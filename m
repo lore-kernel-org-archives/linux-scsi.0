@@ -1,249 +1,143 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A951262FCA;
-	Mon, 28 Apr 2025 13:55:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45F0B27B4EB
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Apr 2025 16:22:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745848551; cv=none; b=Chq+npscWYBjww39FWAyHDya6M2J5wnT2dkzkp+yN13YAS3ajZJlotlofI2n1aHCsA+5MnhlVl+ZjX7RsicdjtfjHIFi7EJEZyD+hCOhgTL/AtTiSzmuCejoXNPZUpglbTdCNVJkaoXdeJzKiyeyF31Ddz8buqYTxdjnjv8/sOA=
+	t=1745857329; cv=none; b=QOWxSe7kXp8TAqFxeMUVjsZM5Y0jngYX5owl3kU6Bpx0uUkgOTiJbXqMPrWtt8d3U0tk+iZL6/864/aNvlsuEthbsgjFzsjj6EM8F9NDzJ32kgCY1waShKYFxuWC2MamadDhlbubL5uInTpxvRGeagOPJqtAgxdyD90ZQYo9q2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745848551; c=relaxed/simple;
-	bh=2wDSomBKx4zZNDuqvc7GRdEVnF9G4IW/tpgoVrJAAEU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gk57X0rFuCHgzfyF4KaBcw92hmglJ9HnviV7/v1MB14qizaysQ38MY1XHmMINcuSKrfYhefoGEFNeWTKbWxiJy1uEGJ2bB+DCGWUJkA6+ohIXX8mJW2PHTCoyIC4mS41zTLdemq2mI/9ArhEn748Jpl4vmZyeafPfMpSTEqUP6g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4ZmQ2V4x3qzKHMXc;
-	Mon, 28 Apr 2025 21:55:46 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A16A11A0EC8;
-	Mon, 28 Apr 2025 21:55:45 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgDXOl_fiA9o2mtPKw--.49456S3;
-	Mon, 28 Apr 2025 21:55:45 +0800 (CST)
-Message-ID: <58f1e9e2-8c4f-42a0-800e-cefe17a7faaa@huaweicloud.com>
-Date: Mon, 28 Apr 2025 21:55:43 +0800
+	s=arc-20240116; t=1745857329; c=relaxed/simple;
+	bh=Vw4DlImvgesrbSAsVdwb6vTeImKi0Z4LGtqXAOAB+Nk=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=CLEDEKEaGY/2fmHKdNWS2WOag1IPZLiKAtB9WLpxg2jj37VPRPvnA7yedpRCO/zUrqDT9lMWSYgNPYXuIs/C8H3KJJrIlIoFRW53zEqaT8CUgWTe+UMvihgsLef3Rdpzal5pF5ytugNhwUif9sN8+u9uYWa0OBJz1HfgUEZ/dAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=VstnMOO9; arc=none smtp.client-ip=209.85.128.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VstnMOO9"
+Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-70427fb838cso40942897b3.2
+        for <linux-scsi@vger.kernel.org>; Mon, 28 Apr 2025 09:22:07 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1745857326; x=1746462126; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=kjtfgNYAyQgaIv+6+gwAi/DXzlNfZQv9vmE2wR+LnUU=;
+        b=VstnMOO9OIpDzRVxGmD9lmKOmGsdXuocbVU9WCF4GNr0cPoaTl+FvxFER6+gxTX01g
+         l0lPgxqzmL4GI0JX2UiIFXcAiIS68xq+DKCjIKxCbmShJ71tf7eFQmLqy1OOwC5ZqDYz
+         zsKcS742SGFGoG5pLeeNUgEUQ28vlxoWIQa7wjfNDKi/ALdT3FLf6nIpQcw1FnW5H55G
+         6L/vMsGOdDkcpUMzmI3uLgqcHkhrY2S8ZeRgkF+AJZBbdJqT77kL0zGKpLFWCm3PHB+a
+         E1qqVEe0tr6wcHtDoZAR8pMkiR4kpbeZqwXtzijE3XqLWKv99PcQujVmOdxowxweiEl2
+         H5XQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745857326; x=1746462126;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kjtfgNYAyQgaIv+6+gwAi/DXzlNfZQv9vmE2wR+LnUU=;
+        b=XQv8gpFqtxFaiLiypcZhXPyqFdn9bv7FcbJTW9eJe6by0K96E2mo8r59CWINaWoIdA
+         W598jkxtae+EnG0mLiM3828u00IJQdCgORyQJM0oC4SzrCBe653Y4LGslgi6VdOVYm/6
+         KdSzRIFT/fzWQeMuACj4+9F099ixFdjgWAG/8wCVMg5TOeJ3Vno5eDzCVJ01e99WXn2z
+         /CpG2ct2ObZt1QDxVRjxFATP0Glv7sy1Ya6DsXMeDJ2FFk/a3lNXvq9XRq8OiDtKkPiD
+         6YMs3TFU8TNbUZcwezAWXdFM/O25MoqISy2ah1USSMu/ZCSdZFnLUXLZKE+AU56tz1MS
+         3URA==
+X-Forwarded-Encrypted: i=1; AJvYcCVi+n6X0HgfyzCdGg0sv89ATUgUObGncEHDF9n8kTOuv17ZbidRtrH664xiGexlwE7dWI4++SiwaIIP@vger.kernel.org
+X-Gm-Message-State: AOJu0YyX0ZmfEXeHJshXNpZ5iTeOkPzy26SW8CQpwYM1W3o15b/YQLSa
+	/bGBZrfS0r2rpYV6AxcLIEWxG3J8h7b3bN9Nl9kzU+aFjrsyWI0LmSTstuiUYY/9dLqEd4Tu4Uz
+	ruV8cfoED8BdwZrSxq9tx0PntjXfE3AVpjuJz+Q==
+X-Gm-Gg: ASbGnctEJndOAYl6nxEc7F6QGW1qGqF2cno0zUNW4y59mwCTJ03eDKGf1A46PjgiccR
+	a4+3IzPWnkCNG3YKusCmdwaDQdn1lxUj6JxzCYS7oLlnP+27pVcxR1AoJvo/eJCbpb3Gg4haDZf
+	6K1W1milJNnghSc1xqcZUQtPRHnr3SoseIRQ==
+X-Google-Smtp-Source: AGHT+IHJ8fzCsar22nWRrLuqubA/nW5PD6Isexezh6U72gKuIl5N70HEwT9JTNXKPWmpqHrpu7bpAGC2DT3kmga/dpo=
+X-Received: by 2002:a05:690c:67c6:b0:708:3532:ec94 with SMTP id
+ 00721157ae682-70853f752e9mr174343137b3.0.1745857326167; Mon, 28 Apr 2025
+ 09:22:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH blktests 2/3] dm/003: add unmap write zeroes tests
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "linux-fsdevel@vger.kernel.org" <linux-fsdevel@vger.kernel.org>,
- "linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- hch <hch@lst.de>, "tytso@mit.edu" <tytso@mit.edu>,
- "djwong@kernel.org" <djwong@kernel.org>,
- "john.g.garry@oracle.com" <john.g.garry@oracle.com>,
- "bmarzins@redhat.com" <bmarzins@redhat.com>,
- "chaitanyak@nvidia.com" <chaitanyak@nvidia.com>,
- "yi.zhang@huawei.com" <yi.zhang@huawei.com>,
- "chengzhihao1@huawei.com" <chengzhihao1@huawei.com>,
- "yukuai3@huawei.com" <yukuai3@huawei.com>,
- "yangerkun@huawei.com" <yangerkun@huawei.com>
-References: <20250318072835.3508696-1-yi.zhang@huaweicloud.com>
- <20250318072835.3508696-3-yi.zhang@huaweicloud.com>
- <t4vmmsupkbffrp3p33okbdjtf6il2ahp5omp2s5fvuxkngipeo@4thxzp4zlcse>
- <7b0319ac-cad4-4285-800c-b1e18ee4d92b@huaweicloud.com>
- <6p2dh577oiqe7lfaexv4fzct4aqhc56lxrz2ecwwctvbuxrjx3@oual7hmxfiqc>
- <a5d847d1-9799-4294-ac8f-e78d73e3733d@huaweicloud.com>
- <pbuxtmwqk5bdmxckwwkjob3lh6mg3et52w3xdvsnjjwmofschm@pkotcbnp4ypt>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <pbuxtmwqk5bdmxckwwkjob3lh6mg3et52w3xdvsnjjwmofschm@pkotcbnp4ypt>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDXOl_fiA9o2mtPKw--.49456S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxJFWrKw1xuF1UAr17ur45KFg_yoWrKF1kpr
-	yfAFyktrWUKF17tr1jvF13Zr1ay3y5Gw17Xw15Jry8A34qvr13KFZ7GF4Uuas7XrW3ZF40
-	vayUXa9I9r15tFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
-	s2-5UUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+References: <20250422-sm7150-upstream-v1-0-bf9a9081631d@jiaxyga.com> <20250422-sm7150-upstream-v1-11-bf9a9081631d@jiaxyga.com>
+In-Reply-To: <20250422-sm7150-upstream-v1-11-bf9a9081631d@jiaxyga.com>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 28 Apr 2025 18:21:30 +0200
+X-Gm-Features: ATxdqUFknbhFgOKvNVOI3-s43pP4YH55pKLNf_KwLrUaeaEizalUr2MLUM3sfs8
+Message-ID: <CAPDyKFqPpqDj+DKT=nJrTS8iDUx_8scnLreUQ99byDHEdBeiww@mail.gmail.com>
+Subject: Re: [PATCH 11/33] dt-bindings: mmc: sdhci-msm: Add the SM7150 compatible
+To: Danila Tikhonov <danila@jiaxyga.com>
+Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+	Conor Dooley <conor+dt@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
+	"Rafael J. Wysocki" <rafael@kernel.org>, Viresh Kumar <viresh.kumar@linaro.org>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+	Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck <linux@roeck-us.net>, 
+	Rajendra Nayak <quic_rjendra@quicinc.com>, Jassi Brar <jassisinghbrar@gmail.com>, 
+	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
+	Amit Kucheria <amitk@kernel.org>, Thara Gopinath <thara.gopinath@gmail.com>, 
+	Daniel Lezcano <daniel.lezcano@linaro.org>, Zhang Rui <rui.zhang@intel.com>, 
+	Lukasz Luba <lukasz.luba@arm.com>, Thomas Gleixner <tglx@linutronix.de>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wesley Cheng <quic_wcheng@quicinc.com>, 
+	Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
+	Souradeep Chowdhury <quic_schowdhu@quicinc.com>, Lee Jones <lee@kernel.org>, 
+	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
+	Alex Elder <elder@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, 
+	Srinivas Kandagatla <srini@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, 
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, Georgi Djakov <djakov@kernel.org>, 
+	Loic Poulain <loic.poulain@oss.qualcomm.com>, Robert Foss <rfoss@kernel.org>, 
+	Andi Shyti <andi.shyti@kernel.org>, Michael Turquette <mturquette@baylibre.com>, 
+	Stephen Boyd <sboyd@kernel.org>, Taniya Das <quic_tdas@quicinc.com>, 
+	Sibi Sankar <quic_sibis@quicinc.com>, Will Deacon <will@kernel.org>, 
+	Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>, 
+	Imran Shaik <quic_imrashai@quicinc.com>, Mathieu Poirier <mathieu.poirier@linaro.org>, 
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
+	Jessica Zhang <quic_jesszhan@quicinc.com>, David Airlie <airlied@gmail.com>, 
+	Simona Vetter <simona@ffwll.ch>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
+	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, Kees Cook <kees@kernel.org>, 
+	Tony Luck <tony.luck@intel.com>, "Guilherme G. Piccoli" <gpiccoli@igalia.com>, 
+	David Wronek <david@mainlining.org>, Jens Reidel <adrian@mainlining.org>, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-watchdog@vger.kernel.org, 
+	linux-usb@vger.kernel.org, linux-phy@lists.infradead.org, 
+	linux-mmc@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	dmaengine@vger.kernel.org, linux-crypto@vger.kernel.org, 
+	linux-i2c@vger.kernel.org, linux-clk@vger.kernel.org, 
+	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, 
+	linux-remoteproc@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	linux-hardening@vger.kernel.org, linux@mainlining.org, 
+	~postmarketos/upstreaming@lists.sr.ht
+Content-Type: text/plain; charset="UTF-8"
 
-On 2025/4/28 17:25, Shinichiro Kawasaki wrote:
-> On Apr 28, 2025 / 17:04, Zhang Yi wrote:
->> On 2025/4/28 16:13, Shinichiro Kawasaki wrote:
->>> On Apr 28, 2025 / 12:32, Zhang Yi wrote:
->>>> On 2025/4/3 15:43, Shinichiro Kawasaki wrote:
->>> [...]
->>>>>> +
->>>>>> +setup_test_device() {
->>>>>> +	if ! _configure_scsi_debug "$@"; then
->>>>>> +		return 1
->>>>>> +	fi
->>>>>
->>>>> In same manner as the 1st patch, I suggest to check /queue/write_zeroes_unmap
->>>>> here.
->>>>>
->>>>> 	if [[ ! -f /sys/block/${SCSI_DEBUG_DEVICES[0]}/queue/write_zeroes_unmap ]]; then
->>>>> 		_exit_scsi_debug
->>>>> 		SKIP_REASONS+=("kernel does not support unmap write zeroes sysfs interface")
->>>>> 		return 1
->>>>> 	fi
->>>>>
->>>>> The caller will need to check setup_test_device() return value.
->>>>
->>>> Sure.
->>>>
->>>>>
->>>>>> +
->>>>>> +	local dev="/dev/${SCSI_DEBUG_DEVICES[0]}"
->>>>>> +	local blk_sz="$(blockdev --getsz "$dev")"
->>>>>> +	dmsetup create test --table "0 $blk_sz linear $dev 0"
->>>>>
->>>>> I suggest to call _real_dev() here, and echo back the device name.
->>>>>
->>>>> 	dpath=$(_real_dev /dev/mapper/test)
->>>>> 	echo ${dpath##*/}
->>>>>
->>>>> The bash parameter expansion ${xxx##*/} works in same manner as the basename
->>>>> command. The caller can receive the device name in a local variable. This will
->>>>> avoid a bit of code duplication, and allow to avoid _short_dev().
->>>>>
->>>>
->>>> I'm afraid this approach will not work since we may set the
->>>> SKIP_REASONS parameter. We cannot pass the device name in this
->>>> manner as it will overlook the SKIP_REASONS setting when the caller
->>>> invokes $(setup_test_device xxx), this function runs in a subshell.
->>>
->>> Ah, that's right. SKIP_REASONS modification in subshell won't work.
->>>
->>>>
->>>> If you don't like _short_dev(), I think we can pass dname through a
->>>> global variable, something like below:
->>>>
->>>> setup_test_device() {
->>>> 	...
->>>> 	dpath=$(_real_dev /dev/mapper/test)
->>>> 	dname=${dpath##*/}
->>>> }
->>>>
->>>> if ! setup_test_device lbprz=0; then
->>>> 	return 1
->>>> fi
->>>> umap="$(< "/sys/block/${dname}/queue/write_zeroes_unmap")"
->>>>
->>>> What do you think?
->>>
->>> I think global variable is a bit dirty. So my suggestion is to still echo back
->>> the short device name from the helper, and set the SKIP_REASONS after calling
->>> the helper, as follows:
->>>
->>> diff --git a/tests/dm/003 b/tests/dm/003
->>> index 1013eb5..e00fa99 100755
->>> --- a/tests/dm/003
->>> +++ b/tests/dm/003
->>> @@ -20,13 +20,23 @@ device_requries() {
->>>  }
->>>  
->>>  setup_test_device() {
->>> +	local dev blk_sz dpath
->>> +
->>>  	if ! _configure_scsi_debug "$@"; then
->>>  		return 1
->>
->> Hmm, if we encounter an error here, the test will be skipped instead of
->> returning a failure. This is not the expected outcome.
-> 
-> Ah, rigth. That's not good.
-> How about to return differnt values for the failure case above,
-> 
->>
->> Thanks,
->> Yi.
->>
->>>  	fi
->>>  
->>> -	local dev="/dev/${SCSI_DEBUG_DEVICES[0]}"
->>> -	local blk_sz="$(blockdev --getsz "$dev")"
->>> +        if [[ ! -f /sys/block/${SCSI_DEBUG_DEVICES[0]}/queue/write_zeroes_unmap ]]; then
->>> +		_exit_scsi_debug
->>> +                return 1
-> 
-> and this "should skip" case?
-> 
-> 
-> diff --git a/tests/dm/003 b/tests/dm/003
-> index 1013eb5..5e617fd 100755
-> --- a/tests/dm/003
-> +++ b/tests/dm/003
-> @@ -19,14 +19,26 @@ device_requries() {
->  	_require_test_dev_sysfs queue/write_zeroes_unmap
->  }
->  
-> +readonly TO_SKIP=255
-> +
->  setup_test_device() {
-> +	local dev blk_sz dpath
-> +
->  	if ! _configure_scsi_debug "$@"; then
->  		return 1
->  	fi
->  
-> -	local dev="/dev/${SCSI_DEBUG_DEVICES[0]}"
-> -	local blk_sz="$(blockdev --getsz "$dev")"
-> +        if [[ ! -f /sys/block/${SCSI_DEBUG_DEVICES[0]}/queue/write_zeroes_unmap ]]; then
-> +		_exit_scsi_debug
-> +		return $TO_SKIP
-> +	fi
-> +
-> +	dev="/dev/${SCSI_DEBUG_DEVICES[0]}"
-> +	blk_sz="$(blockdev --getsz "$dev")"
->  	dmsetup create test --table "0 $blk_sz linear $dev 0"
-> +
-> +	dpath=$(_real_dev /dev/mapper/test)
-> +	echo "${dpath##*/}"
->  }
->  
->  cleanup_test_device() {
-> @@ -38,17 +50,25 @@ test() {
->  	echo "Running ${TEST_NAME}"
->  
->  	# disable WRITE SAME with unmap
-> -	setup_test_device lbprz=0
-> -	umap="$(cat "/sys/block/$(_short_dev /dev/mapper/test)/queue/write_zeroes_unmap")"
-> +	local dname
-> +	dname=$(setup_test_device lbprz=0)
-> +	ret=$?
-> +	if ((ret)); then
-> +		if ((ret == TO_SKIP)); then
-> +			SKIP_REASONS+=("kernel does not support unmap write zeroes sysfs interface")
-> +		fi
-> +		return 1
-> +	fi
-> +	umap="$(cat "/sys/block/${dname}/queue/zoned")"
->  	if [[ $umap -ne 0 ]]; then
->  		echo "Test disable WRITE SAME with unmap failed."
->  	fi
->  	cleanup_test_device
->  
+On Tue, 22 Apr 2025 at 22:24, Danila Tikhonov <danila@jiaxyga.com> wrote:
+>
+> Add compatible for the SDHCI block found in SM7150.
+>
+> Signed-off-by: Danila Tikhonov <danila@jiaxyga.com>
 
-Yeah, I believe this will work, and it looks good to me. Thank you for
-the suggestion！
+Applied for next, thanks!
 
-Thanks,
-Yi.
+Kind regards
+Uffe
 
 
+> ---
+>  Documentation/devicetree/bindings/mmc/sdhci-msm.yaml | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml b/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
+> index eed9063e9bb352b5c8dac10ae2d289c5ca17f81b..2b2cbce2458b70b96b98c042109b10ead26e2291 100644
+> --- a/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
+> +++ b/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
+> @@ -60,6 +60,7 @@ properties:
+>                - qcom,sm6125-sdhci
+>                - qcom,sm6350-sdhci
+>                - qcom,sm6375-sdhci
+> +              - qcom,sm7150-sdhci
+>                - qcom,sm8150-sdhci
+>                - qcom,sm8250-sdhci
+>                - qcom,sm8350-sdhci
+>
+> --
+> 2.49.0
+>
