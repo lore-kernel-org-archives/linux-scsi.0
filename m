@@ -1,143 +1,107 @@
-Received: from mail-yw1-f177.google.com (mail-yw1-f177.google.com [209.85.128.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from out-187.mta1.migadu.com (out-187.mta1.migadu.com [95.215.58.187])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45F0B27B4EB
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Apr 2025 16:22:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5242727C17F
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Apr 2025 17:17:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=95.215.58.187
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745857329; cv=none; b=QOWxSe7kXp8TAqFxeMUVjsZM5Y0jngYX5owl3kU6Bpx0uUkgOTiJbXqMPrWtt8d3U0tk+iZL6/864/aNvlsuEthbsgjFzsjj6EM8F9NDzJ32kgCY1waShKYFxuWC2MamadDhlbubL5uInTpxvRGeagOPJqtAgxdyD90ZQYo9q2I=
+	t=1745860643; cv=none; b=HT5UzppLvp0n+fuzhcKWFNbBITVDTE3LhwWTKneSHqncpYf7OJBogiCQEGcGd88eGKFWtw4iEzo5YWdOF96gDIqQRk8lVEdbMeD9XgPT84eG6d8DHq8ilJfljCT9x6S+tTVc4sESEQ6vxAzWl4UrJ4BvV/wHbkXm8Hg8ZveMIWw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745857329; c=relaxed/simple;
-	bh=Vw4DlImvgesrbSAsVdwb6vTeImKi0Z4LGtqXAOAB+Nk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=CLEDEKEaGY/2fmHKdNWS2WOag1IPZLiKAtB9WLpxg2jj37VPRPvnA7yedpRCO/zUrqDT9lMWSYgNPYXuIs/C8H3KJJrIlIoFRW53zEqaT8CUgWTe+UMvihgsLef3Rdpzal5pF5ytugNhwUif9sN8+u9uYWa0OBJz1HfgUEZ/dAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=VstnMOO9; arc=none smtp.client-ip=209.85.128.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1745860643; c=relaxed/simple;
+	bh=Q44nlAzJAWRtcbuLv7vRmsMflaRgSG13S50QWb/l6v8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oINiphvAt6zYnCnFt2nJeOW9pD0+hJ2h1gqvgFjscoE258Q6ugmQVjSByJChwwQGhxxr2E9OKY9kVvGxa0aLy6DbSdM2Y+4aLCFdoPUC8WQa44gxc4l69BoYmQnMEqttVxY34ESWe7Y5qVnnkuNipUWOH5g7oDhL5NqwJjHjoaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=g2Zla/yz; arc=none smtp.client-ip=95.215.58.187
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="VstnMOO9"
-Received: by mail-yw1-f177.google.com with SMTP id 00721157ae682-70427fb838cso40942897b3.2
-        for <linux-scsi@vger.kernel.org>; Mon, 28 Apr 2025 09:22:07 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1745857326; x=1746462126; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=kjtfgNYAyQgaIv+6+gwAi/DXzlNfZQv9vmE2wR+LnUU=;
-        b=VstnMOO9OIpDzRVxGmD9lmKOmGsdXuocbVU9WCF4GNr0cPoaTl+FvxFER6+gxTX01g
-         l0lPgxqzmL4GI0JX2UiIFXcAiIS68xq+DKCjIKxCbmShJ71tf7eFQmLqy1OOwC5ZqDYz
-         zsKcS742SGFGoG5pLeeNUgEUQ28vlxoWIQa7wjfNDKi/ALdT3FLf6nIpQcw1FnW5H55G
-         6L/vMsGOdDkcpUMzmI3uLgqcHkhrY2S8ZeRgkF+AJZBbdJqT77kL0zGKpLFWCm3PHB+a
-         E1qqVEe0tr6wcHtDoZAR8pMkiR4kpbeZqwXtzijE3XqLWKv99PcQujVmOdxowxweiEl2
-         H5XQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1745857326; x=1746462126;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=kjtfgNYAyQgaIv+6+gwAi/DXzlNfZQv9vmE2wR+LnUU=;
-        b=XQv8gpFqtxFaiLiypcZhXPyqFdn9bv7FcbJTW9eJe6by0K96E2mo8r59CWINaWoIdA
-         W598jkxtae+EnG0mLiM3828u00IJQdCgORyQJM0oC4SzrCBe653Y4LGslgi6VdOVYm/6
-         KdSzRIFT/fzWQeMuACj4+9F099ixFdjgWAG/8wCVMg5TOeJ3Vno5eDzCVJ01e99WXn2z
-         /CpG2ct2ObZt1QDxVRjxFATP0Glv7sy1Ya6DsXMeDJ2FFk/a3lNXvq9XRq8OiDtKkPiD
-         6YMs3TFU8TNbUZcwezAWXdFM/O25MoqISy2ah1USSMu/ZCSdZFnLUXLZKE+AU56tz1MS
-         3URA==
-X-Forwarded-Encrypted: i=1; AJvYcCVi+n6X0HgfyzCdGg0sv89ATUgUObGncEHDF9n8kTOuv17ZbidRtrH664xiGexlwE7dWI4++SiwaIIP@vger.kernel.org
-X-Gm-Message-State: AOJu0YyX0ZmfEXeHJshXNpZ5iTeOkPzy26SW8CQpwYM1W3o15b/YQLSa
-	/bGBZrfS0r2rpYV6AxcLIEWxG3J8h7b3bN9Nl9kzU+aFjrsyWI0LmSTstuiUYY/9dLqEd4Tu4Uz
-	ruV8cfoED8BdwZrSxq9tx0PntjXfE3AVpjuJz+Q==
-X-Gm-Gg: ASbGnctEJndOAYl6nxEc7F6QGW1qGqF2cno0zUNW4y59mwCTJ03eDKGf1A46PjgiccR
-	a4+3IzPWnkCNG3YKusCmdwaDQdn1lxUj6JxzCYS7oLlnP+27pVcxR1AoJvo/eJCbpb3Gg4haDZf
-	6K1W1milJNnghSc1xqcZUQtPRHnr3SoseIRQ==
-X-Google-Smtp-Source: AGHT+IHJ8fzCsar22nWRrLuqubA/nW5PD6Isexezh6U72gKuIl5N70HEwT9JTNXKPWmpqHrpu7bpAGC2DT3kmga/dpo=
-X-Received: by 2002:a05:690c:67c6:b0:708:3532:ec94 with SMTP id
- 00721157ae682-70853f752e9mr174343137b3.0.1745857326167; Mon, 28 Apr 2025
- 09:22:06 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="g2Zla/yz"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1745860635;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=8R0RWxWmLIRk6b3UDexAAn0Iao0D6NIuoSCe7Qbxh8s=;
+	b=g2Zla/yz3sd4i7MJBgkX4D03yzYugMIQsDGcdxEA6L0g60MnsNsiKj0iryCd+oEGj8tu8e
+	ptWoUF0nExLXURtV8uHOH/tgOa8xB1ui51UfHPhcIOoysiYHrVll44Fs2FwoxTzi/Shs19
+	LeqgDUfVPjDppNhJyo/qzFrkxTtEMdE=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: Use secs_to_jiffies() instead of msecs_to_jiffies()
+Date: Mon, 28 Apr 2025 19:16:26 +0200
+Message-ID: <20250428171625.2499-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250422-sm7150-upstream-v1-0-bf9a9081631d@jiaxyga.com> <20250422-sm7150-upstream-v1-11-bf9a9081631d@jiaxyga.com>
-In-Reply-To: <20250422-sm7150-upstream-v1-11-bf9a9081631d@jiaxyga.com>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Mon, 28 Apr 2025 18:21:30 +0200
-X-Gm-Features: ATxdqUFknbhFgOKvNVOI3-s43pP4YH55pKLNf_KwLrUaeaEizalUr2MLUM3sfs8
-Message-ID: <CAPDyKFqPpqDj+DKT=nJrTS8iDUx_8scnLreUQ99byDHEdBeiww@mail.gmail.com>
-Subject: Re: [PATCH 11/33] dt-bindings: mmc: sdhci-msm: Add the SM7150 compatible
-To: Danila Tikhonov <danila@jiaxyga.com>
-Cc: Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Lorenzo Pieralisi <lpieralisi@kernel.org>, 
-	"Rafael J. Wysocki" <rafael@kernel.org>, Viresh Kumar <viresh.kumar@linaro.org>, 
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Rajendra Nayak <quic_rjendra@quicinc.com>, Jassi Brar <jassisinghbrar@gmail.com>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Amit Kucheria <amitk@kernel.org>, Thara Gopinath <thara.gopinath@gmail.com>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Zhang Rui <rui.zhang@intel.com>, 
-	Lukasz Luba <lukasz.luba@arm.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wesley Cheng <quic_wcheng@quicinc.com>, 
-	Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Souradeep Chowdhury <quic_schowdhu@quicinc.com>, Lee Jones <lee@kernel.org>, 
-	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Alex Elder <elder@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, 
-	Srinivas Kandagatla <srini@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, Georgi Djakov <djakov@kernel.org>, 
-	Loic Poulain <loic.poulain@oss.qualcomm.com>, Robert Foss <rfoss@kernel.org>, 
-	Andi Shyti <andi.shyti@kernel.org>, Michael Turquette <mturquette@baylibre.com>, 
-	Stephen Boyd <sboyd@kernel.org>, Taniya Das <quic_tdas@quicinc.com>, 
-	Sibi Sankar <quic_sibis@quicinc.com>, Will Deacon <will@kernel.org>, 
-	Robin Murphy <robin.murphy@arm.com>, Joerg Roedel <joro@8bytes.org>, 
-	Imran Shaik <quic_imrashai@quicinc.com>, Mathieu Poirier <mathieu.poirier@linaro.org>, 
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
-	Jessica Zhang <quic_jesszhan@quicinc.com>, David Airlie <airlied@gmail.com>, 
-	Simona Vetter <simona@ffwll.ch>, Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, 
-	Maxime Ripard <mripard@kernel.org>, Thomas Zimmermann <tzimmermann@suse.de>, Kees Cook <kees@kernel.org>, 
-	Tony Luck <tony.luck@intel.com>, "Guilherme G. Piccoli" <gpiccoli@igalia.com>, 
-	David Wronek <david@mainlining.org>, Jens Reidel <adrian@mainlining.org>, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-pm@vger.kernel.org, 
-	linux-arm-msm@vger.kernel.org, linux-watchdog@vger.kernel.org, 
-	linux-usb@vger.kernel.org, linux-phy@lists.infradead.org, 
-	linux-mmc@vger.kernel.org, netdev@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	dmaengine@vger.kernel.org, linux-crypto@vger.kernel.org, 
-	linux-i2c@vger.kernel.org, linux-clk@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, 
-	linux-remoteproc@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	linux-hardening@vger.kernel.org, linux@mainlining.org, 
-	~postmarketos/upstreaming@lists.sr.ht
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Tue, 22 Apr 2025 at 22:24, Danila Tikhonov <danila@jiaxyga.com> wrote:
->
-> Add compatible for the SDHCI block found in SM7150.
->
-> Signed-off-by: Danila Tikhonov <danila@jiaxyga.com>
+Use secs_to_jiffies() instead of msecs_to_jiffies() and avoid scaling
+the timeouts to milliseconds.
 
-Applied for next, thanks!
+No functional changes intended.
 
-Kind regards
-Uffe
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+---
+ drivers/scsi/lpfc/lpfc_bsg.c   | 6 ++----
+ drivers/scsi/lpfc/lpfc_vport.c | 4 ++--
+ 2 files changed, 4 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/lpfc/lpfc_bsg.c b/drivers/scsi/lpfc/lpfc_bsg.c
+index c8f8496bbdf8..d61d979f9b77 100644
+--- a/drivers/scsi/lpfc/lpfc_bsg.c
++++ b/drivers/scsi/lpfc/lpfc_bsg.c
+@@ -2687,8 +2687,7 @@ static int lpfcdiag_loop_get_xri(struct lpfc_hba *phba, uint16_t rpi,
+ 	evt->wait_time_stamp = jiffies;
+ 	time_left = wait_event_interruptible_timeout(
+ 		evt->wq, !list_empty(&evt->events_to_see),
+-		msecs_to_jiffies(1000 *
+-			((phba->fc_ratov * 2) + LPFC_DRVR_TIMEOUT)));
++		secs_to_jiffies(phba->fc_ratov * 2 + LPFC_DRVR_TIMEOUT));
+ 	if (list_empty(&evt->events_to_see))
+ 		ret_val = (time_left) ? -EINTR : -ETIMEDOUT;
+ 	else {
+@@ -3258,8 +3257,7 @@ lpfc_bsg_diag_loopback_run(struct bsg_job *job)
+ 	evt->waiting = 1;
+ 	time_left = wait_event_interruptible_timeout(
+ 		evt->wq, !list_empty(&evt->events_to_see),
+-		msecs_to_jiffies(1000 *
+-			((phba->fc_ratov * 2) + LPFC_DRVR_TIMEOUT)));
++		secs_to_jiffies(phba->fc_ratov * 2 + LPFC_DRVR_TIMEOUT));
+ 	evt->waiting = 0;
+ 	if (list_empty(&evt->events_to_see)) {
+ 		rc = (time_left) ? -EINTR : -ETIMEDOUT;
+diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
+index cc56a7334319..2797aa75a689 100644
+--- a/drivers/scsi/lpfc/lpfc_vport.c
++++ b/drivers/scsi/lpfc/lpfc_vport.c
+@@ -505,7 +505,7 @@ lpfc_send_npiv_logo(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp)
+ 		wait_event_timeout(waitq,
+ 				   !test_bit(NLP_WAIT_FOR_LOGO,
+ 					     &ndlp->save_flags),
+-				   msecs_to_jiffies(phba->fc_ratov * 2000));
++				   secs_to_jiffies(phba->fc_ratov * 2));
+ 
+ 		if (!test_bit(NLP_WAIT_FOR_LOGO, &ndlp->save_flags))
+ 			goto logo_cmpl;
+@@ -703,7 +703,7 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
+ 				wait_event_timeout(waitq,
+ 				   !test_bit(NLP_WAIT_FOR_DA_ID,
+ 					     &ndlp->save_flags),
+-				   msecs_to_jiffies(phba->fc_ratov * 2000));
++				   secs_to_jiffies(phba->fc_ratov * 2));
+ 			}
+ 
+ 			lpfc_printf_vlog(vport, KERN_INFO, LOG_VPORT | LOG_ELS,
+-- 
+2.49.0
 
-> ---
->  Documentation/devicetree/bindings/mmc/sdhci-msm.yaml | 1 +
->  1 file changed, 1 insertion(+)
->
-> diff --git a/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml b/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
-> index eed9063e9bb352b5c8dac10ae2d289c5ca17f81b..2b2cbce2458b70b96b98c042109b10ead26e2291 100644
-> --- a/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
-> +++ b/Documentation/devicetree/bindings/mmc/sdhci-msm.yaml
-> @@ -60,6 +60,7 @@ properties:
->                - qcom,sm6125-sdhci
->                - qcom,sm6350-sdhci
->                - qcom,sm6375-sdhci
-> +              - qcom,sm7150-sdhci
->                - qcom,sm8150-sdhci
->                - qcom,sm8250-sdhci
->                - qcom,sm8350-sdhci
->
-> --
-> 2.49.0
->
