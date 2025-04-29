@@ -1,48 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92CA32922C4;
-	Tue, 29 Apr 2025 23:51:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3CD7299A8B;
+	Tue, 29 Apr 2025 23:52:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745970704; cv=none; b=N0RvZUQODoXbawYb+3vZiILpD44h5AdUHzYsxmUzRpMubSEKMan1NOpK3nywakT21EVYNM9RYrdsnzVmOkN82Nn6OnNFKrCKAQD+Tb83Xfxan3R7Z1wIQXITgAXnX2LkY/n7rzY99EcKTN8aEVarpGSIN+IDnCenskK0j9MhjEY=
+	t=1745970721; cv=none; b=dtBtFq5xiiLK525APZhfD62AwoZKxFcTZ50Xkma+jv2jf/r8429CjB6o+TJ2wo4JDOx2LTAjb4jJIjWHAIXnyIOhHOl58B5EMdc2Gk7Tsscgq057jC1dTjk4lf/eEQzS+BEPDJiclH5M1LT2ECPPwmf8L+YnxL34Yg/A2NxTHXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745970704; c=relaxed/simple;
-	bh=OuPv82rWcLem94oBrXnB1UlTGA80HpJ8wilm7gvnBMU=;
+	s=arc-20240116; t=1745970721; c=relaxed/simple;
+	bh=GSShjkSefXVjJ320Soai3s/rEN4erY190WSPuUY01ao=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JlyWinYtLGTNOy1A5GwaWDv0Vx2liBVMqv4EBNgglYLnKG/7b4UnFUCaJm6p2+zakLF25Zxp52yHAwK2ItAJIS93vid+DY3J9ZJ2VstUyo07oeMGq1/5Ixv8khdI3ngHrj6loU0xGrib24AecFCnsv2tsje+v9bUSE56iI/sY2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IbqOvxeH; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=rDnQVwv7y6chdEcsjAZR3Udsy3neovYzZw3H1xIatq/B0lKhl+on7YQnQ1e+ULXD4pTieRRGKbDV2kRwnVOHlTS/t+53ThcI7HLAHxl6Tor4njfh0xjntnyEsQqzv2ym0rR7nAB7Xph5zWmgV26cWpSX2MxmHlW6eRu8P7VuLSM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZQHouyYE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IbqOvxeH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0609EC4CEE3;
-	Tue, 29 Apr 2025 23:51:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZQHouyYE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5059CC4CEE3;
+	Tue, 29 Apr 2025 23:52:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745970704;
-	bh=OuPv82rWcLem94oBrXnB1UlTGA80HpJ8wilm7gvnBMU=;
+	s=k20201202; t=1745970721;
+	bh=GSShjkSefXVjJ320Soai3s/rEN4erY190WSPuUY01ao=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=IbqOvxeHT/bqSCUvGRBknbO9VAxGYS8kFBiGifxqPHJJhy62W7NiXn4J7Bg+VCA+a
-	 F9NVX920it/yOgSRy/Us8yqz2eAKgS3Nbi5ZPWT6AqWuOJhDwmJ7OOTPAgyOlVGjrH
-	 puUEuZkhKeX2aN9BS/M9xZ8TwHLeuyBeWKuslfcrEnuIeY851CWHry+JmCG6N47pJ0
-	 ZbtGMa1ax8n6Pa51djMFIAwL68MhZY+VI762sWxjvkMMFolTNq5PbEALxeDb4tMjqX
-	 2Xqa1lYXEhtCaFSFxOCHE3Hnmq6QgTP5vCOY6MmnVoIj+rB8liLjbtFi/RGZBv7Zr4
-	 ckjr9hWdCkg9A==
+	b=ZQHouyYEXIBeWt13drNOXmR5JG8xO21GNriau3vyWx0Ij1VyVuyYhxf173YWfKpwx
+	 GjuWwK1RkmAURuEYZ4UclL+8F5mAQWstQ8wQ/Sct6OjldbZEQW5barZXE8xiPiANyM
+	 /fWsBrgT8HheqPH5GGFHZc+VsxtdSAs0YrYcF6lNb0fkhC6z5QhHgVc9oG1ZVjru3s
+	 4EHAw/ncZX8qG2NsohmCvpBjIrz0H6st/PCPhJYyRbVrb/mRV2DAL2llfpkm8sJImL
+	 ZNvpqDndgkk5Anb2BTvTV80qpfZoOWOqAyZRZ4iKvY0Bmvjk2RnDISR8yBqoRIcJM4
+	 aC6Tu7wtygBcA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Manish Pandey <quic_mapa@quicinc.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
-	bvanassche@acm.org,
-	peter.wang@mediatek.com,
-	avri.altman@wdc.com,
-	quic_nguyenb@quicinc.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 10/37] scsi: ufs: Introduce quirk to extend PA_HIBERN8TIME for UFS devices
-Date: Tue, 29 Apr 2025 19:50:55 -0400
-Message-Id: <20250429235122.537321-10-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 21/37] scsi: mpi3mr: Add level check to control event logging
+Date: Tue, 29 Apr 2025 19:51:06 -0400
+Message-Id: <20250429235122.537321-21-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250429235122.537321-1-sashal@kernel.org>
 References: <20250429235122.537321-1-sashal@kernel.org>
@@ -52,102 +51,40 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.25
 Content-Transfer-Encoding: 8bit
 
-From: Manish Pandey <quic_mapa@quicinc.com>
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 
-[ Upstream commit 569330a34a31a52c904239439984a59972c11d28 ]
+[ Upstream commit b0b7ee3b574a72283399b9232f6190be07f220c0 ]
 
-Samsung UFS devices require additional time in hibern8 mode before
-exiting, beyond the negotiated handshaking phase between the host and
-device.  Introduce a quirk to increase the PA_HIBERN8TIME parameter by
-100 µs, a value derived from experiments, to ensure a proper hibernation
-process.
+Ensure event logs are only generated when the debug logging level
+MPI3_DEBUG_EVENT is enabled. This prevents unnecessary logging.
 
-Signed-off-by: Manish Pandey <quic_mapa@quicinc.com>
-Link: https://lore.kernel.org/r/20250411121630.21330-3-quic_mapa@quicinc.com
-Reviewed-by: Bean Huo <beanhuo@micron.com>
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Link: https://lore.kernel.org/r/20250415101546.204018-1-ranjan.kumar@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/core/ufshcd.c | 29 +++++++++++++++++++++++++++++
- include/ufs/ufs_quirks.h  |  6 ++++++
- 2 files changed, 35 insertions(+)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 89fc0b5662919..856afd0e6a4b5 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -278,6 +278,7 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
- 	  .model = UFS_ANY_MODEL,
- 	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
- 		   UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE |
-+		   UFS_DEVICE_QUIRK_PA_HIBER8TIME |
- 		   UFS_DEVICE_QUIRK_RECOVERY_FROM_DL_NAC_ERRORS },
- 	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
- 	  .model = UFS_ANY_MODEL,
-@@ -8459,6 +8460,31 @@ static int ufshcd_quirk_tune_host_pa_tactivate(struct ufs_hba *hba)
- 	return ret;
- }
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index ec5b1ab287177..1cf5a517b4758 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -174,6 +174,9 @@ static void mpi3mr_print_event_data(struct mpi3mr_ioc *mrioc,
+ 	char *desc = NULL;
+ 	u16 event;
  
-+/**
-+ * ufshcd_quirk_override_pa_h8time - Ensures proper adjustment of PA_HIBERN8TIME.
-+ * @hba: per-adapter instance
-+ *
-+ * Some UFS devices require specific adjustments to the PA_HIBERN8TIME parameter
-+ * to ensure proper hibernation timing. This function retrieves the current
-+ * PA_HIBERN8TIME value and increments it by 100us.
-+ */
-+static void ufshcd_quirk_override_pa_h8time(struct ufs_hba *hba)
-+{
-+	u32 pa_h8time;
-+	int ret;
-+
-+	ret = ufshcd_dme_get(hba, UIC_ARG_MIB(PA_HIBERN8TIME), &pa_h8time);
-+	if (ret) {
-+		dev_err(hba->dev, "Failed to get PA_HIBERN8TIME: %d\n", ret);
++	if (!(mrioc->logging_level & MPI3_DEBUG_EVENT))
 +		return;
-+	}
 +
-+	/* Increment by 1 to increase hibernation time by 100 µs */
-+	ret = ufshcd_dme_set(hba, UIC_ARG_MIB(PA_HIBERN8TIME), pa_h8time + 1);
-+	if (ret)
-+		dev_err(hba->dev, "Failed updating PA_HIBERN8TIME: %d\n", ret);
-+}
-+
- static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
- {
- 	ufshcd_vops_apply_dev_quirks(hba);
-@@ -8469,6 +8495,9 @@ static void ufshcd_tune_unipro_params(struct ufs_hba *hba)
+ 	event = event_reply->event;
  
- 	if (hba->dev_quirks & UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE)
- 		ufshcd_quirk_tune_host_pa_tactivate(hba);
-+
-+	if (hba->dev_quirks & UFS_DEVICE_QUIRK_PA_HIBER8TIME)
-+		ufshcd_quirk_override_pa_h8time(hba);
- }
- 
- static void ufshcd_clear_dbg_ufs_stats(struct ufs_hba *hba)
-diff --git a/include/ufs/ufs_quirks.h b/include/ufs/ufs_quirks.h
-index 41ff44dfa1db3..f52de5ed1b3b6 100644
---- a/include/ufs/ufs_quirks.h
-+++ b/include/ufs/ufs_quirks.h
-@@ -107,4 +107,10 @@ struct ufs_dev_quirk {
-  */
- #define UFS_DEVICE_QUIRK_DELAY_AFTER_LPM        (1 << 11)
- 
-+/*
-+ * Some ufs devices may need more time to be in hibern8 before exiting.
-+ * Enable this quirk to give it an additional 100us.
-+ */
-+#define UFS_DEVICE_QUIRK_PA_HIBER8TIME          (1 << 12)
-+
- #endif /* UFS_QUIRKS_H_ */
+ 	switch (event) {
 -- 
 2.39.5
 
