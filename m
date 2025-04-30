@@ -1,101 +1,105 @@
-Received: from fhigh-b1-smtp.messagingengine.com (fhigh-b1-smtp.messagingengine.com [202.12.124.152])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64B411187
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 01:36:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.152
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0367C1E32C3
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 07:39:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745977012; cv=none; b=rd1jhl9+CjkbzwUFx9z8NIfgjwafh5lEdA8zRKzby0h4vKgtomn1KSlXvBRpf7QilkgzSddvgV8Iu2m+4M3Znyrk+LtyKjgfrAU8Uq1bjgxeFDb/3cthyoLgIsEeTT8k7WnqawJE/vUuVlB6CPMuPGRuMNFTP8P+Jebflq1Yyi4=
+	t=1745998791; cv=none; b=Kbmar5TwHi/YlA+ubSstnXleWgymOS09B/abMc710QbsK+acoRIjRPQ/3JHCsu0I4VzVqau9mhb6OelDnn76rvRHWycjVd6nwTcJW/CXeBOrAfekvZrvmNbY/SxBHHnEjFeK0A1IFgrO8dj7lFLpy5lE6Yn1MhfQSLvqOfE8JF0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745977012; c=relaxed/simple;
-	bh=8hIrgiEsPsWuoBwRtZoK8cMgMpFtEq4I5UiSjoqyvgU=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=WFac1aoymZoXAuMdTLl0/DssJZI3W7VivKfTv9Z23T6+T0eshp/dSnRn0HwHX+0MjQIloXRUndlNJVHemJZ5Fwxf4EZ1PTQjOA+KQi875K8U+8MgMUZtImDUT/shBNtJbuwncafl9iaQdmWljT5632J3giWeXHdx09pfuzJnTic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=nNNn21xL; arc=none smtp.client-ip=202.12.124.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+	s=arc-20240116; t=1745998791; c=relaxed/simple;
+	bh=RYF5rT5SGXiuiOMM3oZfVuad7Ga744mi0LsZrurPLlo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=krMdjZHC3dYeH6AixTLO37hwDwG+n0lcwMajyWWMOIbs/osJ9wIlOx1CeQ6Id+OGjtjF4+iMW61/CzGqECZjlXIH9mwhxQYzbqwC2I+9bekFK+/Xy6EPkg+1CXU+EmWaOgxdzdSMYnTLDAw3Zq/VYRpCnBeB4gjrfLlrAdWJmjE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=HdAaxTbH; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="nNNn21xL"
-Received: from phl-compute-12.internal (phl-compute-12.phl.internal [10.202.2.52])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 8B9852540219;
-	Tue, 29 Apr 2025 21:36:49 -0400 (EDT)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-12.internal (MEProxy); Tue, 29 Apr 2025 21:36:49 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1745977009; x=1746063409; bh=lXtmYKmM+kLolKVr6MLT45PItAjhInNaFFT
-	UQ66S0vY=; b=nNNn21xLHwds027493PbUXZFdwb7RM6yKPq7+j9yt2nc1GICHci
-	sfCWY4me2ALWZHf3ASZpXsbr/t1btceANo02pEnyA0AKehCH+Cl9WOSOvV3yxMiG
-	ha7MI+Y7QpJ+jD4RjSqE5popyrN+wSGeZqTx/BegEUeTItG29PlU7QvugoxYpL3k
-	euIHh0Bk/mL1ZJlqqpVLghxrWFsVu46Jl+2ZQ2EXa8nEJ2klpmeL/SZ+Dr46R5rc
-	fFhI8fsSS9BGMRyAbPODsWLt16CtQ6T2Bx5ijm4ct/qwOspUY+CjLpPhbWxEnt4P
-	OXTQYyuVXDivZ0fufK4iwUlCbVXM68TI+ww==
-X-ME-Sender: <xms:sH4RaPYSD_Il7S0M2mID4NsGO9mL3qgqwizUVYdAmVDGvdpWOhUVow>
-    <xme:sH4RaOYyMrLopypTHH84rdBJVUttHWx8vp9nvjEsz3kPV91R-lqJQBa416gjxlagz
-    fnTaXmUJ7JbOukhJIo>
-X-ME-Received: <xmr:sH4RaB-oglDBVItNy6ZX37oIp-EcnybmsTkW0EOF4cc72jwnUEntV6_r0soyhQoohiZiMY3aOGUxdOupnGZsW0U7_3VBGY_Ag4M>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddvieehfeelucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
-    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpih
-    gvnhhtshculddquddttddmnecujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddv
-    necuhfhrohhmpefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheike
-    hkrdhorhhgqeenucggtffrrghtthgvrhhnpeelueehleehkefgueevtdevteejkefhffek
-    feffffdtgfejveekgeefvdeuheeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrh
-    grmhepmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgpdhn
-    sggprhgtphhtthhopeelpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehnrghthh
-    grnheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepohhnvghukhhumhesshhushgvrdgt
-    ohhmpdhrtghpthhtoheprghlihgrkhgtseifvggsrdguvgdprhgtphhtthhopehlvghnvg
-    hhrghnsehtfihisggslhgvrdhorhhgpdhrtghpthhtohepmhgrrhhtihhnrdhpvghtvghr
-    shgvnhesohhrrggtlhgvrdgtohhmpdhrtghpthhtoheptgholhhinhdrihdrkhhinhhgse
-    hgmhgrihhlrdgtohhmpdhrtghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgv
-    rhhnvghlrdhorhhgpdhrtghpthhtoheplhhlvhhmsehlihhsthhsrdhlihhnuhigrdguvg
-    hvpdhrtghpthhtohepphgrthgthhgvsheslhhishhtshdrlhhinhhugidruggvvh
-X-ME-Proxy: <xmx:sH4RaFrbJM5lV8M-uzGSDXczNSRgvq8nG6xeCoGQy58JuqJSu66sWA>
-    <xmx:sH4RaKoFAGK-hVmcVkDZ6SG7cGE86ZEn1VSjDCzts4bBgpV4AgGNBQ>
-    <xmx:sH4RaLTBt-QfFvpxmM8N8ELdlERkiWQIfK9Lr9_AS6vsfSC3GV5bcA>
-    <xmx:sH4RaCrD0pYPJCa1Kb6pk_WIoHM8j4kVS3ysEFBxbX9cWVVE5t-Zaw>
-    <xmx:sX4RaOzBUmJuu7VnfZCKdCdlSHfwxicqfMAmiHo7SoiXYBeHM08ctsiK>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
- 29 Apr 2025 21:36:46 -0400 (EDT)
-Date: Wed, 30 Apr 2025 11:36:55 +1000 (AEST)
-From: Finn Thain <fthain@linux-m68k.org>
-To: Nathan Chancellor <nathan@kernel.org>
-cc: Oliver Neukum <oneukum@suse.com>, Ali Akcaagac <aliakc@web.de>, 
-    Jamie Lenehan <lenehan@twibble.org>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org, 
-    llvm@lists.linux.dev, patches@lists.linux.dev
-Subject: Re: [PATCH] scsi: dc395x: Remove leftover if statement in
- reselect()
-In-Reply-To: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org>
-Message-ID: <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org>
-References: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="HdAaxTbH"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-43cebe06e9eso46053245e9.3
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 00:39:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1745998788; x=1746603588; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=5U9OMJXkSPz8hKC+syIhe+oLvZq6aylg9p+TfyNHAYs=;
+        b=HdAaxTbHS+veqEqCbCoTewjMJY68d5CBRPqjO4CQzHYraydK6c2WF9FOZ/tTUbfVLR
+         Ly81+fApsU6mZeI6ygUxM1V7Fsf+IJZ1ifGysYqGaNNqRc7c71+4EYG1mYhwPEKnU+1+
+         zKe/qvVH9sfda6jaQJc1i54j5memYI2mahU6+2EFZedrv+OYh2ruaBFFDEwSENYxe+Z/
+         nuIb42Uapn8lk4RmWcnhuW3Xqas1cC75W7qHb+KayY14Z/RV3vutWRrYC+Ol5Ts8pBFM
+         nXBIQW/bDZQM1Gs/k7n8bmYVW9nnqajeLlvHSd5wdxY0TJJTFIb+1N3rZaLRc1pIpdYf
+         8Hrw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1745998788; x=1746603588;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=5U9OMJXkSPz8hKC+syIhe+oLvZq6aylg9p+TfyNHAYs=;
+        b=FwX4WKa/idNrI5tH9sHbURV4VruJqwcvOOSAXBPC3IaPcTeWLyhxzX5YoGW5rykVFH
+         3vcEMesTQG1zViwvPrFI6IiKMvtxlhbVDhQacSW19Vq968O7UQ21Igr6UIQCjxXSmsym
+         9QuxODCN1UmnLohmwUXBnvT52c4pMZLMeKaYoaeRdqgwmJO8zHp8axejT88fnWStFuzK
+         t0kWH5jG7cTnQMUkPXhz6Khk6FSS7/1sWqdai80WjJ9KgM38My1c2ePDelzttQ/O79jH
+         JWgEDcbwr6wYakQuprTVMjr2vrmixKGQPwwdyjrIbPUcB+blybfKzzjs9bYXRKLmwwCQ
+         Qw6g==
+X-Forwarded-Encrypted: i=1; AJvYcCX7w2AGNRLw2D9J2soCntMKCR0Etx4urb0Wm2+JblGtPAkewpazTtyHVW6WqLxIEC36uvwzXyWfwV6w@vger.kernel.org
+X-Gm-Message-State: AOJu0YximyWnQ6DJwFc4pF98n+EOIuirE8hRU3zCVDitIQqzJNff98HZ
+	j8iPAjAqfW0MMDxNqzWk+Gi7FBNNZu+hL+bCqeQjtWEN2U8nk7YwM2mqf55BNM4=
+X-Gm-Gg: ASbGncvUc7gDzha898F/bReam3v7LV+rjojrsX065rWPHt4KtxU1rZQlyrLlWTjchUG
+	PS+ZyBtQmFJVJvSCC17FUNKHdCzd8Wj+xLJsOV9MiDvX2mA1CRPPYzQm1i12PbETKL8qlcoZ6rz
+	M4Y+Wv+887lr57qj/UYZpWdwgGRrYK0KVcpB776XX3riFOC7IirUDZPknkTGsEd1U2B4nMDqNjZ
+	1u9lwakjo3/hXgzPD2ytFxtw0grAf1W+IEbxHSmVBEzVhUwDuv7wLL2kWtfLaHgwVKW3e+8zC4+
+	XB9QwxEq2yWDcsTZE1SXkBIhMOrNMGWH6dMZ8JITXdi826O/aUOdyQlhZ7r84XpGmICohzNfsdW
+	VIVJC2nQ=
+X-Google-Smtp-Source: AGHT+IE8jp0ZjUVoh7f9msS1Shj+zFFjpix/VROzqHbjQs2YUPeE4capqjHRAxR03y+nyYOapSyDRw==
+X-Received: by 2002:a05:600c:500a:b0:43b:d0fe:b8ac with SMTP id 5b1f17b1804b1-441b2695e64mr12959955e9.30.1745998788203;
+        Wed, 30 Apr 2025 00:39:48 -0700 (PDT)
+Received: from ?IPV6:2001:a61:13c6:eb01:e359:8d71:4b9a:921f? ([2001:a61:13c6:eb01:e359:8d71:4b9a:921f])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-441b2ba4b10sm14125645e9.16.2025.04.30.00.39.47
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 30 Apr 2025 00:39:47 -0700 (PDT)
+Message-ID: <41bc286e-6e6b-4ae8-ad6a-3bdf56cd172b@suse.com>
+Date: Wed, 30 Apr 2025 09:39:47 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: dc395x: Remove leftover if statement in reselect()
+To: Finn Thain <fthain@linux-m68k.org>, Nathan Chancellor <nathan@kernel.org>
+Cc: Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org,
+ llvm@lists.linux.dev, patches@lists.linux.dev
+References: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org>
+ <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
 
-On Tue, 29 Apr 2025, Nathan Chancellor wrote:
 
-> This if statement only existed for a debugging print but it was not 
-> removed with the debugging print in a recent cleanup
+On 30.04.25 03:36, Finn Thain wrote:
+> 
+> On Tue, 29 Apr 2025, Nathan Chancellor wrote:
+> 
+>> This if statement only existed for a debugging print but it was not
+>> removed with the debugging print in a recent cleanup
+> 
+> The patch you called "cleanup" has a "fixes" tag. Strange.
+> 
+> I think it's unreasonable to refer to a patch which alters object code as
+> "cleanup".
 
-The patch you called "cleanup" has a "fixes" tag. Strange.
+Hi,
 
-I think it's unreasonable to refer to a patch which alters object code as 
-"cleanup".
+yes, I was unsure about terminology used for code that is by default not
+compiled, but would not compile if the attempt is made to compile it.
 
-I also think it's unreasonable to put a "fixes" tag on a patch that 
-doesn't alter object code (for any shipping config, for any supported 
-toolchain).
+	Regards
+		Oliver
 
-Those assertions could be tested automatically by CI. And maybe that could 
-prevent this kind of regression.
