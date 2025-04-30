@@ -1,104 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fhigh-b1-smtp.messagingengine.com (fhigh-b1-smtp.messagingengine.com [202.12.124.152])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA1202DC768;
-	Wed, 30 Apr 2025 00:47:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B64B411187
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 01:36:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.152
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1745974030; cv=none; b=FdIJ0/zw5YxgOHHmX3E+ifynXwPeBKNk+6d3QMA6qi1pj2oRMXegGs8wIsmzs24Gcs5emldQzggVxAZHsFXXXMHxfsmh2ZLDbrSvkrfnlwGOzBOfh+f7+D4jNTmicVI+WaXcTgwmAn/DlMBQ5WtJULCFFigmWFLa7l/14apvFfI=
+	t=1745977012; cv=none; b=rd1jhl9+CjkbzwUFx9z8NIfgjwafh5lEdA8zRKzby0h4vKgtomn1KSlXvBRpf7QilkgzSddvgV8Iu2m+4M3Znyrk+LtyKjgfrAU8Uq1bjgxeFDb/3cthyoLgIsEeTT8k7WnqawJE/vUuVlB6CPMuPGRuMNFTP8P+Jebflq1Yyi4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1745974030; c=relaxed/simple;
-	bh=0y9B9wg71iPcc94hYHsLcd4ggl+XIo8SKgRXNkzmgnQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=BLBkS7F/d05XT3mAIyigOawe2eAU0Omuv29ASTLzflM+//bUq38HcT9bMWdw+9HR+Iy2/fdEXs4tmMEF+PRFTrgXCafS44mDtdl5IlQf1AZ/hbcqPh46h3ryNnXFg2BhCZRtRV9YUYweZHM3rYgYq1Eg4k81XcEX9mbCCx0tBmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sdy2T0GX; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1745977012; c=relaxed/simple;
+	bh=8hIrgiEsPsWuoBwRtZoK8cMgMpFtEq4I5UiSjoqyvgU=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=WFac1aoymZoXAuMdTLl0/DssJZI3W7VivKfTv9Z23T6+T0eshp/dSnRn0HwHX+0MjQIloXRUndlNJVHemJZ5Fwxf4EZ1PTQjOA+KQi875K8U+8MgMUZtImDUT/shBNtJbuwncafl9iaQdmWljT5632J3giWeXHdx09pfuzJnTic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=nNNn21xL; arc=none smtp.client-ip=202.12.124.152
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sdy2T0GX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 859E7C4CEE3;
-	Wed, 30 Apr 2025 00:47:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1745974030;
-	bh=0y9B9wg71iPcc94hYHsLcd4ggl+XIo8SKgRXNkzmgnQ=;
-	h=From:Date:Subject:To:Cc:From;
-	b=sdy2T0GXO8CQlUN6voiRN1QFUXKDE5Aoouowjk4T3KqnfwqXPFd7eqJtTdIgVLcHk
-	 lA10dVUhAHGMVG4+hLd1ENGrYkZfVSg1LSuiP1dipodi3K8c8HhK/uH4MyGkTrzXyl
-	 9E+CG4mF7DePlUX6YBNqUzRiSs+X3ZMy1FFCNKphVe28Vs8qm4IBu9YQgcbP6giBNr
-	 kPNKOj7AebpQEVe+cYXtnNdkrY5zhmyiPiID8/OgnXrtp1UEMXGltFkm5sU0YHib3l
-	 /jwG+cUXFMAb2VasHwHokXZSApuPhVy6KxhQeaGiq8h1BvoyoNazF2b4a55xoyymQo
-	 7f/oa0t0iAisg==
-From: Nathan Chancellor <nathan@kernel.org>
-Date: Tue, 29 Apr 2025 17:46:49 -0700
-Subject: [PATCH] scsi: dc395x: Remove leftover if statement in reselect()
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="nNNn21xL"
+Received: from phl-compute-12.internal (phl-compute-12.phl.internal [10.202.2.52])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 8B9852540219;
+	Tue, 29 Apr 2025 21:36:49 -0400 (EDT)
+Received: from phl-mailfrontend-02 ([10.202.2.163])
+  by phl-compute-12.internal (MEProxy); Tue, 29 Apr 2025 21:36:49 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
+	1745977009; x=1746063409; bh=lXtmYKmM+kLolKVr6MLT45PItAjhInNaFFT
+	UQ66S0vY=; b=nNNn21xLHwds027493PbUXZFdwb7RM6yKPq7+j9yt2nc1GICHci
+	sfCWY4me2ALWZHf3ASZpXsbr/t1btceANo02pEnyA0AKehCH+Cl9WOSOvV3yxMiG
+	ha7MI+Y7QpJ+jD4RjSqE5popyrN+wSGeZqTx/BegEUeTItG29PlU7QvugoxYpL3k
+	euIHh0Bk/mL1ZJlqqpVLghxrWFsVu46Jl+2ZQ2EXa8nEJ2klpmeL/SZ+Dr46R5rc
+	fFhI8fsSS9BGMRyAbPODsWLt16CtQ6T2Bx5ijm4ct/qwOspUY+CjLpPhbWxEnt4P
+	OXTQYyuVXDivZ0fufK4iwUlCbVXM68TI+ww==
+X-ME-Sender: <xms:sH4RaPYSD_Il7S0M2mID4NsGO9mL3qgqwizUVYdAmVDGvdpWOhUVow>
+    <xme:sH4RaOYyMrLopypTHH84rdBJVUttHWx8vp9nvjEsz3kPV91R-lqJQBa416gjxlagz
+    fnTaXmUJ7JbOukhJIo>
+X-ME-Received: <xmr:sH4RaB-oglDBVItNy6ZX37oIp-EcnybmsTkW0EOF4cc72jwnUEntV6_r0soyhQoohiZiMY3aOGUxdOupnGZsW0U7_3VBGY_Ag4M>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddvieehfeelucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
+    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpih
+    gvnhhtshculddquddttddmnecujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddv
+    necuhfhrohhmpefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheike
+    hkrdhorhhgqeenucggtffrrghtthgvrhhnpeelueehleehkefgueevtdevteejkefhffek
+    feffffdtgfejveekgeefvdeuheeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrh
+    grmhepmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgpdhn
+    sggprhgtphhtthhopeelpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehnrghthh
+    grnheskhgvrhhnvghlrdhorhhgpdhrtghpthhtohepohhnvghukhhumhesshhushgvrdgt
+    ohhmpdhrtghpthhtoheprghlihgrkhgtseifvggsrdguvgdprhgtphhtthhopehlvghnvg
+    hhrghnsehtfihisggslhgvrdhorhhgpdhrtghpthhtohepmhgrrhhtihhnrdhpvghtvghr
+    shgvnhesohhrrggtlhgvrdgtohhmpdhrtghpthhtoheptgholhhinhdrihdrkhhinhhgse
+    hgmhgrihhlrdgtohhmpdhrtghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgv
+    rhhnvghlrdhorhhgpdhrtghpthhtoheplhhlvhhmsehlihhsthhsrdhlihhnuhigrdguvg
+    hvpdhrtghpthhtohepphgrthgthhgvsheslhhishhtshdrlhhinhhugidruggvvh
+X-ME-Proxy: <xmx:sH4RaFrbJM5lV8M-uzGSDXczNSRgvq8nG6xeCoGQy58JuqJSu66sWA>
+    <xmx:sH4RaKoFAGK-hVmcVkDZ6SG7cGE86ZEn1VSjDCzts4bBgpV4AgGNBQ>
+    <xmx:sH4RaLTBt-QfFvpxmM8N8ELdlERkiWQIfK9Lr9_AS6vsfSC3GV5bcA>
+    <xmx:sH4RaCrD0pYPJCa1Kb6pk_WIoHM8j4kVS3ysEFBxbX9cWVVE5t-Zaw>
+    <xmx:sX4RaOzBUmJuu7VnfZCKdCdlSHfwxicqfMAmiHo7SoiXYBeHM08ctsiK>
+Feedback-ID: i58a146ae:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Tue,
+ 29 Apr 2025 21:36:46 -0400 (EDT)
+Date: Wed, 30 Apr 2025 11:36:55 +1000 (AEST)
+From: Finn Thain <fthain@linux-m68k.org>
+To: Nathan Chancellor <nathan@kernel.org>
+cc: Oliver Neukum <oneukum@suse.com>, Ali Akcaagac <aliakc@web.de>, 
+    Jamie Lenehan <lenehan@twibble.org>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org, 
+    llvm@lists.linux.dev, patches@lists.linux.dev
+Subject: Re: [PATCH] scsi: dc395x: Remove leftover if statement in
+ reselect()
+In-Reply-To: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org>
+Message-ID: <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org>
+References: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org>
-X-B4-Tracking: v=1; b=H4sIAPhyEWgC/x3MMQqAMAxA0atIZgPaqlivIg4ljZqlSqMiiHe3O
- D74/AeUk7DCUDyQ+BKVLWbUZQG0+rgwSsgGU5m2aoxDJRUMZF174yw3nlGiHHj5hFTTHPre+c4
- GyIM9cS7++Ti97wcvjvGybAAAAA==
-X-Change-ID: 20250429-scsi-dc395x-fix-uninit-var-c1cfd889a63d
-To: Oliver Neukum <oneukum@suse.com>, Ali Akcaagac <aliakc@web.de>, 
- Jamie Lenehan <lenehan@twibble.org>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org, 
- llvm@lists.linux.dev, patches@lists.linux.dev, 
- Nathan Chancellor <nathan@kernel.org>
-X-Mailer: b4 0.15-dev
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1855; i=nathan@kernel.org;
- h=from:subject:message-id; bh=0y9B9wg71iPcc94hYHsLcd4ggl+XIo8SKgRXNkzmgnQ=;
- b=owGbwMvMwCUmm602sfCA1DTG02pJDBmCxTxr1x745q7GrN2nevQjX6vWN0al5y/f3JvsWHg4Y
- u3r5HfGHaUsDGJcDLJiiizVj1WPGxrOOct449QkmDmsTCBDGLg4BWAiv3gZ/lmJf69excOhbcHE
- fPHMXoH7qw+FKcnEXDAWvbfou3p7yFxGhpZuidc5kh9/H/r2wPyF/b6o5TKp2zOFPM7Nnf8myp/
- tBDMA
-X-Developer-Key: i=nathan@kernel.org; a=openpgp;
- fpr=2437CB76E544CB6AB3D9DFD399739260CB6CB716
+Content-Type: text/plain; charset=us-ascii
 
-Clang warns (or errors with CONFIG_WERROR=y):
 
-  drivers/scsi/dc395x.c:2553:6: error: variable 'id' is used uninitialized whenever 'if' condition is false [-Werror,-Wsometimes-uninitialized]
-   2553 |         if (!(rsel_tar_lun_id & (IDENTIFY_BASE << 8)))
-        |             ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  drivers/scsi/dc395x.c:2556:22: note: uninitialized use occurs here
-   2556 |         dcb = find_dcb(acb, id, lun);
-        |                             ^~
-  drivers/scsi/dc395x.c:2553:2: note: remove the 'if' if its condition is always true
-   2553 |         if (!(rsel_tar_lun_id & (IDENTIFY_BASE << 8)))
-        |         ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   2554 |         id = rsel_tar_lun_id & 0xff;
+On Tue, 29 Apr 2025, Nathan Chancellor wrote:
 
-This if statement only existed for a debugging print but it was not
-removed with the debugging print in a recent cleanup, leading to id only
-being initialized when the if condition is true. Remove the if
-statement to ensure id is always initialized, clearing up the warning.
+> This if statement only existed for a debugging print but it was not 
+> removed with the debugging print in a recent cleanup
 
-Fixes: 62b434b0db2c ("scsi: dc395x: Remove DEBUG conditional compilation")
-Signed-off-by: Nathan Chancellor <nathan@kernel.org>
----
- drivers/scsi/dc395x.c | 1 -
- 1 file changed, 1 deletion(-)
+The patch you called "cleanup" has a "fixes" tag. Strange.
 
-diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
-index 95145b9d9ce3..96b335c92603 100644
---- a/drivers/scsi/dc395x.c
-+++ b/drivers/scsi/dc395x.c
-@@ -2550,7 +2550,6 @@ static void reselect(struct AdapterCtlBlk *acb)
- 		}
- 	}
- 	/* Read Reselected Target Id and LUN */
--	if (!(rsel_tar_lun_id & (IDENTIFY_BASE << 8)))
- 	id = rsel_tar_lun_id & 0xff;
- 	lun = (rsel_tar_lun_id >> 8) & 7;
- 	dcb = find_dcb(acb, id, lun);
+I think it's unreasonable to refer to a patch which alters object code as 
+"cleanup".
 
----
-base-commit: e142de4aac2aae697d7e977b01e7a889e9f454df
-change-id: 20250429-scsi-dc395x-fix-uninit-var-c1cfd889a63d
+I also think it's unreasonable to put a "fixes" tag on a patch that 
+doesn't alter object code (for any shipping config, for any supported 
+toolchain).
 
-Best regards,
--- 
-Nathan Chancellor <nathan@kernel.org>
-
+Those assertions could be tested automatically by CI. And maybe that could 
+prevent this kind of regression.
