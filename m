@@ -1,71 +1,79 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fhigh-b6-smtp.messagingengine.com (fhigh-b6-smtp.messagingengine.com [202.12.124.157])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7CBB2DC771
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 08:09:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7428235049
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 09:43:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.157
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746000563; cv=none; b=BHFouv1La719cg7tueb9TpQaeLydBJTfcksEW/F0qXkqklOZaxToHFu0OUZSKcYuqS/5GztWMMPQ2RTPvw2g6UkzKuOmMDTvXKAdH4g/Y+el++QXriJcPlNsS/RrzdWldyiARvd+EidxM8QUMEcrSy7iLjNhqrDsfOuvj8UJiKI=
+	t=1746006231; cv=none; b=fRbzYIkkay2nbYGiBfbb4DYUnDlKIuQ81rkqqYVFlZ6kWKEcuC+5qR5umqf6pDrxW+deF6wwhbkYTRXe8sUv+8oTGt0YqlFfjYhws1VfXdOYJIx3+w7gsMXn+c8sp1PfmdHvn3CHKRB8x2fhmTy0TJYBKcNxp0DvrgGyRuid8Zs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746000563; c=relaxed/simple;
-	bh=6UtymQyXrF4a+LYasF9PbN/zB10qj6RgpAwI21LybYo=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=LZQ8ViFVxV3LQ9RSLEL73ZWaoUSw9cPrEe2jw9ch5VtJid0BhN/B4lUw4BM5UrZzDx2jsReLxMAYN8NENCXAxBjpX0MmJ728WDFbh8UzDwexnffNIdKsgGWK4/NMn+gcWa+b2UQ/d6SvjmMiAuwEEWYpbnOqfA9A+nIHONpZzUY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=vOZeOOz5; arc=none smtp.client-ip=209.85.128.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1746006231; c=relaxed/simple;
+	bh=XtgqRvORrPWozkHd3wu+8pxwh28bhcQUDC7Hvz9WiSQ=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=o2MxDpjzaMGZsfNlpMSm7TFJM85c6BMWNXLYMDr3i+d1C+O98hLfOHvXnRfh1CXJLzuczCcZ2DOg5LcebeML38ndkRsgWL0K3yEpbl9qw5qM1uABX9jk34wkx6gOedczBqq4WLJeAwYtuP0qqzQNqC7F8oi2P1wuqCs5UbSM5sA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=DVoZmBqT; arc=none smtp.client-ip=202.12.124.157
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vOZeOOz5"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-43cfba466b2so64873615e9.3
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 01:09:21 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1746000560; x=1746605360; darn=vger.kernel.org;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=DpACOCF1MHWzD96uBtOOM0CMYYdJxW2a4szy+v5N/qQ=;
-        b=vOZeOOz5yTZMNSVQis6JmcE17LzgrtvDzL95xWFk1ZCNbZG+Jy+cOi09QNxxqodROj
-         SMLVCvpuW+l9ZJigj0Ukr4Mv1MyUiPFyHqXEL7rf9dDlpgq0ueNUqevy+/MfpL+3F1gz
-         xqt9YI6+znI2EOi2xKnKZ4u5ril5Q/W84b1yHd9mD+AaLhxV9m1bljCz6ftEgnQ0RHiA
-         aJthFxsym3cy0Y/65D8Z7n3t1RxVh+5CbmVD4QoCqq+TpFxFv7CxV2Pp54r7+pJuNXpI
-         8VpPam1yPFzOwZmXtUaY1OmcE+srUiU+0VA5ewfk1+uDVKiIBQZeeopAmec53mWl9eYo
-         b0CQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746000560; x=1746605360;
-        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=DpACOCF1MHWzD96uBtOOM0CMYYdJxW2a4szy+v5N/qQ=;
-        b=hIVfQ1aS9oJc/ohnO/QBeWQ1ejsWF8+bPJ9le7PYHZgqt1nPpLZA+lhyQEcC/bFQh3
-         ITFXTH4XvyiWFHFQN+2c9M9B4z4JdCAasUMZVyy7EvUWo/RkSnZBFFGz/dk40boVGm3j
-         K8u9JraJnj6tFQ4UmcKFiVRb1U76tUzPlnqAQQ1L/S72Lt6GH9Bovy8KGQ/WWTFPC5E6
-         y1uWFK2+XcpNtNI4TTOXoag3ZPDFpk8Yv3KVLUHYDvoE5AJhxsq+6zIJ38WKvNOR3amC
-         zskTHR+Fh3zBY/uCoZW2ZSyFGBrlk+1iUeAmGPnMlT1gH0zEn9KiDS3xsYl2BGuyX5XP
-         PXzw==
-X-Forwarded-Encrypted: i=1; AJvYcCXhwWuxdB6lh4wU/druUZPwFS9zp9r8oIvtcaKWV8GY8MJHioUhC6ebUvY4IpOG8AdXoEZJDnQvHD65@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw9fMt8H4eN07mNEETJ6/eKcBmNBB0kfoIwkLh1eyU1lk2gLbXg
-	sZYuVMSdO6yqtzwYsAaNQG2SNJHKXKVjuQTbQdD30XkKnwjbyfblZ87uBR+yFhY=
-X-Gm-Gg: ASbGnctd4TyYytK9Z1GOWAiC7cybVLbMOcGCpWrNsnBXqSm5imBuXVkomAtUKsuKTOr
-	stGIlJRTsTu4xltz5vu2Ed5IHiWIG9pKw7SX3r+3D7N9kXaw7m/DPj0e7WXqk+9oTHqVh7Apkxj
-	YwOomJ2ni9n24rgKL3j5fwyA4598ofel6JUK9o/jsQxsjAmFX1BvJYWsurBYyf/SYbeNsQAGGvU
-	ndg/mbVTyVQMGsggBirffjMQb7V9PfBe2h0E2nSLluHhIxhpXmVipHH6lawZu7/ivgcTdgpg6He
-	c3WZXSbKlOxNj6mHp8weX1DuR03RLkurpJ5jRWGBGIBOGw==
-X-Google-Smtp-Source: AGHT+IGBq83nOcN4b+oPM0CzEXiI7VyG2IzTaGKGL8JICGk+35Wr6Tatqo6c5pr6+l1Y/IIGhYQN/A==
-X-Received: by 2002:a05:600c:35d4:b0:43d:3df:42d8 with SMTP id 5b1f17b1804b1-441b2635580mr12479415e9.6.1746000560243;
-        Wed, 30 Apr 2025 01:09:20 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-441b2bbbe88sm14908225e9.25.2025.04.30.01.09.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Apr 2025 01:09:19 -0700 (PDT)
-Date: Wed, 30 Apr 2025 11:09:16 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Yi Zhang <yi.zhang@redhat.com>
-Cc: Don Brace <don.brace@microchip.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	storagedev@microchip.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
-Subject: [PATCH] scsi: smartpqi: Delete a stray tab in
- pqi_is_parity_write_stream()
-Message-ID: <aBHarJ601XTGsyOX@stanley.mountain>
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="DVoZmBqT"
+Received: from phl-compute-05.internal (phl-compute-05.phl.internal [10.202.2.45])
+	by mailfhigh.stl.internal (Postfix) with ESMTP id 61D3325401FD;
+	Wed, 30 Apr 2025 05:43:48 -0400 (EDT)
+Received: from phl-mailfrontend-02 ([10.202.2.163])
+  by phl-compute-05.internal (MEProxy); Wed, 30 Apr 2025 05:43:48 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
+	1746006228; x=1746092628; bh=e6+T/yiIRZeSdwbVaMs14nVoOrBRt6wVS86
+	ZtjyG5lE=; b=DVoZmBqTv2uEiNgbfT3LBKRTY/n0uKym4SuVZsiVro+G0VXBiqe
+	x0C3v7c8VJM9l1dTsPvac69Y6w4BM0gOJDz27wRYOAu6At9Vp6BvPr/5t4ZTPpM1
+	GrrMnZlEec7+cBNM7KlD63lCfBsYgTQ4rqWJEPetDuHxXxR72ex1BAtT6Afx5q6x
+	Ns0J76uJdodduXfpRF/9J26TQoUO6OTgkz3vS+AxzG3dypAG5DW5p8a6+vko5Y5V
+	3p41Ke3V3oqfGC3OHNTZnfkxsd06QkHagjU0L9fDcSFvG52Q1N6CwWy3jtHVwBNw
+	aIDooiZJWl+kyKYT+NrZaPUz44UaFtnuDPw==
+X-ME-Sender: <xms:0_ARaKVsuPOovVCIwa-6VEQZKtEilyFKkoS0GqZJgPxscnz5APjNqg>
+    <xme:0_ARaGmcNP2-4vF_Ff8AA4mLTd55ZqL0OJwpgZ_0bGNVUIOTad8JxgjrXcFmXv-Xo
+    oLD98pSWbogHZ7N7m0>
+X-ME-Received: <xmr:0_ARaOZGGUq6b5pTYafrlPmoOJQvdOcspkwhAFVrNPgXtc-1ru4z6P73paBYg5lMeSMrebrazDy7ZS0N4-fgW8rJmte3BusI-rA>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddvieeifeejucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
+    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpih
+    gvnhhtshculddquddttddmnecujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddv
+    necuhfhrohhmpefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheike
+    hkrdhorhhgqeenucggtffrrghtthgvrhhnpeelueehleehkefgueevtdevteejkefhffek
+    feffffdtgfejveekgeefvdeuheeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrh
+    grmhepmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgpdhn
+    sggprhgtphhtthhopeelpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehonhgvuh
+    hkuhhmsehsuhhsvgdrtghomhdprhgtphhtthhopehnrghthhgrnheskhgvrhhnvghlrdho
+    rhhgpdhrtghpthhtoheprghlihgrkhgtseifvggsrdguvgdprhgtphhtthhopehlvghnvg
+    hhrghnsehtfihisggslhgvrdhorhhgpdhrtghpthhtohepmhgrrhhtihhnrdhpvghtvghr
+    shgvnhesohhrrggtlhgvrdgtohhmpdhrtghpthhtoheptgholhhinhdrihdrkhhinhhgse
+    hgmhgrihhlrdgtohhmpdhrtghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgv
+    rhhnvghlrdhorhhgpdhrtghpthhtoheplhhlvhhmsehlihhsthhsrdhlihhnuhigrdguvg
+    hvpdhrtghpthhtohepphgrthgthhgvsheslhhishhtshdrlhhinhhugidruggvvh
+X-ME-Proxy: <xmx:0_ARaBVAYVf6a0ChJENHbm0CxbZGjiYnP7lokulSYH9eoIw-2use6w>
+    <xmx:0_ARaEnrmhkUkAa3Gqv5pULs2d-9r01OAA5W6mO5im6eNNfSn0ijRg>
+    <xmx:0_ARaGdgjMw-mL_Gm3eU_rqmyUKVAdImsNJ8kotksOkk622L2jD2CQ>
+    <xmx:0_ARaGEn89mprNRBVWSG-XQPuaxH2VPGlSQ460VyQHy2P0YDMbTgTQ>
+    <xmx:1PARaIsVXTMXwCutb80s8s4v6dyrhiiffPcMvZsdmcI7h_gYSQ9P_o94>
+Feedback-ID: i58a146ae:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 30 Apr 2025 05:43:45 -0400 (EDT)
+Date: Wed, 30 Apr 2025 19:43:54 +1000 (AEST)
+From: Finn Thain <fthain@linux-m68k.org>
+To: Oliver Neukum <oneukum@suse.com>
+cc: Nathan Chancellor <nathan@kernel.org>, Ali Akcaagac <aliakc@web.de>, 
+    Jamie Lenehan <lenehan@twibble.org>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org, 
+    llvm@lists.linux.dev, patches@lists.linux.dev
+Subject: Re: [PATCH] scsi: dc395x: Remove leftover if statement in
+ reselect()
+In-Reply-To: <41bc286e-6e6b-4ae8-ad6a-3bdf56cd172b@suse.com>
+Message-ID: <bd660f83-434a-85dc-0037-7830f58acd6f@linux-m68k.org>
+References: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org> <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org> <41bc286e-6e6b-4ae8-ad6a-3bdf56cd172b@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,29 +81,30 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-X-Mailer: git-send-email haha only kidding
 
-We accidentally intended this line an extra tab.  Delete the tab.
 
-Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
----
- drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On Wed, 30 Apr 2025, Oliver Neukum wrote:
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index 93e6c777a01e..1d784ee7671c 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -6004,7 +6004,7 @@ static bool pqi_is_parity_write_stream(struct pqi_ctrl_info *ctrl_info,
- 			pqi_stream_data->next_lba = rmd.first_block +
- 				rmd.block_cnt;
- 			pqi_stream_data->last_accessed = jiffies;
--				per_cpu_ptr(device->raid_io_stats, raw_smp_processor_id())->write_stream_cnt++;
-+			per_cpu_ptr(device->raid_io_stats, raw_smp_processor_id())->write_stream_cnt++;
- 			return true;
- 		}
- 
--- 
-2.47.2
+> On 30.04.25 03:36, Finn Thain wrote:
+> > 
+> > On Tue, 29 Apr 2025, Nathan Chancellor wrote:
+> > 
+> >> This if statement only existed for a debugging print but it was not
+> >> removed with the debugging print in a recent cleanup
+> > 
+> > The patch you called "cleanup" has a "fixes" tag. Strange.
+> > 
+> > I think it's unreasonable to refer to a patch which alters object code as
+> > "cleanup".
+> 
+> Hi,
+> 
+> yes, I was unsure about terminology used for code that is by default not
+> compiled, but would not compile if the attempt is made to compile it.
+> 
 
+Yes, I realize that you were referring to the intention as "cleanup" and 
+not the actual patch that got merged.
+
+I'm afraid my message was poorly expressed. I don't have a problem with 
+your fix. I was only interested in the general case.
