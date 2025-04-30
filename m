@@ -1,65 +1,24 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD56425A33C
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 12:11:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 039D624728A;
+	Wed, 30 Apr 2025 12:13:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746015114; cv=none; b=gC6w6EhCmQTsIzcbE8TkeKWyFFOZaEAY8SdH82aO9yNel/hph5dS4wAzfVMq7pwHYrZSD+EQDsaJZKK09r9VfDuYOjwMSz+mUkXrcLEEhmVtAfLqCuA/KKMQNByjrTl5BK/bt/rQx5q29RMdPBHhdzQFc37FLZhMOhGWDdcQ3Iw=
+	t=1746015240; cv=none; b=tYfSTqEQgfv0x4s17Db4EA2OGANnMpKRHC8KGPx7WAh85nTukPw+52RyJ8uAmIESUi+WbK0wkOTJjsAI8KHq8CbiCGHTvMhAdsLmUlMAr5ekNNzt0XxptSqmF6jwCYr16YO/OpHAHWH2S/nh3hX5t/LBjL6KRo8PhrQkD1qm+nM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746015114; c=relaxed/simple;
-	bh=9V8hG0kuB8a9dfhOvU2/xeY8oePk9/AvAiE5vkZROHY=;
+	s=arc-20240116; t=1746015240; c=relaxed/simple;
+	bh=fqwzzezm3ldL5MIdfh+XeitEWc4pBnImFbeoykoqmVo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VB8+j01jEI9e9XHIw2LHswFrHEBAcn+X32gtNsifLUWTRzINscsI06LWIWOfIGvpEfD7SpGavsWL6SCZqsNuUXaQ2ZfrKNiFWBKcUogkuH6UiG4CQgjjB499C49fxJYi6feH6qo28g7NFIeO4LZyc2+E7lLBw8hmxEKcAOyhU34=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=U8RVpBHI; arc=none smtp.client-ip=209.85.218.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="U8RVpBHI"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-ac6e8cf9132so1423778366b.2
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 05:11:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1746015111; x=1746619911; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=B95QSXbaRKrQee1y60Xx4b/cA/KifuO/m3Um/1ZsFQ8=;
-        b=U8RVpBHI9ee3qK4g5Ugqj5uHTpGyaOR8kAahmhHJ3zWag9c8c9XghJUa2ENiPZ3FjT
-         hwHwzpazI7FVSmz9zVqqRaeGNGmUAr0MqJx4tVKOGM16j2XS/I6eSu7ukY4hGMis5BzD
-         x+UgOZ3U/tSKTt/acvix3KpbSsdvAtf2NJ9O6CBbCyxN2fzrIboi0vLCsc5iAXZ4FjhQ
-         KHQ4DPc35U4hPIliQo8BTWwqgtvUOpLcHechQBeI4wfYq44sNwjIA0tb5H7X5SXswERY
-         JgoTMu5e3D5L8J2A6DNLR8RriPMXYXlrCEYmkmvmW1VNwHRbM+4D+53Ij9o8sJTz6pU4
-         qsKg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746015111; x=1746619911;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=B95QSXbaRKrQee1y60Xx4b/cA/KifuO/m3Um/1ZsFQ8=;
-        b=i7EKnEsd5RWUG+sZnZ+j8TlCq2dYe7qq/l5TXH9RA5yEW3R6NXO1MMnHSRPsujgPwv
-         Rsjr2FQGG+upYRAXKnXIcV9ASGfuCjWh+PrKAB88v3fAqySi+wvQIYFyakG6FCTr7bDK
-         YvFI8DA4Q8YUuXLieGL4myJZlKMNS2ya4UyfEymYdEJ4NEnxsxA7pU/mtJzv5hC0elAc
-         7OkjOfIE0izvc5Wn/OJYQJdjEDeTqY01epzl1aFkwMm5Xnsvh1ABanlbWZnmehcT38KB
-         T19YgRTFuI9Ie2gBSWQf4Axkye53zcdLh/+lqJxSowTeFzmWLvDCloVREtaDkqC5BtbS
-         PwSg==
-X-Forwarded-Encrypted: i=1; AJvYcCVQ+pWRm9kFqEe16aPpr3wCK3+P9EkBTjLHtqlwp3jLQLs6h9KcFMNWlz2tFTkY7p1W8qXFKAf4nw64@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx1f0uhoiKDYqeoVZkyisVxhj1NZpK2x9Xx+V2Dd51LYakcipOA
-	S7ckEGHHx945qKX6cZiPpLtSNqrzGR+a5JcQKX1DUKXvWtnk4xSQ4w+XqzWvg5I=
-X-Gm-Gg: ASbGncto+RMKAV3acDCI2ZUbPkoKSpdOrRdNLbk42qw/uwmFu1Z8iWBOK2RKCAUMNjK
-	YKSaUFPL5ZW6tiXFa5T5XrbyEtlsx1lsX8IG4KCVuM/937j5d2b45W+HKmhx+kDj5kW9EdZTT6/
-	4im3q9B8BWN+PorgSz0VaSPNuoIgeeT9/XUCA3/oSyAFpewauE4f5IatD9bFGiw5avCKhwi4eC4
-	MBKVSWVTO2PhPZzAnXA8P7yzDjCv/ZijOwF5wKcHAKtghevNvTZX80A1rdQjh76YmPFaKX9Ov4B
-	c6FNkJWQBTvuA7OjS1iUSGJcbRR8SgoeNSkP6TyBdQ4Wo5efVXs+g5F55bnYZmEnf04hgXHvqHM
-	q41+YkVtpEPHXeC7P
-X-Google-Smtp-Source: AGHT+IFr6SQQ+d2QrrxDwLOsR+z8bVyCtqJ1ToE4PnHRFIcIMnjdCwxrzr0yGNH9fg/1HzSz+gHXaQ==
-X-Received: by 2002:a17:907:3e8c:b0:ac7:f348:b8bc with SMTP id a640c23a62f3a-acedc7be3f8mr277378366b.61.1746015110909;
-        Wed, 30 Apr 2025 05:11:50 -0700 (PDT)
-Received: from ?IPV6:2a02:3033:263:b03d:abf1:3c8d:23a2:52d? ([2a02:3033:263:b03d:abf1:3c8d:23a2:52d])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ace6ed702ecsm922371266b.137.2025.04.30.05.11.50
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 30 Apr 2025 05:11:50 -0700 (PDT)
-Message-ID: <06495223-342d-4759-995f-f62234fb1020@suse.com>
-Date: Wed, 30 Apr 2025 14:11:49 +0200
+	 In-Reply-To:Content-Type; b=UKE7LJWbYZowUiDIPF/xilOJdSJ0B6VL91vd43v0GEZv/0ksI+H28PEKttyZNBVi8sFPQUBrvvqKEIY4mct54AOuJz190h65Cv9qezffHKHewpQkDtBVlSKqa7Zp8UQrysW4NmWHUu8n8nG1cXQvC57P0Y2gxu4C1pX2cDBPGos=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
+Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
+	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id 652E847A72;
+	Wed, 30 Apr 2025 14:13:55 +0200 (CEST)
+Message-ID: <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
+Date: Wed, 30 Apr 2025 14:13:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -67,38 +26,193 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: dc395x: Remove leftover if statement in reselect()
-To: Finn Thain <fthain@linux-m68k.org>
-Cc: Nathan Chancellor <nathan@kernel.org>, Ali Akcaagac <aliakc@web.de>,
- Jamie Lenehan <lenehan@twibble.org>,
+Subject: Re: [PATCH v7 08/19] scsi: detect support for command duration limits
+To: Niklas Cassel <nks@flawful.org>, Jens Axboe <axboe@kernel.dk>,
  "Martin K. Petersen" <martin.petersen@oracle.com>,
- Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org,
- llvm@lists.linux.dev, patches@lists.linux.dev
-References: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org>
- <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org>
- <41bc286e-6e6b-4ae8-ad6a-3bdf56cd172b@suse.com>
- <bd660f83-434a-85dc-0037-7830f58acd6f@linux-m68k.org>
+ "James E.J. Bottomley" <jejb@linux.ibm.com>
+Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>,
+ Hannes Reinecke <hare@suse.de>, Damien Le Moal <dlemoal@kernel.org>,
+ linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
+ linux-block@vger.kernel.org, Niklas Cassel <niklas.cassel@wdc.com>,
+ Mira Limbeck <m.limbeck@proxmox.com>
+References: <20230511011356.227789-1-nks@flawful.org>
+ <20230511011356.227789-9-nks@flawful.org>
 Content-Language: en-US
-From: Oliver Neukum <oneukum@suse.com>
-In-Reply-To: <bd660f83-434a-85dc-0037-7830f58acd6f@linux-m68k.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Friedrich Weber <f.weber@proxmox.com>
+In-Reply-To: <20230511011356.227789-9-nks@flawful.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 30.04.25 11:43, Finn Thain wrote:
+Hi,
 
->> yes, I was unsure about terminology used for code that is by default not
->> compiled, but would not compile if the attempt is made to compile it.
->>
-> 
-> Yes, I realize that you were referring to the intention as "cleanup" and
-> not the actual patch that got merged.
-> 
-> I'm afraid my message was poorly expressed. I don't have a problem with
-> your fix. I was only interested in the general case.
+One of our users reports that, in their setup, hotplugging new disks doesn't
+work anymore with recent kernels (details below). The issue appeared somewhere
+between kernels 6.4 and 6.5, and they bisected the change to this patch:
 
-Well, in general I think such code is problematic. In general I think we should use dynamic debugging statements. The issue seems to be of terminology. However, we can hope that this will
-go away and become moot.
+  624885209f31 (scsi: core: Detect support for command duration limits)
 
-	Regards
-		Oliver
-  
+The issue is also reproducible on a mainline kernel 6.14.4 build from [1]. When
+hotplugging a disk under 6.14.4, the following is logged (I've redacted some
+identifiers, let me know in case I've been too overzealous with that):
+
+Apr 28 16:41:13 pbs-disklab kernel: mpt3sas_cm0: handle(0xa) sas_address(0xREDACTED_SAS_ADDR) port_type(0x1)
+Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: Direct-Access     WDC      REDACTED_SN  C5C0 PQ: 0 ANSI: 7
+Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: SSP: handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR), phy(2), device_name(REDACTED_DEVICE_NAME)
+Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: enclosure logical id (REDACTED_LOGICAL_ID), slot(0) 
+Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: enclosure level(0x0000), connector name(     )
+Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: qdepth(254), tagged(1), scsi_level(8), cmd_que(1)
+Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: Power-on or device reset occurred
+Apr 28 16:41:16 pbs-disklab kernel: mpt3sas_cm0: log_info(0x31110e05): originator(PL), code(0x11), sub_code(0x0e05)
+Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: log_info(0x31130000): originator(PL), code(0x13), sub_code(0x0000)
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: Attached scsi generic sg1 type 0
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Test Unit Ready failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Read Capacity(16) failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Sense not available.
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Sense not available.
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] 0 512-byte logical blocks: (0 B/0 B)
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] 0-byte physical blocks
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Test WP failed, assume Write Enabled
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Asking for cache data failed
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Assuming drive cache: write through
+Apr 28 16:41:18 pbs-disklab kernel:  end_device-5:1: add: handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR)
+Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: handle(0x000a), ioc_status(0x0022) failure at drivers/scsi/mpt3sas/mpt3sas_transport.c:225/_transport_set_identify()!
+Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Attached SCSI disk
+Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: mpt3sas_transport_port_remove: removed: sas_addr(0xREDACTED_SAS_ADDR)
+Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: removing handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR)
+Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: enclosure logical id(REDACTED_LOGICAL_ID), slot(0)
+Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: enclosure level(0x0000), connector name(     )
+
+and the block device isn't accessible afterwards. It does seem to be visible
+after a reboot.
+
+lspci on this host shows:
+
+02:00.0 Serial Attached SCSI controller [0107]: Broadcom / LSI SAS3008 PCI-Express Fusion-MPT SAS-3 [1000:0097] (rev 02)
+	Subsystem: Broadcom / LSI SAS9300-8i [1000:30e0]
+	Kernel driver in use: mpt3sas
+	Kernel modules: mpt3sas
+
+The HBA is placed on a PCIe 3.0 x8 slot (not bifurcated) and connected via
+SFF-8643 to a simple 2U 12xLFF SAS3 Supermicro box. The user can also reproduce
+the issue with other HBAs with e.g. the SAS3108 and SAS3816 chipsets.
+
+The device doesn't seem to support CDL. So if I see correctly, the only
+effective change introduced by the patch are the four scsi_cdl_check_cmd (and
+thus scsi_report_opcode) calls to check for CDL support. Hence we wondered
+whether may be the cause of the issue. We ran a few tests to verify:
+
+- disabling "REPORT SUPPORTED OPERATION CODES" by passing
+  `scsi_mod.dev_flags=WDC:REDACTED_SN:536870912` (the flag being
+  BLIST_NO_RSOC) resolves the issue (hotplug works again), but I imagine
+  disabling RSOC altogether isn't a good workaround. This test was not done
+  on a mainline kernel, but I don't think it would make a difference.
+
+- we patched out the four calls to scsi_cdl_check_cmd and unconditionally set
+  cdl_supported to 0, see [2] for the patch (on top of 6.14.4). This resolves
+  the issue.
+
+- I suspected that particularly the two latter scsi_cdl_check_cmd calls with a
+  nonzero service action might be problematic, so we patched them out
+  specifically but kept the other two calls without a service action, see [3]
+  for the patch (on top of 6.14.4). But with this patch, hotplug still does
+  not work.
+
+- the RSOC commands themselves don't seem to be problematic per se. We asked
+  the user to boot a (non-mainline) kernel with the `scsi_mod.dev_flags`
+  parameter to disable RSOC as above, hotplug the disk (this succeeds), and
+  then query the four opcodes/service actions using `sg_opcodes`, and this
+  looks okay [4] (reporting that CDL is not supported).
+
+I wonder whether these results might suggest the RSOC queries are problematic
+not in general, but at this particular point (during device initialization) in
+this particular hardware setup? If this turns out to be the case -- would it be
+feasible to suppress these RSOC queries if CDL is not enabled via sysfs?
+
+If you have any ideas for further troubleshooting, we're happy to gather more
+data. I'll be AFK for a few weeks, but Mira (in CC) will take over in the
+meantime.
+
+Thanks!
+
+Friedrich
+
+[1] https://kernel.ubuntu.com/mainline/v6.14.4/
+
+[2]
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index a77e0499b738..022b2f9706a4 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -658,11 +658,7 @@ void scsi_cdl_check(struct scsi_device *sdev)
+        }
+
+        /* Check support for READ_16, WRITE_16, READ_32 and WRITE_32 commands */
+-       cdl_supported =
+-               scsi_cdl_check_cmd(sdev, READ_16, 0, buf) ||
+-               scsi_cdl_check_cmd(sdev, WRITE_16, 0, buf) ||
+-               scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, READ_32, buf) ||
+-               scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, WRITE_32, buf);
++       cdl_supported = 0;
+        if (cdl_supported) {
+                /*
+                 * We have CDL support: force the use of READ16/WRITE16.
+
+[3]
+
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index a77e0499b738..6b0f36f5415e 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -660,9 +660,8 @@ void scsi_cdl_check(struct scsi_device *sdev)
+        /* Check support for READ_16, WRITE_16, READ_32 and WRITE_32 commands */
+        cdl_supported =
+                scsi_cdl_check_cmd(sdev, READ_16, 0, buf) ||
+-               scsi_cdl_check_cmd(sdev, WRITE_16, 0, buf) ||
+-               scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, READ_32, buf) ||
+-               scsi_cdl_check_cmd(sdev, VARIABLE_LENGTH_CMD, WRITE_32, buf);
++               scsi_cdl_check_cmd(sdev, WRITE_16, 0, buf);
++       cdl_supported = 0;
+        if (cdl_supported) {
+                /*
+                 * We have CDL support: force the use of READ16/WRITE16.
+
+[4]
+
+root@pbs-disklab:~# sg_opcodes -o 0x88 /dev/sdb
+
+Opcode=0x88
+Command_name: Read(16)
+Command is supported [conforming to SCSI standard]
+No command duration limit mode page
+Multiple Logical Units (MLU): not reported
+Usage data: 88 fe ff ff ff ff ff ff ff ff ff ff ff ff 00 00
+
+root@pbs-disklab:~# sg_opcodes -o 0x8a /dev/sdb
+
+Opcode=0x8a
+Command_name: Write(16)
+Command is supported [conforming to SCSI standard]
+No command duration limit mode page
+Multiple Logical Units (MLU): not reported
+Usage data: 8a fa ff ff ff ff ff ff ff ff ff ff ff ff 00 00
+
+root@pbs-disklab:~# sg_opcodes -o 0x7f,0x9 /dev/sdb
+
+Opcode=0x7f  Service_action=0x0009
+Command_name: Read(32)
+Command is supported [conforming to SCSI standard]
+No command duration limit mode page
+Multiple Logical Units (MLU): not reported
+Usage data: 7f 00 00 00 00 00 00 ff 00 09 fe 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
+root@pbs-disklab:~# sg_opcodes -o 0x7f,0xb /dev/sdb
+
+Opcode=0x7f  Service_action=0x000b
+Command_name: Write(32)
+Command is supported [conforming to SCSI standard]
+No command duration limit mode page
+Multiple Logical Units (MLU): not reported
+Usage data: 7f 00 00 00 00 00 00 ff 00 0b fa 00 ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff ff
+
