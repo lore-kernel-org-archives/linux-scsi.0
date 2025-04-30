@@ -1,157 +1,104 @@
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
+Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D640518641;
-	Wed, 30 Apr 2025 12:00:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD56425A33C
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 12:11:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746014441; cv=none; b=YivSeeeZto30lx3OXx+N9+mDvCVquInnEd65PkcbbdKXorTllwpv4MR38t1IR4gpgXQmiRiE4nTiQqaUKJ53N2BV7mcMWtN9GSRFTO5th5uiBYf0ezGKvUm6NYUsLmlgsWK9mtC2q1iIl7kGF8wmBLkzhGovi4iZ5ajvFe31hKc=
+	t=1746015114; cv=none; b=gC6w6EhCmQTsIzcbE8TkeKWyFFOZaEAY8SdH82aO9yNel/hph5dS4wAzfVMq7pwHYrZSD+EQDsaJZKK09r9VfDuYOjwMSz+mUkXrcLEEhmVtAfLqCuA/KKMQNByjrTl5BK/bt/rQx5q29RMdPBHhdzQFc37FLZhMOhGWDdcQ3Iw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746014441; c=relaxed/simple;
-	bh=jF+DIY5JnqDc//M+YPQqY22Wq3fJUqVU119jdhtjRKA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kQVO6icoQO2opV1u0p0zDi+n6QoZtiTaPZqvNyZNg9FYJLvvv5xqfl6ZSTDH4EIrxAALoedpegaiRGdYmAFNs/cAAZ0wAEEy66jm9Y2q1mPEEEkFIZsPvgkOLp97OHqPlT8aqLCl3kCGbZD4kAGCwj3/usDDFMiwz5gutHN0Kw8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c9sxhs2/; arc=none smtp.client-ip=209.85.167.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1746015114; c=relaxed/simple;
+	bh=9V8hG0kuB8a9dfhOvU2/xeY8oePk9/AvAiE5vkZROHY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VB8+j01jEI9e9XHIw2LHswFrHEBAcn+X32gtNsifLUWTRzINscsI06LWIWOfIGvpEfD7SpGavsWL6SCZqsNuUXaQ2ZfrKNiFWBKcUogkuH6UiG4CQgjjB499C49fxJYi6feH6qo28g7NFIeO4LZyc2+E7lLBw8hmxEKcAOyhU34=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=U8RVpBHI; arc=none smtp.client-ip=209.85.218.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c9sxhs2/"
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-54298ec925bso9371862e87.3;
-        Wed, 30 Apr 2025 05:00:39 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="U8RVpBHI"
+Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-ac6e8cf9132so1423778366b.2
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 05:11:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1746014438; x=1746619238; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=IVVuEjYJOqn+boZBin8W4czftfuQ4zS8Ah33rhpA2vE=;
-        b=c9sxhs2/M48Bd/ebfe7AFaF5KBU0W2mIy3wmylEtr454bp5SRU3bPM5ByR9/3kF9rR
-         G+ZVQ0xR9Nj1OH4c0CVZx1e9JBRQp9ivbhGHsoWSTx7m8IRHkmyjkayJBv+GJZOz5cTm
-         v5l3uxLfpOYQZ4Qv/ZxZxoA1krg4WuPAMKSDcqcSJ23XmFmgAgYZ1rBYtxtLpKfsJUqW
-         Lzi9UmWtpehALuBrIaCsKnIkCoY5dLHU1NFgKRlgjDr0cH+ZYVMRff01n97px6K23ALq
-         yroMTGP17ZnA71IHBAqbsmdO6DfHFm9hPhLBm/YPu5y2FR9sTh29HnaNwIQ0LRm0cr6i
-         jrIA==
+        d=suse.com; s=google; t=1746015111; x=1746619911; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=B95QSXbaRKrQee1y60Xx4b/cA/KifuO/m3Um/1ZsFQ8=;
+        b=U8RVpBHI9ee3qK4g5Ugqj5uHTpGyaOR8kAahmhHJ3zWag9c8c9XghJUa2ENiPZ3FjT
+         hwHwzpazI7FVSmz9zVqqRaeGNGmUAr0MqJx4tVKOGM16j2XS/I6eSu7ukY4hGMis5BzD
+         x+UgOZ3U/tSKTt/acvix3KpbSsdvAtf2NJ9O6CBbCyxN2fzrIboi0vLCsc5iAXZ4FjhQ
+         KHQ4DPc35U4hPIliQo8BTWwqgtvUOpLcHechQBeI4wfYq44sNwjIA0tb5H7X5SXswERY
+         JgoTMu5e3D5L8J2A6DNLR8RriPMXYXlrCEYmkmvmW1VNwHRbM+4D+53Ij9o8sJTz6pU4
+         qsKg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746014438; x=1746619238;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=IVVuEjYJOqn+boZBin8W4czftfuQ4zS8Ah33rhpA2vE=;
-        b=ZCbFnqISKDWjePImIFz5zWpI9DO93MbplcqJBQBxeTf5x+G5JoCYDyIQkL80bMm5kJ
-         BI1isxJlCGkXXgoCtDi6j3Pw9N7cmNHAZs0oyFPAW1hxPfhfNPNCWUtkO1ZVlTuCywwv
-         0CckEwI/+45yPp/TRkjjmxBvaXViAkgXW8EQ6Ix61v15PvGrKLDFa71/3lM0OCFfeOSK
-         36XoAFK2rI7tr5rN/fMzLC3R4vHOVJh4fEPV2JM87trjB2QtvYhzTXgfpqI0OPpErzLf
-         VAcWhZdN3y9qxM1S3XnQYmjj6n+eihG+VCXVV1mb2g981BDn93Ww/fhAYqmYFfX36NEs
-         Iltg==
-X-Forwarded-Encrypted: i=1; AJvYcCVjAuLkabGaJnFNp1Wq3dW9S98PNA2FEGWKRDtyAAeVNpNr7QUYCIReUVDU4aXbwJKef+n7j8lU+RrVIFg=@vger.kernel.org, AJvYcCWnQbxBKDjmLiQGFLr0jzvkzU07nsC7L7jYgEG+yvyX7klpr0M09BuFGLYaJSk3k1Sa7gMwCkWSWFPx3g==@vger.kernel.org
-X-Gm-Message-State: AOJu0YzjXC5Qv7ZK0natPAXkNTXeVBv3hTMG+5IQ508Xk/4/x5tMTL97
-	ax7S9nzpgmwIxYLVM6euNzLH/BUebjf1qKdZ+DNn8XPtuDKMfG/F
-X-Gm-Gg: ASbGncu3iY/epPxNvt1hWANXftle1r+lj8zbF2Shj95E064IikzzgyCFf5ciSvQdF0I
-	HZB7henitcaB13TJWosC2Xybz6CI2gKGPZTF0Bz019GmmEE5gw+h3qxjrEFFMJFCbyH/KhAYzQ8
-	4tFGq4eD+v3DwfIIGqX4WimD3ij8YjyLzgnFkZNX+oRjc0sEzQLbrQYlpJMn0q02sCdaTOa7h8s
-	c625ZIvsRjFXFE9qerO7EBziQ6Rlf9manOdse95R8MvQVK7wiPM0qq83kziOKh76Aq1mToLdxHW
-	esT/nl6b7IEeD92OE3Iw1sV5/YRtt74Rxh2MDQFOOudfhrG+z480gQZQd1V588hBrWQakNWni4S
-	WhRQjrHimD6sAH0OWDg==
-X-Google-Smtp-Source: AGHT+IEMAC/mLk5WMRaMl7FNmuEoCvirpF9/OeYheJM75rzfV2gAUEOP6wpe4St7JmW+Dee07/rwIg==
-X-Received: by 2002:a05:6512:23a3:b0:54d:6a89:8722 with SMTP id 2adb3069b0e04-54ea33643f2mr761914e87.29.1746014435989;
-        Wed, 30 Apr 2025 05:00:35 -0700 (PDT)
-Received: from rand-ubuntu-development.dl.local (mail.confident.ru. [85.114.29.218])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-54e7ccb7ef9sm2151866e87.231.2025.04.30.05.00.35
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Apr 2025 05:00:35 -0700 (PDT)
-From: Rand Deeb <rand.sec96@gmail.com>
-To: Finn Thain <fthain@linux-m68k.org>,
-	Michael Schmitz <schmitzmic@gmail.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org (open list:NCR 5380 SCSI DRIVERS),
-	linux-kernel@vger.kernel.org (open list)
-Cc: deeb.rand@confident.ru,
-	lvc-project@linuxtesting.org,
-	voskresenski.stanislav@confident.ru,
-	Rand Deeb <rand.sec96@gmail.com>
-Subject: [PATCH] scsi: NCR5380: Prevent potential out-of-bounds read in spi_print_msg()
-Date: Wed, 30 Apr 2025 14:59:26 +0300
-Message-Id: <20250430115926.6335-1-rand.sec96@gmail.com>
-X-Mailer: git-send-email 2.34.1
+        d=1e100.net; s=20230601; t=1746015111; x=1746619911;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=B95QSXbaRKrQee1y60Xx4b/cA/KifuO/m3Um/1ZsFQ8=;
+        b=i7EKnEsd5RWUG+sZnZ+j8TlCq2dYe7qq/l5TXH9RA5yEW3R6NXO1MMnHSRPsujgPwv
+         Rsjr2FQGG+upYRAXKnXIcV9ASGfuCjWh+PrKAB88v3fAqySi+wvQIYFyakG6FCTr7bDK
+         YvFI8DA4Q8YUuXLieGL4myJZlKMNS2ya4UyfEymYdEJ4NEnxsxA7pU/mtJzv5hC0elAc
+         7OkjOfIE0izvc5Wn/OJYQJdjEDeTqY01epzl1aFkwMm5Xnsvh1ABanlbWZnmehcT38KB
+         T19YgRTFuI9Ie2gBSWQf4Axkye53zcdLh/+lqJxSowTeFzmWLvDCloVREtaDkqC5BtbS
+         PwSg==
+X-Forwarded-Encrypted: i=1; AJvYcCVQ+pWRm9kFqEe16aPpr3wCK3+P9EkBTjLHtqlwp3jLQLs6h9KcFMNWlz2tFTkY7p1W8qXFKAf4nw64@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx1f0uhoiKDYqeoVZkyisVxhj1NZpK2x9Xx+V2Dd51LYakcipOA
+	S7ckEGHHx945qKX6cZiPpLtSNqrzGR+a5JcQKX1DUKXvWtnk4xSQ4w+XqzWvg5I=
+X-Gm-Gg: ASbGncto+RMKAV3acDCI2ZUbPkoKSpdOrRdNLbk42qw/uwmFu1Z8iWBOK2RKCAUMNjK
+	YKSaUFPL5ZW6tiXFa5T5XrbyEtlsx1lsX8IG4KCVuM/937j5d2b45W+HKmhx+kDj5kW9EdZTT6/
+	4im3q9B8BWN+PorgSz0VaSPNuoIgeeT9/XUCA3/oSyAFpewauE4f5IatD9bFGiw5avCKhwi4eC4
+	MBKVSWVTO2PhPZzAnXA8P7yzDjCv/ZijOwF5wKcHAKtghevNvTZX80A1rdQjh76YmPFaKX9Ov4B
+	c6FNkJWQBTvuA7OjS1iUSGJcbRR8SgoeNSkP6TyBdQ4Wo5efVXs+g5F55bnYZmEnf04hgXHvqHM
+	q41+YkVtpEPHXeC7P
+X-Google-Smtp-Source: AGHT+IFr6SQQ+d2QrrxDwLOsR+z8bVyCtqJ1ToE4PnHRFIcIMnjdCwxrzr0yGNH9fg/1HzSz+gHXaQ==
+X-Received: by 2002:a17:907:3e8c:b0:ac7:f348:b8bc with SMTP id a640c23a62f3a-acedc7be3f8mr277378366b.61.1746015110909;
+        Wed, 30 Apr 2025 05:11:50 -0700 (PDT)
+Received: from ?IPV6:2a02:3033:263:b03d:abf1:3c8d:23a2:52d? ([2a02:3033:263:b03d:abf1:3c8d:23a2:52d])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ace6ed702ecsm922371266b.137.2025.04.30.05.11.50
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 30 Apr 2025 05:11:50 -0700 (PDT)
+Message-ID: <06495223-342d-4759-995f-f62234fb1020@suse.com>
+Date: Wed, 30 Apr 2025 14:11:49 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: dc395x: Remove leftover if statement in reselect()
+To: Finn Thain <fthain@linux-m68k.org>
+Cc: Nathan Chancellor <nathan@kernel.org>, Ali Akcaagac <aliakc@web.de>,
+ Jamie Lenehan <lenehan@twibble.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org,
+ llvm@lists.linux.dev, patches@lists.linux.dev
+References: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org>
+ <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org>
+ <41bc286e-6e6b-4ae8-ad6a-3bdf56cd172b@suse.com>
+ <bd660f83-434a-85dc-0037-7830f58acd6f@linux-m68k.org>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <bd660f83-434a-85dc-0037-7830f58acd6f@linux-m68k.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-spi_print_msg() assumes that the input buffer is large enough to
-contain the full SCSI message, including extended messages which may
-access msg[2], msg[3], msg[7], and beyond based on message type.
+On 30.04.25 11:43, Finn Thain wrote:
 
-NCR5380_reselect() currently allocates a 3-byte buffer for 'msg'
-and reads only a single byte from the SCSI bus before passing it to
-spi_print_msg(), which can result in a potential out-of-bounds read
-if the message is malformed or declares a longer length.
+>> yes, I was unsure about terminology used for code that is by default not
+>> compiled, but would not compile if the attempt is made to compile it.
+>>
+> 
+> Yes, I realize that you were referring to the intention as "cleanup" and
+> not the actual patch that got merged.
+> 
+> I'm afraid my message was poorly expressed. I don't have a problem with
+> your fix. I was only interested in the general case.
 
-This patch increases the buffer size to 16 bytes and reads up to
-16 bytes from the SCSI bus. A length check is also added to ensure
-the message is well-formed before passing it to spi_print_msg().
+Well, in general I think such code is problematic. In general I think we should use dynamic debugging statements. The issue seems to be of terminology. However, we can hope that this will
+go away and become moot.
 
-This ensures safe handling of all valid SCSI messages and prevents
-undefined behavior due to malformed or malicious input.
-
-Found by Linux Verification Center (linuxtesting.org) with SVACE.
-
-Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
----
- drivers/scsi/NCR5380.c | 25 ++++++++++++++++++++++---
- 1 file changed, 22 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
-index 0e10502660de..2d2a1244af62 100644
---- a/drivers/scsi/NCR5380.c
-+++ b/drivers/scsi/NCR5380.c
-@@ -2026,7 +2026,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
- 	unsigned char target_mask;
- 	unsigned char lun;
--	unsigned char msg[3];
-+	unsigned char msg[16];
- 	struct NCR5380_cmd *ncmd;
- 	struct scsi_cmnd *tmp;
- 
-@@ -2084,7 +2084,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 	msg[0] = NCR5380_read(CURRENT_SCSI_DATA_REG);
- #else
- 	{
--		int len = 1;
-+		int len = sizeof(msg);
- 		unsigned char *data = msg;
- 		unsigned char phase = PHASE_MSGIN;
- 
-@@ -2099,7 +2099,26 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
- 
- 	if (!(msg[0] & 0x80)) {
- 		shost_printk(KERN_ERR, instance, "expecting IDENTIFY message, got ");
--		spi_print_msg(msg);
-+
-+		/*
-+		 * Defensive check before calling spi_print_msg():
-+		 * Avoid buffer overrun if msg claims extended length.
-+		 */
-+		if (msg[0] == EXTENDED_MESSAGE && len >= 3) {
-+			int expected_len = 2 + msg[1];
-+
-+			if (expected_len == 2)
-+				expected_len += 256;
-+
-+			if (len >= expected_len)
-+				spi_print_msg(msg);
-+			else
-+				pr_warn("spi_print_msg: skipping malformed extended message (len=%d, expected=%d)\n",
-+					len, expected_len);
-+		} else {
-+			spi_print_msg(msg);
-+		}
-+
- 		printk("\n");
- 		do_abort(instance, 0);
- 		return;
--- 
-2.34.1
-
+	Regards
+		Oliver
+  
