@@ -1,110 +1,157 @@
-Received: from fhigh-b6-smtp.messagingengine.com (fhigh-b6-smtp.messagingengine.com [202.12.124.157])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7428235049
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Apr 2025 09:43:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.157
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D640518641;
+	Wed, 30 Apr 2025 12:00:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746006231; cv=none; b=fRbzYIkkay2nbYGiBfbb4DYUnDlKIuQ81rkqqYVFlZ6kWKEcuC+5qR5umqf6pDrxW+deF6wwhbkYTRXe8sUv+8oTGt0YqlFfjYhws1VfXdOYJIx3+w7gsMXn+c8sp1PfmdHvn3CHKRB8x2fhmTy0TJYBKcNxp0DvrgGyRuid8Zs=
+	t=1746014441; cv=none; b=YivSeeeZto30lx3OXx+N9+mDvCVquInnEd65PkcbbdKXorTllwpv4MR38t1IR4gpgXQmiRiE4nTiQqaUKJ53N2BV7mcMWtN9GSRFTO5th5uiBYf0ezGKvUm6NYUsLmlgsWK9mtC2q1iIl7kGF8wmBLkzhGovi4iZ5ajvFe31hKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746006231; c=relaxed/simple;
-	bh=XtgqRvORrPWozkHd3wu+8pxwh28bhcQUDC7Hvz9WiSQ=;
-	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
-	 MIME-Version:Content-Type; b=o2MxDpjzaMGZsfNlpMSm7TFJM85c6BMWNXLYMDr3i+d1C+O98hLfOHvXnRfh1CXJLzuczCcZ2DOg5LcebeML38ndkRsgWL0K3yEpbl9qw5qM1uABX9jk34wkx6gOedczBqq4WLJeAwYtuP0qqzQNqC7F8oi2P1wuqCs5UbSM5sA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=DVoZmBqT; arc=none smtp.client-ip=202.12.124.157
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
+	s=arc-20240116; t=1746014441; c=relaxed/simple;
+	bh=jF+DIY5JnqDc//M+YPQqY22Wq3fJUqVU119jdhtjRKA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kQVO6icoQO2opV1u0p0zDi+n6QoZtiTaPZqvNyZNg9FYJLvvv5xqfl6ZSTDH4EIrxAALoedpegaiRGdYmAFNs/cAAZ0wAEEy66jm9Y2q1mPEEEkFIZsPvgkOLp97OHqPlT8aqLCl3kCGbZD4kAGCwj3/usDDFMiwz5gutHN0Kw8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=c9sxhs2/; arc=none smtp.client-ip=209.85.167.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="DVoZmBqT"
-Received: from phl-compute-05.internal (phl-compute-05.phl.internal [10.202.2.45])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 61D3325401FD;
-	Wed, 30 Apr 2025 05:43:48 -0400 (EDT)
-Received: from phl-mailfrontend-02 ([10.202.2.163])
-  by phl-compute-05.internal (MEProxy); Wed, 30 Apr 2025 05:43:48 -0400
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-type:content-type:date:date
-	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
-	:message-id:mime-version:references:reply-to:subject:subject:to
-	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
-	1746006228; x=1746092628; bh=e6+T/yiIRZeSdwbVaMs14nVoOrBRt6wVS86
-	ZtjyG5lE=; b=DVoZmBqTv2uEiNgbfT3LBKRTY/n0uKym4SuVZsiVro+G0VXBiqe
-	x0C3v7c8VJM9l1dTsPvac69Y6w4BM0gOJDz27wRYOAu6At9Vp6BvPr/5t4ZTPpM1
-	GrrMnZlEec7+cBNM7KlD63lCfBsYgTQ4rqWJEPetDuHxXxR72ex1BAtT6Afx5q6x
-	Ns0J76uJdodduXfpRF/9J26TQoUO6OTgkz3vS+AxzG3dypAG5DW5p8a6+vko5Y5V
-	3p41Ke3V3oqfGC3OHNTZnfkxsd06QkHagjU0L9fDcSFvG52Q1N6CwWy3jtHVwBNw
-	aIDooiZJWl+kyKYT+NrZaPUz44UaFtnuDPw==
-X-ME-Sender: <xms:0_ARaKVsuPOovVCIwa-6VEQZKtEilyFKkoS0GqZJgPxscnz5APjNqg>
-    <xme:0_ARaGmcNP2-4vF_Ff8AA4mLTd55ZqL0OJwpgZ_0bGNVUIOTad8JxgjrXcFmXv-Xo
-    oLD98pSWbogHZ7N7m0>
-X-ME-Received: <xmr:0_ARaOZGGUq6b5pTYafrlPmoOJQvdOcspkwhAFVrNPgXtc-1ru4z6P73paBYg5lMeSMrebrazDy7ZS0N4-fgW8rJmte3BusI-rA>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddvieeifeejucetufdoteggodetrf
-    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
-    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpih
-    gvnhhtshculddquddttddmnecujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddv
-    necuhfhrohhmpefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheike
-    hkrdhorhhgqeenucggtffrrghtthgvrhhnpeelueehleehkefgueevtdevteejkefhffek
-    feffffdtgfejveekgeefvdeuheeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrh
-    grmhepmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgpdhn
-    sggprhgtphhtthhopeelpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehonhgvuh
-    hkuhhmsehsuhhsvgdrtghomhdprhgtphhtthhopehnrghthhgrnheskhgvrhhnvghlrdho
-    rhhgpdhrtghpthhtoheprghlihgrkhgtseifvggsrdguvgdprhgtphhtthhopehlvghnvg
-    hhrghnsehtfihisggslhgvrdhorhhgpdhrtghpthhtohepmhgrrhhtihhnrdhpvghtvghr
-    shgvnhesohhrrggtlhgvrdgtohhmpdhrtghpthhtoheptgholhhinhdrihdrkhhinhhgse
-    hgmhgrihhlrdgtohhmpdhrtghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgv
-    rhhnvghlrdhorhhgpdhrtghpthhtoheplhhlvhhmsehlihhsthhsrdhlihhnuhigrdguvg
-    hvpdhrtghpthhtohepphgrthgthhgvsheslhhishhtshdrlhhinhhugidruggvvh
-X-ME-Proxy: <xmx:0_ARaBVAYVf6a0ChJENHbm0CxbZGjiYnP7lokulSYH9eoIw-2use6w>
-    <xmx:0_ARaEnrmhkUkAa3Gqv5pULs2d-9r01OAA5W6mO5im6eNNfSn0ijRg>
-    <xmx:0_ARaGdgjMw-mL_Gm3eU_rqmyUKVAdImsNJ8kotksOkk622L2jD2CQ>
-    <xmx:0_ARaGEn89mprNRBVWSG-XQPuaxH2VPGlSQ460VyQHy2P0YDMbTgTQ>
-    <xmx:1PARaIsVXTMXwCutb80s8s4v6dyrhiiffPcMvZsdmcI7h_gYSQ9P_o94>
-Feedback-ID: i58a146ae:Fastmail
-Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
- 30 Apr 2025 05:43:45 -0400 (EDT)
-Date: Wed, 30 Apr 2025 19:43:54 +1000 (AEST)
-From: Finn Thain <fthain@linux-m68k.org>
-To: Oliver Neukum <oneukum@suse.com>
-cc: Nathan Chancellor <nathan@kernel.org>, Ali Akcaagac <aliakc@web.de>, 
-    Jamie Lenehan <lenehan@twibble.org>, 
-    "Martin K. Petersen" <martin.petersen@oracle.com>, 
-    Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org, 
-    llvm@lists.linux.dev, patches@lists.linux.dev
-Subject: Re: [PATCH] scsi: dc395x: Remove leftover if statement in
- reselect()
-In-Reply-To: <41bc286e-6e6b-4ae8-ad6a-3bdf56cd172b@suse.com>
-Message-ID: <bd660f83-434a-85dc-0037-7830f58acd6f@linux-m68k.org>
-References: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org> <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org> <41bc286e-6e6b-4ae8-ad6a-3bdf56cd172b@suse.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="c9sxhs2/"
+Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-54298ec925bso9371862e87.3;
+        Wed, 30 Apr 2025 05:00:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1746014438; x=1746619238; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=IVVuEjYJOqn+boZBin8W4czftfuQ4zS8Ah33rhpA2vE=;
+        b=c9sxhs2/M48Bd/ebfe7AFaF5KBU0W2mIy3wmylEtr454bp5SRU3bPM5ByR9/3kF9rR
+         G+ZVQ0xR9Nj1OH4c0CVZx1e9JBRQp9ivbhGHsoWSTx7m8IRHkmyjkayJBv+GJZOz5cTm
+         v5l3uxLfpOYQZ4Qv/ZxZxoA1krg4WuPAMKSDcqcSJ23XmFmgAgYZ1rBYtxtLpKfsJUqW
+         Lzi9UmWtpehALuBrIaCsKnIkCoY5dLHU1NFgKRlgjDr0cH+ZYVMRff01n97px6K23ALq
+         yroMTGP17ZnA71IHBAqbsmdO6DfHFm9hPhLBm/YPu5y2FR9sTh29HnaNwIQ0LRm0cr6i
+         jrIA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746014438; x=1746619238;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=IVVuEjYJOqn+boZBin8W4czftfuQ4zS8Ah33rhpA2vE=;
+        b=ZCbFnqISKDWjePImIFz5zWpI9DO93MbplcqJBQBxeTf5x+G5JoCYDyIQkL80bMm5kJ
+         BI1isxJlCGkXXgoCtDi6j3Pw9N7cmNHAZs0oyFPAW1hxPfhfNPNCWUtkO1ZVlTuCywwv
+         0CckEwI/+45yPp/TRkjjmxBvaXViAkgXW8EQ6Ix61v15PvGrKLDFa71/3lM0OCFfeOSK
+         36XoAFK2rI7tr5rN/fMzLC3R4vHOVJh4fEPV2JM87trjB2QtvYhzTXgfpqI0OPpErzLf
+         VAcWhZdN3y9qxM1S3XnQYmjj6n+eihG+VCXVV1mb2g981BDn93Ww/fhAYqmYFfX36NEs
+         Iltg==
+X-Forwarded-Encrypted: i=1; AJvYcCVjAuLkabGaJnFNp1Wq3dW9S98PNA2FEGWKRDtyAAeVNpNr7QUYCIReUVDU4aXbwJKef+n7j8lU+RrVIFg=@vger.kernel.org, AJvYcCWnQbxBKDjmLiQGFLr0jzvkzU07nsC7L7jYgEG+yvyX7klpr0M09BuFGLYaJSk3k1Sa7gMwCkWSWFPx3g==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzjXC5Qv7ZK0natPAXkNTXeVBv3hTMG+5IQ508Xk/4/x5tMTL97
+	ax7S9nzpgmwIxYLVM6euNzLH/BUebjf1qKdZ+DNn8XPtuDKMfG/F
+X-Gm-Gg: ASbGncu3iY/epPxNvt1hWANXftle1r+lj8zbF2Shj95E064IikzzgyCFf5ciSvQdF0I
+	HZB7henitcaB13TJWosC2Xybz6CI2gKGPZTF0Bz019GmmEE5gw+h3qxjrEFFMJFCbyH/KhAYzQ8
+	4tFGq4eD+v3DwfIIGqX4WimD3ij8YjyLzgnFkZNX+oRjc0sEzQLbrQYlpJMn0q02sCdaTOa7h8s
+	c625ZIvsRjFXFE9qerO7EBziQ6Rlf9manOdse95R8MvQVK7wiPM0qq83kziOKh76Aq1mToLdxHW
+	esT/nl6b7IEeD92OE3Iw1sV5/YRtt74Rxh2MDQFOOudfhrG+z480gQZQd1V588hBrWQakNWni4S
+	WhRQjrHimD6sAH0OWDg==
+X-Google-Smtp-Source: AGHT+IEMAC/mLk5WMRaMl7FNmuEoCvirpF9/OeYheJM75rzfV2gAUEOP6wpe4St7JmW+Dee07/rwIg==
+X-Received: by 2002:a05:6512:23a3:b0:54d:6a89:8722 with SMTP id 2adb3069b0e04-54ea33643f2mr761914e87.29.1746014435989;
+        Wed, 30 Apr 2025 05:00:35 -0700 (PDT)
+Received: from rand-ubuntu-development.dl.local (mail.confident.ru. [85.114.29.218])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-54e7ccb7ef9sm2151866e87.231.2025.04.30.05.00.35
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Apr 2025 05:00:35 -0700 (PDT)
+From: Rand Deeb <rand.sec96@gmail.com>
+To: Finn Thain <fthain@linux-m68k.org>,
+	Michael Schmitz <schmitzmic@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org (open list:NCR 5380 SCSI DRIVERS),
+	linux-kernel@vger.kernel.org (open list)
+Cc: deeb.rand@confident.ru,
+	lvc-project@linuxtesting.org,
+	voskresenski.stanislav@confident.ru,
+	Rand Deeb <rand.sec96@gmail.com>
+Subject: [PATCH] scsi: NCR5380: Prevent potential out-of-bounds read in spi_print_msg()
+Date: Wed, 30 Apr 2025 14:59:26 +0300
+Message-Id: <20250430115926.6335-1-rand.sec96@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Transfer-Encoding: 8bit
 
+spi_print_msg() assumes that the input buffer is large enough to
+contain the full SCSI message, including extended messages which may
+access msg[2], msg[3], msg[7], and beyond based on message type.
 
-On Wed, 30 Apr 2025, Oliver Neukum wrote:
+NCR5380_reselect() currently allocates a 3-byte buffer for 'msg'
+and reads only a single byte from the SCSI bus before passing it to
+spi_print_msg(), which can result in a potential out-of-bounds read
+if the message is malformed or declares a longer length.
 
-> On 30.04.25 03:36, Finn Thain wrote:
-> > 
-> > On Tue, 29 Apr 2025, Nathan Chancellor wrote:
-> > 
-> >> This if statement only existed for a debugging print but it was not
-> >> removed with the debugging print in a recent cleanup
-> > 
-> > The patch you called "cleanup" has a "fixes" tag. Strange.
-> > 
-> > I think it's unreasonable to refer to a patch which alters object code as
-> > "cleanup".
-> 
-> Hi,
-> 
-> yes, I was unsure about terminology used for code that is by default not
-> compiled, but would not compile if the attempt is made to compile it.
-> 
+This patch increases the buffer size to 16 bytes and reads up to
+16 bytes from the SCSI bus. A length check is also added to ensure
+the message is well-formed before passing it to spi_print_msg().
 
-Yes, I realize that you were referring to the intention as "cleanup" and 
-not the actual patch that got merged.
+This ensures safe handling of all valid SCSI messages and prevents
+undefined behavior due to malformed or malicious input.
 
-I'm afraid my message was poorly expressed. I don't have a problem with 
-your fix. I was only interested in the general case.
+Found by Linux Verification Center (linuxtesting.org) with SVACE.
+
+Signed-off-by: Rand Deeb <rand.sec96@gmail.com>
+---
+ drivers/scsi/NCR5380.c | 25 ++++++++++++++++++++++---
+ 1 file changed, 22 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/NCR5380.c b/drivers/scsi/NCR5380.c
+index 0e10502660de..2d2a1244af62 100644
+--- a/drivers/scsi/NCR5380.c
++++ b/drivers/scsi/NCR5380.c
+@@ -2026,7 +2026,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
+ 	struct NCR5380_hostdata *hostdata = shost_priv(instance);
+ 	unsigned char target_mask;
+ 	unsigned char lun;
+-	unsigned char msg[3];
++	unsigned char msg[16];
+ 	struct NCR5380_cmd *ncmd;
+ 	struct scsi_cmnd *tmp;
+ 
+@@ -2084,7 +2084,7 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
+ 	msg[0] = NCR5380_read(CURRENT_SCSI_DATA_REG);
+ #else
+ 	{
+-		int len = 1;
++		int len = sizeof(msg);
+ 		unsigned char *data = msg;
+ 		unsigned char phase = PHASE_MSGIN;
+ 
+@@ -2099,7 +2099,26 @@ static void NCR5380_reselect(struct Scsi_Host *instance)
+ 
+ 	if (!(msg[0] & 0x80)) {
+ 		shost_printk(KERN_ERR, instance, "expecting IDENTIFY message, got ");
+-		spi_print_msg(msg);
++
++		/*
++		 * Defensive check before calling spi_print_msg():
++		 * Avoid buffer overrun if msg claims extended length.
++		 */
++		if (msg[0] == EXTENDED_MESSAGE && len >= 3) {
++			int expected_len = 2 + msg[1];
++
++			if (expected_len == 2)
++				expected_len += 256;
++
++			if (len >= expected_len)
++				spi_print_msg(msg);
++			else
++				pr_warn("spi_print_msg: skipping malformed extended message (len=%d, expected=%d)\n",
++					len, expected_len);
++		} else {
++			spi_print_msg(msg);
++		}
++
+ 		printk("\n");
+ 		do_abort(instance, 0);
+ 		return;
+-- 
+2.34.1
+
