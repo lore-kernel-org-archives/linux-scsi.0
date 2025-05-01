@@ -1,42 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from fout-b8-smtp.messagingengine.com (fout-b8-smtp.messagingengine.com [202.12.124.151])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83561B644;
-	Wed, 30 Apr 2025 21:33:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C17A3D6F
+	for <linux-scsi@vger.kernel.org>; Thu,  1 May 2025 00:20:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.151
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746048783; cv=none; b=F3f9bg2SWAbJebpiZV5vWOr3L9jIMLc1qOo6iyUXvK5EkBbd3mm0lMBARa5Pza7bEhl/QxznuGFIOU2TkNcrXNJoXVZau01CsdiP0UhbjXo7FcwBWBxbcPEU1B/3tQEj3srGzj7Ix0fk7rX8Hu5D6YFKr8kx8DCD0Hm9Mnq0D0k=
+	t=1746058805; cv=none; b=ZVUnPARAYOzTWmZhjdIv3FSgcdR3lbeHVex1vqC4JYV40+PPNxiPLxzgSHVoTI5oF55Fj59Y3RmpXSjVUFaSJqIQecoeVuGgsQ6seLWNfmBhBwrR3WACPSqzdUfSiZ78mq3ZNhrGuWsGiDOL6c2LOR/VD26ZN4X9qSyZD+CZzm0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746048783; c=relaxed/simple;
-	bh=VsGVHtp+9q6RGn5BQWuGa91tLEpsT3A6cFMcod1nM8I=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PRnuBYxwL2kIwfL1nelZgGwBdX0gwfs2L8tHIBXCUUgZBV0zIQdwsDTJUa0BVOTPDg49KwqIelLcvoarsKl11GgM14swnrrjOPYPOxA14+ciBHyU6M8UQfE0w6I9ZCIY6VIeMs2/lTpIK9WCLB9QgpD7UOf9RXh9WhCHK7PEw7s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M8n0hbSS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746058805; c=relaxed/simple;
+	bh=/46Q97vcy/33zGgkHbh7iEVragIn3KetTP89aed2zxg=;
+	h=Date:From:To:cc:Subject:In-Reply-To:Message-ID:References:
+	 MIME-Version:Content-Type; b=cs+kTPYfaObeVN+jy2g71duOJheQ+RbzYLHmesUJvfNaq/ei2I441Vsud0eGPaaZWWsr/RfmKVD2C0FIA49QeurU4vHxJrTlcrBlaihXHxzE/DqdVQImyj1ko/MvM/2dsAgcNBvAoHdWcsR1my6zmMMywm24Dmb0mJlKzxgWFU8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org; spf=none smtp.mailfrom=linux-m68k.org; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=QFHocaF2; arc=none smtp.client-ip=202.12.124.151
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=linux-m68k.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux-m68k.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M8n0hbSS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8A49C4CEE7;
-	Wed, 30 Apr 2025 21:33:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746048783;
-	bh=VsGVHtp+9q6RGn5BQWuGa91tLEpsT3A6cFMcod1nM8I=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=M8n0hbSSdpyf1eIRlQ4DZlDTX6/nX9eZuzO5RwegBTytZUR5gsvTB0LhZE3b2zArW
-	 2/atCY8Al5muERExki99lrnsZE5ErgoFDPKO4PsKYJC8zeN3c0NsdG6xF2EKvko4LV
-	 ggqL1QW+jfBfJgQLc8jqwjfKiOi7V2P675phjacsVMCCh/Zqbz4UZ7fjeNUzO7cFqC
-	 JAfarQ2JPYoTIy0nIiFdIWUSKnWWhOOrTZ79VV85VdrEy1c23r0qkScFmu6sTqnLX6
-	 uxTcaXn4wGqf7zul7MtQ/nzfj4fH2yEe5oAZi9Pd0Jes1G+PFdLGWufvLqfpLwQKWa
-	 QhHToo1n4o3WQ==
-Date: Wed, 30 Apr 2025 14:32:59 -0700
-From: Kees Cook <kees@kernel.org>
-To: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: Re: [PATCH][next] scsi: sd: Avoid -Wflex-array-member-not-at-end
- warning
-Message-ID: <202504301432.3A737A3B8F@keescook>
-References: <aAwos0mLxneG9R_t@kspp>
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="QFHocaF2"
+Received: from phl-compute-01.internal (phl-compute-01.phl.internal [10.202.2.41])
+	by mailfout.stl.internal (Postfix) with ESMTP id 07275114025A;
+	Wed, 30 Apr 2025 20:20:02 -0400 (EDT)
+Received: from phl-mailfrontend-02 ([10.202.2.163])
+  by phl-compute-01.internal (MEProxy); Wed, 30 Apr 2025 20:20:02 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-type:content-type:date:date
+	:feedback-id:feedback-id:from:from:in-reply-to:in-reply-to
+	:message-id:mime-version:references:reply-to:subject:subject:to
+	:to:x-me-proxy:x-me-sender:x-me-sender:x-sasl-enc; s=fm3; t=
+	1746058801; x=1746145201; bh=/5EPHsjwidgwd+da4u+ZT6nCp9gLDKf6842
+	v7sb19qk=; b=QFHocaF2YzTUp7w8H07S+Ot/pOK5t/iD4XNDlcpz7upNRheve34
+	qsvSA/cMtvH9Uc0U+Ub0Uizor9H/TCPj9kHX18tfi7lDoBIH2Vn7xtxFPRX7NDhD
+	cXn8UkfeJN+0SkbFpRxnoWOQ8RR2Hhc/SoCkSmMQPchB/B7gKJEzjpq+guLI5INm
+	cAusnVzyFl2Q7Qv+3tk58eqEcSM3GbZPprklMUZ2UNm5cLlkOXV9mPqPFC2QB5sE
+	c/HBCdawobTFOPGCs2IL/B34eBnFBtFgkI8YceUStnTng1ddldfu0D7A5clsMDS4
+	mupdjjm9vqxdVzgUceMJIZlKG6VYBcc9SEg==
+X-ME-Sender: <xms:Mb4SaK25KeIILb10NEoqYQ2Zq1haCIRBp1_E9Z8PPQgiEy0_G524MQ>
+    <xme:Mb4SaNGYB0LWmvj1_0TJMzAJi5YMW_aC7GSesJGK5htce1emFbAfFXPeg5QuwBKxh
+    sudtvS6-jZ_jAmLh0M>
+X-ME-Received: <xmr:Mb4SaC4vlAZQnPsUWPhHOGEGnHck5LI9fWajqQiQwdAC2stBelLZSZvCGFega7YHSQLvasq_x0Jh23PddUrgRo_qoGLhPKk8FOw>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefvddrtddtgddvieekuddvucetufdoteggodetrf
+    dotffvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdggtfgfnhhsuhgsshgtrhhisggv
+    pdfurfetoffkrfgpnffqhgenuceurghilhhouhhtmecufedttdenucesvcftvggtihhpih
+    gvnhhtshculddquddttddmnecujfgurhepfffhvfevufgjkfhfgggtsehttdertddttddv
+    necuhfhrohhmpefhihhnnhcuvfhhrghinhcuoehfthhhrghinheslhhinhhugidqmheike
+    hkrdhorhhgqeenucggtffrrghtthgvrhhnpeelueehleehkefgueevtdevteejkefhffek
+    feffffdtgfejveekgeefvdeuheeuleenucevlhhushhtvghrufhiiigvpedtnecurfgrrh
+    grmhepmhgrihhlfhhrohhmpehfthhhrghinheslhhinhhugidqmheikehkrdhorhhgpdhn
+    sggprhgtphhtthhopeelpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopehonhgvuh
+    hkuhhmsehsuhhsvgdrtghomhdprhgtphhtthhopehnrghthhgrnheskhgvrhhnvghlrdho
+    rhhgpdhrtghpthhtoheprghlihgrkhgtseifvggsrdguvgdprhgtphhtthhopehlvghnvg
+    hhrghnsehtfihisggslhgvrdhorhhgpdhrtghpthhtohepmhgrrhhtihhnrdhpvghtvghr
+    shgvnhesohhrrggtlhgvrdgtohhmpdhrtghpthhtoheptgholhhinhdrihdrkhhinhhgse
+    hgmhgrihhlrdgtohhmpdhrtghpthhtoheplhhinhhugidqshgtshhisehvghgvrhdrkhgv
+    rhhnvghlrdhorhhgpdhrtghpthhtoheplhhlvhhmsehlihhsthhsrdhlihhnuhigrdguvg
+    hvpdhrtghpthhtohepphgrthgthhgvsheslhhishhtshdrlhhinhhugidruggvvh
+X-ME-Proxy: <xmx:Mb4SaL3WxpZT9vEmf1ngsv79rVHsOy1cQljiU41H-d0kmFlDYJK3kQ>
+    <xmx:Mb4SaNEAF_CR6Cjj4MdnC8H_yph85c4BoHM1427ZwNZROM21gG2t0A>
+    <xmx:Mb4SaE-7GWSiKZ1wAtgp5Qh6fpwpxaef9Uonlcth5yFPQVjPCpC3Mg>
+    <xmx:Mb4SaClMr15tHggT73n8zeDmbqM_mkWU77OGIH2-0lvQHf9Lh6cQjQ>
+    <xmx:Mb4SaKba0hnM9KLESdBdag9QDJGk3eJRk91zeLQcGykzQwPMIDHl0z6s>
+Feedback-ID: i58a146ae:Fastmail
+Received: by mail.messagingengine.com (Postfix) with ESMTPA; Wed,
+ 30 Apr 2025 20:19:58 -0400 (EDT)
+Date: Thu, 1 May 2025 10:20:05 +1000 (AEST)
+From: Finn Thain <fthain@linux-m68k.org>
+To: Oliver Neukum <oneukum@suse.com>
+cc: Nathan Chancellor <nathan@kernel.org>, Ali Akcaagac <aliakc@web.de>, 
+    Jamie Lenehan <lenehan@twibble.org>, 
+    "Martin K. Petersen" <martin.petersen@oracle.com>, 
+    Colin Ian King <colin.i.king@gmail.com>, linux-scsi@vger.kernel.org, 
+    llvm@lists.linux.dev, patches@lists.linux.dev
+Subject: Re: [PATCH] scsi: dc395x: Remove leftover if statement in
+ reselect()
+In-Reply-To: <06495223-342d-4759-995f-f62234fb1020@suse.com>
+Message-ID: <f0842307-a0e9-6e50-e6be-b25e38ca7120@linux-m68k.org>
+References: <20250429-scsi-dc395x-fix-uninit-var-v1-1-25215d481020@kernel.org> <91ba6cf2-ca95-1ebe-837f-ecc89f547ea2@linux-m68k.org> <41bc286e-6e6b-4ae8-ad6a-3bdf56cd172b@suse.com> <bd660f83-434a-85dc-0037-7830f58acd6f@linux-m68k.org>
+ <06495223-342d-4759-995f-f62234fb1020@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -44,31 +82,30 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aAwos0mLxneG9R_t@kspp>
 
-On Fri, Apr 25, 2025 at 06:28:35PM -0600, Gustavo A. R. Silva wrote:
-> -Wflex-array-member-not-at-end was introduced in GCC-14, and we are
-> getting ready to enable it, globally.
-> 
-> Use the `DEFINE_RAW_FLEX()` helper for on-stack definitions of
-> a flexible structure where the size of the flexible-array member
-> is known at compile-time, and refactor the rest of the code,
-> accordingly.
-> 
-> Also, there is no need to use the DECLARE_FLEX_ARRAY() helper.
-> Replace it with a regular flexible-array member declaration
-> instead.
-> 
-> So, with these changes, fix the following warning:
-> 
-> drivers/scsi/sd.c:3195:50: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 
-Looks good; thanks!
+On Wed, 30 Apr 2025, Oliver Neukum wrote:
 
-Reviewed-by: Kees Cook <kees@kernel.org>
+> On 30.04.25 11:43, Finn Thain wrote:
+> 
+> >> yes, I was unsure about terminology used for code that is by default not
+> >> compiled, but would not compile if the attempt is made to compile it.
+> >>
+> > 
+> > Yes, I realize that you were referring to the intention as "cleanup" and
+> > not the actual patch that got merged.
+> > 
+> > I'm afraid my message was poorly expressed. I don't have a problem with
+> > your fix. I was only interested in the general case.
+> 
+> Well, in general I think such code is problematic. In general I think we 
+> should use dynamic debugging statements. The issue seems to be of 
+> terminology. However, we can hope that this will go away and become 
+> moot.
+> 
 
--- 
-Kees Cook
+I think you're saying that the general problem is the style of the 
+debugging code that everyone disables. I'm afraid I don't see it that way.
+
+The general problem here is a bad cleanup masquerading as a fix that got 
+merged because of a missed opportunity for automated vetting.
