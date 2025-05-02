@@ -1,63 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09462376;
-	Fri,  2 May 2025 19:57:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABD24205AD0;
+	Fri,  2 May 2025 22:42:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746215835; cv=none; b=PtbhVH4o01YyFTOWZb/PXMVdKc88NYz+b5isRQzEXzPHmhhlTSbE7uRt/7AtHYEU5Fgp9q84Ggwg2EWylh9VQ013hyEcPay3KGuQBfSvEtRjdQX9N9toopiSXtX4uCaaJD4V8153dpwZzAm45VMvrHPbKSneS8HunFzPLU7YhVo=
+	t=1746225721; cv=none; b=ebVzRPw25Ez+bOOoRXN78K94GFyMMfciaMhrq0kd81/ddZdx5sUfcm+1iRI0nS19OdPE+OGHCqN0FhG/EOIwX4abdS6/wM2RPBu2/JJ/t7eNJQ3NAe6Mfl6ikkHwZKc+0uii9eps0qsv9f7f8uZBVz0S37gBr5o/6q64HlIDL0c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746215835; c=relaxed/simple;
-	bh=OSJPq71QxGhy9JhTDMDpYvSKPnh4oq30RXiA3QAUmDM=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=b3qiqrBntBOtZfXyTC5l6iDuiBFN1SkYG2ZXqg8B1lnAoWtaWHsohOrb0wgUHPM9DRwNtpFK4kdAvDRDkYO0SNGXIrKA6y9jnr8WZvlsK5qhg3zQWN+A86GM+PBbtxWtMVdA7jWSvhWrudLMi80ZqeANEZITe33J9EGzVszxm/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tBdr0kGq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746225721; c=relaxed/simple;
+	bh=pQj86fi+y58xx2m3KZLT/z77OBsLn8M0nibe3HnDK7U=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=jGtQLaXbCbAAkX3Lcv7c4KfmZDVmPrnTS2/YCE2j+uDsDkpbxLndmFq7thRMF0mwLdcCxry+2UguDjh/YhW+ghm893Ol+GXXg/u1AbOVptMYtQ+tXn3b8RcgYC4cTeE7eLO2MzNSKTmEqjck7jEemC/zRYmoRim+O9t2DxXiOeQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NSxZY+rZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tBdr0kGq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89725C4CEE4;
-	Fri,  2 May 2025 19:57:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NSxZY+rZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 82EFEC4CEE4;
+	Fri,  2 May 2025 22:42:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746215834;
-	bh=OSJPq71QxGhy9JhTDMDpYvSKPnh4oq30RXiA3QAUmDM=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=tBdr0kGqdC7zBGIE3GpkQJ1lv4ava7Su1nWPWeMwFI0ZW4j9VcaPTGyYE5d7p6UUj
-	 9x7eHz7pnjJXZ3vQei9wtXb6PbWM/AWwZTxAe4NsfiCU/IRyVy+Ur9hfF8SLmIbUFW
-	 ZaH0jLR0dtu+cFdd2N7lCZCkPu/NQTemPf9xUE7CrxSZtSQwDUr06i2YfcaTXon+8b
-	 Varc1q/olPnz4N2wTtn7fKMV8+VuG9poExMXUsr/IBKVQyN0g3HI0Eb9rPJ8Thkw30
-	 tpL90dc0OuPNF8v00orvW0s+sgnqjJ0LZt+ApLS3GrtnEu4SfDhg9Yt5srC+jvBD8T
-	 J4XNi7dcczWRw==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EB145380DBE9;
-	Fri,  2 May 2025 19:57:54 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.15-rc3
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <ee7c8d8f36e562711091ac1ed02b7d3b5d995eed.camel@HansenPartnership.com>
-References: <ee7c8d8f36e562711091ac1ed02b7d3b5d995eed.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
-X-PR-Tracked-Message-Id: <ee7c8d8f36e562711091ac1ed02b7d3b5d995eed.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 0e9693b97a0eee1df7bae33aec207c975fbcbdb8
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 00b827f0cffa50abb6773ad4c34f4cd909dae1c8
-Message-Id: <174621587353.3715549.13383307227519158526.pr-tracker-bot@kernel.org>
-Date: Fri, 02 May 2025 19:57:53 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	s=k20201202; t=1746225721;
+	bh=pQj86fi+y58xx2m3KZLT/z77OBsLn8M0nibe3HnDK7U=;
+	h=From:To:Cc:Subject:Date:From;
+	b=NSxZY+rZq9oWnD7JrCGpyizGSeRNouZrQ1dmNPdnqfeuhFRKI3xaHzmqg9xwmrYbx
+	 8EWa8lhojJVY6/yRZLZwDTcbEPoqNmTEG2j3Sxoo0G/B/plyC+OniRxE7SH/OMDYV+
+	 plXH1rkvv/xOjXWK9GzES6HjsaExh3lvElJKxCutrPPznZmtyPrqhDfiYzbnXwKp17
+	 T4n5fyBlDqPQzJFeKmsFmfiK0yciBnAZ03Be5ya0TzF2xIMPMfgB00Uu7hQWy4v4oq
+	 suUmuZMmyR+711PWq11Muzuc1epCzorfMHelTdlEpGiNBeu8oZa+APbmFrXCs1vtcF
+	 loBmGOZRaUDHQ==
+From: Kees Cook <kees@kernel.org>
+To: Saurav Kashyap <skashyap@marvell.com>
+Cc: Kees Cook <kees@kernel.org>,
+	Javed Hasan <jhasan@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	WangYuli <wangyuli@uniontech.com>,
+	Mark Brown <broonie@kernel.org>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	linux-kernel@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH] scsi: qedf: Use designated initializer for struct qed_fcoe_cb_ops
+Date: Fri,  2 May 2025 15:41:57 -0700
+Message-Id: <20250502224156.work.617-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1485; i=kees@kernel.org; h=from:subject:message-id; bh=pQj86fi+y58xx2m3KZLT/z77OBsLn8M0nibe3HnDK7U=; b=owGbwMvMwCVmps19z/KJym7G02pJDBmiXqbRW+858Tw8Ii8nZtjQf76adbfHWRN/rZcViwp+H +pw9TLrKGVhEONikBVTZAmyc49z8XjbHu4+VxFmDisTyBAGLk4BmMhnLkaGP1EW0ltS1ANcF7sU s9y89vaph4fVn/DLQVFPqsTNG+u5GRk2bX4o/a4x2uCblSPH+ianaY+n+CyK2xYZ/MZyvWClnCs LAA==
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
-The pull request you sent on Fri, 02 May 2025 14:11:26 -0400:
+Recent fixes to the randstruct GCC plugin allowed it to notice
+that this structure is entirely function pointers and is therefore
+subject to randomization, but doing so requires that it always use
+designated initializers. Explicitly specify the "common" member as being
+initialized. Silences:
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+drivers/scsi/qedf/qedf_main.c:702:9: error: positional initialization of field in 'struct' declared with 'designated_init' attribute [-Werror=designated-init]
+  702 |         {
+      |         ^
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/00b827f0cffa50abb6773ad4c34f4cd909dae1c8
+Fixes: c2ea09b193d2 ("randstruct: gcc-plugin: Remove bogus void member")
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+Cc: Saurav Kashyap <skashyap@marvell.com>
+Cc: Javed Hasan <jhasan@marvell.com>
+Cc: <GR-QLogic-Storage-Upstream@marvell.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: <linux-scsi@vger.kernel.org>
+---
+ drivers/scsi/qedf/qedf_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thank you!
-
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 436bd29d5eba..6b1ebab36fa3 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -699,7 +699,7 @@ static u32 qedf_get_login_failures(void *cookie)
+ }
+ 
+ static struct qed_fcoe_cb_ops qedf_cb_ops = {
+-	{
++	.common = {
+ 		.link_update = qedf_link_update,
+ 		.bw_update = qedf_bw_update,
+ 		.schedule_recovery_handler = qedf_schedule_recovery_handler,
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+2.34.1
+
