@@ -1,80 +1,25 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx01.omp.ru (mx01.omp.ru [90.154.21.10])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 019F0238C1A
-	for <linux-scsi@vger.kernel.org>; Fri,  2 May 2025 07:27:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93BDE22AE6D;
+	Fri,  2 May 2025 08:43:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=90.154.21.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746170874; cv=none; b=aqOe0Eu/zRt19wWyf++aKjF+uQByxk6xa19gZbSO4dZkMfovCkQ3/itAQzp4bqMu73kmG5uhXp74Z8FvoC8mLTmbH1D8ubvYjHRbf98hbFdzeDCmY60pXXo/D7yOMm8mdX7uW27SwYKbA4dU6ALFHWiRcm+Utq9njLAAoV8ZubM=
+	t=1746175448; cv=none; b=tEwIoNvw5XvETPLq39oAh+1QYhylMdSnig9rZqgrT4h/AgDzCy8vq5t2pnYdU7XtFHFJ9Fma43qDlf5D5nIjqc0Bsd0Qv0GJ1j/H184LPWCUb8NoJzHiQdhzoVM1uHTwnl9D1hMSUPWiatOhAP3FaCoXI12xAL0qpD9RaYRUzJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746170874; c=relaxed/simple;
-	bh=gy2an+r/Y9vT+IQNPlA7x2mBv+BmleYUZ2j8XhBorj0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OoeHnvfxY9rwIexHRU3UI0cO0h4wNTUi4Q4mYlzFpQf76GiPPruCsnMfJegVwfNfoPcSaMSMxTYqFN6/fcbUu0S2QNHMrNXSpDco/BiUAVnmVGIbrMx2kT9WZAXuybSrXN9QBC6WBdO9aKRj6SjAGgQL/Q6T2gMFlYyE9qLtg6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ShzLkQ8v; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SQnRgcpb; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ShzLkQ8v; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SQnRgcpb; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ShzLkQ8v";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SQnRgcpb";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ShzLkQ8v";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SQnRgcpb"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 28A471F385;
-	Fri,  2 May 2025 07:27:50 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1746170870; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=W2PGwf5whLEVyVOCQc+zLst5fgDgN/UZfYnFj0npqnM=;
-	b=ShzLkQ8vCp5/mDOevaN2ImEIsPbkuaGdBD9e4BpAg+rZhOrh/8TqkVTVtDHxTC8RxR77hJ
-	VeFVGEaMU62qKQDPyoxEwEvRwyADyMmBOkxtKmjJByn3ysHVnaf7w54BA0QfohDllbc9uD
-	W5Zl7N2Rlysc5ticjATR6CxmldLwVyo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1746170870;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=W2PGwf5whLEVyVOCQc+zLst5fgDgN/UZfYnFj0npqnM=;
-	b=SQnRgcpbIZt4h8l0GR4TcD/YvZqhEX/AteOt4+xgso0xKBqvCOJtJ0qu7pS0dlD6Gnx8TH
-	jvFa4EHso+x/ryAQ==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1746170870; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=W2PGwf5whLEVyVOCQc+zLst5fgDgN/UZfYnFj0npqnM=;
-	b=ShzLkQ8vCp5/mDOevaN2ImEIsPbkuaGdBD9e4BpAg+rZhOrh/8TqkVTVtDHxTC8RxR77hJ
-	VeFVGEaMU62qKQDPyoxEwEvRwyADyMmBOkxtKmjJByn3ysHVnaf7w54BA0QfohDllbc9uD
-	W5Zl7N2Rlysc5ticjATR6CxmldLwVyo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1746170870;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=W2PGwf5whLEVyVOCQc+zLst5fgDgN/UZfYnFj0npqnM=;
-	b=SQnRgcpbIZt4h8l0GR4TcD/YvZqhEX/AteOt4+xgso0xKBqvCOJtJ0qu7pS0dlD6Gnx8TH
-	jvFa4EHso+x/ryAQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id AE80B13687;
-	Fri,  2 May 2025 07:27:49 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id V7+qKPVzFGjpOAAAD6G6ig
-	(envelope-from <hare@suse.de>); Fri, 02 May 2025 07:27:49 +0000
-Message-ID: <72655fa4-104c-4dd1-be55-090f50089f0f@suse.de>
-Date: Fri, 2 May 2025 09:27:49 +0200
+	s=arc-20240116; t=1746175448; c=relaxed/simple;
+	bh=SheY0x0gbNoDFM4PVTpQwRqnRbwOjioKqMfzBcMGfUk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=bMpNbsOP4oV+4IQ+8iY/lZ1oHZInWcq/TfiQwTj6dMRa5fsHcP9TJoZU53/YjHc2Cw7zTvZgXqbSau48KsK/Pdg++Rw2/pk4saI3b+pUEkIZh6wXHZ8SF+SiCYdHuV6SRA/gPj5TwMEShWYQaFPiTDIjKIDfFe9KN9xXc025hU4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru; spf=pass smtp.mailfrom=omp.ru; arc=none smtp.client-ip=90.154.21.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=omp.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=omp.ru
+Received: from [192.168.2.102] (213.87.139.230) by msexch01.omp.ru
+ (10.188.4.12) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_CBC_SHA384) id 15.2.1258.12; Fri, 2 May
+ 2025 11:43:31 +0300
+Message-ID: <61fe4e0f-9b33-4338-9fbd-57a85d413346@omp.ru>
+Date: Fri, 2 May 2025 11:43:31 +0300
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,63 +27,92 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 7/7] mm: remove NR_BOUNCE zone stat
+Subject: Re: remove block layer bounce buffering
 To: Christoph Hellwig <hch@lst.de>, Jens Axboe <axboe@kernel.dk>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
- "Juergen E. Fischer" <fischer@norbit.de>,
- Alan Stern <stern@rowland.harvard.edu>,
- Andrew Morton <akpm@linux-foundation.org>, linux-block@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-usb@vger.kernel.org,
- usb-storage@lists.one-eyed-alien.net, linux-mm@kvack.org
+CC: "Martin K. Petersen" <martin.petersen@oracle.com>, "Juergen E. Fischer"
+	<fischer@norbit.de>, Alan Stern <stern@rowland.harvard.edu>, Andrew Morton
+	<akpm@linux-foundation.org>, <linux-block@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>, <linux-usb@vger.kernel.org>,
+	<usb-storage@lists.one-eyed-alien.net>, <linux-mm@kvack.org>
 References: <20250502064930.2981820-1-hch@lst.de>
- <20250502064930.2981820-8-hch@lst.de>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250502064930.2981820-8-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Score: -4.30
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[11];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,lst.de:email,suse.de:mid,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Level: 
+From: Sergey Shtylyov <s.shtylyov@omp.ru>
+Organization: Open Mobile Platform
+In-Reply-To: <20250502064930.2981820-1-hch@lst.de>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: msexch01.omp.ru (10.188.4.12) To msexch01.omp.ru
+ (10.188.4.12)
+X-KSE-ServerInfo: msexch01.omp.ru, 9
+X-KSE-AntiSpam-Interceptor-Info: scan successful
+X-KSE-AntiSpam-Version: 6.1.1, Database issued on: 05/02/2025 08:23:12
+X-KSE-AntiSpam-Status: KAS_STATUS_NOT_DETECTED
+X-KSE-AntiSpam-Method: none
+X-KSE-AntiSpam-Rate: 19
+X-KSE-AntiSpam-Info: Lua profiles 193072 [May 02 2025]
+X-KSE-AntiSpam-Info: Version: 6.1.1.11
+X-KSE-AntiSpam-Info: Envelope from: s.shtylyov@omp.ru
+X-KSE-AntiSpam-Info: LuaCore: 56 0.3.56
+ 52db7f275cc9b6820389ba9ab2ac225370e1c244
+X-KSE-AntiSpam-Info: {rep_avail}
+X-KSE-AntiSpam-Info: {Tracking_phishing_log_reg_50_60}
+X-KSE-AntiSpam-Info: {Tracking_from_domain_doesnt_match_to}
+X-KSE-AntiSpam-Info: {SMTP from is not routable}
+X-KSE-AntiSpam-Info: {Found in DNSBL: 213.87.139.230 in (user)
+ b.barracudacentral.org}
+X-KSE-AntiSpam-Info:
+	127.0.0.199:7.1.2;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;omp.ru:7.1.1
+X-KSE-AntiSpam-Info: {Tracking_ip_hunter}
+X-KSE-AntiSpam-Info: FromAlignment: s
+X-KSE-AntiSpam-Info: ApMailHostAddress: 213.87.139.230
+X-KSE-AntiSpam-Info: {DNS response errors}
+X-KSE-AntiSpam-Info: Rate: 19
+X-KSE-AntiSpam-Info: Status: not_detected
+X-KSE-AntiSpam-Info: Method: none
+X-KSE-AntiSpam-Info: Auth:dmarc=temperror header.from=omp.ru;spf=temperror
+ smtp.mailfrom=omp.ru;dkim=none
+X-KSE-Antiphishing-Info: Clean
+X-KSE-Antiphishing-ScanningType: Heuristic
+X-KSE-Antiphishing-Method: None
+X-KSE-Antiphishing-Bases: 05/02/2025 08:26:00
+X-KSE-Antivirus-Interceptor-Info: scan successful
+X-KSE-Antivirus-Info: Clean, bases: 5/2/2025 6:29:00 AM
+X-KSE-Attachment-Filter-Triggered-Rules: Clean
+X-KSE-Attachment-Filter-Triggered-Filters: Clean
+X-KSE-BulkMessagesFiltering-Scan-Result: InTheLimit
 
-On 5/2/25 08:49, Christoph Hellwig wrote:
-> The stat is always 0 now, so remove it and hardwire the user visible
-> output to 0.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/base/node.c    | 2 +-
->   fs/proc/meminfo.c      | 3 +--
->   include/linux/mmzone.h | 1 -
->   mm/show_mem.c          | 4 ++--
->   4 files changed, 4 insertions(+), 6 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+On 5/2/25 9:49 AM, Christoph Hellwig wrote:
 
-Cheers,
+[...]
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+> Diffstat:
+>  b/arch/mips/configs/gcw0_defconfig  |    1 
+>  b/block/Makefile                    |    1 
+>  b/block/blk-map.c                   |    5 
+>  b/block/blk-mq.c                    |    2 
+>  b/block/blk-settings.c              |    5 
+>  b/block/blk.h                       |   17 --
+>  b/drivers/base/node.c               |    2 
+>  b/drivers/scsi/Kconfig              |    3 
+>  b/drivers/scsi/aha152x.c            |    1 
+>  b/drivers/scsi/imm.c                |    1 
+>  b/drivers/scsi/ppa.c                |    1 
+>  b/drivers/scsi/scsi_lib.c           |    3 
+>  b/drivers/usb/storage/usb.c         |   14 +
+>  b/fs/proc/meminfo.c                 |    3 
+>  b/include/linux/blk_types.h         |    1 
+>  b/include/linux/blkdev.h            |    5 
+>  b/include/linux/mmzone.h            |    1 
+>  b/include/scsi/scsi_host.h          |    2 
+>  b/include/trace/events/block.h      |   15 --
+>  b/include/uapi/linux/blktrace_api.h |    2 
+>  b/kernel/trace/blktrace.c           |    9 -
+>  b/mm/show_mem.c                     |    4 
+
+   Hm, your diffstat looks borked... :-)
+
+>  block/bounce.c                      |  267 ------------------------------------
+>  23 files changed, 19 insertions(+), 346 deletions(-)
+
+MBR, Sergey
+
