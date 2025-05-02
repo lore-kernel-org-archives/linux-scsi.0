@@ -1,176 +1,115 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46931223DFD
-	for <linux-scsi@vger.kernel.org>; Fri,  2 May 2025 14:53:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 155201D54D8;
+	Fri,  2 May 2025 18:11:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746197584; cv=none; b=FbOtBsfYwBOjUmhB+izbSm9gEEv5IaNGx7FtYz2Cb3AwDs6YEDDJ2iCuPVSOJSTGjSLUqSTggOMmPchmcUV+Vt+Rp5RmvPUqFZP2YdPhKaVKfNNZ0dayRVk2YcNPm4hRIak8QEx+KoGPziF5CIHAsqUvRjbpSgDe3W7blW6KJxY=
+	t=1746209491; cv=none; b=tas3TgojwYfWUejO6d4Os6G/CP+1BNfhCC+DwkwZVKVISeVEJokrh1ic1aczrJtxAWV6JuJBGX4kXFIAFlBSvRQC2CydJ3IK+sfDq4ojpNyY7cCZ1n5R/tW79uTUV4823tBI3dzPmRsDc2Aq61N33nGEGl4V1TL6keI2iM6KhnI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746197584; c=relaxed/simple;
-	bh=RpJVwCDKSnByw8jtUR+cMwoe+OU/wu1hEclu+sJDocE=;
-	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type; b=rVauF8YJMPPwe1SGXjjRhXELUCepm0IcCQuc9vd/g6FmoXi4IY/kTuCUjJsTy4/lOJIf3qaPGldTTRSnjqUMhF5FilxP3c5fOA7lzQR3hj/IbFR6BewjpAHOcRP214FD6g60o+xjEPhmYNkB21xR60ir6h0XJnp9wQcQ3rZGVCg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=E6rWrHVi; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1746209491; c=relaxed/simple;
+	bh=oikHvStq7I5df3RPWVNm302xZdKUIQ7oDh52mVeWzhg=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=tuFqtFnc9yLUNHizH55p90LTJTJ9NiMewmh4VMn23oh6Cp/P/FGVVaAe69OE6qRmaLEdgktIvRQ/nl073Bv8InV2u5nGFgEnEyj+Vi2FaLUK3b9nBpl3BOds26FBs+ZIBjGegc1JlsCtw0AAr7hJpaAtIUxLLHATQFkUjL6bbJg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=B1c1Afmw; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="E6rWrHVi"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-af579e46b5dso1492730a12.3
-        for <linux-scsi@vger.kernel.org>; Fri, 02 May 2025 07:53:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1746197582; x=1746802382; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:subject:to:from
-         :reply-to:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=APu7gvDG+GWIH3CqaZfGtDjeCKACn6athf5zXmMCeek=;
-        b=E6rWrHVixZk/2yR1CEZxwQereb+nOa30Dn9AZT1dB8ojt44o/TvIOmqc/eF59/37B7
-         9Tcu3EQ3n+cN9Kt7TQfXHLCkpdtyW6jMzrKSKTXbQVcu9/0Htlbs0dno5JBh29RbEYsS
-         pDisAqT+5U4aJIu1OXX/spewdsgmARy9MnkYkqqX764dGZ940sNk4+OH7Y9XfBWyrSrx
-         qNWI6U62ZkPOk4k1XMOcK0ldPyDW7dZBZ4gd5kCPqs80c7Aa7mS110nU07spGvofLRAS
-         eMOxX64tgvv2s2uhONTWw5qvucurjusMJs3BUqxC8PEfNvPA0+lUSubt1bfpcVSvsiqb
-         091Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746197582; x=1746802382;
-        h=content-transfer-encoding:mime-version:message-id:subject:to:from
-         :reply-to:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=APu7gvDG+GWIH3CqaZfGtDjeCKACn6athf5zXmMCeek=;
-        b=sm68vy686Kp1TpiZ5PDeXkfwzaIRxxj65N7X2TqQ5DVSnNjEMfaf7YYnQl7h9xl9D8
-         nmXLFi0YHeW5C6PILnDvXTkYzvlYSD7JDDMcSrA16mSgSv2xcA76luopFSpgWVwxRFPh
-         HQKSBBu7cXKl3fZhgJ58iq/rH4QVWBHlrn2Rk8XCwR5oEB5uZIVfY5cApRsHQUHcoods
-         8YQA5kSSVf8HNq6OHgvPbwYv6oqTCdc1IfJndmwCKlFZqqYlnzIMRWPzXqoY6UuVPZtQ
-         KgPMt1YoTXf+r4g28vuYAYuq9+AjqOHoP9TzFjJPLNSoq97LBeebiRJac9epD7GV9IEE
-         cKTA==
-X-Gm-Message-State: AOJu0YxZVbmLU7Yrh/OwBwB6Z2lSKV53iO+rPerkq64Nq6NLs3G8Qddo
-	RABRtxWBSMNK8TF3KJg9P2tyGHU7S6NbETtkelgka8wVwLAPcEa4xIfDDgb8
-X-Gm-Gg: ASbGncs457cEym95dBSeRVYAp5/Qr5uRsEI8Nux7zHWxNkqOWAyqYqnmAOizfWwY8AU
-	rU1qnybJ3wfPv0VsdNH7hf5pvfFLXL6sa1ZBIosk5bxWLDJKpYttha5s4jMVLe8evSOv351kod+
-	TX3CfDvV2PBMTPKdKmoYXgSyQTQpl13Di7DUjhdv9dKQRxN8wRPJuB54xnFMh7YK8uVR0NhQxeL
-	b1w87R/lpszqGcpV2b0cKzQS3BVECAfMhCnEugqeHfczGaH0N8NtdlVZPQo+YFpGAP3vWKcHu/m
-	tp/5BS8fDR82Nv/q6bWdB81PG7Vd30ReQND3bZP28ZoZY8nnvZfswN6YWfA67TWSy6Om3vc7v+C
-	WHRKk0GAdKUNKPhI4
-X-Google-Smtp-Source: AGHT+IE85sxy30u3hFnnBx+/nR9pizKb8PF9fcs2r33kUrwvwE8IqYV57h04ORlIQO4DjvlrggSD5g==
-X-Received: by 2002:a05:6a20:12d3:b0:1f5:75a9:526c with SMTP id adf61e73a8af0-20cde85d1demr4840097637.13.1746197582091;
-        Fri, 02 May 2025 07:53:02 -0700 (PDT)
-Received: from 179-190-173-23.cable.cabotelecom.com.br ([179.190.173.23])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74059021e13sm1637552b3a.89.2025.05.02.07.52.59
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 02 May 2025 07:53:00 -0700 (PDT)
-Date: Fri, 02 May 2025 07:53:00 -0700 (PDT)
-X-Google-Original-Date: 2 May 2025 09:52:58 -0500
-Reply-To: sales1@theleadingone.net
-From: Winston Taylor <sglvlinks@gmail.com>
-To: linux-scsi@vger.kernel.org
-Subject: wts
-Message-ID: <20250502095258.AFCDF341E747EA73@gmail.com>
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="B1c1Afmw"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1746209487;
+	bh=oikHvStq7I5df3RPWVNm302xZdKUIQ7oDh52mVeWzhg=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=B1c1Afmwe2GzBcukIRqxG7RZZ+7l3JuxIIzRhRorvZuXKdCgA+1+HWzX9NfZchhAV
+	 lgw3M26afESXoF7gSEsWhoRt32N1/PgJWFtN+O1IQ77jF4aI2HDYocf2PTDDI+lo/B
+	 ufzKoQGJdbCn+tHNgq8e2I/8AUjxXBmOtBXu1PsQ=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id ABEAA1C0030;
+	Fri, 02 May 2025 14:11:27 -0400 (EDT)
+Message-ID: <ee7c8d8f36e562711091ac1ed02b7d3b5d995eed.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.15-rc3
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Fri, 02 May 2025 14:11:26 -0400
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
 
-Hello ,
+Two minor updates, both in drivers.
 
- These are available for sale. If you=E2=80=99re interested in purchasing=
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+
+The short changelog is:
+
+Colin Ian King (1):
+      scsi: myrb: Fix spelling mistake "statux" -> "status"
+
+Keoseong Park (1):
+      scsi: ufs: core: Remove redundant query_complete trace
+
+And the diffstat:
+
+ drivers/scsi/myrb.c       | 2 +-
+ drivers/ufs/core/ufshcd.c | 2 --
+ 2 files changed, 1 insertion(+), 3 deletions(-)
+
+With full diff below.
+
+Regards,
+
+James
+
+---
+
+diff --git a/drivers/scsi/myrb.c b/drivers/scsi/myrb.c
+index dc4bd422b601..486db5b2f05d 100644
+--- a/drivers/scsi/myrb.c
++++ b/drivers/scsi/myrb.c
+@@ -891,7 +891,7 @@ static bool myrb_enable_mmio(struct myrb_hba *cb, mbox_=
+mmio_init_t mmio_init_fn)
+ 		status =3D mmio_init_fn(pdev, base, &mbox);
+ 		if (status !=3D MYRB_STATUS_SUCCESS) {
+ 			dev_err(&pdev->dev,
+-				"Failed to enable mailbox, statux %02X\n",
++				"Failed to enable mailbox, status %02X\n",
+ 				status);
+ 			return false;
+ 		}
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 5cb6132b8147..7735421e3991 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -7265,8 +7265,6 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_hb=
+a *hba,
+ 			err =3D -EINVAL;
+ 		}
+ 	}
+-	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
+-				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
 =20
-these, please email me
-
- 960GB SSD SATA 600 pcs/18 USD
-
-S/N MTFDDAK960TDS-1AW1ZABDB
-
-Brand New C9200L-48T-4X-E  $1,200 EAC
-Brand New ST8000NM017B  $70 EA
-
-Brand New ST20000NM007D
-QTY 86  $100 EACH
-Brand New ST4000NM000A   $30 EA
-Brand New WD80EFPX   $60 EA
- Brand New WD101PURZ    $70 EA
-
-Intel Xeon Gold 5418Y Processors
-
-QTY $70 each
-
-
-
-CPU  4416+   200pcs/$500
-
-CPU  5418Y    222pcs/$700
-
- 
-
-8TB 7.2K RPM SATA
-6Gbps 512   2500pcs/$70
-
-
-960GB SSD SATA   600pcs/$30
-serial number MTFDDAK960TDS-1AW1ZABDB
-
-
-SK Hynix 48GB 2RX8 PC5 56008 REO_1010-XT
-PH HMCGY8MG8RB227N AA
-QTY 239 $50 EACH
-
-
-SAMSUNG 64GB 4DRX4 PC4-2666V-LD2-12-MAO
-M386A8K40BM2-CTD60 S
-QTY 320 $42 each
-
-
-Ipad pro 129 2021 MI 5th Gen 256 WiFi + Cellular
-quantity 24 $200 EACH
-
-=20
-Ipad pro 12.9 2022 m2 6th Gen 128 WiFi + Cellular
-quantity - 44 $250 EAC
-
-Brand New NVIDIA GeForce RTX 4090 Founders
-Edition 24GB - QTY: 56 - $700 each
-
- Brand New ASUS TUF Gaming GeForce RTX 4090 OC
- 24GB GDDR6X Graphics Card
- QTY87 $1000 each
-=20
-Refurbished MacBook Pro with Touch Bar 13 inches
-MacBook Pro 2018 i5 8GB 256gb quantity $ 200 EACH
-MacBook Pro 2019 i5 8GB 256gb Quantity $ 200
-MacBook Pro 2020 i5 8gb 256gb Quantity $200
-MacBook Pro 2022 i5 m2 8gb 256gb quantity $250 EACH
-
- 
-
-Refurbished Apple iPhone 14 Pro Max - 256 GB
-quantity-10 $35O EACH
-
-Refurbished Apple iPhone 13 Pro Max has
-quantity-22 $300 EACH
-
-
-Apple MacBook Pro 14-inch with M3 Pro chip, 512GB SSD (Space=20
-Black)[2023
-QTY50
-USD 280
-
-
-Apple MacBook Air 15" (2023) MQKR3LL/A M2 8GB 256GB
-QTY25
-USD 300 EACH
-
-
-HP EliteBook 840 G7 i7-10610U 16GB RAM 512GB
-SSD Windows 11 Pro TOUCH Screen
-QTY 237 USD 100 each
-
-
- Best Regards,
-
-300 Laird St, Wilkes-Barre, PA 18702, USA
-Mobile: +1 570-890-5512
-Email: sales1@theleadingone.net
-www.theleadingone.net
+ 	return err;
+ }
 
