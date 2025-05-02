@@ -1,35 +1,34 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 76E9F25334E;
-	Fri,  2 May 2025 06:49:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73453266B6A;
+	Fri,  2 May 2025 06:49:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746168580; cv=none; b=rka2pWOmP6q5UkIQkykHNx1ITDQPqvKxnkZjPpyd4/nhRj8GcJjaX/UOOLIoY3bERN8O50nkj0hquEU7/d6eqKY+JD5JFR6zFq88wNxjBzEB7rtJiA6L+K9tyiTKKEIJW2OmPRR5jtQvy6T1hHGL3H0klhakPC6dqRqErsnxGnw=
+	t=1746168581; cv=none; b=WziWlu2n4Fhugz+9eBWTQi2GAyUdHyo74bGUdlCWBvS8MXIG3R6xX0LPaPrgRbaLTQHZS8ErU+iyczFZnTxp9a5LSiaAzqATmw0TZKlTJXWhsQgTV2srV8hA6LnAyMC03qAQjz2JXANMMx6PqKFIDDfx+sKic/afBVh/oRPV2/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746168580; c=relaxed/simple;
-	bh=REs9Pr4UkQGHUi3+CE4UFF8CiS0l6JDIAlNbyhMQtr4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fxm3GOCKRTaQTvizO87kC1UKLYroT6gaCF+6fr+TdTNcSarXczXin0Vcld+psI9rUbx/cuXx7shHiFFNJ+GkRk/gY91re5/sjgydLngFRSUXy8p6vUJob4jIAe7si/8O1ysgdBEjwfADTIdcZ/YgypNlIkIYhVqFDdf5VmEZ9e0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=fBJ3v7Hl; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1746168581; c=relaxed/simple;
+	bh=HVkwrBOGhAKlee+KtVGxZ1VbGsX1k9D/WmNWSmYm/fI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ukFL4frLgHSkjkvLTrXb/MTqleItdXZlo+No9a5iEUkFDTKhziNEci0sSQdnVapnD9X8lvKgboFXEiN7GKyhy11ZoaicuCX79FLH68vN2CdPsscqgvj4llGPVw00na+oV+izVpfw4t72vJs5n1WZ6JW93VzIlK6gNOgbz6VqPXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=c7lDIAmS; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="fBJ3v7Hl"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="c7lDIAmS"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
-	:Reply-To:Content-Type:Content-ID:Content-Description;
-	bh=2oL8x0BTuH24AYsPOwQRvxExDQJgTOpRI68w9zTOSkc=; b=fBJ3v7HlnI1NU6WPtYuIEeHs1C
-	nKeFucRX8zQLGpyIwp8T3bhHOixJfyLjtWtAAaCkWeUx6A22iyAF7HX7AU5eubrtOgbuXsbLDeYAX
-	MintWQ6g9MysJ0FFJ3NVYRyF2y1+In2pzU809bh9c3smC8fX/q3XBW8S0OpCry2HwmSZyDQhgSexD
-	tgHcD8XRp/0PP3b2/DpO1NHmMhLXJIzlwshmugmGjULvwwqgq7+uooe02WTYtUw9HUnos/+i9KeJ1
-	k8iuydxoEWIU2ObiASDJ8uqimRqJcok5Wo/c5u9L4KUtXahnEScgTBfvkJiFA69dOiFDVk3lNVoCg
-	4pui77sQ==;
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=PORlUSLual3F6eJbqxK9YVY84oVvG6MW+mh4UJLeZPQ=; b=c7lDIAmSjjYZkc8QLiCauuXu4n
+	irC60MC0eyrIPp8V/61UU+x4RBOnR+dDSc2tGQoTE57iXqLRPyvZkBUVIDmarAsnyNe29uUj3gjXg
+	mXEPPGtcKoOgo9w83uFLB5kEQVJoZDw8/zZZsfGxa6PX8vxsHpkSxKVPQ/HYSgmphFn/uptkXiM3l
+	PIcBTuSHqWVSVq4R4N0PnR3s/ZWl5vMyKffwd6EKfUXBJrHJYacS81JQuEJWyarjd11S4RVMoMLwj
+	5DVh1Kaa3GLoEERhD7TQIaCqguBsSF0mmuNAQKPlWFce3t83K7aDXEn05WjFWMaN1T5sE2dCevYLo
+	ahjxduQg==;
 Received: from [185.143.37.16] (helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uAkDI-0000000113t-0iIo;
-	Fri, 02 May 2025 06:49:36 +0000
+	id 1uAkDF-0000000113H-0pdI;
+	Fri, 02 May 2025 06:49:33 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
@@ -41,12 +40,10 @@ Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-usb@vger.kernel.org,
 	usb-storage@lists.one-eyed-alien.net,
 	linux-mm@kvack.org
-Subject: [PATCH 1/7] scsi: make aha152x depend on !HIGHMEM
-Date: Fri,  2 May 2025 07:49:18 +0100
-Message-ID: <20250502064930.2981820-2-hch@lst.de>
+Subject: remove block layer bounce buffering
+Date: Fri,  2 May 2025 07:49:17 +0100
+Message-ID: <20250502064930.2981820-1-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250502064930.2981820-1-hch@lst.de>
-References: <20250502064930.2981820-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -56,40 +53,49 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-This is one of the last drivers depending on the block layer bounce
-buffering code.  Restrict it to run on non-highmem configs so that the
-bounce buffering code can be removed.
+Hi all,
 
-Signed-off-by: Christoph Hellwig <hch@lst.de>
----
- drivers/scsi/Kconfig   | 1 +
- drivers/scsi/aha152x.c | 1 -
- 2 files changed, 1 insertion(+), 1 deletion(-)
+the block layer bounce buffering from the early days of highmem keeps
+being a wart in the block layer despite usage by only four drivers,
+all through the SCSI layer.  One of them is an old PIO-only ISA
+card, two are parallel port adapters, and the fourth is the usb-storage
+driver.
 
-diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-index 5a3c670aec27..c89e6991e934 100644
---- a/drivers/scsi/Kconfig
-+++ b/drivers/scsi/Kconfig
-@@ -403,6 +403,7 @@ config SCSI_ACARD
- config SCSI_AHA152X
- 	tristate "Adaptec AHA152X/2825 support"
- 	depends on ISA && SCSI
-+	depends on !HIGHMEM
- 	select SCSI_SPI_ATTRS
- 	select CHECK_SIGNATURE
- 	help
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index 4276f868cd91..e94c0a19c435 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -746,7 +746,6 @@ struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
- 	/* need to have host registered before triggering any interrupt */
- 	list_add_tail(&HOSTDATA(shpnt)->host_list, &aha152x_host_list);
- 
--	shpnt->no_highmem = true;
- 	shpnt->io_port   = setup->io_port;
- 	shpnt->n_io_port = IO_RANGE;
- 	shpnt->irq       = setup->irq;
--- 
-2.47.2
+This series makes the first three depend on !HIGHMEM and for the fourth
+rejects the probe only when used on highmem system and the HCD is one
+of the few annoying one that does not support DMA.
 
+This is not the most pretty way to do things, but none of the driver
+maintainers stepped up to convert them to properly kmapping buffers
+before doing PIO or MMIO operations it does shift the burden to these
+drivers and might get them to actually move that way if there are any
+users of the drivers, or in case of usb-storage configurations left.
+
+A nice benefit is that we remove the per-numa node stat used for the
+number of bounce buffer operations.
+
+Diffstat:
+ b/arch/mips/configs/gcw0_defconfig  |    1 
+ b/block/Makefile                    |    1 
+ b/block/blk-map.c                   |    5 
+ b/block/blk-mq.c                    |    2 
+ b/block/blk-settings.c              |    5 
+ b/block/blk.h                       |   17 --
+ b/drivers/base/node.c               |    2 
+ b/drivers/scsi/Kconfig              |    3 
+ b/drivers/scsi/aha152x.c            |    1 
+ b/drivers/scsi/imm.c                |    1 
+ b/drivers/scsi/ppa.c                |    1 
+ b/drivers/scsi/scsi_lib.c           |    3 
+ b/drivers/usb/storage/usb.c         |   14 +
+ b/fs/proc/meminfo.c                 |    3 
+ b/include/linux/blk_types.h         |    1 
+ b/include/linux/blkdev.h            |    5 
+ b/include/linux/mmzone.h            |    1 
+ b/include/scsi/scsi_host.h          |    2 
+ b/include/trace/events/block.h      |   15 --
+ b/include/uapi/linux/blktrace_api.h |    2 
+ b/kernel/trace/blktrace.c           |    9 -
+ b/mm/show_mem.c                     |    4 
+ block/bounce.c                      |  267 ------------------------------------
+ 23 files changed, 19 insertions(+), 346 deletions(-)
