@@ -1,117 +1,145 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92D9420C014;
-	Thu,  1 May 2025 18:39:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0E964689;
+	Fri,  2 May 2025 01:51:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746124772; cv=none; b=l+vajoigE5Mqm1fS5yIerD+hgckgHf6cXoaKs8jr1yMmgkLG4G6Qk/3iNdrPyVj4QF0Ujke8wzuVFT6WiwUw35c2CAJ9eWhIIzx4+8I4zl6AP5c7wtL7SiF24BtqKC8sncsvXlMFHN6++BJZV2ZO9o/Vyehf3vd5woeJ7GtbZWM=
+	t=1746150705; cv=none; b=pqEcUzk61OerNjREDdSHeWqJ028LOm41Nxsf6xg+fj3eYzH189Nv3qEGM2WL8cL/Wuxwt5Ig96+PA+iubfJNPbcAyxiwPoPzmdubhXS9+OblLNnIkbwxU4xpEt5uNdlFtAYKOAhKoP7bf4zSrIUMRpOXvlnTvIYkHgGFqu7VJFc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746124772; c=relaxed/simple;
-	bh=kx7mZrBm5ITwOGexgKTDEpgWSzrbQNC876wxBUvOef4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=btUtGXtTSRP0WjMXHCI/VSIw0rPNt8sPfncQmun/4CMGQSmUkoACo7lP2Gst2SIaJVXSVamqBC6BgwxiXNzAony1xCu358uEzMuEI8b0oE1fCeTO8RUi+MxnJQXzMbJpfUjA+rPnp3ube71/l43ESwNpW988GdpU9VveppRR5ak=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=slSa4vff; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1746150705; c=relaxed/simple;
+	bh=j7rsRkpEAW/hAbacUXDnhqUHnh+/fomqp9HA9gnFeQs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=q+XEW6IBYdH6bBVzJHArPLxdfk3TD8Mx61CcILumk/Qff20RdkSIUbjMdpMUoGItoK9COwKDhOiIoqtB7lNYya9RHoxq73g1vVFESVjLkhqfBLJexwEzNgaHE29Bz19bfF7fzlSqrTZYXc1lx9U7SB25Gqx0Q9OH9gDswgEk6DA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Y5qhGvU4; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="slSa4vff"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DC7B8C4CEE3;
-	Thu,  1 May 2025 18:39:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746124772;
-	bh=kx7mZrBm5ITwOGexgKTDEpgWSzrbQNC876wxBUvOef4=;
-	h=Date:From:To:Cc:Subject:From;
-	b=slSa4vff6aExOuMZ13cCqpVsq05ZKTz5hUtYHWiwYS2ANtKmK97njF29K7rZc5SMo
-	 X4rMhiZOk+y7KItKGQZRK9PgEfu6Odwv7l7SAgTIRC12xjto7Ai6fR6cHiYCLo9Y43
-	 QCVgFZL/NpbmUjNXXsPUegZWKHa9lGnuvoRsiOYBmxNIOHhNFwj4sJtEyKx456EsAr
-	 EdpzWaXPcJC50gTDO7nhuN7IlJWEO6/IusMkstI0DF97zD4o4webKTdU7wwIR7tMeo
-	 Q8hMFZuupuo9UOwI+gRgXvCgS/HxlEmUvuFVC7kxnMdcvpTDd78e+VWEwNcXq9IFnW
-	 +WQF7uC94T6/w==
-Date: Thu, 1 May 2025 12:39:27 -0600
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Y5qhGvU4"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
+	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
+	Content-ID:Content-Description:In-Reply-To:References;
+	bh=WsZF3C0AbGMDgG/Mjl/rjZFe3PGIbsswPliTR+PjTAc=; b=Y5qhGvU4/nq+AVmY9l4QLbk+ni
+	6rr3oL/jwx1xUuix4dwj/7tgY6R97HbSBaQl/FHYY4y234oNCoaNwW4WxGo0Ox6wQdEI2FNzGR68Q
+	GCGBHUdN89qPg8TWgLiqRqWm2fJEztLPTNAHO7lUoBsqHBJAHZsNfjgqWqH0RSlHOS/lIidpCWR5G
+	aGtTAhceYrm94nPHoBC30791omuicBCAWJD6+dyOoMzyCkID5KGqflPUoRhOzqwbUkKtxUPyulTue
+	oy/Tbie+5p/1/pD/Lxyhlv/REBAyIOAeuzbnJurj6E7pAicsFYEPFp8xo6A/wC5rRcph1Dn0Rnfkp
+	2AB+yaAg==;
+Received: from [50.39.124.201] (helo=bombadil.infradead.org)
+	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uAfYv-00000000X63-1LGr;
+	Fri, 02 May 2025 01:51:37 +0000
+From: Randy Dunlap <rdunlap@infradead.org>
+To: linux-kernel@vger.kernel.org
+Cc: Randy Dunlap <rdunlap@infradead.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@infradead.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-hardening@vger.kernel.org
-Subject: [PATCH v2][next] scsi: sd: Avoid -Wflex-array-member-not-at-end
- warning
-Message-ID: <aBO_32OsMj3hsJsv@kspp>
+	linux-scsi@vger.kernel.org,
+	Jonathan Corbet <corbet@lwn.net>,
+	linux-doc@vger.kernel.org
+Subject: [PATCH] scsi: docs: clean up some style in scsi_mid_low_api
+Date: Thu,  1 May 2025 18:51:36 -0700
+Message-ID: <20250502015136.683691-1-rdunlap@infradead.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
 
-Apparently, the flexible-array member in `struct scsi_stream_status_header`
-is not actually needed. Remove it along with the related KUnit test.
+Capitalize Linux but not "kernel."
+Spell out Linux instead of using "lk".
+Hyphenate "system-wide."
+Hyphenate "32-bit".
+End a sentence with a period (full stop).
+Change "double linked" to "doubly linked" list.
+Use SCSI or scsi but not Scsi.
 
-So, with these changes, fix the following warning:
-
-drivers/scsi/sd.c:3195:50: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-
-Co-developed-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Christoph Hellwig <hch@infradead.org>
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Signed-off-by: Randy Dunlap <rdunlap@infradead.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org
+Cc: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org
 ---
-Changes in v2:
- - Revome flexible-array member. (Christoph)
+ Documentation/scsi/scsi_mid_low_api.rst |   18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-v1:
- - Link: https://lore.kernel.org/linux-hardening/aAwos0mLxneG9R_t@kspp/
-
- drivers/scsi/scsi_proto_test.c | 8 --------
- drivers/scsi/sd.c              | 2 +-
- include/scsi/scsi_proto.h      | 1 -
- 3 files changed, 1 insertion(+), 10 deletions(-)
-
-diff --git a/drivers/scsi/scsi_proto_test.c b/drivers/scsi/scsi_proto_test.c
-index c093389edabb..2fc5c6523184 100644
---- a/drivers/scsi/scsi_proto_test.c
-+++ b/drivers/scsi/scsi_proto_test.c
-@@ -30,14 +30,6 @@ static void test_scsi_proto(struct kunit *test)
- 	KUNIT_EXPECT_EQ(test, get_unaligned_be16(&ss.s.stream_identifier),
- 			0x1234);
- 	KUNIT_EXPECT_EQ(test, ss.s.rel_lifetime + 0, 0x3f);
--
--	static const union {
--		struct scsi_stream_status_header h;
--		u8 arr[sizeof(struct scsi_stream_status_header)];
--	} sh = { .arr = { 1, 2, 3, 4, 0, 0, 5, 6 } };
--	KUNIT_EXPECT_EQ(test, get_unaligned_be32(&sh.h.len), 0x1020304);
--	KUNIT_EXPECT_EQ(test, get_unaligned_be16(&sh.h.number_of_open_streams),
--			0x506);
- }
+--- linux-next-20250501.orig/Documentation/scsi/scsi_mid_low_api.rst
++++ linux-next-20250501/Documentation/scsi/scsi_mid_low_api.rst
+@@ -37,7 +37,7 @@ ISA adapters).]
+ The SCSI mid level isolates an LLD from other layers such as the SCSI
+ upper layer drivers and the block layer.
  
- static struct kunit_case scsi_proto_test_cases[] = {
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 950d8c9fb884..3f6e87705b62 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3215,7 +3215,7 @@ static bool sd_is_perm_stream(struct scsi_disk *sdkp, unsigned int stream_id)
- 		return false;
- 	if (get_unaligned_be32(&buf.h.len) < sizeof(struct scsi_stream_status))
- 		return false;
--	return buf.h.stream_status[0].perm;
-+	return buf.s.perm;
- }
+-This version of the document roughly matches linux kernel version 2.6.8 .
++This version of the document roughly matches Linux kernel version 2.6.8 .
  
- static void sd_read_io_hints(struct scsi_disk *sdkp, unsigned char *buffer)
-diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
-index aeca37816506..bc8f2b2226be 100644
---- a/include/scsi/scsi_proto.h
-+++ b/include/scsi/scsi_proto.h
-@@ -349,7 +349,6 @@ struct scsi_stream_status_header {
- 	__be32 len;	/* length in bytes of stream_status[] array. */
- 	u16 reserved;
- 	__be16 number_of_open_streams;
--	DECLARE_FLEX_ARRAY(struct scsi_stream_status, stream_status);
- };
+ Documentation
+ =============
+@@ -48,7 +48,7 @@ found in that directory. A more recent c
+ at https://docs.kernel.org/scsi/scsi_mid_low_api.html. Many LLDs are
+ documented in Documentation/scsi (e.g. aic7xxx.rst). The SCSI mid-level is
+ briefly described in scsi.rst which contains a URL to a document describing
+-the SCSI subsystem in the Linux Kernel 2.4 series. Two upper level
++the SCSI subsystem in the Linux kernel 2.4 series. Two upper level
+ drivers have documents in that directory: st.rst (SCSI tape driver) and
+ scsi-generic.rst (for the sg driver).
  
- static_assert(sizeof(struct scsi_stream_status_header) == 8);
--- 
-2.43.0
-
+@@ -75,7 +75,7 @@ It is probably best to study how existin
+ As the 2.5 series development kernels evolve into the 2.6 series
+ production series, changes are being introduced into this interface. An
+ example of this is driver initialization code where there are now 2 models
+-available. The older one, similar to what was found in the lk 2.4 series,
++available. The older one, similar to what was found in the Linux 2.4 series,
+ is based on hosts that are detected at HBA driver load time. This will be
+ referred to the "passive" initialization model. The newer model allows HBAs
+ to be hot plugged (and unplugged) during the lifetime of the LLD and will
+@@ -1026,7 +1026,7 @@ initialized from the driver's struct scs
+ of interest:
+ 
+     host_no
+-		 - system wide unique number that is used for identifying
++		 - system-wide unique number that is used for identifying
+                    this host. Issued in ascending order from 0.
+     can_queue
+ 		 - must be greater than 0; do not send more than can_queue
+@@ -1053,7 +1053,7 @@ of interest:
+ 		 - pointer to driver's struct scsi_host_template from which
+                    this struct Scsi_Host instance was spawned
+     hostt->proc_name
+-		 - name of LLD. This is the driver name that sysfs uses
++		 - name of LLD. This is the driver name that sysfs uses.
+     transportt
+ 		 - pointer to driver's struct scsi_transport_template instance
+                    (if any). FC and SPI transports currently supported.
+@@ -1067,7 +1067,7 @@ The scsi_host structure is defined in in
+ struct scsi_device
+ ------------------
+ Generally, there is one instance of this structure for each SCSI logical unit
+-on a host. Scsi devices connected to a host are uniquely identified by a
++on a host. SCSI devices connected to a host are uniquely identified by a
+ channel number, target id and logical unit number (lun).
+ The structure is defined in include/scsi/scsi_device.h
+ 
+@@ -1091,7 +1091,7 @@ Members of interest:
+ 		 - should be set by LLD prior to calling 'done'. A value
+                    of 0 implies a successfully completed command (and all
+                    data (if any) has been transferred to or from the SCSI
+-                   target device). 'result' is a 32 bit unsigned integer that
++                   target device). 'result' is a 32-bit unsigned integer that
+                    can be viewed as 2 related bytes. The SCSI status value is
+                    in the LSB. See include/scsi/scsi.h status_byte() and
+                    host_byte() macros and related constants.
+@@ -1180,8 +1180,8 @@ may get out of synchronization. This is
+ to perform autosense.
+ 
+ 
+-Changes since lk 2.4 series
+-===========================
++Changes since Linux kernel 2.4 series
++=====================================
+ io_request_lock has been replaced by several finer grained locks. The lock
+ relevant to LLDs is struct Scsi_Host::host_lock and there is
+ one per SCSI host.
