@@ -1,116 +1,81 @@
-Received: from mx.treblig.org (mx.treblig.org [46.235.229.95])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E19D1993A3;
-	Sat,  3 May 2025 23:07:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=46.235.229.95
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4A96EAC7
+	for <linux-scsi@vger.kernel.org>; Sun,  4 May 2025 03:09:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746313670; cv=none; b=CEiSzDwjy8aBWzYmvBQy2VmSaYP3lEt0MoyQi+BJhiB1Ng6U/4XXm3JThHdMHQGTK9S6sOhCD0eGUy6K3AaL+7bCbMV+KYiW2gueWKCiD4ggYh3VEwbZYN5FfuX26Oo+wnhVnxQLmKZQRtVJABt5Poafnf18hr6tyGIiSa6IC8Y=
+	t=1746328145; cv=none; b=IEELGoZ0DqElkBsKyZBGZOmxUxVzCPY4a95epYmfN+D5Q6C5nnv/9ByJxxYuH3GK6dEMS3Yy/Yh8hNg3q5gJhcUzAYLlSiRvN+ydKs57Ft6n50guwQ18BEq1rQ1eHYdYDoXmw28o0toD4YWsfk+zB6GwZU+z9gmYa9OMGaCjblM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746313670; c=relaxed/simple;
-	bh=enTALIILXCHt7GDyZfCJ+WJN8o16l3pomAxqJ0ohMTU=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZySY//+Bw89eivB7hFon2/yakgXjK3SSmocUMhyzXV2YbmdQp93zSV81msb8PJ2cDAG3+t0t26wCA389WymLReOaoUCoHX69wzJ5D5BzM8y4EP3zGvjrwJmWMmy5NX9kiupGQgM2tUfq+jIxn/hiKLq5YehJIEbcMkTC34u82xI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org; spf=pass smtp.mailfrom=treblig.org; dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b=Ihs73pkS; arc=none smtp.client-ip=46.235.229.95
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=treblig.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=treblig.org
+	s=arc-20240116; t=1746328145; c=relaxed/simple;
+	bh=VqZwxFHeRZ8mC3oPm2jz9cNUojz4gngYFqMc7bou8DE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=PM7CRqIF+YZ7iTANa/AI0bpbe8w2uQzQmK/sB3ojtUMWTdClqU5Lt7JWegkovBgY3yc1LJDpwxself2FGo6GyULxqfwfaERxxyKDGDCEPHFc1VkW95mgIcqyOqTbipaWQETHT17tBU1rcm6o8e0+DPvWRVQVtQSKLzp5UZ7TaGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=EEuRJgLi; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=treblig.org header.i=@treblig.org header.b="Ihs73pkS"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=treblig.org
-	; s=bytemarkmx; h=MIME-Version:Message-ID:Date:Subject:From:Content-Type:From
-	:Subject; bh=70dm7lKTwuo8qSWczM3W315YVZUE6y8aMFydwom8o2w=; b=Ihs73pkSuPdX86Dn
-	BtYFZHYm+Wv1g6cJyT/xgceYJJLQa9USRaTYPXArc/DWLZrqGYof0YL6Nnh7q0e9PxcZHF1hy8JRV
-	HovRVF4gGYKd4bD20R+KLBOMgishQTZxJq0EjnukKGvSuztRZPPnPAHdl48cN4kC8Siq95+mdzZT2
-	t9TBLLfJ4ocudJmkMLGCOoBQ6+pP6V+MY5dIZ4UwJBkCg4vn4OwxzZAv0joP5xXcfQ/Q/LB27ewcW
-	7AAKpaLlYSp5Z+uRGdoxfzUpneTrDGqnxU2FdmAZrSC0wJ1ECjAx109hibUhDVktZ5zFSvj3XVLYk
-	2JcoBapEhJ3U8lKk2g==;
-Received: from localhost ([127.0.0.1] helo=dalek.home.treblig.org)
-	by mx.treblig.org with esmtp (Exim 4.96)
-	(envelope-from <linux@treblig.org>)
-	id 1uBLxP-001GFz-2B;
-	Sat, 03 May 2025 23:07:43 +0000
-From: linux@treblig.org
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	"Dr. David Alan Gilbert" <linux@treblig.org>
-Subject: [PATCH] scsi: core: Remove unused scsi_dev_info_list_del_keyed
-Date: Sun,  4 May 2025 00:07:42 +0100
-Message-ID: <20250503230743.124978-1-linux@treblig.org>
-X-Mailer: git-send-email 2.49.0
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="EEuRJgLi"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZqqPV4RFpzlgqxh;
+	Sun,  4 May 2025 03:09:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1746328141; x=1748920142; bh=aw0oTbQ5+iBPDzABtjRK1/KH
+	xK8OdHXCpBToiRt7zW0=; b=EEuRJgLiPMUxE9uvcUi+XFn7cBTfv8DOsWRwNHXJ
+	XkiC1J1V3ZAO76vsOTA+gb6xBCZwYhYmgr8ooG58eKK/LMJp89W+4Ff5pQvBlhmZ
+	/kuAbBumRSYzPG1CR/PB6mUoCfAR1mI8j17SVZzfmpG3Hbg4AV+Qr908k5nz7thr
+	Nz0fd0aqKtUciMf9k/BaY5IVENgJOkU8M/fgthGaz7v4a+kHKKrta/l9HraIHzB2
+	pVduwfGdURGdkbdJBCm+t7SPtWI9jvgwJ8fR6wejITfR7VSkXxAd+Cf3TpTA5I77
+	7Qf7NnCPECd/zfleznVAO7O2i7B4B9EYtqLK3k0nokT89A==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id oOi6tSlH6EGb; Sun,  4 May 2025 03:09:01 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZqqPR2ZFHzlgqxn;
+	Sun,  4 May 2025 03:08:57 +0000 (UTC)
+Message-ID: <1ead49d3-b541-41fa-8bc3-225d5fff3252@acm.org>
+Date: Sat, 3 May 2025 20:08:56 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: remove the stream_status member from
+ scsi_stream_status_header
+To: Christoph Hellwig <hch@lst.de>, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org
+References: <20250501181623.2942698-1-hch@lst.de>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250501181623.2942698-1-hch@lst.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: "Dr. David Alan Gilbert" <linux@treblig.org>
+On 5/1/25 11:16 AM, Christoph Hellwig wrote:
+> diff --git a/include/scsi/scsi_proto.h b/include/scsi/scsi_proto.h
+> index aeca37816506..bc8f2b2226be 100644
+> --- a/include/scsi/scsi_proto.h
+> +++ b/include/scsi/scsi_proto.h
+> @@ -349,7 +349,6 @@ struct scsi_stream_status_header {
+>   	__be32 len;	/* length in bytes of stream_status[] array. */
+>   	u16 reserved;
+>   	__be16 number_of_open_streams;
+> -	DECLARE_FLEX_ARRAY(struct scsi_stream_status, stream_status);
+>   };
 
-The last use of scsi_dev_info_list_del_keyed() was removed by 2011's
-commit 2b132577a05e ("[SCSI] scsi_dh: code cleanup and remove the
-references to scsi_dev_info")
+An additional note: the following comment needs to be updated since
+the member it refers to is removed:
 
-Remove it.
+/* length in bytes of stream_status[] array. */
 
-Signed-off-by: Dr. David Alan Gilbert <linux@treblig.org>
----
- drivers/scsi/scsi_devinfo.c | 27 ---------------------------
- drivers/scsi/scsi_priv.h    |  2 --
- 2 files changed, 29 deletions(-)
-
-diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
-index 90f1393a23f8..a348df895dca 100644
---- a/drivers/scsi/scsi_devinfo.c
-+++ b/drivers/scsi/scsi_devinfo.c
-@@ -485,33 +485,6 @@ static struct scsi_dev_info_list *scsi_dev_info_list_find(const char *vendor,
- 	return ERR_PTR(-ENOENT);
- }
- 
--/**
-- * scsi_dev_info_list_del_keyed - remove one dev_info list entry.
-- * @vendor:	vendor string
-- * @model:	model (product) string
-- * @key:	specify list to use
-- *
-- * Description:
-- *	Remove and destroy one dev_info entry for @vendor, @model
-- *	in list specified by @key.
-- *
-- * Returns: 0 OK, -error on failure.
-- **/
--int scsi_dev_info_list_del_keyed(char *vendor, char *model,
--				 enum scsi_devinfo_key key)
--{
--	struct scsi_dev_info_list *found;
--
--	found = scsi_dev_info_list_find(vendor, model, key);
--	if (IS_ERR(found))
--		return PTR_ERR(found);
--
--	list_del(&found->dev_info_list);
--	kfree(found);
--	return 0;
--}
--EXPORT_SYMBOL(scsi_dev_info_list_del_keyed);
--
- /**
-  * scsi_dev_info_list_add_str - parse dev_list and add to the scsi_dev_info_list.
-  * @dev_list:	string of device flags to add
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 9fc397a9ce7a..5b2b19f5e8ec 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -79,8 +79,6 @@ extern int scsi_dev_info_list_add_keyed(int compatible, char *vendor,
- 					char *model, char *strflags,
- 					blist_flags_t flags,
- 					enum scsi_devinfo_key key);
--extern int scsi_dev_info_list_del_keyed(char *vendor, char *model,
--					enum scsi_devinfo_key key);
- extern int scsi_dev_info_add_list(enum scsi_devinfo_key key, const char *name);
- extern int scsi_dev_info_remove_list(enum scsi_devinfo_key key);
- 
--- 
-2.49.0
-
+Bart.
