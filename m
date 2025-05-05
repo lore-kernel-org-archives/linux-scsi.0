@@ -1,42 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F03E35D7BF;
-	Mon,  5 May 2025 22:58:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9320395272;
+	Mon,  5 May 2025 23:04:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485907; cv=none; b=Gj9dWiSxloFA0L8UPTvXiUM/S97WYehTrElt+ggZaNbLFTc43nF7owZSYopdrKodiDGQRrVOKGnT35E1AyFlTae2nTDOHQzJm0nPDMzTriRZ3pxeiM/aJ2KOFi9RPukymZNNkbyEjN6+LwEGTmDdClkN6QXmO8d5kb24uLcYRYc=
+	t=1746486270; cv=none; b=b3yxlI+GDslR59ww0P4KowxeGrs1MQOlOGNjA/M/sxIjTqO9ZTxLvco7es86GLGE0InSsMjv52PJZB3GaG4d6WxL1SUnAtxecuhdAcATgyeyefcEhckTXmyI/IXM/UJpnMb4nI38CVbwJgRa5ZfQfcZ/dBApug9xl8CU9WMZLQY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485907; c=relaxed/simple;
-	bh=QTl/bFmcjYT6RvFJZuAeXHESyiMLhcUNbI0/Y+RFxOA=;
+	s=arc-20240116; t=1746486270; c=relaxed/simple;
+	bh=pezJFGNqJYcMCIUcG2oynIeI9Ofz2rix52mArlSiCCY=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oFAYtIsuD75CB2PngNdjXNsIJwpj9LQ6/NK2iDiCFUS3H89YZvU5bVsUb8DevcIEuJfjzAV9gNU5m0DFRkWbjvgNB88z9tfVVZ4tEwHvEpvqMTIczk7GxPaYqBrG4/My6Fm6z5ycI35spJ9xoQ8Phx2rLekr6D10lWGQVAp4FE0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ymklz+QC; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=V9aL00Xx3v5yZo5Q5GD2BRHEbr21gutC8zbuSENOYDIsavcBKvHde699faOfCpvrAKWxr+azMn/Ovgz+TkWRp+tOlusdkc6Fl9MZuY2PCKFuvhr8YGyD9UtQFubdeBbn98WqoEzAs9Y0/nolAtyQezVIaPbotKh9myfRYmh8HXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rl570EER; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ymklz+QC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19EBEC4CEE4;
-	Mon,  5 May 2025 22:58:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rl570EER"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 99866C4CEED;
+	Mon,  5 May 2025 23:04:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485906;
-	bh=QTl/bFmcjYT6RvFJZuAeXHESyiMLhcUNbI0/Y+RFxOA=;
+	s=k20201202; t=1746486268;
+	bh=pezJFGNqJYcMCIUcG2oynIeI9Ofz2rix52mArlSiCCY=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Ymklz+QCJIyr7MWE1zcccJWh1MvwQFIkWo2+56WdfV5ADwJQyC42MEOynb3gMHvZ0
-	 uFOcvQKvzGMkxu8IiI6Y0zOdY5K/oVCdqZPJYJRLP5zszMYADaIRJUHvqpDLBRlZRX
-	 AJ6uzxfpYtbp7JjbHeurIt9Q7VSfuCY6h398wbO15B1za3lMaeMcjsbav1iriz2Ujy
-	 vGlx8eceQd4ld1T+G8hq47OWZmH7VCwxxdWOxuQfXBXquaxMSQNPnuiKzsjV3eHi2o
-	 7RIXhqhLRt0z8BPUzmhLmXMaqn624y07WkI6zqioZfqwlGUAnUOk8zTKFDQsaDQwOO
-	 mfCI/5F9McOyA==
+	b=rl570EERQMGpgjHzGd0kHFrfnCzrY7tkcNIYpwvghdUGfaN6iew5KDuEdgyCzvinZ
+	 P3poznVY7VEn4F+M4nusOtc0kBNB+XXFwG58mejPDGlClelzfBzW0qqBHqDtfxdmEs
+	 2v6V+6QVlRUP4va49pAl7MnI6ssK6PFogMwOBJUKgV7lhdNusah8bxABCo/SMRCCKe
+	 KSGeprCxJ53pMGLvgPahsoSolXmNN/umEWijb/zjzX7M4a+WW22lr2qesif3IveeE4
+	 16XCZHzM38RhChHZL5GeXywg2upzULjgQR9Qz8dumTd1sd6Mj1gBMJ8gKlvaN4it/5
+	 +RVKdoXeecY2w==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+Cc: Chaohai Chen <wdhh66@163.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 059/294] scsi: st: ERASE does not change tape location
-Date: Mon,  5 May 2025 18:52:39 -0400
-Message-Id: <20250505225634.2688578-59-sashal@kernel.org>
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.6 231/294] scsi: target: spc: Fix loop traversal in spc_rsoc_get_descr()
+Date: Mon,  5 May 2025 18:55:31 -0400
+Message-Id: <20250505225634.2688578-231-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505225634.2688578-1-sashal@kernel.org>
 References: <20250505225634.2688578-1-sashal@kernel.org>
@@ -46,39 +46,71 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.89
 Content-Transfer-Encoding: 8bit
 
-From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+From: Chaohai Chen <wdhh66@163.com>
 
-[ Upstream commit ad77cebf97bd42c93ab4e3bffd09f2b905c1959a ]
+[ Upstream commit 04ad06e41d1c74cc323b20a7bd023c47bd0e0c38 ]
 
-The SCSI ERASE command erases from the current position onwards.  Don't
-clear the position variables.
+Stop traversing after finding the appropriate descriptor.
 
-Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
-Link: https://lore.kernel.org/r/20250311112516.5548-3-Kai.Makisara@kolumbus.fi
+Signed-off-by: Chaohai Chen <wdhh66@163.com>
+Link: https://lore.kernel.org/r/20250124085542.109088-1-wdhh66@163.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/st.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/target/target_core_spc.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 293074f30906f..fb193caa4a3fa 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -2895,7 +2895,6 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 			timeout = STp->long_timeout * 8;
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index f110f932ba054..675f774be1d30 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -2151,8 +2151,10 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
+ 			if (descr->serv_action_valid)
+ 				return TCM_INVALID_CDB_FIELD;
  
- 		DEBC_printk(STp, "Erasing tape.\n");
--		fileno = blkno = at_sm = 0;
- 		break;
- 	case MTSETBLK:		/* Set block length */
- 	case MTSETDENSITY:	/* Set tape density */
+-			if (!descr->enabled || descr->enabled(descr, cmd))
++			if (!descr->enabled || descr->enabled(descr, cmd)) {
+ 				*opcode = descr;
++				return TCM_NO_SENSE;
++			}
+ 			break;
+ 		case 0x2:
+ 			/*
+@@ -2166,8 +2168,10 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
+ 			if (descr->serv_action_valid &&
+ 			    descr->service_action == requested_sa) {
+ 				if (!descr->enabled || descr->enabled(descr,
+-								      cmd))
++								      cmd)) {
+ 					*opcode = descr;
++					return TCM_NO_SENSE;
++				}
+ 			} else if (!descr->serv_action_valid)
+ 				return TCM_INVALID_CDB_FIELD;
+ 			break;
+@@ -2180,13 +2184,15 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
+ 			 */
+ 			if (descr->service_action == requested_sa)
+ 				if (!descr->enabled || descr->enabled(descr,
+-								      cmd))
++								      cmd)) {
+ 					*opcode = descr;
++					return TCM_NO_SENSE;
++				}
+ 			break;
+ 		}
+ 	}
+ 
+-	return 0;
++	return TCM_NO_SENSE;
+ }
+ 
+ static sense_reason_t
 -- 
 2.39.5
 
