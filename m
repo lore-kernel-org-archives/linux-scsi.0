@@ -1,46 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66565390E1B;
-	Mon,  5 May 2025 23:16:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2ACEF2F664B;
+	Mon,  5 May 2025 23:18:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486998; cv=none; b=NidUkj1w8IoS58oDNo8oy2c5c7qA9M9L0qBHLhT+Weog29WF1BgAC9eaNTPD2ZYf8HNA2y5VC5FYB8pu11/weJbF1LAXbCIC5dnM9TVwDVI2lguR+9obbJJaWFMjYkNzGT2VLPgGSMmFRzOyHnTv7es4UPZ2euZ+eOaPMyejsY8=
+	t=1746487082; cv=none; b=gplRsM4+bvoJeeoBj0VqckNZskaovM06H2e5vBoM5JYfc+xkewAvgUY+pzB+QNN8i6DbVs8ZmKe7YWuRUZp/aUwGkCwT7c2NyzWmbftkuphMv4NM3BGSsbrPRKBXpLzwGbw7XY1JT524zFcDLykiqUEqJOWFwCwO87krYEtVTzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486998; c=relaxed/simple;
-	bh=kE+Ox8+wh2XWdCq4ivPaCQX40m7HZo0+tSTOrHgS04E=;
+	s=arc-20240116; t=1746487082; c=relaxed/simple;
+	bh=+TWGb/mEEB6UbAXTVc60y86UuV0WiChWROSIQVpztFg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=dRE84BTks1BxJWoiILcNLlUaFOeJUCoPFwXKhmZ8RrSlGOyVobsKnHaoFegBAk91yXoB9UaIaUFpE5WIT19pm4tFy1a603VIhAXayepy0pwtNUyqvnyNbwMO5pQGVGIJh0zL19fYGbKWQCclo/GbSFTG5NcYkLW3Y6jrdOLsnkQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=M/qZmqL0; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=vEFUxv+jAB/YAagaoK456UdjipxTzK3efVdvdZ6DpXK81vLGvUy5bBmgykiBR73We9REKrEI1kxFAZTflTb1j58TFCRr8hX/mby6xh49bwt2YsKqRJwTuRJ0h4k59nKAASbC0gGo4fvYErXzmZkP+9QuNfp6ha89n29eYggU0Is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YxjlT86a; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="M/qZmqL0"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 23002C4CEF2;
-	Mon,  5 May 2025 23:16:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YxjlT86a"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1141AC4CEED;
+	Mon,  5 May 2025 23:17:59 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486997;
-	bh=kE+Ox8+wh2XWdCq4ivPaCQX40m7HZo0+tSTOrHgS04E=;
+	s=k20201202; t=1746487081;
+	bh=+TWGb/mEEB6UbAXTVc60y86UuV0WiChWROSIQVpztFg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=M/qZmqL0XvZP+RTu+GeaHA5eTJ0YEIgWNJhe/XzWT+Z0QBr0REBV/6BGHs662zfZY
-	 94fq2sKVAyYNi3jSvKIr4snpDxG5UCEsNMCij5tIwq0RKS6B6xvz4ApV+QdJvGD7Rs
-	 nalPyFvvt22sQ+iP2oV6t6tSTC0Ze6J+3eyq1FVckbg2oBsr6J30c4OnILPQ/UG30A
-	 XaQRRZLF8/5KnWqxaxAqStB0rHi1l/y4wdAfXZ7whYtDXKHI3BxXEQ8ktIhKUHGuiS
-	 lbAme1Zh3Ix5TRmxE/wNnC3n2rNuXhBxJjiDnsmiR2tjlHDhDTjFrURnP1DUmmXUze
-	 HWETn/xJll7Sg==
+	b=YxjlT86arEEK05pwKrtNIcPw/trcX8mSh0FknPNHcOhcdV89CI4Ros++xdpUSzdqc
+	 wLJoKUKu0cis0eZKwP6aRxSWERvvLURj8Xhuly/EPXGfhPOGviSJW5sHai9dqgqd5m
+	 8s1AY00lRsLgjbmSX5BL6UTwnW5YzGirtuZclx7l5FuWf5O4tPCB+4N78FeG0jQ8uq
+	 eG0gi1Beh0tMQ+vB63M/TZc7jDwhIDUH1CYOSAr3a23ET8Nt8fVzYJ319XpmGhdDOB
+	 lh8FJRb/ubSQTo+8kYm+7x5xVQ0ZzXiAfgds0lxTgk36S96EKQ50rOviXsQVRRxa+R
+	 1CXxfth0hafRg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+	John Meneghini <jmeneghi@redhat.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
-	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 098/153] scsi: mpt3sas: Send a diag reset if target reset fails
-Date: Mon,  5 May 2025 19:12:25 -0400
-Message-Id: <20250505231320.2695319-98-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 143/153] scsi: st: Restore some drive settings after reset
+Date: Mon,  5 May 2025 19:13:10 -0400
+Message-Id: <20250505231320.2695319-143-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505231320.2695319-1-sashal@kernel.org>
 References: <20250505231320.2695319-1-sashal@kernel.org>
@@ -50,67 +47,113 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 5.15.181
 Content-Transfer-Encoding: 8bit
 
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 
-[ Upstream commit 5612d6d51ed2634a033c95de2edec7449409cbb9 ]
+[ Upstream commit 7081dc75df79696d8322d01821c28e53416c932c ]
 
-When an IOCTL times out and driver issues a target reset, if firmware
-fails the task management elevate the recovery by issuing a diag reset to
-controller.
+Some of the allowed operations put the tape into a known position to
+continue operation assuming only the tape position has changed.  But reset
+sets partition, density and block size to drive default values. These
+should be restored to the values before reset.
 
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Link: https://lore.kernel.org/r/1739410016-27503-5-git-send-email-shivasharan.srikanteshwara@broadcom.com
+Normally the current block size and density are stored by the drive.  If
+the settings have been changed, the changed values have to be saved by the
+driver across reset.
+
+Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+Link: https://lore.kernel.org/r/20250120194925.44432-2-Kai.Makisara@kolumbus.fi
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Tested-by: John Meneghini <jmeneghi@redhat.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/st.c | 24 +++++++++++++++++++++---
+ drivers/scsi/st.h |  2 ++
+ 2 files changed, 23 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 20336175c14f5..81cd96b93bdf8 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -678,6 +678,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 	size_t data_in_sz = 0;
- 	long ret;
- 	u16 device_handle = MPT3SAS_INVALID_DEVICE_HANDLE;
-+	int tm_ret;
- 
- 	issue_reset = 0;
- 
-@@ -1111,18 +1112,25 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 			if (pcie_device && (!ioc->tm_custom_handling) &&
- 			    (!(mpt3sas_scsih_is_pcie_scsi_device(
- 			    pcie_device->device_info))))
--				mpt3sas_scsih_issue_locked_tm(ioc,
-+				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
- 				  le16_to_cpu(mpi_request->FunctionDependent1),
- 				  0, 0, 0,
- 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
- 				  0, pcie_device->reset_timeout,
- 			MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE);
- 			else
--				mpt3sas_scsih_issue_locked_tm(ioc,
-+				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
- 				  le16_to_cpu(mpi_request->FunctionDependent1),
- 				  0, 0, 0,
- 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
- 				  0, 30, MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET);
-+
-+			if (tm_ret != SUCCESS) {
-+				ioc_info(ioc,
-+					 "target reset failed, issue hard reset: handle (0x%04x)\n",
-+					 le16_to_cpu(mpi_request->FunctionDependent1));
-+				mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 26827e94d5e38..dc0c6508d254b 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -947,7 +947,6 @@ static void reset_state(struct scsi_tape *STp)
+ 		STp->partition = find_partition(STp);
+ 		if (STp->partition < 0)
+ 			STp->partition = 0;
+-		STp->new_partition = STp->partition;
+ 	}
+ }
+ 
+@@ -2916,14 +2915,17 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
+ 		if (cmd_in == MTSETDENSITY) {
+ 			(STp->buffer)->b_data[4] = arg;
+ 			STp->density_changed = 1;	/* At least we tried ;-) */
++			STp->changed_density = arg;
+ 		} else if (cmd_in == SET_DENS_AND_BLK)
+ 			(STp->buffer)->b_data[4] = arg >> 24;
+ 		else
+ 			(STp->buffer)->b_data[4] = STp->density;
+ 		if (cmd_in == MTSETBLK || cmd_in == SET_DENS_AND_BLK) {
+ 			ltmp = arg & MT_ST_BLKSIZE_MASK;
+-			if (cmd_in == MTSETBLK)
++			if (cmd_in == MTSETBLK) {
+ 				STp->blksize_changed = 1; /* At least we tried ;-) */
++				STp->changed_blksize = arg;
 +			}
  		} else
- 			mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
- 	}
+ 			ltmp = STp->block_size;
+ 		(STp->buffer)->b_data[9] = (ltmp >> 16);
+@@ -3624,9 +3626,25 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+ 				retval = (-EIO);
+ 				goto out;
+ 			}
+-			reset_state(STp);
++			reset_state(STp); /* Clears pos_unknown */
+ 			/* remove this when the midlevel properly clears was_reset */
+ 			STp->device->was_reset = 0;
++
++			/* Fix the device settings after reset, ignore errors */
++			if (mtc.mt_op == MTREW || mtc.mt_op == MTSEEK ||
++				mtc.mt_op == MTEOM) {
++				if (STp->can_partitions) {
++					/* STp->new_partition contains the
++					 *  latest partition set
++					 */
++					STp->partition = 0;
++					switch_partition(STp);
++				}
++				if (STp->density_changed)
++					st_int_ioctl(STp, MTSETDENSITY, STp->changed_density);
++				if (STp->blksize_changed)
++					st_int_ioctl(STp, MTSETBLK, STp->changed_blksize);
++			}
+ 		}
+ 
+ 		if (mtc.mt_op != MTNOP && mtc.mt_op != MTSETBLK &&
+diff --git a/drivers/scsi/st.h b/drivers/scsi/st.h
+index c0ef0d9aaf8a2..f6ac5ffe7df6f 100644
+--- a/drivers/scsi/st.h
++++ b/drivers/scsi/st.h
+@@ -166,12 +166,14 @@ struct scsi_tape {
+ 	unsigned char compression_changed;
+ 	unsigned char drv_buffer;
+ 	unsigned char density;
++	unsigned char changed_density;
+ 	unsigned char door_locked;
+ 	unsigned char autorew_dev;   /* auto-rewind device */
+ 	unsigned char rew_at_close;  /* rewind necessary at close */
+ 	unsigned char inited;
+ 	unsigned char cleaning_req;  /* cleaning requested? */
+ 	int block_size;
++	int changed_blksize;
+ 	int min_block;
+ 	int max_block;
+ 	int recover_count;     /* From tape opening */
 -- 
 2.39.5
 
