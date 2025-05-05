@@ -1,42 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C608D35D7BB;
-	Mon,  5 May 2025 22:58:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F76637A888;
+	Mon,  5 May 2025 23:02:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485906; cv=none; b=b1D/lNXqBW+LmuwLC4fdKI10G0iZ1/FnDg5NLisSX7xtmteBWSeyxzB9MZV+8XiQiUJkvKot6h37ZQsLd3am9Kgz48uR+9KjMb/1y6NvNRITnfN87qSBvuu3UVrRDI/Cez5nVywkxPkrg9QLb0/j9hw5zemY9L88wRcT95KSkOA=
+	t=1746486148; cv=none; b=leUTq/mpbbiDdT0po6wQ8CxnPl+e92eOKmEUsqgDAvTqwx6AGraOJOVUDRdQ3lRVBVG+emwydztt3ev2iJTI/fMA3nzUgH5tj2tGtFdmzZMkw+oKtpaQWR76/A2cepCYion7hy5ZoBXw5m/6WBbaCBR7slh/OIPe1OiqtGGZ18g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485906; c=relaxed/simple;
-	bh=ptyUP18uHVTbecN1W1P7sS32RvPDU/5QXcxuPG2yEpE=;
+	s=arc-20240116; t=1746486148; c=relaxed/simple;
+	bh=y8Vu0hbKSB+CuL4BRtzTCM3l3KNzez+yZf9bGpQhOSE=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eKR4AKH3OLb4iytZhNrbqrnC0MMB3CrkEh2ZrFS7BZXXaNMuml3Qa5L3pFdPUvzpECw8xLu4XzR+u6y1RheKJWOBME39hAz99tl+08bNa3jFXib+5YxprpRK43/I49wMxnDZLqPoGTXvzRjTQUv3GwTHXGjYY0vQ7bOcrmGKUYc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VuVcm/+c; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Mj54LodtqZxtVMxHUWzYLDY2biVeGHpaDJunN87Wa111S4LZfFM6IFqnv3cPcRlfMut0VBpP310qoz/rOdnTeAjLuk0GW3vZGPS1HVcOuDdtjNBfvbo7I71XmPdx3KkyMqR+Zw1Yw4ZzBNoTco0BIoIsGPxN+6C/KAJbdiRmLjo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=svztyB5g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VuVcm/+c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D4242C4CEF1;
-	Mon,  5 May 2025 22:58:24 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="svztyB5g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D78FC4CEE4;
+	Mon,  5 May 2025 23:02:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485905;
-	bh=ptyUP18uHVTbecN1W1P7sS32RvPDU/5QXcxuPG2yEpE=;
+	s=k20201202; t=1746486147;
+	bh=y8Vu0hbKSB+CuL4BRtzTCM3l3KNzez+yZf9bGpQhOSE=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=VuVcm/+cmZxQE54NNQGFdMBSxJTS77XGydUJ660M8Zn9r8zhSROjF3ZIK5BXe8ZhB
-	 8Xvax6S0Rrn/hXmNfj+x7+8MklaDkjpiHauQBx62PsChGKBo88nQpfF+UWwwYbFR3q
-	 F6AvGrUl1B1+qMMf23QsErQVQh+9xS7toc/BZRJlsnSX2FTuyuq0kDOOmvQCBkxf0d
-	 yNRuzwRY/jmFzPOXEQ5TyHlvhXv2WmWEbVZIfpqVFmZhh4j3YKAUKbj5oNLdTxzVY/
-	 5Sq0Z8+QlZWarCx9pOm7OBafHaZNs1q9pENxGerzrdZ5ZmjjKewontTh1RR8UhKOgt
-	 ymM/di8b4C79Q==
+	b=svztyB5g1OvsdSQ9NMA8hmSreZnUWWTqNvIJdOqv1KbE64ohxcHZ0wbjlzrx4i94Y
+	 u8nNy/o0t8a9Jowfd2aHVuPkfulWZUK/alLaZTx7XDKscphKP5tz1U/cdoR1j4+SWR
+	 1EzIkUxoA4fcA2IUi4hkaD3ltIfv1E9koRWCK+uCr21x5zUV98vkSkRtwVha4njLoh
+	 icgpw9TynFAL/i7P+uO/OQq26xGqQ73tmyGPnLfm5d4FNgvRE873JAHDEza8okKzEa
+	 JfVZX/rHHWa+1aZpgVdX7QmmZ7radf1CkCjMBl4p3vX0BM5XAg6KXhk5hnTf201Mem
+	 ED9b/bnsGjKEA==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
+	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 058/294] scsi: st: Tighten the page format heuristics with MODE SELECT
-Date: Mon,  5 May 2025 18:52:38 -0400
-Message-Id: <20250505225634.2688578-58-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 176/294] scsi: mpt3sas: Send a diag reset if target reset fails
+Date: Mon,  5 May 2025 18:54:36 -0400
+Message-Id: <20250505225634.2688578-176-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505225634.2688578-1-sashal@kernel.org>
 References: <20250505225634.2688578-1-sashal@kernel.org>
@@ -46,48 +50,67 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.89
 Content-Transfer-Encoding: 8bit
 
-From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
 
-[ Upstream commit 8db816c6f176321e42254badd5c1a8df8bfcfdb4 ]
+[ Upstream commit 5612d6d51ed2634a033c95de2edec7449409cbb9 ]
 
-In the days when SCSI-2 was emerging, some drives did claim SCSI-2 but did
-not correctly implement it. The st driver first tries MODE SELECT with the
-page format bit set to set the block descriptor.  If not successful, the
-non-page format is tried.
+When an IOCTL times out and driver issues a target reset, if firmware
+fails the task management elevate the recovery by issuing a diag reset to
+controller.
 
-The test only tests the sense code and this triggers also from illegal
-parameter in the parameter list. The test is limited to "old" devices and
-made more strict to remove false alarms.
-
-Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
-Link: https://lore.kernel.org/r/20250311112516.5548-4-Kai.Makisara@kolumbus.fi
+Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+Link: https://lore.kernel.org/r/1739410016-27503-5-git-send-email-shivasharan.srikanteshwara@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/st.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 900322bad4f3b..293074f30906f 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3082,7 +3082,9 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 			   cmd_in == MTSETDRVBUFFER ||
- 			   cmd_in == SET_DENS_AND_BLK) {
- 			if (cmdstatp->sense_hdr.sense_key == ILLEGAL_REQUEST &&
--			    !(STp->use_pf & PF_TESTED)) {
-+				cmdstatp->sense_hdr.asc == 0x24 &&
-+				(STp->device)->scsi_level <= SCSI_2 &&
-+				!(STp->use_pf & PF_TESTED)) {
- 				/* Try the other possible state of Page Format if not
- 				   already tried */
- 				STp->use_pf = (STp->use_pf ^ USE_PF) | PF_TESTED;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index e289f18fc7643..daef90ee431f5 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -679,6 +679,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 	size_t data_in_sz = 0;
+ 	long ret;
+ 	u16 device_handle = MPT3SAS_INVALID_DEVICE_HANDLE;
++	int tm_ret;
+ 
+ 	issue_reset = 0;
+ 
+@@ -1120,18 +1121,25 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
+ 			if (pcie_device && (!ioc->tm_custom_handling) &&
+ 			    (!(mpt3sas_scsih_is_pcie_scsi_device(
+ 			    pcie_device->device_info))))
+-				mpt3sas_scsih_issue_locked_tm(ioc,
++				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
+ 				  le16_to_cpu(mpi_request->FunctionDependent1),
+ 				  0, 0, 0,
+ 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
+ 				  0, pcie_device->reset_timeout,
+ 			MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE);
+ 			else
+-				mpt3sas_scsih_issue_locked_tm(ioc,
++				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
+ 				  le16_to_cpu(mpi_request->FunctionDependent1),
+ 				  0, 0, 0,
+ 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
+ 				  0, 30, MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET);
++
++			if (tm_ret != SUCCESS) {
++				ioc_info(ioc,
++					 "target reset failed, issue hard reset: handle (0x%04x)\n",
++					 le16_to_cpu(mpi_request->FunctionDependent1));
++				mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
++			}
+ 		} else
+ 			mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
+ 	}
 -- 
 2.39.5
 
