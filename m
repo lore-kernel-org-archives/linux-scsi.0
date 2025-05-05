@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F0543BAF87;
-	Mon,  5 May 2025 23:22:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 755FA3C10D3;
+	Mon,  5 May 2025 23:23:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746487348; cv=none; b=IMvfXLRuIwxrjUfJtyHtEsg8u2JRleA9Kh8ms864QjlewWd77JWg27hSm/9gEK1varDLkPazs3LI/t+PQkjQpfKlOBjd3lBglSo8tWaYShd6K9LJZ3TJGmh3cA7zV9Kh0+h+JYLarmvmJGh/AKBlfxRm3kcltTMfY3NMwhPbYQY=
+	t=1746487440; cv=none; b=As0Apmf8X5Adzpa42YOv87kpfZ258ZyUrOXqgQLMI+K16e+9wjR3R01H/P37AsTYRoLCj1UowjewgkiYZ0+bSfoxgQkwjAHeifpYEX4DEqwtKfoAMztssw58noZe6UPhzw3bqaS5ochOByghts84jGN3mV1YefU2t+eVR6lbAOE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746487348; c=relaxed/simple;
-	bh=Q+v7VZoENNlzJV9ZQLNwya7jNn5yUDxBD4kC0ULM0Ag=;
+	s=arc-20240116; t=1746487440; c=relaxed/simple;
+	bh=5FHVkciLYMbBd8XlPHAl2XYzPawIaEyJ4RSuwnbM2RM=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LiWOCdVAPGsC6l1JGIieMqMcwscpJ7U6kTFt0ifdHC+blPnE6fvbwaT9rfRYZFUrHUKPYj+IQbV9hfb+oXP3YQYzRlZl3aJL+DmTYsPOnVY+wK8l8qWZORQ7/Bgdsc3LlsqGOMwwnwLeQOCuVtoVQ7sDFTG1XF1lr5t3ix97wO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PJIRJgvn; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=UDtZ/cxnn/Z/yFlsiyMJp2gjeboH2nnzYEGmvO3f900j7bfep2OGdiUvVxT8lm9mDPYr9vfL6Mx8OsBjs03r9nHV7vTDt4mckA14J9XMG6Mpdrv5G9Bxqqjn6nIjUADNoJsiiXZUZQIoEYhVj2iyBx/0L3CAK3zxdBH+2BkrCIE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jPX0B9/d; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PJIRJgvn"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE06CC4AF09;
-	Mon,  5 May 2025 23:22:25 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jPX0B9/d"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 09077C4CEEF;
+	Mon,  5 May 2025 23:23:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746487346;
-	bh=Q+v7VZoENNlzJV9ZQLNwya7jNn5yUDxBD4kC0ULM0Ag=;
+	s=k20201202; t=1746487439;
+	bh=5FHVkciLYMbBd8XlPHAl2XYzPawIaEyJ4RSuwnbM2RM=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=PJIRJgvniun6llULIUJUaYzUefx6eahx75hu+f/sct8FxF+Lt80T4sk5N+VQLgAAP
-	 aA7WG9jZeMTrWrdjUqPiHl8JKiaCWVk3DOUkjQ5Yk0h7YQqnHe76C8BuT81xz6/eeo
-	 j5zlVwhdek6EBqOGXnyllTuh6/T7J7Rqka1nO+r8oPSGRWhQIXPBPAzmaJN8Xb7yAV
-	 GtFm+pIxY6MmWExhzD45ROhxzdEdDDFUp4NCoKAk29jVA0dFGaZfDzxC3VMrrceFwC
-	 6yqak+j+vjhKJ+XVCiknzN/y7dso4DRqAMRQf3awk1KgTWUBaIvbOM4o+tZVV/kcHg
-	 HGWagZSCutsqg==
+	b=jPX0B9/d2siMpy8dvfzSx02+dzjlnRekPbs3aHXS1R2/bGajlILM/GEjbB9frA12w
+	 WK47Ea95IaWWkn26ic0RUmA8wU12Is2Tvo+K8hNUA5HoALFOLQTT53hgdx1e+GmCU0
+	 CRlBDafFmf2gQh4tX46FqQOz13WKrJi2aWTYnx9icSW/NIUvxmoszfVcvVakf/bs2W
+	 bJ4e8DVZbOgamqhSZ8ZZFX4gUP72jsCnatzkSW+BCcd48jZRwFU5OuWgiywrd8l8nT
+	 KET6sS7ZOGujfhKdj70+CKxoQcRoGVCud93oQkDNLwGvqKNwl3qq0GDpUwN75Xc58H
+	 gyXViRC/pjh+A==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 20/79] scsi: st: ERASE does not change tape location
-Date: Mon,  5 May 2025 19:20:52 -0400
-Message-Id: <20250505232151.2698893-20-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 72/79] scsi: lpfc: Handle duplicate D_IDs in ndlp search-by D_ID routine
+Date: Mon,  5 May 2025 19:21:44 -0400
+Message-Id: <20250505232151.2698893-72-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505232151.2698893-1-sashal@kernel.org>
 References: <20250505232151.2698893-1-sashal@kernel.org>
@@ -46,39 +48,69 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 5.4.293
 Content-Transfer-Encoding: 8bit
 
-From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit ad77cebf97bd42c93ab4e3bffd09f2b905c1959a ]
+[ Upstream commit 56c3d809b7b450379162d0b8a70bbe71ab8db706 ]
 
-The SCSI ERASE command erases from the current position onwards.  Don't
-clear the position variables.
+After a port swap between separate fabrics, there may be multiple nodes in
+the vport's fc_nodes list with the same fabric well known address.
+Duplication is temporary and eventually resolves itself after dev_loss_tmo
+expires, but nameserver queries may still occur before dev_loss_tmo.  This
+possibly results in returning stale fabric ndlp objects.  Fix by adding an
+nlp_state check to ensure the ndlp search routine returns the correct newer
+allocated ndlp fabric object.
 
-Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
-Link: https://lore.kernel.org/r/20250311112516.5548-3-Kai.Makisara@kolumbus.fi
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20250131000524.163662-5-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/st.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 8f927851ccf86..3f798f87e8d98 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -2889,7 +2889,6 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
- 			timeout = STp->long_timeout * 8;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 0abce779fbb13..3238222b89fa8 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5357,6 +5357,7 @@ static struct lpfc_nodelist *
+ __lpfc_findnode_did(struct lpfc_vport *vport, uint32_t did)
+ {
+ 	struct lpfc_nodelist *ndlp;
++	struct lpfc_nodelist *np = NULL;
+ 	uint32_t data1;
  
- 		DEBC_printk(STp, "Erasing tape.\n");
--		fileno = blkno = at_sm = 0;
- 		break;
- 	case MTSETBLK:		/* Set block length */
- 	case MTSETDENSITY:	/* Set tape density */
+ 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
+@@ -5371,14 +5372,20 @@ __lpfc_findnode_did(struct lpfc_vport *vport, uint32_t did)
+ 					 ndlp, ndlp->nlp_DID,
+ 					 ndlp->nlp_flag, data1, ndlp->nlp_rpi,
+ 					 ndlp->active_rrqs_xri_bitmap);
+-			return ndlp;
++
++			/* Check for new or potentially stale node */
++			if (ndlp->nlp_state != NLP_STE_UNUSED_NODE)
++				return ndlp;
++			np = ndlp;
+ 		}
+ 	}
+ 
+-	/* FIND node did <did> NOT FOUND */
+-	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
+-			 "0932 FIND node did x%x NOT FOUND.\n", did);
+-	return NULL;
++	if (!np)
++		/* FIND node did <did> NOT FOUND */
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
++				 "0932 FIND node did x%x NOT FOUND.\n", did);
++
++	return np;
+ }
+ 
+ struct lpfc_nodelist *
 -- 
 2.39.5
 
