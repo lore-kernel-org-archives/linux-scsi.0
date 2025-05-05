@@ -1,42 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6B7B290BC3;
-	Mon,  5 May 2025 22:34:24 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B80DE2D5486;
+	Mon,  5 May 2025 22:36:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746484464; cv=none; b=HAm3asSshodwBoj5YTZbGi0Je6bVtHZ1dO5e+AaI0daKhLJMcGSiBUIwVc++UViR9FR//z29EchOOg8A4C1pKY1HkDDlrVQNuTM7Tuushk7rHObMWiZ47ikXRppijJBpQPC502uNAD6NTDhxjIwQJZxxc5rvf8Q+oZASc+eRuxc=
+	t=1746484618; cv=none; b=nmbFWUdO/YxkP4pEMLLLRkGpGN6qEEbtGdD7iIF6mEr8s+3nYgt+iGNdX2cnkdlViH6bxv6AMH9PSiwVDO30T9Wuf2J2SZBVJVfPtjs4WI7NB8HkhlUTacGtaPK6AnQ3DykOVppdEEDmuT5743ARh3kZg6GO0owTXpANOgHIp0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746484464; c=relaxed/simple;
-	bh=eqh0H8xljnVjnyVHXMzmwhnw19zLffKsvfB+BptY+yA=;
+	s=arc-20240116; t=1746484618; c=relaxed/simple;
+	bh=H9FOgRwcMPrQx2C9zMW1osqc66AjCjqL/SIhMG/vmTw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Iy95WcOJ0uO/YqhGSbYN+ni8QWQvMuS9DsScU1XQUhC+9H7rLIVvfu0GGsgImm82sxZC5aRSPkmeBFK6N0RMwJrY6/n4C3REMA1QNxQ06dsYSeiqHo8r/A5XKuuzJSoX1Nw1pueRJVmBJKpcResdYy4z8St7eRCQlubq7NX09UA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XBWsIXcf; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=mj9JEaxdequJuSlwruV1IDr93LkxPCh4xhWAYVozqn8cBVSf2uZ0vK1OQmdfYXnyUCsat2hUONJAyiLUwDiqYMrihlWt7ZFxC5ebJ9y0/FQNzrVJkpaZlgGVrwiRQEKgN5rRjHj+8id6n2pdy2uWI1oYEL+MD9Jc2UhH0RoWw0g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=L9uU7Vw1; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XBWsIXcf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B9A5BC4CEE4;
-	Mon,  5 May 2025 22:34:23 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="L9uU7Vw1"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 32101C4CEED;
+	Mon,  5 May 2025 22:36:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746484464;
-	bh=eqh0H8xljnVjnyVHXMzmwhnw19zLffKsvfB+BptY+yA=;
+	s=k20201202; t=1746484618;
+	bh=H9FOgRwcMPrQx2C9zMW1osqc66AjCjqL/SIhMG/vmTw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=XBWsIXcfk9ys6TEaKzpNT4Org5iJxM8EiCoxmdqSjQ8xHeF/TG5wmeBqZCProLNCu
-	 2OSn8jioDCvXx5vcBQwXfXiiDfSjlIzejO/eeaejZBOXNsQcDbFzya5fhD+pmMfhVW
-	 k/N2VdjTFzIasLqhWcW++TcdM9euMghHCQ4v1e/2q5LqJ7X9pBHzpafG8j957fv4Yk
-	 /kO4Se4FTAdP5yIRhFJYqHqHFsiKfTljZaWgpN3LM+cC3+x5YYVFg4GLkhJdA516DG
-	 iRw70qowKN1ofCaO+KEX8JlY0AkkREkHOV595osuOrg8AFTu0oXNXz3QXDWqJhW5sI
-	 hKkvhsKN5Ev2Q==
+	b=L9uU7Vw1upjDMPdaVCrIuGNr5Ko5fBGynl5xO+Whn4yjHi7I9xxX81oduFuDOonBe
+	 8Pfio60y2Pm/XH4C+kozz4/c03g1AmIWGmY3lcPE0Jo9miOjfvVpdWJ+2293HXZMHj
+	 3zRy9XvFhGSQwyJ4M7rCxPo/2qGD1ncpzP7QLgBfEzO5CuuS5o3CGG/c6W6y3IyByx
+	 oZV1qhz06PfoALtvYX7nVigGjfAbaF//jfWdcfWELyV2AdgZSiDTR89612iJ0QV9SA
+	 THN7T1XrBjf19NU4j1J7t+x4uBvBiOGwdFcdWeuxA3LRxKod+CUjICxry6EoqY55YE
+	 ESjWzrEyROkiw==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Chaohai Chen <wdhh66@163.com>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.14 485/642] scsi: target: spc: Fix loop traversal in spc_rsoc_get_descr()
-Date: Mon,  5 May 2025 18:11:41 -0400
-Message-Id: <20250505221419.2672473-485-sashal@kernel.org>
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.14 564/642] scsi: lpfc: Handle duplicate D_IDs in ndlp search-by D_ID routine
+Date: Mon,  5 May 2025 18:13:00 -0400
+Message-Id: <20250505221419.2672473-564-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505221419.2672473-1-sashal@kernel.org>
 References: <20250505221419.2672473-1-sashal@kernel.org>
@@ -51,66 +53,64 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.14.5
 Content-Transfer-Encoding: 8bit
 
-From: Chaohai Chen <wdhh66@163.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 04ad06e41d1c74cc323b20a7bd023c47bd0e0c38 ]
+[ Upstream commit 56c3d809b7b450379162d0b8a70bbe71ab8db706 ]
 
-Stop traversing after finding the appropriate descriptor.
+After a port swap between separate fabrics, there may be multiple nodes in
+the vport's fc_nodes list with the same fabric well known address.
+Duplication is temporary and eventually resolves itself after dev_loss_tmo
+expires, but nameserver queries may still occur before dev_loss_tmo.  This
+possibly results in returning stale fabric ndlp objects.  Fix by adding an
+nlp_state check to ensure the ndlp search routine returns the correct newer
+allocated ndlp fabric object.
 
-Signed-off-by: Chaohai Chen <wdhh66@163.com>
-Link: https://lore.kernel.org/r/20250124085542.109088-1-wdhh66@163.com
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20250131000524.163662-5-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/target/target_core_spc.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
-index 785a97536212b..0a02492bef701 100644
---- a/drivers/target/target_core_spc.c
-+++ b/drivers/target/target_core_spc.c
-@@ -2151,8 +2151,10 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
- 			if (descr->serv_action_valid)
- 				return TCM_INVALID_CDB_FIELD;
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 36e66df36a18c..45d268d49060e 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5564,6 +5564,7 @@ static struct lpfc_nodelist *
+ __lpfc_findnode_did(struct lpfc_vport *vport, uint32_t did)
+ {
+ 	struct lpfc_nodelist *ndlp;
++	struct lpfc_nodelist *np = NULL;
+ 	uint32_t data1;
  
--			if (!descr->enabled || descr->enabled(descr, cmd))
-+			if (!descr->enabled || descr->enabled(descr, cmd)) {
- 				*opcode = descr;
-+				return TCM_NO_SENSE;
-+			}
- 			break;
- 		case 0x2:
- 			/*
-@@ -2166,8 +2168,10 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
- 			if (descr->serv_action_valid &&
- 			    descr->service_action == requested_sa) {
- 				if (!descr->enabled || descr->enabled(descr,
--								      cmd))
-+								      cmd)) {
- 					*opcode = descr;
-+					return TCM_NO_SENSE;
-+				}
- 			} else if (!descr->serv_action_valid)
- 				return TCM_INVALID_CDB_FIELD;
- 			break;
-@@ -2180,13 +2184,15 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
- 			 */
- 			if (descr->service_action == requested_sa)
- 				if (!descr->enabled || descr->enabled(descr,
--								      cmd))
-+								      cmd)) {
- 					*opcode = descr;
-+					return TCM_NO_SENSE;
-+				}
- 			break;
+ 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
+@@ -5578,14 +5579,20 @@ __lpfc_findnode_did(struct lpfc_vport *vport, uint32_t did)
+ 					 ndlp, ndlp->nlp_DID,
+ 					 ndlp->nlp_flag, data1, ndlp->nlp_rpi,
+ 					 ndlp->active_rrqs_xri_bitmap);
+-			return ndlp;
++
++			/* Check for new or potentially stale node */
++			if (ndlp->nlp_state != NLP_STE_UNUSED_NODE)
++				return ndlp;
++			np = ndlp;
  		}
  	}
  
--	return 0;
-+	return TCM_NO_SENSE;
+-	/* FIND node did <did> NOT FOUND */
+-	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
+-			 "0932 FIND node did x%x NOT FOUND.\n", did);
+-	return NULL;
++	if (!np)
++		/* FIND node did <did> NOT FOUND */
++		lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
++				 "0932 FIND node did x%x NOT FOUND.\n", did);
++
++	return np;
  }
  
- static sense_reason_t
+ struct lpfc_nodelist *
 -- 
 2.39.5
 
