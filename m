@@ -1,116 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2ADA2F6B5B;
-	Mon,  5 May 2025 23:17:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04E022F73BC;
+	Mon,  5 May 2025 23:19:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746487079; cv=none; b=WKGpb20vYq1ovRhHVKMDj2/jKDw3JDKNwf9ldU8XrQjfkpnUx/92lOeoDAHemste9PvnRoBAd3zLPmJ0Z126MvyYtqF0MZ6C3s2KKIglaIbmUA59pfgH6xNVX/Pe4q6nJmABNWxyKv30cR25I/cSfW3Ngo2Nu0D+ddu/dImdhAI=
+	t=1746487149; cv=none; b=L7L6XJZ/kt4RzIo0U2XX6QkmaMwxLI9omCAwEAwWoeVkLmTUxKwssXZ1nE4XAxd6t484cOm/Lz5+AgRNJlwp3FaJa/3hL1o6h8A4uR06jPRztt//MrxDuRCfnOVP7yLFXggkTsvcGaeB3EGlSYdA+BuxBMpPxRnmAN3UK1IkQb0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746487079; c=relaxed/simple;
-	bh=CMDfBiFwcjIQ0GzR+o2KKA+zOU0rN/vwkB/RvxyrxWA=;
+	s=arc-20240116; t=1746487149; c=relaxed/simple;
+	bh=VyrK+8Ot+v1oAp9CLHvUx60S7dF3xU2GFcyb3xyqnNc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=bp+dp5z8R3lOeAn3gvhlEJb0WgjISplLOe/1wch9uaYC85ICru/a7ZHdxDJaY4xb57k7/RBfbiSu+GLXghd6mfA3/crxsIitKB2duiahXV3Zjy90oUkxQs1m6HnySQOW6PQN8fsJWt7VfQa4+VlKACDrvmUk0dusVqGZFlIYnjE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=imgs4Z5+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=RNv+UnQUi8YOQtDr7b/3U5Q+lNEDbVIVTq9Sf8x32J5KE3F0So69izxCJWsHHSL5DR6TjH2/CznUfsew3kMs3q3EQ6o/h40WyTLPVVLWERsuctUI3GB2hoLFSnrrO4RdWxtVIQ0Ew7CXDiCrMIG9ZAx1XT0zVhC7sQ4NXcIgLXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MwaMM9ws; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="imgs4Z5+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A4EE9C4CEF1;
-	Mon,  5 May 2025 23:17:58 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MwaMM9ws"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD52AC4CEEF;
+	Mon,  5 May 2025 23:19:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746487079;
-	bh=CMDfBiFwcjIQ0GzR+o2KKA+zOU0rN/vwkB/RvxyrxWA=;
+	s=k20201202; t=1746487148;
+	bh=VyrK+8Ot+v1oAp9CLHvUx60S7dF3xU2GFcyb3xyqnNc=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=imgs4Z5+5M7KiGE2y4jIRYpHjryLiYWFHVQvDLKBei/ZxlY5wVgIxSYHeYd89qjhT
-	 qRbetTWGUUr0WbWI3ssTC7Ia/om6E13QmkfSMBAr+kfjI5/7890hObMiTvN4DbsRyQ
-	 zoPcBTZMAFIy9E1Se6S15cRh8DcvYbsL8rFqomviTOjAtRZ+1YZ+zNGvEgKN7s7DMz
-	 aINRMKX/46WWEabCjumXecs6BBHl0FSYPjJZAIuCJ4T7O+jaKS14zDMqTnALIipO2M
-	 zoUQ4g4pivCNIHyEX/u+ij9k5xqZbvIYe2Bwd41jwprokmIOjlKI+zaVtQVtjHZL/o
-	 xqL1GgEm5aMtQ==
+	b=MwaMM9ws7j8LMb/mkXj0fbpL+/80L3QEi5gPud+S9YiwsKMRqUlnw8LpcfHBer9j5
+	 KcC1dXyHtYkVpDvKBKmiGrVoRLVqjucqrJTMRnAzW/MyWwhPB4bOS4Dd3nKzjki9bi
+	 C9+b2ga5QH1Ge5XYcJ+UU2R71YLgVVSSTG9zjeJlU1UhxPx85ICZJudi0k/JvpLoaG
+	 usLTq5DD16VU72vEdGlfRp0Q6rJc0Z91NOAfMZWokXE8VZ5k+10oC9jgJD00q34Ypf
+	 uHSdhXOdDNjnvMtcNE7oXTj/1Xu8CWj5wbR1ewgonVdf3RVOA4gHW3Zu/MwyeMf3YF
+	 t2KpxYfOKTgCQ==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
+Cc: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.15 142/153] scsi: lpfc: Handle duplicate D_IDs in ndlp search-by D_ID routine
-Date: Mon,  5 May 2025 19:13:09 -0400
-Message-Id: <20250505231320.2695319-142-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.10 025/114] scsi: st: Tighten the page format heuristics with MODE SELECT
+Date: Mon,  5 May 2025 19:16:48 -0400
+Message-Id: <20250505231817.2697367-25-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250505231320.2695319-1-sashal@kernel.org>
-References: <20250505231320.2695319-1-sashal@kernel.org>
+In-Reply-To: <20250505231817.2697367-1-sashal@kernel.org>
+References: <20250505231817.2697367-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.15.181
+X-stable-base: Linux 5.10.237
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
 
-[ Upstream commit 56c3d809b7b450379162d0b8a70bbe71ab8db706 ]
+[ Upstream commit 8db816c6f176321e42254badd5c1a8df8bfcfdb4 ]
 
-After a port swap between separate fabrics, there may be multiple nodes in
-the vport's fc_nodes list with the same fabric well known address.
-Duplication is temporary and eventually resolves itself after dev_loss_tmo
-expires, but nameserver queries may still occur before dev_loss_tmo.  This
-possibly results in returning stale fabric ndlp objects.  Fix by adding an
-nlp_state check to ensure the ndlp search routine returns the correct newer
-allocated ndlp fabric object.
+In the days when SCSI-2 was emerging, some drives did claim SCSI-2 but did
+not correctly implement it. The st driver first tries MODE SELECT with the
+page format bit set to set the block descriptor.  If not successful, the
+non-page format is tried.
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20250131000524.163662-5-justintee8345@gmail.com
+The test only tests the sense code and this triggers also from illegal
+parameter in the parameter list. The test is limited to "old" devices and
+made more strict to remove false alarms.
+
+Signed-off-by: Kai Mäkisara <Kai.Makisara@kolumbus.fi>
+Link: https://lore.kernel.org/r/20250311112516.5548-4-Kai.Makisara@kolumbus.fi
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/lpfc/lpfc_hbadisc.c | 17 ++++++++++++-----
- 1 file changed, 12 insertions(+), 5 deletions(-)
+ drivers/scsi/st.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
-index 54aff304cdcf4..d04669ae878bd 100644
---- a/drivers/scsi/lpfc/lpfc_hbadisc.c
-+++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
-@@ -5631,6 +5631,7 @@ static struct lpfc_nodelist *
- __lpfc_findnode_did(struct lpfc_vport *vport, uint32_t did)
- {
- 	struct lpfc_nodelist *ndlp;
-+	struct lpfc_nodelist *np = NULL;
- 	uint32_t data1;
- 
- 	list_for_each_entry(ndlp, &vport->fc_nodes, nlp_listp) {
-@@ -5645,14 +5646,20 @@ __lpfc_findnode_did(struct lpfc_vport *vport, uint32_t did)
- 					 ndlp, ndlp->nlp_DID,
- 					 ndlp->nlp_flag, data1, ndlp->nlp_rpi,
- 					 ndlp->active_rrqs_xri_bitmap);
--			return ndlp;
-+
-+			/* Check for new or potentially stale node */
-+			if (ndlp->nlp_state != NLP_STE_UNUSED_NODE)
-+				return ndlp;
-+			np = ndlp;
- 		}
- 	}
- 
--	/* FIND node did <did> NOT FOUND */
--	lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
--			 "0932 FIND node did x%x NOT FOUND.\n", did);
--	return NULL;
-+	if (!np)
-+		/* FIND node did <did> NOT FOUND */
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_NODE,
-+				 "0932 FIND node did x%x NOT FOUND.\n", did);
-+
-+	return np;
- }
- 
- struct lpfc_nodelist *
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 465fe83b49e98..47e59b74c09d2 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -3076,7 +3076,9 @@ static int st_int_ioctl(struct scsi_tape *STp, unsigned int cmd_in, unsigned lon
+ 			   cmd_in == MTSETDRVBUFFER ||
+ 			   cmd_in == SET_DENS_AND_BLK) {
+ 			if (cmdstatp->sense_hdr.sense_key == ILLEGAL_REQUEST &&
+-			    !(STp->use_pf & PF_TESTED)) {
++				cmdstatp->sense_hdr.asc == 0x24 &&
++				(STp->device)->scsi_level <= SCSI_2 &&
++				!(STp->use_pf & PF_TESTED)) {
+ 				/* Try the other possible state of Page Format if not
+ 				   already tried */
+ 				STp->use_pf = (STp->use_pf ^ USE_PF) | PF_TESTED;
 -- 
 2.39.5
 
