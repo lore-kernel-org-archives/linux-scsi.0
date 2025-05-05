@@ -1,78 +1,48 @@
-Received: from mail-qk1-f182.google.com (mail-qk1-f182.google.com [209.85.222.182])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EBA519DF62
-	for <linux-scsi@vger.kernel.org>; Mon,  5 May 2025 14:13:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.182
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB1E0189B8B;
+	Mon,  5 May 2025 14:29:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746454430; cv=none; b=biuIln02N1HsXh1KCyZawW74J87Npjncyi8jnAL4/BLHuKIEu+N/BN+GUmyG8ylJ22yEALneIrRzZEODW8UKPX6SZlta0FdgTMm9tDwTiFWTANSnzN8OgwSzI4W7rqpwwvNnwZAU8T7mLHatf36N4OYIGg5BEHYdyBbpQ2fcMa0=
+	t=1746455386; cv=none; b=R9V5HyGHNeWJmUSP1XaxkjPt1SEWUmrf9z72TYvs7/DkRKjlh3zmqMp98cwshWcQcQoFtepnAbnoYzgQtjdVprkNZfDc9EErCuHexvFRNd/0jIhOUU92uZbtXs8iAJz4BL0OCX6fMPJ1ejaUDCuzsyqkst6HjDFyBBqDllK/6OA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746454430; c=relaxed/simple;
-	bh=A2zxAUOPLV3bNvLbAu3RCEqZwUjdKzQAa87eBOyOC90=;
+	s=arc-20240116; t=1746455386; c=relaxed/simple;
+	bh=CD6uIDxK7PuM4/IKezsMaaIGURgMjXMez6lltVRFv3c=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YhwA4P2GoAtAq8WUyBOLvLdvvClncaezlGU7wHPj0imctT6oBltosy5b7o0t8mrDjH9FRVjzGglTkn7gbULft60rizxj8x6ixRlUxeR8LWXif456uff8phJxwjppUHzLszZt/OSGbv7QNlKqtZJgoSMA43ocgQ6PFh3CnEKcjoU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu; spf=fail smtp.mailfrom=g.harvard.edu; dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b=t84ibPae; arc=none smtp.client-ip=209.85.222.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=rowland.harvard.edu
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=g.harvard.edu
+	 Content-Type:Content-Disposition:In-Reply-To; b=OlAH9+CPQJMErMtedkew8w2AbCatD3wE9/noQnYmi14nX5Z/iG6p59ATAeCToae2k8dCp29UsC7HQi/cHMTpXlukvpvSsjba5uevoZxkxTtHYeEY3tBBQ4v78sJM8PvjVru91CLd8o7IvzEqE3u+x7hz+qFx1LW6BgAift8613s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s76bOPfY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=rowland.harvard.edu header.i=@rowland.harvard.edu header.b="t84ibPae"
-Received: by mail-qk1-f182.google.com with SMTP id af79cd13be357-7c5e39d1db2so274711185a.3
-        for <linux-scsi@vger.kernel.org>; Mon, 05 May 2025 07:13:47 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=rowland.harvard.edu; s=google; t=1746454427; x=1747059227; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Km2nNwCy9nfUMi5n8/eIW1Pg+DKWEU9DbSVEm6yXt90=;
-        b=t84ibPaeSevucUprToXcROsr1kvuYloz3/zxUnXayigNnhV1eyxIzbAzfDlAJuFnsB
-         2N3tvzHeJ72xyIyuUBswMUx+wmXClT6EkXdw8Y5ZSq63rjJJEFl7T7N/Q613b13qt/cJ
-         6sIM8f2KYWipH1zMaWVgL8J0tR9lkRKEr/swnRX0Uf+waeyhLrSrbVxsP3WhG30frRhU
-         Hvl3PAN3wb6TVDtMn9Wl2UmzA6itsFnszfHsujz8QzmEdc9flwBNNeahDT64272rbxMa
-         GmQTdNzZRHcoB9haCoqzKRzRguRxq5Pfc6lVCBNLz7Hgd/oXtkI7CWAjUYTujKJ8tiHC
-         jRtg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746454427; x=1747059227;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Km2nNwCy9nfUMi5n8/eIW1Pg+DKWEU9DbSVEm6yXt90=;
-        b=rlVk09BPSF32bzCaxlIkywVzbXYrluBQxmBVBQpUlqQzPwZNAQsoCwUlpahYdNy/J4
-         XSb0OcqvRqbBqza40XpMrEbr2mPSlYikGpHy3hGAZpSfxep3c5MCfHyRZLccxfLKVQpV
-         C3MDaUtU3Dvf3jmvQ9ahet3f1KAU9YtJ7xkLc16W+QG50h/8TtbspdxNS/VA3RtXhr5x
-         nyxqaBj6DOxsC+48chS+nzGwHcJgDmxfG5rQvRGwTJ/nsdo8/fJuaTGJjeUdyC18TtoP
-         P9r8B5pp5m3W2uoaPTfE8kIpQ6IS+4+ol1yYjwd1EXfNuimir2Ut8E7zWTopiZo6lj3P
-         qkOw==
-X-Forwarded-Encrypted: i=1; AJvYcCVZAQT/iVhdyCRJ+DeCWkEBC2/E2QMW8ojPyFlnXYo6OybY9YxPvk5IrNiBlRLBsM6wtKPzT2k3PB71@vger.kernel.org
-X-Gm-Message-State: AOJu0YyfT0j45S+P2yUZm8EuG0nzwl3p8wNG4P3g5wGz5eRPath2Sg4z
-	vYei306wKOWcw15YGBr2JRQa6M81uvMsnXQLVZPB4RGqI+VvL6oBtmBq+sRdAbrQYnQycJATjE0
-	=
-X-Gm-Gg: ASbGncv/VfFuXR3X+jEoSQvimNx5/tbool1kyFjxarzYvBi2hd1KBlcRa06j89/NjTI
-	/Ynt8GYtcBQzmrAl4WN/e7HSvOxoZmxZWAmNdSHAa4pTsoTzPUpgzdwuVI4EWH3aDjEiJ2U0TAY
-	48DpsI9pkQekqqamzeZ+SNzSleoL+XrVeJrMQuqsb9h/9QOYHHkGfc8Shs4djV/s4hhzslFfUf7
-	UOixWvfMWj8xV51i4C4+Ctin7yjm9RoSe0ZoVwxV5Ru/OYuc1G62jjjI/cKu+GB29RkTv6lXRTn
-	EWHMgvoUNlkeNx1UBFoUfkavXN4mt80A2hjPb4VkKYqBbux7MQHyjVRQa10=
-X-Google-Smtp-Source: AGHT+IE0jGXZkHeqo5VP6fuLU3UosiL4RXVAh+fS3HVNKXlvLlMRZFj24Qgw4HiEH1QgtxUBKzrCRQ==
-X-Received: by 2002:a05:620a:4884:b0:7ca:ca21:23d9 with SMTP id af79cd13be357-7cae3a88445mr1253233785a.7.1746454427156;
-        Mon, 05 May 2025 07:13:47 -0700 (PDT)
-Received: from rowland.harvard.edu ([140.247.181.15])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7cad2146a3fsm574523185a.0.2025.05.05.07.13.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 05 May 2025 07:13:46 -0700 (PDT)
-Date: Mon, 5 May 2025 10:13:44 -0400
-From: Alan Stern <stern@rowland.harvard.edu>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s76bOPfY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2C860C4CEE4;
+	Mon,  5 May 2025 14:29:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746455386;
+	bh=CD6uIDxK7PuM4/IKezsMaaIGURgMjXMez6lltVRFv3c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=s76bOPfYZwOomTqJoQgcpmX1YDtAmHKEJbY0ysNXij1GtqBx97Zl0E87GV9b+0mDg
+	 sYN6vd1GOdlgHX0VhkpZVO7v28jxK0PpVZE4nh5XtGBM/8eoyQxhGxxy5Xz/odn5GV
+	 jTOu8ibb2qGgpeOecR3N3XdiOpxDSj8ij1BKjGEoelIa0BXuUwzFa6mIKtdtPxwTYN
+	 efpa1YwpPqBh2TbSCKYxdEiLvPt7ORW/D558omfTb2TXPMLGy0BcFQWqwH5QzLs/zy
+	 sMYcHohbq/anIdvAaYOqIcMkf6/Gau9wApdBWUEOB0NieDwuqI1jM8qYN5bPmI6YwS
+	 V0ZFr/y/4Iqfg==
+Date: Mon, 5 May 2025 07:29:45 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
 To: Christoph Hellwig <hch@lst.de>
-Cc: Jens Axboe <axboe@kernel.dk>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	"Juergen E. Fischer" <fischer@norbit.de>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-usb@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
-	linux-mm@kvack.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH 4/7] usb-storage: reject probe of device one non-DMA HCDs
- when using highmem
-Message-ID: <f75fe6a2-b751-4839-b811-6eed2eecb177@rowland.harvard.edu>
-References: <20250505081138.3435992-1-hch@lst.de>
- <20250505081138.3435992-5-hch@lst.de>
+Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tytso@mit.edu,
+	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com, brauner@kernel.org,
+	yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+	yangerkun@huawei.com
+Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
+Message-ID: <20250505142945.GJ1035866@frogsfrogsfrogs>
+References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
+ <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
+ <20250505132208.GA22182@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,61 +51,47 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250505081138.3435992-5-hch@lst.de>
+In-Reply-To: <20250505132208.GA22182@lst.de>
 
-On Mon, May 05, 2025 at 10:11:23AM +0200, Christoph Hellwig wrote:
-> usb-storage is the last user of the block layer bounce buffering now,
-> and only uses it for HCDs that do not support DMA on highmem configs.
+On Mon, May 05, 2025 at 03:22:08PM +0200, Christoph Hellwig wrote:
+> On Mon, Apr 21, 2025 at 10:15:05AM +0800, Zhang Yi wrote:
+> > From: Zhang Yi <yi.zhang@huawei.com>
+> > 
+> > Add a new attribute flag to statx to determine whether a bdev or a file
+> > supports the unmap write zeroes command.
+> > 
+> > Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> > ---
+> >  block/bdev.c              | 4 ++++
+> >  fs/ext4/inode.c           | 9 ++++++---
+> >  include/uapi/linux/stat.h | 1 +
+> >  3 files changed, 11 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/block/bdev.c b/block/bdev.c
+> > index 4844d1e27b6f..29b0e5feb138 100644
+> > --- a/block/bdev.c
+> > +++ b/block/bdev.c
+> > @@ -1304,6 +1304,10 @@ void bdev_statx(struct path *path, struct kstat *stat,
+> >  			queue_atomic_write_unit_max_bytes(bd_queue));
+> >  	}
+> >  
+> > +	if (bdev_write_zeroes_unmap(bdev))
+> > +		stat->attributes |= STATX_ATTR_WRITE_ZEROES_UNMAP;
+> > +	stat->attributes_mask |= STATX_ATTR_WRITE_ZEROES_UNMAP;
 > 
-> Remove this support and fail the probe so that the block layer bounce
-> buffering can go away.
-> 
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> Acked-by: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Hmm, shouldn't this always be set by stat?  But I might just be
+> really confused what attributes_mask is, and might in fact have
+> misapplied it in past patches of my own..
 
-Reviewed-by: Alan Stern <stern@rowland.harvard.edu>
+attributes_mask contains attribute flags known to the filesystem,
+whereas attributes contains flags actually set on the file.
+"known_attributes" would have been a better name, but that's water under
+the bridge. :P
 
-> ---
->  drivers/usb/storage/usb.c | 20 ++++++++++++++------
->  1 file changed, 14 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/usb/storage/usb.c b/drivers/usb/storage/usb.c
-> index d36f3b6992bb..152ee3376550 100644
-> --- a/drivers/usb/storage/usb.c
-> +++ b/drivers/usb/storage/usb.c
-> @@ -1056,13 +1056,20 @@ int usb_stor_probe1(struct us_data **pus,
->  		goto BadDevice;
->  
->  	/*
-> -	 * Some USB host controllers can't do DMA; they have to use PIO.
-> -	 * For such controllers we need to make sure the block layer sets
-> -	 * up bounce buffers in addressable memory.
-> +	 * Some USB host controllers can't do DMA: They have to use PIO, or they
-> +	 * have to use a small dedicated local memory area, or they have other
-> +	 * restrictions on addressable memory.
-> +	 *
-> +	 * We can't support these controllers on highmem systems as we don't
-> +	 * kmap or bounce buffer.
->  	 */
-> -	if (!hcd_uses_dma(bus_to_hcd(us->pusb_dev->bus)) ||
-> -	    bus_to_hcd(us->pusb_dev->bus)->localmem_pool)
-> -		host->no_highmem = true;
-> +	if (IS_ENABLED(CONFIG_HIGHMEM) &&
-> +	    (!hcd_uses_dma(bus_to_hcd(us->pusb_dev->bus)) ||
-> +	     bus_to_hcd(us->pusb_dev->bus)->localmem_pool)) {
-> +		dev_warn(&intf->dev, "USB Mass Storage not supported on this host controller\n");
-> +		result = -EINVAL;
-> +		goto release;
-> +	}
->  
->  	/* Get the unusual_devs entries and the descriptors */
->  	result = get_device_info(us, id, unusual_dev);
-> @@ -1081,6 +1088,7 @@ int usb_stor_probe1(struct us_data **pus,
->  
->  BadDevice:
->  	usb_stor_dbg(us, "storage_probe() failed\n");
-> +release:
->  	release_everything(us);
->  	return result;
->  }
+> Also shouldn't the patches to report the flag go into the bdev/ext4
+> patches that actually implement the feature for the respective files
+> to keep bisectability?
+
+/I/ think so...
+
+--D
