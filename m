@@ -1,46 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CD5B32D6107;
-	Mon,  5 May 2025 22:49:15 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C9092D3F82;
+	Mon,  5 May 2025 22:53:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746485356; cv=none; b=U7x4sJoiyFUTKyWXx/AbJ4zjX5IUt53GS54qACOZbTm2I160Z+SR7Z9M6BDgeC5uZMXxXGJoTlzHiE0gzerJ5NePbIXmO1IDBDuvTjuJyHW6FFfF/0rx6LGY5jCpeL/q6KuBHRtx8c4q8vJUf0zS8vWmWL2c++ognbjnE6x4Vek=
+	t=1746485593; cv=none; b=d+vmtGgbNqSnQQQ/NdjiGUm6C3eUTP6h05DZ0zD79FPDRNnOJ5bJAw9C4FlyWtPPO8kEl8pFLN44jPsy0qu0j91c+KNq/MHCV7CnTtVwOmD+wKb9JBZDTiaNs9m79heK/zy7oFWeoppsCklKmrl64nvZS2Fi8BsHmOeLDekli2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746485356; c=relaxed/simple;
-	bh=r9j4Hs7QN9+19h8hFBBa0TdRFkZZuj2yxEs/npKCWeI=;
+	s=arc-20240116; t=1746485593; c=relaxed/simple;
+	bh=/ZfG5SNQ1bIVbs6hFU7RU8RBy+koTOJxzYhRtYQ7/9A=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=FplAJJIIF1LkQztvxYPAOmFhWHit7NCHnbWjFY4hpR1lqkkM7RBxU/w1/vfmwj6VEOpHsz9H63m9uVhY/ktIdYOCeOteQlBxd/l6mD0AVeUjGQ+YI5xumn9wOJ+P2pWgt2CuO0guH6Mzy/ajG/cR2kyNz11Fmcbdjt1iGABBcyQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ff3tTUdI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=oFq+FMkqPgk3V1juc+IIfkCeHhBeLizt7xpmYbIBk9HNsqeMM4ouHDH/YSEMuknTanQkneYgFSXOLL2+KOO+/kZGJp9pwAEHb0oV1l4DFNS4YLb6GkN8IsshFxVqZiOu+54DnqS/hzx33kppNFSXA2vPU8vEUo1nJ1TxYgMiWMM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=N3blRtbq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ff3tTUdI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1CABAC4CEEF;
-	Mon,  5 May 2025 22:49:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="N3blRtbq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 13A13C4CEEE;
+	Mon,  5 May 2025 22:53:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746485355;
-	bh=r9j4Hs7QN9+19h8hFBBa0TdRFkZZuj2yxEs/npKCWeI=;
+	s=k20201202; t=1746485592;
+	bh=/ZfG5SNQ1bIVbs6hFU7RU8RBy+koTOJxzYhRtYQ7/9A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=Ff3tTUdI63DWBijS7erdJgJJJLJr5WRJX0GH32RARHBsXBqEAkAPmzh7H/e7jH6w8
-	 hPDAL4uspa7cwEEn1oGP+NPj/Enehwbg7yjm3/kAQbmCIoYxV9IfKV+FTs0m+NG5SG
-	 aVHbS3jmj48vzRJq08PUMEy1paWWfWc1qDu5nqHGoqdwGIjXgDywgqmMw1BLCRraaV
-	 zmilDfwOjgGHzySIki/OXHfCe9mxGBt20U5wegRVChoLgZ1vbJonwNe+/g8yPCZBRt
-	 OMy5SFACvz8jo+a0lNnzlov9GluWehvjiEiuxY1/UPF1dRfvBND+FPvxie5/NMNjSN
-	 5h+uWGYgfSYWA==
+	b=N3blRtbqwEmeSiwxKYSQMXGuq9B0OP5htCSql8HePd3fSfp/D4zYDc+5xW50Ukbzl
+	 mRfdlkvnN692mHU1HlOfM2wEWIvSgnlOetzPnmTnwXO9O0jAu5VCE7H0M0O3StQM9c
+	 37cvYpaheT9iVNIY9MDMhTSTB09jPEI9jmGkm7MpfCBMUc0TSU1Jl00KoIj8qiifEi
+	 mt74/brkBfgdnmgSmzhs88vKdZ4Vnr9BsqSCzngKuh1euPhw2pWRcdZIAmhvXsnaad
+	 S4SSYZWo3VfNFr3aftQjlMELvnvE1cd2BMDG/dI+5sWzhpJYZvbBFcCmsPML/7DBnh
+	 IZrEqxDyAm45A==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+Cc: Chaohai Chen <wdhh66@163.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 283/486] scsi: mpt3sas: Send a diag reset if target reset fails
-Date: Mon,  5 May 2025 18:35:59 -0400
-Message-Id: <20250505223922.2682012-283-sashal@kernel.org>
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.12 378/486] scsi: target: spc: Fix loop traversal in spc_rsoc_get_descr()
+Date: Mon,  5 May 2025 18:37:34 -0400
+Message-Id: <20250505223922.2682012-378-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505223922.2682012-1-sashal@kernel.org>
 References: <20250505223922.2682012-1-sashal@kernel.org>
@@ -55,62 +51,66 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.12.26
 Content-Transfer-Encoding: 8bit
 
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+From: Chaohai Chen <wdhh66@163.com>
 
-[ Upstream commit 5612d6d51ed2634a033c95de2edec7449409cbb9 ]
+[ Upstream commit 04ad06e41d1c74cc323b20a7bd023c47bd0e0c38 ]
 
-When an IOCTL times out and driver issues a target reset, if firmware
-fails the task management elevate the recovery by issuing a diag reset to
-controller.
+Stop traversing after finding the appropriate descriptor.
 
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Link: https://lore.kernel.org/r/1739410016-27503-5-git-send-email-shivasharan.srikanteshwara@broadcom.com
+Signed-off-by: Chaohai Chen <wdhh66@163.com>
+Link: https://lore.kernel.org/r/20250124085542.109088-1-wdhh66@163.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/target/target_core_spc.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 87784c96249a7..47faa27bc3559 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -679,6 +679,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 	size_t data_in_sz = 0;
- 	long ret;
- 	u16 device_handle = MPT3SAS_INVALID_DEVICE_HANDLE;
-+	int tm_ret;
+diff --git a/drivers/target/target_core_spc.c b/drivers/target/target_core_spc.c
+index 61c065702350e..701dcbd7b63cf 100644
+--- a/drivers/target/target_core_spc.c
++++ b/drivers/target/target_core_spc.c
+@@ -2151,8 +2151,10 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
+ 			if (descr->serv_action_valid)
+ 				return TCM_INVALID_CDB_FIELD;
  
- 	issue_reset = 0;
- 
-@@ -1120,18 +1121,25 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 			if (pcie_device && (!ioc->tm_custom_handling) &&
- 			    (!(mpt3sas_scsih_is_pcie_scsi_device(
- 			    pcie_device->device_info))))
--				mpt3sas_scsih_issue_locked_tm(ioc,
-+				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
- 				  le16_to_cpu(mpi_request->FunctionDependent1),
- 				  0, 0, 0,
- 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
- 				  0, pcie_device->reset_timeout,
- 			MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE);
- 			else
--				mpt3sas_scsih_issue_locked_tm(ioc,
-+				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
- 				  le16_to_cpu(mpi_request->FunctionDependent1),
- 				  0, 0, 0,
- 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
- 				  0, 30, MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET);
-+
-+			if (tm_ret != SUCCESS) {
-+				ioc_info(ioc,
-+					 "target reset failed, issue hard reset: handle (0x%04x)\n",
-+					 le16_to_cpu(mpi_request->FunctionDependent1));
-+				mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
+-			if (!descr->enabled || descr->enabled(descr, cmd))
++			if (!descr->enabled || descr->enabled(descr, cmd)) {
+ 				*opcode = descr;
++				return TCM_NO_SENSE;
 +			}
- 		} else
- 			mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
+ 			break;
+ 		case 0x2:
+ 			/*
+@@ -2166,8 +2168,10 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
+ 			if (descr->serv_action_valid &&
+ 			    descr->service_action == requested_sa) {
+ 				if (!descr->enabled || descr->enabled(descr,
+-								      cmd))
++								      cmd)) {
+ 					*opcode = descr;
++					return TCM_NO_SENSE;
++				}
+ 			} else if (!descr->serv_action_valid)
+ 				return TCM_INVALID_CDB_FIELD;
+ 			break;
+@@ -2180,13 +2184,15 @@ spc_rsoc_get_descr(struct se_cmd *cmd, struct target_opcode_descriptor **opcode)
+ 			 */
+ 			if (descr->service_action == requested_sa)
+ 				if (!descr->enabled || descr->enabled(descr,
+-								      cmd))
++								      cmd)) {
+ 					*opcode = descr;
++					return TCM_NO_SENSE;
++				}
+ 			break;
+ 		}
  	}
+ 
+-	return 0;
++	return TCM_NO_SENSE;
+ }
+ 
+ static sense_reason_t
 -- 
 2.39.5
 
