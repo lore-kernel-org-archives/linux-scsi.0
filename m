@@ -1,46 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57B1F2ECE57;
-	Mon,  5 May 2025 23:10:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC03938AF2B;
+	Mon,  5 May 2025 23:12:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746486650; cv=none; b=jjSveA55cI14tvl4BZ9tpfIKTDVUBhsMQE486b0/a7sqjnwctIV1UycyDG63owvoFRC+x5JfBvpRTQBuo/hyOKS+IOfZIXHlJcntdqgeV5UcsyzDeltXsQ/tRYixwY7KcyXDS92wJFU7guK70sUBlk9+uA9mmAiQ99+rDf0vP7A=
+	t=1746486776; cv=none; b=G/ikgeXx24sLK1AUDqeT2jYGRtLQkh+OhTavBJgls0vjFvFsIVu62G4jX0pvC78DDVmZZr0LkUp93CYSdHFX3Lal84QoZHIULZHQo4zKXXbjcCSY8YRhqze2/+ws4qdAk741jPfDOLcwO3chUPScOaaTnINBZzkrVLFCPbiHrcs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746486650; c=relaxed/simple;
-	bh=9dgeRB9RiOpL/1PMxwmzRWywCC+qvQOmB5skJqPYObU=;
+	s=arc-20240116; t=1746486776; c=relaxed/simple;
+	bh=gE3emMFQQOhRKQH4aWjQBd6PT7SYaFX/CFhjgkCBKSo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=DZu+hS3HCXGfXuFNJtpD4DDkmBsWwJ/s3ib6sfEwediryXU6QmiqCz3ujd9aQcmIH/Tlx/iDnkhByyT82HTRJCVHtH0jvbGxm0RNDNpm0vi3KlOb4rXnfGW7Gj4axz+1ftOKdXET5jEFK9eX9tfk4iHUtpH/qTb9+UghOAc7N1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aD+w/2pk; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Tfl9Kz5nrv4byMy79i1cILsF1gb8O/x+9FYF8W0eEO9UmEReIAc2zmwNfYBGDM7khYFZVsJQMo1iFgGwOj4fPGW6amTldf4xsrYyCbGhbJw5ru3CiA/cO2BY3uekGCnH174pgzzSrQVYuV5ngJFV5vCJjBtFWHYLB0D2TYVFdyw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nUfcU6OM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aD+w/2pk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB479C4CEF2;
-	Mon,  5 May 2025 23:10:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nUfcU6OM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 934FFC4CEEF;
+	Mon,  5 May 2025 23:12:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1746486649;
-	bh=9dgeRB9RiOpL/1PMxwmzRWywCC+qvQOmB5skJqPYObU=;
+	s=k20201202; t=1746486776;
+	bh=gE3emMFQQOhRKQH4aWjQBd6PT7SYaFX/CFhjgkCBKSo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=aD+w/2pkNv0ZO0ldQiPKB87meMIOS932q9oOtEysiJ5lPNPnhK3UDrYIUv6hVm8CU
-	 eFnyXz0Az8lJUapLkYcTHNuhGe6CSXc42UraUl2lk8ot+w4AIZWBz6y1l6WZKsHGFO
-	 hGyuFm/kkzsIuoNw1QS85WG2YBXN/tyVzL4GuRy8GntcQcLAasp3L//5eh6GIrpnyE
-	 VjGCTkhOaHZSKL2kkqL2vUDz40kXKpZKjJN4kt8tVqK7Dw/6aG4nw5oyi5ovvNxinK
-	 bRLbSm55irU00T9E5Cm7z9EFeOoXkQ8wjlgIW0+FYAxBSen1dwR8d08JBX1ZyT3415
-	 EP3qnwprz2OQA==
+	b=nUfcU6OM+yeoRQM7Lt9fv6P0hdBahfW18IanQP/NmWGm7jU9NHRV+O7VZLMsDBuB5
+	 m1EdMCTRcL8vs2EqEWKv4wQ5ayofZWK+4Ky2u9lt0Pg9hwPouMnh0dP/GmdqYnBHrz
+	 4wSE8bD9dcpJqgcwmSdGXGzxhhHk8ybhhUai3e5WVmceqK10xatmxc2jRXYMvTFTeH
+	 aEbqLFEX/Yg4V5KNK4eFPr5tEi8Gznbblxda/p14oSzJvcP+kRtU6SwEGgZEoWnKji
+	 1TzzkpHvhfjeuogJGsO/TIlJTigM7NZizkY6cBWBZZ04Jxbnu4q9EwWTBWg0m3vTpn
+	 zVdhz1uN4F6Xg==
 From: Sasha Levin <sashal@kernel.org>
 To: linux-kernel@vger.kernel.org,
 	stable@vger.kernel.org
-Cc: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	sathya.prakash@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	suganath-prabu.subramani@broadcom.com,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	James.Bottomley@HansenPartnership.com,
-	MPT-FusionLinux.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 135/212] scsi: mpt3sas: Send a diag reset if target reset fails
-Date: Mon,  5 May 2025 19:05:07 -0400
-Message-Id: <20250505230624.2692522-135-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.1 197/212] scsi: lpfc: Free phba irq in lpfc_sli4_enable_msi() when pci_irq_vector() fails
+Date: Mon,  5 May 2025 19:06:09 -0400
+Message-Id: <20250505230624.2692522-197-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250505230624.2692522-1-sashal@kernel.org>
 References: <20250505230624.2692522-1-sashal@kernel.org>
@@ -55,62 +53,44 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.1.136
 Content-Transfer-Encoding: 8bit
 
-From: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 5612d6d51ed2634a033c95de2edec7449409cbb9 ]
+[ Upstream commit f0842902b383982d1f72c490996aa8fc29a7aa0d ]
 
-When an IOCTL times out and driver issues a target reset, if firmware
-fails the task management elevate the recovery by issuing a diag reset to
-controller.
+Fix smatch warning regarding missed calls to free_irq().  Free the phba IRQ
+in the failed pci_irq_vector cases.
 
-Signed-off-by: Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Link: https://lore.kernel.org/r/1739410016-27503-5-git-send-email-shivasharan.srikanteshwara@broadcom.com
+lpfc_init.c: lpfc_sli4_enable_msi() warn: 'phba->pcidev->irq' from
+             request_irq() not released.
+
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20250131000524.163662-3-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index fc5af6a5114e3..863503e8a4d1a 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -679,6 +679,7 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 	size_t data_in_sz = 0;
- 	long ret;
- 	u16 device_handle = MPT3SAS_INVALID_DEVICE_HANDLE;
-+	int tm_ret;
- 
- 	issue_reset = 0;
- 
-@@ -1120,18 +1121,25 @@ _ctl_do_mpt_command(struct MPT3SAS_ADAPTER *ioc, struct mpt3_ioctl_command karg,
- 			if (pcie_device && (!ioc->tm_custom_handling) &&
- 			    (!(mpt3sas_scsih_is_pcie_scsi_device(
- 			    pcie_device->device_info))))
--				mpt3sas_scsih_issue_locked_tm(ioc,
-+				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
- 				  le16_to_cpu(mpi_request->FunctionDependent1),
- 				  0, 0, 0,
- 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
- 				  0, pcie_device->reset_timeout,
- 			MPI26_SCSITASKMGMT_MSGFLAGS_PROTOCOL_LVL_RST_PCIE);
- 			else
--				mpt3sas_scsih_issue_locked_tm(ioc,
-+				tm_ret = mpt3sas_scsih_issue_locked_tm(ioc,
- 				  le16_to_cpu(mpi_request->FunctionDependent1),
- 				  0, 0, 0,
- 				  MPI2_SCSITASKMGMT_TASKTYPE_TARGET_RESET, 0,
- 				  0, 30, MPI2_SCSITASKMGMT_MSGFLAGS_LINK_RESET);
-+
-+			if (tm_ret != SUCCESS) {
-+				ioc_info(ioc,
-+					 "target reset failed, issue hard reset: handle (0x%04x)\n",
-+					 le16_to_cpu(mpi_request->FunctionDependent1));
-+				mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
-+			}
- 		} else
- 			mpt3sas_base_hard_reset_handler(ioc, FORCE_BIG_HAMMER);
- 	}
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 1a0bafde34d86..97f3c5240d572 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -13204,6 +13204,7 @@ lpfc_sli4_enable_msi(struct lpfc_hba *phba)
+ 	eqhdl = lpfc_get_eq_hdl(0);
+ 	rc = pci_irq_vector(phba->pcidev, 0);
+ 	if (rc < 0) {
++		free_irq(phba->pcidev->irq, phba);
+ 		pci_free_irq_vectors(phba->pcidev);
+ 		lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+ 				"0496 MSI pci_irq_vec failed (%d)\n", rc);
+@@ -13284,6 +13285,7 @@ lpfc_sli4_enable_intr(struct lpfc_hba *phba, uint32_t cfg_mode)
+ 			eqhdl = lpfc_get_eq_hdl(0);
+ 			retval = pci_irq_vector(phba->pcidev, 0);
+ 			if (retval < 0) {
++				free_irq(phba->pcidev->irq, phba);
+ 				lpfc_printf_log(phba, KERN_WARNING, LOG_INIT,
+ 					"0502 INTR pci_irq_vec failed (%d)\n",
+ 					 retval);
 -- 
 2.39.5
 
