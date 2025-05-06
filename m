@@ -1,108 +1,228 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB9BB277021;
-	Tue,  6 May 2025 11:25:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 688CD27BF70
+	for <linux-scsi@vger.kernel.org>; Tue,  6 May 2025 11:53:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746530713; cv=none; b=EBlpECZN2/bM5Lbi10xw8fAcnlDPfy3nuexXmzRb2jNtTucg8ldd3suvRunOn6Y0hHhhL6Q1245gLJTHSoMDqlquVb3nEr1ZEmCCWAlTgylcmwQzWC8QP6fMSfj4Hf8zZtGxxnC6Hwb+ECWR+ZfwGBBqAMndgQIfsO9dGbJPh/o=
+	t=1746532409; cv=none; b=hxm3BAQ7nhl+yKaiylkSLCF+L+z457BYwAib/afbZ0mjvrrB4xyP9l3dJldw+dC1kttA3J3fopiCECE4XkvY4Aa0Bq/IdrVtfDGcqW/632YNePftSEFCItlxaPt5GAQFv0C1yI8OlO30KWY6fAoC/J14JnVzCRp+ssCJHnQz8K0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746530713; c=relaxed/simple;
-	bh=LYEoDqW9Aw3HirRWc3fZPPqmXKbhw5VH1R/eJ7s7ey0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DbaBIHPJLzFbldzhHAqlBiBjSiWaKpArC6BKQDNIJYQ4+Kzlr0I6qBUl0rxqjB8vC5YvAOPZi2kDUmXL2eucqao6UKj0Vk/IohWmvbSaYh/v2jdLkdg9lwlIXiiPljz3toxtkcuirU+D4aPbHYLh4lRgo+aKmEBeGshUfzZ1R9I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4ZsGK03YjSzYQv9t;
-	Tue,  6 May 2025 19:25:08 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id D0A9F1A1041;
-	Tue,  6 May 2025 19:25:07 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgD3Wl+S8RlowhVpLg--.31381S3;
-	Tue, 06 May 2025 19:25:07 +0800 (CST)
-Message-ID: <c3105509-9d63-4fa2-afaf-5b508ddeeaca@huaweicloud.com>
-Date: Tue, 6 May 2025 19:25:06 +0800
+	s=arc-20240116; t=1746532409; c=relaxed/simple;
+	bh=cJ8z+e/cz/4JpyhS9gbI2W0uxCVuruKRkRejJqlbgbw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=IZu633kepeUy5QSGaa/NC6ufGGw8PQ/jPp4dgLpLLghJ3YU0vJqWZEbk0P/HeodimHhjY3IohtOHyHZugWc7UOlgV7D1rj8YmYOHf0K5oBANVb1DyS7lmnYMeFS64zIZMTkyorCg0xC0FWNb3mdwCPmD9V3xztA7DNawbF4rjK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=W8p8CWkd; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="W8p8CWkd"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5468VDke011169
+	for <linux-scsi@vger.kernel.org>; Tue, 6 May 2025 11:53:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=e2/mPm2rqjVa2UWZk3lLu/r9
+	DrwqHykiPCnvgPRDP9Q=; b=W8p8CWkdl/U+Jl7zrxWRaneUa1lmPnoS8SdufiqB
+	FssFDDUwKJkhUqZY6lLPezliomZilDA+PnRq9K0UP0W2m8BGqi1qZnJTWXkRImKN
+	o5YRwnKMRBe7Pbb1yVc1KdPFe+/8FrI0sR6WduZV70EwstczDd80CF8Y9HOCVslL
+	XYD3DHM7TtVWCLNH7aX+HIphJ5xECs4Xje06wcczOwDChkS7I76EkQYGSiETkWoq
+	BqXgIzLLUW1irjjpQo2k2fmh0rA8dw2g9t+gGN3jhCRdgH0lCV+mQU4sv4IMG8Nc
+	JoCj0GAus7uorHVDy9M1fbHFqb0VTReBu2BcDGgllvN8KA==
+Received: from mail-qt1-f198.google.com (mail-qt1-f198.google.com [209.85.160.198])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46f5tba4wt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Tue, 06 May 2025 11:53:25 +0000 (GMT)
+Received: by mail-qt1-f198.google.com with SMTP id d75a77b69052e-476a44cec4cso98058471cf.2
+        for <linux-scsi@vger.kernel.org>; Tue, 06 May 2025 04:53:25 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746532405; x=1747137205;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=e2/mPm2rqjVa2UWZk3lLu/r9DrwqHykiPCnvgPRDP9Q=;
+        b=Itw8CR/O98YNkzbQQp4N8dWSBMcZ0xquTwGEIVNIhNUj+/YrduhC0zTbfoxyIIIj6T
+         PUBlxX+Sr4KKCuLCK1UkPJBzrb0w0u4+fVwHuw0kRmhqW/d88xri/vYIFo5PeuaW+aJK
+         +6ebLX5srL3T1qPfZfQhmIOvUU77R/15ooVW55uc1xx/Qi1UpcnKZ6AI9ReoMYTsdzng
+         cdPMuF7Psmq7cpHk3AFB6dMfk3cjY7oAxaQ4S1UTwnNYRRgPryeZ0+OxopfHCVZZimym
+         rsfz+HLF43X4jyl4JXGIilKrZK8hUtNK6C7eU4TWG6dWai+qYBRr443gIqtoKR0iYdlF
+         qXQA==
+X-Forwarded-Encrypted: i=1; AJvYcCXioZcKHxahhimbEOwLoro5FNO9VpfODKKl8lyYxHodkdR0VyVoL/AOqBU5UtmHQbLGoEqIcOcJXq2t@vger.kernel.org
+X-Gm-Message-State: AOJu0YzsjLEqRLKJ70Vymlq1R0U6agmztFW5USQcWTBH//xfExDPiDNz
+	ZVuW1yjNG8wfSF338zqoUVKiB+KBi2zjyVnarw/6FU31xO4pMmnzW9cZzM6+6Dp047Lso6QGj2i
+	0iDJ1wfSF7o8NXrMAPXYtlba7qDcaruqdS6bJDV5eWmguZUleZsWaZzN8okgx
+X-Gm-Gg: ASbGncsFMN+Ht7yO0A02L8maCooc0v1gip7EVxqy1UzXsAqt6P4deoLC6+FkhBQPuim
+	rL0mD8XG9HsNjOrKBkaU9T6Ax2N9Ghs2PZrwLfD9kjKLhSumXw0sjLZIS/rvoS8HwNQrxq6nzB7
+	b0ZqMiS5Fzu67BmP2TPaYQYiq5+SMZ6RLTR2UhiAA38gAL1lQKqI50Efn5j7n/bA53Hu5MjB3SX
+	ruKYnrW7x91KhOD/hOkA/iDnDyN/XbJnxNG5675sI0jz5ubwTkIIihyvN69ERz7uTNYy6XIqUHC
+	HLYKxMvVPWl3MI80SJ2H3tgLiZAYuvsDq5Hcf6r7Z85HprrxLNpp3hgrNouAOxNv3AHUk9t2BvI
+	=
+X-Received: by 2002:a05:622a:7a87:b0:491:20d6:75ff with SMTP id d75a77b69052e-49120d6761amr30625051cf.31.1746532405088;
+        Tue, 06 May 2025 04:53:25 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGXOcFjlZPXrhnZADw3wS6Inb1dGDnsA/hWap6iVGRk+I76OYADv+/Pc/bqYfbWLm93Pti8hg==
+X-Received: by 2002:a05:622a:7a87:b0:491:20d6:75ff with SMTP id d75a77b69052e-49120d6761amr30624541cf.31.1746532404657;
+        Tue, 06 May 2025 04:53:24 -0700 (PDT)
+Received: from eriador.lumag.spb.ru (2001-14ba-a0c3-3a00--7a1.rev.dnainternet.fi. [2001:14ba:a0c3:3a00::7a1])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-54ea94f6a7bsm2020949e87.222.2025.05.06.04.53.23
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 06 May 2025 04:53:23 -0700 (PDT)
+Date: Tue, 6 May 2025 14:53:22 +0300
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Nitin Rawat <quic_nitirawa@quicinc.com>
+Cc: vkoul@kernel.org, kishon@kernel.org, manivannan.sadhasivam@linaro.org,
+        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        bvanassche@acm.org, andersson@kernel.org, neil.armstrong@linaro.org,
+        konrad.dybcio@oss.qualcomm.com, quic_rdwivedi@quicinc.com,
+        quic_cang@quicinc.com, linux-arm-msm@vger.kernel.org,
+        linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH V4 06/11] phy: qcom-qmp-ufs: Rename qmp_ufs_power_off
+Message-ID: <qhblitwmuhnb7axrflsqh7pmshmhrehh2hina23k6zqq7mhafv@xtsl376cyooy>
+References: <20250503162440.2954-1-quic_nitirawa@quicinc.com>
+ <20250503162440.2954-7-quic_nitirawa@quicinc.com>
+ <prbe2guxzsea6aqonf32m44zp6oa3vzdf5ieazcontv4fmx3d3@2r4tu5nr2k4x>
+ <2191c270-f4fc-47e4-8bb7-ba6329332ef3@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
-To: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
- john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
- shinichiro.kawasaki@wdc.com, brauner@kernel.org, yi.zhang@huawei.com,
- chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
-References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
- <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
- <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs>
- <20250506050239.GA27687@lst.de> <20250506053654.GA25700@frogsfrogsfrogs>
- <20250506054722.GA28781@lst.de>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20250506054722.GA28781@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgD3Wl+S8RlowhVpLg--.31381S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7tr4rXrW8WF4fKryrZw43ZFb_yoW8GF47pF
-	WkCFyIkr4IkF47Ga1kZw1Ivr1Y9rn7JFy7C3s5Kr12yay2qrn7uFn5Ca42kFnaqr93uw4Y
-	qFZxX342va1093DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvYb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBIdaVFxhVjvjDU0xZFpf9x07
-	j7l19UUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2191c270-f4fc-47e4-8bb7-ba6329332ef3@quicinc.com>
+X-Proofpoint-ORIG-GUID: NA_9CY6RRTRm7pcmOGuyminjpxQ0Ijem
+X-Proofpoint-GUID: NA_9CY6RRTRm7pcmOGuyminjpxQ0Ijem
+X-Authority-Analysis: v=2.4 cv=doXbC0g4 c=1 sm=1 tr=0 ts=6819f835 cx=c_pps
+ a=mPf7EqFMSY9/WdsSgAYMbA==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=dt9VzEwgFbYA:10 a=JfrnYn6hAAAA:8 a=COk6AnOGAAAA:8 a=mhj7_-Pg-QKlZrooJR8A:9
+ a=CjuIK1q_8ugA:10 a=dawVfQjAaf238kedN5IG:22 a=1CNFftbPRP8L7MoqJWF3:22
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA2MDExNCBTYWx0ZWRfXyRcgsYwYTKGJ
+ QbyfL1UClBuEWE23VfB74CUia5l9+DmTpWdFqnzAKrNIhfJTuHxtaGQUvubue4BsjOaf4sY83n6
+ 4q5jqgUzecmeN8ib1bDzS2nAFBkGQKn6Vbx9Bml7ieRZyPsgtECkLV8QYrkDnfHJ7AsqhX1uddM
+ ATq2obpjSKX5clqqqgpP7RA+VKJG2xDkpiqLmnk4UukzxTWC2Uqb5CgV9OUurWu0zMaAAtLZDtL
+ H2JdZxv0zhSREZWBzpnePctzVXz6w8Ecxxstg8abHnPR1B34gHBzKvtaX8ZP1lgY7i/DLHpqpvp
+ TyN287qoBDcTShGqxsXLAp9j89xK7p4dl4seTfjbTb7f6hFySltcq7M0ttZSzuYntoL3kIALLmi
+ tgF3KKdFfGCNpxinuj4WZSzOS9zR59G5VUMN/OtWdy+D+py4FAdr7/vZwoAx5bKD6BzlTfHb
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-06_05,2025-05-05_01,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 bulkscore=0 adultscore=0 malwarescore=0 phishscore=0
+ mlxlogscore=999 impostorscore=0 clxscore=1015 mlxscore=0 priorityscore=1501
+ spamscore=0 lowpriorityscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
+ definitions=main-2505060114
 
-On 2025/5/6 13:47, Christoph Hellwig wrote:
-> On Mon, May 05, 2025 at 10:36:54PM -0700, Darrick J. Wong wrote:
->> I think STATX_* (i.e. not STATX_ATTR_*) flags have two purposes: 1) to
->> declare that specific fields in struct statx actually have meaning, most
->> notably in scenarios where zeroes are valid field contents; and 2) if
->> filling out the field is expensive, userspace can elect not to have it
->> filled by leaving the bit unset.  I don't know how userspace is supposed
->> to figure out which fields are expensive.
+On Sun, May 04, 2025 at 09:22:06PM +0530, Nitin Rawat wrote:
 > 
-> Yes.
 > 
+> On 5/4/2025 9:07 PM, Dmitry Baryshkov wrote:
+> > On Sat, May 03, 2025 at 09:54:35PM +0530, Nitin Rawat wrote:
+> > > Rename qmp_ufs_disable to qmp_ufs_power_off to better represent its
+> > > functionality. Additionally, move the qmp_ufs_exit() call inside
+> > > qmp_ufs_power_off to preserve the functionality of .power_off.
+> > > 
+> > > There is no functional change.
+> > > 
+> > > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> > > ---
+> > >   drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 30 +++++++++----------------
+> > >   1 file changed, 11 insertions(+), 19 deletions(-)
+> > > 
+> > > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> > > index 94095393148c..c501223fc5f9 100644
+> > > --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> > > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
+> > > @@ -1835,6 +1835,15 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
+> > >   	return 0;
+> > >   }
+> > > 
+> > > +static int qmp_ufs_exit(struct phy *phy)
+> > > +{
+> > > +	struct qmp_ufs *qmp = phy_get_drvdata(phy);
+> > > +
+> > > +	qmp_ufs_com_exit(qmp);
+> > 
+> > Just inline it, unless you have any other plans.
+> 
+> Hi Dmitry,
+> 
+> I have inlined qcom_ufs_com_exit in patch #7 of the same series. I separated
+> it into a different patch to keep each patch simpler.
 
-IIUC, it seems I was misled by STATX_ATTR_WRITE_ATOMIC, adding this
-STATX_ATTR_WRITE_ZEROES_UNMAP attribute flag is incorrect. The right
-approach should be to add STATX_WRITE_ZEROES_UNMAP, setting it in the
-result_mask if the request_mask includes this flag and
-bdev_write_zeroes_unmap(bdev) returns true. Something like below. Is
-my understanding right?
+You have inlined qmp_ufs_com_exit() contents. Here I've asked you to
+inline qmp_ufs_exit(), keeping qmp_ufs_com_exit() as is.
 
-diff --git a/block/bdev.c b/block/bdev.c
-index 4ba48b8735e7..e1367f30dbce 100644
---- a/block/bdev.c
-+++ b/block/bdev.c
-@@ -1303,9 +1303,9 @@ void bdev_statx(const struct path *path, struct kstat *stat, u32 request_mask)
-                        queue_atomic_write_unit_max_bytes(bd_queue));
-        }
+> 
+> Could you please review patch #7 and share your thoughts.
+> 
+> [PATCH V4 07/11] phy: qcom-qmp-ufs: Remove qmp_ufs_exit() and Inline
+> qmp_ufs_com_exit().
+> 
+> 
+> Regards,
+> Nitin
+> 
+> 
+> > 
+> > > +
+> > > +	return 0;
+> > > +}
+> > > +
+> > >   static int qmp_ufs_power_off(struct phy *phy)
+> > >   {
+> > >   	struct qmp_ufs *qmp = phy_get_drvdata(phy);
+> > > @@ -1851,28 +1860,11 @@ static int qmp_ufs_power_off(struct phy *phy)
+> > >   	qphy_clrbits(qmp->pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL],
+> > >   			SW_PWRDN);
+> > > 
+> > > -	return 0;
+> > > -}
+> > > -
+> > > -static int qmp_ufs_exit(struct phy *phy)
+> > > -{
+> > > -	struct qmp_ufs *qmp = phy_get_drvdata(phy);
+> > > -
+> > > -	qmp_ufs_com_exit(qmp);
+> > > +	qmp_ufs_exit(phy);
+> > > 
+> > >   	return 0;
+> > >   }
+> > > 
+> > > -static int qmp_ufs_disable(struct phy *phy)
+> > > -{
+> > > -	int ret;
+> > > -
+> > > -	ret = qmp_ufs_power_off(phy);
+> > > -	if (ret)
+> > > -		return ret;
+> > > -	return qmp_ufs_exit(phy);
+> > > -}
+> > > -
+> > >   static int qmp_ufs_set_mode(struct phy *phy, enum phy_mode mode, int submode)
+> > >   {
+> > >   	struct qmp_ufs *qmp = phy_get_drvdata(phy);
+> > > @@ -1921,7 +1913,7 @@ static int qmp_ufs_phy_init(struct phy *phy)
+> > >   static const struct phy_ops qcom_qmp_ufs_phy_ops = {
+> > >   	.init		= qmp_ufs_phy_init,
+> > >   	.power_on	= qmp_ufs_power_on,
+> > > -	.power_off	= qmp_ufs_disable,
+> > > +	.power_off	= qmp_ufs_power_off,
+> > >   	.calibrate	= qmp_ufs_phy_calibrate,
+> > >   	.set_mode	= qmp_ufs_set_mode,
+> > >   	.owner		= THIS_MODULE,
+> > > --
+> > > 2.48.1
+> > > 
+> > 
+> 
+> 
+> -- 
+> linux-phy mailing list
+> linux-phy@lists.infradead.org
+> https://lists.infradead.org/mailman/listinfo/linux-phy
 
-+       if (request_mask & STATX_WRITE_ZEROES_UNMAP &&
-+           bdev_write_zeroes_unmap(bdev))
-+               stat->result_mask |= STATX_WRITE_ZEROES_UNMAP;
-
-        stat->blksize = bdev_io_min(bdev);
-
-Thanks,
-Yi.
-
+-- 
+With best wishes
+Dmitry
