@@ -1,99 +1,78 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC31E27A478;
-	Tue,  6 May 2025 12:40:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9341427FD67;
+	Tue,  6 May 2025 15:55:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746535255; cv=none; b=sMmE6fYrkddbDhi4fEtUsI1RgRPoER2UhkB21+skhCzJWzwGhIBG7tQsHwGqddsf367uLlEj7cpA49CDZNk9fyRtcsV3l472a6kaXSD21x3wWmwlm5ID5lIfoBdUQWU40/hmEyZF/GptHCdTGa4YRU29lM0XcfIzzgnBWG0T7GA=
+	t=1746546918; cv=none; b=RCmQWK8JeMm0JUN34d0YhXl/2DQ4tMmjzyWBUPt7xCf/23mjl7Q64v5iPbIZg/WAbO2fGr8HnAIMllfcMBZTUbC3MtVEYhtW7D4vQ3C4lA0BP3QQ/vjnNWqhVzI+fLxrEp4XSu2Q1OiA+TjQjRHh8AwUeG7lsa0FALzrm5uuCsY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746535255; c=relaxed/simple;
-	bh=hvEomEsZmTMlnPOhDxP1M7vexVqaFcHupXC1pSGzLZ8=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rUnqWR4+kHX/bFmd2nWLh35RGAMxUpqma5skAjkDNdr7Het+3yZyMyjKNlFswCdo5sGu3AdLmVKVx4j4RjAGLD/Afb62LnrhpUog4Z9L3Qm+HqW3gE8pr63y97avDJtED7XKSWo8oa+pbHBhYkkT8D0TR+diwOFmSxtqYeWAVSs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=dTy/Fbx8; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1746546918; c=relaxed/simple;
+	bh=KokwTcsPEjcIZ/f64cPMglQ909nlpDnMzhPyZGYvzxw=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=exbdEODe0RwZrlhJEf6UbFgU8jULxbkEmqeF0o0R+Bbuh3e6un8eXXZTDU1Pv2KR0ZJAaxso8hwMvyLNjpVqdu2NQjNo1AeG89u4d5NhWsQsYToSjpFENdHKv0+SCELEgg/5ZaO6p0V8KmDl7kayMm2DqynBsvNsXyFu+OViZzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YA/lDEym; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="dTy/Fbx8"
-X-UUID: 51c055aa2a7711f082f7f7ac98dee637-20250506
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=InDdJP1K/CvYoSdBcXs4MwVOY78WNNJUgbJvEKFhfOI=;
-	b=dTy/Fbx8P4XstKqjN3kNnwe7etjqH4AJNF4o+aBx9ardTe4vCPjppQBQnEl2t8bD8KbH5/G8clGtXJi58vMPNOIwuoidis1vSsztYfQbWV0DUySasFKEsCkxmDVPa+xCAw4c3PmmnThD/Xmcc/WXq2EYKPce/jCf6LnE5CkzMdo=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:4b831b03-3081-4559-b94b-536c23d06a63,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:0ef645f,CLOUDID:4de478d4-9212-47de-8197-a0cdeb9ca45c,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
-	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 51c055aa2a7711f082f7f7ac98dee637-20250506
-Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1064041535; Tue, 06 May 2025 20:40:40 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Tue, 6 May 2025 20:40:39 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Tue, 6 May 2025 20:40:39 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-	<quic_ziqichen@quicinc.com>, <stable@vger.kernel.org>
-Subject: [PATCH v1] ufs: core: fix hwq_id type and value
-Date: Tue, 6 May 2025 20:39:34 +0800
-Message-ID: <20250506124038.4071609-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YA/lDEym"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id ED659C4CEE4;
+	Tue,  6 May 2025 15:55:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746546916;
+	bh=KokwTcsPEjcIZ/f64cPMglQ909nlpDnMzhPyZGYvzxw=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YA/lDEym02kXPHJYYAshEh37VVEPXYr6h6uUOT3HR5v3gjEgKBOj1grHVWAuVgdtJ
+	 8reM6KCZV5esAd60c4cIkLJo1L6p4kV6Roxnos9n5MjPW7xW/XLfQYonwyhmXvLFoM
+	 9EI3HKKa7GNlohfqkWY+hAhP3v46T18EJBGhmMXzu49uqvTibHpMsanT7iWqsoHoqh
+	 ecDC9NIr1t/MsHrIYhKdR/msNFEoAQHS1f8sa9oQR7tXwFKusOM38K7A7cjMzKOwEs
+	 nQCLhZaGH+jh7whmh0N7cGYW2y2NP4M7dC3JhGvHmT9xJhTbyH5ljZTmmslu47n5Ia
+	 hP7QgfInSFQWQ==
+Date: Tue, 6 May 2025 08:55:15 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Christoph Hellwig <hch@lst.de>
+Cc: Zhang Yi <yi.zhang@huaweicloud.com>, dhowells@redhat.com,
+	brauner@kernel.org, linux-fsdevel@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+	linux-kernel@vger.kernel.org, tytso@mit.edu,
+	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
+Message-ID: <20250506155515.GL1035866@frogsfrogsfrogs>
+References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
+ <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
+ <20250505132208.GA22182@lst.de>
+ <20250505142945.GJ1035866@frogsfrogsfrogs>
+ <20250506050239.GA27687@lst.de>
+ <20250506053654.GA25700@frogsfrogsfrogs>
+ <20250506054722.GA28781@lst.de>
+ <c3105509-9d63-4fa2-afaf-5b508ddeeaca@huaweicloud.com>
+ <20250506121012.GA21705@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250506121012.GA21705@lst.de>
 
-From: Peter Wang <peter.wang@mediatek.com>
+On Tue, May 06, 2025 at 02:10:12PM +0200, Christoph Hellwig wrote:
+> On Tue, May 06, 2025 at 07:25:06PM +0800, Zhang Yi wrote:
+> > +       if (request_mask & STATX_WRITE_ZEROES_UNMAP &&
+> > +           bdev_write_zeroes_unmap(bdev))
+> > +               stat->result_mask |= STATX_WRITE_ZEROES_UNMAP;
+> 
+> That would be my expectation.  But then again this area seems to
+> confuse me a lot, so maybe we'll get Christian or Dave to chim in.
 
-Because the member id of struct ufs_hw_queue is u32 (hwq->id) and
-the trace entry hwq_id is also u32, the type should be changed to u32.
-If mcq is not supported, SDB mode only supports one hardware queue,
-for which setting the hwq_id to 0 is more suitable.
+Um... does STATX_WRITE_ZEROES_UNMAP protect a field somewhere?
+It might be nice to expose the request alignment granularity/max
+size/etc.  Or does this flag exist solely to support discovering that
+FALLOC_FL_WRITE_ZEROES is supported?  In which case, why not discover
+its existence by calling fallocate(fd, WRITE_ZEROES, 0, 0) like the
+other modes?
 
-Fixes: 4a52338bf288 ("scsi: ufs: core: Add trace event for MCQ")
-Cc: <stable@vger.kernel.org>
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7735421e3991..14e4cfbcb9eb 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -432,7 +432,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	u8 opcode = 0, group_id = 0;
- 	u32 doorbell = 0;
- 	u32 intr;
--	int hwq_id = -1;
-+	u32 hwq_id = 0;
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	struct request *rq = scsi_cmd_to_rq(cmd);
--- 
-2.45.2
-
+--D
