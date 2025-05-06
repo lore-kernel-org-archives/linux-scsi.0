@@ -1,107 +1,116 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D1101863E;
-	Tue,  6 May 2025 16:15:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D91A5284B5B;
+	Tue,  6 May 2025 16:37:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746548135; cv=none; b=A1yr8XuepL+429V5ztgjZIP3QlFXMpvcfXF4ji95A990bpxmbmG6TbbrAMMjOMY5wpM4aKzyN5+4neK4qFbHNKMmZeyt/K9xNBWGW0bGaT/EKFHN/SjR+AGswd+OXcbIEMei9qVNHoQ4LiLSoY20Hc/IAzZlIba4vZ85sGZD98Y=
+	t=1746549466; cv=none; b=n+d5QQ4UbJ+It012APu0n+jZfVslTfu+8kZMx4ppFyXDfiM1D3upyI9zVRmnZiOpuK4Gyu6oyjaA6uhSXLlu4NR3492I1Ph3EbOcqsxt1+9NGm44gdud/al/QzyZbZGpbUHefxm/EJR3CjtCCa7Ae3JNT/e2E0gOk9q/ZghNldg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746548135; c=relaxed/simple;
-	bh=IMwNfLGm9juQH4lPnt2AR3LxjJ4sPAsvNvdRxYIrgLk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B1/njVZc2KUv7yhtTqS9JQg0U4gOMAaJAOvwFlgFkYasGlTkkKsZfiYfnqrVi+EmiJZ2opyrWUXbvIP0fgr+KAq3mY0ifY1FcYK2njgDs2BniuPYmghW7slyaya125NRMB29nxew/uxZQO5vYFmk0g9cNA6673ke1yzC+Qt3z/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=NbQlOyCH; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1746549466; c=relaxed/simple;
+	bh=ZZLYZRqalGJH9EAXC5H7UDkMrkHsVeFSxTdaPceNAig=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ChrPE4rujm7NYC3zm37Vi/NUefWSd7hhhDXA3gB9WSC//IQ2o5h9Vf+9bsMi/GT5TNwStlOCTad6vQPgUdD9oAVcsJt426MfWdiLEx2qKxbGzyvt/Nk/Ann/TsH30gL7PSbxtnRXRgFAHEupNHXhIYpARgGlmHLFauK76Wos3c4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=EhpirLcY; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="NbQlOyCH"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZsNlw5NBWzlvBXp;
-	Tue,  6 May 2025 16:15:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1746548120; x=1749140121; bh=oEjLAJ5MJCR9DXyM0kDJC2DJ
-	T9WpoekiwyCg7+L54VM=; b=NbQlOyCH1zKMZNJ2xEg57lzteu1dW07WpzdiUOgP
-	CtxlrnVRj8P3LL4VXMP9JXD5JSu/uw84jetEEm1EJFWtZPslsdNRa7TNWlUvb9Dl
-	CQ9OB7m72raomLLBa37CxkTl0NttuVArdb+VBqZmdMTKMMXTyzmslD1i49ox0yTE
-	0PCFtKhL2YwWvRWYiD680Gjq03CCiIlovHObuOA4PoWQSQjT0YFKqCHWRslyIw9f
-	NyX9Ai7KO7MxT9H9BeQYfc3O5dnjdMoo8yxUnEmQpGYrlHkFCq2GxpvCKnfvx+Oy
-	hgHNDhBsxLT1kgnpIHBhw/4wlE/HHwxjQ+6qlnHIIyT8Ow==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id LiH4KEfXhywU; Tue,  6 May 2025 16:15:20 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZsNlX3lBgzlvBXV;
-	Tue,  6 May 2025 16:15:03 +0000 (UTC)
-Message-ID: <04fc1549-0fa6-4956-b522-df5fbc26100c@acm.org>
-Date: Tue, 6 May 2025 09:15:02 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="EhpirLcY"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5468npYU007245;
+	Tue, 6 May 2025 16:37:12 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=yc2RUdCvkXOSy1TyTmx0o2WlO+CFm9kYTZ9
+	ABmGDDAk=; b=EhpirLcYCFJa8yPw7UeNefeozzx4MGSJma9LK+C+Dy+5uQiv9km
+	krajxdCWNg30p3xY4idzqKukLW/35uI//F5Q0c3NxoSxaM2Y6WDyLmqFFE7xFgAL
+	XIKmrsmsVqed54pil7v4mTk/7nNKdvQVxdyf4B4F9DMl3gVfUlYge3tWR4lwQSMD
+	D8qX+8HKKevm7tYYxLY29Dv/MvlRAJtnj7NQkwBGc2/apJNaTtRZnorV0q1LTfAU
+	HWFiTvv/dS6H5C6knVBd4l5TJaRZ3euehNI6ouCfvFmMzLQdE84lSgpYujjoSGg6
+	TCfIq+gl4ftW84zDUV5GTDzyVvHziwBZ5Qg==
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46f5wg2w12-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 06 May 2025 16:37:12 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 546Gb8TQ003105;
+	Tue, 6 May 2025 16:37:08 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 46dc7kx4m1-1;
+	Tue, 06 May 2025 16:37:08 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 546Gb8Yw003100;
+	Tue, 6 May 2025 16:37:08 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 546Gb8jb003099;
+	Tue, 06 May 2025 16:37:08 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+	id 7CA6A5015A9; Tue,  6 May 2025 22:07:07 +0530 (+0530)
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        krzk+dt@kernel.org, robh@kernel.org, mani@kernel.org,
+        conor+dt@kernel.org, James.Bottomley@HansenPartnership.com,
+        martin.petersen@oracle.com, beanhuo@micron.com,
+        peter.wang@mediatek.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, devicetree@vger.kernel.org,
+        Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V2 0/3] Add support to disable UFS LPM
+Date: Tue,  6 May 2025 22:07:02 +0530
+Message-ID: <20250506163705.31518-1-quic_nitirawa@quicinc.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] ufs: core: fix hwq_id type and value
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
- yi-fan.peng@mediatek.com, qilin.tan@mediatek.com, lin.gui@mediatek.com,
- tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
- ed.tsai@mediatek.com, quic_ziqichen@quicinc.com, stable@vger.kernel.org
-References: <20250506124038.4071609-1-peter.wang@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250506124038.4071609-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: b2DvvsqmjbUmr2U_S87zoWaWCBXfa1ic
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA2MDE1NyBTYWx0ZWRfX4T/A3BJQPQx8
+ XMS4V4Z/adm2zLYd5FQ1pK/UVbXv+e2lVi40tjct3iC3aD64TKyC/IbM+9PkAaMgxjF6Wz7Vu4U
+ ydZEFtzY4xss9WdIgaXc50M5wNhUiRGaTDGMURT5E7FGFKbyOTqv6+Kjz4khezwonyVdNqtPjMf
+ P/rGpoj/oevWrvA6E13DvvJcxaT/LJJP4SmS2mmZKPlv8vPqW1JT5sKY2vr2K4Gw7Q2iOPhKdVS
+ WAYvFH2YC+5N0zun69dHlFd2KqfrGYCUCs2wupedsvMWd2LIgslxrx67FUlsAtnGNYHACbdlywN
+ iLKsWCDHa/RevUwrJ+NxDQUUdfuKyxdcnzq1d+ZjQyoIBryoeRUE8oilc8eTQMLYZudA0t5Eq1z
+ Tgc+CUIwfUz/psL7jYm0O4th96brcaSDPk6VIgHtNCjdjIKArWJAWZUejww4roFT8XPBLhKQ
+X-Authority-Analysis: v=2.4 cv=dPemmPZb c=1 sm=1 tr=0 ts=681a3ab8 cx=c_pps
+ a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=dt9VzEwgFbYA:10 a=DcltoM30VHtk37mhClIA:9
+X-Proofpoint-GUID: b2DvvsqmjbUmr2U_S87zoWaWCBXfa1ic
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-06_07,2025-05-05_01,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 adultscore=0 mlxlogscore=942 priorityscore=1501 impostorscore=0
+ suspectscore=0 lowpriorityscore=0 bulkscore=0 spamscore=0 malwarescore=0
+ mlxscore=0 clxscore=1015 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
+ definitions=main-2505060157
 
-On 5/6/25 5:39 AM, peter.wang@mediatek.com wrote:
-> From: Peter Wang <peter.wang@mediatek.com>
-> 
-> Because the member id of struct ufs_hw_queue is u32 (hwq->id) and
-> the trace entry hwq_id is also u32, the type should be changed to u32.
-> If mcq is not supported, SDB mode only supports one hardware queue,
-> for which setting the hwq_id to 0 is more suitable.
-> 
-> Fixes: 4a52338bf288 ("scsi: ufs: core: Add trace event for MCQ")
-> Cc: <stable@vger.kernel.org>
-> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-> ---
->   drivers/ufs/core/ufshcd.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 7735421e3991..14e4cfbcb9eb 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -432,7 +432,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
->   	u8 opcode = 0, group_id = 0;
->   	u32 doorbell = 0;
->   	u32 intr;
-> -	int hwq_id = -1;
-> +	u32 hwq_id = 0;
->   	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
->   	struct scsi_cmnd *cmd = lrbp->cmd;
->   	struct request *rq = scsi_cmd_to_rq(cmd);
+Add support to disable UFS Low Power Mode (LPM) for platforms
+that doesn't support LPM.
 
-Is this change really necessary? I like the current behavior because it
-makes it easy to figure out whether or not MCQ has been enabled. Even if
-others would agree with this change, I think that the "Fixes:" and "Cc:
-stable" tags are overkill because I don't see this as a bug fix but
-rather as a behavior change that is not a bug fix.
+Changes in v2:
+1. Addressed peter wang's comment to exclude write booster from
+   ufs lpm check.
+2. Addressed rob herring's comment to remove ufs lpm debug print
+   in ufshcd-pltr.c
 
-Thanks,
+Nitin Rawat (3):
+  scsi: ufs: dt-bindings: Document UFS Disable LPM property
+  scsi: ufs: pltfrm: Add parsing support for disable LPM property
+  scsi: ufs: qcom: Add support to disable UFS LPM Feature
 
-Bart.
+ .../devicetree/bindings/ufs/ufs-common.yaml         |  5 +++++
+ drivers/ufs/host/ufs-qcom.c                         | 13 ++++++++-----
+ drivers/ufs/host/ufshcd-pltfrm.c                    | 13 +++++++++++++
+ include/ufs/ufshcd.h                                |  1 +
+ 4 files changed, 27 insertions(+), 5 deletions(-)
+
+--
+2.48.1
+
