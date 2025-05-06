@@ -1,96 +1,129 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE8382F3A66
-	for <linux-scsi@vger.kernel.org>; Tue,  6 May 2025 03:18:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4B8327AC44;
+	Tue,  6 May 2025 04:07:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746501504; cv=none; b=NqRMLqYQLx8jyZKeUd+PbHKNnbnuRh17lrv8PVKCHXg4rFVgxG1CFINj8oQPlcUOJ71OX7+ZoeE+DWlod7Jp5Scytd6o6WGAwoPTTzg2LQTut7CmT6tvRIKXQ8GhdSsf2waeTdKvie4iNl6yy6bZOiDxAG2UdAhic+FckjkOm5s=
+	t=1746504456; cv=none; b=m4Jzr5YVvRIywATsL+rTWdcxj9JAXOkm8ReIhQpoQtvNE6/C5iqK+pcJSpDZ+VwFwfK2c3VhE0deK/ylQ6hNEPYneArvM2bsrsUS512ZXPASLIXtK0Uno/naPxvTVJ5YcfG2vCeVcRovH6YSU+H6no0TB94Y9cZe+9TVNCpU0gs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746501504; c=relaxed/simple;
-	bh=hRLVacyamiMBXkbrXkozw5cwrH3nRoNQATSfeWPw/rE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=l3RzZD3ek9/OUVoyqcoJwh4I5qONekLcHzzRPIIbjiErXsl4crmiigMTX0eQjbZhNt2urj3woWfazXSLIF87u0w9VM/0Hkd+jtRRKn4iv/B0MOx6Rx7AzzxZlKFBIEjSF2PjQL5mZDsW1Czg27sgGDDnWflUnNHxyYaDR7RNap4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cGHqq5Qg; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1746504456; c=relaxed/simple;
+	bh=xKEaLg0xeLxv/foHFiczwztCwAn6AMmjzHxBpNaINag=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=lO+miZbRb2Y8eqRQ0+l/4WyZM9wg67+RX8pFbgqZkhb2GPsNNWI90GSZz589kQenRJaNWiVR4r5/P/aRiQBBtcDlLtzau4N/aPD4WF3vL42uzLUzFES7iWHHxh1Bs4uDB4vyV/Cy6hV28JC3/JlvWRghjHWh5k505KV32UOgd8g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=MpcvTscH; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cGHqq5Qg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1746501501;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=sch28xP6WEwnIvUBxG3RgJ58EIQ3AtVfphEVYn+3Nl4=;
-	b=cGHqq5QgNFyKMk/smC1OS6noyk5eg4ZzW6tlBUhWznP2oToaLlsvxPudXnwnUqEYkwjhtm
-	QNFflW+RJr07wfAJiO71vtyzVRxhUK9woEPG93j6Vn8qL6BiZ2uXgHUaIM63+SwsmKF1Gv
-	IGPOV/T28eo8iLCz7lDaPYyH3DE2oek=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-607-nA-B1ofkMX2faPg98ufcOw-1; Mon,
- 05 May 2025 23:18:18 -0400
-X-MC-Unique: nA-B1ofkMX2faPg98ufcOw-1
-X-Mimecast-MFC-AGG-ID: nA-B1ofkMX2faPg98ufcOw_1746501496
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C8EC7180048E;
-	Tue,  6 May 2025 03:18:15 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.13])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 44F2A19560A3;
-	Tue,  6 May 2025 03:18:02 +0000 (UTC)
-Date: Tue, 6 May 2025 11:17:58 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Costa Shulyupin <costa.shul@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Valentin Schneider <vschneid@redhat.com>,
-	Waiman Long <llong@redhat.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org, storagedev@microchip.com,
-	virtualization@lists.linux.dev,
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v6 0/9] blk: honor isolcpus configuration
-Message-ID: <aBl_Zn7aHbUTmPSE@fedora>
-References: <20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="MpcvTscH"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 545M6YUq014186;
+	Tue, 6 May 2025 04:07:10 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	dBrQueunD29pwtZ7nyPlnH4tPT+aRDKtGtA0hlttyd0=; b=MpcvTscHxD2Qcx5N
+	KYwJ80/u2SB16OaOtUxnh4XyVHAK5xiX47WQvG71qh3Oj1jFsOVZd7C5mm3UEvPq
+	ynU4tH5zjb8w4QEgBpmzdt2xTmQm/mwSfDn/TbY2z96ANpfQpT7N1qEHVufk6IJ2
+	r4gS3zq1ixapSx9q95uZGwe9fjTh1kKpxhM0CYzkaQAgOK7pwWKHXRvwwRTtykwE
+	CZ5gXuq6805gALUEDdmYAPPBj4Fjxjo9ZNaB4hfYqiwgakteyXr7bpxHbeSiZDqt
+	2dU9N3GoVmqIQ/C4NdeJtsBlejEymA2EUEwEFCAzVWR1IW4CbFjs8NiKkVyuEpbi
+	DP3Ciw==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46f5u40tuq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 06 May 2025 04:07:09 +0000 (GMT)
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 546478fC002368
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 6 May 2025 04:07:08 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 5 May 2025
+ 21:07:03 -0700
+Message-ID: <42beadc3-4c90-4012-a019-dca2083d4c89@quicinc.com>
+Date: Tue, 6 May 2025 12:07:01 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/3] scsi: ufs: qcom: Map devfreq OPP freq to UniPro Core
+ Clock freq
+To: Avri Altman <Avri.Altman@sandisk.com>,
+        "quic_cang@quicinc.com"
+	<quic_cang@quicinc.com>,
+        "bvanassche@acm.org" <bvanassche@acm.org>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "beanhuo@micron.com"
+	<beanhuo@micron.com>,
+        "avri.altman@wdc.com" <avri.altman@wdc.com>,
+        "junwoo80.lee@samsung.com" <junwoo80.lee@samsung.com>,
+        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+        "quic_rampraka@quicinc.com" <quic_rampraka@quicinc.com>,
+        "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
+        "luca.weiss@fairphone.com" <luca.weiss@fairphone.com>,
+        "konrad.dybcio@oss.qualcomm.com" <konrad.dybcio@oss.qualcomm.com>
+CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        "Manivannan
+ Sadhasivam" <manivannan.sadhasivam@linaro.org>,
+        "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>,
+        open list
+	<linux-kernel@vger.kernel.org>
+References: <20250502042432.88434-1-quic_ziqichen@quicinc.com>
+ <20250502042432.88434-3-quic_ziqichen@quicinc.com>
+ <PH7PR16MB619617AE20ECBC06E548EC24E58D2@PH7PR16MB6196.namprd16.prod.outlook.com>
+Content-Language: en-US
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <PH7PR16MB619617AE20ECBC06E548EC24E58D2@PH7PR16MB6196.namprd16.prod.outlook.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Authority-Analysis: v=2.4 cv=KcfSsRYD c=1 sm=1 tr=0 ts=68198aed cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10
+ a=v_nTldZyZx9e_q5U3aIA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: gjSWctVIkbPZxKujJFNy9qQrBVu4ugol
+X-Proofpoint-ORIG-GUID: gjSWctVIkbPZxKujJFNy9qQrBVu4ugol
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA2MDAzNiBTYWx0ZWRfX2aONhp2WPVi8
+ 7RZO/KoSbwwYg4v9XtEfSplGZm1xHT6IYLUd04wN5oi2d8jWLRVrjbm5l7QFBaxaCYkwEvzeA63
+ 6CAGUoI0XUlawWiZ0ABGn9KNTeDkWxaI9tFnMbts+69h0k7kct1wE3B+pfz2JMxOJ1aU06PuO8J
+ TEBWg1P/qgrrbG8L5+lCnA/P1t4oQCcWwY9ELifsI0Abb5rFebAjTnLcrK13v4Tral9sf3SkhKV
+ boFebGQCESxL17EBrwFyvlQA+ws3GCvlnZdSbxIlD8zDpgdNRpqSUMbZFeU5fy0LFgdbWhVwDJ/
+ 22kdyrqi6T7TFzLzpk1L8BLSDOzpNSPFuaCzEg94AzhWNopILnYfby3QhYhrpgwn6VzRO1W+Un5
+ qh2wd9jGFNhPS1Me56cP47nLVCiT5t0Olj6sB8FIyamBS3j0BQQ1e3PCkaz9UdNtsGgST/o+
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-06_02,2025-05-05_01,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ lowpriorityscore=0 spamscore=0 suspectscore=0 bulkscore=0 mlxlogscore=905
+ phishscore=0 impostorscore=0 priorityscore=1501 malwarescore=0 adultscore=0
+ clxscore=1011 mlxscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
+ definitions=main-2505060036
 
-On Thu, Apr 24, 2025 at 08:19:39PM +0200, Daniel Wagner wrote:
-> I've added back the isolcpus io_queue agrument. This avoids any semantic
-> changes of managed_irq.
 
-IMO, this is correct thing to do.
+Hi Avri,
 
-> I don't like it but I haven't found a
-> better way to deal with it. Ming clearly stated managed_irq should not
-> change.
+On 5/2/2025 1:13 PM, Avri Altman wrote:
+>> +			cycles_in_1us = ceil(clk_freq, HZ_PER_MHZ);
+> Does ceil() is in fact DIV_ROUND_UP?
+>
+Yes , Both of these macro definitions, ceil(freq, div) and
+DIV_ROUND_UP(n, d), are used to implement the function of rounding up
+upwards by different implementation methods.
 
-Precisely, we can't cause io hang and break existing managed_irq applications,
-especially you know there isn't kernel solution for it, same for v5, v6 or
-whatever.
+Ziqi,
 
-I will look at v6 this week.
-
-Thanks, 
-Ming
+> Thanks,
+> Avri
 
