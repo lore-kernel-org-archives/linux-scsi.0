@@ -1,48 +1,48 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE6E6145B16;
-	Wed,  7 May 2025 15:06:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DC8728B4FE;
+	Wed,  7 May 2025 19:27:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746630409; cv=none; b=RnrsQCsaM6/ovA6JeX0aLNBj92LO+RT3pQYVy35+TCthM7fQl5OICdgKjPITn0799EZneZoMa5MASSg4FVyDHAJh1V5GUjqUQSEoSlB9LmvhFWL10Hm4bI/pmkExwjMIkxjbyV0agSDjs5yM+LU66xhGgf6Xit/2y2Ym1NP9Iik=
+	t=1746646048; cv=none; b=FVt6lB6LZNE3GO++6oVsR7oBPpCYlhnHESCGwAZx1AhUZzxQVDptJOpcQ8eKA3Dldzv/YB2PVmT8FtWNm7jzObNJuycwNsDgGnszURZ5KB0vsHXWyyl37OZg1WFf51/eU5aBNsIrRPVpp54QiE44xjTCGX11y/gOcmuLRdTNpSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746630409; c=relaxed/simple;
-	bh=N1rwgRRnDqs/M9QA2Mc7JZlhCWle/rl+V84fvGvfCDw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=J+meyvNGHUxbAt/aAHzvXKJj5SwqhMSmLmKf+lbTxTIJHTiIVgZ5oGEYxn4iWfwRVLvOc13maba+AEnR+aHwdAV9KAstJyQYmvTkp67NfInlUT3ef4V3DICjZOdYZU4IC/H9lHtszxnoxdTlT1GAo2WTvLmB2oV6opMM/4F+n3s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Kk0fa7Ti; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1746646048; c=relaxed/simple;
+	bh=MevCUtC29kmg79Osqbp+iLHaV5bIefjb1T+Q1ufLpCI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MzUSv3yD58yjAOX6lq/kfUJOveMNA4CoGTTE0xzkyqwC2UjxBBZSJT3Cy90cvhT2EnQjKIx9osz8+bTuMOng660w4yk4x+xO44oyWYL3MU5D7KJ3FUc4xl3lhbb5qNHEMV0bJjAMfXXQwb5J1B9SbzRAxltw7l8mxgiTRQQj0A4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pMTCjJd4; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Kk0fa7Ti"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 547Da8xt011186;
-	Wed, 7 May 2025 15:06:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	u8No8/KPTSLU3O+50ue4WHZSN0FQGaSfa9yafjJ6UAs=; b=Kk0fa7Tibq9z5ln0
-	DbzpkNOGMLuGeYA/Q1kzjo1UvdmlnYg0eR+/+JMEM7EsU74Etp+C/SPxISB0kctx
-	wFgJmMmsiBeYIvCxRISL/IqmFb1/GSdscdxnmBUHuoN01IU/STJd3O19DbQxobXg
-	edpPW/Ktlf4uAhLr9dZ9QwjzbW9GBs4W2EyR3/Ix14EMTP3rM9pSiwTEE3Y40Tw9
-	k9bKpL5pENbRz+JbyACqfD2JVP09FiW9RVlThDyztbdP4AbUkh+0RrdgZAhq6MP5
-	ode0g8hpRFHBtXGgnWPN1zdfAA70y0xrjUJJ7fBFB73+UxzatALQJ+gXP4Jz+EQC
-	8WJPjA==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46g13vsrcs-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 07 May 2025 15:06:05 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 547F6334006734
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 7 May 2025 15:06:03 GMT
-Received: from [10.216.23.216] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 7 May 2025
- 08:05:58 -0700
-Message-ID: <626f208c-7060-4fce-9aac-4c48606fc56d@quicinc.com>
-Date: Wed, 7 May 2025 20:35:54 +0530
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pMTCjJd4"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4Zt4yv2T13zm0yTm;
+	Wed,  7 May 2025 19:27:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1746646035; x=1749238036; bh=MevCUtC29kmg79Osqbp+iLHa
+	V5bIefjb1T+Q1ufLpCI=; b=pMTCjJd4UP3qHHqV5FR4Dd3wbLC20/Do4ZF3qgu6
+	i5Mm+C44DLrlXtwuOiJz1JpwZWRFo6joSytrhNucbIdRj5cuhvoj9DQFWA595Wgi
+	6o0Pbg4kv/hMOFWvr0Tlx9vbJ1AEEhO1090Sv/Y/AX76RJnx60EiwMn9QAMHy5Sd
+	Q1itCsQmZ1TRBjxblO/upiI93JYb3HPKKh+k11StpAR9rIpVbKaTY2+8L3YCPDTw
+	MLqgdb3qsl4IIYo6uzBpj7r+1l/kQFISbxyqTU2F+A8BawNFmn05RQs1wbW5AfhT
+	oE9E9E+984O0/GoAfAOJHxfQG2d4yVFSZBfETdpYdCITOQ==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id JAJxBvassQb1; Wed,  7 May 2025 19:27:15 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4Zt4yT3vTKzm0yTR;
+	Wed,  7 May 2025 19:26:55 +0000 (UTC)
+Message-ID: <95235015-270d-451e-989c-9fddcbfcb97e@acm.org>
+Date: Wed, 7 May 2025 12:26:54 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,167 +50,66 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4 06/11] phy: qcom-qmp-ufs: Rename qmp_ufs_power_off
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-CC: <vkoul@kernel.org>, <kishon@kernel.org>,
-        <manivannan.sadhasivam@linaro.org>,
-        <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-        <bvanassche@acm.org>, <andersson@kernel.org>,
-        <neil.armstrong@linaro.org>, <konrad.dybcio@oss.qualcomm.com>,
-        <quic_rdwivedi@quicinc.com>, <quic_cang@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-phy@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-References: <20250503162440.2954-1-quic_nitirawa@quicinc.com>
- <20250503162440.2954-7-quic_nitirawa@quicinc.com>
- <prbe2guxzsea6aqonf32m44zp6oa3vzdf5ieazcontv4fmx3d3@2r4tu5nr2k4x>
- <2191c270-f4fc-47e4-8bb7-ba6329332ef3@quicinc.com>
- <qhblitwmuhnb7axrflsqh7pmshmhrehh2hina23k6zqq7mhafv@xtsl376cyooy>
+Subject: Re: [PATCH v1] ufs: core: fix hwq_id type and value
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>
+Cc: =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
+ "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+ "stable@vger.kernel.org" <stable@vger.kernel.org>,
+ =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= <eddie.huang@mediatek.com>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
+ <Chaotian.Jing@mediatek.com>, =?UTF-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?=
+ <Qilin.Tan@mediatek.com>, =?UTF-8?B?TGluIEd1aSAo5qGC5p6XKQ==?=
+ <Lin.Gui@mediatek.com>, =?UTF-8?B?WWktZmFuIFBlbmcgKOW9ree+v+WHoSk=?=
+ <Yi-fan.Peng@mediatek.com>, =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?=
+ <jiajie.hao@mediatek.com>, =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?=
+ <Naomi.Chu@mediatek.com>, =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?=
+ <Alice.Chao@mediatek.com>, =?UTF-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?=
+ <Ed.Tsai@mediatek.com>, wsd_upstream <wsd_upstream@mediatek.com>,
+ =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?= <Chun-hung.Wu@mediatek.com>,
+ =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>
+References: <20250506124038.4071609-1-peter.wang@mediatek.com>
+ <04fc1549-0fa6-4956-b522-df5fbc26100c@acm.org>
+ <6c9e983154ff8d9b4a1e63eb503e8b147303eb68.camel@mediatek.com>
 Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <qhblitwmuhnb7axrflsqh7pmshmhrehh2hina23k6zqq7mhafv@xtsl376cyooy>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: 8lyCi0D8an1jr1kZOvVJkHON42edOAn2
-X-Proofpoint-ORIG-GUID: 8lyCi0D8an1jr1kZOvVJkHON42edOAn2
-X-Authority-Analysis: v=2.4 cv=JNc7s9Kb c=1 sm=1 tr=0 ts=681b76dd cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=JfrnYn6hAAAA:8
- a=COk6AnOGAAAA:8 a=zV9PPM8jW_R1-xSbYZ8A:9 a=QEXdDO2ut3YA:10
- a=1CNFftbPRP8L7MoqJWF3:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA3MDE0MSBTYWx0ZWRfX3IyhT/6pcPLz
- IjYIlt5taCWiRLorU3mTzOIsmVoLgiTi0SJPA8CpnA92PCdbzcGl4msb20iVjXu09TSbQp2fO5u
- JdYdKeo00nE2tdNMVsq4WSkf/Grj39xroJiSwNiQ4ooJTs2DQJKA8MSjBeft9maPekLVn1EF/Pi
- 8kb77g/LOysrc+wPsqD5XgAUGAFOGgVH6JtUSX6J0Mz8NE4TbzS/r6Xt2Ncz7l6ekQgxJEi0PZr
- Wt1mNBjqdwuRWSekXkXHV4r1MA+WhbXYCCvSlAU5Abm1vIOmMojkpkuzrHOFkypd9wQza9sIV+/
- i04hzhk3HcSKV8eBVBbmgdyHdUJRuod9esL8+6WQH9iCuMgegb5RYXwDxaV+j04BE5hoDPbONYA
- u7t301y0QVMJrlAP0ndjp4NOGBMLl6wL6asS+euzgXg34I1vrTSDoitZMSaJeW1gWVgD5azy
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-07_04,2025-05-06_01,2025-02-21_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 bulkscore=0 mlxlogscore=999 phishscore=0 spamscore=0
- clxscore=1015 adultscore=0 suspectscore=0 lowpriorityscore=0 malwarescore=0
- impostorscore=0 mlxscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
- definitions=main-2505070141
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <6c9e983154ff8d9b4a1e63eb503e8b147303eb68.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
+On 5/6/25 9:03 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> Whether it is necessary or not depends on how we define 'necessary.'
+> If the criterion is simply to avoid errors, then indeed, this patch
+> is not necessary. However, if we are addressing the warning caused
+> by incorrect behavior (assigning int to u32), then it is necessary
+> to fix it. After all, we shouldn't just be satisfied with avoiding
+> errors, we should strive to make the Linux kernel as perfect as
+> possible, shouldn't we?
 
+Errors? Which errors? Using -1 instead of UINT_MAX is common in C code.
+Assigning variables of signed integer type to unsigned variables is also
+widespread. Using %d to format a negative number, although dubious, is
+also common in C code. Several years ago gcc warned about using %d to
+format unsigned integers. That warning was disabled again because there
+is too much existing code that follows this practice.
 
-On 5/6/2025 5:23 PM, Dmitry Baryshkov wrote:
-> On Sun, May 04, 2025 at 09:22:06PM +0530, Nitin Rawat wrote:
->>
->>
->> On 5/4/2025 9:07 PM, Dmitry Baryshkov wrote:
->>> On Sat, May 03, 2025 at 09:54:35PM +0530, Nitin Rawat wrote:
->>>> Rename qmp_ufs_disable to qmp_ufs_power_off to better represent its
->>>> functionality. Additionally, move the qmp_ufs_exit() call inside
->>>> qmp_ufs_power_off to preserve the functionality of .power_off.
->>>>
->>>> There is no functional change.
->>>>
->>>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->>>> ---
->>>>    drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 30 +++++++++----------------
->>>>    1 file changed, 11 insertions(+), 19 deletions(-)
->>>>
->>>> diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->>>> index 94095393148c..c501223fc5f9 100644
->>>> --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->>>> +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
->>>> @@ -1835,6 +1835,15 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
->>>>    	return 0;
->>>>    }
->>>>
->>>> +static int qmp_ufs_exit(struct phy *phy)
->>>> +{
->>>> +	struct qmp_ufs *qmp = phy_get_drvdata(phy);
->>>> +
->>>> +	qmp_ufs_com_exit(qmp);
->>>
->>> Just inline it, unless you have any other plans.
->>
->> Hi Dmitry,
->>
->> I have inlined qcom_ufs_com_exit in patch #7 of the same series. I separated
->> it into a different patch to keep each patch simpler.
-> 
-> You have inlined qmp_ufs_com_exit() contents. Here I've asked you to
-> inline qmp_ufs_exit(), keeping qmp_ufs_com_exit() as is.
+> Additionally, there are many ways to determine whether MCQ is enabled,
+> including reading the host capability or checking hba->mcq_enabled,
+> etc.
+> Moreover, MCQ is not a feature that trun on and off at runtime.
+> It is at the end of the UFS initialization that the status of MCQ
+> is determined, so it shouldn't be necessary to rely on this to
+> determine whether MCQ is enabled, right?
 
+If you want to proceed with this patch, please make it clear in the
+patch description that this patch is a behavior change and not a bug
+fix.
 
-Sure Dmitry. I'll update this in next patchset. Thanks
-> 
->>
->> Could you please review patch #7 and share your thoughts.
->>
->> [PATCH V4 07/11] phy: qcom-qmp-ufs: Remove qmp_ufs_exit() and Inline
->> qmp_ufs_com_exit().
->>
->>
->> Regards,
->> Nitin
->>
->>
->>>
->>>> +
->>>> +	return 0;
->>>> +}
->>>> +
->>>>    static int qmp_ufs_power_off(struct phy *phy)
->>>>    {
->>>>    	struct qmp_ufs *qmp = phy_get_drvdata(phy);
->>>> @@ -1851,28 +1860,11 @@ static int qmp_ufs_power_off(struct phy *phy)
->>>>    	qphy_clrbits(qmp->pcs, cfg->regs[QPHY_PCS_POWER_DOWN_CONTROL],
->>>>    			SW_PWRDN);
->>>>
->>>> -	return 0;
->>>> -}
->>>> -
->>>> -static int qmp_ufs_exit(struct phy *phy)
->>>> -{
->>>> -	struct qmp_ufs *qmp = phy_get_drvdata(phy);
->>>> -
->>>> -	qmp_ufs_com_exit(qmp);
->>>> +	qmp_ufs_exit(phy);
->>>>
->>>>    	return 0;
->>>>    }
->>>>
->>>> -static int qmp_ufs_disable(struct phy *phy)
->>>> -{
->>>> -	int ret;
->>>> -
->>>> -	ret = qmp_ufs_power_off(phy);
->>>> -	if (ret)
->>>> -		return ret;
->>>> -	return qmp_ufs_exit(phy);
->>>> -}
->>>> -
->>>>    static int qmp_ufs_set_mode(struct phy *phy, enum phy_mode mode, int submode)
->>>>    {
->>>>    	struct qmp_ufs *qmp = phy_get_drvdata(phy);
->>>> @@ -1921,7 +1913,7 @@ static int qmp_ufs_phy_init(struct phy *phy)
->>>>    static const struct phy_ops qcom_qmp_ufs_phy_ops = {
->>>>    	.init		= qmp_ufs_phy_init,
->>>>    	.power_on	= qmp_ufs_power_on,
->>>> -	.power_off	= qmp_ufs_disable,
->>>> +	.power_off	= qmp_ufs_power_off,
->>>>    	.calibrate	= qmp_ufs_phy_calibrate,
->>>>    	.set_mode	= qmp_ufs_set_mode,
->>>>    	.owner		= THIS_MODULE,
->>>> --
->>>> 2.48.1
->>>>
->>>
->>
->>
->> -- 
->> linux-phy mailing list
->> linux-phy@lists.infradead.org
->> https://lists.infradead.org/mailman/listinfo/linux-phy
-> 
+Thanks,
 
+Bart.
