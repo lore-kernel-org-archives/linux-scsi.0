@@ -1,67 +1,48 @@
-Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5B12580CD
-	for <linux-scsi@vger.kernel.org>; Wed,  7 May 2025 11:59:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F2DA145B16;
+	Wed,  7 May 2025 15:05:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746619198; cv=none; b=Y8jnrduZWDaN/8tdtGd270BbIBW4F4LKvRMt9iMHjbuQuUq4um2qsYXmNaW3Vjcmr032IraLA3+y20ft0+B0Hj8IkYpbma4JOvqI3QVujKGZbKdYXNempFrZ8WyYvtil5uR4Kiht1WEDF5tcvH3zcXIToYVs80Lz0Fj3bp1tkBw=
+	t=1746630328; cv=none; b=qaAcnRE/bRIy7RJI+Dj2RnQL/4uu7S9aPIuJsq0la0CVpr3xuu9I6ImlObyHfV6DzJrBxCqppkxfkKTZKx4HX3mgShA6p0hNLzTdNhzqB0ZhfelMZz65A1dhA+PZII4oYfCYA1aQHdeO5hsEfVsnU091LWhwIczNdpZw1VHzlyU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746619198; c=relaxed/simple;
-	bh=qbnCw7dOQkq3nFndIdhgatR4r8qCPfL3w4RscWXHG3c=;
-	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=HXYmcV83e/ZIGVksrrTV+uf+aYvVDJ0jx8E6cAupvkZhsqXxGi1fRDVaMfaiWnsi2AfUyeycfNjcvVoJPio4My7yI5vOmGy0FpO4J3pibEJWjqHfS+0J0g7giQphZOFKbXzxb1opiDnKikaRXIo8ETi7bIqBmVWtb9CSuj7t+r0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=j6f+0JzF; arc=none smtp.client-ip=209.85.128.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1746630328; c=relaxed/simple;
+	bh=JyV8xkCMJ/2t26KujPnEhLvHfnrJWNgCXzBZHePh3xY=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:CC:References:
+	 In-Reply-To:Content-Type; b=VDWBnuPA2lD734uD4mj29xf8uxQW+HOkkYiVgwQShKYjbzgGhawJjJqRKGRM47sFUocKNRnfS5I25u3IG0HECHs8Jm5lsETwm7z/YO0r0/qalT0i0m5AhejBoAFzJPtsDXqJdsgUTjfLow3g401Cej4I9JUpOG0cCTBeMlcMVGE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=d02d3X7i; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="j6f+0JzF"
-Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-440685d6afcso60166805e9.0
-        for <linux-scsi@vger.kernel.org>; Wed, 07 May 2025 04:59:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1746619195; x=1747223995; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=CqPJI4HdquVpCx3k4hEKfR3V8+wlA5emf3OFZSQ9jYg=;
-        b=j6f+0JzFQYl3GPNHcnI6Ch7j/dtyjYiKszBG2AbKIgQlBLvH/okBpQqj+O2tgFkIvA
-         EBd2u5dNU7V9VDxa2mUqWvvg9x+2o98uVyWs8LM3vuOJTwvmUNHQNQnZoOT8pmdtmfPc
-         lXpIUW9P0SoWMl3eTHP7p74PPs51rInyU7eUoNNVjrr543ChEFzOFTSOtVqoaYc9GGmo
-         oVBjz5Nzhrm6BeckPNxEVJ8wGYiQ2/34FMSJRsWljB1H/XmQF4g6zMSwz7yJEA5R4Clb
-         umeU/cPJkEaHy44QUWHoj9EGSmG8/frWcYO2vmqsxRl1Z0bMtoerKhewNVTPueiuzNDt
-         AjFg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746619195; x=1747223995;
-        h=content-transfer-encoding:in-reply-to:organization:autocrypt
-         :content-language:references:cc:to:subject:reply-to:from:user-agent
-         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=CqPJI4HdquVpCx3k4hEKfR3V8+wlA5emf3OFZSQ9jYg=;
-        b=ey1IuLmhfQ+zpBYb8kvftiYA9MMu8qA6QUru4MajnYpDYkn4bLyA1xN4SUTFhwRExN
-         8RC1VO6+SEZBIuMJ9KqzHuGHcomKPHmvAVlh2u/920NWEp+OaU3De6E7yudrrppn+Ejt
-         Bq9FIEJMHbPVvjtaodrHzFt6psg+0YqbijRGqDaTQfebtQt8bQRHntv/qc/MZEPYoArT
-         pP0AAhpqixHdc12L1UeLVk68/CFeuWszapLqyMbUiRcIJFWIHiwPgH+XH+1FtnIqrqfY
-         ohD3n13FD+RN5nCaAJjKhk/K6wgYNsvHmD8flJkQAEt/zCwxqKLrpk35GZTdGv7yv6kH
-         yg5w==
-X-Forwarded-Encrypted: i=1; AJvYcCV/YgglIJD6wKklc3wJacL5xrhMusas69dTERQSqoqDgNieS8U20mGi1zeq8CCHjF9vyQVo0IcpF2lN@vger.kernel.org
-X-Gm-Message-State: AOJu0YypOGF650yx5jRxVSTP7cmgkg7LM6y43SPJmYgznmYm+Bk1byTS
-	WT1KaW51mcD62VqvV4qBiZHg7ZhjOXDiZxADLt92rhFbrb2ZAY60yyt1kZ/53WU=
-X-Gm-Gg: ASbGncuPssFZB/23HRBMJRO32Rms1jD6XNaqs3zSaJWsAWjgI3o3INnj0WBw/zwsePI
-	0LN5PZlO0mzf0LILZGdv8VLTfRsnrR0thZgLz13Ap+6D/XAxnZP9huc8ZiTkgEuGqtq5xI6WR2N
-	KOVlD74tuqrlrSh+ADObrxlEMUxiy3TByaMyKXKbO1FocGWPqlU72p7+0cOW7bYJPAEA6Mo7VV5
-	tiLHOIpSDUeCgCp5Swx7Ti34rS6fk/3dqbEXkM8xP+cGQ2sqsxhDvXJjGFFN6ZnAiVvlD56ZD/n
-	Y0BdSqTpcBjJUXKYxC1P5tF06ZZmmj1YoTuOVpq8mV+VFmOZr4GvmYKRbsf+E9YGi7aefzaTJzN
-	4RRhnfg/t8USHCVbJhw==
-X-Google-Smtp-Source: AGHT+IFIxLzUQYS8WbSe7gjUBBLP5moevd2VzC6lwoikd3JqtPlVaRPaA2s8NpuN78U3XjMiFPwpFw==
-X-Received: by 2002:a05:600c:1c8c:b0:43d:683:8cb2 with SMTP id 5b1f17b1804b1-441d4eeb512mr15437105e9.14.1746619195054;
-        Wed, 07 May 2025 04:59:55 -0700 (PDT)
-Received: from ?IPV6:2a01:e0a:3d9:2080:784f:3312:6406:12a9? ([2a01:e0a:3d9:2080:784f:3312:6406:12a9])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a099b17096sm17206685f8f.96.2025.05.07.04.59.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 May 2025 04:59:54 -0700 (PDT)
-Message-ID: <7ccbd722-c99a-43b3-9ceb-4c207521822d@linaro.org>
-Date: Wed, 7 May 2025 13:59:53 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="d02d3X7i"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 547AKt8J005104;
+	Wed, 7 May 2025 15:04:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	cFLfz+n3dUXli7hBsRzY0wxWQxf03ZGrvo/57nmAkAU=; b=d02d3X7imkstiFin
+	HSbLBfMEEilFbDvkEqpxopSB89rGhNAuEWladcMgqTSkyoPrleyhATyqUszBqsDY
+	xPMDiiNF6vvEYWEM6yZasKy+a5EVo/syJjLUzHCF9u0Nk4Lk2Xkug8uLs6TpHLmD
+	NJ0XrnywB7db2GE3V+2khUV6P8yzpNeXZgL/kMXryLr3n2ArnOJTn6HsG5ng/j3n
+	rLu8YQUvyRJCd9+GDhdnkZP76HbWZv6D4d5yhIwda91s6utJjrH70G0BtP7u3ryd
+	X9L/5cYFeHqIxVy7AxasN9/TioE+2OutWfmNylFJVDYcqQdyUimpL9i+f/MrkM4J
+	UIMDvA==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46f5sv69uh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 07 May 2025 15:04:57 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 547F4ub4023886
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 7 May 2025 15:04:56 GMT
+Received: from [10.216.23.216] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 7 May 2025
+ 08:04:51 -0700
+Message-ID: <9974cf1d-6929-4c7f-8472-fd19c7a40b12@quicinc.com>
+Date: Wed, 7 May 2025 20:34:47 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -69,120 +50,74 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-From: neil.armstrong@linaro.org
-Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH v2 2/3] scsi: ufs: qcom: Map devfreq OPP freq to UniPro
- Core Clock freq
-To: Ziqi Chen <quic_ziqichen@quicinc.com>,
- Luca Weiss <luca.weiss@fairphone.com>, quic_cang@quicinc.com,
- bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
- avri.altman@wdc.com, junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com, konrad.dybcio@oss.qualcomm.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <20250507074415.2451940-1-quic_ziqichen@quicinc.com>
- <20250507074415.2451940-3-quic_ziqichen@quicinc.com>
- <D9PS51XVRKLP.1AHMCRH9CZFWU@fairphone.com>
- <7c74a395-a8b8-4a12-9ddb-691f28c90885@quicinc.com>
-Content-Language: en-US, fr
-Autocrypt: addr=neil.armstrong@linaro.org; keydata=
- xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
- GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
- BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
- qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
- 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
- AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
- OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
- Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
- YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
- GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
- UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
- GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
- yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
- QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
- SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
- 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
- Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
- oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
- M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
- 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
- KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
- 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
- QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
-Organization: Linaro
-In-Reply-To: <7c74a395-a8b8-4a12-9ddb-691f28c90885@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: Re: [PATCH V2 1/3] scsi: ufs: dt-bindings: Document UFS Disable LPM
+ property
+To: Krzysztof Kozlowski <krzk@kernel.org>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <bvanassche@acm.org>, <krzk+dt@kernel.org>,
+        <robh@kernel.org>, <mani@kernel.org>, <conor+dt@kernel.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <peter.wang@mediatek.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+References: <20250506163705.31518-1-quic_nitirawa@quicinc.com>
+ <20250506163705.31518-2-quic_nitirawa@quicinc.com>
+ <667e43a7-a33c-491b-83ca-fe06a2a5d9c3@kernel.org>
+Content-Language: en-US
+In-Reply-To: <667e43a7-a33c-491b-83ca-fe06a2a5d9c3@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: TYTFDam9UZu2-D5HKDMvEKHVDWXLxeQi
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA3MDE0MCBTYWx0ZWRfX9MA3jKqXIrTN
+ 3YaW9kKuwWD8utor78J4Y+SqhagKFXkmhvnazIqW/u5zSjHc2L0xUD0sfSFT5XOrjbRffftXFkA
+ 7AlDdYULYrZ46INmLEpXcapBOLuOm2EDe2X2Su/Aq1thodKzJl7nCGEoIXaJ/qwmmh+mOi0DWKx
+ e6ipFhR6e5FsTtvLw46OZOihv/h/OB0oQ9efhDjq7l1SCkRD3500QvaAolGslHYKpI88DFhzh5M
+ c99zKpNg7odFR2k6T1XN5QN+IDhMxCXksZKtkpclmagwJioJwL4QrJb6sU13MRR88SFYtGtu4hZ
+ 4FHNPe/AV1EYmR7gWBBGV5Y7el4iVTWOdvwY3MfcC/5eMAkmmQgYd05whymA53MUEVR09j4k8UQ
+ x3OVqle0vWYYwqN+EaUQ3A+LGLBUhYUryCI5fpmqIlHXxG8Ox+pgJRhaEL+cP/+oGAUuvkJH
+X-Authority-Analysis: v=2.4 cv=cOXgskeN c=1 sm=1 tr=0 ts=681b7699 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10
+ a=NJ1Z62h-ssRt74_nPL4A:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: TYTFDam9UZu2-D5HKDMvEKHVDWXLxeQi
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-07_04,2025-05-06_01,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ mlxscore=0 clxscore=1011 suspectscore=0 priorityscore=1501 bulkscore=0
+ mlxlogscore=977 adultscore=0 impostorscore=0 malwarescore=0 spamscore=0
+ phishscore=0 lowpriorityscore=0 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2504070000 definitions=main-2505070140
 
-On 07/05/2025 11:09, Ziqi Chen wrote:
-> Hi Luca,
+
+
+On 5/6/2025 11:46 PM, Krzysztof Kozlowski wrote:
+> On 06/05/2025 18:37, Nitin Rawat wrote:
+>> Disable UFS low power mode on emulation FPGA platforms or other platforms
 > 
-> On 5/7/2025 4:19 PM, Luca Weiss wrote:
->> Hi Ziqi,
->>
->> On Wed May 7, 2025 at 9:44 AM CEST, Ziqi Chen wrote:
->>> From: Can Guo <quic_cang@quicinc.com>
->>>
->>> On some platforms, the devfreq OPP freq may be different than the unipro
->>> core clock freq. Implement ufs_qcom_opp_freq_to_clk_freq() and use it to
->>> find the unipro core clk freq.
->>>
->>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->>> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->>> ---
->>>   drivers/ufs/host/ufs-qcom.c | 81 ++++++++++++++++++++++++++++++++-----
->>>   1 file changed, 71 insertions(+), 10 deletions(-)
->>>
->>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>> index 7f10926100a5..804c8ccd8d03 100644
->>> --- a/drivers/ufs/host/ufs-qcom.c
->>> +++ b/drivers/ufs/host/ufs-qcom.c
->>> +static unsigned long ufs_qcom_opp_freq_to_clk_freq(struct ufs_hba *hba,
->>> +                                                   unsigned long freq, char *name)
->>> +{
->>> +    struct ufs_clk_info *clki;
->>> +    struct dev_pm_opp *opp;
->>> +    unsigned long clk_freq;
->>> +    int idx = 0;
->>> +    bool found = false;
->>> +
->>> +    opp = dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
->>> +    if (IS_ERR(opp)) {
->>> +        dev_err(hba->dev, "Failed to find OPP for exact frequency %lu\n", freq);
->>
->> I'm hitting this print on bootup:
->>
->> [    0.512515] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for exact frequency 18446744073709551615
->> [    0.512571] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for exact frequency 18446744073709551615
->>
->> Doesn't look like it's intended? The number is (2^64 - 1)
->>
-> Yes, this is expected. During link startup, the frequency
-> ULONG_MAX will be passed to ufs_qcom_set_core_clk_ctrl() and
-> ufs_qcom_cfg_timer(). This frequency cannot be found through the API
-> dev_pm_opp_find_freq_exact_indexed(). Therefore, we handle the
-> frequency ULONG_MAX separately within Ufs_qcom_set_core_clk_ctrl()
-> and ufs_qcom_cfg_timer().
-> 
-> This print only be print twice during link startup. If you think print
-> such print during bootup is not make sense, I can improve the code and
-> update a new vwesion.
+> Why wouldn't you like to test LPM also on FPGA designs? I do not see
+> here correlation.
 
-I think just don't call ufs_qcom_opp_freq_to_clk_freq() if freq==ULONG_MAX
+Hi Krzysztof,
 
-Neil
+Since the FPGA platform doesn't support UFS Low Power Modes (such as the 
+AutoHibern8 feature specified in the UFS specification), I have included 
+this information in the hardware description (i.e dts).
+
+Thanks,
+Nitin
 
 > 
-> BRs.
-> Ziqi
+>> where it is either unsupported or power efficiency is not a critical
+>> requirement.
 > 
->> Regards
->> Luca
->>
+> That's a policy, not hardware, thus not suitable for DT.
 > 
-> 
+> Best regards,
+> Krzysztof
 
