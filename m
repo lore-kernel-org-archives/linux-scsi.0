@@ -1,174 +1,188 @@
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
+Received: from mail-wm1-f42.google.com (mail-wm1-f42.google.com [209.85.128.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB40D20C03E
-	for <linux-scsi@vger.kernel.org>; Wed,  7 May 2025 09:59:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC5B12580CD
+	for <linux-scsi@vger.kernel.org>; Wed,  7 May 2025 11:59:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746611964; cv=none; b=pD6xWGxDsK3QXWGNE1NCkt5+puMziTrJKHS+KyWS0aD7uXqmsZBeJkIft5w28JVpGWiki59pFYsmlyeBv1QF1g/i9J8Sxz/khVQFmUW1NNn3cbkQRJT9bo/uhSFfMgfFxxqxRz0htATTfpVdHYWL6lLpWHTWagzRNH6ii5C9Y58=
+	t=1746619198; cv=none; b=Y8jnrduZWDaN/8tdtGd270BbIBW4F4LKvRMt9iMHjbuQuUq4um2qsYXmNaW3Vjcmr032IraLA3+y20ft0+B0Hj8IkYpbma4JOvqI3QVujKGZbKdYXNempFrZ8WyYvtil5uR4Kiht1WEDF5tcvH3zcXIToYVs80Lz0Fj3bp1tkBw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746611964; c=relaxed/simple;
-	bh=CVOjiks63kN4nyx81zcnv5yZgTHTFsD0uSpOBIumpbQ=;
-	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
-	 References:In-Reply-To; b=jsvZa/NV6BHYWGJSxV866tmZY7JCcq/g6S8ItV0bZDhEEGi/C+cgsbyiijwbmd1FldzLOYwjwJOGX0AmbhhUz62vhQyfNlWG51278zZxs9LsIfEtzvng8XXu1YgwYNAwBPDrUAXZaq/CZ3x8AVUx+6H29y8z8crgb4ebXVei2uA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fairphone.com; spf=pass smtp.mailfrom=fairphone.com; dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b=nMYfWa+6; arc=none smtp.client-ip=209.85.218.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fairphone.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fairphone.com
+	s=arc-20240116; t=1746619198; c=relaxed/simple;
+	bh=qbnCw7dOQkq3nFndIdhgatR4r8qCPfL3w4RscWXHG3c=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=HXYmcV83e/ZIGVksrrTV+uf+aYvVDJ0jx8E6cAupvkZhsqXxGi1fRDVaMfaiWnsi2AfUyeycfNjcvVoJPio4My7yI5vOmGy0FpO4J3pibEJWjqHfS+0J0g7giQphZOFKbXzxb1opiDnKikaRXIo8ETi7bIqBmVWtb9CSuj7t+r0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=j6f+0JzF; arc=none smtp.client-ip=209.85.128.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="nMYfWa+6"
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-acbb85ce788so308391766b.3
-        for <linux-scsi@vger.kernel.org>; Wed, 07 May 2025 02:59:22 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="j6f+0JzF"
+Received: by mail-wm1-f42.google.com with SMTP id 5b1f17b1804b1-440685d6afcso60166805e9.0
+        for <linux-scsi@vger.kernel.org>; Wed, 07 May 2025 04:59:56 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=fairphone.com; s=fair; t=1746611961; x=1747216761; darn=vger.kernel.org;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=gRBnlzG3csY3q59CrD+HieNRPhlOZlDO/35hP9x7Gow=;
-        b=nMYfWa+6GVUJ2BdwZE1phw3EIG0XJ+Q9ZKMBbk9RA6BptuZZhd8r7gPWbRJzFqZ1j0
-         ahRnaAH+Uc/dVroauVBs2nJnIYFCDGrM2YU85os6stQB8ieKGKmXTvUJJug1iMX724dp
-         WcgzjWHs4NxO58j+ffCnfuWQHEGX+rkEIcO54FE0s6tiXD+gIjNU1mzMlbzsIpKKl49i
-         GoW+ljFiwkK558SmCGrs9r3ZNz694BWHIWCbaX5mNCWbYWe5rJQmSO+HsRoNVjfLBE8x
-         YYka+lDq8VXpG5QuNdZTLZ2TYQ2qMPQD2CpLPg+dbkJ096T9naQAO+Z19YWDRb89psBj
-         QTLw==
+        d=linaro.org; s=google; t=1746619195; x=1747223995; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CqPJI4HdquVpCx3k4hEKfR3V8+wlA5emf3OFZSQ9jYg=;
+        b=j6f+0JzFQYl3GPNHcnI6Ch7j/dtyjYiKszBG2AbKIgQlBLvH/okBpQqj+O2tgFkIvA
+         EBd2u5dNU7V9VDxa2mUqWvvg9x+2o98uVyWs8LM3vuOJTwvmUNHQNQnZoOT8pmdtmfPc
+         lXpIUW9P0SoWMl3eTHP7p74PPs51rInyU7eUoNNVjrr543ChEFzOFTSOtVqoaYc9GGmo
+         oVBjz5Nzhrm6BeckPNxEVJ8wGYiQ2/34FMSJRsWljB1H/XmQF4g6zMSwz7yJEA5R4Clb
+         umeU/cPJkEaHy44QUWHoj9EGSmG8/frWcYO2vmqsxRl1Z0bMtoerKhewNVTPueiuzNDt
+         AjFg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1746611961; x=1747216761;
-        h=in-reply-to:references:to:from:subject:cc:message-id:date
-         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=gRBnlzG3csY3q59CrD+HieNRPhlOZlDO/35hP9x7Gow=;
-        b=o5okwbkJKtSzQAMNtvaksY1t7Zyp0P6jHpbX4fNh2WavU+seT9mu/LaYaxzxg4f+Fk
-         s0pEHYLXAnZNTSf92FfVSuuh+uD4thSk4YUm+dF6ZRKz9NOSVpjO/n2L6KI0SG997r0T
-         eU/mr7kAz4Lr7NkdW9PmSZ7Jfv8qU7L2Fpg1767iEkiFqZTFYCQ1NfjjAKJoYNZoXq5N
-         AJz/Cxs9XMQ/fo0Sms2w5b4xFc+RV3HQdpNDFhBKt+2XPf1IXDDibbqPg1CgorMepfZ6
-         luE+4MWEGNH8fPDJdAQ3dRaD+JuFMChE3yuqDtzpFsX+tJ5WFVBA3zmWIWPYnKijc2xU
-         ZYLA==
-X-Forwarded-Encrypted: i=1; AJvYcCVdC3NRkC6aEqXNzkmhOmN4gFcH5DP5fI+amvAFR7A3JS6zvXeZVxxa5S2msdW1E6o0YA0nfSzFEowv@vger.kernel.org
-X-Gm-Message-State: AOJu0YzbHSrsLmm9cDdHOokw9IHrQhHYKqqjW+wyDTf+Li4Hv+H00Hx8
-	r9UGeVy4NNj3tW+RSQ3pu00jFMhMUuBlM6Hq6Kuk0r1rLy9Jv+Pve9Q8tX+k2yw=
-X-Gm-Gg: ASbGncs+86kP+EBN5XuxcSHX9WqnJ7ULDzn9iEQeHEiVS6jN6cmnCSap2dB0c4fLTSL
-	BE6i+/qlPcbabGw9wuzgdHYhNA6z2DZgu5ZHllNJ/J5R1+JpsyGu5Nkbnj1g28bcWjdd0SpJaaS
-	bv6MTrRLK3KaWyBIdPPuAFdtaPezomGdvbxfyupHEtIvrxF6tMq9M+8JAL2JbvLjkKGa4RrrhJl
-	wQOne7JoIVWiglPDi/vMRplIjoudArnxLcXXTmJ4ZDGFJlK/cdghR1GDun0dMj9Y34RsKM8tzVy
-	AeaFn6UdLTaxMBDLiNYSjt0fJSHT7Zqyh7brzN8K5asORnOdI5jYWWLrvVQlOkdf+1GhTC5rZGU
-	yotnGI31SYQ==
-X-Google-Smtp-Source: AGHT+IETi13rF9ppf4Lq9nZexKfgosA14aFfsxFA6IPZoLnGnfZ4smw0IgYrqh4falCvDOZVHa7FtA==
-X-Received: by 2002:a17:907:9814:b0:ad1:8dde:5b7a with SMTP id a640c23a62f3a-ad1e8d055a7mr240311766b.43.1746611961036;
-        Wed, 07 May 2025 02:59:21 -0700 (PDT)
-Received: from localhost (144-178-202-138.static.ef-service.nl. [144.178.202.138])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ad1891490afsm874478866b.23.2025.05.07.02.59.20
+        d=1e100.net; s=20230601; t=1746619195; x=1747223995;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=CqPJI4HdquVpCx3k4hEKfR3V8+wlA5emf3OFZSQ9jYg=;
+        b=ey1IuLmhfQ+zpBYb8kvftiYA9MMu8qA6QUru4MajnYpDYkn4bLyA1xN4SUTFhwRExN
+         8RC1VO6+SEZBIuMJ9KqzHuGHcomKPHmvAVlh2u/920NWEp+OaU3De6E7yudrrppn+Ejt
+         Bq9FIEJMHbPVvjtaodrHzFt6psg+0YqbijRGqDaTQfebtQt8bQRHntv/qc/MZEPYoArT
+         pP0AAhpqixHdc12L1UeLVk68/CFeuWszapLqyMbUiRcIJFWIHiwPgH+XH+1FtnIqrqfY
+         ohD3n13FD+RN5nCaAJjKhk/K6wgYNsvHmD8flJkQAEt/zCwxqKLrpk35GZTdGv7yv6kH
+         yg5w==
+X-Forwarded-Encrypted: i=1; AJvYcCV/YgglIJD6wKklc3wJacL5xrhMusas69dTERQSqoqDgNieS8U20mGi1zeq8CCHjF9vyQVo0IcpF2lN@vger.kernel.org
+X-Gm-Message-State: AOJu0YypOGF650yx5jRxVSTP7cmgkg7LM6y43SPJmYgznmYm+Bk1byTS
+	WT1KaW51mcD62VqvV4qBiZHg7ZhjOXDiZxADLt92rhFbrb2ZAY60yyt1kZ/53WU=
+X-Gm-Gg: ASbGncuPssFZB/23HRBMJRO32Rms1jD6XNaqs3zSaJWsAWjgI3o3INnj0WBw/zwsePI
+	0LN5PZlO0mzf0LILZGdv8VLTfRsnrR0thZgLz13Ap+6D/XAxnZP9huc8ZiTkgEuGqtq5xI6WR2N
+	KOVlD74tuqrlrSh+ADObrxlEMUxiy3TByaMyKXKbO1FocGWPqlU72p7+0cOW7bYJPAEA6Mo7VV5
+	tiLHOIpSDUeCgCp5Swx7Ti34rS6fk/3dqbEXkM8xP+cGQ2sqsxhDvXJjGFFN6ZnAiVvlD56ZD/n
+	Y0BdSqTpcBjJUXKYxC1P5tF06ZZmmj1YoTuOVpq8mV+VFmOZr4GvmYKRbsf+E9YGi7aefzaTJzN
+	4RRhnfg/t8USHCVbJhw==
+X-Google-Smtp-Source: AGHT+IFIxLzUQYS8WbSe7gjUBBLP5moevd2VzC6lwoikd3JqtPlVaRPaA2s8NpuN78U3XjMiFPwpFw==
+X-Received: by 2002:a05:600c:1c8c:b0:43d:683:8cb2 with SMTP id 5b1f17b1804b1-441d4eeb512mr15437105e9.14.1746619195054;
+        Wed, 07 May 2025 04:59:55 -0700 (PDT)
+Received: from ?IPV6:2a01:e0a:3d9:2080:784f:3312:6406:12a9? ([2a01:e0a:3d9:2080:784f:3312:6406:12a9])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a099b17096sm17206685f8f.96.2025.05.07.04.59.54
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 07 May 2025 02:59:20 -0700 (PDT)
+        Wed, 07 May 2025 04:59:54 -0700 (PDT)
+Message-ID: <7ccbd722-c99a-43b3-9ceb-4c207521822d@linaro.org>
+Date: Wed, 7 May 2025 13:59:53 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain; charset=UTF-8
-Date: Wed, 07 May 2025 11:59:19 +0200
-Message-Id: <D9PU9LEA7CLT.37IBLZRP90E9S@fairphone.com>
-Cc: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
- "Manivannan Sadhasivam" <manivannan.sadhasivam@linaro.org>, "James E.J.
- Bottomley" <James.Bottomley@hansenpartnership.com>, "open list"
- <linux-kernel@vger.kernel.org>
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+From: neil.armstrong@linaro.org
+Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
 Subject: Re: [PATCH v2 2/3] scsi: ufs: qcom: Map devfreq OPP freq to UniPro
  Core Clock freq
-From: "Luca Weiss" <luca.weiss@fairphone.com>
-To: "Ziqi Chen" <quic_ziqichen@quicinc.com>, <quic_cang@quicinc.com>,
- <bvanassche@acm.org>, <mani@kernel.org>, <beanhuo@micron.com>,
- <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
- <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
- <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
- <neil.armstrong@linaro.org>, <konrad.dybcio@oss.qualcomm.com>
-X-Mailer: aerc 0.20.1-0-g2ecb8770224a
+To: Ziqi Chen <quic_ziqichen@quicinc.com>,
+ Luca Weiss <luca.weiss@fairphone.com>, quic_cang@quicinc.com,
+ bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
+ avri.altman@wdc.com, junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+ quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+ quic_rampraka@quicinc.com, konrad.dybcio@oss.qualcomm.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ open list <linux-kernel@vger.kernel.org>
 References: <20250507074415.2451940-1-quic_ziqichen@quicinc.com>
  <20250507074415.2451940-3-quic_ziqichen@quicinc.com>
  <D9PS51XVRKLP.1AHMCRH9CZFWU@fairphone.com>
  <7c74a395-a8b8-4a12-9ddb-691f28c90885@quicinc.com>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
 In-Reply-To: <7c74a395-a8b8-4a12-9ddb-691f28c90885@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-On Wed May 7, 2025 at 11:09 AM CEST, Ziqi Chen wrote:
+On 07/05/2025 11:09, Ziqi Chen wrote:
 > Hi Luca,
->
+> 
 > On 5/7/2025 4:19 PM, Luca Weiss wrote:
 >> Hi Ziqi,
->>=20
+>>
 >> On Wed May 7, 2025 at 9:44 AM CEST, Ziqi Chen wrote:
 >>> From: Can Guo <quic_cang@quicinc.com>
 >>>
->>> On some platforms, the devfreq OPP freq may be different than the unipr=
-o
->>> core clock freq. Implement ufs_qcom_opp_freq_to_clk_freq() and use it t=
-o
+>>> On some platforms, the devfreq OPP freq may be different than the unipro
+>>> core clock freq. Implement ufs_qcom_opp_freq_to_clk_freq() and use it to
 >>> find the unipro core clk freq.
 >>>
 >>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
 >>> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 >>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
 >>> ---
->>>   drivers/ufs/host/ufs-qcom.c | 81 ++++++++++++++++++++++++++++++++----=
--
->>>   1 file changed, 71 insertions(+), 10 deletions(-)
+>>>   drivers/ufs/host/ufs-qcom.c | 81 ++++++++++++++++++++++++++++++++-----
+>>>   1 file changed, 71 insertions(+), 10 deletions(-)
 >>>
 >>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
 >>> index 7f10926100a5..804c8ccd8d03 100644
 >>> --- a/drivers/ufs/host/ufs-qcom.c
 >>> +++ b/drivers/ufs/host/ufs-qcom.c
->>>  =20
->>> +static unsigned long ufs_qcom_opp_freq_to_clk_freq(struct ufs_hba *hba=
-,
->>> +												   unsigned long freq, char *name)
+>>> +static unsigned long ufs_qcom_opp_freq_to_clk_freq(struct ufs_hba *hba,
+>>> +                                                   unsigned long freq, char *name)
 >>> +{
->>> +	struct ufs_clk_info *clki;
->>> +	struct dev_pm_opp *opp;
->>> +	unsigned long clk_freq;
->>> +	int idx =3D 0;
->>> +	bool found =3D false;
+>>> +    struct ufs_clk_info *clki;
+>>> +    struct dev_pm_opp *opp;
+>>> +    unsigned long clk_freq;
+>>> +    int idx = 0;
+>>> +    bool found = false;
 >>> +
->>> +	opp =3D dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
->>> +	if (IS_ERR(opp)) {
->>> +		dev_err(hba->dev, "Failed to find OPP for exact frequency %lu\n", fr=
-eq);
->>=20
+>>> +    opp = dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
+>>> +    if (IS_ERR(opp)) {
+>>> +        dev_err(hba->dev, "Failed to find OPP for exact frequency %lu\n", freq);
+>>
 >> I'm hitting this print on bootup:
->>=20
->> [    0.512515] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for exact f=
-requency 18446744073709551615
->> [    0.512571] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for exact f=
-requency 18446744073709551615
->>=20
+>>
+>> [    0.512515] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for exact frequency 18446744073709551615
+>> [    0.512571] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for exact frequency 18446744073709551615
+>>
 >> Doesn't look like it's intended? The number is (2^64 - 1)
->>=20
+>>
 > Yes, this is expected. During link startup, the frequency
 > ULONG_MAX will be passed to ufs_qcom_set_core_clk_ctrl() and
 > ufs_qcom_cfg_timer(). This frequency cannot be found through the API
 > dev_pm_opp_find_freq_exact_indexed(). Therefore, we handle the
 > frequency ULONG_MAX separately within Ufs_qcom_set_core_clk_ctrl()
 > and ufs_qcom_cfg_timer().
->
+> 
 > This print only be print twice during link startup. If you think print
 > such print during bootup is not make sense, I can improve the code and
 > update a new vwesion.
 
-I'll let others comment on what should happen but certainly this large
-number looks more like a mistake, like an integer overflow, if you don't
-dig into what this number is supposed to represent.
+I think just don't call ufs_qcom_opp_freq_to_clk_freq() if freq==ULONG_MAX
 
-Perhaps an idea could be to just skip the print (or even more code) for
-ULONG_MAX since an opp for that is not supposed to exist anyways?
+Neil
 
-I didn't check the code now but for other frequencies this would be an
-actual error I imagine where it should be visible.
-
-Regards
-Luca
-
->
+> 
 > BRs.
 > Ziqi
->
+> 
 >> Regards
 >> Luca
->>=20
+>>
+> 
+> 
 
