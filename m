@@ -1,182 +1,128 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5416121519F;
-	Wed,  7 May 2025 07:31:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 534434414;
+	Wed,  7 May 2025 07:33:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746603111; cv=none; b=kixPVN+CKkk7oCFD7V+Ucdk6fTqhlVFG4gpRidzVChetDl06arzLexRhbnbaHiNbhuxn/JRYGckngcSWWLHTh8DfxqZB86lkDoo7yqBhhJitHus9Lr+8I5Lrwi9eUNmvc4bbdEkXENPas8k/NkXmRBIPJI9GmnKY0bwVdL5y5fI=
+	t=1746603211; cv=none; b=mlff8vOTQorREuzqsgpKd4ClgJhwN4mvDC8ddV2wz3Ukva7D6FaZmGSB9g+kQ8gNJWX/rohoBbKbNI+bC8KWmFEAnbDbhNi/w3fITpPqfZiGPUVz7PjTM+mGqQVgv99tcvgAxNX0VjlSKkNH479/k0b+srFTLNqSHifpdLawNy4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746603111; c=relaxed/simple;
-	bh=J8vV48whjFWoJfoLKNP11HaSqljdUTAPOGpdU7CDSwA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=DgPtOjtaZGO0EZyJq6xJPnSTq7Qg5uXJQCPiyWxbAjAK/awZoGIJPtdJL/Xz/sMRaF0uKM8Dmr8HfIEtVhwg5A99v62vpgrlqbLlvfPw//VyPZG6qDpPDPHB5GkHZ/z1PTUkuqqu5vzFYiQFR5k2cSt/hwpEMwa0A1IdP/LyTvA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=HtlMRhcQ; arc=none smtp.client-ip=192.198.163.19
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="HtlMRhcQ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1746603109; x=1778139109;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=J8vV48whjFWoJfoLKNP11HaSqljdUTAPOGpdU7CDSwA=;
-  b=HtlMRhcQM1syCLlvaKyZcXu0adYGbBBcvDc1O0b9JbxezlTe0LOhq0cx
-   B+LG1lsVi17KSDLendGescE8yDabxTxUlsHXh9zK2jpQ+B4u+NB7bJvkv
-   O7zuLbGAn49JyIcdZtCsaFsEh46eSjAbVAL+MAOiWL0sgSJV9IBg4/HZe
-   I9cHLo/GtjFEXNs8ak0Lcbwoh+OEucqTVMOO+nESDMJjLomHH8LrkNKp6
-   xYKUL9jMYkyGelc2fBfHvPx5jc27h6Coa54owuW7zAGL1M0ZWQqMw46mX
-   Ngf3iDt3dvIv8SBWxY+zce4rU7n6jCFNtfWuDpwxTpGUFjJzSoxwfHh31
-   A==;
-X-CSE-ConnectionGUID: g23Lhqp9QmyrdwU6ZBuLWA==
-X-CSE-MsgGUID: yfQ9tPSlSZGD0QLphZkCpQ==
-X-IronPort-AV: E=McAfee;i="6700,10204,11425"; a="47413842"
-X-IronPort-AV: E=Sophos;i="6.15,268,1739865600"; 
-   d="scan'208";a="47413842"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 07 May 2025 00:31:43 -0700
-X-CSE-ConnectionGUID: RZKoYAW6S7ujDcZSfSTVYg==
-X-CSE-MsgGUID: N0vZmk0ySu6yU0VhwUgSwg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,268,1739865600"; 
-   d="scan'208";a="140830302"
-Received: from lkp-server01.sh.intel.com (HELO 1992f890471c) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 07 May 2025 00:31:41 -0700
-Received: from kbuild by 1992f890471c with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uCZFi-0007JT-1F;
-	Wed, 07 May 2025 07:31:38 +0000
-Date: Wed, 7 May 2025 15:31:14 +0800
-From: kernel test robot <lkp@intel.com>
-To: Rand Deeb <rand.sec96@gmail.com>, Finn Thain <fthain@linux-m68k.org>,
-	Michael Schmitz <schmitzmic@gmail.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: oe-kbuild-all@lists.linux.dev, deeb.rand@confident.ru,
-	lvc-project@linuxtesting.org, voskresenski.stanislav@confident.ru,
-	Rand Deeb <rand.sec96@gmail.com>
-Subject: Re: [PATCH] scsi: NCR5380: Prevent potential out-of-bounds read in
- spi_print_msg()
-Message-ID: <202505071504.SVF8vs1h-lkp@intel.com>
-References: <20250430115926.6335-1-rand.sec96@gmail.com>
+	s=arc-20240116; t=1746603211; c=relaxed/simple;
+	bh=yvE7hHuhZtqAdLiuiqL4X1jVqwVu03bNZyPR+Wo5Xtc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gtFxrZ2F88qyLfCGV9e2lEeQMuG7dp0JmZMG5BS2f8fyy63RFaydiGU4cn3f0URejloJB58OfBuc7UVTfEEurt4G6iPsYlWJPDCn22vYuTOPyPZzzIbuchzYKRSDld+E63vuWHrbl7HheRUihgLWOZJFBhQn8relzk4hxUe3wL0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTP id 4Zsn6g5Q4Sz4f3l26;
+	Wed,  7 May 2025 15:32:59 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.75])
+	by mail.maildlp.com (Postfix) with ESMTP id AC97A1A1912;
+	Wed,  7 May 2025 15:33:25 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP2 (Coremail) with SMTP id Syh0CgDX32LDDBtoLblhLg--.26256S3;
+	Wed, 07 May 2025 15:33:25 +0800 (CST)
+Message-ID: <a39a6612-89ac-4255-b737-37c7d16b3185@huaweicloud.com>
+Date: Wed, 7 May 2025 15:33:23 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250430115926.6335-1-rand.sec96@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, tytso@mit.edu, john.g.garry@oracle.com,
+ bmarzins@redhat.com, chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+ brauner@kernel.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+ yukuai3@huawei.com, yangerkun@huawei.com
+References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
+ <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
+ <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs>
+ <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com>
+ <20250506043907.GA27061@lst.de>
+ <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com>
+ <20250506121102.GA21905@lst.de>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20250506121102.GA21905@lst.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:Syh0CgDX32LDDBtoLblhLg--.26256S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxAFWkXw47uF13ZF4UWFWrGrg_yoW5WrWxpF
+	W0gFyjkF4DKr13J3s5uw40grn5ZFs5AF15Cw4vkr18uw45XF1xKFn8W3WvyFyDJry7AayD
+	JFZ0kFyUZa1xC3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
+	s2-5UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-Hi Rand,
+On 2025/5/6 20:11, Christoph Hellwig wrote:
+> On Tue, May 06, 2025 at 07:16:56PM +0800, Zhang Yi wrote:
+>> Sorry, but I don't understand your suggestion. The
+>> STATX_ATTR_WRITE_ZEROES_UNMAP attribute only indicate whether the bdev
+>> and the block device that under the specified file support unmap write
+>> zeroes commoand. It does not reflect whether the bdev and the
+>> filesystems support FALLOC_FL_WRITE_ZEROES. The implementation of
+>> FALLOC_FL_WRITE_ZEROES doesn't fully rely on the unmap write zeroes
+>> commoand now, users simply refer to this attribute flag to determine
+>> whether to use FALLOC_FL_WRITE_ZEROES when preallocating a file.
+>> So, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES doesn't
+>> have strong relations, why do you suggested to put this into the ext4
+>> and bdev patches that adding FALLOC_FL_WRITE_ZEROES?
+> 
+> So what is the point of STATX_ATTR_WRITE_ZEROES_UNMAP?
 
-kernel test robot noticed the following build errors:
+My idea is not to strictly limiting the use of FALLOC_FL_WRITE_ZEROES to
+only bdev or files where bdev_unmap_write_zeroes() returns true. In
+other words, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES
+are not consistent, they are two independent features. Even if some
+devices STATX_ATTR_WRITE_ZEROES_UNMAP are not set, users should still be
+allowed to call fallcoate(FALLOC_FL_WRITE_ZEROES). This is because some
+devices and drivers currently cannot reliably ascertain whether they
+support the unmap write zero command; however, certain devices, such as
+specific cloud storage devices, do support it. Users of these devices
+may also wish to use FALLOC_FL_WRITE_ZEROES to expedite the zeroing
+process.
 
-[auto build test ERROR on jejb-scsi/for-next]
-[also build test ERROR on mkp-scsi/for-next linus/master v6.15-rc5 next-20250506]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Therefore, I think that the current point of
+STATX_ATTR_WRITE_ZEROES_UNMAP (possibly STATX_WRITE_ZEROES_UNMAP) should
+be to just indicate whether a bdev or file supports the unmap write zero
+command (i.e., whether bdev_unmap_write_zeroes() returns true). If we
+use standard SCSI and NVMe storage devices, and the
+STATX_ATTR_WRITE_ZEROES_UNMAP attribute is set, users can be assured
+that FALLOC_FL_WRITE_ZEROES is fast and can choose to use
+fallocate(FALLOC_FL_WRITE_ZEROES) immediately.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Rand-Deeb/scsi-NCR5380-Prevent-potential-out-of-bounds-read-in-spi_print_msg/20250430-200221
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20250430115926.6335-1-rand.sec96%40gmail.com
-patch subject: [PATCH] scsi: NCR5380: Prevent potential out-of-bounds read in spi_print_msg()
-config: alpha-randconfig-r072-20250501 (https://download.01.org/0day-ci/archive/20250507/202505071504.SVF8vs1h-lkp@intel.com/config)
-compiler: alpha-linux-gcc (GCC) 11.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250507/202505071504.SVF8vs1h-lkp@intel.com/reproduce)
+Would you prefer to make STATX_ATTR_WRITE_ZEROES_UNMAP and
+FALLOC_FL_WRITE_ZEROES consistent, which means
+fallcoate(FALLOC_FL_WRITE_ZEROES) will return -EOPNOTSUPP if the block
+device doesn't set STATX_ATTR_WRITE_ZEROES_UNMAP ?
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202505071504.SVF8vs1h-lkp@intel.com/
+If so, I'd suggested we need to:
+1) Remove STATX_ATTR_WRITE_ZEROES_UNMAP since users can check the
+   existence by calling fallocate(FALLOC_FL_WRITE_ZEROES) directly, this
+   statx flag seems useless.
+2) Make the BLK_FEAT_WRITE_ZEROES_UNMAP sysfs interface to RW, allowing
+   users to adjust the block device's support state according to the
+   real situation.
 
-All errors (new ones prefixed by >>):
+Thanks,
+Yi.
 
-   In file included from drivers/scsi/g_NCR5380.c:691:
-   drivers/scsi/NCR5380.c: In function 'NCR5380_reselect':
->> drivers/scsi/NCR5380.c:2107:51: error: 'len' undeclared (first use in this function); did you mean 'lun'?
-    2107 |                 if (msg[0] == EXTENDED_MESSAGE && len >= 3) {
-         |                                                   ^~~
-         |                                                   lun
-   drivers/scsi/NCR5380.c:2107:51: note: each undeclared identifier is reported only once for each function it appears in
-
-
-vim +2107 drivers/scsi/NCR5380.c
-
-  2099	
-  2100		if (!(msg[0] & 0x80)) {
-  2101			shost_printk(KERN_ERR, instance, "expecting IDENTIFY message, got ");
-  2102	
-  2103			/*
-  2104			 * Defensive check before calling spi_print_msg():
-  2105			 * Avoid buffer overrun if msg claims extended length.
-  2106			 */
-> 2107			if (msg[0] == EXTENDED_MESSAGE && len >= 3) {
-  2108				int expected_len = 2 + msg[1];
-  2109	
-  2110				if (expected_len == 2)
-  2111					expected_len += 256;
-  2112	
-  2113				if (len >= expected_len)
-  2114					spi_print_msg(msg);
-  2115				else
-  2116					pr_warn("spi_print_msg: skipping malformed extended message (len=%d, expected=%d)\n",
-  2117						len, expected_len);
-  2118			} else {
-  2119				spi_print_msg(msg);
-  2120			}
-  2121	
-  2122			printk("\n");
-  2123			do_abort(instance, 0);
-  2124			return;
-  2125		}
-  2126		lun = msg[0] & 0x07;
-  2127	
-  2128		/*
-  2129		 * We need to add code for SCSI-II to track which devices have
-  2130		 * I_T_L_Q nexuses established, and which have simple I_T_L
-  2131		 * nexuses so we can chose to do additional data transfer.
-  2132		 */
-  2133	
-  2134		/*
-  2135		 * Find the command corresponding to the I_T_L or I_T_L_Q  nexus we
-  2136		 * just reestablished, and remove it from the disconnected queue.
-  2137		 */
-  2138	
-  2139		tmp = NULL;
-  2140		list_for_each_entry(ncmd, &hostdata->disconnected, list) {
-  2141			struct scsi_cmnd *cmd = NCR5380_to_scmd(ncmd);
-  2142	
-  2143			if (target_mask == (1 << scmd_id(cmd)) &&
-  2144			    lun == (u8)cmd->device->lun) {
-  2145				list_del(&ncmd->list);
-  2146				tmp = cmd;
-  2147				break;
-  2148			}
-  2149		}
-  2150	
-  2151		if (tmp) {
-  2152			dsprintk(NDEBUG_RESELECTION | NDEBUG_QUEUES, instance,
-  2153			         "reselect: removed %p from disconnected queue\n", tmp);
-  2154		} else {
-  2155			int target = ffs(target_mask) - 1;
-  2156	
-  2157			shost_printk(KERN_ERR, instance, "target bitmask 0x%02x lun %d not in disconnected queue.\n",
-  2158			             target_mask, lun);
-  2159			/*
-  2160			 * Since we have an established nexus that we can't do anything
-  2161			 * with, we must abort it.
-  2162			 */
-  2163			if (do_abort(instance, 0) == 0)
-  2164				hostdata->busy[target] &= ~(1 << lun);
-  2165			return;
-  2166		}
-  2167	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
