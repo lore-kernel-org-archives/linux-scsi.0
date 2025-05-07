@@ -1,117 +1,152 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EC6B221287;
-	Wed,  7 May 2025 08:23:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3654E217F40
+	for <linux-scsi@vger.kernel.org>; Wed,  7 May 2025 08:27:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746606195; cv=none; b=KzFhqhaSUrqQMJoK/r1qxQ2VTpc/Fi8RDxhHqJqkCClH+QDVNONXTdMUQYnBRJH0/ns0i9+MVJQw/lzIWJehppvnYA3PBLkk6tSf2cVAhk8p5Zdby7wLHIDORnjQwMJmhC2K42vJ2mzwgRdiKYqTCSEDo2sLnOCX1xXAt6lHFmY=
+	t=1746606468; cv=none; b=JivnGxj8wLb5xW6V9lx7uopJEyj4qKV42QDN50zNnn1+ecM9/VNG08K2fAzsLnAdV5Yp94RuEG/dBmY2G2WB0qmT9HiQJS7r05oD0+pBPAhxXib40zEniwIFx3wPw2R5HuzNZs9uDahLg26bFvSnDbe/3stBAOdUwY6z4z9qVqc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746606195; c=relaxed/simple;
-	bh=dKQSYssCqjab+VThR2A6t9EL5/fdsI5w0NftenKqgO8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ibWIb95PO3EaJJ/ByiG3lHgsKX15j1qGqKZaC6Dc4LKEDm/jpb38ip7Lkg/HFIzkJ0LX9mApPhyOL4ZVg3PloSyxrne0uuvQKjJaLcEEaom6lCYY1wQjBO+attNr0xXVFuOZrC4byyMXm1Zm86HoDCfW6j7r2CewVNK0dMfY4MU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTP id 4ZspD501PTz4f3jXv;
-	Wed,  7 May 2025 16:22:44 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.112])
-	by mail.maildlp.com (Postfix) with ESMTP id 7419B1A018C;
-	Wed,  7 May 2025 16:23:09 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP1 (Coremail) with SMTP id cCh0CgAXfHxqGBto+dv_LQ--.31348S3;
-	Wed, 07 May 2025 16:23:08 +0800 (CST)
-Message-ID: <6fc62631-fb6f-4207-badb-1964b20fa89a@huaweicloud.com>
-Date: Wed, 7 May 2025 16:23:06 +0800
+	s=arc-20240116; t=1746606468; c=relaxed/simple;
+	bh=ZQ6pPahqX49L4FoIRBhZ0n9rPl6wHTixR5GsHVSUubk=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=EK5kE2feOWyZIDBA/zv89iCDgb+gadDdDLSrc88Ok/JnTYHRovxYtwefDpFmPSX9NNlc881+ciXYpUx30bHowvClXyP9OnSMKIcdbAgdAXSudkhfIMnS17M/4eOWWyDhyTHUbW2pUhMU4cJYrID0Ag1VOcP2RR9PJiaUq9RiBzw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fairphone.com; spf=pass smtp.mailfrom=fairphone.com; dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b=JAIGVEbo; arc=none smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=fairphone.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=fairphone.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=fairphone.com header.i=@fairphone.com header.b="JAIGVEbo"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-ace98258d4dso977800466b.2
+        for <linux-scsi@vger.kernel.org>; Wed, 07 May 2025 01:27:45 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=fairphone.com; s=fair; t=1746606464; x=1747211264; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=tCYViyp5kWLfzXdJOLLht1vSVoT9lkOIaKumywG/AIc=;
+        b=JAIGVEbob9+FV/NFODJBl3mxVj1WGC05bu20pUQl30dx5mtlyc3cOvB6GE+zTy+1KO
+         aTUwPpOEtQi7Hw9fz7dIAd6wVDy29K9JK1NuzSPBMJItTVdW1R5VhnGAONOW81L86glK
+         HlblZS4CjHFEHNMv6mqj74x6Ln6AHMCY4pkNm3wwSc75siMoW20zUIhFGF6noP4jRGj3
+         Am67JbbSU0x8vQYflOn2XC7pzVBtiMWwh7hlJlP3aaF+AnvLD8ewB2532k2x/kRYjb8d
+         OweG6QL5pm1e/SdqjEGGpbSga6gJdycD6LAM8fXyZ/qcmQpqcWWw5YqH7iO6l8BcoU9+
+         9IcA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746606464; x=1747211264;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=tCYViyp5kWLfzXdJOLLht1vSVoT9lkOIaKumywG/AIc=;
+        b=F4si3oZR6H6Jv18XxqLUEOsC0IdjRUlcWls6jknvN2C/Ulls9rMxpFapGmh7kqbGEP
+         SaoxTLN+XDYQDDFJBy7zP7apyc7x80pVc1nYHup5DBCrhpY9CEL8Hgo2/cH4izuMHAKB
+         mQuPjkkcZJYSAqRVMIlnbzGVcpJ0hBzTBNPqY44jB8cSwACifL5VDaccOCBFRpeZEBgU
+         XfLyvhFas7Xki0vYTdBd03ymrw5PtMFj6Tv+EuGSAsadXrYpoKYXZzSjygsGmN6lFgzj
+         +gak5AUOtkQNq3aX2+0nOi37NB5lgOtr9m+3GbCCi7aYUb3qPYPgOfLoeiCO81PvcWr3
+         zojg==
+X-Forwarded-Encrypted: i=1; AJvYcCWkHrvQ95b8Hescyay2QIETakDC3bJFYhoq7j/fneK1lCGlgPbc+2DQvNzElx6AgYmvfQJh5u6Jk+NW@vger.kernel.org
+X-Gm-Message-State: AOJu0YzedmodyQyuWY7LcwCw8JUV7DNDtNCaNCzrSoA2G9kW/WxPj7mD
+	VUVQnXgAUkuJ8P+Cmv6NvGmixpGlP1XPBnpfhz90R4vP4DBoeA+QeookYLsPr8s=
+X-Gm-Gg: ASbGncuD9hSTOn8qet0XiiRAU3TebSHk+v8VHviPpvGovcEvKU7GMv4KEZEUgCiDHIB
+	ELhcFde1BNyXTluZZRAF9fPtPLmpEfXDa00Th0WzgDnQSM8tRunxRYP9xc+2/6MxuSyUUpynz1R
+	cSEcETiuXDUAX/8EcZB/5cbRhycZBdnnkHQZ8vqcCbu4FVJMx2izZ4RMHXX41z4pGCwGlmdvL+Z
+	/7Z2o8DzrP6v1aM1m2DUileNOf3eQnVF2YyOkOxGWqO0ksXnmCPzrhzgpBXqCXqTYHfWqyLlBw6
+	On/hA+tVNTbiH5KKW2VctYpFy/C3haRAHYQ3BPi9bB2cDpr+GelinCd6/u/qm/4umNeS4sUP4V6
+	wFZm590Yg50qzUBzU1i/m
+X-Google-Smtp-Source: AGHT+IFWVHMkGbVmG1uAPmLK3vq0y13EMcQN92l07tgAXfsVhbprvVYbhymi8zGzYG2gLtYTRHhcDg==
+X-Received: by 2002:a17:907:7d91:b0:acb:1078:9f79 with SMTP id a640c23a62f3a-ad1e8befd21mr271452466b.18.1746606464495;
+        Wed, 07 May 2025 01:27:44 -0700 (PDT)
+Received: from localhost (144-178-202-138.static.ef-service.nl. [144.178.202.138])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ad1894c033asm873440066b.91.2025.05.07.01.27.44
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 07 May 2025 01:27:44 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
-To: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>
-Cc: dhowells@redhat.com, brauner@kernel.org, linux-fsdevel@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, tytso@mit.edu, john.g.garry@oracle.com,
- bmarzins@redhat.com, chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
- yangerkun@huawei.com
-References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
- <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
- <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs>
- <20250506050239.GA27687@lst.de> <20250506053654.GA25700@frogsfrogsfrogs>
- <20250506054722.GA28781@lst.de>
- <c3105509-9d63-4fa2-afaf-5b508ddeeaca@huaweicloud.com>
- <20250506121012.GA21705@lst.de> <20250506155515.GL1035866@frogsfrogsfrogs>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20250506155515.GL1035866@frogsfrogsfrogs>
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:cCh0CgAXfHxqGBto+dv_LQ--.31348S3
-X-Coremail-Antispam: 1UD129KBjvJXoW7uw1ktr18Gr17CFy8Kw48Zwb_yoW8CFWDpF
-	WjgF4UGFWUKry3Jw1kuw1Igr15ZFn5GFy3C39Ykr18Zws0qr1kKF95W3ZYkF9ruryrAa1U
-	ta9xK3sxWws3A37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
-	s2-5UUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Date: Wed, 07 May 2025 10:27:43 +0200
+Message-Id: <D9PSBGJ3COBM.2ZFBUDFGL4AJC@fairphone.com>
+Cc: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+Subject: Re: [PATCH v2 0/3] Bug fixes for UFS multi-frequency scaling on
+ Qcom platform
+From: "Luca Weiss" <luca.weiss@fairphone.com>
+To: "Ziqi Chen" <quic_ziqichen@quicinc.com>, <quic_cang@quicinc.com>,
+ <bvanassche@acm.org>, <mani@kernel.org>, <beanhuo@micron.com>,
+ <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
+ <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
+ <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
+ <neil.armstrong@linaro.org>, <konrad.dybcio@oss.qualcomm.com>
+X-Mailer: aerc 0.20.1-0-g2ecb8770224a
+References: <20250507074415.2451940-1-quic_ziqichen@quicinc.com>
+In-Reply-To: <20250507074415.2451940-1-quic_ziqichen@quicinc.com>
 
-On 2025/5/6 23:55, Darrick J. Wong wrote:
-> On Tue, May 06, 2025 at 02:10:12PM +0200, Christoph Hellwig wrote:
->> On Tue, May 06, 2025 at 07:25:06PM +0800, Zhang Yi wrote:
->>> +       if (request_mask & STATX_WRITE_ZEROES_UNMAP &&
->>> +           bdev_write_zeroes_unmap(bdev))
->>> +               stat->result_mask |= STATX_WRITE_ZEROES_UNMAP;
->>
->> That would be my expectation.  But then again this area seems to
->> confuse me a lot, so maybe we'll get Christian or Dave to chim in.
-> 
-> Um... does STATX_WRITE_ZEROES_UNMAP protect a field somewhere?
-> It might be nice to expose the request alignment granularity/max
-> size/etc.
+Hi Ziqi,
 
-I think that simply returning the support state is sufficient at the
-moment. __blkdev_issue_write_zeroes() will send write zeroes through
-multiple iterations, and there are no specific restrictions on the
-parameters provided by users.
+On Wed May 7, 2025 at 9:44 AM CEST, Ziqi Chen wrote:
+> This series fixes a few corner cases introduced by multi-frequency scalin=
+g feature
+> on some old Qcom platforms design.
+>
+> 1. On some platforms, the frequency tables for unipro clock and the core =
+clock are different,
+>    which has led to errors when handling the unipro clock.
+>
+> 2. On some platforms, the maximum gear supported by the host may exceed t=
+he maximum gear
+>    supported by connected UFS device. Therefore, this should be taken int=
+o account when
+>    find mapped gear for frequency.
+>
+> This series has been tested on below platforms -
+> sm8550 mtp + UFS3.1
+> SM8650 MTP + UFS3.1
+> QCS6490 BR3GEN2 + UFS2.2
+>
+> For change "scsi: ufs: qcom: Check gear against max gear in vop freq_to_g=
+ear()"
+> Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on RB3GEN2
+>
+> For change "scsi: ufs: qcom: Map devfreq OPP freq to UniPro Core Clock fr=
+eq"
+>            "scsi: ufs: qcom: Call ufs_qcom_cfg_timers() in clock scaling =
+path"
+> The original pathes of these two changes are tested by: Luca Weiss <luca.=
+weiss@fairphone.com> on
+> SM6350, but we have reworked the code logic later.
 
-> Or does this flag exist solely to support discovering that
-> FALLOC_FL_WRITE_ZEROES is supported?  In which case, why not discover
-> its existence by calling fallocate(fd, WRITE_ZEROES, 0, 0) like the
-> other modes?
-> 
+How about adding these tags to the patches?
 
-Current STATX_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES are
-inconsistent, we allow users to call fallocate(FALLOC_FL_WRITE_ZEROES) on
-files that STATX_WRITE_ZEROES_UNMAP is not set. Users can check whether
-the device supports unmap write zeroes through STATX_WRITE_ZEROES_UNMAP
-and then decide to call fallocate(FALLOC_FL_WRITE_ZEROES) if it is
-supported. Please see this explanation for details.
+Reported-by: Luca Weiss <luca.weiss@fairphone.com>
+Closes: https://lore.kernel.org/linux-arm-msm/D9FZ9U3AEXW4.1I12FX3YQ3JPW@fa=
+irphone.com/
 
-  https://lore.kernel.org/linux-fsdevel/20250421021509.2366003-1-yi.zhang@huaweicloud.com/T/#mc1618822bc27d486296216fc1643d5531fee03e1
+And despite the print in patch 2 where I've replied separately:
 
-However, removing STATX_WRITE_ZEROES_UNMAP also seems good to me(Perhaps
-it would be better.).It means we do not allow to call
-fallocate(FALLOC_FL_WRITE_ZEROES) if the device does not explicitly
-support unmap write zeroes.
+Tested-by: Luca Weiss <luca.weiss@fairphone.com> # sm7225-fairphone-fp4
 
-Thanks,
-Yi.
+You should probably also add some "Fixes:" metadata to your patches.
+
+Regards
+Luca
+
+>
+> v1 - > v2:
+> For change "scsi: ufs: qcom: Check gear against max gear in vop freq_to_g=
+ear()":
+> 1. Instead of return 'gear', return '0' directly if didn't find mapped
+>    gear
+> 2. Derectly return min_t(gear,max_gear) instead assign to 'gear' then
+>    return it.
+>
+> Can Guo (2):
+>   scsi: ufs: qcom: Map devfreq OPP freq to UniPro Core Clock freq
+>   scsi: ufs: qcom: Call ufs_qcom_cfg_timers() in clock scaling path
+>
+> Ziqi Chen (1):
+>   scsi: ufs: qcom: Check gear against max gear in vop freq_to_gear()
+>
+>  drivers/ufs/host/ufs-qcom.c | 134 +++++++++++++++++++++++++++---------
+>  1 file changed, 102 insertions(+), 32 deletions(-)
 
