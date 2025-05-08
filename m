@@ -1,97 +1,102 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEF7F2F43
-	for <linux-scsi@vger.kernel.org>; Thu,  8 May 2025 09:19:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B2BE1E22E9;
+	Thu,  8 May 2025 09:21:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746695967; cv=none; b=lY4ZIaaVsZawjmivibrBFlFVnHPexuQ+oEnB/MI2gBbY/+gUhWlsww6x3eDZkfJ/oHbh16a+Ijs0L79W8iPvVFcuL2kzE77kjlnGGX+fQGnBFSJc5RgTVMIR0XSaeUqE9AWiKQuRoK6ivKXvU/A6qk6W3hKs7y+xGvVXdL/kZfw=
+	t=1746696075; cv=none; b=uLQL73KjhVotI+s4vTS2iXdr8X0uMZ/3pp9h4hVb+Bc6JJv5m1D6J0t/MVF6kEDiegwQ1KCPigJrxeuDt6PaZrAR502wrfN4wv/OTsOsF5AnJNNioIOn81n581gK5f+0BwHTovKjLuSfL02MmHE/ekRnFN+nbuEfohruosr/NW4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746695967; c=relaxed/simple;
-	bh=uLHsKftMadMLGMErmJIl4fVUVDoJJX2GR3nAxFkT4UY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=WjxyfdZkIp8ftR1QLKE6whRqo993vfWULAYDWpBPwuTsGSP1KCsUufQ1h8VBdjxtS48qPJZOEM8u7Lw3W8x8So5dllnYevLdIKoiPFn3351dhEvF0DqVnm+HFyzRxR6pSaHOcYcuiVpexWTFD/OCd99a8QSsyVN4TUh+EZuvtGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=jvOKi2hS; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1746696075; c=relaxed/simple;
+	bh=ZZwOfmsV6qwFd2mkj0wiXHd0OARcjgbvTjj8X00+fkE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=gqFwoCK4MsuB93F9MfV8h3I1ZlM+9/gbkUtm9oA0VUJF8U+M6ntv5w0bnGOjjXwMdoBNgxQtoDV/sd02HpuB/EC80xNTo/BsaOs9CKOfd6zaNpHPuejVklVyE9r3HTNUsbrdJfRsEU4cgKL5IIwSvnkNZWCMwduiT/q9Pnu98hs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nsOgxZiK; arc=none smtp.client-ip=209.85.218.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="jvOKi2hS"
-X-UUID: 848db5be2bed11f082f7f7ac98dee637-20250508
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=4hWPT6rWQrJNyP1j/yv1AQAhHQ6njvyJ9Op1WloYQHQ=;
-	b=jvOKi2hSwWYtlwReFqNy26EeL2PvpvoYhLJw3MoOjOQeQEBQ9QMKFP1SJ34h7uUojXAmbZxTjwbfMHOPI+nAo/UMSt18I9krK8ffp04/FyxxOqSSTNR+RjsexSCPvhZ1JTkJ3x06gFmE4MnTc2sb7Vy6Sq5Wnj31yvSHOnVLsTM=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:e2cad94a-7c41-4647-b46a-0cbdd0ee6391,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:0ef645f,CLOUDID:a99dbce0-512b-41ef-ab70-9303a9a81417,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
-	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 848db5be2bed11f082f7f7ac98dee637-20250508
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1197025019; Thu, 08 May 2025 17:19:17 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Thu, 8 May 2025 17:19:16 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Thu, 8 May 2025 17:19:16 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>,
-	<quic_ziqichen@quicinc.com>
-Subject: [PATCH v2] ufs: core: behavior change of hwq_id type and value
-Date: Thu, 8 May 2025 17:18:15 +0800
-Message-ID: <20250508091914.307944-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nsOgxZiK"
+Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-ac339f53df9so126572166b.1;
+        Thu, 08 May 2025 02:21:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1746696072; x=1747300872; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=ZZwOfmsV6qwFd2mkj0wiXHd0OARcjgbvTjj8X00+fkE=;
+        b=nsOgxZiKD+pqEE3RM5jKd51q8s2SjNFYqEHnWEww8pazxHPlU5PEqs6/umzzclHZ6u
+         yTBmbTXaUYSnj/U6LTU0w2TAqSQRCarfAYNQTb44MYgqn5cGgFVTOknQmFUCFIBt4dzx
+         lXmeuq2HAgxHq3R6XLYyEtVym7P34jtH8tXm6E+fKdtvqwEVN6pO6vcIFrAaC+sDBbLk
+         TqGVLPGPMi8nmmL7p0eb6dFVaXd/4bne1zSWs1pTZByuu6JdxRWJbC1pk4924L3N45kO
+         E9C4iMIY/E2zn2nMj014zG540bVdg/QU1fHda/gEf+bJM+/vaLHgfVvUB+l01AHuntDo
+         YbHw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1746696072; x=1747300872;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=ZZwOfmsV6qwFd2mkj0wiXHd0OARcjgbvTjj8X00+fkE=;
+        b=wOlZa8NXIdmzab7k2VkFN/eGj8SoCffAyhgey3zCiK+Ca2bavLb+DWAdC8MIGDI26Y
+         lmbUjNG1pzZHt01E2WYZQEe+g9RLbi/UIyvs5A/kYLnVZqNezOXkVwMfp4TJ98UUJhkI
+         JixcGK3D2pyDSQ7NjuzOUVSD/36sx94tcMs4MijZlg5RpSAL/U7IhcVPDppzvS8hXLnt
+         OEC2HbZCC/qLOlSX7G0q/NCnAUSlQ/oSdK6iboJ5i+rPes6HfLRkA7kAod0wILQo5Bm0
+         Z6UEDF+3OyQPTGfpVusutrN6BE0MExmykJtWRHcQHRJ4RElEpLwj6OVzNrznCwf5bxTQ
+         XArA==
+X-Forwarded-Encrypted: i=1; AJvYcCV0C3XfvAK/WIX7Ztg5GFPN6g+HSUra7OkFYBKfEejTltqvN5hkThVUgwuM8Z52fU7UJYmduOmbI02XHw==@vger.kernel.org, AJvYcCXHeAmi5HFbtqPOi5gWKnSQZFkdQgNjDRGbAxKEqhSk81v/C8nsbv8POAW4iqvDAAo0YDWy2bvJVmZY4TI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YxO6sCtvQY+b75eX+V1xYaEMwABsH7Gugy6SqYPd+6Dlakp9qJR
+	EzWELTqObyusyX+0BjgT9k/Dwgk8Go1xlTXJmuy0w/2hPt5NHLQu
+X-Gm-Gg: ASbGncs+1Jq5NkflmEvHXnFHaDD8KzxAVDeUI8RcJu5bQCrSteiD5K6kGrAM5ADyaOC
+	WQLwZIE7EEYh/T/dgPLjZ2RneDuOOs9Cqo/0YLSIVi6ilACX22Zr65b1e2uFhYTjKE+nsWt72CT
+	ezZfi2DJh9pXU5SVHzX7GfXtQDIXVXMAZyBhxYSQTZlU0LU8dn1Tsm0X3pbFNRQ6aMvpyhT7Ume
+	gprZVU7BdXgH72HKyyzBXagK7LkfTyGAZpsVKl9RVovYAN269lrXrW7Sja/4RRb+apf/vF04YWe
+	G4lgUabnh+CtZcjRNYKYfgfuhwIzJualZIFRfI1HDCo=
+X-Google-Smtp-Source: AGHT+IFPf1Qh3KNKTnQO0udn+T730YYO2gH+fHK0l1zsCqoKftabDd58YKQBwuSfKFuy8+Fv+zV1Qw==
+X-Received: by 2002:a17:907:7da9:b0:acb:5f9a:72f4 with SMTP id a640c23a62f3a-ad1e8bf688cmr576012266b.30.1746696072039;
+        Thu, 08 May 2025 02:21:12 -0700 (PDT)
+Received: from [10.176.234.34] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ad189540d6esm1046713166b.185.2025.05.08.02.21.10
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 08 May 2025 02:21:11 -0700 (PDT)
+Message-ID: <4575f37d5221048bfd061c561e42389ae569ca39.camel@gmail.com>
+Subject: Re: [PATCH v2 2/3] scsi: ufs: qcom: Map devfreq OPP freq to UniPro
+ Core Clock freq
+From: Bean Huo <huobean@gmail.com>
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com, 
+ bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
+ avri.altman@wdc.com,  junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+ quic_nguyenb@quicinc.com,  quic_nitirawa@quicinc.com,
+ quic_rampraka@quicinc.com, neil.armstrong@linaro.org, 
+ luca.weiss@fairphone.com, konrad.dybcio@oss.qualcomm.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, Manivannan
+	Sadhasivam <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
+	 <James.Bottomley@HansenPartnership.com>, open list
+	 <linux-kernel@vger.kernel.org>
+Date: Thu, 08 May 2025 11:21:10 +0200
+In-Reply-To: <20250507074415.2451940-3-quic_ziqichen@quicinc.com>
+References: <20250507074415.2451940-1-quic_ziqichen@quicinc.com>
+	 <20250507074415.2451940-3-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
 
-From: Peter Wang <peter.wang@mediatek.com>
-
-Because the member id of struct ufs_hw_queue is u32 (hwq->id) and
-the trace entry hwq_id is also u32, the type should be changed to u32.
-If mcq is not supported, SDB mode only supports one hardware queue,
-for which setting the hwq_id to 0 is more suitable.
-
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7735421e3991..14e4cfbcb9eb 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -432,7 +432,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int tag,
- 	u8 opcode = 0, group_id = 0;
- 	u32 doorbell = 0;
- 	u32 intr;
--	int hwq_id = -1;
-+	u32 hwq_id = 0;
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	struct scsi_cmnd *cmd = lrbp->cmd;
- 	struct request *rq = scsi_cmd_to_rq(cmd);
--- 
-2.45.2
+T24gV2VkLCAyMDI1LTA1LTA3IGF0IDE1OjQ0ICswODAwLCBaaXFpIENoZW4gd3JvdGU6Cj4gLcKg
+wqDCoMKgwqDCoMKgcmV0dXJuIHVmc19xY29tX3NldF9jb3JlX2Nsa19jdHJsKGhiYSwgZnJlcSk7
+Cj4gK8KgwqDCoMKgwqDCoMKgcmV0dXJuIHVmc19xY29tX3NldF9jb3JlX2Nsa19jdHJsKGhiYSwg
+ZmFsc2UsIGZyZXEpOwo+IMKgfQo+IMKgCj4gwqBzdGF0aWMgaW50IHVmc19xY29tX2Nsa19zY2Fs
+ZV9ub3RpZnkoc3RydWN0IHVmc19oYmEgKmhiYSwgYm9vbCBzY2FsZV91cCwKPiBAQCAtMjA4MSwx
+MSArMjEwMCw1MyBAQCBzdGF0aWMgaW50IHVmc19xY29tX2NvbmZpZ19lc2koc3RydWN0IHVmc19o
+YmEgKmhiYSkKPiDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuIHJldDsKPiDCoH0KPiDCoAo+ICtzdGF0
+aWMgdW5zaWduZWQgbG9uZyB1ZnNfcWNvbV9vcHBfZnJlcV90b19jbGtfZnJlcShzdHJ1Y3QgdWZz
+X2hiYSAqaGJhLAo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCB1bnNpZ25lZCBsb25nIGZyZXEs
+IGNoYXIgKm5hbWUpCgoKVGhpcyB0YWIgaW5kZW50YXRpb24gaXMgc3RyYW5nZSEKCgo+ICt7Cj4g
+K8KgwqDCoMKgwqDCoMKgc3RydWN0IHVmc19jbGtfaW5mbyAqY2xraQoK
 
