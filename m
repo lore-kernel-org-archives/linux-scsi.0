@@ -1,177 +1,149 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mail-m32102.qiye.163.com (mail-m32102.qiye.163.com [220.197.32.102])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5C01DF25C;
-	Thu,  8 May 2025 12:17:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EB5D2253B2;
+	Thu,  8 May 2025 12:56:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.32.102
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746706650; cv=none; b=h+1XRrkUJuwDGHI0RyMtuUuTBIyb0I3H6YGCoGlzWCGooK2dsfjxhqmhsXEn/9MlWq/aUSpHpHh9F77TG9o4xd+sGFMI223jIk6PTBYlyyym/4HB22YxxUU0JXZJjAnZSHjdj3CunW0ZMFV5a/3EniBuzx4hGrbC0SQCDe2sdjo=
+	t=1746708968; cv=none; b=MY0/zzSbSpgBcNwL9eFgeMw7jZlF2GuGPBZfANsc1dXeibleuhdT4EqzrV6OQ+mrlIO9hcRAhSG0A9S8XqlG0kKmMhceThmMrX9N3wo/vOBiwqOA52Gagl5xyjHQDQMI1e/SMTbm1ivGXUA79Ep3vE/A4LOoathqwTs+RsEFwEY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746706650; c=relaxed/simple;
-	bh=7xiyatHuEYO5siH784i+66R6gDk//PcjZEueVmEeyvo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FFfBF6u0J0thAeMNIaUgD7DmEwnGOk+zJb1u+E9v7Gu4Mu932+SvZIyNm+BjexwkSF2OKhOTV1YtNKNP9QIwaJZZc8TYMofOSZiQwQ0RlIm3vQgnocSsjDxOv/UVfiTfDYr9ZnwkSMHCpvDeZX0jdMdolV5zWNdP2WWO8FLslTw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4ZtWNH1XsWzYQtwc;
-	Thu,  8 May 2025 20:17:19 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 86C091A1A7E;
-	Thu,  8 May 2025 20:17:18 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgDnSl_KoBxoXus0Lw--.707S3;
-	Thu, 08 May 2025 20:17:16 +0800 (CST)
-Message-ID: <68172a9e-cf68-4962-8229-68e283e894e1@huaweicloud.com>
-Date: Thu, 8 May 2025 20:17:14 +0800
+	s=arc-20240116; t=1746708968; c=relaxed/simple;
+	bh=5PDCbIC95j/ITD40mDOy1iMbEairxNDKkHP6w2tyA+E=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GOEM1tttbxur2oBjLoz2UPa+rETu7ZXTDo2qr6QTE28NTJPAEZ32iticuz3hdgA0XoG1YYXx+DfYH1cBLbSv6rujbApJ15GpPrUPjmJbue9QLj1lbnr+POiH72fTqUERUPjGpKSK76Dr4zLaifotM7heHI0dXB+q8bzEQwY+MYg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sangfor.com.cn; spf=pass smtp.mailfrom=sangfor.com.cn; arc=none smtp.client-ip=220.197.32.102
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=sangfor.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sangfor.com.cn
+Received: from ubuntu.. (unknown [121.32.254.147])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 1464cfa34;
+	Thu, 8 May 2025 20:50:46 +0800 (GMT+08:00)
+From: Zhu Wei <zhuwei@sangfor.com.cn>
+To: don.brace@microchip.com,
+	kevin.barnett@microchip.com
+Cc: dinghui@sangfor.com.cn,
+	zengzhicong@sangfor.com.cn,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	storagedev@microchip.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org,
+	Zhu Wei <zhuwei@sangfor.com.cn>
+Subject: [PATCH] scsi: smartpqi: Fix the race condition between pqi_tmf_worker and pqi_sdev_destroy
+Date: Thu,  8 May 2025 20:50:11 +0800
+Message-ID: <20250508125011.3455696-1-zhuwei@sangfor.com.cn>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
- dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- linux-kernel@vger.kernel.org, tytso@mit.edu, john.g.garry@oracle.com,
- bmarzins@redhat.com, chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
- brauner@kernel.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
- yukuai3@huawei.com, yangerkun@huawei.com
-References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
- <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
- <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs>
- <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com>
- <20250506043907.GA27061@lst.de>
- <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com>
- <20250506121102.GA21905@lst.de>
- <a39a6612-89ac-4255-b737-37c7d16b3185@huaweicloud.com>
- <20250508050147.GA26916@lst.de>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20250508050147.GA26916@lst.de>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgDnSl_KoBxoXus0Lw--.707S3
-X-Coremail-Antispam: 1UD129KBjvJXoWxXF43ZFW3Zry3Aw48Kw1xKrg_yoWrtrWDpF
-	W8WF1jkF4DKr13Cw1v9w4Igrn0vFs3AF15C39Ykr48Cw45XF13KFnaga40yF9rXryxZayD
-	tFZ0kFyUZa1Iy3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
-	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
-	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
-	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
-	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
-	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
-	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
-	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
-	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
-	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
-	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
-	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
-	s2-5UUUUU==
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkZSx9KVhlNSh5KTE1NTUxMSFYVFAkWGhdVEwETFh
+	oSFyQUDg9ZV1kYEgtZQVlKSUpVSElVSU5PVUpPTFlXWRYaDxIVHRRZQVlPS0hVSktJT09PSFVKS0
+	tVSkJLS1kG
+X-HM-Tid: 0a96aff2c9a309cekunm1464cfa34
+X-HM-MType: 1
+X-HM-Sender-Digest: e1kMHhlZQR0aFwgeV1kSHx4VD1lBWUc6NRg6Tgw5LjIMTg0qAU4oSgsj
+	GA5PCzVVSlVKTE9NTEtDTU9MT0JMVTMWGhIXVQETDgweEjsIGhUcHRQJVRgUFlUYFUVZV1kSC1lB
+	WUpJSlVISVVJTk9VSk9MWVdZCAFZQU5PSE03Bg++
 
-On 2025/5/8 13:01, Christoph Hellwig wrote:
-> On Wed, May 07, 2025 at 03:33:23PM +0800, Zhang Yi wrote:
->> On 2025/5/6 20:11, Christoph Hellwig wrote:
->>> On Tue, May 06, 2025 at 07:16:56PM +0800, Zhang Yi wrote:
->>>> Sorry, but I don't understand your suggestion. The
->>>> STATX_ATTR_WRITE_ZEROES_UNMAP attribute only indicate whether the bdev
->>>> and the block device that under the specified file support unmap write
->>>> zeroes commoand. It does not reflect whether the bdev and the
->>>> filesystems support FALLOC_FL_WRITE_ZEROES. The implementation of
->>>> FALLOC_FL_WRITE_ZEROES doesn't fully rely on the unmap write zeroes
->>>> commoand now, users simply refer to this attribute flag to determine
->>>> whether to use FALLOC_FL_WRITE_ZEROES when preallocating a file.
->>>> So, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES doesn't
->>>> have strong relations, why do you suggested to put this into the ext4
->>>> and bdev patches that adding FALLOC_FL_WRITE_ZEROES?
->>>
->>> So what is the point of STATX_ATTR_WRITE_ZEROES_UNMAP?
->>
->> My idea is not to strictly limiting the use of FALLOC_FL_WRITE_ZEROES to
->> only bdev or files where bdev_unmap_write_zeroes() returns true. In
->> other words, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES
->> are not consistent, they are two independent features. Even if some
->> devices STATX_ATTR_WRITE_ZEROES_UNMAP are not set, users should still be
->> allowed to call fallcoate(FALLOC_FL_WRITE_ZEROES). This is because some
->> devices and drivers currently cannot reliably ascertain whether they
->> support the unmap write zero command; however, certain devices, such as
->> specific cloud storage devices, do support it. Users of these devices
->> may also wish to use FALLOC_FL_WRITE_ZEROES to expedite the zeroing
->> process.
-> 
-> What are those "cloud storage devices" where you set it reliably,
-> i.e.g what drivers?
+There is a race condition between pqi_sdev_destroy and pqi_tmf_worker.
+After pqi_free_device is released, pqi_tmf_worker will still use device.
 
-I don't have these 'cloud storage devices' now, but Ted had mentioned
-those cloud-emulated block devices such as Google's Persistent Desk or
-Amazon's Elastic Block Device in. I'm not sure if they can accurately
-report the BLK_FEAT_WRITE_ZEROES_UNMAP feature, maybe Ted can give more
-details.
+kasan report:
+[ 1933.765810] ==================================================================
+[ 1933.771862] scsi 15:0:20:0: Direct-Access     ATA      WDC  WUH722222AL WTS2 PQ: 0 ANSI: 6
+[ 1933.779190] BUG: KASAN: use-after-free in pqi_device_wait_for_pending_io+0x9e/0x600 [smartpqi]
+[ 1933.779194] Read of size 4 at addr ffff88954c490480 by task kworker/2:2/518186
+[ 1933.779201] CPU: 2 PID: 518186 Comm: kworker/2:2 Kdump: loaded Tainted: G     U     OE
+			4.19.90-89.16.v2401.osc.sfc.6.11.1.0108.ky10.x86_64+debug #1
+[ 1933.779203] Source Version: v6.11.1.0108+0~65323201.20250328
+[ 1933.779205] Hardware name: SANGFOR S2122-S12L/ASERVER-P-2000, BIOS TYR.2.00.0100 05/18/2019
+[ 1933.779213] Workqueue: events pqi_tmf_worker [smartpqi]
+[ 1933.779216] Call Trace:
+[ 1933.779225]  dump_stack+0x8b/0xb9
+[ 1933.779239]  print_address_description+0x65/0x2b0
+[ 1933.779249]  kasan_report+0x14b/0x290
+[ 1933.779255]  pqi_device_wait_for_pending_io+0x9e/0x600 [smartpqi]
+[ 1933.779264]  pqi_device_reset_handler+0x174f/0x1f30 [smartpqi]
+[ 1933.779284]  process_one_work+0x65f/0x12d0
+[ 1933.806306]  worker_thread+0x87/0xb50
+[ 1933.806315]  kthread+0x2e9/0x3a0
+[ 1933.806323]  ret_from_fork+0x1f/0x40
+[ 1933.843994] Allocated by task 579094:
+[ 1933.875361]  save_stack+0x19/0x80
+[ 1933.892366]  kasan_kmalloc+0xa0/0xd0
+[ 1933.892373]  kmem_cache_alloc+0xbb/0x1c0
+[ 1933.892378]  getname_flags+0xba/0x500
+[ 1933.892384]  user_path_at_empty+0x1d/0x40
+[ 1933.892389]  vfs_statx+0xb9/0x140
+[ 1933.892397]  __do_sys_newstat+0x77/0xd0
+[ 1933.913179]  do_syscall_64+0xa4/0x430
+[ 1933.913187]  entry_SYSCALL_64_after_hwframe+0x5c/0xc1
+[ 1933.933381] Freed by task 579094:
+[ 1933.933389]  save_stack+0x19/0x80
+[ 1933.933392]  __kasan_slab_free+0x130/0x180
+[ 1933.933396]  kmem_cache_free+0x78/0x1e0
+[ 1933.933401]  filename_lookup+0x216/0x400
+[ 1933.933405]  vfs_statx+0xb9/0x140
+[ 1933.933407]  __do_sys_newstat+0x77/0xd0
+[ 1933.933417]  do_syscall_64+0xa4/0x430
+[ 1933.933432]  entry_SYSCALL_64_after_hwframe+0x5c/0xc1
+[ 1933.956837]
+[ 1933.956842] The buggy address belongs to the object at ffff88954c490000
+                which belongs to the cache names_cache of size 4096
+[ 1933.956845] The buggy address is located 1152 bytes inside of
+                4096-byte region [ffff88954c490000, ffff88954c491000)
+[ 1933.956851] The buggy address belongs to the page:
+[ 1934.297352] page:ffffea0055312400 count:1 mapcount:0 mapping:ffff888100580f00
+		index:0x0 compound_mapcount: 0
+[ 1934.309566] flags: 0x57ffffc0008100(slab|head)
+[ 1934.316370] raw: 0057ffffc0008100 0000000000000000 dead000000000200 ffff888100580f00
+[ 1934.326518] raw: 0000000000000000 0000000000070007 00000001ffffffff 0000000000000000
+[ 1934.338191] page dumped because: kasan: bad access detected
+[ 1934.346177]
+[ 1934.350031] Memory state around the buggy address:
+[ 1934.357220]  ffff88954c490380: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[ 1934.366854]  ffff88954c490400: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[ 1934.376474] >ffff88954c490480: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[ 1934.386094]                    ^
+[ 1934.391684]  ffff88954c490500: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[ 1934.402601]  ffff88954c490580: fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb fb
+[ 1934.412228] ==================================================================
 
-https://lore.kernel.org/linux-fsdevel/20250106161732.GG1284777@mit.edu/
+Before pqi_sdev_destroy executes pqi_free_device, cancel the pqi_tmf_worker
+of the corresponding device.
 
-> 
->> Therefore, I think that the current point of
->> STATX_ATTR_WRITE_ZEROES_UNMAP (possibly STATX_WRITE_ZEROES_UNMAP) should
->> be to just indicate whether a bdev or file supports the unmap write zero
->> command (i.e., whether bdev_unmap_write_zeroes() returns true). If we
->> use standard SCSI and NVMe storage devices, and the
->> STATX_ATTR_WRITE_ZEROES_UNMAP attribute is set, users can be assured
->> that FALLOC_FL_WRITE_ZEROES is fast and can choose to use
->> fallocate(FALLOC_FL_WRITE_ZEROES) immediately.
-> 
-> That's breaking the abstracton again.  An attribute must say something
-> about the specific file, not about some underlying semi-related feature.
+Fixes: 2d80f4054f7f ("scsi: smartpqi: Update deleting a LUN via sysfs")
+Signed-off-by: Zhu Wei <zhuwei@sangfor.com.cn>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-OK.
-
-> 
->> Would you prefer to make STATX_ATTR_WRITE_ZEROES_UNMAP and
->> FALLOC_FL_WRITE_ZEROES consistent, which means
->> fallcoate(FALLOC_FL_WRITE_ZEROES) will return -EOPNOTSUPP if the block
->> device doesn't set STATX_ATTR_WRITE_ZEROES_UNMAP ?
-> 
-> Not sure where the block device comes from here, both of these operate
-> on a file.
-
-I am referring to the block device on which the filesystem is mounted.
-The support status of the file is directly dependent on this block
-device.
-
-> 
->> If so, I'd suggested we need to:
->> 1) Remove STATX_ATTR_WRITE_ZEROES_UNMAP since users can check the
->>    existence by calling fallocate(FALLOC_FL_WRITE_ZEROES) directly, this
->>    statx flag seems useless.
-> 
-> Yes, that was my inital thought.
-> 
->> 2) Make the BLK_FEAT_WRITE_ZEROES_UNMAP sysfs interface to RW, allowing
->>    users to adjust the block device's support state according to the
->>    real situation.
-> 
-> No, it's a feature and not a flag.
-> 
-
-I am a bit confused about the feature and the flag, I checked the other
-features, and it appears that features such as BLK_FEAT_ROTATIONAL allow
-to be modified, is this flexibility due to historical reasons or for the
-convenience of testing?
-
-Think about this again, I suppose we should keep the
-BLK_FEAT_WRITE_ZEROES_UNMAP as read-only and add a new flag,
-BLK_FALG_WRITE_ZEROES_UNMAP_DISABLED, to disable the
-FALLOC_FL_WRITE_ZEROES. Since the Write Zeroes does not guarantee
-performance, and some devices may claim to support **UNMAP** Write Zeroes
-but exhibit extremely slow write-zeroes speeds. Users may want be able to
-disable it. Thoughts？
-
-Thanks,
-Yi.
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 8a26eca4fdc9..102ed7501f08 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -6581,6 +6581,8 @@ static void pqi_sdev_destroy(struct scsi_device *sdev)
+ 	struct pqi_scsi_dev *device;
+ 	int mutex_acquired;
+ 	unsigned long flags;
++	unsigned int lun;
++	struct pqi_tmf_work *tmf_work;
+ 
+ 	ctrl_info = shost_to_hba(sdev->host);
+ 
+@@ -6607,6 +6609,8 @@ static void pqi_sdev_destroy(struct scsi_device *sdev)
+ 	mutex_unlock(&ctrl_info->scan_mutex);
+ 
+ 	pqi_dev_info(ctrl_info, "removed", device);
++	for (lun = 0, tmf_work = device->tmf_work; lun < PQI_MAX_LUNS_PER_DEVICE; lun++, tmf_work++)
++		cancel_work_sync(&tmf_work->work_struct);
+ 	pqi_free_device(device);
+ }
+ 
+-- 
+2.43.0
 
