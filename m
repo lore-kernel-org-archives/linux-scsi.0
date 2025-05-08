@@ -1,270 +1,194 @@
-Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C33371953A1;
-	Thu,  8 May 2025 09:36:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 109CA5A79B;
+	Thu,  8 May 2025 09:39:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746696991; cv=none; b=S4gMmbeb31VlgtXtKMTEsRkYTAkX6P7z778WiHxCB8/T/DO4LdAEBKJQliOdYglmfmlykN23TOuGl4cThmKezkINeP3AQpLvxcEl/mBw/sa7ge/8rMaN26K0FTeq7c2pw/aDRj+bNMDDbjdmc638zX5N0qm6dXr7zXNDsLjqx58=
+	t=1746697168; cv=none; b=uo+ycJRqxO+KDGeU+wsDSgIOTR/z2+ug4dcttSXymBPoDhMHtRtTSxfK9DUzR+jpMEDR/pWAjh4k20eE/89rhdg6C1u+3YAzG/nC3qdholtk7OLIZ/ashFWZTtpdTjC5UDkNGj7mBuN2SPkS4lyFvJsdobV+Ubw3tbk2GZiyQs0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746696991; c=relaxed/simple;
-	bh=VkHnSmmkUmNi08WUZn30fA5b8cau5tzOHLUi6IdUjvE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=JDyjHn2P5CGackx+t3qCYBlMoVOh9DVtSHAFiTUp7XUSddk3k942DgXEZiZbLOhqsv7EfSDxFrXQklc1dDLbPgVTLquFSni32Bb3Eq9nyrAzrZ0ZEGV1vy+JtGBo9LSCqQsFCIT/ZxZL0jZG9WsXf+HH+JKKIZn3GoOvJ/kYT/w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
-Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
-	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id 61EAB426DF;
-	Thu,  8 May 2025 11:36:25 +0200 (CEST)
-Message-ID: <2e7d6a7e-4a82-4da5-ab39-267a7400ca49@proxmox.com>
-Date: Thu, 8 May 2025 11:36:23 +0200
+	s=arc-20240116; t=1746697168; c=relaxed/simple;
+	bh=yHL36ocCfxeq/utyccr6VCpsFhL9r1LtxPcHbVSIKWY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WrG00GCRsiz9NqnDJcrN6lDEzZk7D+4N8P4wY+F/sRMcgzkte9UgEsm3SPWwgyvU5+e87W6vdP2oI+FB49MJIuGkKgnLBVHsoBzzO1oUMpGFL9XdPtWmA3Dp8NHLHtmk+VEK0B+1Quu3QQA6e0+XI/8rp4NhXCmRcUV8mm0LBig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DUdoslVC; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DUdoslVC"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5484WThH014355;
+	Thu, 8 May 2025 09:39:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=qG/FDR4jIPDN3P1J0ZljbXUNk7DPM+48V6U
+	+OK74WNc=; b=DUdoslVCDrMcoumeK6AALRF8fajFV0dk0MJZ2+sBHHwmEMCBU2+
+	zAcZ9tqvyJW3bQUUqQS6v6GUKu1MxkqU8pAiQyxLc5yrurLNEHHPmDIsUHlrScWi
+	t+1JxlHVN9pzpZ6ebd05aE5tkrgDV+mNLe/TFloacKgNOCcucXvKEgQD1aaM4oz9
+	gEhVtPFhbd0OIQ9fkJuxmNd9KPAUuAHcR2oFFsgvw2FxnxbMf6Tng9HDcZiWJvth
+	zgHkINWbLoPfuQZIDunJwIPwSFK5yCfZDSnvwkC6iEtVIYsFIOESN/dNmutcqZKk
+	bfAPxTJ9NkSoRht3Qf3VDQrpThIBccf4UBg==
+Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46gnp4gt5m-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 08 May 2025 09:39:01 +0000 (GMT)
+Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5489cwRr025863;
+	Thu, 8 May 2025 09:38:58 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 46dc7mfnxk-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 08 May 2025 09:38:58 +0000
+Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5489cwjg025855;
+	Thu, 8 May 2025 09:38:58 GMT
+Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
+	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 5489cvnQ025854
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 08 May 2025 09:38:58 +0000
+Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
+	id B981E40D11; Thu,  8 May 2025 17:38:56 +0800 (CST)
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
+        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
+        martin.petersen@oracle.com, quic_ziqichen@quicinc.com,
+        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+        quic_rampraka@quicinc.com, neil.armstrong@linaro.org,
+        luca.weiss@fairphone.com, konrad.dybcio@oss.qualcomm.com,
+        peter.wang@mediatek.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+        linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v3] scsi: ufs: core: skip UFS clkscale if host asynchronous scan in progress
+Date: Thu,  8 May 2025 17:38:51 +0800
+Message-Id: <20250508093854.3281475-1-quic_ziqichen@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 08/19] scsi: detect support for command duration limits
-To: Damien Le Moal <dlemoal@kernel.org>, Friedrich Weber
- <f.weber@proxmox.com>, Niklas Cassel <nks@flawful.org>,
- Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>,
- Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
- Niklas Cassel <niklas.cassel@wdc.com>
-References: <20230511011356.227789-1-nks@flawful.org>
- <20230511011356.227789-9-nks@flawful.org>
- <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
- <6fb8499a-b5bc-4d41-bf37-32ebdea43e9a@kernel.org>
-Content-Language: en-US
-From: Mira Limbeck <m.limbeck@proxmox.com>
-In-Reply-To: <6fb8499a-b5bc-4d41-bf37-32ebdea43e9a@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: IMxl1a_7qZbu-8wh2KhYRZw49trfoYzV
+X-Authority-Analysis: v=2.4 cv=E5XNpbdl c=1 sm=1 tr=0 ts=681c7bb6 cx=c_pps
+ a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8 a=avOu-EqILVl7MynqQNIA:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA4MDA4NyBTYWx0ZWRfX1SG9hUeTQrVp
+ QG2JxkGU5o0WdIz9c1qxFwGQjsFtXWpF15L6mnBqdmEARXDeAB0R6sjGpEhpwHPWgM9mH0jQD5H
+ hHkASo7AP66iraOg+naV20aY1ZMdRpxuHY/M/zi+HD8mYEpMnjt3xRwFdPTt4ChH1HGSqoaiwKo
+ +OUSX/DsyM8YfPPfPBPxz9SP+SIN9VLk5tjGzGVqGmc1jREJVmT+Y1rxx/vrm/+O+5xdHAyrNIh
+ QfHQ3fgUEjntW+J4sqIIa/qsGZbIitOF191LcPWaQahX3d5vXV2ZH3Tv4DAjm4UE2i5WAGbQrM3
+ Vg1zyciYNi1WD3a1ZKIy6/S2G546gEFx/6k291a1oJV3MZl+FLa8W4PgB6nlMwxsQcgpBahVkst
+ WYDgF8qU0VXjwiz/xEUQYWiFOK7PgcjCwD8bC1p/yAhrYT8hEBJ8m1JydFmiNVFkHOEhWOCH
+X-Proofpoint-ORIG-GUID: IMxl1a_7qZbu-8wh2KhYRZw49trfoYzV
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-08_03,2025-05-07_02,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 suspectscore=0 adultscore=0 mlxscore=0 malwarescore=0
+ bulkscore=0 phishscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
+ lowpriorityscore=0 impostorscore=0 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2504070000 definitions=main-2505080087
 
-On 4/30/25 15:39, Damien Le Moal wrote:
-> On 2025/04/30 7:13, Friedrich Weber wrote:
->> Hi,
->>
->> One of our users reports that, in their setup, hotplugging new disks doesn't
->> work anymore with recent kernels (details below). The issue appeared somewhere
->> between kernels 6.4 and 6.5, and they bisected the change to this patch:
->>
->>   624885209f31 (scsi: core: Detect support for command duration limits)
->>
->> The issue is also reproducible on a mainline kernel 6.14.4 build from [1]. When
->> hotplugging a disk under 6.14.4, the following is logged (I've redacted some
->> identifiers, let me know in case I've been too overzealous with that):
->>
->> Apr 28 16:41:13 pbs-disklab kernel: mpt3sas_cm0: handle(0xa) sas_address(0xREDACTED_SAS_ADDR) port_type(0x1)
->> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: Direct-Access     WDC      REDACTED_SN  C5C0 PQ: 0 ANSI: 7
->> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: SSP: handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR), phy(2), device_name(REDACTED_DEVICE_NAME)
->> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: enclosure logical id (REDACTED_LOGICAL_ID), slot(0) 
->> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: enclosure level(0x0000), connector name(     )
->> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: qdepth(254), tagged(1), scsi_level(8), cmd_que(1)
->> Apr 28 16:41:13 pbs-disklab kernel: scsi 5:0:1:0: Power-on or device reset occurred
->> Apr 28 16:41:16 pbs-disklab kernel: mpt3sas_cm0: log_info(0x31110e05): originator(PL), code(0x11), sub_code(0x0e05)
-> 
-> This decodes to:
-> 
-> Code:     	00110000h	PL_LOGINFO_CODE_RESET See Sub-Codes below (PL_LOGINFO_SUB_CODE)
-> Sub Code: 	00000E00h	PL_LOGINFO_SUB_CODE_DISCOVERY_SATA_ERR
-> 
->> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: log_info(0x31130000): originator(PL), code(0x13), sub_code(0x0000)
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: Attached scsi generic sg1 type 0
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Test Unit Ready failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Read Capacity(16) failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Sense not available.
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Read Capacity(10) failed: Result: hostbyte=DID_NO_CONNECT driverbyte=DRIVER_OK
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Sense not available.
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] 0 512-byte logical blocks: (0 B/0 B)
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] 0-byte physical blocks
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Test WP failed, assume Write Enabled
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Asking for cache data failed
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Assuming drive cache: write through
->> Apr 28 16:41:18 pbs-disklab kernel:  end_device-5:1: add: handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR)
->> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: handle(0x000a), ioc_status(0x0022) failure at drivers/scsi/mpt3sas/mpt3sas_transport.c:225/_transport_set_identify()!
->> Apr 28 16:41:18 pbs-disklab kernel: sd 5:0:1:0: [sdb] Attached SCSI disk
->> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: mpt3sas_transport_port_remove: removed: sas_addr(0xREDACTED_SAS_ADDR)
->> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: removing handle(0x000a), sas_addr(0xREDACTED_SAS_ADDR)
->> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: enclosure logical id(REDACTED_LOGICAL_ID), slot(0)
->> Apr 28 16:41:18 pbs-disklab kernel: mpt3sas_cm0: enclosure level(0x0000), connector name(     )
->>
->> and the block device isn't accessible afterwards. It does seem to be visible
->> after a reboot.
->>
->> lspci on this host shows:
->>
->> 02:00.0 Serial Attached SCSI controller [0107]: Broadcom / LSI SAS3008 PCI-Express Fusion-MPT SAS-3 [1000:0097] (rev 02)
->> 	Subsystem: Broadcom / LSI SAS9300-8i [1000:30e0]
->> 	Kernel driver in use: mpt3sas
->> 	Kernel modules: mpt3sas
->>
->> The HBA is placed on a PCIe 3.0 x8 slot (not bifurcated) and connected via
->> SFF-8643 to a simple 2U 12xLFF SAS3 Supermicro box. The user can also reproduce
->> the issue with other HBAs with e.g. the SAS3108 and SAS3816 chipsets.
->>
->> The device doesn't seem to support CDL. So if I see correctly, the only
->> effective change introduced by the patch are the four scsi_cdl_check_cmd (and
->> thus scsi_report_opcode) calls to check for CDL support. Hence we wondered
->> whether may be the cause of the issue. We ran a few tests to verify:
->>
->> - disabling "REPORT SUPPORTED OPERATION CODES" by passing
->>   `scsi_mod.dev_flags=WDC:REDACTED_SN:536870912` (the flag being
->>   BLIST_NO_RSOC) resolves the issue (hotplug works again), but I imagine
->>   disabling RSOC altogether isn't a good workaround. This test was not done
->>   on a mainline kernel, but I don't think it would make a difference.
-> 
-> So it seems that the HBA SAT is choking on the report supported opcode command.
-> I have several mpt3sas HBAs and I have never seen this issue running the latest
-> FW version for these (EOL) HBAs. So I am tempted to say that an HBA FW update
-> should resolve the issue, BUT, I do not recall doing any drive hotplug tests
-> though. This issue may trigger only with hotplug and not with a cold start...
-> Can you confirm that ?
-> 
-Yes, a cold boot works. With hotplug it enters a broken state and any
-subsequent reboots don't fix the issue.
-Removing power is needed to fix the issue again.
+When preparing for UFS clock scaling, the UFS driver will quiesce all sdevs
+queues on the UFS SCSI host tagset list and then unquiesce them when UFS
+clock scaling unpreparing. If the UFS SCSI host async scan is in progress
+at this time, some LUs may be added to the tagset list between UFS clkscale
+prepare and unprepare. This can cause two issues:
 
-They mentioned the following tests:
+1. During clock scaling, there may be IO requests issued through new added
+queues that have not been quiesced, leading to task abort issue.
 
-- Get the 20TB disk in a faulty state by booting kernels 6.5 and above
-(6.14.X in this case, diskcaddy light on server keeps blinking, dmesg
-shows power-reset)
-- Reboot server, reboot into same kernel (6.14.X)
-- Disk remains in faulty state, does not attached to system or show up
-under any path (lsblk, df, blkid)
+2. These new added queues that have not been quiesced will be unquiesced as
+well when UFS clkscale is unprepared, resulting in warning prints.
 
-and
+Therefore, use the flag host->async_scan to check whether the host async
+scan is in progress or not. Additionally, move ufshcd_devfreq_init() to
+after ufshcd_add_lus() to ensure this flag already be set before starting
+devfreq monitor.
 
-- Get 20TB disk into faulty state by hotswapping on kern 6.5 and above.
-- Shut off machine, remove from power & reattach.
-- Start machine
-- 20TB disk mounts during boot, accessible in OS as block-device after.
+Co-developed-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Can Guo <quic_cang@quicinc.com>
+Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+---
 
+v1 -> v2:
+Move whole clkscale Initialize process out of ufshcd_add_lus().
 
->>
->> - we patched out the four calls to scsi_cdl_check_cmd and unconditionally set
->>   cdl_supported to 0, see [2] for the patch (on top of 6.14.4). This resolves
->>   the issue.
->>
->> - I suspected that particularly the two latter scsi_cdl_check_cmd calls with a
->>   nonzero service action might be problematic, so we patched them out
->>   specifically but kept the other two calls without a service action, see [3]
->>   for the patch (on top of 6.14.4). But with this patch, hotplug still does
->>   not work.
->>
->> - the RSOC commands themselves don't seem to be problematic per se. We asked
->>   the user to boot a (non-mainline) kernel with the `scsi_mod.dev_flags`
->>   parameter to disable RSOC as above, hotplug the disk (this succeeds), and
->>   then query the four opcodes/service actions using `sg_opcodes`, and this
->>   looks okay [4] (reporting that CDL is not supported).
->>
->> I wonder whether these results might suggest the RSOC queries are problematic
->> not in general, but at this particular point (during device initialization) in
->> this particular hardware setup? If this turns out to be the case -- would it be
->> feasible to suppress these RSOC queries if CDL is not enabled via sysfs?
-> 
-> I would be tempted to say that indeed it is the RSOC command handling in the HBA
-> SAT that has issues. But your command line checks [4] tend to indicate
-> otherwise. The issue may trigger only with timing differences with hotplug though.
-> 
-> The other possible problem may be that the RSOC command translation is actually
-> fine but ends up generating an ATA command that the drive is not happy about,
-> either because of a drive FW bug or because of the timing the drive receives
-> that command. Given that this is a WD drive, I can probably check that if you
-> can send to me the drive model and FW rev (sending that information off-list is
-> fine).
-> 
->> If you have any ideas for further troubleshooting, we're happy to gather more
->> data. I'll be AFK for a few weeks, but Mira (in CC) will take over in the
->> meantime.
-> 
-> Checking the HBA FW version would be a start, and also if you can confirm if
-> this issue happens only on hotplug or also during cold boot would be nice. I am
-> traveling right now and will not be able to test hot-plugging drives on my
-> setups until end of next week.
-> 
+v2 -> v3:
+Add check for the return value of ufshcd_add_lus().
+---
+ drivers/ufs/core/ufshcd.c | 35 ++++++++++++++++++++---------------
+ 1 file changed, 20 insertions(+), 15 deletions(-)
 
-They provided controller information via `sas3ircu` and `storcli`:
-
-sas3ircu:
-
-  Controller type                         : SAS3008
-  BIOS version                            : 8.37.00.00
-  Firmware version                        : 16.00.16.00
-
-storcli:
-
-Firmware Package Build = 24.18.0-0021
-Firmware Version = 4.670.00-6500
-CPLD Version = 26515-00A
-Bios Version = 6.34.01.0_4.19.08.00_0x06160200
-HII Version = 03.23.06.00
-Ctrl-R Version = 5.18-0400
-Preboot CLI Version = 01.07-05:#%0000
-NVDATA Version = 3.1611.00-0005
-Boot Block Version = 3.07.00.00-0003
-Driver Name = megaraid_sas
-Driver Version = 07.727.03.00-rc1
-
-And the disk information from `smartctl --xall`
-
-20T:
-
-=== START OF INFORMATION SECTION ===
-Vendor:               WDC
-Product:              WUH722020BL5204
-Revision:             C5C0
-Compliance:           SPC-5
-User Capacity:        20,000,588,955,648 bytes [20.0 TB]
-Logical block size:   512 bytes
-Physical block size:  4096 bytes
-LU is fully provisioned
-Rotation Rate:        7200 rpm
-Form Factor:          3.5 inches
-Logical Unit id:      <id>
-Serial number:        <S/N>
-Device type:          disk
-Transport protocol:   SAS (SPL-4)
-Local Time is:        Thu May  1 15:23:35 2025 CEST
-SMART support is:     Available - device has SMART capability.
-SMART support is:     Enabled
-Temperature Warning:  Enabled
-Read Cache is:        Enabled
-Writeback Cache is:   Enabled
-
-18T:
-
-=== START OF INFORMATION SECTION ===
-Vendor:               WDC
-Product:              WUH721818AL5204
-Revision:             C8C2
-Compliance:           SPC-5
-User Capacity:        18,000,207,937,536 bytes [18.0 TB]
-Logical block size:   512 bytes
-Physical block size:  4096 bytes
-LU is fully provisioned
-Rotation Rate:        7200 rpm
-Form Factor:          3.5 inches
-Logical Unit id:      <id>
-Serial number:        <S/N>
-Device type:          disk
-Transport protocol:   SAS (SPL-4)
-Local Time is:        Thu May  1 15:25:27 2025 CEST
-SMART support is:     Available - device has SMART capability.
-SMART support is:     Enabled
-Temperature Warning:  Enabled
-Read Cache is:        Enabled
-Writeback Cache is:   Enabled
-
-The 18T disk is not affected by this issue. Hotplug works as expected
-with it.
-
-
-If you need any additional information, please let us know!
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 1c53ccf5a616..04f40677e76a 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1207,6 +1207,9 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+ 	if (list_empty(head))
+ 		return false;
+ 
++	if (hba->host->async_scan)
++		return false;
++
+ 	if (hba->use_pm_opp)
+ 		return freq != hba->clk_scaling.target_freq;
+ 
+@@ -8740,21 +8743,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
+ 	if (ret)
+ 		goto out;
+ 
+-	/* Initialize devfreq after UFS device is detected */
+-	if (ufshcd_is_clkscaling_supported(hba)) {
+-		memcpy(&hba->clk_scaling.saved_pwr_info,
+-			&hba->pwr_info,
+-			sizeof(struct ufs_pa_layer_attr));
+-		hba->clk_scaling.is_allowed = true;
+-
+-		ret = ufshcd_devfreq_init(hba);
+-		if (ret)
+-			goto out;
+-
+-		hba->clk_scaling.is_enabled = true;
+-		ufshcd_init_clk_scaling_sysfs(hba);
+-	}
+-
+ 	/*
+ 	 * The RTC update code accesses the hba->ufs_device_wlun->sdev_gendev
+ 	 * pointer and hence must only be started after the WLUN pointer has
+@@ -9009,6 +8997,23 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
+ 
+ 	/* Probe and add UFS logical units  */
+ 	ret = ufshcd_add_lus(hba);
++	if (ret)
++		goto out;
++
++	/* Initialize devfreq and start devfreq monitor */
++	if (ufshcd_is_clkscaling_supported(hba)) {
++		memcpy(&hba->clk_scaling.saved_pwr_info,
++			&hba->pwr_info,
++			sizeof(struct ufs_pa_layer_attr));
++		hba->clk_scaling.is_allowed = true;
++
++		ret = ufshcd_devfreq_init(hba);
++		if (ret)
++			goto out;
++
++		hba->clk_scaling.is_enabled = true;
++		ufshcd_init_clk_scaling_sysfs(hba);
++	}
+ 
+ out:
+ 	pm_runtime_put_sync(hba->dev);
+-- 
+2.34.1
 
