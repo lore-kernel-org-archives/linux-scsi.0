@@ -1,48 +1,30 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28EAF211A3F;
-	Thu,  8 May 2025 10:43:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B5C01DF25C;
+	Thu,  8 May 2025 12:17:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746700994; cv=none; b=u3OOUXlZBV1yTi2yRDZFKAME/azrYqrcDhLVjy3Dou/ok5DmKQX/e59GZtTyWE6vGfgnBPra9OCAgtgNjXy7PJtcyQ+tZQFCeeupb+2OLvLXLGH+kB7UufDN89JSRJea+7ymSOfyI6KkuFBQpwL/GHFRcOFmvjyJPmZ3pJ9tP7k=
+	t=1746706650; cv=none; b=h+1XRrkUJuwDGHI0RyMtuUuTBIyb0I3H6YGCoGlzWCGooK2dsfjxhqmhsXEn/9MlWq/aUSpHpHh9F77TG9o4xd+sGFMI223jIk6PTBYlyyym/4HB22YxxUU0JXZJjAnZSHjdj3CunW0ZMFV5a/3EniBuzx4hGrbC0SQCDe2sdjo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746700994; c=relaxed/simple;
-	bh=Oj+f3fNpaRmywlP/8WRe2gvKZdCHEW9rgRJAIINkey0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=pJflU1Tcd7Q5EF+Z9heHEzf+6HPDDdNHmAYvkhaKqIzMq6ziUFYTiywLoMdYW0DQcalkrwvahVuS8cxNiohqv5FjRaMOz85FiB0AZXm/eMsJhmXGv9hhfc2uKtVo3NTV1A/V0kjvdfGmy92/ZX/xYKn05pCCqTDX7fjy4rXL0i4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=a1DInkkd; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="a1DInkkd"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5484X2c4010563;
-	Thu, 8 May 2025 10:42:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/Tq41nLm+5muL4bx925dxv59LEk5NNNsuX/r1mf5DwM=; b=a1DInkkd8VNthU0k
-	2vTozj4pY+9xmXGYnJvMQHCbOEslm7JZdSHTrEyrYcC1yt+VsJzERbKySGmTsjYS
-	7xFQFRsw4PLpSTSnXjHpYTGqBieeYBme5K1sKzYgajt8mkxj+zwBS1jVp6ArZmW3
-	gqnqJ61kaJw6vwYtKbTTJVnzZGMPEYtssDxKWlaq9HgyoZqEwlrgLcorCMOYacqg
-	6LzEoBGqm175KDLTTjaxBDe7dAFG9nZ3zMl9ElJV7YOqeGjSOR/yiKD6Jh6aAd+0
-	cnoiCbSpC9eQr3JmBRvLp6d3g6ZDDjxZMLOJ7oDaVjd9i5j91JA7W5miNn+eqAS4
-	3id+mQ==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46gnp79172-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 08 May 2025 10:42:48 +0000 (GMT)
-Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 548AgmeM001995
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 8 May 2025 10:42:48 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
- (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 8 May 2025
- 03:42:43 -0700
-Message-ID: <933da6f7-c53b-4d29-9198-016b95d7dc9c@quicinc.com>
-Date: Thu, 8 May 2025 18:42:40 +0800
+	s=arc-20240116; t=1746706650; c=relaxed/simple;
+	bh=7xiyatHuEYO5siH784i+66R6gDk//PcjZEueVmEeyvo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FFfBF6u0J0thAeMNIaUgD7DmEwnGOk+zJb1u+E9v7Gu4Mu932+SvZIyNm+BjexwkSF2OKhOTV1YtNKNP9QIwaJZZc8TYMofOSZiQwQ0RlIm3vQgnocSsjDxOv/UVfiTfDYr9ZnwkSMHCpvDeZX0jdMdolV5zWNdP2WWO8FLslTw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4ZtWNH1XsWzYQtwc;
+	Thu,  8 May 2025 20:17:19 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 86C091A1A7E;
+	Thu,  8 May 2025 20:17:18 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgDnSl_KoBxoXus0Lw--.707S3;
+	Thu, 08 May 2025 20:17:16 +0800 (CST)
+Message-ID: <68172a9e-cf68-4962-8229-68e283e894e1@huaweicloud.com>
+Date: Thu, 8 May 2025 20:17:14 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,145 +32,146 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/3] scsi: ufs: qcom: Map devfreq OPP freq to UniPro
- Core Clock freq
-To: Neil Armstrong <neil.armstrong@linaro.org>,
-        Luca Weiss
-	<luca.weiss@fairphone.com>, <quic_cang@quicinc.com>,
-        <bvanassche@acm.org>, <mani@kernel.org>, <beanhuo@micron.com>,
-        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
-        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
-        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
-        <konrad.dybcio@oss.qualcomm.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        "Manivannan
- Sadhasivam" <manivannan.sadhasivam@linaro.org>,
-        "James E.J. Bottomley"
-	<James.Bottomley@hansenpartnership.com>,
-        open list
-	<linux-kernel@vger.kernel.org>
-References: <20250507074415.2451940-1-quic_ziqichen@quicinc.com>
- <20250507074415.2451940-3-quic_ziqichen@quicinc.com>
- <D9PS51XVRKLP.1AHMCRH9CZFWU@fairphone.com>
- <7c74a395-a8b8-4a12-9ddb-691f28c90885@quicinc.com>
- <7ccbd722-c99a-43b3-9ceb-4c207521822d@linaro.org>
+Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
+To: Christoph Hellwig <hch@lst.de>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, linux-fsdevel@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, tytso@mit.edu, john.g.garry@oracle.com,
+ bmarzins@redhat.com, chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+ brauner@kernel.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+ yukuai3@huawei.com, yangerkun@huawei.com
+References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com>
+ <20250421021509.2366003-8-yi.zhang@huaweicloud.com>
+ <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs>
+ <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com>
+ <20250506043907.GA27061@lst.de>
+ <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com>
+ <20250506121102.GA21905@lst.de>
+ <a39a6612-89ac-4255-b737-37c7d16b3185@huaweicloud.com>
+ <20250508050147.GA26916@lst.de>
 Content-Language: en-US
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <7ccbd722-c99a-43b3-9ceb-4c207521822d@linaro.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20250508050147.GA26916@lst.de>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01b.na.qualcomm.com (10.46.141.250)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA4MDA5MyBTYWx0ZWRfX/hJma7aj3SRl
- z5j+TD08KaESgXBmMv+6RSB+NNHm9YvZNm0QBJb9kLqwbeqXrjGQtWW4HwyP+gDsDC/9N9RLCkc
- iKooTtl519OqV3KaC8iVkkYFLejt5ab2f5p9/6nnY7gok4pMjlvSmxpOhzsLFYlJzLAN04i2psa
- 0zyX0mNZnKHv5LhuRL4chfPYfv+BFekYxN5aWt9yRa177orHaW0XNBQQeecX1N5Jq1H7ZAy7gVL
- VUxemkElHiWfAMAI08CLYLe0Ep7a4Za6Rj80e9wV1lUYVgFLsNUJgUr5M93xCDZTIbPIZMo6hJf
- KFUK0lph/W/5Pd8uUVSj8AdOTpAK8I+QYFpmQUoEDzUbTbX4ckNxHz8P492Guq1UtRcsajfCEwO
- NlUbBk07LwcNPz+sN9WfE5hw82CD2rBU7pkmMnYI3Ibui0q+RBrlgp0N5gkDECbu5qq4F41W
-X-Proofpoint-GUID: nLAuIsnqO4otcvbnxe3QPSdzptv6EF0R
-X-Authority-Analysis: v=2.4 cv=B/G50PtM c=1 sm=1 tr=0 ts=681c8aa8 cx=c_pps
- a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=KKAkSRfTAAAA:8
- a=COk6AnOGAAAA:8 a=OEBQwLZ44JOV8wgSCF8A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=cvBusfyB2V15izCimMoJ:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: nLAuIsnqO4otcvbnxe3QPSdzptv6EF0R
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-08_03,2025-05-07_02,2025-02-21_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 clxscore=1015 lowpriorityscore=0 mlxscore=0 spamscore=0
- suspectscore=0 phishscore=0 priorityscore=1501 bulkscore=0 adultscore=0
- mlxlogscore=999 malwarescore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2504070000
- definitions=main-2505080093
+X-CM-TRANSID:gCh0CgDnSl_KoBxoXus0Lw--.707S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxXF43ZFW3Zry3Aw48Kw1xKrg_yoWrtrWDpF
+	W8WF1jkF4DKr13Cw1v9w4Igrn0vFs3AF15C39Ykr48Cw45XF13KFnaga40yF9rXryxZayD
+	tFZ0kFyUZa1Iy3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
+	s2-5UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-
-
-On 5/7/2025 7:59 PM, neil.armstrong@linaro.org wrote:
-> On 07/05/2025 11:09, Ziqi Chen wrote:
->> Hi Luca,
+On 2025/5/8 13:01, Christoph Hellwig wrote:
+> On Wed, May 07, 2025 at 03:33:23PM +0800, Zhang Yi wrote:
+>> On 2025/5/6 20:11, Christoph Hellwig wrote:
+>>> On Tue, May 06, 2025 at 07:16:56PM +0800, Zhang Yi wrote:
+>>>> Sorry, but I don't understand your suggestion. The
+>>>> STATX_ATTR_WRITE_ZEROES_UNMAP attribute only indicate whether the bdev
+>>>> and the block device that under the specified file support unmap write
+>>>> zeroes commoand. It does not reflect whether the bdev and the
+>>>> filesystems support FALLOC_FL_WRITE_ZEROES. The implementation of
+>>>> FALLOC_FL_WRITE_ZEROES doesn't fully rely on the unmap write zeroes
+>>>> commoand now, users simply refer to this attribute flag to determine
+>>>> whether to use FALLOC_FL_WRITE_ZEROES when preallocating a file.
+>>>> So, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES doesn't
+>>>> have strong relations, why do you suggested to put this into the ext4
+>>>> and bdev patches that adding FALLOC_FL_WRITE_ZEROES?
+>>>
+>>> So what is the point of STATX_ATTR_WRITE_ZEROES_UNMAP?
 >>
->> On 5/7/2025 4:19 PM, Luca Weiss wrote:
->>> Hi Ziqi,
->>>
->>> On Wed May 7, 2025 at 9:44 AM CEST, Ziqi Chen wrote:
->>>> From: Can Guo <quic_cang@quicinc.com>
->>>>
->>>> On some platforms, the devfreq OPP freq may be different than the 
->>>> unipro
->>>> core clock freq. Implement ufs_qcom_opp_freq_to_clk_freq() and use 
->>>> it to
->>>> find the unipro core clk freq.
->>>>
->>>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->>>> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->>>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
->>>> ---
->>>>   drivers/ufs/host/ufs-qcom.c | 81 +++++++++++++++++++++++++++++++ 
->>>> +-----
->>>>   1 file changed, 71 insertions(+), 10 deletions(-)
->>>>
->>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>>> index 7f10926100a5..804c8ccd8d03 100644
->>>> --- a/drivers/ufs/host/ufs-qcom.c
->>>> +++ b/drivers/ufs/host/ufs-qcom.c
->>>> +static unsigned long ufs_qcom_opp_freq_to_clk_freq(struct ufs_hba 
->>>> *hba,
->>>> +                                                   unsigned long 
->>>> freq, char *name)
->>>> +{
->>>> +    struct ufs_clk_info *clki;
->>>> +    struct dev_pm_opp *opp;
->>>> +    unsigned long clk_freq;
->>>> +    int idx = 0;
->>>> +    bool found = false;
->>>> +
->>>> +    opp = dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
->>>> +    if (IS_ERR(opp)) {
->>>> +        dev_err(hba->dev, "Failed to find OPP for exact frequency 
->>>> %lu\n", freq);
->>>
->>> I'm hitting this print on bootup:
->>>
->>> [    0.512515] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for 
->>> exact frequency 18446744073709551615
->>> [    0.512571] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for 
->>> exact frequency 18446744073709551615
->>>
->>> Doesn't look like it's intended? The number is (2^64 - 1)
->>>
->> Yes, this is expected. During link startup, the frequency
->> ULONG_MAX will be passed to ufs_qcom_set_core_clk_ctrl() and
->> ufs_qcom_cfg_timer(). This frequency cannot be found through the API
->> dev_pm_opp_find_freq_exact_indexed(). Therefore, we handle the
->> frequency ULONG_MAX separately within Ufs_qcom_set_core_clk_ctrl()
->> and ufs_qcom_cfg_timer().
->>
->> This print only be print twice during link startup. If you think print
->> such print during bootup is not make sense, I can improve the code and
->> update a new vwesion.
+>> My idea is not to strictly limiting the use of FALLOC_FL_WRITE_ZEROES to
+>> only bdev or files where bdev_unmap_write_zeroes() returns true. In
+>> other words, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES
+>> are not consistent, they are two independent features. Even if some
+>> devices STATX_ATTR_WRITE_ZEROES_UNMAP are not set, users should still be
+>> allowed to call fallcoate(FALLOC_FL_WRITE_ZEROES). This is because some
+>> devices and drivers currently cannot reliably ascertain whether they
+>> support the unmap write zero command; however, certain devices, such as
+>> specific cloud storage devices, do support it. Users of these devices
+>> may also wish to use FALLOC_FL_WRITE_ZEROES to expedite the zeroing
+>> process.
 > 
-> I think just don't call ufs_qcom_opp_freq_to_clk_freq() if freq==ULONG_MAX
-> 
-Thanks Neil,  yes, it is a way , let me discuss internally and update 
-new version.
+> What are those "cloud storage devices" where you set it reliably,
+> i.e.g what drivers?
 
-BRs,
-Ziqi
+I don't have these 'cloud storage devices' now, but Ted had mentioned
+those cloud-emulated block devices such as Google's Persistent Desk or
+Amazon's Elastic Block Device in. I'm not sure if they can accurately
+report the BLK_FEAT_WRITE_ZEROES_UNMAP feature, maybe Ted can give more
+details.
 
-> Neil
+https://lore.kernel.org/linux-fsdevel/20250106161732.GG1284777@mit.edu/
+
 > 
->>
->> BRs.
->> Ziqi
->>
->>> Regards
->>> Luca
->>>
->>
->>
+>> Therefore, I think that the current point of
+>> STATX_ATTR_WRITE_ZEROES_UNMAP (possibly STATX_WRITE_ZEROES_UNMAP) should
+>> be to just indicate whether a bdev or file supports the unmap write zero
+>> command (i.e., whether bdev_unmap_write_zeroes() returns true). If we
+>> use standard SCSI and NVMe storage devices, and the
+>> STATX_ATTR_WRITE_ZEROES_UNMAP attribute is set, users can be assured
+>> that FALLOC_FL_WRITE_ZEROES is fast and can choose to use
+>> fallocate(FALLOC_FL_WRITE_ZEROES) immediately.
 > 
+> That's breaking the abstracton again.  An attribute must say something
+> about the specific file, not about some underlying semi-related feature.
+
+OK.
+
+> 
+>> Would you prefer to make STATX_ATTR_WRITE_ZEROES_UNMAP and
+>> FALLOC_FL_WRITE_ZEROES consistent, which means
+>> fallcoate(FALLOC_FL_WRITE_ZEROES) will return -EOPNOTSUPP if the block
+>> device doesn't set STATX_ATTR_WRITE_ZEROES_UNMAP ?
+> 
+> Not sure where the block device comes from here, both of these operate
+> on a file.
+
+I am referring to the block device on which the filesystem is mounted.
+The support status of the file is directly dependent on this block
+device.
+
+> 
+>> If so, I'd suggested we need to:
+>> 1) Remove STATX_ATTR_WRITE_ZEROES_UNMAP since users can check the
+>>    existence by calling fallocate(FALLOC_FL_WRITE_ZEROES) directly, this
+>>    statx flag seems useless.
+> 
+> Yes, that was my inital thought.
+> 
+>> 2) Make the BLK_FEAT_WRITE_ZEROES_UNMAP sysfs interface to RW, allowing
+>>    users to adjust the block device's support state according to the
+>>    real situation.
+> 
+> No, it's a feature and not a flag.
+> 
+
+I am a bit confused about the feature and the flag, I checked the other
+features, and it appears that features such as BLK_FEAT_ROTATIONAL allow
+to be modified, is this flexibility due to historical reasons or for the
+convenience of testing?
+
+Think about this again, I suppose we should keep the
+BLK_FEAT_WRITE_ZEROES_UNMAP as read-only and add a new flag,
+BLK_FALG_WRITE_ZEROES_UNMAP_DISABLED, to disable the
+FALLOC_FL_WRITE_ZEROES. Since the Write Zeroes does not guarantee
+performance, and some devices may claim to support **UNMAP** Write Zeroes
+but exhibit extremely slow write-zeroes speeds. Users may want be able to
+disable it. Thoughts？
+
+Thanks,
+Yi.
 
