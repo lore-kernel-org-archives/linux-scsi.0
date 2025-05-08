@@ -1,194 +1,190 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 109CA5A79B;
-	Thu,  8 May 2025 09:39:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 16E961A2C3A;
+	Thu,  8 May 2025 10:40:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746697168; cv=none; b=uo+ycJRqxO+KDGeU+wsDSgIOTR/z2+ug4dcttSXymBPoDhMHtRtTSxfK9DUzR+jpMEDR/pWAjh4k20eE/89rhdg6C1u+3YAzG/nC3qdholtk7OLIZ/ashFWZTtpdTjC5UDkNGj7mBuN2SPkS4lyFvJsdobV+Ubw3tbk2GZiyQs0=
+	t=1746700806; cv=none; b=VVOCsJfT2dkA6fS4MObAU2t6sAh2D0GaLhJMRiuFEBGDFYVnxtEn9uubhtl1E14NvBV/XSALIdwJmI5v6KTgo8OfySpGJNuj8Sa4qFVb/K2Qhg2H6FnnZ4e0TvvkAFl8hyKzH+l7Ck3ARW/RG6Sy8sAiHoZ3gR0HdHF5AOnzG34=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746697168; c=relaxed/simple;
-	bh=yHL36ocCfxeq/utyccr6VCpsFhL9r1LtxPcHbVSIKWY=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=WrG00GCRsiz9NqnDJcrN6lDEzZk7D+4N8P4wY+F/sRMcgzkte9UgEsm3SPWwgyvU5+e87W6vdP2oI+FB49MJIuGkKgnLBVHsoBzzO1oUMpGFL9XdPtWmA3Dp8NHLHtmk+VEK0B+1Quu3QQA6e0+XI/8rp4NhXCmRcUV8mm0LBig=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DUdoslVC; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1746700806; c=relaxed/simple;
+	bh=lzp2J1+gsFdHtyb5OEJYe8qGILqb/HGxgnci7HjvFX4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=HnBrqKg9x9UhrAAUUAtzQR4fePYJXplKbJ+ECtNbDpbCJQiPtTUGdQkTpru66U0vpsCY6772hVUkgwsSSGrW2eHoeaVEnQSN2FY2i4TZqmgdNt8RNu1CQZCxnLyXFmdosE2aot7cJWCjQGgFbMKGsvKxaEN6PMHHscRJVB+qNFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=TCpVtvS4; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DUdoslVC"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5484WThH014355;
-	Thu, 8 May 2025 09:39:02 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="TCpVtvS4"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5488lSHV019189;
+	Thu, 8 May 2025 10:39:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=qG/FDR4jIPDN3P1J0ZljbXUNk7DPM+48V6U
-	+OK74WNc=; b=DUdoslVCDrMcoumeK6AALRF8fajFV0dk0MJZ2+sBHHwmEMCBU2+
-	zAcZ9tqvyJW3bQUUqQS6v6GUKu1MxkqU8pAiQyxLc5yrurLNEHHPmDIsUHlrScWi
-	t+1JxlHVN9pzpZ6ebd05aE5tkrgDV+mNLe/TFloacKgNOCcucXvKEgQD1aaM4oz9
-	gEhVtPFhbd0OIQ9fkJuxmNd9KPAUuAHcR2oFFsgvw2FxnxbMf6Tng9HDcZiWJvth
-	zgHkINWbLoPfuQZIDunJwIPwSFK5yCfZDSnvwkC6iEtVIYsFIOESN/dNmutcqZKk
-	bfAPxTJ9NkSoRht3Qf3VDQrpThIBccf4UBg==
-Received: from aptaippmta02.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com [103.229.16.4])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46gnp4gt5m-1
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	hr0aPinub4tAud9BSk7ccVmzmQHn/Ny8CMOYC/u3PMs=; b=TCpVtvS4ABLRrV+r
+	YoHtLwbudtxA8JzdFYwM4YMKzDOLdMAsS7VaIViX0avXvm9rRiWwlo044z5UER9t
+	h5ML/iJX+5R596lFCxIvyx9y7JQOrvWAyhwyW2ynpEyY/xGbXljYTQ28qmejgp/Z
+	NhIKA+eObZBf4fNzQFTNlS6+MdnKxRy12x4/Fc9mMF0lELGpKSFQGY6aWvv4MAly
+	sXBPqHOEe4N+uYPBv68Us8AC1hOSD4phjPHCP3Ale5tq31FgwG5wRJy/18R4yP7s
+	nluT7eGj9CtfMkn9dNxG0VCl+zhBGVmQZG6vB9QghTH8bQZJrXOpaqUBsZ7Y7iFK
+	V7MrIA==
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46gsdj0c94-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 08 May 2025 09:39:01 +0000 (GMT)
-Received: from pps.filterd (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5489cwRr025863;
-	Thu, 8 May 2025 09:38:58 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 46dc7mfnxk-1
+	Thu, 08 May 2025 10:39:38 +0000 (GMT)
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 548AdbW1011759
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 08 May 2025 09:38:58 +0000
-Received: from APTAIPPMTA02.qualcomm.com (APTAIPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5489cwjg025855;
-	Thu, 8 May 2025 09:38:58 GMT
-Received: from cbsp-sh-gv.ap.qualcomm.com (CBSP-SH-gv.ap.qualcomm.com [10.231.249.68])
-	by APTAIPPMTA02.qualcomm.com (PPS) with ESMTPS id 5489cvnQ025854
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 08 May 2025 09:38:58 +0000
-Received: by cbsp-sh-gv.ap.qualcomm.com (Postfix, from userid 393357)
-	id B981E40D11; Thu,  8 May 2025 17:38:56 +0800 (CST)
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-To: quic_cang@quicinc.com, bvanassche@acm.org, mani@kernel.org,
-        beanhuo@micron.com, avri.altman@wdc.com, junwoo80.lee@samsung.com,
-        martin.petersen@oracle.com, quic_ziqichen@quicinc.com,
-        quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
-        quic_rampraka@quicinc.com, neil.armstrong@linaro.org,
-        luca.weiss@fairphone.com, konrad.dybcio@oss.qualcomm.com,
-        peter.wang@mediatek.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-        linux-kernel@vger.kernel.org (open list)
-Subject: [PATCH v3] scsi: ufs: core: skip UFS clkscale if host asynchronous scan in progress
-Date: Thu,  8 May 2025 17:38:51 +0800
-Message-Id: <20250508093854.3281475-1-quic_ziqichen@quicinc.com>
-X-Mailer: git-send-email 2.34.1
+	Thu, 8 May 2025 10:39:37 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 8 May 2025
+ 03:39:32 -0700
+Message-ID: <811c7c41-c52a-4c61-b35d-b921568429c3@quicinc.com>
+Date: Thu, 8 May 2025 18:39:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 2/3] scsi: ufs: qcom: Map devfreq OPP freq to UniPro
+ Core Clock freq
+To: Luca Weiss <luca.weiss@fairphone.com>, <quic_cang@quicinc.com>,
+        <bvanassche@acm.org>, <mani@kernel.org>, <beanhuo@micron.com>,
+        <avri.altman@wdc.com>, <junwoo80.lee@samsung.com>,
+        <martin.petersen@oracle.com>, <quic_nguyenb@quicinc.com>,
+        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <neil.armstrong@linaro.org>, <konrad.dybcio@oss.qualcomm.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        "Manivannan
+ Sadhasivam" <manivannan.sadhasivam@linaro.org>,
+        "James E.J. Bottomley"
+	<James.Bottomley@hansenpartnership.com>,
+        open list
+	<linux-kernel@vger.kernel.org>
+References: <20250507074415.2451940-1-quic_ziqichen@quicinc.com>
+ <20250507074415.2451940-3-quic_ziqichen@quicinc.com>
+ <D9PS51XVRKLP.1AHMCRH9CZFWU@fairphone.com>
+ <7c74a395-a8b8-4a12-9ddb-691f28c90885@quicinc.com>
+ <D9PU9LEA7CLT.37IBLZRP90E9S@fairphone.com>
+Content-Language: en-US
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <D9PU9LEA7CLT.37IBLZRP90E9S@fairphone.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: IMxl1a_7qZbu-8wh2KhYRZw49trfoYzV
-X-Authority-Analysis: v=2.4 cv=E5XNpbdl c=1 sm=1 tr=0 ts=681c7bb6 cx=c_pps
- a=nuhDOHQX5FNHPW3J6Bj6AA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8 a=avOu-EqILVl7MynqQNIA:9
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA4MDA4NyBTYWx0ZWRfX1SG9hUeTQrVp
- QG2JxkGU5o0WdIz9c1qxFwGQjsFtXWpF15L6mnBqdmEARXDeAB0R6sjGpEhpwHPWgM9mH0jQD5H
- hHkASo7AP66iraOg+naV20aY1ZMdRpxuHY/M/zi+HD8mYEpMnjt3xRwFdPTt4ChH1HGSqoaiwKo
- +OUSX/DsyM8YfPPfPBPxz9SP+SIN9VLk5tjGzGVqGmc1jREJVmT+Y1rxx/vrm/+O+5xdHAyrNIh
- QfHQ3fgUEjntW+J4sqIIa/qsGZbIitOF191LcPWaQahX3d5vXV2ZH3Tv4DAjm4UE2i5WAGbQrM3
- Vg1zyciYNi1WD3a1ZKIy6/S2G546gEFx/6k291a1oJV3MZl+FLa8W4PgB6nlMwxsQcgpBahVkst
- WYDgF8qU0VXjwiz/xEUQYWiFOK7PgcjCwD8bC1p/yAhrYT8hEBJ8m1JydFmiNVFkHOEhWOCH
-X-Proofpoint-ORIG-GUID: IMxl1a_7qZbu-8wh2KhYRZw49trfoYzV
+X-Authority-Analysis: v=2.4 cv=PMAP+eqC c=1 sm=1 tr=0 ts=681c89ea cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8
+ a=OEBQwLZ44JOV8wgSCF8A:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA4MDA5MiBTYWx0ZWRfX3AZjOpP8iy7b
+ vJnbVEKUZOSN1o8tTuRRxKHNC5bxbw7H+kk21EeJr+8Zb8waGcsoCMO7b6D0rLPs4pUO8tNh1TE
+ aUd1CZGqktMMG5Qpm0YvJklrcjRZMql6PI0FXksdQtQ2oo/srjLpIbiVr7TcV7asqMlcgbtkZ4y
+ aKsHBSDoO+0DF5tfismFJvaeijf9nPI2E4odadCnmycyJ+OWaAgpxTkd8y+SO6Knf6XYFINyBDH
+ vt1zMa/lWYCMxFciXwAsTIMNuNhl61ahoHRqYi/Knd8SNiYKOO9Thyq0Gc3O0FeDnH3K3xrWx18
+ kfKgbL91NJByEa+wu9pUIVIO/4uvHNwqxMVNvKnybPDIXd1BQ0jmjRZZZ1tY5ZKEM2IReVdyr6S
+ MWO2SsB6NNhzCW9l5JDcHBTUPhInnOgG2qEHAeeaNi8LRfYLyys/dNUHOWo0OQF6dq7pTZwE
+X-Proofpoint-GUID: idujXSwdNlbp_1WJkM_BEi8XYtU8dIuR
+X-Proofpoint-ORIG-GUID: idujXSwdNlbp_1WJkM_BEi8XYtU8dIuR
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
  definitions=2025-05-08_03,2025-05-07_02,2025-02-21_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 adultscore=0 mlxscore=0 malwarescore=0
- bulkscore=0 phishscore=0 spamscore=0 priorityscore=1501 mlxlogscore=999
- lowpriorityscore=0 impostorscore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2504070000 definitions=main-2505080087
+ phishscore=0 impostorscore=0 mlxscore=0 suspectscore=0 spamscore=0
+ bulkscore=0 priorityscore=1501 clxscore=1015 lowpriorityscore=0
+ mlxlogscore=999 adultscore=0 malwarescore=0 classifier=spam authscore=0
+ authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2504070000 definitions=main-2505080092
 
-When preparing for UFS clock scaling, the UFS driver will quiesce all sdevs
-queues on the UFS SCSI host tagset list and then unquiesce them when UFS
-clock scaling unpreparing. If the UFS SCSI host async scan is in progress
-at this time, some LUs may be added to the tagset list between UFS clkscale
-prepare and unprepare. This can cause two issues:
 
-1. During clock scaling, there may be IO requests issued through new added
-queues that have not been quiesced, leading to task abort issue.
 
-2. These new added queues that have not been quiesced will be unquiesced as
-well when UFS clkscale is unprepared, resulting in warning prints.
+On 5/7/2025 5:59 PM, Luca Weiss wrote:
+> On Wed May 7, 2025 at 11:09 AM CEST, Ziqi Chen wrote:
+>> Hi Luca,
+>>
+>> On 5/7/2025 4:19 PM, Luca Weiss wrote:
+>>> Hi Ziqi,
+>>>
+>>> On Wed May 7, 2025 at 9:44 AM CEST, Ziqi Chen wrote:
+>>>> From: Can Guo <quic_cang@quicinc.com>
+>>>>
+>>>> On some platforms, the devfreq OPP freq may be different than the unipro
+>>>> core clock freq. Implement ufs_qcom_opp_freq_to_clk_freq() and use it to
+>>>> find the unipro core clk freq.
+>>>>
+>>>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+>>>> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+>>>> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
+>>>> ---
+>>>>    drivers/ufs/host/ufs-qcom.c | 81 ++++++++++++++++++++++++++++++++-----
+>>>>    1 file changed, 71 insertions(+), 10 deletions(-)
+>>>>
+>>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>>>> index 7f10926100a5..804c8ccd8d03 100644
+>>>> --- a/drivers/ufs/host/ufs-qcom.c
+>>>> +++ b/drivers/ufs/host/ufs-qcom.c
+>>>>    
+>>>> +static unsigned long ufs_qcom_opp_freq_to_clk_freq(struct ufs_hba *hba,
+>>>> +												   unsigned long freq, char *name)
+>>>> +{
+>>>> +	struct ufs_clk_info *clki;
+>>>> +	struct dev_pm_opp *opp;
+>>>> +	unsigned long clk_freq;
+>>>> +	int idx = 0;
+>>>> +	bool found = false;
+>>>> +
+>>>> +	opp = dev_pm_opp_find_freq_exact_indexed(hba->dev, freq, 0, true);
+>>>> +	if (IS_ERR(opp)) {
+>>>> +		dev_err(hba->dev, "Failed to find OPP for exact frequency %lu\n", freq);
+>>>
+>>> I'm hitting this print on bootup:
+>>>
+>>> [    0.512515] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for exact frequency 18446744073709551615
+>>> [    0.512571] ufshcd-qcom 1d84000.ufshc: Failed to find OPP for exact frequency 18446744073709551615
+>>>
+>>> Doesn't look like it's intended? The number is (2^64 - 1)
+>>>
+>> Yes, this is expected. During link startup, the frequency
+>> ULONG_MAX will be passed to ufs_qcom_set_core_clk_ctrl() and
+>> ufs_qcom_cfg_timer(). This frequency cannot be found through the API
+>> dev_pm_opp_find_freq_exact_indexed(). Therefore, we handle the
+>> frequency ULONG_MAX separately within Ufs_qcom_set_core_clk_ctrl()
+>> and ufs_qcom_cfg_timer().
+>>
+>> This print only be print twice during link startup. If you think print
+>> such print during bootup is not make sense, I can improve the code and
+>> update a new vwesion.
+> 
+> I'll let others comment on what should happen but certainly this large
+> number looks more like a mistake, like an integer overflow, if you don't
+> dig into what this number is supposed to represent.
+> 
+> Perhaps an idea could be to just skip the print (or even more code) for
+> ULONG_MAX since an opp for that is not supposed to exist anyways?
+> 
+> I didn't check the code now but for other frequencies this would be an
+> actual error I imagine where it should be visible.
+> 
+sure, let me clear away this prints in next version.
 
-Therefore, use the flag host->async_scan to check whether the host async
-scan is in progress or not. Additionally, move ufshcd_devfreq_init() to
-after ufshcd_add_lus() to ensure this flag already be set before starting
-devfreq monitor.
+BRs,
+Ziqi
 
-Co-developed-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
----
-
-v1 -> v2:
-Move whole clkscale Initialize process out of ufshcd_add_lus().
-
-v2 -> v3:
-Add check for the return value of ufshcd_add_lus().
----
- drivers/ufs/core/ufshcd.c | 35 ++++++++++++++++++++---------------
- 1 file changed, 20 insertions(+), 15 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1c53ccf5a616..04f40677e76a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1207,6 +1207,9 @@ static bool ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
- 	if (list_empty(head))
- 		return false;
- 
-+	if (hba->host->async_scan)
-+		return false;
-+
- 	if (hba->use_pm_opp)
- 		return freq != hba->clk_scaling.target_freq;
- 
-@@ -8740,21 +8743,6 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- 	if (ret)
- 		goto out;
- 
--	/* Initialize devfreq after UFS device is detected */
--	if (ufshcd_is_clkscaling_supported(hba)) {
--		memcpy(&hba->clk_scaling.saved_pwr_info,
--			&hba->pwr_info,
--			sizeof(struct ufs_pa_layer_attr));
--		hba->clk_scaling.is_allowed = true;
--
--		ret = ufshcd_devfreq_init(hba);
--		if (ret)
--			goto out;
--
--		hba->clk_scaling.is_enabled = true;
--		ufshcd_init_clk_scaling_sysfs(hba);
--	}
--
- 	/*
- 	 * The RTC update code accesses the hba->ufs_device_wlun->sdev_gendev
- 	 * pointer and hence must only be started after the WLUN pointer has
-@@ -9009,6 +8997,23 @@ static void ufshcd_async_scan(void *data, async_cookie_t cookie)
- 
- 	/* Probe and add UFS logical units  */
- 	ret = ufshcd_add_lus(hba);
-+	if (ret)
-+		goto out;
-+
-+	/* Initialize devfreq and start devfreq monitor */
-+	if (ufshcd_is_clkscaling_supported(hba)) {
-+		memcpy(&hba->clk_scaling.saved_pwr_info,
-+			&hba->pwr_info,
-+			sizeof(struct ufs_pa_layer_attr));
-+		hba->clk_scaling.is_allowed = true;
-+
-+		ret = ufshcd_devfreq_init(hba);
-+		if (ret)
-+			goto out;
-+
-+		hba->clk_scaling.is_enabled = true;
-+		ufshcd_init_clk_scaling_sysfs(hba);
-+	}
- 
- out:
- 	pm_runtime_put_sync(hba->dev);
--- 
-2.34.1
+> Regards
+> Luca
+> 
+>>
+>> BRs.
+>> Ziqi
+>>
+>>> Regards
+>>> Luca
+>>>
+> 
 
