@@ -1,109 +1,84 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E041623498F;
-	Thu,  8 May 2025 05:01:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37C711E0E00
+	for <linux-scsi@vger.kernel.org>; Thu,  8 May 2025 06:03:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746680516; cv=none; b=s5bCJSvaf8dr9oPPhvA+WuHfEHDJ5WoWefJAErZl/6ldl64Vu35D5VgECEJPy/mq1Wf6pW8uk3lPpC7Xo9boiYYRMe14z6vS7c4AQn9AW0Nuq04t2+Q/4rh6UJqBLUv3wdit0gKB7nWj9bFQ/rtJC1rn+kDa7NTXCOj8S3lbtMI=
+	t=1746684223; cv=none; b=qDaOTwFhRTHMT1uEWHS4miAkhDgqwXzM56jiErpitTCVVuIDB3OhyRuHBYbOol+ylQOCZOXq+JIG2dqsVvaLDsrt4rIBdrA8mZgQNMLWzgw50xxm+DFg+nHrZBUKWLQOeohzCBaLXhVrnx15vC/+7CRHhGXM1yS1Qs50Al5wm5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746680516; c=relaxed/simple;
-	bh=AwhhZ2wBTFfk+q7m2bEqg8jP8mcot7mr9qk1rjjHN4s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=YUsJOTlO75FlF4utm5B09QRhU067zUvCUsJuxGHeBAx7xO6k8tbR2QRopwRT/VPaVJLJAwjwwD+eHvEPGJdG+EfrZ/JPJ9amV20oihCmIFSOcqADwwTmPcQ4yiMBeVRihWflV9vWbl5LS3wtADw8tzrA536OO8RfKLi/9Q4Acyw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id 7F69868B05; Thu,  8 May 2025 07:01:47 +0200 (CEST)
-Date: Thu, 8 May 2025 07:01:47 +0200
-From: Christoph Hellwig <hch@lst.de>
-To: Zhang Yi <yi.zhang@huaweicloud.com>
-Cc: Christoph Hellwig <hch@lst.de>, "Darrick J. Wong" <djwong@kernel.org>,
-	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
-	tytso@mit.edu, john.g.garry@oracle.com, bmarzins@redhat.com,
-	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
-	brauner@kernel.org, yi.zhang@huawei.com, chengzhihao1@huawei.com,
-	yukuai3@huawei.com, yangerkun@huawei.com
-Subject: Re: [RFC PATCH v4 07/11] fs: statx add write zeroes unmap attribute
-Message-ID: <20250508050147.GA26916@lst.de>
-References: <20250421021509.2366003-1-yi.zhang@huaweicloud.com> <20250421021509.2366003-8-yi.zhang@huaweicloud.com> <20250505132208.GA22182@lst.de> <20250505142945.GJ1035866@frogsfrogsfrogs> <c7d8d0c3-7efa-4ee6-b518-f8b09ec87b73@huaweicloud.com> <20250506043907.GA27061@lst.de> <64c8b62a-83ba-45be-a83e-62b6ad8d6f22@huaweicloud.com> <20250506121102.GA21905@lst.de> <a39a6612-89ac-4255-b737-37c7d16b3185@huaweicloud.com>
+	s=arc-20240116; t=1746684223; c=relaxed/simple;
+	bh=zR+NOhXGGib5bVR9mfpujnxn85pdSCKsCClSsnaOD9I=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=NblubYYKZmaaBXA7WLTC0IezG/cPfnnvhIm+VhXDeswAl6fombqCsMjDZcndj0Y9PzFhQyRcBn1zCb0nT174lqJXWhgcYauCf/jgv9x1MbnFtNbQLDFKZKhUQf7hnynWPa4R4cwXFtQH3+KbuHQ78TGEXDoLH7euoBkQCOYfQHc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b4Qrc/1A; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b4Qrc/1A"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id AF9DBC4CEF6
+	for <linux-scsi@vger.kernel.org>; Thu,  8 May 2025 06:03:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1746684222;
+	bh=zR+NOhXGGib5bVR9mfpujnxn85pdSCKsCClSsnaOD9I=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=b4Qrc/1AvRUqzG0hsWGC8pVBZfVWLIhRU/yc2mtorigVgyI1MTW05Sm2FMip/RhiY
+	 YXI5AepBNEMnjjy1QMqkbzhiY9kN++V58PYwAEfy4CFA1TI6dcELfkJiBWYdQB2ZVK
+	 ahzVXOzpYhGKRkJfjP2kU/KhUcrtsBmo0RaS1Sp8i53+wzkolhEHDQ664LdPbsfkKo
+	 6Ys76eByGtBrYA+EQH8CVhLyvS7t9VMuqW83F6CszfpK+aCWXx4HHZR/wMBZOLAT9D
+	 HZ3xy6R3TJ3tVo755lXh2w+HprtTTumKLR9jZuCRYZZFy94qaC5cg14R+RSHNE6hHP
+	 c4hKd+oUyrf9Q==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id A8E62C41616; Thu,  8 May 2025 06:03:42 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 213759] CD tray ejected on hibernate resume
+Date: Thu, 08 May 2025 06:03:42 +0000
+X-Bugzilla-Reason: CC
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: pakap82186@exitings.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: CODE_FIX
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-213759-11613-2psPr0Acb9@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-213759-11613@https.bugzilla.kernel.org/>
+References: <bug-213759-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a39a6612-89ac-4255-b737-37c7d16b3185@huaweicloud.com>
-User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, May 07, 2025 at 03:33:23PM +0800, Zhang Yi wrote:
-> On 2025/5/6 20:11, Christoph Hellwig wrote:
-> > On Tue, May 06, 2025 at 07:16:56PM +0800, Zhang Yi wrote:
-> >> Sorry, but I don't understand your suggestion. The
-> >> STATX_ATTR_WRITE_ZEROES_UNMAP attribute only indicate whether the bdev
-> >> and the block device that under the specified file support unmap write
-> >> zeroes commoand. It does not reflect whether the bdev and the
-> >> filesystems support FALLOC_FL_WRITE_ZEROES. The implementation of
-> >> FALLOC_FL_WRITE_ZEROES doesn't fully rely on the unmap write zeroes
-> >> commoand now, users simply refer to this attribute flag to determine
-> >> whether to use FALLOC_FL_WRITE_ZEROES when preallocating a file.
-> >> So, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES doesn't
-> >> have strong relations, why do you suggested to put this into the ext4
-> >> and bdev patches that adding FALLOC_FL_WRITE_ZEROES?
-> > 
-> > So what is the point of STATX_ATTR_WRITE_ZEROES_UNMAP?
-> 
-> My idea is not to strictly limiting the use of FALLOC_FL_WRITE_ZEROES to
-> only bdev or files where bdev_unmap_write_zeroes() returns true. In
-> other words, STATX_ATTR_WRITE_ZEROES_UNMAP and FALLOC_FL_WRITE_ZEROES
-> are not consistent, they are two independent features. Even if some
-> devices STATX_ATTR_WRITE_ZEROES_UNMAP are not set, users should still be
-> allowed to call fallcoate(FALLOC_FL_WRITE_ZEROES). This is because some
-> devices and drivers currently cannot reliably ascertain whether they
-> support the unmap write zero command; however, certain devices, such as
-> specific cloud storage devices, do support it. Users of these devices
-> may also wish to use FALLOC_FL_WRITE_ZEROES to expedite the zeroing
-> process.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D213759
 
-What are those "cloud storage devices" where you set it reliably,
-i.e.g what drivers?
+Wheel4x4 (pakap82186@exitings.com) changed:
 
-> Therefore, I think that the current point of
-> STATX_ATTR_WRITE_ZEROES_UNMAP (possibly STATX_WRITE_ZEROES_UNMAP) should
-> be to just indicate whether a bdev or file supports the unmap write zero
-> command (i.e., whether bdev_unmap_write_zeroes() returns true). If we
-> use standard SCSI and NVMe storage devices, and the
-> STATX_ATTR_WRITE_ZEROES_UNMAP attribute is set, users can be assured
-> that FALLOC_FL_WRITE_ZEROES is fast and can choose to use
-> fallocate(FALLOC_FL_WRITE_ZEROES) immediately.
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |pakap82186@exitings.com
 
-That's breaking the abstracton again.  An attribute must say something
-about the specific file, not about some underlying semi-related feature.
+--- Comment #18 from Wheel4x4 (pakap82186@exitings.com) ---
+, Wheel4x4 is the brand you need to know. Known for rugged performance,
+innovation, and a passion for all things 4x4, Wheel4x4 caters to everyone f=
+rom
+weekend warriors to seasoned trail explorers.<a
+href=3D"https://wheel4x4.com/">Wheel4x4</a>
 
-> Would you prefer to make STATX_ATTR_WRITE_ZEROES_UNMAP and
-> FALLOC_FL_WRITE_ZEROES consistent, which means
-> fallcoate(FALLOC_FL_WRITE_ZEROES) will return -EOPNOTSUPP if the block
-> device doesn't set STATX_ATTR_WRITE_ZEROES_UNMAP ?
+--=20
+You may reply to this email to add a comment.
 
-Not sure where the block device comes from here, both of these operate
-on a file.
-
-> If so, I'd suggested we need to:
-> 1) Remove STATX_ATTR_WRITE_ZEROES_UNMAP since users can check the
->    existence by calling fallocate(FALLOC_FL_WRITE_ZEROES) directly, this
->    statx flag seems useless.
-
-Yes, that was my inital thought.
-
-> 2) Make the BLK_FEAT_WRITE_ZEROES_UNMAP sysfs interface to RW, allowing
->    users to adjust the block device's support state according to the
->    real situation.
-
-No, it's a feature and not a flag.
-
+You are receiving this mail because:
+You are on the CC list for the bug.
+You are watching the assignee of the bug.=
