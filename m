@@ -1,183 +1,170 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FC14230BC7
-	for <linux-scsi@vger.kernel.org>; Fri,  9 May 2025 02:54:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4D47139D1B;
+	Fri,  9 May 2025 05:03:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746759284; cv=none; b=rrEiTmoSgv6KabRzlyimXT7kM307iQ3tfZhJPA+6NvFvlhIQDyw9JWTF44Gz5K5R++t1wKlkwC3cdSU1ys/UnkMt72X90rHWWQ2Ca6MHbuNFb0vsUnOClqVLdknCVEYNjVaiboBAYNOlzp6wW1IT5sKZizyA7hw0qG2GmE4g8Ts=
+	t=1746767003; cv=none; b=OiZWJfsyqTMQv2l0sNpzl5FzwLeeIRb5hIP+bgsHrjsWQn3PxnI4SAYa2XiXcortNnbD+UPmuRfaGF2URpzShEQmD7ObEfxcftfqvkiQ5f8q7d16pvw+Gh1pcteD1zX4NiTo5g7bRrij6uLHiErsNIqvI4+HCKcy1uFU4QY+Vco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746759284; c=relaxed/simple;
-	bh=AXqSqGpaUUdjYDz3GVi1ZD7kAUeicLrKgmxvXNjxq/w=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pzKgXw34nI26RYroezWtFe7G4fUC3NM5y7ZVybILK+gu8dgAcR8LSGPGEzdm/8dFKTGVUpqLaw++Tzdi+SO8b9lSQN7Z+Kz5AZBQMHR/TPeFqWH/dgaP2QJ4kDuCritgAfu2ZIi+KGdG66ws+gKWHYXplWtM9yfxJ+YzMnvvYbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Aj1+8jgg; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1746767003; c=relaxed/simple;
+	bh=xbOGB7izE0lOUCVHPMcETHodRDciZrjYwgfcA/Zxs74=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=K1u2I5gkw5ZC46LzJZuTuOJJZBtMIzNRWdRaS7G7PIBP34OuY82L9mhrihRH/tUzgircUKhWW54T9CIcQ6FYpRhwWqVakAhBIQJh1zOyh/9VZctqv0PP02mvtGKLTvGC6lyj46/Xj/s5krcGwhTy+7CxfEwUX+mUx1KakRcp6oI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Wpk0xIXj; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Aj1+8jgg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1746759280;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=nu9dJaM+tlFWqIyxUlK5LSPVjvjKt3pIbseYQlD56Ks=;
-	b=Aj1+8jggDtkj8LWn5E+E20SrmI2KQ1OquffsgRnQaaaMPBRd+HidHCE/EvZUKj2Zlxlocj
-	BQFcQpV7V9hemxB7Vg5Uy4xp6SF4RcpiJbij54NVBRcrruO6HXVC7tdROhZSqo9LweaVsp
-	v/d4NJlWmS90/A+jDykv3+fXZv+X1C4=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-391-oiLQlf_9P1m4qOm9AvPOvA-1; Thu,
- 08 May 2025 22:54:37 -0400
-X-MC-Unique: oiLQlf_9P1m4qOm9AvPOvA-1
-X-Mimecast-MFC-AGG-ID: oiLQlf_9P1m4qOm9AvPOvA_1746759274
-Received: from mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.40])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0C6A219560AB;
-	Fri,  9 May 2025 02:54:34 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.120])
-	by mx-prod-int-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 23A2119560B3;
-	Fri,  9 May 2025 02:54:20 +0000 (UTC)
-Date: Fri, 9 May 2025 10:54:15 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Daniel Wagner <wagi@kernel.org>
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	"Michael S. Tsirkin" <mst@redhat.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Costa Shulyupin <costa.shul@redhat.com>,
-	Juri Lelli <juri.lelli@redhat.com>,
-	Valentin Schneider <vschneid@redhat.com>,
-	Waiman Long <llong@redhat.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
-	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org, storagedev@microchip.com,
-	virtualization@lists.linux.dev,
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v6 9/9] blk-mq: prevent offlining hk CPU with associated
- online isolated CPUs
-Message-ID: <aB1uV38QB_FErstt@fedora>
-References: <20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org>
- <20250424-isolcpus-io-queues-v6-9-9a53a870ca1f@kernel.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Wpk0xIXj"
+Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 548I1I4p021350;
+	Fri, 9 May 2025 05:02:54 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	qjlYofGatGRAiUmyQmq+6GXYuIy1QKIWTHRJYUSH5OQ=; b=Wpk0xIXjxfXDKr0v
+	eBjtXDDeLQ6XWeE1Gu6bOQ/NWNP28DnlzHyIaEQa0LHIymkMtMDxk3xWY5mDNXeb
+	C0xVZNSGUDbdey3F4jgjPBHDgL7Ad9FKuJzChS6F/bQlbSeaGopd68/Oe2d2o0Q3
+	a9Jn36IGSHG3r2I9my+pkhRcG9wSwPXuuTmJY2eEOfY1srap2BevPhDAw14HLtto
+	zV4AaB/CuC9RDwaqhlf+KOB92YI8IxvhlusC5bvtcJ99Y6pwoPt0uobTvyjFbDG1
+	3Zl/5/dyKyYM+hU9d+4dT80xv+OOl5TwZZXr4r2RkeyiM5CfAhWhI+AF3+XKc9Ue
+	axZHcw==
+Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46gsdj2un7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 09 May 2025 05:02:54 +0000 (GMT)
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54952rCx019997
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 9 May 2025 05:02:53 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 8 May 2025
+ 22:02:49 -0700
+Message-ID: <5748d0cc-a603-4b44-bbfc-d39d684b2ea6@quicinc.com>
+Date: Fri, 9 May 2025 13:02:46 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250424-isolcpus-io-queues-v6-9-9a53a870ca1f@kernel.org>
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.40
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3] scsi: ufs: core: skip UFS clkscale if host
+ asynchronous scan in progress
+To: Bart Van Assche <bvanassche@acm.org>, <quic_cang@quicinc.com>,
+        <mani@kernel.org>, <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <martin.petersen@oracle.com>,
+        <quic_nguyenb@quicinc.com>, <quic_nitirawa@quicinc.com>,
+        <quic_rampraka@quicinc.com>, <neil.armstrong@linaro.org>,
+        <luca.weiss@fairphone.com>, <konrad.dybcio@oss.qualcomm.com>,
+        <peter.wang@mediatek.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        Alim Akhtar
+	<alim.akhtar@samsung.com>,
+        "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>,
+        Manivannan Sadhasivam
+	<manivannan.sadhasivam@linaro.org>,
+        open list <linux-kernel@vger.kernel.org>
+References: <20250508093854.3281475-1-quic_ziqichen@quicinc.com>
+ <fd13e179-f2d8-4085-86da-c6b0fce2de5b@acm.org>
+Content-Language: en-US
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <fd13e179-f2d8-4085-86da-c6b0fce2de5b@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Authority-Analysis: v=2.4 cv=PMAP+eqC c=1 sm=1 tr=0 ts=681d8c7e cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10
+ a=H7B4ieK4C1KPzknp_EoA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTA5MDA0NiBTYWx0ZWRfXwEaaIBZNg/DI
+ 4lPdfVl31yPZlSneqVeeKwe/ipY121VnsIn7INw0Io3RT86fL1mZnqCQ032yhBJiPGm71Cs08Sj
+ 2gGV1VBbfnmJc8uE2yT7JWzt7F4qk9AgqPK50MqVgINebm8lkSZpGiyXfwETdW2dmYCWLHlJvj8
+ 9ea5KCM/yVkCwLLm6Fw/NJt3gUKBXne2g40mwPmpQshbD7gf8VYu5AM1fJ9dG6k8L/FCCacPJhZ
+ cjne/uXCPhP1hJz+3kU4ZCX2mMefqCPb6lrmvePJhUiogvub3I/jiFiyl5lQynPE3DyjX5jgzhW
+ k/dZBhkO+gZ5dCZNWuPOwXzl/eRPrFYC/aQB3Fp2R0ENJLP130ocZyl+UrcoDpda28UE+ArSwx4
+ oFYjN2i8IpqFCA6h/InAIgIt+50p2aIgXvd1epHki3+0Mv+QhsCThs44NMvZyg6/rhbZ8oxg
+X-Proofpoint-GUID: YvBBlEA34M66njag9DWaFOMVKtfpMOJy
+X-Proofpoint-ORIG-GUID: YvBBlEA34M66njag9DWaFOMVKtfpMOJy
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-09_01,2025-05-08_04,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 impostorscore=0 mlxscore=0 suspectscore=0 spamscore=0
+ bulkscore=0 priorityscore=1501 clxscore=1015 lowpriorityscore=0
+ mlxlogscore=999 adultscore=0 malwarescore=0 classifier=spam authscore=0
+ authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2504070000 definitions=main-2505090046
 
-On Thu, Apr 24, 2025 at 08:19:48PM +0200, Daniel Wagner wrote:
-> When isolcpus=io_queue is enabled, and the last housekeeping CPU for a
-> given hctx would go offline, there would be no CPU left which handles
-> the IOs. To prevent IO stalls, prevent offlining housekeeping CPUs which
-> are still severing isolated CPUs..
+
+
+On 5/9/2025 12:06 AM, Bart Van Assche wrote:
+> On 5/8/25 2:38 AM, Ziqi Chen wrote:
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>> index 1c53ccf5a616..04f40677e76a 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -1207,6 +1207,9 @@ static bool 
+>> ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+>>       if (list_empty(head))
+>>           return false;
+>> +    if (hba->host->async_scan)
+>> +        return false;
 > 
-> Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> ---
->  block/blk-mq.c | 46 ++++++++++++++++++++++++++++++++++++++++++++--
->  1 file changed, 44 insertions(+), 2 deletions(-)
+> Testing a boolean is never a proper way to synchronize code sections.
+> As an example, the SCSI core could set hba->host->async_scan after this
+> check completed and before the code below is executed. I think we need a
+> better solution.
+
+Hi Bart,
+
+I get your point, we have also taken this into consideration. That's why
+we move ufshcd_devfreq_init() out of ufshd_add_lus().
+
+Old sequence:
+
+| ufshcd_async_scan()
+   |ufshcd_add_lus()
+     |ufshcd_devfreq_init()
+     |  | enable UFS clock scaling
+     |scsi_scan_host()
+        |scsi_prep_async_scan()
+        |    | set host->async_scan to '1'
+        |async_schedule(do_scan_async, data)
+
+With this old sequence , The ufs devfreq monitor started before the
+scsi_prep_async_scan(),  the SCSI core could set hba->host->async_scan
+after this check.
+
+New sequence:
+
+| ufshcd_async_scan()
+   |ufshcd_add_lus()
+   | |scsi_scan_host()
+   |    |scsi_prep_async_scan()
+   |    |    | set host->async_scan to '1'
+   |    |async_schedule(do_scan_async, data)
+   |ufshcd_devfreq_init()
+   |    |enable UFS clock scaling
+
+With the new sequence , it is guaranteed that host->async_scan
+is set before the UFS clock scaling enabling.
+
+I guess you might be worried about out-of-order execution will
+cause this flag not be set before clock scaling enabling with
+extremely low probability?
+If yes, do you have any suggestion on this ?
+
+
+BRs,
+Ziqi
+
+
 > 
-> diff --git a/block/blk-mq.c b/block/blk-mq.c
-> index c2697db591091200cdb9f6e082e472b829701e4c..aff17673b773583dfb2b01cb2f5f010c456bd834 100644
-> --- a/block/blk-mq.c
-> +++ b/block/blk-mq.c
-> @@ -3627,6 +3627,48 @@ static bool blk_mq_hctx_has_requests(struct blk_mq_hw_ctx *hctx)
->  	return data.has_rq;
->  }
->  
-> +static bool blk_mq_hctx_check_isolcpus_online(struct blk_mq_hw_ctx *hctx, unsigned int cpu)
-> +{
-> +	const struct cpumask *hk_mask;
-> +	int i;
-> +
-> +	if (!housekeeping_enabled(HK_TYPE_IO_QUEUE))
-> +		return true;
-> +
-> +	hk_mask = housekeeping_cpumask(HK_TYPE_IO_QUEUE);
-> +
-> +	for (i = 0; i < hctx->nr_ctx; i++) {
-> +		struct blk_mq_ctx *ctx = hctx->ctxs[i];
-> +
-> +		if (ctx->cpu == cpu)
-> +			continue;
-> +
-> +		/*
-> +		 * Check if this context has at least one online
-> +		 * housekeeping CPU in this case the hardware context is
-> +		 * usable.
-> +		 */
-> +		if (cpumask_test_cpu(ctx->cpu, hk_mask) &&
-> +		    cpu_online(ctx->cpu))
-> +			break;
-> +
-> +		/*
-> +		 * The context doesn't have any online housekeeping CPUs
-> +		 * but there might be an online isolated CPU mapped to
-> +		 * it.
-> +		 */
-> +		if (cpu_is_offline(ctx->cpu))
-> +			continue;
-> +
-> +		pr_warn("%s: trying to offline hctx%d but there is still an online isolcpu CPU %d mapped to it\n",
-> +			hctx->queue->disk->disk_name,
-> +			hctx->queue_num, ctx->cpu);
-> +		return true;
-> +	}
-> +
-> +	return false;
-> +}
-> +
->  static bool blk_mq_hctx_has_online_cpu(struct blk_mq_hw_ctx *hctx,
->  		unsigned int this_cpu)
->  {
-> @@ -3647,7 +3689,7 @@ static bool blk_mq_hctx_has_online_cpu(struct blk_mq_hw_ctx *hctx,
->  
->  		/* this hctx has at least one online CPU */
->  		if (this_cpu != cpu)
-> -			return true;
-> +			return blk_mq_hctx_check_isolcpus_online(hctx, this_cpu);
->  	}
->  
->  	return false;
-> @@ -3659,7 +3701,7 @@ static int blk_mq_hctx_notify_offline(unsigned int cpu, struct hlist_node *node)
->  			struct blk_mq_hw_ctx, cpuhp_online);
->  
->  	if (blk_mq_hctx_has_online_cpu(hctx, cpu))
-> -		return 0;
-> +		return -EINVAL;
-
-Here the logic looks wrong, it is fine to return 0 immediately if there are
-more online CPUs for this hctx.
-
-Looks you are trying for figuring out the last online & housekeeping cpu
-meantime there are still online isolated cpus in this hctx, it could be more
-readable by:
-
-
-	if (housekeeping_enabled(HK_TYPE_IO_QUEUE)) {
-		if (!can_offline_this_hk_cpu(cpu))
-			return -EINVAL;
-	} else {
-		if (blk_mq_hctx_has_online_cpu(hctx, cpu))
-			return 0;
-	}
-
-Another thing is that this way breaks cpu offline, you need to document
-the behavior for 'isolcpus=io_queue' in
-Documentation/admin-guide/kernel-parameters.rst. Otherwise, people may
-complain it is one bug.
-
-Thanks,
-Ming
+> Bart.
 
