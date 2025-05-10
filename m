@@ -1,86 +1,236 @@
-Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
-	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F72618DF8D;
-	Sat, 10 May 2025 10:00:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 762B9222599;
+	Sat, 10 May 2025 13:50:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746871236; cv=none; b=uHkEGiFoTfXCcL04nuctDPYbUYeGhatK214YqbXqXSO5VgtyzIyp0hpbbpsVGKFLLdeIljDWjOi+Kh+jhH0cgubsi8f/1/sYcHw8gJXn2pEBROY27w78OsVir7dyL3cqGC995ak6CiPinknoR5Rt2WZQ7vng9oWV4V2yH2dvnrc=
+	t=1746885006; cv=none; b=llxn1N3+Tna3bBwr55JiDFn+MK6XAqVaGAigY+kHX/xBec1GOlLC3KakWVqHOboOCDkgXmKyd/vONjpY4CdP6WREyEJZrT8SGh0fJZTNFSsKZxvziPmb9uLIOn7Eg01hAQUzCiS0Yp1YcCosVaTWbRCbq2dQCTY5ahhd98/G5lU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746871236; c=relaxed/simple;
-	bh=Pi3y4dmEW1UEme+HX6yYi09ZtTkO/xqgAF/M7VX6HHw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qyCuMaL1+vEYEeZaFhERp3J/ZTD84P71wISLcZrJgiEXB8fF471rHxPHunxA7hunc7SqUFu3HiKsvV5qS3PCql/DEH63A30hY2jVnEMwW09AfrLqqWq/AZtAtgZoBDq/w9tBiWwovjs6UXU/IOfnnP36ksTHb2FMiarrm6m3pSA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
-Received: from localhost.localdomain (unknown [111.199.70.239])
-	by APP-05 (Coremail) with SMTP id zQCowADnJg8iIh9oBnoDEw--.48103S2;
-	Sat, 10 May 2025 17:53:42 +0800 (CST)
-From: Wentao Liang <vulab@iscas.ac.cn>
-To: njavali@marvell.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: mrangankar@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Wentao Liang <vulab@iscas.ac.cn>
-Subject: [RESEND PATCH] scsi: qla4xxx: Add missing is_qla4022 check in device initialization
-Date: Sat, 10 May 2025 17:52:57 +0800
-Message-ID: <20250510095257.921-1-vulab@iscas.ac.cn>
-X-Mailer: git-send-email 2.42.0.windows.2
+	s=arc-20240116; t=1746885006; c=relaxed/simple;
+	bh=f+G/cjnyKT5yoFP2OM6bQOMPKODgZNapnWrSZt0VPq8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=YXncVI/K3Bw7/aMDZdZrT7EXYI72fMEaFLgtE3sKbu6rsFDWzH89hTRcJg7DIA5CnIF5CotmfKZyeoKWGUVvFk9IhOjzXSQ8ZAGIWeXGL8iBcgumV+TCsdjEwJA6u+/HaSfzZ8fffusA7Z4aB2UKm4yft32IiPnYKMNBcIbvza8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=T14Tbftt; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="T14Tbftt"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54ABmdU5023152;
+	Sat, 10 May 2025 13:49:41 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	6QI5MdJNvPxptwrSHZ/+tFrMWva0CsITk7LKryGpub4=; b=T14Tbftt9mYS0Nj1
+	c+jShrN8JlRqrYhLG5stHSVwwgsmJQ5bkd9ucAJZw0j5FwCewursgQMdrlziviBs
+	Avz08gyP0bttXYH7vCEOrH8g06eKoQx8tDOnUtzzMvFMHhWu7izcMyOV08SwKZc+
+	MzSUDx1I+q9v1Gd6Z+vtYgVRDs70tbAZHskHJCDygikHUrI5n1OvJoMheCbajPa/
+	VqKIr13v11VrUL2mo4GvXUvQSpbYGESxjIM+VcMBFwgaPY3dkWeRaEChfaksM2CE
+	Xa27B93ZwIQ5wk8Fe5H5x4N4VfXHK26iByCcoRJACKwL8fUPHqkGqRlPZipib7ix
+	vzETOw==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46hy68gnm9-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 10 May 2025 13:49:41 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54ADne58028513
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sat, 10 May 2025 13:49:40 GMT
+Received: from [10.216.13.129] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sat, 10 May
+ 2025 06:49:35 -0700
+Message-ID: <812a9905-a8f6-40b2-a603-6c0be18239da@quicinc.com>
+Date: Sat, 10 May 2025 19:19:31 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:zQCowADnJg8iIh9oBnoDEw--.48103S2
-X-Coremail-Antispam: 1UD129KBjvdXoW7JFWxGryUGF1rGw15XFWfGrg_yoWkuwb_ua
-	10v34Iv3ZIyr4kZ3W7XF18JFnavrsYqr1jq34Sqr4fA34UZ3s3Xryqv343Zw15G3yjyasx
-	Gws5Xry5Ar1fKjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUb4kFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2IYs7xG
-	6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8w
-	A2z4x0Y4vE2Ix0cI8IcVAFwI0_Jr0_JF4l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Jr0_
-	Gr1l84ACjcxK6I8E87Iv67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVCY1x0267AKxVW8Jr
-	0_Cr1UM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
-	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
-	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
-	6r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
-	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUtVW8ZwCI
-	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
-	AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
-	Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuYvjfUYCJmUU
-	UUU
-X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAYSA2gesI3jzAAAs-
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V4 09/11] scsi: ufs: qcom : Refactor phy_power_on/off
+ calls
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, <vkoul@kernel.org>,
+        <kishon@kernel.org>, <manivannan.sadhasivam@linaro.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <bvanassche@acm.org>, <andersson@kernel.org>,
+        <neil.armstrong@linaro.org>
+CC: <quic_rdwivedi@quicinc.com>, <quic_cang@quicinc.com>,
+        <linux-arm-msm@vger.kernel.org>, <linux-phy@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+References: <20250503162440.2954-1-quic_nitirawa@quicinc.com>
+ <20250503162440.2954-10-quic_nitirawa@quicinc.com>
+ <780d84ca-4004-41ef-a9ae-17532053f8a5@oss.qualcomm.com>
+Content-Language: en-US
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <780d84ca-4004-41ef-a9ae-17532053f8a5@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTEwMDE0MCBTYWx0ZWRfX1h+K6Uf6o6PN
+ K/c4kgXFHJGJ1vLM9MnFnoPNsGfxw0QjAxTejOP3cLttcog6P6pJnZPmTixd9J233KYITEm/1Hg
+ NDrhW284Ke5rcF4uE2gYALWUDPaElTqWEqiVwMYQqpjDs2WBZWpK4oAKEay4fDEXTsSv7DVyI2Y
+ JINvCqGZmXxL9ROKo7Uw8vgZ7aHTzzjOcLekgIfZtbxHVAxmmvPOk6N6cjmNHflTgNyKYW68G8Y
+ wvvzUgpJczTlbcB1EIuJO5MOwVZ+eqLVZzu9etjipICSq9w0pqXFa8I68+7dC2l4F3n291Bmcez
+ Rzyo6FAxNpHkeQmHKrgAZvx9NVkJ4usxij3mOnKIMJvf7PVFeMDRK58rIx7tRKWIVnVgwz5lGiC
+ c2vMZRIj83/j7qRAbClLQi2V4YSYLNbqvhVNtu98TPy5QBYjxS++vi+7jDphzPQ8TD61CQfh
+X-Proofpoint-GUID: WbuIQtUqq6SOkPhJTB31z1TbFyt35Vh5
+X-Proofpoint-ORIG-GUID: WbuIQtUqq6SOkPhJTB31z1TbFyt35Vh5
+X-Authority-Analysis: v=2.4 cv=c5irQQ9l c=1 sm=1 tr=0 ts=681f5975 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8
+ a=iv0NEw3qHnIl1jiBOd0A:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-10_03,2025-05-09_01,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 priorityscore=1501 phishscore=0 adultscore=0 malwarescore=0
+ impostorscore=0 mlxlogscore=999 mlxscore=0 spamscore=0 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2504070000 definitions=main-2505100140
 
-The current code only checks for is_qla4032 in the adapter initialization
-logic, but is_qla4022 is also required for proper handling of qla4022
-devices. This can lead to incorrect behavior on qla4022 adapters.
 
-This patch adds the missing is_qla4022 check to ensure proper handling
-of both qla4022 and qla4032 devices during adapter initialization.
 
-Fixes: d915058f4874 ("[SCSI] qla4xxx: add support for qla4032")
-Signed-off-by: Wentao Liang <vulab@iscas.ac.cn>
----
- drivers/scsi/qla4xxx/ql4_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+On 5/9/2025 5:05 PM, Konrad Dybcio wrote:
+> On 5/3/25 6:24 PM, Nitin Rawat wrote:
+>> Commit 3f6d1767b1a0 ("phy: ufs-qcom: Refactor all init steps into
+>> phy_poweron") removes the phy_power_on/off from ufs_qcom_setup_clocks
+>> to suspend/resume func.
+>>
+>> To have a better power saving, remove the phy_power_on/off calls from
+>> resume/suspend path and put them back to ufs_qcom_setup_clocks, so that
+>> PHY regulators & clks can be turned on/off along with UFS's clocks.
+>>
+>> Since phy phy_power_on is separated out from phy calibrate, make
+>> separate calls to phy_power_on and phy_calibrate calls from ufs qcom
+>> driver.
+>>
+>> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>> ---
+>>   drivers/ufs/host/ufs-qcom.c | 55 ++++++++++++++++---------------------
+>>   1 file changed, 23 insertions(+), 32 deletions(-)
+>>
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>> index 2cd44ee522b8..ff35cd15c72f 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -639,26 +639,17 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+>>   	enum ufs_notify_change_status status)
+>>   {
+>>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>> -	struct phy *phy = host->generic_phy;
+>>   
+>>   	if (status == PRE_CHANGE)
+>>   		return 0;
+>>   
+>> -	if (ufs_qcom_is_link_off(hba)) {
+>> -		/*
+>> -		 * Disable the tx/rx lane symbol clocks before PHY is
+>> -		 * powered down as the PLL source should be disabled
+>> -		 * after downstream clocks are disabled.
+>> -		 */
+>> +	if (!ufs_qcom_is_link_active(hba))
+> 
+> so is_link_off and !is_link_active are not the same thing - this also allows
+> for disabling the resources when in hibern8/broken states - is that intended?
 
-diff --git a/drivers/scsi/qla4xxx/ql4_init.c b/drivers/scsi/qla4xxx/ql4_init.c
-index 301bc09c8365..dfe3d0b26224 100644
---- a/drivers/scsi/qla4xxx/ql4_init.c
-+++ b/drivers/scsi/qla4xxx/ql4_init.c
-@@ -513,7 +513,7 @@ static int qla4xxx_fw_ready(struct scsi_qla_host *ha)
- 			      "seconds expired= %d\n", ha->host_no, __func__,
- 			      ha->firmware_state, ha->addl_fw_state,
- 			      timeout_count));
--		if (is_qla4032(ha) &&
-+		if ((is_qla4022(ha) || is_qla4032(ha)) &&
- 			!(ha->addl_fw_state & FW_ADDSTATE_LINK_UP) &&
- 			(timeout_count < ADAPTER_INIT_TOV - 5)) {
- 			break;
--- 
-2.42.0.windows.2
+Yes is_link_off and !is_link_Active is not same thing. !is_link_active 
+also include link in hibern8 state where lane clock is intended to be
+disabled because PHY is powered down in hibern8.
+
+
+
+> 
+>>   		ufs_qcom_disable_lane_clks(host);
+>> -		phy_power_off(phy);
+>>   
+>> -		/* reset the connected UFS device during power down */
+>> -		ufs_qcom_device_reset_ctrl(hba, true);
+>>   
+>> -	} else if (!ufs_qcom_is_link_active(hba)) {
+>> -		ufs_qcom_disable_lane_clks(host);
+>> -	}
+>> +	/* reset the connected UFS device during power down */
+>> +	if (ufs_qcom_is_link_off(hba) && host->device_reset)
+>> +		ufs_qcom_device_reset_ctrl(hba, true);
+> 
+> similarly this will not be allowed in hibern8/broken states now
+> 
+>>   
+>>   	return ufs_qcom_ice_suspend(host);
+>>   }
+>> @@ -666,26 +657,11 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+>>   static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+>>   {
+>>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>> -	struct phy *phy = host->generic_phy;
+>>   	int err;
+>>   
+>> -	if (ufs_qcom_is_link_off(hba)) {
+>> -		err = phy_power_on(phy);
+>> -		if (err) {
+>> -			dev_err(hba->dev, "%s: failed PHY power on: %d\n",
+>> -				__func__, err);
+>> -			return err;
+>> -		}
+>> -
+>> -		err = ufs_qcom_enable_lane_clks(host);
+>> -		if (err)
+>> -			return err;
+>> -
+>> -	} else if (!ufs_qcom_is_link_active(hba)) {
+>> -		err = ufs_qcom_enable_lane_clks(host);
+>> -		if (err)
+>> -			return err;
+>> -	}
+>> +	err = ufs_qcom_enable_lane_clks(host);
+>> +	if (err)
+>> +		return err;
+>>   
+>>   	return ufs_qcom_ice_resume(host);
+>>   }
+>> @@ -1042,6 +1018,8 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+>>   				 enum ufs_notify_change_status status)
+>>   {
+>>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>> +	struct phy *phy = host->generic_phy;
+>> +	int err;
+>>   
+>>   	/*
+>>   	 * In case ufs_qcom_init() is not yet done, simply ignore.
+>> @@ -1060,10 +1038,22 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+>>   				/* disable device ref_clk */
+>>   				ufs_qcom_dev_ref_clk_ctrl(host, false);
+>>   			}
+>> +			err = phy_power_off(phy);
+> 
+> a newline to separate the blocks would improve readability> +			if (err) {
+>> +				dev_err(hba->dev, "%s: phy power off failed, ret=%d\n",
+>> +					__func__, err);
+>> +					return err;
+
+Sure will add in next patchset.
+
+> 
+> please indent the return statement a tab earlier so it doesn't look
+> like it's an argument to dev_err()
+
+Sure will add in next patchset.
+
+> 
+> putting PHY calls in the function that promises to toggle clocks could
+> also use a comment, maybe extending the kerneldoc to say that certain
+> clocks come from the PHY so it needs to be managed together
+> 
+Sure will add a comment or update in kernel doc in next patchset.
+
+> Konrad
 
