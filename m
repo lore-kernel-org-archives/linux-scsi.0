@@ -1,103 +1,142 @@
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9253725A63D;
-	Mon, 12 May 2025 08:58:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1274D24A07B
+	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2025 11:07:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747040319; cv=none; b=tlKKEvxVrKfKu8vzRSQni85Gn5RPJWAoqNDkALfb1azcmvbVRy0yi+Xi3+LSd8OxivfqKPP9ua55ijHpyGxbecSo7BaZ3DBMNw8BmODadRg1ZbtdQJtQuddD42Uv0h3ZiqWYaLCBptV5h0GtBMeAUJV8NCSjHqBoylwhtdFUCeE=
+	t=1747048076; cv=none; b=kUkzgnin4xcPDG02C4K22yUNABYF4syRSLOVAALv+P34hrPngDRRX1pwdsRmAEGTdXYIgk4XrMLLCuDD6VDuLzpPuhGHqHFj59creCvTOyiW3lXxfZTXde2AoQ/4cRxvpMMa/ld8kHA9fTyxGJ9BbMeOQ2R4k8pGeaOr5qCV6K4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747040319; c=relaxed/simple;
-	bh=A7P8XUPXv6zRLcCTZFqD9dlTu6yVWVAX4HC3mjQThoU=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=gsKjr9a6ujLnBjVGxHl2p5phxLQHVy67rX2BbD/yfOfc/tgnxwM4NYmtgeC4BKNFEuc8HqJJ3VVe1YzkoV80zk+rCm+fxLpRISX6kIEQJgslj48wOaNUk5JA4+EFEd8MsdmXP1AyOCuUCV7R/neRwEIayjxyqlUrBpyRlnP9Zx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=msGuLrHp; arc=none smtp.client-ip=209.85.218.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1747048076; c=relaxed/simple;
+	bh=a5hesHHed0WB99e3gDftAULm+dxzKOuTh7XgMfWK1mg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=VSd4oYcdbIwaNmzpsfCL5JC4jBBQ6vMbBGGQjiKgg/Vn67/ngezyYfwXp8vP7c6TjxhsSWlfYrNl2rKXeVsUcEmC98RiHLQ2X8Zx95Hy+aybMswtNuuCcyUvu6IybOlwoXpW9dVW4sVZpKuzw5f0ngoQhO/tVB2vXZU5pJJ4RPk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=THzPPblT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=jsbKJ2Oh; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=z9RVOi+w; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=jsbKJ2Oh; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="msGuLrHp"
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-ace94273f0dso806655666b.3;
-        Mon, 12 May 2025 01:58:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747040316; x=1747645116; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=A7P8XUPXv6zRLcCTZFqD9dlTu6yVWVAX4HC3mjQThoU=;
-        b=msGuLrHpi06fJXS4DEn6xwwPl3KbLOBlCVy4meK+POOkU26oLfs9YUpyrhTSBcTYC5
-         jG2Hq1Xn72oVvuSjXY/n19xHH1wLcsRYQNOp9/NmQPePlG3yXHnWOKmqACqIomv0zOrV
-         whqnO+Zqv5P5VcOIjtcvi9PF594K1mpd6Bh02x4ybk8jprQESBOlXtyotu9naR8xf5sS
-         bEGBRhxQzSKARuvsInvbFXJik2wd7XsvRCQYSXqlcpFiBx/khTi0OTQ7hL2Iir5g6bJu
-         VWrmv45IclDN7kmW7+8AChZT00qEGx2tmB5p/jTWbGWFoq0BU8dwP9tmdHTYwtgMThEA
-         JdfQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747040316; x=1747645116;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=A7P8XUPXv6zRLcCTZFqD9dlTu6yVWVAX4HC3mjQThoU=;
-        b=qEvI03bfQPRL2gpETQevfy22m+UBch/ZH4t9+eIkHx2tktZ8RZW0KSQkj1X8JFfnHN
-         aGErN5BPv4K9dglsd6NvySzYGV5Go3EtXFFhMH8gUwIAZiwSUq0tnVb6n/f27JC25PIT
-         D4X+IfAkjkLbPmO+dgveDBdGtWt+xrmxR06mBXPywG0ejOCEscVCxIgyM1esm+qec7zV
-         BHIJZablEYr00VjCHmYgPPMeo7jNaQUQV+vzyVAUEpmQbBeDHgOK7JO+Dfb9O/7l5wxh
-         lWxnY7D6jCyvmU7GvtKTPcpxqEI2cWFoSebo0lsoSsA2JOyD2foO5Cm9dIf67zDdnXiU
-         i6pw==
-X-Forwarded-Encrypted: i=1; AJvYcCWo8yBVZkT6tg4lcKL59wgvOw9V2xK3RiurShNm8y5VsNspocu8wddirQ6wg4NbHUwAHR6uOzBlnw6oIg==@vger.kernel.org, AJvYcCX15gV7azWWdv6N/vL4YRP5yQeag00K3QMhweH5Jut4Ct/pa4z7P60VzmsTx09aOuYnA60YOIIP/YAIooU=@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywz7LsNhUaXoDKXiK2m4MJPuN573vowo3CuD5n4pjQY9XklkmBy
-	+DdjMdA/FocH1BHtIXDxMRadkwHr+SF2pB3HLxCfN06K7CEv1KwC
-X-Gm-Gg: ASbGncsfWPhd0Ur0OnjQnufqsVbTws/dBp+D49XnutVsOUVmt8nKlJXpFW4v8Jkepa3
-	5o/iDiKJ7j0oq3WP0W/I5jH4IaBxrT/k3glNO02ujqrnZuyFlwbshKh3jIpmqgT3yO+t95kefVR
-	HayjrWFx1Tl+1npOmurIeE8JBE2KvWxdS9Zwyhq8OXYPG4G3yLu/Yifcab7b6/HTtdhCWIZERM2
-	wQTiWTGnvFcd1U+3KfYVAH9eU9IZHIPRKFf6CdmIsDWYJ6v+kJwmM1HkW7mpf1kNMyQ1elWlj90
-	udIfgma6TtrlY3db0mN7M8TXqyyLWlsEiTvgTCKlSHSYc9944Xm6Tg==
-X-Google-Smtp-Source: AGHT+IGeqWIQDxmfP89wFb+3ktXSBHf1gFxheovUtgKj4Mon4MoBshJI9dMIu/Mj07TgMoIJaG8i+A==
-X-Received: by 2002:a17:907:6a13:b0:ace:8004:2a87 with SMTP id a640c23a62f3a-ad218f1e3d7mr1226887666b.16.1747040315688;
-        Mon, 12 May 2025 01:58:35 -0700 (PDT)
-Received: from [10.176.234.34] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ad2198b6ebcsm582162766b.185.2025.05.12.01.58.34
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 May 2025 01:58:35 -0700 (PDT)
-Message-ID: <93ff21984da1fcc67a5d99e4f68fff00572cf59a.camel@gmail.com>
-Subject: Re: [PATCH v3 3/3] scsi: ufs: qcom: Call ufs_qcom_cfg_timers() in
- clock scaling path
-From: Bean Huo <huobean@gmail.com>
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com, 
- bvanassche@acm.org, mani@kernel.org, beanhuo@micron.com,
- avri.altman@wdc.com,  junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com,  quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com, neil.armstrong@linaro.org, 
- luca.weiss@fairphone.com, konrad.dybcio@oss.qualcomm.com, 
- peter.wang@mediatek.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, Manivannan
-	Sadhasivam <manivannan.sadhasivam@linaro.org>, "James E.J. Bottomley"
-	 <James.Bottomley@HansenPartnership.com>, open list
-	 <linux-kernel@vger.kernel.org>
-Date: Mon, 12 May 2025 10:58:33 +0200
-In-Reply-To: <20250509075029.3776419-4-quic_ziqichen@quicinc.com>
-References: <20250509075029.3776419-1-quic_ziqichen@quicinc.com>
-	 <20250509075029.3776419-4-quic_ziqichen@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="THzPPblT";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="jsbKJ2Oh";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="z9RVOi+w";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="jsbKJ2Oh"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id F1A7221186;
+	Mon, 12 May 2025 11:07:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1747048073; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=et5gDcoc8ekn1bmJBTtGTHZmagIiqCmt0KDfMdx6qZw=;
+	b=THzPPblTmd9VV+AENJc1V/QdceVe7xM7O1rvZ8Nc1IDmI5ypwnWCKGBQoE0OTn/F8EmZLq
+	wsEGDo3BRgAKcJtces2FLfpHXeiKI2m2Vgk9gavN5LBJmJYZ+j7UmQdyWEqCIsnzrVP2n1
+	NFHp2BlRH7U3P2Os27c0cyBJOCNR4dc=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1747048073;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=et5gDcoc8ekn1bmJBTtGTHZmagIiqCmt0KDfMdx6qZw=;
+	b=jsbKJ2OhWbeplsYXSX/iGej+Xx+hnXslqftpo8EDuUeG19R7kStcKolzQ9YWjD6S/+gaBA
+	o975xMuEV69raSBQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=z9RVOi+w;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=jsbKJ2Oh
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1747048072; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=et5gDcoc8ekn1bmJBTtGTHZmagIiqCmt0KDfMdx6qZw=;
+	b=z9RVOi+wc/fFi3MmF5HsCHY5Gq1RuQxjD2olGshUh20a8Cns5ZWgR15XEjn3ifbcZ9zCEA
+	Y+z0+oiEHXpPNyOBh0XPfvZREI372tjTngApG6Qx96Ch/rwE+2jTJy80y7SMPs+UuXX1eF
+	M5lOi2d1zLrrhv5W9z0LmJjC28Dmc6k=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1747048073;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=et5gDcoc8ekn1bmJBTtGTHZmagIiqCmt0KDfMdx6qZw=;
+	b=jsbKJ2OhWbeplsYXSX/iGej+Xx+hnXslqftpo8EDuUeG19R7kStcKolzQ9YWjD6S/+gaBA
+	o975xMuEV69raSBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D66D6137D2;
+	Mon, 12 May 2025 11:07:52 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id QlrxMYjWIWgwZAAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Mon, 12 May 2025 11:07:52 +0000
+Date: Mon, 12 May 2025 13:07:52 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: David Laight <david.laight.linux@gmail.com>
+Cc: Daniel Wagner <wagi@kernel.org>, 
+	James Smart <james.smart@broadcom.com>, Dick Kennedy <dick.kennedy@broadcom.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] lpfc: use memcpy for bios version
+Message-ID: <5da12dbf-4f18-44f7-9817-5e0dc70bddce@flourine.local>
+References: <20250409-fix-lpfc-bios-str-v1-1-05dac9e51e13@kernel.org>
+ <20250413190238.2cb8ec64@pumpkin>
+ <6f6b4f8c-e9f3-4962-af48-baf48a91c0a9@flourine.local>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <6f6b4f8c-e9f3-4962-af48-baf48a91c0a9@flourine.local>
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: F1A7221186
+X-Spam-Flag: NO
+X-Spam-Score: -3.01
+X-Spam-Level: 
+X-Spamd-Result: default: False [-3.01 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	SUSPICIOUS_RECIPS(1.50)[];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FREEMAIL_TO(0.00)[gmail.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	FREEMAIL_ENVRCPT(0.00)[gmail.com];
+	DKIM_TRACE(0.00)[suse.de:+];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
+	TAGGED_RCPT(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
+X-Rspamd-Action: no action
 
-On Fri, 2025-05-09 at 15:50 +0800, Ziqi Chen wrote:
-> From: Can Guo <quic_cang@quicinc.com>
->=20
-> ufs_qcom_cfg_timers() is clock freq dependent like ufs_qcom_set_core_clk_
-> ctrl(), hence move ufs_qcom_cfg_timers() call to clock scaling path. In
-> addition, do not assume the devfreq OPP freq is always the 'core_clock'
-> freq although 'core_clock' is the first clock phandle in device tree, use
-> ufs_qcom_opp_freq_to_clk_freq() to find the core clk freq.
->=20
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
-> Co-developed-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-> Tested-by: Luca Weiss <luca.weiss@fairphone.com>
+On Mon, Apr 14, 2025 at 09:51:09AM +0200, Daniel Wagner wrote:
+> On Sun, Apr 13, 2025 at 07:02:38PM +0100, David Laight wrote:
+> > On Wed, 09 Apr 2025 13:34:22 +0200
+> > Daniel Wagner <wagi@kernel.org> wrote:
+> > 
+> > > The strlcat with FORTIFY support is triggering a panic because it thinks
+> > > the target buffer will overflow although the correct target buffer
+> > > size is passed in.
+> 
+> BTW, still trying to figure out what is happening here. It was observed
+> on ppc64el but so far creating a crash dump is not working.
 
-Reviewed-by: Bean Huo <beanhuo@micron.com>
+FTR, finally got hold on the crash dump. As expected, the problem is
+that bios_ver_str is not properly NUL terminated. strlcat expects that
+both input strings are properly terminated.
