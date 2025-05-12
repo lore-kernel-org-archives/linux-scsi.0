@@ -1,119 +1,140 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B8F4C1411DE
-	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2025 02:52:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6BD22576;
+	Mon, 12 May 2025 04:16:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747018346; cv=none; b=uIHBcyqtAsnPxfOaIrTeIh//kwzonzLwQuga0FvJj5N/EdMGzJ9Bkghek0+COiwyN2pn/vss+Dr5eE04TEap3Nt8dLDzh+WSrZ7zZqZLntDcVB2wFHYPGJZVn3ZVF8LSck39V/kgIIKhtd4CQM2KfB9IM03mWNqm/ZiCHlm/3TE=
+	t=1747023389; cv=none; b=ULF1oi5Dq1rEQ1DB/NAbdjGfbyZ1M8jy6zMVpwpJT+NiGf3mzIgdaDBnkWUdc9mSoovLIi3LAH/xSC2rcXSU0ncMql25QHDigTXTSzI8/fYC73qpVNbvmW8Yd0UYLCLFJyGz12Em5giZSR0hpgUYBo93eF36SKo5tpQr6VcfHGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747018346; c=relaxed/simple;
-	bh=utyiP6vyElN81PyIMsK+us/AfakfjIQqniyhKu7KeNE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 References; b=ZDEqI6llGig9FZkuyYGH1oQhKOyqiRAG3aRia3wQACCr27uIjNzTbVWYI74aBDk7d9ZG0vNSdxncLzAR2FpIbdjN4ZZ1W/7J9OQpA9Cd5waYELYPq6Q7AV8eqNNwztBg98Izb6whIaCRgGjgK9XO7mUvP9/ywh9ePglJ4IBOnyU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ToRRi0V0; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1747023389; c=relaxed/simple;
+	bh=CSx5GjW8qiIQ6AI5LGKRHO8jBbY0J44kUonuoOj6vpo=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:CC:References:
+	 In-Reply-To:Content-Type; b=gO6KpE4g/PRU72I1Kh2WW6J8YGx6MbTn+KgeZuEl5W9Ih/C04XiTxjbRUEO3W3rkRaO3na9BQGJLX0hbLLavpjonM7FYovbiR4hG2A4HBJYM6dwUvEqKQ3KoAaqfgpX4tK8cvJLeyb9Peg0l9huUV4sa/RAvo9bh3LUJqm365X8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=HFvYA+Tp; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ToRRi0V0"
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250512025216epoutp04c2654249ac42125bbc7168f616c8b740~_p_upKX1V0438404384epoutp04N
-	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2025 02:52:16 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250512025216epoutp04c2654249ac42125bbc7168f616c8b740~_p_upKX1V0438404384epoutp04N
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1747018336;
-	bh=q00Vv5B7I79wSH/4FeoH2FPbsZ9uHubVAqD5eC+PSk8=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=ToRRi0V0YSsEFNCvYiKnQU1fni4nD9QAJY2AjSw0xgPeel4IGQhgU8CR5q3fEnP9P
-	 89uu1s4qjspIKC4cyE4X31uuBOaZvihuExyZ1sqV1S+j/RaoxQfPJE73DwF/8m0/sC
-	 6NwR5mpA9E2wd2qHcwBfeHems/LHexeOsX3sflyo=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas1p1.samsung.com (KnoxPortal) with ESMTPS id
-	20250512025215epcas1p1b45c0174b33b0282646bf8691b1f8b5b~_p_uVPfZ50051300513epcas1p1q;
-	Mon, 12 May 2025 02:52:15 +0000 (GMT)
-Received: from epcas1p2.samsung.com (unknown [182.195.36.227]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4ZwkfR2hkgz6B9m4; Mon, 12 May
-	2025 02:52:15 +0000 (GMT)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250512025214epcas1p273986e3b3bb3451e4039094d21611e86~_p_tXTPQD0738207382epcas1p2a;
-	Mon, 12 May 2025 02:52:14 +0000 (GMT)
-Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250512025214epsmtrp25fcc27bc53954952a5831efcc4ee8ddd~_p_tWp8PT0535705357epsmtrp2m;
-	Mon, 12 May 2025 02:52:14 +0000 (GMT)
-X-AuditID: b6c32a28-46cef70000001e8a-f7-6821625e5444
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	F2.1C.07818.E5261286; Mon, 12 May 2025 11:52:14 +0900 (KST)
-Received: from wkk-400TFA-400SFA.. (unknown [10.253.99.106]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20250512025214epsmtip21fa6e92cdcf182e958a8801c79f2ff27~_p_tKzLMC2663626636epsmtip2a;
-	Mon, 12 May 2025 02:52:14 +0000 (GMT)
-From: Wonkon Kim <wkon.kim@samsung.com>
-To: bvanassche@acm.org, James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: wkon.kim@samsung.com
-Subject: [PATCH] ufs: core: Print error value as hex format on
- ufshcd_err_handler()
-Date: Mon, 12 May 2025 11:52:10 +0900
-Message-Id: <20250512025210.5802-1-wkon.kim@samsung.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="HFvYA+Tp"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54BMHLg7022069;
+	Mon, 12 May 2025 04:15:59 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	w0qXQLLr+NzmGUNVJlRa+YPm19SxX0X9UG+bF3cx/Fk=; b=HFvYA+TpDHtheibJ
+	JuyDFfCHUFnxmLbHsvuUNL1X3q/hbDlhh3RD8Ca3c2EwwEK8YJh11OjiiRAqw5VS
+	IXvsi6WXtFgIVXwysHN9ksBZCBiaNAec9s+8Wz/KpXHK6oIDYWwZwW3Yg2zI2vq7
+	iuefm4XW4Q6GzfqSge968xf3WZUZu8YT4IfIYuVIFpTY6KW88It9w4JGO2NXOgVo
+	0hqoydngIRb6Gww1LKyAS2WpuVWh5jnIbCQ7OjkjfbgAssHgVRiEC2qFnG+gkKGp
+	4ws7EvwDBy8n3VClPkK5CmwQI5GIc8b7XWyxGQXKWA2dF5FQztUB2LHZzYsoOucg
+	TUWIZg==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46hy68k0mq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 12 May 2025 04:15:58 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54C4FvPr008184
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 12 May 2025 04:15:57 GMT
+Received: from [10.216.41.215] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sun, 11 May
+ 2025 21:15:52 -0700
+Message-ID: <8ebe4439-eab8-456a-ac91-b53956eab633@quicinc.com>
+Date: Mon, 12 May 2025 09:45:49 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFlrKLMWRmVeSWpSXmKPExsWy7bCSvG5ckmKGwaVNqhbTPvxkttjYz2Fx
-	edccNovu6zvYLJYf/8dksfnSNxYHNo/LV7w9pk06xebx8ektFo++LasYPT5vkgtgjeKySUnN
-	ySxLLdK3S+DK6Jmym6ngIWfFm60tTA2Mszm6GDk4JARMJN59juli5OIQEtjNKLF4SzcjRFxC
-	YsuXbAhTWOLw4WKIkveMEh/mv2fuYuTkYBNQl1j87iI7SEJEYDajRFv7XbBeZqDeA7dsQWqE
-	BYIlfsx7yAJiswioSnxs+c8OYvMKWEj8WtgLFpcQkJfYf/AsM0RcUOLkzCdgcWagePPW2cwT
-	GPlmIUnNQpJawMi0ilEytaA4Nz032bDAMC+1XK84Mbe4NC9dLzk/dxMjOCS1NHYwvvvWpH+I
-	kYmD8RCjBAezkgjvVAb5DCHelMTKqtSi/Pii0pzU4kOM0hwsSuK8Kw0j0oUE0hNLUrNTUwtS
-	i2CyTBycUg1MXoHv1znM830TteJK2YV5F/e/vZ261uagca/zT4tNHflfPZVD73qcXX316Ikf
-	pTUZL5b9cVCZdjWK+Z6lha7ecwVVs5NTZ2h+1Jj16HDV04/pjfIPkl5zMKz5sz0n0Fkx9KJo
-	/n6G00f/3TsTMVXwCKPdtO98uVXVprY+989nes9vmVDfIfh626OqGjWn3HVf3e61+U7apXoz
-	nTNEgG/vJsO3O3dwNTTsOn8+bK3qbdlJAb39FQdXNdvYz+ybe+bvJ+fr6iHC/k9W2X308pBs
-	EnrVmPlWsvHrdEZVC9m255Ey5lM4j3260Thx+3ytqIMFi2L27T6y+nfApmPf2DNjOPxfz9mt
-	5nmz9u1296UlL5VYijMSDbWYi4oTAa8w4s+4AgAA
-X-CMS-MailID: 20250512025214epcas1p273986e3b3bb3451e4039094d21611e86
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250512025214epcas1p273986e3b3bb3451e4039094d21611e86
-References: <CGME20250512025214epcas1p273986e3b3bb3451e4039094d21611e86@epcas1p2.samsung.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V2 1/3] scsi: ufs: dt-bindings: Document UFS Disable LPM
+ property
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+To: Krzysztof Kozlowski <krzk@kernel.org>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <bvanassche@acm.org>, <krzk+dt@kernel.org>,
+        <robh@kernel.org>, <mani@kernel.org>, <conor+dt@kernel.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+        <beanhuo@micron.com>, <peter.wang@mediatek.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <devicetree@vger.kernel.org>
+References: <20250506163705.31518-1-quic_nitirawa@quicinc.com>
+ <20250506163705.31518-2-quic_nitirawa@quicinc.com>
+ <667e43a7-a33c-491b-83ca-fe06a2a5d9c3@kernel.org>
+ <9974cf1d-6929-4c7f-8472-fd19c7a40b12@quicinc.com>
+Content-Language: en-US
+In-Reply-To: <9974cf1d-6929-4c7f-8472-fd19c7a40b12@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTEyMDA0MSBTYWx0ZWRfX5lpTx1qfLZEX
+ 9efWac04HZiyJAoUuKIOzYP384IVU5nmZuSzPcBH2pwkraycLo88cFGaxE4ky6NR3fZjaSY3jQw
+ Efm5qcrftdQRQCnNAFarbykz0VcSDo95YDBoasfbQYt3+8Wof5UksEMQ+i66rOxy9/lU5YUDPsS
+ htF8jJkvxPKiY1i5ZAf2jTpFPryfPei1J9/04nymmaY4intaEKLvtltsooZV9FCt/1aQb5aV5bW
+ rMoRSq+cdrwgNKDgXUJ8wTPGzuDpWhxdgRrkwF90CS1/nEmg4RPDVy8EROXdTpHGikWPVEJEyTW
+ TWpUDess3zEg6YeM5vxzAi3rZNl6fOsGkNDXWxqoo52uXZ88WVsbwtgqJeh03eXGf3dNhHSRFaH
+ lkegvitShDfra9dVayq+4E5p6j2QDUM6oLChtlvC6x6mi/XUCbWWvmPvKsKD4s69qWsnv+1A
+X-Proofpoint-GUID: 12Wti5JdCVsqytwACHxoaLvWRHLh0rZ1
+X-Proofpoint-ORIG-GUID: 12Wti5JdCVsqytwACHxoaLvWRHLh0rZ1
+X-Authority-Analysis: v=2.4 cv=c5irQQ9l c=1 sm=1 tr=0 ts=682175fe cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10
+ a=paxrxDOAfeD8ejVehjsA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-12_01,2025-05-09_01,2025-02-21_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1015 priorityscore=1501 phishscore=0 adultscore=0 malwarescore=0
+ impostorscore=0 mlxlogscore=999 mlxscore=0 spamscore=0 bulkscore=0
+ lowpriorityscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2504070000 definitions=main-2505120041
 
-From: wkon-kim <wkon.kim@samsung.com>
 
-It is better to print saved_err and saved_uic_err in hex format.
-Integer format is hard to decode.
 
-[ 1024.485428] [2: kworker/u20:13:28211] exynos-ufs 17100000.ufs: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0; saved_err = 131072; saved_uic_err = 0; force_reset = 0; link is broken
+On 5/7/2025 8:34 PM, Nitin Rawat wrote:
+> 
+> 
+> On 5/6/2025 11:46 PM, Krzysztof Kozlowski wrote:
+>> On 06/05/2025 18:37, Nitin Rawat wrote:
+>>> Disable UFS low power mode on emulation FPGA platforms or other 
+>>> platforms
+>>
+>> Why wouldn't you like to test LPM also on FPGA designs? I do not see
+>> here correlation.
+> 
+> Hi Krzysztof,
+> 
+> Since the FPGA platform doesn't support UFS Low Power Modes (such as the 
+> AutoHibern8 feature specified in the UFS specification), I have included 
+> this information in the hardware description (i.e dts).
 
-Signed-off-by: Wonkon Kim <wkon.kim@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 5cb6132b8147..eb0ce35a7a9c 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6572,7 +6572,7 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	hba = container_of(work, struct ufs_hba, eh_work);
- 
- 	dev_info(hba->dev,
--		 "%s started; HBA state %s; powered %d; shutting down %d; saved_err = %d; saved_uic_err = %d; force_reset = %d%s\n",
-+		 "%s started; HBA state %s; powered %d; shutting down %d; saved_err = 0x%x; saved_uic_err = 0x%x; force_reset = %d%s\n",
- 		 __func__, ufshcd_state_name[hba->ufshcd_state],
- 		 hba->is_powered, hba->shutting_down, hba->saved_err,
- 		 hba->saved_uic_err, hba->force_reset,
--- 
-2.34.1
+Hi Krzysztof,
+
+Could you please share your thoughts on my above comment? If you still 
+see concerns, I may need to consider other options like modparam.
+
+Regards,
+Nitin
+
+> 
+> Thanks,
+> Nitin
+> 
+>>
+>>> where it is either unsupported or power efficiency is not a critical
+>>> requirement.
+>>
+>> That's a policy, not hardware, thus not suitable for DT.
+>>
+>> Best regards,
+>> Krzysztof
+> 
+> 
 
