@@ -1,236 +1,113 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 762B9222599;
-	Sat, 10 May 2025 13:50:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AC0C1E87B
+	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2025 02:32:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1746885006; cv=none; b=llxn1N3+Tna3bBwr55JiDFn+MK6XAqVaGAigY+kHX/xBec1GOlLC3KakWVqHOboOCDkgXmKyd/vONjpY4CdP6WREyEJZrT8SGh0fJZTNFSsKZxvziPmb9uLIOn7Eg01hAQUzCiS0Yp1YcCosVaTWbRCbq2dQCTY5ahhd98/G5lU=
+	t=1747017150; cv=none; b=dLZBFpBSuLE75yjqkmqTIgR+q/QPJ6u0LYR1gJBwlhd6kOk44N1GOAmdcxyoA2Hi15erOHcw9RybzZOwiELAVls16xRVK5i0xlIhZuZd2QtmEzGxyxa0Gd9R8w404r6NSkcS5rUzj4X7DVUtYmufLPP6+mcNpNeZ620paSBDrcM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1746885006; c=relaxed/simple;
-	bh=f+G/cjnyKT5yoFP2OM6bQOMPKODgZNapnWrSZt0VPq8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=YXncVI/K3Bw7/aMDZdZrT7EXYI72fMEaFLgtE3sKbu6rsFDWzH89hTRcJg7DIA5CnIF5CotmfKZyeoKWGUVvFk9IhOjzXSQ8ZAGIWeXGL8iBcgumV+TCsdjEwJA6u+/HaSfzZ8fffusA7Z4aB2UKm4yft32IiPnYKMNBcIbvza8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=T14Tbftt; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1747017150; c=relaxed/simple;
+	bh=ZTdg2sSQi0ffs1RvHu8BvvcVGRC3HE8ZGpgUqNo1bOg=;
+	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=lzLo27rTrih58374j2HZYGRsya/arIY25M1LPAMpJeYB1iXwniUHp+t9yxwJyErh59YSOf8ItII6NK83H+N3pqGXOH4sJWiqtGhT1qGG0HqiMG5nUmTF1Iw0cfJd41IxmCRbuFRoxDO5Nz5rq7ATn9kqOmGpeFBdVuteD/EUgxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=m2RG8j+g; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="T14Tbftt"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54ABmdU5023152;
-	Sat, 10 May 2025 13:49:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	6QI5MdJNvPxptwrSHZ/+tFrMWva0CsITk7LKryGpub4=; b=T14Tbftt9mYS0Nj1
-	c+jShrN8JlRqrYhLG5stHSVwwgsmJQ5bkd9ucAJZw0j5FwCewursgQMdrlziviBs
-	Avz08gyP0bttXYH7vCEOrH8g06eKoQx8tDOnUtzzMvFMHhWu7izcMyOV08SwKZc+
-	MzSUDx1I+q9v1Gd6Z+vtYgVRDs70tbAZHskHJCDygikHUrI5n1OvJoMheCbajPa/
-	VqKIr13v11VrUL2mo4GvXUvQSpbYGESxjIM+VcMBFwgaPY3dkWeRaEChfaksM2CE
-	Xa27B93ZwIQ5wk8Fe5H5x4N4VfXHK26iByCcoRJACKwL8fUPHqkGqRlPZipib7ix
-	vzETOw==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46hy68gnm9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 10 May 2025 13:49:41 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54ADne58028513
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 10 May 2025 13:49:40 GMT
-Received: from [10.216.13.129] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sat, 10 May
- 2025 06:49:35 -0700
-Message-ID: <812a9905-a8f6-40b2-a603-6c0be18239da@quicinc.com>
-Date: Sat, 10 May 2025 19:19:31 +0530
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="m2RG8j+g"
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250512023220epoutp03cb58093f234e238c8faaad1a551a4033~_ptVGBsId2209922099epoutp03k
+	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2025 02:32:20 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250512023220epoutp03cb58093f234e238c8faaad1a551a4033~_ptVGBsId2209922099epoutp03k
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1747017140;
+	bh=HVd3PQKx9PrYIr1S2MjQOwqL7uw5Z1zN7d+Gt9MXQSI=;
+	h=From:To:In-Reply-To:Subject:Date:References:From;
+	b=m2RG8j+gpeXX3neDFfy/vrfwE8R1TeZag8F5MxEYA70h+M6ZGAZMdeOCF0CX0wlAv
+	 dP21AgVVuEaguqMUHlFSxETzg6cWBPXa71W52UjM9XeSZ+8XRZv01puzlEet1ND6H2
+	 MukClJfllxS5V1XuAo374eFpi7Y7W6hvQoW+X5M0=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPS id
+	20250512023220epcas1p38ef2deb78d3f631138f8b86c351d6bbf~_ptU2w5iA1239912399epcas1p3g;
+	Mon, 12 May 2025 02:32:20 +0000 (GMT)
+Received: from epcas1p1.samsung.com (unknown [182.195.36.224]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4ZwkCS0BxFz6B9mL; Mon, 12 May
+	2025 02:32:20 +0000 (GMT)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250512023219epcas1p2409388bd504ff09e9b5775a2aa804cd0~_ptUPZ6ox1887618876epcas1p2q;
+	Mon, 12 May 2025 02:32:19 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20250512023219epsmtrp1c11261ea91e9ae9e2dfd8bd12e83b8ce~_ptUOnnxm1564315643epsmtrp1z;
+	Mon, 12 May 2025 02:32:19 +0000 (GMT)
+X-AuditID: b6c32a28-460ee70000001e8a-c3-68215db32ad7
+Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
+	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	C1.4A.07818.3BD51286; Mon, 12 May 2025 11:32:19 +0900 (KST)
+Received: from wkonkim01 (unknown [10.253.100.198]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250512023219epsmtip2d08680cc5b6fb3d4684ed4a92cfd37da~_ptT-tdiM1484314843epsmtip2H;
+	Mon, 12 May 2025 02:32:19 +0000 (GMT)
+From: =?UTF-8?B?6rmA7JuQ6rOkL1N5c3RlbSBEZXZpY2XqsJzrsJzqt7jro7ko66y07ISgKS9Fbmdp?=
+	=?UTF-8?B?bmVlci/sgrzshLHsoITsnpA=?= <wkon.kim@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+In-Reply-To: <3b41510d-cd82-4c80-9651-ba9744f6ffc6@acm.org>
+Subject: RE: [PATCH] ufs: core: Print error value as hex format on
+ ufshcd_err_handler()
+Date: Mon, 12 May 2025 11:32:19 +0900
+Message-ID: <3b4d01dbc2e6$15423a10$3fc6ae30$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V4 09/11] scsi: ufs: qcom : Refactor phy_power_on/off
- calls
-To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>, <vkoul@kernel.org>,
-        <kishon@kernel.org>, <manivannan.sadhasivam@linaro.org>,
-        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-        <bvanassche@acm.org>, <andersson@kernel.org>,
-        <neil.armstrong@linaro.org>
-CC: <quic_rdwivedi@quicinc.com>, <quic_cang@quicinc.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-phy@lists.infradead.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-References: <20250503162440.2954-1-quic_nitirawa@quicinc.com>
- <20250503162440.2954-10-quic_nitirawa@quicinc.com>
- <780d84ca-4004-41ef-a9ae-17532053f8a5@oss.qualcomm.com>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <780d84ca-4004-41ef-a9ae-17532053f8a5@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTEwMDE0MCBTYWx0ZWRfX1h+K6Uf6o6PN
- K/c4kgXFHJGJ1vLM9MnFnoPNsGfxw0QjAxTejOP3cLttcog6P6pJnZPmTixd9J233KYITEm/1Hg
- NDrhW284Ke5rcF4uE2gYALWUDPaElTqWEqiVwMYQqpjDs2WBZWpK4oAKEay4fDEXTsSv7DVyI2Y
- JINvCqGZmXxL9ROKo7Uw8vgZ7aHTzzjOcLekgIfZtbxHVAxmmvPOk6N6cjmNHflTgNyKYW68G8Y
- wvvzUgpJczTlbcB1EIuJO5MOwVZ+eqLVZzu9etjipICSq9w0pqXFa8I68+7dC2l4F3n291Bmcez
- Rzyo6FAxNpHkeQmHKrgAZvx9NVkJ4usxij3mOnKIMJvf7PVFeMDRK58rIx7tRKWIVnVgwz5lGiC
- c2vMZRIj83/j7qRAbClLQi2V4YSYLNbqvhVNtu98TPy5QBYjxS++vi+7jDphzPQ8TD61CQfh
-X-Proofpoint-GUID: WbuIQtUqq6SOkPhJTB31z1TbFyt35Vh5
-X-Proofpoint-ORIG-GUID: WbuIQtUqq6SOkPhJTB31z1TbFyt35Vh5
-X-Authority-Analysis: v=2.4 cv=c5irQQ9l c=1 sm=1 tr=0 ts=681f5975 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8
- a=iv0NEw3qHnIl1jiBOd0A:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-10_03,2025-05-09_01,2025-02-21_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 priorityscore=1501 phishscore=0 adultscore=0 malwarescore=0
- impostorscore=0 mlxlogscore=999 mlxscore=0 spamscore=0 bulkscore=0
- lowpriorityscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2504070000 definitions=main-2505100140
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQKj/Hkc2gGrd+gl3yr8ZRpthH+1fQIhzdNLApfHxWmyGAYB0A==
+Content-Language: ko
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFnrGLMWRmVeSWpSXmKPExsWy7bCSvO7mWMUMg5OLRS2mffjJbLGxn8Pi
+	8q45bBbd13ewWSw//o/JgdXj8hVvj2mTTrF5fHx6i8Xj8ya5AJYoLpuU1JzMstQifbsEroy5
+	R54zFixjqrhy5A1rA+Mdxi5GTg4JAROJP1/ug9lCArsZJeZPt+hi5ACKS0hs+ZINYQpLHD5c
+	3MXIBVTxjFHiyp9vjCAOm8AERolJm2eCOSICOxklHu+7wApRBuS0P5vFAjKVU8Ba4kzvXGYQ
+	W1ggXOLEv6nsIDaLgKrEpa6vYDW8ApYSj6ftZ4KwBSVOznwCFmcW0JbofdjKCGHLS2x/O4cZ
+	4moFid2fjrKC2CICThJHli9jhagRkZjd2cY8gVFoFpJRs5CMmoVk1CwkLQsYWVYxSqYWFOem
+	5yYbFhjmpZbrFSfmFpfmpesl5+duYgRHhZbGDsZ335r0DzEycTAeYpTgYFYS4Z3KIJ8hxJuS
+	WFmVWpQfX1Sak1p8iFGag0VJnHelYUS6kEB6YklqdmpqQWoRTJaJg1OqgUn2u4Ayr76CmpS9
+	gQKX/nT/y1nfpr3vPnlAcOq5sOV+vdHp0mLtTIvlttVxu56fNO2FW/SjlOMrOW6W8z7Y+ktc
+	e8dDQ8vA9ACX4q5JJd5zf6w9rTjZpeysI5eh4aHzc3uDb3KcmLzHfM1U+W1Xl+ZV7nZ5X+Y4
+	+eftfdWhj86H3zzn1WzO/MJlfVTpA/G1X5+fLvhV/JXV4vK69rkTmm/s2DU3tXeOzhzruXJ+
+	X/xfLvmW63x5XYhhgqeer7fdykn+NZmNaxeszfx297jP7TX7ZUPqg2NE9hiFJzgfso00fPI9
+	0iugZRFv1csPTbkma99l/H943cVlt2K10Ay9GzNLy7IWvT684/TxTZZ6b+qVWIozEg21mIuK
+	EwERID3d+QIAAA==
+X-CMS-MailID: 20250512023219epcas1p2409388bd504ff09e9b5775a2aa804cd0
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250507020722epcas1p1171c5e96ef474d587a1a35af8d6931bf
+References: <CGME20250507020722epcas1p1171c5e96ef474d587a1a35af8d6931bf@epcas1p1.samsung.com>
+	<20250507020718.7446-1-wkon.kim@samsung.com>
+	<3b41510d-cd82-4c80-9651-ba9744f6ffc6@acm.org>
 
-
-
-On 5/9/2025 5:05 PM, Konrad Dybcio wrote:
-> On 5/3/25 6:24 PM, Nitin Rawat wrote:
->> Commit 3f6d1767b1a0 ("phy: ufs-qcom: Refactor all init steps into
->> phy_poweron") removes the phy_power_on/off from ufs_qcom_setup_clocks
->> to suspend/resume func.
->>
->> To have a better power saving, remove the phy_power_on/off calls from
->> resume/suspend path and put them back to ufs_qcom_setup_clocks, so that
->> PHY regulators & clks can be turned on/off along with UFS's clocks.
->>
->> Since phy phy_power_on is separated out from phy calibrate, make
->> separate calls to phy_power_on and phy_calibrate calls from ufs qcom
->> driver.
->>
->> Co-developed-by: Can Guo <quic_cang@quicinc.com>
->> Signed-off-by: Can Guo <quic_cang@quicinc.com>
->> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->> ---
->>   drivers/ufs/host/ufs-qcom.c | 55 ++++++++++++++++---------------------
->>   1 file changed, 23 insertions(+), 32 deletions(-)
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->> index 2cd44ee522b8..ff35cd15c72f 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -639,26 +639,17 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
->>   	enum ufs_notify_change_status status)
->>   {
->>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> -	struct phy *phy = host->generic_phy;
->>   
->>   	if (status == PRE_CHANGE)
->>   		return 0;
->>   
->> -	if (ufs_qcom_is_link_off(hba)) {
->> -		/*
->> -		 * Disable the tx/rx lane symbol clocks before PHY is
->> -		 * powered down as the PLL source should be disabled
->> -		 * after downstream clocks are disabled.
->> -		 */
->> +	if (!ufs_qcom_is_link_active(hba))
+> On 5/6/25 7:07 PM, wkon-kim wrote:
+> > It is better to print saved_err and saved_uic_err in hex format.
+> > Integer format is hard to spot.
 > 
-> so is_link_off and !is_link_active are not the same thing - this also allows
-> for disabling the resources when in hibern8/broken states - is that intended?
-
-Yes is_link_off and !is_link_Active is not same thing. !is_link_active 
-also include link in hibern8 state where lane clock is intended to be
-disabled because PHY is powered down in hibern8.
-
-
-
+> spot -> decode
 > 
->>   		ufs_qcom_disable_lane_clks(host);
->> -		phy_power_off(phy);
->>   
->> -		/* reset the connected UFS device during power down */
->> -		ufs_qcom_device_reset_ctrl(hba, true);
->>   
->> -	} else if (!ufs_qcom_is_link_active(hba)) {
->> -		ufs_qcom_disable_lane_clks(host);
->> -	}
->> +	/* reset the connected UFS device during power down */
->> +	if (ufs_qcom_is_link_off(hba) && host->device_reset)
->> +		ufs_qcom_device_reset_ctrl(hba, true);
+> Anyway:
 > 
-> similarly this will not be allowed in hibern8/broken states now
-> 
->>   
->>   	return ufs_qcom_ice_suspend(host);
->>   }
->> @@ -666,26 +657,11 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
->>   static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->>   {
->>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> -	struct phy *phy = host->generic_phy;
->>   	int err;
->>   
->> -	if (ufs_qcom_is_link_off(hba)) {
->> -		err = phy_power_on(phy);
->> -		if (err) {
->> -			dev_err(hba->dev, "%s: failed PHY power on: %d\n",
->> -				__func__, err);
->> -			return err;
->> -		}
->> -
->> -		err = ufs_qcom_enable_lane_clks(host);
->> -		if (err)
->> -			return err;
->> -
->> -	} else if (!ufs_qcom_is_link_active(hba)) {
->> -		err = ufs_qcom_enable_lane_clks(host);
->> -		if (err)
->> -			return err;
->> -	}
->> +	err = ufs_qcom_enable_lane_clks(host);
->> +	if (err)
->> +		return err;
->>   
->>   	return ufs_qcom_ice_resume(host);
->>   }
->> @@ -1042,6 +1018,8 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->>   				 enum ufs_notify_change_status status)
->>   {
->>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->> +	struct phy *phy = host->generic_phy;
->> +	int err;
->>   
->>   	/*
->>   	 * In case ufs_qcom_init() is not yet done, simply ignore.
->> @@ -1060,10 +1038,22 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->>   				/* disable device ref_clk */
->>   				ufs_qcom_dev_ref_clk_ctrl(host, false);
->>   			}
->> +			err = phy_power_off(phy);
-> 
-> a newline to separate the blocks would improve readability> +			if (err) {
->> +				dev_err(hba->dev, "%s: phy power off failed, ret=%d\n",
->> +					__func__, err);
->> +					return err;
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Sure will add in next patchset.
 
-> 
-> please indent the return statement a tab earlier so it doesn't look
-> like it's an argument to dev_err()
+Okay, I'll modify it.
 
-Sure will add in next patchset.
-
-> 
-> putting PHY calls in the function that promises to toggle clocks could
-> also use a comment, maybe extending the kerneldoc to say that certain
-> clocks come from the PHY so it needs to be managed together
-> 
-Sure will add a comment or update in kernel doc in next patchset.
-
-> Konrad
+Thank you.
+Wonkon Kim
 
