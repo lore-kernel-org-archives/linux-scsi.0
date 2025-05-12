@@ -1,48 +1,48 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 354972609EE
-	for <linux-scsi@vger.kernel.org>; Mon, 12 May 2025 22:22:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0572C1E51D;
+	Mon, 12 May 2025 22:31:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747088531; cv=none; b=g+sIjsAgQQBdhjDvjK9cjhiMr1VsMgeLOuGodlR4t9ZZpsv0QOHhbMzvRC3D9hfaeg7lk9fvvi6/HBjn9Oru4UI+BOB/CPaD81sp4yaU8QUW+k+PeQTKw06qFGpKGOZYcZnaUwcg/EpVT1+AD6RE/PP2nUu7Fe8RiGouNyWT/0M=
+	t=1747089119; cv=none; b=o/uWVKuW9G9CH6SFq6qmKzpcFxR6xwXNJnrg4bcklyKSjV1D03sMGiRFGTzX5fOWDdrBWId0NSuhWB9KIGfwXZOAxTR874tS5lja2Grm8jvHB7FeILagZl4AUQhHawhFsZdoOUK/XDRBCjCcxE7cR+KHdhDrZ0sTK9ChKJr4eNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747088531; c=relaxed/simple;
-	bh=zlaLzn+pVyebtw7YkjcB4lVpsHM1M8eH8Dnp9T3yH8M=;
+	s=arc-20240116; t=1747089119; c=relaxed/simple;
+	bh=RZiIcIs1PuMj2VXYMOfeh18MmftaP3biuib72BYcumE=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=dr1b45+73GIzR91Q68Bo9NVmZ2gH956cG5GsGE1tfSHc7XF/rJaA923WehoII7IYXZy4FVDv1ufratPHPA91MIc6X1AcNfXOkZHQfMa1gtDZog7Zg9zTQLfov9unGV3n+1XkFjwLX6Nvc/1ia78qebLdsb1gCAmartbedMVEaY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=wbryJAuR; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=AfuS407tueObwOGrT+pk8jHHp/3jaM8FxJ1/QqF6suho2QAifD2z0cKSi/JEySRBIwiFrzCD9SjmkqXcYnfU3d9JhRTMtAlzkB1DpnQEKgQRvo8cvWbM9UX9BAa+wdH/n6qOFE7PX/hNPE2zMYUF0Wk4y9PgHtkatCujz3fDXe4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=n7iUojaJ; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="wbryJAuR"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="n7iUojaJ"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZxDcK0Vw7zm0yTL;
-	Mon, 12 May 2025 22:22:09 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ZxDqc4gzhzlvq82;
+	Mon, 12 May 2025 22:31:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1747088525; x=1749680526; bh=bkNeTzwzChBPxnTQM5+0U/fF
-	A9+o13xiapopYsinHT0=; b=wbryJAuRaHD3jtgIM+x3oAW5wVdXqTEudLBMx6GW
-	l6iFrcgvkb4F1nZrJKg+NoPrjwWyVRjDEO7bQdBfd8FeKt3hYC21MMyXB8iYo4s2
-	l701r5iz4ox5SpgzR494TN1GU08hH/Zas4KDF7ugqWpLWNmXshVYZbQrgzibuT6e
-	HKXkN4lBFnwZUWlh5uj6t/71LSI/hafADSTHzYsEQ11mvH4u+XfIFnYa8NVHhsAs
-	xrx6mgAO40yysbLvTteqkLTa4aZoldV/pmRfSJDQzoC0ai780Kk7mYeyVFBhaxqL
-	nFZ+DVVvfYRQ1+35GSmekv74SeF1gmd8sFaa3jUZqn3yMw==
+	 s=mr01; t=1747089113; x=1749681114; bh=1FCMBZKRgqOtoLjNgFwQVUJQ
+	g6hd6Q3nZJiJEDM/GdU=; b=n7iUojaJuw53IBUL4yjewpqX1Rm982CnOIXzavxz
+	/Z4HvJMc9POEZ/5WbOrntNRBsxq2HyAkceClL3jham7sa2BJuhBo/Nexmzsqhvyq
+	CS+8IA+Ys7an/4l9cCZxYrtgjKXbcPi/uhCT1R4z/OOPpZEsf0U6IfIMgNXegJYa
+	bUC28eJIVfpmsmvkVVjeVyjfSa8BYSbX2Pk2Whl8yMPjrrB0cPcfQXjUvCHuDS6e
+	aIvoBf8RFRAZiECTD+DYCfZOOjnB5kHo6cm8niqxMEnO1MtTdGmWanGMbNcfhT4v
+	qjZlZkkPd49HPBT3uhiTtdGVeyd1LhQcGZM+57X5lBnOhg==
 X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id W43GxB88FXig; Mon, 12 May 2025 22:22:05 +0000 (UTC)
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id gvvtx5GO0s_c; Mon, 12 May 2025 22:31:53 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZxDc00wnQzm0pK6;
-	Mon, 12 May 2025 22:21:50 +0000 (UTC)
-Message-ID: <a399d7d5-7829-42d6-84d8-d0956d07f8f0@acm.org>
-Date: Mon, 12 May 2025 15:21:49 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ZxDqG41qlzlschm;
+	Mon, 12 May 2025 22:31:37 +0000 (UTC)
+Message-ID: <c428f074-c010-4225-960e-56aa65a799d8@acm.org>
+Date: Mon, 12 May 2025 15:31:36 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,31 +50,104 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ufs: core: support updating device command timeout
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
- yi-fan.peng@mediatek.com, qilin.tan@mediatek.com, lin.gui@mediatek.com,
- tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
- ed.tsai@mediatek.com
-References: <20250510080345.595798-1-peter.wang@mediatek.com>
+Subject: Re: [PATCH v3] scsi: ufs: core: skip UFS clkscale if host
+ asynchronous scan in progress
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
+ mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
+ junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+ quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+ quic_rampraka@quicinc.com, neil.armstrong@linaro.org,
+ luca.weiss@fairphone.com, konrad.dybcio@oss.qualcomm.com,
+ peter.wang@mediatek.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Alim Akhtar <alim.akhtar@samsung.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20250508093854.3281475-1-quic_ziqichen@quicinc.com>
+ <fd13e179-f2d8-4085-86da-c6b0fce2de5b@acm.org>
+ <5748d0cc-a603-4b44-bbfc-d39d684b2ea6@quicinc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250510080345.595798-1-peter.wang@mediatek.com>
+In-Reply-To: <5748d0cc-a603-4b44-bbfc-d39d684b2ea6@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 5/10/25 1:01 AM, peter.wang@mediatek.com wrote:
-> The default device command timeout remains 1.5 seconds,
-> but platform drivers can override it if needed.
-> 
-> Some UFS device commands may timeout due to being blocked
-> by regular SCSI write commands. Therefore, the maximun timeout
-> needs to be extended to 30 seconds, matching the SCSI write
-> command timeout. And for error injection purposes, set the
-> minimum value to 1 ms.
+On 5/8/25 10:02 PM, Ziqi Chen wrote:
+>=20
+>=20
+> On 5/9/2025 12:06 AM, Bart Van Assche wrote:
+>> On 5/8/25 2:38 AM, Ziqi Chen wrote:
+>>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+>>> index 1c53ccf5a616..04f40677e76a 100644
+>>> --- a/drivers/ufs/core/ufshcd.c
+>>> +++ b/drivers/ufs/core/ufshcd.c
+>>> @@ -1207,6 +1207,9 @@ static bool=20
+>>> ufshcd_is_devfreq_scaling_required(struct ufs_hba *hba,
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (list_empty(head))
+>>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return false;
+>>> +=C2=A0=C2=A0=C2=A0 if (hba->host->async_scan)
+>>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return false;
+>>
+>> Testing a boolean is never a proper way to synchronize code sections.
+>> As an example, the SCSI core could set hba->host->async_scan after thi=
+s
+>> check completed and before the code below is executed. I think we need=
+ a
+>> better solution.
+>=20
+> Hi Bart,
+>=20
+> I get your point, we have also taken this into consideration. That's wh=
+y
+> we move ufshcd_devfreq_init() out of ufshd_add_lus().
+>=20
+> Old sequence:
+>=20
+> | ufshcd_async_scan()
+>  =C2=A0 |ufshcd_add_lus()
+>  =C2=A0=C2=A0=C2=A0 |ufshcd_devfreq_init()
+>  =C2=A0=C2=A0=C2=A0 |=C2=A0 | enable UFS clock scaling
+>  =C2=A0=C2=A0=C2=A0 |scsi_scan_host()
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |scsi_prep_async_scan()
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0=C2=A0 | set host->a=
+sync_scan to '1'
+>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |async_schedule(do_scan_async, da=
+ta)
+>=20
+> With this old sequence , The ufs devfreq monitor started before the
+> scsi_prep_async_scan(),=C2=A0 the SCSI core could set hba->host->async_=
+scan
+> after this check.
+>=20
+> New sequence:
+>=20
+> | ufshcd_async_scan()
+>  =C2=A0 |ufshcd_add_lus()
+>  =C2=A0 | |scsi_scan_host()
+>  =C2=A0 |=C2=A0=C2=A0=C2=A0 |scsi_prep_async_scan()
+>  =C2=A0 |=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0=C2=A0 | set host->async_scan =
+to '1'
+>  =C2=A0 |=C2=A0=C2=A0=C2=A0 |async_schedule(do_scan_async, data)
+>  =C2=A0 |ufshcd_devfreq_init()
+>  =C2=A0 |=C2=A0=C2=A0=C2=A0 |enable UFS clock scaling
+>=20
+> With the new sequence , it is guaranteed that host->async_scan
+> is set before the UFS clock scaling enabling.
+>=20
+> I guess you might be worried about out-of-order execution will
+> cause this flag not be set before clock scaling enabling with
+> extremely low probability?
+> If yes, do you have any suggestion on this ?
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+The new sequence depends on SCSI core internals that may change at
+any time. SCSI drivers like the UFS drivers shouldn't depend on this
+behavior since there are no guarantees that this behavior won't change.
+
+Can host->scan_mutex be used to serialize clock scaling and LUN
+scanning? I think this mutex is already used by a SCSI driver to
+serialize against LUN addition and removal (storvsc).
+
+Thanks,
+
+Bart.
