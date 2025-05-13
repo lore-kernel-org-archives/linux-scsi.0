@@ -1,96 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2118B253F2D;
-	Mon, 12 May 2025 23:35:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F34C9367;
+	Tue, 13 May 2025 00:06:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747092910; cv=none; b=S4qkvB86TNUBq9b6yqtwlpeG4mBBfmQGWII1Bh21HgXod3nOGRet9aJrAuXg8XWhj7yRJRVTcgmTizjKg05wSgr01VQh9qi02tG1/a5ivqepOpAOrGONy6Wa7huquF67VrHD88tRMReQufqa4DaPgFLLu2O4jjAS3Grt0eZmXoA=
+	t=1747094784; cv=none; b=Ka9YCWqqmb5IWAq8paqUVSlllR8VFpLrLLEC7mKyNLjNXs2N9GC8CM5JaI8QeqNE3UAk1hQe9GuVcWEBlL6S+57c6xAtWUrN77B+AMr700VNptQGgYkOenQlOKYDUiDO+Y+64ZIXxaUrcX7wcrlpHIzOfoYGrNcqEiOkSH8kY3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747092910; c=relaxed/simple;
-	bh=5d7ulaWu8eLuk9+FYkxlpsohVPqS7lsPmXK7MdtDv/s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=I73wKUJRiZ6p3LlhwJtvgQMh0gfgxJ2LLpClOPva6GabMDQHHAuEs/3/R3Mqn8TN0PbmrBi4W5fGN5gImvj7kEy4pjZ8f8ZMtpNYNYL59k5wvT77ldAhTL08/Jd+/4ZNztAumZlJtb/g5km2jS9CcO4SbipOSl4U13+C5+6DcBA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kYziXmCW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747094784; c=relaxed/simple;
+	bh=FqKM+4QL0Ww31oOptKrxbmEN83vTXpCtq/sYWBVjerc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=KkSO/pmRYnsPe5pSkNw3s5CAhl9EdhqXYgnwMJ05KqeSBcRjbMzCUel+UQ7QND3uZGv0F6ayXI1ElLh1U9iAHA5lo5fKcKXtb7htCARrsPcO33ITtvm/HYY2HSqoe0YivhKDFCzK7GCo58z8v17yoHmKmtXOyOJ2AAO5NkliWCk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=S8ka0XCE; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kYziXmCW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E8802C4CEE7;
-	Mon, 12 May 2025 23:35:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747092909;
-	bh=5d7ulaWu8eLuk9+FYkxlpsohVPqS7lsPmXK7MdtDv/s=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kYziXmCWJ/OtT/sjFSI8Qr9gwTNkyWj4GklD96Ui5yO8DqP8A6gZ70UIrRrhgtfOo
-	 7asY8czIfUUM1QV8BL12++wFoKahmsEVE0zdi4/IBtRl9V4bwGAR5VOmcl0Zm6+2kP
-	 MLdKBy0LBtwA0tA+XrXH32a1QRleYOslACSlemqRDDd6OsB1E80IURoZsKFHU8UUjH
-	 X88e7KI24/bgDqAKo3UqPeZzSQzFt4E0qwEYABe/sHIlGYvoxmj6fI0LwxKASDg39R
-	 9fRl7Tq2b1YnlyzCWpJM6shKn18JvMoSKVE/Ft3yzmkxZOY71kxb8t5YKVAxHbL9As
-	 dxyvA4g6X3T4w==
-Date: Tue, 13 May 2025 01:35:05 +0200
-From: Andi Shyti <andi.shyti@kernel.org>
-To: Danila Tikhonov <danila@jiaxyga.com>
-Cc: Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Lorenzo Pieralisi <lpieralisi@kernel.org>, "Rafael J . Wysocki" <rafael@kernel.org>, 
-	Viresh Kumar <viresh.kumar@linaro.org>, Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
-	Wim Van Sebroeck <wim@linux-watchdog.org>, Guenter Roeck <linux@roeck-us.net>, 
-	Rajendra Nayak <quic_rjendra@quicinc.com>, Jassi Brar <jassisinghbrar@gmail.com>, 
-	Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, 
-	Amit Kucheria <amitk@kernel.org>, Thara Gopinath <thara.gopinath@gmail.com>, 
-	Daniel Lezcano <daniel.lezcano@linaro.org>, Zhang Rui <rui.zhang@intel.com>, 
-	Lukasz Luba <lukasz.luba@arm.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Wesley Cheng <quic_wcheng@quicinc.com>, 
-	Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Ulf Hansson <ulf.hansson@linaro.org>, Souradeep Chowdhury <quic_schowdhu@quicinc.com>, 
-	Lee Jones <lee@kernel.org>, Andrew Lunn <andrew+netdev@lunn.ch>, 
-	"David S . Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, Alex Elder <elder@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, Andy Gross <agross@kernel.org>, 
-	Srinivas Kandagatla <srini@kernel.org>, Herbert Xu <herbert@gondor.apana.org.au>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, Georgi Djakov <djakov@kernel.org>, 
-	Loic Poulain <loic.poulain@oss.qualcomm.com>, Robert Foss <rfoss@kernel.org>, 
-	Michael Turquette <mturquette@baylibre.com>, Stephen Boyd <sboyd@kernel.org>, 
-	Taniya Das <quic_tdas@quicinc.com>, Sibi Sankar <quic_sibis@quicinc.com>, 
-	Will Deacon <will@kernel.org>, Robin Murphy <robin.murphy@arm.com>, 
-	Joerg Roedel <joro@8bytes.org>, Imran Shaik <quic_imrashai@quicinc.com>, 
-	Mathieu Poirier <mathieu.poirier@linaro.org>, Bartosz Golaszewski <bartosz.golaszewski@linaro.org>, 
-	Neil Armstrong <neil.armstrong@linaro.org>, Jessica Zhang <quic_jesszhan@quicinc.com>, 
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>, 
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>, Maxime Ripard <mripard@kernel.org>, 
-	Thomas Zimmermann <tzimmermann@suse.de>, Kees Cook <kees@kernel.org>, Tony Luck <tony.luck@intel.com>, 
-	"Guilherme G . Piccoli" <gpiccoli@igalia.com>, David Wronek <david@mainlining.org>, 
-	Jens Reidel <adrian@mainlining.org>, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-pm@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-watchdog@vger.kernel.org, 
-	linux-usb@vger.kernel.org, linux-phy@lists.infradead.org, linux-mmc@vger.kernel.org, 
-	netdev@vger.kernel.org, linux-scsi@vger.kernel.org, dmaengine@vger.kernel.org, 
-	linux-crypto@vger.kernel.org, linux-i2c@vger.kernel.org, linux-clk@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, iommu@lists.linux.dev, linux-remoteproc@vger.kernel.org, 
-	dri-devel@lists.freedesktop.org, linux-hardening@vger.kernel.org, linux@mainlining.org, 
-	~postmarketos/upstreaming@lists.sr.ht
-Subject: Re: [PATCH 20/33] dt-bindings: i2c: qcom-cci: Add the SM7150
- compatible
-Message-ID: <5smj66yzv2xnfdsiedrkivxxebhm2pbbwjjsbiwxhmxr5n4fns@vugxqsm32abk>
-References: <20250422213137.80366-1-danila@jiaxyga.com>
- <20250422213137.80366-4-danila@jiaxyga.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="S8ka0XCE"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-22e4d235811so72608925ad.2;
+        Mon, 12 May 2025 17:06:22 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1747094782; x=1747699582; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:reply-to:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=K+wz2fZe6II1B8M7LCEZ+1BKnQs3N11wYkIiB94tlgk=;
+        b=S8ka0XCEqmC4Ys2FDA+kV3i0WXoiN/zC/8IxQlQmTgw1Pr/AX3H/KOGcBMQyrdu3lR
+         ROM9Jqo1dNPua2pWBXteHjTh3R1b8gPnKFzrMp1m1MenOWDBx3d2yt5ebASJUNKCBEmR
+         yKdkNJDJADRaQOM1zeOdT9xSSb+rhnSCmRmRlg8d03F996Cn4RQVtuQlxG9eXw09FaNr
+         6ETLd4SbTCWmjJ/27ka/fzobDs7apqC8POCkHjAFA7uW3HcYiKVweoARvuRzhafe//CI
+         Ku2ZFXzSEfRx5f3mlqzcD9lv49waJGmBi2LaCqOyWVYL8bacE0zIaszqE3l5DEgT+3sb
+         L9Zw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1747094782; x=1747699582;
+        h=content-transfer-encoding:mime-version:reply-to:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=K+wz2fZe6II1B8M7LCEZ+1BKnQs3N11wYkIiB94tlgk=;
+        b=nEpahuvhTKFMYwp0n2c2Q9w8C+ThjNh+xrF8q8nafK+rnVvQECtqiP8DU/7djJLh1q
+         IVlaicm0hNK2VGOLVSm5XXHA7eOrZYCweI89WiVIqOpP1PD5mmnGHhTeHTEKZq3lKduX
+         kSwYMP12sFnysjTqT3VhBYVKwF2Jh7JzEKh79l39rF3KUrnfIOlBvvRKexYMRagjjm/6
+         Hlf1apTk4LAiiqa7Wuo2zyfQKev7BDWbELaZkoWbsr+78fvM87/4fskfFki9FUo99dsC
+         QEbkLLJ+xffbi2lzkZOmAUlM7dyGwObhbqUOEJ0wkuHaC3iJ+hUFKY2nmyP9DUsqmLzp
+         JYjg==
+X-Forwarded-Encrypted: i=1; AJvYcCU0r+SCpqnh2n5/TUljLZp2c53QZDp34VjfVN5fQKF5cwVoaht9Dd/CQJ+LZi4U0oq+oaGMCcGL@vger.kernel.org, AJvYcCV6GUzxBrQ7EjbuyZzpbj60TzT4BaWJPjFaobVhbd4nAzScRulXQVHaTTL18Wc/Hzl/UObkSz33KVfZEg==@vger.kernel.org, AJvYcCVkCPKPVd1zXLFUElstktQ8iGdv1Fb/aVGmSSD8GWaAGWWXw4akvRcewdBZMOIVJbCCzm5JZr+/dXMbK7s=@vger.kernel.org, AJvYcCWzoAE3MYSqyQDuwJnBeicwg0DGzsizNEgezO2nQOmgLHG8BJseJednACSHSeOTlOmOUgKZ3iow@vger.kernel.org
+X-Gm-Message-State: AOJu0YyX+2KDHcUrFaya+i3HBHPpXjFV+6WrOzwhZPm9DdQ0OhYl+kVk
+	2qHg1igMBl/te2D3+cCqU2z7CqVErV3GDFmF7iUwwelpN6OviRMe
+X-Gm-Gg: ASbGncsoCD7KkOBNPgqHgtFVyg8AwlepFZZOaXPmnN1je4qtpcVTcQngX8PK+sl3uZC
+	/+2Lmwosz0/IXPDT7d6kdqihwr2f+OzzjBydRDvA/ScJKUNeSfA5v6ljFAWLaBdl3PWwRfxS5o3
+	qBExxAL9UEwlt9a3E6kHmlbaRRlVvzLbpL5tn90ojg01ROgeHCYoajHMnjdCn4ARdBPHoyoqpE2
+	gNdBbwTge5vbSdIvMSScxSRpF/sgrOqZ2Ejqe/jOHx9ztl3Ub5cE5P5OwbXtCRs6j58eF2lt8eV
+	NJ5ggn+/uYoXjitkBrr7vndidPp4myiQxm6Wzc6CFp4xOLMje69XpIC4H1yvkod3Ns5jpL16kdI
+	VU1EdqblFgSuDlGF71Bnp5pEebWP7ccNbUKeO9Q5U
+X-Google-Smtp-Source: AGHT+IHIWe95ox3zt/ZzG1SW9KG/4OtiRl2M/Zxq8XMDH7/fn4wU67Qk37R3LtB/fXEZes0qT3Tkkw==
+X-Received: by 2002:a17:902:ce83:b0:227:ac2a:2472 with SMTP id d9443c01a7336-22fc8c83d38mr230587205ad.28.1747094782102;
+        Mon, 12 May 2025 17:06:22 -0700 (PDT)
+Received: from localhost.localdomain (c-67-160-120-253.hsd1.wa.comcast.net. [67.160.120.253])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22fc828b491sm68470665ad.184.2025.05.12.17.06.21
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 12 May 2025 17:06:21 -0700 (PDT)
+From: mhkelley58@gmail.com
+X-Google-Original-From: mhklinux@outlook.com
+To: kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	andrew+netdev@lunn.ch,
+	davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-hyperv@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH net 1/5] Drivers: hv: Allow vmbus_sendpacket_mpb_desc() to create multiple ranges
+Date: Mon, 12 May 2025 17:06:00 -0700
+Message-Id: <20250513000604.1396-2-mhklinux@outlook.com>
+X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250513000604.1396-1-mhklinux@outlook.com>
+References: <20250513000604.1396-1-mhklinux@outlook.com>
+Reply-To: mhklinux@outlook.com
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250422213137.80366-4-danila@jiaxyga.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Danila,
+From: Michael Kelley <mhklinux@outlook.com>
 
-On Wed, Apr 23, 2025 at 12:31:24AM +0300, Danila Tikhonov wrote:
-> Add the SM7150 CCI device string compatible.
-> 
-> Signed-off-by: Danila Tikhonov <danila@jiaxyga.com>
+vmbus_sendpacket_mpb_desc() is currently used only by the storvsc driver
+and is hardcoded to create a single GPA range. To allow it to also be
+used by the netvsc driver to create multiple GPA ranges, no longer
+hardcode as having a single GPA range. Allow the calling driver to
+specify the rangecount in the supplied descriptor.
 
-Acked-by: Andi Shyti <andi.shyti@kernel.org>
+Update the storvsc driver to reflect this new approach.
 
-Thanks,
-Andi
+Cc: <stable@vger.kernel.org> # 6.1.x
+Signed-off-by: Michael Kelley <mhklinux@outlook.com>
+---
+ drivers/hv/channel.c       | 6 +++---
+ drivers/scsi/storvsc_drv.c | 1 +
+ 2 files changed, 4 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/hv/channel.c b/drivers/hv/channel.c
+index fb8cd8469328..4ffd5eaa7817 100644
+--- a/drivers/hv/channel.c
++++ b/drivers/hv/channel.c
+@@ -1136,9 +1136,10 @@ int vmbus_sendpacket_pagebuffer(struct vmbus_channel *channel,
+ EXPORT_SYMBOL_GPL(vmbus_sendpacket_pagebuffer);
+ 
+ /*
+- * vmbus_sendpacket_multipagebuffer - Send a multi-page buffer packet
++ * vmbus_sendpacket_mpb_desc - Send one or more multi-page buffer packets
+  * using a GPADL Direct packet type.
+- * The buffer includes the vmbus descriptor.
++ * The desc argument must include space for the VMBus descriptor. The
++ * rangecount field must already be set.
+  */
+ int vmbus_sendpacket_mpb_desc(struct vmbus_channel *channel,
+ 			      struct vmbus_packet_mpb_array *desc,
+@@ -1160,7 +1161,6 @@ int vmbus_sendpacket_mpb_desc(struct vmbus_channel *channel,
+ 	desc->length8 = (u16)(packetlen_aligned >> 3);
+ 	desc->transactionid = VMBUS_RQST_ERROR; /* will be updated in hv_ringbuffer_write() */
+ 	desc->reserved = 0;
+-	desc->rangecount = 1;
+ 
+ 	bufferlist[0].iov_base = desc;
+ 	bufferlist[0].iov_len = desc_size;
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index 35db061ae3ec..2e6b2412d2c9 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1819,6 +1819,7 @@ static int storvsc_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *scmnd)
+ 				return SCSI_MLQUEUE_DEVICE_BUSY;
+ 		}
+ 
++		payload->rangecount = 1;
+ 		payload->range.len = length;
+ 		payload->range.offset = offset_in_hvpg;
+ 
+-- 
+2.25.1
+
