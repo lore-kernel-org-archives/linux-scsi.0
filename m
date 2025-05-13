@@ -1,61 +1,63 @@
-Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4A3BA50;
-	Tue, 13 May 2025 00:06:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D492628F3;
+	Tue, 13 May 2025 00:06:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747094785; cv=none; b=jT4JbzcKxWtfJrIreWOK64OLw+B9UiqfmWevkvA0vDJ92naY9hyGXWLJBSv1HyALT+VYF06oaF7RHGQ3qo9gMTc7wcqmCHym+pQjCcgEliF42F/Y0LquFjSe8ndDkUDo7tFegOatlrjWqHXeQajfIn+wBoe3S/zOuaW3G9gvwAE=
+	t=1747094785; cv=none; b=twCqwatI0M/VfHs4OEuxQAJ8K8JZ6Oof36AcEec6M99ZedH3pfXCYyv0EWDa0IMEgFeSwvtx+WERhOVok4Ceu0XtN+qGuiAPeCjBB3hSLphBfQNpu/wPV4cAwkSTe2rZg3EnGpLrxvL4SUPfLc5yd8JdKFXr1+2qDBgxbZQCH3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1747094785; c=relaxed/simple;
-	bh=15QlA1RvqwWBPCuQg1QOEhb8GU/p5PFuITDF0PemJyE=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=XT+Jp/Sbx+xIrk+PONHg2bmzvRmVWib2jTSBWugpkfT7gd7CL4AnJ7T2dKgjm9duGBAP3mzKXhgGVyJq2mB2v7dx/Wuap7yrxoRu8dY3J3FcVtzssezr0C3G35dU5lCOyfcC0xv43mibyWSgggwnDm9of+czcrr/X9nOEC0goaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R9x4nIZK; arc=none smtp.client-ip=209.85.214.179
+	bh=8/xVulW2CSRK1+XsSobzHokLcQO2lTn+ZWudBCT/UHg=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=BDoaqV3tnWlo0kVeiQy69W3LX7eeDwxrFQI/zjCI/9qd3JVutx19nGl2uSkQegY+xSqj2qNwx8Az/so3bFhGI32QD84bAWwdk3kaDqBu7mBpin6Ipu0+e+RGPEt/XN8BUXlaTYYUqecL1ZVDO6DjjqVGufyrr2KnMyjxFA9BYug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HpL1VPWO; arc=none smtp.client-ip=209.85.214.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R9x4nIZK"
-Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-22e730c05ddso45738815ad.2;
-        Mon, 12 May 2025 17:06:21 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HpL1VPWO"
+Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-22c33e4fdb8so43109895ad.2;
+        Mon, 12 May 2025 17:06:23 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747094781; x=1747699581; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:reply-to:message-id:date
-         :subject:cc:to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8muQO4QFV9cfTFAot9pQ7G4buAK54OtcnnAyHHxj5uY=;
-        b=R9x4nIZK0O6YLd4fJHGWwKR2fwoD4q5OW0dxAAHjBCSjYy6BouFc5DH93i5MgO0N3y
-         dE/aQvn7LifHmAzZS012f+ooj3sXJ0/o9+H+ZJOPiwYC9trhb6ftZurQ4PbKEub1FMXc
-         YmF1GEMH39XNwK/7Lo3mBoJw3vZABV8cxqm08Dk7EI4FI1d5yiXqWY4FVSBUR91k5D81
-         EuQK3kEaKxiRCRrUlQkf2ge55kI3IJFRxCygUtjGf8uXdyOLytVtwPlkZ4Ncg8zghlXM
-         4jlBdBgJzHo+Tyb8OiRduRkn/wP4ekSIA0QN5+9HHgZkmqZlJZmXQA0USYwLLY4sGaMx
-         4Qtw==
+        d=gmail.com; s=20230601; t=1747094783; x=1747699583; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:reply-to:references
+         :in-reply-to:message-id:date:subject:cc:to:from:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=FXCvU2Vs7s7mGjO2bzsEOujhMs8/vRhZqhlIuLlVupA=;
+        b=HpL1VPWOJdw8g8GUaauvwRP18hIw4UO1VIG9TxegZTRzmzNRtkbrMmMM4lJaV6MbRF
+         YRXaEn/eW5ZjdzpisSU2FkTCpq+Nsr4tlh955iI1J8Br0JLvSMWdPVMjg8gJwc6a4J3S
+         UsAJW4a/xVAIgzWD+UMT26veKm3MbzYMpgsBDC1qlP69gDD1+a4JWHCkjcr3pUPKqKH+
+         sp9Pd+Clq2ruHCWUwF0iYOb321KKj+AbP+HGGI8Bv9Um2ufew05EIb78HZ0z7U9fn6NC
+         wKlcq6pmsYX3KS7TotU1j2LqifWfEd0YguSu1pkE7oykXtnHPDxA6roFC+7kNA+dDwhw
+         +6Rw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747094781; x=1747699581;
-        h=content-transfer-encoding:mime-version:reply-to:message-id:date
-         :subject:cc:to:from:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=8muQO4QFV9cfTFAot9pQ7G4buAK54OtcnnAyHHxj5uY=;
-        b=Aa+unqBk4JU+t1P0BcHxSChWoyzB1gU2K+IouWHAD/UQooRn7kXEQZZ1hvRFEW7NFC
-         qsHjJQMTjZizXJiV90HdacRj978f1EHetvY1b0jWRDfiFNvZfMY2mEVk8EBVPzfnkOHr
-         E0bRm6Ekh7W6NNT8RmZWg/yzMkb8/jYbGdBjw2wWWrw+QuZkc4siE40hpqJFzc8oZIAg
-         SXBq3qIARL5omuB+LB/eaf5wLpIZtaZvXUSKvUqdwH3I1PCHE86MqNEeqO4d3rKQpoYh
-         IwOwXFxSaWfBiJjY2n9JFCr9+6udbpUKDsHXAitho1cD0A1WYqt9/a9WT/WIDFWy7Jjx
-         +qLQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUMt+ZzmvJwpuDlahCl/7otsqZMkq5tu510KK81Q+PhcIYRMCHxRlnmmnLGZ8fi65Wb7qWvZxtTNIUaKg==@vger.kernel.org, AJvYcCUlAUAV0rAkVs8eC1y4QUoYJzFqu9Zq5AeU+tjdJsY+sJ3OuK0AtqtEqsfR3FS78MCjmy4AueiS@vger.kernel.org, AJvYcCVqhbAmgeoFDkpHBbFw+KCaM1X4D6NXlXuRzX9ZQbRcKCUa6gEnKZFqm5tqsJLXnWxB0E5kIBwF@vger.kernel.org, AJvYcCXFfVKFJjfuyREPqqlb+IfWJltNhkXi3jsDbaQhKIHElEbUQfYJ+uVf4F072fEj2O/wCYS1IaWDnR4N0E4=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzyeMkIhRyMVRkruNCEuqgRvjoT82HxqxU7uYiK6WdYNRlUaA68
-	MOLWcEc0QeE/fPLg2do50D5rktoTXEbMZ0bLGgneUPii4SnOA+2+
-X-Gm-Gg: ASbGncvAK3Q8X1gC8cmZKOqSSwCx7au3op5KkbXxrJD/d3l52tggBJ4xHDDfJGxRGig
-	kk57xT0WB4ugBYbNpHH27L72Na8PFju3qNAX/CyaXMgUWWW0JSMYeDCcryzs9kzVFogDFAr+Ieb
-	c5Q1wjZbiclsrKI6xZK40eKd3H+sZp7x7L13j+v+ICndC10auydJT0O8CL/wuQansfo+Dcz7PpG
-	wesH4M7NlQHZlIo9CaXc4YamI+8U8S5jlMIiC3RVVj/iv+JUDI7rrU4lDTv/V6GPZlpfWfSfUGW
-	eSPUCAKCZf9UVMxkPoRjFlGSF7I0Ctv10p0B3Jk3a3U3YO7X7Q1dPYIcg6CaXugq30YJHs+Hkw+
-	/GFaaVxXjIuFyp0DrHhWsYv0RTl6byQ==
-X-Google-Smtp-Source: AGHT+IGOdy/5TRdsB8TQMESAds9fv8y6dVMhnUM3bhvm/H593j88ln37N2/fl5wL+AZFbQpPJwnybQ==
-X-Received: by 2002:a17:902:ce8b:b0:223:44c5:4eb8 with SMTP id d9443c01a7336-22fc8d98ab0mr231086305ad.32.1747094780966;
-        Mon, 12 May 2025 17:06:20 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1747094783; x=1747699583;
+        h=content-transfer-encoding:mime-version:reply-to:references
+         :in-reply-to:message-id:date:subject:cc:to:from:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=FXCvU2Vs7s7mGjO2bzsEOujhMs8/vRhZqhlIuLlVupA=;
+        b=CsfY1HMZHSVzMrUzx3Apb5Eo+7+DVtHkgGWe87Qsx8lCTILdVnxvykuf5nM7uhernb
+         iFgo4UiO3gDjVNvCAUYujXpkDqQEbYmbdWwXx22oq5B9JCHFQLxQvgZ1JqmsRaUIeaE2
+         Vn+MasGUYjfUMUeGBqJS491Qc1gpDmCk6UWf5mOUWu7rlOIk5M7fIN4d3pThqLYazhEB
+         hTPYUqe2VGKxdJ+HPzb8oqjSxv/aQ3YFO5NzceixHwyA1KHLL1DZh9hZ6/G786M3eoJr
+         ZT7i6c5PPvtro6qg5827f2Bvog2uJB7kz4kk9mEd3GWGoSQ6qaojqdJEwE74nGlKieSs
+         OMoA==
+X-Forwarded-Encrypted: i=1; AJvYcCULnwTw1iaFVAHarT70A3vjMB/SS4gm78C1eZ9zJjrcWbWTu+HC9ixZhxTqZvCauvpEhHfpekHCks2cwMA=@vger.kernel.org, AJvYcCUT9IoK61b+d8Y6P83X56qUn41Ttg8CTTqseNP1KRZ2PV89+/smN0/vMkbKydrD0k9auZmgYEvD@vger.kernel.org, AJvYcCUrHiiLdlVorzZBg7i/Zivd9S9/8KS4oreqmTW2VTEYfzoT+5zWMdxClsyz57nz9uxUVrxwBQfT@vger.kernel.org, AJvYcCWeQX4g/M5O1qEKDBf3lYs5B/C7XDDybRugLF01W0rOneMm9bQFok/jbEWe8MWqgUObYixZ0yFvo0XOog==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy2fcA5t5N1Uq0MZVPqaXzAKAAZxJL7avPj8nuAIKO6G0QdUbeQ
+	aI/PwgnwfQ6ZyMoHEEjGHdiUDPW6RVLN8Uvgk6rm3OQZvFlDtFNR
+X-Gm-Gg: ASbGnctsfLAt4EVF8pTSYlPJw2Zpyc850clLW2v/55bImxlgYeeUQqlU436/RZiL/dP
+	+oPhW2UnFStJfE9n46CX8xPLyday5uvFlpWI2orTpTqbRXxA1vktunIJXrnc9Iknz1oqCAJvMC7
+	eBowNpHqxOSNS3uM+IPGzecIcgehPpcV48Sdz9S4yA+h9HNwtMe8hQboqEdhSA1IvKdlNEQxCVV
+	y+ATzwJ6LlVV/7EdXTx2cYWvsnMkZFrfaKtvrmlxMNhkIiHqjEvAzwLwUoJbCphjBi/Ozgr/Zzl
+	GLRNIRyinyaFp8WTDNCNb6+mdIifKngN8F/4cbhwYfscANPRavuHoLm6oh3cgoEvQ71tDdcc3Ga
+	herLXRv4KKae1woepsKumH9UzjoKhZw==
+X-Google-Smtp-Source: AGHT+IFziuIqABFOvhkhgN/xuoHGmIstOjH0r6ljTVAroISwtMFpsIg6e5wHjzk4TIlhWturAbynGA==
+X-Received: by 2002:a17:902:f70b:b0:224:1af1:87ed with SMTP id d9443c01a7336-22fc8b7bddfmr203927655ad.27.1747094783134;
+        Mon, 12 May 2025 17:06:23 -0700 (PDT)
 Received: from localhost.localdomain (c-67-160-120-253.hsd1.wa.comcast.net. [67.160.120.253])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22fc828b491sm68470665ad.184.2025.05.12.17.06.19
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-22fc828b491sm68470665ad.184.2025.05.12.17.06.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 12 May 2025 17:06:20 -0700 (PDT)
+        Mon, 12 May 2025 17:06:22 -0700 (PDT)
 From: mhkelley58@gmail.com
 X-Google-Original-From: mhklinux@outlook.com
 To: kys@microsoft.com,
@@ -74,10 +76,12 @@ Cc: linux-hyperv@vger.kernel.org,
 	netdev@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	stable@vger.kernel.org
-Subject: [PATCH net 0/5] hv_netvsc: Fix error "nvsp_rndis_pkt_complete error status: 2"
-Date: Mon, 12 May 2025 17:05:59 -0700
-Message-Id: <20250513000604.1396-1-mhklinux@outlook.com>
+Subject: [PATCH net 2/5] hv_netvsc: Use vmbus_sendpacket_mpb_desc() to send VMBus messages
+Date: Mon, 12 May 2025 17:06:01 -0700
+Message-Id: <20250513000604.1396-3-mhklinux@outlook.com>
 X-Mailer: git-send-email 2.25.1
+In-Reply-To: <20250513000604.1396-1-mhklinux@outlook.com>
+References: <20250513000604.1396-1-mhklinux@outlook.com>
 Reply-To: mhklinux@outlook.com
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -89,104 +93,105 @@ Content-Transfer-Encoding: 8bit
 
 From: Michael Kelley <mhklinux@outlook.com>
 
-Starting with commit dca5161f9bd0 in the 6.3 kernel, the Linux driver
-for Hyper-V synthetic networking (netvsc) occasionally reports
-"nvsp_rndis_pkt_complete error status: 2".[1] This error indicates
-that Hyper-V has rejected a network packet transmit request from the
-guest, and the outgoing network packet is dropped. Higher level
-network protocols presumably recover and resend the packet so there is
-no functional error, but performance is slightly impacted. Commit
-dca5161f9bd0 is not the cause of the error -- it only added reporting
-of an error that was already happening without any notice. The error
-has presumably been present since the netvsc driver was originally
-introduced into Linux.
+netvsc currently uses vmbus_sendpacket_pagebuffer() to send VMBus
+messages. This function creates a series of GPA ranges, each of which
+contains a single PFN. However, if the rndis header in the VMBus
+message crosses a page boundary, the netvsc protocol with the host
+requires that both PFNs for the rndis header must be in a single "GPA
+range" data structure, which isn't possible with
+vmbus_sendpacket_pagebuffer(). As the first step in fixing this, add a
+new function netvsc_build_mpb_array() to build a VMBus message with
+multiple GPA ranges, each of which may contain multiple PFNs. Use
+vmbus_sendpacket_mpb_desc() to send this VMBus message to the host.
 
-This patch set fixes the root cause of the problem, which is that the
-netvsc driver in Linux may send an incorrectly formatted VMBus message
-to Hyper-V when transmitting the network packet. The incorrect
-formatting occurs when the rndis header of the VMBus message crosses a
-page boundary due to how the Linux skb head memory is aligned. In such
-a case, two PFNs are required to describe the location of the rndis
-header, even though they are contiguous in guest physical address
-(GPA) space. Hyper-V requires that two PFNs be in a single "GPA range"
-data struture, but current netvsc code puts each PFN in its own GPA
-range, which Hyper-V rejects as an error in the case of the rndis
-header.
+There's no functional change since higher levels of netvsc don't
+maintain or propagate knowledge of contiguous PFNs. Based on its
+input, netvsc_build_mpb_array() still produces a separate GPA range
+for each PFN and the behavior is the same as with
+vmbus_sendpacket_pagebuffer(). But the groundwork is laid for a
+subsequent patch to provide the necessary grouping.
 
-The incorrect formatting occurs only for larger packets that netvsc
-must transmit via a VMBus "GPA Direct" message. There's no problem
-when netvsc transmits a smaller packet by copying it into a pre-
-allocated send buffer slot because the pre-allocated slots don't have
-page crossing issues.
+Cc: <stable@vger.kernel.org> # 6.1.x
+Signed-off-by: Michael Kelley <mhklinux@outlook.com>
+---
+ drivers/net/hyperv/netvsc.c | 50 +++++++++++++++++++++++++++++++++----
+ 1 file changed, 45 insertions(+), 5 deletions(-)
 
-After commit 14ad6ed30a10 in the 6.14 kernel, the error occurs much
-more frequently in VMs with 16 or more vCPUs. It may occur every few
-seconds, or even more frequently, in a ssh session that outputs a lot
-of text. Commit 14ad6ed30a10 subtly changes how skb head memory is
-allocated, making it much more likely that the rndis header will cross
-a page boundary when the vCPU count is 16 or more.  The changes in
-commit 14ad6ed30a10 are perfectly valid -- they just had the side
-effect of making the netvsc bug more prominent.
-
-One fix is to check for adjacent PFNs in vmbus_sendpacket_pagebuffer()
-and just combine them into a single GPA range. Such a fix is very
-contained. But conceptually it is fixing the problem at the wrong
-level. So this patch set takes the broader approach of maintaining
-the already known grouping of contiguous PFNs at a higher level in
-the netvsc driver code, and propagating that grouping down to the
-creation of the VMBus message to send to Hyper-V. Maintaining the
-grouping fixes this problem, and has the added benefit of allowing
-netvsc_dma_map() to make fewer calls to dma_map_single() to do bounce
-buffering in CoCo VMs.
-
-Patch 1 is a preparatory change to allow vmbus_sendpacket_mpb_desc()
-to specify multiple GPA ranges. In current code
-vmbus_sendpacket_mpb_desc() is used only by the storvsc synthetic SCSI
-driver, and it always creates a single GPA range.
-
-Patch 2 updates the netvsc driver to use vmbus_sendpacket_mpb_desc()
-instead of vmbus_sendpacket_pagebuffer(). Because the higher levels of
-netvsc still don't group contiguous PFNs, this patch is functionally
-neutral. The VMBus message to Hyper-V still has many GPA ranges, each
-with a single PFN. But it lays the groundwork for the next patch.
-
-Patch 3 changes the higher levels of netvsc to preserve the already
-known grouping of contiguous PFNs. When the contiguous groupings are
-passed to vmbus_sendpacket_mpb_desc(), GPA ranges containing multiple
-PFNs are produced, as expected by Hyper-V. This is point at which the
-core problem is fixed.
-
-Patches 4 and 5 remove code that is no longer necessary after the
-previous patches.
-
-These changes provide a net reduction of about 65 lines of code, which
-is an added benefit.
-
-These changes have been tested in normal VMs, in SEV-SNP and TDX CoCo
-VMs, and in Dv6-series VMs where the netvsp implementation is in the
-OpenHCL paravisor instead of the Hyper-V host.
-
-These changes are built against kernel version 6.15-rc6.
-
-[1] https://bugzilla.kernel.org/show_bug.cgi?id=217503
-
-Michael Kelley (5):
-  Drivers: hv: Allow vmbus_sendpacket_mpb_desc() to create multiple
-    ranges
-  hv_netvsc: Use vmbus_sendpacket_mpb_desc() to send VMBus messages
-  hv_netvsc: Preserve contiguous PFN grouping in the page buffer array
-  hv_netvsc: Remove rmsg_pgcnt
-  Drivers: hv: vmbus: Remove vmbus_sendpacket_pagebuffer()
-
- drivers/hv/channel.c              | 65 ++-----------------------------
- drivers/net/hyperv/hyperv_net.h   | 13 ++++++-
- drivers/net/hyperv/netvsc.c       | 57 ++++++++++++++++++++++-----
- drivers/net/hyperv/netvsc_drv.c   | 62 +++++++----------------------
- drivers/net/hyperv/rndis_filter.c | 24 +++---------
- drivers/scsi/storvsc_drv.c        |  1 +
- include/linux/hyperv.h            |  7 ----
- 7 files changed, 83 insertions(+), 146 deletions(-)
-
+diff --git a/drivers/net/hyperv/netvsc.c b/drivers/net/hyperv/netvsc.c
+index d6f5b9ea3109..6d1705f87682 100644
+--- a/drivers/net/hyperv/netvsc.c
++++ b/drivers/net/hyperv/netvsc.c
+@@ -1055,6 +1055,42 @@ static int netvsc_dma_map(struct hv_device *hv_dev,
+ 	return 0;
+ }
+ 
++/* Build an "array" of mpb entries describing the data to be transferred
++ * over VMBus. After the desc header fields, each "array" entry is variable
++ * size, and each entry starts after the end of the previous entry. The
++ * "offset" and "len" fields for each entry imply the size of the entry.
++ *
++ * The pfns are in HV_HYP_PAGE_SIZE, because all communication with Hyper-V
++ * uses that granularity, even if the system page size of the guest is larger.
++ * Each entry in the input "pb" array must describe a contiguous range of
++ * guest physical memory so that the pfns are sequential if the range crosses
++ * a page boundary. The offset field must be < HV_HYP_PAGE_SIZE.
++ */
++static inline void netvsc_build_mpb_array(struct hv_page_buffer *pb,
++				u32 page_buffer_count,
++				struct vmbus_packet_mpb_array *desc,
++				u32 *desc_size)
++{
++	struct hv_mpb_array *mpb_entry = &desc->range;
++	int i, j;
++
++	for (i = 0; i < page_buffer_count; i++) {
++		u32 offset = pb[i].offset;
++		u32 len = pb[i].len;
++
++		mpb_entry->offset = offset;
++		mpb_entry->len = len;
++
++		for (j = 0; j < HVPFN_UP(offset + len); j++)
++			mpb_entry->pfn_array[j] = pb[i].pfn + j;
++
++		mpb_entry = (struct hv_mpb_array *)&mpb_entry->pfn_array[j];
++	}
++
++	desc->rangecount = page_buffer_count;
++	*desc_size = (char *)mpb_entry - (char *)desc;
++}
++
+ static inline int netvsc_send_pkt(
+ 	struct hv_device *device,
+ 	struct hv_netvsc_packet *packet,
+@@ -1097,6 +1133,9 @@ static inline int netvsc_send_pkt(
+ 
+ 	packet->dma_range = NULL;
+ 	if (packet->page_buf_cnt) {
++		struct vmbus_channel_packet_page_buffer desc;
++		u32 desc_size;
++
+ 		if (packet->cp_partial)
+ 			pb += packet->rmsg_pgcnt;
+ 
+@@ -1106,11 +1145,12 @@ static inline int netvsc_send_pkt(
+ 			goto exit;
+ 		}
+ 
+-		ret = vmbus_sendpacket_pagebuffer(out_channel,
+-						  pb, packet->page_buf_cnt,
+-						  &nvmsg, sizeof(nvmsg),
+-						  req_id);
+-
++		netvsc_build_mpb_array(pb, packet->page_buf_cnt,
++				(struct vmbus_packet_mpb_array *)&desc,
++				 &desc_size);
++		ret = vmbus_sendpacket_mpb_desc(out_channel,
++				(struct vmbus_packet_mpb_array *)&desc,
++				desc_size, &nvmsg, sizeof(nvmsg), req_id);
+ 		if (ret)
+ 			netvsc_dma_unmap(ndev_ctx->device_ctx, packet);
+ 	} else {
 -- 
 2.25.1
 
