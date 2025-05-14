@@ -1,147 +1,145 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 129281F866B
-	for <linux-scsi@vger.kernel.org>; Wed, 14 May 2025 17:49:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83234296721;
+	Wed, 14 May 2025 21:05:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747244969; cv=none; b=UMHPtgiA7D3mEczoMUEsYbvsjAL0HIfkXNhnW9S/f4xxY0SAj2IVn1HQ7UQF1qXvpgpBkOYLyG/MqTwNqXt3pVEAembL+vXv6FjmNWpeZgFA2LK9jyzSoJLyaR12MBE6Ut8USAn69buKLe59Oy76DgyRanIRZE1O3VFhfFgMF80=
+	t=1747256720; cv=none; b=PXaLJylXN3NyQrc14nQPhD0pHR0mrQCiiOYVvm2QpXCB2UBeZgjCvACNub0XYQTX7rip3yoafJW7Bz7JomBVecnAGIInO050BHdNKKvn9h0WLNmJgiZAKoMETr8kYibA0KVd6w6fRzJVmrPEgR72L3b3IiBnLIwGK4RsOLowN3c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747244969; c=relaxed/simple;
-	bh=LxTfSd/7IAwsDPnzSG3cxLZevfygYzh7L/1opFHyldA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FEnbUXC7iRVsTuprnM9wqVfyI3tI1Q9IhnjNLV8xEmHhTnpfS4Fe4el2Lv3eM2+GCJuYgy3Obgn55vhLYHe0H0hmmwjBU0wMbBMFk4RLtKSpKmRSmV0OxmInIQiX3w/COo2cYFZQJoIMoWdY6KxYZbjknS4YiSamOxePYaKk2gQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=c3z0KGJT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=k5sUYedm; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=slKEHsve; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=MN5gXTrk; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1747256720; c=relaxed/simple;
+	bh=uoRh8aaEuZOB5yWJaOK5GfLIhzapSqZ04TVuCbrANNU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WnnWazttlAVaMckWBf3fprLbRA/Ziy6ZjgbdU3J5c8Yznet9URhi67c4Y6q3R7g9fzgB41GtDQdhw1uo6LDbYH+psAYeUfet2b/R7HKyMs3OsBX+gCHdldXzS5akysRNHL0U0IaBvHEoX7snyJ4Rj1OT/OhmvmWUpUZj1/wMr3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=x+6W/6QD; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="c3z0KGJT";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="k5sUYedm";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="slKEHsve";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="MN5gXTrk"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="x+6W/6QD"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4ZyQph1mslzlytFj;
+	Wed, 14 May 2025 21:05:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1747256712; x=1749848713; bh=4y6PpJpBvWFd4janBIfhVIiK
+	UNQpKumZnChgRc1rMHc=; b=x+6W/6QDkL7EY+dpOuW6aAvIA2BJcx+poFLSCnez
+	c9kP6soLoce7VKhm/J58RbrrT7MdFOBDPzBeUx79eWIh/kUcNUuEfyoL1L07fPfL
+	q7LGxAC8ZkZpHWJ6Nel0i+AJL39sbFHhB2pjddhShrRU6G/F9nwcyyBp15s2s4er
+	/7McPBtoFjzc9lawcVBvslN7QSlH8HvBHjE8HrhUNnki833OeyyhZtZJ/G3Act21
+	8hbBdM0TLEgIn0x6qTRAHV+GGnoLpAq8xToSI1DB2Oz6f0zQwb3BTOLZ5Y7aj480
+	2vaaRwFRkVlJIYQU9ABnkYlF/rvsS7QfoVjJ4GLfd9/p/w==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id q7JJV-5aA4eK; Wed, 14 May 2025 21:05:12 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 130111F399;
-	Wed, 14 May 2025 17:49:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1747244966; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DmGO+NabaKpfrrkQS+LCDqhwMzhbABcI3RxnkP+9bj4=;
-	b=c3z0KGJTV2vnFpdTSyoUNzljvLnILUDEMaasdHw6Oy/kgmK5QP/4WAG2U5oGk/5IHTzO80
-	QchKXHJ42LcNvWBb95zDXyUHEY8mFVS7vrpd/7W2cphVwkywbvRDTqjCmDLElXUJl2VEAc
-	To3oJEh5ubYJIkUefzGn20v+kPsgd2E=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1747244966;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DmGO+NabaKpfrrkQS+LCDqhwMzhbABcI3RxnkP+9bj4=;
-	b=k5sUYedmbXgKVYrKaS+vGV9REJF5079skawrmBEuivZnSzCWop+lC8+K9qbKY4J5EVM6hz
-	OsUhOKvlfZSR4FCw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1747244965; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DmGO+NabaKpfrrkQS+LCDqhwMzhbABcI3RxnkP+9bj4=;
-	b=slKEHsveynpUG2MSh7A2qlx3v72ZYhuw7/NON85cE9u9CLH0L3QIoV+Qy0HNHySNg+6SKm
-	L/EY/qawjhjhgFQIxsc3Q8KkB4VO1eYwU5v565MmjThEAK/pTrDyjMfnCIFZAei3XH3wac
-	EUXiwfN9YHqXZELr5ZcFf3jdeOEpeZ4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1747244965;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DmGO+NabaKpfrrkQS+LCDqhwMzhbABcI3RxnkP+9bj4=;
-	b=MN5gXTrkQKzK9YZEOjvXI5BWfonVrNqEbB2mOKVNSZWDE28CQr9myrvNbNCRc63QukAJIM
-	z6O/jWSZdT7tvwAA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id DE9A413306;
-	Wed, 14 May 2025 17:49:24 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 9B1SNqTXJGiNUwAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Wed, 14 May 2025 17:49:24 +0000
-Date: Wed, 14 May 2025 19:49:20 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: Waiman Long <llong@redhat.com>
-Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Thomas Gleixner <tglx@linutronix.de>, Costa Shulyupin <costa.shul@redhat.com>, 
-	Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, 
-	Ming Lei <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, 
-	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	storagedev@microchip.com, virtualization@lists.linux.dev, 
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v6 7/9] lib/group_cpus: honor housekeeping config when
- grouping CPUs
-Message-ID: <770522cc-79fd-415b-9f4e-f25f8c73194e@flourine.local>
-References: <20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org>
- <20250424-isolcpus-io-queues-v6-7-9a53a870ca1f@kernel.org>
- <cd1576ee-82a3-4899-b218-2e5c5334af6e@redhat.com>
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4ZyQpL6nSDzlyj4g;
+	Wed, 14 May 2025 21:04:57 +0000 (UTC)
+Message-ID: <88718b2f-0583-4444-8bf0-7ecf9a45329c@acm.org>
+Date: Wed, 14 May 2025 14:04:56 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <cd1576ee-82a3-4899-b218-2e5c5334af6e@redhat.com>
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MISSING_XM_UA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[25];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[flourine.local:mid,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -4.30
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ufs: core: Add HID support
+To: Huan Tang <tanghuan@vivo.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, peter.wang@mediatek.com,
+ manivannan.sadhasivam@linaro.org, quic_nguyenb@quicinc.com,
+ luhongfei@vivo.com, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org
+Cc: opensource.kernel@vivo.com, Wenxing Cheng <wenxing.cheng@vivo.com>
+References: <20250512131519.138-1-tanghuan@vivo.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250512131519.138-1-tanghuan@vivo.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, May 06, 2025 at 02:18:32PM -0400, Waiman Long wrote:
-> > +static struct cpumask *group_mask_cpus_evenly(unsigned int numgrps,
-> > +					      const struct cpumask *cpu_mask,
-> > +					      unsigned int *nummasks)
+On 5/12/25 6:15 AM, Huan Tang wrote:
+> +What:		/sys/bus/platform/drivers/ufshcd/*/ufs_hid/hid_analysis_trigger
+> +What:		/sys/bus/platform/devices/*.ufs/ufs_hid/hid_analysis_trigger
+> +Date:		April 2025
+> +Contact:	Huan Tang <tanghuan@vivo.com>
+> +Description:
+> +		The host can enable or disable HID analysis operation.
+> +
+> +		=======  =========================================
+> +		disable   disable HID analysis operation
+> +		enable    enable HID analysis operation
+> +		=======  =========================================
+> +
+> +		The file is write only.
 
-> > +struct cpumask *group_cpus_evenly(unsigned int numgrps,
-> > +				  unsigned int *nummasks)
-> > +{
-> > +	if (housekeeping_enabled(HK_TYPE_IO_QUEUE)) {
-> > +		return group_mask_cpus_evenly(numgrps,
-> > +				housekeeping_cpumask(HK_TYPE_IO_QUEUE),
-> > +				nummasks);
-> > +	}
-> > +
-> > +	return group_possible_cpus_evenly(numgrps, nummasks);
-> > +}
-> 
-> The group_cpus_evenly() isn't just used by block I/O. So you can't make it
-> check only HK_TYPE_IO_QUEUE here. I will suggest to make it a bit more
-> general and add helper function to specify the isolated cpumask the caller
-> want to skip.
+All HID sysfs attributes occur in the "ufs_hid" directory and have a
+"hid_" prefix. That's two times "hid". Please remove the "hid_" prefix
+from the sysfs attribute names since it is redundant.
 
-Okay, in this case I'd make group_mask_cpus_evenly a public interface
-and drop the houskeeping bits in group_cpus_evenly.
+> +static struct attribute *ufs_sysfs_ufs_hid[] = {
+> +	&dev_attr_hid_analysis_trigger.attr,
+> +	&dev_attr_hid_defrag_trigger.attr,
+> +	&dev_attr_hid_fragmented_size.attr,
+> +	&dev_attr_hid_defrag_size.attr,
+> +	&dev_attr_hid_progress_ratio.attr,
+> +	&dev_attr_hid_state.attr,
+> +	NULL,
+> +};
+> +
+> +static const struct attribute_group ufs_sysfs_ufs_hid_group = {
+> +	.name = "ufs_hid",
+> +	.attrs = ufs_sysfs_ufs_hid,
+> +};
+
+Isn't the prefix "ufs_" in "ufs_hid" redundant since this sysfs group
+occurs under a UFS host controller directory?
+
+Regarding the name of this sysfs group, "ufs" occurs twice in that
+name (ufs_sysfs_ufs_hid_group). Please make sure that "ufs" only occurs
+once in that sysfs group name.
+
+>   #define UFS_LUN_DESC_PARAM(_pname, _puname, _duname, _size)		\
+>   static ssize_t _pname##_show(struct device *dev,			\
+>   	struct device_attribute *attr, char *buf)			\
+> @@ -1898,6 +2079,7 @@ const struct attribute_group ufs_sysfs_lun_attributes_group = {
+>   
+>   void ufs_sysfs_add_nodes(struct device *dev)
+>   {
+> +	struct ufs_hba *hba = dev_get_drvdata(dev);
+>   	int ret;
+>   
+>   	ret = sysfs_create_groups(&dev->kobj, ufs_sysfs_groups);
+> @@ -1905,9 +2087,22 @@ void ufs_sysfs_add_nodes(struct device *dev)
+>   		dev_err(dev,
+>   			"%s: sysfs groups creation failed (err = %d)\n",
+>   			__func__, ret);
+> +
+> +	if (hba->dev_info.hid_sup) {
+> +		ret = sysfs_create_group(&dev->kobj, &ufs_sysfs_ufs_hid_group);
+> +		if (ret)
+> +			dev_err(dev,
+> +				"%s: sysfs ufs_hid group creation failed (err = %d)\n",
+> +				__func__, ret);
+> +	}
+>   }
+
+Please merge ufs_sysfs_ufs_hid_group into ufs_sysfs_groups, remove the
+new sysfs_create_group() call and add a visibility callback in
+ufs_sysfs_ufs_hid_group that only makes the attributes in this group
+visible if hba->dev_info.hid_sup == true.
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
