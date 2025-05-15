@@ -1,95 +1,149 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D60D4B1E64;
-	Thu, 15 May 2025 02:59:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 508CC1DF97D
+	for <linux-scsi@vger.kernel.org>; Thu, 15 May 2025 08:36:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747277998; cv=none; b=A5SdNU1bNL5PS3Cwp/KUEV4EmkVOevQGGIPd9t7zS0dtFVCdglruOQOoz1WLSN9WWsBNQPvxmjgzjlc6crswGQcozTV08yMQzeXAK/B2Hn6FGmpaRwLzJP9AOL6HU8moMXn0HgknApsiycrXyqPYpf4LIu7Dyb5dK+YcnETIO6w=
+	t=1747298212; cv=none; b=iQ1cI8SixoJeFU92jYwLCSMef9ufmW3xLYDY3SkNQ4jz7I6cjjqVcuCiaX5+01hPFskFoR9g8s+OO0w54crg+YR8UJteGgxzkXy+W1g/ESvOcbPkIgmHwlk/shuLfLexKb1Wupb60xDACdqh6et57rXaPwjTAPQ5dKcUOUUacmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747277998; c=relaxed/simple;
-	bh=PDLb/Z5CFapT4NGFtLlJZRiFyM6zo5sw4RC5O3pCj60=;
-	h=Content-Type:MIME-Version:Subject:From:Message-Id:Date:References:
-	 In-Reply-To:To:Cc; b=PvinJE3pEvDX3g7cjqYWxqfPlr4opROMMdOgJx30KbE38PL9X/FxBQRgixIz0R0btBOOuzA2faBbHnElSGx4kM/Mduv4qwkIYAVewZsZahDboWuiGuI5K9Si56RndU9LjTL2k8N4ym93QS2xrSQxXRk57tM07GmOpRE+XaASifY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V9DTHpJm; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747298212; c=relaxed/simple;
+	bh=+c9NGYmiEkqdCnm5003uXEFhtfdeTB7uo/kvDiYpTHE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=YiIrBthklsRSbGSaQbQC9zH4RlddMYjA6JTx1h7Dub+WebP3rHwa1prUsQFbZc/7/rZlgmdJbjioYIMGNBRNs+BZZ9cw+eNkJXMOjSoOrJulX39bF98uaf/L0hlFBsVZYEbY+qJo8kuD+BAtVCXHMj5rSFHbLh5I9brsG4uWiyE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=aqC1eiDN; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=J/xY8Bkn; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=aqC1eiDN; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=J/xY8Bkn; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V9DTHpJm"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CBC5FC4CEEB;
-	Thu, 15 May 2025 02:59:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747277997;
-	bh=PDLb/Z5CFapT4NGFtLlJZRiFyM6zo5sw4RC5O3pCj60=;
-	h=Subject:From:Date:References:In-Reply-To:To:Cc:From;
-	b=V9DTHpJmS1XdJOo7dTi7f7SBsTBdKs7B7n75z+ENLeHSUtQZgNpTNstGghGQUFP5K
-	 sWDX1QeIPCL9RWephFXnPsWqPZ2JXEKoTi6gkya1Agy7KlfNvH6CjWbUI6idmhT8Ao
-	 2gD7tm/ix4SJJCBsiQkG0P8Fho4t7vIuDwjf66CYz3rZn00jFZxeh6qx4FnMsNIQ85
-	 AsOk6n3MPNmp8Jnp/gGJmhMdGD8xpxhTNnlZMDYINBb/+vSC4yFdatZlLpiDf4IAdB
-	 +TWT8lBJIK/8/evfnk/91ncMR9Mab5VL1VrNCpguRFRuXO8Yi3QHw07bfGLhaUe93g
-	 ncZtNbubpVCGA==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 33D20380AA66;
-	Thu, 15 May 2025 03:00:36 +0000 (UTC)
-Content-Type: text/plain; charset="utf-8"
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="aqC1eiDN";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="J/xY8Bkn";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="aqC1eiDN";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="J/xY8Bkn"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 709EE211B5;
+	Thu, 15 May 2025 08:36:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1747298209; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Kvzf/cT7kFTGGu4qe+BKuApOCbvOUKO36BdytQuX9bg=;
+	b=aqC1eiDNM7x3s6EozlAR5OWCQviVaAtCIVVgIiVqcB5WImfCQcQSz6EKUql/QHKN5ac2ld
+	bqwy15BWMFuXP6q/FvItc1ldfOdTVkAafcpVQ2xzORslHnbLpp4moQX3Z7VPcHwnkoO917
+	WandeC9N+tQ+ikWVdzmqhgEDCjiAF7I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1747298209;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Kvzf/cT7kFTGGu4qe+BKuApOCbvOUKO36BdytQuX9bg=;
+	b=J/xY8BknbdxEFblaXLWVlGBNQFfjNKxZQlySvLAf7Ew69O48nQxw0BiCJEwyMZTGwEUpIE
+	S+1f4MolWlZmm2Cg==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=aqC1eiDN;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="J/xY8Bkn"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1747298209; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Kvzf/cT7kFTGGu4qe+BKuApOCbvOUKO36BdytQuX9bg=;
+	b=aqC1eiDNM7x3s6EozlAR5OWCQviVaAtCIVVgIiVqcB5WImfCQcQSz6EKUql/QHKN5ac2ld
+	bqwy15BWMFuXP6q/FvItc1ldfOdTVkAafcpVQ2xzORslHnbLpp4moQX3Z7VPcHwnkoO917
+	WandeC9N+tQ+ikWVdzmqhgEDCjiAF7I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1747298209;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Kvzf/cT7kFTGGu4qe+BKuApOCbvOUKO36BdytQuX9bg=;
+	b=J/xY8BknbdxEFblaXLWVlGBNQFfjNKxZQlySvLAf7Ew69O48nQxw0BiCJEwyMZTGwEUpIE
+	S+1f4MolWlZmm2Cg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4A0B6137E8;
+	Thu, 15 May 2025 08:36:49 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id uh33EKGnJWgzPAAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Thu, 15 May 2025 08:36:49 +0000
+Date: Thu, 15 May 2025 10:36:40 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Ming Lei <ming.lei@redhat.com>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	"Michael S. Tsirkin" <mst@redhat.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Thomas Gleixner <tglx@linutronix.de>, Costa Shulyupin <costa.shul@redhat.com>, 
+	Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, 
+	Waiman Long <llong@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, 
+	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+	storagedev@microchip.com, virtualization@lists.linux.dev, 
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH v6 8/9] blk-mq: use hk cpus only when isolcpus=io_queue
+ is enabled
+Message-ID: <8c162a99-05f5-408c-b513-4005690d56a2@flourine.local>
+References: <20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org>
+ <20250424-isolcpus-io-queues-v6-8-9a53a870ca1f@kernel.org>
+ <aB1qqNDEnHMlpMH_@fedora>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Subject: Re: [PATCH net 0/5] hv_netvsc: Fix error "nvsp_rndis_pkt_complete error
- status: 2"
-From: patchwork-bot+netdevbpf@kernel.org
-Message-Id: 
- <174727803505.2590892.12386533199392905169.git-patchwork-notify@kernel.org>
-Date: Thu, 15 May 2025 03:00:35 +0000
-References: <20250513000604.1396-1-mhklinux@outlook.com>
-In-Reply-To: <20250513000604.1396-1-mhklinux@outlook.com>
-To: Michael Kelley <mhkelley58@gmail.com>
-Cc: kys@microsoft.com, haiyangz@microsoft.com, wei.liu@kernel.org,
- decui@microsoft.com, andrew+netdev@lunn.ch, davem@davemloft.net,
- edumazet@google.com, kuba@kernel.org, pabeni@redhat.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- linux-hyperv@vger.kernel.org, linux-kernel@vger.kernel.org,
- netdev@vger.kernel.org, linux-scsi@vger.kernel.org, stable@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aB1qqNDEnHMlpMH_@fedora>
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 709EE211B5
+X-Spam-Flag: NO
+X-Spam-Score: -4.51
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_TWELVE(0.00)[25];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Rspamd-Action: no action
 
-Hello:
-
-This series was applied to netdev/net.git (main)
-by Jakub Kicinski <kuba@kernel.org>:
-
-On Mon, 12 May 2025 17:05:59 -0700 you wrote:
-> From: Michael Kelley <mhklinux@outlook.com>
+On Fri, May 09, 2025 at 10:38:32AM +0800, Ming Lei wrote:
+> > +static bool blk_mq_map_hk_queues(struct blk_mq_queue_map *qmap)
+> > +{
+> > +	struct cpumask *hk_masks;
+> > +	cpumask_var_t isol_mask;
+> > +	unsigned int queue, cpu, nr_masks;
+> > +
+> > +	if (!housekeeping_enabled(HK_TYPE_IO_QUEUE))
+> > +		return false;
 > 
-> Starting with commit dca5161f9bd0 in the 6.3 kernel, the Linux driver
-> for Hyper-V synthetic networking (netvsc) occasionally reports
-> "nvsp_rndis_pkt_complete error status: 2".[1] This error indicates
-> that Hyper-V has rejected a network packet transmit request from the
-> guest, and the outgoing network packet is dropped. Higher level
-> network protocols presumably recover and resend the packet so there is
-> no functional error, but performance is slightly impacted. Commit
-> dca5161f9bd0 is not the cause of the error -- it only added reporting
-> of an error that was already happening without any notice. The error
-> has presumably been present since the netvsc driver was originally
-> introduced into Linux.
-> 
-> [...]
+> It could be more readable to move the above check to the caller.
 
-Here is the summary with links:
-  - [net,1/5] Drivers: hv: Allow vmbus_sendpacket_mpb_desc() to create multiple ranges
-    https://git.kernel.org/netdev/net/c/380b75d30786
-  - [net,2/5] hv_netvsc: Use vmbus_sendpacket_mpb_desc() to send VMBus messages
-    https://git.kernel.org/netdev/net/c/4f98616b855c
-  - [net,3/5] hv_netvsc: Preserve contiguous PFN grouping in the page buffer array
-    https://git.kernel.org/netdev/net/c/41a6328b2c55
-  - [net,4/5] hv_netvsc: Remove rmsg_pgcnt
-    https://git.kernel.org/netdev/net/c/5bbc644bbf4e
-  - [net,5/5] Drivers: hv: vmbus: Remove vmbus_sendpacket_pagebuffer()
-    https://git.kernel.org/netdev/net/c/45a442fe369e
-
-You are awesome, thank you!
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/patchwork/pwbot.html
-
-
+I wanted to avoid checking if housekeeping is enabled twice in a row.
+I'll post the next version with your suggestion and see if this approach
+is better.
