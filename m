@@ -1,125 +1,119 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8B2222D4ED;
-	Thu, 15 May 2025 16:27:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBA9F207DE2
+	for <linux-scsi@vger.kernel.org>; Thu, 15 May 2025 17:36:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747326481; cv=none; b=IWFZ7YUJelQPDk7fkEZR6ZLaizEs+RLlakIslsBY8rgGs5Vs0eRbiVlrPiDitVXwzCPS2tE2GL8OOOaOPFb6LNHab9743H8DZZdoW2xHTigKYXhCOqkjN/PTgRX7DFS5RrrjjlLsmPCAqYlZBWU3ZpPPppmcSJ891ff+w2gQtcg=
+	t=1747330570; cv=none; b=o7FSUK8EdCi48stzhpV4VQOwsrbxDB4VkhkZPTXlQJ4qg5BgLE9Xu7UUv/XTGVQdd7p/+O0mI2N2zAmiU83UdB46SLrDognnVh3SvggT7G6IqRXyLV+oA2aKpYILcAGnZkFtFRfJEbYW6xFiILi4eXOaGFo3jlAIDDOeHXetAio=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747326481; c=relaxed/simple;
-	bh=+K4gzSxjT5lVukfOttjD+XFNfJaaJhihXK2v+zfn2R8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=iBtvtc+jydFQWUS28shVDJQLkfbRFI4e97DKOu9gIM/BmI422iF3sBiiV4ATFQ22wjzKduaU8fLLQWWh1QVUXPCryjJtsZnAUumXGkjQ/dJE8NrYw5xLC8QtZSCqaEOCZrIw/O/LmTkdSQ5l3IKbMz87eGrH3WYIIOkZHh1WXpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=POfM5/fq; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1747330570; c=relaxed/simple;
+	bh=NR2KwpgoP9e6xDNHhpTJz0r+PQREDf3/duguzujYn/w=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=baDds09vArm1ouF+5QcJXG69zX03Rr+Zd8DAGIYXNztlHtYAQUiiYDG9qjiCbCfi4Te0l7txT7PuzfeHUxAj2xtOdc/duN/iBKFdltKMPs1ad0dqaYhtAKzI79bgRI3krkm4ZuPVEQiduniFXoQ9FXYXs0sm9McctrupY0RPEEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pkRNxYw2; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="POfM5/fq"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54FEFCeq026156;
-	Thu, 15 May 2025 16:27:40 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=V7ySCYnUYSX
-	wwDN6/ExxYJpAp/ii2NAf3QEXQz/O89g=; b=POfM5/fqpxmNU0sg4u5hFQB+teg
-	/Mn+591gLFKlyw7iBMAONPTKO+2wQNMaLIdw2PUuVoTiHA6ZErq+2isz2pGvIoXY
-	fPZr3Xy/2DKhDjKwJ6u0U9EWkW1cXTz2CYs3tej9fyr+8AYbLRE2aeAU0x/NaOs9
-	S1MwFGnLswFqy94CeiOEqrPOdIZcgwhm3H1w43Op72QJqQr8lICflIAZr+e6uhRG
-	kQ+AxUXllmhm3lpAory1w7FijMbsfpHmgAP/XdOVNw0Qc5OikoiWt7NJ4E8eedMJ
-	OgMdQhob5GCQcP22fBpvN9fRVgYEkgRXdO0AGBWjwHv9WqaPYtr098xkL2g==
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46mbcyq0y1-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 15 May 2025 16:27:40 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 54FGRSJ4023582;
-	Thu, 15 May 2025 16:27:36 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 46hyvmvnq9-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Thu, 15 May 2025 16:27:36 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 54FGRPSj023527;
-	Thu, 15 May 2025 16:27:36 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 54FGRaNc023683;
-	Thu, 15 May 2025 16:27:36 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id 863125015B0; Thu, 15 May 2025 21:57:35 +0530 (+0530)
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-To: vkoul@kernel.org, kishon@kernel.org, manivannan.sadhasivam@linaro.org,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-        bvanassche@acm.org, andersson@kernel.org, neil.armstrong@linaro.org,
-        dmitry.baryshkov@oss.qualcomm.com, konrad.dybcio@oss.qualcomm.com
-Cc: quic_rdwivedi@quicinc.com, quic_cang@quicinc.com,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V5 11/11] scsi: ufs: qcom: Prevent calling phy_exit before phy_init
-Date: Thu, 15 May 2025 21:57:22 +0530
-Message-ID: <20250515162722.6933-12-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250515162722.6933-1-quic_nitirawa@quicinc.com>
-References: <20250515162722.6933-1-quic_nitirawa@quicinc.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pkRNxYw2"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4Zyy6v0pNQzlvtfp;
+	Thu, 15 May 2025 17:36:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1747330565; x=1749922566; bh=7C/f5KRy5lLe36jI5JCXdFDUNDhQQDkAtCM
+	FgJY/hPA=; b=pkRNxYw2EBoVhyG1RJnC1kYhS3vs4SOYMd62Gp9tHzJGXPAzlo/
+	0XSbBA3eZDBBk/3vOsnmp09MW7xnkvV+ZeYgpqYPiGwuFN3m1UBFsAfpvn0l04vs
+	zsNRHNyViWR9BzvJ+eMOup3tE9PwiFWwUhDcAkJ+lbbc5KZc+kYxxyUwQgLJRiBE
+	LKMvRDC36MkrkexK3gfk5pQMN31iGMmxT8Nbqo2j0cnlEeJDRhVkpTduIdytBoao
+	QiIqhEFTq6mZ2M91TnfcAECDf0WdBOPrCdzLQP1Bm5HR4c2xLMKW0Qmm4TBa9WEy
+	ons0i+OS0vVS+1oOLoHP1Ik4W+0vUdBdIxg==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id u6Oj-sWmq-iO; Thu, 15 May 2025 17:36:05 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4Zyy6n6lX4zlgqW1;
+	Thu, 15 May 2025 17:36:01 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	John Garry <john.g.garry@oracle.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] scsi_debug: Make max_sectors configurable
+Date: Thu, 15 May 2025 10:35:37 -0700
+Message-ID: <20250515173537.1024421-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.49.0.1101.gccaa498523-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: uy0HNrdnQmsFY0AAlFqsFVPCcMMgPmYw
-X-Proofpoint-ORIG-GUID: uy0HNrdnQmsFY0AAlFqsFVPCcMMgPmYw
-X-Authority-Analysis: v=2.4 cv=JszxrN4C c=1 sm=1 tr=0 ts=682615fc cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8 a=EUspDBNiAAAA:8 a=6qkdr0EpClcQ5iOZAa0A:9
- a=zZCYzV9kfG8A:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTE1MDE2MyBTYWx0ZWRfX1qNr6HISpzIP
- YHtTMW8MdSxbrWhtjRRSwt15J3/Rp/Qn7TXJrK00klwfAkoYLoPddi8PrusoH2Y5qwHHB221U19
- rd5adwrimd0U0wsMSqLvFl5rDkhiwqWmb/RyJ5SSBCV5mAmYD/nFFrc+iMPk6Vo5ShCYWmU7UGJ
- DLZ9uAdQoQbGdTrO7a7mPrhN4lKqV1JS8rA/xeYVtjA6lNBO2WzxMLYQozkoIGyFrklSI+odKsB
- JelJI0KGuKfxSWXCcOamqcn60vMfRtATguHwuGYWrYZYvJ6VhAGkG8MC5fmHcTgcwR8Hz7UzCj4
- yRxi+EKDNZPBUCdGEb6PYED7gBrkyHenv9htvt0GmCQ6Zwe1RnPthPM2sXt/vyeTiRcGRfTZRmL
- +54tLpnE1w9/fWSgfY5Rgd6Wwj9o57Q2+nmP0MGxa8rh377T2FmKgDxtfjaxTK9HuNLSQxVV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-15_07,2025-05-15_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 priorityscore=1501 suspectscore=0 mlxlogscore=999 bulkscore=0
- malwarescore=0 mlxscore=0 adultscore=0 phishscore=0 spamscore=0
- lowpriorityscore=0 clxscore=1015 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505070000 definitions=main-2505150163
+Content-Transfer-Encoding: quoted-printable
 
-Prevent calling phy_exit before phy_init to avoid abnormal power
-count and the following warning during boot up.
+Make the SCSI debug host parameter max_sectors configurable to make it
+easier to trigger request splitting in the block layer. If this parameter
+is not set then the following SCSI core code will set max sectors to 1024=
+:
 
-[5.146763] phy phy-1d80000.phy.0: phy_power_on was called before phy_init
+	if (sht->max_sectors)
+		shost->max_sectors =3D sht->max_sectors;
+	else
+		shost->max_sectors =3D SCSI_DEFAULT_MAX_SECTORS;
 
-Fixes: 7bac65687510 ("scsi: ufs: qcom: Power off the PHY if it was already powered on in ufs_qcom_power_up_sequence()")
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-Reviewed-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Cc: John Garry <john.g.garry@oracle.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/scsi/scsi_debug.c | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 583db910efd4..bd7f65500db7 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -540,7 +540,6 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
- 
- 	if (phy->power_count) {
- 		ufs_qcom_phy_power_off(hba);
--		phy_exit(phy);
- 	}
- 
- 	/* phy initialization - calibrate the phy */
--- 
-2.48.1
-
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index aef33d1e346a..101a96530b11 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -913,6 +913,7 @@ static int sdebug_host_max_queue;	/* per host */
+ static int sdebug_lowest_aligned =3D DEF_LOWEST_ALIGNED;
+ static int sdebug_max_luns =3D DEF_MAX_LUNS;
+ static int sdebug_max_queue =3D SDEBUG_CANQUEUE;	/* per submit queue */
++static unsigned int sdebug_max_sectors;
+ static unsigned int sdebug_medium_error_start =3D OPT_MEDIUM_ERR_ADDR;
+ static int sdebug_medium_error_count =3D OPT_MEDIUM_ERR_NUM;
+ static int sdebug_ndelay =3D DEF_NDELAY;	/* if > 0 then unit is nanoseco=
+nds */
+@@ -7314,6 +7315,7 @@ module_param_named(lowest_aligned, sdebug_lowest_al=
+igned, int, S_IRUGO);
+ module_param_named(lun_format, sdebug_lun_am_i, int, S_IRUGO | S_IWUSR);
+ module_param_named(max_luns, sdebug_max_luns, int, S_IRUGO | S_IWUSR);
+ module_param_named(max_queue, sdebug_max_queue, int, S_IRUGO | S_IWUSR);
++module_param_named(max_sectors, sdebug_max_sectors, uint, 0444);
+ module_param_named(medium_error_count, sdebug_medium_error_count, int,
+ 		   S_IRUGO | S_IWUSR);
+ module_param_named(medium_error_start, sdebug_medium_error_start, int,
+@@ -7395,6 +7397,7 @@ MODULE_PARM_DESC(lbpws10, "enable LBP, support WRIT=
+E SAME(10) with UNMAP bit (de
+ MODULE_PARM_DESC(atomic_write, "enable ATOMIC WRITE support, support WRI=
+TE ATOMIC(16) (def=3D0)");
+ MODULE_PARM_DESC(lowest_aligned, "lowest aligned lba (def=3D0)");
+ MODULE_PARM_DESC(lun_format, "LUN format: 0->peripheral (def); 1 --> fla=
+t address method");
++MODULE_PARM_DESC(max_sectors, "maximum sectors per command");
+ MODULE_PARM_DESC(max_luns, "number of LUNs per target to simulate(def=3D=
+1)");
+ MODULE_PARM_DESC(max_queue, "max number of queued commands (1 to max(def=
+))");
+ MODULE_PARM_DESC(medium_error_count, "count of sectors to return follow =
+on MEDIUM error");
+@@ -9465,6 +9468,7 @@ static int sdebug_driver_probe(struct device *dev)
+ 	hpnt->cmd_per_lun =3D sdebug_max_queue;
+ 	if (!sdebug_clustering)
+ 		hpnt->dma_boundary =3D PAGE_SIZE - 1;
++	hpnt->max_sectors =3D sdebug_max_sectors;
+=20
+ 	if (submit_queues > nr_cpu_ids) {
+ 		pr_warn("%s: trim submit_queues (was %d) to nr_cpu_ids=3D%u\n",
