@@ -1,88 +1,140 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2A2328032E;
-	Thu, 15 May 2025 20:11:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3483B282E1
+	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2025 08:37:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747339871; cv=none; b=FiLleZOPABVXi2W2Og9zZD9bNPRdzIlKJ7lPVnRJ85WSU6heM3i2ZqFZh04qxxerJGLQtFl+3VsX7OZPEkLD/jNMY1gMIdHt+CcQ8JJF/i8K4MlzLFenYBKhIE7VWq8fxWDD6zhoUsApRVuIdALNmZ+8gSHlgLZ3zj+0ZbakCuY=
+	t=1747384650; cv=none; b=B+KV4NdjkhHp6QzLantLQDuHooHu359XDAvqtQjpWDHJd1jiQfuWPMH0Y2/FR3UyDgxGwyik5XrqDjwhISsBKTVywDk7Of0AG0NxEbenRtc3yes6PwkjhwOWm7Dw2mIFwNU+xTRTlyhsnSvey5HsEST2DoHBMOj0eA14jC73c2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747339871; c=relaxed/simple;
-	bh=+BV9gekqOKPyJUwsswQCTDO2tOWQYe22XaT4A9ldTMc=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=pMWMSy49C4qNI8UE8VtaCh+oTcq3s3zhb0gT3K/57xB0birrqxl+S7erfkthXGs9YRqBRL/T16XHmALm7LD40mrD/wDvodRc/elOdzDhyGcM8Xgrqa/Boi/J13NPNvxtoiWqnQzoI08e+A1WhigRwqho0VCPVspXT1RwrVxLM6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=iK26F75j; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1747384650; c=relaxed/simple;
+	bh=fi7qBQVzRR/BDXaQCkUxtll5IWUl9/nKV++lPsLDtZQ=;
+	h=From:To:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=P2aMfsTrznA4cwdAmOEjZ4lYl80qX0BH69ePZO/Lf7mp9Akp3CadnUod/Gm0+c3beFS0yk3RNZmPEUab2PUioVfX4VQ5Qf6z66s6RJC+1Ssp9FGdQyE9jYBiAWg+ydkc6jVAe2SeAjTbgcjHOjyjXqmU3FwoIk5hWnQmqmpSeNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=VY6vauHw; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="iK26F75j"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1747339868;
-	bh=+BV9gekqOKPyJUwsswQCTDO2tOWQYe22XaT4A9ldTMc=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=iK26F75juTUmFeeN04uP7DY4JpQH/us4xJwXpb/qivzWr0XLTvmfJofgIYYh8YE2o
-	 VKI4ZDyUkAISqH8XZqfV1K9lHbJrJl+xjrVmECs2Ns6XLxS9HA5g84W61RJSGaOVxj
-	 CfBYvbuGnD9CGPmHOiz1YjXWJ67RTxdVuJMjd3ds=
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 5C4CE1C0016;
-	Thu, 15 May 2025 16:11:08 -0400 (EDT)
-Message-ID: <727641384722bbdbbf96176210a7899f1b9795eb.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: Add SCSI error events, sent as kobject uevents by
- mid-layer
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Salomon Dushimirimana <salomondush@google.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 15 May 2025 16:11:07 -0400
-In-Reply-To: <CAPE3x16MrkQXFasVaaHBxhH2QvQ4H5cDiE3ae=-nYjuEKV-NBw@mail.gmail.com>
-References: <20250422181729.2792081-1-salomondush@google.com>
-	 <CAPE3x14-Tsm-2ThihT3a=h9a0L9Vi8J4BbiZiTV6=6Ctc1xryg@mail.gmail.com>
-	 <18aa42a73584fcf50b07d7a43073e55fb4c3159b.camel@HansenPartnership.com>
-	 <CAPE3x16MrkQXFasVaaHBxhH2QvQ4H5cDiE3ae=-nYjuEKV-NBw@mail.gmail.com>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="VY6vauHw"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250516083724epoutp03c616ef24c9ef79d98f85f8cfcfd1a8f6~-9ROa6Atx3150731507epoutp03N
+	for <linux-scsi@vger.kernel.org>; Fri, 16 May 2025 08:37:24 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250516083724epoutp03c616ef24c9ef79d98f85f8cfcfd1a8f6~-9ROa6Atx3150731507epoutp03N
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1747384645;
+	bh=4Zhu/vBMgvVq9L8aEv9dFQUEhIuLX61Uo6B2T4FP0rQ=;
+	h=From:To:Subject:Date:References:From;
+	b=VY6vauHwa5U9PyfKXdlk9vquDD00fnqFsuIhWrnH7SMEbZ2W2CJSuV0RqUODVSPXj
+	 fDNgzVFiRpP1ubiUkfB1iYDIW4BaIqFegfHtjUxTgM90lIjcS0l0oAgfCoMx2cz8/j
+	 fN7Sugzi7y8vZ1rBkE8NceAVOKnoEn7EMXO3ZD4E=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20250516083724epcas5p4e69fbb3781dec4dabd3d5811f4184ca7~-9RNveLRe2035120351epcas5p4J;
+	Fri, 16 May 2025 08:37:24 +0000 (GMT)
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4ZzL6r1h0Vz6B9mB; Fri, 16 May
+	2025 08:37:24 +0000 (GMT)
+Received: from epsmtrp1.samsung.com (unknown [182.195.40.13]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250516083723epcas5p216a21ffb81631d35f0a12f7a583ea248~-9RNeGMEZ1166711667epcas5p2C;
+	Fri, 16 May 2025 08:37:23 +0000 (GMT)
+Received: from epsmgmc1p1new.samsung.com (unknown [182.195.42.40]) by
+	epsmtrp1.samsung.com (KnoxPortal) with ESMTP id
+	20250516083723epsmtrp1dfd1976faf326d98147978e81e3b387b~-9RNdRYxX1472814728epsmtrp1K;
+	Fri, 16 May 2025 08:37:23 +0000 (GMT)
+X-AuditID: b6c32a28-460ee70000001e8a-d5-6826f9430553
+Received: from epsmtip1.samsung.com ( [182.195.34.30]) by
+	epsmgmc1p1new.samsung.com (Symantec Messaging Gateway) with SMTP id
+	76.4E.07818.349F6286; Fri, 16 May 2025 17:37:23 +0900 (KST)
+Received: from hzsscr.. (unknown [109.120.22.104]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250516083723epsmtip12f72bf26ad708cadebac3e7b790a3275~-9RMrqrIA1581115811epsmtip11;
+	Fri, 16 May 2025 08:37:23 +0000 (GMT)
+From: "ping.gao" <ping.gao@samsung.com>
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+	peter.wang@mediatek.com, minwoo.im@samsung.com,
+	manivannan.sadhasivam@linaro.org, chenyuan0y@gmail.com,
+	ping.gao@samsung.com, cw9316.lee@samsung.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: ufs: mcq: delete ufshcd_release_scsi_cmd in
+ ufshcd_mcq_abort
+Date: Fri, 16 May 2025 16:38:12 +0800
+Message-Id: <20250516083812.3894396-1-ping.gao@samsung.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrCLMWRmVeSWpSXmKPExsWy7bCSnK7zT7UMgz3fTCwezNvGZvHy51U2
+	i2kffjJbvJyxlNlixqk2VouN/RwWl3fNYbPovr6DzeJuSyerxfLj/5gsnp0+wGyx9dNvVovP
+	TxcwOfB6XL7i7bFz1l12j2mTTrF53Lm2h82j5eR+Fo+PT2+xePRtWcXo8XmTnEf7gW6mAM4o
+	LpuU1JzMstQifbsErozGpVvZCtZyVbQ27mFuYDzI0cXIySEhYCLx4dIP1i5GLg4hgd2MEjs7
+	lzJDJCQkPnf+YYWwhSVW/nvODlH0lFFi1vn57CAJNgF1iT/X74J1iwi8Z5I4eq+VBSQhLBAs
+	sefREbAiFgFVidNr7oNN5RWwlri68DQbxFR5if0Hz0LFBSVOznwC1ssMFG/eOpt5AiPvLCSp
+	WUhSCxiZVjFKphYU56bnJhsWGOallusVJ+YWl+al6yXn525iBAe8lsYOxnffmvQPMTJxMB5i
+	lOBgVhLhvZ6lnCHEm5JYWZValB9fVJqTWnyIUZqDRUmcd6VhRLqQQHpiSWp2ampBahFMlomD
+	U6qBKae/IO0il9XujNpTdz66L1WK8pJn26n/L7iPsZ9josiRBbYHexLZjQQV8m96SK4JnuFz
+	WeSTlFvxagZvXePwhxumhHpd7TMRYLQIkI/ovy1oyO+v+5cvOu+XxuwFLs+O/vyzIu7l3UUS
+	qY/fzdBU/1/yWd5B1C7huXXb8sgd7wvy6/r2clmXzPO9c1ff5eyZ9/w8JX8NOT5nv2NOKtp7
+	iondcqmRjeEE777/tf1Jq5fk7jfJaY1lOs0T8WblL0GRzSk7ol7uOmf5/0vV1R2ZKxsf8Py6
+	/OlixboZnm33vQ8uV4g45PrvImvCljsRzZGKL8wKOn5nXlNeeLL2yLpihsoNlo4PAxbK3b5o
+	rxylxFKckWioxVxUnAgA5yrrAOcCAAA=
+X-CMS-MailID: 20250516083723epcas5p216a21ffb81631d35f0a12f7a583ea248
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+X-CMS-RootMailID: 20250516083723epcas5p216a21ffb81631d35f0a12f7a583ea248
+References: <CGME20250516083723epcas5p216a21ffb81631d35f0a12f7a583ea248@epcas5p2.samsung.com>
 
-On Thu, 2025-05-15 at 13:03 -0700, Salomon Dushimirimana wrote:
-> Hi,
->=20
-> I agree with the recommended use of ftrace or blktrace for tracing.
+after ufs UFS_ABORT_TASK process successfully , host will generate
+mcq irq for abort tag with response OCS_ABORTED
+ufshcd_compl_one_cqe ->
+    ufshcd_release_scsi_cmd
 
-Great; what made me think of tracing is that your event emits for every
-error or retry which seemed like quite an overhead.  Conditioning it on
-a config parameter really isn't useful to distributions, so using the
-tracepoint system would solve both the quantity and the activation
-problem.
+But in ufshcd_mcq_abort already do ufshcd_release_scsi_cmd, this means
+ __ufshcd_release will be done twice.
 
-> However, our primary goal for using uevents was not merely for
-> collecting trace information. We are using uevents as a notification
-> mechanism for userspace workflows to determine repair workflows (swap
-> / remove a failing device).
+This means hba->clk_gating.active_reqs also will be decrease twice, it
+will be negtive, so delete ufshcd_release_scsi_cmd in ufshcd_mcq_abort
+function.
 
-If you're collecting stats for predictive failure, how is this proposed
-active mechanism more effective than the passive one of simply using
-the existing SMART monitor tools?
+static void __ufshcd_release(struct ufs_hba *hba)
+{
+    if (!ufshcd_is_clkgating_allowed(hba))
+        return;
 
-Regards,
+    hba->clk_gating.active_reqs--;
 
-James
+    if (hba->clk_gating.active_reqs < 0) {
+        panic("ufs abnormal active_reqs!!!!!!");
+    }
+
+    ...
+}
+Signed-off-by: ping.gao <ping.gao@samsung.com>
+---
+ drivers/ufs/core/ufs-mcq.c | 5 -----
+ 1 file changed, 5 deletions(-)
+
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index f1294c29f484..2106c63db5ca 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -713,10 +713,5 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
+ 		return FAILED;
+ 	}
+ 
+-	spin_lock_irqsave(&hwq->cq_lock, flags);
+-	if (ufshcd_cmd_inflight(lrbp->cmd))
+-		ufshcd_release_scsi_cmd(hba, lrbp);
+-	spin_unlock_irqrestore(&hwq->cq_lock, flags);
+-
+ 	return SUCCESS;
+ }
+-- 
+2.25.1
 
