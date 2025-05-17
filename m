@@ -1,125 +1,103 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B0A17A13A;
-	Sat, 17 May 2025 05:29:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48DC1170826;
+	Sat, 17 May 2025 19:24:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747459752; cv=none; b=cjWXN7oGLlBc7VOeW/lpDd46A6GMzga478B6LRndgg4tUG2zN8Nzz63jKGY3l8gw55sZGspdoPAPaYU5v62oDypmKRTMOzOO6bjMgrRPJ7N1xbjGjz8uY3Yvi6A82Olo+5YZ3gYDFTmXUMC2S0ynpNM02RKDEbODL7LTLnO2swc=
+	t=1747509870; cv=none; b=pR2CtSWZudgxCNl7HIBvxtJ/XslGM4rTmnlMaFW/lNxQFJPCUNN1Xdo6FsrQLI/SHl4qtNjh0kQToeBo6setpACbCRZ7cOX/V7kcS69gWh/d4UQO+BRmqiAN8e32qLXqiORbC4AP3qV5bf8Iq+xUCcNPY44V4QyKnCMBjlCEx6Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747459752; c=relaxed/simple;
-	bh=QHtTyWCABC/4jueRIsDSnE4V++TqQGVuI532zaEvZmk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GWFfxSM+W5td2+pbY4jCGnyezyI5+KdafrsMla61QwCixI6+2WpB20YGlM6Pi6YNQ2TjsylFab7j67rcOfce+pqrCA+0RWuEJGX6gi3fbn/FtRD+qU/JLtkEohwtG3mS+tPJ3Idx2HjAin5yWnoL/vQ5oLvfdWzymg8FUuowjBI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=oIHWcGrC; arc=none smtp.client-ip=192.198.163.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1747509870; c=relaxed/simple;
+	bh=ppe0iizIww3veT1AyxmEFcfYQ5htktshyLO8xyPT5sY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Fzk8lK4GwcMxyNjhlxP7YQI1RKpusxIwgIKZcCgWnKEJFDvFVULsvLEfJcMOmqmwGZ6m3B1w6JHhN79vRx/HhY4bquzdvtHKRcdkExkRcS5l7xMY0VOINMAzXbd14t91+Xk0aw0H1NNYEAUjh9GJ13BfiaeUK/Upzwt2824abOw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=IVpub/yr; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="oIHWcGrC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1747459750; x=1778995750;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=QHtTyWCABC/4jueRIsDSnE4V++TqQGVuI532zaEvZmk=;
-  b=oIHWcGrC47r2PNuTWI39aG/42Nb9faZ0hM5hSVKSgeG6xEnEEUETXZxg
-   PcGKXmjjM5vOteoQffea+6eEvzO025rxb2yBlmHqKb9iMiaGgXTiwdTxv
-   O5lp/3XlJvXiI6YtCiAd+LJqT1GMed9vJb0baAiYcLFIRCU4PUUVdSFZs
-   wh2IoMFRJpeA+rSbs3Dzd/sRpu5OqkzAoCAQksFId7Ru+6k0OHVlSjeUu
-   XecS2yGkpdLl2fXtrx80K22oAmGOVBL9AGhvpBrev+QgokusDkJEigq2+
-   67Ao5fUFD/l+ebQmgPSyfCZLHl+kNfDOk8tMg9K96zB8Tg6s59upF2Mly
-   A==;
-X-CSE-ConnectionGUID: TQoOVygfQjudHwjxDUcO5g==
-X-CSE-MsgGUID: CFzHxUCHThqjBouczhOeVw==
-X-IronPort-AV: E=McAfee;i="6700,10204,11435"; a="60092153"
-X-IronPort-AV: E=Sophos;i="6.15,296,1739865600"; 
-   d="scan'208";a="60092153"
-Received: from orviesa004.jf.intel.com ([10.64.159.144])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 May 2025 22:29:09 -0700
-X-CSE-ConnectionGUID: ZHnUcQmRQ56m+ohm6iOk/w==
-X-CSE-MsgGUID: TyCXuBZvQSyTPLBA1ZStDA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,296,1739865600"; 
-   d="scan'208";a="143864931"
-Received: from lkp-server01.sh.intel.com (HELO 1992f890471c) ([10.239.97.150])
-  by orviesa004.jf.intel.com with ESMTP; 16 May 2025 22:29:06 -0700
-Received: from kbuild by 1992f890471c with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uGA6Z-000Jx5-2E;
-	Sat, 17 May 2025 05:29:03 +0000
-Date: Sat, 17 May 2025 13:28:22 +0800
-From: kernel test robot <lkp@intel.com>
-To: "ping.gao" <ping.gao@samsung.com>, alim.akhtar@samsung.com,
-	avri.altman@wdc.com, bvanassche@acm.org,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	peter.wang@mediatek.com, minwoo.im@samsung.com,
-	manivannan.sadhasivam@linaro.org, chenyuan0y@gmail.com,
-	cw9316.lee@samsung.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev
-Subject: Re: [PATCH] scsi: ufs: mcq: delete ufshcd_release_scsi_cmd in
- ufshcd_mcq_abort
-Message-ID: <202505171237.VZSTTv75-lkp@intel.com>
-References: <20250516083812.3894396-1-ping.gao@samsung.com>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="IVpub/yr"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54H1i0HJ009182;
+	Sat, 17 May 2025 19:24:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=corp-2025-04-25; bh=CqDeGvkugP/Widj2LVbUK3kpkBICk
+	P9RdZUz0rTOzkA=; b=IVpub/yr80VbLQowMJmf0Mvl2AK9qCXGnFDyh4sZ6EnTW
+	Ox13jbdS7cZQTkT9SW0Qr/xLWJnYB79+QDcPsPAyfl07oGJGj+mFeMlhk+qvcmm7
+	ujv0ZHkwoF9Vd/nhAUSfXvzRH0XQQYHwpxYJjN/kibrRe+cQPHsDLZbYG5da3PMG
+	m72nzhzOEiH8IhPx0RJtc0m5GQOMVMSFI9hinjp06KJ1UBUcQuCAqGR76LMMrgAh
+	zxlPeH9ysyQE03X1orZxUwZZIjjCk5QXSDQcnAEhAMYxtEB1zdjUaDIu0B8faLDD
+	lmtXLNGSl1kZQwCWeA6WhNtSoERSN7IhNGV/Wh+jQ==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 46ph238jta-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 17 May 2025 19:24:26 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 54HJ7V6N029063;
+	Sat, 17 May 2025 19:24:25 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 46pgw55she-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 17 May 2025 19:24:25 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 54HJOPAh023681;
+	Sat, 17 May 2025 19:24:25 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 46pgw55sh9-1;
+	Sat, 17 May 2025 19:24:25 +0000
+From: Alok Tiwari <alok.a.tiwari@oracle.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org
+Cc: alok.a.tiwari@oracle.com, linux-kernel@vger.kernel.org,
+        darren.kenny@oracle.com
+Subject: [PATCH] scsi: mvsas: fix typos in SAS/SATA VSP register comments
+Date: Sat, 17 May 2025 12:24:10 -0700
+Message-ID: <20250517192422.310489-1-alok.a.tiwari@oracle.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250516083812.3894396-1-ping.gao@samsung.com>
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-17_09,2025-05-16_03,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 suspectscore=0
+ bulkscore=0 mlxscore=0 spamscore=0 mlxlogscore=996 adultscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2505070000 definitions=main-2505170192
+X-Authority-Analysis: v=2.4 cv=GN4IEvNK c=1 sm=1 tr=0 ts=6828e26a cx=c_pps a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17 a=dt9VzEwgFbYA:10 a=yPCof4ZbAAAA:8 a=PKyxXqJ4jqzQODs3vaIA:9
+X-Proofpoint-ORIG-GUID: 659OlvL-UoIvZPbVd_i3U566ZLZjiMeS
+X-Proofpoint-GUID: 659OlvL-UoIvZPbVd_i3U566ZLZjiMeS
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTE3MDE5MiBTYWx0ZWRfX5L9wsgB55Ae2 8qmWpqlRoUWCNYV6cKlTq7e/mi89ZdHjWjMwYswGpgu+A2Px4c+ecwXg+wO8/WsRgekYesYY96G z7mxY7AvHV1HLitw1tZLYD/9a0b+ABna3BFrpREwNV932LQ44IVJC+a+dtya92JMzVzdSehzrgm
+ J9B4KXbNRyzWjPFIAe3jR8I62R6GyI7i0F944aFZ27XB+jex+YEU9B26DKKNgx81gO1RVkMlbUe 2aglCJ1Cw918KsrzqlxfxmbkPPehEQy0FDLVp76slE6eSf1qTmhevZQd1PrbM0RgiZmviwh323b 4kzx9ab/NoII5qyVjJuLCFiZUIXy32UnK07Ebo3w5qk8yL9gh9DsiBzOLlhLpBfMb5x95pYcVXx
+ igW4CIlYrB5/U+UlHaIG4OEEc9ASOZdB6Z74hIrmGLcTRj6o1rRaEpnwCyMwjfOgGiwGSxP0
 
-Hi ping.gao,
+Correct spelling mistakes of the SAS/SATA Vendor Specific Port Registers.
+Fixed "Vednor" to "Vendor" in VSR_PHY_VS0 and VSR_PHY_VS1 comments.
+This is a non-functional change aimed at improving code clarity.
 
-kernel test robot noticed the following build warnings:
+Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
+---
+ drivers/scsi/mvsas/mv_64xx.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next linus/master v6.15-rc6 next-20250516]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/ping-gao/scsi-ufs-mcq-delete-ufshcd_release_scsi_cmd-in-ufshcd_mcq_abort/20250516-163807
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20250516083812.3894396-1-ping.gao%40samsung.com
-patch subject: [PATCH] scsi: ufs: mcq: delete ufshcd_release_scsi_cmd in ufshcd_mcq_abort
-config: arm-randconfig-004-20250517 (https://download.01.org/0day-ci/archive/20250517/202505171237.VZSTTv75-lkp@intel.com/config)
-compiler: clang version 21.0.0git (https://github.com/llvm/llvm-project f819f46284f2a79790038e1f6649172789734ae8)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250517/202505171237.VZSTTv75-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202505171237.VZSTTv75-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/ufs/core/ufs-mcq.c:677:16: warning: unused variable 'flags' [-Wunused-variable]
-     677 |         unsigned long flags;
-         |                       ^~~~~
-   1 warning generated.
-
-
-vim +/flags +677 drivers/ufs/core/ufs-mcq.c
-
-f1304d4420777f Bao D. Nguyen   2023-05-29  663  
-f1304d4420777f Bao D. Nguyen   2023-05-29  664  /**
-f1304d4420777f Bao D. Nguyen   2023-05-29  665   * ufshcd_mcq_abort - Abort the command in MCQ.
-317a38045ab763 Yang Li         2023-07-12  666   * @cmd: The command to be aborted.
-f1304d4420777f Bao D. Nguyen   2023-05-29  667   *
-3a17fefe0f1960 Bart Van Assche 2023-07-27  668   * Return: SUCCESS or FAILED error codes
-f1304d4420777f Bao D. Nguyen   2023-05-29  669   */
-f1304d4420777f Bao D. Nguyen   2023-05-29  670  int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
-f1304d4420777f Bao D. Nguyen   2023-05-29  671  {
-f1304d4420777f Bao D. Nguyen   2023-05-29  672  	struct Scsi_Host *host = cmd->device->host;
-f1304d4420777f Bao D. Nguyen   2023-05-29  673  	struct ufs_hba *hba = shost_priv(host);
-f1304d4420777f Bao D. Nguyen   2023-05-29  674  	int tag = scsi_cmd_to_rq(cmd)->tag;
-f1304d4420777f Bao D. Nguyen   2023-05-29  675  	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
-f1304d4420777f Bao D. Nguyen   2023-05-29  676  	struct ufs_hw_queue *hwq;
-27900d7119c464 Peter Wang      2023-11-06 @677  	unsigned long flags;
-
+diff --git a/drivers/scsi/mvsas/mv_64xx.h b/drivers/scsi/mvsas/mv_64xx.h
+index c25a5dfe7889..749f616b21af 100644
+--- a/drivers/scsi/mvsas/mv_64xx.h
++++ b/drivers/scsi/mvsas/mv_64xx.h
+@@ -101,8 +101,8 @@ enum sas_sata_vsp_regs {
+ 	VSR_PHY_MODE9		= 0x09, /* Test */
+ 	VSR_PHY_MODE10		= 0x0A, /* Power */
+ 	VSR_PHY_MODE11		= 0x0B, /* Phy Mode */
+-	VSR_PHY_VS0		= 0x0C, /* Vednor Specific 0 */
+-	VSR_PHY_VS1		= 0x0D, /* Vednor Specific 1 */
++	VSR_PHY_VS0		= 0x0C, /* Vendor Specific 0 */
++	VSR_PHY_VS1		= 0x0D, /* Vendor Specific 1 */
+ };
+ 
+ enum chip_register_bits {
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.47.1
+
