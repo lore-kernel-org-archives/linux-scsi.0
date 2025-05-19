@@ -1,150 +1,133 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C82EB4B1E76
-	for <linux-scsi@vger.kernel.org>; Mon, 19 May 2025 02:55:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FF4622DA14;
+	Mon, 19 May 2025 07:38:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747623316; cv=none; b=e4thmvb7YS9guXdRGff5DxxnJmDm+UYeJQ5A9myFurnb68InAUVAlSbmqYqqBsT1EJsDQ/dB4djKrhiuAb3CrlCjHqIx6JOCsvrxF8lkRpETTg36FScQT4NIvpYHhbN9j63KfGkWt+9TcII9Yd72CJWvu7iwPCiSFU7apqOEYoo=
+	t=1747640315; cv=none; b=bIjxs1bdx8XoXdyehyXs/f8KZ+UBO7skZf74lCAT+hn7E6gPGlKNlVworqc+CCk5+ztbxbVWfaOmSJkl4aGZXCcGoWzj2i+oypX12btD/6/WJjunAFI2VjoMWseHMJKWOygxnP5Gi/Yp++T/ivgG3jOmNVEKxt2JfkavKzuz1RE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747623316; c=relaxed/simple;
-	bh=dAJUqFlUiU7t/FY5+basqnTiCVZGegoSbGuO7Nvscnc=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 References; b=OE1ZvlzBqsbK0LCY6wwlRopVRNFqfe3BPGBZiHdeNIp4K6tj0JO0JkW3DI+arBM6OLnSVrlu0ryheyj/xqcdlsVnSMVYE2o9599/wWA/4iw39uHya+DCRGedZ2eVVzKhP+Y3vHWrb+YGorww0Z1irlas2Ha7erU5oPdlmJC9v+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=RzuMq3oH; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1747640315; c=relaxed/simple;
+	bh=SjjBMUxQPYzQNNIFGjlm0NpZXO7Rfj/OLiyitrnPmKc=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=F6kEkZ2mENQqQcuw/ApHWQQ1rqcsWUDd0BgX5j1aFUs9Fl+mmWsuyZLZhgBBXL4D1A1CzZnPYa0g0S2ZMyg5fJDnfzy+tMhHD2R606x+2o8XDqvZhvJDJQye7LgzQFJvaq+rZbBh4CHfSk6ho/WsCwfWEW5N158dKIHw4YqWZdo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=a3wFtYUm; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="RzuMq3oH"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250519025510epoutp013db2e59292083d4870b6e9d86acfe0f3~AziRIvZbe1179511795epoutp015
-	for <linux-scsi@vger.kernel.org>; Mon, 19 May 2025 02:55:10 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250519025510epoutp013db2e59292083d4870b6e9d86acfe0f3~AziRIvZbe1179511795epoutp015
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1747623310;
-	bh=ChUFgxAEw7CGR5BqcUfKWMh9hVPhBwi/jH40Uw0p4mo=;
-	h=From:To:Subject:Date:References:From;
-	b=RzuMq3oHpJcO1bmvRBYX/LRjLUfMSIFe+Izkn2m6qi0a2zW1opdXRgiHdkxqWJAZx
-	 T8jvCvOZc2srT2fUi5u52B3VHGoNPunJBws+Ca66z61wPvSmFT4FYiR9S4aL2rzKMk
-	 OQBrppbsORhxbO9k/Vm/sc0aUrU6GV7+rCCXpZCw=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
-	20250519025510epcas5p16f160fe564496ed3b780a0a9efc906f3~AziQnyOBH1845818458epcas5p1d;
-	Mon, 19 May 2025 02:55:10 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.41.42]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4b12NZ0CCwz6B9m6; Mon, 19 May
-	2025 02:55:10 +0000 (GMT)
-Received: from epsmtrp2.samsung.com (unknown [182.195.40.14]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250519025509epcas5p2bdc884392dafa224289b337c1232daf3~AziQCMQxB0852108521epcas5p2n;
-	Mon, 19 May 2025 02:55:09 +0000 (GMT)
-Received: from epsmgms1p2new.samsung.com (unknown [182.195.42.42]) by
-	epsmtrp2.samsung.com (KnoxPortal) with ESMTP id
-	20250519025509epsmtrp2f8e521a4b3e6c7929b6f100d99e0a5ff~AziQA6CHA0363803638epsmtrp22;
-	Mon, 19 May 2025 02:55:09 +0000 (GMT)
-X-AuditID: b6c32a2a-d63ff70000002265-9f-682a9d8d6c93
-Received: from epsmtip2.samsung.com ( [182.195.34.31]) by
-	epsmgms1p2new.samsung.com (Symantec Messaging Gateway) with SMTP id
-	DF.B2.08805.D8D9A286; Mon, 19 May 2025 11:55:09 +0900 (KST)
-Received: from hzsscr.. (unknown [109.120.22.104]) by epsmtip2.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250519025508epsmtip22234b35ee80c7eded73a8b77ebbcfab3~AziPDPQID0352803528epsmtip2a;
-	Mon, 19 May 2025 02:55:08 +0000 (GMT)
-From: "ping.gao" <ping.gao@samsung.com>
-To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-	peter.wang@mediatek.com, minwoo.im@samsung.com,
-	manivannan.sadhasivam@linaro.org, chenyuan0y@gmail.com,
-	ping.gao@samsung.com, cw9316.lee@samsung.com, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: mcq: delete ufshcd_release_scsi_cmd in
- ufshcd_mcq_abort
-Date: Mon, 19 May 2025 10:55:59 +0800
-Message-Id: <20250519025559.1263821-1-ping.gao@samsung.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="a3wFtYUm"
+X-UUID: 3bf13c46348411f082f7f7ac98dee637-20250519
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Z7nRriuV9vS+4k4680rkW86JxjvMbZ7a06K/lzDLNBo=;
+	b=a3wFtYUmcH5zYvLJAPaUVjKH0MWg2JQRmpLx4yRd7jJU/KmUxK/T2YPPuDE/DJERAZgR1a9gDKvCzGSOw81kr4GZUsYCEVzi21yTAHmMlyCuLPQ6ena91pLaGnMafoE0ZdDw/Q6wjTZU4tXFY7WDcMDOVF8LlxZe42w2CDb81C0=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.2.1,REQID:fca8c623-834e-41f0-a70d-4d61db8c3c2e,IP:0,UR
+	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-25
+X-CID-META: VersionHash:0ef645f,CLOUDID:e496ea73-805e-40ad-809d-9cec088f3bd8,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
+	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 3bf13c46348411f082f7f7ac98dee637-20250519
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
+	(envelope-from <bo.ye@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 554549055; Mon, 19 May 2025 15:38:19 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.39; Mon, 19 May 2025 15:38:17 +0800
+Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Mon, 19 May 2025 15:38:16 +0800
+From: Bo Ye <bo.ye@mediatek.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley"
+	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+CC: <xiujuan.tan@mediatek.com>, Qilin Tan <qilin.tan@mediatek.com>, Bosser Ye
+	<bo.ye@mediatek.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-mediatek@lists.infradead.org>
+Subject: [PATCH] scsi: ufs: preventing bus hang crash during emergency power off
+Date: Mon, 19 May 2025 15:38:13 +0800
+Message-ID: <20250519073814.167264-1-bo.ye@mediatek.com>
+X-Mailer: git-send-email 2.17.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Brightmail-Tracker: H4sIAAAAAAAAA+NgFrrCLMWRmVeSWpSXmKPExsWy7bCSvG7vXK0MgymtQhYP5m1js3j58yqb
-	xbQPP5ktXs5Yymwx41Qbq8XGfg6Ly7vmsFl0X9/BZnG3pZPVYvnxf0wWz04fYLbY+uk3q8Xn
-	pwuYHHg9Ll/x9tg56y67x7RJp9g87lzbw+bRcnI/i8fHp7dYPPq2rGL0+LxJzqP9QDdTAGcU
-	l01Kak5mWWqRvl0CV8aB22eYCqbxVkzb85SpgfEpVxcjJ4eEgInEpOuXWLoYuTiEBHYzStxe
-	vJgFIiEh8bnzDyuELSyx8t9zdoiip4wSr69eYAZJsAmoS/y5fpcVJCEi8J5J4ui9VrBuYYFg
-	iT2PjrCD2CwCqhJndi4Hm8QrYC3xeMNpNoip8hL7D55lhogLSpyc+QSslxko3rx1NvMERt5Z
-	SFKzkKQWMDKtYpRMLSjOTc8tNiwwykst1ytOzC0uzUvXS87P3cQIDngtrR2Me1Z90DvEyMTB
-	eIhRgoNZSYR31WaNDCHelMTKqtSi/Pii0pzU4kOM0hwsSuK83173pggJpCeWpGanphakFsFk
-	mTg4pRqY7PuybBl5zhbXqSs84GK+qx/xPJvlWeUNu/SFTGpTW8vu1T57H/DzoY/TfLtoHxnx
-	tad/XVf38P0adeDk/LQUhUjtkByb67rFtx+3H/6quSdrD5dKluX0qG69FfE3fEWWHziQuVLL
-	4fyXMr+bMx/5s8rIRz+47MGnO5PxmLDDTj4Ly5/LzTJMtGt63e2is3UNNykGCbMcXbuwdsJH
-	q5R9i6My5l3OKt66o8RL6/eymRN5HjPemLF63R/+PS+f+TycXfGN4+aphW6L9uqbpxX909vy
-	rXnXreV7+FYXb43/EWTHPyG2pylVdJvcieMTNdnPlrxkN9/iVPNjetra8zvW6x0wfnq4RH2W
-	vff+uxtElViKMxINtZiLihMB6NIrwucCAAA=
-X-CMS-MailID: 20250519025509epcas5p2bdc884392dafa224289b337c1232daf3
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-X-CMS-RootMailID: 20250519025509epcas5p2bdc884392dafa224289b337c1232daf3
-References: <CGME20250519025509epcas5p2bdc884392dafa224289b337c1232daf3@epcas5p2.samsung.com>
+Content-Type: text/plain
+X-MTK: N
 
-after ufs UFS_ABORT_TASK process successfully , host will generate
-mcq irq for abort tag with response OCS_ABORTED
-ufshcd_compl_one_cqe ->
-    ufshcd_release_scsi_cmd
+From: Qilin Tan <qilin.tan@mediatek.com>
 
-But in ufshcd_mcq_abort already do ufshcd_release_scsi_cmd, this means
- __ufshcd_release will be done twice.
+When kernel_power_off is called directly without freezing userspace,
+it may cause UFS crashes:
 
-This means hba->clk_gating.active_reqs also will be decrease twice, it
-will be negtive, so delete ufshcd_release_scsi_cmd in ufshcd_mcq_abort
-function.
+Callback:
+    ...... 0xBFFFFFC080C6156C()
+    vmlinux readl() + 52
+    vmlinux ufshcd_add_command_trace() + 552
+    vmlinux ufshcd_send_command() + 84
 
-static void __ufshcd_release(struct ufs_hba *hba)
-{
-    if (!ufshcd_is_clkgating_allowed(hba))
-        return;
+When kernel_power_off is executed, ufshcd_wl_shutdown is also called
+to turn off the UFS reference clock, VCC, and VCCQ. If I/O requests
+are still being sent to the UFS host and accessing the interrupt
+status register at this time, AP read timeouts may occur, causing bus
+hang crashes.
 
-    hba->clk_gating.active_reqs--;
+The root cause is that scsi_device_quiesce and blk_mq_freeze_queue
+only drain the requests in the request queue but don't guarantee that
+all requests have been dispatched to the UFS host and completed.
+Requests may remain pending in the hardware dispatch queue and be
+rescheduled later. If the UFS reference clock has already been turned
+off at this point, a bus hang crash will occur.
 
-    if (hba->clk_gating.active_reqs < 0) {
-        panic("ufs abnormal active_reqs!!!!!!");
-    }
+Example of the race condition:
+Thread 1                                                   Thread 2
+kernel_power_off
+-> ufshcd_wl_shutdown
+ -> scsi_device_quiesce(sdev)
+  -> blk_mq_freeze_queue(q)
+   -> blk_mq_run_hw_queue(htx, false)
+    -> blk_mq_delay_run_hw_queue(hctx, 0)                blk_mq_run_work_fn
+ -> ufshcd_suspend(hba) // disable ref clk                -> blk_mq_dispatch_rq_list
+                                                           -> blk_mq_run_hw_queue()
+                                                            -> ufshcd_send_command()
+                                                             -> ufshcd_add_command_trace()
+                                                              -> ufshcd_readl(hba, REG_INTERRUPT_STATUS)
 
-    ...
-}
+When Thread-2's dispatch request is delayed due to heavy CPU load,
+the interrupt status register may be read after the reference clock
+is disabled, resulting in a bus hang crash.
 
-Fixes: f1304d442077 ("scsi: ufs: mcq: Added ufshcd_mcq_abort()")
-Signed-off-by: ping.gao <ping.gao@samsung.com>
+To avoid this issue, call ufshcd_wait_for_doorbell_clr to wait until
+all requests are processed before disabling the reference clock.
+
+Signed-off-by: Qilin Tan <qilin.tan@mediatek.com>
+Signed-off-by: Bosser Ye <bo.ye@mediatek.com>
 ---
- drivers/ufs/core/ufs-mcq.c | 6 ------
- 1 file changed, 6 deletions(-)
+ drivers/ufs/core/ufshcd.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index f1294c29f484..1e50675772fe 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -674,7 +674,6 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
- 	int tag = scsi_cmd_to_rq(cmd)->tag;
- 	struct ufshcd_lrb *lrbp = &hba->lrb[tag];
- 	struct ufs_hw_queue *hwq;
--	unsigned long flags;
- 	int err;
- 
- 	/* Skip task abort in case previous aborts failed and report failure */
-@@ -713,10 +712,5 @@ int ufshcd_mcq_abort(struct scsi_cmnd *cmd)
- 		return FAILED;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 7735421e3991..a1013aea8e90 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -10262,6 +10262,7 @@ static void ufshcd_wl_shutdown(struct device *dev)
+ 		scsi_device_set_state(sdev, SDEV_OFFLINE);
+ 		mutex_unlock(&sdev->state_mutex);
  	}
++	ufshcd_wait_for_doorbell_clr(hba, 5 * USEC_PER_SEC);
+ 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
  
--	spin_lock_irqsave(&hwq->cq_lock, flags);
--	if (ufshcd_cmd_inflight(lrbp->cmd))
--		ufshcd_release_scsi_cmd(hba, lrbp);
--	spin_unlock_irqrestore(&hwq->cq_lock, flags);
--
- 	return SUCCESS;
- }
+ 	/*
 -- 
-2.25.1
+2.17.0
 
