@@ -1,133 +1,97 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from cstnet.cn (smtp84.cstnet.cn [159.226.251.84])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3FF4622DA14;
-	Mon, 19 May 2025 07:38:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E61F1B4F0F;
+	Mon, 19 May 2025 08:56:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.84
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747640315; cv=none; b=bIjxs1bdx8XoXdyehyXs/f8KZ+UBO7skZf74lCAT+hn7E6gPGlKNlVworqc+CCk5+ztbxbVWfaOmSJkl4aGZXCcGoWzj2i+oypX12btD/6/WJjunAFI2VjoMWseHMJKWOygxnP5Gi/Yp++T/ivgG3jOmNVEKxt2JfkavKzuz1RE=
+	t=1747644984; cv=none; b=QS7CHNn9+9LNcPmNVQdeTqXkc2KqLh3xMmv4TKKdXffHfac8OGnF4a13a1LjXdt7V9e3/0KJ0sLvrB2Ryoa6enKprlD2aDatBB042+Fr3JDlX/u/kEvGwU6Irz9JWe92zqokuRXEexFyDYtODWrKWS/maUULqM17K0mwNgG/y6Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747640315; c=relaxed/simple;
-	bh=SjjBMUxQPYzQNNIFGjlm0NpZXO7Rfj/OLiyitrnPmKc=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=F6kEkZ2mENQqQcuw/ApHWQQ1rqcsWUDd0BgX5j1aFUs9Fl+mmWsuyZLZhgBBXL4D1A1CzZnPYa0g0S2ZMyg5fJDnfzy+tMhHD2R606x+2o8XDqvZhvJDJQye7LgzQFJvaq+rZbBh4CHfSk6ho/WsCwfWEW5N158dKIHw4YqWZdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=a3wFtYUm; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="a3wFtYUm"
-X-UUID: 3bf13c46348411f082f7f7ac98dee637-20250519
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=Z7nRriuV9vS+4k4680rkW86JxjvMbZ7a06K/lzDLNBo=;
-	b=a3wFtYUmcH5zYvLJAPaUVjKH0MWg2JQRmpLx4yRd7jJU/KmUxK/T2YPPuDE/DJERAZgR1a9gDKvCzGSOw81kr4GZUsYCEVzi21yTAHmMlyCuLPQ6ena91pLaGnMafoE0ZdDw/Q6wjTZU4tXFY7WDcMDOVF8LlxZe42w2CDb81C0=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:fca8c623-834e-41f0-a70d-4d61db8c3c2e,IP:0,UR
-	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-25
-X-CID-META: VersionHash:0ef645f,CLOUDID:e496ea73-805e-40ad-809d-9cec088f3bd8,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
-	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 3bf13c46348411f082f7f7ac98dee637-20250519
-Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
-	(envelope-from <bo.ye@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 554549055; Mon, 19 May 2025 15:38:19 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Mon, 19 May 2025 15:38:17 +0800
-Received: from mcddlt001.gcn.mediatek.inc (10.19.240.15) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Mon, 19 May 2025 15:38:16 +0800
-From: Bo Ye <bo.ye@mediatek.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
-CC: <xiujuan.tan@mediatek.com>, Qilin Tan <qilin.tan@mediatek.com>, Bosser Ye
-	<bo.ye@mediatek.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
-	<linux-mediatek@lists.infradead.org>
-Subject: [PATCH] scsi: ufs: preventing bus hang crash during emergency power off
-Date: Mon, 19 May 2025 15:38:13 +0800
-Message-ID: <20250519073814.167264-1-bo.ye@mediatek.com>
-X-Mailer: git-send-email 2.17.0
+	s=arc-20240116; t=1747644984; c=relaxed/simple;
+	bh=qpouYrWqzs13/DTjXJBCi/42yy5oibCTN2WW2JVHgdA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ncXkpcpWM2U9meLEX9AvA3PXS4HNgA2c+ucx1fj895nB/e701KyvuetzjqcbSeyjRsATLs9tPJ3euW9rC6eUt1D6fbzYd6xAtbd74BMmHHTTS4j1oHyPsKcUPkNbVuJek5Uskjr9K7gwpB9+R+4JdJJJ83yPi6LLcevS9K6OBeM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from localhost (unknown [124.16.138.129])
+	by APP-05 (Coremail) with SMTP id zQCowABnpykq8ipoTR9sAQ--.11645S2;
+	Mon, 19 May 2025 16:56:10 +0800 (CST)
+From: Chen Ni <nichen@iscas.ac.cn>
+To: satishkh@cisco.com,
+	sebaddel@cisco.com,
+	kartilak@cisco.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Chen Ni <nichen@iscas.ac.cn>
+Subject: [PATCH] scsi: fnic: Replace memset with eth_zero_addr
+Date: Mon, 19 May 2025 16:54:57 +0800
+Message-Id: <20250519085457.918720-1-nichen@iscas.ac.cn>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain
-X-MTK: N
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zQCowABnpykq8ipoTR9sAQ--.11645S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7WrW7CFWkKw4UAFy5WFW7Arb_yoW8GF1rpF
+	93t3sxCFW7JrWavwsrAan5Cr1avwn3ta4UC348Jas3urWFgF10ka45Jw1vqr95GrnaqrZF
+	vFyDJry3K3WrA3DanT9S1TB71UUUUUDqnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvl14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVCY1x0267AKxVW0oV
+	Cq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0
+	I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Gr1j6F4UJwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
+	6r1q6r43MxkIecxEwVAFwVW8ZwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJV
+	W8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67AF67kF
+	1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJVWUCwCI42IY6x
+	IIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF04k26cxKx2IYs7xG6r1j6r1xMIIF0xvE
+	x4A2jsIE14v26r4j6F4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvj
+	DU0xZFpf9x0JUqYL9UUUUU=
+X-CM-SenderInfo: xqlfxv3q6l2u1dvotugofq/
 
-From: Qilin Tan <qilin.tan@mediatek.com>
+Use eth_zero_addr to assign the zero address to the given address
+array instead of memset when second argument is address of zero.
 
-When kernel_power_off is called directly without freezing userspace,
-it may cause UFS crashes:
-
-Callback:
-    ...... 0xBFFFFFC080C6156C()
-    vmlinux readl() + 52
-    vmlinux ufshcd_add_command_trace() + 552
-    vmlinux ufshcd_send_command() + 84
-
-When kernel_power_off is executed, ufshcd_wl_shutdown is also called
-to turn off the UFS reference clock, VCC, and VCCQ. If I/O requests
-are still being sent to the UFS host and accessing the interrupt
-status register at this time, AP read timeouts may occur, causing bus
-hang crashes.
-
-The root cause is that scsi_device_quiesce and blk_mq_freeze_queue
-only drain the requests in the request queue but don't guarantee that
-all requests have been dispatched to the UFS host and completed.
-Requests may remain pending in the hardware dispatch queue and be
-rescheduled later. If the UFS reference clock has already been turned
-off at this point, a bus hang crash will occur.
-
-Example of the race condition:
-Thread 1                                                   Thread 2
-kernel_power_off
--> ufshcd_wl_shutdown
- -> scsi_device_quiesce(sdev)
-  -> blk_mq_freeze_queue(q)
-   -> blk_mq_run_hw_queue(htx, false)
-    -> blk_mq_delay_run_hw_queue(hctx, 0)                blk_mq_run_work_fn
- -> ufshcd_suspend(hba) // disable ref clk                -> blk_mq_dispatch_rq_list
-                                                           -> blk_mq_run_hw_queue()
-                                                            -> ufshcd_send_command()
-                                                             -> ufshcd_add_command_trace()
-                                                              -> ufshcd_readl(hba, REG_INTERRUPT_STATUS)
-
-When Thread-2's dispatch request is delayed due to heavy CPU load,
-the interrupt status register may be read after the reference clock
-is disabled, resulting in a bus hang crash.
-
-To avoid this issue, call ufshcd_wait_for_doorbell_clr to wait until
-all requests are processed before disabling the reference clock.
-
-Signed-off-by: Qilin Tan <qilin.tan@mediatek.com>
-Signed-off-by: Bosser Ye <bo.ye@mediatek.com>
+Signed-off-by: Chen Ni <nichen@iscas.ac.cn>
 ---
- drivers/ufs/core/ufshcd.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/scsi/fnic/fip.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 7735421e3991..a1013aea8e90 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10262,6 +10262,7 @@ static void ufshcd_wl_shutdown(struct device *dev)
- 		scsi_device_set_state(sdev, SDEV_OFFLINE);
- 		mutex_unlock(&sdev->state_mutex);
+diff --git a/drivers/scsi/fnic/fip.c b/drivers/scsi/fnic/fip.c
+index 6e7c0b00eb41..19395e2aee44 100644
+--- a/drivers/scsi/fnic/fip.c
++++ b/drivers/scsi/fnic/fip.c
+@@ -200,7 +200,7 @@ void fnic_fcoe_start_fcf_discovery(struct fnic *fnic)
+ 		return;
  	}
-+	ufshcd_wait_for_doorbell_clr(hba, 5 * USEC_PER_SEC);
- 	__ufshcd_wl_suspend(hba, UFS_SHUTDOWN_PM);
  
- 	/*
+-	memset(iport->selected_fcf.fcf_mac, 0, ETH_ALEN);
++	eth_zero_addr(iport->selected_fcf.fcf_mac);
+ 
+ 	pdisc_sol = (struct fip_discovery *) frame;
+ 	*pdisc_sol = (struct fip_discovery) {
+@@ -588,12 +588,12 @@ void fnic_common_fip_cleanup(struct fnic *fnic)
+ 	if (!is_zero_ether_addr(iport->fpma))
+ 		vnic_dev_del_addr(fnic->vdev, iport->fpma);
+ 
+-	memset(iport->fpma, 0, ETH_ALEN);
++	eth_zero_addr(iport->fpma);
+ 	iport->fcid = 0;
+ 	iport->r_a_tov = 0;
+ 	iport->e_d_tov = 0;
+-	memset(fnic->iport.fcfmac, 0, ETH_ALEN);
+-	memset(iport->selected_fcf.fcf_mac, 0, ETH_ALEN);
++	eth_zero_addr(fnic->iport.fcfmac);
++	eth_zero_addr(iport->selected_fcf.fcf_mac);
+ 	iport->selected_fcf.fcf_priority = 0;
+ 	iport->selected_fcf.fka_adv_period = 0;
+ 	iport->selected_fcf.ka_disabled = 0;
 -- 
-2.17.0
+2.25.1
 
