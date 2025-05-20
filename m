@@ -1,62 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32A6A256C95;
-	Tue, 20 May 2025 22:31:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2810B263C73;
+	Tue, 20 May 2025 22:31:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747780272; cv=none; b=hvOUqK6FuJqf/BHtt9vBBEk0lDkxl0NZlhjqhiOv+cwgv1yKTzZ5pc00S+mlSvoZeRFX5NJhPRHAs6+Yn8XlWB08YMrSexTPtQHs95vwzHFXTxn/7tKlTGFJdD9tbPYu6snRyUmHRMibyyri52M87ugDIE2jYjhRQOy839m+A5Q=
+	t=1747780275; cv=none; b=EqD7VM/cjS3gRSG/moJ4vKULn0o1FRI4EYByHJXv9VI3tkISJ9+ykJKrm2fEuiBFerDAfhyh5ecHoZ7fqtVYKgKiRx6JQbM7tHJ+Ywa9GSwh7K7LpdYWOQMgsaqcMWxJ0QubYrsJe7vFCFlvRMJDseMgdc4NMFsBEkX/XvQagCQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747780272; c=relaxed/simple;
-	bh=uramFqaTXcKGmvifQ+vkTuF2NyZiKyMboU5iLwTXK2I=;
+	s=arc-20240116; t=1747780275; c=relaxed/simple;
+	bh=G/KW2fG4F98OctuROMgZgIIvFCaLrHVnDk1WTYvgspw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Y+GvHIgZYpSxBQOTtoh8Bdb3iRtRRht9o2yvyQiJx88+VMRyv+75Pgvtw2lZQ5G97vNtX+9KpAbGsGPiGcMEdegGX9vmMTBmuPBYWz9A4rrM1vV9oL9H9iKCNFfE3+oIBakmGVGnY3XqaEITnUNV5dG49IBfuZCmX9qJw7ZFKKE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tnDnrNKs; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=jBmQHIi6/wMJSK7TfiLciDmuzyBA/RXx9Zyn+ebfMT7EODrJstTgUhkNt1LiLAdQF8RgJ5dZURzvdLB0NgLEntn19Yyn+1vIET8WnULMbLWeawT8DXyi2T5oAW7ftupMGLJ2dMoU0tar+03HRhy9svbLMoV5zMLIOWInXSGSklg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f187OrFC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tnDnrNKs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ACBE9C4CEED;
-	Tue, 20 May 2025 22:31:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f187OrFC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 90BDFC4AF0C;
+	Tue, 20 May 2025 22:31:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747780271;
-	bh=uramFqaTXcKGmvifQ+vkTuF2NyZiKyMboU5iLwTXK2I=;
+	s=k20201202; t=1747780274;
+	bh=G/KW2fG4F98OctuROMgZgIIvFCaLrHVnDk1WTYvgspw=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=tnDnrNKsKaBZC11KZ9EHyaKNRsSvHhgGxP6FQJSFDiZ3a7Nz+2rAgs9p5eW+mstYR
-	 6sNo3EcilJmKNrNI4vjeapTo6ULBnibd7KH9WT3K1f4aKAI3hPkpg/rckb3xVTaiaH
-	 sko89tr4zLcGTZQhUANuN9eauyrMt+8uU7kW8sp2h7n4PAzpDQAI+wwaawlS6uRXvr
-	 ZnGFfezJrMhniZYYvNN9WCn2erUGBgyJ8qbwGvRspV6vY0/eOVHNxY8N02bYuznvfX
-	 9UeEd35lQH2Paa0ZdwhT50S93tQLK8+C+wCtNGla07B7PZvlfm6Y9SC6O1G19H1wzi
-	 rFTsfhJdy7AKg==
+	b=f187OrFCg57oP0keL/hhM+Str6skqYz5KDi3ixuy4dW6InjJA8mmWQIlXSQwLQ6pB
+	 yu//5NY1YoeUx2lAW15/4R9wVmBv8p7VaNipK9g8pxMsfWkg85pxXf3TQFP/10oK/r
+	 BAsL57NAaPfN2JFfEWJV2ks4VFHiVIFMCTRKK1tx2sMMpa36JgSgRUQoMSPkTRwXF4
+	 PPepSZwyKYp3lw02cEfA+Q04Z89y1WnubbHp/MwY1gfXDenV9S1p+totqqC03C2/rR
+	 W/JQGom8aSowEx+F8QHM9zx3JEOHmx7bNAvAEOJXQXRg4xfKGkuXseY/eEVZuv2tr/
+	 KKnIxOBXL6Fcg==
 From: Kees Cook <kees@kernel.org>
 To: Kuniyuki Iwashima <kuniyu@amazon.com>
 Cc: Kees Cook <kees@kernel.org>,
-	"Gustavo A . R . Silva" <gustavoars@kernel.org>,
-	Christoph Hellwig <hch@lst.de>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Samuel Mendoza-Jonas <sam@mendozajonas.com>,
+	Paul Fertser <fercerpav@gmail.com>,
 	"David S. Miller" <davem@davemloft.net>,
 	Eric Dumazet <edumazet@google.com>,
 	Jakub Kicinski <kuba@kernel.org>,
 	Paolo Abeni <pabeni@redhat.com>,
+	Simon Horman <horms@kernel.org>,
+	netdev@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Mike Christie <michael.christie@oracle.com>,
 	Max Gurtovoy <mgurtovoy@nvidia.com>,
 	Maurizio Lombardi <mlombard@redhat.com>,
 	Dmitry Bogdanov <d.bogdanov@yadro.com>,
 	Mingzhe Zou <mingzhe.zou@easystack.cn>,
 	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	Simon Horman <horms@kernel.org>,
 	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	netdev@vger.kernel.org,
 	Andrew Lunn <andrew+netdev@lunn.ch>,
 	Stanislav Fomichev <sdf@fomichev.me>,
 	Cosmin Ratiu <cratiu@nvidia.com>,
 	Lei Yang <leiyang@redhat.com>,
 	Ido Schimmel <idosch@nvidia.com>,
-	Samuel Mendoza-Jonas <sam@mendozajonas.com>,
-	Paul Fertser <fercerpav@gmail.com>,
 	Alexander Aring <alex.aring@gmail.com>,
 	Stefan Schmidt <stefan@datenfreihafen.org>,
 	Miquel Raynal <miquel.raynal@bootlin.com>,
@@ -78,13 +74,16 @@ Cc: Kees Cook <kees@kernel.org>,
 	Alexander Lobakin <aleksander.lobakin@intel.com>,
 	Xiao Liang <shaw.leon@gmail.com>,
 	linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
 	linux-wpan@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	linux-hyperv@vger.kernel.org,
 	linux-hardening@vger.kernel.org
-Subject: [PATCH 1/7] net: core: Convert inet_addr_is_any() to sockaddr_storage
-Date: Tue, 20 May 2025 15:31:00 -0700
-Message-Id: <20250520223108.2672023-1-kees@kernel.org>
+Subject: [PATCH 3/7] net/ncsi: Use struct sockaddr_storage for pending_mac
+Date: Tue, 20 May 2025 15:31:02 -0700
+Message-Id: <20250520223108.2672023-3-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250520222452.work.063-kees@kernel.org>
 References: <20250520222452.work.063-kees@kernel.org>
@@ -94,128 +93,112 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4744; i=kees@kernel.org; h=from:subject; bh=uramFqaTXcKGmvifQ+vkTuF2NyZiKyMboU5iLwTXK2I=; b=owGbwMvMwCVmps19z/KJym7G02pJDBm6TCukp91SsP4t9OdOH4P5+wY7/u5bc3avKPHu3Cmjk lWR7TK5o5SFQYyLQVZMkSXIzj3OxeNte7j7XEWYOaxMIEMYuDgFYCLCnowMe6e9WqS28ohfk9Da nsbOdXVPK0PtNn2Z9DaV+2P4rvaSEEaGL7Jnv3gGvp/zyNhMVWCD2Zvl/GcEP8zw+iYQecNoxQN rXgA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=4361; i=kees@kernel.org; h=from:subject; bh=G/KW2fG4F98OctuROMgZgIIvFCaLrHVnDk1WTYvgspw=; b=owGbwMvMwCVmps19z/KJym7G02pJDBm6TCunCmxWFNePehP86dB70827uoPWdOgUrArcFFzwa 3ksv9jJjlIWBjEuBlkxRZYgO/c4F4+37eHucxVh5rAygQxh4OIUgIlcPMjwVzQp/92/7mUeWUz6 crLSi1crXmCVWSB2NPJaUDunXPnyRob/ZWuqXyrWdfZONDS471Garv39t+b7vVEcbcL/o4JbpUo ZAA==
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-All the callers of inet_addr_is_any() have a sockaddr_storage-backed
-sockaddr. Avoid casts and switch prototype to the actual object being
-used.
+To avoid future casting with coming API type changes, switch struct
+ncsi_dev_priv::pending_mac to a full struct sockaddr_storage.
 
-Acked-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 Signed-off-by: Kees Cook <kees@kernel.org>
 ---
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Sagi Grimberg <sagi@grimberg.me>
-Cc: Chaitanya Kulkarni <kch@nvidia.com>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Samuel Mendoza-Jonas <sam@mendozajonas.com>
+Cc: Paul Fertser <fercerpav@gmail.com>
 Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Eric Dumazet <edumazet@google.com>
 Cc: Jakub Kicinski <kuba@kernel.org>
 Cc: Paolo Abeni <pabeni@redhat.com>
-Cc: Mike Christie <michael.christie@oracle.com>
-Cc: Max Gurtovoy <mgurtovoy@nvidia.com>
-Cc: Maurizio Lombardi <mlombard@redhat.com>
-Cc: Dmitry Bogdanov <d.bogdanov@yadro.com>
-Cc: Mingzhe Zou <mingzhe.zou@easystack.cn>
-Cc: Christophe Leroy <christophe.leroy@csgroup.eu>
 Cc: Simon Horman <horms@kernel.org>
-Cc: "Dr. David Alan Gilbert" <linux@treblig.org>
-Cc: linux-nvme@lists.infradead.org
-Cc: linux-scsi@vger.kernel.org
-Cc: target-devel@vger.kernel.org
-Cc: netdev@vger.kernel.org
+Cc: <netdev@vger.kernel.org>
 ---
- include/linux/inet.h                | 2 +-
- drivers/nvme/target/rdma.c          | 2 +-
- drivers/nvme/target/tcp.c           | 2 +-
- drivers/target/iscsi/iscsi_target.c | 2 +-
- net/core/utils.c                    | 8 ++++----
- 5 files changed, 8 insertions(+), 8 deletions(-)
+ net/ncsi/internal.h    |  2 +-
+ net/ncsi/ncsi-manage.c |  2 +-
+ net/ncsi/ncsi-rsp.c    | 18 +++++++++---------
+ 3 files changed, 11 insertions(+), 11 deletions(-)
 
-diff --git a/include/linux/inet.h b/include/linux/inet.h
-index bd8276e96e60..9158772f3559 100644
---- a/include/linux/inet.h
-+++ b/include/linux/inet.h
-@@ -55,6 +55,6 @@ extern int in6_pton(const char *src, int srclen, u8 *dst, int delim, const char
- 
- extern int inet_pton_with_scope(struct net *net, unsigned short af,
- 		const char *src, const char *port, struct sockaddr_storage *addr);
--extern bool inet_addr_is_any(struct sockaddr *addr);
-+bool inet_addr_is_any(struct sockaddr_storage *addr);
- 
- #endif	/* _LINUX_INET_H */
-diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
-index 2a4536ef6184..79a5aad2e9d0 100644
---- a/drivers/nvme/target/rdma.c
-+++ b/drivers/nvme/target/rdma.c
-@@ -1999,7 +1999,7 @@ static void nvmet_rdma_disc_port_addr(struct nvmet_req *req,
- 	struct nvmet_rdma_port *port = nport->priv;
- 	struct rdma_cm_id *cm_id = port->cm_id;
- 
--	if (inet_addr_is_any((struct sockaddr *)&cm_id->route.addr.src_addr)) {
-+	if (inet_addr_is_any(&cm_id->route.addr.src_addr)) {
- 		struct nvmet_rdma_rsp *rsp =
- 			container_of(req, struct nvmet_rdma_rsp, req);
- 		struct rdma_cm_id *req_cm_id = rsp->queue->cm_id;
-diff --git a/drivers/nvme/target/tcp.c b/drivers/nvme/target/tcp.c
-index 12a5cb8641ca..5cd1cf74f8ff 100644
---- a/drivers/nvme/target/tcp.c
-+++ b/drivers/nvme/target/tcp.c
-@@ -2194,7 +2194,7 @@ static void nvmet_tcp_disc_port_addr(struct nvmet_req *req,
+diff --git a/net/ncsi/internal.h b/net/ncsi/internal.h
+index 2c260f33b55c..e76c6de0c784 100644
+--- a/net/ncsi/internal.h
++++ b/net/ncsi/internal.h
+@@ -322,7 +322,7 @@ struct ncsi_dev_priv {
+ #define NCSI_DEV_RESHUFFLE	4
+ #define NCSI_DEV_RESET		8            /* Reset state of NC          */
+ 	unsigned int        gma_flag;        /* OEM GMA flag               */
+-	struct sockaddr     pending_mac;     /* MAC address received from GMA */
++	struct sockaddr_storage pending_mac; /* MAC address received from GMA */
+ 	spinlock_t          lock;            /* Protect the NCSI device    */
+ 	unsigned int        package_probe_id;/* Current ID during probe    */
+ 	unsigned int        package_num;     /* Number of packages         */
+diff --git a/net/ncsi/ncsi-manage.c b/net/ncsi/ncsi-manage.c
+index b36947063783..0202db2aea3e 100644
+--- a/net/ncsi/ncsi-manage.c
++++ b/net/ncsi/ncsi-manage.c
+@@ -1058,7 +1058,7 @@ static void ncsi_configure_channel(struct ncsi_dev_priv *ndp)
+ 		break;
+ 	case ncsi_dev_state_config_apply_mac:
+ 		rtnl_lock();
+-		ret = dev_set_mac_address(dev, &ndp->pending_mac, NULL);
++		ret = dev_set_mac_address(dev, (struct sockaddr *)&ndp->pending_mac, NULL);
+ 		rtnl_unlock();
+ 		if (ret < 0)
+ 			netdev_warn(dev, "NCSI: 'Writing MAC address to device failed\n");
+diff --git a/net/ncsi/ncsi-rsp.c b/net/ncsi/ncsi-rsp.c
+index 8668888c5a2f..472cc68ad86f 100644
+--- a/net/ncsi/ncsi-rsp.c
++++ b/net/ncsi/ncsi-rsp.c
+@@ -628,7 +628,7 @@ static int ncsi_rsp_handler_snfc(struct ncsi_request *nr)
+ static int ncsi_rsp_handler_oem_gma(struct ncsi_request *nr, int mfr_id)
  {
- 	struct nvmet_tcp_port *port = nport->priv;
+ 	struct ncsi_dev_priv *ndp = nr->ndp;
+-	struct sockaddr *saddr = &ndp->pending_mac;
++	struct sockaddr_storage *saddr = &ndp->pending_mac;
+ 	struct net_device *ndev = ndp->ndev.dev;
+ 	struct ncsi_rsp_oem_pkt *rsp;
+ 	u32 mac_addr_off = 0;
+@@ -644,11 +644,11 @@ static int ncsi_rsp_handler_oem_gma(struct ncsi_request *nr, int mfr_id)
+ 	else if (mfr_id == NCSI_OEM_MFR_INTEL_ID)
+ 		mac_addr_off = INTEL_MAC_ADDR_OFFSET;
  
--	if (inet_addr_is_any((struct sockaddr *)&port->addr)) {
-+	if (inet_addr_is_any(&port->addr)) {
- 		struct nvmet_tcp_cmd *cmd =
- 			container_of(req, struct nvmet_tcp_cmd, req);
- 		struct nvmet_tcp_queue *queue = cmd->queue;
-diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
-index 620ba6e0ab07..a2dde08c8a62 100644
---- a/drivers/target/iscsi/iscsi_target.c
-+++ b/drivers/target/iscsi/iscsi_target.c
-@@ -3419,7 +3419,7 @@ iscsit_build_sendtargets_response(struct iscsit_cmd *cmd,
- 					}
- 				}
+-	saddr->sa_family = ndev->type;
+-	memcpy(saddr->sa_data, &rsp->data[mac_addr_off], ETH_ALEN);
++	saddr->ss_family = ndev->type;
++	memcpy(saddr->__data, &rsp->data[mac_addr_off], ETH_ALEN);
+ 	if (mfr_id == NCSI_OEM_MFR_BCM_ID || mfr_id == NCSI_OEM_MFR_INTEL_ID)
+-		eth_addr_inc((u8 *)saddr->sa_data);
+-	if (!is_valid_ether_addr((const u8 *)saddr->sa_data))
++		eth_addr_inc(saddr->__data);
++	if (!is_valid_ether_addr(saddr->__data))
+ 		return -ENXIO;
  
--				if (inet_addr_is_any((struct sockaddr *)&np->np_sockaddr))
-+				if (inet_addr_is_any(&np->np_sockaddr))
- 					sockaddr = &conn->local_sockaddr;
- 				else
- 					sockaddr = &np->np_sockaddr;
-diff --git a/net/core/utils.c b/net/core/utils.c
-index 27f4cffaae05..e47feeaa5a49 100644
---- a/net/core/utils.c
-+++ b/net/core/utils.c
-@@ -399,9 +399,9 @@ int inet_pton_with_scope(struct net *net, __kernel_sa_family_t af,
- }
- EXPORT_SYMBOL(inet_pton_with_scope);
- 
--bool inet_addr_is_any(struct sockaddr *addr)
-+bool inet_addr_is_any(struct sockaddr_storage *addr)
+ 	/* Set the flag for GMA command which should only be called once */
+@@ -1088,7 +1088,7 @@ static int ncsi_rsp_handler_netlink(struct ncsi_request *nr)
+ static int ncsi_rsp_handler_gmcma(struct ncsi_request *nr)
  {
--	if (addr->sa_family == AF_INET6) {
-+	if (addr->ss_family == AF_INET6) {
- 		struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
- 		const struct sockaddr_in6 in6_any =
- 			{ .sin6_addr = IN6ADDR_ANY_INIT };
-@@ -409,13 +409,13 @@ bool inet_addr_is_any(struct sockaddr *addr)
- 		if (!memcmp(in6->sin6_addr.s6_addr,
- 			    in6_any.sin6_addr.s6_addr, 16))
- 			return true;
--	} else if (addr->sa_family == AF_INET) {
-+	} else if (addr->ss_family == AF_INET) {
- 		struct sockaddr_in *in = (struct sockaddr_in *)addr;
- 
- 		if (in->sin_addr.s_addr == htonl(INADDR_ANY))
- 			return true;
- 	} else {
--		pr_warn("unexpected address family %u\n", addr->sa_family);
-+		pr_warn("unexpected address family %u\n", addr->ss_family);
+ 	struct ncsi_dev_priv *ndp = nr->ndp;
+-	struct sockaddr *saddr = &ndp->pending_mac;
++	struct sockaddr_storage *saddr = &ndp->pending_mac;
+ 	struct net_device *ndev = ndp->ndev.dev;
+ 	struct ncsi_rsp_gmcma_pkt *rsp;
+ 	int i;
+@@ -1105,15 +1105,15 @@ static int ncsi_rsp_handler_gmcma(struct ncsi_request *nr)
+ 			    rsp->addresses[i][4], rsp->addresses[i][5]);
  	}
  
- 	return false;
+-	saddr->sa_family = ndev->type;
++	saddr->ss_family = ndev->type;
+ 	for (i = 0; i < rsp->address_count; i++) {
+ 		if (!is_valid_ether_addr(rsp->addresses[i])) {
+ 			netdev_warn(ndev, "NCSI: Unable to assign %pM to device\n",
+ 				    rsp->addresses[i]);
+ 			continue;
+ 		}
+-		memcpy(saddr->sa_data, rsp->addresses[i], ETH_ALEN);
+-		netdev_warn(ndev, "NCSI: Will set MAC address to %pM\n", saddr->sa_data);
++		memcpy(saddr->__data, rsp->addresses[i], ETH_ALEN);
++		netdev_warn(ndev, "NCSI: Will set MAC address to %pM\n", saddr->__data);
+ 		break;
+ 	}
+ 
 -- 
 2.34.1
 
