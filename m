@@ -1,43 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CD6126462E;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CCF626462C;
 	Tue, 20 May 2025 22:31:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747780275; cv=none; b=bCpGnBNode+d/B+5BovTq3/G3f7BzHHmEIDc0hRWhSi7ib7IyUHIzQZLP/7U+T0SKSzXxToNts6UDMst0nxTnwrVUA+RgCYnugNJyTPIlPrWeG+A3QoS/Tje/gTKiqhdFi/YenhMu/o7zy3ollLxOjgDVWFdHtP+kYNk+JqPWfI=
+	t=1747780275; cv=none; b=rrPGJnaMH75ovdAYyr6Th35iEsKMcUfc5reKPyDLVEZgt5H9VHljPBMxmgNxfcLv8zvUOYIcyxZXfHdGl6MYeac4zI2Dfwk+ndMG5knyu5g3/2TK8Af39wwvqB0DjCUo/vhWa8l+DY6XCiNH86hMrpn+BdFwF8fiovENRKVCSU4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1747780275; c=relaxed/simple;
-	bh=7+5aLCST6s7T/oujRRoROLyuAQnVT9g0E0a0chHKZpY=;
+	bh=7Qa/IpuQKFOWRWF79NofDyxxIjQyXX1yFfRlJmNAhpQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Zhr2pMNfIWzLzZDaaVBh8eC6yNThmDLApwRSB8t4PZxEnB2GnthYlSXS/hy8Qj+HlA8loPbt/3bUWc41Ccxz8ADTDbc5M8xAYFaTlH1bVEOl5d7n0FP3hQ6esQcYiDAMZfu2q6MsB9V/oj4IF2G68rVQQ7T3bjD7lANx8581xB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ldaHrxJ+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=FMGvzHCkuxWqFl+EdeIaiVXvWM22bM1XJy5kvTmjTryNWpe/9siMWQcQEU50HrVch5PMu2DM+GQA+KKftY3EDepBiQj5wCiiItWSzMh+Y8ue1eE+W9Hwp2K/UcdljULWD1lI4QK0DMDxxJSvDq4XpdM2Y4rcvM1R+v9WBnlsinA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BOwFhMEv; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ldaHrxJ+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CDE3C4CEEF;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BOwFhMEv"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8CF8AC4CEF2;
 	Tue, 20 May 2025 22:31:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1747780274;
-	bh=7+5aLCST6s7T/oujRRoROLyuAQnVT9g0E0a0chHKZpY=;
+	bh=7Qa/IpuQKFOWRWF79NofDyxxIjQyXX1yFfRlJmNAhpQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ldaHrxJ+HWhXTPlP+sI/ZOa+dyUowLN+FvRZgsV/pojXZLN+5l0tMTfDgW+FvxXEi
-	 l6kB4qqCzEH3QJojzSOdG0Soxb7diNMYVQQOQiXH/QZ4nG0KbFvhE62wcMzLmR5wxD
-	 vYzJC23akqQAfWN3ae9OeyTLnv3bVi7P8nb8oOO0LP8BA+/UnJMz2QJIxAl+Rf5ezs
-	 7/5N5COJCJr+5jsF5lwzw4tt9uCvfW/BgZqa5cozToSzp+Lk/4dFSB90zs1JQnJbXc
-	 IxOg9p8m+B+dfNQb13ftdez29WQRPrpGVFpYOcgPikp73u22S2Sai2erFI4eeN0eEi
-	 Vcrs0XReQcjHA==
+	b=BOwFhMEvnncEbt04sunuSxfflgKvjcUp7JSXl1Rx49NjhAjlJs3CnmgFEO2OjYLFS
+	 FnxMRf+Y0l8NIw9qbw2FBVhJEmGUfzmI3o5rYjb5Xats4x1tM2hRAQqRSZlsxW/PVs
+	 99R5M0bnHfVohXHQoaW/qQCm7BPLAGEzVl0pXcL5Vst2Vc6khbh8bQjuyOktICMffX
+	 U3L1qVyImNx2jT/9p34tb3ykRcqoI2oa5OpAV4Lpy5hLXCv+0K7HtW4O6s6vPI/P8i
+	 l2MNooYeY9cP5g1ou6cmJiHAiz4cPxZ+ZQeRqLYZPnvcGd3eMSvAungNxE2YUbqYgG
+	 83Ywtr100ZzXw==
 From: Kees Cook <kees@kernel.org>
 To: Kuniyuki Iwashima <kuniyu@amazon.com>
 Cc: Kees Cook <kees@kernel.org>,
-	Alexander Aring <alex.aring@gmail.com>,
-	Stefan Schmidt <stefan@datenfreihafen.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	"David S. Miller" <davem@davemloft.net>,
 	Eric Dumazet <edumazet@google.com>,
 	Jakub Kicinski <kuba@kernel.org>,
+	"David S. Miller" <davem@davemloft.net>,
 	Paolo Abeni <pabeni@redhat.com>,
 	Simon Horman <horms@kernel.org>,
-	linux-wpan@vger.kernel.org,
+	Ido Schimmel <idosch@nvidia.com>,
 	netdev@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Sagi Grimberg <sagi@grimberg.me>,
@@ -54,9 +51,11 @@ Cc: Kees Cook <kees@kernel.org>,
 	Stanislav Fomichev <sdf@fomichev.me>,
 	Cosmin Ratiu <cratiu@nvidia.com>,
 	Lei Yang <leiyang@redhat.com>,
-	Ido Schimmel <idosch@nvidia.com>,
 	Samuel Mendoza-Jonas <sam@mendozajonas.com>,
 	Paul Fertser <fercerpav@gmail.com>,
+	Alexander Aring <alex.aring@gmail.com>,
+	Stefan Schmidt <stefan@datenfreihafen.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
 	Hayes Wang <hayeswang@realtek.com>,
 	Douglas Anderson <dianders@chromium.org>,
 	Grant Grundler <grundler@chromium.org>,
@@ -78,12 +77,13 @@ Cc: Kees Cook <kees@kernel.org>,
 	linux-nvme@lists.infradead.org,
 	linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org,
+	linux-wpan@vger.kernel.org,
 	linux-usb@vger.kernel.org,
 	linux-hyperv@vger.kernel.org,
 	linux-hardening@vger.kernel.org
-Subject: [PATCH 4/7] ieee802154: Use struct sockaddr_storage with dev_set_mac_address()
-Date: Tue, 20 May 2025 15:31:03 -0700
-Message-Id: <20250520223108.2672023-4-kees@kernel.org>
+Subject: [PATCH 7/7] rtnetlink: do_setlink: Use struct sockaddr_storage
+Date: Tue, 20 May 2025 15:31:06 -0700
+Message-Id: <20250520223108.2672023-7-kees@kernel.org>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20250520222452.work.063-kees@kernel.org>
 References: <20250520222452.work.063-kees@kernel.org>
@@ -93,56 +93,71 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1660; i=kees@kernel.org; h=from:subject; bh=7+5aLCST6s7T/oujRRoROLyuAQnVT9g0E0a0chHKZpY=; b=owGbwMvMwCVmps19z/KJym7G02pJDBm6TCuvblF8lhP5XPy9sMWyEMOOBf5mZU1r2a84b9zO5 XOSa+eDjlIWBjEuBlkxRZYgO/c4F4+37eHucxVh5rAygQxh4OIUgIn0SzEydIpvmvaTp0OOf/HG wvDqKzx16Tpczr9fn9p0tPx64oXQBwz/U432vV52/+aEDRx7zU2ryn2Z8narzXt2blLAxWNdZx/ NYQEA
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2093; i=kees@kernel.org; h=from:subject; bh=7Qa/IpuQKFOWRWF79NofDyxxIjQyXX1yFfRlJmNAhpQ=; b=owGbwMvMwCVmps19z/KJym7G02pJDBm6TKtmnOlUkkri/PtTpKuJWcgyguPHyic/Ci2ju8tye j+JT8rrKGVhEONikBVTZAmyc49z8XjbHu4+VxFmDisTyBAGLk4BmIiyHcP/5OXSpk/zfC1KOKbI rnhQbaXzKEa72P+m2Oa4bIZV4bfXMzKsmyNVf+e5ovVutyS7NQKZupb5O/XKFvdZxT2fsS5DZR0 TAA==
 X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
 
-Switch to struct sockaddr_storage for calling dev_set_mac_address(). Add
-a temporary cast to struct sockaddr, which will be removed in a
-subsequent patch.
+Instead of a heap allocating a variably sized struct sockaddr and lying
+about the type in the call to netif_set_mac_address(), use a stack
+allocated struct sockaddr_storage. This lets us drop the cast and avoid
+the allocation.
+
+Putting "ss" on the stack means it will get a reused stack slot since
+it is the same size (128B) as other existing single-scope stack variables,
+like the vfinfo array (128B), so no additional stack space is used by
+this function.
 
 Signed-off-by: Kees Cook <kees@kernel.org>
 ---
-Cc: Alexander Aring <alex.aring@gmail.com>
-Cc: Stefan Schmidt <stefan@datenfreihafen.org>
-Cc: Miquel Raynal <miquel.raynal@bootlin.com>
-Cc: "David S. Miller" <davem@davemloft.net>
+Cc: Kuniyuki Iwashima <kuniyu@amazon.com>
 Cc: Eric Dumazet <edumazet@google.com>
 Cc: Jakub Kicinski <kuba@kernel.org>
+Cc: "David S. Miller" <davem@davemloft.net>
 Cc: Paolo Abeni <pabeni@redhat.com>
 Cc: Simon Horman <horms@kernel.org>
-Cc: <linux-wpan@vger.kernel.org>
+Cc: Ido Schimmel <idosch@nvidia.com>
 Cc: <netdev@vger.kernel.org>
 ---
- net/ieee802154/nl-phy.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ net/core/rtnetlink.c | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
-diff --git a/net/ieee802154/nl-phy.c b/net/ieee802154/nl-phy.c
-index 359249ab77bf..ee2b190e8e0d 100644
---- a/net/ieee802154/nl-phy.c
-+++ b/net/ieee802154/nl-phy.c
-@@ -224,17 +224,17 @@ int ieee802154_add_iface(struct sk_buff *skb, struct genl_info *info)
- 	dev_hold(dev);
+diff --git a/net/core/rtnetlink.c b/net/core/rtnetlink.c
+index 9743f1c2ae3c..f9a35bdc58ad 100644
+--- a/net/core/rtnetlink.c
++++ b/net/core/rtnetlink.c
+@@ -3080,17 +3080,7 @@ static int do_setlink(const struct sk_buff *skb, struct net_device *dev,
+ 	}
  
- 	if (info->attrs[IEEE802154_ATTR_HW_ADDR]) {
--		struct sockaddr addr;
-+		struct sockaddr_storage addr;
+ 	if (tb[IFLA_ADDRESS]) {
+-		struct sockaddr *sa;
+-		int len;
+-
+-		len = sizeof(sa_family_t) + max_t(size_t, dev->addr_len,
+-						  sizeof(*sa));
+-		sa = kmalloc(len, GFP_KERNEL);
+-		if (!sa) {
+-			err = -ENOMEM;
+-			goto errout;
+-		}
+-		sa->sa_family = dev->type;
++		struct sockaddr_storage ss = { };
  
--		addr.sa_family = ARPHRD_IEEE802154;
--		nla_memcpy(&addr.sa_data, info->attrs[IEEE802154_ATTR_HW_ADDR],
-+		addr.ss_family = ARPHRD_IEEE802154;
-+		nla_memcpy(&addr.__data, info->attrs[IEEE802154_ATTR_HW_ADDR],
- 			   IEEE802154_ADDR_LEN);
+ 		netdev_unlock_ops(dev);
  
- 		/* strangely enough, some callbacks (inetdev_event) from
- 		 * dev_set_mac_address require RTNL_LOCK
- 		 */
- 		rtnl_lock();
--		rc = dev_set_mac_address(dev, &addr, NULL);
-+		rc = dev_set_mac_address(dev, (struct sockaddr *)&addr, NULL);
- 		rtnl_unlock();
- 		if (rc)
- 			goto dev_unregister;
+@@ -3098,10 +3088,9 @@ static int do_setlink(const struct sk_buff *skb, struct net_device *dev,
+ 		down_write(&dev_addr_sem);
+ 		netdev_lock_ops(dev);
+ 
+-		memcpy(sa->sa_data, nla_data(tb[IFLA_ADDRESS]),
+-		       dev->addr_len);
+-		err = netif_set_mac_address(dev, (struct sockaddr_storage *)sa, extack);
+-		kfree(sa);
++		ss.ss_family = dev->type;
++		memcpy(ss.__data, nla_data(tb[IFLA_ADDRESS]), dev->addr_len);
++		err = netif_set_mac_address(dev, &ss, extack);
+ 		if (err) {
+ 			up_write(&dev_addr_sem);
+ 			goto errout;
 -- 
 2.34.1
 
