@@ -1,315 +1,232 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69F01267F41;
-	Tue, 20 May 2025 12:11:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747743097; cv=none; b=puiOWp0poBjr59yngriDnfSmBMfaIxpoayPdPUC7CH5TvGQjC0GLih7MNU28x452Mn5CGl4cMiFEkqwqPM3bt84r8+BqrKo3SDTBZgYw8cW6WnW1GJxL1pdoCuT14I0TrGUpKZ0Syx2bTt8JmvQ4BxgohX+YWkvd6UibTE+Q86A=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747743097; c=relaxed/simple;
-	bh=EHSvRNvgm+GaXbq1NtOZOkHkxxBeWpFGycrSmffCy+g=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dF9Wre/FIiyPKuz4YEcVo51Ad7zMu8smdazwJ+5+8GBreS0b9QFBV4cpcaVgwO2z/Fm7V7XQH5N4N7s/0o/VzYpIppa4fFOvm6vNwx1fil1kKaI/Y0Artcoe5KQOjXqU7P82RYkvGBXgnjKd2IqEI1Mf5GJ9YWdNMiQg4fqibhI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Ccpco1co; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0EA91C07D9;
+	Tue, 20 May 2025 13:14:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=210.61.82.184
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1747746897; cv=fail; b=Vq4/h385FF4X6HB3jJNNYDJgNebmVbF+UIgV9HczgoqaTwBpC6UAtBLsVDp0H3S3NHn6MMmDGIe+iYSFDteSl8c6t1eZ9q7u7hJ4kW1N58nJDnxeibBpt9Y8U+Y9WGoJG7xcz7UBR2z5Nxnt7o8Pt+07cOH3c7J2j/XZwQv0YzM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1747746897; c=relaxed/simple;
+	bh=cEH2Xrg8vCz4Ae2Ixp/t/hah5DAHfv7kwDCF+H5Tw1g=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=odLpWfFc7mHcxnX44CeQ7iesMgqdU6YubPjVCBpuOCcyLpNfOhmSZ4h06L575+D+eUwPn7aDkPf4DWEvpEGFo+dWW720InRxC9BYpAkJJ/B78JzTht9klUocQbBAoSt5rufsTZOSI/tzUwyj9AiDPqkaaXH2+ypipP+mTlpbTxk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=E83ARnWs; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=a2tDqUk4; arc=fail smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Ccpco1co"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1747743095; x=1779279095;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=EHSvRNvgm+GaXbq1NtOZOkHkxxBeWpFGycrSmffCy+g=;
-  b=Ccpco1co7VwyRno66kxjwIntJhemTnOM1B5J7V8/vNEsO720ydOegrsr
-   AFPZ9mp5ok/AmIIyxVKPsWPcsb0zXLmRY5cEFAh8WlDeUNniZYFfQdgMZ
-   +RvEUQcDyDp3mQdtZaEZEjHxrAx6QLlEcBh5PLRxMbPNHS7xECcvfM569
-   jASe1R+S0+DpJTO9sJplZHm91Q/9IZr8W4hGFl6e2maK/aVekXcl4NcTX
-   7sIeU7r9GKZAOJxHpy5nJ7e7wKvYPhdLFVt7TlmxFQQXxO023Toq8hH3+
-   SquLmWgKAox5CGnTbyj6VxY3I4hp6eTRNg5uKW2CuvznVyfnB0RN+T87v
-   A==;
-X-CSE-ConnectionGUID: OKcrrkIYSw2m1m22+TgB6A==
-X-CSE-MsgGUID: 4tfQjVklQSmIANOrYOP0zg==
-X-IronPort-AV: E=McAfee;i="6700,10204,11438"; a="75075187"
-X-IronPort-AV: E=Sophos;i="6.15,302,1739865600"; 
-   d="scan'208";a="75075187"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 20 May 2025 05:11:34 -0700
-X-CSE-ConnectionGUID: lf+5YtciTJapDKPzB3o74w==
-X-CSE-MsgGUID: 6ODpm6GhQSiKKHgA6g363Q==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.15,302,1739865600"; 
-   d="scan'208";a="162976147"
-Received: from lkp-server01.sh.intel.com (HELO 1992f890471c) ([10.239.97.150])
-  by fmviesa002.fm.intel.com with ESMTP; 20 May 2025 05:11:32 -0700
-Received: from kbuild by 1992f890471c with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uHLog-000MYa-06;
-	Tue, 20 May 2025 12:11:30 +0000
-Date: Tue, 20 May 2025 20:10:50 +0800
-From: kernel test robot <lkp@intel.com>
-To: Kassey Li <quic_yingangl@quicinc.com>, rostedt@goodmis.org,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	mathieu.desnoyers@efficios.com, linux-kernel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	quic_yingangl@quicinc.com
-Subject: Re: [PATCH v3] scsi: trace: change the rtn log in string
-Message-ID: <202505201948.7kMKhg6W-lkp@intel.com>
-References: <20250520010405.3844511-1-quic_yingangl@quicinc.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="E83ARnWs";
+	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="a2tDqUk4"
+X-UUID: 64510e2a357c11f082f7f7ac98dee637-20250520
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=cEH2Xrg8vCz4Ae2Ixp/t/hah5DAHfv7kwDCF+H5Tw1g=;
+	b=E83ARnWs4VcfJpcy1qUyxy2LdNe1aYh91EcWe93TVHHw1EoF3Mnh9yZWrAdDbP/WamZMdiY3fBsIzp/tL9jzckAUGEV0WuCkQk4AdB2glirJnOVUjTSebaFoS28We2K37SaaJN1a3ykW/iuLzqfgTjtIdfGCA70NJJxNxH76TVI=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.2.1,REQID:0afb1ab6-54e9-483f-b561-bcf5a53c6ae6,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:0ef645f,CLOUDID:3d473b0b-116e-44e6-89b4-c2ab29149e30,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111,TC:nil,Conte
+	nt:0|50,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,
+	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 64510e2a357c11f082f7f7ac98dee637-20250520
+Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1961878669; Tue, 20 May 2025 21:14:42 +0800
+Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
+ mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.39; Tue, 20 May 2025 21:14:40 +0800
+Received: from HK3PR03CU002.outbound.protection.outlook.com (172.21.101.237)
+ by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Tue, 20 May 2025 21:14:40 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=YIWGC/pLI/sy1SkrfWpzFNtfZjt+IZTa6REtz8PZtqdLs0ErQUNdwbW2XaPkMeXtN/ArXrPFTEMv7/5bkuuI/QDKBizsW/tJMwnoVQk87ZriKzoe1DZttM5i0Kx7KhOfoMsb/c9xq4zt3/JVfmqLwXRICjqevDRD40Ammjc5m3P/SIuF3l4XhTnIORYOWqpL/wC85E31refH0Y+e9dCLunDlBTJsvKDXyehaU1WwH5/9gi6uPeTqQ6V5w1B3gGyO7xOxMg3z7GMqoa12cHB8l1mYSI38JBHXExfMk8XDaycl1d1/NouttaNNTNrVxYzHxfB5zAGr8W2hjuLgpTg/Bw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=cEH2Xrg8vCz4Ae2Ixp/t/hah5DAHfv7kwDCF+H5Tw1g=;
+ b=EvIcIqZEDV1mCRlutxC7hPO7Fj09ug+rtstyFmF3L01STV9r5m9fCRliZvhwvR16qX8LWYr75AI79n14/co/+2rly+D3XMxECtL/bM6I3A0VSykPTVdYyOuP9sjKEP5sx1s6Hmr3C8lVQqKkqAouK1F+08WF6beKSUXSj2gvS0o1S90WZLOqlvV84BEoGYvCTbmjjxY0KgYAem2bIvhEAIz98oxXzMnwi5qBAD+0vc7hw+xVnV9udffGHEfLD7t/VdfKNXrL2T1HKvjW9lhamcUduIzOM+gYDZDBKyQ0s76V9cU+Otse/bknJRhBmNjccKlDGwNf/HdPopHxuLSjRQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
+ dkim=pass header.d=mediatek.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=cEH2Xrg8vCz4Ae2Ixp/t/hah5DAHfv7kwDCF+H5Tw1g=;
+ b=a2tDqUk4uvY8PNyvNgz4F0DshqozLSSoQHiozSxw4IiZ393vR6+XQhO4PtJEZIPwGAvDkVcDTO/JiE8FXRcFRxVE4VUz6J1XR8hnUyuoLHjZYs13hJnPgTRFRu1LJd5TSoiQtxrBfQ4E9H72NLlZjRQHtWiNDLk9Tu7FPFTzMUQ=
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
+ by SEZPR03MB6593.apcprd03.prod.outlook.com (2603:1096:101:75::7) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8746.30; Tue, 20 May
+ 2025 13:14:38 +0000
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::3945:7dbc:62bd:c31c]) by PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::3945:7dbc:62bd:c31c%6]) with mapi id 15.20.8746.030; Tue, 20 May 2025
+ 13:14:38 +0000
+From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
+To: "avri.altman@wdc.com" <avri.altman@wdc.com>,
+	"linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+	"tanghuan@vivo.com" <tanghuan@vivo.com>, "quic_nguyenb@quicinc.com"
+	<quic_nguyenb@quicinc.com>, AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>, "bvanassche@acm.org"
+	<bvanassche@acm.org>, "manivannan.sadhasivam@linaro.org"
+	<manivannan.sadhasivam@linaro.org>, "alim.akhtar@samsung.com"
+	<alim.akhtar@samsung.com>, "luhongfei@vivo.com" <luhongfei@vivo.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+	"James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>, "linux-arm-kernel@lists.infradead.org"
+	<linux-arm-kernel@lists.infradead.org>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>
+CC: "opensource.kernel@vivo.com" <opensource.kernel@vivo.com>,
+	"wenxing.cheng@vivo.com" <wenxing.cheng@vivo.com>
+Subject: Re: [PATCH v5] ufs: core: Add HID support
+Thread-Topic: [PATCH v5] ufs: core: Add HID support
+Thread-Index: AQHbyWthn7PGWIdsckicQEY+2V08FbPbf26A
+Date: Tue, 20 May 2025 13:14:37 +0000
+Message-ID: <ab468bb26dafca673d7ffca7dff519b7cf024cdc.camel@mediatek.com>
+References: <20250520094054.313-1-tanghuan@vivo.com>
+In-Reply-To: <20250520094054.313-1-tanghuan@vivo.com>
+Accept-Language: zh-TW, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=mediatek.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|SEZPR03MB6593:EE_
+x-ms-office365-filtering-correlation-id: 1d365adf-b692-419a-acd9-08dd97a045df
+x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|7416014|1800799024|376014|366016|921020|38070700018;
+x-microsoft-antispam-message-info: =?utf-8?B?bXVWT2hmVEFRaytHSXhCUm9naGprVGQ3VGgvR1RXQ3ZxNzY5bS9CbHc0VFNu?=
+ =?utf-8?B?OE5ocWJzL1R6aExSbWZCb0t0WVB5ejA3MzhxY1hvWlFkQi9hYjdVNncwUWsw?=
+ =?utf-8?B?eEcybmZQT0NZZWR6RWlaaG9YYXh5L2UvNFVwbTBtMWl1OUdBWDN1ZTB4VmRJ?=
+ =?utf-8?B?cVIvWVdvVEt3ZDEwaUpudDFpMWowc2FOYjVnNDRvNnQrWVpiQlZuK256WkNj?=
+ =?utf-8?B?dGdYS2tMMWphWHdJSmZDS21YYkhvREJERzlWb1l6MVJhejhRNUZPamRiczFv?=
+ =?utf-8?B?MUZmWkFldjZuZ05QaGhLSTZ4N0liZnhEaFRqcFBOUS9raHlDbnRGc3pRL0JQ?=
+ =?utf-8?B?MDYvOTJJYzlTT09NNk9tbWVzd1ZwUTg3aUFZVUpWNUhpZCtPQUdZUWtjSFpu?=
+ =?utf-8?B?Zk9lUGV6T2NrTzBxTGVMaXM1MW9oOVJiZnlMU0FmRTVnTVh1ZlN1MWpNdkcv?=
+ =?utf-8?B?SXJEK3V6Mmk1ckRrd3BKVzlFV3U1bkdURkxnR3RaT3hDMUNCV1kvbEtnRWNJ?=
+ =?utf-8?B?b0U1VzBkcHRzamVzUEg4ZkQzZWM0NHluaHN4Tk5aMXNjeThNdmY2MGppUjF4?=
+ =?utf-8?B?Y3BCVVVUTUIvSnVqR2ticmRUK1p0UXZMT0gvb3B3a0FSNzYzeEFrRVZVMkIv?=
+ =?utf-8?B?Sm80ZE5xMVJDWm5aZWNvNmZCd1hxZlRaTkM5cGhSNUdEemxjbCttL2pmR2RE?=
+ =?utf-8?B?dUNKeUJMbHZOZFN0VzZLTFpEWll1cHM3SllzVXVmbEtZdkFoTW5HS0NiQmND?=
+ =?utf-8?B?cnZsYXVyV3hnK2lTYzVWOTcwT3orNVRUb2FNUHk1M0hQanQ3UFJwcGZuRnJ2?=
+ =?utf-8?B?YXNuM3FxeFpHMmF6MVp5Y0x2emRoQVRyZk5LUmE1MzRrdFNEN1pid0VJdk4r?=
+ =?utf-8?B?My9wRFN2bEVuYzZUL3RCVlJ6OGdCeEg3UkN0L1F6d3pJZWNZeEVKYnhXcnNu?=
+ =?utf-8?B?VU9qV1lDZU40Z0hTeHkxTzY1NWo0L3pnNnpkakl4WnNsbk5qQUlKM053Yk5B?=
+ =?utf-8?B?Y1poSXRuek5QNkN1MWRENjNUb3g1L0xaTXgwWENlZ1ZjWjBtNlFYRWNicHNl?=
+ =?utf-8?B?MTdOVS92R3JhVHUyN2t2OVo0SUhXclpqdnFWaEkyUCsrSEtXMTAzVXpOeUV6?=
+ =?utf-8?B?QWs0S2RDcHFWSUx1WmErQXlvTmtEMGRYTndXMWsvSmp2NlRuVC9VVS8xZUpL?=
+ =?utf-8?B?d1krc0tpVEdweXdMUXZvM0gwRHhKMy8xT2sxL1QzRnQwWmFySnpGS09rN2c2?=
+ =?utf-8?B?dTIrZEVVUzBFZEdpekc4TGl6YWNPWXFBTWhRY0RLTU4rK3VmcWZpNzZNaSs0?=
+ =?utf-8?B?bHU5dGw3ZEJ5dTR5VDhTbXc5bmhkQUthS3hFc0pFd1h6SzNVdnVLR2M0akFW?=
+ =?utf-8?B?TXBXZVlGeUl4M1pCTGJxcHllR09KdUtHdEtUODRiWXVKcUtmaVpEeUtteGsr?=
+ =?utf-8?B?YnRUQnVWeTR0YWxYZmJHMVRvTXEvQ28rTStjM3lLUFJldDlmakcwS1E5UXZa?=
+ =?utf-8?B?WTByWi91T0sxR2tpbzlwdmtBOTF2V2hvTjRiWEFkWXVJNGlUSUNuNFdQNXNk?=
+ =?utf-8?B?Zyt2N29TemlKUTJ5VWdNOHNoQnVBem84TGM4Z0VZZWpPenJVTG1yaTNYZ09l?=
+ =?utf-8?B?L3lJOHZVUlFIdUJVd1JFUjdlYWkwZ2o2VFJlRmZUUUpycUxzWnNHQzh5RFFs?=
+ =?utf-8?B?Uk1oRHNkbDZJQm9OUGJxUXJtaEhJdHhYamdKbjcvUW5YVUxXRFlPc2pZYXVV?=
+ =?utf-8?B?bXBJY1VOalJSVEEraEFjZDk4NlM5R3NjQ0ErMlNEaXQrZ09OK0IxYjd1VEcr?=
+ =?utf-8?B?bkRhTlNyVVdJSys5UXlkL3Z6UW8wT2hycVI1WTUzVFBHNU4vOFNkaWpQRTV3?=
+ =?utf-8?B?UWphc09iUWNsQzBST1FtaHVTVytOd1V1SFpSZ3pXdE42Qm1uandLNGVCZ2hv?=
+ =?utf-8?B?OU81T3Q5Q1ZEd21yMDMxL2paU0JTaUlBSGNkL0FHSHRaWlZPeW1aVFQvcW42?=
+ =?utf-8?Q?vvUnyJmUBj/3P8vKbU8A9Fo78eE+Ww=3D?=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(1800799024)(376014)(366016)(921020)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?OEtPTndQNWc2a3JWeGtWNEZLODhJQkVUYzlGSlprdTBlM0xpdi9yaU4ybEd5?=
+ =?utf-8?B?bnBqV3hJMThNNy9HMjdqT3p2aDF1NVBUVEYzbHFsTFV0dmNKdXA3TEdaRy9R?=
+ =?utf-8?B?TGhuc1VwOHdBV1FiWDBtME9CblRjNTF3WURaaTdXRTd5WjlrQ3pMMzNyTjRq?=
+ =?utf-8?B?TDVuK2FWWWpnY2Q0TnRiWHhMQXVEYTlaMWg5QVoyOVNVNUVzL2dUUllEZmpD?=
+ =?utf-8?B?UUZGdWNRSFVReUdxOHVlK3FHbDBzRHdXUjUzODU3UFR1YXZnKzdKMStlN0Q0?=
+ =?utf-8?B?di9nSWRuSnNoazJjbytlRDBWLzVENnNwdk9BRWQxam9sYlhaU1pMZFdZSG5s?=
+ =?utf-8?B?ejNyTzdCK0Z0UldlNnROTVBMTHR0OTA5V0ZFTGhycDJjWWpTUm03VHpWd0ha?=
+ =?utf-8?B?b3hZbmYvamo2cStWVFBuSXprQXFOWW55S2RVRTdyWENhWDVmMjZYWVpmQlI0?=
+ =?utf-8?B?VGlWdUpURDRnNDZFMElqTFMyQ0xKN2h2UEFoTHBENFVMTGlmQmNUakJSMFls?=
+ =?utf-8?B?bzJvOFY0WXAxV2RJQ0doYmhGazRVbXVFdGpZcjdtdk45aW4wRE1jN1RmSlUw?=
+ =?utf-8?B?ejFaeEs2SGhjZzdYQWpoNitlYWpCYVlwU200QU4xN0doL3lkNEIzVE9rMEpY?=
+ =?utf-8?B?WmgrQnZiRVNTS0RYdm15azRtVk5VWXhzV3NHZVJGYWhZaGo4QVBzbTZjSUh4?=
+ =?utf-8?B?MkVFemV3ajJ0cmFmaEdFT2lEbDNiQXNIU3owVXhzWXFVWmlTdE5hTUttcy9X?=
+ =?utf-8?B?RnZLekx1ZmNtNkxvT21kSUdRRU1GTUtSQWJMSFFkeVp1cVRsZWdLbnY2dnJF?=
+ =?utf-8?B?SXNsNUdyS3czL2FqS3N6NXgzb3RqNVhySndCbVJDRGxUQ0dtUWQzaXFtM1ZR?=
+ =?utf-8?B?d2FOZnFVQVZ5bFdqNTR4R1JYbTJXK3U3cTFidjNXK1VZRmdRWkwzNzNXREEv?=
+ =?utf-8?B?YTdvOW42aFVjQkc2T0FQOU5lRndVRFgyLzY1eEdMRHNjMG9hdVp1dDVIemhM?=
+ =?utf-8?B?NzlLVGZ3WDBvYUtYKzViWTVpTlBqc1NUcmdWRmJhRVBzZDlsUVRvcTNtS0hG?=
+ =?utf-8?B?cGUzTkxONWRaeGFTOGNYUWp0VG9CN29KSnRlZ2N4UmZwN1FlMmx6L1ZSYzdi?=
+ =?utf-8?B?R0hFUk5TL1E5S1JUSzFEeTFkb05lcU0wNUd4djVZVlltdCs2L1RsL1dzb3Zo?=
+ =?utf-8?B?RnNkTlUrZjRmYmxBV0V6ZURSN2tWSGV0VUZORVFrMG9uWVRlSUlaSWNKS2gw?=
+ =?utf-8?B?RDhnZ1JXMmRUVDhBSVJyKzl4bFRDaHJ1UjgwMjZDKzRMTGIvcC9Fb0t3RDhr?=
+ =?utf-8?B?Z0pGNWxpczJEd0J1SnArQmc0UCtxQnhhTVg5Qk1EbjRlV245N3Z5QmlTVVM3?=
+ =?utf-8?B?elZCUWV6aEdoNHZMazVIdFZBbC9JTEs2SzlEZ2VUOXF5cWQyaUZ6L09PTSt4?=
+ =?utf-8?B?ZU52Mmxwa0NhVVR4UUQySEFvQU5YMkM2Ui9neGVuNFBDZkZQK1ZNbVBpR2FV?=
+ =?utf-8?B?N3FscStJZVpNc2ZIdVlrRjR3ejJ4MURSa1lvS2FiVHY4Q1BCQzVGTEJFRjc2?=
+ =?utf-8?B?b1NFcGx5MHFzdlJtaEk3ei9qOG5mM2ZYYk9XNlBIOVBSbVU4M1VPYkkvVVJR?=
+ =?utf-8?B?ZTZ5NUVnbXVzTjdtV2RFWTRIekkyN01IZ2RxMGJZYUx4WEtkSHFPc2dyK3FC?=
+ =?utf-8?B?VXR3VmQ3OUpHYVhZb0tCcU50M0pyaGZkZENEbW94UEdCV3cyOE03S0tQalph?=
+ =?utf-8?B?aVA0MkNmUUw3L1JCSEtwUERiSHcyZGsxL1h3ME4xQ3lJdGJ4Uk1RRXhPTnl3?=
+ =?utf-8?B?LzJuTmtpRngyNC9HaE5QNUE4NThwa2dxRjZNaXoxS1JMZnZwUmN4RGZvY0lP?=
+ =?utf-8?B?U1BMSXBXL05SWVRBbXppaHZEL21JV0ZEQVZ1OWdScDBtclZRMHZFWkFGSjcr?=
+ =?utf-8?B?SEJYckVnTFlxUnpVbjVVRHlFbzNmdnlEbVZ5T3ozU21NbHFkVjVPL2VqcmpO?=
+ =?utf-8?B?RlU5dU1HQnk2TWVmSytVM1VRcS92bHVqT0VGY1hqNk92MkJSekJPN1dSOU85?=
+ =?utf-8?B?am9WVDJOMGxqa1Nvd3RNYnh6cEwzZXFJVGhjdFdvTGdMRjgxQVkzNndUYXJX?=
+ =?utf-8?B?bUFReERaMjZJbTdXRkRSSEFCaGZJNTNaWkdZcHIvakpNSFdINEhPTWlqRG5r?=
+ =?utf-8?B?b3c9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <BD690D1BC2C018448DAABDC145DEB6CF@apcprd03.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250520010405.3844511-1-quic_yingangl@quicinc.com>
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 1d365adf-b692-419a-acd9-08dd97a045df
+X-MS-Exchange-CrossTenant-originalarrivaltime: 20 May 2025 13:14:37.8826
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: nyqtHhbm6qMif9geSqCWSORDdCfLO3iQ+16DSuCtVREk04L3WuWYtkuy6cnL7T3r7GGnoTQnoeBgLEIjPmZa2w==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR03MB6593
 
-Hi Kassey,
-
-kernel test robot noticed the following build warnings:
-
-[auto build test WARNING on trace/for-next]
-[also build test WARNING on jejb-scsi/for-next mkp-scsi/for-next linus/master v6.15-rc7 next-20250516]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Kassey-Li/scsi-trace-change-the-rtn-log-in-string/20250520-090745
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/trace/linux-trace for-next
-patch link:    https://lore.kernel.org/r/20250520010405.3844511-1-quic_yingangl%40quicinc.com
-patch subject: [PATCH v3] scsi: trace: change the rtn log in string
-config: riscv-randconfig-002-20250520 (https://download.01.org/0day-ci/archive/20250520/202505201948.7kMKhg6W-lkp@intel.com/config)
-compiler: clang version 21.0.0git (https://github.com/llvm/llvm-project f819f46284f2a79790038e1f6649172789734ae8)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250520/202505201948.7kMKhg6W-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202505201948.7kMKhg6W-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   In file included from drivers/scsi/scsi.c:73:
-   In file included from include/trace/events/scsi.h:358:
-   In file included from include/trace/define_trace.h:132:
-   In file included from include/trace/trace_events.h:256:
-   include/trace/events/scsi.h:256:5: error: call to undeclared function 'show_rtn_type'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-     256 |                   show_rtn_type(__entry->rtn)
-         |                   ^
->> include/trace/events/scsi.h:256:5: warning: format specifies type 'char *' but the argument has type 'int' [-Wformat]
-     209 |                 __entry->prot_op        = scsi_get_prot_op(cmd);
-         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     210 |                 memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
-         |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     211 |         ),
-         |         ~~
-     212 | 
-     213 |         TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u" \
-         |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     214 |                   " prot_op=%s driver_tag=%d scheduler_tag=%d cmnd=(%s %s raw=%s)" \
-         |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     215 |                   " rtn=%s",
-         |                   ~~~~~~~~~~
-         |                         %d
-     216 |                   __entry->host_no, __entry->channel, __entry->id,
-         |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     217 |                   __entry->lun, __entry->data_sglen, __entry->prot_sglen,
-         |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     218 |                   show_prot_op_name(__entry->prot_op), __entry->driver_tag,
-         |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     219 |                   __entry->scheduler_tag, show_opcode_name(__entry->opcode),
-         |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     220 |                   __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
-         |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     221 |                   __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
-         |                   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-     222 |                   show_rtn_type(__entry->rtn)
-         |                   ^~~~~~~~~~~~~~~~~~~~~~~~~~~
-     223 |           )
-         |           ~
-     224 | );
-         | ~
-   include/trace/stages/stage3_trace_output.h:9:43: note: expanded from macro 'TP_printk'
-       9 | #define TP_printk(fmt, args...) fmt "\n", args
-         |                                 ~~~       ^
-   include/trace/trace_events.h:45:16: note: expanded from macro 'TRACE_EVENT'
-      40 |         DECLARE_EVENT_CLASS(name,                              \
-         |         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      41 |                              PARAMS(proto),                    \
-         |                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      42 |                              PARAMS(args),                     \
-         |                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      43 |                              PARAMS(tstruct),                  \
-         |                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      44 |                              PARAMS(assign),                   \
-         |                              ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-      45 |                              PARAMS(print));                   \
-         |                              ~~~~~~~^~~~~~~
-   include/linux/tracepoint.h:139:25: note: expanded from macro 'PARAMS'
-     139 | #define PARAMS(args...) args
-         |                         ^~~~
-   include/trace/trace_events.h:219:27: note: expanded from macro 'DECLARE_EVENT_CLASS'
-     219 |         trace_event_printf(iter, print);                                \
-         |                                  ^~~~~
-   1 warning and 1 error generated.
-
-
-vim +256 include/trace/events/scsi.h
-
-   210	
-   211		TP_PROTO(struct scsi_cmnd *cmd, int rtn),
-   212	
-   213		TP_ARGS(cmd, rtn),
-   214	
-   215		TP_STRUCT__entry(
-   216			__field( unsigned int,	host_no	)
-   217			__field( unsigned int,	channel	)
-   218			__field( unsigned int,	id	)
-   219			__field( unsigned int,	lun	)
-   220			__field( int,		rtn	)
-   221			__field( unsigned int,	opcode	)
-   222			__field( unsigned int,	cmd_len )
-   223			__field( int,	driver_tag)
-   224			__field( int,	scheduler_tag)
-   225			__field( unsigned int,	data_sglen )
-   226			__field( unsigned int,	prot_sglen )
-   227			__field( unsigned char,	prot_op )
-   228			__dynamic_array(unsigned char,	cmnd, cmd->cmd_len)
-   229		),
-   230	
-   231		TP_fast_assign(
-   232			__entry->host_no	= cmd->device->host->host_no;
-   233			__entry->channel	= cmd->device->channel;
-   234			__entry->id		= cmd->device->id;
-   235			__entry->lun		= cmd->device->lun;
-   236			__entry->rtn		= rtn;
-   237			__entry->opcode		= cmd->cmnd[0];
-   238			__entry->cmd_len	= cmd->cmd_len;
-   239			__entry->driver_tag	= scsi_cmd_to_rq(cmd)->tag;
-   240			__entry->scheduler_tag	= scsi_cmd_to_rq(cmd)->internal_tag;
-   241			__entry->data_sglen	= scsi_sg_count(cmd);
-   242			__entry->prot_sglen	= scsi_prot_sg_count(cmd);
-   243			__entry->prot_op	= scsi_get_prot_op(cmd);
-   244			memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
-   245		),
-   246	
-   247		TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u" \
-   248			  " prot_op=%s driver_tag=%d scheduler_tag=%d cmnd=(%s %s raw=%s)" \
-   249			  " rtn=%s",
-   250			  __entry->host_no, __entry->channel, __entry->id,
-   251			  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
-   252			  show_prot_op_name(__entry->prot_op), __entry->driver_tag,
-   253			  __entry->scheduler_tag, show_opcode_name(__entry->opcode),
-   254			  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
-   255			  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
- > 256			  show_rtn_type(__entry->rtn)
-   257		  )
-   258	);
-   259	
-   260	DECLARE_EVENT_CLASS(scsi_cmd_done_timeout_template,
-   261	
-   262		TP_PROTO(struct scsi_cmnd *cmd),
-   263	
-   264		TP_ARGS(cmd),
-   265	
-   266		TP_STRUCT__entry(
-   267			__field( unsigned int,	host_no	)
-   268			__field( unsigned int,	channel	)
-   269			__field( unsigned int,	id	)
-   270			__field( unsigned int,	lun	)
-   271			__field( int,		result	)
-   272			__field( unsigned int,	opcode	)
-   273			__field( unsigned int,	cmd_len )
-   274			__field( int,	driver_tag)
-   275			__field( int,	scheduler_tag)
-   276			__field( unsigned int,	data_sglen )
-   277			__field( unsigned int,	prot_sglen )
-   278			__field( unsigned char,	prot_op )
-   279			__dynamic_array(unsigned char,	cmnd, cmd->cmd_len)
-   280			__field( u8, sense_key )
-   281			__field( u8, asc )
-   282			__field( u8, ascq )
-   283		),
-   284	
-   285		TP_fast_assign(
-   286			struct scsi_sense_hdr sshdr;
-   287	
-   288			__entry->host_no	= cmd->device->host->host_no;
-   289			__entry->channel	= cmd->device->channel;
-   290			__entry->id		= cmd->device->id;
-   291			__entry->lun		= cmd->device->lun;
-   292			__entry->result		= cmd->result;
-   293			__entry->opcode		= cmd->cmnd[0];
-   294			__entry->cmd_len	= cmd->cmd_len;
-   295			__entry->driver_tag	= scsi_cmd_to_rq(cmd)->tag;
-   296			__entry->scheduler_tag	= scsi_cmd_to_rq(cmd)->internal_tag;
-   297			__entry->data_sglen	= scsi_sg_count(cmd);
-   298			__entry->prot_sglen	= scsi_prot_sg_count(cmd);
-   299			__entry->prot_op	= scsi_get_prot_op(cmd);
-   300			memcpy(__get_dynamic_array(cmnd), cmd->cmnd, cmd->cmd_len);
-   301			if (cmd->sense_buffer && SCSI_SENSE_VALID(cmd) &&
-   302			    scsi_command_normalize_sense(cmd, &sshdr)) {
-   303				__entry->sense_key = sshdr.sense_key;
-   304				__entry->asc = sshdr.asc;
-   305				__entry->ascq = sshdr.ascq;
-   306			} else {
-   307				__entry->sense_key = 0;
-   308				__entry->asc = 0;
-   309				__entry->ascq = 0;
-   310			}
-   311		),
-   312	
-   313		TP_printk("host_no=%u channel=%u id=%u lun=%u data_sgl=%u prot_sgl=%u " \
-   314			  "prot_op=%s driver_tag=%d scheduler_tag=%d cmnd=(%s %s raw=%s) " \
-   315			  "result=(driver=%s host=%s message=%s status=%s) "
-   316			  "sense=(key=%#x asc=%#x ascq=%#x)",
-   317			  __entry->host_no, __entry->channel, __entry->id,
-   318			  __entry->lun, __entry->data_sglen, __entry->prot_sglen,
-   319			  show_prot_op_name(__entry->prot_op), __entry->driver_tag,
-   320			  __entry->scheduler_tag, show_opcode_name(__entry->opcode),
-   321			  __parse_cdb(__get_dynamic_array(cmnd), __entry->cmd_len),
-   322			  __print_hex(__get_dynamic_array(cmnd), __entry->cmd_len),
-   323			  "DRIVER_OK",
-   324			  show_hostbyte_name(((__entry->result) >> 16) & 0xff),
-   325			  "COMMAND_COMPLETE",
-   326			  show_statusbyte_name(__entry->result & 0xff),
-   327			  __entry->sense_key, __entry->asc, __entry->ascq)
-   328	);
-   329	
-   330	DEFINE_EVENT(scsi_cmd_done_timeout_template, scsi_dispatch_cmd_done,
-   331		     TP_PROTO(struct scsi_cmnd *cmd),
-   332		     TP_ARGS(cmd));
-   333	
-   334	DEFINE_EVENT(scsi_cmd_done_timeout_template, scsi_dispatch_cmd_timeout,
-   335		     TP_PROTO(struct scsi_cmnd *cmd),
-   336		     TP_ARGS(cmd));
-   337	
-   338	TRACE_EVENT(scsi_eh_wakeup,
-   339	
-   340		TP_PROTO(struct Scsi_Host *shost),
-   341	
-   342		TP_ARGS(shost),
-   343	
-   344		TP_STRUCT__entry(
-   345			__field( unsigned int,	host_no	)
-   346		),
-   347	
-   348		TP_fast_assign(
-   349			__entry->host_no	= shost->host_no;
-   350		),
-   351	
-   352		TP_printk("host_no=%u", __entry->host_no)
-   353	);
-   354	
-   355	#endif /*  _TRACE_SCSI_H */
-   356	
-   357	/* This part must be outside protection */
- > 358	#include <trace/define_trace.h>
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+T24gVHVlLCAyMDI1LTA1LTIwIGF0IDE3OjQwICswODAwLCBIdWFuIFRhbmcgd3JvdGU6DQo+IA0K
+PiArc3RhdGljIGNvbnN0IGNoYXIgKiBjb25zdCBoaWRfdHJpZ2dlcl9tb2RlW10gPSB7ImRpc2Fi
+bGUiLA0KPiAiZW5hYmxlIn07DQo+ICsNCj4gK3N0YXRpYyBzc2l6ZV90IGFuYWx5c2lzX3RyaWdn
+ZXJfc3RvcmUoc3RydWN0IGRldmljZSAqZGV2LA0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoCBzdHJ1Y3QgZGV2aWNlX2F0dHJpYnV0ZSAqYXR0ciwgY29uc3QgY2hhciAqYnVmLA0KPiBz
+aXplX3QgY291bnQpDQo+ICt7DQo+ICvCoMKgwqDCoMKgwqAgc3RydWN0IHVmc19oYmEgKmhiYSA9
+IGRldl9nZXRfZHJ2ZGF0YShkZXYpOw0KPiArwqDCoMKgwqDCoMKgIGludCBtb2RlOw0KPiArwqDC
+oMKgwqDCoMKgIGludCByZXQ7DQo+ICsNCj4gK8KgwqDCoMKgwqDCoCBtb2RlID0gc3lzZnNfbWF0
+Y2hfc3RyaW5nKGhpZF90cmlnZ2VyX21vZGUsIGJ1Zik7DQo+ICvCoMKgwqDCoMKgwqAgaWYgKG1v
+ZGUgPCAwKQ0KPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCByZXR1cm4gLUVJTlZBTDsN
+Cj4gDQoNCkhpIEhhdW4sDQoNCkNvbnNpZGVyIHVzZSBiZWxvdyBjb2Rpbmcgc3R5bGUgZm9yIHJl
+YWRhYmlsaXR5Lg0KDQppZiAoc3lzZnNfc3RyZXEoYnVmLCAiZW5hYmxlIikpDQogICAgbW9kZSA9
+IC4uLjsNCmVsc2UgaWYgKHN5c2ZzX3N0cmVxKGJ1ZiwgImRpc2FibGUiKSkNCiAgICBtb2RlID0g
+Li4uOw0KZWxzZQ0KICAgIHJldHVybiAtRUlOVkFMOw0KDQoNCg0KPiANCj4gZGlmZiAtLWdpdCBh
+L2RyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMgYi9kcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC5jDQo+
+IGluZGV4IDNlMjA5N2U2NTk2NC4uOGNjZDkyM2E1NzYxIDEwMDY0NA0KPiAtLS0gYS9kcml2ZXJz
+L3Vmcy9jb3JlL3Vmc2hjZC5jDQo+ICsrKyBiL2RyaXZlcnMvdWZzL2NvcmUvdWZzaGNkLmMNCj4g
+QEAgLTgzOTAsNiArODM5MCwxMCBAQCBzdGF0aWMgaW50IHVmc19nZXRfZGV2aWNlX2Rlc2Moc3Ry
+dWN0IHVmc19oYmENCj4gKmhiYSkNCj4gDQo+IMKgwqDCoMKgwqDCoMKgIGRldl9pbmZvLT5ydHRf
+Y2FwID0gZGVzY19idWZbREVWSUNFX0RFU0NfUEFSQU1fUlRUX0NBUF07DQo+IA0KPiArwqDCoMKg
+wqDCoMKgIGRldl9pbmZvLT5oaWRfc3VwID0gZ2V0X3VuYWxpZ25lZF9iZTMyKGRlc2NfYnVmICsN
+Cj4gK8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoA0KPiBERVZJQ0VfREVTQ19QQVJBTV9FWFRfVUZTX0ZFQVRVUkVfU1VQKSAmDQo+ICvC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqAgVUZTX0RFVl9ISURfU1VQUE9SVDsNCj4gKw0KPiANCg0KQ291bGQgYWRkIHRoZSBkb3VibGUg
+bmVnYXRpb24gKCEhKSBlbnN1cmVzIHRoZSB2YWx1ZSBpcyBleGFjdGx5IDAgb3IgMS4NCmRldl9p
+bmZvLT5oaWRfc3VwID0gISEoZ2V0X3VuYWxpZ25lZF9iZTMyKGRlc2NfYnVmICsNCiAgICAgICAg
+ICAgIERFVklDRV9ERVNDX1BBUkFNX0VYVF9VRlNfRkVBVFVSRV9TVVApICYNCiAgICAgICAgICAg
+IFVGU19ERVZfSElEX1NVUFBPUlQpOw0KDQpUaGUgcmVzdCBvZiB0aGUgcGFydHMgbG9va3MgZ29v
+ZCB0byBtZS4NCg0KUmV2aWV3ZWQtYnk6IFBldGVyIFdhbmcgPHBldGVyLndhbmdAbWVkaWF0ZWsu
+Y29tPg0KDQoNClRoYW5rcw0KUGV0ZXINCg==
