@@ -1,112 +1,164 @@
-Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66663288A2;
-	Tue, 20 May 2025 16:01:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3ED2182BC;
+	Tue, 20 May 2025 17:34:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747756918; cv=none; b=MvX61gGwOJMEGfn+8/pkjnWJhP6F3BALFyt+zo6kO4PekvixvXHsGBotyqUhrIV67DR+dT3kwiZPDk6q9EQeMEPtEzqyB8ag/qfTh+kp9hNrdOPGzZYNqQ7r2Giyy7dxl9lLdviLz3v6ZSQvolxPRSAEyJQiSjV1fwkWxQvQefI=
+	t=1747762484; cv=none; b=o6X6oHQSGQrCJiGkS0TOkhPARVif1gYANsybglsVqI9LsDQgK8RvMk5s6yWwLvp/rcaSUZa8GrNIQHVlEQyx0Gdy1t88LsOJwHlKiQ+AS7/2GO70Fhg82Ep8/qf9jzWe7qwXrqoCfdcgGaXKVXRwnpt3HX94sbGqPlkEjc0gdm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747756918; c=relaxed/simple;
-	bh=NLHQu01znICve73PRKiUqGXlEoXbgUBhtxBnnuUPUyM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=OQ7BIepi3NewaVZer9ijAZsMexvSdCQ4aPPv+SSLWFA5zU8GVt+mGoQG39D4QdPnY3LG9O39hspeov8ncGp8mxKcbzzDxoFHOahbveh1GUAnObfcjowKIoTaqgiXrsq6EIhotlOlJbaxUwVkafOYfBkjNIIg81vchrA9Ky8Hifg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UFOPh8+4; arc=none smtp.client-ip=209.85.208.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1747762484; c=relaxed/simple;
+	bh=4Oa/oAs7QoUno9lRk6Vmd+pQV2yim2hp+jaTVoota5M=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=V/S/RPDo8k11XgdcJOP+H/2fCrlfXtNBFUear8qTle/3gFSrx0BrY3eNMeuvT3Z26PBXTQZmYK4Ov1aj7wq95G2bCIgXLYsYOluV8P5HiRJc1gAT7TMoi9kja5hxbpRYtCx3nYp/DhTHDim+xxRR+PuNI14odj/kYQ+ogW11RsE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jfZwfM+E; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UFOPh8+4"
-Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-5f3f04b5dbcso8312168a12.1;
-        Tue, 20 May 2025 09:01:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1747756915; x=1748361715; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=NLHQu01znICve73PRKiUqGXlEoXbgUBhtxBnnuUPUyM=;
-        b=UFOPh8+4PsYKS1VT5Ye+pBUtIfcH4QTl8NGvhBIUUyHCnsiEZb2FJlg6sCbTljG8Oi
-         RWsHPNbBBVuItqTXW82P1TfiXaGspLPcxOit9uA0pj5UWgtZr9/n/hHi68M7it03aZ15
-         Wj3hWQJ4w1KxjCSl1HJ6cEg1jA4s160NtL55iq9eFwhI5BhwEd6SisVSChYwizpeMUEO
-         ljo+/rEK39givfZmR1sQ7uDxNoR1+WDKxR8E6Nn83POB/wbCSkuVMLcgaG2DtuZrhANu
-         bTIZBLuSa2q+z69e2A3iiC385MDaL0EqTfQ1uIE/6iFttw1BG8fEKzqHfxpZCicoT1sZ
-         3nsg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747756915; x=1748361715;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NLHQu01znICve73PRKiUqGXlEoXbgUBhtxBnnuUPUyM=;
-        b=rUJC/MCy8INS+29ZGpOnmPRoURsoBTGbIugIRgEjy+bhi2iC5F1jggPsXAxfqaxMwK
-         gZ/WgGAt86E522Aclap/BmJUvs/ApbyXOMITXHne5ef0G0SzZvoYTNlXcSYdS5DjyG7Q
-         2wR9KYJOP3CSSPW5Y8sJ7BQiSyfEXz3WucKlN/O3F/Wvo062oTlx5qg2NmwjJMeWPDiO
-         7oh0Tj22FbmL+DlESCzOCGxb3srfLV2cNT78jLa58O3etQVHospglmcNLLWfYDyaY95H
-         KD+EILaB52SHYY2l66kfE3VDX+s47uzE9NTz8TQkfzvMx9F9K65+ygFLvQvTAW5qmvtu
-         FhqA==
-X-Forwarded-Encrypted: i=1; AJvYcCV/7UYCz+s1zFdmYRhAUqDu0tUASrQ7df36+RvRM9xAyTqX/Sjb3FHS5G63YXc5FO46mq8+ddf5ipCAuK0=@vger.kernel.org, AJvYcCXmfLWFw4JPgDaMaXmbFxFqHHCXJMGUWZgWItNud9zIV2z7nuiO0QBDRDPsPT8me+QYaj4APoVdJ1AtBw==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxbLFRo124KZrF+ssXbXQt14uKYIPuYnDxDl1zghgFbz32Ay2XY
-	nEFlAqU8QkH8z0Fu+9MDGdvBbP046+9fTPKv8l1USsHc6EOm70uGOfEh
-X-Gm-Gg: ASbGncsUCrdm4hywVSYe41ByLN6UCjznrprCqgAhOEcoyWmfUVTCTjPualrVFwfWdqN
-	z0Sea/V3vaT/I9QXBXaKa/0EoV6a4lhMxEkDYhmxJKv8rz1g2KL5BQDT3TUU1e+jPxj6leYd42a
-	fYw5CATjVvylKXR/EKBLxB/95/AkSygI2fbyRQ+UBLJFpt/Z6WeJ8PjWv0WEXEbGIGTCxeVlcRW
-	8pcEmYjmMZ5eQ02XGWC0YHKkb4j30vI8+bmt4dP/ndyxLzbrtG3nQ15R09rYOusT2wPSjDfAAtK
-	CSwB9LAML+QN0perTOhCtx2bCpgpKmdk9r995ubRfSW14xUXqpRKXQ==
-X-Google-Smtp-Source: AGHT+IHyQCwN+N8keILzdY8urJ4nceUZZMCFLVcZ2JJ//X1ZPm39zCCDWnYiM9DBHR4AHkitjLt/Mg==
-X-Received: by 2002:a17:907:db02:b0:ad5:27b6:7fd1 with SMTP id a640c23a62f3a-ad52d48da04mr1704960866b.17.1747756914001;
-        Tue, 20 May 2025 09:01:54 -0700 (PDT)
-Received: from [10.176.234.34] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ad52d4ca654sm740504266b.158.2025.05.20.09.01.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 20 May 2025 09:01:52 -0700 (PDT)
-Message-ID: <32c36b58dcdbb09403fa9dccff28b6bee76882e0.camel@gmail.com>
-Subject: Re: [PATCH v5] ufs: core: Add HID support
-From: Bean Huo <huobean@gmail.com>
-To: Huan Tang <tanghuan@vivo.com>, alim.akhtar@samsung.com,
- avri.altman@wdc.com,  bvanassche@acm.org,
- James.Bottomley@HansenPartnership.com,  martin.petersen@oracle.com,
- matthias.bgg@gmail.com,  angelogioacchino.delregno@collabora.com,
- peter.wang@mediatek.com,  manivannan.sadhasivam@linaro.org,
- quic_nguyenb@quicinc.com, luhongfei@vivo.com,  linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org,  linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org
-Cc: opensource.kernel@vivo.com, Wenxing Cheng <wenxing.cheng@vivo.com>
-Date: Tue, 20 May 2025 18:01:50 +0200
-In-Reply-To: <20250520094054.313-1-tanghuan@vivo.com>
-References: <20250520094054.313-1-tanghuan@vivo.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: base64
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jfZwfM+E"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44EA6C4CEE9;
+	Tue, 20 May 2025 17:34:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747762482;
+	bh=4Oa/oAs7QoUno9lRk6Vmd+pQV2yim2hp+jaTVoota5M=;
+	h=From:To:Cc:Subject:Date:From;
+	b=jfZwfM+EtFOzz6o1W4wA7JkhydcX5QsZE1LXPTdGom5UBgQnzBSdDzZTcCARDp8f5
+	 Vq26/sS3c4HPDrJW6+6kkbZDzFZhuOmlInC6lqq8/bYBQcWViH5yWm4poeTKpbDicy
+	 rUvfEea0TRcffAQe6CJoYFMPCAv0/lCPTcNjzKGciGGowwesF9XUYAYgglPMhbzx60
+	 J2HO8WoHVeHV0WKwMzXrEJBc02I6yOcuVyWuVQoOC0L7LDXP7MQTSSi4JTUDReJdXH
+	 QH9WVJlsX/2KBGUX20C5U/3opbDlh1VbVFfLsN07z9XjnJ5BcU3nti2XyrTONnvi39
+	 Lvpjl7IOfAQfA==
+From: Kees Cook <kees@kernel.org>
+To: Jakub Kicinski <kuba@kernel.org>
+Cc: Kees Cook <kees@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Simon Horman <horms@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	Maurizio Lombardi <mlombard@redhat.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Eric Biggers <ebiggers@google.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH net-next v3] net: core: Convert inet_addr_is_any() to sockaddr_storage
+Date: Tue, 20 May 2025 10:34:38 -0700
+Message-Id: <20250520173437.make.907-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=3953; i=kees@kernel.org; h=from:subject:message-id; bh=4Oa/oAs7QoUno9lRk6Vmd+pQV2yim2hp+jaTVoota5M=; b=owGbwMvMwCVmps19z/KJym7G02pJDBk6e/UWxP4+wt+4oHy5kvm27bypzpd7FIJW7GG36yz5E vBVNOFTRykLgxgXg6yYIkuQnXuci8fb9nD3uYowc1iZQIYwcHEKwER4PzH8d/R79zXsVMzHwoNr 3S37XUPk1lmqbEzrdW2ICU1iWZ62g+GviKK1l+2mkz+NPMzufv0UoFPKn/pPtmjqu1vVTzf83nq QBQA=
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
-T24gVHVlLCAyMDI1LTA1LTIwIGF0IDE3OjQwICswODAwLCBIdWFuIFRhbmcgd3JvdGU6Cj4gQEAg
-LTg3LDYgKzg3LDI2IEBAIHN0YXRpYyBjb25zdCBjaGFyICp1ZnNfd2JfcmVzaXplX3N0YXR1c190
-b19zdHJpbmcoZW51bSB3Yl9yZXNpemVfc3RhdHVzIHN0YXR1cykKPiDCoMKgwqDCoMKgwqDCoMKg
-fQo+IMKgfQo+IMKgCj4gK3N0YXRpYyBjb25zdCBjaGFyICp1ZnNfaGlkX3N0YXRlX3RvX3N0cmlu
-ZyhlbnVtIHVmc19oaWRfc3RhdGUgc3RhdGUpCj4gK3sKPiArwqDCoMKgwqDCoMKgwqBzd2l0Y2gg
-KHN0YXRlKSB7Cj4gK8KgwqDCoMKgwqDCoMKgY2FzZSBISURfSURMRToKPiArwqDCoMKgwqDCoMKg
-wqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuICJpZGxlIjsKPiArwqDCoMKgwqDCoMKgwqBjYXNlIEFO
-QUxZU0lTX0lOX1BST0dSRVNTOgo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXR1
-cm4gImFuYWx5c2lzX2luX3Byb2dyZXNzIjsKPiArwqDCoMKgwqDCoMKgwqBjYXNlIERFRlJBR19S
-RVFVSVJFRDoKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuICJkZWZyYWdf
-cmVxdWlyZWQiOwo+ICvCoMKgwqDCoMKgwqDCoGNhc2UgREVGUkFHX0lOX1BST0dSRVNTOgo+ICvC
-oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXR1cm4gImRlZnJhZ19pbl9wcm9ncmVzcyI7
-Cj4gK8KgwqDCoMKgwqDCoMKgY2FzZSBERUZSQUdfQ09NUExFVEVEOgo+ICvCoMKgwqDCoMKgwqDC
-oMKgwqDCoMKgwqDCoMKgwqByZXR1cm4gImRlZnJhZ19jb21wbGV0ZWQiOwo+ICvCoMKgwqDCoMKg
-wqDCoGNhc2UgREVGUkFHX05PVF9SRVFVSVJFRDoKPiArwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
-wqDCoMKgcmV0dXJuICJkZWZyYWdfbm90X3JlcXVpcmVkIjsKPiArwqDCoMKgwqDCoMKgwqBkZWZh
-dWx0Ogo+ICvCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXR1cm4gInVua25vd24iOwo+
-ICvCoMKgwqDCoMKgwqDCoH0KPiArfQoKVGhlIGVudW0gdWZzX2hpZF9zdGF0ZSB2YWx1ZXMgYXJl
-IGNvbnRpZ3VvdXMgYW5kIHN0YXJ0IGZyb20gMCwgbWF5YmUgY2hhbmdlIHN3aXRjaC1zdGF0ZSB0
-byA6CgojZGVmaW5lIE5VTV9VRlNfSElEX1NUQVRFUyA2CnN0YXRpYyBjb25zdCBjaGFyICp1ZnNf
-aGlkX3N0YXRlc1tOVU1fVUZTX0hJRF9TVEFURVNdID0gewogICAgImlkbGUiLAogICAgImFuYWx5
-c2lzX2luX3Byb2dyZXNzIiwKICAgICJkZWZyYWdfcmVxdWlyZWQiLAogICAgImRlZnJhZ19pbl9w
-cm9ncmVzcyIsCiAgICAiZGVmcmFnX2NvbXBsZXRlZCIsCiAgICAiZGVmcmFnX25vdF9yZXF1aXJl
-ZCIKfTsKCnN0YXRpYyBjb25zdCBjaGFyICp1ZnNfaGlkX3N0YXRlX3RvX3N0cmluZyhlbnVtIHVm
-c19oaWRfc3RhdGUgc3RhdGUpIHsKICAgIGlmICgodW5zaWduZWQgaW50KXN0YXRlIDwgTlVNX1VG
-U19ISURfU1RBVEVTKQogICAgICAgIHJldHVybiB1ZnNfaGlkX3N0YXRlc1tzdGF0ZV07CiAgICBy
-ZXR1cm4gInVua25vd24iOwp9Cgo=
+All the callers of inet_addr_is_any() have a sockaddr_storage-backed
+sockaddr. Avoid casts and switch prototype to the actual object being
+used.
+
+Reviewed-by: Christoph Hellwig <hch@lst.de>
+Reviewed-by: Simon Horman <horms@kernel.org>
+Signed-off-by: Kees Cook <kees@kernel.org>
+---
+ include/linux/inet.h                | 2 +-
+ drivers/nvme/target/rdma.c          | 2 +-
+ drivers/nvme/target/tcp.c           | 2 +-
+ drivers/target/iscsi/iscsi_target.c | 2 +-
+ net/core/utils.c                    | 8 ++++----
+ 5 files changed, 8 insertions(+), 8 deletions(-)
+
+diff --git a/include/linux/inet.h b/include/linux/inet.h
+index bd8276e96e60..9158772f3559 100644
+--- a/include/linux/inet.h
++++ b/include/linux/inet.h
+@@ -55,6 +55,6 @@ extern int in6_pton(const char *src, int srclen, u8 *dst, int delim, const char
+ 
+ extern int inet_pton_with_scope(struct net *net, unsigned short af,
+ 		const char *src, const char *port, struct sockaddr_storage *addr);
+-extern bool inet_addr_is_any(struct sockaddr *addr);
++bool inet_addr_is_any(struct sockaddr_storage *addr);
+ 
+ #endif	/* _LINUX_INET_H */
+diff --git a/drivers/nvme/target/rdma.c b/drivers/nvme/target/rdma.c
+index 2a4536ef6184..79a5aad2e9d0 100644
+--- a/drivers/nvme/target/rdma.c
++++ b/drivers/nvme/target/rdma.c
+@@ -1999,7 +1999,7 @@ static void nvmet_rdma_disc_port_addr(struct nvmet_req *req,
+ 	struct nvmet_rdma_port *port = nport->priv;
+ 	struct rdma_cm_id *cm_id = port->cm_id;
+ 
+-	if (inet_addr_is_any((struct sockaddr *)&cm_id->route.addr.src_addr)) {
++	if (inet_addr_is_any(&cm_id->route.addr.src_addr)) {
+ 		struct nvmet_rdma_rsp *rsp =
+ 			container_of(req, struct nvmet_rdma_rsp, req);
+ 		struct rdma_cm_id *req_cm_id = rsp->queue->cm_id;
+diff --git a/drivers/nvme/target/tcp.c b/drivers/nvme/target/tcp.c
+index 12a5cb8641ca..5cd1cf74f8ff 100644
+--- a/drivers/nvme/target/tcp.c
++++ b/drivers/nvme/target/tcp.c
+@@ -2194,7 +2194,7 @@ static void nvmet_tcp_disc_port_addr(struct nvmet_req *req,
+ {
+ 	struct nvmet_tcp_port *port = nport->priv;
+ 
+-	if (inet_addr_is_any((struct sockaddr *)&port->addr)) {
++	if (inet_addr_is_any(&port->addr)) {
+ 		struct nvmet_tcp_cmd *cmd =
+ 			container_of(req, struct nvmet_tcp_cmd, req);
+ 		struct nvmet_tcp_queue *queue = cmd->queue;
+diff --git a/drivers/target/iscsi/iscsi_target.c b/drivers/target/iscsi/iscsi_target.c
+index 620ba6e0ab07..a2dde08c8a62 100644
+--- a/drivers/target/iscsi/iscsi_target.c
++++ b/drivers/target/iscsi/iscsi_target.c
+@@ -3419,7 +3419,7 @@ iscsit_build_sendtargets_response(struct iscsit_cmd *cmd,
+ 					}
+ 				}
+ 
+-				if (inet_addr_is_any((struct sockaddr *)&np->np_sockaddr))
++				if (inet_addr_is_any(&np->np_sockaddr))
+ 					sockaddr = &conn->local_sockaddr;
+ 				else
+ 					sockaddr = &np->np_sockaddr;
+diff --git a/net/core/utils.c b/net/core/utils.c
+index 27f4cffaae05..e47feeaa5a49 100644
+--- a/net/core/utils.c
++++ b/net/core/utils.c
+@@ -399,9 +399,9 @@ int inet_pton_with_scope(struct net *net, __kernel_sa_family_t af,
+ }
+ EXPORT_SYMBOL(inet_pton_with_scope);
+ 
+-bool inet_addr_is_any(struct sockaddr *addr)
++bool inet_addr_is_any(struct sockaddr_storage *addr)
+ {
+-	if (addr->sa_family == AF_INET6) {
++	if (addr->ss_family == AF_INET6) {
+ 		struct sockaddr_in6 *in6 = (struct sockaddr_in6 *)addr;
+ 		const struct sockaddr_in6 in6_any =
+ 			{ .sin6_addr = IN6ADDR_ANY_INIT };
+@@ -409,13 +409,13 @@ bool inet_addr_is_any(struct sockaddr *addr)
+ 		if (!memcmp(in6->sin6_addr.s6_addr,
+ 			    in6_any.sin6_addr.s6_addr, 16))
+ 			return true;
+-	} else if (addr->sa_family == AF_INET) {
++	} else if (addr->ss_family == AF_INET) {
+ 		struct sockaddr_in *in = (struct sockaddr_in *)addr;
+ 
+ 		if (in->sin_addr.s_addr == htonl(INADDR_ANY))
+ 			return true;
+ 	} else {
+-		pr_warn("unexpected address family %u\n", addr->sa_family);
++		pr_warn("unexpected address family %u\n", addr->ss_family);
+ 	}
+ 
+ 	return false;
+-- 
+2.34.1
 
