@@ -1,124 +1,145 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3BFF24BBFA;
-	Tue, 20 May 2025 20:22:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32925244690;
+	Tue, 20 May 2025 22:31:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747772545; cv=none; b=E2vpf85YokM8/PNpoMeccfRvaazvGHha3TMdr8DjKRVZGgVuE/KOezh2S+5x9AEMt910s72vRu7Y19/wDTaJRZ9pNifWw8Pki/+a16neRnj4aVb74cNtJlf8zgaRksOLCE0KXwin5uKsvDeJ/reOmgdQ/huz+EJOjCQWy7Jcpds=
+	t=1747780272; cv=none; b=Qn3bN5WNyYKbh0ba/tdl7FrEaOxDg6gbzz5f0z/3TtgtHwoA1KXLRaWYWxfV/QPLYF/8Mk/J97uswQecIC/NIqHJo0nVWPBba7PxiLlLFcG21hYbuTtTaiZT1y1lpBbpQmqKR7yr/10NwAC/HBzjDGIRqPHlXA78tq9xejx1LlM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747772545; c=relaxed/simple;
-	bh=nBIz2YBhpcCG6sMnziTwhK5Dqq9fn+f5ySbYnL3wGz4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=U7pf2XzfhTZY/r8lachtFRyCqj4dcsbKXPkDraSqmyMItei85KQQl8vht5ggB0aWmpIk2/eMcf20DCUAl8a9To06OJuFrcdyaIpEloyS1ZfslROTGjdaiu95u3fYBfwJuif187XxPnyLqgvv5x3aGrZX2JSGNPIqj76LxFzGRSc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pBIR+Zvh; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1747780272; c=relaxed/simple;
+	bh=V5uf6YlgPTr2U418QetNaAAYXDxQz7VW/iPHa55aWbE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=bXQ8+gKgnlvgq2OYRZV1mCVlw+P1rn7coeiEKuRWx6uevZeYZKbuhQmxc9TVI++CufL3lrfteGgvf5lB4Kd3YlIaGvP4JPMSpFDEP8zJqdnW0pZRucvIA6NUgtaqVk300/jYVRT5QOCmMK+3Dkh5NCKJfGjsRk5meOeATKQ2FOQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c8JF6yMZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pBIR+Zvh"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4b25ZQ3hKWzm0yVW;
-	Tue, 20 May 2025 20:22:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1747772539; x=1750364540; bh=VsWblo70W25KLjzab3RDQK4+
-	FjMs+JwITco0BGNeUJc=; b=pBIR+Zvh4Q7rLh9RZvGG64FHSWIbR18L0w0sCyiM
-	btVI41klJaHxTtmoaFZ6deEOiM4BBh/9lMca/kD4klUMO1jrxUUspO1xf7FKxWOZ
-	7BiZxUpK1YolQgYDd47Xpo61TBOTzc0Rb/J9WhyCu+9ht7x0VrOc8lpQUE6iSCqi
-	I1xit/mlup5HSQCdSWhXFffbAt+mIoI8CYgvHAuerAuMSh2yNU/GjK27St8Sqpz3
-	U1ZS/0A6QluC4E3gwz+7+hVgZbJUcPQHefRU8Jr1aq8pg24Cwx6LDqk+KIVH5YvT
-	f/1Bxnb9oiW3DoqWwusNrFo267n5iMO2RbE9FC+PSzvzbg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id g1LDX6Kg9hux; Tue, 20 May 2025 20:22:19 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4b25Z71qClzm0pKq;
-	Tue, 20 May 2025 20:22:05 +0000 (UTC)
-Message-ID: <b0ec5b8a-b303-4e5b-bca9-4524eba9fa31@acm.org>
-Date: Tue, 20 May 2025 13:22:05 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c8JF6yMZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B18DAC4AF0C;
+	Tue, 20 May 2025 22:31:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747780271;
+	bh=V5uf6YlgPTr2U418QetNaAAYXDxQz7VW/iPHa55aWbE=;
+	h=From:To:Cc:Subject:Date:From;
+	b=c8JF6yMZ2CfkNKv+fj/emGvRG+4AyBoiThhjNe5giOiqWyOZw3S7kTIX/1n0SD9Jj
+	 suGB+ONLcSBgGXRUppLShhfbiSMiz01dT9hURbyiqqUgl9uZIL9h5Qb1w5mz9fq2g3
+	 +3KDq2sAocKLZIJ+6qf0tJKmZvhm5Ld//TaXafA9rqLXQ0D01Gikn2kmFDNEFisM35
+	 hYRp9zZ9CfpjFon3LCztZHDMjSgmV62M8vHILqeu31B7msusbLOVZEM7R0MiAGCaAv
+	 doSIfmG9RO12LRHELfyIyHykmNE5dHzqAAGdqhZvqPBN5eiLTNrMtO52XzsHkdfs9B
+	 5R1K5BHNnA5CA==
+From: Kees Cook <kees@kernel.org>
+To: Kuniyuki Iwashima <kuniyu@amazon.com>
+Cc: Kees Cook <kees@kernel.org>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Max Gurtovoy <mgurtovoy@nvidia.com>,
+	Maurizio Lombardi <mlombard@redhat.com>,
+	Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	Mingzhe Zou <mingzhe.zou@easystack.cn>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	Simon Horman <horms@kernel.org>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	Stanislav Fomichev <sdf@fomichev.me>,
+	Cosmin Ratiu <cratiu@nvidia.com>,
+	Lei Yang <leiyang@redhat.com>,
+	Ido Schimmel <idosch@nvidia.com>,
+	Samuel Mendoza-Jonas <sam@mendozajonas.com>,
+	Paul Fertser <fercerpav@gmail.com>,
+	Alexander Aring <alex.aring@gmail.com>,
+	Stefan Schmidt <stefan@datenfreihafen.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Hayes Wang <hayeswang@realtek.com>,
+	Douglas Anderson <dianders@chromium.org>,
+	Grant Grundler <grundler@chromium.org>,
+	Jay Vosburgh <jv@jvosburgh.net>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	Jiri Pirko <jiri@resnulli.us>,
+	Eric Biggers <ebiggers@google.com>,
+	Milan Broz <gmazyland@gmail.com>,
+	Philipp Hahn <phahn-oss@avm.de>,
+	Ard Biesheuvel <ardb@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Ahmed Zaki <ahmed.zaki@intel.com>,
+	Alexander Lobakin <aleksander.lobakin@intel.com>,
+	Xiao Liang <shaw.leon@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-wpan@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH 0/7] net: Convert dev_set_mac_address() to struct sockaddr_storage
+Date: Tue, 20 May 2025 15:30:59 -0700
+Message-Id: <20250520222452.work.063-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5] ufs: core: Add HID support
-To: Bean Huo <huobean@gmail.com>, Huan Tang <tanghuan@vivo.com>,
- alim.akhtar@samsung.com, avri.altman@wdc.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- matthias.bgg@gmail.com, angelogioacchino.delregno@collabora.com,
- peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
- quic_nguyenb@quicinc.com, luhongfei@vivo.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org
-Cc: opensource.kernel@vivo.com, Wenxing Cheng <wenxing.cheng@vivo.com>
-References: <20250520094054.313-1-tanghuan@vivo.com>
- <32c36b58dcdbb09403fa9dccff28b6bee76882e0.camel@gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <32c36b58dcdbb09403fa9dccff28b6bee76882e0.camel@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2018; i=kees@kernel.org; h=from:subject:message-id; bh=V5uf6YlgPTr2U418QetNaAAYXDxQz7VW/iPHa55aWbE=; b=owGbwMvMwCVmps19z/KJym7G02pJDBm6TCseuGUb11+RCOzXO7lCOWzlOiOBrx4L36js6ygWL q07/N2go5SFQYyLQVZMkSXIzj3OxeNte7j7XEWYOaxMIEMYuDgFYCKzBRgZ/tQsZlVS1pRfEbvj 8Caz4t6e8B9HuKfWHNo4c+GV9lVGrxj+WV4zLXjF52Tya+X2me5K9ydwBjwu97i7/jWv+FeeaQG 6zAA=
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
+Content-Transfer-Encoding: 8bit
 
-On 5/20/25 9:01 AM, Bean Huo wrote:
-> On Tue, 2025-05-20 at 17:40 +0800, Huan Tang wrote:
->> @@ -87,6 +87,26 @@ static const char *ufs_wb_resize_status_to_string(e=
-num wb_resize_status status)
->>  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
->>  =C2=A0}
->>  =20
->> +static const char *ufs_hid_state_to_string(enum ufs_hid_state state)
->> +{
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0switch (state) {
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case HID_IDLE:
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return "idle";
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case ANALYSIS_IN_PROGRESS:
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return "analysis_in_progress";
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case DEFRAG_REQUIRED:
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return "defrag_required";
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case DEFRAG_IN_PROGRESS:
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return "defrag_in_progress";
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case DEFRAG_COMPLETED:
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return "defrag_completed";
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0case DEFRAG_NOT_REQUIRED:
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return "defrag_not_required";
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0default:
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0return "unknown";
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0}
->> +}
->=20
-> The enum ufs_hid_state values are contiguous and start from 0, maybe ch=
-ange switch-state to :
->=20
-> #define NUM_UFS_HID_STATES 6
-> static const char *ufs_hid_states[NUM_UFS_HID_STATES] =3D {
->      "idle",
->      "analysis_in_progress",
->      "defrag_required",
->      "defrag_in_progress",
->      "defrag_completed",
->      "defrag_not_required"
-> };
+Hi,
 
-If this change is made, please use the designated initializer syntax
-([label] =3D "text"). This will make it easier to verify that the
-enumeration labels and the strings match.
+As part of the effort to allow the compiler to reason about object sizes,
+we need to deal with the problematic variably sized struct sockaddr,
+which has no internal runtime size tracking. In much of the network
+stack the use of struct sockaddr_storage has been adopted. Continue the
+transition toward this for more of the internal APIs. Specifically:
 
-Thanks,
+- inet_addr_is_any()
+- netif_set_mac_address()
+- dev_set_mac_address()
 
-Bart.
+Only 3 callers of dev_set_mac_address() needed adjustment; all others
+were already using struct sockaddr_storage internally.
+
+-Kees
+
+Kees Cook (7):
+  net: core: Convert inet_addr_is_any() to sockaddr_storage
+  net: core: Switch netif_set_mac_address() to struct sockaddr_storage
+  net/ncsi: Use struct sockaddr_storage for pending_mac
+  ieee802154: Use struct sockaddr_storage with dev_set_mac_address()
+  net: usb: r8152: Convert to use struct sockaddr_storage internally
+  net: core: Convert dev_set_mac_address() to struct sockaddr_storage
+  rtnetlink: do_setlink: Use struct sockaddr_storage
+
+ include/linux/inet.h                |  2 +-
+ include/linux/netdevice.h           |  4 +--
+ net/ncsi/internal.h                 |  2 +-
+ drivers/net/bonding/bond_alb.c      |  8 ++---
+ drivers/net/bonding/bond_main.c     | 10 +++---
+ drivers/net/hyperv/netvsc_drv.c     |  6 ++--
+ drivers/net/macvlan.c               | 10 +++---
+ drivers/net/team/team_core.c        |  2 +-
+ drivers/net/usb/r8152.c             | 52 +++++++++++++++--------------
+ drivers/nvme/target/rdma.c          |  2 +-
+ drivers/nvme/target/tcp.c           |  2 +-
+ drivers/target/iscsi/iscsi_target.c |  2 +-
+ net/core/dev.c                      | 11 +++---
+ net/core/dev_api.c                  |  6 ++--
+ net/core/rtnetlink.c                | 19 +++--------
+ net/core/utils.c                    |  8 ++---
+ net/ieee802154/nl-phy.c             |  6 ++--
+ net/ncsi/ncsi-rsp.c                 | 18 +++++-----
+ 18 files changed, 79 insertions(+), 91 deletions(-)
+
+-- 
+2.34.1
+
