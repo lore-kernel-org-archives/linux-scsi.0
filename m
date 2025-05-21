@@ -1,33 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 57669231A32;
-	Wed, 21 May 2025 06:51:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55B241E7C27;
+	Wed, 21 May 2025 08:24:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747810268; cv=none; b=RIr1CyWVgkDH97B654tLJUtErwNLeus2Swl2ftFloqey30CHhUfIAeJwZ39FCCic3pTU/N9/wVG824RmnktopHwmaeEU7ApR3pJmlW5q5gmu4X5rJHhdNsx9LO627DTlHuFZhkzwxmosvlsus92S86sOptk9D1/RdwqH8zciwcc=
+	t=1747815867; cv=none; b=iU/6+k2/s9rLQqzzpi+CtqyWY8jCeLZvWfPnGNhTlbkCPjS+XFjjUf1aJnGxm9v8e6Bv6dkAdO99r0G8KvVjneMGhJ6uqhJ6/xRDXjsRLFB8v8ljXI9ucWeIrVsQ5pE7sg2otBTxS9wXVVgcDRm7oIEGLx6gKG7FgLgZidJeBYA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747810268; c=relaxed/simple;
-	bh=rbPuWRc2IlHAfuxihPZQnz6FEHLQy5ZB9NDxIJCBN3M=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZOqmjJm36gEP1MC9vOR7wQzMvomgbs06SGJYFSsdur4TZL0QikmOjsXtneGUjMaga2yPBn6vkl5xwH5/IWrvW7g5zAQEOPEqDdcNn0w1a6fHVRIC78HthYMD5xBSjjuPpv11m36ZKM7RuP5apPTfTcWWj/v7jbwtfHsxiFSnIKg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=bZhjeY6M; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1747815867; c=relaxed/simple;
+	bh=XiJxLeC24/pKHi9fOtdze4fw6C1A0nz5VfG+RetSoRY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=G7JXnd9cGuEybS0DjLG20k3A4i3e3DItr0gp+Vk7R4q6qmfd6zMgW6ZjOgY7XSnTYP++LcdFq1T4S3MmRaWy2P/1oFJzc5napyxPj5ipAsE2cXkNr+UhGzy7gw19JCRgrv98kifDLzJ1eEBZBn/dhmhK9JJ350mk77mocc070Vg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Ge8KF0V3; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="bZhjeY6M"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D93DDC4CEE4;
-	Wed, 21 May 2025 06:51:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1747810267;
-	bh=rbPuWRc2IlHAfuxihPZQnz6FEHLQy5ZB9NDxIJCBN3M=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=bZhjeY6M/3TadKT7EnBM6pZrIHDRGyts1x0gInFxLZxd0ORIORHemirY4lNZxcVOR
-	 cFasB/i5H98H7/BE+hi8SAJCxu34dskibUukpCVm+R0Rni4sm48STVMeYLnbziCGqC
-	 fz91yury0EXGYBHRpsoYTrDBjS1+XilQzEJ/SfUplchvDW31rw+w+1LIpC6FB+ixn5
-	 qe+y9lBPUHWF5TbO1s+m+lNfvvQfQxBlGtvN2B2MmVpG+UaJBShLHhBJ49J31nar96
-	 VvIrbm773nSWJ+tuYk83hFvuGWlbA/T8ESBlL3xt/Ly3qMmDOCfV1QN7zKGw7EWIYW
-	 zltK2UQzAxJQA==
-Message-ID: <4734853b-87fc-4625-a9ee-54339b7a1512@kernel.org>
-Date: Wed, 21 May 2025 08:51:01 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Ge8KF0V3"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54L5qkhQ000753;
+	Wed, 21 May 2025 08:23:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	BIBpob/UJr2FLrefJuVrS/wLOfDj1n6dK1C+cBL9UBA=; b=Ge8KF0V3wldfqWW9
+	2jsdcgn6DxLBEKK1rtVFUY9JQ1km/mFeGfjqdzGOvIJQancpEnO01jFzBzvBCWML
+	GGZ3O1viqJq2SvgEUBf3ObS4IGKi9eGxtQaBeZCbPaxHmTByh0PmvQ1OTgz2eNea
+	1ZLMGWUzVBOZH1bJN5xY8YEvcpIAK+C8rt2eXVjyVfntUsEMItqvZf/MTZh7llBh
+	KDxZxJbQC/fzHc65PV4z0Hw46dnYZapQymr8Z3ksuwBaUnCwM3JfRD4ZNh8ewIAT
+	czkT2qSo61fhFrV/HN0c5nvnA6XgU8evjmKyBEKCvfaj6yruwhi3k4geAFnMUan2
+	++5pmQ==
+Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46rwf4t4vv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 21 May 2025 08:23:57 +0000 (GMT)
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54L8Nulm025209
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 21 May 2025 08:23:56 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 21 May
+ 2025 01:23:53 -0700
+Message-ID: <d7d85aa1-6f27-4557-a5e6-60bcfae32908@quicinc.com>
+Date: Wed, 21 May 2025 16:23:50 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,142 +50,83 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 1/3] scsi: ufs: dt-bindings: Document UFS Disable LPM
- property
-To: Nitin Rawat <quic_nitirawa@quicinc.com>,
- Pavan Kondeti <pavan.kondeti@oss.qualcomm.com>
-Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
- krzk+dt@kernel.org, robh@kernel.org, mani@kernel.org, conor+dt@kernel.org,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- beanhuo@micron.com, peter.wang@mediatek.com, linux-arm-msm@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- devicetree@vger.kernel.org
-References: <20250506163705.31518-1-quic_nitirawa@quicinc.com>
- <20250506163705.31518-2-quic_nitirawa@quicinc.com>
- <667e43a7-a33c-491b-83ca-fe06a2a5d9c3@kernel.org>
- <9974cf1d-6929-4c7f-8472-fd19c7a40b12@quicinc.com>
- <8ebe4439-eab8-456a-ac91-b53956eab633@quicinc.com>
- <852e3d10-5bf8-4b2e-9447-fe15c1aaf3ba@quicinc.com>
- <8aa09712-5543-4bda-bf9e-a29c61656445@kernel.org>
- <80d8888c-41d9-4650-8be7-11e71610a4b8@quicinc.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
+Subject: Re: [PATCH v3 0/3] Bug fixes for UFS multi-frequency scaling on Qcom
+ platform
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+CC: <quic_cang@quicinc.com>, <bvanassche@acm.org>, <mani@kernel.org>,
+        <beanhuo@micron.com>, <avri.altman@wdc.com>,
+        <junwoo80.lee@samsung.com>, <quic_nguyenb@quicinc.com>,
+        <quic_nitirawa@quicinc.com>, <quic_rampraka@quicinc.com>,
+        <neil.armstrong@linaro.org>, <luca.weiss@fairphone.com>,
+        <konrad.dybcio@oss.qualcomm.com>, <peter.wang@mediatek.com>,
+        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+References: <20250509075029.3776419-1-quic_ziqichen@quicinc.com>
+ <yq1h61elobo.fsf@ca-mkp.ca.oracle.com>
 Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <80d8888c-41d9-4650-8be7-11e71610a4b8@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <yq1h61elobo.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: oSHkT2t1Q4h5FFEv_vtrxOBkW982KGXb
+X-Proofpoint-ORIG-GUID: oSHkT2t1Q4h5FFEv_vtrxOBkW982KGXb
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTIxMDA4MiBTYWx0ZWRfX3v9zHqsnvPay
+ M0bxx6jJdtuj8HUP1HXdxBr5/Rv5lvIy3Kj1IXWhCwGco4sL5o3Mw99DTkEbiG2YNnvMFXoTvpE
+ IlkFu6ESbVbmj4YA6gW56idQbBixq7USAe6dlGEdiFPHqyN2lrTl/pbj6NfGQpSK7CbSa5kGOxl
+ F8AUcwOi6ozcJ9kuIXmXYpjDsmOI6u7pdDnA6TZ3WfJONEF0vSCBEUV5ARZYGO4LTgSPx5uEDqv
+ PN7rKeAk11WRd1dkdGCDXflSLeEle5Q3s4PqeSXrC7wBhiOgJHVAF2ac5/vMnPfhlua/RXlFljy
+ TUQYfpk9Ono+rauws6Fz2LnrUxtH1wEHr09yC+MDnRu9rHgbqage+MCL/5WsdI3G4nyXaQkPff0
+ JvNRbJ3VHGLdLmquYMztMGb4g48nRW7kgoFP8nDCLNukuG0bkS76F2t1psVn9P5FABBLWLWe
+X-Authority-Analysis: v=2.4 cv=R7UDGcRX c=1 sm=1 tr=0 ts=682d8d9d cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=VwQbUJbxAAAA:8
+ a=6H0WHjuAAAAA:8 a=KKAkSRfTAAAA:8 a=FzGy5eBrWT_g2xVYw_wA:9 a=QEXdDO2ut3YA:10
+ a=Soq9LBFxuPC4vsCAQt-j:22 a=cvBusfyB2V15izCimMoJ:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-21_02,2025-05-20_03,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 clxscore=1015 mlxlogscore=999 priorityscore=1501 spamscore=0
+ bulkscore=0 lowpriorityscore=0 malwarescore=0 suspectscore=0 mlxscore=0
+ impostorscore=0 adultscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505160000
+ definitions=main-2505210082
 
-On 20/05/2025 20:49, Nitin Rawat wrote:
+Hi Martin,
+
+Thanks , this series need to be applied since 6.15/scsi-queue as the
+series UFS multi-frequency scaling was applied to 6.15/scsi-queue.
+
+I will updated a new version to rebase it to 6.15/scsi-queue.
+
+On 5/21/2025 9:58 AM, Martin K. Petersen wrote:
 > 
+> Ziqi,
 > 
-> On 5/20/2025 1:39 PM, Krzysztof Kozlowski wrote:
->> On 12/05/2025 09:41, Pavan Kondeti wrote:
->>> On Mon, May 12, 2025 at 09:45:49AM +0530, Nitin Rawat wrote:
->>>>
->>>>
->>>> On 5/7/2025 8:34 PM, Nitin Rawat wrote:
->>>>>
->>>>>
->>>>> On 5/6/2025 11:46 PM, Krzysztof Kozlowski wrote:
->>>>>> On 06/05/2025 18:37, Nitin Rawat wrote:
->>>>>>> Disable UFS low power mode on emulation FPGA platforms or other
->>>>>>> platforms
->>>>>>
->>>>>> Why wouldn't you like to test LPM also on FPGA designs? I do not see
->>>>>> here correlation.
->>>>>
->>>>> Hi Krzysztof,
->>>>>
->>>>> Since the FPGA platform doesn't support UFS Low Power Modes (such as the
->>>>> AutoHibern8 feature specified in the UFS specification), I have included
->>>>> this information in the hardware description (i.e dts).
->>>>
->>>>
->>>> Hi Krzysztof,
->>>>
->>>> Could you please share your thoughts on my above comment? If you still see
->>>> concerns, I may need to consider other options like modparam.
->>>>
->>>
->>> I understand why you are inclining towards the module param here. Before
->>> we take that route,
->>>
->>> Is it possible to use a different compatible (for ex: qcom,sm8650-emu-ufshc) for UFS controller
->>> on the emulation platform and apply the quirk in the driver based on the device_get_match_data()
->>> based detection?
+>> This series fixes a few corner cases introduced by multi-frequency
+>> scaling feature on some old Qcom platforms design.
+> 
+> Which kernel is this series against? It does not apply to
+> 6.16/scsi-queue.
+> 
+>> For change "scsi: ufs: qcom: Check gear against max gear in vop freq_to_gear()"
+>> Reported-by: Neil Armstrong <neil.armstrong@linaro.org>
+>> Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on RB3GEN2
+> 
+> These tags should be applied to the relevant patch.
+> 
+>> For change "scsi: ufs: qcom: Map devfreq OPP freq to UniPro Core Clock freq"
+>>             "scsi: ufs: qcom: Call ufs_qcom_cfg_timers() in clock scaling path"
 >>
->> I do not get what are the benefits of upstreaming such patches. It feels
->> like you have some internal product, which will never be released, no
->> one will ever use it and eventually will be obsolete even internally. We
->> don't want patches for every broken feature or every broken hardware.
+>> Reported-by: Luca Weiss <luca.weiss@fairphone.com>
+>> Closes: https://lore.kernel.org/linux-arm-msm/D9FZ9U3AEXW4.1I12FX3YQ3JPW@fairphone.com/
+>> Tested-by: Luca Weiss <luca.weiss@fairphone.com> # sm7225-fairphone-fp4
 > 
-> Hi Krzysztof,
+> Same here.
 > 
-> Thank you for your review and opinions. I would like to clarify that 
-> this is a platform requirement rather than a broken feature. 
-> Additionally, there are few automotive targets, in addition to the FPGA 
-> platform, where Low Power Mode (LPM) is not a requirement. For these 
-> platforms, the LPM disable changes are currently maintained downstream.
-
-And these platforms do not have their own SoC compatible? When you say
-platforms, you mean SoC or boards? So many options... all this is so
-unspecific, I need to dig every answer, every specific bit.
-
+> Thanks!
 > 
-> My apology for not including the automotive requirements in my previous 
-> commit messages.
-> 
-> In my opinion, since these platforms do not support LPM, I requested 
-> that this be reflected in the hardware description (i.e. DTS)). However, 
-> I am open to suggestions and am willing to proceed with module 
-> parameters if you have concerns regarding the device tree.
 
-Module param will get other obstacles... We have lengthy discussion
-because your commit msg explains nothing. Even now I still don't know
-what do you mean by half of above statements. Use the wide upstream
-terms, instead of ambiguous like "automotive platform".
-
-Best regards,
-Krzysztof
