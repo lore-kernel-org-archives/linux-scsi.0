@@ -1,106 +1,163 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 077111459F6
-	for <linux-scsi@vger.kernel.org>; Wed, 21 May 2025 16:51:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87CA4233156;
+	Wed, 21 May 2025 20:46:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747846318; cv=none; b=a2rWNlu9tVgXSmfSNxyFTlzl1QeRGpUvVXbQcWYSP7IhTloOf9OQIPAP+hbcSelgVACc5GTuHtp4ypUr2HsluXp/5c51yT6oekzKp0CfjFfsHsJ8dd+iuFyegOCUeCUmIVy3e/sNfvLcEhYngaVTNJWsFwPDZQWUJOJPoHJg+10=
+	t=1747860383; cv=none; b=V4Qn1oqDLrO03jJYQg1v8gcU50i0gkFmje1r92NiVIa++CidQiXKzW15hz8aGVrM+0uNjeLhVg0eX0vPmcVUdoQuCLpol0HsYJRjPs+j6ciCRJLA0eP5N2EQaCBVJfpQA5ntuVctM9m35r2SMY6UJCW9QY1kv2Pp1BuZGOMoVpg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747846318; c=relaxed/simple;
-	bh=bxsRn0vR+cV+EBo/cK1aiQoZ3DG/lKh9hWCSldmnwB4=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=sQrAt48IzOV+38+bgtqHBj8x9/utE+2zYuR+38V/8CXVxcL6PXGnt/6uueyeNwdLrEA8JhCLicVtnBVBC/5cLGILWUSiwmcAdeFC+IVK6vxVoNpN5gY2ot6ltDA9InFxzXW0Zdf9SB7xlz9qL0dPvnl8NxXGLCKcIZ+LS8Vcbhg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZE56Q4aw; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1747860383; c=relaxed/simple;
+	bh=TB5RrtCE3tLkkWSSZvlSdGdEuB83W94mJusyAgZ8cTE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=AHrxqXsKYCQOc2NSsYaWeiWFYFoWSZaF6hX0Wbr2toFpzE33rpo99nc/ezDZgspFdnuW7jX5YoZTIhQ0yUcft6yERPT7HM8BT4ruw4NwGIkdQDhTBNWsgnzRC6R4biMde+zbRlBm26EDUPV4WMNuprISR3x8dIJZ+62qQ5lgooo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=azKxmU9y; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZE56Q4aw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1747846315;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=40bqgGZoIFw8pU5e3iawrsuIQNROVCimAGaH8oGlcYA=;
-	b=ZE56Q4awBkG3GeWpRNxBP0fCfumxpx1cFUycviMaiiRWjSHYVxxZ+9xkNkPNFSG1LtJUIX
-	ZrnyD3KagAOiCX9V54EOogNR59KHcz0Tl1cGHakk4xHVsBdjdoeMprHHW/lri9YAkFjXHi
-	8ZVMidFjsZU0Ytm9/p7Bb0dqPjhY5XI=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-643--dYU5V1gMMaXKF_iVRVkrg-1; Wed,
- 21 May 2025 12:51:52 -0400
-X-MC-Unique: -dYU5V1gMMaXKF_iVRVkrg-1
-X-Mimecast-MFC-AGG-ID: -dYU5V1gMMaXKF_iVRVkrg_1747846311
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 833E51801A2F;
-	Wed, 21 May 2025 16:51:51 +0000 (UTC)
-Received: from localhost.localdomain.com (unknown [10.45.224.102])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 2BE2B19560AB;
-	Wed, 21 May 2025 16:51:49 +0000 (UTC)
-From: Tomas Henzl <thenzl@redhat.com>
-To: linux-scsi@vger.kernel.org
-Cc: Tom.White@microchip.com,
-	sagar.biradar@microchip.com
-Subject: [PATCH] aacraid: remove useless code
-Date: Wed, 21 May 2025 18:51:48 +0200
-Message-ID: <20250521165148.8856-1-thenzl@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="azKxmU9y"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 17535C4CEE4;
+	Wed, 21 May 2025 20:46:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1747860383;
+	bh=TB5RrtCE3tLkkWSSZvlSdGdEuB83W94mJusyAgZ8cTE=;
+	h=From:To:Cc:Subject:Date:From;
+	b=azKxmU9yy7Izy99ARGU0CwcQd4sF4KPMD1aOQ//cIUDTuPCHSVJo6VQexSwPahcCY
+	 RaB+/ec6twf4muJqtblNNKS/GpDDD2XG3WtK/YVf5pHdY030dyLCSc8h4ij0bAqyxG
+	 XhMzcNbqL8jIseK0RS+FeGkfPecDLFgtEPxMgAOfvEscrYZNh+S4Apfj3U9piEHogG
+	 y9AGdGlc3O0MHidOMqYgAwp7Okoo3zWYOYIkWqEJ9lP3XE3rJP/2gpLAJ+KJG3hZi0
+	 kPJez90sL/EYEcH5kWO6CvWwcrgZuWC6+OgAByhtJvtb+9BzJ98rYQ164KEaiHbnwN
+	 Wk4GR0fftc4bQ==
+From: Kees Cook <kees@kernel.org>
+To: Kuniyuki Iwashima <kuniyu@amazon.com>
+Cc: Kees Cook <kees@kernel.org>,
+	Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Max Gurtovoy <mgurtovoy@nvidia.com>,
+	Maurizio Lombardi <mlombard@redhat.com>,
+	Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	Mingzhe Zou <mingzhe.zou@easystack.cn>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	Simon Horman <horms@kernel.org>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	Stanislav Fomichev <sdf@fomichev.me>,
+	Cosmin Ratiu <cratiu@nvidia.com>,
+	Lei Yang <leiyang@redhat.com>,
+	Ido Schimmel <idosch@nvidia.com>,
+	Samuel Mendoza-Jonas <sam@mendozajonas.com>,
+	Paul Fertser <fercerpav@gmail.com>,
+	Alexander Aring <alex.aring@gmail.com>,
+	Stefan Schmidt <stefan@datenfreihafen.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Hayes Wang <hayeswang@realtek.com>,
+	Douglas Anderson <dianders@chromium.org>,
+	Grant Grundler <grundler@chromium.org>,
+	Jay Vosburgh <jv@jvosburgh.net>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	Jiri Pirko <jiri@resnulli.us>,
+	Jason Wang <jasowang@redhat.com>,
+	Vladimir Oltean <vladimir.oltean@nxp.com>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Kory Maincent <kory.maincent@bootlin.com>,
+	Maxim Georgiev <glipus@gmail.com>,
+	Aleksander Jan Bajkowski <olek2@wp.pl>,
+	Philipp Hahn <phahn-oss@avm.de>,
+	Eric Biggers <ebiggers@google.com>,
+	Ard Biesheuvel <ardb@kernel.org>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Ahmed Zaki <ahmed.zaki@intel.com>,
+	Alexander Lobakin <aleksander.lobakin@intel.com>,
+	Xiao Liang <shaw.leon@gmail.com>,
+	linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-wpan@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH net-next v2 0/8] net: Convert dev_set_mac_address() to struct sockaddr_storage
+Date: Wed, 21 May 2025 13:46:08 -0700
+Message-Id: <20250521204310.it.500-kees@kernel.org>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2500; i=kees@kernel.org; h=from:subject:message-id; bh=TB5RrtCE3tLkkWSSZvlSdGdEuB83W94mJusyAgZ8cTE=; b=owGbwMvMwCVmps19z/KJym7G02pJDBl61lMn8Rlk/WQ5tG/fnM3cc3mE/hqzZ3+yr2D0L1GRf iekt16jo5SFQYyLQVZMkSXIzj3OxeNte7j7XEWYOaxMIEMYuDgFYCIe3Az//f2rG3P6DZ5UOD7/ tuvKqRbdCQfV0q4oJrdt32d7xpNJhZFhldYdQ86QnhUK32dnBp/7eZFtyvJNKkZbN6/8239RZs9 5TgA=
+X-Developer-Key: i=kees@kernel.org; a=openpgp; fpr=A5C3F68F229DD60F723E6E138972F4DFDC6DC026
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-There isn't a AAC_MIN_NATIVE_SIZE defined so
-remove eight useless lines.
-When at it remove also an unused #define
+ v2:
+  - add conversion of dev_set_mac_address_user() (kuniyu)
+  - fix missed sockaddr/sockaddr_storage conversion (kuba)
+ v1: https://lore.kernel.org/all/20250520222452.work.063-kees@kernel.org/
 
-No functional change.
+Hi,
 
-Signed-off-by: Tomas Henzl <thenzl@redhat.com>
----
- drivers/scsi/aacraid/aacraid.h |  1 -
- drivers/scsi/aacraid/commsup.c | 10 +---------
- 2 files changed, 1 insertion(+), 10 deletions(-)
+As part of the effort to allow the compiler to reason about object sizes,
+we need to deal with the problematic variably sized struct sockaddr,
+which has no internal runtime size tracking. In much of the network
+stack the use of struct sockaddr_storage has been adopted. Continue the
+transition toward this for more of the internal APIs. Specifically:
 
-diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-index 8c384c25dca1..0a5888b53d6d 100644
---- a/drivers/scsi/aacraid/aacraid.h
-+++ b/drivers/scsi/aacraid/aacraid.h
-@@ -93,7 +93,6 @@ enum {
- 
- #define AAC_NUM_MGT_FIB         8
- #define AAC_NUM_IO_FIB		(1024 - AAC_NUM_MGT_FIB)
--#define AAC_NUM_FIB		(AAC_NUM_IO_FIB + AAC_NUM_MGT_FIB)
- 
- #define AAC_MAX_LUN		256
- 
-diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-index ffef61c4aa01..7d9a4dce236b 100644
---- a/drivers/scsi/aacraid/commsup.c
-+++ b/drivers/scsi/aacraid/commsup.c
-@@ -48,15 +48,7 @@
- 
- static int fib_map_alloc(struct aac_dev *dev)
- {
--	if (dev->max_fib_size > AAC_MAX_NATIVE_SIZE)
--		dev->max_cmd_size = AAC_MAX_NATIVE_SIZE;
--	else
--		dev->max_cmd_size = dev->max_fib_size;
--	if (dev->max_fib_size < AAC_MAX_NATIVE_SIZE) {
--		dev->max_cmd_size = AAC_MAX_NATIVE_SIZE;
--	} else {
--		dev->max_cmd_size = dev->max_fib_size;
--	}
-+	dev->max_cmd_size = AAC_MAX_NATIVE_SIZE;
- 
- 	dprintk((KERN_INFO
- 	  "allocate hardware fibs dma_alloc_coherent(%p, %d * (%d + %d), %p)\n",
+- inet_addr_is_any()
+- netif_set_mac_address()
+- dev_set_mac_address()
+- dev_set_mac_address_user()
+
+Only a few callers of dev_set_mac_address() needed adjustment; all others
+were already using struct sockaddr_storage internally.
+
+-Kees
+
+Kees Cook (8):
+  net: core: Convert inet_addr_is_any() to sockaddr_storage
+  net: core: Switch netif_set_mac_address() to struct sockaddr_storage
+  net/ncsi: Use struct sockaddr_storage for pending_mac
+  ieee802154: Use struct sockaddr_storage with dev_set_mac_address()
+  net: usb: r8152: Convert to use struct sockaddr_storage internally
+  net: core: Convert dev_set_mac_address() to struct sockaddr_storage
+  rtnetlink: do_setlink: Use struct sockaddr_storage
+  net: core: Convert dev_set_mac_address_user() to use struct
+    sockaddr_storage
+
+ include/linux/inet.h                |  2 +-
+ include/linux/netdevice.h           |  6 ++--
+ net/ncsi/internal.h                 |  2 +-
+ drivers/net/bonding/bond_alb.c      |  8 ++---
+ drivers/net/bonding/bond_main.c     | 15 ++++-----
+ drivers/net/hyperv/netvsc_drv.c     |  6 ++--
+ drivers/net/macvlan.c               | 18 +++++-----
+ drivers/net/tap.c                   | 14 +++++---
+ drivers/net/team/team_core.c        |  2 +-
+ drivers/net/tun.c                   |  8 ++++-
+ drivers/net/usb/r8152.c             | 52 +++++++++++++++--------------
+ drivers/nvme/target/rdma.c          |  2 +-
+ drivers/nvme/target/tcp.c           |  2 +-
+ drivers/target/iscsi/iscsi_target.c |  2 +-
+ net/core/dev.c                      | 11 +++---
+ net/core/dev_api.c                  | 11 +++---
+ net/core/dev_ioctl.c                |  6 ++--
+ net/core/rtnetlink.c                | 19 +++--------
+ net/core/utils.c                    |  8 ++---
+ net/ieee802154/nl-phy.c             |  6 ++--
+ net/ncsi/ncsi-rsp.c                 | 18 +++++-----
+ 21 files changed, 109 insertions(+), 109 deletions(-)
+
 -- 
-2.49.0
+2.34.1
 
