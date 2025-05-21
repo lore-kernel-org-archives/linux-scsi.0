@@ -1,63 +1,63 @@
-Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
+Received: from mail-pg1-f170.google.com (mail-pg1-f170.google.com [209.85.215.170])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4883C26B958
-	for <linux-scsi@vger.kernel.org>; Wed, 21 May 2025 13:13:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1E47262FC7
+	for <linux-scsi@vger.kernel.org>; Wed, 21 May 2025 13:26:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.170
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747833207; cv=none; b=hPWh0g6jcZWqeuFOEyiQM4CHytNhmqasc0jaf9ZGTf0rZmDlNWkct9o7xN2ppKqzGq1Au7EOgdOAYeS7MlVGR0YvlFptie0xukHUfmdlh5ECDhILgC/MeKyWF1Odp/B44TIX1xKiVoVejCNRNJMI2N+o+t5A7SR4gapuwc3aIhE=
+	t=1747834008; cv=none; b=lpx2uIbC+rXH4q9BriDqleTA7i17UDO6XKh08jq+HCCCPXypu/p6r2KZKYhMGJ4VOoGKGSBllm7uD6q/vZwz92ItUNLgne183ChnLSSS7krjI/tEtWgcwhbTHmz0ywDjFtR/bPXzDjUjvZF0Ig03bPvln0cFStumzRCQe0lOQUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747833207; c=relaxed/simple;
-	bh=PEUw8oNToGBQUpdkFgey1gEWtLuJRmRd/HOWRufD8D0=;
+	s=arc-20240116; t=1747834008; c=relaxed/simple;
+	bh=O5lp2QoEpMPS2MwUPvQkU43TbDUAVV9V0PVY3zVpypM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FB1yh9Q4NBvrQlm2YS2h6cR+NezMI3km9y98zscXVkoJYN6dGI2XVtAPGZJ9K6sU+O3UsKKMgNkE5c1qbLUUHjLCoQHL8P9uFWYSVCQo0rhJ7eq8WvXL7ATUaYS4ec4IoDWFYN/Y9tIjDVtIQ0oOEOSwVXLgslI3UuMXezPPrOE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=fkT7ecYS; arc=none smtp.client-ip=209.85.216.51
+	 Content-Type:Content-Disposition:In-Reply-To; b=Jt4Xi8FUcfFaplhF7HOCcVqfeIb6SanwibyPkXDD7pM6Wo2HuursDa0cANPRW6uW3r4o4HOVo8TIi+krgmmyJAQ0uE0P8nra5rMzv1H+eIP1ot8x2LJrWCdQTtTXCeyrQQvhcP7MoTRtJhPzYuR2rqdHwxjSQeeIC3voAMPN/lY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=N0Oyl3Wc; arc=none smtp.client-ip=209.85.215.170
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="fkT7ecYS"
-Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-30e7bfef364so5167276a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 21 May 2025 06:13:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="N0Oyl3Wc"
+Received: by mail-pg1-f170.google.com with SMTP id 41be03b00d2f7-b13e0471a2dso4440176a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 21 May 2025 06:26:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1747833205; x=1748438005; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1747834005; x=1748438805; darn=vger.kernel.org;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date:from:to
          :cc:subject:date:message-id:reply-to;
-        bh=DowZvl7qA/uAhVQuHMif7vNt8RT6sHwwCijVL4Xt204=;
-        b=fkT7ecYS4NICRdU9xSXBycNBBO2wEeOv8x98W23bZv5PalpY/RfLCWEWsPN8ASvqIe
-         xWhuWEv7/Maxzuy8dc2VDBKr+unlLE3TXASK6NgmMvrKkzFVNXiKTHZnfV4lmoQqGCkZ
-         kQf71OtCRbnNxQaUeGO7YF7azPIQ7+u4HS1mF6jYGUCAFyTvH76V/bHmpU/g9AcHe4zU
-         46lUJ5a/7Nr1ouwad8XRCiq/L5d3lmnlpBXLONENK/bLoBHRWPJDCfUYOTZgpY8paW9N
-         W7mVKp8DqaPIMSOqy8FVuqxkUSejPxRYtaTIu685/z9qnjRVMB4aLN+oxVXTWb2bAW5S
-         EdrA==
+        bh=vsAPeVY9F4Ep0Af1IsuKENhPXpnyEXq+ZRKN1+hGmWI=;
+        b=N0Oyl3WctUeeMrQUOfHgkPgudP/EaGpufBqVz9NvVySvCCBe/4NAOVdiscdfhPlz+F
+         X8YF+Wa1EoQGvbesgLOW5O42mSIXqshDB95vWEiJDwUZBsjw0OwY4iisW6ZKSk2Z53St
+         fi/eFqA57Jc04bcgq5Pj/jayPVRoslPD4uPR3bocnMPJfOhDznwe1mL1k6hFZCHLvo4g
+         yP1pzC9VMQQ1R04g8SVzh+5hOItwdcBxjIbfUxCU+r/KmvPwuRlRcIHc96NOeV/pPzV0
+         9iLSpYO0/LPPK2rbb/VtcHlXTGD0F0tDvwUtpsYDJ889qudcVgP154GpunRoxGjnqwYF
+         kpgw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747833205; x=1748438005;
+        d=1e100.net; s=20230601; t=1747834005; x=1748438805;
         h=in-reply-to:content-transfer-encoding:content-disposition
          :mime-version:references:message-id:subject:cc:to:from:date
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=DowZvl7qA/uAhVQuHMif7vNt8RT6sHwwCijVL4Xt204=;
-        b=MvVTp9bosDe7GYIg7dnRrQeKyyQja87tX56Fe2Jsz+BLrW5znFRaFh49oHwoKisuW/
-         JAPZgoQWzsnE3NcW1LRPI9yuG4/qaCFpdZ4yFhSEv+KNbkxSVOzJpZ6xUQVWNMniRLNp
-         amwgdncl1drin2R3YjbLJVR+WhT9a5vZuel/w/9xUwFAbnMkIic7TszkgY09kQWhfB5q
-         c4LtAjW99QmFdSj+Rq3M+gJgeRgYSavh32fm81lld1QtcZo995GbKLbgE161SqpRq9lT
-         0VEXGNGaPvpfkmgp/H1vHUarTx6jsKUNII5wjkxRkG1yJdvMYIJNxl3VplWSIWgXdtOp
-         HL+w==
-X-Forwarded-Encrypted: i=1; AJvYcCVLX/MAeioHrgMI/IvJSryCNvnJUdFolzc2s0WGT/ik+Fj1Txz+0TTKGWDb8NNBVsyho1Yo7Egeg+dq@vger.kernel.org
-X-Gm-Message-State: AOJu0YxxnXRBDLayPsbktJYNYgLiWvb3s9jZblO3R8jEWZhUGinOZ8em
-	VQm4dEhkrwpdkS1y22xtKQupxJYux2fnplKCL8xS7f+juLLdTiGlQEJhxFsRPCQOsg==
-X-Gm-Gg: ASbGncu3fFkrClutLHDw6H/abF+LwBBhGU/IFe0pBjNN5MVZSpDfKQ3XqMDOjjGWu/+
-	syZ5Aj02cwCe5ZZqYvPOzNGynEZ6Fm5lFsql2KOynCqBxzmNvmw3TeirUkIhRtCWScFaGNSNLqI
-	ycVHCU4X5z2PQGIs6Q2NVeWLqS8FYmuSgTQ3b4V9TDVrM/ucAD0PSPOmV/3aRKGJ9xtlKGSCw/O
-	c9UiGE5/FLFQyrT7SMp3/fA0jgSDEdDGh0EZWDkPBhElJGL6u6xzxCZ8UOPLeZlfPwLXYWZSVve
-	t14XNj9AIuPj7G3kdiV3NCuphv+6Xjny9rYFbKGHpD7dHsOXtFYF4n5l0+MJ
-X-Google-Smtp-Source: AGHT+IHiH2b/i4vvEt/AHMBHqqPS0yIzh62+h+3L9fGQ7pUd2qcx4hY61OfXdJ/u8TfPs3p6Vnp3eQ==
-X-Received: by 2002:a17:90b:4b0f:b0:2fe:8a84:e033 with SMTP id 98e67ed59e1d1-30e7d4ebdbcmr32842704a91.2.1747833205356;
-        Wed, 21 May 2025 06:13:25 -0700 (PDT)
+        bh=vsAPeVY9F4Ep0Af1IsuKENhPXpnyEXq+ZRKN1+hGmWI=;
+        b=M30QhuhFdudyHht9kcJLnbIfb1nAsbJpO8HLBaKH7dn5JOv950LYNvYc+tDESueDvY
+         0w3yLwQD3EZI3lxdpgZvtnZZb+GBdqCvzaYYM227EwMuT2aXBWtb6rP+1q0sZH2JoCTk
+         bgLp4JLAttpKDpLWDvFYKfI9WYEpwKqV6yajReNKBE2fiKPCXjADKKWFYmTECkLDW1dd
+         OhkCdG1dTDD8FznKMykLCHYpUNkrDnlDhdsJSLiKHOq2fyLp77LxE14spWMt5Y3soUcH
+         9g4Waf/B7eARCLI1tboaatHwnL+aSo/PNAmKQTMS35qMohi23SGh2uo2UTUP/EcZ1y3h
+         6Dmw==
+X-Forwarded-Encrypted: i=1; AJvYcCXCaliDYbKDIEQPKjRxplrUzRWHIfosrBYrjtG8iezKsUMmghLPMnqqBPqVHaIXtUA3Io5nP6BA+jHG@vger.kernel.org
+X-Gm-Message-State: AOJu0YzfwnzIX54GEnpLYbGmd5mtQDg4K/ZGabDufARHxLliy7JEY5J2
+	kth8WIrykHwMTiX2wKFIQSX+oyCCXx/uU1Kf3nebo1YA2YjKnOPPwG+frJkFTAKLdQ==
+X-Gm-Gg: ASbGnct3/i3X2D6lNa6tYrHLyDhrBxthF83Ls6JJ9t9pmORKFJpW/ksn80m+2cTP6Ht
+	8/qBak472oCtkEGA8bykkar8IOXpC5Mi8YDTBiNkG8T6hCxfrXK0jDn3fzHAEdt/roDPREZkSss
+	apNLC/4trJ32qRCLwOoh/pCcuKxUXzIdeFObny/2yn6qFoJZel74HwPOiO4ecIZ8JTJesBo8ST8
+	uHg+a2WlV0GM2ox+FnQ6cCB5LXyigoSWf/G0RPqfANgpI09Fcdrbxiu5ooXTB0uicF4VU6uZX76
+	nsTUbL/khpCNxzFri7AvQ0PD7U38ItH5RJznqzLftXxZMzM8Ohiv23SBc69QPKRIANl38ok=
+X-Google-Smtp-Source: AGHT+IFBDTatb/Wv2ODO3rVWJekx3BLDAeNfQgIP1zt45t6SjBWL/VcQDCAoRuUemYsln1KAeEC4/g==
+X-Received: by 2002:a17:902:efc9:b0:231:fc6a:244a with SMTP id d9443c01a7336-231fc6a24a2mr179505555ad.2.1747834004862;
+        Wed, 21 May 2025 06:26:44 -0700 (PDT)
 Received: from thinkpad ([120.60.52.42])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-30f3638710esm3578317a91.20.2025.05.21.06.13.19
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2320418f249sm74691545ad.215.2025.05.21.06.26.39
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 21 May 2025 06:13:24 -0700 (PDT)
-Date: Wed, 21 May 2025 14:13:17 +0100
+        Wed, 21 May 2025 06:26:44 -0700 (PDT)
+Date: Wed, 21 May 2025 14:26:37 +0100
 From: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
 To: Nitin Rawat <quic_nitirawa@quicinc.com>
 Cc: vkoul@kernel.org, kishon@kernel.org, 
@@ -66,11 +66,10 @@ Cc: vkoul@kernel.org, kishon@kernel.org,
 	konrad.dybcio@oss.qualcomm.com, quic_rdwivedi@quicinc.com, quic_cang@quicinc.com, 
 	linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org, linux-kernel@vger.kernel.org, 
 	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V5 03/11] phy: qcom-qmp-ufs: Refactor phy_power_on and
- phy_calibrate callbacks
-Message-ID: <g6neasajgbbu3iqy3kj6zzizichz5xvrsktepl46ahxepy2nus@whq2j35lc5fe>
+Subject: Re: [PATCH V5 04/11] phy: qcom-qmp-ufs: Refactor UFS PHY reset
+Message-ID: <mwcqp3mxuheffc6x7w4w5mykqc57ovmvyrmh3ky5czjf54wnag@fxnxgsoi6y2u>
 References: <20250515162722.6933-1-quic_nitirawa@quicinc.com>
- <20250515162722.6933-4-quic_nitirawa@quicinc.com>
+ <20250515162722.6933-5-quic_nitirawa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,109 +79,73 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250515162722.6933-4-quic_nitirawa@quicinc.com>
+In-Reply-To: <20250515162722.6933-5-quic_nitirawa@quicinc.com>
 
-On Thu, May 15, 2025 at 09:57:14PM +0530, Nitin Rawat wrote:
-> Commit 052553af6a31 ("ufs/phy: qcom: Refactor to use phy_init call")
-> puts enabling regulators & clks, calibrating UFS PHY, starting serdes
-> and polling PCS ready status into phy_power_on.
+On Thu, May 15, 2025 at 09:57:15PM +0530, Nitin Rawat wrote:
+> Refactor the UFS PHY reset handling to parse the reset logic only once
+> during initialization, instead of every resume.
 > 
-> In Current code regulators enable, clks enable, calibrating UFS PHY,
-> start_serdes and polling PCS_ready_status are part of phy_power_on.
+> As part of this change, move the UFS PHY reset parsing logic from
+> qmp_phy_power_on to the new qmp_ufs_phy_init function.
 > 
-> UFS PHY registers are retained after power collapse, meaning calibrating
-> UFS PHY, start_serdes and polling PCS_ready_status can be done only when
-> hba is powered_on, and not needed every time when phy_power_on is called
-> during resume. Hence keep the code which enables PHY's regulators & clks
-> in phy_power_on and move the rest steps into phy_calibrate function.
-> 
-> Refactor the code to retain PHY regulators & clks in phy_power_on and
-> move out rest of the code to new phy_calibrate function.
-> 
-> Also move reset_control_assert to qmp_ufs_phy_calibrate to align
-> with Hardware programming guide.
-> 
-> Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-> Co-developed-by: Can Guo <quic_cang@quicinc.com>
-> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+
+More importantly, you are introducing the phy_ops::init callback, which
+should've been mentioned.
+
+> Co-developed-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
 > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-
-- Mani
-
+> Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 > ---
->  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 26 ++++++-------------------
->  1 file changed, 6 insertions(+), 20 deletions(-)
+>  drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 59 +++++++++++++------------
+>  1 file changed, 31 insertions(+), 28 deletions(-)
 > 
 > diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> index a67cf0a64f74..ade8e9c4b9ae 100644
+> index ade8e9c4b9ae..33d238cf49aa 100644
 > --- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
 > +++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-> @@ -1797,7 +1797,7 @@ static int qmp_ufs_com_exit(struct qmp_ufs *qmp)
->  	return 0;
->  }
->  
-> -static int qmp_ufs_init(struct phy *phy)
-> +static int qmp_ufs_power_on(struct phy *phy)
+> @@ -1800,38 +1800,11 @@ static int qmp_ufs_com_exit(struct qmp_ufs *qmp)
+>  static int qmp_ufs_power_on(struct phy *phy)
 >  {
 >  	struct qmp_ufs *qmp = phy_get_drvdata(phy);
->  	const struct qmp_phy_cfg *cfg = qmp->cfg;
-> @@ -1825,10 +1825,6 @@ static int qmp_ufs_init(struct phy *phy)
->  				return ret;
->  			}
->  		}
-> -
-> -		ret = reset_control_assert(qmp->ufs_reset);
-> -		if (ret)
-> -			return ret;
->  	}
->  
->  	ret = qmp_ufs_com_init(qmp);
-> @@ -1847,6 +1843,10 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
->  	unsigned int val;
+> -	const struct qmp_phy_cfg *cfg = qmp->cfg;
 >  	int ret;
+>  	dev_vdbg(qmp->dev, "Initializing QMP phy\n");
 >  
-> +	ret = reset_control_assert(qmp->ufs_reset);
-> +	if (ret)
-> +		return ret;
-> +
->  	qmp_ufs_init_registers(qmp, cfg);
->  
->  	ret = reset_control_deassert(qmp->ufs_reset);
-> @@ -1899,21 +1899,6 @@ static int qmp_ufs_exit(struct phy *phy)
->  	return 0;
->  }
->  
-> -static int qmp_ufs_power_on(struct phy *phy)
-> -{
-> -	int ret;
+> -	if (cfg->no_pcs_sw_reset) {
+> -		/*
+> -		 * Get UFS reset, which is delayed until now to avoid a
+> -		 * circular dependency where UFS needs its PHY, but the PHY
+> -		 * needs this UFS reset.
+> -		 */
+> -		if (!qmp->ufs_reset) {
+> -			qmp->ufs_reset =
+> -				devm_reset_control_get_exclusive(qmp->dev,
+> -								 "ufsphy");
 > -
-> -	ret = qmp_ufs_init(phy);
+> -			if (IS_ERR(qmp->ufs_reset)) {
+> -				ret = PTR_ERR(qmp->ufs_reset);
+> -				dev_err(qmp->dev,
+> -					"failed to get UFS reset: %d\n",
+> -					ret);
+> -
+> -				qmp->ufs_reset = NULL;
+> -				return ret;
+> -			}
+> -		}
+> -	}
+> -
+>  	ret = qmp_ufs_com_init(qmp);
 > -	if (ret)
 > -		return ret;
 > -
-> -	ret = qmp_ufs_phy_calibrate(phy);
-> -	if (ret)
-> -		qmp_ufs_exit(phy);
-> -
-> -	return ret;
-> -}
-> -
->  static int qmp_ufs_disable(struct phy *phy)
->  {
->  	int ret;
-> @@ -1943,6 +1928,7 @@ static int qmp_ufs_set_mode(struct phy *phy, enum phy_mode mode, int submode)
->  static const struct phy_ops qcom_qmp_ufs_phy_ops = {
->  	.power_on	= qmp_ufs_power_on,
->  	.power_off	= qmp_ufs_disable,
-> +	.calibrate	= qmp_ufs_phy_calibrate,
->  	.set_mode	= qmp_ufs_set_mode,
->  	.owner		= THIS_MODULE,
->  };
-> -- 
-> 2.48.1
-> 
+> -	return 0;
+> +	return ret;
+
+This can't be:
+	return qmp_ufs_com_init; ?
+
+- Mani
 
 -- 
 மணிவண்ணன் சதாசிவம்
