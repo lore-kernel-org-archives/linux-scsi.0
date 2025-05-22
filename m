@@ -1,71 +1,48 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 899A4231849
-	for <linux-scsi@vger.kernel.org>; Thu, 22 May 2025 09:11:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2B6E1AED5C;
+	Thu, 22 May 2025 09:19:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747905091; cv=none; b=Uejv91+L3HSsWHbk4EJXz+QbCKsjdqr0AjO5H3GPkHD6EDkKD4Yn3kJw0+0d15N/MjTNnXYzztSx2e5jRaUrYD4Vx3E/Oc0I24bo0kdK761msTQhILhne9I+h9GyQQbiZZK+xGFEf8c6XJEaHSgKuhLUEUTiQZ3MJxCZCuDHcb4=
+	t=1747905599; cv=none; b=by7NkBVNvgelR8qEklczDtoPirNWczB4mbViw8XurGMkxMSmrx/v6AZbe/sXvnlpseQlDuFUrEwrPnTvCw3Y0HNdGY9yHgxRmBMfPDr86+VZ1xXyJRx3jWrTXhe6M2rfZiXyxUF4AF0/4pK0N+zLgT7fkLkxvdMgYEWEU6KRabs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747905091; c=relaxed/simple;
-	bh=ZDC9x4MYunxqEojxt2QMnAUa/sa1GbM7hsgeW5aenQ0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RtO1eicSM/Od79eD2ikX9UKBZ9dqHpx7W26/kS7Mu1S9CC3UwXk1THPd5GaZIibfeKHs5Zj5JqQMNGJVjHRGVadm14B/zvDjVqBBTFtHYqCKOnlD2+mIShd6MD95p3a6qPjCZh+iZDVZDEsOIdi5xfs3QP8oGQVnMgwlyEFo9PY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=d0RkTwnL; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1747905599; c=relaxed/simple;
+	bh=Vumn8RZM/ix8NHA+DQjwidiTtBvjSFKLb5W66/ag1Q0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ahSy6ePPiqcI/onoDm54exnIjj6gEjV3yd1dXZ0xDml5Gu6cyUk7cOox4EqWOpgqj3sy1/gdyHNn2YFMWDMN5j1gyNrQyzwYcokayLss+1S8EFQC4oIhtMh2UWQhLWRnDmjQz1ZqDE6pIAAc0P41+vv4CFyr9+fNmvqu0yamkfo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=PBNgtksK; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="d0RkTwnL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1747905088;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=Efw/xOoBR5JtsAGWTbkGb39F5QrJRSJy0Aiy1rPkylA=;
-	b=d0RkTwnLqSfj3Fchi08koiFF1bUS0ZYlIgM/GNhR1Y13qYukU1EOmapWj7fQLJqamI8sRj
-	RvbS366oTj1FIHYXBTkgj+d8E0MEoHGXeUTAyIQoaDilumkmo5HNl0lnXIOCWkCHOkbeJD
-	z8fNqrXBRtlmXpR+IU57searNgtoRvU=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-18-0yjYrtl2MCeIo7B62sbyow-1; Thu, 22 May 2025 05:11:24 -0400
-X-MC-Unique: 0yjYrtl2MCeIo7B62sbyow-1
-X-Mimecast-MFC-AGG-ID: 0yjYrtl2MCeIo7B62sbyow_1747905084
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-43e9a3d2977so58128345e9.1
-        for <linux-scsi@vger.kernel.org>; Thu, 22 May 2025 02:11:24 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1747905083; x=1748509883;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=Efw/xOoBR5JtsAGWTbkGb39F5QrJRSJy0Aiy1rPkylA=;
-        b=flGbUkNS+CYZtM4SW4tA3jOlwRlUXFH+dzuP4aU1yHQcNr4lsrabryR7pxN9n907/Y
-         HyN6+MMVL6URxP3HIHfwuiJZrQymzTruYj7Nn0uRoEorMXROBRXYHwXccSW3Y4Idtusq
-         OCjSV1C2bhcRF5duc4r1TcI3eDmrT+3K3/1eIA4ygwjebR52SXygF4m5hc8naxsiE6cc
-         /ArVtQ+3U/2AdIFnrZj1PCy+cL9G3uuw+P+8B/1zmGekY3btye3bkR0wfijE/68BZsqj
-         wDPm5L/AeMZsxNNQv1sIz/no4bsTl14rCVcG0DVFhF7/nyPMlpuqfw7eZdyXCzO9UMhz
-         fE6A==
-X-Forwarded-Encrypted: i=1; AJvYcCXV/tB2LY9nRZP46YfnzaN4jhRaXNVesprWo7eXHUNvWbW/C0vrSUxNn53H69VWCwHFRSju3tje4585@vger.kernel.org
-X-Gm-Message-State: AOJu0YwSvlKKLhOmTxMFYYMG8amYPeUKVjl05gaAQMiKOeu/hcRaFaw9
-	0oMqA984SucKbAfa1j0ZDRV8pJqhV1+vNaCElDERoWx5YX00vbUo5jvS7OWYbQF6o0jciXyBgrz
-	H+FSnc8LEyyaIT34PI9pJ1ogk9FYF5FEDurV6CKwZlKUE+DZ27P0olCbzoNHgH+A=
-X-Gm-Gg: ASbGncuMZcCMU4gWCcDffIJ5xy+uZL85rGJVrJ+LO8Z0yanrMIFvMdOwSG4RA065qjh
-	Q+JDKw8wtUmQMyPVMwt9/ljUp/bGRWlbaCOiNCHXgK3qaOBkRUs2muy2N8RpgMfK+eeJtMEmlfu
-	V98FoYYzFrhxfyPQY0FvoM7epHsI9onjqUXjRHyqnCvVJxiwMk8JpxiKsX10GDQtA1Scbyh/Naw
-	sb1DjLP6wGuY5u1AOAIJuupSejpIXZzBSSrP4GwtDqWxJ7iTHIp1lzcbafP+a9PA6xv6D8gxgCd
-	MYtFduILgpeytOlHgFk=
-X-Received: by 2002:a05:600c:a016:b0:441:d2d8:bd8b with SMTP id 5b1f17b1804b1-442fd622c81mr247895305e9.8.1747905083661;
-        Thu, 22 May 2025 02:11:23 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEciTJ/zcRf4AXElu0pqBhYj5jKqeehae3NT83Gy64LvlkBARBipL5idMvjE3WFf06oe/P65g==
-X-Received: by 2002:a05:600c:a016:b0:441:d2d8:bd8b with SMTP id 5b1f17b1804b1-442fd622c81mr247894945e9.8.1747905083275;
-        Thu, 22 May 2025 02:11:23 -0700 (PDT)
-Received: from ?IPV6:2a0d:3344:247a:1010::f39? ([2a0d:3344:247a:1010::f39])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-447f6f05581sm97329145e9.13.2025.05.22.02.11.21
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 22 May 2025 02:11:22 -0700 (PDT)
-Message-ID: <f8640da1-c442-4704-8f0a-8d498e1b7e16@redhat.com>
-Date: Thu, 22 May 2025 11:11:20 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="PBNgtksK"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54M7pNdw029931;
+	Thu, 22 May 2025 09:19:37 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	SluCIdJCTMYmiz7FXaBDUUgy1IMjyMOeFE3QncYRnLM=; b=PBNgtksKxDANN3Pl
+	dNuV7+XzYOgNzooFQBC7EZqCK7ZBZY4D5TkpCxirK1SwVby1mQRxaoxzH3IprZa1
+	nch18px3yUOtcmxC3eps/jv4gkNF+OBgOuA0COAomA7FV5aXn8vsX32Nvyb4/DUg
+	1zF165uknW6SHNK7oumMDdP6MTMW1WvU3GSBit4ylF4uqqfTzjYQvhWBc1EEmf0u
+	XnkPecoj2hV8nUJGKuCbdljf8JkdCWiY4LKVlsPL7c+ls3wihT0MvB7VzXjcgmlJ
+	1ne5vzJhUYF3xcCTky/EPHICCFUReghgWFITVx0i6FRi53iR3vD/+co250y5qnIR
+	Uv+CJg==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46rwf45upn-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 22 May 2025 09:19:36 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54M9JZ9u022945
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 22 May 2025 09:19:35 GMT
+Received: from [10.218.7.247] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 22 May
+ 2025 02:19:31 -0700
+Message-ID: <6e3c37d6-7e52-4380-9703-56deb2704992@quicinc.com>
+Date: Thu, 22 May 2025 14:49:28 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,44 +50,167 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 net-next 5/6] socket: Replace most sock_create() calls
- with sock_create_kern().
-To: Kuniyuki Iwashima <kuniyu@amazon.com>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Willem de Bruijn <willemb@google.com>
-Cc: Simon Horman <horms@kernel.org>, Kuniyuki Iwashima <kuni1840@gmail.com>,
- netdev@vger.kernel.org, Jason Gunthorpe <jgg@ziepe.ca>,
- Leon Romanovsky <leon@kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, target-devel@vger.kernel.org,
- Juergen Gross <jgross@suse.com>, Stefano Stabellini
- <sstabellini@kernel.org>, xen-devel@lists.xenproject.org,
- Mark Fasheh <mark@fasheh.com>, Joel Becker <jlbec@evilplan.org>,
- ocfs2-devel@lists.linux.dev
-References: <20250517035120.55560-1-kuniyu@amazon.com>
- <20250517035120.55560-6-kuniyu@amazon.com>
+Subject: Re: [PATCH V5 09/11] scsi: ufs: qcom : Refactor phy_power_on/off
+ calls
+To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+CC: <vkoul@kernel.org>, <kishon@kernel.org>,
+        <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
+        <bvanassche@acm.org>, <andersson@kernel.org>,
+        <neil.armstrong@linaro.org>, <dmitry.baryshkov@oss.qualcomm.com>,
+        <konrad.dybcio@oss.qualcomm.com>, <quic_rdwivedi@quicinc.com>,
+        <quic_cang@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+References: <20250515162722.6933-1-quic_nitirawa@quicinc.com>
+ <20250515162722.6933-10-quic_nitirawa@quicinc.com>
+ <knlhbl3mwo3b7xc4rjp4y7yka2nwythumjacmvn236v72ykddo@r3cp2w4uomol>
+ <5584c019-d435-4d1b-b38c-80fb9b9f00f6@quicinc.com>
+ <5z5yfa2xrnkrgz6ol6baaynsy4vugxv3kf7c2xrqjqvrr7dbcr@u3qycb4ucguz>
 Content-Language: en-US
-From: Paolo Abeni <pabeni@redhat.com>
-In-Reply-To: <20250517035120.55560-6-kuniyu@amazon.com>
-Content-Type: text/plain; charset=UTF-8
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <5z5yfa2xrnkrgz6ol6baaynsy4vugxv3kf7c2xrqjqvrr7dbcr@u3qycb4ucguz>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTIyMDA5MyBTYWx0ZWRfX6zJFGRM66HCT
+ ZO5qBlNLdgrfUfklSOFmVspDSe/nXYzLXLV0O4G4Qy50ITaEf5/WHYxci64qzBY4ZD+mp4p4oiS
+ bIMLq7ZvwiPekzhcIZtJ0OpZmOuawN8AoqWQxAfVH9F7ECEWRqb3l8+Q/deceL82AYZopaGFkO1
+ WU1Xg/ZcojojRwOsIkAPF30F2FjG9sZSNAlv3kQhcrB209l3FyhfX3wUb0IeQe62WmR9z+KDx7R
+ hRpG4pXVippdoxVp6p2eim9l21XTTaMvzBMm6KL44PyDBJcfqVBJ3eqt6AEJtia9QI5W1mifbkh
+ yCvi2iEp2yqtXVB3w3jmAJFYfD+1LuDMNFVgz5UeegOSYX8FTcSI1A9oW4R/E1Xsmj5EyUoqv1t
+ nfarM3u+RpFbsTJ/M3nLNda/paD1L0Q2DDYdUAvoKHe48gJCkrgJ05295TdGHiBA2KzMoxpj
+X-Proofpoint-GUID: gtlR3klHaKuyuHtXAbc_6DuZJcxK3wwt
+X-Authority-Analysis: v=2.4 cv=Ws8rMcfv c=1 sm=1 tr=0 ts=682eec28 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10 a=COk6AnOGAAAA:8
+ a=tUN6H4m40X_enmaeLRoA:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: gtlR3klHaKuyuHtXAbc_6DuZJcxK3wwt
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-05-22_04,2025-05-22_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 malwarescore=0 clxscore=1015 suspectscore=0 mlxscore=0
+ bulkscore=0 phishscore=0 priorityscore=1501 impostorscore=0
+ lowpriorityscore=0 mlxlogscore=999 adultscore=0 classifier=spam authscore=0
+ authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505160000 definitions=main-2505220093
 
-On 5/17/25 5:50 AM, Kuniyuki Iwashima wrote:
-> Except for only one user, sctp_do_peeloff(), all sockets created
-> by drivers and fs are not tied to userspace processes nor exposed
-> via file descriptors.
+
+
+On 5/22/2025 2:25 PM, Manivannan Sadhasivam wrote:
+> On Thu, May 22, 2025 at 03:10:48AM +0530, Nitin Rawat wrote:
+>>
+>>
+>> On 5/21/2025 7:27 PM, Manivannan Sadhasivam wrote:
+>>> On Thu, May 15, 2025 at 09:57:20PM +0530, Nitin Rawat wrote:
+>>>> Commit 3f6d1767b1a0 ("phy: ufs-qcom: Refactor all init steps into
+>>>> phy_poweron") removes the phy_power_on/off from ufs_qcom_setup_clocks
+>>>
+>>> s/removes/moved
+>>
+>> Sure, will address in next patchset.
+>>
+>>>
+>>>> to suspend/resume func.
+>>>>
+>>>> To have a better power saving, remove the phy_power_on/off calls from
+>>>> resume/suspend path and put them back to ufs_qcom_setup_clocks, so that
+>>>> PHY regulators & clks can be turned on/off along with UFS's clocks.
+>>>>
+>>>> Since phy phy_power_on is separated out from phy calibrate, make
+>>>> separate calls to phy_power_on and phy_calibrate calls from ufs qcom
+>>>> driver.
+>>>>
+>>>
+>>> This patch is not calling phy_calibrate().
+>>
+>> updated commit text to remove phy_Calibrate from commit text
+>>
+>>>
+>>>> Co-developed-by: Can Guo <quic_cang@quicinc.com>
+>>>> Signed-off-by: Can Guo <quic_cang@quicinc.com>
+>>>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+>>>> ---
+>>>>    drivers/ufs/host/ufs-qcom.c | 61 ++++++++++++++++++-------------------
+>>>>    1 file changed, 29 insertions(+), 32 deletions(-)
+>>>>
+>>>
+>>> [...]
+>>>
+>>>>    static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+>>>>    				 enum ufs_notify_change_status status)
+>>>>    {
+>>>>    	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>>>> +	struct phy *phy = host->generic_phy;
+>>>> +	int err;
+>>>>    	/*
+>>>>    	 * In case ufs_qcom_init() is not yet done, simply ignore.
+>>>> @@ -1157,10 +1141,22 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+>>>>    				/* disable device ref_clk */
+>>>>    				ufs_qcom_dev_ref_clk_ctrl(host, false);
+>>>>    			}
+>>>> +
+>>>> +			err = phy_power_off(phy);
+>>>> +			if (err) {
+>>>> +				dev_err(hba->dev, "phy power off failed, ret=%d\n", err);
+>>>> +				return err;
+>>>> +			}
+>>>>    		}
+>>>>    		break;
+>>>>    	case POST_CHANGE:
+>>>>    		if (on) {
+>>>> +			err = phy_power_on(phy);
+>>>> +			if (err) {
+>>>> +				dev_err(hba->dev, "phy power on failed, ret = %d\n", err);
+>>>> +				return err;
+>>>> +			}
+>>>> +
+>>>>    			/* enable the device ref clock for HS mode*/
+>>>>    			if (ufshcd_is_hs_mode(&hba->pwr_info))
+>>>>    				ufs_qcom_dev_ref_clk_ctrl(host, true);
+>>>> @@ -1343,9 +1339,10 @@ static int ufs_qcom_init(struct ufs_hba *hba)
+>>>>    static void ufs_qcom_exit(struct ufs_hba *hba)
+>>>>    {
+>>>>    	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>>>> +	struct phy *phy = host->generic_phy;
+>>>>    	ufs_qcom_disable_lane_clks(host);
+>>>> -	phy_power_off(host->generic_phy);
+>>>> +	phy_power_off(phy);
+>>>
+>>> This change is not at all needed.
+>>
+>> In the current code, PHY resources (clocks and rails) remain active even
+>> when the link is in a hibernate state and all controller clocks are off.
+>> This results in a significant power penalty and can prevent CX power
+>> collapse.
+>>
+>> These rails and clocks are only turned off when a system suspend is
+>> triggered, and even then, only at SPM level 5 where the link is turned off.
+>> This approach is not power-efficient.
+>>
+>> As part of this series, the code that enables/disables the PHY's regulators
+>> and clocks is now confined to the phy_power_on and phy_power_off calls, with
+>> the rest moved to the calibration phase.
+>>
+>> Therefore, we are invoking the phy_power_off and phy_power_on calls from
+>> ufs_qcom_setup_clocks, ensuring that the PHY's regulators and clocks can be
+>> turned on/off along with the UFS clocks, thereby achieving power savings.
+>>
+>> Therefore, this patch is the cornerstone of this series.
+>>
 > 
-> Let's use sock_create_kern() for such in-kernel use cases as CIFS
-> client and NFS.
+> I did not question the patch, but just the change that you did in the
+> ufs_qcom_exit() function. You added a local variable for 'host->generic_phy',
+> which is not related to this patch.
+
+Sorry about that, Mani. I misunderstood your comments. Sure, will 
+address them.
+
+
 > 
-> Signed-off-by: Kuniyuki Iwashima <kuniyu@amazon.com>
-
-The change makes sense to me, but it has a semantic change, let's add
-more CCs.
-
-Link to the full series:
-
-https://lore.kernel.org/all/20250517035120.55560-1-kuniyu@amazon.com/
-
-/P
+> - Mani
+> 
 
