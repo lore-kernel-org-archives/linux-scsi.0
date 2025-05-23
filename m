@@ -1,180 +1,595 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from HK3PR03CU002.outbound.protection.outlook.com (mail-eastasiaazon11011013.outbound.protection.outlook.com [52.101.129.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B3E8289344;
-	Thu, 22 May 2025 10:27:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1747909622; cv=none; b=IWd3vpu5w5ZmDGW/d5aT+5JOVok4X5/WpkcUVWotGij3BMBLih/nm6uBqQxmMurCqGbj1T//PY9+/Yl5lV7Yj7p9MvsL8q5B3wXz+x5cnre0TPzfznbjk0GrApAqVD/1z75diud/dMaq3H02vz3ZOOt88VNFz3wPDklQJtJ+wdo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1747909622; c=relaxed/simple;
-	bh=g3m8X+SSGWchkNkBQcuRkmg/IKwGLWIwyUFvr7Bx5Nc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=tvQ5ggchIbnjEGnZzue1hznd7qoScuq5jrWCnrGaYkhVS4Z4owyGQcnUOe8bHB/V4ZwZPtmrzrPpPx2Ug5EsVeY4NG5w7lBq1hNcJJHF4qkgjnGfUu9iWlW3hZC0XnK/t3UNI81b1maq8qsZLU4Cfgz77hUr/DBJSpSeZY1PSyA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=j/sPI59V; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 637AE1804A;
+	Fri, 23 May 2025 06:46:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.129.13
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1747982782; cv=fail; b=umml+1d4yuzTYEGM/8Ry6L4ovWTrbwgGDf27jOw++KQPvze7ovgyOTCd+6eNY/a5p0Oku8c/HK+cL5p9U9DI/r+CozRXplHDwZoyZE9E/HJxLQEBEe+3aSsoFtsVY6MflXJdUFI8WaGrVoOMNzjoTYQGO1+RPeieQquVo2G68FQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1747982782; c=relaxed/simple;
+	bh=tIJlLuvj+hUOyk2shXaZOONzbhSLH5lvUir7iaIFkIc=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=NmSWuFFBPTub4kabaKmenlavoWMzrejhpn2OUpWZ2/ea+P5rgly6FJhhv9n8K7t6pfv1tnbl3ZTmK8R0AnQkSkdbd8bzBnp8V7RigYQaNYEv1UDCN0qX798w9jzqCQEiulwgQXIDVssot/wsSReK16jqpg9MsS2FFulXLXR/Cs8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=Sq4y0E9J; arc=fail smtp.client-ip=52.101.129.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="j/sPI59V"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54M7Dgpi031676;
-	Thu, 22 May 2025 10:26:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/o7YX+evW2GN6E32XpMY9VwoShfAa5vC1VTKim8kbAg=; b=j/sPI59VR8m9SpQU
-	oLDGlmC36LS8Ci2kEJNr6ypD7Iw7z96Ja5TobfK0bs43BdR5akvCp1Q97HCh5Flt
-	JhdtM8XWqRCMhzy+tr4T9Q60iOY0iVTP4YRKg99GJpu5qB4AocGCaOBeGOpXlFPz
-	G8EvNyl+U9rfLgFRLRJwIl8Z+yhArn4xTasAOPhe/EhXaibunqgVr9aCSR1KLP0g
-	94C8MxdeY29+C5xVPN/8XyPs7h5Hl23fO26aC4IGd+Syg7RjndXzvpesxZwN+orV
-	0Xo0xJ9GR0JFDNPHe17Bplai3DHkOQW+kVtvVf3EU49spiKn1M+bTsnWmQ9rqPUh
-	ogHD9A==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46s8c24jfp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 22 May 2025 10:26:38 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54MAQcpa017628
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 22 May 2025 10:26:38 GMT
-Received: from [10.218.7.247] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Thu, 22 May
- 2025 03:26:33 -0700
-Message-ID: <226fa4de-f3a7-4bf0-a960-263443af7de8@quicinc.com>
-Date: Thu, 22 May 2025 15:56:30 +0530
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="Sq4y0E9J"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=h8RQxSgVliZf4u71iEl1Hv3IXv1t2Syrk/4UzS6hM9LXoDKJ/vuLsUi/3fU32tZH3muZH5aHG6x/VYMheF1bYD3dBOUDWaJKn53qPmKsXwwmv/vr23Gj93OR29uGuTMY8Kd4pm7gC6HXtD4u46+1HFtFkQHqgVyYlDd7TA+bCtscQ2p8yvIvvc9nSJP04UGZzY9Lw9k6H4PZyjibFDNwstkKqPWsp/1SpeHtszXA7CLG3q+RGGmmO+exXWVCYRb2+LLHLJMcIdufS2ykA2cdqd1kiKh1Xh8KfR8fi0HhNOMFPRL6vYQFV2RHZy8eiRRCNvD7snqvC2xubUdURO4EmQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lXUwkDYtpLH3KQv5nc3USqfr9A9vDlEx1GCo87USRU0=;
+ b=U1iZvZ6YDbk3gqkDvONpWhTiMD6JG9V7OOyvCYMO+ZLYEXqvPYWlcR9/uxoLseZrJdQAMUAcJpqOv1ACJ+s2bRRQODp9NDpkIA5a16CuFTPIaQ804yQHjSCGFhtk4jeteQzIu4LIonjszwm7ycKZztkcA5DHHuVAfbweM5jSKu98nY0Wa3YXTaxreY7bF4f8iGA6W65JQuhTIQ9n+HRuLqaahmOQ9jET8HzVWz7oNGeJcOO818VyiUTlDGbvu0LFpWw5+KY0JgR3djYtbB7Z28KEmFCfktRZMNPvCFSl8F3+KZgVSrJRhz67CGM2p5wZiMP/fMYpu0SYKiYwimMj4Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lXUwkDYtpLH3KQv5nc3USqfr9A9vDlEx1GCo87USRU0=;
+ b=Sq4y0E9JvAx27kx7SUfXDYVdNv5by/++UwbgO4xPSZWXUiWqTdqmOVcy0kCQqaXjcmoDuYkkjDpZrSmErCa0WsHP59owPsGvDHnBS2bpaBwGnWzHrESJSCOW+3wjXjvYFLV61ovFG3vY6vq4nZyZS21zenM5Kru5ajHznGQAD98wWHA+T3tOmu3SDZH45oprvPQyVnLQN/r2OAvkmmnujwZZOqqcMtvn+PADOjDO6smvgzmJ1BR/jmxNycokxCg7fXvjVMmOP+7ihDqIGiAssaSPegzncVaP6Rgvo2BnYxMKH2y7uktKXrwHNMVDx7oWlSHyBRN1RRR5WauE8pFPfg==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from KL1PR06MB6273.apcprd06.prod.outlook.com (2603:1096:820:ec::10)
+ by SEZPR06MB6814.apcprd06.prod.outlook.com (2603:1096:101:197::12) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8769.21; Fri, 23 May
+ 2025 06:46:14 +0000
+Received: from KL1PR06MB6273.apcprd06.prod.outlook.com
+ ([fe80::9d21:d819:94e4:d09]) by KL1PR06MB6273.apcprd06.prod.outlook.com
+ ([fe80::9d21:d819:94e4:d09%6]) with mapi id 15.20.8769.021; Fri, 23 May 2025
+ 06:46:13 +0000
+From: Huan Tang <tanghuan@vivo.com>
+To: alim.akhtar@samsung.com,
+	avri.altman@wdc.com,
+	bvanassche@acm.org,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	beanhuo@micron.com,
+	peter.wang@mediatek.com,
+	quic_nguyenb@quicinc.com,
+	quic_ziqichen@quicinc.com,
+	tanghuan@vivo.com,
+	keosung.park@samsung.com,
+	viro@zeniv.linux.org.uk,
+	gwendal@chromium.org,
+	manivannan.sadhasivam@linaro.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org
+Cc: opensource.kernel@vivo.com,
+	Wenxing Cheng <wenxing.cheng@vivo.com>,
+	Bean Huo <huobean@gmail.com>
+Subject: [PATCH v6] ufs: core: Add HID support
+Date: Fri, 23 May 2025 14:46:04 +0800
+Message-Id: <20250523064604.800-1-tanghuan@vivo.com>
+X-Mailer: git-send-email 2.25.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR02CA0136.apcprd02.prod.outlook.com
+ (2603:1096:4:188::16) To KL1PR06MB6273.apcprd06.prod.outlook.com
+ (2603:1096:820:ec::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V5 10/11] scsi: ufs: qcom : Introduce phy_power_on/off
- wrapper function
-To: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-CC: <vkoul@kernel.org>, <kishon@kernel.org>,
-        <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-        <bvanassche@acm.org>, <andersson@kernel.org>,
-        <neil.armstrong@linaro.org>, <dmitry.baryshkov@oss.qualcomm.com>,
-        <konrad.dybcio@oss.qualcomm.com>, <quic_rdwivedi@quicinc.com>,
-        <quic_cang@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
-        <linux-phy@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>
-References: <20250515162722.6933-1-quic_nitirawa@quicinc.com>
- <20250515162722.6933-11-quic_nitirawa@quicinc.com>
- <k37lk3poz6kzrgnby4sikwmz6rg4ysxsticn3opcil4j3njylp@cvmgwiw6nwy5>
- <9092ed42-ef8b-42cc-a423-c5a486d3b998@quicinc.com>
- <zelvl7b5ov66lzbgay42ncdbkof3flv7g3gybqexth5hty6mvq@eemod4qy6gqs>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <zelvl7b5ov66lzbgay42ncdbkof3flv7g3gybqexth5hty6mvq@eemod4qy6gqs>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTIyMDEwNSBTYWx0ZWRfXxAc0lDBwNYpv
- /wSwUawIE3WdBtHKJfadnGg5NwLZM9ya7PqrdNcFSMIdeeODpgQO5chFEOaL8gn8awiLe6JeO23
- FuqqTS7/D+P7oMq83xuM+cxST2lQCOqHU49+WYPTg+ylaZOqHZFS7XInv+Reyt7qdfC811YYJWz
- DnVlVX+Pr9TUnb0Kmp4/fMx7Ie/jKl27/vD3nHDLl7PQnC5KXeMp3muULlY5oGqFKtx0dewdqc4
- 44915J37BN792r2550s76jhzsUsOrdrUgCAbPazthOU8G3hR68MIfcaEQCCLZ1g7QwYS0bblVhW
- hdCZs4hnO1Hou5d4uVM8aFEHvK7yK3+gkLp8zS8BCwyJeU88jt4F39qnLaXV3LBWIBMU+jVpQi6
- z1vHJ8XO+DHjtCHDaJc+e5FaK45FbH8we3D1x1yvA/H97pSml+wMCXvM+7gQPLxhnBpm1pT2
-X-Authority-Analysis: v=2.4 cv=RIuzH5i+ c=1 sm=1 tr=0 ts=682efbdf cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10
- a=YvcutQcU1dviTmGepvQA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: oXpZXqg-0jlmksyzSRFg-HDgntXfLOxB
-X-Proofpoint-GUID: oXpZXqg-0jlmksyzSRFg-HDgntXfLOxB
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-22_05,2025-05-22_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 phishscore=0 suspectscore=0 malwarescore=0 bulkscore=0
- mlxlogscore=999 spamscore=0 lowpriorityscore=0 mlxscore=0 priorityscore=1501
- adultscore=0 impostorscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505160000
- definitions=main-2505220105
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: KL1PR06MB6273:EE_|SEZPR06MB6814:EE_
+X-MS-Office365-Filtering-Correlation-Id: a7dbefcf-24d9-4d37-d311-08dd99c58267
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|366016|1800799024|52116014|7416014|376014|38350700014|921020;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?p615W6VWZCJ2gsG3jqIoqt8LWdOKycIujf2gQ83rDm6KyyzFXCq1cFkXV6Pu?=
+ =?us-ascii?Q?oTb79QlDdP6STAMX1VYPV+kU5Ofbwtxm9p47Ka1O2CvfGVwdvSBIIFSIl8IR?=
+ =?us-ascii?Q?vQGDd7Jb/nUCqXe7F0FesyDI+tCChfGdncQmHX6SFIRa4s5oqAotWqDUpS+X?=
+ =?us-ascii?Q?eN7XK9JqHMcSLZMqeuAWH81rfhtGcLFb9c7OquYhXJfG9IfNGNbfZt4Oc3My?=
+ =?us-ascii?Q?iTf8+2y/qtsPfZn2m4de007xRsL/48kfqdDy09/l6o25tbmGnSlgtrnTLG61?=
+ =?us-ascii?Q?KKJLel3+cJlRPDtpzBKJ7kikp+9bI26903TThNIjMF5e7PwzN7LGYnKhM4l1?=
+ =?us-ascii?Q?JBlZOzkUpA44bXSdMBBjfggIJ6OMxQXx7v8vWKGAXJPDaW9XtuiXNGNL2Dft?=
+ =?us-ascii?Q?WAdxufja+xeWyyDzcK4qHeKpRzGdTs0yjdzVUFntOHB5xp+X0hIZT5Kuoy6x?=
+ =?us-ascii?Q?+4Zt5VbUNoxLtWN/p3dcLByDS296oeD50XU/G7f0Fm5t5EiayGgx7qPZFdx1?=
+ =?us-ascii?Q?+BJIWbHWSixMoieFj2ZARLRDozkHiQQ1lBGokRZ7tUAhGJAd+ZxwWQCl5M8H?=
+ =?us-ascii?Q?285J2dKAHqEnhRP4aG9mO3oY58abq+KpHWfEqLM4wtY/yPbTR1Y2ZhlrzR+k?=
+ =?us-ascii?Q?aiyjkW+f2u6j3/omm+t7jOEOB5l2VzfIROx5w/X42B4opdwjrVOD7UZdBt12?=
+ =?us-ascii?Q?OaR6wmQ870ohSQ06bevFVH+rVdOLNuA93tM13QOC9Q1l55kwp9jxT+mIeSoW?=
+ =?us-ascii?Q?ymxUsN0mzn44upvjR9I6Lv3EmGYFbhHud4Thur4J+Np0WDxInPdVEt4WXemC?=
+ =?us-ascii?Q?nTNffJTl82jexMRyZ5ISouBrhu/jYqlI4a/f8B71aG7OIome5MnGdBLKJxrd?=
+ =?us-ascii?Q?7KiFTXu4Yt4L3zJyhv7Oaerm2ZLeXnwlKVV+SX/VrJE442kmCiiiWB4TfXtO?=
+ =?us-ascii?Q?7huUAg5fpHuLh7TvcYYaQydiuHWIf23g91LWlF2YBfVtDpMHdBy90GcqY6b0?=
+ =?us-ascii?Q?i/td8ZAdQnHlD5apxV332lIi6ryrl5o/HrwmKGgm+saZeQyE2SK6T+FCxr8u?=
+ =?us-ascii?Q?I1/sLK7J5irs5aJpN11vZYboM6FiGCOBYliYTgaXH9eR6/dgB494VW5mHC7A?=
+ =?us-ascii?Q?GdZkO4FBRHAyvZ3T8UTlJvHnNqD+4KECHId8oocnt8btxNXjIrf6np1it+Fo?=
+ =?us-ascii?Q?UUg76SaltNjTVj4x8q4sCYvR92vwbTNXsAt2pyF6XET8jtEs61r8rw6j0bsv?=
+ =?us-ascii?Q?NwTVOGxm1O+kZHQcjxXEGhwgbYCz7g4XsbNCMgrB0f+kdLaVFtSjucdz111b?=
+ =?us-ascii?Q?9b4sWsCbq9BhiHFWOI77THJAbMW+OsAfD5mRyPEwBsmq7+yWuXkTgiqm2AvU?=
+ =?us-ascii?Q?f/Wc3RZ/x0mOs6ldHOuDiu7mrariuECUbtoKfyq8yPvjbP9ZMMC/oIW7lgl0?=
+ =?us-ascii?Q?Vy6+uyMljYcuLueUCXOYNh+UFq9wko5V?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:KL1PR06MB6273.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(52116014)(7416014)(376014)(38350700014)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?NK4xgaqppm6uAF0m80YB9DBX4ltINjcpLZgs5iHUmFs2CFPquYQv8KRO/nMc?=
+ =?us-ascii?Q?FxmrunDuYc4UEwBGtS1rc+D+PFIg2lyjnhzTKD8KBZOWqDapcPsNdNLvpYIZ?=
+ =?us-ascii?Q?Y9UtR1fE5O8FITArUtCEOMJUyriiiZ44rREhQgsk5ao7A1enIseL/H8KfLqC?=
+ =?us-ascii?Q?T3IDPfioIsfftxtzKqheA5vzuARiEVbU1y00cXXRxNhxIXQSiaLbybAoC6WJ?=
+ =?us-ascii?Q?5mwlcM7nDgfKk0HV1G86mKep6+7fhWtji2Y2p7o8tVThuitQqC70/Dmt1tCe?=
+ =?us-ascii?Q?ZrWTVSIcBK6/zdlP9Iwnln172Nfpv8301/O4LVeL4wCcIFmkGVZsqkoIWkUy?=
+ =?us-ascii?Q?DQrhIQTIP8PX3XjeA3yHgE2rl4K+TpPTlb7HdmnBJVtzvQpuQFqEQaczmny8?=
+ =?us-ascii?Q?gDVcl0ign2fKg0M0Comt4zPmj34NEwlgW7SPFKUWWlGD14Zf0X5nYEh/YmWK?=
+ =?us-ascii?Q?phThrpd4Pyf1or8+eaEADuhmS385fytDlSSEvtKED802BcC79+N/aNdQZZt2?=
+ =?us-ascii?Q?lH8OnavGtVhBfs1t4bnLSwZ/7bSQjwZs87QmUtobhEnEh40GeGw8CrWkPrzG?=
+ =?us-ascii?Q?whTnWHCUS7RkZKsmDYp3dScNuLHZ6/PbQ7GMPhjW4vVwE9bkfiq1VpgmJ+Pa?=
+ =?us-ascii?Q?NX0JRbIf+nfyLLCxZgJclDMhOSWgt90yQa7WPjR7HQDBl9MH/xFv1FkxAYbd?=
+ =?us-ascii?Q?FXmR6gcIQUncA0MxBCYt0LmFGbxREp73aTD22oFf/Nbi28v54Gvoh80HQQ3l?=
+ =?us-ascii?Q?EqqxlLEULNtmsPwDViNI0n1wgePEFPAumw3/8XaYnnGr86Sl+BQDkhisG03C?=
+ =?us-ascii?Q?IbINYOjIJgJlWbSPwlM1e8PBjCvSAMEEvKFq4vF5V24CxVfM2M9HAMsWZLCU?=
+ =?us-ascii?Q?p4MfLUoYkInx6fNiJx27bJoNDUpB9apFFyDaM8BXg9m7GLUlbMm4hO4raC3u?=
+ =?us-ascii?Q?SvZy/reje1ohekduMbOYny5MPkapzn/pwHcMEgsUah0KUYrQRNX8pkDjuEId?=
+ =?us-ascii?Q?8M3GaiCcmOpjY2dJm8qhdB3YAFjlynSaGkhcJhOBZ8XrNJOFMLOKBmSedXTX?=
+ =?us-ascii?Q?CePhIVowKx3Buw5iSNLreUC3+p/1o8KWqx1SbM1i7seLpU2J4q+/aUgY9Aet?=
+ =?us-ascii?Q?t2EPDYlIpT5IhMu63BuoXH94huwiI7qfgNnuwgtCLbIVzgPQMN9wCnpXg9qe?=
+ =?us-ascii?Q?3QNuPkmB8fXiMDVdAV/R7AqeBSpzQwtn4+/4pM+rJ25vyZ7iN4OAV8Y2dBPZ?=
+ =?us-ascii?Q?C0trpJAD6ix3IUf69BywxcH58l1imVKZLqE6RcCYckBk//rTwh0WXE7D6ozU?=
+ =?us-ascii?Q?4Knj8cmSDzf41nI+7EZuHclMT1LzvrCfn+X33+SzszaKLDxV0zFdj53pTEEt?=
+ =?us-ascii?Q?NcbjXcds+nN80Yt0KQkTfowu98RT6aJYSRgqAI2cRahzj6cvajVQgN4mLYhD?=
+ =?us-ascii?Q?yi6McQXfyxD3SE3/w9Kg7bXGtF7Mq2HpsFzBUTj9BcW5XI90aVdJt7o2/QWS?=
+ =?us-ascii?Q?ua8+wcO48D5koZaaWLqRpGyDdM5kuVUKbV+ZAXOrenN5cfDn2G5nXKcL6+Os?=
+ =?us-ascii?Q?5ld8SS+FFdNTuQfhiWu9ElGzIupSQzmtUi3I0yQG?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a7dbefcf-24d9-4d37-d311-08dd99c58267
+X-MS-Exchange-CrossTenant-AuthSource: KL1PR06MB6273.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 May 2025 06:46:13.5509
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: T3AiXUp7KC4Q50n3HQc1KyQIcOy9cUFHLrEu5uHymY+p43s98RCnsqbUDiSOUmY9iQRUibzP/N1ODjzdlbHYNA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEZPR06MB6814
 
+Follow JESD220G, support HID(Host Initiated Defragmentation)
+through sysfs, the relevant sysfs nodes are as follows:
+	1.analysis_trigger
+	2.defrag_trigger
+	3.fragmented_size
+	4.defrag_size
+	5.progress_ratio
+	6.state
+The detailed definition	of the six nodes can be	found in the sysfs
+documentation.
 
+HID's execution policy is given to user-space.
 
-On 5/22/2025 3:01 PM, Manivannan Sadhasivam wrote:
-> On Thu, May 22, 2025 at 03:48:29AM +0530, Nitin Rawat wrote:
->>
->>
->> On 5/21/2025 7:31 PM, Manivannan Sadhasivam wrote:
->>> On Thu, May 15, 2025 at 09:57:21PM +0530, Nitin Rawat wrote:
->>>
->>> Subject should mention ufs_qcom_phy_power_{on/off} as phy_power_{on/off} are
->>> generic APIs.
->>>
->>>> There can be scenarios where phy_power_on is called when PHY is
->>>> already on (phy_count=1). For instance, ufs_qcom_power_up_sequence
->>>> can be called multiple times from ufshcd_link_startup as part of
->>>> ufshcd_hba_enable call for each link startup retries(max retries =3),
->>>> causing the PHY reference count to increase and leading to inconsistent
->>>> phy behavior.
->>>>
->>>> Similarly, there can be scenarios where phy_power_on or phy_power_off
->>>> might be called directly from the UFS controller driver when the PHY
->>>> is already powered on or off respectiely, causing similar issues.
->>>>
->>>> To fix this, introduce ufs_qcom_phy_power_on and ufs_qcom_phy_power_off
->>>> wrappers for phy_power_on and phy_power_off. These wrappers will use an
->>>> is_phy_pwr_on flag to check if the PHY is already powered on or off,
->>>> avoiding redundant calls. Protect the is_phy_pwr_on flag with a mutex
->>>> to ensure safe usage and prevent race conditions.
->>>>
->>>
->>> This smells like the phy_power_{on/off} calls are not balanced and you are
->>> trying to workaround that in the UFS driver.
->>
->> Hi Mani,
->>
->> Yes, there can be scenarios that were not previously encountered because
->> phy_power_on and phy_power_off were only called during system suspend
->> (spm_lvl = 5). However, with phy_power_on now moved to
->> ufs_qcom_setup_clocks, there is a slightly more probability of phy_power_on
->> being called twice, i.e., phy_power_on being invoked when the PHY is already
->> on.
->>
->> For instance, if the PHY power is already on and the UFS driver calls
->> ufs_qcom_setup_clocks from an error handling context, phy_power_on could be
->> called again which may increase phy_count and can cause inconsistent phy
->> bheaviour . Therefore, we need to have a flag, is_phy_pwr_on, in the
->> controller driver, protected by a mutex, to indicate the state of
->> phy_power_on and phy_power_off.
->>
-> 
-> If phy_power_on() is called twice without phy_power_off(), there can be only 2
-> possibilities:
-> 
-> 1. phy_power_off() is not balanced
-> 2. phy_power_on() is called from a wrong place
-> 
->> This approach is also present in Qualcomm downstream UFS driver and similiar
->> solution in mtk ufs driver to have flag in controller indictring phy power
->> state in their upstream UFS drivers.
->>
-> 
-> No, having this check in the host driver is clearly a workaround for a broken
-> behavior. I do not want to carry this mess all along.
-> 
+Signed-off-by: Huan Tang <tanghuan@vivo.com>
+Signed-off-by: Wenxing Cheng <wenxing.cheng@vivo.com>
+Suggested-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Reviewed-by: Bean Huo <huobean@gmail.com>
+---
+Changelog
+===
+v5 - > v6:
+	1.Adopt Peter's suggestion to improve code readability
+	2.Adopt Bean's suggestion to simplify code
+v4 - > v5:
+	1.Fixed a typo in "indicates"
+	2."DEFRAG_IS_NOT_REQUIRED" -> "DEFRAG_NOT_REQUIRED"
+	3.Fix some coding style issues
+v3 - > v4:
+	1.Move the changelog description under "---"
+v2 - > v3:
+	1.Remove the "ufs_" prefix from directory name
+	2.Remove the "hid_" prefix from node names
+	3.Make "ufs" appear only once in the HID group name
+	4.Add "is_visible" callback for "ufs_sysfs_hid_group"
+v1 - > v2:
+	1.Refactor the HID code according to Bart and Peter and
+	Arvi's suggestions
 
-Hi Mani,
+v5
+	https://lore.kernel.org/all/20250520094054.313-1-tanghuan@vivo.com/
+v4
+	https://lore.kernel.org/all/20250520063512.213-1-tanghuan@vivo.com/
+v3
+	https://lore.kernel.org/all/20250519022912.292-1-tanghuan@vivo.com/
+v2
+	https://lore.kernel.org/all/20250512131519.138-1-tanghuan@vivo.com/
+v1
+	https://lore.kernel.org/all/20250417125008.123-1-tanghuan@vivo.com/
 
-I double checked the code again error handling scenarios which i mention 
-is my earlier reply is actually under runtime suspend check so this 
-issue won't occur there which means as of now we have no scenarios which 
-exists as per our understanding where existing code will break w.r.t 
-phy_on/_off , hence i can drop this patch from this series.
+ Documentation/ABI/testing/sysfs-driver-ufs |  83 +++++++++
+ drivers/ufs/core/ufs-sysfs.c               | 190 +++++++++++++++++++++
+ drivers/ufs/core/ufshcd.c                  |   4 +
+ include/ufs/ufs.h                          |  26 +++
+ 4 files changed, 303 insertions(+)
 
-Regards,
-Nitin
-
-
-> - Mani
-> 
+diff --git a/Documentation/ABI/testing/sysfs-driver-ufs b/Documentation/ABI/testing/sysfs-driver-ufs
+index d4140dc6c5ba..f3de8c521bbd 100644
+--- a/Documentation/ABI/testing/sysfs-driver-ufs
++++ b/Documentation/ABI/testing/sysfs-driver-ufs
+@@ -1685,3 +1685,86 @@ Description:
+ 		================  ========================================
+ 
+ 		The file is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/hid/analysis_trigger
++What:		/sys/bus/platform/devices/*.ufs/hid/analysis_trigger
++Date:		May 2025
++Contact:	Huan Tang <tanghuan@vivo.com>
++Description:
++		The host can enable or disable HID analysis operation.
++
++		=======  =========================================
++		disable   disable HID analysis operation
++		enable    enable HID analysis operation
++		=======  =========================================
++
++		The file is write only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/hid/defrag_trigger
++What:		/sys/bus/platform/devices/*.ufs/hid/defrag_trigger
++Date:		May 2025
++Contact:	Huan Tang <tanghuan@vivo.com>
++Description:
++		The host can enable or disable HID defragmentation operation.
++
++		=======  =========================================
++		disable   disable HID defragmentation operation
++		enable    enable HID defragmentation operation
++		=======  =========================================
++
++		The attribute is write only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/hid/fragmented_size
++What:		/sys/bus/platform/devices/*.ufs/hid/fragmented_size
++Date:		May 2025
++Contact:	Huan Tang <tanghuan@vivo.com>
++Description:
++		The total fragmented size in the device is reported through
++		this attribute.
++
++		The attribute is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/hid/defrag_size
++What:		/sys/bus/platform/devices/*.ufs/hid/defrag_size
++Date:		May 2025
++Contact:	Huan Tang <tanghuan@vivo.com>
++Description:
++		The host sets the size to be defragmented by an HID
++		defragmentation operation.
++
++		The attribute is read/write.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/hid/progress_ratio
++What:		/sys/bus/platform/devices/*.ufs/hid/progress_ratio
++Date:		May 2025
++Contact:	Huan Tang <tanghuan@vivo.com>
++Description:
++		Defragmentation progress is reported by this attribute,
++		indicates the ratio of the completed defragmentation size
++		over the requested defragmentation size.
++
++		====  ============================================
++		1     1%
++		...
++		100   100%
++		====  ============================================
++
++		The attribute is read only.
++
++What:		/sys/bus/platform/drivers/ufshcd/*/hid/state
++What:		/sys/bus/platform/devices/*.ufs/hid/state
++Date:		May 2025
++Contact:	Huan Tang <tanghuan@vivo.com>
++Description:
++		The HID state is reported by this attribute.
++
++		====================   ===========================
++		idle			Idle (analysis required)
++		analysis_in_progress    Analysis in progress
++		defrag_required      	Defrag required
++		defrag_in_progress      Defrag in progress
++		defrag_completed      	Defrag completed
++		defrag_not_required     Defrag is not required
++		====================   ===========================
++
++		The attribute is read only.
+diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+index de8b6acd4058..10006ae5ee35 100644
+--- a/drivers/ufs/core/ufs-sysfs.c
++++ b/drivers/ufs/core/ufs-sysfs.c
+@@ -87,6 +87,23 @@ static const char *ufs_wb_resize_status_to_string(enum wb_resize_status status)
+ 	}
+ }
+ 
++static const char * const ufs_hid_states[] = {
++	[HID_IDLE]		= "idle",
++	[ANALYSIS_IN_PROGRESS]	= "analysis_in_progress",
++	[DEFRAG_REQUIRED]	= "defrag_required",
++	[DEFRAG_IN_PROGRESS]	= "defrag_in_progress",
++	[DEFRAG_COMPLETED]	= "defrag_completed",
++	[DEFRAG_NOT_REQUIRED]	= "defrag_not_required",
++};
++
++static const char *ufs_hid_state_to_string(enum ufs_hid_state state)
++{
++	if (state < NUM_UFS_HID_STATES)
++		return ufs_hid_states[state];
++
++	return "unknown";
++}
++
+ static const char *ufshcd_uic_link_state_to_string(
+ 			enum uic_link_state state)
+ {
+@@ -1763,6 +1780,178 @@ static const struct attribute_group ufs_sysfs_attributes_group = {
+ 	.attrs = ufs_sysfs_attributes,
+ };
+ 
++static int hid_query_attr(struct ufs_hba *hba, enum query_opcode opcode,
++			enum attr_idn idn, u32 *attr_val)
++{
++	int ret;
++
++	down(&hba->host_sem);
++	if (!ufshcd_is_user_access_allowed(hba)) {
++		up(&hba->host_sem);
++		return -EBUSY;
++	}
++
++	ufshcd_rpm_get_sync(hba);
++	ret = ufshcd_query_attr(hba, opcode, idn, 0, 0, attr_val);
++	ufshcd_rpm_put_sync(hba);
++
++	up(&hba->host_sem);
++	return ret;
++}
++
++static ssize_t analysis_trigger_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	int mode;
++	int ret;
++
++	if (sysfs_streq(buf, "enable"))
++		mode = HID_ANALYSIS_ENABLE;
++	else if (sysfs_streq(buf, "disable"))
++		mode = HID_ANALYSIS_AND_DEFRAG_DISABLE;
++	else
++		return -EINVAL;
++
++	ret = hid_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++			QUERY_ATTR_IDN_HID_DEFRAG_OPERATION, &mode);
++
++	return ret < 0 ? ret : count;
++}
++
++static DEVICE_ATTR_WO(analysis_trigger);
++
++static ssize_t defrag_trigger_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	int mode;
++	int ret;
++
++	if (sysfs_streq(buf, "enable"))
++		mode = HID_ANALYSIS_AND_DEFRAG_ENABLE;
++	else if (sysfs_streq(buf, "disable"))
++		mode = HID_ANALYSIS_AND_DEFRAG_DISABLE;
++	else
++		return -EINVAL;
++
++	ret = hid_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++			QUERY_ATTR_IDN_HID_DEFRAG_OPERATION, &mode);
++
++	return ret < 0 ? ret : count;
++}
++
++static DEVICE_ATTR_WO(defrag_trigger);
++
++static ssize_t fragmented_size_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	u32 value;
++	int ret;
++
++	ret = hid_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++			QUERY_ATTR_IDN_HID_AVAILABLE_SIZE, &value);
++	if (ret)
++		return ret;
++
++	return sysfs_emit(buf, "%u\n", value);
++}
++
++static DEVICE_ATTR_RO(fragmented_size);
++
++static ssize_t defrag_size_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	u32 value;
++	int ret;
++
++	ret = hid_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++			QUERY_ATTR_IDN_HID_SIZE, &value);
++	if (ret)
++		return ret;
++
++	return sysfs_emit(buf, "%u\n", value);
++}
++
++static ssize_t defrag_size_store(struct device *dev,
++		struct device_attribute *attr, const char *buf, size_t count)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	u32 value;
++	int ret;
++
++	if (kstrtou32(buf, 0, &value))
++		return -EINVAL;
++
++	ret = hid_query_attr(hba, UPIU_QUERY_OPCODE_WRITE_ATTR,
++			QUERY_ATTR_IDN_HID_SIZE, &value);
++
++	return ret < 0 ? ret : count;
++}
++
++static DEVICE_ATTR_RW(defrag_size);
++
++static ssize_t progress_ratio_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	u32 value;
++	int ret;
++
++	ret = hid_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++			QUERY_ATTR_IDN_HID_PROGRESS_RATIO, &value);
++	if (ret)
++		return ret;
++
++	return sysfs_emit(buf, "%u\n", value);
++}
++
++static DEVICE_ATTR_RO(progress_ratio);
++
++static ssize_t state_show(struct device *dev,
++		struct device_attribute *attr, char *buf)
++{
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++	u32 value;
++	int ret;
++
++	ret = hid_query_attr(hba, UPIU_QUERY_OPCODE_READ_ATTR,
++			QUERY_ATTR_IDN_HID_STATE, &value);
++	if (ret)
++		return ret;
++
++	return sysfs_emit(buf, "%s\n", ufs_hid_state_to_string(value));
++}
++
++static DEVICE_ATTR_RO(state);
++
++static struct attribute *ufs_sysfs_hid[] = {
++	&dev_attr_analysis_trigger.attr,
++	&dev_attr_defrag_trigger.attr,
++	&dev_attr_fragmented_size.attr,
++	&dev_attr_defrag_size.attr,
++	&dev_attr_progress_ratio.attr,
++	&dev_attr_state.attr,
++	NULL,
++};
++
++static umode_t ufs_sysfs_hid_is_visible(struct kobject *kobj,
++		struct attribute *attr, int n)
++{
++	struct device *dev = container_of(kobj, struct device, kobj);
++	struct ufs_hba *hba = dev_get_drvdata(dev);
++
++	return	hba->dev_info.hid_sup ? attr->mode : 0;
++}
++
++static const struct attribute_group ufs_sysfs_hid_group = {
++	.name = "hid",
++	.attrs = ufs_sysfs_hid,
++	.is_visible = ufs_sysfs_hid_is_visible,
++};
++
+ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_default_group,
+ 	&ufs_sysfs_capabilities_group,
+@@ -1777,6 +1966,7 @@ static const struct attribute_group *ufs_sysfs_groups[] = {
+ 	&ufs_sysfs_string_descriptors_group,
+ 	&ufs_sysfs_flags_group,
+ 	&ufs_sysfs_attributes_group,
++	&ufs_sysfs_hid_group,
+ 	NULL,
+ };
+ 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 3e2097e65964..8ccd923a5761 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8390,6 +8390,10 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 
+ 	dev_info->rtt_cap = desc_buf[DEVICE_DESC_PARAM_RTT_CAP];
+ 
++	dev_info->hid_sup = get_unaligned_be32(desc_buf +
++				DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP) &
++				UFS_DEV_HID_SUPPORT;
++
+ 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+ 
+ 	err = ufshcd_read_string_desc(hba, model_index,
+diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
+index c0c59a8f7256..72fd385037a6 100644
+--- a/include/ufs/ufs.h
++++ b/include/ufs/ufs.h
+@@ -182,6 +182,11 @@ enum attr_idn {
+ 	QUERY_ATTR_IDN_CURR_WB_BUFF_SIZE        = 0x1F,
+ 	QUERY_ATTR_IDN_TIMESTAMP		= 0x30,
+ 	QUERY_ATTR_IDN_DEV_LVL_EXCEPTION_ID     = 0x34,
++	QUERY_ATTR_IDN_HID_DEFRAG_OPERATION	= 0x35,
++	QUERY_ATTR_IDN_HID_AVAILABLE_SIZE	= 0x36,
++	QUERY_ATTR_IDN_HID_SIZE			= 0x37,
++	QUERY_ATTR_IDN_HID_PROGRESS_RATIO	= 0x38,
++	QUERY_ATTR_IDN_HID_STATE		= 0x39,
+ 	QUERY_ATTR_IDN_WB_BUF_RESIZE_HINT	= 0x3C,
+ 	QUERY_ATTR_IDN_WB_BUF_RESIZE_EN		= 0x3D,
+ 	QUERY_ATTR_IDN_WB_BUF_RESIZE_STATUS	= 0x3E,
+@@ -401,6 +406,7 @@ enum {
+ 	UFS_DEV_HPB_SUPPORT		= BIT(7),
+ 	UFS_DEV_WRITE_BOOSTER_SUP	= BIT(8),
+ 	UFS_DEV_LVL_EXCEPTION_SUP       = BIT(12),
++	UFS_DEV_HID_SUPPORT		= BIT(13),
+ };
+ #define UFS_DEV_HPB_SUPPORT_VERSION		0x310
+ 
+@@ -466,6 +472,24 @@ enum ufs_ref_clk_freq {
+ 	REF_CLK_FREQ_INVAL	= -1,
+ };
+ 
++/* bDefragOperation attribute values */
++enum ufs_hid_defrag_operation {
++	HID_ANALYSIS_AND_DEFRAG_DISABLE	= 0,
++	HID_ANALYSIS_ENABLE		= 1,
++	HID_ANALYSIS_AND_DEFRAG_ENABLE	= 2,
++};
++
++/* bHIDState attribute values */
++enum ufs_hid_state {
++	HID_IDLE		= 0,
++	ANALYSIS_IN_PROGRESS	= 1,
++	DEFRAG_REQUIRED		= 2,
++	DEFRAG_IN_PROGRESS	= 3,
++	DEFRAG_COMPLETED	= 4,
++	DEFRAG_NOT_REQUIRED	= 5,
++	NUM_UFS_HID_STATES	= 6,
++};
++
+ /* bWriteBoosterBufferResizeEn attribute */
+ enum wb_resize_en {
+ 	WB_RESIZE_EN_IDLE	= 0,
+@@ -625,6 +649,8 @@ struct ufs_dev_info {
+ 	u32 rtc_update_period;
+ 
+ 	u8 rtt_cap; /* bDeviceRTTCap */
++
++	bool hid_sup;
+ };
+ 
+ /*
+-- 
+2.48.1
 
