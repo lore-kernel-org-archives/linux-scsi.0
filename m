@@ -1,128 +1,99 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60D9A1A315A
-	for <linux-scsi@vger.kernel.org>; Fri, 23 May 2025 20:14:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 661E317BBF;
+	Sat, 24 May 2025 03:55:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748031278; cv=none; b=WUiae5Pi8bwtfbmLN3fIKHcGa/DjbRnbLRPPYZ+G/fEhpGCkdMFNb0aecXagZ/9DNaNbT7qErLev/kao6wzpsmj1aUkGAVfwj0GS5Uj+HapuItTHoqS7m2j6vr0y1sGrGXMncdWQUKEly+iPglkopXMOMgCS1AIVMWasi6j9Ruc=
+	t=1748058947; cv=none; b=RWGMcNtihlnKdJvj6T3Q7muBNpoKoyPiKaHHPjmVoH8RpFVbEIFaPI0kayUulXG8PLJJp6ZaQD/co4C6RQGJgBrj9vKnvYlcX95EyARKWuL7e/mey3HqV2xzJdZYiPtvgXz1m8ash7Myz73hUj2yNQCQ8SDjNvXFaLOPikycHqA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748031278; c=relaxed/simple;
-	bh=muiiH3BzynTaFQm3RJp0l/XCUUGb+/JN9CI/r9tsYa8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bXXFbdwPKA4WI3Fw614fB5UXPG90x4ClKmw5sdt9X3vYFOujByaw6EaqpVFVSLsiJJ/p6/DSiEudFMXFgFYPUhkUwNtztQl60YjZxdCWc7kRPheOrt2f4km/9avXTAQLQPAnQ4frrnFUM/Zdd1dvnHtvQJJ+JflPlX2K7afS+eU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=I0jmy5np; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1748058947; c=relaxed/simple;
+	bh=JU8iOU5XsMKv/yF0+qrL2TTRn1KelKiIZHxAy0V+ank=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Y14PzEC5/fLe1RuQJcSI0OK8x/pzU9sP68g+pFTtbesBItynMjacdXjLwezMrIaf6+BgsnEaLpeq4FTfCpzqVkb0vgFEp6o7vbXrLJU1DQS9xFZxNaGUPxVdhi6s8ZQZQZRoKusmywzoOpR73WtHpoNKzw+cOzioIlftmPUTzmY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OuCZX2MK; arc=none smtp.client-ip=209.85.215.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="I0jmy5np"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4b3xG212fFzm10gT;
-	Fri, 23 May 2025 20:14:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1748031271; x=1750623272; bh=QstXYPBlIKP0j6Mzyp1T5D/zMV9d9wBtZSD
-	HG3ZRI84=; b=I0jmy5npSTguLn2dWSIh47X9xDuQQmt5DvTeX5JmFUBYkM1DTTz
-	Mx2JYfzMQ07jciOsKfYrlkZvxpLru6QYZEAgXwl3V6FNvi2iaV8gAjun3046OcKP
-	ynr2lsjVAknk0xCTkkY0cUuHlXQmft7Bcmm16Ufc5ost12qFM+vdRmASHJ5O5v3M
-	zAF/ROIHwAb/kAR0JvZflUU10Unx9vU6qf7zwCAIYjh0pcIcJU4UO4YoS3RJEXl6
-	cXuBBfLy0WHYQwUSu/PXjMcsgENHs3IWt/Twve7HvNUrLskNJGbomFQ8l5fyX9nA
-	7w+ldYKpToElw3v0WnwDZyqyJH4KR+CZP/w==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id TpzZZ4QrtTqc; Fri, 23 May 2025 20:14:31 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4b3xFq0ndBzm0gbn;
-	Fri, 23 May 2025 20:14:22 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OuCZX2MK"
+Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-7fd35b301bdso373527a12.2;
+        Fri, 23 May 2025 20:55:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1748058945; x=1748663745; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=iOOMMXXqkOKG/dAPYpGHtEnMJRzYGPdaiwfPy079iJQ=;
+        b=OuCZX2MKLpVEjfx3lng0XSznsVpKbtqa4yoDgeMO28rOxecHOL+D/CcwCNB3GKV96y
+         Gi6os8cT5A5gIqhmMPz14jPSQBzY7cM9ixhulkda0spYPo2LUZdvi1ueofvUB7Ms25Ei
+         1GJpK7FXNWYUbojbpFduE6yzvqRoJtAxzVvT0VOYlgLLlhL7JsbhQTea5GRsXhHza4Hp
+         mq54tnb/UrYzU756Op4fy/EBi2xWecfUwoe+OO+mkeTWYGOdmhFOsGvbjyka7woznswz
+         z86BS7P/e6BEUC1fNEd4pBPzm6uJU7hq/e3PZCBoiUtLBJvMWZ5J3kJEW7iSlPO/H/fJ
+         zY6w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748058945; x=1748663745;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=iOOMMXXqkOKG/dAPYpGHtEnMJRzYGPdaiwfPy079iJQ=;
+        b=g2WDv7U22eg25g4B+fjGq57k3KHNr4sQhdhGRRBGHpJwgnTL6Iz+B0PtEnXohljUlJ
+         ZJOUeWfmsz5mXHwqetuzVGSCGDQkwhUBalxj9PVwVe4O0Q2aCNjiJVPjuTR7V2W6saKe
+         UsMH2uu7rMUPnw5hl5pmjXAc8+V8hiiJfsQDfrEolX7ZmBgYl6iKJ086wDCjJD8nnMpU
+         35KcZJeo1DPrwcovp31vpqwnJlHAxCa99Ipbl6efbqwFig9bPSOxGEElrWQdM3P6owJz
+         0j5BczDh77UhqbQoMzLplptAvvs/GagzWYNbokobA06+a5HlfIA0Q6IP1yM0c31CK5lu
+         2wog==
+X-Forwarded-Encrypted: i=1; AJvYcCXXlnXVFM0/sSbqjZr6+4nRUQylNtDGpynDiG5ilRVUzyb8gar5JE4KEEC99Xan7NscOH0EZ0cS28Crv/Q=@vger.kernel.org
+X-Gm-Message-State: AOJu0YypvrxVhFO64Ue0geXSJ+YOpQX3znGewU2PQHY8EGrTWy4B0SOj
+	aHYebkXlRyhQR3XuO4Lj9xK9rUYN9fihgnGvmCumNsiVavaHU5tVTL5N
+X-Gm-Gg: ASbGncu94piv6CPjxopslb/MeXqXrTYXb+4ccFaaPkI1nRygrRQsyuwIj0T9KcQfm5V
+	E5+ZfcYOtPDkd/JaAxtkmLnuW/ac862n8DBaanew/urOx9uNhYjlIx2q9+WY4PbWQcsBvk4U+IZ
+	30yh+XXP9j6xc+OQmmRKdrBFIwWwzRT3/Yya3LfdmaZ+SkOeoDaVvatHUyLgwlGAk7r6fm/tuGK
+	ad1S4TSAPMNFbPY9bMzbtNBTyQrfxxMWQWArz6k1Y5fV/l4hgDlCkdwtJ8IdZU+K3Cyu5sggDmf
+	63ubzhra07KpSpMFj+na+KOSXs3A82y4MG6Bw/KeYBpmrCUcS6M3d+rBeoifSa2H
+X-Google-Smtp-Source: AGHT+IGFrdmT47Ot+f4lT/yBluPn5u+8o8zMcAQYNom7xNEYdagmtxyMKQjvuMsVnUJxleXfcz2Sow==
+X-Received: by 2002:a17:902:db03:b0:224:1001:677c with SMTP id d9443c01a7336-23414f32ca9mr27166425ad.9.1748058945398;
+        Fri, 23 May 2025 20:55:45 -0700 (PDT)
+Received: from n.. ([2401:4900:1cb0:129d:7b0a:6b07:3aed:30f1])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2340934d8a0sm10021235ad.167.2025.05.23.20.55.43
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 23 May 2025 20:55:44 -0700 (PDT)
+From: mrigendrachaubey <mrigendra.chaubey@gmail.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
 Cc: linux-scsi@vger.kernel.org,
-	Sanjeev Yadav <sanjeev.y@mediatek.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	Santosh Y <santoshsy@gmail.com>
-Subject: [PATCH] scsi: core: ufs: Fix a hang in the error handler
-Date: Fri, 23 May 2025 13:14:01 -0700
-Message-ID: <20250523201409.1676055-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.49.0.1204.g71687c7c1d-goog
+	linux-kernel@vger.kernel.org,
+	mrigendrachaubey <mrigendra.chaubey@gmail.com>
+Subject: [PATCH] scsi: scsi_devinfo: Fix typo in comment
+Date: Sat, 24 May 2025 09:25:16 +0530
+Message-Id: <20250524035516.27341-1-mrigendra.chaubey@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-From: Sanjeev Yadav <sanjeev.y@mediatek.com>
+This patch corrects a minor typo in a comment within scsi_devinfo.c,
+replacing "compatibile" with the correct spelling "compatible".
 
-ufshcd_err_handling_prepare() calls ufshcd_rpm_get_sync(). The latter
-function can only succeed if UFSHCD_EH_IN_PROGRESS is not set because
-resuming involves submitting a SCSI command and ufshcd_queuecommand()
-returns SCSI_MLQUEUE_HOST_BUSY if UFSHCD_EH_IN_PROGRESS is set. Fix
-this hang by setting UFSHCD_EH_IN_PROGRESS after
-ufshcd_rpm_get_sync() has been called instead of before.
-
-Backtrace:
-__switch_to+0x174/0x338
-__schedule+0x600/0x9e4
-schedule+0x7c/0xe8
-schedule_timeout+0xa4/0x1c8
-io_schedule_timeout+0x48/0x70
-wait_for_common_io+0xa8/0x160 //waiting on START_STOP
-wait_for_completion_io_timeout+0x10/0x20
-blk_execute_rq+0xe4/0x1e4
-scsi_execute_cmd+0x108/0x244
-ufshcd_set_dev_pwr_mode+0xe8/0x250
-__ufshcd_wl_resume+0x94/0x354
-ufshcd_wl_runtime_resume+0x3c/0x174
-scsi_runtime_resume+0x64/0xa4
-rpm_resume+0x15c/0xa1c
-__pm_runtime_resume+0x4c/0x90 // Runtime resume ongoing
-ufshcd_err_handler+0x1a0/0xd08
-process_one_work+0x174/0x808
-worker_thread+0x15c/0x490
-kthread+0xf4/0x1ec
-ret_from_fork+0x10/0x20
-
-Signed-off-by: Sanjeev Yadav <sanjeev.y@mediatek.com>
-[ bvanassche: rewrote patch description ]
-Fixes: 62694735ca95 ("[SCSI] ufs: Add runtime PM support for UFS host con=
-troller driver")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: mrigendrachaubey <mrigendra.chaubey@gmail.com>
 ---
- drivers/ufs/core/ufshcd.c | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+ drivers/scsi/scsi_devinfo.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 34a499b19480..b43dd1f88fbc 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6530,9 +6530,14 @@ static void ufshcd_err_handler(struct ufs_hba *hba=
-)
- 		up(&hba->host_sem);
- 		return;
- 	}
--	ufshcd_set_eh_in_progress(hba);
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
- 	ufshcd_err_handling_prepare(hba);
-+
-+	spin_lock_irqsave(hba->host->host_lock, flags);
-+	ufshcd_set_eh_in_progress(hba);
-+	spin_unlock_irqrestore(hba->host->host_lock, flags);
-+
- 	/* Complete requests that have door-bell cleared by h/w */
- 	ufshcd_complete_requests(hba, false);
- 	spin_lock_irqsave(hba->host->host_lock, flags);
+diff --git a/drivers/scsi/scsi_devinfo.c b/drivers/scsi/scsi_devinfo.c
+index 90f1393a23f8..3772c3bca5fe 100644
+--- a/drivers/scsi/scsi_devinfo.c
++++ b/drivers/scsi/scsi_devinfo.c
+@@ -863,7 +863,7 @@ int __init scsi_init_devinfo(void)
+ 		goto out;
+ 
+ 	for (i = 0; scsi_static_device_list[i].vendor; i++) {
+-		error = scsi_dev_info_list_add(1 /* compatibile */,
++		error = scsi_dev_info_list_add(1 /* compatible */,
+ 				scsi_static_device_list[i].vendor,
+ 				scsi_static_device_list[i].model,
+ 				NULL,
+-- 
+2.34.1
+
