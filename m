@@ -1,204 +1,227 @@
-Received: from mail-oi1-f171.google.com (mail-oi1-f171.google.com [209.85.167.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5D6319FA8D
-	for <linux-scsi@vger.kernel.org>; Mon, 26 May 2025 11:28:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.171
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748258897; cv=none; b=Ldo7PZHTxcTL6OF917HmbDfe/5Ef0iApNOmCgHlDU0s6odcxDM9NpwqfH7WbpkqHTlKBWkxwN3nFwMWztMXA3Y3wS4kbtUtfRrj5X/pVY1pWBoGGHI6/nm1z4fQzCGcuvtSmV8v56oaCCM9yLwpljuoGFQr6IOvd2sQUir/Dgzo=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748258897; c=relaxed/simple;
-	bh=fMGRF4QbYDU1RPpkGST8PpeVk5yZEUtNI4SAPFhJliQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=iwkgAzqlTxt1p+hj7ffyuBMtcaIXUyz6syLxK+LLAYFLsBTu8EH3KHfhed8KiXBj4BlazCBW0sQkz5Hswm4gzX4diWlYKiEeqeRuc/UVANw8MebWfd9TBlxUw2PzXyho21IKtu9BrRM+btXCCZlEWVGm/vZr/v12O/CxIotsfPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=cQRqaaIu; arc=none smtp.client-ip=209.85.167.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4F2528EB
+	for <linux-scsi@vger.kernel.org>; Mon, 26 May 2025 13:21:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=60.244.123.138
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1748265681; cv=fail; b=Uikplb64fFKtRnma3ZJJE7yCYrDwaV4QkwRN6lIlI7fUHwrlJl6e1D4X7kqdA/8KDj2EEoVRbQNKpseNb0gfWHk+9FArd5E/4OJp+UDAx78MGHLjDkNV/ITInGW2lsTshX27X7SoGM2Go1KznCdy33gkhD+c5Pp80X8E79Pqn0U=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1748265681; c=relaxed/simple;
+	bh=PTXXHTrAQFDHJMJK9a5zez2QB8ug+8K2U3qrUy24+mE=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=CHPZXj6T7y6dAWuisFh6fCBbemOOXtxeMDH2BQxOIvQauEyrIT7/HKcNE07jXTYlm+zA/VFnopP0LsDnO1E6fUkb7mhBR3QSAdVlTFTdg4Isyw+iHWDgUAh6VqZvEzJLnmD0UZ4CaM5iDsFEVZz5Ur6+E6EbH48/4XSRji3P/yY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=kioh1/+h; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=bCgm60Nc; arc=fail smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="cQRqaaIu"
-Received: by mail-oi1-f171.google.com with SMTP id 5614622812f47-3feaedb531dso290463b6e.3
-        for <linux-scsi@vger.kernel.org>; Mon, 26 May 2025 04:28:15 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="kioh1/+h";
+	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="bCgm60Nc"
+X-UUID: 4ce5f02c3a3411f0813e4fe1310efc19-20250526
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=PTXXHTrAQFDHJMJK9a5zez2QB8ug+8K2U3qrUy24+mE=;
+	b=kioh1/+hkjsOl1Xy8VMUwfBXpA7OltPWaLPoAunmj+wPlXEXc2h6EcyApbiFJ/qrpN0mY2r2MljBSTpy37w4ghUW0c7ZE0eRndEZt+km0OznTVtPkYEl3fvQ/1uUMgz+rySYEaINU3oqmXLmsHiZAMz2DhspghHhVEXzlyCOu18=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.2.1,REQID:874d93ca-78d4-460d-bc1d-f1cc0f909993,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:0ef645f,CLOUDID:a630fd57-abad-4ac2-9923-3af0a8a9a079,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111,TC:nil,Conte
+	nt:0|50,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,
+	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0,NGT
+X-CID-BAS: 0,NGT,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-UUID: 4ce5f02c3a3411f0813e4fe1310efc19-20250526
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 564863336; Mon, 26 May 2025 21:21:15 +0800
+Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
+ MTKMBS14N1.mediatek.inc (172.21.101.75) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.39; Mon, 26 May 2025 21:21:12 +0800
+Received: from TYDPR03CU002.outbound.protection.outlook.com (172.21.101.237)
+ by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Mon, 26 May 2025 21:21:12 +0800
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=pK/9dA0HwcA7qpiC8I/Mpf4P2VViE8Lwv5SK8wJ9zskToeeXleKLtk5w1jk04Ur3XHvRiRlyA2GqKZ7FgHOZLSQ4VhuwJxJ8OWgb3h/XH39R+0d0HDxdnxKxmx4bq0V/GTYsQZIouk8w1f8GqR3X7hEhdS9NFoDjPovJvx+0jPFbnYqSbrflzYu+s6318bt41wxwOcUo8/e0pCEK1p4jpDWfNsPUbggnap2AKzoQGRN3eE3rkxipuzpY4Lc1Ts4gUzn5N6JITmcWCTlM7QG7175Kauhckv2RWR4c5TEah8Ql2z7wKtZpjMT8t51ANz+s+eokIVoxgdiZZsy0cMRYDA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PTXXHTrAQFDHJMJK9a5zez2QB8ug+8K2U3qrUy24+mE=;
+ b=mT97HM4c1kYPIZzmLtiQbgNcMBsMJjvSfSoI3j6Eo4Trl1vgP7p1HXZdVtxt79k/sHx1mpKLbM8ht4PMv/sm9RR7BlhfesCHPl8Ai9IfoDhyE+wUU2ht26JmpiBK+mVESMHUwF3OmPEpM8PbVmezEiGINOh1tAQQLQUHavzUkNIsx/SRMhiL6DUETtqBbbscmBQl4+VczYEIKhM86u2+1DfXxjbR5tX4Cu7ErGc0RYxhhZpOdeZO0WsPb5UrVaCIFruz7cAsvFZ9uPoyA5Xe6Og4NKLfstjs+gPC+fUXoi7ygIAPcxWjNZvrRy2S6aTpQaRTCYLYYDYbxxiE+e/JIg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
+ dkim=pass header.d=mediatek.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=bytedance.com; s=google; t=1748258895; x=1748863695; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=V1W+rRg+qB6E3PP3RlffazXHAJY+3BhmSu21vDM0uEA=;
-        b=cQRqaaIuVnaLW2zXqqKC3HIFS/WWYNtK5+wQhNfnvS+OX8sF1g9KcK1NUEmPwG4Tq/
-         d89xN1BvSVAGBHcbXuWcipAeZCISga1Jm0mnr+OlFmkjqFjJCOeuYaevfJzuw+vWuh0M
-         DxAAv4Kxh0aQjGLJOKYmLmlTfFBpHoKhupOlUsve5Op8ghRwL3L4N7h9xn0FiFaHyPg1
-         3ExoFKDg/7NWNF/AAp4tN8xGD5NKqueBR1uapajR3ZniakGvXhqqDYUPboGF4Gp9zBxu
-         PkHSQxyeVmG/CcjOjIW/Vj3DCM186MW+yBC9VwknAlwJ9MqobZmXdObvr4XCQJk89qa5
-         KiRA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1748258895; x=1748863695;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=V1W+rRg+qB6E3PP3RlffazXHAJY+3BhmSu21vDM0uEA=;
-        b=GfDT/qR6imbX2FkgdeV+5sboqLVtULFZxq9U2WkYim87w/qudQHQSgWLuniQnjKnUn
-         JT9K999ePI0sNI7tya5YQqaumWNHY8MfWQP05g3VxwkWw1uTv2W2SPW0vXmZxQuiXVLT
-         xOaKm96bPJMdtFaG4ivGfwf+GIh0Ecs5EK3WqigCzMhNAkQEHHqTUGA5hu+a4zFugdJg
-         hS/cfGMid7EMVQhgNZTDMf/Nd6K5oCLo/+F23jEc8YXjmDvrINvJ9QDn7g/DhHZI4epS
-         LV0gvOroJfzE1P6kwf2rQO7Vceb0VGGM8m3TmojPVyHv5MQ1+KEbnA+iw3eNQ6cFkhwZ
-         HFLg==
-X-Forwarded-Encrypted: i=1; AJvYcCVi/oRz/p2tlgcGO3am2dlCgaECvExx4kg2C0fvVH4OyodF//9c2mnijJ6iyeD868qlGhyVRZ6S0J7R@vger.kernel.org
-X-Gm-Message-State: AOJu0YxKJxNbApu0wygp4wj1LjcZ0VoR4qZujJtpJ1xYDWEzz1CPTNuf
-	HJSd3mcK8IFKuj6pyJGgzvbOeAYDmAysildkug80FH4+MEZptQvvAGmeBV8eqo4OysbC9Rtjamw
-	pYPWGdeR4bzjhwFPzsLSxu0NLXWbJ/eVp0yYI2G/JRQ==
-X-Gm-Gg: ASbGnctbb//iEGhS36IN8QomLbJg5ZT8HlH5vh9PyMqOMeBJBs1/r1UbAOR2IQwE8EJ
-	m8MNMN04STIUv+xOeOGsnOD+Qt6Y7j0wyqTzlyrfWwzq3Vv/XCzFhhKZ0On7O96V64E5SJlLVJU
-	Qd8DIy2SUD+mhRE7gi57+dRXc+ObIgFMpsAW+RmIIgEUeJ
-X-Google-Smtp-Source: AGHT+IF+XGb+RC9whoUMyRPJpJA3/K8NnIsOpwzmdZhF+QP/Z2mlIwOUMsIJaLuxnb800CCFZdKYSuCm1ofFRmWpVlo=
-X-Received: by 2002:a05:6871:e70c:b0:29f:f1cc:12a5 with SMTP id
- 586e51a60fabf-2e862057547mr5015366fac.31.1748258894516; Mon, 26 May 2025
- 04:28:14 -0700 (PDT)
+ d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PTXXHTrAQFDHJMJK9a5zez2QB8ug+8K2U3qrUy24+mE=;
+ b=bCgm60Nc8z5zjhcjUbvycLDvy5IJ8otQ1xcfQeB4X23YCY+WXUta76AeMrdt26AjQc1v26+aW3ETtGgDzOo4F3TpuPEAGGFdHXc8nkkTQYTepOK9glFPBsvdeyMuJ4xVe8VhjPzX7g1iJjpuuUoyrNpxfEBoA6EGd5KcSLctmUo=
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
+ by JH0PR03MB7975.apcprd03.prod.outlook.com (2603:1096:990:3f::6) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8769.24; Mon, 26 May
+ 2025 13:21:11 +0000
+Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::3945:7dbc:62bd:c31c]) by PSAPR03MB5605.apcprd03.prod.outlook.com
+ ([fe80::3945:7dbc:62bd:c31c%6]) with mapi id 15.20.8769.022; Mon, 26 May 2025
+ 13:21:10 +0000
+From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
+To: "bvanassche@acm.org" <bvanassche@acm.org>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "avri.altman@wdc.com" <avri.altman@wdc.com>, "jejb@linux.ibm.com"
+	<jejb@linux.ibm.com>, Sanjeev Y <Sanjeev.Y@mediatek.com>,
+	"santoshsy@gmail.com" <santoshsy@gmail.com>, "quic_nguyenb@quicinc.com"
+	<quic_nguyenb@quicinc.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>, "manivannan.sadhasivam@linaro.org"
+	<manivannan.sadhasivam@linaro.org>, "matthias.bgg@gmail.com"
+	<matthias.bgg@gmail.com>, "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: core: ufs: Fix a hang in the error handler
+Thread-Topic: [PATCH] scsi: core: ufs: Fix a hang in the error handler
+Thread-Index: AQHbzB9auVPXGDRIzkKd3VohNkQZa7Pk6deA
+Date: Mon, 26 May 2025 13:21:10 +0000
+Message-ID: <2ab0ae98fd101d893d4f20112771cdb623fbca67.camel@mediatek.com>
+References: <20250523201409.1676055-1-bvanassche@acm.org>
+In-Reply-To: <20250523201409.1676055-1-bvanassche@acm.org>
+Accept-Language: zh-TW, en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=mediatek.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|JH0PR03MB7975:EE_
+x-ms-office365-filtering-correlation-id: 30131a4f-afd7-4b81-e653-08dd9c582e45
+x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014|38070700018;
+x-microsoft-antispam-message-info: =?utf-8?B?RUNLMldDRmhJbTVTckJNUDlCOVRINEQrbFgzQkxobEl4VTVrSy9uc1ZQYklL?=
+ =?utf-8?B?WDVpNXd2bUt2amtKaE1MdDkyRmEveW1OR0J0dDJZZlBIMFc1ZDgrVjVmZmda?=
+ =?utf-8?B?Z05xZUJsb21WQllYOUJ5SW9sZFFVTWRRWWhzRGdXZzdQdGE3aDJYdktCUDNH?=
+ =?utf-8?B?dUpydkl1QXVvQm0vNENJak1VR0pSOVhjakhOdzBCQ2ZEVnVrQXhrdlEwSm42?=
+ =?utf-8?B?OTQyR0RPMGkxTW1ncGVJZmV1VE5GQ05TNHQ3dHg2empVZ0pJeDU1TW4zOUVv?=
+ =?utf-8?B?UzgrUFRYQlFXMUM1bjNoU2pBNWFXRFBKMG1zcEtnMkxkd2FhTjlFWHM4dk94?=
+ =?utf-8?B?TFhnRGhoRDJJN0FGZm5yWm01cGtRVXFCV1cwSzBZaFZvM1ZDNXVzZlhyVE52?=
+ =?utf-8?B?UlJIcUxlRitCQ210NkhYSnduVXEwSG94RWJaSmVZaFNIdTlLTzhveWdWaFZB?=
+ =?utf-8?B?czhnS2lVVjhMSjVURjFmWTlHeUpVZ0I3eVBRVnBQaXBnUGlGTGJ1QTdPT09N?=
+ =?utf-8?B?NUh2Tm5PUHRmWDRneXlYT3VGdlRmRkdhOVIvQ3F1cDhmVjVGMUd3MnVsejZz?=
+ =?utf-8?B?VXNjSHgwbFZtaHdEWXE3ekdIMkppd3FaNi9YY2txQWJobHQzb2Y1U01NS2dt?=
+ =?utf-8?B?SXpLZnNPMmczMmppa21yV3kzMjBKTTFESE1LcnRSeDJJa1dDNjVIcm53WGN4?=
+ =?utf-8?B?MlljMXR5ZHBTWk56blY1ajYvd29jQ1d3NHhqSjFQUWpsTHNDeXBuTnpLSmVN?=
+ =?utf-8?B?T1lqaUZWd1NLc3hKU0d5Kzljb0JpYTdjamNkYlJaalhrQkRmRnVLalRYYVZX?=
+ =?utf-8?B?VEZWSis3SjlDQVRvcGRqazRBaXJ6SU5va3MzSVlJckhQOHlpZlBrZmJqSlhC?=
+ =?utf-8?B?ZDljWUtSeHBGay91V1lmSXlsY0NmT2FCRy9UeHVrT3lzUjJEWWxWNFdnNlFT?=
+ =?utf-8?B?UkE1SmJCRWpUWDZVdWFsK0NSdGdZZkxOZ1ZZRmQzejhscXJLdkR3dHJ0bXNi?=
+ =?utf-8?B?M3hjQ3NWR3RvcEZvY0c0RDhYbDlZK1dlbkVhL0F2c0RENWkzMzdQYzhTSkdn?=
+ =?utf-8?B?NitkYUxPRmFCNnA3MzM0RTJvZ0htTG8vdlp3dnIrcDRlTFJ2VUF2MzB0a2FX?=
+ =?utf-8?B?UWhDK05WbjFGTnZPZ1hOUGN6c2tHT2RQYVp3N0lUNjJENVBCd1lSb24zQVo4?=
+ =?utf-8?B?WkdVNS85cGlZQ09NWlpRNFhwMVVXUWlHTm45N3R0bmxXUmkwbU5qZm5VZFIv?=
+ =?utf-8?B?bGlmc0lQU1AxVmkxMjJ1di8rbkhHRWM5OWNLeXhwYXZFUjg4RW9CR2pqUVhG?=
+ =?utf-8?B?T1VHWFdFTDQ1Tks3eG1SU3hrY0tKTXoxKzdPRldSMm80ckM5aUFEbmhURlVF?=
+ =?utf-8?B?dEd1MUxTR1ZReGJGZFk3U3pZNUgyVi9hMlgrV0JscmpKN2tDeUNMZU55cTQw?=
+ =?utf-8?B?SXZLL0FJL2s4bHF6blBDOWxOcERCQnozMUErRWdJaGp1ekViUkl5MU02TFNt?=
+ =?utf-8?B?OUFldGhienF6a3FiNUkvQk1uNzk5ZWNJNkEvWXdQdVdUYVNXUHF1TEswSkhx?=
+ =?utf-8?B?OHlIV0Y0cDVVdUtDcnh3WG13RmU3MENEdjRVd1FxamFmWXVUT2FFWEZTZFJm?=
+ =?utf-8?B?M3N3Q0tINVNhalFCNitscjlhVVdKbStidnQ0UkQxTERkenZTVGRjNml5dDVi?=
+ =?utf-8?B?QVFYR3N3M2hYMlQ3VjVJOU9JeURUclNtWllqRDAzQXRBQW1seGZLQUUxcmNU?=
+ =?utf-8?B?N3lPUzFEWkxXUkJvSm9lR0pzMGlkN2gxYjJkSWZhYWNibUxsQ3RSNHlqSnU3?=
+ =?utf-8?B?MDRDNDUwdlRZbU50QWpNNm5QSzRrb0p1cXdIRXhaNC8rbGZ0eFRwQmY4TXlX?=
+ =?utf-8?B?NHBXaFdzQ25zV2ZyYzcvSS9TWStNMXZiWWtvYmx1UWhvQklmanNZQjZCaFdW?=
+ =?utf-8?B?c2NiWmV2OE54aXFzNDZlS0YwemJRRGJhanUxWDA4Qk1xUHJURDJOV3Jwdyts?=
+ =?utf-8?B?SlZ2ZXo1V1VnPT0=?=
+x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0: =?utf-8?B?SFQ0L3ZNQWk2SkI1SHJ2anRsL00wd1RXazI1TW9QNVhuTjRmOFVlbDZzR00v?=
+ =?utf-8?B?dlN2dkVXUVJtY1QxMlJyR2FHKzVveHVCOE9vNFJmK3Rvck41Qy90V1pVWVZG?=
+ =?utf-8?B?aXZPcCtoMmpSZnErUjh0R3RQN0NwaUFxejA4Z1R1QlRNTzBEWHV4SGJjY0lh?=
+ =?utf-8?B?Qk0rb3FaNk1NMFVubSs5UklKeXl4RVdLMnU3a2wvUkF2Ni90ZTFoTWlQcG01?=
+ =?utf-8?B?dUlkN0RlOXh3Rk9MS1Qrdlc4c1BMSk53dmMyRHlHUmFNMWh4M0xhVU55YXpD?=
+ =?utf-8?B?M2hnamJmVHp2ckdPakNtWHgrdDR0Z3F4UnVzV1p2UVdReUpINXVkbFRHL2Yw?=
+ =?utf-8?B?WTRHdFlhZTJEeng4elhmU2k1OGFyM3FvaG1kckdoOHNkL0NvQVViek5iYll3?=
+ =?utf-8?B?Mmc0czZEQ3lScExrNUs1T0d1SlRUbE5kWFZqY1hMRU1LZTdyTUtVME9RbDNy?=
+ =?utf-8?B?MUppcXpzQzY1cFhPZmNVdjU2bVBkMkRaUEJpSkVEajRId0hyd1ZXcjIrSHk2?=
+ =?utf-8?B?aTJpbGl4OW1XQVFjQXpuSzVBdlVJTWlTRkVjczRDQ3A0VDlFREtvblRrOEsx?=
+ =?utf-8?B?SFdDWUxLN1REL3VvVERVSUlYMGxianhESDhrUXBxRDhHbUc4SUdIUk5HMHdH?=
+ =?utf-8?B?QThuUUMvQnN1VnZxUW1pdnljUEhIU1Y5NU1lYXE3b3dvTHJpc1JCSmh4N29k?=
+ =?utf-8?B?WDdjVWQvdVlIdE1RS1NYZ2JnRURtb1FiMi8rcnk2czBVQ3pxSlR2TXZYMVVX?=
+ =?utf-8?B?emFTUXdUNlR0bUZmU2piZ1R2RHFYSmVJZGVYSzdzTmRDSXRYcWJuSVRMZk5h?=
+ =?utf-8?B?QU1LNjM4eFZlT0RIVjdmaU9oKzZLakhaOXkvMGhWYUszQjBqYytRR3RqL3I0?=
+ =?utf-8?B?bjhXQ3prUDhZcnVEWVZ4VWtYb09UNFlXREU5WGxUcDJjd1g4RlVOYVV5VGta?=
+ =?utf-8?B?ZzFXMUd5SDg4ODZ5U2J1WGZZMUoybE5WMnd3WGdYTGZiTGlYanVTWll6YzJa?=
+ =?utf-8?B?SVhWTERDSzU5TlB6QW5RNkgvb2prL1BaR0FsNDFld2hidDdSMWYzQlUxc2JD?=
+ =?utf-8?B?SUt2NDVITDYwaFZ1a2ZqYWlDbUM4REtHcDJwV3l5Qm9JUEVYdXpWdWtQbXZD?=
+ =?utf-8?B?bmRpZ1lzVlQxaUI3N3FKRzdaQUxYLzhiM1hxdzFqOTk5Q29admVnR2ZTZlNM?=
+ =?utf-8?B?cHdab2pxQ0JyVm9ncTQyU29uQ3c1K0d4NlBESjBTaHBIQ2ZtSUlzbGtRc1p1?=
+ =?utf-8?B?d3Yxak13VjZ5OTk4dnJZNXZ4NDZlSTNoTm5aNmFXWDM3dFVWWXcxTHdPR2lK?=
+ =?utf-8?B?N2p1Q3N3RW5RVUMwamd2Ujg3OVZVanRKOG9zVHVBVk9LK0FOZnNyTmlmako0?=
+ =?utf-8?B?eUVWUGNhcmhnWWtrczJZVE10VGxnQmRFRk9DTUxyVCsyenl3TEtMWE5rbkRW?=
+ =?utf-8?B?bVVwcXNtWnpHcWljd3VNQnZrQTZvNmJ2T1lkZXJOZVI2OFZQeHpNTWMxWVJE?=
+ =?utf-8?B?d3RKUm00YkNkMWlQVzBWdjIwZGhCS1JzUi9RcG82VStWVnU3aUVBSUt4aTQy?=
+ =?utf-8?B?SjhqbndtYjM3d0FQcjBVdXM1Q1NFQVVUMWZPREFvdGZPNmV3ZmRqUVI5Rmxj?=
+ =?utf-8?B?cDlNWmEzUDRtaVBhVUdYbllHY015ZVdTMWRIVG1IdjhsVk1RNlRFaFZEVzJJ?=
+ =?utf-8?B?NVd2WWcvVFQ1UXhSak5RT05oN25TTDVmOE0za3dzYytSMGdFMkNmTUt2RVVW?=
+ =?utf-8?B?V3N0N3dFM1pldTF2T2Z6RXNsWmFpN09pSS9jWDNuTHFFYi9ucldpbXppRkVX?=
+ =?utf-8?B?aGFZL3V2QU1zVVhwRUJGY0c1dzQyM0xQeXdPNGRRbUc3VkQ0SHdQVW9XMzhp?=
+ =?utf-8?B?emdVbW5ibzhFcUQ1UlQ2V2NyczhHNHNNMHFrdDczRG5BTk1kaFJEZjlieDdD?=
+ =?utf-8?B?SzVkWENCdnVoSWtnVWpzNmFOU0QvTGV4ZlVkczVWZFR6YXZ0YS9maHNZRDNv?=
+ =?utf-8?B?cDBOYVpQRE9XNFFicDdsNyttSmZvWEp0cDZ4cTJVcng3VHduSjZkSjhBcnFB?=
+ =?utf-8?B?NU9NckhvUFRBYVpOOHVack1INHJ5NUtYL0xnSTFEMUxsWnI2eld1NVIwSHpu?=
+ =?utf-8?B?T2ZUZkJWSjNVcXM2Tzlaakc4cGxkVGRLZWZJSVZzdmlxNHpLQSs2RmpLbXN6?=
+ =?utf-8?B?UWc9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-ID: <8FE88A2A44557047AB0AA300A279A55A@apcprd03.prod.outlook.com>
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250526112203.75874-1-changfengnan@bytedance.com>
-In-Reply-To: <20250526112203.75874-1-changfengnan@bytedance.com>
-From: Fengnan Chang <changfengnan@bytedance.com>
-Date: Mon, 26 May 2025 19:28:03 +0800
-X-Gm-Features: AX0GCFsVM1msxbokKO7UGkahRhxFlcELb6lFQ74O9WnfapfGrxVBt_2QG77KLOQ
-Message-ID: <CAPFOzZtUqYWGc2VXtFERXNT33zAKviiLT6QXg7U2LNas7pe4qQ@mail.gmail.com>
-Subject: Re: [RFC PATCH] scsi: mpi3mr: add remove host in mpi3mr_shutdown
-To: sathya.prakash@broadcom.com, kashyap.desai@broadcom.com, 
-	sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
-	Narayan Kittur <narayan.kittur@broadcom.com>, Jens Axboe <axboe@kernel.dk>
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	linux-block@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 30131a4f-afd7-4b81-e653-08dd9c582e45
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 May 2025 13:21:10.3745
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: zaiipiDaHnGC4Ey3H96ZXVWwRYarBhSCXeharNhdZv7l91ZNh1fcXZQllkJAxlhSEEdVt5d3+uxI3q76JuvsnQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: JH0PR03MB7975
 
-I discussed this with Narayan and we had some disagreements.
-Narayan said he had not encountered this problem on other OS distributions.
-I am not sure if this problem is related to the OS.
-IMO, during reboot, io may still be sent to the driver unless the driver
-calls the block layer interface to stop or destroy the request queue.
-During the reboot process, the OS or other modules of the kernel cannot
-prevent io from being sent to the driver, and the driver needs to handle
-this situation.
-So I sent a CC to block layer email list, wanting to confirm whether my
-opinion was correct.
-
-Fengnan Chang <changfengnan@bytedance.com> =E4=BA=8E2025=E5=B9=B45=E6=9C=88=
-26=E6=97=A5=E5=91=A8=E4=B8=80 19:22=E5=86=99=E9=81=93=EF=BC=9A
->
-> When we do reboot test, we found the following issue:
-> [ 1524.234267] sd 0:0:2:0: [sdc] Synchronizing SCSI cache
-> [ 1524.234491] sd 0:0:1:0: [sdb] Synchronizing SCSI cache
-> [ 1524.234726] sd 0:0:0:0: [sda] Synchronizing SCSI cache
-> [ 1524.235568] mpi3mr0: issuing message unit reset(MUR)
-> [ 1524.545409] mpi3mr0: ioc_status/ioc_config after successful message un=
-it reset is (0x10)/(0x470000)
-> [ 1524.753407] mpi3mr0: ioc_status/ioc_config after successful shutdown i=
-s (0x8)/(0x472000)
-> [ 1526.002436] BUG: unable to handle page fault for address: 000000000000=
-1090
-> [ 1526.002454] #PF: supervisor write access in kernel mode
-> [ 1526.002463] #PF: error_code(0x0002) - not-present page
-> [ 1526.002470] PGD 0 P4D 0
-> [ 1526.002476] Oops: 0002 [#1] SMP NOPTI
-> [ 1526.002483] CPU: 17 PID: 2800 Comm: kworker/17:1H Kdump: loaded Tainte=
-d: G S         OE     5.15.152-amd64 #5.15.152
-> [ 1526.002497] Hardware name: ByteDance ByteDance System/ByteDance System
-> [ 1526.002507] Workqueue: kblockd blk_mq_requeue_work
-> [ 1526.002517] RIP: 0010:mpi3mr_op_request_post+0x1bf/0x290 [mpi3mr]
-> [ 1526.002531] Code: ca f0 0f c1 42 2c 83 c0 01 83 f8 08 7f 3d f0 41 ff 8=
-6 dc 1e 00 00 49 8b 86 80 00 00 00 48 8d 94 d8 08 10 00 00 41 0f b7 47 02 <=
-89> 02 31 db 48 8b 34 24 4c 89 e7 e8 51 85 8e c5 48 83 c4 18 89 d8
-> [ 1526.002551] RSP: 0018:ffff9a6244083bd8 EFLAGS: 00010003
-> [ 1526.002558] RAX: 0000000000000168 RBX: 0000000000000011 RCX: 000000000=
-0000440
-> [ 1526.002567] RDX: 0000000000001090 RSI: 0000000000000000 RDI: ffff8af52=
-8c4e400
-> [ 1526.002576] RBP: 0000000000000080 R08: 000000000000001b R09: ffff8af52=
-8c4e380
-> [ 1526.002584] R10: 0000000000000000 R11: 0000000000000168 R12: ffff8af54=
-31c6560
-> [ 1526.002593] R13: 0000000000000167 R14: ffff8af51aed87f0 R15: ffff8af54=
-31c6550
-> [ 1526.002602] FS:  0000000000000000(0000) GS:ffff8b726fe40000(0000) knlG=
-S:0000000000000000
-> [ 1526.002611] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-> [ 1526.002619] CR2: 0000000000001090 CR3: 0000000255a04006 CR4: 000000000=
-0770ee0
-> [ 1526.002628] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 000000000=
-0000000
-> [ 1526.002637] DR3: 0000000000000000 DR6: 00000000fffe07f0 DR7: 000000000=
-0000400
-> [ 1526.002646] PKRU: 55555554
-> [ 1526.002650] Call Trace:
-> [ 1526.002655]  <TASK>
-> [ 1526.002660]  ? __die_body+0x1a/0x60
-> [ 1526.002668]  ? page_fault_oops+0x131/0x270
-> [ 1526.002675]  ? update_group_capacity+0x25/0x1b0
-> [ 1526.002684]  ? exc_page_fault+0x79/0x160
-> [ 1526.002692]  ? asm_exc_page_fault+0x22/0x30
-> [ 1526.002700]  ? mpi3mr_op_request_post+0x1bf/0x290 [mpi3mr]
-> [ 1526.002711]  ? mpi3mr_op_request_post+0xe2/0x290 [mpi3mr]
-> [ 1526.002721]  mpi3mr_qcmd+0x43b/0xc10 [mpi3mr]
-> [ 1526.002730]  ? scsi_init_command+0x102/0x160 [scsi_mod]
-> [ 1526.002746]  ? ktime_get+0x3b/0xa0
-> [ 1526.002753]  scsi_queue_rq+0x375/0xa60 [scsi_mod]
-> [ 1526.002765]  blk_mq_dispatch_rq_list+0x13f/0x810
-> [ 1526.002774]  __blk_mq_sched_dispatch_requests+0xb4/0x140
-> [ 1526.002782]  blk_mq_sched_dispatch_requests+0x30/0x60
-> [ 1526.002790]  __blk_mq_run_hw_queue+0x2b/0x60
-> [ 1526.002798]  __blk_mq_delay_run_hw_queue+0x13a/0x160
-> [ 1526.002806]  blk_mq_run_hw_queues+0x45/0xc0
-> [ 1526.002813]  blk_mq_requeue_work+0x159/0x180
-> [ 1526.002819]  process_one_work+0x1ce/0x370
-> [ 1526.003004]  ? process_one_work+0x370/0x370
-> [ 1526.003183]  worker_thread+0x30/0x380
-> [ 1526.003359]  ? process_one_work+0x370/0x370
-> [ 1526.003573]  kthread+0xc0/0xe0
-> [ 1526.003794]  ? __kthread_cancel_work+0x40/0x40
-> [ 1526.004015]  ret_from_fork+0x1f/0x30
->
-> After my analysis, I think it is like this:
-> When the machine reboots, the shutdown function of all devices will
-> be called.
-> In mpi3mr_shutdown, the mpi3mr driver releases related resources when
-> shutting down the device, but does not quiesce or destroy the request_que=
-ue
-> in block layer, which leads to the possibility that io may still be issue=
-d
-> to mpi3mr driver, and when the mpi3mr driver try to processes io, it's
-> possible to access the released resources.
-> So add remove scsi&sas host in mpi3mr_shutdown to destroy request_queue.
->
-> BTW, the above call trace log is reproduced on Debian+ 5.15.152 kernel
-> using the mpi3mr 8.12 driver version, but this issue still exist in the
-> upstream version.
->
-> Signed-off-by: Fengnan Chang <changfengnan@bytedance.com>
-> ---
->  drivers/scsi/mpi3mr/mpi3mr_os.c | 5 +++++
->  1 file changed, 5 insertions(+)
->
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr=
-_os.c
-> index c186b892150f..443430d51603 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-> +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-> @@ -5603,6 +5603,11 @@ static void mpi3mr_shutdown(struct pci_dev *pdev)
->         if (wq)
->                 destroy_workqueue(wq);
->
-> +       if (mrioc->sas_transport_enabled)
-> +               sas_remove_host(shost);
-> +       else
-> +               scsi_remove_host(shost);
-> +
->         mpi3mr_stop_watchdog(mrioc);
->         mpi3mr_cleanup_ioc(mrioc);
->         mpi3mr_cleanup_resources(mrioc);
-> --
-> 2.39.2 (Apple Git-143)
->
+T24gRnJpLCAyMDI1LTA1LTIzIGF0IDEzOjE0IC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
+DQo+IA0KPiBFeHRlcm5hbCBlbWFpbCA6IFBsZWFzZSBkbyBub3QgY2xpY2sgbGlua3Mgb3Igb3Bl
+biBhdHRhY2htZW50cyB1bnRpbA0KPiB5b3UgaGF2ZSB2ZXJpZmllZCB0aGUgc2VuZGVyIG9yIHRo
+ZSBjb250ZW50Lg0KPiANCj4gDQo+IEZyb206IFNhbmplZXYgWWFkYXYgPHNhbmplZXYueUBtZWRp
+YXRlay5jb20+DQo+IA0KPiB1ZnNoY2RfZXJyX2hhbmRsaW5nX3ByZXBhcmUoKSBjYWxscyB1ZnNo
+Y2RfcnBtX2dldF9zeW5jKCkuIFRoZSBsYXR0ZXINCj4gZnVuY3Rpb24gY2FuIG9ubHkgc3VjY2Vl
+ZCBpZiBVRlNIQ0RfRUhfSU5fUFJPR1JFU1MgaXMgbm90IHNldCBiZWNhdXNlDQo+IHJlc3VtaW5n
+IGludm9sdmVzIHN1Ym1pdHRpbmcgYSBTQ1NJIGNvbW1hbmQgYW5kIHVmc2hjZF9xdWV1ZWNvbW1h
+bmQoKQ0KPiByZXR1cm5zIFNDU0lfTUxRVUVVRV9IT1NUX0JVU1kgaWYgVUZTSENEX0VIX0lOX1BS
+T0dSRVNTIGlzIHNldC4gRml4DQo+IHRoaXMgaGFuZyBieSBzZXR0aW5nIFVGU0hDRF9FSF9JTl9Q
+Uk9HUkVTUyBhZnRlcg0KPiB1ZnNoY2RfcnBtX2dldF9zeW5jKCkgaGFzIGJlZW4gY2FsbGVkIGlu
+c3RlYWQgb2YgYmVmb3JlLg0KPiANCj4gQmFja3RyYWNlOg0KPiBfX3N3aXRjaF90bysweDE3NC8w
+eDMzOA0KPiBfX3NjaGVkdWxlKzB4NjAwLzB4OWU0DQo+IHNjaGVkdWxlKzB4N2MvMHhlOA0KPiBz
+Y2hlZHVsZV90aW1lb3V0KzB4YTQvMHgxYzgNCj4gaW9fc2NoZWR1bGVfdGltZW91dCsweDQ4LzB4
+NzANCj4gd2FpdF9mb3JfY29tbW9uX2lvKzB4YTgvMHgxNjAgLy93YWl0aW5nIG9uIFNUQVJUX1NU
+T1ANCj4gd2FpdF9mb3JfY29tcGxldGlvbl9pb190aW1lb3V0KzB4MTAvMHgyMA0KPiBibGtfZXhl
+Y3V0ZV9ycSsweGU0LzB4MWU0DQo+IHNjc2lfZXhlY3V0ZV9jbWQrMHgxMDgvMHgyNDQNCj4gdWZz
+aGNkX3NldF9kZXZfcHdyX21vZGUrMHhlOC8weDI1MA0KPiBfX3Vmc2hjZF93bF9yZXN1bWUrMHg5
+NC8weDM1NA0KPiB1ZnNoY2Rfd2xfcnVudGltZV9yZXN1bWUrMHgzYy8weDE3NA0KPiBzY3NpX3J1
+bnRpbWVfcmVzdW1lKzB4NjQvMHhhNA0KPiBycG1fcmVzdW1lKzB4MTVjLzB4YTFjDQo+IF9fcG1f
+cnVudGltZV9yZXN1bWUrMHg0Yy8weDkwIC8vIFJ1bnRpbWUgcmVzdW1lIG9uZ29pbmcNCj4gdWZz
+aGNkX2Vycl9oYW5kbGVyKzB4MWEwLzB4ZDA4DQo+IHByb2Nlc3Nfb25lX3dvcmsrMHgxNzQvMHg4
+MDgNCj4gd29ya2VyX3RocmVhZCsweDE1Yy8weDQ5MA0KPiBrdGhyZWFkKzB4ZjQvMHgxZWMNCj4g
+cmV0X2Zyb21fZm9yaysweDEwLzB4MjANCj4gDQo+IFNpZ25lZC1vZmYtYnk6IFNhbmplZXYgWWFk
+YXYgPHNhbmplZXYueUBtZWRpYXRlay5jb20+DQo+IFsgYnZhbmFzc2NoZTogcmV3cm90ZSBwYXRj
+aCBkZXNjcmlwdGlvbiBdDQo+IEZpeGVzOiA2MjY5NDczNWNhOTUgKCJbU0NTSV0gdWZzOiBBZGQg
+cnVudGltZSBQTSBzdXBwb3J0IGZvciBVRlMgaG9zdA0KPiBjb250cm9sbGVyIGRyaXZlciIpDQo+
+IFNpZ25lZC1vZmYtYnk6IEJhcnQgVmFuIEFzc2NoZSA8YnZhbmFzc2NoZUBhY20ub3JnPg0KDQoN
+CkhpIEJhcnQsDQoNCkknbSBhIGJpdCBjdXJpb3VzIHdoeSB0aGUgdWZzaGNkX2Vycl9oYW5kbGVy
+IHdhcyB0cmlnZ2VyZWQ/DQpCZWNhdXNlIGR1cmluZyB0aGUgcnVudGltZSBzdXNwZW5kL3Jlc3Vt
+ZSBwcm9jZXNzLCBpZiB0aGVyZSANCmFyZSBhbnkgZXJyb3JzLCBpdCBzaG91bGQgdXNlIHVmc2hj
+ZF9saW5rX3JlY292ZXJ5IGRpcmVjdGx5Pw0KDQpUaGFua3MuDQpQZXRlcg0K
