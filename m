@@ -1,145 +1,125 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9B2514AD2B;
-	Tue, 27 May 2025 15:23:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88CDF27C854;
+	Tue, 27 May 2025 18:43:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748359439; cv=none; b=LE90aDqm4Bq3lx5v363ECiOimE2BduJ2osOjdddCbzOieJ9pRlpyPlr4NBo+jZ3EdaWSxkbg5VkYLl2Zride4W+Ymk77MAo+vS8geWGmQXM5ryUKHExDaazRaDgMZeg/Gw7QX9vt2Yy1Ih9KCDfKNTa21Txp/gE/B8ozWLEmbJE=
+	t=1748371392; cv=none; b=RUWDeZlQUqpCC++jbTqovwYlNKI6HMjdEpYe0pCKLNrK2kHaAtAhT7hiVB3Pdm+6OhJosNOSB2s+0KxLp5bLC015sUOPWp2CkkKUtpxEIFHuBSS66q/2RXHyuhoOXQqXp+bQP8fBDSDabkxFDNEuOk1E9Iwntvu1dyD3ToFayu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748359439; c=relaxed/simple;
-	bh=uHawQKNWyX/cJedS815p5gSoBiadOAdhl0e7BQ3THks=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=mYR3qrCCKIaJl3KUGr/5ppKCobu27K9ASD7pPh352ElAtHm8fBZBO8af7DMcEqn0+sAT3maUnXVpa/4PSkm+q8Ht4O+bHF8Cv34NUtSt2lid3nX/bQnpuHuuIKmtVSJaBZFd94Gm93RsBZ8lYz3eZa93X/IK/Ze+APbFGt5OF08=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=BvBC8bfP; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1748371392; c=relaxed/simple;
+	bh=unrEi+Z8Vcid2frmRc00TpoL+pz62h5Wsf8KIjX1MAI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=mfV8VJxNi/USAC+PEZeRUtNWnRYUO4jmF+ImjSIVibgz88fh9BeTUWJtpk9tP4U1A9FIosoix8bCpgwOY3HF8tTM5yS0BxCrsBSNSorpnIeJXBxo8oNH0BfDl7//Hbjpbr88kcZ/DmkJujm7JNlB1hv11DcmMHK5zWx/6RYhcmU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SAJg/lTs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="BvBC8bfP"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54R7itaT028239;
-	Tue, 27 May 2025 15:22:55 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	WH41sOw46uGb0O/mCSIo69Vm7oio0sgM/j+ncmuu7NA=; b=BvBC8bfPOQEZR/j7
-	+XXj7hmFjS2txjVbALo40AmFpZ81tzVhBpnPiVFH1xPSVhfSwwUS9aDVJZhsp2/0
-	vXiMIqSsUXB88DDiulFauIY6PAhhmhDCGBJtalJ8dtl8cUkg88s/sm2/q6NFcElf
-	G4SQL9sb4H2DZH7ihlmZIM9phup2jLObnJNMLt9eBl7PhIme3Ku042VBXBvusYWw
-	AsidcLMrg2QAK49B6OiX5eiAZKPXXKECx/ubqf3FgkcElj+BFATjhGe1oiSKufOQ
-	PsBKTUXG5J9AtWcbWb2FlSD5cMxqqHfufgB50A74uJ26dAuSXupJDxT9QO1Ddb4j
-	JfQwfg==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46w992hb1d-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 27 May 2025 15:22:55 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 54RFMsxm028681
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 27 May 2025 15:22:54 GMT
-Received: from [10.218.7.247] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Tue, 27 May
- 2025 08:22:49 -0700
-Message-ID: <93869cf3-de84-4f3b-b120-7126928a5ea6@quicinc.com>
-Date: Tue, 27 May 2025 20:52:47 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SAJg/lTs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1049DC4CEEA;
+	Tue, 27 May 2025 18:43:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1748371392;
+	bh=unrEi+Z8Vcid2frmRc00TpoL+pz62h5Wsf8KIjX1MAI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=SAJg/lTsHFPpMmZvVmP+0XJugy76N/WOctdJIssWWs7qNHSBbzmSYg8xkWQak4g5C
+	 LfZgHKgxVCZb8p0qamVGEV/1YiZTk2afQEafhl37cp97dLgGRdjvi7trKjD2XXdMuP
+	 LbrGzfua9UHyhqt54e4WAAnlTo1NpBqK2l+IKnh1JQUdMKF4EbO60uwu4lUOeBUiiD
+	 wKIfF3Uo87tWndWoi9LDxjhMwmt61Lxnq3QWSMVbr06JAV1rHQ9XUs10fwb75pWBr3
+	 anGW5bNZOirMCaMIcgBCgcjqJ5Vcm09HGhEIuw7KuVAzISErwpzi7uyi2a2hStymIg
+	 Mw76bx9c3WLMA==
+Date: Tue, 27 May 2025 11:43:08 -0700
+From: Kees Cook <kees@kernel.org>
+To: Paolo Abeni <pabeni@redhat.com>
+Cc: Kuniyuki Iwashima <kuniyu@amazon.com>,
+	Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+	Jason Wang <jasowang@redhat.com>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Simon Horman <horms@kernel.org>,
+	Stanislav Fomichev <sdf@fomichev.me>,
+	Cosmin Ratiu <cratiu@nvidia.com>,
+	Vladimir Oltean <vladimir.oltean@nxp.com>,
+	Florian Fainelli <florian.fainelli@broadcom.com>,
+	Kory Maincent <kory.maincent@bootlin.com>,
+	Maxim Georgiev <glipus@gmail.com>, netdev@vger.kernel.org,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+	Chaitanya Kulkarni <kch@nvidia.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Max Gurtovoy <mgurtovoy@nvidia.com>,
+	Maurizio Lombardi <mlombard@redhat.com>,
+	Dmitry Bogdanov <d.bogdanov@yadro.com>,
+	Mingzhe Zou <mingzhe.zou@easystack.cn>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	Lei Yang <leiyang@redhat.com>, Ido Schimmel <idosch@nvidia.com>,
+	Samuel Mendoza-Jonas <sam@mendozajonas.com>,
+	Paul Fertser <fercerpav@gmail.com>,
+	Alexander Aring <alex.aring@gmail.com>,
+	Stefan Schmidt <stefan@datenfreihafen.org>,
+	Miquel Raynal <miquel.raynal@bootlin.com>,
+	Hayes Wang <hayeswang@realtek.com>,
+	Douglas Anderson <dianders@chromium.org>,
+	Grant Grundler <grundler@chromium.org>,
+	Jay Vosburgh <jv@jvosburgh.net>,
+	"K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
+	Jiri Pirko <jiri@resnulli.us>,
+	Aleksander Jan Bajkowski <olek2@wp.pl>,
+	Philipp Hahn <phahn-oss@avm.de>, Eric Biggers <ebiggers@google.com>,
+	Ard Biesheuvel <ardb@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
+	Ahmed Zaki <ahmed.zaki@intel.com>,
+	Alexander Lobakin <aleksander.lobakin@intel.com>,
+	Xiao Liang <shaw.leon@gmail.com>, linux-kernel@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org, linux-wpan@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	linux-hardening@vger.kernel.org
+Subject: Re: [PATCH net-next v2 8/8] net: core: Convert
+ dev_set_mac_address_user() to use struct sockaddr_storage
+Message-ID: <202505271142.EA78EAB04@keescook>
+References: <20250521204310.it.500-kees@kernel.org>
+ <20250521204619.2301870-8-kees@kernel.org>
+ <e1429351-3c9b-40e0-b50d-de6527d0a05b@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V5 00/11] Refactor ufs phy powerup sequence
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>
-CC: <vkoul@kernel.org>, <kishon@kernel.org>,
-        <manivannan.sadhasivam@linaro.org>,
-        <James.Bottomley@hansenpartnership.com>, <bvanassche@acm.org>,
-        <andersson@kernel.org>, <neil.armstrong@linaro.org>,
-        <konrad.dybcio@oss.qualcomm.com>, <quic_rdwivedi@quicinc.com>,
-        <quic_cang@quicinc.com>, <linux-arm-msm@vger.kernel.org>,
-        <linux-phy@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>
-References: <20250515162722.6933-1-quic_nitirawa@quicinc.com>
- <yq1msb6lowo.fsf@ca-mkp.ca.oracle.com>
- <ni7kedpcz7vchztb5qrs5msdt37mfdoabtt4gdqsaiwmbxlb2a@im4wurr77z43>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <ni7kedpcz7vchztb5qrs5msdt37mfdoabtt4gdqsaiwmbxlb2a@im4wurr77z43>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTI3MDEyNyBTYWx0ZWRfX5pCPrc1zpff0
- ddINaK0caD+7H9oLrJq+xo1G13Cj9+QuLUJHQmSgyTHc/n4kwVEFi1/h+qVBCxNouy6ktD2sx2x
- 6IbVaYZPgTE1HG7mH+SoHavsgMVNtFMnG4SZZCODBrENmr/TYs0XnjcRlyWjpC0dXoyfDPNUIPN
- ZTGR2fAh69hDDhb51jn7p5K5q8MwDVNGyS0RFSnCV+CCv0jcrwzOUYhRaW2gBV6cfGq1K72o3l5
- LI6O2vG+oGOPPzKIpc5qZk+TGprNOCGLzlavI0+5APsVw5uwG91cl/iek8/Zu0x654zE+z+gwXc
- u/582/GAL5YzEr99/S9MaSTStcJ1q7eEKm6kqJGO+ij8Mk08oMsWs3ikSAI2Qote4FHJu4t7xf4
- ffniZCHTl71+ZTxqckv6AWLUqz2+k/NRZvw2BnJxTjHuX/zCqiTyJMufiqbyFYTfUbz5Xbtq
-X-Authority-Analysis: v=2.4 cv=Fes3xI+6 c=1 sm=1 tr=0 ts=6835d8cf cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=dt9VzEwgFbYA:10
- a=HGgBVA14KErkiVD9HLEA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: yiuvSsOzWlmG4o9TUWcDiMtnHK8qHTcw
-X-Proofpoint-ORIG-GUID: yiuvSsOzWlmG4o9TUWcDiMtnHK8qHTcw
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-27_07,2025-05-27_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- mlxscore=0 malwarescore=0 impostorscore=0 phishscore=0 clxscore=1015
- lowpriorityscore=0 bulkscore=0 priorityscore=1501 mlxlogscore=904 spamscore=0
- adultscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505160000
- definitions=main-2505270127
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <e1429351-3c9b-40e0-b50d-de6527d0a05b@redhat.com>
 
-
-
-On 5/21/2025 6:40 PM, Dmitry Baryshkov wrote:
-> On Tue, May 20, 2025 at 09:45:40PM -0400, Martin K. Petersen wrote:
->>
->> Hi Nitin!
->>
->>> Nitin Rawat (11):
->>>    scsi: ufs: qcom: add a new phy calibrate API call
->>>    phy: qcom-qmp-ufs: Rename qmp_ufs_enable and qmp_ufs_power_on
->>>    phy: qcom-qmp-ufs: Refactor phy_power_on and phy_calibrate callbacks
->>>    phy: qcom-qmp-ufs: Refactor UFS PHY reset
->>>    phy: qcom-qmp-ufs: Remove qmp_ufs_com_init()
->>>    phy: qcom-qmp-ufs: Rename qmp_ufs_power_off
->>>    phy: qcom-qmp-ufs: Remove qmp_ufs_exit() and Inline qmp_ufs_com_exit()
->>>    phy: qcom-qmp-ufs: refactor qmp_ufs_power_off
->>>    scsi: ufs: qcom : Refactor phy_power_on/off calls
->>>    scsi: ufs: qcom : Introduce phy_power_on/off wrapper function
->>>    scsi: ufs: qcom: Prevent calling phy_exit before phy_init
->>
->> What is your intent wrt. getting this series merged? Can the phy: and
->> scsi: patches be merged independently?
+On Tue, May 27, 2025 at 09:02:28AM +0200, Paolo Abeni wrote:
+> On 5/21/25 10:46 PM, Kees Cook wrote:
+> > diff --git a/net/core/dev_ioctl.c b/net/core/dev_ioctl.c
+> > index fff13a8b48f1..616479e71466 100644
+> > --- a/net/core/dev_ioctl.c
+> > +++ b/net/core/dev_ioctl.c
+> > @@ -572,9 +572,11 @@ static int dev_ifsioc(struct net *net, struct ifreq *ifr, void __user *data,
+> >  		return dev_set_mtu(dev, ifr->ifr_mtu);
+> >  
+> >  	case SIOCSIFHWADDR:
+> > -		if (dev->addr_len > sizeof(struct sockaddr))
+> > +		if (dev->addr_len > sizeof(ifr->ifr_hwaddr))
+> >  			return -EINVAL;
+> > -		return dev_set_mac_address_user(dev, &ifr->ifr_hwaddr, NULL);
+> > +		return dev_set_mac_address_user(dev,
+> > +						(struct sockaddr_storage *)&ifr->ifr_hwaddr,
+> > +						NULL);
 > 
-> Unfortunately PHY patches depend on the first scsi patch.
+> Side note for a possible follow-up: the above pattern is repeated a
+> couple of times: IMHO consolidating it into an helper would be nice.
 
-Thanks, Dmitry, for mentioning the dependency
+Yeah, I will look at that.
 
-Hi Martin,
+> Also such helper could/should explicitly convert ifr->ifr_hwaddr to
+> sockaddr_storage and avoid the cast.
 
-After addressing the review comments for v5, there has been a change in 
-the patch order.
+It's UAPI, so it looked verrrry painful to change.
 
-In the latest patchset (v6), Patch 2 (SCSI patch) is now required for 
-the functional dependency of the subsequent PHY patches (Patch 3 to 
-Patch 9).
-
-Patch 1 (SCSI patch) addresses an existing issue and does not depend on 
-any other changes.
-
-Regards,
-Nitin
-
-
-
-> 
-
+-- 
+Kees Cook
