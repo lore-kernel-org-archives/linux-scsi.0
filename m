@@ -1,125 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 88CDF27C854;
-	Tue, 27 May 2025 18:43:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EAFE29A1;
+	Tue, 27 May 2025 21:25:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748371392; cv=none; b=RUWDeZlQUqpCC++jbTqovwYlNKI6HMjdEpYe0pCKLNrK2kHaAtAhT7hiVB3Pdm+6OhJosNOSB2s+0KxLp5bLC015sUOPWp2CkkKUtpxEIFHuBSS66q/2RXHyuhoOXQqXp+bQP8fBDSDabkxFDNEuOk1E9Iwntvu1dyD3ToFayu4=
+	t=1748381108; cv=none; b=bPPn1r13JB/WLCxkIdcc9mNRfNo3oh0D3xbHeC4Efj58UEtV8OEVUCxpqiwagQ5TOgHRwwEAY7JmO3Oz7eSk+RM92spLp0okAY3xKlyl95sPDr+ervOu0kLSjjBJsXB1T/zaaWFkv6vRnggrb8wOPNKlPArMNvVRN0L3yTuwB/8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748371392; c=relaxed/simple;
-	bh=unrEi+Z8Vcid2frmRc00TpoL+pz62h5Wsf8KIjX1MAI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mfV8VJxNi/USAC+PEZeRUtNWnRYUO4jmF+ImjSIVibgz88fh9BeTUWJtpk9tP4U1A9FIosoix8bCpgwOY3HF8tTM5yS0BxCrsBSNSorpnIeJXBxo8oNH0BfDl7//Hbjpbr88kcZ/DmkJujm7JNlB1hv11DcmMHK5zWx/6RYhcmU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SAJg/lTs; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1748381108; c=relaxed/simple;
+	bh=yGb89xEjY3Woi7LpabLSzMNw5oe1bMQc/Fb6oP4wld4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=VY4DW6ywqMEy41lMt0WePNnPrBPBjhurU4u843aysjqR8MVUY1M02JPnF+0d6m9U8qtGwqVLs2Td3sf1YivL8Y+U/h+Ajmff8zxtmuDHOAImettPLheiVfx9KuTadbOIo1jMh4w844j41mLSL21MKbcZFqgBQ/1A/vwW7GVERYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lEZgAcxJ; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SAJg/lTs"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1049DC4CEEA;
-	Tue, 27 May 2025 18:43:12 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748371392;
-	bh=unrEi+Z8Vcid2frmRc00TpoL+pz62h5Wsf8KIjX1MAI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=SAJg/lTsHFPpMmZvVmP+0XJugy76N/WOctdJIssWWs7qNHSBbzmSYg8xkWQak4g5C
-	 LfZgHKgxVCZb8p0qamVGEV/1YiZTk2afQEafhl37cp97dLgGRdjvi7trKjD2XXdMuP
-	 LbrGzfua9UHyhqt54e4WAAnlTo1NpBqK2l+IKnh1JQUdMKF4EbO60uwu4lUOeBUiiD
-	 wKIfF3Uo87tWndWoi9LDxjhMwmt61Lxnq3QWSMVbr06JAV1rHQ9XUs10fwb75pWBr3
-	 anGW5bNZOirMCaMIcgBCgcjqJ5Vcm09HGhEIuw7KuVAzISErwpzi7uyi2a2hStymIg
-	 Mw76bx9c3WLMA==
-Date: Tue, 27 May 2025 11:43:08 -0700
-From: Kees Cook <kees@kernel.org>
-To: Paolo Abeni <pabeni@redhat.com>
-Cc: Kuniyuki Iwashima <kuniyu@amazon.com>,
-	Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
-	Jason Wang <jasowang@redhat.com>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Simon Horman <horms@kernel.org>,
-	Stanislav Fomichev <sdf@fomichev.me>,
-	Cosmin Ratiu <cratiu@nvidia.com>,
-	Vladimir Oltean <vladimir.oltean@nxp.com>,
-	Florian Fainelli <florian.fainelli@broadcom.com>,
-	Kory Maincent <kory.maincent@bootlin.com>,
-	Maxim Georgiev <glipus@gmail.com>, netdev@vger.kernel.org,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
-	Chaitanya Kulkarni <kch@nvidia.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	Max Gurtovoy <mgurtovoy@nvidia.com>,
-	Maurizio Lombardi <mlombard@redhat.com>,
-	Dmitry Bogdanov <d.bogdanov@yadro.com>,
-	Mingzhe Zou <mingzhe.zou@easystack.cn>,
-	Christophe Leroy <christophe.leroy@csgroup.eu>,
-	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	Lei Yang <leiyang@redhat.com>, Ido Schimmel <idosch@nvidia.com>,
-	Samuel Mendoza-Jonas <sam@mendozajonas.com>,
-	Paul Fertser <fercerpav@gmail.com>,
-	Alexander Aring <alex.aring@gmail.com>,
-	Stefan Schmidt <stefan@datenfreihafen.org>,
-	Miquel Raynal <miquel.raynal@bootlin.com>,
-	Hayes Wang <hayeswang@realtek.com>,
-	Douglas Anderson <dianders@chromium.org>,
-	Grant Grundler <grundler@chromium.org>,
-	Jay Vosburgh <jv@jvosburgh.net>,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>,
-	Jiri Pirko <jiri@resnulli.us>,
-	Aleksander Jan Bajkowski <olek2@wp.pl>,
-	Philipp Hahn <phahn-oss@avm.de>, Eric Biggers <ebiggers@google.com>,
-	Ard Biesheuvel <ardb@kernel.org>, Al Viro <viro@zeniv.linux.org.uk>,
-	Ahmed Zaki <ahmed.zaki@intel.com>,
-	Alexander Lobakin <aleksander.lobakin@intel.com>,
-	Xiao Liang <shaw.leon@gmail.com>, linux-kernel@vger.kernel.org,
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org, linux-wpan@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-hyperv@vger.kernel.org,
-	linux-hardening@vger.kernel.org
-Subject: Re: [PATCH net-next v2 8/8] net: core: Convert
- dev_set_mac_address_user() to use struct sockaddr_storage
-Message-ID: <202505271142.EA78EAB04@keescook>
-References: <20250521204310.it.500-kees@kernel.org>
- <20250521204619.2301870-8-kees@kernel.org>
- <e1429351-3c9b-40e0-b50d-de6527d0a05b@redhat.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lEZgAcxJ"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4b6QdY6pTLzm0yQ1;
+	Tue, 27 May 2025 21:25:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1748381102; x=1750973103; bh=nWR/Tw1R8H9uMvTSu9ifpTSp
+	3GnNEXesJatUEekQH8I=; b=lEZgAcxJT+2CvXmT39VJ1rqw3wso9u/J5Y93OI6P
+	0oezKl4PjCxCCvVSKWYb6I44siWKjrtZdEF1q2GyOjuCQ01dBYrIqLbXoIxCxbCE
+	vDvYI5V/Qke+KiOunOcu9ttN2mULQQZ3dGAkR4f1cMM1sUK6b/zB0/8Qsi3hjOUE
+	oGhwMWnbWGFU6G04m7/J7+mKJmDldJL1jDbJ57OVM+43rPKtXaW9p0opgW2r8MpD
+	RRpEvnHo8lIedq35lsWB/znQ7PY+d/k8Td5afPJsJ+mA+6PxRAzg0w1spOCUTRW7
+	PjNGc+GPvAV5jdj8K6RL3586LQUduKwHukBdREvm9gfVxw==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 03RSyhsk2Bkl; Tue, 27 May 2025 21:25:02 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4b6QdC2ls4zm0xjy;
+	Tue, 27 May 2025 21:24:46 +0000 (UTC)
+Message-ID: <bfe4b18f-aa09-4b1b-89fb-1cb0cc0a78ed@acm.org>
+Date: Tue, 27 May 2025 14:24:44 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <e1429351-3c9b-40e0-b50d-de6527d0a05b@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] scsi: ufs: core: Don't perform UFS clkscale if host
+ asyn scan in progress
+To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
+ mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
+ junwoo80.lee@samsung.com, martin.petersen@oracle.com,
+ quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
+ quic_rampraka@quicinc.com, neil.armstrong@linaro.org,
+ luca.weiss@fairphone.com, konrad.dybcio@oss.qualcomm.com,
+ peter.wang@mediatek.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Alim Akhtar <alim.akhtar@samsung.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+ open list <linux-kernel@vger.kernel.org>
+References: <20250522081233.2358565-1-quic_ziqichen@quicinc.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250522081233.2358565-1-quic_ziqichen@quicinc.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, May 27, 2025 at 09:02:28AM +0200, Paolo Abeni wrote:
-> On 5/21/25 10:46 PM, Kees Cook wrote:
-> > diff --git a/net/core/dev_ioctl.c b/net/core/dev_ioctl.c
-> > index fff13a8b48f1..616479e71466 100644
-> > --- a/net/core/dev_ioctl.c
-> > +++ b/net/core/dev_ioctl.c
-> > @@ -572,9 +572,11 @@ static int dev_ifsioc(struct net *net, struct ifreq *ifr, void __user *data,
-> >  		return dev_set_mtu(dev, ifr->ifr_mtu);
-> >  
-> >  	case SIOCSIFHWADDR:
-> > -		if (dev->addr_len > sizeof(struct sockaddr))
-> > +		if (dev->addr_len > sizeof(ifr->ifr_hwaddr))
-> >  			return -EINVAL;
-> > -		return dev_set_mac_address_user(dev, &ifr->ifr_hwaddr, NULL);
-> > +		return dev_set_mac_address_user(dev,
-> > +						(struct sockaddr_storage *)&ifr->ifr_hwaddr,
-> > +						NULL);
+On 5/22/25 1:12 AM, Ziqi Chen wrote:
+> When preparing for UFS clock scaling, the UFS driver will quiesce all sdevs
+> queues in the UFS SCSI host tagset list and then unquiesce them when UFS
+> clock scaling unpreparing. If the UFS SCSI host async scan is in progress
+> at this time, some LUs may be added to the tagset list between UFS clkscale
+> prepare and unprepare. This can cause two issues:
 > 
-> Side note for a possible follow-up: the above pattern is repeated a
-> couple of times: IMHO consolidating it into an helper would be nice.
-
-Yeah, I will look at that.
-
-> Also such helper could/should explicitly convert ifr->ifr_hwaddr to
-> sockaddr_storage and avoid the cast.
-
-It's UAPI, so it looked verrrry painful to change.
-
--- 
-Kees Cook
+> 1. During clock scaling, there may be IO requests issued through new added
+> queues that have not been quiesced, leading to task abort issue.
+> 
+> 2. These new added queues that have not been quiesced will be unquiesced as
+> well when UFS clkscale is unprepared, resulting in warning prints.
+> 
+> Therefore, use the mutex lock scan_mutex in ufshcd_clock_scaling_prepare()
+> and ufshcd_clock_scaling_unprepare() to protect it.
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
