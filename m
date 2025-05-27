@@ -1,194 +1,148 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6B3B21931C;
-	Mon, 26 May 2025 15:38:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 643171D6DDD
+	for <linux-scsi@vger.kernel.org>; Tue, 27 May 2025 07:02:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748273939; cv=none; b=YLph3VOxfgH6LhMwPm67LNK19O6vS/uduVxko0dh4qClMTxa4LGDJfwaraJB1OWbooooOsJF9JeN0zImwkU6fJGKEoNvqkSSf4RKRGs/OrzsbQBRvoFpt72xlnjVgCNygzDM7jPJMuZ57zwxT9qTcfBTH6CyUWCK8hz115lLlis=
+	t=1748329360; cv=none; b=ERZDaTv/AvwVffzDigDF43MEnYHvBZ510rIJtd/b934WNG9FoOOxFYIddPiWgrfNky+eHyKtgIRBdV0gbu/JXxo7uu1UkP685JYaHalmQm9o60k5LWzZ3flkjIhOSF+3ijKvjpTEn8Zkvwi7qZXLAC9ln707+e4kN7wP7bjxcHM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748273939; c=relaxed/simple;
-	bh=4PI0TPbnI+kOdjtS5lAT8N+xWFo78os+dNClxKtFYGI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=cjDsElKsiBlwPrcktMQqdYQ32j4TXTfNBUx3HZugcef/SyFSgfW2zFZfhD060EGYNP49f/LIbkGhfqCIt8pXwzaTwBNRAXmlgay6RJQO4Jm23unzNiSjfkNFuh5MM9eWDoqnjnEMtwL/vywl8rsCk49ZdToTuW+ZU/C5df9U/vM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=OMkDMTGN; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1748329360; c=relaxed/simple;
+	bh=uerM567QcQCVqLcNbyZwn68Uozgpe9FXmx2lyhpHDvY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lLW8upo6Gl3E/zoYE1BKP0xXZKXGKamjDIj72ogqxoIKWKT/WBp7xYTkj44XaYFqQdPYXQM8AclTu29g1MitCZomfXQTRDE4CXjfN0hWPT9DUJy5nNffdBgSwiDHQ2H6ec+98Vqa+Jj6kQ7ZQTErxuWYUPROMlyz6yVGGVx78xU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ikjz3TI2; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OMkDMTGN"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 54QAKdVU014890;
-	Mon, 26 May 2025 15:38:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=+FcrV9vl51e
-	mEJXtSn1jU1WLt8DznQRLB3uZafBII9U=; b=OMkDMTGNB0zTGgToocYnV7a+4h0
-	9ccjMIs0r2pZI7FcCaD9gZ/OFRE9pa3LYMRpy5er8OFwC29AU5Zua2Ga3K43qWsi
-	OyiacxHj+fU1Y6h69A2YTEV6lMbfb/vysmPFX1ZrIt/+G5hN9pSZGOfNP85DhnF6
-	NPUMun2vupgjJ5VX9s713PCXJGEudMRu0zgj772syqHRcTMvh0C9NGMsxzEkNijr
-	i/zDYfFrM3blvJQK//9CoASYdbL/UwRpZ+ZhqnuPQkm4hTgLUOv9+U8tACaUBADg
-	EwDNf/MtUgpqNn/OCoxbOCiR1qUuWi21AJBPCMq6DfGrlkAmCe4HRW02xLw==
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 46u66wcquy-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 26 May 2025 15:38:30 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 54QFcR75032469;
-	Mon, 26 May 2025 15:38:27 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 46u76m73gn-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
-	Mon, 26 May 2025 15:38:27 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 54QFcRQH032457;
-	Mon, 26 May 2025 15:38:27 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 54QFcRBS032454;
-	Mon, 26 May 2025 15:38:27 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id 9A926602733; Mon, 26 May 2025 21:08:26 +0530 (+0530)
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-To: vkoul@kernel.org, kishon@kernel.org, manivannan.sadhasivam@linaro.org,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-        bvanassche@acm.org, andersson@kernel.org, neil.armstrong@linaro.org,
-        konrad.dybcio@oss.qualcomm.com, dmitry.baryshkov@oss.qualcomm.com
-Cc: quic_rdwivedi@quicinc.com, quic_cang@quicinc.com,
-        linux-arm-msm@vger.kernel.org, linux-phy@lists.infradead.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V6 04/10] phy: qcom-qmp-ufs: Refactor phy_power_on and phy_calibrate callbacks
-Date: Mon, 26 May 2025 21:08:15 +0530
-Message-ID: <20250526153821.7918-5-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250526153821.7918-1-quic_nitirawa@quicinc.com>
-References: <20250526153821.7918-1-quic_nitirawa@quicinc.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ikjz3TI2"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1748329357;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lPj65lDKBn8X+w6dITxUNDiVhmFCDqyup7L8wrKjKWs=;
+	b=ikjz3TI2RNF/P/IQm7jZhhyyq/ZfulKQ2wJ5drc/IDwl7zP1qZP5RdDhfUDLrv7bmy1YAO
+	Ip/lLhyR8Vd38TcClkZZ5pVVxNzT5YTjNcgETdwbyAowODJs197GtAexiTnJnZGT/iSnQZ
+	8jnc/bZ30tStRVRL3hscPSEqz+C6bSc=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-563-UFUDdkvrO_qowi-tqjVbkg-1; Tue, 27 May 2025 03:02:34 -0400
+X-MC-Unique: UFUDdkvrO_qowi-tqjVbkg-1
+X-Mimecast-MFC-AGG-ID: UFUDdkvrO_qowi-tqjVbkg_1748329354
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-3a4d51e563eso789098f8f.3
+        for <linux-scsi@vger.kernel.org>; Tue, 27 May 2025 00:02:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1748329353; x=1748934153;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=lPj65lDKBn8X+w6dITxUNDiVhmFCDqyup7L8wrKjKWs=;
+        b=W6tY2W6eSQgofPk37PCIw3HA7Ws6wY09sQGR+Mo23tBSbAGr5SnajGhqvlsq1RBQJ4
+         MYUjEmI1cztKvGl/EHhYbd9kzDce2hIleDKAGS7xbSpGYp2HeD1dq1FR0YPzX8vYYyla
+         v/9tTSWM42xO+Dw00JZQi6foKc6ktxnRIbVTW2lGuGTCZ/2dHnUCZ8uLvlLd2c+Q9pTC
+         Lbgv8hiYUu1l2GH340nSgEPbu2+2561mzNF1KhAdOPzQP+AU6EAu86z+8pKm+yPtHE5M
+         lqyDDE+Wx7PQGEoE3QgxeJ0AL46is0W+aYOrWI8ByvIdF1KLiyxmx9xyFqP3Whhd1ZVi
+         9jAQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV463nF6TDX2vMjW3KtUGSTqlfSogCbIREqVaV+vpYj1/16LLHiPPPKEQ1NC43uRENvtuEej5HTsWmU@vger.kernel.org
+X-Gm-Message-State: AOJu0YyhOj7MiNTURMssajfNtk4qwQB37vQXoo9MV/LRB6z6SAgGp8xn
+	TxcDr4FP60Rn5qPs328FnarAaGWeC7k29oNLRHPd5OQPvSLiMxnfAWRn82nKEzV663ubV0B2uWz
+	xjeWP+HujRJJ/SBHHX7a7BvOUprReSVEb4vBAmcclLKKSIPHZBiXV4/ljBXLBb3U=
+X-Gm-Gg: ASbGnct3XnY7dq+nG1GbaEOuFK8/7vHxmS6gldUK5uHRwOcCfGAC9JfBU9X3xWIAYvM
+	5u26PeaKVsD+VBZ2rQWNNUtHHDS6hAHKqKAoUkvLPGcbyq871KUQWg+2t050mCsPPanIESSw0mS
+	L0awGeZQn0f3q9obn/js8HNc8lI4fJmusnW++CzcaDyImKa3PTFfEfPZWbqE/cXD218gap4ZFbD
+	IqrF2NfdjfnctdZYiZFPBPNHsl7Z+rhuI1UJERG6EVmsxoh2PViWybD/0iyCnjis2deSydWIaFM
+	rVXKJE6fXmIaxDRuvotYfELOi3X6+IYIFmXI8c1DMZh/vZKUjKvQVylhnrI=
+X-Received: by 2002:a5d:5543:0:b0:3a4:cf66:efbb with SMTP id ffacd0b85a97d-3a4cf66f1f6mr7608655f8f.57.1748329353548;
+        Tue, 27 May 2025 00:02:33 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGex5mHhM/OYaq2gRKUAD/HxHUJY3MptMrHBU8jm/eQhY8uxpjEvS25/QUCzUXZRuezIVGAwQ==
+X-Received: by 2002:a5d:5543:0:b0:3a4:cf66:efbb with SMTP id ffacd0b85a97d-3a4cf66f1f6mr7608571f8f.57.1748329353087;
+        Tue, 27 May 2025 00:02:33 -0700 (PDT)
+Received: from ?IPV6:2a0d:3344:2728:e810:827d:a191:aa5f:ba2f? ([2a0d:3344:2728:e810:827d:a191:aa5f:ba2f])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a4cc52ab88sm9930473f8f.11.2025.05.27.00.02.29
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 27 May 2025 00:02:32 -0700 (PDT)
+Message-ID: <e1429351-3c9b-40e0-b50d-de6527d0a05b@redhat.com>
+Date: Tue, 27 May 2025 09:02:28 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=aYJhnQot c=1 sm=1 tr=0 ts=68348af7 cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=dt9VzEwgFbYA:10 a=KKAkSRfTAAAA:8 a=EUspDBNiAAAA:8 a=COk6AnOGAAAA:8
- a=ZEhkBkkNTqPGxlI-GDwA:9 a=cvBusfyB2V15izCimMoJ:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: pn2jo_gi_1mx9PvBsaijPtWVxcpS3Iji
-X-Proofpoint-GUID: pn2jo_gi_1mx9PvBsaijPtWVxcpS3Iji
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNTI2MDEzMiBTYWx0ZWRfX8BgmXdvyYbXS
- 0y9jSii/M/HDw4q+as/i/m1+YPiRTiyJgKwAc6WYa2FvZlcC9NtCijy6uY0oQWogqwhsQtMXeE0
- cXZsx7qyf2DCtzzTIw7fftgBDmZQyo4ksaG4hISjw16MrWEVmvl7dZ+GAWH2Ajh1MqcY5siicU+
- yBA8gSrK5RUcHKeTpez5sgrhVTGOq0fgrvj4uZ0lousynUacUXsea/+fQYmZkmi5hGkBwadxz1J
- f/U+eyHjHqbNl8Zhu2MAEXKF2YrK5s8HcQXJW4MGLSNwi4/S4Upn2gQNLZBFTRFm77nddSCDgWO
- 8aSVmQaQkGyTmhRQwJdM9p5hHgjhWhDRWwuoSHJcZHUyhR9sNQPWK4hiHNVc4KRGLGMZI0+m0sj
- IcD9cjVmQSSRxp0+DkPKeXG/3tTYuejwa/VIXutQYMh5BHJ+05ytAr46tfLnwpu2yMcycp7d
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-05-26_08,2025-05-26_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 suspectscore=0 impostorscore=0 adultscore=0
- mlxlogscore=999 lowpriorityscore=0 malwarescore=0 mlxscore=0 spamscore=0
- clxscore=1015 bulkscore=0 phishscore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505160000 definitions=main-2505260132
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH net-next v2 8/8] net: core: Convert
+ dev_set_mac_address_user() to use struct sockaddr_storage
+To: Kees Cook <kees@kernel.org>, Kuniyuki Iwashima <kuniyu@amazon.com>
+Cc: Willem de Bruijn <willemdebruijn.kernel@gmail.com>,
+ Jason Wang <jasowang@redhat.com>, Andrew Lunn <andrew+netdev@lunn.ch>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Simon Horman <horms@kernel.org>,
+ Stanislav Fomichev <sdf@fomichev.me>, Cosmin Ratiu <cratiu@nvidia.com>,
+ Vladimir Oltean <vladimir.oltean@nxp.com>,
+ Florian Fainelli <florian.fainelli@broadcom.com>,
+ Kory Maincent <kory.maincent@bootlin.com>, Maxim Georgiev
+ <glipus@gmail.com>, netdev@vger.kernel.org,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>,
+ Chaitanya Kulkarni <kch@nvidia.com>,
+ Mike Christie <michael.christie@oracle.com>,
+ Max Gurtovoy <mgurtovoy@nvidia.com>, Maurizio Lombardi
+ <mlombard@redhat.com>, Dmitry Bogdanov <d.bogdanov@yadro.com>,
+ Mingzhe Zou <mingzhe.zou@easystack.cn>,
+ Christophe Leroy <christophe.leroy@csgroup.eu>,
+ "Dr. David Alan Gilbert" <linux@treblig.org>,
+ "Gustavo A. R. Silva" <gustavoars@kernel.org>, Lei Yang
+ <leiyang@redhat.com>, Ido Schimmel <idosch@nvidia.com>,
+ Samuel Mendoza-Jonas <sam@mendozajonas.com>,
+ Paul Fertser <fercerpav@gmail.com>, Alexander Aring <alex.aring@gmail.com>,
+ Stefan Schmidt <stefan@datenfreihafen.org>,
+ Miquel Raynal <miquel.raynal@bootlin.com>, Hayes Wang
+ <hayeswang@realtek.com>, Douglas Anderson <dianders@chromium.org>,
+ Grant Grundler <grundler@chromium.org>, Jay Vosburgh <jv@jvosburgh.net>,
+ "K. Y. Srinivasan" <kys@microsoft.com>,
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Dexuan Cui <decui@microsoft.com>, Jiri Pirko <jiri@resnulli.us>,
+ Aleksander Jan Bajkowski <olek2@wp.pl>, Philipp Hahn <phahn-oss@avm.de>,
+ Eric Biggers <ebiggers@google.com>, Ard Biesheuvel <ardb@kernel.org>,
+ Al Viro <viro@zeniv.linux.org.uk>, Ahmed Zaki <ahmed.zaki@intel.com>,
+ Alexander Lobakin <aleksander.lobakin@intel.com>,
+ Xiao Liang <shaw.leon@gmail.com>, linux-kernel@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ target-devel@vger.kernel.org, linux-wpan@vger.kernel.org,
+ linux-usb@vger.kernel.org, linux-hyperv@vger.kernel.org,
+ linux-hardening@vger.kernel.org
+References: <20250521204310.it.500-kees@kernel.org>
+ <20250521204619.2301870-8-kees@kernel.org>
+Content-Language: en-US
+From: Paolo Abeni <pabeni@redhat.com>
+In-Reply-To: <20250521204619.2301870-8-kees@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Commit 052553af6a31 ("ufs/phy: qcom: Refactor to use phy_init call")
-puts enabling regulators & clks, calibrating UFS PHY, starting serdes
-and polling PCS ready status into phy_power_on.
+On 5/21/25 10:46 PM, Kees Cook wrote:
+> diff --git a/net/core/dev_ioctl.c b/net/core/dev_ioctl.c
+> index fff13a8b48f1..616479e71466 100644
+> --- a/net/core/dev_ioctl.c
+> +++ b/net/core/dev_ioctl.c
+> @@ -572,9 +572,11 @@ static int dev_ifsioc(struct net *net, struct ifreq *ifr, void __user *data,
+>  		return dev_set_mtu(dev, ifr->ifr_mtu);
+>  
+>  	case SIOCSIFHWADDR:
+> -		if (dev->addr_len > sizeof(struct sockaddr))
+> +		if (dev->addr_len > sizeof(ifr->ifr_hwaddr))
+>  			return -EINVAL;
+> -		return dev_set_mac_address_user(dev, &ifr->ifr_hwaddr, NULL);
+> +		return dev_set_mac_address_user(dev,
+> +						(struct sockaddr_storage *)&ifr->ifr_hwaddr,
+> +						NULL);
 
-In Current code regulators enable, clks enable, calibrating UFS PHY,
-start_serdes and polling PCS_ready_status are part of phy_power_on.
+Side note for a possible follow-up: the above pattern is repeated a
+couple of times: IMHO consolidating it into an helper would be nice.
+Also such helper could/should explicitly convert ifr->ifr_hwaddr to
+sockaddr_storage and avoid the cast.
 
-UFS PHY registers are retained after power collapse, meaning calibrating
-UFS PHY, start_serdes and polling PCS_ready_status can be done only when
-hba is powered_on, and not needed every time when phy_power_on is called
-during resume. Hence keep the code which enables PHY's regulators & clks
-in phy_power_on and move the rest steps into phy_calibrate function.
-
-Refactor the code to retain PHY regulators & clks in phy_power_on and
-move out rest of the code to new phy_calibrate function.
-
-Also move reset_control_assert to qmp_ufs_phy_calibrate to align
-with Hardware programming guide.
-
-Reviewed-by: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-Reviewed-by: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Co-developed-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
----
- drivers/phy/qualcomm/phy-qcom-qmp-ufs.c | 26 ++++++-------------------
- 1 file changed, 6 insertions(+), 20 deletions(-)
-
-diff --git a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-index a67cf0a64f74..ade8e9c4b9ae 100644
---- a/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-+++ b/drivers/phy/qualcomm/phy-qcom-qmp-ufs.c
-@@ -1797,7 +1797,7 @@ static int qmp_ufs_com_exit(struct qmp_ufs *qmp)
- 	return 0;
- }
-
--static int qmp_ufs_init(struct phy *phy)
-+static int qmp_ufs_power_on(struct phy *phy)
- {
- 	struct qmp_ufs *qmp = phy_get_drvdata(phy);
- 	const struct qmp_phy_cfg *cfg = qmp->cfg;
-@@ -1825,10 +1825,6 @@ static int qmp_ufs_init(struct phy *phy)
- 				return ret;
- 			}
- 		}
--
--		ret = reset_control_assert(qmp->ufs_reset);
--		if (ret)
--			return ret;
- 	}
-
- 	ret = qmp_ufs_com_init(qmp);
-@@ -1847,6 +1843,10 @@ static int qmp_ufs_phy_calibrate(struct phy *phy)
- 	unsigned int val;
- 	int ret;
-
-+	ret = reset_control_assert(qmp->ufs_reset);
-+	if (ret)
-+		return ret;
-+
- 	qmp_ufs_init_registers(qmp, cfg);
-
- 	ret = reset_control_deassert(qmp->ufs_reset);
-@@ -1899,21 +1899,6 @@ static int qmp_ufs_exit(struct phy *phy)
- 	return 0;
- }
-
--static int qmp_ufs_power_on(struct phy *phy)
--{
--	int ret;
--
--	ret = qmp_ufs_init(phy);
--	if (ret)
--		return ret;
--
--	ret = qmp_ufs_phy_calibrate(phy);
--	if (ret)
--		qmp_ufs_exit(phy);
--
--	return ret;
--}
--
- static int qmp_ufs_disable(struct phy *phy)
- {
- 	int ret;
-@@ -1943,6 +1928,7 @@ static int qmp_ufs_set_mode(struct phy *phy, enum phy_mode mode, int submode)
- static const struct phy_ops qcom_qmp_ufs_phy_ops = {
- 	.power_on	= qmp_ufs_power_on,
- 	.power_off	= qmp_ufs_disable,
-+	.calibrate	= qmp_ufs_phy_calibrate,
- 	.set_mode	= qmp_ufs_set_mode,
- 	.owner		= THIS_MODULE,
- };
---
-2.48.1
+/P
 
