@@ -1,48 +1,48 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EAFE29A1;
-	Tue, 27 May 2025 21:25:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DBF951465A5;
+	Tue, 27 May 2025 21:38:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748381108; cv=none; b=bPPn1r13JB/WLCxkIdcc9mNRfNo3oh0D3xbHeC4Efj58UEtV8OEVUCxpqiwagQ5TOgHRwwEAY7JmO3Oz7eSk+RM92spLp0okAY3xKlyl95sPDr+ervOu0kLSjjBJsXB1T/zaaWFkv6vRnggrb8wOPNKlPArMNvVRN0L3yTuwB/8=
+	t=1748381905; cv=none; b=YoZXF9WxKANj7FPjIDAWwnuHeMVqOHuyvkVY2y5ekqE0/Pf3xTvdkp2J5JjTOlIfsw6Fouz1cSSrmZNZ0UtXHzAkdM11kU6P0JoPLC0AJDBAlgq1pxTLVbTx9yHidi03hUAEu1vvyLRA10NVxamG38LUhuP13GCQY3eiq9rnYBA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748381108; c=relaxed/simple;
-	bh=yGb89xEjY3Woi7LpabLSzMNw5oe1bMQc/Fb6oP4wld4=;
+	s=arc-20240116; t=1748381905; c=relaxed/simple;
+	bh=oa4aau0o+QDBX1AUVYeSan9W4UogTjwV3ZMNtPcpQdM=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VY4DW6ywqMEy41lMt0WePNnPrBPBjhurU4u843aysjqR8MVUY1M02JPnF+0d6m9U8qtGwqVLs2Td3sf1YivL8Y+U/h+Ajmff8zxtmuDHOAImettPLheiVfx9KuTadbOIo1jMh4w844j41mLSL21MKbcZFqgBQ/1A/vwW7GVERYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lEZgAcxJ; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=JsMhuvlVzf1lHtGoQtJ9IMNFB/KoslPga4g4WG/mjvP4Wz6/dsYZo1onDEvbqTcozPpsxdi3rahz4pcJhqsf+ybQxBs3HpxYavHWSqEfyka/5/DpkPE1dkn6UkJsaqm6gX4BlElVGt9X/XW8kS1NZdQaa8KfnT6f4cfcWx5YkKw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DavGqlez; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lEZgAcxJ"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DavGqlez"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4b6QdY6pTLzm0yQ1;
-	Tue, 27 May 2025 21:25:05 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4b6Qwt4tJJzm0gbm;
+	Tue, 27 May 2025 21:38:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1748381102; x=1750973103; bh=nWR/Tw1R8H9uMvTSu9ifpTSp
-	3GnNEXesJatUEekQH8I=; b=lEZgAcxJT+2CvXmT39VJ1rqw3wso9u/J5Y93OI6P
-	0oezKl4PjCxCCvVSKWYb6I44siWKjrtZdEF1q2GyOjuCQ01dBYrIqLbXoIxCxbCE
-	vDvYI5V/Qke+KiOunOcu9ttN2mULQQZ3dGAkR4f1cMM1sUK6b/zB0/8Qsi3hjOUE
-	oGhwMWnbWGFU6G04m7/J7+mKJmDldJL1jDbJ57OVM+43rPKtXaW9p0opgW2r8MpD
-	RRpEvnHo8lIedq35lsWB/znQ7PY+d/k8Td5afPJsJ+mA+6PxRAzg0w1spOCUTRW7
-	PjNGc+GPvAV5jdj8K6RL3586LQUduKwHukBdREvm9gfVxw==
+	 s=mr01; t=1748381899; x=1750973900; bh=aLc5NxkI8M6spKxInjbGY5A5
+	fJLpZLq+g1FMQFSSSOQ=; b=DavGqlezNjvN0lqUvuQ+5r9yVyOxdBlWx4RJtljG
+	Aa3LRtX/nFT+4kSHpb31UMxnv3Wg4CevSpsUBs2/JanU4/RgZVN3uI2cSNU1tnXf
+	Gl3kNcnVCDDR90xPK8JuVFcgkALf8G9Qo4w8xXLWbngogLlSTROy/ceMdWrsTLcI
+	+MoVqXKgUU/22UHcDioPxN5TWG0fZeXgSlfsmv6lNwbXkq7f2ShIr20r7TJ1cWk5
+	bjv94mDQZUnOf5U6TDijYfXyOlTDbB0fK4B73rLd3cf8gCfAOAaWqX99XAJcNKE9
+	asqL9iKAYIRbn6O4EeiX4sqXekk6RPJQZ0u/XWbjH9mbdw==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 03RSyhsk2Bkl; Tue, 27 May 2025 21:25:02 +0000 (UTC)
+ id hhLAYRg3fNIf; Tue, 27 May 2025 21:38:19 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4b6QdC2ls4zm0xjy;
-	Tue, 27 May 2025 21:24:46 +0000 (UTC)
-Message-ID: <bfe4b18f-aa09-4b1b-89fb-1cb0cc0a78ed@acm.org>
-Date: Tue, 27 May 2025 14:24:44 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4b6QwV5NwCzm0gc0;
+	Tue, 27 May 2025 21:38:01 +0000 (UTC)
+Message-ID: <ae392b24-9096-45d4-a138-a6fb64dffaec@acm.org>
+Date: Tue, 27 May 2025 14:38:00 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,40 +50,44 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] scsi: ufs: core: Don't perform UFS clkscale if host
- asyn scan in progress
-To: Ziqi Chen <quic_ziqichen@quicinc.com>, quic_cang@quicinc.com,
- mani@kernel.org, beanhuo@micron.com, avri.altman@wdc.com,
- junwoo80.lee@samsung.com, martin.petersen@oracle.com,
- quic_nguyenb@quicinc.com, quic_nitirawa@quicinc.com,
- quic_rampraka@quicinc.com, neil.armstrong@linaro.org,
- luca.weiss@fairphone.com, konrad.dybcio@oss.qualcomm.com,
- peter.wang@mediatek.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- Alim Akhtar <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20250522081233.2358565-1-quic_ziqichen@quicinc.com>
+Subject: Re: [PATCH v6] ufs: core: Add HID support
+To: Huan Tang <tanghuan@vivo.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, matthias.bgg@gmail.com,
+ angelogioacchino.delregno@collabora.com, beanhuo@micron.com,
+ peter.wang@mediatek.com, quic_nguyenb@quicinc.com,
+ quic_ziqichen@quicinc.com, keosung.park@samsung.com,
+ viro@zeniv.linux.org.uk, gwendal@chromium.org,
+ manivannan.sadhasivam@linaro.org, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org
+Cc: opensource.kernel@vivo.com, Wenxing Cheng <wenxing.cheng@vivo.com>,
+ Bean Huo <huobean@gmail.com>
+References: <20250523064604.800-1-tanghuan@vivo.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250522081233.2358565-1-quic_ziqichen@quicinc.com>
+In-Reply-To: <20250523064604.800-1-tanghuan@vivo.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 5/22/25 1:12 AM, Ziqi Chen wrote:
-> When preparing for UFS clock scaling, the UFS driver will quiesce all sdevs
-> queues in the UFS SCSI host tagset list and then unquiesce them when UFS
-> clock scaling unpreparing. If the UFS SCSI host async scan is in progress
-> at this time, some LUs may be added to the tagset list between UFS clkscale
-> prepare and unprepare. This can cause two issues:
+On 5/22/25 11:46 PM, Huan Tang wrote:
+> Follow JESD220G, support HID(Host Initiated Defragmentation)
+> through sysfs, the relevant sysfs nodes are as follows:
+> 	1.analysis_trigger
+> 	2.defrag_trigger
+> 	3.fragmented_size
+> 	4.defrag_size
+> 	5.progress_ratio
+> 	6.state
+> The detailed definition	of the six nodes can be	found in the sysfs
+> documentation.
 > 
-> 1. During clock scaling, there may be IO requests issued through new added
-> queues that have not been quiesced, leading to task abort issue.
+> HID's execution policy is given to user-space.
 > 
-> 2. These new added queues that have not been quiesced will be unquiesced as
-> well when UFS clkscale is unprepared, resulting in warning prints.
-> 
-> Therefore, use the mutex lock scan_mutex in ufshcd_clock_scaling_prepare()
-> and ufshcd_clock_scaling_unprepare() to protect it.
+> Signed-off-by: Huan Tang <tanghuan@vivo.com>
+> Signed-off-by: Wenxing Cheng <wenxing.cheng@vivo.com>
+> Suggested-by: Bart Van Assche <bvanassche@acm.org>
+> Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+> Reviewed-by: Bean Huo <huobean@gmail.com>
+
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
