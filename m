@@ -1,196 +1,297 @@
-Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D65B1862;
-	Tue, 27 May 2025 23:56:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=68.232.143.124
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748390164; cv=fail; b=Mfbv4NpLKzWcUtmYk6ko6657AFfRsLm786xe4yfd+d0TCqoqzcceGzWgcdQ+8HvWrxHyyfRycb8q+TOhjpoGYJN63uQwsrBfj0zu1hEzL1W+GagVAYYoEHQs0fy1XPGfVmsYQ5BiMzI8hX+uUWTdlXXDI8zEMHSVya91l8DxDUI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748390164; c=relaxed/simple;
-	bh=Ub+BkJ9T9Zf7zpDBUYMoqC7jabWDO2H0B1EeZL7vqKY=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=Xx6p6uSTt5cT8aaZiywqwlbkP1QorzQ1n2DzhWfwWJfjiGD0ZoORBJJdKev19hqolic5ABD0CrDhZ2Bxwhn4xhIikUaGfBaVeSfF+by4JUY3NRmr5NCmeJOPRgy5ONXy7JoCvU6do7wdNfVjGi8SD8gIFpvvUdEX4CQ5L7qwtVg=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=TcQcgvd9; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=DuiiTstM; arc=fail smtp.client-ip=68.232.143.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="TcQcgvd9";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="DuiiTstM"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1748390161; x=1779926161;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-id:content-transfer-encoding:mime-version;
-  bh=Ub+BkJ9T9Zf7zpDBUYMoqC7jabWDO2H0B1EeZL7vqKY=;
-  b=TcQcgvd9fHfAJGb3j7rixbhdtoNIj3geGI/CFJKvFMA30cEI5zhsBlj/
-   tett/3tibs2vFCPDhfaSN1aBEAuGU0QkNpKWJJRyZq6lmt9mgPM/SBp9M
-   cFxiqjICwF7yDoWx06ZCYUaz8zMdZYX9i0forntEOUTLvyUNF4n5u9teW
-   LgGxVeOQ5HMxamt/THR9yyskgxsa7RXhL5+s6CGjZLewpreW5lMP9b1wA
-   GX5cGbKQ/m+HB3/+fF5BVPWdIecumBcMXIptkAseBX17wII9jfAsxrai1
-   6mHmmoOrrZW4RS59rScFUon3sqBemy57CnRMSU07rpM+aF+tISCxUZW2t
-   A==;
-X-CSE-ConnectionGUID: 7MXDBErbShCf0cw9gz+Mgw==
-X-CSE-MsgGUID: 3GyvsJEARIK+wNrXK+A7WQ==
-X-IronPort-AV: E=Sophos;i="6.15,319,1739808000"; 
-   d="scan'208";a="89216429"
-Received: from mail-northcentralusazon11013057.outbound.protection.outlook.com (HELO CH4PR04CU002.outbound.protection.outlook.com) ([40.107.201.57])
-  by ob1.hgst.iphmx.com with ESMTP; 28 May 2025 07:55:54 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=s/0O9LTUN9eDyhztMb00kWK7DfFXsXrVhzVubv5tBENlAAcJcHAd/Tn+eCFIwbg0PFSA4mhFdoYcdy+MRdMCtTKv2opI2fjpRDGTQAP/s0qWQbAyKzKNNHtm17wGqSAKNGQ2clZcmGS/S0wTRcRQXdiEYYPMpnLXyKUwnGufJhYTrCQVBEgHiKH387hhvP7b7Tat2LpPlIUcCYnsh5XdVy01qlqJIx0/EP9ejXFeIcRQ5zcu0GyZez6PkcwOOq5XiBnX2VGBIzRd3Tc1VkCrS2REYj+nW5q/5T8fdZh0sF4KcNvRzKcMzCDAAIMTyAmu3msEV+3esP9+8rKTdGJdtA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yNH1wjOtzkESEBOpTIct5puOyb5q9nApXkYQKSYxUz4=;
- b=KTKEmqmtYyyRGXleLj1Lp9SZehJu6vaTS4C9su1Dw+nBASmUdhx9gGDKrKM7OE8/xZGhMix+B46/wVbbBokbTg3kiRWpTTVTHVGNoOTawN0q2SeewsuT0F/zVEdLBgFGlebKgdUozCiGUtufDJrmQAdx3dFaVRHBzUrePgobro8hIIRwhUf5geHf+eLet7TjeS04y4PVXR/2rQCfaeEcFhV8078VDudSJtEvD+2k+f4kMuRuq9ORab82SYO6zgzVkPnGq9uOmr9l2x2pM6xFms0VEcCwoiIKw6g9ARsj7VXKYLoIfZZlNnjv/JL66qK9tfaSfW+vKO12gHPyqRjg3Q==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yNH1wjOtzkESEBOpTIct5puOyb5q9nApXkYQKSYxUz4=;
- b=DuiiTstMbGxlsMrHxAFyyKm5Qo43TWeqizM1wdWOL4cKRd0PpSXL7joR8oFR0fEDP9MisM2MzaR2MyD8SmgWHQe50sN88BQ12z9t6wdkBEZggmucxMASXCjUxYcwViLePxAdhzzer3LJqg5DzrxxvdOnSCe18FetaiUGUakfqSI=
-Received: from SN7PR04MB8532.namprd04.prod.outlook.com (2603:10b6:806:350::6)
- by CO1PR04MB8233.namprd04.prod.outlook.com (2603:10b6:303:160::24) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8769.26; Tue, 27 May
- 2025 23:55:51 +0000
-Received: from SN7PR04MB8532.namprd04.prod.outlook.com
- ([fe80::4e14:94e7:a9b3:a4d4]) by SN7PR04MB8532.namprd04.prod.outlook.com
- ([fe80::4e14:94e7:a9b3:a4d4%5]) with mapi id 15.20.8769.025; Tue, 27 May 2025
- 23:55:51 +0000
-From: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org"
-	<linux-rdma@vger.kernel.org>
-Subject: Re: [ANNOUNCE] blktests repoistory move
-Thread-Topic: [ANNOUNCE] blktests repoistory move
-Thread-Index: AQHbypSA/Tc20EMek0i3PG4ZJvL8ALPnMJeA
-Date: Tue, 27 May 2025 23:55:51 +0000
-Message-ID: <ulhlylk7ybzhudqvxar44fs7vvaq3paicfkvr63knxheu5lsuv@n7m6g45xzzub>
-References: <rl6mkqchfjfzylyrfie7d52gxetnvh6r2wpgwi3pflbl3v3duf@cjielnfb5rht>
-In-Reply-To: <rl6mkqchfjfzylyrfie7d52gxetnvh6r2wpgwi3pflbl3v3duf@cjielnfb5rht>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN7PR04MB8532:EE_|CO1PR04MB8233:EE_
-x-ms-office365-filtering-correlation-id: 6e36350d-67f2-4847-ee88-08dd9d7a0309
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|366016|376014|38070700018;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?YEvGNrjIrKCaVzbReHBsBDoDAfL/+DEvtPPNPjEGL8bTjXgwfPVy3ZF6bUVF?=
- =?us-ascii?Q?Eh3dTCWo78Mg8rs0+HRY06WE++unm/mV2IP9a+jy5aYxb5gQwslZSHbekhEn?=
- =?us-ascii?Q?mHzKCoB/Nzp/IXpk1mmi03WvtuyE5u76rho3I1LIyBB6nRHZv2ClAzl110DS?=
- =?us-ascii?Q?x10L6CFo1WBL1KQHcVAom97nejm+Zf5NRfxjq3BSY+fiyR9Qjr8vTF6BJFf7?=
- =?us-ascii?Q?KH28rbFvNr9XdcHAf60ocQZ7iQv69w6jFnXw2Ae+k3m7PnI54H9d+eOaPfBX?=
- =?us-ascii?Q?ipJ06BcA4jjWGvOzgFZN/1U1iPpc20ivBaaZ9a3GD4ollP3HHvIyo4u9RnV8?=
- =?us-ascii?Q?YZMh27eQiy/7e8pso8kGCYAfAHYiinQ09AlXwf9oAmOxCsgAEu5UPLnoLnbu?=
- =?us-ascii?Q?zJa3yYCQJ2DMrx4nk5S7AVbZAuKzqO8l3LkGcmM3EGuMgassaI/uyvDmCwJN?=
- =?us-ascii?Q?Tw9zE4jE0eqj5SBYqVswO/mrK+ij7K48zuCTf6TvXXrBEsuEQPIte2s/55sm?=
- =?us-ascii?Q?YfE8imxBQtChaiklsm6s+vub9GoaQvA/VxiVDevP1ZZMqmYvtEBhwsafQX9w?=
- =?us-ascii?Q?O4PLGlzoOvhXcGtxMPxs9kabWW/MOr4G+NGH+lG82ZoZYu7CU3rn7m9qlXDZ?=
- =?us-ascii?Q?s5tFHODjRAR1ew5txse8SUBT1YTXsfyf/u+HwBQNEVEfeUlInJzs23RyV0pF?=
- =?us-ascii?Q?0onRY8SjJIS8OfE/NWuaNWmdw8VPEe4bqc8pU6K9ecZpRDEUV3xKt8S+e/Xk?=
- =?us-ascii?Q?c2ISaSQ33XMeO7QxG/XMLdJKarfszXVJxusDWrIuUvMvyQNY8NCsu1zOOVGn?=
- =?us-ascii?Q?gTN5Z0Aq/EMHQJgopWyf7zcw2a/OfYiatfnVUOAy8auxysPkwCrUE4ILdsfq?=
- =?us-ascii?Q?Zz4Qr0DV0oTZy2walWglqRsQusmQkvsj5f93tlswPTijR0oaFwKgAbjCk70W?=
- =?us-ascii?Q?j+DNNNRiyYERNAY90F6JtwRs5ZkeMW8DSL9WwpQkaMX51cSFYCICYIHhXLQY?=
- =?us-ascii?Q?7pTgBVyTEX7gWODoi32VcJXb84f1YjSRcgpoIXcyFAKS8D932Owm48I3EHE2?=
- =?us-ascii?Q?4oLFgS6GHje9iHjxJmn8dQd5LGWCGGv8lQ3xI/eCm9kkowKGuRKOBFjwxO1H?=
- =?us-ascii?Q?4vpYs/XKShrVUqNdufhMT3kIpVSWcG+pyIvtG9z2YQx+JkHArebO0SWLV8ef?=
- =?us-ascii?Q?8s26LFjtkaBY8oXQtDSzU7owbVDP9I1GIrLJi6WVPG+Z8KF7ha0nxiRUeczM?=
- =?us-ascii?Q?xnvXYHkB1Onv/UArZAXZ0DjY62nKXSDZtAo66j5nfygq1q/iFhvi5ADKlAcj?=
- =?us-ascii?Q?AT+F7xXDXYfthAZzSWB0/3TfNoAEA8bVMQXvh7XzwPqJFSd7YHy/wvEk0AI1?=
- =?us-ascii?Q?uUrsay0hNDIlP2gp/m4E5T1ir96pQ/NlK3yCgkJXzEp+j0uuP3heeigxuXPG?=
- =?us-ascii?Q?AgyqCjjlCyLzH8in8Kwca63HGbLD4fwu?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR04MB8532.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?z4JumYosPglUrpP7W5VQJJYVl057TMugnGyKfcPooFBB6ddrN+q0oukjbck8?=
- =?us-ascii?Q?ROzzbzZAOaIsWDIhRON4EQ1+/djyuqtq/D/02FaD6n5S6effya6KQ90XevY7?=
- =?us-ascii?Q?PaUnYdONntn6NMdJ4xN2GmUG1NmKN7j/GSvJMkb7ZsNA3WRlHghrL1W9k1uc?=
- =?us-ascii?Q?pFo4msV3xMr7V9mLrJ5xzRvHnQrCVMhcRGlHQoScjmCUre6Sy/vRm4bujZ/x?=
- =?us-ascii?Q?KKqpAU/s+6Dw9YGJe3Wgu/3+On0Ib8artUt+uuMgwSsl/Qn6UsEzuPV0FJzp?=
- =?us-ascii?Q?wCnhT52vguxZY4fBffODoRIwdtrzbggw4H9hqDl1rBqc35ZFpKQ5rjsO3HIw?=
- =?us-ascii?Q?Yo44H1rahwV/pc2Z/dsK0FM8mCR5C/x3nYr51p8RH31S2yxjkIg5S+k0HnT6?=
- =?us-ascii?Q?5fTWIefOV8SLLwlcXvNnS8EoBnTtSmBbkAy6jHW+We7OeCnHP3Ksd7LEkxKM?=
- =?us-ascii?Q?QlLjT22Xy0TF2gXvgrvLEc1Jrptvxrx2MwXLT7IG3sg+p3g9/YMFIYUUCTro?=
- =?us-ascii?Q?k1YkO8v1ZRX8Lz4NLxyat9p7Gpr/iBte97tRH6ofwVqSMCyD34gSq2S7PH5A?=
- =?us-ascii?Q?uVKWsdKXt7ld28M9d/PMXCqeshYaKeez6spo+FeoU5KI/1ZZai37ANyGarFJ?=
- =?us-ascii?Q?0ah2dvIOXZwtBeobbIOvwKKtf7l1fpzvGsCWND7FgzKfPFqfbKMnte42wQTr?=
- =?us-ascii?Q?BJ/PbGUB+YkZNpSISbQdqWtnJ04n+hSBSejHvqbXALMyQBnR3GZ4uAZN9ETW?=
- =?us-ascii?Q?wKevdVp7W3f37rvtF7XNZYGqnGqvUYsqycsPdELmbounXTfXkahrIyh/Jew8?=
- =?us-ascii?Q?QQBEi7m8cHYwM/zBs41wRT530SGzliYwcs+pw9R2J6mC0ZCmNC/vU51qZ06t?=
- =?us-ascii?Q?xE4Jw5mImt1qSo9ljuo+lVbajAo2QgWkkrW23q0DWpgC8pj7FYvko95ID6Mm?=
- =?us-ascii?Q?Yv/O6pfb3IGRgFUDJJ0g2Y4iMuV+FLZVHlP3WuSEGerHJQWtnZySwQ+X2soR?=
- =?us-ascii?Q?hLFmYykJ9Lp5K6V/cxmUZp+B0M08jX7Y3BwNZDzze3NVxHOyTrwpeeMsNetm?=
- =?us-ascii?Q?xVxJ4a5iSGQi6Yk9jzk5LE99mSu70sVG41y/1VdieOMF41l3OOsdpmX8gnqg?=
- =?us-ascii?Q?IZMVtMyTtsjNUMyeCVGGGcxLYWUvP0lMJBVwSZEh4lSoQJXxRTZAk8Siinnz?=
- =?us-ascii?Q?Xen13YZy56AMsMkwDviM2QbxhRQao5vaHJaVa6eQOS4OIK68XVbZnoFzMhoY?=
- =?us-ascii?Q?Vp7sqDRZwP5ZlO+cwtYrCfjc2hm9ePM80rxXktwzgEuJYS8PT0kr7FzCYrre?=
- =?us-ascii?Q?jVCFrPCawGGi9LfOnT0Z2ApjxNP7pg9UCj9A7p+IFqQ5gBijlvwnrPCHDv3b?=
- =?us-ascii?Q?217hxU3fUT0g8r4NQqHVibwfGhR94/TE4FybtQmWAfUKpwm36P2EPMhJKRyZ?=
- =?us-ascii?Q?8UOSTjsyDrVTvky1MImFH/8q9i5UDhlvegdTL8r/OYrb6aNKcPs//XRwdXFC?=
- =?us-ascii?Q?ylK/9/+H5u4dZJsB/I8KYQPZsqExazq6NHx3MKjqsuJEg770J5Xn2c6tNFmh?=
- =?us-ascii?Q?RhtYyOv8/rDSeEP4kGxqDLtWjApOG9NnihGeGXUaBWjNjCQ/sUYu2d6O1MuG?=
- =?us-ascii?Q?edvedUnelP51RqouMiuFMbg=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <477B58D50B706642960861EEC0CA77AF@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75E711862;
+	Wed, 28 May 2025 00:54:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1748393682; cv=none; b=IQ/JP75u/Ynt0GFbG8AfT++PrJ25X7hCgR3x7HRfig1g1y5blYtkrnjRORh5PmZg4Rcg8XSYQgRRY2KSSlxmsKMrpleR4Z9eVd/M2RKgw2ICvBIAYrB5LjRyk/9WG/EteswUu+9XQSgIKQuV+ZdicgBzwtyb/bdwv/LVR6G2NEE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1748393682; c=relaxed/simple;
+	bh=gd4xfLncHNUyQzg2P69vjaMSh6/QXK433Ho/ho8ZwVA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uhgA2F1FAIbP/5yDRZRl31v1hlLOvLv5shR4EF255v+yYYC9BKH90/q5lnKT5sIbWlVI+OohPZmzHa75kvisfGeU6V6eRY+tL6/vg2kD3KbBGe4qRvGGuG/QipeaOq7zDqsglt5Twe74ryAtDNUD+bscaaaE1N/SLFa30QtkMLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4b6WHK5hTWzYQv4N;
+	Wed, 28 May 2025 08:54:37 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id E3A701A178F;
+	Wed, 28 May 2025 08:54:36 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP4 (Coremail) with SMTP id gCh0CgDHK2DKXjZomuPmNg--.45313S4;
+	Wed, 28 May 2025 08:54:36 +0800 (CST)
+From: Zheng Qixing <zhengqixing@huaweicloud.com>
+To: sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	yukuai3@huawei.com,
+	yi.zhang@huawei.com,
+	yangerkun@huawei.com,
+	zhengqixing@huawei.com
+Subject: [PATCH v2] scsi: mpt3sas: fix uaf in _scsih_fw_event_cleanup_queue() during hard reset
+Date: Wed, 28 May 2025 08:49:35 +0800
+Message-Id: <20250528004935.2000196-1-zhengqixing@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	Mk/K1IjSSxHL9+5pqWSv/YEHutMN1Aa5g4eSgZ87ZBWwFnpQrG+N+sIf6rzaQRjjk2qT14ueCNrWDJJXKo5gaBat+B3+QkIRxd+hLm3USSn0uOslArZNvvL7FROzkBY+cnZJcK+42ZXzT7yhO2iNxaOCsBiRFGVo8/NlbMIsec0I7dwv6gwmF9tde0BiE7aRakcvPuzepgFzNDVgwbfhtEdqyo1Z9l1rDjARGTl7d/hvg6B+BbvXwHvnBK77yZyWPaLu+pI+9F/1A4D+zcTg80+PNrIosxMEdH+zouocE+1ZN1DgwIFFnou03qN5vwEeMLJ8fXhOMss8ly092sTAbLLbmFQZnbM9LUmhcNg0NPS7z0Zvacu0SXX1Uxu7qXseTrBgLF3xbNpMVkCoBTgyzmdp4nfbPn1Yx0DzDjdH9ekUfVw/iWybZ65MgWYdCbKEgv95savw4ZQftBWPkFVjMYwWKSh7REw8HLlFRx4eaRsBvQJ39zzZmH+uI29EFerToP9sdJb3KFMwAkMt02kaONfUrMk7l/RM9+/pGwZeV2A93MXUR9JC78+/PDgYJR09sUlCqmeXKVG5cdgQiQ0WBA8uaFuxKF9MH2DE9XdwD73fgCx19Xtg7V46PNic4V5g
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN7PR04MB8532.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6e36350d-67f2-4847-ee88-08dd9d7a0309
-X-MS-Exchange-CrossTenant-originalarrivaltime: 27 May 2025 23:55:51.8492
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: imzBChHws64o7ttwZnRKDd8YXnPuvOK/7zna4L1S2uPKTND+3ctG5fm2uJON64W9DntZ4xxMNPSvplPB3Rldf4BE6dWnOZoOzfoYOrcvBeY=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR04MB8233
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgDHK2DKXjZomuPmNg--.45313S4
+X-Coremail-Antispam: 1UD129KBjvJXoW3AF4kAw18Gr18tw15Gr17Wrg_yoW3Zw43pr
+	95Ca43tws8WFyIgrsxWw1UX3WrA39Yqr1DGFW0g3Z3Ar43u34UtF18CFyYgF15Gr93Zasr
+	JayDt393CFWUJFDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv2b4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0E
+	n4kS14v26r1q6r43MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I
+	0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWU
+	tVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcV
+	CY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAF
+	wI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa
+	7IU17KsUUUUUU==
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/
 
-On May 21, 2025 / 21:08, Shinichiro Kawasaki wrote:
-> Hello all,
->=20
-> FYI, as a preparation to set up blktests CI, we are going to move the blk=
-tests
-> repository,
->=20
->  from: https://github.com/osandov/blktests
->  to:   https://github.com/linux-blktests/blktests
->=20
-> The move is planned early next week, around May/27.
->=20
-> The move will be served by the GitHub repository transfer feature [1], so=
- no
-> impact is expected for blktests users. Old repository addresses should be=
- usable
-> after the move since they are redirected to the new repository. Just to a=
-void
-> confusion, it is recommended to update the remote URLs in your local clon=
-es
-> after the move.
->=20
-> [1] https://docs.github.com/en/repositories/creating-and-managing-reposit=
-ories/transferring-a-repository
+From: Zheng Qixing <zhengqixing@huawei.com>
 
-FYI, the move has been completed around an hour ago.=
+Changes in v2:
+
+  1. Reference counting: Ensuring the fw_event_work has proper reference
+    counting so it's not freed while still in use
+  2. Read-write locks: Protecting access to ioc->current_event with locks
+     to prevent race conditions between readers and writers
+
+During mpt3sas hard reset, there are two asynchronous execution paths that
+can lead to use-after-free issues:
+
+Path A (cleanup):
+  _base_clear_outstanding_commands()
+    mpt3sas_scsih_clear_outstanding_scsi_tm_commands()
+      _scsih_fw_event_cleanup_queue()
+	cancel_work_sync // UAF!
+
+Path B (recovery):
+  _base_reset_done_handler()
+    mpt3sas_scsih_reset_done_handler()
+      _scsih_error_recovery_delete_devices()
+        alloc_fw_event_work()
+        _scsih_fw_event_add()
+          _firmware_event_work()
+            _mpt3sas_fw_work() // free fw_event
+
+Here is a use-after-free issue during hard reset:
+
+==================================================================
+BUG: KASAN: slab-use-after-free in __cancel_work_timer+0x172/0x3e0
+Read of size 8 at addr ffff88be08e72610 by task scsi_eh_10/980
+
+CPU: 50 PID: 980 Comm: scsi_eh_10 Kdump: loaded Not tainted 6.6.0+ #24
+Call Trace:
+ <TASK>
+ __cancel_work_timer+0x172/0x3e0
+ _scsih_fw_event_cleanup_queue+0x2a2/0x570 [mpt3sas]
+ mpt3sas_scsih_clear_outstanding_scsi_tm_commands+0x171/0x2c0 [mpt3sas]
+ mpt3sas_base_hard_reset_handler+0x2e8/0x9d0 [mpt3sas]
+ mpt3sas_scsih_issue_tm+0xaa1/0xc10 [mpt3sas]
+ scsih_target_reset+0x344/0x7f0 [mpt3sas]
+ scsi_try_target_reset+0xa7/0x1f0
+ scsi_eh_target_reset+0x4e8/0xc50
+ scsi_eh_ready_devs+0xc8/0x5b0
+ scsi_unjam_host+0x2fa/0x700
+ scsi_error_handler+0x434/0x700
+ kthread+0x2d1/0x3b0
+ ret_from_fork+0x2b/0x70
+ ret_from_fork_asm+0x1b/0x30
+ </TASK>
+
+Allocated by task 980:
+ mpt3sas_scsih_reset_done_handler+0x575/0x7f0 [mpt3sas]
+ mpt3sas_base_hard_reset_handler+0x7a7/0x9d0 [mpt3sas]
+ mpt3sas_scsih_issue_tm+0xaa1/0xc10 [mpt3sas]
+ scsih_dev_reset+0x354/0x8e0 [mpt3sas]
+ scsi_eh_bus_device_reset+0x255/0x7a0
+ scsi_eh_ready_devs+0xb6/0x5b0
+ scsi_unjam_host+0x2fa/0x700
+ scsi_error_handler+0x434/0x700
+ kthread+0x2d1/0x3b0
+ ret_from_fork+0x2b/0x70
+ ret_from_fork_asm+0x1b/0x30
+
+Freed by task 660838:
+ __kmem_cache_free+0x174/0x370
+ _mpt3sas_fw_work+0x269/0x2510 [mpt3sas]
+ process_one_work+0x578/0xc60
+ worker_thread+0x6c0/0xc90
+ kthread+0x2d1/0x3b0
+ ret_from_fork+0x2b/0x70
+ ret_from_fork_asm+0x1b/0x30
+
+Last potentially related work creation:
+ insert_work+0x24/0x230
+ __queue_work.part.0+0x3d2/0x840
+ queue_work_on+0x4b/0x60
+ _scsih_fw_event_add.part.0+0x20e/0x2c0 [mpt3sas]
+ mpt3sas_scsih_reset_done_handler+0x64b/0x7f0 [mpt3sas]
+ mpt3sas_base_hard_reset_handler+0x7a7/0x9d0 [mpt3sas]
+ mpt3sas_scsih_issue_tm+0xaa1/0xc10 [mpt3sas]
+ scsih_dev_reset+0x354/0x8e0 [mpt3sas]
+ scsi_eh_bus_device_reset+0x255/0x7a0
+ scsi_eh_ready_devs+0xb6/0x5b0
+ scsi_unjam_host+0x2fa/0x700
+ scsi_error_handler+0x434/0x700
+ kthread+0x2d1/0x3b0
+ ret_from_fork+0x2b/0x70
+ ret_from_fork_asm+0x1b/0x30
+
+Second to last potentially related work creation:
+ kasan_save_stack+0x21/0x40
+ __kasan_record_aux_stack+0x94/0xa0
+ kvfree_call_rcu+0x25/0xa20
+ kernfs_unlink_open_file+0x2dd/0x410
+ kernfs_fop_release+0xc4/0x320
+ __fput+0x35e/0xa10
+ __se_sys_close+0x4f/0xa0
+ do_syscall_64+0x55/0x100
+ entry_SYSCALL_64_after_hwframe+0x78/0xe2
+
+After commit 991df3dd5144 ("scsi: mpt3sas: Fix use-after-free warning"),
+a race condition exists in _scsih_fw_event_cleanup_queue(). When Path A
+dequeues a fw_event and Path B concurrently processes the same fw_event,
+the reference count can drop to zero before cancel_work_sync() is called
+in Path A, leading to use-after-free when accessing the already freed
+fw_event structure.
+
+Fix this by:
+1. Protecting all accesses to ioc->current_event with ioc->fw_event_lock
+2. Adding reference counting when accessing current_event
+3. Moving the fw_event_work_put() call from dequeue_next_fw_event() to
+   the caller, ensuring fw_event remains valid during cancel_work_sync()
+
+Fixes: 991df3dd5144 ("scsi: mpt3sas: Fix use-after-free warning")
+Signed-off-by: Zheng Qixing <zhengqixing@huawei.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 40 +++++++++++++++++++++-------
+ 1 file changed, 31 insertions(+), 9 deletions(-)
+
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+index 508861e88d9f..a17963ce3f93 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
+@@ -3659,7 +3659,6 @@ static struct fw_event_work *dequeue_next_fw_event(struct MPT3SAS_ADAPTER *ioc)
+ 		fw_event = list_first_entry(&ioc->fw_event_list,
+ 				struct fw_event_work, list);
+ 		list_del_init(&fw_event->list);
+-		fw_event_work_put(fw_event);
+ 	}
+ 	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 
+@@ -3679,10 +3678,15 @@ static void
+ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ {
+ 	struct fw_event_work *fw_event;
++	unsigned long flags;
+ 
++	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+ 	if ((list_empty(&ioc->fw_event_list) && !ioc->current_event) ||
+-	    !ioc->firmware_event_thread)
++	    !ioc->firmware_event_thread) {
++		spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 		return;
++	}
++
+ 	/*
+ 	 * Set current running event as ignore, so that
+ 	 * current running event will exit quickly.
+@@ -3691,10 +3695,21 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 	 */
+ 	if (ioc->shost_recovery && ioc->current_event)
+ 		ioc->current_event->ignore = 1;
++	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 
+ 	ioc->fw_events_cleanup = 1;
+-	while ((fw_event = dequeue_next_fw_event(ioc)) ||
+-	     (fw_event = ioc->current_event)) {
++	while (true) {
++		fw_event = dequeue_next_fw_event(ioc);
++
++		spin_lock_irqsave(&ioc->fw_event_lock, flags);
++		if (!fw_event) {
++			fw_event = ioc->current_event;
++			if (!fw_event) {
++				spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
++				break;
++			}
++			fw_event_work_get(fw_event);
++		}
+ 
+ 		/*
+ 		 * Don't call cancel_work_sync() for current_event
+@@ -3714,8 +3729,11 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 		    ioc->current_event->event !=
+ 		    MPT3SAS_REMOVE_UNRESPONDING_DEVICES) {
+ 			ioc->current_event = NULL;
++			spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
++			fw_event_work_put(fw_event);
+ 			continue;
+ 		}
++		spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 
+ 		/*
+ 		 * Driver has to clear ioc->start_scan flag when
+@@ -3741,6 +3759,7 @@ _scsih_fw_event_cleanup_queue(struct MPT3SAS_ADAPTER *ioc)
+ 		if (cancel_work_sync(&fw_event->work))
+ 			fw_event_work_put(fw_event);
+ 
++		fw_event_work_put(fw_event);
+ 	}
+ 	ioc->fw_events_cleanup = 0;
+ }
+@@ -10690,15 +10709,16 @@ mpt3sas_scsih_reset_done_handler(struct MPT3SAS_ADAPTER *ioc)
+ static void
+ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ {
++	unsigned long flags;
++
++	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+ 	ioc->current_event = fw_event;
++	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ 	_scsih_fw_event_del_from_list(ioc, fw_event);
+ 
+ 	/* the queue is being flushed so ignore this event */
+-	if (ioc->remove_host || ioc->pci_error_recovery) {
+-		fw_event_work_put(fw_event);
+-		ioc->current_event = NULL;
+-		return;
+-	}
++	if (ioc->remove_host || ioc->pci_error_recovery)
++		goto out;
+ 
+ 	switch (fw_event->event) {
+ 	case MPT3SAS_PROCESS_TRIGGER_DIAG:
+@@ -10794,8 +10814,10 @@ _mpt3sas_fw_work(struct MPT3SAS_ADAPTER *ioc, struct fw_event_work *fw_event)
+ 		return;
+ 	}
+ out:
++	spin_lock_irqsave(&ioc->fw_event_lock, flags);
+ 	fw_event_work_put(fw_event);
+ 	ioc->current_event = NULL;
++	spin_unlock_irqrestore(&ioc->fw_event_lock, flags);
+ }
+ 
+ /**
+-- 
+2.39.2
+
