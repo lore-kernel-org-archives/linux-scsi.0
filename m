@@ -1,210 +1,306 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6970F2749F2
-	for <linux-scsi@vger.kernel.org>; Thu, 29 May 2025 09:43:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=60.244.123.138
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748511811; cv=fail; b=a40i9hpvPCgybgSW/z2q9vTR81nPMKPVqphU0f+S0BdOxAjyl25Ho5NqgtARr2outDi4o0o+aZ/I8jeGWhN5q1ZZQLpCp5W8prZipa8JBfMR0+EmjFiwHU1RykTFcdkO2kGIJvH5k51KaxA4pYIW30JvyJMubZGBQzYBIIUdjTQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748511811; c=relaxed/simple;
-	bh=UzYqQ9BX9JbuHWPaDwIQyv13Fo3NUAcvNU2YhLBkybo=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=LBJTkuvARaMcN5WMoeEwjdmD1e4oMU4K+dZGFbKsls0ZtGGajYNqboeCJt2diF+7QE9tV5BNQ2y3k0R5u516/if8VY0+s/nFdoWOf520JLB27ugU+f5mccxhVtLX7PlHBx0MVPGhoy91khEqBdjfs+LcbASAbE1v9pv0HlIvss4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=KahyLBh1; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=nWKvpX46; arc=fail smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50F241F19A;
+	Thu, 29 May 2025 17:50:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1748541046; cv=none; b=Ix7izTlUlx9ANYm+VY12PFQ3XUKHGojThgTMS6yiIBT/wmFZ27wGR3uyFA3ktGi2/fC1ptXGubtAgKaJKfLUCEsI2tPj9jP3+GctvN19LmgMcpee4TvcL6tWfF5v89VNI54h4C7giC8T2lnVBFl8dpJrRJ1NtO9YSbdcLBS01DM=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1748541046; c=relaxed/simple;
+	bh=+s2Cur19DP9hB0WYfCgKF5nOFgrmQPEhk9aC8V7MzFk=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=gJkz4z6d+yV3AEoc5AXxh5fVnDkYyJvQaeGN9122+0k0LWUsC+8temKYvpAMXFxVm2KZUG01aEBjLl6Oc5I/XZ6lVcRgpiP+2olSSqzMFTFA6JH/RKmFIYkFAzm0ppQIrkTwzZKx6C2EsNoCmJEiPPQNDOFnkr7qce03I/pgwm0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=dBx3c09U; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="KahyLBh1";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="nWKvpX46"
-X-UUID: 5da37d783c7111f0813e4fe1310efc19-20250529
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=UzYqQ9BX9JbuHWPaDwIQyv13Fo3NUAcvNU2YhLBkybo=;
-	b=KahyLBh1TWA0oyJuuOzIEV0T7F+og5l8DFuJds+Us0R3O4TuSXhOMAxsoGlokO2FEtySB3b3BtlPgcmzJ/RsoT/KeXtFgTGyMhrOAyLY5nmhMdzv/iYSlPGWPhtQyd2/I2nt58Zk7afKQQZv//GayuxWOI664UGZT7YLFbpth+g=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.2.1,REQID:0c66135a-e308-424d-a3be-3f8c5def69e5,IP:0,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:0
-X-CID-META: VersionHash:0ef645f,CLOUDID:533a1c58-abad-4ac2-9923-3af0a8a9a079,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111,TC:nil,Conte
-	nt:0|50,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,
-	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-UUID: 5da37d783c7111f0813e4fe1310efc19-20250529
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1027876807; Thu, 29 May 2025 17:43:24 +0800
-Received: from mtkmbs10n1.mediatek.inc (172.21.101.34) by
- MTKMBS14N2.mediatek.inc (172.21.101.76) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Thu, 29 May 2025 17:43:21 +0800
-Received: from SEYPR02CU001.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n1.mediatek.inc (172.21.101.34) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Thu, 29 May 2025 17:43:21 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=uSx9EDtcxL82ZNg/WIeMm+twgCQpX2qBv7jbd2O8nX2jBR7im/Jy7XfZw4fjfv3Fz9WZ7e5p7T3p1cOoZoghIOQacjSqSqzrndGqpfzoDt0LQm4VsxzmahUov9H6NevcL1b8sfCuREiRpKBtUDZn5QShiGsEyrRlf7cy8VinvBaoFIL3T/nvy2N+reiyKMJ2ZTwR8Iiihd0PkJF5IgFkwVICIeffQVAC290MMqL0kJTulLKfVro4SbqGosrdRmo73W+ImpuIWuPQQLWTHhSMEh4+mkgYLEVmYSOx99LkKjOD8Zi4+gCBfZU7H+NpnvLrSI4DiaIEWOa24A4yIVkpvA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=UzYqQ9BX9JbuHWPaDwIQyv13Fo3NUAcvNU2YhLBkybo=;
- b=F1+bo0FFjv4sKPwWWP5y2ro2RTpaEt2D0zSN0GQ/PPx6szEkvVOiKpIap3qQ1NmO4qIwAxB/pnCfqwezFgIu4kDwxJFr3oiYNHGl9Bi4TNP4js3kKYvfsXANSwMwNZiktV9mQ4S7M3jA4yUbA43jWfrSPwnADP6biFWKWqE4Jp7Q3rYZjRf5IZj1uJ/GYc/bwXzIs4n094MPcZHdT87F/JOMXspLoUtME2x4LTlzX+qRwMCavG9G9wyGuoausStuNlTVJ2p692hrjuDQRF19+AmpyWU7NZFcBy/sLviGdCUx19C9UdKEI/AlIAG0LqUSaumnBJUbkOEnB1/FrI8Jmw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UzYqQ9BX9JbuHWPaDwIQyv13Fo3NUAcvNU2YhLBkybo=;
- b=nWKvpX46MkOOSZizKWR2xl1/MgiGfR4NREpFNP9qZP5fkMo0k7AVzw6jYtyU4Tpef+DEguTkj+lWUoaksq7wQeJVYi35Z1EvEc8aTesz9Dy2RDA7eYa+qzvKNMHw3ITRPXdn7BPV6l97h8EHCt6o7b3ew+E/gpsx/qAobejueAo=
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
- by TYZPR03MB8053.apcprd03.prod.outlook.com (2603:1096:400:45a::10) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8769.30; Thu, 29 May
- 2025 09:43:19 +0000
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::3945:7dbc:62bd:c31c]) by PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::3945:7dbc:62bd:c31c%6]) with mapi id 15.20.8769.025; Thu, 29 May 2025
- 09:43:19 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: "bvanassche@acm.org" <bvanassche@acm.org>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "avri.altman@wdc.com" <avri.altman@wdc.com>, "jejb@linux.ibm.com"
-	<jejb@linux.ibm.com>, Sanjeev Y <Sanjeev.Y@mediatek.com>,
-	"santoshsy@gmail.com" <santoshsy@gmail.com>, "quic_nguyenb@quicinc.com"
-	<quic_nguyenb@quicinc.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>, AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>, "manivannan.sadhasivam@linaro.org"
-	<manivannan.sadhasivam@linaro.org>, "matthias.bgg@gmail.com"
-	<matthias.bgg@gmail.com>, "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: core: ufs: Fix a hang in the error handler
-Thread-Topic: [PATCH] scsi: core: ufs: Fix a hang in the error handler
-Thread-Index: AQHbzB9auVPXGDRIzkKd3VohNkQZa7Pk6deAgAIj2ACAALAsAIAAeFSAgAEtyAA=
-Date: Thu, 29 May 2025 09:43:19 +0000
-Message-ID: <03ccea47401a5754fffaae91c549857478545a36.camel@mediatek.com>
-References: <20250523201409.1676055-1-bvanassche@acm.org>
-	 <2ab0ae98fd101d893d4f20112771cdb623fbca67.camel@mediatek.com>
-	 <ecfd1748-d257-48ae-808e-c672ac2f1536@acm.org>
-	 <32f45a00d5c1cdf26f91bde4821fe73d5b06dadc.camel@mediatek.com>
-	 <6d82c9dd-b93d-4400-9500-a850b1ba0bb7@acm.org>
-In-Reply-To: <6d82c9dd-b93d-4400-9500-a850b1ba0bb7@acm.org>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|TYZPR03MB8053:EE_
-x-ms-office365-filtering-correlation-id: d869c7db-028c-4537-48d5-08dd9e953e9c
-x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|7416014|366016|376014|38070700018;
-x-microsoft-antispam-message-info: =?utf-8?B?cExrcXNXWmdqbzhwY0xNZU9tOWYrUFd4K2RacTNpWlVxV3k3cE02cWlONFMr?=
- =?utf-8?B?Ti9peHdiMXQ0STcrQlNrRVkyOSt2MFpvTWlsK0Q5dW0wZkFJWlArbkxBNysw?=
- =?utf-8?B?ZVhnd3Y1WXJwM1RZOVAyeHRQeHhueWVOcHJ1dHQreDZkbHFHakV5Vm1pQTFm?=
- =?utf-8?B?MStoUTUzdW1lWitXbStYOW5pMkZlVFY1c2JwcVBoR3k4QWM0eU85ODhiN3VG?=
- =?utf-8?B?bDBCN293eC9uSitpRDMrOFlTM2dYVkZFUmpIaFJsaVE4OTg1VGoxUDBlNUV6?=
- =?utf-8?B?ZE5KdGVxRDdGTEpiSDQ0KzJiOFZjWWtQN0RTZW5aYTlmMXFXTkQyeEtySUZE?=
- =?utf-8?B?VFU1Ky9CcTR3bHpKUnducmhETlFhQ2FyK0xzSGo2Y3R5Ulhic3RlMlMvSkN2?=
- =?utf-8?B?T3pVWE9ISG8rMVZ6YXVheFhmWXEyT3ZidU1IMFVIbXd0cnY2ai9wU0tuTUp4?=
- =?utf-8?B?M1hYTkZJMGR2Ti85K2JWVnNmMFJYMFdZajI1aHJUOVhBV0puSzVvcmwvK3Jr?=
- =?utf-8?B?RGVnRlVuOTdKZiszV3NXWlFQMlh6aUZzVktXM1lCU2Z1Wnh6c3B0YVhmN2xR?=
- =?utf-8?B?SjdpYjV0SlNyYTZ6VWdqVEZsOUZ2eGU4VWtYK1A5L0hIV05yUWs3eWV4Ymt4?=
- =?utf-8?B?eW9POHdXTEY1bWszOXNTNG51TVV2MDhxb0dlRDBIbzlvajh2RG5henlwTmVM?=
- =?utf-8?B?Skp2WXFqdndsZ1lmbWIrTnNIZDRkM01HN0NFUFNPcjVMaXdYK2ZXK2YwYXc5?=
- =?utf-8?B?OXhxYlNJZFFmNnM4STRjYjRrdEdHYkluZHZmNVNiUXlnMkdpM1h0L2dnQTh3?=
- =?utf-8?B?NTFIOFNyL0laTVI1T1VZWkg0OG1VUkNuNlZ0MVFrd2dWL2RIQThpaHFPd2Jh?=
- =?utf-8?B?NGR6dnlwZ3pjUk4zZkNtS3ArQURLUVdNM3Joak5BWDVLZndWbFczWmZSeU10?=
- =?utf-8?B?UkF4VFVBajV5MVNFaXFPZTd0SDIzbE5YMW0ySzY2b2ZlcWpMREUrSEo3citJ?=
- =?utf-8?B?UTVSV0RBZnFqQzZnMWJjVXZYSnlYanY5OHZMM3hKYkZTZGJNdng5a1BTN3NU?=
- =?utf-8?B?a0R5MjU4M3VsbmZpS2VWMjJoOEJ2aXJKejRPZ2s1cFQrZy9SVHg5dVYvYUU2?=
- =?utf-8?B?N3R2TmFRMDRmVUh2b1ZNQjE2OHJPbEpsaXhma29kUWgzZHhsbk51bENjRlkv?=
- =?utf-8?B?TUlvcGtNcnVQNm9GZ0JZd3dhZjZBWkFZTE9NNnhlTjRjZjBrNjI3Rm9GQnB2?=
- =?utf-8?B?TmRuZU5tMHA4KzJUdjU4UmdYZy9ZbGZndk02VTBXcCt1MmdaWEFqV2RSV2VW?=
- =?utf-8?B?amZ6Y2RFZURUWUZrWSt2Z1RMdDBFZXkxM0FMNFY0U0dxTDhIREJQMFMrR3pT?=
- =?utf-8?B?Mmd0ZkpJQjhFTmtOUUNCc2NqNWluSmt3TGdyQkd4d0cwaTVzOGd6S05NOUJN?=
- =?utf-8?B?RUlGUHZMc3BSZHczV0o4WDc3bGZkNjRmMVZISnR2eWE2V2l5MWNnMkdUakY3?=
- =?utf-8?B?NFM2TURNSEIvMFVTUjBMMFpOTTVDeXF0VTZESElpRmVVb0RMa3JQaS9lSDJ5?=
- =?utf-8?B?MXhvOVdOQjFlS0tzZnBUMXppbUh6SHoyMEF3VGExZCtJU2VjdHh5eHdLRFdT?=
- =?utf-8?B?Ty9YYUVLdGU5VmMxRzdwRzA5VW9mREJBZGRhOXNFcXgydFRpNHh0eXpyVDFG?=
- =?utf-8?B?T3h5N0IwMGVOUDhPcWhLTjhZUHFNMmN1UmVudDBKOCtKbDh2M2tQOUduWDVL?=
- =?utf-8?B?Uk5MN2ZqQS9kamJZWWRJa09MOUVJd082YzZBdFlYN0VZSmExeE9KOEd1bWFy?=
- =?utf-8?B?UEF4ekNIOXdGYm1Kdzc3VkRLb045VW9GQVhxZnB6d043NW9zdHppM3NlWTIz?=
- =?utf-8?B?aXZtQXUrejhqOGE4enNNU3pQcmJZWVZOeDJmTE1jOFdvUHZ0R0JhdkNaUkxN?=
- =?utf-8?B?Umd2OXRJdFVmeklvU000YU9IdEZjejJvMTA5VjFpU3h2RVl1YjFWZ3F3QTRi?=
- =?utf-8?Q?zjxxHnZ2YYy0ive2oRd80k8UhujimY=3D?=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(366016)(376014)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?ZG8relJmSVFNYXEzdEZNeHRZVjNTcWdQVVZ4cmxGNGZvOWcxTTNoZGdiLzNG?=
- =?utf-8?B?M0pXR3FqcDhLNS9iaTZxMVhLelBINThhZHBBNUZuL3dQaXd1QXo3NTVPb2VQ?=
- =?utf-8?B?SU96cmV0N2xvVmhaSlhBZ3BLWWZ5S252cEJxTnZYeUZBQnlRaGpTQllab0or?=
- =?utf-8?B?b2ZzSU00bFVVdy9wczJ2WGVsTENlcHkySnZaZldSdTVyWnlqODU2WCtMQlI3?=
- =?utf-8?B?WDFWOFZ5MVpwYlo1b3ViSmwzMHlCc0dPWm9KVHRjeW9oQ0FUbjNKQUhaNXFS?=
- =?utf-8?B?dGhSc1lqQTVSbmUxSCsxM1RDUFdRMXlMNHN3OU0zUzhZU01oTkQrWS9LVWMy?=
- =?utf-8?B?NlRPbWNhY216c2l0cm9JQ0lFNUVnMk43a24veW1OZ2J2UlF1M2plVytrd21o?=
- =?utf-8?B?MldRQ2NqTm1ydXhDRTY2cXYwa2tYY0tmdHduSFpRZzI1eWpVYWU4TWdJQVBU?=
- =?utf-8?B?N3R0QWdRMFEzZFhtZS9jL1U3Sk1naFB6OGxscERZbFJWU2dtbW9hS2ZGM0hZ?=
- =?utf-8?B?aU00bHZzdWpDUUNINjc4bzk2cm0rWUJJUGZZQkZVeFFOYmxRY0I4SUhtTW9Y?=
- =?utf-8?B?TXJBbGFlYzBEQ092NmQvUmIyeVRqNlNSRmFJTWU2b2YyK0FVRlY0aGgwMStK?=
- =?utf-8?B?OU9OSDV1VFNXMHFLak1ONnpDcFppM2lqdVcycGFsZVB5TW9KRHlOQytjQXpr?=
- =?utf-8?B?dHpSU0pUaE9oZUdhZjNwY0lYcEU5Ri9YT1JRS3B6RzZ2UnlQK0lRSU1odkZ4?=
- =?utf-8?B?bXJPamk1czZXbHdXL0VHRjM1UjRzanpqZGwxMjJEYzJkN0NWbThWRzlhd1ow?=
- =?utf-8?B?SGMzSVJoYnN5NktHckpsQ0VvMnpuMTRyT0FJSkdnVVdKWW4rNlhITlcySFhi?=
- =?utf-8?B?aGNVeTFXTGIyd2ROc3RYdlVoTHpaYTlaeEgwelFLWkRjQVBEMndnT3hPWTEw?=
- =?utf-8?B?RlU0aklQVlVES0gzb3hpUkZrYnBHampPUW1yWXNkNmNmVkhCaDdoaVpqY2FI?=
- =?utf-8?B?dFFJOWswS2JCMjBVdjU2Vm5hNUYrWlYyelF0L2RUWjJKcG1PNkVZWTdLc0Q5?=
- =?utf-8?B?UEhPc0lhYnl6TlZWaktONWhweHNoU214c3F3Tlg1TjRwUTBla2VFcGNmbVRB?=
- =?utf-8?B?YWZscjB2Q1NNL1NleDFnT2s1Z2RiZ1kzN1p2TmVqR1RodC9jRVBqZ1M4T1hq?=
- =?utf-8?B?QkgrbUl4QmFGNkVZdUthZjQwQjgvVXNFVmRCeWQxeEdKQlJPRjlDNHZOdjJ0?=
- =?utf-8?B?aG0va2tGYmRRM1dPdnBMWFRYTUZ2dkhQMHdIR0pRZkN5My8vUHB1dm9EUUFi?=
- =?utf-8?B?SlhNZktURktHRzhqUXpURDZJN2Z6NHJUaHQ3blNHTEc4QVpxdHZKVDFWK0c3?=
- =?utf-8?B?TWtqTHNpMDNLUkVFVDU4cVdOT1UvVVo1b3dRYkpJcXAvNmxMaFJ3Z01pSlRH?=
- =?utf-8?B?WWZLSXdabWR5dGpGZU5JNE9wTmVmaHM1TlU4b2haQWlrM0JwejdJWDA1UXR6?=
- =?utf-8?B?VnJUN3k2SWlyVFV1dTNYVm11M1E3WnNIS3cwN2tYc3FDV2xyVzh0TVoramZ5?=
- =?utf-8?B?MWZJT00yZ1hEU000OHYrQjVRKytYekNKVUlZRWMreHdXbVdmd0tJNjZZN1dP?=
- =?utf-8?B?bGYwOEFoYWxkc3FIN3VZa2M3d2RERFZncXVna0lJWFFBUWoyVjBTSWdsRnFw?=
- =?utf-8?B?VGp5N0ZRTEM4TGFXd1plM0ZhM0t4Y2pyMlVsV2VRc3BiOHp1TFlDOU1EQzhh?=
- =?utf-8?B?UytXa0FXQzRzSFRHcVJiNVVjbzVDUGNPNk5NZEZmMkppZk1yblI5b3pnTDE3?=
- =?utf-8?B?eVRnZW1XS1Z2L3VaaG9Wb1piMndVTWdhODJPczlTVTA3QmdtYkF0WVQ2a2xR?=
- =?utf-8?B?c0MvR3NYMkNtTjhaejFkY1A0TVF6UEY3M1l1N01SNFRuR21TYldWcEVORFpm?=
- =?utf-8?B?Mm52R28yREF1Uk1FbVZlSzIvZGUyUkVLaThVdzQ4TExFRGgwOVRMbTEvalRp?=
- =?utf-8?B?ZXpKamh6U05lU0JBT0pwY3BHaFlRWjlhYmlBSGt4Sm5wTjFydVdoenRKZDJ4?=
- =?utf-8?B?MlRyOWtaeDVOTzM3RGhzd3dlb0RUZ1oxZTFkZmNDL29TNXovaFNvaC9VMEtQ?=
- =?utf-8?B?dURYbWF6K1pXM3MwaEZJblRjUlZhV1l0dm4yUWNKaENuUVlDbm82dWpzejNi?=
- =?utf-8?B?Zmc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <CFDB1005E80F5546A2F14F9F8FA62324@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="dBx3c09U"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1748541040;
+	bh=+s2Cur19DP9hB0WYfCgKF5nOFgrmQPEhk9aC8V7MzFk=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=dBx3c09UXp2LyfnEPP6+00AhTMrROQG5Br1oDmpWhQCqbQsD1qudg0k0ZQp07tbre
+	 qA+hm9Pzeq7IAnmCqkyJtJ4mi4dPraX2J/87yodH+UKMLTrNZnmsPrm7EJBrlMATTX
+	 ASnFbRSS3XgxrkcGGFIdpZ6fTzf8wQZEHgjUYXHI=
+Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id C4C751C0103;
+	Thu, 29 May 2025 13:50:40 -0400 (EDT)
+Message-ID: <a68bfa4b6e75c8bfa2cb847d0b4867f44f9b8109.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI updates for the 6.14+ merge window
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Thu, 29 May 2025 13:50:39 -0400
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d869c7db-028c-4537-48d5-08dd9e953e9c
-X-MS-Exchange-CrossTenant-originalarrivaltime: 29 May 2025 09:43:19.4003
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: i07qu4rhPNsYt6S9dp8YlR8i4WOPH327w8KO4kVAgRLP5sn4X7E3/7HEb6cax4TCJewZRSXvIOt35KEX3AXzPg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: TYZPR03MB8053
 
-T24gV2VkLCAyMDI1LTA1LTI4IGF0IDA4OjQzIC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IEhpIFBldGVyLA0KPiANCj4gSXQgc2VlbXMgdG8gbWUgdGhhdCB0aGlzIHBhdGNoIGRvZXNu
-J3QgaGF2ZSBhbnkgYWR2ZXJzZSBzaWRlIGVmZmVjdHMNCj4gYW5kDQo+IGFsc28gdGhhdCBpdCBm
-aXhlcyBhIGJ1ZywgbmFtZWx5IHRoYXQgdWZzaGNkX3NldF9laF9pbl9wcm9ncmVzcygpDQo+IHNo
-b3VsZA0KPiBiZSBjYWxsZWQgYWZ0ZXIgdWZzaGNkX2Vycl9oYW5kbGluZ19wcmVwYXJlKCkgaW5z
-dGVhZCBvZiBiZWZvcmUuIERvDQo+IHlvdQ0KPiBhZ3JlZSB3aXRoIHRoaXMgYW5kIGRvIHlvdSBh
-bHNvIGFncmVlIHRoYXQgaXQgd291bGQgYmUgZ29vZCB0byBoYXZlDQo+IHRoaXMNCj4gcGF0Y2gg
-dXBzdHJlYW0/DQo+IA0KPiBUaGFuayB5b3UsDQo+IA0KPiBCYXJ0Lg0KDQpIaSBCYXJ0LA0KDQpZ
-ZXMsIHRoaXMgcGF0Y2ggc2hvdWxkIGJlIGFibGUgdG8gc29sdmUgcGFydCBvZiB0aGUgcHJvYmxl
-bQ0KYW5kIHNob3VsZG4ndCBjYXVzZSBhbnkgc2lkZSBlZmZlY3RzLg0KDQpSZXZpZXdlZC1ieTog
-UGV0ZXIgV2FuZyA8cGV0ZXIud2FuZ0BtZWRpYXRlay5jb20+DQoNCg0K
+Updates to the usual drivers (smartpqi, ufs, lpfc, scsi_debug, target,
+hisi_sas) with the only substantive core change being the removal of
+the stream_status member from the scsi_stream_status_header (to get rid
+of flex array members).
+
+The patch is available here:
+
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-misc
+
+The short changelog is:
+
+Alok Tiwari (1):
+      scsi: mvsas: Fix typos in SAS/SATA VSP register comments
+
+Bart Van Assche (1):
+      scsi: ufs: core: Increase the UIC command timeout further
+
+Benjamin Block (1):
+      scsi: zfcp: Simplify workqueue allocation
+
+Chelsy Ratnawat (1):
+      scsi: mpi3mr: Fix typo and grammar
+
+Chen Ni (2):
+      scsi: sg: Remove unnecessary NULL check before unregister_sysctl_tabl=
+e()
+      scsi: fnic: Replace memset() with eth_zero_addr()
+
+Christoph Hellwig (1):
+      scsi: sd: Remove the stream_status member from scsi_stream_status_hea=
+der
+
+Christophe JAILLET (2):
+      scsi: target: core: Constify struct target_opcode_descriptor
+      scsi: target: core: Constify enabled() in struct target_opcode_descri=
+ptor
+
+Dan Carpenter (1):
+      scsi: smartpqi: Delete a stray tab in pqi_is_parity_write_stream()
+
+Daniel Wagner (1):
+      scsi: lpfc: Use memcpy() for BIOS version
+
+David Strahan (2):
+      scsi: smartpqi: Add new PCI IDs
+      scsi: smartpqi: Take drives offline when controller is offline
+
+Don Brace (1):
+      scsi: smartpqi: Update driver version to 2.1.34-035
+
+Dr. David Alan Gilbert (12):
+      scsi: core: Remove unused scsi_dev_info_list_del_keyed()
+      scsi: isci: Remove unused sci_remote_device_reset()
+      scsi: qedi: Remove unused qedi_get_proto_itt()
+      scsi: qedi: Remove unused sysfs functions
+      scsi: qla2xxx: Remove unused module parameters
+      scsi: qla2xxx: Remove unused qla2x00_gpsc()
+      scsi: qla2xxx: Remove unused ql_log_qp
+      scsi: qla2xxx: Remove unused qla82xx_wait_for_state_change()
+      scsi: qla2xxx: Remove unused qla82xx_pci_region_offset()
+      scsi: qla2xxx: Remove unused qlt_83xx_iospace_config()
+      scsi: qla2xxx: Remove unused qlt_fc_port_deleted()
+      scsi: qla2xxx: Remove unused qlt_free_qfull_cmds()
+
+Eric Biggers (2):
+      scsi: ufs: qcom: Add support for wrapped keys
+      scsi: soc: qcom: ice: Make qcom_ice_program_key() take struct blk_cry=
+pto_key
+
+Gaurav Kashyap (1):
+      scsi: soc: qcom: ice: Add HWKM support to the ICE driver
+
+Huan Tang (2):
+      scsi: ufs: core: Fix WB resize using wrong offset
+      scsi: ufs: core: Add WB buffer resize support
+
+John Garry (1):
+      scsi: scsi_debug: Reduce DEF_ATOMIC_WR_MAX_LENGTH
+
+Justin Tee (8):
+      scsi: lpfc: Copyright updates for 14.4.0.9 patches
+      scsi: lpfc: Update lpfc version to 14.4.0.9
+      scsi: lpfc: Create lpfc_vmid_info sysfs entry
+      scsi: lpfc: Avoid potential ndlp use-after-free in dev_loss_tmo_callb=
+k
+      scsi: lpfc: Prevent failure to reregister with NVMe transport after P=
+RLI retry
+      scsi: lpfc: Restart eratt_poll timer if HBA_SETUP flag still unset
+      scsi: lpfc: Notify FC transport of rport disappearance during PCI fcn=
+ reset
+      scsi: lpfc: Fix lpfc_check_sli_ndlp() handling for GEN_REQUEST64 comm=
+ands
+
+Kai M=C3=A4kisara (5):
+      scsi: scsi_debug: Add ERASE for tapes
+      scsi: scsi_debug: Use scsi_device->type instead os sdebug_ptype where=
+ possible
+      scsi: scsi_debug: Move some tape-specific commands to separate defini=
+tions
+      scsi: scsi_debug: Enable different command definitions for different =
+device types
+      scsi: scsi_debug: Fix two typos in command definitions
+
+Kees Cook (3):
+      scsi: qla4xxx: Remove duplicate struct crb_addr_pair
+      scsi: qla2xxx: Remove duplicate struct crb_addr_pair
+      scsi: pm80xx: Add __nonstring annotations for unterminated strings
+
+Manish Pandey (3):
+      scsi: ufs: ufs-qcom: Add support to dump testbus registers
+      scsi: ufs: ufs-qcom: Add support to dump MCQ registers
+      scsi: ufs: ufs-qcom: Add support to dump HW and SW hibern8 count
+
+Mike Christie (2):
+      scsi: target: Move delayed/ordered tracking to per CPU
+      scsi: target: Move I/O path stats to per CPU
+
+Nathan Chancellor (1):
+      scsi: dc395x: Remove leftover if statement in reselect()
+
+Neil Armstrong (3):
+      scsi: ufs: core: Delegate the interrupt service routine to a threaded=
+ IRQ handler
+      scsi: ufs: core: Track when MCQ ESI is enabled
+      scsi: ufs: core: Drop last_intr_status/ts stats
+
+Nitin Rawat (1):
+      scsi: ufs: qcom: dt-bindings: Document the SM8750 UFS Controller
+
+Oliver Neukum (1):
+      scsi: dc395x: Remove DEBUG conditional compilation
+
+Peter Wang (2):
+      scsi: ufs: core: Support updating device command timeout
+      scsi: ufs: core: Change hwq_id type and value
+
+Randy Dunlap (1):
+      scsi: docs: Clean up some style in scsi_mid_low_api
+
+Ranjan Kumar (1):
+      scsi: mpi3mr: Event processing debug improvement
+
+Shivasharan S (1):
+      scsi: mpt3sas: Fix _ctl_get_mpt_mctp_passthru_adapter() to return IOC=
+ pointer
+
+Thorsten Blum (3):
+      scsi: lpfc: Use secs_to_jiffies() instead of msecs_to_jiffies()
+      scsi: target: Remove size arguments when calling strscpy()
+      scsi: elx: sli4: Replace deprecated strncpy() with strscpy()
+
+Venkatesh Emparala (1):
+      scsi: smartpqi: Enhance WWID logging logic
+
+WangYuli (1):
+      scsi: scsi_transport_fc: Rename del_timer() in comment
+
+Wonkon Kim (1):
+      scsi: ufs: core: Print error value as hex format in ufshcd_err_handle=
+r()
+
+Yi Zhang (1):
+      scsi: smartpqi: Fix smp_processor_id() call trace for preemptible ker=
+nels
+
+Yihang Li (5):
+      scsi: hisi_sas: Fix warning detected by sparse
+      scsi: hisi_sas: Wait until error handling is complete
+      scsi: hisi_sas: Call I_T_nexus after soft reset for SATA disk
+      scsi: hisi_sas: Coding style cleanup
+      scsi: hisi_sas: Use macro instead of magic number
+
+ping.gao (1):
+      scsi: ufs: mcq: Delete ufshcd_release_scsi_cmd() in ufshcd_mcq_abort(=
+)
+
+And the diffstat:
+
+ Documentation/ABI/testing/sysfs-driver-ufs         |  49 ++
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          |   2 +
+ Documentation/scsi/scsi_mid_low_api.rst            |  18 +-
+ drivers/mmc/host/sdhci-msm.c                       |  16 +-
+ drivers/s390/scsi/zfcp_aux.c                       |  14 +-
+ drivers/scsi/dc395x.c                              | 697 +----------------=
+----
+ drivers/scsi/elx/libefc_sli/sli4.c                 |   6 +-
+ drivers/scsi/fnic/fip.c                            |   8 +-
+ drivers/scsi/hisi_sas/hisi_sas.h                   |  51 +-
+ drivers/scsi/hisi_sas/hisi_sas_main.c              |  81 ++-
+ drivers/scsi/hisi_sas/hisi_sas_v1_hw.c             |   2 +-
+ drivers/scsi/hisi_sas/hisi_sas_v2_hw.c             |   6 +-
+ drivers/scsi/hisi_sas/hisi_sas_v3_hw.c             | 259 +++++---
+ drivers/scsi/isci/remote_device.c                  |  30 -
+ drivers/scsi/isci/remote_device.h                  |  15 -
+ drivers/scsi/lpfc/lpfc_attr.c                      | 136 +++-
+ drivers/scsi/lpfc/lpfc_bsg.c                       |   6 +-
+ drivers/scsi/lpfc/lpfc_hbadisc.c                   |  38 +-
+ drivers/scsi/lpfc/lpfc_init.c                      |   3 +
+ drivers/scsi/lpfc/lpfc_nvme.c                      |  10 +-
+ drivers/scsi/lpfc/lpfc_sli.c                       |  30 +-
+ drivers/scsi/lpfc/lpfc_version.h                   |   2 +-
+ drivers/scsi/lpfc/lpfc_vport.c                     |   4 +-
+ drivers/scsi/mpi3mr/mpi3mr_os.c                    |  73 ++-
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c                 |   3 +-
+ drivers/scsi/mvsas/mv_64xx.h                       |   4 +-
+ drivers/scsi/pm8001/pm8001_ctl.c                   |   2 +-
+ drivers/scsi/qedi/qedi_dbg.c                       |  22 -
+ drivers/scsi/qedi/qedi_dbg.h                       |  12 -
+ drivers/scsi/qedi/qedi_gbl.h                       |   1 -
+ drivers/scsi/qedi/qedi_main.c                      |   8 -
+ drivers/scsi/qla2xxx/qla_dbg.c                     |  53 --
+ drivers/scsi/qla2xxx/qla_dbg.h                     |   3 -
+ drivers/scsi/qla2xxx/qla_gbl.h                     |   5 -
+ drivers/scsi/qla2xxx/qla_gs.c                      |  90 ---
+ drivers/scsi/qla2xxx/qla_nx.c                      |  50 --
+ drivers/scsi/qla2xxx/qla_os.c                      |  12 -
+ drivers/scsi/qla2xxx/qla_target.c                  | 129 ----
+ drivers/scsi/qla2xxx/qla_target.h                  |   3 -
+ drivers/scsi/qla4xxx/ql4_nx.c                      |   5 -
+ drivers/scsi/scsi_debug.c                          | 361 ++++++-----
+ drivers/scsi/scsi_devinfo.c                        |  27 -
+ drivers/scsi/scsi_priv.h                           |   2 -
+ drivers/scsi/scsi_transport_fc.c                   |   2 +-
+ drivers/scsi/sd.c                                  |   2 +-
+ drivers/scsi/sg.c                                  |   3 +-
+ drivers/scsi/smartpqi/smartpqi_init.c              | 140 ++++-
+ drivers/soc/qcom/ice.c                             | 350 ++++++++++-
+ drivers/target/target_core_configfs.c              |  20 +-
+ drivers/target/target_core_device.c                |  89 ++-
+ drivers/target/target_core_spc.c                   | 134 ++--
+ drivers/target/target_core_stat.c                  |  69 +-
+ drivers/target/target_core_transport.c             | 119 ++--
+ drivers/ufs/core/ufs-mcq.c                         |   6 -
+ drivers/ufs/core/ufs-sysfs.c                       | 133 ++++
+ drivers/ufs/core/ufshcd.c                          | 103 ++-
+ drivers/ufs/host/ufs-qcom.c                        | 181 +++++-
+ drivers/ufs/host/ufs-qcom.h                        |  11 +
+ include/scsi/scsi_proto.h                          |   3 +-
+ include/soc/qcom/ice.h                             |  34 +-
+ include/target/target_core_base.h                  |  26 +-
+ include/ufs/ufs.h                                  |  32 +
+ include/ufs/ufshcd.h                               |   8 +-
+ 63 files changed, 1990 insertions(+), 1823 deletions(-)
+
+Regards,
+
+James
+
