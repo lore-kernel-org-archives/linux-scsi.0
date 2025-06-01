@@ -1,25 +1,26 @@
 Received: from CWXP265CU008.outbound.protection.outlook.com (mail-ukwestazon11020120.outbound.protection.outlook.com [52.101.195.120])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B45095227;
-	Sun,  1 Jun 2025 01:41:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2BE3B65C;
+	Sun,  1 Jun 2025 01:41:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.195.120
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748742068; cv=fail; b=No0Kgu52aZnLejouulHu1ORh50qgovbS7XDW9kJ1BNaWxMXKdbCzEWOLn8GXvzn7ujLYrNU8orvW2I3moHBUIQR82YH77j6ZB7TUnmsjHVoINZBRcVARbLCI4BKJO2F1+wj6DWk2pGsSPelc+iNkuxplUbNQz+SU4ysgTgSsRP0=
+	t=1748742070; cv=fail; b=HsPKTlECPC8yiam1h2KcKq69Zuhv45ntdGLh0+6sc6CekXu9q/y2A3tak4LKVdCgEENAcxcykySzIfeH+OisGsaZeIEPNeUmjU5sewj/SWXnPvXsNcIzyFxbvUcG0yF69iyN0lAd+lqJ2aQDpxytIZ0P9zGfDR8yNMsOOYNeCkE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748742068; c=relaxed/simple;
-	bh=F4xCCxpDicx6qWXuT30G+VoY+no0+9psfNOazYpqhkc=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=GSc5tqo38kgZWP4sn7NnWnhmJV5eZ0lDa0vJYFrmbH/itcYORO1SUO9vI+FVOh3HfXwRPltXIkSEL9YrR8789mlKTdGu2OsJV9JjcDalAJgJfxfS9+K3UcfbHs4uURdrtY+ADNTs/Mal9pUEPlKohLtsRU6NUN9nkbQs21/NwX8=
+	s=arc-20240116; t=1748742070; c=relaxed/simple;
+	bh=B6hn3UBHBlu8qJZMy5OIjmFPSSgcxq7rDFePY15cmXM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=EJFPACUlVPOXZ3sI6FrHxyK7da1n47AaiX1AlDO5VZpGCzrOAOoWNWCms1XEZTEBxbufnmSGDuhX3xOSN00giZEXuL7RjwWc4IgvvKUWvbXzWiASQGv/R9dfWZZ1EoOaSTCYsm9hJuFKVUl2mWQ5WGEBLW8dnOQonsNZqSlef4Y=
 ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com; spf=pass smtp.mailfrom=atomlin.com; arc=fail smtp.client-ip=52.101.195.120
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=atomlin.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=atomlin.com
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xTOMhPAgbzK8m7UyazFGfaqYIGTFaUoRB4K+FboNeP1tBIP/2GW14FlkszAlstgTJVZ5CupbuUYLhA1aybsvAKXasR8q0s62gHuspHC6l446B41Wt3bfEmacFwL11I56uGpAaHE++OUV6CWuklmJSPI8cGjNoIZVpYUtIklDMbOIxdHrp0CLjrQBB1m8Vl4VlWrbxB2xk0rDLvk9elo8f/Z8i6SsdjmJE9/WpubfIdHgYQ+h4JZs+gJtyySjIaYLOelDfngXEvBwEOENlR/FHNo4g5cq/J3mNLH7DyEZIrx/BKopxY5ahCCiXY9oUYDIN5HdP/eoe/LIQJzMtIOAhQ==
+ b=o8awuBfwmwMvKRdN2rKKZSIcX5MVwXeYBtHARcyK4g3Kc5gYuqxdMk3o10Pt6A+AK2hfSAF0TeIYVghXphImC11VBZvYPzYhLpJtRPp3MRzsd0MsHSxv4fXLquU8uvPZdouaospZjzEBBp8sfE+lNCaHn/RI/mPyeXGA6dlYBHvtV5NXhbYtFqxTQN+NT/O9A4NBV4jWGRbCM0Qh1Ne6y7T/n5FZgxpzXrbGlpXnxK8jtydanO+2+ke6fUePzPPDgTH7VKan/h3oMkw1UDn5YFOLqKSkcsLgvd0vrimMtViZ4T3dRXCTf0O30FZBrvoueY1ClNt7kRbJxmJD/UpsOw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=AIpu+OUey+jTGs4+B/n1jvzKlZ8nLYOs/8w+zEu4S0I=;
- b=RBbfmAZBOd/MypPpTzvpyunhuFS/SrnSyyMcEo+T8DgZYxPg3ifbA5RxGLzRxiMnmFB8shWjHveEQH48do0XURY2y3FLm9pHeE8FBDFRinwXZP6lCXRIq7EIsYG6sb7bJbKCNkPtWaoBmPYrDS5zcwI8a7wYXe9ZqDZCNrWGqEulKnVtrMrUagp3G0LD9OIttn/h1Qn4ggXMX2D3dviIOxULeXYy2SpY2IDDaKM1GenU/coX9IZcmAbdNo06Hgc3IBc7KAcHr2tvHXV+ozfsqwkFuVNoyS7y4p+tbw1omZO9vk+rQ6wxruK/mXuU20CEa1SFmprb/p5YnWa8qUPUyg==
+ bh=0gey7zi8sodF373x8/Eu8hbKh4sP35j76LkbcMPWS0M=;
+ b=JmlfdsPcBJxkWLRFsHLFACS6nWh5yAWEuqFkBP7EKqJ0flvUbeb+tMMFEvB5Y0TqAhH592Swha1E19uGwrHIf2SSP8uxbrQyc6Ph7gtdgCnuBoa+d74KBNjJvPjGqx7qbJtcOxpz4Jj1wGIom3ZDIdM7qe0q/T11PTRkjSpKyDy2/bTwODoKpZfTMBgSJQvHWDr5W3S5h4OWqaQx8oGcKLlIhLIbPilRtFZxQqQXCQYt/BOkdDUFkphZcpCsXkiQ3qY1flqod0i8Bg20led/S3LFP0MHQfGQQnIcah0zcNvucT6C1OtF5s8C3LeBgDqnw6rcu4MhF0GhCZ73JFCJmQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=atomlin.com; dmarc=pass action=none header.from=atomlin.com;
  dkim=pass header.d=atomlin.com; arc=none
@@ -29,11 +30,11 @@ Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM (2603:10a6:400:70::10)
  by LO0P123MB5679.GBRP123.PROD.OUTLOOK.COM (2603:10a6:600:229::14) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8813.16; Sun, 1 Jun
- 2025 01:41:02 +0000
+ 2025 01:41:07 +0000
 Received: from CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::5352:7866:8b0f:21f6]) by CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
  ([fe80::5352:7866:8b0f:21f6%4]) with mapi id 15.20.8813.016; Sun, 1 Jun 2025
- 01:41:01 +0000
+ 01:41:07 +0000
 From: Aaron Tomlin <atomlin@atomlin.com>
 To: mpi3mr-linuxdrv.pdl@broadcom.com
 Cc: kashyap.desai@broadcom.com,
@@ -44,15 +45,17 @@ Cc: kashyap.desai@broadcom.com,
 	atomlin@atomlin.com,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
-Subject: [RFC PATCH v2 0/1] scsi: mpi3mr: Introduce smp_affinity_enable module parameter
-Date: Sat, 31 May 2025 21:40:55 -0400
-Message-ID: <20250601014056.128716-1-atomlin@atomlin.com>
+Subject: [RFC PATCH v2 1/1] scsi: mpi3mr: Introduce smp_affinity_enable module parameter
+Date: Sat, 31 May 2025 21:40:56 -0400
+Message-ID: <20250601014056.128716-2-atomlin@atomlin.com>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250601014056.128716-1-atomlin@atomlin.com>
+References: <20250601014056.128716-1-atomlin@atomlin.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: BN7PR06CA0044.namprd06.prod.outlook.com
- (2603:10b6:408:34::21) To CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
- (2603:10a6:400:70::10)
+X-ClientProxiedBy: BN9P220CA0004.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:408:13e::9) To LO3P123MB3531.GBRP123.PROD.OUTLOOK.COM
+ (2603:10a6:600:be::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -61,100 +64,192 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CWLP123MB3523:EE_|LO0P123MB5679:EE_
-X-MS-Office365-Filtering-Correlation-Id: e26001e9-135e-4a0a-f1ad-08dda0ad5d54
+X-MS-Office365-Filtering-Correlation-Id: f392be29-5db4-4b2f-d6c3-08dda0ad5fd7
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?DL1UziL1jTS631LSjgq0aKxlI1+HuL3OdcLjej2jWRgCBacpjkyyG1Wkk6kI?=
- =?us-ascii?Q?uACCZEkyl0DPuOFOkQHdKU3oDoHc5TwvTLo9TxyD7D39d38a7M+hMYn7YV9H?=
- =?us-ascii?Q?TbUHo4JoTax2Wpo6JHH3BhzVpAHfFOhEmG8d5hdg4V9CrOEdjto3sPDjlpnf?=
- =?us-ascii?Q?wTlHZJNrrY+VK6cgWsQwk4Zhhytig0oRSkkfWOzXnDGyy3HGJgG9IiFr+C1g?=
- =?us-ascii?Q?c4dxeo0f4CFV69apAuoqWnSQ5Lzw/Pie0DZNBYPEqCVXCPsQRwwL6EvUxi0D?=
- =?us-ascii?Q?i4dQujHe6BU8kORfoPdJybFr5a3RNmKuoyzKbkWtGGRm4eMQgPBs/u3ZiVoH?=
- =?us-ascii?Q?HrICzvK51vvbWbhspv3Hpi5L9/YZ+BKscrD+77w1DV8wPwLkI4vv62Xn4/xH?=
- =?us-ascii?Q?tBBmqoY8Y5FEbJV4RLJ8dyYJS4AZzSAAtAVZDE1bNRBXrgM/B0zYZ6HdMBSd?=
- =?us-ascii?Q?hKlAxulclp3SqnATxO66jxWO3+N6/o1AKabO0XEWjxQrqQjEFIvYxiNXzizs?=
- =?us-ascii?Q?UYBNgWrO69GjMMM9lSR7CsHtx/WZWhbaD/MXqxbY8/OZTY9xHss59cn5wIVw?=
- =?us-ascii?Q?2Y/NBi4xBgZ72ObLORD6fbe1wGytUPh238w/yzdEq8/NTIUW3WjuMacLbaDb?=
- =?us-ascii?Q?T+fJy+6WpYGXekIpB0xe32SMIlixGBCoUOYbO+bj16LKVBOvmZ/jOyXNnheJ?=
- =?us-ascii?Q?19Cv3RhL1OdpjwE5e9Ox5G3whHm+0GSIRAp8145hw7qa3YatUbMkc7LJr8xi?=
- =?us-ascii?Q?FbDKrSykWm6164zwXsjWiKyAau8yFi5ibTdzbxNuBDRO0eVHJL2ZxyYzI+/U?=
- =?us-ascii?Q?hCHfODA9uRREHxlDs7xfzY5O27B3sxZ/kiH62ku4sqBHyrSiVrIEquBSvcE0?=
- =?us-ascii?Q?JqrAStbG9mfhiZdreCRDNpW6ec7hLwtojwMfa33MDPIfm79OH+DUjo3GtEq4?=
- =?us-ascii?Q?L5pH2ffobfNCKIW1my92fd5tDSxdtCPouETkb+2RA/g1ByYMPDWyCmIwpBMv?=
- =?us-ascii?Q?PBCKXlQS0dSvoMD7qlKI5OqZuplt2ohVtPkINZGifJWjF4yGFknHsjdk80qg?=
- =?us-ascii?Q?QAKcMfKzXCIC6z2hAwnydOVgve8k+uMp9YXGWsDmOzzVpc/CZLb5M4fDmqk1?=
- =?us-ascii?Q?htX7PtQBPbidaFGTrO3YjO8ojZucWC/vpvvqr3M9gEI++pS4pbFGhIsvgc+z?=
- =?us-ascii?Q?lQSFX8618QDcQJt5dhatNRqYK3i2ejUU1BmZVNt2IEXLg6Fst1Ia4Zs+Jb4M?=
- =?us-ascii?Q?kYk7LdkqpB379b3CtH1OiwTu72nVkzI0qTtZDtiUdoUUMG6GdehLItam5Zah?=
- =?us-ascii?Q?pcf7f93HEx2F7SU5MX1Y3SPLb/IvCbTqb39DvPZHLn/lfO+HTn0fEB0UHLWN?=
- =?us-ascii?Q?MAjA5SxgXm5FrwEG4fGgjAPC8AedNecu6WwtuZ5RlioVJmrEKl4I4Pz7QRI7?=
- =?us-ascii?Q?R51nVAoqMRs=3D?=
+	=?us-ascii?Q?bDyp8Dw9ZyYKeRaRxDT0Lq4sQi456hWRbrKOyTOJRv5mdIgfDe5Gr7g4iCo3?=
+ =?us-ascii?Q?itH5mBzJ077JCbRn6u8nZSWfKVhwNVBvPeKi0fQy8FEPeEAL9k7sW6/vhMUy?=
+ =?us-ascii?Q?wiP44QvbRyyT+u2pXYvIBifBo8nCpiGuY827TQUG4VFbsIuy8WnmVYyEmTkT?=
+ =?us-ascii?Q?Qxa9aJ2kqEqs30WaxkUNp7R73Wh9Aa5EXtpzQCq5B270KrkUmLOapciSn2zo?=
+ =?us-ascii?Q?Z1+F2aAPNi3OVFq/K1weiLTJ93iXVqSxOPwd63t12ZHENnteZTtUmgOEf2Iy?=
+ =?us-ascii?Q?BcHBkO1lAl7vp15VRXZQb7z01IXssk31yQzWMxWwUM+l53D7ohURlZsVK0As?=
+ =?us-ascii?Q?VIiQQPERVr3CxdxLAZJjMWf37LaRncldRECarb1bGr505pDIPBdzWgmx+4m5?=
+ =?us-ascii?Q?z7QxjV3PX/YpY/qeTNnPH9nzOZEK1vdx1VPHEClBEZ2KuAjM8Adht60ixY/7?=
+ =?us-ascii?Q?0QofszZavr9U2vcQfIqK2ZvEUJn/19Ie00/+LOPF9y2BsxgSSM+NMm5L60FM?=
+ =?us-ascii?Q?z7KyD9CbHUhos5SQq6eEuHKzdim43G66S2QWbLUrj7N6hU8Ob6OOUjKyobUO?=
+ =?us-ascii?Q?UeViCXAb955FVa++PWmcbGh10TOD0PpJnO+pRT1ssyhpWKhuYgHef5SKMpw/?=
+ =?us-ascii?Q?Sm7xEBRBxGcVtImq0ffaUCoIUyGQ983eCjb2vp4LcM+1lHPdPIzFNWeGHBKF?=
+ =?us-ascii?Q?t8qMFVcbc7vDNlNyUueHgjjbUVDoN3sZv6jfZfrIkGpMWgzEB6nf+mewmEgF?=
+ =?us-ascii?Q?cBcFZUjyq7wHTh518ZY519f6SNi0cz7XPLo7FU8UgYyUhRbR/KMl1LHGJS/o?=
+ =?us-ascii?Q?7AnDIxYgTaDCCD7uDEldhJDmvEvvsr7MoRaYnvNIjyIPs+J5wXAJqu5B9DRl?=
+ =?us-ascii?Q?kALZ+5pvynT+wba3IaP7J4eMQ9po3mo/+F+z6fHp/hU315UD1j+BHVHPNgB0?=
+ =?us-ascii?Q?TfPKQq83pvHdp2lmDzVYkhaoKXZXt0j4bgjbAlnCzQb77AW3YDY3T14i4qqS?=
+ =?us-ascii?Q?G1fjuDc7OyCaVDV1jPwkYBx7UZyJpk0lkr1ufF/30tJ6uWEoUf2znxKut4r1?=
+ =?us-ascii?Q?4jHGC+A6lFiGWo49t/CPgilyhgRFbQ0wTNoGNdj4rogrHBbno5UUZ7Q/MhiD?=
+ =?us-ascii?Q?8jx4RG2CVF0+0Fm+QTjnSud6/dn7B324F9bDNauLMnCdm7gAn55wDxS4ENcP?=
+ =?us-ascii?Q?PF4O3icGVqNB7BPzSutPvZkHCCw9oh0fxz1xP1iQ0Zh3uYSGTYGRqw8AplWr?=
+ =?us-ascii?Q?sBEgMITZhOxpbzsDc+PAr478V649ZQF01MPGTaJiWsQ+Ev5PkMXSjaysQ8aa?=
+ =?us-ascii?Q?fOJ8bEvIQsXhfruabqBjnmYhfkdkpFgyG/uPSd0RxqmfLITghliTNJtMSES7?=
+ =?us-ascii?Q?yQ/hZ0s2MtT7vXtvGLcpQZVSWtGQPf4r0PY0/tA7w2uALvIX7P/5TiGIvoxE?=
+ =?us-ascii?Q?jdocuuPxOro=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014);DIR:OUT;SFP:1102;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?BtdTdf9cAXo2/gh+SsjDGflvtKNPlfhrPK2XupEkVaP9kG6ekXwI+VSzF2xR?=
- =?us-ascii?Q?wxezFcAFELQS9H89rjMDMOUSRHXTYXnVxGtRNSo33krPa0NM8ObWPhwE5t6z?=
- =?us-ascii?Q?ZsjoXjsqvrkrb1XmxkZWlMjtMzhl8u8u4jNLrSV/auUKEBzNnZ4oUITEnlX3?=
- =?us-ascii?Q?M6+hYnEBk/929BlmfHoX5XARgsK0le6Q1A8F1VlM5FGJWEANUA67NZMiCvs/?=
- =?us-ascii?Q?CX2QzXusMMtv0gwYp45JukDaGGCIr4H0W5V0bNS9U8RQO+VL7jWjeKGrCNWn?=
- =?us-ascii?Q?hU3XJsuGWBNg2nHJTtaGbfQhm5iXNninf4IJq8Cn8NElFW+32aOMeIR4EIBD?=
- =?us-ascii?Q?X/l1TfgDxjY62zYaXFRMlXzOolFJSRyNrLfZY8WHFFIvdyM5N9hHvJItxGRY?=
- =?us-ascii?Q?nhh/guFShB2LYMymjCeF+4UjvHPRXHA+EJ+Hpvhkv05PvqQ6ZgRDjXrCWThE?=
- =?us-ascii?Q?vKJ6ajzKoh2M2VJ0IdC+NXJjQt///fvl2bSeyYl7NhAFF80yhy2x2euTNcCb?=
- =?us-ascii?Q?WqkqyVeMer7UtGzYzXWK6EV5KTHd+9IZvJ+ZW7Cag66eq2aI/x9m8l4iZhVU?=
- =?us-ascii?Q?7Fc6/w7qj+pYR6lV0afwRQiep4UbJ57uC55vX1x6fAaQtdd0cnl4mxv+DD+H?=
- =?us-ascii?Q?ptWYdFAf30G0QlMacI/bIV2Baj1E12oo0NpNiHUHLsvy0D6d+0Ib/HiuKeR0?=
- =?us-ascii?Q?X054ZP01soRoirCkNwfeB342XGCCbFfARSshy4NvD90mnm1OYZV1FDFn7XFy?=
- =?us-ascii?Q?0HI2OX3Tl7CkrLL0PoC258vmi7zAaDmfIOkbrIxPAju8tOXAvQRi4szHrzjs?=
- =?us-ascii?Q?Z7ID1WAaa950MaspiTlLVGMOAy1ArgEl5P8htbwOcw4xbI4UBn9uYMa4DvNA?=
- =?us-ascii?Q?7ONDATOpcsjbGbqD7lUdAmzz/Lp0O0jeA3WDk4XTmXsxt+SMe5RVczJMo1kb?=
- =?us-ascii?Q?8rMLHykfVED9sg5q9ASyTsZXmIs7r6DhnRJow3orXCUv21SKPmGMVaO4sWd6?=
- =?us-ascii?Q?xfw+kai2KUeY2818fbv9Ps9oUM0HcLzIxRr2Py3593C1Oq3Y4lh6G3X6R/A3?=
- =?us-ascii?Q?q1S2npqjIIybp+O07lQSBQ/kR9G3Bz1tnBTJf9axM6choUk9UIaiEG8DkIC9?=
- =?us-ascii?Q?bVvlQbxVSRKul1RDeBk2iGM28ynDOB7v4VmN3/SiQjnI255M+ZVnecmopo1D?=
- =?us-ascii?Q?uZm1qqiWqFrxCTdtAFtwFdhm1mSlAAKY5aIEGS8WycCI3G9SjJR/UV8kbvWE?=
- =?us-ascii?Q?alAlpvh8qD9tHd+4qcNWHPV7ahBHbhFbW02BicXyrveHROOxg5W+mLyzr8ZN?=
- =?us-ascii?Q?lQcqd+ZQRLGii5DV3AREcCPFFdQlx3pelggMXRTXCZXlcut+VCE0SBbrsm42?=
- =?us-ascii?Q?Qf7iR9Ry+y8PMHVwmPAoGH4mRsEjYEjAkYC2E1cDgWHVt+Q5gvBmfa7G0rId?=
- =?us-ascii?Q?5a125Iik0wNy825aWrpHHKtkSG1VfB0vsRMmnppSPJjcOyD5+NB1bgfZzEUg?=
- =?us-ascii?Q?SMmOx9djGLzsuGYjiBaxO1W5diUBf/J7C9Qp2ofh/c7fwfCJKTZLjG9iP2hR?=
- =?us-ascii?Q?KzyLoFJGogTTswcMCAawMDGn5oCgXxYEJ4tk3vPU?=
+	=?us-ascii?Q?r1I4tUCeq24vnhx7d/+t2hcJEu+w6xatD1CHUZKbha67uU0gL6Z2DPqvfPeX?=
+ =?us-ascii?Q?Tmb9obRAyJUbzoLz0eSlOQDLGXok8mnAPs5e0x0ocT5P1+MwkMyw/ZUIYfT7?=
+ =?us-ascii?Q?rbvqp/n2eo0f/hJrbbdsteWJdMDq2UPdCR2jO9YLUwN+tymIyw3dh/DTQUqk?=
+ =?us-ascii?Q?k+mdTzSqiIi7amCGbU5eemlNOmJXSv/Jh780WAu+rVqLR8zbECGLf+bJLupD?=
+ =?us-ascii?Q?LlfczjlkoxaIY/sgLXo9NCxTJ4UJAIahI6B8KYZnlj5aBRSZ+XFFoAmENsId?=
+ =?us-ascii?Q?yWvtHSkZdBtNfTfLMSX4RbiEwoQoQ6htbPCWHX+bEyE8X5ZrDtO9J0JD2NcC?=
+ =?us-ascii?Q?xVMjegXtgVclneA14TKwLMd51qL/g0EzB3fZeil4VoWsARPDB+LBGhsMzNAM?=
+ =?us-ascii?Q?vqR1vF9akxOMH/YyUE7oZCEDcZpoEbJ/11KqSVf2WwXqlAFZq64J4z02hU9x?=
+ =?us-ascii?Q?ILhkwceq/Tn/2HwF30UyV8bI1IlqN/GGTc0Z5YMq4iLpt79/T0228GLgjuw+?=
+ =?us-ascii?Q?A+MoxkWebLzQNIXgh/jhzZKM0shddm/xczfjtcXC2fqcoUH7WMeZQvnnar/4?=
+ =?us-ascii?Q?F0TF8JF64+JmUnUmGeFUdzPze9ndOeTzGDht7BFv/ksIHF4hkFRYkVZy6f+e?=
+ =?us-ascii?Q?9NBBECHEt34hZq9CThx7kDXlFXml1oUUzUDRxSbnDmAIXDtKdGf+0+N1I34f?=
+ =?us-ascii?Q?RNVlCsMOnpqVKNU+oNoW6SDh1/R0sSn92aroMwSIlCV1szeIGGGNo/FeFxaR?=
+ =?us-ascii?Q?1ls/kcTEAZK93zyhSTXXZXFc4Qt/3TWutf5LWOVLVvj35j8/W54UgMfj3cKG?=
+ =?us-ascii?Q?PkaO6xq7Yb8ZEA5lK5mr0vtDYUqqUFy7cqLwnhE6eYqQt2NBROxWK0ZnKBIh?=
+ =?us-ascii?Q?Bi3VIkZHEAL31u8hI44RqeSWl23xCuwP7qIrDHbJbVVh3gYSa4pp7y++ZaZ1?=
+ =?us-ascii?Q?BrVukubCbtAcr0T7z487GQClDGUg7THEJsmQ6UxgLEcIN18ENVRAF/IAuajr?=
+ =?us-ascii?Q?0gLNeEoJ/jA6IkuUVOTx557DAe728aZz47ZfWJkupG1qWnO/4Xhak/YJI0nu?=
+ =?us-ascii?Q?IMecsYHxQkUjU9JghNJdwaKtPEqoBAdnngoZ4MtS4y1qA4Qv6GRE3JmhNZZA?=
+ =?us-ascii?Q?ucLU/G/se4Jad9a0kOeD68DERJRplZvzK5ahrNkjJHcpx6GJcVdJxktAugDC?=
+ =?us-ascii?Q?y38TQCvV7LrQdgFphMPntuTZwFo6fihxtV4ruN06+W7wYw+rea3ffEFJo3kU?=
+ =?us-ascii?Q?qG0KWgtqu+pgwDOzAWKPTjTPdOulOM8CdzpUF3ocxEHEHI/r/rLNbDlJ8/Il?=
+ =?us-ascii?Q?jLyYbP1eEqdnIcbtAuCvQUjDaKJjiZRD3P2RWvKeqxpsUdslsf2fBMjmD2JM?=
+ =?us-ascii?Q?WHtW3Wd1fzkp2pXMiLAsYZ/dlxu1b1WiiMc36V0Ek76R3JXTZQCOAbbXewoe?=
+ =?us-ascii?Q?qx+FXnQJvy8M8iSV2nKFCA7vdWpCzcg9hlFWi65eO+Z5kf+hextFFrNmKWRC?=
+ =?us-ascii?Q?QXo70M/m1gVnwBxNv37+/WPhp0XckY8MiybmK3UmM0GARKB9vDU4uDOa1U73?=
+ =?us-ascii?Q?HL8bT+YHtrQsXZhlNMRh2gvt1TlmmtA7j01toTWs?=
 X-OriginatorOrg: atomlin.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: e26001e9-135e-4a0a-f1ad-08dda0ad5d54
-X-MS-Exchange-CrossTenant-AuthSource: CWLP123MB3523.GBRP123.PROD.OUTLOOK.COM
+X-MS-Exchange-CrossTenant-Network-Message-Id: f392be29-5db4-4b2f-d6c3-08dda0ad5fd7
+X-MS-Exchange-CrossTenant-AuthSource: LO3P123MB3531.GBRP123.PROD.OUTLOOK.COM
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Jun 2025 01:41:01.4281
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 01 Jun 2025 01:41:07.8084
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: e6a32402-7d7b-4830-9a2b-76945bbbcb57
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: iT0iHELtq80abZAeupRAsGYlvtbsd/2K8qT2Atit3dtCEpVBSNxYKT+MrOvjnuswvO5hjuLs7/n+t99KHoey1g==
+X-MS-Exchange-CrossTenant-UserPrincipalName: CGYqn61FYVzZMcVQ2FhNktKIrrCqQ3x8NOx4n2pW/j0mAKNYw6U+VGvjsxjZ3QYgNSCY8mCix2Y3wy/pqNrzvQ==
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: LO0P123MB5679
 
-I noticed that the Linux MegaRAID driver for SAS based RAID controllers has
-the same aforementioned module parameter. Despite the potential performance
-drawbacks, I suspect it would be useful with the Broadcom MPI3 Storage
-Controller Driver too, to respect the default IRQ affinity.
-Please let me know your thoughts.
+This patch introduces a new module parameter namely
+"smp_affinity_enable", to govern the application of system-wide IRQ
+affinity (with kernel boot-time parameter "irqaffinity") for MSI-X
+interrupts. By default, the default IRQ affinity mask will not be
+respected. Set smp_affinity_enable to 0 disables this behaviour.
+Consequently, preventing the auto-assignment of MSI-X IRQs.
 
-Changes since v1 [1]
- - Addressed WARN_ON() in pci_alloc_irq_vectors_affinity()
-   due to affd != NULL when smp_affinity_enable = 0
- - Avoid unnecessary complexity for a single queue
-
-[1]: https://lore.kernel.org/lkml/20250428094141.1385188-2-atomlin@atomlin.com/
-
-Aaron Tomlin (1):
-  scsi: mpi3mr: Introduce smp_affinity_enable module parameter
-
+Signed-off-by: Aaron Tomlin <atomlin@atomlin.com>
+---
  drivers/scsi/mpi3mr/mpi3mr.h    |  1 +
  drivers/scsi/mpi3mr/mpi3mr_fw.c | 14 ++++++++++++--
  drivers/scsi/mpi3mr/mpi3mr_os.c | 14 +++++++++++---
  3 files changed, 24 insertions(+), 5 deletions(-)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 9bbc7cb98ca3..82a0c1dd2f59 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -1378,6 +1378,7 @@ struct mpi3mr_ioc {
+ 	u32 num_tb_segs;
+ 	struct dma_pool *trace_buf_pool;
+ 	struct segments *trace_buf;
++	bool smp_affinity_enable;
+ 
+ };
+ 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 1d7901a8f0e4..9cbe1744213d 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -22,6 +22,10 @@ static int poll_queues;
+ module_param(poll_queues, int, 0444);
+ MODULE_PARM_DESC(poll_queues, "Number of queues for io_uring poll mode. (Range 1 - 126)");
+ 
++static int smp_affinity_enable = 1;
++module_param(smp_affinity_enable, int, 0444);
++MODULE_PARM_DESC(smp_affinity_enable, "SMP affinity feature enable/disable Default: enable(1)");
++
+ #if defined(writeq) && defined(CONFIG_64BIT)
+ static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
+ {
+@@ -821,6 +825,7 @@ static int mpi3mr_setup_isr(struct mpi3mr_ioc *mrioc, u8 setup_one)
+ 	int retval;
+ 	int i;
+ 	struct irq_affinity desc = { .pre_vectors =  1, .post_vectors = 1 };
++	struct irq_affinity *descp = &desc;
+ 
+ 	if (mrioc->is_intr_info_set)
+ 		return 0;
+@@ -852,10 +857,13 @@ static int mpi3mr_setup_isr(struct mpi3mr_ioc *mrioc, u8 setup_one)
+ 
+ 		desc.post_vectors = mrioc->requested_poll_qcount;
+ 		min_vec = desc.pre_vectors + desc.post_vectors;
+-		irq_flags |= PCI_IRQ_AFFINITY | PCI_IRQ_ALL_TYPES;
++		if (mrioc->smp_affinity_enable)
++			irq_flags |= PCI_IRQ_AFFINITY | PCI_IRQ_ALL_TYPES;
++		else
++			descp = NULL;
+ 
+ 		retval = pci_alloc_irq_vectors_affinity(mrioc->pdev,
+-			min_vec, max_vectors, irq_flags, &desc);
++			min_vec, max_vectors, irq_flags, descp);
+ 
+ 		if (retval < 0) {
+ 			ioc_err(mrioc, "cannot allocate irq vectors, ret %d\n",
+@@ -4233,6 +4241,8 @@ int mpi3mr_init_ioc(struct mpi3mr_ioc *mrioc)
+ 		goto out_failed_noretry;
+ 	}
+ 
++	mrioc->smp_affinity_enable = smp_affinity_enable ? true : false;
++
+ 	retval = mpi3mr_setup_isr(mrioc, 1);
+ 	if (retval) {
+ 		ioc_err(mrioc, "Failed to setup ISR error %d\n",
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
+index ce444efd859e..6ea73cf7579b 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_os.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
+@@ -4064,6 +4064,9 @@ static void mpi3mr_map_queues(struct Scsi_Host *shost)
+ 	int i, qoff, offset;
+ 	struct blk_mq_queue_map *map = NULL;
+ 
++	if (shost->nr_hw_queues == 1)
++		return;
++
+ 	offset = mrioc->op_reply_q_offset;
+ 
+ 	for (i = 0, qoff = 0; i < HCTX_MAX_TYPES; i++) {
+@@ -5422,8 +5425,6 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	shost->max_channel = 0;
+ 	shost->max_id = 0xFFFFFFFF;
+ 
+-	shost->host_tagset = 1;
+-
+ 	if (prot_mask >= 0)
+ 		scsi_host_set_prot(shost, prot_mask);
+ 	else {
+@@ -5471,7 +5472,14 @@ mpi3mr_probe(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		goto init_ioc_failed;
+ 	}
+ 
+-	shost->nr_hw_queues = mrioc->num_op_reply_q;
++	shost->host_tagset = 0;
++	shost->nr_hw_queues = 1;
++
++	if (mrioc->smp_affinity_enable) {
++		shost->nr_hw_queues = mrioc->num_op_reply_q;
++		shost->host_tagset = 1;
++	}
++
+ 	if (mrioc->active_poll_qcount)
+ 		shost->nr_maps = 3;
+ 
 -- 
 2.49.0
 
