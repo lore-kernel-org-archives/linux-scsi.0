@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E75612B73;
-	Wed,  4 Jun 2025 01:07:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EEBB427E7C1;
+	Wed,  4 Jun 2025 01:07:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748999222; cv=none; b=pbK0cQVfnUkPwkvSxfgdmhVqMbkODHjJE5c0577mNAF6qUabMdvxgatHCkq+ynxmqpQ32CYjJrsAlJENt4jQ0l4CJT3Mu6CWUpPGsUn0pCfQHq+BFB/sfAckJP62UC+QYcQdE9GV615dbXCsnycWmOx8QP6zqoL+jrdCb8Kcd4w=
+	t=1748999256; cv=none; b=gwupNY6x07VORfoi39VSeOHrxtzrnh8DqCkUzLnt2lVg3BdoTGwZVR9Rev1Ne+EC/ECV5OGYJp+4T3YKWW7weS3KL/gCBWQQJ5cFnq2h0cvJdl1YyU5nckmg2vD9fIclWABcptoB4d2EWZ1NwnANQCZByDhnWm+skB0xVs0lcIs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748999222; c=relaxed/simple;
-	bh=GINOFS9LMDmMJeXVKKNcYAE4xeFgEOUNFruaIrvOXxU=;
+	s=arc-20240116; t=1748999256; c=relaxed/simple;
+	bh=gTFSugQZq0CA78LB8DIcC566oQZIVSl8nUIclIB1qfo=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=d9hgIKblSSLbp6mzV+5KCY1hg4m3GeX61yFd5V6GhN/qJ+08JCqH+195n+E/5+SQqavo3KSsfZG8AvAMNsVn9a4jEW6CDENa84XLOPyGN+OLC20xqAJD81bND9S2VEcJ1yWMTuGIn4SmfGpQuhAHR6QzxNUYYY1Qyyk6s+M5HBk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OaCRHkuj; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=rF9bcs+XAzjrFpU5Dqg2r8OPrC/3v+gOeRxKaeQP1LkIBLuT8+hwh9DbCzs3KTB4Qr/M2DO8YNVu8tvvx+iaqprDKT6tYZavemPfXsbgu8g+bUxpdAa66F/B5eBV9k8kMLnmyCKegKmhLDH5MT949gsYXTPfXaqFqUywWxn5n3M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G3UGNDRg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OaCRHkuj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7357EC4CEF2;
-	Wed,  4 Jun 2025 01:07:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G3UGNDRg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CDF78C4CEED;
+	Wed,  4 Jun 2025 01:07:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748999222;
-	bh=GINOFS9LMDmMJeXVKKNcYAE4xeFgEOUNFruaIrvOXxU=;
+	s=k20201202; t=1748999255;
+	bh=gTFSugQZq0CA78LB8DIcC566oQZIVSl8nUIclIB1qfo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=OaCRHkuj9GzSfygbcMKP9O9tu68GBBbc6lnFJ1wmT2M7jMfXu58RqDhFd7DYCNzqh
-	 uvpqvugzmIcJ5K/6qCauXMapkVaZF1z5LlAzhqeMBZ4WJ/euwx6U6vYnDAyMJ22Znn
-	 pbHPJOLB+bPIMnhpklg1EVK/HAG6hdtvVjTig/ImijuyBzQT7QLdlXmn0rTPTVKo6u
-	 KAbwzSGJAo1aAivTLxMSbh6TLJrD3LdlJsnKClW2MfG1pNhDY4B2yguaoHID0NRiXJ
-	 MGjZHa6bPHEAMyuq8xf0ARuXKiRD07ALC+5OpgU3LptiJWB3Nyi8IbUaZjoyK0AIC3
-	 t0QAZHLHsgmdA==
+	b=G3UGNDRgn61UBbG9m2uC4OjOTo3NRl87staGc8m8b9oTJnbzpw3nupDrbOu5oeHdK
+	 mjR3z5sKS1NSdVC43fyHUKI1Hjj9rfs+saklm5IfprhhEecNlUshdN+r+PkUkv3GsE
+	 UfagtDtZMlSsd37djG+gZHVz27dJpNu4ZVlubw65PGOIXWIfgb6b0rEYDkTe7F8VQb
+	 zxzg+Pzyk9/AakHT3fxlezgiV8eTeUiItv8G1oNp+kKlXHoO4lAyigW7TShhowbpF7
+	 yJzvEV1X6f+/5a5LI5JV3Ztu3Qqos6qWr/suGAAT0q9uLu6wEWB81vZX3hs4rSAkqD
+	 wrSMUY4aEsyEg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -36,12 +36,12 @@ Cc: Daniel Wagner <wagi@kernel.org>,
 	james.smart@broadcom.com,
 	dick.kennedy@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 25/27] scsi: lpfc: Use memcpy() for BIOS version
-Date: Tue,  3 Jun 2025 21:06:18 -0400
-Message-Id: <20250604010620.6819-25-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 18/20] scsi: lpfc: Use memcpy() for BIOS version
+Date: Tue,  3 Jun 2025 21:07:04 -0400
+Message-Id: <20250604010706.7395-18-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250604010620.6819-1-sashal@kernel.org>
-References: <20250604010620.6819-1-sashal@kernel.org>
+In-Reply-To: <20250604010706.7395-1-sashal@kernel.org>
+References: <20250604010706.7395-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,7 +50,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.237
+X-stable-base: Linux 5.4.293
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
@@ -121,10 +121,10 @@ experiencing these panics.
  1 file changed, 2 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 84f90f4d5abd8..ff39c596f0007 100644
+index 04b9a94f2f5e5..e1ef28d9a89e9 100644
 --- a/drivers/scsi/lpfc/lpfc_sli.c
 +++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -5530,9 +5530,9 @@ lpfc_sli4_get_ctl_attr(struct lpfc_hba *phba)
+@@ -5407,9 +5407,9 @@ lpfc_sli4_get_ctl_attr(struct lpfc_hba *phba)
  	phba->sli4_hba.lnk_info.lnk_no =
  		bf_get(lpfc_cntl_attr_lnk_numb, cntl_attr);
  
