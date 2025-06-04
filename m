@@ -1,47 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8FEA149C55;
-	Wed,  4 Jun 2025 01:01:41 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 350A020CCCC;
+	Wed,  4 Jun 2025 01:03:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748998901; cv=none; b=GvtknDxN9CthN28rckvcmhG2j3BdpYRlNj0l3uJ6DJupwOsyB8d+TfMEslbp19JRjW+RhBISU8PY7vakFvgNWV3Hqg3+Qu59d58Zy5O9HNnhnzsV+8T3oPBWAvvanqidd9odMDD7P/eCLTPdLuCacafZ+8Sj35YPvW2JznpIB8A=
+	t=1748998999; cv=none; b=KNxYdH/UZPToTG2taHwCDwWvonWN6kPnwj15Gh76xN7evyx/6i+4ab3G/1mvy91flVWOmJFtS5D/lgk3miVOJyDGbiTmK6PzU3FbUMjYURF/je5hoChWcV4UxeVb17PQwJacxyaW9uTwsEpq/QZd1rIGZqP6gkXEFU5XMutTKzQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748998901; c=relaxed/simple;
-	bh=MVoe63oIh7OE22z9Js4kjHwPGbpNWFTNw9gmtPB+smQ=;
+	s=arc-20240116; t=1748998999; c=relaxed/simple;
+	bh=A376Bn8WO8WsxFncenPUTeZj1biacg8HuQ8qBqV+Rg4=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MI2AJVTNvpWWFhSeLuf9Gjr7U2i4/zHcsYAlBWgyqXmcajN/VELTudUNyPcP9NIJP7/w9zV7v17qHw7Y8LzP5AaO9F5JDXdxsbb24wa2X/8nA5hsBWHLAVwozurWaBsEc+N1IW10ac/pK6Z+fRtAIdCxzmDUgrlDIzLY9oeiPcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SsZR0F1u; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=Sp7s8MxbuPy0tt3gulFu1OM6zRHFaPWglR8la5nRQ4T3gmEPl4GnWMTryEHxfEGvH1OuRJpiaQcCN076/kBrf9BgyvgGEcfE33ksoDRLa02SyJHLjQ5MpgJvjPdR6JRHngfO7C5PEPQlBD6e9qeDiUDzxCHMBfha5fCoQoozPoU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UXEVUfJs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SsZR0F1u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DE3CC4CEF1;
-	Wed,  4 Jun 2025 01:01:40 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UXEVUfJs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 21B96C4CEEF;
+	Wed,  4 Jun 2025 01:03:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748998901;
-	bh=MVoe63oIh7OE22z9Js4kjHwPGbpNWFTNw9gmtPB+smQ=;
+	s=k20201202; t=1748998999;
+	bh=A376Bn8WO8WsxFncenPUTeZj1biacg8HuQ8qBqV+Rg4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=SsZR0F1u5BCYedVtLbLl+iOHxP+Vtaa9ICKZnBLfzYbtsJMA4VTPlhIKjCHnnipqd
-	 3RY4MNx2U5U69GSXY2L7SMJ1TApVW2P9g7ovc0pBf13rVzZ/7j4gr6HL+kP0kKs0io
-	 6mY3EhVBY8NlD3Q+RlKuyh8RnnGktR4f3uERmcw6Mq1n+rAfVzGCy2MgpFxTV489MH
-	 nhaX9w0mRlaR+8mVdvx6meRCSeRP+FOGfeE2ZVHNETw1QnUV1JFe653AKdYWnfx0bb
-	 CqB9jdbVAk9IC9qCNSRWUOmF/ZmuJgbLVydKyCTEEOfCa3aL/9VViftBEDFjbQNrBx
-	 eW3yA9Gp+8BKQ==
+	b=UXEVUfJs+y+QAO2c2b+lc2BuG9fvwG6h6B7k9h1eT85YAWtH6pqLPwy7KVSSpfo0h
+	 ElTTSeL3q7HknlKJmphPb74QBaaGrUiRuIMw1DxmBXiE81safHcDHUlFem/1rxfuRG
+	 35KtktoGFhISs4iwnA5J3YikVtvhDiMw+NcHHD2Qgws8kn//Sud9f0MPorh32AGKGu
+	 oZmBBWpR6EaQ+0MmbYWskVcItlHFYiVfwebiDDg1vj38ouv2BVvKU/7jobk8QEQHbS
+	 g91iNaUJleQFYBN/AlpyKd3KU1ugfJbbct2R3J46ut01Pifc9Qn54GdAeOOs0QUnnv
+	 yMLejpJlA7/hg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Daniel Wagner <wagi@kernel.org>,
-	Justin Tee <justin.tee@broadcom.com>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	james.smart@broadcom.com,
 	dick.kennedy@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 78/93] scsi: lpfc: Use memcpy() for BIOS version
-Date: Tue,  3 Jun 2025 20:59:04 -0400
-Message-Id: <20250604005919.4191884-78-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 37/62] scsi: lpfc: Fix lpfc_check_sli_ndlp() handling for GEN_REQUEST64 commands
+Date: Tue,  3 Jun 2025 21:01:48 -0400
+Message-Id: <20250604010213.3462-37-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250604005919.4191884-1-sashal@kernel.org>
-References: <20250604005919.4191884-1-sashal@kernel.org>
+In-Reply-To: <20250604010213.3462-1-sashal@kernel.org>
+References: <20250604010213.3462-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,92 +49,72 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.12.31
+X-stable-base: Linux 6.6.92
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Daniel Wagner <wagi@kernel.org>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit ae82eaf4aeea060bb736c3e20c0568b67c701d7d ]
+[ Upstream commit 05ae6c9c7315d844fbc15afe393f5ba5e5771126 ]
 
-The strlcat() with FORTIFY support is triggering a panic because it
-thinks the target buffer will overflow although the correct target
-buffer size is passed in.
+In lpfc_check_sli_ndlp(), the get_job_els_rsp64_did remote_id assignment
+does not apply for GEN_REQUEST64 commands as it only has meaning for a
+ELS_REQUEST64 command.  So, if (iocb->ndlp == ndlp) is false, we could
+erroneously return the wrong value.  Fix by replacing the fallthrough
+statement with a break statement before the remote_id check.
 
-Anyway, instead of memset() with 0 followed by a strlcat(), just use
-memcpy() and ensure that the resulting buffer is NULL terminated.
-
-BIOSVersion is only used for the lpfc_printf_log() which expects a
-properly terminated string.
-
-Signed-off-by: Daniel Wagner <wagi@kernel.org>
-Link: https://lore.kernel.org/r/20250409-fix-lpfc-bios-str-v1-1-05dac9e51e13@kernel.org
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20250425194806.3585-2-justintee8345@gmail.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
-Let me understand the actual problem by examining the function more
-carefully. Based on the commit message, this is about a FORTIFY panic
-when using strlcat(): **YES** This commit should be backported to stable
-kernel trees. Here's my extensive analysis: ## Bug Analysis **Root
-Cause:** The commit fixes a kernel panic triggered by FORTIFY_SOURCE
-when using `strlcat()`. The FORTIFY infrastructure incorrectly detected
-a potential buffer overflow in the BIOS version string handling code.
-**The Problem Code:** ```c memset(phba->BIOSVersion, 0,
-sizeof(phba->BIOSVersion)); strlcat(phba->BIOSVersion, (char
-*)cntl_attr->bios_ver_str, sizeof(phba->BIOSVersion)); ``` **The Fix:**
-```c memcpy(phba->BIOSVersion, cntl_attr->bios_ver_str,
-sizeof(phba->BIOSVersion)); phba->BIOSVersion[sizeof(phba->BIOSVersion)
-- 1] = '\0'; ``` ## Technical Details 1. **Buffer Sizes:** `BIOSVersion`
-is a 16-byte character array (`char BIOSVersion[16]` in lpfc.h:1267),
-while `bios_ver_str` is a 32-byte array (`uint32_t bios_ver_str[8]` in
-lpfc_hw4.h:3798). 2. **FORTIFY Issue:** The `strlcat()` function with
-FORTIFY enabled was triggering a false positive, causing kernel panics
-when it incorrectly calculated potential overflow conditions. 3. **Safe
-Solution:** The fix uses `memcpy()` for the exact buffer size and
-explicitly null-terminates the string, which is simpler and avoids the
-FORTIFY false positive. ## Backport Criteria Analysis ✅ **Fixes
-Important Bug:** This resolves kernel panics in production systems with
-FORTIFY enabled ✅ **Small & Contained:** Only 3 lines changed in a
-single function ✅ **Minimal Risk:** The change is functionally
-equivalent but safer ✅ **No Architectural Changes:** Simple string
-handling improvement ✅ **Clear Side Effects:** No behavioral changes
-beyond fixing the panic ✅ **Critical Subsystem:** SCSI driver stability
-is important for storage ## Comparison with Similar Commits This closely
-resembles **Similar Commit #2** (marked YES for backport) which fixed an
-overflow build issue with FORTIFY. Both commits: - Address FORTIFY-
-related compilation/runtime issues - Make minimal, safe code changes -
-Fix real problems affecting users - Have low regression risk ## Risk
-Assessment **Low Risk:** The change maintains identical functionality
-while eliminating the false positive. Both code paths copy BIOS version
-data into a 16-byte buffer and ensure null termination. The `memcpy()`
-approach is actually more predictable than `strlcat()` with an empty
-target buffer. ## Conclusion This commit fixes a real kernel panic issue
-that affects users running kernels with FORTIFY_SOURCE enabled. The fix
-is minimal, safe, and follows stable tree guidelines perfectly. It
-should definitely be backported to prevent production systems from
-experiencing these panics.
+**YES** This commit should be backported to stable kernel trees. Here's
+my detailed analysis: **Reasons for Backporting:** 1. **Fixes a Clear
+Bug**: The commit addresses a specific logic error where
+`CMD_GEN_REQUEST64_CR` commands incorrectly fall through to use
+`get_job_els_rsp64_did()`, which is designed for ELS requests and may
+return meaningless data for generic requests. 2. **Small and Contained
+Change**: The fix is minimal (changing `fallthrough;` to `break;`) and
+affects only the `lpfc_check_sli_ndlp()` function in
+`drivers/scsi/lpfc/lpfc_hbadisc.c:5056`. 3. **Low Regression Risk**: The
+change makes the code logic more precise by ensuring each command type
+uses its appropriate validation method. This reduces the chance of false
+matches rather than introducing new behavior. 4. **Affects Critical
+Functionality**: The `lpfc_check_sli_ndlp()` function is used to match
+IOCBs to node lists, which is fundamental for proper SCSI I/O handling
+and could affect data integrity if nodes are incorrectly matched. 5.
+**Similar to Accepted Backports**: This fix follows the same pattern as
+Similar Commit #2 (Status: YES), which fixed missing validation in lpfc
+node handling code. **Evidence from Code Analysis:** -
+`get_job_els_rsp64_did()` extracts destination ID from ELS request
+structures (`iocbq->wqe.els_req.wqe_dest` or
+`iocbq->iocb.un.elsreq64.remoteID`) - For `CMD_GEN_REQUEST64_CR`
+commands, these ELS-specific fields may contain unrelated data - The
+incorrect fallthrough could cause `lpfc_check_sli_ndlp()` to return 1
+(match) when it should return 0 (no match), potentially leading to I/O
+being associated with wrong nodes **Stability Criteria Met:** - ✅
+Important bug fix affecting I/O path - ✅ No new features introduced - ✅
+No architectural changes - ✅ Minimal regression risk - ✅ Confined to
+lpfc driver subsystem This is exactly the type of targeted bug fix that
+stable trees are designed to include.
 
- drivers/scsi/lpfc/lpfc_sli.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 6748fba48a07e..4dccbaeb63283 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -6020,9 +6020,9 @@ lpfc_sli4_get_ctl_attr(struct lpfc_hba *phba)
- 	phba->sli4_hba.flash_id = bf_get(lpfc_cntl_attr_flash_id, cntl_attr);
- 	phba->sli4_hba.asic_rev = bf_get(lpfc_cntl_attr_asic_rev, cntl_attr);
- 
--	memset(phba->BIOSVersion, 0, sizeof(phba->BIOSVersion));
--	strlcat(phba->BIOSVersion, (char *)cntl_attr->bios_ver_str,
-+	memcpy(phba->BIOSVersion, cntl_attr->bios_ver_str,
- 		sizeof(phba->BIOSVersion));
-+	phba->BIOSVersion[sizeof(phba->BIOSVersion) - 1] = '\0';
- 
- 	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
- 			"3086 lnk_type:%d, lnk_numb:%d, bios_ver:%s, "
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 0ad8a10002ce3..2179b26271665 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5101,7 +5101,7 @@ lpfc_check_sli_ndlp(struct lpfc_hba *phba,
+ 		case CMD_GEN_REQUEST64_CR:
+ 			if (iocb->ndlp == ndlp)
+ 				return 1;
+-			fallthrough;
++			break;
+ 		case CMD_ELS_REQUEST64_CR:
+ 			if (remote_id == ndlp->nlp_DID)
+ 				return 1;
 -- 
 2.39.5
 
