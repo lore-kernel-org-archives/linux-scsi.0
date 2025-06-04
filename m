@@ -1,154 +1,120 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F4391CD1F;
-	Tue,  3 Jun 2025 23:23:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7919224CC;
+	Wed,  4 Jun 2025 00:53:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748993029; cv=none; b=M+hAtVrTIR9L9cdgPSdMxmuYoyc228EM/x5LrG2iUu8pChU0d6AAIGP5RKos4K9oscvm5fNKNFrYXEk/7J8w2N2xMTwbxzSM7Ly9TF/ki+xk2TJlhD6/GjW+/vccBDEmKUhQ+hpkwifmPW0vN52y6h5BMSKaLimdviI7/ph93qM=
+	t=1748998422; cv=none; b=ZVdL8TaZuAmBAGxtA2tyR0VtrNI9m8kd/7aNKOreX4HU2E4PSoqJRNwbYYk0nT2B4W4+fNJ7vNqizvrs1exS6v+JJvKmgFqx43QcU3ZFtjTqATbsN3h9q0v/if6WqodZhqYVgp29iwGk4bffQj5HmQzjAVyxW9HwrajjvjZV0zI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748993029; c=relaxed/simple;
-	bh=RB3uO5vqD+jkCq8D4eGcycQQpynIt1GzD+jXQPy3FUA=;
-	h=Date:From:To:Cc:Subject:Message-Id:In-Reply-To:References:
-	 Mime-Version:Content-Type; b=nBD8Z1bijmGrTT4VrdJXPIqk5fDQMVWbf1D5G19BjuXT0xQwpNAkkZZ2rb7GhCyAOqDthknKIG4uZbGzkzqSvPVuWq40fdxd/omvePVC853swoNVYYz703aDTLXPdhtVR+1lEFnzB/bqYFXIwzX+2b9n/rMGwayj88bum60vDIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AE+uHbRw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1748998422; c=relaxed/simple;
+	bh=WpIZ8RQbkISoRhgS2e6jSC0jYP06scqEu1F9/yTILgY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=up8D+fxYtZuyCsXvF9hlTXlz712Ilbxu7GtG1uEsoBurfbc4CIQbmWRQxPy0dRAN0lhmBgp/DSIboBish8jyoC190xntt/2DbwLNK2e+krxhQ+chOk1r3IWgldH7HeOmwf93uGzcYERaVbrXvq/M7jtnPJp8uDRjsXtbpoAfHR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OW4tWHR8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AE+uHbRw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43CF9C4CEEF;
-	Tue,  3 Jun 2025 23:23:48 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OW4tWHR8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB0B3C4CEED;
+	Wed,  4 Jun 2025 00:53:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748993029;
-	bh=RB3uO5vqD+jkCq8D4eGcycQQpynIt1GzD+jXQPy3FUA=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
-	b=AE+uHbRworKsxg+gQl1k8efBWqhhDUhyBgo2QfEMJwxiIWUKl3RxMmF5HYwWpGO3t
-	 izyhyfC+bEH1oXtenMRifsInKXj4sHVsWGcv9HJhSQdpITooOIDuhhZQKj+HUOFQoV
-	 NGkujnyoIaNemWjOb9JTn4RSP+8ckZtg6c4rqkWd3M3+/d6O6WyT3ZCM2VKU58wQ1r
-	 41L8ntbQmCNutQdaleLS4+UWnC8vS24b+vqB5PKIJRX/Mr5gC7BEMGKLfHqo/DVEhb
-	 c3ig2C2HqqUp7IID64GzUIhl2vGsktymD58mw/Nq7GdeAi/uR/OmL0ZaVF91mBGanC
-	 4XoVGXOHbYraw==
-Date: Wed, 4 Jun 2025 08:23:46 +0900
-From: Masami Hiramatsu (Google) <mhiramat@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>, Sergey Senozhatsky
- <senozhatsky@chromium.org>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] sd: Add timeout_sec and max_retries module parameter
- for sd
-Message-Id: <20250604082346.2f00f1776700812215e42ec0@kernel.org>
-In-Reply-To: <ac157481-9cd3-47be-92f1-67a67b1b726d@acm.org>
-References: <174892923909.3887244.10526006121005369450.stgit@mhiramat.tok.corp.google.com>
-	<ac157481-9cd3-47be-92f1-67a67b1b726d@acm.org>
-X-Mailer: Sylpheed 3.8.0beta1 (GTK+ 2.24.33; x86_64-pc-linux-gnu)
+	s=k20201202; t=1748998422;
+	bh=WpIZ8RQbkISoRhgS2e6jSC0jYP06scqEu1F9/yTILgY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=OW4tWHR873yP3suehjFFcqJGRPFjkDyTMHU6N1KVk6xNdEEaQhXpqC5kM4npUly0m
+	 RWjQy6C/06fnhwjENupLHQihNNil/oNtAzXMLgvanxf8QKWXIiKDy8pA60PZJBwH9W
+	 Wev2J5J/Zz1DlQcmi7RaaWekM2Bj4q23hemW6+g1UM0/LHPN27/wKL9cWOh0yezYEd
+	 N7IbQJHgT3mNcyh5bZmfSQih5dx5A2GvGw8Xsisoy9NF9YE/bCq4wnRaBGczF1JbUo
+	 xhsit+7hfPnZi7ZTJHRj+UzZYN6L30O9DOioMm8yIjLEimhEJHe0IHxIjMhNbhUbsX
+	 8xpKrU7J03pKw==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: Justin Tee <justin.tee@broadcom.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.15 073/118] scsi: lpfc: Fix lpfc_check_sli_ndlp() handling for GEN_REQUEST64 commands
+Date: Tue,  3 Jun 2025 20:50:04 -0400
+Message-Id: <20250604005049.4147522-73-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250604005049.4147522-1-sashal@kernel.org>
+References: <20250604005049.4147522-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
-Content-Transfer-Encoding: 7bit
+MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.15
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Wed, 4 Jun 2025 03:19:54 +0800
-Bart Van Assche <bvanassche@acm.org> wrote:
+From: Justin Tee <justin.tee@broadcom.com>
 
-> On 6/3/25 1:40 PM, Masami Hiramatsu (Google) wrote:
-> > For example, enabling CONFIG_DETECT_HUNG_TASK_BLOCKER, I got an
-> > error message something like below (Note that this is 6.1 kernel
-> > example, so the function names are a bit different.);
-> > 
-> >   INFO: task udevd:5301 blocked for more than 122 seconds.
-> > ...
-> >   INFO: task udevd:5301 is blocked on a mutex likely owned by task kworker/u4:1:11.
-> >   task:kworker/u4:1state:D stack:0 pid:11ppid:2  flags:0x00004000
-> >   Workqueue: events_unbound async_run_entry_fn
-> >   Call Trace:
-> >    <TASK>
-> >    schedule+0x438/0x1490
-> >    ? blk_mq_do_dispatch_ctx+0x70/0x1c0
-> >    schedule_timeout+0x253/0x790
-> >    ? try_to_del_timer_sync+0xb0/0xb0
-> >    io_schedule_timeout+0x3f/0x80
-> >    wait_for_common_io+0xb4/0x160
-> >    blk_execute_rq+0x1bd/0x210
-> >    __scsi_execute+0x156/0x240
-> >    sd_revalidate_disk+0xa2a/0x2360
-> >    ? kobject_uevent_env+0x158/0x430
-> >    sd_probe+0x364/0x47
-> >    really_probe+0x15a/0x3b0
-> >    __driver_probe_device+0x78/0xc0
-> >    driver_probe_device+0x24/0x1a0
-> >    __device_attach_driver+0x131/0x160
-> >    ? coredump_store+0x50/0x50
-> >    bus_for_each_drv+0x9d/0xf0
-> >    __device_attach_async_helper+0x7e/0xd0  <=== device_lock()
-> > ...
-> 
-> How can this happen? The following code should prevent that a hung task
-> complaint appears while blk_execute_rq() is waiting:
-> 
-> static inline void blk_wait_io(struct completion *done)
-> {
-> 	/* Prevent hang_check timer from firing at us during very long I/O */
-> 	unsigned long timeout = sysctl_hung_task_timeout_secs * HZ / 2;
-> 
-> 	if (timeout)
-> 		while (!wait_for_completion_io_timeout(done, timeout))
-> 			;
-> 	else
-> 		wait_for_completion_io(done);
-> }
+[ Upstream commit 05ae6c9c7315d844fbc15afe393f5ba5e5771126 ]
 
-The hung task complaint is for 'udevd:5301', but the stacktrace is for
-'kworker/u4:1:11' (sorry I should paste the udevd's stacktrace too)
+In lpfc_check_sli_ndlp(), the get_job_els_rsp64_did remote_id assignment
+does not apply for GEN_REQUEST64 commands as it only has meaning for a
+ELS_REQUEST64 command.  So, if (iocb->ndlp == ndlp) is false, we could
+erroneously return the wrong value.  Fix by replacing the fallthrough
+statement with a break statement before the remote_id check.
 
->   INFO: task udevd:5301 blocked for more than 122 seconds.
-> ...
->   INFO: task udevd:5301 is blocked on a mutex likely owned by task kworker/u4:1:11.
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Link: https://lore.kernel.org/r/20250425194806.3585-2-justintee8345@gmail.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
 
-There are 2 tasks involved, waiter of SCSI commands (kworker),
-and waiter of a lock which is locked by __device_attach_async_helper()
-(udevd).
+**YES** This commit should be backported to stable kernel trees. Here's
+my detailed analysis: **Reasons for Backporting:** 1. **Fixes a Clear
+Bug**: The commit addresses a specific logic error where
+`CMD_GEN_REQUEST64_CR` commands incorrectly fall through to use
+`get_job_els_rsp64_did()`, which is designed for ELS requests and may
+return meaningless data for generic requests. 2. **Small and Contained
+Change**: The fix is minimal (changing `fallthrough;` to `break;`) and
+affects only the `lpfc_check_sli_ndlp()` function in
+`drivers/scsi/lpfc/lpfc_hbadisc.c:5056`. 3. **Low Regression Risk**: The
+change makes the code logic more precise by ensuring each command type
+uses its appropriate validation method. This reduces the chance of false
+matches rather than introducing new behavior. 4. **Affects Critical
+Functionality**: The `lpfc_check_sli_ndlp()` function is used to match
+IOCBs to node lists, which is fundamental for proper SCSI I/O handling
+and could affect data integrity if nodes are incorrectly matched. 5.
+**Similar to Accepted Backports**: This fix follows the same pattern as
+Similar Commit #2 (Status: YES), which fixed missing validation in lpfc
+node handling code. **Evidence from Code Analysis:** -
+`get_job_els_rsp64_did()` extracts destination ID from ELS request
+structures (`iocbq->wqe.els_req.wqe_dest` or
+`iocbq->iocb.un.elsreq64.remoteID`) - For `CMD_GEN_REQUEST64_CR`
+commands, these ELS-specific fields may contain unrelated data - The
+incorrect fallthrough could cause `lpfc_check_sli_ndlp()` to return 1
+(match) when it should return 0 (no match), potentially leading to I/O
+being associated with wrong nodes **Stability Criteria Met:** - ✅
+Important bug fix affecting I/O path - ✅ No new features introduced - ✅
+No architectural changes - ✅ Minimal regression risk - ✅ Confined to
+lpfc driver subsystem This is exactly the type of targeted bug fix that
+stable trees are designed to include.
 
-The above blk_wait_io() trick is for preventing a hung task on the
-kworker which is waiting SCSI command. But if it is done under a lock
-and there is a waiter of the lock, it does not help the lock waiter.
+ drivers/scsi/lpfc/lpfc_hbadisc.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-
-> 
-> > +/* timeout_sec defines the default value of the SCSI command timeout in second. */
-> > +static int sd_timeout_sec = SD_TIMEOUT / HZ;
-> > +module_param_named(timeout_sec, sd_timeout_sec, int, 0644);
-> > +
-> > +/*
-> > + * write_same_timeout_sec defines the default value of the WRITE SAME SCSI
-> > + * command timeout in second.
-> > + */
-> > +static int sd_write_same_timeout_sec = SD_WRITE_SAME_TIMEOUT / HZ;
-> > +module_param_named(write_same_timeout_sec, sd_write_same_timeout_sec, int, 0644);
-> > +
-> > +/* max_retries defines the default value of the max of SCSI command retries.*/
-> > +static int sd_max_retries = SD_MAX_RETRIES;
-> > +module_param_named(max_retries, sd_max_retries, int, 0644);
-> 
-> Shouldn't these parameters come from the SCSI host template rather than
-> introducing new kernel module parameters? It is impossible to make a 
-> good choice for these kernel module parameters if multiple types of SCSI
-> devices are present (USB, HDD, ...).
-
-Hmm, that does not help us from the hung task for lock waiter case.
-I would like to tune the total timeout according to the hung task
-timeout.
-
-Or, as another idea, instead of tuning it from userspace, maybe
-we can finish waiting earlier according to the deadline of the
-hung task from when it acquires a mutex.
-
-Thank you,
-
-> 
-> Bart.
-
-
+diff --git a/drivers/scsi/lpfc/lpfc_hbadisc.c b/drivers/scsi/lpfc/lpfc_hbadisc.c
+index 179be6c5a43e0..b5273cb1adbdb 100644
+--- a/drivers/scsi/lpfc/lpfc_hbadisc.c
++++ b/drivers/scsi/lpfc/lpfc_hbadisc.c
+@@ -5053,7 +5053,7 @@ lpfc_check_sli_ndlp(struct lpfc_hba *phba,
+ 		case CMD_GEN_REQUEST64_CR:
+ 			if (iocb->ndlp == ndlp)
+ 				return 1;
+-			fallthrough;
++			break;
+ 		case CMD_ELS_REQUEST64_CR:
+ 			if (remote_id == ndlp->nlp_DID)
+ 				return 1;
 -- 
-Masami Hiramatsu (Google) <mhiramat@kernel.org>
+2.39.5
+
