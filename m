@@ -1,33 +1,48 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48AB013AD05;
-	Wed,  4 Jun 2025 07:31:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 996331804A;
+	Wed,  4 Jun 2025 07:37:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749022283; cv=none; b=rn//0a+SWzyxfXo30u+EwKZ72dzG6ChVQtmMRfR9kvTicBrrMln7kedpJ/2cbdD76zexFJgeKTyZxDqX9K71lBGvJYz0LbdJMLpY5vuUw+Nb7cK6LCXFJXpgPHBmvMkFQDSCzrUsUJGbaRavAgupX3FUcCJ1lvaPR+AD9vrw1aU=
+	t=1749022667; cv=none; b=axQYaKWIFUOERUy3+pmQi81Bjwdga624E9Mg0NnxaS0pbzo4bonBu/KoBo4BDqedc/YqlRkW0+DlGKtb1PfA5vQgHen3MchqWPqebFSnry7jc6AZt0TQSfrWsBYaIwCFmh+YkIYntuwUTMCpmkrZr9yoTgVGADiec/lDQe1Zats=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749022283; c=relaxed/simple;
-	bh=CoUYZg4cbHXIK3YnOrrX6RWNoH7Arv+dVw/7EPD8JQ0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Q5tGeD9I9xVDoQFn5r+LKLJgfaIgKlnACwWcjMMNThyl3Cxld4sH8TxkSK0TimynMtF7vWxcP5qqlwGh5xZXwXRfvR3FAff2VJMAj61tgD+qZL/OwoQiwHXPuOAQNXuYg9y2vhBTzpzrkvrUNusRH6DhBFKFMtOEQGIoQMi9Maw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vGb8k9Wq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749022667; c=relaxed/simple;
+	bh=AeBrh+oy5xsCDpXg0d0Om6EvKGdC7MCU1OdkXqLTmac=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=iyqwxpOzwZRY2aF4Zl/yoq/1lZdO8ATRUQ15ogcs42D7j+lMV+SKw8OoQmoHs1N7kKXe60kAef66yoLgnhQvRmDqkLpjzuQp+y+PN/I/PmtRX7EFokn15nfCdx3N0P3HYeee3A+NW/0XuhRg6/d4gfcOs11vdJkISZ646rHH51k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=nEs+0H0B; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vGb8k9Wq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E234EC4CEE7;
-	Wed,  4 Jun 2025 07:31:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749022281;
-	bh=CoUYZg4cbHXIK3YnOrrX6RWNoH7Arv+dVw/7EPD8JQ0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=vGb8k9Wq4mWOWYluRmLs+xHWkD9PVOjantV9mwXywJoURpAWY0Y2jRWlWj9+Yj6pt
-	 jN0N3CT2fTdBaU4zloJd56/5RV1UX9uPiG6SyOojZCyXYUjaXoUYgvM0m2CPlfCJFI
-	 0AWAk7f0Nt8XSoSLJ3USI9sykqV4eSKZB7hyXs5keplrgQmNuRxiq3chcW6WS6+m4J
-	 EeUnEGGZpP/7uKAs05J7TAuEQHkYWI3G2semklq0gv0I04/t3Sw3RwXG36b8Rilj+Q
-	 7nXZEpZbLIaRA40ba5JKBOFRJq2nOT2Auew+obXpw9ftwW9VFCuGv6JGTSMvKFJTiN
-	 HlZzKVCfKtkEQ==
-Message-ID: <ee8952a0-d0ee-47db-8012-abb2722ae7ef@kernel.org>
-Date: Wed, 4 Jun 2025 16:29:43 +0900
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="nEs+0H0B"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 553KjETM000708;
+	Wed, 4 Jun 2025 07:37:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	HKX4WDJqubHxp7Yn6Vt7HnreGzdd0WNVbOxinOMb4No=; b=nEs+0H0BGadvCB3Y
+	nwwUUy8Nikf5/TJbqAJZg73SYdNIdnhJHB/Z6ob2ilUlV/+uVwBTEAsWL1kwL86/
+	VY8R1CB2oNaE1bTFefnhozJN6RyXS3Npiw6N0SX9pLmOcelrtXVi0JEtwAqyfM8F
+	cWnmJtnPbp5EQEV8Eq3aQ0ZcsT+cUVYyfXvj7ge+p6ZaW7M08yLLYNf7DFIG9eha
+	HOkDm2aG5RXdyKStrfolkC3QT3td2hLWv12+otsdFlVEm++AEY+9iKVXGlFEb8XL
+	famucgZiKfZLctkAM/CXotXWrUlhwXm/MjaNe90EnvsVkP45LCgBgcIdkI3NpYOB
+	BWPQHA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 471g8q5845-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 04 Jun 2025 07:37:24 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5547bND3005620
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 4 Jun 2025 07:37:23 GMT
+Received: from [10.218.7.247] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Wed, 4 Jun 2025
+ 00:37:18 -0700
+Message-ID: <c2b9dfbf-9163-4df5-bd0d-25c5bb43cfb5@quicinc.com>
+Date: Wed, 4 Jun 2025 13:07:15 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,72 +50,74 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [QUESTION] xfs, iomap: Handle writeback errors to prevent silent
- data corruption
-To: James Bottomley <James.Bottomley@HansenPartnership.com>,
- Christoph Hellwig <hch@infradead.org>
-Cc: Yafang Shao <laoar.shao@gmail.com>, Matthew Wilcox <willy@infradead.org>,
- Christian Brauner <brauner@kernel.org>, djwong@kernel.org, cem@kernel.org,
- linux-xfs@vger.kernel.org, Linux-Fsdevel <linux-fsdevel@vger.kernel.org>,
- Damien Le Moal <Damien.LeMoal@wdc.com>,
- Sathya Prakash <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org
-References: <aD03HeZWLJihqikU@infradead.org>
- <CALOAHbDxgvY7Aozf8H9H2OBedcU1efYBQiEvxMg6pj1+arPETQ@mail.gmail.com>
- <aD5obj2G58bRMFlB@casper.infradead.org>
- <CALOAHbCWra+DskmcWUWJOenTg9EJQfS23Hi-rB1GLYmcRUKf4A@mail.gmail.com>
- <aD5ratf3NF_DUnL-@casper.infradead.org>
- <CALOAHbB_p=rxT2-7bWudKLUgbD7AvNoBsge90VDgQFpakfTbCQ@mail.gmail.com>
- <aD58p4OpY0QhKl3i@infradead.org>
- <e2b4db3d-a282-4c96-b333-8d4698e5a705@kernel.org>
- <CALOAHbA_ttJmOejYJ+rrRdzKav_BPtwxuKwCSAf2dwLZJ1UyZQ@mail.gmail.com>
- <26d6d164-5acd-4f85-a7ac-d01f44fb5a87@kernel.org>
- <aD8Jmmd4Aiy1HElV@infradead.org>
- <abe44d8f2bebe805dd0975be198994c89a100644.camel@HansenPartnership.com>
-From: Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH V6 00/10] Refactor ufs phy powerup sequence
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Vinod Koul
+	<vkoul@kernel.org>
+CC: <vkoul@kernel.org>, <kishon@kernel.org>,
+        <manivannan.sadhasivam@linaro.org>,
+        <James.Bottomley@HansenPartnership.com>, <bvanassche@acm.org>,
+        <andersson@kernel.org>, <neil.armstrong@linaro.org>,
+        <konrad.dybcio@oss.qualcomm.com>, <dmitry.baryshkov@oss.qualcomm.com>,
+        <quic_rdwivedi@quicinc.com>, <quic_cang@quicinc.com>,
+        <linux-arm-msm@vger.kernel.org>, <linux-phy@lists.infradead.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+References: <20250526153821.7918-1-quic_nitirawa@quicinc.com>
+ <yq1a56xiir9.fsf@ca-mkp.ca.oracle.com>
 Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <abe44d8f2bebe805dd0975be198994c89a100644.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <yq1a56xiir9.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: R5W1pYtVDuT2Wkt5a18owf9FwqP_-su4
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA0MDA2MCBTYWx0ZWRfX4U4OUDfnd8XZ
+ 3DQ/sN3MXN9sqoZJUV8eCj2ylWg75+1Pr48k/Ub8YO4CV5Jksalhm+EOCOqeKvl2Gm9tl7qID2W
+ yOA/LmeAlpjEIG+XJ0ld0jMERkKIxMXDuZQlWKuVBx9KFEdXlFsOkbwuC0XT5e8/Ob8yQ9s+jQL
+ hOuQbgBKAHXS0vWgiOLia9GGansxi6xFzXQP/MAQFvvVG3RdFu6MlQKKbGId2iyMZtEs6rDXYg9
+ BuXY9Dy9NvO1C47FbjwNK/htNWW674BnASV39D5AgMcLR9cONcpPKp8YH2VnXRvmXniFfD6Lxzl
+ 7cd6sP/gxdy289aGgTCvk5S4JsdMNVNSdgNOE5DWPUyJmtbkmW3rBrHxvdYR7v8EyqZoOlMAuLj
+ g3wrposRtic3jZYSghOTjwGdK7vnKkgRH9m9dnPWDepnjjSO/Xt4kJ/0563l8NvpfWgpDyq6
+X-Proofpoint-ORIG-GUID: R5W1pYtVDuT2Wkt5a18owf9FwqP_-su4
+X-Authority-Analysis: v=2.4 cv=PrmTbxM3 c=1 sm=1 tr=0 ts=683ff7b4 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10
+ a=MvDHQgU3c1KqSIzCRgcA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-04_02,2025-06-03_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 priorityscore=1501 mlxlogscore=999 mlxscore=0 lowpriorityscore=0
+ impostorscore=0 malwarescore=0 spamscore=0 clxscore=1015 adultscore=0
+ suspectscore=0 bulkscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2506040060
 
-On 6/3/25 11:57 PM, James Bottomley wrote:
-> On Tue, 2025-06-03 at 07:41 -0700, Christoph Hellwig wrote:
->> [taking this private to discuss the mpt drivers]
->>
->>> Hmmm... DID_SOFT_ERROR... Normally, this is an immediate retry as
->>> this normally is used to indicate that a command is a collateral
->>> abort due to an NCQ error, and per ATA spec, that command should be
->>> retried. However, the *BAD* thing about Broadcom HBAs using this is
->>> that it increments the command retry counter, so if a command ends
->>> up being retried more than 5 times due to other commands failing,
->>> the command runs out of retries and is failed like this. The
->>> command retry counter should *not* be incremented for NCQ
->>> collateral aborts. I tried to fix this, but it is impossible as we
->>> actually do not know if this is a collateral abort or something
->>> else. The HBA events used to handle completion do not allow
->>> differentiation. Waiting on Broadcom to do something about this
->>> (the mpi3mr HBA driver has the same nasty issue).
->>
->> Maybe we should just change the mpt3 sas/mr drivers to use
->> DID_SOFT_ERROR less?  In fact there's not really a whole lot of
->> DID_SOFT_ERROR users otherwise, and there's probably better status
->> codes whatever they are doing can be translated to that do not
->> increment the retry counter.
+
+
+On 5/28/2025 7:45 AM, Martin K. Petersen wrote:
 > 
-> The status code that does that (retry without incrementing the counter)
-> is DID_IMM_RETRY.  The driver has to be a bit careful about using this
-> because we can get into infinite retry loops.
+> Nitin,
+> 
+>>        Patch 1 is a fix for existing issues, which doesn't have any
+>>        dependencies on any other changes.
 
-James,
+Hi Martin and Vinod,
 
-Thank you for the information. Will have a try again at changing the driver to
-use this.
+For the remaining patches (Patch 2 - Patch 10), since Patch 2 (SCSI 
+Patch) depends on PHY patches, can these patches be merged through the 
+PHY tree?
+
+Regards,
+Nitin
 
 
--- 
-Damien Le Moal
-Western Digital Research
+
+
+> 
+> Applied patch 1 to 6.16/scsi-staging, thanks!
+> 
+
