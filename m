@@ -1,46 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7FBF44A2D;
-	Wed,  4 Jun 2025 01:01:03 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8FEA149C55;
+	Wed,  4 Jun 2025 01:01:41 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1748998863; cv=none; b=k1QuCJbGXGGu+t9jyL2ovX4EBF3popRTMEyH5d+QssySYg97vIJVjeaa7Zq5m1dwcsov9OhSNihKe0PvRrHVZRvURDmdTewPUtZLrNgCK+FkYVzFtoISb34qvWWSVQZAepfboprrVbuHjBs4vzMrDY99zT3HPuUhNYeD73ixSAw=
+	t=1748998901; cv=none; b=GvtknDxN9CthN28rckvcmhG2j3BdpYRlNj0l3uJ6DJupwOsyB8d+TfMEslbp19JRjW+RhBISU8PY7vakFvgNWV3Hqg3+Qu59d58Zy5O9HNnhnzsV+8T3oPBWAvvanqidd9odMDD7P/eCLTPdLuCacafZ+8Sj35YPvW2JznpIB8A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1748998863; c=relaxed/simple;
-	bh=JhPhrI0gst5zMdd+ycC3QseyzvDP6HxlZ+Pj+OJQ320=;
+	s=arc-20240116; t=1748998901; c=relaxed/simple;
+	bh=MVoe63oIh7OE22z9Js4kjHwPGbpNWFTNw9gmtPB+smQ=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=OgRNyzCZLkeoHFS7FN4B6X6xF5ZMYuaDHXQNIfTkz1UTgivAP485QTrv2uw0EYrcdAk5zpEeV7hi3ysAFUjAfV0Qcik4rdqUER0YIa3HizSG6GTwq0QhkBh8CaBeu4L+ojY23uQxCPHrDBMAtuZPAkpRQhesKJN42PvjIRXRY7Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kiWwG8sy; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=MI2AJVTNvpWWFhSeLuf9Gjr7U2i4/zHcsYAlBWgyqXmcajN/VELTudUNyPcP9NIJP7/w9zV7v17qHw7Y8LzP5AaO9F5JDXdxsbb24wa2X/8nA5hsBWHLAVwozurWaBsEc+N1IW10ac/pK6Z+fRtAIdCxzmDUgrlDIzLY9oeiPcs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SsZR0F1u; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kiWwG8sy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2A4DEC4CEED;
-	Wed,  4 Jun 2025 01:01:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SsZR0F1u"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8DE3CC4CEF1;
+	Wed,  4 Jun 2025 01:01:40 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1748998863;
-	bh=JhPhrI0gst5zMdd+ycC3QseyzvDP6HxlZ+Pj+OJQ320=;
+	s=k20201202; t=1748998901;
+	bh=MVoe63oIh7OE22z9Js4kjHwPGbpNWFTNw9gmtPB+smQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=kiWwG8syLpaTrICjpUAr3kxQ8zxnwQYPGL2RinQKETHRcG24MQUy8UmUDTYoPbr7k
-	 flGxBugLYUbpgZxfirXMVml57gVNOKJWCnuTIfy+y948GtSRRJp08z9E1agkRdycQy
-	 gAT7bY+XJhPCiiyGMpoY7tABpeaIMNj8B3vWiTR9el+zB03eg9e9U1MuxJYC4/YcjA
-	 HZMX3udS/ngMS8y851RHsV8AB17UC1ZseAfuXsDlpeCHaZ9zA6/8GIOW2FcB4qI6W1
-	 AVaIUG4K5dp5mYPkZDSVDyjCi9HkCpJ5zwIDfKP8NtPzL0Y4vgb5zlnSbqpP4vFbKO
-	 aCeHKFlXMEeNA==
+	b=SsZR0F1u5BCYedVtLbLl+iOHxP+Vtaa9ICKZnBLfzYbtsJMA4VTPlhIKjCHnnipqd
+	 3RY4MNx2U5U69GSXY2L7SMJ1TApVW2P9g7ovc0pBf13rVzZ/7j4gr6HL+kP0kKs0io
+	 6mY3EhVBY8NlD3Q+RlKuyh8RnnGktR4f3uERmcw6Mq1n+rAfVzGCy2MgpFxTV489MH
+	 nhaX9w0mRlaR+8mVdvx6meRCSeRP+FOGfeE2ZVHNETw1QnUV1JFe653AKdYWnfx0bb
+	 CqB9jdbVAk9IC9qCNSRWUOmF/ZmuJgbLVydKyCTEEOfCa3aL/9VViftBEDFjbQNrBx
+	 eW3yA9Gp+8BKQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: David Strahan <david.strahan@microchip.com>,
-	Scott Benesh <scott.benesh@microchip.com>,
-	Scott Teel <scott.teel@microchip.com>,
-	Mike McGowen <mike.mcgowen@microchip.com>,
-	Don Brace <don.brace@microchip.com>,
+Cc: Daniel Wagner <wagi@kernel.org>,
+	Justin Tee <justin.tee@broadcom.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	storagedev@microchip.com,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.12 57/93] scsi: smartpqi: Add new PCI IDs
-Date: Tue,  3 Jun 2025 20:58:43 -0400
-Message-Id: <20250604005919.4191884-57-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 78/93] scsi: lpfc: Use memcpy() for BIOS version
+Date: Tue,  3 Jun 2025 20:59:04 -0400
+Message-Id: <20250604005919.4191884-78-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250604005919.4191884-1-sashal@kernel.org>
 References: <20250604005919.4191884-1-sashal@kernel.org>
@@ -56,279 +54,88 @@ X-stable-base: Linux 6.12.31
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: David Strahan <david.strahan@microchip.com>
+From: Daniel Wagner <wagi@kernel.org>
 
-[ Upstream commit 01b8bdddcfab035cf70fd9981cb20593564cd15d ]
+[ Upstream commit ae82eaf4aeea060bb736c3e20c0568b67c701d7d ]
 
-Add in support for more PCI devices.
+The strlcat() with FORTIFY support is triggering a panic because it
+thinks the target buffer will overflow although the correct target
+buffer size is passed in.
 
-All PCI ID entries in Hex.
+Anyway, instead of memset() with 0 followed by a strlcat(), just use
+memcpy() and ensure that the resulting buffer is NULL terminated.
 
-Add PCI IDs for Ramaxel controllers:
-                                                  VID  / DID  / SVID / SDID
-                                                  ----   ----   ----   ----
-                      Ramaxel SmartHBA RX8238-16i 9005   028f   1018   8238
-                      Ramaxel SSSRAID card        9005   028f   1f3f   0610
+BIOSVersion is only used for the lpfc_printf_log() which expects a
+properly terminated string.
 
-Add PCI ID for Alibaba controller:
-                                                  VID  / DID  / SVID / SDID
-                                                  ----   ----   ----   ----
-                      HBA AS1340                  9005   028f   1ded   3301
-
-Add PCI IDs for Inspur controller:
-                                                  VID  / DID  / SVID / SDID
-                                                  ----   ----   ----   ----
-                      RT0800M6E2i                 9005   028f   1bd4   00a3
-
-Add PCI IDs for Delta controllers:
-                                                  VID  / DID  / SVID / SDID
-                                                  ----   ----   ----   ----
-ThinkSystem 4450-8i SAS/SATA/NVMe PCIe Gen4       9005   028f   1d49   0222
-24Gb HBA
-ThinkSystem 4450-16i SAS/SATA/NVMe PCIe Gen4      9005   028f   1d49   0223
-24Gb HBA
-ThinkSystem 4450-8e SAS/SATA PCIe Gen4            9005   028f   1d49   0224
-24Gb HBA
-ThinkSystem RAID 4450-16e PCIe Gen4 24Gb          9005   028f   1d49   0225
-Adapter HBA
-ThinkSystem RAID 5450-16i PCIe Gen4 24Gb Adapter  9005   028f   1d49   0521
-ThinkSystem RAID 9450-8i 4GB Flash PCIe Gen4      9005   028f   1d49   0624
-24Gb Adapter
-ThinkSystem RAID 9450-16i 4GB Flash PCIe Gen4     9005   028f   1d49   0625
-24Gb Adapter
-ThinkSystem RAID 9450-16i 4GB Flash PCIe Gen4     9005   028f   1d49   0626
-24Gb Adapter
-ThinkSystem RAID 9450-32i 8GB Flash PCIe Gen4     9005   028f   1d49   0627
-24Gb Adapter
-ThinkSystem RAID 9450-16e 4GB Flash PCIe Gen4     9005   028f   1d49   0628
-24Gb Adapter
-
-Add PCI ID for Cloudnine Controller:
-                                                  VID  / DID  / SVID / SDID
-                                                  ----   ----   ----   ----
-                      SmartHBA P6600-24i          9005   028f   1f51   100b
-
-Add PCI IDs for Hurraydata Controllers:
-                                                  VID  / DID  / SVID / SDID
-                                                  ----   ----   ----   ----
-                      HRDT TrustHBA H4100-8i      9005   028f   207d   4044
-                      HRDT TrustHBA H4100-8e      9005   028f   207d   4054
-                      HRDT TrustHBA H4100-16i     9005   028f   207d   4084
-                      HRDT TrustHBA H4100-16e     9005   028f   207d   4094
-                      HRDT TrustRAID D3152s-8i    9005   028f   207d   4140
-                      HRDT TrustRAID D3154s-8i    9005   028f   207d   4240
-
-Reviewed-by: Scott Benesh <scott.benesh@microchip.com>
-Reviewed-by: Scott Teel <scott.teel@microchip.com>
-Reviewed-by: Mike McGowen <mike.mcgowen@microchip.com>
-Signed-off-by: David Strahan <david.strahan@microchip.com>
-Signed-off-by: Don Brace <don.brace@microchip.com>
-Link: https://lore.kernel.org/r/20250423183229.538572-3-don.brace@microchip.com
+Signed-off-by: Daniel Wagner <wagi@kernel.org>
+Link: https://lore.kernel.org/r/20250409-fix-lpfc-bios-str-v1-1-05dac9e51e13@kernel.org
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
-**YES** This commit should be backported to stable kernel trees. ##
-Extensive Analysis ### Code Changes Analysis The commit adds **25 new
-PCI ID entries** to the smartpqi driver's `pqi_pci_id_table[]` in
-`drivers/scsi/smartpqi/smartpqi_init.c`. All changes follow the
-identical pattern: ```c { PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-subvendor_id, subdevice_id) }, ``` **Key technical characteristics:** -
-**Same device ID (0x028f)**: All entries use the identical base device
-ID, indicating the same underlying Microchip chipset - **Only
-vendor/subdevice variations**: Changes only affect which OEM hardware
-variants the driver will claim - **Pure table additions**: No functional
-code modifications, algorithm changes, or new logic paths - **Maintains
-table structure**: Preserves existing entries and the critical
-`PCI_ANY_ID` wildcard terminator ### Why This Merits Backporting **1.
-Explicit Stable Policy Compliance** The Linux stable kernel rules at
-`/home/sasha/linux/Documentation/process/stable-kernel-rules.rst:15`
-explicitly state: *"It must either fix a real bug that bothers people or
-just add a device ID."* This commit directly falls under the "device ID
-addition" category that stable policy encourages. **2. Hardware Support
-Without Risk** - **Zero functional impact**: The smartpqi driver uses
-unified hardware detection and initialization regardless of PCI ID -
-**No existing hardware affected**: New IDs only enable support for
-previously unsupported hardware - **Same code paths**: All controllers
-use identical probe/initialization functions (`pqi_pci_probe`) -
-**Runtime capability detection**: Controller features are discovered at
-runtime, not determined by PCI IDs **3. Strong Historical Precedent**
-Recent smartpqi PCI ID commits show systematic stable backporting: -
-**dbc39b84540f** (Aug 2024) → backported to v6.11.3-v6.11.11 -
-**0e21e73384d3** (July 2024) → backported to v6.11.3-v6.11.11 - Pattern
-shows stable maintainers routinely backport these changes **4. User
-Impact Considerations** - **Enterprise hardware support**: Enables
-critical storage controller support for servers already in production -
-**OEM ecosystem**: Supports Lenovo ThinkSystem, Ramaxel, Alibaba,
-Inspur, Delta, Cloudnine, and Hurraydata controllers - **No regression
-risk**: Cannot break existing functionality since it only adds new
-hardware recognition **5. Technical Safety Assessment** The smartpqi
-driver architecture makes PCI ID additions exceptionally safe: -
-**Unified PQI interface**: All hardware uses the same Physical Queue
-Interface standard - **Common initialization**: Single code path handles
-all variants - **Wildcard fallback**: Existing `PCI_ANY_ID` entry
-provides compatibility safety net - **Module parameter control**:
-`disable_device_id_wildcards` allows administrators to control behavior
-### Comparison with Historical Examples The provided reference commits
-confirm this assessment: - **Similar Commit #1 & #2**: Marked "YES" for
-backporting, involve identical PCI ID table additions - **Similar Commit
-#3, #4, #5**: Marked "NO" but appear to be earlier commits from
-different timeframes with different maintainer practices ### Risk
-Analysis **Minimal Risk Profile:** - **No code logic changes**: Pure
-data table modification - **Isolated impact scope**: Only affects
-hardware device matching - **Reversible**: Changes can be easily
-reverted if issues arise - **Well-tested pattern**: Follows established
-commit pattern with extensive reviewer approval **Conclusion:** This
-commit represents exactly the type of low-risk hardware support addition
-that stable kernel policy explicitly encourages for backporting. The
-combination of zero functional risk, clear user benefit, strong
-historical precedent, and explicit stable policy support makes this an
-ideal candidate for stable tree inclusion.
+Let me understand the actual problem by examining the function more
+carefully. Based on the commit message, this is about a FORTIFY panic
+when using strlcat(): **YES** This commit should be backported to stable
+kernel trees. Here's my extensive analysis: ## Bug Analysis **Root
+Cause:** The commit fixes a kernel panic triggered by FORTIFY_SOURCE
+when using `strlcat()`. The FORTIFY infrastructure incorrectly detected
+a potential buffer overflow in the BIOS version string handling code.
+**The Problem Code:** ```c memset(phba->BIOSVersion, 0,
+sizeof(phba->BIOSVersion)); strlcat(phba->BIOSVersion, (char
+*)cntl_attr->bios_ver_str, sizeof(phba->BIOSVersion)); ``` **The Fix:**
+```c memcpy(phba->BIOSVersion, cntl_attr->bios_ver_str,
+sizeof(phba->BIOSVersion)); phba->BIOSVersion[sizeof(phba->BIOSVersion)
+- 1] = '\0'; ``` ## Technical Details 1. **Buffer Sizes:** `BIOSVersion`
+is a 16-byte character array (`char BIOSVersion[16]` in lpfc.h:1267),
+while `bios_ver_str` is a 32-byte array (`uint32_t bios_ver_str[8]` in
+lpfc_hw4.h:3798). 2. **FORTIFY Issue:** The `strlcat()` function with
+FORTIFY enabled was triggering a false positive, causing kernel panics
+when it incorrectly calculated potential overflow conditions. 3. **Safe
+Solution:** The fix uses `memcpy()` for the exact buffer size and
+explicitly null-terminates the string, which is simpler and avoids the
+FORTIFY false positive. ## Backport Criteria Analysis ✅ **Fixes
+Important Bug:** This resolves kernel panics in production systems with
+FORTIFY enabled ✅ **Small & Contained:** Only 3 lines changed in a
+single function ✅ **Minimal Risk:** The change is functionally
+equivalent but safer ✅ **No Architectural Changes:** Simple string
+handling improvement ✅ **Clear Side Effects:** No behavioral changes
+beyond fixing the panic ✅ **Critical Subsystem:** SCSI driver stability
+is important for storage ## Comparison with Similar Commits This closely
+resembles **Similar Commit #2** (marked YES for backport) which fixed an
+overflow build issue with FORTIFY. Both commits: - Address FORTIFY-
+related compilation/runtime issues - Make minimal, safe code changes -
+Fix real problems affecting users - Have low regression risk ## Risk
+Assessment **Low Risk:** The change maintains identical functionality
+while eliminating the false positive. Both code paths copy BIOS version
+data into a 16-byte buffer and ensure null termination. The `memcpy()`
+approach is actually more predictable than `strlcat()` with an empty
+target buffer. ## Conclusion This commit fixes a real kernel panic issue
+that affects users running kernels with FORTIFY_SOURCE enabled. The fix
+is minimal, safe, and follows stable tree guidelines perfectly. It
+should definitely be backported to prevent production systems from
+experiencing these panics.
 
- drivers/scsi/smartpqi/smartpqi_init.c | 84 +++++++++++++++++++++++++++
- 1 file changed, 84 insertions(+)
+ drivers/scsi/lpfc/lpfc_sli.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
-index d919a74746a05..9ab59354f9340 100644
---- a/drivers/scsi/smartpqi/smartpqi_init.c
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c
-@@ -9708,6 +9708,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1bd4, 0x0089)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1bd4, 0x00a3)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1ff9, 0x00a1)
-@@ -10044,6 +10048,30 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_ADAPTEC2, 0x14f0)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x207d, 0x4044)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x207d, 0x4054)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x207d, 0x4084)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x207d, 0x4094)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x207d, 0x4140)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x207d, 0x4240)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_ADVANTECH, 0x8312)
-@@ -10260,6 +10288,14 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1cc4, 0x0201)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1018, 0x8238)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       0x1f3f, 0x0610)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_LENOVO, 0x0220)
-@@ -10268,10 +10304,30 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_LENOVO, 0x0221)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0222)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0223)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0224)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0225)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_LENOVO, 0x0520)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0521)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_LENOVO, 0x0522)
-@@ -10292,6 +10348,26 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       PCI_VENDOR_ID_LENOVO, 0x0623)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0624)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0625)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0626)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0627)
-+	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+			       PCI_VENDOR_ID_LENOVO, 0x0628)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 				0x1014, 0x0718)
-@@ -10320,6 +10396,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1137, 0x0300)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1ded, 0x3301)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1ff9, 0x0045)
-@@ -10468,6 +10548,10 @@ static const struct pci_device_id pqi_pci_id_table[] = {
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 				0x1f51, 0x100a)
- 	},
-+	{
-+		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
-+				0x1f51, 0x100b)
-+	},
- 	{
- 		PCI_DEVICE_SUB(PCI_VENDOR_ID_ADAPTEC2, 0x028f,
- 			       0x1f51, 0x100e)
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 6748fba48a07e..4dccbaeb63283 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -6020,9 +6020,9 @@ lpfc_sli4_get_ctl_attr(struct lpfc_hba *phba)
+ 	phba->sli4_hba.flash_id = bf_get(lpfc_cntl_attr_flash_id, cntl_attr);
+ 	phba->sli4_hba.asic_rev = bf_get(lpfc_cntl_attr_asic_rev, cntl_attr);
+ 
+-	memset(phba->BIOSVersion, 0, sizeof(phba->BIOSVersion));
+-	strlcat(phba->BIOSVersion, (char *)cntl_attr->bios_ver_str,
++	memcpy(phba->BIOSVersion, cntl_attr->bios_ver_str,
+ 		sizeof(phba->BIOSVersion));
++	phba->BIOSVersion[sizeof(phba->BIOSVersion) - 1] = '\0';
+ 
+ 	lpfc_printf_log(phba, KERN_INFO, LOG_SLI,
+ 			"3086 lnk_type:%d, lnk_numb:%d, bios_ver:%s, "
 -- 
 2.39.5
 
