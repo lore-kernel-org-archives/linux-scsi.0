@@ -1,124 +1,77 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A3817548;
-	Wed,  4 Jun 2025 04:32:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E093146447;
+	Wed,  4 Jun 2025 06:39:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749011555; cv=none; b=qSQBoBsu8sNgfpRZNU9y1J5/atJjhEHXWEv4+1Sw92T3wnp8xRyUvzQE+T+HVLmE9JZ7vyRIcJt3k9669bzk7YFSZ8sUZ58fvQaoT7zNnI2cWIePCoXc87TvopqF47kIexktvoFkA1ShLGySP3Cey34eANrgd+ksscLF4+EDj70=
+	t=1749019199; cv=none; b=Tj1GwEK3q6vh1dV+IsgzpK91REUTacTPuLsLkAcpQ2TE3VY6vumH9t8JL0VKmiS0TKO+g4wyXJSCDYBWaTXj2k62WT6CKXzRn/FXPorOjk4kuAo094U3RdQ8p0G6rUGx7WBh8WDri6Ae+0bgOnD7csMdPkZgUfNTf0+fcjpSTqE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749011555; c=relaxed/simple;
-	bh=1fpC3Hybi/eVGZh4MEeqKTWPmCJz86JZI3OFCfdqyoo=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=U+oszMAwEtYBTz6qzlgVxD/0soBeqw59v2I1QuPM/aIGFEUps5hC50NGx7kP9q1KDb4rVL1aaMWyPsGaJwdN4AW6YJJjQbFwCo1IOWCqsmCTah4mYCpTQ0atnH6hRxfLDRNk6H6UVc+Oh9Nw/b9vCRH5OBjjaoxwQ7HbBehC4E4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LbnU+Vth; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1749019199; c=relaxed/simple;
+	bh=gAtNlfTa8CjhIyQFjnINER2l/QhNyKuN+O64uD4vOkU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=aehTmdeKEIYzDSz+rHp9i0om1GS86zPGyfawFRYP51YYDXHRRphrrZ7ayfT1Id+FyJorpuMnYZhSQ06GkCALL+uM0d6tbLcEdhZhWK5tj8n/XyvY+1Xd+OgqCeigZfJy/R3Y3g9FmgGva1uJ11Tv+HSs9/ZZQZujxe3GOebO08g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=NTTkSrUg; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LbnU+Vth"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1749011554; x=1780547554;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=1fpC3Hybi/eVGZh4MEeqKTWPmCJz86JZI3OFCfdqyoo=;
-  b=LbnU+VthNRtc4WbynW1jIQiP2Mh8bqI4jxYJ5HrG3veOqTaBWABfjRAh
-   ar2WLkDWKTcNAZDKECT2oDAQ8Bk0xAwB27tg7hgxL8cQKbC2MdbNG9NKw
-   ZSD3Y6yvN1RoBjPCeWXtLiLE3id5MPTZ9tSyG3UVHffbptHcmL9mqocLg
-   nJ6L1e2jUqgziHe4qImGbR6vZj/11EvC5xpgVRiYh3taacekJ+eCkiclF
-   QuTwalB8FwdT4eLhr9guzcqlsziLhwQ/q/5iArpOGQ0SbM6JzDsAsZk5E
-   JJ3ogA3K4DGyVr8SyahFPGSyUgnk/eRBqC4aWE7vcTKuxajTjemzFJaoW
-   Q==;
-X-CSE-ConnectionGUID: m8g6KL0ORzezSKwvO+Kvnw==
-X-CSE-MsgGUID: uKvHA1HQQD+5PFwSKlgzkA==
-X-IronPort-AV: E=McAfee;i="6700,10204,11453"; a="51217522"
-X-IronPort-AV: E=Sophos;i="6.16,208,1744095600"; 
-   d="scan'208";a="51217522"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2025 21:32:33 -0700
-X-CSE-ConnectionGUID: ADEZ9NkNT56f57CeRBtwIg==
-X-CSE-MsgGUID: 2PWEErnlRCa62D6QTvh1+A==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,208,1744095600"; 
-   d="scan'208";a="150221411"
-Received: from chenyu-dev.sh.intel.com ([10.239.62.107])
-  by fmviesa004.fm.intel.com with ESMTP; 03 Jun 2025 21:32:23 -0700
-From: Chen Yu <yu.c.chen@intel.com>
-To: Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: megaraidlinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Chen Yu <yu.c.chen@intel.com>
-Subject: [PATCH RESEND] scsi: megaraid_sas: Fix invalid Node index
-Date: Wed,  4 Jun 2025 12:25:56 +0800
-Message-Id: <20250604042556.3731059-1-yu.c.chen@intel.com>
-X-Mailer: git-send-email 2.25.1
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="NTTkSrUg"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
+	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
+	Sender:Reply-To:Content-ID:Content-Description;
+	bh=pe1qJeegvXBPluoOlMRYoHImqkwDQRENHFRDQIDQpsY=; b=NTTkSrUgpjgM/V/3ioGpL3/x1Z
+	2CxMMtmNvfQCOqeWRlfFKfGVhWrhlWY5gK6pjM79rFwTcVyu9SWSzkHHygVX9cez/zYGNMg6FYOOY
+	TiEg3FAz6BOLfIBKq64da7xdXOuC3ASKfolqOF34fVu7/OqN1+ZzDywnQVlaTMyNw6h2CLX3KTn6T
+	MN43a5PYxj09xbdQvytmRFNFYJUuKRsJUYyj9Ertm97WlaIsXXm6QdYlVOAUykYmZuq93ut0to2xS
+	WeXfa7gTdZ5+fWOAQ991PQdFRY6Ma15CQ/Cvz5MKiCssjbGYiXM1ddnQLwmWhOP4/E2ehYqXPEl9f
+	0zv/dWOg==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uMhmx-0000000Ch1g-32G7;
+	Wed, 04 Jun 2025 06:39:51 +0000
+Date: Tue, 3 Jun 2025 23:39:51 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
+	martin.petersen@oracle.com, asml.silence@gmail.com,
+	anuj1072538@gmail.com, brauner@kernel.org, jack@suse.cz,
+	viro@zeniv.linux.org.uk, io-uring@vger.kernel.org,
+	linux-nvme@lists.infradead.org, linux-block@vger.kernel.org,
+	gost.dev@samsung.com, linux-scsi@vger.kernel.org,
+	vishak.g@samsung.com, linux-fsdevel@vger.kernel.org
+Subject: Re: [PATCH v11 00/10] Read/Write with meta/integrity
+Message-ID: <aD_qN7pDeYXz10NU@infradead.org>
+References: <CGME20241128113036epcas5p397ba228852b72fff671fe695c322a3ef@epcas5p3.samsung.com>
+ <20241128112240.8867-1-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <20241128112240.8867-1-anuj20.g@samsung.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On a system with DRAM interleave enabled, out-of-bound access
-is detected:
+On Thu, Nov 28, 2024 at 04:52:30PM +0530, Anuj Gupta wrote:
+> This adds a new io_uring interface to exchange additional integrity/pi
+> metadata with read/write.
+> 
+> Example program for using the interface is appended below [1].
+> 
+> The patchset is on top of block/for-next.
+> 
+> Testing has been done by modifying fio:
+> https://github.com/SamsungDS/fio/tree/priv/feat/pi-test-v11
 
-megaraid_sas 0000:3f:00.0: requested/available msix 128/128 poll_queue 0
-------------[ cut here ]------------
-UBSAN: array-index-out-of-bounds in ./arch/x86/include/asm/topology.h:72:28
-index -1 is out of range for type 'cpumask *[1024]'
-dump_stack_lvl+0x5d/0x80
-ubsan_epilogue+0x5/0x2b
-__ubsan_handle_out_of_bounds.cold+0x46/0x4b
-megasas_alloc_irq_vectors+0x149/0x190 [megaraid_sas]
-megasas_probe_one.cold+0xa4d/0x189c [megaraid_sas]
-local_pci_probe+0x42/0x90
-pci_device_probe+0xdc/0x290
-really_probe+0xdb/0x340
-__driver_probe_device+0x78/0x110
-driver_probe_device+0x1f/0xa0
-__driver_attach+0xba/0x1c0
-bus_for_each_dev+0x8b/0xe0
-bus_add_driver+0x142/0x220
-driver_register+0x72/0xd0
-megasas_init+0xdf/0xff0 [megaraid_sas]
-do_one_initcall+0x57/0x310
-do_init_module+0x90/0x250
-init_module_from_file+0x85/0xc0
-idempotent_init_module+0x114/0x310
-__x64_sys_finit_module+0x65/0xc0
-do_syscall_64+0x82/0x170
-entry_SYSCALL_64_after_hwframe+0x76/0x7e
+It looks like this never got into upstream fio.  Do you plan to submit
+it?  It would also be extremely useful to have a testing using it in
+blktests, because it seems like we don't have any test coverage for the
+read/write with metadata code at the moment.
 
-Fix it accordingly.
-
-Signed-off-by: Chen Yu <yu.c.chen@intel.com>
----
- drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++++-
- 1 file changed, 5 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 5e33d411fa3d..6d4de06082d1 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -5910,7 +5910,11 @@ megasas_set_high_iops_queue_affinity_and_hint(struct megasas_instance *instance)
- 	const struct cpumask *mask;
- 
- 	if (instance->perf_mode == MR_BALANCED_PERF_MODE) {
--		mask = cpumask_of_node(dev_to_node(&instance->pdev->dev));
-+		int nid = dev_to_node(&instance->pdev->dev);
-+
-+		if (nid == NUMA_NO_NODE)
-+			nid = 0;
-+		mask = cpumask_of_node(nid);
- 
- 		for (i = 0; i < instance->low_latency_index_start; i++) {
- 			irq = pci_irq_vector(instance->pdev, i);
--- 
-2.25.1
+Just bringing this up because I want to be able to properly test the
+metadata side of the nvme/block support for the new DMA mapping API
+and I'm ѕtruggling to come up with good test coverage.
 
