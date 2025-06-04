@@ -1,57 +1,62 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 904401DE4E0;
-	Wed,  4 Jun 2025 02:21:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A3817548;
+	Wed,  4 Jun 2025 04:32:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749003719; cv=none; b=PQelFu9+p9qggfwRp6j1fcegsRV5JukrAGZ/qGmooFs7DXWAX9SVbs1cP2f33KArSGyYbCttTTLLSxV7f8zvWqOpFjTs6GzPZ1rnAwsot4UVaRn0xM3iAlxiu2/puoIp4agEgH7yaXfqEd9ymT3szgtDglXY9fXIDPm02Gb2UaQ=
+	t=1749011555; cv=none; b=qSQBoBsu8sNgfpRZNU9y1J5/atJjhEHXWEv4+1Sw92T3wnp8xRyUvzQE+T+HVLmE9JZ7vyRIcJt3k9669bzk7YFSZ8sUZ58fvQaoT7zNnI2cWIePCoXc87TvopqF47kIexktvoFkA1ShLGySP3Cey34eANrgd+ksscLF4+EDj70=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749003719; c=relaxed/simple;
-	bh=ctqXTNBZgtcIpZpzjMEuvc2QTfu0aH4V1HJ8hp1WPaM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nqw07vdJyc8QGzckto0Bn2P9TAyFuNh4mNFpSafOEzeQMm+IJQj56Zb3tN30dxNHMGPVp3x8j8JTCOBuZwqGWsZs8ZdeyQOK53vHcdpensC8is4yCREWptSZdRmqF0L4+jGtIJ3bTy0vTIxmiuKO/+Ux3//SFio3/ivj1kJzg/U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bBrtl0Y7JzYQvQC;
-	Wed,  4 Jun 2025 10:21:51 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 1D7CA1A11BA;
-	Wed,  4 Jun 2025 10:21:50 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.112.188])
-	by APP4 (Coremail) with SMTP id gCh0CgCnCl+nrT9oedfBOQ--.14997S13;
-	Wed, 04 Jun 2025 10:21:49 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-ext4@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-xfs@vger.kernel.org,
+	s=arc-20240116; t=1749011555; c=relaxed/simple;
+	bh=1fpC3Hybi/eVGZh4MEeqKTWPmCJz86JZI3OFCfdqyoo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=U+oszMAwEtYBTz6qzlgVxD/0soBeqw59v2I1QuPM/aIGFEUps5hC50NGx7kP9q1KDb4rVL1aaMWyPsGaJwdN4AW6YJJjQbFwCo1IOWCqsmCTah4mYCpTQ0atnH6hRxfLDRNk6H6UVc+Oh9Nw/b9vCRH5OBjjaoxwQ7HbBehC4E4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LbnU+Vth; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LbnU+Vth"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1749011554; x=1780547554;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=1fpC3Hybi/eVGZh4MEeqKTWPmCJz86JZI3OFCfdqyoo=;
+  b=LbnU+VthNRtc4WbynW1jIQiP2Mh8bqI4jxYJ5HrG3veOqTaBWABfjRAh
+   ar2WLkDWKTcNAZDKECT2oDAQ8Bk0xAwB27tg7hgxL8cQKbC2MdbNG9NKw
+   ZSD3Y6yvN1RoBjPCeWXtLiLE3id5MPTZ9tSyG3UVHffbptHcmL9mqocLg
+   nJ6L1e2jUqgziHe4qImGbR6vZj/11EvC5xpgVRiYh3taacekJ+eCkiclF
+   QuTwalB8FwdT4eLhr9guzcqlsziLhwQ/q/5iArpOGQ0SbM6JzDsAsZk5E
+   JJ3ogA3K4DGyVr8SyahFPGSyUgnk/eRBqC4aWE7vcTKuxajTjemzFJaoW
+   Q==;
+X-CSE-ConnectionGUID: m8g6KL0ORzezSKwvO+Kvnw==
+X-CSE-MsgGUID: uKvHA1HQQD+5PFwSKlgzkA==
+X-IronPort-AV: E=McAfee;i="6700,10204,11453"; a="51217522"
+X-IronPort-AV: E=Sophos;i="6.16,208,1744095600"; 
+   d="scan'208";a="51217522"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Jun 2025 21:32:33 -0700
+X-CSE-ConnectionGUID: ADEZ9NkNT56f57CeRBtwIg==
+X-CSE-MsgGUID: 2PWEErnlRCa62D6QTvh1+A==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.16,208,1744095600"; 
+   d="scan'208";a="150221411"
+Received: from chenyu-dev.sh.intel.com ([10.239.62.107])
+  by fmviesa004.fm.intel.com with ESMTP; 03 Jun 2025 21:32:23 -0700
+From: Chen Yu <yu.c.chen@intel.com>
+To: Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sumit Saxena <sumit.saxena@broadcom.com>,
+	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+	Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: megaraidlinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	hch@lst.de,
-	tytso@mit.edu,
-	djwong@kernel.org,
-	john.g.garry@oracle.com,
-	bmarzins@redhat.com,
-	chaitanyak@nvidia.com,
-	shinichiro.kawasaki@wdc.com,
-	brauner@kernel.org,
-	martin.petersen@oracle.com,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH 09/10] block: add FALLOC_FL_WRITE_ZEROES support
-Date: Wed,  4 Jun 2025 10:08:49 +0800
-Message-ID: <20250604020850.1304633-10-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.46.1
-In-Reply-To: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
-References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
+	Chen Yu <yu.c.chen@intel.com>
+Subject: [PATCH RESEND] scsi: megaraid_sas: Fix invalid Node index
+Date: Wed,  4 Jun 2025 12:25:56 +0800
+Message-Id: <20250604042556.3731059-1-yu.c.chen@intel.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -59,73 +64,61 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgCnCl+nrT9oedfBOQ--.14997S13
-X-Coremail-Antispam: 1UD129KBjvJXoW7Zry7Xw4DWw48CryrJFy3twb_yoW8Wr43pF
-	45JFyFgFWFg3s3GF1rCa1kWrn5Za1kJrWrC3yIkr1F9w47Jrn7Kr98WF98tFyDJFyUAw4k
-	X3ya9ryDuF17ArDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUmS14x267AKxVWrJVCq3wAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2048vs2IY020E87I2jVAFwI0_JF0E3s1l82xGYI
-	kIc2x26xkF7I0E14v26ryj6s0DM28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48ve4kI8wA2
-	z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F
-	4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AKxVW0oVCq
-	3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7
-	IYx2IY67AKxVWUGVWUXwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4U
-	M4x0Y48IcxkI7VAKI48JM4x0x7Aq67IIx4CEVc8vx2IErcIFxwACI402YVCY1x02628vn2
-	kIc2xKxwCY1x0262kKe7AKxVW8ZVWrXwCF04k20xvY0x0EwIxGrwCFx2IqxVCFs4IE7xkE
-	bVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1rMI8E67
-	AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUCVW8JwCI
-	42IY6xIIjxv20xvEc7CjxVAFwI0_Gr1j6F4UJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF
-	4lIxAIcVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8Jr0_Cr1UYxBI
-	daVFxhVjvjDU0xZFpf9x0pRiF4iUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-From: Zhang Yi <yi.zhang@huawei.com>
+On a system with DRAM interleave enabled, out-of-bound access
+is detected:
 
-Add support for FALLOC_FL_WRITE_ZEROES, if the block device enables the
-unmap write zeroes operation, it will issue a write zeroes command.
+megaraid_sas 0000:3f:00.0: requested/available msix 128/128 poll_queue 0
+------------[ cut here ]------------
+UBSAN: array-index-out-of-bounds in ./arch/x86/include/asm/topology.h:72:28
+index -1 is out of range for type 'cpumask *[1024]'
+dump_stack_lvl+0x5d/0x80
+ubsan_epilogue+0x5/0x2b
+__ubsan_handle_out_of_bounds.cold+0x46/0x4b
+megasas_alloc_irq_vectors+0x149/0x190 [megaraid_sas]
+megasas_probe_one.cold+0xa4d/0x189c [megaraid_sas]
+local_pci_probe+0x42/0x90
+pci_device_probe+0xdc/0x290
+really_probe+0xdb/0x340
+__driver_probe_device+0x78/0x110
+driver_probe_device+0x1f/0xa0
+__driver_attach+0xba/0x1c0
+bus_for_each_dev+0x8b/0xe0
+bus_add_driver+0x142/0x220
+driver_register+0x72/0xd0
+megasas_init+0xdf/0xff0 [megaraid_sas]
+do_one_initcall+0x57/0x310
+do_init_module+0x90/0x250
+init_module_from_file+0x85/0xc0
+idempotent_init_module+0x114/0x310
+__x64_sys_finit_module+0x65/0xc0
+do_syscall_64+0x82/0x170
+entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+Fix it accordingly.
+
+Signed-off-by: Chen Yu <yu.c.chen@intel.com>
 ---
- block/fops.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ drivers/scsi/megaraid/megaraid_sas_base.c | 6 +++++-
+ 1 file changed, 5 insertions(+), 1 deletion(-)
 
-diff --git a/block/fops.c b/block/fops.c
-index e1c921549d28..050c16f5974a 100644
---- a/block/fops.c
-+++ b/block/fops.c
-@@ -841,7 +841,7 @@ static ssize_t blkdev_read_iter(struct kiocb *iocb, struct iov_iter *to)
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 5e33d411fa3d..6d4de06082d1 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -5910,7 +5910,11 @@ megasas_set_high_iops_queue_affinity_and_hint(struct megasas_instance *instance)
+ 	const struct cpumask *mask;
  
- #define	BLKDEV_FALLOC_FL_SUPPORTED					\
- 		(FALLOC_FL_KEEP_SIZE | FALLOC_FL_PUNCH_HOLE |		\
--		 FALLOC_FL_ZERO_RANGE)
-+		 FALLOC_FL_ZERO_RANGE | FALLOC_FL_WRITE_ZEROES)
+ 	if (instance->perf_mode == MR_BALANCED_PERF_MODE) {
+-		mask = cpumask_of_node(dev_to_node(&instance->pdev->dev));
++		int nid = dev_to_node(&instance->pdev->dev);
++
++		if (nid == NUMA_NO_NODE)
++			nid = 0;
++		mask = cpumask_of_node(nid);
  
- static long blkdev_fallocate(struct file *file, int mode, loff_t start,
- 			     loff_t len)
-@@ -856,6 +856,13 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
- 	/* Fail if we don't recognize the flags. */
- 	if (mode & ~BLKDEV_FALLOC_FL_SUPPORTED)
- 		return -EOPNOTSUPP;
-+	/*
-+	 * Don't allow writing zeroes if the device does not enable the
-+	 * unmap write zeroes operation.
-+	 */
-+	if (!bdev_write_zeroes_unmap(bdev) &&
-+	    (mode & FALLOC_FL_WRITE_ZEROES))
-+		return -EOPNOTSUPP;
- 
- 	/* Don't go off the end of the device. */
- 	isize = bdev_nr_bytes(bdev);
-@@ -886,6 +893,9 @@ static long blkdev_fallocate(struct file *file, int mode, loff_t start,
- 	case FALLOC_FL_PUNCH_HOLE | FALLOC_FL_KEEP_SIZE:
- 		flags = BLKDEV_ZERO_NOFALLBACK;
- 		break;
-+	case FALLOC_FL_WRITE_ZEROES:
-+		flags = 0;
-+		break;
- 	default:
- 		error = -EOPNOTSUPP;
- 		goto fail;
+ 		for (i = 0; i < instance->low_latency_index_start; i++) {
+ 			irq = pci_irq_vector(instance->pdev, i);
 -- 
-2.46.1
+2.25.1
 
