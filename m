@@ -1,93 +1,104 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f176.google.com (mail-yb1-f176.google.com [209.85.219.176])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B31A111BF;
-	Wed,  4 Jun 2025 19:53:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 843F46F073;
+	Wed,  4 Jun 2025 23:42:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749066811; cv=none; b=fFMBSmVJy2VMPoO0E5sO2ObVmqp4twjnbNo7rLZxE8IBTCHpznXB0TiqEk+ku4F+xglUvXnMlV+gOyN0I4SWHDbErnOCa5wZwM9x0IGkXiTBWGRC74CYysKkZc4LKwsSdPSQvoRcTEQhT4UOLjkL3H/wXSNUUo8GVMZi1wgWCyY=
+	t=1749080527; cv=none; b=UKW/sNU5WftpSGIfmTOcwxC3PFVhc7q8wyO45h8MGPW0qZE8fGf8NTA7Rbd0E/ZIPaiF0RR+xV2r2GluEwEVC8hTDzSGyW6CoXDN2DcLR/cXuoSJEot4t+eMPoumqKwA7bGnFNlCPkC7wh2CTWnaWI/+DDBv4Optryv3c+JN/YA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749066811; c=relaxed/simple;
-	bh=6SAVqw289jRcTcQ+PCiFQKMlpJilukYhNge2apyk/+I=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=evM9hOpismL3S3TtTyQx3FRsa3ePT8fxFydZ/cmvaiuGDtCUYbY5fzMzIRtVqYTcDn0P541fwaPreJd0o81642tnEHPbK7QWaCQgBs6QnJkSuBmi6tKapjur8nyXYqDvvAp5KM7sfZtXyLoqVu3/wsSi+XdNuDhHs00MqN0PS/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aUee7+F+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749080527; c=relaxed/simple;
+	bh=TssufhLWCeePlGG2Z0MM13Ur1COb2ebvj5gdMsFKJJA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FtnWHAeF1fUcybHVH2s+p4GhnJtz2SkgPvV+VecB2ytUOqzFXJ5IEiWRvJ2RbW47K53cBMW4zJ73L1xmK4vFY/QZfLjHmFSnpq/B3Q02SVAxv8X37mMonXEjGqqDWqwYKzwDWhnvMbfUmCDl1ICIcaEKT8NieQUuH8Q+diQxa64=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=k0o9ES7l; arc=none smtp.client-ip=209.85.219.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aUee7+F+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DEEE5C4CEE4;
-	Wed,  4 Jun 2025 19:53:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749066810;
-	bh=6SAVqw289jRcTcQ+PCiFQKMlpJilukYhNge2apyk/+I=;
-	h=Date:Subject:To:Cc:References:From:Reply-To:In-Reply-To:From;
-	b=aUee7+F+VVbFb88Y+zuXz53ah29uxU/8HSb3RpOHsN2DQOtp+vQSPXhub6o9Ki7Xi
-	 ZabbZoTNumzuubufi1SPerZWVcxenWAo75fitcEUkEWI4TDVowNr78LX0C20rDYjB2
-	 IlpNNcK7s5e9peptryVBghiubwhbwMdH0F/iq3AdwyO0RnjA82O3XFwAwGQ3IQSW/o
-	 P+5DlQuCzULmDrY+s47xBwokZ9UDO0x5ScCHr5XxGUHn4izBuBYVr0rGAJE8HfGTLN
-	 ntxhkvGJvcdBRbtDcgjjYeze7iDfknq95/gseMhxCIlY2g0vfRQpZuNTmcn756qImY
-	 uiPKIenAXPnyw==
-Message-ID: <2a5d123a-3c95-47dc-8306-df76bb2b077b@kernel.org>
-Date: Wed, 4 Jun 2025 21:53:24 +0200
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="k0o9ES7l"
+Received: by mail-yb1-f176.google.com with SMTP id 3f1490d57ef6-e740a09eae0so415652276.1;
+        Wed, 04 Jun 2025 16:42:05 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749080524; x=1749685324; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ogtPkHGBxY5aXjHm5ko6SRdjkhMwenqN1SLiQIlyNC0=;
+        b=k0o9ES7lPRzLFrnc8CT0juMnk5EgVSXF7hnE9BCqxg7zF4HVeEPmzY03oLfiurIhkK
+         rPshu1ku6BtsMQ0zN1IkDADkQiDtyNcZy7jweXgBVPmv8ALq348+oyfCnaxqJuGZQYZE
+         NvD3AaeCprvnfb4Yv3ItRYr8XPxgXnBNu/LIBvsGteLP0zIbYRXa7U6p25+yrDtnzfLs
+         PMyKKGz8RjTrw2klaVzh2lQlAI7C+mpZbqT3HeZ0P5xrgQlvKKL8STlGNgCkxz7dGfRo
+         zOW956I9H/9J9+aQkGNtQThkL1S61CcAQ2rqcxjbOHE4b5uwVnaViDjpP1zawG0nrVON
+         7b3g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749080524; x=1749685324;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ogtPkHGBxY5aXjHm5ko6SRdjkhMwenqN1SLiQIlyNC0=;
+        b=Woc9eX3HdeQjZeg8XPM5oWUqxouMZk+8fwKd9ta9kjdPxUjyUsu1sMuK7i93RyIVF7
+         v4T9Xo/huUsP0v+LgUflbct070eNFmzaDr3p3g0Zu1yOXXR/UvIldncBj3ix5DMR3eTF
+         8WCuUdQLqKGuIaGxq1SO0oBt90YnHpGJa0D0zeOvsZ2vYT76czNv3W0n9TUvH7wCSx37
+         ENQxbqYLeQonBzqDDrkIUjKV5vMV0rECWTwcVGZgVl/3ydsqmfG63XOKelZ9PzYT3Nrn
+         RzNMbKWUg+lx1Yw4KmmI6n3H0KzVpbPvdk9MMf2Cbs8Yai7dI/Fjd18a+IWKaszV7X8b
+         GfkQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUzjmwhI2y34H0MiIxC/U/t3k1EX6ep/Qc1vSu2LNrb8SYGSGwPa0auLeVr59lB1aB/0ehmTJHgYWu+WDo=@vger.kernel.org, AJvYcCVMBaz2GagXf8RBcafbKLX00eWUz6zU0qjakrwBvStG4/b5kgFL6btgMghDvmfQfCJqIVBiMHho3KPjxw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyx9u1z8dSe7IumOJxq0zffj3L1FO1kzDKYhHDoMGUkbeo4U+d5
+	g8fbvNycajDMtIIkqKAiwcQju1bCjfrCYAVOnQiF5sjcazL1z3Bjs1DZtfPFuw==
+X-Gm-Gg: ASbGncvugHafpg+LLfXi7MXDINyB25LnOu75FCk7qnnsDhV/sIGjnz8nGx6yKboddTS
+	AkmeUeNBRZkLvyG/dR1LRYIzp4XS0lhozLD+T0mvECAtAqTn7WZHE3nVpLC8pu6a28YOSrJi0eZ
+	lLY0Pr30VV5puBeV3a0ZluEkiYmmlCfJGdbRo1jAf4ZMS3TpKQrizBkOOo1nIpq2cxi3jSrOM40
+	5yyAvS/flSFABzVodwNB6raNqoXuwF/tLBAfk3BYfFvmDTklXPKxYuk7tnH4jjiJDq1n9ODaonO
+	aZMs5vM3xHyZDwFLUigvmi8VL18awiY55JeiyCc9SVIsD+lp/tcgkNHx8pdmcU23PDtbIk1MT98
+	vbq7jM+xpySc=
+X-Google-Smtp-Source: AGHT+IGYLFQSXYiQ1P74k/ZFrgZ+D8x/YLl+JJqMylp7u3vT/i81AKeVBGpIjDbKx265JQylSgO5jA==
+X-Received: by 2002:a05:6902:2291:b0:e81:8639:c59b with SMTP id 3f1490d57ef6-e818639ce51mr3781407276.48.1749080524378;
+        Wed, 04 Jun 2025 16:42:04 -0700 (PDT)
+Received: from localhost (c-73-224-175-84.hsd1.fl.comcast.net. [73.224.175.84])
+        by smtp.gmail.com with ESMTPSA id 3f1490d57ef6-e7f733c9f9csm3373822276.17.2025.06.04.16.42.02
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 04 Jun 2025 16:42:03 -0700 (PDT)
+From: Yury Norov <yury.norov@gmail.com>
+To: Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Yury Norov <yury.norov@gmail.com>
+Subject: [PATCH] scsi/fcoe: simplify fcoe_select_cpu()
+Date: Wed,  4 Jun 2025 19:42:00 -0400
+Message-ID: <20250604234201.42509-1-yury.norov@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v11 00/10] Read/Write with meta/integrity
-To: Christoph Hellwig <hch@infradead.org>, Anuj Gupta <anuj20.g@samsung.com>,
- shinichiro.kawasaki@wdc.com, Luis Chamberlain <mcgrof@kernel.org>
-Cc: axboe@kernel.dk, hch@lst.de, kbusch@kernel.org,
- martin.petersen@oracle.com, asml.silence@gmail.com, anuj1072538@gmail.com,
- brauner@kernel.org, jack@suse.cz, viro@zeniv.linux.org.uk,
- io-uring@vger.kernel.org, linux-nvme@lists.infradead.org,
- linux-block@vger.kernel.org, gost.dev@samsung.com,
- linux-scsi@vger.kernel.org, vishak.g@samsung.com,
- linux-fsdevel@vger.kernel.org
-References: <CGME20241128113036epcas5p397ba228852b72fff671fe695c322a3ef@epcas5p3.samsung.com>
- <20241128112240.8867-1-anuj20.g@samsung.com> <aD_qN7pDeYXz10NU@infradead.org>
-Content-Language: en-US
-From: Daniel Gomez <da.gomez@kernel.org>
-Reply-To: da.gomez@kernel.org
-Organization: kernel.org
-In-Reply-To: <aD_qN7pDeYXz10NU@infradead.org>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 04/06/2025 08.39, Christoph Hellwig wrote:
-> On Thu, Nov 28, 2024 at 04:52:30PM +0530, Anuj Gupta wrote:
->> This adds a new io_uring interface to exchange additional integrity/pi
->> metadata with read/write.
->>
->> Example program for using the interface is appended below [1].
->>
->> The patchset is on top of block/for-next.
->>
->> Testing has been done by modifying fio:
->> https://github.com/SamsungDS/fio/tree/priv/feat/pi-test-v11
-> 
-> It looks like this never got into upstream fio.  Do you plan to submit
-> it?  It would also be extremely useful to have a testing using it in
-> blktests, because it seems like we don't have any test coverage for the
-> read/write with metadata code at the moment.
-> 
-> Just bringing this up because I want to be able to properly test the
-> metadata side of the nvme/block support for the new DMA mapping API
-> and I'm ѕtruggling to come up with good test coverage.
-> 
+cpumask_next() followed by cpumask_first() opencodes
+cpumask_next_wrap(). Fix it.
 
-FWIW, we’re interested [1] in helping get this part properly tested as well.
-We're already running blktests in CI as part of kdevops, regularly testing
-against both linux-next and Linus' latest tags [2].
+Signed-off-by: Yury Norov <yury.norov@gmail.com>
+---
+ drivers/scsi/fcoe/fcoe.c | 5 +----
+ 1 file changed, 1 insertion(+), 4 deletions(-)
 
-[1]
-https://lore.kernel.org/all/Z9v-1xjl7dD7Tr-H@bombadil.infradead.org/
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index b911fdb387f3..07eddafe52ff 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -1312,10 +1312,7 @@ static inline unsigned int fcoe_select_cpu(void)
+ {
+ 	static unsigned int selected_cpu;
+ 
+-	selected_cpu = cpumask_next(selected_cpu, cpu_online_mask);
+-	if (selected_cpu >= nr_cpu_ids)
+-		selected_cpu = cpumask_first(cpu_online_mask);
+-
++	selected_cpu = cpumask_next_wrap(selected_cpu, cpu_online_mask);
+ 	return selected_cpu;
+ }
+ 
+-- 
+2.43.0
 
-[2]
-https://github.com/linux-kdevops/kdevops-ci/actions
-
-Shin'ichiro, the current CI implementation is still experimental (we are missing
-a few things like archive results and dashboard reporting) but we hope we can
-discuss soon the possibility to automatically reporting tests results to the
-mailing list
