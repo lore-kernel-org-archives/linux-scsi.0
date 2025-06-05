@@ -1,88 +1,167 @@
-Received: from mailgw.kylinos.cn (mailgw.kylinos.cn [124.126.103.232])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE1F11F4176
-	for <linux-scsi@vger.kernel.org>; Thu,  5 Jun 2025 07:51:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=124.126.103.232
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78C55225A34
+	for <linux-scsi@vger.kernel.org>; Thu,  5 Jun 2025 13:03:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749109872; cv=none; b=QMvjEgMKH/wnzAjwEE01oOCOhmTYNG0TbXotu+vCVKiSdRtM5DzTMbEvy1YLg3PgkfkYr2PPFD/qQ5JjXJVbLMwTFrnyRCIqEvVA8zgKVAcU0PbKvDuLd0NQizT97ky2a8D1Rld0M5yaz98WNTOCfe2kWmgMCdU6nRtirZHZVSI=
+	t=1749128587; cv=none; b=GpN4u5r321wzgOQWNdHc86ZV5fNQu+4eopoOBKgBaJyu9WP61AbXXjEIfs1A06ZrBXxq5EhsP6pOU9B39qC7S9W2kUpT5KTTLPwH+7p5n7edamA1STTLiU4kAk6MQlUK1GtIV5/j4ll2UWeMf1Mx5W+jyAUOEg+2XiJupjSFPg8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749109872; c=relaxed/simple;
-	bh=VjvAhoL/vTPClVJ+IQh2kT3nlCQRlhpVeZ/Kb8+D124=;
-	h=From:To:Subject:Date:Message-Id:MIME-Version; b=i2zV4TPWoQ8NL8IJSMedS0AvQgc9QV3JSYGL5N4KhhDRXKXoVG7tWph5lReajyv6sYk9Xhi0aVbHc46x5UBcgtgDUT4F3vD9hTqHjlyIJSLl9+G0zcWOmLfzD01j420vftBWBCILeLvofSfsKeGU0wnKG/4rsqNjlOZx6IX8PTk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn; spf=pass smtp.mailfrom=kylinos.cn; arc=none smtp.client-ip=124.126.103.232
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kylinos.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kylinos.cn
-X-UUID: d3defce041e111f0b29709d653e92f7d-20250605
-X-CTIC-Tags:
-	HR_CTE_8B, HR_CTT_MISS, HR_DATE_H, HR_DATE_WKD, HR_DATE_ZONE
-	HR_FROM_DIGIT_LEN, HR_FROM_NAME, HR_SJ_DIGIT_LEN, HR_SJ_LANG, HR_SJ_LEN
-	HR_SJ_LETTER, HR_SJ_NOR_SYM, HR_SJ_PHRASE, HR_SJ_PHRASE_LEN, HR_SJ_WS
-	HR_TO_COUNT, HR_TO_DOMAIN_COUNT, HR_TO_NO_NAME, IP_TRUSTED, SRC_TRUSTED
-	DN_TRUSTED, SA_EXISTED, SN_EXISTED, SPF_NOPASS, DKIM_NOPASS
-	DMARC_NOPASS, CIE_BAD, CIE_GOOD_SPF, GTI_FG_BS, GTI_RG_INFO
-	GTI_C_BU, AMN_T1, AMN_GOOD, AMN_C_TI, AMN_C_BU
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.1.45,REQID:01a7859e-d677-4703-a01e-4bf02c7234f5,IP:0,U
-	RL:0,TC:0,Content:-5,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTI
-	ON:release,TS:15
-X-CID-INFO: VERSION:1.1.45,REQID:01a7859e-d677-4703-a01e-4bf02c7234f5,IP:0,URL
-	:0,TC:0,Content:-5,EDM:25,RT:0,SF:-5,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:15
-X-CID-META: VersionHash:6493067,CLOUDID:6bb68523192d489ab21e498317cd6db8,BulkI
-	D:250605155103PJXT8XHN,BulkQuantity:0,Recheck:0,SF:17|19|38|66|78|102,TC:n
-	il,Content:0|50,EDM:5,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil
-	,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0,NGT
-X-CID-BAS: 0,NGT,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_FAS,TF_CID_SPAM_FSD
-X-UUID: d3defce041e111f0b29709d653e92f7d-20250605
-X-User: lijun01@kylinos.cn
-Received: from localhost.localdomain [(10.44.16.150)] by mailgw.kylinos.cn
-	(envelope-from <lijun01@kylinos.cn>)
-	(Generic MTA with TLSv1.3 TLS_AES_256_GCM_SHA384 256/256)
-	with ESMTP id 1956813705; Thu, 05 Jun 2025 15:51:02 +0800
-From: Li Jun <lijun01@kylinos.cn>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	lijun01@kylinos.cn
-Subject: [PATCH v2] scsi: arcmsr: return the value of fun directly
-Date: Thu,  5 Jun 2025 15:50:47 +0800
-Message-Id: <20250605075047.218827-1-lijun01@kylinos.cn>
-X-Mailer: git-send-email 2.25.1
+	s=arc-20240116; t=1749128587; c=relaxed/simple;
+	bh=8XhWz1uDUGpc2KEGsQPqoMFu9IbGsBJhR4oTTUhj1g8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=KQ7MdPuyc5JvjEvX900qkYJDEIT2aXHpnmgSJbJt56xp+D7cLUXaBXsQ2kYarc7X94wUHtWW1RIYuTCnpLfn4sZc+Qzb1kX1x0Df5YB2eqBtDO0/q92zTw9jhusipOjwZJ7w2bxhTr9Y8/L8ZcfFEckHUvH6qJM+FJVuhWwTJAU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=IOCIQeVt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=woLlgr8h; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=IOCIQeVt; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=woLlgr8h; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="IOCIQeVt";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="woLlgr8h";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="IOCIQeVt";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="woLlgr8h"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id A51E3345B2;
+	Thu,  5 Jun 2025 13:03:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1749128583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FiQfaBUdLpG0izU+n3dwo6IxIx6W2D/15BOpRHmYH38=;
+	b=IOCIQeVtn3JIpKgPBF/6Dud02iAzz3JWYtG2SdpHp+1qCcZ1m4nN0CbFVlF3wNu7NBFYni
+	kEi3N/zmRcADp+nfkm1yMY4WcWZ/nNxKAecjLf0zM8AEd9yWHJy6o1lk16RfkXLLAvA8Cf
+	Zne19P9ERQrlULg0r6jADX6SJDFzGvM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1749128583;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FiQfaBUdLpG0izU+n3dwo6IxIx6W2D/15BOpRHmYH38=;
+	b=woLlgr8ha1Iq6fu8KGJx6OA9UlIWNjM+gZNxEbET5dWYc3AqgyH5tsXsAiiUuZbC7TYyDg
+	ed6hC/HX5zK53fDA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=IOCIQeVt;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=woLlgr8h
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1749128583; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FiQfaBUdLpG0izU+n3dwo6IxIx6W2D/15BOpRHmYH38=;
+	b=IOCIQeVtn3JIpKgPBF/6Dud02iAzz3JWYtG2SdpHp+1qCcZ1m4nN0CbFVlF3wNu7NBFYni
+	kEi3N/zmRcADp+nfkm1yMY4WcWZ/nNxKAecjLf0zM8AEd9yWHJy6o1lk16RfkXLLAvA8Cf
+	Zne19P9ERQrlULg0r6jADX6SJDFzGvM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1749128583;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=FiQfaBUdLpG0izU+n3dwo6IxIx6W2D/15BOpRHmYH38=;
+	b=woLlgr8ha1Iq6fu8KGJx6OA9UlIWNjM+gZNxEbET5dWYc3AqgyH5tsXsAiiUuZbC7TYyDg
+	ed6hC/HX5zK53fDA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 87D2C137FE;
+	Thu,  5 Jun 2025 13:03:03 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id YuG/HoeVQWhxKQAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Thu, 05 Jun 2025 13:03:03 +0000
+Date: Thu, 5 Jun 2025 15:02:54 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+Subject: Re: blktests failures with v6.15 kernel
+Message-ID: <7cdceac2-ef72-4917-83a2-703f8f93bd64@flourine.local>
+References: <2xsfqvnntjx5iiir7wghhebmnugmpfluv6ef22mghojgk6gilr@mvjscqxroqqk>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <2xsfqvnntjx5iiir7wghhebmnugmpfluv6ef22mghojgk6gilr@mvjscqxroqqk>
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_EQ_ADDR_SOME(0.00)[];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	ASN(0.00)[asn:25478, ipnet:::/0, country:RU];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DKIM_TRACE(0.00)[suse.de:+];
+	MISSING_XM_UA(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:dkim]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: A51E3345B2
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Score: -4.51
 
-Maybe the 'error' variable is not needed,as arcmsr_module_init
-can return the result of pci_register_driver(&arcmsr_pci_driver)
-directly.
+Hi,
 
-Signed-off-by: Li Jun <lijun01@kylinos.cn>
----
- drivers/scsi/arcmsr/arcmsr_hba.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+On Thu, May 29, 2025 at 08:46:35AM +0000, Shinichiro Kawasaki wrote:
+> #1: nvme/023
+> 
+>     When libnvme has version 1.13 or later and built with liburing, nvme-cli
+>     command "nvme smart-log" command fails for namespace block devices. This
+>     makes the test case nvme/032 fail [2]. Fix in libnvme is expected.
+> 
+>     [2]
+>     https://lore.kernel.org/linux-nvme/32c3e9ef-ab3c-40b5-989a-7aa323f5d611@flourine.local/T/#m6519ce3e641e7011231d955d9002d1078510e3ee
 
-diff --git a/drivers/scsi/arcmsr/arcmsr_hba.c b/drivers/scsi/arcmsr/arcmsr_hba.c
-index b450b1fc6bbb..c3a71a3fdcd0 100644
---- a/drivers/scsi/arcmsr/arcmsr_hba.c
-+++ b/drivers/scsi/arcmsr/arcmsr_hba.c
-@@ -1777,9 +1777,7 @@ static void arcmsr_shutdown(struct pci_dev *pdev)
- 
- static int __init arcmsr_module_init(void)
- {
--	int error = 0;
--	error = pci_register_driver(&arcmsr_pci_driver);
--	return error;
-+	return pci_register_driver(&arcmsr_pci_driver);
- }
- 
- static void __exit arcmsr_module_exit(void)
--- 
-2.25.1
+Should be fixed now. If you want, I can do another release soon, so the
+fix get packaged up by the distros.
 
+> #2: nvme/041 (fc transport)
+> 
+>     The test case nvme/041 fails for fc transport. Refer to the report for v6.12
+>     kernel [3].
+> 
+>     [3]
+>     https://lore.kernel.org/linux-nvme/6crydkodszx5vq4ieox3jjpwkxtu7mhbohypy24awlo5w7f4k6@to3dcng24rd4/
+
+Is still on my TODO list. Sorry.
+
+> #4: nvme/061 failure (fc transport)
+> 
+>     The test case nvme/061 sometimes fails due to a WARN [5]. Just before the
+>     WARN, The kernel reported "refcount_t: underflow; use-after-free." This
+>     failure can be recreated in stable manner by repeating the test case 10
+>     times or so.
+> 
+>     I tried v6.15-rcX kernels. When I ran v6.15-rc1 kernel, the test case always
+>     failed with different symptom. With v6.15-rc2 kernel, the test case passed
+>     in most runs, but sometimes it failed with the same symptom as v6.15. I
+>     guess the nvme-fc changes in v6.15-rc2 fixed most of the refcounting issue,
+>     but still rare refcounting failure scenario is left.
+
+The nvmet-fcloop changes for 6.16 should address this (fingers crossed).
+
+Thanks,
+Daniel
