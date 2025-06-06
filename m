@@ -1,46 +1,37 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 707764C8F
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Jun 2025 05:29:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0DB921DF267
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Jun 2025 05:30:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749187770; cv=none; b=lyjfdL0IRy+ib+cYU85YMY+XHMUgamV+X/mFO1QjFCerGmEvC8U7H1IPwcJTUmuksnSHw3o9bGop4yGaAR7FHP4XsTwjl/xYmFUYHchNECH+5ppTLKUDbW8wq8Yvr8VZawSKBDrlJxnX2ZEyPBbyd1M/n93370kjcyQ120f+d4U=
+	t=1749187825; cv=none; b=QCzY6YU6bn1EgPxFXjBWdJRolD9PCn58Vdta0fNWXq77AOIwsWXeMHACI8/t5tzzWSUHgPVu+fJktKsfVT6hICCIMU88g0spniTTa7xxXsl3bKdTRECnPMH4A/M07guan9A4xl87+WTk6O7EdPbOuffoZFHS9BneVZh2c3B5b4s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749187770; c=relaxed/simple;
-	bh=k0JMqT/nlcLP5cnzOZDRY+vD7honjl7gbosuRfPAtLM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mrKGj4n8QW4QKEMBNjjR0po/viTy45uncVgW08JGPkgtK3RrpN74hfp01jqmvfIhZYPzDEF5N/p/70hiXEqFIkq08t32FlqJqcTweXmjUhoN7P2N2uFIy6aw8FYr+xDKjKj+3w0/floi/moSOnHGTGgzQEJTo7lQSJ07/m7oH/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s2kQtbxU; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749187825; c=relaxed/simple;
+	bh=qpjqnZZxhIh1mX+2sepEN9o6mJaj9rs188S6+aoOhcI=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=jOoOf4mmQ6cJW8f/HCKTj5kaFc3F5A1/xlMMnmQi6a/AafayOony7fr6Bfg+tef2jV8btuDNepWu5tIISxnc0m1HXYYQtdCiVLD1FoY9LW/C5l/9XSQ0B68+DUUICDlrMeTaVUtxhn4uLVUaZGPIi7QZPSdbCzolyNWnPN7Pyvo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=daUHU6+j; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s2kQtbxU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 03CE3C4CEF1;
-	Fri,  6 Jun 2025 05:29:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="daUHU6+j"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 152C5C4CEEB;
+	Fri,  6 Jun 2025 05:30:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749187770;
-	bh=k0JMqT/nlcLP5cnzOZDRY+vD7honjl7gbosuRfPAtLM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=s2kQtbxUIc0NBLoLNeafQnmcKLNkO32unio73u6F5igZWqO7LjswuuXiXt5uuoh1v
-	 0uoKOZQ4MI3Bo5SmrGMxaEKNi45w7kTveQUFUxJGvFl76tUkHxUggp+aR8jzsEG4wF
-	 yajskWXavCpZVpdpuJtARB5f8ZEhDnMFdKcaVUcAORPml2+7MPpY3eu4iqq6nJLTFz
-	 1+XYxJt8FA1uKyp1BFmC4aMBDAFYRs7+UW9ocAa7xgUdJ5FrNPElJ19f9qMhCUOTLj
-	 zhZXU42CGvF3JbSOGT8Ktemd8nxSVJD1WB0xVzN23Koeb/FyqhCq/Yz+sjo6lE20hF
-	 V4X7SLwX+NaLw==
+	s=k20201202; t=1749187824;
+	bh=qpjqnZZxhIh1mX+2sepEN9o6mJaj9rs188S6+aoOhcI=;
+	h=From:To:Subject:Date:From;
+	b=daUHU6+jYQZZFgxbFzRgtV9Nthqem70HkV7R0hKlBBvBcg2CpB4vrmaV0jRIr3h+B
+	 FqU2daJaK4NvHiWFvTuk8mSnK4LLpNvXyYGUPttXmhOtZvbuU8TrpbEZ1pc/LrfYgi
+	 aoQQH5oGY+OO6IeplPkrNVmkqkRECdaGgfttLb6LGVjZW7XAkYoPSeftQoWC/zWHa/
+	 s7EMaIgzT5eoHj8jq+TTqTPmsfS1KODr/+9cLXAkRsYfDiUFEJf7uO2d0HCGjydGKm
+	 bWXnunlIBIjZ+47JjXs7BUXzr5UljWoNS9o3hW+1p7Obu0IQl6XgTY8yewDL0W9YR2
+	 3uI9N+okK49rA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Cc: Sathya Prakash <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	MPT-FusionLinux.pdl@broadcom.com
-Subject: [PATCH 2/2] scsi: mpt3sas: Correctly handle ATA device errors
-Date: Fri,  6 Jun 2025 14:27:47 +0900
-Message-ID: <20250606052747.742998-3-dlemoal@kernel.org>
+Subject: [PATCH] scsi: Remember if a device is an ATA device
+Date: Fri,  6 Jun 2025 14:28:44 +0900
+Message-ID: <20250606052844.746754-1-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250606052747.742998-1-dlemoal@kernel.org>
-References: <20250606052747.742998-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,75 +40,82 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-With the ATA error model, an NCQ command failure always triggers an
-abort (termination) of all NCQ commands queued on the device. In such
-case, the SAT or the host must handle the failed command according to
-the command sense data and immediately retry all other NCQ commands that
-were aborted due to the failed NCQ command.
+scsi_add_lun() tests the device vendor string of SCSI devices to detect
+if a SCSI device is in fact an ATA device, in order to correctly handle
+SATL power management. The function scsi_cdl_enable() also requires
+knowing if a SCSI device is an ATA device to control the state of the
+device CDL feature but this function does that by testing for the
+presence of the VPD page 89h (ATA INFORMATION page).
 
-For SAS HBAs controlled by the mpt3sas driver, NCQ command aborts are
-not handled by the HBA SAT and sent back to the host, with an ioc log
-information equal to 0x31080000 (IOC_LOGINFO_PREFIX_PL with the PL code
-PL_LOGINFO_CODE_SATA_NCQ_FAIL_ALL_CMDS_AFTR_ERR). The function
-_scsih_io_done() always forces a retry of commands terminated with the
-status MPI2_IOCSTATUS_SCSI_IOC_TERMINATED using the SCSI result
-DID_SOFT_ERROR, regardless of the log_info for the command.
-This correctly forces the retry of collateral NCQ abort commands, but
-with the retry counter for the command being incremented. If a command
-to an ATA device is subject to too many retries due to other NCQ
-commands failing (e.g. read commands trying to access unreadable
-sectors), the collateral NCQ abort commands may be terminated with an
-error as they run out of retries. This violates the SAT specifications
-and causes hard-to-debug command errors.
-
-Solve this issue by modifying the handling of the
-MPI2_IOCSTATUS_SCSI_IOC_TERMINATED status to check if a command is for
-an ATA device and if the command loginfo indicates an NCQ collateral
-abort. If that is the case, force the command retry using the
-SCSI result DID_IMM_RETRY to avoid incrementing the command retry count.
+Simplify these different methods by adding the is_ata field to struct
+scsi_device to remember that a SCSI device is in fact an ATA one based
+on the device vendor name test. This filed can also allow low level
+SCSI host adapter drivers to take special actions for ATA devices
+(e.g. to better handle ATA NCQ errors).
 
 Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 ---
- drivers/scsi/mpt3sas/mpt3sas_scsih.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+ drivers/scsi/scsi.c        | 7 +------
+ drivers/scsi/scsi_scan.c   | 3 ++-
+ include/scsi/scsi_device.h | 5 +++++
+ 3 files changed, 8 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_scsih.c b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-index 508861e88d9f..d7d8244dfedc 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_scsih.c
-@@ -195,6 +195,14 @@ struct sense_info {
- #define MPT3SAS_PORT_ENABLE_COMPLETE (0xFFFD)
- #define MPT3SAS_ABRT_TASK_SET (0xFFFE)
- #define MPT3SAS_REMOVE_UNRESPONDING_DEVICES (0xFFFF)
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 518a252eb6aa..534310224e8f 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -708,20 +708,15 @@ void scsi_cdl_check(struct scsi_device *sdev)
+ int scsi_cdl_enable(struct scsi_device *sdev, bool enable)
+ {
+ 	char buf[64];
+-	bool is_ata;
+ 	int ret;
+ 
+ 	if (!sdev->cdl_supported)
+ 		return -EOPNOTSUPP;
+ 
+-	rcu_read_lock();
+-	is_ata = rcu_dereference(sdev->vpd_pg89);
+-	rcu_read_unlock();
+-
+ 	/*
+ 	 * For ATA devices, CDL needs to be enabled with a SET FEATURES command.
+ 	 */
+-	if (is_ata) {
++	if (sdev->is_ata) {
+ 		struct scsi_mode_data data;
+ 		struct scsi_sense_hdr sshdr;
+ 		char *buf_data;
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 4833b8fe251b..160c2f74c7e7 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -909,7 +909,8 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 	sdev->model = (char *) (sdev->inquiry + 16);
+ 	sdev->rev = (char *) (sdev->inquiry + 32);
+ 
+-	if (strncmp(sdev->vendor, "ATA     ", 8) == 0) {
++	sdev->is_ata = strncmp(sdev->vendor, "ATA     ", 8) == 0;
++	if (sdev->is_ata) {
+ 		/*
+ 		 * sata emulation layer device.  This is a hack to work around
+ 		 * the SATL power management specifications which state that
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 68dd49947d04..6d6500148c4b 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -184,6 +184,11 @@ struct scsi_device {
+ 	 */
+ 	unsigned force_runtime_start_on_system_start:1;
+ 
++	/*
++	 * Set if the device is an ATA device.
++	 */
++	unsigned is_ata:1;
 +
-+/*
-+ * SAS Log info code for a NCQ collateral abort after an NCQ error:
-+ * IOC_LOGINFO_PREFIX_PL | PL_LOGINFO_CODE_SATA_NCQ_FAIL_ALL_CMDS_AFTR_ERR
-+ * See: drivers/message/fusion/lsi/mpi_log_sas.h
-+ */
-+#define IOC_LOGINFO_SATA_NCQ_FAIL_AFTER_ERR	0x31080000
-+
- /**
-  * struct fw_event_work - firmware event struct
-  * @list: link list framework
-@@ -5814,6 +5822,17 @@ _scsih_io_done(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index, u32 reply)
- 			scmd->result = DID_TRANSPORT_DISRUPTED << 16;
- 			goto out;
- 		}
-+		if (log_info == IOC_LOGINFO_SATA_NCQ_FAIL_AFTER_ERR) {
-+			/*
-+			 * This is a ATA NCQ command aborted due to another NCQ
-+			 * command failure. We must retry this command
-+			 * immediately but without incrementing its retry
-+			 * counter.
-+			 */
-+			WARN_ON_ONCE(xfer_cnt != 0);
-+			scmd->result = DID_IMM_RETRY << 16;
-+			break;
-+		}
- 		if (log_info == 0x31110630) {
- 			if (scmd->retries > 2) {
- 				scmd->result = DID_NO_CONNECT << 16;
+ 	unsigned removable:1;
+ 	unsigned changed:1;	/* Data invalid due to media change */
+ 	unsigned busy:1;	/* Used to prevent races */
 -- 
 2.49.0
 
