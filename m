@@ -1,134 +1,141 @@
-Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9A4376026
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Jun 2025 15:29:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D594776026
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Jun 2025 15:31:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749223796; cv=none; b=ObbPvAVfzFFN8XAzvwekOHH1yrb+VFa0WDyQEmgYTAWvAUpGEt2pN/K3otsTcNnmP+QzCNts3aO6y3IOfPN+AhhUD1xZaCx77CGMQtFsoZXFAgCn9NdA1XMjZ2GSR35/5BlsPN22+SgcbW88aCrc3zIthoK4FIXBNG1zHgfnD+4=
+	t=1749223904; cv=none; b=B+FD/ZpCaxws3LPS4tXvXpYLxg2zLaSl961sZumSFOS6WZArrOOUqmXog9Oq1QMbapGwJs0XOPRbb9W1+nFCJCz0inQC64QJGXDVLOuOeNxe7EXXYEdFNS50aNHW7zRqVxe67otMv/Kw9Kaybeo53qpjfwMdEC5Um1RH2G3d10c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749223796; c=relaxed/simple;
-	bh=v7Au4C4CPsHEk+3y2XJCnvtIlU+mBidFXKTov4cpvRU=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=AqLhMc5LVios4NwfiyWxaz4xsnVlrcvbK86pf5rmzq15qO5TCibzGpV5QYKelvOC9KGALXCOow9PS67zQhHvqYLaxw5kMXcFgKxitSwHcp7OKh+IS0s236KBokA7i8wan7UrcR9Xg0cTRHJSXKnIJY682m5b+4RbXqLKm4Xqf2s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=pbmecGN1; arc=none smtp.client-ip=209.85.218.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1749223904; c=relaxed/simple;
+	bh=ts8dwlbbfaDCvJ505Qq6ciBe4/o68ORgX2CetiiL7UQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hB99gEtNVTPOZVNXbEk5lhFgmZRbJuMXBxHNbr7vL7vAS3hrfQCTdq6833MkhRMJX7FDlRRlfhl8q35L7yyBhSHmi5Cu9ViMsOsQ+GwJRk/0hami9lI6NG51OF34zj+sJNDy+LGrIBcenXxwWN3wBU5zalv2GisDtpZCbRpP9qU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kdo2FLY6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=0YFAcE5i; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kdo2FLY6; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=0YFAcE5i; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pbmecGN1"
-Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-adb5fd85996so427297666b.2
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Jun 2025 08:29:53 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1749223792; x=1749828592; darn=vger.kernel.org;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=pHKg9aReCBIhycPzMljP890R0nKClsGn0j0TZZruLEs=;
-        b=pbmecGN1OqgEPpflLsZ6dogyEF3lkXEgtGQaxQLFjznGg7x3l/xQPaFD7/z6uaPZHa
-         RlVxeE0SbmVxT8ACQ+xtW3FvCZQE8+YntL3kCqoBmtGcqg5pb51BSS0RNpEsarjnAGVK
-         mLCDx3HjHR2QrM+NAKgq6JrGMWeJsylP13ZwGbpzWZow0/cP/9pVqZnyI07L/aPlU/Bx
-         IWXvTJDPKkLo+s4fXRqNIMyUTzyF7EwcyG7moiM4NrZy+BXcqJmKpX4z9qYgDHlsHcvo
-         /ik0BQ3ArHKyWkBqepM79Nv54AxgyZJbe4sa8ZXzrj4d0X8348ld/Ddn7v5ujqMO84Fg
-         RY2w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749223792; x=1749828592;
-        h=cc:to:message-id:content-transfer-encoding:mime-version:subject
-         :date:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=pHKg9aReCBIhycPzMljP890R0nKClsGn0j0TZZruLEs=;
-        b=oUgBjprNAwwIzFrA2hp2kJiVmqrIyUdeOc632jAvDWKprse+PD9I64kuby1V21GJa5
-         C6dgQFnwKUV42OAMaWYuJxbt0XDxJTPIw85k1MR5B4BJG8HVgalcVD6tpa0CDX0zR8DU
-         h1UydGnhUyE02GQ3cW7Oh36tYD85hgNi9Y+QptnrG4eX0ZOjaAJwSO1vPZ+5lbEGI6P0
-         vlVaH4ink1tzAUP9pZ+cB1mhW9JikiWBsdG2uPfktUhzouyNada/CbtUDvzHkhF00vjU
-         la77mfu7PFxwqkyYsbybUbr6rJnyFnmSJS0Y+6vai7ZML5ChhMS2BIKTWpYeoSzM0xS3
-         2vgg==
-X-Forwarded-Encrypted: i=1; AJvYcCWzyQkPehZhozkUqlsYtTbOOnYYC5Sjv4LfTgWCiKtRt7Wj+e1zS8FshPzaR+6DGIY/StDiaIn7nqb1@vger.kernel.org
-X-Gm-Message-State: AOJu0YyTCMwpLXxiS29KAwnI/8bG27tAB/sQ3/E/Ncx7CcRCSiZIlsXy
-	U83CJ3DyfCXQgGWxUTCq2tABMcmL5Ai8uBkzATtvEiXgrzMkLT8K4iQ4WyNIUpK7mWA=
-X-Gm-Gg: ASbGncucOWsW4wN/ijuNjv2PnttrDl7icCYPuq0cu+bb6zYReFEMNVcVaq9wzQn7NmY
-	e86Dds317zcNVnDpHJkh1v8R4nVe5JlM3Vudm2gNBvm9le500C0QfsOCJ+QYrP3CCDbnepQAnZh
-	jRXAUYjfgB6FtJJZJ6jNAuynEO7vBYSlsC/fNBXq6RK8FzZjLzUDEStxaKTvOGPuymRpL0luSN/
-	ryqWokeJ1blO/KqbChyoeNzhbI9KGl83ZIuIRTk1lI4VHFlaj57JRLv+wECOkFhL05dq9hAqlTV
-	R2V14Xgss2GHXEKB8PKib47w8BDTl0tpYFQXwlbQsek9MiBmOWYbO+bt3DivgL0fMiIO80PBhAN
-	kJGMJEHrAG1AJ4dwbBDBKTU2+moewRJJ2ETCDOyuzidebVw==
-X-Google-Smtp-Source: AGHT+IFIbqOwQmbDQEe3E/wlxCxAjm4JmZX9I8K8ar5M7fYX/U4wmJP0R3iG9BUeJ0Tu3p9r9nBSjg==
-X-Received: by 2002:a17:906:9fc7:b0:ade:8df:5b4d with SMTP id a640c23a62f3a-ade1a9329dcmr347910366b.15.1749223792241;
-        Fri, 06 Jun 2025 08:29:52 -0700 (PDT)
-Received: from puffmais.c.googlers.com (140.20.91.34.bc.googleusercontent.com. [34.91.20.140])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ade1d754913sm130801166b.4.2025.06.06.08.29.51
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 06 Jun 2025 08:29:51 -0700 (PDT)
-From: =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
-Date: Fri, 06 Jun 2025 16:29:43 +0100
-Subject: [PATCH] scsi: mpt3sas: drop unused variable in
- mpt3sas_send_mctp_passthru_req()
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kdo2FLY6";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="0YFAcE5i";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kdo2FLY6";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="0YFAcE5i"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 1FC1C336A1;
+	Fri,  6 Jun 2025 15:31:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1749223900; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sTaxRHKwF+vzmXr0h8gchfeJdwPaFIf2cEMCCW/n7+A=;
+	b=kdo2FLY6uImYG5myX98OBi1M5XgqczBq0Pj7pql0UDXaqgIoVf3R531K9uUlUTdyygWzO5
+	GvheP0Nt5TJtxV53GFB/kbLM24NaPDSVCriNYC4BWFHwn8u/pL3Np7E4CkzXsfwML2Afgy
+	LZ7AmLGGC3tuQ7Ke8oZ1dw25q54fQHo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1749223900;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sTaxRHKwF+vzmXr0h8gchfeJdwPaFIf2cEMCCW/n7+A=;
+	b=0YFAcE5iTeNsslsFY3deRp4aKNCW6rXvHCWSidKaiIDLu8LWQ+TRPaCBB3vLKq7/MtpHhA
+	vyDej2B7YEVbPxDw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1749223900; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sTaxRHKwF+vzmXr0h8gchfeJdwPaFIf2cEMCCW/n7+A=;
+	b=kdo2FLY6uImYG5myX98OBi1M5XgqczBq0Pj7pql0UDXaqgIoVf3R531K9uUlUTdyygWzO5
+	GvheP0Nt5TJtxV53GFB/kbLM24NaPDSVCriNYC4BWFHwn8u/pL3Np7E4CkzXsfwML2Afgy
+	LZ7AmLGGC3tuQ7Ke8oZ1dw25q54fQHo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1749223900;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sTaxRHKwF+vzmXr0h8gchfeJdwPaFIf2cEMCCW/n7+A=;
+	b=0YFAcE5iTeNsslsFY3deRp4aKNCW6rXvHCWSidKaiIDLu8LWQ+TRPaCBB3vLKq7/MtpHhA
+	vyDej2B7YEVbPxDw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 0EFA31336F;
+	Fri,  6 Jun 2025 15:31:40 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id mXxgA9wJQ2g7LAAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Fri, 06 Jun 2025 15:31:40 +0000
+Date: Fri, 6 Jun 2025 17:31:39 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Yi Zhang <yi.zhang@redhat.com>, 
+	Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>, "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, 
+	Tomas Bzatek <tbzatek@redhat.com>
+Subject: Re: blktests failures with v6.15 kernel
+Message-ID: <d1e5aefd-9669-4638-9466-951e69df1176@flourine.local>
+References: <2xsfqvnntjx5iiir7wghhebmnugmpfluv6ef22mghojgk6gilr@mvjscqxroqqk>
+ <7cdceac2-ef72-4917-83a2-703f8f93bd64@flourine.local>
+ <rcirbjhpzv6ojqc5o33cl3r6l7x72adaqp7k2uf6llgvcg5pfh@qy5ii2yfi2b2>
+ <CAHj4cs8SqXUpbT49v29ugG1Q36g5KrGAHtHu6sSjiH19Ct_vJA@mail.gmail.com>
+ <38a8ec1a-dbca-43f1-b0fa-79f0361bbc0b@flourine.local>
+ <14194a5f-e320-45e0-8f6c-019ce3bd4dbe@kernel.dk>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20250606-mpt3sas-v1-1-906ffe49fb6b@linaro.org>
-X-B4-Tracking: v=1; b=H4sIAGYJQ2gC/6tWKk4tykwtVrJSqFYqSi3LLM7MzwNyDHUUlJIzE
- vPSU3UzU4B8JSMDI1MDMwMz3dyCEuPixGJdQ1NTM2MLA8s0cwNTJaDqgqLUtMwKsEnRsbW1AGY
- q/l5ZAAAA
-X-Change-ID: 20250606-mpt3sas-15563809f705
-To: Sathya Prakash <sathya.prakash@broadcom.com>, 
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
- Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>
-Cc: Peter Griffin <peter.griffin@linaro.org>, 
- Tudor Ambarus <tudor.ambarus@linaro.org>, MPT-FusionLinux.pdl@broadcom.com, 
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- stable@vger.kernel.org, 
- =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
-X-Mailer: b4 0.14.2
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <14194a5f-e320-45e0-8f6c-019ce3bd4dbe@kernel.dk>
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	TO_DN_EQ_ADDR_SOME(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	RCVD_TLS_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	FROM_HAS_DN(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[flourine.local:mid,imap1.dmz-prg2.suse.org:helo]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-With W=1, gcc complains correctly:
+On Fri, Jun 06, 2025 at 09:03:11AM -0600, Jens Axboe wrote:
+> On 6/6/25 8:58 AM, Daniel Wagner wrote:
+> > FWIW, the contributor for the io_uring feature, stated that it improved
+> > the performance for some workloads. Though, I think the whole
+> > integration is sub-optimal, as a new io_uring is created/configured for
+> > each get_log_page call. So only for a large transfers there is going to
+> > help.
+> 
+> That's crazy... What commit is that?
 
-    mpt3sas_ctl.c: In function ‘mpt3sas_send_mctp_passthru_req’:
-    mpt3sas_ctl.c:2917:29: error: variable ‘mpi_reply’ set but not used [-Werror=unused-but-set-variable]
-     2917 |         MPI2DefaultReply_t *mpi_reply;
-          |                             ^~~~~~~~~
+adee4ed1c8c8 ("ioctl: get_log_page by nvme uring cmd")
 
-Drop the unused assignment and variable.
+ioctl: get_log_page by nvme uring cmd
+Use io_uring for fetching log pages.
 
-Fixes: c72be4b5bb7c ("scsi: mpt3sas: Add support for MCTP Passthrough commands")
-Cc: stable@vger.kernel.org
-Signed-off-by: André Draszik <andre.draszik@linaro.org>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 3 ---
- 1 file changed, 3 deletions(-)
+This showed about a 10% performance improvement for some large log pages.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 02fc204b9bf7b276115bf6db52746155381799fd..3b951589feeb6c13094ea44b494ca3050a309b15 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -2914,7 +2914,6 @@ int mpt3sas_send_mctp_passthru_req(struct mpt3_passthru_command *command)
- {
- 	struct MPT3SAS_ADAPTER *ioc;
- 	MPI2RequestHeader_t *mpi_request = NULL, *request;
--	MPI2DefaultReply_t *mpi_reply;
- 	Mpi26MctpPassthroughRequest_t *mctp_passthru_req;
- 	u16 smid;
- 	unsigned long timeout;
-@@ -3022,8 +3021,6 @@ int mpt3sas_send_mctp_passthru_req(struct mpt3_passthru_command *command)
- 		goto issue_host_reset;
- 	}
- 
--	mpi_reply = ioc->ctl_cmds.reply;
--
- 	/* copy out xdata to user */
- 	if (data_in_sz)
- 		memcpy(command->data_in_buf_ptr, data_in, data_in_sz);
 
----
-base-commit: a0bea9e39035edc56a994630e6048c8a191a99d8
-change-id: 20250606-mpt3sas-15563809f705
+https://github.com/linux-nvme/libnvme/commit/adee4ed1c8c8
 
-Best regards,
--- 
-André Draszik <andre.draszik@linaro.org>
-
+Should I rip it out? I am not really attached to it.
