@@ -1,116 +1,156 @@
-Received: from mail-lf1-f48.google.com (mail-lf1-f48.google.com [209.85.167.48])
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EDC41B4F09
-	for <linux-scsi@vger.kernel.org>; Fri,  6 Jun 2025 14:47:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CEDB1E501C
+	for <linux-scsi@vger.kernel.org>; Fri,  6 Jun 2025 14:58:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749221226; cv=none; b=HcsVI0JiFMYoaaZKC+VnZGCXAjPiHoaXf+sdsX2/GZBKacVn5+MVl+ZHeWXoDALRwJ7JruObqLa7m8T94eEXgUAEyP/YGc1sbFSz4OT8BxgaDfIxsG8gMrWZzhrALG9YpidFqxNA29Kh7rdLVSuslQSikfspEloDTIbnPx2K9IY=
+	t=1749221923; cv=none; b=BVF/kDE7ikJKlwFn/JLGc2NaMhLQUPcrynsG25DJVnM4YITWRWxPQ+pWmD3jokMK9axh53bHIdGNp2aqdI/+vqG1sT4GDLTN9nerqFJ13QQ/41JTBFanpxJYy6kB64wM99ACq7TXUuiZuKJdjXtjWvd7HcqommiSgHYekdI1uAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749221226; c=relaxed/simple;
-	bh=WRlLELstaNpW7yEx1JeER9RD1FzlSogCAowXKNoqzUs=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=rl2bXSymHqlmWtUIbWOvzu1XXQF7U6t5q+i9XE5vdR86UC1vj5I/2aSFAv8vwS/uuYbsTvlMtnr3JTOMGqHOeur8awu99jqGnB7oogtPOwv5Z0p3+c5D2OXuCZgv/hB/0KVnyeB8FcIEyPMbNgIumwtdhyh4OZ3LI71VvoQS6eU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=eBNZ+Trv; arc=none smtp.client-ip=209.85.167.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1749221923; c=relaxed/simple;
+	bh=HN2SBWrsjtMR0cSd6DvYN94z+HGQ2n3JZvvJt6jAyW4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GEeGPO3qxWHDujWfh0rGiA1kJnuLV0oCAUB5jLAmIgenF1OnYAUztjsgURGPh/R8zjoeW1NcwOrZg+Cq+YQIiK1yIfnWtaQZRSbBBuWepzDqHdNf70PZeLx7tg3v79BjyEYGgbr/fhS4ohLr3JF+Bha9eRGnww2TDKqzurjEDZc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=aGGGm7oJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=YKa4Y/+G; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=aGGGm7oJ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=YKa4Y/+G; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="eBNZ+Trv"
-Received: by mail-lf1-f48.google.com with SMTP id 2adb3069b0e04-55342bca34eso2240511e87.2
-        for <linux-scsi@vger.kernel.org>; Fri, 06 Jun 2025 07:47:04 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1749221223; x=1749826023; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=MJ8SD8Nt1oQltLkUYIecVVOB5LiS2FtNSos97bg2CI0=;
-        b=eBNZ+Trvvx99IVUTKbfilzjy+FHGuLuBWBqABmKyT8NDY5dntjuzj7DLEaBFL8/jf5
-         +1EvN1Q4iywAay20qEDX9KLUtnTymJSga8QofgwyOTWO7McU6yqT0gyty9xPL4NWP5UA
-         cygNet51muORKPaTwsTYsF3DMaEqQggF9NWVpk2bzlreWb30vo2Me1ADjvLXO5WPCq11
-         QWMW8t2E36IvQsXVFSOFiAkjrOICpGm3SglXrBznDxbXa4WtFaS6gQx6wyl8qS8GSQbQ
-         h2obSdVqVjJqy4ToRrdLStLri98D+Id97mBSTfZph5mz8BfDCTccKZQmOxtK+cjmE63a
-         q22w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749221223; x=1749826023;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=MJ8SD8Nt1oQltLkUYIecVVOB5LiS2FtNSos97bg2CI0=;
-        b=PFeGifip9+gvlNKpF65lOogxFXTFJyLfuCyVszBcwSlSf00y3NipbCVVsFBAedmIoS
-         guVNJfXlPUfkyHs5WsXdcbnUnqNDXRGyt6WYxvSKZPIGT1t2QFv1imBAehsn8svHRnrr
-         /lBiPEh0kO7GyVwBZoUWO/+ikkUE0oIVNris97NCrNEpfNFpiZxVe0TzXGIsGxj9VsMM
-         mfUOPXuyYH5A1mDnY47UQwVIdRMhcGMvxtp/izDykOeRqjJgwgWsMHrXQx6uij2fdfyb
-         UbDe0WmaBkQRpnOXxQRieI/TyFOrwOct1Ezwvl9+PrX7YF6MwNIG7rVlPkvHwkEA/TZR
-         dymQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUpRiPEjyqH6EWzTUuQKdYfaIeixjT8r6zcp0HmRXwB/LclnnX6oHVCukkJis4RPJdiNvsPSR0zE6wA@vger.kernel.org
-X-Gm-Message-State: AOJu0YxzHgiWKvJmE9xYXYP3mCELK5IUv/N7crUovb7MmeexCakFRKPj
-	FScT1i9zCUyN5Fvmq8Hc0fOBdbwPpkhOZ3OTDwRlGvJ3R9zAXqBJBYxqCR2P3fpzIhC/YH480Dq
-	7dUN2jAj7yWS3LKSCY1YrbNWeGJXwBttUk3zOmWvf3A==
-X-Gm-Gg: ASbGncsvlR9PdWPO/I1ZV99GCZ3CnkBXBlGTKxORrD/1L1+lIOwSkfvQ0sjm5Vf4Rta
-	0WvWtrl7q6P/lQ70okdFFkmq0HtFOM4l+TLWOvypgpJ0Mn4YTEx4fQi2CKV2tzkakPzRpUcytDj
-	oMsQpelaOd4DyxgAoTFRefAj/EmyoG+znWSZw4doUgIzI3
-X-Google-Smtp-Source: AGHT+IFe3OpcPnZlD8lOzt3MFcIqPO5oyX/9F+jryTxNhc6JYjYSJSjUyYlFKMFuQNL9+UZzr5xwvYhfQEGpZEX5CHk=
-X-Received: by 2002:a05:6512:1306:b0:553:2e99:c18 with SMTP id
- 2adb3069b0e04-55366c0af51mr999336e87.38.1749221222680; Fri, 06 Jun 2025
- 07:47:02 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="aGGGm7oJ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="YKa4Y/+G";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="aGGGm7oJ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="YKa4Y/+G"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 0625F1F445;
+	Fri,  6 Jun 2025 14:58:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1749221920; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ti/Py6dJ0naeNjX5F1k8KYleDnBdjDj8FiSaldxcGVE=;
+	b=aGGGm7oJv6CPTBdNX4ovBls6qBfTQ91csqAs1c1CgwtR47QKMIDdgwpck0OQ/ZWWRI9vsZ
+	/X5cNY8XqBTM+qbsTtGzXemcMucLr30vEplzjymcorvZlaJZ8lL8SKUmY+5MviFfTfFF2K
+	flkJIRBgH62FUsKZblFfUTHnJkTlj8Q=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1749221920;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ti/Py6dJ0naeNjX5F1k8KYleDnBdjDj8FiSaldxcGVE=;
+	b=YKa4Y/+GP/n6rSitlwQ7WRRkTtp3fu37O23sIYy/rr6BUKpsJAK7wHb7VqBl09QbKqu3NI
+	91DG1q/c1x1DVVBA==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=aGGGm7oJ;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="YKa4Y/+G"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1749221920; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ti/Py6dJ0naeNjX5F1k8KYleDnBdjDj8FiSaldxcGVE=;
+	b=aGGGm7oJv6CPTBdNX4ovBls6qBfTQ91csqAs1c1CgwtR47QKMIDdgwpck0OQ/ZWWRI9vsZ
+	/X5cNY8XqBTM+qbsTtGzXemcMucLr30vEplzjymcorvZlaJZ8lL8SKUmY+5MviFfTfFF2K
+	flkJIRBgH62FUsKZblFfUTHnJkTlj8Q=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1749221920;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Ti/Py6dJ0naeNjX5F1k8KYleDnBdjDj8FiSaldxcGVE=;
+	b=YKa4Y/+GP/n6rSitlwQ7WRRkTtp3fu37O23sIYy/rr6BUKpsJAK7wHb7VqBl09QbKqu3NI
+	91DG1q/c1x1DVVBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E83E21369F;
+	Fri,  6 Jun 2025 14:58:39 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id NrRqOB8CQ2iHIAAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Fri, 06 Jun 2025 14:58:39 +0000
+Date: Fri, 6 Jun 2025 16:58:31 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Yi Zhang <yi.zhang@redhat.com>
+Cc: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>, 
+	"linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>, 
+	Tomas Bzatek <tbzatek@redhat.com>
+Subject: Re: blktests failures with v6.15 kernel
+Message-ID: <38a8ec1a-dbca-43f1-b0fa-79f0361bbc0b@flourine.local>
+References: <2xsfqvnntjx5iiir7wghhebmnugmpfluv6ef22mghojgk6gilr@mvjscqxroqqk>
+ <7cdceac2-ef72-4917-83a2-703f8f93bd64@flourine.local>
+ <rcirbjhpzv6ojqc5o33cl3r6l7x72adaqp7k2uf6llgvcg5pfh@qy5ii2yfi2b2>
+ <CAHj4cs8SqXUpbT49v29ugG1Q36g5KrGAHtHu6sSjiH19Ct_vJA@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250606135924.27397-1-hare@kernel.org>
-In-Reply-To: <20250606135924.27397-1-hare@kernel.org>
-From: Lee Duncan <lduncan@suse.com>
-Date: Fri, 6 Jun 2025 07:46:51 -0700
-X-Gm-Features: AX0GCFuj0UIpzD4WYkgmBhw539ks8JbaoRo-t8g8JnQIcLG82tSGHq2KGsfxOs8
-Message-ID: <CAPj3X_XHv6pthzouVKxoTcZqQ4bT1rJxFbFwDQ_5VYp=kPpQZg@mail.gmail.com>
-Subject: Re: [PATCH] I/O errors for ALUA state transitions
-To: Hannes Reinecke <hare@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	James Bottomley <james.bottomley@hansenpartnership.com>, linux-scsi@vger.kernel.org, 
-	Rajashekhar M A <rajs@netapp.com>, Hannes Reinecke <hare@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <CAHj4cs8SqXUpbT49v29ugG1Q36g5KrGAHtHu6sSjiH19Ct_vJA@mail.gmail.com>
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Queue-Id: 0625F1F445
+X-Rspamd-Action: no action
+X-Spam-Flag: NO
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_EQ_ADDR_SOME(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_TLS_ALL(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[8];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Score: -4.51
+X-Spam-Level: 
 
-On Fri, Jun 6, 2025 at 7:01=E2=80=AFAM Hannes Reinecke <hare@kernel.org> wr=
-ote:
->
-> From: Rajashekhar M A <rajs@netapp.com>
->
-> When a host is configured with a few LUNs and IO is running,
-> injecting FC faults repeatedly leads to path recovery problems.
-> The LUNs have 4 paths each and 3 of them come back active after
-> say an FC fault which makes two of the paths go down, instead of
-> all 4. This happens after several iterations of continuous FC faults.
->
-> Reason here is that we're returning an I/O error whenever we're
-> encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE,
-> ASYMMETRIC ACCESS STATE TRANSITION) instead of retrying.
->
-> Signed-off-by: Hannes Reinecke <hare@suse.de>
-> ---
->  drivers/scsi/scsi_error.c | 3 ++-
->  1 file changed, 2 insertions(+), 1 deletion(-)
->
-> diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-> index 376b8897ab90..746ff6a1f309 100644
-> --- a/drivers/scsi/scsi_error.c
-> +++ b/drivers/scsi/scsi_error.c
-> @@ -665,7 +665,8 @@ enum scsi_disposition scsi_check_sense(struct scsi_cm=
-nd *scmd)
->                  * if the device is in the process of becoming ready, we
->                  * should retry.
->                  */
-> -               if ((sshdr.asc =3D=3D 0x04) && (sshdr.ascq =3D=3D 0x01))
-> +               if ((sshdr.asc =3D=3D 0x04) &&
-> +                   (sshdr.ascq =3D=3D 0x01 || sshdr.ascq =3D=3D 0x0a))
->                         return NEEDS_RETRY;
->                 /*
->                  * if the device is not started, we need to wake
-> --
-> 2.35.3
->
->
+On Fri, Jun 06, 2025 at 10:25:25PM +0800, Yi Zhang wrote:
+> > As of today, CKI project keeps on reporting the failure:
+> >
+> >   https://datawarehouse.cki-project.org/kcidb/tests/redhat:1851238698-aarch64-kernel_upt_7
+> >
+> > Yi, do you think the new libnvme release will help to silence the failure
+> 
+> I've created one CKI issue to track the nvme/023 failure, so the
+> failure will be waived in the future test.
+> 
+> > reports? I'm guessing the release will help RedHat to pick up and apply to CKI
+> 
+> Yes, if we have the new release for libnvme, our Fedora libnvme
+> maintainer can build the new one for Fedora. I also created the Fedora
+> issue to track it on libnvme side.
 
-Reviewed-by: Lee Duncan <lduncan@suse.com>
+Sure; a stop gap solution, just don't build with liburing. In hindsight,
+I should have set it to disabled per default, will do it now.
+
+FWIW, the contributor for the io_uring feature, stated that it improved
+the performance for some workloads. Though, I think the whole
+integration is sub-optimal, as a new io_uring is created/configured for
+each get_log_page call. So only for a large transfers there is going to
+help.
+
+I am currently working on libnvme 2 and I think we can improve this
+quite a bit though. But for libnvme 1 I'd  recommend to disable
+liburing.
