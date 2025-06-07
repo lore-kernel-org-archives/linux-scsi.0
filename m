@@ -1,311 +1,148 @@
-Received: from esa6.hgst.iphmx.com (esa6.hgst.iphmx.com [216.71.154.45])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9491367;
-	Sat,  7 Jun 2025 06:13:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.45
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749276786; cv=fail; b=MUkhMgU2W8AHxkDi0anPh+fWUOmmKL8nqx98z+2PmPRfVlfXaHe9gyVfKFvhpZN5iHADAkB0W/MzW2TvsvH1aKif00o5GtHKb3gaODNYOXtLf2+gbhoiVb8GG4/hSqXG6a2OT4+thhlxrLkH0zc89NnsPIBuk+rjW2EenBOY7lY=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749276786; c=relaxed/simple;
-	bh=OtgrAvIlQM+qQkL4PajejoA/mY2NOiMgzEQdiMTvQn8=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=oW+wF0Vf44TSjXkTCLb0SfEP/UUkPXFF/0Ah2fGnvuWA+BwvDs8re0kGGZTsBsBg3QSipwuRjYn1k7sM47u5xRtT1zw9Ux1haAwAWgVxruQFNaLR5PzJFN3bz887dfLTFFloCFhrxnktfe72dSlvPJJRz8VBxDsQG3p2uUE7c3w=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=mOE7KYgx; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=QnkaoKBm; arc=fail smtp.client-ip=216.71.154.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05CFC1DFFD;
+	Sat,  7 Jun 2025 16:23:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1749313407; cv=none; b=UPaovUgIVxc5WUqaDnM8ALAoZb0XAhfvRgz9v6AGYySzakpi3fmLM3uBeKridJoxBI6BHbOfY4Kk+IY8ixR9cNZ8o9a+34Ru+EQ2Tp6N7Yc7nhwU43DX6UMxle+PJ0wFEeIaetVBQvYQGtFMuKAqLgRDd1YV/7q9MJRC5ArT7LE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1749313407; c=relaxed/simple;
+	bh=/C8aKTgpxFq/51Om8jvnGyrWGjteETkE8yR5x4OCV1A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=p8HKZqqzUNRBVC1rCo3FDxwcCFZ1myX7apfksuM7k5SzQFm1O+3g8oL0NTpin6S0m0GcTEiRWK/ZQEOfrwvWqD8LHUNqaEe9PaLGcnctv64lHesrLz3VTXT+Gaqeiw7yGScrBiWk4HGzNTahB0RweABRb4/EED31Uf50yYGV0uU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=bAATkdTf; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="mOE7KYgx";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="QnkaoKBm"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1749276784; x=1780812784;
-  h=from:to:cc:subject:date:message-id:references:
-   in-reply-to:content-id:content-transfer-encoding:
-   mime-version;
-  bh=OtgrAvIlQM+qQkL4PajejoA/mY2NOiMgzEQdiMTvQn8=;
-  b=mOE7KYgxrczczuKJWw3CAvB3BegBXwHj3pGLrqvLLp+NnTjfMEj+SQjH
-   2brwZFXngIHQRnNFLckIWkvHknDYVwy2/kd5YJLSNYYkSXXypyjGmrf6B
-   RihCSS5rWDdtA6qfYit1mQLTnGW3T8M8GNBE9X2RMqcIiMRVMlJ2lYPCj
-   N5l3Bd9d7k0KrVSrb0qi4h+mFckDnVKW8CQo+Orx+4w56Av5tvCmhDhMu
-   adpCzdtIYTIj9R2ENHgasG0U1RqpaJZUfvNbzdYUahH7+uvDMz1O42vlE
-   a0qcse+PEzCiZiUfe63OhaIUKeqshGrJyLiwnj3n/DBcovQe5oxfR3WqO
-   Q==;
-X-CSE-ConnectionGUID: I80uQeWCR4mhDtmCilKFfw==
-X-CSE-MsgGUID: mo+dhavpRVyjgu7Mm1DZ6A==
-X-IronPort-AV: E=Sophos;i="6.16,217,1744041600"; 
-   d="scan'208";a="89089659"
-Received: from mail-mw2nam12on2051.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([40.107.244.51])
-  by ob1.hgst.iphmx.com with ESMTP; 07 Jun 2025 14:12:57 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=yoQsex3UOW+bbQnljhHvj2z2jyW8dTKqEVNNUix0GxymD/hAHcC9wok2E4HJ29yhq+8ol92F/VljyhOZ6jOQRQyaZ2WyMHZLy+UE02cxGn1zXAUXASC/4VklSXEXoI1LK0Ocr9QSz/F6vui0DXzErkR0k5uevqurJ8xluUNP2ZP10GAOEp717iZaHw6vjThbIRByC/NOBQaVDC7TjXYkMcHprsC30CAL9BeqpNmDvzjo/4NAuDEOVeMcd2d+Nt5rXrLKzPTXkrClrlnJQpQb+i7OKpbrCEO8J3TdAellPeBmjPi/SARsfz5wqPfQ8Ofk7lGFjfSmFwMUDqPLxqpu9w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=UBw+rVbFUZkPjdGImEcnvPowZBUZFRiJz76cTHEXbdQ=;
- b=kfdW0VZOLC5xMRN/QbKIN9Rnu0WGtSN2XFuZDGnKud2bsDQartDL30HmvaO5rSC/AVAaWJs8C+GtZnendnCNHgX1zgSU8LD57rmO6+uHC1QKmrjxJ7niZcL3vzJImryJvBZuupo78lnW3zSLVcDULuWoMjcdDjorqowx1nD9c6AGvVZB23NrxMmS8fDacMHW0KcqIboueyBhsECavK3SfVsi95UcmTFLXRH+nEglhNg0EqeZooh2tEucrgMsMXefOP2BjLAlA1q7Vpz3sBPO42KddJrrpeEHa2qqNzoKnXKg00FE9T2kU2cH8MI7VMFz1RbGbeCa6BmRLqmZFY9xVg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=UBw+rVbFUZkPjdGImEcnvPowZBUZFRiJz76cTHEXbdQ=;
- b=QnkaoKBmoF0KwLM98cdtzbVqakceURdoSc+HUf9+hKdP651pkCsBkvOsIcbLpU/t4EHFBs+wnnQjK39TFdSBcdZk48LIrv17M1poncE37yT9RxXmIkkY3+HNdu3myi1zGBR6F+opH4nQR+OGM4vnunXJiyHN7GUDuUlvYr/GhNk=
-Received: from SN7PR04MB8532.namprd04.prod.outlook.com (2603:10b6:806:350::6)
- by SN7PR04MB8570.namprd04.prod.outlook.com (2603:10b6:806:32c::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8792.36; Sat, 7 Jun
- 2025 06:12:55 +0000
-Received: from SN7PR04MB8532.namprd04.prod.outlook.com
- ([fe80::4e14:94e7:a9b3:a4d4]) by SN7PR04MB8532.namprd04.prod.outlook.com
- ([fe80::4e14:94e7:a9b3:a4d4%5]) with mapi id 15.20.8792.034; Sat, 7 Jun 2025
- 06:12:54 +0000
-From: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: Alan Adamson <alan.adamson@oracle.com>
-CC: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-raid@vger.kernel.org" <linux-raid@vger.kernel.org>
-Subject: Re: [PATCH blktests] md/002: add atomic write tests for md/stacked
- devices
-Thread-Topic: [PATCH blktests] md/002: add atomic write tests for md/stacked
- devices
-Thread-Index: AQHb1mvbZXfXEK+a1E2N6RVyMpJqrbP3OZCA
-Date: Sat, 7 Jun 2025 06:12:54 +0000
-Message-ID: <ncboqvpcxt44wyqukzukg5f27duwj7fcp3ueat3ocjkqlgvlci@ep5nc3at5vjg>
-References: <20250605225725.3352708-1-alan.adamson@oracle.com>
-In-Reply-To: <20250605225725.3352708-1-alan.adamson@oracle.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN7PR04MB8532:EE_|SN7PR04MB8570:EE_
-x-ms-office365-filtering-correlation-id: 8af2b897-e5d1-4323-1465-08dda58a576f
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|376014|366016|1800799024|38070700018;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?DggXCz+NtKSCLNyc5tJN4+yyDnSLqDtpRDRx8hWXoR3L5oNfsHYta9RNXSYD?=
- =?us-ascii?Q?TYPRmh62s7+oCSerZMJkeo946wsSb0qQxphDpjxjddE2JfNenceOKFQNPOOo?=
- =?us-ascii?Q?Jy5e/82ElwvS9u6bZnjfcG11m7D9cvlKCwGaUl+l7eDYEfXVb3vLXLV4fc8/?=
- =?us-ascii?Q?Bim2LWi8ixJcOekKz6f7S/ZhXmKAALQAT8NCbvkV4RhjjSiBt2ywfaxEbwnh?=
- =?us-ascii?Q?I+c4lg0qoIlscW6kQXi+oycmfXxL57dSWPjWmtMl/LZwG6XNDXA42cdS0dUa?=
- =?us-ascii?Q?Pegky4whlLle0tdnHys+ezoycgx+AB0YArVDeK2jGjWQiYGDVca0wljLQa4/?=
- =?us-ascii?Q?USf4vU+B/XtzUTg5X+WZRT2SFGP4igaSIUvVFIDW7U8bwdq3QO8Q+IsHk9p5?=
- =?us-ascii?Q?cOrHdskpgmQOBZOd9raVLrwpTfWVubC6N2z+F433rMo783uGVmAxyUF5degL?=
- =?us-ascii?Q?QA0anAVa6FbXK/LlKCNMUipVpU6CHshQlzHEosdb16U/JyqiBdbGTl5v+IcR?=
- =?us-ascii?Q?7EGI4eD4z01PAs2hUERMh3lITOE41YvCYADDFdu9lI+AKTY8yn3NP2gD/CGN?=
- =?us-ascii?Q?iY4LaOvt9qeTkIy0M9eFbjLe8PcbyBC1dY06JS6IZY3feC4w9cuuZjVDkd2I?=
- =?us-ascii?Q?Xf2sezqLOQOGKezwUFLsPJadnxBIVtdLl9QHOZn1/H/g/dtA8ZICwLw2WQmu?=
- =?us-ascii?Q?US4xfz1HgkPlYVhNQGZoweNreBm2u9o0K9ZKw0g4sqDsSvMcNaf6J6x+j/bf?=
- =?us-ascii?Q?WdI/ViW50ZuNWaeFsj/98CNkMDJzeTj49rMskK7udGkz4uUBx9rLIcV6+srz?=
- =?us-ascii?Q?iuF4UvzPT3B0x+BugElqbWiJsjzoRedrTvoNoTFS8ylhN9UVezT32iUMLgWe?=
- =?us-ascii?Q?KwJAa7nAPYftRdlrvqeLBgWqH9ACXluzOuI9O0k1fm/zCC6krRqJ/lSsXTxN?=
- =?us-ascii?Q?FPPzp5G8HOB8tIlNnpeLBeM5N6Xe//VdqPoYOx2wm24vE0jPGxu3UPy8IKc2?=
- =?us-ascii?Q?euPGOar6/f8yciPjp3iCVzIb5SRu0pRrvS3dgnTJNI3LYFj0AOR1QxYYlFqJ?=
- =?us-ascii?Q?h3/gDOmZzeOi83xLoXbTH83HxNiV7Qvz7vtkcpdeipzKCk6MH4S+3wIb1xKM?=
- =?us-ascii?Q?UJMaUBGTaV8dQ8W5dOk5M0cL0JagDbtk3qw8fcnuj8Kzr0BzFh2lsw1I0qyP?=
- =?us-ascii?Q?z3PkeqCwIFzBZ2zJOaIOwPlIfSr5bUuD6seL34bGVeXmvKDyEPnXwOcfYYof?=
- =?us-ascii?Q?ogmIijQeklyC5BBsxh1KgzG9VvbQPmLGJXkWYVYYqOtEo0Nz3L3DOEgUjb2P?=
- =?us-ascii?Q?KdTb0ZxuoTPMcjTQQEVQ+/f8ShDWs+TRk2ogQbspzeI5VifUAkGpsQ1w9AWW?=
- =?us-ascii?Q?lsX3FtOMY2oWiBnX7u/4TREwpzvlyx1oGZ0f3C52q63laKobsmKTjR8omPhW?=
- =?us-ascii?Q?sib0alrauGSHEJoQkIyGqGaAfQRfOaIVIIFAG7uwbEO6Ki/reLlaiaqsqtms?=
- =?us-ascii?Q?OY+lbQh/kK7cEI8=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR04MB8532.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?8Z/QM48ewob4JiHaw36dPvgReGCmkBCqmTOGJfFO0EwqiAmjg5/xpp0onorZ?=
- =?us-ascii?Q?LV5p72O+msPp5wqNRpVetmDGUXRuUKdd7iqnWk0NMpaQBwjDpxpTw+FYnpip?=
- =?us-ascii?Q?OedPBrsTKoIIwumDOgTFIAQmiM7ivrBZKjySzocULAa2J+oJS0QTbDGSDS9B?=
- =?us-ascii?Q?+I4QA//nDjSWNi2R26Y0wq1FUL8f0fpuaOuejKVoic9ykpnZYn5UBEX+tm4Q?=
- =?us-ascii?Q?02sStIQfvqOP97oib9yZKIcTi52yWsBFwy7YDjH59qcvQFaIGRfijzTxiR6E?=
- =?us-ascii?Q?n1tDDV+nY+IIh1I2cI+Cy7EsumPMFHMjmH2ji7gEXKAqlNd7SLC+33wRII0a?=
- =?us-ascii?Q?XTKmRpl/URXPzCwfqD00jugf2sCv2LWDamdguXFAYDtdr3p1kMMUatE9VwoL?=
- =?us-ascii?Q?LL5rIbA5Kuv8lONJSpFMGEWjUxUXClujU4K3U6YS2dgtRnrSCQtGntQPn05f?=
- =?us-ascii?Q?AVFSj/CJy6lULzRwKqeI6Cx3vSC2mB8EBfplS8maZDaMsyEEdN9dvXG7zAtr?=
- =?us-ascii?Q?1GUCrhf6nMa1JCMlxVcjFf9SavWGOU6M2D34fmdlHf0OcS9L3k+jyDeeTurS?=
- =?us-ascii?Q?NkASqOI6u3BPpDm8WHDEP22sEjZBYrog887nwQ4+UgK8sv8TYax3aFVl56i0?=
- =?us-ascii?Q?toaMv0rkdoSRulUNS/DrUFOW8l+6zFHD6O1MzR7Uv0MjtsdWurfdodyNlWr1?=
- =?us-ascii?Q?vQ5dvNGBWe5+99xbLb+obSGcMD1DVHs/JKiWLojzGgMQL9+kPdZfE3A/vSl0?=
- =?us-ascii?Q?J0uGOMaaUoVYvDMzesY9OR8uWX9dOtl6pYjzjBsCoSoVou0jILtfi/bzCFcH?=
- =?us-ascii?Q?VP5vlKGYDiu2zAv4t32k5zua0rhyna0njXtFp/+vcg406PWBXGCrmeMHYsjt?=
- =?us-ascii?Q?eF1lEtalO6ZAD1yEgtfBMeBY2F5NhcZcc7A9qPDUpSh4Isx6fT1I2WnUFeud?=
- =?us-ascii?Q?452kssFyUfIXrvv3AXtXDwyqJ6MmISDfi3Bgw3Cbtj7q83fNlKtQhu1EuZye?=
- =?us-ascii?Q?J/fjMziUdWclb0XFFMVG5peCTdCvYOOkUt/anjCrfuUtQNMQPEwJ+PABydW4?=
- =?us-ascii?Q?W8HTzsSUliHPDGij4MO9rPFHUajfEBtAgDNwRB1beGv6CLs6gntuZcCzRHJv?=
- =?us-ascii?Q?zfXCH96ju5wAxu9bs8RC9U+XdU8q68nB5CxlIR/DFzWL1A+gPn2q+rG3dDYh?=
- =?us-ascii?Q?B3q3A+x/Fh/2nhnnz1CDa92RqZV9iHdOsD5CBCdyvXNYeJ0TtNaFjQ/ilAab?=
- =?us-ascii?Q?R7JWNZoGUfeAvlGNKZ297oJWy8vlq/1vOUiganQgx2D7A9GU4EmM/IyCl9eE?=
- =?us-ascii?Q?kWnvDFVmNeHrxmzC5KUnMAwGpnSr8d59gD9yN+QkKO0NA64U4Vv+ninF5Dfd?=
- =?us-ascii?Q?81wLevykwzDInl0LBqHbNGCy6ttaGs+5sMhCAVrZBuOECQPvX5e6HtNBVDfK?=
- =?us-ascii?Q?+fQLEMToZmM6ILvhGSmjdcNcwAchnZfc7LiAFzJdt4zCYEjggA8wNmfr1BaQ?=
- =?us-ascii?Q?xndl1jWzXjvAqG7ZgVkZ08EqiddvaSW9p1MmwCL5m7hL12US2q/HocVu83VC?=
- =?us-ascii?Q?LwXRg0SpyHO65DgnFl4NQcd7lDzKcjODNGvVqWeX+cGznAwAOl0te4X1towu?=
- =?us-ascii?Q?4g=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <08A4133B36B894418A4D72F1F927E6C8@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bAATkdTf"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 557Ce0lg011099;
+	Sat, 7 Jun 2025 16:23:24 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=corp-2025-04-25; bh=VNQcpR3FgrVvkaxcmYX2339ffI8LJ
+	aNen8iQlJEMRQM=; b=bAATkdTfPDMniHDK+iOn63SkYVctFQBAbKVMcfuXwNgXa
+	c0AoYOV/IsyLfqppKAJJ5Iajb/av8HRx5NaFw4lPAeCJYL6Wf5kHTQSE+yvDZD/e
+	CP/4/pDIL37+/rWoInMh9nnsJNGOSuZuRk9yJYM8zrlENVrhsl21oYRM3uKmNXjA
+	wbTOoG0Q5QCaveo37YjFGHrW2O7DPA2VVLLrtyN2d3R0jl41HkGT/gjvFBBkYv7i
+	mVqQMip4jaN2OTKEPKSiZpXBJ1HHDzy9J0lCxluf9ye4tI2r6UNJ9vpYPP+Im8uF
+	64HFLJvuUq8ntxnkf1EylkbEbnrQ+ajdkf8JrMasw==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 474dywratb-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 07 Jun 2025 16:23:24 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 557CKxhK020775;
+	Sat, 7 Jun 2025 16:23:08 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 474bv6utcx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 07 Jun 2025 16:23:08 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 557GJakY008514;
+	Sat, 7 Jun 2025 16:23:07 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 474bv6utcp-1;
+	Sat, 07 Jun 2025 16:23:07 +0000
+From: Alok Tiwari <alok.a.tiwari@oracle.com>
+To: corbet@lwn.net, linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org,
+        martin.petersen@oracle.com
+Cc: alok.a.tiwari@oracle.com, himanshu.madhani@oracle.com,
+        darren.kenny@oracle.com, linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: docs: scsi_fc_transport: Add documentation for FC Remote Ports
+Date: Sat,  7 Jun 2025 09:22:56 -0700
+Message-ID: <20250607162304.1765430-1-alok.a.tiwari@oracle.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	pWOzFKA9LjzQKmLJWX/LRaLThXEFM1JKEgnHm3feHhjupyepGFKhzIh7k6tnBTIzYJLIPiNpdk+pqogbHTGUr+Kaav12GJSuD8ISGCczTLRZHFNENabp7YHdw7KfWoTC63BcXydE4AzRUCrLex3EiibaYxNV9hDRfRDR5axN5LmAxirR+ROmOnIL8qSSRsmPMm5Mx9gz9TnomFl3EwEivF32ErFbltEjlfIPvmGyDeMkGwKMyLUCHxeP7+j6fRFixKdZFOrsYZXQMwZqBWUNf7PMxw4ERxjm0zZbjRmlmIXK5F5ovZSLc3Zn1imTlFKTtRk13Olpku5IMrKUNDDpTJyJBFHuF4v4ZMXPt+lMnF0hTpNLCBYoesTrnCQcS3MKd6jGFE8or76iNna+ux/xt+Td7OKHfpPYtqMCuyQwsDqmYqf9JyTxWU1MypO3eVdmlz7pRxfQBB9XUoVe1YWaksnrabKW/zyYEYVy3AzoX6MRMfBwH2fUIuYvX0WHdAgFR4C72QIItT8Fjj1tvuH3UKwuwgZw/5JkQTQKSyD0lTPgVObhiSRU7SLn/fXs1JabW2p2fzvRlV/A5XFOz6XQN0VN6KXs6ZdDp0AI1cSR7pT8ZmgJ3WP1qD2oGBfz1XIW
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN7PR04MB8532.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 8af2b897-e5d1-4323-1465-08dda58a576f
-X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Jun 2025 06:12:54.7218
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: T+R9x1x2gELHHTuJ0PSFubfKqx61ncSlyI69tlOkCA5kofBHWOwIT+ldUY709kWcI82cOIVwJ0jkLoTViEoY1PzQySdUP1s0WFluAk0Nneg=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN7PR04MB8570
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-07_06,2025-06-05_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 bulkscore=0
+ malwarescore=0 suspectscore=0 spamscore=0 phishscore=0 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
+ definitions=main-2506070117
+X-Authority-Analysis: v=2.4 cv=fdaty1QF c=1 sm=1 tr=0 ts=6844677c b=1 cx=c_pps a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17 a=6IFa9wvqVegA:10 a=yPCof4ZbAAAA:8 a=Q_fQxBA_vzZ2BlmfIw4A:9 cc=ntf awl=host:13206
+X-Proofpoint-ORIG-GUID: bReM-n9k3kUoaxYAJBYAL6mirJ5ouhh7
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA3MDExOCBTYWx0ZWRfX1u2FmG1l6S/Y FttwI4P6fLJm+1LQclFNscljvD7N7HivIxK5oXWt/edqmCVi2oKlLdQGCuMOCah+g2WCUn81xME ajm9/tRNqwQ1JnE8z+IFqzJejU2IQ05PYP56lSlN/ZIZClCIbNWG8Lxmw6NuN621uDYQeCkZT/Q
+ YqPTj1e4jrPOu9oS/QNlfBJtBqSa6xsBK7mGU5c085v5Ip3hn8kgXeITx/j0h2NOq7VZ/9y6aB/ OHzMqOkmcnxVzaJqJhL5+uXv835Kq5K5sBUMyACI4cwnJPW4vWIFkRDAHiwPATHX8CWPvaX9EX5 2qW4SJWBrmDeYoAbC2+NM/+wXY9inBStfqGdy8vtuPjTO61GhIJ30/c3vGN6PDx4C/AnbVtLVDk
+ IloODh87WgL79T/QwLOyD/nYvu7alSEPBwZGf9ZPmbDaRqjplPYqy50XMFM9twibnXZAlMT6
+X-Proofpoint-GUID: bReM-n9k3kUoaxYAJBYAL6mirJ5ouhh7
 
-On Jun 05, 2025 / 15:57, Alan Adamson wrote:
-> Add a new test (md/002) to verify atomic write support for MD devices
-> (RAID 0, 1, and 10) stacked on top of SCSI devices using scsi_debug with
-> atomic write emulation enabled.
->=20
-> This test validates that atomic write sysfs attributes are correctly
-> propagated through MD layers, and that pwritev2() with RWF_ATOMIC
-> behaves as expected on these devices.
->=20
-> Specifically, the test checks:
->     - That atomic write attributes in /sys/block/.../queue are consistent
->       between MD and underlying SCSI devices
->     - That atomic write limits are respected in user-space via xfs_io
->     - That statx reports accurate atomic_write_unit_{min,max} values
->     - That invalid writes (too small or too large) fail as expected
->     - That chunk size affects max atomic write limits (for RAID 0/10)
->=20
-> Signed-off-by: Alan Adamson <alan.adamson@oracle.com>
+This patch updates the scsi_fc_transport.rst documentation by
+replacing the outdated << To Be Supplied >> placeholder under
+the "FC Remote Ports (rports)" section with a detailed explanation
+of remote port functionality in the Fibre Channel (FC) transport class.
 
-Hello Allan, thanks for the patch. I ran the new test case and it looks wor=
-king
-good. Please find my comments in line.
+The new documentation covers:
+What rports are and their role in FC-based SCSI communication
+Their representation in sysfs (/sys/class/fc_remote_ports/)
+Common sysfs attributes such as (port_id, port_name, node_name,
+and port_state).
+Their typical lifecycle (creation and removal)
+Guidance for driver developers on using fc_remote_port_add() and
+fc_remote_port_delete()
 
-> ---
->  tests/md/002     | 245 +++++++++++++++++++++++++++++++++++++++++++++++
->  tests/md/002.out |  43 +++++++++
->  2 files changed, 288 insertions(+)
->  create mode 100755 tests/md/002
->  create mode 100644 tests/md/002.out
->=20
-> diff --git a/tests/md/002 b/tests/md/002
-> new file mode 100755
-> index 000000000000..4b71ebf7d496
-> --- /dev/null
-> +++ b/tests/md/002
-> @@ -0,0 +1,245 @@
-> +#!/bin/bash
-> +# SPDX-License-Identifier: GPL-3.0+
-> +# Copyright (C) 2025 Oracle and/or its affiliates
-> +#
-> +# Test SCSI Atomic Writes with MD devices
-> +
-> +. tests/scsi/rc
+This change improves the completeness and usefulness of the
+FC transport documentation for developers and users interacting
+with Fibre Channel drivers in the Linux SCSI subsystem
 
-I think you meant "tests/md/rc", didn't you?
+Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
+---
+ Documentation/scsi/scsi_fc_transport.rst | 35 +++++++++++++++++++++++-
+ 1 file changed, 34 insertions(+), 1 deletion(-)
 
-> +. common/scsi_debug
-> +. common/xfs
-> +
-> +DESCRIPTION=3D"test md atomic writes"
-> +QUICK=3D1
-> +
-> +requires() {
-> +	_have_kver 6 14 0
+diff --git a/Documentation/scsi/scsi_fc_transport.rst b/Documentation/scsi/scsi_fc_transport.rst
+index e3ddcfb7f8fd..5ef75575924e 100644
+--- a/Documentation/scsi/scsi_fc_transport.rst
++++ b/Documentation/scsi/scsi_fc_transport.rst
+@@ -30,7 +30,40 @@ This file is found at Documentation/scsi/scsi_fc_transport.rst
+ 
+ FC Remote Ports (rports)
+ ========================
+-<< To Be Supplied >>
++
++  In the Fibre Channel (FC) subsystem, a remote port (rport) refers to a
++  remote Fibre Channel node that the local port can communicate with.
++  These are typically storage targets (e.g., arrays, tapes) that respond
++  to SCSI commands over FC transport.
++
++  In Linux, rports are managed by the FC transport class and are
++  represented in sysfs under:
++
++    /sys/class/fc_remote_ports/
++
++  Each rport directory contains attributes describing the remote port,
++  such as port ID, node name, port state, and link speed.
++
++  rports are typically created by the FC transport when a new device is
++  discovered during a fabric login or scan, and they persist until the
++  device is removed or the link is lost.
++
++  Common attributes:
++  - node_name: World Wide Node Name (WWNN).
++  - port_name: World Wide Port Name (WWPN).
++  - port_id: FC address of the remote port.
++  - roles: Indicates if the port is an initiator, target, or both.
++  - port_state: Shows the current operational state.
++
++  After discovering a remote port, the driver typically populates a
++  fc_rport_identifiers structure and invokes fc_remote_port_add() to
++  create and register the remote port with the SCSI subsystem via the
++  Fibre Channel (FC) transport class.
++
++  rports are also visible via sysfs as children of the FC host adapter.
++
++  For developers: use fc_remote_port_add() and fc_remote_port_delete() when
++  implementing a driver that interacts with the FC transport class.
+ 
+ 
+ FC Virtual Ports (vports)
+-- 
+2.47.1
 
-I wanted to confirm that the kernel version check is the only way to
-confirm the kernel dependency of this test case. Is there any other
-way to check it from userland, such as sysfs attributes?
-
-> +	group_requires
-
-I don't think the line above is necessary.
-
-> +	_have_program mdadm
-> +	_have_driver scsi_debug
-> +	_have_xfs_io_atomic_write
-> +}
-> +
-> +test() {
-> +	local scsi_debug_atomic_wr_max_length
-> +	local scsi_debug_atomic_wr_gran
-> +	local scsi_sysfs_atomic_max_bytes
-> +	local scsi_sysfs_atomic_unit_max_bytes
-> +	local scsi_sysfs_atomic_unit_min_bytes
-> +	local md_atomic_max_bytes
-> +	local md_atomic_min_bytes
-> +	local md_sysfs_max_hw_sectors_kb
-> +	local md_max_hw_bytes
-> +	local md_chunk_size
-> +	local md_sysfs_logical_block_size
-> +	local md_sysfs_atomic_max_bytes
-> +	local md_sysfs_atomic_unit_max_bytes
-> +	local md_sysfs_atomic_unit_min_bytes
-> +	local bytes_to_write
-> +	local bytes_written
-> +	local test_desc
-> +	local scsi_0
-> +	local scsi_1
-> +	local scsi_2
-> +	local scsi_3
-> +	local scsi_dev_sysfs
-> +	local md_dev
-> +	local md_dev_sysfs
-> +	local scsi_debug_params=3D(
-> +		delay=3D0
-> +		atomic_wr=3D1
-> +		num_tgts=3D1
-> +		add_host=3D4
-> +		per_host_store=3Dtrue
-> +	)
-> +
-> +	echo "Running ${TEST_NAME}"
-> +
-> +	if ! _configure_scsi_debug "${scsi_debug_params[@]}"; then
-> +                return 1
-> +                fi
-
-Nit: Whitespaces are used for indenet in the above two lines.
-
-> +
-> +	scsi_0=3D"${SCSI_DEBUG_DEVICES[0]}"
-> +	scsi_1=3D"${SCSI_DEBUG_DEVICES[1]}"
-> +	scsi_2=3D"${SCSI_DEBUG_DEVICES[2]}"
-> +	scsi_3=3D"${SCSI_DEBUG_DEVICES[3]}"
-> +
-> +	scsi_dev_sysfs=3D"/sys/block/${scsi_0}"
-> +	scsi_sysfs_atomic_max_bytes=3D$(< "${scsi_dev_sysfs}"/queue/atomic_writ=
-e_max_bytes)
-> +	scsi_sysfs_atomic_unit_max_bytes=3D$(< "${scsi_dev_sysfs}"/queue/atomic=
-_write_unit_max_bytes)
-> +	scsi_sysfs_atomic_unit_min_bytes=3D$(< "${scsi_dev_sysfs}"/queue/atomic=
-_write_unit_min_bytes)
-> +	scsi_debug_atomic_wr_max_length=3D$(< /sys/module/scsi_debug/parameters=
-/atomic_wr_max_length)
-> +	scsi_debug_atomic_wr_gran=3D$(< /sys/module/scsi_debug/parameters/atomi=
-c_wr_gran)
-> +
-> +	for raid_level in 0 1 10; do
-
-Nit: this for loop block is rather large and has deep nest and long lines, =
-then
-it would be good to factor out it into another function (Bash users dynamic
-scoping then the local variables defined in test() will be usable in the ne=
-w
-function()). I'm ok with current implementation, just a mere suggestion.
-
-Thanks!=
