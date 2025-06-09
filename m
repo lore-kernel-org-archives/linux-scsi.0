@@ -1,222 +1,98 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D672735963;
-	Mon,  9 Jun 2025 02:41:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 30F471459F6;
+	Mon,  9 Jun 2025 02:46:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749436898; cv=none; b=Rf66LFzaWKptCAtYOLWyHd6aoXu6DUbmfAmB7bIu06Kf1z6QIzxP35CkFLK7GNSdNz+I9uNL4653mY/Zi/Y8/HvnQwfmnprE17KpOyOhuoxRnn7uw50zQ3hx2US3SaaGEbzX1TOaW/IphphcAMV3CjY1UXfI1VRAE8zQWQeXZQc=
+	t=1749437196; cv=none; b=im9st3VKZK9bxxjJepu1VoA3LFqAiD6FiZ3vIu61K2X29Q6D0vpnRGmbrDEno7dwcQJGoiGu1BdvXo8YHeb/DC0RDNhF45eIPQvCjEs9eAnSeAba3gycbIbUNGxR3WE6Pm+BB0kA0MN/lvzLte8jlPZsT7p8NzKeOtJxi0hIpuk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749436898; c=relaxed/simple;
-	bh=0dNxAqJz8VbKFDM3A/agY1w0Cc7xU4taJjsDdg27CW0=;
-	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
-	 MIME-Version:Message-ID; b=SNC5pnMWgXyADNYRWa9ofHX3QsRKfA/p27aNfr4sFJXDvSDynorY1edsmE3nNSXryZ6Ci8QHzw6QXpyU4LhxXuVDQr0Wzal/EgXURL7cS9dymThKUqr3+/Mdu7RRO2godOaw4+u7cz6dpc0laRa6HYhy3DTiD4hdTANzZtsn+9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bFx514CdpzYQvlm;
-	Mon,  9 Jun 2025 10:41:25 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 8D6671A1955;
-	Mon,  9 Jun 2025 10:41:24 +0800 (CST)
-Received: from zhengqixing$huaweicloud.com ( [10.174.178.72] ) by
- ajax-webmail-APP4 (Coremail) ; Mon, 9 Jun 2025 10:41:24 +0800 (GMT+08:00)
-Date: Mon, 9 Jun 2025 10:41:24 +0800 (GMT+08:00)
-X-CM-HeaderCharset: UTF-8
-From: zhengqixing@huaweicloud.com
-To: "Zheng Qixing" <zhengqixing@huaweicloud.com>, 
-	sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com, 
-	suganath-prabu.subramani@broadcom.com, 
-	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
-	yi.zhang@huawei.com, yangerkun@huawei.com
-Subject: Re: [PATCH v2] scsi: mpt3sas: fix uaf in
- _scsih_fw_event_cleanup_queue() during hard reset
-X-Priority: 3
-X-Mailer: Coremail Webmail Server Version 2024.1-cmXT5 build
- 20240919(7cc4060a) Copyright (c) 2002-2025 www.mailtech.cn
- mispb-afc14d85-da06-4a9c-b40d-9d3adbbd040a-huawei.com
-In-Reply-To: <20250528004935.2000196-1-zhengqixing@huaweicloud.com>
-References: <20250528004935.2000196-1-zhengqixing@huaweicloud.com>
-Content-Transfer-Encoding: base64
-Content-Type: text/plain; charset=UTF-8
+	s=arc-20240116; t=1749437196; c=relaxed/simple;
+	bh=jM8wdEwNXLFrk2Eu5Cqxd8tWg9JnaEJ9FmQA4RrL0lg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=L/2Fp4Yk4BSph4QdKGzjyfojqNdQfs2EP3ej1Ue6cXRsZeM4IQuFnHI7TOnndUiCetqx4KwXmYVlPPAyBxFJixtKmdIycGXB1TQhfonM6lYxeYz7zN4DrHgusWxxQqRNESakeEcJmNKlQXSe6qhqsTQ9yob0ymE5zF2G/gK4axc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fQ6X/3HY; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fQ6X/3HY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 94D56C113CF;
+	Mon,  9 Jun 2025 02:46:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749437196;
+	bh=jM8wdEwNXLFrk2Eu5Cqxd8tWg9JnaEJ9FmQA4RrL0lg=;
+	h=From:To:Cc:Subject:Date:From;
+	b=fQ6X/3HYQ36F34pys39KIOh3hRdYubeC8dJnN6E3MgHSdrz6VAAMLBeuG52nFdRC6
+	 ClXEk2iN+NY7tneTNnsxl38Mn60H1ailCD797tocWFSQdvQvDA+WQTK2QAGFBnLhwM
+	 CKs6zwhpgqB3SoqPKYoCc/jJILf50jUnLIfbjpd7Nmge9axRvzjes/EJ4kSjbOWNJl
+	 r06GlIIgDkWhUqg10E4Vk4Kvr64uFkEJsFPcwCnucdna0PXkvJpxhpNn6x+13jeoMi
+	 T/iB3idBZeMypjeF79wn52M8iqkRbKF4pSauFlSjket1PcUu4V+43BLIWCI2mbRefP
+	 uv9OPfuRYqbiQ==
+From: Mario Limonciello <superm1@kernel.org>
+To: "Rafael J . Wysocki" <rafael@kernel.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: amd-gfx@lists.freedesktop.org (open list:RADEON and AMDGPU DRM DRIVERS),
+	linux-pm@vger.kernel.org (open list:HIBERNATION (aka Software Suspend, aka swsusp)),
+	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
+	linux-kernel@vger.kernel.org (open list),
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	dri-devel@lists.freedesktop.org (open list:DRM DRIVERS),
+	linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
+	linux-usb@vger.kernel.org (open list:USB SUBSYSTEM),
+	Mario Limonciello <mario.limonciello@amd.com>
+Subject: [PATCH v3 0/5] Improvements to S5 power consumption
+Date: Sun,  8 Jun 2025 21:46:14 -0500
+Message-ID: <20250609024619.407257-1-superm1@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Message-ID: <28dbc2.10c5.197529065a2.Coremail.zhengqixing@huaweicloud.com>
-X-Coremail-Locale: zh_CN
-X-CM-TRANSID:gCh0CgBHqV3USUZotSfKOw--.31697W
-X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/1tbiAgAOEmhFRIgzjgA
-	BsD
-X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3GIAIbVAYFVCjjxCrMI
-	AIbVAFxVCF77xC64kEw24lV2xY67C26IkvcIIF6IxKo4kEV4DvcSsGvfC2KfnxnUU==
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-SGkgQWxsLAoKCkdlbnRsZSBwaW5nIG9uIHRoaXMgcGF0Y2ggc3VibWl0dGVkIHR3byB3ZWVrcyBh
-Z28uIENvdWxkIHNvbWVvbmUgcGxlYXNlCgp0YWtlIGEgbG9vayB3aGVuIGNvbnZlbmllbnQ/CgoK
-VGhhbmtzLAoKUWl4aW5nCgoK5ZyoIDIwMjUvNS8yOCA4OjQ5LCBaaGVuZyBRaXhpbmcg5YaZ6YGT
-OgomZ3Q7IEZyb206IFpoZW5nIFFpeGluZyA8emhlbmdxaXhpbmdAaHVhd2VpLmNvbT4KJmd0Owom
-Z3Q7IENoYW5nZXMgaW4gdjI6CiZndDsKJmd0OyAgICAxLiBSZWZlcmVuY2UgY291bnRpbmc6IEVu
-c3VyaW5nIHRoZSBmd19ldmVudF93b3JrIGhhcyBwcm9wZXIgcmVmZXJlbmNlCiZndDsgICAgICBj
-b3VudGluZyBzbyBpdCdzIG5vdCBmcmVlZCB3aGlsZSBzdGlsbCBpbiB1c2UKJmd0OyAgICAyLiBS
-ZWFkLXdyaXRlIGxvY2tzOiBQcm90ZWN0aW5nIGFjY2VzcyB0byBpb2MtJmd0O2N1cnJlbnRfZXZl
-bnQgd2l0aCBsb2NrcwomZ3Q7ICAgICAgIHRvIHByZXZlbnQgcmFjZSBjb25kaXRpb25zIGJldHdl
-ZW4gcmVhZGVycyBhbmQgd3JpdGVycwomZ3Q7CiZndDsgRHVyaW5nIG1wdDNzYXMgaGFyZCByZXNl
-dCwgdGhlcmUgYXJlIHR3byBhc3luY2hyb25vdXMgZXhlY3V0aW9uIHBhdGhzIHRoYXQKJmd0OyBj
-YW4gbGVhZCB0byB1c2UtYWZ0ZXItZnJlZSBpc3N1ZXM6CiZndDsKJmd0OyBQYXRoIEEgKGNsZWFu
-dXApOgomZ3Q7ICAgIF9iYXNlX2NsZWFyX291dHN0YW5kaW5nX2NvbW1hbmRzKCkKJmd0OyAgICAg
-IG1wdDNzYXNfc2NzaWhfY2xlYXJfb3V0c3RhbmRpbmdfc2NzaV90bV9jb21tYW5kcygpCiZndDsg
-ICAgICAgIF9zY3NpaF9md19ldmVudF9jbGVhbnVwX3F1ZXVlKCkKJmd0OyAJY2FuY2VsX3dvcmtf
-c3luYyAvLyBVQUYhCiZndDsKJmd0OyBQYXRoIEIgKHJlY292ZXJ5KToKJmd0OyAgICBfYmFzZV9y
-ZXNldF9kb25lX2hhbmRsZXIoKQomZ3Q7ICAgICAgbXB0M3Nhc19zY3NpaF9yZXNldF9kb25lX2hh
-bmRsZXIoKQomZ3Q7ICAgICAgICBfc2NzaWhfZXJyb3JfcmVjb3ZlcnlfZGVsZXRlX2RldmljZXMo
-KQomZ3Q7ICAgICAgICAgIGFsbG9jX2Z3X2V2ZW50X3dvcmsoKQomZ3Q7ICAgICAgICAgIF9zY3Np
-aF9md19ldmVudF9hZGQoKQomZ3Q7ICAgICAgICAgICAgX2Zpcm13YXJlX2V2ZW50X3dvcmsoKQom
-Z3Q7ICAgICAgICAgICAgICBfbXB0M3Nhc19md193b3JrKCkgLy8gZnJlZSBmd19ldmVudAomZ3Q7
-CiZndDsgSGVyZSBpcyBhIHVzZS1hZnRlci1mcmVlIGlzc3VlIGR1cmluZyBoYXJkIHJlc2V0Ogom
-Z3Q7CiZndDsgPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
-PT09PT09PT09PT09PT09PT09CiZndDsgQlVHOiBLQVNBTjogc2xhYi11c2UtYWZ0ZXItZnJlZSBp
-biBfX2NhbmNlbF93b3JrX3RpbWVyKzB4MTcyLzB4M2UwCiZndDsgUmVhZCBvZiBzaXplIDggYXQg
-YWRkciBmZmZmODhiZTA4ZTcyNjEwIGJ5IHRhc2sgc2NzaV9laF8xMC85ODAKJmd0OwomZ3Q7IENQ
-VTogNTAgUElEOiA5ODAgQ29tbTogc2NzaV9laF8xMCBLZHVtcDogbG9hZGVkIE5vdCB0YWludGVk
-IDYuNi4wKyAjMjQKJmd0OyBDYWxsIFRyYWNlOgomZ3Q7ICAgPHRhc2s+CiZndDsgICBfX2NhbmNl
-bF93b3JrX3RpbWVyKzB4MTcyLzB4M2UwCiZndDsgICBfc2NzaWhfZndfZXZlbnRfY2xlYW51cF9x
-dWV1ZSsweDJhMi8weDU3MCBbbXB0M3Nhc10KJmd0OyAgIG1wdDNzYXNfc2NzaWhfY2xlYXJfb3V0
-c3RhbmRpbmdfc2NzaV90bV9jb21tYW5kcysweDE3MS8weDJjMCBbbXB0M3Nhc10KJmd0OyAgIG1w
-dDNzYXNfYmFzZV9oYXJkX3Jlc2V0X2hhbmRsZXIrMHgyZTgvMHg5ZDAgW21wdDNzYXNdCiZndDsg
-ICBtcHQzc2FzX3Njc2loX2lzc3VlX3RtKzB4YWExLzB4YzEwIFttcHQzc2FzXQomZ3Q7ICAgc2Nz
-aWhfdGFyZ2V0X3Jlc2V0KzB4MzQ0LzB4N2YwIFttcHQzc2FzXQomZ3Q7ICAgc2NzaV90cnlfdGFy
-Z2V0X3Jlc2V0KzB4YTcvMHgxZjAKJmd0OyAgIHNjc2lfZWhfdGFyZ2V0X3Jlc2V0KzB4NGU4LzB4
-YzUwCiZndDsgICBzY3NpX2VoX3JlYWR5X2RldnMrMHhjOC8weDViMAomZ3Q7ICAgc2NzaV91bmph
-bV9ob3N0KzB4MmZhLzB4NzAwCiZndDsgICBzY3NpX2Vycm9yX2hhbmRsZXIrMHg0MzQvMHg3MDAK
-Jmd0OyAgIGt0aHJlYWQrMHgyZDEvMHgzYjAKJmd0OyAgIHJldF9mcm9tX2ZvcmsrMHgyYi8weDcw
-CiZndDsgICByZXRfZnJvbV9mb3JrX2FzbSsweDFiLzB4MzAKJmd0OyAgIDwvdGFzaz4KJmd0Owom
-Z3Q7IEFsbG9jYXRlZCBieSB0YXNrIDk4MDoKJmd0OyAgIG1wdDNzYXNfc2NzaWhfcmVzZXRfZG9u
-ZV9oYW5kbGVyKzB4NTc1LzB4N2YwIFttcHQzc2FzXQomZ3Q7ICAgbXB0M3Nhc19iYXNlX2hhcmRf
-cmVzZXRfaGFuZGxlcisweDdhNy8weDlkMCBbbXB0M3Nhc10KJmd0OyAgIG1wdDNzYXNfc2NzaWhf
-aXNzdWVfdG0rMHhhYTEvMHhjMTAgW21wdDNzYXNdCiZndDsgICBzY3NpaF9kZXZfcmVzZXQrMHgz
-NTQvMHg4ZTAgW21wdDNzYXNdCiZndDsgICBzY3NpX2VoX2J1c19kZXZpY2VfcmVzZXQrMHgyNTUv
-MHg3YTAKJmd0OyAgIHNjc2lfZWhfcmVhZHlfZGV2cysweGI2LzB4NWIwCiZndDsgICBzY3NpX3Vu
-amFtX2hvc3QrMHgyZmEvMHg3MDAKJmd0OyAgIHNjc2lfZXJyb3JfaGFuZGxlcisweDQzNC8weDcw
-MAomZ3Q7ICAga3RocmVhZCsweDJkMS8weDNiMAomZ3Q7ICAgcmV0X2Zyb21fZm9yaysweDJiLzB4
-NzAKJmd0OyAgIHJldF9mcm9tX2ZvcmtfYXNtKzB4MWIvMHgzMAomZ3Q7CiZndDsgRnJlZWQgYnkg
-dGFzayA2NjA4Mzg6CiZndDsgICBfX2ttZW1fY2FjaGVfZnJlZSsweDE3NC8weDM3MAomZ3Q7ICAg
-X21wdDNzYXNfZndfd29yaysweDI2OS8weDI1MTAgW21wdDNzYXNdCiZndDsgICBwcm9jZXNzX29u
-ZV93b3JrKzB4NTc4LzB4YzYwCiZndDsgICB3b3JrZXJfdGhyZWFkKzB4NmMwLzB4YzkwCiZndDsg
-ICBrdGhyZWFkKzB4MmQxLzB4M2IwCiZndDsgICByZXRfZnJvbV9mb3JrKzB4MmIvMHg3MAomZ3Q7
-ICAgcmV0X2Zyb21fZm9ya19hc20rMHgxYi8weDMwCiZndDsKJmd0OyBMYXN0IHBvdGVudGlhbGx5
-IHJlbGF0ZWQgd29yayBjcmVhdGlvbjoKJmd0OyAgIGluc2VydF93b3JrKzB4MjQvMHgyMzAKJmd0
-OyAgIF9fcXVldWVfd29yay5wYXJ0LjArMHgzZDIvMHg4NDAKJmd0OyAgIHF1ZXVlX3dvcmtfb24r
-MHg0Yi8weDYwCiZndDsgICBfc2NzaWhfZndfZXZlbnRfYWRkLnBhcnQuMCsweDIwZS8weDJjMCBb
-bXB0M3Nhc10KJmd0OyAgIG1wdDNzYXNfc2NzaWhfcmVzZXRfZG9uZV9oYW5kbGVyKzB4NjRiLzB4
-N2YwIFttcHQzc2FzXQomZ3Q7ICAgbXB0M3Nhc19iYXNlX2hhcmRfcmVzZXRfaGFuZGxlcisweDdh
-Ny8weDlkMCBbbXB0M3Nhc10KJmd0OyAgIG1wdDNzYXNfc2NzaWhfaXNzdWVfdG0rMHhhYTEvMHhj
-MTAgW21wdDNzYXNdCiZndDsgICBzY3NpaF9kZXZfcmVzZXQrMHgzNTQvMHg4ZTAgW21wdDNzYXNd
-CiZndDsgICBzY3NpX2VoX2J1c19kZXZpY2VfcmVzZXQrMHgyNTUvMHg3YTAKJmd0OyAgIHNjc2lf
-ZWhfcmVhZHlfZGV2cysweGI2LzB4NWIwCiZndDsgICBzY3NpX3VuamFtX2hvc3QrMHgyZmEvMHg3
-MDAKJmd0OyAgIHNjc2lfZXJyb3JfaGFuZGxlcisweDQzNC8weDcwMAomZ3Q7ICAga3RocmVhZCsw
-eDJkMS8weDNiMAomZ3Q7ICAgcmV0X2Zyb21fZm9yaysweDJiLzB4NzAKJmd0OyAgIHJldF9mcm9t
-X2ZvcmtfYXNtKzB4MWIvMHgzMAomZ3Q7CiZndDsgU2Vjb25kIHRvIGxhc3QgcG90ZW50aWFsbHkg
-cmVsYXRlZCB3b3JrIGNyZWF0aW9uOgomZ3Q7ICAga2FzYW5fc2F2ZV9zdGFjaysweDIxLzB4NDAK
-Jmd0OyAgIF9fa2FzYW5fcmVjb3JkX2F1eF9zdGFjaysweDk0LzB4YTAKJmd0OyAgIGt2ZnJlZV9j
-YWxsX3JjdSsweDI1LzB4YTIwCiZndDsgICBrZXJuZnNfdW5saW5rX29wZW5fZmlsZSsweDJkZC8w
-eDQxMAomZ3Q7ICAga2VybmZzX2ZvcF9yZWxlYXNlKzB4YzQvMHgzMjAKJmd0OyAgIF9fZnB1dCsw
-eDM1ZS8weGExMAomZ3Q7ICAgX19zZV9zeXNfY2xvc2UrMHg0Zi8weGEwCiZndDsgICBkb19zeXNj
-YWxsXzY0KzB4NTUvMHgxMDAKJmd0OyAgIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdmcmFtZSsw
-eDc4LzB4ZTIKJmd0OwomZ3Q7IEFmdGVyIGNvbW1pdCA5OTFkZjNkZDUxNDQgKCJzY3NpOiBtcHQz
-c2FzOiBGaXggdXNlLWFmdGVyLWZyZWUgd2FybmluZyIpLAomZ3Q7IGEgcmFjZSBjb25kaXRpb24g
-ZXhpc3RzIGluIF9zY3NpaF9md19ldmVudF9jbGVhbnVwX3F1ZXVlKCkuIFdoZW4gUGF0aCBBCiZn
-dDsgZGVxdWV1ZXMgYSBmd19ldmVudCBhbmQgUGF0aCBCIGNvbmN1cnJlbnRseSBwcm9jZXNzZXMg
-dGhlIHNhbWUgZndfZXZlbnQsCiZndDsgdGhlIHJlZmVyZW5jZSBjb3VudCBjYW4gZHJvcCB0byB6
-ZXJvIGJlZm9yZSBjYW5jZWxfd29ya19zeW5jKCkgaXMgY2FsbGVkCiZndDsgaW4gUGF0aCBBLCBs
-ZWFkaW5nIHRvIHVzZS1hZnRlci1mcmVlIHdoZW4gYWNjZXNzaW5nIHRoZSBhbHJlYWR5IGZyZWVk
-CiZndDsgZndfZXZlbnQgc3RydWN0dXJlLgomZ3Q7CiZndDsgRml4IHRoaXMgYnk6CiZndDsgMS4g
-UHJvdGVjdGluZyBhbGwgYWNjZXNzZXMgdG8gaW9jLSZndDtjdXJyZW50X2V2ZW50IHdpdGggaW9j
-LSZndDtmd19ldmVudF9sb2NrCiZndDsgMi4gQWRkaW5nIHJlZmVyZW5jZSBjb3VudGluZyB3aGVu
-IGFjY2Vzc2luZyBjdXJyZW50X2V2ZW50CiZndDsgMy4gTW92aW5nIHRoZSBmd19ldmVudF93b3Jr
-X3B1dCgpIGNhbGwgZnJvbSBkZXF1ZXVlX25leHRfZndfZXZlbnQoKSB0bwomZ3Q7ICAgICB0aGUg
-Y2FsbGVyLCBlbnN1cmluZyBmd19ldmVudCByZW1haW5zIHZhbGlkIGR1cmluZyBjYW5jZWxfd29y
-a19zeW5jKCkKJmd0OwomZ3Q7IEZpeGVzOiA5OTFkZjNkZDUxNDQgKCJzY3NpOiBtcHQzc2FzOiBG
-aXggdXNlLWFmdGVyLWZyZWUgd2FybmluZyIpCiZndDsgU2lnbmVkLW9mZi1ieTogWmhlbmcgUWl4
-aW5nIDx6aGVuZ3FpeGluZ0BodWF3ZWkuY29tPgomZ3Q7IC0tLQomZ3Q7ICAgZHJpdmVycy9zY3Np
-L21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jIHwgNDAgKysrKysrKysrKysrKysrKysrKysrLS0tLS0t
-LQomZ3Q7ICAgMSBmaWxlIGNoYW5nZWQsIDMxIGluc2VydGlvbnMoKyksIDkgZGVsZXRpb25zKC0p
-CiZndDsKJmd0OyBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3Np
-aC5jIGIvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jCiZndDsgaW5kZXggNTA4
-ODYxZTg4ZDlmLi5hMTc5NjNjZTNmOTMgMTAwNjQ0CiZndDsgLS0tIGEvZHJpdmVycy9zY3NpL21w
-dDNzYXMvbXB0M3Nhc19zY3NpaC5jCiZndDsgKysrIGIvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0
-M3Nhc19zY3NpaC5jCiZndDsgQEAgLTM2NTksNyArMzY1OSw2IEBAIHN0YXRpYyBzdHJ1Y3QgZndf
-ZXZlbnRfd29yayAqZGVxdWV1ZV9uZXh0X2Z3X2V2ZW50KHN0cnVjdCBNUFQzU0FTX0FEQVBURVIg
-KmlvYykKJmd0OyAgIAkJZndfZXZlbnQgPSBsaXN0X2ZpcnN0X2VudHJ5KCZhbXA7aW9jLSZndDtm
-d19ldmVudF9saXN0LAomZ3Q7ICAgCQkJCXN0cnVjdCBmd19ldmVudF93b3JrLCBsaXN0KTsKJmd0
-OyAgIAkJbGlzdF9kZWxfaW5pdCgmYW1wO2Z3X2V2ZW50LSZndDtsaXN0KTsKJmd0OyAtCQlmd19l
-dmVudF93b3JrX3B1dChmd19ldmVudCk7CiZndDsgICAJfQomZ3Q7ICAgCXNwaW5fdW5sb2NrX2ly
-cXJlc3RvcmUoJmFtcDtpb2MtJmd0O2Z3X2V2ZW50X2xvY2ssIGZsYWdzKTsKJmd0OyAgIAomZ3Q7
-IEBAIC0zNjc5LDEwICszNjc4LDE1IEBAIHN0YXRpYyB2b2lkCiZndDsgICBfc2NzaWhfZndfZXZl
-bnRfY2xlYW51cF9xdWV1ZShzdHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MpCiZndDsgICB7CiZn
-dDsgICAJc3RydWN0IGZ3X2V2ZW50X3dvcmsgKmZ3X2V2ZW50OwomZ3Q7ICsJdW5zaWduZWQgbG9u
-ZyBmbGFnczsKJmd0OyAgIAomZ3Q7ICsJc3Bpbl9sb2NrX2lycXNhdmUoJmFtcDtpb2MtJmd0O2Z3
-X2V2ZW50X2xvY2ssIGZsYWdzKTsKJmd0OyAgIAlpZiAoKGxpc3RfZW1wdHkoJmFtcDtpb2MtJmd0
-O2Z3X2V2ZW50X2xpc3QpICZhbXA7JmFtcDsgIWlvYy0mZ3Q7Y3VycmVudF9ldmVudCkgfHwKJmd0
-OyAtCSAgICAhaW9jLSZndDtmaXJtd2FyZV9ldmVudF90aHJlYWQpCiZndDsgKwkgICAgIWlvYy0m
-Z3Q7ZmlybXdhcmVfZXZlbnRfdGhyZWFkKSB7CiZndDsgKwkJc3Bpbl91bmxvY2tfaXJxcmVzdG9y
-ZSgmYW1wO2lvYy0mZ3Q7ZndfZXZlbnRfbG9jaywgZmxhZ3MpOwomZ3Q7ICAgCQlyZXR1cm47CiZn
-dDsgKwl9CiZndDsgKwomZ3Q7ICAgCS8qCiZndDsgICAJICogU2V0IGN1cnJlbnQgcnVubmluZyBl
-dmVudCBhcyBpZ25vcmUsIHNvIHRoYXQKJmd0OyAgIAkgKiBjdXJyZW50IHJ1bm5pbmcgZXZlbnQg
-d2lsbCBleGl0IHF1aWNrbHkuCiZndDsgQEAgLTM2OTEsMTAgKzM2OTUsMjEgQEAgX3Njc2loX2Z3
-X2V2ZW50X2NsZWFudXBfcXVldWUoc3RydWN0IE1QVDNTQVNfQURBUFRFUiAqaW9jKQomZ3Q7ICAg
-CSAqLwomZ3Q7ICAgCWlmIChpb2MtJmd0O3Nob3N0X3JlY292ZXJ5ICZhbXA7JmFtcDsgaW9jLSZn
-dDtjdXJyZW50X2V2ZW50KQomZ3Q7ICAgCQlpb2MtJmd0O2N1cnJlbnRfZXZlbnQtJmd0O2lnbm9y
-ZSA9IDE7CiZndDsgKwlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhbXA7aW9jLSZndDtmd19ldmVu
-dF9sb2NrLCBmbGFncyk7CiZndDsgICAKJmd0OyAgIAlpb2MtJmd0O2Z3X2V2ZW50c19jbGVhbnVw
-ID0gMTsKJmd0OyAtCXdoaWxlICgoZndfZXZlbnQgPSBkZXF1ZXVlX25leHRfZndfZXZlbnQoaW9j
-KSkgfHwKJmd0OyAtCSAgICAgKGZ3X2V2ZW50ID0gaW9jLSZndDtjdXJyZW50X2V2ZW50KSkgewom
-Z3Q7ICsJd2hpbGUgKHRydWUpIHsKJmd0OyArCQlmd19ldmVudCA9IGRlcXVldWVfbmV4dF9md19l
-dmVudChpb2MpOwomZ3Q7ICsKJmd0OyArCQlzcGluX2xvY2tfaXJxc2F2ZSgmYW1wO2lvYy0mZ3Q7
-ZndfZXZlbnRfbG9jaywgZmxhZ3MpOwomZ3Q7ICsJCWlmICghZndfZXZlbnQpIHsKJmd0OyArCQkJ
-ZndfZXZlbnQgPSBpb2MtJmd0O2N1cnJlbnRfZXZlbnQ7CiZndDsgKwkJCWlmICghZndfZXZlbnQp
-IHsKJmd0OyArCQkJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmFtcDtpb2MtJmd0O2Z3X2V2ZW50
-X2xvY2ssIGZsYWdzKTsKJmd0OyArCQkJCWJyZWFrOwomZ3Q7ICsJCQl9CiZndDsgKwkJCWZ3X2V2
-ZW50X3dvcmtfZ2V0KGZ3X2V2ZW50KTsKJmd0OyArCQl9CiZndDsgICAKJmd0OyAgIAkJLyoKJmd0
-OyAgIAkJICogRG9uJ3QgY2FsbCBjYW5jZWxfd29ya19zeW5jKCkgZm9yIGN1cnJlbnRfZXZlbnQK
-Jmd0OyBAQCAtMzcxNCw4ICszNzI5LDExIEBAIF9zY3NpaF9md19ldmVudF9jbGVhbnVwX3F1ZXVl
-KHN0cnVjdCBNUFQzU0FTX0FEQVBURVIgKmlvYykKJmd0OyAgIAkJICAgIGlvYy0mZ3Q7Y3VycmVu
-dF9ldmVudC0mZ3Q7ZXZlbnQgIT0KJmd0OyAgIAkJICAgIE1QVDNTQVNfUkVNT1ZFX1VOUkVTUE9O
-RElOR19ERVZJQ0VTKSB7CiZndDsgICAJCQlpb2MtJmd0O2N1cnJlbnRfZXZlbnQgPSBOVUxMOwom
-Z3Q7ICsJCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhbXA7aW9jLSZndDtmd19ldmVudF9sb2Nr
-LCBmbGFncyk7CiZndDsgKwkJCWZ3X2V2ZW50X3dvcmtfcHV0KGZ3X2V2ZW50KTsKJmd0OyAgIAkJ
-CWNvbnRpbnVlOwomZ3Q7ICAgCQl9CiZndDsgKwkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYW1w
-O2lvYy0mZ3Q7ZndfZXZlbnRfbG9jaywgZmxhZ3MpOwomZ3Q7ICAgCiZndDsgICAJCS8qCiZndDsg
-ICAJCSAqIERyaXZlciBoYXMgdG8gY2xlYXIgaW9jLSZndDtzdGFydF9zY2FuIGZsYWcgd2hlbgom
-Z3Q7IEBAIC0zNzQxLDYgKzM3NTksNyBAQCBfc2NzaWhfZndfZXZlbnRfY2xlYW51cF9xdWV1ZShz
-dHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MpCiZndDsgICAJCWlmIChjYW5jZWxfd29ya19zeW5j
-KCZhbXA7ZndfZXZlbnQtJmd0O3dvcmspKQomZ3Q7ICAgCQkJZndfZXZlbnRfd29ya19wdXQoZndf
-ZXZlbnQpOwomZ3Q7ICAgCiZndDsgKwkJZndfZXZlbnRfd29ya19wdXQoZndfZXZlbnQpOwomZ3Q7
-ICAgCX0KJmd0OyAgIAlpb2MtJmd0O2Z3X2V2ZW50c19jbGVhbnVwID0gMDsKJmd0OyAgIH0KJmd0
-OyBAQCAtMTA2OTAsMTUgKzEwNzA5LDE2IEBAIG1wdDNzYXNfc2NzaWhfcmVzZXRfZG9uZV9oYW5k
-bGVyKHN0cnVjdCBNUFQzU0FTX0FEQVBURVIgKmlvYykKJmd0OyAgIHN0YXRpYyB2b2lkCiZndDsg
-ICBfbXB0M3Nhc19md193b3JrKHN0cnVjdCBNUFQzU0FTX0FEQVBURVIgKmlvYywgc3RydWN0IGZ3
-X2V2ZW50X3dvcmsgKmZ3X2V2ZW50KQomZ3Q7ICAgewomZ3Q7ICsJdW5zaWduZWQgbG9uZyBmbGFn
-czsKJmd0OyArCiZndDsgKwlzcGluX2xvY2tfaXJxc2F2ZSgmYW1wO2lvYy0mZ3Q7ZndfZXZlbnRf
-bG9jaywgZmxhZ3MpOwomZ3Q7ICAgCWlvYy0mZ3Q7Y3VycmVudF9ldmVudCA9IGZ3X2V2ZW50Owom
-Z3Q7ICsJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYW1wO2lvYy0mZ3Q7ZndfZXZlbnRfbG9jaywg
-ZmxhZ3MpOwomZ3Q7ICAgCV9zY3NpaF9md19ldmVudF9kZWxfZnJvbV9saXN0KGlvYywgZndfZXZl
-bnQpOwomZ3Q7ICAgCiZndDsgICAJLyogdGhlIHF1ZXVlIGlzIGJlaW5nIGZsdXNoZWQgc28gaWdu
-b3JlIHRoaXMgZXZlbnQgKi8KJmd0OyAtCWlmIChpb2MtJmd0O3JlbW92ZV9ob3N0IHx8IGlvYy0m
-Z3Q7cGNpX2Vycm9yX3JlY292ZXJ5KSB7CiZndDsgLQkJZndfZXZlbnRfd29ya19wdXQoZndfZXZl
-bnQpOwomZ3Q7IC0JCWlvYy0mZ3Q7Y3VycmVudF9ldmVudCA9IE5VTEw7CiZndDsgLQkJcmV0dXJu
-OwomZ3Q7IC0JfQomZ3Q7ICsJaWYgKGlvYy0mZ3Q7cmVtb3ZlX2hvc3QgfHwgaW9jLSZndDtwY2lf
-ZXJyb3JfcmVjb3ZlcnkpCiZndDsgKwkJZ290byBvdXQ7CiZndDsgICAKJmd0OyAgIAlzd2l0Y2gg
-KGZ3X2V2ZW50LSZndDtldmVudCkgewomZ3Q7ICAgCWNhc2UgTVBUM1NBU19QUk9DRVNTX1RSSUdH
-RVJfRElBRzoKJmd0OyBAQCAtMTA3OTQsOCArMTA4MTQsMTAgQEAgX21wdDNzYXNfZndfd29yayhz
-dHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MsIHN0cnVjdCBmd19ldmVudF93b3JrICpmd19ldmVu
-dCkKJmd0OyAgIAkJcmV0dXJuOwomZ3Q7ICAgCX0KJmd0OyAgIG91dDoKJmd0OyArCXNwaW5fbG9j
-a19pcnFzYXZlKCZhbXA7aW9jLSZndDtmd19ldmVudF9sb2NrLCBmbGFncyk7CiZndDsgICAJZndf
-ZXZlbnRfd29ya19wdXQoZndfZXZlbnQpOwomZ3Q7ICAgCWlvYy0mZ3Q7Y3VycmVudF9ldmVudCA9
-IE5VTEw7CiZndDsgKwlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhbXA7aW9jLSZndDtmd19ldmVu
-dF9sb2NrLCBmbGFncyk7CiZndDsgICB9CiZndDsgICAKJmd0OyAgIC8qKgo8L3poZW5ncWl4aW5n
-QGh1YXdlaS5jb20+PC96aGVuZ3FpeGluZ0BodWF3ZWkuY29tPg==
+From: Mario Limonciello <mario.limonciello@amd.com>
+
+A variety of issues both in function and in power consumption have been
+raised as a result of devices not being put into a low power state when
+the system is powered off.
+
+There have been some localized changes[1] to PCI core to help these issues,
+but they have had various downsides.
+
+This series instead tries to use the S4 flow when the system is being
+powered off.  This lines up the behavior with what other operating systems
+do as well.  If for some reason that fails or is not supported, unwind and
+do the previous S5 flow that will wake all devices and run their shutdown()
+callbacks.
+
+Previous submissions [1]:
+Link: https://lore.kernel.org/linux-pm/CAJZ5v0hrKEJa8Ad7iiAvQ3d_0ysVhzZcXSYc5kkL=6vtseF+bg@mail.gmail.com/T/#m91e4eae868a7405ae579e89b135085f4906225d2
+Link: https://lore.kernel.org/linux-pci/20250506041934.1409302-1-superm1@kernel.org/
+Link: https://lore.kernel.org/linux-pci/20231213182656.6165-1-mario.limonciello@amd.com/ (v1)
+Link: https://lore.kernel.org/linux-pm/20250514193406.3998101-1-superm1@kernel.org/ (v2)
+
+Mario Limonciello (5):
+  PM: Use hibernate flows for system power off
+  PCI: Put PCIe ports with downstream devices into D3 at hibernate
+  drm/amd: Avoid evicting resources at S5
+  scsi: Add PM_EVENT_POWEROFF into suspend callbacks
+  usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
+
+ drivers/base/power/main.c                  |  7 ++
+ drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  4 +
+ drivers/pci/pci-driver.c                   | 92 ++++++++++++++--------
+ drivers/scsi/mesh.c                        |  1 +
+ drivers/scsi/stex.c                        |  1 +
+ drivers/usb/host/sl811-hcd.c               |  1 +
+ include/linux/pm.h                         |  3 +
+ include/trace/events/power.h               |  3 +-
+ kernel/reboot.c                            |  6 ++
+ 9 files changed, 84 insertions(+), 34 deletions(-)
+
+-- 
+2.43.0
+
