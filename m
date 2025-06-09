@@ -1,164 +1,174 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABD4718024;
-	Mon,  9 Jun 2025 08:30:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 943722609DD;
+	Mon,  9 Jun 2025 12:24:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749457845; cv=none; b=QeudpX3drshd/wihWg6ubQ1l+qRoFjQEzFY2bADGdl1A7nmGMqqH82sqCAuFgqeEsGMmP+N9vJM1i2mV4GRDhZ/vOk+Si6OZEN6gMwUMxhMVpyTKP5WK7/nqtV4Bv+RzncJTFJSIoAy0ZNdegCNHu76H71hcO+lWKyvhKjVy61k=
+	t=1749471880; cv=none; b=dD8+3Zf2RsvOQCJ7sJIAiMHCyQ3AwMiRseKGZWaCUWhshGB3wxOb2ySDvXuHOYauXpRdJ52iVW4enHu9U3Y+/pzteX/oUVLwWgy0ZPXihlmmi4fAKc61OyNfugqHKJbd+kKD4MazFCy2EdUXxRxOuOpsCKiENhzHkoXMQZPNOfk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749457845; c=relaxed/simple;
-	bh=ensT7p+N/ywee7KLRyYcOmYZaATuuZJ+u1tIIRo0PZs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=lx3d/pxYLx5RwHK6adrhB34k8lzmmj1zcwLECrbRGerL4YwAskkuP9+KwzM8+geIPMGpuojW2jZiH3EudI+vvoegXJkYh9Kh0uR7pk/cFtQNyU+y5cLzGhmbpZFd5RRYbv2CBuIYMsfNzv4rafIA4CHQUi6dCOC9i2bnli1vShg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=edm/kAxs; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1749471880; c=relaxed/simple;
+	bh=Hahc+n3Jf7KOUvzlwOx91gFQ+x2DTk5MtNBwOjpizsI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lzdVeSFLL5neLFxQVuLUEdom8jrRX4cIU9TyiS+CJSK8idSG/PywpGncFORdKdxzTmeInOJiKJazBDYDPxb44CNYNWsd1gKYySIgolFnxv9sjXR/L+2nWGjzgH0flS8vmXKs2TPh6rYTvm/0xiRU1UOaJvKI8poAjF776XA0WR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=spnJSzm7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="edm/kAxs"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1749457844; x=1780993844;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ensT7p+N/ywee7KLRyYcOmYZaATuuZJ+u1tIIRo0PZs=;
-  b=edm/kAxssvUiFX2AcN+EAlNgiGMoSEqPkcBZtMlOhpUwUXLrUuj7mzzw
-   COAFDJK46yujl/+lQuGZo7lQhVdJRENo0wf5r8lHxQTHi83ACMsmJQTG1
-   JR0psujnKpCBT3TRqoVCFZIZ5p1uaDPt8EdqVF1q4V0RjA+gVAqAMOV4D
-   rPhfLUU7oZRnzX6m/nUwHM0byacBMDnQEKb4a/NVHZCtYDNzzx/hf4Gpw
-   +pJZ7AiWgT7rKZV9p+dJDcTDs/rYQekVeC/Y3EahooJEd4ofKpQznAOYU
-   niSDK5EDgQiiZdrB5Q0pr8DfpbCwNDchmYge14oYb+L/ZMmwRoQS11KRY
-   Q==;
-X-CSE-ConnectionGUID: H0y8W1G6RayvBnUH528R/w==
-X-CSE-MsgGUID: 2CJuj0fVT/+dmO9qPYi/Rw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11458"; a="76921921"
-X-IronPort-AV: E=Sophos;i="6.16,222,1744095600"; 
-   d="scan'208";a="76921921"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Jun 2025 01:30:43 -0700
-X-CSE-ConnectionGUID: 5Pkjg0zRSoW7rgRyVlx9Gg==
-X-CSE-MsgGUID: h31gkaVcRXapdesgq+80fQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.16,222,1744095600"; 
-   d="scan'208";a="147382809"
-Received: from lkp-server01.sh.intel.com (HELO e8142ee1dce2) ([10.239.97.150])
-  by fmviesa009.fm.intel.com with ESMTP; 09 Jun 2025 01:30:38 -0700
-Received: from kbuild by e8142ee1dce2 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uOXts-0006t3-0L;
-	Mon, 09 Jun 2025 08:30:36 +0000
-Date: Mon, 9 Jun 2025 16:29:45 +0800
-From: kernel test robot <lkp@intel.com>
-To: Mario Limonciello <superm1@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	amd-gfx@lists.freedesktop.org,
-	"(open list:HIBERNATION (aka Software Suspend, aka swsusp))" <linux-pm@vger.kernel.org>,
-	linux-pci@vger.kernel.org, linux-kernel@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	dri-devel@lists.freedesktop.org, linux-scsi@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	Mario Limonciello <mario.limonciello@amd.com>,
-	AceLan Kao <acelan.kao@canonical.com>,
-	Kai-Heng Feng <kaihengf@nvidia.com>,
-	Mark Pearson <mpearson-lenovo@squebb.ca>,
-	Denis Benato <benato.denis96@gmail.com>,
-	Merthan =?utf-8?Q?Karaka=C5=9F?= <m3rthn.k@gmail.com>
-Subject: Re: [PATCH v3 2/5] PCI: Put PCIe ports with downstream devices into
- D3 at hibernate
-Message-ID: <202506091639.HaxwbWtd-lkp@intel.com>
-References: <20250609024619.407257-3-superm1@kernel.org>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="spnJSzm7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E574C4CEEB;
+	Mon,  9 Jun 2025 12:24:37 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749471880;
+	bh=Hahc+n3Jf7KOUvzlwOx91gFQ+x2DTk5MtNBwOjpizsI=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=spnJSzm7W3rfBeE0jvqI/fgvcxYQk9GJ8ZI178bwuR0bl2DV9J9CRx/sHT+fodmpY
+	 2uzgIS6YbvggxigiaG6ZMI21xz6S4kLttgdmD0yGoJ30Nyxm/GmzOwb4n9iolrUzb9
+	 x5M8IHCizv8cnfVmKVFqH192WQMe9WR1wGWc4A6HShAFggqLt1TKZkPkj5xy3eGVhR
+	 sWd+6KyWIbJM1eww90VNwXqynL/bSUJ7m9eB/+hYvSkg2R7bLjTRU6LZBFnWbD+TLN
+	 3inGFcuD+wgdlPAtUEDQ3+bnOc7kdGiNBl1VfxFwGJx9k8w0iKv1yuSKhVqYtYXUu0
+	 JmrutdnFowUIA==
+Message-ID: <54e0a717-e9fc-4534-bc27-8bc1ee745048@kernel.org>
+Date: Mon, 9 Jun 2025 21:24:36 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250609024619.407257-3-superm1@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v7 08/19] scsi: detect support for command duration limits
+To: Friedrich Weber <f.weber@proxmox.com>,
+ Mira Limbeck <m.limbeck@proxmox.com>, Niklas Cassel <nks@flawful.org>,
+ Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
+ Kashyap Desai <kashyap.desai@broadcom.com>,
+ Sumit Saxena <sumit.saxena@broadcom.com>,
+ Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
+ Chandrakanth patil <chandrakanth.patil@broadcom.com>,
+ Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
+ Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+ megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com
+Cc: Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>,
+ Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
+ linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
+ Niklas Cassel <niklas.cassel@wdc.com>
+References: <20230511011356.227789-1-nks@flawful.org>
+ <20230511011356.227789-9-nks@flawful.org>
+ <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
+ <6fb8499a-b5bc-4d41-bf37-32ebdea43e9a@kernel.org>
+ <2e7d6a7e-4a82-4da5-ab39-267a7400ca49@proxmox.com>
+ <b1d9e928-a7f3-4555-9c0a-5b83ba87a698@kernel.org>
+ <a927b51b-1b34-4d4f-9447-d8c559127707@proxmox.com>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <a927b51b-1b34-4d4f-9447-d8c559127707@proxmox.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Hi Mario,
+On 6/3/25 20:28, Friedrich Weber wrote:
+>>> They provided controller information via `sas3ircu` and `storcli`:
+>>>
+>>> sas3ircu:
+>>>
+>>>   Controller type                         : SAS3008
+>>>   BIOS version                            : 8.37.00.00
+>>>   Firmware version                        : 16.00.16.00
+>>
+>> Is this the latest available FW for this HBA ? (see below)
+> 
+> It seems 16.00.16.00 is even newer than the latest version available on
+> the Broadcom website, which is a bit strange -- I only found [1] there
+> which has an older 16.00.14.00 (3008_FW_PH16.00.14.00.rar).
 
-kernel test robot noticed the following build errors:
+So this is an old/now EOL 9300 series HBA, right ? Or is this a 3008 controller
+chip as part of the server motherboard (e.g. a supermicro HBA ?)
+Looking at the Broadcom support page for legacy products, the latest FW version
+seems to be 16.00.10.00.
 
-[auto build test ERROR on rafael-pm/linux-next]
-[also build test ERROR on rafael-pm/bleeding-edge mkp-scsi/for-next jejb-scsi/for-next linus/master v6.16-rc1 next-20250606]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+>>> storcli:
+>>>
+>>> Firmware Package Build = 24.18.0-0021
+>>> Firmware Version = 4.670.00-6500
+>>> CPLD Version = 26515-00A
+>>> Bios Version = 6.34.01.0_4.19.08.00_0x06160200
+>>> HII Version = 03.23.06.00
+>>> Ctrl-R Version = 5.18-0400
+>>> Preboot CLI Version = 01.07-05:#%0000
+>>> NVDATA Version = 3.1611.00-0005
+>>> Boot Block Version = 3.07.00.00-0003
+>>> Driver Name = megaraid_sas
+>>> Driver Version = 07.727.03.00-rc1
+>>
+>> Unfortunately, I do not have any megaraid model so I cannot test/recreate. I
+>> only have mpt3sas (9300, 9400 and 9500 series HBAs) and mpi3mr models (9600 HBA
+>> series).
+> 
+> We just realized this is actually the firmware information for a
+> different unrelated controller on the same host (a LSI MegaRAID SAS-3
+> 3108 using the megaraid_sas driver). But the megaraid_sas one is not
+> used in our tests, so please ignore the storcli output we provided.
+> Sorry for the confusion.
+> 
+> The controller we're testing with is the SAS3008 I mentioned initially,
+> with firmware version 16.00.16.00 as reported by sas3ircu above.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Mario-Limonciello/PM-Use-hibernate-flows-for-system-power-off/20250609-105658
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git linux-next
-patch link:    https://lore.kernel.org/r/20250609024619.407257-3-superm1%40kernel.org
-patch subject: [PATCH v3 2/5] PCI: Put PCIe ports with downstream devices into D3 at hibernate
-config: i386-buildonly-randconfig-003-20250609 (https://download.01.org/0day-ci/archive/20250609/202506091639.HaxwbWtd-lkp@intel.com/config)
-compiler: clang version 20.1.2 (https://github.com/llvm/llvm-project 58df0ef89dd64126512e4ee27b4ac3fd8ddf6247)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250609/202506091639.HaxwbWtd-lkp@intel.com/reproduce)
+I do not have this FW... Not sure what the HBA itself is too. I only have some
+Broadcom 9300-XX HBAs that have the 3008 controller.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202506091639.HaxwbWtd-lkp@intel.com/
+> FWIW, the user reports they have also seen the same issue with a
+> SAS3-9500-8e Tri-mode HBA.
 
-All errors (new ones prefixed by >>):
+This one had a FW update last month or so. So checking the latest is required.
 
->> drivers/pci/pci-driver.c:1221:7: error: call to undeclared function 'pci_pm_set_prepare_bus_pm'; ISO C99 and later do not support implicit function declarations [-Wimplicit-function-declaration]
-    1221 |         if (!pci_pm_set_prepare_bus_pm(pci_dev))
-         |              ^
-   1 error generated.
+>>> And the disk information from `smartctl --xall`
+>>>
+>>> 20T:
+>>>
+>>> === START OF INFORMATION SECTION ===
+>>> Vendor:               WDC
+>>> Product:              WUH722020BL5204
+
+...
+
+>>> Product:              WUH721818AL5204
+
+I have these. I will try to check. But again, I seriously doubt this has
+anything to do with the drives since these do not support CDL, nor do the HBAs
+you listed. None of then support CDL so calling scsi_report_opcode() for
+checking CDL, we should always see the HBA SAT return "CDL not supported".
 
 
-vim +/pci_pm_set_prepare_bus_pm +1221 drivers/pci/pci-driver.c
+>> I do not think that the drives are relevant for this issue. How the HBA react
+>> to a command error from the drive resulting from the HBA command translation
+>> likely is the issue.
+> 
+> I see, but it is certainly strange that 18T vs 20T drives do seem to
+> make a difference (hotplug works with 18T and doesn't work with 20T).
 
-  1195	
-  1196	static int pci_pm_poweroff_noirq(struct device *dev)
-  1197	{
-  1198		struct pci_dev *pci_dev = to_pci_dev(dev);
-  1199		const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
-  1200	
-  1201		if (dev_pm_skip_suspend(dev))
-  1202			return 0;
-  1203	
-  1204		if (pci_has_legacy_pm_support(pci_dev))
-  1205			return pci_legacy_suspend_late(dev);
-  1206	
-  1207		if (!pm) {
-  1208			pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-  1209			return 0;
-  1210		}
-  1211	
-  1212		if (pm->poweroff_noirq) {
-  1213			int error;
-  1214	
-  1215			error = pm->poweroff_noirq(dev);
-  1216			suspend_report_result(dev, pm->poweroff_noirq, error);
-  1217			if (error)
-  1218				return error;
-  1219		}
-  1220	
-> 1221		if (!pci_pm_set_prepare_bus_pm(pci_dev))
-  1222			goto Fixup;
-  1223	
-  1224		/*
-  1225		 * The reason for doing this here is the same as for the analogous code
-  1226		 * in pci_pm_suspend_noirq().
-  1227		 */
-  1228		if (pci_dev->class == PCI_CLASS_SERIAL_USB_EHCI)
-  1229			pci_write_config_word(pci_dev, PCI_COMMAND, 0);
-  1230	
-  1231	Fixup:
-  1232		pci_fixup_device(pci_fixup_suspend_late, pci_dev);
-  1233	
-  1234		return 0;
-  1235	}
-  1236	
+Probably a timing difference since these drives are not the same generation.
+They have different timing on scan.
+
+>>> If you need any additional information, please let us know!
+>>
+>> Adding the Broadcom folks to this thread, since as suspected, this seems to be
+>> an HBA issue. I strongly suspect that it relates to a recent very similar issue
+>> I have seen with the mpi3mr driver and a 9600 Broadcom HBA: any hotplug of a
+>> drive would completely crash the HBA and a full power cycle was needed to
+>> recover. A simple reboot would not be sufficient. I think the latest HBA FW
+>> version fixes that problem.
+>>
+>> Broadcom team,
+>>
+>> Any comment ?
+
+Broadcom ? Would you care to comment ?
+
+At this point, I have no idea what is going on. My hunch is that it is the HBA
+SAT misbehaving. But that is only a hunch. To prove it, we would likely need a
+bus trace and have Broadcom look at HBA logs (which can be extracted using
+storecli). All of this likely means involving the technical support of the vendors.
+
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Damien Le Moal
+Western Digital Research
