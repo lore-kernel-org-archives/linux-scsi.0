@@ -1,62 +1,95 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f54.google.com (mail-qv1-f54.google.com [209.85.219.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0D5610D
-	for <linux-scsi@vger.kernel.org>; Mon,  9 Jun 2025 05:50:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 710131C1F22
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Jun 2025 07:09:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749448206; cv=none; b=QHsGDDTFvCI5KOZW0oCUR9vXr5bL4/Y/PyuDMt2PiWxE0BCetL75RTIhjav0t8kZ+R8/UbW1tZOJU1mVVg+fboOQl3OogX4WZ3HTqfUG2oZig6dJ4/XPu/TerQDBnUxZ4lTzLt3auoHcqmt9EdQDpkI1BQ7xfh+DayMhCBKeRAM=
+	t=1749452987; cv=none; b=YwE1SW1lTAs2jZTwX7tQZK+0IJwZy5SrSc8R4HToct2UTBXwlNkilGND6EZAckh4w27i3dXQPm1hgIEOWC6BBWsap6I6iAOP+eSakHAAq7y6B5h9Eg89byXjm7+a4LxrQze30UY2erh3KNCJmZvlyXaRMXv+4+IeXr7xM+ivXzs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749448206; c=relaxed/simple;
-	bh=YpAglpdL3J3egNt22NaK9wLT2khpL3E3e+r3saEVViY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dwHckefX5nBoDWJn5hzqFh+2136MrWhdXgkxXkUIgWvVo/Pn4lF/25EFL28LtlkkSLs8z8c3FkekFNnPkI5NDqpt1m4Xdk0nWdX53wd3o8mR522yBbb+DZnJ6TjSn8yDd+1/HFU/ktFiLpwh6xeA7G0pmqaXWzTBrmOVE78ftu4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IhaG7VGs; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1749452987; c=relaxed/simple;
+	bh=FSDpt+soB+kJAc3aAHvBnNWXf23kg39FCCz/ToPg2RU=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=t89AhoYDsPnwM1N4aUtWWNypMA43T6gokWP0Bn6mNTkPXFIR753TzxlHFcJio0viCJMkCiBCa31N0xHk7GFCRqTVk+ry/QNZG8X8PynXAs8x4H8V+l/FKlhXIw902J+3TlXr4TIa826IG56VJcaMuxUOoxrOn1CM3mJAqlSuj74=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lZuTXxHk; arc=none smtp.client-ip=209.85.219.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IhaG7VGs"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=YpAglpdL3J3egNt22NaK9wLT2khpL3E3e+r3saEVViY=; b=IhaG7VGstOnwZFdTJOcCbQFp5s
-	pYagDbiUU/jApnmBdZNsMW953asC2+vkKdJVEMDePJ1lvjxY2QWE5rkEm/ocIn46AKyBVCDus2H10
-	4bQaALD0Lk1G5SlSm+YMI51Blxu/H1xoDLh5UPbuKn2LekSZBgryKYbO2JsYHz9H34RK0WOKhg6gV
-	RzBGvr8SS4ZrtIGnD41vObW5gxr+MBKjK3YgZw2YNr99v8a9B7v6yuRquczb/psz/1RK6TeD8LByz
-	Nm8ZLKBULisvH0cbKh5zzieCcLDW2vrg8CgpS5em59lmzR2SJmn3DYePo8j5dDCk2ec98ZKG5Vwa0
-	Ebahw/Hw==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uOVOV-00000003Tvd-4Aq7;
-	Mon, 09 Jun 2025 05:50:03 +0000
-Date: Sun, 8 Jun 2025 22:50:03 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	Sathya Prakash <sathya.prakash@broadcom.com>,
-	Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
-	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com,
-	laoar.shao@gmail.com
-Subject: Re: [PATCH 0/2] Improve ATA NCQ command error in mpt3sas and mpi3mr
-Message-ID: <aEZ2C93sEiFRzGEE@infradead.org>
-References: <20250606052747.742998-1-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lZuTXxHk"
+Received: by mail-qv1-f54.google.com with SMTP id 6a1803df08f44-6fabb948e5aso42871836d6.1
+        for <linux-scsi@vger.kernel.org>; Mon, 09 Jun 2025 00:09:46 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1749452985; x=1750057785; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=FSDpt+soB+kJAc3aAHvBnNWXf23kg39FCCz/ToPg2RU=;
+        b=lZuTXxHkyfMIOLwC9MswwrLYDWo0d5S4KKTK7B0p/NuQEfy9sfbKFYwYdM630GoGNM
+         TFnVRDwBX2mqSrYe5S1Oej6Fn8ZfszxGF4X/PY/ETblg6Kv6NlY/43xbXRIfrikqxg/f
+         vxtJ0Z43ldTtbDZ+mSAzJCgAhyA+Kl5H+0nfPiSPftZB4CXTlR+SlSL1MLwIdHnIOS1t
+         HTbGMuHAhLIkLDxphpntTVJVCHg7vx8Rj+swbWeNRrG+EyshcYsOfzyCmVD0+V2zkuoa
+         piHXtS6opnqYeZsgu2G0KJ8gpE8dnZ3CWs10FFtJJbATolXy9sEJ+B1Zc9r6c930g++u
+         rtpA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749452985; x=1750057785;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=FSDpt+soB+kJAc3aAHvBnNWXf23kg39FCCz/ToPg2RU=;
+        b=GPfXdsWK9Tw2V/PoxB5WjDWmrOfPmrY/Ias5hDhLUYfYIe4M/qi4Pvj6/BuFoJmv7Y
+         FSGIMzrrTJlajOZ9ErmuMKVYy30auY6iJtRdFKC6ZZ15Yeyp2eTH+R5W9JfxSWrSWz2C
+         8KwaHfU+Nw9DSTYfJJjD8O01GSeirDxwjzJvPVVMmrpWBEwtK6MF1yaZkmrCMdmn0qUH
+         FpMWdKwA95/2ZZNUKXFrpKrS6l6c3Sh5CBdHJTKeKTYKsJLv3JvjCW9S/wjCykIodYkq
+         B79+A1SY5nj7fq//xlMaV3oTsqsDkKvNZwP4GY60wQrgZsHXH37rKMTW296dD9ndTLxm
+         lntg==
+X-Forwarded-Encrypted: i=1; AJvYcCW4GZeFhcoYtuRDfyzRQMeRG1bB+Q6Pzk3vM7dh6WADAux72GmT8Tl7J1amPjdJHNewhjk5V7tPeqlI@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyl+bMLJcTr7wOTMde8VhGGlXDF1E30qU60fevGfU9FyN00oSl+
+	BTjb9fAQHVlxI7gMW1+bCnb/RcuRpK5F2ftoTLshrZhUPkqfZiMydkU2TKdos8aF3NFmtXpNw3L
+	jFXr2dcl8/aztbqhLmR7lpoY1y3ieUWs=
+X-Gm-Gg: ASbGncs1ABvq8MH0/x8m8EXDMHh16i7/55QwY9e5rSiWfd+KK1Rze0tnygnCiAvwwsu
+	lIDiPQrqqnnAn1OyfweOcuSiAEGYHTuTw1nL6esVcqMUUpXle4tAfJ86ywrCHyI1h3VfaJk885H
+	jxqbVeSpdnLF4w5omCqowcCpKhbfCGm9TnczTqEQ7lEcDG
+X-Google-Smtp-Source: AGHT+IEv9O5YgK3CppAzORYW9KFh0DLzC+syzKnM/PtyGYw3mtH7vr5CfNkkmq+OCVmoIdxjC9ptRQIN0c0PHd5d8pM=
+X-Received: by 2002:ad4:5ce4:0:b0:6fa:fe02:8219 with SMTP id
+ 6a1803df08f44-6fb08fc6fa8mr214450996d6.7.1749452985349; Mon, 09 Jun 2025
+ 00:09:45 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250606052747.742998-1-dlemoal@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+References: <20250606052747.742998-1-dlemoal@kernel.org> <aEZ2C93sEiFRzGEE@infradead.org>
+In-Reply-To: <aEZ2C93sEiFRzGEE@infradead.org>
+From: Yafang Shao <laoar.shao@gmail.com>
+Date: Mon, 9 Jun 2025 15:09:09 +0800
+X-Gm-Features: AX0GCFuK49o41AbcT2ztweuzhQCz-bSY0VjklxaSb3cYyaqjjPCbEhY4BZkL94Q
+Message-ID: <CALOAHbDmSjaBjG7-yTm4FOxwY-mhR0ea610ZyTb-TPzLZOu2Lw@mail.gmail.com>
+Subject: Re: [PATCH 0/2] Improve ATA NCQ command error in mpt3sas and mpi3mr
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, Sathya Prakash <sathya.prakash@broadcom.com>, 
+	Kashyap Desai <kashyap.desai@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, mpi3mr-linuxdrv.pdl@broadcom.com, 
+	MPT-FusionLinux.pdl@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Adding Yafang Shao <laoar.shao@gmail.com>, who has a test case, which
-I think promted this.
+On Mon, Jun 9, 2025 at 1:50=E2=80=AFPM Christoph Hellwig <hch@infradead.org=
+> wrote:
+>
+> Adding Yafang Shao <laoar.shao@gmail.com>, who has a test case, which
+> I think promted this.
 
-Yafang, can you check if this makes the writeback errors you're seeing
-go away?
+Thank you for the information and for addressing this so quickly!
 
+>
+> Yafang, can you check if this makes the writeback errors you're seeing
+> go away?
+
+I=E2=80=99m happy to test the fix and will share the results as soon as I h=
+ave them.
+
+--=20
+Regards
+Yafang
