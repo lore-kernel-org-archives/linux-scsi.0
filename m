@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 035D5224895;
-	Mon,  9 Jun 2025 22:53:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5699224895;
+	Mon,  9 Jun 2025 22:53:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749509587; cv=none; b=kgZD6z0atNwHpQ6b7Tip0vEgGmH7dNJAUglYJkuOQSvQIpI9PaZo2sUd5uGIFlZvulwiQ3myOh4y9jfZrXf4wsk994RufjIr1L9+vKKpLWOgQdc31IKEgG/i+9Fft71ZPY9P5Ppecyl0HsltyY7yijLujz7zT+1fJaaVjBIPo5A=
+	t=1749509610; cv=none; b=sovzsLa8P6zfTwXLoFyD5KWruiYOCPKdxbmisETZxyq4k64n8e4whCHwIygCG50Vh7q/LZ3dTk5dYww+Ubs/6xbYN914u4DWofsw0Qr6qk8MQbFP+1jtrl6iWecn5sPVdVdQhIqV/xSR8lLE84Ul6fYEbE5ERr6Siky1F4CIB8U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749509587; c=relaxed/simple;
-	bh=7h+hbZ0EvWfINpNj3Iwio8W6h2aKkF4iZxOYWAQknCs=;
+	s=arc-20240116; t=1749509610; c=relaxed/simple;
+	bh=zklJJX37K1eEdGc685483qBRFhMz1cOfF8PTXJfhNOA=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Ape7FqKYWiJ5Q9XQX7iExVKGHEpRvqD8Hhv1JsqL/sNw1L7uTQ25/NNs3FCjk+vFMz0ET/5cxDeoVl2d167/8ZZ9pAs0X2oBuQrHkAMnHQ3hG5QUCXLUBGMw2C3owHzAQZLeqBA1so5R1nmmM0Z8jP+3sNvryRmOPnHr+RqNDOY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p89peBtg; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Vm90BP6NjOWDSwWz64BKYPKGSIXwC1fXTDumQKjHdspi484vsaEG0TDW+0A/thtuKfLktfkUCvE3xjMSwib5yOx26u8InsTuVeZ0+Gj6NXQenbLMQfgjmim13GEj5hnImxKRlBmLX0Cyn05AArmZWQKwb1US5ahN5jp0hroWY9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FlVZoT6w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p89peBtg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 92E9FC4CEEF;
-	Mon,  9 Jun 2025 22:53:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FlVZoT6w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 42A4AC4CEED;
+	Mon,  9 Jun 2025 22:53:29 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749509586;
-	bh=7h+hbZ0EvWfINpNj3Iwio8W6h2aKkF4iZxOYWAQknCs=;
+	s=k20201202; t=1749509610;
+	bh=zklJJX37K1eEdGc685483qBRFhMz1cOfF8PTXJfhNOA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=p89peBtgcXQhXQ9zjkjFw5hHxwWuvcJccktqQxG08PacJoCUcKmh9bBJJzvfWPBkH
-	 QTMtRp0egSeJps0CFkDrlK1LD/jJcV6XnHVGlb0UzsChnjM7EAGM3cazuk6X/PNviL
-	 rkAyZ5M3BCvQhszdR0J+Stdg/KilrUNQxZK4ZIjjN2JcfSFFwLso6IVSASjP+LuMLi
-	 U5YZJPZuJnhNmNOy3EhAxohSDB29xNKTf4SQanL5GxKfOaM29J8LpbsgCJb8rqpD2M
-	 6wIh4Cazo2EsjA4awc2NM25z36UqmTmrbatxsU8uSKSZ/X1L8tLiMcBnTay4UAzWeD
-	 3ouqzRh2M4O9g==
+	b=FlVZoT6w7XAw9oDmKhLS0qmrhqOPXBsuxsrpnFnj7PjDwpjLejkApzVI/UL3iLAd1
+	 Wg1IrN/nYVjA+uffCcqNiMZhSVRqjLMyfWvtaeiBg4eB3ryVjhHyL4JbiGxXIYjZHN
+	 RyC6Dk5awd6ViQ9rhR0cei1QA12wloK5qDX3+D8Fl5FhPm3NeXQydxIxqWG7uWonfs
+	 BuvXUEXMiUpJKoejzvLpBsjaJ1hea5hYl7xbvr1qjB4bbF2GuqxLLkHXZn1GvcFSM9
+	 rLYZD/ewculZEqaNDWUiWvBgyEdkg5p6Gd2q4yySx7rJswPSnmIHv0bhuLCtOo+P4k
+	 A6ROZPla69t7g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -39,12 +39,12 @@ Cc: Ziqi Chen <quic_ziqichen@quicinc.com>,
 	mani@kernel.org,
 	quic_nguyenb@quicinc.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.14 09/11] scsi: ufs: core: Don't perform UFS clkscaling during host async scan
-Date: Mon,  9 Jun 2025 18:52:43 -0400
-Message-Id: <20250609225246.1443679-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.12 7/8] scsi: ufs: core: Don't perform UFS clkscaling during host async scan
+Date: Mon,  9 Jun 2025 18:53:13 -0400
+Message-Id: <20250609225315.1443936-7-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250609225246.1443679-1-sashal@kernel.org>
-References: <20250609225246.1443679-1-sashal@kernel.org>
+In-Reply-To: <20250609225315.1443936-1-sashal@kernel.org>
+References: <20250609225315.1443936-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,7 +53,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.14.10
+X-stable-base: Linux 6.12.32
 Content-Transfer-Encoding: 8bit
 
 From: Ziqi Chen <quic_ziqichen@quicinc.com>
@@ -193,10 +193,10 @@ ideal candidate for stable kernel backporting.
  1 file changed, 3 insertions(+)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 47ec4e4e4a2a0..c68c868d112bb 100644
+index 247e425428c88..b9fe86c661608 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -1368,6 +1368,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
+@@ -1392,6 +1392,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
  	 * make sure that there are no outstanding requests when
  	 * clock scaling is in progress
  	 */
@@ -204,7 +204,7 @@ index 47ec4e4e4a2a0..c68c868d112bb 100644
  	blk_mq_quiesce_tagset(&hba->host->tag_set);
  	mutex_lock(&hba->wb_mutex);
  	down_write(&hba->clk_scaling_lock);
-@@ -1378,6 +1379,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
+@@ -1402,6 +1403,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
  		up_write(&hba->clk_scaling_lock);
  		mutex_unlock(&hba->wb_mutex);
  		blk_mq_unquiesce_tagset(&hba->host->tag_set);
@@ -212,7 +212,7 @@ index 47ec4e4e4a2a0..c68c868d112bb 100644
  		goto out;
  	}
  
-@@ -1399,6 +1401,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
+@@ -1423,6 +1425,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
  	mutex_unlock(&hba->wb_mutex);
  
  	blk_mq_unquiesce_tagset(&hba->host->tag_set);
