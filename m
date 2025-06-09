@@ -1,148 +1,222 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05CFC1DFFD;
-	Sat,  7 Jun 2025 16:23:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D672735963;
+	Mon,  9 Jun 2025 02:41:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749313407; cv=none; b=UPaovUgIVxc5WUqaDnM8ALAoZb0XAhfvRgz9v6AGYySzakpi3fmLM3uBeKridJoxBI6BHbOfY4Kk+IY8ixR9cNZ8o9a+34Ru+EQ2Tp6N7Yc7nhwU43DX6UMxle+PJ0wFEeIaetVBQvYQGtFMuKAqLgRDd1YV/7q9MJRC5ArT7LE=
+	t=1749436898; cv=none; b=Rf66LFzaWKptCAtYOLWyHd6aoXu6DUbmfAmB7bIu06Kf1z6QIzxP35CkFLK7GNSdNz+I9uNL4653mY/Zi/Y8/HvnQwfmnprE17KpOyOhuoxRnn7uw50zQ3hx2US3SaaGEbzX1TOaW/IphphcAMV3CjY1UXfI1VRAE8zQWQeXZQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749313407; c=relaxed/simple;
-	bh=/C8aKTgpxFq/51Om8jvnGyrWGjteETkE8yR5x4OCV1A=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=p8HKZqqzUNRBVC1rCo3FDxwcCFZ1myX7apfksuM7k5SzQFm1O+3g8oL0NTpin6S0m0GcTEiRWK/ZQEOfrwvWqD8LHUNqaEe9PaLGcnctv64lHesrLz3VTXT+Gaqeiw7yGScrBiWk4HGzNTahB0RweABRb4/EED31Uf50yYGV0uU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=bAATkdTf; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bAATkdTf"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 557Ce0lg011099;
-	Sat, 7 Jun 2025 16:23:24 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=corp-2025-04-25; bh=VNQcpR3FgrVvkaxcmYX2339ffI8LJ
-	aNen8iQlJEMRQM=; b=bAATkdTfPDMniHDK+iOn63SkYVctFQBAbKVMcfuXwNgXa
-	c0AoYOV/IsyLfqppKAJJ5Iajb/av8HRx5NaFw4lPAeCJYL6Wf5kHTQSE+yvDZD/e
-	CP/4/pDIL37+/rWoInMh9nnsJNGOSuZuRk9yJYM8zrlENVrhsl21oYRM3uKmNXjA
-	wbTOoG0Q5QCaveo37YjFGHrW2O7DPA2VVLLrtyN2d3R0jl41HkGT/gjvFBBkYv7i
-	mVqQMip4jaN2OTKEPKSiZpXBJ1HHDzy9J0lCxluf9ye4tI2r6UNJ9vpYPP+Im8uF
-	64HFLJvuUq8ntxnkf1EylkbEbnrQ+ajdkf8JrMasw==
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 474dywratb-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 07 Jun 2025 16:23:24 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 557CKxhK020775;
-	Sat, 7 Jun 2025 16:23:08 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 474bv6utcx-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 07 Jun 2025 16:23:08 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 557GJakY008514;
-	Sat, 7 Jun 2025 16:23:07 GMT
-Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 474bv6utcp-1;
-	Sat, 07 Jun 2025 16:23:07 +0000
-From: Alok Tiwari <alok.a.tiwari@oracle.com>
-To: corbet@lwn.net, linux-doc@vger.kernel.org, linux-scsi@vger.kernel.org,
-        martin.petersen@oracle.com
-Cc: alok.a.tiwari@oracle.com, himanshu.madhani@oracle.com,
-        darren.kenny@oracle.com, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: docs: scsi_fc_transport: Add documentation for FC Remote Ports
-Date: Sat,  7 Jun 2025 09:22:56 -0700
-Message-ID: <20250607162304.1765430-1-alok.a.tiwari@oracle.com>
-X-Mailer: git-send-email 2.47.1
+	s=arc-20240116; t=1749436898; c=relaxed/simple;
+	bh=0dNxAqJz8VbKFDM3A/agY1w0Cc7xU4taJjsDdg27CW0=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:Content-Type:
+	 MIME-Version:Message-ID; b=SNC5pnMWgXyADNYRWa9ofHX3QsRKfA/p27aNfr4sFJXDvSDynorY1edsmE3nNSXryZ6Ci8QHzw6QXpyU4LhxXuVDQr0Wzal/EgXURL7cS9dymThKUqr3+/Mdu7RRO2godOaw4+u7cz6dpc0laRa6HYhy3DTiD4hdTANzZtsn+9s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bFx514CdpzYQvlm;
+	Mon,  9 Jun 2025 10:41:25 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 8D6671A1955;
+	Mon,  9 Jun 2025 10:41:24 +0800 (CST)
+Received: from zhengqixing$huaweicloud.com ( [10.174.178.72] ) by
+ ajax-webmail-APP4 (Coremail) ; Mon, 9 Jun 2025 10:41:24 +0800 (GMT+08:00)
+Date: Mon, 9 Jun 2025 10:41:24 +0800 (GMT+08:00)
+X-CM-HeaderCharset: UTF-8
+From: zhengqixing@huaweicloud.com
+To: "Zheng Qixing" <zhengqixing@huaweicloud.com>, 
+	sathya.prakash@broadcom.com, sreekanth.reddy@broadcom.com, 
+	suganath-prabu.subramani@broadcom.com, 
+	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: MPT-FusionLinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, yukuai3@huawei.com, 
+	yi.zhang@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH v2] scsi: mpt3sas: fix uaf in
+ _scsih_fw_event_cleanup_queue() during hard reset
+X-Priority: 3
+X-Mailer: Coremail Webmail Server Version 2024.1-cmXT5 build
+ 20240919(7cc4060a) Copyright (c) 2002-2025 www.mailtech.cn
+ mispb-afc14d85-da06-4a9c-b40d-9d3adbbd040a-huawei.com
+In-Reply-To: <20250528004935.2000196-1-zhengqixing@huaweicloud.com>
+References: <20250528004935.2000196-1-zhengqixing@huaweicloud.com>
+Content-Transfer-Encoding: base64
+Content-Type: text/plain; charset=UTF-8
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-06-07_06,2025-06-05_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 mlxlogscore=999 bulkscore=0
- malwarescore=0 suspectscore=0 spamscore=0 phishscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
- definitions=main-2506070117
-X-Authority-Analysis: v=2.4 cv=fdaty1QF c=1 sm=1 tr=0 ts=6844677c b=1 cx=c_pps a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17 a=6IFa9wvqVegA:10 a=yPCof4ZbAAAA:8 a=Q_fQxBA_vzZ2BlmfIw4A:9 cc=ntf awl=host:13206
-X-Proofpoint-ORIG-GUID: bReM-n9k3kUoaxYAJBYAL6mirJ5ouhh7
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjA3MDExOCBTYWx0ZWRfX1u2FmG1l6S/Y FttwI4P6fLJm+1LQclFNscljvD7N7HivIxK5oXWt/edqmCVi2oKlLdQGCuMOCah+g2WCUn81xME ajm9/tRNqwQ1JnE8z+IFqzJejU2IQ05PYP56lSlN/ZIZClCIbNWG8Lxmw6NuN621uDYQeCkZT/Q
- YqPTj1e4jrPOu9oS/QNlfBJtBqSa6xsBK7mGU5c085v5Ip3hn8kgXeITx/j0h2NOq7VZ/9y6aB/ OHzMqOkmcnxVzaJqJhL5+uXv835Kq5K5sBUMyACI4cwnJPW4vWIFkRDAHiwPATHX8CWPvaX9EX5 2qW4SJWBrmDeYoAbC2+NM/+wXY9inBStfqGdy8vtuPjTO61GhIJ30/c3vGN6PDx4C/AnbVtLVDk
- IloODh87WgL79T/QwLOyD/nYvu7alSEPBwZGf9ZPmbDaRqjplPYqy50XMFM9twibnXZAlMT6
-X-Proofpoint-GUID: bReM-n9k3kUoaxYAJBYAL6mirJ5ouhh7
+Message-ID: <28dbc2.10c5.197529065a2.Coremail.zhengqixing@huaweicloud.com>
+X-Coremail-Locale: zh_CN
+X-CM-TRANSID:gCh0CgBHqV3USUZotSfKOw--.31697W
+X-CM-SenderInfo: x2kh0wptl0x03j6k3tpzhluzxrxghudrp/1tbiAgAOEmhFRIgzjgA
+	BsD
+X-Coremail-Antispam: 1Ur529EdanIXcx71UUUUU7IcSsGvfJ3GIAIbVAYFVCjjxCrMI
+	AIbVAFxVCF77xC64kEw24lV2xY67C26IkvcIIF6IxKo4kEV4DvcSsGvfC2KfnxnUU==
 
-This patch updates the scsi_fc_transport.rst documentation by
-replacing the outdated << To Be Supplied >> placeholder under
-the "FC Remote Ports (rports)" section with a detailed explanation
-of remote port functionality in the Fibre Channel (FC) transport class.
-
-The new documentation covers:
-What rports are and their role in FC-based SCSI communication
-Their representation in sysfs (/sys/class/fc_remote_ports/)
-Common sysfs attributes such as (port_id, port_name, node_name,
-and port_state).
-Their typical lifecycle (creation and removal)
-Guidance for driver developers on using fc_remote_port_add() and
-fc_remote_port_delete()
-
-This change improves the completeness and usefulness of the
-FC transport documentation for developers and users interacting
-with Fibre Channel drivers in the Linux SCSI subsystem
-
-Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
----
- Documentation/scsi/scsi_fc_transport.rst | 35 +++++++++++++++++++++++-
- 1 file changed, 34 insertions(+), 1 deletion(-)
-
-diff --git a/Documentation/scsi/scsi_fc_transport.rst b/Documentation/scsi/scsi_fc_transport.rst
-index e3ddcfb7f8fd..5ef75575924e 100644
---- a/Documentation/scsi/scsi_fc_transport.rst
-+++ b/Documentation/scsi/scsi_fc_transport.rst
-@@ -30,7 +30,40 @@ This file is found at Documentation/scsi/scsi_fc_transport.rst
- 
- FC Remote Ports (rports)
- ========================
--<< To Be Supplied >>
-+
-+  In the Fibre Channel (FC) subsystem, a remote port (rport) refers to a
-+  remote Fibre Channel node that the local port can communicate with.
-+  These are typically storage targets (e.g., arrays, tapes) that respond
-+  to SCSI commands over FC transport.
-+
-+  In Linux, rports are managed by the FC transport class and are
-+  represented in sysfs under:
-+
-+    /sys/class/fc_remote_ports/
-+
-+  Each rport directory contains attributes describing the remote port,
-+  such as port ID, node name, port state, and link speed.
-+
-+  rports are typically created by the FC transport when a new device is
-+  discovered during a fabric login or scan, and they persist until the
-+  device is removed or the link is lost.
-+
-+  Common attributes:
-+  - node_name: World Wide Node Name (WWNN).
-+  - port_name: World Wide Port Name (WWPN).
-+  - port_id: FC address of the remote port.
-+  - roles: Indicates if the port is an initiator, target, or both.
-+  - port_state: Shows the current operational state.
-+
-+  After discovering a remote port, the driver typically populates a
-+  fc_rport_identifiers structure and invokes fc_remote_port_add() to
-+  create and register the remote port with the SCSI subsystem via the
-+  Fibre Channel (FC) transport class.
-+
-+  rports are also visible via sysfs as children of the FC host adapter.
-+
-+  For developers: use fc_remote_port_add() and fc_remote_port_delete() when
-+  implementing a driver that interacts with the FC transport class.
- 
- 
- FC Virtual Ports (vports)
--- 
-2.47.1
-
+SGkgQWxsLAoKCkdlbnRsZSBwaW5nIG9uIHRoaXMgcGF0Y2ggc3VibWl0dGVkIHR3byB3ZWVrcyBh
+Z28uIENvdWxkIHNvbWVvbmUgcGxlYXNlCgp0YWtlIGEgbG9vayB3aGVuIGNvbnZlbmllbnQ/CgoK
+VGhhbmtzLAoKUWl4aW5nCgoK5ZyoIDIwMjUvNS8yOCA4OjQ5LCBaaGVuZyBRaXhpbmcg5YaZ6YGT
+OgomZ3Q7IEZyb206IFpoZW5nIFFpeGluZyA8emhlbmdxaXhpbmdAaHVhd2VpLmNvbT4KJmd0Owom
+Z3Q7IENoYW5nZXMgaW4gdjI6CiZndDsKJmd0OyAgICAxLiBSZWZlcmVuY2UgY291bnRpbmc6IEVu
+c3VyaW5nIHRoZSBmd19ldmVudF93b3JrIGhhcyBwcm9wZXIgcmVmZXJlbmNlCiZndDsgICAgICBj
+b3VudGluZyBzbyBpdCdzIG5vdCBmcmVlZCB3aGlsZSBzdGlsbCBpbiB1c2UKJmd0OyAgICAyLiBS
+ZWFkLXdyaXRlIGxvY2tzOiBQcm90ZWN0aW5nIGFjY2VzcyB0byBpb2MtJmd0O2N1cnJlbnRfZXZl
+bnQgd2l0aCBsb2NrcwomZ3Q7ICAgICAgIHRvIHByZXZlbnQgcmFjZSBjb25kaXRpb25zIGJldHdl
+ZW4gcmVhZGVycyBhbmQgd3JpdGVycwomZ3Q7CiZndDsgRHVyaW5nIG1wdDNzYXMgaGFyZCByZXNl
+dCwgdGhlcmUgYXJlIHR3byBhc3luY2hyb25vdXMgZXhlY3V0aW9uIHBhdGhzIHRoYXQKJmd0OyBj
+YW4gbGVhZCB0byB1c2UtYWZ0ZXItZnJlZSBpc3N1ZXM6CiZndDsKJmd0OyBQYXRoIEEgKGNsZWFu
+dXApOgomZ3Q7ICAgIF9iYXNlX2NsZWFyX291dHN0YW5kaW5nX2NvbW1hbmRzKCkKJmd0OyAgICAg
+IG1wdDNzYXNfc2NzaWhfY2xlYXJfb3V0c3RhbmRpbmdfc2NzaV90bV9jb21tYW5kcygpCiZndDsg
+ICAgICAgIF9zY3NpaF9md19ldmVudF9jbGVhbnVwX3F1ZXVlKCkKJmd0OyAJY2FuY2VsX3dvcmtf
+c3luYyAvLyBVQUYhCiZndDsKJmd0OyBQYXRoIEIgKHJlY292ZXJ5KToKJmd0OyAgICBfYmFzZV9y
+ZXNldF9kb25lX2hhbmRsZXIoKQomZ3Q7ICAgICAgbXB0M3Nhc19zY3NpaF9yZXNldF9kb25lX2hh
+bmRsZXIoKQomZ3Q7ICAgICAgICBfc2NzaWhfZXJyb3JfcmVjb3ZlcnlfZGVsZXRlX2RldmljZXMo
+KQomZ3Q7ICAgICAgICAgIGFsbG9jX2Z3X2V2ZW50X3dvcmsoKQomZ3Q7ICAgICAgICAgIF9zY3Np
+aF9md19ldmVudF9hZGQoKQomZ3Q7ICAgICAgICAgICAgX2Zpcm13YXJlX2V2ZW50X3dvcmsoKQom
+Z3Q7ICAgICAgICAgICAgICBfbXB0M3Nhc19md193b3JrKCkgLy8gZnJlZSBmd19ldmVudAomZ3Q7
+CiZndDsgSGVyZSBpcyBhIHVzZS1hZnRlci1mcmVlIGlzc3VlIGR1cmluZyBoYXJkIHJlc2V0Ogom
+Z3Q7CiZndDsgPT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
+PT09PT09PT09PT09PT09PT09CiZndDsgQlVHOiBLQVNBTjogc2xhYi11c2UtYWZ0ZXItZnJlZSBp
+biBfX2NhbmNlbF93b3JrX3RpbWVyKzB4MTcyLzB4M2UwCiZndDsgUmVhZCBvZiBzaXplIDggYXQg
+YWRkciBmZmZmODhiZTA4ZTcyNjEwIGJ5IHRhc2sgc2NzaV9laF8xMC85ODAKJmd0OwomZ3Q7IENQ
+VTogNTAgUElEOiA5ODAgQ29tbTogc2NzaV9laF8xMCBLZHVtcDogbG9hZGVkIE5vdCB0YWludGVk
+IDYuNi4wKyAjMjQKJmd0OyBDYWxsIFRyYWNlOgomZ3Q7ICAgPHRhc2s+CiZndDsgICBfX2NhbmNl
+bF93b3JrX3RpbWVyKzB4MTcyLzB4M2UwCiZndDsgICBfc2NzaWhfZndfZXZlbnRfY2xlYW51cF9x
+dWV1ZSsweDJhMi8weDU3MCBbbXB0M3Nhc10KJmd0OyAgIG1wdDNzYXNfc2NzaWhfY2xlYXJfb3V0
+c3RhbmRpbmdfc2NzaV90bV9jb21tYW5kcysweDE3MS8weDJjMCBbbXB0M3Nhc10KJmd0OyAgIG1w
+dDNzYXNfYmFzZV9oYXJkX3Jlc2V0X2hhbmRsZXIrMHgyZTgvMHg5ZDAgW21wdDNzYXNdCiZndDsg
+ICBtcHQzc2FzX3Njc2loX2lzc3VlX3RtKzB4YWExLzB4YzEwIFttcHQzc2FzXQomZ3Q7ICAgc2Nz
+aWhfdGFyZ2V0X3Jlc2V0KzB4MzQ0LzB4N2YwIFttcHQzc2FzXQomZ3Q7ICAgc2NzaV90cnlfdGFy
+Z2V0X3Jlc2V0KzB4YTcvMHgxZjAKJmd0OyAgIHNjc2lfZWhfdGFyZ2V0X3Jlc2V0KzB4NGU4LzB4
+YzUwCiZndDsgICBzY3NpX2VoX3JlYWR5X2RldnMrMHhjOC8weDViMAomZ3Q7ICAgc2NzaV91bmph
+bV9ob3N0KzB4MmZhLzB4NzAwCiZndDsgICBzY3NpX2Vycm9yX2hhbmRsZXIrMHg0MzQvMHg3MDAK
+Jmd0OyAgIGt0aHJlYWQrMHgyZDEvMHgzYjAKJmd0OyAgIHJldF9mcm9tX2ZvcmsrMHgyYi8weDcw
+CiZndDsgICByZXRfZnJvbV9mb3JrX2FzbSsweDFiLzB4MzAKJmd0OyAgIDwvdGFzaz4KJmd0Owom
+Z3Q7IEFsbG9jYXRlZCBieSB0YXNrIDk4MDoKJmd0OyAgIG1wdDNzYXNfc2NzaWhfcmVzZXRfZG9u
+ZV9oYW5kbGVyKzB4NTc1LzB4N2YwIFttcHQzc2FzXQomZ3Q7ICAgbXB0M3Nhc19iYXNlX2hhcmRf
+cmVzZXRfaGFuZGxlcisweDdhNy8weDlkMCBbbXB0M3Nhc10KJmd0OyAgIG1wdDNzYXNfc2NzaWhf
+aXNzdWVfdG0rMHhhYTEvMHhjMTAgW21wdDNzYXNdCiZndDsgICBzY3NpaF9kZXZfcmVzZXQrMHgz
+NTQvMHg4ZTAgW21wdDNzYXNdCiZndDsgICBzY3NpX2VoX2J1c19kZXZpY2VfcmVzZXQrMHgyNTUv
+MHg3YTAKJmd0OyAgIHNjc2lfZWhfcmVhZHlfZGV2cysweGI2LzB4NWIwCiZndDsgICBzY3NpX3Vu
+amFtX2hvc3QrMHgyZmEvMHg3MDAKJmd0OyAgIHNjc2lfZXJyb3JfaGFuZGxlcisweDQzNC8weDcw
+MAomZ3Q7ICAga3RocmVhZCsweDJkMS8weDNiMAomZ3Q7ICAgcmV0X2Zyb21fZm9yaysweDJiLzB4
+NzAKJmd0OyAgIHJldF9mcm9tX2ZvcmtfYXNtKzB4MWIvMHgzMAomZ3Q7CiZndDsgRnJlZWQgYnkg
+dGFzayA2NjA4Mzg6CiZndDsgICBfX2ttZW1fY2FjaGVfZnJlZSsweDE3NC8weDM3MAomZ3Q7ICAg
+X21wdDNzYXNfZndfd29yaysweDI2OS8weDI1MTAgW21wdDNzYXNdCiZndDsgICBwcm9jZXNzX29u
+ZV93b3JrKzB4NTc4LzB4YzYwCiZndDsgICB3b3JrZXJfdGhyZWFkKzB4NmMwLzB4YzkwCiZndDsg
+ICBrdGhyZWFkKzB4MmQxLzB4M2IwCiZndDsgICByZXRfZnJvbV9mb3JrKzB4MmIvMHg3MAomZ3Q7
+ICAgcmV0X2Zyb21fZm9ya19hc20rMHgxYi8weDMwCiZndDsKJmd0OyBMYXN0IHBvdGVudGlhbGx5
+IHJlbGF0ZWQgd29yayBjcmVhdGlvbjoKJmd0OyAgIGluc2VydF93b3JrKzB4MjQvMHgyMzAKJmd0
+OyAgIF9fcXVldWVfd29yay5wYXJ0LjArMHgzZDIvMHg4NDAKJmd0OyAgIHF1ZXVlX3dvcmtfb24r
+MHg0Yi8weDYwCiZndDsgICBfc2NzaWhfZndfZXZlbnRfYWRkLnBhcnQuMCsweDIwZS8weDJjMCBb
+bXB0M3Nhc10KJmd0OyAgIG1wdDNzYXNfc2NzaWhfcmVzZXRfZG9uZV9oYW5kbGVyKzB4NjRiLzB4
+N2YwIFttcHQzc2FzXQomZ3Q7ICAgbXB0M3Nhc19iYXNlX2hhcmRfcmVzZXRfaGFuZGxlcisweDdh
+Ny8weDlkMCBbbXB0M3Nhc10KJmd0OyAgIG1wdDNzYXNfc2NzaWhfaXNzdWVfdG0rMHhhYTEvMHhj
+MTAgW21wdDNzYXNdCiZndDsgICBzY3NpaF9kZXZfcmVzZXQrMHgzNTQvMHg4ZTAgW21wdDNzYXNd
+CiZndDsgICBzY3NpX2VoX2J1c19kZXZpY2VfcmVzZXQrMHgyNTUvMHg3YTAKJmd0OyAgIHNjc2lf
+ZWhfcmVhZHlfZGV2cysweGI2LzB4NWIwCiZndDsgICBzY3NpX3VuamFtX2hvc3QrMHgyZmEvMHg3
+MDAKJmd0OyAgIHNjc2lfZXJyb3JfaGFuZGxlcisweDQzNC8weDcwMAomZ3Q7ICAga3RocmVhZCsw
+eDJkMS8weDNiMAomZ3Q7ICAgcmV0X2Zyb21fZm9yaysweDJiLzB4NzAKJmd0OyAgIHJldF9mcm9t
+X2ZvcmtfYXNtKzB4MWIvMHgzMAomZ3Q7CiZndDsgU2Vjb25kIHRvIGxhc3QgcG90ZW50aWFsbHkg
+cmVsYXRlZCB3b3JrIGNyZWF0aW9uOgomZ3Q7ICAga2FzYW5fc2F2ZV9zdGFjaysweDIxLzB4NDAK
+Jmd0OyAgIF9fa2FzYW5fcmVjb3JkX2F1eF9zdGFjaysweDk0LzB4YTAKJmd0OyAgIGt2ZnJlZV9j
+YWxsX3JjdSsweDI1LzB4YTIwCiZndDsgICBrZXJuZnNfdW5saW5rX29wZW5fZmlsZSsweDJkZC8w
+eDQxMAomZ3Q7ICAga2VybmZzX2ZvcF9yZWxlYXNlKzB4YzQvMHgzMjAKJmd0OyAgIF9fZnB1dCsw
+eDM1ZS8weGExMAomZ3Q7ICAgX19zZV9zeXNfY2xvc2UrMHg0Zi8weGEwCiZndDsgICBkb19zeXNj
+YWxsXzY0KzB4NTUvMHgxMDAKJmd0OyAgIGVudHJ5X1NZU0NBTExfNjRfYWZ0ZXJfaHdmcmFtZSsw
+eDc4LzB4ZTIKJmd0OwomZ3Q7IEFmdGVyIGNvbW1pdCA5OTFkZjNkZDUxNDQgKCJzY3NpOiBtcHQz
+c2FzOiBGaXggdXNlLWFmdGVyLWZyZWUgd2FybmluZyIpLAomZ3Q7IGEgcmFjZSBjb25kaXRpb24g
+ZXhpc3RzIGluIF9zY3NpaF9md19ldmVudF9jbGVhbnVwX3F1ZXVlKCkuIFdoZW4gUGF0aCBBCiZn
+dDsgZGVxdWV1ZXMgYSBmd19ldmVudCBhbmQgUGF0aCBCIGNvbmN1cnJlbnRseSBwcm9jZXNzZXMg
+dGhlIHNhbWUgZndfZXZlbnQsCiZndDsgdGhlIHJlZmVyZW5jZSBjb3VudCBjYW4gZHJvcCB0byB6
+ZXJvIGJlZm9yZSBjYW5jZWxfd29ya19zeW5jKCkgaXMgY2FsbGVkCiZndDsgaW4gUGF0aCBBLCBs
+ZWFkaW5nIHRvIHVzZS1hZnRlci1mcmVlIHdoZW4gYWNjZXNzaW5nIHRoZSBhbHJlYWR5IGZyZWVk
+CiZndDsgZndfZXZlbnQgc3RydWN0dXJlLgomZ3Q7CiZndDsgRml4IHRoaXMgYnk6CiZndDsgMS4g
+UHJvdGVjdGluZyBhbGwgYWNjZXNzZXMgdG8gaW9jLSZndDtjdXJyZW50X2V2ZW50IHdpdGggaW9j
+LSZndDtmd19ldmVudF9sb2NrCiZndDsgMi4gQWRkaW5nIHJlZmVyZW5jZSBjb3VudGluZyB3aGVu
+IGFjY2Vzc2luZyBjdXJyZW50X2V2ZW50CiZndDsgMy4gTW92aW5nIHRoZSBmd19ldmVudF93b3Jr
+X3B1dCgpIGNhbGwgZnJvbSBkZXF1ZXVlX25leHRfZndfZXZlbnQoKSB0bwomZ3Q7ICAgICB0aGUg
+Y2FsbGVyLCBlbnN1cmluZyBmd19ldmVudCByZW1haW5zIHZhbGlkIGR1cmluZyBjYW5jZWxfd29y
+a19zeW5jKCkKJmd0OwomZ3Q7IEZpeGVzOiA5OTFkZjNkZDUxNDQgKCJzY3NpOiBtcHQzc2FzOiBG
+aXggdXNlLWFmdGVyLWZyZWUgd2FybmluZyIpCiZndDsgU2lnbmVkLW9mZi1ieTogWmhlbmcgUWl4
+aW5nIDx6aGVuZ3FpeGluZ0BodWF3ZWkuY29tPgomZ3Q7IC0tLQomZ3Q7ICAgZHJpdmVycy9zY3Np
+L21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jIHwgNDAgKysrKysrKysrKysrKysrKysrKysrLS0tLS0t
+LQomZ3Q7ICAgMSBmaWxlIGNoYW5nZWQsIDMxIGluc2VydGlvbnMoKyksIDkgZGVsZXRpb25zKC0p
+CiZndDsKJmd0OyBkaWZmIC0tZ2l0IGEvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3Np
+aC5jIGIvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0M3Nhc19zY3NpaC5jCiZndDsgaW5kZXggNTA4
+ODYxZTg4ZDlmLi5hMTc5NjNjZTNmOTMgMTAwNjQ0CiZndDsgLS0tIGEvZHJpdmVycy9zY3NpL21w
+dDNzYXMvbXB0M3Nhc19zY3NpaC5jCiZndDsgKysrIGIvZHJpdmVycy9zY3NpL21wdDNzYXMvbXB0
+M3Nhc19zY3NpaC5jCiZndDsgQEAgLTM2NTksNyArMzY1OSw2IEBAIHN0YXRpYyBzdHJ1Y3QgZndf
+ZXZlbnRfd29yayAqZGVxdWV1ZV9uZXh0X2Z3X2V2ZW50KHN0cnVjdCBNUFQzU0FTX0FEQVBURVIg
+KmlvYykKJmd0OyAgIAkJZndfZXZlbnQgPSBsaXN0X2ZpcnN0X2VudHJ5KCZhbXA7aW9jLSZndDtm
+d19ldmVudF9saXN0LAomZ3Q7ICAgCQkJCXN0cnVjdCBmd19ldmVudF93b3JrLCBsaXN0KTsKJmd0
+OyAgIAkJbGlzdF9kZWxfaW5pdCgmYW1wO2Z3X2V2ZW50LSZndDtsaXN0KTsKJmd0OyAtCQlmd19l
+dmVudF93b3JrX3B1dChmd19ldmVudCk7CiZndDsgICAJfQomZ3Q7ICAgCXNwaW5fdW5sb2NrX2ly
+cXJlc3RvcmUoJmFtcDtpb2MtJmd0O2Z3X2V2ZW50X2xvY2ssIGZsYWdzKTsKJmd0OyAgIAomZ3Q7
+IEBAIC0zNjc5LDEwICszNjc4LDE1IEBAIHN0YXRpYyB2b2lkCiZndDsgICBfc2NzaWhfZndfZXZl
+bnRfY2xlYW51cF9xdWV1ZShzdHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MpCiZndDsgICB7CiZn
+dDsgICAJc3RydWN0IGZ3X2V2ZW50X3dvcmsgKmZ3X2V2ZW50OwomZ3Q7ICsJdW5zaWduZWQgbG9u
+ZyBmbGFnczsKJmd0OyAgIAomZ3Q7ICsJc3Bpbl9sb2NrX2lycXNhdmUoJmFtcDtpb2MtJmd0O2Z3
+X2V2ZW50X2xvY2ssIGZsYWdzKTsKJmd0OyAgIAlpZiAoKGxpc3RfZW1wdHkoJmFtcDtpb2MtJmd0
+O2Z3X2V2ZW50X2xpc3QpICZhbXA7JmFtcDsgIWlvYy0mZ3Q7Y3VycmVudF9ldmVudCkgfHwKJmd0
+OyAtCSAgICAhaW9jLSZndDtmaXJtd2FyZV9ldmVudF90aHJlYWQpCiZndDsgKwkgICAgIWlvYy0m
+Z3Q7ZmlybXdhcmVfZXZlbnRfdGhyZWFkKSB7CiZndDsgKwkJc3Bpbl91bmxvY2tfaXJxcmVzdG9y
+ZSgmYW1wO2lvYy0mZ3Q7ZndfZXZlbnRfbG9jaywgZmxhZ3MpOwomZ3Q7ICAgCQlyZXR1cm47CiZn
+dDsgKwl9CiZndDsgKwomZ3Q7ICAgCS8qCiZndDsgICAJICogU2V0IGN1cnJlbnQgcnVubmluZyBl
+dmVudCBhcyBpZ25vcmUsIHNvIHRoYXQKJmd0OyAgIAkgKiBjdXJyZW50IHJ1bm5pbmcgZXZlbnQg
+d2lsbCBleGl0IHF1aWNrbHkuCiZndDsgQEAgLTM2OTEsMTAgKzM2OTUsMjEgQEAgX3Njc2loX2Z3
+X2V2ZW50X2NsZWFudXBfcXVldWUoc3RydWN0IE1QVDNTQVNfQURBUFRFUiAqaW9jKQomZ3Q7ICAg
+CSAqLwomZ3Q7ICAgCWlmIChpb2MtJmd0O3Nob3N0X3JlY292ZXJ5ICZhbXA7JmFtcDsgaW9jLSZn
+dDtjdXJyZW50X2V2ZW50KQomZ3Q7ICAgCQlpb2MtJmd0O2N1cnJlbnRfZXZlbnQtJmd0O2lnbm9y
+ZSA9IDE7CiZndDsgKwlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhbXA7aW9jLSZndDtmd19ldmVu
+dF9sb2NrLCBmbGFncyk7CiZndDsgICAKJmd0OyAgIAlpb2MtJmd0O2Z3X2V2ZW50c19jbGVhbnVw
+ID0gMTsKJmd0OyAtCXdoaWxlICgoZndfZXZlbnQgPSBkZXF1ZXVlX25leHRfZndfZXZlbnQoaW9j
+KSkgfHwKJmd0OyAtCSAgICAgKGZ3X2V2ZW50ID0gaW9jLSZndDtjdXJyZW50X2V2ZW50KSkgewom
+Z3Q7ICsJd2hpbGUgKHRydWUpIHsKJmd0OyArCQlmd19ldmVudCA9IGRlcXVldWVfbmV4dF9md19l
+dmVudChpb2MpOwomZ3Q7ICsKJmd0OyArCQlzcGluX2xvY2tfaXJxc2F2ZSgmYW1wO2lvYy0mZ3Q7
+ZndfZXZlbnRfbG9jaywgZmxhZ3MpOwomZ3Q7ICsJCWlmICghZndfZXZlbnQpIHsKJmd0OyArCQkJ
+ZndfZXZlbnQgPSBpb2MtJmd0O2N1cnJlbnRfZXZlbnQ7CiZndDsgKwkJCWlmICghZndfZXZlbnQp
+IHsKJmd0OyArCQkJCXNwaW5fdW5sb2NrX2lycXJlc3RvcmUoJmFtcDtpb2MtJmd0O2Z3X2V2ZW50
+X2xvY2ssIGZsYWdzKTsKJmd0OyArCQkJCWJyZWFrOwomZ3Q7ICsJCQl9CiZndDsgKwkJCWZ3X2V2
+ZW50X3dvcmtfZ2V0KGZ3X2V2ZW50KTsKJmd0OyArCQl9CiZndDsgICAKJmd0OyAgIAkJLyoKJmd0
+OyAgIAkJICogRG9uJ3QgY2FsbCBjYW5jZWxfd29ya19zeW5jKCkgZm9yIGN1cnJlbnRfZXZlbnQK
+Jmd0OyBAQCAtMzcxNCw4ICszNzI5LDExIEBAIF9zY3NpaF9md19ldmVudF9jbGVhbnVwX3F1ZXVl
+KHN0cnVjdCBNUFQzU0FTX0FEQVBURVIgKmlvYykKJmd0OyAgIAkJICAgIGlvYy0mZ3Q7Y3VycmVu
+dF9ldmVudC0mZ3Q7ZXZlbnQgIT0KJmd0OyAgIAkJICAgIE1QVDNTQVNfUkVNT1ZFX1VOUkVTUE9O
+RElOR19ERVZJQ0VTKSB7CiZndDsgICAJCQlpb2MtJmd0O2N1cnJlbnRfZXZlbnQgPSBOVUxMOwom
+Z3Q7ICsJCQlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhbXA7aW9jLSZndDtmd19ldmVudF9sb2Nr
+LCBmbGFncyk7CiZndDsgKwkJCWZ3X2V2ZW50X3dvcmtfcHV0KGZ3X2V2ZW50KTsKJmd0OyAgIAkJ
+CWNvbnRpbnVlOwomZ3Q7ICAgCQl9CiZndDsgKwkJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYW1w
+O2lvYy0mZ3Q7ZndfZXZlbnRfbG9jaywgZmxhZ3MpOwomZ3Q7ICAgCiZndDsgICAJCS8qCiZndDsg
+ICAJCSAqIERyaXZlciBoYXMgdG8gY2xlYXIgaW9jLSZndDtzdGFydF9zY2FuIGZsYWcgd2hlbgom
+Z3Q7IEBAIC0zNzQxLDYgKzM3NTksNyBAQCBfc2NzaWhfZndfZXZlbnRfY2xlYW51cF9xdWV1ZShz
+dHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MpCiZndDsgICAJCWlmIChjYW5jZWxfd29ya19zeW5j
+KCZhbXA7ZndfZXZlbnQtJmd0O3dvcmspKQomZ3Q7ICAgCQkJZndfZXZlbnRfd29ya19wdXQoZndf
+ZXZlbnQpOwomZ3Q7ICAgCiZndDsgKwkJZndfZXZlbnRfd29ya19wdXQoZndfZXZlbnQpOwomZ3Q7
+ICAgCX0KJmd0OyAgIAlpb2MtJmd0O2Z3X2V2ZW50c19jbGVhbnVwID0gMDsKJmd0OyAgIH0KJmd0
+OyBAQCAtMTA2OTAsMTUgKzEwNzA5LDE2IEBAIG1wdDNzYXNfc2NzaWhfcmVzZXRfZG9uZV9oYW5k
+bGVyKHN0cnVjdCBNUFQzU0FTX0FEQVBURVIgKmlvYykKJmd0OyAgIHN0YXRpYyB2b2lkCiZndDsg
+ICBfbXB0M3Nhc19md193b3JrKHN0cnVjdCBNUFQzU0FTX0FEQVBURVIgKmlvYywgc3RydWN0IGZ3
+X2V2ZW50X3dvcmsgKmZ3X2V2ZW50KQomZ3Q7ICAgewomZ3Q7ICsJdW5zaWduZWQgbG9uZyBmbGFn
+czsKJmd0OyArCiZndDsgKwlzcGluX2xvY2tfaXJxc2F2ZSgmYW1wO2lvYy0mZ3Q7ZndfZXZlbnRf
+bG9jaywgZmxhZ3MpOwomZ3Q7ICAgCWlvYy0mZ3Q7Y3VycmVudF9ldmVudCA9IGZ3X2V2ZW50Owom
+Z3Q7ICsJc3Bpbl91bmxvY2tfaXJxcmVzdG9yZSgmYW1wO2lvYy0mZ3Q7ZndfZXZlbnRfbG9jaywg
+ZmxhZ3MpOwomZ3Q7ICAgCV9zY3NpaF9md19ldmVudF9kZWxfZnJvbV9saXN0KGlvYywgZndfZXZl
+bnQpOwomZ3Q7ICAgCiZndDsgICAJLyogdGhlIHF1ZXVlIGlzIGJlaW5nIGZsdXNoZWQgc28gaWdu
+b3JlIHRoaXMgZXZlbnQgKi8KJmd0OyAtCWlmIChpb2MtJmd0O3JlbW92ZV9ob3N0IHx8IGlvYy0m
+Z3Q7cGNpX2Vycm9yX3JlY292ZXJ5KSB7CiZndDsgLQkJZndfZXZlbnRfd29ya19wdXQoZndfZXZl
+bnQpOwomZ3Q7IC0JCWlvYy0mZ3Q7Y3VycmVudF9ldmVudCA9IE5VTEw7CiZndDsgLQkJcmV0dXJu
+OwomZ3Q7IC0JfQomZ3Q7ICsJaWYgKGlvYy0mZ3Q7cmVtb3ZlX2hvc3QgfHwgaW9jLSZndDtwY2lf
+ZXJyb3JfcmVjb3ZlcnkpCiZndDsgKwkJZ290byBvdXQ7CiZndDsgICAKJmd0OyAgIAlzd2l0Y2gg
+KGZ3X2V2ZW50LSZndDtldmVudCkgewomZ3Q7ICAgCWNhc2UgTVBUM1NBU19QUk9DRVNTX1RSSUdH
+RVJfRElBRzoKJmd0OyBAQCAtMTA3OTQsOCArMTA4MTQsMTAgQEAgX21wdDNzYXNfZndfd29yayhz
+dHJ1Y3QgTVBUM1NBU19BREFQVEVSICppb2MsIHN0cnVjdCBmd19ldmVudF93b3JrICpmd19ldmVu
+dCkKJmd0OyAgIAkJcmV0dXJuOwomZ3Q7ICAgCX0KJmd0OyAgIG91dDoKJmd0OyArCXNwaW5fbG9j
+a19pcnFzYXZlKCZhbXA7aW9jLSZndDtmd19ldmVudF9sb2NrLCBmbGFncyk7CiZndDsgICAJZndf
+ZXZlbnRfd29ya19wdXQoZndfZXZlbnQpOwomZ3Q7ICAgCWlvYy0mZ3Q7Y3VycmVudF9ldmVudCA9
+IE5VTEw7CiZndDsgKwlzcGluX3VubG9ja19pcnFyZXN0b3JlKCZhbXA7aW9jLSZndDtmd19ldmVu
+dF9sb2NrLCBmbGFncyk7CiZndDsgICB9CiZndDsgICAKJmd0OyAgIC8qKgo8L3poZW5ncWl4aW5n
+QGh1YXdlaS5jb20+PC96aGVuZ3FpeGluZ0BodWF3ZWkuY29tPg==
