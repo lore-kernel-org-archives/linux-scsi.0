@@ -1,84 +1,62 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E310624BBFC;
-	Mon,  9 Jun 2025 02:46:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B0D5610D
+	for <linux-scsi@vger.kernel.org>; Mon,  9 Jun 2025 05:50:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749437207; cv=none; b=ocKW8SGCDnK+6SYuIHhbu7nfvKePN4Mp7nAwskxVgksia5V/CV1ihS/dmVHCv+dUA2h9a85SfOGGUkJogtAF3O7uBzhj8YRhXgddt0TMOM05uAlC0bs8t4E7UAyIkdMHvDlpNXpFivfX0a8zCKmloG63MpbUQc6hJQk8xD70Ldg=
+	t=1749448206; cv=none; b=QHsGDDTFvCI5KOZW0oCUR9vXr5bL4/Y/PyuDMt2PiWxE0BCetL75RTIhjav0t8kZ+R8/UbW1tZOJU1mVVg+fboOQl3OogX4WZ3HTqfUG2oZig6dJ4/XPu/TerQDBnUxZ4lTzLt3auoHcqmt9EdQDpkI1BQ7xfh+DayMhCBKeRAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749437207; c=relaxed/simple;
-	bh=kU6/5PrnoLPvsSRESMinNLoRD724Pj4qIwsER9avoT8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=jR8oXmZbDbaAPxp3eCoAHPQ5FntdHuUGEU+9ttqn/1EUkVUC0wsFJFXOnAIbQXZusv4kx6LdPvm+80qZavvmfLly1bgOyIatHTcJEs+mP7xhV2Z2UMA8mEYWXbmRjq3fvAivibokbgdRwWtYMdeDr0GFHOmtwpynNnjKKSyAD3k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UZvKR70r; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749448206; c=relaxed/simple;
+	bh=YpAglpdL3J3egNt22NaK9wLT2khpL3E3e+r3saEVViY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=dwHckefX5nBoDWJn5hzqFh+2136MrWhdXgkxXkUIgWvVo/Pn4lF/25EFL28LtlkkSLs8z8c3FkekFNnPkI5NDqpt1m4Xdk0nWdX53wd3o8mR522yBbb+DZnJ6TjSn8yDd+1/HFU/ktFiLpwh6xeA7G0pmqaXWzTBrmOVE78ftu4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=IhaG7VGs; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UZvKR70r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 18763C4CEF5;
-	Mon,  9 Jun 2025 02:46:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749437205;
-	bh=kU6/5PrnoLPvsSRESMinNLoRD724Pj4qIwsER9avoT8=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=UZvKR70rBdP3dlik5UAP5m+f8VYflYUmi6Tv6l+mEvoC6VJoRyzu72O2599XlVn6o
-	 lTbUVQVIXEEJ5cIkl8pyOEmdDI0u+JD3VgxZdsCcuspODUmLpVKUQeOYStOAqyfGXi
-	 8+hE9sFcPQSXmOwE2dZ7B+78khv437ikXt8MvsaU+SCwJv3ERtK89bUgI8FyUURrln
-	 9Z93cSsv/BfCw9XgQWzpUOo3PHl8nMgL9M6EjIAT/aUDdd0bjtam5aFsMD7tA7tN6y
-	 IrtbehRzta/vL2J+cYTVxEnBuZIm84+eMthlOe9pjxOuqjTjeqSwvMXcScVRtb8dbN
-	 QdaudT+cjQWow==
-From: Mario Limonciello <superm1@kernel.org>
-To: "Rafael J . Wysocki" <rafael@kernel.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: amd-gfx@lists.freedesktop.org (open list:RADEON and AMDGPU DRM DRIVERS),
-	linux-pm@vger.kernel.org (open list:HIBERNATION (aka Software Suspend, aka swsusp)),
-	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-	linux-kernel@vger.kernel.org (open list),
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	dri-devel@lists.freedesktop.org (open list:DRM DRIVERS),
-	linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
-	linux-usb@vger.kernel.org (open list:USB SUBSYSTEM),
-	Mario Limonciello <mario.limonciello@amd.com>
-Subject: [PATCH v3 5/5] usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
-Date: Sun,  8 Jun 2025 21:46:19 -0500
-Message-ID: <20250609024619.407257-6-superm1@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250609024619.407257-1-superm1@kernel.org>
-References: <20250609024619.407257-1-superm1@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="IhaG7VGs"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=YpAglpdL3J3egNt22NaK9wLT2khpL3E3e+r3saEVViY=; b=IhaG7VGstOnwZFdTJOcCbQFp5s
+	pYagDbiUU/jApnmBdZNsMW953asC2+vkKdJVEMDePJ1lvjxY2QWE5rkEm/ocIn46AKyBVCDus2H10
+	4bQaALD0Lk1G5SlSm+YMI51Blxu/H1xoDLh5UPbuKn2LekSZBgryKYbO2JsYHz9H34RK0WOKhg6gV
+	RzBGvr8SS4ZrtIGnD41vObW5gxr+MBKjK3YgZw2YNr99v8a9B7v6yuRquczb/psz/1RK6TeD8LByz
+	Nm8ZLKBULisvH0cbKh5zzieCcLDW2vrg8CgpS5em59lmzR2SJmn3DYePo8j5dDCk2ec98ZKG5Vwa0
+	Ebahw/Hw==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uOVOV-00000003Tvd-4Aq7;
+	Mon, 09 Jun 2025 05:50:03 +0000
+Date: Sun, 8 Jun 2025 22:50:03 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Kashyap Desai <kashyap.desai@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>,
+	mpi3mr-linuxdrv.pdl@broadcom.com, MPT-FusionLinux.pdl@broadcom.com,
+	laoar.shao@gmail.com
+Subject: Re: [PATCH 0/2] Improve ATA NCQ command error in mpt3sas and mpi3mr
+Message-ID: <aEZ2C93sEiFRzGEE@infradead.org>
+References: <20250606052747.742998-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250606052747.742998-1-dlemoal@kernel.org>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-From: Mario Limonciello <mario.limonciello@amd.com>
+Adding Yafang Shao <laoar.shao@gmail.com>, who has a test case, which
+I think promted this.
 
-When the ACPI core uses hibernation callbacks for shutdown drivers
-will receive PM_EVENT_POWEROFF and should handle it the same as
-PM_EVENT_HIBERNATE would have been used.
-
-Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
----
- drivers/usb/host/sl811-hcd.c | 1 +
- 1 file changed, 1 insertion(+)
-
-diff --git a/drivers/usb/host/sl811-hcd.c b/drivers/usb/host/sl811-hcd.c
-index ea3cab99c5d40..5d6dba681e503 100644
---- a/drivers/usb/host/sl811-hcd.c
-+++ b/drivers/usb/host/sl811-hcd.c
-@@ -1748,6 +1748,7 @@ sl811h_suspend(struct platform_device *dev, pm_message_t state)
- 		break;
- 	case PM_EVENT_SUSPEND:
- 	case PM_EVENT_HIBERNATE:
-+	case PM_EVENT_POWEROFF:
- 	case PM_EVENT_PRETHAW:		/* explicitly discard hw state */
- 		port_power(sl811, 0);
- 		break;
--- 
-2.43.0
+Yafang, can you check if this makes the writeback errors you're seeing
+go away?
 
