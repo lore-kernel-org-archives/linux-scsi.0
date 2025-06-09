@@ -1,225 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8583B224895;
-	Mon,  9 Jun 2025 22:53:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C2541DF25A;
+	Mon,  9 Jun 2025 23:56:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749509625; cv=none; b=DGegKOn0SGeE6Ae6+/U0Tgtyr/c7f7nrcSzMrONDS42zODxSj4YOPrgxt+OV2B4Xn8G4c1Jw7rCdS+XXf7E4DfzPnNSUUVpKNnYhjEetRr+LBjXQ1tke86uxVRtyLJDPZ+fgAv2W7zijLW7iPk3iUqxbwhuFC3ZgbwardOrbB2g=
+	t=1749513393; cv=none; b=A23n2MkTDnVBxRFO0V8WTy1p+Ub8xysxqyynTBHp+Ne9jKDlz3bST9DDlTr4rVRiK6aAhg6YZpQccON0h9A0dKpc7bjXhAPX2xARHaW4c2GP+A60NEk1myXSEBHu+4UY04XldGdfCC7NJTf/s7+dYyKm/A4Am/MKewbCfXhIjrE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749509625; c=relaxed/simple;
-	bh=M8npS7yq7BD9LwiA6TjrWh6kMFqFbSUyKEB0LghpNa4=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=hY3amIGT3OtjCMEdtBLrF0MU7Tx8MVCSDEVTl3MHhz0dW+25sz4/ALs83lXj+CBZIj5iq+2QX1wTU/LWrPKOzA5fKcgWZVLUbQ1hjAyIe2kUcn4vcCuUk1vDw/yxlhjxb71AZKk3bMDfufqe3322joLXkEG1guzsCw+o4MtiCBU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qx/F50zi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749513393; c=relaxed/simple;
+	bh=KSjEolPVe5dvnnsbVZqlsdVH46zQi+4/hbX6+f8Dy+E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=K52DaSEW0utQV2KOZ11kqOigrPcF5uimU5SxQD6C8rMEh+aBgEb0mSjdYonHSPQbzksyZDeF577xFeC28pMKH3Q0Ae3DufzWcZ/2pBlk3A5EKSWrQm4tdjPErWoPBQYElNYxnbfvq9KsrL4sS+odGwLy/ZYNFIVCYWcXlYIRims=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=K472MJD9; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qx/F50zi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF0CAC4CEEF;
-	Mon,  9 Jun 2025 22:53:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749509625;
-	bh=M8npS7yq7BD9LwiA6TjrWh6kMFqFbSUyKEB0LghpNa4=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=qx/F50zim2MDYK38Q5PUUSVV8f8GShIV9tdLMQQ9S0dqw9p5BIkccMDvP+pzOMZBE
-	 rkk97Oc5ynGnFSS6Prm1ETKYUsbnhm7SvBClBW36n8fwFIzebGZYZm5xCQo+Tz2X+k
-	 ULiY7Laif75Xg85uYsLpEKKnTjsFSURZIkYhM76yUkn0G4dq6OAOi6ur0cK1YruVaA
-	 WU8SOQrN3WQ+gAWmg3rrO0gTUZWnuthSWM6/c9umR2qCn0Ghr9r8nTqzeA+Anfk9+y
-	 lCjvMX+LBNlRErKeBWN0JLblw2C+uJrcIXkAk5CYbJzPQPqtNSgtBjuzgjQ4NeAvsY
-	 F1i3dB20qOuow==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Ziqi Chen <quic_ziqichen@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	peter.wang@mediatek.com,
-	avri.altman@wdc.com,
-	mani@kernel.org,
-	quic_nguyenb@quicinc.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 5/6] scsi: ufs: core: Don't perform UFS clkscaling during host async scan
-Date: Mon,  9 Jun 2025 18:53:31 -0400
-Message-Id: <20250609225333.1444210-5-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250609225333.1444210-1-sashal@kernel.org>
-References: <20250609225333.1444210-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="K472MJD9"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bGTN83r7FzlgqyR;
+	Mon,  9 Jun 2025 23:56:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1749513383; x=1752105384; bh=KYCXaUY9ndNL8OgV5qFsqIP2
+	lhBk9b/78jW3INTU7XQ=; b=K472MJD9q6eQSV2yMg5Xkz/cxsGKzy9818VA8ASW
+	OPqsYuNIJrMvNZsufihh6HXt1+27cX8Jn7yFTyx/VekkaK3kIhjSNzcdDXUgImyT
+	y57foXKClO4b+6kbx/11N/63gf/ItxAIjlyjByzRoK+FhX4mAAw6+TzaB1nuTta3
+	JM011xICvezk77plh64/SLIUjsnXfrRWqUyTLj6Oe8vXWhpFPoKy+lygxtCRJ9Lz
+	YOB+JVNnq3dBJkTSduG1laiCT5Rn5+4dIxF5vnxtkxX5fFpMAlETtGx/UbBff6x9
+	bnD+yjVtOByPO9iLfBZe0ZLm8XZJWQ3ioW61iJQoIs3mIQ==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id lOStajVoL0oe; Mon,  9 Jun 2025 23:56:23 +0000 (UTC)
+Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bGTN32MHnzlgqyD;
+	Mon,  9 Jun 2025 23:56:18 +0000 (UTC)
+Message-ID: <7cfda015-75df-4ac9-897a-41cfc6338046@acm.org>
+Date: Mon, 9 Jun 2025 16:56:16 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.6.93
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: scsi_devinfo: remove redundant 'found'
+To: mrigendrachaubey <mrigendra.chaubey@gmail.com>,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250531054638.46256-1-mrigendra.chaubey@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250531054638.46256-1-mrigendra.chaubey@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
+On 5/30/25 10:46 PM, mrigendrachaubey wrote:
+> +	list_for_each_entry(devinfo_table, &scsi_dev_info_list, node) {
+> +		if (devinfo_table->key == key)
+> +			return devinfo_table;
+> +	}
 
-[ Upstream commit e97633492f5a3eca7b3ff03b4ef6f993017f7955 ]
+The braces around the loop body are not necessary. Please remove these.
 
-When preparing for UFS clock scaling, the UFS driver will quiesce all
-sdevs queues in the UFS SCSI host tagset list and then unquiesce them in
-ufshcd_clock_scaling_unprepare(). If the UFS SCSI host async scan is in
-progress at this time, some LUs may be added to the tagset list between
-UFS clkscale prepare and unprepare. This can cause two issues:
+Thanks,
 
-1. During clock scaling, there may be I/O requests issued through new
-added queues that have not been quiesced, leading to task abort issue.
-
-2. These new added queues that have not been quiesced will be unquiesced
-as well when UFS clkscale is unprepared, resulting in warning prints.
-
-Therefore, use the mutex lock scan_mutex in
-ufshcd_clock_scaling_prepare() and ufshcd_clock_scaling_unprepare() to
-protect it.
-
-Co-developed-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Link: https://lore.kernel.org/r/20250522081233.2358565-1-quic_ziqichen@quicinc.com
-Suggested-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
-
-Based on my thorough analysis of the code and the race condition, here's
-my assessment:
-
-**YES**
-
-This commit should be backported to stable kernel trees. Here's my
-extensive analysis:
-
-## Bug Analysis
-
-The commit fixes a **critical race condition** between UFS clock scaling
-operations and async SCSI scanning that can lead to two serious issues:
-
-### 1. **The Race Condition Explained**
-
-Looking at the code changes, the issue occurs when:
-
-**Before the fix**: `ufshcd_clock_scaling_prepare()` performs operations
-in this order:
-```c
-blk_mq_quiesce_tagset(&hba->host->tag_set);  // Quiesce existing queues
-mutex_lock(&hba->wb_mutex);
-down_write(&hba->clk_scaling_lock);
-```
-
-**The race**: If `ufshcd_async_scan()` is running concurrently, it calls
-`scsi_scan_host()` at line 8789, which:
-1. Discovers new LUNs and adds them to the tagset
-2. Creates new block queues for these LUNs
-3. These new queues are **not quiesced** by the earlier
-   `blk_mq_quiesce_tagset()` call
-
-**After the fix**: The addition of `mutex_lock(&hba->host->scan_mutex)`
-**before** `blk_mq_quiesce_tagset()` ensures:
-```c
-mutex_lock(&hba->host->scan_mutex);          // NEW: Serialize with
-scanning
-blk_mq_quiesce_tagset(&hba->host->tag_set);  // Now quiesces ALL queues
-```
-
-### 2. **Specific Problems This Fixes**
-
-**Issue #1 - Task Abort**: Non-quiesced new queues can continue issuing
-I/O during clock scaling, leading to task aborts when the UFS controller
-changes power states mid-transaction.
-
-**Issue #2 - Warning Messages**: In `ufshcd_clock_scaling_unprepare()`,
-`blk_mq_unquiesce_tagset()` attempts to unquiesce ALL queues in the
-tagset, including newly added ones that were never quiesced, triggering
-warning messages.
-
-### 3. **Why This Should Be Backported**
-
-**Critical System Stability**: This fixes a race that can cause:
-- I/O errors and potential data corruption during clock scaling
-- System warnings and potential instability
-- Unpredictable behavior during device discovery
-
-**High Impact**: The race affects:
-- **UFS storage devices** (widely used in mobile phones, tablets,
-  servers)
-- **Clock scaling operations** (essential for power management)
-- **Device discovery** (happens during boot and hotplug)
-
-**Low Risk Change**: The fix is minimal and surgical:
-- Only adds `scan_mutex` synchronization around existing code
-- No functional changes to the clock scaling or scanning logic
-- Follows established kernel locking patterns (similar to other SCSI
-  drivers)
-
-**Timing-Dependent Bug**: This is exactly the type of race condition
-that:
-- May not be easily reproducible in testing
-- Can appear randomly in production under load
-- Becomes more likely with faster systems or specific timing conditions
-
-### 4. **Code Quality Assessment**
-
-The fix demonstrates good kernel programming practices:
-- **Proper lock ordering**: Acquires `scan_mutex` first to serialize
-  with scanning
-- **Complete error handling**: Properly releases `scan_mutex` in error
-  paths
-- **Symmetric operations**: Both `prepare` and `unprepare` handle the
-  mutex consistently
-- **Minimal scope**: Changes only what's necessary to fix the race
-
-### 5. **Comparison with Similar Commits**
-
-Looking at the historical commits provided:
-- This is similar to commit #4 (marked YES) which also fixes
-  synchronization during async operations
-- Unlike commits #1, #2, #3, #5 (marked NO) which are
-  optimization/refactoring changes
-- This is a **bug fix** addressing a real race condition, not a feature
-  addition
-
-**Conclusion**: This commit fixes a legitimate race condition that can
-cause system instability in UFS-based systems. It's a small, well-
-contained fix that addresses a critical synchronization issue without
-introducing new features or architectural changes. This makes it an
-ideal candidate for stable kernel backporting.
-
- drivers/ufs/core/ufshcd.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2346a1fc72b56..a6c8af2c24805 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1284,6 +1284,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- 	 * make sure that there are no outstanding requests when
- 	 * clock scaling is in progress
- 	 */
-+	mutex_lock(&hba->host->scan_mutex);
- 	blk_mq_quiesce_tagset(&hba->host->tag_set);
- 	mutex_lock(&hba->wb_mutex);
- 	down_write(&hba->clk_scaling_lock);
-@@ -1294,6 +1295,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- 		up_write(&hba->clk_scaling_lock);
- 		mutex_unlock(&hba->wb_mutex);
- 		blk_mq_unquiesce_tagset(&hba->host->tag_set);
-+		mutex_unlock(&hba->host->scan_mutex);
- 		goto out;
- 	}
- 
-@@ -1315,6 +1317,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
- 	mutex_unlock(&hba->wb_mutex);
- 
- 	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-+	mutex_unlock(&hba->host->scan_mutex);
- 	ufshcd_release(hba);
- }
- 
--- 
-2.39.5
-
+Bart.
