@@ -1,66 +1,64 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D3E31C84DD;
-	Tue, 10 Jun 2025 02:07:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C97A1624E5;
+	Tue, 10 Jun 2025 02:08:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749521248; cv=none; b=QKnguU9d6k7dezZroFhkBqDzEEvueBDegtlaAwqT9x3c2trrfcL+AoEdErKGtM16EP8FrnAAmcqwwhW1tCEY+uwufqsi+H3Y0tXl0+j904Y73ds9IB6pAmPxo3Zo8dyvdHXoH00fXqWEJroOtxzkGU4vFYP/wG/GYXmnpIifBXw=
+	t=1749521319; cv=none; b=UAMx6Y4nukDY/BaI3FQtN8TPbxpYR1kAMIpRTHuPIouBFfD8CJQryfvJsVL6Tqdb978eKvwv5jjNTI6sUd0QbkBIRgfjCwwWSb1eH3ZrKS6+vOYDiB5vcxQ8bQzgmvMogjIRj5srMLpjIf3pVywmz//z19yDlhRmugIYsREzylc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749521248; c=relaxed/simple;
-	bh=PTwP4DILR1ZgMLefVOft2PWLCZ2BmHDYdqe0+nXyBdU=;
+	s=arc-20240116; t=1749521319; c=relaxed/simple;
+	bh=pFK1rxrVlId8RG7xg4WdxocrCGY9gGEthLO82ScbDnk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HNF4+dfab5A03tvvxwgllEOtQW4j/cHyLGYqmiQqeyonpHpQTqzZDlaj41p6anR9B1cCkqnXrDSG2WslROn7gjM3sIR+E6RMo2CVGAJmPq6rerO+LGAjOxSmmzEoE6yFFoJ97OEX5QYy+FDcaYEAIe6pilZjfrE34LoomQGY4Fo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=PyPAi9X+; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=EF0hCDeTgV+0MVANVgSgFllrIciREzoXGkvytOMXFQolxnO31V/Xm5Kfii8RqLEGIyDAM/UogLHcWyu+yLfL64WQr+OcQarQHwifUIAb4lwy8y78dKSVO4T8kAw/Vmy+cATG7puYHdvs6rfO3PLIT0bIzznflgD+BtJMx7rgWLo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Iusrr9xo; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PyPAi9X+"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 559FiTiv011582;
-	Tue, 10 Jun 2025 02:07:24 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Iusrr9xo"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 559FYbDj006885;
+	Tue, 10 Jun 2025 02:08:34 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=Hcao3oqcJiTPTivIikuH7r93UTzBCV/GTaTzIqXzKSo=; b=
-	PyPAi9X+ujv5vLKIvd9b2L9YQv6VT3vt9Rg5ESK4O5+RYoXA0ZM4mdw4WzoH2+kz
-	2e2VkjeQLRiALfm46TEBxJvNw7RizSDUlsfgv5GVs0uounTOl2pNRkuLB1/OnCU1
-	CVf6T5rKScLRoU0/GHm5J/Gw8tReBnvqePqc+uX/peQ5jzRFx6Lsn+xtF31B4rjL
-	4T/O89ElfKn7eO/7SgkXXc0CVP9uIBn3OW1Wtewm2bT5s32xjsdunG3GgmkBjDt9
-	JzgmN4mu8Wd2gU/NsCEsO+1Ttt7UyP6aDgq5Ace3iCTVMQspukPj4T77vN1UW9Dk
-	eJEWG+Ct9Hmp90gHyojIZw==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 474buf39bj-1
+	corp-2025-04-25; bh=JUyqZBAzWYlfXy6XMTgQSIQERQpzKbL5PVmI8AzaYes=; b=
+	Iusrr9xotH1Jpv/0t0rRODvIcKicZZLjDLTWe1TibUIEaabPkzg0jfArOZyE5Xl5
+	g2mZWfn1BWu9U79I9tzO45SMhP1XQDOm9XDuUOyuv49Y1OYlBCphORxkHtKSq9dG
+	2/jSm6n5V9mpB75jqMVVaiO7kvDOT5WVq8YHnHn5xmu8vThuSI7uIZPacRuzaFhJ
+	Kcfh5F2Yil6HI0eZ2kfWEqVT1ix2cfym+V6QtMI+T1yuOzOLVi/aO43nEf8Flp1V
+	I4sVxZpNsrRscgdiRWSevbNeuAvyM4cwRK50tk7XfcxM3tF30xMk2oU9t5ymCYfF
+	ioakGx3R0teJ8QR2fEaD4g==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4752xjtm6y-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 10 Jun 2025 02:07:24 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 55A0jJx9031998;
-	Tue, 10 Jun 2025 02:07:23 GMT
+	Tue, 10 Jun 2025 02:08:34 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 55A1pR37007367;
+	Tue, 10 Jun 2025 02:08:33 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 474bv84jgc-1
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 474bv7vr06-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 10 Jun 2025 02:07:23 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 55A27Kr0016523;
-	Tue, 10 Jun 2025 02:07:22 GMT
+	Tue, 10 Jun 2025 02:08:33 +0000
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 55A26ugc001728;
+	Tue, 10 Jun 2025 02:08:31 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 474bv84jet-3;
-	Tue, 10 Jun 2025 02:07:22 +0000
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 474bv7vquh-1;
+	Tue, 10 Jun 2025 02:08:31 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Nihar Panda <niharp@linux.ibm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-s390@vger.kernel.org,
-        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev <agordeev@linux.ibm.com>,
-        Nihar Panda <nihar.panda@ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>
-Subject: Re: [PATCH] s390/zfcp: Ensure synchronous unit_add
-Date: Mon,  9 Jun 2025 22:06:47 -0400
-Message-ID: <174951883638.1141801.4092943028769739009.b4-ty@oracle.com>
+To: James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, longli@microsoft.com,
+        linux-hyperv@vger.kernel.org, wei.liu@kernel.org,
+        haiyangz@microsoft.com, kys@microsoft.com,
+        Dexuan Cui <decui@microsoft.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, stable@kernel.org
+Subject: Re: [PATCH] scsi: storvsc: Increase the timeouts to storvsc_timeout
+Date: Mon,  9 Jun 2025 22:07:36 -0400
+Message-ID: <174952124901.1235337.4567244349908648438.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250603182252.2287285-2-niharp@linux.ibm.com>
-References: <20250603182252.2287285-1-niharp@linux.ibm.com> <20250603182252.2287285-2-niharp@linux.ibm.com>
+In-Reply-To: <1749243459-10419-1-git-send-email-decui@microsoft.com>
+References: <1749243459-10419-1-git-send-email-decui@microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,36 +70,33 @@ Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
  definitions=2025-06-10_01,2025-06-09_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 suspectscore=0
- phishscore=0 malwarescore=0 mlxlogscore=984 spamscore=0 adultscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
- definitions=main-2506100014
-X-Authority-Analysis: v=2.4 cv=RZGQC0tv c=1 sm=1 tr=0 ts=6847935c cx=c_pps a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=VwQbUJbxAAAA:8 a=iJjEDP7nYTzMqzp7gXkA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: JWiXZBSr66StzwurPf3KoRj28AWoSXYa
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjEwMDAxNCBTYWx0ZWRfX2EXxuT/ZQmWZ FKzUm69c5mw1bHa014r/dguU1w5EaXTYoYCaf6ogvXV9V3/vpPj2XQwVu4GdDKGm1wCRauUBXw9 XU0C+S/9yacX62OEzzMqGMIGE/GPw7NmQCyovKzdgJDCXa03tqr99TaLrPFjcHP0Zl2sG0itoUb
- ATC7afz/Q94GK+8sxHMKxHPLfcVyKLstzbZW4jc9Q+hsmdssGbFe5uWMzp9vhvQuz5iTFfAuEUQ LO8AYUIH3KAfuhS2r84wRFQZOKv3f1O3iMtX5xgWqnSjBguYilzNVUlQK+XoYSHjT0uJt3XLiq/ pJvUv0gHazI/XuJ7yopPJttsG5kvvbMPXyM+ZH7BT/x0W9uKWzuG+EhWmGG/DBR6kGbGwqMm4OR
- b3zvAZDXw7qyBNS4O4QmaXEfw1kXAdtUIylMXmDxaNhHK/2kCyW8Nw74r/l1iDtBOilHbleo
-X-Proofpoint-ORIG-GUID: JWiXZBSr66StzwurPf3KoRj28AWoSXYa
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 phishscore=0
+ malwarescore=0 suspectscore=0 spamscore=0 mlxscore=0 bulkscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2505160000 definitions=main-2506100015
+X-Authority-Analysis: v=2.4 cv=K4AiHzWI c=1 sm=1 tr=0 ts=684793a2 cx=c_pps a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=VwQbUJbxAAAA:8 a=2I0cK5IvEajveI9R3G8A:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjEwMDAxNSBTYWx0ZWRfX3JqJ9GFINucp vOpy9yvleIRhmfZfGxfT2nUq1Bbjzj4YXmDArdOzZpmXI9KN8nEQx4/4h83H8+nkE1Oz9+kjrOm 720PjzMu1qolOqxZFB1lia1IBuWoH05/LYbU2JI7kp8makJL/TkvLnrrKdU0fsaTIm8yZYu/PNQ
+ wSSVrJxrTAWW1jHk4q1cmuIiqghadwEbBLhYSoprMX3ECs7OFDcp0OZud05oNVix/UcKvTdftDC VUFQa7s2shTd5uYMzkQLipZwNvGhmDzXfh57o1s7NF5QYTlsHCbq3RkcLL51DU6ZQwFFh1e4RWC o/uTAenq81fyxOosVQPGMlOd9xXKfFWnaFhLLQP61A+4PL/GfAJdHdXzqmBQSO1cQLDPf+3GayQ
+ wyjKfMT/nmYlsoYCgGit1k9OHM0AJeU+OOJnugdXg8W+Dxwuj4nHd2ZO0dxU4tVy4kt5HLAV
+X-Proofpoint-ORIG-GUID: jHFpknroR-ITkKir1hua2EKvow3vubfC
+X-Proofpoint-GUID: jHFpknroR-ITkKir1hua2EKvow3vubfC
 
-On Tue, 03 Jun 2025 20:21:56 +0200, Nihar Panda wrote:
+On Fri, 06 Jun 2025 13:57:39 -0700, Dexuan Cui wrote:
 
-> Improve the usability of the unit_add sysfs attribute by ensuring that
-> the associated FCP LUN scan processing is completed synchronously.
-> This enables configuration tooling to consistently determine the end of
-> the scan process to allow for serialization of follow-on actions.
+> Currently storvsc_timeout is only used in storvsc_sdev_configure(), and
+> 5s and 10s are used elsewhere. It turns out that rarely the 5s is not
+> enough on Azure, so let's use storvsc_timeout everywhere.
 > 
-> While the scan process associated with unit_add typically completes
-> synchronously, it is deferred to an asynchronous background process if
-> unit_add is used before initial remote port scanning has completed.
-> This occurs when unit_add is used immediately after setting the
-> associated FCP device online.
+> In case a timeout happens and storvsc_channel_init() returns an error,
+> close the VMBus channel so that any host-to-guest messages in the
+> channel's ringbuffer, which might come late, can be safely ignored.
 > 
 > [...]
 
 Applied to 6.16/scsi-fixes, thanks!
 
-[1/1] s390/zfcp: Ensure synchronous unit_add
-      https://git.kernel.org/mkp/scsi/c/9697ca0d53e3
+[1/1] scsi: storvsc: Increase the timeouts to storvsc_timeout
+      https://git.kernel.org/mkp/scsi/c/b2f966568faa
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
