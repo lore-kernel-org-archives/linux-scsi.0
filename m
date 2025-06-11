@@ -1,120 +1,182 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE2218479
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2025 12:31:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4259418BC2F;
+	Wed, 11 Jun 2025 15:05:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749645069; cv=none; b=GjY2nuCnTe2x90Keogoa6oyYTzPLTmpiaQ39uYr09CmvsqKM4TTbGAi810/OvB71hpDi5BMT2KEB5Z5dKt8H12lwm1wr2lqEly8TKPtQ176IHVsTXWT3lysFS+uIALVvgyBCZl77POHclj9angvh7eG2fIRllThBziPT6Ldk0kE=
+	t=1749654356; cv=none; b=gs2p97F8xakutiMBlAhVpbhOEq0ICMVZ4Xd9sDMtS01a2sWk/COeeYYx4rqiFik8WB3FVb/zvDgqgvFtEx1s/ZGU9CyW32NLSPipu/rdOcCmYJ5qhodTZXJ8AFqhmwbz02QXQ8KWTmJmglmwdBBKE8Lr1SlUfmaCUas/9cTQHNk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749645069; c=relaxed/simple;
-	bh=GPAoc1RhjAcOvQTmrRrchjFnFIGToNpKDZfZyoxuLP4=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=MS+iOaOYGSCDQdYg3NGQCkCRXooneYmAXlBPyyxUdqH9zjKHZ6tFkf4QKvbozWu45BmnTq+wP+dUFea6MZ+5sfATQqJC9A/6eCkW39bWnI+5pSY6S6gGsuE1lIW0CDJ/DazncGCda/BW/At7xYerBBPYQLbPLtdVNl1crdu4abA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GChjpCik; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749654356; c=relaxed/simple;
+	bh=nXn//9wEDz612qpwUp8e5GEyUKA50kkwM4h/bE6ZsuQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=su5z1yS8jd8azCp46KNpSr3hGUrUxHodUkSa+nWZc3tLl4dQVwIHtbkS0idMXbDby+r8eqovkXu0UhwBY3u26oWorq0EgJWCy2yxS/3YLRcycAhBIkhbUozQjxDFHetKSj8wLxN6+SmApe8OT+k09HiqetS+eJ9HtWj2LJ6Pxn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Q09gTN7J; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GChjpCik"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F38B9C4CEEE;
-	Wed, 11 Jun 2025 12:31:07 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Q09gTN7J"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BF97EC4CEE3;
+	Wed, 11 Jun 2025 15:05:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749645068;
-	bh=GPAoc1RhjAcOvQTmrRrchjFnFIGToNpKDZfZyoxuLP4=;
-	h=From:To:Subject:Date:From;
-	b=GChjpCikzmxT6yzDoCjU9cqzrEio88dNTFtspl5q1BSPVJcbsIzEPgRoLD1nXRgKC
-	 njZGiDZpaniAlnEphcCCw0uyl4n2oo+a+07q9Vo3Wt9elxkmj/jXFu++mi4bWgY98q
-	 RCr3HTsls+BPI4fbE9n9fmfIePSoAzkjN9uY7joS0p0EePJ3WOKfSAnND8M3DsXXsP
-	 Dvdw9MMGGMXbMuh8vyxC5tRgvQxVzrud3ACp1ARUaTeMLr8XhH5VquJJ0jNVpNFyaG
-	 32kygmjkS5fdZeG/QrtBEegVooKNBqJFtCJM9VeYC0aZuIZcXAIygy9bKCD36R1W8Y
-	 aTosGsLpVKgMw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v2] scsi: sd: Set a default optimal IO size if one is not defined
-Date: Wed, 11 Jun 2025 21:29:21 +0900
-Message-ID: <20250611122921.3960656-1-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.49.0
+	s=k20201202; t=1749654355;
+	bh=nXn//9wEDz612qpwUp8e5GEyUKA50kkwM4h/bE6ZsuQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Q09gTN7JEA9p4RLFDHZ4C0xd3qOt0xR+cuu6CEvOs3oeO1rgndK/SFluuYHxpBwiL
+	 pcrJUktzodkyPGdCmioD3Pn+DGNwZw7t8x7x2D0qcxhP98WSlrEXXDrl7ncRliIhTv
+	 i4B1LttaTfBZZFx7yGC/ufWAgQofppsA7SN8MiAQIPngifAuoyFFbczwovXdJeehdI
+	 4OJt2ThjrKPM/ptQuox2H9n/ZSCCZ39v0wavG5UYR+eo8fL5G9z0B1cJtSFNF0XXL9
+	 lNIgvxMVexROrysgq8wf/C4BYLcPSK2fCrvofoN4KX+z/6+s8eFIPH4pHF4mqI6jr0
+	 gYUgZDM+G7c/Q==
+Date: Wed, 11 Jun 2025 08:05:55 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+	tytso@mit.edu, john.g.garry@oracle.com, bmarzins@redhat.com,
+	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+	brauner@kernel.org, martin.petersen@oracle.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com,
+	linux-api@vger.kernel.org
+Subject: Re: [PATCH 07/10] fs: introduce FALLOC_FL_WRITE_ZEROES to fallocate
+Message-ID: <20250611150555.GB6134@frogsfrogsfrogs>
+References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
+ <20250604020850.1304633-8-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250604020850.1304633-8-yi.zhang@huaweicloud.com>
 
-Introduce the helper function sd_set_io_opt() to set a disk io_opt
-limit. This new way of setting this limit falls back to using the
-max_sectors limit if the host does not define an optimal sector limit
-and the device did not indicate an optimal transfer size (e.g. as is
-the case for ATA devices). This fallback io_opt limit avoids the disk to
-be setup with the rather small 128 KB for as the read_ahead_kb
-attribute. The larger read_ahead_kb value set with the default io_opt
-limit significantly improves buffered read performance with file
-systems without any intervention from the user.
+[cc linux-api about a fallocate uapi change]
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
-Changes from v1:
- - Changed message level from wrong WARNING level to INFO level
- - Added review tag
+On Wed, Jun 04, 2025 at 10:08:47AM +0800, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
+> 
+> With the development of flash-based storage devices, we can quickly
+> write zeros to SSDs using the WRITE_ZERO command if the devices do not
+> actually write physical zeroes to the media. Therefore, we can use this
+> command to quickly preallocate a real all-zero file with written
+> extents. This approach should be beneficial for subsequent pure
+> overwriting within this file, as it can save on block allocation and,
+> consequently, significant metadata changes, which should greatly improve
+> overwrite performance on certain filesystems.
+> 
+> Therefore, introduce a new operation FALLOC_FL_WRITE_ZEROES to
+> fallocate. This flag is used to convert a specified range of a file to
+> zeros by issuing a zeroing operation. Blocks should be allocated for the
+> regions that span holes in the file, and the entire range is converted
+> to written extents. If the underlying device supports the actual offload
+> write zeroes command, the process of zeroing out operation can be
+> accelerated. If it does not, we currently don't prevent the file system
+> from writing actual zeros to the device. This provides users with a new
+> method to quickly generate a zeroed file, users no longer need to write
+> zero data to create a file with written extents.
+> 
+> Users can determine whether a disk supports the unmap write zeroes
+> operation through querying this sysfs interface:
+> 
+>     /sys/block/<disk>/queue/write_zeroes_unmap
+> 
+> Finally, this flag cannot be specified in conjunction with the
+> FALLOC_FL_KEEP_SIZE since allocating written extents beyond file EOF is
+> not permitted. In addition, filesystems that always require out-of-place
+> writes should not support this flag since they still need to allocated
+> new blocks during subsequent overwrites.
+> 
+> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> ---
+>  fs/open.c                   |  1 +
+>  include/linux/falloc.h      |  3 ++-
+>  include/uapi/linux/falloc.h | 18 ++++++++++++++++++
+>  3 files changed, 21 insertions(+), 1 deletion(-)
+> 
+> diff --git a/fs/open.c b/fs/open.c
+> index 7828234a7caa..b777e11e5522 100644
+> --- a/fs/open.c
+> +++ b/fs/open.c
+> @@ -281,6 +281,7 @@ int vfs_fallocate(struct file *file, int mode, loff_t offset, loff_t len)
+>  		break;
+>  	case FALLOC_FL_COLLAPSE_RANGE:
+>  	case FALLOC_FL_INSERT_RANGE:
+> +	case FALLOC_FL_WRITE_ZEROES:
+>  		if (mode & FALLOC_FL_KEEP_SIZE)
+>  			return -EOPNOTSUPP;
+>  		break;
+> diff --git a/include/linux/falloc.h b/include/linux/falloc.h
+> index 3f49f3df6af5..7c38c6b76b60 100644
+> --- a/include/linux/falloc.h
+> +++ b/include/linux/falloc.h
+> @@ -36,7 +36,8 @@ struct space_resv {
+>  				 FALLOC_FL_COLLAPSE_RANGE |	\
+>  				 FALLOC_FL_ZERO_RANGE |		\
+>  				 FALLOC_FL_INSERT_RANGE |	\
+> -				 FALLOC_FL_UNSHARE_RANGE)
+> +				 FALLOC_FL_UNSHARE_RANGE |	\
+> +				 FALLOC_FL_WRITE_ZEROES)
+>  
+>  /* on ia32 l_start is on a 32-bit boundary */
+>  #if defined(CONFIG_X86_64)
+> diff --git a/include/uapi/linux/falloc.h b/include/uapi/linux/falloc.h
+> index 5810371ed72b..265aae7ff8c1 100644
+> --- a/include/uapi/linux/falloc.h
+> +++ b/include/uapi/linux/falloc.h
+> @@ -78,4 +78,22 @@
+>   */
+>  #define FALLOC_FL_UNSHARE_RANGE		0x40
+>  
+> +/*
+> + * FALLOC_FL_WRITE_ZEROES is used to convert a specified range of a file to
+> + * zeros by issuing a zeroing operation. Blocks should be allocated for the
+> + * regions that span holes in the file, and the entire range is converted to
+> + * written extents.
 
- drivers/scsi/sd.c | 37 +++++++++++++++++++++++++++----------
- 1 file changed, 27 insertions(+), 10 deletions(-)
+I think you could simplify this a bit by talking only about the end
+state after a successful call:
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index daddef2e9e87..92d5b4900c0e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3681,6 +3681,32 @@ static void sd_read_block_zero(struct scsi_disk *sdkp)
- 	kfree(buffer);
- }
- 
-+/*
-+ * Set the optimal I/O size: limit the default to the SCSI host optimal sector
-+ * limit if it is set. There may be an impact on performance when the size of
-+ * a request exceeds this host limit. If the host did not set any optimal
-+ * sector limit and the device did not indicate an optimal transfer size
-+ * (e.g. ATA devices), default to using the device max_sectors limit.
-+ */
-+static void sd_set_io_opt(struct scsi_disk *sdkp, unsigned int dev_max,
-+			  struct queue_limits *lim)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	struct Scsi_Host *shost = sdp->host;
-+
-+	lim->io_opt = shost->opt_sectors << SECTOR_SHIFT;
-+	if (sd_validate_opt_xfer_size(sdkp, dev_max))
-+		lim->io_opt = min_not_zero(lim->io_opt,
-+				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
-+	if (!lim->io_opt) {
-+		lim->io_opt = ALIGN_DOWN(lim->max_sectors << SECTOR_SHIFT,
-+					 sdkp->physical_block_size - 1);
-+		sd_first_printk(KERN_INFO, sdkp,
-+			"Using default optimal transfer size of %u bytes\n",
-+			lim->io_opt);
-+	}
-+}
-+
- /**
-  *	sd_revalidate_disk - called the first time a new disk is seen,
-  *	performs disk spin up, read_capacity, etc.
-@@ -3777,16 +3803,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	else
- 		lim.io_min = 0;
- 
--	/*
--	 * Limit default to SCSI host optimal sector limit if set. There may be
--	 * an impact on performance for when the size of a request exceeds this
--	 * host limit.
--	 */
--	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
--	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
--		lim.io_opt = min_not_zero(lim.io_opt,
--				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
--	}
-+	sd_set_io_opt(sdkp, dev_max, &lim);
- 
- 	sdkp->first_scan = 0;
- 
--- 
-2.49.0
+"FALLOC_FL_WRITE_ZEROES zeroes a specified file range in such a way that
+subsequent writes to that range do not require further changes to file
+mapping metadata."
 
+Note that we don't say how the filesystem gets to this goal.  Presumably
+the first implementations will send a zeroing operation to the block
+device during allocation and the fs will create written mappings, but
+there are other ways to get there -- a filesystem could maintain a pool
+of pre-zeroed space and hand those out; or it could zero space on
+freeing and mounting such that all new mappings can be created as
+written even without the block device zeroing operation.
+
+Or you could be running on some carefully engineered system where you
+know the storage will always be zeroed at allocation time due to some
+other aspect of the system design, e.g. a single-use throwaway cloud vm
+where you allocate to the end of the disk and reboot the node.
+
+> + *                  This flag is beneficial for subsequent pure overwriting
+> + * within this range, as it can save on block allocation and, consequently,
+> + * significant metadata changes. Therefore, filesystems that always require
+> + * out-of-place writes should not support this flag.
+> + *
+> + * Different filesystems may implement different limitations on the
+> + * granularity of the zeroing operation. Most will preferably be accelerated
+> + * by submitting write zeroes command if the backing storage supports, which
+> + * may not physically write zeros to the media.
+> + *
+> + * This flag cannot be specified in conjunction with the FALLOC_FL_KEEP_SIZE.
+> + */
+> +#define FALLOC_FL_WRITE_ZEROES		0x80
+
+The rest of the writeup seems fine to me.
+
+--D
+
+> +
+>  #endif /* _UAPI_FALLOC_H_ */
+> -- 
+> 2.46.1
+> 
+> 
