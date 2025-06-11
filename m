@@ -1,48 +1,48 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 321D71C863B
-	for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2025 15:35:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA1C1DE3C3
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2025 15:46:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749656143; cv=none; b=ODlfQSgOfg7GlVsbQtnr9hxijWtOOSFULcgO0ee3ZFayAhycRTUiq7U3lE1m44PLc5DaXLFdE+ssquDpEhWmXQnEAhKLY2cqjZSoBBzvX4QiiIMAGgUC4Nkq2xfQMmfWGlrZcfUdY20oo0aJwRsIpbXamkuqoG14KTjmjotsw6Q=
+	t=1749656778; cv=none; b=dC+ADPwYLBd8gDJwzhKdwdwh8+iW7t/9i4B71rjsGtmuKtqpVCpN9lL6pnoswVn/GHWn45hUkM6S7/1BSF6EL2CgVHXB4dbk9gIzPpkPoO6MH5ss9sAm1o+sGQVWjLSDE9NrU03z2uEJft0bgaVUFx5SD/ZBC2lHdoaRjgK+7GI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749656143; c=relaxed/simple;
-	bh=lHXfJa297tIQDdcKbAvtnzLTGwV02IJTQic/rgiLhcg=;
+	s=arc-20240116; t=1749656778; c=relaxed/simple;
+	bh=8oNK3qitZXkrEipdiqTWBQBKfwJf3jqcij39ZN/CfVk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=eFkoV79darEURJ9gO0q6vHhGZUSSlSKOo7J1EMoVipI9H3I+YvdXpVuuKlPFauuTmrcaPaXvkXNy+fnGJGQMbU4O8vc4frZgAT+Hhz3TnLCG81XTENPPbj9nmU/+BylTXRkgcB1vVpQdzpG61sLmwcjrhc3Vumu0KXaSWr61/No=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2pZX4Q7F; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=Cf1k51ynsJmnIhQa3JFcRXyGm0b32MBjNXlO1h/OPsjhQCNCdibBKSG3/78c4UkZtCa/DGlI9qzFjIULnTbv4QzJWTB1EqmuwLnZrg9Jpyrkjbm3+XIESB9L0s5+vX3IOGlNgY1zbJwPr3IpOXMbTjIkfu8qSxP8eBekBD83HB0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sYhCQOpf; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2pZX4Q7F"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sYhCQOpf"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bHV9K724qzm0jvG;
-	Wed, 11 Jun 2025 15:35:33 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bHVPg3qnpzm0jvn;
+	Wed, 11 Jun 2025 15:46:15 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1749656132; x=1752248133; bh=AhqAdwO7QNpmN5RfI79FPQWJ
-	WB92sjYqxUm81PQ6dJk=; b=2pZX4Q7FRPe75WGTOc5wvFythI8IJh/OgzeR4xtI
-	44CnQGHr+7Mt2+ldblz4mF5XP621J0NmoN5EobiJgMG9hT/8/wnkuWa4rzEMAp9p
-	i8xBiMzd35E8wEvKen2jSLLcYpIYMnqlDgdiwHL1Ivy5rWiOT/AToHSUX/9Xfule
-	u5IoI4ZQNfdTeJvhk7K0yP9jSPiTO++5UvT/mRk5kSIQKlwGGQO8YbJCr7d5glvh
-	EQk+xtmvoubDBJdunvcfHuM2zsNas1E8M88TXiHDlaqRl/jc1GlAtaBthrqipob0
-	KzLGf49oDezEspHMoPuZ6xTB964R8PSl2jivXYnz07oFlQ==
+	 s=mr01; t=1749656774; x=1752248775; bh=1rWfkeVP8ZX21cLWACQfhqYC
+	NsG4a5E5DcWvPEdGc6w=; b=sYhCQOpf3jgjBrhL7MflmN/t1w1gGCSUGuoF5PLR
+	F5H0wso1JjSK6lHqCOKp8OANxW63grhufYx5lgMzN5wXS6Xy5eRH7AYOi2SfMjGB
+	jVqwPOyYCF2LItviwhgb9K9wDN7JxcOCLISaZldBA+7CX/b7oPXBammmMWdOBLSv
+	sf5z4N2gIZRuY19T01Y20auEnly1d2+1OsVJ5axFNCfDaY6jViSNRrAnJdnps+0w
+	d6rZCrwX3KhyT/qwU1mOoj2FCzhMtGro+jLdRaWaAWYACAU1UEc9L0DSgq+XE8rN
+	sXjyS4CiKAc0oVgjKNBY2hkWZkeRy7yi05++NdIqfv0EPg==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id At5UNtR89kcw; Wed, 11 Jun 2025 15:35:32 +0000 (UTC)
+ id baGEXOJhh4qc; Wed, 11 Jun 2025 15:46:14 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bHV9H3BMVzm0pKm;
-	Wed, 11 Jun 2025 15:35:30 +0000 (UTC)
-Message-ID: <f1877d65-6b7b-4d71-899d-d6b3d8bafbdc@acm.org>
-Date: Wed, 11 Jun 2025 08:35:29 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bHVPc4Yl3zm1Hbf;
+	Wed, 11 Jun 2025 15:46:11 +0000 (UTC)
+Message-ID: <aca75eab-45b4-4afd-8319-e2662fd9d9e8@acm.org>
+Date: Wed, 11 Jun 2025 08:46:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,48 +50,41 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: sd: Set a default optimal IO size if one is not
- defined
+Subject: Re: [PATCH v2] scsi: Remember if a device is an ATA device
 To: Damien Le Moal <dlemoal@kernel.org>,
  "Martin K . Petersen" <martin.petersen@oracle.com>,
  linux-scsi@vger.kernel.org
-References: <20250611122921.3960656-1-dlemoal@kernel.org>
+References: <20250611093421.2901633-1-dlemoal@kernel.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250611122921.3960656-1-dlemoal@kernel.org>
+In-Reply-To: <20250611093421.2901633-1-dlemoal@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 6/11/25 5:29 AM, Damien Le Moal wrote:
-> +static void sd_set_io_opt(struct scsi_disk *sdkp, unsigned int dev_max,
-> +			  struct queue_limits *lim)
-> +{
-> +	struct scsi_device *sdp = sdkp->device;
-> +	struct Scsi_Host *shost = sdp->host;
-> +
-> +	lim->io_opt = shost->opt_sectors << SECTOR_SHIFT;
-> +	if (sd_validate_opt_xfer_size(sdkp, dev_max))
-> +		lim->io_opt = min_not_zero(lim->io_opt,
-> +				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
-> +	if (!lim->io_opt) {
-> +		lim->io_opt = ALIGN_DOWN(lim->max_sectors << SECTOR_SHIFT,
-> +					 sdkp->physical_block_size - 1);
-> +		sd_first_printk(KERN_INFO, sdkp,
-> +			"Using default optimal transfer size of %u bytes\n",
-> +			lim->io_opt);
-> +	}
-> +}
+On 6/11/25 2:34 AM, Damien Le Moal wrote:
+> scsi_add_lun() tests the device vendor string of SCSI devices to detect
+> if a SCSI device is in fact an ATA device, in order to correctly handle
+> SATL power management. The function scsi_cdl_enable() also requires
+> knowing if a SCSI device is an ATA device to control the state of the
+> device CDL feature but this function does that by testing for the
+> presence of the VPD page 89h (ATA INFORMATION page).
+> sd_read_write_same() also has a similar test.
+> 
+> Simplify these different methods by adding the is_ata field to struct
+> scsi_device to remember that a SCSI device is in fact an ATA one based
+> on the device vendor name test. This filed can also allow low level
+> SCSI host adapter drivers to take special actions for ATA devices
+> (e.g. to better handle ATA NCQ errors).
+> 
+> With this, simplify scsi_cdl_enable() and sd_read_write_same().
+Hi Damien,
 
-shost->opt_sectors and lim->max_sectors both have type unsigned int so
-when shifting these left there is a risk of overflow. As an example,
-from the scsi_debug driver:
-
-	.max_sectors =		-1U,
-
-Shouldn't integer overflows be prevented instead of letting these
-happen?
+There is only one "if (is_ata)" check in the SCSI core as far as I can
+see. Can it be avoided that ATA code leaks into the SCSI core by
+introducing a new function pointer, e.g. in struct Scsi_Host, and by
+calling that new function pointer if it has been set from
+scsi_cdl_enable()?
 
 Thanks,
 
 Bart.
-
