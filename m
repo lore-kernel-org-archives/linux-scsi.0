@@ -1,106 +1,115 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50FDC23183C;
-	Wed, 11 Jun 2025 07:31:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3B32D231839
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2025 07:40:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749627089; cv=none; b=MHQTRmtxN1clMCtQBMTKVIZmlLb8y6XGOLHfb4zc/GR4TZ1k1uHxGpqVkxyVV5cpaWZXaqSs5f9AEBZf4ekwYLagIe7FYBO2Jxs6HZpJG5jKCAio16LKGREGiqc8784Sz8NJIvV/JPRcOP4hSptVDuVQrn8plw+C0ZnfrGTzMnw=
+	t=1749627652; cv=none; b=RtBi1Um8gnQkb4AlzYRAFokMXWAitO1H32JRY5jCiMbWhxs9lGb2OpontiU+Up7Bfi/qlX0cDXcspOG7M/Py/Mwn3R/bIXUjDIdurDXG2q/MjGexWjY3USc1n9JWCWt7+h6l15UH06az5g6oRc/CTaxisGwgmB4ktM5k55lK/Jk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749627089; c=relaxed/simple;
-	bh=uVY8gD5wTvCS8m0kEGk+hfJFF8nXcQhSPWKbuime2kk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=LCPSO3WBMzUPw/0CtRcSdlK0hcCZQaFbK09q36js3xqb2mpiOO713nXu9zWGekclg1H/hkU6WAge2QbaZVVabS1zAQsW3VtVgqZE9C74IfKQGX1hDdAH4pT3DlShIguq8ZAFgWjs8UVBi98tU6QWR+uzDijnfDPvcJw6V4Cand8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.235])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bHHQh4rsVzYQvJs;
-	Wed, 11 Jun 2025 15:31:24 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.252])
-	by mail.maildlp.com (Postfix) with ESMTP id A3D651A0A55;
-	Wed, 11 Jun 2025 15:31:23 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP3 (Coremail) with SMTP id _Ch0CgA3icPJMElo89e+Ow--.19807S3;
-	Wed, 11 Jun 2025 15:31:23 +0800 (CST)
-Message-ID: <343f7f06-9bf6-442f-8e77-0a774203ec3f@huaweicloud.com>
-Date: Wed, 11 Jun 2025 15:31:21 +0800
+	s=arc-20240116; t=1749627652; c=relaxed/simple;
+	bh=LH/99foafaSWmmvuo0qyDyyHh5B/pUskHGUOzZvZmgU=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version; b=Hpk/N9pXL1GTdvTqpfDQooGp4MrTs2WQx72hJB5OJ4ZszTXzDhOUnSQLXbdFBBGKdx0dBGgY79giZTdXlD53AzP21isLemdjdIfJa7ZZu1rTtTikG8LDP/XrDeEWx6O1i0Vcc6TRHgbZWCwW0T/4gxNsnoiosWZuWCbb2hHXGxE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oNvx5h2R; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oNvx5h2R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 722A0C4CEEE;
+	Wed, 11 Jun 2025 07:40:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1749627651;
+	bh=LH/99foafaSWmmvuo0qyDyyHh5B/pUskHGUOzZvZmgU=;
+	h=From:To:Subject:Date:From;
+	b=oNvx5h2RFDZa7qRetf9iSKh2kdUar493rdsrc8V6eLxBRhCnFfBLMEv/3Rtehv7Hq
+	 xBtxAlPntwp6Up7wNqWAqdHCIlDM4Y43Y3ck5MK29iiV/6Vq3L8caPkVIk77pNEMHA
+	 EljslqiOVt70WEIEnmN9uxkaCyaxuUdyT06iOj58esgrG7uQ8lssWGlEWoyaz2kbp4
+	 Zg5ojYZcGvFYMMPUutPpmo5k6ac+1t1LiW6BK3AhmlE2GL+zd+0UmVqURs8etWMFzT
+	 6DFeWmKD1V/DpHfdpI32bQOSE8+5HS1N2eI9ms4UdqCyTrioCKspG5L5cpZ7xG5KPJ
+	 +ddiBnHO+QSWQ==
+From: Damien Le Moal <dlemoal@kernel.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH] scsi: sd: Set a default optimal IO size if one is not defined
+Date: Wed, 11 Jun 2025 16:39:05 +0900
+Message-ID: <20250611073905.2173785-1-dlemoal@kernel.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/10] block: introduce BLK_FEAT_WRITE_ZEROES_UNMAP to
- queue limits features
-To: Christoph Hellwig <hch@lst.de>
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
- djwong@kernel.org, john.g.garry@oracle.com, bmarzins@redhat.com,
- chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com, brauner@kernel.org,
- martin.petersen@oracle.com, yi.zhang@huawei.com, chengzhihao1@huawei.com,
- yukuai3@huawei.com, yangerkun@huawei.com
-References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
- <20250604020850.1304633-2-yi.zhang@huaweicloud.com>
- <20250611060900.GA4613@lst.de>
-Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <20250611060900.GA4613@lst.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:_Ch0CgA3icPJMElo89e+Ow--.19807S3
-X-Coremail-Antispam: 1UD129KBjvdXoW7Xw1kXw1DJFWxCryUZF4xWFg_yoWfWFc_Za
-	1SyryDCw4DArySyanrAwn8trWkKr4DXFWxur47Kay5Ca45Ja4xCrs5urySva4FqayFqF4I
-	krZxXF9F9FZ2gjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
-	9fnUUIcSsGvfJTRUUUbxxYFVCjjxCrM7AC8VAFwI0_Xr0_Wr1l1xkIjI8I6I8E6xAIw20E
-	Y4v20xvaj40_Wr0E3s1l1IIY67AEw4v_Jr0_Jr4l8cAvFVAK0II2c7xJM28CjxkF64kEwV
-	A0rcxSw2x7M28EF7xvwVC0I7IYx2IY67AKxVWDJVCq3wA2z4x0Y4vE2Ix0cI8IcVCY1x02
-	67AKxVW8Jr0_Cr1UM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
-	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
-	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
-	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
-	wI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
-	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5
-	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
-	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
-	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUIa
-	0PDUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+Content-Transfer-Encoding: 8bit
 
-On 2025/6/11 14:09, Christoph Hellwig wrote:
-> On Wed, Jun 04, 2025 at 10:08:41AM +0800, Zhang Yi wrote:
->> +static ssize_t queue_write_zeroes_unmap_show(struct gendisk *disk, char *page)
-> 
-> ..
-> 
->> +static int queue_write_zeroes_unmap_store(struct gendisk *disk,
->> +		const char *page, size_t count, struct queue_limits *lim)
-> 
-> We're probably getting close to wanting macros for the sysfs
-> flags, similar to the one for the features (QUEUE_SYSFS_FEATURE).
-> 
-> No need to do this now, just thinking along.
+Introduce the helper function sd_set_io_opt() to set a disk io_opt
+limit. This new way of setting this limit falls back to using the
+max_sectors limit if the host does not define an optimal sector limit
+and the device did not indicate an optimal transfer size (e.g. as is
+the case for ATA devices). This fallback io_opt limit avoids the disk to
+be setup with the rather small 128 KB for as the read_ahead_kb
+attribute. The larger read_ahead_kb value set with the default io_opt
+limit significantly improves buffered read performance with file
+systems without any intervention from the user.
 
-Yes.
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/scsi/sd.c | 37 +++++++++++++++++++++++++++----------
+ 1 file changed, 27 insertions(+), 10 deletions(-)
 
-> 
->> +/* supports unmap write zeroes command */
->> +#define BLK_FEAT_WRITE_ZEROES_UNMAP	((__force blk_features_t)(1u << 17))
-> 
-> 
-> Should this be exposed through sysfs as a read-only value?
-
-Uh, are you suggesting adding another sysfs interface to expose
-this feature?
-
-> 
-> Otherwise looks good:
-> 
-> Reviewed-by: Christoph Hellwig <hch@lst.de>
-
-Thanks,
-Yi.
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 3f6e87705b62..ebcc1358d3bd 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3686,6 +3686,32 @@ static void sd_read_block_zero(struct scsi_disk *sdkp)
+ 	kfree(buffer);
+ }
+ 
++/*
++ * Set the optimal I/O size: limit the default to the SCSI host optimal sector
++ * limit if it is set. There may be an impact on performance when the size of
++ * a request exceeds this host limit. If the host did not set any optimal
++ * sector limit and the device did not indicate an optimal transfer size
++ * (e.g. ATA devices), default to using the device max_sectors limit.
++ */
++static void sd_set_io_opt(struct scsi_disk *sdkp, unsigned int dev_max,
++			  struct queue_limits *lim)
++{
++	struct scsi_device *sdp = sdkp->device;
++	struct Scsi_Host *shost = sdp->host;
++
++	lim->io_opt = shost->opt_sectors << SECTOR_SHIFT;
++	if (sd_validate_opt_xfer_size(sdkp, dev_max))
++		lim->io_opt = min_not_zero(lim->io_opt,
++				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
++	if (!lim->io_opt) {
++		lim->io_opt = ALIGN_DOWN(lim->max_sectors << SECTOR_SHIFT,
++					 sdkp->physical_block_size - 1);
++		sd_first_printk(KERN_WARNING, sdkp,
++			"Using default optimal transfer size of %u bytes\n",
++			lim->io_opt);
++	}
++}
++
+ /**
+  *	sd_revalidate_disk - called the first time a new disk is seen,
+  *	performs disk spin up, read_capacity, etc.
+@@ -3782,16 +3808,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	else
+ 		lim.io_min = 0;
+ 
+-	/*
+-	 * Limit default to SCSI host optimal sector limit if set. There may be
+-	 * an impact on performance for when the size of a request exceeds this
+-	 * host limit.
+-	 */
+-	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
+-	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
+-		lim.io_opt = min_not_zero(lim.io_opt,
+-				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
+-	}
++	sd_set_io_opt(sdkp, dev_max, &lim);
+ 
+ 	sdkp->first_scan = 0;
+ 
+-- 
+2.49.0
 
