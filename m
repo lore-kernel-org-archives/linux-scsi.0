@@ -1,130 +1,115 @@
-Received: from rcdn-iport-6.cisco.com (rcdn-iport-6.cisco.com [173.37.86.77])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FD5E380;
-	Wed, 11 Jun 2025 18:33:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.77
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9850A1DE2CC
+	for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2025 18:42:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749666818; cv=none; b=AE7hZHSk4CY3bbJAPeCUAJ3BNVmKGx1wP8BNaxU9yQb1+goQDiFOdyAkAG3pih2clP1FT/fjKpN11tTo81/RINQXwO4HjVq8SmylKBbK+kZ/NruqQLordqrCTapnHCrrJcZhlTtLrBvi38J5R4f6NC+XMHNKhpX1rD+/ZrPA5a0=
+	t=1749667322; cv=none; b=QPa7IvwhFTtzpHH5dM706VnBHaJGDflwOmX+izzNrpREIC5nJ6oAswq741h3PFvZIs5+jwE158IxdUEmftpuvmnR1Om3HrzAW0rW7ddbkgy/Vm9aymbeoFNmF0RlPtc/41MDQRrzcvobCxmvi30rZ0+4jn2NliBr8I8K3nxOO0w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749666818; c=relaxed/simple;
-	bh=W9TMtmNAQox4GJzmyGBKfQRvar8R3C9E12Rn9hMqO80=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=s9ysmsWnEXBgnySLOpid7RJksaosotZBF5ZTCRdtVt9jcW8borQTMvB4R0mtyM4evxxKC/9aTHcrBiEZxqMmDxmJ1HpcyQorrFR0XVf7NPKJ01p7fWnDkvvZom+ZwYPE3SC849JtPULuAOCc1Yna+UAPQ3md+fqvV+BNmh1Kgkc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=S21kekLs; arc=none smtp.client-ip=173.37.86.77
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
+	s=arc-20240116; t=1749667322; c=relaxed/simple;
+	bh=CkHxhlfuBpVaK4GXCF8g07K/ObYJP2txf0W3iqQi/X0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=q4bSquDPUwUZq+GExxjC4BIbykUZ+c8tINSxTCd1kSbbXSYPLhS5xyYdPqwXk7Q1AeFhz55p8LDN/sDIGWnbKKdkUzNW4zhJmct3U/0TNT7NFYeqLLrW9+Lxb9rjqga/j8794NzwTS5OaFY/FwiD2yO6U9owHWa2qeun9ZYHzk8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=f8H2CDZw; arc=none smtp.client-ip=209.85.221.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="S21kekLs"
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="f8H2CDZw"
+Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-3a507e88b0aso219860f8f.1
+        for <linux-scsi@vger.kernel.org>; Wed, 11 Jun 2025 11:42:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=cisco.com; i=@cisco.com; l=785; q=dns/txt;
-  s=iport01; t=1749666816; x=1750876416;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=vebaEpidSVTCWaBHFi0jPYyqh1hFt65CsSfk9PGHd6Y=;
-  b=S21kekLsJMQQmQVdRDYd4XCIDqd19ELuDtThOM233ZZupA5YCrgmsMSn
-   WlnqNwV/ECFJ91zaLA7vIJVFveqZB4+RYWXZ+4cHmfs7rHr8SNvaIs6ow
-   xDGUEh2HGngXjKWbkWvhFPS4Cbg3J2Uie1C/bnDW8WNq6GN7Y6gPQ0jLM
-   oWE/wnLvJVNtWfVzH6QoCvZkr+vl8gxh4QVNSwCFUIqSwo7Y0ce6yrfzU
-   /ihEk6mPKw0+lpZNNAzoiySA3sOp5Zvw0PnooU/yEOfe2i+EzwweTlKrA
-   2edV1nNYT2h0TA45iS3ApY2El98hBvSXhjp9qaHROk3fR8ffl7Tm5VT8N
-   w==;
-X-CSE-ConnectionGUID: IcWTMjmiTt6Boz6kLlXIrQ==
-X-CSE-MsgGUID: bJkycYS0RuSt2/RuuRKzEg==
-X-IPAS-Result: =?us-ascii?q?A0AEAABIy0lo/4sQJK1aGgEBAQEBAQEBAQEDAQEBARIBA?=
- =?us-ascii?q?QEBAgIBAQEBgX8FAQEBAQsBgkqBUkMZMIxwhzSgOoElA1cPAQEBD1EEAQGFB?=
- =?us-ascii?q?wKLZgImNAkOAQIEAQEBAQMCAwEBAQEBAQEBAQEBCwEBBQEBAQIBBwWBDhOGC?=
- =?us-ascii?q?IZbAgEDMgFGEFFWGYMCgm8Dr3KCLIEB3jeBboFJAY1McIR3JxUGgUlEhH2BU?=
- =?us-ascii?q?oI4gQaFdwSCJIECFKEUSIEeA1ksAVUTDQoLBwWBYwM1DAsuFW4yHYINhRmCE?=
- =?us-ascii?q?osHhEkrT4UhhQUkcg8HPUADCxgNSBEsNxQbBj5uB5gEg3CBDoExgQ+mAKELh?=
- =?us-ascii?q?CWhUxozqmGZBKk4gWg8gVkzGggbFYMiUhkPyhgmMjwCBwsBAQMJkBeBfQEB?=
-IronPort-Data: A9a23:cgRjfa2heyIA61YV8/bD5QNwkn2cJEfYwER7XKvMYLTBsI5bpzdRz
- TdMDGHXM6qLYGXzL99xYIvg9R8Eu5HUmNNhHQY63Hw8FHgiRegpqji6wuYcGwvIc6UvmWo+t
- 512huHodZ5yFjmG4E70aNANlFEkvYmQXL3wFeXYDS54QA5gWU8JhAlq8wIDqtYAbeORXUXU5
- 7sen+WFYAX4g2AtazpOg06+gEoHUMra6WtwUmMWPZinjHeG/1EJAZQWI72GLneQauF8Au6gS
- u/f+6qy92Xf8g1FIovNfmHTKxBirhb6ZGBiu1IOM0SQqkEqSh8ajs7XAMEhhXJ/0F1lqTzeJ
- OJl7vRcQS9xVkHFdX90vxNwS0mSNoUekFPLzOTWXcG7lyX7n3XQL/pGLUoJAaga/+dLHT9k8
- u5GKxQJXjGZvrfjqF67YrEEasULJc3vOsYb/3pn1zycVaxgSpHYSKKM7thdtNsyrpkRRrCFO
- YxAN3w2N0Wojx5nYj/7DLo9lf20h332cBVTqUmeouw85G27IAlZi+i8aICPJofTLSlTtky6p
- XPNzl+hOAwhKIbY8yeYyFG+q+CayEsXX6pXTtVU7MVCjFSVgGcaEgUbU0e2u9G9i0i3QdUZL
- FYbkgIsoKo43EiqSMTtGRyypTiPuRt0c99ZCfE77keVx7bZ+R2UAEADVDdKbNFgv8gzLRQo0
- 1KPktzpBBR1vbGVQG7b/bCRxRuoNDYYN3QqfyIITQIZpdLkpekbihPJU8YmE6OviNDxMS//z
- irMryUkgbgXy8kR2M2T+VHBniLpvZPSTyYr6QjNGGGo9AV0YMiifYPA1LTAxf9EKIDcShyKu
- 2IJ3pDEqusPFpqK0ieKRY3hAY2U2hpMCxWE6XYHInXr327FF6KLFWyI3AxDGQ==
-IronPort-HdrOrdr: A9a23:UIEEFKgb1II/Pu3eB0X3c5TQO3BQXvUji2hC6mlwRA09TyVXra
- yTdZMgpHvJYVkqNk3I9errBEDEewK+yXcX2/h1AV7BZmjbUQKTRekI0WKh+UyDJ8SUzIFgPM
- lbHpRWOZnZEUV6gcHm4AOxDtoshOWc/LvAv5a4854Ud2FXg2UK1XYBNu5deXcGIjV7OQ==
-X-Talos-CUID: 9a23:HoH4I235okWOMPvPLyoThLxfO8saTljfyXbsPxGSDnQ3S5mReX6KwfYx
-X-Talos-MUID: 9a23:XpXraglFEd8jFEOtVKMDdnpoFsR56JWVUHoQqolc/POZKBZTKRqS2WE=
-X-IronPort-Anti-Spam-Filtered: true
-X-IronPort-AV: E=Sophos;i="6.16,228,1744070400"; 
-   d="scan'208";a="389022431"
-Received: from alln-l-core-02.cisco.com ([173.36.16.139])
-  by rcdn-iport-6.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 11 Jun 2025 18:32:24 +0000
-Received: from fedora.lan?044cisco.com (unknown [10.188.19.134])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: kartilak@cisco.com)
-	by alln-l-core-02.cisco.com (Postfix) with ESMTPSA id D292818000151;
-	Wed, 11 Jun 2025 18:32:22 +0000 (GMT)
-From: Karan Tilak Kumar <kartilak@cisco.com>
-To: sebaddel@cisco.com
-Cc: arulponn@cisco.com,
-	djhawar@cisco.com,
-	gcboffa@cisco.com,
-	mkai2@cisco.com,
-	satishkh@cisco.com,
-	aeasi@cisco.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	jmeneghi@redhat.com,
-	revers@redhat.com,
-	dan.carpenter@linaro.org,
-	Karan Tilak Kumar <kartilak@cisco.com>
-Subject: [PATCH 5/5] scsi: fnic: Increment driver version number
-Date: Wed, 11 Jun 2025 11:30:33 -0700
-Message-ID: <20250611183033.4205-5-kartilak@cisco.com>
-X-Mailer: git-send-email 2.47.1
-In-Reply-To: <20250611183033.4205-1-kartilak@cisco.com>
+        d=linaro.org; s=google; t=1749667319; x=1750272119; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=WKfrpUvrdAwcpn30SJ8EKISnxqjztsTWvvkV9uw1jUs=;
+        b=f8H2CDZwlvpmnVM8mlBffYmWjzd3wwn5MySf/i0lnfG+i47UvG09/ma8OreItS1jJ9
+         bnIEmEJSt38Ehpc4y14TKsPueQ4H+awxjI3AkVhzlWiVmQbZR7H/5JAxL8jJI5cn270b
+         HmyNVGKRyfVazTAf0OI4cAF0FPUyNO0jGq08jnh70BTq3/H8pNByXU/15/Rh+b5AFwAC
+         jjEXytIsVrmu9MXt18Ci432+wrEgDXOy8yb2+QONCz29blACWERrN+1u/ccNLz+9DbUl
+         c5bf5+yUiuuiarPi4ceYHtmu3ZKHQeRIhUmeRFXnTKU9A19d1Mc6p+I+zSBV+W3OjhTM
+         jhqg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749667319; x=1750272119;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=WKfrpUvrdAwcpn30SJ8EKISnxqjztsTWvvkV9uw1jUs=;
+        b=OMJwJR/Leu8ZLVxpVqyIfiJfL0ilR462TGL1PdgpxXBWsaSLtweUkJjPYwssRH7tOJ
+         ywPt7OEjCHFR8t+VuZOWbcMhDyuzXYXn8RCSR7+SlAow25Ispkbw8HYqCsmkyiZN8j7o
+         3is3JF/9mKQ+JD3sFAK6KvWwD49arLNTRukpsI7nIj5Wzfu8Drzk4F6ZzTX7r6S7LZU+
+         x/tb7gZ5l62EyDcVp3bY69kiubbRgy7MAa0wS8AGzmfJzrOBXaY4rFcnDMYahlBwOqyS
+         jIOXXYPw/bpg00T0Mk1Y2YqpVxAo4f0rzbbINmApdNtCsjJ0fTyOPOyC1QlPW3x8Ny7x
+         URLg==
+X-Forwarded-Encrypted: i=1; AJvYcCWjWDO8RsDOx9jgE7CnnBiE63cTmuOl9e8c1/gTlfR7Zn9lF4pMPloYFiRgQKZJSsoRVOfOhZvwPFG9@vger.kernel.org
+X-Gm-Message-State: AOJu0YwgnEmXJ/2dcrsiRAKalx8/6gtlaF6keVHnpnzr9Tf0YxUNXiQt
+	JrU9+9zxeIAT/XuEdvksQOTu66HNKBmakB51b2NCmUheIgiyV6WF5wgYwDG435rXR2w=
+X-Gm-Gg: ASbGncsqVuaLJ4rFO2aYk30rVNiqFXQqrYnXIN1PaJYjQ6kJMyS+xw0de1HZFIWMkKB
+	C4Ag7GMKcLxeX6tQPsc8h0QMeXp4IeD9Pb5G94pwa7BU5jJkXtUNB3wmTPpulEH3eiP8NsqctVy
+	LRZspMl47W9HeqNMp4LaJCSofWj9ZaQZlHYEySnZlDTv4P3qQSzqCuKKg2p3iSEQH6yBPn341pV
+	5TY8+3Iik2jXrAmSWOMsqzvX7YZkHSKVcLF1jMEZXPpCeCNwy3pN9Ymw5vNrPrrNK0oI7qrMIWp
+	lAfCLl/DM5RQM9bUzlZ/64TSjDJC+2muUk13kauAHdK9nbblabQn92BS04eCqU0ejs0=
+X-Google-Smtp-Source: AGHT+IE8IO3x5kgMMLjG88ZEq35UY3RD1TsJ71KI+PrQeFiKWv1nPP47wXf32YYs9T5iAq6yC36tgA==
+X-Received: by 2002:a05:6000:2207:b0:3a0:b940:d479 with SMTP id ffacd0b85a97d-3a560809a92mr423897f8f.53.1749667318953;
+        Wed, 11 Jun 2025 11:41:58 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3a53229dc33sm15903289f8f.20.2025.06.11.11.41.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 11 Jun 2025 11:41:58 -0700 (PDT)
+Date: Wed, 11 Jun 2025 21:41:55 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: sebaddel@cisco.com, arulponn@cisco.com, djhawar@cisco.com,
+	gcboffa@cisco.com, mkai2@cisco.com, satishkh@cisco.com,
+	aeasi@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jmeneghi@redhat.com, revers@redhat.com
+Subject: Re: [PATCH 2/5] scsi: fnic: Fix crash in fnic_wq_cmpl_handler when
+ FDMI times out
+Message-ID: <aEnN8x59OdWMqRP6@stanley.mountain>
 References: <20250611183033.4205-1-kartilak@cisco.com>
+ <20250611183033.4205-2-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authenticated-User: kartilak@cisco.com
-X-Outbound-SMTP-Client: 10.188.19.134, [10.188.19.134]
-X-Outbound-Node: alln-l-core-02.cisco.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250611183033.4205-2-kartilak@cisco.com>
 
-Increment driver version number.
+On Wed, Jun 11, 2025 at 11:30:30AM -0700, Karan Tilak Kumar wrote:
+> When both the RHBA and RPA FDMI requests time out, fnic reuses a frame
+> to send ABTS for each of them. On send completion, this causes an
+> attempt to free the same frame twice that leads to a crash.
+> 
+> Fix crash by allocating separate frames for RHBA and RPA,
+> and modify ABTS logic accordingly.
+> 
+> Tested by checking MDS for FDMI information.
+> Tested by using instrumented driver to:
+> Drop PLOGI response
+> Drop RHBA response
+> Drop RPA response
+> Drop RHBA and RPA response
+> Drop PLOGI response + ABTS response
+> Drop RHBA response + ABTS response
+> Drop RPA response + ABTS response
+> Drop RHBA and RPA response + ABTS response for both of them
+> 
+> Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+> Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+> Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+> Tested-by: Arun Easi <aeasi@cisco.com>
+> Co-developed-by: Arun Easi <aeasi@cisco.com>
+> Signed-off-by: Arun Easi <aeasi@cisco.com>
+> Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
+> Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+> ---
 
-Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
-Reviewed-by: Arun Easi <aeasi@cisco.com>
-Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
----
- drivers/scsi/fnic/fnic.h | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+This needs a Fixes tag and a CC to stable.
 
-diff --git a/drivers/scsi/fnic/fnic.h b/drivers/scsi/fnic/fnic.h
-index 6c5f6046b1f5..86e293ce530d 100644
---- a/drivers/scsi/fnic/fnic.h
-+++ b/drivers/scsi/fnic/fnic.h
-@@ -30,7 +30,7 @@
- 
- #define DRV_NAME		"fnic"
- #define DRV_DESCRIPTION		"Cisco FCoE HBA Driver"
--#define DRV_VERSION		"1.8.0.0"
-+#define DRV_VERSION		"1.8.0.1"
- #define PFX			DRV_NAME ": "
- #define DFX                     DRV_NAME "%d: "
- 
--- 
-2.47.1
+regards,
+dan carpenter
 
