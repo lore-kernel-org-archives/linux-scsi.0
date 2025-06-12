@@ -1,194 +1,127 @@
-Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from rcdn-iport-9.cisco.com (rcdn-iport-9.cisco.com [173.37.86.80])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 687862D0292
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 21:25:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B308563A9;
+	Thu, 12 Jun 2025 22:18:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.37.86.80
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749763516; cv=none; b=exJ3g/LTN/H4K+hHDByIYhfDPyLeI3OrSgdMWs/UAkLLvXsjLoAq3dj/p6BZNmHmASebKqhP8pxqVB30ytUsa512dL8VZLmLhzq0W4wgBP4fv0eejyDEBYKTcVQTP0DgJpSdWH35ISSFNf4oFAmLst6LLqCL8JmcfJ1I8Dakzqs=
+	t=1749766701; cv=none; b=qezF9w+NkMiCa4Cyee4lJD5idm2t3cxVt5ww3AMd4DJ1dkKLnFfkefeI5ngjC59h9h6T8npctPtBT+Xo4agr6j+uSbb0eF+qb9keJ05+uq/9fwZYn2XjSojPGp/sPWftuxfJaNDWjGdZfK0h1PbSfcPNY9yU5PT3IMsx9Xr35K0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749763516; c=relaxed/simple;
-	bh=mOjY4eoiqhwRuat0DYgAlouuJaGp2SZZ5wyrdxxW/1M=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=mUWfAq3UtAzdf5mS42AnFoTZVmFIbfKPdD/JiCqtjodWZCnpDRrkxOjz3bT512J6VcDt0NZcyyFknY+rc6rOF9FO9vhqk/KYx4N9HwFErwlEtXsmtGm6H3MCOwrsUGKPo8Rtp6DKi+Clkw9+oFnFWBSfG8Jcvob633XMgr9+baY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=fnyGLGjA; arc=none smtp.client-ip=209.85.216.73
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com
+	s=arc-20240116; t=1749766701; c=relaxed/simple;
+	bh=MnCr9OEVlQ7GknTARTds4npHpQMQRi/DiitUYHLyMJw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kieL2/pq1DcNy/QJcf/FS1LFzNStEj/6C+1/l/YbbYoLZfxC99UjkXkW8+SfjygM3VWiiCchs3LY4PDzu8JyYLtATuSTCS8SDbht9N3NzNcWU48ZHsvMQYSGUN55EnPjTmGnKQ5x/MjXy5nQ5/NELhxcmt6WkR1ceAvl0ioXFpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=AFD4bsda; arc=none smtp.client-ip=173.37.86.80
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="fnyGLGjA"
-Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-31218e2d5b0so2144867a91.2
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 14:25:14 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="AFD4bsda"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1749763514; x=1750368314; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=49H/u4xHuXH3kNd0ZN1kjpTsXf6BcbH0tfxU5dQvTo4=;
-        b=fnyGLGjAm4XCK8J9DhQvm82gb/TSJQYLbP7/GGauvRRiu2BBlqClWGe7hNCDL4UURu
-         9IerHtr+MwTilpXDvVVDJSDiPDjsc7JF2zm+GeZhV8WG+8XGqCaLLFbr5ExYfbLE359e
-         4W0CP4gM0KA9JBEexcDHZ1WVDzIU+Bi7tRI825W3HyP0mQ/NOtDpszSG8n7EGZrZ42oi
-         5TlDcpy0tJ0DB0ryDenHMhSvTlw0WTDreDneAyC91Z40hu0FqJX8oCRwPvMRU5oJlh24
-         ZfA4djNvoe/iSSZf1iCx4ozgXc5TBC7T0y2osC/u2121RqRnNfD2k8n37L4m7u3vv6I8
-         U00Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749763514; x=1750368314;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=49H/u4xHuXH3kNd0ZN1kjpTsXf6BcbH0tfxU5dQvTo4=;
-        b=W64hYJmvc0vpJw/oai0PUmh/2cm3LvB1AATYcjOv11Iau2YoBhY3h67PUrWu+KnKHE
-         f4rGd2w7nUzlmrumUusdJrB38mw4H9E7AoFUuh6BE4qQlgTG62OO0TH9KpQFAjTIvkbs
-         AQHT7Zsih+SECNbHRokaHOp8n7yqIrfdytXqGE+Q0DgieUyAS5bBYC6R6iKqW8TPyKFS
-         0umOjdbmRar34Z1BNBfs9nU+oOX4dLRsjy1wVQGIb9KnDENdCEVHr18LDSE1xCf09Tlx
-         mpFp7fJb964stF9AAv2X1mWfLyXp3MMyn4Jpb3CpnKm2xq1/YF4yX6D2eI86GqYanxPG
-         HaVQ==
-X-Gm-Message-State: AOJu0YzwaC7WSV+1KIgO/7fbIkrrzcRlpdQQBVaJpFL+Y3thOqw2d0pY
-	1O+/y0n723vE3CzdNhgCZ8esQKgam2ivYtp2/294V4KOts40JNf7o4h+1oApH7DBhXQVCPn9Hl2
-	BsWsOTDC98YgSr9R9aPuVmUGSDw==
-X-Google-Smtp-Source: AGHT+IH7DpKidXltZ14HPMKNKNeaJcPPrDyah8HHXnIqXY3bINqh/Nv8WY7WUw5Ijtcc17p2cu9uR+BHVdzLeHXFXA==
-X-Received: from pjxx15.prod.google.com ([2002:a17:90b:58cf:b0:311:c5d3:c7d0])
- (user=salomondush job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:90b:2686:b0:313:db0b:75e4 with SMTP id 98e67ed59e1d1-313db0b7883mr618567a91.33.1749763513836;
- Thu, 12 Jun 2025 14:25:13 -0700 (PDT)
-Date: Thu, 12 Jun 2025 21:25:04 +0000
+  d=cisco.com; i=@cisco.com; l=980; q=dns/txt;
+  s=iport01; t=1749766699; x=1750976299;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=JPGvyzDxmu2hP40yELBEjF/T5i9eYvf8QiI2IbJNsD0=;
+  b=AFD4bsdaZ2y+EYI8Rl39rq7qq2B7zL4SW2pbFDA+hFBXur5zj9PouXcX
+   WIA5EfcUR9rNL5uoMyb1yuPlyCoAI4Krk1eYbQKVvLpsptIHN+HCKi4ty
+   yffpef47ZOcyTy9O+uw6UbozqgTEa8QEnZowsHNcF93T4mr2n5I17wHlz
+   24gW4fty+Aheup7PgrQFNXTHCUTSGuwCrPEy0N0CwBHXPGMcp3OUSYvkH
+   UE3aAEaP6BTEjrVPkRhx+ndHpJlRsUoknCU5SC8jNx6WzPlj43II9bm4d
+   pQzzICT0lw2FuuDt0Ig6ixdz0NFYPquMSxNqVGFX4pQSq4iaNsYxsCc26
+   g==;
+X-CSE-ConnectionGUID: UHXx/6+hRdmWREKvtgUf9g==
+X-CSE-MsgGUID: IoL56DG8RdeXlKEd25dndA==
+X-IPAS-Result: =?us-ascii?q?A0AnAACoUUto/5MQJK1aHAECAgEHARQBBAQBggAHAQwBg?=
+ =?us-ascii?q?kqBUkMZMIxwhzSgOoElA1cPAQEBD1EEAQGFB4toAiY0CQ4BAgQBAQEBAwIDA?=
+ =?us-ascii?q?QEBAQEBAQEBAQELAQEFAQEBAgEHBYEOE4YIhl0rCwFGgVCDAoJvA7AGgXkzg?=
+ =?us-ascii?q?QHeN4FugUkBjUxwhHcnFQaBSUSCUIE+b4FSgjiBBoV3BIMmFKEeSIEeA1ksA?=
+ =?us-ascii?q?VUTDQoLBwWBYwM1DAsuFW4yHYINhRmCEoQphl+ESStPhSGFByRyDwZHQAMLG?=
+ =?us-ascii?q?A1IESw3FBsGPm4HmAmDcIEOgQKBPqYAoQuEJaFTGjOqYZkEqTiBaDyBWTMaC?=
+ =?us-ascii?q?BsVgyJSGQ+OLRa7VSYyPAIHCwEBAwmPdYF9AQE?=
+IronPort-Data: A9a23:75mY7q9NOHGaT4ytkawBDrUDUH+TJUtcMsCJ2f8bNWPcYEJGY0x3x
+ jYZWGGEbq7fN2TyL9Elaojl8hxUupDcxtRrTwBvqi5EQiMRo6IpJzg2wmQcns+2BpeeJK6yx
+ 5xGMrEsFOhtEDmE4E3ra+G7xZVF/fngbqLmD+LZMTxGSwZhSSMw4TpugOdRbrRA2bBVOCvT/
+ 4qsyyHjEAX9gWMsbDtOs/jrRC5H5ZwehhtJ5jTSWtgT1LPuvyF9JI4SI6i3M0z5TuF8dsamR
+ /zOxa2O5WjQ+REgELuNyt4XpWVTH9Y+lSDX4pZnc/DKbipq/0Te4Y5nXBYoUnq7vh3S9zxHJ
+ HqhgrTrIeshFvWkdO3wyHC0GQkmVUFN0OevzXRSLaV/wmWeG0YAzcmCA2kLHb0Ivbg0AVtC8
+ MMiBRMTch++ibO5lefTpulE3qzPLeHiOIcZ/3UlxjbDALN/GdbIQr7B4plT2zJYasJmRKmFI
+ ZFHL2MxKk2cPHWjOX9PYH46tOShnGX+dzRbgFmUvqEwpWPUyWSd1ZC2YIuKJYLUFZQ9ckCwh
+ 2XiojrVLUEgONGvzRmo/ijxiunDtHauMG4VPPjinhJwu3Wfz2pVAxQMTVa9vfSjokq/XdtFL
+ AoT4CVGhao/9kaDStj7Qg3+oXSB+BUbXrJ4FuQg9ACLjLLZ/wuDHWUCZjlbYdciuYk9QjlC/
+ l2MktXkCjxumKeYRXKU6vGfqjbaETIYM2IYfgceQAcF6sWlq4Y25jrLT9B+AOu2g8fzFDXY3
+ T+Htm49iq8VgMpN0L+0lXjDgjSxtt3SRRU0zhvYU3jj7Q5jYoOhIYuy5jDmAe1oJYKdSByF+
+ XMDgcXbtbhIBpCWnyvLS+IIdF2028u43PTnqQYHN/EcG/6FohZPoag4DOlCGXpU
+IronPort-HdrOrdr: A9a23:835l+K5gdOKyxKjy4QPXwPvXdLJyesId70hD6qm+c3Bom6uj5q
+ KTdZsguyMc5Ax6ZJhCo6HiBEDjexLhHPdOiOF7AV7IZmbbUQWTQb1K3M/L3yDgFyri9uRUyK
+ tsN5RlBMaYNykesS+D2mmF+xJK+qjhzEhu7t2uq0tQcQ==
+X-Talos-CUID: 9a23:DgqrA2FSCFIZxY3CqmJa1H4EXZ5mckfRyUjqDmymFWlURuyaHAo=
+X-Talos-MUID: 9a23:3oPBZgR/ezi9E+roRXTNgxU/autHs56iBXAJsrgK4ZSIMyBZbmI=
+X-IronPort-Anti-Spam-Filtered: true
+X-IronPort-AV: E=Sophos;i="6.16,231,1744070400"; 
+   d="scan'208";a="389776689"
+Received: from alln-l-core-10.cisco.com ([173.36.16.147])
+  by rcdn-iport-9.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 12 Jun 2025 22:18:17 +0000
+Received: from fedora.lan?044cisco.com (unknown [10.188.19.134])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: kartilak@cisco.com)
+	by alln-l-core-10.cisco.com (Postfix) with ESMTPSA id EA4191800015F;
+	Thu, 12 Jun 2025 22:18:15 +0000 (GMT)
+From: Karan Tilak Kumar <kartilak@cisco.com>
+To: sebaddel@cisco.com
+Cc: arulponn@cisco.com,
+	djhawar@cisco.com,
+	gcboffa@cisco.com,
+	mkai2@cisco.com,
+	satishkh@cisco.com,
+	aeasi@cisco.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	jmeneghi@redhat.com,
+	revers@redhat.com,
+	dan.carpenter@linaro.org,
+	Karan Tilak Kumar <kartilak@cisco.com>
+Subject: [PATCH v4 1/5] scsi: fnic: Set appropriate logging level for log message
+Date: Thu, 12 Jun 2025 15:18:01 -0700
+Message-ID: <20250612221805.4066-1-kartilak@cisco.com>
+X-Mailer: git-send-email 2.47.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.50.0.rc2.696.g1fc2a0284f-goog
-Message-ID: <20250612212504.512786-1-salomondush@google.com>
-Subject: [PATCH] scsi: pm80xx: add controller scsi host fatal error uevents
-From: Salomon Dushimirimana <salomondush@google.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Salomon Dushimirimana <salomondush@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-Authenticated-User: kartilak@cisco.com
+X-Outbound-SMTP-Client: 10.188.19.134, [10.188.19.134]
+X-Outbound-Node: alln-l-core-10.cisco.com
 
-Adds pm80xx_fatal_error_uevent_emit(), called when the pm80xx driver
-encouters a fatal error. The uevent has the following additional custom
-key/value pair sets:
+Replace KERN_INFO with KERN_DEBUG for a log message.
 
-- DRIVER: driver name, pm80xx in this case
-- HBA_NUM: the scsi host id of the device
-- EVENT_TYPE: to indicate a fatal error
-- REPORTED_BY: either driver or firmware
-
-The uevent is anchored to the kernel object that represents the scsi
-controller, which includes other useful core variables, such as, ACTION,
-DEVPATH, SUBSYSTEM, and more.
-
-The fatal_error_uevent_emit() function is called when the controller
-fatal error state changes. Since this doesn't happen often for a
-specific scsi host, there is no worries of a uevent storm.
-
-Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
+Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+Reviewed-by: Arun Easi <aeasi@cisco.com>
+Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
 ---
- drivers/scsi/pm8001/pm8001_sas.h | 10 +++++++
- drivers/scsi/pm8001/pm80xx_hwi.c | 48 ++++++++++++++++++++++++++++++++
- 2 files changed, 58 insertions(+)
+ drivers/scsi/fnic/fnic_scsi.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.h b/drivers/scsi/pm8001/pm8001_sas.h
-index 315f6a7523f0..334485bb2c12 100644
---- a/drivers/scsi/pm8001/pm8001_sas.h
-+++ b/drivers/scsi/pm8001/pm8001_sas.h
-@@ -170,6 +170,14 @@ struct forensic_data {
- #define SPCV_MSGU_CFG_TABLE_TRANSFER_DEBUG_INFO  0x80
- #define MAIN_MERRDCTO_MERRDCES		         0xA0/* DWORD 0x28) */
+diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
+index 7133b254cbe4..75b29a018d1f 100644
+--- a/drivers/scsi/fnic/fnic_scsi.c
++++ b/drivers/scsi/fnic/fnic_scsi.c
+@@ -1046,7 +1046,7 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic, unsigned int cq_ind
+ 		if (icmnd_cmpl->scsi_status == SAM_STAT_TASK_SET_FULL)
+ 			atomic64_inc(&fnic_stats->misc_stats.queue_fulls);
  
-+/**
-+ * enum fatal_error_reporter: Indicates the originator of the fatal error
-+ */
-+enum fatal_error_reporter {
-+	REPORTER_DRIVER,
-+	REPORTER_FIRMWARE,
-+};
-+
- struct pm8001_dispatch {
- 	char *name;
- 	int (*chip_init)(struct pm8001_hba_info *pm8001_ha);
-@@ -715,6 +723,8 @@ ssize_t pm80xx_get_non_fatal_dump(struct device *cdev,
- 		struct device_attribute *attr, char *buf);
- ssize_t pm8001_get_gsm_dump(struct device *cdev, u32, char *buf);
- int pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha);
-+void pm80xx_fatal_error_uevent_emit(struct pm8001_hba_info *pm8001_ha,
-+	enum fatal_error_reporter error_reporter);
- void pm8001_free_dev(struct pm8001_device *pm8001_dev);
- /* ctl shared API */
- extern const struct attribute_group *pm8001_host_groups[];
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 5b373c53c036..dfa9494fa659 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -1551,6 +1551,52 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
- 	return 0;
- }
+-		FNIC_SCSI_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
++		FNIC_SCSI_DBG(KERN_DEBUG, fnic->host, fnic->fnic_num,
+ 				"xfer_len: %llu", xfer_len);
+ 		break;
  
-+/**
-+ * pm80xx_fatal_error_uevent_emit - emits a single fatal error uevent
-+ * @pm8001_ha: our hba card information
-+ * @error_type: fatal error type to emit
-+ */
-+void pm80xx_fatal_error_uevent_emit(struct pm8001_hba_info *pm8001_ha,
-+	enum fatal_error_reporter error_reporter)
-+{
-+	struct kobj_uevent_env *env;
-+
-+	pm8001_dbg(pm8001_ha, FAIL, "emitting fatal error uevent");
-+
-+	env = kzalloc(sizeof(struct kobj_uevent_env), GFP_KERNEL);
-+	if (!env)
-+		return;
-+
-+	if (add_uevent_var(env, "DRIVER=%s", DRV_NAME))
-+		goto exit;
-+
-+	if (add_uevent_var(env, "HBA_NUM=%u", pm8001_ha->id))
-+		goto exit;
-+
-+	if (add_uevent_var(env, "EVENT_TYPE=FATAL_ERROR"))
-+		goto exit;
-+
-+	switch (error_reporter) {
-+	case REPORTER_DRIVER:
-+		if (add_uevent_var(env, "REPORTED_BY=DRIVER"))
-+			goto exit;
-+		break;
-+	case REPORTER_FIRMWARE:
-+		if (add_uevent_var(env, "REPORTED_BY=FIRMWARE"))
-+			goto exit;
-+		break;
-+	default:
-+		if (add_uevent_var(env, "REPORTED_BY=OTHER"))
-+			goto exit;
-+		break;
-+	}
-+
-+	kobject_uevent_env(&pm8001_ha->shost->shost_dev.kobj, KOBJ_CHANGE, env->envp);
-+
-+exit:
-+	kfree(env);
-+}
-+
- /**
-  * pm80xx_fatal_errors - returns non-zero *ONLY* when fatal errors
-  * @pm8001_ha: our hba card information
-@@ -1580,6 +1626,7 @@ pm80xx_fatal_errors(struct pm8001_hba_info *pm8001_ha)
- 			"Fatal error SCRATCHPAD1 = 0x%x SCRATCHPAD2 = 0x%x SCRATCHPAD3 = 0x%x SCRATCHPAD_RSVD0 = 0x%x SCRATCHPAD_RSVD1 = 0x%x\n",
- 				scratch_pad1, scratch_pad2, scratch_pad3,
- 				scratch_pad_rsvd0, scratch_pad_rsvd1);
-+		pm80xx_fatal_error_uevent_emit(pm8001_ha, REPORTER_DRIVER);
- 		ret = 1;
- 	}
- 
-@@ -4039,6 +4086,7 @@ static int process_oq(struct pm8001_hba_info *pm8001_ha, u8 vec)
- 			pm8001_dbg(pm8001_ha, FAIL,
- 				   "Firmware Fatal error! Regval:0x%x\n",
- 				   regval);
-+			pm80xx_fatal_error_uevent_emit(pm8001_ha, REPORTER_FIRMWARE);
- 			pm8001_handle_event(pm8001_ha, NULL, IO_FATAL_ERROR);
- 			print_scratchpad_registers(pm8001_ha);
- 			return ret;
 -- 
-2.50.0.rc2.696.g1fc2a0284f-goog
+2.47.1
 
