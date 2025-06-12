@@ -1,139 +1,101 @@
-Received: from mail-wr1-f51.google.com (mail-wr1-f51.google.com [209.85.221.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E621C226CF8
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 08:39:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A14A623185C
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 10:16:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749717573; cv=none; b=gA9HZW8m9wa982AJ06m4asHGp1Tb/V7cka44wZshh6xmup++j2tg+IEc3xBwAxpJoseOWMVoIVXl735++bBEimQm9LJ2l5XEQuUWk0uvK1eOC2UkGdxNojo558IyHiL6o5XQ9XshOubFZw84gYcXpU1dINYCPxdBmwMfnrhpmEE=
+	t=1749723368; cv=none; b=hztOdWS7QgjLLHP3vuIlvzrEUWURp5R9kdYClv4Zy+9TPqKXDv/TlaNwDYGeiiiDgpf94TbdL1C9i6jFnNZsWZy9xlaQ5n/g/6J6mwM6cfKa/hOgpEWplR7d30gEBY2jsVrBoI/ip1XztZlwfLU5SaBXVycAC0WclOy5gOmIQdw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749717573; c=relaxed/simple;
-	bh=hJ7X/tNOTl73bwX25xhIlJdNu9sTqCaD1Ms/vj4d5r8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GPAnT5NG2v74HVOZJzUWKPj9rEhTS0WuRhpZcdb9TA9HaKQ3knmfA6w3vwatcHVY1z0kNoyHRwq9BTSvwK3EIxZBkFgfsQ0VH47s4w/NweUijBZD30+/EOmmi+OposU4XImRW54+QWS07QRPBbzMg+b5tWD7Pcbbsdn76ojXbLg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=f6HpwNVF; arc=none smtp.client-ip=209.85.221.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1749723368; c=relaxed/simple;
+	bh=DXTFj7+ooipVpXUwtfksauCcsc5cn9FQKlCUC8ETSYk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MWFIGkyTzxjK98hWaWA8kku5popVLansIa6WXVclFyNeWSqAFUGVn7rmAkjOSBx8zLDJs8M5axwz7iga2+Q6IjVrs9vbXQk8guY0Jz0YyrNGRb3YUW5Qs9pT0mcj05ehBXxAlF4qI5O6jFelmQxCZfBsmh9z9qeppa/AQsfue4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=jOdhGk6j; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="f6HpwNVF"
-Received: by mail-wr1-f51.google.com with SMTP id ffacd0b85a97d-3a3798794d3so766013f8f.1
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 01:39:31 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1749717570; x=1750322370; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xMn86gBGFQBElUD4C04aCEWWj1Sy8fLs55GPp5ijFjA=;
-        b=f6HpwNVFfRi6W2Sms6MVNsmZYI8KveHZfl5sXNiONtB3sWnyVSGfRsYBZTYaCAhKHS
-         ow9wJHssthE1f/VBDrhhCvzvLJpgdxwdcPQ4hsd+rOMAkPPTpKzX4X+tzcK636E2lwDc
-         jd8hF1Zx0dpZcHRNNRvRrl7dXNWfyVu4tdI47FliadoQX2UoRhBGLT0pRe54aOZZp4Nr
-         /qmJO86dAlFVhMP2YP5q9V5VOefgEry+/t6ZSO2lUrGzJ832ddopLSwIfnNU2RLBc0ED
-         8TROy/N9a8W7zpmJWHf/SfccoGJs1Z96uOA/OK+lDTI41JBkfAH/nQa/xNrFrpz8KKz/
-         lNWQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749717570; x=1750322370;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=xMn86gBGFQBElUD4C04aCEWWj1Sy8fLs55GPp5ijFjA=;
-        b=vwZGcd/gLPsxrUmzXTpsTM1zu9c8z1a0yqCc8uJfLCMoibizKMwz0yR80hw9c+YZ5O
-         BmkGQw1D6x9su+GFiUoMmerTg8+MGB/ODK25ZY6RQNLFjiWFvypNLCTv5y1fphmMdUNL
-         rIN9sbfGoWtoMMKW8O35RteLgEpwdoYpPrIGbtsJfLPytezuh9QV79ISsWulfAwdx1ij
-         K6WyBJjVLNcmTptDsCJeFxjX5q08z0qwgivqxzD36/HZTUF4w9I6S+NDfTxintREymCQ
-         e4VKjHj+kor9iEgm7XMT821v2jhNxo/F2/G+cyzuvyZYdW2facnEAHECbPpBP+jM14dT
-         baag==
-X-Forwarded-Encrypted: i=1; AJvYcCXMp/TQzvLyjdz1BEw0dug893KdPQiJoGj209sTY6SEYbYMwJDWlRFqYkFC7yQwwnj3m0GyWMbzMsSH@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywq87VVD/cAFiGPfqB7cpyeU03zJqMxzsArVpD5L3tZhp+sbUjr
-	8GgO+/IzQVuXnt5vlkZvClwHqhBfilpt/acelqGcg2Zu4SgTNzf+bdNsMuB5PLhZvDA=
-X-Gm-Gg: ASbGncsIG0X02S79kXMFqaFsj9QUDWvBY5/T6gfQW6C9Ys8c8LZZU/5AJJvMUy2plqR
-	XmG+8l+nE8c2lSSlmxVNqzcW47aSL3KbFyI4Lw8WktqsXAaWTsLvFa+Ov23lSlA9UiGBKi6ZPIx
-	UrtmUBsWiFx+Uzvh2Q/wSzKI5ph3coZOrqABbEZ2CWWBl5M6bBp7BBUp6+9H6VfdYBHF7x1jUXN
-	EkYr42qKqjWrosCJbQaxMKYSPKmezNfUfF3aZCCv1gB1IwbxYDIEeIQ/csbwDZrQb4lrg0QuH/O
-	2DiIC0tYvQ/b/TdwJKqnNcdS7+rfe7kFw5VldtgI0z09noGu06M4E+wfjALYpvflhsQ=
-X-Google-Smtp-Source: AGHT+IF/U38N89Oos/Ii+uKueDvpQelJtkG4+ZSkUxRWatEFCL62scczRT/E2Bk0UmIqZpbCKrbN4g==
-X-Received: by 2002:a05:6000:178a:b0:3a4:f038:af76 with SMTP id ffacd0b85a97d-3a56130bf3emr1772951f8f.53.1749717570107;
-        Thu, 12 Jun 2025 01:39:30 -0700 (PDT)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3a561b4bb17sm1299122f8f.68.2025.06.12.01.39.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 12 Jun 2025 01:39:29 -0700 (PDT)
-Date: Thu, 12 Jun 2025 11:39:25 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: Karan Tilak Kumar <kartilak@cisco.com>
-Cc: sebaddel@cisco.com, arulponn@cisco.com, djhawar@cisco.com,
-	gcboffa@cisco.com, mkai2@cisco.com, satishkh@cisco.com,
-	aeasi@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	jmeneghi@redhat.com, revers@redhat.com, stable@vger.kernel.org
-Subject: Re: [PATCH v3 2/5] scsi: fnic: Fix crash in fnic_wq_cmpl_handler
- when FDMI times out
-Message-ID: <aEqSPahh0b5h39J0@stanley.mountain>
-References: <20250612004426.4661-1-kartilak@cisco.com>
- <20250612004426.4661-2-kartilak@cisco.com>
- <aEqE5okf2jfV9kwt@stanley.mountain>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="jOdhGk6j"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1749723365;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=MKTsOWalSEh9Swp/BjoAyyoOsi8/EO5jetbKJbG4Hws=;
+	b=jOdhGk6jCUYcdd+DeM/SAQHUWLzywhag2nphl9kTc90LI7atSpXyMaMgpwQ/SS6PftaGzu
+	PWrz5wYZP79f06a1chRjxI4FAR+tv8tkl9j98sEVmA5+QQUE2APJx42IPru9u5m1sZavfg
+	L2E313FM7McG2jHkpbhlYKzB1d4muHY=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-651-ZZ18GLUMPAmOBpJC2ERqWA-1; Thu,
+ 12 Jun 2025 06:16:02 -0400
+X-MC-Unique: ZZ18GLUMPAmOBpJC2ERqWA-1
+X-Mimecast-MFC-AGG-ID: ZZ18GLUMPAmOBpJC2ERqWA_1749723361
+Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 183FB1800291;
+	Thu, 12 Jun 2025 10:16:01 +0000 (UTC)
+Received: from kinzhal.redhat.com (unknown [10.42.28.41])
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 1EB8A18003FC;
+	Thu, 12 Jun 2025 10:15:58 +0000 (UTC)
+From: Maurizio Lombardi <mlombard@redhat.com>
+To: martin.petersen@oracle.com
+Cc: mlombard@bsdbackstore.eu,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	michael.christie@oracle.com
+Subject: [PATCH] scsi: target: Fix NULL pointer dereference in core_scsi3_decode_spec_i_port
+Date: Thu, 12 Jun 2025 12:15:56 +0200
+Message-ID: <20250612101556.24829-1-mlombard@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aEqE5okf2jfV9kwt@stanley.mountain>
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-On Thu, Jun 12, 2025 at 10:42:30AM +0300, Dan Carpenter wrote:
-> On Wed, Jun 11, 2025 at 05:44:23PM -0700, Karan Tilak Kumar wrote:
-> > When both the RHBA and RPA FDMI requests time out, fnic reuses a frame
-> > to send ABTS for each of them. On send completion, this causes an
-> > attempt to free the same frame twice that leads to a crash.
-> > 
-> > Fix crash by allocating separate frames for RHBA and RPA,
-> > and modify ABTS logic accordingly.
-> > 
-> > Tested by checking MDS for FDMI information.
-> > Tested by using instrumented driver to:
-> > Drop PLOGI response
-> > Drop RHBA response
-> > Drop RPA response
-> > Drop RHBA and RPA response
-> > Drop PLOGI response + ABTS response
-> > Drop RHBA response + ABTS response
-> > Drop RPA response + ABTS response
-> > Drop RHBA and RPA response + ABTS response for both of them
-> > 
-> > Fixes: 09c1e6ab4ab2 ("scsi: fnic: Add and integrate support for FDMI")
-> > Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-> > Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-> > Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
-> > Tested-by: Arun Easi <aeasi@cisco.com>
-> > Co-developed-by: Arun Easi <aeasi@cisco.com>
-> > Signed-off-by: Arun Easi <aeasi@cisco.com>
-> > Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
-> > Cc: <stable@vger.kernel.org> # 6.14.x Please see patch description
-> 
-> I'm a bit confused.  Why do we need to specify 6.14.x?  I would have
-> assumed that the Fixes tag was enough information.  What are we supposed
-> to see in the patch description?
-> 
-> I suspect you're making this too complicated...  Just put
-> Cc: <stable@vger.kernel.org> and a Fixes tag and let the scripts figure
-> it out.  Or put in the commit description, "The Fixes tag points to
-> an older kernel because XXX but really this should only be backported
-> to 6.14.x because YYY."
+The function core_scsi3_decode_spec_i_port(), in its error code path,
+unconditionally calls core_scsi3_lunacl_undepend_item()
+passing the dest_se_deve pointer, which may be NULL.
 
-But here even with the comment in the commit description, you would still
-just say:
+This can lead to a NULL pointer dereference if
+dest_se_deve remains unset.
 
-Cc: <stable@vger.kernel.org> # 6.14.x
+SPC-3 PR SPEC_I_PT: Unable to locate dest_tpg
+Unable to handle kernel paging request at virtual address dfff800000000012
+Call trace:
+  core_scsi3_lunacl_undepend_item+0x2c/0xf0 [target_core_mod] (P)
+  core_scsi3_decode_spec_i_port+0x120c/0x1c30 [target_core_mod]
+  core_scsi3_emulate_pro_register+0x6b8/0xcd8 [target_core_mod]
+  target_scsi3_emulate_pr_out+0x56c/0x840 [target_core_mod]
 
-The stable maintainers trust you to list the correct kernel and don't
-need to know the reasoning.
+Fix this by adding a NULL check before calling
+core_scsi3_lunacl_undepend_item()
 
-I much prefer to keep it simple whenever possible.  We had bad CVE where
-someone left off the Fixes tag and instead specified
-"Cc: <stable@vger.kernel.org> # 4.1" where 4.1 was the oldest supported
-kernel on kernel.org.  The patch should have been applied to the older
-vendor kernels but it wasn't because the the tag was wrong.
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+ drivers/target/target_core_pr.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-regards,
-dan carpenter
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 34cf2c399b39..70905805cb17 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1842,7 +1842,9 @@ core_scsi3_decode_spec_i_port(
+ 		}
+ 
+ 		kmem_cache_free(t10_pr_reg_cache, dest_pr_reg);
+-		core_scsi3_lunacl_undepend_item(dest_se_deve);
++
++		if (dest_se_deve)
++			core_scsi3_lunacl_undepend_item(dest_se_deve);
+ 
+ 		if (is_local)
+ 			continue;
+-- 
+2.47.1
 
