@@ -1,131 +1,123 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDAB01EEA28
-	for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 06:03:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A31C2139B0
+	for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 07:42:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749708240; cv=none; b=ZOWgwltJZMQwkm0i9JTXjsekMAlY7QoJ4txPIPiFwkKdlQuFBI8DmzmkwGt9paBAk+lmZdwEkJ105ERs541cFmjokA6Oe1DBp9b//ifNcwaB+L2vuDZFlffOCn3XWzvbGY8krqWjXVABjTyVDVJMc5OU0nekGIna/NvcongX0ZM=
+	t=1749714159; cv=none; b=rAHDmiXXlsf5Ks9GVd2eAQB8sVyhkgObz8OEahPsAFacoXsaNqJB+4xBUZWdD4L7fTsG5zvYhnXa269Ms5mhNeUKNwZvRDRr0D9AMNUnyPWZrsBJBxAtamwOb/hbQw6iJO9ajRu9bMVTSJFSQpgAr73qX112f+MKwjsecrp2fLE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749708240; c=relaxed/simple;
-	bh=WtGXBAqnnP89EcvfhqMvn4YNXCU8xT6+2QPx+55dDrs=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=AkJ08J+eZNukK4p/SyYrhB0WU8hfuImxfK9uVOokwjfE7uYepRP5wi78101BRlTSNZ7fCx7+HY3kWAREWeXrfkI3T1G/whogWXLFMI2HN0DCpiw2GgHNsPbqE44tIxY21VrWyriIX20dJ5xd/PW2oQKU610LuTR6pj9/nMWZqQM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kW0ZVSQg; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749714159; c=relaxed/simple;
+	bh=liD84H33mldJ5FwcAo5b42k0QKzep4H4rmYW/0tE3Po=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Cao71x+NKDBtKeYvEQThryLpb3Z8Hs4MWAS3dJlnm4UoOpjE01xSZl43Vhnej42IwO2lg6RRIeLNGdEJh4CWi0lkc29HQZ7OzPf7nZY53+Moojd6xxaMqZQOsFL8BrQnzMCtpQIRnK5R7v2ApJ4CrHhd2ukyg52F0JBDgN21LC8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RB7mHz2P; arc=none smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kW0ZVSQg"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1577BC4CEEA;
-	Thu, 12 Jun 2025 06:03:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1749708239;
-	bh=WtGXBAqnnP89EcvfhqMvn4YNXCU8xT6+2QPx+55dDrs=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=kW0ZVSQgujU1rtMS6vfFURiM/DG0M/wn1siyvG5mq0sJMuoF9Keb9tCOVqCQtlQ3H
-	 TnD/bGMud0awD6lre5Ly3pawMBpb85A1nOu6q+6dnSYLcpiLMsgF28E7n9WAvyRkP8
-	 D/W9dxFjDLKoq4uCuprzC5z6d2S31YN603Bj6wO8WNuG8TYy/elJs5yZ99LrWOge9p
-	 q19kbxHt6Tt57JiuWAfFz51uZ1rw2EOjO0PNg+orv17n4fgzUAiPe3RvZrqLyr6UDD
-	 LD2WR3XZx821DIKHvIhE5pKXzVkpxxW+5A2WYaWnFr8LO6zeW4j57EOWlcdRE8gWvz
-	 lmpINuLDILnDw==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH v3 2/2] scsi: sd: Set a default optimal IO size if one is not defined
-Date: Thu, 12 Jun 2025 15:02:11 +0900
-Message-ID: <20250612060211.1970933-3-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250612060211.1970933-1-dlemoal@kernel.org>
-References: <20250612060211.1970933-1-dlemoal@kernel.org>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RB7mHz2P"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-3a503d9ef59so579138f8f.3
+        for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 00:42:35 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1749714154; x=1750318954; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=pOjdW6tvwIHGvqgEBjcYXxpqXXP0mM93Bi1E5VHKi0I=;
+        b=RB7mHz2P2F0km9hNYYtu3w9W1j0fp/y1iV6+QIlaCDcvOSzig+rw9sfzzBLqoNB9My
+         FC0BFiaK7emHFD9TfA3KoCEgVCMmooWs5v8kXWeJxYp0GXatPBKkxRo96PLPF6be1G70
+         wLKRi4UcC1JJWBC9uNDWrtn9j2csf4afhir3kvjc+p4qP6Xck5DJsdbimN2+fS8KekDG
+         wMVUbeTYauqAoKxVs/4Ljj2jEwi44JjRtkG58FmM7ZcHmw+95RfQ+1ZkGYPgww5xTQUV
+         u7aKlNpEpnGPTunoHhOsXFFONPmfcpcL0onPOS4cxzaEC+EgcOJnsj8re5KGWIqnoJHj
+         M2hQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1749714154; x=1750318954;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=pOjdW6tvwIHGvqgEBjcYXxpqXXP0mM93Bi1E5VHKi0I=;
+        b=uSeGXCeRM3gaRmLcGvJ8tUcVat/1KgbufNTwlCFTmrpk4u/MN4tVPm2LFFvelNxBdi
+         4mqsDRZT1pZNagb6A1eD2lH2FL6nwfdcHeFeEN9ivTAXqKE+zSjg2HNnrTR5vssluwVE
+         c0bqVzC3j26+fJ0WJxKW4g4IMk6J58hyYcQXWALlmkALa42wB41zL8KmmWRcYONc9oB2
+         ub/hSVUSVYTUObmo40CfJ/m5WnfGpn/sAke22TUXw+trg2x6SeBHmUbrW8DDbZ7TH3Vd
+         mAgcvLDvh4PDabJiJBKSlp8N7GcUoban52es68gToANg/OT4saskfSW/JQD2m5RcJQEx
+         iklg==
+X-Forwarded-Encrypted: i=1; AJvYcCVgXze8WE1IQRzym2gNmjFYuJC4eef/XnOA26OywgCHTuYVbpB5CirTJcN+jlXEk9I07FghUlo3ei1b@vger.kernel.org
+X-Gm-Message-State: AOJu0YyunAXBg3dV0/SVG2uvWOtDBYwcigR/C6ObkFS2gFOgLukL/eR9
+	ammCUKFZwcwl9YYzwwL6tQObMFyeL0LYqACGz3WL60os/LP1dI8m8zxEA23GiNg5/dE=
+X-Gm-Gg: ASbGnctI8au4GDDkJ0LS3edCL5k7oMRn7FJXZ4UMpObxjm+DOvMy5BImaBz0L9SLQ39
+	JJ8kUaiMCOfGjGVpYlCdUeotFjpL4c+2jUg2yW3jyd7tkLmnh61NzIR50/BSitG9zGHEeeF6jyD
+	bZJWAkfhYY7kF1NEeaWIGN/u0zCRQ6M4BRIw7t1a+ojfCtEDEFyeH0+krI2cwfsfHWtmeH5XZgB
+	ncfQNHtkkozNgrmyyC+Q7HhUE+EiDVYC3/CQXTyVXyDjqQ8u+bzb58ixFPOA1F34XPm2Mznh8um
+	9V7vPR83sCUmlTTx6c0yvgt+P+iKWuknDikqEYSpVkCbQCZLY0vv9hYSfR6MgEg7Ars=
+X-Google-Smtp-Source: AGHT+IHK4uQuCn2XQWMjU/bTqraytEDLe7/LB0UXdjlju8466jLpB8n5+oghPZtv4fc6nLejDkqEyw==
+X-Received: by 2002:a05:6000:2308:b0:3a4:e740:cd72 with SMTP id ffacd0b85a97d-3a56127883dmr1425617f8f.13.1749714154457;
+        Thu, 12 Jun 2025 00:42:34 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-453305a0d9dsm3836115e9.21.2025.06.12.00.42.33
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 12 Jun 2025 00:42:34 -0700 (PDT)
+Date: Thu, 12 Jun 2025 10:42:30 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Karan Tilak Kumar <kartilak@cisco.com>
+Cc: sebaddel@cisco.com, arulponn@cisco.com, djhawar@cisco.com,
+	gcboffa@cisco.com, mkai2@cisco.com, satishkh@cisco.com,
+	aeasi@cisco.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	jmeneghi@redhat.com, revers@redhat.com, stable@vger.kernel.org
+Subject: Re: [PATCH v3 2/5] scsi: fnic: Fix crash in fnic_wq_cmpl_handler
+ when FDMI times out
+Message-ID: <aEqE5okf2jfV9kwt@stanley.mountain>
+References: <20250612004426.4661-1-kartilak@cisco.com>
+ <20250612004426.4661-2-kartilak@cisco.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250612004426.4661-2-kartilak@cisco.com>
 
-Introduce the helper function sd_set_io_opt() to set a disk io_opt
-limit. This new way of setting this limit falls back to using the
-max_sectors limit if the host does not define an optimal sector limit
-and the device did not indicate an optimal transfer size (e.g. as is
-the case for ATA devices). io_opt calculation is done using a local
-64-bits variable to avoid overflows. The final value is clamped to
-UINT_MAX aligned down to the device physical block size.
+On Wed, Jun 11, 2025 at 05:44:23PM -0700, Karan Tilak Kumar wrote:
+> When both the RHBA and RPA FDMI requests time out, fnic reuses a frame
+> to send ABTS for each of them. On send completion, this causes an
+> attempt to free the same frame twice that leads to a crash.
+> 
+> Fix crash by allocating separate frames for RHBA and RPA,
+> and modify ABTS logic accordingly.
+> 
+> Tested by checking MDS for FDMI information.
+> Tested by using instrumented driver to:
+> Drop PLOGI response
+> Drop RHBA response
+> Drop RPA response
+> Drop RHBA and RPA response
+> Drop PLOGI response + ABTS response
+> Drop RHBA response + ABTS response
+> Drop RPA response + ABTS response
+> Drop RHBA and RPA response + ABTS response for both of them
+> 
+> Fixes: 09c1e6ab4ab2 ("scsi: fnic: Add and integrate support for FDMI")
+> Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
+> Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
+> Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
+> Tested-by: Arun Easi <aeasi@cisco.com>
+> Co-developed-by: Arun Easi <aeasi@cisco.com>
+> Signed-off-by: Arun Easi <aeasi@cisco.com>
+> Tested-by: Karan Tilak Kumar <kartilak@cisco.com>
+> Cc: <stable@vger.kernel.org> # 6.14.x Please see patch description
 
-This fallback io_opt limit avoids setting up the disk with a zero
-io_opt limit, which result in the rather small 128 KB read_ahead_kb
-attribute. The larger read_ahead_kb value set with the default non-zero
-io_opt limit significantly improves buffered read performance with file
-systems without any intervention from the user.
+I'm a bit confused.  Why do we need to specify 6.14.x?  I would have
+assumed that the Fixes tag was enough information.  What are we supposed
+to see in the patch description?
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
----
- drivers/scsi/sd.c | 45 +++++++++++++++++++++++++++++++++++----------
- 1 file changed, 35 insertions(+), 10 deletions(-)
+I suspect you're making this too complicated...  Just put
+Cc: <stable@vger.kernel.org> and a Fixes tag and let the scripts figure
+it out.  Or put in the commit description, "The Fixes tag points to
+an older kernel because XXX but really this should only be backported
+to 6.14.x because YYY."
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index daddef2e9e87..8070356285a7 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -3681,6 +3681,40 @@ static void sd_read_block_zero(struct scsi_disk *sdkp)
- 	kfree(buffer);
- }
- 
-+/*
-+ * Set the optimal I/O size: limit the default to the SCSI host optimal sector
-+ * limit if it is set. There may be an impact on performance when the size of
-+ * a request exceeds this host limit. If the host did not set any optimal
-+ * sector limit and the device did not indicate an optimal transfer size
-+ * (e.g. ATA devices), default to using the device max_sectors limit.
-+ */
-+static void sd_set_io_opt(struct scsi_disk *sdkp, unsigned int dev_max,
-+			  struct queue_limits *lim)
-+{
-+	struct scsi_device *sdp = sdkp->device;
-+	struct Scsi_Host *shost = sdp->host;
-+	u64 io_opt;
-+
-+	io_opt = (u64)shost->opt_sectors << SECTOR_SHIFT;
-+	if (sd_validate_opt_xfer_size(sdkp, dev_max))
-+		io_opt = min_not_zero(io_opt,
-+				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
-+	if (io_opt) {
-+		lim->io_opt = ALIGN_DOWN(min_t(u64, io_opt, UINT_MAX),
-+					 sdkp->physical_block_size - 1);
-+		return;
-+	}
-+
-+	/* Set default */
-+	io_opt = (u64)lim->max_sectors << SECTOR_SHIFT;
-+	lim->io_opt = ALIGN_DOWN(min_t(u64, io_opt, UINT_MAX),
-+				 sdkp->physical_block_size - 1);
-+
-+	sd_first_printk(KERN_INFO, sdkp,
-+			"Using default optimal transfer size of %u bytes\n",
-+			lim->io_opt);
-+}
-+
- /**
-  *	sd_revalidate_disk - called the first time a new disk is seen,
-  *	performs disk spin up, read_capacity, etc.
-@@ -3777,16 +3811,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	else
- 		lim.io_min = 0;
- 
--	/*
--	 * Limit default to SCSI host optimal sector limit if set. There may be
--	 * an impact on performance for when the size of a request exceeds this
--	 * host limit.
--	 */
--	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
--	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
--		lim.io_opt = min_not_zero(lim.io_opt,
--				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
--	}
-+	sd_set_io_opt(sdkp, dev_max, &lim);
- 
- 	sdkp->first_scan = 0;
- 
--- 
-2.49.0
+regards,
+dan carpenter
 
