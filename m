@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 348A53BB48
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2025 16:17:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF2483BB48;
+	Fri, 13 Jun 2025 16:20:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749831439; cv=none; b=sJ/4nZeZML0h3bOEMWv+00H8LGhrQijEA8kBLfbr5u3y3M/fxiFfMzB/b7N6RIJB6GG7NYLZs79+2IFy0RFi4hsws2xXh57aMIABHVoC84JSBsZmSTP+c4iqHzGhfnCWMcPXgHQmNgeOHq1lvEYgWxgI8ONXWmu7tbj7ULEwIOI=
+	t=1749831620; cv=none; b=XDqyRKpLmV+qaRI8MllMhcXR2F7dxA8FiTIGFiG97D8SdeaJTHp53cCNZ45Bpc/mJKwJVxRxQ7C8lDqCyrC0wuNjAOpCcKlWY6RB551NPNN9q1R5gNAG/Z14y9cfCCRbEc7i4M6ocQbpv8A/khraSIxfQafgCwTnGWixRbgECdk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749831439; c=relaxed/simple;
-	bh=avw3seADXvthv5BwvZlqHtXib0+I2cdMmZx6sSUGlGI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=eyEfG5+ITh0BKsxUIdnwjUxyYLHlD4G9dEMQebmr08Bsx1m4PlqP0UcWj/uhki5f1UgZ2RscvXAXiVsqYBgV2P+egep5bCg+pn20Y06kQL1Wu8f/Lzosc+9MU9IjWFEA12GclNGrbx+z7JPwt33S7Mmh2dnkEZij8IkGqUE9NuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=cupnAllB; arc=none smtp.client-ip=199.89.3.6
+	s=arc-20240116; t=1749831620; c=relaxed/simple;
+	bh=CNErbTXB19qmacs6+xkbQ/5C0W3lKEIyxjPb4zKkg1E=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MQ6ie2yG3z2Tu45ttahImr4MffXAsw5SwfV6fIejOsiu9zgss9/0/VwngPt9BjXmUll7mlpd7aNmlvJfFXwcDW27dLNBDxINK2zmf09oBDpn9eHpqWP2UyvLCbHa5I7r2W18B7vefHWXnF7eL2u6E6yR2NbfA+TEREEtUNmVKkQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gbmiJziu; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="cupnAllB"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gbmiJziu"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bJl0P2yKdzlgqTx;
-	Fri, 13 Jun 2025 16:17:09 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bJl3v13Y4zm0yst;
+	Fri, 13 Jun 2025 16:20:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1749831428; x=1752423429; bh=zw8quaIQ+lLMP6whlgAjoSus
-	0RD5h5yKdUxjhw5bMSc=; b=cupnAllBL6Qz/dwt3wJbcUlxHNW3fesKqUzr1xDA
-	Xxyeh+hYRA0PdNZBtXnpaPEbn4edU1KNzPtTDmhq5xWg6EwceTmsY3o3fUSOZP+N
-	HZGMB2hAIVDLcoHp4+XjMqjp8uYhQrOMsiFyYAS/YWWPLA32t6YJMzfTQqVu/eog
-	kkAsiHk58tKCv3r1aLzME/diDHNMjFX4zqXdjrpkvgU9bs6xztOuCFfETDGGQ+O8
-	dJT1WLWrl/GKLdT07Ib0WY/JxVlB6Y/t1dTCLgFF1IBA/Ky6o354tGpYAYcWBafM
-	0iSxa2SudkflDCaZlgqCW201WKGB+V7/DgctZwlLDtodSA==
+	 s=mr01; t=1749831609; x=1752423610; bh=CNErbTXB19qmacs6+xkbQ/5C
+	0W3lKEIyxjPb4zKkg1E=; b=gbmiJziue20r5dFW8Xxl9VhoPK4ydfn7ypM2sCED
+	GHNb7a658Z3BHUECI/vxwRFgDDvl7uu98cvOmkFJHovv5KkJHW0QmYkAk7mkGBLs
+	yGUGeRhYmoe4+V85a5HK1bPXRrWmvxJmbOhMXsLbllgjFIbgYbXJzJtyuUYLnA4k
+	PdZDKN2eGFl6CkFbWQ20qyV0XNgIHmox1qcjyCDvhxIyWf5bWnXXOnoHpsSsi25I
+	RFPmrLJ1HehlOnLlcPWbr3j4eIUMSLx8AiobfzExDPvmGCGToX+Y5scDlB4rUeTy
+	LQXODrojt06aBK1n2EKgApLO/oO8iTSNpshfqsv9rJvLEA==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 8vtQhhwH4Voz; Fri, 13 Jun 2025 16:17:08 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id XbKdJ0pP__oj; Fri, 13 Jun 2025 16:20:09 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bJl0L61HVzlgqV5;
-	Fri, 13 Jun 2025 16:17:06 +0000 (UTC)
-Message-ID: <3eb1100f-a0e4-4ed0-99e0-9e58c2cd5223@acm.org>
-Date: Fri, 13 Jun 2025 09:17:05 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bJl3m2Cr8zm1HbX;
+	Fri, 13 Jun 2025 16:20:02 +0000 (UTC)
+Message-ID: <07975e85-2424-4ae9-8f31-d689c09d21dc@acm.org>
+Date: Fri, 13 Jun 2025 09:20:01 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,53 +50,26 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 1/2] scsi: sd: Prevent logical_to_bytes() from
- returning overflowed values
-To: Damien Le Moal <dlemoal@kernel.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org
-References: <20250613062909.2505759-1-dlemoal@kernel.org>
- <20250613062909.2505759-2-dlemoal@kernel.org>
+Subject: Re: [PATCH] scsi: ufs: core: Do clk scaling conditionally in reset
+ and restore
+To: Anvith Dosapati <anvithdosapati@google.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, manugautam@google.com, vamshigajjela@google.com
+References: <20250613103140.1121621-1-anvithdosapati@google.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250613062909.2505759-2-dlemoal@kernel.org>
+In-Reply-To: <20250613103140.1121621-1-anvithdosapati@google.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 6/12/25 11:29 PM, Damien Le Moal wrote:
-> Make sure that logical_to_bytes() does not return an overflowed value
-> by changing its return type from unsigned int (32-bits) to u64
-> (64-bits). And while at it, also use a bit-shift instead of a
-> multiplication, similar to logical_to_sectors() and bytes_to_logical().
-> 
-> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-> ---
->   drivers/scsi/sd.h | 4 ++--
->   1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
-> index 36382eca941c..53658679e063 100644
-> --- a/drivers/scsi/sd.h
-> +++ b/drivers/scsi/sd.h
-> @@ -213,9 +213,9 @@ static inline sector_t logical_to_sectors(struct scsi_device *sdev, sector_t blo
->   	return blocks << (ilog2(sdev->sector_size) - 9);
->   }
->   
-> -static inline unsigned int logical_to_bytes(struct scsi_device *sdev, sector_t blocks)
-> +static inline u64 logical_to_bytes(struct scsi_device *sdev, sector_t blocks)
->   {
-> -	return blocks * sdev->sector_size;
-> +	return (u64)blocks << ilog2(sdev->sector_size);
->   }
-
- From <linux/types.h>:
-
-typedef u64 sector_t;
-
-Hence, casting 'blocks' from type sector_t to type u64 is not necessary.
-
-Since 'blocks' represents an LBA instead of a byte offset divided by
-512, please consider changing "sector_t blocks" into "u64 logical_blocks".
+On 6/13/25 3:31 AM, Anvith Dosapati wrote:
+> In ufshcd_host_reset_and_restore, scale up clocks only when clock
+> scaling is supported. Without this change cpu latency is voted for 0
+> (ufshcd_pm_qos_update) during resume unconditionally.
+Since this patch is a bug fix, please add "Cc: stable@vger.kernel.org"
+and "Fixes:" tags. See also Documentation/process/stable-kernel-rules.rst
+in the kernel tree.
 
 Thanks,
 
