@@ -1,140 +1,142 @@
-Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0975C2472B0
-	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2025 03:08:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59E2320E70C;
+	Fri, 13 Jun 2025 03:15:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749784133; cv=none; b=KCLNcdVwRgUp11ctv16QriRxK0PGnOVhRgbQ8kGoefkf2D2RLWZ9vQa3YHjbxP+YsYgNtgBPIRwndT1gxeEkPROKleBS0tDFdZ0VKnG0cf+smhmHIYXn2sXjLj/T1Cj1t9HzSoERgtYuhvqjvwN501aOcHpyxbZMzK+5loCcrTg=
+	t=1749784549; cv=none; b=lF9Wakv2w/ThDufJYWIBmX3L7MycqUa0NRVtAVF8Pf7lyzIIMoDsbHtyL4wkSmXBigmyvzBl4vspWe+hELrCGOY03waEYioGA8Qhx076oQleHi1uEa/sEmm1drHASIacIG9pcaibaEs4tvaDpgunb/0s/MZxPkJc0TDm02olxYU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749784133; c=relaxed/simple;
-	bh=te63zQbWCSo0mXXkreplZyT4a26l+JieKkfYEFKB3+c=;
-	h=MIME-Version:From:Date:Message-ID:Subject:To:Content-Type; b=jPVqsUjhJA2o/MhWpXM2hp6a6XjlfZ3I9y2b27GkuoQwRyMexk8+YsFo1JPJZqU8TfW3PSzOJEYRlS9LhKmBsULcLDmXFye4HsdKxhxvJTI2AncDJTnOGhlyi3XW5r5tZJnBvnV90/OVMD20o+ClpDwbYiQocG+w/ZXmP76pxPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NCsljuLa; arc=none smtp.client-ip=209.85.128.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NCsljuLa"
-Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-451dbe494d6so21107975e9.1
-        for <linux-scsi@vger.kernel.org>; Thu, 12 Jun 2025 20:08:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1749784130; x=1750388930; darn=vger.kernel.org;
-        h=to:subject:message-id:date:from:mime-version:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=NIxP3iombi8+uVGSIAyip6bKiFBuxxY9Jf5Cqzou2E4=;
-        b=NCsljuLad6pswBA+CO7qyQrDDLL7vJpoC4pRfCGvatFZ8tbhi03AMHjVEu97l2Qael
-         h5nX8nWN948hwzKzRyYYj60Ph80cEFWzu+lncA67IgbEs8x79lti5p4w+kXDPBQdIk7k
-         B0Hyc5FtFzgvh5BWrC+Ogg0+JZS9KjY5MN9RMeS/zGesPdNuJfPUe8dc1y5Gl7v6kcRM
-         g+jSCO2NM9iwduEjZdEpDg2o1qpQqZY+PwlOnR7Tu1QQvGqEwP83/QG99WDmfmQUZSVi
-         LxAxXlmDdHOvHWFwEwH+HWSukWrfg2h0AQ7Mq7JeoPA865J4WIQ6dD+OLa8XRymm3UT/
-         UA5Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1749784130; x=1750388930;
-        h=to:subject:message-id:date:from:mime-version:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=NIxP3iombi8+uVGSIAyip6bKiFBuxxY9Jf5Cqzou2E4=;
-        b=iWnT8RvsgtPLZiBFCH1xp8IpTtrzj2OAueTUe2QQYWT+9CLH01PGbqR7yyDOgShkPJ
-         Ku0/LIlfxkVWapLijUFH/CmIvJ/kUsUpQ4yC0Q2DG2qEl4qwjcsuNmVMRYARzhgGustW
-         ZpEkDINUiJWDL61YkAVUDdBaJlofoYkhTRtoQXzgfA/A60weIb7qkLbH31bEwwGociht
-         uClxpcmQaOBYOQ24Qvev3Azf9nQPmPe3t+nxC98ZCmueNUNxEJtb2QhkO6DAp7lBoKNC
-         VWhj1ABNgKrJAdpsStICivg8HsfmzbGl+G9OetLe3kXdJznJWp5NwuwBYbs2L9xFvOqu
-         aIDA==
-X-Gm-Message-State: AOJu0Yy8AeiK1npoGxr9TNPm6EO3cOiU3l22nSDAcqOSjERtDTTvgKWJ
-	XFGyJ4XNa2WECyOr1+6+2G4f9luVUJ380ldSTqZmSsADzt2pKU6f1f3BBYaDy8D9+FHfB0Iim0o
-	w9JnfK8NQoPrisqgHSJ7T0Kd8/oXbdMUYC2UhJh4=
-X-Gm-Gg: ASbGncs7D8PeM6Eu6HPCd3vt7XjkG3VYjeZypSGTOHAvwEEEtGyUfc+0RD26M4WiMfy
-	AkF7TmRmEGsW43+SMp64EghWR/4i5vMmXzH8SFy10Bg6SoxLvQ0uSJRshtJfjznZFOLj/Zx1RTi
-	yDf3gifNNOebCx1JZzzziURweELlRb2T+c+mXsSmhYcKY=
-X-Google-Smtp-Source: AGHT+IEjZ3Oe2Sn02M0OJ061yy4mKBw25sOfyCwwrO1bvsxx0xZIXaBAdVK2xX+RiP81nZcalBuGlGmFNa9nrR0QGHs=
-X-Received: by 2002:a05:600c:4f49:b0:43c:ee3f:2c3 with SMTP id
- 5b1f17b1804b1-45334ab7ebdmr9256075e9.7.1749784130001; Thu, 12 Jun 2025
- 20:08:50 -0700 (PDT)
+	s=arc-20240116; t=1749784549; c=relaxed/simple;
+	bh=wiWZ2dzLQqc4OfpRI+E8bl3uA461tgzyLh2UFnwyaAI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GheMIyNuTe+cAnMFkBm/O47OAIxvKfRWncwOzF6hwSI7tiy528Hdan2dCK+AwJfUBmVwOAn8btlWXz1FwT+wfkJZVEq+4UCnBXfH6oioGpS/xxO1j1HgeDIYHr8XMtckqCoonEY1/B+XSyLku3GhYBkpZ2U51RJ5oSIPViuuN+c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4bJPfn3RlhzKHN5T;
+	Fri, 13 Jun 2025 11:15:45 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id CBD201A1911;
+	Fri, 13 Jun 2025 11:15:43 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgD3W2Ddl0to15NsPQ--.28263S3;
+	Fri, 13 Jun 2025 11:15:43 +0800 (CST)
+Message-ID: <3569a77f-1f38-4764-b1e3-d0075775c7bb@huaweicloud.com>
+Date: Fri, 13 Jun 2025 11:15:41 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-From: =?UTF-8?B?5YiY5oCd5rSL?= <theforsaken641@gmail.com>
-Date: Fri, 13 Jun 2025 11:08:38 +0800
-X-Gm-Features: AX0GCFsYRp2JDw_TIVDP8_XauID5zyCD5EFT-WSQA23XYsNU3lnw9QZMWLAEdIk
-Message-ID: <CAOocBacoLFg5sz+Y4UL86h2gvmzZBUk2uJw2ocUgvk7tMVqB3g@mail.gmail.com>
-Subject: memory leak vulnerability found in drivers/scsi/qedf
-To: linux-scsi@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 01/10] block: introduce BLK_FEAT_WRITE_ZEROES_UNMAP to
+ queue limits features
+To: "Darrick J. Wong" <djwong@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>, linux-fsdevel@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ linux-kernel@vger.kernel.org, tytso@mit.edu, john.g.garry@oracle.com,
+ bmarzins@redhat.com, chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+ brauner@kernel.org, martin.petersen@oracle.com, yi.zhang@huawei.com,
+ chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
+ <20250604020850.1304633-2-yi.zhang@huaweicloud.com>
+ <20250611060900.GA4613@lst.de>
+ <343f7f06-9bf6-442f-8e77-0a774203ec3f@huaweicloud.com>
+ <20250612044744.GA12828@lst.de>
+ <41c21e20-5439-4157-ad73-6f133df42d28@huaweicloud.com>
+ <20250612150347.GK6138@frogsfrogsfrogs>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <20250612150347.GK6138@frogsfrogsfrogs>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgD3W2Ddl0to15NsPQ--.28263S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7Ww45Gr4fJw4UWr13Zw4DXFb_yoW5Jr43pF
+	W8GF1vyFWDKF15Gw1q93W0qr1Fvrs2ywsxXws5CrWUAwn0qr17WF1kKFWjkF97Z3Wxu3y5
+	Xa15G343ua15C3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUvjb4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Cr1j6rxdM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I
+	0E14v26rxl6s0DM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40E
+	x7xfMcIj6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x
+	0Yz7v_Jr0_Gr1lF7xvr2IY64vIr41lFIxGxcIEc7CjxVA2Y2ka0xkIwI1lc7CjxVAaw2AF
+	wI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x0Yz7v_Jr0_Gr1lx2IqxVAqx4
+	xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2zVAF1VAY17CE14v26r4a6rW5
+	MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF4lIxAIcVC0I7IYx2IY6xkF7I
+	0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWUCwCI42IY6I8E87Iv67AKxVWU
+	JVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCTnIWIevJa73UjIFyTuYvjxUIa
+	0PDUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-I found a memory leak vulnerability in
-linux/drivers/scsi/qedf/qedf_main.c , qedf_prepare_sb Function Due to
-Missing Resource Cleanup in Error Path.
+On 2025/6/12 23:03, Darrick J. Wong wrote:
+> On Thu, Jun 12, 2025 at 07:20:45PM +0800, Zhang Yi wrote:
+>> On 2025/6/12 12:47, Christoph Hellwig wrote:
+>>> On Wed, Jun 11, 2025 at 03:31:21PM +0800, Zhang Yi wrote:
+>>>>>> +/* supports unmap write zeroes command */
+>>>>>> +#define BLK_FEAT_WRITE_ZEROES_UNMAP	((__force blk_features_t)(1u << 17))
+>>>>>
+>>>>>
+>>>>> Should this be exposed through sysfs as a read-only value?
+>>>>
+>>>> Uh, are you suggesting adding another sysfs interface to expose
+>>>> this feature?
+>>>
+>>> That was the idea.  Or do we have another way to report this capability?
+>>>
+>>
+>> Exposing this feature looks useful, but I think adding a new interface
+>> might be somewhat redundant, and it's also difficult to name the new
+>> interface. What about extend this interface to include 3 types? When
+>> read, it exposes the following:
+>>
+>>  - none     : the device doesn't support BLK_FEAT_WRITE_ZEROES_UNMAP.
+>>  - enabled  : the device supports BLK_FEAT_WRITE_ZEROES_UNMAP, but the
+>>               BLK_FLAG_WRITE_ZEROES_UNMAP_DISABLED is not set.
+>>  - disabled : the device supports BLK_FEAT_WRITE_ZEROES_UNMAP, and the
+>>               BLK_FLAG_WRITE_ZEROES_UNMAP_DISABLED is set.
+>>
+>> Users can write '0' and '1' to disable and enable this operation if it
+>> is not 'none', thoughts?
+> 
+> Perhaps it should reuse the enumeration pattern elsewhere in sysfs?
+> For example,
+> 
+> # cat /sys/block/sda/queue/scheduler
+> none [mq-deadline]
+> # echo none > /sys/block/sda/queue/scheduler
+> # cat /sys/block/sda/queue/scheduler
+> [none] mq-deadline
+> 
+> (Annoying that this seems to be opencoded wherever it appears...)
+> 
 
-The qedf_prepare_sb function allocates resources in a loop for
-multiple queues. If an allocation fails mid-loop (e.g., kcalloc for
-fp->sb_info or qedf_alloc_and_init_sb fails), the error path (goto
-err) returns without freeing resources allocated in previous
-iterations
+Yeah, this solution looks good to me. However, we currently have only
+two selections (none and unmap). What if we keep it as is and simply
+hide this interface if BLK_FEAT_WRITE_ZEROES_UNMAP is not set, making
+it visible only when the device supports this feature? Something like
+below:
 
+diff --git a/block/blk-sysfs.c b/block/blk-sysfs.c
+index e918b2c93aed..204ee4d5f63f 100644
+--- a/block/blk-sysfs.c
++++ b/block/blk-sysfs.c
+@@ -747,6 +747,9 @@ static umode_t queue_attr_visible(struct kobject *kobj, struct attribute *attr,
+             attr == &queue_max_active_zones_entry.attr) &&
+            !blk_queue_is_zoned(q))
+                return 0;
++       if (attr == &queue_write_zeroes_unmap_entry.attr &&
++           !(q->limits.features & BLK_FEAT_WRITE_ZEROES_UNMAP))
++               return 0;
 
+        return attr->mode;
+ }
 
-static int qedf_prepare_sb(struct qedf_ctx *qedf)
-{
-    int id;
-    struct qedf_fastpath *fp;
-    int ret;
+Thanks,
+Yi.
 
-    qedf->fp_array =
-        kcalloc(qedf->num_queues, sizeof(struct qedf_fastpath),
-        GFP_KERNEL);
-
-    if (!qedf->fp_array) {
-        QEDF_ERR(&(qedf->dbg_ctx), "fastpath array allocation "
-              "failed.\n");
-        return -ENOMEM;
-    }
-
-    for (id = 0; id < qedf->num_queues; id++) {
-        fp = &(qedf->fp_array[id]);
-        fp->sb_id = QEDF_SB_ID_NULL;
-        fp->sb_info = kcalloc(1, sizeof(*fp->sb_info), GFP_KERNEL);
-        if (!fp->sb_info) {
-            QEDF_ERR(&(qedf->dbg_ctx), "SB info struct "
-                  "allocation failed.\n");
-            goto err;
-        }
-        ret = qedf_alloc_and_init_sb(qedf, fp->sb_info, id);
-        if (ret) {
-            QEDF_ERR(&(qedf->dbg_ctx), "SB allocation and "
-                  "initialization failed.\n");
-            goto err;
-        }
-        fp->sb_id = id;
-        fp->qedf = qedf;
-        fp->cq_num_entries =
-            qedf->global_queues[id]->cq_mem_size /
-            sizeof(struct fcoe_cqe);
-    }
-err:
-    return 0;
-
-}
-
-
-
-vulnerability can be fixed by cleanup allocated resources on error:
-err:
-    // return 0;
-    /* Cleanup allocated resources on error */
-    for (int i = 0; i < id; i++) {
-        fp = &qedf->fp_array[i];
-        if (fp->sb_info) {
-            qedf_free_sb(qedf, fp->sb_info);
-            kfree(fp->sb_info);
-            fp->sb_info = NULL;
-        }
-    }
-    kfree(qedf->fp_array);
-    qedf->fp_array = NULL;
-    return -ENOMEM;
-
-
-
-Looking forward to your reply
