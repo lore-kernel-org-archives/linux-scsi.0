@@ -1,37 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A449B19E7D0
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DE71257459
 	for <linux-scsi@vger.kernel.org>; Fri, 13 Jun 2025 06:30:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1749796256; cv=none; b=N4pXjLi87L2/jGumU7qZy+qBohUcsHPhcLWxMG+N55iV/pVmIag7QZoUzeOx8BeY5ObjThnS94/W2NZ+na4P0RfEp3Ymxzx8PVNFJ8nOQwy5pYCRBO4wZhHJ+er24EhPRyuriZKlEFS1Sfcyu4uvXaP/ce/UxNB98oCG79Ru/yc=
+	t=1749796257; cv=none; b=O9KeVLRadaP+LOup1iVQA13xMgu7B7Ir5YLRqoQsjW+ziNdNfLhg9lZY5Ch7ZreoMVri7sbpDSPtJu3kljJpHH6XSTGmJfTHDLkQ7DNio9Z+NECRJlUjxRDbVd5WyaWt36uQwadTfXJ0bMMvPWo6DfAVmb2R120J/2c9kvxwT5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1749796256; c=relaxed/simple;
-	bh=6LhAjF+UjdZz4tKDZuBXsGh7Lg4w5x7n6zZ3UnkvR/8=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=JcY3VKgmgjAd0zsELQBraSBH5madk7WCUpJa4+u648Qnf0zF2E1tGd6ELx0LFMqafz1RSket0B2PxuT3unsMUgZKyVCKHVpo6k2pV7BaCpozbn/4BL/3gjJIyOtYLjDXugisTbe/SZ1Nrx2yNSNBvKokOzVuP/P2Uc2+DXDs86s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SrXSY87e; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1749796257; c=relaxed/simple;
+	bh=+jKzSFzHNmDNXJuLUbvPWR/o/wthXuUOq4Ag/k9KVbs=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=q3FQKPwqKnAuZof/QqegtU8GlNx5RW+GGTnVFkILev7jkJusrBirn6S9HS1DRRnyk2D4Qvjnw+blehnOfs2XPPcgXY/PvSBVELEYMNQLYy2ccaTWsQSJ/z4bQgkij+iw3xiIKEHWGOtptWR2A3m602U6+fz0kltktIzrweSMyeo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AxfmxxtK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SrXSY87e"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CC00DC4CEE3;
-	Fri, 13 Jun 2025 06:30:55 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AxfmxxtK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E7BCC4CEED;
+	Fri, 13 Jun 2025 06:30:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
 	s=k20201202; t=1749796256;
-	bh=6LhAjF+UjdZz4tKDZuBXsGh7Lg4w5x7n6zZ3UnkvR/8=;
-	h=From:To:Subject:Date:From;
-	b=SrXSY87eKo9NB2yT6VCCxCFSFzI9YtbW/1y4GIft81PASck1rtMjdLe6llb8Qj4Xx
-	 64P0iSu/6HNKpMWYPlMsYx5rhxP74lVHiN5HkE0QbpDvQ8vOC6JnGM5x7rJ5fbYEzv
-	 ZDXSPjVafZjGdXdfUZx+3Kcl7EZX79PotGlIJXV8i9TXfDCaVdkX80Be1xMew1dD5s
-	 8hcb90J42LQ5pI+0pnlPt6irbVilP+uKq+bGfQxDanbk2ALpvQWre0v9BgLL6e91Jh
-	 50zD1H0W2Ic3bU03TeTNSxXMsA+qy3Dsv5YEpEdyeElYjHAaRjUi3lQCRov5RMgJeu
-	 VbzhPuo3Az/Xw==
+	bh=+jKzSFzHNmDNXJuLUbvPWR/o/wthXuUOq4Ag/k9KVbs=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=AxfmxxtKusLK99ZhTv2h2XDNenR7qZukCIZA4XT5ZLyRham89gnjjhRqcYrse1tjV
+	 /ayuZ+pylvQWg8NVH9ru/mQQYELi/Jr2rNycKRTbQDmrdepAsjS4ervbwtr00+AbmI
+	 ci8iAnLC+8Y7vbi2y8VMz9N+Z5zSzOZCpue44ub863HtAFL95CvHAEhCCoeOPlL7ym
+	 YQyp/nCqHs3EeacfOTjj9ee0YfzlFFruVm9t1dONowXGrEJZSV8nehv6NNafv21iEw
+	 3acoDG5kvpnY3lH/lBDzrFozu+TIUxq/vErkIw1ctcLFrS/fo/NH6CrDLPu3LQo6F8
+	 7e94wVUfjQoxg==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH v4 0/2] Improve optimal IO size initialization
-Date: Fri, 13 Jun 2025 15:29:07 +0900
-Message-ID: <20250613062909.2505759-1-dlemoal@kernel.org>
+Subject: [PATCH v4 1/2] scsi: sd: Prevent logical_to_bytes() from returning overflowed values
+Date: Fri, 13 Jun 2025 15:29:08 +0900
+Message-ID: <20250613062909.2505759-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250613062909.2505759-1-dlemoal@kernel.org>
+References: <20250613062909.2505759-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -40,32 +43,32 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A couple of patches to improve setting the optimal I/O size limit of
-scsi disks. A fallback default is added to make sure we always have a
-non-zero optimal I/O size so that file systems operate with a
-reasonnably sized default read_ahead_kb value, for improving buffered
-read performance.
+Make sure that logical_to_bytes() does not return an overflowed value
+by changing its return type from unsigned int (32-bits) to u64
+(64-bits). And while at it, also use a bit-shift instead of a
+multiplication, similar to logical_to_sectors() and bytes_to_logical().
 
-Changes from v1:
- - Changed message level from wrong WARNING level to INFO level
- - Added review tag
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ drivers/scsi/sd.h | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-Changes from v2:
- - Added patch 1
- - Make sure we do not overflow variables and limits in patch 2
-
-Changes from v3:
- - Change logical_to_bytes() to return a u64 in patch 1
- - Added review tag to patch 2
-
-Damien Le Moal (2):
-  scsi: sd: Prevent logical_to_bytes() from returning overflowed values
-  scsi: sd: Set a default optimal IO size if one is not defined
-
- drivers/scsi/sd.c | 45 +++++++++++++++++++++++++++++++++++----------
- drivers/scsi/sd.h |  4 ++--
- 2 files changed, 37 insertions(+), 12 deletions(-)
-
+diff --git a/drivers/scsi/sd.h b/drivers/scsi/sd.h
+index 36382eca941c..53658679e063 100644
+--- a/drivers/scsi/sd.h
++++ b/drivers/scsi/sd.h
+@@ -213,9 +213,9 @@ static inline sector_t logical_to_sectors(struct scsi_device *sdev, sector_t blo
+ 	return blocks << (ilog2(sdev->sector_size) - 9);
+ }
+ 
+-static inline unsigned int logical_to_bytes(struct scsi_device *sdev, sector_t blocks)
++static inline u64 logical_to_bytes(struct scsi_device *sdev, sector_t blocks)
+ {
+-	return blocks * sdev->sector_size;
++	return (u64)blocks << ilog2(sdev->sector_size);
+ }
+ 
+ static inline sector_t bytes_to_logical(struct scsi_device *sdev, unsigned int bytes)
 -- 
 2.49.0
 
