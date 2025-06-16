@@ -1,112 +1,71 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FE882E11C1
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2025 05:34:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F336135947;
+	Mon, 16 Jun 2025 05:39:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750052068; cv=none; b=UYa0wKZaZyfNpIGyd4awftvgM7ejwn5TD9kE/UDQ1FEs7XedcvswCcxRnKKeBlBP9MDgi35isgGZme9VFVzKYOtFB2bUGX/pYcONvZ+nODdxFtD2TJxpJUspuE+H3TMkPD6ZGHWzN1fFngf0Puj9kO/vzYgV7VJarzKKyZdA5Iw=
+	t=1750052349; cv=none; b=e58LyCl1K9vOD1xd9YHnfrweQuEjorVFVQ8A8s8cSHhb8tlSeFyskBl3qm+H1JYWoE9BMDi1KjGncCa8cSvEFceCBk3gMGk+Eq50VoQi675WBPkHzBb6aUCkNzkgHkWXIwyibAsaz/lseQPG3kbkcYf6+f1CxCHd9OBJlaR5LHU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750052068; c=relaxed/simple;
-	bh=0sM/aZNCERc6KuhLn844dszptkPFUnllX3CUSFR9SvY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=UoyINhjEFaWSrsF/GWP8/wjzlXvvm7OJKxs/a/zMBeSARyOWvYXQNLWk3dS1Mb4lMbDvRAN8deDB/2BBpzeLhb9SCL7qfPuQft+m1Z7TxSC/2gnoT2KG1AroCKMvLvDqXaAcTemBlk0HwcD302PVVfnWwtbUVuv27QZfSrX409o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tvj/jBL8; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tvj/jBL8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6301FC4CEF1;
-	Mon, 16 Jun 2025 05:34:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750052067;
-	bh=0sM/aZNCERc6KuhLn844dszptkPFUnllX3CUSFR9SvY=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=Tvj/jBL8vQbcaSIlN4k4Po3lHN6NQUt28fqt5J9TqVQbnvTPq3E/AdlP9RIOVssYw
-	 1UcjVwWVACT0iytgrUPijF97FeOojOWEMB0FQ3rR/6MDoNt5U7XTFla8oKGU5MAhte
-	 hYT/6eLzaB5SMTNxfQMfsEmiXfqXYmiPeNMArgxGx6HZgevdJp2LJcjn0Rj7ulKEzZ
-	 FJYb6G1q0c4fXdeyu77mwzfrGy/NEYWFLqBG/8tMxmaq7F8Jkv/h3oof65Z6lHa96a
-	 jP/pf8pTxdEtX6OGEonCmtIiIpxAv0uyD/7LT75AgXZ1dbGFZNhbJOLJU+71mNR2AU
-	 6EmaIvk/8xP3A==
-Message-ID: <690b0726-f183-4ec7-91fa-ad3c706ba2bc@kernel.org>
-Date: Mon, 16 Jun 2025 14:34:26 +0900
+	s=arc-20240116; t=1750052349; c=relaxed/simple;
+	bh=STav/yxP0DU2hAiPDTbOJaqsMjK8vZu+DSN1dLJfplU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=iBj7pAJ3bQTJ1eUMd5OpW9oaXSaXkagPxahu2I/FpvX6HK90GAMAKtPnDkC7SoX2r9Bp5XEl1SexaaU+FfuYwIVRreD9TI3X5F2bQK3kFQgPxt15tD0FM+1/ckYaeOBxZzwfiIP0LmjcxKQSYVUQM2TG0A277HoS2NLB3G7bkfI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 2C15E68BFE; Mon, 16 Jun 2025 07:39:02 +0200 (CEST)
+Date: Mon, 16 Jun 2025 07:39:01 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: "Darrick J. Wong" <djwong@kernel.org>, Christoph Hellwig <hch@lst.de>,
+	linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org,
+	tytso@mit.edu, john.g.garry@oracle.com, bmarzins@redhat.com,
+	chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+	brauner@kernel.org, martin.petersen@oracle.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH 01/10] block: introduce BLK_FEAT_WRITE_ZEROES_UNMAP to
+ queue limits features
+Message-ID: <20250616053901.GA1533@lst.de>
+References: <20250604020850.1304633-2-yi.zhang@huaweicloud.com> <20250611060900.GA4613@lst.de> <343f7f06-9bf6-442f-8e77-0a774203ec3f@huaweicloud.com> <20250612044744.GA12828@lst.de> <41c21e20-5439-4157-ad73-6f133df42d28@huaweicloud.com> <20250612150347.GK6138@frogsfrogsfrogs> <3569a77f-1f38-4764-b1e3-d0075775c7bb@huaweicloud.com> <20250613055630.GA9119@lst.de> <20250613145433.GF6134@frogsfrogsfrogs> <3d749264-6fdd-458f-a3a8-35d2320193b3@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/2] scsi: sd: Set a default optimal IO size if one is
- not defined
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org
-References: <20250613062909.2505759-1-dlemoal@kernel.org>
- <20250613062909.2505759-3-dlemoal@kernel.org>
- <b20bde78-5f11-4700-9f99-e9bf4bc31e85@oracle.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <b20bde78-5f11-4700-9f99-e9bf4bc31e85@oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3d749264-6fdd-458f-a3a8-35d2320193b3@huaweicloud.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On 6/13/25 23:31, John Garry wrote:
-> On 13/06/2025 07:29, Damien Le Moal wrote:
->> Introduce the helper function sd_set_io_opt() to set a disk io_opt
->> limit. This new way of setting this limit falls back to using the
->> max_sectors limit if the host does not define an optimal sector limit
->> and the device did not indicate an optimal transfer size (e.g. as is
->> the case for ATA devices). io_opt calculation is done using a local
->> 64-bits variable to avoid overflows. The final value is clamped to
->> UINT_MAX aligned down to the device physical block size.
->>
->> This fallback io_opt limit avoids setting up the disk with a zero
->> io_opt limit, which result in the rather small 128 KB read_ahead_kb
->> attribute. The larger read_ahead_kb value set with the default non-zero
->> io_opt limit significantly improves buffered read performance with file
->> systems without any intervention from the user.
+On Sat, Jun 14, 2025 at 12:48:26PM +0800, Zhang Yi wrote:
+> >> Maybe we should redo this similar to the other hardware/software interfaces
+> >> and have a hw_ limit that is exposed by the driver and re-only in
+> >> sysfs, and then the user configurable one without _hw.  Setting it to
+> >> zero disables the feature.
+> > 
+> > Yeah, that fits the /sys/block/foo/queue model better.
+> > 
 > 
-> Out of curiosity, why do this just for sd.c and not always set up the 
-> default like this in blk_validate_limits()?
+> OK, well. Please let me confirm, are you both suggesting adding
+> max_hw_write_zeores_unmap_sectors and max_write_zeroes_unmap_sectors to
+> the queue_limits instead of adding BLK_FEAT_WRITE_ZEROES_UNMAP to the
+> queue_limits->features. Something like the following.
 
-Good point. Though I think we do not want to have a large io_opt for slow
-devices like MMC/SD Cards. So something like this, which is indeed simpler than
-hacking lim->io_opt in sd.c.
+Yes.
 
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index a000daafbfb4..d3ec6f4100f4 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -58,16 +58,24 @@ EXPORT_SYMBOL(blk_set_stacking_limits);
- void blk_apply_bdi_limits(struct backing_dev_info *bdi,
-                struct queue_limits *lim)
- {
-+       u64 io_opt = lim->io_opt;
-+
-        /*
-         * For read-ahead of large files to be effective, we need to read ahead
--        * at least twice the optimal I/O size.
-+        * at least twice the optimal I/O size. For rotational devices that do
-+        * not report an optimal I/O size (e.g. ATA HDDs), use the maximum I/O
-+        * size to avoid falling back to the (rather inefficient) small default
-+        * read-ahead size.
-         *
-         * There is no hardware limitation for the read-ahead size and the user
-         * might have increased the read-ahead size through sysfs, so don't ever
-         * decrease it.
-         */
-+       if (!io_opt && (lim->features & BLK_FEAT_ROTATIONAL))
-+               io_opt = lim->max_sectors;
-+
-        bdi->ra_pages = max3(bdi->ra_pages,
--                               lim->io_opt * 2 / PAGE_SIZE,
-+                               io_opt * 2 >> PAGE_SHIFT,
-                                VM_READAHEAD_PAGES);
-        bdi->io_pages = lim->max_sectors >> PAGE_SECTORS_SHIFT;
- }
+> Besides, we should also rename max_write_zeroes_sectors to
+> max_hw_write_zeroes_sectors since it is a hardware limitation reported
+> by the driver.  If the device supports unmap write zeroes,
+> max_hw_write_zeores_unmap_sectors should be equal to
+> max_hw_write_zeroes_sectors, otherwise it should be 0.
 
-I will make a proper patch of this and send it out as a replacement.
+We've only done the hw names when we allow and overwrite or cap based
+on other values.  So far we've not done any of that to
+max_write_zeroes_sectors.
 
--- 
-Damien Le Moal
-Western Digital Research
