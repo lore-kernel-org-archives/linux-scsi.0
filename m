@@ -1,54 +1,54 @@
-Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
+Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9987B289823
-	for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2025 18:53:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 711C11CAA62
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2025 19:00:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750100032; cv=none; b=uVleTvjYK9M1UomII0DjvEMlmRpc0XPlNFy50jI8QXFQmlhMNwK6UiyuxG/jiTFH5ewR3con0vwovEzVptLtPOpJwpxmSAXqfRngJa8yajYwFuw9NmCo3dk2KWrG17uWCGPEIQ0HqbSYNjqso7rI2ZsagT7O31RQ5ZYj5Bp039E=
+	t=1750100431; cv=none; b=aMlPH4CGXp/kJj0+7slKa8S6AIpwouxyiUXRR15ez9TTSkuhH9Cg5KhW0WpreXVm9VElCUgE4QBzWCbCMLnYh35QGzs6f01qGHeCHLAg/23hVpQu7l2WqgRvKdKuEn0+tEvxg5JholssGFjXXve128pnLGV3LFp7n9LFOJ4MaYw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750100032; c=relaxed/simple;
-	bh=zUxltSsWVNVt8bYevgiEv/NHVTrfuATi/zj9pH/LRUY=;
+	s=arc-20240116; t=1750100431; c=relaxed/simple;
+	bh=9besGwIU/81/CaB70eqYGxX6VSKamtzwWGExgc/F3XE=;
 	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
-	 To:Cc:Content-Type; b=NRCZ1b5vHI4NI93ZOy/ys7O4XDCD/Pi3ZbyP3M8iRYVR0EelKWtAMzX9dozLZyq3DTBFCi7B4HDD+TSp2nwntWUe+QRtKVbuZhGIMHRMLqOq4WoFquQXY3X6Stdhzih4VBMW4+4TyOeP3onmgDF+7dS5sLEIFxA3rSqev5BXFQI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=MHiwZUAi; arc=none smtp.client-ip=209.85.215.202
+	 To:Cc:Content-Type; b=cUHG5aEZ3i89z5aYhCl4NELwF8fVApczmUAsdAD6tNEiqXToEA7hxvn/pqn0KuAk7DVzejBeWCty0Y9Qzw89L4+Onj65o5jhc/RSmK5VjMdAvyRD5Y+RhmwKd8s+r3I9Uuv3JO7omwM6crDwoAeD4oFIA6MeMFUGC7sSmI7U4fU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=vAI8SHBx; arc=none smtp.client-ip=209.85.214.201
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="MHiwZUAi"
-Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-b2eeff19115so6188214a12.0
-        for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2025 11:53:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="vAI8SHBx"
+Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-236725af87fso26553645ad.3
+        for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2025 12:00:22 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1750100030; x=1750704830; darn=vger.kernel.org;
+        d=google.com; s=20230601; t=1750100422; x=1750705222; darn=vger.kernel.org;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:from:to:cc:subject:date:message-id:reply-to;
-        bh=OLAr2ewOlT6jsnw3XYqY4XngPcCJbvRfNpPnxqDqFR8=;
-        b=MHiwZUAirjFiY8zWd6t+4hQ4DOIYJUHk9U7OuzdK7Uu5ohbZZXfI2wBz/6H0YePXiG
-         UFiFq9RbxgCqKP3+qniuLKAT5mRuVoWxZEXoCh5kWbxFbSwRwkH+lOk7k0v9YeUxr05F
-         N07wK53lLtyyeNAWGdz7Er6ZBKE2nC5SoIPxGBSiIr564/LRWOeLJUbHX7nZx/aSfJTx
-         MomLyu73R8iGlvq6l3vfs/z9dr+RwNkCvV86CIwSGMx4DBYEdLbWWJQlpMtGM8dL8iJ0
-         HkE8dez5Y+C6J6GEl8Voscij3sqbwVDkj1plBc0pHiCnCCkSQ4i9dQytC9rW/eddPd42
-         Icyw==
+        bh=jFNCP/Zfjf0zOYYsP29CukZPsGtgXo87gr1Y7z6mt20=;
+        b=vAI8SHBxRlToldnVS8rSMkh4trf+nWk+GEtyW9HLfnFBZY2cZX+uOcyc/eUH8Bxgb5
+         yIM1LdSrq8t/j7vkJNaPkQ3AYERZx9FcLD4k2r2qwN7zmq/mqP3xCPwvD1fMNq+bY5H0
+         juPQ1nEDxfygJTuDzY7Yd77tqN6u0ovz4jq0zt9KbaPs3Zx3zCy9NVwzPOHYmD8FWx2e
+         1tmyge1QHZWljLoR2ArNOZ4EJFABP4VSVFz7zAbcMeqV1EjA/m8XNZhw1pRzQb+g5X/Q
+         k6MTYI5JdyHe/e4hfN6s51T/NkKRD9qVC+ig3mARZtulqMxxMHi26mJ0mVuMaZ7lE/hT
+         8hvw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750100030; x=1750704830;
+        d=1e100.net; s=20230601; t=1750100422; x=1750705222;
         h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
          :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=OLAr2ewOlT6jsnw3XYqY4XngPcCJbvRfNpPnxqDqFR8=;
-        b=wDFoWyYBxL649jewvbK4PNYsuzLjKsCuBPDCIBZpUCMvKSdt3KTw2G+2hzOfjKDdxb
-         w8jiJpGOrnuvmuBsSqyu9J02jxef0I9p6zKO3l4deqrHrAEP0HGrGJLAuvz/PrGtFguC
-         kc0+kSysmVPsDIryZwtsZSYcKSfxTtNlHFEf4kWAlhEanZjRAoWgq2b8gNZzu3g9vwK1
-         ckCP+uBnAbf8SFSR7SHbmigVHAkxZQqpfjfJcJAmTzANXuoVfBhGGmUdfS1oOFFao2Zk
-         6Z2sCg4CEMcLmnkT5hPlFtnyP4QX4GWToPqr9L68ODhcrJCRBok9Hep+RpABCriOedF/
-         ai7w==
-X-Gm-Message-State: AOJu0YxKs8esAEGYB2lCNoQ1NwsPOUN6FXrQea8KMpKso2bjKRlt8Mtt
-	/kI7mb9sukAFHuyhsi15PTEccoqDnqlWhBdH9U1+dEvX7Y3wZbhAVk9Z2/XDAKW7+AAcx94eXA7
-	04HsoGOYBzMN+Lsu7IJuVGLfsSA==
-X-Google-Smtp-Source: AGHT+IET7z9u2/hgTm5vndqG54MifGSmury/J3t5MlQaWyCOVjZGzk0mnDTcEwEQvUvJ3VNrnbLs36h+M+HrUqO/rQ==
-X-Received: from pfbha10.prod.google.com ([2002:a05:6a00:850a:b0:746:1cdd:faa3])
+        bh=jFNCP/Zfjf0zOYYsP29CukZPsGtgXo87gr1Y7z6mt20=;
+        b=b3Z4vKgSMu1CPSiIw27nyz8pMca6qwkE/0qy/C6lAS7QyMmtFa715qeJe8CnyaXEyr
+         QZ1/nAzwACsw2lq3pRFRS+NS9/rzqIG8PwJTeJ9sKyUk0HrbFzxkgI36z6ijqKmYI8vr
+         XSnpO6gcxnPC1c6TLeinabaHoWZ+xo3x7qDCzx3BcuUZZF5MMYuuXv9Wj0NEEiRLczGB
+         lOPlYY8ljDU64ax4BYWJ50nT5YQRdkhftz4p7Acn3+oFMJdkivp4+Wmg5jzaK5nPki3G
+         hDfGKVLh5P9sx2l9py3IB9GoPGuSL+ZHNtKgAfQWgcdDN8KoSqy7Kif/zRXA86FQlPkS
+         JBuQ==
+X-Gm-Message-State: AOJu0Yw9A1LLXaT0HnQSiwTQKa2gvFffOiy/XOD3qwZXak63CA5L1HyB
+	zJuIVOMSWFIXCxAgyPc5b9t8RPsa1+fcyvJoMxONE/TFWX+EVH+jxM4zc5Zg7xlTbhiwxk+42pk
+	cBB7LhvvrNHAjroIY3sBOPn2kSg==
+X-Google-Smtp-Source: AGHT+IGSEuQN3aX5jJ+hJ9qbwRUdVZknufgr0wwISVat/2IXLjOni3lc/rfWow0P9ZS5mdJZ7txhZ0mkCZ6P5oOqvA==
+X-Received: from plap10.prod.google.com ([2002:a17:902:f08a:b0:220:ca3c:96bc])
  (user=salomondush job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a21:4612:b0:1ee:e33d:f477 with SMTP id adf61e73a8af0-21fbd4cd6f3mr16856910637.15.1750100029982;
- Mon, 16 Jun 2025 11:53:49 -0700 (PDT)
-Date: Mon, 16 Jun 2025 18:53:45 +0000
+ 2002:a17:902:ce89:b0:220:c164:6ee1 with SMTP id d9443c01a7336-2366b3dd319mr170509295ad.32.1750100421812;
+ Mon, 16 Jun 2025 12:00:21 -0700 (PDT)
+Date: Mon, 16 Jun 2025 19:00:18 +0000
 In-Reply-To: <20250612212504.512786-1-salomondush@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -58,8 +58,8 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 Mime-Version: 1.0
 References: <20250612212504.512786-1-salomondush@google.com>
 X-Mailer: git-send-email 2.50.0.rc2.701.gf1e915cc24-goog
-Message-ID: <20250616185345.2133349-1-salomondush@google.com>
-Subject: [PATCH v2] scsi: pm80xx: add controller scsi host fatal error uevents
+Message-ID: <20250616190018.2136260-1-salomondush@google.com>
+Subject: [PATCH v3] scsi: pm80xx: add controller scsi host fatal error uevents
 From: Salomon Dushimirimana <salomondush@google.com>
 To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
@@ -88,7 +88,8 @@ specific scsi host, there is no worries of a uevent storm.
 Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
 ---
 Changelog since v2:
-- Fix kernel test robot build warnings.
+- Same intention as v2 but actually includes the changes to fix build
+  warnings
 
  drivers/scsi/pm8001/pm8001_sas.h | 10 +++++++
  drivers/scsi/pm8001/pm80xx_hwi.c | 48 ++++++++++++++++++++++++++++++++
@@ -123,7 +124,7 @@ index 315f6a7523f0..334485bb2c12 100644
  /* ctl shared API */
  extern const struct attribute_group *pm8001_host_groups[];
 diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 5b373c53c036..dfa9494fa659 100644
+index 5b373c53c036..d1741a2ea07c 100644
 --- a/drivers/scsi/pm8001/pm80xx_hwi.c
 +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
 @@ -1551,6 +1551,52 @@ static int mpi_uninit_check(struct pm8001_hba_info *pm8001_ha)
@@ -133,7 +134,7 @@ index 5b373c53c036..dfa9494fa659 100644
 +/**
 + * pm80xx_fatal_error_uevent_emit - emits a single fatal error uevent
 + * @pm8001_ha: our hba card information
-+ * @error_type: fatal error type to emit
++ * @error_reporter: reporter of fatal error
 + */
 +void pm80xx_fatal_error_uevent_emit(struct pm8001_hba_info *pm8001_ha,
 +	enum fatal_error_reporter error_reporter)
