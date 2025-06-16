@@ -1,72 +1,136 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87E2B2BF017;
-	Mon, 16 Jun 2025 14:27:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA39A1BC3F
+	for <linux-scsi@vger.kernel.org>; Mon, 16 Jun 2025 14:36:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750084034; cv=none; b=QlTEYjWFshZrhgyt721Elx/2ph+WlmteXr4KNEZcFRrnJxxOojV0FfLoh1nyoFg7j/v4pDSwq5Ixsmxu1kylM9MCdShD+I0Ndw/SWy/30Q3YqU4jo3D+mqdvNA5oRazeLl/amei47LAlQBtg73NnaLAQTlirZF9LpAsr/iSuqk4=
+	t=1750084566; cv=none; b=fg979gVdxUWpoiAcUgUlc9f04iHauVrD3kpRg3cy0qk5VaXmgI8mjbfxDHvhIsnJ8iBkWNz13uetVTWLdNLyLCKFDo0ayjofYJXHHjJzcZxS0rCRbmncDqeaBJd1UwwpHyf0aIv6k2oiXe30+NTz75PWh/NPkLGwlZaxaGwsEFg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750084034; c=relaxed/simple;
-	bh=27LBzjkFKC0MWbPlUQj6Tt4KZ0Jk3l3sGSDRRlvA7Qg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=rhqpd05+UhJQEADLxrAhSAapzJgcZXVebK45QjJlK94hmpzaxc/fRZnN1M+UsdySERbhtToGCRSGHuq2yXg8dOWjHKsYdGubF7GDLKyqY2pQM1jqKSFKYHebLQBfn+XXsfp8Lu8fSZCWo8O6STI+N98YHF3lZQKLUc8b5uMMA4s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NTVakR5S; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750084566; c=relaxed/simple;
+	bh=lkkn5j7H4sLb0NDyrQUhe3JZh/b0R5tBG6NCHDSKDxA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hVQxeACB9qtFlLyuGmYdjF6tNyEHLnVQNbtB/NXeL6BbesjZ4sjCF4ViRk/wy5XVdEI9JZ3UdKqXO5YFvTt6AsZK1vufbmVng2/IPrRcGT+xmypCBcnG2A/SaX7TVyrkA0sY/B8sIMlgBXYewXPGfl13OuAN6uBigTttw/Eqt4Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=N4J4Rtgu; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NTVakR5S"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6F3D8C4CEEA;
-	Mon, 16 Jun 2025 14:27:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750084034;
-	bh=27LBzjkFKC0MWbPlUQj6Tt4KZ0Jk3l3sGSDRRlvA7Qg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NTVakR5SXYu6c0BR4in/xtNji5OdDLRcOb+1S6kRPnlTkxHPWFuXHEYB2XKVOnV5V
-	 XKW8fuD7PUAxa0hc9pOLobc3bi0uPxw+HNln+mqm/IAkPNktMrm+/b1hQwe4msPHOt
-	 /RBrG+An7Q7/xCH/oFBha8sLE7asffKwinvo7s0gsMMJkwqWOFFVu1jWoUz0qVEXqh
-	 8nYbEvxVezT7bLn6rjAKCURMMss27siUxZLadBGHlsr1LHHNUVo8hPE4huYEBXn5E5
-	 fAacJRg0Mlzep6Qt2V5d4o+LEnwopKyEIQ5mGnZXFdLg6Twux+PSTbq1SyQ5q+r4bW
-	 c85QZmNSdOsqg==
-Date: Mon, 16 Jun 2025 16:27:07 +0200
-From: Christian Brauner <brauner@kernel.org>
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Zhang Yi <yi.zhang@huaweicloud.com>, linux-fsdevel@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-block@vger.kernel.org, dm-devel@lists.linux.dev, 
-	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, hch@lst.de, tytso@mit.edu, djwong@kernel.org, 
-	john.g.garry@oracle.com, bmarzins@redhat.com, chaitanyak@nvidia.com, 
-	shinichiro.kawasaki@wdc.com, yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com, 
-	yangerkun@huawei.com
-Subject: Re: [PATCH 00/10] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
-Message-ID: <20250616-wasser-replizieren-c47bcfaa418a@brauner>
-References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
- <yq17c1k74jd.fsf@ca-mkp.ca.oracle.com>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="N4J4Rtgu"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1750084563;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=8P6C3VOyWCSr/Pw6J8JHTXM1e6kPxEGsyDCYoqRWzKY=;
+	b=N4J4RtguSJeYPdptpQdXF4/nGxmbRdw453KpfUgTJeFIj5MsAdDmXrsK3OwlhEIqL/F03y
+	A7qZW68KRwRtA6gCFeuKI9IHu3c42pWgFv8mRh710mIWxsqtdI9jirb/WZ0P0I4i/zulGb
+	veCzvv/7xqHsGQJ7E5jJjF1iK9mTvD4=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-10-A0YSDCDRPDWKqA_PIVDCKg-1; Mon,
+ 16 Jun 2025 10:35:46 -0400
+X-MC-Unique: A0YSDCDRPDWKqA_PIVDCKg-1
+X-Mimecast-MFC-AGG-ID: A0YSDCDRPDWKqA_PIVDCKg_1750084543
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 660351809C82;
+	Mon, 16 Jun 2025 14:35:43 +0000 (UTC)
+Received: from [10.22.64.24] (unknown [10.22.64.24])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 68AEE195608F;
+	Mon, 16 Jun 2025 14:35:40 +0000 (UTC)
+Message-ID: <6cf23067-de70-45b9-ad83-90e96c5ea189@redhat.com>
+Date: Mon, 16 Jun 2025 10:35:39 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <yq17c1k74jd.fsf@ca-mkp.ca.oracle.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 4/5] scsi: fnic: Turn off FDMI ACTIVE flags on link
+ down
+To: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>,
+ "Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>
+Cc: "Arulprabhu Ponnusamy (arulponn)" <arulponn@cisco.com>,
+ "Dhanraj Jhawar (djhawar)" <djhawar@cisco.com>,
+ "Gian Carlo Boffa (gcboffa)" <gcboffa@cisco.com>,
+ "Masa Kai (mkai2)" <mkai2@cisco.com>,
+ "Satish Kharat (satishkh)" <satishkh@cisco.com>,
+ "Arun Easi (aeasi)" <aeasi@cisco.com>,
+ "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "revers@redhat.com" <revers@redhat.com>,
+ "dan.carpenter@linaro.org" <dan.carpenter@linaro.org>,
+ "stable@vger.kernel.org" <stable@vger.kernel.org>
+References: <20250612221805.4066-1-kartilak@cisco.com>
+ <20250612221805.4066-4-kartilak@cisco.com>
+ <7a33bd90-7f1b-49ad-b24c-1808073f7f5e@redhat.com>
+ <SJ0PR11MB589646EBDF785F570E35E774C377A@SJ0PR11MB5896.namprd11.prod.outlook.com>
+Content-Language: en-US
+From: John Meneghini <jmeneghi@redhat.com>
+Organization: RHEL Core Storge Team
+In-Reply-To: <SJ0PR11MB589646EBDF785F570E35E774C377A@SJ0PR11MB5896.namprd11.prod.outlook.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On Mon, Jun 09, 2025 at 09:47:13PM -0400, Martin K. Petersen wrote:
-> 
-> Zhang,
-> 
-> > Changes since RFC v4:
-> >  - Rebase codes on 6.16-rc1.
-> >  - Add a new queue_limit flag, and change the write_zeroes_unmap sysfs
-> >    interface to RW mode. User can disable the unmap write zeroes
-> >    operation by writing '0' to it when the operation is slow.
-> >  - Modify the documentation of write_zeroes_unmap sysfs interface as
-> >    Martin suggested.
-> >  - Remove the statx interface.
-> >  - Make the bdev and ext4 don't allow to submit FALLOC_FL_WRITE_ZEROES
-> >    if the block device does not enable the unmap write zeroes operation,
-> >    it should return -EOPNOTSUPP.
-> 
-> This looks OK to me as long as the fs folks agree on the fallocate()
-> semantics.
+Sounds good to me. Please make these changes in your v5 patch series and I'll approve.
 
-That looks overall fine. Should I queue this up in the vfs tree?
+/John
+
+On 6/13/25 5:59 PM, Karan Tilak Kumar (kartilak) wrote:
+> On Friday, June 13, 2025 1:29 PM, John Meneghini <jmeneghi@redhat.com> wrote:
+>>
+>> Hi Karan.
+>>
+>> You've got two patches in this series with the same Fixes: tag.
+>>
+>> [PATCH v4 2/5] scsi: fnic: Fix crash in fnic_wq_cmpl_handler when FDMI times out
+>> Fixes: 09c1e6ab4ab2 ("scsi: fnic: Add and integrate support for FDMI")
+>>
+>> [PATCH v4 4/5] scsi: fnic: Turn off FDMI ACTIVE flags on link down
+>> Fixes: 09c1e6ab4ab2 ("scsi: fnic: Add and integrate support for FDMI")
+>>
+>> both of these patches modify the same file:
+>>
+>> drivers/scsi/fnic/fdls_disc.c
+>>
+>> So I recommend you squash patch 4/5 and patch 2/5 into one.
+>>
+>> Thanks,
+>>
+>> /John
+> 
+> Thanks for your proposal, John.
+> 
+> I'm a bit hesitant to squash them into one since each patch fixes unrelated bugs.
+> The reason they have the same fixes tag is because we found two separate issues in the same commit.
+> 
+> I get your concern, however. What do you think about the following?
+> 
+> Move this patch to the beginning and increment driver version to 1.8.0.1:
+> [PATCH v4 2/5] scsi: fnic: Fix crash in fnic_wq_cmpl_handler when FDMI times out
+> 
+> Move this patch to the next and increment driver version to 1.8.0.2:
+> [PATCH v4 4/5] scsi: fnic: Turn off FDMI ACTIVE flags on link down
+> 
+> Move this patch to the next:
+> [PATCH v4 3/5] scsi: fnic: Add and improve logs in FDMI and FDMI ABTS paths
+> 
+> Ideally, I would have liked to squash this above patch with the first patch in this series, since it's easier to debug if and when an issue occurs in that path.
+> I separated them since it would be easier to review. I could add a Fixes tag here as well, but I'm not sure about that since they are just log messages,
+> and they are not really fixes.
+> 
+> Move this patch to the end:
+> [PATCH v4 1/5] scsi: fnic: Set appropriate logging level for log message
+> 
+> Regards,
+> Karan
+> 
+
