@@ -1,47 +1,44 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6BD72DE1E0;
-	Tue, 17 Jun 2025 12:22:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE86F2DE1E0;
+	Tue, 17 Jun 2025 12:23:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750162978; cv=none; b=Aw3pQstY8VMOGaJUhLPTYBvh7p4eD4neZwft3i2Md/fJqcF2QTT+rETlQwnC7XhTQbVSGfvo3MI0JbK0o6h7mEb4kj5V7imLGk8ZCR6DYpfeUFUdn5OzKSGHxfCJzNsEcb0h/5Cx3uFmyFRXsTMeLSux4b2UOsKyWHqLa/NIaxI=
+	t=1750162982; cv=none; b=lyeSC1vCzZwr8bu+HHcLrrJEdnWIWlgiPsoF5zE5khwz58x9+shUaPjkTDLmMT3LCB3WBXLvQgU4GWDnNyfRI5Z3RK5GD6EUS7fJXuAoZ5xtTGYHcFaAGLwzrXeN+Pxzfh8OCWO/7j4nHwzUAQr+CcLIzAM9mErrMcZwTRm4faU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750162978; c=relaxed/simple;
-	bh=M8npS7yq7BD9LwiA6TjrWh6kMFqFbSUyKEB0LghpNa4=;
+	s=arc-20240116; t=1750162982; c=relaxed/simple;
+	bh=8yf5XSP8ZqA3gXRPiQPsKGOJCveEPLa4aRYq/sfhNMs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Xp0C+7O5laFNXfhkzQzweo0hlKqX/zPdDqWeIn8KZjevcplH4My3pWYZlZ+v/+3nVq+g6YebaIDfx4lU4E8Kz/8j/vSMwGKaHrBykQUoevL6Y2jyfqq0ufYfkXuLZ23xizpW6N0fCqxMw9Svl2RPA0wtEnb/9hgVL8zVtjAVwJA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LI9nb0Kc; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=hKAmQYq8qZjTZiDKgEmoyoi6eq+OOT8iKSkYC+MRm+hTnyjurs8iSWQ2cxgph17jhxCxwy/JPUFtlsLBDzDKuyAcFPTd8p8Vt6GaeDehIWeE+weIeEhbKJQfTNtxW8+TMh3Ui1zYwPdOqcM3HHzxUWl6MgPIAk8g3wpDK/npZj8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hea5xyG0; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LI9nb0Kc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50D51C4CEE3;
-	Tue, 17 Jun 2025 12:22:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hea5xyG0"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F698C4CEE3;
+	Tue, 17 Jun 2025 12:23:01 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750162978;
-	bh=M8npS7yq7BD9LwiA6TjrWh6kMFqFbSUyKEB0LghpNa4=;
+	s=k20201202; t=1750162982;
+	bh=8yf5XSP8ZqA3gXRPiQPsKGOJCveEPLa4aRYq/sfhNMs=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=LI9nb0KcF3r1nHZ7aE316hbD9KXSELkch0ZRkonm9vVijTY/5hXJ7sivR9nk7POnb
-	 qoYCDr6CZSCIUNhGDkvyxP5Y1HrFc5vLZI3gmcfraHchBuc+qdLFueC70hiVm5izYu
-	 gjF3n1QhOmBAhqwxjVheDk/sA2U+YNq9Cr4aE/UCDivwWBX3z1lUZijlNb6cEDXn9n
-	 IdlDPffXquBuocaPr3q3ziNnGnpohjtZmJqClqBzez4C1Vup6F6SV/yWw/HGhC/LHJ
-	 RtUNDnqrNVzZ+YE8i769UyUiPdZF+tuQcrQxUHOdus7Cp6iPKadO3N+Fggd20xfs7Z
-	 UKK8ZAsz1XoRg==
+	b=hea5xyG0yop/Xvjt8164IsWXkDJyeHR4pUtOp7c6oBkCEpJF9a1KcUlHujTr3aCPb
+	 XzPo2lqxpY0BPndSYlG5JQgLehKII0Hne+kaqJ5X2lBuKVdNFp0ofgB1tUFwTcDTTp
+	 PiFfux6cX4ZpEz9Jnxu8l7FP777dFLM76BdONzlp0QDMhTrDvalDrOPR+UhOQTwxBz
+	 9lLveIYB0XpBUjJl1g8inhP2gQ0ku6Kkq03mglrtLZ3KLP5ZLjCOb4ohXyUbZK52bj
+	 REGo5VViofRVmrb7gnM7SlKpdCJBo/yMbsZMkgD80u3Db84G1zDmwSYVouDJJLWjek
+	 oUzLuW47FdK/A==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Ziqi Chen <quic_ziqichen@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
+Cc: Rajashekhar M A <rajs@netapp.com>,
+	Hannes Reinecke <hare@suse.de>,
+	Lee Duncan <lduncan@suse.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	peter.wang@mediatek.com,
-	avri.altman@wdc.com,
-	mani@kernel.org,
-	quic_nguyenb@quicinc.com,
+	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.6 5/9] scsi: ufs: core: Don't perform UFS clkscaling during host async scan
-Date: Tue, 17 Jun 2025 08:22:42 -0400
-Message-Id: <20250617122246.1969130-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.6 8/9] scsi: error: alua: I/O errors for ALUA state transitions
+Date: Tue, 17 Jun 2025 08:22:45 -0400
+Message-Id: <20250617122246.1969130-8-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250617122246.1969130-1-sashal@kernel.org>
 References: <20250617122246.1969130-1-sashal@kernel.org>
@@ -56,170 +53,128 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.6.93
 Content-Transfer-Encoding: 8bit
 
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
+From: Rajashekhar M A <rajs@netapp.com>
 
-[ Upstream commit e97633492f5a3eca7b3ff03b4ef6f993017f7955 ]
+[ Upstream commit 5c3ba81923e02adae354ec8afd006f93289b4a3c ]
 
-When preparing for UFS clock scaling, the UFS driver will quiesce all
-sdevs queues in the UFS SCSI host tagset list and then unquiesce them in
-ufshcd_clock_scaling_unprepare(). If the UFS SCSI host async scan is in
-progress at this time, some LUs may be added to the tagset list between
-UFS clkscale prepare and unprepare. This can cause two issues:
+When a host is configured with a few LUNs and I/O is running, injecting
+FC faults repeatedly leads to path recovery problems.  The LUNs have 4
+paths each and 3 of them come back active after say an FC fault which
+makes 2 of the paths go down, instead of all 4. This happens after
+several iterations of continuous FC faults.
 
-1. During clock scaling, there may be I/O requests issued through new
-added queues that have not been quiesced, leading to task abort issue.
+Reason here is that we're returning an I/O error whenever we're
+encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE, ASYMMETRIC
+ACCESS STATE TRANSITION) instead of retrying.
 
-2. These new added queues that have not been quiesced will be unquiesced
-as well when UFS clkscale is unprepared, resulting in warning prints.
-
-Therefore, use the mutex lock scan_mutex in
-ufshcd_clock_scaling_prepare() and ufshcd_clock_scaling_unprepare() to
-protect it.
-
-Co-developed-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Can Guo <quic_cang@quicinc.com>
-Signed-off-by: Ziqi Chen <quic_ziqichen@quicinc.com>
-Link: https://lore.kernel.org/r/20250522081233.2358565-1-quic_ziqichen@quicinc.com
-Suggested-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Rajashekhar M A <rajs@netapp.com>
+Signed-off-by: Hannes Reinecke <hare@suse.de>
+Link: https://lore.kernel.org/r/20250606135924.27397-1-hare@kernel.org
+Reviewed-by: Lee Duncan <lduncan@suse.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
-Based on my thorough analysis of the code and the race condition, here's
-my assessment:
+Based on my analysis of the commit and the kernel repository context,
+here's my determination:
 
 **YES**
 
 This commit should be backported to stable kernel trees. Here's my
-extensive analysis:
+extensive explanation:
 
-## Bug Analysis
+## Key Reasons for Backporting:
 
-The commit fixes a **critical race condition** between UFS clock scaling
-operations and async SCSI scanning that can lead to two serious issues:
+### 1. **Fixes a Real Production Bug**
+The commit addresses a critical bug where ALUA state transitions (sense
+code 0x04/0x0a) incorrectly return I/O errors instead of retrying. This
+manifests as:
+- Path recovery problems in multipath environments
+- Only partial path recovery after FC faults (3 of 4 paths instead of
+  all 4)
+- Issues that compound after repeated fault conditions
 
-### 1. **The Race Condition Explained**
-
-Looking at the code changes, the issue occurs when:
-
-**Before the fix**: `ufshcd_clock_scaling_prepare()` performs operations
-in this order:
+### 2. **Simple and Contained Fix**
+The code change is minimal and surgical:
 ```c
-blk_mq_quiesce_tagset(&hba->host->tag_set);  // Quiesce existing queues
-mutex_lock(&hba->wb_mutex);
-down_write(&hba->clk_scaling_lock);
+- if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
++               if ((sshdr.asc == 0x04) &&
++                   (sshdr.ascq == 0x01 || sshdr.ascq == 0x0a))
 ```
+It simply adds ASCQ 0x0a (ALUA state transition) to the existing retry
+logic that already handles ASCQ 0x01 (becoming ready).
 
-**The race**: If `ufshcd_async_scan()` is running concurrently, it calls
-`scsi_scan_host()` at line 8789, which:
-1. Discovers new LUNs and adds them to the tagset
-2. Creates new block queues for these LUNs
-3. These new queues are **not quiesced** by the earlier
-   `blk_mq_quiesce_tagset()` call
+### 3. **Affects Common Enterprise Configurations**
+ALUA (Asymmetric Logical Unit Access) is widely used in enterprise
+storage arrays for:
+- Active/passive failover configurations
+- Load balancing across storage controllers
+- High availability setups
 
-**After the fix**: The addition of `mutex_lock(&hba->host->scan_mutex)`
-**before** `blk_mq_quiesce_tagset()` ensures:
-```c
-mutex_lock(&hba->host->scan_mutex);          // NEW: Serialize with
-scanning
-blk_mq_quiesce_tagset(&hba->host->tag_set);  // Now quiesces ALL queues
-```
+Without this fix, normal ALUA state transitions during controller
+failovers or maintenance can cause unnecessary I/O failures.
 
-### 2. **Specific Problems This Fixes**
+### 4. **Matches Established Pattern**
+Looking at similar commits:
+- Commit #1 (scsi: core: alua: I/O errors for ALUA state transitions) -
+  **Backported: YES**
+- Commit #5 (scsi: core: Allow the ALUA transitioning state enough time)
+  - **Backported: YES**
 
-**Issue #1 - Task Abort**: Non-quiesced new queues can continue issuing
-I/O during clock scaling, leading to task aborts when the UFS controller
-changes power states mid-transaction.
+Both these commits address the same fundamental issue (ALUA state
+transitions causing I/O errors) and were deemed suitable for
+backporting.
 
-**Issue #2 - Warning Messages**: In `ufshcd_clock_scaling_unprepare()`,
-`blk_mq_unquiesce_tagset()` attempts to unquiesce ALL queues in the
-tagset, including newly added ones that were never quiesced, triggering
-warning messages.
+### 5. **Low Risk of Regression**
+The change:
+- Only affects the specific error path for sense code 0x04/0x0a
+- Extends existing retry logic rather than introducing new behavior
+- Has been tested in production environments (as indicated by the bug
+  report)
+- Is consistent with how the ALUA device handler expects these
+  transitions to be handled
 
-### 3. **Why This Should Be Backported**
+### 6. **Clear Bug Symptoms**
+The commit message clearly describes reproducible symptoms:
+- Multiple LUNs with 4 paths each
+- FC fault injection causes path failures
+- Recovery is incomplete (only 3 of 4 paths recover)
+- Problem worsens with repeated faults
 
-**Critical System Stability**: This fixes a race that can cause:
-- I/O errors and potential data corruption during clock scaling
-- System warnings and potential instability
-- Unpredictable behavior during device discovery
+This indicates a well-understood bug with clear reproduction steps and
+observable impact.
 
-**High Impact**: The race affects:
-- **UFS storage devices** (widely used in mobile phones, tablets,
-  servers)
-- **Clock scaling operations** (essential for power management)
-- **Device discovery** (happens during boot and hotplug)
+### 7. **Alternative Implementation**
+This appears to be an alternative approach to fixing the same issue
+addressed in similar commit #1. While that commit modified the ALUA
+device handler, this commit fixes it at the generic SCSI error handling
+level, making it applicable to all SCSI devices that might report this
+sense code, not just those using the ALUA handler.
 
-**Low Risk Change**: The fix is minimal and surgical:
-- Only adds `scan_mutex` synchronization around existing code
-- No functional changes to the clock scaling or scanning logic
-- Follows established kernel locking patterns (similar to other SCSI
-  drivers)
+## Conclusion:
+This is a textbook example of a good stable backport candidate: it fixes
+an important bug affecting production systems, the fix is minimal and
+well-contained, and the risk of regression is very low. The bug can
+cause data availability issues in common enterprise configurations,
+making the fix important for stable kernel users.
 
-**Timing-Dependent Bug**: This is exactly the type of race condition
-that:
-- May not be easily reproducible in testing
-- Can appear randomly in production under load
-- Becomes more likely with faster systems or specific timing conditions
+ drivers/scsi/scsi_error.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-### 4. **Code Quality Assessment**
-
-The fix demonstrates good kernel programming practices:
-- **Proper lock ordering**: Acquires `scan_mutex` first to serialize
-  with scanning
-- **Complete error handling**: Properly releases `scan_mutex` in error
-  paths
-- **Symmetric operations**: Both `prepare` and `unprepare` handle the
-  mutex consistently
-- **Minimal scope**: Changes only what's necessary to fix the race
-
-### 5. **Comparison with Similar Commits**
-
-Looking at the historical commits provided:
-- This is similar to commit #4 (marked YES) which also fixes
-  synchronization during async operations
-- Unlike commits #1, #2, #3, #5 (marked NO) which are
-  optimization/refactoring changes
-- This is a **bug fix** addressing a real race condition, not a feature
-  addition
-
-**Conclusion**: This commit fixes a legitimate race condition that can
-cause system instability in UFS-based systems. It's a small, well-
-contained fix that addresses a critical synchronization issue without
-introducing new features or architectural changes. This makes it an
-ideal candidate for stable kernel backporting.
-
- drivers/ufs/core/ufshcd.c | 3 +++
- 1 file changed, 3 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2346a1fc72b56..a6c8af2c24805 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1284,6 +1284,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- 	 * make sure that there are no outstanding requests when
- 	 * clock scaling is in progress
- 	 */
-+	mutex_lock(&hba->host->scan_mutex);
- 	blk_mq_quiesce_tagset(&hba->host->tag_set);
- 	mutex_lock(&hba->wb_mutex);
- 	down_write(&hba->clk_scaling_lock);
-@@ -1294,6 +1295,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
- 		up_write(&hba->clk_scaling_lock);
- 		mutex_unlock(&hba->wb_mutex);
- 		blk_mq_unquiesce_tagset(&hba->host->tag_set);
-+		mutex_unlock(&hba->host->scan_mutex);
- 		goto out;
- 	}
- 
-@@ -1315,6 +1317,7 @@ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err, bool sc
- 	mutex_unlock(&hba->wb_mutex);
- 
- 	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-+	mutex_unlock(&hba->host->scan_mutex);
- 	ufshcd_release(hba);
- }
- 
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 43eff1107038a..5f800348b7ceb 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -652,7 +652,8 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
+ 		 * if the device is in the process of becoming ready, we
+ 		 * should retry.
+ 		 */
+-		if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
++		if ((sshdr.asc == 0x04) &&
++		    (sshdr.ascq == 0x01 || sshdr.ascq == 0x0a))
+ 			return NEEDS_RETRY;
+ 		/*
+ 		 * if the device is not started, we need to wake
 -- 
 2.39.5
 
