@@ -1,115 +1,90 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D77491DB92A;
-	Mon, 16 Jun 2025 22:35:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C23523506E;
+	Tue, 17 Jun 2025 02:25:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750113312; cv=none; b=ABBmhIQSDJZ2yh0jDaZCdOIN2OL5SSN5eknl0iIkWAgNR0w0YVzdXhqBigN7Z38VqF5hqb/b28QJH0NQEaORY1FoyiikemVOa90tt3syyQVTroYP4Vyj10s2YjiFWNfRFXImnEHSGvje+S6eMTTS1+0HgAuWWX28OoDRskrMPZQ=
+	t=1750127122; cv=none; b=jutBx0zxfLTM3qNPq16NLRabFq+bsn6BP74Ht9M+qpDr+VgDPtJ/5+ArOxyqwPNdflUZZoQksf2bSbT03jV+KZ7Q8fd6PYARfIG8EIUudw6f1NFndQMZL6ktctOWqEW9ml4a2ajprFuelQj7h7CfjcGnLea2xVNLHh277P40mAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750113312; c=relaxed/simple;
-	bh=YHcEf0Io7x90FXsKM9LClEIG3XWXzAJPAYSIijCa6bc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OthzWaKC3Q27MLmHPIHCT7CU+lqqGdalxfJ5KVOlQ114avRgIKhHGi5wrpEZafHnvHi7ezh1vrU9cM1mQR7ldSCTHWISwgFZbxvBvc5/f4VNS8cjUW38mDozT8GOjLxoc+7up7q35UIJ26ibQGWch01k5+bc+yqyqTIL/QVck60=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sbbTfqM1; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sbbTfqM1"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bLlFB1fmqzlgqVt;
-	Mon, 16 Jun 2025 22:35:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1750113308; x=1752705309; bh=7ln/S
-	4tTfu7oHvZMjNMdFWQTW89wOPPM01ySWg5IhX0=; b=sbbTfqM1kTFqqLzzO2Myh
-	OuPN/3SrE0AzWccAP7G2M/tm0ddmv6tL0XPVuKw+NT3c8VyCarpClSkdSX1TRVz1
-	LB2PMjlk/Ah6IEm6e4Ao70Hptx3s8SgOK3pOLpiDKviR3dbdYMOEipiFq6eXM9Kl
-	OC87t3Cz6HUIKS0ElFOoBwDA/+M/h5pRzoD7GIyCJN1DzmCqFe7mU/leu16lltW5
-	oggZiqIhruiNvSWskocVbPSMEr73BAcgVo5pjTD86jKGT52BxvTUfjWBx2AldRM0
-	wLW9baY8cyjYxZFEkmuShiPUzycIFyNUQVZPv2QtFJ+WpICpNeUqwcpSYI3ihouR
-	A==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id A5F1wrgUlpJj; Mon, 16 Jun 2025 22:35:08 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bLlF11PCKzlgqVx;
-	Mon, 16 Jun 2025 22:35:00 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Avri Altman <avri.altman@wdc.com>
-Subject: [PATCH v18 12/12] scsi: ufs: Inform the block layer about write ordering
-Date: Mon, 16 Jun 2025 15:33:12 -0700
-Message-ID: <20250616223312.1607638-13-bvanassche@acm.org>
-X-Mailer: git-send-email 2.50.0.rc2.692.g299adb8693-goog
-In-Reply-To: <20250616223312.1607638-1-bvanassche@acm.org>
-References: <20250616223312.1607638-1-bvanassche@acm.org>
+	s=arc-20240116; t=1750127122; c=relaxed/simple;
+	bh=Xz9fkPVCSDMIjCo3EsGmjhJGHVFC4cBlxoxBxDimSD0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=glD64iAxDC7x7IVkgkBqkCy850q27RJK/VOfRC358+UtUmOVHTBefdO2b1CD8GNNEBUU01KQj7lVDT7RL/J0rICyMYQzn/hA5a77OhfANR+INDdtNP0OJ7aXquukR2ADiUppiDXgUl/dUgEZUcpxmiKWBZm/+3yq2ea/Lj/J2sg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bLrLl0Kp0zYQvlL;
+	Tue, 17 Jun 2025 10:25:19 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id 01DEE1A08C8;
+	Tue, 17 Jun 2025 10:25:18 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgBHrGAL0lBoptoIPw--.40502S3;
+	Tue, 17 Jun 2025 10:25:17 +0800 (CST)
+Message-ID: <e48ab50f-ce8a-4426-b72b-8c0f66fe80ad@huaweicloud.com>
+Date: Tue, 17 Jun 2025 10:25:15 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/10] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Christian Brauner <brauner@kernel.org>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+ linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+ tytso@mit.edu, djwong@kernel.org, john.g.garry@oracle.com,
+ bmarzins@redhat.com, chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com,
+ yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
+ yangerkun@huawei.com
+References: <20250604020850.1304633-1-yi.zhang@huaweicloud.com>
+ <yq17c1k74jd.fsf@ca-mkp.ca.oracle.com>
+ <20250616-wasser-replizieren-c47bcfaa418a@brauner>
+ <yq1ecvj1v50.fsf@ca-mkp.ca.oracle.com>
+Content-Language: en-US
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <yq1ecvj1v50.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-CM-TRANSID:gCh0CgBHrGAL0lBoptoIPw--.40502S3
+X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
+	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYV7kC6x804xWl14x267AKxVW5JVWrJwAF
+	c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
+	0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xv
+	wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
+	x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
+	64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r
+	1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kI
+	c2xKxwCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AKxVW8ZVWrXwCFx2IqxVCFs4
+	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
+	MI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
+	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
+	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
+	BIdaVFxhVjvjDU0xZFpf9x07UZ18PUUUUU=
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-From the UFSHCI 4.0 specification, about the MCQ mode:
-"Command Submission
-1. Host SW writes an Entry to SQ
-2. Host SW updates SQ doorbell tail pointer
+On 2025/6/17 0:59, Martin K. Petersen wrote:
+> 
+> Christian,
+> 
+>>> This looks OK to me as long as the fs folks agree on the fallocate()
+>>> semantics.
+>>
+>> That looks overall fine. Should I queue this up in the vfs tree?
+> 
+> We're expecting another revision addressing the queue limit sysfs
+> override. Otherwise I believe it's good to go.
+> 
 
-Command Processing
-3. After fetching the Entry, Host Controller updates SQ doorbell head
-   pointer
-4. Host controller sends COMMAND UPIU to UFS device"
+Yeah, I'm going to revise the queue limits sysfs interface as
+Christoph and Darrick suggested and send out v2.
 
-In other words, in MCQ mode, UFS controllers are required to forward
-commands to the UFS device in the order these commands have been
-received from the host.
+Best regards,
+Yi.
 
-This patch improves performance as follows on a test setup with UFSHCI
-4.0 controller:
-- With the mq-deadline scheduler: 2.0x more IOPS for small writes.
-- When not using an I/O scheduler compared to using mq-deadline with
-  zone locking: 2.3x more IOPS for small writes.
-
-Cc: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Cc: Can Guo <quic_cang@quicinc.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Avri Altman <avri.altman@wdc.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 4410e7d93b7d..340db59b7675 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5281,6 +5281,12 @@ static int ufshcd_sdev_configure(struct scsi_devic=
-e *sdev,
- 	struct ufs_hba *hba =3D shost_priv(sdev->host);
- 	struct request_queue *q =3D sdev->request_queue;
-=20
-+	/*
-+	 * The write order is preserved per MCQ. Without MCQ, auto-hibernation
-+	 * may cause write reordering that results in unaligned write errors.
-+	 */
-+	lim->driver_preserves_write_order =3D hba->mcq_enabled;
-+
- 	lim->dma_pad_mask =3D PRDT_DATA_BYTE_COUNT_PAD - 1;
-=20
- 	/*
