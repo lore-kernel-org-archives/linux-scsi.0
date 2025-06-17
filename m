@@ -1,67 +1,105 @@
-Received: from mail-10627.protonmail.ch (mail-10627.protonmail.ch [79.135.106.27])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8342C285061
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 16:35:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=79.135.106.27
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA43D2550A9;
+	Tue, 17 Jun 2025 20:35:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750178108; cv=none; b=jySszCq9H6l8pDpawjy2CXZlrVujN57MkFfLTmQMYyCnlJor1gavRr2uR0VBe9B/3I1XyQoeQxyIufD7eaUurFuXia4bJNm7OzpoNwzA1ChPiou0Nw+nLLxsmdAFcYLY5CPISRQ1OQFyuINcCyy/ESy2ARYygbBy1FjvGqZ3b6A=
+	t=1750192536; cv=none; b=iaS2dwdNYalvTosiPyW0nQ1JDFHzp0JpHx680e64MsUrMsU8/e8NR7vxSldiutvyNGUH2TGFEWdguV8tXbsr41ENJ26y9+lerW44QxlZOhYoWbng0ZfETI0fnrXdVnAioAhXhUOEV7UxETyxL6QK3zGuXzZTu+gZDwwwWoDltqg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750178108; c=relaxed/simple;
-	bh=aADlZ16iPb4JlaQWfs+94eC38upeNt6R9aA4PtN5LFg=;
-	h=Date:To:From:Cc:Subject:Message-ID:MIME-Version:Content-Type; b=WHLHLedHgxvaDxiebBZd534X2NHnw1M8j+bDt4Up9MT0Om7/K82IBZY4SUhcnHmFpU6iFPWZpQrz36kbJc+tq+I+J/nBjCnDLVBHVfzRduBXVGzCn2EMHRxMMxKCCrugyt8YZkW0+4GDv/AROdzBY8wq965kwA6iNMkGB641/BM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ashe.io; spf=pass smtp.mailfrom=ashe.io; dkim=pass (2048-bit key) header.d=ashe.io header.i=@ashe.io header.b=Kc0SWpLX; arc=none smtp.client-ip=79.135.106.27
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=ashe.io
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ashe.io
+	s=arc-20240116; t=1750192536; c=relaxed/simple;
+	bh=rPE7MoPsrOZc3jaN64uddrrPIwCUoTZyGIJniPvCk3k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KgqN1BdJfu1HY7C7K+OHRj7esGCb+k/swSCDZRfLbPJ+ovXui+vPIv2ygq46m2+hhrC+G++xteEMB0EKbemL251AAxeNmg3f6KGhWDucJ3aSUZN+Uz1+oGtslfY/MWye/5rySvoL5T1ejXctlgevjTdQZlyyMivpkAVgFyX4TdU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=VC7zLJTJ; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ashe.io header.i=@ashe.io header.b="Kc0SWpLX"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ashe.io;
-	s=protonmail2; t=1750178096; x=1750437296;
-	bh=aADlZ16iPb4JlaQWfs+94eC38upeNt6R9aA4PtN5LFg=;
-	h=Date:To:From:Cc:Subject:Message-ID:Feedback-ID:From:To:Cc:Date:
-	 Subject:Reply-To:Feedback-ID:Message-ID:BIMI-Selector:
-	 List-Unsubscribe:List-Unsubscribe-Post;
-	b=Kc0SWpLXomx7DUg9JOqYbrXAVvl1EP/HF8/UJJ68DEwLefYa0a7L1d/9eWSNfBHcX
-	 uMMha4wiLQSSbyMVNPC0iCGsbDseYWoYaanaYknwWBIzA9o3WnSmzVZn5Yk/yY1fKY
-	 0gGJYlwDdAiEmyejnz8OpW1qKvIsqVIYwsqnVa7Jdi3G/niZy/dlcsIbLdbrtWdIEG
-	 gjH2G8fR9cEpKrRXYCu5/bYXcggm1WY+r/ue3M3rTfxhJsE9hJ1l22TXbeAF0e1TXV
-	 TskM77FnUijYI+nCvdQLRwUPUDHlwjyiw8RHp7D0SA6udCOwP/Ta5qlYihUZZyENp/
-	 TBsZzXOV6wMhQ==
-Date: Tue, 17 Jun 2025 16:34:52 +0000
-To: "john.g.garry@oracle.com" <john.g.garry@oracle.com>
-From: "Sean A." <sean@ashe.io>
-Cc: "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>, "atomlin@atomlin.com" <atomlin@atomlin.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, "mpi3mr-linuxdrv.pdl@broadcom.com" <mpi3mr-linuxdrv.pdl@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, "sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>
-Subject: Re: [RFC PATCH v2 1/1] scsi: mpi3mr: Introduce smp_affinity_enable module parameter
-Message-ID: <1xjYfSjJndOlG0Uro2jPuAmIrfqi5AVbfpFeWh7RfLfzqqH9u8ePoqgaP32ElXrGyOB47UvesV_Y2ypmM3cZtWit2EPnV3aj6i9w_DMo1eI=@ashe.io>
-Feedback-ID: 119619660:user:proton
-X-Pm-Message-ID: 66632c2760772bcd62fe3f5db77cf6364e199897
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="VC7zLJTJ"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bMJXj66trzlgqxs;
+	Tue, 17 Jun 2025 20:35:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1750192532; x=1752784533; bh=NJM5Xr7XT4s74chXxnwo4y3s
+	j6gq5yvpkyrSo5mt9+s=; b=VC7zLJTJvjF9wYq8W0LcwySjpV990r8rOOwJ92S6
+	dQfBP1HHXYtg3fyh2XnLJVR250lzKf2/epwW2FxJ6dA58bHaiL1JsNH1feDX2tv3
+	aHLqxWmx4TxXjwU83B5aqz3Y2HtMUAqwbI4psr3lqSgdCpgojRRsfSr8XjpneKR5
+	JXk5M1CBE0lDgq96eRYxdBYEvVOqjN51jKxNTYOTqNdkdzp/CX9wniRW+OkjDZoA
+	bSF1k+w5L9M6ywDhZ8EYjUYp+DzRJESE0q3xrplwMcXyvRr8wHdJyFkNyziAVpkX
+	ujeFJqKH9IdzbBMsWDq3Rjl8AmLox4dmQ+ikZ0xiK4Xo5Q==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id T29ELpj76Ixo; Tue, 17 Jun 2025 20:35:32 +0000 (UTC)
+Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bMJXd0RTmzlgqxr;
+	Tue, 17 Jun 2025 20:35:27 +0000 (UTC)
+Message-ID: <289fa5bc-ffb5-4ceb-a03c-dd79f282d2fe@acm.org>
+Date: Tue, 17 Jun 2025 13:35:26 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] scsi: ufs: Clear ucd_rsp_ptr for UPIU requests once
+To: Avri Altman <avri.altman@sandisk.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250617095611.89229-1-avri.altman@sandisk.com>
+ <20250617095611.89229-2-avri.altman@sandisk.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250617095611.89229-2-avri.altman@sandisk.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 6/17/25 2:56 AM, Avri Altman wrote:
+> Previously, the response buffer (ucd_rsp_ptr) was cleared in multiple
+> UPIU preparation functions. Do it once.
+> 
+> Signed-off-by: Avri Altman <avri.altman@sandisk.com>
+> ---
+>   drivers/ufs/core/ufshcd.c | 6 ++----
+>   1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 0a702356a715..c2048aca09fc 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2826,8 +2826,6 @@ static void ufshcd_prepare_utp_query_req_upiu(struct ufs_hba *hba,
+>   	/* Copy the Descriptor */
+>   	if (query->request.upiu_req.opcode == UPIU_QUERY_OPCODE_WRITE_DESC)
+>   		memcpy(ucd_req_ptr + 1, query->descriptor, len);
+> -
+> -	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+>   }
+>   
+>   static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
+> @@ -2840,8 +2838,6 @@ static inline void ufshcd_prepare_utp_nop_upiu(struct ufshcd_lrb *lrbp)
+>   		.transaction_code = UPIU_TRANSACTION_NOP_OUT,
+>   		.task_tag = lrbp->task_tag,
+>   	};
+> -
+> -	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+>   }
+>   
+>   /**
+> @@ -2867,6 +2863,8 @@ static int ufshcd_compose_devman_upiu(struct ufs_hba *hba,
+>   	else
+>   		ret = -EINVAL;
+>   
+> +	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+> +
+>   	return ret;
+>   }
 
-Le 17 Jun 2025, John Garry a =C3=A9crit :
-> You have given no substantial motivation for this change
-
-From my perspective, workloads exist (defense, telecom, finance, RT etc) th=
-at prefer not to be interrupted and developers may opt to utilize CPU isola=
-tion and other mechanisms to reduce the likelihood of being pre-empted, evi=
-cted, etc. This includes steering interrupts away from an isolated set of c=
-ores. Also while this doesn't result from any actual benchmarking, it would=
- seem that forcing your way on to every core in a 192 core system and refus=
-ing to move might be needlessly greedy or even detrimental to performance i=
-f most of the core set is NUMA-foreign to the storage controller. One shoul=
-d be able to make placement decisions to protect app threads from interrupt=
-ion and to ensure the interrupt handler has a sleepy, local core to play wi=
-th without lighting up a bunch of interconnect paths on the way.
-
-Generically, I believe interfaces like /proc/$pid/smp_affinity[_list] shoul=
-d be allowed to work as expected, and things like irqbalance should also be=
- able to do their jobs unless there's a good (documented) reason they shoul=
-d not.
-SA
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
