@@ -1,103 +1,125 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f202.google.com (mail-pg1-f202.google.com [209.85.215.202])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2EC4CA6F
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 07:25:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EFB6128C85A
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 07:37:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.202
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750145141; cv=none; b=r4BcD012pK3yiU9+nwt+4vAl8K04FiE1FlYK7zroY7nzPpZT6FfEMd2gmtVDUkeaRsHgbQpI7RO4BKql1YVoqZv57W/kpu+kkzNRKErvRTZzvFZ7Ncjtlpq9MPe7YVxhiL0TbRRIRVXGTOv/0W0eDYgfvdg9+QIl8axt4qsBg+0=
+	t=1750145832; cv=none; b=YH6uUETbfS1/2BRynFx2bI7NIesAdvk/NaJWiMswhvtNsTVetRenZehPe7qaHDxAkcpbwWmcjGzY/CBmTIkf5NuQNDkZPIlSiXb1YpQK5pAOJNgi8QPsAQeYwnTdM0Owg9N0a7LD3WltdAq+j+mN766xT99dkIIYmvqrdenx5j0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750145141; c=relaxed/simple;
-	bh=Pbj3vJHvkhc3w1ktwr4/JfCbq1mnFSis2rU+He7Fek8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=EO6qJZfdVL+d8MDAZCTMOoS9TDQ77bSnT/AjuR7nrdf3ltPy7/Xpe0xLjLeuRVWJx6aNPben8bJqoRGre6HecfIax43GmHZUqy239nVYITnVN5CfmXel+Pn2mNxVXFUcdP70dd9ApLRv1UOUjzxO74R9/DWfS2jxuG+iXvjxS7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=G2bc68Y0; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1750145832; c=relaxed/simple;
+	bh=Fw0r/pD8eXjBxq5M9YDCHayUq2kGXUfM4+movx1TiNM=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=rPN8hGSb3Ea6VnRAkQSa5z5aCSNC5TWzUNjeNtRNqTaGBcOLmL5f3LZ0bM0qI4q08d9IqcPBkavnnwjZcInyxYC27/tCPRs/7ubgVG8er/LX9WKy68QN/aDMSfql3iA93Bch+cKd5r4zuz7dDBUyg/DdgS6dJ14C3SQH76RNKBc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--mrigankac.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=z7naIZlL; arc=none smtp.client-ip=209.85.215.202
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--mrigankac.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="G2bc68Y0"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1750145138;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=tRhdOYnZijUDFTbLchYF+k1cCB2nXXbuhiNRlKP9kcA=;
-	b=G2bc68Y0IFAOmGZ+kpkKiE6UD8j0xjJFZxcw0wJGBrmooSmKkfdeqteWiEgCwmumV7hxcY
-	GW2hmOb2ImVQxkAuf6Ehfd08XyKyR985uZkLgDZBDnqbkY4/HnJKN4YhC69/qJ5+nnP0Py
-	wFkXcwtIzwrNSaxKKvlWlGYfUfgTt2A=
-Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-259-dzcPNCogMRuMAz-WLh7S6g-1; Tue,
- 17 Jun 2025 03:25:34 -0400
-X-MC-Unique: dzcPNCogMRuMAz-WLh7S6g-1
-X-Mimecast-MFC-AGG-ID: dzcPNCogMRuMAz-WLh7S6g_1750145133
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E3CDA195609F;
-	Tue, 17 Jun 2025 07:25:32 +0000 (UTC)
-Received: from fedora (unknown [10.72.116.143])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 6064530002C3;
-	Tue, 17 Jun 2025 07:25:26 +0000 (UTC)
-Date: Tue, 17 Jun 2025 15:25:21 +0800
-From: Ming Lei <ming.lei@redhat.com>
-To: Christoph Hellwig <hch@lst.de>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-	"K. Y. Srinivasan" <kys@microsoft.com>,
-	Haiyang Zhang <haiyangz@microsoft.com>,
-	Wei Liu <wei.liu@kernel.org>, "Ewan D. Milne" <emilne@redhat.com>,
-	Laurence Oberman <loberman@redhat.com>
-Subject: Re: [PATCH] scsi: storvsc: set max_segment_size as UINT_MAX
- explicitly
-Message-ID: <aFEYYSCREiCMGBAH@fedora>
-References: <20250616160509.52491-1-ming.lei@redhat.com>
- <20250617050240.GA2178@lst.de>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="z7naIZlL"
+Received: by mail-pg1-f202.google.com with SMTP id 41be03b00d2f7-b26eec6da92so4559976a12.1
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 00:37:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1750145830; x=1750750630; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=sy/UQIqIkh4iDz5Vmt1LhSxZUQWIjcCk5+X9H5FvqVw=;
+        b=z7naIZlLMuSOWR9jXKGqu0vEn6sOaXvrWT/M5HMHDJ0/U98x96YKPWiApRsx/r09Js
+         VvpCCWJXssxho0+reDehfQCyNO882OcVIoTiiTJ7mWW44L2LBSJs+MFj/2VL/FhAm7hv
+         qhk9iaA+u6umpmvUf3eE+QjECZB8ROKoCEGMPien8EQdHmAU78wSN2cP/Jtot/UaYoHY
+         zmnAKLAXUo0qY4azG0bHqnI0RERLZQKz4LpCClEZ5bhEEiO6ImtO9n00sYOz417XfP/C
+         VPvp4Okq0i9W0zYMA9+OSz9DJomGI2pyRIx7GTB51lwzWlL2GYBRPn4IBiLlUhA1l0NJ
+         s9QA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750145830; x=1750750630;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=sy/UQIqIkh4iDz5Vmt1LhSxZUQWIjcCk5+X9H5FvqVw=;
+        b=h5np2pFzeeSx8qnWAJvgNou4sFmRA3lseRMJcwJ6Y8gQgMJe5D2mTEk7JSEYjiQ3G/
+         GaR3t6f5vKBxfIAv0RYoeshXiu9gGazliMMgxTpFZfyLTEOh8HHpX/F6W0im5Iii3wKX
+         pFoBXznHi/wmZIrT1osBMY2L0vYBg3+zhSjgZy51wG9Hw0ixdJjRAG0nPucRQxzx1ngc
+         m/SAU8j3O+MqbhzpnBCpfH1SlQ/xTiBGwMQ/pfv6gD+dOH5MLHpQRSVDYDcgATKO4iUx
+         u8DgFsIEgrfzcq93eUhmwovDNDViBlsOxCyVk5zQt7qzdCc/gN7TlaTOm/0wlVI6KOyd
+         MZBQ==
+X-Gm-Message-State: AOJu0YwJJgnYQcU5S5ioWnOZYIbzfhA2EyubevttXaGy90bKYQQ61vRd
+	L1mOzl/IXOMoP05CGXjF95rRlkLW2gEneC5IEeJJ8Ff0CivROQgerLwyPleZcxwB8HRWo5RvRep
+	5x7h8fhkviyrn7Czfcw==
+X-Google-Smtp-Source: AGHT+IEPC+WEQptuRwt14ZtttLHQvynjqrFoVYYin/ZfT1B+AtpRXR5jEzUVjnNSC3heXSLfxA0sDfPfcFVox7M=
+X-Received: from pgbda5.prod.google.com ([2002:a05:6a02:2385:b0:b2e:c3bd:cf90])
+ (user=mrigankac job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a21:1512:b0:215:d41d:9183 with SMTP id adf61e73a8af0-21fbc62c0e0mr21527045637.1.1750145830209;
+ Tue, 17 Jun 2025 00:37:10 -0700 (PDT)
+Date: Tue, 17 Jun 2025 07:37:02 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250617050240.GA2178@lst.de>
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.50.0.rc2.692.g299adb8693-goog
+Message-ID: <20250617073702.1207412-1-mrigankac@google.com>
+Subject: [PATCH] ufs: scsi: core: Send a NOP OUT to device before disabling AHIT
+From: Mriganka Chakravarty <mrigankac@google.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Peter Wang <peter.wang@mediatek.com>, 
+	Manivannan Sadhasivam <mani@kernel.org>, "Bao D . Nguyen" <quic_nguyenb@quicinc.com>, 
+	Eric Biggers <ebiggers@google.com>, Can Guo <quic_cang@quicinc.com>, 
+	Neil Armstrong <neil.armstrong@linaro.org>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	manugautam@google.com, vamshigajjela@google.com, 
+	Mriganka Chakravarty <mrigankac@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Tue, Jun 17, 2025 at 07:02:40AM +0200, Christoph Hellwig wrote:
-> Please try this proper fix instead:
-> 
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index e021f1106bea..09f5fb5b2fb1 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -473,7 +473,9 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
->  	else
->  		shost->max_sectors = SCSI_DEFAULT_MAX_SECTORS;
->  
-> -	if (sht->max_segment_size)
-> +	if (sht->virt_boundary_mask)
-> +		shost->virt_boundary_mask = sht->virt_boundary_mask;
-> +	else if (sht->max_segment_size)
->  		shost->max_segment_size = sht->max_segment_size;
->  	else
->  		shost->max_segment_size = BLK_MAX_SEGMENT_SIZE;
+Synopsis databook recommends that the host must send a NOP OUT to device
+before disabling AHIT(setting AHIT.AH8ITV to 0), if already programmed
+to a non-zero value.
 
-This way works, but I prefer to set it explicitly in driver, instead of
-making block layer more fragile to deal with def ->max_segment_size
-if ->virt_boundary_mask is defined
+Signed-off-by: Mriganka Chakravarty <mrigankac@google.com>
+---
+ drivers/ufs/core/ufshcd.c | 10 ++++++++++
+ include/ufs/ufshcd.h      |  7 +++++++
+ 2 files changed, 17 insertions(+)
 
-- for low level driver, if ->virt_boundary_mask is defined, ->max_segment_size
-should be UINT_MAX obviously since it implies single `virt segment`.
-Setting UINT_MAX in driver has document benefit too.
-
-- for logical block device(md, dm, ...), both ->virt_boundary_mask and
-->max_segment_size may be set, and it is fine since logical block device
-driver needn't to deal with sg
-
-
-Thanks,
-Ming
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 4410e7d93b7d..f9a2d15ab2ee 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4507,9 +4507,19 @@ EXPORT_SYMBOL_GPL(ufshcd_uic_hibern8_exit);
+ 
+ static void ufshcd_configure_auto_hibern8(struct ufs_hba *hba)
+ {
++	u32 reg_ahit;
++
+ 	if (!ufshcd_is_auto_hibern8_supported(hba))
+ 		return;
+ 
++	if (hba->quirks & UFSHCD_QUIRK_SEND_NOP_BEFORE_AHIT_DISABLE) {
++		reg_ahit = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
++		if (hba->ahit == 0 &&
++		    FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, reg_ahit) != 0)
++			ufshcd_exec_dev_cmd(hba, DEV_CMD_TYPE_NOP,
++					    hba->nop_out_timeout);
++	}
++
+ 	ufshcd_writel(hba, hba->ahit, REG_AUTO_HIBERNATE_IDLE_TIMER);
+ }
+ 
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 9b3515cee711..b069d15c1c71 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -689,6 +689,13 @@ enum ufshcd_quirks {
+ 	 * single doorbell mode.
+ 	 */
+ 	UFSHCD_QUIRK_BROKEN_LSDBS_CAP			= 1 << 25,
++
++	/*
++	 * This quirk indicates that host must send a NOP OUT to device before
++	 * disabling AHIT(setting AHIT.AH8ITV to 0), if already programmed to a
++	 * non-zero value.
++	 */
++	UFSHCD_QUIRK_SEND_NOP_BEFORE_AHIT_DISABLE	= 1 << 31,
+ };
+ 
+ enum ufshcd_caps {
+-- 
+2.50.0.rc2.692.g299adb8693-goog
 
