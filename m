@@ -1,180 +1,108 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC4602DE1E1;
-	Tue, 17 Jun 2025 12:23:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1FCAF2C08B8;
+	Tue, 17 Jun 2025 13:43:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750163037; cv=none; b=mASVe1mICOVnwvRgt9XDL+zx/lT0eV9epT6/262HRya/NJmKb6GcBo+/IBKkXiR+kuL07KoHx4g3G5O7o7LnTOJ7UHD4nr4MtAdtb7HtugcxOueWYrl/QsyP3EdskyZOCr278vUWRIBFBWsQSuX9U3QoZAM7QOlj8jwoWHvtfVs=
+	t=1750167810; cv=none; b=ZKHcMvTO7ZNyyakWgbjpERQY2GJGNpaTYuRAWsBQLOTslfNw/NnVkdPRfB3Ua+Bi/HH25UZ3eP6MeHPX8eBY/EgFxjzys6ntZlBGzcuEfx2X+OZDmLCe+0KDBnp/6YxqzPz/yS7r0o1m4HVfkMttM+ejTV5yKDrKyVOUqFCEfpw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750163037; c=relaxed/simple;
-	bh=0jAhLN/dfOahJ+QabHlTWcNFqHae16wldg+akFJ6xvI=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=lBq4W/Y2wtJC5PLQJlKHxleO0HImA6Qs63LI3ngVmSDBpH4aQYiT1TaG3Q6DPj5NeYIa/FGjtf6l4CqhQ7SVdbQsKv8mCGUepDxtTnyP+yEbpp1x8+DRpUMzX4HPFhWOTU2BcHTyky9jnirBPRFzP6lZ+5v3yDb469qpCqW/mGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SXEJCmPS; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750167810; c=relaxed/simple;
+	bh=Tq5rUOpjXriBkipN8jcjoOeGSv4ICYoTA0fxuVN9H94=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=VSTv3D0YOrjjGVNYqblO3AMZxhvT25Q/pLiaZDpP6TpS/gYR2ODLeyvMamxDBhqlezpdHuYoYZ8tJzPBNhy45naX+LXCctdvoRCLHnGUc5Qqu5N0yW2POEpNcxcEkNjcYeQ4bqqw45DzwLPh4Ame0ntSG1SpBBi78h78Ld4+WvU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=H2VMXZuy; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SXEJCmPS"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AF40C4CEF2;
-	Tue, 17 Jun 2025 12:23:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="H2VMXZuy"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0A4E8C4CEE3;
+	Tue, 17 Jun 2025 13:43:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750163037;
-	bh=0jAhLN/dfOahJ+QabHlTWcNFqHae16wldg+akFJ6xvI=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=SXEJCmPS3XUwgL7RyqV2+5Tn0dx6/S4hzKXp4VDNzv49ffIsqX7S64qDJOWgIbMAa
-	 QMhRpXX/33kLTWT4krE0X847cYsc3L+yTKuoXohyx65EHYGSyVcEe3p1MHorC5fX53
-	 xyZuMJTVN3GUlnPXzUdT+bzDM+/AWKDcxWVMhvPUMwA3BOOhjAaeNu0neeE37J9Iys
-	 jjIrhXGO8SdRCmk6orQWNZFaekD40H0K02sLDrcPs0rf3liuabQHXaPbNgOCaDJtaX
-	 gvORSPhq1nzOVCXrvL2410Dd1YmxGJ6CYe++KFFRUa1tnop3A4LjM3/qdYXwy32DvY
-	 Cfc+CxTUoZk9w==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Rajashekhar M A <rajs@netapp.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Lee Duncan <lduncan@suse.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.4 4/5] scsi: error: alua: I/O errors for ALUA state transitions
-Date: Tue, 17 Jun 2025 08:23:49 -0400
-Message-Id: <20250617122351.1970032-4-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250617122351.1970032-1-sashal@kernel.org>
-References: <20250617122351.1970032-1-sashal@kernel.org>
+	s=k20201202; t=1750167809;
+	bh=Tq5rUOpjXriBkipN8jcjoOeGSv4ICYoTA0fxuVN9H94=;
+	h=From:Subject:Date:To:Cc:From;
+	b=H2VMXZuyU6kbuxsnxDZ0TmEkSbKr3URfhjt3ZDdyNXdL6ivkgmgNDPNrOX9KpE8un
+	 67xPRwP+Ax/wzJc2Ag4PN0uQU0cP705b5qy8C4qngTFaBEQa1rH+Kzsv8IM6Vn+LEz
+	 8CSQ9N0XBnKfvE5wmCJA7G0B8JA8f1RlR0EFVTmL5PUsJkpbPJXpnRcihFHL4WjTOf
+	 sh6EN8lf7ZZku7gd9SslC/G2sikDNq5IMhqoNJJBKGmx43LT1noz6/VO4ojstrL4Vc
+	 y/uoWybaf86e/LHNiEjgDrNXwLqD6NK2POmZIlEW+001ads1kk7oiwhiuB9jH9oZFZ
+	 SdYtNHiRhxS/Q==
+From: Daniel Wagner <wagi@kernel.org>
+Subject: [PATCH 0/5] blk: introduce block layer helpers to calculate num of
+ queues
+Date: Tue, 17 Jun 2025 15:43:22 +0200
+Message-Id: <20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.4.294
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAPpwUWgC/x3MQQrCMBBG4auUWTuQxGpor1Jc1PirA5KkmUaE0
+ rs3uPwW722kKAKlsduo4CsqKTbYU0fhPccXWB7N5Iy7mKv1LJo+IVflpaKCQ6pxRVHu3X02gPf
+ nwVCrc8FTfv/zdNv3A/LaqlZpAAAA
+X-Change-ID: 20250617-isolcpus-queue-counters-42ba0ee77390
+To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
+Cc: Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>, 
+ "Michael S. Tsirkin" <mst@redhat.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Thomas Gleixner <tglx@linutronix.de>, 
+ Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
+ Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, 
+ Ming Lei <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, 
+ Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, 
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+ storagedev@microchip.com, virtualization@lists.linux.dev, 
+ GR-QLogic-Storage-Upstream@marvell.com, Daniel Wagner <wagi@kernel.org>
+X-Mailer: b4 0.14.2
 
-From: Rajashekhar M A <rajs@netapp.com>
+I am still working on the change request for the "blk: honor isolcpus
+configuration" series [1]. Teaching group_cpus_evenly to use the
+housekeeping mask depending on the context is not a trivial change.
 
-[ Upstream commit 5c3ba81923e02adae354ec8afd006f93289b4a3c ]
+The first part of the series has already been reviewed and doesn't
+contain any controversial changes, so let's get them processed
+independely.
 
-When a host is configured with a few LUNs and I/O is running, injecting
-FC faults repeatedly leads to path recovery problems.  The LUNs have 4
-paths each and 3 of them come back active after say an FC fault which
-makes 2 of the paths go down, instead of all 4. This happens after
-several iterations of continuous FC faults.
+[1] https://patch.msgid.link/20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org
 
-Reason here is that we're returning an I/O error whenever we're
-encountering sense code 06/04/0a (LOGICAL UNIT NOT ACCESSIBLE, ASYMMETRIC
-ACCESS STATE TRANSITION) instead of retrying.
-
-Signed-off-by: Rajashekhar M A <rajs@netapp.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-Link: https://lore.kernel.org/r/20250606135924.27397-1-hare@kernel.org
-Reviewed-by: Lee Duncan <lduncan@suse.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
+Signed-off-by: Daniel Wagner <wagi@kernel.org>
 ---
+Changes in from https://patch.msgid.link/20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org
+- limit number of allocated masks to the max allocated number of masks
+- commit message improvements
+- typo fixes
+- formatting fixed
+- collected tags
 
-Based on my analysis of the commit and the kernel repository context,
-here's my determination:
+---
+Daniel Wagner (5):
+      lib/group_cpus: Let group_cpu_evenly() return the number of initialized masks
+      blk-mq: add number of queue calc helper
+      nvme-pci: use block layer helpers to calculate num of queues
+      scsi: use block layer helpers to calculate num of queues
+      virtio: blk/scsi: use block layer helpers to calculate num of queues
 
-**YES**
+ block/blk-mq-cpumap.c                     | 46 +++++++++++++++++++++++++++++--
+ drivers/block/virtio_blk.c                |  5 ++--
+ drivers/nvme/host/pci.c                   |  5 ++--
+ drivers/scsi/megaraid/megaraid_sas_base.c | 15 ++++++----
+ drivers/scsi/qla2xxx/qla_isr.c            | 10 +++----
+ drivers/scsi/smartpqi/smartpqi_init.c     |  5 ++--
+ drivers/scsi/virtio_scsi.c                |  1 +
+ drivers/virtio/virtio_vdpa.c              |  9 +++---
+ fs/fuse/virtio_fs.c                       |  6 ++--
+ include/linux/blk-mq.h                    |  2 ++
+ include/linux/group_cpus.h                |  2 +-
+ kernel/irq/affinity.c                     | 11 ++++----
+ lib/group_cpus.c                          | 16 +++++------
+ 13 files changed, 89 insertions(+), 44 deletions(-)
+---
+base-commit: e04c78d86a9699d136910cfc0bdcf01087e3267e
+change-id: 20250617-isolcpus-queue-counters-42ba0ee77390
 
-This commit should be backported to stable kernel trees. Here's my
-extensive explanation:
-
-## Key Reasons for Backporting:
-
-### 1. **Fixes a Real Production Bug**
-The commit addresses a critical bug where ALUA state transitions (sense
-code 0x04/0x0a) incorrectly return I/O errors instead of retrying. This
-manifests as:
-- Path recovery problems in multipath environments
-- Only partial path recovery after FC faults (3 of 4 paths instead of
-  all 4)
-- Issues that compound after repeated fault conditions
-
-### 2. **Simple and Contained Fix**
-The code change is minimal and surgical:
-```c
-- if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
-+               if ((sshdr.asc == 0x04) &&
-+                   (sshdr.ascq == 0x01 || sshdr.ascq == 0x0a))
-```
-It simply adds ASCQ 0x0a (ALUA state transition) to the existing retry
-logic that already handles ASCQ 0x01 (becoming ready).
-
-### 3. **Affects Common Enterprise Configurations**
-ALUA (Asymmetric Logical Unit Access) is widely used in enterprise
-storage arrays for:
-- Active/passive failover configurations
-- Load balancing across storage controllers
-- High availability setups
-
-Without this fix, normal ALUA state transitions during controller
-failovers or maintenance can cause unnecessary I/O failures.
-
-### 4. **Matches Established Pattern**
-Looking at similar commits:
-- Commit #1 (scsi: core: alua: I/O errors for ALUA state transitions) -
-  **Backported: YES**
-- Commit #5 (scsi: core: Allow the ALUA transitioning state enough time)
-  - **Backported: YES**
-
-Both these commits address the same fundamental issue (ALUA state
-transitions causing I/O errors) and were deemed suitable for
-backporting.
-
-### 5. **Low Risk of Regression**
-The change:
-- Only affects the specific error path for sense code 0x04/0x0a
-- Extends existing retry logic rather than introducing new behavior
-- Has been tested in production environments (as indicated by the bug
-  report)
-- Is consistent with how the ALUA device handler expects these
-  transitions to be handled
-
-### 6. **Clear Bug Symptoms**
-The commit message clearly describes reproducible symptoms:
-- Multiple LUNs with 4 paths each
-- FC fault injection causes path failures
-- Recovery is incomplete (only 3 of 4 paths recover)
-- Problem worsens with repeated faults
-
-This indicates a well-understood bug with clear reproduction steps and
-observable impact.
-
-### 7. **Alternative Implementation**
-This appears to be an alternative approach to fixing the same issue
-addressed in similar commit #1. While that commit modified the ALUA
-device handler, this commit fixes it at the generic SCSI error handling
-level, making it applicable to all SCSI devices that might report this
-sense code, not just those using the ALUA handler.
-
-## Conclusion:
-This is a textbook example of a good stable backport candidate: it fixes
-an important bug affecting production systems, the fix is minimal and
-well-contained, and the risk of regression is very low. The bug can
-cause data availability issues in common enterprise configurations,
-making the fix important for stable kernel users.
-
- drivers/scsi/scsi_error.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ae2fa170f6ad3..b395d6a8fe447 100644
---- a/drivers/scsi/scsi_error.c
-+++ b/drivers/scsi/scsi_error.c
-@@ -577,7 +577,8 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
- 		 * if the device is in the process of becoming ready, we
- 		 * should retry.
- 		 */
--		if ((sshdr.asc == 0x04) && (sshdr.ascq == 0x01))
-+		if ((sshdr.asc == 0x04) &&
-+		    (sshdr.ascq == 0x01 || sshdr.ascq == 0x0a))
- 			return NEEDS_RETRY;
- 		/*
- 		 * if the device is not started, we need to wake
+Best regards,
 -- 
-2.39.5
+Daniel Wagner <wagi@kernel.org>
 
