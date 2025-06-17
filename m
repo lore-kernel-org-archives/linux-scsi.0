@@ -1,161 +1,149 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24E272F30CC;
-	Tue, 17 Jun 2025 21:31:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9C9D1F5847;
+	Tue, 17 Jun 2025 23:22:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750195903; cv=none; b=YyXbgnKGU5fBBnG/viMoxabLCi3Oi3x5KdGDZDPqdovyFh2d4pQhPg0tAwIu0psdWQvCdzngwhPfs8FfK+aElKZCwH914IEtvbv4pctSFyOP3+2HpYZaq2twYhSmBYB4yW58RyTCAldb/qBJIKuQXEWHicI/Mz1A3RMy49dru9c=
+	t=1750202555; cv=none; b=taTbaZNZW9eo0ymlFJW8f9DavnL5YWJp333FAMqzI7gNs13JJfybTOQKFh1h8fKJRysCku5P1CCoGd5FNrnMjONFROZdZ/sth8tJVBKbwKhPNtGa5bCGKrWdOb06I29shhA7No9YzXsaKCfneoZP8Uxh929ekQ1dSMqenpCaggw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750195903; c=relaxed/simple;
-	bh=1YfwZW+S936XwdA8SGfJ1ZJvlipD9uTXygNO4srMawo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=BWrl/fwZcbwWBEcKxMkQFCJPUAghwLr4ETQ3G0/zqBGUnvzaVwO+umBbCrqaHe9Wt2xY1m0b6lkI/Jp7FrJr2E00mA8gPxcCrk3hPGMaKqW877GTFTqBfep3XdCaFEKktQZnkAFa+SxNOGWu57oLURUcQOEumwlHExYURyd/FKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YmarUdqc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750202555; c=relaxed/simple;
+	bh=u1htMHCfOn54kD/o5h2nrr3o2cCWVjR8jS9t5mNwAAo=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=lpm3saFSITDavIsI93fAwP/oVx98UhBCeXVl3MjeZvnKQgE+eBKBAmEVL3sk9epEOtcCAougAMjoszRee/zQ9mRA1EiRIqdla5ZYOzE2prMZCu2Bb0f+1MLsza0uFQKo5ITD+7XW128IbHTMAre1gsuyueqJmh/2zVAhK7HjNLU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CJJMEIcd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YmarUdqc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEBBFC4CEF1;
-	Tue, 17 Jun 2025 21:31:36 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CJJMEIcd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 514D9C4CEE3;
+	Tue, 17 Jun 2025 23:22:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750195902;
-	bh=1YfwZW+S936XwdA8SGfJ1ZJvlipD9uTXygNO4srMawo=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YmarUdqcOEke0FSqL0Xg4J8Lsf3Wt1uxrnUTrBql9tooIzqRSqrJXRb/RthUG96tM
-	 UhmIuCJamZ3RxGpHFDGNgVGHqRgU1HHltdd03/dUDd3yZXgKOp1z4NJsBzWdqKZRoT
-	 Nhpr9RanMRtnDUygTTyNdDrv/EZ+9j1PkN20sbSIICvlIom/jxXKO7Iy/l/5DOxHrK
-	 Bbs/ObfLHkXDYrqiBgMagOsKvqyvb6JzIr1I9Liskj/HU2yXXiA0ZapCnbVd5Mg2Kc
-	 jqYO7cFto/25mDOQtAHCbJcXHeN3ftaqa2xSE6M8SFyV/zeuKzmBhVcfLIJFp6Mr6z
-	 Mn6XCuVHjg8Yw==
-From: Bjorn Andersson <andersson@kernel.org>
-To: Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Lorenzo Pieralisi <lpieralisi@kernel.org>,
-	"Rafael J. Wysocki" <rafael@kernel.org>,
-	Viresh Kumar <viresh.kumar@linaro.org>,
-	Wim Van Sebroeck <wim@linux-watchdog.org>,
-	Guenter Roeck <linux@roeck-us.net>,
-	Rajendra Nayak <quic_rjendra@quicinc.com>,
-	Jassi Brar <jassisinghbrar@gmail.com>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Amit Kucheria <amitk@kernel.org>,
-	Thara Gopinath <thara.gopinath@gmail.com>,
-	Daniel Lezcano <daniel.lezcano@linaro.org>,
-	Zhang Rui <rui.zhang@intel.com>,
-	Lukasz Luba <lukasz.luba@arm.com>,
-	Thomas Gleixner <tglx@linutronix.de>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Wesley Cheng <quic_wcheng@quicinc.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Souradeep Chowdhury <quic_schowdhu@quicinc.com>,
-	Lee Jones <lee@kernel.org>,
-	Andrew Lunn <andrew+netdev@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Alex Elder <elder@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Andy Gross <agross@kernel.org>,
-	Srinivas Kandagatla <srini@kernel.org>,
-	Herbert Xu <herbert@gondor.apana.org.au>,
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
-	Georgi Djakov <djakov@kernel.org>,
-	Loic Poulain <loic.poulain@oss.qualcomm.com>,
-	Robert Foss <rfoss@kernel.org>,
-	Andi Shyti <andi.shyti@kernel.org>,
-	Michael Turquette <mturquette@baylibre.com>,
-	Stephen Boyd <sboyd@kernel.org>,
-	Taniya Das <quic_tdas@quicinc.com>,
-	Sibi Sankar <quic_sibis@quicinc.com>,
-	Will Deacon <will@kernel.org>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Joerg Roedel <joro@8bytes.org>,
-	Imran Shaik <quic_imrashai@quicinc.com>,
-	Mathieu Poirier <mathieu.poirier@linaro.org>,
-	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	Jessica Zhang <quic_jesszhan@quicinc.com>,
-	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Kees Cook <kees@kernel.org>,
-	Tony Luck <tony.luck@intel.com>,
-	"Guilherme G. Piccoli" <gpiccoli@igalia.com>,
-	David Wronek <david@mainlining.org>,
-	Jens Reidel <adrian@mainlining.org>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Danila Tikhonov <danila@jiaxyga.com>
-Cc: devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-pm@vger.kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-watchdog@vger.kernel.org,
-	linux-usb@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	linux-mmc@vger.kernel.org,
-	netdev@vger.kernel.org,
+	s=k20201202; t=1750202554;
+	bh=u1htMHCfOn54kD/o5h2nrr3o2cCWVjR8jS9t5mNwAAo=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=CJJMEIcdDL3U6KeionggSaibPhm8G//lLOHIh/M0Sv3ETnJx3ZonmS2DBE4kHPEiB
+	 G+qDd5cANB8mxW16MzxHEUPSeXVm3jMXARu8P165BaWknXoG0jcqDfbtkkxlepxqJB
+	 rkakRvjbQ4hNzWqYApa0KEdRAPLYCJ1vU3e/PEeO4Jv/DBGEW+FR6Y9UBfWhyL3Kaj
+	 OjDt4bLRw059fA+iLK/WGmSiNIKhVGyuC9nOe1LlttWN3VBwEtvw2UId0UoYsHPUaU
+	 dZ6KVmI5xSUwU4MeCfgb//aydRZHZzb0PmlsDK7q4MAxVKO+PbNE9DH/FkR147Y1E+
+	 ceTnoMgYOBAgA==
+Date: Tue, 17 Jun 2025 18:22:32 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>, Marc Zyngier <maz@kernel.org>,
+	Peter Zijlstra <peterz@infradead.org>,
+	Bjorn Helgaas <bhelgaas@google.com>, Wei Huang <wei.huang2@amd.com>,
+	linux-pci@vger.kernel.org,
+	Jonathan Cameron <Jonathan.Cameron@huawei.com>,
+	Nishanth Menon <nm@ti.com>, Dhruva Gole <d-gole@ti.com>,
+	Tero Kristo <kristo@kernel.org>,
+	Santosh Shilimkar <ssantosh@kernel.org>,
+	Logan Gunthorpe <logang@deltatee.com>,
+	Dave Jiang <dave.jiang@intel.com>, Jon Mason <jdmason@kudzu.us>,
+	Allen Hubbe <allenbh@gmail.com>, ntb@lists.linux.dev,
+	Michael Kelley <mhklinux@outlook.com>, Wei Liu <wei.liu@kernel.org>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	linux-hyperv@vger.kernel.org,
+	Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org,
-	dmaengine@vger.kernel.org,
-	linux-crypto@vger.kernel.org,
-	linux-i2c@vger.kernel.org,
-	linux-clk@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	iommu@lists.linux.dev,
-	linux-remoteproc@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linux-hardening@vger.kernel.org,
-	linux@mainlining.org,
-	~postmarketos/upstreaming@lists.sr.ht,
-	Connor Mitchell <c.dog29@hotmail.com>
-Subject: Re: (subset) [PATCH 00/33] Add support for Qualcomm Snapdragon SM7150 SoC and Google Pixel 4a
-Date: Tue, 17 Jun 2025 16:31:26 -0500
-Message-ID: <175019588888.714929.17490930593303808143.b4-ty@kernel.org>
-X-Mailer: git-send-email 2.49.0
-In-Reply-To: <20250422-sm7150-upstream-v1-0-bf9a9081631d@jiaxyga.com>
-References: <20250422-sm7150-upstream-v1-0-bf9a9081631d@jiaxyga.com>
+	Jonathan Cameron <Jonathan.Cameron@huwei.com>
+Subject: Re: [patch V4 11/14] PCI/MSI: Provide a sane mechanism for TPH
+Message-ID: <20250617232232.GA1175597@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250319105506.683663807@linutronix.de>
 
-
-On Tue, 22 Apr 2025 23:17:01 +0300, Danila Tikhonov wrote:
-> This patch series adds support for the Qualcomm Snapdragon 730/730G/732G
-> (SM7150) platform along with the Google Pixel 4a (sunfish) device. Since
-> the most critical drivers were submitted and applied in separate patch
-> series, this series is largely composed of DT bindings and device‑trees.
+On Wed, Mar 19, 2025 at 11:56:57AM +0100, Thomas Gleixner wrote:
+> The PCI/TPH driver fiddles with the MSI-X control word of an active
+> interrupt completely unserialized against concurrent operations issued
+> from the interrupt core. It also brings the PCI/MSI-X internal cached
+> control word out of sync.
 > 
-> To date, we’ve tested SM7150 support on the following eleven devices:
-> - Google Pixel 4a (sunfish)
-> - Samsung Galaxy A71 (a715f)
-> - Lenovo Tab P11 Pro (j706f)
-> - Xiaomi POCO X2 (phoenix)
-> - Xiaomi POCO X3 (karna) / POCO X3 NFC (surya)
-> - Xiaomi Redmi Note 10 Pro (sweet)
-> - Xiaomi Redmi Note 12 Pro (sweet_k6a)
-> - Xiaomi Mi 9T / Redmi K20 (davinci)
-> - Xiaomi Mi Note 10 Lite (toco)
-> - Xiaomi Mi Note 10 (CC9 Pro) & Mi Note 10 Pro (CC9 Pro Premium) (tucana)
-> - Xiaomi Mi 11 Lite 4G (courbet)
+> Provide a function, which has the required serialization and keeps the
+> control word cache in sync.
 > 
-> [...]
+> Unfortunately this requires to look up and lock the interrupt descriptor,
+> which should be only done in the interrupt core code. But confining this
+> particular oddity in the PCI/MSI core is the lesser of all evil. A
+> interrupt core implementation would require a larger pile of infrastructure
+> and indirections for dubious value.
+> 
+> Signed-off-by: Thomas Gleixner <tglx@linutronix.de>
+> Acked-by: Bjorn Helgaas <bhelgaas@google.com>
+> Cc: Wei Huang <wei.huang2@amd.com>
+> Cc: linux-pci@vger.kernel.org
+> 
+> 
+> 
+> ---
+>  drivers/pci/msi/msi.c |   47 +++++++++++++++++++++++++++++++++++++++++++++++
+>  drivers/pci/pci.h     |    9 +++++++++
+>  2 files changed, 56 insertions(+)
+> 
+> --- a/drivers/pci/msi/msi.c
+> +++ b/drivers/pci/msi/msi.c
+> @@ -910,6 +910,53 @@ void pci_free_msi_irqs(struct pci_dev *d
+>  	}
+>  }
+>  
+> +#ifdef CONFIG_PCIE_TPH
+> +/**
+> + * pci_msix_write_tph_tag - Update the TPH tag for a given MSI-X vector
+> + * @pdev:	The PCIe device to update
+> + * @index:	The MSI-X index to update
+> + * @tag:	The tag to write
+> + *
+> + * Returns: 0 on success, error code on failure
+> + */
+> +int pci_msix_write_tph_tag(struct pci_dev *pdev, unsigned int index, u16 tag)
+> +{
+> +	struct msi_desc *msi_desc;
+> +	struct irq_desc *irq_desc;
+> +	unsigned int virq;
+> +
+> +	if (!pdev->msix_enabled)
+> +		return -ENXIO;
+> +
+> +	guard(msi_descs_lock)(&pdev->dev);
+> +	virq = msi_get_virq(&pdev->dev, index);
+> +	if (!virq)
+> +		return -ENXIO;
+> +	/*
+> +	 * This is a horrible hack, but short of implementing a PCI
+> +	 * specific interrupt chip callback and a huge pile of
+> +	 * infrastructure, this is the minor nuissance. It provides the
+> +	 * protection against concurrent operations on this entry and keeps
+> +	 * the control word cache in sync.
+> +	 */
+> +	irq_desc = irq_to_desc(virq);
+> +	if (!irq_desc)
+> +		return -ENXIO;
+> +
+> +	guard(raw_spinlock_irq)(&irq_desc->lock);
+> +	msi_desc = irq_data_get_msi_desc(&irq_desc->irq_data);
+> +	if (!msi_desc || msi_desc->pci.msi_attrib.is_virtual)
+> +		return -ENXIO;
+> +
+> +	msi_desc->pci.msix_ctrl &= ~PCI_MSIX_ENTRY_CTRL_ST;
+> +	msi_desc->pci.msix_ctrl |= FIELD_PREP(PCI_MSIX_ENTRY_CTRL_ST, tag);
+> +	pci_msix_write_vector_ctrl(msi_desc, msi_desc->pci.msix_ctrl);
+> +	/* Flush the write */
+> +	readl(pci_msix_desc_addr(msi_desc));
+> +	return 0;
+> +}
 
-Applied, thanks!
+Looks like this change might add this warning, which I don't claim to
+understand:
 
-[01/33] dt-bindings: arm: cpus: Add Kryo 470 CPUs
-        commit: 7b768d1235dbd98ef7268596995d86df31afce21
+  $ make C=2 drivers/pci/msi/msi.o
+  drivers/pci/msi/msi.c:928:5: warning: context imbalance in 'pci_msix_write_tph_tag' - wrong count at exit
 
-Best regards,
--- 
-Bjorn Andersson <andersson@kernel.org>
+This appeared in v6.16-rc1 as d5124a9957b2 ("PCI/MSI: Provide a sane
+mechanism for TPH")
