@@ -1,59 +1,56 @@
-Received: from xmbghk7.mail.qq.com (xmbghk7.mail.qq.com [43.163.128.54])
+Received: from esa2.hgst.iphmx.com (esa2.hgst.iphmx.com [68.232.143.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 21802295D85;
-	Tue, 17 Jun 2025 09:55:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=43.163.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 934662BF012;
+	Tue, 17 Jun 2025 10:03:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=68.232.143.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750154148; cv=none; b=LSlKEn75NXPlY+nCmA8bpNEv8sk7Ob+nJoeey8LLF4Nt1OC9LPwXIeW2zYsaMQAZpYUi3vmp4Y0QjUYcSZi/HPvHqT7v7gWQ2trAvXVjnJa+pGJl2k76lX/TH0Ty7EitVNswh4mvMVdIHs5IH4rtGqG/oiPnIDD6F7kEemvuJTg=
+	t=1750154605; cv=none; b=i1YDtBiaixJ1OvaapBDttVmNpq6UwrXk/RV6O4TbWIAQVoMq9MN26s3Cu8xo0T8wL8m8T7Le2Wrv2Io+Y5jl8hW1T3Cy3tN4EtCTxkWVjewHmV8jD0cZ9rvtDToXeH0YzTgClaNo/GnigQvuOAQEtfaukCeXHdt7cmmbYLxhJ+4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750154148; c=relaxed/simple;
-	bh=+oZQx773tpJwPVGdXGiglLWOeItYJS7QI5pBwA/y+WA=;
-	h=Message-ID:From:To:Cc:Subject:Date:MIME-Version; b=Pl5A8GbhJGkpkIamYRn9ta1ssmTtTxojJ0n1uKcSh2bryUagd1i6bLuRoyIRqFUry1PDBG36ksFWiczcMJXuaQK7VAUcI+GS9P1C8FK5IrcRkUEM3W2DUM1pd9iwlJqc/wNzJNGpZT/6SNelXGRiOEpZfjawPvFbnHyZCuQ5+VA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=mGXrpWbx; arc=none smtp.client-ip=43.163.128.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1750154605; c=relaxed/simple;
+	bh=vDseggZPlNNEp+ybqhzFguBws6RBkzSe0p57oXgsotI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=brwqYf3fNJaHZJpsSM6KxM/GnpPbM9f01XOzh51/TBQzd/ZpZH5fPmEwPrWTzkeu4lhfDAcNaX6pm0+0nlJoMP0BO+EAd6GTG9DnCLCHH6qbUz9dZed/Gtvk1sGq82Yi0S8HPmzEielE9yXbgr1sEK2Qco4x8/48LqOnv4Erc0A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com; spf=pass smtp.mailfrom=sandisk.com; dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b=IrqOPYRl; arc=none smtp.client-ip=68.232.143.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandisk.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="mGXrpWbx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1750154140; bh=0LstCLd+ooxMwtRRuOVJqrkEDJBS38giqtvR0cA34zk=;
-	h=From:To:Cc:Subject:Date;
-	b=mGXrpWbxwPC1pYnqG2fFiwTjbm8jhInh/u1+YEmdd3SMh+fxbW1r/JNvFLKFalV16
-	 ygppWofCPS2BiPWE8uIn8cG79myEZQGRyvlYCh2PtbaODm5dOvOIkS4Fav0aGgiJFO
-	 9N5hUotrrHIu2m2mDJ/qrGiVN6Ril+f4/zCmvDTY=
-Received: from VM-222-126-tencentos.localdomain ([14.116.239.37])
-	by newxmesmtplogicsvrszgpua8-0.qq.com (NewEsmtp) with SMTP
-	id DE6ABA5A; Tue, 17 Jun 2025 17:55:38 +0800
-X-QQ-mid: xmsmtpt1750154138tcqpzx27z
-Message-ID: <tencent_3C5078D216712F6F21FC8792FADED59A3D09@qq.com>
-X-QQ-XMAILINFO: OSM/iTyfLV62kOpq2RHm9PS13nMDTXfAjDr+yxgtOdI8TVFB1Vf05irz/fhFjJ
-	 nZFQ/miqJ2jpjwUpkDzVnGaYuCEPmzpFLNjnfOO0whtDL2dpGENapBbcAUA8fFj9RbmXlftuPTth
-	 k2kA26pQvKktwlr4TDYijMcK38hE1rZCCiDGDbt1veuNg0MnWWQ01w7NOZbnimXdXO7qsRvWih0g
-	 bRZN08PfcoHHTMMCcZsJtq4Kh5uGBe714Nw2ZOifav0XdzK9gUIBed0aXRM/mCAzKX2JsC13BZI6
-	 rU/EOoCpZ2CDvffHSzeVqy0XKpVlAZIz0309JmxVddlfL0kJL4c2EAArPA4NXvF92pKpyW1qvYfs
-	 6Bcf736YMd/NnPsLOh2ByuK39rQ8G4Y1hZsbZuliV+LkG907UgULWvQP8qa3uYsIaqY7rCZ5nm1Y
-	 McTHLudRCBUWuqoQwI2AgbWnuubiTOS8UgYukR8o3wpjSHtixzjgFIzDfbeganaOF8LfhsRfekdK
-	 7WJ6rZrJUinBWph3DYaPcGQiQrHDhSoLtt/ax1qKiQF/xiYT5VXET/tWKr6xWlP/3+Df4w7ItPlN
-	 PXETPGFWKjtpODulRpuY/GIwVIM8CsBF1/KFXqGCtHsteq+9+t2DQ/J6YkZkodNf3S5J9UR69Frl
-	 1K5fqvi42gdGJgvPWvkYNiZi1/6T294WuwMtaSh332AaSLqfO5ky30NlsnZtMl22p+5qzS8prz8U
-	 8wrWSTNcwrpZLEGPFRK1PxdFDgn27yopESNyKmLsLAMFuuiUSyu7XzzU9psDc2bM1VrzAul1v1Fe
-	 DhydBCFhtNfrKErgGDH/INjwYJmVKKylcKY+tD2iQAF5Z8uUT4+NeRkHUm5aeF97qStCVnC9/RAa
-	 KXZD+LAiqE9DNsMeI6AH77/iLYJLE9JjH2k3X9pzf8YUQF8Vgg8XfLwxq8veMMkv2w90wAfS+dTM
-	 OnE/wqlAi6xiLw3s8EYgdKc7fSCoxsV4TAAJ/o1ZVLEANkgXqijcFJ+4u+za2N
-X-QQ-XMRINFO: Nq+8W0+stu50PRdwbJxPCL0=
-From: jackysliu <1972843537@qq.com>
-To: skashyap@marvell.com
-Cc: jhasan@marvell.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b="IrqOPYRl"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=sandisk.com; i=@sandisk.com; q=dns/txt;
+  s=dkim.sandisk.com; t=1750154603; x=1781690603;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=vDseggZPlNNEp+ybqhzFguBws6RBkzSe0p57oXgsotI=;
+  b=IrqOPYRl53wcG/3VUbdKKLUYmUnWL/3fFtidd5RtlI2tsrf5K1qxoeht
+   KugURO22aYIZIvAh1x6A/a0pS9yEu2juCJbmTtbdzigbyP/1fJZKHMNhd
+   JTGciYOF+FrfI0CBzA8SpJnM8G1//aPQGSWpMYBVQk6c4+TW/0afZlYuK
+   WvPaIjXpU8vYqSsC3eWHjn7IhGM06om+3I5K4Lav4uxJNH2hQOPuBckUf
+   k1cki1sEFZ/pPBBUBq7iyW58q3nuk2UEDLriYX8+SZJ/AZBqCseEj25tR
+   AbicTG150Cidvozkk/JJ04mUWC4vM7M4C3eASKW0A9NI9zEz3OJphlqkj
+   A==;
+X-CSE-ConnectionGUID: H0hGyXBKTZi3Ckm5Dqi8EQ==
+X-CSE-MsgGUID: 99y+SXklSIaa5XFdJjvEmg==
+X-IronPort-AV: E=Sophos;i="6.16,242,1744041600"; 
+   d="scan'208";a="90748002"
+Received: from uls-op-cesaip01.wdc.com (HELO uls-op-cesaep01.wdc.com) ([199.255.45.14])
+  by ob1.hgst.iphmx.com with ESMTP; 17 Jun 2025 18:03:16 +0800
+IronPort-SDR: 68512ef1_fq1kboJ0nbpBr7kTs6yELx694pKA4keyUdLWpjE1IcU/OMe
+ 2bJqFOMaYU2RrnMKxtHNHZUAvVQqrJpBi5N7jzw==
+Received: from uls-op-cesaip02.wdc.com ([10.248.3.37])
+  by uls-op-cesaep01.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Jun 2025 02:01:38 -0700
+WDCIronportException: Internal
+Received: from avri-office.ad.shared (HELO avri-office.sdcorp.global.sandisk.com) ([10.45.31.142])
+  by uls-op-cesaip02.wdc.com with ESMTP/TLS/ECDHE-RSA-AES128-GCM-SHA256; 17 Jun 2025 03:03:15 -0700
+From: Avri Altman <avri.altman@sandisk.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	jackysliu <1972843537@qq.com>
-Subject: [PATCH] scsi: qedf: Fix a possible memory leak in qedf_prepare_sb()
-Date: Tue, 17 Jun 2025 17:55:31 +0800
-X-OQ-MSGID: <20250617095531.850681-1-1972843537@qq.com>
-X-Mailer: git-send-email 2.43.5
+	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@sandisk.com>
+Subject: [PATCH 0/2] scsi: ufs: Two minor optimizations in query UPIU preparation
+Date: Tue, 17 Jun 2025 12:56:09 +0300
+Message-Id: <20250617095611.89229-1-avri.altman@sandisk.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,42 +59,17 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-A memory leak vulnerability found in
-linux/drivers/scsi/qedf/qedf_main.c , qedf_prepare_sb Function Due to
-Missing Resource Cleanup in Error Path.
+This short series introduces two minor optimizations to the UPIU
+preparation code in the UFS core driver. Shouldn't have functional
+impact.
 
-The qedf_prepare_sb function allocates resources in a loop for
-multiple queues. If an allocation fails mid-loop (e.g., kcalloc for
-fp->sb_info or qedf_alloc_and_init_sb fails), the error path (goto
-err) returns without freeing resources allocated in previous
-iterations
+Avri Altman (2):
+  scsi: ufs: Clear ucd_rsp_ptr for UPIU requests once
+  scsi: ufs: Document NOP_OUT transaction code
 
-Signed-off-by: jackysliu <1972843537@qq.com>
----
- drivers/scsi/qedf/qedf_main.c | 12 +++++++++++-
- 1 files changed, 11 insertions(+), 1 deletions(-)
+ drivers/ufs/core/ufshcd.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 6b1ebab36fa3..8767d9de819f 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2809,7 +2809,17 @@ static int qedf_prepare_sb(struct qedf_ctx *qedf)
- 		    sizeof(struct fcoe_cqe);
- 	}
- err:
--	return 0;
-+for (int i = 0; i < id; i++) {
-+	fp = &qedf->fp_array[i];
-+if (fp->sb_info) {
-+	qedf_free_sb(qedf, fp->sb_info);
-+kfree(fp->sb_info);
-+fp->sb_info = NULL;
-+}
-+}
-+kfree(qedf->fp_array);
-+qedf->fp_array = NULL;
-+return -ENOMEM;
- }
- 
- void qedf_process_cqe(struct qedf_ctx *qedf, struct fcoe_cqe *cqe)
+-- 
+2.25.1
 
