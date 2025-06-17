@@ -1,22 +1,22 @@
 Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17AC3188A3A;
-	Tue, 17 Jun 2025 04:43:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA93E3C01;
+	Tue, 17 Jun 2025 05:02:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750135429; cv=none; b=dJecCYnU3xQk6NoxLcu0Ka+6k7eeLfOSISaFx7SQfptBgHj68+Uu8rx/GZJutacAPDj/GwuZiDuiVYF804MlCkAM0Za5Dp59Is9v4d9uliwOsftWOZThZoCBQNYmoA43UEX4UWWNmq+FreFCxSPT6IeuYmTEC6T+RsUGECd/owI=
+	t=1750136567; cv=none; b=UL0ycrvSwFMzDtTfO/lPMl579oBDKsdrSsC6oBQ5hhqiK72uHhecheQLbBbcducUS6zaM5XErW+89AkemsculgDIyak6sLNWdZWAslr3ozF195e/HfRQJNh8ckEZG3gITIIBYHYdOiG5iZkWVgRGmFEPvJx4eAFude3yZDLyBKc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750135429; c=relaxed/simple;
-	bh=AaHAcR4uEX+JHu87/G/l9HjeirgUKvMWYxA8nlhDi+U=;
+	s=arc-20240116; t=1750136567; c=relaxed/simple;
+	bh=8NZa2ZGYava5v9rkDt/7q9+JjFUhw3MpxoIO0XTpWog=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=LafL7gYhZoTIS8lJYca8YslKpf8YdrHTE+xJdQ9ZBAp2XW1IjZyi0MJSU1hCiNKy4KN7ChkEh6ph3+fLIaBxZ0cdVrNp7GJwhPpVXBMKwYH5fT9NkhtYlXPpx3TYSazBuijsJApety7jKTV0vlB9JRUQRPhiH0pFS769i+4RZxg=
+	 Content-Type:Content-Disposition:In-Reply-To; b=VTsNxXvyDisEXaXnbK/lbDsAymYmReTr0WzQwbJ95Bn700b8Ky+StdGDdXIPIeU1M7DWHwuCqcyjPNk9FcZ30ZmW/YYUKOSioEHEBfL6r+arPopKjpK4y3QL5DUVmWXZt2H8jFMyyvauH0IW5umzJSF4lXVKbyJAsRHJT1rme9E=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
 Received: by verein.lst.de (Postfix, from userid 2407)
-	id 2AED468D05; Tue, 17 Jun 2025 06:43:43 +0200 (CEST)
-Date: Tue, 17 Jun 2025 06:43:42 +0200
+	id 5E43468D05; Tue, 17 Jun 2025 07:02:41 +0200 (CEST)
+Date: Tue, 17 Jun 2025 07:02:40 +0200
 From: Christoph Hellwig <hch@lst.de>
 To: Ming Lei <ming.lei@redhat.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
@@ -28,7 +28,7 @@ Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
 	Laurence Oberman <loberman@redhat.com>
 Subject: Re: [PATCH] scsi: storvsc: set max_segment_size as UINT_MAX
  explicitly
-Message-ID: <20250617044342.GB1824@lst.de>
+Message-ID: <20250617050240.GA2178@lst.de>
 References: <20250616160509.52491-1-ming.lei@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -41,22 +41,30 @@ Content-Disposition: inline
 In-Reply-To: <20250616160509.52491-1-ming.lei@redhat.com>
 User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Tue, Jun 17, 2025 at 12:05:09AM +0800, Ming Lei wrote:
-> Set max_segment_size as UINT_MAX explicitly:
-> 
-> - storvrc uses virt_boundary to define `segment`
-> 
-> - strovrc does not define max_segment_size
-> 
-> So define max_segment_size as UINT_MAX, otherwise __blk_rq_map_sg() takes
-> default 64K max segment size and splits one virtual segment into two parts,
-> then breaks virt_boundary limit.
-> 
-> Before commit ec84ca4025c0 ("scsi: block: Remove now unused queue limits helpers"),
-> max segment size is set as UINT_MAX in case that virt_boundary is
-> defined.
+Please try this proper fix instead:
 
-Drivers should not have done this.  If you need this someone (probably
-me) broke the block layer code ensuring it's not needed, and that
-affects all drivers using virt_boundary.
-
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index e021f1106bea..09f5fb5b2fb1 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -473,7 +473,9 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
+ 	else
+ 		shost->max_sectors = SCSI_DEFAULT_MAX_SECTORS;
+ 
+-	if (sht->max_segment_size)
++	if (sht->virt_boundary_mask)
++		shost->virt_boundary_mask = sht->virt_boundary_mask;
++	else if (sht->max_segment_size)
+ 		shost->max_segment_size = sht->max_segment_size;
+ 	else
+ 		shost->max_segment_size = BLK_MAX_SEGMENT_SIZE;
+@@ -492,9 +494,6 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_host_template *sht, int priv
+ 	else
+ 		shost->dma_boundary = 0xffffffff;
+ 
+-	if (sht->virt_boundary_mask)
+-		shost->virt_boundary_mask = sht->virt_boundary_mask;
+-
+ 	device_initialize(&shost->shost_gendev);
+ 	dev_set_name(&shost->shost_gendev, "host%d", shost->host_no);
+ 	shost->shost_gendev.bus = &scsi_bus_type;
