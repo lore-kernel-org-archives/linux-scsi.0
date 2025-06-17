@@ -1,101 +1,109 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E76AD2EF9C7;
-	Tue, 17 Jun 2025 20:44:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15C692EA16C
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 21:05:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750193066; cv=none; b=ZeVLG71I660OcbvkGLffWBT5ITp3Rw73QnzIBPX1DAg+5uUCtgDciWl3H+knWnoQ7yEJOm+GCLdn3KuEr93IzIbDhWWC/+2IhqfHQnQIuCWWunzOH9z2soCXfRBsPf2K7V1t/EysnA+agtgeEEdbxmbn+P8HNbWC0EpLkpijfdQ=
+	t=1750194312; cv=none; b=SRI3zSGpTJ+MVWuhqEryZ/Q6m/JVpxEq3QtTzFnO9OAARESaduVIavKAKH2P7YsOah319iFaEjsXCM7E5KqSuBgiXp851Zoi7bdnGrzSpZ9oOCBXD1/A9oq1Cztiux4WALmPgfraKl73DeHCCjFBC88y1SPzWSpu389O3nJYXxU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750193066; c=relaxed/simple;
-	bh=NenoU6iJEOzpUiP+jsIKZvLpP3TvdBXNqcmpwU2kdYk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fO+jkmvhfTz8iZrAcza3SLKz2xF9IHc7BQwDk6G/tTzeWkQP48U5KkJ1PcDj1RjQZ7V/GkBJzLfdzAU4zF5jnTcdOc4RLIPAy2JeuUkUCAdXLJMlfn8a+jLlsEfpJAUWJ676FIER/CHCuNUqToc/oJAYKuODolwUlov/wOr1LA8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=zDH400Cg; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1750194312; c=relaxed/simple;
+	bh=z6As7b7u4dNJN+RFdc4kRkY6FNbad6JDPqBp4UFHYF4=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=NoCqXR1zWCYEW2QMC2cP3CxD/msNzhNGMVqSvoOznPKtwvanu5kx/Rsfau+yrsdcGaH4xa1Y6vLzCDHRQalF9+4zyB5V/RFXLa9T3Sad8846Voq2FQm2gNV6hSz8OMTW/YUpdRDxpPQ0Y392GD4P8uBAvxzMKgQuGIcp3UiDw1Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--frankramirez.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=1vyk0DZV; arc=none smtp.client-ip=209.85.214.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--frankramirez.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="zDH400Cg"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bMJkn6z8qzm1HbT;
-	Tue, 17 Jun 2025 20:44:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1750193056; x=1752785057; bh=mXfic0ItqVeP4UWsBKuKWGxL
-	90Cx/yU9vDDLjBUlkbA=; b=zDH400CgWpACsxBmkw4yU6WG7quKVjwGhzRTuE6p
-	MDYGIHZFgTISrbkntnw6Vu3iHyG/Bs7kUR5uidTP755lUQp3ub7yIF5sYZIDe0SP
-	2nwcIBAVTHLBjGQZEdXJebQaMrudFfY5CXsnCB2Ylx/EWCkHmN7J19YgM1mRAdEv
-	B71IEolwc4utFahlLYBoDtu18C40L8FO4P56i8Z6kVIk6hzNAyHqj3NdxKJjql2F
-	045qJHCPAN2nkBx29m9P4d/52i0IOMYdDh83SwDwiCdCVq50ioH3hu6LumWL4fEi
-	FDHwOhdVz3KnV5hzhHCBv5SvG56TRk5Ty2Sq5U3oDtB4jA==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 28xjMBXV75lE; Tue, 17 Jun 2025 20:44:16 +0000 (UTC)
-Received: from [192.168.50.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bMJkh5411zm0yVb;
-	Tue, 17 Jun 2025 20:44:11 +0000 (UTC)
-Message-ID: <07c4c84d-0c52-4843-b32d-6806e58892fe@acm.org>
-Date: Tue, 17 Jun 2025 13:44:10 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="1vyk0DZV"
+Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-235dd77d11fso50825505ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 14:05:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1750194310; x=1750799110; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=RT/4G+d3RfQXn0+3N/5uepvdPWq1t3QwRhcHYgh4JDs=;
+        b=1vyk0DZVZtYfEGAs8yVJnexsyZS0l1zZW5tvzQcX1gR5iQQOauoTamOQ5MyxyrID9x
+         LXZyZ0neQ6ZNW+J/ROcyywdNaP8aCHL8MlB17V1fI4hXtP1K1yRrEheYgTkQZb6JcAZh
+         TUuRrvZlfdPxpBUZ6pEioA3VEQK+OS91PED94VQBZ2sVa+3qKXIjTWs3deYpilMH2CKo
+         WjSgb1wfGPQbueDa9kha7Qax6mZV1sUT1pChHQmjoCFS+qrSho3wYvYpOUVEBdSrNVFu
+         xzAzhmQkayMqA3Bc4m92irGB2/5HlFBWeG31LMhs82ecZNixPESETz4Rk+OJs64UgHBl
+         yQ1Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750194310; x=1750799110;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RT/4G+d3RfQXn0+3N/5uepvdPWq1t3QwRhcHYgh4JDs=;
+        b=gJBB8Qu7KLWB4gD9z+oY+UoqvY6XB/lIxN/VF6zQnxDjc9nGTvlT30WE1CnqdKTrB9
+         AbKat9geGAhQjSfIdBb84Lh+UST98WoUy2xkl110RRQnyBBuYdBjnKjSWnM5Qv2cwPUJ
+         BcJzPXr+hct6UWYRW34ilp6P0BbfutVkrhjz96ufJPOHw/gxb9byaHEOUB5IYOKyuOD2
+         AxQjit2oRS5bDWXFgbIGmoenFXTeqBNGmg8+GWJPTLcwvFCxGgEHLjevsxvoA7tvITOJ
+         esW6B2K1eA7ifsTVAoy9vgJjGtfOguuaJC48qJep4RedIgWDxGlDIPfXLQ5VzOMXYEGz
+         tkzg==
+X-Gm-Message-State: AOJu0YzHEOpiVNfYAaSIinmsjUD8YTxiqPrqY4Qm02NwLI/LxavBCizY
+	MTIH+NkCdHHm6UXqyo+c0U5rP/ZeRbKCPmyACGCykB7iTzw33aqcCSnTmztPc+zA34eqe5YHVYf
+	aFzp6hpfF+d82PFaXAeY081QMysaaYg==
+X-Google-Smtp-Source: AGHT+IHwTb+uzPjoYirGoN97S9QWNgf/j0GBXFgirky6u+kL8qRWr7c7rA1quvr+NJg+QHNBw4iPGY34zNToFLzov2M=
+X-Received: from pgcv23.prod.google.com ([2002:a05:6a02:5317:b0:b2d:aac5:e874])
+ (user=frankramirez job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:903:f8d:b0:235:225d:3083 with SMTP id d9443c01a7336-2366b32e499mr174900755ad.6.1750194310417;
+ Tue, 17 Jun 2025 14:05:10 -0700 (PDT)
+Date: Tue, 17 Jun 2025 21:04:43 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: fix out of bounds error in /drivers/scsi
-To: jackysliu <1972843537@qq.com>, James.Bottomley@HansenPartnership.com
-Cc: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <tencent_BD16D2DE705D6E27FC5B93ECDEEF9A7B5009@qq.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <tencent_BD16D2DE705D6E27FC5B93ECDEEF9A7B5009@qq.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.50.0.rc2.696.g1fc2a0284f-goog
+Message-ID: <20250617210443.989058-1-frankramirez@google.com>
+Subject: [PATCH] scsi: pm80xx: Free allocated tags after failure
+From: Francisco Gutierrez <frankramirez@google.com>
+To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Francisco Gutierrez <frankramirez@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 6/17/25 2:03 AM, jackysliu wrote:
-> Out-of-bounds vulnerability found in ./drivers/scsi/sd.c,
-> sd_read_block_limits_ext Function Due to Unreasonable boundary checks.
-> Out-of-bounds read vulnerability exists in the
-> Linux kernel's SCSI disk driver (./drivers/scsi/sd.c).
-> The flaw occurs in the sd_read_block_limits_ext function
->   when processing Vital Product Data (VPD) page B7 (Block Limits Extension)
->   responses from storage devices
-> 
-> Signed-off-by: jackysliu <1972843537@qq.com>
-> ---
->   drivers/scsi/sd.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 3f6e87705b62..eeaa6af294b8 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3384,7 +3384,7 @@ static void sd_read_block_limits_ext(struct scsi_disk *sdkp)
->   
->   	rcu_read_lock();
->   	vpd = rcu_dereference(sdkp->device->vpd_pgb7);
-> -	if (vpd && vpd->len >= 2)
-> +	if (vpd && vpd->len >= 6)
->   		sdkp->rscs = vpd->data[5] & 1;
->   	rcu_read_unlock();
->   }
+This change frees resources after an error is detected.
 
-Fixes: and Cc: stable tags are missing. Please add these.
+Signed-off-by: Francisco Gutierrez <frankramirez@google.com>
+---
+ drivers/scsi/pm8001/pm80xx_hwi.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
 
-How has this been detected? Please mention this in the patch
-description. When I wrote the above code I was assuming that vpd->len
-represents the contents of the PAGE LENGTH field (bytes 2 and 3).
-Apparently vpd->len is the length in bytes of the entire VPD page.
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 5b373c53c0369..c4074f062d931 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -4677,8 +4677,12 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
+ 		&pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
+ 	payload.sas_identify.phy_id = phy_id;
+ 
+-	return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
++	ret = pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
+ 				    sizeof(payload), 0);
++	if (ret < 0)
++		pm8001_tag_free(pm8001_ha, tag);
++
++	return ret;
+ }
+ 
+ /**
+@@ -4704,8 +4708,12 @@ static int pm80xx_chip_phy_stop_req(struct pm8001_hba_info *pm8001_ha,
+ 	payload.tag = cpu_to_le32(tag);
+ 	payload.phy_id = cpu_to_le32(phy_id);
+ 
+-	return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
++	ret = pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
+ 				    sizeof(payload), 0);
++	if (ret < 0)
++		pm8001_tag_free(pm8001_ha, tag);
++
++	return ret;
+ }
+ 
+ /*
+-- 
+2.50.0.rc2.696.g1fc2a0284f-goog
 
-Thanks,
-
-Bart.
