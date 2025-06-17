@@ -1,109 +1,161 @@
-Received: from mail-pl1-f201.google.com (mail-pl1-f201.google.com [209.85.214.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15C692EA16C
-	for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 21:05:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24E272F30CC;
+	Tue, 17 Jun 2025 21:31:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750194312; cv=none; b=SRI3zSGpTJ+MVWuhqEryZ/Q6m/JVpxEq3QtTzFnO9OAARESaduVIavKAKH2P7YsOah319iFaEjsXCM7E5KqSuBgiXp851Zoi7bdnGrzSpZ9oOCBXD1/A9oq1Cztiux4WALmPgfraKl73DeHCCjFBC88y1SPzWSpu389O3nJYXxU=
+	t=1750195903; cv=none; b=YyXbgnKGU5fBBnG/viMoxabLCi3Oi3x5KdGDZDPqdovyFh2d4pQhPg0tAwIu0psdWQvCdzngwhPfs8FfK+aElKZCwH914IEtvbv4pctSFyOP3+2HpYZaq2twYhSmBYB4yW58RyTCAldb/qBJIKuQXEWHicI/Mz1A3RMy49dru9c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750194312; c=relaxed/simple;
-	bh=z6As7b7u4dNJN+RFdc4kRkY6FNbad6JDPqBp4UFHYF4=;
-	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=NoCqXR1zWCYEW2QMC2cP3CxD/msNzhNGMVqSvoOznPKtwvanu5kx/Rsfau+yrsdcGaH4xa1Y6vLzCDHRQalF9+4zyB5V/RFXLa9T3Sad8846Voq2FQm2gNV6hSz8OMTW/YUpdRDxpPQ0Y392GD4P8uBAvxzMKgQuGIcp3UiDw1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--frankramirez.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=1vyk0DZV; arc=none smtp.client-ip=209.85.214.201
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--frankramirez.bounces.google.com
+	s=arc-20240116; t=1750195903; c=relaxed/simple;
+	bh=1YfwZW+S936XwdA8SGfJ1ZJvlipD9uTXygNO4srMawo=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=BWrl/fwZcbwWBEcKxMkQFCJPUAghwLr4ETQ3G0/zqBGUnvzaVwO+umBbCrqaHe9Wt2xY1m0b6lkI/Jp7FrJr2E00mA8gPxcCrk3hPGMaKqW877GTFTqBfep3XdCaFEKktQZnkAFa+SxNOGWu57oLURUcQOEumwlHExYURyd/FKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YmarUdqc; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="1vyk0DZV"
-Received: by mail-pl1-f201.google.com with SMTP id d9443c01a7336-235dd77d11fso50825505ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 14:05:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1750194310; x=1750799110; darn=vger.kernel.org;
-        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=RT/4G+d3RfQXn0+3N/5uepvdPWq1t3QwRhcHYgh4JDs=;
-        b=1vyk0DZVZtYfEGAs8yVJnexsyZS0l1zZW5tvzQcX1gR5iQQOauoTamOQ5MyxyrID9x
-         LXZyZ0neQ6ZNW+J/ROcyywdNaP8aCHL8MlB17V1fI4hXtP1K1yRrEheYgTkQZb6JcAZh
-         TUuRrvZlfdPxpBUZ6pEioA3VEQK+OS91PED94VQBZ2sVa+3qKXIjTWs3deYpilMH2CKo
-         WjSgb1wfGPQbueDa9kha7Qax6mZV1sUT1pChHQmjoCFS+qrSho3wYvYpOUVEBdSrNVFu
-         xzAzhmQkayMqA3Bc4m92irGB2/5HlFBWeG31LMhs82ecZNixPESETz4Rk+OJs64UgHBl
-         yQ1Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750194310; x=1750799110;
-        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=RT/4G+d3RfQXn0+3N/5uepvdPWq1t3QwRhcHYgh4JDs=;
-        b=gJBB8Qu7KLWB4gD9z+oY+UoqvY6XB/lIxN/VF6zQnxDjc9nGTvlT30WE1CnqdKTrB9
-         AbKat9geGAhQjSfIdBb84Lh+UST98WoUy2xkl110RRQnyBBuYdBjnKjSWnM5Qv2cwPUJ
-         BcJzPXr+hct6UWYRW34ilp6P0BbfutVkrhjz96ufJPOHw/gxb9byaHEOUB5IYOKyuOD2
-         AxQjit2oRS5bDWXFgbIGmoenFXTeqBNGmg8+GWJPTLcwvFCxGgEHLjevsxvoA7tvITOJ
-         esW6B2K1eA7ifsTVAoy9vgJjGtfOguuaJC48qJep4RedIgWDxGlDIPfXLQ5VzOMXYEGz
-         tkzg==
-X-Gm-Message-State: AOJu0YzHEOpiVNfYAaSIinmsjUD8YTxiqPrqY4Qm02NwLI/LxavBCizY
-	MTIH+NkCdHHm6UXqyo+c0U5rP/ZeRbKCPmyACGCykB7iTzw33aqcCSnTmztPc+zA34eqe5YHVYf
-	aFzp6hpfF+d82PFaXAeY081QMysaaYg==
-X-Google-Smtp-Source: AGHT+IHwTb+uzPjoYirGoN97S9QWNgf/j0GBXFgirky6u+kL8qRWr7c7rA1quvr+NJg+QHNBw4iPGY34zNToFLzov2M=
-X-Received: from pgcv23.prod.google.com ([2002:a05:6a02:5317:b0:b2d:aac5:e874])
- (user=frankramirez job=prod-delivery.src-stubby-dispatcher) by
- 2002:a17:903:f8d:b0:235:225d:3083 with SMTP id d9443c01a7336-2366b32e499mr174900755ad.6.1750194310417;
- Tue, 17 Jun 2025 14:05:10 -0700 (PDT)
-Date: Tue, 17 Jun 2025 21:04:43 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YmarUdqc"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BEBBFC4CEF1;
+	Tue, 17 Jun 2025 21:31:36 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750195902;
+	bh=1YfwZW+S936XwdA8SGfJ1ZJvlipD9uTXygNO4srMawo=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=YmarUdqcOEke0FSqL0Xg4J8Lsf3Wt1uxrnUTrBql9tooIzqRSqrJXRb/RthUG96tM
+	 UhmIuCJamZ3RxGpHFDGNgVGHqRgU1HHltdd03/dUDd3yZXgKOp1z4NJsBzWdqKZRoT
+	 Nhpr9RanMRtnDUygTTyNdDrv/EZ+9j1PkN20sbSIICvlIom/jxXKO7Iy/l/5DOxHrK
+	 Bbs/ObfLHkXDYrqiBgMagOsKvqyvb6JzIr1I9Liskj/HU2yXXiA0ZapCnbVd5Mg2Kc
+	 jqYO7cFto/25mDOQtAHCbJcXHeN3ftaqa2xSE6M8SFyV/zeuKzmBhVcfLIJFp6Mr6z
+	 Mn6XCuVHjg8Yw==
+From: Bjorn Andersson <andersson@kernel.org>
+To: Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Lorenzo Pieralisi <lpieralisi@kernel.org>,
+	"Rafael J. Wysocki" <rafael@kernel.org>,
+	Viresh Kumar <viresh.kumar@linaro.org>,
+	Wim Van Sebroeck <wim@linux-watchdog.org>,
+	Guenter Roeck <linux@roeck-us.net>,
+	Rajendra Nayak <quic_rjendra@quicinc.com>,
+	Jassi Brar <jassisinghbrar@gmail.com>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Amit Kucheria <amitk@kernel.org>,
+	Thara Gopinath <thara.gopinath@gmail.com>,
+	Daniel Lezcano <daniel.lezcano@linaro.org>,
+	Zhang Rui <rui.zhang@intel.com>,
+	Lukasz Luba <lukasz.luba@arm.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Wesley Cheng <quic_wcheng@quicinc.com>,
+	Vinod Koul <vkoul@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Souradeep Chowdhury <quic_schowdhu@quicinc.com>,
+	Lee Jones <lee@kernel.org>,
+	Andrew Lunn <andrew+netdev@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Alex Elder <elder@kernel.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Andy Gross <agross@kernel.org>,
+	Srinivas Kandagatla <srini@kernel.org>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
+	Georgi Djakov <djakov@kernel.org>,
+	Loic Poulain <loic.poulain@oss.qualcomm.com>,
+	Robert Foss <rfoss@kernel.org>,
+	Andi Shyti <andi.shyti@kernel.org>,
+	Michael Turquette <mturquette@baylibre.com>,
+	Stephen Boyd <sboyd@kernel.org>,
+	Taniya Das <quic_tdas@quicinc.com>,
+	Sibi Sankar <quic_sibis@quicinc.com>,
+	Will Deacon <will@kernel.org>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Joerg Roedel <joro@8bytes.org>,
+	Imran Shaik <quic_imrashai@quicinc.com>,
+	Mathieu Poirier <mathieu.poirier@linaro.org>,
+	Bartosz Golaszewski <bartosz.golaszewski@linaro.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	Jessica Zhang <quic_jesszhan@quicinc.com>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Kees Cook <kees@kernel.org>,
+	Tony Luck <tony.luck@intel.com>,
+	"Guilherme G. Piccoli" <gpiccoli@igalia.com>,
+	David Wronek <david@mainlining.org>,
+	Jens Reidel <adrian@mainlining.org>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Danila Tikhonov <danila@jiaxyga.com>
+Cc: devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-pm@vger.kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-watchdog@vger.kernel.org,
+	linux-usb@vger.kernel.org,
+	linux-phy@lists.infradead.org,
+	linux-mmc@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	dmaengine@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	linux-i2c@vger.kernel.org,
+	linux-clk@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	iommu@lists.linux.dev,
+	linux-remoteproc@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linux-hardening@vger.kernel.org,
+	linux@mainlining.org,
+	~postmarketos/upstreaming@lists.sr.ht,
+	Connor Mitchell <c.dog29@hotmail.com>
+Subject: Re: (subset) [PATCH 00/33] Add support for Qualcomm Snapdragon SM7150 SoC and Google Pixel 4a
+Date: Tue, 17 Jun 2025 16:31:26 -0500
+Message-ID: <175019588888.714929.17490930593303808143.b4-ty@kernel.org>
+X-Mailer: git-send-email 2.49.0
+In-Reply-To: <20250422-sm7150-upstream-v1-0-bf9a9081631d@jiaxyga.com>
+References: <20250422-sm7150-upstream-v1-0-bf9a9081631d@jiaxyga.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.50.0.rc2.696.g1fc2a0284f-goog
-Message-ID: <20250617210443.989058-1-frankramirez@google.com>
-Subject: [PATCH] scsi: pm80xx: Free allocated tags after failure
-From: Francisco Gutierrez <frankramirez@google.com>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>, 
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Francisco Gutierrez <frankramirez@google.com>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
 
-This change frees resources after an error is detected.
 
-Signed-off-by: Francisco Gutierrez <frankramirez@google.com>
----
- drivers/scsi/pm8001/pm80xx_hwi.c | 12 ++++++++++--
- 1 file changed, 10 insertions(+), 2 deletions(-)
+On Tue, 22 Apr 2025 23:17:01 +0300, Danila Tikhonov wrote:
+> This patch series adds support for the Qualcomm Snapdragon 730/730G/732G
+> (SM7150) platform along with the Google Pixel 4a (sunfish) device. Since
+> the most critical drivers were submitted and applied in separate patch
+> series, this series is largely composed of DT bindings and device‑trees.
+> 
+> To date, we’ve tested SM7150 support on the following eleven devices:
+> - Google Pixel 4a (sunfish)
+> - Samsung Galaxy A71 (a715f)
+> - Lenovo Tab P11 Pro (j706f)
+> - Xiaomi POCO X2 (phoenix)
+> - Xiaomi POCO X3 (karna) / POCO X3 NFC (surya)
+> - Xiaomi Redmi Note 10 Pro (sweet)
+> - Xiaomi Redmi Note 12 Pro (sweet_k6a)
+> - Xiaomi Mi 9T / Redmi K20 (davinci)
+> - Xiaomi Mi Note 10 Lite (toco)
+> - Xiaomi Mi Note 10 (CC9 Pro) & Mi Note 10 Pro (CC9 Pro Premium) (tucana)
+> - Xiaomi Mi 11 Lite 4G (courbet)
+> 
+> [...]
 
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
-index 5b373c53c0369..c4074f062d931 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.c
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.c
-@@ -4677,8 +4677,12 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
- 		&pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
- 	payload.sas_identify.phy_id = phy_id;
- 
--	return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
-+	ret = pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
- 				    sizeof(payload), 0);
-+	if (ret < 0)
-+		pm8001_tag_free(pm8001_ha, tag);
-+
-+	return ret;
- }
- 
- /**
-@@ -4704,8 +4708,12 @@ static int pm80xx_chip_phy_stop_req(struct pm8001_hba_info *pm8001_ha,
- 	payload.tag = cpu_to_le32(tag);
- 	payload.phy_id = cpu_to_le32(phy_id);
- 
--	return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
-+	ret = pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
- 				    sizeof(payload), 0);
-+	if (ret < 0)
-+		pm8001_tag_free(pm8001_ha, tag);
-+
-+	return ret;
- }
- 
- /*
+Applied, thanks!
+
+[01/33] dt-bindings: arm: cpus: Add Kryo 470 CPUs
+        commit: 7b768d1235dbd98ef7268596995d86df31afce21
+
+Best regards,
 -- 
-2.50.0.rc2.696.g1fc2a0284f-goog
-
+Bjorn Andersson <andersson@kernel.org>
