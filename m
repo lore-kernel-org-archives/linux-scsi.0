@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5E6E2E2F02;
-	Tue, 17 Jun 2025 12:23:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC4602DE1E1;
+	Tue, 17 Jun 2025 12:23:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750163027; cv=none; b=PwbUNh/bRQ/tH2loIfsoz769Ru+HuYrVbUShDop680bKzYFzTTdIfosLYM37bX61M/iirGMTAan8tx+pEGPVH2+aKCyt7B/MzwQc07czJ0So5KRAYWs2AY4edFhAf+vHKqLaxjI+tfnq7hXWuM7QoE1x+R+s7/tsOvCi+UC1+sA=
+	t=1750163037; cv=none; b=mASVe1mICOVnwvRgt9XDL+zx/lT0eV9epT6/262HRya/NJmKb6GcBo+/IBKkXiR+kuL07KoHx4g3G5O7o7LnTOJ7UHD4nr4MtAdtb7HtugcxOueWYrl/QsyP3EdskyZOCr278vUWRIBFBWsQSuX9U3QoZAM7QOlj8jwoWHvtfVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750163027; c=relaxed/simple;
-	bh=KjUg3Vnbefy4i8gyQa7e6DE7sCXRDz4uAsY2l9lInkM=;
+	s=arc-20240116; t=1750163037; c=relaxed/simple;
+	bh=0jAhLN/dfOahJ+QabHlTWcNFqHae16wldg+akFJ6xvI=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=NbO0ZEHu8Z3+hao77STcxjaYvHfmXGr/nM4wqhWhmkuXzWDhlmYS1O8gblpmQRdts/xKKNEhH5jbx5fgY46KSeiCiYMSgfaHLpD2SZlzfMBMBmVwhGAGOR15ssqT6Sf11cKuU7UBqQ4ve/1l8j5QYZEp9b4MqqobdbGIoVGHzZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nr4rssK+; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=lBq4W/Y2wtJC5PLQJlKHxleO0HImA6Qs63LI3ngVmSDBpH4aQYiT1TaG3Q6DPj5NeYIa/FGjtf6l4CqhQ7SVdbQsKv8mCGUepDxtTnyP+yEbpp1x8+DRpUMzX4HPFhWOTU2BcHTyky9jnirBPRFzP6lZ+5v3yDb469qpCqW/mGA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SXEJCmPS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nr4rssK+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 964D5C4CEF0;
-	Tue, 17 Jun 2025 12:23:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SXEJCmPS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AF40C4CEF2;
+	Tue, 17 Jun 2025 12:23:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750163027;
-	bh=KjUg3Vnbefy4i8gyQa7e6DE7sCXRDz4uAsY2l9lInkM=;
+	s=k20201202; t=1750163037;
+	bh=0jAhLN/dfOahJ+QabHlTWcNFqHae16wldg+akFJ6xvI=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=nr4rssK+JtvkznC+RkOifryTfPtOjldl/HVfiAVVTw4uR2EioRtngVh+9ypBXLYP1
-	 c3s307PM4M+IMRDTmLmnoM3bQeO/9lf9NBebjVheXPbtuQHFy3kkTtg/DblcL/qG5b
-	 2LgZULDDPnR+vMBIL+J6JbV6dR2Pdc/1A4GlkXAJUJeYSlQRzXDqwUY4mP4tMMeFue
-	 PgudZhfDy2oEHvWrMa1iqevNnrmFtc6AgSfH9uPktu/5xhcv47GKSDM8UMYQFMGFmf
-	 +3TfoDPGCU6WKRWC5/p37xPVUM2A/kdq0tNVJflDh92Gy1SaTgPXDYSM8Ih3MhV225
-	 4kHrTLuXW3AAA==
+	b=SXEJCmPS3XUwgL7RyqV2+5Tn0dx6/S4hzKXp4VDNzv49ffIsqX7S64qDJOWgIbMAa
+	 QMhRpXX/33kLTWT4krE0X847cYsc3L+yTKuoXohyx65EHYGSyVcEe3p1MHorC5fX53
+	 xyZuMJTVN3GUlnPXzUdT+bzDM+/AWKDcxWVMhvPUMwA3BOOhjAaeNu0neeE37J9Iys
+	 jjIrhXGO8SdRCmk6orQWNZFaekD40H0K02sLDrcPs0rf3liuabQHXaPbNgOCaDJtaX
+	 gvORSPhq1nzOVCXrvL2410Dd1YmxGJ6CYe++KFFRUa1tnop3A4LjM3/qdYXwy32DvY
+	 Cfc+CxTUoZk9w==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -36,12 +36,12 @@ Cc: Rajashekhar M A <rajs@netapp.com>,
 	Sasha Levin <sashal@kernel.org>,
 	James.Bottomley@HansenPartnership.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 5.10 5/6] scsi: error: alua: I/O errors for ALUA state transitions
-Date: Tue, 17 Jun 2025 08:23:36 -0400
-Message-Id: <20250617122338.1969838-5-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.4 4/5] scsi: error: alua: I/O errors for ALUA state transitions
+Date: Tue, 17 Jun 2025 08:23:49 -0400
+Message-Id: <20250617122351.1970032-4-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250617122338.1969838-1-sashal@kernel.org>
-References: <20250617122338.1969838-1-sashal@kernel.org>
+In-Reply-To: <20250617122351.1970032-1-sashal@kernel.org>
+References: <20250617122351.1970032-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,7 +50,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 5.10.238
+X-stable-base: Linux 5.4.294
 Content-Transfer-Encoding: 8bit
 
 From: Rajashekhar M A <rajs@netapp.com>
@@ -162,10 +162,10 @@ making the fix important for stable kernel users.
  1 file changed, 2 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index ffc6f3031e82b..ca2d76457f8f2 100644
+index ae2fa170f6ad3..b395d6a8fe447 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -578,7 +578,8 @@ enum scsi_disposition scsi_check_sense(struct scsi_cmnd *scmd)
+@@ -577,7 +577,8 @@ int scsi_check_sense(struct scsi_cmnd *scmd)
  		 * if the device is in the process of becoming ready, we
  		 * should retry.
  		 */
