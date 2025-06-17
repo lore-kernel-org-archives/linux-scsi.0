@@ -1,108 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A49892E888F;
-	Tue, 17 Jun 2025 13:43:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF6BD54673
+	for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 13:58:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750167828; cv=none; b=qq8EQCiMa/G/g9xS3Llqyp8DMK7BIikOIUnMxusp330BIgJxwhYQpxvjY5j/m6GaJidvQZ4nxlrKDl+xIygtGp/tyl7jDCRJEuW9c+Xl+LuCkK1ImN4P0/PzjtSUFXCdkcztFwgvByStixFtOQOEGglDmG1qKlciIVvewxe/2bM=
+	t=1750168701; cv=none; b=GPyiz5VcgDJvDSOKiUYnWg1Z082yMXiSGNYl4m9Da3Kd1zNEeD7uRYOPqYa4eYW7fnUbqV38otHI9007+fNniVp40VB2H8SgWIw7GqIfYSVQ+TcZ0vnOaV5WgeKI1JnfM9adWe4Y7q9vrToTnBBI52XYODRiIi2Xxd0jgG0R2L4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750167828; c=relaxed/simple;
-	bh=3edJmKoyUSjMTYlt2oNOEj/NOQQ/uX8bqeMbrf4iMm8=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=ebvZ06CTT6mtJZqiplYvAuyrf+yl1eYnmdqkzRpppMtsO//6YjIJ/xbCM2zBjaxB4BV3ipkU92Bwpd8a8uteJK4qLY5LKSWegRpLd+uCV6qRsxJUZ4P34H6rcKO6bJqDjEkUOiuiRJvyDxdAAuD/iZrWD3189Wcr13UikpBBMfU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MNYoPSYB; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1750168701; c=relaxed/simple;
+	bh=8KOI5xyxym04Su+Y1cshyyjm3OqlNZRmsZPFqtfguek=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=EeP7lgJL1KmoPAdMOdenX8PI4ZiSP6a0gcZiqbRDVdo0Bkavuye6PPepATh15wytTv8n0cG73YaVZJvmYs35OWZnGZ5KnaNc118PJ3+i3If6NEoVEPDghuFE4dWkpkmKXIKr5I7L97z+++BsljM1wrjrPZyvisOeCAvZgGu0Dws=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iQ+bekuv; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MNYoPSYB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9D687C4CEE3;
-	Tue, 17 Jun 2025 13:43:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750167828;
-	bh=3edJmKoyUSjMTYlt2oNOEj/NOQQ/uX8bqeMbrf4iMm8=;
-	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=MNYoPSYBKQ2E60FbE8av7UdKTeFZsKp3S1eSfPUOuJJhZWJ4nSpsIQXDbIrEEGshZ
-	 iHANFRqB4+ogYxSrGyADEDNwXR5u9jn2P6HBuTrlP2slsKz9o9Y39tMu8j3JUETGla
-	 83P1lNhc+taMFmbuSnKF2vIa4IKya0LP157KDLSkK0r3Q2gUfbztIrS8O/MKw3fRIX
-	 gybwsEBPDiv3IDfOsLObyxSmGNQUIywBltt2JdllGdeuTEH4GMk/v1HYtlRutH1kQM
-	 gpX41cp5n6zrWZjqstS3pKlN0WuFir/IqypxXI9urvSnxaGOh2xDOa1rhL2FCsp6t9
-	 tYOyyzhTcmPsw==
-From: Daniel Wagner <wagi@kernel.org>
-Date: Tue, 17 Jun 2025 15:43:27 +0200
-Subject: [PATCH 5/5] virtio: blk/scsi: use block layer helpers to calculate
- num of queues
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iQ+bekuv"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1750168697;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=bENOsIRAxg+jMcMN0GOm+0hWN/lXpSKL+NP33siNQU8=;
+	b=iQ+bekuvfdZiVbYHZfc4YOc1NtlQRS6+CaFrWCMpyVgov8fsY4aOdeLbR6FjzkAyyrYj8r
+	dSuEl8Vj0iMwZqwYPeaDGLFCvx6LuHC6GQU2/V1aiFkfPWP490YaDud1946aduNfYzBTxc
+	nV8IomONJFCcDa5zwZwrD42TIeAIiDs=
+Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com
+ [209.85.128.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-611-RG9lg8fiNqS-doU1RteLDA-1; Tue, 17 Jun 2025 09:58:16 -0400
+X-MC-Unique: RG9lg8fiNqS-doU1RteLDA-1
+X-Mimecast-MFC-AGG-ID: RG9lg8fiNqS-doU1RteLDA_1750168696
+Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-70e4269de4fso76263027b3.0
+        for <linux-scsi@vger.kernel.org>; Tue, 17 Jun 2025 06:58:16 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750168696; x=1750773496;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=bENOsIRAxg+jMcMN0GOm+0hWN/lXpSKL+NP33siNQU8=;
+        b=Rk0PSFR86sGiQkZk0zXssfkCs2C3alklrco5FxERqEnxlSpNF3QsSK5S6yg07+joFR
+         QCV9NgMTCYFnzfw85sUB7UvyEvfud4XrET8hLsYnaVyMQJbOwq/Lrlwfs5HX2D3Tnl/n
+         vQaHFhK4v1UK8G9Ylvq/TWZenXUVo/UEo7kJmvbLVALGQA+126l3KQXjU1DH2Xat1KSV
+         oFxDab37411Y4A3C9uJdZ84PHaIFsTwMQZUuyt2NOt9EkCY5LLb8Nj7acipNjagi1+BX
+         kQgx5hRYl7qQAgS3RctZK5yLrj671Y3CKwy5HkNnDd0X4ibcX5B9f5n349lbbnsekFAL
+         hAzQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWrQ+JltOz1fKvfaXy2ghy2N0iIQ6AEv2lBcpn9H2mFEmIyDQw9XTaoydidZCDw94yF9q2iR6jEBYEk@vger.kernel.org
+X-Gm-Message-State: AOJu0YyYnAJaqqotBtcLIlzASoMlQl85bhGdc2Vk0rjNl8dRnEoYJ0ik
+	4xoJvw4Ocf0/1mPDIPLuPzBInKCEBtCnSnPOqe4xYALnTJk5CvoZtYhmuokl6g6nRvXzQFoaWF3
+	RmCK9VuvO+PF+8yTp3eaGXDHFMe2hzGDEn+Swh/TXEDgzY9r1m6rOKtTnvNzE2Ng=
+X-Gm-Gg: ASbGncsFQHI6V0PEp7d5ynzxS3YuiNXWR1ZRiEm7CuWHhA1D8p3s/vy1mEuA4IBV5Dm
+	uZhAss9rcONVjfN8Q5xNhUZ0DtW8ZkQEhE7fBBOCPu0AMiBbq6ugt/eItKs7CdhzpGEA+WE+PJv
+	EwKELMDEJanjjfCeKmULDSC3AgRb4OKaaH37hUTPcP0zHNtdpJDNmjnEMp2eXTlsaIdM4TuC6yh
+	nHxaJbj2oVy1Em6xUNeA9r/3x4wktSZAS4t/C/h6kwD11Z9/U0Hzsa8gQGPe2oRGnmaEadXzaHS
+	Jt95QgTMIQJSWnuFuJiZTYLRb5/xfyqcCwCNF6Z42TtmlrhNhHpDnTuNZ1Wwngefif7suyjo
+X-Received: by 2002:a05:690c:688f:b0:70f:83af:7db1 with SMTP id 00721157ae682-711754dfc11mr196238417b3.19.1750168696136;
+        Tue, 17 Jun 2025 06:58:16 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IF8BpLzZz4BKXDeh8JDK9hwMCQUTeKIwgrAeTc5hbfFEez9niTNWRIj2BpaXVbdmcugQvSmfQ==
+X-Received: by 2002:a05:690c:688f:b0:70f:83af:7db1 with SMTP id 00721157ae682-711754dfc11mr196238067b3.19.1750168695804;
+        Tue, 17 Jun 2025 06:58:15 -0700 (PDT)
+Received: from ?IPv6:2600:6c64:4e7f:603b:fc4d:8b7c:e90c:601a? ([2600:6c64:4e7f:603b:fc4d:8b7c:e90c:601a])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-7119e3758e6sm5223547b3.101.2025.06.17.06.58.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 17 Jun 2025 06:58:15 -0700 (PDT)
+Message-ID: <aa8e177c053a91452f6dde4b31b876453d481077.camel@redhat.com>
+Subject: Re: [PATCH] scsi: storvsc: set max_segment_size as UINT_MAX
+ explicitly
+From: Laurence Oberman <loberman@redhat.com>
+To: Ming Lei <ming.lei@redhat.com>, "Martin K . Petersen"
+	 <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Cc: linux-block@vger.kernel.org, "K. Y. Srinivasan" <kys@microsoft.com>, 
+ Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
+ Christoph Hellwig <hch@lst.de>, "Ewan D. Milne" <emilne@redhat.com>
+Date: Tue, 17 Jun 2025 09:58:13 -0400
+In-Reply-To: <20250616160509.52491-1-ming.lei@redhat.com>
+References: <20250616160509.52491-1-ming.lei@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.46.4 (3.46.4-1.fc37) 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250617-isolcpus-queue-counters-v1-5-13923686b54b@kernel.org>
-References: <20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org>
-In-Reply-To: <20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org>
-To: Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@lst.de>
-Cc: Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>, 
- "Michael S. Tsirkin" <mst@redhat.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Thomas Gleixner <tglx@linutronix.de>, 
- Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
- Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, 
- Ming Lei <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, 
- Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, 
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
- megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
- storagedev@microchip.com, virtualization@lists.linux.dev, 
- GR-QLogic-Storage-Upstream@marvell.com, Daniel Wagner <wagi@kernel.org>
-X-Mailer: b4 0.14.2
 
-The calculation of the upper limit for queues does not depend solely on
-the number of possible CPUs; for example, the isolcpus kernel
-command-line option must also be considered.
+On Tue, 2025-06-17 at 00:05 +0800, Ming Lei wrote:
+> Set max_segment_size as UINT_MAX explicitly:
+>=20
+> - storvrc uses virt_boundary to define `segment`
+>=20
+> - strovrc does not define max_segment_size
+>=20
+> So define max_segment_size as UINT_MAX, otherwise __blk_rq_map_sg()
+> takes
+> default 64K max segment size and splits one virtual segment into two
+> parts,
+> then breaks virt_boundary limit.
+>=20
+> Before commit ec84ca4025c0 ("scsi: block: Remove now unused queue
+> limits helpers"),
+> max segment size is set as UINT_MAX in case that virt_boundary is
+> defined.
+>=20
+> Cc: "K. Y. Srinivasan" <kys@microsoft.com>
+> Cc: Haiyang Zhang <haiyangz@microsoft.com>
+> Cc: Wei Liu <wei.liu@kernel.org>
+> Cc: Christoph Hellwig <hch@lst.de>
+> Cc: Ewan D. Milne <emilne@redhat.com>
+> Cc: Laurence Oberman <loberman@redhat.com>
+> Fixes: ec84ca4025c0 ("scsi: block: Remove now unused queue limits
+> helpers")
+> Signed-off-by: Ming Lei <ming.lei@redhat.com>
+> ---
+> =C2=A0drivers/scsi/storvsc_drv.c | 1 +
+> =C2=A01 file changed, 1 insertion(+)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index 2e6b2412d2c9..1e7ad85f4ba3 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1897,6 +1897,7 @@ static struct scsi_host_template scsi_driver =3D
+> {
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.no_write_same =3D=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A01,
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.track_queue_depth =3D=C2=
+=A0=C2=A0=C2=A0=C2=A01,
+> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.change_queue_depth =3D=
+=C2=A0=C2=A0=C2=A0storvsc_change_queue_depth,
+> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0.max_segment_size=C2=A0=C2=A0 =
+=3D 0xffffffff,
+> =C2=A0};
+> =C2=A0
+> =C2=A0enum {
 
-To account for this, the block layer provides a helper function to
-retrieve the maximum number of queues. Use it to set an appropriate
-upper queue number limit.
+Hello=20
+For what it is worth, I tested Ming's patch in our lab and at our
+customers and it fixed a very serious corruption in Oracle REDO logs.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
-Acked-by: Michael S. Tsirkin <mst@redhat.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
-Signed-off-by: Daniel Wagner <wagi@kernel.org>
----
- drivers/block/virtio_blk.c | 5 ++---
- drivers/scsi/virtio_scsi.c | 1 +
- 2 files changed, 3 insertions(+), 3 deletions(-)
+Tested-by: Laurence Oberman  <loberman@redhat.com>
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index 30bca8cb7106040d3bbb11ba9e0b546510534324..e649fa67bac16b4f0c6e8e8f0e6bec111897c355 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -976,9 +976,8 @@ static int init_vq(struct virtio_blk *vblk)
- 		return -EINVAL;
- 	}
- 
--	num_vqs = min_t(unsigned int,
--			min_not_zero(num_request_queues, nr_cpu_ids),
--			num_vqs);
-+	num_vqs = blk_mq_num_possible_queues(
-+			min_not_zero(num_request_queues, num_vqs));
- 
- 	num_poll_vqs = min_t(unsigned int, poll_queues, num_vqs - 1);
- 
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 21ce3e9401929cd273fde08b0944e8b47e1e66cc..96a69edddbe5555574fc8fed1ba7c82a99df4472 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -919,6 +919,7 @@ static int virtscsi_probe(struct virtio_device *vdev)
- 	/* We need to know how many queues before we allocate. */
- 	num_queues = virtscsi_config_get(vdev, num_queues) ? : 1;
- 	num_queues = min_t(unsigned int, nr_cpu_ids, num_queues);
-+	num_queues = blk_mq_num_possible_queues(num_queues);
- 
- 	num_targets = virtscsi_config_get(vdev, max_target) + 1;
- 
+I will test what Christoph share dbut our initial way to deal with this
+in RHEL will be the point fix in storvsc as its a critical issue
+needing an urgent fix.
 
--- 
-2.49.0
+Thanks
+Laurence
 
