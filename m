@@ -1,70 +1,70 @@
 Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 153D23085C7
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2025 18:56:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC9B03085C7
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2025 18:56:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750272966; cv=none; b=qEdd3XkJt6mtzr8Hyu0BJpFb//nBRfoJH37TQviFJQTPCXkqFBUaI/odmNg/5u3NAyendLyj7jgxC19zWx/n47nW/KgGXKNet4M+jVSn3tfE3fqNnAqseU17196CzuEr/ZoQj675/nsqoWBKAvIn6DLLr7TsVbd1doh+wXY7Ems=
+	t=1750272969; cv=none; b=rjktGbe5PTFq9w8nXQuHUYnhqu3SNKoinOyh6ja2ocG774aWZM5BvBFXX6tJM5nR6shQ25f27A+HGlQH+N0VyhXYezDFhcOxqAzdfyGtfefZEy7iTIvrCmk9KDaPHY0WKBVvAnY/g7syd2QPHsU/z4KE99zTf/Q5fOOrXxYTbSU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750272966; c=relaxed/simple;
-	bh=lQhx/GQyAvXB8rzpmY2qaYPXFL5//8+un3i47QBd8mE=;
+	s=arc-20240116; t=1750272969; c=relaxed/simple;
+	bh=ClSmxWPMwnoXNRBCVfYtGk32oeYun9qO5pz2jYHHGKc=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=EM38cw7FgODklJrZ8sAvpaQlPmHFn87knJ1UX3pPs5lLVgilRREi9fM2jN1eOy8ulU8IXgzgM/VAhm1UK0O4MJWf5bNw28nMsklgOw1q7x2qKnh53HPxIKKUCUX7s0N5n5+AxApcrvCuA6bIehQv2LAy/ppNmu86d2vUStSEY/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=X/wDC4qC; arc=none smtp.client-ip=209.85.210.171
+	 MIME-Version; b=fuDp7slsk0L82hIKDp6990HFn3P7JE7ApzdUAtTxFB0X55bcXljzMgnxdp60A2YV0N1cHWC7hb9Qr3UOmfg3KIAxJqoSVxuud038UoKDXLILl/gfhIswo0TxKVvO+16U3nPCdL3mKVEsu+NUp1MI5+0W1DKEYCVNXKmcwDLLlAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Lzaf8WQn; arc=none smtp.client-ip=209.85.210.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="X/wDC4qC"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-748ece799bdso663972b3a.1
-        for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2025 11:56:04 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lzaf8WQn"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-748d982e92cso1340198b3a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2025 11:56:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750272964; x=1750877764; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1750272967; x=1750877767; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=CznToGtqOPBKpf9CB9vaRUX4VWDh2Fd0bnDiBWcCsoU=;
-        b=X/wDC4qC705iD8Xo5DbQwfekDHsJXodtFUV5L8yTtipAXi0AMTDlyayJqjVzhTbNkt
-         LPQkjth49OjcqwYAN5l5LMnXrK7TCF5XoWbFNQz/MIx7dStcA7OcSUZMY+a7IqFDgVlT
-         //pVf0Pa0TM3nFfHSYf/WqvEYCoUIxtULazoHZ1i0WeTVKDi9Hi8b55RPU4S6wOrbwVi
-         DfxNoIkWeDFqVxfrSedBT4fNVtnaW+aYvMfDgVgLdwr2JB1Hdbj05RaJ/P9nrZ3sgFaT
-         VRKLdtwbgvNda2kdjeqRSw4XzQs12PWTguOCb2JxGz60jHYGXYA02Bi8upq2JjFEGsfK
-         jJ1g==
+        bh=d7wMqzLtAQ/D3AvrhGBANGvTV+XOH7rvyvWnciP+vS0=;
+        b=Lzaf8WQnJdhra/BJ5bsvqiZeXx4L0PMyrBAvnM8wA3MMfh72yMaz8vpg5LV9kEhEeU
+         /7kPKRT3MVGCQaXc5LxyEFqwcPmnhIlBxzuWeyRfn8F0z4qUCGRyXrL1i7W4PfVkyamo
+         O09EY7imv8Q/LSOYv6lgoW/Chbb5m4sv5l1SyiUtdWo0w/MCq0uigcUwLRQ4Eu+EK/kA
+         K71yY4beTLB0HBpzSlFLNhgicaotYt3xzFP49sj4AhZP3FwQEliy7zrc4eKsQ+CGe/fZ
+         j+xlkHGjfXb5n82K4/Ol7qSVl1deM+kCsn8k/x9IxauPLGvBPObpZCTza3yCRIzKo2HL
+         ltLA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750272964; x=1750877764;
+        d=1e100.net; s=20230601; t=1750272967; x=1750877767;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=CznToGtqOPBKpf9CB9vaRUX4VWDh2Fd0bnDiBWcCsoU=;
-        b=lL6ETM32YaG6M+8DHKMpAGaMUu6aW5qrsWieRWaJibILhbs5++pnYJGIKXgL6PJvMN
-         +3saTqMn95cdndZG6v/nOF67FNw/d+ywNZAZ+3eWsWne8nZwqNJdphgYHY5laKb0NlC3
-         WfQv06puBX+mhLl29tGYI9X1WVdXBE834aJtqzxfW7HWO4TTlajRIxuOKoyUPN/lGlfy
-         yrlU7wedDjbKA4n2bAz32vQgBzXGij8/cc+FV4b4mPvJwCv6Iy6l3OaQXeLAO8yCxf63
-         yxARdWVJlbjA9JiKJzEgcqRP8hULiz3CkTUBk7RQ2bWUd+B0J+icGzbFzNwZjvIOAyjr
-         RSJQ==
-X-Gm-Message-State: AOJu0Yx4WyIe+cS3zLP7CXvSzQPIN4bDrn25KBICrQqwB6UO/s8e8yyw
-	/1egmJRam33PjTKUM+QJ42eeEPBejt4NF5jVuuh8tPT9BCivGjA9+cZOD2dljg==
-X-Gm-Gg: ASbGncvJAne8JfWtmBy63Jr5glosWJvc8Fhhm1nIFhmHc6bxjAsnlMxTQ00KTGWTPHM
-	Uokruqn/mFq1q/FAYQnBjoYssmodt4jPgDvOlxKHXrS/zjmenhP+lcQRierLB8reoOAtaJfMcDq
-	AlRnwkYFozBh1m1FoaHazyx0lgx3zMsZukAPbcQxfeuE31pRftXvSWpqQIdKd4wGhSIormcoYKU
-	snenbUMzG8cjdz3DzsWcQh5Wtl1jqIEzykgm9nTtGBCcgrLFrGNPAD6VGGNd7gskaoTS2V3NL+B
-	2jNVXSveSwrfOE3x8d7uyyqlNESTl7ny34Rx80nU3xpel5URBJuBM9clL7PwD0CnxCI4nqbbyUk
-	yhh4FepgY0a7GW1qk3QDnoxoIchyvDuNsA5XGugXAghLPJlp9UcrdiePTAA==
-X-Google-Smtp-Source: AGHT+IE57exwsLgX5L3L1bn55sjA1gFuOEtpguxnHfpxsMQ49rNHNLruggiTdECNHl+GOzCuTTxfbQ==
-X-Received: by 2002:a05:6a00:895:b0:746:3025:6576 with SMTP id d2e1a72fcca58-7489cfbb642mr25628950b3a.14.1750272964233;
-        Wed, 18 Jun 2025 11:56:04 -0700 (PDT)
+        bh=d7wMqzLtAQ/D3AvrhGBANGvTV+XOH7rvyvWnciP+vS0=;
+        b=TPTh7A2H+8MiMJCieXjkdHDAKOHHYlc8xfXjqIrzXFtCt2tD9oE4krX2PYCTPQNDsz
+         DuJ0sEtCHPKp+BYAa+D5eKRKAjguX+ymWIdwSW7VvTx9IEg5JhFX7ae2CbRxzUWXlmpH
+         GS43Vbne7vXc5y9eCcQt7YRqfi41NhltOblgoTrQW2SK9GsMZoohQrRTqTWy1ylwXYBH
+         I2XNlhvW91Rq8FCPMYJ1bJvaGO3+RiD8RSTo/BXe8Y6APv0/mI0T2BuQ5CKCsTq5CNYs
+         7mOe3XimAhP3jFQKUoRJqxo9Qm10ZhW5PKOBLKjjIaNlNF7pkEuSD0c+1EpPYev04WTr
+         gQcg==
+X-Gm-Message-State: AOJu0YzLyWiVMTyJbJ0xVAG+P5b4kFRVjID4PV/OL8ROJyEroZz5TRJE
+	JBl22YsaH8o3OcqzNg36f/aJMqxtoDjWj40yDuRPwr9QKNnM5pKQoubJwlSZQg==
+X-Gm-Gg: ASbGnct1/y1VzB1bIMIDn0A7fPwI9A6QOtzxM2BOTUMf7GPUpDdoH08nHjxGNmWTTw2
+	tus2RvCPPLYiwNM/jTfMkkxWpBV1cs4LazlmKRchijGhzr24ERVpSnv6g6vr7zlVufOTzXam9GN
+	dJClcpjJhCd0B32BVLANHQoyVxCh1atXVEJ4gIsNqjYAYHvRaiRMC4WK2PV+0l991FexZriKWIk
+	lUHLeqmO83XmOHPcIqImTjJ6SeYgcXi7wUnFPxXWaWExgWubHXI/m0J0hbT4Ty69SNu+IrnPZAM
+	+V1jo+8NE+DNt8Vi3th2SIdN824yqHVEmyKFJgmPbEYqaJ+fmbRNd9c1BArvHueEu7fkuPr8mTn
+	QG3m6iQgEuW/ajGj/+3n5CnNVKmoZ97bQ+U6Auv7dvNY1x1g=
+X-Google-Smtp-Source: AGHT+IFY2UYxnGKfw6I8zrXDHH+35bK7p+4d0HfrgxOI10KhrTuJLTK5M9DI7EAoPy+A1qFiBFNjdA==
+X-Received: by 2002:a05:6a00:1989:b0:736:4e67:d631 with SMTP id d2e1a72fcca58-7489cfddacdmr24686959b3a.23.1750272967075;
+        Wed, 18 Jun 2025 11:56:07 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-748900b75a8sm11798834b3a.133.2025.06.18.11.56.03
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-748900b75a8sm11798834b3a.133.2025.06.18.11.56.06
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 18 Jun 2025 11:56:03 -0700 (PDT)
+        Wed, 18 Jun 2025 11:56:06 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 01/13] lpfc: Revise logging format for failed CT MIB requests
-Date: Wed, 18 Jun 2025 12:21:26 -0700
-Message-Id: <20250618192138.124116-2-justintee8345@gmail.com>
+Subject: [PATCH 02/13] lpfc: Update debugfs trace ring initialization messages
+Date: Wed, 18 Jun 2025 12:21:27 -0700
+Message-Id: <20250618192138.124116-3-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20250618192138.124116-1-justintee8345@gmail.com>
 References: <20250618192138.124116-1-justintee8345@gmail.com>
@@ -76,40 +76,65 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Unsupported and rejected CT MIB request log messages are changed to
-KERN_WARNING level.  Also, remove extra space in log message.
+Initialization parameters for trace rings used in debugfs are sometimes
+automatically adjusted.  This patch corrects and updates the corresponding
+log messages.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_ct.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 18 +++++++++---------
+ 1 file changed, 9 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_ct.c b/drivers/scsi/lpfc/lpfc_ct.c
-index 530dddd39bab..a88099b6e713 100644
---- a/drivers/scsi/lpfc/lpfc_ct.c
-+++ b/drivers/scsi/lpfc/lpfc_ct.c
-@@ -264,9 +264,9 @@ lpfc_ct_reject_event(struct lpfc_nodelist *ndlp,
- ct_free_mp:
- 	kfree(mp);
- ct_exit:
--	lpfc_printf_vlog(vport, KERN_ERR, LOG_ELS,
--			 "6440 Unsol CT: Rsp err %d Data: x%lx\n",
--			 rc, vport->fc_flag);
-+	lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
-+		      "6440 Unsol CT: Rsp err %d Data: x%lx\n",
-+		      rc, vport->fc_flag);
- }
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 3fd1aa5cc78c..061a5e4e525d 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -6227,8 +6227,9 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 					i++;
+ 				}
+ 				lpfc_debugfs_max_slow_ring_trc = (1 << i);
+-				pr_err("lpfc_debugfs_max_disc_trc changed to "
+-				       "%d\n", lpfc_debugfs_max_disc_trc);
++				pr_info("lpfc_debugfs_max_slow_ring_trc "
++					"changed to %d\n",
++					lpfc_debugfs_max_slow_ring_trc);
+ 			}
+ 		}
  
- /**
-@@ -313,7 +313,7 @@ lpfc_ct_handle_mibreq(struct lpfc_hba *phba, struct lpfc_iocbq *ctiocbq)
+@@ -6260,7 +6261,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 		atomic_set(&phba->nvmeio_trc_cnt, 0);
+ 		if (lpfc_debugfs_max_nvmeio_trc) {
+ 			num = lpfc_debugfs_max_nvmeio_trc - 1;
+-			if (num & lpfc_debugfs_max_disc_trc) {
++			if (num & lpfc_debugfs_max_nvmeio_trc) {
+ 				/* Change to be a power of 2 */
+ 				num = lpfc_debugfs_max_nvmeio_trc;
+ 				i = 0;
+@@ -6269,10 +6270,9 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 					i++;
+ 				}
+ 				lpfc_debugfs_max_nvmeio_trc = (1 << i);
+-				lpfc_printf_log(phba, KERN_ERR, LOG_INIT,
+-						"0575 lpfc_debugfs_max_nvmeio_trc "
+-						"changed to %d\n",
+-						lpfc_debugfs_max_nvmeio_trc);
++				pr_info("lpfc_debugfs_max_nvmeio_trc changed "
++					"to %d\n",
++					lpfc_debugfs_max_nvmeio_trc);
+ 			}
+ 			phba->nvmeio_trc_size = lpfc_debugfs_max_nvmeio_trc;
  
- 	mi_cmd = be16_to_cpu(ct_req->CommandResponse.bits.CmdRsp);
- 	lpfc_vlog_msg(vport, KERN_WARNING, LOG_ELS,
--		      "6442 MI Cmd : x%x Not Supported\n", mi_cmd);
-+		      "6442 MI Cmd: x%x Not Supported\n", mi_cmd);
- 	lpfc_ct_reject_event(ndlp, ct_req,
- 			     bf_get(wqe_ctxt_tag,
- 				    &ctiocbq->wqe.xmit_els_rsp.wqe_com),
+@@ -6317,8 +6317,8 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 				i++;
+ 			}
+ 			lpfc_debugfs_max_disc_trc = (1 << i);
+-			pr_err("lpfc_debugfs_max_disc_trc changed to %d\n",
+-			       lpfc_debugfs_max_disc_trc);
++			pr_info("lpfc_debugfs_max_disc_trc changed to %d\n",
++				lpfc_debugfs_max_disc_trc);
+ 		}
+ 	}
+ 
 -- 
 2.38.0
 
