@@ -1,49 +1,49 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91FDD2EF289
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2025 17:22:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C3092FEE03
+	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2025 17:24:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750267329; cv=none; b=uM2V+1kW6+ms2UnabcNM6Utn/kTYGf8AADvStx55O8OtP75iL9+RIBvH58gYv5JT0DmlRDguePct687sRB+vCthvld0x48XV50NWHPlcYXsxbg90VanEHBCD4yPOOV1WesP4ZLGXZ4HCqVnIIGy4iTnJNPx7iebOBWJMCz5QJfw=
+	t=1750267501; cv=none; b=Tc5JPVe+lKFLxBPW0PPGYFvpVI9drZre9/VgmblWXN8TbeNvishOklUP2NMt4pU/fEdVOMTUdR+vos+/gBJixyuUjdBVsmVnuSiSo9EMPgNTN/R2PUHIyq8s+/JIW7oOaczr5+kkosu/t1DTJiXlKG5wmdrm4Ap88AEQp/RigFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750267329; c=relaxed/simple;
-	bh=JQXct5x6xClvcXeIW3n4Ed4wK4FBsJctQGZPbEpfj+c=;
+	s=arc-20240116; t=1750267501; c=relaxed/simple;
+	bh=p3qKFb0mlIPrGGkcHGN9L7tPv3XKVey3d0rlXBiTsws=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=g5NB8bVCG28Qm5rluPQcueIiFs4yrb8NADBfZD7wnVPUPGpHDvYtzcUjUVC0H4inmE9u9SmIidVN1ps0HbpcgOhKU5eQIrQo2uWHe/DytmfXBzG14qAbb1m0ev3HntRmH3bDSojaNrH3hV7xOA+UekX5VOPP6g1CFXtGGJiyQ1M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dqLWs+Io; arc=none smtp.client-ip=170.10.129.124
+	 In-Reply-To:Content-Type; b=PFQmh6i+ZQcPsxbJKarI8mOfbt2mriwaFuDoiRRcAAVclEQXQi8fznH2fyHbDgQQAnMoO/FjvfLLu3wJmdqREh8TtkCfG7nx0UOyXIqTRKAEfYzfJW9XrtmVq7dvRmZWZHnbSkDErR/YZmyroONo3EaRO8irfQmhqicwnvt3gDk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=brviU66M; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dqLWs+Io"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="brviU66M"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1750267326;
+	s=mimecast20190719; t=1750267499;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=iPzAnQ1fZXolnZ1+sIetH1vtwxZcsqJF5DWYrNvf4/M=;
-	b=dqLWs+Iopamo/bEQqXw8a4Guqq/ozXoMxhpLF/4fZjGuIv0hlOXoUdeN+upyRLYpEJ87QZ
-	izm84cTbWNK7tHYO3U4TxOiaRnFwonanni7IrZhaArJuEzaEBZbHPOyc6AB6y2Z0EWbzC1
-	Yj9mH/F4gnC8gWtMpMFF6ToLIu1JT5Y=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+	bh=Dv8fHHOGGUR1gmS2u4yoeIy6ptKNZ2gKp8QUSEExM/Y=;
+	b=brviU66MozNfZueZG/B4xTJr54I0kHicoUHso2yW6+rdzb5SuI3tUxKjRF/0gqkb3j62CP
+	WdQuNw73a5BjqMvMVIw9ZlY4ILMKPKB+CWLngPCCNDFVHQShwZ5tPPG7T30kxLCQwU2g1x
+	s/9YnXErx4FtOBMF0Lo9sfIOPVR2TB8=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-253-zpcEMTcpMraorc_HVKzFoQ-1; Wed,
- 18 Jun 2025 13:22:01 -0400
-X-MC-Unique: zpcEMTcpMraorc_HVKzFoQ-1
-X-Mimecast-MFC-AGG-ID: zpcEMTcpMraorc_HVKzFoQ_1750267319
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-691-DNkLthlENdGxks2nnBu10g-1; Wed,
+ 18 Jun 2025 13:24:55 -0400
+X-MC-Unique: DNkLthlENdGxks2nnBu10g-1
+X-Mimecast-MFC-AGG-ID: DNkLthlENdGxks2nnBu10g_1750267494
 Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 350691800294;
-	Wed, 18 Jun 2025 17:21:59 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id B13B018089B5;
+	Wed, 18 Jun 2025 17:24:53 +0000 (UTC)
 Received: from [10.22.64.21] (unknown [10.22.64.21])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 7618E1956094;
-	Wed, 18 Jun 2025 17:21:56 +0000 (UTC)
-Message-ID: <89a9481a-f788-4e7e-b0ad-b23bb0f24fc9@redhat.com>
-Date: Wed, 18 Jun 2025 13:21:55 -0400
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 4EAFC1956094;
+	Wed, 18 Jun 2025 17:24:51 +0000 (UTC)
+Message-ID: <af1bd868-0de6-4dec-bae3-b91f6444aa1d@redhat.com>
+Date: Wed, 18 Jun 2025 13:24:50 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,57 +51,52 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 4/4] scsi: fnic: Set appropriate logging level for log
- message
-To: Karan Tilak Kumar <kartilak@cisco.com>, sebaddel@cisco.com
-Cc: arulponn@cisco.com, djhawar@cisco.com, gcboffa@cisco.com,
- mkai2@cisco.com, satishkh@cisco.com, aeasi@cisco.com, jejb@linux.ibm.com,
- martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, revers@redhat.com, dan.carpenter@linaro.org
-References: <20250618003431.6314-1-kartilak@cisco.com>
- <20250618003431.6314-4-kartilak@cisco.com>
+Subject: Re: [PATCH] scsi: fnic: fix missing dma mapping error in
+ `fnic_send_frame()`
+To: Thomas Fourier <fourier.thomas@gmail.com>
+Cc: Satish Kharat <satishkh@cisco.com>, Sesidhar Baddela
+ <sebaddel@cisco.com>, Karan Tilak Kumar <kartilak@cisco.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Arulprabhu Ponnusamy <arulponn@cisco.com>, Arun Easi <aeasi@cisco.com>,
+ Gian Carlo Boffa <gcboffa@cisco.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <20250618065715.14740-2-fourier.thomas@gmail.com>
 Content-Language: en-US
 From: John Meneghini <jmeneghi@redhat.com>
 Organization: RHEL Core Storge Team
-In-Reply-To: <20250618003431.6314-4-kartilak@cisco.com>
+In-Reply-To: <20250618065715.14740-2-fourier.thomas@gmail.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Reviewed-by: John Menghini <jmeneghi@redhat.com>
 
+Martin, can we get this merged into 6.16/scsi-fixes as well?
 
-On 6/17/25 8:34 PM, Karan Tilak Kumar wrote:
-> Replace KERN_INFO with KERN_DEBUG for a log message.
+/John
+
+On 6/18/25 2:57 AM, Thomas Fourier wrote:
+> `dma_map_XXX()` can fail and should be tested for errors with
+> `dma_mapping_error().`
 > 
-> Reviewed-by: Sesidhar Baddela <sebaddel@cisco.com>
-> Reviewed-by: Arulprabhu Ponnusamy <arulponn@cisco.com>
-> Reviewed-by: Gian Carlo Boffa <gcboffa@cisco.com>
-> Reviewed-by: Arun Easi <aeasi@cisco.com>
-> Signed-off-by: Karan Tilak Kumar <kartilak@cisco.com>
+> Fixes: a63e78eb2b0f ("scsi: fnic: Add support for fabric based solicited requests and responses")
+> Signed-off-by: Thomas Fourier <fourier.thomas@gmail.com>
 > ---
-> Changes between v5 and v6:
->      - Incorporate review comments from John:
-> 	- Rebase patches on 6.17/scsi-queue
+>   drivers/scsi/fnic/fnic_fcs.c | 2 ++
+>   1 file changed, 2 insertions(+)
 > 
-> Changes between v4 and v5:
->      - Incorporate review comments from John:
-> 	- Refactor patches
-> ---
->   drivers/scsi/fnic/fnic_scsi.c | 2 +-
->   1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/fnic/fnic_scsi.c b/drivers/scsi/fnic/fnic_scsi.c
-> index 7133b254cbe4..75b29a018d1f 100644
-> --- a/drivers/scsi/fnic/fnic_scsi.c
-> +++ b/drivers/scsi/fnic/fnic_scsi.c
-> @@ -1046,7 +1046,7 @@ static void fnic_fcpio_icmnd_cmpl_handler(struct fnic *fnic, unsigned int cq_ind
->   		if (icmnd_cmpl->scsi_status == SAM_STAT_TASK_SET_FULL)
->   			atomic64_inc(&fnic_stats->misc_stats.queue_fulls);
+> diff --git a/drivers/scsi/fnic/fnic_fcs.c b/drivers/scsi/fnic/fnic_fcs.c
+> index 1e8cd64f9a5c..103ab6f1f7cd 100644
+> --- a/drivers/scsi/fnic/fnic_fcs.c
+> +++ b/drivers/scsi/fnic/fnic_fcs.c
+> @@ -636,6 +636,8 @@ static int fnic_send_frame(struct fnic *fnic, void *frame, int frame_len)
+>   	unsigned long flags;
 >   
-> -		FNIC_SCSI_DBG(KERN_INFO, fnic->host, fnic->fnic_num,
-> +		FNIC_SCSI_DBG(KERN_DEBUG, fnic->host, fnic->fnic_num,
->   				"xfer_len: %llu", xfer_len);
->   		break;
+>   	pa = dma_map_single(&fnic->pdev->dev, frame, frame_len, DMA_TO_DEVICE);
+> +	if (dma_mapping_error(&fnic->pdev->dev, pa))
+> +		return -ENOMEM;
 >   
+>   	if ((fnic_fc_trace_set_data(fnic->fnic_num,
+>   				FNIC_FC_SEND | 0x80, (char *) frame,
 
