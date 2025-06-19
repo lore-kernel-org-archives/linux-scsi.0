@@ -1,374 +1,245 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from alln-iport-4.cisco.com (alln-iport-4.cisco.com [173.37.142.91])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF1421A3167
-	for <linux-scsi@vger.kernel.org>; Wed, 18 Jun 2025 19:37:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750275461; cv=none; b=ceM3qctZGbN21iACujCvGDrJt69DylLQZWegcoPo4x2QLug+T0iMWpOU3jxN6XYpFGs+m3OJuzJgkpj73Fe55ISKF8QF4OCegxVeosZfvg/Az1Bl9hW4HWlEJaA7zeRh8hsEEf7f3OhvpzQtn5EkKw8MM3QwEj9HmUZC5QswyOQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750275461; c=relaxed/simple;
-	bh=xOVicUgtFcWS/ZwDVJxAvl5/Uc8NxjYQC6AZTg/lvGE=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=VCLBbIqyazT2hhXCxEZdOah8FCpFLHz6Nbp2UXdhl1RsYJXeveJcHgRzy3dXEE20lS4W6g/gPc+lPQUum6fiWbcWMkkcppdGks43dbQcgbBWmZq0G0g5Fn1WfMpZyBOCYkdsNtl8CiKIM7h1wRSpIb3qL1UW+Wr76Rch90oB8Ok=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Kz/vUCzq; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D11E020125F;
+	Thu, 19 Jun 2025 01:44:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=173.37.142.91
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1750297454; cv=fail; b=iyvVMYiKBWYEKsIfUVOoXBHhrZkPTH58KG5aPs9FKRy5BC6V1JiXiONdGHPp5mpv0oa5N0TXz3i77u8VafKcMhkF/mucN7ZgKUouHBkz+K5fPvqWcEn7guxw0egVka+jfXOCwydX8ynbT1hj+do8Q5V4Vp52bbmg8E+yTA2otiI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1750297454; c=relaxed/simple;
+	bh=KblgVs89XKOLP0uxIuRe8kz+LB1D5zkm6UtGrlK9D88=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=F2KtL/Fs8OJhLs8RrEoDTM4tOsJT9OOAVvOhsZtWhSOH209OiaphvKQYEe+H+gloG5GCN8DPR47I2Y98a7QK6cRN17BeiznfmyINMRUsNA2PbroQcFDyb06SpBUukMtXmy9Do6tsIIbiM2UtTtUk+em236X/BsyfRpFnR31EhQY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com; spf=pass smtp.mailfrom=cisco.com; dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b=ezyOQ5iq; arc=fail smtp.client-ip=173.37.142.91
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=cisco.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cisco.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Kz/vUCzq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1750275458;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=9IkYGm6Mw0TCtS7HbG5nO6VuQcopkMIUeN25h2BC3QA=;
-	b=Kz/vUCzqOjFcOn44u8UCce8C4VB7Bslh/ugFV2+pyzSVayQC5xKzu70v+Zo7DpKWiMk2b1
-	KoQCaNYggach0w0abCBgHFq0hCS+CGqupPYoirNcdoWuJVlZqAzS1vudFhcvFNvwJeZall
-	0PZ9ntwoFzUpcdiwEqFVm0RSXtFvtfQ=
-Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-595-tgmBqrbBNyOgul3xDHOMng-1; Wed,
- 18 Jun 2025 15:37:35 -0400
-X-MC-Unique: tgmBqrbBNyOgul3xDHOMng-1
-X-Mimecast-MFC-AGG-ID: tgmBqrbBNyOgul3xDHOMng_1750275453
-Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
+	dkim=pass (2048-bit key) header.d=cisco.com header.i=@cisco.com header.b="ezyOQ5iq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=cisco.com; i=@cisco.com; l=560; q=dns/txt;
+  s=iport01; t=1750297452; x=1751507052;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=KblgVs89XKOLP0uxIuRe8kz+LB1D5zkm6UtGrlK9D88=;
+  b=ezyOQ5iqxaCPhlxY92T3ZUmPLmWCLx4GFNFa3cW7nQyrRGDpFm2L18tG
+   nUidEx9h2h+AQfuPbagLn1jZV2RwuTpK703jguCrzxAY393BASuD4uqj+
+   IZisuP98j8JgLr62wkE9QlEp9IqG49IWgiIP9wc5CfRDr/RQg0saI4Rka
+   TNPOQaD4WocKmajtT9TRKjxfj+RSvfHnq9xQ5gReBjM+AQFNUsgQBeIFH
+   eAZ99ho13PtECf5FhQ5T8nNlWJnLzMqJyIJ5tWhBFZhivrsMEeMKSeIh3
+   Y00C9GasgIj640Oq0Z7/A9T8yUI7+zicOzY/8tWbKuKHD25aaIEKugsEs
+   Q==;
+X-CSE-ConnectionGUID: W13aZLvjT1St9cVnDyBMbA==
+X-CSE-MsgGUID: XedtAiQ3TZGO/7YlAlaUvg==
+X-IPAS-Result: =?us-ascii?q?A0AEAAAOalNo/5H/Ja1aGgEBAQEBAQEBAQEDAQEBARIBA?=
+ =?us-ascii?q?QEBAgIBAQEBQCWBGgUBAQEBCwGBcVIHghVJhFSDTAOETV+GVYIkmDqFXIF/D?=
+ =?us-ascii?q?wEBAQ0CUQQBAYUHAhaLUQImNAkOAQIEAQEBAQMCAwEBAQEBAQEBAQEBCwEBB?=
+ =?us-ascii?q?QEBAQIBBwWBDhOGCIZaAQEBAQMSERFFEAIBCA4KAgImAgICLxUQAgQBDQUIG?=
+ =?us-ascii?q?oVPAwGhcgGBQAKKK3qBMoEB4CWBGy4BiFABgW2Df4R3JxuCDYEVQoJoPoRFF?=
+ =?us-ascii?q?YNEOoIvBIIkRFKFYZM2CUl4HANZLAFVExcLBwVeQhAzAyo0MSMPPAUtHXYMK?=
+ =?us-ascii?q?hgOgjochD6ERStPgyKBAw8BbGVBg14SDAZwDwaBKkADC209NwYOGwUEOnsFk?=
+ =?us-ascii?q?WyGdZZ5Sa9JCoQbogkXg3EBEo0NmVAuh2WQcSKobQIEAgQFAhABAQaBaDyBW?=
+ =?us-ascii?q?XAVgyJSGQ+OX7sZeDwCBwsBAQMJkXMBAQ?=
+IronPort-PHdr: A9a23:/y8v+BOUX4Rqn5AO2Qsl6nc2WUAX0o4cdiYc7p4hzrVWfbvmpdLpP
+ VfU4rNmi1qaFYnY6vcRk+PNqOigQm0P55+drWoPOIJBTR4LiMga3kQgDceJBFe9LavCZC0hF
+ 8MEX1hgl0w=
+IronPort-Data: A9a23:TBqdmKj+Nq1CaLKCdRdWuzOSX161YxEKZh0ujC45NGQN5FlHY01je
+ htvWG2PPP2KYzCkLtBxOY228E8PuJDRndFiT1ZrrCFnFS5jpJueD7x1DKtf0wB+jyHnZBg6h
+ ynLQoCYdKjYdleF+FH1dOKn9CAmvU2xbuKUIPbePSxsThNTRi4kiBZy88Y0mYcAbeKRW2thg
+ vus5ZSBULOZ82QsaD9MtfvT8EgHUMna4Vv0gHRvPZing3eG/5UlJMp3Db28KXL+Xr5VEoaSL
+ 87fzKu093/u5BwkDNWoiN7TKiXmlZaLYGBiIlIPM0STqkAqSh4ai87XB9JAAatjsAhlqvgqo
+ Dl7WTNcfi9yVkHEsLx1vxC1iEiSN4UekFPMCSDXXcB+UyQqflO0q8iCAn3aMqUno71+M0VQ9
+ 8BBEyxcZS6Fq/Oc5biSH7wEasQLdKEHPasFsX1miDWcBvE8TNWbE+PB5MRT23E7gcUm8fT2P
+ pVCL2EwKk6dPlsWZgp/5JEWxI9EglH8eidEqVacpoI84nPYy0p6172F3N/9JoPbGZ0EwBfFz
+ o7A11T0Dg0zNeXE9Qiq1TXzt+vmmSrGRo1HQdVU8dYv2jV/3Fc7DBwQSEv+ovSjjEO6c8xQJ
+ lZS+Sc0q6U2skuxQbHVWxy+vW7BpRUHWvJOHOAgrgKA0KzZ50CeHGdsZiVdYdYiuecoSjEwk
+ FyEhdXkAXpoqrL9dJ6G3q2foTX3PW0eKnUPIHdUCwAE+NLk5oo0i3ojU+peLUJ8tfWscRnYy
+ DGRpy94jLIW5fPnHY3ilbwbq1pAfqT0czM=
+IronPort-HdrOrdr: A9a23:G7nqJKrLHqnhABbDFyhER88aV5tkLNV00zEX/kB9WHVpm5Oj5q
+ OTdaUgtSMc1gxxZJh5o6H/BEDhex/hHZ4c2/h2AV7QZniWhILOFvAs0WKC+UytJ8SQzJ8m6U
+ 4NSdkbNDS0NykEsS+Y2nj3Lz9D+qj7zEnAv463pBkdL3AOV0gj1XYENu/xKDwOeOAyP+tDKH
+ Pq3Ls+m9PPQwVxUu2LQlM+c6zoodrNmJj6YRgAKSIGxWC15w+A2frRKTTd+g0RfQ9u7N4ZnF
+ QtlTaX2oyT99WAjjPM3W7a6Jpb3PH7zMFYOcCKgs8Jbh3xlweBfu1aKv2/lQFwhNvqxEchkd
+ HKrRtlFd908Wntcma8pgao8xX80Qwp92TpxTaj8DjeSI3CNXAH4vh69MZkmyjimg0dVRZHoe
+ R2Nleixt9q5NX77X3ADpbzJklXfwGP0AofeKYo/g9iuM0lGf5sRUh1xjIOLH/GdxiKs7wPAa
+ 1gCtrR6+1Rdk7fZ3fFvnN3yNjpRXgrGAyaK3Jy8fB9/gIm1UyR9XFojPA3jzMF7tYwWpNE7+
+ PLPuBhk6xPVNYfaeZ4CP0aScW6B2TRSVaUWVjibGjPBeUCITbAupT36LI66KWjf4EJ1oI7nN
+ DEXElDvWA/dkryAYmF3YFN8BrKXGKhNA6dgP129tx8oPnxVbDrOSqMRBQnlNahuewWBonBV/
+ O6KPttconexKvVaPF0NiHFKu1vwCMlIb8oU/4AKieznv4=
+X-Talos-CUID: 9a23:tLhyHGGZrhRlltx/qmJYrRUdKOQ7cEGE92uBKHG+JXdDbbe8HAo=
+X-Talos-MUID: =?us-ascii?q?9a23=3AB5dMPQ3BxT7jZOT2AdKiSKAmMzUj06miFGkMqM4?=
+ =?us-ascii?q?6ieajcnNBPx6ZhQmpTdpy?=
+X-IronPort-Anti-Spam-Filtered: true
+Received: from rcdn-l-core-08.cisco.com ([173.37.255.145])
+  by alln-iport-4.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 19 Jun 2025 01:44:04 +0000
+Received: from alln-opgw-2.cisco.com (alln-opgw-2.cisco.com [173.37.147.250])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C589519560AD;
-	Wed, 18 Jun 2025 19:37:32 +0000 (UTC)
-Received: from [10.22.64.21] (unknown [10.22.64.21])
-	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B09071956094;
-	Wed, 18 Jun 2025 19:37:29 +0000 (UTC)
-Message-ID: <6e2ee819-c0a4-4067-8516-ca0e5569bbab@redhat.com>
-Date: Wed, 18 Jun 2025 15:37:23 -0400
+	by rcdn-l-core-08.cisco.com (Postfix) with ESMTPS id B0C891800044A;
+	Thu, 19 Jun 2025 01:44:04 +0000 (GMT)
+X-CSE-ConnectionGUID: 8apgxpN6Twe5t3sks4eW2Q==
+X-CSE-MsgGUID: 6BYf8sd5SoK0trDyC+cj3A==
+Authentication-Results: alln-opgw-2.cisco.com; dkim=pass (signature verified) header.i=@cisco.com
+X-IronPort-AV: E=Sophos;i="6.16,247,1744070400"; 
+   d="scan'208";a="24919215"
+Received: from mail-mw2nam12lp2041.outbound.protection.outlook.com (HELO NAM12-MW2-obe.outbound.protection.outlook.com) ([104.47.66.41])
+  by alln-opgw-2.cisco.com with ESMTP/TLS/TLS_AES_256_GCM_SHA384; 19 Jun 2025 01:44:03 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=lXhyrlDPZhsA4c0+yf4OsioRcSenYVRAYVgEaMGnBIFiytqvTij0mmEdYyqB0eBN/G/r0HEMBZcbu+YrZ3PXJ9NrudsQi+YFuDQHtHPkktYgKVISwSmTi+eAy97T/iI2pbHs3rNZ852uLxX/nGwzaErVc7cPo9eSdW+hXdZr0iyMUIB4pwoxsTK/d6EUoVKuvGA3YSPFybM2oi1JXO8hNoZw9+QmSHFwq4ngojm0e16zTmThnkZtGh1S43aQryFC8ejaOSJhuEVTyiULHFZfNP/MBKnLCl9dbOOwvxTV4Q5l9CTAnVhIbDtExW9GvayQJfzaOdyxLUhGoa4fmnzOwg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=KblgVs89XKOLP0uxIuRe8kz+LB1D5zkm6UtGrlK9D88=;
+ b=en94yRbvO/WXT7Gzp0ahRYK/dhulULatYKu6asGJRPCXwTyPWOdUNXulOHY+kz2ii4MrBdyEjCqDY6/oow6Vj282cRFTTkHIdcfoDXrL0UHGK55QBR3//9B2Zja7OjdJOvtBloDNcETmAQ06x+tly19ks5ZOFFnoUcnjTMktrE54RN8Ot6YN9AuS9BvaPyoiC/7PS7QyPMzWsEFb1h9KVYNBSKYbv6iIX/J2+xiS5X3J3jnnvINNtpjE4QkelIdRMgNkKaN82OJZ7O0YpOiQb3Dst+7whHEMGSm1mLIJlQTq9wTtJm0CWR1g+vdeonwThMXA1vtaFMsObG4n7aIwiQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=cisco.com; dmarc=pass action=none header.from=cisco.com;
+ dkim=pass header.d=cisco.com; arc=none
+Received: from SJ0PR11MB5896.namprd11.prod.outlook.com (2603:10b6:a03:42c::19)
+ by IA0PR11MB7909.namprd11.prod.outlook.com (2603:10b6:208:407::14) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8835.29; Thu, 19 Jun
+ 2025 01:44:01 +0000
+Received: from SJ0PR11MB5896.namprd11.prod.outlook.com
+ ([fe80::2081:bcd4:cb3e:e2dd]) by SJ0PR11MB5896.namprd11.prod.outlook.com
+ ([fe80::2081:bcd4:cb3e:e2dd%5]) with mapi id 15.20.8857.019; Thu, 19 Jun 2025
+ 01:44:01 +0000
+From: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
+To: John Meneghini <jmeneghi@redhat.com>, "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>
+CC: "Arulprabhu Ponnusamy (arulponn)" <arulponn@cisco.com>, "Dhanraj Jhawar
+ (djhawar)" <djhawar@cisco.com>, "Gian Carlo Boffa (gcboffa)"
+	<gcboffa@cisco.com>, "Masa Kai (mkai2)" <mkai2@cisco.com>, "Satish Kharat
+ (satishkh)" <satishkh@cisco.com>, "Arun Easi (aeasi)" <aeasi@cisco.com>,
+	"jejb@linux.ibm.com" <jejb@linux.ibm.com>, "linux-scsi@vger.kernel.org"
+	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>, "revers@redhat.com" <revers@redhat.com>,
+	"dan.carpenter@linaro.org" <dan.carpenter@linaro.org>,
+	"stable@vger.kernel.org" <stable@vger.kernel.org>, "Sesidhar Baddela
+ (sebaddel)" <sebaddel@cisco.com>
+Subject: RE: [PATCH v6 1/4] scsi: fnic: Fix crash in fnic_wq_cmpl_handler when
+ FDMI times out
+Thread-Topic: [PATCH v6 1/4] scsi: fnic: Fix crash in fnic_wq_cmpl_handler
+ when FDMI times out
+Thread-Index: AQHb3+jNXC+yODxQ/U6cEpDxFRKkNrQJKe2AgACNFYA=
+Date: Thu, 19 Jun 2025 01:44:01 +0000
+Message-ID:
+ <SJ0PR11MB58966BD0A15339E284AC7B89C37DA@SJ0PR11MB5896.namprd11.prod.outlook.com>
+References: <20250618003431.6314-1-kartilak@cisco.com>
+ <62bfa26a-822b-462d-ba8d-e0d85610e278@redhat.com>
+In-Reply-To: <62bfa26a-822b-462d-ba8d-e0d85610e278@redhat.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SJ0PR11MB5896:EE_|IA0PR11MB7909:EE_
+x-ms-office365-filtering-correlation-id: 49bee5b0-0ebe-449c-87eb-08ddaed2c416
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?T3EzMkQvWngvUVhZc2VtL0I1YXFnQzhXZC9hZXordVpXcENJSkNVQnQ1MS9o?=
+ =?utf-8?B?RHdXSVZ1Q3lETzNJRVJ2dUZ4U3hEbVJoa0oxZUVRUzI4QkFZWExpcGlBU1Ft?=
+ =?utf-8?B?YW4vVW1FU0RqZDhtVGh3N21hUkpwbUhnYXNmOC9wTllJUTEvUTJrT1ZEY1Ju?=
+ =?utf-8?B?QUlZSmRMbncyV0hETlMyamYrbzlZNXBteU9zaU1jTlFTb2pLZWR1U2tpTTBy?=
+ =?utf-8?B?aFRpOHJoWStVVUFobUlFU21tL2pxMUUzc1NtYjFmeE5OMVowZE9rU0FCU1Bn?=
+ =?utf-8?B?YVhIVDZqc1dvQkwxclZaZFc2S1JrMWlvNXI5bWVzcU1xN1ZEWlZpa2RaQ29q?=
+ =?utf-8?B?ZytDR2lsYjk1d2lrWkdwWFNlTzRyVno0Sm4wMnhodDB6SFhMcDgvVUNnOUZt?=
+ =?utf-8?B?U3ZaclhQRnNtWDNsYnh5VnBud1JtRkwyOGhvaEtIZEFtVlpiZXRLRjVmMlhw?=
+ =?utf-8?B?M01oZkFYK0JGMjY5UFVzWnFJeXcxdW1OQzB0NVRjTHFPNXVRcHR2Uk1haEk1?=
+ =?utf-8?B?ZUsrcGtPRVZXblJhZDFyZ1lZOUZaQmZXRGZOeldFekhISUE2ais4eHhQZkZm?=
+ =?utf-8?B?T1JGUnVjdnFEYWRpdWZqUWdvRitiODEzT01LYWg1eG5yci9SQkp2UXV0UXdK?=
+ =?utf-8?B?Y1NwcUJzTk9lZWY4bDM2UEs3RDFRd003ZzM0NlNmZStSeERPcDVkekM4NVFE?=
+ =?utf-8?B?WXQ0d3RqNWZmdjdleVJ0MjN0c2FNVjhseXArdml1c1lYY1JCeXB4L2RmamdY?=
+ =?utf-8?B?cW52dEFHOFJsUGxOTzFpbmJQcVhCMWJiSmZDQStWSWFrSm5teHdvajhpVzhE?=
+ =?utf-8?B?KzVsc0RCQkZxbEJhTWg1dWFsNmhNQW9XcEZqRjYzaWRQU2l6aURVU21KSzAw?=
+ =?utf-8?B?RkF4VzVMVmRiU3owdHpvZndMQUZYaHZ6VzFBN0pOc1VHcUV1cHpYNFBWMFJH?=
+ =?utf-8?B?eUFxZWFNbGhScUs4N0NPMlFNN3E3dmtkdHdjYWE4eS8vMGM1VytDVzl4OWQz?=
+ =?utf-8?B?ajEzYXpTeEpTMXBmd1Z1ZlE3ZGNuMzk5dkgrTFBseGdSai8xL2pabjhUc0VJ?=
+ =?utf-8?B?aFliMGt4UDFuVEg1d1d1UDFIRlljM1dDeDdrZlB6NWpmb2VEdHZoMFE3bXdz?=
+ =?utf-8?B?RytBS1Y4KzMydytUK2c2L3daVzVveTBLRitqNllYOGZVci9vY0xsTUhCam16?=
+ =?utf-8?B?V3RKRjZZSlBJSXcybG5xTmVEV1NXWGMyWmJuaThBN1pDcXhQUzhUM0loVmdL?=
+ =?utf-8?B?TzVSNndydHJKemxJSXlpa3UrUzFZRXpybCtiSklXSi9GazI4WHZyekVGNEpP?=
+ =?utf-8?B?RFVoQ3hZSm1HTkFJZVdaeWRBUWxTZjNTcm54TWs5N0tTQ2RjNjJQV2phTDV3?=
+ =?utf-8?B?aE9uMjBFYnFDZUpZSXArVThVc1prak81Nms1aXhPV3ltcFpMR0tZWWQ5SVFZ?=
+ =?utf-8?B?Yk1aMllSZks2ZDF0c0R3RTBhVmJJMDNJR3hZRTVxWnA2NDZFdXNGaHYwSFJZ?=
+ =?utf-8?B?ZTc2VjUxMUdUY24xNzBmL1p4TS9ES0hITmIwODJ4d2lFNmVuaU9icGJmNzNF?=
+ =?utf-8?B?cW5BeGZNL2tGdnM1TUxRY1I1dmxxNjFVU1NScEl4a2ppSkZSUzkrbGJyNkJs?=
+ =?utf-8?B?ekgxZTFNU1QwOTNLV0ZZL2kwMEhmd3VDMzgxaEw5ZjJXQ3hGbkdoMTczMHlt?=
+ =?utf-8?B?bVRESEJIdHQwc1MzamM1SjhrdDNzTjdFZ3hlQzBZT1laaFhmNk9ac3RWaVVa?=
+ =?utf-8?B?bTN2TDg0NnBtU1BVK05qbGlHNjM0KzZoS3pNYlFDWmNKNjIxcjM4Vkx5RVAv?=
+ =?utf-8?B?UTZIdnZlejI2NkVCclErbk0zN1A5cnFhWWg0djlGZDRRRTB1VzQyRmU1S1Ey?=
+ =?utf-8?B?VW1iR3VsK2F1a1VEeXpuaVJoM0pkaFJuUUd5Tmlqa2ExbmFZSnZkaWQxeWRQ?=
+ =?utf-8?B?OU96Zlc0N1oxNTBwY0tHMUNCMnQxZFlyMHB6UkhvaW1XZHQrL2pzdlpjeUZn?=
+ =?utf-8?Q?X1O4lBVZb4Km4BB4TL9TtqTuNGWxj0=3D?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ0PR11MB5896.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?dmtnaFkyRmhSN2MwblhiVXBVclRVZTlPdnB6NG1zanIvYm1XdU9BU1krMGZ2?=
+ =?utf-8?B?NUtCMkpRZVVNK2NHRUxUR3RpK25jWGdLQWdFV0M2dkEyQ1Y3NVdWR2hmbytR?=
+ =?utf-8?B?L24wUlpLTVV5VTRncUtGeHN1aGdkRnBRbTZLY0RqY2cvdy9CWkZPb1NoUlgx?=
+ =?utf-8?B?QWtlQ282MEZPQ01pVWR1ZkdzZDRua1NZeDQ4c1lsemNndVRjam9ucWlDTlFS?=
+ =?utf-8?B?aFB6Zk1wcU5iMVh3S250SjdncUtydjFSaHIzRGgwaHE0ZGt0clpsS2o4L0hy?=
+ =?utf-8?B?SnlCNm1vMnNDaE5oTHhjTERjMEVuV0FmSUN5bGJsaDhrOFJuQkwxUVBHd0Uy?=
+ =?utf-8?B?VU5XSzNuWlVWSjlTYVJGbkh0eXJoZ251Z2Y5aGsvQk5MYW5UNXhuY1pCUkxG?=
+ =?utf-8?B?QVhiaThUTVBnM21Ia3ZQWGNqaW9xNndPWVk5TDRRcHZNRmRuZUhEZzNqdzcz?=
+ =?utf-8?B?bjBaVkNNeDkzS1pzb2txY05WMk1UQXY1NmNEUG50QmdJVHlkUURDcitvbGRP?=
+ =?utf-8?B?cGlzeEdQVko1YU5QWS9lUzQ2ODU5d1Vjc1lnbWFoWUZ3eURlSWJ0Qk5rdkph?=
+ =?utf-8?B?QnRpMGw0RTJ1L0xJb1ZKcDljVUlIZy82NVd0ek5mbGEyNkltVEo0QUtBQlJp?=
+ =?utf-8?B?SFNlUmlNNWJkQU4reWhUN3d6SUFndEhacCs1TkxxU0lEUmdSeElvWDFIdlZn?=
+ =?utf-8?B?VG53R1lxUUZ1Y1llcHRmS0tub3ZUTGZZTnVXQy9NdzVVUzdETGtpZitQcHlU?=
+ =?utf-8?B?MkFvbEtSd1IwWUpRRHVpL3h1WDkxMVZYaVU0SjhGOVByb0VHazNzcjVrUG1y?=
+ =?utf-8?B?VE43bllUUUwvNmNmRUJES09udmI3TFhnNHFjb0hKNTRyYWRpZFVycnZnanJX?=
+ =?utf-8?B?TWlWSFBwUEJVeW1MTmZXd3paN2w5aTlHTVEwSHl5dzR3bFYrMkZzRGpFNTVk?=
+ =?utf-8?B?ZEJrNHNEVC9HZEp1d1BqNGJqa29yWXVJZ1BPZ21BVlZpZjFPVnNEMWY4TERs?=
+ =?utf-8?B?RkhKeGdGZ1NBL3lkNUg0b0FaRDZROEpWVndpZUVCaDczWldQOFR0ejdsbTg4?=
+ =?utf-8?B?Qm4yd3h4d25uWUtWOEE0eWZNSTRwMjF1VkFCdCtNWWFWb3Z3S1RKV3R1NG5V?=
+ =?utf-8?B?QnZJRlJZZjRxakxXeGdKMk91TURkR1U3ZmVnQmU5R1FkZGhoMmg0QWRnZU5J?=
+ =?utf-8?B?UGVXNnFieUwyMGowUXZ0aUE4MW9KcmpzYTc0MWRHMlowcnV1Z1YzR1lXOFhz?=
+ =?utf-8?B?WXdVTTcxTG84OTR6eFg3ZEsyeHhhbjVodnFGVTBMK1JUcVlrRllPQU1aMkVV?=
+ =?utf-8?B?QmFVL3VySWZaa2tseVNmV01vUm13QkVLQ0VQQitsZ2RIbDMwVjA1UTFyWEZV?=
+ =?utf-8?B?Tzl4dWZFL0I1aDZmMUcyMzVqWEdocG40V2RQSkI3WTVRMERvNmFWdDYvYk43?=
+ =?utf-8?B?ZUFuOXN4L0tqcDhYQnpkc0FhSjRlSVVmamJQQkY2ZVFQNnhWcjZSY0RVa0c0?=
+ =?utf-8?B?NjViSGhHNzlSNGpabWkwbFY5RVQrRlE0MGQ3dzdQZWhETnVKNVFabGs5d1lP?=
+ =?utf-8?B?ZzBiWWg4NVFaNWVBWGgyc2lidTI3aW9SV2JvczFsTnhJakdQKyt5eGdlVno3?=
+ =?utf-8?B?ZUFkQng4Qk1qMjliWElJb05qanpFUVliNkI2TjJlM2hxV1Q3bGVYVTk5UlJP?=
+ =?utf-8?B?YXJIcVJ0LytNZ1FiS1VsOGlxV0dlc3NJUVV6UTZOVjZqYXA3bmcwRUoyU2Yr?=
+ =?utf-8?B?RkJPaHgxWVJPSlpYNEZOMk9tUWZpYW44eWZmeFJPVmwveGJ2U3d5cGJ3MEkw?=
+ =?utf-8?B?ZmtBZFNGRFhJVCtjcHZONHo1elFaTGdmSytocHYwZ092NDMwY2VaNGlEYjRo?=
+ =?utf-8?B?c0h4aHB6bzJ3UnlXTkY0dHZXaWNYN2Q5Vk80cjY2QUU1cjVCcVRYVEE1Y0ZY?=
+ =?utf-8?B?bmtBcHBEcUpQZTBIVTVkRmRlMFlDZ3BwZDkyNEw4T3VHYU5uKzNOd1hxYnRJ?=
+ =?utf-8?B?VFNCRXRFcytDWmpNN2JxUFVIMHBzbHF4cThZNDR1Q3R0R3oyUjU5c21tYmlB?=
+ =?utf-8?B?WllVQlprUktrTFRlVjZ1aTE4cXpNbUpVL3NtUXkxTi9wWndOYnJCNzBBTllZ?=
+ =?utf-8?Q?mb4+2pHpwyg18mSJeSoryUvpN?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] scsi: aacraid: Fix reply queue mapping to CPUs based
- on IRQ affinity
-From: John Meneghini <jmeneghi@redhat.com>
-To: martin.petersen@oracle.com
-Cc: linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
- thenzl@redhat.com, Scott.Benesh@microchip.com, Don.Brace@microchip.com,
- Tom.White@microchip.com, Abhinav.Kuchibhotla@microchip.com,
- sagar.biradar@microchip.com, mpatalan@redhat.com,
- James.Bottomley@HansenPartnership.com, linux-scsi@vger.kernel.org,
- aacraid@microsemi.com, corbet@lwn.net
-References: <20250618192427.3845724-1-jmeneghi@redhat.com>
-Content-Language: en-US
-Organization: RHEL Core Storge Team
-In-Reply-To: <20250618192427.3845724-1-jmeneghi@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
+X-OriginatorOrg: cisco.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SJ0PR11MB5896.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 49bee5b0-0ebe-449c-87eb-08ddaed2c416
+X-MS-Exchange-CrossTenant-originalarrivaltime: 19 Jun 2025 01:44:01.2383
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 5ae1af62-9505-4097-a69a-c1553ef7840e
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: KTfxbMJkuyIuH2MFeRgW3giPKfORMJUEunY5SEjT4DjaqZOPclBFM/FmJxOPDQk7RIxo7uE+1K5IsnyS5GIKPA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: IA0PR11MB7909
+X-Outbound-SMTP-Client: 173.37.147.250, alln-opgw-2.cisco.com
+X-Outbound-Node: rcdn-l-core-08.cisco.com
 
-Martin,
-
-This is the AACRAID patch we talked about at LSFMM this spring.  This change has undergone extensive internal review and testing at Red Hat while working closely with Microchip. We'd really like to get this merged into v6.16 as a fix because the current upstream aacraid driver is badly broken when CPU offline is used.
-
-I've based this patch on scsi/6.16/scsi-fixes.
-
-Thanks,
-
-/John
-
-On 6/18/25 3:24 PM, John Meneghini wrote:
-> From: Sagar Biradar <sagar.biradar@microchip.com>
-> 
-> From: Sagar Biradar <sagar.biradar@microchip.com>
-> 
-> This patch fixes a bug in the original path that caused I/O hangs. The
-> I/O hangs were because of an MSIx vector not having a mapped online CPU
-> upon receiving completion.
-> 
-> This patch enables Multi-Q support in the aacriad driver. Multi-Q support
-> in the driver is needed to support CPU offlining.
-> 
-> SCSI cmds use the mq_map to get the vector_no via blk_mq_unique_tag()
-> and blk_mq_unique_tag_to_hwq() - which are setup during the blk_mq init.
-> For reserved cmds, or the ones before the blk_mq init, use the vector_no
-> 0, which is the norm since don't yet have a proper mapping to the queues.
-> 
-> Note that this change can cause a drop in performance in some
-> configurations. To address any concerns about performance the
-> CONFIG_SCSI_AACRAID_MULTIQ option has been added.
-> 
-> The CONFIG_SCSI_AACRAID_MULTIQ option is on by default to ensure that
-> CPU offlining with MultiQ support is enabled. To disable MultiQ support
-> compile the kernel with CONFIG_SCSI_AACRAID_MULTIQ=N. Disabling MultiQ
-> support should not be done if your application uses CPU offling.
-> 
-> Closes: https://lore.kernel.org/linux-scsi/20250130173314.608836-1-sagar.biradar@microchip.com/
-> 
-> Fixes: c5becf57dd56 ("Revert "scsi: aacraid: Reply queue mapping to CPUs based on IRQ affinity"")
-> Signed-off-by: Sagar Biradar <sagar.biradar@microchip.com>
-> [jmeneghi: replace aac_cpu_offline_feature with Kconfig option]
-> Co-developed-by: John Meneghini <jmeneghi@redhat.com>
-> Signed-off-by: John Meneghini <jmeneghi@redhat.com>
-> Reviewed-by: Gilbert Wu <gilbert.wu@microchip.com>
-> Reviewed-by: Tomas Henzl <thenzl@redhat.com>
-> Tested-by: Marco Patalano <mpatalan@redhat.com>
-> ---
->   Documentation/scsi/aacraid.rst | 11 +++++++++++
->   MAINTAINERS                    |  1 +
->   drivers/scsi/Kconfig           |  2 +-
->   drivers/scsi/aacraid/Kconfig   | 20 ++++++++++++++++++++
->   drivers/scsi/aacraid/aachba.c  |  1 -
->   drivers/scsi/aacraid/aacraid.h |  3 +++
->   drivers/scsi/aacraid/commsup.c | 16 ++++++++++++++--
->   drivers/scsi/aacraid/linit.c   | 23 ++++++++++++++++++++++-
->   drivers/scsi/aacraid/src.c     | 28 +++++++++++++++++++++++++++-
->   9 files changed, 99 insertions(+), 6 deletions(-)
->   create mode 100644 drivers/scsi/aacraid/Kconfig
-> 
-> diff --git a/Documentation/scsi/aacraid.rst b/Documentation/scsi/aacraid.rst
-> index 1904674b94f3..0fc35edd0ac9 100644
-> --- a/Documentation/scsi/aacraid.rst
-> +++ b/Documentation/scsi/aacraid.rst
-> @@ -129,6 +129,17 @@ Supported Cards/Chipsets
->   People
->   ======
->   
-> +Sagar Biradar <Sagar.Biradar@microchip.com>
-> +
-> + - Added support for CPU offlining and updated the driver to support MultiQ.
-> + - Introduced the option CONFIG_SCSI_AACRAID_MULTIQ to control this feature.
-> +
-> +By default, MultiQ support is disabled to provide optimal I/O performance.
-> +
-> +Enable CONFIG_SCSI_AACRAID_MULTIQ only if CPU offlining support is required,
-> +as enabling it may result in reduced performance in some configurations.
-> +Note : Disabling MultiQ while still offlining CPUs may lead to I/O hangs.
-> +
->   Alan Cox <alan@lxorguk.ukuu.org.uk>
->   
->   Christoph Hellwig <hch@infradead.org>
-> diff --git a/MAINTAINERS b/MAINTAINERS
-> index a92290fffa16..996c90959caa 100644
-> --- a/MAINTAINERS
-> +++ b/MAINTAINERS
-> @@ -184,6 +184,7 @@ L:	linux-scsi@vger.kernel.org
->   S:	Supported
->   W:	http://www.adaptec.com/
->   F:	Documentation/scsi/aacraid.rst
-> +F:	drivers/scsi/aacraid/Kconfig
->   F:	drivers/scsi/aacraid/
->   
->   AAEON UPBOARD FPGA MFD DRIVER
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 5522310bab8d..a6739cd94db7 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -456,7 +456,7 @@ config SCSI_AACRAID
->   	  To compile this driver as a module, choose M here: the module
->   	  will be called aacraid.
->   
-> -
-> +source "drivers/scsi/aacraid/Kconfig"
->   source "drivers/scsi/aic7xxx/Kconfig.aic7xxx"
->   source "drivers/scsi/aic7xxx/Kconfig.aic79xx"
->   source "drivers/scsi/aic94xx/Kconfig"
-> diff --git a/drivers/scsi/aacraid/Kconfig b/drivers/scsi/aacraid/Kconfig
-> new file mode 100644
-> index 000000000000..c69e1a7a77d2
-> --- /dev/null
-> +++ b/drivers/scsi/aacraid/Kconfig
-> @@ -0,0 +1,20 @@
-> +# SPDX-License-Identifier: GPL-2.0-only
-> +#
-> +# Kernel configuration file for the aacraid driver.
-> +#
-> +# Copyright (c) 2025 Microchip Technology Inc. and its subsidiaries
-> +#  (mailto:storagedev@microchip.com)
-> +#
-> +config SCSI_AACRAID_MULTIQ
-> +	bool "AACRAID Multiq support"
-> +	depends on SCSI_AACRAID
-> +	default n
-> +	help
-> +	  This option enables MultiQ support in the aacraid driver.
-> +
-> +	  Enabling MultiQ allows the driver to safely handle CPU offlining.
-> +	  However, it may cause a performance drop in certain configurations.
-> +
-> +	  Enable this option only if your system requires CPU offlining support.
-> +
-> +	  If unsure, say N.
-> diff --git a/drivers/scsi/aacraid/aachba.c b/drivers/scsi/aacraid/aachba.c
-> index 0be719f38377..db9bef348834 100644
-> --- a/drivers/scsi/aacraid/aachba.c
-> +++ b/drivers/scsi/aacraid/aachba.c
-> @@ -328,7 +328,6 @@ MODULE_PARM_DESC(wwn, "Select a WWN type for the arrays:\n"
->   	"\t1 - Array Meta Data Signature (default)\n"
->   	"\t2 - Adapter Serial Number");
->   
-> -
->   static inline int aac_valid_context(struct scsi_cmnd *scsicmd,
->   		struct fib *fibptr) {
->   	struct scsi_device *device;
-> diff --git a/drivers/scsi/aacraid/aacraid.h b/drivers/scsi/aacraid/aacraid.h
-> index 0a5888b53d6d..557f9fc50012 100644
-> --- a/drivers/scsi/aacraid/aacraid.h
-> +++ b/drivers/scsi/aacraid/aacraid.h
-> @@ -1672,6 +1672,9 @@ struct aac_dev
->   	u32			handle_pci_error;
->   	bool			init_reset;
->   	u8			soft_reset_support;
-> +#ifdef CONFIG_SCSI_AACRAID_MULTIQ
-> +	u8			use_map_queue;
-> +#endif
->   };
->   
->   #define aac_adapter_interrupt(dev) \
-> diff --git a/drivers/scsi/aacraid/commsup.c b/drivers/scsi/aacraid/commsup.c
-> index 7d9a4dce236b..309a166ce6e4 100644
-> --- a/drivers/scsi/aacraid/commsup.c
-> +++ b/drivers/scsi/aacraid/commsup.c
-> @@ -215,8 +215,17 @@ int aac_fib_setup(struct aac_dev * dev)
->   struct fib *aac_fib_alloc_tag(struct aac_dev *dev, struct scsi_cmnd *scmd)
->   {
->   	struct fib *fibptr;
-> +#ifdef CONFIG_SCSI_AACRAID_MULTIQ
-> +	u32 blk_tag;
-> +	int i;
->   
-> +	blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
-> +	i = blk_mq_unique_tag_to_tag(blk_tag);
-> +	fibptr = &dev->fibs[i];
-> +#else
->   	fibptr = &dev->fibs[scsi_cmd_to_rq(scmd)->tag];
-> +#endif
-> +
->   	/*
->   	 *	Null out fields that depend on being zero at the start of
->   	 *	each I/O
-> @@ -242,14 +251,17 @@ struct fib *aac_fib_alloc(struct aac_dev *dev)
->   {
->   	struct fib * fibptr;
->   	unsigned long flags;
-> +
->   	spin_lock_irqsave(&dev->fib_lock, flags);
-> +	/*  Management FIB allocation: use free list within reserved range */
->   	fibptr = dev->free_fib;
-> -	if(!fibptr){
-> +	if (!fibptr) {
->   		spin_unlock_irqrestore(&dev->fib_lock, flags);
-> -		return fibptr;
-> +		return NULL;
->   	}
->   	dev->free_fib = fibptr->next;
->   	spin_unlock_irqrestore(&dev->fib_lock, flags);
-> +
->   	/*
->   	 *	Set the proper node type code and node byte size
->   	 */
-> diff --git a/drivers/scsi/aacraid/linit.c b/drivers/scsi/aacraid/linit.c
-> index 4b12e6dd8f07..8c56579a8efc 100644
-> --- a/drivers/scsi/aacraid/linit.c
-> +++ b/drivers/scsi/aacraid/linit.c
-> @@ -506,6 +506,17 @@ static int aac_sdev_configure(struct scsi_device *sdev,
->   	return 0;
->   }
->   
-> +#ifdef CONFIG_SCSI_AACRAID_MULTIQ
-> +static void aac_map_queues(struct Scsi_Host *shost)
-> +{
-> +	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
-> +	struct blk_mq_queue_map *qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
-> +
-> +	blk_mq_map_hw_queues(qmap, &aac->pdev->dev, 0);
-> +	aac->use_map_queue = true;
-> +}
-> +#endif
-> +
->   /**
->    *	aac_change_queue_depth		-	alter queue depths
->    *	@sdev:	SCSI device we are considering
-> @@ -1490,6 +1501,9 @@ static const struct scsi_host_template aac_driver_template = {
->   	.bios_param			= aac_biosparm,
->   	.shost_groups			= aac_host_groups,
->   	.sdev_configure			= aac_sdev_configure,
-> +#ifdef CONFIG_SCSI_AACRAID_MULTIQ
-> +	.map_queues			= aac_map_queues,
-> +#endif
->   	.change_queue_depth		= aac_change_queue_depth,
->   	.sdev_groups			= aac_dev_groups,
->   	.eh_abort_handler		= aac_eh_abort,
-> @@ -1777,7 +1791,11 @@ static int aac_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
->   	shost->max_lun = AAC_MAX_LUN;
->   
->   	pci_set_drvdata(pdev, shost);
-> -
-> +#ifdef CONFIG_SCSI_AACRAID_MULTIQ
-> +	shost->nr_hw_queues = aac->max_msix;
-> +	shost->can_queue = min_t(int, aac->vector_cap, shost->can_queue);
-> +	shost->host_tagset = 1;
-> +#endif
->   	error = scsi_add_host(shost, &pdev->dev);
->   	if (error)
->   		goto out_deinit;
-> @@ -1908,6 +1926,9 @@ static void aac_remove_one(struct pci_dev *pdev)
->   	struct aac_dev *aac = (struct aac_dev *)shost->hostdata;
->   
->   	aac_cancel_rescan_worker(aac);
-> +#ifdef CONFIG_SCSI_AACRAID_MULTIQ
-> +	aac->use_map_queue = false;
-> +#endif
->   	scsi_remove_host(shost);
->   
->   	__aac_shutdown(aac);
-> diff --git a/drivers/scsi/aacraid/src.c b/drivers/scsi/aacraid/src.c
-> index 28115ed637e8..5881bce3ccfc 100644
-> --- a/drivers/scsi/aacraid/src.c
-> +++ b/drivers/scsi/aacraid/src.c
-> @@ -493,6 +493,12 @@ static int aac_src_deliver_message(struct fib *fib)
->   #endif
->   
->   	u16 vector_no;
-> +#ifdef CONFIG_SCSI_AACRAID_MULTIQ
-> +	struct scsi_cmnd *scmd;
-> +	u32 blk_tag;
-> +	struct Scsi_Host *shost = dev->scsi_host_ptr;
-> +	struct blk_mq_queue_map *qmap;
-> +#endif
->   
->   	atomic_inc(&q->numpending);
->   
-> @@ -505,8 +511,28 @@ static int aac_src_deliver_message(struct fib *fib)
->   		if ((dev->comm_interface == AAC_COMM_MESSAGE_TYPE3)
->   			&& dev->sa_firmware)
->   			vector_no = aac_get_vector(dev);
-> -		else
-> +		else {
-> +#ifdef CONFIG_SCSI_AACRAID_MULTIQ
-> +			if (!fib->vector_no || !fib->callback_data) {
-> +				if (shost && dev->use_map_queue) {
-> +					qmap = &shost->tag_set.map[HCTX_TYPE_DEFAULT];
-> +					vector_no = qmap->mq_map[raw_smp_processor_id()];
-> +				}
-> +				/*
-> +				 *	We hardcode the vector_no for reserved commands
-> +				 *	as a valid shost is absent during the init.
-> +				 */
-> +				else
-> +					vector_no = 0;
-> +			} else {
-> +				scmd = (struct scsi_cmnd *)fib->callback_data;
-> +				blk_tag = blk_mq_unique_tag(scsi_cmd_to_rq(scmd));
-> +				vector_no = blk_mq_unique_tag_to_hwq(blk_tag);
-> +			}
-> +#else
->   			vector_no = fib->vector_no;
-> +#endif
-> +		}
->   
->   		if (native_hba) {
->   			if (fib->flags & FIB_CONTEXT_FLAG_NATIVE_HBA_TMF) {
-
+T24gV2VkbmVzZGF5LCBKdW5lIDE4LCAyMDI1IDEwOjE4IEFNLCBKb2huIE1lbmVnaGluaSA8am1l
+bmVnaGlAcmVkaGF0LmNvbT4gd3JvdGU6DQo+DQo+IEdyZWF0IEpvYi4gIFRoYW5rcyBLYXJhbi4N
+Cj4NCj4gUmV2aWV3ZWQtYnk6IEpvaG4gTWVuZWdoaW5pIDxqbWVuZWdoaUByZWRoYXQuY29tPg0K
+Pg0KPiBNYXJ0aW4sIGlmIHBvc3NpYmxlLCBwbGVhc2UgaW5jbHVkZSB0aGVzZSBpbiA2LjE2L3Nj
+c2ktZml4ZXMuICBUaGVzZSBhcmUgY3JpdGljYWwgYnVnIGZpeGVzIHdoaWNoIGFyZSBob2xkaW5n
+IHVwIHRoZSByZWxlYXNlIG9mIFJIRUwtOS43Lg0KPg0KPiAvSm9obg0KDQpUaGFua3MgZm9yIHJl
+dmlld2luZyBhbGwgdGhlIHBhdGNoZXMgaW4gdGhlIHNlcmllcywgSm9obi4NCg0KUmVnYXJkcywN
+CkthcmFuDQo=
