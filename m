@@ -1,117 +1,87 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2991528B7C1;
-	Thu, 19 Jun 2025 13:53:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4231C11712;
+	Thu, 19 Jun 2025 16:39:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750341188; cv=none; b=Zk4xTDbii5Kbz/hUO4c9kemkjxIN0JANJeHKzvTua7QYzQ3xnRI7NtnUxj7uD3xofo6O5VAPWDPsfM4EuQ2oYW2Pmt0rnDZS0VrdofdoVUxiIU9G7MqIMnEEB7hn2tInfreSpLhQMA32OzRGEb24thRyUhMspDZydwP+m7rZjKY=
+	t=1750351146; cv=none; b=CVN3qshGtmizyhKAr+D056Bb/he/LPcFnH06h1uQtm2LcMb49UT6y+ElwzMLpulD/ECiW0ZvaxdiwlejYfmhkCiwyXVowuB5I6UxUCmCROFn0wOUouuwE9NJ6mRUuJYfFqI+sY0tcsBZy4fq7/Zm88wP4P/HBJmqU4bbnlEOHNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750341188; c=relaxed/simple;
-	bh=e3IzxRN2+kK4nKfbjnHQ1KUE0dymxfbZ2bnFd+F9r7w=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Liq3e/V+tdMKiI9K/lTytg3BRcztdLKjzGZM+6SBucpkxB9gjpWldxXDoKs8VhzHkrnCNlHCIWsyxmV7rh32kL2Cu/tx5OjCIm7w8lOjxzcQ5QidKjBkDwvFHfo/Jgz0FMWf/NcuLc5uOPB8EXykLrKB8Ikj+DlD6PqiWwOSNxY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=arm.com; spf=none smtp.mailfrom=foss.arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=foss.arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 57F7C113E;
-	Thu, 19 Jun 2025 06:52:45 -0700 (PDT)
-Received: from usa.arm.com (GTV29432L0-2.cambridge.arm.com [10.1.31.86])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 37AB63F66E;
-	Thu, 19 Jun 2025 06:53:03 -0700 (PDT)
-From: Aishwarya <aishwarya.tcv@arm.com>
-To: quic_nitirawa@quicinc.com
-Cc: James.Bottomley@HansenPartnership.com,
-	andersson@kernel.org,
-	bvanassche@acm.org,
-	dmitry.baryshkov@oss.qualcomm.com,
-	kishon@kernel.org,
-	konrad.dybcio@oss.qualcomm.com,
-	linux-arm-msm@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	manivannan.sadhasivam@linaro.org,
-	martin.petersen@oracle.com,
-	neil.armstrong@linaro.org,
-	quic_cang@quicinc.com,
-	quic_rdwivedi@quicinc.com,
-	vkoul@kernel.org
-Subject: Re: [PATCH V6 10/10] scsi: ufs: qcom : Refactor phy_power_on/off calls
-Date: Thu, 19 Jun 2025 14:53:02 +0100
-Message-Id: <20250619135302.9192-1-aishwarya.tcv@arm.com>
-X-Mailer: git-send-email 2.39.5 (Apple Git-154)
-In-Reply-To: <20250526153821.7918-11-quic_nitirawa@quicinc.com>
-References: <20250526153821.7918-11-quic_nitirawa@quicinc.com>
+	s=arc-20240116; t=1750351146; c=relaxed/simple;
+	bh=uHFC2Zuf4ATdEfc3EczL2xFWh06gjwF2yI92iK+dBL8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=KzLt15bOVMveVIc3USakBMr/7MvpgSothqQTf2qgKKFHMfPAX0wQ/fdgnqeD+D3xV+sjqocSZopMcKRxCotSLvd3irQ3Yerqqr13Pek+Pp6PKykO/1bXmerqmz3cwuTvJX4kdDnhvr09OqkEHOIgm1dQYtHiwFSk5Ej1erXtaaY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Ebu+6Ly8; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Ebu+6Ly8"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bNRBv0QBhzm0jvw;
+	Thu, 19 Jun 2025 16:39:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1750351141; x=1752943142; bh=uHFC2Zuf4ATdEfc3EczL2xFW
+	h06gjwF2yI92iK+dBL8=; b=Ebu+6Ly8UsL3+CtGuZ17sVHhihxTWEZQG20X1z4P
+	Wfxk7bz8DEZbI6Jh6E+0/NWt3wIjnUN2x8QoQdjqb67Welay8XAsWX5zZfCMxuWb
+	edSG8jcsVyB7DmbHcw6JXaqCtAtw7mg4nfX+5q/xzXxqUK3MUDjXVkzisEn96GQP
+	J1Ro8CO2779M9KMxJFS3yR09TdFudzGVcmUluM+lMMajWT4wRfQS8vnTyxxYhMAv
+	vxRCtnhSYnDuE2teWNaqSkfoteezbeC9tcnEoZn9fO8bspXm4DfyoFnSinnCpQxN
+	aZuCRx9/uC9tHd18AMvoQaUwn0FTwQJ7Hb+Y2NwhHJw1og==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id S7PMG4qRlAVh; Thu, 19 Jun 2025 16:39:01 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bNRBg2hlRzm0ySs;
+	Thu, 19 Jun 2025 16:38:50 +0000 (UTC)
+Message-ID: <ef0c0a3f-4c8a-4073-b20c-5371c1ebe27e@acm.org>
+Date: Thu, 19 Jun 2025 09:38:47 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v18 12/12] scsi: ufs: Inform the block layer about write
+ ordering
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "axboe@kernel.dk" <axboe@kernel.dk>
+Cc: "avri.altman@wdc.com" <avri.altman@wdc.com>, "hch@lst.de" <hch@lst.de>,
+ "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+ "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "dlemoal@kernel.org" <dlemoal@kernel.org>,
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+References: <20250616223312.1607638-1-bvanassche@acm.org>
+ <20250616223312.1607638-13-bvanassche@acm.org>
+ <efda2d4c27346f03acdd2c7b7d98ad57da7fb332.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <efda2d4c27346f03acdd2c7b7d98ad57da7fb332.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Hi Nitin,
+On 6/19/25 5:49 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> How can we ensure that there is ordering across different HW queues?
+> For example, req0 is sent to hwq0 and req1 is sent to hwq1,
+> but req1 might be dispatched first?
 
-When booting the kernel from next-20250619 on Arm64 Qualcomm boards
-(RB5 and DB845C), we observe that the baseline bootr test fails due to
-dmesg.emerg errors in our CI environment.
+Hi Peter,
 
-A full git bisect (log included below) points to this patch as the
-culprit. The issue was introduced sometime from tag next-20250616 in
-https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git.
+Please take a look at patch 06/12 from this series. That patch prevents
+that the reordering mentioned above can happen. It prevents this by
+queuing all zoned writes to the same hwq as long as any zoned writes are
+in progress. See also
+https://lore.kernel.org/linux-scsi/20250616223312.1607638-7-bvanassche@ac=
+m.org/
 
-This issue is not present in v6.16-rc2
-
-Here’s a sample of the failure observed on the RB5 board:
-lert :   ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
-kern  :alert :   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
-kern  :alert :   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
-kern  :alert : user pgtable: 4k pages, 48-bit VAs, pgdp=0000000102c4c000
-kern  :alert : [0000000000000000] pgd=0000000000000000
-kern  :emerg : Internal error: Oops: 0000000096000004 [#1]  SMP
-kern  :emerg : Code: a90157f3 aa0003f3 f90013f6 f9405c15 (f94002b6) 
-<8>[   30.933289] <LAVA_SIGNAL_TESTCASE TEST_CASE_ID=emerg RESULT=fail UNITS=lines MEASUREMENT=2>
-+ <8>[   30.943798] <LAVA_SIGNAL_ENDRUN 0_dmesg 1000325_2.4.4.1>
-set +x
-
-Git bisection log:
-git bisect start
-# status: waiting for both good and bad commits
-# good: [9afe652958c3ee88f24df1e4a97f298afce89407] Merge tag 'x86_urgent_for_6.16-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-git bisect good 9afe652958c3ee88f24df1e4a97f298afce89407
-# status: waiting for bad commit, 1 good commit known
-# bad: [4325743c7e209ae7845293679a4de94b969f2bef] Add linux-next specific files for 20250617
-git bisect bad 4325743c7e209ae7845293679a4de94b969f2bef
-# good: [436c8cbbcb18deb96100cd9f33f1efedddc31d9c] Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git
-git bisect good 436c8cbbcb18deb96100cd9f33f1efedddc31d9c
-# good: [183d224083773ca4a84a458fb608efecff19e19e] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/regmap.git
-git bisect good 183d224083773ca4a84a458fb608efecff19e19e
-# good: [1347ff0c0e510f1a6adb78259a2a0ddfac41d258] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/wq.git
-git bisect good 1347ff0c0e510f1a6adb78259a2a0ddfac41d258
-# bad: [b09bd04eabb1994257f4c11d0ed25ff03517d3ec] Merge branch 'gpio/for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/brgl/linux.git
-git bisect bad b09bd04eabb1994257f4c11d0ed25ff03517d3ec
-# good: [70bc9e18653c20fbcb47184d9498ad7bd7b7d6be] Merge branch 'togreg' of git://git.kernel.org/pub/scm/linux/kernel/git/jic23/iio.git
-git bisect good 70bc9e18653c20fbcb47184d9498ad7bd7b7d6be
-# bad: [3a847fb85c9d47e61ad5d9d54b762a3e99a08084] Merge branch 'next' of git://git.kernel.org/pub/scm/linux/kernel/git/phy/linux-phy.git
-git bisect bad 3a847fb85c9d47e61ad5d9d54b762a3e99a08084
-# skip: [50355ac70d4f104e2f82bfbd0658c129027ebb37] dt-bindings: phy: Convert marvell,comphy-cp110 to DT schema
-git bisect skip 50355ac70d4f104e2f82bfbd0658c129027ebb37
-# good: [acc6b0d73d902d3296d8c77878a9b508c2c6a5bf] phy: qcom-qmp-ufs: Rename qmp_ufs_power_off
-git bisect good acc6b0d73d902d3296d8c77878a9b508c2c6a5bf
-# bad: [35b629b28afd72a14ed573f1b180dc4ab1bf7e19] dt-bindings: phy: Convert ti,dm816x-usb-phy to DT schema
-git bisect bad 35b629b28afd72a14ed573f1b180dc4ab1bf7e19
-# bad: [66acaf8f6b0bcc273f8356b2a77baa90b177014c] dt-bindings: phy: Convert img,pistachio-usb-phy to DT schema
-git bisect bad 66acaf8f6b0bcc273f8356b2a77baa90b177014c
-# bad: [f151f3a6ebe184b5f8c9abe58fe2d63f9950139b] dt-bindings: phy: Convert brcm,ns2-drd-phy to DT schema
-git bisect bad f151f3a6ebe184b5f8c9abe58fe2d63f9950139b
-# bad: [77d2fa54a94574f767d5fb296b6b8e011eba0c8e] scsi: ufs: qcom : Refactor phy_power_on/off calls
-git bisect bad 77d2fa54a94574f767d5fb296b6b8e011eba0c8e
-# good: [7f600f0e193a6638135026c3718ac296ed3f5044] phy: qcom-qmp-ufs: Remove qmp_ufs_exit() and Inline qmp_ufs_com_exit()
-git bisect good 7f600f0e193a6638135026c3718ac296ed3f5044
-# good: [a079b2d715340482e425ff136b55810ab8279800] phy: qcom-qmp-ufs: refactor qmp_ufs_power_off
-git bisect good a079b2d715340482e425ff136b55810ab8279800
-# first bad commit: [77d2fa54a94574f767d5fb296b6b8e011eba0c8e] scsi: ufs: qcom : Refactor phy_power_on/off calls
-
-Thanks,
-Aishwarya
+Bart.
