@@ -1,100 +1,117 @@
-Received: from szxga01-in.huawei.com (szxga01-in.huawei.com [45.249.212.187])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 580752459F6
-	for <linux-scsi@vger.kernel.org>; Thu, 19 Jun 2025 12:57:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.187
+Received: from foss.arm.com (foss.arm.com [217.140.110.172])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 2991528B7C1;
+	Thu, 19 Jun 2025 13:53:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750337881; cv=none; b=AOCs4r5QBNpKWvbJt3f8kuPCkx5pPLYug6wAQmo20SWqpHuVefGLk7WCezHtCIa78yI/OJCIJ1EM58wi92u41xAB4uctnXIl+hWFx9pC8uCilKtqS229NoD8IQ9swAoPrPvKMFop8nK5aMB4ILUhJjAOSr38+vNORjnCSIW38Z4=
+	t=1750341188; cv=none; b=Zk4xTDbii5Kbz/hUO4c9kemkjxIN0JANJeHKzvTua7QYzQ3xnRI7NtnUxj7uD3xofo6O5VAPWDPsfM4EuQ2oYW2Pmt0rnDZS0VrdofdoVUxiIU9G7MqIMnEEB7hn2tInfreSpLhQMA32OzRGEb24thRyUhMspDZydwP+m7rZjKY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750337881; c=relaxed/simple;
-	bh=Y/evQQHz1/efdJNhnP2IpoIeUxk01snklFHY5ZBmCoI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:CC:From:
-	 In-Reply-To:Content-Type; b=OygngxUn4yybnFr5sjxsKIYE83YU/DDJD/nsuv4p6R2/3Jr2s1IdNgGvwMpoOPMqvgpBhD1N+cITkRpZQxBoRCrCZu2Ppgq/EY57kGKYjGHgttToBBEEDeSPBF0XB/xG5W8izZ7k4k5tDTllQqTK/PRiSrUFGGZETCiMyxnSPjo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.187
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.194])
-	by szxga01-in.huawei.com (SkyGuard) with ESMTP id 4bNLBS6wS3z10XPS;
-	Thu, 19 Jun 2025 20:53:20 +0800 (CST)
-Received: from kwepemg500017.china.huawei.com (unknown [7.202.181.81])
-	by mail.maildlp.com (Postfix) with ESMTPS id A2D5C1400D9;
-	Thu, 19 Jun 2025 20:57:55 +0800 (CST)
-Received: from [10.174.179.155] (10.174.179.155) by
- kwepemg500017.china.huawei.com (7.202.181.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 19 Jun 2025 20:57:54 +0800
-Message-ID: <93484c2e-528e-46a1-83d6-c420e0d2a1ef@huawei.com>
-Date: Thu, 19 Jun 2025 20:57:54 +0800
+	s=arc-20240116; t=1750341188; c=relaxed/simple;
+	bh=e3IzxRN2+kK4nKfbjnHQ1KUE0dymxfbZ2bnFd+F9r7w=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=Liq3e/V+tdMKiI9K/lTytg3BRcztdLKjzGZM+6SBucpkxB9gjpWldxXDoKs8VhzHkrnCNlHCIWsyxmV7rh32kL2Cu/tx5OjCIm7w8lOjxzcQ5QidKjBkDwvFHfo/Jgz0FMWf/NcuLc5uOPB8EXykLrKB8Ikj+DlD6PqiWwOSNxY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=arm.com; spf=none smtp.mailfrom=foss.arm.com; arc=none smtp.client-ip=217.140.110.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=arm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=foss.arm.com
+Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
+	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 57F7C113E;
+	Thu, 19 Jun 2025 06:52:45 -0700 (PDT)
+Received: from usa.arm.com (GTV29432L0-2.cambridge.arm.com [10.1.31.86])
+	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPA id 37AB63F66E;
+	Thu, 19 Jun 2025 06:53:03 -0700 (PDT)
+From: Aishwarya <aishwarya.tcv@arm.com>
+To: quic_nitirawa@quicinc.com
+Cc: James.Bottomley@HansenPartnership.com,
+	andersson@kernel.org,
+	bvanassche@acm.org,
+	dmitry.baryshkov@oss.qualcomm.com,
+	kishon@kernel.org,
+	konrad.dybcio@oss.qualcomm.com,
+	linux-arm-msm@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-phy@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	manivannan.sadhasivam@linaro.org,
+	martin.petersen@oracle.com,
+	neil.armstrong@linaro.org,
+	quic_cang@quicinc.com,
+	quic_rdwivedi@quicinc.com,
+	vkoul@kernel.org
+Subject: Re: [PATCH V6 10/10] scsi: ufs: qcom : Refactor phy_power_on/off calls
+Date: Thu, 19 Jun 2025 14:53:02 +0100
+Message-Id: <20250619135302.9192-1-aishwarya.tcv@arm.com>
+X-Mailer: git-send-email 2.39.5 (Apple Git-154)
+In-Reply-To: <20250526153821.7918-11-quic_nitirawa@quicinc.com>
+References: <20250526153821.7918-11-quic_nitirawa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
-Subject: Re: [PATCH 1/6] scsi: iscsi: Fix HW conn removal use after free
-To: Mike Christie <michael.christie@oracle.com>
-References: <20220616222738.5722-1-michael.christie@oracle.com>
- <20220616222738.5722-2-michael.christie@oracle.com>
-CC: <lduncan@suse.com>, <cleech@redhat.com>, <njavali@marvell.com>,
-	<mrangankar@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
-	<martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-	<jejb@linux.ibm.com>, yangerkun <yangerkun@huawei.com>, "yukuai (C)"
-	<yukuai3@huawei.com>, Hou Tao <houtao1@huawei.com>, "zhangyi (F)"
-	<yi.zhang@huawei.com>
-From: Li Lingfeng <lilingfeng3@huawei.com>
-In-Reply-To: <20220616222738.5722-2-michael.christie@oracle.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemg500017.china.huawei.com (7.202.181.81)
 
-Hi Mike,
+Hi Nitin,
 
-Thanks for this patch addressing the UAF issue. I have some questions when
-analyzing this patch.
+When booting the kernel from next-20250619 on Arm64 Qualcomm boards
+(RB5 and DB845C), we observe that the baseline bootr test fails due to
+dmesg.emerg errors in our CI environment.
 
-You mention that iscsi_remove_conn() frees the connection, making the extra
-iscsi_put_conn() cause UAF. However, looking at iscsi_remove_conn():
+A full git bisect (log included below) points to this patch as the
+culprit. The issue was introduced sometime from tag next-20250616 in
+https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git.
 
-iscsi_remove_conn
-  device_del(&conn->dev)
-   put_device(parent) // Only parent gets put_device
+This issue is not present in v6.16-rc2
 
-This doesn't appear to free conn directly - only device_del() + parent
-reference drop. Typically, conn is freed via put_device() on &conn->dev when
-its refcount reaches zero.
+Here’s a sample of the failure observed on the RB5 board:
+lert :   ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
+kern  :alert :   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+kern  :alert :   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+kern  :alert : user pgtable: 4k pages, 48-bit VAs, pgdp=0000000102c4c000
+kern  :alert : [0000000000000000] pgd=0000000000000000
+kern  :emerg : Internal error: Oops: 0000000096000004 [#1]  SMP
+kern  :emerg : Code: a90157f3 aa0003f3 f90013f6 f9405c15 (f94002b6) 
+<8>[   30.933289] <LAVA_SIGNAL_TESTCASE TEST_CASE_ID=emerg RESULT=fail UNITS=lines MEASUREMENT=2>
++ <8>[   30.943798] <LAVA_SIGNAL_ENDRUN 0_dmesg 1000325_2.4.4.1>
+set +x
 
-Could you briefly clarify how iscsi_remove_conn() ultimately triggers the
-freeing, and in what scenario the subsequent iscsi_put_conn() leads to UAF?
+Git bisection log:
+git bisect start
+# status: waiting for both good and bad commits
+# good: [9afe652958c3ee88f24df1e4a97f298afce89407] Merge tag 'x86_urgent_for_6.16-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+git bisect good 9afe652958c3ee88f24df1e4a97f298afce89407
+# status: waiting for bad commit, 1 good commit known
+# bad: [4325743c7e209ae7845293679a4de94b969f2bef] Add linux-next specific files for 20250617
+git bisect bad 4325743c7e209ae7845293679a4de94b969f2bef
+# good: [436c8cbbcb18deb96100cd9f33f1efedddc31d9c] Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git
+git bisect good 436c8cbbcb18deb96100cd9f33f1efedddc31d9c
+# good: [183d224083773ca4a84a458fb608efecff19e19e] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/regmap.git
+git bisect good 183d224083773ca4a84a458fb608efecff19e19e
+# good: [1347ff0c0e510f1a6adb78259a2a0ddfac41d258] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/wq.git
+git bisect good 1347ff0c0e510f1a6adb78259a2a0ddfac41d258
+# bad: [b09bd04eabb1994257f4c11d0ed25ff03517d3ec] Merge branch 'gpio/for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/brgl/linux.git
+git bisect bad b09bd04eabb1994257f4c11d0ed25ff03517d3ec
+# good: [70bc9e18653c20fbcb47184d9498ad7bd7b7d6be] Merge branch 'togreg' of git://git.kernel.org/pub/scm/linux/kernel/git/jic23/iio.git
+git bisect good 70bc9e18653c20fbcb47184d9498ad7bd7b7d6be
+# bad: [3a847fb85c9d47e61ad5d9d54b762a3e99a08084] Merge branch 'next' of git://git.kernel.org/pub/scm/linux/kernel/git/phy/linux-phy.git
+git bisect bad 3a847fb85c9d47e61ad5d9d54b762a3e99a08084
+# skip: [50355ac70d4f104e2f82bfbd0658c129027ebb37] dt-bindings: phy: Convert marvell,comphy-cp110 to DT schema
+git bisect skip 50355ac70d4f104e2f82bfbd0658c129027ebb37
+# good: [acc6b0d73d902d3296d8c77878a9b508c2c6a5bf] phy: qcom-qmp-ufs: Rename qmp_ufs_power_off
+git bisect good acc6b0d73d902d3296d8c77878a9b508c2c6a5bf
+# bad: [35b629b28afd72a14ed573f1b180dc4ab1bf7e19] dt-bindings: phy: Convert ti,dm816x-usb-phy to DT schema
+git bisect bad 35b629b28afd72a14ed573f1b180dc4ab1bf7e19
+# bad: [66acaf8f6b0bcc273f8356b2a77baa90b177014c] dt-bindings: phy: Convert img,pistachio-usb-phy to DT schema
+git bisect bad 66acaf8f6b0bcc273f8356b2a77baa90b177014c
+# bad: [f151f3a6ebe184b5f8c9abe58fe2d63f9950139b] dt-bindings: phy: Convert brcm,ns2-drd-phy to DT schema
+git bisect bad f151f3a6ebe184b5f8c9abe58fe2d63f9950139b
+# bad: [77d2fa54a94574f767d5fb296b6b8e011eba0c8e] scsi: ufs: qcom : Refactor phy_power_on/off calls
+git bisect bad 77d2fa54a94574f767d5fb296b6b8e011eba0c8e
+# good: [7f600f0e193a6638135026c3718ac296ed3f5044] phy: qcom-qmp-ufs: Remove qmp_ufs_exit() and Inline qmp_ufs_com_exit()
+git bisect good 7f600f0e193a6638135026c3718ac296ed3f5044
+# good: [a079b2d715340482e425ff136b55810ab8279800] phy: qcom-qmp-ufs: refactor qmp_ufs_power_off
+git bisect good a079b2d715340482e425ff136b55810ab8279800
+# first bad commit: [77d2fa54a94574f767d5fb296b6b8e011eba0c8e] scsi: ufs: qcom : Refactor phy_power_on/off calls
 
-Thanks again for the fix.
-
-Lingfeng
-
-在 2022/6/17 6:27, Mike Christie 写道:
-> If qla4xxx doesn't remove the connection before the session, the iSCSI
-> class tries to remove the connection for it. We were doing a
-> iscsi_put_conn() in the iter function which is not needed and will result
-> in a use after free because iscsi_remove_conn() will free the connection.
->
-> Reviewed-by: Lee Duncan <lduncan@suse.com>
-> Signed-off-by: Mike Christie <michael.christie@oracle.com>
-> ---
->   drivers/scsi/scsi_transport_iscsi.c | 2 --
->   1 file changed, 2 deletions(-)
->
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index 2c0dd64159b0..e6084e158cc0 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -2138,8 +2138,6 @@ static int iscsi_iter_destroy_conn_fn(struct device *dev, void *data)
->   		return 0;
->   
->   	iscsi_remove_conn(iscsi_dev_to_conn(dev));
-> -	iscsi_put_conn(iscsi_dev_to_conn(dev));
-> -
->   	return 0;
->   }
->   
+Thanks,
+Aishwarya
