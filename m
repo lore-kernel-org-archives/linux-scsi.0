@@ -1,178 +1,141 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from fout-b5-smtp.messagingengine.com (fout-b5-smtp.messagingengine.com [202.12.124.148])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 497B928A3E4;
-	Fri, 20 Jun 2025 14:26:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7EC51DE3C3;
+	Fri, 20 Jun 2025 14:45:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.148
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750429609; cv=none; b=ryoFjYzmYiScoTa4rqGWtNYXSip3BX/kyfDWvnbxt7dOEmwSHSvfbhVjoeVYdIORRxzVsrIuETiRIqif/n5I4WwXUD7euuS38KaCNVpcRxfMpQkuepThWarrMO0dDbP+dRHk9h4KfQzr5R2cD4diqVDNRgvcGscO5ckq8ZjeNbo=
+	t=1750430748; cv=none; b=BFYQtJH+NQ2DsaNBps9vw9rafsWpr7T3WaM/Itejnx30E44uY//4EPk3KXc0d74wLdCoERmauXMOON3/Fq84ktpDTdgiu98gHhmZ78WTOx/bDbhY2Ggzp0N1ejPqrWWJinp6iBl+4dkoAL9UaafIeMVnDAqTZgGJMgPREy37gvE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750429609; c=relaxed/simple;
-	bh=+pWQPw+Ca2mJz3X31Q1pGdLyshBfBAfKJlr9EFmlMsk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=uENAsiovztx/izpAaJyLZI7JaH2G/CLIoJyiVALE5oxjXmDvhjIxkSOxSVd4Z4itIytrlEgrpMPsYXfAYxAtCTiAInvsXkmh07no2AK2Lj4zAp1EfknkIc+63bfs+xen/2j3hkk8cNO2BoQTBY0FfYxEPDzpEg/4BldhPFpbYRs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=RucEdvV2; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1750430748; c=relaxed/simple;
+	bh=KM+faQe66poOoKhy4vqdIItp4UFmjlUVugv4gcwOTbM=;
+	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
+	 Subject:Content-Type; b=mrU6yHsTo3A2wowu6Y3zsORnZWIQLEfjDXA3Rw225BMtUWIRk17TCPD3m43banrsICCGVKBgqrHP4lZj7el8u3mvNx3HPZse1KU4rTFoJ0EcbocgpiJz65MKM4HO+J/1Zob8seCR3ziXe30jkXEvyvPiwB2uQiC1N1xMDa4hhy0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=BjJ7RGrE; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=nd1u1str; arc=none smtp.client-ip=202.12.124.148
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="RucEdvV2"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55K7H9dZ009657;
-	Fri, 20 Jun 2025 14:26:20 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	tXkJ67cMbeMVJ9YZw29ONigI2pwCgXoma9QCqa3pX88=; b=RucEdvV2mPKLvwI5
-	T6F7UEO3Tui9rGeReMnhUQq29KoXO/B/CYurSOFM0aaRmYzHTtsVBaf7uxgg70XI
-	q1ZcCrG2Oky/TU46flij+fW9QPKUCMe1c7LS8QxMtC3hFIFTQeQ5/tHVBmnk8k2r
-	uh47MfhZE6cIdpyl5rso7iOUi0METaeQYPMyqqZ7nPQaB9IowQEmpTGX0DeZP+70
-	vgmR/JZhPUKAao1bcCB5T3KU14AI8OZYN8FGE+OVTcMRYRJB5PD0xi07/0Yj+x/R
-	B7wCS8I5sAwmxZeJ15uSjm9+XBpTaMjUollDjpd6+u223GOZM1BNNwRXyllEh0xP
-	3dn02Q==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47d340155f-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 20 Jun 2025 14:26:20 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 55KEQJbN023197
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 20 Jun 2025 14:26:19 GMT
-Received: from [10.216.13.27] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 20 Jun
- 2025 07:26:13 -0700
-Message-ID: <9c846734-9267-442d-bba0-578d993650c1@quicinc.com>
-Date: Fri, 20 Jun 2025 19:55:58 +0530
+	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="BjJ7RGrE";
+	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="nd1u1str"
+Received: from phl-compute-05.internal (phl-compute-05.phl.internal [10.202.2.45])
+	by mailfout.stl.internal (Postfix) with ESMTP id 93861114022D;
+	Fri, 20 Jun 2025 10:45:45 -0400 (EDT)
+Received: from phl-imap-02 ([10.202.2.81])
+  by phl-compute-05.internal (MEProxy); Fri, 20 Jun 2025 10:45:45 -0400
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
+	:cc:content-transfer-encoding:content-type:content-type:date
+	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to; s=fm1; t=1750430745;
+	 x=1750517145; bh=W+jO+12kpWz9YoaOeriqxBhzNpXk/foSVJANLYzthxg=; b=
+	BjJ7RGrEM6Qydz4rEDZXWHfXa6Dwuj/5gRfOI8/T85sFB0ArYmRHbJumSg28eQea
+	xk4Q3SpJiP+9TJdPKSAqDmZL1xuTTVtR+Q1J50z3tAkRwxHHdG4Ba0KDJJqXCnsy
+	QBGJFiHK4jFPrHOY5qu1SXUfv8B1gOBXXcmRhIJc6XlO5sgt8PIzeIQUAnre/WQm
+	7sTr6dy7v6BOBY7sgZjm9dx2aqstfMYJpi5Ui9jWdzQdYzKPVY8J+WQe6mqDq40Q
+	IvlbkQArcKEpO35+t/XLt+VdU4S9Su1VbcfD/v/Wipf6jimXV0/NZMpQXLwqUUeT
+	FgXiFPtsi2fjdoa/TAmD3A==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
+	messagingengine.com; h=cc:cc:content-transfer-encoding
+	:content-type:content-type:date:date:feedback-id:feedback-id
+	:from:from:in-reply-to:in-reply-to:message-id:mime-version
+	:references:reply-to:subject:subject:to:to:x-me-proxy
+	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1750430745; x=
+	1750517145; bh=W+jO+12kpWz9YoaOeriqxBhzNpXk/foSVJANLYzthxg=; b=n
+	d1u1strG74xFvfC8PAQjeMAXE0CTAwtg1ywokUhfYTnXUK/Pbo45M92FxE5ZD8G1
+	QCb4QIDz8b88V4xs61t6w7NwLI7rF4TqnRo1rYVpg//yXmHInKncQFKefvjVtwRr
+	T674uhXap5Q1/XWZyP3hNiRNKgCj0QKPMmx+zXXkv/JZTgOpBCiwj0BXMd0KDU/V
+	Cbu7lQA71zJwCWR8uAA/5qYGO0QVlhO8PirRmaq931jQ5vDvoBvqbaHUxd7v7mgS
+	IxWHvCWSE96bHhTV+ivUFylICIHqhiUfIE4hpn3ZtNYAv7GGNOnFPM7uxpVu662r
+	rX0mUoCw0//h3OQH/dftw==
+X-ME-Sender: <xms:GHRVaPQynn1jfNjOQFY2l9KwaPihpCHTPC2yC1qjYwfz0L9gl3eiIg>
+    <xme:GHRVaAwGCXdKJ8NAm3elAfxti9sA8FIlAoxKbhN3rGBBOujvdMeTarIuJNzqV0G-3
+    fFVHbq2Q2c8iXxmK3s>
+X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeeffedrtddvgdekieekucetufdoteggodetrfdotf
+    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceurghi
+    lhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurh
+    epofggfffhvfevkfgjfhfutgfgsehtjeertdertddtnecuhfhrohhmpedftehrnhguuceu
+    vghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrthhtvghrnh
+    ephfdthfdvtdefhedukeetgefggffhjeeggeetfefggfevudegudevledvkefhvdeinecu
+    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprghrnhguse
+    grrhhnuggsrdguvgdpnhgspghrtghpthhtohepuddupdhmohguvgepshhmthhpohhuthdp
+    rhgtphhtthhopehjrghmvghsrdgsohhtthhomhhlvgihsehhrghnshgvnhhprghrthhnvg
+    hrshhhihhprdgtohhmpdhrtghpthhtoheprghrnhgusehkvghrnhgvlhdrohhrghdprhgt
+    phhtthhopehgrhdqqhhlohhgihgtqdhsthhorhgrghgvqdhuphhsthhrvggrmhesmhgrrh
+    hvvghllhdrtghomhdprhgtphhtthhopehnjhgrvhgrlhhisehmrghrvhgvlhhlrdgtohhm
+    pdhrtghpthhtohepqhhuthhrrghnsehmrghrvhgvlhhlrdgtohhmpdhrtghpthhtoheprg
+    hlohhkrdgrrdhtihifrghrihesohhrrggtlhgvrdgtohhmpdhrtghpthhtohephhhimhgr
+    nhhshhhurdhmrgguhhgrnhhisehorhgrtghlvgdrtghomhdprhgtphhtthhopehmrghrth
+    hinhdrphgvthgvrhhsvghnsehorhgrtghlvgdrtghomhdprhgtphhtthhopehlihhnuhig
+    sehtrhgvsghlihhgrdhorhhg
+X-ME-Proxy: <xmx:GHRVaE2ztrykHrO845LnrB_kDRGu6HjcakoEtt1-R9V3YZYPuMq5EQ>
+    <xmx:GHRVaPDxwNS0TkWgpyiTKxSUkAOOrD-IR_MNrQJebNFgdGbps-5WHA>
+    <xmx:GHRVaIhnCFW_qJeI92B2GHGaspvRQKCWyCa_tRHKe118wdbOJOPBzQ>
+    <xmx:GHRVaDrh3qO-mfN_YKd77mhOxmkzfcNoa7PVflcDWcvf9UJQw7Dg9A>
+    <xmx:GXRVaDacloe4o-74nInrPcOlIDTw9uVnb4kWautxLfNDXk2axhPuPw-e>
+Feedback-ID: i56a14606:Fastmail
+Received: by mailuser.phl.internal (Postfix, from userid 501)
+	id B1FE8700064; Fri, 20 Jun 2025 10:45:44 -0400 (EDT)
+X-Mailer: MessagingEngine.com Webmail Interface
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V6 10/10] scsi: ufs: qcom : Refactor phy_power_on/off
- calls
-To: Aishwarya <aishwarya.tcv@arm.com>
-CC: <James.Bottomley@HansenPartnership.com>, <andersson@kernel.org>,
-        <bvanassche@acm.org>, <dmitry.baryshkov@oss.qualcomm.com>,
-        <kishon@kernel.org>, <konrad.dybcio@oss.qualcomm.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-phy@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
-        <manivannan.sadhasivam@linaro.org>, <martin.petersen@oracle.com>,
-        <neil.armstrong@linaro.org>, <quic_cang@quicinc.com>,
-        <quic_rdwivedi@quicinc.com>, <vkoul@kernel.org>
-References: <20250526153821.7918-11-quic_nitirawa@quicinc.com>
- <20250619135302.9192-1-aishwarya.tcv@arm.com>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <20250619135302.9192-1-aishwarya.tcv@arm.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-ORIG-GUID: ZHYQYXUdS1hDqa-RbOPXtdnN-IZwsXyx
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIwMDEwMyBTYWx0ZWRfX7wUCeFZ/MuQ2
- uVV2KVg+Gmu+Zg2yHEdVhWakIyNIdlOIQnsYwcHdtymxTLgmlDNwzImLMcJS/3oym6Qu93oGmJn
- 3u0Nx/1fyU6dqbp1koyKdP+2cx7wTBB0/rIOUIcHJGJb8VK//7avb92NMoXG4ekQf0FsoWd0jiX
- PHAi+2McHCwUh1wgoMQn6lkhe2nr6MMM+n/bjSnm4sHRaAcg28u3/obBfJ1F+8v51RMUfKTSIlk
- IDUdGS1dINPxwaymt2TtK1RVK3xNiogFL7LybBl1GeLv773CzxrrqePOOe8OTmjdSjKDBeg/jA7
- uwhnKPO8USsvAbgxyYPfejU/Tj30X+hCOcAMgJp56Ewmarj/mWN8LYMND/yyA9dAEYEQCIxTwuU
- hicCo8bppRDyepwSZdOlzFaymUwnYZHFsJrRiSp8Nv2rMYIOrqVjaJv7InulMhRbT+D++sLi
-X-Authority-Analysis: v=2.4 cv=JLE7s9Kb c=1 sm=1 tr=0 ts=68556f8c cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=VwQbUJbxAAAA:8
- a=ydUYT1VdIsrJ1VNw940A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: ZHYQYXUdS1hDqa-RbOPXtdnN-IZwsXyx
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-06-20_05,2025-06-20_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 mlxlogscore=999 adultscore=0 mlxscore=0 lowpriorityscore=0
- malwarescore=0 impostorscore=0 suspectscore=0 bulkscore=0 priorityscore=1501
- spamscore=0 phishscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2506200103
+X-ThreadId: Tfde9bdcd63e30167
+Date: Fri, 20 Jun 2025 16:45:24 +0200
+From: "Arnd Bergmann" <arnd@arndb.de>
+To: "ALOK TIWARI" <alok.a.tiwari@oracle.com>,
+ "Arnd Bergmann" <arnd@kernel.org>, "Nilesh Javali" <njavali@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com,
+ "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: "Quinn Tran" <qutran@marvell.com>,
+ "Himanshu Madhani" <himanshu.madhani@oracle.com>, linux <linux@treblig.org>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Message-Id: <44f9b2b8-fa62-483a-a821-f2a18d5832c9@app.fastmail.com>
+In-Reply-To: <9f1486ff-2351-4002-8ee6-e2cfad354251@oracle.com>
+References: <20250620113919.3974443-1-arnd@kernel.org>
+ <9f1486ff-2351-4002-8ee6-e2cfad354251@oracle.com>
+Subject: Re: [PATCH] scsi: qla2xxx: avoid stack frame size warning in qla_dfs
+Content-Type: text/plain
+Content-Transfer-Encoding: 7bit
 
-On 6/19/2025 7:23 PM, Aishwarya wrote:
-> Hi Nitin,
-> 
-> When booting the kernel from next-20250619 on Arm64 Qualcomm boards
-> (RB5 and DB845C), we observe that the baseline bootr test fails due to
-> dmesg.emerg errors in our CI environment.
-> 
-> A full git bisect (log included below) points to this patch as the
-> culprit. The issue was introduced sometime from tag next-20250616 in
-> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git.
+On Fri, Jun 20, 2025, at 15:34, ALOK TIWARI wrote:
+> On 6/20/2025 5:09 PM, Arnd Bergmann wrote:
+>
+> remove extra " " after pd
 
+Done
 
-Hi Aishwarya,
+>> +		    "Failed to allocate port database structure.\n");
+>> +		goto done_free_sp;
+>
+> -> goto done
+> as pd is NULL it wont called dma_pool_free at all.
+> dma_pool_free, trying to free a pd (NULL) confusing.
 
-I tested booting the QRB5165 using the qrb5165-rb5.dtb with the latest 
-upstream tip multiple times, and each time it successfully booted to the 
-shell without any issues.
+Done
 
-Are you encountering a boot failure, or is there a specific test case 
-you're running that triggers the problem? If so, could you please share 
-the dmesg log to help check further.
+>> +	memset(&mc, 0, sizeof(mc));
+>> +	mc.mb[0] = MBC_GET_PORT_DATABASE;
+>> +	mc.mb[1] = loop_id;
+>> +	mc.mb[2] = MSW(pd_dma);
+>> +	mc.mb[3] = LSW(pd_dma);
+>> +	mc.mb[6] = MSW(MSD(pd_dma));
+>> +	mc.mb[7] = LSW(MSD(pd_dma));
+>> +	mc.mb[9] = vha->vp_idx;
+>> +	mc.mb[10] = 0;
+>
+> seems Redundant, as already called memset ?
 
-Thanks,
-Nitin
+Done reluctantly: I see the driver is a bit inconsistent here,
+with some functions skipping the memset() and initializing all
+array entries, some functions do both, and rely on the memset
+but skip the individual fields.
 
-> 
-> This issue is not present in v6.16-rc2
-> 
-> Here’s a sample of the failure observed on the RB5 board:
-> lert :   ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
-> kern  :alert :   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
-> kern  :alert :   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
-> kern  :alert : user pgtable: 4k pages, 48-bit VAs, pgdp=0000000102c4c000
-> kern  :alert : [0000000000000000] pgd=0000000000000000
-> kern  :emerg : Internal error: Oops: 0000000096000004 [#1]  SMP
-> kern  :emerg : Code: a90157f3 aa0003f3 f90013f6 f9405c15 (f94002b6)
-> <8>[   30.933289] <LAVA_SIGNAL_TESTCASE TEST_CASE_ID=emerg RESULT=fail UNITS=lines MEASUREMENT=2>
-> + <8>[   30.943798] <LAVA_SIGNAL_ENDRUN 0_dmesg 1000325_2.4.4.1>
-> set +x
-> 
-> Git bisection log:
-> git bisect start
-> # status: waiting for both good and bad commits
-> # good: [9afe652958c3ee88f24df1e4a97f298afce89407] Merge tag 'x86_urgent_for_6.16-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
-> git bisect good 9afe652958c3ee88f24df1e4a97f298afce89407
-> # status: waiting for bad commit, 1 good commit known
-> # bad: [4325743c7e209ae7845293679a4de94b969f2bef] Add linux-next specific files for 20250617
-> git bisect bad 4325743c7e209ae7845293679a4de94b969f2bef
-> # good: [436c8cbbcb18deb96100cd9f33f1efedddc31d9c] Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git
-> git bisect good 436c8cbbcb18deb96100cd9f33f1efedddc31d9c
-> # good: [183d224083773ca4a84a458fb608efecff19e19e] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/regmap.git
-> git bisect good 183d224083773ca4a84a458fb608efecff19e19e
-> # good: [1347ff0c0e510f1a6adb78259a2a0ddfac41d258] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/wq.git
-> git bisect good 1347ff0c0e510f1a6adb78259a2a0ddfac41d258
-> # bad: [b09bd04eabb1994257f4c11d0ed25ff03517d3ec] Merge branch 'gpio/for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/brgl/linux.git
-> git bisect bad b09bd04eabb1994257f4c11d0ed25ff03517d3ec
-> # good: [70bc9e18653c20fbcb47184d9498ad7bd7b7d6be] Merge branch 'togreg' of git://git.kernel.org/pub/scm/linux/kernel/git/jic23/iio.git
-> git bisect good 70bc9e18653c20fbcb47184d9498ad7bd7b7d6be
-> # bad: [3a847fb85c9d47e61ad5d9d54b762a3e99a08084] Merge branch 'next' of git://git.kernel.org/pub/scm/linux/kernel/git/phy/linux-phy.git
-> git bisect bad 3a847fb85c9d47e61ad5d9d54b762a3e99a08084
-> # skip: [50355ac70d4f104e2f82bfbd0658c129027ebb37] dt-bindings: phy: Convert marvell,comphy-cp110 to DT schema
-> git bisect skip 50355ac70d4f104e2f82bfbd0658c129027ebb37
-> # good: [acc6b0d73d902d3296d8c77878a9b508c2c6a5bf] phy: qcom-qmp-ufs: Rename qmp_ufs_power_off
-> git bisect good acc6b0d73d902d3296d8c77878a9b508c2c6a5bf
-> # bad: [35b629b28afd72a14ed573f1b180dc4ab1bf7e19] dt-bindings: phy: Convert ti,dm816x-usb-phy to DT schema
-> git bisect bad 35b629b28afd72a14ed573f1b180dc4ab1bf7e19
-> # bad: [66acaf8f6b0bcc273f8356b2a77baa90b177014c] dt-bindings: phy: Convert img,pistachio-usb-phy to DT schema
-> git bisect bad 66acaf8f6b0bcc273f8356b2a77baa90b177014c
-> # bad: [f151f3a6ebe184b5f8c9abe58fe2d63f9950139b] dt-bindings: phy: Convert brcm,ns2-drd-phy to DT schema
-> git bisect bad f151f3a6ebe184b5f8c9abe58fe2d63f9950139b
-> # bad: [77d2fa54a94574f767d5fb296b6b8e011eba0c8e] scsi: ufs: qcom : Refactor phy_power_on/off calls
-> git bisect bad 77d2fa54a94574f767d5fb296b6b8e011eba0c8e
-> # good: [7f600f0e193a6638135026c3718ac296ed3f5044] phy: qcom-qmp-ufs: Remove qmp_ufs_exit() and Inline qmp_ufs_com_exit()
-> git bisect good 7f600f0e193a6638135026c3718ac296ed3f5044
-> # good: [a079b2d715340482e425ff136b55810ab8279800] phy: qcom-qmp-ufs: refactor qmp_ufs_power_off
-> git bisect good a079b2d715340482e425ff136b55810ab8279800
-> # first bad commit: [77d2fa54a94574f767d5fb296b6b8e011eba0c8e] scsi: ufs: qcom : Refactor phy_power_on/off calls
-> 
-> Thanks,
-> Aishwarya
+The compiler should be smart enough produce the same result
+in any of those combinations at least for small structures,
+so to me this is mostly about documenting what fields are
+actually being accessed by the firmware later.
 
+     Arnd
