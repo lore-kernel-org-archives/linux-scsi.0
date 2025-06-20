@@ -1,357 +1,135 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CAE6621C18E;
-	Fri, 20 Jun 2025 13:35:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750426502; cv=fail; b=jxI9K1sFWhv3NjMWmOVcUTbMqWz0ooGn22fB5p69TcQa5+F2byKfKqjoOxAP7UT7NQJ408s7ObFOPot94TDerp58NjSD+9odlArQzrin1JXgJC9kxCGKbMhmSt0qFlpuJo31sYhzuUbCY+CWDF/KOJzWQt7uSYA0wotvwnRvWg4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750426502; c=relaxed/simple;
-	bh=jSjp+rNUN8kbyxSobmfsub9u1M8ffNCkqCJ0uHeuB+U=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=L8flgCl5+p8kM70j13vtlddsZ2RlLOPw2pwrEuWRHhzD25hQIupN2SPcFJl/63sTUA7pd4mqvHXptGaTHV+gObJ/5BNeK5bvChsQPfgad/t/ir6PNupFwm5j1EacPf1oKC/7LgK8W5uwbxo51P9OIN4+g+G+qspIqn7qDvRlVjQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=TqrWBzh8; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=aOJhGgpL; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62C028C876;
+	Fri, 20 Jun 2025 13:47:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1750427224; cv=none; b=F/8PMaP9W19G7KTNcQwkdYaopw9iYJrduqLUXlBAmAqCeUZTuOOgSHQibV+BBCavYkDaVOrNn061lxI2eCM1//Hux6McNzfdPC2IYhYnblYCl1pv32lOVobA4NDQPA9sCLvRFf9V9zdJy5m8zRIPqM1O9hYf/r2Q2vnlqYAU/nI=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1750427224; c=relaxed/simple;
+	bh=hANIJ6jTgXhF97uaxMSpWN9neQjAhCls7FSZgFkQJHw=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=cHq7aLZGgoyxgGgBPB0z/aMrQ5O7/c+rPn+fifAGnMxcvfycLPwmN8p4LeSJfTfIreSoCbDS71jAvw+RsVrMCvvq1GSrxG0TTr3sra0o3uW+bMEi5uAnBzVGBqk1Q5lta+X947KJMJpSTMA/hAKLN8lJiOCueS9qxl2VEjStgbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=gFH9IhH8; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="TqrWBzh8";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="aOJhGgpL"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55KDWBVl031696;
-	Fri, 20 Jun 2025 13:34:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=WoPIpYx49kIR9VF/rfP171nQJ38BiTnZkV1W2C1HQt4=; b=
-	TqrWBzh8BUnQFE1UmHwGHU3AM+6mMRUay4BdtLK1HbGu2FxzW4jU3Xk4wpW2nXrp
-	gt0xj/dGJO/2BSeNGBd21qGDlhiNq7nH8LkryFzd4+tIxkGZxBxH5TBXCtAoOJlG
-	YOevl6IJA9SxfveoCKOhA5kJy0BCOG4WhKC4m35ydX7D7r/cdJB5ho1psm+bnt1p
-	IwGyw7B7CL1Mg4JZ9WW4crPlhn6UoVFZ1k1cWmT2SLqK9ghkkqkyYRKFx3a4wGLX
-	zWc2/bH2YfBdccg/CFYrH7X9RlbgNCqc6Eu+Dxs72hb/VxQGRlgUIs72wut21xGv
-	I9m12KVo0qPyr5Zz9VnkTA==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 47b23xy6xg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 20 Jun 2025 13:34:52 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 55KCmKq1021557;
-	Fri, 20 Jun 2025 13:34:51 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12on2056.outbound.protection.outlook.com [40.107.243.56])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 478yhcpk3v-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 20 Jun 2025 13:34:51 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xBxhLlgYQM7M93/CCOq9946P1N8ecll23kGIruEp3A4tqfoH9bWErnC5EJFx/g8ll49qWMlTuT/SBBPQiL2S3B6o1Zs/U992ln7mBSiErYL+1BxT+RWG8WSBBTbhYvuRtZ4oHvsRPl6mNVFv7OXYxqDiVMUJMu0XMmKd56ODMGNYjXkfpk2/8z+IEL/DEB8J0mIb28THZb8NM7IgWmBEnK8AZN5UvZSOkDJ5//LRCotBGjy98Oa/tSLQUFbGDP/MrXqbGwF8MpBV+7G28GgtpfwLGWoLG53kqE/qK1ajv3rrmvStZNwMCJJjEvb7EQe2882MZd4CAFo3FGO2y4VMcw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=WoPIpYx49kIR9VF/rfP171nQJ38BiTnZkV1W2C1HQt4=;
- b=oNAMskOigfSfvB5R1fdsPsWEL0vebZQ+OfSzwDP1V0Rl2djNFPzCZ9L1abDPQVXrXS0xFtnkoTKInYHhIAlTtJcukW7LpXraAd64lToIyMbq7udZCSxIoKTPSKyeXgc+3p8lCPKiBwkShKYaKyTQzseBVWAHaAM7fVhKPDw4+4/N4lWyOBdx+SCDa0Bh+8YWw+1Bn7zC7I47+2F4BxU0kcYzRtWVVKnWUH487nWlyqAhsFYBeICPvzAKZUpZlXxjtNCWaUuAu77HbGA1ocxCT8HtqSeWxdfmdHbNuCQMPDvGJmlnt97TL+2Ovk0A5QZhDSGv8e6ysr9EglAAh2FZGg==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=WoPIpYx49kIR9VF/rfP171nQJ38BiTnZkV1W2C1HQt4=;
- b=aOJhGgpLe+RigDz1UA++5njDo7e97wL+Bp9WvoO/yClLYac3/hD5yTlmC0OxByM0/o9rxPhOOXQHwuEfsY1XLS1FZ+PPgSK2gzUakjI64NrCEV69GOL6lf2SC2aE63nxTq0TXxUNStxD9zMCicQy4U9DRmTdH97a8LYyR6LoSWY=
-Received: from DS7PR10MB5328.namprd10.prod.outlook.com (2603:10b6:5:3a6::12)
- by BN0PR10MB4950.namprd10.prod.outlook.com (2603:10b6:408:12a::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8857.25; Fri, 20 Jun
- 2025 13:34:49 +0000
-Received: from DS7PR10MB5328.namprd10.prod.outlook.com
- ([fe80::ea13:c6c1:9956:b29c]) by DS7PR10MB5328.namprd10.prod.outlook.com
- ([fe80::ea13:c6c1:9956:b29c%5]) with mapi id 15.20.8857.021; Fri, 20 Jun 2025
- 13:34:49 +0000
-Message-ID: <9f1486ff-2351-4002-8ee6-e2cfad354251@oracle.com>
-Date: Fri, 20 Jun 2025 19:04:41 +0530
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: qla2xxx: avoid stack frame size warning in qla_dfs
-To: Arnd Bergmann <arnd@kernel.org>, Nilesh Javali <njavali@marvell.com>,
-        GR-QLogic-Storage-Upstream@marvell.com,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Arnd Bergmann <arnd@arndb.de>, Quinn Tran <qutran@marvell.com>,
-        Himanshu Madhani <himanshu.madhani@oracle.com>,
-        "Dr. David Alan Gilbert" <linux@treblig.org>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250620113919.3974443-1-arnd@kernel.org>
-Content-Language: en-US
-From: ALOK TIWARI <alok.a.tiwari@oracle.com>
-In-Reply-To: <20250620113919.3974443-1-arnd@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: SI1PR02CA0059.apcprd02.prod.outlook.com
- (2603:1096:4:1f5::19) To DS7PR10MB5328.namprd10.prod.outlook.com
- (2603:10b6:5:3a6::12)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="gFH9IhH8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1750427220;
+	bh=hANIJ6jTgXhF97uaxMSpWN9neQjAhCls7FSZgFkQJHw=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=gFH9IhH8PJnh5rcSHw0LmHRIdIURbJW5ID8+l+ngBhe/DuVCki+wO14nX773HaT81
+	 zaGdwHUqMciQgAb3josdXAkXP/Bl3E6Xv8fWeuFA5Cl1WwkS/QVzxPPRmOxD+FvnSg
+	 0CNz11coCDm4eDOlaMoH4S1TSgA7GRfP+vZTlZjU=
+Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 3FDCE1C03CC;
+	Fri, 20 Jun 2025 09:47:00 -0400 (EDT)
+Message-ID: <8b2ba4f9bf668716c583d8f5cc10e7f3bd7bd3a8.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.16-rc2
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Fri, 20 Jun 2025 09:46:59 -0400
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: DS7PR10MB5328:EE_|BN0PR10MB4950:EE_
-X-MS-Office365-Filtering-Correlation-Id: 70b774ab-d965-4377-34e1-08ddafff3a53
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?anpjWDA4eGRDOTBwWnJGMTAzOTgwcldta05zWkg4cGVCZXhuaE1LUitxUnVP?=
- =?utf-8?B?QWVyS1dwNEswSWhTSWw0QmtKYzRCWGNGSkFxUFd6RGpJRFE2UEQ3clhWa2Jk?=
- =?utf-8?B?a0ZLYzV3eXUxaEExRStRbWtvaFExSXRGSzViUlk4dnZEazdUdjlrUEozNzZw?=
- =?utf-8?B?S0x0UXp5UXZkVTdkT1IyNmJZZ2hydzdGNGVGUXluV3dOV0dPNWwzZ0s4eXYz?=
- =?utf-8?B?dG9pWmtGWGtuOVh6TUtlRWlZdVZEejFrU1ZaYXdaa2dSU3BhVXVKNnVzUEkx?=
- =?utf-8?B?dThEcGlsNFJraWRtWmpib0VTWXpSS1VibkRUeXEreGNtY2czaCtscnUwM1c0?=
- =?utf-8?B?b1VCdFc0OU1HaVlmVzdmTjJvMTFjNjVNcDVDQTkrelhXR1cwTFE2WjNKaDlZ?=
- =?utf-8?B?VnhxSlR3S1pyM0dYVGVvNER5MkMvNFowUkxILy9BUGRMOXJ0V1Q5K3k4MUZH?=
- =?utf-8?B?ZWZheWU2dDl3RWNxMURQdWpzdFJmUXlpVERaSVVXVTFRWkwyRjc3UldJelB4?=
- =?utf-8?B?dXdDeXZnU2V4Qis2Yy92bllWV3hCbktQVmhBZmFqY2JBdUE2YVNSV09VdXRE?=
- =?utf-8?B?Nm40K0FQSlZUUGZma0N2MUhYakdlald0RWhwY3lnZGFFWENmRnRDUVJjUFZl?=
- =?utf-8?B?NFNiL2g0Ymp3c3N0Rjl3L0ZNeEVsQitsejNEV1BqV1JNc29tVEVIRWJCTkhv?=
- =?utf-8?B?V0RuL0Z2RTlteFBPOURqbkVFM21TREtnTkVrS0Y0V0ppS2Fieit4Q3NyOURW?=
- =?utf-8?B?ZHpQRVAyNkxFWFNaamk0VmdBdVBWYzlwSWIxNDg0UzlmT1BmendtMWYwcWRY?=
- =?utf-8?B?azhPTHhRZ2FqQVA5WkFvTTRpZ0ZURXBqM2JUSjRGdXV1N1BrdzlaZVZ2amZQ?=
- =?utf-8?B?Y2wwdmRwS1F3Z2F6eHVwRGhLR3VWS1BITEg1UWQrbUxkT20yVDlBdnJMTmNt?=
- =?utf-8?B?VnBjT2VjL2NiTytDWXM0ZG0rcGJtRlpWZmIyU1QvNmtaLzRNeGpPVVJsS2ll?=
- =?utf-8?B?M1YvaDZyOWw0STVqdlRORXFMNTJDRUlDSVA1MzVCSzZ2cFcwU0Y4dHVVdGs3?=
- =?utf-8?B?WHE0YlBPWFJUamkzam13UG11QytEZkIxUlloT3JnYmdieGJZQ0thRWloem9C?=
- =?utf-8?B?dzZmRzFSa2N5dE9UOWZtSDQ2dVZFM1JyNmFZbWpBcVVoM296TER2T0M4SXV4?=
- =?utf-8?B?cm9UZ2UySFIvOUVEOVNCQzA3V2VNN2d1cFAyWlZ1VE9obkxtSDYrUldURWhY?=
- =?utf-8?B?MlpVNUNqaWsrcnhmV1hpTFBWYlYyMmNMa1NFK081Tmdpa1luZmN4Q09KTkpo?=
- =?utf-8?B?K09FN1FWWEppRExzaFZ2cDJmcmxOL21vaS9WdFdpeklpb3RFbHVOblU4OVA2?=
- =?utf-8?B?eDVnSG5pdnVtMHY1eWJSTlV6RnB6SHlXT3J1VEZHZVZ1eHAzQ2JZZzJlZFlC?=
- =?utf-8?B?TTJQcGQ5QThTOEVRR2ljYXhuTzljM2dPNWlhRW8wamxGL0lkczhXS0M0dlo3?=
- =?utf-8?B?eDNuRW9NWEgwdnR0YWtWZDRCRmVCUGJIM3BCbEdwR3laTzFIQ281M216dUVC?=
- =?utf-8?B?VzFkRldTamdNVnZxLzNQMStkbjgrQzlOUWhaMFpDYVkydVZhNWNCdHZtL29k?=
- =?utf-8?B?UnE4Yzdab25nUEd0bDVja3JnMGRFQkVFajZza0FUczZrOVJWVmIySjcweENi?=
- =?utf-8?B?cGtNSDBqNzFSVzJhWTl4NGh4VXdQTVdCZmY1aEkvU0RuWnFoSDlMT24vME1a?=
- =?utf-8?B?bjVmcklHRFVTeXk5SENkMG5oRmdZakpoZXM5cDN6dXk2aXU4bmR3eVI0RG9J?=
- =?utf-8?B?MitMcCsrcndDN0VZRk9KZlZELzJCTHcyMFlsMEo2eEhSSlFUc0dQMGlkb0xX?=
- =?utf-8?B?NkQ2WnYrbXJJdWZpdkt1TE50WXg0MTU3TmFEYU1HdjJjOXNLTlVtenZZU09T?=
- =?utf-8?Q?+R1umpKXCUw=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:DS7PR10MB5328.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?d3BjWDhMUWNZaHdxTFR6K3JyVUE5djk1dUsvNk9yNUZ3Tk5FNjJpK2NaNFpL?=
- =?utf-8?B?Z05NU0tHWk1rZHhOZnlmWG1wdFlkeTR4UDdFMTFDMUQrMHhNM1hlRkVHanp0?=
- =?utf-8?B?bDl4T3pXakZEU3hRTkFvYmNxRG93WnZpYTgwQ0RqZTFSL09janFQWklKNzZY?=
- =?utf-8?B?RGY3STJQL2o3WUlBTTV1YXh4K2tZbWVQQzFXS1VCMk02Z1NrZVBhK1hBWkF4?=
- =?utf-8?B?aW5ieDNWcFc3UnpzVGxZcE5ac2pUT1lXTWJRM203SWcyek5aVXNFUm1TZVZI?=
- =?utf-8?B?M3Y2Z1cxZ3pJMTNwU005ZFI2SStlOExJZWplMWhRUEF5b2lCck5HYzMybE5M?=
- =?utf-8?B?N0VMUkRpcmYyeDIrbHZyRDdKbisxekhRSmEyWXJPbWo5S2YwVFdSODhvY0VG?=
- =?utf-8?B?NHhXZ2NuM3hidTNkQ0p5TkNKaVl1UlFiNWtTY0tEYW9lYVFzU2UwRXRkbUo3?=
- =?utf-8?B?aUxXVHRJUE55WUo0V3BYZy9qMk9nMDJGUC9Rbi9KU3d0d0pjcnlBYnBZbEs2?=
- =?utf-8?B?QmZFam5ET0VoeFloKy8vVzRtSGpLZUdLajVjem5PNWE3NXkvd3lmNU5kTTRz?=
- =?utf-8?B?aE5YQkZmSWdVU2J3ODNkNGdSSnNsbzNaK2hITERFaEdSYWowb3ZsYjcxMUlL?=
- =?utf-8?B?UHMzQ1ozeVBLSnNDT1hkWGQvZjViaS9hYmcyV3U3QUhMeExnZy9SOHFiTGMz?=
- =?utf-8?B?b2dsMkNxdUkrZEZBTmNtL0FXMnVRcGcybnMwanRMdFB4RnFJUHpCNWVWMWNL?=
- =?utf-8?B?NzlmVVQ3MmQzWDAza3JsQmowOGUzNmdmZHVPOEJDVi9HaWVQNXowNEtOU1B3?=
- =?utf-8?B?N0hZdDBEV2l0R0pTN29GMnJmSHQzSElMVS9Mbis3SGJqRFpGNVhzWS9WSVBo?=
- =?utf-8?B?L1lBV2FEblhVcmFpTCtodkxjMXRQTWk3Yyt5TWUrbmwzdUx0T2UwVy94a2tR?=
- =?utf-8?B?YWlrcmFNQzB1NU9hRGFHYVppSWVHN0FsZWdVVUVZVG5zVzRhQU43bEpLRDcw?=
- =?utf-8?B?SDJGNWg3dndxREZEVzk3am1GOWJoRFVaRldHQmlvT0JVRUFKcFZScWVET040?=
- =?utf-8?B?ZjlsSGFWMklJVmd0WUdUM25veXFpUFhOLzZHaEl0VHh6RmtoOTdDdWRWVzR0?=
- =?utf-8?B?MHJYUEhJRmlweFh1NWRlMjJ5Y25FZk5tOTVDM1BGTTJ1WVJvWVpOOHQrUEJE?=
- =?utf-8?B?U3NVbUF3VzRQZXNCM0lRcFBDbGhFd2JJZlFadmpCWWpQR211SW1ld1NRTGx3?=
- =?utf-8?B?emwwTGd0QmpwT0tLUzR1V3QxVHhHS2YwRmk2VHNuKzUrRERHNThqOHQweXN3?=
- =?utf-8?B?U1NxcS9zVlVXR3pYaEQyN01HL2crM3V4OGE1SWlxaSs4b3hxeE9rTUFzbVVu?=
- =?utf-8?B?b243aEl5UFlVb0VPUGt0Z1F5NW4xWlltWGJ1WlF4KzRJNHk5SS9oWW55TXlS?=
- =?utf-8?B?T2FBMHRGK2V2OVpPUVBlTXpJV1ZWM25pU3Q0cEMzazYxeW1YOUpRZHBUWFd4?=
- =?utf-8?B?ejJlcnhyN2lONGFHK3ltTkkvSWZZT1h5cVRNRDFVNmM4YVVXc01TV3IzZ3pL?=
- =?utf-8?B?OVFDSGhqZFVZUnlkb0JaeVdzUEFiTmJMSlVlc3VHbGFJbFIxOTJiMlNpUWw5?=
- =?utf-8?B?a05BUUVxUysxbmZ6cXJ3OHA0L2hrbnpISDJtYUVCUlh6TzVqemNqNnZVWnVL?=
- =?utf-8?B?SG45N2NINGduQzh3WWFIY0VyN05BS08xdWlSNXdSanRLbnFrRW1HZ0IrdVE5?=
- =?utf-8?B?QW5lOXBUdDZNQWliSU5kOXBDVVgyTnhXYjE4aHF2T3U0c3VZOVk1a0RDZlNM?=
- =?utf-8?B?S2kwRDBWcS83ZXgxNXdjZkkxUFRWZmJEZEhuMFBhVklLTTRpbFBIL0FtUjhx?=
- =?utf-8?B?K2YyTDVMaXVUcVN1YUFZWlB2Q3dOanhodm51RDlvTnJaUFpzbFBvend1YWtK?=
- =?utf-8?B?TWdQNXVQcUdkRnBZVmJuSThYTEJDdno5VjdTTWk0cmNjMlZpemthMlIxc1Np?=
- =?utf-8?B?M3cwWlQrUjk3UHhhd1g5LzEvNlJuNHNLOEhqVXZhbWVRVmpKcTM3LzBTVzFi?=
- =?utf-8?B?UFY4bEcybkdvd3lJa0J0TDVzVks1K1RaN3h0RlNvRFZkdW1Ham0zS0JYS0oz?=
- =?utf-8?B?UmFZVEcwZGluUHBTQ0JCL0pGS1FQSEZCTzdzQUU3M3BNb3hjbkxjbTVMV1pk?=
- =?utf-8?B?SkE9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	yeYG72qZWDU0luDtnRLJH3YuCOdAh6hixz2ZYGm/pACE4HmyraL52wJRJy6BmbZx7UOMOqCiFte4jewqnu7xNfV9orxRY7245TJLLBYVodpboP5wv7JlcgrUCkWNPzfpBG6TkxSpeNq74xTamFQ9j1RQ9bhxoIKDLG7T/rvm7bIczq5szuNzRD22mLQocaZbB3Z4MBi6W7xcDa3y3nTuOmEUtpRNCZC7OnQ+WLEt3fTcCMFvMOj8e7aq5BG5lB8APrai6h78sZ2KuyFydeCi3etJEMCd0oZRDpZp4vydh8hkXWQRvh8a+BneuRkn79P7cVud7bK+eNOrxrHvk8R4MIpX+F+umpi4uAr0/e4pKOM0Zdm7lk8wVgnLd8Ksb43aAr3wPQ5ayU4Uqyd43Wst/3RJBPTNcjoUFMaItbmfJgw2NOwkOQHYc2LDoCyFE3UG/iQrw5WV18rZ2L6zNA2prOBCkLQZLu9f4Ck12cnXwV7SdVV+y9PQMFFboEoSav8KdBcbD7le+U2V+HOUtdNKKTen1HCdZW5Z56CUoAlvEhg9ev9xxg0xVSm9b+trASJ8RDIc1uzXCiySBNW/oziU6zKbWB7I6LurafamQGD9ohY=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 70b774ab-d965-4377-34e1-08ddafff3a53
-X-MS-Exchange-CrossTenant-AuthSource: DS7PR10MB5328.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 20 Jun 2025 13:34:49.0411
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: qwTQxs8FLwaKdF3aWJod4AEr2A2Bb5LSGfi681srQSVILF7ysKXz0XzCSdMXIYeSWGEmUYxU/wdtCr9A6ajwMTQvnf7lb7L9AxQd4EPxC2s=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR10MB4950
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
- definitions=2025-06-20_05,2025-06-20_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 spamscore=0
- malwarescore=0 adultscore=0 phishscore=0 suspectscore=0 mlxscore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2505160000 definitions=main-2506200096
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIwMDA5NiBTYWx0ZWRfXyhE+NigVhfBg 99cDvSy8rV9hbc6Hr8EPR44F5ZGGZ1/yeFt4SSXTaMQXpv+5OC/Ilb8SvkMf0fS0PQHLL9H4t8q 9droFxTtTKyl2fObLzbg+rDefBzw0njlyKWmZQRN9whItaZgE4zEMVzRRyFw9iENc3UuKr5e/iK
- Q4Vgpnl5tv74LUffQqgmm+R0VDWw6l9qSWlTYtRHuYw8eHBjDm1rx7ecoCZilzQO225kmOrXuul Zl6oJJ5jwFpYx5XiGPpwAvd+AIHqqK6Hmt/xDnF4nnaCXtce62HNXk2g70ETGURMwp4NGJLQ2Vw Nn8+JivDJdl8gz1tSI0snAUXs/jZrvWBJFZW6xY471LKeLl9+/v6N/6bvzqkJQ0TOJsPBHH9yin
- 0/vNUTHAu70M2/2vGeBYL6AC3d/SHt1qJf2Z1EFZc8Ujtz/iZzSPOJTU2OSsl+GVxl4/X1b4
-X-Authority-Analysis: v=2.4 cv=DM2P4zNb c=1 sm=1 tr=0 ts=6855637c cx=c_pps a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
- a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=GoEa3M9JfhUA:10 a=lMdmhQsT8_Uv-OeJrEMA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: FwI0a-DSeTRgNYBkLgYLqVVNkCSUXrb9
-X-Proofpoint-ORIG-GUID: FwI0a-DSeTRgNYBkLgYLqVVNkCSUXrb9
 
+Two small and obvious driver fixes.
 
+The patch is available here:
 
-On 6/20/2025 5:09 PM, Arnd Bergmann wrote:
-> From: Arnd Bergmann <arnd@arndb.de>
-> 
-> The qla2x00_dfs_tgt_port_database_show() function constructs a fake
-> fc_port_t object on the stack, which depending on the configuration
-> is large enough to exceed the stack size warning limit:
-> 
-> drivers/scsi/qla2xxx/qla_dfs.c:176:1: error: stack frame size (1392) exceeds limit (1280) in 'qla2x00_dfs_tgt_port_database_show' [-Werror,-Wframe-larger-than]
-> 
-> Rework this function to no longer need the structure but instead
-> call a custom helper function that just prints the data directly
-> from the port_database_24xx structure.
-> 
-> Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-> ---
-> I don't have this hardware and tried restructing the code in
-> a way that makes sense to me. This should be tested on an actual
-> device before it gets applied.
-> ---
->   drivers/scsi/qla2xxx/qla_dfs.c | 20 +++++---------
->   drivers/scsi/qla2xxx/qla_gbl.h |  1 +
->   drivers/scsi/qla2xxx/qla_mbx.c | 49 ++++++++++++++++++++++++++++++++++
->   3 files changed, 56 insertions(+), 14 deletions(-)
-> 
-> diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
-> index 08273520c777..43970caca7b3 100644
-> --- a/drivers/scsi/qla2xxx/qla_dfs.c
-> +++ b/drivers/scsi/qla2xxx/qla_dfs.c
-> @@ -179,10 +179,9 @@ qla2x00_dfs_tgt_port_database_show(struct seq_file *s, void *unused)
->   	struct qla_hw_data *ha = vha->hw;
->   	struct gid_list_info *gid_list;
->   	dma_addr_t gid_list_dma;
-> -	fc_port_t fc_port;
->   	char *id_iter;
->   	int rc, i;
-> -	uint16_t entries, loop_id;
-> +	uint16_t entries;
->   
->   	seq_printf(s, "%s\n", vha->host_str);
->   	gid_list = dma_alloc_coherent(&ha->pdev->dev,
-> @@ -205,18 +204,11 @@ qla2x00_dfs_tgt_port_database_show(struct seq_file *s, void *unused)
->   	seq_puts(s, "Port Name	Port ID		Loop ID\n");
->   
->   	for (i = 0; i < entries; i++) {
-> -		struct gid_list_info *gid =
-> -			(struct gid_list_info *)id_iter;
-> -		loop_id = le16_to_cpu(gid->loop_id);
-> -		memset(&fc_port, 0, sizeof(fc_port_t));
-> -
-> -		fc_port.loop_id = loop_id;
-> -
-> -		rc = qla24xx_gpdb_wait(vha, &fc_port, 0);
-> -		seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
-> -			   fc_port.port_name, fc_port.d_id.b.domain,
-> -			   fc_port.d_id.b.area, fc_port.d_id.b.al_pa,
-> -			   fc_port.loop_id);
-> +		struct gid_list_info *gid = (struct gid_list_info *)id_iter;
-> +
-> +		rc = qla24xx_print_fc_port_id(vha, s, le16_to_cpu(gid->loop_id));
-> +		if (rc != QLA_SUCCESS)
-> +			break;
->   		id_iter += ha->gid_list_info_size;
->   	}
->   out_free_id_list:
-> diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-> index 03e50e8fc08d..145defc420f2 100644
-> --- a/drivers/scsi/qla2xxx/qla_gbl.h
-> +++ b/drivers/scsi/qla2xxx/qla_gbl.h
-> @@ -557,6 +557,7 @@ qla26xx_dport_diagnostics_v2(scsi_qla_host_t *,
->   
->   int qla24xx_send_mb_cmd(struct scsi_qla_host *, mbx_cmd_t *);
->   int qla24xx_gpdb_wait(struct scsi_qla_host *, fc_port_t *, u8);
-> +int qla24xx_print_fc_port_id(struct scsi_qla_host *, struct seq_file *, u16);
->   int qla24xx_gidlist_wait(struct scsi_qla_host *, void *, dma_addr_t,
->       uint16_t *);
->   int __qla24xx_parse_gpdb(struct scsi_qla_host *, fc_port_t *,
-> diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-> index 0cd6f3e14882..a51b9704cf4b 100644
-> --- a/drivers/scsi/qla2xxx/qla_mbx.c
-> +++ b/drivers/scsi/qla2xxx/qla_mbx.c
-> @@ -6597,6 +6597,55 @@ int qla24xx_send_mb_cmd(struct scsi_qla_host *vha, mbx_cmd_t *mcp)
->   	return rval;
->   }
->   
-> +int qla24xx_print_fc_port_id(struct scsi_qla_host *vha, struct seq_file *s, u16 loop_id)
-> +{
-> +	int rval = QLA_FUNCTION_FAILED;
-> +	dma_addr_t pd_dma;
-> +	struct port_database_24xx *pd;
-> +	struct qla_hw_data *ha = vha->hw;
-> +	mbx_cmd_t mc;
-> +
-> +	if (!vha->hw->flags.fw_started)
-> +		goto done;
-> +
-> +	pd = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &pd_dma);
-> +	if (pd  == NULL) {
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-remove extra " " after pd
+And the short changelog is:
 
-> +		ql_log(ql_log_warn, vha, 0xd047,
-> +		    "Failed to allocate port database structure.\n");
-> +		goto done_free_sp;
+Maurizio Lombardi (1):
+      scsi: target: Fix NULL pointer dereference in core_scsi3_decode_spec_=
+i_port()
 
--> goto done
-as pd is NULL it wont called dma_pool_free at all.
-dma_pool_free, trying to free a pd (NULL) confusing.
+Vitaliy Shevtsov (1):
+      scsi: elx: efct: Fix memory leak in efct_hw_parse_filter()
 
-> +	}
-> +
-> +	memset(&mc, 0, sizeof(mc));
-> +	mc.mb[0] = MBC_GET_PORT_DATABASE;
-> +	mc.mb[1] = loop_id;
-> +	mc.mb[2] = MSW(pd_dma);
-> +	mc.mb[3] = LSW(pd_dma);
-> +	mc.mb[6] = MSW(MSD(pd_dma));
-> +	mc.mb[7] = LSW(MSD(pd_dma));
-> +	mc.mb[9] = vha->vp_idx;
-> +	mc.mb[10] = 0;
+And the diffstat:
 
-seems Redundant, as already called memset ?
+ drivers/scsi/elx/efct/efct_hw.c | 5 +++--
+ drivers/target/target_core_pr.c | 4 +++-
+ 2 files changed, 6 insertions(+), 3 deletions(-)
 
-> +
-> +	rval = qla24xx_send_mb_cmd(vha, &mc);
-> +	if (rval != QLA_SUCCESS) {
-> +		ql_dbg(ql_dbg_mbx, vha, 0x1193, "%s: fail\n", __func__);
-> +		goto done_free_sp;
-> +	}
-> +
-> +	ql_dbg(ql_dbg_mbx, vha, 0x1197, "%s: %8phC done\n",
-> +	    __func__, pd->port_name);
-> +
-> +	seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
-> +		   pd->port_name, pd->port_id[0],
-> +		   pd->port_id[1], pd->port_id[2],
-> +		   loop_id);
-> +
-> +done_free_sp:
-> +	if (pd)
-> +		dma_pool_free(ha->s_dma_pool, pd, pd_dma);
-> +done:
-> +	return rval;
-> +}
-> +
->   /*
->    * qla24xx_gpdb_wait
->    * NOTE: Do not call this routine from DPC thread
+With full diff below.
 
-Thanks,
-Alok
+Regards,
+
+James
+
+---
+
+diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_h=
+w.c
+index 5a5525054d71..5b079b8b7a08 100644
+--- a/drivers/scsi/elx/efct/efct_hw.c
++++ b/drivers/scsi/elx/efct/efct_hw.c
+@@ -1120,7 +1120,7 @@ int
+ efct_hw_parse_filter(struct efct_hw *hw, void *value)
+ {
+ 	int rc =3D 0;
+-	char *p =3D NULL;
++	char *p =3D NULL, *pp =3D NULL;
+ 	char *token;
+ 	u32 idx =3D 0;
+=20
+@@ -1132,6 +1132,7 @@ efct_hw_parse_filter(struct efct_hw *hw, void *value)
+ 		efc_log_err(hw->os, "p is NULL\n");
+ 		return -ENOMEM;
+ 	}
++	pp =3D p;
+=20
+ 	idx =3D 0;
+ 	while ((token =3D strsep(&p, ",")) && *token) {
+@@ -1144,7 +1145,7 @@ efct_hw_parse_filter(struct efct_hw *hw, void *value)
+ 		if (idx =3D=3D ARRAY_SIZE(hw->config.filter_def))
+ 			break;
+ 	}
+-	kfree(p);
++	kfree(pp);
+=20
+ 	return rc;
+ }
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_p=
+r.c
+index 34cf2c399b39..70905805cb17 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1842,7 +1842,9 @@ core_scsi3_decode_spec_i_port(
+ 		}
+=20
+ 		kmem_cache_free(t10_pr_reg_cache, dest_pr_reg);
+-		core_scsi3_lunacl_undepend_item(dest_se_deve);
++
++		if (dest_se_deve)
++			core_scsi3_lunacl_undepend_item(dest_se_deve);
+=20
+ 		if (is_local)
+ 			continue;
 
