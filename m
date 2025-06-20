@@ -1,135 +1,178 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A62C028C876;
-	Fri, 20 Jun 2025 13:47:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 497B928A3E4;
+	Fri, 20 Jun 2025 14:26:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750427224; cv=none; b=F/8PMaP9W19G7KTNcQwkdYaopw9iYJrduqLUXlBAmAqCeUZTuOOgSHQibV+BBCavYkDaVOrNn061lxI2eCM1//Hux6McNzfdPC2IYhYnblYCl1pv32lOVobA4NDQPA9sCLvRFf9V9zdJy5m8zRIPqM1O9hYf/r2Q2vnlqYAU/nI=
+	t=1750429609; cv=none; b=ryoFjYzmYiScoTa4rqGWtNYXSip3BX/kyfDWvnbxt7dOEmwSHSvfbhVjoeVYdIORRxzVsrIuETiRIqif/n5I4WwXUD7euuS38KaCNVpcRxfMpQkuepThWarrMO0dDbP+dRHk9h4KfQzr5R2cD4diqVDNRgvcGscO5ckq8ZjeNbo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750427224; c=relaxed/simple;
-	bh=hANIJ6jTgXhF97uaxMSpWN9neQjAhCls7FSZgFkQJHw=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=cHq7aLZGgoyxgGgBPB0z/aMrQ5O7/c+rPn+fifAGnMxcvfycLPwmN8p4LeSJfTfIreSoCbDS71jAvw+RsVrMCvvq1GSrxG0TTr3sra0o3uW+bMEi5uAnBzVGBqk1Q5lta+X947KJMJpSTMA/hAKLN8lJiOCueS9qxl2VEjStgbw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=gFH9IhH8; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1750429609; c=relaxed/simple;
+	bh=+pWQPw+Ca2mJz3X31Q1pGdLyshBfBAfKJlr9EFmlMsk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=uENAsiovztx/izpAaJyLZI7JaH2G/CLIoJyiVALE5oxjXmDvhjIxkSOxSVd4Z4itIytrlEgrpMPsYXfAYxAtCTiAInvsXkmh07no2AK2Lj4zAp1EfknkIc+63bfs+xen/2j3hkk8cNO2BoQTBY0FfYxEPDzpEg/4BldhPFpbYRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=RucEdvV2; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="gFH9IhH8"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1750427220;
-	bh=hANIJ6jTgXhF97uaxMSpWN9neQjAhCls7FSZgFkQJHw=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=gFH9IhH8PJnh5rcSHw0LmHRIdIURbJW5ID8+l+ngBhe/DuVCki+wO14nX773HaT81
-	 zaGdwHUqMciQgAb3josdXAkXP/Bl3E6Xv8fWeuFA5Cl1WwkS/QVzxPPRmOxD+FvnSg
-	 0CNz11coCDm4eDOlaMoH4S1TSgA7GRfP+vZTlZjU=
-Received: from [IPv6:2601:5c4:4302:c21::a774] (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 3FDCE1C03CC;
-	Fri, 20 Jun 2025 09:47:00 -0400 (EDT)
-Message-ID: <8b2ba4f9bf668716c583d8f5cc10e7f3bd7bd3a8.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.16-rc2
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
-	 <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
-	 <linux-kernel@vger.kernel.org>
-Date: Fri, 20 Jun 2025 09:46:59 -0400
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="RucEdvV2"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55K7H9dZ009657;
+	Fri, 20 Jun 2025 14:26:20 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	tXkJ67cMbeMVJ9YZw29ONigI2pwCgXoma9QCqa3pX88=; b=RucEdvV2mPKLvwI5
+	T6F7UEO3Tui9rGeReMnhUQq29KoXO/B/CYurSOFM0aaRmYzHTtsVBaf7uxgg70XI
+	q1ZcCrG2Oky/TU46flij+fW9QPKUCMe1c7LS8QxMtC3hFIFTQeQ5/tHVBmnk8k2r
+	uh47MfhZE6cIdpyl5rso7iOUi0METaeQYPMyqqZ7nPQaB9IowQEmpTGX0DeZP+70
+	vgmR/JZhPUKAao1bcCB5T3KU14AI8OZYN8FGE+OVTcMRYRJB5PD0xi07/0Yj+x/R
+	B7wCS8I5sAwmxZeJ15uSjm9+XBpTaMjUollDjpd6+u223GOZM1BNNwRXyllEh0xP
+	3dn02Q==
+Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47d340155f-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Jun 2025 14:26:20 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 55KEQJbN023197
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Fri, 20 Jun 2025 14:26:19 GMT
+Received: from [10.216.13.27] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Fri, 20 Jun
+ 2025 07:26:13 -0700
+Message-ID: <9c846734-9267-442d-bba0-578d993650c1@quicinc.com>
+Date: Fri, 20 Jun 2025 19:55:58 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V6 10/10] scsi: ufs: qcom : Refactor phy_power_on/off
+ calls
+To: Aishwarya <aishwarya.tcv@arm.com>
+CC: <James.Bottomley@HansenPartnership.com>, <andersson@kernel.org>,
+        <bvanassche@acm.org>, <dmitry.baryshkov@oss.qualcomm.com>,
+        <kishon@kernel.org>, <konrad.dybcio@oss.qualcomm.com>,
+        <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
+        <manivannan.sadhasivam@linaro.org>, <martin.petersen@oracle.com>,
+        <neil.armstrong@linaro.org>, <quic_cang@quicinc.com>,
+        <quic_rdwivedi@quicinc.com>, <vkoul@kernel.org>
+References: <20250526153821.7918-11-quic_nitirawa@quicinc.com>
+ <20250619135302.9192-1-aishwarya.tcv@arm.com>
+Content-Language: en-US
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20250619135302.9192-1-aishwarya.tcv@arm.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: ZHYQYXUdS1hDqa-RbOPXtdnN-IZwsXyx
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIwMDEwMyBTYWx0ZWRfX7wUCeFZ/MuQ2
+ uVV2KVg+Gmu+Zg2yHEdVhWakIyNIdlOIQnsYwcHdtymxTLgmlDNwzImLMcJS/3oym6Qu93oGmJn
+ 3u0Nx/1fyU6dqbp1koyKdP+2cx7wTBB0/rIOUIcHJGJb8VK//7avb92NMoXG4ekQf0FsoWd0jiX
+ PHAi+2McHCwUh1wgoMQn6lkhe2nr6MMM+n/bjSnm4sHRaAcg28u3/obBfJ1F+8v51RMUfKTSIlk
+ IDUdGS1dINPxwaymt2TtK1RVK3xNiogFL7LybBl1GeLv773CzxrrqePOOe8OTmjdSjKDBeg/jA7
+ uwhnKPO8USsvAbgxyYPfejU/Tj30X+hCOcAMgJp56Ewmarj/mWN8LYMND/yyA9dAEYEQCIxTwuU
+ hicCo8bppRDyepwSZdOlzFaymUwnYZHFsJrRiSp8Nv2rMYIOrqVjaJv7InulMhRbT+D++sLi
+X-Authority-Analysis: v=2.4 cv=JLE7s9Kb c=1 sm=1 tr=0 ts=68556f8c cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=6IFa9wvqVegA:10 a=VwQbUJbxAAAA:8
+ a=ydUYT1VdIsrJ1VNw940A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: ZHYQYXUdS1hDqa-RbOPXtdnN-IZwsXyx
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
+ definitions=2025-06-20_05,2025-06-20_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ clxscore=1011 mlxlogscore=999 adultscore=0 mlxscore=0 lowpriorityscore=0
+ malwarescore=0 impostorscore=0 suspectscore=0 bulkscore=0 priorityscore=1501
+ spamscore=0 phishscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2506200103
 
-Two small and obvious driver fixes.
+On 6/19/2025 7:23 PM, Aishwarya wrote:
+> Hi Nitin,
+> 
+> When booting the kernel from next-20250619 on Arm64 Qualcomm boards
+> (RB5 and DB845C), we observe that the baseline bootr test fails due to
+> dmesg.emerg errors in our CI environment.
+> 
+> A full git bisect (log included below) points to this patch as the
+> culprit. The issue was introduced sometime from tag next-20250616 in
+> https://git.kernel.org/pub/scm/linux/kernel/git/next/linux-next.git.
 
-The patch is available here:
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Hi Aishwarya,
 
-And the short changelog is:
+I tested booting the QRB5165 using the qrb5165-rb5.dtb with the latest 
+upstream tip multiple times, and each time it successfully booted to the 
+shell without any issues.
 
-Maurizio Lombardi (1):
-      scsi: target: Fix NULL pointer dereference in core_scsi3_decode_spec_=
-i_port()
+Are you encountering a boot failure, or is there a specific test case 
+you're running that triggers the problem? If so, could you please share 
+the dmesg log to help check further.
 
-Vitaliy Shevtsov (1):
-      scsi: elx: efct: Fix memory leak in efct_hw_parse_filter()
+Thanks,
+Nitin
 
-And the diffstat:
-
- drivers/scsi/elx/efct/efct_hw.c | 5 +++--
- drivers/target/target_core_pr.c | 4 +++-
- 2 files changed, 6 insertions(+), 3 deletions(-)
-
-With full diff below.
-
-Regards,
-
-James
-
----
-
-diff --git a/drivers/scsi/elx/efct/efct_hw.c b/drivers/scsi/elx/efct/efct_h=
-w.c
-index 5a5525054d71..5b079b8b7a08 100644
---- a/drivers/scsi/elx/efct/efct_hw.c
-+++ b/drivers/scsi/elx/efct/efct_hw.c
-@@ -1120,7 +1120,7 @@ int
- efct_hw_parse_filter(struct efct_hw *hw, void *value)
- {
- 	int rc =3D 0;
--	char *p =3D NULL;
-+	char *p =3D NULL, *pp =3D NULL;
- 	char *token;
- 	u32 idx =3D 0;
-=20
-@@ -1132,6 +1132,7 @@ efct_hw_parse_filter(struct efct_hw *hw, void *value)
- 		efc_log_err(hw->os, "p is NULL\n");
- 		return -ENOMEM;
- 	}
-+	pp =3D p;
-=20
- 	idx =3D 0;
- 	while ((token =3D strsep(&p, ",")) && *token) {
-@@ -1144,7 +1145,7 @@ efct_hw_parse_filter(struct efct_hw *hw, void *value)
- 		if (idx =3D=3D ARRAY_SIZE(hw->config.filter_def))
- 			break;
- 	}
--	kfree(p);
-+	kfree(pp);
-=20
- 	return rc;
- }
-diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_p=
-r.c
-index 34cf2c399b39..70905805cb17 100644
---- a/drivers/target/target_core_pr.c
-+++ b/drivers/target/target_core_pr.c
-@@ -1842,7 +1842,9 @@ core_scsi3_decode_spec_i_port(
- 		}
-=20
- 		kmem_cache_free(t10_pr_reg_cache, dest_pr_reg);
--		core_scsi3_lunacl_undepend_item(dest_se_deve);
-+
-+		if (dest_se_deve)
-+			core_scsi3_lunacl_undepend_item(dest_se_deve);
-=20
- 		if (is_local)
- 			continue;
+> 
+> This issue is not present in v6.16-rc2
+> 
+> Here’s a sample of the failure observed on the RB5 board:
+> lert :   ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
+> kern  :alert :   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+> kern  :alert :   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+> kern  :alert : user pgtable: 4k pages, 48-bit VAs, pgdp=0000000102c4c000
+> kern  :alert : [0000000000000000] pgd=0000000000000000
+> kern  :emerg : Internal error: Oops: 0000000096000004 [#1]  SMP
+> kern  :emerg : Code: a90157f3 aa0003f3 f90013f6 f9405c15 (f94002b6)
+> <8>[   30.933289] <LAVA_SIGNAL_TESTCASE TEST_CASE_ID=emerg RESULT=fail UNITS=lines MEASUREMENT=2>
+> + <8>[   30.943798] <LAVA_SIGNAL_ENDRUN 0_dmesg 1000325_2.4.4.1>
+> set +x
+> 
+> Git bisection log:
+> git bisect start
+> # status: waiting for both good and bad commits
+> # good: [9afe652958c3ee88f24df1e4a97f298afce89407] Merge tag 'x86_urgent_for_6.16-rc3' of git://git.kernel.org/pub/scm/linux/kernel/git/tip/tip
+> git bisect good 9afe652958c3ee88f24df1e4a97f298afce89407
+> # status: waiting for bad commit, 1 good commit known
+> # bad: [4325743c7e209ae7845293679a4de94b969f2bef] Add linux-next specific files for 20250617
+> git bisect bad 4325743c7e209ae7845293679a4de94b969f2bef
+> # good: [436c8cbbcb18deb96100cd9f33f1efedddc31d9c] Merge branch 'master' of git://git.kernel.org/pub/scm/linux/kernel/git/bluetooth/bluetooth-next.git
+> git bisect good 436c8cbbcb18deb96100cd9f33f1efedddc31d9c
+> # good: [183d224083773ca4a84a458fb608efecff19e19e] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/broonie/regmap.git
+> git bisect good 183d224083773ca4a84a458fb608efecff19e19e
+> # good: [1347ff0c0e510f1a6adb78259a2a0ddfac41d258] Merge branch 'for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/tj/wq.git
+> git bisect good 1347ff0c0e510f1a6adb78259a2a0ddfac41d258
+> # bad: [b09bd04eabb1994257f4c11d0ed25ff03517d3ec] Merge branch 'gpio/for-next' of git://git.kernel.org/pub/scm/linux/kernel/git/brgl/linux.git
+> git bisect bad b09bd04eabb1994257f4c11d0ed25ff03517d3ec
+> # good: [70bc9e18653c20fbcb47184d9498ad7bd7b7d6be] Merge branch 'togreg' of git://git.kernel.org/pub/scm/linux/kernel/git/jic23/iio.git
+> git bisect good 70bc9e18653c20fbcb47184d9498ad7bd7b7d6be
+> # bad: [3a847fb85c9d47e61ad5d9d54b762a3e99a08084] Merge branch 'next' of git://git.kernel.org/pub/scm/linux/kernel/git/phy/linux-phy.git
+> git bisect bad 3a847fb85c9d47e61ad5d9d54b762a3e99a08084
+> # skip: [50355ac70d4f104e2f82bfbd0658c129027ebb37] dt-bindings: phy: Convert marvell,comphy-cp110 to DT schema
+> git bisect skip 50355ac70d4f104e2f82bfbd0658c129027ebb37
+> # good: [acc6b0d73d902d3296d8c77878a9b508c2c6a5bf] phy: qcom-qmp-ufs: Rename qmp_ufs_power_off
+> git bisect good acc6b0d73d902d3296d8c77878a9b508c2c6a5bf
+> # bad: [35b629b28afd72a14ed573f1b180dc4ab1bf7e19] dt-bindings: phy: Convert ti,dm816x-usb-phy to DT schema
+> git bisect bad 35b629b28afd72a14ed573f1b180dc4ab1bf7e19
+> # bad: [66acaf8f6b0bcc273f8356b2a77baa90b177014c] dt-bindings: phy: Convert img,pistachio-usb-phy to DT schema
+> git bisect bad 66acaf8f6b0bcc273f8356b2a77baa90b177014c
+> # bad: [f151f3a6ebe184b5f8c9abe58fe2d63f9950139b] dt-bindings: phy: Convert brcm,ns2-drd-phy to DT schema
+> git bisect bad f151f3a6ebe184b5f8c9abe58fe2d63f9950139b
+> # bad: [77d2fa54a94574f767d5fb296b6b8e011eba0c8e] scsi: ufs: qcom : Refactor phy_power_on/off calls
+> git bisect bad 77d2fa54a94574f767d5fb296b6b8e011eba0c8e
+> # good: [7f600f0e193a6638135026c3718ac296ed3f5044] phy: qcom-qmp-ufs: Remove qmp_ufs_exit() and Inline qmp_ufs_com_exit()
+> git bisect good 7f600f0e193a6638135026c3718ac296ed3f5044
+> # good: [a079b2d715340482e425ff136b55810ab8279800] phy: qcom-qmp-ufs: refactor qmp_ufs_power_off
+> git bisect good a079b2d715340482e425ff136b55810ab8279800
+> # first bad commit: [77d2fa54a94574f767d5fb296b6b8e011eba0c8e] scsi: ufs: qcom : Refactor phy_power_on/off calls
+> 
+> Thanks,
+> Aishwarya
 
