@@ -1,181 +1,185 @@
-Received: from mail-lj1-f174.google.com (mail-lj1-f174.google.com [209.85.208.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 658D720127D
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Jun 2025 17:29:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E3C813774D;
+	Fri, 20 Jun 2025 17:32:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750440561; cv=none; b=XKVauNWh/XHpHgA5HatZXZK0qm74sQ3/5IRmXyNyNrVS9Te9OTW/F9AtfbsvFalVz5FpwpVJ0xWBfxbJ3Jia2eeykwwgFOZaQwbN6qEDXxsyesNHr4DJZWuEeKnVJmTRi0ivSy8QfFmIr/u0T3CZhCjVYqbxX50FdKG+tVZsvtY=
+	t=1750440758; cv=none; b=LbMOwydS+HkWabOqWwj2KbKYAwRLMhp5ljI6dx1k67X1IkU0ZiGhRHeQNH40/hunPp+1EHqrlbtvmtUt0IzF1FIHJfhu9M70fe9qjjNMEsr1HYHjUcVgT2BvAiWV5kdqcCYQRD/l2FNq9q7rYsXFwCtwuy6tICDzg61d2f1lQcc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750440561; c=relaxed/simple;
-	bh=irAvOdz5zq+YRKPH4KdTIlAlfRkDGKHECtJ4HEcaY3w=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ldrhXe7F+U4qSNw/V4tOxZI4Ypwy6yZP+RGLaSXALWvSPmFaRxmy4yP4DTJlZr0NKXYgF8qqfsLEAUoAXWZPqIF9Soi6VkKcT3NYMXsb1cuNFQ4GNOwla4dcVIj1y9SSGbQ8Se0RVKn5Oi9f70YsU/CeJajLZU4e/varKi92dLo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=eNTx6fIa; arc=none smtp.client-ip=209.85.208.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1750440758; c=relaxed/simple;
+	bh=hUmxKxYrfLSvEtssqPOOtV8zd1BBWLh011LOtkMog40=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=kaTuDSrdCVp6ejfNj+HI0TCZENKtmJzNjqTXkKoI/YXs2pmPFVdQWKEkZOYt+URuYfTakM3lN4wvLXRodIv6kHpGQVVHwWMaPwQQ3dl6x67GxXULhbPWFjm8tZLEqhKVP7I5K96AGvyefCB1QzBNcOqRAADdaevULmIqUAhb3t4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=afZMCWUM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="eNTx6fIa"
-Received: by mail-lj1-f174.google.com with SMTP id 38308e7fff4ca-32b910593edso14347251fa.1
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Jun 2025 10:29:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1750440555; x=1751045355; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=irAvOdz5zq+YRKPH4KdTIlAlfRkDGKHECtJ4HEcaY3w=;
-        b=eNTx6fIaT251/VWW6ASDKio4uzD3OpicrJuopl02qDINqfj+ooHd1RzRzApC4mBlJ6
-         UbhLIWwlBoA0QvG5STQTJZvR43Cae2Uf4LPqbWfb4wwzag+ksfuyzX/sWbZOSJ40xrN/
-         q+UDDUFWtu0BcqWWtzp5ufTl28ePJdodz4bBA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750440555; x=1751045355;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=irAvOdz5zq+YRKPH4KdTIlAlfRkDGKHECtJ4HEcaY3w=;
-        b=gtipdmEWpXJhhhcALRjTHyHQNgEu3wUWtTjelGGf706LVCOQL+zfrhRUhqCC4dMHFr
-         g6IIJ+KwSz1KXVj+gzEbhc5VnCj6kbRS6qvrTMTBQdjQ7QKrhxprlOx7SSnrmntXc/ay
-         9IFBr9gK6obEkGvLI03D0dkgWH005GlQlaLrwkRFXN0DGMClOL4XVZ6Qtip/eco3wS/F
-         aM5hpKduYgscrCjAf9UCQ8Sycnu1XKnctGlqTq9YFT46zR3wJ+FKOxrN4iDr40uC5rmo
-         weLxZg3LxdOMcCYcdxu7SfVDvYcffJGzwrlfcG1NpoYwxcpt6UCicsHCI8vvaeslLspn
-         4leA==
-X-Forwarded-Encrypted: i=1; AJvYcCW/BoS1bbUopRqrQtMBlCZUpMJc9Hhb8QB385w2jXm8SYtgAEcRPk588D/EP1MaNBYLaKovM27db5lF@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSIOBmnsyZnxDmkUHlO+NlL/fzAF4aV3w+KJ7lngA0DYTRNJ6n
-	6UjpQoOlPw7iEykdj1gpPYZ3ruEybtWarFJ1bU1vJB0Hx5SkBFKOeO/nUWwLKJS7V47XxYzSkic
-	fovu4AdgP2Fb4cL8+A8zz5B9d4qOrnH4YlFpikyQ=
-X-Gm-Gg: ASbGnct0epnG7NkZHBjsbJIBYXHqfOaixchGBpoHwfEg9hLoJtae3tbigEX2JTP5x3v
-	R2LpmElUfA7z/5Jr62Fp7o/5I2JRtnP2g/8D/m4c4sScG911CmfnAqCzjTTTi5NZNIac+qhQ/Ia
-	r1tXvsM103Vie5Bw9FoQFqEBuInLfA4lPrY9M3iDEBn88=
-X-Google-Smtp-Source: AGHT+IHB1zN65Agueoyy5vE7UDJnMr0ShkOP5ChcI1pjHjp6Rem2kzAV5lfFJccyVgWY3+VuLOkavo6Zl4BeZ0KWRk8=
-X-Received: by 2002:a05:651c:41cf:b0:32a:83b4:c146 with SMTP id
- 38308e7fff4ca-32b9901b97bmr11430401fa.23.1750440555496; Fri, 20 Jun 2025
- 10:29:15 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="afZMCWUM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BCEEDC4CEE3;
+	Fri, 20 Jun 2025 17:32:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750440756;
+	bh=hUmxKxYrfLSvEtssqPOOtV8zd1BBWLh011LOtkMog40=;
+	h=From:To:Cc:Subject:Date:From;
+	b=afZMCWUMNiFexScGZnhQw4culXKOSZynp/wiuc2FpPbaZzjjG1GeNhO7FuGRmHzx7
+	 f4YsWE+k8TPzg3jb8z8g+T4GOFft/RgnkFO0tUERTvkEgS4NIzof15li+RdIbhzy8f
+	 UAvh+IdbbVf1d6L+l4xueOeF9ptnw3B6WZ/2vPnCfAH/44Z+JY1amVHjIrxV+YPedd
+	 +sv/fl94OxIW27eT3wzaJjl0IdDfKe4i50Y02DroP6EDL8yMLNkFIWK7CsTdw7waMN
+	 7KFm+KgJudHaMHMrbLMhkl+oFlihRYKp6lXz1v3H26dydis0Xf8jy/ySDLV4+NnBR6
+	 0UoUXJUPcaXCA==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Quinn Tran <qutran@marvell.com>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] [v2] scsi: qla2xxx: avoid stack frame size warning in qla_dfs
+Date: Fri, 20 Jun 2025 19:32:22 +0200
+Message-Id: <20250620173232.864179-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250606052747.742998-1-dlemoal@kernel.org> <yq1cyazt8w7.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1cyazt8w7.fsf@ca-mkp.ca.oracle.com>
-From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
-Date: Fri, 20 Jun 2025 11:28:55 -0600
-X-Gm-Features: AX0GCFtS17wb8iDgjS3ZCkzQ8Ax9G7chuej1hzeiUPm73nMOj7D7ruFxkcHTeTM
-Message-ID: <CAFdVvOx-yD7qjs0HfpdxxmPH2ZEW-jAHnHTV_TmOZJwum-kynA@mail.gmail.com>
-Subject: Re: [PATCH 0/2] Improve ATA NCQ command error in mpt3sas and mpi3mr
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org, 
-	Kashyap Desai <kashyap.desai@broadcom.com>, Sreekanth Reddy <sreekanth.reddy@broadcom.com>, 
-	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>, mpi3mr-linuxdrv.pdl@broadcom.com, 
-	MPT-FusionLinux.pdl@broadcom.com
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="00000000000088c6370638043368"
+Content-Transfer-Encoding: 8bit
 
---00000000000088c6370638043368
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+From: Arnd Bergmann <arnd@arndb.de>
 
-Martin,
+The qla2x00_dfs_tgt_port_database_show() function constructs a fake
+fc_port_t object on the stack, which depending on the configuration
+is large enough to exceed the stack size warning limit:
 
+drivers/scsi/qla2xxx/qla_dfs.c:176:1: error: stack frame size (1392) exceeds limit (1280) in 'qla2x00_dfs_tgt_port_database_show' [-Werror,-Wframe-larger-than]
 
-On Thu, Jun 19, 2025 at 9:00=E2=80=AFPM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Damien,
->
-> > Two similar patches for the mpt3sas and mpi3mr drivers to improve the
-> > handling of NCQ command terminated due to an NCQ command failure.
-> > These so-called collateral aborts must be retried immediately but that
-> > must be done without incrementing the command retry counter.
-> > Otherwise, these collateral abort commands may endup being failed due
-> > to other NCQ command errors.
->
-> Applied to 6.17/scsi-staging, thanks!
->
-Thanks for taking this patch. We are working with our internal
-firmware team on the specifics, if there is any additional change
-required, we will push a new set of patches.
-> --
-> Martin K. Petersen
+Rework this function to no longer need the structure but instead
+call a custom helper function that just prints the data directly
+from the port_database_24xx structure.
 
---00000000000088c6370638043368
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
+---
+v2: address review comments from ALOK TIWARI
+---
+ drivers/scsi/qla2xxx/qla_dfs.c | 20 +++++---------
+ drivers/scsi/qla2xxx/qla_gbl.h |  1 +
+ drivers/scsi/qla2xxx/qla_mbx.c | 48 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 55 insertions(+), 14 deletions(-)
 
-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
-v82E+npLwqC8bSHh1m6BJewfpawx72uKM9aFs6SVpLPtN6a5369OCwVeEwkk2FeFU9tZXWBnI4Wu
-d1Q4a3vhOColD6PdTWv74Ez2I3ahCkmpeEQ1YMt61TUH3W8NUJJeYN2xkR6OGsA1AgMBAAGjggHc
-MIIB2DAOBgNVHQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRw
-Oi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
-MC5jcnQwQQYIKwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJz
-b25hbHNpZ24yY2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZo
-dHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRC
-MEAwPqA8oDqGOGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
-YTIwMjAuY3JsMCYGA1UdEQQfMB2BG3NhdGh5YS5wcmFrYXNoQGJyb2FkY29tLmNvbTATBgNVHSUE
-DDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU
-VyBc/F5XGkYNCP9Rb96mru8lU4AwDQYJKoZIhvcNAQELBQADggEBACiysbqj0ggjcc9uzOpBkt1Q
-nGtvHhd9pbNmshJRUoNL11pQEzupSsUkDoAa6hPrOaJVobIO+yC84D4GXQc13Jk0QZQhRJJRYLwk
-vdq704JPh4ULIwofTWqwsiZ1OvINzX9h9KEw/+h+Mc3YUCO7tvKBGLJTUaUhrjxyjLQdEK1Xp/8B
-kYd5quZssxYPJ3nl37Moy/U9ZM2F0Ivv4U3wyP5y5cdmBUBAGOd94rH60fVDVogEo5F9gXrZhT/4
-jKzCG3LclOOzLinCkK2J5GYngIUHSmnqk909QPG6jkx5RJWwkpTzm+AAVbJ9a+1F/8iR3FiDddEK
-8wQJuWG84jqd/9wxggJgMIICXAIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
-aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
-MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEIG70PEZe
-tPYvo5IemZ9AuTzXB42PxyyPXSzX+lPsTSifMBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
-KoZIhvcNAQkFMQ8XDTI1MDYyMDE3MjkxNVowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQMEASow
-CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQcwCwYJYIZI
-AWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAKxtUUnOlMcJFYFt2+rj1nmAl/L1bnV8eSs2yiO5r5Jb
-psEgQuQVrCK4LTgRd/xjU70RuE3awK0s0kZep968HUwTxDRQDbN8341ewLRBvFjzm+w9Cv16bseY
-ka1joIDy9bc4f/L6Z07xYOdrpgPLpaN5Wm5w978HyxSTO+/NzvLCHBgDXAjem9kAqCiHSBW4KpCO
-UPYsLFIgAv9hciSETQ7ER64XpgQeew6jMMILlK4J1BlDga4tL9ILdJZ2jOr1/A0fAUqnbpWEOTkE
-pZGTFt3XrHyqzK2vrtVg0z1O6l8lDHUpNcMnxTLlCYEqjU8mSVrVW/3/MxPSWyW5MFCQLeM=
---00000000000088c6370638043368--
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 08273520c777..43970caca7b3 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -179,10 +179,9 @@ qla2x00_dfs_tgt_port_database_show(struct seq_file *s, void *unused)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct gid_list_info *gid_list;
+ 	dma_addr_t gid_list_dma;
+-	fc_port_t fc_port;
+ 	char *id_iter;
+ 	int rc, i;
+-	uint16_t entries, loop_id;
++	uint16_t entries;
+ 
+ 	seq_printf(s, "%s\n", vha->host_str);
+ 	gid_list = dma_alloc_coherent(&ha->pdev->dev,
+@@ -205,18 +204,11 @@ qla2x00_dfs_tgt_port_database_show(struct seq_file *s, void *unused)
+ 	seq_puts(s, "Port Name	Port ID		Loop ID\n");
+ 
+ 	for (i = 0; i < entries; i++) {
+-		struct gid_list_info *gid =
+-			(struct gid_list_info *)id_iter;
+-		loop_id = le16_to_cpu(gid->loop_id);
+-		memset(&fc_port, 0, sizeof(fc_port_t));
+-
+-		fc_port.loop_id = loop_id;
+-
+-		rc = qla24xx_gpdb_wait(vha, &fc_port, 0);
+-		seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
+-			   fc_port.port_name, fc_port.d_id.b.domain,
+-			   fc_port.d_id.b.area, fc_port.d_id.b.al_pa,
+-			   fc_port.loop_id);
++		struct gid_list_info *gid = (struct gid_list_info *)id_iter;
++
++		rc = qla24xx_print_fc_port_id(vha, s, le16_to_cpu(gid->loop_id));
++		if (rc != QLA_SUCCESS)
++			break;
+ 		id_iter += ha->gid_list_info_size;
+ 	}
+ out_free_id_list:
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 03e50e8fc08d..145defc420f2 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -557,6 +557,7 @@ qla26xx_dport_diagnostics_v2(scsi_qla_host_t *,
+ 
+ int qla24xx_send_mb_cmd(struct scsi_qla_host *, mbx_cmd_t *);
+ int qla24xx_gpdb_wait(struct scsi_qla_host *, fc_port_t *, u8);
++int qla24xx_print_fc_port_id(struct scsi_qla_host *, struct seq_file *, u16);
+ int qla24xx_gidlist_wait(struct scsi_qla_host *, void *, dma_addr_t,
+     uint16_t *);
+ int __qla24xx_parse_gpdb(struct scsi_qla_host *, fc_port_t *,
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 0cd6f3e14882..ae90c0973ca7 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -6597,6 +6597,54 @@ int qla24xx_send_mb_cmd(struct scsi_qla_host *vha, mbx_cmd_t *mcp)
+ 	return rval;
+ }
+ 
++int qla24xx_print_fc_port_id(struct scsi_qla_host *vha, struct seq_file *s, u16 loop_id)
++{
++	int rval = QLA_FUNCTION_FAILED;
++	dma_addr_t pd_dma;
++	struct port_database_24xx *pd;
++	struct qla_hw_data *ha = vha->hw;
++	mbx_cmd_t mc;
++
++	if (!vha->hw->flags.fw_started)
++		goto done;
++
++	pd = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &pd_dma);
++	if (pd == NULL) {
++		ql_log(ql_log_warn, vha, 0xd047,
++		    "Failed to allocate port database structure.\n");
++		goto done;
++	}
++
++	memset(&mc, 0, sizeof(mc));
++	mc.mb[0] = MBC_GET_PORT_DATABASE;
++	mc.mb[1] = loop_id;
++	mc.mb[2] = MSW(pd_dma);
++	mc.mb[3] = LSW(pd_dma);
++	mc.mb[6] = MSW(MSD(pd_dma));
++	mc.mb[7] = LSW(MSD(pd_dma));
++	mc.mb[9] = vha->vp_idx;
++
++	rval = qla24xx_send_mb_cmd(vha, &mc);
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_mbx, vha, 0x1193, "%s: fail\n", __func__);
++		goto done_free_sp;
++	}
++
++	ql_dbg(ql_dbg_mbx, vha, 0x1197, "%s: %8phC done\n",
++	    __func__, pd->port_name);
++
++	seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
++		   pd->port_name, pd->port_id[0],
++		   pd->port_id[1], pd->port_id[2],
++		   loop_id);
++
++done_free_sp:
++	if (pd)
++		dma_pool_free(ha->s_dma_pool, pd, pd_dma);
++done:
++	return rval;
++}
++
+ /*
+  * qla24xx_gpdb_wait
+  * NOTE: Do not call this routine from DPC thread
+-- 
+2.39.5
+
