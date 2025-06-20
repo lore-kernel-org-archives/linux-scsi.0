@@ -1,69 +1,45 @@
-Received: from mail-pl1-f172.google.com (mail-pl1-f172.google.com [209.85.214.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6C026277CA9
-	for <linux-scsi@vger.kernel.org>; Fri, 20 Jun 2025 10:54:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B575728A1F6;
+	Fri, 20 Jun 2025 11:39:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750416842; cv=none; b=cXsQfX1sddTFsq5Ac9yO4xsX1EmTqM7Jh9hdqoIwNFPOdXlwy6WsMBht9wYBx7HyMNXbHX++58EFMsXYMUVMaW6xqJObmhVKnD8+skqu5ShmCV8n2jbmEG6gZbzPMlxC7XuifOrHFaliJBxhsrdNznHVNbhefn/3pc4MTUHiY1Y=
+	t=1750419563; cv=none; b=ZL+iijTf3jOgNKvEJCxdmXrfvF4CUSGGlp3NWb2gPd0ceE58f09+cWLawCsEL/HrQeSh7ZTn+TSbXIJloFan/KxIthPzoH12rn8srfgERFM9borR5PNtVMjE/8TIDAHGbQ0LhyOJQGIeCio6IPFczF6UQ+x9+lvzgpUWaP9GRFU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750416842; c=relaxed/simple;
-	bh=QRTWIyGgOAAKEJ0OgD2IzCvLBts70+f98D/alGUzt0s=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=IpyXY80WX0d1xbE9zTuVp1ZgKxMEkuuT1JHSyHBLJPsV2IpIenxQ/0G5M98Iz5o8M1HGvT2lLhG0sHXZfEuApt9KbULU5RdSeAYZCbnTvoZ7cLQI7gNLLHMCvkF4GzCtSwkc0tkhA1A3tbgGJOnATSboi06kjBjaKssqwqfeuU8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aegp7+or; arc=none smtp.client-ip=209.85.214.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1750419563; c=relaxed/simple;
+	bh=o0Q+jJlE+4KCD6McJOZBcBxadKWIt+MWEaZEfa3c2ao=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=edKbv72K2U0NpQ57+v/NsfarsnjwP8hvY1sksmzZoN6qnDygomqbZMcGTIFk5r8vCgUHuHOQTXaB65NUKhE6fZcTDPgWd/Np8NZnh94erOcE/mWaO/5ZLjS9QDyZHfMcl6CWe5yCJ7v70vjxnjUXL02R1QrC9FHB9eB4aw75XKc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GwUKN0kI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aegp7+or"
-Received: by mail-pl1-f172.google.com with SMTP id d9443c01a7336-23508d30142so22925015ad.0
-        for <linux-scsi@vger.kernel.org>; Fri, 20 Jun 2025 03:54:01 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750416840; x=1751021640; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=7lxX2jMIKqvJLKZnjXMFlZJTCoMffWFRvd7plldskzI=;
-        b=aegp7+orWi1wF5MVsM5/5UQ0irnLZXOywsjyJCapSZ8ScdfT/t5ZH1jlrlxCnPs8pK
-         m6tIENGmwJejfyl0rHxKY/5GkpLMpDEpZkGQ6AFFLVRBBhLFvK4+5wktDDST8NByQxa3
-         qwNdQWDL4NmT8nF7395peXTb0ZhdUhxuNWbdwLn9ZJz1HMq5bjE7Qg3+K3zMzjMPaGWS
-         WPNG2kDvGpPFmZDax40W6E3XNq/oQX/CXPSc44Ey8r9fj6Uji9YLb+vxvKoZ40f3+3En
-         6JdUtuyATxupIZ5x9sm8EDf8xvwfhV0J4ziF3RIy1852aij+5A7aQs3ikh4vT4bQe8cK
-         2FsA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750416840; x=1751021640;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=7lxX2jMIKqvJLKZnjXMFlZJTCoMffWFRvd7plldskzI=;
-        b=Sheh9S6JA6yHH2kW33tJqDeFpibzoKHdDl9iaQtG9QCde+FJ9lBW2T1uGEkh2vO70k
-         vt8dd8FwOsBRcu6hQostxdhUJDWBxr6l3WZrJQW5/TFcctM5IQnv7EJRPsoLq71tuzhh
-         U567GHl8RmOJuxF/LMD8G5pRGMPSdATe7SVFDrnKO7jYvOPBAPydfcQTMgNPG9UgQvDt
-         5SeMt9QdXXVEisoDzYIvIYFSJINBvnvy7dbwzj7c2DrzI7vORyg23plJOxFwysLjLC4W
-         OylcUgJ+vmrr0YqeC0A5hYHbU8akpzxdMCTFez9Ii+7hrAo+U5d31Onsu5+9eA7yQSq2
-         D+uQ==
-X-Gm-Message-State: AOJu0YxYmpCngwy8ZF8fZ52JFsv9Iz5vE0dDfhtd12xn4zV0D5E5kI/a
-	46qjIr4arF741kRAKn1Ux81B8fkU21yixhsYZgrccrs70bE8doxQ1EGjSC7ZbqIR
-X-Gm-Gg: ASbGncuuFB+Q0YnuMFPYX+YUGO90nqGPt7xfahzjILQbJVSOi8+EyT3x63tulHP3StC
-	KM8qgcye1m5NKG48Zu2yypNktLYma1VJGQYm/3Y4+EizOUjV4vfLexsSel2WBPc+rfeKis/fWdv
-	N07ulV98Luz4azpHwSqeLcL1iBs86esPzQ9MNoR/4JA3z7D59fm6Vi18HOLYT71yMuOVQeeReMr
-	d4JEKSKImdeu4tm/S1n/KtTSy4uvbhjKnfImp4ruEUMUilbJEOuEnyHRK75v5Rhl7LBGat6nuyQ
-	gOLatR/YR4pkUg0Fij8Wm8lLcsGHB4d3IF1Jv/OAjioiXojV6nIzuQcnKB2/3Nz0/ANq+XS6HHc
-	/ERX5Pw==
-X-Google-Smtp-Source: AGHT+IE4m1yne/Uqgn11e6fV2HYdTX8S7810B90ITpDDZ37Vz2Pse8Pqfo8EszkXKZWfKkvllRDQKg==
-X-Received: by 2002:a17:902:e5c9:b0:235:ea29:28da with SMTP id d9443c01a7336-237d991f9e1mr42960285ad.17.1750416840381;
-        Fri, 20 Jun 2025 03:54:00 -0700 (PDT)
-Received: from shankari-IdeaPad.. ([2409:4080:e3d:e62b:23a4:8d99:ee1f:652a])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-237d866b5b7sm15467175ad.161.2025.06.20.03.53.57
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 20 Jun 2025 03:53:59 -0700 (PDT)
-From: Shankari Anand <shankari.ak0208@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	Shankari Anand <shankari.ak0208@gmail.com>
-Subject: [PATCH] scsi: sysfs: replace scnprintf() with sysfs_emit() in sdev_show_blacklist()
-Date: Fri, 20 Jun 2025 16:23:44 +0530
-Message-Id: <20250620105344.455283-1-shankari.ak0208@gmail.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GwUKN0kI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5105FC4CEEE;
+	Fri, 20 Jun 2025 11:39:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750419563;
+	bh=o0Q+jJlE+4KCD6McJOZBcBxadKWIt+MWEaZEfa3c2ao=;
+	h=From:To:Cc:Subject:Date:From;
+	b=GwUKN0kIheVSXlhTIoNOAhfnK5snShTKokOhfRJK4Z/Wp6aHhtmwc/VILq+poE5J4
+	 sesBzPtFZ+EnQc1Tr2YPzPt8HYEPERU8x35s0J9dA93RL7qVdHY9VPb400f52baBrL
+	 Kzny6Hk8YOfbaPWHgXFHhHNeIhbxskrHz/xUaMS7qoHXNLmxH7DPQGNhuFVhfJzJ/7
+	 GX7DJMK79/zjmu2GuP+I462YBIHF/peuzaM4YqGuAKUfqA38H8BzpTfx8xLYqqRfeC
+	 IGkfDGJMwjgW+r//6sG6J1ToB7rKgwSgcny8xTL12Sq/gGyDzInoMjsLJmFcPuwoDS
+	 /IS+6KXzKODdQ==
+From: Arnd Bergmann <arnd@kernel.org>
+To: Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Arnd Bergmann <arnd@arndb.de>,
+	Quinn Tran <qutran@marvell.com>,
+	Himanshu Madhani <himanshu.madhani@oracle.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: qla2xxx: avoid stack frame size warning in qla_dfs
+Date: Fri, 20 Jun 2025 13:39:11 +0200
+Message-Id: <20250620113919.3974443-1-arnd@kernel.org>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,37 +48,141 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Documentation/filesystems/sysfs.rst mentions that show() should only
-use sysfs_emit() or sysfs_emit_at() when formating the value to be
-returned to user space. So replace scnprintf() with sysfs_emit().
+From: Arnd Bergmann <arnd@arndb.de>
 
-Signed-off-by: Shankari Anand <shankari.ak0208@gmail.com>
+The qla2x00_dfs_tgt_port_database_show() function constructs a fake
+fc_port_t object on the stack, which depending on the configuration
+is large enough to exceed the stack size warning limit:
+
+drivers/scsi/qla2xxx/qla_dfs.c:176:1: error: stack frame size (1392) exceeds limit (1280) in 'qla2x00_dfs_tgt_port_database_show' [-Werror,-Wframe-larger-than]
+
+Rework this function to no longer need the structure but instead
+call a custom helper function that just prints the data directly
+from the port_database_24xx structure.
+
+Signed-off-by: Arnd Bergmann <arnd@arndb.de>
 ---
- drivers/scsi/scsi_sysfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I don't have this hardware and tried restructing the code in
+a way that makes sense to me. This should be tested on an actual
+device before it gets applied.
+---
+ drivers/scsi/qla2xxx/qla_dfs.c | 20 +++++---------
+ drivers/scsi/qla2xxx/qla_gbl.h |  1 +
+ drivers/scsi/qla2xxx/qla_mbx.c | 49 ++++++++++++++++++++++++++++++++++
+ 3 files changed, 56 insertions(+), 14 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index d772258e29ad..074b02e4cf9e 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1095,14 +1095,14 @@ sdev_show_blacklist(struct device *dev, struct device_attribute *attr,
- 			name = sdev_bflags_name[i];
+diff --git a/drivers/scsi/qla2xxx/qla_dfs.c b/drivers/scsi/qla2xxx/qla_dfs.c
+index 08273520c777..43970caca7b3 100644
+--- a/drivers/scsi/qla2xxx/qla_dfs.c
++++ b/drivers/scsi/qla2xxx/qla_dfs.c
+@@ -179,10 +179,9 @@ qla2x00_dfs_tgt_port_database_show(struct seq_file *s, void *unused)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct gid_list_info *gid_list;
+ 	dma_addr_t gid_list_dma;
+-	fc_port_t fc_port;
+ 	char *id_iter;
+ 	int rc, i;
+-	uint16_t entries, loop_id;
++	uint16_t entries;
  
- 		if (name)
--			len += scnprintf(buf + len, PAGE_SIZE - len,
-+			len += sysfs_emit(buf + len,
- 					 "%s%s", len ? " " : "", name);
- 		else
--			len += scnprintf(buf + len, PAGE_SIZE - len,
-+			len += sysfs_emit(buf + len,
- 					 "%sINVALID_BIT(%d)", len ? " " : "", i);
+ 	seq_printf(s, "%s\n", vha->host_str);
+ 	gid_list = dma_alloc_coherent(&ha->pdev->dev,
+@@ -205,18 +204,11 @@ qla2x00_dfs_tgt_port_database_show(struct seq_file *s, void *unused)
+ 	seq_puts(s, "Port Name	Port ID		Loop ID\n");
+ 
+ 	for (i = 0; i < entries; i++) {
+-		struct gid_list_info *gid =
+-			(struct gid_list_info *)id_iter;
+-		loop_id = le16_to_cpu(gid->loop_id);
+-		memset(&fc_port, 0, sizeof(fc_port_t));
+-
+-		fc_port.loop_id = loop_id;
+-
+-		rc = qla24xx_gpdb_wait(vha, &fc_port, 0);
+-		seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
+-			   fc_port.port_name, fc_port.d_id.b.domain,
+-			   fc_port.d_id.b.area, fc_port.d_id.b.al_pa,
+-			   fc_port.loop_id);
++		struct gid_list_info *gid = (struct gid_list_info *)id_iter;
++
++		rc = qla24xx_print_fc_port_id(vha, s, le16_to_cpu(gid->loop_id));
++		if (rc != QLA_SUCCESS)
++			break;
+ 		id_iter += ha->gid_list_info_size;
  	}
- 	if (len)
--		len += scnprintf(buf + len, PAGE_SIZE - len, "\n");
-+		len += sysfs_emit(buf + len, "\n");
- 	return len;
+ out_free_id_list:
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 03e50e8fc08d..145defc420f2 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -557,6 +557,7 @@ qla26xx_dport_diagnostics_v2(scsi_qla_host_t *,
+ 
+ int qla24xx_send_mb_cmd(struct scsi_qla_host *, mbx_cmd_t *);
+ int qla24xx_gpdb_wait(struct scsi_qla_host *, fc_port_t *, u8);
++int qla24xx_print_fc_port_id(struct scsi_qla_host *, struct seq_file *, u16);
+ int qla24xx_gidlist_wait(struct scsi_qla_host *, void *, dma_addr_t,
+     uint16_t *);
+ int __qla24xx_parse_gpdb(struct scsi_qla_host *, fc_port_t *,
+diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
+index 0cd6f3e14882..a51b9704cf4b 100644
+--- a/drivers/scsi/qla2xxx/qla_mbx.c
++++ b/drivers/scsi/qla2xxx/qla_mbx.c
+@@ -6597,6 +6597,55 @@ int qla24xx_send_mb_cmd(struct scsi_qla_host *vha, mbx_cmd_t *mcp)
+ 	return rval;
  }
- static DEVICE_ATTR(blacklist, S_IRUGO, sdev_show_blacklist, NULL);
+ 
++int qla24xx_print_fc_port_id(struct scsi_qla_host *vha, struct seq_file *s, u16 loop_id)
++{
++	int rval = QLA_FUNCTION_FAILED;
++	dma_addr_t pd_dma;
++	struct port_database_24xx *pd;
++	struct qla_hw_data *ha = vha->hw;
++	mbx_cmd_t mc;
++
++	if (!vha->hw->flags.fw_started)
++		goto done;
++
++	pd = dma_pool_zalloc(ha->s_dma_pool, GFP_KERNEL, &pd_dma);
++	if (pd  == NULL) {
++		ql_log(ql_log_warn, vha, 0xd047,
++		    "Failed to allocate port database structure.\n");
++		goto done_free_sp;
++	}
++
++	memset(&mc, 0, sizeof(mc));
++	mc.mb[0] = MBC_GET_PORT_DATABASE;
++	mc.mb[1] = loop_id;
++	mc.mb[2] = MSW(pd_dma);
++	mc.mb[3] = LSW(pd_dma);
++	mc.mb[6] = MSW(MSD(pd_dma));
++	mc.mb[7] = LSW(MSD(pd_dma));
++	mc.mb[9] = vha->vp_idx;
++	mc.mb[10] = 0;
++
++	rval = qla24xx_send_mb_cmd(vha, &mc);
++	if (rval != QLA_SUCCESS) {
++		ql_dbg(ql_dbg_mbx, vha, 0x1193, "%s: fail\n", __func__);
++		goto done_free_sp;
++	}
++
++	ql_dbg(ql_dbg_mbx, vha, 0x1197, "%s: %8phC done\n",
++	    __func__, pd->port_name);
++
++	seq_printf(s, "%8phC  %02x%02x%02x  %d\n",
++		   pd->port_name, pd->port_id[0],
++		   pd->port_id[1], pd->port_id[2],
++		   loop_id);
++
++done_free_sp:
++	if (pd)
++		dma_pool_free(ha->s_dma_pool, pd, pd_dma);
++done:
++	return rval;
++}
++
+ /*
+  * qla24xx_gpdb_wait
+  * NOTE: Do not call this routine from DPC thread
 -- 
-2.34.1
+2.39.5
 
