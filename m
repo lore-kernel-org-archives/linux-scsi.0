@@ -1,156 +1,141 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD8F311CA9
-	for <linux-scsi@vger.kernel.org>; Sat, 21 Jun 2025 13:36:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70272DDC1;
+	Sat, 21 Jun 2025 13:57:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750513014; cv=none; b=qmh5a32HkHNNuOZybDEa3o6ZSjB5jj2K3Rn1j3Q2fYFksy3X2xo08OeokPz1H77hWvDjU0BpPamyM8v6jwY0oop+zRm+Bi/vs2PzJgVjWKhO3h5mVqU7xdhyiDrLQL7gT0LiDJtvljS/mnCwOG7IRnE0Bw1447XxKpPyvwwUGv4=
+	t=1750514255; cv=none; b=ThQy7HTPS1elin/aY0/ZjDu88DSOpYdb80wUXzEHbsZIwoo+p2TcXejkSMM3lOy1AdycS6hEM22je1EV4EHZDMU64sG5O8g0V+pQCV8E5hZmfCyxupCJOc65+yJs8GEiI4Y9cZ1H3X/aJ9/smf66ISmpqVz+zPvRyiuXPptHClM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750513014; c=relaxed/simple;
-	bh=ROPxr+qhf02thMdrgS1JBar6aQo2xuAQP9lzNCF23nk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hubAO5O7S4tJaqpnwfhgcBAtkgKLaLo7KIwaRsfNFaDpAVrcH3S1QvXvSeODs1Bxuefs5gARAGK/caxI3bkbJrRIg3iabM1qq+R5J5SS3XVy66mUqoox+YYwA3LmF2P0Zi/aOlYdofekUK7lPYsmduiHRTOCcMl04DbBPy7ucfg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=xpT816IB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=iQtZVTEC; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=xpT816IB; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=iQtZVTEC; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1750514255; c=relaxed/simple;
+	bh=ID7rjaE4ykN+fwkjvNTq6vv6yfCyYfVW7wahp8XmlUE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=P1JJL0gkfw9bRn6jdLvffBcLw4DquEdYlTms4RRSPQKx8QdvphHar3wwffZxcxh4UnCSCVMjqOLI0aivLDTb5VPK+rQKyD3QskcQPbZ1tGmvC7T8cN6geWDDBqJetQWaT84gBfhUVdYz5J0pb8B/pOO4HqTuSTqpcqZ420Ov36w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dRaMfz+/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="xpT816IB";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="iQtZVTEC";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="xpT816IB";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="iQtZVTEC"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 44F6F21187;
-	Sat, 21 Jun 2025 13:36:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1750513005; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oycTO/YFFT2TIM/jSDPrQxDkJASZq1U4rkORUH/J/M0=;
-	b=xpT816IBN58S8yLIy6KkCka2AmShuxRWcj5KTeYcbogzyBshjWbIo/wL4YrVk0EoKx7O5y
-	OSPzwhF5hWMgA5Xf2J+eXa4iWGMzOlV02/NuGB4xg0QFSKDGcM0GaVpo7r3OnH7q75HoOt
-	mfMxjQYuISX6zf9j2GyjsafJ6Z97LBU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1750513005;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oycTO/YFFT2TIM/jSDPrQxDkJASZq1U4rkORUH/J/M0=;
-	b=iQtZVTECCTGZhdAp86qJLU2twnyz3+yfAUi2+g+it7R63rHjB5k3r6Y2HzDeF6DEiMnuP0
-	PcsxwjvQ/3OxSkDw==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1750513005; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oycTO/YFFT2TIM/jSDPrQxDkJASZq1U4rkORUH/J/M0=;
-	b=xpT816IBN58S8yLIy6KkCka2AmShuxRWcj5KTeYcbogzyBshjWbIo/wL4YrVk0EoKx7O5y
-	OSPzwhF5hWMgA5Xf2J+eXa4iWGMzOlV02/NuGB4xg0QFSKDGcM0GaVpo7r3OnH7q75HoOt
-	mfMxjQYuISX6zf9j2GyjsafJ6Z97LBU=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1750513005;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oycTO/YFFT2TIM/jSDPrQxDkJASZq1U4rkORUH/J/M0=;
-	b=iQtZVTECCTGZhdAp86qJLU2twnyz3+yfAUi2+g+it7R63rHjB5k3r6Y2HzDeF6DEiMnuP0
-	PcsxwjvQ/3OxSkDw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A6415136BA;
-	Sat, 21 Jun 2025 13:36:43 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id B3YAHGu1VmjlHAAAD6G6ig
-	(envelope-from <hare@suse.de>); Sat, 21 Jun 2025 13:36:43 +0000
-Message-ID: <bec7b2d5-06a8-4649-a15b-e91fff21854f@suse.de>
-Date: Sat, 21 Jun 2025 15:36:42 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dRaMfz+/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 78B62C4CEE7;
+	Sat, 21 Jun 2025 13:57:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750514255;
+	bh=ID7rjaE4ykN+fwkjvNTq6vv6yfCyYfVW7wahp8XmlUE=;
+	h=From:To:Cc:Subject:Date:From;
+	b=dRaMfz+/QwayoSc09I81w3rRWTBbhVPP3Gwcpl4sDv3QqhcqZODVA31iRbfq6SwCq
+	 YolgwDJd0LK9hKxPw/pIess9wEKNBx3KumKidug7lcoQiCfB6phSeEbe7PJyULpGOg
+	 ha9rj1aUtT1oo0PsVS+fvLVukPLl1wn+XpV6PgEHeBedx3ejc11lzn/T9hADd1bh2R
+	 sEnWlXiCkZ5R7zgMtMyWe9HS1RpG8dBvHPxRlNE0FxdDml5boVve+cfITQTC0M0/+1
+	 1fW9oYL9Y6G9foE+RF0fng+zIJ5BmU7swp/w/NduVldTQxf/lMEUscAK4/Z84pwuDP
+	 7R3iwdJXnTKKA==
+From: Alexey Gladkov <legion@kernel.org>
+To: Masahiro Yamada <masahiroy@kernel.org>,
+	Petr Pavlu <petr.pavlu@suse.com>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Daniel Gomez <da.gomez@samsung.com>,
+	Nathan Chancellor <nathan@kernel.org>,
+	Nicolas Schier <nicolas.schier@linux.dev>
+Cc: linux-kernel@vger.kernel.org,
+	linux-modules@vger.kernel.org,
+	linux-kbuild@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Alexey Gladkov <legion@kernel.org>
+Subject: [PATCH v4 0/7] Add generated modalias to modules.builtin.modinfo
+Date: Sat, 21 Jun 2025 15:57:12 +0200
+Message-ID: <cover.1750511018.git.legion@kernel.org>
+X-Mailer: git-send-email 2.49.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 6/6] nvme: sysfs: emit the marginal path state in
- show_state()
-To: Bryan Gurney <bgurney@redhat.com>, linux-nvme@lists.infradead.org,
- kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, axboe@kernel.dk
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, njavali@marvell.com,
- linux-scsi@vger.kernel.org, jmeneghi@redhat.com
-References: <20250620175820.34795-1-bgurney@redhat.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250620175820.34795-1-bgurney@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RCPT_COUNT_SEVEN(0.00)[11];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Level: 
 
-On 6/20/25 19:58, Bryan Gurney wrote:
-> If a controller has received a link integrity or congestion event, and
-> has the NVME_CTRL_MARGINAL flag set, emit "marginal" in the state
-> instead of "live", to identify the marginal paths.
-> 
-> Co-developed-by: John Meneghini <jmeneghi@redhat.com>
-> Signed-off-by: John Meneghini <jmeneghi@redhat.com>
-> Signed-off-by: Bryan Gurney <bgurney@redhat.com>
-> ---
->   drivers/nvme/host/sysfs.c | 4 +++-
->   1 file changed, 3 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/nvme/host/sysfs.c b/drivers/nvme/host/sysfs.c
-> index 29430949ce2f..4a6135c2f9cb 100644
-> --- a/drivers/nvme/host/sysfs.c
-> +++ b/drivers/nvme/host/sysfs.c
-> @@ -430,7 +430,9 @@ static ssize_t nvme_sysfs_show_state(struct device *dev,
->   	};
->   
->   	if (state < ARRAY_SIZE(state_name) && state_name[state])
-> -		return sysfs_emit(buf, "%s\n", state_name[state]);
-> +		return sysfs_emit(buf, "%s\n",
-> +			(nvme_ctrl_is_marginal(ctrl)) ? "marginal" :
-> +			state_name[state]);
->   
->   	return sysfs_emit(buf, "unknown state\n");
->   }
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+The modules.builtin.modinfo file is used by userspace (kmod to be specific) to
+get information about builtin modules. Among other information about the module,
+information about module aliases is stored. This is very important to determine
+that a particular modalias will be handled by a module that is inside the
+kernel.
 
-Cheers,
+There are several mechanisms for creating modalias for modules:
 
-Hannes
+The first is to explicitly specify the MODULE_ALIAS of the macro. In this case,
+the aliases go into the '.modinfo' section of the module if it is compiled
+separately or into vmlinux.o if it is builtin into the kernel.
+
+The second is the use of MODULE_DEVICE_TABLE followed by the use of the
+modpost utility. In this case, vmlinux.o no longer has this information and
+does not get it into modules.builtin.modinfo.
+
+For example:
+
+$ modinfo pci:v00008086d0000A36Dsv00001043sd00008694bc0Csc03i30
+modinfo: ERROR: Module pci:v00008086d0000A36Dsv00001043sd00008694bc0Csc03i30 not found.
+
+$ modinfo xhci_pci
+name:           xhci_pci
+filename:       (builtin)
+license:        GPL
+file:           drivers/usb/host/xhci-pci
+description:    xHCI PCI Host Controller Driver
+
+The builtin module is missing alias "pci:v*d*sv*sd*bc0Csc03i30*" which will be
+generated by modpost if the module is built separately.
+
+To fix this it is necessary to add the generated by modpost modalias to
+modules.builtin.modinfo.
+
+Fortunately modpost already generates .vmlinux.export.c for exported symbols. It
+is possible to use this file to create a '.modinfo' section for builtin modules.
+The modules.builtin.modinfo file becomes a composite file. One part is extracted
+from vmlinux.o, the other part from .vmlinux.export.o.
+
+Notes:
+- v4:
+  * Rework the patchset based on top of Masahiro Yamada's patches.
+  * Add removal of unnecessary __mod_device_table__* symbols to avoid symbol
+    table growth in vmlinux.
+  * rust code takes into account changes in __mod_device_table__*.
+  * v3: https://lore.kernel.org/all/cover.1748335606.git.legion@kernel.org/
+
+- v3:
+  * Add `Reviewed-by` tag to patches from Petr Pavlu.
+  * Rebase to v6.15.
+  * v2: https://lore.kernel.org/all/20250509164237.2886508-1-legion@kernel.org/
+
+- v2:
+  * Drop patch for mfd because it was already applied and is in linux-next.
+  * The generation of aliases for builtin modules has been redone as
+    suggested by Masahiro Yamada.
+  * Rebase to v6.15-rc5-136-g9c69f8884904
+  * v1: https://lore.kernel.org/all/cover.1745591072.git.legion@kernel.org/
+
+
+Alexey Gladkov (3):
+  scsi: Always define blogic_pci_tbl structure
+  modpost: Add modname to mod_device_table alias
+  modpost: Create modalias for builtin modules
+
+Masahiro Yamada (4):
+  module: remove meaningless 'name' parameter from __MODULE_INFO()
+  kbuild: always create intermediate vmlinux.unstripped
+  kbuild: keep .modinfo section in vmlinux.unstripped
+  kbuild: extract modules.builtin.modinfo from vmlinux.unstripped
+
+ drivers/scsi/BusLogic.c           |  2 -
+ include/asm-generic/vmlinux.lds.h |  2 +-
+ include/crypto/algapi.h           |  4 +-
+ include/linux/module.h            | 21 ++++-----
+ include/linux/moduleparam.h       |  9 ++--
+ include/net/tcp.h                 |  4 +-
+ rust/kernel/device_id.rs          |  8 ++--
+ scripts/Makefile.vmlinux          | 74 +++++++++++++++++++++----------
+ scripts/Makefile.vmlinux_o        | 26 +----------
+ scripts/mksysmap                  |  6 +++
+ scripts/mod/file2alias.c          | 34 ++++++++++++--
+ scripts/mod/modpost.c             | 17 ++++++-
+ scripts/mod/modpost.h             |  2 +
+ 13 files changed, 131 insertions(+), 78 deletions(-)
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.49.0
+
