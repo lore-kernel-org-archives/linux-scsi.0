@@ -1,49 +1,49 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 482465D8F0;
-	Sat, 21 Jun 2025 17:16:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 116BE1624EA;
+	Sat, 21 Jun 2025 17:16:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750526174; cv=none; b=bw3vzv2i9cwC/0Ez0WrTYYVIEKh7CFWgFnznI51y+hefDPLEMHQ9iv8nNp+okm2MGwQwttxpzv5f+prY8EYArDF7UvM9ssBVTCJKKy1iU7EyZxhjwRnlQocTdrZPTkn1t/b//B2UJCZFX+olmioNhBLdXIckbOkyXNB84/09bPY=
+	t=1750526192; cv=none; b=u5cHHb3McTkdAGBmL8vGCYYat+E3w+ULtDjc1MFMI7aMkq/8bu1PPAPnRZh7OUNRfoPE+aQYH+ohDPnAPksre+epjBIhEr8LruiZKqZpgjkbEZKq1WB9sSp2XfXi+T6daQy+vn3cWdf7WHs+YesUaMsPX6/9wcjjeYLGZiCias4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750526174; c=relaxed/simple;
-	bh=+gcvjGZwxdrnistOt45/AQ9QvQLHGQ1VDn3xcEGVmmQ=;
+	s=arc-20240116; t=1750526192; c=relaxed/simple;
+	bh=WdYjSmwJ75G3ptkBKzWUoLdXsaZpab0x5plIXv6ukEw=;
 	h=Content-Type:Message-ID:Date:MIME-Version:Subject:To:CC:
-	 References:From:In-Reply-To; b=Tip8UhgoBHXiOiHOV1K8Rzfe862gPK76ENWynSmBh9NxBXzuv3ypKDXAkyEfit4kwH0+5tNDBFum0YXwoex+2fhWDgrKqJL5n/QKWbkWIZVdHHKfZx7FHhNROIL82XrpqTYw808LN3+m0swqLoeJCfdopsbLcWUaCWsoOXfKI9g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Qcu/Nv8U; arc=none smtp.client-ip=205.220.180.131
+	 References:From:In-Reply-To; b=hGCyKKVrmmqMzNFHbCybejdzorWuo9N3jY1SybNnHvAb06FY//MzdvwekDZAQ8AtgcNnOyjG7nXNXg83Rtj0grTKJ9onBIABfTrtZCgGpeAw95b8q/AoUE/aefmriWMzcqMI4vj3Zw6ZnBJoVSKxSFRL/ZCex6kkvBFRKZuDwEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=UWg6onVo; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Qcu/Nv8U"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55LDbpMK029033;
-	Sat, 21 Jun 2025 17:15:42 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="UWg6onVo"
+Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55LFDpnY006375;
+	Sat, 21 Jun 2025 17:16:08 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=EWhAyY52R9B93tq46/GWTLOi
-	WgtqM3fkKV1oXuaq+No=; b=Qcu/Nv8Uu27F4rb5vyW953hmmqtz5f7ASowCdYX1
-	KQBah3TNtpaFQL7yVq0C89YfrHbqQT5A5/BHFU/2GTjiw8qaRcDuE14fLRrkBGpj
-	l+l5SrRMWjxEOfX2kGnvGDayGCoC4ruADJm6ns+aQiu+UG3U07li784SDJO47Lyl
-	1w0OEN05sZAtJgSqcamTWMhB2n2hpXR8s8zk4e8YBkxlRzEl/OMMY6LX/pVqtIwA
-	/IInap47SUYvnCPoXZ7YE143dCp2z0StAT/kHIq/K6phYSmd0R2VQ/9N11QMvnXn
-	jus+pqLSc0d2kcIjx7VnAEmdiNV95e+amV/ipQKMI5dnlA==
-Received: from nalasppmta01.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47dm2mgy2r-1
+	:references:subject:to; s=qcppdkim1; bh=8uQBlmo30bqBjXdsNkTv/gJ6
+	are8bjp9rRn9JhNcWiM=; b=UWg6onVoDGBXZbsDi34Xj7kp/W0qFPkmtvJPgbYj
+	pgua2y7NRJ7MTY+gjb5p4frZ1erCr2KTcnTJzTS34slPXOcJIdlMWesC+DikeKe3
+	L1+jaewM6uGeQ7K7NneOTEP44tWUorAMsV/7DXtaDJCY36qaB8RSW4Q2X73wP3yY
+	UGkdq+3gH0lMiYtZq5xE8RHgMEeDe5qMcWgUGNy0nUi2QH9kFJOXEz0f4SQzZA8C
+	xzm6+gcJZq89SNZt1lKw1oogC/cfAXFN+iXxzLDNpg81B3nnQbmPwVqqbmKKLNRl
+	gbiG6D9XTTlx4EICaro49DIH9WGDU2yzU3UbiJViyUn6Eg==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47du0x0dpc-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 21 Jun 2025 17:15:41 +0000 (GMT)
+	Sat, 21 Jun 2025 17:16:08 +0000 (GMT)
 Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 55LHFeUl024446
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 55LHG7Gj008313
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 21 Jun 2025 17:15:40 GMT
+	Sat, 21 Jun 2025 17:16:07 GMT
 Received: from [10.216.13.113] (10.80.80.8) by nalasex01a.na.qualcomm.com
  (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Sat, 21 Jun
- 2025 10:15:35 -0700
+ 2025 10:16:01 -0700
 Content-Type: multipart/mixed;
-	boundary="------------MYv0y4zmAFyzi5G04JjanIdp"
-Message-ID: <e392a025-2417-4df8-b3f6-853a33cc8fe2@quicinc.com>
-Date: Sat, 21 Jun 2025 22:45:32 +0530
+	boundary="------------Da0V0ck15j1W3qt0hMbzwM0N"
+Message-ID: <7e362ee3-a237-4583-97fe-69ffc0d1d90d@quicinc.com>
+Date: Sat, 21 Jun 2025 22:45:57 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,89 +51,70 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: next-20250620: Qualcomm Dragonboard 845c Internal error Oops at
- ufs_qcom_setup_clocks
-To: Naresh Kamboju <naresh.kamboju@linaro.org>,
-        open list
-	<linux-kernel@vger.kernel.org>,
-        Linux ARM
-	<linux-arm-kernel@lists.infradead.org>,
-        <lkft-triage@lists.linaro.org>,
-        "Linux Regressions" <regressions@lists.linux.dev>,
-        <linux-phy@lists.infradead.org>, <linux-scsi@vger.kernel.org>
-CC: Vinod Koul <vkoul@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        "James E.J. Bottomley"
-	<James.Bottomley@hansenpartnership.com>,
-        "Martin K. Petersen"
-	<martin.petersen@oracle.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "Bjorn
- Andersson" <andersson@kernel.org>,
-        <konrad.dybcio@oss.qualcomm.com>, <dmitry.baryshkov@oss.qualcomm.com>,
-        Manivannan Sadhasivam <mani@kernel.org>
-References: <CA+G9fYuOnfvm7N0pa=PNvq=tQsp6CVA34eDq5=rGthEBrdMJuQ@mail.gmail.com>
+Subject: Re: [PATCH V6 10/10] scsi: ufs: qcom : Refactor phy_power_on/off
+ calls
+To: Aishwarya <aishwarya.tcv@arm.com>
+CC: <James.Bottomley@HansenPartnership.com>, <andersson@kernel.org>,
+        <bvanassche@acm.org>, <dmitry.baryshkov@oss.qualcomm.com>,
+        <kishon@kernel.org>, <konrad.dybcio@oss.qualcomm.com>,
+        <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-phy@lists.infradead.org>, <linux-scsi@vger.kernel.org>,
+        <manivannan.sadhasivam@linaro.org>, <martin.petersen@oracle.com>,
+        <neil.armstrong@linaro.org>, <quic_cang@quicinc.com>,
+        <quic_rdwivedi@quicinc.com>, <vkoul@kernel.org>, <broonie@kernel.org>
+References: <9c846734-9267-442d-bba0-578d993650c1@quicinc.com>
+ <20250620214408.11028-1-aishwarya.tcv@arm.com>
 Content-Language: en-US
 From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <CA+G9fYuOnfvm7N0pa=PNvq=tQsp6CVA34eDq5=rGthEBrdMJuQ@mail.gmail.com>
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+In-Reply-To: <20250620214408.11028-1-aishwarya.tcv@arm.com>
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01a.na.qualcomm.com (10.47.209.196)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: zwt2HxUhSi6xVY2923fndPMoZrIGRJ5P
-X-Proofpoint-ORIG-GUID: zwt2HxUhSi6xVY2923fndPMoZrIGRJ5P
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIxMDEwOSBTYWx0ZWRfXyCNU3s9oybwD
- lq9yQZMb3PkSGzBU2TbXwTZalsMMqyhThad9iH0AvnBESH2Ccn2cZnCm+G3MkYxu7x74w4wyigA
- oPGXjDwjeuwTqTCw0TYDuCvn6yqvJXx2NDot6J/c1ziklETEwMUbARqbERg+iHsr6VMf1Ga0rtx
- KasG0nIO6Zdz5TJzgkLOujtzJWlQ0RT05yYkPBQ/pcBrjhlpShE8RQqWM5rsjY3yAE0boCMs7rB
- qF6AkNlPerultpu9jTyWl3M0xx3VoA2494WlWcoHBSaNP49WY/bMSFBcSkgXpdNcbPLvVF4MthV
- x3Xf/7LjHmq4s2rExAv/LwtZBQtBd9lPxKlHRgg7Sp6XN0uaTFndng7H/0oje8dYsZYf7OJLhuv
- uMWEiaKpcZl77yPf+1OyL7z9WUgO5IUTp532aSGg8owHRzaJIvCnAls4xYmLMX7Rv6WTrdGX
-X-Authority-Analysis: v=2.4 cv=Q93S452a c=1 sm=1 tr=0 ts=6856e8be cx=c_pps
+X-Proofpoint-GUID: BBgAG4L-SZ6R_xd46fwJubdJZ8p0ZAAV
+X-Authority-Analysis: v=2.4 cv=fYqty1QF c=1 sm=1 tr=0 ts=6856e8d8 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=6IFa9wvqVegA:10 a=Oh2cFVv5AAAA:8 a=KKAkSRfTAAAA:8
- a=21D8NHQQAAAA:8 a=IbvxqlhZ7zuPPwgKCwkA:9 a=QEXdDO2ut3YA:10
- a=09waTpoc23FLKGTpX6IA:9 a=B2y7HmGcmWMA:10 a=7KeoIwV6GZqOttXkcoxL:22
- a=cvBusfyB2V15izCimMoJ:22 a=aE7_2WBlPvBBVsBbSUWX:22
+ a=GEpy-HfZoHoA:10 a=6IFa9wvqVegA:10 a=NEAV23lmAAAA:8 a=VcYpPVACYBiYVGcob_UA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=09waTpoc23FLKGTpX6IA:9
+ a=B2y7HmGcmWMA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIxMDEwOSBTYWx0ZWRfX4RbztmE39TiY
+ r/bYabi1sVGpv41mlV8Cfs4apNGquFVhxWI3++PdklMF9x0T98vpfYxn6mg5X3O/HtSxP43deaa
+ i+QmlhLg7hNOO6AADJjf6wjHG91DYIu2GyDWdIG7nhmOjmQsjLTbLb79F05vQggRawhHcE2LHcY
+ lnU69yq+abgZutAY4SIlq7uYmdz1rkJAFwulvQLBMu+5AChmLKEK4rT8vdVh89nnAfHUty/P3va
+ xbsJ8dktxUuWavOsA0Q0prLtxHB1v8eQxDtYZ8wHBgRA3BVrJ8R+1UmzETD9nKguOqDWYTuUNKY
+ uW6KByXL7AyPSw0VCv1/I/1pfYuu7FP9l4rjDujCS0Yedt7ZPGQv0XnTXRLIF1AxZHzIIH7LJTv
+ 7zO3KGXbxl7jtKtT8r3SrXRgJoqsWfak7q5x/kwCxe+IiLQUiCGWtQ5PzSwUqqqdaVaEC7AP
+X-Proofpoint-ORIG-GUID: BBgAG4L-SZ6R_xd46fwJubdJZ8p0ZAAV
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.0.736,FMLib:17.12.80.40
  definitions=2025-06-21_05,2025-06-20_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 priorityscore=1501 mlxscore=0 suspectscore=0
- clxscore=1011 lowpriorityscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- impostorscore=0 bulkscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2506210109
+ spamscore=0 impostorscore=0 phishscore=0 mlxlogscore=999 adultscore=0
+ priorityscore=1501 malwarescore=0 suspectscore=0 mlxscore=0
+ lowpriorityscore=0 bulkscore=0 clxscore=1011 classifier=spam authscore=0
+ authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505280000 definitions=main-2506210109
 
---------------MYv0y4zmAFyzi5G04JjanIdp
+--------------Da0V0ck15j1W3qt0hMbzwM0N
 Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
 
 
-On 6/21/2025 1:40 PM, Naresh Kamboju wrote:
-> Regressions noticed on the Qualcomm Dragonboard 845c device while booting the
-> Linux next tags from next-20250616..next-20250620 the following kernel oops
-> noticed and boot failed.
+On 6/21/2025 3:14 AM, Aishwarya wrote:
+> Hi Nitin,
 > 
-> Regressions found on Thundercomm Dragonboard 845c (DT)
-> - Boot
+> To clarify — the defconfig kernel does boot successfully on our Arm64
+> Qualcomm platforms (RB5 and DB845C). However, starting from
+> next-20250613, we are seeing the following three test failures in the
+> `bootrr` baseline test in our CI environment:
 > 
-> Regression Analysis:
-> - New regression? Yes
-> - Reproducibility? Yes
+>    - baseline.bootrr.scsi-disk-device0-probed
+>    - dmesg.alert
+>    - dmesg.emerg
 > 
-> First seen on the next-20250616
-> Good: next-20250613
-> Bad:  next-20250616
-> 
-> Boot regression: Qualcomm Dragonboard 845c Internal error Oops at
-> ufs_qcom_setup_clocks
-> 
-> Reported-by: Linux Kernel Functional Testing <lkft@linaro.org>
 
-
-Hi Naresh,
+Hi Aishwarya,
 
 Thanks for testing and reporting this issue. Can you please
 test with the attached fix and let me know if it helps.
@@ -141,132 +122,41 @@ test with the attached fix and let me know if it helps.
 Regards,
 Nitin
 
+> Test suite:
+>    https://github.com/kernelci/bootrr/tree/main
+> 
+> These failures are due to kernel alerts seen in the boot logs. A relevant
+> snippet is shown below:
+> 
+>    kern  :alert : Unable to handle kernel NULL pointer dereference at
+>    virtual address 0000000000000000
+>    kern  :alert : Mem abort info:
+>    kern  :alert :   ESR = 0x0000000096000004
+>    kern  :alert :   EC = 0x25: DABT (current EL), IL = 32 bits
+>    kern  :alert :   SET = 0, FnV = 0
+>    kern  :alert :   EA = 0, S1PTW = 0
+>    kern  :alert :   FSC = 0x04: level 0 translation fault
+>    kern  :alert : Data abort info:
+>    kern  :alert :   ISV = 0, ISS = 0x00000004, ISS2 = 0x00000000
+>    kern  :alert :   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
+>    kern  :alert :   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
+>    kern  :alert : user pgtable: 4k pages, 48-bit VAs, pgdp=0000000109c41000
+>    kern  :alert : [0000000000000000] pgd=0000000000000000
+>    <LAVA_SIGNAL_TESTCASE TEST_CASE_ID=alert RESULT=fail UNITS=lines
+>    MEASUREMENT=13>
+> 
+>    kern  :emerg : Internal error: Oops: 0000000096000004 [#1] SMP
+>    kern  :emerg : Code: a90157f3 aa0003f3 f90013f6 f9405c15 (f94002b6)
+>    <LAVA_SIGNAL_TESTCASE TEST_CASE_ID=emerg RESULT=fail UNITS=lines
+>    MEASUREMENT=2>
+> 
+> Please let me know if you need full logs or further details to help
+> with debugging.
+> 
+> Thanks,
+> Aishwarya
 
-> 
-> ## Boot log
-> [    6.446825] ufshcd-qcom 1d84000.ufshc: ufshcd_populate_vreg: Unable
-> to find vccq2-supply regulator, assuming enabled
-> [    6.448070] Unable to handle kernel NULL pointer dereference at
-> virtual address 0000000000000000
-> [    6.448080] Mem abort info:
-> [    6.448086]   ESR = 0x0000000096000006
-> [    6.448093]   EC = 0x25: DABT (current EL), IL = 32 bits
-> [    6.448101]   SET = 0, FnV = 0
-> [    6.448107]   EA = 0, S1PTW = 0
-> [    6.448113]   FSC = 0x06: level 2 translation fault
-> [    6.448120] Data abort info:
-> [    6.448125]   ISV = 0, ISS = 0x00000006, ISS2 = 0x00000000
-> [    6.448132]   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
-> [    6.448139]   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
-> [    6.448146] user pgtable: 4k pages, 48-bit VAs, pgdp=000000010447b000
-> [    6.448154] [0000000000000000] pgd=080000010447d403,
-> p4d=080000010447d403, pud=080000010447e403, pmd=0000000000000000
-> [    6.448186] Internal error: Oops: 0000000096000006 [#1]  SMP
-> [    6.448193] Modules linked in: qcom_q6v5_mss(+) ufs_qcom(+)
-> cfg80211(+) coresight_stm stm_core phy_qcom_qmp_pcie rfkill qcom_wdt
-> lmh(+) icc_osm_l3 qrtr slim_qcom_ngd_ctrl slimbus pdr_interface
-> qcom_pdr_msg icc_bwmon qcom_q6v5_pas(+) llcc_qcom qcom_pil_info
-> display_connector qcom_q6v5 qcom_sysmon drm_kms_helper qcom_common
-> qcom_glink_smem mdt_loader qmi_helpers drm backlight socinfo rmtfs_mem
-> [    6.448278] CPU: 6 UID: 0 PID: 385 Comm: (udev-worker) Not tainted
-> 6.16.0-rc2-next-20250620 #1 PREEMPT
-> [    6.448288] Hardware name: Thundercomm Dragonboard 845c (DT)
-> [    6.448292] pstate: 20400005 (nzCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-> [    6.448299] pc : ufs_qcom_setup_clocks+0x28/0x148 ufs_qcom
-> [    6.448317] lr : ufshcd_setup_clocks
-> (drivers/ufs/core/ufshcd-priv.h:142 drivers/ufs/core/ufshcd.c:9290)
-> [    6.448332] sp : ffff800081213640
-> [    6.448335] x29: ffff800081213640 x28: 0000000000000001 x27: ffff00008b633270
-> [    6.448347] x26: ffff00008b6332a0 x25: ffff00008b632870 x24: 0000000000000000
-> [    6.448359] x23: ffff00008b633280 x22: ffff00008b6332a0 x21: 0000000000000000
-> [    6.448369] x20: ffffd7eabf84d618 x19: ffff00008b632870 x18: 0000000000000000
-> [    6.448380] x17: 5453595342555300 x16: 305f666d745f6973 x15: 0000000000000100
-> [    6.448391] x14: ffffffffffffffff x13: 0000000000000030 x12: 0101010101010101
-> [    6.448402] x11: ffff00008188ea18 x10: 0000000000000000 x9 : ffffd7eabd9c3c28
-> [    6.448413] x8 : ffff8000812134b8 x7 : fefefefefefefefe x6 : 0000000000000001
-> [    6.448423] x5 : ffffffffffffffc8 x4 : 00000000c0000000 x3 : ffffd7eab32aa058
-> [    6.448433] x2 : 0000000000000000 x1 : 0000000000000001 x0 : ffff00008b632870
-> [    6.448444] Call trace:
-> [    6.448449] ufs_qcom_setup_clocks+0x28/0x148 ufs_qcom (P)
-> [    6.448466] ufshcd_setup_clocks (drivers/ufs/core/ufshcd-priv.h:142
-> drivers/ufs/core/ufshcd.c:9290)
-> [    6.448477] ufshcd_init (drivers/ufs/core/ufshcd.c:9468
-> drivers/ufs/core/ufshcd.c:10636)
-> [    6.448485] ufshcd_pltfrm_init (drivers/ufs/host/ufshcd-pltfrm.c:504)
-> [    6.448495] ufs_qcom_probe+0x28/0x68 ufs_qcom
-> [    6.448508] platform_probe (drivers/base/platform.c:1404)
-> [    6.448519] really_probe (drivers/base/dd.c:579 drivers/base/dd.c:657)
-> [    6.448526] __driver_probe_device (drivers/base/dd.c:799)
-> [    6.448532] driver_probe_device (drivers/base/dd.c:829)
-> [    6.448539] __driver_attach (drivers/base/dd.c:1216)
-> [    6.448545] bus_for_each_dev (drivers/base/bus.c:370)
-> [    6.448556] driver_attach (drivers/base/dd.c:1234)
-> [    6.448567] bus_add_driver (drivers/base/bus.c:678)
-> [    6.448577] driver_register (drivers/base/driver.c:249)
-> [    6.448584] __platform_driver_register (drivers/base/platform.c:868)
-> [    6.448592] ufs_qcom_pltform_init+0x28/0xff8 ufs_qcom
-> [    6.448605] do_one_initcall (init/main.c:1274)
-> [    6.448615] do_init_module (kernel/module/main.c:3041)
-> [    6.448626] load_module (kernel/module/main.c:3511)
-> [    6.448635] init_module_from_file (kernel/module/main.c:3704)
-> [    6.448644] __arm64_sys_finit_module (kernel/module/main.c:3715
-> kernel/module/main.c:3741 kernel/module/main.c:3725
-> kernel/module/main.c:3725)
-> [    6.448653] invoke_syscall (arch/arm64/include/asm/current.h:19
-> arch/arm64/kernel/syscall.c:54)
-> [    6.448661] el0_svc_common.constprop.0
-> (include/linux/thread_info.h:135 (discriminator 2)
-> arch/arm64/kernel/syscall.c:140 (discriminator 2))
-> [    6.448668] do_el0_svc (arch/arm64/kernel/syscall.c:152)
-> [    6.448674] el0_svc (arch/arm64/include/asm/irqflags.h:82
-> (discriminator 1) arch/arm64/include/asm/irqflags.h:123 (discriminator
-> 1) arch/arm64/include/asm/irqflags.h:136 (discriminator 1)
-> arch/arm64/kernel/entry-common.c:165 (discriminator 1)
-> arch/arm64/kernel/entry-common.c:178 (discriminator 1)
-> arch/arm64/kernel/entry-common.c:768 (discriminator 1))
-> [    6.448685] el0t_64_sync_handler (arch/arm64/kernel/entry-common.c:787)
-> [    6.448694] el0t_64_sync (arch/arm64/kernel/entry.S:600)
-> [ 6.448705] Code: a90157f3 aa0003f3 f90013f6 f9405c15 (f94002b6)
-> All code
-> ========
->     0: a90157f3 stp x19, x21, [sp, #16]
->     4: aa0003f3 mov x19, x0
->     8: f90013f6 str x22, [sp, #32]
->     c: f9405c15 ldr x21, [x0, #184]
->    10:* f94002b6 ldr x22, [x21] <-- trapping instruction
-> 
-> Code starting with the faulting instruction
-> ===========================================
->     0: f94002b6 ldr x22, [x21]
-> [    6.448710] ---[ end trace 0000000000000000 ]---
-> 
-> ## Source
-> * Kernel version: 6.16.0-rc2-next-20250620
-> * Git tree: https://kernel.googlesource.com/pub/scm/linux/kernel/git/next/linux-next.git
-> * Git sha: 2c923c845768a0f0e34b8161d70bc96525385782
-> * Git describe: next-20250620
-> * Project details:
-> https://qa-reports.linaro.org/lkft/linux-next-master/build/next-20250620/
-> * Architectures: arm64 Dragonboard 845c
-> * Toolchains: gcc-13
-> * Kconfigs: defconfig+lkfttestconfigs
-> 
-> ## Build arm64
-> * Test log: https://qa-reports.linaro.org/api/testruns/28811906/log_file/
-> * Test Lava log: https://lkft.validation.linaro.org/scheduler/job/8323501#L5646
-> * Test Lava log 2:
-> https://lkft.validation.linaro.org/scheduler/job/8323351#L5682
-> * Test details:
-> https://regressions.linaro.org/lkft/linux-next-master/next-20250620/boot/gcc-13-lkftconfig/
-> * Build link: https://storage.tuxsuite.com/public/linaro/lkft/builds/2yj4otvwBRT4UktLTyKEN8ZtUQm/
-> * Kernel config:
-> https://storage.tuxsuite.com/public/linaro/lkft/builds/2yj4otvwBRT4UktLTyKEN8ZtUQm/config
-> 
-> --
-> Linaro LKFT
-> https://lkft.linaro.org
-
---------------MYv0y4zmAFyzi5G04JjanIdp
+--------------Da0V0ck15j1W3qt0hMbzwM0N
 Content-Type: text/plain; charset="UTF-8";
 	name="0001-scsi-ufs-qcom-Fix-NULL-pointer-dereference-in-ufs_qc.patch"
 Content-Disposition: attachment;
@@ -332,4 +222,4 @@ IWhvc3QpCiAJCXJldHVybiAwOwoKKwlwaHkgPSBob3N0LT5nZW5lcmljX3BoeTsKKwogCXN3
 aXRjaCAoc3RhdHVzKSB7CiAJY2FzZSBQUkVfQ0hBTkdFOgogCQlpZiAob24pIHsKLS0KMi40
 OC4xCgo=
 
---------------MYv0y4zmAFyzi5G04JjanIdp--
+--------------Da0V0ck15j1W3qt0hMbzwM0N--
