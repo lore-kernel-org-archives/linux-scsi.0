@@ -1,50 +1,37 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6B17262C;
-	Mon, 23 Jun 2025 05:32:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35B4D154457;
+	Mon, 23 Jun 2025 05:39:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750656779; cv=none; b=R5YlsOYPEvyOgttmazFIWm/dCsiT/hppcUSff7d2sDW6SOlxGIs4ihEOtvBKKB60YagyDrcg3ufIf+VBIYbTX0GQyWiNcVx7L/vDZMBoDHcwsn1Dhov5lyYV3Oi+MhJVoERBdoqtn5bLX7wT1hHJZ4yceMWYPx0eAZqKbbCBjug=
+	t=1750657192; cv=none; b=XAgqVhNv/qz1i7d25Ibsg1A4sovV9g/ekZ/LxSoDvGbiMSZzcLruSqBnRafG7RuRCahymVABPURvyPUbSUOdcDK5zHrosYDyYZMPOUykYN0rHwj2Q2DqjLTfzqjIlemTe8Co3dEGb4TuZliUcXGLvJrV93aKV+Zg5srqWgqrXPY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750656779; c=relaxed/simple;
-	bh=wn6hU4uBLVXiKUn0aPPSrorYe7DaQl25K3Tr55cujBI=;
+	s=arc-20240116; t=1750657192; c=relaxed/simple;
+	bh=M7NmYC/Iylm9myghHwqILim55SAUt9QrM+UZYk0eJlw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=sFAwoybQUO013gGUxSC0+sji+BO/QeesNNbJb/7k31rBHvxW3YVByughmj+FxD7k/dxqf6h8ooEnzCBPAOIhQMaCfPGNSC0vaUFYrE4g/0bwS62HOCFCUKCu3+POPMURah0ASvlq2kFyK2CDND+cXjwTBjb4WUulKqLKxjmVmio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WhzzCamn; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WhzzCamn"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=ipEsyYyk71k2C4j1LNOEHkyKYSiaoyutZyoqccIJItY=; b=WhzzCamnfQVlzTExnovnOi1iaK
-	igUte6PEQMjPQxzd/6ESeKng+Fy6g3VOkYFYHJ6pG6nqLEy1U800RqWaZTwDPAJK/wBNS9Bq46KDA
-	LsDyjAPQ1/RjW5HrZde+pMp2sjTwah3eN+D+RnPz4M4dyArXZVoiGwGCaz0/uiji8dKRhYfP+kxSf
-	z9YrB9gBkl7m9/f2y7fjCRYOjzD8WTseQHzHwoLDSytNbux5fAgeWotvLVVR/OY1shLD9Iv9lpM18
-	+ddDN4Tpu0NbUel24ydM0308x4Jd1AQjJrwwiwiXk7bBWFTUlRLzng66b4dNEc9Pa3omG6CkWe/DX
-	02NRoogg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uTZnb-00000001cyp-0xeg;
-	Mon, 23 Jun 2025 05:32:55 +0000
-Date: Sun, 22 Jun 2025 22:32:55 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Anuj Gupta <anuj20.g@samsung.com>
-Cc: vincent.fu@samsung.com, jack@suse.cz, anuj1072538@gmail.com,
-	axboe@kernel.dk, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	hch@infradead.org, martin.petersen@oracle.com, ebiggers@kernel.org,
-	adilger@dilger.ca, linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com,
+	 Content-Type:Content-Disposition:In-Reply-To; b=Z9aRrRxRxS9Xbl7W3QR1/7odIh5VdXsJ7EkFPR61+Ghqo7q2UVYNEh9DfWTYWgYRd2OMhSJ/3vrawG/XA2M45RirxaCRXK+g3+OZvxQaU2I/O0Y9b7HssZINUjNUiW63k9IL7EdB6QuAKOLwT2bF2VwFnhMGyDAlWG7y4pLrN58=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 1C88968AFE; Mon, 23 Jun 2025 07:39:45 +0200 (CEST)
+Date: Mon, 23 Jun 2025 07:39:44 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
+	linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
 	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
-	gost.dev@samsung.com
-Subject: Re: [PATCH for-next v4 4/4] fs: add ioctl to query metadata and
- protection info capabilities
-Message-ID: <aFjnBxZ8dAehH0Xr@infradead.org>
-References: <20250618055153.48823-1-anuj20.g@samsung.com>
- <CGME20250618055220epcas5p3e806eb6636542bb344c1a08cb9d9fd0f@epcas5p3.samsung.com>
- <20250618055153.48823-5-anuj20.g@samsung.com>
+	linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+	tytso@mit.edu, djwong@kernel.org, john.g.garry@oracle.com,
+	bmarzins@redhat.com, chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com, brauner@kernel.org,
+	martin.petersen@oracle.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH v2 1/9] block: introduce
+ max_{hw|user}_wzeroes_unmap_sectors to queue limits
+Message-ID: <20250623053944.GA29955@lst.de>
+References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com> <20250619111806.3546162-2-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,53 +40,10 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250618055153.48823-5-anuj20.g@samsung.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20250619111806.3546162-2-yi.zhang@huaweicloud.com>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-On Wed, Jun 18, 2025 at 11:21:53AM +0530, Anuj Gupta wrote:
-> +/*
-> + * struct logical_block_metadata_cap - Logical block metadata capability
+Looks good:
 
-No real need to duplicate the struct name here.
-
-> + * If the device does not support metadata, all the fields will be zero.
-> + * Applications must check lbmd_flags to determine whether metadata is supported or not.
-
-Overly long line.
-
-> + */
-> +struct logical_block_metadata_cap {
-> +	/* Bitmask of logical block metadata capability flags */
-> +	__u32	lbmd_flags;
-> +	/* The amount of data described by each unit of logical block metadata */
-
-Loit sof overly long lines, please reformat these as block comments.
-
-> +	__u16	lbmd_interval;
-> +	/* Size in bytes of the logical block metadata associated with each interval */
-> +	__u8	lbmd_size;
-> +	/* Size in bytes of the opaque block tag associated with each interval */
-> +	__u8	lbmd_opaque_size;
-
-
-
-> +	/* Offset in bytes of the opaque block tag within the logical block metadata */
->
-> +	__u8	lbmd_opaque_offset;
-> +	/* Size in bytes of the T10 PI tuple associated with each interval */
-> +	__u8	lbmd_pi_size;
-> +	/* Offset in bytes of T10 PI tuple within the logical block metadata */
-> +	__u8	lbmd_pi_offset;
-> +	/* T10 PI guard tag type */
-> +	__u8	lbmd_guard_tag_type;
-> +	/* Size in bytes of the T10 PI application tag */
-> +	__u8	lbmd_app_tag_size;
-> +	/* Size in bytes of the T10 PI reference tag */
-> +	__u8	lbmd_ref_tag_size;
-> +	/* Size in bytes of the T10 PI storage tag */
-> +	__u8	lbmd_storage_tag_size;
-> +};
-
-This leaves a byte of padding at the end, leaving to issues with
-compiler alignments and potentially leaking uninitialized stack data.
+Reviewed-by: Christoph Hellwig <hch@lst.de>
 
