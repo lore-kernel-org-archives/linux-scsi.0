@@ -1,35 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15714210FB;
-	Mon, 23 Jun 2025 05:30:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE6B17262C;
+	Mon, 23 Jun 2025 05:32:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750656620; cv=none; b=h1tyJvPmp5N+LV9LnEe2kyxpYW7uODfsTMOWlSlRxZ3cSs9+V7EH/tMHJ8DiCaE3ITzN730w40GK1s5xQZFwLni1WGIJ1Em3kzOmW1bVChFDbGKLDHPxW7SAZN3Fc3OkJLJD4nsiTo2z8d1rnNKMbPGR+9d+M5ww+OqLaCMXg9U=
+	t=1750656779; cv=none; b=R5YlsOYPEvyOgttmazFIWm/dCsiT/hppcUSff7d2sDW6SOlxGIs4ihEOtvBKKB60YagyDrcg3ufIf+VBIYbTX0GQyWiNcVx7L/vDZMBoDHcwsn1Dhov5lyYV3Oi+MhJVoERBdoqtn5bLX7wT1hHJZ4yceMWYPx0eAZqKbbCBjug=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750656620; c=relaxed/simple;
-	bh=OLS9TfzrHaJbr7q8HR4u6+oaiCM98vyR/i7lZ8fnI68=;
+	s=arc-20240116; t=1750656779; c=relaxed/simple;
+	bh=wn6hU4uBLVXiKUn0aPPSrorYe7DaQl25K3Tr55cujBI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UnLTgu1/oGk/eQAecRsipmSHS08Oe/Okbn7enz8Vf9nroxNj/HfECxl5b6uW7mZtqqtJViQFF65SKToQdov0RDLwu+FJSrBjKew4UWXbybnOTPshJK9Ewm8Xa049BsQVJjy/35QR9x57tsXNFJZA42TWDr5D9lruXcZcivjFiis=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=e1KZ9QyY; arc=none smtp.client-ip=198.137.202.133
+	 Content-Type:Content-Disposition:In-Reply-To; b=sFAwoybQUO013gGUxSC0+sji+BO/QeesNNbJb/7k31rBHvxW3YVByughmj+FxD7k/dxqf6h8ooEnzCBPAOIhQMaCfPGNSC0vaUFYrE4g/0bwS62HOCFCUKCu3+POPMURah0ASvlq2kFyK2CDND+cXjwTBjb4WUulKqLKxjmVmio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=WhzzCamn; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="e1KZ9QyY"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="WhzzCamn"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
 	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
 	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=OLS9TfzrHaJbr7q8HR4u6+oaiCM98vyR/i7lZ8fnI68=; b=e1KZ9QyYVqszBvA+tNI5GhIgd8
-	Y/uPFGe+3zKpytXztk+ckvYQyRV5pHi2oAjJ0RJ58FRXkbKLu1m28XdCitYiqKiSaJcoLjaCo1LSH
-	4dQ0yJ1qrBdQ1Hojcf25FlLA/fptIAuK+zZZSIFa/dNeNPobp5B9MjHaGu8CyHyVAZYTe8Th6VRYU
-	wnHBsIqu9s/qFhqNKUYQ7O+eduTjklzN8jV/rCl3hXjTXzNy45/7NGmcC4QnUu1HSJ6y6J4I1Kluf
-	RTjId58owroV27j/BHi1mATd0dxTLf+gbrf+Vs+78pnSIx4zzSB+70uTveK7xlhz4xsUhfypzX0gM
-	LrvSR86A==;
+	bh=ipEsyYyk71k2C4j1LNOEHkyKYSiaoyutZyoqccIJItY=; b=WhzzCamnfQVlzTExnovnOi1iaK
+	igUte6PEQMjPQxzd/6ESeKng+Fy6g3VOkYFYHJ6pG6nqLEy1U800RqWaZTwDPAJK/wBNS9Bq46KDA
+	LsDyjAPQ1/RjW5HrZde+pMp2sjTwah3eN+D+RnPz4M4dyArXZVoiGwGCaz0/uiji8dKRhYfP+kxSf
+	z9YrB9gBkl7m9/f2y7fjCRYOjzD8WTseQHzHwoLDSytNbux5fAgeWotvLVVR/OY1shLD9Iv9lpM18
+	+ddDN4Tpu0NbUel24ydM0308x4Jd1AQjJrwwiwiXk7bBWFTUlRLzng66b4dNEc9Pa3omG6CkWe/DX
+	02NRoogg==;
 Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uTZl0-00000001cg2-0hIM;
-	Mon, 23 Jun 2025 05:30:14 +0000
-Date: Sun, 22 Jun 2025 22:30:14 -0700
+	id 1uTZnb-00000001cyp-0xeg;
+	Mon, 23 Jun 2025 05:32:55 +0000
+Date: Sun, 22 Jun 2025 22:32:55 -0700
 From: Christoph Hellwig <hch@infradead.org>
 To: Anuj Gupta <anuj20.g@samsung.com>
 Cc: vincent.fu@samsung.com, jack@suse.cz, anuj1072538@gmail.com,
@@ -39,12 +39,12 @@ Cc: vincent.fu@samsung.com, jack@suse.cz, anuj1072538@gmail.com,
 	linux-fsdevel@vger.kernel.org, joshi.k@samsung.com,
 	linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
 	gost.dev@samsung.com
-Subject: Re: [PATCH for-next v4 3/4] set pi_offset only when checksum type is
- not BLK_INTEGRITY_CSUM_NONE
-Message-ID: <aFjmZkidi9O_73bW@infradead.org>
+Subject: Re: [PATCH for-next v4 4/4] fs: add ioctl to query metadata and
+ protection info capabilities
+Message-ID: <aFjnBxZ8dAehH0Xr@infradead.org>
 References: <20250618055153.48823-1-anuj20.g@samsung.com>
- <CGME20250618055218epcas5p13a69c6cbb36108a34379148a4f8d0a20@epcas5p1.samsung.com>
- <20250618055153.48823-4-anuj20.g@samsung.com>
+ <CGME20250618055220epcas5p3e806eb6636542bb344c1a08cb9d9fd0f@epcas5p3.samsung.com>
+ <20250618055153.48823-5-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,12 +53,53 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250618055153.48823-4-anuj20.g@samsung.com>
+In-Reply-To: <20250618055153.48823-5-anuj20.g@samsung.com>
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-The Subject line is missing an "nvme: " prefix.
+On Wed, Jun 18, 2025 at 11:21:53AM +0530, Anuj Gupta wrote:
+> +/*
+> + * struct logical_block_metadata_cap - Logical block metadata capability
 
-Otherwise looks good:
+No real need to duplicate the struct name here.
 
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+> + * If the device does not support metadata, all the fields will be zero.
+> + * Applications must check lbmd_flags to determine whether metadata is supported or not.
+
+Overly long line.
+
+> + */
+> +struct logical_block_metadata_cap {
+> +	/* Bitmask of logical block metadata capability flags */
+> +	__u32	lbmd_flags;
+> +	/* The amount of data described by each unit of logical block metadata */
+
+Loit sof overly long lines, please reformat these as block comments.
+
+> +	__u16	lbmd_interval;
+> +	/* Size in bytes of the logical block metadata associated with each interval */
+> +	__u8	lbmd_size;
+> +	/* Size in bytes of the opaque block tag associated with each interval */
+> +	__u8	lbmd_opaque_size;
+
+
+
+> +	/* Offset in bytes of the opaque block tag within the logical block metadata */
+>
+> +	__u8	lbmd_opaque_offset;
+> +	/* Size in bytes of the T10 PI tuple associated with each interval */
+> +	__u8	lbmd_pi_size;
+> +	/* Offset in bytes of T10 PI tuple within the logical block metadata */
+> +	__u8	lbmd_pi_offset;
+> +	/* T10 PI guard tag type */
+> +	__u8	lbmd_guard_tag_type;
+> +	/* Size in bytes of the T10 PI application tag */
+> +	__u8	lbmd_app_tag_size;
+> +	/* Size in bytes of the T10 PI reference tag */
+> +	__u8	lbmd_ref_tag_size;
+> +	/* Size in bytes of the T10 PI storage tag */
+> +	__u8	lbmd_storage_tag_size;
+> +};
+
+This leaves a byte of padding at the end, leaving to issues with
+compiler alignments and potentially leaking uninitialized stack data.
 
