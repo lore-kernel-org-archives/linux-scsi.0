@@ -1,34 +1,35 @@
 Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9FC762101AE;
-	Mon, 23 Jun 2025 08:03:33 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D61BB1F873B;
+	Mon, 23 Jun 2025 08:03:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750665815; cv=none; b=Dxub1y4z0RjIT/S6Toz+m3xEt/n6295X/ZLzAEdVRf1jotW7HH3WM/Y3mI8TFUEpQlo2MwkLTrJpqPkS29n3wWnag/reO6WpUtA+0kU5x2Att9WvCCe4RK8OIARyQ5/Vwg+Gzx7agYxFidxyztTwPDnFvLJqR80IBKuuhs4IoV4=
+	t=1750665819; cv=none; b=KOGZkwSYe/g4Swr0g2in8SrOKY4XqiRtWpg+mgY7o7rRwdhQCALRCE1KFuFs7wB+++Y6Bahcnn8vr9Kc0Nw5M7er0f9XI7y8jVmYwc2EZ4lvFRTVUe0Rpb0OuaFyYr8XcdpvZi418SwDLE7lF1mF4gqE8xXSYwXHGRrCaE8YkVo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750665815; c=relaxed/simple;
-	bh=e0ktP2iwVr4FvXesAqg1Sk7r9UahGrfTEMU18baZE6Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=c2+GVWJbDNHY5dnKxmftqv5JU0C0W92Sbcn1pmN4RPEpGb6Z0+vmNmq9F1oXbFNqxNxp9rjrDYPar9A3wnhMnuqrr9twS/g6SR0phgmC1l0sP5It9W/IDBEmhbGVhRHBM7+NlPxqC5qaS6avbq7+phAdojrOkgY1mn7FshaTj2g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=zAnM7djq; arc=none smtp.client-ip=198.137.202.133
+	s=arc-20240116; t=1750665819; c=relaxed/simple;
+	bh=RryDxMP6phDoHxOFe7njIFJUFEt+81x4OCWvS7YI6tw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=HhLRiJzBS44wjd84V6Kq31twU4+L3OIVaAUy9g8Cdz+T4SKNAsdxoL15/xUS25/3FuiXJ8/L9dNOxzSSimTpHKpmCcSsO8URMHVktu4Nr/XQu4yqJ2cfLd+Vp7pNVJLNmrLiYidw409B1DVLXrX0NjYGPuMw78XxGZ2Jix5VYZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=PkCA/KIj; arc=none smtp.client-ip=198.137.202.133
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=lst.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="zAnM7djq"
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="PkCA/KIj"
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
 	d=infradead.org; s=bombadil.20210309; h=Content-Transfer-Encoding:
-	MIME-Version:Message-ID:Date:Subject:Cc:To:From:Sender:Reply-To:Content-Type:
-	Content-ID:Content-Description:In-Reply-To:References;
-	bh=eTsxtf4UZCnslU6UBLjKAuF8MnH+LixRASR1F/VfA9k=; b=zAnM7djquzUYezeWaUbyOn6dJM
-	UZK5tKTrNOFN9jb9+gVqpPFEq0LAQMLy3nPezOW/Qu4XtoJhCLWSgpFO1BA90NGZiLg0jEvIYzHjk
-	CPy4oDI32iIyCvhr4/GzPZJdDwacGUlAZQEt4NATjFv+ds2To+cNRJkGfTaN+NSiS0waQpoTEZ2Sv
-	wuESEBG3kKnv0wvRebDSu1sZeIGaUtFyXbeLqdBKRcMyz+WPdVCiB+MUzEGQ7QiYhDG6CcE8dI5Pe
-	w5InQSXxJdDkfpVArOUWDqTL12A5kc0PRZv8NysohxX7TFElfn/UNSJQoeIQXN0xQ67kd7PBtADqi
-	q4p/GnJA==;
+	MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:Cc:To:From:Sender
+	:Reply-To:Content-Type:Content-ID:Content-Description;
+	bh=4KXgel8fCtzMQNCq58h1yqjjwTpBLjsS8T72jqNXmaI=; b=PkCA/KIjRagfSaE/9Pf9deAEYj
+	2wY0IbTURSoAyixidSTH+yYyBsWQ5VeFJjWvge4qDVfe5CzfJslCHp03LnZ9nqqMVASKK7Fh9rfV8
+	ukV94sNbU7QHR4johtpbH28AdY7Zg9RvG5H//zkUy0ZXeYn3YrEpxkSHOH6ipPWJlEWSIhQ1/j/3C
+	RFl+5c9r+N2AalqeHXI6RcLYL1ygPVPSoiis3s5K+MgBd/Yi4LjJd5tbSiAx5+WI8C2NZVgISVeYI
+	45wyPmDKaaNBVapRxXmPfjiPZch2B1JbnyhYORT67iJE3niCIisHjPzB7Cltbf9r6k/xHyfTHJTaZ
+	nTgEG/3g==;
 Received: from 2a02-8389-2341-5b80-d601-7564-c2e0-491c.cable.dynamic.v6.surfer.at ([2a02:8389:2341:5b80:d601:7564:c2e0:491c] helo=localhost)
 	by bombadil.infradead.org with esmtpsa (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1uTc9K-00000001wxz-0Glg;
-	Mon, 23 Jun 2025 08:03:30 +0000
+	id 1uTc9M-00000001wy7-2E3O;
+	Mon, 23 Jun 2025 08:03:33 +0000
 From: Christoph Hellwig <hch@lst.de>
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Bart Van Assche <bvanassche@acm.org>,
@@ -41,10 +42,12 @@ Cc: Bart Van Assche <bvanassche@acm.org>,
 	linux-rdma@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	linux-block@vger.kernel.org
-Subject: fix virt_boundary_mask handling in SCSI
-Date: Mon, 23 Jun 2025 10:02:52 +0200
-Message-ID: <20250623080326.48714-1-hch@lst.de>
+Subject: [PATCH 1/2] RDMA/srp: don't set a max_segment_size when virt_boundary_mask is set
+Date: Mon, 23 Jun 2025 10:02:53 +0200
+Message-ID: <20250623080326.48714-2-hch@lst.de>
 X-Mailer: git-send-email 2.47.2
+In-Reply-To: <20250623080326.48714-1-hch@lst.de>
+References: <20250623080326.48714-1-hch@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -54,17 +57,32 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-Hi all,
+virt_boundary_mask implies an unlimited max_segment_size.  Setting both
+can lead to data corruption, and we're going to check for this in the
+SCSI midlayer soon.
 
-this series fixes a corruption when drivers using virt_boundary_mask set
-a limited max_segment_size by accident, which Red Hat reported as causing
-data corruption with storvsc.  I did audit the tree and also found that
-this can affect SRP and iSER as well.
+Signed-off-by: Christoph Hellwig <hch@lst.de>
+---
+ drivers/infiniband/ulp/srp/ib_srp.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-Note that I've dropped the Tested-by from Laurence because the patch
-changed very slightly from the last version.
+diff --git a/drivers/infiniband/ulp/srp/ib_srp.c b/drivers/infiniband/ulp/srp/ib_srp.c
+index 1378651735f6..23ed2fc688f0 100644
+--- a/drivers/infiniband/ulp/srp/ib_srp.c
++++ b/drivers/infiniband/ulp/srp/ib_srp.c
+@@ -3705,9 +3705,10 @@ static ssize_t add_target_store(struct device *dev,
+ 	target_host->max_id      = 1;
+ 	target_host->max_lun     = -1LL;
+ 	target_host->max_cmd_len = sizeof ((struct srp_cmd *) (void *) 0L)->cdb;
+-	target_host->max_segment_size = ib_dma_max_seg_size(ibdev);
+ 
+-	if (!(ibdev->attrs.kernel_cap_flags & IBK_SG_GAPS_REG))
++	if (ibdev->attrs.kernel_cap_flags & IBK_SG_GAPS_REG)
++		target_host->max_segment_size = ib_dma_max_seg_size(ibdev);
++	else
+ 		target_host->virt_boundary_mask = ~srp_dev->mr_page_mask;
+ 
+ 	target = host_to_target(target_host);
+-- 
+2.47.2
 
-Diffstat:
- infiniband/ulp/srp/ib_srp.c |    5 +++--
- scsi/hosts.c                |   20 +++++++++++++-------
- 2 files changed, 16 insertions(+), 9 deletions(-)
