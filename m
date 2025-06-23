@@ -1,695 +1,193 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96FDE2451F0
-	for <linux-scsi@vger.kernel.org>; Mon, 23 Jun 2025 15:59:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750694396; cv=none; b=aTxfMP9AAuaDLetJFsnPJ6L6q809KKoB5ZdUJLPuXLJzFk+NkjFoQKOJ+zV6q1HG1UM+LUgWO7V7ooLycLxOR98ZisEShUnrhrxDg+MWHQs+NkSjs80FnzqSdoVYmlbZo3RTaIW9wKjzQehQfwyzliHnvy+01MjKvGBNIlWSrJg=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750694396; c=relaxed/simple;
-	bh=SPyOQGy0DXBVS3pFaf4sTny9G3h4cTQ4nBPnEmaaWLY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J4h10unFOO1idYZJsxBoZJ+1iEgUiGhyD94weX3WCUxsRO9PWsanr1+v9lvHsegtyZrb0KU9h+e8dqOyA0ryYoC8K5qrXQhVfSak+DlD+fA8C2K2tnf6XOo+lFtx9SVoE+dCQ+UeJYtt9F0Ke5k67EM9XqIkSFp+kR0jUXIpVoQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Prxj5wUJ; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 933A429CB58
+	for <linux-scsi@vger.kernel.org>; Mon, 23 Jun 2025 17:13:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1750698793; cv=fail; b=UCxd1A/wgwnXDlSrYMUjcoCj44fMGQExCAKSAmCWWMzHy/+Jv+FyepIgG1895ia9jCh0YWOtF3Uy6M0lxopZKdndM04jogOa7RDtDWzTBEA8jdrCGFgSZAESrPfX0qX4vEMSsPGFN5vFMs1SBg/+I2hA7PQ3TaicZiQd2tFtAFU=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1750698793; c=relaxed/simple;
+	bh=XEoImBhAlV0GZhcGsNKsALfb11xZSUUtXhaWCEL7IeM=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=btpEPJ8ga39BWIfpAWbcSvzN5GkRYbgRwIx5di5LUUqgoryh49YiUQYahA5p/nDg7XwLpnFbx7JEQPHtCoIpi/9iVKdV5MeewqztOLYlsXLLfdPq8ZD2ktmkQjNxbODc9RehOLj36pQQphT6c2K87UxrkY3XEOjE/FFkEdJGFyI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=oyxvDenp; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=ie++o6VY; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Prxj5wUJ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1750694392;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=+eEoq+6d0WgcESEGvvbxbxwBHlN5XLV7+QpwbDZ1Oqc=;
-	b=Prxj5wUJzaHzRPKlzVQmybtRgW7aPQ8EApK26oqzmZvgMheOUuIWYYFu/s8hUONexxooaV
-	LzgZMa8Z2OUH6IQt58XxOQBTyZJvEQDmeRtwzJJ9x7kZl6b+VFjEWJKn7WRO7Q5+CWP5U7
-	nL1k350blqcQJ6RhwTghzQ/388v8n0c=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-468-3XoeSZyqOciyOcj1M-2MCw-1; Mon,
- 23 Jun 2025 11:59:48 -0400
-X-MC-Unique: 3XoeSZyqOciyOcj1M-2MCw-1
-X-Mimecast-MFC-AGG-ID: 3XoeSZyqOciyOcj1M-2MCw_1750694386
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id CCF391800290;
-	Mon, 23 Jun 2025 15:59:45 +0000 (UTC)
-Received: from [10.22.90.20] (unknown [10.22.90.20])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6F20A19560AB;
-	Mon, 23 Jun 2025 15:59:42 +0000 (UTC)
-Message-ID: <46047671-c047-4922-8aa9-8e4892dde8fb@redhat.com>
-Date: Mon, 23 Jun 2025 11:59:41 -0400
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oyxvDenp";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="ie++o6VY"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 55NGXqmd015427;
+	Mon, 23 Jun 2025 17:13:09 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2025-04-25; bh=oWA7jTwh5G/lIHATeR
+	uwQAiuPyMNUlA8zcbLPhMkMR8=; b=oyxvDenp2KodznMRQKAIj4jEYln1y66zq0
+	mNwaMrUb7+RAKN+n74j2h8WJjTNwYvAtLQyUw7q8GC8pJ97iQa5StVI+83nv7Mgf
+	YWaGUXM4Ks5WWbflOcQvKi6Dr1WllIxkYa95RlbA+X0Rl13a1pIVBcYA/kWHuDsc
+	9Q95oKgaRL247MoxSnPXku5nzCJVwO7Led23KBnhOoN4F/Y3ILLYgIQ6ytZWaCAs
+	dYlelXu0c2+oihg32WSuP5vUbE6bb5zLOn8LIQLY7u1c0oio1OpFNO63DZSTkAOU
+	iAmaOXGGxtj83aJ4xSEHm1bRFa4Iy9ajB7N7c/8TqMTds309s6Bw==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 47ds8mu6hg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 23 Jun 2025 17:13:08 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 55NH11OX025880;
+	Mon, 23 Jun 2025 17:13:07 GMT
+Received: from nam11-co1-obe.outbound.protection.outlook.com (mail-co1nam11on2051.outbound.protection.outlook.com [40.107.220.51])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 47ehvv41mj-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Mon, 23 Jun 2025 17:13:07 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=XIuqvGiSLhF2DbW5hfWaH/MFDJgPlXTWZmFnfJHU+Zw9/dZsvetdg+6PORT7skANhdymt9D/8X4jRDb0lCw4KOH+W7xetce34mhepLEWnVRG21FyGZLXIS49ttRJf1R4DLaHgdQc+/vPDV7CZ3o8Vjkpy/vA4BxlLzHE1uyNQzI+ZgFXLpyhNJC1EBduYps7ajPf792W2L1BdZGmUwFTauEJRJl6sQHdZaTka7De78MI14CLl06AagXK+MTITs+/MD+393uLZ3mKY8ks3m5yqFXvHwwsGDNf32z7uBZTR3dru0PoK1jkroPRL0oPeeAtBdHSli/XGgoiSML8P07aoA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=oWA7jTwh5G/lIHATeRuwQAiuPyMNUlA8zcbLPhMkMR8=;
+ b=LFOtcZlTCs863z3r2E5asX6clfG1XsgWdzf8q1SiM2+fXZEwV/P0bDdyM6UdGUOO3H7TVrnj2PKd/6FjVKIfIHUHH4WzELlSj4sjSHwm6Wq9nbuEQZms2LtDU916v4VonxDti2RPZCotGEm7J8r8zlrrV4NtwVY6b7n5TDszDxFyIG6Oe/PlKIZ0xCM8q3bmQk2P6JJA4e+ZcpkfUSvyanKF1QqKRU1w7XMl7TBG2sTJGUzSMrLoclbHQrD7FnEqi0iN4O1+/rL3AIYCvbW8+UxV+SeesuIL0jGbsHfrbY3GSK8bG+sQD23QHS6meLx+2f4Y4L1yeeUnzCSabIhE1Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=oWA7jTwh5G/lIHATeRuwQAiuPyMNUlA8zcbLPhMkMR8=;
+ b=ie++o6VYQVQgRLJm5mzNa1uxKfM3R0UYg4UFzxyYwYzkUTIuN/KomWZxIA/vW4jMjMxVR9r2yIQDjhNhbp3oQ/99e+Ft+Led6v8braX8Lzlj+63ROh5qPTIvLsJtCS+lHJUjtCAqVHrAljvmzBx7gAQ4HI+I48VNyYOVUFRTWD4=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by DS0PR10MB6175.namprd10.prod.outlook.com (2603:10b6:8:c1::11) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8857.26; Mon, 23 Jun
+ 2025 17:13:04 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf%7]) with mapi id 15.20.8857.026; Mon, 23 Jun 2025
+ 17:13:04 +0000
+To: Justin Tee <justintee8345@gmail.com>
+Cc: linux-scsi@vger.kernel.org, jsmart2021@gmail.com, justin.tee@broadcom.com
+Subject: Re: [PATCH 00/13] Update lpfc to revision 14.4.0.10
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <20250618192138.124116-1-justintee8345@gmail.com> (Justin Tee's
+	message of "Wed, 18 Jun 2025 12:21:25 -0700")
+Organization: Oracle Corporation
+Message-ID: <yq1v7ompejx.fsf@ca-mkp.ca.oracle.com>
+References: <20250618192138.124116-1-justintee8345@gmail.com>
+Date: Mon, 23 Jun 2025 13:13:01 -0400
+Content-Type: text/plain
+X-ClientProxiedBy: PH5P220CA0012.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:510:34a::9) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 1/6] fc_els: use 'union fc_tlv_desc'
-To: Bryan Gurney <bgurney@redhat.com>, linux-nvme@lists.infradead.org,
- kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, axboe@kernel.dk
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, njavali@marvell.com,
- linux-scsi@vger.kernel.org, hare@suse.de
-References: <20250620175557.34635-1-bgurney@redhat.com>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <20250620175557.34635-1-bgurney@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|DS0PR10MB6175:EE_
+X-MS-Office365-Filtering-Correlation-Id: 234ad01e-d2a2-4eb0-2f39-08ddb27936e6
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?+1FMGgxJGqjaP03yPnQP5zLupvVzkxNwsM9wJEz4WiT0PoCurc7rS+9BuFAq?=
+ =?us-ascii?Q?OC+PoU59tb2hCOe8mJtS8Agj9WQD5d6psBCIwDT6BrPzksPBz8wm28jkWpEz?=
+ =?us-ascii?Q?EMlPa+olPl5UWufuGIprhT65KddT+KfGTQSeet/XKwA1vs/vdw4DCG5KJFsQ?=
+ =?us-ascii?Q?O7LSrX2zqy7gOGFe/1L1sWzxRsGliYjzuRkiLFBofFE5n+Us1e6HiqApelJB?=
+ =?us-ascii?Q?fTdRLmqqKqXNCGDPvGFN396b2dmvYKS704QDBqRHIA+HfRgUsWRLObHDtJx4?=
+ =?us-ascii?Q?auCXNWlwGOzW9aHy2svt/3/usJLT3DIW8AxglOqw9auFWbftSssuuBESoQiS?=
+ =?us-ascii?Q?sxYuG/xg7SY1AmQ/Rxz39alb7pqlrO4I16IsU0vB6mAFtoI9VVYhNDcc8uJC?=
+ =?us-ascii?Q?BiBZGGBoPY5cv/Pv0npQ+jwCIIutg+ppJ5KXKrXF0ncnIt26dAVUUrCRzj5E?=
+ =?us-ascii?Q?y3iXzV7OMuoivZn6ACEoURpW7077MFrUQuWc+Uq3/aGqoLMigS1uIX1fD82R?=
+ =?us-ascii?Q?7oAVqbsRV/a3/u4qXdZbrW4qVgUuKDfSEQrZ8P6SyXeccyAy+R1DKMfeaEyT?=
+ =?us-ascii?Q?dSP1P1V6eIhhHSAb057l2ylS9dik0zs+OmMJhOVQnYyjLtx6jlbgzEeie8EA?=
+ =?us-ascii?Q?45aX0u0wA9hdeKXkHgDBisHz5281DrfSw6G6Jas4g+tNKNHyK4jkNDNZHInK?=
+ =?us-ascii?Q?qF7OKrEcdZAGXvHnKyUWcIth0X1csj3pGNmozyx911w8Q8QIi53+rqZVg615?=
+ =?us-ascii?Q?8vXRW7HqfkD5ZYJCqIZdfWsLXuuTEv0x/fqZA+v0XCdGOsO5MAjM36xjvYF/?=
+ =?us-ascii?Q?acoT9eMCFDj3bBcIJwD6JwWrsXpKCZjlDjRzv6jKoZjd2Z2tjZ8VtivUwpC2?=
+ =?us-ascii?Q?KZKvmDY8o22aFaIKvu9iwTh4TL9MogwYrKpQ8z+CVoVw3P7U7HtUYeX0PXHp?=
+ =?us-ascii?Q?HJSDw7GuLWlLXDHa7Oq+sI/8KZWJ5LxIEPj3ruJRMWZj/sedYnHqzjWnyAiy?=
+ =?us-ascii?Q?bQBHaTm8xsGIbf3o4LlMGGh+bwTqa/4yNvU2RSIVUCq22H0nSu1pGKdG3dRG?=
+ =?us-ascii?Q?fP9wtbAhFD3lYn9OQf/VvpoKQMJeXtSZsK+fiHg5EptwxKkzte8IfJPgZ/3R?=
+ =?us-ascii?Q?H0LqSP2+imkYBqbuGvBU/zF+xBJehSpOnTNqaJLlmqqASNPhtPc0aHc7AeFb?=
+ =?us-ascii?Q?ulV0MqpnIOx7PDcJ+P6EoILDcwUdAPfgawY7lgSI87v95E2ilsgJFknIjaz1?=
+ =?us-ascii?Q?Dnk/YiJVxg7dXVF89/a/SpOHPCg/BvoA3DszIBxExnMESfKeZly1J5kghM8/?=
+ =?us-ascii?Q?0ZjiOtv5BDRH4Y+/yJ+tVH2QCs7KASW+jcM8/Qvut1autEXEBr1RwjkCd35v?=
+ =?us-ascii?Q?slNd0fPYxCgBlKwfCDYvoaUhMvpJurHqsz/oiHXsHf4w9ycjSVk+SMZsyDnR?=
+ =?us-ascii?Q?OQHcHCLdH5k=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?sC8sytxMX3Q7oTVbDkSBjzIpTAVjkBlKheMQwOtpjeaguA22eUSMiUL/nlEh?=
+ =?us-ascii?Q?apqnYmGo/5BrHr20xAyaPdJAe+TkVvlGIiCaJzMiGFY4fNeN3ALuT2/Y05Sb?=
+ =?us-ascii?Q?e7LQJL5skTokdHkrc3VeYUfnlYQGO0LjOoDygaMAQSa4KgYGMkrYJm3lnhT7?=
+ =?us-ascii?Q?0xijWKsQjc0WOPe7aW9sBG/d/bPOMXCBgCZJJrIinE4jlPAv7SV8tP+mHFke?=
+ =?us-ascii?Q?qHcvjFcby6FaxQEf4RTWB9Fqby0sRIBsU4j8hGU5FwaV7J21TU7UK5O69/3H?=
+ =?us-ascii?Q?h8JNvT6Kzh5ZC9wiilXc7pBO3nCNk9v+yhgnowqSJyd0KkdoL2y34U93+sNW?=
+ =?us-ascii?Q?P88H23UQO96/2AUBawqg7sSL0B87pvmf4eTOGwOGKoWiEZz8HacZmCVMw40X?=
+ =?us-ascii?Q?ePnFKIIfE/ynFjnex4Jvxnbz66VbdY9Ore7vhYXPsdtcFjJS/KMpmVzd5f+2?=
+ =?us-ascii?Q?6G21jgjSjdJU8xgdoGRVjPCSuq+5EN/djPaOBjTGyYW8KPxF0MJwDzP3Ynxw?=
+ =?us-ascii?Q?XQNgvA6pHW8vrEUgX/JjXmDYnF8/e/3c4zOJUYHBCMCDffHPUV6nr5xdaEeW?=
+ =?us-ascii?Q?Epz20nXXux+3kJnteV8IPKNbzJh5K5SAN//i6yvyd4Sv6umQ9CsrtMg3otDq?=
+ =?us-ascii?Q?+LaUCDdkJJYafHhwkdbnBn1m4lNgzY4dHz8J7Dowp2qKky0P3sZS+FhAGNcE?=
+ =?us-ascii?Q?I/FSoKyGUNE1Qsq2STiTiewsTZo66mU9iPc4LiAl+UDnM5rduOZogDuczM1q?=
+ =?us-ascii?Q?I/H6bkE7en4+m7VlGeYaYaI0kVsy8JlGmlRBEECn5POouYfOawycaxXqBVpv?=
+ =?us-ascii?Q?JVBDyCoeAN5JXJg5ZCoPIGDuEVLA5nPn/Tp4HtF0uIoLAoRqwRVUeyhDZwbp?=
+ =?us-ascii?Q?VejCCPEZ1VBKDFMxdmeHjY1Djr1j4qhTKyi+MB1o5o64eKl9ZST51jlH9Dwq?=
+ =?us-ascii?Q?seK/vwzCkWFuwjyQk2lASL8Vae06bJi43CjQnNwQZmdfZex+xs0pIUFmWcIh?=
+ =?us-ascii?Q?OEd4j3j87VaMngi3CDC0P1vq1Jm4qKKjbsRiEoRB8u1mJzW1nr8k0vCTX0jY?=
+ =?us-ascii?Q?M2GTPXe3EjQiVSjVTxZ87mIS9ZLJITYAmt560BtmiCXC7GMFWt+/oyoQSlzF?=
+ =?us-ascii?Q?XNUOmYjk5BfUYkIIyH5oGYoJUY1v4wpSYHyPiP8EJwwJBATHJKw5PVxek0Ro?=
+ =?us-ascii?Q?bsA6gfE4zdHvdkR0voMyJRkUsriEq8ckD35cBLerbj5tUIvMIdmaNQ1OKT4O?=
+ =?us-ascii?Q?UpqyV5BLk0/0laU6oPD5i8jRqIHO4x5mGCAotPRQrki6FuhrlXxCww6PQNFs?=
+ =?us-ascii?Q?KXLisQoOstNAI5ZpZKqjz/B6tDKOgZesBfoFYeJhzKwmbyVDsjXCpjQW5Hfl?=
+ =?us-ascii?Q?m+nMAdECNxq8eSNQ65JZv+Ozcc77lXHRL0AbuKY2sFksBvCnM5TaDOq9A+rB?=
+ =?us-ascii?Q?vybCrvgSQ3i4mo0AZYK9yhqqmE2vGDPeu/91DLjFq5tAeyzl2V3Y+yiBUu7c?=
+ =?us-ascii?Q?Z4cQBKChTEObzz6Bhrf7AQrqMkpRylZPw2Fv7qFOuc2b5SgVafy4fw1Gvcql?=
+ =?us-ascii?Q?Mn2OeYhYnCokinw7YK5wVkQhwdRoVFskrx3Nt2nGIgvqeEG8isW0l8ZyDTKm?=
+ =?us-ascii?Q?sA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	yK17RAAJ9s0/TznkLcK+KVT9OCSTH81SXiZ+brpV+gOlrmJL4+2GRqeRCb8IAd/C2BCykMURPZHp95JferqYNxifiJFNG+JqMngIRZzv2QFxQGBjTPKSBvky0RVQ9yOKU4R9YK8mNzyvr7v6PLsR55pZUcmFdxOZkp470lK/45cZM0oTM9NN0p2VnPc6sFwelUYNszGavu/aYRD2dRFmPlaFKamPe/fSAhv/l7J7qrbRtVeDnWsIX8MJPPv/nqTNWuDNi7KybagZ8+B+uG+ZRwO+G2EdC29C+djsbdUft9TT06+oHbC9ldu9SH7/3cOG/lRW9SkojPnFtM84LK4lCeumKgujkinDt6NPWk3R7CKHojnmnUTClDXrSm0UeQCmlaPqocB0RqFHX+vIXSCK99IhDD0GudwxTo6edYNAVOAh3Wchf4gyXsGYTmFBxh/tHPi5LGmfmHu5a8Q72A3YUwHBqiTHfbF6Fj9+kuRqJC5IaivtealRfwSM/oYQqNMWXgxgfHvn6LLvYyK15Bq3n1jMglQDNYFNoEXpL+dy3OTce6bBpVUtD38WRvKg6XExuL4gHXL+aCD9ivVwb14KUZgQ/gNVApALGv0Wrkt+8sg=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 234ad01e-d2a2-4eb0-2f39-08ddb27936e6
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 23 Jun 2025 17:13:04.2839
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: MpG9RAa9ijfZC6E7ZRlflSi2+qXOEireuPcqbPExp3CLDO25F9/lW6tjSKdBcroDkO+aZeT7oaeLs6ysYtxUakN0Jw7EhdLzyx15DMLWrqk=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR10MB6175
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
+ definitions=2025-06-23_04,2025-06-23_07,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxscore=0 bulkscore=0 spamscore=0
+ phishscore=0 adultscore=0 malwarescore=0 suspectscore=0 mlxlogscore=796
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
+ definitions=main-2506230105
+X-Authority-Analysis: v=2.4 cv=IcWHWXqa c=1 sm=1 tr=0 ts=68598b24 b=1 cx=c_pps a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
+ a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=6IFa9wvqVegA:10 a=GoEa3M9JfhUA:10 a=cewXuGIsSzsw8c2jRYwA:9 cc=ntf awl=host:14714
+X-Proofpoint-ORIG-GUID: q-HrEIfcPakz3JkXTKrVoIRyVHlpeIZj
+X-Proofpoint-GUID: q-HrEIfcPakz3JkXTKrVoIRyVHlpeIZj
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNjIzMDEwNSBTYWx0ZWRfX/0wboPX17Evk uBKHSK/rSkzfZ1VXMLahAD/vWrZGGc5iU+o9T2b27HZ6X5UiltY2rPYgao5LmxJUFI4ET00HMgy G/t/8AFBnEFfiE8tZ99iDX7jl/bjHQnUrTg0JoXkbRDcOf71f2rEeSoAYCZuZBJNb5QXlc0IhkO
+ RmxtktavAuuG4REkN/Tb52hAiKRGcFYewHK1HaLHJD09NNbJx/os5fucNznue57IVnIAHxsUbOe 19Xs42rWtJWXBbHYst5ZMiToWBX7JicLtoh7Ons4GYVNt5tBc3a6Rbf8r9vKzWC2wK7DpI0+4Ek F+/nvxHPHFGDSZsPZzhoA9PT+pOpIKIIqotP4A5XQDgDvH8X08/fMKhr+r3DQWWrdTVoFAfsnJP
+ 6tM9VVG3DD7D+THLAghQ1kdpWLaYUREtmniyuIMVbv8lJKUZmcdNkQ7bIz6zV8e3KD5bp/Mz
 
-Reviewed-by: John Meneghini <jmeneghi@redhat.com>
 
-On 6/20/25 1:55 PM, Bryan Gurney wrote:
-> From: Hannes Reinecke <hare@kernel.org>
-> 
-> Introduce 'union fc_tlv_desc' to have a common structure for all FC
-> ELS TLV structures and avoid type casts.
-> 
-> [bgurney: The cast inside the union fc_tlv_next_desc() has "u8",
-> which causes a failure to build.  Use "__u8" instead.]
-> 
-> Signed-off-by: Hannes Reinecke <hare@kernel.org>
-> Reviewed-by: Justin Tee <justin.tee@broadcom.com>
-> Tested-by: Bryan Gurney <bgurney@redhat.com>
-> ---
->   drivers/scsi/lpfc/lpfc_els.c     |  75 +++++++-------
->   drivers/scsi/scsi_transport_fc.c |  27 +++--
->   include/uapi/scsi/fc/fc_els.h    | 165 +++++++++++++++++--------------
->   3 files changed, 135 insertions(+), 132 deletions(-)
-> 
-> diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-> index 375a879c31f1..959603ab939a 100644
-> --- a/drivers/scsi/lpfc/lpfc_els.c
-> +++ b/drivers/scsi/lpfc/lpfc_els.c
-> @@ -3937,7 +3937,7 @@ lpfc_cmpl_els_edc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
->   {
->   	IOCB_t *irsp_iocb;
->   	struct fc_els_edc_resp *edc_rsp;
-> -	struct fc_tlv_desc *tlv;
-> +	union fc_tlv_desc *tlv;
->   	struct fc_diag_cg_sig_desc *pcgd;
->   	struct fc_diag_lnkflt_desc *plnkflt;
->   	struct lpfc_dmabuf *pcmd, *prsp;
-> @@ -4028,7 +4028,7 @@ lpfc_cmpl_els_edc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
->   			goto out;
->   		}
->   
-> -		dtag = be32_to_cpu(tlv->desc_tag);
-> +		dtag = be32_to_cpu(tlv->hdr.desc_tag);
->   		switch (dtag) {
->   		case ELS_DTAG_LNK_FAULT_CAP:
->   			if (bytes_remain < FC_TLV_DESC_SZ_FROM_LENGTH(tlv) ||
-> @@ -4043,7 +4043,7 @@ lpfc_cmpl_els_edc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
->   					sizeof(struct fc_diag_lnkflt_desc));
->   				goto out;
->   			}
-> -			plnkflt = (struct fc_diag_lnkflt_desc *)tlv;
-> +			plnkflt = &tlv->lnkflt;
->   			lpfc_printf_log(phba, KERN_INFO,
->   				LOG_ELS | LOG_LDS_EVENT,
->   				"4617 Link Fault Desc Data: 0x%08x 0x%08x "
-> @@ -4070,7 +4070,7 @@ lpfc_cmpl_els_edc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
->   				goto out;
->   			}
->   
-> -			pcgd = (struct fc_diag_cg_sig_desc *)tlv;
-> +			pcgd = &tlv->cg_sig;
->   			lpfc_printf_log(
->   				phba, KERN_INFO, LOG_ELS | LOG_CGN_MGMT,
->   				"4616 CGN Desc Data: 0x%08x 0x%08x "
-> @@ -4125,10 +4125,8 @@ lpfc_cmpl_els_edc(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
->   }
->   
->   static void
-> -lpfc_format_edc_lft_desc(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
-> +lpfc_format_edc_lft_desc(struct lpfc_hba *phba, struct fc_diag_lnkflt_desc *lft)
->   {
-> -	struct fc_diag_lnkflt_desc *lft = (struct fc_diag_lnkflt_desc *)tlv;
-> -
->   	lft->desc_tag = cpu_to_be32(ELS_DTAG_LNK_FAULT_CAP);
->   	lft->desc_len = cpu_to_be32(
->   		FC_TLV_DESC_LENGTH_FROM_SZ(struct fc_diag_lnkflt_desc));
-> @@ -4141,10 +4139,8 @@ lpfc_format_edc_lft_desc(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
->   }
->   
->   static void
-> -lpfc_format_edc_cgn_desc(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
-> +lpfc_format_edc_cgn_desc(struct lpfc_hba *phba, struct fc_diag_cg_sig_desc *cgd)
->   {
-> -	struct fc_diag_cg_sig_desc *cgd = (struct fc_diag_cg_sig_desc *)tlv;
-> -
->   	/* We are assuming cgd was zero'ed before calling this routine */
->   
->   	/* Configure the congestion detection capability */
-> @@ -4233,7 +4229,7 @@ lpfc_issue_els_edc(struct lpfc_vport *vport, uint8_t retry)
->   	struct lpfc_hba  *phba = vport->phba;
->   	struct lpfc_iocbq *elsiocb;
->   	struct fc_els_edc *edc_req;
-> -	struct fc_tlv_desc *tlv;
-> +	union fc_tlv_desc *tlv;
->   	u16 cmdsize;
->   	struct lpfc_nodelist *ndlp;
->   	u8 *pcmd = NULL;
-> @@ -4272,13 +4268,13 @@ lpfc_issue_els_edc(struct lpfc_vport *vport, uint8_t retry)
->   	tlv = edc_req->desc;
->   
->   	if (cgn_desc_size) {
-> -		lpfc_format_edc_cgn_desc(phba, tlv);
-> +		lpfc_format_edc_cgn_desc(phba, &tlv->cg_sig);
->   		phba->cgn_sig_freq = lpfc_fabric_cgn_frequency;
->   		tlv = fc_tlv_next_desc(tlv);
->   	}
->   
->   	if (lft_desc_size)
-> -		lpfc_format_edc_lft_desc(phba, tlv);
-> +		lpfc_format_edc_lft_desc(phba, &tlv->lnkflt);
->   
->   	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_CGN_MGMT,
->   			 "4623 Xmit EDC to remote "
-> @@ -5823,7 +5819,7 @@ lpfc_issue_els_edc_rsp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   {
->   	struct lpfc_hba  *phba = vport->phba;
->   	struct fc_els_edc_resp *edc_rsp;
-> -	struct fc_tlv_desc *tlv;
-> +	union fc_tlv_desc *tlv;
->   	struct lpfc_iocbq *elsiocb;
->   	IOCB_t *icmd, *cmd;
->   	union lpfc_wqe128 *wqe;
-> @@ -5867,10 +5863,10 @@ lpfc_issue_els_edc_rsp(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   		FC_TLV_DESC_LENGTH_FROM_SZ(struct fc_els_lsri_desc));
->   	edc_rsp->lsri.rqst_w0.cmd = ELS_EDC;
->   	tlv = edc_rsp->desc;
-> -	lpfc_format_edc_cgn_desc(phba, tlv);
-> +	lpfc_format_edc_cgn_desc(phba, &tlv->cg_sig);
->   	tlv = fc_tlv_next_desc(tlv);
->   	if (lft_desc_size)
-> -		lpfc_format_edc_lft_desc(phba, tlv);
-> +		lpfc_format_edc_lft_desc(phba, &tlv->lnkflt);
->   
->   	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_RSP,
->   			      "Issue EDC ACC:      did:x%x flg:x%lx refcnt %d",
-> @@ -9255,7 +9251,7 @@ lpfc_els_rcv_edc(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   {
->   	struct lpfc_hba  *phba = vport->phba;
->   	struct fc_els_edc *edc_req;
-> -	struct fc_tlv_desc *tlv;
-> +	union fc_tlv_desc *tlv;
->   	uint8_t *payload;
->   	uint32_t *ptr, dtag;
->   	const char *dtag_nm;
-> @@ -9298,7 +9294,7 @@ lpfc_els_rcv_edc(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   			goto out;
->   		}
->   
-> -		dtag = be32_to_cpu(tlv->desc_tag);
-> +		dtag = be32_to_cpu(tlv->hdr.desc_tag);
->   		switch (dtag) {
->   		case ELS_DTAG_LNK_FAULT_CAP:
->   			if (bytes_remain < FC_TLV_DESC_SZ_FROM_LENGTH(tlv) ||
-> @@ -9313,7 +9309,7 @@ lpfc_els_rcv_edc(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   					sizeof(struct fc_diag_lnkflt_desc));
->   				goto out;
->   			}
-> -			plnkflt = (struct fc_diag_lnkflt_desc *)tlv;
-> +			plnkflt = &tlv->lnkflt;
->   			lpfc_printf_log(phba, KERN_INFO,
->   				LOG_ELS | LOG_LDS_EVENT,
->   				"4626 Link Fault Desc Data: x%08x len x%x "
-> @@ -9350,7 +9346,7 @@ lpfc_els_rcv_edc(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
->   			phba->cgn_sig_freq = lpfc_fabric_cgn_frequency;
->   
->   			lpfc_least_capable_settings(
-> -				phba, (struct fc_diag_cg_sig_desc *)tlv);
-> +				phba, &tlv->cg_sig);
->   			break;
->   		default:
->   			dtag_nm = lpfc_get_tlv_dtag_nm(dtag);
-> @@ -9941,14 +9937,13 @@ lpfc_display_fpin_wwpn(struct lpfc_hba *phba, __be64 *wwnlist, u32 cnt)
->   /**
->    * lpfc_els_rcv_fpin_li - Process an FPIN Link Integrity Event.
->    * @phba: Pointer to phba object.
-> - * @tlv:  Pointer to the Link Integrity Notification Descriptor.
-> + * @li:  Pointer to the Link Integrity Notification Descriptor.
->    *
->    * This function processes a Link Integrity FPIN event by logging a message.
->    **/
->   static void
-> -lpfc_els_rcv_fpin_li(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
-> +lpfc_els_rcv_fpin_li(struct lpfc_hba *phba, struct fc_fn_li_desc *li)
->   {
-> -	struct fc_fn_li_desc *li = (struct fc_fn_li_desc *)tlv;
->   	const char *li_evt_str;
->   	u32 li_evt, cnt;
->   
-> @@ -9972,14 +9967,13 @@ lpfc_els_rcv_fpin_li(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
->   /**
->    * lpfc_els_rcv_fpin_del - Process an FPIN Delivery Event.
->    * @phba: Pointer to hba object.
-> - * @tlv:  Pointer to the Delivery Notification Descriptor TLV
-> + * @del:  Pointer to the Delivery Notification Descriptor TLV
->    *
->    * This function processes a Delivery FPIN event by logging a message.
->    **/
->   static void
-> -lpfc_els_rcv_fpin_del(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
-> +lpfc_els_rcv_fpin_del(struct lpfc_hba *phba, struct fc_fn_deli_desc *del)
->   {
-> -	struct fc_fn_deli_desc *del = (struct fc_fn_deli_desc *)tlv;
->   	const char *del_rsn_str;
->   	u32 del_rsn;
->   	__be32 *frame;
-> @@ -10010,14 +10004,14 @@ lpfc_els_rcv_fpin_del(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
->   /**
->    * lpfc_els_rcv_fpin_peer_cgn - Process a FPIN Peer Congestion Event.
->    * @phba: Pointer to hba object.
-> - * @tlv:  Pointer to the Peer Congestion Notification Descriptor TLV
-> + * @pc:  Pointer to the Peer Congestion Notification Descriptor TLV
->    *
->    * This function processes a Peer Congestion FPIN event by logging a message.
->    **/
->   static void
-> -lpfc_els_rcv_fpin_peer_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
-> +lpfc_els_rcv_fpin_peer_cgn(struct lpfc_hba *phba,
-> +			   struct fc_fn_peer_congn_desc *pc)
->   {
-> -	struct fc_fn_peer_congn_desc *pc = (struct fc_fn_peer_congn_desc *)tlv;
->   	const char *pc_evt_str;
->   	u32 pc_evt, cnt;
->   
-> @@ -10045,7 +10039,7 @@ lpfc_els_rcv_fpin_peer_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
->   /**
->    * lpfc_els_rcv_fpin_cgn - Process an FPIN Congestion notification
->    * @phba: Pointer to hba object.
-> - * @tlv:  Pointer to the Congestion Notification Descriptor TLV
-> + * @cgn:  Pointer to the Congestion Notification Descriptor TLV
->    *
->    * This function processes an FPIN Congestion Notifiction.  The notification
->    * could be an Alarm or Warning.  This routine feeds that data into driver's
-> @@ -10054,10 +10048,9 @@ lpfc_els_rcv_fpin_peer_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
->    * to the upper layer or 0 to indicate don't deliver it.
->    **/
->   static int
-> -lpfc_els_rcv_fpin_cgn(struct lpfc_hba *phba, struct fc_tlv_desc *tlv)
-> +lpfc_els_rcv_fpin_cgn(struct lpfc_hba *phba, struct fc_fn_congn_desc *cgn)
->   {
->   	struct lpfc_cgn_info *cp;
-> -	struct fc_fn_congn_desc *cgn = (struct fc_fn_congn_desc *)tlv;
->   	const char *cgn_evt_str;
->   	u32 cgn_evt;
->   	const char *cgn_sev_str;
-> @@ -10160,7 +10153,7 @@ lpfc_els_rcv_fpin(struct lpfc_vport *vport, void *p, u32 fpin_length)
->   {
->   	struct lpfc_hba *phba = vport->phba;
->   	struct fc_els_fpin *fpin = (struct fc_els_fpin *)p;
-> -	struct fc_tlv_desc *tlv, *first_tlv, *current_tlv;
-> +	union fc_tlv_desc *tlv, *first_tlv, *current_tlv;
->   	const char *dtag_nm;
->   	int desc_cnt = 0, bytes_remain, cnt;
->   	u32 dtag, deliver = 0;
-> @@ -10185,7 +10178,7 @@ lpfc_els_rcv_fpin(struct lpfc_vport *vport, void *p, u32 fpin_length)
->   		return;
->   	}
->   
-> -	tlv = (struct fc_tlv_desc *)&fpin->fpin_desc[0];
-> +	tlv = &fpin->fpin_desc[0];
->   	first_tlv = tlv;
->   	bytes_remain = fpin_length - offsetof(struct fc_els_fpin, fpin_desc);
->   	bytes_remain = min_t(u32, bytes_remain, be32_to_cpu(fpin->desc_len));
-> @@ -10193,22 +10186,22 @@ lpfc_els_rcv_fpin(struct lpfc_vport *vport, void *p, u32 fpin_length)
->   	/* process each descriptor separately */
->   	while (bytes_remain >= FC_TLV_DESC_HDR_SZ &&
->   	       bytes_remain >= FC_TLV_DESC_SZ_FROM_LENGTH(tlv)) {
-> -		dtag = be32_to_cpu(tlv->desc_tag);
-> +		dtag = be32_to_cpu(tlv->hdr.desc_tag);
->   		switch (dtag) {
->   		case ELS_DTAG_LNK_INTEGRITY:
-> -			lpfc_els_rcv_fpin_li(phba, tlv);
-> +			lpfc_els_rcv_fpin_li(phba, &tlv->li);
->   			deliver = 1;
->   			break;
->   		case ELS_DTAG_DELIVERY:
-> -			lpfc_els_rcv_fpin_del(phba, tlv);
-> +			lpfc_els_rcv_fpin_del(phba, &tlv->deli);
->   			deliver = 1;
->   			break;
->   		case ELS_DTAG_PEER_CONGEST:
-> -			lpfc_els_rcv_fpin_peer_cgn(phba, tlv);
-> +			lpfc_els_rcv_fpin_peer_cgn(phba, &tlv->peer_congn);
->   			deliver = 1;
->   			break;
->   		case ELS_DTAG_CONGESTION:
-> -			deliver = lpfc_els_rcv_fpin_cgn(phba, tlv);
-> +			deliver = lpfc_els_rcv_fpin_cgn(phba, &tlv->congn);
->   			break;
->   		default:
->   			dtag_nm = lpfc_get_tlv_dtag_nm(dtag);
-> @@ -10221,12 +10214,12 @@ lpfc_els_rcv_fpin(struct lpfc_vport *vport, void *p, u32 fpin_length)
->   			return;
->   		}
->   		lpfc_cgn_update_stat(phba, dtag);
-> -		cnt = be32_to_cpu(tlv->desc_len);
-> +		cnt = be32_to_cpu(tlv->hdr.desc_len);
->   
->   		/* Sanity check descriptor length. The desc_len value does not
->   		 * include space for the desc_tag and the desc_len fields.
->   		 */
-> -		len -= (cnt + sizeof(struct fc_tlv_desc));
-> +		len -= (cnt + sizeof(struct fc_tlv_desc_hdr));
->   		if (len < 0) {
->   			dtag_nm = lpfc_get_tlv_dtag_nm(dtag);
->   			lpfc_printf_log(phba, KERN_WARNING, LOG_CGN_MGMT,
-> diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-> index 082f76e76721..a62636c6f708 100644
-> --- a/drivers/scsi/scsi_transport_fc.c
-> +++ b/drivers/scsi/scsi_transport_fc.c
-> @@ -750,13 +750,12 @@ fc_cn_stats_update(u16 event_type, struct fc_fpin_stats *stats)
->    *
->    */
->   static void
-> -fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
-> +fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_fn_li_desc *li_desc)
->   {
->   	u8 i;
->   	struct fc_rport *rport = NULL;
->   	struct fc_rport *attach_rport = NULL;
->   	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-> -	struct fc_fn_li_desc *li_desc = (struct fc_fn_li_desc *)tlv;
->   	u16 event_type = be16_to_cpu(li_desc->event_type);
->   	u64 wwpn;
->   
-> @@ -799,12 +798,11 @@ fc_fpin_li_stats_update(struct Scsi_Host *shost, struct fc_tlv_desc *tlv)
->    */
->   static void
->   fc_fpin_delivery_stats_update(struct Scsi_Host *shost,
-> -			      struct fc_tlv_desc *tlv)
-> +			      struct fc_fn_deli_desc *dn_desc)
->   {
->   	struct fc_rport *rport = NULL;
->   	struct fc_rport *attach_rport = NULL;
->   	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-> -	struct fc_fn_deli_desc *dn_desc = (struct fc_fn_deli_desc *)tlv;
->   	u32 reason_code = be32_to_cpu(dn_desc->deli_reason_code);
->   
->   	rport = fc_find_rport_by_wwpn(shost,
-> @@ -830,13 +828,11 @@ fc_fpin_delivery_stats_update(struct Scsi_Host *shost,
->    */
->   static void
->   fc_fpin_peer_congn_stats_update(struct Scsi_Host *shost,
-> -				struct fc_tlv_desc *tlv)
-> +				struct fc_fn_peer_congn_desc *pc_desc)
->   {
->   	u8 i;
->   	struct fc_rport *rport = NULL;
->   	struct fc_rport *attach_rport = NULL;
-> -	struct fc_fn_peer_congn_desc *pc_desc =
-> -	    (struct fc_fn_peer_congn_desc *)tlv;
->   	u16 event_type = be16_to_cpu(pc_desc->event_type);
->   	u64 wwpn;
->   
-> @@ -876,10 +872,9 @@ fc_fpin_peer_congn_stats_update(struct Scsi_Host *shost,
->    */
->   static void
->   fc_fpin_congn_stats_update(struct Scsi_Host *shost,
-> -			   struct fc_tlv_desc *tlv)
-> +			   struct fc_fn_congn_desc *congn)
->   {
->   	struct fc_host_attrs *fc_host = shost_to_fc_host(shost);
-> -	struct fc_fn_congn_desc *congn = (struct fc_fn_congn_desc *)tlv;
->   
->   	fc_cn_stats_update(be16_to_cpu(congn->event_type),
->   			   &fc_host->fpin_stats);
-> @@ -899,32 +894,32 @@ fc_host_fpin_rcv(struct Scsi_Host *shost, u32 fpin_len, char *fpin_buf,
->   		u8 event_acknowledge)
->   {
->   	struct fc_els_fpin *fpin = (struct fc_els_fpin *)fpin_buf;
-> -	struct fc_tlv_desc *tlv;
-> +	union fc_tlv_desc *tlv;
->   	u32 bytes_remain;
->   	u32 dtag;
->   	enum fc_host_event_code event_code =
->   		event_acknowledge ? FCH_EVT_LINK_FPIN_ACK : FCH_EVT_LINK_FPIN;
->   
->   	/* Update Statistics */
-> -	tlv = (struct fc_tlv_desc *)&fpin->fpin_desc[0];
-> +	tlv = &fpin->fpin_desc[0];
->   	bytes_remain = fpin_len - offsetof(struct fc_els_fpin, fpin_desc);
->   	bytes_remain = min_t(u32, bytes_remain, be32_to_cpu(fpin->desc_len));
->   
->   	while (bytes_remain >= FC_TLV_DESC_HDR_SZ &&
->   	       bytes_remain >= FC_TLV_DESC_SZ_FROM_LENGTH(tlv)) {
-> -		dtag = be32_to_cpu(tlv->desc_tag);
-> +		dtag = be32_to_cpu(tlv->hdr.desc_tag);
->   		switch (dtag) {
->   		case ELS_DTAG_LNK_INTEGRITY:
-> -			fc_fpin_li_stats_update(shost, tlv);
-> +			fc_fpin_li_stats_update(shost, &tlv->li);
->   			break;
->   		case ELS_DTAG_DELIVERY:
-> -			fc_fpin_delivery_stats_update(shost, tlv);
-> +			fc_fpin_delivery_stats_update(shost, &tlv->deli);
->   			break;
->   		case ELS_DTAG_PEER_CONGEST:
-> -			fc_fpin_peer_congn_stats_update(shost, tlv);
-> +			fc_fpin_peer_congn_stats_update(shost, &tlv->peer_congn);
->   			break;
->   		case ELS_DTAG_CONGESTION:
-> -			fc_fpin_congn_stats_update(shost, tlv);
-> +			fc_fpin_congn_stats_update(shost, &tlv->congn);
->   		}
->   
->   		bytes_remain -= FC_TLV_DESC_SZ_FROM_LENGTH(tlv);
-> diff --git a/include/uapi/scsi/fc/fc_els.h b/include/uapi/scsi/fc/fc_els.h
-> index 16782c360de3..3598dc553f4d 100644
-> --- a/include/uapi/scsi/fc/fc_els.h
-> +++ b/include/uapi/scsi/fc/fc_els.h
-> @@ -253,12 +253,12 @@ enum fc_ls_tlv_dtag {
->   
->   
->   /*
-> - * Generic Link Service TLV Descriptor format
-> + * Generic Link Service TLV Descriptor header
->    *
->    * This structure, as it defines no payload, will also be referred to
->    * as the "tlv header" - which contains the tag and len fields.
->    */
-> -struct fc_tlv_desc {
-> +struct fc_tlv_desc_hdr {
->   	__be32		desc_tag;	/* Notification Descriptor Tag */
->   	__be32		desc_len;	/* Length of Descriptor (in bytes).
->   					 * Size of descriptor excluding
-> @@ -267,36 +267,6 @@ struct fc_tlv_desc {
->   	__u8		desc_value[];  /* Descriptor Value */
->   };
->   
-> -/* Descriptor tag and len fields are considered the mandatory header
-> - * for a descriptor
-> - */
-> -#define FC_TLV_DESC_HDR_SZ	sizeof(struct fc_tlv_desc)
-> -
-> -/*
-> - * Macro, used when initializing payloads, to return the descriptor length.
-> - * Length is size of descriptor minus the tag and len fields.
-> - */
-> -#define FC_TLV_DESC_LENGTH_FROM_SZ(desc)	\
-> -		(sizeof(desc) - FC_TLV_DESC_HDR_SZ)
-> -
-> -/* Macro, used on received payloads, to return the descriptor length */
-> -#define FC_TLV_DESC_SZ_FROM_LENGTH(tlv)		\
-> -		(__be32_to_cpu((tlv)->desc_len) + FC_TLV_DESC_HDR_SZ)
-> -
-> -/*
-> - * This helper is used to walk descriptors in a descriptor list.
-> - * Given the address of the current descriptor, which minimally contains a
-> - * tag and len field, calculate the address of the next descriptor based
-> - * on the len field.
-> - */
-> -static inline void *fc_tlv_next_desc(void *desc)
-> -{
-> -	struct fc_tlv_desc *tlv = desc;
-> -
-> -	return (desc + FC_TLV_DESC_SZ_FROM_LENGTH(tlv));
-> -}
-> -
-> -
->   /*
->    * Link Service Request Information Descriptor
->    */
-> @@ -1094,19 +1064,6 @@ struct fc_fn_congn_desc {
->   	__u8		resv[3];	/* reserved - must be zero */
->   };
->   
-> -/*
-> - * ELS_FPIN - Fabric Performance Impact Notification
-> - */
-> -struct fc_els_fpin {
-> -	__u8		fpin_cmd;	/* command (0x16) */
-> -	__u8		fpin_zero[3];	/* specified as zero - part of cmd */
-> -	__be32		desc_len;	/* Length of Descriptor List (in bytes).
-> -					 * Size of ELS excluding fpin_cmd,
-> -					 * fpin_zero and desc_len fields.
-> -					 */
-> -	struct fc_tlv_desc	fpin_desc[];	/* Descriptor list */
-> -};
-> -
->   /* Diagnostic Function Descriptor - FPIN Registration */
->   struct fc_df_desc_fpin_reg {
->   	__be32		desc_tag;	/* FPIN Registration (0x00030001) */
-> @@ -1125,33 +1082,6 @@ struct fc_df_desc_fpin_reg {
->   					 */
->   };
->   
-> -/*
-> - * ELS_RDF - Register Diagnostic Functions
-> - */
-> -struct fc_els_rdf {
-> -	__u8		fpin_cmd;	/* command (0x19) */
-> -	__u8		fpin_zero[3];	/* specified as zero - part of cmd */
-> -	__be32		desc_len;	/* Length of Descriptor List (in bytes).
-> -					 * Size of ELS excluding fpin_cmd,
-> -					 * fpin_zero and desc_len fields.
-> -					 */
-> -	struct fc_tlv_desc	desc[];	/* Descriptor list */
-> -};
-> -
-> -/*
-> - * ELS RDF LS_ACC Response.
-> - */
-> -struct fc_els_rdf_resp {
-> -	struct fc_els_ls_acc	acc_hdr;
-> -	__be32			desc_list_len;	/* Length of response (in
-> -						 * bytes). Excludes acc_hdr
-> -						 * and desc_list_len fields.
-> -						 */
-> -	struct fc_els_lsri_desc	lsri;
-> -	struct fc_tlv_desc	desc[];	/* Supported Descriptor list */
-> -};
-> -
-> -
->   /*
->    * Diagnostic Capability Descriptors for EDC ELS
->    */
-> @@ -1221,6 +1151,65 @@ struct fc_diag_cg_sig_desc {
->   	struct fc_diag_cg_sig_freq	rcv_signal_frequency;
->   };
->   
-> +/*
-> + * Generic Link Service TLV Descriptor format
-> + *
-> + * This structure, as it defines no payload, will also be referred to
-> + * as the "tlv header" - which contains the tag and len fields.
-> + */
-> +union fc_tlv_desc {
-> +	struct fc_tlv_desc_hdr hdr;
-> +	struct fc_els_lsri_desc lsri;
-> +	struct fc_fn_li_desc li;
-> +	struct fc_fn_deli_desc deli;
-> +	struct fc_fn_peer_congn_desc peer_congn;
-> +	struct fc_fn_congn_desc congn;
-> +	struct fc_df_desc_fpin_reg fpin_reg;
-> +	struct fc_diag_lnkflt_desc lnkflt;
-> +	struct fc_diag_cg_sig_desc cg_sig;
-> +};
-> +
-> +/* Descriptor tag and len fields are considered the mandatory header
-> + * for a descriptor
-> + */
-> +#define FC_TLV_DESC_HDR_SZ	sizeof(struct fc_tlv_desc_hdr)
-> +
-> +/*
-> + * Macro, used when initializing payloads, to return the descriptor length.
-> + * Length is size of descriptor minus the tag and len fields.
-> + */
-> +#define FC_TLV_DESC_LENGTH_FROM_SZ(desc)	\
-> +		(sizeof(desc) - FC_TLV_DESC_HDR_SZ)
-> +
-> +/* Macro, used on received payloads, to return the descriptor length */
-> +#define FC_TLV_DESC_SZ_FROM_LENGTH(tlv)		\
-> +		(__be32_to_cpu((tlv)->hdr.desc_len) + FC_TLV_DESC_HDR_SZ)
-> +
-> +/*
-> + * This helper is used to walk descriptors in a descriptor list.
-> + * Given the address of the current descriptor, which minimally contains a
-> + * tag and len field, calculate the address of the next descriptor based
-> + * on the len field.
-> + */
-> +static inline union fc_tlv_desc *fc_tlv_next_desc(union fc_tlv_desc *desc)
-> +{
-> +	return (union fc_tlv_desc *)((__u8 *)desc + FC_TLV_DESC_SZ_FROM_LENGTH(desc));
-> +}
-> +
-> +
-> +/*
-> + * ELS_FPIN - Fabric Performance Impact Notification
-> + */
-> +struct fc_els_fpin {
-> +	__u8		fpin_cmd;	/* command (0x16) */
-> +	__u8		fpin_zero[3];	/* specified as zero - part of cmd */
-> +	__be32		desc_len;	/* Length of Descriptor List (in bytes).
-> +					 * Size of ELS excluding fpin_cmd,
-> +					 * fpin_zero and desc_len fields.
-> +					 */
-> +	union fc_tlv_desc	fpin_desc[];	/* Descriptor list */
-> +};
-> +
->   /*
->    * ELS_EDC - Exchange Diagnostic Capabilities
->    */
-> @@ -1231,10 +1220,37 @@ struct fc_els_edc {
->   					 * Size of ELS excluding edc_cmd,
->   					 * edc_zero and desc_len fields.
->   					 */
-> -	struct fc_tlv_desc	desc[];
-> +	union fc_tlv_desc	desc[];
->   					/* Diagnostic Descriptor list */
->   };
->   
-> +/*
-> + * ELS_RDF - Register Diagnostic Functions
-> + */
-> +struct fc_els_rdf {
-> +	__u8		fpin_cmd;	/* command (0x19) */
-> +	__u8		fpin_zero[3];	/* specified as zero - part of cmd */
-> +	__be32		desc_len;	/* Length of Descriptor List (in bytes).
-> +					 * Size of ELS excluding fpin_cmd,
-> +					 * fpin_zero and desc_len fields.
-> +					 */
-> +	union fc_tlv_desc	desc[];	/* Descriptor list */
-> +};
-> +
-> +/*
-> + * ELS RDF LS_ACC Response.
-> + */
-> +struct fc_els_rdf_resp {
-> +	struct fc_els_ls_acc	acc_hdr;
-> +	__be32			desc_list_len;	/* Length of response (in
-> +						 * bytes). Excludes acc_hdr
-> +						 * and desc_list_len fields.
-> +						 */
-> +	struct fc_els_lsri_desc	lsri;
-> +	union fc_tlv_desc	desc[];	/* Supported Descriptor list */
-> +};
-> +
-> +
->   /*
->    * ELS EDC LS_ACC Response.
->    */
-> @@ -1245,9 +1261,8 @@ struct fc_els_edc_resp {
->   						 * and desc_list_len fields.
->   						 */
->   	struct fc_els_lsri_desc	lsri;
-> -	struct fc_tlv_desc	desc[];
-> +	union fc_tlv_desc	desc[];
->   				    /* Supported Diagnostic Descriptor list */
->   };
->   
-> -
->   #endif /* _FC_ELS_H_ */
+Justin,
 
+> Update lpfc to revision 14.4.0.10
+>
+> This patch set contains bug fixes related to diagnostic log messaging,
+> driver initialization and removal, updates to mailbox command
+> handling, and string modifications for obsolete adapter model
+> descriptions.
+
+Applied to 6.17/scsi-staging, thanks!
+
+-- 
+Martin K. Petersen
