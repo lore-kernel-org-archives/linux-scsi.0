@@ -1,292 +1,179 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E249623BD1B
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 20:13:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A01762E2EE3
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 20:20:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750796003; cv=none; b=SVvh2+pWmqi3MMYFGM7hSTFcXdvEtwoxy2yBG7OKLaRxnH8j0eWQuS/GyAsK7HCPbimF907Q8wppWKYhuEMUy2gRzjq1R45JYsZOwaNT43rGAV7icP/gJA8kogW/c096ZQZxi7meARastHNoYJ9nJnYD0gEDtzK07hz9Cm1qjG0=
+	t=1750796440; cv=none; b=ncvPgHIOTo5E6TE7xyCjXU+/DkIwRpYgemOR+Bss/lJ9VFteLVHdlEtC5uWU5UivqoHITBoswIS5a7knfHQxoK0olxxaWyWnGIl1jr+N8W8u692kXqK3Ve7MaKQgR+4NpA1BmP2bqwuZhz8lYD2Uv/txpMhR35NZxidd9poXyjE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750796003; c=relaxed/simple;
-	bh=fh2CqEI6TDbfKsLN8wHepvnZv5jdUHrDJM27EN/ehiA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QH9Cap8e/S5F4gydVU72R4p5DVaaqQI/3F47qOenTNR2fu7vpAwC1bC6q2bwQXdK2FdqgAg32I4wLB1/yLDvVjODYcLS9xLVrYH4srJXP1Gt/eURQpSS8GAqZ359JnC7QWWaVduP11+oOt+j9zo8Q7jxjQCJB8a5JBHEc7dlPbs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DDDEJsWP; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1750796440; c=relaxed/simple;
+	bh=QeLqEIxbOJSC4hzQNpaqg9sk/PC8T6UOOCVCN+NtL4M=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fBeyy6gw5fZ2b8U8A+m/IbMo7HjBehfII8UuYg4T2kx97gjyF2kYHS/05aF/r3koKG5mipx5UQlnOqhJl0TBD2Y44+XoBtVWxfpMAZDB0kED8f7wm9cfqTNigMMmsDsEKDNqw3+3mSYiNm6Eelm/H62F0zdOkQg/zDcu5BFwKD8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fVLzZBVr; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DDDEJsWP"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bRbjr5Tv3zlgqVb;
-	Tue, 24 Jun 2025 20:13:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1750795998; x=1753387999; bh=w1fxkDy76vqFyH4r65jsnRoQvvBqdfcN6bp
-	vlFbfkMw=; b=DDDEJsWPQ4RdJUEBv/Fh3ZctDapLlh0Sox4xJ98gVgNG7oTL0Fe
-	YSlvNPNcLxZurbTLhuTfJYoWSVMDPneSG0DF8YrQ5DbcnruVwdrV3HNS2U/fqSNX
-	7A/WeV/paWYPnE6B2gd/wZrvQ9gM8C0jmRFmnp7MVyowaSulB57ODZBMIdVe+/2E
-	h6NHdX3+Jwi8bQpxjYff3pD0UVFN+NS0gLtiJxlXmqKwxRnAUUroeEMhH9NhkTPP
-	zyHQwtv8K6kfeUA43r3dPQ7uoea/NAJyvNCARoHZdQDljI0EpEEii2jip713hbUb
-	d0opppwqfCUxBBCStlrWS/3ZIRj5d9qUb4A==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 8p236RIKAJAD; Tue, 24 Jun 2025 20:13:18 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fVLzZBVr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1750796437;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=sAon4/aUpge0AwBbK4GiAktDJCSlgNuBWZOwFjoHTCE=;
+	b=fVLzZBVriR6eRIzXwlgKuBetXQR/ZIxbxQ8A/bSEFjBEpMEXLeeboHh6jT8eRJtReL1SyC
+	sLziWTBjIG3U54F/iJz3cddtAw44YwqJHLuHRBA8UgsRpkxCz2Eg48YIuNpl9F7IvqhE3L
+	AGMQiztKvGtGfN/5rBgeXbwYIMottYM=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-487-Rp_6R6lDO66eX74Npgrqwg-1; Tue,
+ 24 Jun 2025 16:20:33 -0400
+X-MC-Unique: Rp_6R6lDO66eX74Npgrqwg-1
+X-Mimecast-MFC-AGG-ID: Rp_6R6lDO66eX74Npgrqwg_1750796432
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bRbjg18DWzlgqVM;
-	Tue, 24 Jun 2025 20:13:09 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Can Guo <quic_cang@quicinc.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	Asutosh Das <quic_asutoshd@quicinc.com>
-Subject: [PATCH] scsi: ufs: Make ufshcd_clock_scaling_prepare() compatible with MCQ
-Date: Tue, 24 Jun 2025 13:12:44 -0700
-Message-ID: <20250624201252.396941-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.50.0.714.g196bf9f422-goog
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id D33981956094;
+	Tue, 24 Jun 2025 20:20:31 +0000 (UTC)
+Received: from bgurney-thinkpadp1gen5.remote.csb (unknown [10.45.226.95])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2735D19560A3;
+	Tue, 24 Jun 2025 20:20:25 +0000 (UTC)
+From: Bryan Gurney <bgurney@redhat.com>
+To: linux-nvme@lists.infradead.org,
+	kbusch@kernel.org,
+	hch@lst.de,
+	sagi@grimberg.me,
+	axboe@kernel.dk
+Cc: james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	njavali@marvell.com,
+	linux-scsi@vger.kernel.org,
+	hare@suse.de,
+	bgurney@redhat.com,
+	jmeneghi@redhat.com
+Subject: [PATCH v7 0/6] nvme-fc: FPIN link integrity handling
+Date: Tue, 24 Jun 2025 16:20:14 -0400
+Message-ID: <20250624202020.42612-1-bgurney@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-ufshcd_clock_scaling_prepare() only supports the lecagy doorbell mode and
-may wait up to 20 ms longer than necessary. Hence this patch that reworks
-ufshcd_clock_scaling_prepare(). Compile-tested only.
+FPIN LI (link integrity) messages are received when the attached
+fabric detects hardware errors. In response to these messages I/O
+should be directed away from the affected ports, and only used
+if the 'optimized' paths are unavailable.
+Upon port reset the paths should be put back in service as the
+affected hardware might have been replaced.
+This patch adds a new controller flag 'NVME_CTRL_MARGINAL'
+which will be checked during multipath path selection, causing the
+path to be skipped when checking for 'optimized' paths. If no
+optimized paths are available the 'marginal' paths are considered
+for path selection alongside the 'non-optimized' paths.
+It also introduces a new nvme-fc callback 'nvme_fc_fpin_rcv()' to
+evaluate the FPIN LI TLV payload and set the 'marginal' state on
+all affected rports.
 
-Cc: Can Guo <quic_cang@quicinc.com>
-Fixes: 305a357d3595 ("scsi: ufs: core: Introduce multi-circular queue cap=
-ability")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 162 +++++++++++++++-----------------------
- 1 file changed, 64 insertions(+), 98 deletions(-)
+The testing for this patch set was performed by Bryan Gurney, using the
+process outlined by John Meneghini's presentation at LSFMM 2024, where
+the fibre channel switch sends an FPIN notification on a specific switch
+port, and the following is checked on the initiator:
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b3fe4335d56c..c8eb5bf65e22 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1248,87 +1248,6 @@ static bool ufshcd_is_devfreq_scaling_required(str=
-uct ufs_hba *hba,
- 	return false;
- }
-=20
--/*
-- * Determine the number of pending commands by counting the bits in the =
-SCSI
-- * device budget maps. This approach has been selected because a bit is =
-set in
-- * the budget map before scsi_host_queue_ready() checks the host_self_bl=
-ocked
-- * flag. The host_self_blocked flag can be modified by calling
-- * scsi_block_requests() or scsi_unblock_requests().
-- */
--static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
--{
--	const struct scsi_device *sdev;
--	unsigned long flags;
--	u32 pending =3D 0;
--
--	spin_lock_irqsave(hba->host->host_lock, flags);
--	__shost_for_each_device(sdev, hba->host)
--		pending +=3D sbitmap_weight(&sdev->budget_map);
--	spin_unlock_irqrestore(hba->host->host_lock, flags);
--
--	return pending;
--}
--
--/*
-- * Wait until all pending SCSI commands and TMFs have finished or the ti=
-meout
-- * has expired.
-- *
-- * Return: 0 upon success; -EBUSY upon timeout.
-- */
--static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
--					u64 wait_timeout_us)
--{
--	int ret =3D 0;
--	u32 tm_doorbell;
--	u32 tr_pending;
--	bool timeout =3D false, do_last_check =3D false;
--	ktime_t start;
--
--	ufshcd_hold(hba);
--	/*
--	 * Wait for all the outstanding tasks/transfer requests.
--	 * Verify by checking the doorbell registers are clear.
--	 */
--	start =3D ktime_get();
--	do {
--		if (hba->ufshcd_state !=3D UFSHCD_STATE_OPERATIONAL) {
--			ret =3D -EBUSY;
--			goto out;
--		}
--
--		tm_doorbell =3D ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
--		tr_pending =3D ufshcd_pending_cmds(hba);
--		if (!tm_doorbell && !tr_pending) {
--			timeout =3D false;
--			break;
--		} else if (do_last_check) {
--			break;
--		}
--
--		io_schedule_timeout(msecs_to_jiffies(20));
--		if (ktime_to_us(ktime_sub(ktime_get(), start)) >
--		    wait_timeout_us) {
--			timeout =3D true;
--			/*
--			 * We might have scheduled out for long time so make
--			 * sure to check if doorbells are cleared by this time
--			 * or not.
--			 */
--			do_last_check =3D true;
--		}
--	} while (tm_doorbell || tr_pending);
--
--	if (timeout) {
--		dev_err(hba->dev,
--			"%s: timedout waiting for doorbell to clear (tm=3D0x%x, tr=3D0x%x)\n"=
-,
--			__func__, tm_doorbell, tr_pending);
--		ret =3D -EBUSY;
--	}
--out:
--	ufshcd_release(hba);
--	return ret;
--}
--
- /**
-  * ufshcd_scale_gear - scale up/down UFS gear
-  * @hba: per adapter instance
-@@ -1391,36 +1310,86 @@ static int ufshcd_scale_gear(struct ufs_hba *hba,=
- u32 target_gear, bool scale_up
-  * Return: 0 upon success; -EBUSY upon timeout.
-  */
- static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout=
-_us)
-+	__cond_acquires(hba->host->scan_mutex)
-+	__cond_acquires(hba->wb_mutex)
-+	__cond_acquires(hba->clk_scaling_lock)
- {
--	int ret =3D 0;
-+	const unsigned long deadline =3D jiffies + usecs_to_jiffies(timeout_us)=
-;
-+	struct Scsi_Host *host =3D hba->host;
-+	struct scsi_device *sdev;
-+	long timeout;
-+
- 	/*
--	 * make sure that there are no outstanding requests when
--	 * clock scaling is in progress
-+	 * Hold scan_mutex to prevent that SCSI devices are added or removed
-+	 * while this function is in progress.
- 	 */
--	mutex_lock(&hba->host->scan_mutex);
--	blk_mq_quiesce_tagset(&hba->host->tag_set);
-+	mutex_lock(&host->scan_mutex);
- 	mutex_lock(&hba->wb_mutex);
- 	down_write(&hba->clk_scaling_lock);
-+	/* Call ufshcd_hold() to serialize clock gating and clock scaling. */
-+	ufshcd_hold(hba);
-=20
- 	if (!hba->clk_scaling.is_allowed ||
--	    ufshcd_wait_for_doorbell_clr(hba, timeout_us)) {
--		ret =3D -EBUSY;
--		up_write(&hba->clk_scaling_lock);
--		mutex_unlock(&hba->wb_mutex);
--		blk_mq_unquiesce_tagset(&hba->host->tag_set);
--		mutex_unlock(&hba->host->scan_mutex);
-+	    hba->ufshcd_state !=3D UFSHCD_STATE_OPERATIONAL)
- 		goto out;
-+
-+	blk_freeze_queue_start(hba->tmf_queue);
-+	shost_for_each_device(sdev, host)
-+		blk_freeze_queue_start(sdev->request_queue);
-+
-+	/*
-+	 * Calling synchronize_*rcu_expedited() reduces the wait time from
-+	 * milliseconds to less than a microsecond. See also
-+	 * https://paulmck.livejournal.com/67547.html.
-+	 */
-+	if (host->tag_set.flags & BLK_MQ_F_BLOCKING)
-+		synchronize_srcu_expedited(host->tag_set.srcu);
-+	else
-+		synchronize_rcu_expedited();
-+
-+	timeout =3D deadline - jiffies;
-+	if (timeout <=3D 0 ||
-+	    blk_mq_freeze_queue_wait_timeout(hba->tmf_queue, timeout) <=3D 0)
-+		goto unfreeze;
-+	shost_for_each_device(sdev, host) {
-+		timeout =3D deadline - jiffies;
-+		if (timeout <=3D 0 ||
-+		    blk_mq_freeze_queue_wait_timeout(sdev->request_queue,
-+						     timeout) <=3D 0) {
-+			goto unfreeze;
-+		}
- 	}
-=20
--	/* let's not get into low power until clock scaling is completed */
--	ufshcd_hold(hba);
-+	return 0;
-+
-+unfreeze:
-+	blk_mq_unfreeze_queue_nomemrestore(hba->tmf_queue);
-+	shost_for_each_device(sdev, host)
-+		blk_mq_unfreeze_queue_nomemrestore(sdev->request_queue);
-+
-+	dev_err(hba->dev, "%s timed out\n", __func__);
-=20
- out:
--	return ret;
-+	ufshcd_release(hba);
-+	up_write(&hba->clk_scaling_lock);
-+	mutex_unlock(&hba->wb_mutex);
-+	mutex_unlock(&host->scan_mutex);
-+
-+	return -EBUSY;
- }
-=20
- static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
-+	__releases(hba->host->scan_mutex)
-+	__releases(hba->wb_mutex)
-+	__releases(hba->clk_scaling_lock)
- {
-+	struct scsi_device *sdev;
-+
-+	blk_mq_unfreeze_queue_nomemrestore(hba->tmf_queue);
-+	shost_for_each_device(sdev, hba->host)
-+		blk_mq_unfreeze_queue_nomemrestore(sdev->request_queue);
-+
-+	ufshcd_release(hba);
- 	up_write(&hba->clk_scaling_lock);
-=20
- 	/* Enable Write Booster if current gear requires it else disable it */
-@@ -1428,10 +1397,7 @@ static void ufshcd_clock_scaling_unprepare(struct =
-ufs_hba *hba, int err)
- 		ufshcd_wb_toggle(hba, hba->pwr_info.gear_rx >=3D hba->clk_scaling.wb_g=
-ear);
-=20
- 	mutex_unlock(&hba->wb_mutex);
--
--	blk_mq_unquiesce_tagset(&hba->host->tag_set);
- 	mutex_unlock(&hba->host->scan_mutex);
--	ufshcd_release(hba);
- }
-=20
- /**
+1. The controllers corresponding to the paths on the port that has
+received the notification are showing a set NVME_CTRL_MARGINAL flag.
+
+   \
+    +- nvme4 fc traddr=c,host_traddr=e live optimized
+    +- nvme5 fc traddr=8,host_traddr=e live non-optimized
+    +- nvme8 fc traddr=e,host_traddr=f marginal optimized
+    +- nvme9 fc traddr=a,host_traddr=f marginal non-optimized
+
+2. The I/O statistics of the test namespace show no I/O activity on the
+controllers with NVME_CTRL_MARGINAL set.
+
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     25001.00         0.00        97.66         0.00
+   nvme4c9n1     25000.00         0.00        97.66         0.00
+   nvme4n1       50011.00         0.00       195.36         0.00
+   
+   
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     48360.00         0.00       188.91         0.00
+   nvme4c9n1      1642.00         0.00         6.41         0.00
+   nvme4n1       49981.00         0.00       195.24         0.00
+   
+   
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     50001.00         0.00       195.32         0.00
+   nvme4c9n1         0.00         0.00         0.00         0.00
+   nvme4n1       50016.00         0.00       195.38         0.00
+
+Link: https://people.redhat.com/jmeneghi/LSFMM_2024/LSFMM_2024_NVMe_Cancel_and_FPIN.pdf
+
+More rigorous testing was also performed to ensure proper path migration
+on each of the eight different FPIN link integrity events, particularly
+during a scenario where there are only non-optimized paths available, in
+a state where all paths are marginal.  On a configuration with a
+round-robin iopolicy, when all paths on the host show as marginal, I/O
+continues on the optimized path that was most recently non-marginal.
+From this point, of both of the optimized paths are down, I/O properly
+continues on the remaining paths.
+
+Changes to the original submission:
+- Changed flag name to 'marginal'
+- Do not block marginal path; influence path selection instead
+  to de-prioritize marginal paths
+
+Changes to v2:
+- Split off driver-specific modifications
+- Introduce 'union fc_tlv_desc' to avoid casts
+
+Changes to v3:
+- Include reviews from Justin Tee
+- Split marginal path handling patch
+
+Changes to v4:
+- Change 'u8' to '__u8' on fc_tlv_desc to fix a failure to build
+- Print 'marginal' instead of 'live' in the state of controllers
+  when they are marginal
+
+Changes to v5:
+- Minor spelling corrections to patch descriptions
+
+Changes to v6:
+- No code changes; added note about additional testing 
+
+Hannes Reinecke (5):
+  fc_els: use 'union fc_tlv_desc'
+  nvme-fc: marginal path handling
+  nvme-fc: nvme_fc_fpin_rcv() callback
+  lpfc: enable FPIN notification for NVMe
+  qla2xxx: enable FPIN notification for NVMe
+
+Bryan Gurney (1):
+  nvme: sysfs: emit the marginal path state in show_state()
+
+ drivers/nvme/host/core.c         |   1 +
+ drivers/nvme/host/fc.c           |  99 +++++++++++++++++++
+ drivers/nvme/host/multipath.c    |  17 ++--
+ drivers/nvme/host/nvme.h         |   6 ++
+ drivers/nvme/host/sysfs.c        |   4 +-
+ drivers/scsi/lpfc/lpfc_els.c     |  84 ++++++++--------
+ drivers/scsi/qla2xxx/qla_isr.c   |   3 +
+ drivers/scsi/scsi_transport_fc.c |  27 +++--
+ include/linux/nvme-fc-driver.h   |   3 +
+ include/uapi/scsi/fc/fc_els.h    | 165 +++++++++++++++++--------------
+ 10 files changed, 269 insertions(+), 140 deletions(-)
+
+-- 
+2.49.0
+
