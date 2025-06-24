@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 820CE22FF22;
-	Tue, 24 Jun 2025 04:12:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4F4E2512F5;
+	Tue, 24 Jun 2025 04:13:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750738370; cv=none; b=g1Z3gPATEq6e3hXizxJvmdZkXCbWKnWCRODSxyHEu6kGO7SgrwapOeW84HEzkwxvUFfS0yoJsww5qACFptfOFg6tGZZ6g/U8snoRd/OgG+UZ4ofWxAk7K6Y4T+V1IbK+QQN82oNvPO3TcF2ne7XBow3RVvT9Zj/tyxGn2/chdbY=
+	t=1750738387; cv=none; b=fiZ3619LdYBLgR0UEPFyqzJCoVT2KWZyq20FEwZ3uXIGduiVh8HQp8MXlBIwughQDnJLIF0suKvtzvnVleBQ9/lPURzIE4rM41J6yg0xozu6W8fLTcR5FU+5psPVpneEtk/X2jkzwEGf0zO023Xs6set0iaA49dGRyet3X8uBNA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750738370; c=relaxed/simple;
-	bh=96lESeON1DC32FEQir6QbIYFHPyxMDUPDXPozNYTmQw=;
+	s=arc-20240116; t=1750738387; c=relaxed/simple;
+	bh=kAdmc0tFFBVEig7hCQaAVgdAaMoieIBpJa0IRDl18No=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=pwCtweKHOYLbxB8tZq0Zro+ZaCg+Pu8ZG/vqiXb3v3fdOmKCqYblzdu2rQuL6mU59cQ0BszC8Fbb13sLZhTxskuXO5Y8ca74SOHyYhd2niAiZ7H8pPmwlUtBFEG4/yJqXOVVntjXS/2/XNT1JVOoAJY5JLFK/HuYSEiJm498Byo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hyFwUBav; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Hht7J+JBDRfaamRsgUcCbY7z7MO1y6usW0ttJYU1QA7vPNNuR1Agp7HOINLpSDrsn4Em+MTF0mASbD7nBiCOMqF/he8OHrmztRHD63i1D2kk/HyYNcj4ostMoiyHF+uIpWqaWeoIDaZrQrT3e4eH28Gi3DWQt7DobktGYUALOXM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qwTJL7E9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hyFwUBav"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0BD72C4CEE3;
-	Tue, 24 Jun 2025 04:12:50 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qwTJL7E9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 44315C4CEE3;
+	Tue, 24 Jun 2025 04:13:07 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1750738370;
-	bh=96lESeON1DC32FEQir6QbIYFHPyxMDUPDXPozNYTmQw=;
+	s=k20201202; t=1750738387;
+	bh=kAdmc0tFFBVEig7hCQaAVgdAaMoieIBpJa0IRDl18No=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=hyFwUBavP4n3JppgWFbTw3N30J1s+93TLJ68VV2d3e4pLPJKVHSGLStiK1MDTNtBD
-	 c6FNXN4WvWqOaOe6BGJVgdk2XKSRumZRolmUNLJfPVwPTcG9i7Uv/VYcDd9r5oKDbH
-	 cEONVH2v0aaQoFd7VB0JnPkd8pyUXCLa5K1eA+GjVK8TwCqikD64HRxboOMBSWD5M0
-	 y27lMiZEdhNAM+o3Sb7LrK9hbE6fatbB1Ik0+3sAWjWp4SdjV87cmy6GfPZcR2Pzl6
-	 MizSQx02VjM6RtWnQ5Jop2NduPKkG4EuxZjED+xiyDc764m0oHRkiOvK26gWkhSYaN
-	 qCtJKCIc8R/1g==
+	b=qwTJL7E9qL8ZvvhGdcmwj6GuyiKz8AMeVlvAkhluxVCfIfMqInos53q+zIotZsR2H
+	 ivVZZqs4L9MtNxvaeWwYVX0IwchBXzW4N/DaVaVyi95FYakdhM54xJVF9azCoqfBfX
+	 ztl250b6cEb9dCd0NfK7j0VAkH4OYBF7SGE7GHJVrLJvm2dSZHhuCNxYKLmd5Bnucc
+	 aS7LfXZK2dFIVZ3UbgxDaO4P/0UoYnW1x0X/aA9SglgR2BGH2FUjuHFF/hvt3A3QGx
+	 81NBoUfmt6gdPzIzytnmpw9z85gWny3Talb9r1TI5kCL7HOrBzNHrXsmuukqQ2TgwD
+	 8VtEivAE9+qCw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -36,12 +36,12 @@ Cc: Maurizio Lombardi <mlombard@redhat.com>,
 	Sasha Levin <sashal@kernel.org>,
 	linux-scsi@vger.kernel.org,
 	target-devel@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.1 09/15] scsi: target: Fix NULL pointer dereference in core_scsi3_decode_spec_i_port()
-Date: Tue, 24 Jun 2025 00:12:32 -0400
-Message-Id: <20250624041238.84580-9-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 5.15 06/11] scsi: target: Fix NULL pointer dereference in core_scsi3_decode_spec_i_port()
+Date: Tue, 24 Jun 2025 00:12:54 -0400
+Message-Id: <20250624041259.84940-6-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250624041238.84580-1-sashal@kernel.org>
-References: <20250624041238.84580-1-sashal@kernel.org>
+In-Reply-To: <20250624041259.84940-1-sashal@kernel.org>
+References: <20250624041259.84940-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,7 +50,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.1.141
+X-stable-base: Linux 5.15.185
 Content-Transfer-Encoding: 8bit
 
 From: Maurizio Lombardi <mlombard@redhat.com>
@@ -147,10 +147,10 @@ architectural changes.
  1 file changed, 3 insertions(+), 1 deletion(-)
 
 diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
-index 1493b1d01194f..a355661e82027 100644
+index 3829b61b56c12..f4a797d3c5734 100644
 --- a/drivers/target/target_core_pr.c
 +++ b/drivers/target/target_core_pr.c
-@@ -1841,7 +1841,9 @@ core_scsi3_decode_spec_i_port(
+@@ -1852,7 +1852,9 @@ core_scsi3_decode_spec_i_port(
  		}
  
  		kmem_cache_free(t10_pr_reg_cache, dest_pr_reg);
