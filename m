@@ -1,47 +1,46 @@
-Received: from out162-62-57-64.mail.qq.com (out162-62-57-64.mail.qq.com [162.62.57.64])
+Received: from out203-205-221-239.mail.qq.com (out203-205-221-239.mail.qq.com [203.205.221.239])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97C486136;
-	Tue, 24 Jun 2025 03:27:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.57.64
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ABF8EC5;
+	Tue, 24 Jun 2025 03:34:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.239
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750735679; cv=none; b=HRE+1cbgpm75FYLQXOO8FMAg5H3Zmx8p8ytLbhlrnW5BaCvTg6p+kkyauFbqFXnHELMeh88XFBx+d7SdjoQWrIK4Z5oEOyi395yQ97YyPNcJgp7zJrLAI/77RLN6qyVdsk3vOG2iAiBP/CWlo95haiBjTrHK4riCdCrgNFwsMlM=
+	t=1750736074; cv=none; b=h0USAimUbwJfo/pmNNNLyaFhuk8Hm5UZNL9HCSwrxOW2z2qjf75uoJM3v4UiFRuTDfIHQ9alfuU6eTmdwHOVKDZ86suvlc/tUPdDaN43j8gz2Ye4YMkcj3VS8KZ0h9Uzn+4q5Eu0kR7j2tHn+6w0FiP3vvWh0MrmRTHlDpLiCtY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750735679; c=relaxed/simple;
-	bh=RLEIRSjrgC2GMjEJKM5fjLmfrTS5grac6NjsH/mjjro=;
+	s=arc-20240116; t=1750736074; c=relaxed/simple;
+	bh=2lgsSiSDVhVvn8xEry5TEui0answQ0NLBijzCjYH/hg=;
 	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=V/EADStwVKi82Yncb0iyg6R/a0Wkes796UAfGFbje+TzyQGSnK9WA6/EKnw2n9VeaAq5K7I327sI4PEUGtIMJJ/4O4xqWNi5d5oUriUnQ1yqQTVsbj88SvD9eocaxlV1jR6q9GPlFbSs6cxCj9eEFRGzm/JbSp0widxPtA2poTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=GUmuRjd3; arc=none smtp.client-ip=162.62.57.64
+	 MIME-Version; b=b2XdsTmQE940Ns1gD3qOcKOEtQ7JD9SyQJumwHqxR2U4GAKzBEactDvFSryNhwkS/l4mNcHpm5PZa2NO4YrHJEVEsMDT+dN2zjkx59HjH+D6Yh92KOK/AtOvBZFkrkFh9D01QOmWE/TasviG22N99/zppBMmAiFeJ9TZS5LGyFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=XECnpSKp; arc=none smtp.client-ip=203.205.221.239
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="GUmuRjd3"
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="XECnpSKp"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1750735665; bh=nmo+J8zIdQuvgWJj2E1ulnfVG/wxLiRfXsCfFWon/8k=;
+	t=1750736062; bh=e5CddSXqWu8idh7jLesbAOAwyCS96hBKVBtYhIbCOis=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=GUmuRjd3nhWVu98EGzVnWs8lQ7OfevZtcjTX1f/3j0jXUUz5C1eX/32f1GVZqeKv2
-	 xasKVo9aUyrevSNQv8at2AaBfcFpSOUXcjJg4XKEyTE9qLbNNBniA6AxcjinR0ItUB
-	 jRtBB3eUqNc1zemnBwL1+fldqiJZhYgbX8DYNa7k=
-Received: from VM-222-126-tencentos.localdomain ([14.22.11.162])
-	by newxmesmtplogicsvrszc16-0.qq.com (NewEsmtp) with SMTP
-	id 4DA38C3D; Tue, 24 Jun 2025 11:19:26 +0800
-X-QQ-mid: xmsmtpt1750735166tvilzjywo
-Message-ID: <tencent_DB9950A0D2FA71F96EE7FDDF92F6DE959A09@qq.com>
-X-QQ-XMAILINFO: NxPU7wltX8BLEPcb7EL3STuoaK9zZ8SLjiZxpVXaoqfSsYP5NNnfj5d7L6+5EP
-	 0JAlui+cWm8bjdODdrO4lC6DEylgK7uH1t+GJfICnGSfcGbg3DQgyKpGhZHrhPG45qGg4gfwdfaC
-	 9Efd+JgZ2/6P/5yQl3Fpl+okax/Pf7EwKsr9Wh7FbaGSKWBrBtoqGuqI5X3q0p79NYqh9pnWyHOG
-	 ITf7pXjZirDCBdMFuR6WX2IKIK2Irs2dEYsnMZaG5sh0uCEhfAUB01HN/GHhfN6l5iO+Y4bQgkiY
-	 GLAFoTF/4xHUjoQ0jnVtvgAd2yXS17zScsFoOj7PPJC6yczEvTqcm1H+GEu3FUbmBxLDgCiNLQkV
-	 C5KTG+fpmSKfPfscB++MuwITDC/JUVuktOefuiLupBhE+8BIJ0hl2xFZRMmlSz4XiqO8CipksgU7
-	 tIxA+m/e2oh5aYgkIXgADERU9qJxenIB29gzgZfGqcPb9Z21i+4VxgyxmnWf5Aaxp0yZopwPveWd
-	 4yDZC/dh9yPbV8/vdujxpB3la924zKXslpOx/BeHPg7PVHwNbt2Ca5mF7XdlNsl/KKPpwzCRFguF
-	 oWsC+yXeXZqZ9jj+VyLWY7/nLT1d/KWA56Y4FowNwO4j3la9Ozi5iMHyVDUsBGAamXtEO/I+/G3p
-	 hk3S2KWghlKTvMxG52u/DwGDnaIuPFVHlbD6jrCSwop/vBx9rLRHW+eqjrrUL4xvEfa+jhcfglQo
-	 U8rq9FXhvZUG8aa0U0Sauq1uYJGkDbl6XFIaHFQ8Hz5m/31ogpHQ293cF1XUJwmMnh7fnv5TS3DF
-	 GAlZ4zo5TAGrlvqipm7WNB6jNIhBz8S1Y+qoItoN61eBg4YFRsPDH+PqwjVFqQMZmkaFGEFQ2ym8
-	 bwLLX9PPVCCN/i2TvqNCo8HABcbr8WmDv4tWuknQLtYpgfK37wymOhJn7NxZNoO9yDSd6Xty3k65
-	 0esN+oGR5WxP9xCyz1sacHhJefWFGmi43g1kgnB5Lmm9yuO5Zu3bdpnTZgSwleifBjz1MB7Pl7n0
-	 jmSaWxNPMLTr30bUlP9IGsHXBWJ24=
+	b=XECnpSKpRSoAgZQyQuGsY+Eum1g/7k26jZYVoe5NoqdrH4d7H3RqIGlPfb/RtvUGS
+	 y7lStmQfEKbsss8jsvz+RPVJYIw4exAYkEVaDeR12wYL5Z1UPhDe90vGVahkbPrsCo
+	 Q0k6b2j/mS+ss9OgT6u1U6lfNmLp0u3qnkp4jwA8=
+Received: from VM-222-126-tencentos.localdomain ([14.22.11.165])
+	by newxmesmtplogicsvrszc13-0.qq.com (NewEsmtp) with SMTP
+	id 4333CCA0; Tue, 24 Jun 2025 11:16:51 +0800
+X-QQ-mid: xmsmtpt1750735011tvra48o7l
+Message-ID: <tencent_FACDDA286D6964B8EFB784FE3C4966EFDA08@qq.com>
+X-QQ-XMAILINFO: NyTsQ4JOu2J2sYoc6GuRSGi/RPtT58ss+s1XHr5nfWLCHIxKyly4svic0kOksH
+	 7zwcIW37+MpR+3wzQtAIANDUukiaOHjmoBh4GDWsbAPaHJYlO+xx9TIgPZ0on+vnq/aGjejOMJG6
+	 0gb8oc5F6MNWngAIQu+G4BItbqf+/5wbUiIsJaj0H5l4Z99NV8anfIBTyngabT79+9v8ITDgTSRr
+	 /YW61SOabi9MaGwz+Jjkensj3KWLKqSDoe3hhl6/5EjWUHK5bnfdrI3MieryVgElo77Mim+H7oUv
+	 H0kHuZmHOyXFzM3NhrUwQpe7StGdjg+YckF3SViWdgR+j54wgb48EA5A9jxwN5KRvRacs29HtU/v
+	 rFZ85eHZH1LXJ0YHNTfg88HWG8PDzNeFGRfrtfkIKFAzDlJb3kK5tLOrP1/UfVHsTYh+qk1c91Qt
+	 1d5yssHNwAfT2qSpVIq4a12EkslIPIw72mmHeGsqCsOFZD3qzmPCUSBIIU6nVKjjtzEP/ymj3wS3
+	 Ua4UrRbVBO8+HrjDOSVXnEX4XidrBcruqy85q16oGrLUjKLu0cFFm/bplXnzSR+EIP3BWdUiHRdo
+	 wMHnoByIzaeR672eOofJ7GdQ7jKXhcFb4I4yHdVxAbduZP7LaYuzthfD23Xl+oV85b44apnTfSp0
+	 DYTt0K2dGM+jDbwawuro90tYaMojOqD4v5DqSfr/I2OhTrDYFFssElKpjNe+HBEISE8A6Umf2LAg
+	 TAURUfIA/TgfxhZ8mAw/Zn1Is+KUJBx7Wdvd7oF8g0YbsJgcPDn0F8/zqo2TxeKzgAI2HXhVj0ZW
+	 MAQ6txox0Zh8TFJNsQ2LxvmxaNQK6RlHmCF9Fzmf8TMU+PLJ79GHA/qafOATPV1mNUWhi9UsWB3y
+	 e3JngoevZxkM6KkFdrYUKj/rGujKniwonhi8N7BDoZowI+rfFvTez0CrwzherPvZ0LJ58SuKcCau
+	 9JXqOZ+iUMFGvO195htvkNPI2fKlpPh5yt+riZJdbcfv30Uj/v4qv1ZgYWPR8f
 X-QQ-XMRINFO: Nq+8W0+stu50PRdwbJxPCL0=
 From: jackysliu <1972843537@qq.com>
 To: lkp@intel.com
@@ -54,9 +53,9 @@ Cc: 1972843537@qq.com,
 	martin.petersen@oracle.com,
 	oe-kbuild-all@lists.linux.dev,
 	skashyap@marvell.com
-Subject: [PATCH] scsi: qedf: fix inconsistent indenting warning 
-Date: Tue, 24 Jun 2025 11:19:19 +0800
-X-OQ-MSGID: <20250624031919.2207851-1-1972843537@qq.com>
+Subject: [PATCH] [PATCH] scsi: qedf: fix inconsistent indenting warning Fix below inconsistent indenting smatch warning. New smatch warnings: drivers/scsi/qedf/qedf_main.c:2814 qedf_prepare_sb() warn: inconsistent indenting
+Date: Tue, 24 Jun 2025 11:16:43 +0800
+X-OQ-MSGID: <20250624031643.2205842-1-1972843537@qq.com>
 X-Mailer: git-send-email 2.43.5
 In-Reply-To: <202506240340.fv6cXpyc-lkp@intel.com>
 References: <202506240340.fv6cXpyc-lkp@intel.com>
@@ -67,12 +66,6 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-
-Fix below inconsistent indenting smatch warning.
-
-New smatch warnings:
-drivers/scsi/qedf/qedf_main.c:2814 qedf_prepare_sb() warn: inconsistent
-indenting
 
 Old smatch warnings:
 drivers/scsi/qedf/qedf_main.c:2816 qedf_prepare_sb() warn: inconsistent indenting
