@@ -1,112 +1,145 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6397E2D1925
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 14:21:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5FCBE2153C1
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 14:30:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750774904; cv=none; b=q/m7BcMUF40xCUjDTmfci1mu9pL0WVswqFx81QHsePlLO0MZR3896v+3XzXz5L/4RyWuIURVD0j/TkoxiOt67eXI237pYjkCtj0lP8qt+T/NnbpLjNTgKbSlcPppht762KwLltG80O047+fLCWpEC+jbCvjvv3yvT695x78QA4o=
+	t=1750775402; cv=none; b=R72JqMoHPJveRyjTnXBK0CBhJN1PDN1hjEidDWCzAc96qq+GsxOHRKQ+VNg+ysYOYUIe18B/F3m0rw8qP6bweOE8bpgBeVjkgQK1KakzL3fr8iZrB2Fzdprnu3XeCyLTdGpOQlKq/09qzeptHg0tFWzQnvaI9mdzIrYXtibMVO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750774904; c=relaxed/simple;
-	bh=XwnGdWQkYlApWdZit8M7GQi5s2uWr0s+SHL5bLPxKSY=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=RNb0QSm4lEY6s5AcrHPDM2M9xYebx1F/NvaYzryr+uKN38uiU5lFUDdK9bJ+PcK4tC/lIolnPdHNeXXqemozbrgfWjyvTplisE5mRhJXTJD+U5ZzT6jLRDwNNQw3Xm4pJEjFZ6lh/LMuKATYcCa4q/fKziU0Q86rwWHnZQMXK6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=H2SS3SPn; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1750775402; c=relaxed/simple;
+	bh=qpvaQFDW+0dHZvXO/+ldJtYYEf/g7b/ifdIXwLxnrs4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=E12w6oTQPmUi7jah7FXzDR7MTV7lGg9Vrmo+m+gAO9eJfrmgV4LCHZfoC4n85+ynxCJ0gdqYLa9ZV5439euTbdciHQicZGK3LQ3b3gJMhKrrWP6DnAoAp8q6QK6k3wXYI+q7bK18tJKPN5otKBLyBDTqE/HABU2kcgml4J70AJI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=URFyznW8; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=y0oAZeI1; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=URFyznW8; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=y0oAZeI1; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="H2SS3SPn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1750774901;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="URFyznW8";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="y0oAZeI1";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="URFyznW8";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="y0oAZeI1"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 73B6E2116E;
+	Tue, 24 Jun 2025 14:29:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1750775399; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=14xIxMy2YUHY1lgAeFKa78vWXvA9MuYA/3dz475p8Z8=;
-	b=H2SS3SPnutJdbeEVJvjEeC83nwXo5Xonku8dRF970uqkM9MgKlICAGBsHz2lplocZ1dycD
-	6DrZIG0ARg9GPBPOdiIqv4J1V6HgEOtMeD9V80XAqcNZzbS8pUzs6QCN01WA/sKejiTEPh
-	BimO9kYfgu4nYdSOgkQ+a9hfsVrbGCA=
-Received: from mail-qk1-f200.google.com (mail-qk1-f200.google.com
- [209.85.222.200]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-126-MzXkzIYHMA-kiaqzg7hoKQ-1; Tue, 24 Jun 2025 10:21:40 -0400
-X-MC-Unique: MzXkzIYHMA-kiaqzg7hoKQ-1
-X-Mimecast-MFC-AGG-ID: MzXkzIYHMA-kiaqzg7hoKQ_1750774899
-Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-7d0aa9cdecdso433177385a.3
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 07:21:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750774899; x=1751379699;
-        h=content-transfer-encoding:mime-version:user-agent:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=14xIxMy2YUHY1lgAeFKa78vWXvA9MuYA/3dz475p8Z8=;
-        b=Od3cp0ph2+7s8dHJq6SQGfFfzdAaqKXt4EeSpEgcvDSLNEVdCtvCyCO0dWgNf6Sh2t
-         griolf5L2PpCl7QjnfHC82dSf052YMcxooFyHU7NrPUowDXvSjLSZNgL7pDbFR80CXKF
-         lj6VKfDRMNBYgZGOjMCTrWKvggfqXFMbWcZBi2DBqpYntAXp1hRr+W3Gs5+w0G3zagqJ
-         E+i+6TGqPq/29SRmLZj9V/H3X/zomyhn0EQRc9bAP38NFN8k0Z731sFyiApq8Hij8WR+
-         UEVhMRYf5fgDUjUIK5mpmLWHh4sswUth1azCuhpyvX74j/ZaUFKbtaCVljqkvmZQgMZa
-         viOA==
-X-Forwarded-Encrypted: i=1; AJvYcCVOIg3HU5/EbcRNmMn7trRjgv5W+0TDN0G2Hg6U9Xgif7/SxNv1JyCSSNwTXt937BpsNHsgu2OoUGsX@vger.kernel.org
-X-Gm-Message-State: AOJu0YzDjiEsXOs7FElwNVioMGGAbWz4rZLVfngmIZ4wDtmxz/eSEV+c
-	hLEf4DKTDoK7wn/A2Ao44sJ/q/pN+3jE+UD663ANiSUYXR0wH+E3tjdYL4ahQYJj+FRDQ7Hs80c
-	z/DxPeUM84odV++fT6qlCPfpghDQFPDOa/UqpqpOGou8VebPlGGh58utpZSA2ZRg=
-X-Gm-Gg: ASbGnctJ47QSRmtyO3WyNFmuT5PvePRVbq9YlNpzu4XVOoHZUR6QkprIAzjvGNjJ+Kv
-	8Kmp7CsDBWHwUeC5fN8uSDWsA4DWwVcYVzUv3wA5ktV0HoWRdvMAG+slzBe6hG0b55aKboMX/oN
-	DhpCgwZvNJ9uXA4j8EOOpdY+IEuOPdojY7YpgADN2kWf1cz2Y6KjhQLnzYJyMSZqfWzutGLSxD5
-	frztHvq0BfSBaOsK/sxerljIAoEqx/HIyRKXKpcwWRS1JyoQpArmDeXGfmxcNYCOy5LckXIuW86
-	gRSfYr/s9q5L+1Isn1jGONYssxwhMPTKg4nscLkMRu7Kz91i0IwqJHEyYbd1dAulZA1o/0kIH76
-	2YAwRthenHeWDaUP+
-X-Received: by 2002:a05:620a:410f:b0:7d3:c67f:7532 with SMTP id af79cd13be357-7d3f99327ccmr2313483085a.40.1750774899259;
-        Tue, 24 Jun 2025 07:21:39 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFR3cDql3VJLUr0EuiZIXkdr5u/svh4yWrVWPkzjWNmljf9JBpmaP0fofJOKq3rHI7yZwMwag==
-X-Received: by 2002:a05:620a:410f:b0:7d3:c67f:7532 with SMTP id af79cd13be357-7d3f99327ccmr2313476085a.40.1750774898607;
-        Tue, 24 Jun 2025 07:21:38 -0700 (PDT)
-Received: from syn-2600-6c64-4e7f-603b-9b92-b2ac-3267-27e9.biz6.spectrum.com ([2600:6c64:4e7f:603b:9b92:b2ac:3267:27e9])
-        by smtp.gmail.com with ESMTPSA id af79cd13be357-7d3f99a6755sm504639885a.32.2025.06.24.07.21.37
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Jun 2025 07:21:37 -0700 (PDT)
-Message-ID: <a665dead67bf4f3432cf1bddf29d2c573ab71673.camel@redhat.com>
-Subject: Re: fix virt_boundary_mask handling in SCSI
-From: Laurence Oberman <loberman@redhat.com>
-To: Christoph Hellwig <hch@lst.de>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>, 
-	"K. Y. Srinivasan"
-	 <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu
-	 <wei.liu@kernel.org>, "Ewan D. Milne" <emilne@redhat.com>, 
-	linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-block@vger.kernel.org
-Date: Tue, 24 Jun 2025 10:21:36 -0400
-In-Reply-To: <20250623080326.48714-1-hch@lst.de>
-References: <20250623080326.48714-1-hch@lst.de>
-Content-Type: text/plain; charset="UTF-8"
-User-Agent: Evolution 3.40.4 (3.40.4-11.el9) 
+	bh=GdzHCZdpOzN9qk+zX9xpsiMsUBeRg80+Yr/M8DrT0PI=;
+	b=URFyznW8jNAukftcOhGRh/TSh7iDXB85HE9FUSbFS0SHWKSIsJfOh4YO8BlzxpwK1w/Hgk
+	RPJl9r9VU1NJafACnnb7p+zGb3x8tAF4dnoVZn2dZhrjJXf1RqbGRdTqdzOjiLaAfj7kmm
+	mRcxvgBsOj7yujle13duzbydnne8DwQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1750775399;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GdzHCZdpOzN9qk+zX9xpsiMsUBeRg80+Yr/M8DrT0PI=;
+	b=y0oAZeI176k7LZhMYHZ7cNE3YlmVmtjDIsJF6VfF9KBrTgqeSEaibJpE9dK2Y6k5krx3nE
+	XMjD6S13/dH72ZAA==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=URFyznW8;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=y0oAZeI1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1750775399; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GdzHCZdpOzN9qk+zX9xpsiMsUBeRg80+Yr/M8DrT0PI=;
+	b=URFyznW8jNAukftcOhGRh/TSh7iDXB85HE9FUSbFS0SHWKSIsJfOh4YO8BlzxpwK1w/Hgk
+	RPJl9r9VU1NJafACnnb7p+zGb3x8tAF4dnoVZn2dZhrjJXf1RqbGRdTqdzOjiLaAfj7kmm
+	mRcxvgBsOj7yujle13duzbydnne8DwQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1750775399;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=GdzHCZdpOzN9qk+zX9xpsiMsUBeRg80+Yr/M8DrT0PI=;
+	b=y0oAZeI176k7LZhMYHZ7cNE3YlmVmtjDIsJF6VfF9KBrTgqeSEaibJpE9dK2Y6k5krx3nE
+	XMjD6S13/dH72ZAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 58EA813A24;
+	Tue, 24 Jun 2025 14:29:59 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 9sBLE2e2WmgPfQAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Tue, 24 Jun 2025 14:29:59 +0000
+Date: Tue, 24 Jun 2025 16:29:58 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Christoph Hellwig <hch@infradead.org>
+Cc: John Garry <john.g.garry@oracle.com>, Daniel Wagner <wagi@kernel.org>, 
+	"Sean A." <sean@ashe.io>, 
+	"James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "atomlin@atomlin.com" <atomlin@atomlin.com>, 
+	"kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "martin.petersen@oracle.com" <martin.petersen@oracle.com>, 
+	"mpi3mr-linuxdrv.pdl@broadcom.com" <mpi3mr-linuxdrv.pdl@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, 
+	"sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>
+Subject: Re: [RFC PATCH v2 1/1] scsi: mpi3mr: Introduce smp_affinity_enable
+ module parameter
+Message-ID: <0233e47b-894f-49e0-822c-bc1436352c98@flourine.local>
+References: <1xjYfSjJndOlG0Uro2jPuAmIrfqi5AVbfpFeWh7RfLfzqqH9u8ePoqgaP32ElXrGyOB47UvesV_Y2ypmM3cZtWit2EPnV3aj6i9w_DMo1eI=@ashe.io>
+ <077ffc15-f949-41d4-a13b-4949990ba830@oracle.com>
+ <aFjjf3qbuEOeWUjt@infradead.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <aFjjf3qbuEOeWUjt@infradead.org>
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_EQ_ADDR_SOME(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: 73B6E2116E
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spam-Score: -4.51
 
-On Mon, 2025-06-23 at 10:02 +0200, Christoph Hellwig wrote:
-> Hi all,
+On Sun, Jun 22, 2025 at 10:17:51PM -0700, Christoph Hellwig wrote:
+> On Wed, Jun 18, 2025 at 07:49:16AM +0100, John Garry wrote:
+> > BTW, if you use taskset to set the affinity of a process and ensure that
+> > /sys/block/xxx/queue/rq_affinity is set so that we complete on same CPU as
+> > submitted, then I thought that this would ensure that interrupts are not
+> > bothering other CPUs.
 > 
-> this series fixes a corruption when drivers using virt_boundary_mask
-> set
-> a limited max_segment_size by accident, which Red Hat reported as
-> causing
-> data corruption with storvsc.  I did audit the tree and also found
-> that
-> this can affect SRP and iSER as well.
-> 
-> Note that I've dropped the Tested-by from Laurence because the patch
-> changed very slightly from the last version.
-> 
-> Diffstat:
->  infiniband/ulp/srp/ib_srp.c |    5 +++--
->  scsi/hosts.c                |   20 +++++++++++++-------
->  2 files changed, 16 insertions(+), 9 deletions(-)
-> 
-Grabbing latest and will test tomorrow and reply
+> The RT folks want to not even have interrupts on the application CPUs.
+> That's perfectly reasonable and a common request.  Why doing driver
+> hacks as in this patch and many others is so completely insane.  Instead
+> we need common functionality for that.  The core irq layer has added
+> them for managed interrupts, and Daniel has been working on the blk-mq side
+> for a while.
 
+Indeed, I am in the process to finish the work on my next version for
+the isolcpus support in the block layer. I hope to send it out the next
+version this week.
