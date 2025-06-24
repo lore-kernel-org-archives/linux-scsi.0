@@ -1,134 +1,292 @@
-Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D279C170826
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 19:09:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E249623BD1B
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 20:13:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750792172; cv=none; b=cEmDEY4ILsKqkJmKuaLExzfTQEYzEI3oPnXA9Z/NL7MaanucQcRQvIpDhW5LhSff452L5FbZAGbtkiS31thz7fnBc+YxOrVYQpY1QFqy8viGeD4KjeSYuNov1SwN4vKLbh0C/L6w3KH9Pe2T8NELa2IQIwmcnqnFKXn0jjLIass=
+	t=1750796003; cv=none; b=SVvh2+pWmqi3MMYFGM7hSTFcXdvEtwoxy2yBG7OKLaRxnH8j0eWQuS/GyAsK7HCPbimF907Q8wppWKYhuEMUy2gRzjq1R45JYsZOwaNT43rGAV7icP/gJA8kogW/c096ZQZxi7meARastHNoYJ9nJnYD0gEDtzK07hz9Cm1qjG0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750792172; c=relaxed/simple;
-	bh=hBhJ9L2/0h1qj4fvkYPYVGp55waIKwB8Ncc4UioS0Ds=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=IlXhre2lkc9t8o+SyusookPRVbEJe5q9M90SmpBvkQT8iTlEROuFPXMuqbEmbagqxZoc8KWVdOF7PR3/7bXDsP/nou+7jrg6eP7vH4pTJBqcKA2jhIjskmmsfqzs5XBiPGhApINqEDqdOTWsk78dO2EqYJNnqiM8I0HYJqWeinE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=CIgHLcF7; arc=none smtp.client-ip=209.85.221.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1750796003; c=relaxed/simple;
+	bh=fh2CqEI6TDbfKsLN8wHepvnZv5jdUHrDJM27EN/ehiA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=QH9Cap8e/S5F4gydVU72R4p5DVaaqQI/3F47qOenTNR2fu7vpAwC1bC6q2bwQXdK2FdqgAg32I4wLB1/yLDvVjODYcLS9xLVrYH4srJXP1Gt/eURQpSS8GAqZ359JnC7QWWaVduP11+oOt+j9zo8Q7jxjQCJB8a5JBHEc7dlPbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DDDEJsWP; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="CIgHLcF7"
-Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-3a52878d37aso862005f8f.2
-        for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 12:09:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750792168; x=1751396968; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=FkvYPueiCOuf5txXi0BNyw1clF28awuB3uZflGQQ4EE=;
-        b=CIgHLcF7cvQF0JR/5fzSvj/EIrcQkmiKBn9maON9/pSNDHUeCP5hY8l0x/3pD3jMTB
-         EMou0iKqaz8c1rm0+3hPn/eCq0pmNEEIZYpW7mqRtV0r/TI69PNRoA2C65Rtn04BW8pA
-         QBOPzw1X6v7ceK/k9PYdhkQdxlCi4uEUh9vaSCZkXXxpm6xZqL1Vo+mziLMPB5TyfaYD
-         WdAfXk0ZLd8+0k7py0uwH4tvtzZhVrKrTVFpH/v1DhaouHaVfnAzM6SHN+clusdUFXH/
-         UzvNw0fMKc1qBfVh5nyUjqgnFg4o5RUTQjt+PPK1TV5jC09NURk9cJYWkG6Ow8ch8JqS
-         /Vkg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750792168; x=1751396968;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=FkvYPueiCOuf5txXi0BNyw1clF28awuB3uZflGQQ4EE=;
-        b=jAgEPmde9Sjl3VDZppS6kW5jxCOBfFT9t8aZJxI4RoT6AqhT/YhRj8SuWYQ9fuF/wi
-         vNrh2D6XrUOk/Q4pgu3K8q1rbNuGRb1xSfyarpboJEW+32pnh1tZjCEH3cFG8NaRPkgx
-         gGTAGe24+Iw3oI5rqkmUgrQt6HvXuvoWrGr1rcfiVUyde3nxyklhiVUFENARy8c2fLCl
-         1nSR0QOP0CCDCYbxU6B5cWZUsdAlpSQqigXsKgy5Hv2gLHgengjBmk41/RyVOnWqvjV7
-         3CEhAaIrfvxz8/dFGGrf69sFvGwaHUz2XuEnqPub1fm8+eUWLarvlE4RaCgXgbTnFhB6
-         Br9g==
-X-Forwarded-Encrypted: i=1; AJvYcCVNSajrdZ2qG6BJ7CYEFYK/15s6+TT0wS/EMVU6kzPXdg8TSJFiDDYmOLYiKBA1DTKkMACbbotaCy06@vger.kernel.org
-X-Gm-Message-State: AOJu0YxqZsq1cgHUT5XjgVDHQxdgKnUPDOzZGPukyvvofeEmzMnRvxi8
-	c6XnpcJt7U7Xc8Fy+RhWEqlwD0xZV5gODbDqi52WB13e48nSJFijKYo=
-X-Gm-Gg: ASbGncuetGXbYX6c0Xjb0t9Rpbcf9Q5s9jUSH0Cku1PXDL261pxj9zH5SgKcnXyJhDb
-	dNyJSkXbhhTXlNo+Amb7vGzdpTjQ3pB3upwfOFU841WlDZ4WHSxYRS2/QQyodmxZNCThHgd7Vr8
-	dapu2GtN/J5f+uW8u6rdbBM1MlBvRKdoJ1zkSSC81SEh58SxGJHHxiS0bFe2MEhBKwD8Ap/xfDr
-	+KG+W604rC0CcNKYuE8HDDE7Nt/LvQYeGSmu3ETqk3UKAMdxtoIhYyR7Q5+gbTZirq6yR9cPffX
-	uLcUv0MqjS8U52izeCs58A/KgaOpXaIRJOzbgaDPyszpYLcy1YV+pA0wkNOMy/5++1IKZklvWlN
-	7FxAeIUAn4oXetTPEcYkr
-X-Google-Smtp-Source: AGHT+IEePkrOyGuXaIC29F2bg0H/92kD36TZ0jf8wCx1W59mVlvtwCyryVuuvo7od6B2GT9jQTfsZQ==
-X-Received: by 2002:a05:6000:2211:b0:3a5:7875:576 with SMTP id ffacd0b85a97d-3a6d12d737bmr5213330f8f.1.1750792167693;
-        Tue, 24 Jun 2025 12:09:27 -0700 (PDT)
-Received: from localhost (8.red-80-39-33.staticip.rima-tde.net. [80.39.33.8])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3a6e80f264esm2585524f8f.47.2025.06.24.12.09.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 24 Jun 2025 12:09:27 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: 
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Nilesh Javali <njavali@marvell.com>,
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DDDEJsWP"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bRbjr5Tv3zlgqVb;
+	Tue, 24 Jun 2025 20:13:20 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1750795998; x=1753387999; bh=w1fxkDy76vqFyH4r65jsnRoQvvBqdfcN6bp
+	vlFbfkMw=; b=DDDEJsWPQ4RdJUEBv/Fh3ZctDapLlh0Sox4xJ98gVgNG7oTL0Fe
+	YSlvNPNcLxZurbTLhuTfJYoWSVMDPneSG0DF8YrQ5DbcnruVwdrV3HNS2U/fqSNX
+	7A/WeV/paWYPnE6B2gd/wZrvQ9gM8C0jmRFmnp7MVyowaSulB57ODZBMIdVe+/2E
+	h6NHdX3+Jwi8bQpxjYff3pD0UVFN+NS0gLtiJxlXmqKwxRnAUUroeEMhH9NhkTPP
+	zyHQwtv8K6kfeUA43r3dPQ7uoea/NAJyvNCARoHZdQDljI0EpEEii2jip713hbUb
+	d0opppwqfCUxBBCStlrWS/3ZIRj5d9qUb4A==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 8p236RIKAJAD; Tue, 24 Jun 2025 20:13:18 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bRbjg18DWzlgqVM;
+	Tue, 24 Jun 2025 20:13:09 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Can Guo <quic_cang@quicinc.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	QLOGIC ML <GR-QLogic-Storage-Upstream@marvell.com>,
-	LINUX SCSI ML <linux-scsi@vger.kernel.org>
-Subject: [PATCH] scsi: qla2xxx: remove firmware URL
-Date: Tue, 24 Jun 2025 21:09:25 +0200
-Message-ID: <20250624190926.115009-1-xose.vazquez@gmail.com>
-X-Mailer: git-send-email 2.50.0
+	Peter Wang <peter.wang@mediatek.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	Asutosh Das <quic_asutoshd@quicinc.com>
+Subject: [PATCH] scsi: ufs: Make ufshcd_clock_scaling_prepare() compatible with MCQ
+Date: Tue, 24 Jun 2025 13:12:44 -0700
+Message-ID: <20250624201252.396941-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.50.0.714.g196bf9f422-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Patchwork-Bot: notify
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: quoted-printable
 
-redirects to a marvell URL, only with drivers.
+ufshcd_clock_scaling_prepare() only supports the lecagy doorbell mode and
+may wait up to 20 ms longer than necessary. Hence this patch that reworks
+ufshcd_clock_scaling_prepare(). Compile-tested only.
 
-Cc: Nilesh Javali <njavali@marvell.com> (maintainer:QLOGIC QLA2XXX FC-SCSI DRIVER)
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com> (maintainer:SCSI SUBSYSTEM)
-Cc: Martin K. Petersen <martin.petersen@oracle.com> (maintainer:SCSI SUBSYSTEM)
-Cc: QLOGIC ML <GR-QLogic-Storage-Upstream@marvell.com> (maintainer:QLOGIC QLA2XXX FC-SCSI DRIVER)
-Cc: LINUX SCSI ML <linux-scsi@vger.kernel.org> (open list:QLOGIC QLA2XXX FC-SCSI DRIVER)
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: Can Guo <quic_cang@quicinc.com>
+Fixes: 305a357d3595 ("scsi: ufs: core: Introduce multi-circular queue cap=
+ability")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/qla2xxx/Kconfig    | 6 +-----
- drivers/scsi/qla2xxx/qla_init.c | 4 ----
- 2 files changed, 1 insertion(+), 9 deletions(-)
+ drivers/ufs/core/ufshcd.c | 162 +++++++++++++++-----------------------
+ 1 file changed, 64 insertions(+), 98 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/Kconfig b/drivers/scsi/qla2xxx/Kconfig
-index a8b4314bfd6e..6946d7155bc2 100644
---- a/drivers/scsi/qla2xxx/Kconfig
-+++ b/drivers/scsi/qla2xxx/Kconfig
-@@ -25,11 +25,7 @@ config SCSI_QLA_FC
- 	  Upon request, the driver caches the firmware image until
- 	  the driver is unloaded.
- 
--	  Firmware images can be retrieved from:
--
--	        http://ldriver.qlogic.com/firmware/
--
--	  They are also included in the linux-firmware tree as well.
-+	  Firmware images are included in the linux-firmware tree.
- 
- config TCM_QLA2XXX
- 	tristate "TCM_QLA2XXX fabric module for QLogic 24xx+ series target mode HBAs"
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index 514934dd6f80..be211ff22acb 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -8603,8 +8603,6 @@ qla24xx_load_risc_flash(scsi_qla_host_t *vha, uint32_t *srisc_addr,
- 	return QLA_SUCCESS;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index b3fe4335d56c..c8eb5bf65e22 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -1248,87 +1248,6 @@ static bool ufshcd_is_devfreq_scaling_required(str=
+uct ufs_hba *hba,
+ 	return false;
  }
- 
--#define QLA_FW_URL "http://ldriver.qlogic.com/firmware/"
+=20
+-/*
+- * Determine the number of pending commands by counting the bits in the =
+SCSI
+- * device budget maps. This approach has been selected because a bit is =
+set in
+- * the budget map before scsi_host_queue_ready() checks the host_self_bl=
+ocked
+- * flag. The host_self_blocked flag can be modified by calling
+- * scsi_block_requests() or scsi_unblock_requests().
+- */
+-static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
+-{
+-	const struct scsi_device *sdev;
+-	unsigned long flags;
+-	u32 pending =3D 0;
 -
- int
- qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
+-	spin_lock_irqsave(hba->host->host_lock, flags);
+-	__shost_for_each_device(sdev, hba->host)
+-		pending +=3D sbitmap_weight(&sdev->budget_map);
+-	spin_unlock_irqrestore(hba->host->host_lock, flags);
+-
+-	return pending;
+-}
+-
+-/*
+- * Wait until all pending SCSI commands and TMFs have finished or the ti=
+meout
+- * has expired.
+- *
+- * Return: 0 upon success; -EBUSY upon timeout.
+- */
+-static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
+-					u64 wait_timeout_us)
+-{
+-	int ret =3D 0;
+-	u32 tm_doorbell;
+-	u32 tr_pending;
+-	bool timeout =3D false, do_last_check =3D false;
+-	ktime_t start;
+-
+-	ufshcd_hold(hba);
+-	/*
+-	 * Wait for all the outstanding tasks/transfer requests.
+-	 * Verify by checking the doorbell registers are clear.
+-	 */
+-	start =3D ktime_get();
+-	do {
+-		if (hba->ufshcd_state !=3D UFSHCD_STATE_OPERATIONAL) {
+-			ret =3D -EBUSY;
+-			goto out;
+-		}
+-
+-		tm_doorbell =3D ufshcd_readl(hba, REG_UTP_TASK_REQ_DOOR_BELL);
+-		tr_pending =3D ufshcd_pending_cmds(hba);
+-		if (!tm_doorbell && !tr_pending) {
+-			timeout =3D false;
+-			break;
+-		} else if (do_last_check) {
+-			break;
+-		}
+-
+-		io_schedule_timeout(msecs_to_jiffies(20));
+-		if (ktime_to_us(ktime_sub(ktime_get(), start)) >
+-		    wait_timeout_us) {
+-			timeout =3D true;
+-			/*
+-			 * We might have scheduled out for long time so make
+-			 * sure to check if doorbells are cleared by this time
+-			 * or not.
+-			 */
+-			do_last_check =3D true;
+-		}
+-	} while (tm_doorbell || tr_pending);
+-
+-	if (timeout) {
+-		dev_err(hba->dev,
+-			"%s: timedout waiting for doorbell to clear (tm=3D0x%x, tr=3D0x%x)\n"=
+,
+-			__func__, tm_doorbell, tr_pending);
+-		ret =3D -EBUSY;
+-	}
+-out:
+-	ufshcd_release(hba);
+-	return ret;
+-}
+-
+ /**
+  * ufshcd_scale_gear - scale up/down UFS gear
+  * @hba: per adapter instance
+@@ -1391,36 +1310,86 @@ static int ufshcd_scale_gear(struct ufs_hba *hba,=
+ u32 target_gear, bool scale_up
+  * Return: 0 upon success; -EBUSY upon timeout.
+  */
+ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout=
+_us)
++	__cond_acquires(hba->host->scan_mutex)
++	__cond_acquires(hba->wb_mutex)
++	__cond_acquires(hba->clk_scaling_lock)
  {
-@@ -8622,8 +8620,6 @@ qla2x00_load_risc(scsi_qla_host_t *vha, uint32_t *srisc_addr)
- 	if (!blob) {
- 		ql_log(ql_log_info, vha, 0x0083,
- 		    "Firmware image unavailable.\n");
--		ql_log(ql_log_info, vha, 0x0084,
--		    "Firmware images can be retrieved from: "QLA_FW_URL ".\n");
- 		return QLA_FUNCTION_FAILED;
+-	int ret =3D 0;
++	const unsigned long deadline =3D jiffies + usecs_to_jiffies(timeout_us)=
+;
++	struct Scsi_Host *host =3D hba->host;
++	struct scsi_device *sdev;
++	long timeout;
++
+ 	/*
+-	 * make sure that there are no outstanding requests when
+-	 * clock scaling is in progress
++	 * Hold scan_mutex to prevent that SCSI devices are added or removed
++	 * while this function is in progress.
+ 	 */
+-	mutex_lock(&hba->host->scan_mutex);
+-	blk_mq_quiesce_tagset(&hba->host->tag_set);
++	mutex_lock(&host->scan_mutex);
+ 	mutex_lock(&hba->wb_mutex);
+ 	down_write(&hba->clk_scaling_lock);
++	/* Call ufshcd_hold() to serialize clock gating and clock scaling. */
++	ufshcd_hold(hba);
+=20
+ 	if (!hba->clk_scaling.is_allowed ||
+-	    ufshcd_wait_for_doorbell_clr(hba, timeout_us)) {
+-		ret =3D -EBUSY;
+-		up_write(&hba->clk_scaling_lock);
+-		mutex_unlock(&hba->wb_mutex);
+-		blk_mq_unquiesce_tagset(&hba->host->tag_set);
+-		mutex_unlock(&hba->host->scan_mutex);
++	    hba->ufshcd_state !=3D UFSHCD_STATE_OPERATIONAL)
+ 		goto out;
++
++	blk_freeze_queue_start(hba->tmf_queue);
++	shost_for_each_device(sdev, host)
++		blk_freeze_queue_start(sdev->request_queue);
++
++	/*
++	 * Calling synchronize_*rcu_expedited() reduces the wait time from
++	 * milliseconds to less than a microsecond. See also
++	 * https://paulmck.livejournal.com/67547.html.
++	 */
++	if (host->tag_set.flags & BLK_MQ_F_BLOCKING)
++		synchronize_srcu_expedited(host->tag_set.srcu);
++	else
++		synchronize_rcu_expedited();
++
++	timeout =3D deadline - jiffies;
++	if (timeout <=3D 0 ||
++	    blk_mq_freeze_queue_wait_timeout(hba->tmf_queue, timeout) <=3D 0)
++		goto unfreeze;
++	shost_for_each_device(sdev, host) {
++		timeout =3D deadline - jiffies;
++		if (timeout <=3D 0 ||
++		    blk_mq_freeze_queue_wait_timeout(sdev->request_queue,
++						     timeout) <=3D 0) {
++			goto unfreeze;
++		}
  	}
- 
--- 
-2.50.0
-
+=20
+-	/* let's not get into low power until clock scaling is completed */
+-	ufshcd_hold(hba);
++	return 0;
++
++unfreeze:
++	blk_mq_unfreeze_queue_nomemrestore(hba->tmf_queue);
++	shost_for_each_device(sdev, host)
++		blk_mq_unfreeze_queue_nomemrestore(sdev->request_queue);
++
++	dev_err(hba->dev, "%s timed out\n", __func__);
+=20
+ out:
+-	return ret;
++	ufshcd_release(hba);
++	up_write(&hba->clk_scaling_lock);
++	mutex_unlock(&hba->wb_mutex);
++	mutex_unlock(&host->scan_mutex);
++
++	return -EBUSY;
+ }
+=20
+ static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
++	__releases(hba->host->scan_mutex)
++	__releases(hba->wb_mutex)
++	__releases(hba->clk_scaling_lock)
+ {
++	struct scsi_device *sdev;
++
++	blk_mq_unfreeze_queue_nomemrestore(hba->tmf_queue);
++	shost_for_each_device(sdev, hba->host)
++		blk_mq_unfreeze_queue_nomemrestore(sdev->request_queue);
++
++	ufshcd_release(hba);
+ 	up_write(&hba->clk_scaling_lock);
+=20
+ 	/* Enable Write Booster if current gear requires it else disable it */
+@@ -1428,10 +1397,7 @@ static void ufshcd_clock_scaling_unprepare(struct =
+ufs_hba *hba, int err)
+ 		ufshcd_wb_toggle(hba, hba->pwr_info.gear_rx >=3D hba->clk_scaling.wb_g=
+ear);
+=20
+ 	mutex_unlock(&hba->wb_mutex);
+-
+-	blk_mq_unquiesce_tagset(&hba->host->tag_set);
+ 	mutex_unlock(&hba->host->scan_mutex);
+-	ufshcd_release(hba);
+ }
+=20
+ /**
