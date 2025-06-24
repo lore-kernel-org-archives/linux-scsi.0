@@ -1,104 +1,166 @@
-Received: from out203-205-221-239.mail.qq.com (out203-205-221-239.mail.qq.com [203.205.221.239])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7ABF8EC5;
-	Tue, 24 Jun 2025 03:34:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.205.221.239
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9520F225413;
+	Tue, 24 Jun 2025 04:11:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750736074; cv=none; b=h0USAimUbwJfo/pmNNNLyaFhuk8Hm5UZNL9HCSwrxOW2z2qjf75uoJM3v4UiFRuTDfIHQ9alfuU6eTmdwHOVKDZ86suvlc/tUPdDaN43j8gz2Ye4YMkcj3VS8KZ0h9Uzn+4q5Eu0kR7j2tHn+6w0FiP3vvWh0MrmRTHlDpLiCtY=
+	t=1750738299; cv=none; b=q/PsVWr3cdz7ejzASZi5yfiG7EfZELmFucQe++PGclfFptcXNg9CyFeFErX2s8B7O9Q0z9GF0j+Qh8dztVDyhFUYBWcXbxa9Pm5U45pbR+WJ4MEmt3tWXcfiPgvfmY/wLiE8/bBSZsIUz70HV3zbVkHd6TlgMffi8ssdWyV5SmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750736074; c=relaxed/simple;
-	bh=2lgsSiSDVhVvn8xEry5TEui0answQ0NLBijzCjYH/hg=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=b2XdsTmQE940Ns1gD3qOcKOEtQ7JD9SyQJumwHqxR2U4GAKzBEactDvFSryNhwkS/l4mNcHpm5PZa2NO4YrHJEVEsMDT+dN2zjkx59HjH+D6Yh92KOK/AtOvBZFkrkFh9D01QOmWE/TasviG22N99/zppBMmAiFeJ9TZS5LGyFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=XECnpSKp; arc=none smtp.client-ip=203.205.221.239
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1750738299; c=relaxed/simple;
+	bh=4yRE1NGLgz9BRc3VwUBMag7df6Eh6Ml+7ZVEJLOAoT4=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=lCTlYlYTFELDwX8j7tVohfhOQxSV4BLO9W0LphEYRNp3hFnma/wRPLa4NqPjXb1YTWJW4NWW2Q/vchOXb/ppPnciQOb1/wiIAgtI0diobrXaV4SCauSLpN7KtJ7dmnb54/H4Vwf2ysQmkeoueSO/nOv5JlQj7OkE+ygJMDySHSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p9DQJMVN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="XECnpSKp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1750736062; bh=e5CddSXqWu8idh7jLesbAOAwyCS96hBKVBtYhIbCOis=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=XECnpSKpRSoAgZQyQuGsY+Eum1g/7k26jZYVoe5NoqdrH4d7H3RqIGlPfb/RtvUGS
-	 y7lStmQfEKbsss8jsvz+RPVJYIw4exAYkEVaDeR12wYL5Z1UPhDe90vGVahkbPrsCo
-	 Q0k6b2j/mS+ss9OgT6u1U6lfNmLp0u3qnkp4jwA8=
-Received: from VM-222-126-tencentos.localdomain ([14.22.11.165])
-	by newxmesmtplogicsvrszc13-0.qq.com (NewEsmtp) with SMTP
-	id 4333CCA0; Tue, 24 Jun 2025 11:16:51 +0800
-X-QQ-mid: xmsmtpt1750735011tvra48o7l
-Message-ID: <tencent_FACDDA286D6964B8EFB784FE3C4966EFDA08@qq.com>
-X-QQ-XMAILINFO: NyTsQ4JOu2J2sYoc6GuRSGi/RPtT58ss+s1XHr5nfWLCHIxKyly4svic0kOksH
-	 7zwcIW37+MpR+3wzQtAIANDUukiaOHjmoBh4GDWsbAPaHJYlO+xx9TIgPZ0on+vnq/aGjejOMJG6
-	 0gb8oc5F6MNWngAIQu+G4BItbqf+/5wbUiIsJaj0H5l4Z99NV8anfIBTyngabT79+9v8ITDgTSRr
-	 /YW61SOabi9MaGwz+Jjkensj3KWLKqSDoe3hhl6/5EjWUHK5bnfdrI3MieryVgElo77Mim+H7oUv
-	 H0kHuZmHOyXFzM3NhrUwQpe7StGdjg+YckF3SViWdgR+j54wgb48EA5A9jxwN5KRvRacs29HtU/v
-	 rFZ85eHZH1LXJ0YHNTfg88HWG8PDzNeFGRfrtfkIKFAzDlJb3kK5tLOrP1/UfVHsTYh+qk1c91Qt
-	 1d5yssHNwAfT2qSpVIq4a12EkslIPIw72mmHeGsqCsOFZD3qzmPCUSBIIU6nVKjjtzEP/ymj3wS3
-	 Ua4UrRbVBO8+HrjDOSVXnEX4XidrBcruqy85q16oGrLUjKLu0cFFm/bplXnzSR+EIP3BWdUiHRdo
-	 wMHnoByIzaeR672eOofJ7GdQ7jKXhcFb4I4yHdVxAbduZP7LaYuzthfD23Xl+oV85b44apnTfSp0
-	 DYTt0K2dGM+jDbwawuro90tYaMojOqD4v5DqSfr/I2OhTrDYFFssElKpjNe+HBEISE8A6Umf2LAg
-	 TAURUfIA/TgfxhZ8mAw/Zn1Is+KUJBx7Wdvd7oF8g0YbsJgcPDn0F8/zqo2TxeKzgAI2HXhVj0ZW
-	 MAQ6txox0Zh8TFJNsQ2LxvmxaNQK6RlHmCF9Fzmf8TMU+PLJ79GHA/qafOATPV1mNUWhi9UsWB3y
-	 e3JngoevZxkM6KkFdrYUKj/rGujKniwonhi8N7BDoZowI+rfFvTez0CrwzherPvZ0LJ58SuKcCau
-	 9JXqOZ+iUMFGvO195htvkNPI2fKlpPh5yt+riZJdbcfv30Uj/v4qv1ZgYWPR8f
-X-QQ-XMRINFO: Nq+8W0+stu50PRdwbJxPCL0=
-From: jackysliu <1972843537@qq.com>
-To: lkp@intel.com
-Cc: 1972843537@qq.com,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	James.Bottomley@hansenpartnership.com,
-	jhasan@marvell.com,
-	linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p9DQJMVN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1BA32C4CEE3;
+	Tue, 24 Jun 2025 04:11:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1750738299;
+	bh=4yRE1NGLgz9BRc3VwUBMag7df6Eh6Ml+7ZVEJLOAoT4=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=p9DQJMVNH49qMlklgpXEeIURlp+oNds2fMFibWrjPDAb9ts5eWtefcsoHV5nlR/VO
+	 XLjfqt/bkLiqHtBnSZwfkWIu9EXnoVidQ8oDRZLRd+EDsrA63+QYo4eh0QuxXZ9ygt
+	 SZ2YXAHwBwiEa3a37uOKRe3UGRTG2dQPRpgBuGkRL+Nz0tFU2hQOdXaJp3xFm4oK1M
+	 Wk/pw2oU565T05kMDh8gnZmcJc4HqsDsEOnTt/t6WXtsli8Vh2P6kWa12Cp0Lqmbrv
+	 q7JgU6f3FoTs0VgWPo9LkH8iHG+ErQd/gX0arDsQv3SYksH8MXLN+H7tO0Zkio1i48
+	 wLES1oag1pLNw==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: Maurizio Lombardi <mlombard@redhat.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
 	linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com,
-	oe-kbuild-all@lists.linux.dev,
-	skashyap@marvell.com
-Subject: [PATCH] [PATCH] scsi: qedf: fix inconsistent indenting warning Fix below inconsistent indenting smatch warning. New smatch warnings: drivers/scsi/qedf/qedf_main.c:2814 qedf_prepare_sb() warn: inconsistent indenting
-Date: Tue, 24 Jun 2025 11:16:43 +0800
-X-OQ-MSGID: <20250624031643.2205842-1-1972843537@qq.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <202506240340.fv6cXpyc-lkp@intel.com>
-References: <202506240340.fv6cXpyc-lkp@intel.com>
+	target-devel@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.15 14/20] scsi: target: Fix NULL pointer dereference in core_scsi3_decode_spec_i_port()
+Date: Tue, 24 Jun 2025 00:11:13 -0400
+Message-Id: <20250624041120.83191-14-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250624041120.83191-1-sashal@kernel.org>
+References: <20250624041120.83191-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.15.3
 Content-Transfer-Encoding: 8bit
 
-Old smatch warnings:
-drivers/scsi/qedf/qedf_main.c:2816 qedf_prepare_sb() warn: inconsistent indenting
+From: Maurizio Lombardi <mlombard@redhat.com>
 
-Reported-by: kernel test robot <lkp@intel.com>
-Closes: https://lore.kernel.org/oe-kbuild-all/202506240340.fv6cXpyc-lkp@intel.com/
+[ Upstream commit d8ab68bdb294b09a761e967dad374f2965e1913f ]
 
-Signed-off-by: jackysliu <1972843537@qq.com>
+The function core_scsi3_decode_spec_i_port(), in its error code path,
+unconditionally calls core_scsi3_lunacl_undepend_item() passing the
+dest_se_deve pointer, which may be NULL.
+
+This can lead to a NULL pointer dereference if dest_se_deve remains
+unset.
+
+SPC-3 PR SPEC_I_PT: Unable to locate dest_tpg
+Unable to handle kernel paging request at virtual address dfff800000000012
+Call trace:
+  core_scsi3_lunacl_undepend_item+0x2c/0xf0 [target_core_mod] (P)
+  core_scsi3_decode_spec_i_port+0x120c/0x1c30 [target_core_mod]
+  core_scsi3_emulate_pro_register+0x6b8/0xcd8 [target_core_mod]
+  target_scsi3_emulate_pr_out+0x56c/0x840 [target_core_mod]
+
+Fix this by adding a NULL check before calling
+core_scsi3_lunacl_undepend_item()
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+Link: https://lore.kernel.org/r/20250612101556.24829-1-mlombard@redhat.com
+Reviewed-by: Mike Christie <michael.christie@oracle.com>
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/scsi/qedf/qedf_main.c | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 8767d9de819f..b46fc510557b 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -2810,11 +2810,11 @@ static int qedf_prepare_sb(struct qedf_ctx *qedf)
- 	}
- err:
- for (int i = 0; i < id; i++) {
--fp = &qedf->fp_array[i];
--if (fp->sb_info) {
--qedf_free_sb(qedf, fp->sb_info);
--kfree(fp->sb_info);
--fp->sb_info = NULL;
-+	fp = &qedf->fp_array[i];
-+	if (fp->sb_info) {
-+		qedf_free_sb(qedf, fp->sb_info);
-+		kfree(fp->sb_info);
-+	fp->sb_info = NULL;
- }
- }
- kfree(qedf->fp_array);
+I see now! If we look at the error path, when
+`core_get_se_deve_from_rtpi()` returns NULL (line 1667), the code jumps
+to `out_unmap` at line 1675. However, there could be existing entries in
+the `tid_dest_list` that were already added before this failure.
+
+The commit shows the stack trace mentions "SPC-3 PR SPEC_I_PT: Unable to
+locate dest_tpg" which actually happens at line 1641, and then jumps to
+`out_unmap` (line 1644).
+
+In this case, any tidh entries in the list would have `dest_se_deve =
+NULL` because the failure happens before `dest_se_deve` is even
+assigned.
+
+**YES**
+
+This commit should be backported to stable kernel trees for the
+following reasons:
+
+1. **It fixes a real NULL pointer dereference bug**: The commit
+   addresses a kernel crash that occurs when
+   `core_scsi3_lunacl_undepend_item()` is called with a NULL
+   `dest_se_deve` pointer. The function dereferences the pointer at line
+   1453 (`if (!se_deve->se_lun_acl)`) without checking for NULL, causing
+   a crash.
+
+2. **The bug affects normal error handling paths**: This crash occurs
+   during error handling in the SCSI target subsystem when processing
+   PERSISTENT RESERVE OUT commands with SPEC_I_PT (Specify Initiator
+   Ports). When certain lookups fail (like "Unable to locate dest_tpg"),
+   the error cleanup path can have NULL `dest_se_deve` values in the
+   tid_dest_list.
+
+3. **The fix is minimal and safe**: The fix simply adds a NULL check
+   before calling `core_scsi3_lunacl_undepend_item()`:
+  ```c
+  if (dest_se_deve)
+  core_scsi3_lunacl_undepend_item(dest_se_deve);
+  ```
+  This is a defensive programming practice that prevents the crash
+  without changing the logic flow.
+
+4. **The fix is confined to error handling**: The change only affects
+   the error cleanup path and doesn't modify the normal operation flow,
+   minimizing the risk of regression.
+
+5. **Similar to other backported fixes**: Looking at the similar
+   commits, commit #3 (qla2xxx NULL pointer fix) and commit #5
+   (rt5514-spi NULL pointer fix) were both backported and had similar
+   characteristics - they were simple NULL pointer checks that prevented
+   crashes.
+
+6. **Production impact**: NULL pointer dereferences in kernel code lead
+   to kernel panics, which can cause system crashes and data loss. This
+   is particularly important for storage-related code where reliability
+   is critical.
+
+The commit follows the stable tree rules by fixing an important bug
+(kernel crash) with minimal risk and without introducing new features or
+architectural changes.
+
+ drivers/target/target_core_pr.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 34cf2c399b399..70905805cb175 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1842,7 +1842,9 @@ core_scsi3_decode_spec_i_port(
+ 		}
+ 
+ 		kmem_cache_free(t10_pr_reg_cache, dest_pr_reg);
+-		core_scsi3_lunacl_undepend_item(dest_se_deve);
++
++		if (dest_se_deve)
++			core_scsi3_lunacl_undepend_item(dest_se_deve);
+ 
+ 		if (is_local)
+ 			continue;
 -- 
-2.43.5
+2.39.5
 
