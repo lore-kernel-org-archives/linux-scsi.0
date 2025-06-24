@@ -1,170 +1,203 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-pl1-f182.google.com (mail-pl1-f182.google.com [209.85.214.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E21D123B607
-	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 05:57:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB4B015B971
+	for <linux-scsi@vger.kernel.org>; Tue, 24 Jun 2025 06:22:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750744681; cv=none; b=j/DBjjoUdR9U1iekPnpNTQheeoGrHvKUApcNJOXwfAI6qZVmAo6huN4s47cEss1Gaj/HMWFJD6yWKz4nOZF9oOAqFcoFAt3wRdAAH1+SL/8Ybqh9okPDCPi6DmwDz7uGzi4taRTZxxIfTEBx4kFnXrqVj1Q8Fl0yuNQlxuYNnrQ=
+	t=1750746131; cv=none; b=dfLTQyJBJxMfT48MNh18/CfSPrJo9sjsmhpGM+ZkuFCEHe0JjF+KmPjSy8gJ2NO6EPTH+1o4uPHlzaBVwEojbqcGsd1CG3b937dQOniWRGJ1ivOeoo9gfEtW/Juh8gnFmmcbbJZ4SvQPUjSUKow18HSSPLKiSgsAO6T45nDZRgM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750744681; c=relaxed/simple;
-	bh=7OO0zVMBn2QvNf8Qajk4JtDnlTDNgAnVi1O4yy2Z3ZM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lABvYLLIPT9aHdV7t3i6CgsHRXpzb+LsG53h9W6+6VZAGqNBQTy9YveX+3sGgcW+x/KdhYnylcY5yDz0k/SkpabtL1+FaMFsO66LG3nit8BAoEZyVjC80TzjcliK46rTFSeuKQEiWEfxth1ZDvBkhYgeSoj69LLM65TJeofc9Q8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Ky4xv6Yq; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=pFGgy11G; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Ky4xv6Yq; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=pFGgy11G; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1750746131; c=relaxed/simple;
+	bh=Bl3xKRIiLlxBkZnmvdL34eVgXg+GXRlp+2dGlDOqWls=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=OQZnjB1CZ5BRkJyPCBSiwk1HSU3A1h+29JOLUKWGpKvKp2l7fLsn9bNeM/jCksezWeEuqde3ESrYVtY8dYVI8EUUpZMaDFhm4Tonni7CA6Sz2D5acNcJgi/HBu7N+V/pjR3eDf/7E+vCJc7crtGkiD142LHu+mJgDeYLeWSBHqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=ZnlYjFCQ; arc=none smtp.client-ip=209.85.214.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Ky4xv6Yq";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="pFGgy11G";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Ky4xv6Yq";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="pFGgy11G"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 283F51F785;
-	Tue, 24 Jun 2025 05:57:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1750744677; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QJoyx986F+AhB0f90x+WHoTjZ4gb/HP6KX5rYDhU+/A=;
-	b=Ky4xv6YqSc1kDxXm1eRnl/yOHPBySFBCpy8Q3JxWxA+eP85m6yj8tqfKo4tPoI88nd6oZe
-	Su1B84mVZ2XnWJsR01/Hh1ReYzMNeqjHNFV5lS9U/7uHBJwXoraQyy35TcbWHzQ5tXunKb
-	pnZ+tW4FZmJyIusa4K93fY0ShpGlFm4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1750744677;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QJoyx986F+AhB0f90x+WHoTjZ4gb/HP6KX5rYDhU+/A=;
-	b=pFGgy11GeI2eQNrjmiFe+6X99/eWin4Y045/JZo3Apd4Zl74irDfWwDGHmUzpwls0LQh/Z
-	ljHd/pXdoiFO7+Dg==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=Ky4xv6Yq;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=pFGgy11G
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1750744677; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QJoyx986F+AhB0f90x+WHoTjZ4gb/HP6KX5rYDhU+/A=;
-	b=Ky4xv6YqSc1kDxXm1eRnl/yOHPBySFBCpy8Q3JxWxA+eP85m6yj8tqfKo4tPoI88nd6oZe
-	Su1B84mVZ2XnWJsR01/Hh1ReYzMNeqjHNFV5lS9U/7uHBJwXoraQyy35TcbWHzQ5tXunKb
-	pnZ+tW4FZmJyIusa4K93fY0ShpGlFm4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1750744677;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=QJoyx986F+AhB0f90x+WHoTjZ4gb/HP6KX5rYDhU+/A=;
-	b=pFGgy11GeI2eQNrjmiFe+6X99/eWin4Y045/JZo3Apd4Zl74irDfWwDGHmUzpwls0LQh/Z
-	ljHd/pXdoiFO7+Dg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 9182713751;
-	Tue, 24 Jun 2025 05:57:56 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id yOjIIWQ+WmiaXAAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 24 Jun 2025 05:57:56 +0000
-Message-ID: <8b439279-9e50-423d-ab87-4c65e2e21919@suse.de>
-Date: Tue, 24 Jun 2025 07:57:56 +0200
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="ZnlYjFCQ"
+Received: by mail-pl1-f182.google.com with SMTP id d9443c01a7336-23636167b30so46096025ad.1
+        for <linux-scsi@vger.kernel.org>; Mon, 23 Jun 2025 23:22:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1750746129; x=1751350929; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=kypKoS3rUHkv7CiblGJGOjWca0U7U3413yBwpsbP/AE=;
+        b=ZnlYjFCQlr3FzGG1nWsV/KwF5bfWchgdrsK4ucOaIatKV9umbqS+lzQpD5HNHRsYMX
+         382PAbIGkgSOWhCzYlrRS2x3Xf4NnKI5IUeQwejL2vJbEQW2yuSydoyIv5fCqKeM0kpO
+         3PH4NhJsDh5ZsMNRvGROIBy7ztnwjMy0VLVZM=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750746129; x=1751350929;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=kypKoS3rUHkv7CiblGJGOjWca0U7U3413yBwpsbP/AE=;
+        b=GecbKMrRiFUkBCtvE9xbcmk6nd8ErArPAfRbQrNVZR/mRpE9iqjPbFh7qQIN1JYDN1
+         sfgHgZIyd7prij+ljO+CD3gUKzu5PcNM7l6S1V6Gy3Rj7oDGZgjub67iT/+X0l/XKvQv
+         o6NeeqjFDQcmPmOEW3jcEc55yokkQC5MT2DYCtrcVFxfs/3AscQWmd44NrDv3ezSBYK8
+         yWK3tEE5lOyh+QbcOx21WmfLQCKachbKDeoah3PNqCPQBz7htT1QWABOkOXDbGgq+l2T
+         YkZVSZJNNqwaW6BtwN/8p6rCgc0yJreTq6vyZdQvipc+qE0Nod6MCSV+wpwXhyZVrPCz
+         GqPg==
+X-Gm-Message-State: AOJu0YxhqT/Zw5BSJHgV/hzQaNJIc3uvEqgez4ntU6sRHHDaptOWDQ8k
+	sSU+ndYf0N2G/OTzgiUqDOhMCvvAbyBLVSVktzBcz0fbBGhaTxStGBkq1JSrQr1wiUfg2fmK5Px
+	T85PRK65Cdme1gW5JvwPNPW0Aq510Z5hb9dsjQWETuhIpDeHaZXzabPGNqrztBS6C+PFSjEKe/b
+	vayybOmsbNsth6eBU4jvq3n3sGF2i1MRlGGCOCT3CIztdDLdMRXw==
+X-Gm-Gg: ASbGncvPker1XsrRUNre8cA1/oFc6wdQtQsb6Xz0Mabm3amigw+7c28P1QZhVVDDShz
+	/VdT/9AwV4CxnGP/i4J95mQyAqQFb9dyb4uUbbBhZ5jNO9v25vuTfxvCjkexfSzDC4s48NWPeOX
+	+mfJcLyqS1ZOoiJwIGkRDSUL1vglxD2bifzPMK6JiSF0kX2HMQg+9bYq3KVDdxWzoqToajrwySt
+	tdMMA87zeFhsG5GCxRmEeuTNt4j4FhVkPwK4tvFckhIgCVVxig0ugQ9xxzYQGobjqiVkQSQf3q1
+	OGxn6mccc7aROebxblgxq5CINnb/gbIhN/ye8NHPTmizr1KNG23Hiqq9uBjMF+733QJj/i3efWi
+	EN5aXYfaLs3SFJ+ldJXmxVI+Ye1TftA==
+X-Google-Smtp-Source: AGHT+IHaTHEzNzYHu12hZmqojizi2fqHBb4LaNAplV6a4+4AQ4eT4D6xNSV0J7yqmuAgYxkr7MFp7g==
+X-Received: by 2002:a17:902:ea06:b0:234:d2fb:2d13 with SMTP id d9443c01a7336-237d97f9aa0mr192181555ad.18.1750746128559;
+        Mon, 23 Jun 2025 23:22:08 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-237d83937bcsm98135715ad.43.2025.06.23.23.22.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 23 Jun 2025 23:22:07 -0700 (PDT)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: rajsekhar.chundru@broadcom.com,
+	sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v1] scsi: Fix sas_user_scan() to handle wildcard and multi-channel  scans
+Date: Tue, 24 Jun 2025 11:46:49 +0530
+Message-Id: <20250624061649.17990-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] scsi: enforce unlimited max_segment_size when
- virt_boundary_mask is set
-To: Christoph Hellwig <hch@lst.de>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Ming Lei <ming.lei@redhat.com>,
- "K. Y. Srinivasan" <kys@microsoft.com>,
- Haiyang Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>,
- "Ewan D. Milne" <emilne@redhat.com>, Laurence Oberman <loberman@redhat.com>,
- linux-rdma@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-block@vger.kernel.org
-References: <20250623080326.48714-1-hch@lst.de>
- <20250623080326.48714-3-hch@lst.de>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250623080326.48714-3-hch@lst.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[12];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,lst.de:email];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 283F51F785
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Score: -4.51
 
-On 6/23/25 10:02, Christoph Hellwig wrote:
-> The virt_boundary_mask limit requires an unlimited max_segment_size for
-> bio splitting to not corrupt data.  Historically, the block layer tried
-> to validate this, although the check was half-hearted until the addition
-> of the atomic queue limits API.  The full blown check than triggered
-> issues with stacked devices incorrectly inheriting limits such as the
-> virt boundary and got disabled in commit b561ea56a264 ("block: allow
-> device to have both virt_boundary_mask and max segment size") instead of
-> fixing the issue properly.
-> 
-> Ensure that the SCSI mid layer doesn't set the default low
-> max_segment_size limit for this case, and check for invalid
-> max_segment_size values in the host template, similar to the original
-> block layer check given that SCSI devices can't be stacked.
-> 
-> This fixes reported data corruption on storvsc, although as far as I can
-> tell storvsc always failed to properly set the max_segment_size limit as
-> the SCSI APIs historically applied that when setting up the host, while
-> storvsc only set the virt_boundary_mask when configuring the scsi_device.
-> 
-> Fixes: 81988a0e6b03 ("storvsc: get rid of bounce buffer")
-> Fixes: b561ea56a264 ("block: allow device to have both virt_boundary_mask and max segment size")
-> Reported-by: Ming Lei <ming.lei@redhat.com>
-> Signed-off-by: Christoph Hellwig <hch@lst.de>
-> ---
->   drivers/scsi/hosts.c | 20 +++++++++++++-------
->   1 file changed, 13 insertions(+), 7 deletions(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+sas_user_scan() did not fully process wildcard channel
+scans (SCAN_WILD_CARD).When a transport-specific user_scan()
+callback was present.Only channel 0 would be scanned via user_scan(),
+while the remaining channels were skipped, potentially missing devices.
 
-Cheers,
+user_scan() invoke updated sas_user_scan() for channel 0,
+and if successful,iteratively scan remaining
+channels (1 to shost->max_channel) via scsi_scan_host_selected().
+This ensures complete wildcard scanning without afftecting
+transport-specific scanning behavior.
 
-Hannes
+Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+---
+ drivers/scsi/scsi_scan.c          |  2 +-
+ drivers/scsi/scsi_transport_sas.c | 61 +++++++++++++++++++++++++------
+ 2 files changed, 50 insertions(+), 13 deletions(-)
+
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 4833b8fe251b..396fcf194b6b 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -1899,7 +1899,7 @@ int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
+ 
+ 	return 0;
+ }
+-
++EXPORT_SYMBOL(scsi_scan_host_selected);
+ static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
+ {
+ 	struct scsi_device *sdev;
+diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
+index 351b028ef893..42e79eccf05f 100644
+--- a/drivers/scsi/scsi_transport_sas.c
++++ b/drivers/scsi/scsi_transport_sas.c
+@@ -40,6 +40,8 @@
+ #include <scsi/scsi_transport_sas.h>
+ 
+ #include "scsi_sas_internal.h"
++#include "scsi_priv.h"
++
+ struct sas_host_attrs {
+ 	struct list_head rphy_list;
+ 	struct mutex lock;
+@@ -1683,32 +1685,67 @@ int scsi_is_sas_rphy(const struct device *dev)
+ }
+ EXPORT_SYMBOL(scsi_is_sas_rphy);
+ 
+-
+-/*
+- * SCSI scan helper
+- */
+-
+-static int sas_user_scan(struct Scsi_Host *shost, uint channel,
+-		uint id, u64 lun)
++static void scan_channel_zero(struct Scsi_Host *shost, uint id, u64 lun)
+ {
+ 	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
+ 	struct sas_rphy *rphy;
+ 
+-	mutex_lock(&sas_host->lock);
+ 	list_for_each_entry(rphy, &sas_host->rphy_list, list) {
+ 		if (rphy->identify.device_type != SAS_END_DEVICE ||
+ 		    rphy->scsi_target_id == -1)
+ 			continue;
+ 
+-		if ((channel == SCAN_WILD_CARD || channel == 0) &&
+-		    (id == SCAN_WILD_CARD || id == rphy->scsi_target_id)) {
++		if (id == SCAN_WILD_CARD || id == rphy->scsi_target_id) {
+ 			scsi_scan_target(&rphy->dev, 0, rphy->scsi_target_id,
+ 					 lun, SCSI_SCAN_MANUAL);
+ 		}
+ 	}
+-	mutex_unlock(&sas_host->lock);
++}
+ 
+-	return 0;
++/*
++ * SCSI scan helper
++ */
++
++static int sas_user_scan(struct Scsi_Host *shost, uint channel,
++		uint id, u64 lun)
++{
++	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
++	int res = 0;
++	int i;
++
++	switch (channel) {
++	case 0:
++		mutex_lock(&sas_host->lock);
++		scan_channel_zero(shost, id, lun);
++		mutex_unlock(&sas_host->lock);
++		break;
++
++	case SCAN_WILD_CARD:
++
++		mutex_lock(&sas_host->lock);
++		scan_channel_zero(shost, id, lun);
++		mutex_unlock(&sas_host->lock);
++
++		for (i = 1; i <= shost->max_channel; i++) {
++			res = scsi_scan_host_selected(shost, i, id, lun,
++						      SCSI_SCAN_MANUAL);
++			if (res)
++				goto exit_scan;
++		}
++		break;
++
++	default:
++		if (channel < shost->max_channel) {
++			res = scsi_scan_host_selected(shost, channel, id, lun,
++						      SCSI_SCAN_MANUAL);
++		} else {
++			res = -EINVAL;
++		}
++		break;
++	}
++
++exit_scan:
++	return res;
+ }
+ 
+ 
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.31.1
+
