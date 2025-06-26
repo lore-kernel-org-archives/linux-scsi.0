@@ -1,115 +1,124 @@
-Received: from mail-pg1-f175.google.com (mail-pg1-f175.google.com [209.85.215.175])
+Received: from mail-pl1-f178.google.com (mail-pl1-f178.google.com [209.85.214.178])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54A9627713;
-	Thu, 26 Jun 2025 04:19:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.175
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A09C1219E0
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2025 06:57:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.178
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750911579; cv=none; b=XaqV4iQ0MM9g596YDuBY66IBJmaNoN9EPbp0p6nIwUUbdrYM2U6idPGeD4DHiJl3rdFQzvG2zaTmyrD8jNptgUWfK4iJ7lqb+FBjaQMTpTAItVZ70gEjalaJIXfeNoTsC1l1MAHP1ZI9em0xuZVjsTCEJD1NF/rKtylPi0nsSkw=
+	t=1750921062; cv=none; b=TAKC0o4Xcb/5uRjb2tIXKiKQUAQMUSTiJxPnCytQDu32lDwnkbRHMqDQVrcLEFwCysXDRfsZqOGb8GXncziYnJeDT5cOM99k2UdQ/oRVHvgl5fQko0bGfwVaKNw0DKXBpZmYSNehl+9jkuJHQQN9dETPyGhpLPn9TftcRtFGguY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750911579; c=relaxed/simple;
-	bh=Azcx5DAIRGyFizpoNj1dK8LiOxpAELO3S4L3HMgck14=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fHJ9WRfBxQsat9uCYnLBxp8At0hsYsKXi6L8UKFlrH4xkt30DsNloVR88S/WGwUrLn9OTCWpIOCIHURbj1xKj/6kgqlynM462VRkBJo3kLIAODn0WV0/Ei357li7SGqPA+mV8I20UhZf2sFLKFs4FFmjjO2UhP+DVIuKkpty730=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aYkBhSk5; arc=none smtp.client-ip=209.85.215.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1750921062; c=relaxed/simple;
+	bh=ON4pHfZjOHNvXFY9QPZUPYoUfbFKnygBHaZeZsDwMzE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=GGo+Y4g5/WA//Whr3GRVG4DZjQqTkx8Ga1xODsf6AKkUuEg/MrBqHNCxsIYqBYV39xuQ5JUqsP373ZHjtoztkyDWF/HpOmGqV1rANBD0Q+zAp4wtU4SlWVEMKYNWTG5ODvSSGgzfOL2SnGyJCpDrp+Qt9ZI9Y5oWbaB/jA8VEHQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com; spf=pass smtp.mailfrom=bytedance.com; dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b=JEw6xsk0; arc=none smtp.client-ip=209.85.214.178
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=bytedance.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bytedance.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aYkBhSk5"
-Received: by mail-pg1-f175.google.com with SMTP id 41be03b00d2f7-b34ab678931so403536a12.0;
-        Wed, 25 Jun 2025 21:19:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=bytedance.com header.i=@bytedance.com header.b="JEw6xsk0"
+Received: by mail-pl1-f178.google.com with SMTP id d9443c01a7336-2366e5e4dbaso16914975ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 25 Jun 2025 23:57:40 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1750911575; x=1751516375; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=e7KNO401syobiGwdw9hkUtwfyUPUj/xa8j+8Zw4WnR4=;
-        b=aYkBhSk5ZL28hRzvrj/5UYIJTo9rLDxtiWwvOYuJjbLmFev2tZZx61KEOQ334nfX/U
-         xBaGcdTYmOV3Jf5hpxLd7I4pDt5BbnSsiXh74pHZYRUlDT0d12f0lzd1CtMUantodeL4
-         C9BY/NTdxJazTlJ4ew1d2brf41ecLkS0OvmMydeiEQ/hWZSoiQrO4HXK/Ra9DTqWSg7V
-         OrsPjeHrLD4uPYuRduu18zv5UnIyFMn51JYYZBBwdB8sKEWDiXZi0GADA8W0fD+UPe7H
-         Q4sWpP/zPCMyuV/9s/X9fneMzdgK6xl5ua+iX7eTPQ7P+UGxCuVrphRa0bYdIFA0Blsv
-         ooxw==
+        d=bytedance.com; s=google; t=1750921060; x=1751525860; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Y4Vig7M7ZvV+14zfziAcuZo4feguXVoSCTQV8AryWNE=;
+        b=JEw6xsk0EeYhrKZOAAo6WnL5dGGNCnYh8VZn/Y6jj8yIJ10AnuypDpMqU4ssk3cAjk
+         dtXw0RgQa6Hh4WZ+uzb9cddthMhakcUSTPu7p+nQ/uhbMHmZmDRxA56h7tDYodJ00cNQ
+         /hHXG0g4aDKCqAAMAA3+1y4/1ELBVVnGLSsv2KbD/t1Z7XrHZkVkHPtivYYAoTh6Qqqp
+         snJbiJfe4KBrcqB6a666dl8Ocuq/26EdnHC0M9Te5CA7UkTO/ETUXnuN8Rf6i+lKYMRr
+         idf/CluESRFfxKE+VI//7Mx9K5AaWMK50TyI4wwG2226mZcPx/O5mfSs+8pPV/tVv5Wh
+         M5Ig==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1750911575; x=1751516375;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=e7KNO401syobiGwdw9hkUtwfyUPUj/xa8j+8Zw4WnR4=;
-        b=F5mdaIKqxgM6ozMmRzO+QYvWQs9WtheWy/+lIhNL7uuz5IVD2VYCQU301rPlFE2xiv
-         I+87+IuNc5YOHtP8mwW+GSQTrQGkmOlxG/4GzWYRFs7dkKXqYX85/SK/qGsp8qmOx942
-         yIse5FNhWy3ZtAc0qjzyOO85wEz+DXH4vNg5/Gpod3whRc/1HIvvjCNGUX2thgsdqIQK
-         tPe9ihlvz1nIPwJ6+nbmD06Zd3/Jxx9Rp9dBNXaWOpivBx2MCkvujSO6ZpftVc0Sbbw6
-         S4Wh4HgmviM0mKKRJSi8oW1W1qgzkP9OhxvGlJAHL0SRgv1qzz4YIlu/7A5AkZdThI40
-         9SDg==
-X-Forwarded-Encrypted: i=1; AJvYcCXMUgfauvOFZs4d0OD3mzMfomBRTEZro86q2OtLPgbsCQiPQHr//7bZw+IvkoqFsnQ/qFmB2+K0+hOt@vger.kernel.org
-X-Gm-Message-State: AOJu0YxNbV6K66rpP3Pu8Qiz+p/gnruFkckzTFqQVmdImfWsrl/E6PEL
-	kBXxvDdDLidh8H965WOvq+tm/TbOJ00sKunJOSzCCg/xhrO14Sr+LqHI/F/3Ng==
-X-Gm-Gg: ASbGncs+43nFaqVOLxV7/3KJpcZfYmJe3c2L/+puDmwD46/cwJf36yLflSdfHougsZv
-	1ustXQQHOjCYHcJu88AmlJDOUTyu6JiiXNw1p/f9PWrl4joiY5TbQ4BsYC1R0UdazOF+TihQMrB
-	U5LpcA1uKc127uv5HQdwJu7jwpNn9IaJu4fxNb/nNmzlHt46dijxsdvDL/riYhpyO0+a4X5Q6m0
-	fGBQByOmndnMHyiU7S74HQhEJBRWBqof9UUORYLxngzoajUNIGAIkY7v46bKgzn5QkJhJB6wmFB
-	hi7MBfXGKcm59m7lbqDTtSkzRAq/SugwUMl0gMYnjhZS4MAmpmPPBw1E3j3mRw==
-X-Google-Smtp-Source: AGHT+IH+Q6+aooxTgLKuAMZ2jdp9wZGuurAp7EKpbOOnT2BHua7mop9YcuNJsZ+gomB/BVvZJkcXYw==
-X-Received: by 2002:a17:90b:2dc2:b0:311:ea13:2e6e with SMTP id 98e67ed59e1d1-315f26b86abmr7758585a91.28.1750911575388;
-        Wed, 25 Jun 2025 21:19:35 -0700 (PDT)
-Received: from archie.me ([103.124.138.155])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-315edd0dfedsm1190650a91.1.2025.06.25.21.19.34
+        d=1e100.net; s=20230601; t=1750921060; x=1751525860;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Y4Vig7M7ZvV+14zfziAcuZo4feguXVoSCTQV8AryWNE=;
+        b=xC+I6SSZ/dyz6repdchyyLaTx9LdO8KE9e1nPSEbwF1v8QR+of/+I6RCW/LkJ029O+
+         csjVmdkV1ME1chUvlisGiLeXiIs+Qu//jeZ4CiCGJe24boLGsr83vvewfGYlVo6r9izB
+         ShsyBUaz30My79W4LZZ/1rC42GLCPj9uDimFWAF5bkXXDYyGkzmn8YJTUpXnKcxwlrEJ
+         tAxmyWEPXahCfyNpBnEwAKvdwNjEIuD9oPNnm2d1tgLWo/hIm/0ebFMLMeuqxxT9dWu1
+         uXgJDPGNFBme/BbBFlOCoHk/ZzxJNzVW5cvqJfid8RbMUrTqt545w2ZkpAdWkBR6gimW
+         ro9w==
+X-Forwarded-Encrypted: i=1; AJvYcCV2KN0c7CS8IH1jaE8FRBiVdFgOogRkUTBCG6Y+tj7OjOipard95gfM+l61Yz6Xrnw2o+UBk5vMbqWc@vger.kernel.org
+X-Gm-Message-State: AOJu0YxIkjBFlTYbOstQKzHTIy9Q1zA9CJpjcGRJyzG343d+MmacPL12
+	lHTsCB+8fR9RzHuCFdPNNFJ+Z/kzSrGvxN6Gy6zKf/aEH6yowoPq6zS3EUNStt2YuRY=
+X-Gm-Gg: ASbGncuFeLV6tlMJFl8EGaC3WB5BsOt6mU8Y0RsFkOPwzH755ipFP7M35KychyS/Chh
+	e5QLTiIbSzRAWnjr05vup/1lgwSTjMP0wHPHUrVca1TBQlWsFCbw3+be0p9EVCCqqtEl/aGNr0l
+	XADNJiw8I/hY/CLC5+JTN0pB3U45goaVNEdEvI8Lk91PdRYfqc8/GzxeBcwVHl2S7RtmzlMnM5a
+	hdFeMOEy3nJ8YACZV2lHDWJsvn/0AryEk6GqHhU2V6ObfIZhP+aARURtG0Ae3VSErdtmhBZPKDj
+	02PDprMwB+ExpZgZkSNCkWvdk/KZRUiev6rWQHmvGmSI0B4g826Hi3KX9Ic+lOpVeXcj2Psl1lm
+	L7b0=
+X-Google-Smtp-Source: AGHT+IFMQohfiMG4tbP85u+fzwYzq9uXFaqf1k6qgiVNQ4h+jQ2TyJdVgYw1OL5lP+mJ4i6rhpCWHg==
+X-Received: by 2002:a17:903:2450:b0:234:71c1:d34f with SMTP id d9443c01a7336-238e9e1ab43mr34039265ad.8.1750921059733;
+        Wed, 25 Jun 2025 23:57:39 -0700 (PDT)
+Received: from H7GWF0W104 ([139.177.225.233])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23807231407sm54685805ad.54.2025.06.25.23.57.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 25 Jun 2025 21:19:34 -0700 (PDT)
-Received: by archie.me (Postfix, from userid 1000)
-	id 4C5B1420A9A6; Thu, 26 Jun 2025 11:19:31 +0700 (WIB)
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-To: Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
-	Linux SCSI <linux-scsi@vger.kernel.org>
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Rob Landley <rob@landley.net>,
-	Bagas Sanjaya <bagasdotme@gmail.com>
-Subject: [PATCH] scsi: Format scsi_track_queue_full() return values as bullet list
-Date: Thu, 26 Jun 2025 11:18:58 +0700
-Message-ID: <20250626041857.44259-2-bagasdotme@gmail.com>
-X-Mailer: git-send-email 2.50.0
+        Wed, 25 Jun 2025 23:57:39 -0700 (PDT)
+Date: Thu, 26 Jun 2025 14:57:33 +0800
+From: Diangang Li <lidiangang@bytedance.com>
+To: JiangJianJun <jiangjianjun3@huawei.com>
+Cc: jejb@linux.ibm.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, hare@suse.de,
+	linux-kernel@vger.kernel.org, lixiaokeng@huawei.com,
+	hewenliang4@huawei.com, yangkunlin7@huawei.com,
+	changfengnan@bytedance.com
+Subject: Re: [External] Re: [RFC PATCH v3 04/19] scsi: scsi_error: Add helper
+ scsi_eh_sdev_stu to do START_UNIT
+Message-ID: <20250626065733.GA13649@bytedance.com>
+References: <0088ad17-37cd-4425-bfca-d03595c91cd2@huawei.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1355; i=bagasdotme@gmail.com; h=from:subject; bh=Azcx5DAIRGyFizpoNj1dK8LiOxpAELO3S4L3HMgck14=; b=owGbwMvMwCX2bWenZ2ig32LG02pJDBkxJxk2nqjb/eX+A5fzS9cJi1vwS2+bx+VomMORfyzpv 8vRyXd1OkpZGMS4GGTFFFkmJfI1nd5lJHKhfa0jzBxWJpAhDFycAjARzmRGhvV83586R0lmstuI Ws66ILz7Xd1m/qITSUfm2rad2vxk01yG/0H8DqIe39jX3H/D07ulXOKEYrOR67NI8bvvV/nYHo0 QZAYA
-X-Developer-Key: i=bagasdotme@gmail.com; a=openpgp; fpr=701B806FDCA5D3A58FFB8F7D7C276C64A5E44A1D
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <0088ad17-37cd-4425-bfca-d03595c91cd2@huawei.com>
 
-Sphinx reports indentation warning on scsi_track_queue_full() return
-values:
+On Wed, Jun 25, 2025 at 11:37:09AM +0800, JiangJianJun wrote:
+> > From: Wenchao Hao <haowenchao2@huawei.com>
+> >
+> > Add helper function scsi_eh_sdev_stu() to perform START_UNIT and check
+> > if to finish some error commands.
+> >
+> > > This is preparation for a genernal LUN/target based error handle
+> > > strategy and did not change original logic.
+> > >
+> > > Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
+> > > ---
+> > >  drivers/scsi/scsi_error.c | 50 +++++++++++++++++++++++----------------
+> > >  1 file changed, 29 insertions(+), 21 deletions(-)
+> > >
+> > > diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+> > > index cc3a5adb9daa..3b55642fb585 100644
+> > > --- a/drivers/scsi/scsi_error.c
+> > > +++ b/drivers/scsi/scsi_error.c
+> > > @@ -1567,6 +1567,31 @@ static int scsi_eh_try_stu(struct scsi_cmnd
+> *scmd)
+> > >  	return 1;
+> > >  }
+> > >
+> > > +static int scsi_eh_sdev_stu(struct scsi_cmnd *scmd,
+> > > +			      struct list_head *work_q,
+> > > +			      struct list_head *done_q)
+> > > +{
+> > > +	struct scsi_device *sdev = scmd->device;
+> > > +	struct scsi_cmnd *next;
+> > > +
+> > > +	SCSI_LOG_ERROR_RECOVERY(3, sdev_printk(KERN_INFO, sdev,
+> > > +				"%s: Sending START_UNIT\n", current->comm));
+> > > +
+> >
+> > As in the scsi_eh_stu, SCSI_SENSE_VALID and scsi_check_sense is required
+> > before calling scsi_eh_try_stu.
+> 
+> But the SCSI_SENSE_VALID and scsi_check_sense has been called before calling
+> scsi_eh_try_stu, see in loop devices in scsi_eh_stu, do you means re-call at
+> here?
 
-Documentation/driver-api/scsi:101: ./drivers/scsi/scsi.c:247: ERROR: Unexpected indentation. [docutils]
-
-Fix the warning by making the return values listing a bullet list.
-
-Fixes: eb44820c28bc ("[SCSI] Add Documentation and integrate into docbook build")
-Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-Signed-off-by: Bagas Sanjaya <bagasdotme@gmail.com>
----
- drivers/scsi/scsi.c | 7 ++++---
- 1 file changed, 4 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 518a252eb6aa05..ca8cf50824f35d 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -242,9 +242,10 @@ EXPORT_SYMBOL(scsi_change_queue_depth);
-  * 		specific SCSI device to determine if and when there is a
-  * 		need to adjust the queue depth on the device.
-  *
-- * Returns:	0 - No change needed, >0 - Adjust queue depth to this new depth,
-- * 		-1 - Drop back to untagged operation using host->cmd_per_lun
-- * 			as the untagged command depth
-+ * Returns:	* 0 - No change needed
-+ *		* >0 - Adjust queue depth to this new depth,
-+ * 		* -1 - Drop back to untagged operation using host->cmd_per_lun
-+ * 		  as the untagged command depth
-  *
-  * Lock Status:	None held on entry
-  *
--- 
-An old man doll... just what I always wanted! - Clara
-
+No, I meant that SCSI_SENSE_VALID and scsi_check_sense are required in
+scsi_eh_sdev_stu, or perhaps we could move them into scsi_eh_sdev_stu.
