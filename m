@@ -1,48 +1,64 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE74A2EFDB1;
-	Thu, 26 Jun 2025 19:42:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F63218871F;
+	Thu, 26 Jun 2025 23:08:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750966948; cv=none; b=uzlpZ5HI7+q+6sGznaBD+NlLFPMhegmYV6qiC7UzD2qJ8Hb6NLa7IvJRXm68fyNxVlimyRsn15uCXcuq/+DvqUfDImd1/Zz2tZgOfQ8RL9WNYoib12qx1eNHS/Xyjw6kZZecVl1ukfyUQy8grcji3uAhDSdlSR6Gwd5P7uDPSUY=
+	t=1750979309; cv=none; b=s3Z0H0MHwK0AkbUabWhrW6wYDt+Q6K3dR7IVyB9KDTJ73HGFsDh7CLI1JZHpsGHSI/eg4hSP8W7dffPus5bD84Ibg2voF4N5A1beUF5Brxgz3R1uVHwXFN7hbxoS3g6WGmBIFOFOx2Wh4ECGqkmjdacDraqlIOYRg5Fy15KjklA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750966948; c=relaxed/simple;
-	bh=UhtTgxYsewfDZ1sVGQQs/yjCE8lzSPT1bdNzk+qtaWI=;
+	s=arc-20240116; t=1750979309; c=relaxed/simple;
+	bh=SNfpXrlXe/EqYPDNhi4LL4SuiR71SP/o0IESvGZ8nBw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=s898vSq3sG4aSdNxOxoKoWMvs5vKHaoTzY1UkDarbWGXc0KTh2LLHLND7tnjag8GivrDmWCU+Z+x+tsiXgmSv1SxsVs463TokO9hHpIGNH71tQkAS604KgXiTGfWLqI3pu7FpGC1ELUIByRGueJqtRjPjBV13BGE4MH+QKYt9eY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=BmGmllty; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=asFytFdkfE0GxHvm4pjQBIOLebxflUfIY+w/yuObGSO3aDV9ggaoJp6iVKY3O/6FLD5CKFJOEZE8CRm5VjguXbffeSvDgdgvuXhvRb5HL4WSmckukHLTkp/s1/c2jMJGM9CY1BqvfQUDOl+H02YwDV0UzTA9fh1IeR2vb7oxefo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jl+rOWvK; arc=none smtp.client-ip=209.85.210.174
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="BmGmllty"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bSpxF4nwrzm0yQd;
-	Thu, 26 Jun 2025 19:42:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1750966944; x=1753558945; bh=DO4Ajm5yJAUZQO1VLeK2cYaD
-	j7dY+GIVytxqX/PfGq0=; b=BmGmlltyEgl4uodyIQrjcGCrwEw6C7kkCr490U4g
-	eCuBsiqAsqNmCzIslgtxDY98fP6+tfWpWz1Q3ZlQLvSQMLvi97z5FbuWzjGGNqA4
-	zZ2rnmAQuJ1YhY1whRjER/XkHMYVX1OBhqie8RcmAQI7A3Cx1ujtwhKsTFIvHAf5
-	oYFk94txNtTqbNFEA8OjqJ6U5FBMdraiETCK4sRKP3IpMGT5h+kX3FQKqIg99jyR
-	GHXoA6alWfnOEDBeQrzhAuwvAEJHow6ONVIlfJ/EvFShkD5gk2WrtbFgmZ7S9Gzv
-	liNTY2v3LG5j9PY1a7UDtvMaSA+m0WCzuGTu8fE1lORv6g==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id j5M4bBBsZHjL; Thu, 26 Jun 2025 19:42:24 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bSpx82K4Dzm0ySQ;
-	Thu, 26 Jun 2025 19:42:19 +0000 (UTC)
-Message-ID: <fdcdb18c-91b1-4c31-b24c-5837a8a08ac7@acm.org>
-Date: Thu, 26 Jun 2025 12:42:18 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jl+rOWvK"
+Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-749068b9b63so1172969b3a.0;
+        Thu, 26 Jun 2025 16:08:28 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1750979307; x=1751584107; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=GnT5+ruvbNYdj+EvduSQIeU+Nd4XJFuoLHpJ8CNx10w=;
+        b=jl+rOWvKOltRoPpTZeY08YFWDs53Mu/Po4Xse3vnoD2jZtAvK9T6LrL+vBbhNFePdG
+         iuBaN0KLMRAhBXapyIeU2MYcch0A7TdRFsYOPsV01QCChfCYffhsDp0WFDmefdGOdJHS
+         ejPfL2gZzr8ysnlXDVV7+v4QMV+OFwCUrxLcbpqCcAneswEemgeaxxEqOh/dwdkYLv8g
+         +Fse5Z8nWR1Hykn32Qc10q6os2m9eK/ui5sYqqHMuvx3HW5fKF4eKcch6PAQs0IWyyKt
+         r0c+c61TamKDf6qk3BfXAZ8QY1PhO9n2lJhSmRia31tcotSJOLdrR/TSXOSXq8fJSYXd
+         K3bQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1750979307; x=1751584107;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=GnT5+ruvbNYdj+EvduSQIeU+Nd4XJFuoLHpJ8CNx10w=;
+        b=j7ck1Gr6kct/D6t6nIy0ApQ/2FtiV+zP9g7kmW3feL472WjQkuqZH154BDxbfNJK7I
+         YszHhMij/4AdWa1+XDqMQQ7Zp5oueXhKCPi2tgGhPUh4ydskJiZZByUWDCX4jxzA2ir1
+         iIHAww7hgsbeKsRrXdgZx/8WTlx2OxGPP+b4xCuGhSXK2qSswiyZ5Vev+K0uJ/L87hyh
+         3HIx25IBjJCUx6sB0L6KWrj8gT7vSstL9pbtsXiIv87+diI7IC72V2niwfXIp/PqqWTY
+         rvvdrcgK2zWxc3Ca05lu3vEdgFWBlqc6BjmsllT8W6UeVe6UlGEP+Hf4X8cqb93AHKpz
+         N3dw==
+X-Forwarded-Encrypted: i=1; AJvYcCV/SRLmexAQ7L3AGdur3KAlJKJp/As5S5ux6LcPhlaypvBhGJ9Nbjrd2RCEh061drXB7M4geG7VE+fSvw==@vger.kernel.org, AJvYcCVjnMCNST8uFsorWP8lBriZlVgdHZBBKLy6m7M/4/jS6KXj/kmy5o0m6H3dg0J+jCfe3DPHgAH9Bk9Hbr0=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwfZst5xU1hMHgIIASJ3nI312hSJXEA3gJsuzECfrpwO7aBzGAA
+	4Ud7DHTJO6nRe2hdUBHVYLXLc2RX/YJk5qz7soEEAGL4V43EDhBROaoZta0daA==
+X-Gm-Gg: ASbGnctGvWZak0IUhNHhLJO5IDHtia1+hGtRdJHWuonREsRk7bGojcgvhZ+IusoXbdu
+	MyFgqS0Lz0h6ocfBGsrYMXao/mOCzQDpRXvIB/xSZyVempmZB81f7wfEH2bFCtjjfOogFL/Mf33
+	u59zpBXl0DHb+7KA5DFcfeOTgVaXif4s+DLBfTpigMzl71gaAcGgxPsV19EKj4kSHJVxP3EQ5aw
+	hEIa1D+qtRTMaFbv96mXgRTNg7/66XAoUtVxKDloykAcoBT0aO/pO7zUhynRHzgq6p8I64oBkAn
+	tUVH4mzFaROJlOWlxklff92nSFlXU+4KWEXaWPllgNOc/6BZQh3pXNt+uIGkMnUF3+/2AA==
+X-Google-Smtp-Source: AGHT+IFkmcQUrOCO6zaITV8e/fmz/bD6LzgUMMwJW3brWPmBbFHQQLHgJjq/uno4Viu+7bF8etdRkw==
+X-Received: by 2002:a05:6300:8e0f:b0:220:81e2:eae4 with SMTP id adf61e73a8af0-220a1802be3mr780395637.39.1750979307560;
+        Thu, 26 Jun 2025 16:08:27 -0700 (PDT)
+Received: from [192.168.0.150] ([103.124.138.155])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74af5581020sm721813b3a.87.2025.06.26.16.08.25
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 26 Jun 2025 16:08:26 -0700 (PDT)
+Message-ID: <89c663de-35bb-4a40-b547-19512319d28d@gmail.com>
+Date: Fri, 27 Jun 2025 06:08:24 +0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,66 +66,50 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v18 04/12] blk-mq: Restore the zoned write order when
- requeuing
-To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai3@huawei.com>
-References: <20250616223312.1607638-1-bvanassche@acm.org>
- <20250616223312.1607638-5-bvanassche@acm.org>
- <8df3d726-2ad1-4592-aa1f-f3d5eeb17014@kernel.org>
+Subject: Re: [PATCH] scsi: Format scsi_track_queue_full() return values as
+ bullet list
+To: Bart Van Assche <bvanassche@acm.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Linux SCSI <linux-scsi@vger.kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Rob Landley <rob@landley.net>
+References: <20250626041857.44259-2-bagasdotme@gmail.com>
+ <159d1b84-665f-4bc7-865c-59b15232a477@acm.org>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <8df3d726-2ad1-4592-aa1f-f3d5eeb17014@kernel.org>
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+In-Reply-To: <159d1b84-665f-4bc7-865c-59b15232a477@acm.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 6/25/25 5:11 PM, Damien Le Moal wrote:
-> On 6/17/25 07:33, Bart Van Assche wrote:
->> Zoned writes may be requeued. This happens if a block driver returns
->> BLK_STS_RESOURCE, to handle SCSI unit attentions or by the SCSI error
->> handler after error handling has finished. Requests may be requeued in
->> another order than submitted. Restore the request order if requests are
->> requeued. Add RQF_DONTPREP to RQF_NOMERGE_FLAGS because this patch may
->> cause RQF_DONTPREP requests to be sent to the code that checks whether
->> a request can be merged and RQF_DONTPREP requests must not be merged.
+On 6/26/25 23:16, Bart Van Assche wrote:
+> On 6/25/25 9:18 PM, Bagas Sanjaya wrote:
+>> - * Returns:    0 - No change needed, >0 - Adjust queue depth to this 
+>> new depth,
+>> - *         -1 - Drop back to untagged operation using host->cmd_per_lun
+>> - *             as the untagged command depth
+>> + * Returns:    * 0 - No change needed
+>> + *        * >0 - Adjust queue depth to this new depth,
+>> + *         * -1 - Drop back to untagged operation using host- 
+>> >cmd_per_lun
+>> + *           as the untagged command depth
+>>    *
+>>    * Lock Status:    None held on entry
+>>    *
 > 
-> Shouldn't this last part be a different prep patch ?
-
-No. Without the RQF_NOMERGE_FLAGS change, this patch would introduce a
-bug. The bug that would be introduced without the RQF_NOMERGE_FLAGS
-change is that merging might happen of RQF_DONTPREP patches. As you know
-patch series must be bisectable.
-
-> But overall, the commit message is inadequate because you have not yet enabled
-> pipelining, so this patch will only see one write request per zone at most. And
-> in that case, we do not care about ordering. We only care about the order of
-> requests per zone.
-
-I will add in the patch description that this patch prepares for
-enabling write pipelining.
-
->>   static void blk_mq_insert_request(struct request *rq, blk_insert_t flags)
->>   {
->>   	struct request_queue *q = rq->q;
->> @@ -2649,6 +2665,8 @@ static void blk_mq_insert_request(struct request *rq, blk_insert_t flags)
->>   		spin_lock(&ctx->lock);
->>   		if (flags & BLK_MQ_INSERT_AT_HEAD)
->>   			list_add(&rq->queuelist, &ctx->rq_lists[hctx->type]);
->> +		else if (flags & BLK_MQ_INSERT_ORDERED)
->> +			blk_mq_insert_ordered(rq, &ctx->rq_lists[hctx->type]);
->>   		else
->>   			list_add_tail(&rq->queuelist,
->>   				      &ctx->rq_lists[hctx->type]);
+> Here is an example from Documentation/doc-guide/kernel-doc.rst:
 > 
-> This pattern is repeated multiple times. Make it a helper ?
+>        * Return:
+>        * * %0        - OK to runtime suspend the device
+>        * * %-EBUSY    - Device should not be runtime suspended
+> 
+> Wouldn't it be better to follow that example and to move the list under
+> 'Returns:' and to move it more to the left?
+> 
 
-The repeated code is too short to make it a helper function. Common
-feedback on block layer and NVMe kernel patches is that very short
-helper functions reduce code readability and hence that typically
-it's better to expand code inline rather than to introduce a very
-short helper function.
+Ack.
 
-Thanks,
+Thanks.
 
-Bart.
+-- 
+An old man doll... just what I always wanted! - Clara
