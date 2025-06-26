@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D17701E008B;
-	Thu, 26 Jun 2025 17:18:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C00D78F2F;
+	Thu, 26 Jun 2025 17:25:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750958295; cv=none; b=CD7AQf2fZOBm77Fg8RpjNamlS01q6sfA4Y89YvxSwMojdzGNrWqq1CUJrRJPPsbprRNMgUJuyOkvzhMNybvWNxaBvYVAn/sz+jZlUnq0OWw67/+0IL4/mdscvc7ou8DG4yWb5DOUoB9b1mjJW7MImykFwxgrzBfapG2HPHLGPC4=
+	t=1750958750; cv=none; b=pTFZ7gsh+DyRDJIKDDnZ/W70kFPWGEcTgn2gRaAzq5+xI2yAz4HCHw6XI1CWKTw7aEnFM5Ht1cJxKdYVNdgPGt2xFkhYkUa1aJMvoVDWdLxMLQG/NP9zT05v8kCo/GO91QZHRvucJ/iC4lYHAMzpIsrEJW9NXTmnO9Gdb5XmY4k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750958295; c=relaxed/simple;
-	bh=1f7wed8XYHY6XPhic6jgNyzg1EhaCjzmjAC4efSpuqg=;
+	s=arc-20240116; t=1750958750; c=relaxed/simple;
+	bh=lXahm46a9ky2T7ukyv3Jw7Eg4Kk/gnBV/VdOqmDVAaY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QsZIkbsA97oDmEy8O5SMmYPFGzkRX6k2oJK6PGdf2XOBqQdxJsyREVO3aJ6YMHkPiAMnXbMIPnOcNSXWkXyT4qQn3pd+XYZpygw3Z6lkd2e8no2TRNQt/GBhjN6gf5AXfEhIEP0lJZtJjRpoD2O3wfVQj+WlebegieCTJ8xjOQw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Was7X4rf; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=uLaVJVvanTutgvQhuPOi45XuFd1/L8t+22KWN1KXIUft6pQodVTvc7Ax/UOrAB9qerCjECPwIWnIthacBFUtUW9/eoqQ8xUBTVgpkGEfT/Gt+UhSPwosQzWbe7Oq0EPIyz3KdMMQqPNnj+1z5EDIi947prAGeG2NFFYuDxk0azo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Dpzgiiyy; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Was7X4rf"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Dpzgiiyy"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bSlkl1VypzlvNRr;
-	Thu, 26 Jun 2025 17:18:07 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bSlvc06fbzm0gc9;
+	Thu, 26 Jun 2025 17:25:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1750958285; x=1753550286; bh=kwUjOM2XgYAyH/Jd0ooGBu7b
-	Dfs+PEdYCPIs3qj/MhU=; b=Was7X4rfOsHU66qE9T7l7GMNOh+wXoBLlWCgEpdK
-	YDoFIxnWO9mol936N5vYaQg4u+VKhBa0e8idWuM/Jne0x8qI5SkGAE5CM04zBAx8
-	qlXs5PgE+6cB0nY5Dx/poM2YPaGgyx94on19+IQGULIPxzApGrJz4OXzbDEIa9wJ
-	BScsKqNijeaWeQnGdvG/tFMRVQTHha6gsvnoR24fypI3wsnbaIWCw6CIUbsB2T9x
-	m7C+syhcqzR2kLd1+CJG1rngPxag3zBB6NFy5ydX1NwlR1gRF1K3xD2vBMZMb30/
-	Uc6CPQAA+9zu3ULNYVx5NrrTiOc+wS/GZIXXGjPYXAW7PQ==
+	 s=mr01; t=1750958746; x=1753550747; bh=a2QVQzEhFPL4A6Hd9qQY+llT
+	fAzFFAriOUUdn7jLp0g=; b=DpzgiiyyG2dCoI89DIAri5q7mVYB9EtF5gQCsklq
+	dq41T+XG1k6+nqgr0khTvDcFNHIDnOJUL3Fdon13bfgS3Pd74G5pNHIDVkEGrfAO
+	CjLPtLk6Yqjdz711JappVavGcrSUTZleQ4nsXop4i3ERGb+cMnt9ubfupF8hKPVl
+	StuJxyXL1H+2vBuSA/YpQx2IFV9myc7HZ2Hb4/x7rgeCX8zEGuwzPGie/FZAM5v/
+	klcxBSiUQzEZgwiSmkNP7HSWyNoRHdkNVQDZlzsdRlxy3vMWFRX7SH6Yls+9cqxZ
+	fEvwsIICUNuGlKSn6veN9P322lXbkTaSNyY7hk6Bim4pJA==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id JP_WNRLA7VNz; Thu, 26 Jun 2025 17:18:05 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id NdFizUVHyEYi; Thu, 26 Jun 2025 17:25:46 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bSlkd2f1qzlmm7x;
-	Thu, 26 Jun 2025 17:18:00 +0000 (UTC)
-Message-ID: <1e4651ff-77a4-49e3-84e4-7b42ffc45034@acm.org>
-Date: Thu, 26 Jun 2025 10:17:59 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bSlvW6fx4zm0yQd;
+	Thu, 26 Jun 2025 17:25:43 +0000 (UTC)
+Message-ID: <61cf7e54-832c-42df-a476-08d8a2d1e462@acm.org>
+Date: Thu, 26 Jun 2025 10:25:41 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,34 +50,39 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v18 03/12] block: Support allocating from a specific
- software queue
+Subject: Re: [PATCH v18 02/12] block: Rework request allocation in
+ blk_mq_submit_bio()
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
  Christoph Hellwig <hch@lst.de>
 References: <20250616223312.1607638-1-bvanassche@acm.org>
- <20250616223312.1607638-4-bvanassche@acm.org>
- <c22a7c1e-8d57-4d71-895b-fc2913404f0f@kernel.org>
+ <20250616223312.1607638-3-bvanassche@acm.org>
+ <aeeb5b64-e539-4f0b-b80e-5aaecde55550@kernel.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <c22a7c1e-8d57-4d71-895b-fc2913404f0f@kernel.org>
+In-Reply-To: <aeeb5b64-e539-4f0b-b80e-5aaecde55550@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 6/25/25 5:04 PM, Damien Le Moal wrote:
+On 6/25/25 5:00 PM, Damien Le Moal wrote:
 > On 6/17/25 07:33, Bart Van Assche wrote:
->> A later patch will preserve the order of pipelined zoned writes by
->> submitting all zoned writes per zone to the same software queue as
->> previously submitted zoned writes. Hence support allocating a request
->> from a specific software queue.
+>> Prepare for allocating a request from a specific hctx by making
+>> blk_mq_submit_bio() allocate a request later.
+>>
+>> The performance impact of this patch on the hot path is small: if a
+>> request is cached, one percpu_ref_get(&q->q_usage_counter) call and one
+>> percpu_ref_put(&q->q_usage_counter) call are added to the hot path.
 > 
-> Why is this needed ? All you need to do is schedule the zone write plug BIO work
-> on a specific CPU. Then the request used will naturally come from the software
-> queue of that CPU, no ? Am I missing something ?
+> Numbers ?
+> 
+> The change is forcing a queue enter for all BIOs because you remove the cached
+> request optimization. So I am not sure it is the impact is that small if you
+> have a very fast storage device.
 
-Yes. That approach may be acceptable for rotating magnetic storage but
-is not acceptable for UFS devices. Inserting a context switch in the hot
-path would slow down UFS writes significantly.
+Hi Damien,
+
+I will check whether I can drop this patch by reworking the later
+patches from this series.
 
 Thanks,
 
