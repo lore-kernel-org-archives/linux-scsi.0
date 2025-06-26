@@ -1,30 +1,48 @@
-Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A08491922F6;
-	Thu, 26 Jun 2025 13:57:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 843472EAD1A
+	for <linux-scsi@vger.kernel.org>; Thu, 26 Jun 2025 15:40:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1750946241; cv=none; b=sd2eZAyEaj2lhaf0Pwtn0XQXFoon4mRof2tFtjiYAfZLdNH1jsqGd+Le7RAVgZ9rv8yIgCc+TM6doyDK+rjS4XWzV6j6sMfhFyZQYe1Q21yfKhVBakMO9Cgzp4ZgtislYAIQE2ofOCiwOvLfZj/QN8/nzcB0rAMxh6Fj0lBbIuM=
+	t=1750952456; cv=none; b=NVtTw/efVxvC87p6tG0NIPMmHYVRR8lTK9A9oVx1jTeuNa3Mw/9/Vtt3HML+jJhtXZB9pG8LJgDSTiGYCQX4bnyHpsCcBPyLCl8kRG9Q0nRbdV7QWKzW0Y/khxq1zgBzuK0VxQgNuBSFjXSE3oQrZUaXFxCVMmHxedu+rGTUytI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1750946241; c=relaxed/simple;
-	bh=0c7ZHZLsdl7RngXjNl2NpX2L2Tdel9+PLaSBG+/n1XA=;
+	s=arc-20240116; t=1750952456; c=relaxed/simple;
+	bh=rwOjKNtMXhEyDkXSCMU++DOn23CSXdnTBPiVTC6em7M=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cu1w5KznyGw1a1CS4xnBWTUrzlk176gNs+l6rXVviwoMN0cua/ZFk9eJwci9Q8WEjNIFax1L6D9BExIE3VuCWsC78Mwbyxd78WIoq0MEeS2hrvJDZ8Nb3MfgVf0ImOKi9kXw8NuxEC6VbIiWTpXyIKpr0Zjj6O1R3J3wTB0YQM0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.163.216])
-	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4bSgH11TkwzYQv0F;
-	Thu, 26 Jun 2025 21:57:17 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id 164801A236D;
-	Thu, 26 Jun 2025 21:57:16 +0800 (CST)
-Received: from [10.174.179.80] (unknown [10.174.179.80])
-	by APP4 (Coremail) with SMTP id gCh0CgD3W2C6UV1ofP7jQg--.28741S3;
-	Thu, 26 Jun 2025 21:57:15 +0800 (CST)
-Message-ID: <e2fe408c-23be-4cb4-9cb2-04178fad947f@huaweicloud.com>
-Date: Thu, 26 Jun 2025 21:57:14 +0800
+	 In-Reply-To:Content-Type; b=OydrEtHo2qKwwfWyPj6cHDsPyCSoKpgFpx2vsa0BId2m3R23erfaCJKVOCGxamx2jLBZZeoX1v1SW0KPpIRKTPRy3Mcln08Da2dOyFHPgORM8r6Qt6QLTvab9/mL12LwcEUUHvuHcnJhmKRBB7c0/DKgs/VxebUwUQcMbH9lpVs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QCJByWwY; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QCJByWwY"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bSjZY2DWgzlgqW1;
+	Thu, 26 Jun 2025 15:40:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1750952451; x=1753544452; bh=ZErAGvOUmizNx9ghESk8V4Sg
+	2uiP781JvxTECAT5rJU=; b=QCJByWwYiSIB/fpD/hsXP++I13PLsw/DfoQHLcgZ
+	O6r1E34KWiZRrR6RRCa3P67V0leeqjCHDwojou4Rnrudk3MaTKgE98I2OdR8aF2E
+	FwLEPBOt5LZ72SoME2rFOsJuWXz8/CY1PwJgWji0T8h2b6HwnsRTF0oPa6LQp4ZP
+	erLROepZXwkKenClitJKUmmrTR1iJIvcJdHdETJg/Lod38qRVIUCsgn376So+8dM
+	rlTM44FlkYkNW25CVD7r1pOZf4mdijxuBxKBcyYm7TG9vz4e3Tzt2rAXQ1DsN78B
+	d8HXUfU8cgqeijhvq8+MJa6vxsoAcUHggvR6g0Ju5oab0Q==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id dJfWVB3BcH0J; Thu, 26 Jun 2025 15:40:51 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bSjZS0bcHzlvbmg;
+	Thu, 26 Jun 2025 15:40:47 +0000 (UTC)
+Message-ID: <c6b5d62b-e039-4e3b-80a0-6ddd19624c29@acm.org>
+Date: Thu, 26 Jun 2025 08:40:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -32,58 +50,36 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/9] fallocate: introduce FALLOC_FL_WRITE_ZEROES flag
-To: "Martin K. Petersen" <martin.petersen@oracle.com>, hch@lst.de
-Cc: linux-fsdevel@vger.kernel.org, linux-ext4@vger.kernel.org,
- linux-block@vger.kernel.org, dm-devel@lists.linux.dev,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, tytso@mit.edu,
- djwong@kernel.org, john.g.garry@oracle.com, bmarzins@redhat.com,
- chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com, brauner@kernel.org,
- yi.zhang@huawei.com, chengzhihao1@huawei.com, yukuai3@huawei.com,
- yangerkun@huawei.com
-References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
- <yq11praqywi.fsf@ca-mkp.ca.oracle.com>
+Subject: Re: [PATCH 1/3] scsi: core: Make scsi_cmd_to_rq() accept const
+ arguments
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20250624210541.512910-1-bvanassche@acm.org>
+ <20250624210541.512910-2-bvanassche@acm.org>
+ <302ceae2-176e-4c89-8f44-aa2169ca2840@oracle.com>
 Content-Language: en-US
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-In-Reply-To: <yq11praqywi.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <302ceae2-176e-4c89-8f44-aa2169ca2840@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-CM-TRANSID:gCh0CgD3W2C6UV1ofP7jQg--.28741S3
-X-Coremail-Antispam: 1UD129KBjDUn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7v73
-	VFW2AGmfu7bjvjm3AaLaJ3UjIYCTnIWjp_UUUYV7kC6x804xWl14x267AKxVW5JVWrJwAF
-	c2x0x2IEx4CE42xK8VAvwI8IcIk0rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII
-	0Yj41l84x0c7CEw4AK67xGY2AK021l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xv
-	wVC0I7IYx2IY6xkF7I0E14v26r4UJVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4
-	x0Y4vEx4A2jsIEc7CjxVAFwI0_GcCE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG
-	64xvF2IEw4CE5I8CrVC2j2WlYx0E2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r
-	1j6r4UMcvjeVCFs4IE7xkEbVWUJVW8JwACjcxG0xvEwIxGrwACI402YVCY1x02628vn2kI
-	c2xKxwCF04k20xvY0x0EwIxGrwCF54CYxVCY1x0262kKe7AKxVW8ZVWrXwCFx2IqxVCFs4
-	IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E7480Y4vE14v26r106r1r
-	MI8E67AF67kF1VAFwI0_GFv_WrylIxkGc2Ij64vIr41lIxAIcVC0I7IYx2IY67AKxVWUJV
-	WUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Gr0_Cr1lIxAIcVCF04k26cxKx2IYs7xG6r1j
-	6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7CjxVAFwI0_Gr0_Gr1UYx
-	BIdaVFxhVjvjDU0xZFpf9x07UdxhLUUUUU=
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 2025/6/23 23:08, Martin K. Petersen wrote:
-> 
-> Zhang,
-> 
->> This series implements the BLK_FEAT_WRITE_ZEROES_UNMAP feature and
->> BLK_FLAG_WRITE_ZEROES_UNMAP_DISABLED flag for SCSI, NVMe and
->> device-mapper drivers, and add the FALLOC_FL_WRITE_ZEROES and
->> STATX_ATTR_WRITE_ZEROES_UNMAP support for ext4 and raw bdev devices.
->> Any comments are welcome.
-> 
-> This looks OK to me.
-> 
-> Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
+On 6/26/25 1:36 AM, John Garry wrote:
+> Is there something special about the logging code that it even requires 
+> that const scsi_cmnd * be used?
 
-Thank you, Martin and Christoph, for the patient review. I will update
-my test patches next.
+No. Declaring pointers 'const' helps to make the intention of code more
+clear to human readers.
 
-Best regards,
-Yi.
+> Or will it be encouraged to use const scsi_cmnd * elsewhere in future 
+> (after this change)? Or, further than that, convert all scsi core code 
+> to use const scsi_cmnd * (when possible)?
+Many kernel developers don't care about declaring pointers 'const' even
+if these can be declared 'const'. Hence, a large scale change that
+changes struct scsi_cmnd pointer to const pointers would be considered
+controversial.
 
+Thanks,
+
+Bart.
