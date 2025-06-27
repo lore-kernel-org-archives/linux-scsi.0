@@ -1,106 +1,100 @@
-Received: from mail-pf1-f178.google.com (mail-pf1-f178.google.com [209.85.210.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 026D01F8747
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 19:51:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B75DE258CE8
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 20:53:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751053865; cv=none; b=HFBEKoiHGGFl0i6weCD23NmJWXsZO+OsZ5jYd+ympkhDcr/scMI7pmldEjKpNXimhv/VRaMQy7g2zEovx/d1m7uaqlWux62ElDL01Qs9mDiIZTSoNj8VmCwW/ALNARVQVSu4X0DufnhNm9nHaOGmwLRnAEqs3wBQxVd/z0XnNIw=
+	t=1751057641; cv=none; b=dtATdpTaN676HAUvNfW7NkU7mRQ6rShSHqKUtQzKLBR2eYqnu8zpS222Ir9CzFA3hnaCATNxjbuA1+j47imuuE0fkZGnRwGv0SDJwLMUoaDidgkxXjHI8jL/c9zEc+yMdsYqUyup7XJot9u+lsu0OP3SiLM0tlTx/zaVznZfMBg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751053865; c=relaxed/simple;
-	bh=xa63cdl45Ay3mqQshlbRgRxD+grduS1xjIjcTrPtLaU=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UjY+V/6iCNKK424Job2hsAvsbTsI0SsNz3hOHnLxXSI8z0ZOUQ9RivZXVfo2arh3iG4934Wc7Kg1bgD+RdXccEdsUoSyp4tXHqprnTx52waU67jMlgqy73ZJNd4uEgPm8GMUoVzmoty4jZHFxCSN0dhpiVGoh+pusCzNFTcZk2w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=NUN4xk9P; arc=none smtp.client-ip=209.85.210.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1751057641; c=relaxed/simple;
+	bh=jQnbCAt92ZTIQ6zDGGeLPvn1fXN17yc+ucOGRP3mE9s=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SH7VwHUzCe/klskglT+YgWG0hINoafqmmWvyQrW6egebi8kNPZRgEhav4Myo8gPPbyWASxvbUxZ8m0KmHAS/eg4Nxtnt0tZeQDaB+E4/i5M4ZFGAqE49KfHSztGFg0HxTxseeVqkIunNoQM87J66angOTy4V9pzPr+IcCFwHxOc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=UoYw3Ttn; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NUN4xk9P"
-Received: by mail-pf1-f178.google.com with SMTP id d2e1a72fcca58-7490acf57b9so345372b3a.2
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 12:51:03 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1751053863; x=1751658663; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=t9BzN+q0oJmAch2Z+oWASfhmyuRjM+jQgxhyogpLBqI=;
-        b=NUN4xk9PMcOAYbHBOBkMvFizb1PNuduG8NkPkTk3IpCI0gUfrMn6RUYHvDrZO/Ignu
-         OcZ+SOrttKcX4KAwxTEa0zRXhQUA4MebgX7NzJ8+Xn4+WmTLqmXMWuoXyE3ZWBnrr1Ok
-         uhsJGK0xpVSSuq1zaR8vViQTtRE9CwWmegIog=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751053863; x=1751658663;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=t9BzN+q0oJmAch2Z+oWASfhmyuRjM+jQgxhyogpLBqI=;
-        b=t17lqzyvPeT/uxt9Zewg7qmMa/Pj+ogkO3/RH2P829zYJJ5C7V3KEmmmYdNxKVeKGP
-         ccThLbBszBmsZ2JewD+CPU8NdU1gGwsz6DAu75txgL4DVe0/qaAPcFPYu4S/GN2iMeTB
-         MT0A8qXCjRS4GSmT0tC4X6LMt6n3ncNXjJPWSFKluSnuPjLtpYoFMOMDcYArTSclon1k
-         DI6Jg0ZytJzyPzD5qg8E4WQHPU11YawGwoL7NX4F4GbkQI+VssESQfIysiafWfnRslSw
-         x0RvBHmEWYXLV6yhuQQUx8/ujVAt7yPL8RitmSHf8A+7gyxnpFF88iisB4de0flZ1yyF
-         anuw==
-X-Gm-Message-State: AOJu0YwJ/fpMb30IVbpQSe1CojQoYXSRdxgcIrm0sD970lDe9yf7/c7T
-	Ir4PUKDlj52xWcWPDIkNORyzUwXC7vFS2sQXxLqfKkjJEuW7BBtwLFYECLe4A0mr/zg6oT3coBt
-	uUqtSUQGN630FrnDhejLnFIb502OUrAwBvk2h5N3A0bcn2nXDVGUE9ChxbHcMOkSZUnfCe7j7jU
-	XISBSapFVq2PmHhlDA3WI/CropmKZPES4L99NkinK7rgNtEJGtnQ==
-X-Gm-Gg: ASbGncvVbLbwGIBTzDKtISaKjfggjWKVudLIYeBhnnAa+/EXy9StWW+KyRpFKy01/t6
-	h/+WHpw3Kc6MUvIECOC4bs+M/hZMuXFLmtx5QuJJGu9s2YZGWThJciBDEq1hUumx1bVDnYr2M4E
-	HKMj7vDdUIRcC6CgIX3EV1+VgrpZ96/iL3RciU+N4zLtFA9FEKQUsNqlKowQOzU46BYVo9WhKUg
-	bljydS+bKFEKXBzoF3yMHSkL9wXOL6FfjDvvYdkueu8TXMNdySSCFD/vkUKVr4WUj1cowT4JiNi
-	XBMrlYUV3tT506yPBGChRzEGP5ROXsmaQMSv8ykLLtbD+U1HkozvxREo9iwjAoQ5LU7mpY0cdKl
-	M2nZc2QePVCie4Hxe+b/FPOEwszPo9MY=
-X-Google-Smtp-Source: AGHT+IF4ps/AdgKc4huJHXINtS08vU/sSAqc6ItF4iYaSWBVgT1/hZzl0Ltr7XMLAAtkkwNz0rWWYQ==
-X-Received: by 2002:a17:902:ce87:b0:235:7c6:ebbf with SMTP id d9443c01a7336-23ac46342d3mr78005845ad.35.1751053862622;
-        Fri, 27 Jun 2025 12:51:02 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23acb2f247csm23485175ad.79.2025.06.27.12.50.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Jun 2025 12:51:02 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: rajsekhar.chundru@broadcom.com,
-	sathya.prakash@broadcom.com,
-	sumit.saxena@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 4/4] mpi3mr: Update driver version to 8.14.0.5.50
-Date: Sat, 28 Jun 2025 01:15:39 +0530
-Message-Id: <20250627194539.48851-5-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.31.1
-In-Reply-To: <20250627194539.48851-1-ranjan.kumar@broadcom.com>
-References: <20250627194539.48851-1-ranjan.kumar@broadcom.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="UoYw3Ttn"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bTSTD2zmnzlssxm;
+	Fri, 27 Jun 2025 20:53:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1751057631; x=1753649632; bh=DyVWalj1NfVtV+DeAfuKf2G2
+	1ywBjwmIpsbezV/FaSA=; b=UoYw3Ttn3QsaTcsgHWPrQT2IO1vkUOhat3VWCtGk
+	HGnOGonhsHh3tJ8hHbVhvrgTV7MBLODiYKBZjiYTtOnwsRh5yMh0bnh90P0fM0yr
+	XwrI1Qup57vgm74BP0vo6e5wsv0FaaFw4uI3PSEgCiQ+ISj4cOsy044hxhy1p4Io
+	fvGVzPull6njq96KZMLi3qDickpbOFcFt098Y1UgDr89APYJ6njY8VAUdO9hMItn
+	yN9cxPNDbCZ3nBcTFAdiv6JGGr0Lj2gEVDpb5hiWF/v3J6RmtnIP564vSOb/82EH
+	gQ5pWW8lzuTfKCw4QeyqDcbjkELIS/Ygk2ugOVdFWa7UfA==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ePRU34gIjdZR; Fri, 27 Jun 2025 20:53:51 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bTST818ktzlstRW;
+	Fri, 27 Jun 2025 20:53:46 +0000 (UTC)
+Message-ID: <4ded8779-9987-465a-8c13-3de42321032a@acm.org>
+Date: Fri, 27 Jun 2025 13:53:45 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: sysfs: replace scnprintf() with sysfs_emit() in
+ sdev_show_blacklist()
+To: Shankari Anand <shankari.ak0208@gmail.com>, linux-scsi@vger.kernel.org
+Cc: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+References: <20250620105344.455283-1-shankari.ak0208@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250620105344.455283-1-shankari.ak0208@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Updated driver version to 8.14.0.5.50
+On 6/20/25 3:53 AM, Shankari Anand wrote:
+> Documentation/filesystems/sysfs.rst mentions that show() should only
+> use sysfs_emit() or sysfs_emit_at() when formating the value to be
+> returned to user space. So replace scnprintf() with sysfs_emit().
+> 
+> Signed-off-by: Shankari Anand <shankari.ak0208@gmail.com>
+> ---
+>   drivers/scsi/scsi_sysfs.c | 6 +++---
+>   1 file changed, 3 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+> index d772258e29ad..074b02e4cf9e 100644
+> --- a/drivers/scsi/scsi_sysfs.c
+> +++ b/drivers/scsi/scsi_sysfs.c
+> @@ -1095,14 +1095,14 @@ sdev_show_blacklist(struct device *dev, struct device_attribute *attr,
+>   			name = sdev_bflags_name[i];
+>   
+>   		if (name)
+> -			len += scnprintf(buf + len, PAGE_SIZE - len,
+> +			len += sysfs_emit(buf + len,
+>   					 "%s%s", len ? " " : "", name);
+>   		else
+> -			len += scnprintf(buf + len, PAGE_SIZE - len,
+> +			len += sysfs_emit(buf + len,
+>   					 "%sINVALID_BIT(%d)", len ? " " : "", i);
+>   	}
+>   	if (len)
+> -		len += scnprintf(buf + len, PAGE_SIZE - len, "\n");
+> +		len += sysfs_emit(buf + len, "\n");
+>   	return len;
+>   }
+>   static DEVICE_ATTR(blacklist, S_IRUGO, sdev_show_blacklist, NULL);
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpi3mr/mpi3mr.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+This patch changes correct code into broken code. Hence, to the SCSI
+maintainer, please do *not* apply this patch.
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index f2201108ea91..8d4ef49e04d1 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -56,8 +56,8 @@ extern struct list_head mrioc_list;
- extern int prot_mask;
- extern atomic64_t event_counter;
- 
--#define MPI3MR_DRIVER_VERSION	"8.13.0.5.50"
--#define MPI3MR_DRIVER_RELDATE	"20-February-2025"
-+#define MPI3MR_DRIVER_VERSION	"8.14.0.5.50"
-+#define MPI3MR_DRIVER_RELDATE	"27-June-2025"
- 
- #define MPI3MR_DRIVER_NAME	"mpi3mr"
- #define MPI3MR_DRIVER_LICENSE	"GPL"
--- 
-2.31.1
-
+Bart.
