@@ -1,61 +1,61 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0D102949F3
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 19:50:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBB8B1F8747
+	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 19:50:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751053856; cv=none; b=thL3HeUdi2NhhcnWPzHyD0xHgq7IoilI1OP8XdxfSwnJ4URLKRiifNuXaqt5gCVC623qbV4HBPPn/Kw8caPhTIAb9mjyw2aqaURrrlS+HaZ5TL6FvH9mRHp8IZ6Mi4EVw7bZMqgfSwBaikFNunmGvtn9rB+kNN3fJm7dN4InfkU=
+	t=1751053860; cv=none; b=uotLNskybwk8PbKKz9ysCxOkqDeeFBX1KK8AY6P58oXx3HTgrhmgCm+8R8f5z6UXkZsymU4QdbvGAyctCrH6auE47hzJJw+WjCU7OFOkOXvSu/+oKUCUpdugJlRAPnoPf3xg3rUtFafjrI8IHPlL9nlI3GKeCD8qURxodu0OIwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751053856; c=relaxed/simple;
-	bh=7scot/otsCZWfhionpx+oiUHlFeRZLTEHjzJBT1mbDE=;
+	s=arc-20240116; t=1751053860; c=relaxed/simple;
+	bh=AhC7tMRWQT/Xqq0f8UZySYiHCBw/k2ot1sf8xRUAMJU=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RbgNGpwPRQnH+DU7iIl20+mpsVce5zYmT71kmps5IvwwGqQ6D+1E/rJt21wR9HMWMXM+BnnNvlgFi/PhgyEMcGE5Cmajjq8pWh6NNtBm99I3NLO76UKlCAD7dgIyFc/Kgc2dRuo9wK27t4amhcgyjDjNG/6qDhawr7o52D8RRZU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Z70HelxP; arc=none smtp.client-ip=209.85.215.176
+	 MIME-Version; b=EIKgvTvEorLTFujzIPBXDNhKhVoJXkKH6rvit/TQQ0880BhmvYLAn5IMPKGnct8ghr4Mw4xkV6vuaJINXecigFUWUQPpy0+OtyscWxiGJZHfc1cOQRsqrnydVyZb1wygJr3HvuWi0qPRaQL/JGmTqtRNkslUq2v1Nt5ariPU81I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=JA+77mpB; arc=none smtp.client-ip=209.85.210.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Z70HelxP"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-af51596da56so497690a12.0
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 12:50:54 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JA+77mpB"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-7426c44e014so3125888b3a.3
+        for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 12:50:57 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1751053853; x=1751658653; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1751053856; x=1751658656; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=JrAr7GxdF6AOrkM/hv3ArFP9XhZfc+XhzG/M9Z6/0SY=;
-        b=Z70HelxPj1NbxP5R/A0gzu85I55V8V8wUHQrhRo2D8eYADkX7bvJeSSGI2CQQqsOJ8
-         eceL+YPtaKEkcOhlpEOAOm6AdqFkkp8hqyVse6T1N1+MsOECldQ6rVVlhFRZfX6k+Nix
-         5Ch01XYRJgK7iOnfIX6mQBbCfptMd0v4WVAD4=
+        bh=1Wl9qIfqM25nfZqWuccDWXnXL+IVYa3s/3FeBklsXJs=;
+        b=JA+77mpBOfAcHGeO7brqpuRDOFqlt1kMFFcp2oH092Mv7C+pJFHENCuFmvdSf3C3fU
+         kr6t9Cqm+PrhVELOo5qIwYDTK1K89yVg/9bz9ZPFBt6QQzoTtcPef05TuLS3teCOpscs
+         oah8zP0GyhqHN1ZRkJ+r4V80pIxz9FsmdbzbQ=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751053853; x=1751658653;
+        d=1e100.net; s=20230601; t=1751053856; x=1751658656;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=JrAr7GxdF6AOrkM/hv3ArFP9XhZfc+XhzG/M9Z6/0SY=;
-        b=IFbS053yDsAu+VMOv4RE3iJU4+WE+JS/UgCVGsxgGdPp0BDoYtEW5fPlR0C6Y+wCTr
-         B5uIdp8GrA8t3Em4ivBY6pYJD8rMOrgbp0ZIuzRrHfOXJxGvC5WHFvr5JxDPbJAwKBS8
-         qbwkjiaWpRB7iMDNw8/QPGXV1c32PGi+ZDCQTbN1/qdp0iJ+jnVpPt2UbwBpCdX4w4NB
-         ycur2XWTEFhKulCgJMtk4WlKb58s0wlrkgopTspMXqOP3ogES4bNX9QZJDJ67vmiHjWR
-         ejXiE0EhCLWs01q4ck319pbnLN0CV/xx1WgJrsf/cGyRNRUf4yO26I06Zr5i//lQqGTX
-         gEmw==
-X-Gm-Message-State: AOJu0Yxbzfnf0nSw8+FzM8ihAUUfaaUGAinXPwPX8naWr4wSa9ojXwEH
-	yOiyqpNr4LqFEBUQsk9+gblbyEv0P4c3wDbDZm53vg5cK3MIq3Pl+q4bdKpIGJ+gx8hwF5gv5OZ
-	rC6L5E90+zL2DFTYCCACwbgjv3qd6zz2zlhN0noonYYEu4KL7NPVOg8LSxfL+aBSIc0ALXnkJes
-	NwczyAqzaCWveHCkgr0RTYoQyCNVvrj0aoZJ5rqVL8r/PqFVJepA==
-X-Gm-Gg: ASbGnculWNSi+AAfBqRFhCnQZoFbQP+LX/pHUn11dXJLGLqijSBh1kkY2XSfGSfRnnI
-	H86r01lZOpK/wDzRv2/80TxS73WqCPjeOO2tw8BPbm4KZyLtyIgfWKWP6PrSvoEMhf0xG/Fj0v1
-	A6MiwD/5EKCyd6QgbEuYCBQQ+TPT391eMF84Dfbv1AxvcPnV0lgonyMDvXgayq0w16gsvZIVoRx
-	VIxCJuar6kTBpU/c6DQaP4eV5OZp+OTQSBE9bcH5Ti8zG8yMWL07a7DwddxgOFslWINEzLoFFLw
-	fkuzqvhv9V+0bgDUkqjaaOvkYzi1x1Tq9dYb735A2XN/h5CfwgjGdhF5VtDWDBr+KUcujNTMjuh
-	xpbOoCZr/Wf5l311kmbK6XmtJljPruFQ=
-X-Google-Smtp-Source: AGHT+IFA9T5q2PuUq6ThjccrtRNDleV+A/eLjWeXBPzrH7ODaHqabMYPpLpcKYeRv1116D0Or1OgFg==
-X-Received: by 2002:a17:90b:3b47:b0:311:d670:a10d with SMTP id 98e67ed59e1d1-318c92ee549mr5632581a91.26.1751053853339;
-        Fri, 27 Jun 2025 12:50:53 -0700 (PDT)
+        bh=1Wl9qIfqM25nfZqWuccDWXnXL+IVYa3s/3FeBklsXJs=;
+        b=jVFajOn6pchP6JIUBwlIwsj2z+3+oa8WkC+BKIN6Xw88Ycy2xwchToUG8yHTyCb0qV
+         lF3x7tqSiqucY0NUjHUsOAAyxpsqQSy0wtx53tUi5lfsctMbYJYEz8yl3ds0hKKE6EUc
+         WHIASQA2r6t04wIH7M0HtWmXKLLxql2KjLpEH3RWna+LuRJ51IJ5Ne+LHC05F8jXzR1I
+         RaF0k+Ki2rJIFxN0zAN5FBkz1UU4ZjjJHfoIHFlo+RPCjj420CzA15rreL8joxCf9Q2I
+         iyVRqXCp4xzhpCacNXCPhQOmawluUYP6DNY+B0h38706EFexnRdA2KzKUVOiHZhpn3AM
+         cbmg==
+X-Gm-Message-State: AOJu0YzAmhYQxsNBwNTC2NLqvzVX/Y8QSzcyiDXRxUsxjqp1nyKEuWxM
+	qJ3vXBAVfVmyn1o0jzenxqwk01NMjllkvoP6ihGC/7WyPNzdcsVID9Q+aHU2OpbZSdV7fNY3Odf
+	8iDdxnYMwf+CfYfZoM0l4BPmh+eZsfLU9LSUfVQcoB2Iz5owmenI7Oo1sKiiXaT5x67Eps4OOEF
+	7VxEqEIF2GmnilicCIQL+VRvtWS464NCXy4OVE24U372SwVqKejQ==
+X-Gm-Gg: ASbGnct8aRkvxUzOCgcqaXeFtsI+TtV+6FgRhKRJPDON1modtv6NAXumc9r3NQz0938
+	p5NM4Ue8o8S8WgAxw2SNmY4oGp483hWKB/ZnhD8sutM1Xyb+GlU5HuPb7jo0U9pHgGepmG3F61q
+	W3K1ZZRz0nDDhRpqmPlCmNxK/5wAyPeuLSbtmR6dEex8AnQRN0jt/CexJWOu3uaLCM6Qg1ChHFJ
+	+XmRP7zDv9qVFj7t9xDmbbQ0JlCIWsdNt88VtRdousPmRdnKHiYGlpfPaoAVHfnuuYnaXAbjKlP
+	7v38hrpfod0JyylRF5lSBJToJ2AHKh4YlCTCo2Q+fEbq3JQoXW+Dd3MnZq76NwhJL3W2RdJQ5PR
+	2dOlj6P9lI6gS3fe6OypCqEWOmVY66q0=
+X-Google-Smtp-Source: AGHT+IF7Kgn3cdzBHNaKLRryNNQ6ir+ld/xrNZaYegenVrcUnxIVHu0VbW11sJI5RS2Ypr61zu2A1A==
+X-Received: by 2002:a17:902:dacc:b0:236:15b7:62e4 with SMTP id d9443c01a7336-23ac4608402mr72247525ad.38.1751053856375;
+        Fri, 27 Jun 2025 12:50:56 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23acb2f247csm23485175ad.79.2025.06.27.12.50.50
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23acb2f247csm23485175ad.79.2025.06.27.12.50.53
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 27 Jun 2025 12:50:52 -0700 (PDT)
+        Fri, 27 Jun 2025 12:50:55 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -64,11 +64,10 @@ Cc: rajsekhar.chundru@broadcom.com,
 	sumit.saxena@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	stable@vger.kernel.org
-Subject: [PATCH v1 1/4] mpi3mr: Fix race between config read submit and interrupt completion
-Date: Sat, 28 Jun 2025 01:15:36 +0530
-Message-Id: <20250627194539.48851-2-ranjan.kumar@broadcom.com>
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 2/4] mpi3mr: Drop unnecessary volatile from __iomem pointers
+Date: Sat, 28 Jun 2025 01:15:37 +0530
+Message-Id: <20250627194539.48851-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20250627194539.48851-1-ranjan.kumar@broadcom.com>
 References: <20250627194539.48851-1-ranjan.kumar@broadcom.com>
@@ -80,35 +79,49 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The "is_waiting" flag was updated after calling complete(), which could
-lead to a race where the waiting thread wakes up before the flag is
-cleared, may cause a missed wakeup or stale state check.
+The volatile qualifier is redundant for __iomem pointers.
 
-Reorder the operations to update "is_waiting" before signaling completion
-to ensure consistent state.
+Cleaned up usage in mpi3mr_writeq() and sysif_regs pointer as
+per Upstream compliance.
 
-Fixes: 824a156633df ("scsi: mpi3mr: Base driver code")
-Cc: stable@vger.kernel.org
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/mpi3mr/mpi3mr.h    | 2 +-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 4 ++--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
 
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 9bbc7cb98ca3..bf272dd69d23 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -1185,7 +1185,7 @@ struct mpi3mr_ioc {
+ 	char name[MPI3MR_NAME_LENGTH];
+ 	char driver_name[MPI3MR_NAME_LENGTH];
+ 
+-	volatile struct mpi3_sysif_registers __iomem *sysif_regs;
++	struct mpi3_sysif_registers __iomem *sysif_regs;
+ 	resource_size_t sysif_regs_phys;
+ 	int bars;
+ 	u64 dma_mask;
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 1d7901a8f0e4..0186676698d4 100644
+index 0186676698d4..8976582946a2 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -428,8 +428,8 @@ static void mpi3mr_process_admin_reply_desc(struct mpi3mr_ioc *mrioc,
- 				       MPI3MR_SENSE_BUF_SZ);
- 			}
- 			if (cmdptr->is_waiting) {
--				complete(&cmdptr->done);
- 				cmdptr->is_waiting = 0;
-+				complete(&cmdptr->done);
- 			} else if (cmdptr->callback)
- 				cmdptr->callback(mrioc, cmdptr);
- 		}
+@@ -23,12 +23,12 @@ module_param(poll_queues, int, 0444);
+ MODULE_PARM_DESC(poll_queues, "Number of queues for io_uring poll mode. (Range 1 - 126)");
+ 
+ #if defined(writeq) && defined(CONFIG_64BIT)
+-static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
++static inline void mpi3mr_writeq(__u64 b, void __iomem *addr)
+ {
+ 	writeq(b, addr);
+ }
+ #else
+-static inline void mpi3mr_writeq(__u64 b, volatile void __iomem *addr)
++static inline void mpi3mr_writeq(__u64 b, void __iomem *addr)
+ {
+ 	__u64 data_out = b;
+ 
 -- 
 2.31.1
 
