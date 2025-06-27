@@ -1,98 +1,245 @@
-Received: from mail-ot1-f50.google.com (mail-ot1-f50.google.com [209.85.210.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mta-03.yadro.com (mta-03.yadro.com [89.207.88.253])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9226F2EA735
-	for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 16:28:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0A682D9EDE;
+	Fri, 27 Jun 2025 17:40:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=89.207.88.253
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751041699; cv=none; b=caDIT10q6IEZLtN/QwYmls1WinJHzVdWxDF9k+lowXTCKYsBVy+5zPkbJkYv+SUBIHtSX4qLRM1fJoPhTU7pzGKp77ZF7ESGFNtKSRPAQ3tthRT9+7jyCVOR8s2zh48UNWuBudyfTT24f+RF9ymrHAiFoTb8LHxtVi2sr0cSpMs=
+	t=1751046046; cv=none; b=cW0zehMY4eyZ3UNbMAL3aLPDbfnLN3wnNpU1xabqZt/4frDg6JQbWhFD5dTWlRONwOhgHNiec65tTA5CYjPpDC/kAVG/xAjeHlyZd8E9jXcg0yVaqjgHCxvIDg5o/eQYy3JSTfr8miid3d8pqN8VWtZc8nHy73uV5lKIBU6h3Sw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751041699; c=relaxed/simple;
-	bh=9FA9bMKxVeb5yQVsUVm+jp/IZZQX6CQBPJL+CqLfVAg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=m3nhcWETQIrbNJDL9kFfjoqhQ0/qTiBRbEQ28zb7Q8QyxPlijnhTF+bwuN4QmW01W0WEFHZ+7KTZzGEj7dz6wm4q+KmkgpmJFa8CKqZsYfARJeh7BUFvhoSWhKDgQcvXeFMa+49Q9EVN3lQD/OqAoM+NoY/6Bla7Azy00EgtlEo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=XzXmYOkR; arc=none smtp.client-ip=209.85.210.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1751046046; c=relaxed/simple;
+	bh=mfJOMC6zuDTeKC7rDUKVimWH/CRUl9SO9RHQNj81TZU=;
+	h=Date:From:To:CC:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WkywT3/ptYb7Q9VsT/gr+lj+ImIqMWXPb3WmjeQO2DRkj7Llo7wLfwHuLCsEPBI7ryeGT13hUpZjITUIPZJI5Ip775TuqnVrEsostAjsuUcO+p7DwW8biQqUUZi3mSoR2DQfzgaLJosbMTwpsgbz0DGLv8LS3I7g48tWvikLmrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com; spf=pass smtp.mailfrom=yadro.com; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=W5DHsBJb; dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b=DnBIUW6M; arc=none smtp.client-ip=89.207.88.253
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=yadro.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yadro.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XzXmYOkR"
-Received: by mail-ot1-f50.google.com with SMTP id 46e09a7af769-73ac5680bb0so602609a34.3
-        for <linux-scsi@vger.kernel.org>; Fri, 27 Jun 2025 09:28:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1751041696; x=1751646496; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=9FA9bMKxVeb5yQVsUVm+jp/IZZQX6CQBPJL+CqLfVAg=;
-        b=XzXmYOkRJ409bBDin9CGpXNXJ/Rguok2syKgwL0r1XCkF0tzEEAz2jX1AHHcuDIi+d
-         LeXiRWftzPsqNigFV4oEP5JWkqyiPK/Xro0o8uGqA3/2fegb9dqc+Uq2T/ESbE9o9brF
-         lU8UPeuPu2nT4u1TkGszLmuGqV7KQea/xJW9wsJ3EXTLWGAFpBpIBEJY/fSAzlZR1Elu
-         uUdpjsfI/OMYt0WpiPt19Zm/qlGGPLAU/t880gHT7dwScVPk4XbS3gR7dRib6frY6iWU
-         X6P5sLE3lnjW39LkE+u/EQ6jtfZ0Rr6LevvTbeAZ4+Tw/CtYd9jIJhKOmdMQiMavDOlE
-         NRJw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751041696; x=1751646496;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=9FA9bMKxVeb5yQVsUVm+jp/IZZQX6CQBPJL+CqLfVAg=;
-        b=WHQoyyylhsXg7pjMiIzFHdoE7+2wJJH/iDdwutZ4plVZo/RyOSVV/qiAOMcs2Ctr4d
-         PgRKxiYwZ+qf05bs/0tqAT92vxI9jgistWCCuXY03fIuDvHt3UXEApfYV2b8tf5vS80+
-         OW1MGbnj1OlV8Zq0D4TQZte5mhObnM6OHd+ltYHlL0odcWdLRL37YHK/cJWJ63bewqO4
-         akDZ+uMP7HUAFxbg2Ccc1m1NQPwj4uyzUYvUXkhucbHltJC8ozrfW2PdByuBTSzn4TZL
-         tcWKIWo0QNehNj8T53eCWBojCh0cxGJHg78Tgdc+DPWiVZWijmvTwj1d/8cJsaSnHhy9
-         j+2g==
-X-Forwarded-Encrypted: i=1; AJvYcCVfxFJZaKuXvfCrpjDL9N7gYxL2NASGHAVBH0RvGe6rcTGJYH+chvregj2f+L8pO+A6ppKBR9Mk1P32@vger.kernel.org
-X-Gm-Message-State: AOJu0YwrW12mKdDoU02Kug8kDJfQ9tS2eU9Y+8HG1Flwyw1c06IRv1zh
-	W1cw2gP64vbLxhb2E3YTfRAsgQUfy7d6wyi+qwc7K0arg/7cVcesX85atVECLw8TpZbPDlIDkll
-	F7bz7D045XIe01JQhpTxH3RVrgryPf8QIY+TtsM6GFQ==
-X-Gm-Gg: ASbGncv+5Ou2Ep1IvxO2HYI8zKM1PbASPfgP/y56E9Hw6mDcoIhP7QprYnOQH9Lw2Qx
-	ITzo3C8QvZmKeU62fXL/1nE1RJTNLqDA2PpJzMymofm6h2AFAk781rNZlsnszpJWzhpwKja4Olt
-	xrSDbLHsqvzcFuTPQ4nDjxRJ6TLQ1iDoCdmkYn5b6YEq83
-X-Google-Smtp-Source: AGHT+IHG27gv9karbj1NOogatAO2BrlEvYrLEtmFNeu9XKhGpRsgm/m1RTB+hY9Q08ptcJZaTLUxxE8Xd6aHQ2a8Oic=
-X-Received: by 2002:a05:6871:588a:b0:2d9:45b7:8ffc with SMTP id
- 586e51a60fabf-2efed430597mr2254424fac.3.1751041696545; Fri, 27 Jun 2025
- 09:28:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="W5DHsBJb";
+	dkim=pass (2048-bit key) header.d=yadro.com header.i=@yadro.com header.b="DnBIUW6M"
+Received: from mta-03.yadro.com (localhost [127.0.0.1])
+	by mta-03.yadro.com (Postfix) with ESMTP id 67831E0007;
+	Fri, 27 Jun 2025 20:40:33 +0300 (MSK)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mta-03.yadro.com 67831E0007
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-04;
+	t=1751046033; bh=UdDcVA+mTIznQmx7UexzTv0BETtuUsQx4KRN+coJ2DA=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=W5DHsBJbfdGyeJ7SFXYQGZgdH7wisbzpdI1xQkNSKiLOlDM7meQ/g3qy/AFx3XOzw
+	 DMJgEipTv4rR9bj9KcIS/AudGVZkrlo9AehDXsU70t7a2aJuDxn3LIS9tO7m4b0UGp
+	 5L5nBcIeniH01l7uD0mr4r60886R3j6IqNVJv5xDoTJLN6OAfnYonPamrzurwIbe9S
+	 oeEcyQ3Z5yJpbrz/bGaHXhLK23RNcuJ/J0AeHMsA79KZsH9KX+fdon3/YIBSknWn0i
+	 LDnrH3iGZ3bRS/9rSRMsbLb+UD08N8qFIkQsfZYRGCCeBUivmIG7G2V2qS4Cwvx/ug
+	 s3NJHOH4pYOpw==
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yadro.com; s=mta-03;
+	t=1751046033; bh=UdDcVA+mTIznQmx7UexzTv0BETtuUsQx4KRN+coJ2DA=;
+	h=Date:From:To:Subject:Message-ID:MIME-Version:Content-Type:From;
+	b=DnBIUW6MRp/gqs+mSUzy/4FHqYlzeZX3fpUxbT2CQ0dWftSRqVCxmmUpCHrXRz5Of
+	 VPr0pbVA5L/bpFaDvut1PrcXTmTO37lb+aBq3BL9kYU8sk/Qk3u7XoWQqX7opbYCok
+	 0P6XmMZNSy3WcipqLlGJlS6uvHOjnBF8jft7oemuUqZDT7YTNwUxG9UmB/FSoTNEJy
+	 AHR2JcnFGPOIgEMs2H0SvV489FHMNtpIc76O3wFYXsiEBvl79gStt5RjebQy7wbCqG
+	 KfrVOi2lvFrHfjPXf/fhSbbxe59O0WAN8+LyeruD8ReWsL/uTBGL39r5361v2OxpjD
+	 RN91ChZPrGbWg==
+Received: from T-EXCH-10.corp.yadro.com (T-EXCH-10.corp.yadro.com [172.17.11.60])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by mta-03.yadro.com (Postfix) with ESMTPS;
+	Fri, 27 Jun 2025 20:40:24 +0300 (MSK)
+Received: from T-EXCH-12.corp.yadro.com (172.17.11.143) by
+ T-EXCH-10.corp.yadro.com (172.17.11.60) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1118.9; Fri, 27 Jun 2025 20:40:24 +0300
+Received: from yadro.com (172.17.34.55) by T-EXCH-12.corp.yadro.com
+ (172.17.11.143) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1258.12; Fri, 27 Jun
+ 2025 20:40:23 +0300
+Date: Fri, 27 Jun 2025 20:40:22 +0300
+From: Dmitry Bogdanov <d.bogdanov@yadro.com>
+To: Maurizio Lombardi <mlombard@redhat.com>
+CC: <martin.petersen@oracle.com>, <michael.christie@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <target-devel@vger.kernel.org>,
+	<mlombard@bsdbackstore.eu>
+Subject: Re: [PATCH] target: generate correct string identifiers for PR OUT
+ transport IDs
+Message-ID: <20250627174022.GA19805@yadro.com>
+References: <20250627145229.286252-1-mlombard@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250314-ufs-dma-coherent-v1-0-bdf9f9be2919@linaro.org> <20250314-ufs-dma-coherent-v1-1-bdf9f9be2919@linaro.org>
-In-Reply-To: <20250314-ufs-dma-coherent-v1-1-bdf9f9be2919@linaro.org>
-From: Peter Griffin <peter.griffin@linaro.org>
-Date: Fri, 27 Jun 2025 17:28:05 +0100
-X-Gm-Features: Ac12FXykTIPEyZRenrTTVdLWukedtCGjmkjr6e-4BGSc71M9daw1mwCSL7G-obU
-Message-ID: <CADrjBPqdr1NEd+W4ATJ-6Xi36y8Gi_=81LsFNtY_s2-pBPagFA@mail.gmail.com>
-Subject: Re: [PATCH 1/2] arm64: dts: exynos: gs101: ufs: add dma-coherent property
-To: =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
-	Tudor Ambarus <tudor.ambarus@linaro.org>, Rob Herring <robh@kernel.org>, 
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
-	Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, linux-arm-kernel@lists.infradead.org, 
-	linux-samsung-soc@vger.kernel.org, devicetree@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	kernel-team@android.com, willmcvicker@google.com, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset="us-ascii"
+Content-Disposition: inline
+In-Reply-To: <20250627145229.286252-1-mlombard@redhat.com>
+X-ClientProxiedBy: RTM-EXCH-04.corp.yadro.com (10.34.9.204) To
+ T-EXCH-12.corp.yadro.com (172.17.11.143)
+X-KSMG-AntiPhishing: not scanned, disabled by settings
+X-KSMG-AntiSpam-Interceptor-Info: not scanned
+X-KSMG-AntiSpam-Status: not scanned, disabled by settings
+X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.1.8310, bases: 2025/06/27 16:06:00 #27596505
+X-KSMG-AntiVirus-Status: NotDetected, skipped
+X-KSMG-KATA-Status: Not Scanned
+X-KSMG-LinksScanning: NotDetected, bases: 2025/06/27 16:30:00
+X-KSMG-Message-Action: skipped
+X-KSMG-Rule-ID: 5
 
-Hi Krzysztof,
+On Fri, Jun 27, 2025 at 04:52:29PM +0200, Maurizio Lombardi wrote:
+> 
+> Fix target_parse_pr_out_transport_id() to
+> return a dynamically allocated string representing the
+> transport ID in a standardized, human-readable format
+> (e.g., naa.xxxxxxxx...) for various SCSI protocol types
+> (SAS, FCP, SRP, SBP).
 
-On Fri, 14 Mar 2025 at 15:38, Peter Griffin <peter.griffin@linaro.org> wrote:
+There is no a single standard how to represent TransportId. There are
+several standards for the same port address. But TransportId itself is
+the single standard to represent different port names in binary format.
+So, the most correct solution would be have TransportId for ACLs and
+to match them.
+
+> 
+> Previously, the function returned a pointer to the raw binary buffer.
+> The caller would then compared it to a human-readable string,
+> which obviously always failed.
 >
-> ufs-exynos driver configures the sysreg shareability as
-> cacheable for gs101 so we need to set the dma-coherent
-> property so the descriptors are also allocated cacheable.
->
-> This fixes the UFS stability issues we have seen with
-> the upstream UFS driver on gs101.
->
-> Fixes: 4c65d7054b4c ("arm64: dts: exynos: gs101: Add ufs and ufs-phy dt nodes")
-> Cc: stable@vger.kernel.org
-> Suggested-by: Will McVicker <willmcvicker@google.com>
-> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
+> Now, the function constructs a string using kasprintf()
+> based on the protocol's offset and format:
+> 
+> * SAS, FCP, SBP: 64-bit identifier
+> * SRP: 128-bit identifier
+> * iSCSI: duplicates the iqn string to match the new allocation behavior
+
+The caller compares it with a specifically prepared string buffer by
+fabric module in its own way. And they are not corresponded any
+standard and, that especially important, to your code.
+Mostly that string contains only hex-representation without any prefixes.
+You may grep target_setup_session to check which transport
+generates what a string.
+
+
+There was a patch[1] from my old RFC patchset that addressed that
+issue. It can not be applied to upstream due to dependencies on other
+patches. But a generation of string representation of TransportID is
+correct there.
+You may get it to create a correct fix, or let me create new patch with
+my solution that could be applied to upstream.
+
+[1] https://patchwork.kernel.org/project/target-devel/patch/20220803162857.27770-28-d.bogdanov@yadro.com/
+
+BR,
+ Dmitry
+
+> 
+> Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
 > ---
-
-Friendly ping about this patch :)
-
-Peter
+>  drivers/target/target_core_fabric_lib.c | 22 ++++++++++++++++------
+>  drivers/target/target_core_pr.c         |  7 ++++++-
+>  2 files changed, 22 insertions(+), 7 deletions(-)
+> 
+> diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+> index 43f47e3aa448..a124cf982a4c 100644
+> --- a/drivers/target/target_core_fabric_lib.c
+> +++ b/drivers/target/target_core_fabric_lib.c
+> @@ -390,7 +390,10 @@ int target_get_pr_transport_id(struct se_node_acl *nacl,
+>  const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+>                 char *buf, u32 *out_tid_len, char **port_nexus_ptr)
+>  {
+> -       u32 offset;
+> +       u32 offset = 8;
+> +       u32 len = 8;
+> +       char *prefix;
+> +       char hex[40];
+> 
+>         switch (tpg->proto_id) {
+>         case SCSI_PROTOCOL_SAS:
+> @@ -399,15 +402,21 @@ const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+>                  * for initiator ports using SCSI over SAS Serial SCSI Protocol.
+>                  */
+>                 offset = 4;
+> +               prefix = "naa";
+>                 break;
+> -       case SCSI_PROTOCOL_SBP:
+>         case SCSI_PROTOCOL_SRP:
+> +               prefix = "ib";
+> +               len = 16;
+> +               break;
+>         case SCSI_PROTOCOL_FCP:
+> -               offset = 8;
+> +               prefix = "naa";
+> +               break;
+> +       case SCSI_PROTOCOL_SBP:
+> +               prefix = "eui";
+>                 break;
+>         case SCSI_PROTOCOL_ISCSI:
+> -               return iscsi_parse_pr_out_transport_id(tpg, buf, out_tid_len,
+> -                                       port_nexus_ptr);
+> +               return kstrdup(iscsi_parse_pr_out_transport_id(tpg, buf,
+> +                               out_tid_len, port_nexus_ptr), GFP_KERNEL);
+>         default:
+>                 pr_err("Unknown proto_id: 0x%02x\n", tpg->proto_id);
+>                 return NULL;
+> @@ -415,5 +424,6 @@ const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+> 
+>         *port_nexus_ptr = NULL;
+>         *out_tid_len = 24;
+> -       return buf + offset;
+> +       bin2hex(hex, buf + offset, len);
+> +       return kasprintf(GFP_KERNEL, "%s.%s", prefix, hex);
+>  }
+> diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+> index 70905805cb17..b9b3adc1657d 100644
+> --- a/drivers/target/target_core_pr.c
+> +++ b/drivers/target/target_core_pr.c
+> @@ -1571,6 +1571,7 @@ core_scsi3_decode_spec_i_port(
+>                         dest_rtpi = tmp_lun->lun_tpg->tpg_rtpi;
+> 
+>                         iport_ptr = NULL;
+> +                       kfree(i_str);
+>                         i_str = target_parse_pr_out_transport_id(tmp_tpg,
+>                                         ptr, &tid_len, &iport_ptr);
+>                         if (!i_str)
+> @@ -1808,6 +1809,7 @@ core_scsi3_decode_spec_i_port(
+>                 core_scsi3_tpg_undepend_item(dest_tpg);
+>         }
+> 
+> +       kfree(i_str);
+>         return 0;
+>  out_unmap:
+>         transport_kunmap_data_sg(cmd);
+> @@ -1852,6 +1854,7 @@ core_scsi3_decode_spec_i_port(
+>                 core_scsi3_nodeacl_undepend_item(dest_node_acl);
+>                 core_scsi3_tpg_undepend_item(dest_tpg);
+>         }
+> +       kfree(i_str);
+>         return ret;
+>  }
+> 
+> @@ -3153,7 +3156,7 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
+>         struct t10_pr_registration *pr_reg, *pr_res_holder, *dest_pr_reg;
+>         struct t10_reservation *pr_tmpl = &dev->t10_pr;
+>         unsigned char *buf;
+> -       const unsigned char *initiator_str;
+> +       const unsigned char *initiator_str = NULL;
+>         char *iport_ptr = NULL, i_buf[PR_REG_ISID_ID_LEN] = { };
+>         u32 tid_len, tmp_tid_len;
+>         int new_reg = 0, type, scope, matching_iname;
+> @@ -3526,6 +3529,7 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
+>         core_scsi3_update_and_write_aptpl(cmd->se_dev, aptpl);
+> 
+>         core_scsi3_put_pr_reg(dest_pr_reg);
+> +       kfree(initiator_str);
+>         return 0;
+>  out:
+>         if (buf)
+> @@ -3538,6 +3542,7 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
+> 
+>  out_put_pr_reg:
+>         core_scsi3_put_pr_reg(pr_reg);
+> +       kfree(initiator_str);
+>         return ret;
+>  }
+> 
+> --
+> 2.47.1
+> 
+> 
