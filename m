@@ -1,46 +1,46 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC9042E8DF0;
-	Mon, 30 Jun 2025 22:30:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 702172E54D7;
+	Mon, 30 Jun 2025 22:30:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751322653; cv=none; b=ZHKEr/YtwIslmy/I81qyEp9MzBQqupIberZDtWK0D8iE3A09geU13UeEnVRFw+/u+V85+6HL/OpVlsxo0xHmAzEAonmuH58zs4vs+TImXtsrV7kEKLRtNuebanjJLnVWPmISbq249ZOPR9fpqfTh3/KN8jkBWq8LyZrWUAdWdTo=
+	t=1751322658; cv=none; b=WNYK6kupxJeR+HYrq8msN9HD6n2sDymxPRAsi8ahwDxF1XWUx+avFy3xWIhrmHde85urH4F7WawDvzUnu5T30h0gA2BZIQAGnsHFX53L49qC9FxVDE7dz3vxm5EHCWPgqp8qKDLOE1eSobJUZ/GRjdbgGbwm6h42xTuw7ppK2so=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751322653; c=relaxed/simple;
-	bh=KdX9cLUfgM6frLm7SJng/TUBkQvhSUKjfg9Y9AnuFWo=;
+	s=arc-20240116; t=1751322658; c=relaxed/simple;
+	bh=bQ6DF9mFPNFARqHJiYSu0fIJSEWxEI6wVX8lTLQAjj8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UkGUud1P2NkmscXcbrm8f8gX3KWW09MGH3kgMzEO4jIninaGrxD3rCUQ9kBOAAv8YBs/AUwSAOPF+PwXuLOJzKSsIzj++LS9U9SJkJRy4TJPhAmyUMx97pozzwFcyEReVyUEVic3gEw3eNmobn8VyQr5UGiHHT6V1Op1HEIgXPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HZ9FQUO3; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=mW8cGVCq33PINzF/xUsIaHhF3cWZfkvPnkY4TQkNlIukPbQ4VgbZwePfzDQHgAtRCkHRX/uK1XCjKO/d1OzU5DbhTu9mkzkcP00O1ZNNmItypuiI+Tkw2VA31Kd7lJVFLa2UPoD44uJ5wrkdm4LC3BMfpF/qbR3YU96WjE6VDiA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xTBroTaj; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HZ9FQUO3"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xTBroTaj"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bWLTl03N8zm0bfy;
-	Mon, 30 Jun 2025 22:30:51 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bWLTq3GjCzm0c30;
+	Mon, 30 Jun 2025 22:30:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1751322649; x=1753914650; bh=oFNxZ
-	UCBGIQmIDYLY5q6YPBaXjSdbY5bb2a2ffrdkVI=; b=HZ9FQUO3DKf1Jtp392MjH
-	P/DMEm1PC8qjqeGXBVHC01j/SsCdiT029LuQYyv/NEryn9wQsnGzfhBSI4ogxzNc
-	nbsptYTySQzR72MwmyB7AA9wz/rpyeELpffNsRp5R8unJ8MYaU3f20PejUslyD1I
-	RhAhxMPqy7q/9ulc294uaBQvT6faFWRpOWOf3IzYCL0HQfdLmjpGvDmWIkuB21xF
-	G5IxzNgoPEXoaQZJKfSFbPFQhBZuLoLmKBslvOaHYTY6HvjytOdLt+0J83uObKSY
-	5Z4jf/I22vgeL8UkLNUMKz2JtXMxNn8H8e1bvjl8IGOIV5NZV426E13He3x2nbEa
-	Q==
+	:received:received; s=mr01; t=1751322653; x=1753914654; bh=6DOoN
+	D912JS8bXiblfqv5mE74PppnguEe54JacmLRQE=; b=xTBroTajWH4/mNJS/Qbxh
+	wypOMqOr9XSFjDT2ESJ/GmIKmB2tSADhPsGhE3/e8PHh1FQ4YvIVjZBO7oBZYR48
+	aQgNO6S1+bPQ+SmBoPvS8h4MW00eY/1246mNizs2wFXsDHqWjAL+0DEwNmSCDIJN
+	1/hNDlT+KpR92tvroPdKO9kQkv2dDttfE1mplxbnZzADtxCVLuDzW633skQQEQM/
+	IHZicv4nD7u0lo6XWqbZ63rlvu30A9jeCJqwdB66PhzZo3q116XUXnBOUbBvJ5lH
+	5fPVTdNQmhp8cKXGC3gK+0WALFfUDpfGYV4pn9JDfk48wg5QaZd3wxlOrLw39cWW
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id oIhyI1asSFXs; Mon, 30 Jun 2025 22:30:49 +0000 (UTC)
+ id qa1BN162-oRX; Mon, 30 Jun 2025 22:30:53 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bWLTf01DXzm0c30;
-	Mon, 30 Jun 2025 22:30:45 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bWLTk2nGqzm0bfr;
+	Mon, 30 Jun 2025 22:30:49 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -48,9 +48,9 @@ Cc: linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v19 04/11] blk-zoned: Add an argument to blk_zone_plug_bio()
-Date: Mon, 30 Jun 2025 15:29:56 -0700
-Message-ID: <20250630223003.2642594-5-bvanassche@acm.org>
+Subject: [PATCH v19 05/11] blk-zoned: Support pipelining of zoned writes
+Date: Mon, 30 Jun 2025 15:29:57 -0700
+Message-ID: <20250630223003.2642594-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.50.0.727.gbf7dc18ff4-goog
 In-Reply-To: <20250630223003.2642594-1-bvanassche@acm.org>
 References: <20250630223003.2642594-1-bvanassche@acm.org>
@@ -62,113 +62,157 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Zoned writes may be submitted from multiple CPUs as long as these are
-serialized per zone. Prepare for preserving the order of pipelined zoned
-writes per zone by adding the 'from_cpu` argument to blk_zone_plug_bio().
-This argument will be used to preserve the write order per zone by
-submitting all zoned writes per zone from the same CPU as long as any
-zoned writes are pending for that zone.
+Support pipelining of zoned writes if the block driver preserves the writ=
+e
+order per hardware queue. Track per zone to which software queue writes
+have been queued. If zoned writes are pipelined, submit new writes to the
+same software queue as the writes that are already in progress. This
+prevents reordering by submitting requests for the same zone to different
+software or hardware queues.
 
 Cc: Christoph Hellwig <hch@lst.de>
 Cc: Damien Le Moal <dlemoal@kernel.org>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-mq.c         | 7 +++----
- block/blk-zoned.c      | 4 +++-
- drivers/md/dm.c        | 5 ++---
- include/linux/blkdev.h | 5 +++--
- 4 files changed, 11 insertions(+), 10 deletions(-)
+ block/blk-mq.c    |  4 ++--
+ block/blk-zoned.c | 30 +++++++++++++++++++++++-------
+ 2 files changed, 25 insertions(+), 9 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 7935f6adda71..34304b6ac29e 100644
+index 34304b6ac29e..c8734539606f 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -3195,10 +3195,9 @@ void blk_mq_submit_bio(struct bio *bio)
- 	if (blk_mq_attempt_bio_merge(q, bio, nr_segs))
- 		goto queue_exit;
-=20
--	if (bio_needs_zone_write_plugging(bio)) {
--		if (blk_zone_plug_bio(bio, nr_segs))
--			goto queue_exit;
--	}
-+	if (bio_needs_zone_write_plugging(bio) &&
-+	    blk_zone_plug_bio(bio, nr_segs, &from_cpu))
-+		goto queue_exit;
-=20
- new_request:
- 	if (rq && (from_cpu =3D=3D -1 || from_cpu =3D=3D rq->mq_ctx->cpu)) {
+@@ -3150,8 +3150,8 @@ void blk_mq_submit_bio(struct bio *bio)
+ 	/*
+ 	 * A BIO that was released from a zone write plug has already been
+ 	 * through the preparation in this function, already holds a reference
+-	 * on the queue usage counter, and is the only write BIO in-flight for
+-	 * the target zone. Go straight to preparing a request for it.
++	 * on the queue usage counter. Go straight to preparing a request for
++	 * it.
+ 	 */
+ 	if (bio_zone_write_plugging(bio)) {
+ 		nr_segs =3D bio->__bi_nr_segments;
 diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index efe71b1a1da1..91a59bf54547 100644
+index 91a59bf54547..04a852058155 100644
 --- a/block/blk-zoned.c
 +++ b/block/blk-zoned.c
-@@ -1104,6 +1104,8 @@ static void blk_zone_wplug_handle_native_zone_appen=
-d(struct bio *bio)
-  * blk_zone_plug_bio - Handle a zone write BIO with zone write plugging
-  * @bio: The BIO being submitted
-  * @nr_segs: The number of physical segments of @bio
-+ * @from_cpu: [out] CPU of the software queue to which the bio should be
-+ *	queued
-  *
-  * Handle write, write zeroes and zone append operations requiring emula=
-tion
-  * using zone write plugging.
-@@ -1112,7 +1114,7 @@ static void blk_zone_wplug_handle_native_zone_appen=
-d(struct bio *bio)
-  * write plug. Otherwise, return false to let the submission path proces=
-s
-  * @bio normally.
-  */
--bool blk_zone_plug_bio(struct bio *bio, unsigned int nr_segs)
-+bool blk_zone_plug_bio(struct bio *bio, unsigned int nr_segs, int *from_=
-cpu)
- {
- 	struct block_device *bdev =3D bio->bi_bdev;
-=20
-diff --git a/drivers/md/dm.c b/drivers/md/dm.c
-index ca889328fdfe..76c5eada7d03 100644
---- a/drivers/md/dm.c
-+++ b/drivers/md/dm.c
-@@ -1814,9 +1814,8 @@ static inline bool dm_zone_bio_needs_split(struct m=
-apped_device *md,
-=20
- static inline bool dm_zone_plug_bio(struct mapped_device *md, struct bio=
- *bio)
- {
--	if (!bio_needs_zone_write_plugging(bio))
--		return false;
--	return blk_zone_plug_bio(bio, 0);
-+	return bio_needs_zone_write_plugging(bio) &&
-+		blk_zone_plug_bio(bio, 0, NULL);
+@@ -51,6 +51,8 @@ static const char *const zone_cond_name[] =3D {
+  * @zone_no: The number of the zone the plug is managing.
+  * @wp_offset: The zone write pointer location relative to the start of =
+the zone
+  *             as a number of 512B sectors.
++ * @from_cpu: Software queue to submit writes from for drivers that pres=
+erve
++ *	the write order.
+  * @bio_list: The list of BIOs that are currently plugged.
+  * @bio_work: Work struct to handle issuing of plugged BIOs
+  * @rcu_head: RCU head to free zone write plugs with an RCU grace period=
+.
+@@ -63,6 +65,7 @@ struct blk_zone_wplug {
+ 	unsigned int		flags;
+ 	unsigned int		zone_no;
+ 	unsigned int		wp_offset;
++	int			from_cpu;
+ 	struct bio_list		bio_list;
+ 	struct work_struct	bio_work;
+ 	struct rcu_head		rcu_head;
+@@ -72,8 +75,7 @@ struct blk_zone_wplug {
+ /*
+  * Zone write plug flags bits:
+  *  - BLK_ZONE_WPLUG_PLUGGED: Indicates that the zone write plug is plug=
+ged,
+- *    that is, that write BIOs are being throttled due to a write BIO al=
+ready
+- *    being executed or the zone write plug bio list is not empty.
++ *    that is, that write BIOs are being throttled.
+  *  - BLK_ZONE_WPLUG_NEED_WP_UPDATE: Indicates that we lost track of a z=
+one
+  *    write pointer offset and need to update it.
+  *  - BLK_ZONE_WPLUG_UNHASHED: Indicates that the zone write plug was re=
+moved
+@@ -568,6 +570,7 @@ static struct blk_zone_wplug *disk_get_and_lock_zone_=
+wplug(struct gendisk *disk,
+ 	zwplug->flags =3D 0;
+ 	zwplug->zone_no =3D zno;
+ 	zwplug->wp_offset =3D bdev_offset_from_zone_start(disk->part0, sector);
++	zwplug->from_cpu =3D -1;
+ 	bio_list_init(&zwplug->bio_list);
+ 	INIT_WORK(&zwplug->bio_work, blk_zone_wplug_bio_work);
+ 	zwplug->disk =3D disk;
+@@ -983,7 +986,8 @@ static bool blk_zone_wplug_prepare_bio(struct blk_zon=
+e_wplug *zwplug,
+ 	return true;
  }
 =20
- static blk_status_t __send_zone_reset_all_emulated(struct clone_info *ci=
-,
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index aa1990d94130..46fe8d97b31f 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -891,7 +891,7 @@ static inline bool bio_needs_zone_write_plugging(stru=
-ct bio *bio)
+-static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int nr=
+_segs)
++static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int nr=
+_segs,
++					int *from_cpu)
+ {
+ 	struct gendisk *disk =3D bio->bi_bdev->bd_disk;
+ 	sector_t sector =3D bio->bi_iter.bi_sector;
+@@ -1045,7 +1049,13 @@ static bool blk_zone_wplug_handle_write(struct bio=
+ *bio, unsigned int nr_segs)
+ 		return true;
  	}
+=20
+-	zwplug->flags |=3D BLK_ZONE_WPLUG_PLUGGED;
++	if (disk->queue->limits.driver_preserves_write_order) {
++		if (zwplug->from_cpu < 0)
++			zwplug->from_cpu =3D raw_smp_processor_id();
++		*from_cpu =3D zwplug->from_cpu;
++	} else {
++		zwplug->flags |=3D BLK_ZONE_WPLUG_PLUGGED;
++	}
+=20
+ 	spin_unlock_irqrestore(&zwplug->lock, flags);
+=20
+@@ -1147,7 +1157,7 @@ bool blk_zone_plug_bio(struct bio *bio, unsigned in=
+t nr_segs, int *from_cpu)
+ 		fallthrough;
+ 	case REQ_OP_WRITE:
+ 	case REQ_OP_WRITE_ZEROES:
+-		return blk_zone_wplug_handle_write(bio, nr_segs);
++		return blk_zone_wplug_handle_write(bio, nr_segs, from_cpu);
+ 	case REQ_OP_ZONE_RESET:
+ 		return blk_zone_wplug_handle_reset_or_finish(bio, 0);
+ 	case REQ_OP_ZONE_FINISH:
+@@ -1179,6 +1189,9 @@ static void disk_zone_wplug_unplug_bio(struct gendi=
+sk *disk,
+=20
+ 	zwplug->flags &=3D ~BLK_ZONE_WPLUG_PLUGGED;
+=20
++	if (refcount_read(&zwplug->ref) =3D=3D 2)
++		zwplug->from_cpu =3D -1;
++
+ 	/*
+ 	 * If the zone is full (it was fully written or finished, or empty
+ 	 * (it was reset), remove its zone write plug from the hash table.
+@@ -1830,6 +1843,7 @@ static void queue_zone_wplug_show(struct blk_zone_w=
+plug *zwplug,
+ 	unsigned int zwp_zone_no, zwp_ref;
+ 	unsigned int zwp_bio_list_size;
+ 	unsigned long flags;
++	int from_cpu;
+=20
+ 	spin_lock_irqsave(&zwplug->lock, flags);
+ 	zwp_zone_no =3D zwplug->zone_no;
+@@ -1837,10 +1851,12 @@ static void queue_zone_wplug_show(struct blk_zone=
+_wplug *zwplug,
+ 	zwp_ref =3D refcount_read(&zwplug->ref);
+ 	zwp_wp_offset =3D zwplug->wp_offset;
+ 	zwp_bio_list_size =3D bio_list_size(&zwplug->bio_list);
++	from_cpu =3D zwplug->from_cpu;
+ 	spin_unlock_irqrestore(&zwplug->lock, flags);
+=20
+-	seq_printf(m, "%u 0x%x %u %u %u\n", zwp_zone_no, zwp_flags, zwp_ref,
+-		   zwp_wp_offset, zwp_bio_list_size);
++	seq_printf(m, "zone_no %u flags 0x%x ref %u wp_offset %u bio_list_size =
+%u from_cpu %d\n",
++		   zwp_zone_no, zwp_flags, zwp_ref, zwp_wp_offset,
++		   zwp_bio_list_size, from_cpu);
  }
 =20
--bool blk_zone_plug_bio(struct bio *bio, unsigned int nr_segs);
-+bool blk_zone_plug_bio(struct bio *bio, unsigned int nr_segs, int *from_=
-cpu);
-=20
- /**
-  * disk_zone_capacity - returns the zone capacity of zone containing @se=
-ctor
-@@ -926,7 +926,8 @@ static inline bool bio_needs_zone_write_plugging(stru=
-ct bio *bio)
- 	return false;
- }
-=20
--static inline bool blk_zone_plug_bio(struct bio *bio, unsigned int nr_se=
-gs)
-+static inline bool blk_zone_plug_bio(struct bio *bio, unsigned int nr_se=
-gs,
-+				     int *from_cpu)
- {
- 	return false;
- }
+ int queue_zone_wplugs_show(void *data, struct seq_file *m)
