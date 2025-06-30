@@ -1,130 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C72B2F4A;
-	Mon, 30 Jun 2025 06:01:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F172D1F5434
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Jun 2025 06:29:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751263273; cv=none; b=dxExg7EEAWGDWvSHNjiV6vTKccFzEYb+co9XEZDFxa2vcGUajwo4zujeqksi3IsWmMkhO0z1dN1uj07ubQlX39vc2VpeXoZkInHc5rxruPl2kjxgIMMQIKeLS7ANqIO7QPRJ+8Va5ScmoDX5BFJUBho7h3epFpX2QRRILrRq/4U=
+	t=1751264999; cv=none; b=eKR6Ei73ZpWEpiRbMihTEauz91kv/96HMhcHZ9um4yoEYQkuaflyTjXX+f+t2WLiVjtIk3dDM3A4M5sgoXE4nCnoNkVDoHkpBFXPu9HMzFuJVwUzhLxvmWNPNXvVwh/HxWxfFx4B5O/otjwYC3U5cghtGZckD1PYvePU2AgDtbw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751263273; c=relaxed/simple;
-	bh=v5/m+SptX3o0mtNDldvgpFmmeUsduy78ctRV5gEn5gI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=awiTzPQ5s+HjV805WPnS33Pc8vNHHgywH/Ai7S4W4+9jvL0yNhhDeSIMg0Nan5VGdR1NnBxYd16Bvrf9fGB4lSaJq0a9AnYPCXVOIhU78bG4LxizNzxsDfO04A2jzIsLsJdpQxAlh4Fi2b0jhrDIN7bg2IuOgA5voklbrWUyk+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CXOpV5Ym; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751264999; c=relaxed/simple;
+	bh=Ne94kVTsvLLZTJtik7jY1bcgtT6q57FsE7blIMe63gE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=P3dfJRupSQ5yTfBzFR2TCzH1STGy7Y6Kz6hdcWaA76HXHOdP3Gbhu4PvFXBz7jOdoBLvH+Bu87456Ak7kKph02UaxAi83yGEZPIxCYDBc8emyDVf+I2ghW5wW9uuXr0dEeV5B+jyGUH+bIIbLi4Vc2zOVN/5F+ukn/0HMNozg88=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gnlWZzxR; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=luRU9Bn8; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=gnlWZzxR; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=luRU9Bn8; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CXOpV5Ym"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9AB84C4CEE3;
-	Mon, 30 Jun 2025 06:01:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751263273;
-	bh=v5/m+SptX3o0mtNDldvgpFmmeUsduy78ctRV5gEn5gI=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=CXOpV5YmwRciSLOSQwnJlXJ/stw5SCA4NcsEyMpcmu/Zyp1vYNKkbw2BojHRNlpW2
-	 cjdxkq9dt28NXYdWkJ4f2ocbiPnrZ6CH/TKDy7lMAHtXDwtL6wP+7SwPK3rrahTJ84
-	 tnLDMI3zozG2vgUVE0gt2lnWGG/76I/D1XqrmgTf0uyp6HSYqtX8BqX8rS+v06HFJX
-	 +vjhKoobIBDX2iqc7hhbIYuXMy6xRTcKTwuoaomSnFeYxGSKyNMKObxem8HplpDkY5
-	 BBlqipu2TJNIKT6o/jTC5gbA4B9zR0fh3bc/Ist0Nhxrl8dMahv4TsagEWqtXr/s3U
-	 c5k7DDY931+Ww==
-Message-ID: <c6c90a4b-b8d2-45d1-928a-464281ce7b37@kernel.org>
-Date: Mon, 30 Jun 2025 08:01:04 +0200
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gnlWZzxR";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="luRU9Bn8";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="gnlWZzxR";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="luRU9Bn8"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 2386E2115F;
+	Mon, 30 Jun 2025 06:29:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1751264996; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=O4a8monR3tF8KOIGOp3AbckiUTMIFvbQ7an8p9i9+Zs=;
+	b=gnlWZzxRYsR9snuPxctWbr4YxmPgmEHuiFM7oI2VvnZYQ2NDI8leSkqPR+O/VNhaC43iTL
+	uZLbXaHvhxJOAaAK/Hvo8zTSrNypTJq53WbOPN6EOiLmYnkuAZJTGNjNBZftvZByYKHUG4
+	W7v28N0T2tx/5YqdNoqSDIBovRo9xSg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1751264996;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=O4a8monR3tF8KOIGOp3AbckiUTMIFvbQ7an8p9i9+Zs=;
+	b=luRU9Bn8IXGPA2rgPefjUqeEkRRlTkBo8DkYqMIVOXJbPMKyFkCvE/t2ZvUHKguJiZUWG0
+	lIpUEZ9B4M3BEZDQ==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1751264996; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=O4a8monR3tF8KOIGOp3AbckiUTMIFvbQ7an8p9i9+Zs=;
+	b=gnlWZzxRYsR9snuPxctWbr4YxmPgmEHuiFM7oI2VvnZYQ2NDI8leSkqPR+O/VNhaC43iTL
+	uZLbXaHvhxJOAaAK/Hvo8zTSrNypTJq53WbOPN6EOiLmYnkuAZJTGNjNBZftvZByYKHUG4
+	W7v28N0T2tx/5YqdNoqSDIBovRo9xSg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1751264996;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=O4a8monR3tF8KOIGOp3AbckiUTMIFvbQ7an8p9i9+Zs=;
+	b=luRU9Bn8IXGPA2rgPefjUqeEkRRlTkBo8DkYqMIVOXJbPMKyFkCvE/t2ZvUHKguJiZUWG0
+	lIpUEZ9B4M3BEZDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id F14F213A6E;
+	Mon, 30 Jun 2025 06:29:55 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id FeVQOOMuYmj4VwAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Mon, 30 Jun 2025 06:29:55 +0000
+Date: Mon, 30 Jun 2025 08:29:55 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@lst.de>, Keith Busch <kbusch@kernel.org>, 
+	Sagi Grimberg <sagi@grimberg.me>, "Michael S. Tsirkin" <mst@redhat.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Thomas Gleixner <tglx@linutronix.de>, 
+	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
+	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>, 
+	Frederic Weisbecker <frederic@kernel.org>, Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, 
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com, 
+	linux-scsi@vger.kernel.org, storagedev@microchip.com, virtualization@lists.linux.dev, 
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH 0/5] blk: introduce block layer helpers to calculate num
+ of queues
+Message-ID: <38e19482-e07d-4130-88d2-fc0a4aa5ddc8@flourine.local>
+References: <20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] arm64: dts: exynos: gs101: ufs: add dma-coherent
- property
-To: Peter Griffin <peter.griffin@linaro.org>,
- =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>,
- Tudor Ambarus <tudor.ambarus@linaro.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>,
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- linux-arm-kernel@lists.infradead.org, linux-samsung-soc@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, kernel-team@android.com,
- willmcvicker@google.com, stable@vger.kernel.org
-References: <20250314-ufs-dma-coherent-v1-0-bdf9f9be2919@linaro.org>
- <20250314-ufs-dma-coherent-v1-1-bdf9f9be2919@linaro.org>
- <CADrjBPqdr1NEd+W4ATJ-6Xi36y8Gi_=81LsFNtY_s2-pBPagFA@mail.gmail.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <CADrjBPqdr1NEd+W4ATJ-6Xi36y8Gi_=81LsFNtY_s2-pBPagFA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org>
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[22];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	TO_DN_SOME(0.00)[]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-On 27/06/2025 18:28, Peter Griffin wrote:
-> Hi Krzysztof,
+Hi Jens,
+
+On Tue, Jun 17, 2025 at 03:43:22PM +0200, Daniel Wagner wrote:
+> I am still working on the change request for the "blk: honor isolcpus
+> configuration" series [1]. Teaching group_cpus_evenly to use the
+> housekeeping mask depending on the context is not a trivial change.
 > 
-> On Fri, 14 Mar 2025 at 15:38, Peter Griffin <peter.griffin@linaro.org> wrote:
->>
->> ufs-exynos driver configures the sysreg shareability as
->> cacheable for gs101 so we need to set the dma-coherent
->> property so the descriptors are also allocated cacheable.
->>
->> This fixes the UFS stability issues we have seen with
->> the upstream UFS driver on gs101.
->>
->> Fixes: 4c65d7054b4c ("arm64: dts: exynos: gs101: Add ufs and ufs-phy dt nodes")
->> Cc: stable@vger.kernel.org
->> Suggested-by: Will McVicker <willmcvicker@google.com>
->> Signed-off-by: Peter Griffin <peter.griffin@linaro.org>
->> ---
+> The first part of the series has already been reviewed and doesn't
+> contain any controversial changes, so let's get them processed
+> independely.
 > 
-> Friendly ping about this patch :)
+> [1] https://patch.msgid.link/20250424-isolcpus-io-queues-v6-0-9a53a870ca1f@kernel.org
 
-Thanks, I dropped it from my queue based on comments on the bindings
-patch, but that was too hasty.
+Would you mind to route this series via your tree? There are changes in
+several different trees though all the patches have been acked/reviewed
+by the corresponding maintainers. Would be great to get some weeks in
+'next' so that this series gets some more testing.
 
-I applied it now.
-
-Best regards,
-Krzysztof
+Thanks a lot,
+Daniel
