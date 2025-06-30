@@ -1,47 +1,47 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1682245014
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Jun 2025 09:08:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0183024293C
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Jun 2025 09:08:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751274535; cv=none; b=jiQ2IzqxoQPeNu/u6zC/DwAv9W8O6vkZ2Gy73yiCQFSyCWo4/KDooaJ9u6fmb/tv6G6auXESLgRUbQOdTwdjjE96HbYeiihiUyOuEiMTeRYQmcFHnGIZHGLAEvj4dAwZ236VxvJRP6BSeJBVRM/J8Pk7Tf1baWCesnke4mk03eI=
+	t=1751274542; cv=none; b=rgbtwxv0LTCda9Xd/pC1Bs9XiVPAErZrZyixWjcVsGmxJEM8zQTjbhMnLFWLSLzKSYicedGxhlk4Kr1NKnfICW/wNjMu6jgQGvkU3nONFj31SlcxkRMYk7uewkGfeNPPAl6HwYa9sQ1mSMddTxaD9QP8KXDhTS6wfrGsNt1bdGI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751274535; c=relaxed/simple;
-	bh=+bDD4bo8jHBZhJOAnTwCEmCgSbQQs8+A8b9cK7yOiws=;
+	s=arc-20240116; t=1751274542; c=relaxed/simple;
+	bh=SGgI+2t8QSfEtCh+EmiXkpTtLijUeJGowIY2TYU10Ik=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=mqddtB5EIwnWZyc6JfiNgsYUmjEVeRnj51ajmSuNtO/VzU7kwCehN67ZPMcMAEO4QZKnDaIx2G9nUDfF+CWla0T3FxA7ZytrVuWuo6jGh6SkoblbQLswJFkgaXF/b0EY9rrrHYgSueU/9tKJXgWNqFVLFXSBIaWViWO4yF3tuyo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=kKCraec8; arc=none smtp.client-ip=203.254.224.34
+	 Content-Type:References; b=BXpe/x6loFtnd8E6Ynv2vLhCW09LRh01rV8Oj6xWKKlEiVPS/M+EXhuD3UaYdslMcuwNRJP4T0TCPeWfzLZf7M42PbxqpsW6abnI6piTmVdMYhZ6QolOZhrLIgQK7SywMzreVc2qoqLphbaAqatOSukUpsdUy+vtWUlAnLAzqbg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=G1NXGnmv; arc=none smtp.client-ip=203.254.224.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="kKCraec8"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250630090846epoutp04ff3da70566a5e13b9ac56c93b5079e52~NxucakioC2313223132epoutp04a
-	for <linux-scsi@vger.kernel.org>; Mon, 30 Jun 2025 09:08:46 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250630090846epoutp04ff3da70566a5e13b9ac56c93b5079e52~NxucakioC2313223132epoutp04a
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="G1NXGnmv"
+Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250630090858epoutp0398f77855710c954c63f3957eedece9c8~Nxunnjy0O1562615626epoutp03c
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Jun 2025 09:08:58 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250630090858epoutp0398f77855710c954c63f3957eedece9c8~Nxunnjy0O1562615626epoutp03c
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1751274526;
-	bh=9bSeSta7JLOrglF/W6spICiV7ZNVu/Jzv52Edv9Hx9Q=;
+	s=mail20170921; t=1751274538;
+	bh=KuP4KAiQsKpw4mqMpH1zHHPSC2k3DoFrHQQ6pz0kICU=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=kKCraec83wMkpCK39DwmvJ8BUQfDIR2Ygzqq7SNRF1LQbIVyyu5J38Kj3EtNsHDUg
-	 +OqYGJ8BIs5wf3pYHUNhAxsLfiufkoX4w72D72ExwA12xZGRQjfcum3tJrKrpHOFoQ
-	 J9dAWgyD650+/gVVXkUdoUazvoXKytWLyuKqoTQ8=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	b=G1NXGnmvvPfIIUuAdxOlwc0KXheU1GyCIaqWk+PZbT7ahTGC9j8S1V9AWEujWfLFF
+	 UWR2xUuquPn1MdTKM+qrcwyYhtxZSJuR+izRA+DaUjgb2GhJUgOJU/PEGthO5F9m2N
+	 Y+7Tz2BcBvspcczwKrX1Q9/HCX1BvmBqkRc131jA=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
 	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20250630090845epcas5p4b34cd3c5e0cf6e9ad22adf9384ae27ca~Nxub6vGk20739107391epcas5p4B;
-	Mon, 30 Jun 2025 09:08:45 +0000 (GMT)
+	20250630090857epcas5p4cc423d6634783953db3ff103947b4232~NxunJau9j2849428494epcas5p4b;
+	Mon, 30 Jun 2025 09:08:57 +0000 (GMT)
 Received: from epcas5p4.samsung.com (unknown [182.195.38.182]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4bW0hC4Kg2z6B9mH; Mon, 30 Jun
-	2025 09:08:43 +0000 (GMT)
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4bW0hS0Cp3z6B9m8; Mon, 30 Jun
+	2025 09:08:56 +0000 (GMT)
 Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250630090608epcas5p192ace2db81d6cc04854919225464444c~NxsKEWCEZ0151501515epcas5p1x;
-	Mon, 30 Jun 2025 09:06:08 +0000 (GMT)
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250630090616epcas5p2a9ca118ca83586172d69213e22b635a1~NxsRQh7E41144511445epcas5p2m;
+	Mon, 30 Jun 2025 09:06:16 +0000 (GMT)
 Received: from localhost.localdomain (unknown [107.99.41.245]) by
 	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20250630090606epsmtip2c999573ce0bc298f997f181b31b42c1c~NxsHyoLz41134211342epsmtip2b;
-	Mon, 30 Jun 2025 09:06:06 +0000 (GMT)
+	20250630090614epsmtip2f8167ee603d818ac154ac73d76a49336~NxsPKrF8q1134211342epsmtip2j;
+	Mon, 30 Jun 2025 09:06:14 +0000 (GMT)
 From: Anuj Gupta <anuj20.g@samsung.com>
 To: vincent.fu@samsung.com, jack@suse.cz, anuj1072538@gmail.com,
 	axboe@kernel.dk, viro@zeniv.linux.org.uk, brauner@kernel.org,
@@ -50,11 +50,11 @@ To: vincent.fu@samsung.com, jack@suse.cz, anuj1072538@gmail.com,
 Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
 	joshi.k@samsung.com, linux-nvme@lists.infradead.org,
 	linux-scsi@vger.kernel.org, gost.dev@samsung.com, Anuj Gupta
-	<anuj20.g@samsung.com>, Christoph Hellwig <hch@lst.de>
-Subject: [PATCH for-next v5 1/4] block: rename tuple_size field in
- blk_integrity to metadata_size
-Date: Mon, 30 Jun 2025 14:35:45 +0530
-Message-Id: <20250630090548.3317-2-anuj20.g@samsung.com>
+	<anuj20.g@samsung.com>
+Subject: [PATCH for-next v5 4/4] fs: add ioctl to query metadata and
+ protection info capabilities
+Date: Mon, 30 Jun 2025 14:35:48 +0530
+Message-Id: <20250630090548.3317-5-anuj20.g@samsung.com>
 X-Mailer: git-send-email 2.25.1
 In-Reply-To: <20250630090548.3317-1-anuj20.g@samsung.com>
 Precedence: bulk
@@ -64,321 +64,259 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20250630090608epcas5p192ace2db81d6cc04854919225464444c
+X-CMS-MailID: 20250630090616epcas5p2a9ca118ca83586172d69213e22b635a1
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 X-Sendblock-Type: REQ_APPROVE
 CMS-TYPE: 105P
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250630090608epcas5p192ace2db81d6cc04854919225464444c
+X-CMS-RootMailID: 20250630090616epcas5p2a9ca118ca83586172d69213e22b635a1
 References: <20250630090548.3317-1-anuj20.g@samsung.com>
-	<CGME20250630090608epcas5p192ace2db81d6cc04854919225464444c@epcas5p1.samsung.com>
+	<CGME20250630090616epcas5p2a9ca118ca83586172d69213e22b635a1@epcas5p2.samsung.com>
 
-The tuple_size field in blk_integrity currently represents the total
-size of metadata associated with each data interval. To make the meaning
-more explicit, rename tuple_size to metadata_size. This is a purely
-mechanical rename with no functional changes.
+Add a new ioctl, FS_IOC_GETLBMD_CAP, to query metadata and protection
+info (PI) capabilities. This ioctl returns information about the files
+integrity profile. This is useful for userspace applications to
+understand a files end-to-end data protection support and configure the
+I/O accordingly.
+
+For now this interface is only supported by block devices. However the
+design and placement of this ioctl in generic FS ioctl space allows us
+to extend it to work over files as well. This maybe useful when
+filesystems start supporting  PI-aware layouts.
+
+A new structure struct logical_block_metadata_cap is introduced, which
+contains the following fields:
+
+1. lbmd_flags: bitmask of logical block metadata capability flags
+2. lbmd_interval: the amount of data described by each unit of logical
+block metadata
+3. lbmd_size: size in bytes of the logical block metadata associated
+with each interval
+4. lbmd_opaque_size: size in bytes of the opaque block tag associated
+with each interval
+5. lbmd_opaque_offset: offset in bytes of the opaque block tag within
+the logical block metadata
+6. lbmd_pi_size: size in bytes of the T10 PI tuple associated with each
+interval
+7. lbmd_pi_offset: offset in bytes of T10 PI tuple within the logical
+block metadata
+8. lbmd_pi_guard_tag_type: T10 PI guard tag type
+9. lbmd_pi_app_tag_size: size in bytes of the T10 PI application tag
+10. lbmd_pi_ref_tag_size: size in bytes of the T10 PI reference tag
+11. lbmd_pi_storage_tag_size: size in bytes of the T10 PI storage tag
+
+The internal logic to fetch the capability is encapsulated in a helper
+function blk_get_meta_cap(), which uses the blk_integrity profile
+associated with the device. The ioctl returns -EOPNOTSUPP, if
+CONFIG_BLK_DEV_INTEGRITY is not enabled.
 
 Suggested-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Anuj Gupta <anuj20.g@samsung.com>
-Reviewed-by: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Kanchan Joshi <joshi.k@samsung.com>
 Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
 ---
- block/bio-integrity-auto.c        |  4 ++--
- block/blk-integrity.c             |  2 +-
- block/blk-settings.c              |  6 +++---
- block/t10-pi.c                    | 16 ++++++++--------
- drivers/md/dm-crypt.c             |  4 ++--
- drivers/md/dm-integrity.c         | 12 ++++++------
- drivers/nvdimm/btt.c              |  2 +-
- drivers/nvme/host/core.c          |  2 +-
- drivers/nvme/target/io-cmd-bdev.c |  2 +-
- drivers/scsi/sd_dif.c             |  2 +-
- include/linux/blk-integrity.h     |  4 ++--
- include/linux/blkdev.h            |  2 +-
- 12 files changed, 29 insertions(+), 29 deletions(-)
+ block/blk-integrity.c         | 52 ++++++++++++++++++++++++++++++
+ block/ioctl.c                 |  4 +++
+ include/linux/blk-integrity.h |  7 +++++
+ include/uapi/linux/fs.h       | 59 +++++++++++++++++++++++++++++++++++
+ 4 files changed, 122 insertions(+)
 
-diff --git a/block/bio-integrity-auto.c b/block/bio-integrity-auto.c
-index 9c6657664792..687952f63bbb 100644
---- a/block/bio-integrity-auto.c
-+++ b/block/bio-integrity-auto.c
-@@ -54,10 +54,10 @@ static bool bi_offload_capable(struct blk_integrity *bi)
- {
- 	switch (bi->csum_type) {
- 	case BLK_INTEGRITY_CSUM_CRC64:
--		return bi->tuple_size == sizeof(struct crc64_pi_tuple);
-+		return bi->metadata_size == sizeof(struct crc64_pi_tuple);
- 	case BLK_INTEGRITY_CSUM_CRC:
- 	case BLK_INTEGRITY_CSUM_IP:
--		return bi->tuple_size == sizeof(struct t10_pi_tuple);
-+		return bi->metadata_size == sizeof(struct t10_pi_tuple);
- 	default:
- 		pr_warn_once("%s: unknown integrity checksum type:%d\n",
- 			__func__, bi->csum_type);
 diff --git a/block/blk-integrity.c b/block/blk-integrity.c
-index e4e2567061f9..c1102bf4cd8d 100644
+index c1102bf4cd8d..9d9dc9c32083 100644
 --- a/block/blk-integrity.c
 +++ b/block/blk-integrity.c
-@@ -239,7 +239,7 @@ static ssize_t format_show(struct device *dev, struct device_attribute *attr,
- {
- 	struct blk_integrity *bi = dev_to_bi(dev);
+@@ -13,6 +13,7 @@
+ #include <linux/scatterlist.h>
+ #include <linux/export.h>
+ #include <linux/slab.h>
++#include <linux/t10-pi.h>
  
--	if (!bi->tuple_size)
-+	if (!bi->metadata_size)
- 		return sysfs_emit(page, "none\n");
- 	return sysfs_emit(page, "%s\n", blk_integrity_profile_name(bi));
+ #include "blk.h"
+ 
+@@ -54,6 +55,57 @@ int blk_rq_count_integrity_sg(struct request_queue *q, struct bio *bio)
+ 	return segments;
  }
-diff --git a/block/blk-settings.c b/block/blk-settings.c
-index a000daafbfb4..787500ff00c3 100644
---- a/block/blk-settings.c
-+++ b/block/blk-settings.c
-@@ -114,7 +114,7 @@ static int blk_validate_integrity_limits(struct queue_limits *lim)
+ 
++int blk_get_meta_cap(struct block_device *bdev, unsigned int cmd,
++		     struct logical_block_metadata_cap __user *argp)
++{
++	struct blk_integrity *bi = blk_get_integrity(bdev->bd_disk);
++	struct logical_block_metadata_cap meta_cap = {};
++	size_t usize = _IOC_SIZE(cmd);
++
++	if (!argp)
++		return -EINVAL;
++	if (usize < LBMD_SIZE_VER0)
++		return -EINVAL;
++	if (!bi)
++		goto out;
++
++	if (bi->flags & BLK_INTEGRITY_DEVICE_CAPABLE)
++		meta_cap.lbmd_flags |= LBMD_PI_CAP_INTEGRITY;
++	if (bi->flags & BLK_INTEGRITY_REF_TAG)
++		meta_cap.lbmd_flags |= LBMD_PI_CAP_REFTAG;
++	meta_cap.lbmd_interval = 1 << bi->interval_exp;
++	meta_cap.lbmd_size = bi->metadata_size;
++	meta_cap.lbmd_pi_size = bi->pi_tuple_size;
++	meta_cap.lbmd_pi_offset = bi->pi_offset;
++	meta_cap.lbmd_opaque_size = bi->metadata_size - bi->pi_tuple_size;
++	if (meta_cap.lbmd_opaque_size && !bi->pi_offset)
++		meta_cap.lbmd_opaque_offset = bi->pi_tuple_size;
++
++	meta_cap.lbmd_guard_tag_type = bi->csum_type;
++	if (bi->csum_type != BLK_INTEGRITY_CSUM_NONE)
++		meta_cap.lbmd_app_tag_size = 2;
++
++	if (bi->flags & BLK_INTEGRITY_REF_TAG) {
++		switch (bi->csum_type) {
++		case BLK_INTEGRITY_CSUM_CRC64:
++			meta_cap.lbmd_ref_tag_size =
++				sizeof_field(struct crc64_pi_tuple, ref_tag);
++			break;
++		case BLK_INTEGRITY_CSUM_CRC:
++		case BLK_INTEGRITY_CSUM_IP:
++			meta_cap.lbmd_ref_tag_size =
++				sizeof_field(struct t10_pi_tuple, ref_tag);
++			break;
++		default:
++			break;
++		}
++	}
++
++out:
++	return copy_struct_to_user(argp, usize, &meta_cap, sizeof(meta_cap),
++				   NULL);
++}
++
+ /**
+  * blk_rq_map_integrity_sg - Map integrity metadata into a scatterlist
+  * @rq:		request to map
+diff --git a/block/ioctl.c b/block/ioctl.c
+index e472cc1030c6..9ad403733e19 100644
+--- a/block/ioctl.c
++++ b/block/ioctl.c
+@@ -13,6 +13,7 @@
+ #include <linux/uaccess.h>
+ #include <linux/pagemap.h>
+ #include <linux/io_uring/cmd.h>
++#include <linux/blk-integrity.h>
+ #include <uapi/linux/blkdev.h>
+ #include "blk.h"
+ #include "blk-crypto-internal.h"
+@@ -566,6 +567,9 @@ static int blkdev_common_ioctl(struct block_device *bdev, blk_mode_t mode,
  {
- 	struct blk_integrity *bi = &lim->integrity;
+ 	unsigned int max_sectors;
  
--	if (!bi->tuple_size) {
-+	if (!bi->metadata_size) {
- 		if (bi->csum_type != BLK_INTEGRITY_CSUM_NONE ||
- 		    bi->tag_size || ((bi->flags & BLK_INTEGRITY_REF_TAG))) {
- 			pr_warn("invalid PI settings.\n");
-@@ -875,7 +875,7 @@ bool queue_limits_stack_integrity(struct queue_limits *t,
- 		return true;
- 
- 	if (ti->flags & BLK_INTEGRITY_STACKED) {
--		if (ti->tuple_size != bi->tuple_size)
-+		if (ti->metadata_size != bi->metadata_size)
- 			goto incompatible;
- 		if (ti->interval_exp != bi->interval_exp)
- 			goto incompatible;
-@@ -891,7 +891,7 @@ bool queue_limits_stack_integrity(struct queue_limits *t,
- 		ti->flags |= (bi->flags & BLK_INTEGRITY_DEVICE_CAPABLE) |
- 			     (bi->flags & BLK_INTEGRITY_REF_TAG);
- 		ti->csum_type = bi->csum_type;
--		ti->tuple_size = bi->tuple_size;
-+		ti->metadata_size = bi->metadata_size;
- 		ti->pi_offset = bi->pi_offset;
- 		ti->interval_exp = bi->interval_exp;
- 		ti->tag_size = bi->tag_size;
-diff --git a/block/t10-pi.c b/block/t10-pi.c
-index 851db518ee5e..0c4ed9702146 100644
---- a/block/t10-pi.c
-+++ b/block/t10-pi.c
-@@ -56,7 +56,7 @@ static void t10_pi_generate(struct blk_integrity_iter *iter,
- 			pi->ref_tag = 0;
- 
- 		iter->data_buf += iter->interval;
--		iter->prot_buf += bi->tuple_size;
-+		iter->prot_buf += bi->metadata_size;
- 		iter->seed++;
- 	}
- }
-@@ -105,7 +105,7 @@ static blk_status_t t10_pi_verify(struct blk_integrity_iter *iter,
- 
- next:
- 		iter->data_buf += iter->interval;
--		iter->prot_buf += bi->tuple_size;
-+		iter->prot_buf += bi->metadata_size;
- 		iter->seed++;
- 	}
- 
-@@ -125,7 +125,7 @@ static blk_status_t t10_pi_verify(struct blk_integrity_iter *iter,
- static void t10_pi_type1_prepare(struct request *rq)
- {
- 	struct blk_integrity *bi = &rq->q->limits.integrity;
--	const int tuple_sz = bi->tuple_size;
-+	const int tuple_sz = bi->metadata_size;
- 	u32 ref_tag = t10_pi_ref_tag(rq);
- 	u8 offset = bi->pi_offset;
- 	struct bio *bio;
-@@ -177,7 +177,7 @@ static void t10_pi_type1_complete(struct request *rq, unsigned int nr_bytes)
- {
- 	struct blk_integrity *bi = &rq->q->limits.integrity;
- 	unsigned intervals = nr_bytes >> bi->interval_exp;
--	const int tuple_sz = bi->tuple_size;
-+	const int tuple_sz = bi->metadata_size;
- 	u32 ref_tag = t10_pi_ref_tag(rq);
- 	u8 offset = bi->pi_offset;
- 	struct bio *bio;
-@@ -234,7 +234,7 @@ static void ext_pi_crc64_generate(struct blk_integrity_iter *iter,
- 			put_unaligned_be48(0ULL, pi->ref_tag);
- 
- 		iter->data_buf += iter->interval;
--		iter->prot_buf += bi->tuple_size;
-+		iter->prot_buf += bi->metadata_size;
- 		iter->seed++;
- 	}
- }
-@@ -289,7 +289,7 @@ static blk_status_t ext_pi_crc64_verify(struct blk_integrity_iter *iter,
- 
- next:
- 		iter->data_buf += iter->interval;
--		iter->prot_buf += bi->tuple_size;
-+		iter->prot_buf += bi->metadata_size;
- 		iter->seed++;
- 	}
- 
-@@ -299,7 +299,7 @@ static blk_status_t ext_pi_crc64_verify(struct blk_integrity_iter *iter,
- static void ext_pi_type1_prepare(struct request *rq)
- {
- 	struct blk_integrity *bi = &rq->q->limits.integrity;
--	const int tuple_sz = bi->tuple_size;
-+	const int tuple_sz = bi->metadata_size;
- 	u64 ref_tag = ext_pi_ref_tag(rq);
- 	u8 offset = bi->pi_offset;
- 	struct bio *bio;
-@@ -340,7 +340,7 @@ static void ext_pi_type1_complete(struct request *rq, unsigned int nr_bytes)
- {
- 	struct blk_integrity *bi = &rq->q->limits.integrity;
- 	unsigned intervals = nr_bytes >> bi->interval_exp;
--	const int tuple_sz = bi->tuple_size;
-+	const int tuple_sz = bi->metadata_size;
- 	u64 ref_tag = ext_pi_ref_tag(rq);
- 	u8 offset = bi->pi_offset;
- 	struct bio *bio;
-diff --git a/drivers/md/dm-crypt.c b/drivers/md/dm-crypt.c
-index 381b37f181e5..bec91cfb5cb8 100644
---- a/drivers/md/dm-crypt.c
-+++ b/drivers/md/dm-crypt.c
-@@ -1207,11 +1207,11 @@ static int crypt_integrity_ctr(struct crypt_config *cc, struct dm_target *ti)
- 		return -EINVAL;
- 	}
- 
--	if (bi->tuple_size < cc->used_tag_size) {
-+	if (bi->metadata_size < cc->used_tag_size) {
- 		ti->error = "Integrity profile tag size mismatch.";
- 		return -EINVAL;
- 	}
--	cc->tuple_size = bi->tuple_size;
-+	cc->tuple_size = bi->metadata_size;
- 	if (1 << bi->interval_exp != cc->sector_size) {
- 		ti->error = "Integrity profile sector size mismatch.";
- 		return -EINVAL;
-diff --git a/drivers/md/dm-integrity.c b/drivers/md/dm-integrity.c
-index 4395657fa583..efeee0a873c0 100644
---- a/drivers/md/dm-integrity.c
-+++ b/drivers/md/dm-integrity.c
-@@ -3906,8 +3906,8 @@ static void dm_integrity_io_hints(struct dm_target *ti, struct queue_limits *lim
- 		struct blk_integrity *bi = &limits->integrity;
- 
- 		memset(bi, 0, sizeof(*bi));
--		bi->tuple_size = ic->tag_size;
--		bi->tag_size = bi->tuple_size;
-+		bi->metadata_size = ic->tag_size;
-+		bi->tag_size = bi->metadata_size;
- 		bi->interval_exp =
- 			ic->sb->log2_sectors_per_block + SECTOR_SHIFT;
- 	}
-@@ -4746,18 +4746,18 @@ static int dm_integrity_ctr(struct dm_target *ti, unsigned int argc, char **argv
- 			ti->error = "Integrity profile not supported";
- 			goto bad;
- 		}
--		/*printk("tag_size: %u, tuple_size: %u\n", bi->tag_size, bi->tuple_size);*/
--		if (bi->tuple_size < ic->tag_size) {
-+		/*printk("tag_size: %u, metadata_size: %u\n", bi->tag_size, bi->metadata_size);*/
-+		if (bi->metadata_size < ic->tag_size) {
- 			r = -EINVAL;
- 			ti->error = "The integrity profile is smaller than tag size";
- 			goto bad;
- 		}
--		if ((unsigned long)bi->tuple_size > PAGE_SIZE / 2) {
-+		if ((unsigned long)bi->metadata_size > PAGE_SIZE / 2) {
- 			r = -EINVAL;
- 			ti->error = "Too big tuple size";
- 			goto bad;
- 		}
--		ic->tuple_size = bi->tuple_size;
-+		ic->tuple_size = bi->metadata_size;
- 		if (1 << bi->interval_exp != ic->sectors_per_block << SECTOR_SHIFT) {
- 			r = -EINVAL;
- 			ti->error = "Integrity profile sector size mismatch";
-diff --git a/drivers/nvdimm/btt.c b/drivers/nvdimm/btt.c
-index 423dcd190906..2a1aa32e6693 100644
---- a/drivers/nvdimm/btt.c
-+++ b/drivers/nvdimm/btt.c
-@@ -1506,7 +1506,7 @@ static int btt_blk_init(struct btt *btt)
- 	int rc;
- 
- 	if (btt_meta_size(btt) && IS_ENABLED(CONFIG_BLK_DEV_INTEGRITY)) {
--		lim.integrity.tuple_size = btt_meta_size(btt);
-+		lim.integrity.metadata_size = btt_meta_size(btt);
- 		lim.integrity.tag_size = btt_meta_size(btt);
- 	}
- 
-diff --git a/drivers/nvme/host/core.c b/drivers/nvme/host/core.c
-index e533d791955d..de8d27ceefc4 100644
---- a/drivers/nvme/host/core.c
-+++ b/drivers/nvme/host/core.c
-@@ -1866,7 +1866,7 @@ static bool nvme_init_integrity(struct nvme_ns_head *head,
- 		break;
- 	}
- 
--	bi->tuple_size = head->ms;
-+	bi->metadata_size = head->ms;
- 	bi->pi_offset = info->pi_offset;
- 	return true;
- }
-diff --git a/drivers/nvme/target/io-cmd-bdev.c b/drivers/nvme/target/io-cmd-bdev.c
-index eba42df2f821..42fb19f94ab8 100644
---- a/drivers/nvme/target/io-cmd-bdev.c
-+++ b/drivers/nvme/target/io-cmd-bdev.c
-@@ -65,7 +65,7 @@ static void nvmet_bdev_ns_enable_integrity(struct nvmet_ns *ns)
- 		return;
- 
- 	if (bi->csum_type == BLK_INTEGRITY_CSUM_CRC) {
--		ns->metadata_size = bi->tuple_size;
-+		ns->metadata_size = bi->metadata_size;
- 		if (bi->flags & BLK_INTEGRITY_REF_TAG)
- 			ns->pi_type = NVME_NS_DPS_PI_TYPE1;
- 		else
-diff --git a/drivers/scsi/sd_dif.c b/drivers/scsi/sd_dif.c
-index ae6ce6f5d622..18bfca1f1c78 100644
---- a/drivers/scsi/sd_dif.c
-+++ b/drivers/scsi/sd_dif.c
-@@ -52,7 +52,7 @@ void sd_dif_config_host(struct scsi_disk *sdkp, struct queue_limits *lim)
- 	if (type != T10_PI_TYPE3_PROTECTION)
- 		bi->flags |= BLK_INTEGRITY_REF_TAG;
- 
--	bi->tuple_size = sizeof(struct t10_pi_tuple);
-+	bi->metadata_size = sizeof(struct t10_pi_tuple);
- 
- 	if (dif && type) {
- 		bi->flags |= BLK_INTEGRITY_DEVICE_CAPABLE;
++	if (_IOC_NR(cmd) == _IOC_NR(FS_IOC_GETLBMD_CAP))
++		return blk_get_meta_cap(bdev, cmd, argp);
++
+ 	switch (cmd) {
+ 	case BLKFLSBUF:
+ 		return blkdev_flushbuf(bdev, cmd, arg);
 diff --git a/include/linux/blk-integrity.h b/include/linux/blk-integrity.h
-index c7eae0bfb013..d27730da47f3 100644
+index d27730da47f3..e04c6e5bf1c6 100644
 --- a/include/linux/blk-integrity.h
 +++ b/include/linux/blk-integrity.h
-@@ -33,7 +33,7 @@ int blk_rq_integrity_map_user(struct request *rq, void __user *ubuf,
+@@ -29,6 +29,8 @@ int blk_rq_map_integrity_sg(struct request *, struct scatterlist *);
+ int blk_rq_count_integrity_sg(struct request_queue *, struct bio *);
+ int blk_rq_integrity_map_user(struct request *rq, void __user *ubuf,
+ 			      ssize_t bytes);
++int blk_get_meta_cap(struct block_device *bdev, unsigned int cmd,
++		     struct logical_block_metadata_cap __user *argp);
+ 
  static inline bool
  blk_integrity_queue_supports_integrity(struct request_queue *q)
- {
--	return q->limits.integrity.tuple_size;
-+	return q->limits.integrity.metadata_size;
+@@ -92,6 +94,11 @@ static inline struct bio_vec rq_integrity_vec(struct request *rq)
+ 				 rq->bio->bi_integrity->bip_iter);
  }
- 
- static inline struct blk_integrity *blk_get_integrity(struct gendisk *disk)
-@@ -74,7 +74,7 @@ static inline unsigned int bio_integrity_intervals(struct blk_integrity *bi,
- static inline unsigned int bio_integrity_bytes(struct blk_integrity *bi,
- 					       unsigned int sectors)
+ #else /* CONFIG_BLK_DEV_INTEGRITY */
++static inline int blk_get_meta_cap(struct block_device *bdev, unsigned int cmd,
++				   struct logical_block_metadata_cap __user *argp)
++{
++	return -EOPNOTSUPP;
++}
+ static inline int blk_rq_count_integrity_sg(struct request_queue *q,
+ 					    struct bio *b)
  {
--	return bio_integrity_intervals(bi, sectors) * bi->tuple_size;
-+	return bio_integrity_intervals(bi, sectors) * bi->metadata_size;
- }
+diff --git a/include/uapi/linux/fs.h b/include/uapi/linux/fs.h
+index 0098b0ce8ccb..83720a2fd20d 100644
+--- a/include/uapi/linux/fs.h
++++ b/include/uapi/linux/fs.h
+@@ -91,6 +91,63 @@ struct fs_sysfs_path {
+ 	__u8			name[128];
+ };
  
- static inline bool blk_integrity_rq(struct request *rq)
-diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-index a51f92b6c340..edc3b458fbd9 100644
---- a/include/linux/blkdev.h
-+++ b/include/linux/blkdev.h
-@@ -116,7 +116,7 @@ enum blk_integrity_checksum {
- struct blk_integrity {
- 	unsigned char				flags;
- 	enum blk_integrity_checksum		csum_type;
--	unsigned char				tuple_size;
-+	unsigned char				metadata_size;
- 	unsigned char				pi_offset;
- 	unsigned char				interval_exp;
- 	unsigned char				tag_size;
++/* Protection info capability flags */
++#define	LBMD_PI_CAP_INTEGRITY		(1 << 0)
++#define	LBMD_PI_CAP_REFTAG		(1 << 1)
++
++/* Checksum types for Protection Information */
++#define LBMD_PI_CSUM_NONE		0
++#define LBMD_PI_CSUM_IP			1
++#define LBMD_PI_CSUM_CRC16_T10DIF	2
++#define LBMD_PI_CSUM_CRC64_NVME		4
++
++/* sizeof first published struct */
++#define LBMD_SIZE_VER0			16
++
++/*
++ * Logical block metadata capability descriptor
++ * If the device does not support metadata, all the fields will be zero.
++ * Applications must check lbmd_flags to determine whether metadata is
++ * supported or not.
++ */
++struct logical_block_metadata_cap {
++	/* Bitmask of logical block metadata capability flags */
++	__u32	lbmd_flags;
++	/*
++	 * The amount of data described by each unit of logical block
++	 * metadata
++	 */
++	__u16	lbmd_interval;
++	/*
++	 * Size in bytes of the logical block metadata associated with each
++	 * interval
++	 */
++	__u8	lbmd_size;
++	/*
++	 * Size in bytes of the opaque block tag associated with each
++	 * interval
++	 */
++	__u8	lbmd_opaque_size;
++	/*
++	 * Offset in bytes of the opaque block tag within the logical block
++	 * metadata
++	 */
++	__u8	lbmd_opaque_offset;
++	/* Size in bytes of the T10 PI tuple associated with each interval */
++	__u8	lbmd_pi_size;
++	/* Offset in bytes of T10 PI tuple within the logical block metadata */
++	__u8	lbmd_pi_offset;
++	/* T10 PI guard tag type */
++	__u8	lbmd_guard_tag_type;
++	/* Size in bytes of the T10 PI application tag */
++	__u8	lbmd_app_tag_size;
++	/* Size in bytes of the T10 PI reference tag */
++	__u8	lbmd_ref_tag_size;
++	/* Size in bytes of the T10 PI storage tag */
++	__u8	lbmd_storage_tag_size;
++	__u8	pad;
++};
++
+ /* extent-same (dedupe) ioctls; these MUST match the btrfs ioctl definitions */
+ #define FILE_DEDUPE_RANGE_SAME		0
+ #define FILE_DEDUPE_RANGE_DIFFERS	1
+@@ -247,6 +304,8 @@ struct fsxattr {
+  * also /sys/kernel/debug/ for filesystems with debugfs exports
+  */
+ #define FS_IOC_GETFSSYSFSPATH		_IOR(0x15, 1, struct fs_sysfs_path)
++/* Get logical block metadata capability details */
++#define FS_IOC_GETLBMD_CAP		_IOWR(0x15, 2, struct logical_block_metadata_cap)
+ 
+ /*
+  * Inode flags (FS_IOC_GETFLAGS / FS_IOC_SETFLAGS)
 -- 
 2.25.1
 
