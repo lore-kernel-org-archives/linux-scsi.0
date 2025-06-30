@@ -1,61 +1,61 @@
-Received: from out162-62-58-211.mail.qq.com (out162-62-58-211.mail.qq.com [162.62.58.211])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 703FD1E2858;
-	Mon, 30 Jun 2025 08:27:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.58.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5EAC23E33D
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Jun 2025 09:08:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751272031; cv=none; b=E/3y1RXk7r+1mmzJt6YvCUmE6L6qVH/3sJy8Hk78yO4BY74N0Wsy2RT8p7n52j32YWnZDMv+H1lRodNSGBzm0u5N6tqyt+HxkrBH/7x67Cn2/KPFZT377ASpiJ0YBo8p6ts0jyDrkg0Y0J4B48lG4YAkFvxAPWjGCmIDZ19pptY=
+	t=1751274533; cv=none; b=SMs10zQzhbKn8VS8tv+2JYuFOGx3QxJp/GshhFIrv3VZsItw0B/FBXIk5iHfKtcBWRw/KlZ06N5FGnKsK/KuWYA74tjNyeiLzbv5J8ujTVFi1cv/knwoLhvMwV9UIMIm8Mc2/zN80UsNC/hQVOJZvsrODovAreXTk6x+seLQRH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751272031; c=relaxed/simple;
-	bh=lLupGE83slk6Rc7n8lXUVq8/KuU2FXMNUgqrMet+k9Y=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=gZ+wire7R084mGRvkwEBfJR2W3kUp0x+kObBJgP2vL/xurXtLW0RDFhiDj3BTriLWRzW0RfVPba/46fZZ3tWoImNnceSUZplNeoHNVxmEOdw3TKLsvFWSZrqUkWmqEce4GiwnpbhF86nCH54M5b+f/llZQMHnSd9jp/YLmpuyVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=s6P5h7yn; arc=none smtp.client-ip=162.62.58.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1751274533; c=relaxed/simple;
+	bh=JYH8KYXiVde6jihot4RcOkySptuG4EStrz3h8Ir18ZY=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=ssPnvzJV27uSK/Wd+5Nr1wGjggvmcWp0/8hWe3kZXIKSz8revLATqS84O9YfMjnu1V6FYpwLHKxL4tmiD1hHABPQMFCZnfy/gBwLA6/sH5PLG5H6p3beW/2IDWnPyuodRczR+trzgWdefo5JF37MEE8u/qyw8YsaWUzFU49zrNA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=AkxU8CAn; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="s6P5h7yn"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1751271715; bh=XZ0aFEqYQnkKoHskDEAXjLCNAGRjf4o/lr5Ys3ymZFk=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=s6P5h7yn9w47iE+mDDC6mtgQGqZftLAdzLV7/kSKDlFmXIQvraow2XGLqY/IQJvaf
-	 y3rJePUFEVcXC2M+QhzS7cFddu5ntRCXZ0dXifzt9UkP5kwtEVP7tqKvYRxjLdlnmL
-	 IagrSF9uomHNt9cvBmxCBFv7BNnIshNtHs5f8828=
-Received: from VM-222-126-tencentos.localdomain ([14.22.11.161])
-	by newxmesmtplogicsvrszc13-1.qq.com (NewEsmtp) with SMTP
-	id 5762EAB6; Mon, 30 Jun 2025 16:21:54 +0800
-X-QQ-mid: xmsmtpt1751271714t64qi34cy
-Message-ID: <tencent_12DB60FFE724D17784666194FAB42BDC9A07@qq.com>
-X-QQ-XMAILINFO: NT7dO8ok7FP2v7xRnUhcmt4Rdgr/FlUPPDgif8LsnLpTyNsvGaF723Z0bqBqz0
-	 PshyKa3HtCjgKU2dVS/syvcz4z+xP9JipP1BjGfhUOJYwq6z5Atw59v9HrqtLdw2JeB+MRq7OYoL
-	 oAllUh54t7Z0pSKUybVcV2qIQUmA3uCMr916aFDOaJUX5PlslvMpNZz1ltwBlsdeMqF0TJmT8bHi
-	 /+oi9Z2JnQVY2rumIrgIQeyVLTrhY6MejW+FXB/sKS3eChe8t0Ss9PwU9voiH5BVPXXYLaHUMYKu
-	 MdpL8rLZdCBb01GAf2l/M+FKVNHEHlVZ0ZOL2kE2aCTyTP3e5uQwhSl/aIkiIpLjn0bfC11zQUG0
-	 592PPym8ooPEFEuueECg2wOap0ySHrZ9WlCSJKQJRYUKR5EabqAoUgiY5kZ9vx20v3AFzFyyrFb+
-	 VShQTTA3cAIkzAZ1WLrC3ACgJtxAjLD53ebFMED/pazYlX/XwSXo816Wc2AqPVGBJQ1tmmMphI0j
-	 rTV95XKG3HVpMd8uI4rq1SXFChaarn0bIUIJF0MpxwDouLWVTUFo1Ycj55HacSl90BLPyU+vSMvS
-	 cDF5CT0NlIiB9rtvSgCZBfI82TVQw8D2Q0rEMHRIHh/4cWZpdDITwEREkeMaaXQbtKeNW6kOROE3
-	 GX7XiMc6RgoGnBdCRmjb/ApuaKh/7EcUTfGZvaekpI8Gh7FaTlB3/lRIIOZc85rFmEySBomAlGqq
-	 SuGZVOaAOdkoY6WSqGlqzUezu5fjd8zV910J3eoOOw8lwc97adilROCNlxN5eQ3k7sQ6+odyV7n2
-	 7kMZw3xjw2xmMmStCuw6ploJ1mp41B0vIT0oVQOfxtz38O64M97XguszWa+j0eU/VpZNvxOiDAbV
-	 MobMSBmEc6adHwZRDO8CUrs9NjNVVrZ4Th/n1N7QDFoxyZvSSVyimdMiNamjFl6FJ94LC49ltNMf
-	 dnlv1xqnso5GlQAeNrHT1IGm1BH797axccGEHbZduCOJdE2IMJvxwVX0CgZbg66/Wiyhc+Gyea29
-	 miBy+t7TJ9ez6STSQsfyFoJ76zYaLMpzGuMIW77m19edtrqudfLN1U7szJbh/OaKFHdIODWw==
-X-QQ-XMRINFO: MSVp+SPm3vtS1Vd6Y4Mggwc=
-From: jackysliu <1972843537@qq.com>
-To: 1972843537@qq.com
-Cc: James.Bottomley@HansenPartnership.com,
-	bvanassche@acm.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Subject: RE:[PATCH] scsi: fix out of bounds error in /drivers/scsi
-Date: Mon, 30 Jun 2025 16:21:49 +0800
-X-OQ-MSGID: <20250630082149.3798936-1-1972843537@qq.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <tencent_D9A0F9052526AD09F7FF76DD5F2529FDDD05@qq.com>
-References: <tencent_D9A0F9052526AD09F7FF76DD5F2529FDDD05@qq.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="AkxU8CAn"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250630090842epoutp0175735f95e4ec38f2ec96c2147eec901e~NxuZTg3gz1949519495epoutp012
+	for <linux-scsi@vger.kernel.org>; Mon, 30 Jun 2025 09:08:42 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250630090842epoutp0175735f95e4ec38f2ec96c2147eec901e~NxuZTg3gz1949519495epoutp012
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1751274522;
+	bh=GgS+k17VlS3z5f+lStV0zi9JYkR/O/BiLDiSucjLPyA=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=AkxU8CAnHa1JkUGk9Sr6h5b2fSI7LyS86MEPkxgOB9QbGJRQrTLwvaQLCJdDWOppT
+	 pTfq3iHN1mC+AZpio0d0Q2wg23Ix6IYrkSEJ2klo+X2KC+ngrOBfYtygB4Ix5Z15HT
+	 CdKNlVwU1pCOaJSx6k4m6QLLNHoz0+l4O98DNnBM=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20250630090841epcas5p4d240f5b83654cef1436b16dc399f8cb3~NxuYr60gy2849528495epcas5p43;
+	Mon, 30 Jun 2025 09:08:41 +0000 (GMT)
+Received: from epcas5p4.samsung.com (unknown [182.195.38.174]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4bW0h84NnGz3hhT9; Mon, 30 Jun
+	2025 09:08:40 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20250630090606epcas5p42edec1dfe34f53c9f1448acb0964bb8f~NxsHinA8m1010310103epcas5p4O;
+	Mon, 30 Jun 2025 09:06:06 +0000 (GMT)
+Received: from localhost.localdomain (unknown [107.99.41.245]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250630090603epsmtip2ad17b3a3e395080ea4a974cffd9163a8~NxsFZLARt1109511095epsmtip2X;
+	Mon, 30 Jun 2025 09:06:03 +0000 (GMT)
+From: Anuj Gupta <anuj20.g@samsung.com>
+To: vincent.fu@samsung.com, jack@suse.cz, anuj1072538@gmail.com,
+	axboe@kernel.dk, viro@zeniv.linux.org.uk, brauner@kernel.org,
+	hch@infradead.org, martin.petersen@oracle.com, ebiggers@kernel.org,
+	adilger@dilger.ca
+Cc: linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+	joshi.k@samsung.com, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, gost.dev@samsung.com, Anuj Gupta
+	<anuj20.g@samsung.com>
+Subject: [PATCH for-next v5 0/4] add ioctl to query metadata and protection
+ info capabilities
+Date: Mon, 30 Jun 2025 14:35:44 +0530
+Message-Id: <20250630090548.3317-1-anuj20.g@samsung.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -63,25 +63,81 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20250630090606epcas5p42edec1dfe34f53c9f1448acb0964bb8f
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250630090606epcas5p42edec1dfe34f53c9f1448acb0964bb8f
+References: <CGME20250630090606epcas5p42edec1dfe34f53c9f1448acb0964bb8f@epcas5p4.samsung.com>
 
-On 6/18/25 08:26 AM , Bart Van Assche wrote:
->> Can I know what kind of impact this vulnerability will have?
->
->The worst possible impact I see is that the Linux kernel would decide 
->that RSCS is supported although the device doesn't support it. This
->could cause sd_read_io_hints() to print incorrect information. The
->following message could be printed when it should not be printed:
->"Unexpected: RSCS has been set and the permanent stream count is %u\n"
->
->> And is it possible to get a cve number?
->
->You are asking the wrong person. I don't know how to get a CVE number.
->
->Bart.
+Hi all,
 
-Thank you Bart,for the patient review. I've submitted a new patch which 
-mentioned way of detection and influenced stable tags.
-Best regards.
+This patch series adds a new ioctl to query metadata and integrity
+capability.
 
-Jackysliu
+Patch 1 renames tuple_size field to metadata_size
+Patch 2 adds a pi_tuple_size field in blk_integrity struct which is later
+used to export this value to the user as well.
+Patch 3 allows computing right pi_offset value.
+Patch 4 introduces a new ioctl to query integrity capability.
+
+v4->v5
+add a pad field in the user structure to align it (Christoph)
+get rid of overly long lines (Christoph)
+add missing nvme prefix to the patch desc (Christoph)
+
+v3->v4
+rename tuple_size to metadata_size to inflect right meaning (Martin)
+rectify the condition in blk_validate_integrity_limits when csum type is
+none (Christoph)
+change uapi field comment to more friendly formats (Christoph)
+add comments regarding ioctl behaviour when bi is NULL (Christoph)
+remove the reserved fields and use different scheme for extensibility
+(Christian)
+Other misc code improvements (Christoph)
+set pi_tuple_size and pi_offset in NVMe only if csum type is not NONE
+
+v2->v3
+better naming for uapi struct fields (Martin)
+validate integrity fields in blk-settings.c (Christoph)
+
+v1 -> v2
+introduce metadata_size, storage_tag_size and ref_tag_size field in the
+uapi struct (Martin)
+uapi struct fields comment improvements (Martin)
+add csum_type definitions to the uapi file (Martin)
+add fpc_* prefix to uapi struct fields (Andreas)
+bump the size of rsvd and hence the uapi struct to 32 bytes (Andreas)
+use correct value for ioctl (Andreas)
+use clearer names for CRC (Eric)
+
+
+Anuj Gupta (4):
+  block: rename tuple_size field in blk_integrity to metadata_size
+  block: introduce pi_tuple_size field in blk_integrity
+  nvme: set pi_offset only when checksum type is not
+    BLK_INTEGRITY_CSUM_NONE
+  fs: add ioctl to query metadata and protection info capabilities
+
+ block/bio-integrity-auto.c        |  4 +--
+ block/blk-integrity.c             | 54 +++++++++++++++++++++++++++-
+ block/blk-settings.c              | 44 +++++++++++++++++++++--
+ block/ioctl.c                     |  4 +++
+ block/t10-pi.c                    | 16 ++++-----
+ drivers/md/dm-crypt.c             |  4 +--
+ drivers/md/dm-integrity.c         | 12 +++----
+ drivers/nvdimm/btt.c              |  2 +-
+ drivers/nvme/host/core.c          |  7 ++--
+ drivers/nvme/target/io-cmd-bdev.c |  2 +-
+ drivers/scsi/sd_dif.c             |  3 +-
+ include/linux/blk-integrity.h     | 11 ++++--
+ include/linux/blkdev.h            |  3 +-
+ include/uapi/linux/fs.h           | 59 +++++++++++++++++++++++++++++++
+ 14 files changed, 195 insertions(+), 30 deletions(-)
+
+-- 
+2.25.1
 
