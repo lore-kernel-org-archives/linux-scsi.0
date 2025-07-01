@@ -1,114 +1,116 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B22682EA750;
-	Mon, 30 Jun 2025 22:31:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D5438FC0A;
+	Tue,  1 Jul 2025 02:50:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751322694; cv=none; b=drMndAN5Srci3wCCIhPkd1+ew5CvbRw/XGj3UExHiMPv5lBeHcqVt6fwV5UsdoTxpuGbxc0UEE+Y7pWOp13M8Gi9XVysH+XZgULz5wQm+/uwYPwuR1sm/D8URmmRLuYE+6PcFCJYTv1CoYmU44YILdogzUP9gghBfG98gl8cCV8=
+	t=1751338223; cv=none; b=KT8Q0I3XWiJIUANm6JlaCmqEub/SC4fHJtEDSpkCn6r4DI/bQK7c9f6rijTvdITsBW6c6B1Tyr0wE2+IxXDpSELyoW0ePClkBU+xwDf/j72K2HCexE9mKriT09szQggEM8n4fJjTCVhyNw6Frm/VvzIaY4GzhJku5t5dXc0CwEc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751322694; c=relaxed/simple;
-	bh=CXMV6wfDaQSlWZQyF4hSEXvoxhfI57wDE1w3O8R1x3M=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=hzTpC47YJbIeAgQKv56IGY1OZ3fsPYnDQkmUxH1LrGY8KgASuAUulIcnV8VBf58dG4IplHooarPPKSg5NMQH9nKUGrH1RJSXZbhcLHyZz1NAPzk8OSgLKtT6YKxTrKI5Hkwcnov94UfmU0SUW90O2JN5syQFefKcfvhtYDPm8yE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DWwvpdxe; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1751338223; c=relaxed/simple;
+	bh=TaJjkkMAtMyilMlPoCXrfBgXDZqu5+p/dSDz1gVA8l4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=LWFXL7Mp078sLm56/csZBS3GgmlEuJM5MDQCBnNuiB4zYlxhUzf19sfRzYMG19oNDVTqonvRAwQu1o5loRTUBKK+Jf9sNkuGMC4+ghKff/Q/yZaG9Oa/2Rpv6cts0n9IrRp6vvIY17HcjyyFIrrMdRZxvP2KeyZ8WRlp2eS11Is=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YGwPAQmr; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DWwvpdxe"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bWLVW67d5zm0c30;
-	Mon, 30 Jun 2025 22:31:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1751322689; x=1753914690; bh=CIeKg
-	tusAl5YQmSP+f8DbV1x3/RtOLjWueDD7VaDP0I=; b=DWwvpdxetgrodJ6LfKEZz
-	kwK6reMixG+BL+59P5AeVBy/tHuZSvBFvDq9B/lNDxS+G1W1UxU16YnfDes0qps8
-	YOvKHfm8SfSWAnQC8VtGpvo/hg2t2DJq42DREvjAnWikPf3jmlGuTMrFtSzqZ/JR
-	IrgJFnTSwYjmQgVlQDzGdxFhZDngxkFm7dzuSCLh3kGyguWzoceO1I7Tfbw8eD8Y
-	4x3qnjbvD2Z1CbYH6CkNQ/L8iIt1+WhdSNqrsMgGFE6E+x7HLoQjd/iNYyNxKHwC
-	QP2y9uUvYUq2hmLeUF27SVeCE+tFFSbKVP3FLJpVUtaCeJB5LD3hN6qA8q4/J7Ab
-	g==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id hBgGAFdiZpja; Mon, 30 Jun 2025 22:31:29 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bWLVM2qHdzm1Hbt;
-	Mon, 30 Jun 2025 22:31:22 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <avri.altman@wdc.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH v19 11/11] scsi: ufs: Inform the block layer about write ordering
-Date: Mon, 30 Jun 2025 15:30:03 -0700
-Message-ID: <20250630223003.2642594-12-bvanassche@acm.org>
-X-Mailer: git-send-email 2.50.0.727.gbf7dc18ff4-goog
-In-Reply-To: <20250630223003.2642594-1-bvanassche@acm.org>
-References: <20250630223003.2642594-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YGwPAQmr"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2349f096605so30933125ad.3;
+        Mon, 30 Jun 2025 19:50:21 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1751338221; x=1751943021; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=0gUDd/VhewzNMfjifK2zCnAoxWB+Qij5GThYsfQSrB8=;
+        b=YGwPAQmrvA8GjTzb5nVlWLnRGccMDhsySkfkFlmgafb3o8z4dXk1puUCVtE+cEnSGd
+         Z2+CwxBtsNSKVoMCzLWkVm7DsE4TB9aqOBmqZTohaA66rO77uXtuG/lM2TxyFEK2lvFy
+         0pd9bcKRTJpaqnSrt4JuTujgwNW9ZirP9qH+UWfqOnhEZF1+VrANMlka7u+fJfbxyztv
+         Rfc0G6SosCoD7dopDp76xC47AEnfdwLTfvo3mHZa36Rdyr4LwI6EBcD7c7L+zXCO/ypq
+         Q5Ra4UE+Ct/8R09PsB/eUnN2zn6iMbHjt2fzQd/JxTl9SweZRKFijOMHl1fsGCfA6/EZ
+         B72w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751338221; x=1751943021;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=0gUDd/VhewzNMfjifK2zCnAoxWB+Qij5GThYsfQSrB8=;
+        b=lhVmpZ4NheouI340eTSRefW+IETaae9oBMCGcD8KUBlj3URO3OL69OOrsAhOqW0nyN
+         crQ8/M/iAc66lrCeC1Up2LDxUAZyzQjFV0wQVuO8M3PX8OUgt8MbGsJBigw/X+TmjhDD
+         DqIGLdhXKq4Q8KFLhk/mQlnKhf1I1TYtjkAmg4qcjvsOfI7lJt3pmrnoUrqhapC3ZcwS
+         EFUoVmmfvZ1lkLzetBI0S6vhs08twd/feqMJgoSu+qOhDJrGPVguPmYwxNynDKnby4S8
+         rh4pYgHepGjjhgb81pVYf/0IgoT+J38SdCWwK7iXVbrnOmzz5IivtWWapUHxnYx2shc+
+         RJBg==
+X-Forwarded-Encrypted: i=1; AJvYcCUZASWRvslLt6SdBYVW95JDGjhOSS9MvJdh2EGhTHhxv4604T2UDUn739IpKcq0CsOcdRH9a4cHHj1OQFw=@vger.kernel.org, AJvYcCXnuyC1g+LS5SuSjl79Qdjc6H2uTKVK/SEhzSpV89ZMW1e90IEZdcFdwxkKJQeOTL8ng3Gt9ICOug1OgA==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzhPLFxp2+Pj4pvpOnxvhqppalr2/sXBbUGb3RCwfS7AMOI1p0o
+	1hhtzRZYRDkUvgO1AjImecFwvdnk7vKansoIcfh+p+HZUNeASfaKs8aVFBgbZw==
+X-Gm-Gg: ASbGnctWAQO7JqOMM5+62/OOElaHCUcSDccTKbjNVQMYPgd9qEegWOtAX4MaMOA38Cw
+	3JBPN8NupJ6LePscICBaTddq3B8fF84Lt9KAmszk4U9Kn9r/5vNLTTJi8DAdK3ZpEEyFtY5reG0
+	NlaRIFCJ+P67Lp3O95pS75/psgaH6i5SfELclNM8tXv9v4smcZwrjetjqJYT67Pi1jSMGdwdvH9
+	DQrXnEjaFa46+a6R/eUWL9pp68IQPT1TEGOwCxWec6WdygdBdsmb2ufWPmUvI/oGziboBq1f88o
+	+34fK83Sexp5+tJ5aSCBe0SafzrhRBu4DcdkKYoBPkkJfgPG+SWC8xo2r2nQ9W9tBY3lcByI4ew
+	hIqpe
+X-Google-Smtp-Source: AGHT+IG6hTc8brOl9s7bdLpqzfwOfSXJqPevjp0lpRaMqxsJNNQhXwy3/8SnFjnJjR+qmjscGIPNWg==
+X-Received: by 2002:a17:903:244e:b0:234:c7e6:8459 with SMTP id d9443c01a7336-23ac40e021fmr176244025ad.20.1751338221070;
+        Mon, 30 Jun 2025 19:50:21 -0700 (PDT)
+Received: from [192.168.0.150] ([103.124.138.155])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-23acb3b0047sm98261595ad.160.2025.06.30.19.50.18
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 30 Jun 2025 19:50:20 -0700 (PDT)
+Message-ID: <6538b497-6e65-4e02-a102-7f9649dbf231@gmail.com>
+Date: Tue, 1 Jul 2025 09:50:17 +0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: Format scsi_track_queue_full() return values as
+ bullet list
+To: Bart Van Assche <bvanassche@acm.org>,
+ Linux Kernel Mailing List <linux-kernel@vger.kernel.org>,
+ Linux SCSI <linux-scsi@vger.kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Rob Landley <rob@landley.net>
+References: <20250626041857.44259-2-bagasdotme@gmail.com>
+ <159d1b84-665f-4bc7-865c-59b15232a477@acm.org>
+Content-Language: en-US
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+In-Reply-To: <159d1b84-665f-4bc7-865c-59b15232a477@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-From the UFSHCI 4.0 specification, about the MCQ mode:
-"Command Submission
-1. Host SW writes an Entry to SQ
-2. Host SW updates SQ doorbell tail pointer
+On 6/26/25 23:16, Bart Van Assche wrote:
+> On 6/25/25 9:18 PM, Bagas Sanjaya wrote:
+>> - * Returns:    0 - No change needed, >0 - Adjust queue depth to this 
+>> new depth,
+>> - *         -1 - Drop back to untagged operation using host->cmd_per_lun
+>> - *             as the untagged command depth
+>> + * Returns:    * 0 - No change needed
+>> + *        * >0 - Adjust queue depth to this new depth,
+>> + *         * -1 - Drop back to untagged operation using host- 
+>> >cmd_per_lun
+>> + *           as the untagged command depth
+>>    *
+>>    * Lock Status:    None held on entry
+>>    *
+> 
+> Here is an example from Documentation/doc-guide/kernel-doc.rst:
+> 
+>        * Return:
+>        * * %0        - OK to runtime suspend the device
+>        * * %-EBUSY    - Device should not be runtime suspended
+> 
+> Wouldn't it be better to follow that example and to move the list under
+> 'Returns:' and to move it more to the left?
+> 
 
-Command Processing
-3. After fetching the Entry, Host Controller updates SQ doorbell head
-   pointer
-4. Host controller sends COMMAND UPIU to UFS device"
+Ack. I will do that in v2.
 
-In other words, in MCQ mode, UFS controllers are required to forward
-commands to the UFS device in the order these commands have been
-received from the host.
+Thanks.
 
-This patch improves performance as follows on a test setup with UFSHCI
-4.0 controller:
-- When not using an I/O scheduler: 2.3x more IOPS for small writes.
-- With the mq-deadline scheduler: 2.0x more IOPS for small writes.
-
-Reviewed-by: Avri Altman <avri.altman@wdc.com>
-Cc: Bao D. Nguyen <quic_nguyenb@quicinc.com>
-Cc: Can Guo <quic_cang@quicinc.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 6 ++++++
- 1 file changed, 6 insertions(+)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 50adfb8b335b..1f2fc47ca7b4 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5281,6 +5281,12 @@ static int ufshcd_sdev_configure(struct scsi_devic=
-e *sdev,
- 	struct ufs_hba *hba =3D shost_priv(sdev->host);
- 	struct request_queue *q =3D sdev->request_queue;
-=20
-+	/*
-+	 * The write order is preserved per MCQ. Without MCQ, auto-hibernation
-+	 * may cause write reordering that results in unaligned write errors.
-+	 */
-+	lim->driver_preserves_write_order =3D hba->mcq_enabled;
-+
- 	lim->dma_pad_mask =3D PRDT_DATA_BYTE_COUNT_PAD - 1;
-=20
- 	/*
+-- 
+An old man doll... just what I always wanted! - Clara
