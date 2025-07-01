@@ -1,98 +1,138 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B7725D1EE;
-	Tue,  1 Jul 2025 12:01:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54261275AFD
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Jul 2025 13:54:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751371295; cv=none; b=CoJsZxmoPGwGKntqLwDvD8iOVzuWouQZlBTN0MD4ww5yQwEA9+g9PmQyfqrB7r9JpFy/6AFxobtt7sDT5KwRzj2dUsLdpD+K8tRqOEgLfwcQcFdF70HD2Pel8Yscwc9W6SMVG2vqIvh5eFAeh0JQSTC07IaNNpH1eqOSjrNDxWM=
+	t=1751378091; cv=none; b=nKXHQCyu9sCkqS7qE7CYVHx3llEucKvc+IwjlBsXSZHiXU+PO+2bZ5BYIv8JBQ9PThIR3N3yo2yrkopq5CVORhSf1HDy1mnoAXWNL/r8MYfSyPBDLdt1asrATcwTWDEnJ7OGUbrUaorksgcWepKnewS05iliciCE8HEvratql2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751371295; c=relaxed/simple;
-	bh=Ve2jWkUY7Kco8qr8eXLeveQqpfYfuVWQzfdfLKDRfSM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=qgh8PhwRaTv5Rgq8FvL4knbMF65tYvdksVOdneE6g5d8g9YWFpVcZCGXe5DCOSeU//nTI2pE3ZT/dbXSg6TEP8PTC0ZSJ7aCGR61ZXYHeRAJ44Tgr58LxZ5zjELeSDK8nymWDcIb9fZWCYD/xYMG9nCJbRnWVARYSe3WpXyvWH8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rEeP5CN4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1751378091; c=relaxed/simple;
+	bh=OZa4yKRHVDO+7SZUwMFN1ZqXJzB6v61X3RuYjqeq4EI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=H4PHapo+Ls1dFnB9m4WNSZdQ19lx3bwfm6Zb4xyS39m4lP/LnLSYBeZvh52aI9cADLXV8BdauzNKhW0HyJg+jOTg+FIcyeO+cCJNKkDHXvBU0Omt3pruRIMFSjnzrdDIoM+pjL8pcA7NmpCFSWL2Ik2BDx3uWFz5QhaGNdv7HCI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qW7LzJ++; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=p10Zy082; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qW7LzJ++; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=p10Zy082; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rEeP5CN4"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4647C4CEEB;
-	Tue,  1 Jul 2025 12:01:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751371294;
-	bh=Ve2jWkUY7Kco8qr8eXLeveQqpfYfuVWQzfdfLKDRfSM=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=rEeP5CN4D96Xof3lUeWOZq5kQVZ7As6qgXQJ+ZVOWulMkKg1SsV7pEcbmA40Q+3Cf
-	 0kM710txoJdS2GTbF+7CWVJOzBREkzgDya6XBMBUQ5Sd2wcowJtnGQJcB42WwFgYc2
-	 9OnkmabB6qG7uKK/PG3jU0ecNGZh6KSAQMa6/hWoiJnYrVXLZAOiX05cJSJBAzEJSQ
-	 gRG9W3sdo/A7Z1TRijbJ49SJk6U9SGZz1sNAIakruHpAbHjzCKJrgFNsr1aWKa0z9H
-	 xoODuRK3rSU+3W7fF5pnIuwZwyHu4qVVmDClkSXfnC6fRlP/Iup5YOBkz2dVpS4F1c
-	 cyvilMj4huWcQ==
-From: Christian Brauner <brauner@kernel.org>
-To: Anuj Gupta <anuj20.g@samsung.com>
-Cc: Christian Brauner <brauner@kernel.org>,
-	linux-block@vger.kernel.org,
-	linux-fsdevel@vger.kernel.org,
-	joshi.k@samsung.com,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	gost.dev@samsung.com,
-	vincent.fu@samsung.com,
-	jack@suse.cz,
-	anuj1072538@gmail.com,
-	axboe@kernel.dk,
-	viro@zeniv.linux.org.uk,
-	hch@infradead.org,
-	martin.petersen@oracle.com,
-	ebiggers@kernel.org,
-	adilger@dilger.ca
-Subject: Re: [PATCH for-next v5 0/4] add ioctl to query metadata and protection info capabilities
-Date: Tue,  1 Jul 2025 14:01:17 +0200
-Message-ID: <20250701-abreden-rohkost-a0c293481b42@brauner>
-X-Mailer: git-send-email 2.47.2
-In-Reply-To: <20250630090548.3317-1-anuj20.g@samsung.com>
-References: <20250630090548.3317-1-anuj20.g@samsung.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qW7LzJ++";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="p10Zy082";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qW7LzJ++";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="p10Zy082"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 96C8D1F393;
+	Tue,  1 Jul 2025 13:54:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1751378088; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OZa4yKRHVDO+7SZUwMFN1ZqXJzB6v61X3RuYjqeq4EI=;
+	b=qW7LzJ++TZAzgZzJJ8dmmAQ3FyyHzXkr28sOR7UKjG+7dWpaaMSxDYuzxYJ90697etJ2fs
+	oqLVJPIJNNtOoXor5lYq0cqHsB6quP7YUwFrJICByatLKoRqvjSGs/sO9tD6aU7VWRcV+u
+	mmXFtKYwwysFM+lKd3sIE2zEFo1bSOQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1751378088;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OZa4yKRHVDO+7SZUwMFN1ZqXJzB6v61X3RuYjqeq4EI=;
+	b=p10Zy082goSNDSHYdjSff+NcvPSNoCEK4P0Pp5IS1mnYA/UxSuvlPWc9Ynakx8tMU51g6B
+	1AmCwGgHFnVN82AA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1751378088; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OZa4yKRHVDO+7SZUwMFN1ZqXJzB6v61X3RuYjqeq4EI=;
+	b=qW7LzJ++TZAzgZzJJ8dmmAQ3FyyHzXkr28sOR7UKjG+7dWpaaMSxDYuzxYJ90697etJ2fs
+	oqLVJPIJNNtOoXor5lYq0cqHsB6quP7YUwFrJICByatLKoRqvjSGs/sO9tD6aU7VWRcV+u
+	mmXFtKYwwysFM+lKd3sIE2zEFo1bSOQ=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1751378088;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=OZa4yKRHVDO+7SZUwMFN1ZqXJzB6v61X3RuYjqeq4EI=;
+	b=p10Zy082goSNDSHYdjSff+NcvPSNoCEK4P0Pp5IS1mnYA/UxSuvlPWc9Ynakx8tMU51g6B
+	1AmCwGgHFnVN82AA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 740281364B;
+	Tue,  1 Jul 2025 13:54:48 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id OMToGajoY2i3BQAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Tue, 01 Jul 2025 13:54:48 +0000
+Date: Tue, 1 Jul 2025 15:54:43 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Aaron Tomlin <atomlin@atomlin.com>
+Cc: Christoph Hellwig <hch@infradead.org>, 
+	John Garry <john.g.garry@oracle.com>, Daniel Wagner <wagi@kernel.org>, "Sean A." <sean@ashe.io>, 
+	"James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, "kashyap.desai@broadcom.com" <kashyap.desai@broadcom.com>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>, 
+	"mpi3mr-linuxdrv.pdl@broadcom.com" <mpi3mr-linuxdrv.pdl@broadcom.com>, "sreekanth.reddy@broadcom.com" <sreekanth.reddy@broadcom.com>, 
+	"sumit.saxena@broadcom.com" <sumit.saxena@broadcom.com>
+Subject: Re: [RFC PATCH v2 1/1] scsi: mpi3mr: Introduce smp_affinity_enable
+ module parameter
+Message-ID: <c4c82ac2-c9f9-4bef-8f6f-a6cc9a2a0545@flourine.local>
+References: <1xjYfSjJndOlG0Uro2jPuAmIrfqi5AVbfpFeWh7RfLfzqqH9u8ePoqgaP32ElXrGyOB47UvesV_Y2ypmM3cZtWit2EPnV3aj6i9w_DMo1eI=@ashe.io>
+ <077ffc15-f949-41d4-a13b-4949990ba830@oracle.com>
+ <aFjjf3qbuEOeWUjt@infradead.org>
+ <0233e47b-894f-49e0-822c-bc1436352c98@flourine.local>
+ <itze7fhv7yx6j4l4ammx2znkknr2v6iducahcsxdjpfbasdsz5@nz4hvmv3s234>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1633; i=brauner@kernel.org; h=from:subject:message-id; bh=Ve2jWkUY7Kco8qr8eXLeveQqpfYfuVWQzfdfLKDRfSM=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQknxN75MRyd/PiQ5JXj/wQbuLSu2fukbHgvmHLC/8Fx w+t3D2/rKOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAid48xMqyzkzDW3sER9D89 SPm21bwpawozbEPuMy969V6FLSlrITsjw2ot+bUZNcv9avvZ703+8bGnrjlII9OyWpBl6wIR/uT fHAA=
-X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <itze7fhv7yx6j4l4ammx2znkknr2v6iducahcsxdjpfbasdsz5@nz4hvmv3s234>
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	ARC_NA(0.00)[];
+	TO_DN_EQ_ADDR_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_BLOCKED(0.00)[rspamd.com];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	MISSING_XM_UA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
+X-Spam-Level: 
 
-On Mon, 30 Jun 2025 14:35:44 +0530, Anuj Gupta wrote:
-> This patch series adds a new ioctl to query metadata and integrity
-> capability.
-> 
-> Patch 1 renames tuple_size field to metadata_size
-> Patch 2 adds a pi_tuple_size field in blk_integrity struct which is later
-> used to export this value to the user as well.
-> Patch 3 allows computing right pi_offset value.
-> Patch 4 introduces a new ioctl to query integrity capability.
-> 
-> [...]
+On Wed, Jun 25, 2025 at 09:03:42AM -0400, Aaron Tomlin wrote:
+> Understood. I agree, common functionality is indeed preferred.
+> Daniel, I look forward to your submission.
 
-Applied to the vfs-6.17.integrity branch of the vfs/vfs.git tree.
-Patches in the vfs-6.17.integrity branch should appear in linux-next soon.
+Sorry for the delay. I found a few bugs in the new cpu queue mapping
+code and it took a while to debug and fix them all. I should have it
+ready to post by tomorrow. Currently, my brain overheating due to summer
+:)
 
-Please report any outstanding bugs that were missed during review in a
-new review to the original patch series allowing us to drop it.
-
-It's encouraged to provide Acked-bys and Reviewed-bys even though the
-patch has now been applied. If possible patch trailers will be updated.
-
-Note that commit hashes shown below are subject to change due to rebase,
-trailer updates or similar. If in doubt, please check the listed branch.
-
-tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
-branch: vfs-6.17.integrity
-
-[1/4] block: rename tuple_size field in blk_integrity to metadata_size
-      https://git.kernel.org/vfs/vfs/c/c6603b1d6556
-[2/4] block: introduce pi_tuple_size field in blk_integrity
-      https://git.kernel.org/vfs/vfs/c/76e45252a4ce
-[3/4] nvme: set pi_offset only when checksum type is not BLK_INTEGRITY_CSUM_NONE
-      https://git.kernel.org/vfs/vfs/c/f3ee50659148
-[4/4] fs: add ioctl to query metadata and protection info capabilities
-      https://git.kernel.org/vfs/vfs/c/9eb22f7fedfc
+FWIW, the last standing issue is that the qla2xxx driver allocates
+queues for scsi and reuses a subset of these queues for nvme. So the irq
+allocating is done for the scsi queues, e.g 16 queues, but the nvme code
+limits it to 8 queues. Currently, there is a disconnect between the irq
+mapping and the cpu mapping code. The solution here is to use the
+irq_get_affinity function instead creating a new map based only on the
+housekeeping cpumask.
