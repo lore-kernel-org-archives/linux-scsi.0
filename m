@@ -1,120 +1,211 @@
-Received: from mail-io1-f51.google.com (mail-io1-f51.google.com [209.85.166.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46D37279DD8
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Jul 2025 16:30:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.51
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC4DD25C6EC;
+	Tue,  1 Jul 2025 17:44:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751387404; cv=none; b=LfYp02Lzst4Jqn6N/w/qClpSITH8/1iz/PfrJ7m05Ulk3mq1RYNHeiPMR6emWcpvDllXERYt02BVwReg+HZcT0yS9xkAnvFkyISbZAKwTAea6yy9FEg++hBk94v/7Rizg98QjbO4AP5RfTU4QkHtysrV5MSSXZ5qvYNnYJGuD9Y=
+	t=1751391861; cv=none; b=AYjkOZQCZo341Kygcx+rUGnnded8BAdppevYObzRAkRVbtO3hpuVajbQ91xJHlPvmvYGunR1skpiJMOKVLGyQHG1pdL0ysAz8vvtH3XN/0wTk88mhttGpCkj4WV5aul3ndTo51JwQ3d8QLMTB3AuBIPeHeyMdSo+7jkktXicXe0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751387404; c=relaxed/simple;
-	bh=wFrxDDlw3PMnJ84pTpU3+oamjHqaLYc4WDE2gz4FccE=;
-	h=From:To:Cc:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=en8ewC8ixdMvR7Kak1Rq4/VggANOYlthNsaEjQhRE8E3HLPbuttq0u6vQ69tpo2j+Cr9jy6/Laa+MrZ9AlZ7WD49FGJepCvVNADAGurk2pstCm2w3dbnYNYAsFU1nwqppTSMETpCvrsEZ3Bec5CEaw4ONHfB9MJ1oSg2NVFmL7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=09fs6eb5; arc=none smtp.client-ip=209.85.166.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1751391861; c=relaxed/simple;
+	bh=T/Oh3jotCzcmLKi13L685F87dDpqLPMtMcQj6fakPvk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=I0PEN50NROnUjWt38DdH9Ky7sXElV0pwX6o7tNIfmc8nRVV6qhj4g62bHlu3B3rXxS39N7/xorj1z7kPnY43/16TEPjoksvgOKvxglNyD4julT25aUNCk8b07OyYMNdrp3aX7yOlLF4f6Z+Wkz1mM3y5aZ7Zv2cbT8RuJXaO8+Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PFC8LLDa; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="09fs6eb5"
-Received: by mail-io1-f51.google.com with SMTP id ca18e2360f4ac-876ae3f7768so193297639f.0
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Jul 2025 09:30:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1751387401; x=1751992201; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=crWwaD/7GgCUUFcWT/Llkm7dN9wwCuiLb/qh9BwJGxc=;
-        b=09fs6eb5exlgCRMXs4yv7qhEYiWG/hZ5FcH/x0fmWbkI8uuqVC0MbFRBqfJwLxpRh4
-         hvhQUw9cMVFTY6ocKF5kXNp9HmbCp+f4MU4QRW1ql8X1ppZVntgtBpVZrlB4oWKkUdxp
-         Ze4b/LURH6iRi/eXuK7FgsVm+Xja4ONJaLnontXBtmmRp1yn1coXOHmEU71tKLw5C/jU
-         8TkGU4HWKoIbkrXBuVtEhZksV21wbDiw89Y0tfPK7cOc1D50aDnAyMkEVwVapzIvw7Ra
-         vetnL5bDRNo8eCl2eP/Zs5AnTlWIn1hSsnWJbWnq8ZMdra1vyD7HsmIy12PTtO8LbPR/
-         VOyw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751387401; x=1751992201;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=crWwaD/7GgCUUFcWT/Llkm7dN9wwCuiLb/qh9BwJGxc=;
-        b=vlTUkoQ9sdNL7QL6/MTNSojqzAZckwKGlD3H9dkBMTP4b2bSCuEaNOcdJvyTqRXjf/
-         7zvMxa+4gY2wd21lxee+yN6iVHXxsPHDitAkUQw7X73mukPCn40wC0fdthvEmJCPcRL+
-         AR3XxzlpzsTTejt42lo2Qg5lQSTiCSSnqr/zCf9AP1s74QCcWmw6+RDl30k5qNu8JSXX
-         PvUyNOoa2r+2jA42diAp7bOP4ozj6gRIfXFsL4q7rUrKfx5HPnRkv3zNK9VbScEU8PlQ
-         2bWhAOPscSebCcCUPgeipfJcF3MJpsesZBdEVkQ0p3+aczIcGm8iLu8pRoSizFBHH3P2
-         HB5g==
-X-Forwarded-Encrypted: i=1; AJvYcCX6M/Q/Cjh1DOK22GDwVyKhf53IH+WhxDB+zlaXhmTYcRt33PVqOD8gNe5eOt0FQ+J0BxApZb9sW1+x@vger.kernel.org
-X-Gm-Message-State: AOJu0YyesXV/Q9mjojRRJF8s7+QNQZNES1S4hAxhg2z9p7rK4MCViciN
-	f1slgxjNzI9X5MyMsqhYgQAFNLJLmdkGJ6Ao/wXknvobT3XII8LXtBKRs414M4dWqME=
-X-Gm-Gg: ASbGncsLMNw0BD1oIgBaKUhbm9lUMyXNjI7B/KUoLwxoaZEny0ZEt8gyC9WDPX17QkX
-	YoJSAav1kzGWB7zkbbXftSJ1DkebVUhLNSo1YY7+PVJ+6PVgkYxs6xoPoBdPOkaHyOKFBs7WCG6
-	TWEIPwiC97wWMrHTKxxjvogxQt60aDUKSQ/VQWOxtevvey7S4l2R7hko0QlOGmHjbGwYRx36i87
-	9MPxuaJSHwC4dN/IKMa91EMHfJpVROe78VX0q+HT31mtmIFMFgxXo46+ORhZW4JNrCWPh766GDN
-	+qWJLpz1VzU+Xu8ki2qJiaJjPjd6tFhBLPJY9gnNSraulVKU2H+Eu+pxuoobsYE=
-X-Google-Smtp-Source: AGHT+IGmszV/ckQKjI/KgjT/UrAo+IhSsGcXQNmla80uKgIibrMYCCf4LgGCWJe7gTvyQW/Kg7z8dQ==
-X-Received: by 2002:a05:6602:2b8c:b0:864:4aa2:d796 with SMTP id ca18e2360f4ac-876882fbadcmr2169640839f.8.1751387401311;
-        Tue, 01 Jul 2025 09:30:01 -0700 (PDT)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-87687b0d3fbsm236096439f.39.2025.07.01.09.29.59
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Jul 2025 09:30:00 -0700 (PDT)
-From: Jens Axboe <axboe@kernel.dk>
-To: Christoph Hellwig <hch@lst.de>, Daniel Wagner <wagi@kernel.org>
-Cc: Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>, 
- "Michael S. Tsirkin" <mst@redhat.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>, 
- Thomas Gleixner <tglx@linutronix.de>, 
- Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
- Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, 
- Ming Lei <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, 
- Hannes Reinecke <hare@suse.de>, linux-kernel@vger.kernel.org, 
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
- megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
- storagedev@microchip.com, virtualization@lists.linux.dev, 
- GR-QLogic-Storage-Upstream@marvell.com
-In-Reply-To: <20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org>
-References: <20250617-isolcpus-queue-counters-v1-0-13923686b54b@kernel.org>
-Subject: Re: [PATCH 0/5] blk: introduce block layer helpers to calculate
- num of queues
-Message-Id: <175138739958.350817.18365520328662376034.b4-ty@kernel.dk>
-Date: Tue, 01 Jul 2025 10:29:59 -0600
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PFC8LLDa"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A33B7C4CEEB;
+	Tue,  1 Jul 2025 17:44:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751391860;
+	bh=T/Oh3jotCzcmLKi13L685F87dDpqLPMtMcQj6fakPvk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PFC8LLDaQCERloxxDdzc9fDp24D33SKAmYgZ1QFEOmzF6jiKiF2fH1EYoGLBTDyic
+	 DAf4tg0M7jTvpKKWO6Bcb9xNER/kpNY8Am6LmTbfe7sVF+DtYDlF35U1Coo3CpV4M7
+	 /Th3Z18z7qwHtMSYuKvYYoGDluKbU7eBxqGLTb2vcV1rZcyfADPAoDl0EaInKSZQMy
+	 +523XjIJeVk/nSgi3w/m0+h4md8zNTFLXti5KrMVtUpNMoC8ixPYLXAhDIboKSx9jS
+	 e17VaG1/Z+x6oAaXb9lBOGsWH7AmAbp/zzL2jDYTGZ/Kq2PWkC1Yc60bP+K5sjuSO+
+	 BX5oEW8zb2ibw==
+Date: Tue, 1 Jul 2025 19:44:17 +0200
+From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <ukleinek@kernel.org>
+To: Waqar Hameed <waqar.hameed@axis.com>
+Cc: Vignesh Raghavendra <vigneshr@ti.com>, 
+	Julien Panis <jpanis@baylibre.com>, William Breathitt Gray <wbg@kernel.org>, 
+	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, 
+	Peter Rosin <peda@axentia.se>, Jonathan Cameron <jic23@kernel.org>, 
+	David Lechner <dlechner@baylibre.com>, Nuno =?utf-8?B?U8Oh?= <nuno.sa@analog.com>, 
+	Andy Shevchenko <andy@kernel.org>, Cosmin Tanislav <cosmin.tanislav@analog.com>, 
+	Lars-Peter Clausen <lars@metafoo.de>, Michael Hennerich <Michael.Hennerich@analog.com>, 
+	Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Matteo Martelli <matteomartelli3@gmail.com>, 
+	Heiko Stuebner <heiko@sntech.de>, Francesco Dolcini <francesco@dolcini.it>, 
+	=?utf-8?Q?Jo=C3=A3o_Paulo_Gon=C3=A7alves?= <jpaulo.silvagoncalves@gmail.com>, Hugo Villeneuve <hvilleneuve@dimonoff.com>, 
+	Subhajit Ghosh <subhajit.ghosh@tweaklogic.com>, Mudit Sharma <muditsharma.info@gmail.com>, 
+	Gerald Loacker <gerald.loacker@wolfvision.net>, Song Qiang <songqiang1304521@gmail.com>, 
+	Crt Mori <cmo@melexis.com>, Dmitry Torokhov <dmitry.torokhov@gmail.com>, 
+	Ulf Hansson <ulf.hansson@linaro.org>, Karol Gugala <kgugala@antmicro.com>, 
+	Mateusz Holenko <mholenko@antmicro.com>, Gabriel Somlo <gsomlo@gmail.com>, Joel Stanley <joel@jms.id.au>, 
+	Claudiu Manoil <claudiu.manoil@nxp.com>, Vladimir Oltean <vladimir.oltean@nxp.com>, 
+	Wei Fang <wei.fang@nxp.com>, Clark Wang <xiaoning.wang@nxp.com>, 
+	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
+	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, 
+	Paolo Abeni <pabeni@redhat.com>, Vinod Koul <vkoul@kernel.org>, 
+	Kishon Vijay Abraham I <kishon@kernel.org>, Krzysztof Kozlowski <krzk@kernel.org>, 
+	Alim Akhtar <alim.akhtar@samsung.com>, Sebastian Reichel <sre@kernel.org>, 
+	Neil Armstrong <neil.armstrong@linaro.org>, Kevin Hilman <khilman@baylibre.com>, 
+	Jerome Brunet <jbrunet@baylibre.com>, Martin Blumenstingl <martin.blumenstingl@googlemail.com>, 
+	Han Xu <han.xu@nxp.com>, Haibo Chen <haibo.chen@nxp.com>, 
+	Yogesh Gaur <yogeshgaur.83@gmail.com>, Mark Brown <broonie@kernel.org>, 
+	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	Souradeep Chowdhury <quic_schowdhu@quicinc.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Liam Girdwood <lgirdwood@gmail.com>, Peter Ujfalusi <peter.ujfalusi@linux.intel.com>, 
+	Bard Liao <yung-chuan.liao@linux.intel.com>, Ranjani Sridharan <ranjani.sridharan@linux.intel.com>, 
+	Daniel Baluta <daniel.baluta@nxp.com>, Kai Vehmanen <kai.vehmanen@linux.intel.com>, 
+	Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>, Jaroslav Kysela <perex@perex.cz>, Takashi Iwai <tiwai@suse.com>, 
+	Shawn Guo <shawnguo@kernel.org>, Sascha Hauer <s.hauer@pengutronix.de>, 
+	Pengutronix Kernel Team <kernel@pengutronix.de>, Fabio Estevam <festevam@gmail.com>, kernel@axis.com, 
+	linux-iio@vger.kernel.org, linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-mediatek@lists.infradead.org, linux-rockchip@lists.infradead.org, linux-input@vger.kernel.org, 
+	linux-mmc@vger.kernel.org, imx@lists.linux.dev, netdev@vger.kernel.org, 
+	linux-phy@lists.infradead.org, linux-samsung-soc@vger.kernel.org, linux-pm@vger.kernel.org, 
+	linux-pwm@vger.kernel.org, linux-amlogic@lists.infradead.org, linux-spi@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, linux-usb@vger.kernel.org, 
+	sound-open-firmware@alsa-project.org, linux-sound@vger.kernel.org
+Subject: Re: [PATCH] Remove error prints for devm_add_action_or_reset()
+Message-ID: <ylr7cuxldwb24ccenen4khtyddzq3owgzzfblbohkdxb7p7eeo@qpuddn6wrz3x>
+References: <pnd7c0s6ji2.fsf@axis.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3-dev-d7477
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="siz3npg32duy4f54"
+Content-Disposition: inline
+In-Reply-To: <pnd7c0s6ji2.fsf@axis.com>
 
 
-On Tue, 17 Jun 2025 15:43:22 +0200, Daniel Wagner wrote:
-> I am still working on the change request for the "blk: honor isolcpus
-> configuration" series [1]. Teaching group_cpus_evenly to use the
-> housekeeping mask depending on the context is not a trivial change.
-> 
-> The first part of the series has already been reviewed and doesn't
-> contain any controversial changes, so let's get them processed
-> independely.
-> 
-> [...]
+--siz3npg32duy4f54
+Content-Type: text/plain; protected-headers=v1; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
+Subject: Re: [PATCH] Remove error prints for devm_add_action_or_reset()
+MIME-Version: 1.0
 
-Applied, thanks!
+Hello,
 
-[1/5] lib/group_cpus: Let group_cpu_evenly() return the number of initialized masks
-      commit: b6139a6abf673029008f80d42abd3848d80a9108
-[2/5] blk-mq: add number of queue calc helper
-      commit: 3f27c1de5df265f9d8edf0cc5d75dc92e328484a
-[3/5] nvme-pci: use block layer helpers to calculate num of queues
-      commit: 4082c98c1fefd276b34ba411ac59c50b336dfbb1
-[4/5] scsi: use block layer helpers to calculate num of queues
-      commit: 94970cfb5f10ea381df8c402d36c5023765599da
-[5/5] virtio: blk/scsi: use block layer helpers to calculate num of queues
-      commit: 0a50ed0574ffe853f15c3430794b5439b2e6150a
+On Tue, Jul 01, 2025 at 05:03:33PM +0200, Waqar Hameed wrote:
+>  drivers/pwm/pwm-meson.c                          | 3 +--
 
-Best regards,
--- 
-Jens Axboe
+Looking at this driver I tried the following:
 
+diff --git a/drivers/base/core.c b/drivers/base/core.c
+index 3809baed42f3..58a2ab74f14c 100644
+--- a/drivers/base/core.c
++++ b/drivers/base/core.c
+@@ -5062,7 +5062,7 @@ static void __dev_probe_failed(const struct device *d=
+ev, int err, bool fatal,
+  *
+  * Returns @err.
+  */
+-int dev_err_probe(const struct device *dev, int err, const char *fmt, ...)
++int _dev_err_probe(const struct device *dev, int err, const char *fmt, ...)
+ {
+ 	va_list vargs;
+=20
+@@ -5075,7 +5075,7 @@ int dev_err_probe(const struct device *dev, int err, =
+const char *fmt, ...)
+=20
+ 	return err;
+ }
+-EXPORT_SYMBOL_GPL(dev_err_probe);
++EXPORT_SYMBOL_GPL(_dev_err_probe);
+=20
+ /**
+  * dev_warn_probe - probe error check and log helper
+diff --git a/include/linux/dev_printk.h b/include/linux/dev_printk.h
+index eb2094e43050..23ef250727f1 100644
+--- a/include/linux/dev_printk.h
++++ b/include/linux/dev_printk.h
+@@ -275,7 +275,13 @@ do {									\
+ 	WARN_ONCE(condition, "%s %s: " format, \
+ 			dev_driver_string(dev), dev_name(dev), ## arg)
+=20
+-__printf(3, 4) int dev_err_probe(const struct device *dev, int err, const =
+char *fmt, ...);
++__printf(3, 4) int _dev_err_probe(const struct device *dev, int err, const=
+ char *fmt, ...);
++
++#define dev_err_probe(dev, err, ...) (								\
++	(__builtin_constant_p(err) && err =3D=3D -ENOMEM) ? err : _dev_err_probe(=
+dev, err, __VA_ARGS__)	\
++)
++
++
+ __printf(3, 4) int dev_warn_probe(const struct device *dev, int err, const=
+ char *fmt, ...);
+=20
+ /* Simple helper for dev_err_probe() when ERR_PTR() is to be returned. */
+diff --git a/include/linux/device/devres.h b/include/linux/device/devres.h
+index ae696d10faff..abfa5152b5a7 100644
+--- a/include/linux/device/devres.h
++++ b/include/linux/device/devres.h
+@@ -157,8 +157,11 @@ static inline int __devm_add_action_or_reset(struct de=
+vice *dev, void (*action)(
+ 	int ret;
+=20
+ 	ret =3D __devm_add_action(dev, action, data, name);
+-	if (ret)
++	if (ret) {
++		if (ret !=3D -ENOMEM)
++			__builtin_unreachable();
+ 		action(data);
++	}
+=20
+ 	return ret;
+ }
 
+With that
 
+        ret =3D devm_add_action_or_reset(dev, meson_pwm_s4_put_clk,
+                                       meson->channels[i].clk);
+        if (ret)
+                return dev_err_probe(dev, ret,
+                                     "Failed to add clk_put action\n");
+
+=66rom drivers/pwm/pwm-meson.c is optimized to
+
+        ret =3D devm_add_action_or_reset(dev, meson_pwm_s4_put_clk,
+                                       meson->channels[i].clk);
+        if (ret)
+                return ret;
+
+=2E
+
+I would prefer this approach, because a) there is no need to drop all
+dev_err_probe()s after devm_add_action_or_reset() and b) the
+dev_err_probe()s could stay for consistency in the error paths of a
+driver.
+
+Best regards
+Uwe
+
+--siz3npg32duy4f54
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmhkHm4ACgkQj4D7WH0S
+/k40Ugf+IGBhMZPHVoCFXh9jXSPImkCDM81Omc7cyM5CZFFdOO09K82bfGBFD7bF
+X+9ZxJqCFCRmF8AtN+3Z6xmAia7Q4jKwUgvdR/iJY4jMX6uQk49IxGgv9Ux9aAu2
+/jttnDFocIwCi6sjUxxf2HCdfwLPKhfhrl+xNpQ80kh4oBZ+L0X5s6u6Mcsu8V2P
+2O3Q05nJZK/bpCYZNgRHMeg4k71v6nG8eYw2nJ6n7dbTOtj+HnQC3GCfajWFg7mf
+al8FLQxckEkDif0f7yDlSnjUT7oF78eg1G2pf9PDBr9I15efw+TkKSmkr/MIVXJE
+YFLNKMZeRFfoAyzKWfjfpuR/ZUe+3Q==
+=uD6x
+-----END PGP SIGNATURE-----
+
+--siz3npg32duy4f54--
