@@ -1,110 +1,98 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF9E31E1DF2
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Jul 2025 07:11:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20B7725D1EE;
+	Tue,  1 Jul 2025 12:01:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751353873; cv=none; b=mlpcVIdNys4bkS7tDphi2YNWqYUXqnmWVPJRgTWCVQTdgXUaUfO7VpTfM+Xr78kwa0g4NGLv2Wf5Y/VW0TcpnHkByBrk5lOnR3bk47YhRPRu8SrDaKoLirlWAKK5OWIcMtvg9BSU0AFv62GQ6pS6NZcM0UdEGnUjrk4akLItM4Q=
+	t=1751371295; cv=none; b=CoJsZxmoPGwGKntqLwDvD8iOVzuWouQZlBTN0MD4ww5yQwEA9+g9PmQyfqrB7r9JpFy/6AFxobtt7sDT5KwRzj2dUsLdpD+K8tRqOEgLfwcQcFdF70HD2Pel8Yscwc9W6SMVG2vqIvh5eFAeh0JQSTC07IaNNpH1eqOSjrNDxWM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751353873; c=relaxed/simple;
-	bh=gz2k1uTtHT3pD2yquUXxfcMI0+h40Ol80pAebQJKDGM=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=EkhtEatn2/csV0vT7ibPCBTPWNZWU61SspvN/YuVAu8/JxXB5SMYHjwUa/C2der3v44FhhLAfDvGUUHWGdFS+raZSrCqIEXmVG0cyUDBmq8Y/3SqFDk06EJPpSBLVaDdbzrv6VB5FbXEyl9umnCcqpZFcFOsHoP88GAPkDYx+vM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Wx71Edoa; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1751371295; c=relaxed/simple;
+	bh=Ve2jWkUY7Kco8qr8eXLeveQqpfYfuVWQzfdfLKDRfSM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=qgh8PhwRaTv5Rgq8FvL4knbMF65tYvdksVOdneE6g5d8g9YWFpVcZCGXe5DCOSeU//nTI2pE3ZT/dbXSg6TEP8PTC0ZSJ7aCGR61ZXYHeRAJ44Tgr58LxZ5zjELeSDK8nymWDcIb9fZWCYD/xYMG9nCJbRnWVARYSe3WpXyvWH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rEeP5CN4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Wx71Edoa"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-748f54dfa5fso4596771b3a.2
-        for <linux-scsi@vger.kernel.org>; Tue, 01 Jul 2025 00:11:09 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1751353869; x=1751958669; darn=vger.kernel.org;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=zlJot7sx2YopdWxHyoyhohLl4TchU03X/u4osGspitU=;
-        b=Wx71EdoaavEbpZ+ztjNWAWzP+tmJXo7QGk3i/7WgicRvtrUSMWnYaYcSqxXmTNJ/et
-         1wC0kNTvB1smJFED8VqLpsT0eWIekq8tR0eH42kJvOgtNa5tu0IO94ZXL7vHiSPpmV2+
-         TxiX7/mss8RoU+ipG7oIrYXQs0CnyyIrtGpIA=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751353869; x=1751958669;
-        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zlJot7sx2YopdWxHyoyhohLl4TchU03X/u4osGspitU=;
-        b=pRj4lumhXOQrHX3xidlqz4F+DwqNJ8EJpJI5pqHTN0kO2fV0LlUQkNLvUXU91TYdiW
-         UZx4XAEUxHCfraPiDEShWyuHsf+YSDXEp480MHCWPzrOBPAZR2CgUwJSuqxvGknwmf9a
-         XXuSqq1NsEQlI1p5SIGzV22lGRMUMT/r8jEIiAygFbqSpX7AHmh4HZu/sHXVwqSo4PMo
-         Gu3e6CavGHa+KXnNBT5PtNgVOncbgT4VpgrwqQDwkk+L4Zvt1y7xebH0b3cM8SZyPEWt
-         PCzFU2+708ot7QojHurW1jXPWH4dPRTvqOdEWQKxKMeE0jfiVYjxeicrvFYKNeKMbk9p
-         0usw==
-X-Forwarded-Encrypted: i=1; AJvYcCWD2Wo8QXQO9Y7JlXqMMBdpMKRyaJlEFVcSz9iAaG441pvGxaf63s8tjvFHL+CS0iBD2tVnbpMTWgVo@vger.kernel.org
-X-Gm-Message-State: AOJu0YxP9YY2xsFUZxB1ToDXCyvOn4GE9XCc67ZK7osNo6j1B55jolim
-	yW8TUi6uml+cReBahiehgHVi7ZNohtbHl/Ou3dDb/NRu1SMzIQ8GNWt28+sw1IXkEooxFQ+SPVJ
-	3M06C28VgcFAjEDnie5eFpPo1jIlIyXQIFbJiKNw0UEO4E+bVz3KK
-X-Gm-Gg: ASbGnctd2pBv8oVb+brDMP9nj2bosIarNcuNf7PCNnv05xz7E0S6Ou/crjdLNy5G6nG
-	hcJpzOKzysf4xYYE2XOCmos/8MbDsk+ZJn7KKhXW2+Fk+YqDmYMPxjLbJ/xLJE7mM+ecjLSS7/h
-	Bn9kW4zBVo3yyHLTnBprdnjG+MO9Alwj817CNcZtBltK9mi0+GxshZd+OrndHqo0K5JiJtGlTIu
-	Z8s0xVoEw2nyxkVV0YeHoYjYfFBn9r1CLJT72+MJTbAmKYGpgwOSs2T+dmPniPVNOiqgRtyfnnF
-	IJ6qTEqxubNIKsC+cdevuOkFtO9rEHhcckgTVZEn0wiqPZA64ZI8B4nOy2YnKt50sEbs+M2lBYz
-	1iDau1wcq3K6K0BMLt2sr7xqMYnL9asyMJA==
-X-Google-Smtp-Source: AGHT+IFjV6+RrH4+UnV8V5+50viki/aZYcrx5DBr5GFjR0CD6LtrULS5qzOc04+1tAG58NB1KrApAA==
-X-Received: by 2002:a05:6a00:4b11:b0:749:93d:b098 with SMTP id d2e1a72fcca58-74af6fd7312mr21032262b3a.22.1751353869139;
-        Tue, 01 Jul 2025 00:11:09 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74af540a8f6sm11235597b3a.12.2025.07.01.00.11.04
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 01 Jul 2025 00:11:08 -0700 (PDT)
-From: Muneendra Kumar <muneendra.kumar@broadcom.com>
-To: bgurney@redhat.com
-Cc: axboe@kernel.dk,
-	dick.kennedy@broadcom.com,
-	hare@suse.de,
-	hch@lst.de,
-	james.smart@broadcom.com,
-	jmeneghi@redhat.com,
-	kbusch@kernel.org,
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rEeP5CN4"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4647C4CEEB;
+	Tue,  1 Jul 2025 12:01:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751371294;
+	bh=Ve2jWkUY7Kco8qr8eXLeveQqpfYfuVWQzfdfLKDRfSM=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=rEeP5CN4D96Xof3lUeWOZq5kQVZ7As6qgXQJ+ZVOWulMkKg1SsV7pEcbmA40Q+3Cf
+	 0kM710txoJdS2GTbF+7CWVJOzBREkzgDya6XBMBUQ5Sd2wcowJtnGQJcB42WwFgYc2
+	 9OnkmabB6qG7uKK/PG3jU0ecNGZh6KSAQMa6/hWoiJnYrVXLZAOiX05cJSJBAzEJSQ
+	 gRG9W3sdo/A7Z1TRijbJ49SJk6U9SGZz1sNAIakruHpAbHjzCKJrgFNsr1aWKa0z9H
+	 xoODuRK3rSU+3W7fF5pnIuwZwyHu4qVVmDClkSXfnC6fRlP/Iup5YOBkz2dVpS4F1c
+	 cyvilMj4huWcQ==
+From: Christian Brauner <brauner@kernel.org>
+To: Anuj Gupta <anuj20.g@samsung.com>
+Cc: Christian Brauner <brauner@kernel.org>,
+	linux-block@vger.kernel.org,
+	linux-fsdevel@vger.kernel.org,
+	joshi.k@samsung.com,
 	linux-nvme@lists.infradead.org,
 	linux-scsi@vger.kernel.org,
-	njavali@marvell.com,
-	sagi@grimberg.me,
-	muneendra737@gmail.com,
-	Muneendra Kumar <muneendra.kumar@broadcom.com>
-Subject: Re: [PATCHv7 0/6] nvme-fc: FPIN link integrity handling
-Date: Mon, 30 Jun 2025 17:27:24 -0700
-Message-Id: <20250701002724.1435361-1-muneendra.kumar@broadcom.com>
-X-Mailer: git-send-email 2.27.0
-In-Reply-To: <20250624202020.42612-1-bgurney@redhat.com>
-References: <20250624202020.42612-1-bgurney@redhat.com>
+	gost.dev@samsung.com,
+	vincent.fu@samsung.com,
+	jack@suse.cz,
+	anuj1072538@gmail.com,
+	axboe@kernel.dk,
+	viro@zeniv.linux.org.uk,
+	hch@infradead.org,
+	martin.petersen@oracle.com,
+	ebiggers@kernel.org,
+	adilger@dilger.ca
+Subject: Re: [PATCH for-next v5 0/4] add ioctl to query metadata and protection info capabilities
+Date: Tue,  1 Jul 2025 14:01:17 +0200
+Message-ID: <20250701-abreden-rohkost-a0c293481b42@brauner>
+X-Mailer: git-send-email 2.47.2
+In-Reply-To: <20250630090548.3317-1-anuj20.g@samsung.com>
+References: <20250630090548.3317-1-anuj20.g@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="US-ASCII"
+Content-Type: text/plain; charset="utf-8"
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1633; i=brauner@kernel.org; h=from:subject:message-id; bh=Ve2jWkUY7Kco8qr8eXLeveQqpfYfuVWQzfdfLKDRfSM=; b=owGbwMvMwCU28Zj0gdSKO4sYT6slMWQknxN75MRyd/PiQ5JXj/wQbuLSu2fukbHgvmHLC/8Fx w+t3D2/rKOUhUGMi0FWTJHFod0kXG45T8Vmo0wNmDmsTCBDGLg4BWAid48xMqyzkzDW3sER9D89 SPm21bwpawozbEPuMy969V6FLSlrITsjw2ot+bUZNcv9avvZ703+8bGnrjlII9OyWpBl6wIR/uT fHAA=
+X-Developer-Key: i=brauner@kernel.org; a=openpgp; fpr=4880B8C9BD0E5106FC070F4F7B3C391EFEA93624
+Content-Transfer-Encoding: 8bit
 
-Thanks for the patch .
-We have tested this patch and this is working as designed.
-This functionality is a crucial enhancement for Fibre Channel solutions.
-This feature perpetuates the capabilities available in dm for NVMe in previous releases.
-With this patch we have a solution for both SCSI and NVMe.
+On Mon, 30 Jun 2025 14:35:44 +0530, Anuj Gupta wrote:
+> This patch series adds a new ioctl to query metadata and integrity
+> capability.
+> 
+> Patch 1 renames tuple_size field to metadata_size
+> Patch 2 adds a pi_tuple_size field in blk_integrity struct which is later
+> used to export this value to the user as well.
+> Patch 3 allows computing right pi_offset value.
+> Patch 4 introduces a new ioctl to query integrity capability.
+> 
+> [...]
 
-Tested-by: Muneendra Kumar <muneendra.kumar@broadcom.com>
+Applied to the vfs-6.17.integrity branch of the vfs/vfs.git tree.
+Patches in the vfs-6.17.integrity branch should appear in linux-next soon.
 
+Please report any outstanding bugs that were missed during review in a
+new review to the original patch series allowing us to drop it.
 
-Regards,
-Muneendra.
+It's encouraged to provide Acked-bys and Reviewed-bys even though the
+patch has now been applied. If possible patch trailers will be updated.
 
+Note that commit hashes shown below are subject to change due to rebase,
+trailer updates or similar. If in doubt, please check the listed branch.
 
--- 
-This electronic communication and the information and any files transmitted 
-with it, or attached to it, are confidential and are intended solely for 
-the use of the individual or entity to whom it is addressed and may contain 
-information that is confidential, legally privileged, protected by privacy 
-laws, or otherwise restricted from disclosure to anyone else. If you are 
-not the intended recipient or the person responsible for delivering the 
-e-mail to the intended recipient, you are hereby notified that any use, 
-copying, distributing, dissemination, forwarding, printing, or copying of 
-this e-mail is strictly prohibited. If you received this e-mail in error, 
-please return the e-mail to the sender, delete it from your computer, and 
-destroy any printed copy of it.
+tree:   https://git.kernel.org/pub/scm/linux/kernel/git/vfs/vfs.git
+branch: vfs-6.17.integrity
+
+[1/4] block: rename tuple_size field in blk_integrity to metadata_size
+      https://git.kernel.org/vfs/vfs/c/c6603b1d6556
+[2/4] block: introduce pi_tuple_size field in blk_integrity
+      https://git.kernel.org/vfs/vfs/c/76e45252a4ce
+[3/4] nvme: set pi_offset only when checksum type is not BLK_INTEGRITY_CSUM_NONE
+      https://git.kernel.org/vfs/vfs/c/f3ee50659148
+[4/4] fs: add ioctl to query metadata and protection info capabilities
+      https://git.kernel.org/vfs/vfs/c/9eb22f7fedfc
