@@ -1,159 +1,221 @@
-Received: from mail-ej1-f53.google.com (mail-ej1-f53.google.com [209.85.218.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2792B3596B;
-	Tue,  1 Jul 2025 17:57:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A3B2FEE10
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Jul 2025 20:32:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751392662; cv=none; b=hieCgyydzGkjwPcD8uxGP22c05kiSoDYcvzKBR+6BnA9VJ2goKSQYjkhigzd7raXHIG9mOR96HX5cuMNKinC0oQTYft0fmBHTpnsSV7JCKmllFA4T+NNhCKDTBhys5KNXsSUSzxzUv2Ai2FNGushiQuXS/dKee+d+84raoi61/Q=
+	t=1751401963; cv=none; b=C3vx94cATQ/aR/3RDi0YeKXoavBrX80IZwYHysTdxupO1zkEPsKrS8Ciig0J0tpfQVbeUmgD8llxpzTp513KyY/SNWiNqdh0cZJr1ilI76ToXAFr5dVzWm7VYTW6WmAC/WO3wGXBdZSpZOy7z55L5QunUknnnIXKTehaJdk5+eE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751392662; c=relaxed/simple;
-	bh=Xcj3t8dS0FcmInmyKWAR0WJhIMN9tZ31T0nM7EtTJpo=;
+	s=arc-20240116; t=1751401963; c=relaxed/simple;
+	bh=lhbw11nQ7b0aR2Z30rHwPBlF/+badm3+KVmfhXMdWG0=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=CSXhZya4XURCXoKlKZ2QVG4sUG50x0Ww+OmXOfg7ZBKh8r6EG6kZklDtTW0FsRJNa4Cjk8TcBCwVmpOIDs9KM8w8bAmezXKn7pyvCN0UIdsUlm95N1H2EWBkHWLVdhNg6t51QM/bQfDB6ftINs+mThT6dPW7nHogvlT5g81PwLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=iUsIsFLR; arc=none smtp.client-ip=209.85.218.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=eFsibtGy5qsh1nohZg8rVhMHGIoOAkmpOeS7b9BIdrwlvlIso7mdT/nW2M1w6HTd4M3nAjSDbWHshEoM7avEz7zA4jQ/S3UlSJvxhla5DwePStj+2dfXJX8Qdwxjc8PQ3ingSz331doKKNwRhvpFUbLuMBP1OJy0jS69vu91WAI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=AvulrLHi; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="iUsIsFLR"
-Received: by mail-ej1-f53.google.com with SMTP id a640c23a62f3a-ae360b6249fso750356066b.1;
-        Tue, 01 Jul 2025 10:57:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751392659; x=1751997459; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=pXjfR544OdpbJ9besQg+JvGQxJKjojQewq85hiTyzvw=;
-        b=iUsIsFLRo0peJdxeIvjPC8w2Xj21cg7MZDINLIla+fLfS+v6bxkabM0H5Q0Osishi6
-         UUZ0SIUnGa3fiaE92Kz9bd1QGsNVTiEUW7FC0cJAcQn8H2dWljRcmYm342h5SyAc7WYD
-         KqWdMNgAui9YjsBXz8kWTWXfusZPEsmVJ5W9YOuhJgjNMxn7LBHvK9uwRhHF2HBdkREW
-         JyaWKNDQFmkjUI1gVZGrzA0IRQP8ikXGo0yg/a2ayPKPWvncq08QgBIqPIhK2Vu3qLtd
-         iCvF63w9b454hh9W3pn+da87v1Icl0ZsNiR8NFKteNWoXUJAjGwMih5M48U+TeoxYK20
-         GaDQ==
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="AvulrLHi"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1751401960;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=E3QAp+njIqgagygGelfi+VFuGwWXW8+PeuSHzW1GgA0=;
+	b=AvulrLHiY//6sLMGZhKpI60YMCUyaGjmLKCj+Mws2xaCYIh3IPnfSAD5tgf/1Dh/bfQmNV
+	6Q8x2BTp+mx0fCXTcLDoorBrnJC/wikr6NR3p8C3Qs+5N+vRUBNLUKj8noNrRZduWR0S1W
+	WZgDzDQ+Oslo/wBDCSBy6vuShJf6m2E=
+Received: from mail-wr1-f72.google.com (mail-wr1-f72.google.com
+ [209.85.221.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-347-YFQAK4K9O3GGmhPiIQw-yQ-1; Tue, 01 Jul 2025 16:32:39 -0400
+X-MC-Unique: YFQAK4K9O3GGmhPiIQw-yQ-1
+X-Mimecast-MFC-AGG-ID: YFQAK4K9O3GGmhPiIQw-yQ_1751401958
+Received: by mail-wr1-f72.google.com with SMTP id ffacd0b85a97d-3a578958000so1425707f8f.3
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Jul 2025 13:32:39 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751392659; x=1751997459;
+        d=1e100.net; s=20230601; t=1751401958; x=1752006758;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=pXjfR544OdpbJ9besQg+JvGQxJKjojQewq85hiTyzvw=;
-        b=sVQ6LM1uKdTcWsRpvmMhCSfsZwekWzdzyAEGqF8nx/+e43poG2GrBssYpijs4DPwMB
-         QUNakoVVkmn225dhJ2Ah/fFMmeClmzouSEQzrdd1M2NfgHh4z4wniTIb26uWp7HYNR80
-         ypL/jFPrpSJBTaX4+QSggho1PaEY6+PhbjvGuDan5G+d0fG8sUrkV40y3sNQujk6p2LG
-         gLAELKO8H4/wwTSkqtFVN9qjeazgpAza5eA6DHLeS0JDX8JkVgZYLR3eu1KOMdf4BXWN
-         aqK4V1f01Ywyx4jzW6BmXAgYQAc11bgj79buSnm5gZ3SXEEJo+AxxZTRyo1R7amZYLWL
-         yTiw==
-X-Forwarded-Encrypted: i=1; AJvYcCUVy8txv5hM/+hSuI/nBkFn6sciUTOqmrIza6Z4MATGQRkWFZPHh6W7PFNMx62aS6WlENBSrOqzIqeG@vger.kernel.org, AJvYcCUYh/3YBv1eIHq8DRInHDBLAEmFMrOHWEueom13cLFsHpUWSBNjlr7B6a+L6qKXgil2tFStF96/ruPB@vger.kernel.org, AJvYcCUl/4+2LXagdrLUZ4u7f72e6Lw4rnyfO5dvFXvIj5SJV6GO9v66Gmgj5XJCgwld5BaBtigVz4Exz5csvw==@vger.kernel.org, AJvYcCVFajyBuFXmkHXMd12duyPWRVtLNot+iVJQ2/IPuCb0uJa6gCxkp4Xkk/ft5W0fJT69wnudFVsmiKLEeL8=@vger.kernel.org, AJvYcCVMM3qVPM93ghaLpM94wGg5djBKPtTjyghvV1y+wLFBTHwzMfa0QcrZJ3IT7iPcOPzh6XbhrlcJ@vger.kernel.org, AJvYcCVt3PauObtJgxRsytfRrfMRFYs7meOcw+YLXThV5ovyMad35OjbXCTm19HPF2x6XwLMSTY31TeHUin2@vger.kernel.org, AJvYcCWB9zAKg780CCcyghYnGyjDgwjPFyRtwiyVNldF8EJZDybh2g6wAI3sXIXtCCbbxCEM2rc5gx0I9QGd@vger.kernel.org, AJvYcCWTNg+wfy1z8mCD/919h9pxLk1WnuRvq7nQEHVTb+YIQlxIIMMcSaDFEScU+TWli8hRxmyvjL1rnjwj@vger.kernel.org, AJvYcCWTpf8edLOE12O7ljWgLR1PoBD5Q7pOH8XFMSO+qt2/9teyviBV2fMzn7mGHCIuU9DGKvZV4APecTn7DKhO@vger.kernel.org, AJvYcCWzLpehFBsFncirw4f3Yls10idYvrVYh6PTlarYFrlhboAOP9dq940VxmBDv6HlojJ4MnjRJgaw/EojpYg=@vger.kernel.org, AJvYcCX8hXB5mHBGjXE9tjVKBh1TE5C+51yE8VZwpkR2qotdZT0wmSKs2VYLJPSkhtwd3yf5cHdR46Uw8GncsOVa@vger.kernel.org, AJvYcCXDRYSqXJ9Ezu1RLo/SwxjSTIOa/G647ySbDPIqsfabcfI1xpy/1byYgi/ax+deLZwvzjkQxVtJO/8=@vger.kernel.org, AJvYcCXHNeWhtB4b5p5dsm0EflF1uQSI0DCPqiqflvwdZpVNDEoUPUnTeenoQg43EbD3X1JkuCC8J6x9j15Cq04v3L6T4yQ=@vger.kernel.org, AJvYcCXQAeJiMLfoDPN1XJ/5u6UnekWspCCP8LCUjucfOzv6fQofiveJmpcQjqKQVxTofwCIlK2J1vnSUX3y@vger.kernel.org, AJvYcCXrE5T3PSv+5HSh8qBMPdanjt4Q+ZYuWu0sb91nyrb0Nc90DWuATXDPnaGVQL53Hf582iw30kTfkbPqLQ==@vger.kernel.org, AJvYcCXrP5dOej6d3xvPVaf+mLWcS6a71IXhslX1x9UZphNsd6XgtvfbDD5VmpKc16cnh6EgdR7JjSx6YfxCpg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy7MPPdXThqK15+abUr6j6KjvMcKc59g+Qv1fDXLHKI7HAX/iUd
-	y++Eq+5rPUGBreX7Jh1RwPNwHTEc+XB0b29HZJbs5/hVVzXp8FYlul82NNbM3MO4aM2ph4eWdXx
-	m50Vhz7xoDL74S+Ri/CTZZaS7IFVIswI=
-X-Gm-Gg: ASbGnctGtb3rAmJjJkxzrhubY3ksEybJjyB+5oLMHM8qciye+1xs+zPjo2zIb48G12U
-	PxQAG7NjFxDPU5bzK7Q3RFur/3s00DJBgthiyETtX3VTvj4o+HYi5OFKE+hDXqdACYbnOXOHVl+
-	hj7YhjckPnuLlO204B0V1gG7mAj5AhXebUfjMnqmXLjHM=
-X-Google-Smtp-Source: AGHT+IFi2mQZLuvuKUJ5Vmbx2bMFhgEtTB1rODdhMnUJkkTAqMfdBOcO66FNReafO5ChqP0c8B6r5Lro21q2uCkd3k4=
-X-Received: by 2002:a17:907:1c18:b0:ae0:4410:47e3 with SMTP id
- a640c23a62f3a-ae3501a58a6mr1915225466b.51.1751392659068; Tue, 01 Jul 2025
- 10:57:39 -0700 (PDT)
+        bh=E3QAp+njIqgagygGelfi+VFuGwWXW8+PeuSHzW1GgA0=;
+        b=q56p8M5XiKgASYFxQQ+mZKTI0AVk5OI+gOd15y/vD0wdhFhVM80aful5P5cmJ/N1xC
+         nse5nnOeOsP5AhPU9ron+iVf41sgQVqD7i0pmri9K4UN92Ur4ttdFKBYB2L3FKyVfch6
+         P3InFM5pgzBE2ljj4DiiPUeOEfc+PMhM3S/RfMA25s6PSQ+8eUbcbBdm0tHtgQICLvom
+         rYN2j6f3uXyi5tz0Weer1Qibf6UaRmPTemyIbKXhjS72cLJPMUoldqpABtlzKOgZEqBq
+         FKHDEvLgJ+bAOzH8Ts4e9iaVNnuZR6swHsP40TZMt8I4PPhRhbiTWkjoKovFboAt1FpL
+         dd9Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUVG3eH6hUAGF3wMLLt7orPiGYC9JZtlwGa4twYa4umoLfgDkEGMtjT8do82CrbrBA2C5KXNLBwl36X@vger.kernel.org
+X-Gm-Message-State: AOJu0YwgpOxTcJQ+L29fMKjPOXU06WhxeZXC5XV5crJV5vlQSalHbVXh
+	CTcl/bhUkgtovuGzusJfwJkm2d1G3wsTdwFMc2Zi0O0lgRENqY+FmPwKRPwhNnb2LZyrnTFdcIv
+	Op4zJyjx4yQeki5GcSRpQAFbiwTz5c08nruKsUA1Rdt/Abs23vWM1DdCHvGbMmaHUDflTBf8zHu
+	e/qXsUL/ZPEGpXpXCo+g9JYTxpqLEirBF4QS5jWQ==
+X-Gm-Gg: ASbGncuNisqD16v1b/EQlbFjZNJ3qKA6aJqQttc5t7q5/2vkByfbMVf2hlu3y5RCGWQ
+	YKSTFcpM0lrejXLveEXbsdFWuwiV52CMJ1Cxi1Z9TWO6gosKviDfwjuTtp8h8vesyem7GuGeSPM
+	luBWCY
+X-Received: by 2002:a05:6000:25ca:b0:3a5:8abe:a267 with SMTP id ffacd0b85a97d-3a8fe5b1cf7mr15747188f8f.29.1751401958025;
+        Tue, 01 Jul 2025 13:32:38 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFaXTrHdYMTTka2N0mDvXTqVTj3B/c609I9qCTvVCH95ljEAo/uWdP4xeb+yfNBMzV+3n9TvAoTLAQSpx33k7I=
+X-Received: by 2002:a05:6000:25ca:b0:3a5:8abe:a267 with SMTP id
+ ffacd0b85a97d-3a8fe5b1cf7mr15747169f8f.29.1751401957535; Tue, 01 Jul 2025
+ 13:32:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <pnd7c0s6ji2.fsf@axis.com> <ylr7cuxldwb24ccenen4khtyddzq3owgzzfblbohkdxb7p7eeo@qpuddn6wrz3x>
-In-Reply-To: <ylr7cuxldwb24ccenen4khtyddzq3owgzzfblbohkdxb7p7eeo@qpuddn6wrz3x>
-From: Andy Shevchenko <andy.shevchenko@gmail.com>
-Date: Tue, 1 Jul 2025 20:57:02 +0300
-X-Gm-Features: Ac12FXyruF9twzstORuqQqTbcXFq7Oy0k32bhmiSfPFWKw8o7JRMkyPmwEAJIYk
-Message-ID: <CAHp75Ve=Zas8=6YKoPeTRrvjCaTyyRAyJG1gBLripqZgQpfg7g@mail.gmail.com>
-Subject: Re: [PATCH] Remove error prints for devm_add_action_or_reset()
-To: =?UTF-8?Q?Uwe_Kleine=2DK=C3=B6nig?= <ukleinek@kernel.org>
-Cc: Waqar Hameed <waqar.hameed@axis.com>, Vignesh Raghavendra <vigneshr@ti.com>, 
-	Julien Panis <jpanis@baylibre.com>, William Breathitt Gray <wbg@kernel.org>, 
-	Linus Walleij <linus.walleij@linaro.org>, Bartosz Golaszewski <brgl@bgdev.pl>, Peter Rosin <peda@axentia.se>, 
-	Jonathan Cameron <jic23@kernel.org>, David Lechner <dlechner@baylibre.com>, 
-	=?UTF-8?B?TnVubyBTw6E=?= <nuno.sa@analog.com>, 
-	Andy Shevchenko <andy@kernel.org>, Cosmin Tanislav <cosmin.tanislav@analog.com>, 
-	Lars-Peter Clausen <lars@metafoo.de>, Michael Hennerich <Michael.Hennerich@analog.com>, 
-	Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
-	Matteo Martelli <matteomartelli3@gmail.com>, Heiko Stuebner <heiko@sntech.de>, 
-	Francesco Dolcini <francesco@dolcini.it>, 
-	=?UTF-8?Q?Jo=C3=A3o_Paulo_Gon=C3=A7alves?= <jpaulo.silvagoncalves@gmail.com>, 
-	Hugo Villeneuve <hvilleneuve@dimonoff.com>, Subhajit Ghosh <subhajit.ghosh@tweaklogic.com>, 
-	Mudit Sharma <muditsharma.info@gmail.com>, Gerald Loacker <gerald.loacker@wolfvision.net>, 
-	Song Qiang <songqiang1304521@gmail.com>, Crt Mori <cmo@melexis.com>, 
-	Dmitry Torokhov <dmitry.torokhov@gmail.com>, Ulf Hansson <ulf.hansson@linaro.org>, 
-	Karol Gugala <kgugala@antmicro.com>, Mateusz Holenko <mholenko@antmicro.com>, 
-	Gabriel Somlo <gsomlo@gmail.com>, Joel Stanley <joel@jms.id.au>, 
-	Claudiu Manoil <claudiu.manoil@nxp.com>, Vladimir Oltean <vladimir.oltean@nxp.com>, 
-	Wei Fang <wei.fang@nxp.com>, Clark Wang <xiaoning.wang@nxp.com>, 
-	Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, 
-	Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, 
-	Vinod Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, 
-	Krzysztof Kozlowski <krzk@kernel.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Sebastian Reichel <sre@kernel.org>, Neil Armstrong <neil.armstrong@linaro.org>, 
-	Kevin Hilman <khilman@baylibre.com>, Jerome Brunet <jbrunet@baylibre.com>, 
-	Martin Blumenstingl <martin.blumenstingl@googlemail.com>, Han Xu <han.xu@nxp.com>, 
-	Haibo Chen <haibo.chen@nxp.com>, Yogesh Gaur <yogeshgaur.83@gmail.com>, 
-	Mark Brown <broonie@kernel.org>, Avri Altman <avri.altman@wdc.com>, 
-	Bart Van Assche <bvanassche@acm.org>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Souradeep Chowdhury <quic_schowdhu@quicinc.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Liam Girdwood <lgirdwood@gmail.com>, Peter Ujfalusi <peter.ujfalusi@linux.intel.com>, 
-	Bard Liao <yung-chuan.liao@linux.intel.com>, 
-	Ranjani Sridharan <ranjani.sridharan@linux.intel.com>, Daniel Baluta <daniel.baluta@nxp.com>, 
-	Kai Vehmanen <kai.vehmanen@linux.intel.com>, 
-	Pierre-Louis Bossart <pierre-louis.bossart@linux.dev>, Jaroslav Kysela <perex@perex.cz>, 
-	Takashi Iwai <tiwai@suse.com>, Shawn Guo <shawnguo@kernel.org>, 
-	Sascha Hauer <s.hauer@pengutronix.de>, Pengutronix Kernel Team <kernel@pengutronix.de>, 
-	Fabio Estevam <festevam@gmail.com>, kernel@axis.com, linux-iio@vger.kernel.org, 
-	linux-omap@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
-	linux-rockchip@lists.infradead.org, linux-input@vger.kernel.org, 
-	linux-mmc@vger.kernel.org, imx@lists.linux.dev, netdev@vger.kernel.org, 
-	linux-phy@lists.infradead.org, linux-samsung-soc@vger.kernel.org, 
-	linux-pm@vger.kernel.org, linux-pwm@vger.kernel.org, 
-	linux-amlogic@lists.infradead.org, linux-spi@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-usb@vger.kernel.org, sound-open-firmware@alsa-project.org, 
-	linux-sound@vger.kernel.org
+References: <20250624202020.42612-1-bgurney@redhat.com>
+In-Reply-To: <20250624202020.42612-1-bgurney@redhat.com>
+From: Bryan Gurney <bgurney@redhat.com>
+Date: Tue, 1 Jul 2025 16:32:26 -0400
+X-Gm-Features: Ac12FXzlbt2uDX9BNpN5evNVgF5ZoZ7CRlSkxe-hfkTmpSFBIUZ-ko4ETlTFq7w
+Message-ID: <CAHhmqcTO_Q59aDr3DywC-tPF=9pe3gxbyn6J4ycdf+eYEOayHQ@mail.gmail.com>
+Subject: Re: [PATCH v7 0/6] nvme-fc: FPIN link integrity handling
+To: linux-nvme@lists.infradead.org, kbusch@kernel.org, hch@lst.de, 
+	sagi@grimberg.me, axboe@kernel.dk
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, njavali@marvell.com, 
+	linux-scsi@vger.kernel.org, hare@suse.de, jmeneghi@redhat.com
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 1, 2025 at 8:44=E2=80=AFPM Uwe Kleine-K=C3=B6nig <ukleinek@kern=
-el.org> wrote:
-> On Tue, Jul 01, 2025 at 05:03:33PM +0200, Waqar Hameed wrote:
-
-...
-
-> With that
+On Tue, Jun 24, 2025 at 4:20=E2=80=AFPM Bryan Gurney <bgurney@redhat.com> w=
+rote:
 >
->         ret =3D devm_add_action_or_reset(dev, meson_pwm_s4_put_clk,
->                                        meson->channels[i].clk);
->         if (ret)
->                 return dev_err_probe(dev, ret,
->                                      "Failed to add clk_put action\n");
+> FPIN LI (link integrity) messages are received when the attached
+> fabric detects hardware errors. In response to these messages I/O
+> should be directed away from the affected ports, and only used
+> if the 'optimized' paths are unavailable.
+> Upon port reset the paths should be put back in service as the
+> affected hardware might have been replaced.
+> This patch adds a new controller flag 'NVME_CTRL_MARGINAL'
+> which will be checked during multipath path selection, causing the
+> path to be skipped when checking for 'optimized' paths. If no
+> optimized paths are available the 'marginal' paths are considered
+> for path selection alongside the 'non-optimized' paths.
+> It also introduces a new nvme-fc callback 'nvme_fc_fpin_rcv()' to
+> evaluate the FPIN LI TLV payload and set the 'marginal' state on
+> all affected rports.
 >
-> from drivers/pwm/pwm-meson.c is optimized to
+> The testing for this patch set was performed by Bryan Gurney, using the
+> process outlined by John Meneghini's presentation at LSFMM 2024, where
+> the fibre channel switch sends an FPIN notification on a specific switch
+> port, and the following is checked on the initiator:
 >
->         ret =3D devm_add_action_or_reset(dev, meson_pwm_s4_put_clk,
->                                        meson->channels[i].clk);
->         if (ret)
->                 return ret;
+> 1. The controllers corresponding to the paths on the port that has
+> received the notification are showing a set NVME_CTRL_MARGINAL flag.
 >
-> .
+>    \
+>     +- nvme4 fc traddr=3Dc,host_traddr=3De live optimized
+>     +- nvme5 fc traddr=3D8,host_traddr=3De live non-optimized
+>     +- nvme8 fc traddr=3De,host_traddr=3Df marginal optimized
+>     +- nvme9 fc traddr=3Da,host_traddr=3Df marginal non-optimized
 >
-> I would prefer this approach, because a) there is no need to drop all
-> dev_err_probe()s after devm_add_action_or_reset() and b) the
-> dev_err_probe()s could stay for consistency in the error paths of a
-> driver.
+> 2. The I/O statistics of the test namespace show no I/O activity on the
+> controllers with NVME_CTRL_MARGINAL set.
+>
+>    Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+>    nvme4c4n1         0.00         0.00         0.00         0.00
+>    nvme4c5n1     25001.00         0.00        97.66         0.00
+>    nvme4c9n1     25000.00         0.00        97.66         0.00
+>    nvme4n1       50011.00         0.00       195.36         0.00
+>
+>
+>    Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+>    nvme4c4n1         0.00         0.00         0.00         0.00
+>    nvme4c5n1     48360.00         0.00       188.91         0.00
+>    nvme4c9n1      1642.00         0.00         6.41         0.00
+>    nvme4n1       49981.00         0.00       195.24         0.00
+>
+>
+>    Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+>    nvme4c4n1         0.00         0.00         0.00         0.00
+>    nvme4c5n1     50001.00         0.00       195.32         0.00
+>    nvme4c9n1         0.00         0.00         0.00         0.00
+>    nvme4n1       50016.00         0.00       195.38         0.00
+>
+> Link: https://people.redhat.com/jmeneghi/LSFMM_2024/LSFMM_2024_NVMe_Cance=
+l_and_FPIN.pdf
+>
+> More rigorous testing was also performed to ensure proper path migration
+> on each of the eight different FPIN link integrity events, particularly
+> during a scenario where there are only non-optimized paths available, in
+> a state where all paths are marginal.  On a configuration with a
+> round-robin iopolicy, when all paths on the host show as marginal, I/O
+> continues on the optimized path that was most recently non-marginal.
+> From this point, of both of the optimized paths are down, I/O properly
+> continues on the remaining paths.
+>
+> Changes to the original submission:
+> - Changed flag name to 'marginal'
+> - Do not block marginal path; influence path selection instead
+>   to de-prioritize marginal paths
+>
+> Changes to v2:
+> - Split off driver-specific modifications
+> - Introduce 'union fc_tlv_desc' to avoid casts
+>
+> Changes to v3:
+> - Include reviews from Justin Tee
+> - Split marginal path handling patch
+>
+> Changes to v4:
+> - Change 'u8' to '__u8' on fc_tlv_desc to fix a failure to build
+> - Print 'marginal' instead of 'live' in the state of controllers
+>   when they are marginal
+>
+> Changes to v5:
+> - Minor spelling corrections to patch descriptions
+>
+> Changes to v6:
+> - No code changes; added note about additional testing
+>
+> Hannes Reinecke (5):
+>   fc_els: use 'union fc_tlv_desc'
+>   nvme-fc: marginal path handling
+>   nvme-fc: nvme_fc_fpin_rcv() callback
+>   lpfc: enable FPIN notification for NVMe
+>   qla2xxx: enable FPIN notification for NVMe
+>
+> Bryan Gurney (1):
+>   nvme: sysfs: emit the marginal path state in show_state()
+>
+>  drivers/nvme/host/core.c         |   1 +
+>  drivers/nvme/host/fc.c           |  99 +++++++++++++++++++
+>  drivers/nvme/host/multipath.c    |  17 ++--
+>  drivers/nvme/host/nvme.h         |   6 ++
+>  drivers/nvme/host/sysfs.c        |   4 +-
+>  drivers/scsi/lpfc/lpfc_els.c     |  84 ++++++++--------
+>  drivers/scsi/qla2xxx/qla_isr.c   |   3 +
+>  drivers/scsi/scsi_transport_fc.c |  27 +++--
+>  include/linux/nvme-fc-driver.h   |   3 +
+>  include/uapi/scsi/fc/fc_els.h    | 165 +++++++++++++++++--------------
+>  10 files changed, 269 insertions(+), 140 deletions(-)
+>
+> --
+> 2.49.0
+>
 
-Why do we need a dev_err_probe() after devm_add_action*()? I would
-expect that the original call (if needed) can spit out a message.
+
+We're going to be working on follow-up patches to address some things
+that I found in additional testing:
+
+During path fail testing on the numa iopolicy, I found that I/O moves
+off of the marginal path after a first link integrity event is
+received, but if the non-marginal path the I/O is on is disconnected,
+the I/O is transferred onto a marginal path (in testing, sometimes
+I've seen it go to a "marginal optimized" path, and sometimes
+"marginal non-optimized").
+
+The queue-depth iopolicy doesn't change its path selection based on
+the marginal flag, but looking at nvme_queue_depth_path(), I can see
+that there's currently no logic to handle marginal paths.  We're
+developing a patch to address that issue in queue-depth, but we need
+to do more testing.
 
 
---=20
-With Best Regards,
-Andy Shevchenko
+Thanks,
+
+Bryan
+
