@@ -1,124 +1,110 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7600E1C84BB
-	for <linux-scsi@vger.kernel.org>; Tue,  1 Jul 2025 04:05:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF9E31E1DF2
+	for <linux-scsi@vger.kernel.org>; Tue,  1 Jul 2025 07:11:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751342732; cv=none; b=aA/tAuIVYfq29z8ovvPUR44xevDXygIZwA2J/Hlp3gAS7PlODPKX0tuDIOUMmeQ6eYzQaR8rKHqIyl/I183EpIHBpzbPzP+dUGTjhJjbaNzJL8IejNRLpqpssmKZEVbCu3hy+uzxxw8UWKnkQ3FXlZL2MOOChUYJacASc8KHk3Y=
+	t=1751353873; cv=none; b=mlpcVIdNys4bkS7tDphi2YNWqYUXqnmWVPJRgTWCVQTdgXUaUfO7VpTfM+Xr78kwa0g4NGLv2Wf5Y/VW0TcpnHkByBrk5lOnR3bk47YhRPRu8SrDaKoLirlWAKK5OWIcMtvg9BSU0AFv62GQ6pS6NZcM0UdEGnUjrk4akLItM4Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751342732; c=relaxed/simple;
-	bh=FfIFYtO810XsRb/A1m/0MZftVd0htcVM1zhw1SZIOnA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=EsizoGWkyb0MBhmMk+SJiU470HhQAp0vmFap1ZgRsaZxdtrj+WwCbmvLMT0/7835tkjVDEZOBTLcdcYRHsDKZYre86WJzqRMf2qsDpwLZOmRW7SORTb+oo4exw5lZDXn+Vq9zP3nFHsQMIVA96Gi+l/Ch3iB/8XIYOIpmmkD1gI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=g+PBlJ8A; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1751353873; c=relaxed/simple;
+	bh=gz2k1uTtHT3pD2yquUXxfcMI0+h40Ol80pAebQJKDGM=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=EkhtEatn2/csV0vT7ibPCBTPWNZWU61SspvN/YuVAu8/JxXB5SMYHjwUa/C2der3v44FhhLAfDvGUUHWGdFS+raZSrCqIEXmVG0cyUDBmq8Y/3SqFDk06EJPpSBLVaDdbzrv6VB5FbXEyl9umnCcqpZFcFOsHoP88GAPkDYx+vM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Wx71Edoa; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="g+PBlJ8A"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5613tM1p024817;
-	Tue, 1 Jul 2025 04:05:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	kaX6Hg+XI+TuIgUs/H48/x2Q7SU0vnnkh0AuWeDOkhA=; b=g+PBlJ8A6BO7nGST
-	TO4g6v/e9eD+w3yW+AJodmeAVIzW6tNuqLWJ7Vg0BHvp41sPH3ZtI204OFqE6JmE
-	pt/On7yvSK+QiIudonYwOZWlZpzgUg+CYIMs1OJM6YFULAUm0e+ygMkYJBbDZzH7
-	S+lGA1+cp1na/HcVkvTT1Fw/gXgxcJYBduVNdSeukECYLHc0cbl1goWBX14OFO/Q
-	26lE6psQRI4S7JtltAImnKY4rRQPjgviTSFpRP0WcUIsoZdMGVFOZWr036u8rsLk
-	wV2cUEXL365YECvIqe0YSPCDrk4cnS/0/HZ0B2xmzPj9aTp5Cq6u3eNpHDuyPwZS
-	5aXV6A==
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47j8s9extq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 01 Jul 2025 04:05:09 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 561458jZ017684
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 1 Jul 2025 04:05:08 GMT
-Received: from [10.239.155.136] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.9; Mon, 30 Jun
- 2025 21:05:04 -0700
-Message-ID: <24e5836f-1391-4444-8d03-fc8f5cafacff@quicinc.com>
-Date: Tue, 1 Jul 2025 12:04:53 +0800
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Wx71Edoa"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-748f54dfa5fso4596771b3a.2
+        for <linux-scsi@vger.kernel.org>; Tue, 01 Jul 2025 00:11:09 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1751353869; x=1751958669; darn=vger.kernel.org;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=zlJot7sx2YopdWxHyoyhohLl4TchU03X/u4osGspitU=;
+        b=Wx71EdoaavEbpZ+ztjNWAWzP+tmJXo7QGk3i/7WgicRvtrUSMWnYaYcSqxXmTNJ/et
+         1wC0kNTvB1smJFED8VqLpsT0eWIekq8tR0eH42kJvOgtNa5tu0IO94ZXL7vHiSPpmV2+
+         TxiX7/mss8RoU+ipG7oIrYXQs0CnyyIrtGpIA=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751353869; x=1751958669;
+        h=mime-version:references:in-reply-to:message-id:date:subject:cc:to
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=zlJot7sx2YopdWxHyoyhohLl4TchU03X/u4osGspitU=;
+        b=pRj4lumhXOQrHX3xidlqz4F+DwqNJ8EJpJI5pqHTN0kO2fV0LlUQkNLvUXU91TYdiW
+         UZx4XAEUxHCfraPiDEShWyuHsf+YSDXEp480MHCWPzrOBPAZR2CgUwJSuqxvGknwmf9a
+         XXuSqq1NsEQlI1p5SIGzV22lGRMUMT/r8jEIiAygFbqSpX7AHmh4HZu/sHXVwqSo4PMo
+         Gu3e6CavGHa+KXnNBT5PtNgVOncbgT4VpgrwqQDwkk+L4Zvt1y7xebH0b3cM8SZyPEWt
+         PCzFU2+708ot7QojHurW1jXPWH4dPRTvqOdEWQKxKMeE0jfiVYjxeicrvFYKNeKMbk9p
+         0usw==
+X-Forwarded-Encrypted: i=1; AJvYcCWD2Wo8QXQO9Y7JlXqMMBdpMKRyaJlEFVcSz9iAaG441pvGxaf63s8tjvFHL+CS0iBD2tVnbpMTWgVo@vger.kernel.org
+X-Gm-Message-State: AOJu0YxP9YY2xsFUZxB1ToDXCyvOn4GE9XCc67ZK7osNo6j1B55jolim
+	yW8TUi6uml+cReBahiehgHVi7ZNohtbHl/Ou3dDb/NRu1SMzIQ8GNWt28+sw1IXkEooxFQ+SPVJ
+	3M06C28VgcFAjEDnie5eFpPo1jIlIyXQIFbJiKNw0UEO4E+bVz3KK
+X-Gm-Gg: ASbGnctd2pBv8oVb+brDMP9nj2bosIarNcuNf7PCNnv05xz7E0S6Ou/crjdLNy5G6nG
+	hcJpzOKzysf4xYYE2XOCmos/8MbDsk+ZJn7KKhXW2+Fk+YqDmYMPxjLbJ/xLJE7mM+ecjLSS7/h
+	Bn9kW4zBVo3yyHLTnBprdnjG+MO9Alwj817CNcZtBltK9mi0+GxshZd+OrndHqo0K5JiJtGlTIu
+	Z8s0xVoEw2nyxkVV0YeHoYjYfFBn9r1CLJT72+MJTbAmKYGpgwOSs2T+dmPniPVNOiqgRtyfnnF
+	IJ6qTEqxubNIKsC+cdevuOkFtO9rEHhcckgTVZEn0wiqPZA64ZI8B4nOy2YnKt50sEbs+M2lBYz
+	1iDau1wcq3K6K0BMLt2sr7xqMYnL9asyMJA==
+X-Google-Smtp-Source: AGHT+IFjV6+RrH4+UnV8V5+50viki/aZYcrx5DBr5GFjR0CD6LtrULS5qzOc04+1tAG58NB1KrApAA==
+X-Received: by 2002:a05:6a00:4b11:b0:749:93d:b098 with SMTP id d2e1a72fcca58-74af6fd7312mr21032262b3a.22.1751353869139;
+        Tue, 01 Jul 2025 00:11:09 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-74af540a8f6sm11235597b3a.12.2025.07.01.00.11.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 01 Jul 2025 00:11:08 -0700 (PDT)
+From: Muneendra Kumar <muneendra.kumar@broadcom.com>
+To: bgurney@redhat.com
+Cc: axboe@kernel.dk,
+	dick.kennedy@broadcom.com,
+	hare@suse.de,
+	hch@lst.de,
+	james.smart@broadcom.com,
+	jmeneghi@redhat.com,
+	kbusch@kernel.org,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org,
+	njavali@marvell.com,
+	sagi@grimberg.me,
+	muneendra737@gmail.com,
+	Muneendra Kumar <muneendra.kumar@broadcom.com>
+Subject: Re: [PATCHv7 0/6] nvme-fc: FPIN link integrity handling
+Date: Mon, 30 Jun 2025 17:27:24 -0700
+Message-Id: <20250701002724.1435361-1-muneendra.kumar@broadcom.com>
+X-Mailer: git-send-email 2.27.0
+In-Reply-To: <20250624202020.42612-1-bgurney@redhat.com>
+References: <20250624202020.42612-1-bgurney@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: Make ufshcd_clock_scaling_prepare() compatible
- with MCQ
-To: Bart Van Assche <bvanassche@acm.org>
-CC: <linux-scsi@vger.kernel.org>, Can Guo <quic_cang@quicinc.com>,
-        "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Peter Wang
-	<peter.wang@mediatek.com>,
-        Avri Altman <avri.altman@sandisk.com>,
-        "Manivannan
- Sadhasivam" <mani@kernel.org>,
-        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-        Stanley Jhu <chu.stanley@gmail.com>,
-        Asutosh Das <quic_asutoshd@quicinc.com>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-References: <20250624201252.396941-1-bvanassche@acm.org>
-Content-Language: en-US
-From: Ziqi Chen <quic_ziqichen@quicinc.com>
-In-Reply-To: <20250624201252.396941-1-bvanassche@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=H/Pbw/Yi c=1 sm=1 tr=0 ts=68635e75 cx=c_pps
- a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10
- a=lDNoC2b2T2UTmXs0YmoA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: gcYa8u6t2HTgWL-OYngT2opw_yfiuzAC
-X-Proofpoint-GUID: gcYa8u6t2HTgWL-OYngT2opw_yfiuzAC
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzAxMDAxOCBTYWx0ZWRfX6E4BihQ4zMRG
- g7g0CajgKZiYmojl351gPJhMdNVtJ9t57rz1PHHGUMofIR54c8Ai0y/AQMAA708uXVC6P9bxwLA
- QJ8xq3VXgE3REbT1Zp+4TBaqU0jwjIWPirgfPL6eTdv476xkt9sNrP54duqeqEATyzAg39+ewS5
- a2QGebg1KQcXhn/AgSyFrO1XglzGlainrFL60VBiMSUqOoporrtashOS0GKKIx9RdaYf6HG87fU
- +pHGRouAOVrZ4rhIwL/suxx1FbBZJMi/i8SzBR47aVCSMqViOJorHlS1Iy24TgFzQW1RZE7CZEv
- YhdMyZpXO1Qr10YqT9jzilFadDjEaXU8N38hBiGHsUG0m2PFScJAyyDpZ7n22MBN9d46GzY0tRC
- uxVsgbs7ogDM3bc3CPrXusVqD2IuSqb3e1eLILR+hqPbFY/rcsWA4iT/iG3Atr/6JfTCadQZ
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
- definitions=2025-07-01_01,2025-06-27_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 malwarescore=0 suspectscore=0 mlxlogscore=765
- priorityscore=1501 clxscore=1011 mlxscore=0 lowpriorityscore=0 spamscore=0
- adultscore=0 bulkscore=0 phishscore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2507010018
+Content-Type: text/plain; charset="US-ASCII"
 
-Hi Bart,
+Thanks for the patch .
+We have tested this patch and this is working as designed.
+This functionality is a crucial enhancement for Fibre Channel solutions.
+This feature perpetuates the capabilities available in dm for NVMe in previous releases.
+With this patch we have a solution for both SCSI and NVMe.
 
-I am reviewing, will test it also and get back to you.
+Tested-by: Muneendra Kumar <muneendra.kumar@broadcom.com>
 
-BRs,
-Ziqi
 
-On 6/25/2025 4:12 AM, Bart Van Assche wrote:
-> On 6/24/25 1:12 PM, Bart Van Assche wrote:
->> ufshcd_clock_scaling_prepare() only supports the lecagy doorbell mode and
->> may wait up to 20 ms longer than necessary. Hence this patch that reworks
->> ufshcd_clock_scaling_prepare(). Compile-tested only.
-> 
-> Can someone from Qualcomm please help with reviewing and/or testing this
-> patch? I'd like to get rid of the ufshcd_wait_for_doorbell_clr()
-> function before anyone adds more callers to that function.
-> ufshcd_wait_for_doorbell_clr() supports the legacy doorbell mode but not
-> MCQ.
-> 
-> Thanks
-> 
-> Bart.
-> 
+Regards,
+Muneendra.
 
+
+-- 
+This electronic communication and the information and any files transmitted 
+with it, or attached to it, are confidential and are intended solely for 
+the use of the individual or entity to whom it is addressed and may contain 
+information that is confidential, legally privileged, protected by privacy 
+laws, or otherwise restricted from disclosure to anyone else. If you are 
+not the intended recipient or the person responsible for delivering the 
+e-mail to the intended recipient, you are hereby notified that any use, 
+copying, distributing, dissemination, forwarding, printing, or copying of 
+this e-mail is strictly prohibited. If you received this e-mail in error, 
+please return the e-mail to the sender, delete it from your computer, and 
+destroy any printed copy of it.
