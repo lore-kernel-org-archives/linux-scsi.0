@@ -1,58 +1,61 @@
-Received: from mail-gw02.astralinux.ru (mail-gw02.astralinux.ru [93.188.205.243])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC03E27603A;
-	Wed,  2 Jul 2025 13:34:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=93.188.205.243
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9760E2D0C93;
+	Wed,  2 Jul 2025 15:15:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751463266; cv=none; b=alJUbcZ/YC348qIGYicLV+HpFjDwjt3Yx/AOlNK2n7Lef6Y3X+yMvTCqSDhaLk9S07/atEEj7PW2iVVuL8U0frtIUDOqhUaQUMRm6TBhlvUoLNgtnaXtrJrDgRMMOl9+eRLTrEHpzxRbIfGfBLblRrLzi5mNqxSRNTEjXK6Mq20=
+	t=1751469308; cv=none; b=WYZOUIGRZYo0xbmuznsjkf9sdLDtrVYKRkJS2CaAIFPbJ9e8aEDHkslTAiqgxARUAX49X3H8WO9C1H0k4dAJZf2n0iMznbdpEGUYL+8Pn7xqzd2U0ORLf/ekswXY/iQyy0upgN10s71Sl6CGTT+3w9XUUAxbnEvXGOdideCDrEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751463266; c=relaxed/simple;
-	bh=JNr5JhnmpSELPd3exj25rIHy7u/NEDaXATV0e2m0pTM=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=A1lBF5U9sSyRyg5sDOtFueNgdfeupeyThjEV2+r5SJPnO1/D38Ur7PrBLSWdnGBJwrd8BNLStArPRaBnB0KRb8ZtIw9bDCaGGSm7b2qh+4ikpmPVlhP8v2l2MoXIrjz8cCAw1IukAQf140xwfXNxdP/wrsETuP58boqhDpCbJ6s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=astralinux.ru; spf=pass smtp.mailfrom=astralinux.ru; dkim=pass (2048-bit key) header.d=astralinux.ru header.i=@astralinux.ru header.b=cV01KRSp; arc=none smtp.client-ip=93.188.205.243
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=astralinux.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=astralinux.ru
+	s=arc-20240116; t=1751469308; c=relaxed/simple;
+	bh=A1MwKY8R9c5ygJuMtjN4nERZGlHa0OEIm1Hk2GMQxEs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AjbM3n0Am9AJwK8t0dCswwlUUqSC3oBwCf6ANxH51JlL1026711AfxlsGL9JhuKJCmfPeS0oUGxY/mfG1nMtrk9+D6Y+dzS4ynjjLVS5gBpSmZYnVOvAf9IsAsdQLmimuwv0rQ95ovTTXlH0ejEXkR53+lEaJP1X+Bv1daxPiBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=H4UfagTF; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=astralinux.ru header.i=@astralinux.ru header.b="cV01KRSp"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=astralinux.ru;
-	s=mail; t=1751462785;
-	bh=JNr5JhnmpSELPd3exj25rIHy7u/NEDaXATV0e2m0pTM=;
-	h=From:To:Cc:Subject:Date:From;
-	b=cV01KRSpnCED0ratvOKTGc7rUUJQGMIX26Iv/7CxtTd208y0UL2rPlMtgYwwuPLN+
-	 6FR+GEYYa9dZBkxLs3UYbyBj/epVq9QOEMgbEN3r54568KH26p07//kM8JuxyRiQ/O
-	 SMLlN4boXKI6K5SNm+3h2+mW/AqyqJKyG/fLTcELSOd2zrP/x83OZRV4CPz37HJcFX
-	 ISscKlf/mzB+GN4FhAA3PjgI2ECokqQQ4EaUjb28q94KIibRtXyxc8TG+JtTf3Z+rq
-	 td3OfxBaO/K02Y5qpp4mwcLVO90pQAoyBOxrkCmDXR+tkX7lp7A5QTxUnPocyE9nct
-	 8DovlkdLiwuCg==
-Received: from gca-msk-a-srv-ksmg01.astralinux.ru (localhost [127.0.0.1])
-	by mail-gw02.astralinux.ru (Postfix) with ESMTP id 47C621F97E;
-	Wed,  2 Jul 2025 16:26:25 +0300 (MSK)
-Received: from new-mail.astralinux.ru (unknown [10.177.185.198])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mail-gw02.astralinux.ru (Postfix) with ESMTPS;
-	Wed,  2 Jul 2025 16:26:24 +0300 (MSK)
-Received: from localhost.localdomain (unknown [10.198.18.126])
-	by new-mail.astralinux.ru (Postfix) with ESMTPA id 4bXLJZ5sYPz16Hnt;
-	Wed,  2 Jul 2025 16:26:22 +0300 (MSK)
-From: Anastasia Belova <abelova@astralinux.ru>
-To: stable@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Anastasia Belova <abelova@astralinux.ru>,
-	James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	Justin Tee <justin.tee@broadcom.com>
-Subject: [PATCH 5.10] scsi: lpfc: Move NPIV's transport unregistration to after resource clean up
-Date: Wed,  2 Jul 2025 16:24:46 +0300
-Message-ID: <20250702132448.93012-1-abelova@astralinux.ru>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="H4UfagTF"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 562E6QeA025364;
+	Wed, 2 Jul 2025 15:14:47 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=pZzNTFmoUQLpNnJzSFEQsI8T2g7Vuik805t
+	lJSpUsmY=; b=H4UfagTFSzoHaKm04ywyvAVHGYh73cmjbTHR7u4NH3XyfBxDkod
+	CfT+gFBxioe9b7FLb857JsHH98N+FUKDgxwiDlRA7G5Veb17xDEJy1JGuj/oJGJ3
+	AF5M5VG0atRvQ2VQ2+jBc7cueygomhYHXGpv2YmbsJLoFo5wsKbp2ydnyz8gUNTb
+	vBmhw9QScVBO8n82MYR8RvuqY3SJC4sPOL07Z62N4qXo0VRNo7FLi4D/5GLJdNXX
+	h4J7lKSC0xnquiVz8UlSbCeRbyNc73OoMlJwxOedG3m2S/eJ8UYLVmWRgFz6yr6z
+	grfY1azRAIYrgKe3nTUwkd6cRTaQzB9WTvA==
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47kd64t96q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 02 Jul 2025 15:14:47 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 562FEiWv025520;
+	Wed, 2 Jul 2025 15:14:44 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTPS id 47j9fm57pm-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+	Wed, 02 Jul 2025 15:14:44 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 562FEhf2025509;
+	Wed, 2 Jul 2025 15:14:43 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 562FEhj8025507;
+	Wed, 02 Jul 2025 15:14:43 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+	id A8A9961C6C3; Wed,  2 Jul 2025 20:44:42 +0530 (+0530)
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
+        martin.petersen@oracle.com, bvanassche@acm.org,
+        neil.armstrong@linaro.org, konrad.dybcio@oss.qualcomm.com
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V1 0/2] scsi: ufs: qcom: Align programming sequence as per HW spec
+Date: Wed,  2 Jul 2025 20:44:39 +0530
+Message-ID: <20250702151441.8061-1-quic_nitirawa@quicinc.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -60,74 +63,50 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-KSMG-AntiPhishing: NotDetected, bases: 2025/07/02 12:42:00
-X-KSMG-AntiSpam-Auth: dkim=none
-X-KSMG-AntiSpam-Envelope-From: abelova@astralinux.ru
-X-KSMG-AntiSpam-Info: LuaCore: 63 0.3.63 9cc2b4b18bf16653fda093d2c494e542ac094a39, {Tracking_uf_ne_domains}, {Tracking_from_domain_doesnt_match_to}, astralinux.ru:7.1.1;d41d8cd98f00b204e9800998ecf8427e.com:7.1.1;new-mail.astralinux.ru:7.1.1;lore.kernel.org:7.1.1;127.0.0.199:7.1.2, FromAlignment: s
-X-KSMG-AntiSpam-Interceptor-Info: scan successful
-X-KSMG-AntiSpam-Lua-Profiles: 194491 [Jul 02 2025]
-X-KSMG-AntiSpam-Method: none
-X-KSMG-AntiSpam-Rate: 0
-X-KSMG-AntiSpam-Status: not_detected
-X-KSMG-AntiSpam-Version: 6.1.1.11
-X-KSMG-AntiVirus: Kaspersky Secure Mail Gateway, version 2.1.0.7854, bases: 2025/07/02 12:40:00 #27611971
-X-KSMG-AntiVirus-Status: NotDetected, skipped
-X-KSMG-LinksScanning: NotDetected, bases: 2025/07/02 12:41:00
-X-KSMG-Message-Action: skipped
-X-KSMG-Rule-ID: 1
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Authority-Analysis: v=2.4 cv=Z+PsHGRA c=1 sm=1 tr=0 ts=68654ce7 cx=c_pps
+ a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=Wb1JkmetP80A:10 a=g0woJlExcYKCPppWxPgA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzAyMDEyNSBTYWx0ZWRfX24PteLF38+ud
+ 9DqH5tUThRhfBix95kxNRLU19z3sJ9mv0/EfA3MDyJjD1zlBI8V6RaU5Aja8en1gK3Ldcs8x73m
+ +u2uj0VUqR6FxpKKvIefD1mFDvtalD3CYt9IMDoGL3SJ86TtbN0eIOKLFrBxwDAXwGMKs924/5R
+ jzUQQmeMLljwvxw3qhj4uzqeu+gCU8JdQgazTpRQaKAXYo5GmkPgXEZHG788xm3eJvHXp4IrFSX
+ 4pyRF8gzGeWhjsP98A3EIbbk9Dud4KaFGx3/45RoFMDIU7fipC/9wsTIEML1RYNwTbLjI1qspU9
+ rBBzdTfZZIhXa8rbP9J56w3SmmdSKepfelZ13ypmrunO+oTNuKfVAUECrC2vaxww5VvOf/pl/j2
+ qm5wnLnPlU1EgcWZ8OD79j+D8H+f6GgSOxNCbl0p7SsBc/yEpdBy67Cph8UPScZwehJEI+P8
+X-Proofpoint-GUID: AZKPSsFjqqIFqQ5Hvvu9AeTaidvTqfWe
+X-Proofpoint-ORIG-GUID: AZKPSsFjqqIFqQ5Hvvu9AeTaidvTqfWe
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
+ definitions=2025-07-02_02,2025-07-02_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 lowpriorityscore=0 clxscore=1015 malwarescore=0 mlxlogscore=560
+ spamscore=0 adultscore=0 mlxscore=0 priorityscore=1501 bulkscore=0
+ impostorscore=0 suspectscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2507020125
 
-From: Justin Tee <justin.tee@broadcom.com>
+This patch series adds programming support for Qualcomm UFS
+to align with Hardware Specification.
 
-commit 4ddf01f2f1504fa08b766e8cfeec558e9f8eef6c upstream.
+In this patch series below changes are taken care.
 
-There are cases after NPIV deletion where the fabric switch still believes
-the NPIV is logged into the fabric.  This occurs when a vport is
-unregistered before the Remove All DA_ID CT and LOGO ELS are sent to the
-fabric.
+1. Enable QUnipro Internal Clock Gating
+2. Update esi_vec_mask for HW major version >= 6
 
-Currently fc_remove_host(), which calls dev_loss_tmo for all D_IDs including
-the fabric D_ID, removes the last ndlp reference and frees the ndlp rport
-object.  This sometimes causes the race condition where the final DA_ID and
-LOGO are skipped from being sent to the fabric switch.
+Bao D. Nguyen (1):
+  scsi: ufs: ufs-qcom: Update esi_vec_mask for HW major version >= 6
 
-Fix by moving the fc_remove_host() and scsi_remove_host() calls after DA_ID
-and LOGO are sent.
+Nitin Rawat (1):
+  scsi: ufs: qcom: Enable QUnipro Internal Clock Gating
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20240305200503.57317-3-justintee8345@gmail.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Anastasia Belova <abelova@astralinux.ru>
----
-Backport fix for CVE-2024-36952
- drivers/scsi/lpfc/lpfc_vport.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/ufs/host/ufs-qcom.c | 24 ++++++++++++++++++++++--
+ drivers/ufs/host/ufs-qcom.h | 35 +++++++++++++++++++++++++++++++++++
+ 2 files changed, 57 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_vport.c b/drivers/scsi/lpfc/lpfc_vport.c
-index aa4e451d5dc1..921630f71ee9 100644
---- a/drivers/scsi/lpfc/lpfc_vport.c
-+++ b/drivers/scsi/lpfc/lpfc_vport.c
-@@ -668,10 +668,6 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
- 		ns_ndlp_referenced = true;
- 	}
- 
--	/* Remove FC host and then SCSI host with the vport */
--	fc_remove_host(shost);
--	scsi_remove_host(shost);
--
- 	ndlp = lpfc_findnode_did(phba->pport, Fabric_DID);
- 
- 	/* In case of driver unload, we shall not perform fabric logo as the
-@@ -783,6 +779,10 @@ lpfc_vport_delete(struct fc_vport *fc_vport)
- 		lpfc_nlp_put(ndlp);
- 	}
- 
-+	/* Remove FC host to break driver binding. */
-+	fc_remove_host(shost);
-+	scsi_remove_host(shost);
-+
- 	lpfc_cleanup(vport);
- 	lpfc_sli_host_down(vport);
- 
--- 
-2.43.0
+--
+2.48.1
 
