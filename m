@@ -1,35 +1,34 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 508C4309A56;
-	Wed,  2 Jul 2025 16:34:21 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F8B030B9A2;
+	Wed,  2 Jul 2025 16:34:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751474061; cv=none; b=ngEoWWBF+ZJdfVQwumyc+ouYQQu+H0EDWgaI5P3+cx/rh7pkCFoHN29IjuwQPudPh/AaKm0nOtSHTaAGX9MfY4jnCF9OZn3AnrryS5qlWVVt/gW+T1hBFoWD0sJxq2rxClqYXYbNUXXZm8JSIDBGWZHDc8fYr8+hfml2aGlX2x4=
+	t=1751474064; cv=none; b=caPcreBHYsLBWYuTT40sFbECQjeFiXcOJB51/k0OgOKXN58kql3yTatkyyb5GCmRArTn5OEw53o+KN8mKZT3oEOYnUidoev27bsgm4TNNEcy21hEhdTBsSLpc2hNsMj3jKF5g1FI0giQsJexNpdzYNy95sQ3P2TuNdC2r+Nwpho=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751474061; c=relaxed/simple;
-	bh=Myx+PZoZUcbDbjehTnwx+RA9vtGiiCFPLDBRtnu3gqg=;
+	s=arc-20240116; t=1751474064; c=relaxed/simple;
+	bh=pWxK3dXtb7yt/SLdpUa2c56b5nWqf/VUS4szDCMoRQM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=C+uTPBwf68Xna7G3Qwv6+Qa98+4GJuBAhFBeb5cv6cjY1n0IHTY38B7TWRebnPBe7dmoF4Dgl+GgMtc89C64r1pN+wDZlRQRTo5ExdhcsdCuWCCWCE13emWwvw5zySjd3ShuNBUEjgzNAlXYzXJxGQy+lsMaGSfOEGfuCg7Qss8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=V934Qn+9; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=NN3oyYal06FEU9Brn1lHx59rkdFlsAiI3gXnWGymuswzl3XR9uDiPgQI5/IAcV7pfT0Y1Sq9QMCXvCF6vRyY1XGh1Q9/ENr/Syrc+OdBj9nWT3gkpAMgmAMOZTF5XERLAy2yxOVOAV0XS/PMSXJEuVG89tonHM3G+ibToUSD4DE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FyvSjLuk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="V934Qn+9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 66086C4CEEF;
-	Wed,  2 Jul 2025 16:34:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FyvSjLuk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 19E3AC4CEE7;
+	Wed,  2 Jul 2025 16:34:23 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751474061;
-	bh=Myx+PZoZUcbDbjehTnwx+RA9vtGiiCFPLDBRtnu3gqg=;
+	s=k20201202; t=1751474063;
+	bh=pWxK3dXtb7yt/SLdpUa2c56b5nWqf/VUS4szDCMoRQM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=V934Qn+90uC6vxOj2/uy0FXbhoVq2ub3PHObXMD0xrE/uiGT4LMsYYkzscg40r2BD
-	 EOYnOft07Xmw7cCRbn63zkqqrSaxC/KSPv/W+B72P1jnRgOIRCS1pbYHWw44iQkrE3
-	 fLcwLdiQxqNxRSsWHb/bqf6ZOeHexDmxG73j/CGBzgcH8DFxMR41ill6rntyx5qM+/
-	 r2EfnwJYklWSlxriMJor4Dq1kaQn2Ox69ATZ0KQC2ZzZFmJxSaINLdGQl0gpDrNsY+
-	 I5wU219HubMS5b9mn4GtacaaC0HOSEOpf9a9NYYiwvg9/Wng+p0IdFG6LV+CLmu+C9
-	 SmwDx5om9SeEA==
+	b=FyvSjLukQx1wRtaMLSqyLSxFSVirXVNQayunh+NAHb3GRlNHYHp/KIJT2skiVzBl4
+	 9PnLDERQWm9RRe+hotegeoenru+U+K3vXHjPRdQJm4tKthb1KnJYu8BBY+DCB5+yIH
+	 s9pvAY8wrRQJRMocif/F1IJb54djJ+bvliEvMI/7J7tC2bJSeK1g3+L8n1A4NK12r7
+	 aWIoidN4yRwkIaYzuqL/lvTwTDHzRwHZM2yCdN4LOxJYlnuKvuqgQr5Tw6naOBkwD4
+	 X7NJ43KX8aXGYxLihRHLAqyUwvWaSL6EkTkrTOWjG5MGPfHgrITJYCcQSGfOqmntyt
+	 C6zduiiY97TkA==
 From: Daniel Wagner <wagi@kernel.org>
-Date: Wed, 02 Jul 2025 18:33:56 +0200
-Subject: [PATCH v7 06/10] virtio: blk/scsi: use block layer helpers to
- constrain queue affinity
+Date: Wed, 02 Jul 2025 18:33:57 +0200
+Subject: [PATCH v7 07/10] isolation: Introduce io_queue isolcpus type
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +37,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250702-isolcpus-io-queues-v7-6-557aa7eacce4@kernel.org>
+Message-Id: <20250702-isolcpus-io-queues-v7-7-557aa7eacce4@kernel.org>
 References: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org>
 In-Reply-To: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
@@ -59,48 +58,59 @@ Cc: Aaron Tomlin <atomlin@atomlin.com>,
  Daniel Wagner <wagi@kernel.org>
 X-Mailer: b4 0.14.2
 
-Ensure that IRQ affinity setup also respects the queue-to-CPU mapping
-constraints provided by the block layer. This allows the virtio drivers
-to avoid assigning interrupts to CPUs that the block layer has excluded
-(e.g., isolated CPUs).
+Multiqueue drivers spread I/O queues across all CPUs for optimal
+performance. However, these drivers are not aware of CPU isolation
+requirements and will distribute queues without considering the isolcpus
+configuration.
 
+Introduce a new isolcpus mask that allows users to define which CPUs
+should have I/O queues assigned. This is similar to managed_irq, but
+intended for drivers that do not use the managed IRQ infrastructure
+
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Daniel Wagner <wagi@kernel.org>
 ---
- drivers/block/virtio_blk.c | 4 +++-
- drivers/scsi/virtio_scsi.c | 5 ++++-
- 2 files changed, 7 insertions(+), 2 deletions(-)
+ include/linux/sched/isolation.h | 1 +
+ kernel/sched/isolation.c        | 7 +++++++
+ 2 files changed, 8 insertions(+)
 
-diff --git a/drivers/block/virtio_blk.c b/drivers/block/virtio_blk.c
-index e649fa67bac16b4f0c6e8e8f0e6bec111897c355..41b06540c7fb22fd1d2708338c514947c4bdeefe 100644
---- a/drivers/block/virtio_blk.c
-+++ b/drivers/block/virtio_blk.c
-@@ -963,7 +963,9 @@ static int init_vq(struct virtio_blk *vblk)
- 	unsigned short num_vqs;
- 	unsigned short num_poll_vqs;
- 	struct virtio_device *vdev = vblk->vdev;
--	struct irq_affinity desc = { 0, };
-+	struct irq_affinity desc = {
-+		.mask = blk_mq_possible_queue_affinity(),
-+	};
+diff --git a/include/linux/sched/isolation.h b/include/linux/sched/isolation.h
+index d8501f4709b583b8a1c91574446382f093bccdb1..6b6ae9c5b2f61a93c649a98ea27482b932627fca 100644
+--- a/include/linux/sched/isolation.h
++++ b/include/linux/sched/isolation.h
+@@ -9,6 +9,7 @@
+ enum hk_type {
+ 	HK_TYPE_DOMAIN,
+ 	HK_TYPE_MANAGED_IRQ,
++	HK_TYPE_IO_QUEUE,
+ 	HK_TYPE_KERNEL_NOISE,
+ 	HK_TYPE_MAX,
  
- 	err = virtio_cread_feature(vdev, VIRTIO_BLK_F_MQ,
- 				   struct virtio_blk_config, num_queues,
-diff --git a/drivers/scsi/virtio_scsi.c b/drivers/scsi/virtio_scsi.c
-index 96a69edddbe5555574fc8fed1ba7c82a99df4472..67dfb265bf9e54adc68978ac8d93187e6629c330 100644
---- a/drivers/scsi/virtio_scsi.c
-+++ b/drivers/scsi/virtio_scsi.c
-@@ -842,7 +842,10 @@ static int virtscsi_init(struct virtio_device *vdev,
- 	u32 num_vqs, num_poll_vqs, num_req_vqs;
- 	struct virtqueue_info *vqs_info;
- 	struct virtqueue **vqs;
--	struct irq_affinity desc = { .pre_vectors = 2 };
-+	struct irq_affinity desc = {
-+		.pre_vectors = 2,
-+		.mask = blk_mq_possible_queue_affinity(),
-+	};
+diff --git a/kernel/sched/isolation.c b/kernel/sched/isolation.c
+index 93b038d48900a304a29ecc0c8aa8b7d419ea1397..c8cb0cf2b15a11524be73826f38bb2a0709c449c 100644
+--- a/kernel/sched/isolation.c
++++ b/kernel/sched/isolation.c
+@@ -11,6 +11,7 @@
+ enum hk_flags {
+ 	HK_FLAG_DOMAIN		= BIT(HK_TYPE_DOMAIN),
+ 	HK_FLAG_MANAGED_IRQ	= BIT(HK_TYPE_MANAGED_IRQ),
++	HK_FLAG_IO_QUEUE	= BIT(HK_TYPE_IO_QUEUE),
+ 	HK_FLAG_KERNEL_NOISE	= BIT(HK_TYPE_KERNEL_NOISE),
+ };
  
- 	num_req_vqs = vscsi->num_queues;
- 	num_vqs = num_req_vqs + VIRTIO_SCSI_VQ_BASE;
+@@ -224,6 +225,12 @@ static int __init housekeeping_isolcpus_setup(char *str)
+ 			continue;
+ 		}
+ 
++		if (!strncmp(str, "io_queue,", 9)) {
++			str += 9;
++			flags |= HK_FLAG_IO_QUEUE;
++			continue;
++		}
++
+ 		/*
+ 		 * Skip unknown sub-parameter and validate that it is not
+ 		 * containing an invalid character.
 
 -- 
 2.50.0
