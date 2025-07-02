@@ -1,35 +1,35 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35B40303DCB;
-	Wed,  2 Jul 2025 16:34:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D79762FC3D4;
+	Wed,  2 Jul 2025 16:34:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751474052; cv=none; b=AtKSmA+7b12hVyOQ6W0JPTxlpyYSwnK9h9MUXklRgWNIrO/FZO11YPlx+fmW8cYo4eU2195uW4moxEPpGMUbMt/ueSrVvaEBtLP6u6yPxrcot808tzzr5HdKiyR84EO0jvrMJRiKuybOmbi+m+IcZtedcw19/6NyoYMd4jaTcqY=
+	t=1751474057; cv=none; b=Clc4XOOl+dBNGYW7Vy4AE7f7zR96EBh5oE4ft0PIg5CVyuCfMQnT5Zs9FMz3wsG65tmh2E8vhbvQK65H5Cjb6aQMhXHEMXRIOiJq7r0Adm/909PT8btH+Ayn/0UR+lPZKu+Z2Rv/2M/GR+yejX/1FY647j3CntNLRsRpRj+dMAM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751474052; c=relaxed/simple;
-	bh=L2kPQSZAgXrho+8Mjw1nsKm5x3AqLLr+qKmpGSeOxcs=;
+	s=arc-20240116; t=1751474057; c=relaxed/simple;
+	bh=no7srF5DCCtVCNnfmr2KY5yHBkIVauk7JN1MWUBHxlM=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=uyTkvF2LTX6jo3ZBwbshwENZjMFM/M/fXkZaOHSFtfFCAoliPrD7DsuNcFrD8xDWL8IERZ5AhZJc5RGOXHtsMsfVbxPW2kMQaM5v9AGpL1qU+y4kAQwcwqEKzryYfJKFlagqSUu727FWyC2cKf8t7pLxNGkiWJ8kqlcGGbqitn8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rb9j8v/2; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:To:Cc; b=QLVRdgpfCNYqPIaK6aISW+bbTOP3b5u78uxLjBGurMCLgO4xPyBBFguULLsJvHy+8myaaNE7TBVgZ6y62K0bjJTAcU66Sb6dGuQ+eJI8wAaJZNLi8vsawrkG+9ymzTs/0OlIeQT0gJwIUvBGjl3GeS/k51AbJdRwAtuVLEHdBEs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LPtcZJnS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rb9j8v/2"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3E857C4CEED;
-	Wed,  2 Jul 2025 16:34:11 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LPtcZJnS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E7C98C4CEEF;
+	Wed,  2 Jul 2025 16:34:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751474051;
-	bh=L2kPQSZAgXrho+8Mjw1nsKm5x3AqLLr+qKmpGSeOxcs=;
+	s=k20201202; t=1751474055;
+	bh=no7srF5DCCtVCNnfmr2KY5yHBkIVauk7JN1MWUBHxlM=;
 	h=From:Date:Subject:References:In-Reply-To:To:Cc:From;
-	b=rb9j8v/2ajs+fVfGnUD3ot9OtunvlPAz2BP8YjtAio4giziu44PBVYT241YKMqFgd
-	 iFCclTJh4MfBVypDA7BWmozKXPX8uqWNPvhy3ihEBzQ1AWGsGRZUgnOEDhOgEcllLH
-	 uVhFCK4Ukn8EeWKIxgiXkiSVSbP8WYMnnE0aWr9WRwL4ef3hMES0bcYCSInOtu0rpb
-	 OV/KI85T3Bt/KSV8Pmm9pbksgav5AqWDY1eyekCVmbcacj3PGV0TDR27/1a6Eu3I8D
-	 OaoXahr5DqDR3FXwOqqQjNIIQqw76/diFUBi7MrgNstYUgU868Gja2rO6qmTiRk+PL
-	 ZIHdcNxDn4kfw==
+	b=LPtcZJnSpALosEABqfsTSY/FPfU43+97B1C8/qDFNnacZLWqAbIrrpE35wSR94mvf
+	 6IURwIieYLaPD1MBRL0cpYtlTybxxF0Z5AABDLk4IS8Iq5hUlPzCsMRoLqeAANNRUv
+	 6fxaJidD0Y+frVr0oiLeD+hltwnpOouDsiYqYnsVJaLGJT9j7MHcygJOuTWntmdTlV
+	 CGXcKui3j3nEPT3htws9T9GM0BvOgTdg9Zli50040yjk/losmiJtlQf1+fMl887Qx5
+	 HZWPxBco+DPW+LARTpJkfvt5cL6nPQJAGvtl2b0qQ0vi+N7qjIbzMU75Eifs/TGSgx
+	 ILE/uHs/YyjXA==
 From: Daniel Wagner <wagi@kernel.org>
-Date: Wed, 02 Jul 2025 18:33:53 +0200
-Subject: [PATCH v7 03/10] blk-mq: add
- blk_mq_{online|possible}_queue_affinity
+Date: Wed, 02 Jul 2025 18:33:54 +0200
+Subject: [PATCH v7 04/10] nvme-pci: use block layer helpers to constrain
+ queue affinity
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -38,7 +38,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20250702-isolcpus-io-queues-v7-3-557aa7eacce4@kernel.org>
+Message-Id: <20250702-isolcpus-io-queues-v7-4-557aa7eacce4@kernel.org>
 References: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org>
 In-Reply-To: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org>
 To: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
@@ -59,71 +59,28 @@ Cc: Aaron Tomlin <atomlin@atomlin.com>,
  Daniel Wagner <wagi@kernel.org>
 X-Mailer: b4 0.14.2
 
-Introduce blk_mq_{online|possible}_queue_affinity, which returns the
-queue-to-CPU mapping constraints defined by the block layer. This allows
-other subsystems (e.g., IRQ affinity setup) to respect block layer
-requirements.
-
-It is necessary to provide versions for both the online and possible CPU
-masks because some drivers want to spread their I/O queues only across
-online CPUs, while others prefer to use all possible CPUs. And the mask
-used needs to match with the number of queues requested
-(see blk_num_{online|possible}_queues).
+Ensure that IRQ affinity setup also respects the queue-to-CPU mapping
+constraints provided by the block layer. This allows the NVMe driver
+to avoid assigning interrupts to CPUs that the block layer has excluded
+(e.g., isolated CPUs).
 
 Signed-off-by: Daniel Wagner <wagi@kernel.org>
 ---
- block/blk-mq-cpumap.c  | 24 ++++++++++++++++++++++++
- include/linux/blk-mq.h |  2 ++
- 2 files changed, 26 insertions(+)
+ drivers/nvme/host/pci.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/block/blk-mq-cpumap.c b/block/blk-mq-cpumap.c
-index 705da074ad6c7e88042296f21b739c6d686a72b6..8244ecf878358c0b8de84458dcd5100c2f360213 100644
---- a/block/blk-mq-cpumap.c
-+++ b/block/blk-mq-cpumap.c
-@@ -26,6 +26,30 @@ static unsigned int blk_mq_num_queues(const struct cpumask *mask,
- 	return min_not_zero(num, max_queues);
- }
- 
-+/**
-+ * blk_mq_possible_queue_affinity - Return block layer queue affinity
-+ *
-+ * Returns an affinity mask that represents the queue-to-CPU mapping
-+ * requested by the block layer based on possible CPUs.
-+ */
-+const struct cpumask *blk_mq_possible_queue_affinity(void)
-+{
-+	return cpu_possible_mask;
-+}
-+EXPORT_SYMBOL_GPL(blk_mq_possible_queue_affinity);
-+
-+/**
-+ * blk_mq_online_queue_affinity - Return block layer queue affinity
-+ *
-+ * Returns an affinity mask that represents the queue-to-CPU mapping
-+ * requested by the block layer based on online CPUs.
-+ */
-+const struct cpumask *blk_mq_online_queue_affinity(void)
-+{
-+	return cpu_online_mask;
-+}
-+EXPORT_SYMBOL_GPL(blk_mq_online_queue_affinity);
-+
- /**
-  * blk_mq_num_possible_queues - Calc nr of queues for multiqueue devices
-  * @max_queues:	The maximum number of queues the hardware/driver
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 2a5a828f19a0ba6ff0812daf40eed67f0e12ada1..1144017dce47af82f9d010e42bfbf26fa4ddf33f 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -947,6 +947,8 @@ int blk_mq_freeze_queue_wait_timeout(struct request_queue *q,
- void blk_mq_unfreeze_queue_non_owner(struct request_queue *q);
- void blk_freeze_queue_start_non_owner(struct request_queue *q);
- 
-+const struct cpumask *blk_mq_possible_queue_affinity(void);
-+const struct cpumask *blk_mq_online_queue_affinity(void);
- unsigned int blk_mq_num_possible_queues(unsigned int max_queues);
- unsigned int blk_mq_num_online_queues(unsigned int max_queues);
- void blk_mq_map_queues(struct blk_mq_queue_map *qmap);
+diff --git a/drivers/nvme/host/pci.c b/drivers/nvme/host/pci.c
+index a509dc1f1d1400bc0de6d2f9424c126d9b966751..5293d5a3e5ee19427bec834741258be134bdc2c9 100644
+--- a/drivers/nvme/host/pci.c
++++ b/drivers/nvme/host/pci.c
+@@ -2589,6 +2589,7 @@ static int nvme_setup_irqs(struct nvme_dev *dev, unsigned int nr_io_queues)
+ 		.pre_vectors	= 1,
+ 		.calc_sets	= nvme_calc_irq_sets,
+ 		.priv		= dev,
++		.mask		= blk_mq_possible_queue_affinity(),
+ 	};
+ 	unsigned int irq_queues, poll_queues;
+ 	unsigned int flags = PCI_IRQ_ALL_TYPES | PCI_IRQ_AFFINITY;
 
 -- 
 2.50.0
