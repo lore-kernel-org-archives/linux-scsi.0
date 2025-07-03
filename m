@@ -1,121 +1,137 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B01ED2E7F05;
-	Thu,  3 Jul 2025 14:17:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C022EA46B;
+	Thu,  3 Jul 2025 14:29:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751552226; cv=none; b=sZOUsk6v/q8mzfWBl6vpqRMpxZ73B/XtpnjAGSe2kswto2dpzzgdAS/NXm/vv1UzVKyPCBZ5FMf7D6nUI7WAe6qyWhkacGDhWOqKhHc7sFoWwslUJQMirUR7BPpAFdQ117Eu50xs0/Lt/ztJ2gP2t6iusIIcTfGK2h4TeCXSsU8=
+	t=1751552999; cv=none; b=npNgCoDP15zhF2pTy5ZJPez5SDQycnojO8GfDTYKwaP/2iSeJR06p9OfK1+a6dO+4QV5PnFYs+9WHNY8SeewsgCURExfQjJO5atYZ3LBc3q6psEEWeWxXVJ26fQOtS9WxnjyqCGYPog7V8BfpVcuY5Z/UFRbeKiLNOtv0vcOZgk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751552226; c=relaxed/simple;
-	bh=lCKLpqueK88GUgqdWwqfrXQ/O1O8CPEQNkMDi9HGhJ8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=cP7PONr+ICWYoEc0XHbBMfmq7EUsmg1mJyWIiWDLMEAspeXmVk6b6miN1USONT0wNhNBuILruAZMGdB1d6OAWVjjA1f6PkwdzswcIT+oCHOC2qlm/3chX2tkolSBqI9d56oxQMAw5yLh1kCmdRZOvBE1wAqqcLHXozyK8fR9XdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.163.48])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4bXzHt2SNqz1GCFw;
-	Thu,  3 Jul 2025 22:12:58 +0800 (CST)
-Received: from kwepemg500017.china.huawei.com (unknown [7.202.181.81])
-	by mail.maildlp.com (Postfix) with ESMTPS id C708318006C;
-	Thu,  3 Jul 2025 22:16:59 +0800 (CST)
-Received: from [10.174.179.155] (10.174.179.155) by
- kwepemg500017.china.huawei.com (7.202.181.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Thu, 3 Jul 2025 22:16:58 +0800
-Message-ID: <563d1da8-abd8-48e6-9aab-5a4f13859995@huawei.com>
-Date: Thu, 3 Jul 2025 22:16:58 +0800
+	s=arc-20240116; t=1751552999; c=relaxed/simple;
+	bh=Fm3qk2Sxt9oTRrrfhvZcED03yYICrUHHIb3sCtzNWN4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=f71O/7tWZaI3KhAj3P6qGjqXBrR+gFILRs7Zd72VSFGluHfTIYJPNX4Zo3BJTcURyIsc49NtI/wxQVw9mTgPmqxVnY7QgUwhIVxVRQC1PJm7rQOuq/4Y/XphfEMDkj95v+6bvDfVXO5b0ObwoU+nmWxjD06vMfasVoSz8piY8bw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EUtQUVaT; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EUtQUVaT"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C2C47C4AF0B;
+	Thu,  3 Jul 2025 14:29:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751552998;
+	bh=Fm3qk2Sxt9oTRrrfhvZcED03yYICrUHHIb3sCtzNWN4=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=EUtQUVaTKURBSPBDtNxwsZsLLGU/xuEHfm0PM0K5AWLaAr0lx8/+TnwYPfB+kyugp
+	 o5d1bOfi4bMzMx2v5TNIDepiHs+lhKKtjX3PEHUE1FABzscTZA81BEJuCo0M0+oFZE
+	 dOrF4zbUAof8uuDe+iZKSFilPr/iDnGR0fZS146Rn1y2CwpF2gGr8tGklAwmWHwLd/
+	 H8Hc4TXVr72JEd4ApQIUdwamFnhZZ9yo02YLAo86ZBHy6BnhWR2tguDc4rTB9wd0PV
+	 4ddhT8qjZhuaiqWLp/lCL2F70yOJqRDWT/21+N7ylRkXCOvzQfNM3ccrTj/VKiWXAz
+	 zCMqHWcqpGzCA==
+Received: by mail-oo1-f52.google.com with SMTP id 006d021491bc7-610d87553b6so3239901eaf.2;
+        Thu, 03 Jul 2025 07:29:58 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCUGLNMn8xDXP/CdB+o+Odk4XOQAOV46qm0PqJS1QbplrnnfPrmBgEFdzHHbCkTls49lLE0olSRye9qn@vger.kernel.org, AJvYcCUHqUnwnjQcTWDKxYupZMEjwptdst7KXenxVJ6/dnVFCxiucqEGkB0rRDbtbIVnzUqGR6Ziz5sgV0Ou@vger.kernel.org, AJvYcCVyNZTU15TfF5FdZZqqWPfPv5UgNrxCng4xnRgIqT3bAJ9ox9P2FzoOKSam10x6HjjcElPMSchQgI8=@vger.kernel.org, AJvYcCX7ZX3/1EVzejOdGOeUyBz176L8EvQqGV+Xkq2MPxsJSw+F2rWb8H121B5TpD5yM3KTwImtrahC1iEK6io=@vger.kernel.org, AJvYcCXpikidFen+InVaqwdbKQ03ZBrFROJFDXIPx6jola4LQQvUlUB7DjSWzWJibLG76uWLxbxnY0O084ZUqQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzkVMhyJoCmyMy2tLcPji2GPZ/GtOf1FbXQGeXcf9gN7QNFu3Ud
+	F/Q6qhlWDjKWMhMdRLKF3YTeLaTQdbjSzK60eReGB+y3+IT2KOdgVbrR4KalAAcz6xjXSUKOjOY
+	QsUXW0yiZLNTGVQZjCAWxOsTEA0KFfFk=
+X-Google-Smtp-Source: AGHT+IGKqgRrtyx19Ohp3Z1EI2LoOc/W9BuT9DA7/iSo9WQpIWa8l502nswOSx3IuDHZQjfc+w2NIPaPXuTzX8u35dk=
+X-Received: by 2002:a05:6820:2713:b0:611:bbad:7b62 with SMTP id
+ 006d021491bc7-6120112a218mr4957769eaf.3.1751552997991; Thu, 03 Jul 2025
+ 07:29:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
-Subject: Re: CVE-2022-50031: scsi: iscsi: Fix HW conn removal use after free
-To: Greg Kroah-Hartman <gregkh@kernel.org>
-CC: <cve@kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-cve-announce@vger.kernel.org>, <lduncan@suse.com>,
-	<cleech@redhat.com>, Mike Christie <michael.christie@oracle.com>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>, yangerkun
-	<yangerkun@huawei.com>, "zhangyi (F)" <yi.zhang@huawei.com>, Hou Tao
-	<houtao1@huawei.com>, "yukuai (C)" <yukuai3@huawei.com>,
-	"chengzhihao1@huawei.com" <chengzhihao1@huawei.com>
-References: <2025061839-CVE-2022-50031-f2bc@gregkh>
-From: Li Lingfeng <lilingfeng3@huawei.com>
-In-Reply-To: <2025061839-CVE-2022-50031-f2bc@gregkh>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- kwepemg500017.china.huawei.com (7.202.181.81)
+References: <20250616175019.3471583-1-superm1@kernel.org>
+In-Reply-To: <20250616175019.3471583-1-superm1@kernel.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Thu, 3 Jul 2025 16:29:46 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0jc-tjs_a+RCzu6bvrbfhv5QHqsWx-zKjH0wpisiJciKA@mail.gmail.com>
+X-Gm-Features: Ac12FXyr5oPvb2c3yNjkDygXC9l6Pt_56oLkJ04HxD0-cR-THCDtscKWWn70wDY
+Message-ID: <CAJZ5v0jc-tjs_a+RCzu6bvrbfhv5QHqsWx-zKjH0wpisiJciKA@mail.gmail.com>
+Subject: Re: [PATCH v4 0/5] Improvements to S5 power consumption
+To: Mario Limonciello <superm1@kernel.org>
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Alex Deucher <alexander.deucher@amd.com>, 
+	Bjorn Helgaas <bhelgaas@google.com>, 
+	"open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>, 
+	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>, 
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Danilo Krummrich <dakr@kernel.org>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, 
+	"open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>, 
+	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, 
+	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>, Mario Limonciello <mario.limonciello@amd.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi, Greg
+On Mon, Jun 16, 2025 at 7:50=E2=80=AFPM Mario Limonciello <superm1@kernel.o=
+rg> wrote:
+>
+> From: Mario Limonciello <mario.limonciello@amd.com>
+>
+> A variety of issues both in function and in power consumption have been
+> raised as a result of devices not being put into a low power state when
+> the system is powered off.
+>
+> There have been some localized changes[1] to PCI core to help these issue=
+s,
+> but they have had various downsides.
+>
+> This series instead tries to use the S4 flow when the system is being
+> powered off.  This lines up the behavior with what other operating system=
+s
+> do as well.  If for some reason that fails or is not supported, unwind an=
+d
+> do the previous S5 flow that will wake all devices and run their shutdown=
+()
+> callbacks.
 
-在 2025/6/18 19:01, Greg Kroah-Hartman 写道:
-> From: Greg Kroah-Hartman <gregkh@kernel.org>
->
-> Description
-> ===========
->
-> In the Linux kernel, the following vulnerability has been resolved:
->
-> scsi: iscsi: Fix HW conn removal use after free
->
-> If qla4xxx doesn't remove the connection before the session, the iSCSI
-> class tries to remove the connection for it. We were doing a
-> iscsi_put_conn() in the iter function which is not needed and will result
-> in a use after free because iscsi_remove_conn() will free the connection.
->
-> The Linux kernel CVE team has assigned CVE-2022-50031 to this issue.
->
->
-> Affected and fixed versions
-> ===========================
->
-> 	Fixed in 5.19.4 with commit 0483ffc02ebb953124c592485a5c48ac4ffae5fe
-> 	Fixed in 6.0 with commit c577ab7ba5f3bf9062db8a58b6e89d4fe370447e
->
-> Please see https://www.kernel.org for a full list of currently supported
-> kernel versions by the kernel community.
->
-> Unaffected versions might change over time as fixes are backported to
-> older supported kernel versions.  The official CVE entry at
-> 	https://cve.org/CVERecord/?id=CVE-2022-50031
-> will be updated if fixes are backported, please check that for the most
-> up to date information about this issue.
->
->
-> Affected files
-> ==============
->
-> The file(s) affected by this issue are:
-> 	drivers/scsi/scsi_transport_iscsi.c
->
->
-> Mitigation
-> ==========
->
-> The Linux kernel CVE team recommends that you update to the latest
-> stable kernel version for this, and many other bugfixes.  Individual
-> changes are never tested alone, but rather are part of a larger kernel
-> release.  Cherry-picking individual commits is not recommended or
-> supported by the Linux kernel community at all.  If however, updating to
-> the latest release is impossible, the individual changes to resolve this
-> issue can be found at these commits:
-> 	https://git.kernel.org/stable/c/0483ffc02ebb953124c592485a5c48ac4ffae5fe
-> 	https://git.kernel.org/stable/c/c577ab7ba5f3bf9062db8a58b6e89d4fe370447e
->
-Based on the details described in the linked discussion, I have concerns
-that this patch may not fully resolve the Use-After-Free vulnerability.
-Instead, it appears the changes could potentially introduce memory leak
-issues.
-Given these concerns, I'd recommend ​rejecting this CVE until we can
-thoroughly investigate and validate the complete solution.
+I actually like this approach, but I think that it is risky.
 
-Link: 
-https://lore.kernel.org/all/0b0a0bcf-b805-5041-9923-37ad391169c0@huaweicloud.com/
+It also requires more work/review from other people.
 
-Thanks,
-Lingfeng
+I'll be sending some comments on the individual patches going forward,
+but I think the earliest it can go in is after 6.17-rc1 (given it is
+reviewed properly till then).
+
+Thanks!
+
+> v3->v4:
+>  * Fix LKP robot failure
+>  * Rebase on v6.16-rc2
+>
+> Previous submissions [1]:
+> Link: https://lore.kernel.org/linux-pm/CAJZ5v0hrKEJa8Ad7iiAvQ3d_0ysVhzZcX=
+SYc5kkL=3D6vtseF+bg@mail.gmail.com/T/#m91e4eae868a7405ae579e89b135085f49062=
+25d2
+> Link: https://lore.kernel.org/linux-pci/20250506041934.1409302-1-superm1@=
+kernel.org/
+> Link: https://lore.kernel.org/linux-pci/20231213182656.6165-1-mario.limon=
+ciello@amd.com/ (v1)
+> Link: https://lore.kernel.org/linux-pm/20250514193406.3998101-1-superm1@k=
+ernel.org/ (v2)
+> Link: https://lore.kernel.org/linux-pm/20250609024619.407257-1-superm1@ke=
+rnel.org/ (v3)
+>
+> Mario Limonciello (5):
+>   PM: Use hibernate flows for system power off
+>   PCI: Put PCIe ports with downstream devices into D3 at hibernate
+>   drm/amd: Avoid evicting resources at S5
+>   scsi: Add PM_EVENT_POWEROFF into suspend callbacks
+>   usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
+>
+>  drivers/base/power/main.c                  |  7 ++
+>  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  4 +
+>  drivers/pci/pci-driver.c                   | 94 ++++++++++++++--------
+>  drivers/scsi/mesh.c                        |  1 +
+>  drivers/scsi/stex.c                        |  1 +
+>  drivers/usb/host/sl811-hcd.c               |  1 +
+>  include/linux/pm.h                         |  3 +
+>  include/trace/events/power.h               |  3 +-
+>  kernel/reboot.c                            |  6 ++
+>  9 files changed, 86 insertions(+), 34 deletions(-)
+>
+> --
+> 2.43.0
+>
