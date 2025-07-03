@@ -1,159 +1,292 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D211E29A9EE
-	for <linux-scsi@vger.kernel.org>; Thu,  3 Jul 2025 06:59:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC7FC2C08DD
+	for <linux-scsi@vger.kernel.org>; Thu,  3 Jul 2025 08:12:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751525964; cv=none; b=HCXSOEaIw3OXg4tmjldr6LjWK01SjTBx8naSug1MmL/iteCQxOiipL0rmTbGyc569EgbHD59yeVW/jmsrzebSU9QE0udoKKwPa5HcvGuxu+4t83+fvszmsYJJrC+Vc6XaKQcNnnXBxglkBzZe28iD9y7XXk/g0lWU1j9AxbAc84=
+	t=1751530358; cv=none; b=HjlFZwdpiiA1H8E29Iwp9wc6UnExyWu/nDOWX5nqnLnuK37NbHbzhhzxBv3y6+XTUTHf+mcXxw7+HQbuhW7lRm7dF4uhwHCrFV4o3Gf2pcBwLq3J5tCdRIhcBmgmTt8DhM/c8lYdQS2bdYg0MjP5eLBw595vq6PIEXzrwoIi02k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751525964; c=relaxed/simple;
-	bh=HpO9GBcjZkV7Xi7e1U2fle/IMcSg5+uPPNVRuVDcUrI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DYpY81o9siqYktfTZg0Z1uyhnoaOFPtwtfrb3kAWFBUrQ2lEvxhlThf10IXX/bFHEotOYNM3A6wPLOvhQksxrfvY5OnBbFBW5iAe6Vp90lH49TukxYVRmR+ECDVufrRp1R+9UV7Rw+7EyOGIZn4QEN70lbUZYUrImQEubLt5png=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lD4m3Ia2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=DFJYZxpG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=lD4m3Ia2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=DFJYZxpG; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1751530358; c=relaxed/simple;
+	bh=VxuBPVg+eAerudJhediPZnxbHJNhUAGZ3LebUXFy0HA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tg71Kcoro5NfXbSicO/reAaeKVZ5i809sGaW010edM/XU5yS46MJiqlEg+mDlKQhWQUEdqDdZzgHvuOy9EbO2nvplI9bbqMoYxo4uKgHzDAGLD6RkaHWUUJthv2j6wZuZXVc11y5672dI0nNGgG8jxkrhv/8uTLurKGy1vJ0U0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=az7VPUhp; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lD4m3Ia2";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="DFJYZxpG";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="lD4m3Ia2";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="DFJYZxpG"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="az7VPUhp"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1751530355;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=zKjA0FoLuVW4/CYh3iJP6VSaMFPkjm8yZ7Zjcr1XUu4=;
+	b=az7VPUhpDj8wH1HYGhdIs5oDd2H5uAHgd5FfLxCbadCqMztGF3dOXGnBYFlrwUTdpXmdCR
+	v5KfQgm0tQxOQEq4mLItNYb7tGAqOPqL7BeBtkVgCcxSc/sy9anzWnF3tzkgUL7t+7atu9
+	2IK886uwNAhxp3kA2syKV739ZVvgIz4=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-681-jEwy8r2kPDqejreWllvWrQ-1; Thu,
+ 03 Jul 2025 04:12:32 -0400
+X-MC-Unique: jEwy8r2kPDqejreWllvWrQ-1
+X-Mimecast-MFC-AGG-ID: jEwy8r2kPDqejreWllvWrQ_1751530351
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 00E7A21185;
-	Thu,  3 Jul 2025 06:59:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751525960; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5Fsiib8zdgWaCro2EGpljFQE5UhciRXKPNK4B5GKkU8=;
-	b=lD4m3Ia2bzln4Oczmb9c4Vf4N0xymKDAI+Tf03At9ibhppL78aaGByRkbDb99HWx2ELTis
-	0hOdo0dfrReXXYne+Y+6DJ3VXEgac7e/AaS5B0VlWxsfphPjaqohfRb7u6BoahqGxNwWOr
-	exgDCSz6ymKA2fzfkvfZyVgEKxLNmi8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751525960;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5Fsiib8zdgWaCro2EGpljFQE5UhciRXKPNK4B5GKkU8=;
-	b=DFJYZxpG5gFrtWxpzRxIxg7Ez/VzxX0vzPYdi56Bs2Q74M8b3cP9CUkycv7CwlSgLo7woc
-	4lsPG1AAgcE+q4AA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=lD4m3Ia2;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=DFJYZxpG
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751525960; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5Fsiib8zdgWaCro2EGpljFQE5UhciRXKPNK4B5GKkU8=;
-	b=lD4m3Ia2bzln4Oczmb9c4Vf4N0xymKDAI+Tf03At9ibhppL78aaGByRkbDb99HWx2ELTis
-	0hOdo0dfrReXXYne+Y+6DJ3VXEgac7e/AaS5B0VlWxsfphPjaqohfRb7u6BoahqGxNwWOr
-	exgDCSz6ymKA2fzfkvfZyVgEKxLNmi8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751525960;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5Fsiib8zdgWaCro2EGpljFQE5UhciRXKPNK4B5GKkU8=;
-	b=DFJYZxpG5gFrtWxpzRxIxg7Ez/VzxX0vzPYdi56Bs2Q74M8b3cP9CUkycv7CwlSgLo7woc
-	4lsPG1AAgcE+q4AA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3175E13721;
-	Thu,  3 Jul 2025 06:59:19 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id VIEVCUcqZmiXUQAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 03 Jul 2025 06:59:19 +0000
-Message-ID: <c98a6d1e-d3df-4865-9ef7-89ba485cf827@suse.de>
-Date: Thu, 3 Jul 2025 08:59:14 +0200
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 584911944A83;
+	Thu,  3 Jul 2025 08:12:30 +0000 (UTC)
+Received: from rocky.redhat.com (unknown [10.47.238.33])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 767F018002B5;
+	Thu,  3 Jul 2025 08:12:26 +0000 (UTC)
+From: Maurizio Lombardi <mlombard@redhat.com>
+To: martin.petersen@oracle.com
+Cc: michael.christie@oracle.com,
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	mlombard@bsdbackstore.eu,
+	d.bogdanov@yadro.com
+Subject: [PATCH V2] target: generate correct string identifiers for PR OUT transport IDs
+Date: Thu,  3 Jul 2025 10:12:24 +0200
+Message-ID: <20250703081224.115865-1-mlombard@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 10/10] docs: add io_queue flag to isolcpus
-To: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
- Sagi Grimberg <sagi@grimberg.me>, "Michael S. Tsirkin" <mst@redhat.com>
-Cc: Aaron Tomlin <atomlin@atomlin.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Thomas Gleixner <tglx@linutronix.de>, Costa Shulyupin
- <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
- Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>,
- Ming Lei <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>,
- Mel Gorman <mgorman@suse.de>,
- Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
- linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
- linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com,
- linux-scsi@vger.kernel.org, storagedev@microchip.com,
- virtualization@lists.linux.dev, GR-QLogic-Storage-Upstream@marvell.com
-References: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org>
- <20250702-isolcpus-io-queues-v7-10-557aa7eacce4@kernel.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250702-isolcpus-io-queues-v7-10-557aa7eacce4@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[25];
-	MID_RHS_MATCH_FROM(0.00)[];
-	FUZZY_BLOCKED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RLdd7zpc331qgmz6gw8s9zsqsb)];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim,suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 00E7A21185
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spam-Score: -4.51
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On 7/2/25 18:34, Daniel Wagner wrote:
-> The io_queue flag informs multiqueue device drivers where to place
-> hardware queues. Document this new flag in the isolcpus
-> command-line argument description.
-> 
-> Signed-off-by: Daniel Wagner <wagi@kernel.org>
-> ---
->   Documentation/admin-guide/kernel-parameters.txt | 19 ++++++++++++++++++-
->   1 file changed, 18 insertions(+), 1 deletion(-)
-> 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+Fix target_parse_pr_out_transport_id() to
+return a string representing the transport ID
+in a human-readable format (e.g., naa.xxxxxxxx...)
+for various SCSI protocol types (SAS, FCP, SRP, SBP).
 
-Cheers,
+Previously, the function returned a pointer to the raw binary buffer,
+which was incorrectly compared against human-readable strings,
+causing comparisons to fail.
+Now, the function writes a properly formatted string into a
+buffer provided by the caller.
+The output format depends on the transport protocol:
 
-Hannes
+* SAS: 64-bit identifier, "naa." prefix.
+* FCP: 64-bit identifier, colon separated values.
+* SBP: 64-bit identifier, no prefix.
+* SRP: 128-bit identifier, "0x" prefix.
+* iSCSI: IQN string.
+
+Signed-off-by: Maurizio Lombardi <mlombard@redhat.com>
+---
+
+v2: Fix the prefixes, using Dmitry Bogdanov's patch as a reference.
+    target_parse_pr_out_transport_id() runs in atomic context
+    because it's called in a spin_lock() protected section,
+    therefore I rewrote the patch to avoid using kasprintf().
+
+ drivers/target/target_core_fabric_lib.c | 63 +++++++++++++++++++------
+ drivers/target/target_core_internal.h   |  4 +-
+ drivers/target/target_core_pr.c         | 18 +++----
+ 3 files changed, 60 insertions(+), 25 deletions(-)
+
+diff --git a/drivers/target/target_core_fabric_lib.c b/drivers/target/target_core_fabric_lib.c
+index 43f47e3aa448..cc40f857e21a 100644
+--- a/drivers/target/target_core_fabric_lib.c
++++ b/drivers/target/target_core_fabric_lib.c
+@@ -257,11 +257,41 @@ static int iscsi_get_pr_transport_id_len(
+ 	return len;
+ }
+ 
+-static char *iscsi_parse_pr_out_transport_id(
++static void sas_parse_pr_out_transport_id(char *buf, char *i_str)
++{
++	char hex[17] = {0};
++
++	bin2hex(hex, buf + 4, 8);
++	snprintf(i_str, TRANSPORT_IQN_LEN, "naa.%s", hex);
++}
++
++static void srp_parse_pr_out_transport_id(char *buf, char *i_str)
++{
++	char hex[33] = {0};
++
++	bin2hex(hex, buf + 8, 16);
++	snprintf(i_str, TRANSPORT_IQN_LEN, "0x%s", hex);
++}
++
++static void fcp_parse_pr_out_transport_id(char *buf, char *i_str)
++{
++	snprintf(i_str, TRANSPORT_IQN_LEN, "%8phC", buf + 8);
++}
++
++static void sbp_parse_pr_out_transport_id(char *buf, char *i_str)
++{
++	char hex[17] = {0};
++
++	bin2hex(hex, buf + 8, 8);
++	snprintf(i_str, TRANSPORT_IQN_LEN, "%s", hex);
++}
++
++static bool iscsi_parse_pr_out_transport_id(
+ 	struct se_portal_group *se_tpg,
+ 	char *buf,
+ 	u32 *out_tid_len,
+-	char **port_nexus_ptr)
++	char **port_nexus_ptr,
++	char *i_str)
+ {
+ 	char *p;
+ 	int i;
+@@ -282,7 +312,7 @@ static char *iscsi_parse_pr_out_transport_id(
+ 	if ((format_code != 0x00) && (format_code != 0x40)) {
+ 		pr_err("Illegal format code: 0x%02x for iSCSI"
+ 			" Initiator Transport ID\n", format_code);
+-		return NULL;
++		return false;
+ 	}
+ 	/*
+ 	 * If the caller wants the TransportID Length, we set that value for the
+@@ -306,7 +336,7 @@ static char *iscsi_parse_pr_out_transport_id(
+ 			pr_err("Unable to locate \",i,0x\" separator"
+ 				" for Initiator port identifier: %s\n",
+ 				&buf[4]);
+-			return NULL;
++			return false;
+ 		}
+ 		*p = '\0'; /* Terminate iSCSI Name */
+ 		p += 5; /* Skip over ",i,0x" separator */
+@@ -339,7 +369,8 @@ static char *iscsi_parse_pr_out_transport_id(
+ 	} else
+ 		*port_nexus_ptr = NULL;
+ 
+-	return &buf[4];
++	strncpy(i_str, &buf[4], TRANSPORT_IQN_LEN);
++	return true;
+ }
+ 
+ int target_get_pr_transport_id_len(struct se_node_acl *nacl,
+@@ -387,33 +418,35 @@ int target_get_pr_transport_id(struct se_node_acl *nacl,
+ 	}
+ }
+ 
+-const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+-		char *buf, u32 *out_tid_len, char **port_nexus_ptr)
++bool target_parse_pr_out_transport_id(struct se_portal_group *tpg,
++		char *buf, u32 *out_tid_len, char **port_nexus_ptr, char *i_str)
+ {
+-	u32 offset;
+-
+ 	switch (tpg->proto_id) {
+ 	case SCSI_PROTOCOL_SAS:
+ 		/*
+ 		 * Assume the FORMAT CODE 00b from spc4r17, 7.5.4.7 TransportID
+ 		 * for initiator ports using SCSI over SAS Serial SCSI Protocol.
+ 		 */
+-		offset = 4;
++		sas_parse_pr_out_transport_id(buf, i_str);
+ 		break;
+-	case SCSI_PROTOCOL_SBP:
+ 	case SCSI_PROTOCOL_SRP:
++		srp_parse_pr_out_transport_id(buf, i_str);
++		break;
+ 	case SCSI_PROTOCOL_FCP:
+-		offset = 8;
++		fcp_parse_pr_out_transport_id(buf, i_str);
++		break;
++	case SCSI_PROTOCOL_SBP:
++		sbp_parse_pr_out_transport_id(buf, i_str);
+ 		break;
+ 	case SCSI_PROTOCOL_ISCSI:
+ 		return iscsi_parse_pr_out_transport_id(tpg, buf, out_tid_len,
+-					port_nexus_ptr);
++					port_nexus_ptr, i_str);
+ 	default:
+ 		pr_err("Unknown proto_id: 0x%02x\n", tpg->proto_id);
+-		return NULL;
++		return false;
+ 	}
+ 
+ 	*port_nexus_ptr = NULL;
+ 	*out_tid_len = 24;
+-	return buf + offset;
++	return true;
+ }
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 408be26d2e9b..20aab1f50565 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -103,8 +103,8 @@ int	target_get_pr_transport_id_len(struct se_node_acl *nacl,
+ int	target_get_pr_transport_id(struct se_node_acl *nacl,
+ 		struct t10_pr_registration *pr_reg, int *format_code,
+ 		unsigned char *buf);
+-const char *target_parse_pr_out_transport_id(struct se_portal_group *tpg,
+-		char *buf, u32 *out_tid_len, char **port_nexus_ptr);
++bool target_parse_pr_out_transport_id(struct se_portal_group *tpg,
++		char *buf, u32 *out_tid_len, char **port_nexus_ptr, char *i_str);
+ 
+ /* target_core_hba.c */
+ struct se_hba *core_alloc_hba(const char *, u32, u32);
+diff --git a/drivers/target/target_core_pr.c b/drivers/target/target_core_pr.c
+index 70905805cb17..83e172c92238 100644
+--- a/drivers/target/target_core_pr.c
++++ b/drivers/target/target_core_pr.c
+@@ -1478,11 +1478,12 @@ core_scsi3_decode_spec_i_port(
+ 	LIST_HEAD(tid_dest_list);
+ 	struct pr_transport_id_holder *tidh_new, *tidh, *tidh_tmp;
+ 	unsigned char *buf, *ptr, proto_ident;
+-	const unsigned char *i_str = NULL;
++	unsigned char i_str[TRANSPORT_IQN_LEN];
+ 	char *iport_ptr = NULL, i_buf[PR_REG_ISID_ID_LEN];
+ 	sense_reason_t ret;
+ 	u32 tpdl, tid_len = 0;
+ 	u32 dest_rtpi = 0;
++	bool tid_found;
+ 
+ 	/*
+ 	 * Allocate a struct pr_transport_id_holder and setup the
+@@ -1571,9 +1572,9 @@ core_scsi3_decode_spec_i_port(
+ 			dest_rtpi = tmp_lun->lun_tpg->tpg_rtpi;
+ 
+ 			iport_ptr = NULL;
+-			i_str = target_parse_pr_out_transport_id(tmp_tpg,
+-					ptr, &tid_len, &iport_ptr);
+-			if (!i_str)
++			tid_found = target_parse_pr_out_transport_id(tmp_tpg,
++					ptr, &tid_len, &iport_ptr, i_str);
++			if (!tid_found)
+ 				continue;
+ 			/*
+ 			 * Determine if this SCSI device server requires that
+@@ -3153,13 +3154,14 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
+ 	struct t10_pr_registration *pr_reg, *pr_res_holder, *dest_pr_reg;
+ 	struct t10_reservation *pr_tmpl = &dev->t10_pr;
+ 	unsigned char *buf;
+-	const unsigned char *initiator_str;
++	unsigned char initiator_str[TRANSPORT_IQN_LEN];
+ 	char *iport_ptr = NULL, i_buf[PR_REG_ISID_ID_LEN] = { };
+ 	u32 tid_len, tmp_tid_len;
+ 	int new_reg = 0, type, scope, matching_iname;
+ 	sense_reason_t ret;
+ 	unsigned short rtpi;
+ 	unsigned char proto_ident;
++	bool tid_found;
+ 
+ 	if (!se_sess || !se_lun) {
+ 		pr_err("SPC-3 PR: se_sess || struct se_lun is NULL!\n");
+@@ -3278,9 +3280,9 @@ core_scsi3_emulate_pro_register_and_move(struct se_cmd *cmd, u64 res_key,
+ 		ret = TCM_INVALID_PARAMETER_LIST;
+ 		goto out;
+ 	}
+-	initiator_str = target_parse_pr_out_transport_id(dest_se_tpg,
+-			&buf[24], &tmp_tid_len, &iport_ptr);
+-	if (!initiator_str) {
++	tid_found = target_parse_pr_out_transport_id(dest_se_tpg,
++			&buf[24], &tmp_tid_len, &iport_ptr, initiator_str);
++	if (!tid_found) {
+ 		pr_err("SPC-3 PR REGISTER_AND_MOVE: Unable to locate"
+ 			" initiator_str from Transport ID\n");
+ 		ret = TCM_INVALID_PARAMETER_LIST;
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+2.47.1
+
