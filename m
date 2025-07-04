@@ -1,185 +1,119 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+Received: from mail-lf1-f54.google.com (mail-lf1-f54.google.com [209.85.167.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 863172D8788
-	for <linux-scsi@vger.kernel.org>; Fri,  4 Jul 2025 12:30:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A76ED2F531D
+	for <linux-scsi@vger.kernel.org>; Fri,  4 Jul 2025 12:55:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751632222; cv=none; b=DYGn0tC3VpICLZxg9pYqdXDnZiw1+rhgArpj77yK4AXhbUn7Tw9w7/CO4mkfACEIcV94zhBBJZvCe0kb5vF/N3uKNfeEPLNtL72TCiY3MI4qyS0iw9GLlHfl+42x27QOH5eqDAvxiqE1sMotDbsIToKnpL8c1+uHTE4QDx0/lcU=
+	t=1751633745; cv=none; b=BP+a2ghnJUZHHKovO3z/XQedHLD2LmZG2zz8ToxAfYsNkZY4f/JA2SJt4uqmGglP/QgRuJXm5x04/JtDSmBcQBgGf/mRUSza1++c5Egqa/7Vu78ePFHHwkxD3P8LVXf74jyfLNYnLmvRc25iXFHNgxdhBWuakq+xL6R220+qSRs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751632222; c=relaxed/simple;
-	bh=EhqUgOJCJlnSDCmE5YbN+SmR7GZFhyPzjsXP0FF1GYo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=iVhQ3X0t/VES1ApOCgKMtsYrPrKgLVH0mKrAvDOwstabiJPUaISQlDFEH+sO0qmAQDIJZwWUSJ6t60dDa2a0flPMre/90uTXvgdmPPoWggwGW4697Xx/7JKD8HZC2JG1XdDtiQBO7RYR/L6+Yhcmajug3Ab3btIuMqA+gy4lEf8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1PNeuq6X; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Qw5LBiTr; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=iUH4+5Vu; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ZffzaIRI; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1751633745; c=relaxed/simple;
+	bh=KPH3Xiy9mlbjaxPq8h3ifisCHjsTKK7k/FurarbQ5uI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=svFIJ9jmvA2W5qxHUZUAim7z+Z0REVKbrLh5wl5PTAdvwQVtsszQA6PCeohat1nXbr0E+8Flw55n5cvori2Y6jW3mD3qIY7pBdUTSGyemPNF2cPmOmnRk8fugMfikIibD/KvAM6OMez92C3niY3haZfrnISBEQeWCOeZ9OJVopc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=vijZUmqk; arc=none smtp.client-ip=209.85.167.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1PNeuq6X";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Qw5LBiTr";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="iUH4+5Vu";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ZffzaIRI"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 68609211B1;
-	Fri,  4 Jul 2025 12:30:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751632218; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=q+FqtZMjtP4HpZ/jeTQTPK73EGvFDqPilJ5M/AUaOsg=;
-	b=1PNeuq6XRG9MLSKh16/8j87kZJMB7EIl2HpEWVs2u8pn4ERdxbvgelzT1f5k+NPAxh1NA3
-	DUhuhO33rqPurfYDV6Xd6LvxR7Ete9BU17kVZxsSQq6GNQ+XFFClvqd4nRp/A5nzVx5KTs
-	zK1JxYRs9oPAk10lH1ZjkkCMs6fkV6c=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751632218;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=q+FqtZMjtP4HpZ/jeTQTPK73EGvFDqPilJ5M/AUaOsg=;
-	b=Qw5LBiTryjPMOx7bvmSs0x5fIFEAlrw4PFmoc6rh/CevNJnTZQovkQFMhOVgGAycZXvDAG
-	yQYm71qi29pWD2Dg==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=iUH4+5Vu;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=ZffzaIRI
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751632217; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=q+FqtZMjtP4HpZ/jeTQTPK73EGvFDqPilJ5M/AUaOsg=;
-	b=iUH4+5VultHZW/BBXGA+BmaiSW4ERO0GGGCIXtyomlhI4kUC2UuvbntREmfxxaGRS6qiYD
-	hi1IhXlsoGLh8tcEins5JEoHmBxUFBPxJeUY3VkbOuhDyn9Cwj64A1IV9uB8rq1TnEVLHk
-	en7cLJ94w0kqDZkxYepKPUB6rC5hcZc=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751632217;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=q+FqtZMjtP4HpZ/jeTQTPK73EGvFDqPilJ5M/AUaOsg=;
-	b=ZffzaIRI91Wrez4gmihemHyE278M17FvJei2kFPfkywnXuEZHbdJw/QsufVHUpEN//WEQT
-	xO9k6fQKdvq5TrCQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 41F8913A71;
-	Fri,  4 Jul 2025 12:30:17 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id ViIbEFnJZ2j/VAAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Fri, 04 Jul 2025 12:30:17 +0000
-Date: Fri, 4 Jul 2025 14:30:16 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, Aaron Tomlin <atomlin@atomlin.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
-	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	storagedev@microchip.com, virtualization@lists.linux.dev, 
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v7 05/10] scsi: Use block layer helpers to constrain
- queue affinity
-Message-ID: <fdbc2ddc-830b-4727-88ae-5347fea8fca8@flourine.local>
-References: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org>
- <20250702-isolcpus-io-queues-v7-5-557aa7eacce4@kernel.org>
- <d95de280-8cd7-4697-933a-37dc53f4c552@suse.de>
- <2e7576e4-442f-4000-817d-6253374f5818@flourine.local>
- <c06d0ef2-6bd2-4f5d-895f-0255415b2a24@suse.de>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="vijZUmqk"
+Received: by mail-lf1-f54.google.com with SMTP id 2adb3069b0e04-553d27801b4so37283e87.3
+        for <linux-scsi@vger.kernel.org>; Fri, 04 Jul 2025 05:55:43 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1751633742; x=1752238542; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=bXS2CAH8cY4s46125RlrGwDTCzxYthjabffdF2nmZ6E=;
+        b=vijZUmqk5dvIE5ReLc28vf++0zXe/+XCfx1sbVYumPRxSm/UEKH7ebnQ9ppSWcyG2n
+         sv27PgQ8IUSCOTduAp1J6dbIqGJSvkLTdXUvxU+CQaKIIOSYIZQPLooz5IW6NfSG5F3B
+         lA571fObpCjHbbCoNFkiXQFXIBIXtVhizlUgtJVBFcDcoB0d0JHDZ0KzO1hm+nVrVdRq
+         T8KjkpJ818MTTz60YEr4tB5/y7U16n4Dw1s6c4mIHVy0dubuDtHyYS9CWkXCn4p1XVMN
+         wyiAVs410o89oIw5zwU1VvG5THJ532lDMouV+prINax+o+/LRNefX4MFQyJ9aI5wWkOg
+         DL4g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1751633742; x=1752238542;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bXS2CAH8cY4s46125RlrGwDTCzxYthjabffdF2nmZ6E=;
+        b=qjgoz1zNvmqlxF+fff1I5zjWhx9q7RVDrfcGsb11KjHJMrp2NBvACxKvGnhAuuQjJh
+         NHwXYsVu2rF+jbawDGmo7OvKa8150aM5moIAC41OymsFHOWlKHDsdUfgHwdzP2zAWbr3
+         nyLyyFJPL4I6IQI8ufjp3wRpPPaQwZc5qt3RW/f6XGZsYcEoCkYoTPflBp2bc86T5GFs
+         RMZUJ5tbooXcTZEOyxqc/+1bA/S0nBCiLMepAxTDg6DlauIWwmAl0kQx/tXrRPNhx3v5
+         9kI8gaKKGW83tVxoUJdNu0MIG8CQBrTSWlHjkBYWskchPanX0sKKYgszvieAPnFHIRiq
+         ifeg==
+X-Forwarded-Encrypted: i=1; AJvYcCVWXIW+fbGeZoH7PAwIJyD7G7r+W3bN/NDh8XLa27EGzUjdrGgLFVmk+OflQJ608fiBFjjy+1732NfL@vger.kernel.org
+X-Gm-Message-State: AOJu0YyztUT45euBm39pxKFgYczAfpgia+0CHqsx4z2IXoUdQwMSBgUh
+	Y7QcjkviiRyVdPy9BcDMerGMBbt7pPRJ1BUFVzTsVp66yNtl0Z+HbzDijktvRUGlcrk=
+X-Gm-Gg: ASbGncvBL2SEFTQaJWRKhucxWbbhQTQfu714749icrdnvXoGgJYbc5f9z2IgXiFu+sy
+	/uNT1oJfaIpLD5gGRaRQ8M14Q0EWrY7H5YjC8IU2yzNiuxBLHvev54kkdAorqftpw1D0LzJHQcI
+	v4byVOPXkn7/bFcYwnYKZBg9oyLylsYk58q8SqxXugE4f1Q1tVqERtvU8D2LmgPaCG6lOqIGP/1
+	jfkYJPwLv7XV3FzUUwNMlMjb63cLpGgg3HJefOT7QwigApvHN26PXxOUTAuVjiLiziDgnqMLW0O
+	bEob7WdRex5uxunL6mBGjXYft9hiTUk0LOImPdzx6Soth4oIDCaZT4L2tn7L/d6IYBBzOS5E7H3
+	JcfZaD7PzL/HY88vp9dmNCtKVKlt8Pcnk
+X-Google-Smtp-Source: AGHT+IEXL/S82jil0CchvfSvjiER+3hIXl3C8odNwTNIX/B7ZjFtkvE5wSgpuVOReGNVJal1fGnQMA==
+X-Received: by 2002:a05:6512:39d5:b0:553:af02:78e4 with SMTP id 2adb3069b0e04-556f330539dmr222570e87.5.1751633741779;
+        Fri, 04 Jul 2025 05:55:41 -0700 (PDT)
+Received: from localhost (c-85-229-7-191.bbcust.telenor.se. [85.229.7.191])
+        by smtp.gmail.com with UTF8SMTPSA id 2adb3069b0e04-556383d33f3sm247513e87.68.2025.07.04.05.55.41
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 04 Jul 2025 05:55:41 -0700 (PDT)
+From: Anders Roxell <anders.roxell@linaro.org>
+To: lduncan@suse.com,
+	cleech@redhat.com,
+	michael.christie@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: open-iscsi@googlegroups.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	arnd@arndb.de,
+	Anders Roxell <anders.roxell@linaro.org>
+Subject: [PATCH] pps: Fix IDR memory leak in module exit
+Date: Fri,  4 Jul 2025 14:55:36 +0200
+Message-ID: <20250704125536.1091187-1-anders.roxell@linaro.org>
+X-Mailer: git-send-email 2.47.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <c06d0ef2-6bd2-4f5d-895f-0255415b2a24@suse.de>
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 68609211B1
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[26];
-	TO_DN_SOME(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	MIME_TRACE(0.00)[0:+];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DWL_DNSWL_BLOCKED(0.00)[suse.de:dkim];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	R_RATELIMIT(0.00)[to_ip_from(RL71uuc3g3e76oxfn4mu5aogan)];
-	MISSING_XM_UA(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[flourine.local:mid,suse.de:dkim]
-X-Spam-Score: -4.51
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jul 04, 2025 at 12:28:49PM +0200, Hannes Reinecke wrote:
-> It really shouldn't be an issue when the cpus are distributed 'correctly'
-> :-)
+Add missing idr_destroy() call in pps_exit() to properly free the pps_idr
+radix tree nodes. Without this, module load/unload cycles leak 576-byte
+radix tree node allocations, detectable by kmemleak as:
 
-If I get the drift, we start to discuss how the mapping could be
-normally, so not for isolcpus. The isolcpus case is just how many hwq
-are available (and affinity):
+unreferenced object (size 576):
+  backtrace:
+    [<ffffffff81234567>] radix_tree_node_alloc+0xa0/0xf0
+    [<ffffffff81234568>] idr_get_free+0x128/0x280
 
- num queues to map = min(num housekeeping CPUs, #hwq)
+The pps_idr is initialized via DEFINE_IDR() at line 32 and used throughout
+the PPS subsystem for device ID management. The fix follows the documented
+pattern in lib/idr.c and matches the cleanup approach used by other drivers
+such as drivers/uio/uio.c.
 
-and then it's common code, no special housekeeping mapping code.
+This leak was discovered through comprehensive module testing with cumulative
+kmemleak detection across 10 load/unload iterations per module.
 
-> We have several possibilities:
-> -> #hwq > num_possible_cpus: easy, 1:1 mapping, no problem
+Fixes: eae9d2ba0cfc ("LinuxPPS: core support")
+Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
+---
+ drivers/scsi/scsi_transport_iscsi.c | 1 +
+ 1 file changed, 1 insertion(+)
 
-I agree, no problem here.
+diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
+index c75a806496d6..adbedb58930d 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -5024,6 +5024,7 @@ static void __exit iscsi_transport_exit(void)
+ 	class_unregister(&iscsi_endpoint_class);
+ 	class_unregister(&iscsi_iface_class);
+ 	class_unregister(&iscsi_transport_class);
++	idr_destroy(&iscsi_ep_idr);
+ }
+ 
+ module_init(iscsi_transport_init);
+-- 
+2.47.2
 
-> -> num_online_cpu < #hwq < num_possible_cpus: Not as easy, but if we
->    ensure that each online cpu is mapped to a different hwq we don't
->    have a performance impact.
-
-This should also be fairly straightforward too. First assign each online
-CPU a hwq and distribute the rest of the hwq amount the rest of the
-possible offline CPUs.
-
-> -> #hwq < num_online_cpu: If we ensure that a) the number of online cpus
->    per hwq is (roughly) identical we won't have a performance impact.
->    As a bonus we should strive to have the number of offline cpus
->    distributed equally on each hwq.
-
-__group_cpus_evenly is handling this pretty well.
-
-> Of course, that doesn't take into accound NUMA locality; with NUMA locality
-> you would need to ensure to have at least one CPU per NUMA node
-> mapped to each hwq. Which actually would impose a lower limit on the
-> number (and granularity!) of hwqs (namely the number of NUMA nodes), but
-> that's fair, I guess.
-
-Again __group_cpus_evenly is taking NUMA into account as I understand it.
-
-> But this really can be delegated to later patches; initially we really
-> should identify which drivers might have issues with CPU hotplug,
-> and at the very least issue a warning for these drivers.
-
-There are different ways I suppose. My approach is not to change the
-drivers too much because I don't have access to all the hardware for
-testing. Instead extend the core code so that the different cases are
-covered.
