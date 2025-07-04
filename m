@@ -1,136 +1,103 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DE98D252906;
-	Fri,  4 Jul 2025 04:23:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6E062882A9;
+	Fri,  4 Jul 2025 07:55:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751603025; cv=none; b=dZq99vBxXm5yjaKCzuSK6Z/SxZPgucgJWEN07jajBIKTZ7+Fo4a6AdSK2N2UlLBPYDruxsCTvUjkkFuFAnh/ko9jHJ3anzO5aqNcpTDvRYcSxzxsBjYLluNSxtiwV6llTLBiK0L3HTnDJchTVWDaSc9LC74axiCJ9Tu3vDQdCdI=
+	t=1751615712; cv=none; b=X+NnQlG+ox+TqfjESJK0i+NZZv+d7jfzTi7NrqeO0+A8sb76VW7/dmoxK8b/uVmQzuHQx1XXSmGzoMNrxdwvvkj+TcCGtYXTSQTvVfwrKPFkuws/+ql/hz6AjCfA0sSfPmjU+TqqB1XcJ6Yp1ljOOLChipcUVwT/NP9WnApCZwQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751603025; c=relaxed/simple;
-	bh=OvxNdnQ74uQ8nHm62YANOFxLGZf31u+IHThS/kjFuPk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=t0NHVeX+OprMzYmLOs1VXDfGchJqSvwR7YanGPFKfZlczipua2tfqOO7Fa7Np8HNDeCmIWA4jDGCJd2jPgiuZ7Kp3c1j5i4TlzJnyLY/9R2jE+APPG3c2pesyck07R43k2xqUYZQ6ToqHduBqyUFt/MVW1eU49+VIjZZAWELOFE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=BHwWAbh/; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1751615712; c=relaxed/simple;
+	bh=HatJQt+/Adv64NfU4l9yYslyXa8ctxMBuP4/uoYp+2s=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Tf/hX+AE6vXQKeXFvoDnMLxd0wK8hIGZ3zyErLn358u1FojtyBVWBXG9xgR2gIJzBLAfoWBSQ4lv9nfDUcn9O5xG1JStgiAT3/9BUnixRwhWOY9EcWig1qCB6zBJOD1ayF1xLmuf0gHpGfPzQAHYABg7mOH93RUO1PxiejIcP8A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=eQ7Hb34u; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="BHwWAbh/"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 563HC8Ol032128;
-	Fri, 4 Jul 2025 04:23:18 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	s0445/eYFRFumWInKkw8yHbZRIG87CvsShAGp/8DDfM=; b=BHwWAbh/GnAh1N3r
-	pYeRrs24JxXmThQAVOIb/3QJKh0s9o2mq8p0wBl72lny316AGfDvK4jFF7ICriru
-	ehDFxdpzrBYH0YIuHF27Nl2aHnI16bbQ38zCjJvE3MTZwewYqUOQaJFOU+925nHr
-	MzuYfVoUn57pOoLT/zrIc0drSJc7sQm+NroHNNn8Qqv87YgX6XLJAxY6dcHrW6ge
-	GPWYWMIwKWwnnfhZAlMYcKyLAs0Qcn1wobqhe3PZb/UVZZFhsWfio6bZTNCrjdZV
-	b/1YK1y+VoI1ONex46XReZde2e28PL5ISwXEAxV9Z8HG29iLxhJpmZd4Rh4j8K+O
-	VP33KQ==
-Received: from nalasppmta04.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47j63kjspr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 04 Jul 2025 04:23:17 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA04.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5644NGBL014989
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 4 Jul 2025 04:23:16 GMT
-Received: from [10.218.7.247] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Thu, 3 Jul
- 2025 21:23:13 -0700
-Message-ID: <8e82f971-8a1f-45c9-8f8a-9ef17f8c1a70@quicinc.com>
-Date: Fri, 4 Jul 2025 09:52:45 +0530
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="eQ7Hb34u"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1751615710; x=1783151710;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=HatJQt+/Adv64NfU4l9yYslyXa8ctxMBuP4/uoYp+2s=;
+  b=eQ7Hb34uCUvO5XR3/8vL+iAvgrjPz50bs0W8beNRjuQyVYrhEMYXLfFx
+   HFsPcb666mfaaULkHe5j6RtyeUG4oxkvGbypkTHRWtoX5VwiGNfGo5zHo
+   1pLN8aL8aFphZTI0Omwakd/A/JwAGp8FnHvXNt2SmH7rkEk5RT185Z0Kj
+   V1R6hmUkt+TKonpA5KE6slMqoKBxq/p1hQH9uFtlkYy4mQvvsOcKn2MQx
+   MPnT1nbZfzaYnA4lTb+E9/pcQ0Ep4GRu4Ab8unCixzoKmMj9YfctqQobY
+   vyvxIA05C6pCgg53RHz94LeL4q2zF47qlrzYQ8vSxvtplIonYiN6adpTg
+   A==;
+X-CSE-ConnectionGUID: H2i2/9KxTL6RhBhwc+4v2A==
+X-CSE-MsgGUID: EN/KXynSQF+6iDOfJcJCTw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11483"; a="53080630"
+X-IronPort-AV: E=Sophos;i="6.16,286,1744095600"; 
+   d="scan'208";a="53080630"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2025 00:55:07 -0700
+X-CSE-ConnectionGUID: 3ZLeYn5ZSAuolWKw3UI1DA==
+X-CSE-MsgGUID: If5O9QjwR6KhmWAMeK3pcA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.16,286,1744095600"; 
+   d="scan'208";a="154223141"
+Received: from jkrzyszt-mobl2.ger.corp.intel.com (HELO svinhufvud.fi.intel.com) ([10.245.244.244])
+  by fmviesa007-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 04 Jul 2025 00:55:06 -0700
+Received: from svinhufvud.lan (localhost [IPv6:::1])
+	by svinhufvud.fi.intel.com (Postfix) with ESMTP id 1464F447EB;
+	Fri,  4 Jul 2025 10:55:04 +0300 (EEST)
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo
+From: Sakari Ailus <sakari.ailus@linux.intel.com>
+To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH 80/80] scsi: block: pm: Remove redundant pm_runtime_mark_last_busy() calls
+Date: Fri,  4 Jul 2025 10:55:03 +0300
+Message-Id: <20250704075503.3223228-1-sakari.ailus@linux.intel.com>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250704075225.3212486-1-sakari.ailus@linux.intel.com>
+References: <20250704075225.3212486-1-sakari.ailus@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 2/2] scsi: ufs: qcom: Enable QUnipro Internal Clock
- Gating
-To: Avri Altman <Avri.Altman@sandisk.com>,
-        "mani@kernel.org"
-	<mani@kernel.org>,
-        "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>,
-        "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
-        "konrad.dybcio@oss.qualcomm.com" <konrad.dybcio@oss.qualcomm.com>
-CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20250702151441.8061-1-quic_nitirawa@quicinc.com>
- <20250702151441.8061-3-quic_nitirawa@quicinc.com>
- <PH7PR16MB61965FA0A8DFB0877CE51690E543A@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <PH7PR16MB61965FA0A8DFB0877CE51690E543A@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=ZKfXmW7b c=1 sm=1 tr=0 ts=68675735 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10
- a=_CqmqpiUMaDpWP_MQkcA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzA0MDAzMCBTYWx0ZWRfX1rVDcQz/8tkk
- t2bHvTp1GVrWqn612/I6Wwc/hSj9281TBi+8HkNODnfutSOVcnoVFVlLAOzpyZNc4jxWBJZdrtY
- i0DQiWc2qUP0heQQt+slcFNc+VdW0mjMsANIPt6CsBt1eQ6Mly7JnnFg6plSehF4RmaEl7Kdy35
- HjnsysDE474Zq853hOsk/OIwaU1nLoE3EXlZVo8J6M5d6Dbc6SVnweaIfl2U3eGuasGiJYn1S+q
- ZvqKpnZo6yxLjyWN/xtwMHiGswG+f4bWomxfyNqsZ7lCqH7aer0Hvwc7RuElvhqTr5VtQvatUri
- cpHESqj10qZA93MbXSWwKq+ctZzuJSey4Z+I7NodxYqrJHNGGsIvms7jac3Z6xDaGqg9Ndi0eIE
- O4qXW3GFPTs+AVuaghUcR+S0L8OJgm94XcpVtxZRItFCQIpsUgbCK0cYji6C020VoPCQiziZ
-X-Proofpoint-ORIG-GUID: Bu5w3aQGuQdg0GM0yBlkBtd4UbhL-wkU
-X-Proofpoint-GUID: Bu5w3aQGuQdg0GM0yBlkBtd4UbhL-wkU
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
- definitions=2025-07-04_01,2025-07-02_04,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- adultscore=0 mlxscore=0 mlxlogscore=999 spamscore=0 suspectscore=0
- bulkscore=0 priorityscore=1501 lowpriorityscore=0 phishscore=0
- impostorscore=0 malwarescore=0 clxscore=1011 classifier=spam authscore=0
- authtc=n/a authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2507040030
+Content-Transfer-Encoding: 8bit
 
+pm_runtime_put_autosuspend(), pm_runtime_put_sync_autosuspend(),
+pm_runtime_autosuspend() and pm_request_autosuspend() now include a call
+to pm_runtime_mark_last_busy(). Remove the now-reduntant explicit call to
+pm_runtime_mark_last_busy().
 
+Signed-off-by: Sakari Ailus <sakari.ailus@linux.intel.com>
+---
+The cover letter of the set can be found here
+<URL:https://lore.kernel.org/linux-pm/20250704075225.3212486-1-sakari.ailus@linux.intel.com>.
 
-On 7/3/2025 12:13 PM, Avri Altman wrote:
->> +/**
->> + * ufshcd_dme_rmw - get modify set a dme attribute
->> + * @hba - per adapter instance
->> + * @mask - mask to apply on read value
->> + * @val - actual value to write
->> + * @attr - dme attribute
->> + */
->> +static inline int ufshcd_dme_rmw(struct ufs_hba *hba, u32 mask,
->> +                                u32 val, u32 attr) {
->> +       u32 cfg = 0;
->> +       int err = 0;
->> +
->> +       err = ufshcd_dme_get(hba, UIC_ARG_MIB(attr), &cfg);
->> +       if (err)
->> +               goto out;
->> +
->> +       cfg &= ~mask;
->> +       cfg |= (val & mask);
->> +
->> +       err = ufshcd_dme_set(hba, UIC_ARG_MIB(attr), cfg);
->> +
->> +out:
->> +       return err;
->> +}
-> Might be useful to share this with other vendors as well. Maybe in ufshcd-priv.h ?
-Sure Avri, I'll move this to ufshcd-priv.h
+In brief, this patch depends on PM runtime patches adding marking the last
+busy timestamp in autosuspend related functions. The patches are here, on
+rc2:
 
-> 
-> Thanks,
-> Avri
+        git://git.kernel.org/pub/scm/linux/kernel/git/rafael/linux-pm.git \
+                pm-runtime-6.17-rc1
+
+ drivers/scsi/scsi_pm.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d581613d87c7..2652fecbfe47 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -205,7 +205,6 @@ static int scsi_runtime_idle(struct device *dev)
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
+ 	if (scsi_is_sdev_device(dev)) {
+-		pm_runtime_mark_last_busy(dev);
+ 		pm_runtime_autosuspend(dev);
+ 		return -EBUSY;
+ 	}
+-- 
+2.39.5
 
