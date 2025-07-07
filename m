@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D8F9205E3E
-	for <linux-scsi@vger.kernel.org>; Mon,  7 Jul 2025 19:58:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E5CB19E97B;
+	Mon,  7 Jul 2025 20:18:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751918335; cv=none; b=loAhC1brD+0N29GCiF5iRFUGJ+aW68ta2PkVo3GxmW8GJet7cAhVQBmmySJc8syda3SdQgclsCgexIlQ4kv97fzuhACwMBlyTW6XpsMio+kcoSRbFaf44zxQsINPdmHk00XjKdc01n5Fq6kmRXVHNvQZCDXPQPRQSMUZ3q18ik4=
+	t=1751919518; cv=none; b=AG7x8RxfsSXvfEF+R5RYSPpQzO7qfqzQZexIg/IcAwuWrynKVKLVUdW7qJ4HWFnp2zkv+doRYP3fZwVBzDlvgpV29FPl3qjnvLSHEcPKi7UqgAc8SgSwXNRqWU33L0fVcGMl42J+3IoWg/MFLozrrCc//uJX1TwDyAmOB154gjI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751918335; c=relaxed/simple;
-	bh=Bk5g85FCZs7iy7lgB3uYsvBdM4U0MphufyabLBCQxCU=;
+	s=arc-20240116; t=1751919518; c=relaxed/simple;
+	bh=MH6AW7DZ/+6oxcmK2lbp/E4s2yvinxh6tDS7lCW48ZU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tSHXupOagK+MiDY6g1dYUpmwPyxyqNDU5KjZLIXrgYEE8hYGOS9iPYjXih5qoLTP+IBgbdng18nDt+rxLUJ8vOeGPv0t3HnpgTfrfpvSBGl0K+yJdXEluELXQwZx6G/FhGMyz7RSndMnMYq6/MSTDRHiQiZIls1irmC7rnBUAWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=nAdr76k8; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=hT4p1rjG7muko/hJdwT4EjI+gTx88tBubTTxjlpD4gB8j9nvJ74QSo0ObAcNP307GD7t+BIrUVlPytOhgKrLpDS2BExCRiGCHQexeYAYTLdqlkMvidPw07PZz5xa0pBfY/Al546DEJcfMPMUGIGByKrwn7jWcZzNRdyynZgholU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jSR1FrsC; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="nAdr76k8"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jSR1FrsC"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bbZn84GBrzltKGk;
-	Mon,  7 Jul 2025 19:58:52 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bbbCv3q9Hzm0yt2;
+	Mon,  7 Jul 2025 20:18:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1751918331; x=1754510332; bh=wRkwwaV6v2zyajUs+U9MPZlt
-	8onusLjc47oAV6K6B50=; b=nAdr76k8bgXIdmiRFrumnXjwk82Nvm17d8OII462
-	Nt0ezUMyYuhH+4aTXgNYIeBGbkc3lSW0F2PgbvUwaGqoPEKt3PpthMrrv7RT5l5o
-	G1O6WEV8GGOGvgXdisd1E+m55bCRz0rS6mJAc1YCDMR3JK45LW1oA0GCgp9J9VEb
-	qSMPFAcGLl/xJggorL6ytNkhnw158NuPV0pMC7kMVGflSNHAg+X08TWToDk8AAGs
-	1k//ckRCMHs1egIcPSmJl2KWomQno/pBblOr/vg2lTgP9lAX0tez3MVcjaRbYcQp
-	tOoFgZIltBiowSsAdzy8+C3WTtEbR6Slp/8L1WGGqaMKsA==
+	 s=mr01; t=1751919513; x=1754511514; bh=MH6AW7DZ/+6oxcmK2lbp/E4s
+	2yvinxh6tDS7lCW48ZU=; b=jSR1FrsCl2VS0dFJCuOShZLpG0WDsBAU0/hDbzeA
+	l39wESHmTAQftBnRGuphZAqsS/E2PJ1fbQ9oLv378acS3Ffph5wYOsCY0Smes2rY
+	BA1hahqSW6U0U1AIBSXluY6UQzf/ROej8ZP9GQux8jacZ2jGAVN/KsNrrsgQlq5Y
+	+vYkUfutjXKJ8DS/81QIcoOKKkatBJgIyVuL6COuUZSGaD52LPP+Vs20eN8Foihv
+	cvBJZhpBm2+hKEvpIFIsgmGYzOffRQRjpDTWQEh7ingXuV+1yDOUGGj+BBfNup7s
+	4g0jFstuvU87VKPYT15PWWxdgsgurgH20P58Iga1mtwwbQ==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 18xCWavNKIGD; Mon,  7 Jul 2025 19:58:51 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id RmX8vjQgZHsO; Mon,  7 Jul 2025 20:18:33 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bbZn33wfRzlh0dZ;
-	Mon,  7 Jul 2025 19:58:46 +0000 (UTC)
-Message-ID: <5fb9ba7f-cd44-43f4-aaf4-d15de73bda3d@acm.org>
-Date: Mon, 7 Jul 2025 12:58:45 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bbbCl74C8zm0yVD;
+	Mon,  7 Jul 2025 20:18:27 +0000 (UTC)
+Message-ID: <bac5f533-0513-4d59-98b8-de44a08daef3@acm.org>
+Date: Mon, 7 Jul 2025 13:18:26 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,30 +50,23 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] scsi: ufs: ufs-pci: Remove UFS PCI driver's
- ->late_init() call back
-To: Adrian Hunter <adrian.hunter@intel.com>,
- Martin K Petersen <martin.petersen@oracle.com>
-Cc: James EJ Bottomley <James.Bottomley@HansenPartnership.com>,
- Avri Altman <avri.altman@sandisk.com>,
- Archana Patni <archana.patni@intel.com>, linux-scsi@vger.kernel.org
-References: <20250703064322.46679-1-adrian.hunter@intel.com>
- <20250703064322.46679-4-adrian.hunter@intel.com>
+Subject: Re: [PATCH] scsi: ufs: exynos: call phy_notify_pmstate() from hibern8
+ callbacks
+To: Peter Griffin <peter.griffin@linaro.org>,
+ Alim Akhtar <alim.akhtar@samsung.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
+References: <20250703-ufs-exynos-phy_notify_pmstate-v1-1-49446d7852d1@linaro.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250703064322.46679-4-adrian.hunter@intel.com>
+In-Reply-To: <20250703-ufs-exynos-phy_notify_pmstate-v1-1-49446d7852d1@linaro.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 7/2/25 11:43 PM, Adrian Hunter wrote:
->   ->late_init() was introduced to allow the default values for rpm_lvl and
-> spm_lvl to be set.  Since commit bb9850704c04 ("scsi: ufs: core: Honor
-> runtime/system PM levels if set by host controller drivers") and
-> commit fe06b7c07f3f ("scsi: ufs: core: Set default runtime/system PM levels
-> before ufshcd_hba_init()"), those default values can be set in the ->init()
-> variant call back.
-> 
-> Move the setting of default values for rpm_lvl and spm_lvl to ->init() and
-> remove ->late_init().
-
+On 7/3/25 7:07 AM, Peter Griffin wrote:
+> Notify the ufs phy of the hibern8 link state so that it can program the
+> appropriate values.
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
