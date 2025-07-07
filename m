@@ -1,130 +1,78 @@
-Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from verein.lst.de (verein.lst.de [213.95.11.211])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6FA661386B4;
-	Sun,  6 Jul 2025 09:25:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39F4013AF2;
+	Mon,  7 Jul 2025 05:42:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751793933; cv=none; b=hdF1sRr6u3AiAVNXnw+RDUz5u0EWEyVqGd0/ApurCuNfEicCFKH61nUVrrR7hg/pfq6WfxtRFPNsjiev9Ob9q2s99jUrxZMRVnGuTEq6Bmed/2KaraNlKCHbjjgjOMpc/JQiZSWHaAdYKxyVmc+Fu0K55W35IOEHVbLChrDfn3w=
+	t=1751866956; cv=none; b=PqnPkpdAmJvbFOx4AKkulbMeapxwPaQDSaUyJSqPwubERzkWKUyFjUfgi7B/0jlHIR8kaK6/7CxZnPPBPGA2mYjExE3XbuSDBb/+H49GCLXPUsxwZo4didk5mQTBnqNWvZn/UdvM6D6lktCZCHEDoJ13asIIXZM4Nn42emODnYc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751793933; c=relaxed/simple;
-	bh=uNRG7Dp9Y5lA1BfsuxAk7MQ5UhU9xjl3Bg3u9K1zj8I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ZD7OxcoiQRvm3GolODJjIGZ+qDQx+mWpJSbFATPzC5zxyBxjM4SZNaLOq//ZoXue+vrbSukcSM0VJTu5pPCVCzp7toVp7FaEbwRWoe0t8Qo9l7CWFUziblAgMdUds02EoiUqJt0UCmoB2j9XluSNu2lol76CUU6kGT0SBnWl49E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JidYwsZk; arc=none smtp.client-ip=209.85.214.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JidYwsZk"
-Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-236377f00a1so18116275ad.3;
-        Sun, 06 Jul 2025 02:25:32 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1751793932; x=1752398732; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=lA8KNkPs04Haqqyk/LQTF4+bgbkvtNg6lmvOnF3xgBo=;
-        b=JidYwsZkga6QlzVHNsaXlfaNPb7+iusC4Hbkc77FBeBNMzHLzcFRdyDMpSSV6bPmWq
-         ROnpJ4QRfmktw+p6SM6Hdxj6ayKY2JTC/sVsswa+IJ9mMxw0qpm5uq4JhxpK9ObsAkkt
-         cNVDysnsL0nknRg+CTcD6k6BgcxPVg/CBmRg13nES0tcYptk9P46KKIYWXVY2/SIpZKZ
-         ziDAJYDwR0bnWwX8WUChsAsvAdO2GJxeHQXmYWGw+apHhEOsCC+BIo6pT5pWLCPSO3wN
-         42szxgw2XN7IxQaWUTbHhnwAAyYTkThDIm0g8WK3841tq04YMgpgN0Do4NAkoH4znScW
-         W55w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1751793932; x=1752398732;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=lA8KNkPs04Haqqyk/LQTF4+bgbkvtNg6lmvOnF3xgBo=;
-        b=VxZfT2B/LlsQXQZd3ko8VvYyKcWUKQ8o7rXGEVFmXZKtcbY0vc5AfzFKOJPIJRU8ya
-         HkoNC+/57m50+H9kb9lnOY2KgM3ERjQ5kzLtO8AVO5/3PdVAn8W3BAJLM78+YamzZniX
-         qMAtVMEQIAtlV4L0ZbUHc9GjaaTAyABOU9qgw1TxDn2/pbG5bAGTz5640pNb9BE+IN9C
-         XhTmq28zEKFe/Tsf5IgjAl0+ZcQy9fw9KFskhCqpN90SB7kFmkyd9Ur1p/GXw3hbFi9F
-         Qm5MAY76BQ4cTJBWgNu2alDQ++hjckKXKXbuaut1QL2NR+pW06OlZS5HXLDtpOuByWnk
-         WDwA==
-X-Forwarded-Encrypted: i=1; AJvYcCVkfgIQRGGAuGoalF4Xps7XIA8mfbbxIVhxvZDmau8v1oyDmjl3FaUR2oPw95mIa3JkPZmAMCWJ6dRVDlY=@vger.kernel.org, AJvYcCVutm2WCdZM9XAaKOoAADWrLcmIpHw50jThHd64IeOEhB4Y9gO1oiFhyLaMDFpCG8yz6srx8StxFCebeewf@vger.kernel.org, AJvYcCXukwA3HgVagyUDHQ3mu6SzMNthwSKJpQzEvjX1AZSGf6k8Boj4MFR8gNzN5gXdtPHmtexsRr2dSXD9Cg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz04bQ0af2Vf2XhJ/SvnGCWvHRYPAO3BaNCQy7bYM3iPBCXtjiF
-	IO/XXxQNkFy9fEUU2Pj1+5ecjntdgYou3iCHV0mt2zqxJKiDUzBXx+AC
-X-Gm-Gg: ASbGncvXzltjSK4l1xaAW7Zrb0Pnk71nD26PBfSgcyNfDM9xHMKK43Q6X6gGYLliPYh
-	Ca5VyNkMthoYxf1+T7Q50YYgsYsGVIRoknQlPdkXruGC6EodRtFrOVtHAtEQmFX0Q0TepnCRfky
-	Gv1LInRpq3dXhDs8u/ll13zJcggggK2pnPH/T40mbTK2k7SeKWeBHrpYcL4mTic3UI0jmHIo8HA
-	5gSryzPKMMwxj8gAKmSH6sr3JztmtVuL76WdKTwplDVaU853rldzAVSK98D0IYSjuKAIq6wQA+Y
-	PNon2VgWjK57PWaBHrkMQI1Kdjw9GVu1E7KvagWNEUzXgSj4FwU/FzHvI9iedzhWqzvnEdQuHjB
-	dpnBgOQ==
-X-Google-Smtp-Source: AGHT+IH3vq2oxcWMOz4KCi0buYRStjOlQa2oNevR3gflhsdNi9rysjwR5KZGyuusMR46XX2R/z7LXQ==
-X-Received: by 2002:a17:902:db0c:b0:234:8ec1:4af6 with SMTP id d9443c01a7336-23c91056ecfmr73738155ad.45.1751793931566;
-        Sun, 06 Jul 2025 02:25:31 -0700 (PDT)
-Received: from manjaro.domain.name ([2401:4900:1c30:6f3f:3d1:c4c0:3855:2a18])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-31aaae5393dsm6247089a91.11.2025.07.06.02.25.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 06 Jul 2025 02:25:31 -0700 (PDT)
-From: Pranav Tyagi <pranav.tyagi03@gmail.com>
-To: martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: skhan@linuxfoundation.org,
-	linux-kernel-mentees@lists.linux.dev,
-	Pranav Tyagi <pranav.tyagi03@gmail.com>
-Subject: [PATCH] target/core: replace strncpy with strscpy
-Date: Sun,  6 Jul 2025 14:55:22 +0530
-Message-ID: <20250706092522.9298-1-pranav.tyagi03@gmail.com>
-X-Mailer: git-send-email 2.49.0
+	s=arc-20240116; t=1751866956; c=relaxed/simple;
+	bh=kuw5IbnV7fi6rLoKY/KXvSEqEshcimO+A5gdlD8ZJyM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gcACazluDlHLkZ/qbycavwkPBSxPyp+uhbPFZHEy8niWQw1b8Rk2ydLro5GEtDJ6rGE4CbKKgS854dm//ga3WRI6kFDEAn1ZcOSQQWDfgWjKKMBwccRbs6HgEewi/sgJ9lbzQne0Eg+F6Pl7OnQME+jp28uEWWUBEYbzDuobXMw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
+Received: by verein.lst.de (Postfix, from userid 2407)
+	id 07766227A87; Mon,  7 Jul 2025 07:42:28 +0200 (CEST)
+Date: Mon, 7 Jul 2025 07:42:27 +0200
+From: Christoph Hellwig <hch@lst.de>
+To: Daniel Wagner <dwagner@suse.de>
+Cc: Christoph Hellwig <hch@lst.de>, Daniel Wagner <wagi@kernel.org>,
+	Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>,
+	Sagi Grimberg <sagi@grimberg.me>,
+	"Michael S. Tsirkin" <mst@redhat.com>,
+	Aaron Tomlin <atomlin@atomlin.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Costa Shulyupin <costa.shul@redhat.com>,
+	Juri Lelli <juri.lelli@redhat.com>,
+	Valentin Schneider <vschneid@redhat.com>,
+	Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org, storagedev@microchip.com,
+	virtualization@lists.linux.dev,
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH v7 08/10] blk-mq: use hk cpus only when
+ isolcpus=io_queue is enabled
+Message-ID: <20250707054227.GB28625@lst.de>
+References: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org> <20250702-isolcpus-io-queues-v7-8-557aa7eacce4@kernel.org> <20250703090158.GA4757@lst.de> <75aafd33-0aff-4cf7-872f-f110ed896213@flourine.local>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <75aafd33-0aff-4cf7-872f-f110ed896213@flourine.local>
+User-Agent: Mutt/1.5.17 (2007-11-01)
 
-strncpy() is deprecated and its use is discouraged. Replace strncpy()
-with safer strscpy() as the p_buf buffer should be NUL-terminated, since
-it holds human readable debug output strings.
+On Fri, Jul 04, 2025 at 11:00:56AM +0200, Daniel Wagner wrote:
+> > I'm no expert on the housekeeping stuff, but why isn't the
+> > housekeeping_enabled check done in housekeeping_cpumask directly so
+> > that the drivers could use housekeeping_cpumask without a blk-mq
+> > wrapper?
+> 
+> Yes, housekeeping_cpumask will return cpu_possible_mask when housekeping
+> is disabled. Though some drivers want cpu_online_mask instead. If all
+> drivers would agree on one version of the mask it should allow to drop
+> to these helpers (maybe we the houskeeping API needs to be extended then
+> though)
 
-Signed-off-by: Pranav Tyagi <pranav.tyagi03@gmail.com>
----
- drivers/target/target_core_transport.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+Drivers don't get cpu hotplug notifications, so cpu_possible_mask is
+the only valid answer right now.  That could change if we ever implement
+notifications to the drivers.
 
-diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
-index 0a76bdfe5528..9c255ed21789 100644
---- a/drivers/target/target_core_transport.c
-+++ b/drivers/target/target_core_transport.c
-@@ -1112,7 +1112,7 @@ void transport_dump_vpd_proto_id(
- 	}
- 
- 	if (p_buf)
--		strncpy(p_buf, buf, p_buf_len);
-+		strscpy(p_buf, buf, p_buf_len);
- 	else
- 		pr_debug("%s", buf);
- }
-@@ -1162,7 +1162,7 @@ int transport_dump_vpd_assoc(
- 	}
- 
- 	if (p_buf)
--		strncpy(p_buf, buf, p_buf_len);
-+		strscpy(p_buf, buf, p_buf_len);
- 	else
- 		pr_debug("%s", buf);
- 
-@@ -1222,7 +1222,7 @@ int transport_dump_vpd_ident_type(
- 	if (p_buf) {
- 		if (p_buf_len < strlen(buf)+1)
- 			return -EINVAL;
--		strncpy(p_buf, buf, p_buf_len);
-+		strscpy(p_buf, buf, p_buf_len);
- 	} else {
- 		pr_debug("%s", buf);
- 	}
-@@ -1276,7 +1276,7 @@ int transport_dump_vpd_ident(
- 	}
- 
- 	if (p_buf)
--		strncpy(p_buf, buf, p_buf_len);
-+		strscpy(p_buf, buf, p_buf_len);
- 	else
- 		pr_debug("%s", buf);
- 
--- 
-2.49.0
+> This is also what Hannes brought up. If the number of supported hardware
+> queues for a device is less than cpu_possible_mask, it really makes
+> sense to distribute the hardware queues only between the online cpus. I
+> think the only two drivers which are interested in the cpu_possible_mask
+> are nvme-pci and virtio.
 
+That's the only two drivers that get it right :(
