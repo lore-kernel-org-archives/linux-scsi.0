@@ -1,48 +1,48 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01AD42857C6;
-	Mon,  7 Jul 2025 21:09:42 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4C27285CB7;
+	Mon,  7 Jul 2025 21:12:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751922584; cv=none; b=kgHSiHbZZt25doMQEkxXHwR7iOaVhSUl7bfpk3OR44Dn87jCv+6XCStelYKjqOanQehq9CHxQafozKFgtkP11adFkuorkJ001zi/Um82OB1oE+7M0iL3ySYTblX8Elq6KoUgXcrKU7np8jPjapcAe8Px7pBhBo9EOka/98yA86Q=
+	t=1751922725; cv=none; b=r3nVGPHzMkTe8UwZp5JaaRastPu6cDMn5jrPtR26wmqQba/Mwco4W94iF4oL2YClZDfinIvuUJzzjeF+ElhZrQ4Gw+DkAYdp25s+u/3/d2EdLJDyIaMCc8W1ZgIQvHAZ3Tfja5MpqC1CfhVPxc+mJmbcWbit9jsgPJiuDidCJZE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751922584; c=relaxed/simple;
-	bh=KR3L9g3pCadHfqpRPsb15XaHk4wdhh99Q+TWkMSZl/g=;
+	s=arc-20240116; t=1751922725; c=relaxed/simple;
+	bh=r5I8t8Pp1vaoSeXwDh5f86XWK7k+0Uq9uft1zZnyglc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Qqws4aPPDMOY+5oyeNuzGJaWupMDuHoZevOayUF3Y5UDBdlGCoVxj0/Uqjebxg9z8a9byquM9RwqacAmqnx68DmZYqU4DEnruYxpNNOF4IAcLdELe7wtBDKCt+o4V+mlmufitdumlWUlOqolIHKEK9MWX93XuAi/+BJEa9TgaWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=c79jGM2o; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=UTCXuOZE+3cMzpi7ZaF8hc6qJL4GSnj+9uZ9ZClxqkBLi6yfX6m1L0ghheqxj3Pv3xV8UlttyT7C7s4ldwvrU5qFppFUPeIf6qIsXaynX+iYqCUjoh1W5HQ4iTDkOfdeLZO2UA6if7Og1nU0jVHLpDIWpJ1KACFPf1ySilsexZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=d1b/HOfk; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="c79jGM2o"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="d1b/HOfk"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bbcLs6GLqzlv4VM;
-	Mon,  7 Jul 2025 21:09:41 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bbcPZ5ycmzlfnBk;
+	Mon,  7 Jul 2025 21:12:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1751922579; x=1754514580; bh=dRfytkfle3F/Uu3PA6L0oggv
-	NxFFAgHeETxJSpCAi1s=; b=c79jGM2olG7mWvn6DDmGIxS8rNxa0xTPXlbYZjol
-	dJ2OwrZWT0YQQGDrdtVE86tnoJSPlIEiWGK8/ANnj/tdzhuJ1NQOyFcLd8pk7jhD
-	OR2NDx8XDgKhaz5eoAxG2j+497U+7kO2lKHet7URzw6aD3fneNd4IyA926PMLugQ
-	Mz5AAjXs7tR7L9qMnLt/kMZtMsTAlQLxyarztfNM6Q2gNQFOjH49JkvsFlrUFkEA
-	Y6268W78sFoNCSS4pqOnu1F6+hAsG7RjZTNd+kGFzkFmv6L/6zclfC1oOG/8ONn8
-	yCBsIIwK/kpjLFQ0vLojXLcRkWZVgG882WxZLBY3Pp9yag==
+	 s=mr01; t=1751922721; x=1754514722; bh=r5I8t8Pp1vaoSeXwDh5f86XW
+	K7k+0Uq9uft1zZnyglc=; b=d1b/HOfkAwacuJcGjU96tXF/uAOl6W4/ci5AqqnE
+	03F/rGVGbKvue1hylax80gXVWA6LQDRPSSnOGqWV69bTFEj6jHWoPNoZy18GpUwl
+	J/Giw09WuPHAEHk+Rf3ii5CoJenQ1617ltnZF0aEgDgu2nDPgKGvpMAYQ5viujkN
+	/ZHgjAG9DTc/23yhqxfwGlC8VfoIK7bteo7TldUfFOdRGtQmuXY1pap0QPKM0tce
+	AdlzdkObmiEnaKKi1KqRP1Tizb2oH9eVEciUyXsH1Hegq+d/HKfgrPMfhIncm719
+	06qzkBy6khGnzcyfF3811cYwmKHflbwsbJ4tasZq96OcPw==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id xlLesTVfmTtE; Mon,  7 Jul 2025 21:09:39 +0000 (UTC)
+ id d-e6BEXTF-HD; Mon,  7 Jul 2025 21:12:01 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bbcLh3bC2zlgqVr;
-	Mon,  7 Jul 2025 21:09:31 +0000 (UTC)
-Message-ID: <39018410-4208-4ab6-bf74-7dbd32bdd10a@acm.org>
-Date: Mon, 7 Jul 2025 14:09:30 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bbcPR6q9XzlstRT;
+	Mon,  7 Jul 2025 21:11:55 +0000 (UTC)
+Message-ID: <6d13fd24-6579-45da-8c81-fd2930680b6c@acm.org>
+Date: Mon, 7 Jul 2025 14:11:54 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,55 +50,35 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 2/3] scsi: ufs: core: Add ufshcd_dme_rmw to modify DME
- attributes
-To: Nitin Rawat <quic_nitirawa@quicinc.com>, mani@kernel.org,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- avri.altman@wdc.com, ebiggers@google.com, neil.armstrong@linaro.org,
- konrad.dybcio@oss.qualcomm.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org
-References: <20250707210300.561-1-quic_nitirawa@quicinc.com>
- <20250707210300.561-3-quic_nitirawa@quicinc.com>
+Subject: Re: [PATCH v19 01/11] block: Support block drivers that preserve the
+ order of write requests
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
+ Nitesh Shetty <nj.shetty@samsung.com>, Ming Lei <ming.lei@redhat.com>
+References: <20250630223003.2642594-1-bvanassche@acm.org>
+ <20250630223003.2642594-2-bvanassche@acm.org>
+ <0f9f5900-b7d0-4df2-8c05-fc147c991534@kernel.org>
+ <a7b5b394-ed7d-4f57-96ba-ff14375b2e7b@acm.org>
+ <a97a31b0-bb6c-4c7a-8d51-d2f723a2b650@kernel.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250707210300.561-3-quic_nitirawa@quicinc.com>
+In-Reply-To: <a97a31b0-bb6c-4c7a-8d51-d2f723a2b650@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 7/7/25 2:02 PM, Nitin Rawat wrote:
-> +/**
-> + * ufshcd_dme_rmw - get modify set a dme attribute
-> + * @hba - per adapter instance
-> + * @mask - mask to apply on read value
-> + * @val - actual value to write
-> + * @attr - dme attribute
-> + */
-> +static inline int ufshcd_dme_rmw(struct ufs_hba *hba, u32 mask,
-> +				 u32 val, u32 attr)
-> +{
-> +	u32 cfg = 0;
-> +	int err = 0;
+On 7/2/25 5:09 PM, Damien Le Moal wrote:
+> I did suggest that you simply should plug all BIOs, always, and have them
+> submitted by the BIO work for a zone by scheduling that work on a single CPU,
+> always the same CPU. Doing so, you can distribute writes to different zones to
+> different CPUs. And if the submitter process is not bouncing all over the place
+> (being rescheduled constantly on different CPUs), there will be no overhead
+> because you can simply run the BIO work on the current CPU.
 
-I don't think that it is necessary to zero-initialize 'err' because the
-next statement overwrites the value of 'err'.
-
-> +
-> +	err = ufshcd_dme_get(hba, UIC_ARG_MIB(attr), &cfg);
-> +	if (err)
-> +		goto out;
-> +
-> +	cfg &= ~mask;
-> +	cfg |= (val & mask);
-> +
-> +	err = ufshcd_dme_set(hba, UIC_ARG_MIB(attr), cfg);
-> +
-> +out:
-> +	return err;
-> +}
-Since this code is not performance-critical, please move the function
-definition into source file ufshcd.c.
+I will look into making this change.
 
 Thanks,
 
 Bart.
+
+
