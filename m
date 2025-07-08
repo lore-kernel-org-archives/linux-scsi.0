@@ -1,134 +1,154 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0337623C519
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Jul 2025 19:56:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E1932417E0;
+	Tue,  8 Jul 2025 21:26:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752004586; cv=none; b=HcUxnWGaJtVwfjdkaXN1KKibUkd0LPPFy+pD/1umQprUwZV44vgKjAmQKdLDgBdLmmE6oaaby/TlOdaeLfCtCazPLLqJb8MyyRZhpRygrkPWF0Z/PwSqVzIdJygsBtpYa0YxAxJXBRoGvibshelGLMx1x51VdiPr6i8pkMPAHvE=
+	t=1752009964; cv=none; b=o6jHGS8Nu8jJFOdRfFBQQRJhVlFe6sIujFvqBxyDkLwXPXJivA2rh5jebEfiiaHrI4y0d5GfdvfmeZABrxSuvV/pS0fiqvjMblwJBSxq2qYYspX/3PuiaVLZfhCk7LYmrYxAo1FT3/qxo5YVfCvKN0+WDUWCWzNS4URFk77NgBQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752004586; c=relaxed/simple;
-	bh=DabBnpmSXg9VI9I0aT04IJei/1NdpLYKEMNhVfIQciM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=uvxSIkAkQYYEqREJLzMFXABRLi9gFmoXQ3RcfQCcverFeqxIOQn0Py7GgPlhvOX6SKlfrqqSfduAH3jnOOB/p9ma4f9qZUjwKvF4H/mp5gP34k26F27g8WZrKlQ1d01dG3JmAt3uIIkHUSEU4p+uoobPS4kbhwdBol7/aprJQPk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dGNb5+5N; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1752009964; c=relaxed/simple;
+	bh=M2+GRVIJzzyVTSieGmh/70mZLHxM1uzhbevAoKQ1kqc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=nwWhqrDngwYewxXHw67ToG6NGIGmWrVUZMtCgSetbeoSKCgEU1W4dROUeIDrjFNHan/hxHFnIP5zgLz4GXWBjaS+ABO7sy8VGB6NtXgHZNowE9/Q5/VJcnMPeicUcuPAwo6nJMnBLW4y7j/sD5Kt0DgaqJ7QRcPR6CCwlIYT2C0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=OdxSYtjD; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dGNb5+5N"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1752004583;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=flLq9xEgsNo7dffruzcue0tL5vT71IqM1MD0NVOC0iA=;
-	b=dGNb5+5N4Sm6muGNbavD2Utj+Bep/+DWcqs8h+Zguc3QCUhSrmMMTFiwMPmDe6PtlR18FY
-	CdyIntYkp7SrUWeGV8ooDThzFoiNtB62oUaHzqqIEx5EEk0y4KxDUuxXGT6E4QG4awFkVb
-	Rr8CUo0AexohnfP44t7kMn53VcyHSs8=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-262-baWVv1GFMN-8eGNAYZIXCg-1; Tue,
- 08 Jul 2025 15:56:19 -0400
-X-MC-Unique: baWVv1GFMN-8eGNAYZIXCg-1
-X-Mimecast-MFC-AGG-ID: baWVv1GFMN-8eGNAYZIXCg_1752004578
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4DEDC1801219;
-	Tue,  8 Jul 2025 19:56:17 +0000 (UTC)
-Received: from [10.22.88.48] (unknown [10.22.88.48])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 44F86195608F;
-	Tue,  8 Jul 2025 19:56:14 +0000 (UTC)
-Message-ID: <b0817e2a-1c4e-4d7d-9a84-633913d9e0e4@redhat.com>
-Date: Tue, 8 Jul 2025 15:56:13 -0400
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OdxSYtjD"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 568I5bTj026767;
+	Tue, 8 Jul 2025 21:25:43 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:date:from:in-reply-to:message-id
+	:mime-version:references:subject:to; s=qcppdkim1; bh=dUpLre4Wxq3
+	86W+8Iqu5WY0XCFsd42rsQicFmCmD/ro=; b=OdxSYtjDNt8xE/63ZKbI7le41ep
+	CFlmgPRwPyeiV6VNUIFW3CuZqBMui3cxzOl6lq+96hC2EANcjbOzlP1vYyGmSZBQ
+	JuLBouGoBUIoGUsnEaoTX4ekRKhNHhyvIeaWFmMGU1Dm0N3MbJ08CvmCrAU8uzZf
+	4VdHp89B8hPTPfCQ8zFWgz0lbkh7ORyiOx7X6/Wh3EGJ15UO+LviQm4YRlWMfo4I
+	zvC1i5Go0QvZ+Dnav6p/QZC8M9gxYxryvn5vCeobuLEeuJIw4tdnheGpCEsKTOH7
+	uHASX/mYKQs4AIJObJF2I5VdtjSWihLo6++ilnqkmTT05Rd06J2NPwI/CEw==
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47psdr2ca7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 08 Jul 2025 21:25:43 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 568LPb9x000876;
+	Tue, 8 Jul 2025 21:25:39 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 47pw4kvamr-1;
+	Tue, 08 Jul 2025 21:25:39 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 568LPdSW000901;
+	Tue, 8 Jul 2025 21:25:39 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 568LPddl000900;
+	Tue, 08 Jul 2025 21:25:39 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+	id DF236571870; Wed,  9 Jul 2025 02:55:38 +0530 (+0530)
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
+        martin.petersen@oracle.com, bvanassche@acm.org, avri.altman@wdc.com,
+        ebiggers@google.com, neil.armstrong@linaro.org,
+        konrad.dybcio@oss.qualcomm.com
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Nitin Rawat <quic_nitirawa@quicinc.com>
+Subject: [PATCH V3 2/3] scsi: ufs: core: Add ufshcd_dme_rmw to modify DME attributes
+Date: Wed,  9 Jul 2025 02:55:33 +0530
+Message-ID: <20250708212534.20910-3-quic_nitirawa@quicinc.com>
+X-Mailer: git-send-email 2.48.1
+In-Reply-To: <20250708212534.20910-1-quic_nitirawa@quicinc.com>
+References: <20250708212534.20910-1-quic_nitirawa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 0/6] nvme-fc: FPIN link integrity handling
-To: Hannes Reinecke <hare@suse.de>, Bryan Gurney <bgurney@redhat.com>,
- linux-nvme@lists.infradead.org, kbusch@kernel.org, hch@lst.de,
- sagi@grimberg.me, axboe@kernel.dk
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com,
- linux-scsi@vger.kernel.org, njavali@marvell.com, muneendra737@gmail.com
-References: <20250624202020.42612-1-bgurney@redhat.com>
- <CAHhmqcTO_Q59aDr3DywC-tPF=9pe3gxbyn6J4ycdf+eYEOayHQ@mail.gmail.com>
- <19484829-0a7b-42ce-99fe-e74ccda67dce@suse.de>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <19484829-0a7b-42ce-99fe-e74ccda67dce@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Authority-Analysis: v=2.4 cv=ffSty1QF c=1 sm=1 tr=0 ts=686d8cd7 cx=c_pps
+ a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=FKiQevh3cX4uHeHiuLsA:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: KKOXwnarrAwigm4BI5zMio6WrSqiB_Id
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzA4MDE4MyBTYWx0ZWRfX4rRZUll9j8KX
+ fktMKjqdk5SwpzFtvwHvTnvLiiVvLU8ssPy6Eb2GvhmxmWPVZfv5JUpANPWeMDe24kFKV6HWwLM
+ qcJ4JWYT6H2HmadtYVB8grAbPKMskuFshmUHL8qbH7rePxNaqeuOj9XWCKwGvM91OPl5xpAcIhD
+ l1UQ076hoP4Q5HiZRUzWYiyMX0DdZpXojeh0Fx952TYVUIYtA4AZAXEx5W2wS31bLXanuPlHkXY
+ CYMtlj0nyEXqnA7tz5zjZtVGr6zHBhYbjxv/H1jKe4UGdfXDdrNfIKJfgkv1xl/d+ihaFdb/6p2
+ ZlK8w0+oUbEr6RJQMV4NymnPcP7okPmOvYOgJMi6Uw1CpT5VnSERuBdtBA0CpkXdgJFzYqAeYLi
+ E7orxVyRxJasersjXBufVeLzg5VOCdCS4qUj+we5eV3fUPo1PzIlHSWs2lhxXA+Q/S2dmGHD
+X-Proofpoint-GUID: KKOXwnarrAwigm4BI5zMio6WrSqiB_Id
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
+ definitions=2025-07-08_06,2025-07-08_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 mlxlogscore=999 mlxscore=0 bulkscore=0 priorityscore=1501
+ phishscore=0 clxscore=1015 suspectscore=0 impostorscore=0 lowpriorityscore=0
+ spamscore=0 adultscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2507080183
 
-On 7/2/25 2:10 AM, Hannes Reinecke wrote:
->> During path fail testing on the numa iopolicy, I found that I/O moves
->> off of the marginal path after a first link integrity event is
->> received, but if the non-marginal path the I/O is on is disconnected,
->> the I/O is transferred onto a marginal path (in testing, sometimes
->> I've seen it go to a "marginal optimized" path, and sometimes
->> "marginal non-optimized").
->>
-> That is by design.
-> 'marginal' paths are only evaluated for the 'optimized' path selection,
-> where it's obvious that 'marginal' paths should not be selected as
-> 'optimized'.
+Introduce `ufshcd_dme_rmw` API to read, modify, and write DME
+attributes in UFS host controllers using a mask and value.
 
-I think we might want to change this.  With the NUMA scheduler you can end up with
-using the non-optimized marginal path.  This happens when we test with 4 paths
-(2 optimized and 2 non-optimized) and set all 4 paths to marginal.  In this case
-the NUMA scheduler should simply choose the optimized marginal path on the closest
-numa node.  However, that's not what happens. It consistently chooses the
-non-optimized first non-optimized path.
+Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+---
+ drivers/ufs/core/ufshcd.c | 24 ++++++++++++++++++++++++
+ include/ufs/ufshcd.h      |  1 +
+ 2 files changed, 25 insertions(+)
 
-> For 'non-optimized' the situation is less clear; is the 'non-optimized'
-> path preferrable to 'marginal'? Or the other way round?
-> So once the 'optimized' path selection returns no paths, _any_ of the
-> remaining paths are eligible.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 13f7e0469141..8964f8912fb2 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4251,6 +4251,30 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
+ }
+ EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
 
-This is a good question for Broadcom.  I think, with all IO schedulers, as long
-as there is a non-marginal path available, that path should be used.  So
-a non-marginal non-optimized path should take precedence over a marginal optimized path.
++/**
++ * ufshcd_dme_rmw - get modify set a DME attribute
++ * @hba - per adapter instance
++ * @mask - mask to apply on read value
++ * @val - actual value to write
++ * @attr - dme attribute
++ */
++int ufshcd_dme_rmw(struct ufs_hba *hba, u32 mask,
++		   u32 val, u32 attr)
++{
++	u32 cfg = 0;
++	int err;
++
++	err = ufshcd_dme_get(hba, UIC_ARG_MIB(attr), &cfg);
++	if (err)
++		return err;
++
++	cfg &= ~mask;
++	cfg |= (val & mask);
++
++	return ufshcd_dme_set(hba, UIC_ARG_MIB(attr), cfg);
++}
++EXPORT_SYMBOL_GPL(ufshcd_dme_rmw);
++
+ /**
+  * ufshcd_uic_pwr_ctrl - executes UIC commands (which affects the link power
+  * state) and waits for it to take effect.
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 9b3515cee711..1d3943777584 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1480,6 +1480,7 @@ void ufshcd_resume_complete(struct device *dev);
+ bool ufshcd_is_hba_active(struct ufs_hba *hba);
+ void ufshcd_pm_qos_init(struct ufs_hba *hba);
+ void ufshcd_pm_qos_exit(struct ufs_hba *hba);
++int ufshcd_dme_rmw(struct ufs_hba *hba, u32 mask, u32 val, u32 attr);
 
-In the case were all paths are marginal, I think the scheduler should simply use the firt
-optimized path on the closest numa node.
-   >> The queue-depth iopolicy doesn't change its path selection based on
->> the marginal flag, but looking at nvme_queue_depth_path(), I can see
->> that there's currently no logic to handle marginal paths.  We're
->> developing a patch to address that issue in queue-depth, but we need
->> to do more testing.
->>
-> Again, by design.
-> The whole point of the marginal path patchset is that I/O should
-> be steered away from the marginal path, but the path itself should
-> not completely shut off (otherwise we just could have declared the
-> path as 'faulty' and be done with).
-> Any I/O on 'marginal' paths should have higher latencies, and higher
-> latencies should result in higher queue depths on these paths. So
-> the queue-depth based IO scheduler should to the right thing
-> automatically.
-
-I don't understand this.  The Round-robin scheduler removes marginal paths, why shouldn't the
-queue-depth and numa scheduler do the same?
-
-> Always assuming that marginal paths should have higher latencies.
-> If they haven't then they will be happily selection for I/O.
-> But then again, if the marginal path does _not_ have highert
-> latencies why shouldn't we select it for I/O?
-
-This may be true with FPIN Congestion Signal, but we are testing Link Integrity.  With FPIN LI I think we want to simply stop using the path.
-LI has nothing to do with latency.  So unless ALL paths are marginal, the IO scheduler should not be using any marginal path.
-
-Do we need another state here?  There is an ask to support FPIN CS, so maybe using the term "marginal" to describe LI is wrong.
-
-Maybe we need something like "marginal_li" and "marginal_cs" to describe the difference.
-
-/John
+ /* Wrapper functions for safely calling variant operations */
+ static inline int ufshcd_vops_init(struct ufs_hba *hba)
+--
+2.48.1
 
