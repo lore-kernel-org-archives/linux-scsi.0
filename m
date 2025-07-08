@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77358D517;
-	Tue,  8 Jul 2025 07:59:40 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 863B9220F38;
+	Tue,  8 Jul 2025 08:03:16 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751961580; cv=none; b=SdI8QbEbjtZcp60v/muzbLuBwx1r21HllFIRl9PY8tYKFVBDxlPGPGSvpDN0NPw/MbRFK2btn8SDd2KqkPU22rj+oElNjhS7D67GmGm2cLhmvV7ZJn+nevZUzQDd5A5w5ImptE6d2IxiDtB/zgO0rB5VJEUHDYglLcHg7VyUqLE=
+	t=1751961799; cv=none; b=f2TPcOIkKfZRgY9aQKjT7oqLq7dAxeCewqQMFdLS7rwJHaLHKKa38Mk4TPR8qIOicem3MY70qcxSGBlXrJ06Dz7fa5jeS/9T9Dc1/1xGO5ZPCCsl2oSe9L23Hc0WeC6K/6JO5rlrDIRe9MzIHRMQvDaRbsZK+dJj4F23JfO+W9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751961580; c=relaxed/simple;
-	bh=UFw52grrrw616Gjvfu2OUSVnaRnSOpyLnrG0aT1OL1A=;
+	s=arc-20240116; t=1751961799; c=relaxed/simple;
+	bh=YoPu+gg4v+uqZEJ8IS0/lxaC2n6vSBw+7yUDN79lgmw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=CCcbjKw4Sz+auhDm+2UtVbAm5RERKeJb91WdQGyb4DNXDx+OEubOQseTD0wONH5wYLUom6Fn32WP/bbxNClFUPEhDJtAsfUAlGeNdw9G3UlfaEGzBWbOtK/ucH3eiy4+elHHMFzq+iMymcw2ixCP9zHzATWaSuAfMv6Fn48/iX4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kyqu+CQX; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=bUqHifQ+Z0x6lRMj4LYvhooe3Id+rlg3m5iN6yx7uVryCnR04nzWQoTYzy6XJHGaJuRSsScotMuOKEKGwON/v/fJ1lR4CA4ZecoK/0TPM2HA8K22rQDNmo3u5mU9h6OzeHQgbuGWMBCu+0Wmt/szvGP5VGy7mP/7Rbaq5BHXwsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WSe+psrK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kyqu+CQX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EE560C4CEED;
-	Tue,  8 Jul 2025 07:59:35 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WSe+psrK"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2038EC4CEF0;
+	Tue,  8 Jul 2025 08:03:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1751961579;
-	bh=UFw52grrrw616Gjvfu2OUSVnaRnSOpyLnrG0aT1OL1A=;
+	s=k20201202; t=1751961796;
+	bh=YoPu+gg4v+uqZEJ8IS0/lxaC2n6vSBw+7yUDN79lgmw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=kyqu+CQXtx2gJOcVfhfYZSAOxdAUtvEBG5Hvn25xwea3ul67fKg0hIz/0R+oK0mUJ
-	 hzCymW1Fsnl2ef9GbmzMulESvkQ3juKDZ/ZrR3q65QKHgXQlx9l66RyhwWW4pEDO0f
-	 WXAr0eR2/kD8Kutywi6a1bo6GMgCGOBRtvvfwLHVFrzNOecoeu+UgbrRJOiHgccFQp
-	 jUUJEKy1getW2Bo5owSzCx58HHNZeDpTHJN1T60A2FVR6g+q5rn+IWdaXtbHoz1vGR
-	 LQy2sAo0K2yVKKVRYo1LpTr5fR1bmvNArGsI5IxpLhmIQRaI6qf5tMkoe89hxgsUmt
-	 O3eyFXgdRThog==
-Date: Tue, 8 Jul 2025 13:29:31 +0530
+	b=WSe+psrKjVQz6ejJkwLQx0dDHIhy39Ayt+Yr/ljnkLEw3rrqQPV27Too9IvU12Ebd
+	 rHCEnYPE9jGYJoME8X6FsFHEjU/7dk6FzH7YuVOR2u3EcnVZrL8qVowByVn4fWVZ2f
+	 WogPKEwOslWpOEehxlmlBH7oxoKSW6Y5jWidsTYPJ9PxIWn5VseddHANQQmywBlcAk
+	 zFwyXB8cCe/i6S+bx8WcPdzVcNdnmwHwKFhdONGM3KUP4YVHjykRl3DEyVVyi7xcfh
+	 feNWJ93s/jpqJ7QdURdo+tHId7GUqJWHCJ6G4VgWfiJlI1DCmnmxpoLfXr2p3CIjg7
+	 1hxXrwwgnVvKA==
+Date: Tue, 8 Jul 2025 13:33:07 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
 To: Nitin Rawat <quic_nitirawa@quicinc.com>
 Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
 	bvanassche@acm.org, avri.altman@wdc.com, ebiggers@google.com, 
 	neil.armstrong@linaro.org, konrad.dybcio@oss.qualcomm.com, linux-arm-msm@vger.kernel.org, 
 	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V2 2/3] scsi: ufs: core: Add ufshcd_dme_rmw to modify DME
- attributes
-Message-ID: <kghfto33klbvpdgehzmjjxzsoqymhrq3dbwbtwa4xddsjdj7q4@uqd7epguntgt>
+Subject: Re: [PATCH V2 3/3] scsi: ufs: qcom: Enable QUnipro Internal Clock
+ Gating
+Message-ID: <4dpwzfoh3lkhffe3jtihjyqvqe3nyncl4uvjhw2ctpeid7poa3@igim7botbr3f>
 References: <20250707210300.561-1-quic_nitirawa@quicinc.com>
- <20250707210300.561-3-quic_nitirawa@quicinc.com>
+ <20250707210300.561-4-quic_nitirawa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,62 +47,64 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250707210300.561-3-quic_nitirawa@quicinc.com>
+In-Reply-To: <20250707210300.561-4-quic_nitirawa@quicinc.com>
 
-On Tue, Jul 08, 2025 at 02:32:59AM GMT, Nitin Rawat wrote:
-> Introduce `ufshcd_dme_rmw` API to read, modify, and write DME
-> attributes in UFS host controllers using a mask and value.
+On Tue, Jul 08, 2025 at 02:33:00AM GMT, Nitin Rawat wrote:
+> Enable internal clock gating for QUnipro by setting the following
+> attributes to 1 during host controller initialization:
+> - DL_VS_CLK_CFG
+> - PA_VS_CLK_CFG_REG
+> - DME_VS_CORE_CLK_CTRL.DME_HW_CGC_EN
+> 
+> This change is necessary to support the internal clock gating mechanism
+> in Qualcomm UFS host controller.
 > 
 > Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
 > ---
->  include/ufs/ufshcd.h | 26 ++++++++++++++++++++++++++
->  1 file changed, 26 insertions(+)
+>  drivers/ufs/host/ufs-qcom.c | 21 +++++++++++++++++++++
+>  drivers/ufs/host/ufs-qcom.h |  9 +++++++++
+>  2 files changed, 30 insertions(+)
 > 
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 9b3515cee711..fe4bb248484c 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -1498,6 +1498,32 @@ static inline int ufshcd_vops_phy_initialization(struct ufs_hba *hba)
->  	return 0;
->  }
-> 
-> +/**
-> + * ufshcd_dme_rmw - get modify set a dme attribute
-
-s/dme/DME
-
-Maybe name the function as, 'ufshcd_dme_update()'?
-
-> + * @hba - per adapter instance
-> + * @mask - mask to apply on read value
-> + * @val - actual value to write
-> + * @attr - dme attribute
-> + */
-> +static inline int ufshcd_dme_rmw(struct ufs_hba *hba, u32 mask,
-> +				 u32 val, u32 attr)
-
-Please move the definition to ufshcd.c
-
-> +{
-> +	u32 cfg = 0;
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index dfdc52333a96..25b5f83b049c 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -558,11 +558,32 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
+>   */
+>  static void ufs_qcom_enable_hw_clk_gating(struct ufs_hba *hba)
+>  {
 > +	int err = 0;
-
-No need to initialize these.
-
 > +
-> +	err = ufshcd_dme_get(hba, UIC_ARG_MIB(attr), &cfg);
+
+No need to init err.
+
+> +	/* Enable UTP internal clock gating */
+>  	ufshcd_rmwl(hba, REG_UFS_CFG2_CGC_EN_ALL, REG_UFS_CFG2_CGC_EN_ALL,
+>  		    REG_UFS_CFG2);
+> 
+>  	/* Ensure that HW clock gating is enabled before next operations */
+>  	ufshcd_readl(hba, REG_UFS_CFG2);
+> +
+> +	/* Enable Unipro internal clock gating */
+> +	err = ufshcd_dme_rmw(hba, DL_VS_CLK_CFG_MASK,
+> +			     DL_VS_CLK_CFG_MASK, DL_VS_CLK_CFG);
 > +	if (err)
 > +		goto out;
-
-Just do, 'return err'.
-
 > +
-> +	cfg &= ~mask;
-> +	cfg |= (val & mask);
+> +	err = ufshcd_dme_rmw(hba, PA_VS_CLK_CFG_REG_MASK,
+> +			     PA_VS_CLK_CFG_REG_MASK, PA_VS_CLK_CFG_REG);
+> +	if (err)
+> +		goto out;
 > +
-> +	err = ufshcd_dme_set(hba, UIC_ARG_MIB(attr), cfg);
+> +	err = ufshcd_dme_rmw(hba, DME_VS_CORE_CLK_CTRL_DME_HW_CGC_EN,
+> +			     DME_VS_CORE_CLK_CTRL_DME_HW_CGC_EN,
+> +			     DME_VS_CORE_CLK_CTRL);
+> +out:
+> +	if (err)
+> +		dev_err(hba->dev, "hw clk gating enabled failed\n");
 
-	return ufshcd_dme_set();
+So the error is not a hard fault and you want the driver to continue? If so, it
+should be justified in commit message.
 
 - Mani
 
