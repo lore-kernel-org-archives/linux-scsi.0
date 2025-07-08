@@ -1,51 +1,50 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E1932417E0;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F411B2417F0;
 	Tue,  8 Jul 2025 21:26:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752009964; cv=none; b=o6jHGS8Nu8jJFOdRfFBQQRJhVlFe6sIujFvqBxyDkLwXPXJivA2rh5jebEfiiaHrI4y0d5GfdvfmeZABrxSuvV/pS0fiqvjMblwJBSxq2qYYspX/3PuiaVLZfhCk7LYmrYxAo1FT3/qxo5YVfCvKN0+WDUWCWzNS4URFk77NgBQ=
+	t=1752009964; cv=none; b=B6zAFXr0MnwXaaYFD7Er/ogU2nTy4Qb4gEoIywQrXkSs2OghYAlcLc7XCKycCLYMiT1MJA2QNLE8oWuMayiJw8NZIiteKqWAaEZsxds2c47bcv12XaIWpyZb4rp/yU6GZJ+Re0yVVvENvNKU5z3G0LmCLuydedRFhtzRyLTux1k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1752009964; c=relaxed/simple;
-	bh=M2+GRVIJzzyVTSieGmh/70mZLHxM1uzhbevAoKQ1kqc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=nwWhqrDngwYewxXHw67ToG6NGIGmWrVUZMtCgSetbeoSKCgEU1W4dROUeIDrjFNHan/hxHFnIP5zgLz4GXWBjaS+ABO7sy8VGB6NtXgHZNowE9/Q5/VJcnMPeicUcuPAwo6nJMnBLW4y7j/sD5Kt0DgaqJ7QRcPR6CCwlIYT2C0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=OdxSYtjD; arc=none smtp.client-ip=205.220.180.131
+	bh=Ge2/q0dY2x4bPaf9l9HQuZj2LoD3prRY/uplpE7MIX4=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dy9XkO0wsyJvwHEHP/f+ZEDyZnxLBWAEyeW1L2Gw9Q2ljBDfvv2r84r9uMfT22nV4r+lndtGP6wDlWdB9T5h7jKRIOlFZhPlTi5YUomBQDRQN5v7oxDGVvhxf3nTVGRfrr1ljUUuIHecSUbYBBp3/55FBN8yD33XCs1ixs7RlJg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Ng9LlbTf; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="OdxSYtjD"
-Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 568I5bTj026767;
-	Tue, 8 Jul 2025 21:25:43 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Ng9LlbTf"
+Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 568JNOwK017086;
+	Tue, 8 Jul 2025 21:25:41 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=dUpLre4Wxq3
-	86W+8Iqu5WY0XCFsd42rsQicFmCmD/ro=; b=OdxSYtjDNt8xE/63ZKbI7le41ep
-	CFlmgPRwPyeiV6VNUIFW3CuZqBMui3cxzOl6lq+96hC2EANcjbOzlP1vYyGmSZBQ
-	JuLBouGoBUIoGUsnEaoTX4ekRKhNHhyvIeaWFmMGU1Dm0N3MbJ08CvmCrAU8uzZf
-	4VdHp89B8hPTPfCQ8zFWgz0lbkh7ORyiOx7X6/Wh3EGJ15UO+LviQm4YRlWMfo4I
-	zvC1i5Go0QvZ+Dnav6p/QZC8M9gxYxryvn5vCeobuLEeuJIw4tdnheGpCEsKTOH7
-	uHASX/mYKQs4AIJObJF2I5VdtjSWihLo6++ilnqkmTT05Rd06J2NPwI/CEw==
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=Dg1K7w85NKq6IPBnoHn24/Vpc8sc0yNmhEo
+	/wpC8AlY=; b=Ng9LlbTfMSu0B0ME53Ji7ryUuiY26Z3+cni3UAiuEuswQmh/20N
+	YN4Wa+GMyIbOts04IdKKKRsEsVOth3srzmf7SDC/5isrxRR54pRte5obHpgSDJXF
+	5eMZMCiDBkTSjlODFneHJLOvWQ6b2uyLwbAp3mZLST2tn+0QOKN7X7p+1C3C3Xm+
+	0BCn8y2RN8cp9h+xj63vr643E2Aj6WdDsYytbANcGS65sYgfV0E5p94w1tFKFr5U
+	egMZpiUUuvayJsDNltkc/I+Vn8mJjnvSwH37BTkKWXZ1z5tBuC540CX4VoQpnmAY
+	kPsQ4zJ3WZcRLws4mg9frJKbeRszUJU1MAw==
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47psdr2ca7-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47pvtksm2m-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 08 Jul 2025 21:25:43 +0000 (GMT)
+	Tue, 08 Jul 2025 21:25:40 +0000 (GMT)
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 568LPb9x000876;
-	Tue, 8 Jul 2025 21:25:39 GMT
+	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 568LPb9w000876;
+	Tue, 8 Jul 2025 21:25:37 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 47pw4kvamr-1;
-	Tue, 08 Jul 2025 21:25:39 +0000
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 47pw4kvamb-1;
+	Tue, 08 Jul 2025 21:25:37 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 568LPdSW000901;
-	Tue, 8 Jul 2025 21:25:39 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 568LPbvF000867;
+	Tue, 8 Jul 2025 21:25:37 GMT
 Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 568LPddl000900;
-	Tue, 08 Jul 2025 21:25:39 +0000
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 568LPbha000866;
+	Tue, 08 Jul 2025 21:25:37 +0000
 Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id DF236571870; Wed,  9 Jul 2025 02:55:38 +0530 (+0530)
+	id 6575557186F; Wed,  9 Jul 2025 02:55:36 +0530 (+0530)
 From: Nitin Rawat <quic_nitirawa@quicinc.com>
 To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
         martin.petersen@oracle.com, bvanassche@acm.org, avri.altman@wdc.com,
@@ -53,12 +52,10 @@ To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
         konrad.dybcio@oss.qualcomm.com
 Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
         linux-scsi@vger.kernel.org, Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V3 2/3] scsi: ufs: core: Add ufshcd_dme_rmw to modify DME attributes
-Date: Wed,  9 Jul 2025 02:55:33 +0530
-Message-ID: <20250708212534.20910-3-quic_nitirawa@quicinc.com>
+Subject: [PATCH V3 0/3] ufs: ufs-qcom: Align programming sequence as per HW spec
+Date: Wed,  9 Jul 2025 02:55:31 +0530
+Message-ID: <20250708212534.20910-1-quic_nitirawa@quicinc.com>
 X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250708212534.20910-1-quic_nitirawa@quicinc.com>
-References: <20250708212534.20910-1-quic_nitirawa@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,85 +67,59 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=ffSty1QF c=1 sm=1 tr=0 ts=686d8cd7 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzA4MDE4MyBTYWx0ZWRfX8QnN1fdPQZda
+ tHoFJVeRB/3W8vikz2FVzru+7hrG+fC+/Lz3JL+WSRyHOfYzm3r2ozfdNIYvtDEfP+0I2ilOpeK
+ a73ZDteQx+TQcgeqButVE+rE8ZeX2APhi00G6vG0JmOJvFrhWQFdVKVfSjmPLgkxQg/dJbs+vlt
+ 9YW8RrY2DmlN6koorvfdR8zFOBwM7wCanzsHLgA4y/4EtppHBrqy8bYbAUZ8PMmoyrfR/etfwV0
+ 5r6PYFpP3kgr2ibLDuOf8p7MfMWmeLsd3ffSVfWzy9RhY/PmOrevR0HhiqmKqtcGffDVylveDAj
+ 4aFYHcLcJtBZNs2bjB03HOwJzEqjmTabtWFcOXvGo5yUNyAKLwV7DW/bTxw7dp0D1Aw1tcckRDM
+ DlRaQmTIjdXOcCCioMEbSsclvMjfg0qnEyAWahO+I3HNl0ZSrkv8owfnQxz/FsqXJsjfP9xy
+X-Authority-Analysis: v=2.4 cv=Vq0jA/2n c=1 sm=1 tr=0 ts=686d8cd5 cx=c_pps
  a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=FKiQevh3cX4uHeHiuLsA:9
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: KKOXwnarrAwigm4BI5zMio6WrSqiB_Id
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzA4MDE4MyBTYWx0ZWRfX4rRZUll9j8KX
- fktMKjqdk5SwpzFtvwHvTnvLiiVvLU8ssPy6Eb2GvhmxmWPVZfv5JUpANPWeMDe24kFKV6HWwLM
- qcJ4JWYT6H2HmadtYVB8grAbPKMskuFshmUHL8qbH7rePxNaqeuOj9XWCKwGvM91OPl5xpAcIhD
- l1UQ076hoP4Q5HiZRUzWYiyMX0DdZpXojeh0Fx952TYVUIYtA4AZAXEx5W2wS31bLXanuPlHkXY
- CYMtlj0nyEXqnA7tz5zjZtVGr6zHBhYbjxv/H1jKe4UGdfXDdrNfIKJfgkv1xl/d+ihaFdb/6p2
- ZlK8w0+oUbEr6RJQMV4NymnPcP7okPmOvYOgJMi6Uw1CpT5VnSERuBdtBA0CpkXdgJFzYqAeYLi
- E7orxVyRxJasersjXBufVeLzg5VOCdCS4qUj+we5eV3fUPo1PzIlHSWs2lhxXA+Q/S2dmGHD
-X-Proofpoint-GUID: KKOXwnarrAwigm4BI5zMio6WrSqiB_Id
+ a=Wb1JkmetP80A:10 a=iRjbf9KB49bWgsSTYZMA:9
+X-Proofpoint-ORIG-GUID: N_wlCF2DApIGwNsBdYtPD9tWnYU_aiJw
+X-Proofpoint-GUID: N_wlCF2DApIGwNsBdYtPD9tWnYU_aiJw
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
  definitions=2025-07-08_06,2025-07-08_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 mlxlogscore=999 mlxscore=0 bulkscore=0 priorityscore=1501
- phishscore=0 clxscore=1015 suspectscore=0 impostorscore=0 lowpriorityscore=0
- spamscore=0 adultscore=0 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2507080183
+ spamscore=0 adultscore=0 bulkscore=0 phishscore=0 lowpriorityscore=0
+ clxscore=1015 mlxscore=0 malwarescore=0 mlxlogscore=759 impostorscore=0
+ suspectscore=0 priorityscore=1501 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505280000 definitions=main-2507080183
 
-Introduce `ufshcd_dme_rmw` API to read, modify, and write DME
-attributes in UFS host controllers using a mask and value.
+This patch series adds programming support for Qualcomm UFS
+to align with Hardware Specification.
 
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
----
- drivers/ufs/core/ufshcd.c | 24 ++++++++++++++++++++++++
- include/ufs/ufshcd.h      |  1 +
- 2 files changed, 25 insertions(+)
+In this patch series below changes are taken care.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 13f7e0469141..8964f8912fb2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4251,6 +4251,30 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32 attr_sel,
- }
- EXPORT_SYMBOL_GPL(ufshcd_dme_get_attr);
+1. Enable QUnipro Internal Clock Gating
+2. Update esi_vec_mask for HW major version >= 6
 
-+/**
-+ * ufshcd_dme_rmw - get modify set a DME attribute
-+ * @hba - per adapter instance
-+ * @mask - mask to apply on read value
-+ * @val - actual value to write
-+ * @attr - dme attribute
-+ */
-+int ufshcd_dme_rmw(struct ufs_hba *hba, u32 mask,
-+		   u32 val, u32 attr)
-+{
-+	u32 cfg = 0;
-+	int err;
-+
-+	err = ufshcd_dme_get(hba, UIC_ARG_MIB(attr), &cfg);
-+	if (err)
-+		return err;
-+
-+	cfg &= ~mask;
-+	cfg |= (val & mask);
-+
-+	return ufshcd_dme_set(hba, UIC_ARG_MIB(attr), cfg);
-+}
-+EXPORT_SYMBOL_GPL(ufshcd_dme_rmw);
-+
- /**
-  * ufshcd_uic_pwr_ctrl - executes UIC commands (which affects the link power
-  * state) and waits for it to take effect.
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9b3515cee711..1d3943777584 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1480,6 +1480,7 @@ void ufshcd_resume_complete(struct device *dev);
- bool ufshcd_is_hba_active(struct ufs_hba *hba);
- void ufshcd_pm_qos_init(struct ufs_hba *hba);
- void ufshcd_pm_qos_exit(struct ufs_hba *hba);
-+int ufshcd_dme_rmw(struct ufs_hba *hba, u32 mask, u32 val, u32 attr);
+Changes from v2:
+1. Addressed bart's and Mani's comment to move ufshcd_dme_rmw
+   to ufshcd.c
+2. Addressed Mani's and bart's comment to avoid initialisation
+   of cfg.
+3. Addressed Mani's comment to update commit text.
 
- /* Wrapper functions for safely calling variant operations */
- static inline int ufshcd_vops_init(struct ufs_hba *hba)
+Changes from v1:
+1. Moved ufshcd_dme_rmw to ufshcd.h as per avri's comment.
+
+Bao D. Nguyen (1):
+  ufs: ufs-qcom: Update esi_vec_mask for HW major version >= 6
+
+Nitin Rawat (2):
+  scsi: ufs: core: Add ufshcd_dme_rmw to modify DME attributes
+  ufs: ufs-qcom: Enable QUnipro Internal Clock Gating
+
+ drivers/ufs/core/ufshcd.c   | 24 ++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.c | 24 ++++++++++++++++++++++--
+ drivers/ufs/host/ufs-qcom.h |  9 +++++++++
+ include/ufs/ufshcd.h        |  1 +
+ 4 files changed, 56 insertions(+), 2 deletions(-)
+
 --
 2.48.1
 
