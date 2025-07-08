@@ -1,178 +1,93 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4511721766A
-	for <linux-scsi@vger.kernel.org>; Tue,  8 Jul 2025 09:35:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07FBE2D8375;
+	Tue,  8 Jul 2025 10:34:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1751967351; cv=none; b=CPVxxdpcktCbAeAHLQQPo/tdwCZLHTP+ysoMIRxoCkhbk17GDn8R4YOzMQlXgnoaVfp1aqXGsax6WoQg6Mu7Dop37qK9AmnlP2bRYdbANKA+zkn8g0mfdz3PFPz08cnliKjFfPQAQLZXZiGDciRDEJw8svKgKHKgha90/4cJHig=
+	t=1751970898; cv=none; b=NtB54UI7qhW594snvP//Lpblu9HL7boJc0SZ3KpeTVvD7v6qYg/UP5U6zuiXsavtKMRwAJqVpzxS7cY+GFsiTAHm5TVddmb6MyVlWMSYCzZaTMea98NVSTdHAMSRlX68x+FOPE9evSnoR4BVFYmeNJi3bleztoCLxt6onoHz+B8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1751967351; c=relaxed/simple;
-	bh=mYQ/swpHP4M41aX880vkxIBveitC3ejN85ZdA2d2MjM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rVwsyOmsbwKKYBlViztae7CI9vjhiHwzBiN+RfqE7Zz4dbF/Z96CRdK2alH3YKROB8MUU3JgI9P5e+8Ryq2c2uN/4GAeWFTMkLilScuRya3bm+6f2KWAaPt2d/WnuxrrK6nKioFGDHR7OVFOsbBQeoN30WE3z2BLnpnjNBw+Stc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=TBGUZV5i; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ogCyK1dx; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=TBGUZV5i; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=ogCyK1dx; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1751970898; c=relaxed/simple;
+	bh=n53/sygAidGPo7i+HNjWOm5XrXac9IDR0kWLzplqD+M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PneaObchTBD6oICnKvVJAMAUXletiLeEulw+9KmMPgN5hK4qSNrRPrdKDFo5KNNBESgsQTEZ2wEwOSR0s0p+M0wHPtby+gMKH6w48NYCaX9K2/TSGx63zOgbZNw0TB65pfvddgyZKpNCkot/d6kga14S2GImQxxjmj0sMyueWVo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dT8CQC2X; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="TBGUZV5i";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ogCyK1dx";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="TBGUZV5i";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="ogCyK1dx"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 554F21F443;
-	Tue,  8 Jul 2025 09:35:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751967348; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vIxAswFeaHobv02Z87+NVJayVXKDYgbUBdW4cNF67+M=;
-	b=TBGUZV5i6662A4lUAH9Bv0+PmFnwgUZAt1yJ9x8HOGBK4ue9p94r+6AaAYqgwIsMUwXc5J
-	YvkuZn6aBZ3NM+Q2Rw32k25gK5DGQEzQfjIU/pQcU52tdPKYLGoJP2ij6hUvI9tyUyUY2w
-	lZSWrm1JLFU3x1WOeCpr6+shr958vP4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751967348;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vIxAswFeaHobv02Z87+NVJayVXKDYgbUBdW4cNF67+M=;
-	b=ogCyK1dxQqVMJ11HbGS6v8wpcAU3oiEU0xIDxb0h2/6oGAbdbSQdN/CequAlbG5Yrw8988
-	Sci/VID50Mg/DlAA==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=TBGUZV5i;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=ogCyK1dx
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1751967348; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vIxAswFeaHobv02Z87+NVJayVXKDYgbUBdW4cNF67+M=;
-	b=TBGUZV5i6662A4lUAH9Bv0+PmFnwgUZAt1yJ9x8HOGBK4ue9p94r+6AaAYqgwIsMUwXc5J
-	YvkuZn6aBZ3NM+Q2Rw32k25gK5DGQEzQfjIU/pQcU52tdPKYLGoJP2ij6hUvI9tyUyUY2w
-	lZSWrm1JLFU3x1WOeCpr6+shr958vP4=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1751967348;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=vIxAswFeaHobv02Z87+NVJayVXKDYgbUBdW4cNF67+M=;
-	b=ogCyK1dxQqVMJ11HbGS6v8wpcAU3oiEU0xIDxb0h2/6oGAbdbSQdN/CequAlbG5Yrw8988
-	Sci/VID50Mg/DlAA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1A93C13A54;
-	Tue,  8 Jul 2025 09:35:48 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id nyUABXTmbGg4bAAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 08 Jul 2025 09:35:48 +0000
-Message-ID: <c72cc8b7-f55d-4691-9161-c20d07fde99e@suse.de>
-Date: Tue, 8 Jul 2025 11:35:47 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dT8CQC2X"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F2FAC4CEED;
+	Tue,  8 Jul 2025 10:34:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1751970897;
+	bh=n53/sygAidGPo7i+HNjWOm5XrXac9IDR0kWLzplqD+M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=dT8CQC2XI4A7csvIr84Ke3pH+0dXSRXP9DkQe6ljbnyiTcmnUPooF4CMWfMTN1rfe
+	 Smdaku3iNQNuZR+3YrP8n6SbZnft8KYyZIkD1ZG7tF60OiQkM4ShwzcgTxwsSw5HTB
+	 d9uCrd6qUk3WnSmVeUviQbqd7joWpgr2G6Ueudy40B/TcLBwLT6wCszI/PGMWlcrK8
+	 uZvFZHIK/HpQc0L6Dktvl+WP0S7ECOfPx8elfBxwnZrKm95HyMrpRcnQJQ1S/j3vWs
+	 v11gtTk8bIqX7Bo4kwW+gpIrxiFnxjdnMJZ6DuXLtq2Zgjho5Om2l4YPcVN5+lY4Va
+	 mqVhFAms/3RJg==
+Date: Tue, 8 Jul 2025 16:04:47 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Konrad Dybcio <konradybcio@kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Asutosh Das <quic_asutoshd@quicinc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Stanley Chu <stanley.chu@mediatek.com>, 
+	Marijn Suijten <marijn.suijten@somainline.org>, Can Guo <quic_cang@quicinc.com>, 
+	Nitin Rawat <quic_nitirawa@quicinc.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Subject: Re: [PATCH RFC/RFT 1/5] ufs: ufs-qcom: Fix UFS base region name in
+ MCQ case
+Message-ID: <xujhcaw2nj7mzb4cspjsxem75lqfwa7ivnfpzccor7npdu5d7c@xad5hx4b2m4e>
+References: <20250704-topic-qcom_ufs_mcq_cleanup-v1-0-c70d01b3d334@oss.qualcomm.com>
+ <20250704-topic-qcom_ufs_mcq_cleanup-v1-1-c70d01b3d334@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] pps: Fix IDR memory leak in module exit
-To: Anders Roxell <anders.roxell@linaro.org>, lduncan@suse.com,
- cleech@redhat.com, michael.christie@oracle.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, arnd@arndb.de
-References: <20250704125536.1091187-1-anders.roxell@linaro.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250704125536.1091187-1-anders.roxell@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	TO_DN_SOME(0.00)[];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:mid,suse.de:dkim,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Rspamd-Queue-Id: 554F21F443
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -4.51
+In-Reply-To: <20250704-topic-qcom_ufs_mcq_cleanup-v1-1-c70d01b3d334@oss.qualcomm.com>
 
-On 7/4/25 14:55, Anders Roxell wrote:
-> Add missing idr_destroy() call in pps_exit() to properly free the pps_idr
-> radix tree nodes. Without this, module load/unload cycles leak 576-byte
-> radix tree node allocations, detectable by kmemleak as:
+On Fri, Jul 04, 2025 at 07:36:09PM GMT, Konrad Dybcio wrote:
+> From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 > 
-> unreferenced object (size 576):
->    backtrace:
->      [<ffffffff81234567>] radix_tree_node_alloc+0xa0/0xf0
->      [<ffffffff81234568>] idr_get_free+0x128/0x280
+> There is no need to reinvent the wheel. There are no users yet, and the
+> dt-bindings were never updated to accommodate for this, so fix it while
+> we still easily can.
 > 
-> The pps_idr is initialized via DEFINE_IDR() at line 32 and used throughout
-> the PPS subsystem for device ID management. The fix follows the documented
-> pattern in lib/idr.c and matches the cleanup approach used by other drivers
-> such as drivers/uio/uio.c.
-> 
-> This leak was discovered through comprehensive module testing with cumulative
-> kmemleak detection across 10 load/unload iterations per module.
-> 
-> Fixes: eae9d2ba0cfc ("LinuxPPS: core support")
-> Signed-off-by: Anders Roxell <anders.roxell@linaro.org>
+
+What are you fixing here? Please be explicit. "std" region is not at all in the
+device memory map? Or it was present in some earlier ones and removed in the
+final tape out version?
+
+- Mani
+
+> Fixes: c263b4ef737e ("scsi: ufs: core: mcq: Configure resource regions")
+> Signed-off-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 > ---
->   drivers/scsi/scsi_transport_iscsi.c | 1 +
->   1 file changed, 1 insertion(+)
+>  drivers/ufs/host/ufs-qcom.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-> index c75a806496d6..adbedb58930d 100644
-> --- a/drivers/scsi/scsi_transport_iscsi.c
-> +++ b/drivers/scsi/scsi_transport_iscsi.c
-> @@ -5024,6 +5024,7 @@ static void __exit iscsi_transport_exit(void)
->   	class_unregister(&iscsi_endpoint_class);
->   	class_unregister(&iscsi_iface_class);
->   	class_unregister(&iscsi_transport_class);
-> +	idr_destroy(&iscsi_ep_idr);
->   }
->   
->   module_init(iscsi_transport_init);
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 318dca7fe3d735431e252e8a2a699ec1b7a36618..8dd9709cbdeef6ede5faa434fcb853e11950721f 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1899,7 +1899,7 @@ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
+>  
+>  /* Resources */
+>  static const struct ufshcd_res_info ufs_res_info[RES_MAX] = {
+> -	{.name = "ufs_mem",},
+> +	{.name = "std",},
+>  	{.name = "mcq",},
+>  	/* Submission Queue DAO */
+>  	{.name = "mcq_sqd",},
+> 
+> -- 
+> 2.50.0
+> 
 
-Errm.
-The description doesn't match the patch.
-Care to fix it up?
-
-Cheers,
-
-Hannes
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+மணிவண்ணன் சதாசிவம்
