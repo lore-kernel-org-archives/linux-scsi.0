@@ -1,208 +1,57 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 073E813D2B2
-	for <linux-scsi@vger.kernel.org>; Wed,  9 Jul 2025 22:06:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A19F243367
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Jul 2025 22:12:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752098769; cv=none; b=kVEeAoyC0VKhPnqytLO4kNi8mo4ffQxDkpfn5SYBDFV9gEjNBoqTFp9BlIthB2dNSyfGo2nY4XxNrGghaekINVtsAkdNQLBHUX7XwbMoHtfqXxOtoe6zLA71U17wr+AASBm10uO7wZaFcVnCYZWzWjJHBJsz6kjtNpLOkiwoB50=
+	t=1752099147; cv=none; b=tJL/6SvSraWTtkOpOPnCPT2xSvXkMMPqslfCzqAEyDq6RSlxvqXjWDTCoSPEVPXwX3U7Bl1W1+0TAuE1h/4rYEwHB5GQPDlUkM/bZXBcvNQiTYE77pelgVVBm4gbx4ICBlqMO6IJb3PPLI7+aDFfWJliXQipbbul2gU63rgrdRE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752098769; c=relaxed/simple;
-	bh=FJob5oKMfsr4nxpI2+1xTxPiZy5k74mOgXERwlnZ+N0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=HKMqammFq9G66YiZvGTkRGC1a/2Hjlya8e27dZ6/FYIVkXjVZjUk2bYa2JgUzXcO9jP8jdq1FibSgkRVhLE8oPOw/LnmRYwXldIRKLHrFIxpAFZXmV/c/b4ujXQ1G6GDMmOZEGfYynHITNRsw2eODGvie57xjDBM3v0arjI49Yo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=L4Ccvkbg; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1752099147; c=relaxed/simple;
+	bh=ekQqIbapukARd6gBzz7yly3iOSMb8FIqVO9iq42DlP0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=gPozYf7LcT049/jzXDrhFwngfIA9fDEKeg132uSMdzLp/bSxRHsWg7WQ+1HHzhEGEd/MyFuuUro7kDuO9N+kVKXo3bbztYVlG8gx3Y24iihsNrVJsxEidoszNcBf7baGRtoJ8cEmz+ZCqM2qZ/gJztlW1RWSn+zgn3zRZu550Ig=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2tAKGY6; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="L4Ccvkbg"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1752098765;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=o5EF9cH7kX6Fvydq07n9/XckYsJ9yZthQWDXy2+xSII=;
-	b=L4CcvkbgWPcI5DXFnMaOBepnMLsi8kPOp07iJadeLkgaRBQDRow54pfgRKcQPnWPck/m6U
-	rMTLTVtCG6Z8fykuQurL+d8S+jPzNdtsAl44v11uWg44PwcKe0Ma7/pZdGAwLCZKKQ9CAo
-	DrfxyidQfItOrOkzAaktesHSyv2zkfs=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-378-2Z7z5fG7PDaodpN-u1BddA-1; Wed,
- 09 Jul 2025 18:06:02 -0400
-X-MC-Unique: 2Z7z5fG7PDaodpN-u1BddA-1
-X-Mimecast-MFC-AGG-ID: 2Z7z5fG7PDaodpN-u1BddA_1752098761
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 298AF1809C87;
-	Wed,  9 Jul 2025 22:06:01 +0000 (UTC)
-Received: from [10.17.16.239] (unknown [10.17.16.239])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id BCFDD180045B;
-	Wed,  9 Jul 2025 22:05:58 +0000 (UTC)
-Message-ID: <40c09a10-8c35-4577-89b1-c8edd8586f6c@redhat.com>
-Date: Wed, 9 Jul 2025 18:05:57 -0400
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2tAKGY6"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D674C4CEEF;
+	Wed,  9 Jul 2025 22:12:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752099147;
+	bh=ekQqIbapukARd6gBzz7yly3iOSMb8FIqVO9iq42DlP0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=F2tAKGY6+QYmIv65ILc2CTZPHoOtM+FaxmjiryXozPOV3E9UP1b3CFN3O5Wsl+4Uv
+	 +4eyf7w0p3tNA2K2s/yszWCxhcnLeTMf/YYk3S+GkotJKFe8IqxuhT4v2qoMd6xbta
+	 ERP5gs7s16SStlct+Oa/sdebbKJMHjRPYUj5yCX1FmA+K3rHgmd98QC+8jaBcb/o/d
+	 XCSkmBuh9bqZ5VC/r3a2e+UvOhl4FYyiBiQqtvlCZSOHEF0AAO+xxKKZd5dlf5dhEo
+	 8xQvrVozM3WmuQhYFusZMwhV/3hJUZSIvQR8wjBJgG1/NrAWkBN3k5SfA5PTZTcxOT
+	 bV+4vvAynJQag==
+Date: Wed, 9 Jul 2025 16:12:24 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Bryan Gurney <bgurney@redhat.com>
+Cc: linux-nvme@lists.infradead.org, hch@lst.de, sagi@grimberg.me,
+	axboe@kernel.dk, james.smart@broadcom.com,
+	dick.kennedy@broadcom.com, njavali@marvell.com,
+	linux-scsi@vger.kernel.org, hare@suse.de, jmeneghi@redhat.com
+Subject: Re: [PATCH v8 7/8] nvme: sysfs: emit the marginal path state in
+ show_state()
+Message-ID: <aG7pSA6TOAANYrru@kbusch-mbp>
+References: <20250709211919.49100-1-bgurney@redhat.com>
+ <20250709211919.49100-8-bgurney@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 0/8] nvme-fc: FPIN link integrity handling
-To: Bryan Gurney <bgurney@redhat.com>, linux-nvme@lists.infradead.org,
- kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, axboe@kernel.dk
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, njavali@marvell.com,
- linux-scsi@vger.kernel.org, hare@suse.de
-References: <20250709211919.49100-1-bgurney@redhat.com>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <20250709211919.49100-1-bgurney@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250709211919.49100-8-bgurney@redhat.com>
 
-I've opened an upstream bugzilla to track this enhancement.
+On Wed, Jul 09, 2025 at 05:19:18PM -0400, Bryan Gurney wrote:
+> If a controller has received a link integrity or congestion event, and
+> has the NVME_CTRL_MARGINAL flag set, emit "marginal" in the state
+> instead of "live", to identify the marginal paths.
 
-https://bugzilla.kernel.org/show_bug.cgi?id=220329
-
-I've asked Bryan to record all information about the unit tests we are developing for FPIN there.
-
-John A. Meneghini
-Senior Principal Platform Storage Engineer
-RHEL SST - Platform Storage Group
-jmeneghi@redhat.com
-
-On 7/9/25 5:19 PM, Bryan Gurney wrote:
-> FPIN LI (link integrity) messages are received when the attached
-> fabric detects hardware errors. In response to these messages I/O
-> should be directed away from the affected ports, and only used
-> if the 'optimized' paths are unavailable.
-> Upon port reset the paths should be put back in service as the
-> affected hardware might have been replaced.
-> This patch adds a new controller flag 'NVME_CTRL_MARGINAL'
-> which will be checked during multipath path selection, causing the
-> path to be skipped when checking for 'optimized' paths. If no
-> optimized paths are available the 'marginal' paths are considered
-> for path selection alongside the 'non-optimized' paths.
-> It also introduces a new nvme-fc callback 'nvme_fc_fpin_rcv()' to
-> evaluate the FPIN LI TLV payload and set the 'marginal' state on
-> all affected rports.
-> 
-> The testing for this patch set was performed by Bryan Gurney, using the
-> process outlined by John Meneghini's presentation at LSFMM 2024, where
-> the fibre channel switch sends an FPIN notification on a specific switch
-> port, and the following is checked on the initiator:
-> 
-> 1. The controllers corresponding to the paths on the port that has
-> received the notification are showing a set NVME_CTRL_MARGINAL flag.
-> 
->     \
->      +- nvme4 fc traddr=c,host_traddr=e live optimized
->      +- nvme5 fc traddr=8,host_traddr=e live non-optimized
->      +- nvme8 fc traddr=e,host_traddr=f marginal optimized
->      +- nvme9 fc traddr=a,host_traddr=f marginal non-optimized
-> 
-> 2. The I/O statistics of the test namespace show no I/O activity on the
-> controllers with NVME_CTRL_MARGINAL set.
-> 
->     Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
->     nvme4c4n1         0.00         0.00         0.00         0.00
->     nvme4c5n1     25001.00         0.00        97.66         0.00
->     nvme4c9n1     25000.00         0.00        97.66         0.00
->     nvme4n1       50011.00         0.00       195.36         0.00
-> 
-> 
->     Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
->     nvme4c4n1         0.00         0.00         0.00         0.00
->     nvme4c5n1     48360.00         0.00       188.91         0.00
->     nvme4c9n1      1642.00         0.00         6.41         0.00
->     nvme4n1       49981.00         0.00       195.24         0.00
-> 
-> 
->     Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
->     nvme4c4n1         0.00         0.00         0.00         0.00
->     nvme4c5n1     50001.00         0.00       195.32         0.00
->     nvme4c9n1         0.00         0.00         0.00         0.00
->     nvme4n1       50016.00         0.00       195.38         0.00
-> 
-> Link: https://people.redhat.com/jmeneghi/LSFMM_2024/LSFMM_2024_NVMe_Cancel_and_FPIN.pdf
-> 
-> More rigorous testing was also performed to ensure proper path migration
-> on each of the eight different FPIN link integrity events, particularly
-> during a scenario where there are only non-optimized paths available, in
-> a state where all paths are marginal.  On a configuration with a
-> round-robin iopolicy, when all paths on the host show as marginal, I/O
-> continues on the optimized path that was most recently non-marginal.
->  From this point, of both of the optimized paths are down, I/O properly
-> continues on the remaining paths.
-> 
-> The testing so far has been done with an Emulex host bus adapter using
-> lpfc.  When tested on a QLogic host bus adapter, a warning was found
-> when the first FPIN link integrity event was received by the host:
-> 
->    kernel: memcpy: detected field-spanning write (size 60) of single field
->    "((uint8_t *)fpin_pkt + buffer_copy_offset)"
->    at drivers/scsi/qla2xxx/qla_isr.c:1221 (size 44)
-> 
-> Line 1221 of qla_isr.c is in the function qla27xx_copy_fpin_pkt().
-> 
-> 
-> Changes to the original submission:
-> - Changed flag name to 'marginal'
-> - Do not block marginal path; influence path selection instead
->    to de-prioritize marginal paths
-> 
-> Changes to v2:
-> - Split off driver-specific modifications
-> - Introduce 'union fc_tlv_desc' to avoid casts
-> 
-> Changes to v3:
-> - Include reviews from Justin Tee
-> - Split marginal path handling patch
-> 
-> Changes to v4:
-> - Change 'u8' to '__u8' on fc_tlv_desc to fix a failure to build
-> - Print 'marginal' instead of 'live' in the state of controllers
->    when they are marginal
-> 
-> Changes to v5:
-> - Minor spelling corrections to patch descriptions
-> 
-> Changes to v6:
-> - No code changes; added note about additional testing
-> 
-> Changes to v7:
-> - Split nvme core marginal flag addition into its own patch
-> - Add patch for queue_depth marginal path support
-> 
-> Bryan Gurney (2):
->    nvme: add NVME_CTRL_MARGINAL flag
->    nvme: sysfs: emit the marginal path state in show_state()
-> 
-> Hannes Reinecke (5):
->    fc_els: use 'union fc_tlv_desc'
->    nvme-fc: marginal path handling
->    nvme-fc: nvme_fc_fpin_rcv() callback
->    lpfc: enable FPIN notification for NVMe
->    qla2xxx: enable FPIN notification for NVMe
-> 
-> John Meneghini (1):
->    nvme-multipath: queue-depth support for marginal paths
-> 
->   drivers/nvme/host/core.c         |   1 +
->   drivers/nvme/host/fc.c           |  99 +++++++++++++++++++
->   drivers/nvme/host/multipath.c    |  24 +++--
->   drivers/nvme/host/nvme.h         |   6 ++
->   drivers/nvme/host/sysfs.c        |   4 +-
->   drivers/scsi/lpfc/lpfc_els.c     |  84 ++++++++--------
->   drivers/scsi/qla2xxx/qla_isr.c   |   3 +
->   drivers/scsi/scsi_transport_fc.c |  27 +++--
->   include/linux/nvme-fc-driver.h   |   3 +
->   include/uapi/scsi/fc/fc_els.h    | 165 +++++++++++++++++--------------
->   10 files changed, 275 insertions(+), 141 deletions(-)
-> 
-
+IMO, this attribute looks more aligned to report in the ana_state
+instead of overriding the controller's state.
