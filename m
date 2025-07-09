@@ -1,127 +1,198 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A33E2235BE8;
-	Wed,  9 Jul 2025 21:14:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3698CE55B
+	for <linux-scsi@vger.kernel.org>; Wed,  9 Jul 2025 21:19:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752095661; cv=none; b=kGCWJTmk/cR74GS3bk9oI4uQclfXUcf9fOipbgiAisChhOuWPejMy0Ccs0rpuc3JEm3DlKGoRb/45DYKqR2uTr1XUwDGvfV7yDTboBtm2/Z1kNWnMLcP7ozALqDi2bVQz/ukEc8+sTFM/9zoQtLrrUOne988abPsO4EFyPn5DmM=
+	t=1752095992; cv=none; b=G1UpCLk3mJEu6nkGM4bQfiElK9T5UHIMHC2RD1KnNyaTUXwWjE6lmFpZyAdrsmDnoz5WazJvPBKnIlAEm45sXS4gLubBzrOjU/V3N1tNZto1i3KQnoRzD+MJLF2RMQP9InSbFphXSNuBuIZ6q9VwufUsN6sylXBQHdumiI/IMlo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752095661; c=relaxed/simple;
-	bh=9KE00Vwfvn7smHgPqWuuB+mbXhp6z0jzNeYVhG7Ib0U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=aloFTlTZ3JEQR31s/IGH88wWGrVTIZeK9tgEAtGfWVBmhDYpy1lMsNCXoQoX5VzbSXOj6bXffaGBsO/RWbCwENLQEtSMEhcGhzsLOeRVG+AhnwGwWp3/hE3JoJzAQO7BGMzTRn8mEzafS12Lu6RNDallr5fTu3YOQZwj+2CirSQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=e/Bx1v2X; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1752095992; c=relaxed/simple;
+	bh=3kp9+frKck/62di/cBWc25j9Ay7ZkPZFjhphTjVaOQs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fiajHqTvD7+0aVp2kV04ryuv2o0AtPMaFegVf4nEb6quntE5IB6ba6+J+fWuT8KhZWqW500BkAjkzcDtOMDr7AhTtkJOE2eXNcy3+TezGG9YOeenyd9QzpIZkVT6kQ+v1dP5iVbs4AGC2lRjCILt1wQTpgFmOtA7FJtgOPZk6pQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Msse149K; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="e/Bx1v2X"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 569Coixn030114;
-	Wed, 9 Jul 2025 21:14:08 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	nPCEWV4vb9msc1fgEgWqYaHAbD5KVC03zhO82vm6oK8=; b=e/Bx1v2X8pPuOnn1
-	NNAYvSR6Gvuj8mtq+vZyfg4SH86zuD7TXIE2WQJkN9E7JndA4cQ+DqykiBXlX8aw
-	Ur1TjImMMd7ogJctYoIFkBiS4W+i0FKDie29UV5MM8j7pvDZaQx6RdEofki81xRE
-	QVdO9En2auEEV9gLXkm9fj/AwBDDIE9gsjPrNErBLB/hp5Ranng60Y5bt/fyGMCl
-	zWx/QCo2iMaJhfbo+Xzr/kKTP/9uFdeopBr4+LVXlKakW+Czu4vf9hUdyTI+o8kx
-	TlGuHEcmwk3/Aa4MfK4MDBF7zPE+UErHsH7/XgUGt/dgZ/M5ZMQd31JrxdvYa5Rv
-	pUB5Ww==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47smcg2fvg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 09 Jul 2025 21:14:08 +0000 (GMT)
-Received: from nalasex01c.na.qualcomm.com (nalasex01c.na.qualcomm.com [10.47.97.35])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 569LE72t003021
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 9 Jul 2025 21:14:07 GMT
-Received: from [10.216.6.66] (10.80.80.8) by nalasex01c.na.qualcomm.com
- (10.47.97.35) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Wed, 9 Jul
- 2025 14:14:04 -0700
-Message-ID: <f4654034-a94b-473b-907a-2687acf11af4@quicinc.com>
-Date: Thu, 10 Jul 2025 02:43:47 +0530
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Msse149K"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1752095990;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=RMSEzuSMHQUet25qqmNOIuxpcUMMqMmw4+avLlRu0QY=;
+	b=Msse149KddILAIo4SIl7M8Izw3XoWsuZan5qBDYIxj+lcQMFcbqX1r8kOKoa9W9tXu8/WX
+	xj4lwSnBqpmVM8BPbWpnrCFrcF1u/fK7AzKR1lsFDGzTAeZm71Gy6Q4BlfQVf1As9wCfm9
+	wMA+iCAPNV59NDIXuh68LysW07fd5Dw=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-404-D5aLalJtOQe3R7O72F2XtQ-1; Wed,
+ 09 Jul 2025 17:19:44 -0400
+X-MC-Unique: D5aLalJtOQe3R7O72F2XtQ-1
+X-Mimecast-MFC-AGG-ID: D5aLalJtOQe3R7O72F2XtQ_1752095983
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E6033180028C;
+	Wed,  9 Jul 2025 21:19:41 +0000 (UTC)
+Received: from bgurney-thinkpadp1gen5.remote.csb (unknown [10.44.33.49])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id C0A2D30001B1;
+	Wed,  9 Jul 2025 21:19:34 +0000 (UTC)
+From: Bryan Gurney <bgurney@redhat.com>
+To: linux-nvme@lists.infradead.org,
+	kbusch@kernel.org,
+	hch@lst.de,
+	sagi@grimberg.me,
+	axboe@kernel.dk
+Cc: james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	njavali@marvell.com,
+	linux-scsi@vger.kernel.org,
+	hare@suse.de,
+	bgurney@redhat.com,
+	jmeneghi@redhat.com
+Subject: [PATCH v8 0/8] nvme-fc: FPIN link integrity handling
+Date: Wed,  9 Jul 2025 17:19:11 -0400
+Message-ID: <20250709211919.49100-1-bgurney@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 3/3] ufs: ufs-qcom: Enable QUnipro Internal Clock
- Gating
-To: Avri Altman <Avri.Altman@sandisk.com>,
-        "mani@kernel.org"
-	<mani@kernel.org>,
-        "James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>,
-        "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "ebiggers@google.com"
-	<ebiggers@google.com>,
-        "neil.armstrong@linaro.org"
-	<neil.armstrong@linaro.org>,
-        "konrad.dybcio@oss.qualcomm.com"
-	<konrad.dybcio@oss.qualcomm.com>
-CC: "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
-References: <20250708212534.20910-1-quic_nitirawa@quicinc.com>
- <20250708212534.20910-4-quic_nitirawa@quicinc.com>
- <PH7PR16MB6196F9B8C676FA18AAC10F3FE549A@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <PH7PR16MB6196F9B8C676FA18AAC10F3FE549A@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01c.na.qualcomm.com (10.47.97.35)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=P7o6hjAu c=1 sm=1 tr=0 ts=686edba0 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10
- a=f1mw9qcMm9sB_ICStggA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: JLy08inFUPqbpea98XrFHe8GXDGAlgja
-X-Proofpoint-GUID: JLy08inFUPqbpea98XrFHe8GXDGAlgja
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzA5MDE5MCBTYWx0ZWRfX3CWdF+olAPcS
- esI5IR+C/ZhSJFZomrueeqfWaCyxQkuiiRpsbW973hxHakpr4GTTkOtobXFGnqOlsT0zB1uPKjz
- PGz00Tup3C65hkfJNqGE7XNAhJOl5oaQrd9vJliWDG4XrcaqGBjgpkKQ7doS9Cnq7PjTCk77FgY
- LlSUBP0lIWO0hVX6UWWD3B8aZCualBU/9pV+ZZ56iXF5e2MUoXs0hce73f8PdaInp+UKksEbFdB
- 6VsIr/Y3LPeqRHeeY9+qEZjS1d9x2klet0lC9s1/o5GUBteQqD0jPeLC1fy8hkY4GgCIdSxwkfx
- GFA3hZA/R08WPbn7vk0+anMSeunlcmd7XjaSK5ifEYOXjgrxe5y6ZUGwH3RIywUHY65eCZXrPgl
- KdVYmdsZ2HA+HZV4q/9PcM9SQ7oFHLwA83myLvvruKoB+eFLzjhMuUQslgVcDANpPbUR4wKI
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
- definitions=2025-07-09_05,2025-07-09_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 priorityscore=1501 phishscore=0 bulkscore=0 mlxscore=0
- malwarescore=0 spamscore=0 lowpriorityscore=0 suspectscore=0 clxscore=1015
- adultscore=0 mlxlogscore=757 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2507090190
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+
+FPIN LI (link integrity) messages are received when the attached
+fabric detects hardware errors. In response to these messages I/O
+should be directed away from the affected ports, and only used
+if the 'optimized' paths are unavailable.
+Upon port reset the paths should be put back in service as the
+affected hardware might have been replaced.
+This patch adds a new controller flag 'NVME_CTRL_MARGINAL'
+which will be checked during multipath path selection, causing the
+path to be skipped when checking for 'optimized' paths. If no
+optimized paths are available the 'marginal' paths are considered
+for path selection alongside the 'non-optimized' paths.
+It also introduces a new nvme-fc callback 'nvme_fc_fpin_rcv()' to
+evaluate the FPIN LI TLV payload and set the 'marginal' state on
+all affected rports.
+
+The testing for this patch set was performed by Bryan Gurney, using the
+process outlined by John Meneghini's presentation at LSFMM 2024, where
+the fibre channel switch sends an FPIN notification on a specific switch
+port, and the following is checked on the initiator:
+
+1. The controllers corresponding to the paths on the port that has
+received the notification are showing a set NVME_CTRL_MARGINAL flag.
+
+   \
+    +- nvme4 fc traddr=c,host_traddr=e live optimized
+    +- nvme5 fc traddr=8,host_traddr=e live non-optimized
+    +- nvme8 fc traddr=e,host_traddr=f marginal optimized
+    +- nvme9 fc traddr=a,host_traddr=f marginal non-optimized
+
+2. The I/O statistics of the test namespace show no I/O activity on the
+controllers with NVME_CTRL_MARGINAL set.
+
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     25001.00         0.00        97.66         0.00
+   nvme4c9n1     25000.00         0.00        97.66         0.00
+   nvme4n1       50011.00         0.00       195.36         0.00
 
 
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     48360.00         0.00       188.91         0.00
+   nvme4c9n1      1642.00         0.00         6.41         0.00
+   nvme4n1       49981.00         0.00       195.24         0.00
 
-On 7/9/2025 10:46 AM, Avri Altman wrote:
->> Enable internal clock gating for QUnipro by setting the following attributes to 1
->> during host controller initialization:
->> - DL_VS_CLK_CFG
->> - PA_VS_CLK_CFG_REG
->> - DME_VS_CORE_CLK_CTRL.DME_HW_CGC_EN
->>
->> This change is necessary to support the internal clock gating mechanism in
->> Qualcomm UFS host controller. This is power saving feature and hence driver
->> can continue to function correctly despite any error in enabling these feature.
-> Does this change offloads clock gating?
-> i.e. no need to set UFSHCD_CAP_CLK_GATING ?
-No , this change does not offload sw based UFS clock gating. Host 
-controller has its own internal clock gating mechanism.
-> 
-> Thanks,
-> Avri
+
+   Device             tps    MB_read/s    MB_wrtn/s    MB_dscd/s
+   nvme4c4n1         0.00         0.00         0.00         0.00
+   nvme4c5n1     50001.00         0.00       195.32         0.00
+   nvme4c9n1         0.00         0.00         0.00         0.00
+   nvme4n1       50016.00         0.00       195.38         0.00
+
+Link: https://people.redhat.com/jmeneghi/LSFMM_2024/LSFMM_2024_NVMe_Cancel_and_FPIN.pdf
+
+More rigorous testing was also performed to ensure proper path migration
+on each of the eight different FPIN link integrity events, particularly
+during a scenario where there are only non-optimized paths available, in
+a state where all paths are marginal.  On a configuration with a
+round-robin iopolicy, when all paths on the host show as marginal, I/O
+continues on the optimized path that was most recently non-marginal.
+From this point, of both of the optimized paths are down, I/O properly
+continues on the remaining paths.
+
+The testing so far has been done with an Emulex host bus adapter using
+lpfc.  When tested on a QLogic host bus adapter, a warning was found
+when the first FPIN link integrity event was received by the host:
+
+  kernel: memcpy: detected field-spanning write (size 60) of single field
+  "((uint8_t *)fpin_pkt + buffer_copy_offset)"
+  at drivers/scsi/qla2xxx/qla_isr.c:1221 (size 44)
+
+Line 1221 of qla_isr.c is in the function qla27xx_copy_fpin_pkt().
+
+
+Changes to the original submission:
+- Changed flag name to 'marginal'
+- Do not block marginal path; influence path selection instead
+  to de-prioritize marginal paths
+
+Changes to v2:
+- Split off driver-specific modifications
+- Introduce 'union fc_tlv_desc' to avoid casts
+
+Changes to v3:
+- Include reviews from Justin Tee
+- Split marginal path handling patch
+
+Changes to v4:
+- Change 'u8' to '__u8' on fc_tlv_desc to fix a failure to build
+- Print 'marginal' instead of 'live' in the state of controllers
+  when they are marginal
+
+Changes to v5:
+- Minor spelling corrections to patch descriptions
+
+Changes to v6:
+- No code changes; added note about additional testing
+
+Changes to v7:
+- Split nvme core marginal flag addition into its own patch
+- Add patch for queue_depth marginal path support
+
+Bryan Gurney (2):
+  nvme: add NVME_CTRL_MARGINAL flag
+  nvme: sysfs: emit the marginal path state in show_state()
+
+Hannes Reinecke (5):
+  fc_els: use 'union fc_tlv_desc'
+  nvme-fc: marginal path handling
+  nvme-fc: nvme_fc_fpin_rcv() callback
+  lpfc: enable FPIN notification for NVMe
+  qla2xxx: enable FPIN notification for NVMe
+
+John Meneghini (1):
+  nvme-multipath: queue-depth support for marginal paths
+
+ drivers/nvme/host/core.c         |   1 +
+ drivers/nvme/host/fc.c           |  99 +++++++++++++++++++
+ drivers/nvme/host/multipath.c    |  24 +++--
+ drivers/nvme/host/nvme.h         |   6 ++
+ drivers/nvme/host/sysfs.c        |   4 +-
+ drivers/scsi/lpfc/lpfc_els.c     |  84 ++++++++--------
+ drivers/scsi/qla2xxx/qla_isr.c   |   3 +
+ drivers/scsi/scsi_transport_fc.c |  27 +++--
+ include/linux/nvme-fc-driver.h   |   3 +
+ include/uapi/scsi/fc/fc_els.h    | 165 +++++++++++++++++--------------
+ 10 files changed, 275 insertions(+), 141 deletions(-)
+
+-- 
+2.50.0
 
