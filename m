@@ -1,183 +1,217 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from NAM10-BN7-obe.outbound.protection.outlook.com (mail-bn7nam10on2042.outbound.protection.outlook.com [40.107.92.42])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61A2A21D3E8
-	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2025 06:36:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752129381; cv=none; b=opD8JunRVCGhfYWtBDqIsFv8UFTjeq7wGfKJjgyO4VtqXEs4ocrhZzAGYidghocO479KnkVTCZWj4PJDcpr8QrZgpug2SoY0K/T1g79jlRt08GDBua0y2epq4kpyuqLAYiA47xtVifemHFFnpgvmyN3TvZ1HRec1HSdhR5ndZxA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752129381; c=relaxed/simple;
-	bh=pAolbAVS5ex1GYzY65PkjEdbxoOfKRXEL4ZwyEcBlHU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=bB2fUnTOTJPQ2iCOP6CLNcguSZnzqXepsLUwsjWzNVBn4M+JoU02Qlu5qMjnADxudBUCC/O6ympeUeMFiH64wihkYnMpnb8Z3iToVp5X0AXIZfzDK8PQSOxE8o5K3fTU63YoJbBl5vWPdsO6lueMcx2ShMYRsmKLEQnIjmwrkuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=u/0DTwPm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=9p6YPHnM; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zfShDxLz; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4X/xWS7M; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 871F222AE75;
+	Thu, 10 Jul 2025 06:49:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.92.42
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1752130182; cv=fail; b=rfJWI8tnVKYLLK32fsZ84PkF2k6MfQeS1UpFAxESsozkvcx3l9NtTdOZbKnORfZrqCoYZyKEbtqs9lol1OkvH43oGJHDkjNEs1hvWNyYvqd2YtSFsz8dl1CCldsD62fd4zq28OW/1ihFIZ+/3USXOIhYpRn+werpanbwvvaDlKw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1752130182; c=relaxed/simple;
+	bh=PEaiyhkLR1iXBquuj5fT4ZM1TrL/CqYxcxoeK9huNNU=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=VWiJ+8yMpnqZ0eSBXLx5V+n9N9F6tDN1nxEoYqWndk1XEMI0I55t/P+LNsQ3Su5GnkiZb9Zr3107lILeMnyn+t+f+fhEI3Yh6vCMP1sg8EkIDe8cW/wmTe1sJuPUMaciBPbqrjJmXLmtpJZtvN6BRtVjBGc2LGPSzpKbAYYimCs=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=pBj/mwTL; arc=fail smtp.client-ip=40.107.92.42
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="u/0DTwPm";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="9p6YPHnM";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zfShDxLz";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4X/xWS7M"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id D4C2A1F385;
-	Thu, 10 Jul 2025 06:36:13 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1752129374; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1WzB9T/HEA3zl1fSfSp4StlUkmpKLI9rc2lrqum55+I=;
-	b=u/0DTwPmycwVQbP0oEdFapFe6BJx6KtLrGQwbBmlIeyOlgISfJKgncy0eRbkxp07nyhDSV
-	GhjsHmWZxH2GTWa235EPq3BtG+m3mMPl+jpTlNIAhoNROst9QM67CULTortlLKhypDvzkz
-	LY62HIWDbQJ7WB61c4vXIh3EqPGU+dk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1752129374;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1WzB9T/HEA3zl1fSfSp4StlUkmpKLI9rc2lrqum55+I=;
-	b=9p6YPHnMD3A8ejIPXxj5WwnNJZpsBhBDAvWecoeo+YdimRaa2CrB6uVneDXOrENgIzDOD8
-	nb9vdAzs2DZEdNAw==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1752129373; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1WzB9T/HEA3zl1fSfSp4StlUkmpKLI9rc2lrqum55+I=;
-	b=zfShDxLz1asSYa4ymdhFfOQJKtVnajWpgHhLZwBv+tdBmu0m59YQYPtCYyIft+MaSa/5PI
-	RZOFdmW5WCUg+Z/+7M35KOGzxCqo/TnKh/OxxajVcgYGOqdxjEWHPkqMfeJNk4dmZV4rPe
-	hOLmJTihI9ePj/sQcAX5k+i4wVUJbqo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1752129373;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=1WzB9T/HEA3zl1fSfSp4StlUkmpKLI9rc2lrqum55+I=;
-	b=4X/xWS7MzzmrvipbT++QlFIoCCe0JHh07Kirjbj9pFTeDYsLMQAOTsdtKDwe1VYC3x6jtF
-	IZIGllbK0oClfGCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 66819136CB;
-	Thu, 10 Jul 2025 06:36:13 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id FJCdFl1fb2hnEgAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 10 Jul 2025 06:36:13 +0000
-Message-ID: <782942d7-41fe-41e2-9913-54108d44bcd3@suse.de>
-Date: Thu, 10 Jul 2025 08:36:12 +0200
+	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="pBj/mwTL"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=XssF0eL6tv5Sfe55J14XcsExFz4cy2DyuyRW1X/Vjaq4A5Vz4IDkeA96WtauQxkqvVJXsql7nf3P8aMp/tVPODATL2MZ0FFEOwozxf2zfb7f8xnVMvM04SXIgx8r0JKrHAQ0D8RHhOo+976sFqK0BGsjE/T60CPC/ecjhxh0iMn6N0chHi08rQrlZ636T36GrS6qL/VlkfKDcxOkTATzitaj/t+doSjow0BpdTxsLjfkzQUy0cNj9EE4XxPh32CohAtwFcSAMqzx/jZacQtfsqm+QSmHgHZrWdw9svLoiO0Ls5P29EijI3kBhq0BkMH1crH6F8FdcEY1i2jOBZ3u9A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PEaiyhkLR1iXBquuj5fT4ZM1TrL/CqYxcxoeK9huNNU=;
+ b=HC11hHC7WcL8qxZ6TL/XqWULbd3f/m8e7XKB8C9UIMPfAkicR/MlMqdHnIPckwZfcLycAqMKkH+IsPSOcI6Oipsf8qe8HrT3k4t4aY9e+HbAJymav8YUUA0fFBvmmqkKP7jMJHflpJ2qsD3h3r7ldnFc9qNHcZmrREM6eilnUpdJc5nPi2qBgSc3Ag9DcV4xh8zfttUr5j+rGCixkyn6e34pt1JykTJbCyN7dd+Qij3xIeYJYMl/q+AgXHl18b1gv7/G9dyl9//3B0RCqFVJ/WYqEB1ZleYlRe3AtVL3OgzlhEofTmFOirTka1PoPcnt2nWnZ7mNeX1+8bV280SsOg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=microchip.com; dmarc=pass action=none
+ header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microchip.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PEaiyhkLR1iXBquuj5fT4ZM1TrL/CqYxcxoeK9huNNU=;
+ b=pBj/mwTLvp5w0Ph8GEuLeFweV3ANBjdJsyiY41BDfw/s0hF+11++KAGqSFXA+TVZh7e6Egru5PozLqq/09MxAU1ydTvVm7x7fbahYX63CwGyccUyq+6wQUGjAitvmZrp6B37+wNGwZApr9yS+ztVVYdfzG0MAYugnI0jwBndJrzoxKIV2oVOwzBqhmMLZ0jM4jblQKTLEqjMrDQYILOOsFqMfp0tqOes1fe217nkBDyATEvDsoRDzDPowvMg/N17oAxZ5OX2zMpKiYAC4/UgvxiUAUBsHRW3LldQoHiCbIV+04yn9dkfYVMVvO/mKs6OZ4/wfgzBOnIDMMhgBmEQxw==
+Received: from PH7PR11MB7570.namprd11.prod.outlook.com (2603:10b6:510:27a::8)
+ by BN9PR11MB5275.namprd11.prod.outlook.com (2603:10b6:408:134::24) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8901.28; Thu, 10 Jul
+ 2025 06:49:37 +0000
+Received: from PH7PR11MB7570.namprd11.prod.outlook.com
+ ([fe80::f249:c679:94d9:9898]) by PH7PR11MB7570.namprd11.prod.outlook.com
+ ([fe80::f249:c679:94d9:9898%4]) with mapi id 15.20.8901.024; Thu, 10 Jul 2025
+ 06:49:36 +0000
+From: <Sagar.Biradar@microchip.com>
+To: <john.g.garry@oracle.com>, <jmeneghi@redhat.com>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <aacraid@microsemi.com>, <corbet@lwn.net>
+CC: <linux-doc@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<thenzl@redhat.com>, <Scott.Benesh@microchip.com>, <Don.Brace@microchip.com>,
+	<Tom.White@microchip.com>, <Abhinav.Kuchibhotla@microchip.com>,
+	<mpatalan@redhat.com>, <Raja.VS@microchip.com>
+Subject: RE: [PATCH v3] scsi: aacraid: Fix reply queue mapping to CPUs based
+ on IRQ affinity
+Thread-Topic: [PATCH v3] scsi: aacraid: Fix reply queue mapping to CPUs based
+ on IRQ affinity
+Thread-Index: AQHb4IardvPho7iCCkmONnezDl+aX7QKTdcAgCC9v3A=
+Date: Thu, 10 Jul 2025 06:49:36 +0000
+Message-ID:
+ <PH7PR11MB75708E49B0C0714421E2812FFA48A@PH7PR11MB7570.namprd11.prod.outlook.com>
+References: <20250618192427.3845724-1-jmeneghi@redhat.com>
+ <682ff953-9130-4920-a9f2-88dfd6718be1@oracle.com>
+In-Reply-To: <682ff953-9130-4920-a9f2-88dfd6718be1@oracle.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=microchip.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH7PR11MB7570:EE_|BN9PR11MB5275:EE_
+x-ms-office365-filtering-correlation-id: fe80869f-7cc6-44f7-22c8-08ddbf7def67
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|7416014|376014|366016|1800799024|38070700018;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?TlpzZ3dud05SZ0IxbG8yZ3VHMGVEQkd5V0RaeXNGUkpjUGFzNDVhc1YxczhP?=
+ =?utf-8?B?NVh4bWxVTVR4SUJVVHVMTk5nd3YvYVJwSUxSOC9HdkY3WUUxSndMQmM3SVJh?=
+ =?utf-8?B?amg3Wk0vOURYQ3R1R2lBZWdxd0ZVT1dvYW5HRmxmQWxvQnJJMERUYzlUSlVR?=
+ =?utf-8?B?Z3FPVFl6Y3o2ajRhekY1amw5bklMVlZsRWpMbk9ld2l2L1U4aTluV1lLMVRO?=
+ =?utf-8?B?ejZnMGFhMGVscHJrd21XdHQrcmhUNVIvSDc1ZVltWlNoTnBkYUtzaUJtRVQ3?=
+ =?utf-8?B?aXduR2tRdXVHS2xnSm52Y2pZODBTdW94dlA5T1RKd0tqWXF0U0hPK3B2S1Fk?=
+ =?utf-8?B?SzhPeXdRT1Z4WDVENW56c1R2eGd1RjF1azd5TXVnMXVCaW5VcWhmS3NBbk5L?=
+ =?utf-8?B?Qlo0djdYc3BxNEdqdVZwNWlQM3EzL3MvcTE5LzBRMUREeUVMNGhXcUlkaGFa?=
+ =?utf-8?B?eU5XejlZdm1jbzlvcnVTSDloV1dlcWlnbDdqZXh3QmI1V2t6VTY2MWZjTjNz?=
+ =?utf-8?B?Ky9vQjRqQWZkRG5QS29nMCs2SnVpYXRORC9uUi9EUk5pNmR1YXlIemdHMjdS?=
+ =?utf-8?B?c3gxZDB6Z3NoVnFtTDRjakkzR0szU3VYYnhMbWlpRWl6NTBMYjdDQmVnOFNE?=
+ =?utf-8?B?TDZFLzZjSkJmMC9Tc1NpMEdUTU01Nk50eUU3d1VyU2dETVJGV2FVTHpLK05Y?=
+ =?utf-8?B?UlkzSCtzTUh4WXh5ZlBPUkRISU4yU24wOW92bFMvWWFGT1Y2c2ZMTWtWUWFo?=
+ =?utf-8?B?QkRFc2VNcXBxWCtZZmFKUGRGNkhYZmphT2lXeUplbGJKRGx5dk5MR3YrbjlT?=
+ =?utf-8?B?eHRNWktSZjZSU0puUndtM01mNDJVZ1gxVW1HSnlRTUhpMXo5emdaT0xrUUFh?=
+ =?utf-8?B?Ykk2OFR2Z1JOclFPVXNsMDFpK1d2elM4aXNYMk1XTzhDZ3Y5enZUYVJhWjNY?=
+ =?utf-8?B?QmpUM01RT0hoaTNFamxHaFhwZnZwNDBFR2VRdHNvazFsbmM1VW9Zdm5JUFM1?=
+ =?utf-8?B?eHFSL3ZQNXJ3T1pIUkNsRFF5UzZLTG1qQ2dtVHQ2TitZSjhRQjk0eitBYUdj?=
+ =?utf-8?B?ci85ODJha2RSYzlLV2cxSDhvSExyRFA0L2gxTlYzdXI1b09VRU1QZWJNMEh5?=
+ =?utf-8?B?d2I1L0ZaM08xb0VlMGNzeTE2S29BSGNsL2ZObGd0NUkwZ0t4U2RhUElxU1Qv?=
+ =?utf-8?B?Tk8rRnJBOXpaL05rbHAxenEyeDUyNUpraFh5alVzblNPdjA3STB5OHdURFJZ?=
+ =?utf-8?B?ZllxNzIrVjFHSGlBM1ZnbHgvbmZXQkc2a2JrN3IxQUZtTTFjVExsaitLdTlx?=
+ =?utf-8?B?cmhDUUNnSnNlSlR6dThFYTZmYnYyZlIrMUNYZit3c2x3a25rWjZFQmNHZTY0?=
+ =?utf-8?B?bFpWMXdJTGpPYzUreWU3L1lxV1JJUldKVzEydGpkL2JZTXRUL0JiRjZHV1Fw?=
+ =?utf-8?B?MlV4RVVJNzJ3K000aG0vT3VTalBtWDZVb3l2a1IwSTVPb09DeGR4S2FFODBq?=
+ =?utf-8?B?S3RZMzlqSHg4eUdRVkFOdWkrSDBqMlp6bkUwbCtUaDlWcC8wL3d0SStwcy9D?=
+ =?utf-8?B?cFBER2xmOHlNZ2xIMWhxQ1I0S3ZQa2NGclNuMEo3OElZOFRJRml0Q3cvOENM?=
+ =?utf-8?B?ZE5pd3dCR0s1NVBSUGdhUmN3MFFDTHVCMDhjM0tuckV3ZnNreExrOHpoQk56?=
+ =?utf-8?B?MlZFbk4xUTFPSWNqWGlKQTl6UEpKMU15cFlHdVBSSHoyY2xBSTFNeGlmY001?=
+ =?utf-8?B?Q3c2YTNUVFJqalhiNlRZYWpndFBlWXp0STJqWU9uT3hUOEJvdTkxQ2NtMFN1?=
+ =?utf-8?B?cVgzSG82cVp4U0ppMVg1YWp2dEdFR3JMbjRxSUxuVUdHZERCMjNsS21qRndy?=
+ =?utf-8?B?bElFWlFkbHdCTHFvQXVWL1kyeWFpVk5VVVk2Z3V0MXdZV3c5dTZpZFlqaTI5?=
+ =?utf-8?B?QmR6UmltMG92UmpNZHROWjhlL2JKaXU4Wi9LcWZUa2hZZVFYZG1pNWhodnl6?=
+ =?utf-8?B?VUM4eXoySDdnPT0=?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR11MB7570.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(7416014)(376014)(366016)(1800799024)(38070700018);DIR:OUT;SFP:1101;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?K01lNHNMUmRhSUxpZGZQMGNueitpZjVPTWpFL0ZaanZ2cmtrMEg1WWkrMmhL?=
+ =?utf-8?B?OU9ZRm9YczNJcHdad3IyYll0YS9FcE1SeGVtOTloL2ZucUQySHdSaXZZYlJH?=
+ =?utf-8?B?UzlPdlBIb00xUUpadXUwU1pXOHh0dkZWTGFLODV3bFk3bFZDOUlmcW9hb0hU?=
+ =?utf-8?B?YjZRRDdaY1pvTjZpd3JhUDZoM1hwNVg0VllVNjh0dHBnbk1KUGhHRFZxbDdh?=
+ =?utf-8?B?Sk9wYUtKa0hLVk85QW10NThVbkZFWEhYYjFxUW0wVUFzV2dZdjFxQ1lXNTZ4?=
+ =?utf-8?B?bGovWlN3ZWxaVW90WGdYU0ZUbStDVVZYeWRoaVJWOHdlcDZNZW0zcUI5Ry9R?=
+ =?utf-8?B?RTY4dE9ocVZ1RDhJelNjNnIrZTNkWFpGRzJmODgrSW5UcXp6UUlqbTJEMkpp?=
+ =?utf-8?B?bndtWjlkUlNqN1ZDa2xBNXNybkNQYjF5MDVGZWREdWxaR1ZNbUF1dWt0MGYy?=
+ =?utf-8?B?MDM0NjJ5MHZ6aU85VmpwRTZmN2FUVEFQcmFSZjQzZXc2WW5UTE9RK0dVS3Zs?=
+ =?utf-8?B?eWhWbUdmUkxZOEZEcUtsVWhablhVK2JyZ0xOY05rNkRFRjY1UzVhRlpCUWNP?=
+ =?utf-8?B?QWNMeU5iUExDTE1aYUxVNWg1MVZ1MnpEMmZ1a091ZjQrdnFrVm5tQ0x2djJz?=
+ =?utf-8?B?bGY2RFVNYlJ5Yks4bGVvTy9jNUl5Y1pyYUZkT3c0M0t3MVAzc0FvVDV3ZjZK?=
+ =?utf-8?B?amk4UldlcjdoSHM5SFk3dHRnamVYdklmNXpIRnNyNW1ueDhTekJyQ1dOOG8v?=
+ =?utf-8?B?R2dURUdxOUZNT0hGUkMxc2VObkJ0WmRnMlFvYlRqTGFNR3FtVlJSQjk3czRr?=
+ =?utf-8?B?b3dnSkZteGFFQ2pTR0xxaXFZTmh2Q1pvOVJ4emplaVV5SXVWMjYyQVZsYWtt?=
+ =?utf-8?B?TjFlK0JTRmQ1LzUwYjJ1b0MvS3dxdmxGMHQrcytlVjhmUlYwVEVIdEgxeVEv?=
+ =?utf-8?B?T0pvWlcyeis5QjJRcWJ1Um1qbXpMOWlvUC8yTUlQaFdXZkJ5eGNXZGhvdnJm?=
+ =?utf-8?B?dVJtZDRDOU5DWTRDQWpCa1pOcVNqL1NHYXVqV2tFUm9ubUdmR3JFcjBRUk03?=
+ =?utf-8?B?TWRGZUIyWUx0RjlPZzlYV0tPME1zY2dTaFhiUnc2VXVLN2NJSG01ZHdRbmJT?=
+ =?utf-8?B?L21lSnJxUVd2aFN3UUpVSUJYMGphMFpvVHVPK1p2L2NjZ1lkbXdESU1heXl4?=
+ =?utf-8?B?aTN0U0pLMVo1M1p6cVZVT2NpM1B5SWkwYTc1RmtyZHcxanZpZ1NZVFB0M1dp?=
+ =?utf-8?B?MkZxWEkyVDlnUTJZbEdZUWtacjJ1QmFtYkxkSHJvSDRTZG41a1lzZzZJNlFy?=
+ =?utf-8?B?cWlxZmVsMWVGS2drSStxWVc2VzVPd2dUNnhxMXVSay9aT1lteHFJSWd0dWQw?=
+ =?utf-8?B?RFJKcUFkbFFyZFQxVGNVS3V0bUNIeWl1RGhTNElIU2JPNW1IcnRFY3Q0M3kv?=
+ =?utf-8?B?NkdNUVlsS0oxL3krUjNtaElvbDhDZDc1UnhYNW9MRXZsYjEvREpCT2FpeFQx?=
+ =?utf-8?B?Mnl5UjVMNTVSRDAySmRMbzhteUc3ZEJGRWVDZ3c3ZU5SSXkwTGxSc2NMRGtW?=
+ =?utf-8?B?UUovN3FoMk9icm9CcENlMFhNVEd6cXdIdTNKQWV3T080VUNlYWlCVC9LVHAy?=
+ =?utf-8?B?bGwvVXhSRXFwVEFoTSsxdDhUQXJxY3diVi9IUGpRaHcvSHc2ZHlQZkphaFcr?=
+ =?utf-8?B?SlJJVkt5dmRtRlduVUxxY2hHU3AwRFIyUFZaODRlUFhSTTIxdGhxWWJmU2Ux?=
+ =?utf-8?B?Q0h4UVBIZWJPa0R6Ui9zcTZ0YzU3a2RFV1VFSjlsTXo4aVY0K05xUkJTb1VC?=
+ =?utf-8?B?M3MrV0JtaEJJcEZ0MkNuNjE5ZmZDUmVUd3FydXBFRE5HZzQ3Z3J5UXlMbHFT?=
+ =?utf-8?B?dXdQZHFOY2kybjREbkZMODEwakt4NjQwb0diMVJuNjNkcVNEWDlJbldadkNG?=
+ =?utf-8?B?YUV1OU5iNS9VQWJKaGFsTFZ6ajhQRklUNmxMc0R5L1V2NE0xdU13UVhOMEp4?=
+ =?utf-8?B?c0lwczZUQkNYOUxNYzlEeFkxb2JoKzhEUTBDbHRaam9ZNlFsNjlobWFDb2tR?=
+ =?utf-8?B?QVBLOFlObEpEY0JaZzU5djY1a2d3cXFmOWkwYVAxa0E0NnNoYlNQemtKY2pE?=
+ =?utf-8?B?a3VsS2dqdUIra2dGOFEvdW9GTzdwNTY2OGNGcUdJSHlmQ1prL1dPcUlIU3g1?=
+ =?utf-8?B?OGc9PQ==?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 8/8] nvme-multipath: queue-depth support for marginal
- paths
-To: John Meneghini <jmeneghi@redhat.com>
-Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, njavali@marvell.com,
- linux-scsi@vger.kernel.org, axboe@kernel.dk, sagi@grimberg.me, hch@lst.de,
- kbusch@kernel.org, linux-nvme@lists.infradead.org,
- Bryan Gurney <bgurney@redhat.com>
-References: <20250709212652.49471-1-bgurney@redhat.com>
- <66a05f2e-f3fd-4347-9c7f-f8fbb715890d@redhat.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <66a05f2e-f3fd-4347-9c7f-f8fbb715890d@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.997];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[11];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spam-Score: -4.30
+X-OriginatorOrg: microchip.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR11MB7570.namprd11.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: fe80869f-7cc6-44f7-22c8-08ddbf7def67
+X-MS-Exchange-CrossTenant-originalarrivaltime: 10 Jul 2025 06:49:36.4739
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: USFTciWX9qfDtbE9xjzslM5r1frOu1Jl8i1pH8ceuNO3+eNDPUP+GqhOtKzarH7FZdP4pmtRtuPdxLrXP2MAVqzGkn1TrHdt5Tz7HUfttUU=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN9PR11MB5275
 
-On 7/10/25 00:03, John Meneghini wrote:
-> Hannes, this patch fixes the queue-depth scheduler.  Please take a look.
-> 
-> On 7/9/25 5:26 PM, Bryan Gurney wrote:
->> From: John Meneghini <jmeneghi@redhat.com>
->>
->> Exclude marginal paths from queue-depth io policy. In the case where all
->> paths are marginal and no optimized or non-optimized path is found, we
->> fall back to __nvme_find_path which selects the best marginal path.
->>
->> Tested-by: Bryan Gurney <bgurney@redhat.com>
->> Signed-off-by: John Meneghini <jmeneghi@redhat.com>
->> ---
->>   drivers/nvme/host/multipath.c | 7 ++++++-
->>   1 file changed, 6 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/ 
->> multipath.c
->> index 8d4e54bb4261..767583e8454b 100644
->> --- a/drivers/nvme/host/multipath.c
->> +++ b/drivers/nvme/host/multipath.c
->> @@ -420,6 +420,9 @@ static struct nvme_ns 
->> *nvme_queue_depth_path(struct nvme_ns_head *head)
->>           if (nvme_path_is_disabled(ns))
->>               continue;
->> +        if (nvme_ctrl_is_marginal(ns->ctrl))
->> +            continue;
->> +
->>           depth = atomic_read(&ns->ctrl->nr_active);
->>           switch (ns->ana_state) {
->> @@ -443,7 +446,9 @@ static struct nvme_ns 
->> *nvme_queue_depth_path(struct nvme_ns_head *head)
->>               return best_opt;
->>       }
->> -    return best_opt ? best_opt : best_nonopt;
->> +    best_opt = (best_opt) ? best_opt : best_nonopt;
->> +
->> +    return best_opt ? best_opt : __nvme_find_path(head, numa_node_id());
->>   }
->>   static inline bool nvme_path_is_optimized(struct nvme_ns *ns)
-> 
-
-Hmm. Not convinced. I would expect a 'marginal' path to behave different
-(performance-wise) than unaffected paths. And the queue-depth scheduler
-should be able to handle paths with different performance
-characteristics just fine.
-(Is is possible that your results are test artifacts? I guess
-your tool just injects FPIN messages with no performance impact,
-resulting in this behaviour...)
-
-But if you want to exclude marginal paths from queue depth:
-by all means, go for it.
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+DQoNCj4gLS0tLS1PcmlnaW5hbCBNZXNzYWdlLS0tLS0NCj4gRnJvbTogSm9obiBHYXJyeSA8am9o
+bi5nLmdhcnJ5QG9yYWNsZS5jb20+DQo+IFNlbnQ6IFRodXJzZGF5LCBKdW5lIDE5LCAyMDI1IDM6
+NDcgQU0NCj4gVG86IEpvaG4gTWVuZWdoaW5pIDxqbWVuZWdoaUByZWRoYXQuY29tPjsNCj4gSmFt
+ZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbTsgbWFydGluLnBldGVyc2VuQG9yYWNs
+ZS5jb207DQo+IGxpbnV4LXNjc2lAdmdlci5rZXJuZWwub3JnOyBhYWNyYWlkQG1pY3Jvc2VtaS5j
+b207IGNvcmJldEBsd24ubmV0DQo+IENjOiBsaW51eC1kb2NAdmdlci5rZXJuZWwub3JnOyBsaW51
+eC1rZXJuZWxAdmdlci5rZXJuZWwub3JnOw0KPiB0aGVuemxAcmVkaGF0LmNvbTsgU2NvdHQgQmVu
+ZXNoIC0gQzMzNzAzIDxTY290dC5CZW5lc2hAbWljcm9jaGlwLmNvbT47DQo+IERvbiBCcmFjZSAt
+IEMzMzcwNiA8RG9uLkJyYWNlQG1pY3JvY2hpcC5jb20+OyBUb20gV2hpdGUgLSBDMzM1MDMNCj4g
+PFRvbS5XaGl0ZUBtaWNyb2NoaXAuY29tPjsgQWJoaW5hdiBLdWNoaWJob3RsYSAtIEM3MDMyMg0K
+PiA8QWJoaW5hdi5LdWNoaWJob3RsYUBtaWNyb2NoaXAuY29tPjsgU2FnYXIgQmlyYWRhciAtIEMz
+NDI0OQ0KPiA8U2FnYXIuQmlyYWRhckBtaWNyb2NoaXAuY29tPjsgbXBhdGFsYW5AcmVkaGF0LmNv
+bQ0KPiBTdWJqZWN0OiBSZTogW1BBVENIIHYzXSBzY3NpOiBhYWNyYWlkOiBGaXggcmVwbHkgcXVl
+dWUgbWFwcGluZyB0byBDUFVzIGJhc2VkDQo+IG9uIElSUSBhZmZpbml0eQ0KPiANCj4gRVhURVJO
+QUwgRU1BSUw6IERvIG5vdCBjbGljayBsaW5rcyBvciBvcGVuIGF0dGFjaG1lbnRzIHVubGVzcyB5
+b3Uga25vdyB0aGUNCj4gY29udGVudCBpcyBzYWZlDQo+IA0KPiBPbiAxOC8wNi8yMDI1IDIwOjI0
+LCBKb2huIE1lbmVnaGluaSB3cm90ZToNCj4gPiBGcm9tOiBTYWdhciBCaXJhZGFyIDxzYWdhci5i
+aXJhZGFyQG1pY3JvY2hpcC5jb20+DQo+ID4NCj4gPiBGcm9tOiBTYWdhciBCaXJhZGFyIDxzYWdh
+ci5iaXJhZGFyQG1pY3JvY2hpcC5jb20+DQo+ID4NCj4gPiBUaGlzIHBhdGNoIGZpeGVzIGEgYnVn
+IGluIHRoZSBvcmlnaW5hbCBwYXRoIHRoYXQgY2F1c2VkIEkvTyBoYW5ncy4gVGhlDQo+ID4gSS9P
+IGhhbmdzIHdlcmUgYmVjYXVzZSBvZiBhbiBNU0l4IHZlY3RvciBub3QgaGF2aW5nIGEgbWFwcGVk
+IG9ubGluZSBDUFUNCj4gPiB1cG9uIHJlY2VpdmluZyBjb21wbGV0aW9uLg0KPiA+DQo+ID4gVGhp
+cyBwYXRjaCBlbmFibGVzIE11bHRpLVEgc3VwcG9ydCBpbiB0aGUgYWFjcmlhZCBkcml2ZXIuIE11
+bHRpLVEgc3VwcG9ydA0KPiA+IGluIHRoZSBkcml2ZXIgaXMgbmVlZGVkIHRvIHN1cHBvcnQgQ1BV
+IG9mZmxpbmluZy4NCj4gDQo+IEkgYXNzdW1lIHRoYXQgeW91IG1lYW4gInNhZmUiIENQVSBvZmZs
+aW5pbmcuDQo+IA0KPiBJdCBzZWVtcyB0byBtZSB0aGF0IGluIGFsbCBjYXNlcyB3ZSB1c2UgcXVl
+dWUgaW50ZXJydXB0IGFmZmluaXR5DQo+IHNwcmVhZGluZyBhbmQgbWFuYWdlZCBpbnRlcnJ1cHRz
+IGZvciBNU0lYLCByaWdodD8NCj4gDQo+IFNlZSBhYWNfZGVmaW5lX2ludF9tb2RlKCkgLT4gcGNp
+X2FsbG9jX2lycV92ZWN0b3JzKC4uLiwgUENJX0lSUV9NU0lYIHwNCj4gUENJX0lSUV9BRkZJTklU
+WSk7DQo+IA0KPiBCdXQgdGhlbiBmb3IgdGhpcyBub24tIE11bHRpLVEgc3VwcG9ydCwgdGhlIHF1
+ZXVlIHNlZW1zIHRvIGJlIGNob3Nlbg0KPiBiYXNlZCBvbiBhIHJvdW5kLXJvYmluIGFwcHJvYWNo
+IGluIHRoZSBkcml2ZXIuIFRoYXQgcm91bmQtcm9iaW4gY29tZXMNCj4gZnJvbSBob3cgZmliLnZl
+Y3Rvcl9ubyBpcyBhc3NpZ25lZCBpbiBhYWNfZmliX3ZlY3Rvcl9hc3NpZ24oKS4gSWYgdGhpcw0K
+PiBpcyB0aGUgY2FzZSwgdGhlbiB3aHkgYXJlIG1hbmFnZWQgaW50ZXJydXB0cyBiZWluZyB1c2Vk
+IGZvciB0aGlzIG5vbi0NCj4gTXVsdGktUSBzdXBwb3J0IGF0IGFsbD8NCj4gDQo+IEkgbWF5IGJl
+IHdyb25nIGFib3V0IHRoaXMuIFRoYXQgZHJpdmVyIGlzIGhhcmQgdG8gdW5kZXJzdGFuZCB3aXRo
+IHNvDQo+IG1hbnkga25vYnMuDQo+IA0KDQoNClRoYW5rIHlvdSB2ZXJ5IG11Y2ggZm9yIHJhaXNp
+bmcgdGhpcyDigJQgeW91J3JlIHJpZ2h0IHRoYXQgdXNpbmcgUENJX0lSUV9BRkZJTklUWSBpbiBu
+b24tTXVsdGlRIG1vZGUgZG9lc27igJl0IG9mZmVyIHJlYWwgdmFsdWUsIHNpbmNlIHRoZSBkcml2
+ZXIgZG9lc27igJl0IHV0aWxpemUgdGhlIGFmZmluaXR5IG1hcHBpbmcuDQpUaGF0IHNhaWQsIHRo
+ZSBjdXJyZW50IGltcGxlbWVudGF0aW9uIGlzIGZ1bmN0aW9uYWxseSBjb3JyZWN0IGFuZCBjb25z
+aXN0ZW50IHdpdGggdGhlIGRyaXZlcuKAmXMgaGlzdG9yaWNhbCBiZWhhdmlvci4gDQpUbyBrZWVw
+IHRoZSBwYXRjaCBmb2N1c2VkIGFuZCBhdm9pZCBzY29wZSBjcmVlcCwgSeKAmWQgcHJlZmVyIHRv
+IGxlYXZlIHRoZSBhZmZpbml0eSBmbGFnIGxvZ2ljIGFzIGlzIGZvciBub3cuDQoNCknigJlkIGJl
+IGhhcHB5IHRvIGZvbGxvdyB1cCB3aXRoIGEgc21hbGwgY2xlYW51cCBwYXRjaCwgc29tZXRpbWUg
+aW4gZnV0dXJlLCB0byBpbXByb3ZlIHRoaXMgaWYgeW91IHRoaW5rIGl0IHdvdWxkIGhlbHAuDQoN
+ClRoYW5rcw0K
