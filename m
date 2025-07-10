@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 517514C97;
-	Thu, 10 Jul 2025 04:31:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCBD3469D;
+	Thu, 10 Jul 2025 04:37:57 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752121876; cv=none; b=ZI3EL4mlyM4dKcgZNZ70HSdJnSaxANUaf2js9zoPF7mha8tFh1dIXMRAfGVxOXsFlNae2AYG4ulhr9TPHXQcHr1LIWT/8DkW7pykp0M6YGyBOV2v8Sm3JHf6VsTXTfBSYKLBJ7ZRi5pxWX22N3iKNjn/YxPxZlRCcxmH32hX5cg=
+	t=1752122278; cv=none; b=pEwFyQc4FuM9rw0XvSfPFPqul8HUx/zX5FBNQon77AFEXzotW4qn3eHwTWmzctVVpDzU3Q8b21u4hpFBr3H83PEB9EDxKxP3CQQcg/z3d4+Msd++CB1hEkFczfjRyulGxt3M7VzCiRKaZfOs+deF73AL16cHxkie4pIJ7YyxEUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752121876; c=relaxed/simple;
-	bh=/Bo+TyYCzgF6Ph4QBCoi1SXpCRqNZ2sJdkXxbT+cDHg=;
+	s=arc-20240116; t=1752122278; c=relaxed/simple;
+	bh=nH2Uzbbah3Fp+qTw/XmILSdL6MP2gErBwVZUPJwW+DY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nSMWT9lVdAF0hJh4R6oJwy6MtDwW0W3pYtlAblCoRCCchldWDbs/9G89RC8nWnMHCvy0hwNejpjQzu55guEc184tc4fr+8L4RO6LBYr+tTUka75V2KgyyQI76JcntC8OK+y6yc+jo5j4i9lgB4waPildlls4FLRoN2X2W4DJiuo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=pcQT9mKy; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=chmSTEF3vA8A78gCA/uFB6wMUBfhc54oqsizNu8BHtQyvwYqvBXifiFtt97ThSg+o4rB7D9LFlv35DZ3/zOy3gr5pwRTp9aYnV3msfkGn2xSTi8OBcVu6Y3k8uBeSw7lvaDkjR858yMv/HNA68Q6kbKKrVBfvIU1cv6CHUFkSxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qPEz1Viq; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="pcQT9mKy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id E0372C4CEE3;
-	Thu, 10 Jul 2025 04:31:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qPEz1Viq"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9979AC4CEE3;
+	Thu, 10 Jul 2025 04:37:56 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752121875;
-	bh=/Bo+TyYCzgF6Ph4QBCoi1SXpCRqNZ2sJdkXxbT+cDHg=;
+	s=k20201202; t=1752122277;
+	bh=nH2Uzbbah3Fp+qTw/XmILSdL6MP2gErBwVZUPJwW+DY=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=pcQT9mKySpPIg2xrVL5CdYK57c/vhUtq25RDNMURWRZasTc6iCeU4NxXJmlNCIL52
-	 auK8DjbC/j0FtOU2jem4CpBm+fA40nzb1Pyc2/wuNzCRBgK8fc7RbiFL0me5z1FGHK
-	 GXCvo3bEOO++NjORTzeNS8/hc0Az3bPdQWQqe7eQCF2o67wn/NnxiduuAqoDaYLtsZ
-	 Z+aRUb3fEd55j2hUTbjMeYzCKWeE+1jw217k2fR6nLVok7mdubbzisbtBU/jkIwgOF
-	 v+kyH62WTnSneN03jY9iD/mSmmCjeXA0w6eHtA+xDnGe0CU+78pSywGJqGeIt0r6Tr
-	 rWzNtXvuZMqwQ==
-Message-ID: <12ad2ed3-53b7-489a-9e91-ee6b1099f535@kernel.org>
-Date: Thu, 10 Jul 2025 13:28:59 +0900
+	b=qPEz1ViqIfswuA0QBM87iY/jUrmNbd0hnjNSOmOZ9VAiHKB9OLwckQC65okMtmxu+
+	 tyroFFLLFzGS0stBguF1hs/H8BJN4oeT6firDQeUYOT88AiAcK1AkQSWhEr935GyPg
+	 Ql/Jn9FP7mtm0Z4kW5/IUH4Y2LZtyGU9aFDwBcnNZaoeymGJuRuC7fnep9rrjuF9w5
+	 IOxFCbrecmZZnUTyEB1LohB2R8G5H89taNca578nqpbejXwworBVk1F2e4flRgvvKx
+	 s/yil48F4Gy12H+Uy1dyUhHJ3/rtDmuT8jz1oY3M3uauxkEeQT4IYGUQ34wLbM5gdp
+	 yaDiSxef4kxOA==
+Message-ID: <36c4d262-9329-4484-be79-9780f5429576@kernel.org>
+Date: Thu, 10 Jul 2025 13:35:41 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,88 +35,59 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v20 01/13] block: Support block drivers that preserve the
- order of write requests
+Subject: Re: [PATCH v20 02/13] blk-mq: Restore the zone write order when
+ requeuing
 To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
- Nitesh Shetty <nj.shetty@samsung.com>, Ming Lei <ming.lei@redhat.com>
+ Christoph Hellwig <hch@lst.de>, Yu Kuai <yukuai3@huawei.com>
 References: <20250708220710.3897958-1-bvanassche@acm.org>
- <20250708220710.3897958-2-bvanassche@acm.org>
+ <20250708220710.3897958-3-bvanassche@acm.org>
 From: Damien Le Moal <dlemoal@kernel.org>
 Content-Language: en-US
 Organization: Western Digital Research
-In-Reply-To: <20250708220710.3897958-2-bvanassche@acm.org>
+In-Reply-To: <20250708220710.3897958-3-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/9/25 7:06 AM, Bart Van Assche wrote:
-> Some storage controllers preserve the request order per hardware queue.
-> Some but not all device mapper drivers preserve the bio order. Introduce
-> the request queue limit member variable 'driver_preserves_write_order' to
-> allow block drivers and device mapper drivers to indicate that the order
-> of write commands is preserved per hardware queue and hence that
-> serialization of writes per zone is not required if all pending writes are
-> submitted to the same hardware queue.
+> Zoned writes may be requeued. This happens if a block driver returns
+> BLK_STS_RESOURCE, to handle SCSI unit attentions or by the SCSI error
+> handler after error handling has finished. A later patch enables write
+> pipelining and increases the number of pending writes per zone. If
+> multiple writes are pending per zone, write requests may be requeued in
+> another order than submitted. Restore the request order if requests are
+> requeued. Add RQF_DONTPREP to RQF_NOMERGE_FLAGS because this patch may
+> cause RQF_DONTPREP requests to be sent to the code that checks whether
+> a request can be merged and RQF_DONTPREP requests must not be merged.
 > 
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: Nitesh Shetty <nj.shetty@samsung.com>
 > Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: Damien Le Moal <dlemoal@kernel.org>
+> Cc: Yu Kuai <yukuai3@huawei.com>
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  block/blk-settings.c   | 2 ++
->  include/linux/blkdev.h | 5 +++++
->  2 files changed, 7 insertions(+)
-> 
-> diff --git a/block/blk-settings.c b/block/blk-settings.c
-> index a000daafbfb4..bceb9a9cb5ba 100644
-> --- a/block/blk-settings.c
-> +++ b/block/blk-settings.c
-> @@ -814,6 +814,8 @@ int blk_stack_limits(struct queue_limits *t, struct queue_limits *b,
->  	}
->  	t->max_secure_erase_sectors = min_not_zero(t->max_secure_erase_sectors,
->  						   b->max_secure_erase_sectors);
-> +	t->driver_preserves_write_order = t->driver_preserves_write_order &&
-> +		b->driver_preserves_write_order;
 
-See blk_stack_limits() and the section:
+[...]
 
-/*
- * Some feaures need to be supported both by the stacking driver and all
- * underlying devices.  The stacking driver sets these flags before
- * stacking the limits, and this will clear the flags if any of the
- * underlying devices does not support it.
- */
-if (!(b->features & BLK_FEAT_NOWAIT))
-	t->features &= ~BLK_FEAT_NOWAIT;
-if (!(b->features & BLK_FEAT_POLL))
-	t->features &= ~BLK_FEAT_POLL;
+> diff --git a/block/blk-mq.c b/block/blk-mq.c
+> index 0c61492724d2..aa81526ad531 100644
+> --- a/block/blk-mq.c
+> +++ b/block/blk-mq.c
+> @@ -1557,7 +1557,9 @@ static void blk_mq_requeue_work(struct work_struct *work)
+>  		 * already.  Insert it into the hctx dispatch list to avoid
+>  		 * block layer merges for the request.
+>  		 */
+> -		if (rq->rq_flags & RQF_DONTPREP)
+> +		if (blk_rq_is_seq_zoned_write(rq))
+> +			blk_mq_insert_request(rq, BLK_MQ_INSERT_ORDERED);
 
-And make driver_preserves_write_order a feature instead of treating it
-specially. Also, the name "driver_preserves_write_order" is not great. The
-driver may be preserving write order, but the hardware not (e.g. libata and AHCI).
+Every zone write will go through this, even for devices that do not have
+driver_preserves_write_order == true. Given that thi insert ordered function is
+heavier than inserting at head, it would be nice to avoid this.
 
->  	t->zone_write_granularity = max(t->zone_write_granularity,
->  					b->zone_write_granularity);
->  	if (!(t->features & BLK_FEAT_ZONED)) {
-> diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
-> index 5f14c20c8bc0..4dec1d91b7f2 100644
-> --- a/include/linux/blkdev.h
-> +++ b/include/linux/blkdev.h
-> @@ -413,6 +413,11 @@ struct queue_limits {
->  
->  	unsigned int		max_open_zones;
->  	unsigned int		max_active_zones;
-> +	/*
-> +	 * Whether or not the block driver preserves the order of write
-> +	 * requests per hardware queue. Set by the block driver.
-> +	 */
-> +	bool			driver_preserves_write_order;
->  
->  	/*
->  	 * Drivers that set dma_alignment to less than 511 must be prepared to
+> +		else if (rq->rq_flags & RQF_DONTPREP)
+>  			blk_mq_request_bypass_insert(rq, 0);
+>  		else
+>  			blk_mq_insert_request(rq, BLK_MQ_INSERT_AT_HEAD);
+
 
 
 -- 
