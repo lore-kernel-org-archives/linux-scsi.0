@@ -1,33 +1,80 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 666F486334;
-	Thu, 10 Jul 2025 05:12:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61A2A21D3E8
+	for <linux-scsi@vger.kernel.org>; Thu, 10 Jul 2025 06:36:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752124327; cv=none; b=BS5tCjhYK3kH6SaqVb2bXU4BtzOnP9tMA5IOvjtmPtpzEMjC6hQhNkEoJE3zDODClSPgvfaXoznC3eVcISf85yK3AM1eUOAsR7gy3u+msb50S43BbzclaAnYZ/z6W/De7cDETsy7f4u2gXTn1IyRubWNGnXzB6+40DG0Trqna9U=
+	t=1752129381; cv=none; b=opD8JunRVCGhfYWtBDqIsFv8UFTjeq7wGfKJjgyO4VtqXEs4ocrhZzAGYidghocO479KnkVTCZWj4PJDcpr8QrZgpug2SoY0K/T1g79jlRt08GDBua0y2epq4kpyuqLAYiA47xtVifemHFFnpgvmyN3TvZ1HRec1HSdhR5ndZxA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752124327; c=relaxed/simple;
-	bh=9ipx1PIcaCR8z/8TB7Hq3zIR9LrhbbvCb1EsCWmBziM=;
+	s=arc-20240116; t=1752129381; c=relaxed/simple;
+	bh=pAolbAVS5ex1GYzY65PkjEdbxoOfKRXEL4ZwyEcBlHU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qzmspxwyPcQxf+xJ3WFku38UCCGWfOxxwA3maI6SonVHNkAjEIJ/nQEct0rHu8tdG9Y8S9xNcCkAMUiLFzKa53smfv2Wp2b5+xNOpzPNAdVeYPS7h49KJvMbX9gRuX1d+iFEhHp9L8DbRhzA1F7C3n6b3p5iYRbgCINpxNUt9js=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qGMje1UH; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=bB2fUnTOTJPQ2iCOP6CLNcguSZnzqXepsLUwsjWzNVBn4M+JoU02Qlu5qMjnADxudBUCC/O6ympeUeMFiH64wihkYnMpnb8Z3iToVp5X0AXIZfzDK8PQSOxE8o5K3fTU63YoJbBl5vWPdsO6lueMcx2ShMYRsmKLEQnIjmwrkuY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=u/0DTwPm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=9p6YPHnM; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=zfShDxLz; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4X/xWS7M; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qGMje1UH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49197C4CEE3;
-	Thu, 10 Jul 2025 05:12:06 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752124327;
-	bh=9ipx1PIcaCR8z/8TB7Hq3zIR9LrhbbvCb1EsCWmBziM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=qGMje1UHVygJO9y1hQkc54ypgTS7SjP1cvrlOXM2L6+WGo6+UX2HdrRQF4yOEh77X
-	 uDrXt6psZhdWKxfQ2DEJwx9Na8xL30OmbFI8AGFSIfOc0+bkNSUFa3atLw6TWAVRMy
-	 ksbR4TT0Wdw2sXgGI0eppIsyKMhbkW/6rUDU9vI1hbozfmByrx9Ty66s7Yold/Rk97
-	 G0+iqinLva5D+LqgNFqsWpql5OWh10s1mC4ztZ1OeGRJLkIiMZjkaJccvUZnOWjCsQ
-	 60a2xlDNDVJGxjC+c6CUIhAwji7BJjLgRtpLS5XKJVwcgwfT75cskFtkHvxwi0i/VP
-	 DNr69RPsMLWzg==
-Message-ID: <bf33405e-f8f5-4d7f-b2e9-8fe84fbd1092@kernel.org>
-Date: Thu, 10 Jul 2025 14:09:50 +0900
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="u/0DTwPm";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="9p6YPHnM";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="zfShDxLz";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4X/xWS7M"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id D4C2A1F385;
+	Thu, 10 Jul 2025 06:36:13 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1752129374; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1WzB9T/HEA3zl1fSfSp4StlUkmpKLI9rc2lrqum55+I=;
+	b=u/0DTwPmycwVQbP0oEdFapFe6BJx6KtLrGQwbBmlIeyOlgISfJKgncy0eRbkxp07nyhDSV
+	GhjsHmWZxH2GTWa235EPq3BtG+m3mMPl+jpTlNIAhoNROst9QM67CULTortlLKhypDvzkz
+	LY62HIWDbQJ7WB61c4vXIh3EqPGU+dk=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1752129374;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1WzB9T/HEA3zl1fSfSp4StlUkmpKLI9rc2lrqum55+I=;
+	b=9p6YPHnMD3A8ejIPXxj5WwnNJZpsBhBDAvWecoeo+YdimRaa2CrB6uVneDXOrENgIzDOD8
+	nb9vdAzs2DZEdNAw==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1752129373; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1WzB9T/HEA3zl1fSfSp4StlUkmpKLI9rc2lrqum55+I=;
+	b=zfShDxLz1asSYa4ymdhFfOQJKtVnajWpgHhLZwBv+tdBmu0m59YQYPtCYyIft+MaSa/5PI
+	RZOFdmW5WCUg+Z/+7M35KOGzxCqo/TnKh/OxxajVcgYGOqdxjEWHPkqMfeJNk4dmZV4rPe
+	hOLmJTihI9ePj/sQcAX5k+i4wVUJbqo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1752129373;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=1WzB9T/HEA3zl1fSfSp4StlUkmpKLI9rc2lrqum55+I=;
+	b=4X/xWS7MzzmrvipbT++QlFIoCCe0JHh07Kirjbj9pFTeDYsLMQAOTsdtKDwe1VYC3x6jtF
+	IZIGllbK0oClfGCw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 66819136CB;
+	Thu, 10 Jul 2025 06:36:13 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id FJCdFl1fb2hnEgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 10 Jul 2025 06:36:13 +0000
+Message-ID: <782942d7-41fe-41e2-9913-54108d44bcd3@suse.de>
+Date: Thu, 10 Jul 2025 08:36:12 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,199 +82,102 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v20 07/13] blk-zoned: Support pipelining of zoned writes
-To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>
-References: <20250708220710.3897958-1-bvanassche@acm.org>
- <20250708220710.3897958-8-bvanassche@acm.org>
-From: Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH v8 8/8] nvme-multipath: queue-depth support for marginal
+ paths
+To: John Meneghini <jmeneghi@redhat.com>
+Cc: james.smart@broadcom.com, dick.kennedy@broadcom.com, njavali@marvell.com,
+ linux-scsi@vger.kernel.org, axboe@kernel.dk, sagi@grimberg.me, hch@lst.de,
+ kbusch@kernel.org, linux-nvme@lists.infradead.org,
+ Bryan Gurney <bgurney@redhat.com>
+References: <20250709212652.49471-1-bgurney@redhat.com>
+ <66a05f2e-f3fd-4347-9c7f-f8fbb715890d@redhat.com>
 Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250708220710.3897958-8-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <66a05f2e-f3fd-4347-9c7f-f8fbb715890d@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.997];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[11];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spam-Score: -4.30
 
-On 7/9/25 7:07 AM, Bart Van Assche wrote:
-> Support pipelining of zoned writes if the block driver preserves the write
-> order per hardware queue. Track per zone to which software queue writes
-> have been queued. If zoned writes are pipelined, submit new writes to the
-> same software queue as the writes that are already in progress. This
-> prevents reordering by submitting requests for the same zone to different
-> software or hardware queues.
+On 7/10/25 00:03, John Meneghini wrote:
+> Hannes, this patch fixes the queue-depth scheduler.  Please take a look.
 > 
-> Cc: Christoph Hellwig <hch@lst.de>
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> On 7/9/25 5:26 PM, Bryan Gurney wrote:
+>> From: John Meneghini <jmeneghi@redhat.com>
+>>
+>> Exclude marginal paths from queue-depth io policy. In the case where all
+>> paths are marginal and no optimized or non-optimized path is found, we
+>> fall back to __nvme_find_path which selects the best marginal path.
+>>
+>> Tested-by: Bryan Gurney <bgurney@redhat.com>
+>> Signed-off-by: John Meneghini <jmeneghi@redhat.com>
+>> ---
+>>   drivers/nvme/host/multipath.c | 7 ++++++-
+>>   1 file changed, 6 insertions(+), 1 deletion(-)
+>>
+>> diff --git a/drivers/nvme/host/multipath.c b/drivers/nvme/host/ 
+>> multipath.c
+>> index 8d4e54bb4261..767583e8454b 100644
+>> --- a/drivers/nvme/host/multipath.c
+>> +++ b/drivers/nvme/host/multipath.c
+>> @@ -420,6 +420,9 @@ static struct nvme_ns 
+>> *nvme_queue_depth_path(struct nvme_ns_head *head)
+>>           if (nvme_path_is_disabled(ns))
+>>               continue;
+>> +        if (nvme_ctrl_is_marginal(ns->ctrl))
+>> +            continue;
+>> +
+>>           depth = atomic_read(&ns->ctrl->nr_active);
+>>           switch (ns->ana_state) {
+>> @@ -443,7 +446,9 @@ static struct nvme_ns 
+>> *nvme_queue_depth_path(struct nvme_ns_head *head)
+>>               return best_opt;
+>>       }
+>> -    return best_opt ? best_opt : best_nonopt;
+>> +    best_opt = (best_opt) ? best_opt : best_nonopt;
+>> +
+>> +    return best_opt ? best_opt : __nvme_find_path(head, numa_node_id());
+>>   }
+>>   static inline bool nvme_path_is_optimized(struct nvme_ns *ns)
+> 
 
-[...]
+Hmm. Not convinced. I would expect a 'marginal' path to behave different
+(performance-wise) than unaffected paths. And the queue-depth scheduler
+should be able to handle paths with different performance
+characteristics just fine.
+(Is is possible that your results are test artifacts? I guess
+your tool just injects FPIN messages with no performance impact,
+resulting in this behaviour...)
 
-> @@ -764,14 +767,18 @@ static bool blk_zone_wplug_handle_reset_all(struct bio *bio)
->  static void disk_zone_wplug_schedule_bio_work(struct gendisk *disk,
->  					      struct blk_zone_wplug *zwplug)
->  {
-> +	int cpu;
-> +
-> +	lockdep_assert_held(&zwplug->lock);
-> +
->  	/*
->  	 * Take a reference on the zone write plug and schedule the submission
->  	 * of the next plugged BIO. blk_zone_wplug_bio_work() will release the
->  	 * reference we take here.
->  	 */
-> -	WARN_ON_ONCE(!(zwplug->flags & BLK_ZONE_WPLUG_PLUGGED));
->  	refcount_inc(&zwplug->ref);
-> -	queue_work(disk->zone_wplugs_wq, &zwplug->bio_work);
-> +	cpu = zwplug->from_cpu >= 0 ? zwplug->from_cpu : WORK_CPU_UNBOUND;
-> +	queue_work_on(cpu, disk->zone_wplugs_wq, &zwplug->bio_work);
+But if you want to exclude marginal paths from queue depth:
+by all means, go for it.
 
-Please change this to a more readable form with an expanded "if". The local
-variable "cpu" should probably be named "work_cpu" for clarity too.
+Cheers,
 
->  }
->  
->  static inline void disk_zone_wplug_add_bio(struct gendisk *disk,
-> @@ -932,7 +939,8 @@ static bool blk_zone_wplug_prepare_bio(struct blk_zone_wplug *zwplug,
->  	 * We know such BIO will fail, and that would potentially overflow our
->  	 * write pointer offset beyond the end of the zone.
->  	 */
-> -	if (disk_zone_wplug_is_full(disk, zwplug))
-> +	if (!disk->queue->limits.driver_preserves_write_order
-> +	    && disk_zone_wplug_is_full(disk, zwplug))
-
-Writing to a zone that is full is an error, pipelining or not. So why do you
-change this ? This does not make sense.
-
->  		return false;
->  
->  	if (bio_op(bio) == REQ_OP_ZONE_APPEND) {
-> @@ -956,7 +964,8 @@ static bool blk_zone_wplug_prepare_bio(struct blk_zone_wplug *zwplug,
->  		 * with a start sector not unaligned to the zone write pointer
->  		 * will fail.
->  		 */
-> -		if (bio_offset_from_zone_start(bio) != zwplug->wp_offset)
-> +		if (!disk->queue->limits.driver_preserves_write_order
-> +		    && bio_offset_from_zone_start(bio) != zwplug->wp_offset)
-
-Same here. This does not depend pipelining: write should have been received in
-order and be aligned with the wp. So why change this condition ?
-
->  			return false;
->  	}
->  
-
-> @@ -1033,8 +1044,23 @@ static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int nr_segs)
->  		return true;
->  	}
->  
-> -	/* Otherwise, plug and submit the BIO. */
-> -	zwplug->flags |= BLK_ZONE_WPLUG_PLUGGED;
-> +	if (dpwo && zwplug->from_cpu < 0) {
-> +		/* No zoned writes are in progress. Select the current CPU. */
-> +		zwplug->from_cpu = raw_smp_processor_id();
-> +		goto plug;
-> +	} else if (dpwo) {
-> +		/*
-> +		 * The block driver preserves the write order. Submit the bio
-> +		 * from zwplug->from_cpu.
-> +		 */
-> +		goto plug;
-
-Can you change this to:
-
-	if (dpwo) {
-		/*
-		 * The block driver preserves the write order: if we do not
-		 * have any writes in progress already, use the current CPU
-		 * to submit the BIO. Otherwise, keep using zwplug->from_cpu.
-		 */
-		if (zwplug->from_cpu < 0)
-			zwplug->from_cpu = raw_smp_processor_id();
-		goto plug;
-	}
-
-	/*
-	 * The block driver does not preserve the write order. Plug and
-	 * submit the BIO.
-	 */
-	zwplug->flags |= BLK_ZONE_WPLUG_PLUGGED;
-
-That is a lot simpler and easier to read.
-
-> +	} else {
-> +		/*
-> +		 * The block driver does not preserve the write order. Plug and
-> +		 * submit the BIO.
-> +		 */
-> +		zwplug->flags |= BLK_ZONE_WPLUG_PLUGGED;
-> +	}
->  
->  	spin_unlock_irqrestore(&zwplug->lock, flags);
->  
-
-> @@ -1298,6 +1329,9 @@ static void blk_zone_submit_one_bio(struct blk_zone_wplug *zwplug)
->  	} else {
->  		blk_mq_submit_bio(bio);
->  	}
-> +
-> +	return disk->queue->limits.driver_preserves_write_order &&
-> +		!need_resched();
-
-I think we really need a helper for that
-"disk->queue->limits.driver_preserves_write_order". But if you make this a
-feature, it will be better.
-
-Also, here, the test using need_resched() really need a comment explaining why
-you look at that. I do not get it personally.
-
->  }
->  
->  static void blk_zone_wplug_bio_work(struct work_struct *work)
-> @@ -1305,7 +1339,8 @@ static void blk_zone_wplug_bio_work(struct work_struct *work)
->  	struct blk_zone_wplug *zwplug =
->  		container_of(work, struct blk_zone_wplug, bio_work);
->  
-> -	blk_zone_submit_one_bio(zwplug);
-> +	while (blk_zone_submit_one_bio(zwplug))
-> +		;
-
-So patch 6 split created that blk_zone_submit_one_bio() function, but all you
-do here is this change. I really do not see how that is better. Let's not do
-that and simply have the loop expanded here to something like:
-
-	do {
-		...
-	} while (disk->queue->limits.driver_preserves_write_order &&
-		 !need_resched());
-
->  
->  	/* Drop the reference we took in disk_zone_wplug_schedule_bio_work(). */
->  	disk_put_zone_wplug(zwplug);
-> @@ -1831,6 +1866,7 @@ static void queue_zone_wplug_show(struct blk_zone_wplug *zwplug,
->  	unsigned int zwp_zone_no, zwp_ref;
->  	unsigned int zwp_bio_list_size;
->  	unsigned long flags;
-> +	int from_cpu;
->  
->  	spin_lock_irqsave(&zwplug->lock, flags);
->  	zwp_zone_no = zwplug->zone_no;
-> @@ -1838,10 +1874,12 @@ static void queue_zone_wplug_show(struct blk_zone_wplug *zwplug,
->  	zwp_ref = refcount_read(&zwplug->ref);
->  	zwp_wp_offset = zwplug->wp_offset;
->  	zwp_bio_list_size = bio_list_size(&zwplug->bio_list);
-> +	from_cpu = zwplug->from_cpu;
->  	spin_unlock_irqrestore(&zwplug->lock, flags);
->  
-> -	seq_printf(m, "%u 0x%x %u %u %u\n", zwp_zone_no, zwp_flags, zwp_ref,
-> -		   zwp_wp_offset, zwp_bio_list_size);
-> +	seq_printf(m, "zone_no %u flags 0x%x ref %u wp_offset %u bio_list_size %u from_cpu %d\n",
-> +		   zwp_zone_no, zwp_flags, zwp_ref, zwp_wp_offset,
-> +		   zwp_bio_list_size, from_cpu);
->  }
->  
->  int queue_zone_wplugs_show(void *data, struct seq_file *m)
-
-
+Hannes
 -- 
-Damien Le Moal
-Western Digital Research
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
