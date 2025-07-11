@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 739C31EFFBB;
-	Fri, 11 Jul 2025 21:26:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C1341991C9;
+	Fri, 11 Jul 2025 21:42:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752269201; cv=none; b=O9g9hXf9W5x56TMM4uGbyd3mnBXrTkJOL1+yi/hzcsN3G4MNYv31fLV2R2+aJ3/VlvV1S/HbGwiSZC/YvmC2s/HqFrKCjVef83F01HV5G3Z/XAXoDJ4wl2qWWsDKceenoYDfmqvGpmH5NPYAd9YCFNfbgK4Q/3veVRvqcTiVQWw=
+	t=1752270156; cv=none; b=n2zwUTV1GH3uK3Y7g/E2JHSkKxeP6Ec/huP5SC5b0BMw3DrnJtVJ7tLu7pvYyLlOViubWzkZ3MTzPTb3L3+5zo1yxWdxQN7N+7HKdyHFhBGv1s8gVQScjzG6jCrNFzhSlQtLjVf13bVlmtLCm4uiXtPyrkMePIOydNAi3iN5lPs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752269201; c=relaxed/simple;
-	bh=grxT6fnKRcLbjein3FVgJ/4e2IECYkuOPOKVylo6YII=;
+	s=arc-20240116; t=1752270156; c=relaxed/simple;
+	bh=HlGNRHlqbdFhn/2cFmzlGSkoeIkuuhm1Aepa6F2dRvs=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pBVchxOFp4JHZfwOqBZ8wOraadNtzxWe2rQWG/q1aHsXTPk1MRcEngDY19LzgGtsrmkFdtI55/Hvr+ybG46282Jb84mlJI6xrXu9lyVCJJk15U99EHlIy207pezqXSH/6j20Kb1Y8XERFzwt4GNrlq3Gh7P0/JJzNj7x9XI91P0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=iBjXDASN; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=ns4D1OqmPYX+wjBNdHcmY44gb2OnRd8+im9Q7naFg5F7RhbWn1lHsY4LVaT3uvd3VpuGKWJKXoxVoVJpIFgcAojnNOh6JuypIrPTawnuGvImC1xp4uZ963ZxGGTTwGSJJTx+KuYkp92B5/E2Bx9ft5+iSckG/Eep7QtA5XyirXo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=vP4pWF6A; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="iBjXDASN"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="vP4pWF6A"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bf4XS4PT9zlgqW3;
-	Fri, 11 Jul 2025 21:26:32 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bf4tx4Ftczm0yTg;
+	Fri, 11 Jul 2025 21:42:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1752269190; x=1754861191; bh=FflfgiPnxV2oDEPh2A44+YMp
-	EIRdMt54w1rr2YeydWU=; b=iBjXDASNZ1MxA0EPgnHUi5lFQKbuRqm7RDYzy4Lw
-	pMU16FjxElhFYr1KeNV6jJoxnHLJzEXQDFyPqA39O4Vr9A5y1fvmO2I3w/EVLPcv
-	CKyBA4MWFFt0MxlJSK0wPEaznZUv/G/but1pnokOZ/ShkbdeLZjUvgMekT2aVsma
-	ocR/KpnfaoXmalbODxOet6IVPxzpSLIDFY98Tkl11dzV+YdowWvzenscVcIHL4/w
-	CcZ2EjrslMn/ja3PxZ1hFtY7rCf/fHoPKZ8gFZbsp1rkpc/Ure8oasP23GmtYZlb
-	ZdvM1WvZgbA9PP7LTJGpHTax4CkhH+apYyr8fT5pIAZFqA==
+	 s=mr01; t=1752270152; x=1754862153; bh=11+WtG58jM6hfL3QHapg96Ql
+	YWxfuHB3PBCg5gAXPyA=; b=vP4pWF6A8BVzJ8GPZRKlBFyl2fuSlfz4IfTV4Rqn
+	zD82aiTGo5ovWHNChFucItvBqQdfKG7pBiqJrTA7WtPQIrsVS2Z4J3bHQES76o43
+	PVhCgWoEG9vXaO39EfeEsbNE0n87qWtBgyjxgmhyzgHJ4c0lg5pt8QUyAP3NMu+8
+	M1Yjq4PchwfBd5wg9/u5pclTGU7SQzLj1qZ7UY36c0FI+ruOHZKGR3/ktV5PpJWW
+	lS9PN9t1bvVjpJBtmsgQa9ODfak9zJ0x3yRdGketR1e0xMOywx/amd1Le/luuBlb
+	zdBXkFAC+fbKmYBynNXZ3GnXSK/QNWIyJVhyPCt8qYEA3w==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id WpZ5IrjF8CIe; Fri, 11 Jul 2025 21:26:30 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 4LInP-km_g2c; Fri, 11 Jul 2025 21:42:32 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bf4XL00ZjzlgqTw;
-	Fri, 11 Jul 2025 21:26:25 +0000 (UTC)
-Message-ID: <cdea1f7f-768c-438b-afc7-32fcc5b4491c@acm.org>
-Date: Fri, 11 Jul 2025 14:26:23 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bf4ts3bYhzm0ytT;
+	Fri, 11 Jul 2025 21:42:28 +0000 (UTC)
+Message-ID: <946afbba-dde6-46d9-a2dc-e51f195aedc4@acm.org>
+Date: Fri, 11 Jul 2025 14:42:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,47 +50,50 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v20 01/13] block: Support block drivers that preserve the
- order of write requests
+Subject: Re: [PATCH v20 05/13] blk-zoned: Move code from
+ disk_zone_wplug_add_bio() into its caller
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>,
- Nitesh Shetty <nj.shetty@samsung.com>, Ming Lei <ming.lei@redhat.com>
+ Christoph Hellwig <hch@lst.de>
 References: <20250708220710.3897958-1-bvanassche@acm.org>
- <20250708220710.3897958-2-bvanassche@acm.org>
- <12ad2ed3-53b7-489a-9e91-ee6b1099f535@kernel.org>
+ <20250708220710.3897958-6-bvanassche@acm.org>
+ <f612d306-f8bd-4e05-9fe2-936c00b2beb4@kernel.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <12ad2ed3-53b7-489a-9e91-ee6b1099f535@kernel.org>
+In-Reply-To: <f612d306-f8bd-4e05-9fe2-936c00b2beb4@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 7/9/25 9:28 PM, Damien Le Moal wrote:
-> See blk_stack_limits() and the section:
+On 7/9/25 9:46 PM, Damien Le Moal wrote:
+> On 7/9/25 7:07 AM, Bart Van Assche wrote:
+>> Move the following code into the only caller of disk_zone_wplug_add_bio():
+>>   - bio->bi_opf &= ~REQ_NOWAIT
+>>   - wplug->flags |= BLK_ZONE_WPLUG_PLUGGED
+>>   - The disk_zone_wplug_schedule_bio_work() call.
 > 
-> /*
->   * Some feaures need to be supported both by the stacking driver and all
->   * underlying devices.  The stacking driver sets these flags before
->   * stacking the limits, and this will clear the flags if any of the
->   * underlying devices does not support it.
->   */
-> if (!(b->features & BLK_FEAT_NOWAIT))
-> 	t->features &= ~BLK_FEAT_NOWAIT;
-> if (!(b->features & BLK_FEAT_POLL))
-> 	t->features &= ~BLK_FEAT_POLL;
+> Please make sentences instead of copy-pasting code. We can see that in the
+> patch itself.
+
+Is this good enough?
+
+Move the following code into the only caller of disk_zone_wplug_add_bio():
+  - The code for clearing the REQ_NOWAIT flag.
+  - The code that sets the BLK_ZONE_WPLUG_PLUGGED flag.
+  - The disk_zone_wplug_schedule_bio_work() call.
+
+>>   	/* If the zone is already plugged, add the BIO to the plug BIO list. */
+>>   	if (zwplug->flags & BLK_ZONE_WPLUG_PLUGGED)
+>> -		goto plug;
+>> +		goto queue_bio;
 > 
-> And make driver_preserves_write_order a feature instead of treating it
-> specially. Also, the name "driver_preserves_write_order" is not great. The
-> driver may be preserving write order, but the hardware not (e.g. libata and AHCI).
+> "queue_bio" is not a good name. Please make that "add_bio" or "plug_bio" to
+> match the call to disk_zone_wplug_add_bio() done.
 
-How about adding this in include/linux/blkdev.h?
-
-/*
-  * The request order is preserved per hardware queue by the block 
-driver and
-  * the block device.
-  */
-#define BLK_FEAT_ORDERED_HWQ		((__force blk_features_t)(1u << 14))
+bio_list_add() adds BIOs at the end of zwplug->bio_list and
+bio_list_pop() removes BIOs from the front of zwplug->bio_list. Hence,
+zwplug->bio_list is used as a queue, isn't it? This is why I chose the
+name "queue_bio". Anyway, if that label name isn't considered
+good enough, how about changing it into "add_to_bio_list"?
 
 Thanks,
 
