@@ -1,434 +1,1321 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C898821D001
-	for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2025 08:55:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A4F61B3925;
+	Fri, 11 Jul 2025 09:06:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752224113; cv=none; b=rYnqaenj0DMcj3jFKrfVf63wyJP/LLt72qoAsGIIXk+SANAim0F/g3JQ/jAJm2M3AUlPbj/quQibnV6SJyJRmHW+Kw2W0MEbpVrFSLkhPhduy8MChlGSR4o60vN97IS8xEAEtY7dDNU6ynHbPO9V9U3RbXzvXInoSxfVro03x98=
+	t=1752224796; cv=none; b=R8voNigHX3sTOPr7IL8D28E/ou3YrDWC0u4wZI81tZyAeyzBJzr1zbfiXycPhTELxMJeaySKDZaR8rVTcSbm+DKCjDLZGg52JhKORW4Q7Uqucsxgnz0TgFojCNaf/WTMVuJb9HfPly4i3QGViHAKiNNrGqrJd2QezF5rvUzTFrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752224113; c=relaxed/simple;
-	bh=xdSejNmMaJNIE0HQH4m5I8PRVBBmfyuJhf/+7lGolPA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=coKmdqkkMA93hSGmu4DwskftqJWGZlktUrCEEGnJ5CQzoEkYKy7VrgWiNhgPGAJPeRgZD6l2Fo7B/uOkJCKkhGL3KciR0pYd1su/pXrvq9Lcgmv/DqcDdQm7Cwa0O9rNi2TolHLUrJy11NsOKqsRiZK8DqUC3+mLWqIQRrCwjBw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=OLjrq9Qa; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1752224796; c=relaxed/simple;
+	bh=9RgjYod5m7eYHPhUhSKFvtZ7JGH0UTGWAF1GtmO2eYM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Ep4EiH385a0INy6g5uSRVRMzRI+k4kxjRBf4ydytOFTwUjpq1a+IgNSi86cdfNBeGucgXINRmMVxogC0o9Sr6sPaMqQQXWbYHJsYgos6AVgPUoJavureppMcmEm0NTfJLLoXdD0/ozP/oNzB+X29dPADyKX6ilq+b/y2YtO1aAs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i0CweJio; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="OLjrq9Qa"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-b34a78bb6e7so1553855a12.3
-        for <linux-scsi@vger.kernel.org>; Fri, 11 Jul 2025 01:55:11 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1752224111; x=1752828911; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=vGEg7l06DfJAdbPrIuEVwZZYtCDdS90uREWs/0ZE8oM=;
-        b=OLjrq9QazwYk7nwYtEKKpwQa81YZ8tGiE94MngsyWGHJ+T3UEHiy9HZPpU8J5RVeZn
-         lPDzeLqZJvKrlKWocgqkOidrZBLUHJjd8Rj+BIcFkI2kTRUQBYQUemXOpsBPrYcOOQsx
-         KBbecaEiuxyIxTTwS0LRUHK0BlKb2w62/YX2E=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752224111; x=1752828911;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=vGEg7l06DfJAdbPrIuEVwZZYtCDdS90uREWs/0ZE8oM=;
-        b=HFDjq34BlC0pzcSy6o+pOzeRnJJ2087H2Te/B1Fj/0Nn7+tAU/rZg1moGWa7NuAivt
-         k4tDrtpjx2IVHYoIwPwr1UzyyITEVBgZV4lz50UA3IZGy8vOVkKfKinr2F7ULfZVJad0
-         ARuNxcJ1RjhBMHXV4gjEwIqyWdGyAAv88dGJL5cdm9OrxnEB/a24WrbZA1Fhd25fXKLG
-         LprspnC9pTdg5OzFKROu3b7HZd+bOz24i9rF5ejBC0aMk5JPOFxBfsvVh1pXKPFe1yjl
-         y70wxi0klQLmuo/7LWV2MhglQJV0cLHH/Uh3eTcEYjTpK7OLKvnC3cmO7X36R18qUtJW
-         Y01Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWHZqMxLyUP3wENeMU/bPDOR4gT0dDYfHl8f6xQ9ih/ag/Xdf7aXQ8nDTl1RyZlSKiAE/9b+fhGmZFI@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx9dAQG7eK2e61mbgnJiGLVYN1SKskNVisAkuPSVl8ERbEkX6he
-	EQo69gbnQ+sZJbERwpC2QQh91IapY1MmKJhSFEW08KC4neiIz9GBDU3x8khyzXghg8nrIUB2v9a
-	2xJ9xYxcavGWxeYjW47P73r/qrwkFffiTyJzaVnMNQHZedf9V8J1rAWsZhBkeUVIK7TvqW9dyN1
-	ze90iaCoPTklaTvxzJ7KOl5/g3J2FPUWt4jGXattA8
-X-Gm-Gg: ASbGncvojMjzHnGlETtyW4bDgDvWyjiPTZnUjnK9UBFMgHBjnGQWXechzMS87aZpQ7q
-	e2sz5VssKoQd3HzQcTSKvcwtpX1d1yoDz3FOuf0SjPgqVMkdhcv6FZKbOgPMge6yEiWPCecvVZC
-	lzLKK3/0DrrqwwNGy3uUch6f05RJbFhSvsnnTPuELPamzRO7oMUNy5RzmSSK+uJpLO2nJW/0jVh
-	opt+0T+
-X-Google-Smtp-Source: AGHT+IF4dV7863iYbBVyu4Ub5QideeFpJ50pjQt+Q2u8VuuEjmucC9VL0I2uRqsTJqQrRMbPnZjKQQHyNmZ8kStadKg=
-X-Received: by 2002:a17:90b:1850:b0:313:33ca:3b8b with SMTP id
- 98e67ed59e1d1-31c4ca848dfmr3739044a91.9.1752224111078; Fri, 11 Jul 2025
- 01:55:11 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i0CweJio"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3699FC4CEED;
+	Fri, 11 Jul 2025 09:06:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752224795;
+	bh=9RgjYod5m7eYHPhUhSKFvtZ7JGH0UTGWAF1GtmO2eYM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=i0CweJiooA7G8RgHljgB8VbP+7HUlgoaKjRanuEleBieJk8h8XXD6zjYFZHtw0aR0
+	 tV1VENyuQ7JJptMulzdc2vE7dstR3eP8/7aJb1VHe5qWhtLYI6BgYwSfSvNlVxTqdd
+	 usiFMktOZyfewAMRBIZQ0/PE3Wu3xCmJ8Ng/KreFtabmMlVCqlfpA+N3CLOWur+fKP
+	 cpZfL7ervY5dmQomZPFEYK/V7T8arGOyJUF85c5LyfnAqjmtv/6H9iAXFQX3T4lwWC
+	 pcpBBXXijohU9rWEUJAONIYOb9Ig213wVoBbe0foKJ4XCOSV2Wg7PJxTt2FW4HtO8s
+	 +XsLGg+Mu+0Cw==
+Date: Fri, 11 Jul 2025 11:06:31 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH v3 2/3] ata: libata-eh: Simplify reset operation
+ management
+Message-ID: <aHDUF4QsNICSSyBC@ryzen>
+References: <20250711083544.231706-1-dlemoal@kernel.org>
+ <20250711083544.231706-3-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250624202020.42612-1-bgurney@redhat.com> <CAHhmqcTO_Q59aDr3DywC-tPF=9pe3gxbyn6J4ycdf+eYEOayHQ@mail.gmail.com>
- <19484829-0a7b-42ce-99fe-e74ccda67dce@suse.de> <b0817e2a-1c4e-4d7d-9a84-633913d9e0e4@redhat.com>
- <0db83ea3-83aa-45ef-bafd-6b37da541d22@suse.de> <CAHhmqcTNrfjj-ABjTfj7LUCQ_qRtcTrZCzhtaERViaAQut3TUw@mail.gmail.com>
- <fb150df4-d235-455b-8394-55b816c0e6ad@suse.de>
-In-Reply-To: <fb150df4-d235-455b-8394-55b816c0e6ad@suse.de>
-From: Muneendra Kumar M <muneendra.kumar@broadcom.com>
-Date: Fri, 11 Jul 2025 14:24:57 +0530
-X-Gm-Features: Ac12FXw0R7O98xsUICSTvnPcO9AZ79F4u0VyEwe3D9YSRXTNBXtkPC99vyPeryI
-Message-ID: <CAJtR8wVupqRK3t0+7shrNCTZ9qZC7gHAR2X8Ov0AR-RJamxcWg@mail.gmail.com>
-Subject: Re: [PATCH v7 0/6] nvme-fc: FPIN link integrity handling
-To: Hannes Reinecke <hare@suse.de>
-Cc: Bryan Gurney <bgurney@redhat.com>, John Meneghini <jmeneghi@redhat.com>, 
-	linux-nvme@lists.infradead.org, kbusch@kernel.org, hch@lst.de, 
-	sagi@grimberg.me, axboe@kernel.dk, james.smart@broadcom.com, 
-	dick.kennedy@broadcom.com, linux-scsi@vger.kernel.org, njavali@marvell.com, 
-	muneendra737@gmail.com
-Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
-	boundary="000000000000bae7140639a377e0"
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250711083544.231706-3-dlemoal@kernel.org>
 
---000000000000bae7140639a377e0
-Content-Type: multipart/alternative; boundary="000000000000b568500639a37799"
+Hello Damien,
 
---000000000000b568500639a37799
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
->>But that's precisely it, isn't it?
->>If it's a straight error the path/controller is being reset, and
->>really there's nothing for us to be done.
->>If it's an FPIN LI _without_ any performance impact, why shouldn't
->>we continue to use that path? Would there be any impact if we do?
->>And if it's an FPIN LI with _any_ sort of performance impact
->>(or a performance impact which might happen eventually) the
->>current approach of steering away I/O should be fine.
-[Muneendra]
+Thank you for doing this, I think it is a nice cleanup :)
 
-With FPIN/LinkIntegrity (LI) - there is still connectivity, but the FPIN is
-identifying the link to the target (could be multiple remoteports if the
-target is doing NPIV) that had some error.  It is *not* indicating that I/O
-won't complete. True, some I/O may not due to the error that affected it.
-And it is true, but not likely that all i/o hits the same problem.   What
-we have seen with flaky links is most I/O does complete, but a few I/Os
-don't.
-It's actually a rather funky condition, kind of sick but not dead scenario.
-As FPIN-Li indicates that the path is "flaky" and using this path further
-will have a performance impact.
-And the current approach of steering away I/O is fine for FPIN-Li.
 
-Regards,
-Muneedra.
+On Fri, Jul 11, 2025 at 05:35:43PM +0900, Damien Le Moal wrote:
+> Introduce struct ata_reset_operations do aggregate in a single structure
 
-On Wed, Jul 9, 2025 at 11:15=E2=80=AFPM Hannes Reinecke <hare@suse.de> wrot=
-e:
+s/do/to/
 
-> On 7/9/25 15:42, Bryan Gurney wrote:
-> > On Wed, Jul 9, 2025 at 2:21=E2=80=AFAM Hannes Reinecke <hare@suse.de> w=
-rote:
-> >>
-> [ .. ]
-> >>> This may be true with FPIN Congestion Signal, but we are testing Link
-> >>> Integrity.  With FPIN LI I think we want to simply stop using the pat=
-h.
-> >>> LI has nothing to do with latency.  So unless ALL paths are marginal,
-> >>> the IO scheduler should not be using any marginal path.
-> >>>
-> >> For FPIN LI the paths should be marked as 'faulty', true.
-> >>
-> >>> Do we need another state here?  There is an ask to support FPIN CS, s=
-o
-> >>> maybe using the term "marginal" to describe LI is wrong.
-> >>>
-> >>> Maybe we need something like "marginal_li" and "marginal_cs" to
-> describe
-> >>> the difference.
-> >>>
-> >> Really not so sure. I really wonder how a FPIN LI event reflect back o=
-n
-> >> the actual I/O. Will the I/O be aborted with an error? Or does the I/O
-> >> continue at a slower pace?
-> >> I would think the latter, and that's the design assumption for this
-> >> patchset. If it's the former and I/O is aborted with an error we are i=
-n
-> >> a similar situation like we have with a faulty cable, and we need
-> >> to come up with a different solution.
-> >>
-> >
-> > During my testing, I was watching the logs on the test host as I was
-> > about to run the command on the switch to generate the FPIN LI event.
-> > I didn't see any I/O errors, and the I/O continued at the normally
-> > expected throughput and latency.  But "if this had been an actual
-> > emergency..." as the saying goes, there would probably be some kind of
-> > disruption that the event itself would be expected to cause (e.g.:
-> > "loss sync", "loss signal", "link failure"), but
-> >
-> > There was a Storage Developer Conference 21 presentation slide deck on
-> > the FPIN LI events that's hosted on the SNIA website [1]; slide 4
-> > shows the problem statements addressed by the notifications.
-> >
-> > In my previous career as a system administrator, I remember seeing
-> > strange performance slowdowns on high-volume database servers, and on
-> > searching through the logs, I might find an event from the database
-> > engine about an I/O operating taking over 30 seconds to complete.
-> > Meanwhile, the application using the database was backlogged due to
-> > its queries taking longer, for what ended up being a faulty SFP.
-> > After replacing that, we could get the application running again, to
-> > process its replication and workload backlogs.  The link integrity
-> > events could help alert on these link problems before they turn into
-> > application disruptions.
-> >
-> But that's precisely it, isn't it?
-> If it's a straight error the path/controller is being reset, and
-> really there's nothing for us to be done.
-> If it's an FPIN LI _without_ any performance impact, why shouldn't
-> we continue to use that path? Would there be any impact if we do?
-> And if it's an FPIN LI with _any_ sort of performance impact
-> (or a performance impact which might happen eventually) the
-> current approach of steering away I/O should be fine.
-> Am I missing something?
->
-> Cheers,
->
-> Hannes
-> --
-> Dr. Hannes Reinecke                  Kernel Storage Architect
-> hare@suse.de                                +49 911 74053 688
-> SUSE Software Solutions GmbH, Frankenstr. 146, 90461 N=C3=BCrnberg
-> HRB 36809 (AG N=C3=BCrnberg), GF: I. Totev, A. McDonald, W. Knoblich
->
->
 
---=20
-This electronic communication and the information and any files transmitted=
-=20
-with it, or attached to it, are confidential and are intended solely for=20
-the use of the individual or entity to whom it is addressed and may contain=
-=20
-information that is confidential, legally privileged, protected by privacy=
-=20
-laws, or otherwise restricted from disclosure to anyone else. If you are=20
-not the intended recipient or the person responsible for delivering the=20
-e-mail to the intended recipient, you are hereby notified that any use,=20
-copying, distributing, dissemination, forwarding, printing, or copying of=
-=20
-this e-mail is strictly prohibited. If you received this e-mail in error,=
-=20
-please return the e-mail to the sender, delete it from your computer, and=
-=20
-destroy any printed copy of it.
+> the definitions of the 4 reset methods (prereset, softreset, hardreset
+> and postreset) for a port. This new structure is used in struct ata_port
+> to define the reset methods for a regular port (reset field) and for a
+> port-multiplier port (pmp_reset field). A pointer to either of these
+> fields replaces the 4 reset method arguments passed to ata_eh_recover()
+> and ata_eh_reset().
+> 
+> ata_std_error_handler() is modified to use the ATA_LFLAG_NO_HRST link
+> flag to prevents the use of built-in hardreset methods for ports without
+> a valid scr. This flag is checked in ata_eh_reset() and if set, the
+> hardreset method is ignored.
+> 
+> The definition of the reset methods for all drivers is changed to use
+> the reset and pmp_reset fields in struct ata_port_operations.
+> 
+> A large number of files is modifed, but no functional changes are
+> introduced.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
---000000000000b568500639a37799
-Content-Type: text/html; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Suggested-by: Niklas Cassel <cassel@kernel.org>
 
-<div dir=3D"ltr"><div dir=3D"ltr"><div>&gt;&gt;But that&#39;s precisely it,=
- isn&#39;t it?</div><div>&gt;&gt;If it&#39;s a straight error the path/cont=
-roller is being reset, and</div><div>&gt;&gt;really there&#39;s nothing for=
- us to be done.</div><div>&gt;&gt;If it&#39;s an FPIN LI _without_ any perf=
-ormance impact, why shouldn&#39;t</div><div>&gt;&gt;we continue to use that=
- path? Would there be any impact if we do?</div><div>&gt;&gt;And if it&#39;=
-s an FPIN LI with _any_ sort of performance impact</div><div>&gt;&gt;(or a =
-performance impact which might happen eventually) the</div><div>&gt;&gt;cur=
-rent approach of steering away I/O should be fine.</div><div>[Muneendra]</d=
-iv><div><br></div><div>With FPIN/LinkIntegrity (LI) - there is still connec=
-tivity, but the FPIN is identifying the link to the target (could be multip=
-le remoteports if the target is doing NPIV) that had some error.=C2=A0 It i=
-s *not* indicating that I/O won&#39;t complete. True, some I/O may not due =
-to the error that affected it.=C2=A0 And it is true, but not likely that al=
-l i/o hits the same problem.=C2=A0 =C2=A0What we have seen with flaky links=
- is most I/O does complete, but a few I/Os don&#39;t.=C2=A0</div><div>It&#3=
-9;s actually a rather funky condition, kind of sick but not dead scenario.<=
-/div><div>As FPIN-Li indicates that the path is &quot;flaky&quot; and using=
- this path further=C2=A0 will have a performance impact.</div><div>And the =
-current approach of steering away I/O is fine for FPIN-Li.<br><br>Regards,<=
-/div><div>Muneedra.</div></div></div><br><div class=3D"gmail_quote gmail_qu=
-ote_container"><div dir=3D"ltr" class=3D"gmail_attr">On Wed, Jul 9, 2025 at=
- 11:15=E2=80=AFPM Hannes Reinecke &lt;<a href=3D"mailto:hare@suse.de">hare@=
-suse.de</a>&gt; wrote:<br></div><blockquote class=3D"gmail_quote" style=3D"=
-margin:0px 0px 0px 0.8ex;border-left:1px solid rgb(204,204,204);padding-lef=
-t:1ex">On 7/9/25 15:42, Bryan Gurney wrote:<br>
-&gt; On Wed, Jul 9, 2025 at 2:21=E2=80=AFAM Hannes Reinecke &lt;<a href=3D"=
-mailto:hare@suse.de" target=3D"_blank">hare@suse.de</a>&gt; wrote:<br>
-&gt;&gt;<br>
-[ .. ]<br>
-&gt;&gt;&gt; This may be true with FPIN Congestion Signal, but we are testi=
-ng Link<br>
-&gt;&gt;&gt; Integrity.=C2=A0 With FPIN LI I think we want to simply stop u=
-sing the path.<br>
-&gt;&gt;&gt; LI has nothing to do with latency.=C2=A0 So unless ALL paths a=
-re marginal,<br>
-&gt;&gt;&gt; the IO scheduler should not be using any marginal path.<br>
-&gt;&gt;&gt;<br>
-&gt;&gt; For FPIN LI the paths should be marked as &#39;faulty&#39;, true.<=
-br>
-&gt;&gt;<br>
-&gt;&gt;&gt; Do we need another state here?=C2=A0 There is an ask to suppor=
-t FPIN CS, so<br>
-&gt;&gt;&gt; maybe using the term &quot;marginal&quot; to describe LI is wr=
-ong.<br>
-&gt;&gt;&gt;<br>
-&gt;&gt;&gt; Maybe we need something like &quot;marginal_li&quot; and &quot=
-;marginal_cs&quot; to describe<br>
-&gt;&gt;&gt; the difference.<br>
-&gt;&gt;&gt;<br>
-&gt;&gt; Really not so sure. I really wonder how a FPIN LI event reflect ba=
-ck on<br>
-&gt;&gt; the actual I/O. Will the I/O be aborted with an error? Or does the=
- I/O<br>
-&gt;&gt; continue at a slower pace?<br>
-&gt;&gt; I would think the latter, and that&#39;s the design assumption for=
- this<br>
-&gt;&gt; patchset. If it&#39;s the former and I/O is aborted with an error =
-we are in<br>
-&gt;&gt; a similar situation like we have with a faulty cable, and we need<=
-br>
-&gt;&gt; to come up with a different solution.<br>
-&gt;&gt;<br>
-&gt; <br>
-&gt; During my testing, I was watching the logs on the test host as I was<b=
-r>
-&gt; about to run the command on the switch to generate the FPIN LI event.<=
-br>
-&gt; I didn&#39;t see any I/O errors, and the I/O continued at the normally=
-<br>
-&gt; expected throughput and latency.=C2=A0 But &quot;if this had been an a=
-ctual<br>
-&gt; emergency...&quot; as the saying goes, there would probably be some ki=
-nd of<br>
-&gt; disruption that the event itself would be expected to cause (e.g.:<br>
-&gt; &quot;loss sync&quot;, &quot;loss signal&quot;, &quot;link failure&quo=
-t;), but<br>
-&gt; <br>
-&gt; There was a Storage Developer Conference 21 presentation slide deck on=
-<br>
-&gt; the FPIN LI events that&#39;s hosted on the SNIA website [1]; slide 4<=
-br>
-&gt; shows the problem statements addressed by the notifications.<br>
-&gt; <br>
-&gt; In my previous career as a system administrator, I remember seeing<br>
-&gt; strange performance slowdowns on high-volume database servers, and on<=
-br>
-&gt; searching through the logs, I might find an event from the database<br=
->
-&gt; engine about an I/O operating taking over 30 seconds to complete.<br>
-&gt; Meanwhile, the application using the database was backlogged due to<br=
->
-&gt; its queries taking longer, for what ended up being a faulty SFP.<br>
-&gt; After replacing that, we could get the application running again, to<b=
-r>
-&gt; process its replication and workload backlogs.=C2=A0 The link integrit=
-y<br>
-&gt; events could help alert on these link problems before they turn into<b=
-r>
-&gt; application disruptions.<br>
-&gt; <br>
-But that&#39;s precisely it, isn&#39;t it?<br>
-If it&#39;s a straight error the path/controller is being reset, and<br>
-really there&#39;s nothing for us to be done.<br>
-If it&#39;s an FPIN LI _without_ any performance impact, why shouldn&#39;t<=
-br>
-we continue to use that path? Would there be any impact if we do?<br>
-And if it&#39;s an FPIN LI with _any_ sort of performance impact<br>
-(or a performance impact which might happen eventually) the<br>
-current approach of steering away I/O should be fine.<br>
-Am I missing something?<br>
-<br>
-Cheers,<br>
-<br>
-Hannes<br>
--- <br>
-Dr. Hannes Reinecke=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =
-=C2=A0 Kernel Storage Architect<br>
-<a href=3D"mailto:hare@suse.de" target=3D"_blank">hare@suse.de</a>=C2=A0 =
-=C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 =C2=
-=A0 =C2=A0 =C2=A0 =C2=A0 =C2=A0 +49 911 74053 688<br>
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 N=C3=BCrnberg<br>
-HRB 36809 (AG N=C3=BCrnberg), GF: I. Totev, A. McDonald, W. Knoblich<br>
-<br>
-</blockquote></div>
 
-<br>
-<span style=3D"background-color:rgb(255,255,255)"><font size=3D"2">This ele=
-ctronic communication and the information and any files transmitted with it=
-, or attached to it, are confidential and are intended solely for the use o=
-f the individual or entity to whom it is addressed and may contain informat=
-ion that is confidential, legally privileged, protected by privacy laws, or=
- otherwise restricted from disclosure to anyone else. If you are not the in=
-tended recipient or the person responsible for delivering the e-mail to the=
- intended recipient, you are hereby notified that any use, copying, distrib=
-uting, dissemination, forwarding, printing, or copying of this e-mail is st=
-rictly prohibited. If you received this e-mail in error, please return the =
-e-mail to the sender, delete it from your computer, and destroy any printed=
- copy of it.</font></span>
---000000000000b568500639a37799--
+> ---
+>  drivers/ata/ahci.c                      |  6 +--
+>  drivers/ata/ahci_da850.c                |  6 +--
+>  drivers/ata/ahci_dm816.c                |  2 +-
+>  drivers/ata/ahci_imx.c                  | 13 ++++---
+>  drivers/ata/ahci_qoriq.c                |  4 +-
+>  drivers/ata/ahci_xgene.c                |  8 ++--
+>  drivers/ata/ata_piix.c                  |  4 +-
+>  drivers/ata/libahci.c                   | 10 ++---
+>  drivers/ata/libata-core.c               |  4 +-
+>  drivers/ata/libata-eh.c                 | 49 ++++++++++++-------------
+>  drivers/ata/libata-pmp.c                | 26 +++++--------
+>  drivers/ata/libata-sata.c               |  2 +-
+>  drivers/ata/libata-sff.c                |  8 ++--
+>  drivers/ata/libata.h                    |  8 ++--
+>  drivers/ata/pata_acpi.c                 |  2 +-
+>  drivers/ata/pata_ali.c                  | 10 ++---
+>  drivers/ata/pata_amd.c                  |  4 +-
+>  drivers/ata/pata_artop.c                |  4 +-
+>  drivers/ata/pata_atiixp.c               |  2 +-
+>  drivers/ata/pata_efar.c                 |  2 +-
+>  drivers/ata/pata_ep93xx.c               |  4 +-
+>  drivers/ata/pata_hpt366.c               |  2 +-
+>  drivers/ata/pata_hpt37x.c               |  4 +-
+>  drivers/ata/pata_hpt3x2n.c              |  2 +-
+>  drivers/ata/pata_icside.c               |  2 +-
+>  drivers/ata/pata_it8213.c               |  2 +-
+>  drivers/ata/pata_jmicron.c              |  2 +-
+>  drivers/ata/pata_marvell.c              |  2 +-
+>  drivers/ata/pata_mpiix.c                |  2 +-
+>  drivers/ata/pata_ns87410.c              |  2 +-
+>  drivers/ata/pata_octeon_cf.c            |  2 +-
+>  drivers/ata/pata_oldpiix.c              |  2 +-
+>  drivers/ata/pata_opti.c                 |  2 +-
+>  drivers/ata/pata_optidma.c              |  2 +-
+>  drivers/ata/pata_parport/pata_parport.c |  3 +-
+>  drivers/ata/pata_pdc2027x.c             |  2 +-
+>  drivers/ata/pata_rdc.c                  |  2 +-
+>  drivers/ata/pata_sis.c                  |  2 +-
+>  drivers/ata/pata_sl82c105.c             |  2 +-
+>  drivers/ata/pata_triflex.c              |  2 +-
+>  drivers/ata/pata_via.c                  |  2 +-
+>  drivers/ata/pdc_adma.c                  |  2 +-
+>  drivers/ata/sata_dwc_460ex.c            |  2 +-
+>  drivers/ata/sata_fsl.c                  |  6 +--
+>  drivers/ata/sata_highbank.c             |  2 +-
+>  drivers/ata/sata_inic162x.c             |  2 +-
+>  drivers/ata/sata_mv.c                   | 10 ++---
+>  drivers/ata/sata_nv.c                   |  2 +-
+>  drivers/ata/sata_promise.c              |  4 +-
+>  drivers/ata/sata_qstor.c                |  4 +-
+>  drivers/ata/sata_rcar.c                 |  2 +-
+>  drivers/ata/sata_sil24.c                |  8 ++--
+>  drivers/ata/sata_svw.c                  |  4 +-
+>  drivers/ata/sata_sx4.c                  |  2 +-
+>  drivers/ata/sata_uli.c                  |  2 +-
+>  drivers/ata/sata_via.c                  |  4 +-
+>  drivers/scsi/libsas/sas_ata.c           |  4 +-
+>  include/linux/libata.h                  | 17 +++++----
+>  58 files changed, 143 insertions(+), 155 deletions(-)
+> 
+> diff --git a/drivers/ata/ahci.c b/drivers/ata/ahci.c
+> index 5558e9f7b85d..e1c24bbacf64 100644
+> --- a/drivers/ata/ahci.c
+> +++ b/drivers/ata/ahci.c
+> @@ -110,17 +110,17 @@ static const struct scsi_host_template ahci_sht = {
+>  
+>  static struct ata_port_operations ahci_vt8251_ops = {
+>  	.inherits		= &ahci_ops,
+> -	.hardreset		= ahci_vt8251_hardreset,
+> +	.reset.hardreset	= ahci_vt8251_hardreset,
+>  };
+>  
+>  static struct ata_port_operations ahci_p5wdh_ops = {
+>  	.inherits		= &ahci_ops,
+> -	.hardreset		= ahci_p5wdh_hardreset,
+> +	.reset.hardreset	= ahci_p5wdh_hardreset,
+>  };
+>  
+>  static struct ata_port_operations ahci_avn_ops = {
+>  	.inherits		= &ahci_ops,
+> -	.hardreset		= ahci_avn_hardreset,
+> +	.reset.hardreset	= ahci_avn_hardreset,
+>  };
+>  
+>  static const struct ata_port_info ahci_port_info[] = {
+> diff --git a/drivers/ata/ahci_da850.c b/drivers/ata/ahci_da850.c
+> index ca0924dc5bd2..f97566c420f8 100644
+> --- a/drivers/ata/ahci_da850.c
+> +++ b/drivers/ata/ahci_da850.c
+> @@ -137,13 +137,13 @@ static int ahci_da850_hardreset(struct ata_link *link,
+>  
+>  static struct ata_port_operations ahci_da850_port_ops = {
+>  	.inherits = &ahci_platform_ops,
+> -	.softreset = ahci_da850_softreset,
+> +	.reset.softreset = ahci_da850_softreset,
+>  	/*
+>  	 * No need to override .pmp_softreset - it's only used for actual
+>  	 * PMP-enabled ports.
+>  	 */
+> -	.hardreset = ahci_da850_hardreset,
+> -	.pmp_hardreset = ahci_da850_hardreset,
+> +	.reset.hardreset = ahci_da850_hardreset,
+> +	.pmp_reset.hardreset = ahci_da850_hardreset,
+>  };
+>  
+>  static const struct ata_port_info ahci_da850_port_info = {
+> diff --git a/drivers/ata/ahci_dm816.c b/drivers/ata/ahci_dm816.c
+> index b08547b877a1..93faed2cfeb6 100644
+> --- a/drivers/ata/ahci_dm816.c
+> +++ b/drivers/ata/ahci_dm816.c
+> @@ -124,7 +124,7 @@ static int ahci_dm816_softreset(struct ata_link *link,
+>  
+>  static struct ata_port_operations ahci_dm816_port_ops = {
+>  	.inherits = &ahci_platform_ops,
+> -	.softreset = ahci_dm816_softreset,
+> +	.reset.softreset = ahci_dm816_softreset,
+>  };
+>  
+>  static const struct ata_port_info ahci_dm816_port_info = {
+> diff --git a/drivers/ata/ahci_imx.c b/drivers/ata/ahci_imx.c
+> index f01f08048f97..86aedd5923ac 100644
+> --- a/drivers/ata/ahci_imx.c
+> +++ b/drivers/ata/ahci_imx.c
+> @@ -642,18 +642,19 @@ static int ahci_imx_softreset(struct ata_link *link, unsigned int *class,
+>  	int ret;
+>  
+>  	if (imxpriv->type == AHCI_IMX53)
+> -		ret = ahci_pmp_retry_srst_ops.softreset(link, class, deadline);
+> +		ret = ahci_pmp_retry_srst_ops.reset.softreset(link, class,
+> +							      deadline);
+>  	else
+> -		ret = ahci_ops.softreset(link, class, deadline);
+> +		ret = ahci_ops.reset.softreset(link, class, deadline);
+>  
+>  	return ret;
+>  }
+>  
+>  static struct ata_port_operations ahci_imx_ops = {
+> -	.inherits	= &ahci_ops,
+> -	.host_stop	= ahci_imx_host_stop,
+> -	.error_handler	= ahci_imx_error_handler,
+> -	.softreset	= ahci_imx_softreset,
+> +	.inherits		= &ahci_ops,
+> +	.host_stop		= ahci_imx_host_stop,
+> +	.error_handler		= ahci_imx_error_handler,
+> +	.reset.softreset	= ahci_imx_softreset,
+>  };
+>  
+>  static const struct ata_port_info ahci_imx_port_info = {
+> diff --git a/drivers/ata/ahci_qoriq.c b/drivers/ata/ahci_qoriq.c
+> index 30e39885b64e..0dec1a17e5b1 100644
+> --- a/drivers/ata/ahci_qoriq.c
+> +++ b/drivers/ata/ahci_qoriq.c
+> @@ -146,8 +146,8 @@ static int ahci_qoriq_hardreset(struct ata_link *link, unsigned int *class,
+>  }
+>  
+>  static struct ata_port_operations ahci_qoriq_ops = {
+> -	.inherits	= &ahci_ops,
+> -	.hardreset	= ahci_qoriq_hardreset,
+> +	.inherits		= &ahci_ops,
+> +	.reset.hardreset	= ahci_qoriq_hardreset,
+>  };
+>  
+>  static const struct ata_port_info ahci_qoriq_port_info = {
+> diff --git a/drivers/ata/ahci_xgene.c b/drivers/ata/ahci_xgene.c
+> index dfbd8c53abcb..5d5a51a77f5d 100644
+> --- a/drivers/ata/ahci_xgene.c
+> +++ b/drivers/ata/ahci_xgene.c
+> @@ -613,11 +613,11 @@ static irqreturn_t xgene_ahci_irq_intr(int irq, void *dev_instance)
+>  static struct ata_port_operations xgene_ahci_v1_ops = {
+>  	.inherits = &ahci_ops,
+>  	.host_stop = xgene_ahci_host_stop,
+> -	.hardreset = xgene_ahci_hardreset,
+> +	.reset.hardreset = xgene_ahci_hardreset,
+> +	.reset.softreset = xgene_ahci_softreset,
+> +	.pmp_reset.softreset = xgene_ahci_pmp_softreset,
+>  	.read_id = xgene_ahci_read_id,
+>  	.qc_issue = xgene_ahci_qc_issue,
+> -	.softreset = xgene_ahci_softreset,
+> -	.pmp_softreset = xgene_ahci_pmp_softreset
+>  };
+>  
+>  static const struct ata_port_info xgene_ahci_v1_port_info = {
+> @@ -630,7 +630,7 @@ static const struct ata_port_info xgene_ahci_v1_port_info = {
+>  static struct ata_port_operations xgene_ahci_v2_ops = {
+>  	.inherits = &ahci_ops,
+>  	.host_stop = xgene_ahci_host_stop,
+> -	.hardreset = xgene_ahci_hardreset,
+> +	.reset.hardreset = xgene_ahci_hardreset,
+>  	.read_id = xgene_ahci_read_id,
+>  };
+>  
+> diff --git a/drivers/ata/ata_piix.c b/drivers/ata/ata_piix.c
+> index d441246fa357..229429ba5027 100644
+> --- a/drivers/ata/ata_piix.c
+> +++ b/drivers/ata/ata_piix.c
+> @@ -1074,7 +1074,7 @@ static struct ata_port_operations piix_pata_ops = {
+>  	.cable_detect		= ata_cable_40wire,
+>  	.set_piomode		= piix_set_piomode,
+>  	.set_dmamode		= piix_set_dmamode,
+> -	.prereset		= piix_pata_prereset,
+> +	.reset.prereset		= piix_pata_prereset,
+>  };
+>  
+>  static struct ata_port_operations piix_vmw_ops = {
+> @@ -1102,7 +1102,7 @@ static const struct scsi_host_template piix_sidpr_sht = {
+>  
+>  static struct ata_port_operations piix_sidpr_sata_ops = {
+>  	.inherits		= &piix_sata_ops,
+> -	.hardreset		= sata_std_hardreset,
+> +	.reset.hardreset	= sata_std_hardreset,
+>  	.scr_read		= piix_sidpr_scr_read,
+>  	.scr_write		= piix_sidpr_scr_write,
+>  	.set_lpm		= piix_sidpr_set_lpm,
+> diff --git a/drivers/ata/libahci.c b/drivers/ata/libahci.c
+> index 4e9c82f36df1..b335fb7e5cb4 100644
+> --- a/drivers/ata/libahci.c
+> +++ b/drivers/ata/libahci.c
+> @@ -162,10 +162,10 @@ struct ata_port_operations ahci_ops = {
+>  
+>  	.freeze			= ahci_freeze,
+>  	.thaw			= ahci_thaw,
+> -	.softreset		= ahci_softreset,
+> -	.hardreset		= ahci_hardreset,
+> -	.postreset		= ahci_postreset,
+> -	.pmp_softreset		= ahci_softreset,
+> +	.reset.softreset	= ahci_softreset,
+> +	.reset.hardreset	= ahci_hardreset,
+> +	.reset.postreset	= ahci_postreset,
+> +	.pmp_reset.softreset	= ahci_softreset,
+>  	.error_handler		= ahci_error_handler,
+>  	.post_internal_cmd	= ahci_post_internal_cmd,
+>  	.dev_config		= ahci_dev_config,
+> @@ -192,7 +192,7 @@ EXPORT_SYMBOL_GPL(ahci_ops);
+>  
+>  struct ata_port_operations ahci_pmp_retry_srst_ops = {
+>  	.inherits		= &ahci_ops,
+> -	.softreset		= ahci_pmp_retry_softreset,
+> +	.reset.softreset	= ahci_pmp_retry_softreset,
+>  };
+>  EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
+>  
+> diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> index bbf1318a2b9a..97d9f0488cc1 100644
+> --- a/drivers/ata/libata-core.c
+> +++ b/drivers/ata/libata-core.c
+> @@ -65,8 +65,8 @@
+>  #include "libata-transport.h"
+>  
+>  const struct ata_port_operations ata_base_port_ops = {
+> -	.prereset		= ata_std_prereset,
+> -	.postreset		= ata_std_postreset,
+> +	.reset.prereset		= ata_std_prereset,
+> +	.reset.postreset	= ata_std_postreset,
+>  	.error_handler		= ata_std_error_handler,
+>  	.sched_eh		= ata_std_sched_eh,
+>  	.end_eh			= ata_std_end_eh,
+> diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+> index 68581adc6f87..c746ef5e7086 100644
+> --- a/drivers/ata/libata-eh.c
+> +++ b/drivers/ata/libata-eh.c
+> @@ -2793,13 +2793,13 @@ static bool ata_eh_followup_srst_needed(struct ata_link *link, int rc)
+>  }
+>  
+>  int ata_eh_reset(struct ata_link *link, int classify,
+> -		 ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+> -		 ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
+> +		 struct ata_reset_operations *reset_ops)
+>  {
+>  	struct ata_port *ap = link->ap;
+>  	struct ata_link *slave = ap->slave_link;
+>  	struct ata_eh_context *ehc = &link->eh_context;
+>  	struct ata_eh_context *sehc = slave ? &slave->eh_context : NULL;
+> +	ata_reset_fn_t reset, softreset, hardreset;
 
---000000000000bae7140639a377e0
-Content-Type: application/pkcs7-signature; name="smime.p7s"
-Content-Transfer-Encoding: base64
-Content-Disposition: attachment; filename="smime.p7s"
-Content-Description: S/MIME Cryptographic Signature
+Wouldn't it be easier to just do:
+	ata_reset_fn_t hardreset = reset_ops->hardreset;
+	ata_reset_fn_t softrereset = reset_ops->softreset;
+	ata_reset_fn_t prereset = reset_ops->prereset;
+	ata_reset_fn_t postreset = reset_ops->postreset;
 
-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
-ys9fYL+GlV3PS9wS3h0MI90cAfs5ZQjER5eWqMBARhfrW70fFVMSdZzBpXljqRjD+GOJm711FgvN
-RsH9iq2Ndn7XY7jpnxND6cwSKympBXWuvQ54YyFDLr0m9eC6BNU5bQIDAQABo4IB3TCCAdkwDgYD
-VR0PAQH/BAQDAgWgMIGjBggrBgEFBQcBAQSBljCBkzBOBggrBgEFBQcwAoZCaHR0cDovL3NlY3Vy
-ZS5nbG9iYWxzaWduLmNvbS9jYWNlcnQvZ3NnY2NyM3BlcnNvbmFsc2lnbjJjYTIwMjAuY3J0MEEG
-CCsGAQUFBzABhjVodHRwOi8vb2NzcC5nbG9iYWxzaWduLmNvbS9nc2djY3IzcGVyc29uYWxzaWdu
-MmNhMjAyMDBNBgNVHSAERjBEMEIGCisGAQQBoDIBKAowNDAyBggrBgEFBQcCARYmaHR0cHM6Ly93
-d3cuZ2xvYmFsc2lnbi5jb20vcmVwb3NpdG9yeS8wCQYDVR0TBAIwADBJBgNVHR8EQjBAMD6gPKA6
-hjhodHRwOi8vY3JsLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJzb25hbHNpZ24yY2EyMDIwLmNy
-bDAnBgNVHREEIDAegRxtdW5lZW5kcmEua3VtYXJAYnJvYWRjb20uY29tMBMGA1UdJQQMMAoGCCsG
-AQUFBwMEMB8GA1UdIwQYMBaAFJYz0eZYF1s0dYqBVmTVvkjeoY/PMB0GA1UdDgQWBBTJvvnIS4Qf
-Z+gEeC51xAB2l3lqOzANBgkqhkiG9w0BAQsFAAOCAQEAE6G8pLIpwrdO0Dmi603StqsNLN3t3i5m
-SU/J+ZHnSeVNQFmfJjYSlZHSeAYrw+nsLEw08xiT4N2dPLbnowDKw0cVDRV5hL6+Uis2nqNkp9Kk
-dXMVNlGeqGqBo98QRdRdzLgc/3FBQp3XIGUo2VDOMYW/RPbI1muHQOBKaVx4q8jqitNbqThvZkt/
-t8KBiojEq4d7/scDRRtEsaL6Hl7cAYNMrS5EpijZrYjNYercaQNHcHP38l/XM9n36jllylt12koc
-Dfj3D142STRRnexoNURmkc9EAKyZPRv/JRGz6YP0i2y1JqgpjF8CggD2osV3pA9e8ecXWQ7/ZJly
-zHlFgjGCAmAwggJcAgEBMGswWzELMAkGA1UEBhMCQkUxGTAXBgNVBAoTEEdsb2JhbFNpZ24gbnYt
-c2ExMTAvBgNVBAMTKEdsb2JhbFNpZ24gR0NDIFIzIFBlcnNvbmFsU2lnbiAyIENBIDIwMjACDEnR
-Sel9Ku9INR0BhDANBglghkgBZQMEAgEFAKCBxzAvBgkqhkiG9w0BCQQxIgQgyJB59vzcbLBn3hUK
-eRD8Qi0wYJZPnGqBCSvKMb8PNxYwGAYJKoZIhvcNAQkDMQsGCSqGSIb3DQEHATAcBgkqhkiG9w0B
-CQUxDxcNMjUwNzExMDg1NTExWjBcBgkqhkiG9w0BCQ8xTzBNMAsGCWCGSAFlAwQBKjALBglghkgB
-ZQMEARYwCwYJYIZIAWUDBAECMAoGCCqGSIb3DQMHMAsGCSqGSIb3DQEBBzALBglghkgBZQMEAgEw
-DQYJKoZIhvcNAQEBBQAEggEAK2c7hafVjBMlaO9ThdbwuMLll0LEidQASQEwroQDS3Ck1EDQeBBU
-8tW/zQBOrwTUZeUqXX89BbVDIAcFEFiRvwi1NnfOk9bTynY/T5bGs0sR+JWfxXPifNCeO21gcPR3
-3hbaVU4xhQA89wr5IgmZN0eS3WiUWOI8DGWBTBv8shDatcluRVOPShOrLI91/1NweexCcoSuMGzT
-H94C8B5FPGpWVlqGOjrq86VuhdAApSf8M2gEw7wo7Krg9E5NzpwTiQkGU8SU+oRWw67OA8T+IQ3J
-BINZV/wQzOAjNBEs/DmTiTZf1Lax+3RPX9GZm8/nlY+yYR8nGfnNQv96zMQ1Og==
---000000000000bae7140639a377e0--
+Here, then rest of the function could be kept as is, no other changes needed.
+
+
+>  	unsigned int *classes = ehc->classes;
+>  	unsigned int lflags = link->flags;
+>  	int verbose = !(ehc->i.flags & ATA_EHI_QUIET);
+> @@ -2807,7 +2807,6 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  	struct ata_link *failed_link;
+>  	struct ata_device *dev;
+>  	unsigned long deadline, now;
+> -	ata_reset_fn_t reset;
+>  	unsigned long flags;
+>  	u32 sstatus;
+>  	int nr_unknown, rc;
+> @@ -2821,8 +2820,12 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  		max_tries = 1;
+>  	if (link->flags & ATA_LFLAG_NO_HRST)
+>  		hardreset = NULL;
+> +	else
+> +		hardreset = reset_ops->hardreset;
+>  	if (link->flags & ATA_LFLAG_NO_SRST)
+>  		softreset = NULL;
+> +	else
+> +		softreset = reset_ops->softreset;
+>  
+>  	/* make sure each reset attempt is at least COOL_DOWN apart */
+>  	if (ehc->i.flags & ATA_EHI_DID_RESET) {
+> @@ -2871,7 +2874,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  		ehc->i.action |= ATA_EH_SOFTRESET;
+>  	}
+>  
+> -	if (prereset) {
+> +	if (reset_ops->prereset) {
+>  		unsigned long deadline = ata_deadline(jiffies,
+>  						      ATA_EH_PRERESET_TIMEOUT);
+>  
+> @@ -2880,7 +2883,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  			sehc->i.action |= ehc->i.action;
+>  		}
+>  
+> -		rc = prereset(link, deadline);
+> +		rc = reset_ops->prereset(link, deadline);
+>  
+>  		/* If present, do prereset on slave link too.  Reset
+>  		 * is skipped iff both master and slave links report
+> @@ -2889,7 +2892,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  		if (slave && (rc == 0 || rc == -ENOENT)) {
+>  			int tmp;
+>  
+> -			tmp = prereset(slave, deadline);
+> +			tmp = reset_ops->prereset(slave, deadline);
+>  			if (tmp != -ENOENT)
+>  				rc = tmp;
+>  
+> @@ -3053,11 +3056,11 @@ int ata_eh_reset(struct ata_link *link, int classify,
+>  	 * reset and here.  This race is mediated by cross checking
+>  	 * link onlineness and classification result later.
+>  	 */
+> -	if (postreset) {
+> -		postreset(link, classes);
+> +	if (reset_ops->postreset) {
+> +		reset_ops->postreset(link, classes);
+>  		trace_ata_link_postreset(link, classes, rc);
+>  		if (slave) {
+> -			postreset(slave, classes);
+> +			reset_ops->postreset(slave, classes);
+>  			trace_ata_slave_postreset(slave, classes, rc);
+>  		}
+>  	}
+> @@ -3756,10 +3759,7 @@ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
+>  /**
+>   *	ata_eh_recover - recover host port after error
+>   *	@ap: host port to recover
+> - *	@prereset: prereset method (can be NULL)
+> - *	@softreset: softreset method (can be NULL)
+> - *	@hardreset: hardreset method (can be NULL)
+> - *	@postreset: postreset method (can be NULL)
+> + *	@reset_ops: The set of reset operations to use
+>   *	@r_failed_link: out parameter for failed link
+>   *
+>   *	This is the alpha and omega, eum and yang, heart and soul of
+> @@ -3775,9 +3775,7 @@ static int ata_eh_handle_dev_fail(struct ata_device *dev, int err)
+>   *	RETURNS:
+>   *	0 on success, -errno on failure.
+>   */
+> -int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+> -		   ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+> -		   ata_postreset_fn_t postreset,
+> +int ata_eh_recover(struct ata_port *ap, struct ata_reset_operations *reset_ops,
+>  		   struct ata_link **r_failed_link)
+>  {
+>  	struct ata_link *link;
+> @@ -3845,8 +3843,7 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+>  		if (!(ehc->i.action & ATA_EH_RESET))
+>  			continue;
+>  
+> -		rc = ata_eh_reset(link, ata_link_nr_vacant(link),
+> -				  prereset, softreset, hardreset, postreset);
+> +		rc = ata_eh_reset(link, ata_link_nr_vacant(link), reset_ops);
+>  		if (rc) {
+>  			ata_link_err(link, "reset failed, giving up\n");
+>  			goto out;
+> @@ -4077,24 +4074,24 @@ void ata_eh_finish(struct ata_port *ap)
+>   */
+>  void ata_std_error_handler(struct ata_port *ap)
+>  {
+> -	struct ata_port_operations *ops = ap->ops;
+> -	ata_reset_fn_t hardreset = ops->hardreset;
+> +	struct ata_reset_operations *reset_ops = &ap->ops->reset;
+> +	struct ata_link *link = &ap->link;
+>  	int rc;
+>  
+>  	/* Ignore built-in hardresets if SCR access is not available */
+> -	if ((hardreset == sata_std_hardreset ||
+> -	     hardreset == sata_sff_hardreset) && !sata_scr_valid(&ap->link))
+> -		hardreset = NULL;
+> +	if (!sata_scr_valid(link) &&
+> +	    (reset_ops->hardreset == sata_std_hardreset ||
+> +	     reset_ops->hardreset == sata_sff_hardreset))
+> +		link->flags |= ATA_LFLAG_NO_HRST;
+
+I think it is cleaner to set ATA_LFLAG_NO_HRST already in patch 1.
+Since this change is not really related to the logical change done
+by this patch IMO.
+
+
+>  
+>  	ata_eh_autopsy(ap);
+>  	ata_eh_report(ap);
+>  
+> -	rc = ata_eh_recover(ap, ops->prereset, ops->softreset,
+> -			    hardreset, ops->postreset, NULL);
+> +	rc = ata_eh_recover(ap, reset_ops, NULL);
+>  	if (rc) {
+>  		struct ata_device *dev;
+>  
+> -		ata_for_each_dev(dev, &ap->link, ALL)
+> +		ata_for_each_dev(dev, link, ALL)
+>  			ata_dev_disable(dev);
+>  	}
+>  
+> diff --git a/drivers/ata/libata-pmp.c b/drivers/ata/libata-pmp.c
+> index d5d189328ae6..57023324a56f 100644
+> --- a/drivers/ata/libata-pmp.c
+> +++ b/drivers/ata/libata-pmp.c
+> @@ -15,9 +15,9 @@
+>  
+>  const struct ata_port_operations sata_pmp_port_ops = {
+>  	.inherits		= &sata_port_ops,
+> -	.pmp_prereset		= ata_std_prereset,
+> -	.pmp_hardreset		= sata_std_hardreset,
+> -	.pmp_postreset		= ata_std_postreset,
+> +	.pmp_reset.prereset	= ata_std_prereset,
+> +	.pmp_reset.hardreset	= sata_std_hardreset,
+> +	.pmp_reset.postreset	= ata_std_postreset,
+>  	.error_handler		= sata_pmp_error_handler,
+>  };
+>  
+> @@ -727,10 +727,7 @@ static int sata_pmp_revalidate_quick(struct ata_device *dev)
+>  /**
+>   *	sata_pmp_eh_recover_pmp - recover PMP
+>   *	@ap: ATA port PMP is attached to
+> - *	@prereset: prereset method (can be NULL)
+> - *	@softreset: softreset method
+> - *	@hardreset: hardreset method
+> - *	@postreset: postreset method (can be NULL)
+> + *	@reset_ops: The set of reset operations to use
+>   *
+>   *	Recover PMP attached to @ap.  Recovery procedure is somewhat
+>   *	similar to that of ata_eh_recover() except that reset should
+> @@ -744,8 +741,7 @@ static int sata_pmp_revalidate_quick(struct ata_device *dev)
+>   *	0 on success, -errno on failure.
+>   */
+>  static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+> -		ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+> -		ata_reset_fn_t hardreset, ata_postreset_fn_t postreset)
+> +				   struct ata_reset_operations *reset_ops)
+>  {
+>  	struct ata_link *link = &ap->link;
+>  	struct ata_eh_context *ehc = &link->eh_context;
+> @@ -767,8 +763,7 @@ static int sata_pmp_eh_recover_pmp(struct ata_port *ap,
+>  		struct ata_link *tlink;
+>  
+>  		/* reset */
+> -		rc = ata_eh_reset(link, 0, prereset, softreset, hardreset,
+> -				  postreset);
+> +		rc = ata_eh_reset(link, 0, reset_ops);
+>  		if (rc) {
+>  			ata_link_err(link, "failed to reset PMP, giving up\n");
+>  			goto fail;
+> @@ -932,8 +927,7 @@ static int sata_pmp_eh_recover(struct ata_port *ap)
+>   retry:
+>  	/* PMP attached? */
+>  	if (!sata_pmp_attached(ap)) {
+> -		rc = ata_eh_recover(ap, ops->prereset, ops->softreset,
+> -				    ops->hardreset, ops->postreset, NULL);
+> +		rc = ata_eh_recover(ap, &ops->reset, NULL);
+>  		if (rc) {
+>  			ata_for_each_dev(dev, &ap->link, ALL)
+>  				ata_dev_disable(dev);
+> @@ -951,8 +945,7 @@ static int sata_pmp_eh_recover(struct ata_port *ap)
+>  	}
+>  
+>  	/* recover pmp */
+> -	rc = sata_pmp_eh_recover_pmp(ap, ops->prereset, ops->softreset,
+> -				     ops->hardreset, ops->postreset);
+> +	rc = sata_pmp_eh_recover_pmp(ap, &ops->reset);
+>  	if (rc)
+>  		goto pmp_fail;
+>  
+> @@ -978,8 +971,7 @@ static int sata_pmp_eh_recover(struct ata_port *ap)
+>  		goto pmp_fail;
+>  
+>  	/* recover links */
+> -	rc = ata_eh_recover(ap, ops->pmp_prereset, ops->pmp_softreset,
+> -			    ops->pmp_hardreset, ops->pmp_postreset, &link);
+> +	rc = ata_eh_recover(ap, &ops->pmp_reset, &link);
+>  	if (rc)
+>  		goto link_fail;
+>  
+> diff --git a/drivers/ata/libata-sata.c b/drivers/ata/libata-sata.c
+> index 47169c469f43..4734465d3b1e 100644
+> --- a/drivers/ata/libata-sata.c
+> +++ b/drivers/ata/libata-sata.c
+> @@ -1704,6 +1704,6 @@ const struct ata_port_operations sata_port_ops = {
+>  	.inherits		= &ata_base_port_ops,
+>  
+>  	.qc_defer		= ata_std_qc_defer,
+> -	.hardreset		= sata_std_hardreset,
+> +	.reset.hardreset	= sata_std_hardreset,
+>  };
+>  EXPORT_SYMBOL_GPL(sata_port_ops);
+> diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+> index e61f00779e40..7fc407255eb4 100644
+> --- a/drivers/ata/libata-sff.c
+> +++ b/drivers/ata/libata-sff.c
+> @@ -31,10 +31,10 @@ const struct ata_port_operations ata_sff_port_ops = {
+>  
+>  	.freeze			= ata_sff_freeze,
+>  	.thaw			= ata_sff_thaw,
+> -	.prereset		= ata_sff_prereset,
+> -	.softreset		= ata_sff_softreset,
+> -	.hardreset		= sata_sff_hardreset,
+> -	.postreset		= ata_sff_postreset,
+> +	.reset.prereset		= ata_sff_prereset,
+> +	.reset.softreset	= ata_sff_softreset,
+> +	.reset.hardreset	= sata_sff_hardreset,
+> +	.reset.postreset	= ata_sff_postreset,
+>  	.error_handler		= ata_sff_error_handler,
+>  
+>  	.sff_dev_select		= ata_sff_dev_select,
+> diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> index ca44fb792aeb..e5b977a8d3e1 100644
+> --- a/drivers/ata/libata.h
+> +++ b/drivers/ata/libata.h
+> @@ -180,11 +180,9 @@ extern void ata_eh_autopsy(struct ata_port *ap);
+>  const char *ata_get_cmd_name(u8 command);
+>  extern void ata_eh_report(struct ata_port *ap);
+>  extern int ata_eh_reset(struct ata_link *link, int classify,
+> -			ata_prereset_fn_t prereset, ata_reset_fn_t softreset,
+> -			ata_reset_fn_t hardreset, ata_postreset_fn_t postreset);
+> -extern int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
+> -			  ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+> -			  ata_postreset_fn_t postreset,
+> +			struct ata_reset_operations *reset_ops);
+> +extern int ata_eh_recover(struct ata_port *ap,
+> +			  struct ata_reset_operations *reset_ops,
+>  			  struct ata_link **r_failed_disk);
+>  extern void ata_eh_finish(struct ata_port *ap);
+>  extern int ata_ering_map(struct ata_ering *ering,
+> diff --git a/drivers/ata/pata_acpi.c b/drivers/ata/pata_acpi.c
+> index ab38871b5e00..23fff10af2ac 100644
+> --- a/drivers/ata/pata_acpi.c
+> +++ b/drivers/ata/pata_acpi.c
+> @@ -216,7 +216,7 @@ static struct ata_port_operations pacpi_ops = {
+>  	.mode_filter		= pacpi_mode_filter,
+>  	.set_piomode		= pacpi_set_piomode,
+>  	.set_dmamode		= pacpi_set_dmamode,
+> -	.prereset		= pacpi_pre_reset,
+> +	.reset.prereset		= pacpi_pre_reset,
+>  	.port_start		= pacpi_port_start,
+>  };
+>  
+> diff --git a/drivers/ata/pata_ali.c b/drivers/ata/pata_ali.c
+> index bb790edd6036..9d5cb9c34c52 100644
+> --- a/drivers/ata/pata_ali.c
+> +++ b/drivers/ata/pata_ali.c
+> @@ -392,11 +392,11 @@ static struct ata_port_operations ali_20_port_ops = {
+>   *	Port operations for DMA capable ALi with cable detect
+>   */
+>  static struct ata_port_operations ali_c2_port_ops = {
+> -	.inherits	= &ali_dma_base_ops,
+> -	.check_atapi_dma = ali_check_atapi_dma,
+> -	.cable_detect	= ali_c2_cable_detect,
+> -	.dev_config	= ali_lock_sectors,
+> -	.postreset	= ali_c2_c3_postreset,
+> +	.inherits		= &ali_dma_base_ops,
+> +	.check_atapi_dma	= ali_check_atapi_dma,
+> +	.cable_detect		= ali_c2_cable_detect,
+> +	.dev_config		= ali_lock_sectors,
+> +	.reset.postreset	= ali_c2_c3_postreset,
+>  };
+>  
+>  /*
+> diff --git a/drivers/ata/pata_amd.c b/drivers/ata/pata_amd.c
+> index 5b02b89748b7..a2fecadc927d 100644
+> --- a/drivers/ata/pata_amd.c
+> +++ b/drivers/ata/pata_amd.c
+> @@ -394,7 +394,7 @@ static const struct scsi_host_template amd_sht = {
+>  
+>  static const struct ata_port_operations amd_base_port_ops = {
+>  	.inherits	= &ata_bmdma32_port_ops,
+> -	.prereset	= amd_pre_reset,
+> +	.reset.prereset	= amd_pre_reset,
+>  };
+>  
+>  static struct ata_port_operations amd33_port_ops = {
+> @@ -429,7 +429,7 @@ static const struct ata_port_operations nv_base_port_ops = {
+>  	.inherits	= &ata_bmdma_port_ops,
+>  	.cable_detect	= ata_cable_ignore,
+>  	.mode_filter	= nv_mode_filter,
+> -	.prereset	= nv_pre_reset,
+> +	.reset.prereset	= nv_pre_reset,
+>  	.host_stop	= nv_host_stop,
+>  };
+>  
+> diff --git a/drivers/ata/pata_artop.c b/drivers/ata/pata_artop.c
+> index 40544282f455..6160414172a3 100644
+> --- a/drivers/ata/pata_artop.c
+> +++ b/drivers/ata/pata_artop.c
+> @@ -301,7 +301,7 @@ static struct ata_port_operations artop6210_ops = {
+>  	.cable_detect		= ata_cable_40wire,
+>  	.set_piomode		= artop6210_set_piomode,
+>  	.set_dmamode		= artop6210_set_dmamode,
+> -	.prereset		= artop62x0_pre_reset,
+> +	.reset.prereset		= artop62x0_pre_reset,
+>  	.qc_defer		= artop6210_qc_defer,
+>  };
+>  
+> @@ -310,7 +310,7 @@ static struct ata_port_operations artop6260_ops = {
+>  	.cable_detect		= artop6260_cable_detect,
+>  	.set_piomode		= artop6260_set_piomode,
+>  	.set_dmamode		= artop6260_set_dmamode,
+> -	.prereset		= artop62x0_pre_reset,
+> +	.reset.prereset		= artop62x0_pre_reset,
+>  };
+>  
+>  static void atp8xx_fixup(struct pci_dev *pdev)
+> diff --git a/drivers/ata/pata_atiixp.c b/drivers/ata/pata_atiixp.c
+> index 8c5cc803aab3..4c612f9543f6 100644
+> --- a/drivers/ata/pata_atiixp.c
+> +++ b/drivers/ata/pata_atiixp.c
+> @@ -264,7 +264,7 @@ static struct ata_port_operations atiixp_port_ops = {
+>  	.bmdma_start 	= atiixp_bmdma_start,
+>  	.bmdma_stop	= atiixp_bmdma_stop,
+>  
+> -	.prereset	= atiixp_prereset,
+> +	.reset.prereset	= atiixp_prereset,
+>  	.cable_detect	= atiixp_cable_detect,
+>  	.set_piomode	= atiixp_set_piomode,
+>  	.set_dmamode	= atiixp_set_dmamode,
+> diff --git a/drivers/ata/pata_efar.c b/drivers/ata/pata_efar.c
+> index 2e6eccf2902f..6fe49b303fee 100644
+> --- a/drivers/ata/pata_efar.c
+> +++ b/drivers/ata/pata_efar.c
+> @@ -243,7 +243,7 @@ static struct ata_port_operations efar_ops = {
+>  	.cable_detect		= efar_cable_detect,
+>  	.set_piomode		= efar_set_piomode,
+>  	.set_dmamode		= efar_set_dmamode,
+> -	.prereset		= efar_pre_reset,
+> +	.reset.prereset		= efar_pre_reset,
+>  };
+>  
+>  
+> diff --git a/drivers/ata/pata_ep93xx.c b/drivers/ata/pata_ep93xx.c
+> index e8cda988feb5..b2b9e0058333 100644
+> --- a/drivers/ata/pata_ep93xx.c
+> +++ b/drivers/ata/pata_ep93xx.c
+> @@ -879,8 +879,8 @@ static const struct scsi_host_template ep93xx_pata_sht = {
+>  static struct ata_port_operations ep93xx_pata_port_ops = {
+>  	.inherits		= &ata_bmdma_port_ops,
+>  
+> -	.softreset		= ep93xx_pata_softreset,
+> -	.hardreset		= ATA_OP_NULL,
+> +	.reset.softreset	= ep93xx_pata_softreset,
+> +	.reset.hardreset	= ATA_OP_NULL,
+>  
+>  	.sff_dev_select		= ep93xx_pata_dev_select,
+>  	.sff_set_devctl		= ep93xx_pata_set_devctl,
+> diff --git a/drivers/ata/pata_hpt366.c b/drivers/ata/pata_hpt366.c
+> index 5280e9960025..b96e8bd2a3f8 100644
+> --- a/drivers/ata/pata_hpt366.c
+> +++ b/drivers/ata/pata_hpt366.c
+> @@ -322,7 +322,7 @@ static const struct scsi_host_template hpt36x_sht = {
+>  
+>  static struct ata_port_operations hpt366_port_ops = {
+>  	.inherits	= &ata_bmdma_port_ops,
+> -	.prereset	= hpt366_prereset,
+> +	.reset.prereset	= hpt366_prereset,
+>  	.cable_detect	= hpt36x_cable_detect,
+>  	.mode_filter	= hpt366_filter,
+>  	.set_piomode	= hpt366_set_piomode,
+> diff --git a/drivers/ata/pata_hpt37x.c b/drivers/ata/pata_hpt37x.c
+> index 4af22b819416..07e3a984cbb1 100644
+> --- a/drivers/ata/pata_hpt37x.c
+> +++ b/drivers/ata/pata_hpt37x.c
+> @@ -543,7 +543,7 @@ static struct ata_port_operations hpt370_port_ops = {
+>  	.cable_detect	= hpt37x_cable_detect,
+>  	.set_piomode	= hpt37x_set_piomode,
+>  	.set_dmamode	= hpt37x_set_dmamode,
+> -	.prereset	= hpt37x_pre_reset,
+> +	.reset.prereset	= hpt37x_pre_reset,
+>  };
+>  
+>  /*
+> @@ -567,7 +567,7 @@ static struct ata_port_operations hpt302_port_ops = {
+>  	.cable_detect	= hpt37x_cable_detect,
+>  	.set_piomode	= hpt37x_set_piomode,
+>  	.set_dmamode	= hpt37x_set_dmamode,
+> -	.prereset	= hpt37x_pre_reset,
+> +	.reset.prereset	= hpt37x_pre_reset,
+>  };
+>  
+>  /*
+> diff --git a/drivers/ata/pata_hpt3x2n.c b/drivers/ata/pata_hpt3x2n.c
+> index 5b1ecccf3c83..2cc57fcf2c46 100644
+> --- a/drivers/ata/pata_hpt3x2n.c
+> +++ b/drivers/ata/pata_hpt3x2n.c
+> @@ -356,7 +356,7 @@ static struct ata_port_operations hpt3xxn_port_ops = {
+>  	.cable_detect	= hpt3x2n_cable_detect,
+>  	.set_piomode	= hpt3x2n_set_piomode,
+>  	.set_dmamode	= hpt3x2n_set_dmamode,
+> -	.prereset	= hpt3x2n_pre_reset,
+> +	.reset.prereset	= hpt3x2n_pre_reset,
+>  };
+>  
+>  /*
+> diff --git a/drivers/ata/pata_icside.c b/drivers/ata/pata_icside.c
+> index 61d8760f09d9..70f056e47e6b 100644
+> --- a/drivers/ata/pata_icside.c
+> +++ b/drivers/ata/pata_icside.c
+> @@ -336,7 +336,7 @@ static struct ata_port_operations pata_icside_port_ops = {
+>  
+>  	.cable_detect		= ata_cable_40wire,
+>  	.set_dmamode		= pata_icside_set_dmamode,
+> -	.postreset		= pata_icside_postreset,
+> +	.reset.postreset	= pata_icside_postreset,
+>  
+>  	.port_start		= ATA_OP_NULL,	/* don't need PRD table */
+>  };
+> diff --git a/drivers/ata/pata_it8213.c b/drivers/ata/pata_it8213.c
+> index 9cbe2132ce59..a6f2cfc1602e 100644
+> --- a/drivers/ata/pata_it8213.c
+> +++ b/drivers/ata/pata_it8213.c
+> @@ -238,7 +238,7 @@ static struct ata_port_operations it8213_ops = {
+>  	.cable_detect		= it8213_cable_detect,
+>  	.set_piomode		= it8213_set_piomode,
+>  	.set_dmamode		= it8213_set_dmamode,
+> -	.prereset		= it8213_pre_reset,
+> +	.reset.prereset		= it8213_pre_reset,
+>  };
+>  
+>  
+> diff --git a/drivers/ata/pata_jmicron.c b/drivers/ata/pata_jmicron.c
+> index f51fb8219762..b885f33e8980 100644
+> --- a/drivers/ata/pata_jmicron.c
+> +++ b/drivers/ata/pata_jmicron.c
+> @@ -113,7 +113,7 @@ static const struct scsi_host_template jmicron_sht = {
+>  
+>  static struct ata_port_operations jmicron_ops = {
+>  	.inherits		= &ata_bmdma_port_ops,
+> -	.prereset		= jmicron_pre_reset,
+> +	.reset.prereset		= jmicron_pre_reset,
+>  };
+>  
+>  
+> diff --git a/drivers/ata/pata_marvell.c b/drivers/ata/pata_marvell.c
+> index 8119caaad605..deab67328388 100644
+> --- a/drivers/ata/pata_marvell.c
+> +++ b/drivers/ata/pata_marvell.c
+> @@ -99,7 +99,7 @@ static const struct scsi_host_template marvell_sht = {
+>  static struct ata_port_operations marvell_ops = {
+>  	.inherits		= &ata_bmdma_port_ops,
+>  	.cable_detect		= marvell_cable_detect,
+> -	.prereset		= marvell_pre_reset,
+> +	.reset.prereset		= marvell_pre_reset,
+>  };
+>  
+>  
+> diff --git a/drivers/ata/pata_mpiix.c b/drivers/ata/pata_mpiix.c
+> index 69e4baf27d72..ce310ae7c93a 100644
+> --- a/drivers/ata/pata_mpiix.c
+> +++ b/drivers/ata/pata_mpiix.c
+> @@ -145,7 +145,7 @@ static struct ata_port_operations mpiix_port_ops = {
+>  	.qc_issue	= mpiix_qc_issue,
+>  	.cable_detect	= ata_cable_40wire,
+>  	.set_piomode	= mpiix_set_piomode,
+> -	.prereset	= mpiix_pre_reset,
+> +	.reset.prereset	= mpiix_pre_reset,
+>  	.sff_data_xfer	= ata_sff_data_xfer32,
+>  };
+>  
+> diff --git a/drivers/ata/pata_ns87410.c b/drivers/ata/pata_ns87410.c
+> index 44cc24d21d5f..bdb55c1a3280 100644
+> --- a/drivers/ata/pata_ns87410.c
+> +++ b/drivers/ata/pata_ns87410.c
+> @@ -123,7 +123,7 @@ static struct ata_port_operations ns87410_port_ops = {
+>  	.qc_issue	= ns87410_qc_issue,
+>  	.cable_detect	= ata_cable_40wire,
+>  	.set_piomode	= ns87410_set_piomode,
+> -	.prereset	= ns87410_pre_reset,
+> +	.reset.prereset	= ns87410_pre_reset,
+>  };
+>  
+>  static int ns87410_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+> diff --git a/drivers/ata/pata_octeon_cf.c b/drivers/ata/pata_octeon_cf.c
+> index 2d32125c16fd..df42ebe98db7 100644
+> --- a/drivers/ata/pata_octeon_cf.c
+> +++ b/drivers/ata/pata_octeon_cf.c
+> @@ -941,7 +941,7 @@ static int octeon_cf_probe(struct platform_device *pdev)
+>  		/* 16 bit but not True IDE */
+>  		base = cs0 + 0x800;
+>  		octeon_cf_ops.sff_data_xfer	= octeon_cf_data_xfer16;
+> -		octeon_cf_ops.softreset		= octeon_cf_softreset16;
+> +		octeon_cf_ops.reset.softreset	= octeon_cf_softreset16;
+>  		octeon_cf_ops.sff_check_status	= octeon_cf_check_status16;
+>  		octeon_cf_ops.sff_tf_read	= octeon_cf_tf_read16;
+>  		octeon_cf_ops.sff_tf_load	= octeon_cf_tf_load16;
+> diff --git a/drivers/ata/pata_oldpiix.c b/drivers/ata/pata_oldpiix.c
+> index 3d01b7000e41..81a7f3eb5654 100644
+> --- a/drivers/ata/pata_oldpiix.c
+> +++ b/drivers/ata/pata_oldpiix.c
+> @@ -214,7 +214,7 @@ static struct ata_port_operations oldpiix_pata_ops = {
+>  	.cable_detect		= ata_cable_40wire,
+>  	.set_piomode		= oldpiix_set_piomode,
+>  	.set_dmamode		= oldpiix_set_dmamode,
+> -	.prereset		= oldpiix_pre_reset,
+> +	.reset.prereset		= oldpiix_pre_reset,
+>  };
+>  
+>  
+> diff --git a/drivers/ata/pata_opti.c b/drivers/ata/pata_opti.c
+> index 3d23f57eb128..3db1b95d1404 100644
+> --- a/drivers/ata/pata_opti.c
+> +++ b/drivers/ata/pata_opti.c
+> @@ -156,7 +156,7 @@ static struct ata_port_operations opti_port_ops = {
+>  	.inherits	= &ata_sff_port_ops,
+>  	.cable_detect	= ata_cable_40wire,
+>  	.set_piomode	= opti_set_piomode,
+> -	.prereset	= opti_pre_reset,
+> +	.reset.prereset	= opti_pre_reset,
+>  };
+>  
+>  static int opti_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+> diff --git a/drivers/ata/pata_optidma.c b/drivers/ata/pata_optidma.c
+> index cc876dc7a9d8..b42dba5f4e05 100644
+> --- a/drivers/ata/pata_optidma.c
+> +++ b/drivers/ata/pata_optidma.c
+> @@ -346,7 +346,7 @@ static struct ata_port_operations optidma_port_ops = {
+>  	.set_piomode	= optidma_set_pio_mode,
+>  	.set_dmamode	= optidma_set_dma_mode,
+>  	.set_mode	= optidma_set_mode,
+> -	.prereset	= optidma_pre_reset,
+> +	.reset.prereset	= optidma_pre_reset,
+>  };
+>  
+>  static struct ata_port_operations optiplus_port_ops = {
+> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
+> index 93ebf566b54e..8de63d889a68 100644
+> --- a/drivers/ata/pata_parport/pata_parport.c
+> +++ b/drivers/ata/pata_parport/pata_parport.c
+> @@ -321,8 +321,7 @@ static void pata_parport_drain_fifo(struct ata_queued_cmd *qc)
+>  static struct ata_port_operations pata_parport_port_ops = {
+>  	.inherits		= &ata_sff_port_ops,
+>  
+> -	.softreset		= pata_parport_softreset,
+> -	.hardreset		= NULL,
+> +	.reset.softreset	= pata_parport_softreset,
+>  
+>  	.sff_dev_select		= pata_parport_dev_select,
+>  	.sff_set_devctl		= pata_parport_set_devctl,
+> diff --git a/drivers/ata/pata_pdc2027x.c b/drivers/ata/pata_pdc2027x.c
+> index a4ee3b92c9aa..d792ce6d97bf 100644
+> --- a/drivers/ata/pata_pdc2027x.c
+> +++ b/drivers/ata/pata_pdc2027x.c
+> @@ -130,7 +130,7 @@ static struct ata_port_operations pdc2027x_pata100_ops = {
+>  	.inherits		= &ata_bmdma_port_ops,
+>  	.check_atapi_dma	= pdc2027x_check_atapi_dma,
+>  	.cable_detect		= pdc2027x_cable_detect,
+> -	.prereset		= pdc2027x_prereset,
+> +	.reset.prereset		= pdc2027x_prereset,
+>  };
+>  
+>  static struct ata_port_operations pdc2027x_pata133_ops = {
+> diff --git a/drivers/ata/pata_rdc.c b/drivers/ata/pata_rdc.c
+> index 09792aac7f9d..e8e8c72a647e 100644
+> --- a/drivers/ata/pata_rdc.c
+> +++ b/drivers/ata/pata_rdc.c
+> @@ -276,7 +276,7 @@ static struct ata_port_operations rdc_pata_ops = {
+>  	.cable_detect		= rdc_pata_cable_detect,
+>  	.set_piomode		= rdc_set_piomode,
+>  	.set_dmamode		= rdc_set_dmamode,
+> -	.prereset		= rdc_pata_prereset,
+> +	.reset.prereset		= rdc_pata_prereset,
+>  };
+>  
+>  static const struct ata_port_info rdc_port_info = {
+> diff --git a/drivers/ata/pata_sis.c b/drivers/ata/pata_sis.c
+> index 31de06b66221..2b751e393771 100644
+> --- a/drivers/ata/pata_sis.c
+> +++ b/drivers/ata/pata_sis.c
+> @@ -552,7 +552,7 @@ static struct ata_port_operations sis_133_for_sata_ops = {
+>  
+>  static struct ata_port_operations sis_base_ops = {
+>  	.inherits		= &ata_bmdma_port_ops,
+> -	.prereset		= sis_pre_reset,
+> +	.reset.prereset		= sis_pre_reset,
+>  };
+>  
+>  static struct ata_port_operations sis_133_ops = {
+> diff --git a/drivers/ata/pata_sl82c105.c b/drivers/ata/pata_sl82c105.c
+> index 93882e976ede..2d24c6b3e9d9 100644
+> --- a/drivers/ata/pata_sl82c105.c
+> +++ b/drivers/ata/pata_sl82c105.c
+> @@ -248,7 +248,7 @@ static struct ata_port_operations sl82c105_port_ops = {
+>  	.bmdma_stop	= sl82c105_bmdma_stop,
+>  	.cable_detect	= ata_cable_40wire,
+>  	.set_piomode	= sl82c105_set_piomode,
+> -	.prereset	= sl82c105_pre_reset,
+> +	.reset.prereset	= sl82c105_pre_reset,
+>  	.sff_irq_check	= sl82c105_sff_irq_check,
+>  };
+>  
+> diff --git a/drivers/ata/pata_triflex.c b/drivers/ata/pata_triflex.c
+> index 26d448a869e2..596e86a031b3 100644
+> --- a/drivers/ata/pata_triflex.c
+> +++ b/drivers/ata/pata_triflex.c
+> @@ -170,7 +170,7 @@ static struct ata_port_operations triflex_port_ops = {
+>  	.bmdma_stop	= triflex_bmdma_stop,
+>  	.cable_detect	= ata_cable_40wire,
+>  	.set_piomode	= triflex_set_piomode,
+> -	.prereset	= triflex_prereset,
+> +	.reset.prereset	= triflex_prereset,
+>  };
+>  
+>  static int triflex_init_one(struct pci_dev *dev, const struct pci_device_id *id)
+> diff --git a/drivers/ata/pata_via.c b/drivers/ata/pata_via.c
+> index bb80e7800dcb..a8c9cf685b4b 100644
+> --- a/drivers/ata/pata_via.c
+> +++ b/drivers/ata/pata_via.c
+> @@ -451,7 +451,7 @@ static struct ata_port_operations via_port_ops = {
+>  	.cable_detect	= via_cable_detect,
+>  	.set_piomode	= via_set_piomode,
+>  	.set_dmamode	= via_set_dmamode,
+> -	.prereset	= via_pre_reset,
+> +	.reset.prereset	= via_pre_reset,
+>  	.sff_tf_load	= via_tf_load,
+>  	.port_start	= via_port_start,
+>  	.mode_filter	= via_mode_filter,
+> diff --git a/drivers/ata/pdc_adma.c b/drivers/ata/pdc_adma.c
+> index 8e6b2599f0d5..17a5a59861c3 100644
+> --- a/drivers/ata/pdc_adma.c
+> +++ b/drivers/ata/pdc_adma.c
+> @@ -140,7 +140,7 @@ static struct ata_port_operations adma_ata_ops = {
+>  
+>  	.freeze			= adma_freeze,
+>  	.thaw			= adma_thaw,
+> -	.prereset		= adma_prereset,
+> +	.reset.prereset		= adma_prereset,
+>  
+>  	.port_start		= adma_port_start,
+>  	.port_stop		= adma_port_stop,
+> diff --git a/drivers/ata/sata_dwc_460ex.c b/drivers/ata/sata_dwc_460ex.c
+> index 6e1dd0d9c035..7a4f59202156 100644
+> --- a/drivers/ata/sata_dwc_460ex.c
+> +++ b/drivers/ata/sata_dwc_460ex.c
+> @@ -1097,7 +1097,7 @@ static struct ata_port_operations sata_dwc_ops = {
+>  	.inherits		= &ata_sff_port_ops,
+>  
+>  	.error_handler		= sata_dwc_error_handler,
+> -	.hardreset		= sata_dwc_hardreset,
+> +	.reset.hardreset	= sata_dwc_hardreset,
+>  
+>  	.qc_issue		= sata_dwc_qc_issue,
+>  
+> diff --git a/drivers/ata/sata_fsl.c b/drivers/ata/sata_fsl.c
+> index 87e91a937a44..84da8d6ef28e 100644
+> --- a/drivers/ata/sata_fsl.c
+> +++ b/drivers/ata/sata_fsl.c
+> @@ -1395,9 +1395,9 @@ static struct ata_port_operations sata_fsl_ops = {
+>  
+>  	.freeze = sata_fsl_freeze,
+>  	.thaw = sata_fsl_thaw,
+> -	.softreset = sata_fsl_softreset,
+> -	.hardreset = sata_fsl_hardreset,
+> -	.pmp_softreset = sata_fsl_softreset,
+> +	.reset.softreset = sata_fsl_softreset,
+> +	.reset.hardreset = sata_fsl_hardreset,
+> +	.pmp_reset.softreset = sata_fsl_softreset,
+>  	.error_handler = sata_fsl_error_handler,
+>  	.post_internal_cmd = sata_fsl_post_internal_cmd,
+>  
+> diff --git a/drivers/ata/sata_highbank.c b/drivers/ata/sata_highbank.c
+> index c8c817c51230..3421039f4bae 100644
+> --- a/drivers/ata/sata_highbank.c
+> +++ b/drivers/ata/sata_highbank.c
+> @@ -428,7 +428,7 @@ static int ahci_highbank_hardreset(struct ata_link *link, unsigned int *class,
+>  
+>  static struct ata_port_operations ahci_highbank_ops = {
+>  	.inherits		= &ahci_ops,
+> -	.hardreset		= ahci_highbank_hardreset,
+> +	.reset.hardreset	= ahci_highbank_hardreset,
+>  	.transmit_led_message   = ecx_transmit_led_message,
+>  };
+>  
+> diff --git a/drivers/ata/sata_inic162x.c b/drivers/ata/sata_inic162x.c
+> index db9c255dc9f2..46a8c20daf18 100644
+> --- a/drivers/ata/sata_inic162x.c
+> +++ b/drivers/ata/sata_inic162x.c
+> @@ -730,7 +730,7 @@ static struct ata_port_operations inic_port_ops = {
+>  
+>  	.freeze			= inic_freeze,
+>  	.thaw			= inic_thaw,
+> -	.hardreset		= inic_hardreset,
+> +	.reset.hardreset	= inic_hardreset,
+>  	.error_handler		= inic_error_handler,
+>  	.post_internal_cmd	= inic_post_internal_cmd,
+>  
+> diff --git a/drivers/ata/sata_mv.c b/drivers/ata/sata_mv.c
+> index bcbf96867f89..ffb396f61731 100644
+> --- a/drivers/ata/sata_mv.c
+> +++ b/drivers/ata/sata_mv.c
+> @@ -687,7 +687,7 @@ static struct ata_port_operations mv5_ops = {
+>  
+>  	.freeze			= mv_eh_freeze,
+>  	.thaw			= mv_eh_thaw,
+> -	.hardreset		= mv_hardreset,
+> +	.reset.hardreset	= mv_hardreset,
+>  
+>  	.scr_read		= mv5_scr_read,
+>  	.scr_write		= mv5_scr_write,
+> @@ -709,10 +709,10 @@ static struct ata_port_operations mv6_ops = {
+>  
+>  	.freeze			= mv_eh_freeze,
+>  	.thaw			= mv_eh_thaw,
+> -	.hardreset		= mv_hardreset,
+> -	.softreset		= mv_softreset,
+> -	.pmp_hardreset		= mv_pmp_hardreset,
+> -	.pmp_softreset		= mv_softreset,
+> +	.reset.hardreset	= mv_hardreset,
+> +	.reset.softreset	= mv_softreset,
+> +	.pmp_reset.hardreset	= mv_pmp_hardreset,
+> +	.pmp_reset.softreset	= mv_softreset,
+>  	.error_handler		= mv_pmp_error_handler,
+>  
+>  	.scr_read		= mv_scr_read,
+> diff --git a/drivers/ata/sata_nv.c b/drivers/ata/sata_nv.c
+> index f36e2915ccf1..841e7de2bba6 100644
+> --- a/drivers/ata/sata_nv.c
+> +++ b/drivers/ata/sata_nv.c
+> @@ -462,7 +462,7 @@ static struct ata_port_operations nv_generic_ops = {
+>  	.lost_interrupt		= ATA_OP_NULL,
+>  	.scr_read		= nv_scr_read,
+>  	.scr_write		= nv_scr_write,
+> -	.hardreset		= nv_hardreset,
+> +	.reset.hardreset	= nv_hardreset,
+>  };
+>  
+>  static struct ata_port_operations nv_nf2_ops = {
+> diff --git a/drivers/ata/sata_promise.c b/drivers/ata/sata_promise.c
+> index 2df1a070b25a..2a005aede123 100644
+> --- a/drivers/ata/sata_promise.c
+> +++ b/drivers/ata/sata_promise.c
+> @@ -188,7 +188,7 @@ static struct ata_port_operations pdc_sata_ops = {
+>  	.scr_read		= pdc_sata_scr_read,
+>  	.scr_write		= pdc_sata_scr_write,
+>  	.port_start		= pdc_sata_port_start,
+> -	.hardreset		= pdc_sata_hardreset,
+> +	.reset.hardreset	= pdc_sata_hardreset,
+>  };
+>  
+>  /* First-generation chips need a more restrictive ->check_atapi_dma op,
+> @@ -206,7 +206,7 @@ static struct ata_port_operations pdc_pata_ops = {
+>  	.freeze			= pdc_freeze,
+>  	.thaw			= pdc_thaw,
+>  	.port_start		= pdc_common_port_start,
+> -	.softreset		= pdc_pata_softreset,
+> +	.reset.softreset	= pdc_pata_softreset,
+>  };
+>  
+>  static const struct ata_port_info pdc_port_info[] = {
+> diff --git a/drivers/ata/sata_qstor.c b/drivers/ata/sata_qstor.c
+> index 8a6286159044..cfb9b5b61cd7 100644
+> --- a/drivers/ata/sata_qstor.c
+> +++ b/drivers/ata/sata_qstor.c
+> @@ -123,8 +123,8 @@ static struct ata_port_operations qs_ata_ops = {
+>  
+>  	.freeze			= qs_freeze,
+>  	.thaw			= qs_thaw,
+> -	.prereset		= qs_prereset,
+> -	.softreset		= ATA_OP_NULL,
+> +	.reset.prereset		= qs_prereset,
+> +	.reset.softreset	= ATA_OP_NULL,
+>  	.error_handler		= qs_error_handler,
+>  	.lost_interrupt		= ATA_OP_NULL,
+>  
+> diff --git a/drivers/ata/sata_rcar.c b/drivers/ata/sata_rcar.c
+> index 22820a02d740..487eadd4073f 100644
+> --- a/drivers/ata/sata_rcar.c
+> +++ b/drivers/ata/sata_rcar.c
+> @@ -624,7 +624,7 @@ static struct ata_port_operations sata_rcar_port_ops = {
+>  
+>  	.freeze			= sata_rcar_freeze,
+>  	.thaw			= sata_rcar_thaw,
+> -	.softreset		= sata_rcar_softreset,
+> +	.reset.softreset	= sata_rcar_softreset,
+>  
+>  	.scr_read		= sata_rcar_scr_read,
+>  	.scr_write		= sata_rcar_scr_write,
+> diff --git a/drivers/ata/sata_sil24.c b/drivers/ata/sata_sil24.c
+> index 87f4cde6a686..d642ece9f07a 100644
+> --- a/drivers/ata/sata_sil24.c
+> +++ b/drivers/ata/sata_sil24.c
+> @@ -393,10 +393,10 @@ static struct ata_port_operations sil24_ops = {
+>  
+>  	.freeze			= sil24_freeze,
+>  	.thaw			= sil24_thaw,
+> -	.softreset		= sil24_softreset,
+> -	.hardreset		= sil24_hardreset,
+> -	.pmp_softreset		= sil24_softreset,
+> -	.pmp_hardreset		= sil24_pmp_hardreset,
+> +	.reset.softreset	= sil24_softreset,
+> +	.reset.hardreset	= sil24_hardreset,
+> +	.pmp_reset.softreset	= sil24_softreset,
+> +	.pmp_reset.hardreset	= sil24_pmp_hardreset,
+>  	.error_handler		= sil24_error_handler,
+>  	.post_internal_cmd	= sil24_post_internal_cmd,
+>  	.dev_config		= sil24_dev_config,
+> diff --git a/drivers/ata/sata_svw.c b/drivers/ata/sata_svw.c
+> index 598a872f6a08..c5d6aa36c9c3 100644
+> --- a/drivers/ata/sata_svw.c
+> +++ b/drivers/ata/sata_svw.c
+> @@ -340,8 +340,8 @@ static const struct scsi_host_template k2_sata_sht = {
+>  
+>  static struct ata_port_operations k2_sata_ops = {
+>  	.inherits		= &ata_bmdma_port_ops,
+> -	.softreset              = k2_sata_softreset,
+> -	.hardreset              = k2_sata_hardreset,
+> +	.reset.softreset	= k2_sata_softreset,
+> +	.reset.hardreset	= k2_sata_hardreset,
+>  	.sff_tf_load		= k2_sata_tf_load,
+>  	.sff_tf_read		= k2_sata_tf_read,
+>  	.sff_check_status	= k2_stat_check_status,
+> diff --git a/drivers/ata/sata_sx4.c b/drivers/ata/sata_sx4.c
+> index f7f5131af937..0986ebd1eb4e 100644
+> --- a/drivers/ata/sata_sx4.c
+> +++ b/drivers/ata/sata_sx4.c
+> @@ -241,7 +241,7 @@ static struct ata_port_operations pdc_20621_ops = {
+>  
+>  	.freeze			= pdc_freeze,
+>  	.thaw			= pdc_thaw,
+> -	.softreset		= pdc_softreset,
+> +	.reset.softreset	= pdc_softreset,
+>  	.error_handler		= pdc_error_handler,
+>  	.lost_interrupt		= ATA_OP_NULL,
+>  	.post_internal_cmd	= pdc_post_internal_cmd,
+> diff --git a/drivers/ata/sata_uli.c b/drivers/ata/sata_uli.c
+> index 52894ff49dcb..44985796cc47 100644
+> --- a/drivers/ata/sata_uli.c
+> +++ b/drivers/ata/sata_uli.c
+> @@ -67,7 +67,7 @@ static struct ata_port_operations uli_ops = {
+>  	.inherits		= &ata_bmdma_port_ops,
+>  	.scr_read		= uli_scr_read,
+>  	.scr_write		= uli_scr_write,
+> -	.hardreset		= ATA_OP_NULL,
+> +	.reset.hardreset	= ATA_OP_NULL,
+>  };
+>  
+>  static const struct ata_port_info uli_port_info = {
+> diff --git a/drivers/ata/sata_via.c b/drivers/ata/sata_via.c
+> index 4ecd8f33b082..68e9003ec2d4 100644
+> --- a/drivers/ata/sata_via.c
+> +++ b/drivers/ata/sata_via.c
+> @@ -120,7 +120,7 @@ static struct ata_port_operations svia_base_ops = {
+>  static struct ata_port_operations vt6420_sata_ops = {
+>  	.inherits		= &svia_base_ops,
+>  	.freeze			= svia_noop_freeze,
+> -	.prereset		= vt6420_prereset,
+> +	.reset.prereset		= vt6420_prereset,
+>  	.bmdma_start		= vt6420_bmdma_start,
+>  };
+>  
+> @@ -140,7 +140,7 @@ static struct ata_port_operations vt6421_sata_ops = {
+>  
+>  static struct ata_port_operations vt8251_ops = {
+>  	.inherits		= &svia_base_ops,
+> -	.hardreset		= sata_std_hardreset,
+> +	.reset.hardreset	= sata_std_hardreset,
+>  	.scr_read		= vt8251_scr_read,
+>  	.scr_write		= vt8251_scr_write,
+>  };
+> diff --git a/drivers/scsi/libsas/sas_ata.c b/drivers/scsi/libsas/sas_ata.c
+> index 7b4e7a61965a..adb9e7a94785 100644
+> --- a/drivers/scsi/libsas/sas_ata.c
+> +++ b/drivers/scsi/libsas/sas_ata.c
+> @@ -559,8 +559,8 @@ static int sas_ata_prereset(struct ata_link *link, unsigned long deadline)
+>  }
+>  
+>  static struct ata_port_operations sas_sata_ops = {
+> -	.prereset		= sas_ata_prereset,
+> -	.hardreset		= sas_ata_hard_reset,
+> +	.reset.prereset		= sas_ata_prereset,
+> +	.reset.hardreset	= sas_ata_hard_reset,
+>  	.error_handler		= ata_std_error_handler,
+>  	.post_internal_cmd	= sas_ata_post_internal,
+>  	.qc_defer               = ata_std_qc_defer,
+> diff --git a/include/linux/libata.h b/include/linux/libata.h
+> index cf0b3fff3198..912ace523880 100644
+> --- a/include/linux/libata.h
+> +++ b/include/linux/libata.h
+> @@ -944,6 +944,13 @@ struct ata_port {
+>   */
+>  #define ATA_OP_NULL		(void *)(unsigned long)(-ENOENT)
+>  
+> +struct ata_reset_operations {
+> +	ata_prereset_fn_t	prereset;
+> +	ata_reset_fn_t		softreset;
+> +	ata_reset_fn_t		hardreset;
+> +	ata_postreset_fn_t	postreset;
+> +};
+> +
+>  struct ata_port_operations {
+>  	/*
+>  	 * Command execution
+> @@ -970,14 +977,8 @@ struct ata_port_operations {
+>  
+>  	void (*freeze)(struct ata_port *ap);
+>  	void (*thaw)(struct ata_port *ap);
+> -	ata_prereset_fn_t	prereset;
+> -	ata_reset_fn_t		softreset;
+> -	ata_reset_fn_t		hardreset;
+> -	ata_postreset_fn_t	postreset;
+> -	ata_prereset_fn_t	pmp_prereset;
+> -	ata_reset_fn_t		pmp_softreset;
+> -	ata_reset_fn_t		pmp_hardreset;
+> -	ata_postreset_fn_t	pmp_postreset;
+> +	struct ata_reset_operations reset;
+> +	struct ata_reset_operations pmp_reset;
+>  	void (*error_handler)(struct ata_port *ap);
+>  	void (*lost_interrupt)(struct ata_port *ap);
+>  	void (*post_internal_cmd)(struct ata_queued_cmd *qc);
+> -- 
+> 2.50.1
+> 
