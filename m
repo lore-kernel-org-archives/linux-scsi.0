@@ -1,112 +1,110 @@
-Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2161ECA6B
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2025 09:06:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2F0123D2A4;
+	Mon, 14 Jul 2025 09:12:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752483996; cv=none; b=b1wGKfWtLAEazL3aA7I7OLWUPzWxpNbAai0G3Am44KcZUwXVtxUcPrhVYl+0lVYj+HF8v2fyHG5DT88vgzwAC1W0ACWoF9OQJV4wZPgFT+jEC3dCJgbuJPVzS1DlHmRkcbDiZxwR07T80Cug8Hg4zGPA8SM38RkXt5bG6OOfe48=
+	t=1752484373; cv=none; b=R9lJlS2Hoc/pn70qdmLLE9GQKad/e7xL0YoLvLPnSggGvSt3r/rAe6ySVuyu4i073DT2vNOCgn4MQqLICRSWsk7qHxJhUJmhomMsYH6dTyjq9Tpkf3Z8MPuHGg7x4lmYL1A5vPzleoJw41yImwxKVCQ/VJzdkOAKaukUhJUt+hY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752483996; c=relaxed/simple;
-	bh=X8RGDB9wzFS4Va1ii1k6z1+qNnla8YBtsxSHUDbd3CE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 References; b=iDHn84c/sGnuIiRUUgPOfuWuoEG2PGTkNLNiCVyC0rUcngXIiGBYMlaPIwQXNeZm0ayD4Vzr+ZwFKS2yleSqi80y0iwj6IO7fxfUM6uZHcnjQXe6z0nTglN5gh/JCU+QoyS9NegOWUmsGsJ5AWeEHeJqwLtTY1e4/Pd6ElrQaVY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=n5PaU9ly; arc=none smtp.client-ip=203.254.224.34
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1752484373; c=relaxed/simple;
+	bh=6xzJPaygFryc8DCLYakIixZ+C8VGXuJGoenc8w9stus=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=p6pjlkQppQ8lj6aWDhzt7r3rvLdFUeL2Q7P01Sv9yqLJNY8kseRJMGqeGeN1niFW4Ys6ba4fzqWkvRnYUq+FXwoWvjkY9NbSf5kzTFCVZ7JVx+qLDMLNmFYP6KTh0b+vl3EFSs8QWgp1LbegPEv6kOy3ECO2WfpERYZM8CMZ7NQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flawful.org; spf=pass smtp.mailfrom=gmail.com; dkim=pass (1024-bit key) header.d=flawful.org header.i=@flawful.org header.b=eNhCuqdB; arc=none smtp.client-ip=209.85.167.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=flawful.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="n5PaU9ly"
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250714090632epoutp04cfd3569cf44758cbfeac4b9fec6303e1~SEufhDcJC1361913619epoutp04O
-	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2025 09:06:32 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250714090632epoutp04cfd3569cf44758cbfeac4b9fec6303e1~SEufhDcJC1361913619epoutp04O
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1752483992;
-	bh=AH1RjOknKmwF3CWDe75qYP+1VnhwNlQ476gW0wSAocE=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=n5PaU9lyD+mJxlA4x018LdxIM9qGfemJsqClO8eKuLiRE3RpqsVBkoa73CmINZE06
-	 +HzmkQoicBm3lo3ROcxA3e1wa+wqZ/hViyjC4SVvkLS+RdKsuq7hE4hpduIdq8FlK+
-	 7iIF+MVR+ox4QMhIgKP0gLez2Et4L4jKie+QoiyE=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas1p4.samsung.com (KnoxPortal) with ESMTPS id
-	20250714090631epcas1p4a39189d3c69dad3c87cbe5534ae3a8d8~SEufEhhq11975419754epcas1p4L;
-	Mon, 14 Jul 2025 09:06:31 +0000 (GMT)
-Received: from epcas1p2.samsung.com (unknown [182.195.38.243]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4bgbzC3yHSz2SSKb; Mon, 14 Jul
-	2025 09:06:31 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b~SEuear0Tc0285302853epcas1p2D;
-	Mon, 14 Jul 2025 09:06:30 +0000 (GMT)
-Received: from sh043lee-960XFH.. (unknown [10.253.98.183]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20250714090630epsmtip2c03061fc01d2d6965a52da8e2b92d621~SEueXVtxj1185511855epsmtip25;
-	Mon, 14 Jul 2025 09:06:30 +0000 (GMT)
-From: Seunghui Lee <sh043.lee@samsung.com>
-To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, sdriver.sec@samsung.com
-Cc: Seunghui Lee <sh043.lee@samsung.com>
-Subject: [PATCH] ufs: core: Use link recovery when the h8 exit failure
- during runtime resume
-Date: Mon, 14 Jul 2025 18:06:17 +0900
-Message-ID: <20250714090617.9212-1-sh043.lee@samsung.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=flawful.org header.i=@flawful.org header.b="eNhCuqdB"
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-55a10c74f31so1064157e87.1;
+        Mon, 14 Jul 2025 02:12:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752484369; x=1753089169;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:dkim-signature:x-gm-message-state:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=M/kTNmpQefjAtHto56TBeeJ4RIn81/eZMsfsW+BTGuI=;
+        b=NB5gfDlZwruhrzUuPygwHoH7pAt8bQbr4e2DFb3sx4ygguZG3p2J74AbH6axJoDMJp
+         84bvgw+/YDIWkx/9TlpfMYZ1JGlLC+GcA2tTQqJ5MvWXsg/xniApmJTJ2KzFFS6zd81U
+         L/yC1kDSu3Y/rwrsv7JfCyr/hKzuYRaZ9uol8gd/ZmAOyZpwG6FWsBJ1NL5MQnvm9KDf
+         sdK7PM8fzBdGTR6kFJ6KyztN2YK0rYPgk6kI0p7taQTusNiVJNwmiuCd62cjKe5m2K5Y
+         79ydJbUwBtzhV+stBQGivU8xrX8vIbRLop8UbKKWNgzngsCvZx2wsOmmbbUQw9DLi8AY
+         eHUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUEQJrt8JJtvOh3f8aZtH206xPfLRdSneblGh1ApXPEm1kw/AOi9MorNsiFoI62LKnCdH79YinMgaab@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzxgb1w6JKzMGttwRFEmwEGOtgnW9xZIg5CoVUQUk9nrHN5YRZm
+	MjGDblbAhJlU6VHvQ9TdR95M2qNdJ6+VG3DQEOxNAVd6X5nk442Z1W6j
+X-Gm-Gg: ASbGncvUXgXCgnQygRrUzUEcxmkxS0H1KQ23Ev3m5bZtk61UC7KBQosNVpqbHWJSF0L
+	98qxG0/2Jvh/DSms7VSqqkoErrMHUEbD4mAv77lDAIajoFEe38eB+ayaDp4WhDN148FGrwL/YOl
+	oUGlal03tZOnziXrg4AcDJ29RlXy/tpU8YOCZnnjqm249HKC6tTeD0A1yZBrf4YMKMR6/n0TzVW
+	fikq3n3K8poCWmE4FO1WELjBnmqaO1sfFjEZJvZOUiPP/u8bPn51BGV1M9RwI54SC7aSr5nlFYX
+	TZOMRo0zmmb1g78cAnfkWmvcuFLwE+A0/BAFkJj4bHk9D1xJ+S2KSMIQc/NbjDf7mQ8hDdLuh0b
+	5dqiCUKqjaoW66zSdDjqjlAxN9mwegHpkLyby1TZszxIg3JnCeu4=
+X-Google-Smtp-Source: AGHT+IFkoboMnDBt3H3vXXqdCHnrm74X11lpyVZl0tTJi8sobREOEbRijG6KqZs1Jb7eiROMkwQg5w==
+X-Received: by 2002:a05:6512:68d:b0:553:d122:f8e1 with SMTP id 2adb3069b0e04-55a04645033mr3631255e87.43.1752484368447;
+        Mon, 14 Jul 2025 02:12:48 -0700 (PDT)
+Received: from flawful.org (c-85-226-250-50.bbcust.telenor.se. [85.226.250.50])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-55943b71feasm1888200e87.176.2025.07.14.02.12.47
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 14 Jul 2025 02:12:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=flawful.org; s=mail;
+	t=1752484366; bh=6xzJPaygFryc8DCLYakIixZ+C8VGXuJGoenc8w9stus=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=eNhCuqdBGowy17fzZAcqXCMMxkN+ZV36yJDwRXVLwMRSUS+tkop7GwKhYLTgC/zQW
+	 OL9vSZkY+0UvEoVkaaNliYnflO5DbyaJOKliuAT1gZIdYGpe8n7IGyG+PNQ7fpbvgH
+	 Ne8Y9spKznHNoim7hW40XIt8mSR73kW5SA6fllqY=
+Received: by flawful.org (Postfix, from userid 1001)
+	id 7AF982810; Mon, 14 Jul 2025 11:12:46 +0200 (CEST)
+Date: Mon, 14 Jul 2025 11:12:46 +0200
+From: Niklas Cassel <nks@flawful.org>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-ide@vger.kernel.org, Niklas Cassel <cassel@kernel.org>,
+	linux-scsi@vger.kernel.org,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	John Garry <john.g.garry@oracle.com>,
+	Jason Yan <yanaijie@huawei.com>
+Subject: Re: [PATCH v4 1/3] ata: libata-eh: Remove ata_do_eh()
+Message-ID: <aHTKDlu2pXGlnHA3@flawful.org>
+References: <20250714005454.35802-1-dlemoal@kernel.org>
+ <20250714005454.35802-2-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b
-References: <CGME20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b@epcas1p2.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250714005454.35802-2-dlemoal@kernel.org>
 
-If the h8 exit fails during runtime resume process,
-the runtime thread enters runtime suspend immediately
-and the error handler operates at the same time.
-It becomes stuck and cannot be recovered through the error handler.
-To fix this, use link recovery instead of the error handler.
+On Mon, Jul 14, 2025 at 09:54:52AM +0900, Damien Le Moal wrote:
+> The only reason for ata_do_eh() to exist is that the two caller sites,
+> ata_std_error_handler() and ata_sff_error_handler() may pass it a
+> NULL hardreset operation so that the built-in (generic) hardreset
+> operation for a driver is ignored if the adapter SCR access is not
+> available.
+> 
+> However, ata_std_error_handler() and ata_sff_error_handler()
+> modifications of the hardreset port operation can easily be combined as
+> they are mutually exclusive. That is, a driver using sata_std_hardreset()
+> as its hardreset operation cannot use sata_sff_hardreset() and
+> vice-versa.
+> 
+> With this observation, ata_do_eh() can be removed and its code moved to
+> ata_std_error_handler(). The condition used to ignore the built-in
+> hardreset port operation is modified to be the one that was used in
+> ata_sff_error_handler(). This requires defining a stub for the function
+> sata_sff_hardreset() to avoid compilation errors when CONFIG_ATA_SFF is
+> not enabled. Furthermore, instead of modifying the local hardreset
+> operation definition, set the ATA_LFLAG_NO_HRST link flag to prevent
+> the use of built-in hardreset methods for ports without a valid scr_read
+> function. This flag is checked in ata_eh_reset() and if set, the
+> hardreset method is ignored.
+> 
+> This change simplifies ata_sff_error_handler() as this function now only
+> needs to call ata_std_error_handler().
+> 
+> No functional changes.
+> 
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
 
-Signed-off-by: Seunghui Lee <sh043.lee@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 50adfb8b335b..dc2845c32d72 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4340,7 +4340,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	hba->uic_async_done = NULL;
- 	if (reenable_intr)
- 		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
--	if (ret) {
-+	if (ret && !hba->pm_op_in_progress) {
- 		ufshcd_set_link_broken(hba);
- 		ufshcd_schedule_eh_work(hba);
- 	}
-@@ -4348,6 +4348,14 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	mutex_unlock(&hba->uic_cmd_mutex);
- 
-+	/*
-+	 * If the h8 exit fails during the runtime resume process,
-+	 * it becomes stuck and cannot be recovered through the error handler.
-+	 * To fix this, use link recovery instead of the error handler.
-+	 */
-+	if (ret && hba->pm_op_in_progress)
-+		ret = ufshcd_link_recovery(hba);
-+
- 	return ret;
- }
- 
--- 
-2.43.0
-
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
