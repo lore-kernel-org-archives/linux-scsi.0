@@ -1,114 +1,112 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E1131F2C34;
-	Mon, 14 Jul 2025 07:58:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2161ECA6B
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2025 09:06:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752479892; cv=none; b=CqXWkE7lTeHR0qRa+/gli+q4J97FB33ywocdb/AOiXEguUHskKt4weMB3ynBOLK1gputjthmmpIRIxbtHRO+QPB/uUbIYeUmxZD4ddGgHcw2En9z1YSRHyCYwe2nwYglxbPWuvQENB0Va5MW8z7AabWZF3IgOayXWRCVYI8a9d8=
+	t=1752483996; cv=none; b=b1wGKfWtLAEazL3aA7I7OLWUPzWxpNbAai0G3Am44KcZUwXVtxUcPrhVYl+0lVYj+HF8v2fyHG5DT88vgzwAC1W0ACWoF9OQJV4wZPgFT+jEC3dCJgbuJPVzS1DlHmRkcbDiZxwR07T80Cug8Hg4zGPA8SM38RkXt5bG6OOfe48=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752479892; c=relaxed/simple;
-	bh=PzbB+7IcW8L6GtFe+c2FSmfXUY7BWeG2rhSrFIM/koA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iA8Zatf6dY2aNCov4pP07jz7ZkGtDjbRHNmf/crj0tIidaTV9x4f6hN8QjJYo3I4AvKp3cDtTOV19H8iijREdaTwFQNAs9ZoZ29w5cCC2w2DKiX9mgBpjOsoMX63JH7CaBqz2+iGTeXfN6QurKk5ETJ5vE8cLbHCuta4zONdGrI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=stGtnnuG; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752483996; c=relaxed/simple;
+	bh=X8RGDB9wzFS4Va1ii1k6z1+qNnla8YBtsxSHUDbd3CE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
+	 References; b=iDHn84c/sGnuIiRUUgPOfuWuoEG2PGTkNLNiCVyC0rUcngXIiGBYMlaPIwQXNeZm0ayD4Vzr+ZwFKS2yleSqi80y0iwj6IO7fxfUM6uZHcnjQXe6z0nTglN5gh/JCU+QoyS9NegOWUmsGsJ5AWeEHeJqwLtTY1e4/Pd6ElrQaVY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=n5PaU9ly; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="stGtnnuG"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB0C9C4CEED;
-	Mon, 14 Jul 2025 07:58:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752479891;
-	bh=PzbB+7IcW8L6GtFe+c2FSmfXUY7BWeG2rhSrFIM/koA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=stGtnnuGLWy3zdQrA0dUE6vGvp5hjkpzdNwjmZdQEu6nqHkJ0qdVidnNJyDRYRSJp
-	 RvAA4r/x0zd6TRcbAIbTrcGJYnwjT/Bm30+RBFNqhcxUte90GywgH6wuXAt2GjrmvT
-	 WwrTyGxMh+39V0jruwC+pLvWQAZaCaQpziG/n0b+pcJa34mncnGhx2UVTpwe9iAUeh
-	 27HEjreYl8TdpjTZ68R98b+o2ParDyQMvxtqfo7WXTOvMhHGyNqSowSoNF3yZHkeTo
-	 C8hEdIpVG3zADCE2KsQASkIq4qf6fIhVAfw2jAoQvqT6d6KPkeI9o9+yR+yvwYgj0M
-	 DhYsp+JPEDTNg==
-Message-ID: <45bca57f-90eb-44cd-af3d-8316cd50eae9@kernel.org>
-Date: Mon, 14 Jul 2025 16:58:09 +0900
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="n5PaU9ly"
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250714090632epoutp04cfd3569cf44758cbfeac4b9fec6303e1~SEufhDcJC1361913619epoutp04O
+	for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2025 09:06:32 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250714090632epoutp04cfd3569cf44758cbfeac4b9fec6303e1~SEufhDcJC1361913619epoutp04O
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1752483992;
+	bh=AH1RjOknKmwF3CWDe75qYP+1VnhwNlQ476gW0wSAocE=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=n5PaU9lyD+mJxlA4x018LdxIM9qGfemJsqClO8eKuLiRE3RpqsVBkoa73CmINZE06
+	 +HzmkQoicBm3lo3ROcxA3e1wa+wqZ/hViyjC4SVvkLS+RdKsuq7hE4hpduIdq8FlK+
+	 7iIF+MVR+ox4QMhIgKP0gLez2Et4L4jKie+QoiyE=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPS id
+	20250714090631epcas1p4a39189d3c69dad3c87cbe5534ae3a8d8~SEufEhhq11975419754epcas1p4L;
+	Mon, 14 Jul 2025 09:06:31 +0000 (GMT)
+Received: from epcas1p2.samsung.com (unknown [182.195.38.243]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4bgbzC3yHSz2SSKb; Mon, 14 Jul
+	2025 09:06:31 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b~SEuear0Tc0285302853epcas1p2D;
+	Mon, 14 Jul 2025 09:06:30 +0000 (GMT)
+Received: from sh043lee-960XFH.. (unknown [10.253.98.183]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250714090630epsmtip2c03061fc01d2d6965a52da8e2b92d621~SEueXVtxj1185511855epsmtip25;
+	Mon, 14 Jul 2025 09:06:30 +0000 (GMT)
+From: Seunghui Lee <sh043.lee@samsung.com>
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, sdriver.sec@samsung.com
+Cc: Seunghui Lee <sh043.lee@samsung.com>
+Subject: [PATCH] ufs: core: Use link recovery when the h8 exit failure
+ during runtime resume
+Date: Mon, 14 Jul 2025 18:06:17 +0900
+Message-ID: <20250714090617.9212-1-sh043.lee@samsung.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/3] ata: libata-eh: Simplify reset operation
- management
-To: Niklas Cassel <cassel@kernel.org>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- John Garry <john.g.garry@oracle.com>, Jason Yan <yanaijie@huawei.com>
-References: <20250714005454.35802-1-dlemoal@kernel.org>
- <20250714005454.35802-3-dlemoal@kernel.org> <aHS4MmhX0W33SxL7@ryzen>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <aHS4MmhX0W33SxL7@ryzen>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b
+References: <CGME20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b@epcas1p2.samsung.com>
 
-On 2025/07/14 16:56, Niklas Cassel wrote:
-> On Mon, Jul 14, 2025 at 09:54:53AM +0900, Damien Le Moal wrote:
->> Introduce struct ata_reset_operations to aggregate in a single structure
->> the definitions of the 4 reset methods (prereset, softreset, hardreset
->> and postreset) for a port. This new structure is used in struct ata_port
->> to define the reset methods for a regular port (reset field) and for a
->> port-multiplier port (pmp_reset field). A pointer to either of these
->> fields replaces the 4 reset method arguments passed to ata_eh_recover()
->> and ata_eh_reset().
->>
->> The definition of the reset methods for all drivers is changed to use
->> the reset and pmp_reset fields in struct ata_port_operations.
->>
->> A large number of files is modifed, but no functional changes are
->> introduced.
->>
->> Suggested-by: Niklas Cassel <cassel@kernel.org>
->> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
->> ---
-> 
-> (snip)
-> 
->> diff --git a/drivers/ata/pata_parport/pata_parport.c b/drivers/ata/pata_parport/pata_parport.c
->> index 93ebf566b54e..8de63d889a68 100644
->> --- a/drivers/ata/pata_parport/pata_parport.c
->> +++ b/drivers/ata/pata_parport/pata_parport.c
->> @@ -321,8 +321,7 @@ static void pata_parport_drain_fifo(struct ata_queued_cmd *qc)
->>  static struct ata_port_operations pata_parport_port_ops = {
->>  	.inherits		= &ata_sff_port_ops,
->>  
->> -	.softreset		= pata_parport_softreset,
->> -	.hardreset		= NULL,
-> 
-> I think you need to add .reset.hardreset = NULL, because pata_parport_port_ops
-> inherits ata_sff_port_ops, which does set hardreset, so I think this line will
-> clear the pointer.
-> 
-> 
->> +	.reset.softreset	= pata_parport_softreset,
->>  
->>  	.sff_dev_select		= pata_parport_dev_select,
->>  	.sff_set_devctl		= pata_parport_set_devctl,
-> 
-> 
-> Rest looks good to me:
-> Reviewed-by: Niklas Cassel <cassel@kernel.org>
-> 
-> 
-> Tell me if you want to fix it up when applying or if you want to send a new
-> version.
+If the h8 exit fails during runtime resume process,
+the runtime thread enters runtime suspend immediately
+and the error handler operates at the same time.
+It becomes stuck and cannot be recovered through the error handler.
+To fix this, use link recovery instead of the error handler.
 
-If you can fix it up when applying, that would be great. Thanks.
+Signed-off-by: Seunghui Lee <sh043.lee@samsung.com>
+---
+ drivers/ufs/core/ufshcd.c | 10 +++++++++-
+ 1 file changed, 9 insertions(+), 1 deletion(-)
 
-> 
-> 
-> Kind regards,
-> Niklas
-
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 50adfb8b335b..dc2845c32d72 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4340,7 +4340,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	hba->uic_async_done = NULL;
+ 	if (reenable_intr)
+ 		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+-	if (ret) {
++	if (ret && !hba->pm_op_in_progress) {
+ 		ufshcd_set_link_broken(hba);
+ 		ufshcd_schedule_eh_work(hba);
+ 	}
+@@ -4348,6 +4348,14 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+ 	spin_unlock_irqrestore(hba->host->host_lock, flags);
+ 	mutex_unlock(&hba->uic_cmd_mutex);
+ 
++	/*
++	 * If the h8 exit fails during the runtime resume process,
++	 * it becomes stuck and cannot be recovered through the error handler.
++	 * To fix this, use link recovery instead of the error handler.
++	 */
++	if (ret && hba->pm_op_in_progress)
++		ret = ufshcd_link_recovery(hba);
++
+ 	return ret;
+ }
+ 
 -- 
-Damien Le Moal
-Western Digital Research
+2.43.0
+
