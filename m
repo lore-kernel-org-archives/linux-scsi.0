@@ -1,192 +1,372 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84FF3258CEC;
-	Mon, 14 Jul 2025 17:53:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752515598; cv=fail; b=C7jJwEAhpSZZyRiUcojCik8lVuaUXEbIDYUzPO0yIPi2AJLovcIxQUWQW/1z+St+qISxoeixgSVPrR+1DNctILrwjUO/r8svLHR1WJ/93DoOCCylV38EE1QB4U8dyrf+EAUsn+yL3oUZhf2O57CvVmZO1f12vxrhagjgsK4d9/k=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752515598; c=relaxed/simple;
-	bh=1pwK6WXmx2B27bq4UkEbMmsg+tZzln2tAEP38qEUiEc=;
-	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
-	 Content-Type:MIME-Version; b=R6FutbjPEJ/nbY9rBT9YwsWVtFf8XFlnqYCuDADWdkOmCbF1dUJWy6jhdkzGj+jLLEksSHSDzNhCIgLr+JV+V2sDjwKkl7PwhGtXGYjQJU7HYrunQRuaPRQi2p9rpejRxd01XPYDAvWRI9GNk2btz8hpzxD6wrNRPY0O/5HcpsM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=l6hm04lg; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=LzB/D4WL; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DEE6724CEE8;
+	Mon, 14 Jul 2025 19:17:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1752520675; cv=none; b=KpqTYDjq3zCJmXHwKPW0hhK6tHqyJvQ/FIdpTZSv8V2l282FwWGZiXqU+JyU/mvGUlsh3zkcCMhOgdmXHsNlgynxOYleBM9YA0DQWQ4yMeUWUlsoz+12H68vJdJeKxjZJVaU8PTNBUkiukxZN8DENUi02omidEr4jG39ldEAEQ0=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1752520675; c=relaxed/simple;
+	bh=LKAYvsGhbzMBfXcm9sHDq2Ipwz7ReozskbUDhi8Wgbc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UIXE7l46/TD65WanBm5kBR68RBRyxfwOELvUcuPINO0pHTzQuxNXu137IVWY7tuK+hUYDwERnWHi89qBK82Z2qntzyYXdAB2mmPvNEq4aelN8aP6FKbwNkO0yxHtDev3YXJNPqBqDUhJUJoZbpS1AswRDHEQMbs8Z4cYYlP2+rE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=GF9yyVwn; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="l6hm04lg";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="LzB/D4WL"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56EH3nor001413;
-	Mon, 14 Jul 2025 17:53:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=corp-2025-04-25; bh=Yh0YSoPdIb1FA2XBm4
-	3vyV9NWUNlxIDtBLpLXzPxE98=; b=l6hm04lgCcu6DegI11DSy84vjQ/QuwWtt+
-	RQ9qFKVH7m5g38RHSRDcsUUCTjlgxuc9U/ilnQM2glHxi3BQn+/CxetZ9qFRGp4n
-	f1BgJM9WtmKHo6vRK+FyBzpfczY6qUvDumj3krTgfEMYIU4PWg9/HF5ePeVripPd
-	xgYzBqfwQkJeKCWrMeWMVgnrsTFPe4KaG4GkzdSesNLUojHpSjFm+aDwwspzxhnh
-	33SU+FaqiOxZjd2uHSpM1tP2pT/I7GkrvzAwyDoflD795Y1H1olSfihlO43zbh4j
-	56kknYZ/SJbEmhl1Fx/j0cV+D7lRhLO5p9kIVJWQ1KKHFv/mtV8Q==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 47uk8fvtx8-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 14 Jul 2025 17:53:03 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56EGbjLZ029626;
-	Mon, 14 Jul 2025 17:53:02 GMT
-Received: from nam12-dm6-obe.outbound.protection.outlook.com (mail-dm6nam12on2089.outbound.protection.outlook.com [40.107.243.89])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 47ue58mj7x-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 14 Jul 2025 17:53:02 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=dW+zY6xrgFVWQHS5w18E+HHvffVpqMlZ4snKD6kj0v7in/IQqU1YLcWNKtVF5fWgVl1rG+Gs0RgskEKTWbloKQKSHtNZ6/qWzSW0McvqvNZrP98AD8kg0S0Us11zNgCb1+wC7DqKoAmzduj89Y4oS2hmPdstv9VukVd07OdVPtotkydk3Xe2k2n7Bv+6a//netDSZG0SlzhEovtn+gNtQkW4EgbVwFIuVv4crkdzxxMZ0Gbl/KRXsRZs2R6Qh/ZVtqJFaZfukik5Zdt4loSsjUI5uqjY2iLR5yJ0ggSN/oFs7MbFszCjjM3uGbEQ3DI7vUFWfflGwUK+Dlq/5+eAjA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=Yh0YSoPdIb1FA2XBm43vyV9NWUNlxIDtBLpLXzPxE98=;
- b=PNkg0FS2EFIRrmQ322aeFZOrZCNUZIj746w9w+nKUo7U13cQ7QqGtK5f3DUcHYiDVpZbFVjGC8wfX9qAgj2O5XrWiQhk5bFqif2KqQmGC9g3s1H03k0k66S2WgTa66eikFTma4GsRvAMsS6qOm6mi6yDwdSNG6vz7ZcLbs+BSaQfhdTApocsdzsW2S/GmXvAnPY6UvFTKKKGwzGJKl0Wyq+OMQxaTF3IVxbVTqZsv6uPEqS/4iFrY0yWcv1PKxXurJk0jdwOBquoDt3pW6Yqa7GHDxhHhQI4ZB+nMKcwuEKlJaHTpbLi/TMvPvtz4VMNleqz194OVHqNMBFw+x707g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=Yh0YSoPdIb1FA2XBm43vyV9NWUNlxIDtBLpLXzPxE98=;
- b=LzB/D4WLFeAgqvGL1KE98N5EkVFkr4/qEx4KMmFNadL5UyU/CfbpeyhO1KPScaW6lEHEJVXapolq9q5hxViUPFNsLYFLo9YoPRkT4ScWnl55fMuQIIPEHrftY7UQxnk93+8lVTQX7VQP9cLCAMU5//+0rVemEC0qWDJrHAHXdQg=
-Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
- by CO1PR10MB4435.namprd10.prod.outlook.com (2603:10b6:303:6c::17) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8922.33; Mon, 14 Jul
- 2025 17:52:59 +0000
-Received: from CH0PR10MB5338.namprd10.prod.outlook.com
- ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
- ([fe80::5cca:2bcc:cedb:d9bf%5]) with mapi id 15.20.8922.028; Mon, 14 Jul 2025
- 17:52:59 +0000
-To: Yihang Li <liyihang9@h-partners.com>
-Cc: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>,
-        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linuxarm@huawei.com>, <liuyonglong@huawei.com>
-Subject: Re: [PATCH] scsi: MAINTAINERS: Update hisi_sas entry
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-In-Reply-To: <20250702012423.1947238-1-liyihang9@h-partners.com> (Yihang Li's
-	message of "Wed, 2 Jul 2025 09:24:23 +0800")
-Organization: Oracle Corporation
-Message-ID: <yq1ms967jj5.fsf@ca-mkp.ca.oracle.com>
-References: <20250702012423.1947238-1-liyihang9@h-partners.com>
-Date: Mon, 14 Jul 2025 13:52:51 -0400
-Content-Type: text/plain
-X-ClientProxiedBy: AS4P251CA0010.EURP251.PROD.OUTLOOK.COM
- (2603:10a6:20b:5d2::12) To CH0PR10MB5338.namprd10.prod.outlook.com
- (2603:10b6:610:cb::8)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="GF9yyVwn"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bgsXV6P2hzlv764;
+	Mon, 14 Jul 2025 19:17:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1752520665; x=1755112666; bh=F4cHB5ZXO8KGBbrVOmj/9zi9
+	SjD1tVKrUlMXzU0k57E=; b=GF9yyVwnnkqpOsS1dlubN5SJd553sN4PN0iXXsk+
+	1igwHyZk3w29LTufiNTfvPEM8OZrKm2hFaT1IgQ/D1Ui3L4MM11/fMZrJevlcxW9
+	ekI5CUc8ox/D4NODJYmmtWQXByzeTIovtzkgNM3smYSIl+GjkPgCGbRKm/IK21q9
+	eGFN6CST7u/a8W864HYrOQewfy22hxVr94MKLPUOxfiuHDms4+mkK2xQw2Jf67fS
+	mSB47FGuW5PudltcWnwwcrsjkiZ++jskbqSvsMpTXfu+ca/Cm+pGBui3ueN1ZtgC
+	76yLr5Tqr6eLyvOy4PPg+0P2Snp9ijZ7mv3KFa5h0ryoxQ==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id s9Y5YFqX31UN; Mon, 14 Jul 2025 19:17:45 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bgsXQ4MCzzltBDV;
+	Mon, 14 Jul 2025 19:17:41 +0000 (UTC)
+Message-ID: <a299c187-1a62-45cb-b9fe-13e31a6bf276@acm.org>
+Date: Mon, 14 Jul 2025 12:17:40 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|CO1PR10MB4435:EE_
-X-MS-Office365-Filtering-Correlation-Id: fd9f7a98-b8ea-4b30-ec4f-08ddc2ff4571
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|366016|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?9A70W4aXrhXaL6yDbThH2+L6IAbLu1LJiOHR9/qtut9StBeKZPDd5GsnJNu0?=
- =?us-ascii?Q?IQbn+3UzaP75LL8skL/JDlUQ+ru2eKlAxT3+K5adHCi8pxipAsfCvYCf1IID?=
- =?us-ascii?Q?tvtZ+NBFvcCIGI61OecdTecAxrVAujVenLlp7RKOc95ecDAsy1CyghwwSeUW?=
- =?us-ascii?Q?pd5u4vxh0Vr85aq/gAAJbChJlkVRuvzsIsPlTwzkZNk7Gj0fsHqbEG1oIc3B?=
- =?us-ascii?Q?xX1/KhSZp7MHqaY9pQLttXeOkBQU3aHT9QEXhkiWhY6lNp0bDWA1oY2P3Cto?=
- =?us-ascii?Q?sn9AP2P4+g+2wk7Gkq9FbKGj00QAY4h2F+KdwKhTbmvMd4sxF5TSBeWm6nbl?=
- =?us-ascii?Q?2i5L6HrvBrqnfnZkNlt1H5pmT8kP1+uP4VHB0UHKx9tgL5KIqgBZxIMqGi9g?=
- =?us-ascii?Q?UrRckFSq8ohTnStRObUV70lRfogLD3RwZylrN+TQ1YGczYbdS4HJLl4AtIh+?=
- =?us-ascii?Q?SSVIHhqzpI+Ehude1frJNrAxXJaMtH4ZJpJl49SUARPcT/LcyB/iTE/vXVvc?=
- =?us-ascii?Q?eFl4LuVLB0fK+hT75z3u48A7PT5dBBe5yVZRPwkvx3F19yZZLYrSwfIZr9TB?=
- =?us-ascii?Q?8WvxH6HXprTtt6ozAViJlhDYcepzF7niwBBmKdCObjCn3J5hUPbwcJkV+G+h?=
- =?us-ascii?Q?5UYTDXL4+/ktVQm2O25lVFGTWeumtZSsjUxrDARt9+/VkhvDkLo+CD9/Krus?=
- =?us-ascii?Q?+lUoCNea9wmcUX4HNqHQ+2J1SZETq3cf73oIioFutVM9rwid9I15rojzRWmt?=
- =?us-ascii?Q?bB9tZ0HNMPSX08rWB7g3mLQToSz2gOUyahbBY05nMtnkG5xks5OLz8bbW1PO?=
- =?us-ascii?Q?HufYoI3giEC5F6QlSI2j+KWam8bgf9etKFqlJbz8To/8E2l4xCjm2aG4L7ew?=
- =?us-ascii?Q?x/Pp3oP5+bufyjFimVXfKpgpHc+CMmjaSwwUE1J5RrbEgQwX97/+sgldJVm0?=
- =?us-ascii?Q?ca/rlA86aS4ic2adnB7bfU7jRqAMNsh+Yt8OTlgzx54ZIVi1+U6zB8OnyGGQ?=
- =?us-ascii?Q?Ytay57e5wTDUHaNiLC37tmsmyCjYL7PjJnegiTUrhw6xjMiGrMYgSj6W3YvE?=
- =?us-ascii?Q?Tr7O1nQTCYsu4DzvIZVLq1HKvo0wjwABTW/eYXk8JnO78OJOZyA58ZkZLkWC?=
- =?us-ascii?Q?VqfBOIjHOy0e925AxcyUqdKSjZi9eVqUpheXd6StM7zRK1+Yefv1TxtQWwrO?=
- =?us-ascii?Q?hKLkbSvbP9PEh+e2iU0QJYQNnS1NuAu+76QtizChaAPTzB4D2foTIs4yM3gK?=
- =?us-ascii?Q?o+hxf9c0RBBDLDYRYNDt67qvYWcncAZo8/XcDOeqvLKF7l9tuV0ahnone5qm?=
- =?us-ascii?Q?N2FRSOBK3QvUMFUNTB1A3dHF06qB91rOZRmMidLsZBuohOsN1hQBqY6Ob67U?=
- =?us-ascii?Q?xGRwwvonRpJCJckPrUIC6LWpOT++vKjoLII5KIhdGcW4Ov4ZvWyh/t0yK2Vi?=
- =?us-ascii?Q?73UKzqYZ6+0=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?z5Pr4a8o9DC24QfGkCtJOkWO6NmIHRaHfVS+lrxcLIkticHmdMd2XGyYBIIu?=
- =?us-ascii?Q?jNwDgQnTi/QdPrjPwqpelD7D6aNNu3lAGutr2mbZDHHy/jJY+9ykWIGmykfU?=
- =?us-ascii?Q?bghFqB1/iQLKrm7RFVD+6kKP7A1AZiHU6NgMXFuSTt2Snx/D6zDajagCr8or?=
- =?us-ascii?Q?gVA4daE+zWTg1yB9gOCmolOpY3qg8BrRXk30WFs8uI6MDKJEp+P9hs6FiD9W?=
- =?us-ascii?Q?JT5w/BSLwekhD0T3Y3Y69YGm+pawC8Ii9Ov4e6ijCF3ZfnadAYEknp7Ubj7T?=
- =?us-ascii?Q?xiitoT+6bYkAI68KW3f0SS5xdHsbMNpPM5c3sVGA0hNDoHxw5HuMiiNdJhLn?=
- =?us-ascii?Q?dcnRooixR+aLeZi2SMbbPdublDL6K1bnvb1OwCUfrWOYmDL3SYuu0FcygD5W?=
- =?us-ascii?Q?a8P2IK7Gjfcl1F9BR2T9Sp0ap7LiB0NMF2oyntaoUZU8N3owIFkU5wbKoOi/?=
- =?us-ascii?Q?IW+U8wUJJozI1Z2scUKOiP9ggZKoYdvxc1VjYWZUFpHl+NL9oeK4aVq8Qtys?=
- =?us-ascii?Q?y0oNZtbws4G662iqXFw+nBJtjb+3tpZ6vzTaUig2HBOhyXMqwwrJefpmbyGO?=
- =?us-ascii?Q?iUyJZ0GNOTbLvH/55UFn5c2WqxC/Fp8CWGzHag9jFodg/dTPk9yw8EboQFE9?=
- =?us-ascii?Q?+fyShGIxstOO/MsW5FcgR6ckwQV7n2baqBwpSIrF71+xm0RrfnAHR0nD2kkD?=
- =?us-ascii?Q?oxHb6+77MnGVEzqQ8mULLiK5Mt2UcZwLY8yZsIdhQPROCsn6t8XeyR46I4VO?=
- =?us-ascii?Q?RQLz4NTiDLzhu9gd+EGRFCDyjY/paXYKYHZG9VNRB1IioUD5MYriIG+vEF3q?=
- =?us-ascii?Q?Yt7go+DBgUMJuYykgI3ic2pY6+zkXb6h1MQDrc2Mn8eGswNJHc5UGfh/GkTS?=
- =?us-ascii?Q?QXBSy7nljBqjUujTfYp5p7roiu4X4nXzchL5iQDJIdxHfZ1O/YXMXW2c+yn6?=
- =?us-ascii?Q?4LoXDcPmH/rMYjBlbUn2yIcndp+f7wZhKjtPSMPlPURMwC7nrd1lBV7OxgQd?=
- =?us-ascii?Q?1vP/NE1q/tYRYttTnSYPBhEf0X2vz/w8CsIQBfXlG/9qfHfJQqYc8hMCMNK6?=
- =?us-ascii?Q?kw5O8G6/6mz7gYhm5kNhfvLS60tMz7nNcRa6yqVRblL5UViRKJN9jxkg5Pfh?=
- =?us-ascii?Q?ot/S3TEkCnZONHl97xEMocHyGo916YG2wgudUTuj+V3PK7SI5suJVVGnnsEP?=
- =?us-ascii?Q?4cwf9xfvzHP9Ur94CiPir8Jvy/KkbbCk3PLwo8+PLbED6D4toTrn3x0KP96Z?=
- =?us-ascii?Q?2E5AvmG6LIXqOetzCxCXorjcoZOXY5STcda2PVnq4u2Zhed8c32AA64AG5pQ?=
- =?us-ascii?Q?2He1QAqEIcauSqeR3TwR94AFdwaNVSUQtUaqy7OA6erQkc3v5j9gunsWMBy1?=
- =?us-ascii?Q?UO2hvoEXOdQwfSThgA+EAoqDW1vaI70osG3RjTjsmkRvIUlg6nrwes5DCPre?=
- =?us-ascii?Q?K7285LkFoWeXv7M7ULsf0/U5FI1Tjlvo9F6fhYD9SEwx5lQ6UbPLl2u5VDry?=
- =?us-ascii?Q?r+2yQGMdIjULJ1cazeyXQd2eeTE+/0eoSfe3eLFg38bQRoWswHdp5fU7194T?=
- =?us-ascii?Q?rZn4pKkSCc7X+Agzx59rl8O1MyNejxnxPfhgWHYlbMalhqFNzUpfm0s7ad4E?=
- =?us-ascii?Q?tg=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	H+QHudZsbWPHqXtELF59lF2KGi5Cw2tOJCPIhutEKcSteVgVPo2KcR3EWSXOfvVX+2uRjOyKI1JBDeyCLuEwIzwLnbPjBSiIE9/7AMIAE0imeKRQMJiyMgloy5gmy2xc6gjzPLrfippHreUfFu5ftRGWHlJFNVKlsEzxh1W84Ot7BqNKVvx/KnqJygLw3yWlAQzu3sgGcGxYqmvE+6CdozlByF1cAfwHAaCnvxChg03Q9o4MflnS2GoR0VLHY88suD96Q+nlieQV+poeiuCIavI0p8/azl3y+LpbtYbQNBIePHjMGYhut4JtR6Zw4GqKRek6APopdKehcUtP56QNMmIF5rueR/UOm2tmsZRvIDsFK6Jb7RsNpb1+m+quTe9nkLRFBfA1xxt0i9VSv7AdI1HT+A7Oe6vm4UgnwOPhplc7ejVyQTgbXSSjh3mRUbHl+cIQGjvvvObelrzSFD0Hj2HizPRL/IKLlrNUwNkRZnNACCE82p06Nak3yGqzCHNkNGyLWGMZDq6v5+dR60Gu2fmdfEUHbB8ClSqEydoI6m5zJk6uyj1xxxFyIna8umVuZW8q+Oli0cY+eaHtj3wdaOnHk3yJP0SjLjS/ClM+5+w=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: fd9f7a98-b8ea-4b30-ec4f-08ddc2ff4571
-X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Jul 2025 17:52:59.5575
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: ysmOMykXfeSqXXi22SxJHI+ZAIt+98xdX/TWsLazY+DFfBeGnLeUxgF9CtXUtScQNL7IbOeiDgie5ytyoqu2+6LSmPZfsANC+rVQowr1VXo=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CO1PR10MB4435
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.7,FMLib:17.12.80.40
- definitions=2025-07-14_02,2025-07-14_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 spamscore=0
- suspectscore=0 adultscore=0 mlxlogscore=964 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
- definitions=main-2507140113
-X-Proofpoint-ORIG-GUID: tmYJPpbWOKo4NaWUmMwrZceVCxw6es2O
-X-Authority-Analysis: v=2.4 cv=Of+YDgTY c=1 sm=1 tr=0 ts=687543ff cx=c_pps a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
- a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=Wb1JkmetP80A:10 a=GoEa3M9JfhUA:10 a=i0EeH86SAAAA:8 a=DOGiGVxG8u48VFt_wQcA:9 a=VncyM7JbuJcA:10
-X-Proofpoint-GUID: tmYJPpbWOKo4NaWUmMwrZceVCxw6es2O
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzE0MDExMyBTYWx0ZWRfX831jgy40g3t/ iBBRkK+EA+gwtduXVJTcfZpBLrZwjjuTXUN0G4wv5RQvqQz/2ElX5aDFgVpuYX/4XwyHpGya5ZE FD+FTu/oMgrzaPN3rCO1yRTq64npCQ6r22XUMFOtK+ByMoEM1BfoarD2Ruh0C1fJ5ner5yKYcTm
- 3lfiSPv6yW3uZcisW5B6AlE/6EWj2E9P8j6Z/yaupKmGsx7LnAnchAk7b4eZCmLV9FAMDzCh+Sy knAjdc8XIeIpcS1gHXXR2fTMLl/Nb3IbrNN4qA3fJODsT8ntFwvgYXrL1xym9z3rfoMK5R/aCUW Hqyx9A79Oppcgq3QFGDyNSltHijfHN8/MYlfFIKzD/M7deNqS8XoEdC+tOtXhI+Xzxu3cc1ehzK
- QHzcVLQv5Yp0XOIodITQ6PRBq/cYFMhCwW71sknoPSLAUgnmJGAMEZ76r+ahk3n818cEHc9I
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v20 07/13] blk-zoned: Support pipelining of zoned writes
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>
+References: <20250708220710.3897958-1-bvanassche@acm.org>
+ <20250708220710.3897958-8-bvanassche@acm.org>
+ <bf33405e-f8f5-4d7f-b2e9-8fe84fbd1092@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <bf33405e-f8f5-4d7f-b2e9-8fe84fbd1092@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+
+On 7/9/25 10:09 PM, Damien Le Moal wrote:
+> On 7/9/25 7:07 AM, Bart Van Assche wrote:
+>> @@ -932,7 +939,8 @@ static bool blk_zone_wplug_prepare_bio(struct blk_zone_wplug *zwplug,
+>>   	 * We know such BIO will fail, and that would potentially overflow our
+>>   	 * write pointer offset beyond the end of the zone.
+>>   	 */
+>> -	if (disk_zone_wplug_is_full(disk, zwplug))
+>> +	if (!disk->queue->limits.driver_preserves_write_order
+>> +	    && disk_zone_wplug_is_full(disk, zwplug))
+> 
+> Writing to a zone that is full is an error, pipelining or not. So why do you
+> change this ? This does not make sense.
+
+Agreed. I will drop this change.
+
+>> @@ -956,7 +964,8 @@ static bool blk_zone_wplug_prepare_bio(struct blk_zone_wplug *zwplug,
+>>   		 * with a start sector not unaligned to the zone write pointer
+>>   		 * will fail.
+>>   		 */
+>> -		if (bio_offset_from_zone_start(bio) != zwplug->wp_offset)
+>> +		if (!disk->queue->limits.driver_preserves_write_order
+>> +		    && bio_offset_from_zone_start(bio) != zwplug->wp_offset)
+> 
+> Same here. This does not depend pipelining: write should have been received in
+> order and be aligned with the wp. So why change this condition ?
+
+Agreed. I will drop this change too. The reason I hit this and the above
+condition is because the blk_zone_wplug_prepare_bio() call in this patch
+is misplaced: it should happen after all the 'goto plug' statements
+instead of before.
+
+>> @@ -1298,6 +1329,9 @@ static void blk_zone_submit_one_bio(struct blk_zone_wplug *zwplug)
+>>   	} else {
+>>   		blk_mq_submit_bio(bio);
+>>   	}
+>> +
+>> +	return disk->queue->limits.driver_preserves_write_order &&
+>> +		!need_resched();
+> 
+> I think we really need a helper for that
+> "disk->queue->limits.driver_preserves_write_order". But if you make this a
+> feature, it will be better.
+> 
+> Also, here, the test using need_resched() really need a comment explaining why
+> you look at that. I do not get it personally.
+
+The need_resched() call was added to break out of the loop if another
+thread would be runnable. Anyway, since I'm not sure that call is needed
+so I will drop it.
+
+It would be appreciated if you could take a look at the reworked version
+of this patch below before I repost the entire series. The changes
+compared to the patch at the start of this email thread are as follows:
+- The ternary operator in the queue_work_on() call has been converted
+   into an if/then/else statement.
+- The two blk_zone_wplug_prepare_bio() changes have been dropped.
+- The behavior changes for zone append writes in
+   blk_zone_wplug_handle_write() have been dropped.
+- blk_zone_wplug_handle_write() has been changed such that
+   blk_zone_wplug_prepare_bio() is only called once for each bio.
+- blk_zone_wplug_handle_write() has been modified such that no
+   plugging happens if a cached request has been allocated from the
+   same cpu as zwplug->from_cpu.
+- The function blk_zone_submit_one_bio() has been removed and has been
+   inlined into its only caller, blk_zone_wplug_bio_work().
+
+Thanks,
+
+Bart.
 
 
-Hi Yihang!
+[PATCH] blk-zoned: Support pipelining of zoned writes
 
-> liyihang9@huawei.com no longer works. So update information for hisi_sas.
+Support pipelining of zoned writes if the block driver preserves the write
+order per hardware queue. Track per zone to which software queue writes
+have been queued. If zoned writes are pipelined, submit new writes to the
+same software queue as the writes that are already in progress. This
+prevents reordering by submitting requests for the same zone to different
+software or hardware queues.
 
-In situations where affiliation changes it is customary to receive an
-acknowledgement from the institution which previously held the
-maintainership.
+Cc: Christoph Hellwig <hch@lst.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+  block/blk-mq.c    |  4 +--
+  block/blk-zoned.c | 67 ++++++++++++++++++++++++++++++++++++++---------
+  2 files changed, 56 insertions(+), 15 deletions(-)
 
--- 
-Martin K. Petersen
+diff --git a/block/blk-mq.c b/block/blk-mq.c
+index 5d216940e9fe..76c45bf81b02 100644
+--- a/block/blk-mq.c
++++ b/block/blk-mq.c
+@@ -3148,8 +3148,8 @@ void blk_mq_submit_bio(struct bio *bio)
+  	/*
+  	 * A BIO that was released from a zone write plug has already been
+  	 * through the preparation in this function, already holds a reference
+-	 * on the queue usage counter, and is the only write BIO in-flight for
+-	 * the target zone. Go straight to preparing a request for it.
++	 * on the queue usage counter. Go straight to preparing a request for
++	 * it.
+  	 */
+  	if (bio_zone_write_plugging(bio)) {
+  		nr_segs = bio->__bi_nr_segments;
+diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+index de3fb0cd6d37..d9d624d90693 100644
+--- a/block/blk-zoned.c
++++ b/block/blk-zoned.c
+@@ -53,6 +53,8 @@ static const char *const zone_cond_name[] = {
+   * @zone_no: The number of the zone the plug is managing.
+   * @wp_offset: The zone write pointer location relative to the start 
+of the zone
+   *             as a number of 512B sectors.
++ * @from_cpu: Software queue to submit writes from for drivers that 
+preserve
++ *	the write order.
+   * @bio_list: The list of BIOs that are currently plugged.
+   * @bio_work: Work struct to handle issuing of plugged BIOs
+   * @rcu_head: RCU head to free zone write plugs with an RCU grace period.
+@@ -65,6 +67,7 @@ struct blk_zone_wplug {
+  	unsigned int		flags;
+  	unsigned int		zone_no;
+  	unsigned int		wp_offset;
++	int			from_cpu;
+  	struct bio_list		bio_list;
+  	struct work_struct	bio_work;
+  	struct rcu_head		rcu_head;
+@@ -74,8 +77,7 @@ struct blk_zone_wplug {
+  /*
+   * Zone write plug flags bits:
+   *  - BLK_ZONE_WPLUG_PLUGGED: Indicates that the zone write plug is 
+plugged,
+- *    that is, that write BIOs are being throttled due to a write BIO 
+already
+- *    being executed or the zone write plug bio list is not empty.
++ *    that is, that write BIOs are being throttled.
+   *  - BLK_ZONE_WPLUG_NEED_WP_UPDATE: Indicates that we lost track of a 
+zone
+   *    write pointer offset and need to update it.
+   *  - BLK_ZONE_WPLUG_UNHASHED: Indicates that the zone write plug was 
+removed
+@@ -572,6 +574,7 @@ static struct blk_zone_wplug 
+*disk_get_and_lock_zone_wplug(struct gendisk *disk,
+  	zwplug->flags = 0;
+  	zwplug->zone_no = zno;
+  	zwplug->wp_offset = bdev_offset_from_zone_start(disk->part0, sector);
++	zwplug->from_cpu = -1;
+  	bio_list_init(&zwplug->bio_list);
+  	INIT_WORK(&zwplug->bio_work, blk_zone_wplug_bio_work);
+  	zwplug->disk = disk;
+@@ -768,14 +771,19 @@ static bool blk_zone_wplug_handle_reset_all(struct 
+bio *bio)
+  static void disk_zone_wplug_schedule_bio_work(struct gendisk *disk,
+  					      struct blk_zone_wplug *zwplug)
+  {
++	lockdep_assert_held(&zwplug->lock);
++
+  	/*
+  	 * Take a reference on the zone write plug and schedule the submission
+  	 * of the next plugged BIO. blk_zone_wplug_bio_work() will release the
+  	 * reference we take here.
+  	 */
+-	WARN_ON_ONCE(!(zwplug->flags & BLK_ZONE_WPLUG_PLUGGED));
+  	refcount_inc(&zwplug->ref);
+-	queue_work(disk->zone_wplugs_wq, &zwplug->bio_work);
++	if (zwplug->from_cpu >= 0)
++		queue_work_on(zwplug->from_cpu, disk->zone_wplugs_wq,
++			      &zwplug->bio_work);
++	else
++		queue_work(disk->zone_wplugs_wq, &zwplug->bio_work);
+  }
+
+  static inline void disk_zone_wplug_add_bio(struct gendisk *disk,
+@@ -972,9 +980,12 @@ static bool blk_zone_wplug_prepare_bio(struct 
+blk_zone_wplug *zwplug,
+  	return true;
+  }
+
+-static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int 
+nr_segs)
++static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int 
+nr_segs,
++					int from_cpu)
+  {
+  	struct gendisk *disk = bio->bi_bdev->bd_disk;
++	const bool ordered_hwq = bio_op(bio) != REQ_OP_ZONE_APPEND &&
++		(disk->queue->limits.features & BLK_FEAT_ORDERED_HWQ);
+  	sector_t sector = bio->bi_iter.bi_sector;
+  	bool schedule_bio_work = false;
+  	struct blk_zone_wplug *zwplug;
+@@ -1034,15 +1045,36 @@ static bool blk_zone_wplug_handle_write(struct 
+bio *bio, unsigned int nr_segs)
+  	if (zwplug->flags & BLK_ZONE_WPLUG_PLUGGED)
+  		goto add_to_bio_list;
+
++	if (ordered_hwq && zwplug->from_cpu < 0) {
++		/* No zoned writes are in progress. Select the current CPU. */
++		zwplug->from_cpu = raw_smp_processor_id();
++	}
++	if (ordered_hwq && zwplug->from_cpu == from_cpu) {
++		/*
++		 * The block driver preserves the write order, zoned writes have
++		 * not been plugged and the zoned write will be submitted from
++		 * zwplug->from_cpu. Let the caller submit the bio.
++		 */
++	} else if (ordered_hwq) {
++		/*
++		 * The block driver preserves the write order. Submit the bio
++		 * from zwplug->from_cpu.
++		 */
++		goto plug;
++	} else {
++		/*
++		 * The block driver does not preserve the write order. Plug and
++		 * submit the BIO.
++		 */
++		zwplug->flags |= BLK_ZONE_WPLUG_PLUGGED;
++	}
++
+  	if (!blk_zone_wplug_prepare_bio(zwplug, bio)) {
+  		spin_unlock_irqrestore(&zwplug->lock, flags);
+  		bio_io_error(bio);
+  		return true;
+  	}
+
+-	/* Otherwise, plug and submit the BIO. */
+-	zwplug->flags |= BLK_ZONE_WPLUG_PLUGGED;
+-
+  	spin_unlock_irqrestore(&zwplug->lock, flags);
+
+  	return false;
+@@ -1150,7 +1182,7 @@ bool blk_zone_plug_bio(struct bio *bio, unsigned 
+int nr_segs, int rq_cpu)
+  		fallthrough;
+  	case REQ_OP_WRITE:
+  	case REQ_OP_WRITE_ZEROES:
+-		return blk_zone_wplug_handle_write(bio, nr_segs);
++		return blk_zone_wplug_handle_write(bio, nr_segs, rq_cpu);
+  	case REQ_OP_ZONE_RESET:
+  		return blk_zone_wplug_handle_reset_or_finish(bio, 0);
+  	case REQ_OP_ZONE_FINISH:
+@@ -1182,6 +1214,9 @@ static void disk_zone_wplug_unplug_bio(struct 
+gendisk *disk,
+
+  	zwplug->flags &= ~BLK_ZONE_WPLUG_PLUGGED;
+
++	if (refcount_read(&zwplug->ref) == 2)
++		zwplug->from_cpu = -1;
++
+  	/*
+  	 * If the zone is full (it was fully written or finished, or empty
+  	 * (it was reset), remove its zone write plug from the hash table.
+@@ -1283,6 +1318,7 @@ static void blk_zone_wplug_bio_work(struct 
+work_struct *work)
+  	struct blk_zone_wplug *zwplug =
+  		container_of(work, struct blk_zone_wplug, bio_work);
+  	struct block_device *bdev;
++	bool ordered_hwq;
+  	struct bio *bio;
+
+  	do {
+@@ -1303,6 +1339,8 @@ static void blk_zone_wplug_bio_work(struct 
+work_struct *work)
+  						 bio->bi_iter.bi_sector,
+  						 bio_sectors(bio));
+
++			ordered_hwq = zwplug->disk->queue->limits.features &
++				BLK_FEAT_ORDERED_HWQ;
+  			if (!blk_zone_wplug_prepare_bio(zwplug, bio)) {
+  				blk_zone_wplug_bio_io_error(zwplug, bio);
+  				goto again;
+@@ -1323,7 +1361,7 @@ static void blk_zone_wplug_bio_work(struct 
+work_struct *work)
+  		} else {
+  			blk_mq_submit_bio(bio);
+  		}
+-	} while (0);
++	} while (ordered_hwq);
+
+  put_zwplug:
+  	/* Drop the reference we took in disk_zone_wplug_schedule_bio_work(). */
+@@ -1850,6 +1888,7 @@ static void queue_zone_wplug_show(struct 
+blk_zone_wplug *zwplug,
+  	unsigned int zwp_zone_no, zwp_ref;
+  	unsigned int zwp_bio_list_size;
+  	unsigned long flags;
++	int from_cpu;
+
+  	spin_lock_irqsave(&zwplug->lock, flags);
+  	zwp_zone_no = zwplug->zone_no;
+@@ -1857,10 +1896,12 @@ static void queue_zone_wplug_show(struct 
+blk_zone_wplug *zwplug,
+  	zwp_ref = refcount_read(&zwplug->ref);
+  	zwp_wp_offset = zwplug->wp_offset;
+  	zwp_bio_list_size = bio_list_size(&zwplug->bio_list);
++	from_cpu = zwplug->from_cpu;
+  	spin_unlock_irqrestore(&zwplug->lock, flags);
+
+-	seq_printf(m, "%u 0x%x %u %u %u\n", zwp_zone_no, zwp_flags, zwp_ref,
+-		   zwp_wp_offset, zwp_bio_list_size);
++	seq_printf(m, "zone_no %u flags 0x%x ref %u wp_offset %u bio_list_size 
+%u from_cpu %d\n",
++		   zwp_zone_no, zwp_flags, zwp_ref, zwp_wp_offset,
++		   zwp_bio_list_size, from_cpu);
+  }
+
+  int queue_zone_wplugs_show(void *data, struct seq_file *m)
+
