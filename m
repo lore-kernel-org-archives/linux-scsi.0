@@ -1,42 +1,61 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from out162-62-58-211.mail.qq.com (out162-62-58-211.mail.qq.com [162.62.58.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A58D2274658;
-	Tue, 15 Jul 2025 07:54:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65AA2230997;
+	Tue, 15 Jul 2025 08:01:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.58.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752566073; cv=none; b=WZ6xIYpQbY3AaVKVYEXiQLQm+7qQ0cVawFgj5j8jG+XL8vm4pMRQTmCOWuMER9TPc4t9Y3vua/hIzn57BBSpDVG9UbOdvmOKGlAEoaQ3BRD0/qn5r7zvL+ChRHRQrPPmfqdyGx15m3aVLvpR1dYcEN6BBbsDsQUZd/P8rrbDvWE=
+	t=1752566501; cv=none; b=mEZRfkeT6PkI0Q41AVB/l+PdDYZkpoWHCc6cDfTIny7w9GXn4QBOdpSoqC3Lf3Ns1nWXkkxxUNwCpuXElJixSTYnB17j9CGRTakDkhp2AsizUlgkrnZMAS2hprlrZuxz3UbjHX1eYvchEuuUt8rszaKsPrABOJVS6QzLesC4ioo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752566073; c=relaxed/simple;
-	bh=uWmehmNiGf8T4RfU0s+cwTdBH+OEaWHv6hOIyw8S+aY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=af5FpGXum3bdgWDQokmAZHTZTsmgCzQj4NA8VPIbJ/afGlCVi4z8irON+KGc9KWrPGV1Z1mP7FneO+DemVLBuS9UUoDNA5RhJ6NdqokOU+XPrE0JOpitasFfprgABjM9E+2oGz+eQxvrjG5CMQ7nhvlLO3llN+2QxAxD4bWgvFg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.190
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4bhBHD0dCMz2TT4Y;
-	Tue, 15 Jul 2025 15:52:24 +0800 (CST)
-Received: from kwepemg500017.china.huawei.com (unknown [7.202.181.81])
-	by mail.maildlp.com (Postfix) with ESMTPS id 00CE9180043;
-	Tue, 15 Jul 2025 15:54:27 +0800 (CST)
-Received: from huawei.com (10.175.112.188) by kwepemg500017.china.huawei.com
- (7.202.181.81) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1544.11; Tue, 15 Jul
- 2025 15:54:25 +0800
-From: Li Lingfeng <lilingfeng3@huawei.com>
-To: <lduncan@suse.com>, <cleech@redhat.com>, <njavali@marvell.com>,
-	<mrangankar@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
-	<martin.petersen@oracle.com>, <jejb@linux.ibm.com>,
-	<James.Bottomley@HansenPartnership.com>, <michael.christie@oracle.com>
-CC: <open-iscsi@googlegroups.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <yukuai1@huaweicloud.com>,
-	<houtao1@huawei.com>, <yi.zhang@huawei.com>, <yangerkun@huawei.com>,
-	<chengzhihao1@huawei.com>, <lilingfeng@huaweicloud.com>,
-	<lilingfeng3@huawei.com>
-Subject: [PATCH] Revert "scsi: iscsi: Fix HW conn removal use after free"
-Date: Tue, 15 Jul 2025 15:39:26 +0800
-Message-ID: <20250715073926.3529456-1-lilingfeng3@huawei.com>
-X-Mailer: git-send-email 2.46.1
+	s=arc-20240116; t=1752566501; c=relaxed/simple;
+	bh=S6NHiSBLhIR3DYKmf6KEc9Y6Sel+6UdtVm9LhNemEb4=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version; b=td6mXwUH6Jad1IuUevmy65Zo2h962fQIPiF0XvUdpqvSCmXEncM+9Q6TDeKpNUFknLlgAnUMT+xRN085wNjCxQJXuKXCNtwqsNBl2AXF/jB+zX+ZmZ/OK111IuH0ON3SFjjE8acVquB9B73WEj/cBG4co88zlhCAdzONhP0gsQc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=yh5SjI9E; arc=none smtp.client-ip=162.62.58.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="yh5SjI9E"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1752566185; bh=UPFN4iCrljSwXOyLIxdudLAgMwjA8757pjLDY2iNOls=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=yh5SjI9EGpBbWlPC1bebp5fi4mhSLZjv1Wgxs16o4n3jnn3FjZZ8aMMb+T7u/Ppmi
+	 2pCdhAlo5Cscshhf2O8q7YhQoo/3KamOOIzkpuXGu2SD+YvSJpymkM8Th4ehe4qqxX
+	 RxDPMfIBOg8vC/Ffiv+fEkBTNCRsKkjdUygs3d8s=
+Received: from VM-222-126-tencentos.localdomain ([14.22.11.162])
+	by newxmesmtplogicsvrszc16-0.qq.com (NewEsmtp) with SMTP
+	id E1682E4F; Tue, 15 Jul 2025 15:56:22 +0800
+X-QQ-mid: xmsmtpt1752566182tlmc1gbov
+Message-ID: <tencent_88DDBC2334BBA2C8A4C1E122DE62F8AB250A@qq.com>
+X-QQ-XMAILINFO: N/WmRbclY25GagF51JIOmPZtChli4QwYBGAqkJKqa/10a3iGlzj/46J9hj2rt3
+	 3vXDUtC5q9unuIr+vi6B9uNiWxpOn2szT1MoK3VnvSjULksId/A4vhJPb0QmgL/ncaWqcVmJeZJG
+	 isb0Vin5dS5h7B5COcIY2KC/yHw4ssrUwcLwo+QfmOLCaRSJeJOHc2IDZmm/zBAp8P3+SSn366Aa
+	 SdpqHPF2u3tSn1NW3F01p97lzuFxWWEIPQbpy6eKboG0vl1ryN9OHnbdbfTxnOz2jW6zJxtI8hSk
+	 0CFNSAeSii6EoMln6PxTcoQUuF2PNfyZ6ge13l/j/hlHj14i9CcYIwneoTeElpYjyA39lbFBhv+U
+	 fXd1M5eQ+PPNvyHimhLjHvXIluxc3BzyBRMGvRhr8XYbPll6JbY4wrHxu7W2swAy5mKzosTxQhNA
+	 OmBzhOdCFNb8MLDGDhLwV5Qh3K/9DDaGpjuqrHnG69Tyl38UaMQRdGcxr3PPGMTRrs8vtsUQu4j6
+	 XHs3bepgqVq8f6e9o+Q20joxY+o9ej9bHFNYQcggmxSCGPfI29/FZcvaStsPsfQ3AkGUkQcHmK5+
+	 /VOku406vF46YZtcW0P6SgQ2fGv0N7Zdxx2NZ9WBdFeK0Pq1ukRNnul8xy51+QvQ/3JV7lWpygJG
+	 73AEJisUTX8hRk/UF+Jnd5uEF2soB3zI7JHBW5rjjcpNF2pi/dPows9RbZ2xFHnajbDOFmZaw8mw
+	 uxO+729fhlBpWxmtRQr+9O0y+MrnQ78uMeiKVDfCvaMlk3erCrofTMbu5X7Iovgfrlob8BJXgIOR
+	 mutdAwNdZirCVHWq5tF1EOB47n4ejnatBUyI6AscZbtWQux2aoTIxa39oZAcWc/qdMPSbzcdAkf5
+	 8FZWIv9oxagUPijOfKEqofjfHwMbBE7wGHE3/LLMNDskB7aahQFV33Or12yMWY884rGbgOAni1S8
+	 y2booDPnMWwcMrpRt1YLUHXeb7BZj+5LTNQiowg/HjQYEh+ArEbu9f6APXi7oEc5L+lAVFS944op
+	 45kEMfq4GN1nwQjSX8lsjUl+EsN1q1qoslJbBb414nO22N84xEIgD5VHHZOe4=
+X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
+From: jackysliu <1972843537@qq.com>
+To: 1972843537@qq.com
+Cc: James.Bottomley@HansenPartnership.com,
+	bvanassche@acm.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Subject: Re: [PATCH v2] usb: gadget: functioni: Fix a oob problem in rndis
+Date: Tue, 15 Jul 2025 15:56:17 +0800
+X-OQ-MSGID: <20250715075617.3120827-1-1972843537@qq.com>
+X-Mailer: git-send-email 2.43.5
+In-Reply-To: <tencent_ADA5210D1317EEB6CD7F3DE9FE9DA4591D05@qq.com>
+References: <tencent_ADA5210D1317EEB6CD7F3DE9FE9DA4591D05@qq.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -44,45 +63,24 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems500002.china.huawei.com (7.221.188.17) To
- kwepemg500017.china.huawei.com (7.202.181.81)
 
-This reverts commit c577ab7ba5f3bf9062db8a58b6e89d4fe370447e.
+On Fri, Jul 11 2025 08:51:30 +0200, greg k-h wrote:
 
-The invocation of iscsi_put_conn() in iscsi_iter_destory_conn_fn() is used
-to free the initial reference counter of iscsi_cls_conn.
-For non-qla4xxx cases, the ->destroy_conn() callback (e.g.,
-iscsi_conn_teardown) will call iscsi_remove_conn() and iscsi_put_conn() to
-remove the connection from the children list of session and free the
-connection at last.
-However for qla4xxx, it is not the case. The ->destroy_conn() callback
-of qla4xxx will keep the connection in the session conn_list and doesn't
-use iscsi_put_conn() to free the initial reference counter. Therefore,
-it seems necessary to keep the iscsi_put_conn() in the
-iscsi_iter_destroy_conn_fn(), otherwise, there will be memory leak
-problem.
+>Yes, and then look to see what buf_len (not buflen) in
+>gen_ndis_set_resp() is used for.  I'll wait... :)
+Oh,my bad.It seem that buf_len will only be used for some debugging code..
 
-Link: https://lore.kernel.org/all/88334658-072b-4b90-a949-9c74ef93cfd1@huawei.com/
-Fixes: c577ab7ba5f3 ("scsi: iscsi: Fix HW conn removal use after free")
-Signed-off-by: Li Lingfeng <lilingfeng3@huawei.com>
----
- drivers/scsi/scsi_transport_iscsi.c | 2 ++
- 1 file changed, 2 insertions(+)
+>What tool generated this static analysis?  You always have to mention
+>that as per our development rules.
+The vulnerability is found by  is found by Wukong-Agent, a code security AI agent,
+ through static code analysis.But It seems that this is a false positive..
 
-diff --git a/drivers/scsi/scsi_transport_iscsi.c b/drivers/scsi/scsi_transport_iscsi.c
-index c75a806496d6..743b4c792ceb 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2143,6 +2143,8 @@ static int iscsi_iter_destroy_conn_fn(struct device *dev, void *data)
- 		return 0;
- 
- 	iscsi_remove_conn(iscsi_dev_to_conn(dev));
-+	iscsi_put_conn(iscsi_dev_to_conn(dev));
-+
- 	return 0;
- }
- 
--- 
-2.46.1
+And what qemu setup did you use to test this?  That would be helpful to
+know so that I can verify it on my end.
+
+I'll add some web-usb device to test this model.But seems that I went into a wrong way.
+
+Thanks
+
+Siyang Liu
 
