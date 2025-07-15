@@ -1,447 +1,386 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 660341A8412
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2025 02:23:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1562018DB1A;
+	Tue, 15 Jul 2025 03:05:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752546189; cv=none; b=YbEzxSgkertFWk09Od5Tlp4F42/EChVOvPhqueXU40Neyio8xMtMa/daoouOiUxOnerS8OcKNGfvcKpGHtcZJR00ZaaBGghk1UzvSkcKkwz5pPlVjWZEQYjQ+5d8lkfMPowZs4MK1K+BhiPalM+jWWs0P/kyR+7XCj552pHIAGo=
+	t=1752548717; cv=none; b=DMBb4qDh0AmqYqmK2b5sUBmAfV0+jIxKCArjpfX6dp3QCkZzcqkSQZqUrETnD1qpdRHjuGSwmi0U62frjWt3+b7ylUN/7BhcnFSVjDWVDpQP6A6S9OvWZOXUNretqEuZhoiUZ4C5G2bXb0NBqei1Pr9h87kK+zNXIq3P9eF82p8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752546189; c=relaxed/simple;
-	bh=ICCDaw3F3G3n4zB3kn1ylHHNAT2pO+AZyKE5FyIHUvk=;
-	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=GzIjpFiw3WqVZR8IaL8CfI8NaCtctfHZIOfvjChmaMhWsa6YwP1EcB89KUuJbtWwEmW592NqfQRh7LAGVVOu9OXD/wf1PvWbt7S0nra6USxEfm+9olRuTBMSyjs/r7k+AFWLdt8zpa1PFFSr5oGHil5OOa5bMHO1p3n7VyZRYr8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=W17al+bM; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="W17al+bM"
-Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250715022304epoutp0351a4a0da104bc19d4a1c3f858300cf8a~SS3geg8je1933619336epoutp03q
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2025 02:23:04 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250715022304epoutp0351a4a0da104bc19d4a1c3f858300cf8a~SS3geg8je1933619336epoutp03q
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1752546184;
-	bh=bas5xIrmDXvLqW7AI3jY+fD/5VPBr845IirbpbtOrPY=;
-	h=From:To:In-Reply-To:Subject:Date:References:From;
-	b=W17al+bMSnamLcbCy+4LS+hfdKhINF1y6jky2qYIA81Npm1caQzka3spyOUrKXM7k
-	 ylVmQZp0JzLyuxENFgycY+TYxzaNqvE1eVG0RtZL48MskVXGpj+ekploGGKZDnh4Wa
-	 mohjJUN7gUVr9EjGZHa4VOW4fZaKuAbdWwiuPvfg=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas1p3.samsung.com (KnoxPortal) with ESMTPS id
-	20250715022303epcas1p319fc5c5ce97f8865348e1639f13ce5d3~SS3f7hgbX0718807188epcas1p3_;
-	Tue, 15 Jul 2025 02:23:03 +0000 (GMT)
-Received: from epcas1p1.samsung.com (unknown [182.195.38.250]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4bh2zC2Gmvz3hhTB; Tue, 15 Jul
-	2025 02:23:03 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250715022302epcas1p1973875e4f5f755ed3db47ea98c2b3a1a~SS3ejGcMk1723017230epcas1p1V;
-	Tue, 15 Jul 2025 02:23:02 +0000 (GMT)
-Received: from sh043lee04 (unknown [10.253.101.72]) by epsmtip2.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250715022302epsmtip244c81c4691a2c6da3cb512eec29e14e4~SS3eaA9o31720917209epsmtip2i;
-	Tue, 15 Jul 2025 02:23:02 +0000 (GMT)
-From: =?UTF-8?B?7J207Iq57Z2s?= <sh043.lee@samsung.com>
-To: "'Bean Huo'" <huobean@gmail.com>, <alim.akhtar@samsung.com>,
-	<avri.altman@wdc.com>, <bvanassche@acm.org>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<linux-scsi@vger.kernel.org>, <sdriver.sec@samsung.com>
-In-Reply-To: <b8fa773234058e68e6006127b3cd848046b75e6f.camel@gmail.com>
-Subject: RE: [PATCH] ufs: core: Use link recovery when the h8 exit failure
- during runtime resume
-Date: Tue, 15 Jul 2025 11:23:01 +0900
-Message-ID: <000901dbf52f$63a69090$2af3b1b0$@samsung.com>
+	s=arc-20240116; t=1752548717; c=relaxed/simple;
+	bh=Pfe8WObDT1a61jiVOqq1FN+hlv1UJ6niselMJ1QVSYg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=nRJM9xVOKazotXYhsUANf6J8B2goSALDE3iLTaDi7uutCEqo7xdMhmzkySh1Irhro1pfHrtFC+Wwre1h/g+R3l8JbeZtjs8tsqet1AuO98WYyxmcCjGZO1l9gcKX+6DwvlVX/tCiu0bgQVaq6ZQhrIU7lkquRiErZsZQ9Oyc6TE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
+Received: from mail.maildlp.com (unknown [172.19.88.194])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4bh3q20LpxzHrRx;
+	Tue, 15 Jul 2025 11:01:02 +0800 (CST)
+Received: from kwepemg500017.china.huawei.com (unknown [7.202.181.81])
+	by mail.maildlp.com (Postfix) with ESMTPS id AA5C41401F3;
+	Tue, 15 Jul 2025 11:05:08 +0800 (CST)
+Received: from [10.174.179.155] (10.174.179.155) by
+ kwepemg500017.china.huawei.com (7.202.181.81) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 15 Jul 2025 11:05:07 +0800
+Message-ID: <88334658-072b-4b90-a949-9c74ef93cfd1@huawei.com>
+Date: Tue, 15 Jul 2025 11:05:07 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQH3aHPkcZ8xP3B7R0c5EXGU8cAQqgKwpSsnAUiyhkKz27bdAA==
-Content-Language: ko
-X-CMS-MailID: 20250715022302epcas1p1973875e4f5f755ed3db47ea98c2b3a1a
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b
-References: <CGME20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b@epcas1p2.samsung.com>
-	<20250714090617.9212-1-sh043.lee@samsung.com>
-	<b8fa773234058e68e6006127b3cd848046b75e6f.camel@gmail.com>
+User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
+Subject: Re: [PATCH 1/6] scsi: iscsi: Fix HW conn removal use after free
+To: Hou Tao <houtao@huaweicloud.com>, Mike Christie
+	<michael.christie@oracle.com>
+CC: <lduncan@suse.com>, <cleech@redhat.com>, <njavali@marvell.com>,
+	<mrangankar@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
+	<martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+	<jejb@linux.ibm.com>, yangerkun <yangerkun@huawei.com>, "yukuai (C)"
+	<yukuai3@huawei.com>, "zhangyi (F)" <yi.zhang@huawei.com>,
+	<James.Bottomley@HansenPartnership.com>, <open-iscsi@googlegroups.com>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Li Lingfeng
+	<lilingfeng@huaweicloud.com>
+References: <20220616222738.5722-1-michael.christie@oracle.com>
+ <20220616222738.5722-2-michael.christie@oracle.com>
+ <93484c2e-528e-46a1-83d6-c420e0d2a1ef@huawei.com>
+ <bb21e728-ae5d-4328-8076-78c2f984ee05@huawei.com>
+ <0b0a0bcf-b805-5041-9923-37ad391169c0@huaweicloud.com>
+From: Li Lingfeng <lilingfeng3@huawei.com>
+In-Reply-To: <0b0a0bcf-b805-5041-9923-37ad391169c0@huaweicloud.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemg500017.china.huawei.com (7.202.181.81)
 
-> -----Original Message-----
-> From: Bean Huo <huobean=40gmail.com>
-> Sent: Monday, July 14, 2025 8:21 PM
-> To: Seunghui Lee <sh043.lee=40samsung.com>; alim.akhtar=40samsung.com;
-> avri.altman=40wdc.com; bvanassche=40acm.org;
-> James.Bottomley=40HansenPartnership.com; martin.petersen=40oracle.com; li=
-nux-
-> scsi=40vger.kernel.org; sdriver.sec=40samsung.com
-> Subject: Re: =5BPATCH=5D ufs: core: Use link recovery when the h8 exit fa=
-ilure
-> during runtime resume
->=20
-> On Mon, 2025-07-14 at 18:06 +0900, Seunghui Lee wrote:
-> > If the h8 exit fails during runtime resume process, the runtime thread
-> > enters runtime suspend immediately and the error handler operates at
-> > the same time.
-> > It becomes stuck and cannot be recovered through the error handler.
-> > To fix this, use link recovery instead of the error handler.
-> >
-> > Signed-off-by: Seunghui Lee <sh043.lee=40samsung.com>
-> > ---
-> >  drivers/ufs/core/ufshcd.c =7C 10 +++++++++-
-> >  1 file changed, 9 insertions(+), 1 deletion(-)
-> >
-> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> > index 50adfb8b335b..dc2845c32d72 100644
-> > --- a/drivers/ufs/core/ufshcd.c
-> > +++ b/drivers/ufs/core/ufshcd.c
-> > =40=40 -4340,7 +4340,7 =40=40 static int ufshcd_uic_pwr_ctrl(struct ufs=
-_hba
-> > *hba, struct uic_command *cmd)
-> >         hba->uic_async_done =3D NULL;
-> >         if (reenable_intr)
-> >                 ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
-> > -       if (ret) =7B
-> > +       if (ret && =21hba->pm_op_in_progress) =7B
-> >                 ufshcd_set_link_broken(hba);
-> >                 ufshcd_schedule_eh_work(hba);
-> >         =7D
-> > =40=40 -4348,6 +4348,14 =40=40 static int ufshcd_uic_pwr_ctrl(struct uf=
-s_hba
-> > *hba, struct uic_command *cmd)
-> >         spin_unlock_irqrestore(hba->host->host_lock, flags);
-> >         mutex_unlock(&hba->uic_cmd_mutex);
-> >
-> > +       /*
-> > +        * If the h8 exit fails during the runtime resume process,
-> > +        * it becomes stuck and cannot be recovered through the error
-> handler.
-> > +        * To fix this, use link recovery instead of the error handler.
-> > +        */
-> > +       if (ret && hba->pm_op_in_progress)
-> > +               ret =3D ufshcd_link_recovery(hba);
-> > +
-> >         return ret;
-> >  =7D
-> >
-> I have one queston:
->=20
-> In the error handler, if the link is broken(set by
-> ufshcd_set_link_broken()), then in ufshcd_err_handler(), will
-> ufshcd_reset_and_restore(hba), does not this work?
->=20
->=20
-> Kind regards,
-> Bean
->=20
+Hi all,
 
-
-Unfortunately, it doesn't work.
-Please refer to the below log.
-
-=5B  310.118416=5D =5B4:    kworker/4:4:  786=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_uic_hibern8_exit: hibern8 exit failed. ret =3D -110
-=5B  310.118423=5D =5B4:    kworker/4:4:  786=5D ufshcd-qcom 1d84000.ufshc:=
- __ufshcd_wl_resume: hibern8 exit failed -110
-
-=5B  310.118424=5D =5B0:  kworker/u32:0:   12=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0=
-; saved_err =3D 0; saved_uic_err =3D 0; force_reset =3D 0; link is broken
-
-=5B  310.119046=5D =5B4:    kworker/4:4:  786=5D ufs_device_wlun 0:0:0:4948=
-8: ufshcd_wl_runtime_resume failed: -110
-=5B  310.119051=5D =5B4:    kworker/4:4:  786=5D ufs_device_wlun 0:0:0:4948=
-8: ufshcd_wl_runtime_resume: 560926us, pwr_mode(1), link state(3)
--> ufshcd_wl_runtime_resume failed done.
-   -> ufshcd_rpm_get_sync() in ufshcd_err_handling_prepare()
-
-=5B  310.119104=5D =5B4:    kworker/4:4:  786=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_runtime_suspend start.
--> ufshcd_runtime_suspend()
-   -> ufshcd_suspend()
-      -> ufshcd_disable_irq() / ufshcd_setup_clocks( , false) / ufshcd_vreg=
-_set_lpm() / ufshcd_hba_vreg_set_lpm()
-=5B  310.119111=5DI=5B0:  kworker/u32:0:   12=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_check_errors: Auto Hibern8 Exit failed - status: 0x00000020, upmcrs=
-: 0x00000001
-=5B  310.119119=5DI=5B0:  kworker/u32:0:   12=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_check_errors: saved_err 0x20 saved_uic_err 0x0
-<snip>
-=5B  310.119162=5D =5B4:    kworker/4:4:  786=5D  gcc_ufs_mem_phy_gdsc: gen=
-pd_power_off
-=5B  310.119167=5D =5B4:    kworker/4:4:  786=5D CPU: 4 UID: 0 PID: 786 Com=
-m: kworker/4:4 Tainted: G        W  O       6.12.23-android16-5-31706220-ud=
--abogki31706220-4k =231 5bbb440b8bd7ff2d31dd25fab2106d21aa9b6357
-=5B  310.119176=5D =5B4:    kworker/4:4:  786=5D Tainted: =5BW=5D=3DWARN, =
-=5BO=5D=3DOOT_MODULE
-=5B  310.119179=5D =5B4:    kworker/4:4:  786=5D Hardware name: Samsung M2Q=
- PROJECT (board-id,05) (DT)
-=5B  310.119183=5D =5B4:    kworker/4:4:  786=5D Workqueue: pm pm_runtime_w=
-ork
-=5B  310.119189=5D =5B4:    kworker/4:4:  786=5D=20
-=5B  310.119192=5D =5B4:    kworker/4:4:  786=5D Call trace:
-=5B  310.119195=5D =5B4:    kworker/4:4:  786=5D  dump_backtrace+0xec/0x128
-=5B  310.119205=5D =5B4:    kworker/4:4:  786=5D  show_stack+0x18/0x28
-=5B  310.119212=5D =5B4:    kworker/4:4:  786=5D  dump_stack_lvl+0x40/0x88
-=5B  310.119219=5D =5B4:    kworker/4:4:  786=5D  dump_stack+0x18/0x24
-=5B  310.119226=5D =5B4:    kworker/4:4:  786=5D  genpd_power_off+0x304/0x3=
-08
-=5B  310.119232=5D =5B4:    kworker/4:4:  786=5D  genpd_runtime_suspend+0x2=
-60/0x38c
-=5B  310.119238=5D =5B4:    kworker/4:4:  786=5D  __rpm_callback+0x94/0x390
-=5B  310.119242=5D =5B4:    kworker/4:4:  786=5D  rpm_suspend+0x284/0x640
-=5B  310.119249=5D =5B4:    kworker/4:4:  786=5D  rpm_idle+0x58/0x37c
-=5B  310.119255=5D =5B4:    kworker/4:4:  786=5D  __pm_runtime_idle+0x60/0x=
-150
-=5B  310.119262=5D =5B4:    kworker/4:4:  786=5D  ufs_qcom_phy_qmp_v4_power=
-_control+0x144/0x15c =5Bphy_qcom_ufs_qmp_v4_canoe f98acc73ebd0cc2fea7bd12b5=
-74d8fd77ee19353=5D
-=5B  310.119276=5D =5B4:    kworker/4:4:  786=5D  ufs_qcom_phy_power_off+0x=
-44/0x308 =5Bphy_qcom_ufs b7bbd5d6bbe64d4ff5f3e89a124ca991f7c4f08a=5D
-=5B  310.119291=5D =5B4:    kworker/4:4:  786=5D  phy_power_off+0x58/0xdc
-=5B  310.119300=5D =5B4:    kworker/4:4:  786=5D  ufs_qcom_setup_clocks+0x3=
-f4/0x7e8 =5Bufs_qcom 01a09a66f1eae71e0199ddd5861db80b7fe6c630=5D
-=5B  310.119341=5D =5B4:    kworker/4:4:  786=5D  ufshcd_setup_clocks+0x74/=
-0x3d8
-=5B  310.119351=5D =5B4:    kworker/4:4:  786=5D  ufshcd_suspend+0x48/0x160
-=5B  310.119357=5D =5B4:    kworker/4:4:  786=5D  ufshcd_runtime_suspend+0x=
-70/0x1b8
-=5B  310.119363=5D =5B4:    kworker/4:4:  786=5D  pm_generic_runtime_suspen=
-d+0x40/0x58
-=5B  310.119369=5D =5B4:    kworker/4:4:  786=5D  genpd_runtime_suspend+0x1=
-28/0x38c
-=5B  310.119375=5D =5B4:    kworker/4:4:  786=5D  __rpm_callback+0x94/0x390
-=5B  310.119378=5D =5B4:    kworker/4:4:  786=5D  rpm_suspend+0x2a4/0x640
-=5B  310.119385=5D =5B4:    kworker/4:4:  786=5D  pm_runtime_work+0x8c/0xa8
-=5B  310.119389=5D =5B4:    kworker/4:4:  786=5D  process_scheduled_works+0=
-x1c4/0x45c
-=5B  310.119394=5D =5B4:    kworker/4:4:  786=5D  worker_thread+0x32c/0x3e8
-=5B  310.119399=5D =5B4:    kworker/4:4:  786=5D  kthread+0x11c/0x1b0
-=5B  310.119405=5D =5B4:    kworker/4:4:  786=5D  ret_from_fork+0x10/0x20
-
-=5B  310.120394=5D =5B0:  kworker/u32:0:   12=5D  gcc_ufs_mem_phy_gdsc: gen=
-pd_power_on
-=5B  310.120398=5D =5B0:  kworker/u32:0:   12=5D CPU: 0 UID: 0 PID: 12 Comm=
-: kworker/u32:0 Tainted: G        W  O       6.12.23-android16-5-31706220-u=
-d-abogki31706220-4k =231 5bbb440b8bd7ff2d31dd25fab2106d21aa9b6357
-=5B  310.120408=5D =5B0:  kworker/u32:0:   12=5D Tainted: =5BW=5D=3DWARN, =
-=5BO=5D=3DOOT_MODULE
-=5B  310.120410=5D =5B0:  kworker/u32:0:   12=5D Hardware name: Samsung M2Q=
- PROJECT (board-id,05) (DT)
-=5B  310.120413=5D =5B0:  kworker/u32:0:   12=5D Workqueue: ufs_eh_wq_0 ufs=
-hcd_err_handler
-=5B  310.120423=5D =5B0:  kworker/u32:0:   12=5D Call trace:
-=5B  310.120426=5D =5B0:  kworker/u32:0:   12=5D  dump_backtrace+0xec/0x128
-=5B  310.120435=5D =5B0:  kworker/u32:0:   12=5D  show_stack+0x18/0x28
-=5B  310.120442=5D =5B0:  kworker/u32:0:   12=5D  dump_stack_lvl+0x40/0x88
-=5B  310.120448=5D =5B0:  kworker/u32:0:   12=5D  dump_stack+0x18/0x24
-=5B  310.120455=5D =5B0:  kworker/u32:0:   12=5D  genpd_power_on+0x34c/0x3b=
-0
-=5B  310.120463=5D =5B0:  kworker/u32:0:   12=5D  genpd_runtime_resume+0x16=
-c/0x43c
-=5B  310.120469=5D =5B0:  kworker/u32:0:   12=5D  __rpm_callback+0x94/0x390
-=5B  310.120473=5D =5B0:  kworker/u32:0:   12=5D  rpm_resume+0x3bc/0x5a8
-=5B  310.120480=5D =5B0:  kworker/u32:0:   12=5D  __pm_runtime_resume+0x48/=
-0x8c
-=5B  310.120487=5D =5B0:  kworker/u32:0:   12=5D  ufs_qcom_phy_qmp_v4_power=
-_control+0x34/0x15c =5Bphy_qcom_ufs_qmp_v4_canoe f98acc73ebd0cc2fea7bd12b57=
-4d8fd77ee19353=5D
-=5B  310.120497=5D =5B0:  kworker/u32:0:   12=5D  ufs_qcom_phy_power_on+0x1=
-3c/0x79c =5Bphy_qcom_ufs b7bbd5d6bbe64d4ff5f3e89a124ca991f7c4f08a=5D
-=5B  310.120512=5D =5B0:  kworker/u32:0:   12=5D  phy_power_on+0x9c/0x124
-=5B  310.120520=5D =5B0:  kworker/u32:0:   12=5D  ufs_qcom_setup_clocks+0xb=
-4/0x7e8 =5Bufs_qcom 01a09a66f1eae71e0199ddd5861db80b7fe6c630=5D
-=5B  310.120560=5D =5B0:  kworker/u32:0:   12=5D  ufshcd_setup_clocks+0x150=
-/0x3d8
-=5B  310.120567=5D =5B0:  kworker/u32:0:   12=5D  ufshcd_err_handler+0x42c/=
-0xd20
-=5B  310.120574=5D =5B0:  kworker/u32:0:   12=5D  process_scheduled_works+0=
-x1c4/0x45c
-=5B  310.120579=5D =5B0:  kworker/u32:0:   12=5D  worker_thread+0x32c/0x3e8
-=5B  310.120584=5D =5B0:  kworker/u32:0:   12=5D  kthread+0x11c/0x1b0
-=5B  310.120590=5D =5B0:  kworker/u32:0:   12=5D  ret_from_fork+0x10/0x20
--> ufshcd_err_handler()
-   -> ufshcd_err_handling_prepare()
-      -> ufshcd_setup_clocks( , true)
-
-=5B  310.122158=5D =5B4:    kworker/4:4:  786=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_runtime_suspend: 3056us, pwr_mode(1), link state(3)
--> ufshcd_runtime_suspend done.
-
-=5B  310.122187=5D =5B4:    kworker/4:4:  786=5D  gcc_ufs_phy_gdsc: genpd_p=
-ower_off
-=5B  310.122191=5D =5B4:    kworker/4:4:  786=5D CPU: 4 UID: 0 PID: 786 Com=
-m: kworker/4:4 Tainted: G        W  O       6.12.23-android16-5-31706220-ud=
--abogki31706220-4k =231 5bbb440b8bd7ff2d31dd25fab2106d21aa9b6357
-=5B  310.122198=5D =5B4:    kworker/4:4:  786=5D Tainted: =5BW=5D=3DWARN, =
-=5BO=5D=3DOOT_MODULE
-=5B  310.122200=5D =5B4:    kworker/4:4:  786=5D Hardware name: Samsung M2Q=
- PROJECT (board-id,05) (DT)
-=5B  310.122203=5D =5B4:    kworker/4:4:  786=5D Workqueue: pm pm_runtime_w=
-ork
-=5B  310.122208=5D =5B4:    kworker/4:4:  786=5D Call trace:
-=5B  310.122210=5D =5B4:    kworker/4:4:  786=5D  dump_backtrace+0xec/0x128
-=5B  310.122218=5D =5B4:    kworker/4:4:  786=5D  show_stack+0x18/0x28
-=5B  310.122225=5D =5B4:    kworker/4:4:  786=5D  dump_stack_lvl+0x40/0x88
-=5B  310.122231=5D =5B4:    kworker/4:4:  786=5D  dump_stack+0x18/0x24
-=5B  310.122238=5D =5B4:    kworker/4:4:  786=5D  genpd_power_off+0x304/0x3=
-08
-=5B  310.122244=5D =5B4:    kworker/4:4:  786=5D  genpd_runtime_suspend+0x2=
-60/0x38c
-=5B  310.122249=5D =5B4:    kworker/4:4:  786=5D  __rpm_callback+0x94/0x390
-=5B  310.122253=5D =5B4:    kworker/4:4:  786=5D  rpm_suspend+0x2a4/0x640
-=5B  310.122260=5D =5B4:    kworker/4:4:  786=5D  pm_runtime_work+0x8c/0xa8
-=5B  310.122263=5D =5B4:    kworker/4:4:  786=5D  process_scheduled_works+0=
-x1c4/0x45c
-=5B  310.122268=5D =5B4:    kworker/4:4:  786=5D  worker_thread+0x32c/0x3e8
-=5B  310.122272=5D =5B4:    kworker/4:4:  786=5D  kthread+0x11c/0x1b0
-=5B  310.122279=5D =5B4:    kworker/4:4:  786=5D  ret_from_fork+0x10/0x20
-
-=5B  313.197378=5D =5B4:  kworker/u32:0:   12=5D ufs_qcom_phy_qmp_v4_canoe =
-1d80000.ufsphy_mem: ufs_qcom_phy_qmp_v4_is_pcs_ready: poll for pcs failed e=
-rr =3D -110
-=5B  313.197398=5D =5B4:  kworker/u32:0:   12=5D ufshcd-qcom 1d84000.ufshc:=
- ufs_qcom_power_up_sequence: Failed to calibrate PHY -110
-=5B  313.255403=5D =5B0:  kworker/u32:0:   12=5D ufshcd-qcom 1d84000.ufshc:=
- Controller enable failed
+在 2025/7/3 17:40, Hou Tao 写道:
+> Hi Mike & Lingfeng:
+>
+> On 7/3/2025 9:35 AM, Li Lingfeng wrote:
+>> Friendly ping...
+>>
+>> Thanks
+>>
+>> 在 2025/6/19 20:57, Li Lingfeng 写道:
+>>> Hi Mike,
+>>>
+>>> Thanks for this patch addressing the UAF issue. I have some questions
+>>> when
+>>> analyzing this patch.
+>>>
+>>> You mention that iscsi_remove_conn() frees the connection, making the
+>>> extra
+>>> iscsi_put_conn() cause UAF. However, looking at iscsi_remove_conn():
+>>>
+>>> iscsi_remove_conn
+>>>   device_del(&conn->dev)
+>>>    put_device(parent) // Only parent gets put_device
+>>>
+>>> This doesn't appear to free conn directly - only device_del() + parent
+>>> reference drop. Typically, conn is freed via put_device() on
+>>> &conn->dev when
+>>> its refcount reaches zero.
+>>>
+>>> Could you briefly clarify how iscsi_remove_conn() ultimately triggers
+>>> the
+>>> freeing, and in what scenario the subsequent iscsi_put_conn() leads
+>>> to UAF?
+>>>
+>>> Thanks again for the fix.
+>>>
+>>> Lingfeng
+>>>
+>>> 在 2022/6/17 6:27, Mike Christie 写道:
+>>>> If qla4xxx doesn't remove the connection before the session, the iSCSI
+>>>> class tries to remove the connection for it. We were doing a
+>>>> iscsi_put_conn() in the iter function which is not needed and will
+>>>> result
+>>>> in a use after free because iscsi_remove_conn() will free the
+>>>> connection.
+>>>>
+>>>> Reviewed-by: Lee Duncan <lduncan@suse.com>
+>>>> Signed-off-by: Mike Christie <michael.christie@oracle.com>
+>>>> ---
+>>>>    drivers/scsi/scsi_transport_iscsi.c | 2 --
+>>>>    1 file changed, 2 deletions(-)
+>>>>
+>>>> diff --git a/drivers/scsi/scsi_transport_iscsi.c
+>>>> b/drivers/scsi/scsi_transport_iscsi.c
+>>>> index 2c0dd64159b0..e6084e158cc0 100644
+>>>> --- a/drivers/scsi/scsi_transport_iscsi.c
+>>>> +++ b/drivers/scsi/scsi_transport_iscsi.c
+>>>> @@ -2138,8 +2138,6 @@ static int iscsi_iter_destroy_conn_fn(struct
+>>>> device *dev, void *data)
+>>>>            return 0;
+>>>>          iscsi_remove_conn(iscsi_dev_to_conn(dev));
+>>>> -    iscsi_put_conn(iscsi_dev_to_conn(dev));
+>>>> -
+>>>>        return 0;
+>>>>    }
+>> .
+> I didn't follow the patch either. If I understand correctly, the
+> invocation of  iscsi_put_conn() in iscsi_iter_destory_conn_fn() is used
+> to free the initial reference counter of iscsi_cls_conn. For non-qla4xxx
+> cases, the ->destroy_conn() callback (e.g., iscsi_conn_teardown) will
+> call iscsi_remove_conn() and iscsi_put_conn() to remove the connection
+> from the children list of session and free the connection at last.
+> However for qla4xxx, it is not the case. The ->destroy_conn() callback
+> of qla4xxx will keep the connection in the session conn_list and doesn't
+> use iscsi_put_conn() to free the initial reference counter. Therefore,
+> it seems necessary to keep the iscsi_put_conn() in the
+> iscsi_iter_destroy_conn_fn(), otherwise, there will be memory leak problem.
+This patch indeed caused a memory leak. I reproduced the leak issue and
+confirmed that reintroducing the removed iscsi_put_conn() prevents the
+leak in the same scenario.
 
 
+*kernel base:*
+master 8c2e52ebbe885c7eeaabd3b7ddcdc1246fc400d2
 
-To fix this, I've tried two more things.
 
-1> The error handler waits until ufshcd_runtime_suspend done.
--> It doesn't work, either.
+*kernel diff:*
+1) Since I don't have the device that supports qla4xxx, I forcibly
+bypassed the connection check during session destruction;
+2) I expanded the memory required by conn by 1024 times to more clearly
+observe the memory changes.
 
---- a/common/drivers/ufs/core/ufshcd.c
-+++ b/common/drivers/ufs/core/ufshcd.c
-=40=40 -6551,6 +6551,11 =40=40 static void ufshcd_err_handling_prepare(stru=
-ct ufs_hba *hba)
-            hba->is_sys_suspended) =7B
-                enum ufs_pm_op pm_op;
-=20
-+               while (=21pm_runtime_status_suspended(hba->dev)) =7B
-+                       dev_err(hba->dev, =22%s: waiting for complete suspe=
-nd=5Cn=22, __func__);
-+                       msleep(10);
-+               =7D
+diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
+index 7b4fe0e6afb2..bb354deeb668 100644
+--- a/drivers/scsi/iscsi_tcp.c
++++ b/drivers/scsi/iscsi_tcp.c
+@@ -940,8 +940,12 @@ static void iscsi_sw_tcp_session_destroy(struct 
+iscsi_cls_session *cls_session)
+         struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
+         struct iscsi_session *session = cls_session->dd_data;
+
+-       if (WARN_ON_ONCE(session->leadconn))
+-               return;
++       if (WARN_ON_ONCE(session->leadconn)) {
++               printk("%s skip checking leadconn", __func__);
++       //      return;
++       }
 +
-                /*
-                 * Don't assume anything of resume, if
-                 * resume fails, irq and clocks can be OFF, and powers
++       printk("%s %d\n", __func__, __LINE__);
 
+         iscsi_session_remove(cls_session);
+         /*
+diff --git a/drivers/scsi/scsi_transport_iscsi.c 
+b/drivers/scsi/scsi_transport_iscsi.c
+index c75a806496d6..eac353ad536f 100644
+--- a/drivers/scsi/scsi_transport_iscsi.c
++++ b/drivers/scsi/scsi_transport_iscsi.c
+@@ -2408,7 +2408,7 @@ iscsi_alloc_conn(struct iscsi_cls_session 
+*session, int dd_size, uint32_t cid)
+         struct iscsi_transport *transport = session->transport;
+         struct iscsi_cls_conn *conn;
 
-=5B  335.876451=5D =5B0:    kworker/0:3:  713=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_uic_hibern8_exit: hibern8 exit failed. ret =3D -110
-=5B  335.876456=5D =5B0:    kworker/0:3:  713=5D ufshcd-qcom 1d84000.ufshc:=
- __ufshcd_wl_resume: hibern8 exit failed -110
+-       conn = kzalloc(sizeof(*conn) + dd_size, GFP_KERNEL);
++       conn = kzalloc((sizeof(*conn) + dd_size) * 1024, GFP_KERNEL);
+         if (!conn)
+                 return NULL;
+         if (dd_size)
+@@ -2984,6 +2984,7 @@ iscsi_if_destroy_conn(struct iscsi_transport 
+*transport, struct iscsi_uevent *ev
 
-=5B  335.876460=5D =5B4:  kworker/u32:2:   88=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0=
-; saved_err =3D 0; saved_uic_err =3D 0; force_reset =3D 0; link is broken
-
-=5B  335.877072=5D =5B0:    kworker/0:3:  713=5D ufs_device_wlun 0:0:0:4948=
-8: ufshcd_wl_runtime_resume failed: -110
-=5B  335.877076=5D =5B0:    kworker/0:3:  713=5D ufs_device_wlun 0:0:0:4948=
-8: ufshcd_wl_runtime_resume: 544445us, pwr_mode(1), link state(3)
--> ufshcd_wl_runtime_resume failed done.
-   -> ufshcd_rpm_get_sync() in ufshcd_err_handling_prepare()
-
-=5B  335.877112=5D =5B4:  kworker/u32:2:   88=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_err_handling_prepare: waiting for complete suspend
--> wait until ufshcd_runtime_suspend done.
-
-=5B  335.877123=5D =5B0:    kworker/0:3:  713=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_runtime_suspend start.
-=5B  335.879805=5D =5B0:    kworker/0:3:  713=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_runtime_suspend: 2685us, pwr_mode(1), link state(3)
-
-=5B  337.950174=5D =5B4:  kworker/u32:2:   88=5D ufshcd-qcom 1d84000.ufshc:=
- ESI configured
-=5B  337.950302=5D =5B4:  kworker/u32:2:   88=5D ufshcd-qcom 1d84000.ufshc:=
- MCQ configured, nr_queues=3D9, io_queues=3D8, read_queue=3D0, poll_queues=
-=3D1, queue_depth=3D64
--> ufshcd_reset_and_restore() works well.
-
-=5B  337.970178=5D =5B0:  kworker/u32:2:   88=5D ufs_device_wlun 0:0:0:4948=
-8: runtime PM trying to activate child device 0:0:0:49488 but parent (targe=
-t0:0:0) is not active
--> ufschd_recover_pm_err()
-   -> Because of this error, pm_request_resume doesn't call here.
-
-=5B  337.970212=5D =5B0:  kworker/u32:2:   88=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_err_handler finished; HBA state operational
-
-
-
-2> if eh_in_progress, err EBUSY return in ufshcd_runtime_suspend to guarant=
-ee the error handling done.
--> It doesn't work as well.
-
---- a/common/drivers/ufs/core/ufshcd.c
-+++ b/common/drivers/ufs/core/ufshcd.c
-=40=40 -10371,6 +10371,9 =40=40 int ufshcd_runtime_suspend(struct device *d=
-ev)
-        int ret;
-        ktime_t start =3D ktime_get();
-=20
-+       if (ufshcd_eh_in_progress(hba))
-+               return -EBUSY;
+         if (transport->destroy_conn)
+                 transport->destroy_conn(conn);
 +
-        ret =3D ufshcd_suspend(hba);
-=20
-        trace_ufshcd_runtime_suspend(hba, ret,
+         return 0;
+  }
 
-=5B   63.010841=5D =5B4:    kworker/4:0:   52=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_uic_hibern8_exit: hibern8 exit failed. ret =3D -110
-=5B   63.010844=5D =5B4:    kworker/4:0:   52=5D ufshcd-qcom 1d84000.ufshc:=
- __ufshcd_wl_resume: hibern8 exit failed -110
+@@ -3937,13 +3938,20 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct 
+nlmsghdr *nlh, uint32_t *group)
+                 iscsi_put_endpoint(ep);
+                 break;
+         case ISCSI_UEVENT_DESTROY_SESSION:
++               printk("%s %d skip checking conns\n", __func__, __LINE__);
+                 session = iscsi_session_lookup(ev->u.d_session.sid);
+-               if (!session)
++               if (!session) {
++                       printk("%s %d\n", __func__, __LINE__);
+                         err = -EINVAL;
+-               else if (iscsi_session_has_conns(ev->u.d_session.sid))
++/*
++               } else if (iscsi_session_has_conns(ev->u.d_session.sid)) {
++                       printk("%s %d\n", __func__, __LINE__);
+                         err = -EBUSY;
+-               else
++*/
++               } else {
++                       printk("%s %d\n", __func__, __LINE__);
+                         transport->destroy_session(session);
++               }
+                 break;
+         case ISCSI_UEVENT_DESTROY_SESSION_ASYNC:
+                 session = iscsi_session_lookup(ev->u.d_session.sid);
 
-=5B   63.010845=5D =5B0: kworker/u32:10:13604=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting down 0=
-; saved_err =3D 0; saved_uic_err =3D 0; force_reset =3D 0; link is broken
 
-=5B   63.011430=5D =5B4:    kworker/4:0:   52=5D ufs_device_wlun 0:0:0:4948=
-8: ufshcd_wl_runtime_resume failed: -110
-=5B   63.011433=5D =5B4:    kworker/4:0:   52=5D ufs_device_wlun 0:0:0:4948=
-8: ufshcd_wl_runtime_resume: 574917us, pwr_mode(1), link state(3)
--> ufshcd_wl_runtime_resume failed done.
-   -> ufshcd_rpm_get_sync() in ufshcd_err_handling_prepare()
+*open-iscsi base:*
+master 5b49cf2a86b1bfce13082f8ddc90b2282feb563d
 
-=5B   63.011457=5D =5B4:    kworker/4:0:   52=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_runtime_suspend: eh_in_progress
--> EBUSY return in ufshcd_runtime_suspend due to eh_in_progress
 
-=5B   63.011464=5DI=5B0: kworker/u32:10:13604=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_check_errors: Auto Hibern8 Exit failed - status: 0x00000020, upmcrs=
-: 0x00000001
-=5B   63.011468=5DI=5B0: kworker/u32:10:13604=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_check_errors: saved_err 0x20 saved_uic_err 0x0
+*open-iscsi diff:*
+I forcibly bypassed the standard connection destruction procedure, so
+that during the session destruction process, the connection would be
+destroyed to trigger iscsi_iter_destroy_conn_fn().
 
-=5B   63.039824=5D =5B0: kworker/u32:10:13604=5D ufshcd-qcom 1d84000.ufshc:=
- ufs_qcom_device_reset: Waiting for device internal cache flush
+diff --git a/usr/netlink.c b/usr/netlink.c
+index 4bcaf8b..970d782 100644
+--- a/usr/netlink.c
++++ b/usr/netlink.c
+@@ -516,12 +516,15 @@ kcreate_conn(uint64_t transport_handle, uint32_t sid,
+  static int
+  kdestroy_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid)
+  {
+-       int rc;
+-       struct iscsi_uevent ev;
+-       struct iovec iov[2];
+-
++//     int rc;
++//     struct iscsi_uevent ev;
++//     struct iovec iov[2];
++       (void)transport_handle;
++       (void)sid;
++       (void)cid;
+         log_debug(7, "in %s", __FUNCTION__);
+-
++       printf("skip destroy conn\n");
++/*
+         memset(&ev, 0, sizeof(struct iscsi_uevent));
 
-=5B   65.084604=5D =5B0: kworker/u32:10:13604=5D ufshcd-qcom 1d84000.ufshc:=
- ESI configured
-=5B   65.084728=5D =5B0: kworker/u32:10:13604=5D ufshcd-qcom 1d84000.ufshc:=
- MCQ configured, nr_queues=3D9, io_queues=3D8, read_queue=3D0, poll_queues=
-=3D1, queue_depth=3D64
--> ufshcd_reset_and_restore() works well.
+         ev.type = ISCSI_UEVENT_DESTROY_CONN;
+@@ -534,7 +537,7 @@ kdestroy_conn(uint64_t transport_handle, uint32_t 
+sid, uint32_t cid)
+         rc = __kipc_call(iov, 2);
+         if (rc < 0)
+                 return rc;
+-
++*/
+         return 0;
+  }
 
-=5B   65.105186=5D =5B1: kworker/u32:10:13604=5D ufs_device_wlun 0:0:0:4948=
-8: runtime PM trying to activate child device 0:0:0:49488 but parent (targe=
-t0:0:0) is not active
--> ufschd_recover_pm_err()
-   -> Because of this error, pm_request_resume doesn't call here.
-  =20
-=5B   65.105305=5D =5B1: kworker/u32:10:13604=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_err_handler finished; HBA state operational
-=5B   65.105310=5D =5B1: kworker/u32:10:13604=5D ufshcd-qcom 1d84000.ufshc:=
- ufshcd_err_handler started; HBA state operational; powered 1; shutting dow=
-n 0; saved_err =3D 0; saved_uic_err =3D 0; force_reset =3D 0
 
+*test script:*
+#!/bin/bash
+LOOP_TIMES=10000
+LOG_FILE="iscsi_opt.log"
+DEVICE_TYPE="VIRTUAL-DISK"
+
+for ((count=1; count<=LOOP_TIMES; count++)); do
+     iscsiadm -m node -l &>/dev/null &
+     login_pid=$!
+     login_start=$(date +%s)
+     device_found=0
+
+     while kill -0 $login_pid 2>/dev/null; do
+         sleep 0.5
+         elapsed=$(( $(date +%s) - login_start ))
+
+         if [ $elapsed -ge 30 ]; then
+             if lsscsi | grep -q "$DEVICE_TYPE"; then
+                 kill $login_pid 2>/dev/null
+                 status="DEVICE_READY (KILLED_TIMEOUT)"
+                 device_found=1
+                 break
+             fi
+         fi
+     done
+
+     if [ $device_found -eq 0 ]; then
+         wait $login_pid
+         status="ATTACHED"
+     fi
+
+     mem_login=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+     printf "%-6d %-12d %-8s %s\n" $count $mem_login "LOGIN" "$status" | 
+tee -a $LOG_FILE
+
+     iscsiadm -m node -u &>/dev/null
+     while iscsiadm -m session &>/dev/null; do sleep 0.1; done
+     mem_logout=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
+     printf "%-6d %-12d %-8s %s\n" $count $mem_logout "LOGOUT" "SUCCESS" 
+| tee -a $LOG_FILE
+done
+
+
+*result without iscsi_put_conn():*
+1) After a certain number of cycles, the available memory significantly
+decreases.
+1      53738028     LOGIN    ATTACHED
+1      53735616     LOGOUT   SUCCESS
+...
+100    52453148     LOGIN    ATTACHED
+100    52453376     LOGOUT   SUCCESS
+...
+200    51122008     LOGIN    ATTACHED
+200    51122644     LOGOUT   SUCCESS
+...
+2108   25984180     LOGIN    ATTACHED
+2108   25995580     LOGOUT   SUCCESS
+
+2) After removing iSCSI devices, stopping related services, and unloading
+kernel modules, the available memory has not returned to the expected
+level.
+[root@fedora test_ko]# lsscsi
+[0:0:0:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sda
+[0:0:1:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sdb
+[0:0:2:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sdc
+[0:0:3:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sdd
+[0:0:4:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sde
+[root@fedora test_ko]# service iscsid stop
+Redirecting to /bin/systemctl stop iscsid.service
+Warning: Stopping iscsid.service, but it can still be activated by:
+   iscsid.socket
+[root@fedora test_ko]# service tgtd stop
+Redirecting to /bin/systemctl stop tgtd.service
+[root@fedora test_ko]# rmmod iscsi_tcp
+[root@fedora test_ko]# rmmod iscsi_boot_sysfs
+[root@fedora test_ko]# rmmod libiscsi_tcp
+[root@fedora test_ko]# rmmod libiscsi
+[root@fedora test_ko]# rmmod scsi_transport_iscsi
+[root@fedora test_ko]# cat /proc/meminfo | grep MemAvailable
+MemAvailable:   26063488 kB
+[root@fedora test_ko]# cat /proc/meminfo | grep MemAvailable
+MemAvailable:   26065000 kB
+[root@fedora test_ko]#
+
+
+*result with iscsi_put_conn():*
+After a certain number of cycles, the available memory does not show
+significant changes.
+1      53823120     LOGIN    ATTACHED
+1      53828420     LOGOUT   SUCCESS
+...
+100    53738576     LOGIN    ATTACHED
+100    53747436     LOGOUT   SUCCESS
+...
+200    53723400     LOGIN    ATTACHED
+200    53728696     LOGOUT   SUCCESS
+...
+
+I haven't found more details about the UAF issue described in this patch,
+but I think the patch's description of the root cause 'iscsi_remove_conn()
+will free the connection' is incorrect. Moreover, this fix approach is
+inappropriate.
+Until the original issue is fully understood, I recommend reverting this
+patch.
+
+Thanks,
+
+Lingfeng
+
+
+> For the use-after-free problem, I think it may be due to the concurrent
+> invocation of iscsi_add_conn() and iscsi_session_teardown().
+> iscsi_add_conn() has already invoked device_add(), but fails on
+> transport_register_device() and is trying to invoke device_del(). At the
+> same time iscsi_session_teardown() invokes iscsi_remove_session() and is
+> invoking iscsi_iter_destroy_conn_fn for the failed-to-add connection.
+> The connection will be put twice: one in iscsi_iter_destroy_conn_fn()
+> and another one in iscsi_conn_setup() and leads to use-after-free problem.
+>
