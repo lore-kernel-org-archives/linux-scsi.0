@@ -1,386 +1,191 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lf1-f51.google.com (mail-lf1-f51.google.com [209.85.167.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1562018DB1A;
-	Tue, 15 Jul 2025 03:05:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73C7F2571B6
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2025 04:15:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752548717; cv=none; b=DMBb4qDh0AmqYqmK2b5sUBmAfV0+jIxKCArjpfX6dp3QCkZzcqkSQZqUrETnD1qpdRHjuGSwmi0U62frjWt3+b7ylUN/7BhcnFSVjDWVDpQP6A6S9OvWZOXUNretqEuZhoiUZ4C5G2bXb0NBqei1Pr9h87kK+zNXIq3P9eF82p8=
+	t=1752552910; cv=none; b=hOvL5tJN4gK+PRLpqkAhoqQrkKeaiAxw6GQ+Ueo7NpSu0bFfUdjxemeLDvmcJdvrsQYibE1/Ol/evql/QrTjMPDTI1Lw83Y5KlwIUS2nR3lIPLFpHkXNRoum01Y5e05bnQOUr5ycEJ3a2IaZm8/aHujbeAkjWt7bMAedQJwUZ8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752548717; c=relaxed/simple;
-	bh=Pfe8WObDT1a61jiVOqq1FN+hlv1UJ6niselMJ1QVSYg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=nRJM9xVOKazotXYhsUANf6J8B2goSALDE3iLTaDi7uutCEqo7xdMhmzkySh1Irhro1pfHrtFC+Wwre1h/g+R3l8JbeZtjs8tsqet1AuO98WYyxmcCjGZO1l9gcKX+6DwvlVX/tCiu0bgQVaq6ZQhrIU7lkquRiErZsZQ9Oyc6TE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=huawei.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huawei.com
-Received: from mail.maildlp.com (unknown [172.19.88.194])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4bh3q20LpxzHrRx;
-	Tue, 15 Jul 2025 11:01:02 +0800 (CST)
-Received: from kwepemg500017.china.huawei.com (unknown [7.202.181.81])
-	by mail.maildlp.com (Postfix) with ESMTPS id AA5C41401F3;
-	Tue, 15 Jul 2025 11:05:08 +0800 (CST)
-Received: from [10.174.179.155] (10.174.179.155) by
- kwepemg500017.china.huawei.com (7.202.181.81) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 15 Jul 2025 11:05:07 +0800
-Message-ID: <88334658-072b-4b90-a949-9c74ef93cfd1@huawei.com>
-Date: Tue, 15 Jul 2025 11:05:07 +0800
+	s=arc-20240116; t=1752552910; c=relaxed/simple;
+	bh=g3kHmLgp+ydHN3htYHPArcnd7ofR2eV12tadzkw0R9E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=IhBWJGd+12p8mL1hc7xzZrZ6auOSEh0YdUGydpl4a9A6ZgMmCwAFycCHZqgzaKocEjzi1U3ArHsewnppCbwFdx/YGvFDQ7PWBkzldziaMYE5loZJsRcmg48B+IXKgM9qWFzZrYe1dfqkj6hFbr5lSLlBVYqvfZRFelr1rCC33Vk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=NxY12gzj; arc=none smtp.client-ip=209.85.167.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="NxY12gzj"
+Received: by mail-lf1-f51.google.com with SMTP id 2adb3069b0e04-54d98aa5981so6635594e87.0
+        for <linux-scsi@vger.kernel.org>; Mon, 14 Jul 2025 21:15:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1752552906; x=1753157706; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=e8MMl0Vc51jEH2Bhn+oDJLDatGD+U8vFR9E3AlCVPe4=;
+        b=NxY12gzjHqkuoNOhY6McD41KmZr+wjTFAGvNOh3GzujMszwWjb+0I58EQtACN/ViUA
+         +dfTqbYmReQDzb67m2H61g56SVWtExOBAEP4yctlBhc4STP+M9Zrl3kmxS3KkUq1vRMv
+         33Oep3fgK39U7m81sBnMZZ9OxKK0vHd7qk0aU=
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752552906; x=1753157706;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=e8MMl0Vc51jEH2Bhn+oDJLDatGD+U8vFR9E3AlCVPe4=;
+        b=ieONhX0pqnFiABZrZxJE+dnZQI/+SJUG1zeLtpGlmSBVOVtkyLh0P4Q7T1cW4C/9ht
+         blQYV4Uai+NW6jXBZca9in6bUpG4L68zs1ZaMV/EWSs1Vk+HLEpo0MXpCAGNUR4uSdBS
+         2+7d366rATzRRzVQvnQJfwK9PXTEBC61PVbFwN3xZzRxnMysQwHiF7QPmT6KkiCtyPON
+         u/xcsJUUHwxcMD66Jcaq8Y5xs5366hR8afJA+UhXpgkHrS8+T8Q9FpUBYaG/TBepy0wg
+         nxZnEprwAvFFpCzaDaQAEU7HoGkTyuXV8A4rYuIiorOX6paSGBRBguH9/DiWg+Q8sRLz
+         33vw==
+X-Forwarded-Encrypted: i=1; AJvYcCWhBkiDYQ/fjJNYMe737jWAxo+q0TCCT7mC1QI9rG4tqY2qIiTb9Mx0FFnfn4QlN0dsRPTtMT6nOB7q@vger.kernel.org
+X-Gm-Message-State: AOJu0YwJYQlvst0ojMaNTCXL7WPVWkTol4CIw8TIV06/PdgYktBA3eny
+	07A+/poJzbo06yFJTkXCfx0h8ahRI0E3huyHeNR+Oe2Wl+5A4Q4UVHSvAiRbR6IgliKYxthI73o
+	O+t9zDv62JBpW4FrfwrenW8Xq2EdIHCjN46EfyHnQeLFfh642imb5
+X-Gm-Gg: ASbGncsuYPa399krseye2+QRq+n9A0J3KWHloXbCc8mB639UI+YAlWo21Ql5E6RHf0a
+	JEb6B5fO9laaUiVXmg+j8TK7ah1k1Q9KUiHR2bCzkmFsx8vTwH2lQ9Zd4VQyPegi+ppdyUuLH8b
+	lqQzBM89Jhpq3f2sOQ7xljjKYcg+LXgOWsb/UlBrlDOmUr+dwfoufbEfPsJQ4Df6n4lRkdu4Y2S
+	+Hs
+X-Google-Smtp-Source: AGHT+IGTXXcFjZa27on7wAcwjuPfAYXV8gl6M42raK1PWAGai4Eq4m9AvmrCrTCtskK63zWK+CCDeq4VAuNOM529cXE=
+X-Received: by 2002:a05:6512:130e:b0:553:2e82:1632 with SMTP id
+ 2adb3069b0e04-55a0464fe5amr4405606e87.44.1752552906364; Mon, 14 Jul 2025
+ 21:15:06 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: =?UTF-8?B?TW96aWxsYSBUaHVuZGVyYmlyZCDmtYvor5XniYg=?=
-Subject: Re: [PATCH 1/6] scsi: iscsi: Fix HW conn removal use after free
-To: Hou Tao <houtao@huaweicloud.com>, Mike Christie
-	<michael.christie@oracle.com>
-CC: <lduncan@suse.com>, <cleech@redhat.com>, <njavali@marvell.com>,
-	<mrangankar@marvell.com>, <GR-QLogic-Storage-Upstream@marvell.com>,
-	<martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-	<jejb@linux.ibm.com>, yangerkun <yangerkun@huawei.com>, "yukuai (C)"
-	<yukuai3@huawei.com>, "zhangyi (F)" <yi.zhang@huawei.com>,
-	<James.Bottomley@HansenPartnership.com>, <open-iscsi@googlegroups.com>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, Li Lingfeng
-	<lilingfeng@huaweicloud.com>
-References: <20220616222738.5722-1-michael.christie@oracle.com>
- <20220616222738.5722-2-michael.christie@oracle.com>
- <93484c2e-528e-46a1-83d6-c420e0d2a1ef@huawei.com>
- <bb21e728-ae5d-4328-8076-78c2f984ee05@huawei.com>
- <0b0a0bcf-b805-5041-9923-37ad391169c0@huaweicloud.com>
-From: Li Lingfeng <lilingfeng3@huawei.com>
-In-Reply-To: <0b0a0bcf-b805-5041-9923-37ad391169c0@huaweicloud.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemg500017.china.huawei.com (7.202.181.81)
+References: <20250624061649.17990-1-ranjan.kumar@broadcom.com> <yq1y0syceen.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1y0syceen.fsf@ca-mkp.ca.oracle.com>
+From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Date: Mon, 14 Jul 2025 22:14:49 -0600
+X-Gm-Features: Ac12FXyDGjqDyuu-L_V7t9PTJKR--u3_ksxu_rtnkLLbo3qmJKHU_PkDGlAX5bQ
+Message-ID: <CAFdVvOwjy+2ORJ6uJkspiLTPF05481U7gcS4QohFOFGPqAs8ig@mail.gmail.com>
+Subject: Re: [PATCH v1] scsi: Fix sas_user_scan() to handle wildcard and
+ multi-channel scans
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org, 
+	rajsekhar.chundru@broadcom.com, sumit.saxena@broadcom.com, 
+	chandrakanth.patil@broadcom.com, prayas.patel@broadcom.com
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="0000000000007681490639f00572"
 
-Hi all,
+--0000000000007681490639f00572
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-在 2025/7/3 17:40, Hou Tao 写道:
-> Hi Mike & Lingfeng:
+On Tue, Jul 8, 2025 at 8:03=E2=80=AFPM Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
 >
-> On 7/3/2025 9:35 AM, Li Lingfeng wrote:
->> Friendly ping...
->>
->> Thanks
->>
->> 在 2025/6/19 20:57, Li Lingfeng 写道:
->>> Hi Mike,
->>>
->>> Thanks for this patch addressing the UAF issue. I have some questions
->>> when
->>> analyzing this patch.
->>>
->>> You mention that iscsi_remove_conn() frees the connection, making the
->>> extra
->>> iscsi_put_conn() cause UAF. However, looking at iscsi_remove_conn():
->>>
->>> iscsi_remove_conn
->>>   device_del(&conn->dev)
->>>    put_device(parent) // Only parent gets put_device
->>>
->>> This doesn't appear to free conn directly - only device_del() + parent
->>> reference drop. Typically, conn is freed via put_device() on
->>> &conn->dev when
->>> its refcount reaches zero.
->>>
->>> Could you briefly clarify how iscsi_remove_conn() ultimately triggers
->>> the
->>> freeing, and in what scenario the subsequent iscsi_put_conn() leads
->>> to UAF?
->>>
->>> Thanks again for the fix.
->>>
->>> Lingfeng
->>>
->>> 在 2022/6/17 6:27, Mike Christie 写道:
->>>> If qla4xxx doesn't remove the connection before the session, the iSCSI
->>>> class tries to remove the connection for it. We were doing a
->>>> iscsi_put_conn() in the iter function which is not needed and will
->>>> result
->>>> in a use after free because iscsi_remove_conn() will free the
->>>> connection.
->>>>
->>>> Reviewed-by: Lee Duncan <lduncan@suse.com>
->>>> Signed-off-by: Mike Christie <michael.christie@oracle.com>
->>>> ---
->>>>    drivers/scsi/scsi_transport_iscsi.c | 2 --
->>>>    1 file changed, 2 deletions(-)
->>>>
->>>> diff --git a/drivers/scsi/scsi_transport_iscsi.c
->>>> b/drivers/scsi/scsi_transport_iscsi.c
->>>> index 2c0dd64159b0..e6084e158cc0 100644
->>>> --- a/drivers/scsi/scsi_transport_iscsi.c
->>>> +++ b/drivers/scsi/scsi_transport_iscsi.c
->>>> @@ -2138,8 +2138,6 @@ static int iscsi_iter_destroy_conn_fn(struct
->>>> device *dev, void *data)
->>>>            return 0;
->>>>          iscsi_remove_conn(iscsi_dev_to_conn(dev));
->>>> -    iscsi_put_conn(iscsi_dev_to_conn(dev));
->>>> -
->>>>        return 0;
->>>>    }
->> .
-> I didn't follow the patch either. If I understand correctly, the
-> invocation of  iscsi_put_conn() in iscsi_iter_destory_conn_fn() is used
-> to free the initial reference counter of iscsi_cls_conn. For non-qla4xxx
-> cases, the ->destroy_conn() callback (e.g., iscsi_conn_teardown) will
-> call iscsi_remove_conn() and iscsi_put_conn() to remove the connection
-> from the children list of session and free the connection at last.
-> However for qla4xxx, it is not the case. The ->destroy_conn() callback
-> of qla4xxx will keep the connection in the session conn_list and doesn't
-> use iscsi_put_conn() to free the initial reference counter. Therefore,
-> it seems necessary to keep the iscsi_put_conn() in the
-> iscsi_iter_destroy_conn_fn(), otherwise, there will be memory leak problem.
-This patch indeed caused a memory leak. I reproduced the leak issue and
-confirmed that reintroducing the removed iscsi_put_conn() prevents the
-leak in the same scenario.
-
-
-*kernel base:*
-master 8c2e52ebbe885c7eeaabd3b7ddcdc1246fc400d2
-
-
-*kernel diff:*
-1) Since I don't have the device that supports qla4xxx, I forcibly
-bypassed the connection check during session destruction;
-2) I expanded the memory required by conn by 1024 times to more clearly
-observe the memory changes.
-
-diff --git a/drivers/scsi/iscsi_tcp.c b/drivers/scsi/iscsi_tcp.c
-index 7b4fe0e6afb2..bb354deeb668 100644
---- a/drivers/scsi/iscsi_tcp.c
-+++ b/drivers/scsi/iscsi_tcp.c
-@@ -940,8 +940,12 @@ static void iscsi_sw_tcp_session_destroy(struct 
-iscsi_cls_session *cls_session)
-         struct Scsi_Host *shost = iscsi_session_to_shost(cls_session);
-         struct iscsi_session *session = cls_session->dd_data;
-
--       if (WARN_ON_ONCE(session->leadconn))
--               return;
-+       if (WARN_ON_ONCE(session->leadconn)) {
-+               printk("%s skip checking leadconn", __func__);
-+       //      return;
-+       }
-+
-+       printk("%s %d\n", __func__, __LINE__);
-
-         iscsi_session_remove(cls_session);
-         /*
-diff --git a/drivers/scsi/scsi_transport_iscsi.c 
-b/drivers/scsi/scsi_transport_iscsi.c
-index c75a806496d6..eac353ad536f 100644
---- a/drivers/scsi/scsi_transport_iscsi.c
-+++ b/drivers/scsi/scsi_transport_iscsi.c
-@@ -2408,7 +2408,7 @@ iscsi_alloc_conn(struct iscsi_cls_session 
-*session, int dd_size, uint32_t cid)
-         struct iscsi_transport *transport = session->transport;
-         struct iscsi_cls_conn *conn;
-
--       conn = kzalloc(sizeof(*conn) + dd_size, GFP_KERNEL);
-+       conn = kzalloc((sizeof(*conn) + dd_size) * 1024, GFP_KERNEL);
-         if (!conn)
-                 return NULL;
-         if (dd_size)
-@@ -2984,6 +2984,7 @@ iscsi_if_destroy_conn(struct iscsi_transport 
-*transport, struct iscsi_uevent *ev
-
-         if (transport->destroy_conn)
-                 transport->destroy_conn(conn);
-+
-         return 0;
-  }
-
-@@ -3937,13 +3938,20 @@ iscsi_if_recv_msg(struct sk_buff *skb, struct 
-nlmsghdr *nlh, uint32_t *group)
-                 iscsi_put_endpoint(ep);
-                 break;
-         case ISCSI_UEVENT_DESTROY_SESSION:
-+               printk("%s %d skip checking conns\n", __func__, __LINE__);
-                 session = iscsi_session_lookup(ev->u.d_session.sid);
--               if (!session)
-+               if (!session) {
-+                       printk("%s %d\n", __func__, __LINE__);
-                         err = -EINVAL;
--               else if (iscsi_session_has_conns(ev->u.d_session.sid))
-+/*
-+               } else if (iscsi_session_has_conns(ev->u.d_session.sid)) {
-+                       printk("%s %d\n", __func__, __LINE__);
-                         err = -EBUSY;
--               else
-+*/
-+               } else {
-+                       printk("%s %d\n", __func__, __LINE__);
-                         transport->destroy_session(session);
-+               }
-                 break;
-         case ISCSI_UEVENT_DESTROY_SESSION_ASYNC:
-                 session = iscsi_session_lookup(ev->u.d_session.sid);
-
-
-*open-iscsi base:*
-master 5b49cf2a86b1bfce13082f8ddc90b2282feb563d
-
-
-*open-iscsi diff:*
-I forcibly bypassed the standard connection destruction procedure, so
-that during the session destruction process, the connection would be
-destroyed to trigger iscsi_iter_destroy_conn_fn().
-
-diff --git a/usr/netlink.c b/usr/netlink.c
-index 4bcaf8b..970d782 100644
---- a/usr/netlink.c
-+++ b/usr/netlink.c
-@@ -516,12 +516,15 @@ kcreate_conn(uint64_t transport_handle, uint32_t sid,
-  static int
-  kdestroy_conn(uint64_t transport_handle, uint32_t sid, uint32_t cid)
-  {
--       int rc;
--       struct iscsi_uevent ev;
--       struct iovec iov[2];
--
-+//     int rc;
-+//     struct iscsi_uevent ev;
-+//     struct iovec iov[2];
-+       (void)transport_handle;
-+       (void)sid;
-+       (void)cid;
-         log_debug(7, "in %s", __FUNCTION__);
--
-+       printf("skip destroy conn\n");
-+/*
-         memset(&ev, 0, sizeof(struct iscsi_uevent));
-
-         ev.type = ISCSI_UEVENT_DESTROY_CONN;
-@@ -534,7 +537,7 @@ kdestroy_conn(uint64_t transport_handle, uint32_t 
-sid, uint32_t cid)
-         rc = __kipc_call(iov, 2);
-         if (rc < 0)
-                 return rc;
--
-+*/
-         return 0;
-  }
-
-
-*test script:*
-#!/bin/bash
-LOOP_TIMES=10000
-LOG_FILE="iscsi_opt.log"
-DEVICE_TYPE="VIRTUAL-DISK"
-
-for ((count=1; count<=LOOP_TIMES; count++)); do
-     iscsiadm -m node -l &>/dev/null &
-     login_pid=$!
-     login_start=$(date +%s)
-     device_found=0
-
-     while kill -0 $login_pid 2>/dev/null; do
-         sleep 0.5
-         elapsed=$(( $(date +%s) - login_start ))
-
-         if [ $elapsed -ge 30 ]; then
-             if lsscsi | grep -q "$DEVICE_TYPE"; then
-                 kill $login_pid 2>/dev/null
-                 status="DEVICE_READY (KILLED_TIMEOUT)"
-                 device_found=1
-                 break
-             fi
-         fi
-     done
-
-     if [ $device_found -eq 0 ]; then
-         wait $login_pid
-         status="ATTACHED"
-     fi
-
-     mem_login=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
-     printf "%-6d %-12d %-8s %s\n" $count $mem_login "LOGIN" "$status" | 
-tee -a $LOG_FILE
-
-     iscsiadm -m node -u &>/dev/null
-     while iscsiadm -m session &>/dev/null; do sleep 0.1; done
-     mem_logout=$(grep MemAvailable /proc/meminfo | awk '{print $2}')
-     printf "%-6d %-12d %-8s %s\n" $count $mem_logout "LOGOUT" "SUCCESS" 
-| tee -a $LOG_FILE
-done
-
-
-*result without iscsi_put_conn():*
-1) After a certain number of cycles, the available memory significantly
-decreases.
-1      53738028     LOGIN    ATTACHED
-1      53735616     LOGOUT   SUCCESS
-...
-100    52453148     LOGIN    ATTACHED
-100    52453376     LOGOUT   SUCCESS
-...
-200    51122008     LOGIN    ATTACHED
-200    51122644     LOGOUT   SUCCESS
-...
-2108   25984180     LOGIN    ATTACHED
-2108   25995580     LOGOUT   SUCCESS
-
-2) After removing iSCSI devices, stopping related services, and unloading
-kernel modules, the available memory has not returned to the expected
-level.
-[root@fedora test_ko]# lsscsi
-[0:0:0:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sda
-[0:0:1:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sdb
-[0:0:2:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sdc
-[0:0:3:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sdd
-[0:0:4:0]    disk    QEMU     QEMU HARDDISK    2.5+  /dev/sde
-[root@fedora test_ko]# service iscsid stop
-Redirecting to /bin/systemctl stop iscsid.service
-Warning: Stopping iscsid.service, but it can still be activated by:
-   iscsid.socket
-[root@fedora test_ko]# service tgtd stop
-Redirecting to /bin/systemctl stop tgtd.service
-[root@fedora test_ko]# rmmod iscsi_tcp
-[root@fedora test_ko]# rmmod iscsi_boot_sysfs
-[root@fedora test_ko]# rmmod libiscsi_tcp
-[root@fedora test_ko]# rmmod libiscsi
-[root@fedora test_ko]# rmmod scsi_transport_iscsi
-[root@fedora test_ko]# cat /proc/meminfo | grep MemAvailable
-MemAvailable:   26063488 kB
-[root@fedora test_ko]# cat /proc/meminfo | grep MemAvailable
-MemAvailable:   26065000 kB
-[root@fedora test_ko]#
-
-
-*result with iscsi_put_conn():*
-After a certain number of cycles, the available memory does not show
-significant changes.
-1      53823120     LOGIN    ATTACHED
-1      53828420     LOGOUT   SUCCESS
-...
-100    53738576     LOGIN    ATTACHED
-100    53747436     LOGOUT   SUCCESS
-...
-200    53723400     LOGIN    ATTACHED
-200    53728696     LOGOUT   SUCCESS
-...
-
-I haven't found more details about the UAF issue described in this patch,
-but I think the patch's description of the root cause 'iscsi_remove_conn()
-will free the connection' is incorrect. Moreover, this fix approach is
-inappropriate.
-Until the original issue is fully understood, I recommend reverting this
-patch.
-
-Thanks,
-
-Lingfeng
-
-
-> For the use-after-free problem, I think it may be due to the concurrent
-> invocation of iscsi_add_conn() and iscsi_session_teardown().
-> iscsi_add_conn() has already invoked device_add(), but fails on
-> transport_register_device() and is trying to invoke device_del(). At the
-> same time iscsi_session_teardown() invokes iscsi_remove_session() and is
-> invoking iscsi_iter_destroy_conn_fn for the failed-to-add connection.
-> The connection will be put twice: one in iscsi_iter_destroy_conn_fn()
-> and another one in iscsi_conn_setup() and leads to use-after-free problem.
 >
+> Hi Ranjan!
+>
+> > user_scan() invoke updated sas_user_scan() for channel 0, and if
+> > successful,iteratively scan remaining channels (1 to
+> > shost->max_channel) via scsi_scan_host_selected().
+>
+> Two questions:
+>
+> 1. Channels? In 2025?
+The mpt3sas and mpi3mr drivers support both SAS/SATA devices and NVMe
+drives (Tri-mode support). The NVMe drives are exposed as generic SCSI
+devices by the controller and they are identified through persistent
+ID (which is nothing but an target ID) whereas the SAS and SATA
+devices are exposed through SAS transport to the kernel as they have
+associated phy/port data structures from the controller and in there
+the ID assignment is done by the SAS transport layer.  Hence if same
+channel is used for both SAS/SATA and NVMe there will be an ID
+conflict so both mpt3sas and mpi3mr drivers reserve non-zero channel
+for NVMe devices.
+>
+> 2. Why special-case channel 0?
+The SAS transport assumes channel 0 for all SAS/SATA devivces, so we
+do not want to mess with that and use the non-zero channel SCSI type
+of scanning and let the SAS transport handle channel 0 for SAS
+transport specific scanning.
+
+> --
+> Martin K. Petersen
+
+--0000000000007681490639f00572
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
+
+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
+v82E+npLwqC8bSHh1m6BJewfpawx72uKM9aFs6SVpLPtN6a5369OCwVeEwkk2FeFU9tZXWBnI4Wu
+d1Q4a3vhOColD6PdTWv74Ez2I3ahCkmpeEQ1YMt61TUH3W8NUJJeYN2xkR6OGsA1AgMBAAGjggHc
+MIIB2DAOBgNVHQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRw
+Oi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MC5jcnQwQQYIKwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJz
+b25hbHNpZ24yY2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZo
+dHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRC
+MEAwPqA8oDqGOGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAuY3JsMCYGA1UdEQQfMB2BG3NhdGh5YS5wcmFrYXNoQGJyb2FkY29tLmNvbTATBgNVHSUE
+DDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU
+VyBc/F5XGkYNCP9Rb96mru8lU4AwDQYJKoZIhvcNAQELBQADggEBACiysbqj0ggjcc9uzOpBkt1Q
+nGtvHhd9pbNmshJRUoNL11pQEzupSsUkDoAa6hPrOaJVobIO+yC84D4GXQc13Jk0QZQhRJJRYLwk
+vdq704JPh4ULIwofTWqwsiZ1OvINzX9h9KEw/+h+Mc3YUCO7tvKBGLJTUaUhrjxyjLQdEK1Xp/8B
+kYd5quZssxYPJ3nl37Moy/U9ZM2F0Ivv4U3wyP5y5cdmBUBAGOd94rH60fVDVogEo5F9gXrZhT/4
+jKzCG3LclOOzLinCkK2J5GYngIUHSmnqk909QPG6jkx5RJWwkpTzm+AAVbJ9a+1F/8iR3FiDddEK
+8wQJuWG84jqd/9wxggJgMIICXAIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
+aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
+MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEIALbSzd2
+xnY5SbOuZeRHXrIWULugZFLzN9PeTzx1U+81MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTI1MDcxNTA0MTUwNlowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQMEASow
+CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQcwCwYJYIZI
+AWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAEeFnnWs9aQy9/K9hmYpM54IHmRUjiN+WHf6QRgUpu0B
+4MlGk7n6QCezT/SojzEmkcpXwL38A2D0hXlNX0/sIn6zoB+4KSGswtrDdePlurxfuo1qgtlY45tX
+XMjOLYK8RvgT5gIadoEfWvZRDDSms/r/OVzKUOHy1Pthld/e51/6BOemi3ycXXBV5uLbd7lMcRYR
+/8N0IA72OsHkks6w2+KoZXFQzGF8SKsx4QYMlqaeeDrS4uHBQX1ebxNzqKjSekuQXAZE2XYXAW3h
+xjN87N0dSfWtuRTOtQVM4yU4d/IHqhvqL1HWsOvsFtbZ/SYG4pyK/bptidn58VBamqy2qP8=
+--0000000000007681490639f00572--
