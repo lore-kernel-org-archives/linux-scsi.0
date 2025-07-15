@@ -1,121 +1,132 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BCEF2528E1;
-	Tue, 15 Jul 2025 15:36:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2D5C1E5B7B;
+	Tue, 15 Jul 2025 16:05:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752593766; cv=none; b=lg9j0zRp/j568PiyOshkAnFIpHVeq2rRWOvBGXKQ+ZeXfpTloW9usVSaMWi8TjJY3is5s2AV5c4/0X24bv6RpV7LJjhkJ8TUoNZCaHqWykECuFP2RlMKLMH/59tx3b22xQw8atrhLbdHZl5EVARMsaUuR9JktEfsqqCQcDrW6ec=
+	t=1752595550; cv=none; b=agmp/Jf+NOXt7wQO264vvSU1My4y0LP5u3uFBQvx0+5ZTgIAJvJ7XLzLFwvoElhyeag3Cf6f/yFe+4SJpu3Rh0gEN02F1iwFyzZZwshrgEWVqkDqS9KiphQR5qTwq4PwVtcB7JpwHZv7DhyPyiGxT0iqdraIXLIUn0CkkWOlE0M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752593766; c=relaxed/simple;
-	bh=FwX8r1C83KUbUoEsMnL3iiygadYHdm27+h1VeRvuG1g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fN1a9wRKwM++rsEUwkgAsD+ncfzZQi3/PET5pAuScLZBtePxOPLMB+3iv8Yub8lrEf6qvTYMK2+kKvIiwTQbAjGv9MB9DyHeBzjYjydrGOGtRAiKVH1sLsvf8OxW8yIErMMfVvNi1dgH6oJBvRflwf3vRLj6zJA1vJ3pr4PS+Kc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AxjjBWGw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752595550; c=relaxed/simple;
+	bh=WFFV8yh7Bx2YrgdBMFx0okBQoJwCRLLW0Ltk2ac7NYY=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pbLRgosAnTuKjb1h5xC3MBMhU0qh/GahoCb1pQI0l9zP1d/Qn3IyQdna/t7+V3531aYu8jjYPhylJLRxe8LE54FvoRG2Zjc0JefTyll+q/xftBrnEHUQM4qbcRQ3qb5vUGK3eg+hvG8bZmL0o9Bh65rwjd6wa5F3DQ5qwcTP0jE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=UMJijqwX; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AxjjBWGw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CC55C4CEF1;
-	Tue, 15 Jul 2025 15:36:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752593765;
-	bh=FwX8r1C83KUbUoEsMnL3iiygadYHdm27+h1VeRvuG1g=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=AxjjBWGwWR2VzG4n+5ODd0cSkJJl9s6jTUn61yQfhouvsqTDMURDLt/jhiuOQAtlI
-	 8fKNv+6ZuTtfQl3pEUf6/dKGAcWBsVPwc/GX0O07t6u9kYYb6/ysVGjYklSjcMt5+t
-	 xrNJFTHptUO3qIrfdN2gpxQfqCLN0/3VM8FgKJUC63gAQrx4fAn4XPH2lBsPsmeDGd
-	 22RnnetioLXG0Lvg75TknM7knjbxjCW4dFT6Bq89cOOW+Kd37BigNf+nn/V1xh/UZ8
-	 MfvZl2uajr2hZFNvcgomgDlISee0ywIPqZEjeSp1mnNhTHM9VFzK2RJMELDcA9869U
-	 kRgU6n17UR4zw==
-Message-ID: <8aa33d58-c46f-46d3-b10c-f6b9998cb8a8@kernel.org>
-Date: Tue, 15 Jul 2025 17:36:02 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="UMJijqwX"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56FCYnfY026500;
+	Tue, 15 Jul 2025 16:05:42 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=B9hPFpJcL+weohiKr5gDxt
+	HHHe8VIYpAWEbMdLK+px0=; b=UMJijqwX9N5g+ObzKyJKtQIvvRtoTkPYm0Z0dL
+	/4wWUKsSnM6uZ7hH43/2/VvTWb6RDm/lhUZkYjocDdc7cD2Pxdhz0Z/grVRyHPPY
+	urVbw9H4SbF3TwGcu/4vPKRIdWEmeGhgGbqbyO2a0ZDuNMFI4D9+Ojm+YIWz9WcJ
+	cuT5dy1qw68RJ++M/bjuN0WEu49gPwtfL1M6qbpmcCruGmUwnODAw14RafN0Je1n
+	wW3lDtWtnnNfR7jdXHyc7xrmT9uSJswuiJxCnSXerY2tkYGM5eLUaPn/q5JfU3mg
+	Yy9i7kSBocn79SUhB8J+pWNz6xOmK0wUQ2xVDNcL+3QHs5yQ==
+Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 47w5drksb5-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 15 Jul 2025 16:05:42 +0000 (GMT)
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 56FG5fcU011956
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 15 Jul 2025 16:05:41 GMT
+Received: from hu-pkambar-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.10; Tue, 15 Jul 2025 09:05:38 -0700
+From: Palash Kambar <quic_pkambar@quicinc.com>
+To: <mani@kernel.org>, <James.Bottomley@HansenPartnership.com>,
+        <martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
+        Palash Kambar
+	<quic_pkambar@quicinc.com>
+Subject: [PATCH] ufs: ufs-qcom: disable lane clocks during phy hibern8
+Date: Tue, 15 Jul 2025 21:35:24 +0530
+Message-ID: <20250715160524.3088594-1-quic_pkambar@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: fix out of bounds error in /drivers/scsi
-To: Bart Van Assche <bvanassche@acm.org>, jackysliu <1972843537@qq.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-References: <07c4c84d-0c52-4843-b32d-6806e58892fe@acm.org>
- <tencent_ADA5210D1317EEB6CD7F3DE9FE9DA4591D05@qq.com>
- <bf166912-80ef-435e-885d-affce237afe7@acm.org>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <bf166912-80ef-435e-885d-affce237afe7@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: wcqqyxC9JNACcl2OL9s-Swhd-pQDp5p4
+X-Authority-Analysis: v=2.4 cv=D4xHKuRj c=1 sm=1 tr=0 ts=68767c56 cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=qBOcMjo_XwzxJe9kIfcA:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-GUID: wcqqyxC9JNACcl2OL9s-Swhd-pQDp5p4
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzE1MDE0OCBTYWx0ZWRfX0ihsGZISHTBn
+ fGGeTFvFY29UVg9Bsx5VWbGVKEejZda2Wl3kTbQ7Y6Hgj7ZFp0YzHWHarnBuX1flZmGv/X04OJO
+ o0FlASxsobAGY5jlWuiKcXkv2C8dVpjcznfTYMzfEOwICZEVF+hvCKEqdoxtt2XuO1M11v07Q3U
+ iBfm7QTtZyjLJbWxl8OTk/MzBUa0Q2PgkoF4lPvoJmpYwFkEg0+5QUb9r/JWOYjgGDjij9ilfsN
+ xU50zUooLvsD+10LQBZYEjioG9Q7yEKm0osOXQbvstHN2ATNS5GTiudqc8IkWLzahusSr5R3iDz
+ juj3iRov0eyGThczmFwml2UqI06dQJTL58+qFSJLJiBOaA/Fy2QIu4fWFVmlKMug2ijt4M9yi4f
+ gta4EmIQmJ/weGt9Y+gQvmhaNyfl1uMrbpgeKjWdXeqfgAOKj+5M0DZrwCPARpCEXB6m3a/Z
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-07-15_04,2025-07-15_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ adultscore=0 mlxlogscore=659 impostorscore=0 spamscore=0 clxscore=1011
+ lowpriorityscore=0 malwarescore=0 suspectscore=0 bulkscore=0 mlxscore=0
+ priorityscore=1501 phishscore=0 classifier=spam authscore=0 authtc=n/a
+ authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2505280000 definitions=main-2507150148
 
-On 15/07/2025 15:00, Bart Van Assche wrote:
-> On 6/18/25 9:03 PM, jackysliu wrote:
->> 6.15-stable review patch, vulnerability exists since v6.9
->>
->> Out-of-bounds vulnerability found in ./drivers/scsi/sd.c
->> The vulnerability is found by  is found by Wukong-Agent
->>   (formerly Tencent Woodpecker), a code security AI agent,
->>   through static code analysis.
->>
->> sd_read_block_limits_ext Function Due to Unreasonable boundary checks.
->> Out-of-bounds read vulnerability exists in the
->> Linux kernel's SCSI disk driver (./drivers/scsi/sd.c).
->> The flaw occurs in the sd_read_block_limits_ext function
->>   when processing Vital Product Data (VPD) page B7 (Block Limits Extension)
->>   responses from storage devices
->>
->> A maliciously crafted 4-byte VPD page (0xB7) would cause Out-of-Bounds
->> Memory Read, leading to potential system Instability
->> and Driver State Corruption.
-> 
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+The UFS lane clocks ensure that the PHY is adequately powered and
+synchronized before initiating the link. Currently, these clocks
+remain enabled even after the link enters the Hibern8 state and
+are only turned off during runtime or system suspend.
 
-Just checking - are you sure? Please be careful with this work, that's
-AI generated stuff which in some cases did not even compile or did not
-actually follow C code.
+Modify the behavior to disable the lane clocks immediately after
+the link transitions to Hibern8, thereby reducing the power
+consumption.
 
-Best regards,
-Krzysztof
+Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 318dca7fe3d7..50e174d9b406 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1141,6 +1141,13 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+ 	case PRE_CHANGE:
+ 		if (on) {
+ 			ufs_qcom_icc_update_bw(host);
++			if (ufs_qcom_is_link_hibern8(hba)) {
++				err = ufs_qcom_enable_lane_clks(host);
++				if (err) {
++					dev_err(hba->dev, "enable lane clks failed, ret=%d\n", err);
++					return err;
++				}
++			}
+ 		} else {
+ 			if (!ufs_qcom_is_link_active(hba)) {
+ 				/* disable device ref_clk */
+@@ -1166,6 +1173,9 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+ 			if (ufshcd_is_hs_mode(&hba->pwr_info))
+ 				ufs_qcom_dev_ref_clk_ctrl(host, true);
+ 		} else {
++			if (ufs_qcom_is_link_hibern8(hba))
++				ufs_qcom_disable_lane_clks(host);
++
+ 			ufs_qcom_icc_set_bw(host, ufs_qcom_bw_table[MODE_MIN][0][0].mem_bw,
+ 					    ufs_qcom_bw_table[MODE_MIN][0][0].cfg_bw);
+ 		}
+-- 
+2.34.1
+
