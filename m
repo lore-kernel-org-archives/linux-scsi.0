@@ -1,86 +1,117 @@
-Received: from out162-62-58-211.mail.qq.com (out162-62-58-211.mail.qq.com [162.62.58.211])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65AA2230997;
-	Tue, 15 Jul 2025 08:01:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.58.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E723328937D;
+	Tue, 15 Jul 2025 10:45:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752566501; cv=none; b=mEZRfkeT6PkI0Q41AVB/l+PdDYZkpoWHCc6cDfTIny7w9GXn4QBOdpSoqC3Lf3Ns1nWXkkxxUNwCpuXElJixSTYnB17j9CGRTakDkhp2AsizUlgkrnZMAS2hprlrZuxz3UbjHX1eYvchEuuUt8rszaKsPrABOJVS6QzLesC4ioo=
+	t=1752576304; cv=none; b=PdDiyzgsYJTf6kkHypkznsAlryKCXyRuyotlKT5Zd38IMRKUQG6bsjqgeO/hRKPQQ9JpdrMAYnNTAmRTHS0st/z9+PmHV3BJ+aNjE8k4izJfHfK1wVTgO+6tzSZUaLO4w6xmlPC3ulQBfPXvgth3mUB15/om/KjBkO49AVrTWic=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752566501; c=relaxed/simple;
-	bh=S6NHiSBLhIR3DYKmf6KEc9Y6Sel+6UdtVm9LhNemEb4=;
-	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
-	 MIME-Version; b=td6mXwUH6Jad1IuUevmy65Zo2h962fQIPiF0XvUdpqvSCmXEncM+9Q6TDeKpNUFknLlgAnUMT+xRN085wNjCxQJXuKXCNtwqsNBl2AXF/jB+zX+ZmZ/OK111IuH0ON3SFjjE8acVquB9B73WEj/cBG4co88zlhCAdzONhP0gsQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=yh5SjI9E; arc=none smtp.client-ip=162.62.58.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
+	s=arc-20240116; t=1752576304; c=relaxed/simple;
+	bh=7XJ1BRhn2lxSh/tzzzaszWDfsHbCVUNk0QDHz+C5wo0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Y7kICLlPZt3J/RLyR5uATRM/Jcuqu4UoL5A0JWbWlVAUg9eE4CrmczQdZJD3I2HEeZdJZAjMCw1zUdiTXdcZK5kOSqi3LsA+UYwmQFZpw06pwuWJwX2FzKQaL/KVqZR9DxlGE2DoaLWcFMcfrWsgvI9FeNh5kH0B8rN+0mglgwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U6JRK1hg; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="yh5SjI9E"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
-	t=1752566185; bh=UPFN4iCrljSwXOyLIxdudLAgMwjA8757pjLDY2iNOls=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=yh5SjI9EGpBbWlPC1bebp5fi4mhSLZjv1Wgxs16o4n3jnn3FjZZ8aMMb+T7u/Ppmi
-	 2pCdhAlo5Cscshhf2O8q7YhQoo/3KamOOIzkpuXGu2SD+YvSJpymkM8Th4ehe4qqxX
-	 RxDPMfIBOg8vC/Ffiv+fEkBTNCRsKkjdUygs3d8s=
-Received: from VM-222-126-tencentos.localdomain ([14.22.11.162])
-	by newxmesmtplogicsvrszc16-0.qq.com (NewEsmtp) with SMTP
-	id E1682E4F; Tue, 15 Jul 2025 15:56:22 +0800
-X-QQ-mid: xmsmtpt1752566182tlmc1gbov
-Message-ID: <tencent_88DDBC2334BBA2C8A4C1E122DE62F8AB250A@qq.com>
-X-QQ-XMAILINFO: N/WmRbclY25GagF51JIOmPZtChli4QwYBGAqkJKqa/10a3iGlzj/46J9hj2rt3
-	 3vXDUtC5q9unuIr+vi6B9uNiWxpOn2szT1MoK3VnvSjULksId/A4vhJPb0QmgL/ncaWqcVmJeZJG
-	 isb0Vin5dS5h7B5COcIY2KC/yHw4ssrUwcLwo+QfmOLCaRSJeJOHc2IDZmm/zBAp8P3+SSn366Aa
-	 SdpqHPF2u3tSn1NW3F01p97lzuFxWWEIPQbpy6eKboG0vl1ryN9OHnbdbfTxnOz2jW6zJxtI8hSk
-	 0CFNSAeSii6EoMln6PxTcoQUuF2PNfyZ6ge13l/j/hlHj14i9CcYIwneoTeElpYjyA39lbFBhv+U
-	 fXd1M5eQ+PPNvyHimhLjHvXIluxc3BzyBRMGvRhr8XYbPll6JbY4wrHxu7W2swAy5mKzosTxQhNA
-	 OmBzhOdCFNb8MLDGDhLwV5Qh3K/9DDaGpjuqrHnG69Tyl38UaMQRdGcxr3PPGMTRrs8vtsUQu4j6
-	 XHs3bepgqVq8f6e9o+Q20joxY+o9ej9bHFNYQcggmxSCGPfI29/FZcvaStsPsfQ3AkGUkQcHmK5+
-	 /VOku406vF46YZtcW0P6SgQ2fGv0N7Zdxx2NZ9WBdFeK0Pq1ukRNnul8xy51+QvQ/3JV7lWpygJG
-	 73AEJisUTX8hRk/UF+Jnd5uEF2soB3zI7JHBW5rjjcpNF2pi/dPows9RbZ2xFHnajbDOFmZaw8mw
-	 uxO+729fhlBpWxmtRQr+9O0y+MrnQ78uMeiKVDfCvaMlk3erCrofTMbu5X7Iovgfrlob8BJXgIOR
-	 mutdAwNdZirCVHWq5tF1EOB47n4ejnatBUyI6AscZbtWQux2aoTIxa39oZAcWc/qdMPSbzcdAkf5
-	 8FZWIv9oxagUPijOfKEqofjfHwMbBE7wGHE3/LLMNDskB7aahQFV33Or12yMWY884rGbgOAni1S8
-	 y2booDPnMWwcMrpRt1YLUHXeb7BZj+5LTNQiowg/HjQYEh+ArEbu9f6APXi7oEc5L+lAVFS944op
-	 45kEMfq4GN1nwQjSX8lsjUl+EsN1q1qoslJbBb414nO22N84xEIgD5VHHZOe4=
-X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
-From: jackysliu <1972843537@qq.com>
-To: 1972843537@qq.com
-Cc: James.Bottomley@HansenPartnership.com,
-	bvanassche@acm.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Subject: Re: [PATCH v2] usb: gadget: functioni: Fix a oob problem in rndis
-Date: Tue, 15 Jul 2025 15:56:17 +0800
-X-OQ-MSGID: <20250715075617.3120827-1-1972843537@qq.com>
-X-Mailer: git-send-email 2.43.5
-In-Reply-To: <tencent_ADA5210D1317EEB6CD7F3DE9FE9DA4591D05@qq.com>
-References: <tencent_ADA5210D1317EEB6CD7F3DE9FE9DA4591D05@qq.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U6JRK1hg"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B0323C4CEE3;
+	Tue, 15 Jul 2025 10:45:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752576303;
+	bh=7XJ1BRhn2lxSh/tzzzaszWDfsHbCVUNk0QDHz+C5wo0=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=U6JRK1hgUG2pBDtboXXdk90VT7VYgEKSJP2AGzgZ2Bcia3HyIUKIUWl5VDW+kGO7a
+	 rg9c/cb0OOS6uH3+FQ71ftH3Um0YqsvBE9BwS54pCiX7w+nMt7ZUWlizrVng6N4pBZ
+	 PGkzIKmv1GjrtMO0JVdYs7RGgdO9a3QIP13Tod31j8JOltT/rqQfEa/uArGHX9MAXq
+	 cdTl8yiTVF4gUDzh0T//6l72b53OYAaGi42Ny5yt2Ch0B9nEmQUH1nPCmwMiaS1U5k
+	 AYAE8pmwNWJSmOuQgAk7k8jllKNamMJ4O6GhZeA5Mz38cxlLy5shP63VJRTucsTfgv
+	 ryobmWWfKPoKQ==
+Message-ID: <f75182a8-90f9-466e-a96b-d454c770f0a5@kernel.org>
+Date: Tue, 15 Jul 2025 12:45:00 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] [PATCH] scsi:bfa: Double-free vulnerability fix
+To: jackysliu <1972843537@qq.com>, anil.gurumurthy@qlogic.com
+Cc: sudarsana.kalluru@qlogic.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org
+References: <tencent_3BB950D6D2D470976F55FC879206DE0B9A09@qq.com>
+Content-Language: en-US
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Autocrypt: addr=krzk@kernel.org; keydata=
+ xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
+ cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
+ JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
+ gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
+ J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
+ NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
+ BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
+ vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
+ Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
+ TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
+ S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGVBBMBCgA/AhsDBgsJCAcDAgYVCAIJCgsE
+ FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJoF1BKBQkWlnSaAAoJEBuTQ307
+ QWKbHukP/3t4tRp/bvDnxJfmNdNVn0gv9ep3L39IntPalBFwRKytqeQkzAju0whYWg+R/rwp
+ +r2I1Fzwt7+PTjsnMFlh1AZxGDmP5MFkzVsMnfX1lGiXhYSOMP97XL6R1QSXxaWOpGNCDaUl
+ ajorB0lJDcC0q3xAdwzRConxYVhlgmTrRiD8oLlSCD5baEAt5Zw17UTNDnDGmZQKR0fqLpWy
+ 786Lm5OScb7DjEgcA2PRm17st4UQ1kF0rQHokVaotxRM74PPDB8bCsunlghJl1DRK9s1aSuN
+ hL1Pv9VD8b4dFNvCo7b4hfAANPU67W40AaaGZ3UAfmw+1MYyo4QuAZGKzaP2ukbdCD/DYnqi
+ tJy88XqWtyb4UQWKNoQqGKzlYXdKsldYqrLHGoMvj1UN9XcRtXHST/IaLn72o7j7/h/Ac5EL
+ 8lSUVIG4TYn59NyxxAXa07Wi6zjVL1U11fTnFmE29ALYQEXKBI3KUO1A3p4sQWzU7uRmbuxn
+ naUmm8RbpMcOfa9JjlXCLmQ5IP7Rr5tYZUCkZz08LIfF8UMXwH7OOEX87Y++EkAB+pzKZNNd
+ hwoXulTAgjSy+OiaLtuCys9VdXLZ3Zy314azaCU3BoWgaMV0eAW/+gprWMXQM1lrlzvwlD/k
+ whyy9wGf0AEPpLssLVt9VVxNjo6BIkt6d1pMg6mHsUEVzsFNBFVDXDQBEADNkrQYSREUL4D3
+ Gws46JEoZ9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLue
+ MNsWLJBvBaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6ei
+ OMheesVS5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wA
+ GldWsRxbf3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA
+ 6z6lBZn0WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9
+ YegxWKvXXHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt
+ 91pFzBSOIpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gU
+ BLHFTg2hYnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/
+ JoFzZ4B0p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu
+ 4vXVFBYIGmpyNPYzRm0QPwARAQABwsF8BBgBCgAmAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtB
+ YpsFAmgXUF8FCRaWWyoACgkQG5NDfTtBYptO0w//dlXJs5/42hAXKsk+PDg3wyEFb4NpyA1v
+ qmx7SfAzk9Hf6lWwU1O6AbqNMbh6PjEwadKUk1m04S7EjdQLsj/MBSgoQtCT3MDmWUUtHZd5
+ RYIPnPq3WVB47GtuO6/u375tsxhtf7vt95QSYJwCB+ZUgo4T+FV4hquZ4AsRkbgavtIzQisg
+ Dgv76tnEv3YHV8Jn9mi/Bu0FURF+5kpdMfgo1sq6RXNQ//TVf8yFgRtTUdXxW/qHjlYURrm2
+ H4kutobVEIxiyu6m05q3e9eZB/TaMMNVORx+1kM3j7f0rwtEYUFzY1ygQfpcMDPl7pRYoJjB
+ dSsm0ZuzDaCwaxg2t8hqQJBzJCezTOIkjHUsWAK+tEbU4Z4SnNpCyM3fBqsgYdJxjyC/tWVT
+ AQ18NRLtPw7tK1rdcwCl0GFQHwSwk5pDpz1NH40e6lU+NcXSeiqkDDRkHlftKPV/dV+lQXiu
+ jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
+ zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
+ XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
+In-Reply-To: <tencent_3BB950D6D2D470976F55FC879206DE0B9A09@qq.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Fri, Jul 11 2025 08:51:30 +0200, greg k-h wrote:
+On 24/06/2025 13:58, jackysliu wrote:
+> In the QLogic BR-series Fibre Channel driver (bfad),
+> there exists a double-free vulnerability.
+> When the bfad_im_probe() function fails during initialization,
+> the memory pointed to by bfad->im is freed without
+>  setting bfad->im to NULL.
+> Subsequently, during driver uninstallation,
+> when the state machine enters the bfad_sm_stopping state
+> and calls the bfad_im_probe_undo() function,
+> it attempts to free the memory pointed to by bfad->im again,
+> thereby triggering a double-free vulnerability.
+> 
+> Signed-off-by: jackysliu <1972843537@qq.com>
+> ---
+>  drivers/scsi/bfa/bfad_im.c | 1 +
+>  1 file changed, 1 insertion(+)
 
->Yes, and then look to see what buf_len (not buflen) in
->gen_ndis_set_resp() is used for.  I'll wait... :)
-Oh,my bad.It seem that buf_len will only be used for some debugging code..
 
->What tool generated this static analysis?  You always have to mention
->that as per our development rules.
-The vulnerability is found by  is found by Wukong-Agent, a code security AI agent,
- through static code analysis.But It seems that this is a false positive..
+You should disclose that you used some AI tool for that... and that
+other report(s) was really fake finding.  People should know you
+generated it with AI, so they could make informed decision whether to
+even allocate time here.
 
-And what qemu setup did you use to test this?  That would be helpful to
-know so that I can verify it on my end.
-
-I'll add some web-usb device to test this model.But seems that I went into a wrong way.
-
-Thanks
-
-Siyang Liu
-
+Best regards,
+Krzysztof
