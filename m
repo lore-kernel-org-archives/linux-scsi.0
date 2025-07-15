@@ -1,163 +1,121 @@
-Received: from mail-ed1-f46.google.com (mail-ed1-f46.google.com [209.85.208.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4919118DF80
-	for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2025 15:21:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4BCEF2528E1;
+	Tue, 15 Jul 2025 15:36:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752592909; cv=none; b=bbAyb6I5JrdGYK0Tpl0BUCwcaBCwEir282AW8QIauKq5ml+QbAUlcoj9ef+RrVdEq4Dq48UKufaAhUNzhR4oQnyxZ0zLG91JXSwES2y6Fb40wh95sQYpUDx3TvCkmJIaykzcqObkqCJ4UnjjGbGubhmtlbELLMKsPa8RANNrzsc=
+	t=1752593766; cv=none; b=lg9j0zRp/j568PiyOshkAnFIpHVeq2rRWOvBGXKQ+ZeXfpTloW9usVSaMWi8TjJY3is5s2AV5c4/0X24bv6RpV7LJjhkJ8TUoNZCaHqWykECuFP2RlMKLMH/59tx3b22xQw8atrhLbdHZl5EVARMsaUuR9JktEfsqqCQcDrW6ec=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752592909; c=relaxed/simple;
-	bh=VH7YZsMRDiM2yfmDGgerEW0XRR/46B+G/q7OSW+5Pms=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=t5RJCpFcuDvzg4ceZu8jlNnxl5ap02IeIixeMp8kZEsjzuJA+vMwEm011hUbv858YqNVA/QpvF2BAOPscOhDp2eyZkqm39k7QFWOJ9JwtOJhWXGZRlV25+VnGav4DoOrRdv/wt3Qu22fZI48o40g5SEOCp3Ed7KIDNpo3tVPpYM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TqAcv/Gc; arc=none smtp.client-ip=209.85.208.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1752593766; c=relaxed/simple;
+	bh=FwX8r1C83KUbUoEsMnL3iiygadYHdm27+h1VeRvuG1g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fN1a9wRKwM++rsEUwkgAsD+ncfzZQi3/PET5pAuScLZBtePxOPLMB+3iv8Yub8lrEf6qvTYMK2+kKvIiwTQbAjGv9MB9DyHeBzjYjydrGOGtRAiKVH1sLsvf8OxW8yIErMMfVvNi1dgH6oJBvRflwf3vRLj6zJA1vJ3pr4PS+Kc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=AxjjBWGw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TqAcv/Gc"
-Received: by mail-ed1-f46.google.com with SMTP id 4fb4d7f45d1cf-60c60f7eeaaso8754635a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2025 08:21:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752592905; x=1753197705; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:to:from:subject:message-id:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=VH7YZsMRDiM2yfmDGgerEW0XRR/46B+G/q7OSW+5Pms=;
-        b=TqAcv/Gc5oA/cWWbh/IhPLB8FhU0JZDiRgHxpoT5KG2T1xZ4ThZ1rPlkjwNgsaUKNF
-         MoscFyKda/zqEKm2NnxPF0SVxktf6oTDbd42O+sftCimiVMd4+B0gOkQZLBDqOzu8Pdm
-         OACJ0JcLM4SuWH4hRqvAXOB7j0k3a2jXkEFGGyNG2ZSudi0NvkWTKe1dcDRKaxbDm+QX
-         1YKePKg44YnyWNIHtRE/421uOPk9s7T386MpImMOwbNgvGAgtnNY3aUiHRoHbug9RcwM
-         ioxCQKOmp4r0p5z8miy+m1E8aDFjIo7wJT9GTkUMZey7ZYMb/+usE6y3JEpjuPXKxtjj
-         Rk5w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752592905; x=1753197705;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=VH7YZsMRDiM2yfmDGgerEW0XRR/46B+G/q7OSW+5Pms=;
-        b=DHj2vd+y90nTC5/NfN7kCFYnqhgL1YT4C1T9CrnHC45tFlmkExEKxICMQsF6IP2Ntm
-         PVJbBhQdiPx0KfxL0M8swg9Yo46vH/doocQz0vnSG7JD4KrSW4+8ZLRVJGnZMfjA0ofm
-         gjqJtoIZdBIBgfU/V5T+aNC5RvwNO0mo5a2nXVosouLmYdYpYacVEXJbTVA9A66/ZKpj
-         XWIuG6HdQth2zr0031PtDtD8agHSEEeTqsO7H40ASZZqx7dxAmzek8mTPBjYHCSahTAH
-         GcBU1KGnYtUUu/EEyEn7susKxo0jBLQsFv+D1mbzFXGBIVIZW50ip10PBqgVwaEQMfHG
-         rU7w==
-X-Forwarded-Encrypted: i=1; AJvYcCWNm6mZogkPTq1d7dQRa08udvR4t2qyicTr2JrPcJJZYuimmhcMELEQK9xvCjC+k0pW8VbF0mkaksXX@vger.kernel.org
-X-Gm-Message-State: AOJu0YzKH3nbBNWH/gr8zWwwRNeWY3GegIfOFcUD4Hi+ywLRQ3zzCr3r
-	B1vwI3pSaPK7oBVM047xafP63IvDT6KMKx4ukw2zueMgDAXiUq8NExR+
-X-Gm-Gg: ASbGncsOsBjVYo4lhs7jgtT+2BXaKGq2X9Sgy3BcbQiR2Div3if8W6pys9LfosOr4AR
-	vN6XDEMAtq1Dw6EzaCi0rkrnfZGVAkzTDjOE8jy3JZpPSIEtM3A4tDeJpmADSIKFppLkpk0PvD4
-	W7Bm3sXrjwc2QF1MTG83bLbhgzd/wcNhwGMVu0ZW+xiDTKNZ4lyOWTTy9WFvPsK9CT/sczyE5y7
-	k2K1iPhSAsjzm/qqUpJE89qeTy/VrSvyjZheucBvIeFkTFXVVzPiN/soZ38WVcGOEkz/UKSs20o
-	DHAe5GEmJXslDqIHUL+I28cvQpNHVKci0q/ZJgKA5JATpwQGbWzBLBE/xersdyUe3U1/fOidZOC
-	5L7JHNFMaFb7oRT5dLNxUAKpl6oLd3JBC3Lg=
-X-Google-Smtp-Source: AGHT+IFqvERhb/GORXHa/CFpJV9KUuY07dbc5NmNayj5rN4zHUmRNBhOAShvznIppEMIsAm1bTkEZg==
-X-Received: by 2002:a05:6402:2547:b0:60c:4bc0:453e with SMTP id 4fb4d7f45d1cf-6126b5b27a7mr2573031a12.2.1752592905053;
-        Tue, 15 Jul 2025 08:21:45 -0700 (PDT)
-Received: from [10.176.234.34] ([137.201.254.41])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-611fb169550sm5566966a12.50.2025.07.15.08.21.43
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 15 Jul 2025 08:21:44 -0700 (PDT)
-Message-ID: <cd0959939d2fefe927b66ca12620c094c4cfb7a2.camel@gmail.com>
-Subject: Re: [PATCH] ufs: core: Use link recovery when the h8 exit failure
- during runtime resume
-From: Bean Huo <huobean@gmail.com>
-To: =?UTF-8?Q?=EC=9D=B4=EC=8A=B9=ED=9D=AC?= <sh043.lee@samsung.com>, 
-	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
-	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com, 
-	linux-scsi@vger.kernel.org, sdriver.sec@samsung.com
-Date: Tue, 15 Jul 2025 17:21:43 +0200
-In-Reply-To: <000901dbf52f$63a69090$2af3b1b0$@samsung.com>
-References: 
-	<CGME20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b@epcas1p2.samsung.com>
-	 <20250714090617.9212-1-sh043.lee@samsung.com>
-	 <b8fa773234058e68e6006127b3cd848046b75e6f.camel@gmail.com>
-	 <000901dbf52f$63a69090$2af3b1b0$@samsung.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="AxjjBWGw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3CC55C4CEF1;
+	Tue, 15 Jul 2025 15:36:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1752593765;
+	bh=FwX8r1C83KUbUoEsMnL3iiygadYHdm27+h1VeRvuG1g=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=AxjjBWGwWR2VzG4n+5ODd0cSkJJl9s6jTUn61yQfhouvsqTDMURDLt/jhiuOQAtlI
+	 8fKNv+6ZuTtfQl3pEUf6/dKGAcWBsVPwc/GX0O07t6u9kYYb6/ysVGjYklSjcMt5+t
+	 xrNJFTHptUO3qIrfdN2gpxQfqCLN0/3VM8FgKJUC63gAQrx4fAn4XPH2lBsPsmeDGd
+	 22RnnetioLXG0Lvg75TknM7knjbxjCW4dFT6Bq89cOOW+Kd37BigNf+nn/V1xh/UZ8
+	 MfvZl2uajr2hZFNvcgomgDlISee0ywIPqZEjeSp1mnNhTHM9VFzK2RJMELDcA9869U
+	 kRgU6n17UR4zw==
+Message-ID: <8aa33d58-c46f-46d3-b10c-f6b9998cb8a8@kernel.org>
+Date: Tue, 15 Jul 2025 17:36:02 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] scsi: fix out of bounds error in /drivers/scsi
+To: Bart Van Assche <bvanassche@acm.org>, jackysliu <1972843537@qq.com>
+Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org, martin.petersen@oracle.com
+References: <07c4c84d-0c52-4843-b32d-6806e58892fe@acm.org>
+ <tencent_ADA5210D1317EEB6CD7F3DE9FE9DA4591D05@qq.com>
+ <bf166912-80ef-435e-885d-affce237afe7@acm.org>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <bf166912-80ef-435e-885d-affce237afe7@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, 2025-07-15 at 11:23 +0900, =EC=9D=B4=EC=8A=B9=ED=9D=AC wrote:
->=20
-> 2> if eh_in_progress, err EBUSY return in ufshcd_runtime_suspend to guara=
-ntee the error handling done.
-> -> It doesn't work as well.
->=20
-> --- a/common/drivers/ufs/core/ufshcd.c
-> +++ b/common/drivers/ufs/core/ufshcd.c
-> @@ -10371,6 +10371,9 @@ int ufshcd_runtime_suspend(struct device *dev)
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int ret;
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ktime_t start =3D ktime_get();
-> =C2=A0
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ufshcd_eh_in_progress(hba))
-> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0 return -EBUSY;
-> +
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ret =3D ufshcd_suspend(hba);
-> =C2=A0
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 trace_ufshcd_runtime_suspend(h=
-ba, ret,
->=20
-> [=C2=A0=C2=A0 63.010841] [4:=C2=A0=C2=A0=C2=A0 kworker/4:0:=C2=A0=C2=A0 5=
-2] ufshcd-qcom 1d84000.ufshc: ufshcd_uic_hibern8_exit: hibern8 exit failed.=
- ret =3D -110
-> [=C2=A0=C2=A0 63.010844] [4:=C2=A0=C2=A0=C2=A0 kworker/4:0:=C2=A0=C2=A0 5=
-2] ufshcd-qcom 1d84000.ufshc: __ufshcd_wl_resume: hibern8 exit failed -110
->=20
-> [=C2=A0=C2=A0 63.010845] [0: kworker/u32:10:13604] ufshcd-qcom 1d84000.uf=
-shc: ufshcd_err_handler started; HBA state eh_fatal; powered 1; shutting do=
-wn 0; saved_err =3D 0; saved_uic_err =3D 0; force_reset =3D 0;
-> link is broken
->=20
-> [=C2=A0=C2=A0 63.011430] [4:=C2=A0=C2=A0=C2=A0 kworker/4:0:=C2=A0=C2=A0 5=
-2] ufs_device_wlun 0:0:0:49488: ufshcd_wl_runtime_resume failed: -110
-> [=C2=A0=C2=A0 63.011433] [4:=C2=A0=C2=A0=C2=A0 kworker/4:0:=C2=A0=C2=A0 5=
-2] ufs_device_wlun 0:0:0:49488: ufshcd_wl_runtime_resume: 574917us, pwr_mod=
-e(1), link state(3)
-> -> ufshcd_wl_runtime_resume failed done.
-> =C2=A0=C2=A0 -> ufshcd_rpm_get_sync() in ufshcd_err_handling_prepare()
->=20
-> [=C2=A0=C2=A0 63.011457] [4:=C2=A0=C2=A0=C2=A0 kworker/4:0:=C2=A0=C2=A0 5=
-2] ufshcd-qcom 1d84000.ufshc: ufshcd_runtime_suspend: eh_in_progress
-> -> EBUSY return in ufshcd_runtime_suspend due to eh_in_progress
->=20
-> [=C2=A0=C2=A0 63.011464]I[0: kworker/u32:10:13604] ufshcd-qcom 1d84000.uf=
-shc: ufshcd_check_errors: Auto Hibern8 Exit failed - status: 0x00000020, up=
-mcrs: 0x00000001
-> [=C2=A0=C2=A0 63.011468]I[0: kworker/u32:10:13604] ufshcd-qcom 1d84000.uf=
-shc: ufshcd_check_errors: saved_err 0x20 saved_uic_err 0x0
->=20
-> [=C2=A0=C2=A0 63.039824] [0: kworker/u32:10:13604] ufshcd-qcom 1d84000.uf=
-shc: ufs_qcom_device_reset: Waiting for device internal cache flush
->=20
-> [=C2=A0=C2=A0 65.084604] [0: kworker/u32:10:13604] ufshcd-qcom 1d84000.uf=
-shc: ESI configured
-> [=C2=A0=C2=A0 65.084728] [0: kworker/u32:10:13604] ufshcd-qcom 1d84000.uf=
-shc: MCQ configured, nr_queues=3D9, io_queues=3D8, read_queue=3D0, poll_que=
-ues=3D1, queue_depth=3D64
-> -> ufshcd_reset_and_restore() works well.
->=20
-> [=C2=A0=C2=A0 65.105186] [1: kworker/u32:10:13604] ufs_device_wlun 0:0:0:=
-49488: runtime PM trying to activate child device 0:0:0:49488 but parent (t=
-arget0:0:0) is not active
-> -> ufschd_recover_pm_err()
-> =C2=A0=C2=A0 -> Because of this error, pm_request_resume doesn't call her=
-e.
+On 15/07/2025 15:00, Bart Van Assche wrote:
+> On 6/18/25 9:03 PM, jackysliu wrote:
+>> 6.15-stable review patch, vulnerability exists since v6.9
+>>
+>> Out-of-bounds vulnerability found in ./drivers/scsi/sd.c
+>> The vulnerability is found by  is found by Wukong-Agent
+>>   (formerly Tencent Woodpecker), a code security AI agent,
+>>   through static code analysis.
+>>
+>> sd_read_block_limits_ext Function Due to Unreasonable boundary checks.
+>> Out-of-bounds read vulnerability exists in the
+>> Linux kernel's SCSI disk driver (./drivers/scsi/sd.c).
+>> The flaw occurs in the sd_read_block_limits_ext function
+>>   when processing Vital Product Data (VPD) page B7 (Block Limits Extension)
+>>   responses from storage devices
+>>
+>> A maliciously crafted 4-byte VPD page (0xB7) would cause Out-of-Bounds
+>> Memory Read, leading to potential system Instability
+>> and Driver State Corruption.
+> 
+> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
+Just checking - are you sure? Please be careful with this work, that's
+AI generated stuff which in some cases did not even compile or did not
+actually follow C code.
 
-You patched ufshcd_runtime_suspend() to return -EBUSY if eh_in_progress is =
-true =E2=80=94 meant to avoid suspend during error handling. I don't unders=
-tand why here parent is not active?
-
-would like to try return -EAGAIN?=20
-
-
-Kind regards,
-Bean
-
+Best regards,
+Krzysztof
