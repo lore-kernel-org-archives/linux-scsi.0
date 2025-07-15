@@ -1,98 +1,128 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C4DA2264D5;
-	Tue, 15 Jul 2025 16:57:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 262A5287245
+	for <linux-scsi@vger.kernel.org>; Tue, 15 Jul 2025 17:49:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752598647; cv=none; b=IJ6cC2n01/ZwXA3AbfqqXFdgwO5wAI6CWxNA0/pTdeAu5SZYXEFepFzdu302mRasjNDyzqjMN6dnbf9dCaP5i01rKh1kG8qHR65gw1dA0Ca71VACLOFfAsV+Xgv8bnEYC6HoqIwQwhrWNUyQ4HYTAcMpERhMnV42Ji+RiAVpTqQ=
+	t=1752601775; cv=none; b=WBz0pnQ3/4irMhJtwu3uJG4ixUi8EXyARHPvi4fcc3JSUs21Lzjqh5DVzQyGeT9TkMnebgAw4mFZMHsJA2VzpKjOcQzpEFMXP41WA+/hJxAHfIv2+i2I+qmtmdhW7IyI9l+F43EroH62zxWKqkhYFlGGQc7+hzQUkUPPh+kBYqI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752598647; c=relaxed/simple;
-	bh=oXDP5W6ruPXMloIGWP6N8fqg75lcZA+WIEvRQZYSJck=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Fe/pCI/WdGrHHCatb4OW8ac6wP9fipNeAC2maRLRBaFORCo3AV/DRBvqBi/GoLOi/yziruu8NwGQhTNDLizYdcEn3tYI8SDFY71EzdBByN4XMdKvEh2ElCwBWOwV5OJlviTSs5pamIIx1qP4m1FjrdwpvUKjqW/G3gCjhi2q7PE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=wnw1Vnd+; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1752601775; c=relaxed/simple;
+	bh=1KjMYagADHM/6HPP3ad2dwRKcUpER75SXgfcksOR7mo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=hnzb2AG8mVDJZnVMHMHYQi/eao7ua0ZHAEiK4wWnXQYWSJ7RFOu6ql6My8bde/jvuLi3yIfNDuuqSuY06EZrrOdU+11oBDlegataYY/x6wKADiR9PKLRUPNz8uOea5WU9mY+JIlgWgaMYs4xFa69kiDStRiiiWgrW2svms/I1po=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Bwwbl8UB; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="wnw1Vnd+"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bhQN500RPzlgqxr;
-	Tue, 15 Jul 2025 16:57:25 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1752598643; x=1755190644; bh=5/3hasJlZZslHaoIJpIUIG0J
-	gPXZITf394ehkRTNpds=; b=wnw1Vnd+tM0eSbP2lP1qcrVk+l2pcTtQnF1MkRPc
-	kHALdve2CVOlu/i6iwN9cC5dmOH5HUscHCEe4Hufw01FFWtzK16dqINqdBA5gwfS
-	hgEa9YI8+ThqiJKl1IO9nxHecOocZ1ZfCx8+4SIPD9tDMkcRcJq/6YeL9+6AGjSN
-	YOVLvuT/7SkLri+lT0LLCc4KjQV0ChwFmMM7VLbpRwY/8OQV4R8SQXSbOxw6JXlD
-	VpUENmhczjJbinWbTikfn6Zg+o9vYKHqAgmbW0gzMH/dNMgYDWXj/BfA1ORgHbQ0
-	0ZGYprZHmdYBzFvpvuDsxGYEfsMezsf9uLqSRlnE2/IEFg==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id QyYDtz6TKa28; Tue, 15 Jul 2025 16:57:23 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Bwwbl8UB"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1752601773;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DvYoJszPqTOnmrYYbLqgBmKS/MWvoTMwhb6CXYFaSX4=;
+	b=Bwwbl8UBodYAgM2sfRFhJZ/Ry0GX6fkzbJgpp+bTWqcQKw1Iw5Y1Hvqr0tFNHNXgsOZWm3
+	RA5B/Av7AXPOqM1PQQU7zIaxLVOW6zFkYERtvQ4tjJ10sKmHCo5FS86tq6UBkBuN4MS1Rj
+	iudDHzWKiR5O0dejZhFiEZWUfMZyC58=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-685-7vslXh-ZMr2oPZN6Xcz82A-1; Tue,
+ 15 Jul 2025 13:49:27 -0400
+X-MC-Unique: 7vslXh-ZMr2oPZN6Xcz82A-1
+X-Mimecast-MFC-AGG-ID: 7vslXh-ZMr2oPZN6Xcz82A_1752601766
+Received: from mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.15])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bhQMz4Z6Szlgqxh;
-	Tue, 15 Jul 2025 16:57:18 +0000 (UTC)
-Message-ID: <9500a7cb-7b60-45c5-bd9c-1ee921ab4b58@acm.org>
-Date: Tue, 15 Jul 2025 09:57:18 -0700
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3897F19560B7;
+	Tue, 15 Jul 2025 17:49:26 +0000 (UTC)
+Received: from my-developer-toolbox-latest (unknown [10.2.16.31])
+	by mx-prod-int-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8929A195609E;
+	Tue, 15 Jul 2025 17:49:24 +0000 (UTC)
+Date: Tue, 15 Jul 2025 10:49:21 -0700
+From: Chris Leech <cleech@redhat.com>
+To: Showrya M N <showrya@chelsio.com>
+Cc: lduncan@suse.com, michael.christie@oracle.com,
+	martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+	bharat@chelsio.com
+Subject: Re: [PATCH for-rc] scsi: libiscsi: initialize iscsi_conn->dd_data
+ only if memory is allocated
+Message-ID: <aHaUoRFbpnjkQFYD@my-developer-toolbox-latest>
+References: <20250627112329.19763-1-showrya@chelsio.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: fix out of bounds error in /drivers/scsi
-To: Krzysztof Kozlowski <krzk@kernel.org>, jackysliu <1972843537@qq.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-References: <07c4c84d-0c52-4843-b32d-6806e58892fe@acm.org>
- <tencent_ADA5210D1317EEB6CD7F3DE9FE9DA4591D05@qq.com>
- <bf166912-80ef-435e-885d-affce237afe7@acm.org>
- <8aa33d58-c46f-46d3-b10c-f6b9998cb8a8@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <8aa33d58-c46f-46d3-b10c-f6b9998cb8a8@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250627112329.19763-1-showrya@chelsio.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.15
 
-On 7/15/25 8:36 AM, Krzysztof Kozlowski wrote:
-> On 15/07/2025 15:00, Bart Van Assche wrote:
->> On 6/18/25 9:03 PM, jackysliu wrote:
->>> 6.15-stable review patch, vulnerability exists since v6.9
->>>
->>> Out-of-bounds vulnerability found in ./drivers/scsi/sd.c
->>> The vulnerability is found by  is found by Wukong-Agent
->>>    (formerly Tencent Woodpecker), a code security AI agent,
->>>    through static code analysis.
->>>
->>> sd_read_block_limits_ext Function Due to Unreasonable boundary checks.
->>> Out-of-bounds read vulnerability exists in the
->>> Linux kernel's SCSI disk driver (./drivers/scsi/sd.c).
->>> The flaw occurs in the sd_read_block_limits_ext function
->>>    when processing Vital Product Data (VPD) page B7 (Block Limits Extension)
->>>    responses from storage devices
->>>
->>> A maliciously crafted 4-byte VPD page (0xB7) would cause Out-of-Bounds
->>> Memory Read, leading to potential system Instability
->>> and Driver State Corruption.
->>
->> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+On Fri, Jun 27, 2025 at 04:53:29PM +0530, Showrya M N wrote:
+> In case of an ib_fast_reg_mr allocation failure during iSER setup,
+> the machine hits a panic because iscsi_conn->dd_data is initialized
+> unconditionally, even when no memory is allocated (dd_size == 0).
+> This leads invalid pointer dereference during connection teardown.
 > 
-> Just checking - are you sure? Please be careful with this work, that's
-> AI generated stuff which in some cases did not even compile or did not
-> actually follow C code.
+> Fix by setting iscsi_conn->dd_data only if memory is actually allocated.
 
-As one can see here, an in-depth review was performed before I replied
-with "Reviewed-by":
-https://lore.kernel.org/linux-scsi/07c4c84d-0c52-4843-b32d-6806e58892fe@acm.org/
+iser is allocating the iser_conn along with the endpoint, and
+dynamically updating iscsi_conn->dd_data to track that allocation.
+That's different from all the other libiscsi drivers which allocate a
+fixed sized driver area with every iscsi_conn.
 
-Bart.
+I don't see any problem with conditionally setting iscsi_conn->dd_data,
+and it makes sense to not have an invalid pointer for a 0 size request.
+
+iscsi_iser_conn_stop already has the checks for a NULL dd_data for this
+case of a bind failure, so that looks OK.
+
+Signed-off-by: Chris Leech <cleech@redhat.com>
+
+> Panic trace:
+> ------------
+>  iser: iser_create_fastreg_desc: Failed to allocate ib_fast_reg_mr err=-12
+>  iser: iser_alloc_rx_descriptors: failed allocating rx descriptors / data buffers
+>  BUG: unable to handle page fault for address: fffffffffffffff8
+>  RIP: 0010:swake_up_locked.part.5+0xa/0x40
+>  Call Trace:
+>   complete+0x31/0x40
+>   iscsi_iser_conn_stop+0x88/0xb0 [ib_iser]
+>   iscsi_stop_conn+0x66/0xc0 [scsi_transport_iscsi]
+>   iscsi_if_stop_conn+0x14a/0x150 [scsi_transport_iscsi]
+>   iscsi_if_rx+0x1135/0x1834 [scsi_transport_iscsi]
+>   ? netlink_lookup+0x12f/0x1b0
+>   ? netlink_deliver_tap+0x2c/0x200
+>   netlink_unicast+0x1ab/0x280
+>   netlink_sendmsg+0x257/0x4f0
+>   ? _copy_from_user+0x29/0x60
+>   sock_sendmsg+0x5f/0x70
+> 
+> Signed-off-by: Showrya M N <showrya@chelsio.com>
+> Signed-off-by: Potnuri Bharat Teja <bharat@chelsio.com>
+> ---
+>  drivers/scsi/libiscsi.c | 3 ++-
+>  1 file changed, 2 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+> index 392d57e054db..c9f410c50978 100644
+> --- a/drivers/scsi/libiscsi.c
+> +++ b/drivers/scsi/libiscsi.c
+> @@ -3185,7 +3185,8 @@ iscsi_conn_setup(struct iscsi_cls_session *cls_session, int dd_size,
+>  		return NULL;
+>  	conn = cls_conn->dd_data;
+>  
+> -	conn->dd_data = cls_conn->dd_data + sizeof(*conn);
+> +	if (dd_size)
+> +		conn->dd_data = cls_conn->dd_data + sizeof(*conn);
+>  	conn->session = session;
+>  	conn->cls_conn = cls_conn;
+>  	conn->c_stage = ISCSI_CONN_INITIAL_STAGE;
+> -- 
+> 2.39.3
+> 
+
