@@ -1,83 +1,95 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40DA72F4A11;
-	Wed, 16 Jul 2025 15:51:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CEA7214818
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Jul 2025 18:48:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752681082; cv=none; b=RGDq0YY/yeUsPVeV+bccKEfIXu9CCgW8yevhn40l1+xfXZsSYqyDRRe+QN131Hu2PfVqOI63PEPJLXJC+v+NIeEtAidWEzmBrDBwnomFAMGfP5KQCfpAjJR0xql43Ycn2LiUVT9GAc42ZakOwVkKrLh/JYtalCymk0a+14bIFKI=
+	t=1752691721; cv=none; b=qOiTSnxD4qs9f4hdc36vxNy/OVhzdOkVllZDQHnKdMKUbxSv7Pmoni+JudZoO3b6NuMQGq2rzRdqQXoGp9Pc6uTPdNmg2tCDbEotyDS8r0PKqSUxGvI5arzTl0hTTFYu7T4QSlFPv4ECKtcKItsCtGBF2xCTyXwAv5FR+sahHjM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752681082; c=relaxed/simple;
-	bh=Dm8rijWUH5OUWDPuGsMhNhNTlMOrxKsYEJm3carquiE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UZSxdt811q4JI1Ys0V39vjnZQCMYS03f+k3e2f98XBk1Y8i1S2eSGHAcQtY/n3ID1kS0bAbeGHNDtqp+RQH3GIO5z0GuZahguWguRA1NlOUXIsjUp8rZW4MSirjmOJWL1s37EvNDSlHCphfLpjl4XspVgYuNmv45q08hFu0TGRY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=SXPTsj/S; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1752691721; c=relaxed/simple;
+	bh=/CX7qi6Gve4+EvpjZEQqAx1sElg/ysNZJMVqY5sdqro=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=AtwTzN6tiAdVlap+hwlCrjCmJNl66N4QGSmyHz98ModjcG1bopCQoRlVyLYD84vlI3Qe9ANw6dwJhN6hK3bc7aKDq79FLDhJke6qFjNHXtr72fsDou6/n6+Lii0kj/j04l6MCRWI88+EN3eol/NIMMlW1X0fugI5SRsKqqKRBKg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JGUT+IVq; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="SXPTsj/S"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bj0sM03crzm0gc4;
-	Wed, 16 Jul 2025 15:51:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1752681076; x=1755273077; bh=/7ypfGplrxoRCGhGZPSUJXVq
-	g/2acYgzyHSBeFFh9u4=; b=SXPTsj/SwN4oYh1ST4EVXe/jq4TN/ry6T01p4zUQ
-	m4+t+/+377pKY6amC15lVi5w/YU1YybqlujG0LS124KQceX9a82EzqMdoe2wB0oU
-	slhUXE93aJW9E9Tw293iE3lCPzWFlDxl/ZuJCDkmb1TaJ5j9jC62oJWoV46EOOvq
-	+pZhOZDBfezuqNtNyfJXVXZNA5mIgOffLoMWsS1EMpVJW1/qv4VULc9RKDL1cuJT
-	QsLk5K8De3SsHejfvkx0yhHLgrCeep7eEVZlTpIU7xNq2sKSqYsBspad94bmOGfh
-	trxyATdi6PWRsSPW3yYTL8gwz6f4ZP1bU57FwsFm9KGc3g==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 2gt2ol6DN2bg; Wed, 16 Jul 2025 15:51:16 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JGUT+IVq"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1752691717;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=HgyouK/1dodaDscXtYlkkME16ZsXbVaMJlyfK2bYVlU=;
+	b=JGUT+IVqayW8dacluG3o/kPOX+jAv8PbHbq4N3PkA+tsN3BO0YLyGB+0KBlQuF7MtKbgEz
+	MXSMTJKdTKaBfWABUOdx529Nb4TNk1V97bxyk/mg+daUGgbCbkfTkvey35WXHI2+nrTZxW
+	VmREmvyGgg0wA0lOH8QH6EMDEXlyYQQ=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-5-XaQCDUB5OiCdYJ-tyShxIg-1; Wed,
+ 16 Jul 2025 14:48:36 -0400
+X-MC-Unique: XaQCDUB5OiCdYJ-tyShxIg-1
+X-Mimecast-MFC-AGG-ID: XaQCDUB5OiCdYJ-tyShxIg_1752691715
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bj0s66LfHzm0yQ4;
-	Wed, 16 Jul 2025 15:51:06 +0000 (UTC)
-Message-ID: <30f8ea8d-79c4-4e5c-b354-51ad8146a61c@acm.org>
-Date: Wed, 16 Jul 2025 08:51:04 -0700
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C9B319560B2;
+	Wed, 16 Jul 2025 18:48:35 +0000 (UTC)
+Received: from emilne-na.westford.csb (unknown [10.22.88.244])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 33CD418002AF;
+	Wed, 16 Jul 2025 18:48:33 +0000 (UTC)
+From: "Ewan D. Milne" <emilne@redhat.com>
+To: linux-scsi@vger.kernel.org
+Cc: michael.christie@oracle.com,
+	dgilbert@interlog.com
+Subject: [PATCH 0/5] Retry READ CAPACITY(10)/(16) with good status but no data
+Date: Wed, 16 Jul 2025 14:48:28 -0400
+Message-ID: <20250716184833.67055-1-emilne@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: mpi3mr: Emit uevent on controller diagnostic fault
-To: Salomon Dushimirimana <salomondush@google.com>,
- Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <20250716013103.1571029-1-salomondush@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250716013103.1571029-1-salomondush@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On 7/15/25 6:31 PM, Salomon Dushimirimana wrote:
-> +	ioc_info(mrioc, "emitting fault exception uevent");
+We encountered a SCSI device that responded to the initial READ CAPACITY command
+with a good status, but no data was transferred.  This caused a sudden change of
+the device capacity to zero when the device was rescanned, for no obvious reason.
 
-Is it really necessary to log that a uevent will be emitted?
+This patch series changes read_capacity_10() and read_capacity_16() in sd.c
+to retry the command up to 3 times in an attempt to get valid capacity information.
+A message is logged if this is ultimately unsuccessful.
 
-> +exit:
-> +	kfree(env);
-> +}
-Why an explicit kfree() call instead of adding __free(kfree) to
-the declaration of "env"?
+There are some predecessor patches, one from a patch in a series by Mike Christie
+which changes read_capacity_16() to use the scsi_failures mechanism (which did
+not eventually get merged), this makes the changes here much more similar for
+both the read_capacity_10 and read_capacity_16() case.  Another patch corrects
+a potential use of an uninitialized variable, and a third one removes a check
+for -EOVERFLOW that hasn't been needed since commit 72deb455b5ec
+("block: remove CONFIG_LBDAF").
 
-Thanks,
+The final patch to scsi_debug is allow insertion of the fault to test this change.
 
-Bart.
+Ewan D. Milne (4):
+  scsi: sd: Avoid passing potentially uninitialized "sense_valid" to
+    read_capacity_error()
+  scsi: sd: Remove checks for -EOVERFLOW in sd_read_capacity()
+  scsi: sd: Check for and retry in case of READ_CAPCITY(10)/(16)
+    returning no data
+  scsi: scsi_debug: Add option to suppress returned data but return good
+    status
+
+Mike Christie (1):
+  scsi: sd: Have scsi-ml retry read_capacity_16 errors
+
+ drivers/scsi/scsi_debug.c |  38 ++++++---
+ drivers/scsi/sd.c         | 173 +++++++++++++++++++++++++++-----------
+ 2 files changed, 151 insertions(+), 60 deletions(-)
+
+-- 
+2.47.1
+
