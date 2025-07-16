@@ -1,215 +1,118 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404472877EF
-	for <linux-scsi@vger.kernel.org>; Wed, 16 Jul 2025 06:28:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A9BF28A1C8
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Jul 2025 07:01:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752647330; cv=none; b=kwKOtW/ocBIjbkYy3q3M9RuVxDOEjqfj0eQyYatzP3PFr3UFSV1kMdYOa0Fp7tolatX0C8YSFx4EVWybYQ9ABbpcekItk3iBxdgH0dDK4GQUX4DSXKWg6HIpgr+vwPU3cKtfm1poh0xw4QlgV0W05S5znYm8jS5YiMIM4j+wuT4=
+	t=1752649298; cv=none; b=RwsR38i6gPuWrg8zpkbDrRqwns4ga6CHGFjzbngFoQzY8H6KjQcezYD2qTg9kQppddeQ78KfxHKATDaCJ4S05p2A+5q/5MWN8XJagW4jxWnWRtcn+5xzwrDS/lfmKOC1eTLag4V/4MkAk8uDaoQ3BHdcMNxZ1oc1/GQhtg7KvUg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752647330; c=relaxed/simple;
-	bh=MhKPSzQGOybFVEuwl8UwsoQ35ScFoSZxRf/m5FaAk/4=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CVAg0+xlgmn32YFbsRF+MZNL6S8tcwH0VLp+I43ayFkAnxi7oiHTiv2cAFPHPiopb6E8V5+8A9A0BR1ZseyvXZySOzptSOXtagVThPkRu8G4CVxLggld/KgkyQ9T7M2nczl9wSusZSB69W9X11198FBVzl13A6UjyxEn+F6+8ps=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=Vkp/DRo3; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1752649298; c=relaxed/simple;
+	bh=TAQ21jHyZJyJijMMs0Y5ry5nybACZ40xdCqwZMi4QM0=;
+	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=qjmkJXAchD4cTyYN7zLVK+xRZchAyqy3Hex/gcJQ6SMjaQ8Ic7YulOPy9DmBs3MS8R72z8NhKm9IO8FcZ2lmntAucSUZ+h95/O2riPxcHXYHLDHOf92DqWFCZSQv2PYsNnXvJMzzDz2iHKa5SOJzv+fRDEVtpZJXDvrI9YIrJR0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Huk0EEC5; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="Vkp/DRo3"
-X-UUID: 19eceb24620e11f08b7dc59d57013e23-20250716
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=8R9oxVbClGPPXG7bwll29LQXRONqsfRw/H5cpU/0Icc=;
-	b=Vkp/DRo3pBsI9eRSSh7B3PUlG3A+Mdz2K9w+sVLbmGjB9y355OAq+lXvPzbVjzg+T94MQDIlOLxEARrDtCHoDR64QtGRCirR+pUxaCjnwqHyZ73JGgO4D/NPqJjO9J4U7Z0O87I4iNTzMYzvi3fLQzj6BJNRvzY4CuPyROuYDNs=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.2,REQID:633bfdaf-01bc-4711-8df1-76059976f90b,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:9eb4ff7,CLOUDID:72dcea49-3902-4ad6-a511-6378a8132fbf,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
-	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
-	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 19eceb24620e11f08b7dc59d57013e23-20250716
-Received: from mtkmbs11n1.mediatek.inc [(172.21.101.185)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1484865348; Wed, 16 Jul 2025 14:28:35 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Wed, 16 Jul 2025 14:28:33 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Wed, 16 Jul 2025 14:28:33 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>
-Subject: [PATCH v1 10/10] ufs: host: mediatek: Support FDE (AES) clock scaling
-Date: Wed, 16 Jul 2025 14:25:35 +0800
-Message-ID: <20250716062830.3712487-11-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250716062830.3712487-1-peter.wang@mediatek.com>
-References: <20250716062830.3712487-1-peter.wang@mediatek.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Huk0EEC5"
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250716070127epoutp045c2aa6c24823cac63074b5b7e1da05ff~SqT3BeyIS1604116041epoutp040
+	for <linux-scsi@vger.kernel.org>; Wed, 16 Jul 2025 07:01:27 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250716070127epoutp045c2aa6c24823cac63074b5b7e1da05ff~SqT3BeyIS1604116041epoutp040
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1752649287;
+	bh=TAQ21jHyZJyJijMMs0Y5ry5nybACZ40xdCqwZMi4QM0=;
+	h=From:To:In-Reply-To:Subject:Date:References:From;
+	b=Huk0EEC5OIqvcyLfJXWr1Xq2gpXWPll1JoMoGmP661H5XAHmb96G70jOJprv/Daz3
+	 ecgchIkv2Pcb3aKVvlyq9YPbA1GzBdZS+v7TpBANk/taf1kqOIJEikR8roY2JEtc3+
+	 x7K3p0ChuNcoGnK1jMgX3gV5b862F/9KVMNa5JFo=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPS id
+	20250716070127epcas1p4f96e1cf0070bfb18dcb9ab61f86c1af1~SqT2udh0V1167411674epcas1p4O;
+	Wed, 16 Jul 2025 07:01:27 +0000 (GMT)
+Received: from epdlp6prp5 (unknown [182.195.38.247]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4bhn5y6Z0Qz6B9mB; Wed, 16 Jul
+	2025 07:01:26 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
+	20250716070126epcas1p30f738d1f211b88d10d5595c414602e27~SqT1yOH-U2246622466epcas1p3s;
+	Wed, 16 Jul 2025 07:01:26 +0000 (GMT)
+Received: from sh043lee04 (unknown [10.253.101.72]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250716070126epsmtip22c645fceb4cb48dffc1e818c597e2521~SqT1uM9jz0459304593epsmtip2y;
+	Wed, 16 Jul 2025 07:01:26 +0000 (GMT)
+From: "Seunghui Lee" <sh043.lee@samsung.com>
+To: "'Bean Huo'" <huobean@gmail.com>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <bvanassche@acm.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <sdriver.sec@samsung.com>
+In-Reply-To: <cd0959939d2fefe927b66ca12620c094c4cfb7a2.camel@gmail.com>
+Subject: RE: [PATCH] ufs: core: Use link recovery when the h8 exit failure
+ during runtime resume
+Date: Wed, 16 Jul 2025 16:01:26 +0900
+Message-ID: <005801dbf61f$7287e7d0$5797b770$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQH3aHPkcZ8xP3B7R0c5EXGU8cAQqgKwpSsnAUiyhkICOzcz6QJIvQEgs7mAebA=
+Content-Language: ko
+X-CMS-MailID: 20250716070126epcas1p30f738d1f211b88d10d5595c414602e27
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b
+References: <CGME20250714090630epcas1p28ab8afec11bbab4d256dfe6649d3b00b@epcas1p2.samsung.com>
+	<20250714090617.9212-1-sh043.lee@samsung.com>
+	<b8fa773234058e68e6006127b3cd848046b75e6f.camel@gmail.com>
+	<000901dbf52f$63a69090$2af3b1b0$@samsung.com>
+	<cd0959939d2fefe927b66ca12620c094c4cfb7a2.camel@gmail.com>
 
-From: Peter Wang <peter.wang@mediatek.com>
-
-This patch adds support for scaling the FDE (AES) clock to achieve higher
-performance, particularly for HS-G5. The implementation includes:
-1. Parsing DTS settings for FDE min/max mux.
-2. Scaling up the FDE clock when required for enhanced performance.
-
-These changes ensure that the FDE clock can be dynamically adjusted
-based on performance needs, leveraging DTS configurations.
-
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/host/ufs-mediatek.c | 54 ++++++++++++++++++++++++++++++++-
- drivers/ufs/host/ufs-mediatek.h |  3 ++
- 2 files changed, 56 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 28aba2f24dd3..bcebbd42baab 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -960,9 +960,23 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
- 			host->mclk.ufs_sel_min_clki = clki;
- 			clk_disable_unprepare(clki->clk);
- 			list_del(&clki->list);
-+		} else if (!strcmp(clki->name, "ufs_fde")) {
-+			host->mclk.ufs_fde_clki = clki;
-+		} else if (!strcmp(clki->name, "ufs_fde_max_src")) {
-+			host->mclk.ufs_fde_max_clki = clki;
-+			clk_disable_unprepare(clki->clk);
-+			list_del(&clki->list);
-+		} else if (!strcmp(clki->name, "ufs_fde_min_src")) {
-+			host->mclk.ufs_fde_min_clki = clki;
-+			clk_disable_unprepare(clki->clk);
-+			list_del(&clki->list);
- 		}
- 	}
- 
-+	list_for_each_entry(clki, head, list) {
-+		dev_info(hba->dev, "clk \"%s\" present", clki->name);
-+	}
-+
- 	if (!ufs_mtk_is_clk_scale_ready(hba)) {
- 		hba->caps &= ~UFSHCD_CAP_CLK_SCALING;
- 		dev_info(hba->dev,
-@@ -1765,14 +1779,16 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 	struct ufs_mtk_clk *mclk = &host->mclk;
- 	struct ufs_clk_info *clki = mclk->ufs_sel_clki;
-+	struct ufs_clk_info *fde_clki = mclk->ufs_fde_clki;
- 	struct regulator *reg;
- 	int volt, ret = 0;
- 	bool clk_bind_vcore = false;
-+	bool clk_fde_scale = false;
- 
- 	if (!hba->clk_scaling.is_initialized)
- 		return;
- 
--	if (!clki)
-+	if (!clki || !fde_clki)
- 		return;
- 
- 	reg = host->mclk.reg_vcore;
-@@ -1780,6 +1796,9 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 	if (reg && volt != 0)
- 		clk_bind_vcore = true;
- 
-+	if (mclk->ufs_fde_max_clki && mclk->ufs_fde_min_clki)
-+		clk_fde_scale = true;
-+
- 	ret = clk_prepare_enable(clki->clk);
- 	if (ret) {
- 		dev_info(hba->dev,
-@@ -1787,6 +1806,15 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 		return;
- 	}
- 
-+	if (clk_fde_scale) {
-+		ret = clk_prepare_enable(fde_clki->clk);
-+		if (ret) {
-+			dev_info(hba->dev,
-+				 "fde clk_prepare_enable() fail, ret: %d\n", ret);
-+			return;
-+		}
-+	}
-+
- 	if (scale_up) {
- 		if (clk_bind_vcore) {
- 			ret = regulator_set_voltage(reg, volt, INT_MAX);
-@@ -1802,7 +1830,28 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
- 				ret);
- 		}
-+
-+		if (clk_fde_scale) {
-+			ret = clk_set_parent(fde_clki->clk,
-+				mclk->ufs_fde_max_clki->clk);
-+			if (ret) {
-+				dev_info(hba->dev,
-+					"Failed to set fde clk mux, ret = %d\n",
-+					ret);
-+			}
-+		}
- 	} else {
-+		if (clk_fde_scale) {
-+			ret = clk_set_parent(fde_clki->clk,
-+				mclk->ufs_fde_min_clki->clk);
-+			if (ret) {
-+				dev_info(hba->dev,
-+					"Failed to set fde clk mux, ret = %d\n",
-+					ret);
-+				goto out;
-+			}
-+		}
-+
- 		ret = clk_set_parent(clki->clk, mclk->ufs_sel_min_clki->clk);
- 		if (ret) {
- 			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
-@@ -1821,6 +1870,9 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 
- out:
- 	clk_disable_unprepare(clki->clk);
-+
-+	if (clk_fde_scale)
-+		clk_disable_unprepare(fde_clki->clk);
- }
- 
- /**
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index 1395c65b46fe..997da391d0a0 100644
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -149,6 +149,9 @@ struct ufs_mtk_clk {
- 	struct ufs_clk_info *ufs_sel_clki; /* Mux */
- 	struct ufs_clk_info *ufs_sel_max_clki; /* Max src */
- 	struct ufs_clk_info *ufs_sel_min_clki; /* Min src */
-+	struct ufs_clk_info *ufs_fde_clki; /* Mux */
-+	struct ufs_clk_info *ufs_fde_max_clki; /* Max src */
-+	struct ufs_clk_info *ufs_fde_min_clki; /* Min src */
- 	struct regulator *reg_vcore;
- 	int vcore_volt;
- };
--- 
-2.45.2
-
+> -----Original Message-----
+> From: Bean Huo <huobean=40gmail.com>
+> Sent: Wednesday, July 16, 2025 12:22 AM
+> To: =EC=9D=B4=EC=8A=B9=ED=9D=AC=20<sh043.lee=40samsung.com>;=20alim.akhta=
+r=40samsung.com;=0D=0A>=20avri.altman=40wdc.com;=20bvanassche=40acm.org;=0D=
+=0A>=20James.Bottomley=40HansenPartnership.com;=20martin.petersen=40oracle.=
+com;=20linux-=0D=0A>=20scsi=40vger.kernel.org;=20sdriver.sec=40samsung.com=
+=0D=0A>=20Subject:=20Re:=20=5BPATCH=5D=20ufs:=20core:=20Use=20link=20recove=
+ry=20when=20the=20h8=20exit=20failure=0D=0A>=20during=20runtime=20resume=0D=
+=0A>=20=0D=0A>=20=0D=0A>=20You=20patched=20ufshcd_runtime_suspend()=20to=20=
+return=20-EBUSY=20if=20eh_in_progress=20is=0D=0A>=20true=20=E2=80=94=20mean=
+t=20to=20avoid=20suspend=20during=20error=20handling.=20I=20don't=20underst=
+and=0D=0A>=20why=20here=20parent=20is=20not=20active?=0D=0A=0D=0AAfter=20ch=
+ecking=20the=20RPM=20devices,=20I=20found=20that=20the=20parent=20device=20=
+is=20suspended=20due=20to=20the=20failure=20of=20ufshcd_wl_runtime_resume.=
+=0D=0AEven=20if=20we=20guarantee=20both=20the=20completion=20of=20ufshcd_ru=
+ntime_suspend=20and=20the=20error=20handling=20completion=20to=20avoid=20ra=
+ces,=20ufshcd_recover_pm_error=20can't=20fully=20recover=20from=20a=20runti=
+me=20pm=20failure=20scenario.=0D=0A=0D=0A>=20=0D=0A>=20would=20like=20to=20=
+try=20return=20-EAGAIN?=0D=0A>=20=0D=0A>=20=0D=0A>=20Kind=20regards,=0D=0A>=
+=20Bean=0D=0A>=20=0D=0A=0D=0AI've=20tried=20that=20as=20well,=20but=20it=20=
+doesn't=20work=20either.=0D=0A=5B=20=20328.915154=5D=20=5B0:=20=20kworker/u=
+32:7:=20=20941=5D=20ufs_device_wlun=200:0:0:49488:=20runtime=20PM=20trying=
+=20to=20activate=20child=20device=200:0:0:49488=20but=20parent=20(target0:0=
+:0)=20is=20not=20active=0D=0A=5B=20=20328.915156=5D=20=5B0:=20=20kworker/u3=
+2:7:=20=20941=5D=20ufs_device_wlun=200:0:0:49488:=20ufshcd_recover_pm_error=
+:=20rpm=20set_active=20ret(-16)=0D=0A=5B=20=20328.915157=5D=20=5B0:=20=20kw=
+orker/u32:7:=20=20941=5D=20ufshcd-qcom=201d84000.ufshc:=20ufshcd_recover_pm=
+_error:=20rpm=20set_active=20ret(-11)=0D=0ADue=20to=20this=20error,=20pm_re=
+quest_resume(q->dev)=20for=20each=20scsi=20device=20can't=20execute.=0D=0AT=
+his=20causes=20the=20I/O=20stack=20to=20become=20stuck.=0D=0A=0D=0AThis=20i=
+ssue=20arises=20from=20the=20race=20condition=20between=20the=20runtime=20p=
+m=20worker=20and=20the=20error=20handler=20worker.=0D=0AI=20believe=20it=20=
+would=20be=20safer=20to=20handle=20recovery=20within=20the=20runtime=20pm=
+=20worker=20itself.=0D=0A=0D=0AFor=20reference,=20ufshcd_link_recovery=20is=
+=20useful=20for=20the=20similar=20issue.=20(resolving=20the=20race=20condit=
+ion=20between=20the=20runtime=20pm=20worker=20and=20the=20SCSI=20error=20ha=
+ndler=20worker)=0D=0Ahttps://patchwork.kernel.org/project/linux-scsi/patch/=
+20230927033557.13801-1-peter.wang=40mediatek.com/=0D=0A=0D=0AI'll=20add=20F=
+ixes=20tags=20and=20modify=20v2=20as=20requested.=0D=0A=0D=0AThank=20you,=
+=0D=0ASeunghui=20Lee.=0D=0A=0D=0A=0D=0A=0D=0A
