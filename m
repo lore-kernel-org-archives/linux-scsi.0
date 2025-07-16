@@ -1,44 +1,63 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out162-62-58-211.mail.qq.com (out162-62-58-211.mail.qq.com [162.62.58.211])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ADEAB273807;
-	Wed, 16 Jul 2025 02:05:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B54727991E;
+	Wed, 16 Jul 2025 03:06:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=162.62.58.211
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752631537; cv=none; b=jwaIcCoG37+yzID3x5MTNymg5kflWMkSrk3IoCeOZBUpP14tUt3ZJEaqPCswrGKaInWB0J3YhZpW9rDBVqJN2yxZd9l+brkHo0nimrIehblxF8xxDA4nU/w79A5yxPO/N0b7lJVzkstH0HV2Hn+z/llwouMdUC4vU4KF4RHhYEw=
+	t=1752635195; cv=none; b=ZA6nk64LodUqTAbhcrbKqk1IJlCn8paAY1do+031YdiXNG/eZ5UIG+wiaq5kbFyMT+9ery1O9pScXG3hnw3yDjGRqYqa9uFRXFRU/YP3dEmryvuaGZymMxpga64LvMTX6c2ZhHNFK5B7jc46KypPdxibQl2/qYDPz1+DUSqvyJI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752631537; c=relaxed/simple;
-	bh=GQK6AiO3C46G7RFOzpBSeojor7lXjzqDAn+OIduLp6Y=;
-	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=K7xKv/iwssiNvqPKvYTvJt7H+vd5j0pyqU3qingHkaWcBUqUZWslEFLyBL/r1je6tgrCd4YDagt+gHAapbQfGLCeCFmFhSmzhFLirMYyHNHVOfwf2xi6tWwK8mREk58lXbeLQN8EI5rIByPKVWseNLVQdQKPerR75JVW9OjX3Ck=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hc6uZway; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752635195; c=relaxed/simple;
+	bh=6VN9FKcTdtAorxviZrZKH9YBRb4tZy7sSEHppzE3GAQ=;
+	h=Message-ID:From:To:Cc:Subject:Date:In-Reply-To:References:
+	 MIME-Version; b=KuSsb5N9R8nYSfVk12IWDbKbniAQ//uQe+6E5zeWYaxegczpppyPrHme5kNFpDpqiMIHZyjx0cwgpO/EaM3/CVbYnuK7GOVtAgJUaS0LzOXFEWYi/CFSwUtGF9JJZR0/DKKsBN7z7Aj5/ZVYAqNEEDrXudlvsWvf+LMT9d63sP8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com; spf=pass smtp.mailfrom=qq.com; dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b=SuLSzZJd; arc=none smtp.client-ip=162.62.58.211
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=qq.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qq.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hc6uZway"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 91AC3C4CEF6;
-	Wed, 16 Jul 2025 02:05:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752631537;
-	bh=GQK6AiO3C46G7RFOzpBSeojor7lXjzqDAn+OIduLp6Y=;
-	h=From:To:Subject:Date:In-Reply-To:References:From;
-	b=hc6uZwayHu40cU3XhUDZXOsz4QAlhYnUR4V8ldZ0DF2A64NwOvTYyrcDlrKE4s9qY
-	 jPzKK8YzRuYaSpnJ0y3enf0hK7loIkXkXzbFbV2bhUrhQnig6G7uT//YVPqDYNnA48
-	 yepY3S3sGDSYGktjBtmOu2NTg7CZYPRH38qw9iFCOsTUUHSczt8iAOeCYp7hBRfaYW
-	 yi/ZNu1w/jMAtsYku05+zOmXd/NDQcJE9S22JBDb1mLGLHWW10djEvtepEgI+kMC4Y
-	 g5ZEbhGR7H2wKPNsG646p7pFNy7NNZKAXqPqey6yElO4o7RlD/woPz7V1rJrWkCTO2
-	 XcaOIr5aas4RQ==
-From: Damien Le Moal <dlemoal@kernel.org>
-To: linux-ide@vger.kernel.org,
-	Niklas Cassel <cassel@kernel.org>,
+	dkim=pass (1024-bit key) header.d=qq.com header.i=@qq.com header.b="SuLSzZJd"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qq.com; s=s201512;
+	t=1752634883; bh=YUlCVgMJNmDjwrdJ6bJdu2yxm+8ftSfwyAUkzwsQpUY=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References;
+	b=SuLSzZJdHxU6KeYuhj+PNRVCx/cBprtyPO/vex5XQCyhY7qcBltt/Dmg7LTe5lMcF
+	 fnyrs1jvxMARltzqoqg1X/UHSgPi9Pvs8Iszot8L1QEgoiXpl14Z2+3F543hfzlvOy
+	 jlFrqlxzXM8Mtw/x6SXJtMI2Y4SscDEsyfo7k3nM=
+Received: from VM-222-126-tencentos.localdomain ([14.116.239.34])
+	by newxmesmtplogicsvrsza28-0.qq.com (NewEsmtp) with SMTP
+	id 55B267D; Wed, 16 Jul 2025 11:01:21 +0800
+X-QQ-mid: xmsmtpt1752634881tvzihwlbp
+Message-ID: <tencent_69EF08CD5A280B69E9B808B7F1FE0849B608@qq.com>
+X-QQ-XMAILINFO: Mkw1Oys1xyjCqHS8GC7e0ScOgMtTBIxcDhaN+oEf1F4AmDdo7uzWLeM7YQuU7V
+	 mXyrXvPpnC+aZPkWYPhe0ImL/FdCYiDKoOeXgb3CJesW2XxyF8W6E/0U6F1VQ7F6thpayQxzzxCH
+	 0v8+vaWWkI1kzeQTj73BS2lK/LBHUrUzBO3fqyxf51+08uKwESE3qJIgD/OI7VGgNrEMFqIdFLar
+	 MyvUWCNhV/jMrgy6ldtbgBoAht4MGC0ou5JUdz6oH1AWFKSAnIZwQPUQfo35RmsMn9S0NO9/wUUO
+	 ctJ5hVyeDpKjUS3EbXBxmRvNPHCph6hVPm6LVlVLRCWBXs/LZzAbcuFqiP+dudpgNEp69DdqbURc
+	 2zqz/HLXML24iVvTeITbPoPC2/gompl0xtYgoYbjsy83vaM/sNgJvFsWJTTiIFWEsOVpCF+QbjZs
+	 0H9WE7LrilOcmrTLuPwWhFqFlMFpa/KNQ1Zv0D9JjtGtuk0J1EBZgS1DEjeZpW8kNKsMGr4MZY7b
+	 rpVdWQmEN6IEDraB8bfgyABbpOoka9snttftEWO6w3icTG5Z2EiItMGUpRO3wdmaINDG4yCRJMMB
+	 Blx5P9SXXaQ4G8USLpGe1sb1a7THPHY2ZTcXPgKFaenq9R8ak7lI+D3YgEXnDHvWmouLaDxFKI7U
+	 Tp4P1v2sm/S1PghQq6rV0xlM3SVOetMywpfpxlCeMGtwgQPxiB2MEwldLEaZcN8Rk391jRUShNuY
+	 ryF/KRtCL6xa8wyJyMeVBZSKlESlRtl6Nh3pLRqYViE9t6WmUDblvQ08brWkE8KN+Nm3wRGvGhGj
+	 ISL7AO2hwXPY+RVpC91fBu68WjlTcShNV9lzLWxj9AEI6kIYf9EMrWom0MzoFtY9F3WqQsX1xA0A
+	 A814iLcFuZ3v719jfQueWKBTc1riGyh1zwUyrm9Mmgj423KDre/XcfS0xfrXzFR6/ZYIhJ+hqHSf
+	 1ha7ap9RCvXtA0I120REjnGG1eTLX26RHBTKDxY52BaqN08BImwBGwqHwYbkT9ZgrwTUGoqXIkmF
+	 0UApSKbivyINxM8b0r
+X-QQ-XMRINFO: NyFYKkN4Ny6FSmKK/uo/jdU=
+From: jackysliu <1972843537@qq.com>
+To: krzk@kernel.org
+Cc: 1972843537@qq.com,
+	James.Bottomley@HansenPartnership.com,
+	anil.gurumurthy@qlogic.com,
+	linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	John Garry <john.g.garry@oracle.com>,
-	Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v5 3/3] Documentation: driver-api: Update libata error handler information
-Date: Wed, 16 Jul 2025 11:03:15 +0900
-Message-ID: <20250716020315.235457-4-dlemoal@kernel.org>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250716020315.235457-1-dlemoal@kernel.org>
-References: <20250716020315.235457-1-dlemoal@kernel.org>
+	martin.petersen@oracle.com,
+	sudarsana.kalluru@qlogic.com
+Subject: Re: [PATCH] scsi:bfa: Double-free vulnerability fix 
+Date: Wed, 16 Jul 2025 11:01:16 +0800
+X-OQ-MSGID: <20250716030116.3958471-1-1972843537@qq.com>
+X-Mailer: git-send-email 2.43.5
+In-Reply-To: <f75182a8-90f9-466e-a96b-d454c770f0a5@kernel.org>
+References: <f75182a8-90f9-466e-a96b-d454c770f0a5@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -47,60 +66,16 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Update ``->error_handler()`` section of the libata documentation file
-Documentation/driver-api/libata.rst to remove the reference to the
-function ata_do_eh() as that function was removed. The reference to the
-function ata_bmdma_drive_eh() is also removed as that function does not
-exist at all. And while at it, cleanup the description of the various
-reset operations using a bullet list.
+On Tue, Jul 15 2025 12:45:00 +0200 Krzysztof Kozlowski wrote:
+>You should disclose that you used some AI tool for that... and that
+>other report(s) was really fake finding.  People should know you
+>generated it with AI, so they could make informed decision whether to
+>even allocate time here.
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Niklas Cassel <cassel@kernel.org>
-Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- Documentation/driver-api/libata.rst | 25 ++++++++++++++++---------
- 1 file changed, 16 insertions(+), 9 deletions(-)
+Although this problem was detected with the help of ai and static methods,
+I checked the trigger path by myself and verified this problem. 
+I'll describe the ways of detection if I find other issues in the future.
+Anyway, thanks for your review.
 
-diff --git a/Documentation/driver-api/libata.rst b/Documentation/driver-api/libata.rst
-index 5da27a749246..93d97fe78e3f 100644
---- a/Documentation/driver-api/libata.rst
-+++ b/Documentation/driver-api/libata.rst
-@@ -283,18 +283,25 @@ interrupts, start DMA engine, etc.
- 
- ``->error_handler()`` is a driver's hook into probe, hotplug, and recovery
- and other exceptional conditions. The primary responsibility of an
--implementation is to call :c:func:`ata_do_eh` or :c:func:`ata_bmdma_drive_eh`
--with a set of EH hooks as arguments:
-+implementation is to call :c:func:`ata_std_error_handler`.
- 
--'prereset' hook (may be NULL) is called during an EH reset, before any
--other actions are taken.
-+:c:func:`ata_std_error_handler` will perform a standard error handling sequence
-+to resurect failed devices, detach lost devices and add new devices (if any).
-+This function will call the various reset operations for a port, as needed.
-+These operations are as follows.
- 
--'postreset' hook (may be NULL) is called after the EH reset is
--performed. Based on existing conditions, severity of the problem, and
--hardware capabilities,
-+* The 'prereset' operation (which may be NULL) is called during an EH reset,
-+  before any other action is taken.
- 
--Either 'softreset' (may be NULL) or 'hardreset' (may be NULL) will be
--called to perform the low-level EH reset.
-+* The 'postreset' hook (which may be NULL) is called after the EH reset is
-+  performed. Based on existing conditions, severity of the problem, and hardware
-+  capabilities,
-+
-+* Either the 'softreset' operation or the 'hardreset' operation will be called
-+  to perform the low-level EH reset. If both operations are defined,
-+  'hardreset' is preferred and used. If both are not defined, no low-level reset
-+  is performed and EH assumes that an ATA class device is connected through the
-+  link.
- 
- ::
- 
--- 
-2.50.1
+Siyang Liu
 
