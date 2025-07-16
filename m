@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB43726FD88;
-	Wed, 16 Jul 2025 02:05:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB3B127380C;
+	Wed, 16 Jul 2025 02:05:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752631534; cv=none; b=kMTavSvO6jOxtnvqqxkmI+tV+Z0JPy0hZv1yQgVxXGtIxoX+6Bn/9lFtY2oU1aSOwm8K9i2rKMyqJfTFtFPDMeZSPF+pnQAbVtoaDG0sJZ3af0bVaUc+/i3lCAxu+opVfCfbH8rWhjqVhekdf5tbma64k0hwzvhg76r0FKsVBn0=
+	t=1752631535; cv=none; b=Ns+UY5MYWS59Dd0D8CyAtsZKS3X4SQIORRPhvmIQN8KpiBZjFS/dz8oyGXLMjmA1DdGqkhANVm2iov0s8PYLqoiJw5FOTwj3pTKnPQzKSE2TT7o7ju9UbYmqyUn4PlzHel9ZVIpV3/Tfqe+2TeuE1kazQa8yScjCqb+P4Otd8+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752631534; c=relaxed/simple;
-	bh=6jJmJJGRk+YiTP9EWNXFM9nhRYFIBVZ7/ZKRSEEfwa0=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=OtISLbUlG5PhR5481G6tV58flSXN1vr3v9yzT3nTicUin/GhEkt+gtLaRFnLN2N8deHvN4WIq5EVmErLSZ5R714kP0Xxrs+68a4SGmUlGi3UIZJWJ5a4dD9YoInP6aGqXLqRi9kI3LNqXCUVwEjmSADx98OXCQCzv8EZAjiDVJ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HQhBTTTi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752631535; c=relaxed/simple;
+	bh=e2GwOO8Q83NWTDOMUzatVl/qAbLX++cpvHGl4nJahjQ=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=YfZ6vQyQsaqr7uUIfiGeV3BcSmswgg1v88DWx2/HBZt8tBhQkJaiPDec/llWEsOn/2yEcwaojlhE883i3CrlxEePzlR77T0izsl3sNUVpYnhMZDrZs1JUvxtH2eEGGYSThMfbisgq3/iIJk26aiZHVGhWdS+mpfheuhAHIFsYIo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ACJkTHBU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HQhBTTTi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A58DC4CEF1;
-	Wed, 16 Jul 2025 02:05:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ACJkTHBU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 805E8C4CEF7;
+	Wed, 16 Jul 2025 02:05:34 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752631534;
-	bh=6jJmJJGRk+YiTP9EWNXFM9nhRYFIBVZ7/ZKRSEEfwa0=;
-	h=From:To:Subject:Date:From;
-	b=HQhBTTTi8NJpSZ9fpo0C2CIEDa0L6CGeTYvopGXGtD8v/e32tVhFB+eEzJkdQLLTb
-	 OjRED1jxwG0YEA598F46hVCvK5jrYzIcM9wiSVUJXFSsOWi0CBo9EgXze3fIbE9Hm/
-	 PDOAqW493RsDgE+1uacutD9Q7o3w1k0A0DP0ZPvGkdRysbfuxVXFeD/gwbv3bn2Kmr
-	 0LKtPa6uF52Oc9sGuumHaEEgWl9n15e/nScB2S7NYi78e/Bqzl3e35vAFVyDU+ykAw
-	 MQ2R5r6lIPmyApH+4hVwgB6SVR3UrLZOg5F36eGVVNnomRzvO4yajLzhT1/cPX840Y
-	 LzyFawfcAHs+Q==
+	s=k20201202; t=1752631535;
+	bh=e2GwOO8Q83NWTDOMUzatVl/qAbLX++cpvHGl4nJahjQ=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=ACJkTHBUZLUHIUgZW8cOtXbv8dH8iLNH/8SQtwFl88KHwpMvD2+YGHcNDk/pJyBQq
+	 rWK5ulvsgT7T96woywe9p7p+VjLCrh70KzbnijuJXeXOh/szSd3TIBEOe94R224EyA
+	 NI0638fX0SEVENqGOqFVLOt3OKluYghgxl8Mk5KmvJmRhjJZ53SqE8NxZdC8B5ay/s
+	 6xU5mYqHq+w6ab2B46JSsKVvBeKlbfZcHz8Vd+SDwkxqit42r4FkA1h7sSWaFUSLzq
+	 QycLtSkitCagLCotaa3OBCBhHNUtpqNUTWN8Fk9nqK22pwvgIKt6DxL3zCinJJiJ9v
+	 B0YTIPb/lUGsA==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-ide@vger.kernel.org,
 	Niklas Cassel <cassel@kernel.org>,
@@ -32,10 +33,12 @@ To: linux-ide@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	John Garry <john.g.garry@oracle.com>,
 	Jason Yan <yanaijie@huawei.com>
-Subject: [PATCH v5 0/3] libata-eh cleanups
-Date: Wed, 16 Jul 2025 11:03:12 +0900
-Message-ID: <20250716020315.235457-1-dlemoal@kernel.org>
+Subject: [PATCH v5 1/3] ata: libata-eh: Remove ata_do_eh()
+Date: Wed, 16 Jul 2025 11:03:13 +0900
+Message-ID: <20250716020315.235457-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250716020315.235457-1-dlemoal@kernel.org>
+References: <20250716020315.235457-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -44,102 +47,177 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-3 patches to cleanup libata-eh code and its documentation.
+The only reason for ata_do_eh() to exist is that the two caller sites,
+ata_std_error_handler() and ata_sff_error_handler() may pass it a
+NULL hardreset operation so that the built-in (generic) hardreset
+operation for a driver is ignored if the adapter SCR access is not
+available.
 
-Changes in patch 2 propagate to libsas.
+However, ata_std_error_handler() and ata_sff_error_handler()
+modifications of the hardreset port operation can easily be combined as
+they are mutually exclusive. That is, a driver using sata_std_hardreset()
+as its hardreset operation cannot use sata_sff_hardreset() and
+vice-versa.
 
-No functional changes are introduced.
+With this observation, ata_do_eh() can be removed and its code moved to
+ata_std_error_handler(). The condition used to ignore the built-in
+hardreset port operation is modified to be the one that was used in
+ata_sff_error_handler(). This requires defining a stub for the function
+sata_sff_hardreset() to avoid compilation errors when CONFIG_ATA_SFF is
+not enabled. Furthermore, instead of modifying the local hardreset
+operation definition, set the ATA_LFLAG_NO_HRST link flag to prevent
+the use of built-in hardreset methods for ports without a valid scr_read
+function. This flag is checked in ata_eh_reset() and if set, the
+hardreset method is ignored.
 
-Changes from v4:
- - Added reivew tags
- - Fixedup patch 2 pata_parport modifications to keep the hardreset
-   operation initialization to NULL
+This change simplifies ata_sff_error_handler() as this function now only
+needs to call ata_std_error_handler().
 
-Changes from v3:
- - Move the use of the ATA_LFLAG_NO_HRST link flag in
-   ata_std_error_handler() from patch 2 to patch 1.
- - Reduce number of changes in ata_eh_reset() in patch 2 using local
-   variables.
- - Correct typos in patch 2 commit message and added suggested-by tag
- - Added review tag in patch 3
+No functional changes.
 
-Changes from v2:
- - Removed former patch 1 "Make ata_eh_followup_srst_needed() return a
-   bool" (sent it as a standalone patch)
- - Addressed Niklas'comment on patch 1
- - Added patch 2
- - Improved the description of reset methods in patch 3
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Niklas Cassel <cassel@kernel.org>
+Reviewed-by: Martin K. Petersen <martin.petersen@oracle.com>
+Reviewed-by: Hannes Reinecke <hare@suse.de>
+---
+ drivers/ata/libata-eh.c  | 48 ++++++++++++----------------------------
+ drivers/ata/libata-sff.c | 10 +--------
+ include/linux/libata.h   |  9 +++++---
+ 3 files changed, 21 insertions(+), 46 deletions(-)
 
-Changes from v1:
- - Correct compilation error when CONFIG_ATA_SFF is not enabled by
-   defining a stub for sata_sff_hardreset().
-
-Damien Le Moal (3):
-  ata: libata-eh: Remove ata_do_eh()
-  ata: libata-eh: Simplify reset operation management
-  Documentation: driver-api: Update libata error handler information
-
- Documentation/driver-api/libata.rst     | 25 +++++----
- drivers/ata/ahci.c                      |  6 +--
- drivers/ata/ahci_da850.c                |  6 +--
- drivers/ata/ahci_dm816.c                |  2 +-
- drivers/ata/ahci_imx.c                  | 13 ++---
- drivers/ata/ahci_qoriq.c                |  4 +-
- drivers/ata/ahci_xgene.c                |  8 +--
- drivers/ata/ata_piix.c                  |  4 +-
- drivers/ata/libahci.c                   | 10 ++--
- drivers/ata/libata-core.c               |  4 +-
- drivers/ata/libata-eh.c                 | 67 ++++++++-----------------
- drivers/ata/libata-pmp.c                | 26 ++++------
- drivers/ata/libata-sata.c               |  2 +-
- drivers/ata/libata-sff.c                | 18 ++-----
- drivers/ata/libata.h                    |  8 ++-
- drivers/ata/pata_acpi.c                 |  2 +-
- drivers/ata/pata_ali.c                  | 10 ++--
- drivers/ata/pata_amd.c                  |  4 +-
- drivers/ata/pata_artop.c                |  4 +-
- drivers/ata/pata_atiixp.c               |  2 +-
- drivers/ata/pata_efar.c                 |  2 +-
- drivers/ata/pata_ep93xx.c               |  4 +-
- drivers/ata/pata_hpt366.c               |  2 +-
- drivers/ata/pata_hpt37x.c               |  4 +-
- drivers/ata/pata_hpt3x2n.c              |  2 +-
- drivers/ata/pata_icside.c               |  2 +-
- drivers/ata/pata_it8213.c               |  2 +-
- drivers/ata/pata_jmicron.c              |  2 +-
- drivers/ata/pata_marvell.c              |  2 +-
- drivers/ata/pata_mpiix.c                |  2 +-
- drivers/ata/pata_ns87410.c              |  2 +-
- drivers/ata/pata_octeon_cf.c            |  2 +-
- drivers/ata/pata_oldpiix.c              |  2 +-
- drivers/ata/pata_opti.c                 |  2 +-
- drivers/ata/pata_optidma.c              |  2 +-
- drivers/ata/pata_parport/pata_parport.c |  4 +-
- drivers/ata/pata_pdc2027x.c             |  2 +-
- drivers/ata/pata_rdc.c                  |  2 +-
- drivers/ata/pata_sis.c                  |  2 +-
- drivers/ata/pata_sl82c105.c             |  2 +-
- drivers/ata/pata_triflex.c              |  2 +-
- drivers/ata/pata_via.c                  |  2 +-
- drivers/ata/pdc_adma.c                  |  2 +-
- drivers/ata/sata_dwc_460ex.c            |  2 +-
- drivers/ata/sata_fsl.c                  |  6 +--
- drivers/ata/sata_highbank.c             |  2 +-
- drivers/ata/sata_inic162x.c             |  2 +-
- drivers/ata/sata_mv.c                   | 10 ++--
- drivers/ata/sata_nv.c                   |  2 +-
- drivers/ata/sata_promise.c              |  4 +-
- drivers/ata/sata_qstor.c                |  4 +-
- drivers/ata/sata_rcar.c                 |  2 +-
- drivers/ata/sata_sil24.c                |  8 +--
- drivers/ata/sata_svw.c                  |  4 +-
- drivers/ata/sata_sx4.c                  |  2 +-
- drivers/ata/sata_uli.c                  |  2 +-
- drivers/ata/sata_via.c                  |  4 +-
- drivers/scsi/libsas/sas_ata.c           |  4 +-
- include/linux/libata.h                  | 26 ++++++----
- 59 files changed, 166 insertions(+), 195 deletions(-)
-
+diff --git a/drivers/ata/libata-eh.c b/drivers/ata/libata-eh.c
+index 436536112043..30c831e56a7f 100644
+--- a/drivers/ata/libata-eh.c
++++ b/drivers/ata/libata-eh.c
+@@ -4067,59 +4067,39 @@ void ata_eh_finish(struct ata_port *ap)
+ }
+ 
+ /**
+- *	ata_do_eh - do standard error handling
++ *	ata_std_error_handler - standard error handler
+  *	@ap: host port to handle error for
+  *
+- *	@prereset: prereset method (can be NULL)
+- *	@softreset: softreset method (can be NULL)
+- *	@hardreset: hardreset method (can be NULL)
+- *	@postreset: postreset method (can be NULL)
+- *
+  *	Perform standard error handling sequence.
+  *
+  *	LOCKING:
+  *	Kernel thread context (may sleep).
+  */
+-void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+-	       ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+-	       ata_postreset_fn_t postreset)
++void ata_std_error_handler(struct ata_port *ap)
+ {
+-	struct ata_device *dev;
++	struct ata_port_operations *ops = ap->ops;
++	struct ata_link *link = &ap->link;
+ 	int rc;
+ 
++	/* Ignore built-in hardresets if SCR access is not available */
++	if ((ops->hardreset == sata_std_hardreset ||
++	     ops->hardreset == sata_sff_hardreset) && !sata_scr_valid(link))
++		link->flags |= ATA_LFLAG_NO_HRST;
++
+ 	ata_eh_autopsy(ap);
+ 	ata_eh_report(ap);
+ 
+-	rc = ata_eh_recover(ap, prereset, softreset, hardreset, postreset,
+-			    NULL);
++	rc = ata_eh_recover(ap, ops->prereset, ops->softreset,
++			    ops->hardreset, ops->postreset, NULL);
+ 	if (rc) {
+-		ata_for_each_dev(dev, &ap->link, ALL)
++		struct ata_device *dev;
++
++		ata_for_each_dev(dev, link, ALL)
+ 			ata_dev_disable(dev);
+ 	}
+ 
+ 	ata_eh_finish(ap);
+ }
+-
+-/**
+- *	ata_std_error_handler - standard error handler
+- *	@ap: host port to handle error for
+- *
+- *	Standard error handler
+- *
+- *	LOCKING:
+- *	Kernel thread context (may sleep).
+- */
+-void ata_std_error_handler(struct ata_port *ap)
+-{
+-	struct ata_port_operations *ops = ap->ops;
+-	ata_reset_fn_t hardreset = ops->hardreset;
+-
+-	/* ignore built-in hardreset if SCR access is not available */
+-	if (hardreset == sata_std_hardreset && !sata_scr_valid(&ap->link))
+-		hardreset = NULL;
+-
+-	ata_do_eh(ap, ops->prereset, ops->softreset, hardreset, ops->postreset);
+-}
+ EXPORT_SYMBOL_GPL(ata_std_error_handler);
+ 
+ #ifdef CONFIG_PM
+diff --git a/drivers/ata/libata-sff.c b/drivers/ata/libata-sff.c
+index 5a46c066abc3..e61f00779e40 100644
+--- a/drivers/ata/libata-sff.c
++++ b/drivers/ata/libata-sff.c
+@@ -2054,8 +2054,6 @@ EXPORT_SYMBOL_GPL(ata_sff_drain_fifo);
+  */
+ void ata_sff_error_handler(struct ata_port *ap)
+ {
+-	ata_reset_fn_t softreset = ap->ops->softreset;
+-	ata_reset_fn_t hardreset = ap->ops->hardreset;
+ 	struct ata_queued_cmd *qc;
+ 	unsigned long flags;
+ 
+@@ -2077,13 +2075,7 @@ void ata_sff_error_handler(struct ata_port *ap)
+ 
+ 	spin_unlock_irqrestore(ap->lock, flags);
+ 
+-	/* ignore built-in hardresets if SCR access is not available */
+-	if ((hardreset == sata_std_hardreset ||
+-	     hardreset == sata_sff_hardreset) && !sata_scr_valid(&ap->link))
+-		hardreset = NULL;
+-
+-	ata_do_eh(ap, ap->ops->prereset, softreset, hardreset,
+-		  ap->ops->postreset);
++	ata_std_error_handler(ap);
+ }
+ EXPORT_SYMBOL_GPL(ata_sff_error_handler);
+ 
+diff --git a/include/linux/libata.h b/include/linux/libata.h
+index d092747be588..cf0b3fff3198 100644
+--- a/include/linux/libata.h
++++ b/include/linux/libata.h
+@@ -1412,9 +1412,6 @@ extern void ata_eh_thaw_port(struct ata_port *ap);
+ extern void ata_eh_qc_complete(struct ata_queued_cmd *qc);
+ extern void ata_eh_qc_retry(struct ata_queued_cmd *qc);
+ 
+-extern void ata_do_eh(struct ata_port *ap, ata_prereset_fn_t prereset,
+-		      ata_reset_fn_t softreset, ata_reset_fn_t hardreset,
+-		      ata_postreset_fn_t postreset);
+ extern void ata_std_error_handler(struct ata_port *ap);
+ extern void ata_std_sched_eh(struct ata_port *ap);
+ extern void ata_std_end_eh(struct ata_port *ap);
+@@ -2152,6 +2149,12 @@ static inline u8 ata_wait_idle(struct ata_port *ap)
+ 
+ 	return status;
+ }
++#else /* CONFIG_ATA_SFF */
++static inline int sata_sff_hardreset(struct ata_link *link, unsigned int *class,
++				     unsigned long deadline)
++{
++	return -EOPNOTSUPP;
++}
+ #endif /* CONFIG_ATA_SFF */
+ 
+ #endif /* __LINUX_LIBATA_H__ */
 -- 
 2.50.1
 
