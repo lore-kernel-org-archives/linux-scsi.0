@@ -1,170 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C7D42E36EF
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2025 16:56:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C04B41BC9E2
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2025 17:47:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752771372; cv=none; b=TwjO8ET14qiX7rgiawIryUp4mWFMebMBm1ajuYqT3uNhBxJlRb8hughCoc3cfO1BPQkIFmdh6qRHdV2PL7ZIJHnYqc/Y/QXywXjErAzEBWvLNwjbnMYVgujOiNHWu3h/h6hUK60X87iv5o4ONecMEEywABTmqWCc80VPh0CFPKc=
+	t=1752774459; cv=none; b=EOanJWpweAf7cv0Dd9rY2kf1sL2v+yb5gCAEUxOpqDkFPGzjdVaB0nP6CxG0QaEggYqqhIWHhDW9LbGlTuM1SXhskdjSKmayBTshz0GKWDx6jjjTarYUWswyKnSzObU0aaYvc6nATmBYy3BEoWpt2W/gmwvE9PZUIunbiEs9ujo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752771372; c=relaxed/simple;
-	bh=9YzKT/T9GOdEP7OBOyIMoFAvRnV/PAr7pxn01XWTvLk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=EA1y5u31ZtHMl0+QULQEl62jlEc6opBJQL4ZQQhGSXAvnvvMPtzBDPoeNfsgetk/gBSJO0oa7MtRvE5FgnPjrLwmCWtd8w4lG+PQQ30n4syJICcsljfqG04PCf1qod9mwCkdcoVwGo+p8e9GN4oMvaX81vGvuuFJvtVFpZ+rLDQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dA3ovLZO; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752774459; c=relaxed/simple;
+	bh=dA+yHrjkjOaVtmGJMYO7hse3EJTQLq52MQfJKcQagW0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=LGpYBGK+cl5amrjokMme7XYvbHzlIaIQYOlmfBYtPQTZvpoaxgiE32Np4b3saKXcy2aS0TyFNmJm+gGcLXlwGv6wih4y4J+WEDmPhWP8ZCPmoD/9ma7OkowskLbP5sGyluldDX665P6kl3ou4zpLE84n47B87sos6Uexez+UQQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ZH3iJjdM; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dA3ovLZO"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4630DC4CEE3;
-	Thu, 17 Jul 2025 16:56:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752771372;
-	bh=9YzKT/T9GOdEP7OBOyIMoFAvRnV/PAr7pxn01XWTvLk=;
-	h=From:To:Cc:Subject:Date:From;
-	b=dA3ovLZOmaNIOMGa0VKL7itT+tHs3Y4Eug5gAHe+hNuoYK1+eHchqseW5tIOII74w
-	 g2bxuMTRUyhXxlB53z8uHuRxuBMxh0ed32THHJMnlUAw488t160reATID0mS7fosmt
-	 Q9KrzXGd4NCo39m+sgsyM+mqEMkcf22kLc6kI6Jjcwyvw/LrCoaWt64kKWxX+xMhq1
-	 ru8L4fRaRRLkJ/QhNHNMUyzY8bv6NHKiyYnkTC9yzZztdtB0HT8S3hDIjQyjH9pIpS
-	 hlVT1+oDOHPS6Lyn60Xu4xQm7lRbOG+L/sYyq8QQllnelxV6XLri8Wn/V1RvA4Mmxe
-	 nlrq5C5iNcEPg==
-From: Niklas Cassel <cassel@kernel.org>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Igor Pylypiv <ipylypiv@google.com>,
-	Terrence Adams <tadamsjr@google.com>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH] Revert "scsi: pm80xx: Do not use libsas port ID"
-Date: Thu, 17 Jul 2025 18:56:07 +0200
-Message-ID: <20250717165606.3099208-2-cassel@kernel.org>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ZH3iJjdM"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bjgNy6rBBzm0yQ1;
+	Thu, 17 Jul 2025 17:47:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1752774449; x=1755366450; bh=Wxc/D2OGZCJYQkLf7TYwnJjU
+	RNKhMbd43jAkbR+GLDE=; b=ZH3iJjdMhycbVR/3/xFRmwGwzJR23YjsudUYmAOm
+	4Ehp6u0voM/GUrr2WbPpPGAccak7s4fzuScRxk7p2Yx7SMKV6ncBz4b4BEICkDm2
+	JVainCUqql1P03gju5dwqdcD2zbfeoonnC8aGq+vYHVLwSwKOX9dPUXv6+u6m5QY
+	AEvOJDvXydQpD848h0wJ/nw6fpmiKRrsXfAp1VvKou8eL1XNqn1yOtxAx2ns+HJ3
+	9Iq6H8sdpjBo0hPBZwjhBgTCuHs0yVsFD2BNbBFtsfQuExc/Itqoqq8C1QRW2rHO
+	2xe8uxhy0Ef8Jjytnk0GdCeGQG8LsVrHOi249MVAPMnHoA==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id yLFKpMYn2FsV; Thu, 17 Jul 2025 17:47:29 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bjgNp0mqczm1748;
+	Thu, 17 Jul 2025 17:47:21 +0000 (UTC)
+Message-ID: <2743ce40-72fa-4c87-a2cc-528b51418aec@acm.org>
+Date: Thu, 17 Jul 2025 10:47:20 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=5611; i=cassel@kernel.org; h=from:subject; bh=9YzKT/T9GOdEP7OBOyIMoFAvRnV/PAr7pxn01XWTvLk=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDIqtdW439m6rdsq+ak/Ynefsys/WzbPgcl1/w/dm/7Q1 2DVn+lJHaUsDGJcDLJiiiy+P1z2F3e7TzmueMcGZg4rE8gQBi5OAZjIm4WMDLNNZ9y71TUtls33 iPeLkoKdTbN4fSeGNjmck5vFq15Uv4zhn4KCZn5UZLR8yJzvQSYM33f+lNdqvcjcnbx7reDchoe JXAA=
-X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] ufs: core: Use link recovery when the h8 exit failure
+ during runtime resume
+To: Seunghui Lee <sh043.lee@samsung.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
+ sdriver.sec@samsung.com
+References: <CGME20250717081220epcas1p224952b344389e4967beb893297f1ae02@epcas1p2.samsung.com>
+ <20250717081213.6811-1-sh043.lee@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250717081213.6811-1-sh043.lee@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-This reverts commit 0f630c58e31afb3dc2373bc1126b555f4b480bb2.
+On 7/17/25 1:12 AM, Seunghui Lee wrote:
+> If the h8 exit fails during runtime resume process,
+> the runtime thread enters runtime suspend immediately
+> and the error handler operates at the same time.
+> It becomes stuck and cannot be recovered through the error handler.
+> To fix this, use link recovery instead of the error handler.
+> 
+> Fixes: 4db7a2360597 ("scsi: ufs: Fix concurrency of error handler and other error recovery paths")
+> Signed-off-by: Seunghui Lee <sh043.lee@samsung.com>
+> ---
+> Changes from v1:
+>   * Add the Fixes tag as Beanhuo's requested.
+> ---
+>   drivers/ufs/core/ufshcd.c | 10 +++++++++-
+>   1 file changed, 9 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 50adfb8b335b..dc2845c32d72 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -4340,7 +4340,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+>   	hba->uic_async_done = NULL;
+>   	if (reenable_intr)
+>   		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+> -	if (ret) {
+> +	if (ret && !hba->pm_op_in_progress) {
+>   		ufshcd_set_link_broken(hba);
+>   		ufshcd_schedule_eh_work(hba);
+>   	}
+> @@ -4348,6 +4348,14 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
+>   	spin_unlock_irqrestore(hba->host->host_lock, flags);
+>   	mutex_unlock(&hba->uic_cmd_mutex);
+>   
+> +	/*
+> +	 * If the h8 exit fails during the runtime resume process,
+> +	 * it becomes stuck and cannot be recovered through the error handler.
+> +	 * To fix this, use link recovery instead of the error handler.
+> +	 */
+> +	if (ret && hba->pm_op_in_progress)
+> +		ret = ufshcd_link_recovery(hba);
+> +
+>   	return ret;
+>   }
 
-Commit 0f630c58e31a ("scsi: pm80xx: Do not use libsas port ID") causes
-drives behind a SAS enclosure (which is connected to one of the ports
-on the HBA) to no longer be detected.
+There are multiple calls to ufshcd_uic_pwr_ctrl() from outside the
+runtime power management callbacks. Hence, hba->pm_op_in_progress may
+be changed from another thread while ufshcd_uic_pwr_ctrl() is in
+progress. Hence, ufshcd_uic_pwr_ctrl() calls from outside runtime power
+management callbacks should be serialized against these callbacks, e.g.
+by surrounding these calls with pm_runtime_get_sync() and
+pm_runtime_put().
 
-Connecting the drives directly to the HBA still works. Thus, the commit
-only broke the detection of drives behind a SAS enclosure.
+Thanks,
 
-Reverting the commit makes the drives behind the SAS enclosure to be
-detected once again.
-
-The commit log of the offending commit is quite vague, but mentions that:
-"Remove sas_find_local_port_id(). We can use pm8001_ha->phy[phy_id].port
-to get the port ID."
-
-This assumption appears false, thus revert the offending commit.
-
-Signed-off-by: Niklas Cassel <cassel@kernel.org>
----
-dmesg after the offending commit, in case anyone is interested:
-pm80xx0:: pm80xx_chip_phy_start_req 4641: PHY START REQ for phy_id 2
-pm80xx0:: mpi_phy_start_resp 3340: phy start resp status:0x0, phyid:0x2
-pm80xx0:: pm80xx_chip_phy_start_req 4641: PHY START REQ for phy_id 3
-pm80xx0:: mpi_phy_start_resp 3340: phy start resp status:0x0, phyid:0x3
-pm80xx0:: pm80xx_chip_phy_start_req 4641: PHY START REQ for phy_id 4
-pm80xx0:: mpi_phy_start_resp 3340: phy start resp status:0x0, phyid:0x4
-pm80xx0:: mpi_hw_event 3417: HW_EVENT_SAS_PHY_UP phyid:0x4 port_id:0x0
-sas: phy-11:4 added to port-11:0, phy_mask:0x10 (50015b21409aefbf)
-sas: DOING DISCOVERY on port 0, pid:215
-pm80xx0:: pm80xx_chip_reg_dev_req 4742: register device req phy_id 0x0 port_id 0x0
-pm80xx0:: pm8001_mpi_reg_resp 3309: register device status 0 phy_id 0x0 device_id 16385
-sas: executing SMP task failed:-19
-sas: RG to ex 50015b21409aefbf failed:0xffffffed
-pm80xx0:: pm8001_chip_dereg_dev_req 4226: unregister device device_id 16385
-sas: DONE DISCOVERY on port 0, pid:215, result:-19
-pm80xx0:: pm80xx_chip_phy_start_req 4641: PHY START REQ for phy_id 5
-pm80xx0:: mpi_phy_start_resp 3340: phy start resp status:0x0, phyid:0x5
-pm80xx0:: mpi_hw_event 3417: HW_EVENT_SAS_PHY_UP phyid:0x5 port_id:0x0
-sas: phy5 matched wide port0
-sas: phy-11:5 added to port-11:0, phy_mask:0x30 (50015b21409aefbf)
-sas: DOING DISCOVERY on port 0, pid:277
-pm80xx0:: pm80xx_chip_reg_dev_req 4742: register device req phy_id 0x0 port_id 0x0
-pm80xx0:: pm8001_mpi_reg_resp 3309: register device status 0 phy_id 0x0 device_id 16386
-sas: executing SMP task failed:-19
-sas: RG to ex 50015b21409aefbf failed:0xffffffed
-pm80xx0:: pm8001_chip_dereg_dev_req 4226: unregister device device_id 16386
-sas: DONE DISCOVERY on port 0, pid:277, result:-19
-pm80xx0:: pm80xx_chip_phy_start_req 4641: PHY START REQ for phy_id 6
-pm80xx0:: mpi_phy_start_resp 3340: phy start resp status:0x0, phyid:0x6
-pm80xx0:: mpi_hw_event 3417: HW_EVENT_SAS_PHY_UP phyid:0x6 port_id:0x0
-sas: phy6 matched wide port0
-sas: phy-11:6 added to port-11:0, phy_mask:0x70 (50015b21409aefbf)
-sas: DOING DISCOVERY on port 0, pid:277
-pm80xx0:: pm80xx_chip_reg_dev_req 4742: register device req phy_id 0x0 port_id 0x0
-pm80xx0:: pm8001_mpi_reg_resp 3309: register device status 0 phy_id 0x0 device_id 16387
-sas: executing SMP task failed:-19
-sas: RG to ex 50015b21409aefbf failed:0xffffffed
-pm80xx0:: pm8001_chip_dereg_dev_req 4226: unregister device device_id 16387
-sas: DONE DISCOVERY on port 0, pid:277, result:-19
-pm80xx0:: pm80xx_chip_phy_start_req 4641: PHY START REQ for phy_id 7
-pm80xx0:: mpi_phy_start_resp 3340: phy start resp status:0x0, phyid:0x7
-pm80xx0:: mpi_hw_event 3417: HW_EVENT_SAS_PHY_UP phyid:0x7 port_id:0x0
-sas: phy7 matched wide port0
-sas: phy-11:7 added to port-11:0, phy_mask:0xf0 (50015b21409aefbf)
-sas: DOING DISCOVERY on port 0, pid:215
-pm80xx0:: pm80xx_chip_reg_dev_req 4742: register device req phy_id 0x0 port_id 0x0
-pm80xx0:: pm8001_mpi_reg_resp 3309: register device status 0 phy_id 0x0 device_id 16388
-sas: executing SMP task failed:-19
-sas: RG to ex 50015b21409aefbf failed:0xffffffed
-pm80xx0:: pm8001_chip_dereg_dev_req 4226: unregister device device_id 16388
-sas: DONE DISCOVERY on port 0, pid:215, result:-19
-
- drivers/scsi/pm8001/pm8001_sas.c | 21 +++++++++++++++++++--
- 1 file changed, 19 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index f7067878b34f..8cfdfb77d9b0 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -431,6 +431,23 @@ static int pm8001_task_prep_ssp(struct pm8001_hba_info *pm8001_ha,
- 	return PM8001_CHIP_DISP->ssp_io_req(pm8001_ha, ccb);
- }
- 
-+ /* Find the local port id that's attached to this device */
-+static int sas_find_local_port_id(struct domain_device *dev)
-+{
-+	struct domain_device *pdev = dev->parent;
-+
-+	/* Directly attached device */
-+	if (!pdev)
-+		return dev->port->id;
-+	while (pdev) {
-+		struct domain_device *pdev_p = pdev->parent;
-+		if (!pdev_p)
-+			return pdev->port->id;
-+		pdev = pdev->parent;
-+	}
-+	return 0;
-+}
-+
- #define DEV_IS_GONE(pm8001_dev)	\
- 	((!pm8001_dev || (pm8001_dev->dev_type == SAS_PHY_UNUSED)))
- 
-@@ -503,10 +520,10 @@ int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
- 	spin_lock_irqsave(&pm8001_ha->lock, flags);
- 
- 	pm8001_dev = dev->lldd_dev;
--	port = pm8001_ha->phy[pm8001_dev->attached_phy].port;
-+	port = &pm8001_ha->port[sas_find_local_port_id(dev)];
- 
- 	if (!internal_abort &&
--	    (DEV_IS_GONE(pm8001_dev) || !port || !port->port_attached)) {
-+	    (DEV_IS_GONE(pm8001_dev) || !port->port_attached)) {
- 		ts->resp = SAS_TASK_UNDELIVERED;
- 		ts->stat = SAS_PHY_DOWN;
- 		if (sas_protocol_ata(task_proto)) {
--- 
-2.50.1
-
+Bart.
