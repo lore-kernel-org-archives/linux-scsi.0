@@ -1,116 +1,102 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f43.google.com (mail-ej1-f43.google.com [209.85.218.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38321279327
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2025 08:12:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED0ED35963
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2025 14:54:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752739947; cv=none; b=nUSyUZyUAScZU6tL30thGlxzvXIJMhPeciUDIeRgJbdL3aIRXxwEsvs40e60R85eF42J9x8D7+TNjPXE3nx28czMt6ZiTRzIjyNDLQXkRDtwm7wX73Xv1FhLtH9AiSmyjkf7nQk8p7FrSgPLLCSMixroyXrqTSYIFnH3tNUF83Q=
+	t=1752764082; cv=none; b=J/m179yhZNH6DPVwTWg4LngovgmviTYrsh1m/drDHCiKv+zJMHe/x6/cxoBLgjEKjNORPLVzhVbQMck9w6IgWLmNPN4SCbRkNVrLco/wy+QN/8Cn9h4sj5IxYzoSydsFSfVGzdZBKGASnsG6rYZQ9nNV8hPiTuOERXi78v0UXR4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752739947; c=relaxed/simple;
-	bh=wlWucFXbu0+Ln1t4583wNhsERYRXZ5JUYc8spd+sCj0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 References; b=UNAK84Zy57Sl+h+yQ0o/Ibuz725ZU4S76cB4jITExEC22KZuXwNyaQJ+FBEoPM/TGiuqs5a4mBa5dGI5Vu8CbMZ+t07XuibX1TAElwn5W9eqjSO2eXmR9uPhr/yl7kYfxtwReWIUqGq1ys+7mDGBPn5lfzLH9ch+dyVI4HlMZUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=I5G7u573; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1752764082; c=relaxed/simple;
+	bh=6GJZm+3lrq7+IRQsUKzMxu6oujhxjo1LFpEHywXw64I=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=DUijByUrsyQF+nMAqn0kHYoByvroQmy/zcuq4tYCAsPPZceQWco+CCwaiVLVRKrhcGMtXg8lqDARr6q4Y/VUdHfKIj0vn64o2tx+IVAZn6Ha/MbZ5snjpMXbHPy2xFWbv29Jq1PajAc1VSU65dQ4gOtRaIs536CxL2aWaFSODa4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hmDNuzgN; arc=none smtp.client-ip=209.85.218.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="I5G7u573"
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250717081222epoutp0138a46882e020ba74bbdce8beb2f4d756~S_7DfTVUn1620716207epoutp01R
-	for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2025 08:12:22 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250717081222epoutp0138a46882e020ba74bbdce8beb2f4d756~S_7DfTVUn1620716207epoutp01R
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1752739942;
-	bh=I6DmLKFHaX7ZFv9+ybkFoENu8O7C3F5K8tKghegzEPE=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=I5G7u573t1Vs1eAC+h5Y9OUCyIAznJLO+48I6OoZMAh4ZmfMF4lBnTf7sC2cSpRBu
-	 F3FJaOtLa8pVYRM+EI0VhoooXgQS4hPv+2kgG+Oyha/jvHwIDQp6qw3QhlrcPEpgVK
-	 66xjPPXFvDi2B+jTL/4NxszU8YNHAUDRXpzJMkns=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas1p4.samsung.com (KnoxPortal) with ESMTPS id
-	20250717081221epcas1p49ca52a04d3d9d32ae1e17e8b0b7725c4~S_7DAaufW2619926199epcas1p4G;
-	Thu, 17 Jul 2025 08:12:21 +0000 (GMT)
-Received: from epcas1p3.samsung.com (unknown [182.195.36.223]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4bjQdK1YnNz2SSKX; Thu, 17 Jul
-	2025 08:12:21 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250717081220epcas1p224952b344389e4967beb893297f1ae02~S_7CMUyfQ2346023460epcas1p25;
-	Thu, 17 Jul 2025 08:12:20 +0000 (GMT)
-Received: from sh043lee-960XFH.. (unknown [10.253.98.183]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250717081220epsmtip1f52df09778fe4c34b224d21c4dd455ae~S_7CJlsHU0463304633epsmtip1J;
-	Thu, 17 Jul 2025 08:12:20 +0000 (GMT)
-From: Seunghui Lee <sh043.lee@samsung.com>
-To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, sdriver.sec@samsung.com
-Cc: Seunghui Lee <sh043.lee@samsung.com>
-Subject: [PATCH v2] ufs: core: Use link recovery when the h8 exit failure
- during runtime resume
-Date: Thu, 17 Jul 2025 17:12:13 +0900
-Message-ID: <20250717081213.6811-1-sh043.lee@samsung.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hmDNuzgN"
+Received: by mail-ej1-f43.google.com with SMTP id a640c23a62f3a-ae0a0cd709bso389781266b.0
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2025 07:54:40 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1752764079; x=1753368879; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=6GJZm+3lrq7+IRQsUKzMxu6oujhxjo1LFpEHywXw64I=;
+        b=hmDNuzgNDvw44r0XpnLtDVrDN3mH0XhRxFUyToCUUU6Nt8BTN2gKsHCFhzS87pINxn
+         VVnomLnfyMePOKBTlTdpZdngI+XoRygctKleHtmG+c/YJlJt2SSmG/45G67IDounEKSn
+         lBizQKuSEWOlQMFB078bEvut2nVdfL7rOsGHL5ZrPtSPP09t8FOkBsrSEOVe5UZhgsiK
+         iSWfly+khtYCWWF+nLO9nVlGAiS9FYzx5fTlpHD1AlUXvB3Pj1eFkRG4zOQq/NiecKzG
+         ez7sKFCrH1LzavbK7UbJ+MsANn1VC9S3s3mIzMviHRYynd797DJThGTJY4jNWckDV2GV
+         0yjg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752764079; x=1753368879;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:to:from:subject:message-id:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=6GJZm+3lrq7+IRQsUKzMxu6oujhxjo1LFpEHywXw64I=;
+        b=jj6V/ilm6MsseZLWig80GE1f3/MX6vgW/XGl2/Z+oa+eSRWKWjEXWGGCl8SEdxMDBu
+         wdZwdcSBwD10etEE3W+4BdgzF/tfoEkOLss86r2Ofpn433kgf+iQHPSyoAOPkT9+eqxE
+         QvyH81v2yqkPAKHMf4AqpNNZnV/EiGUswXxOzvaqDH9qRmlo6LVzRyQZdKtP0Ur4iEUo
+         N80+e/JKmkkgrU0AJcpgIfi/etzMaP2sRFfcg8CXI06LR8alF2acxZhjAXMeUbegzgkU
+         EbHTFe2LZQ8YI5TZtaWoFO1iLr95gHu6GSnAbBh8ghf5uUQlciBJ/t/QjCMWCx5nQYeB
+         OVDQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXHeBIoL/Wb9M2GB7zrSL8FfapTb6xufouh1MnCDhC28X6ryNTRx7oEqsS9vd1Rk8xRxSO2Tq9Nk2Y/@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy6iUT4QQ18D7YwX5jWXLa6Q1dODtdOwaVMH0/TsBkV0mFBWThw
+	xaCa+C1p95DiZaJwrrIrU5tJvQ4CUYqOKiBRsCssnTFe70Rb+SaRUeCg
+X-Gm-Gg: ASbGncu5ytJFHLf74ouke428ELiE4s3BVCpIHXmoBxS3hZ6OuZ1QuMhLeV/ubDuwBuR
+	0TfavHbyWAUQzrq+C+IDvKLQbjcDXZQMiOJ3626KozZQH/8MpnGgKT1iX7zjpz3hQDrGbuQv5gW
+	wnYFqCq81+uhzPNsSJUGfmhjSlY8Y8IcfAV3iE2VFmjM+ZZ6IB4WH+A/OW53qJjhrkdojQN8xX9
+	RTPABljAEd71awQ/MU+OGZabXRkLtGPYsaetPjIJQYKYq4n6AwpoU8KRYLXg/HNPiXBPk4T/LS6
+	yQnBjtrHebCspn01IlgmLisenLWquaUJK5yV6B/eTwMb5P/Ad6oAFKiJKAXCwn9vby6qXCQ2ii2
+	TWxdD4ProwbpRjpsOoSdib4zb
+X-Google-Smtp-Source: AGHT+IFxszyCxxGq9QUj4Zlw/zEuocnWDvM4RD0QxrgccqMfoXpz6j3oIBbByXGFXJsF/ul67jwxsQ==
+X-Received: by 2002:a17:907:a089:b0:ad8:942b:1d53 with SMTP id a640c23a62f3a-aec66076ee9mr10681566b.27.1752764078741;
+        Thu, 17 Jul 2025 07:54:38 -0700 (PDT)
+Received: from [10.176.234.34] ([137.201.254.41])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-ae6e7e90388sm1386500766b.16.2025.07.17.07.54.37
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 17 Jul 2025 07:54:38 -0700 (PDT)
+Message-ID: <1b37b4990e22ecf05b458417026a7a854764831b.camel@gmail.com>
+Subject: Re: [PATCH v2] ufs: core: Use link recovery when the h8 exit
+ failure during runtime resume
+From: Bean Huo <huobean@gmail.com>
+To: Seunghui Lee <sh043.lee@samsung.com>, alim.akhtar@samsung.com, 
+ avri.altman@wdc.com, bvanassche@acm.org,
+ James.Bottomley@HansenPartnership.com,  martin.petersen@oracle.com,
+ linux-scsi@vger.kernel.org, sdriver.sec@samsung.com
+Date: Thu, 17 Jul 2025 16:54:37 +0200
+In-Reply-To: <20250717081213.6811-1-sh043.lee@samsung.com>
+References: 
+	<CGME20250717081220epcas1p224952b344389e4967beb893297f1ae02@epcas1p2.samsung.com>
+	 <20250717081213.6811-1-sh043.lee@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20250717081220epcas1p224952b344389e4967beb893297f1ae02
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250717081220epcas1p224952b344389e4967beb893297f1ae02
-References: <CGME20250717081220epcas1p224952b344389e4967beb893297f1ae02@epcas1p2.samsung.com>
 
-If the h8 exit fails during runtime resume process,
-the runtime thread enters runtime suspend immediately
-and the error handler operates at the same time.
-It becomes stuck and cannot be recovered through the error handler.
-To fix this, use link recovery instead of the error handler.
+On Thu, 2025-07-17 at 17:12 +0900, Seunghui Lee wrote:
+> If the h8 exit fails during runtime resume process,
+> the runtime thread enters runtime suspend immediately
+> and the error handler operates at the same time.
+> It becomes stuck and cannot be recovered through the error handler.
+> To fix this, use link recovery instead of the error handler.
+>=20
+> Fixes: 4db7a2360597 ("scsi: ufs: Fix concurrency of error handler and oth=
+er error recovery paths")
+> Signed-off-by: Seunghui Lee <sh043.lee@samsung.com>
 
-Fixes: 4db7a2360597 ("scsi: ufs: Fix concurrency of error handler and other error recovery paths")
-Signed-off-by: Seunghui Lee <sh043.lee@samsung.com>
----
-Changes from v1:
- * Add the Fixes tag as Beanhuo's requested.
----
- drivers/ufs/core/ufshcd.c | 10 +++++++++-
- 1 file changed, 9 insertions(+), 1 deletion(-)
+Based on my investigation, if child device's runtime-resume fails,the upper=
+ layer will set the status back to suspended. It assumes that
+the driver or error handler will communicate with the device and handle
+recovery. If there is no better solution to fix this issue than this
+patch, let's go with this.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 50adfb8b335b..dc2845c32d72 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -4340,7 +4340,7 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	hba->uic_async_done = NULL;
- 	if (reenable_intr)
- 		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
--	if (ret) {
-+	if (ret && !hba->pm_op_in_progress) {
- 		ufshcd_set_link_broken(hba);
- 		ufshcd_schedule_eh_work(hba);
- 	}
-@@ -4348,6 +4348,14 @@ static int ufshcd_uic_pwr_ctrl(struct ufs_hba *hba, struct uic_command *cmd)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 	mutex_unlock(&hba->uic_cmd_mutex);
- 
-+	/*
-+	 * If the h8 exit fails during the runtime resume process,
-+	 * it becomes stuck and cannot be recovered through the error handler.
-+	 * To fix this, use link recovery instead of the error handler.
-+	 */
-+	if (ret && hba->pm_op_in_progress)
-+		ret = ufshcd_link_recovery(hba);
-+
- 	return ret;
- }
- 
--- 
-2.43.0
+Reviewed-By: Bean Huo <beanhuo@micron.com>
 
