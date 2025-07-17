@@ -1,224 +1,348 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 298811E0E14;
-	Thu, 17 Jul 2025 20:01:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752782515; cv=fail; b=fBfYIJ/uKSNjOE/Doiz6v1pC5U7wW6py0QruP44OVzacRC01vNC1KVBA/CgIlhWaAqw1N2QPaY7CM4THFRiHZit+FjLGDGtzywY12gIkPh8/2Ayeoab3kzJJ+OwyZdih5lvpn5Qxbs2aQ44rXLtqZ5TzSrMdxowDOBDl9EEL9dg=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752782515; c=relaxed/simple;
-	bh=AyNxtr0jHNnerTVsEGgJ1J32TjJUigdBbuPOHdhP6jQ=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=TRXSEAfyrccdoc7l19AQFswQUCiJZXHgYWeUidhE2jDd9bfy1BnZ+2GBmYNYxNayDEh6d6aJtsJwQRrLieoyG1cJmuLoRMmqbJG41U2OayxScSBpNnK4kODAoBvTMZ71aOsUimXhyPBTOR4oajGik5HZi2eUOOSJ+IWm1OneUjA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=PWZo2yuG; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=lXkooEMt; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 293FBEEBB;
+	Thu, 17 Jul 2025 20:58:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1752785910; cv=none; b=cwAHc/tQ6nX9KI9/wYgIw46bQU9GJrIq1PcphJZQsiz1WOvFmMdSOY8LUbF3nw5danX/833MAeWu9EaEfiFtBJ+L6sDQZdfUErdHNYwvJIDrvRx6XdkprfnaifTfIaJYiac5keq5+hTleWjARHQzqX79xw5BH7eG0/FliJNQPnE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1752785910; c=relaxed/simple;
+	bh=uompzgU2Gf+rfocAtdjF7H5fNt7x2tvbuavkieOSdX8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gRtGqojp9E3aNEMQWxW4Gdpw3t5fKQrsJjjU5BSoGeQjFflu61Oam0+GHOCNmRe+MN2hNS2Gbu1Em5HNieyPaDBbJgtMP6oklyY48PdJU2OCTTXkDrI7TfVHHLBiQjewhgACYX2NX525KKxPWhu7THLyCpQ6Majc3aKcMUUe5Ss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Mm2qrCvf; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="PWZo2yuG";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="lXkooEMt"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56HJXtoJ014287;
-	Thu, 17 Jul 2025 20:01:23 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=HmzBkbv7gLzYQhhtoSFQxCaED2W38Jyk3LhtBpB+nlY=; b=
-	PWZo2yuGmMAJ6LJzGJSZyhxe4lo4pm+WM/9ejv+GVKBRZNuH0QLQJK03EFyytrOe
-	ZrLL3fm+3nu0FF2jNHBlr/ItMGAcjZG/vJJ32ZnDqPskmunqWB75dv/o1SeI+R5Y
-	2UANnMLfhckR3FnIcrQRkt2ugsyXmnTD8ahro3Fpgy6V039LuBhkIPxCV8KThD8L
-	iGqGqpRyqXyvcP3FKbLTRnKtrm1bFIu7iK9nvh5nkd5ip2ke5s8n6TT43lRDmye+
-	Vb1crdzJ7RLsHdbZcooEy/45zIbsWNY3He3dshIhCgGEZenCr26frGPcPrf3YfWt
-	gqoXMYDXuQgc9+9nHsNcrA==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 47uk8g3y2r-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 17 Jul 2025 20:01:23 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56HJtrlx011826;
-	Thu, 17 Jul 2025 20:01:21 GMT
-Received: from nam11-dm6-obe.outbound.protection.outlook.com (mail-dm6nam11on2040.outbound.protection.outlook.com [40.107.223.40])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 47ue5d7ysd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 17 Jul 2025 20:01:21 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RCMGVRUpq9kTSFY36qiYlVnqxE26G4i17iBj9Md/d8oJ4cYw4sS5u5kUsLoRTUNnwyt7jntUncLdTurJAuHriEqmA4ITnCT8Sb6TXs9F5PhuMkmBH6jTumdCnoawYiD7nhQR0THpky3FlsPk1hypIEqbStXbdE0bjNP8mT1TJSPy5sjQ5OdtOMPxhBcodseg9XOInFTmwaFXvmKu8HGm71T59vQDXc9HKL8+i9z4snHIb4OZGbjMG258e5Z5Nce+PIzBT190t2qauVGV/VP+6K1/TaFJPATYX87psDRsMG0F+mcDTIfuEBjedi1/jsPTQBij19alD6iWyteezP1t8Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HmzBkbv7gLzYQhhtoSFQxCaED2W38Jyk3LhtBpB+nlY=;
- b=N+wycPSdl6Yfb2cTKiJVoZXcilDQ39ovKUebzU06J5WZB7hNtb9pDLcYTOmRsD3sUolnqaLd4X4HvsUPZ09HU79lWrIhk0cuNlfjR8bzKTycjZmmaCjRNF7qQA5aVE/59fu5yYt77sbyqjzEUiyhEzafmWe76aNUZa/OIZ2ZufWlG7z6A1lBf7w/b0xs0SsIi+EiR3nwF8JE8QrO0Rkhlvuu1aaYlYz3SPj5Mxayrf/LDGVe9gIMQYs8nAm+9p+EXTMnYdQ2ShPafbzUWT8KuuIZM5wxPnTwU8Yr4RYef7g0VYurhTKCUtCpBP/3D8zHL5HamZn6bYx5vTCAe9/pJQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HmzBkbv7gLzYQhhtoSFQxCaED2W38Jyk3LhtBpB+nlY=;
- b=lXkooEMtNHRpSOyQzmOvAC84x0tzjq4H3gplLlJrDWOQFduDwfOcTlTTBkFYkwJsMs1DZbbgqwyTCByK4FlGb+nR5lZrR/vu0Ztgo2R8y4KOt+rtatWkYUQq57WTvZxLpR71WYgfYdSLTyYCnVgf/YGCpLaES2Z/rkVoqH1CFjY=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by SA1PR10MB7683.namprd10.prod.outlook.com (2603:10b6:806:386::12) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8880.16; Thu, 17 Jul
- 2025 20:01:14 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0%4]) with mapi id 15.20.8922.037; Thu, 17 Jul 2025
- 20:01:14 +0000
-Message-ID: <653eaa6f-4e85-43af-a13b-906e34a2e517@oracle.com>
-Date: Thu, 17 Jul 2025 15:01:11 -0500
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] Revert "scsi: iscsi: Fix HW conn removal use after free"
-To: Li Lingfeng <lilingfeng3@huawei.com>, lduncan@suse.com, cleech@redhat.com,
-        njavali@marvell.com, mrangankar@marvell.com,
-        GR-QLogic-Storage-Upstream@marvell.com, martin.petersen@oracle.com,
-        jejb@linux.ibm.com, James.Bottomley@HansenPartnership.com
-Cc: open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org, yukuai1@huaweicloud.com,
-        houtao1@huawei.com, yi.zhang@huawei.com, yangerkun@huawei.com,
-        chengzhihao1@huawei.com, lilingfeng@huaweicloud.com
-References: <20250715073926.3529456-1-lilingfeng3@huawei.com>
-Content-Language: en-US
-From: Mike Christie <michael.christie@oracle.com>
-In-Reply-To: <20250715073926.3529456-1-lilingfeng3@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DS7PR06CA0038.namprd06.prod.outlook.com
- (2603:10b6:8:54::19) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Mm2qrCvf"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bjldH0X9czm0yQP;
+	Thu, 17 Jul 2025 20:58:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1752785905; x=1755377906; bh=YN42L0ApTlebbqOFIq+CV9Wk9chnh0pAQpv
+	ymqsxcR0=; b=Mm2qrCvfEYKL3eR5rD1FYxXm8Ezb8IHBFNCLsUoUhtFBiOTY16a
+	vEmhxP9H52rH1S196kbacJls0m4+01CZqFp5LBU18MD5d2YksL5Xe2F7/ANtPQvY
+	opPHR1au/GQ+9lpxUrpQCZzo5QtsC5A+YPSZG1T8Ns8Per49nN9LuWQLLeJ+VxnH
+	M6EB/ejhX2fKPSb+aBnhifwu4mzKtB93hNY745BBVkKIWxRV877dmsVq2Qr4+sGW
+	4sOvFYMtvZpfEr+B4HO86nAEHpFoTYitAsgie+ckCv46Xd2YMMTdpkzWYIUQLr5Z
+	WjJGhjIn+I0cJRB73pNd3Lv9J0l5/GK2K/g==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id bqlbufhn54pP; Thu, 17 Jul 2025 20:58:25 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bjld92yCxzm1744;
+	Thu, 17 Jul 2025 20:58:20 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Christoph Hellwig <hch@lst.de>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v21 00/12] Improve write performance for zoned UFS devices
+Date: Thu, 17 Jul 2025 13:57:56 -0700
+Message-ID: <20250717205808.3292926-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.50.0.727.gbf7dc18ff4-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|SA1PR10MB7683:EE_
-X-MS-Office365-Filtering-Correlation-Id: 18fe747c-72df-4d0c-0af0-08ddc56caecf
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|7416014|376014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?Q2pxSTJ6VExaVnVPdFIvQjc3OTFxMHBoOGlSa1NMUGpjWklSNmc1MjNEVVcw?=
- =?utf-8?B?cXFuYll4QnFudW4yUVhyZy9iUlRXTFMwNmZoWnpDU2RRR3NhY0hxMUhFR1lj?=
- =?utf-8?B?a0o1aXMyZFd3QiszanJOMmduOTBiSXBxeUdZMzRSYmdRTW1TMUZzZTBWVTBw?=
- =?utf-8?B?eHJzRjFLZjQ5dEljVlVsMjdlNjB6TmszM2JzL3hib21CcGdRUkl2Z25KOFVT?=
- =?utf-8?B?ODRVc2FRM1RKbUIzZGRHdnI1Rzc5N0xNOFgxMWkySlJlbGYvRldVSmplallB?=
- =?utf-8?B?UWRMR3p2L0hRdFBJV1R1cUdJblIrZWhOMEdZZkxvakxwQ1BBT2VVRzZGN2lQ?=
- =?utf-8?B?RVRjZnQ5VFlmZnFCdkJSR05NVDllTzZXczY0ekxUcDlGMGpvZnY2alpZVHN6?=
- =?utf-8?B?QWlERTlLc1JPY3ZUODdHWGY5MjBWdXpwMXBqblEwazdWRTB6eHd3OHliZ0hT?=
- =?utf-8?B?S1ViNjVrT2Nwa09IODRuNlRSSDJZYXRQbmlycXh3bFhRRGVMdkJiYkUzMHhT?=
- =?utf-8?B?Tld6QVBNWDBvVXppMXZicVdoZzU0UkVDazQwYVVkdVpiV3NwbVJub1h1VmFI?=
- =?utf-8?B?R2ZiTkxDWkM1bndsYlk0L0NBMEhmYVdWZEFXZ3J4bVRKWG90WkxHU0FSLzg1?=
- =?utf-8?B?L2w2c25FTGdQZWVrdkZVc1BJSXRzbTE3bUFQOWFBTjBXQTBmNXphdnVxcTdz?=
- =?utf-8?B?MHZ4cFBCZXBuTWhtYkorL0hCNVpMbE1qT1oxOUhhOWNibE5zM0w2MkZzTGxk?=
- =?utf-8?B?YXJSaDBGOWFiM3lsR0htUEpheXNrR0xmVkJTWjlOZEdiSmI2Rld1TS9kQ0dG?=
- =?utf-8?B?UzN3MDNqWEpLcE5EbndqM0NhcG80eElnQ3Vja3pneDRUTG5pUW5KbEUyTnFr?=
- =?utf-8?B?dVRiSCt4cmtEdzBIa1l5NUd0Nnlwa1MzT2pZWEVMWHViUkF4L3NKblZ1WHQ3?=
- =?utf-8?B?dVozQXlLeUVwMTRzRE5pYnM4aVRhMXdPTUlRL3pFMWcxekEzQVM4NGh0WUhi?=
- =?utf-8?B?dnpEcFRmeFgrWGNDUmJMeUpPRXRHa296ZCtVd1JyY1FlYVFCcVlORXM3VElM?=
- =?utf-8?B?M3lITTBKei9vMHY1OUJOT0Q3RTBDWjFIUEtyUmNlVld2Y2ZSRnpaZHRhY0hj?=
- =?utf-8?B?VmhWUm1oUE5rQ01RSGIvK0ZVQlFxeURPWlRFQm9CTmNBOXFjMTk4WFM1bFNH?=
- =?utf-8?B?NDB0eHBsQUVsZGxFc2NFeVpJYnVGbEI0b2oxcWYwdytvakJlMnprZEVMOHND?=
- =?utf-8?B?NnNxSUFkeVlPUDUyZERQTk05eVhsd000ZU0vVVY5UEJNbDRhUjNaN2dwQk41?=
- =?utf-8?B?d2VCTm52UUI4dVZpMm02aVI2VjBGODhuQUs2TXNUOTlpNTB6OFFMNlJrNjJR?=
- =?utf-8?B?Z2YxTElYRVAzd3JsN0cxWTVmZ0JsVmlLR0hXNDlnczdrRWZYd0lycitGb2VY?=
- =?utf-8?B?Zk5hakQ5aVdHemlNWVRYRmFtZU5WbG1BWTZVWkV5UExnSjAySGgvSTIwQWpN?=
- =?utf-8?B?TlR5eDBBazJLNkxIdzBmcHRrbWROSlcxa2RZTlJ5OG1LNjlibVplZHdtb0FN?=
- =?utf-8?B?WDZSYXQ3N0JkOEgxZXc4QkhJK0liSVlreE1YZ0dvdVBFUU94aEx0N1B6V1NU?=
- =?utf-8?B?TFlNWFVmNUlMbUdDbVF6QytXZlZJa3VoNHlyWG1iOThaSXFkWTBVcnZVams2?=
- =?utf-8?B?NmRSeE1qaHJybVVGSmFxZlIvZlIyaWRNdmcwNHJFUnNZVkgybXpsUnpUMHM2?=
- =?utf-8?B?alZBUWttV2p5ellaRDhNMnMzWXh1aTNDSWRmZmxUSmFwdStYbUlhTEFvR3I5?=
- =?utf-8?B?QnhzT05mc2Rkb01IQ3NLcVg0V2RxRkhQUlBOU1BVcGVXMDRDZGVtSk0yUjdF?=
- =?utf-8?B?RTlOL0FhRWN6OS9JbFZVYXQrMFpJTTJhVGx0Q0JTcy9rTk4zRURvVmRJbjR4?=
- =?utf-8?Q?8f1CIGb6Iis=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(7416014)(376014)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?NVYyYS9nVm9mSmdnYlpvV2pHSkIvd3NwUnVXZGYxZVBRbGg4cEZrc1hrbEFF?=
- =?utf-8?B?enovS251eDkzV2V3OWtKQmlqODJSM0Z3SU04bDlySUtzTUg4WmVvVE1ISmJp?=
- =?utf-8?B?dFFQOEc4S2VpbzJXeG4xb1Q4T0JjeHVmUDNvUVYvM2VhQmpkdjJ6SXBZUkNQ?=
- =?utf-8?B?MWhLZm4yRWsrOGhuV3NEaFBQdXc0aEZnTUlibWQvVzRaeTZJWUZQVzJiT3Rs?=
- =?utf-8?B?aUV2dGgrL0Jyb2Q2ZjhtNXBCZm1XMmgydEZIY3ZyS09Jb255aVBCYTlOdEc1?=
- =?utf-8?B?cUhtR1B3dEhvMTlDQnU0UDFxWG1zWXU0T3FoSUtQM0dXZTVjN3E1VFJYV2x1?=
- =?utf-8?B?MFloM0thWGtSamdYNG5hdGdDS0tJMEpjaG1qQXBXemZwMEM3czVudXpVMFZL?=
- =?utf-8?B?aXh1cWRtWjJSMjlVMHYzTW1yRzJJM1JCcGJuZ3BnS1J0cHNHc2Z6VWJiV1Nh?=
- =?utf-8?B?dTZuQWlFYmQ1R3IvYzBXeDc5ZnB0eVYxcmp3Y0VwT3IvTUZ4WHc2blhCOVYz?=
- =?utf-8?B?YVNiQjdTWmdmSGYrdmVYVmRQa2ZlaGp1TlB2VWpUaUNnUDlUOG4yTU9KTUtk?=
- =?utf-8?B?RDFaZHhMVU5WeEFBZXJZQ0JVVkxpcmVvKy9iTHIwWDR6amF1RDBwSFJISUZz?=
- =?utf-8?B?MlUyY0JFdzd1akErVS9rVWpmTHZZNDZJdlNpL29NYUFHbDFtamZ2Q1BrZ1ZR?=
- =?utf-8?B?djU0QmRuVFlPb1YzcXo2MEtoUUtycTdzTm5SdDBacWs4eWhnNnM2eHpvcjlu?=
- =?utf-8?B?U2VocTI1OVRvaUMyMmw1YnR0WlI5NngxZTlKRU5FNlRNRkhFQmN3Q1RUNUtk?=
- =?utf-8?B?c21YRDFVcWJPQmJYMm1xeTBPUVRaazBTTDdIbFgveGtMVmM3OWhBdkNiMThs?=
- =?utf-8?B?b3RhQmo5WFRubXB6NlpuVHVwM0RRWDhaelFMZDdXRzNJMldOcTdBaVJvQ2Ny?=
- =?utf-8?B?WWtMYjZSNnZtSVg2U3N1VzZDZlZ6N1BBdDJXU2hBQTVLaFJVS3NpYUpRKzdP?=
- =?utf-8?B?K2o2QStiOFlVbktQMGVtSzlMbE9oSUkwUUdtQjA1elhwUWc2WlRTK3ZnSmZp?=
- =?utf-8?B?UlJrbURrS1VuK0RSdnN0RFUzak1IRUVBbjhncFpFYzgzSDd6OEUzM3dyNlFF?=
- =?utf-8?B?MDljRzZ1dXMxWURwZmU5bGFaTFZvR05zZTRKQ0cyT3V6NFRMRnZmVHBWYXFw?=
- =?utf-8?B?MTBubTZhQlBWR0wrYlFCU1JUaUlDcG1JSThMdDJQRittMVFncGZLQ2toeW5i?=
- =?utf-8?B?TnBVRGR0ZVp3Rk9EbU1aeS9OS2w5Y2x4L0ZXN3RDNzFrVmp6Yk14YzF4Ymdr?=
- =?utf-8?B?SHNOa3pSYXdHOUhFRnRrZ014aHhXNDZNQkF4NkFQell5ejRoMldpdVRzQ0Zp?=
- =?utf-8?B?U0VUamxlbjd0MU1LaloybVRhc09uY0tDd1FIVzYxS1hiRm11SG91WnJFWncx?=
- =?utf-8?B?SzYwajJORy9ZRGs5R2RyeVpoOVo2aTFzNXc1b2k0WTRsMnRvdXFsUnV0NEti?=
- =?utf-8?B?ekN5UldBRVEwbGR0bzhTb0Zndk8vZkVHdFdoL0hBWUxUUnV0YkJmUzRzNXl6?=
- =?utf-8?B?OTNmT1RJUXpMMXBQdHpwV1QwZ2ZONndBeWw1cVVBQWlDd0tOMFAyMVMvYUNQ?=
- =?utf-8?B?Rnh1UXVUSUpZUEsySkFxc0tGT3k0MG1oakZVTTYwNjIwcmhFbXBBQ0diMlNh?=
- =?utf-8?B?VGw1UGhZVnI2amxJNmRhMVJRRFo5WnptRVZZdEhoUk9naVVmcTE0aFp4L2NG?=
- =?utf-8?B?NloxS0hNK2N0QmRScXRPYk5vZ2t1QmdPUVpPeWt1SVJqenZ4WUlXS05IeGFG?=
- =?utf-8?B?NlltL2I5VlRKOEdsekhrVEVEWnVQZm05SEx3U0tYWjdtQ1ZkVVNHaU94dkFt?=
- =?utf-8?B?bFhkUkpRZUxWSmYzTE15eHNyT210R2ZGWmtsS2F6ajFLOFJuU2tZUm1aR2N4?=
- =?utf-8?B?Y004K1BZSy9xMXhJeEFrY2FmYTZoQXBQMXlsbGhYaVVEbmZMZkpKaE5zU0FH?=
- =?utf-8?B?ZGZ0aG9kMFBCMkw3NXkyTEg2L1hvTUMyR3FjazVZcU5KN01sc3MyWWpodXNi?=
- =?utf-8?B?RmY4Ky95ZkNvK1BEUHJ2MTlTVWhPWXJDY0NLZXAyWmU2QkY2d2JZbVhjMGxr?=
- =?utf-8?B?bDlMYSszNFV5VnNXWXBYMC8xRmc5Tkd3dk93bWR1L3FveWg5cWFxdHpDVW9k?=
- =?utf-8?B?Y1E9PQ==?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	SWfwp2tqfBvGk8qMRUb460SNItds/qyo46wYg/1vq58hUZqMmVzv7XNlItalYYy79mJikFoSuWIgDlnsQ4qVXfe553Kp6HnC9UYTWuVm9y8qtJk7Y44b1smLZdKoE2z60JgqRYoE57Wt7smyUxmX84DkQtWHk317LaT1grwLmbMnwSSBgGCCU911brf6mkuxeYgL5QjL2lTg8Ylv/TLIyR65CTtqDMCsLRzUDxUzFLYTRMj4HKtipeDuLedkV9AaWUhPiXsN/luPFzG3el/rGtP3jS4IsDM/Gtr0oPTp0znurn2bpQ9KqWaqslkCqd2GYiAV7O15WX9HKzQLse7hSb4hH8X3TLv5/Qf/QPx1dzrpa8LySNH/EB+cj8MgOyA0VhY1OGYP/8H4CMAiNFm0qO+3KuebRT9hEUD5yrMdGEfsqJ4atcMC4NM1Gy1rL0dH4rxe5moKzzNubMOE5ukDqRNIRZHYFjgPgS9elQUIo82m9I51bxNUCOKmLb9d9Nu7yf8o07i9+0Xz5qN6MLXenMf+/0rvF6jMESBupImUqd47NVAt32z3m2aY21YcsMFTqnelXUkYjcoNKl13z6HfaYNG7WssyOji4Jdoo4JQ5zk=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 18fe747c-72df-4d0c-0af0-08ddc56caecf
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Jul 2025 20:01:14.0850
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: 0XMWDeAOqB6wEboyHmaqUO/ybuYflrbMb9ckdObxI5wfcwnBIkH+Mgzjci/wkG/cAXsQYAL5YE/UDy2vkjo9GT56tAEK8m94DJI5f7NrGAU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA1PR10MB7683
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-17_03,2025-07-17_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0 mlxscore=0
- mlxlogscore=999 adultscore=0 phishscore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
- definitions=main-2507170177
-X-Proofpoint-ORIG-GUID: _8DjSgmi6om_lTo8OCWPcu-mgn_A5SYU
-X-Authority-Analysis: v=2.4 cv=Of+YDgTY c=1 sm=1 tr=0 ts=68795693 b=1 cx=c_pps a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17 a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
- a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=GoEa3M9JfhUA:10 a=yPCof4ZbAAAA:8 a=8y9rTBotl4Vj4Er68ewA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:12062
-X-Proofpoint-GUID: _8DjSgmi6om_lTo8OCWPcu-mgn_A5SYU
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzE3MDE3NyBTYWx0ZWRfXyiPEgqxbQmnq fDAdHLfK5bT1NQ2bWGjIAjvt1a9oYj2gex9nqcUxvQKhTJEYrnul3R6ZrOO4ohYSx41IFFTzmsy 0xxDM23I+sQItcs7F2IHMCzXE5xr4eV+snndWhxTZmZBrXootMg+t1SjUoH+lgP2galyMMtUrEx
- oJJgnrBFYIEvd5aIQnzM3Lu9eGZHHkl9KMNxiIlht8gSEMJxdAB2K1ebxaEpGzuJ0iCr6A5E7JJ e3AKbV21b54nHL5PwDJkNUz/YLSxpn9VgvkN0xeJIlzz8ISV5DjuWjqzpuW9YUvMqZhLzQZ4n4r XoU0z/uZFOSMKO6UTyBw5qvoGQpF4xokCHGrK+bzjrXG9h62Jwz+8w6EqPKJuN4Y3McLf+huCEw
- Egv5lGzZf+p4sJqwpypFuyTHjQwIqQ0Ovvo62TZRlJ/L3BmZgoh1LIRzWrAFXTPI7M7rUlUJ
+Content-Transfer-Encoding: quoted-printable
 
-On 7/15/25 2:39 AM, Li Lingfeng wrote:
-> This reverts commit c577ab7ba5f3bf9062db8a58b6e89d4fe370447e.
-> 
-> The invocation of iscsi_put_conn() in iscsi_iter_destory_conn_fn() is used
-> to free the initial reference counter of iscsi_cls_conn.
-> For non-qla4xxx cases, the ->destroy_conn() callback (e.g.,
-> iscsi_conn_teardown) will call iscsi_remove_conn() and iscsi_put_conn() to
-> remove the connection from the children list of session and free the
-> connection at last.
-> However for qla4xxx, it is not the case. The ->destroy_conn() callback
-> of qla4xxx will keep the connection in the session conn_list and doesn't
-> use iscsi_put_conn() to free the initial reference counter. Therefore,
-> it seems necessary to keep the iscsi_put_conn() in the
-> iscsi_iter_destroy_conn_fn(), otherwise, there will be memory leak
-> problem.
-> 
-I must have thought we did a unregister instead of remove for
-some reason. Thanks for catching this.
+Hi Jens,
 
-Reviewed-by: Mike Christie <michael.christie@oracle.com>
+This patch series improves small write IOPS by a factor of two for zoned =
+UFS
+devices on my test setup. The changes included in this patch series are a=
+s
+follows:
+ - A new request queue limits flag is introduced that allows block driver=
+s to
+   declare whether or not the request order is preserved per hardware que=
+ue.
+ - The order of zoned writes is preserved in the block layer by submittin=
+g all
+   zoned writes from the same CPU core as long as any zoned writes are pe=
+nding.
+ - A new member 'from_cpu' is introduced in the per-zone data structure
+   'blk_zone_wplug' to track from which CPU to submit zoned writes. This =
+data
+   member is reset to -1 after all pending zoned writes for a zone have
+   completed.
+ - The retry count for zoned writes is increased in the SCSI core to deal=
+ with
+   reordering caused by unit attention conditions or the SCSI error handl=
+er.
+ - New functionality is added in the scsi_debug driver to make it easier =
+to
+   test the changes introduced by this patch series.
+
+Please consider this patch series for the next merge window.
+
+Thanks,
+
+Bart.
+
+Changes compared to v20:
+ - Converted a struct queue_limits member variable into a queue_limits fe=
+ature
+   flag.
+ - Optimized performance of blk_mq_requeue_work().
+ - Instead of splitting blk_zone_wplug_bio_work(), introduce a loop in th=
+at
+   function.
+ - Reworked patch "blk-zoned: Support pipelining of zoned writes".
+ - Dropped the null_blk driver patch.
+ - Improved several patch descriptions.
+
+Changes compared to v19:
+ - Dropped patch 2/11 "block: Support allocating from a specific software=
+ queue"
+ - Implemented Damien's proposal to always add pipelined bios to the plug=
+ list
+   and to submit all pipelined bios from the bio work for a zone.
+ - Added three refactoring patches to make this patch series easier to re=
+view.
+
+Changes compared to v18:
+ - Dropped patch 2/12 "block: Rework request allocation in blk_mq_submit_=
+bio()".
+ - Improved patch descriptions.
+
+Changes compared to v17:
+ - Rebased the patch series on top of kernel v6.16-rc1.
+ - Dropped support for UFSHCI 3.0 controllers because the UFSHCI 3.0 auto=
+-
+   hibernation mechanism causes request reordering. UFSHCI 4.0 controller=
+s
+   remain supported.
+ - Removed the error handling and write pointer tracking mechanisms again
+   from block/blk-zoned.c.
+ - Dropped the dm-linear patch from this patch series since I'm not aware=
+ of
+   any use cases for write pipelining and dm-linear.
+
+Changes compared to v16:
+ - Rebased the entire patch series on top of Jens' for-next branch. Compa=
+red
+   to when v16 of this series was posted, the BLK_ZONE_WPLUG_NEED_WP_UPDA=
+TE
+   flag has been introduced and support for REQ_NOWAIT has been fixed.
+ - The behavior for SMR disks is preserved: if .driver_preserves_write_or=
+der
+   has not been set, BLK_ZONE_WPLUG_NEED_WP_UPDATE is still set if a writ=
+e
+   error has been encountered. If .driver_preserves_write_order has not b=
+een
+   set, the write pointer is restored and the failed zoned writes are ret=
+ried.
+ - The superfluous "disk->zone_wplugs_hash_bits !=3D 0" tests have been r=
+emoved.
+
+Changes compared to v15:
+ - Reworked this patch series on top of the zone write plugging approach.
+ - Moved support for requeuing requests from the SCSI core into the block
+   layer core.
+ - In the UFS driver, instead of disabling write pipelining if
+   auto-hibernation is enabled, rely on the requeuing mechanism to handle
+   reordering caused by resuming from auto-hibernation.
+
+Changes compared to v14:
+ - Removed the drivers/scsi/Kconfig.kunit and drivers/scsi/Makefile.kunit
+   files. Instead, modified drivers/scsi/Kconfig and added #include "*_te=
+st.c"
+   directives in the appropriate .c files. Removed the EXPORT_SYMBOL()
+   directives that were added to make the unit tests link.
+ - Fixed a double free in a unit test.
+
+Changes compared to v13:
+ - Reworked patch "block: Preserve the order of requeued zoned writes".
+ - Addressed a performance concern by removing the eh_needs_prepare_resub=
+mit
+   SCSI driver callback and by introducing the SCSI host template flag
+   .needs_prepare_resubmit instead.
+ - Added a patch that adds a 'host' argument to scsi_eh_flush_done_q().
+ - Made the code in unit tests less repetitive.
+
+Changes compared to v12:
+ - Added two new patches: "block: Preserve the order of requeued zoned wr=
+ites"
+   and "scsi: sd: Add a unit test for sd_cmp_sector()"
+ - Restricted the number of zoned write retries. To my surprise I had to =
+add
+   "&& scmd->retries <=3D scmd->allowed" in the SCSI error handler to lim=
+it the
+   number of retries.
+ - In patch "scsi: ufs: Inform the block layer about write ordering", onl=
+y set
+   ELEVATOR_F_ZBD_SEQ_WRITE for zoned block devices.
+
+Changes compared to v11:
+ - Fixed a NULL pointer dereference that happened when booting from an AT=
+A
+   device by adding an scmd->device !=3D NULL check in scsi_needs_prepara=
+tion().
+ - Updated Reviewed-by tags.
+
+Changes compared to v10:
+ - Dropped the UFS MediaTek and HiSilicon patches because these are not c=
+orrect
+   and because it is safe to drop these patches.
+ - Updated Acked-by / Reviewed-by tags.
+
+Changes compared to v9:
+ - Introduced an additional scsi_driver callback: .eh_needs_prepare_resub=
+mit().
+ - Renamed the scsi_debug kernel module parameter 'no_zone_write_lock' in=
+to
+   'preserves_write_order'.
+ - Fixed an out-of-bounds access in the unit scsi_call_prepare_resubmit()=
+ unit
+   test.
+ - Wrapped ufshcd_auto_hibern8_update() calls in UFS host drivers with
+   WARN_ON_ONCE() such that a kernel stack appears in case an error code =
+is
+   returned.
+ - Elaborated a comment in the UFSHCI driver.
+
+Changes compared to v8:
+ - Fixed handling of 'driver_preserves_write_order' and 'use_zone_write_l=
+ock'
+   in blk_stack_limits().
+ - Added a comment in disk_set_zoned().
+ - Modified blk_req_needs_zone_write_lock() such that it returns false if
+   q->limits.use_zone_write_lock is false.
+ - Modified disk_clear_zone_settings() such that it clears
+   q->limits.use_zone_write_lock.
+ - Left out one change from the mq-deadline patch that became superfluous=
+ due to
+   the blk_req_needs_zone_write_lock() change.
+ - Modified scsi_call_prepare_resubmit() such that it only calls list_sor=
+t() if
+   zoned writes have to be resubmitted for which zone write locking is di=
+sabled.
+ - Added an additional unit test for scsi_call_prepare_resubmit().
+ - Modified the sorting code in the sd driver such that only those SCSI c=
+ommands
+   are sorted for which write locking is disabled.
+ - Modified sd_zbc.c such that ELEVATOR_F_ZBD_SEQ_WRITE is only set if th=
+e
+   write order is not preserved.
+ - Included three patches for UFS host drivers that rework code that wrot=
+e
+   directly to the auto-hibernation controller register.
+ - Modified the UFS driver such that enabling auto-hibernation is not all=
+owed
+   if a zoned logical unit is present and if the controller operates in l=
+egacy
+   mode.
+ - Also in the UFS driver, simplified ufshcd_auto_hibern8_update().
+
+Changes compared to v7:
+ - Split the queue_limits member variable `use_zone_write_lock' into two =
+member
+   variables: `use_zone_write_lock' (set by disk_set_zoned()) and
+   `driver_preserves_write_order' (set by the block driver or SCSI LLD). =
+This
+   should clear up the confusion about the purpose of this variable.
+ - Moved the code for sorting SCSI commands by LBA from the SCSI error ha=
+ndler
+   into the SCSI disk (sd) driver as requested by Christoph.
+  =20
+Changes compared to v6:
+ - Removed QUEUE_FLAG_NO_ZONE_WRITE_LOCK and instead introduced a flag in
+   the request queue limits data structure.
+
+Changes compared to v5:
+ - Renamed scsi_cmp_lba() into scsi_cmp_sector().
+ - Improved several source code comments.
+
+Changes compared to v4:
+ - Dropped the patch that introduces the REQ_NO_ZONE_WRITE_LOCK flag.
+ - Dropped the null_blk patch and added two scsi_debug patches instead.
+ - Dropped the f2fs patch.
+ - Split the patch for the UFS driver into two patches.
+ - Modified several patch descriptions and source code comments.
+ - Renamed dd_use_write_locking() into dd_use_zone_write_locking().
+ - Moved the list_sort() call from scsi_unjam_host() into scsi_eh_flush_d=
+one_q()
+   such that sorting happens just before reinserting.
+ - Removed the scsi_cmd_retry_allowed() call from scsi_check_sense() to m=
+ake
+   sure that the retry counter is adjusted once per retry instead of twic=
+e.
+
+Changes compared to v3:
+ - Restored the patch that introduces QUEUE_FLAG_NO_ZONE_WRITE_LOCK. That=
+ patch
+   had accidentally been left out from v2.
+ - In patch "block: Introduce the flag REQ_NO_ZONE_WRITE_LOCK", improved =
+the
+   patch description and added the function blk_no_zone_write_lock().
+ - In patch "block/mq-deadline: Only use zone locking if necessary", move=
+d the
+   blk_queue_is_zoned() call into dd_use_write_locking().
+ - In patch "fs/f2fs: Disable zone write locking", set REQ_NO_ZONE_WRITE_=
+LOCK
+   from inside __bio_alloc() instead of in f2fs_submit_write_bio().
+
+Changes compared to v2:
+ - Renamed the request queue flag for disabling zone write locking.
+ - Introduced a new request flag for disabling zone write locking.
+ - Modified the mq-deadline scheduler such that zone write locking is onl=
+y
+   disabled if both flags are set.
+ - Added an F2FS patch that sets the request flag for disabling zone writ=
+e
+   locking.
+ - Only disable zone write locking in the UFS driver if auto-hibernation =
+is
+   disabled.
+
+Changes compared to v1:
+ - Left out the patches that are already upstream.
+ - Switched the approach in patch "scsi: Retry unaligned zoned writes" fr=
+om
+   retrying immediately to sending unaligned write commands to the SCSI e=
+rror
+   handler.
+
+Bart Van Assche (12):
+  block: Support block devices that preserve the order of write requests
+  blk-mq: Restore the zone write order when requeuing
+  blk-zoned: Add an argument to blk_zone_plug_bio()
+  blk-zoned: Split an if-statement
+  blk-zoned: Move code from disk_zone_wplug_add_bio() into its caller
+  blk-zoned: Introduce a loop in blk_zone_wplug_bio_work()
+  blk-zoned: Support pipelining of zoned writes
+  scsi: core: Retry unaligned zoned writes
+  scsi: sd: Increase retry count for zoned writes
+  scsi: scsi_debug: Add the preserves_write_order module parameter
+  scsi: scsi_debug: Support injecting unaligned write errors
+  ufs: core: Inform the block layer about write ordering
+
+ block/bfq-iosched.c       |   2 +
+ block/blk-mq.c            |  32 +++++--
+ block/blk-mq.h            |   2 +
+ block/blk-settings.c      |   2 +
+ block/blk-zoned.c         | 179 +++++++++++++++++++++++---------------
+ block/kyber-iosched.c     |   2 +
+ block/mq-deadline.c       |   7 +-
+ drivers/md/dm.c           |   5 +-
+ drivers/scsi/scsi_debug.c |  22 ++++-
+ drivers/scsi/scsi_error.c |  16 ++++
+ drivers/scsi/sd.c         |   7 ++
+ drivers/ufs/core/ufshcd.c |   7 ++
+ include/linux/blk-mq.h    |  13 ++-
+ include/linux/blkdev.h    |  11 ++-
+ 14 files changed, 223 insertions(+), 84 deletions(-)
+
