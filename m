@@ -1,133 +1,154 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mail-pf1-f201.google.com (mail-pf1-f201.google.com [209.85.210.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E80442153FB;
-	Thu, 17 Jul 2025 19:10:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97A6E2FCE34
+	for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2025 19:40:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752779461; cv=none; b=beDmHXhCLOiyBxSAmUcL8DmvPe1vMFddd/h0NSzJYdOg/ri8HQ+DkmYdSvQ2zpTsJcblnJSIjLqvoFxQUwYvX1Cr7ctazI2ire24VwbyL/UCCssX0sP7sRTnDJgyvDZpnHveXE7U/GOABAjp4oakPv5Oq4XnxKouea3f0Qm5pv4=
+	t=1752781233; cv=none; b=kk3+M2VScwWsL8BdXGkiQRWBMb+7M0zOaQrFnGRlA8dNSSGuwYK1iMMEL4NrasMl8z12Oi8Hsv2b1ehLTGErknWW+RgoUsMnpIiif5VBflYA4rP6OKKZtBRkFvL3kCP5DeboU2qe/BgFbWEwAg8b1zLxnbJbtjSu5ajQCkwiJ5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752779461; c=relaxed/simple;
-	bh=X2QTX7soCtQoFbN1OcRPWW6+MAHVqg1KHTXwB1p8eZ4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=eAlnmRZPzkBBez6unuPLFBmsGlwj6wFL6y0wF64IjzIeIvT2bcU+knXTrdG4Hblx4McrPo49B9GQy5ost7pnVCoHLw/I2PxDEXS04zA0QaEVyQ9wz56mISVD2ZFWhCFoQPC93zymRn3ZEe4dvd4YMdzFeo+bXaO6JeZKkfU/Xys=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lX4LSuxQ; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1752781233; c=relaxed/simple;
+	bh=J5T522Xe3jwCY3eAP8SMXr/V7enkbaM2npbeBlIkiMc=;
+	h=Date:In-Reply-To:Mime-Version:References:Message-ID:Subject:From:
+	 To:Cc:Content-Type; b=kPPk/P4pT7b+S2B+N1gxcxp9pQ4TSO9U806Xmd/nb5B350TtYfNhUI0X+UBWWsYJDKDkhjnz4Yaf9nxPsiuAwYIhkJzGsglAttKYyT2wdOermnGBUQLEXSffSvmjB92oy6bxXMHsFYZQvHNFzhXwcQH5wFTmbblQSArSHxaAwTc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=iZI7wLv5; arc=none smtp.client-ip=209.85.210.201
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lX4LSuxQ"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-b3f2f8469b7so7470a12.3;
-        Thu, 17 Jul 2025 12:10:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="iZI7wLv5"
+Received: by mail-pf1-f201.google.com with SMTP id d2e1a72fcca58-74b4d2f67d5so1170959b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 17 Jul 2025 12:40:31 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1752779459; x=1753384259; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=whHHXq9ZKdXTAW705B1rQtAiW8MTVvGsjlJTeXv7yyA=;
-        b=lX4LSuxQC8DuWRsrH78UyuLiD1jAAHFGQB62AnI6Yc3WFMFMQfCqyECxB2Zp1wx/yM
-         VvJf+I0w4/4K/iPF6Js2xlfZzTulg3T1eAB/J4KmXtBNfw6ynn9x5Q9hB6FVoBHBKgIx
-         1l/hELRj41cFGxgRZyVXvbyjc+1d5SJej2kDll/5XtweBiI7Wq8gXypz7Ju3NbowDMqF
-         jJG2Wo2483v0eUHggpXMCrwS/fgqK7YnyyyALHW8CFZ45vu5+h27UWhNW4YKvF1+mkQh
-         kUZH0owDHpoxjnKFMRvNrZ/JzxMCJsTAvfy+8YUjlduD1/Yzc3R9JsaTsHg/tkGHp0G0
-         pRRA==
+        d=google.com; s=20230601; t=1752781231; x=1753386031; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:from:to:cc:subject:date:message-id:reply-to;
+        bh=EabJr18a3SZdXkqRpkIMgBHho+rbTVnRfJqLTg0l/2k=;
+        b=iZI7wLv5s3zEzFg3rI1f8o+PPq7IWmE+iE0JLWfUksOJUpHOfYUiwj2RlZqjQpkrRF
+         Cd2P279rMV2jZKnk7MhL4svPmOkk+EtIlgbL+xMEVnVyEtripKQJmpUTwFMOdOEHi+HD
+         ikvMY65laYP5Z1fCNW7S0LxgvK534TBmr0yZOrKrU1oVmM3Pv79bc2SrjTNLjG/ZQSeC
+         GWx59nSGT6JSgGiVYbifVsX8wxZmqCXVMiwZw/r1/9G3redOxxMxcfVFN0jbWMop6Zfl
+         jMFSUYo4vkoW9ApTW2mrpTeCX89Qd3dopLnjVH8KBoKM7z2jSgPnZdKIP3iUgw/gABHC
+         lb/w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752779459; x=1753384259;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=whHHXq9ZKdXTAW705B1rQtAiW8MTVvGsjlJTeXv7yyA=;
-        b=lfBvqebaYVuQ55eDJPRzuR5NyehIirhCN41qP7ULw29tx1XFhrDFWjw05iOdVaNeYc
-         sqnIXzxNU7HHUTiIoc8bi3vIBYQlUf2kUhrtDeoei11200V1Gque1eyCNvh4kBgwDMgy
-         uTBjdzK1Px31RVQqL4EVP4I4qJ6XA1SUWl2HzGT/Rg1vq/cOctHd6eTMEgmDWvMEVs6/
-         zPYsl+hYKZxigfOr4syIepOyjMhK95xUJBtpMCDBdtBb03TsJgcBzh+bqdL1kirT5zNz
-         qNK35sSe0qBnp4DcIwQyYK0Ruq1oNX5wYFi/iQYu/KFRoYW9DgR7dQQdI2/Ml1VXQdS0
-         60iw==
-X-Forwarded-Encrypted: i=1; AJvYcCUYilkWA9eqX2mmbKZtinNIuoB542NWtdgBvMpxUy7FntFiFuf6SzXDFEP/r7DQvZoTfVfj4jLEgymEyGU=@vger.kernel.org, AJvYcCVJ8X+9IiOkQGvyODqqLV4lv7TmDYt/YuPGieK8DsD8CDNOJyTKo/VfrOFg4thNw4gwgMLX3ux6WPVmcA==@vger.kernel.org, AJvYcCVKCTaUUdIVvffOEcWgc8oOdhlpSKDXBTdjrmcXn0IjQXcOR6NdI97z+LQMu2HSwuYTIbrfYN6VcvI=@vger.kernel.org, AJvYcCWELDfFQR8oz8bDaJfAuBgA7qzELVY5ZxBlzg2vyqa7t8y/mr5FsZEM4BOBa52gE893psVuLkivT/pq@vger.kernel.org, AJvYcCX/BGB+fG3WnWiR4PR/WU7UrvKHsa2ZQC/55fScU4iUro1uJbUW1P/x1hZ3g3bgbsKQmWTYXb1R8uCW@vger.kernel.org
-X-Gm-Message-State: AOJu0YxWt+qFvgIuA9oku95+0dvJvX2ccrhi77mx3v+nOdXoGuIJNesJ
-	4XlNu6VR+zZCk21hQAIVE2zGySsSaYEDRV+VqHC/G24KQdYR1Z/SeLupae9Mu2oI5zIxoSxf1lD
-	tX6+Iu0ATXmop9JyOPTm7e7Dd66Fhg7o=
-X-Gm-Gg: ASbGncvgMKyHvxnChnZJgC4Axv1aYEVKS71TS/knoJiWo1RbK0RQINR0acu05kxDV+8
-	MhZlMYLLmo4OlOQ0pVnwUWxFltakaTPWJtT5rpnubi9SZ4E9k2p03LTjQIC0BD9uwQ5OX5HnYrX
-	S65mkLXp/NN174CAwEcB9JJ2MAZ9oxZ1KGEiGr9NGOSVUbxVQs7ZUmY57rc8Qg74gUWnOZbupxh
-	aTbqXBViOe2tRVd3dY=
-X-Google-Smtp-Source: AGHT+IFcDXeIo6uU4fndJVvGmN/jTY47SR5imHxzk90iAiBRzhNnnJo2QL9GoDY6Xm/D5hnz57/gEipwcAYqKUg8zQw=
-X-Received: by 2002:a17:90b:1cc3:b0:311:c5d9:2c8b with SMTP id
- 98e67ed59e1d1-31c9e7767fbmr4619712a91.5.1752779459096; Thu, 17 Jul 2025
- 12:10:59 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1752781231; x=1753386031;
+        h=cc:to:from:subject:message-id:references:mime-version:in-reply-to
+         :date:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=EabJr18a3SZdXkqRpkIMgBHho+rbTVnRfJqLTg0l/2k=;
+        b=OP8vLLzrQ3d0k7odIaGDbEVt2pcrv2qObuZgjBRr8ntrC1IvTzy/FH1heX6aenfOzw
+         C7a01xMoMxf78keZkk0LjS8lTgp9IfXOu0mRivXjFpucSCsloaN4Qdf5LwD4nOVmYzj/
+         joRosbqsZbGAduwXVqooFSPldi/HHtuJmfNjOULSgSDrkDhHieDoYdAcVnqnJx+qfnFB
+         QqKlGfE8y/ra8/i8ginJZOK2ueCChW4kF9ILLYMDF4siMTWR5cxxk0yt1IpdoFZk5gzU
+         CokoZOJDAT8P1gMO0Bzn9Tuget8dr14+lrSm3WbMWp3RtLaMFd2CTfd7+wUr6f0It6p+
+         +STw==
+X-Forwarded-Encrypted: i=1; AJvYcCVtsRFL451TCY0dbVdDS5yoYCCueUj60mKobZhNFrm20FoTr569u4MbGLspU5+Tw+zaCZf0607lO/SN@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGMKVNNvvD1oHnDZYvj76cq51PuTnSCkEiz6tmku2HUQEqG3rj
+	ZOoDW/fXRGVNeY9JjMjkcZiT5ioXcimzdTK+/v+9TAvlQ65AyKtzH84rob5Sme0FzV8+muQdjDj
+	/hpjBpvXfpQpOcfMnKs1HJLZpXA==
+X-Google-Smtp-Source: AGHT+IET9IaKD5CuoVhly7YexMTdSilD1ZfKaS6gelsVj0NBUm48zNtNHHWQ7BYJMEXFZUmxjmmo3qvk/nU3bh+Ptg==
+X-Received: from pfbjw38.prod.google.com ([2002:a05:6a00:92a6:b0:748:ec4d:30ec])
+ (user=salomondush job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a05:6a20:6a22:b0:225:7617:66ff with SMTP id adf61e73a8af0-2391c962646mr266495637.20.1752781230976;
+ Thu, 17 Jul 2025 12:40:30 -0700 (PDT)
+Date: Thu, 17 Jul 2025 19:40:25 +0000
+In-Reply-To: <30f8ea8d-79c4-4e5c-b354-51ad8146a61c@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20250616175019.3471583-1-superm1@kernel.org> <20250616175019.3471583-4-superm1@kernel.org>
-In-Reply-To: <20250616175019.3471583-4-superm1@kernel.org>
-From: Alex Deucher <alexdeucher@gmail.com>
-Date: Thu, 17 Jul 2025 15:10:47 -0400
-X-Gm-Features: Ac12FXzm6w4bvt8xXNl05VHu2uQA28FvAWVfU6YAJzv7lZsIpjWGCcVY04Bnf2I
-Message-ID: <CADnq5_Pn=0nCD-CyoeJxSAn=Gtn=evkaCBUH2pr_O-=7vpw+bw@mail.gmail.com>
-Subject: Re: [PATCH v4 3/5] drm/amd: Avoid evicting resources at S5
-To: Mario Limonciello <superm1@kernel.org>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Alex Deucher <alexander.deucher@amd.com>, 
-	Bjorn Helgaas <bhelgaas@google.com>, 
-	"open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>, 
-	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>, 
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Danilo Krummrich <dakr@kernel.org>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, 
-	"open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>, 
-	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, 
-	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>, Mario Limonciello <mario.limonciello@amd.com>, 
-	AceLan Kao <acelan.kao@canonical.com>, Kai-Heng Feng <kaihengf@nvidia.com>, 
-	Mark Pearson <mpearson-lenovo@squebb.ca>, Denis Benato <benato.denis96@gmail.com>, 
-	=?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>
+Mime-Version: 1.0
+References: <30f8ea8d-79c4-4e5c-b354-51ad8146a61c@acm.org>
+X-Mailer: git-send-email 2.50.0.727.gbf7dc18ff4-goog
+Message-ID: <20250717194025.3218107-1-salomondush@google.com>
+Subject: [PATCH v2] scsi: mpi3mr: Emit uevent on controller diagnostic fault
+From: Salomon Dushimirimana <salomondush@google.com>
+To: bvanassche@acm.org
+Cc: James.Bottomley@HansenPartnership.com, kashyap.desai@broadcom.com, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
+	salomondush@google.com, sathya.prakash@broadcom.com, 
+	sreekanth.reddy@broadcom.com, sumit.saxena@broadcom.com
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Mon, Jun 16, 2025 at 1:50=E2=80=AFPM Mario Limonciello <superm1@kernel.o=
-rg> wrote:
->
-> From: Mario Limonciello <mario.limonciello@amd.com>
->
-> Normally resources are evicted on dGPUs at suspend or hibernate and
-> on APUs at hibernate.  These steps are unnecessary when using the S4
-> callbacks to put the system into S5.
->
-> Cc: AceLan Kao <acelan.kao@canonical.com>
-> Cc: Kai-Heng Feng <kaihengf@nvidia.com>
-> Cc: Mark Pearson <mpearson-lenovo@squebb.ca>
-> Cc: Denis Benato <benato.denis96@gmail.com>
-> Cc: Merthan Karaka=C5=9F <m3rthn.k@gmail.com>
-> Signed-off-by: Mario Limonciello <mario.limonciello@amd.com>
+Introduces a uevent mechanism to notify userspace when the controller
+undergoes a reset due to a diagnostic fault. A new function,
+mpi3mr_fault_event_emit(), is added and called from the reset path. This
+function filters for a diagnostic fault type
+(MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT) and generates a uevent
+containing details about the event:
 
-Acked-by: Alex Deucher <alexander.deucher@amd.com>
+- DRIVER: mpi3mr in this case
+- HBA_NUM: scsi host id
+- EVENT_TYPE: indicates fatal error
+- RESET_TYPE: type of reset that has occurred
+- RESET_REASON: specific reason for the reset
 
-> ---
-> v3: https://lore.kernel.org/linux-pm/20250609024619.407257-1-superm1@kern=
-el.org/T/#me6db0fb946e3d604a8f3d455128844ed802c82bb
-> ---
->  drivers/gpu/drm/amd/amdgpu/amdgpu_device.c | 4 ++++
->  1 file changed, 4 insertions(+)
->
-> diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c b/drivers/gpu/drm=
-/amd/amdgpu/amdgpu_device.c
-> index 8edd88328749b..c5d8f6d551238 100644
-> --- a/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> +++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_device.c
-> @@ -4966,6 +4966,10 @@ static int amdgpu_device_evict_resources(struct am=
-dgpu_device *adev)
->         if (!adev->in_s4 && (adev->flags & AMD_IS_APU))
->                 return 0;
->
-> +       /* No need to evict when going to S5 through S4 callbacks */
-> +       if (system_state =3D=3D SYSTEM_HALT || system_state =3D=3D SYSTEM=
-_POWER_OFF)
-> +               return 0;
-> +
->         ret =3D amdgpu_ttm_evict_resources(adev, TTM_PL_VRAM);
->         if (ret)
->                 DRM_WARN("evicting device resources failed\n");
-> --
-> 2.43.0
->
+This will allow userspace tools to subscribe to these events and take
+appropriate action.
+
+Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
+---
+Changes in v2:
+- Addressed feedback from Bart regarding use of __free(kfree) and more
+
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 37 +++++++++++++++++++++++++++++++++
+ 1 file changed, 37 insertions(+)
+
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 1d7901a8f0e40..a050c4535ad82 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -1623,6 +1623,42 @@ static inline void mpi3mr_set_diagsave(struct mpi3mr_ioc *mrioc)
+ 	writel(ioc_config, &mrioc->sysif_regs->ioc_configuration);
+ }
+ 
++/**
++ * mpi3mr_fault_uevent_emit - Emit uevent for a controller diagnostic fault
++ * @mrioc: Pointer to the mpi3mr_ioc structure for the controller instance
++ * @reset_type: The type of reset that has occurred
++ * @reset_reason: The specific reason code for the reset
++ *
++ * This function is invoked when the controller undergoes a reset. It specifically
++ * filters for MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT and ignores other
++ * reset types, such as soft resets.
++ */
++static void mpi3mr_fault_uevent_emit(struct mpi3mr_ioc *mrioc, u16 reset_type,
++	u16 reset_reason)
++{
++	struct kobj_uevent_env *env __free(kfree);
++
++	if (reset_type != MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT)
++		return;
++
++	env = kzalloc(sizeof(*env), GFP_KERNEL);
++	if (!env)
++		return;
++
++	if (add_uevent_var(env, "DRIVER=%s", mrioc->driver_name))
++		return;
++	if (add_uevent_var(env, "HBA_NUM=%u", mrioc->id))
++		return;
++	if (add_uevent_var(env, "EVENT_TYPE=FATAL_ERROR"))
++		return;
++	if (add_uevent_var(env, "RESET_TYPE=%s", mpi3mr_reset_type_name(reset_type)))
++		return;
++	if (add_uevent_var(env, "RESET_REASON=%s", mpi3mr_reset_rc_name(reset_reason)))
++		return;
++
++	kobject_uevent_env(&mrioc->shost->shost_gendev.kobj, KOBJ_CHANGE, env->envp);
++}
++
+ /**
+  * mpi3mr_issue_reset - Issue reset to the controller
+  * @mrioc: Adapter reference
+@@ -1741,6 +1777,7 @@ static int mpi3mr_issue_reset(struct mpi3mr_ioc *mrioc, u16 reset_type,
+ 	    ioc_config);
+ 	if (retval)
+ 		mrioc->unrecoverable = 1;
++	mpi3mr_fault_uevent_emit(mrioc, reset_type, reset_reason);
+ 	return retval;
+ }
+ 
+-- 
+2.50.0.727.gbf7dc18ff4-goog
+
