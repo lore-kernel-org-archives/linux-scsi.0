@@ -1,174 +1,206 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
+Received: from mail-qt1-f182.google.com (mail-qt1-f182.google.com [209.85.160.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 236661F92A
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 22:30:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C95172605
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 23:31:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752877835; cv=none; b=mEfrNtYHdB65mRFhTxpOY191tlyc9bghu5ebB4SWQYSSt7GR+Owiw+RcZs+6JzgK3WWMpUklF3u7gV9vXwtkpt/ct2+tTutawOJ7OMpMKeUQrj3ew9BUB1/NGnKaU6JM/QcK3PCkI0Io7UogrpbI1IrQVDVw7FZgrJnmyehWrqc=
+	t=1752881474; cv=none; b=uyV8MyJch0QMSe1GYxZ+hXSFeqJU//jxDjWT4GBz77XyhurU55aOh4i0YdMdyT76GSi8VkswP+oP7WxSTuHqk2OfpxMYi/D1zzlSpuNiUqNLaY41JoFLihlI/dU6yveukv4IZ3si61Z4qYPwfl/XwafOKbmg6QV69qGwhQx9k/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752877835; c=relaxed/simple;
-	bh=sY4aNr1nWbzTlGAUHHYl9MCtomdJQVQxN0BsHVGrBAQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=h79R39XR1q7nj238nW922CeA5nOj2XhX0Ko35aANDM9udxCLTtKnUbt1hXnK6rNAl85DtSC0YtMi3QrycPYPCqgUX7aeMNco3DnaC5oPG7TqMmnG+UzhmaAzrQ54iATaNmErmQLGsG8sTQCYYmXl0vZQKNNzPYqn0Ps3R45+27w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=x83kpwzR; arc=none smtp.client-ip=209.85.214.180
+	s=arc-20240116; t=1752881474; c=relaxed/simple;
+	bh=wyKQcm7FRsVVHy4/wZxvx8WFb4+uvsQcoCBaVGG3kkA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VbKubVphSSAjIaeFDFH435aJlr8gFTghuLPFMv4J1ryEve0EjtwToGjBjk3ylDbnc9fLLyhFd3na71TLl2rNAgpTHQgzYmJMlf698M/la0jb8tOpeaJjP4HrEaA8jFFIzUT741PollhMJlezKq3N/nEK3mFEJrqYKFKV+eUuiFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=x0JLxWpO; arc=none smtp.client-ip=209.85.160.182
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="x83kpwzR"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-235e389599fso65885ad.0
-        for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 15:30:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="x0JLxWpO"
+Received: by mail-qt1-f182.google.com with SMTP id d75a77b69052e-4ab3855fca3so50251cf.1
+        for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 16:31:12 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1752877833; x=1753482633; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=I7Y2FANJDjjPo+eW8s3VGBQISkavgLkmlT1I0QKOxbM=;
-        b=x83kpwzR49ogYcN/DHtCYq4eR7PsfWezfpDnfJp/vBOsFqPclBQrwHR0LJ0hEAHgXb
-         UuA3YjM3iIjfE+I++S6aV+bIEabn/M38Ix8Z8NkwWy2LhiP4Ls9YQPhhuXRCauXtUtNh
-         9M4pH9Ys16s66BEUi44vI7R60VVy7DWiERO8KyBa2AzFXwVXMdaOzuc68LTwTpcMRfly
-         U5ayPL0dvNF63S3lKLI3yvAzVHaj7X+x8rsMhJnJqQQr7tFULmQoGGR5lp2BCH6usFKI
-         jxSLCvlt5f7Z1RNtwv4hshi5D1DoGGl1szthPp/X/4bXgb1Y8o7RaB5EdThtVjU43sg1
-         1wpw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1752877833; x=1753482633;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+        d=google.com; s=20230601; t=1752881471; x=1753486271; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=I7Y2FANJDjjPo+eW8s3VGBQISkavgLkmlT1I0QKOxbM=;
-        b=FDh8bxuHeKMyxWsPXW0DrtIzyhe9ah0/rFXOi8wkvO8u6v9oqj/s13bNnY0Ky7ttxs
-         Rj9S+NZUXaZZyRsLDKWKdcpLIoO6KSPP8Silkohbi8nquRg7D4yb+w9qK21p+ZFWkhl5
-         OyTWbBhmHpZgX5FiJVrdDpmh7/198uA4sV0BzPH8HmAeBbcqj4njE2s6Fjl/lij/uCnu
-         GID4kr0i3mBRwD1edtdHFbkpo7LmswZz5SEuFbLawI55qjuEGJVSPHncUZi0XPbzT3YP
-         B5NE/Y2bbaqz2ovI6O0iI0wLS2LQ983KmUa3rjGLVs5SKwac2OmBMvfdCYgipU9E0DvF
-         kbeA==
-X-Forwarded-Encrypted: i=1; AJvYcCWYW4oto9lST3zRvLmmeRq1sYhjOiIRtGTizm1lg0Wt5VytElVXYGCJv0uXtbkG9aSCzHJ4MXDuUUae@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxn3bowCruoGMBZmGd142SkOL7BQFJTgEO27nRTWyJnLbqRF5/D
-	17TXgkTSjD++I1ZBncAK+utoIm2pEfZjNrlVzhI56sOdrYnk6dHrr1zh5hHq4WZpOA==
-X-Gm-Gg: ASbGncvQ4hbxDZki7bQf+PeZPm67etURSppKFHE9RnwNljnxtJmNgOac2CB/MmBf3+c
-	FB/U5raquTGPO/jrZKSUus0Mr1n2CbCYNpFrhG+RfJcspEQ/p9z3GHMIcHDa1HvQ+jU0i9BGOzj
-	IpYtek510oM5E7pwxuR7x7fPsDxzBYyoae3NE0Fs4povtsnKNwPjlmq+uTLthQenmSyPmu+OYgL
-	3t1XeJZa3zoLW1bXxxQKIfOvzSZA1b1UIPAztN85iQNDf/krtY1/LWHuNRQMjRqFd/gBLfLYQBG
-	jAvpN/bZcup9gtCT0e0o96HSABNjbPxE69fnu9VIoPSSfneMUQKTjlTu9D5kliX4w2OTm3c0OsQ
-	h0RsA8T0GYfapiPw5o8nfXUDEBn7Bv1BNNY8+xlf2na4WkM+HZ9ZPOm1SdQ==
-X-Google-Smtp-Source: AGHT+IG8y9t/nm0Z/zrPUvlMrgFpg5qaSZFfVFBfgRmS9zniPLDy5B2S+lbOyzbzpR8SXJBKgtVZmw==
-X-Received: by 2002:a17:902:c949:b0:22e:4509:cb86 with SMTP id d9443c01a7336-23f72bebe3dmr336315ad.19.1752877832671;
-        Fri, 18 Jul 2025 15:30:32 -0700 (PDT)
-Received: from google.com (166.68.83.34.bc.googleusercontent.com. [34.83.68.166])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-759cb678d0asm1761991b3a.113.2025.07.18.15.30.31
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 18 Jul 2025 15:30:31 -0700 (PDT)
-Date: Fri, 18 Jul 2025 15:30:28 -0700
-From: Igor Pylypiv <ipylypiv@google.com>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Niklas Cassel <cassel@kernel.org>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Terrence Adams <tadamsjr@google.com>, linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] Revert "scsi: pm80xx: Do not use libsas port ID"
-Message-ID: <aHrLBPunX8Fuv1zz@google.com>
-References: <20250717165606.3099208-2-cassel@kernel.org>
- <aHlpNRsPbmrTgv0O@google.com>
- <a09dea31-0de3-4859-95d9-2d83fc1ccc73@kernel.org>
+        bh=A7qVRd75qAo0NhaT8pe3MvptNKMVh4Xqd0bD2B3tv18=;
+        b=x0JLxWpObudM9B8qMn9hFEFvwhKYRDAnccminH6e/QEuPFVtRcpVRc0jcFkfIBD/Eq
+         B3kSFu+7JzRb9WQ+VBLki8QPKAFBGo3MflOx2dULFSt1c96eoQ+i5AUGP3RPMHSqD9Cb
+         2L4+35fGdemZ+c5X00p16rkBbM0ZuKV2dZxmfbRTZKTtdi+BOjZ/tsHBcOwePhQI84qE
+         OdGVuGAoGpiuqs1yRKzRJTd+f67bMzGNUxV6eu1D2hoKaIgbgJjnbOpixvtX3gj/2IRr
+         pSh6cJx2BnvRRg+Ysm4exfbWUbALpDKJ5GIvUwJyG5qeVuUE4lhomYld8dirhOB7PPzM
+         o0+w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1752881471; x=1753486271;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=A7qVRd75qAo0NhaT8pe3MvptNKMVh4Xqd0bD2B3tv18=;
+        b=c5P87Pq2DETbDUytBIhQ1BVIDlRh4RJEteC4cSxuaDcr9N+8EUcFetmy9xTcUc4YwI
+         lrXLHeEI0EG42yaS0WKFSN+GWu7hTztPDC0k+Cbd3EujCfj/0f4OUmCNsNrmL06rU9zC
+         AVO5BP3C3ZZ+J3fxm2cRhzNMwHNufS0tphU1UMzWKEeYBWzBsTSMqZrJwMq2g+64THKO
+         4Rh/JK09lc4Iq0dgwTzoA1EL2c2p49N6cdzfV55t2T3IPWJqs6fZtS0PnhQs+Ac41TZx
+         m2QbsCmdi1BowoLPYsrSE9RVxnW178y1IPw8vXcpMaaDRdsMHklyPwBQ8U5FCKV35Y1f
+         HY/w==
+X-Forwarded-Encrypted: i=1; AJvYcCWg8/C/+xjiuLPijdYlH4I60scCRrCBbEs+FxVZSpdZSPgQMP6eejSfC/bCAyKfGIuRSpT9es0+gADn@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxzknxsr0vXIXOSvhJjYPpIzdnUZFrTA1pbfiUuFJJ45UzKKwaf
+	iaxOzBJ5QsCXGyXcY3IHBYyiztkD/zHO5/p9APfNe6ALZhQXTt7SQ8YMfyM/pLfnWGRx7DylJr2
+	bZzLPUMzuSLPGZlSvraNS+hWXzNh+RfYdEbWmozQC
+X-Gm-Gg: ASbGnctAwUupas8YVM9ZsyWH0DyuFx2jZd298ut/Q7QrXvsTJvRNRYsX5lqxA6BcBhk
+	6Bg4ktnOcFfKTSGOkdMH0yUHUXQGYq8ku74aTQfUb7uegQMjVo4XZ5hgiqFNuTDDdLnXNblcGLh
+	MVpzxz3ii6hAZYFKnMIwwjpsARQZAFOgtzx5qvkIumRavrnyeB0wnKBQZHcQAiJal1hVaLRIvtT
+	hEqbQP/sY0iJIzbidu9cDIQNczXal4LZUY=
+X-Google-Smtp-Source: AGHT+IFlfld6v/GsjQw7m8R0jXsegWa6/2P4Mtqon/Cbpq0aXvdr8xYl+dd9FjYvhcv0JVHvrZmQszFmt4yRNCi9rFc=
+X-Received: by 2002:a05:622a:48a:b0:48a:ba32:370 with SMTP id
+ d75a77b69052e-4abc0f2ed2emr1304301cf.10.1752881470951; Fri, 18 Jul 2025
+ 16:31:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <a09dea31-0de3-4859-95d9-2d83fc1ccc73@kernel.org>
+References: <30f8ea8d-79c4-4e5c-b354-51ad8146a61c@acm.org> <20250717194025.3218107-1-salomondush@google.com>
+ <CAFdVvOx-xegmdGO8xgwpE3i0BvgXD0C1jKjNWKNjTFuifWmuxg@mail.gmail.com>
+In-Reply-To: <CAFdVvOx-xegmdGO8xgwpE3i0BvgXD0C1jKjNWKNjTFuifWmuxg@mail.gmail.com>
+From: Salomon Dushimirimana <salomondush@google.com>
+Date: Fri, 18 Jul 2025 16:31:00 -0700
+X-Gm-Features: Ac12FXzuvXdLhzc6ftq7CLhsfjlqhKNIF_PF7tsJ9Fph4me_WgOPpQP3OjALBjs
+Message-ID: <CAPE3x15Qxy5+C3_1v6a6YBoz03=NVoJMz-yfc6qih_=_js8=ug@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: mpi3mr: Emit uevent on controller diagnostic fault
+To: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Cc: bvanassche@acm.org, James.Bottomley@hansenpartnership.com, 
+	kashyap.desai@broadcom.com, linux-kernel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, martin.petersen@oracle.com, 
+	mpi3mr-linuxdrv.pdl@broadcom.com, sreekanth.reddy@broadcom.com, 
+	sumit.saxena@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Jul 18, 2025 at 01:35:13PM +0900, Damien Le Moal wrote:
-> On 2025/07/18 6:20, Igor Pylypiv wrote:
-> > On Thu, Jul 17, 2025 at 06:56:07PM +0200, Niklas Cassel wrote:
-> >> This reverts commit 0f630c58e31afb3dc2373bc1126b555f4b480bb2.
-> >>
-> >> Commit 0f630c58e31a ("scsi: pm80xx: Do not use libsas port ID") causes
-> >> drives behind a SAS enclosure (which is connected to one of the ports
-> >> on the HBA) to no longer be detected.
-> >>
-> >> Connecting the drives directly to the HBA still works. Thus, the commit
-> >> only broke the detection of drives behind a SAS enclosure.
-> >>
-> >> Reverting the commit makes the drives behind the SAS enclosure to be
-> >> detected once again.
-> >>
-> >> The commit log of the offending commit is quite vague, but mentions that:
-> >> "Remove sas_find_local_port_id(). We can use pm8001_ha->phy[phy_id].port
-> >> to get the port ID."
-> >>
-> >> This assumption appears false, thus revert the offending commit.
-> > 
-> > Thanks for bisecting and reverting the commit, Niklas!
-> > 
-> > Let me review the changes and send a proper fix that takes into account
-> > drives behind a SAS enclosure. I would appretiate if you could test that
-> > new fix since I don't have a setup with a SAS enclosure.
-> 
-> s/enclosure/expander
-> (the important point here is if there is an expander between the HBA and the
-> devices, not how the devices are installed. E.g. a simple enclosure may not have
-> any expander and act similar to a fan-out cable connection)
-> 
-> I think the issue is that if you do not have an expander and use fan-out cables
-> to connect drives directly to the HBA, you essentially get HBA SAS port ==
-> device port and it works (My setup is like this with an -8e model, so 8 ports, 0
-> to 7). That is the case for "if (!pdev)" in sas_find_local_port.
-> 
-> But if there is an expander, you can have multiple devices per HBA port, so you
-> need to search backward using the parent device until you hit the HBA device
-> itself, which gives you the port to use to communicate with the device.
-> 
-> So not sure if we can simplify/remove the loop in sas_find_local_port(). Maybe
-> if we add "local_port" field to struct domain_device ? But then any topology
-> change event would potentially need to update this.
+When the controller encounters a fatal error event, we want to notify
+our userspace tools to react to these events and pull the
+corresponding logs/snapdump from the ioc. There's a list of other
+drivers doing something similar, such as drivers/scsi/qla2xxx,
+drivers/scsi/qedf/qedf_dbg.c, etc.
+
+So the mpi3mr_issue_reset function only supports two types of resets,
+i.e MPI3_SYSIF_HOST_DIAG_RESET_ACTION_SOFT_RESET and
+MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT for now. From the code,
+it seems like only diag fault reset generages a snapdump, soft resets
+do not, hence why we only emit the fatal uevent on diag fault.
+
+Thanks,
+Salomon Dushimirimana
+
+Salomon Dushimirimana
+
+
+On Fri, Jul 18, 2025 at 8:43=E2=80=AFAM Sathya Prakash Veerichetty
+<sathya.prakash@broadcom.com> wrote:
 >
-
-Looks like there is no need for sas_find_local_port() because child devices
-have a reference to the same port?
-
-struct domain_device {
-...
-	struct asd_sas_port *port;        /* shortcut to root of the tree */
-}
-
-https://github.com/torvalds/linux/blob/c7de79e662b8681f54196c107281f1e63c26a3db/include/scsi/libsas.h#L168
-
-During discovery, child devices inherit parent's port:
-
-https://github.com/torvalds/linux/blob/c7de79e662b8681f54196c107281f1e63c26a3db/drivers/scsi/libsas/sas_expander.c#L826
-
-and also
-
-https://github.com/torvalds/linux/blob/c7de79e662b8681f54196c107281f1e63c26a3db/drivers/scsi/libsas/sas_expander.c#L936
-
-Hey Niklas,
-
-Could you try the following fix with your expander setup, please?
-The fix assumes the problematic patch is not yet revered.
-
-$ git diff
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index f7067878b34f..cd9513c23c71 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -503,7 +503,7 @@ int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
-        spin_lock_irqsave(&pm8001_ha->lock, flags);
- 
-        pm8001_dev = dev->lldd_dev;
--       port = pm8001_ha->phy[pm8001_dev->attached_phy].port;
-+       port = dev->port->lldd_port;
- 
-        if (!internal_abort &&
-            (DEV_IS_GONE(pm8001_dev) || !port || !port->port_attached)) {
-
-
-Thank you!
-Igor
-
-> 
-> -- 
-> Damien Le Moal
-> Western Digital Research
+> On Thu, Jul 17, 2025 at 1:40=E2=80=AFPM Salomon Dushimirimana
+> <salomondush@google.com> wrote:
+> >
+> > Introduces a uevent mechanism to notify userspace when the controller
+> > undergoes a reset due to a diagnostic fault. A new function,
+> > mpi3mr_fault_event_emit(), is added and called from the reset path. Thi=
+s
+> > function filters for a diagnostic fault type
+> > (MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT) and generates a uevent
+> > containing details about the event:
+> >
+> > - DRIVER: mpi3mr in this case
+> > - HBA_NUM: scsi host id
+> > - EVENT_TYPE: indicates fatal error
+> > - RESET_TYPE: type of reset that has occurred
+> > - RESET_REASON: specific reason for the reset
+> >
+> > This will allow userspace tools to subscribe to these events and take
+> > appropriate action.
+> What is the reason for userpace tools to know these events and what
+> user space tools we are talking about here?  Also, on what basis it is
+> decided only diag fault reset is considered as FATAL.  I would prefer
+> to understand the actual requirement before ACKing this patch.  If we
+> need this kind of user space notification then it would be better to
+> make it generic and let the notification sent for all firmware fault
+> codes.
+>
+> >
+> > Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
+> > ---
+> > Changes in v2:
+> > - Addressed feedback from Bart regarding use of __free(kfree) and more
+> >
+> >  drivers/scsi/mpi3mr/mpi3mr_fw.c | 37 +++++++++++++++++++++++++++++++++
+> >  1 file changed, 37 insertions(+)
+> >
+> > diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3=
+mr_fw.c
+> > index 1d7901a8f0e40..a050c4535ad82 100644
+> > --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> > +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+> > @@ -1623,6 +1623,42 @@ static inline void mpi3mr_set_diagsave(struct mp=
+i3mr_ioc *mrioc)
+> >         writel(ioc_config, &mrioc->sysif_regs->ioc_configuration);
+> >  }
+> >
+> > +/**
+> > + * mpi3mr_fault_uevent_emit - Emit uevent for a controller diagnostic =
+fault
+> > + * @mrioc: Pointer to the mpi3mr_ioc structure for the controller inst=
+ance
+> > + * @reset_type: The type of reset that has occurred
+> > + * @reset_reason: The specific reason code for the reset
+> > + *
+> > + * This function is invoked when the controller undergoes a reset. It =
+specifically
+> > + * filters for MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT and ignore=
+s other
+> > + * reset types, such as soft resets.
+> > + */
+> > +static void mpi3mr_fault_uevent_emit(struct mpi3mr_ioc *mrioc, u16 res=
+et_type,
+> > +       u16 reset_reason)
+> > +{
+> > +       struct kobj_uevent_env *env __free(kfree);
+> > +
+> > +       if (reset_type !=3D MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAUL=
+T)
+> > +               return;
+> > +
+> > +       env =3D kzalloc(sizeof(*env), GFP_KERNEL);
+> > +       if (!env)
+> > +               return;
+> > +
+> > +       if (add_uevent_var(env, "DRIVER=3D%s", mrioc->driver_name))
+> > +               return;
+> > +       if (add_uevent_var(env, "HBA_NUM=3D%u", mrioc->id))
+> > +               return;
+> > +       if (add_uevent_var(env, "EVENT_TYPE=3DFATAL_ERROR"))
+> > +               return;
+> > +       if (add_uevent_var(env, "RESET_TYPE=3D%s", mpi3mr_reset_type_na=
+me(reset_type)))
+> > +               return;
+> > +       if (add_uevent_var(env, "RESET_REASON=3D%s", mpi3mr_reset_rc_na=
+me(reset_reason)))
+> > +               return;
+> > +
+> > +       kobject_uevent_env(&mrioc->shost->shost_gendev.kobj, KOBJ_CHANG=
+E, env->envp);
+> > +}
+> > +
+> >  /**
+> >   * mpi3mr_issue_reset - Issue reset to the controller
+> >   * @mrioc: Adapter reference
+> > @@ -1741,6 +1777,7 @@ static int mpi3mr_issue_reset(struct mpi3mr_ioc *=
+mrioc, u16 reset_type,
+> >             ioc_config);
+> >         if (retval)
+> >                 mrioc->unrecoverable =3D 1;
+> > +       mpi3mr_fault_uevent_emit(mrioc, reset_type, reset_reason);
+> >         return retval;
+> >  }
+> >
+> > --
+> > 2.50.0.727.gbf7dc18ff4-goog
+> >
