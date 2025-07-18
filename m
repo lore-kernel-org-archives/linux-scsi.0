@@ -1,30 +1,30 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02CE029B78E
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 09:55:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 736BC29B8C0
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 09:55:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752832538; cv=none; b=OFw93GL0ohUVKoFLVtI3FfoG0/4Vjb9kuqBdb4o6tjVSSOV3az0vw2T9FK2pucPGO1QLi5FaBnMkreDkEmt6kdswfvjvoosBuH+OBIGCmydHLU79eh2KaAbDKPa24T9sZbxiDNRQkrLnkM28N5HuTC5spb2Ick5oCI56wjkOVLI=
+	t=1752832538; cv=none; b=MWa7jffsqc0RC+O+yxupWPMVZzWnb5wy3ukfhlMKxVeLvw6aVAuWfqKIuMXbvcOu1QXdbWRUriADM3d58iPIU+fclbG72ZjSWms9Z6ykCooJ/WGhz0w/hOf2RX8X91/BE212hhg8PGT6y6dsJY4ZopkdgoYTfP0rNrAq0jxS8ng=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1752832538; c=relaxed/simple;
-	bh=sslMtIl9g2OvK0k+sJHxElC7SbRBN3sjMDzxXS+6lfU=;
+	bh=rVx4+fNhve/CqyPEQ+EzMRjDDvqBzGXT0MdZO9f0Vyw=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=SuRQt74Zymb6dHZoEC+8FK7vZhyR62cr7Z1+o8p7LIiEzEQDnvA1LdpUbwwmJt9mBT9mgafuhKBrNKXhp1NZhGQS1766TPGLCDITIWHI79ZVxjphwyWfAwBgV8gx5QH949IlRB5yxcy9ZuNYpjZUAwk+I86qaV3g3QhtGdIAemM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=pbYoXpds; arc=none smtp.client-ip=60.244.123.138
+	 MIME-Version:Content-Type; b=N/NENHII2vynUgLVlj5tTsRA4kmMpueQlNa+Z41Ias+Lq2uCp/Lv9rSYF9P+RZyBQ8a1F7/mBqk/8BdLwmMTrv8EKJl+3S+uG4WfdfQRi7YKNZPwTuoD6gBFQWAQopHlF8NPwwXJLlpVOEYonsLyxP0ZLRDPAUtGBeQ3Z+IscbI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=nN7kDUo2; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="pbYoXpds"
-X-UUID: 5615b6f263bd11f08b7dc59d57013e23-20250718
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="nN7kDUo2"
+X-UUID: 560909e863bd11f08b7dc59d57013e23-20250718
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=XoSjw1MlU/FOj+Isf3zw3IaJ9HIWjfuarshIqZkWh7s=;
-	b=pbYoXpdsJ8A5qWqL/PToi3N9QsjIHnH8PQ/9Q/btRXcUgIJH3/G7lGHS+1Zlw44T0FI6kjETX2u9YWE7OCDibstq87hVNubKhLWP0KmlN6ogS0J3Vg1sLcM5kDvLJNyvKKnAjjcK7VghgijG0souuPKFIo2r5EOuh5hZhZC7Zrg=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=+i7EQivPnVUtMq3ufp05n2oFi/TlFAMUvz4KJQYPhTQ=;
+	b=nN7kDUo2VW9PSoUMyadmqSdt3kcFpFaQNf/hpi6/wrXIoQBhM/DlHLZ5GN9Mw5C/IZGfiGwPmMqhcBPO3tDR9ec1BbVHXiiGIQpj0a02EvyWyThL+2ENDdlRof5oBFW6HTMSWPccI9lMoBFN4b7uaoubDQsNdXGv/l+FCU/Oem0=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.2,REQID:b2ff8d5b-d0e4-4a11-a043-ec7002ea0f65,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:9eb4ff7,CLOUDID:e1692773-f565-4a89-86be-304708e7ad47,B
+X-CID-O-INFO: VERSION:1.3.2,REQID:d62ed4aa-786e-4282-a532-e5aea281fb8f,IP:0,UR
+	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-25
+X-CID-META: VersionHash:9eb4ff7,CLOUDID:5cd5ec0e-6968-429c-a74d-a1cce2b698bd,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
 	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
 	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -32,11 +32,11 @@ X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5615b6f263bd11f08b7dc59d57013e23-20250718
+X-UUID: 560909e863bd11f08b7dc59d57013e23-20250718
 Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
 	(envelope-from <peter.wang@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 729744031; Fri, 18 Jul 2025 17:55:29 +0800
+	with ESMTP id 1743096171; Fri, 18 Jul 2025 17:55:29 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
  MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -53,9 +53,9 @@ CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
 	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
 	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
 	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
-Subject: [PATCH v2 9/9] ufs: host: mediatek: Support FDE (AES) clock scaling
-Date: Fri, 18 Jul 2025 17:51:52 +0800
-Message-ID: <20250718095524.682599-10-peter.wang@mediatek.com>
+Subject: [PATCH v2 8/9] ufs: host: mediatek: Support clock scaling with Vcore binding
+Date: Fri, 18 Jul 2025 17:51:51 +0800
+Message-ID: <20250718095524.682599-9-peter.wang@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250718095524.682599-1-peter.wang@mediatek.com>
 References: <20250718095524.682599-1-peter.wang@mediatek.com>
@@ -71,145 +71,223 @@ X-MTK: N
 
 From: Peter Wang <peter.wang@mediatek.com>
 
-This patch adds support for scaling the FDE (AES) clock to achieve higher
-performance, particularly for HS-G5. The implementation includes:
-1. Parsing DTS settings for FDE min/max mux.
-2. Scaling up the FDE clock when required for enhanced performance.
+This patch adds support for clock scaling with Vcore binding.
+It includes the following changes:
+1. Parses the DTS setting for Vcore voltage.
+2. Sets the Vcore voltage to the DTS-specified value before scaling up.
+3. Resets the Vcore voltage to the default setting after scaling down.
 
-These changes ensure that the FDE clock can be dynamically adjusted
-based on performance needs, leveraging DTS configurations.
+These changes ensure that the Vcore voltage is appropriately managed
+during clock scaling operations to maintain system stability and
+performance.
 
 Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 54 ++++++++++++++++++++++++++++++++-
- drivers/ufs/host/ufs-mediatek.h |  3 ++
- 2 files changed, 56 insertions(+), 1 deletion(-)
+ drivers/ufs/host/ufs-mediatek.c | 129 +++++++++++++++++++++++++++-----
+ drivers/ufs/host/ufs-mediatek.h |   3 +
+ 2 files changed, 112 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 0c6380d149ca..4a6c677fce13 100644
+index 2bcf126e0693..0c6380d149ca 100644
 --- a/drivers/ufs/host/ufs-mediatek.c
 +++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -953,9 +953,23 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
- 			host->mclk.ufs_sel_min_clki = clki;
- 			clk_disable_unprepare(clki->clk);
- 			list_del(&clki->list);
-+		} else if (!strcmp(clki->name, "ufs_fde")) {
-+			host->mclk.ufs_fde_clki = clki;
-+		} else if (!strcmp(clki->name, "ufs_fde_max_src")) {
-+			host->mclk.ufs_fde_max_clki = clki;
-+			clk_disable_unprepare(clki->clk);
-+			list_del(&clki->list);
-+		} else if (!strcmp(clki->name, "ufs_fde_min_src")) {
-+			host->mclk.ufs_fde_min_clki = clki;
-+			clk_disable_unprepare(clki->clk);
-+			list_del(&clki->list);
- 		}
- 	}
+@@ -933,6 +933,9 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+ 	struct list_head *head = &hba->clk_list_head;
+ 	struct ufs_clk_info *clki, *clki_tmp;
++	struct device *dev = hba->dev;
++	struct regulator *reg;
++	u32 volt;
  
-+	list_for_each_entry(clki, head, list) {
-+		dev_info(hba->dev, "clk \"%s\" present", clki->name);
+ 	/*
+ 	 * Find private clocks and store them in struct ufs_mtk_clk.
+@@ -958,6 +961,35 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
+ 		dev_info(hba->dev,
+ 			 "%s: Clk-scaling not ready. Feature disabled.",
+ 			 __func__);
++		return;
 +	}
 +
- 	if (!ufs_mtk_is_clk_scale_ready(hba)) {
- 		hba->caps &= ~UFSHCD_CAP_CLK_SCALING;
- 		dev_info(hba->dev,
-@@ -1758,14 +1772,16 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
++	/*
++	 * Default get vcore if dts have these settings.
++	 * No matter clock scaling support or not. (may disable by customer)
++	 */
++	reg = devm_regulator_get_optional(dev, "dvfsrc-vcore");
++	if (IS_ERR(reg)) {
++		dev_info(dev, "failed to get dvfsrc-vcore: %ld",
++			 PTR_ERR(reg));
++		return;
++	}
++
++	if (of_property_read_u32(dev->of_node, "clk-scale-up-vcore-min",
++				 &volt)) {
++		dev_info(dev, "failed to get clk-scale-up-vcore-min");
++		return;
++	}
++
++	host->mclk.reg_vcore = reg;
++	host->mclk.vcore_volt = volt;
++
++	/* If default boot is max gear, request vcore */
++	if (reg && volt && host->clk_scale_up) {
++		if (regulator_set_voltage(reg, volt, INT_MAX)) {
++			dev_info(hba->dev,
++				"Failed to set vcore to %d\n", volt);
++		}
+ 	}
+ }
+ 
+@@ -1126,6 +1158,7 @@ static int ufs_mtk_init(struct ufs_hba *hba)
+ 
+ 	/* Enable clk scaling*/
+ 	hba->caps |= UFSHCD_CAP_CLK_SCALING;
++	host->clk_scale_up = true; /* default is max freq */
+ 
+ 	/* Set runtime pm delay to replace default */
+ 	shost->rpm_autosuspend_delay = MTK_RPM_AUTOSUSPEND_DELAY_MS;
+@@ -1720,24 +1753,25 @@ static void ufs_mtk_config_scaling_param(struct ufs_hba *hba,
+ 	hba->vps->ondemand_data.downdifferential = 20;
+ }
+ 
+-/**
+- * ufs_mtk_clk_scale - Internal clk scaling operation
+- *
+- * MTK platform supports clk scaling by switching parent of ufs_sel(mux).
+- * The ufs_sel downstream to ufs_ck which feeds directly to UFS hardware.
+- * Max and min clocks rate of ufs_sel defined in dts should match rate of
+- * "ufs_sel_max_src" and "ufs_sel_min_src" respectively.
+- * This prevent changing rate of pll clock that is shared between modules.
+- *
+- * @hba: per adapter instance
+- * @scale_up: True for scaling up and false for scaling down
+- */
+-static void ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
++static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
+ {
  	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
  	struct ufs_mtk_clk *mclk = &host->mclk;
  	struct ufs_clk_info *clki = mclk->ufs_sel_clki;
-+	struct ufs_clk_info *fde_clki = mclk->ufs_fde_clki;
- 	struct regulator *reg;
- 	int volt, ret = 0;
- 	bool clk_bind_vcore = false;
-+	bool clk_fde_scale = false;
- 
- 	if (!hba->clk_scaling.is_initialized)
- 		return;
- 
--	if (!clki)
-+	if (!clki || !fde_clki)
- 		return;
- 
- 	reg = host->mclk.reg_vcore;
-@@ -1773,6 +1789,9 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 	if (reg && volt != 0)
- 		clk_bind_vcore = true;
- 
-+	if (mclk->ufs_fde_max_clki && mclk->ufs_fde_min_clki)
-+		clk_fde_scale = true;
+-	int ret = 0;
++	struct regulator *reg;
++	int volt, ret = 0;
++	bool clk_bind_vcore = false;
 +
++	if (!hba->clk_scaling.is_initialized)
++		return;
++
++	if (!clki)
++		return;
++
++	reg = host->mclk.reg_vcore;
++	volt = host->mclk.vcore_volt;
++	if (reg && volt != 0)
++		clk_bind_vcore = true;
+ 
  	ret = clk_prepare_enable(clki->clk);
  	if (ret) {
- 		dev_info(hba->dev,
-@@ -1780,6 +1799,15 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 		return;
+@@ -1747,20 +1781,75 @@ static void ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
  	}
  
-+	if (clk_fde_scale) {
-+		ret = clk_prepare_enable(fde_clki->clk);
-+		if (ret) {
-+			dev_info(hba->dev,
-+				 "fde clk_prepare_enable() fail, ret: %d\n", ret);
-+			return;
-+		}
-+	}
-+
  	if (scale_up) {
- 		if (clk_bind_vcore) {
- 			ret = regulator_set_voltage(reg, volt, INT_MAX);
-@@ -1795,7 +1823,28 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
- 				ret);
- 		}
-+
-+		if (clk_fde_scale) {
-+			ret = clk_set_parent(fde_clki->clk,
-+				mclk->ufs_fde_max_clki->clk);
++		if (clk_bind_vcore) {
++			ret = regulator_set_voltage(reg, volt, INT_MAX);
 +			if (ret) {
 +				dev_info(hba->dev,
-+					"Failed to set fde clk mux, ret = %d\n",
-+					ret);
-+			}
-+		}
- 	} else {
-+		if (clk_fde_scale) {
-+			ret = clk_set_parent(fde_clki->clk,
-+				mclk->ufs_fde_min_clki->clk);
-+			if (ret) {
-+				dev_info(hba->dev,
-+					"Failed to set fde clk mux, ret = %d\n",
-+					ret);
++					"Failed to set vcore to %d\n", volt);
 +				goto out;
 +			}
 +		}
 +
+ 		ret = clk_set_parent(clki->clk, mclk->ufs_sel_max_clki->clk);
+-		clki->curr_freq = clki->max_freq;
++		if (ret) {
++			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
++				ret);
++		}
+ 	} else {
  		ret = clk_set_parent(clki->clk, mclk->ufs_sel_min_clki->clk);
- 		if (ret) {
- 			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
-@@ -1814,6 +1863,9 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
+-		clki->curr_freq = clki->min_freq;
+-	}
++		if (ret) {
++			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
++				ret);
++			goto out;
++		}
  
- out:
+-	if (ret) {
+-		dev_info(hba->dev,
+-			 "Failed to set ufs_sel_clki, ret: %d\n", ret);
++		if (clk_bind_vcore) {
++			ret = regulator_set_voltage(reg, 0, INT_MAX);
++			if (ret) {
++				dev_info(hba->dev,
++					"failed to set vcore to MIN\n");
++			}
++		}
+ 	}
+ 
++out:
  	clk_disable_unprepare(clki->clk);
++}
 +
-+	if (clk_fde_scale)
-+		clk_disable_unprepare(fde_clki->clk);
++/**
++ * ufs_mtk_clk_scale - Internal clk scaling operation
++ *
++ * MTK platform supports clk scaling by switching parent of ufs_sel(mux).
++ * The ufs_sel downstream to ufs_ck which feeds directly to UFS hardware.
++ * Max and min clocks rate of ufs_sel defined in dts should match rate of
++ * "ufs_sel_max_src" and "ufs_sel_min_src" respectively.
++ * This prevent changing rate of pll clock that is shared between modules.
++ *
++ * @hba: per adapter instance
++ * @scale_up: True for scaling up and false for scaling down
++ */
++static void ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
++{
++	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
++	struct ufs_mtk_clk *mclk = &host->mclk;
++	struct ufs_clk_info *clki = mclk->ufs_sel_clki;
++
++	if (host->clk_scale_up == scale_up)
++		goto out;
++
++	if (scale_up)
++		_ufs_mtk_clk_scale(hba, true);
++	else
++		_ufs_mtk_clk_scale(hba, false);
+ 
++	host->clk_scale_up = scale_up;
++
++	/* Must always set before clk_set_rate() */
++	if (scale_up)
++		clki->curr_freq = clki->max_freq;
++	else
++		clki->curr_freq = clki->min_freq;
++out:
+ 	trace_ufs_mtk_clk_scale(clki->name, scale_up, clk_get_rate(clki->clk));
  }
  
- /**
 diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index 3212d2a73953..37e44378e527 100644
+index ba93ef7588c3..3212d2a73953 100644
 --- a/drivers/ufs/host/ufs-mediatek.h
 +++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -149,6 +149,9 @@ struct ufs_mtk_clk {
+@@ -149,6 +149,8 @@ struct ufs_mtk_clk {
  	struct ufs_clk_info *ufs_sel_clki; /* Mux */
  	struct ufs_clk_info *ufs_sel_max_clki; /* Max src */
  	struct ufs_clk_info *ufs_sel_min_clki; /* Min src */
-+	struct ufs_clk_info *ufs_fde_clki; /* Mux */
-+	struct ufs_clk_info *ufs_fde_max_clki; /* Max src */
-+	struct ufs_clk_info *ufs_fde_min_clki; /* Min src */
- 	struct regulator *reg_vcore;
- 	int vcore_volt;
++	struct regulator *reg_vcore;
++	int vcore_volt;
  };
+ 
+ struct ufs_mtk_hw_ver {
+@@ -178,6 +180,7 @@ struct ufs_mtk_host {
+ 	bool mphy_powered_on;
+ 	bool unipro_lpm;
+ 	bool ref_clk_enabled;
++	bool clk_scale_up;
+ 	u16 ref_clk_ungating_wait_us;
+ 	u16 ref_clk_gating_wait_us;
+ 	u32 ip_ver;
 -- 
 2.45.2
 
