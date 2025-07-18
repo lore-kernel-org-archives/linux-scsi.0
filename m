@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FE0D1A8F97;
-	Fri, 18 Jul 2025 07:15:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A924D11CAF;
+	Fri, 18 Jul 2025 07:17:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752822947; cv=none; b=o+wodlWsvLTl/dqW91mXa/f301d6/VQfErQ4gXaDrLAc2U06VKITEIb9wV5u86+isHEC2wdSqljX8nWLNUu3OV5wG/pCQbIWd6LG5kpHbChxXiGN6AD/IuXkRv4PV+cl+yJwcLxNk7cO0eXZ2wPUWUp3xAWts5HNpBYOHsEYuxo=
+	t=1752823032; cv=none; b=qDf3uv79gDRle+ABrUl+x1oB6i5gzCjak+7ike3Hta6NKWbFoOH0scgsYxezlpWmlxEfwR18sq4Zf8WnKJ5H7On6/qNIxC5/L2EA2TTymek1T6wxZYHNh61S1cZhfqGY9uij+YcZpg3izsnp9Kfad9QwAcbDVAgpsqQMS8eGt7o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752822947; c=relaxed/simple;
-	bh=xevuuyn6rIUbMJbEs/q63q1rNzMUeVVOGcNjY0l544k=;
+	s=arc-20240116; t=1752823032; c=relaxed/simple;
+	bh=lhxgFIISR09/+ba0vbYgCK7j2KdfyZ9bihwzSEth0HI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hepWP0g0l1OfhBTOK3iRIlQ3hLu8yeXtEi/qKwKAxBvgJpCDPzgBXe9DEFv3h3H4wmoCPD/Q3hSgq5vABWp88phUOSYWV3GnhKFv6EVRMUACqM+K+EupX92bue1XVdS1W+Dq+vB6mKHQXxbIT8SghJcGtPE2MvU6hPuoUWbthq4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MRu94qEE; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=mf3VAX1Tqtt62wusbgJIVgxiHFopZzCZnR9v3BAjCWgsd83jw+cv/6ZJ7zT664ON+LICZ5dKTN+T+Pz7UC/IpDGdxcfE4QeCOalPDy48hk2lwmIOYWLhqcazDuxOfZdrfx15Q2b7lOzuYGTTi2FQM5+rilDKicDSUNN/fg8YTuc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=vAUqyOdX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MRu94qEE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 26DF6C4CEED;
-	Fri, 18 Jul 2025 07:15:46 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="vAUqyOdX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93A30C4CEED;
+	Fri, 18 Jul 2025 07:17:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752822946;
-	bh=xevuuyn6rIUbMJbEs/q63q1rNzMUeVVOGcNjY0l544k=;
+	s=k20201202; t=1752823032;
+	bh=lhxgFIISR09/+ba0vbYgCK7j2KdfyZ9bihwzSEth0HI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=MRu94qEESdMCEpmPMg8IGrgvU57x6+EtXB7uvtBCoBCWVcdA1LrvATQr3m/YWxQV6
-	 l7JPS6eKQyPEmvx+boTTlthnU+4dDLvJq6qv29PId7gZ4SelLg5oZDFUPE/BGtvNre
-	 F64dDcRIvJO9dN33JyqfYvSEM1JeqTwHiKmQo7NkVu9s6BDurtB+KDhOmNBl5ES7h2
-	 bCgPxhPi7lw/Qearj4OvwpK4jrmgHohYNJJGWiMIq1KmuKzKTpVG2ccoTs2WrZkeKZ
-	 52R/QJk3/P8AxX2cKGeB/xIPXJ43ChygQ5Sn++biQYVFtVwrjMPRNM7H/qdRdSz9/z
-	 ZUHvBG0Xzstbg==
-Message-ID: <27e39d44-430c-42fd-81cc-a36fc0191d0d@kernel.org>
-Date: Fri, 18 Jul 2025 16:15:45 +0900
+	b=vAUqyOdX87o//SaENfyQ5xT7MvqA7j4yXVQ3BIOpSZPzFUbCNM4oVfjknSWuS67bI
+	 HBldtKVqHXOAG0iqA8XAksYomjk4ZDAZMzPI2N1bf5sBzoPaM/XFzGsAosE1j03vQD
+	 V5+dFerr0JdR2d9QmAMSHcAgQOrW4H/hvSNsnVuxVuVmbh4f5gv5UA2OxHIjyrq4h9
+	 7Fxu1vdI7vruxU8bxqo30t+KMetG8qP3pxMJ4nlq5Pmu9sA9awMfS4wmSOA5ByP3Vz
+	 X7FKxT5lOUzB80S6bL87NIQ2d0drcSe8dr3T9e/2pMQQznJaIufS4pLe5+y/2zi013
+	 B2dvMmikvuBZA==
+Message-ID: <d53b460c-5347-41ed-a60d-0b7cf4e71024@kernel.org>
+Date: Fri, 18 Jul 2025 16:17:10 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,85 +35,121 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v21 05/12] blk-zoned: Move code from
- disk_zone_wplug_add_bio() into its caller
+Subject: Re: [PATCH v21 06/12] blk-zoned: Introduce a loop in
+ blk_zone_wplug_bio_work()
 To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
  Christoph Hellwig <hch@lst.de>
 References: <20250717205808.3292926-1-bvanassche@acm.org>
- <20250717205808.3292926-6-bvanassche@acm.org>
+ <20250717205808.3292926-7-bvanassche@acm.org>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20250717205808.3292926-6-bvanassche@acm.org>
+In-Reply-To: <20250717205808.3292926-7-bvanassche@acm.org>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 7/18/25 05:58, Bart Van Assche wrote:
-> Move the following code into the only caller of disk_zone_wplug_add_bio():
->  - The code for clearing the REQ_NOWAIT flag.
->  - The code that sets the BLK_ZONE_WPLUG_PLUGGED flag.
->  - The disk_zone_wplug_schedule_bio_work() call.
-> 
-> No functionality has been changed.
-> 
-> This patch prepares for zoned write pipelining by removing the code from
-> disk_zone_wplug_add_bio() that does not apply to all zoned write pipelining
-> bio processing cases.
+> Prepare for submitting multiple bios from inside a single
+> blk_zone_wplug_bio_work() call. No functionality has been changed.
 > 
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-
-[...]
-
-> @@ -993,6 +976,7 @@ static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int nr_segs)
->  {
->  	struct gendisk *disk = bio->bi_bdev->bd_disk;
->  	sector_t sector = bio->bi_iter.bi_sector;
-> +	bool schedule_bio_work = false;
->  	struct blk_zone_wplug *zwplug;
->  	gfp_t gfp_mask = GFP_NOIO;
->  	unsigned long flags;
-> @@ -1039,12 +1023,16 @@ static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int nr_segs)
->  	 * Add REQ_NOWAIT BIOs to the plug list to ensure that we will not see a
->  	 * BLK_STS_AGAIN failure if we let the BIO execute.
->  	 */
-> -	if (bio->bi_opf & REQ_NOWAIT)
-> -		goto plug;
-> +	if (bio->bi_opf & REQ_NOWAIT) {
-> +		bio->bi_opf &= ~REQ_NOWAIT;
-> +		if (!(zwplug->flags & BLK_ZONE_WPLUG_PLUGGED))
-> +			goto plug;
-
-See below.
-
-> +		goto add_to_bio_list;
-> +	}
+> ---
+>  block/blk-zoned.c | 72 +++++++++++++++++++++++------------------------
+>  1 file changed, 36 insertions(+), 36 deletions(-)
+> 
+> diff --git a/block/blk-zoned.c b/block/blk-zoned.c
+> index 8fe6e545f300..6ef53f78fa3b 100644
+> --- a/block/blk-zoned.c
+> +++ b/block/blk-zoned.c
+> @@ -1283,47 +1283,47 @@ static void blk_zone_wplug_bio_work(struct work_struct *work)
+>  	struct blk_zone_wplug *zwplug =
+>  		container_of(work, struct blk_zone_wplug, bio_work);
+>  	struct block_device *bdev;
+> -	unsigned long flags;
+>  	struct bio *bio;
 >  
->  	/* If the zone is already plugged, add the BIO to the plug BIO list. */
->  	if (zwplug->flags & BLK_ZONE_WPLUG_PLUGGED)
-> -		goto plug;
-> +		goto add_to_bio_list;
->  
->  	if (!blk_zone_wplug_prepare_bio(zwplug, bio)) {
->  		spin_unlock_irqrestore(&zwplug->lock, flags);
-> @@ -1060,7 +1048,13 @@ static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int nr_segs)
->  	return false;
->  
->  plug:
-> +	zwplug->flags |= BLK_ZONE_WPLUG_PLUGGED;
-> +	schedule_bio_work = true;
+> -	/*
+> -	 * Submit the next plugged BIO. If we do not have any, clear
+> -	 * the plugged flag.
+> -	 */
+> -	spin_lock_irqsave(&zwplug->lock, flags);
+> -
+> +	do {
+>  again:
+> -	bio = bio_list_pop(&zwplug->bio_list);
+> -	if (!bio) {
+> -		zwplug->flags &= ~BLK_ZONE_WPLUG_PLUGGED;
+> -		spin_unlock_irqrestore(&zwplug->lock, flags);
+> -		goto put_zwplug;
+> -	}
+> -
+> -	trace_blk_zone_wplug_bio(zwplug->disk->queue, zwplug->zone_no,
+> -				 bio->bi_iter.bi_sector, bio_sectors(bio));
+> -
+> -	if (!blk_zone_wplug_prepare_bio(zwplug, bio)) {
+> -		blk_zone_wplug_bio_io_error(zwplug, bio);
+> -		goto again;
+> -	}
+> -
+> -	spin_unlock_irqrestore(&zwplug->lock, flags);
+> +		/*
+> +		 * Submit the next plugged BIO. If we do not have any, clear
+> +		 * the plugged flag.
+> +		 */
+> +		scoped_guard(spinlock_irqsave, &zwplug->lock) {
 
-Since there is only a single "goto plug", I would simply move the 2 lines above
-together with the goto plug and replace that goto with goto add_to_bio_list.
+I am really not a fan of this. It adds one level of indentation without making
+the code easier to read.
 
+> +			bio = bio_list_pop(&zwplug->bio_list);
+> +			if (!bio) {
+> +				zwplug->flags &= ~BLK_ZONE_WPLUG_PLUGGED;
+> +				goto put_zwplug;
+> +			}
 > +
-> +add_to_bio_list:
->  	disk_zone_wplug_add_bio(disk, zwplug, bio, nr_segs);
-> +	if (schedule_bio_work)
-> +		disk_zone_wplug_schedule_bio_work(disk, zwplug);
+> +			trace_blk_zone_wplug_bio(zwplug->disk->queue,
+> +						 zwplug->zone_no,
+> +						 bio->bi_iter.bi_sector,
+> +						 bio_sectors(bio));
+> +
+> +			if (!blk_zone_wplug_prepare_bio(zwplug, bio)) {
+> +				blk_zone_wplug_bio_io_error(zwplug, bio);
+> +				goto again;
+> +			}
+> +		}
 >  
->  	spin_unlock_irqrestore(&zwplug->lock, flags);
+> -	bdev = bio->bi_bdev;
+> +		bdev = bio->bi_bdev;
 >  
+> -	/*
+> -	 * blk-mq devices will reuse the extra reference on the request queue
+> -	 * usage counter we took when the BIO was plugged, but the submission
+> -	 * path for BIO-based devices will not do that. So drop this extra
+> -	 * reference here.
+> -	 */
+> -	if (bdev_test_flag(bdev, BD_HAS_SUBMIT_BIO)) {
+> -		bdev->bd_disk->fops->submit_bio(bio);
+> -		blk_queue_exit(bdev->bd_disk->queue);
+> -	} else {
+> -		blk_mq_submit_bio(bio);
+> -	}
+> +		/*
+> +		 * blk-mq devices will reuse the extra reference on the request
+> +		 * queue usage counter we took when the BIO was plugged, but the
+> +		 * submission path for BIO-based devices will not do that. So
+> +		 * drop this extra reference here.
+> +		 */
+> +		if (bdev_test_flag(bdev, BD_HAS_SUBMIT_BIO)) {
+> +			bdev->bd_disk->fops->submit_bio(bio);
+> +			blk_queue_exit(bdev->bd_disk->queue);
+> +		} else {
+> +			blk_mq_submit_bio(bio);
+> +		}
+> +	} while (0);
+>  
+>  put_zwplug:
+>  	/* Drop the reference we took in disk_zone_wplug_schedule_bio_work(). */
 
 
 -- 
