@@ -1,48 +1,48 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D7B529B8C2;
-	Fri, 18 Jul 2025 15:54:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B3822E336F;
+	Fri, 18 Jul 2025 16:30:00 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752854066; cv=none; b=iwohI4aa4usvb84E/Y6X6+3wn3GhtN7/m/jI8XzmrNLqvIDXrHBAGJ67EDXaVUeAGpm41WXgcd34/YSxvteMYDZ61olrWIXqYYn29oD3gl/Xq9ZMxxrACw0iDsPvukBPNTcTUWGYHi0weAs0je20c81F/6DcKQ7lN4XRu4/PLu8=
+	t=1752856202; cv=none; b=cFX+7icsNdRIJrITNaKhA7l6cXwKY5Dfhm+gu0jug2xsjxC3I5kgirX8gAXLP6yoWeHVRYe10iHH71pro/2PCJ2D0mCGcSzx3eOS69PisUxZyGsrJHbDiKaIhBrvycgogmhJdNo/VSH0dypvay/FXFGR1ug1vAD84obrdlrq2VQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752854066; c=relaxed/simple;
-	bh=4XDQPkNdV4slch1Zvmvcajx94L6Rki4tub6PxZD5o4s=;
+	s=arc-20240116; t=1752856202; c=relaxed/simple;
+	bh=77BaOVua4mwNSOChTFzpb12lpS81KOvl66N8JsEf8s0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BGOgFts2G9GLV71MWsJIurHs4dPZcgzamiU5tIZVuyOxEkqyAP5UUH2g75JFbctK7s94Si8NU2NvHcExedv/4dOqtEq3SU6KaaChqgox1XmoggU37E+igVOS5LO+s6J3t4W0IeSjHQZqo1K5psjhunJ7z5/Nxygd0GEyhSkaHms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xr5KkONc; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=hhY1E7ltmKu7QOtNKvHGaFVC60Ui41rn0hlxG1B5/PlpJm5UWFYvMbvd1e9TjyzrDyJWpHNE8oYjEsV4mRfABQbm6RBglKHZeiargFGSnjkgStRD4B6zr0vGhCbmpFWc+aSk/JhykZKfG+q+Ar1QFAWsSlQPdEgRZJFO+eQsVvA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mFm6c9si; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xr5KkONc"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mFm6c9si"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bkDr03VcNzm0yVk;
-	Fri, 18 Jul 2025 15:54:24 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bkFd40sp8zm0ySb;
+	Fri, 18 Jul 2025 16:30:00 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1752854062; x=1755446063; bh=W63/koGubiYj2tWQlzrfrG79
-	F7ylsbnCGV3lGigxmUg=; b=xr5KkONcPrs8yhkPWPg2y4uAI+PVIycjOSmY+M2K
-	gL/1Sv0OGvViOayA0YWlX1SHC4ckQjLGoCiiwr8ol3u90CwPqVgzrMTL67vG6h+q
-	qWNEMfF8pK6qK35JUp66dr6XnSBlqXm5ySqXfqwvZIB/xPSWDYc3gOlAGomandz9
-	8iCgV8s1UvR+68Ch/9nyMSa4aejYW91Q0oBi0OazqMCTy/AMs/ZPkVb5VZxGrEc9
-	ip1uX1fenrA1ugTBlI4A/mLujozFa6e9xYCobt5ETpr/KZZZ3Po3HFZ3AK5OzFay
-	9Yc2a8gysH5pqSoaMhykd3G9y+E+f9QZFUoJyWOzQl6P4g==
+	 s=mr01; t=1752856198; x=1755448199; bh=qiSLpOh9TBJ54FgAH95p5dXM
+	+Z1M3poauybTgmZBR3g=; b=mFm6c9sih6mbCEOJ4XS6glAadWN3ASCYuYahTMvC
+	Jg8P7lqI39pyqw0uSuJdGkcKeIVebALGNe0rhxniwFQ/QjwQ9gctONu3xZIeX2Lm
+	OJ5+akjDlWAkRMyxMkRIyvjofWL2iSoFp5rcfIAh02qyMWGFo8mqFRVjNXi6Bx7Q
+	Q8vPzaJ24ZKN2tULKHLAJ2IdAilyNGyhqN2dBOXW4ry66qo7PKWcYDbpFYt0rTyh
+	gkn8rCrjI5FTMpGRluFaOHk/ty1i9Qjfo4wBxZR4n01WM2aNvN/JB6KJB8gj6ZLZ
+	g+aGNad0KJY20rYdF0Q+p/SogOShsIBSZuqW9mI0aiXKsA==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id QinSqasYWzzw; Fri, 18 Jul 2025 15:54:22 +0000 (UTC)
+ id Es9HjYdIKYTS; Fri, 18 Jul 2025 16:29:58 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bkDqv2l6Qzm0yV3;
-	Fri, 18 Jul 2025 15:54:18 +0000 (UTC)
-Message-ID: <2d06bfe0-0ea6-4c52-83fa-e933557ea399@acm.org>
-Date: Fri, 18 Jul 2025 08:54:17 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bkFcz59Pzzm0yTN;
+	Fri, 18 Jul 2025 16:29:54 +0000 (UTC)
+Message-ID: <e51d282f-b07a-4c4d-b83d-b4fb5061ba12@acm.org>
+Date: Fri, 18 Jul 2025 09:29:53 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,45 +50,88 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v21 03/12] blk-zoned: Add an argument to
- blk_zone_plug_bio()
+Subject: Re: [PATCH v21 07/12] blk-zoned: Support pipelining of zoned writes
 To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
  Christoph Hellwig <hch@lst.de>
 References: <20250717205808.3292926-1-bvanassche@acm.org>
- <20250717205808.3292926-4-bvanassche@acm.org>
- <eae89738-44e6-46ea-ada6-665fdfd8db07@kernel.org>
+ <20250717205808.3292926-8-bvanassche@acm.org>
+ <bde0f755-eb69-4799-a9dd-35bf330f78ab@kernel.org>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <eae89738-44e6-46ea-ada6-665fdfd8db07@kernel.org>
+In-Reply-To: <bde0f755-eb69-4799-a9dd-35bf330f78ab@kernel.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
+On 7/18/25 12:38 AM, Damien Le Moal wrote:
+> On 7/18/25 05:58, Bart Van Assche wrote:
+>> @@ -768,14 +771,19 @@ static bool blk_zone_wplug_handle_reset_all(struct bio *bio)
+>>   static void disk_zone_wplug_schedule_bio_work(struct gendisk *disk,
+>>   					      struct blk_zone_wplug *zwplug)
+>>   {
+>> +	lockdep_assert_held(&zwplug->lock);
+> 
+> Unrelated change. Please move this to a prep patch.
 
-On 7/18/25 12:13 AM, Damien Le Moal wrote:
-> I still do not understand why this patch is needed because you can get the
-> current CPU submitting the BIO inside blk_zone_plug_bio() with
-> raw_smp_processor_id(). That CPU ID should be the same as the cached request
-> that we will use only if the BIO is not going through the BIO work, that is, if
-> it is the first write BIO in-flight for the zone.
+I will drop this change since I don't really need this change.
 
-I do not agree with the above. With CONFIG_PREEMPT enabled, migration to 
-another CPU may happen after a cached request has been allocated and
-before the zoned block device code is called. This can be prevented by
-surrounding code with preempt_disable() and preempt_enable(). However, I
-don't think that we want to do this in submit_bio() since there is code
-in submit_bio() that may sleep (bio_queue_enter()) and sleeping with
-preemption disabled is not allowed.
+>> +
+>>   	/*
+>>   	 * Take a reference on the zone write plug and schedule the submission
+>>   	 * of the next plugged BIO. blk_zone_wplug_bio_work() will release the
+>>   	 * reference we take here.
+>>   	 */
+>> -	WARN_ON_ONCE(!(zwplug->flags & BLK_ZONE_WPLUG_PLUGGED));
+> 
+> Why do you remove this warning ?
 
-Is there perhaps something that I'm overlooking or misunderstanding?
+This warning probably can be retained. I will look into restoring it.
 
-> Furthermore, for the DM case, you pass a CPU of "-1", but if the DM target needs
-> zone append emulation, it will use zone write plugging. So the same control as
-> for blk-mq is needed.
+>> @@ -972,9 +980,12 @@ static bool blk_zone_wplug_prepare_bio(struct blk_zone_wplug *zwplug,
+>>   	return true;
+>>   }
+>>   
+>> -static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int nr_segs)
+>> +static bool blk_zone_wplug_handle_write(struct bio *bio, unsigned int nr_segs,
+>> +					int from_cpu)
+>>   {
+>>   	struct gendisk *disk = bio->bi_bdev->bd_disk;
+>> +	const bool ordered_hwq = bio_op(bio) != REQ_OP_ZONE_APPEND &&
+>> +		disk->queue->limits.features & BLK_FEAT_ORDERED_HWQ;
+> 
+> This is not correct. If the BIO is a zone append and
+> blk_zone_wplug_handle_write() is called, it means that we need to handle the BIO
+> using zone append emulation, that is, the BIO will be a regular write. So you
+> must treat it as if it originally was a regular write.
 
-This "-1" means that it is not known from which CPU a request will be
-allocated since a migration to another CPU may happen between the
-blk_zone_plug_bio() call and request allocation.
+Hmm ... my understanding is that zone append emulation and also the
+conversion of REQ_OP_ZONE_APPEND into REQ_OP_WRITE happens after the
+above code has been executed, namely by blk_zone_wplug_prepare_bio().
+ From that function:
+
+	[ ... ]
+	if (bio_op(bio) == REQ_OP_ZONE_APPEND) {
+		bio->bi_opf &= ~REQ_OP_MASK;
+		bio->bi_opf |= REQ_OP_WRITE | REQ_NOMERGE;
+	[ ... ]
+
+Did I perhaps misunderstand your comment?
+
+>> +	if (refcount_read(&zwplug->ref) == 2)
+>> +		zwplug->from_cpu = -1;
+> 
+> This needs a comment explaining why you use the plug ref count instead of
+> unconditionally clearing from_cpu.
+
+I'm considering to add the following comment:
+
+  	/*
+	 * zwplug->from_cpu must not change while one or more writes are pending
+	 * for the zone associated with zwplug. zwplug->ref is 2 when the plug
+	 * is unused (one reference taken when the plug was allocated and
+	 * another reference taken by the caller context). Reset
+	 * zwplug->from_cpu if no more writes are pending.
+	 */
 
 Thanks,
 
