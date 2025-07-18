@@ -1,79 +1,167 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E6D854652
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 04:36:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C623C191F91
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 06:59:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752813370; cv=none; b=kjZkgUK85cqwOR7ZHH27SdZ5FPOwfOdynb3+iJAoaqkbqKO4icqzl+XGM8npJS6FQbUg6gCvTOfF/qqOdGAxQeE2gQiLFWkGh2pJJNYzwc7n78iVLUs5DESrqqr6fraxZWFxUaOyoCosHoDVnH+ww9ez1kccIQ/agt0vpapl1Is=
+	t=1752821976; cv=none; b=OrbKKT9Z18wmh4swWGJMvcpgDFU+4L5Zh2QOuQEhU/xb9UvaIxOXpH7pFAVh4bXy47pfuXOWx9PLReMagnSb9EKGMOpreZstLcoKohKr1ldl9KU6QfhKk+Iefc8Kj8ZiGQC2J8109cFbPKeA+GOMfVREKFze0ys8G4dkMt63Nrc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752813370; c=relaxed/simple;
-	bh=HIkwdtNOIjHkUKYV1Qzw17ucCZW9Kb2S4VyekkUSPrQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WfXKJ8Ly/OiFURI71ZFuVFEQlznrzkf7F454ASXkpSjossSePPVdZH8eiCq0B+OUpKu6Dspn/34R4yI7pdqvZajFd9oWy35jubcbE7N3dW5xdiT34AhMcX38eRWkKlufAtkElFvHuwDNXRfa4WU13nXEZuXV2ePdq6l+Ud0JBgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=dOdyGrAz; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1752821976; c=relaxed/simple;
+	bh=VVv8bUjuizjQTqKtBbVLo6PX03c9jmHMKzceqBx6Aho=;
+	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=Yqs5ZC2KK78z70tHzyHXID69cdvi0h/zanzeF3wJwaxQ/jCCgJPr+aS27CnzabB9eWso0bUZNg7BpR5le8/C7zBZ405PifHIMcyKYX3zxSAmdL3jjeVjd/q3yJsAQ7mff230ovK6j5Mr42IF1i+N/y5yggRxwKX3hev9gYPaomA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Lv81SI4J; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="dOdyGrAz"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B8DA2C4CEF6;
-	Fri, 18 Jul 2025 04:36:08 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1752813369;
-	bh=HIkwdtNOIjHkUKYV1Qzw17ucCZW9Kb2S4VyekkUSPrQ=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=dOdyGrAzF8uTzO9SJukuUAvAAtNQ0koFQiAtqL3JyZPSrgoySBvP7NOkHbX7UHqP0
-	 OLwLa5tbN/iHt7eLb/6MwF8u+rXkgZ0KVHraB9ygx3awz5yD4Oo0WNwoo2fh4y//i+
-	 qK7ryp1tfbXt+QZxIxvHAvYtkko8yp4OBm7Md9lShq2dnj8hbLqxtQXYhuID8tXByG
-	 T/2HjQuNBQMpFdnyWPU7y3Q72IgI2uqS9N66POo1SfU7uhWjZu8X4N9pmK3UAtcvgr
-	 11R8f6I50/SSlMYSfHQmojJKvyec3xM/EKW/ZEz+Hu/Q+7c905jAPtZxN3QaXEzUlE
-	 CgqYQWZZ8r0ww==
-Message-ID: <c0a842a6-2028-4cac-b33b-fb38801a457a@kernel.org>
-Date: Fri, 18 Jul 2025 13:36:07 +0900
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Lv81SI4J"
+Received: from epcas1p3.samsung.com (unknown [182.195.41.47])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250718065931epoutp014edbc1efa82754399a5a95627fe9475d~TRkvfPC_f0664806648epoutp01d
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 06:59:31 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250718065931epoutp014edbc1efa82754399a5a95627fe9475d~TRkvfPC_f0664806648epoutp01d
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1752821971;
+	bh=jOmwYmthexibsqK4/+J+LRPyQZze0KHjrKlRRRPSnpE=;
+	h=From:To:In-Reply-To:Subject:Date:References:From;
+	b=Lv81SI4JjewOI8y3lWBTmk07DQSSExcnM3VUahynMP0lt+QRJbJMepXJIAC6kipfJ
+	 1mqiuCRlQSVFXsXVCNVDerGPV3IH5Q67rUiGrGb8qRflIdsGLySmInpKoKpXo843vL
+	 vaZm/WGqm6v1zWGtE3jrZtWA3wVgC5+evjpcd0OQ=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas1p1.samsung.com (KnoxPortal) with ESMTPS id
+	20250718065930epcas1p166233541bcf7bc05c1290a64f4e6c3df~TRku2_gaa2589125891epcas1p1Q;
+	Fri, 18 Jul 2025 06:59:30 +0000 (GMT)
+Received: from epcas1p4.samsung.com (unknown [182.195.38.241]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4bk0yp3n8Yz2SSKd; Fri, 18 Jul
+	2025 06:59:30 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
+	20250718065929epcas1p1a635ab6fe47253d9a72913f0e6f4afba~TRktoV2Rv2840428404epcas1p1S;
+	Fri, 18 Jul 2025 06:59:29 +0000 (GMT)
+Received: from sh043lee04 (unknown [10.253.101.72]) by epsmtip2.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250718065929epsmtip23ad10baab04ca6a10d9f3291c919d230~TRktkJVme3249832498epsmtip2Y;
+	Fri, 18 Jul 2025 06:59:29 +0000 (GMT)
+From: "Seunghui Lee" <sh043.lee@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <James.Bottomley@HansenPartnership.com>,
+	<martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+	<sdriver.sec@samsung.com>
+In-Reply-To: <2743ce40-72fa-4c87-a2cc-528b51418aec@acm.org>
+Subject: RE: [PATCH v2] ufs: core: Use link recovery when the h8 exit
+ failure during runtime resume
+Date: Fri, 18 Jul 2025 15:59:29 +0900
+Message-ID: <000401dbf7b1$81b61ef0$85225cd0$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] Revert "scsi: pm80xx: Do not use libsas port ID"
-To: Niklas Cassel <cassel@kernel.org>, Jack Wang
- <jinpu.wang@cloud.ionos.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Igor Pylypiv <ipylypiv@google.com>, Terrence Adams <tadamsjr@google.com>,
- linux-scsi@vger.kernel.org
-References: <20250717165606.3099208-2-cassel@kernel.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20250717165606.3099208-2-cassel@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQIyfnsb3T5DgEG2NsXoDWpt/ecQsQK7vKXIAfscmgOzZK698A==
+Content-Language: ko
+X-CMS-MailID: 20250718065929epcas1p1a635ab6fe47253d9a72913f0e6f4afba
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250717081220epcas1p224952b344389e4967beb893297f1ae02
+References: <CGME20250717081220epcas1p224952b344389e4967beb893297f1ae02@epcas1p2.samsung.com>
+	<20250717081213.6811-1-sh043.lee@samsung.com>
+	<2743ce40-72fa-4c87-a2cc-528b51418aec@acm.org>
 
-On 2025/07/18 1:56, Niklas Cassel wrote:
-> This reverts commit 0f630c58e31afb3dc2373bc1126b555f4b480bb2.
-> 
-> Commit 0f630c58e31a ("scsi: pm80xx: Do not use libsas port ID") causes
-> drives behind a SAS enclosure (which is connected to one of the ports
-> on the HBA) to no longer be detected.
-> 
-> Connecting the drives directly to the HBA still works. Thus, the commit
-> only broke the detection of drives behind a SAS enclosure.
-> 
-> Reverting the commit makes the drives behind the SAS enclosure to be
-> detected once again.
-> 
-> The commit log of the offending commit is quite vague, but mentions that:
-> "Remove sas_find_local_port_id(). We can use pm8001_ha->phy[phy_id].port
-> to get the port ID."
-> 
-> This assumption appears false, thus revert the offending commit.
-> 
-> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+> On 7/17/25 1:12 AM, Seunghui Lee wrote:
+> > If the h8 exit fails during runtime resume process, the runtime thread
+> > enters runtime suspend immediately and the error handler operates at
+> > the same time.
+> > It becomes stuck and cannot be recovered through the error handler.
+> > To fix this, use link recovery instead of the error handler.
+> >
+> > Fixes: 4db7a2360597 (=22scsi: ufs: Fix concurrency of error handler and
+> > other error recovery paths=22)
+> > Signed-off-by: Seunghui Lee <sh043.lee=40samsung.com>
+> > ---
+> > Changes from v1:
+> >   * Add the Fixes tag as Beanhuo's requested.
+> > ---
+> >   drivers/ufs/core/ufshcd.c =7C 10 +++++++++-
+> >   1 file changed, 9 insertions(+), 1 deletion(-)
+> >
+> > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> > index 50adfb8b335b..dc2845c32d72 100644
+> > --- a/drivers/ufs/core/ufshcd.c
+> > +++ b/drivers/ufs/core/ufshcd.c
+> > =40=40 -4340,7 +4340,7 =40=40 static int ufshcd_uic_pwr_ctrl(struct ufs=
+_hba *hba,
+> struct uic_command *cmd)
+> >   	hba->uic_async_done =3D NULL;
+> >   	if (reenable_intr)
+> >   		ufshcd_enable_intr(hba, UIC_COMMAND_COMPL);
+> > -	if (ret) =7B
+> > +	if (ret && =21hba->pm_op_in_progress) =7B
+> >   		ufshcd_set_link_broken(hba);
+> >   		ufshcd_schedule_eh_work(hba);
+> >   	=7D
+> > =40=40 -4348,6 +4348,14 =40=40 static int ufshcd_uic_pwr_ctrl(struct uf=
+s_hba
+> *hba, struct uic_command *cmd)
+> >   	spin_unlock_irqrestore(hba->host->host_lock, flags);
+> >   	mutex_unlock(&hba->uic_cmd_mutex);
+> >
+> > +	/*
+> > +	 * If the h8 exit fails during the runtime resume process,
+> > +	 * it becomes stuck and cannot be recovered through the error
+> handler.
+> > +	 * To fix this, use link recovery instead of the error handler.
+> > +	 */
+> > +	if (ret && hba->pm_op_in_progress)
+> > +		ret =3D ufshcd_link_recovery(hba);
+> > +
+> >   	return ret;
+> >   =7D
+>=20
+> There are multiple calls to ufshcd_uic_pwr_ctrl() from outside the runtim=
+e
+> power management callbacks. Hence, hba->pm_op_in_progress may be changed
+> from another thread while ufshcd_uic_pwr_ctrl() is in progress. Hence,
+> ufshcd_uic_pwr_ctrl() calls from outside runtime power management
+> callbacks should be serialized against these callbacks, e.g.
+> by surrounding these calls with pm_runtime_get_sync() and pm_runtime_put(=
+).
+>=20
+> Thanks,
+>=20
+> Bart.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Hi Bart,
 
+Thank you for your opinion.
+I understand what you're concerned about.
 
--- 
-Damien Le Moal
-Western Digital Research
+I've checked multiple calls to ufshcd_uic_pwr_ctrl().
+I think that follow cases looks okay.
+(using rpm get/put, init sequence, synchronize with PM operation sequence)
+Do you have any better idea to cover this issue?
+
+1. ufshcd_send_bsg_uic_cmd()
+ufs_bsg_request()	// using rpm get sync, put
+
+2. __ufshcd_wl_suspend() / __ufshcd_wl_resume()	// runtime sequence
+
+3. ufshcd_change_pwr_mode()
+ufshcd_dme_get_attr()
+	ufshcd_get_max_pwr_mode() from ufshcd_device_init()	// init
+	ufshcd_disable_tx_lcc() from ufshcd_link_startup()	// init
+	ufshcd_is_pwr_mode_restore_needed() from ufshcd_err_handler()	// using rpm=
+ get sync, put
+	ufshcd_quirk_tune_host_pa_tactivate()	// init
+	ufshcd_quirk_override_pa_h8time()		// init
+ufshcd_config_pwr_mode()
+	ufschd_scale_gear()	// synchronize with __ufshcd_wl_resume() / __ufshcd_wl=
+_suspend()
+	ufschd_err_handler()	// using rpm get sync, put
+	ufshcd_post_device_init()	// init
+
