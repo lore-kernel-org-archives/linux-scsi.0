@@ -1,126 +1,100 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBB5229C343
-	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 09:55:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B32282DCF60
+	for <linux-scsi@vger.kernel.org>; Fri, 18 Jul 2025 15:13:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1752832539; cv=none; b=S4BmoVOxSHSN794NEuQqFIxNdAlfU0I5BndEHFVemW2ahe24NRmBaRiG5uhTvQDE27RxCJJ9khNJvQxNjtO5TBElv47G0D6vVdLhaEFU4DdtmOgQjhrvQpencXhSV3sul86w3J1BC+1E7+ulxQjVJl10386KNJeLfABOw1WX0rc=
+	t=1752851606; cv=none; b=to0ePbtWrVsvhMEDaUsc4F01UN2TLkzveE0bEsfA+XeMfPY7tZX2t8k0de28YcMilButQ9Vf38yDATOpqohwibxrXvjK8Vch47BNwGaO5EDrzAgVObB+beiiaQuCjgrK7h99M9R1iGYYYVzjLQNeN2qHStEkvjjJR7WalxBDelE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1752832539; c=relaxed/simple;
-	bh=4PumfZJY3/leEXB2dcabLSdjOSpUIRy92VNfUEYlaYE=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=sgpf0wUFYi/OY1PjVJV4SfdHATuaf5Eh5jvdA6qhETbVHjxI/0B2IVPMc8w3Gj3v6B7ANbREqJ3dtDWB1n/rzsTY/Apw3JZd+SyXJTdOBCCJeEIZvC8U0XASzKm8RpbL85yHjSYAEk9WWv2fdlxjelUrRHZWPegTxyrjeh2ZVuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=QQzX7LxO; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1752851606; c=relaxed/simple;
+	bh=tK99eACdiN8POKehLMTcLRKkz3ETDNCQeKrCHxbYd98=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=IlOq6qL6z57I0A5G6iKf5Xzwu1Ly2XUQe9j8CLoxcPBfiIDO7QEGEpmi2RGPATZ4xJMGmKa9Pqcz/oQ55YQDkVemTTXUq9wjw4gDs7v4+mBoEUQlGubKTmzgFg6RZD/+Lxm5kFQ6XcVHUaITAKHrdzTcnqi7WhmFnZi1cT/T2zQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4cIORkKN; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="QQzX7LxO"
-X-UUID: 554aaffc63bd11f0b33aeb1e7f16c2b6-20250718
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=v6nDzmoHgCuyWSxv2A3tcmY3LGFGpHaIC2x5DgvwL24=;
-	b=QQzX7LxOGuv4JvtsvUniGMXIl8LWcaP1lgNcciaIMLS8S80ULMrL0XFUzaeF2iRFX/GXt1lIplT/zGYC7t/elxfAb6N6jLmItQoSFp+u7PVlASyGZj1rFbG+mvVqVjjM8scBAIXBLsMg1FIIPh96tU5hHGlBGPTpdL4+ahxFx1o=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.2,REQID:21fbdd2a-128e-49d1-8815-68dfc3690b82,IP:0,UR
-	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-25
-X-CID-META: VersionHash:9eb4ff7,CLOUDID:52d5ec0e-6968-429c-a74d-a1cce2b698bd,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
-	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
-	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 554aaffc63bd11f0b33aeb1e7f16c2b6-20250718
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 886627771; Fri, 18 Jul 2025 17:55:27 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Fri, 18 Jul 2025 17:55:26 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Fri, 18 Jul 2025 17:55:26 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
-Subject: [PATCH v2 4/9] ufs: host: mediatek: Handle broken RTC based on DTS setting
-Date: Fri, 18 Jul 2025 17:51:47 +0800
-Message-ID: <20250718095524.682599-5-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250718095524.682599-1-peter.wang@mediatek.com>
-References: <20250718095524.682599-1-peter.wang@mediatek.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4cIORkKN"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bkCwd2YB1zm174K;
+	Fri, 18 Jul 2025 15:13:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1752851598; x=1755443599; bh=ewDHWtsj3AFeozR0rjg1tVfn
+	4EXPf5xtbOK1pz0V3m0=; b=4cIORkKN7DdT0uw0u44dvXDSsopw1fFoWNjvK3SA
+	EKt8oOL/RhQzA1Iat8Qm6rPAHu0PTkw4XjP+tVYXvfJJgmKkMEyWsaXoj3wmBtj3
+	B4msNZRezgW1oqKGmoWo+3vL+f1pMvtbYxwt66xT6MqL/LRhvVDcO5zwu4FQ1+3Y
+	9hlzfxpWYrXmXYVnzKaK0Y6hgQ71OmbpjxFJ1eWF8FsKYSQnHIEpGKPyPVf2Fx5C
+	KII+QyhKKkNO/LVDOGviTwldtiAuI+MVsfdHwJduIrgqKI1nmFZDeJKLRAIEbZW3
+	H3v75vKM4E61TVlrBwkwjCx0aVyRHkRMp6nqfnnqTzigzw==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 1Y1LSqAZk1z0; Fri, 18 Jul 2025 15:13:18 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bkCwH4KxTzm0ySb;
+	Fri, 18 Jul 2025 15:13:02 +0000 (UTC)
+Message-ID: <06cca9bf-e88a-4884-811b-ec103ca6f40f@acm.org>
+Date: Fri, 18 Jul 2025 08:13:01 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/9] ufs: host: mediatek: Remove unnecessary boolean
+ conversion
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+ yi-fan.peng@mediatek.com, qilin.tan@mediatek.com, lin.gui@mediatek.com,
+ tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
+ ed.tsai@mediatek.com
+References: <20250718095524.682599-1-peter.wang@mediatek.com>
+ <20250718095524.682599-2-peter.wang@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250718095524.682599-2-peter.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+On 7/18/25 2:51 AM, peter.wang@mediatek.com wrote:
+> This patch removes unnecessary boolean conversions to ensure consistency
+> with other usages in ufs-mediatek.c. The changes simplify the code by
+> directly returning the result of bitwise operations without converting
+> them to boolean values.
 
-This patch introduces a mechanism to handle broken RTC by checking
-the DTS setting. The configuration is specifically required for
-legacy platform.
+Hmm ... the conversion to boolean still happens but now happens 
+implicitly (by the compiler) instead of explicitly (via !!).
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/host/ufs-mediatek.c | 8 +++++++-
- drivers/ufs/host/ufs-mediatek.h | 2 ++
- 2 files changed, 9 insertions(+), 1 deletion(-)
+> diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+> index 182f58d0c9db..14f0130da653 100644
+> --- a/drivers/ufs/host/ufs-mediatek.c
+> +++ b/drivers/ufs/host/ufs-mediatek.c
+> @@ -96,28 +96,28 @@ static bool ufs_mtk_is_boost_crypt_enabled(struct ufs_hba *hba)
+>   {
+>   	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+>   
+> -	return !!(host->caps & UFS_MTK_CAP_BOOST_CRYPT_ENGINE);
+> +	return (host->caps & UFS_MTK_CAP_BOOST_CRYPT_ENGINE);
+>   }
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index ffc4a27aae7b..5c428061ed77 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -679,6 +679,9 @@ static void ufs_mtk_init_host_caps(struct ufs_hba *hba)
- 	if (of_property_read_bool(np, "mediatek,ufs-rtff-mtcmos"))
- 		host->caps |= UFS_MTK_CAP_RTFF_MTCMOS;
- 
-+	if (of_property_read_bool(np, "mediatek,ufs-broken-rtc"))
-+		host->caps |= UFS_MTK_CAP_MCQ_BROKEN_RTC;
-+
- 	dev_info(hba->dev, "caps: 0x%x", host->caps);
- }
- 
-@@ -1035,8 +1038,11 @@ static int ufs_mtk_init(struct ufs_hba *hba)
- 	shost->rpm_autosuspend_delay = MTK_RPM_AUTOSUSPEND_DELAY_MS;
- 
- 	hba->quirks |= UFSHCI_QUIRK_SKIP_MANUAL_WB_FLUSH_CTRL;
-+
- 	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_INTR;
--	hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_RTC;
-+	if (host->caps & UFS_MTK_CAP_MCQ_BROKEN_RTC)
-+		hba->quirks |= UFSHCD_QUIRK_MCQ_BROKEN_RTC;
-+
- 	hba->vps->wb_flush_threshold = UFS_WB_BUF_REMAIN_PERCENT(80);
- 
- 	if (host->caps & UFS_MTK_CAP_DISABLE_AH8)
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index 474fdec0a880..d78c68676274 100644
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -133,6 +133,8 @@ enum ufs_mtk_host_caps {
- 	UFS_MTK_CAP_DISABLE_MCQ                = 1 << 8,
- 	/* Control MTCMOS with RTFF */
- 	UFS_MTK_CAP_RTFF_MTCMOS                = 1 << 9,
-+
-+	UFS_MTK_CAP_MCQ_BROKEN_RTC             = 1 << 10,
- };
- 
- struct ufs_mtk_crypt_cfg {
--- 
-2.45.2
+How about removing the parentheses too since this patch makes the
+parentheses unnecessary?
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
 
