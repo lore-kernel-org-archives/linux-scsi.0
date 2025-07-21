@@ -1,126 +1,114 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C5C5288C2D
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 08:36:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87511285074
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 08:37:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753087001; cv=none; b=Zsid0sdv191Bip5glHjuO7TBxeUUhN9CY6V9g0CzkLd4f1PuYl9/OGN7C+0DL2x4yLssvCnUMbFoD74hXn/QVZmR6EXS8TC6DOMAU2UB94BlD0Y3CuVoVJ5d+2qzpIfxO7N5s846aUVN1tDvOiO+q9aEWKd6XFC0+yUYSBK563k=
+	t=1753087030; cv=none; b=B+UK6pLmU6R+cDP/+6C3Lj86LBb1x2n/2J9+DieMt/NQRGuh93bi/nIHCO7/KTD9/80Yzyzh+py+TZ5JH6X+sxPGMJdPGLtozABD+3UPxWtigX/eYf4LUZfy2L/1n1Xy0K84YLpPBjRjs2f1R5xZPigvLU7u/a4ftqpfAltqywA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753087001; c=relaxed/simple;
-	bh=FhzVvZ9NSL5ldhpB5A3JG51RFgQ6GHo8pNNtk4v6GEA=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VpygRWgw4T0BzWJGjXbgDS9LpALPA/MafXbzSRijZJQmZrXH3Tp18XnQWShoZ4oeShjn/na5rBTf20xBsPZXC89QLlPDaiXJszrNAq7ywNrUNPoRE5bRSt/GiGyEkNXuLorUHIFkFBjxriBB5c38bP30vnAsFplGAlKO0kBneqM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=BRTNv+F8; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1753087030; c=relaxed/simple;
+	bh=Rl1YOas+fgdSq/Kvz1mZmGoA1VVRBztEtrYFaM8Wj+Y=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=p46N/C/FsLqsEqUphRHYxauidX8r8vidhUt5SW2uArG6w8ib9ecPb2vsoKsN0jcBtWQRZ9rKpxGlfQxWigY5oI+DdctqkNpIdHyBGimxQkRjUNO6DG9Ma0mLtOywOUWEBiLEzdiDzbKhVm37V4jl1IFyy39m20kHhDh0JQE2v6M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=lRB2y0Gv; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="BRTNv+F8"
-X-UUID: cd087b30660d11f0b33aeb1e7f16c2b6-20250721
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=5Pi5P+FwZFfw7EkZYdI0mOEEfVb9ihzQxwHeoxEl064=;
-	b=BRTNv+F86gcmbFOzWDmzWPVsoX+TlYA5pCqJHPUQjmhgjOodPdaCarhA+6JjvRNz63UzGa9UzXF8M75LvelRb7RR49KY9B7PkTa2cb1mgQJ7yUteF+q9u/qf/jtbPpFtuuXC6xOxu/NV7w2FJgnnni+YpPA8t1BfxGVlw292HDE=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.2,REQID:afcacb25-b1ee-4456-bf8b-1a4be4a7f0de,IP:0,UR
-	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-25
-X-CID-META: VersionHash:9eb4ff7,CLOUDID:6d5caa84-a7ec-4748-8ac1-dca5703e241f,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
-	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
-	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: cd087b30660d11f0b33aeb1e7f16c2b6-20250721
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1626611813; Mon, 21 Jul 2025 16:36:30 +0800
-Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Mon, 21 Jul 2025 16:36:30 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Mon, 21 Jul 2025 16:36:29 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
-Subject: [PATCH v3 7/9] ufs: host: mediatek: Add clock scaling query function
-Date: Mon, 21 Jul 2025 16:35:16 +0800
-Message-ID: <20250721083626.1801668-8-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250721083626.1801668-1-peter.wang@mediatek.com>
-References: <20250721083626.1801668-1-peter.wang@mediatek.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="lRB2y0Gv"
+Received: from epcas2p2.samsung.com (unknown [182.195.41.54])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250721083706epoutp048ea0a01d5e561afa77a5d0f2f57ee14e~UN1zIOVFJ0997109971epoutp04o
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 08:37:06 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250721083706epoutp048ea0a01d5e561afa77a5d0f2f57ee14e~UN1zIOVFJ0997109971epoutp04o
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1753087026;
+	bh=YG4PKzlB/k2XkqqC2Fwg1WOfj+qB+gJoAcf5VPjR4+U=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=lRB2y0GvimRKVWaKamok++pKVj5e28SutJY7wV34/xAvQ9YesFbDN2mol+rIhOW/n
+	 5dPU3YSpoDgH1cD70AIPf+KTNgITzTT4GXITt/MA0gXvEHyOMNiD7HB2T2GHHt0gHA
+	 Ihblk1X8gHPnhAMEzgEkevl5euvQ0AC86pBSDqIw=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas2p1.samsung.com (KnoxPortal) with ESMTPS id
+	20250721083705epcas2p1ef23d8a6ab218eff2aecac29da62ea1d~UN1yixB0L0843808438epcas2p1U;
+	Mon, 21 Jul 2025 08:37:05 +0000 (GMT)
+Received: from epcas2p1.samsung.com (unknown [182.195.36.100]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4blv012mR6z3hhT4; Mon, 21 Jul
+	2025 08:37:05 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas2p3.samsung.com (KnoxPortal) with ESMTPA id
+	20250721083704epcas2p3a89014b76970287dfaf58634370050c6~UN1xI70750668906689epcas2p37;
+	Mon, 21 Jul 2025 08:37:04 +0000 (GMT)
+Received: from KORCO118546 (unknown [12.36.150.57]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250721083704epsmtip183eb0ff8b1d8a430baeee8173a410623~UN1xDxi5y2989629896epsmtip1p;
+	Mon, 21 Jul 2025 08:37:04 +0000 (GMT)
+From: "hoyoung seo" <hy50.seo@samsung.com>
+To: "'Christoph Hellwig'" <hch@infradead.org>
+Cc: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, <beanhuo@micron.com>, <bvanassche@acm.org>,
+	<kwangwon.min@samsung.com>, <kwmad.kim@samsung.com>, <cpgs@samsung.com>,
+	<h10.kim@samsung.com>, <willdeacon@google.com>, <jaegeuk@google.com>,
+	<chao@kernel.org>, <linux-fsdevel@vger.kernel.org>
+In-Reply-To: <aH3on5GBd6AfgJuw@infradead.org>
+Subject: RE: [PATCH v1] writback: remove WQ_MEM_RECLAIM flag in bdi_wq
+Date: Mon, 21 Jul 2025 17:37:03 +0900
+Message-ID: <000001dbfa1a$a2a1ad80$e7e50880$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+Content-Type: text/plain; charset="Windows-1252"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQGsuCKma20p4qExdocLsEkdiKd5rQFAzVkXAhcIlgS0gAXygA==
+Content-Language: ko
+X-CMS-MailID: 20250721083704epcas2p3a89014b76970287dfaf58634370050c6
+X-Msg-Generator: CA
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-234,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250721062037epcas2p25fd6fcf66914a419ceefca3285ea09f3
+References: <CGME20250721062037epcas2p25fd6fcf66914a419ceefca3285ea09f3@epcas2p2.samsung.com>
+	<20250721064024.113841-1-hy50.seo@samsung.com>
+	<aH3on5GBd6AfgJuw@infradead.org>
 
-From: Peter Wang <peter.wang@mediatek.com>
 
-This patch introduces a clock scaling readiness query function to
-streamline the process of checking clock scaling parameters.
-This function simplifies the code by encapsulating the logic
-for determining if clock scaling is ready.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Chun-Hung Wu <chun-hung.wu@mediatek.com>
----
- drivers/ufs/host/ufs-mediatek.c | 14 +++++++++++---
- 1 file changed, 11 insertions(+), 3 deletions(-)
+> -----Original Message-----
+> From: Christoph Hellwig <hch@infradead.org>
+> Sent: Monday, July 21, 2025 4:14 PM
+> To: hy50.seo <hy50.seo@samsung.com>
+> Cc: linux-scsi@vger.kernel.org; linux-kernel@vger.kernel.org;
+> alim.akhtar@samsung.com; avri.altman@wdc.com; jejb@linux.ibm.com;
+> martin.petersen@oracle.com; beanhuo@micron.com; bvanassche@acm.org;
+> kwangwon.min@samsung.com; kwmad.kim@samsung.com; cpgs@samsung.com;
+> h10.kim@samsung.com; willdeacon@google.com; jaegeuk@google.com;
+> chao@kernel.org; linux-fsdevel@vger.kernel.org
+> Subject: Re: [PATCH v1] writback: remove WQ_MEM_RECLAIM flag in bdi_wq
+> 
+> On Mon, Jul 21, 2025 at 03:40:24PM +0900, hy50.seo wrote:
+> > if it write with the write back option with f2fs, kernel panic occurs.
+> > Because the write back function uses bdi_wq and WQ_MEM_RECLAIM flag is
+> > included and created.
+> > However, this function calls f2fs_do_quota() of f2fs and finally tries
+> > to perform quota_release_work.
+> > the quota_release_work is performed in the events_unbound workqueue,
+> > but the WQ_MEM_RECLAIM flag is not included.
+> 
+> And what makes you assume the WQ_MEM_RECLAIM was added just for fun and
+> can simply be deleted?
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 28aba44068da..0b3cce8d9787 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -141,6 +141,16 @@ static bool ufs_mtk_is_allow_vccqx_lpm(struct ufs_hba *hba)
- 	return host->caps & UFS_MTK_CAP_ALLOW_VCCQX_LPM;
- }
- 
-+static bool ufs_mtk_is_clk_scale_ready(struct ufs_hba *hba)
-+{
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
-+	struct ufs_mtk_clk *mclk = &host->mclk;
-+
-+	return mclk->ufs_sel_clki &&
-+		mclk->ufs_sel_max_clki &&
-+		mclk->ufs_sel_min_clki;
-+}
-+
- static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
- {
- 	u32 tmp;
-@@ -922,7 +932,6 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
- {
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 	struct list_head *head = &hba->clk_list_head;
--	struct ufs_mtk_clk *mclk = &host->mclk;
- 	struct ufs_clk_info *clki, *clki_tmp;
- 
- 	/*
-@@ -944,8 +953,7 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
- 		}
- 	}
- 
--	if (!mclk->ufs_sel_clki || !mclk->ufs_sel_max_clki ||
--	    !mclk->ufs_sel_min_clki) {
-+	if (!ufs_mtk_is_clk_scale_ready(hba)) {
- 		hba->caps &= ~UFSHCD_CAP_CLK_SCALING;
- 		dev_info(hba->dev,
- 			 "%s: Clk-scaling not ready. Feature disabled.",
--- 
-2.45.2
+No way..
+It's because i just don't know much about this part.
+And WQ_MEM_RECLAIM flag is absolutely necessary.
+Because it is necessary for stable write back operation when memory is
+insufficient. 
+is it right?
+I'll find another way for fix bug.
+Thanks for your reply.
 
