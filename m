@@ -1,174 +1,129 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA8552E406;
-	Mon, 21 Jul 2025 00:26:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AFC541E835B
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 06:20:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753057595; cv=none; b=IZZu2R2kyZD13s0ZtwpfjliHjxfU698ioEWEjYJ78bk9e4oMyrHTnoBUfL9ysQ+4Jau3I2Sr+JNokrmZm/eb5FCLo5O6M9xlxrIzX3R02M5yE+1P+Wrh11Gb5jhBdyAaD3S4czw/qa6xsetq734OKp8k07A4IDYyIXlDScGlr5w=
+	t=1753078845; cv=none; b=VDWttIE4vo82auHN52al39pogqVWBtN0yUbQ8U+/Kh+WlFG/YJRpW2qZ9y7TC5uOvzylZNKpoeTI/2Gp/SGRh68mmhedtIPhw59D+CjDoOtlv35s4tHa8FAvHRMU5lJ6h+544xxx1JCnRNnzY8bN99wWIsN3pU2xmAdyyY/4HhI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753057595; c=relaxed/simple;
-	bh=2jXD6fV2pi4XdodBU4IjziGtCooOyqc6QbykipInwFo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hCam2HEPPUcVJTCAweVx8AbTgKVh8qtv0xVtQj0ANWCa2ALjZoaCXnYLurkofrIXqd+vZkw886qcxfiddih/RS0mV8rpvovEtGIzI6NA8V/a5Q+3EDaXTAaXhlBAqa/LORkyhOjmaZHOcRa5RisOiYNn0ptq2Tlu3LOLliZMCtE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XdcfoYAM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753078845; c=relaxed/simple;
+	bh=fQk6nSWeQuF0vCVcMA4Ltmv16D5fu/QW6hFWoM8Z/G0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=XJc9KId1XD1P00XpQGWEfzzeOjM+uRQ7pl1ibnx788NeQBAwVGe6g/iRZRhQl19FRZgIjpe2ul0tg6L+AxNU2KsL7ULrjNmCCohLr1JfNbn/3hld5hbmVwYzKOITXAHu4zmI1z9bUjsmmNsk68P3g0EwEX+KvSBvGsnR3GVzCBI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=YUKuj6sU; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XdcfoYAM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56CF0C4CEE7;
-	Mon, 21 Jul 2025 00:26:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753057594;
-	bh=2jXD6fV2pi4XdodBU4IjziGtCooOyqc6QbykipInwFo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XdcfoYAMJGyOpwexECJfGYYaLJpKEJYaYhR7Ve456pp1Mu/xlx0GKy77EaNihR0qP
-	 bbNTuZ8BdR8SrB7V52lvnWlaWytC0BjVLaKfuxfcrSlflGZfDVJ6uQjJDyfd26XiJi
-	 fMa6nsR62qdGsIU+RMMsX1MTLVFKYZXHrT8eF36Hyv0351dK7+Nd14tTw0KWxznmaW
-	 Hy0UXyrAlM0GzSVNTcvup5NX/GBBqXfVt77RpIkmxeK52AdeepglwFzNzr+f3/QPAW
-	 XC89vjEWEpVDy8wdkBiDimVW/g9fiPtALjYmQYNvSslUw06gfM2CWvRgQtzjWaELm7
-	 OKLrf9nnyB8Qw==
-Date: Sun, 20 Jul 2025 19:26:33 -0500
-From: Rob Herring <robh@kernel.org>
-To: Macpaul Lin <macpaul.lin@mediatek.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org,
-	openembedded-core@lists.openembedded.org, patches@lists.linux.dev,
-	stable@vger.kernel.org, Bear Wang <bear.wang@mediatek.com>,
-	Pablo Sun <pablo.sun@mediatek.com>,
-	Ramax Lo <ramax.lo@mediatek.com>, Macpaul Lin <macpaul@gmail.com>,
-	MediaTek Chromebook Upstream <Project_Global_Chrome_Upstream_Group@mediatek.com>
-Subject: Re: [PATCH 2/3] dt-bindings: ufs: mediatek,ufs: add MT8195
- compatible and update clock nodes
-Message-ID: <20250721002633.GA3083612-robh@kernel.org>
-References: <20250718082719.653228-1-macpaul.lin@mediatek.com>
- <20250718082719.653228-2-macpaul.lin@mediatek.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YUKuj6sU"
+Received: from epcas2p1.samsung.com (unknown [182.195.41.53])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20250721062039epoutp02166a28d9a13ce6daeb95db56d2471829~UL_qiplt22539525395epoutp02j
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 06:20:39 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20250721062039epoutp02166a28d9a13ce6daeb95db56d2471829~UL_qiplt22539525395epoutp02j
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1753078839;
+	bh=/XDvTMExPc0Dk39AQxulHgbEVBf+0npFbOQqjpCb3KM=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=YUKuj6sUvf7gsaAK5mqAKjZIZEAsIkwQA6JuY1EZvAeLkB2S6heUWo5dBUfZ11lEC
+	 DqF6BoS7SX87q6WTnt07sRET2DQ8e1Gcg6GvTBl/llizIKJESuLxYh0zWDiYGZkhuV
+	 zQlXwhoeXs/jH5JhZ3zdbx5GMJTrcknoUxSj4ICQ=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPS id
+	20250721062039epcas2p231de33c9e10289860dec2211b5db9ca6~UL_p7L4xK0939509395epcas2p2P;
+	Mon, 21 Jul 2025 06:20:39 +0000 (GMT)
+Received: from epcas2p3.samsung.com (unknown [182.195.36.68]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4blqyZ3ZDHz2SSKf; Mon, 21 Jul
+	2025 06:20:38 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas2p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250721062037epcas2p25fd6fcf66914a419ceefca3285ea09f3~UL_ouoOxF0449004490epcas2p24;
+	Mon, 21 Jul 2025 06:20:37 +0000 (GMT)
+Received: from rack03.dsn.sec.samsung.com (unknown [10.229.95.126]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20250721062037epsmtip18cc76bfe8dac1a5b8d8cb913d91e9f0d~UL_opJvV50948009480epsmtip1K;
+	Mon, 21 Jul 2025 06:20:37 +0000 (GMT)
+From: "hy50.seo" <hy50.seo@samsung.com>
+To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	alim.akhtar@samsung.com, avri.altman@wdc.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, beanhuo@micron.com, bvanassche@acm.org,
+	kwangwon.min@samsung.com, kwmad.kim@samsung.com, cpgs@samsung.com,
+	h10.kim@samsung.com, willdeacon@google.com, jaegeuk@google.com,
+	chao@kernel.org, linux-fsdevel@vger.kernel.org
+Cc: "hy50.seo" <hy50.seo@samsung.com>
+Subject: [PATCH v1] writback: remove WQ_MEM_RECLAIM flag in bdi_wq
+Date: Mon, 21 Jul 2025 15:40:24 +0900
+Message-Id: <20250721064024.113841-1-hy50.seo@samsung.com>
+X-Mailer: git-send-email 2.26.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250718082719.653228-2-macpaul.lin@mediatek.com>
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20250721062037epcas2p25fd6fcf66914a419ceefca3285ea09f3
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: AUTO_CONFIDENTIAL
+CMS-TYPE: 102P
+X-CPGSPASS: Y
+cpgsPolicy: CPGSC10-234,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250721062037epcas2p25fd6fcf66914a419ceefca3285ea09f3
+References: <CGME20250721062037epcas2p25fd6fcf66914a419ceefca3285ea09f3@epcas2p2.samsung.com>
 
-On Fri, Jul 18, 2025 at 04:27:17PM +0800, Macpaul Lin wrote:
-> Add 'mediatek,mt8195-ufshci' to compatible list.
-> Update clocks and clock-names constraints to allow one to eight entries.
-> Introduce 'mediatek,ufs-disable-mcq' property to disable
-> MCQ (Multi-Circular Queue). Update conditional schema for mt8195
-> requiring eight 'clocks' and eight 'clock-names'.
+if it write with the write back option with f2fs, kernel panic occurs.
+Because the write back function uses bdi_wq and WQ_MEM_RECLAIM flag
+is included and created.
+However, this function calls f2fs_do_quota() of f2fs and finally tries to
+perform quota_release_work.
+the quota_release_work is performed in the events_unbound workqueue,
+but the WQ_MEM_RECLAIM flag is not included.
+Therefore, it causes warn_on_panic.
 
-Don't just describe the diff, we can read it. Describe why you are 
-making the changes. How is the new h/w different (or the same).
+workqueue: WQ_MEM_RECLAIM writeback:wb_workfn is flushing !WQ_MEM_RECLAIM events_unbound:quota_release_workfn
+Workqueue: writeback wb_workfn (flush-8:0)
+Call trace:
+ check_flush_dependency+0x160/0x16c
+ __flush_work+0x168/0x738
+ flush_delayed_work+0x58/0x70
+ dquot_writeback_dquots+0x90/0x4bc
+ f2fs_do_quota_sync+0x120/0x284
+ f2fs_write_checkpoint+0x58c/0xe18
+ f2fs_gc+0x3e8/0xd78
+ f2fs_balance_fs+0x204/0x284
+ f2fs_write_single_data_page+0x700/0xaf0
+ f2fs_write_data_pages+0xe94/0x15bc
+ do_writepages+0x170/0x3f8
+ __writeback_single_inode+0xa0/0x8c4
+ writeback_sb_inodes+0x2ac/0x708
+ __writeback_inodes_wb+0xc0/0x118
+ wb_writeback+0x1f4/0x664
+ wb_workfn+0x62c/0x900
+ process_one_work+0x3f8/0x968
+ worker_thread+0x610/0x794
+ kthread+0x1c4/0x1e4
+ ret_from_fork+0x10/0x20
 
-> 
-> Signed-off-by: Macpaul Lin <macpaul.lin@mediatek.com>
-> ---
->  .../devicetree/bindings/ufs/mediatek,ufs.yaml | 49 ++++++++++++++++---
->  1 file changed, 43 insertions(+), 6 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> index 32fd535a514a..9d6bcf735920 100644
-> --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-> @@ -9,21 +9,20 @@ title: Mediatek Universal Flash Storage (UFS) Controller
->  maintainers:
->    - Stanley Chu <stanley.chu@mediatek.com>
->  
-> -allOf:
-> -  - $ref: ufs-common.yaml
-> -
->  properties:
->    compatible:
->      enum:
->        - mediatek,mt8183-ufshci
->        - mediatek,mt8192-ufshci
-> +      - mediatek,mt8195-ufshci
->  
->    clocks:
-> -    maxItems: 1
-> +    minItems: 1
-> +    maxItems: 8
->  
->    clock-names:
-> -    items:
-> -      - const: ufs
-> +    minItems: 1
-> +    maxItems: 8
->  
->    phys:
->      maxItems: 1
-> @@ -33,6 +32,11 @@ properties:
->  
->    vcc-supply: true
->  
-> +  mediatek,ufs-disable-mcq:
-> +    $ref: /schemas/types.yaml#/definitions/flag
-> +    description: The mask to disable MCQ (Multi-Circular Queue) for UFS host.
-> +    type: boolean
+Signed-off-by: hy50.seo <hy50.seo@samsung.com>
+---
+ mm/backing-dev.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
 
-Seems this was undocumented, but already in use. That should be a 
-separate patch.
+diff --git a/mm/backing-dev.c b/mm/backing-dev.c
+index 783904d8c5ef..6ef5f23810fc 100644
+--- a/mm/backing-dev.c
++++ b/mm/backing-dev.c
+@@ -491,8 +491,7 @@ postcore_initcall(bdi_class_init);
+ 
+ static int __init default_bdi_init(void)
+ {
+-	bdi_wq = alloc_workqueue("writeback", WQ_MEM_RECLAIM | WQ_UNBOUND |
+-				 WQ_SYSFS, 0);
++	bdi_wq = alloc_workqueue("writeback", WQ_UNBOUND | WQ_SYSFS, 0);
+ 	if (!bdi_wq)
+ 		return -ENOMEM;
+ 	return 0;
+-- 
+2.26.0
 
-> +
->  required:
->    - compatible
->    - clocks
-> @@ -43,6 +47,39 @@ required:
->  
->  unevaluatedProperties: false
->  
-> +allOf:
-> +  - $ref: ufs-common.yaml
-> +
-> +  - if:
-> +      properties:
-> +        compatible:
-> +          contains:
-> +            enum:
-> +              - mediatek,mt8195-ufshci
-> +    then:
-> +      properties:
-> +        clocks:
-> +          minItems: 8
-> +          maxItems: 8
-> +        clock-names:
-> +          items:
-> +            - const: ufs
-> +            - const: ufs_aes
-> +            - const: ufs_tick
-> +            - const: unipro_sysclk
-> +            - const: unipro_tick
-> +            - const: unipro_mp_bclk
-> +            - const: ufs_tx_symbol
-> +            - const: ufs_mem_sub
-> +    else:
-> +      properties:
-> +        clocks:
-> +          minItems: 1
-
-1 is already the minimum. Drop.
-
-> +          maxItems: 1
-> +        clock-names:
-> +          items:
-> +            - const: ufs
-> +
->  examples:
->    - |
->      #include <dt-bindings/clock/mt8183-clk.h>
-> -- 
-> 2.45.2
-> 
