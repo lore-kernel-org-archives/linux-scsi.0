@@ -1,115 +1,87 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E692B293C56
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 11:11:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7285C2900A0;
+	Mon, 21 Jul 2025 11:31:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=160.30.148.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753096274; cv=none; b=AzGR9fx612f18lHex3APqdWMvbH5KHE12/KIZJnjblM++6Q0ktw6/zMbckwDYVnTb5CHlZvVwzlDiFsoXCASboHi4QAsUAI1mOr+rHQaUldZFfeSWBaX7iIncQNwu6F2bw9T1pYEGeG1eSX7dzQjl8YIy6hXHLJYkX2B0Gy0OZg=
+	t=1753097468; cv=none; b=WYZfRsB4O37LR/ULl93pH+k6UC8qgthbzYT/Mp6T/+QYt71+3dTWnzR/Na9CfPxWIogh7Qt7og/n/2RsU7vMugwVaFOBfkvW790JtyyQN3AKgwnIXXhbpgxZbKMEDFBxhhLi5dkiYVet9eJMhmBRMSO++kOmLijxNIzJnE3h4Zo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753096274; c=relaxed/simple;
-	bh=AyBX819lOZqASO4Xl+h3qjFE8OaRAxTNE3UwtKIBvbI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=uOP46mD9+2rum2snSIKOef2sk8iaPudIly4xneUOykhvnH+hiTOnesw4P0Js108XTTXAlFsbmYAkMeBbI7KUzu1HSxY50/eXKGrwJ8VN1YoRiAh2uftaO3OCsBqPdRDgoPyUTkIs51njXS8ETRMN1t0vo82uaXECAg1jmongxAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=hSx22FyV; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hSx22FyV"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-749068b9b63so2740304b3a.0
-        for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 04:11:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1753096272; x=1753701072; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=fMv294KG3PJAz5FaySHACt2v0cuoxkaknOnsBu7Pzjk=;
-        b=hSx22FyV870Bls6FBMideGwB+TBZhcY8jFFj0YrL1mbEtH1I1S/j6em+YX52Mg+N0T
-         aTrGh0RCpLrG73qONsyfCEreO5Av92nLQ9vGkAO0B8Q4jk0H3uCnI/UUThBLFD9mppJB
-         Iw0rbB9EDAwZS04zi1uUj36NV6f/rVTre1iEU=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753096272; x=1753701072;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=fMv294KG3PJAz5FaySHACt2v0cuoxkaknOnsBu7Pzjk=;
-        b=ajU3EsgjX7MA/o1cJAlspNl2WytP8R5MYoR2+RjxjXHycBZKi0mAN7kwkwAj2kZpbu
-         uDtoQS/LXep9a/4KMwxrNbpdpYSQpNC/F4o+aM4xmmVyY7tI+GwaeYHz5Mgaq8fX/C0h
-         C6kvnHmniwjIqbdEsi2hN/B+ATtEzFpeFZQT9Zclpm92eDMUtoQg6eXtWfAfGtyiEBEY
-         vqIA+FujwVmsSp4cTDgkdJ1kxVcViKnmuEmCYN0CJ5SX1jpOtLy/jkGwF3i1h6lbGlCo
-         dINBZUdiYNat7HLfHMK9bWGZyyt6giCVaH9dPyuqqTdu+XirrgPT3PKXrurOjz4x1Agc
-         VYmg==
-X-Gm-Message-State: AOJu0YwEZV7XSPqIPcVLx7yeDuuSYCZpj1rOzBf/VVlSL0o6R7CYnwsC
-	Ta+/NGXffUBaj/uhokiPJpwppDkWpyCe66Bbho5mTxYVYOh3C7uucv01lNJA2v09TUYd0aR5dhP
-	tP9YrGDdfB2K/RQyCF0j/k5aPOI6cUv4lCSLWivND621Q423L27Fo90W8fQBMvQNfuYKNOFx3ew
-	fbBDWGtKfteRCzSY4t/xq44+rYEZGJ358q189qemmvLCcIsG328Q==
-X-Gm-Gg: ASbGncvm/NTu8e7ORHebwjxMy5VBwBkxUpk3anXhqrc2ldu+TpQferCyNiujP2Yu46N
-	poXUoYv+4HLNeUkZMC0kq+RD+ZVNvRHVh3g8j1+SGju03YCtTKHHhBKuXT1iAqLKgfmRZZPEmYC
-	DStdi4dJq2HqgpcrukugEVwA2pwq0DifK34VwrvUuBCd3h6sVLD4YqVtEnhbVVq6nSHl9ukTbrC
-	DkAwIo0sCE37OekGoYwszDVZNSpRKq3wFv3eMmj5UurqtWCWFRTF2CKNX8MMby32kUQwNMCnAxL
-	pMkGjyEKdfOPWRpG8fQD2Q0eL+c1QPh8kmwbOOokveGqcVF7jvt73n5Rfy+qOR/SL14IbsOPmV2
-	1/aoRvbOzi0NbwWFDOGkUIftWe6FsUzfkFMUe0C/xmRDMqKwu+hC04Mq1gIyBXRDYmSc=
-X-Google-Smtp-Source: AGHT+IFySp9SfvDQDAFtIdjTIbvXVZ3XmzP+T5XNCHcPkDs76QFbGWOxBCLBjn4xaaZ4SsiepagI2w==
-X-Received: by 2002:a05:6a21:497:b0:233:f2a3:c68a with SMTP id adf61e73a8af0-237d701a6bbmr33111154637.23.1753096271544;
-        Mon, 21 Jul 2025 04:11:11 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-759c89d2a72sm5632547b3a.46.2025.07.21.04.11.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 21 Jul 2025 04:11:11 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1] mpt3sas: Set DMA_BIDIRECTIONAL for additional SCSI commands
-Date: Mon, 21 Jul 2025 16:35:46 +0530
-Message-Id: <20250721110546.100355-1-ranjan.kumar@broadcom.com>
-X-Mailer: git-send-email 2.31.1
+	s=arc-20240116; t=1753097468; c=relaxed/simple;
+	bh=ToflseDBkJ7JeScdTbOcRWTX+e6By2Q5HLseuMSonI0=;
+	h=Date:Message-ID:Mime-Version:From:To:Cc:Subject:Content-Type; b=UbbT4nEvjhgisPVCXbszYDmbWDpiOPkeoM/KRpyHOiawBcuXQ1siYDpao9AvvUC3sGjqS032RFGuoj6FPVPuV0+RA/ECqK7zEFLuY1jYR9ohB9Rx9/5F92H1Brk2u3RVeqWc4LlAk8+0PWssGar3ZfSIIdx1/kbrBcRlQRfEufg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn; spf=pass smtp.mailfrom=zte.com.cn; arc=none smtp.client-ip=160.30.148.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
+Received: from mse-fl1.zte.com.cn (unknown [10.5.228.132])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4blyrj6kLrz6FyBw;
+	Mon, 21 Jul 2025 19:31:01 +0800 (CST)
+Received: from xaxapp02.zte.com.cn ([10.88.97.241])
+	by mse-fl1.zte.com.cn with SMTP id 56LBUvWX043429;
+	Mon, 21 Jul 2025 19:30:57 +0800 (+08)
+	(envelope-from liu.xuemei1@zte.com.cn)
+Received: from mapi (xaxapp04[null])
+	by mapi (Zmail) with MAPI id mid32;
+	Mon, 21 Jul 2025 19:31:00 +0800 (CST)
+Date: Mon, 21 Jul 2025 19:31:00 +0800 (CST)
+X-Zmail-TransId: 2afb687e24f4ffffffffd23-0878a
+X-Mailer: Zmail v1.0
+Message-ID: <20250721193100468gyyO8d5CbSflXqevXFgIM@zte.com.cn>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Mime-Version: 1.0
+From: <liu.xuemei1@zte.com.cn>
+To: <njavali@marvell.com>
+Cc: <james.bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
+        <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <liu.song13@zte.com.cn>
+Subject: =?UTF-8?B?W1BBVENIXSBzY3NpOiBxbGEyeHh4OiBVc2Ugc3RyX3RydWVfZmFsc2UoKSBoZWxwZXIgaW4gcWxhMngwMF9hbGxvd19jbmFfZndfZHVtcF9zaG93KCk=?=
+Content-Type: text/plain;
+	charset="UTF-8"
+X-MAIL:mse-fl1.zte.com.cn 56LBUvWX043429
+X-TLS: YES
+X-SPF-DOMAIN: zte.com.cn
+X-ENVELOPE-SENDER: liu.xuemei1@zte.com.cn
+X-SPF: None
+X-SOURCE-IP: 10.5.228.132 unknown Mon, 21 Jul 2025 19:31:01 +0800
+X-Fangmail-Anti-Spam-Filtered: true
+X-Fangmail-MID-QID: 687E24F5.001/4blyrj6kLrz6FyBw
 
-Extend DMA direction override to handle additional SCSI commands
-(SECURITY_PROTOCOL_IN, SERVICE_ACTION_IN_16 with RELEASE) that
-require bidirectional DMA mapping, in addition to ZBC REPORT_ZONES.
-This avoids issues on platforms that perform strict DMA checks.
+From: Liu Song <liu.song13@zte.com.cn>
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
+Remove hard-coded strings by using the str_true_false() helper function.
+
+Signed-off-by: Liu Song <liu.song13@zte.com.cn>
 ---
- drivers/scsi/mpt3sas/mpt3sas_base.c | 18 ++++++++++++++++--
- 1 file changed, 16 insertions(+), 2 deletions(-)
+ drivers/scsi/qla2xxx/qla_attr.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index bd3efa5b46c7..8aec475fc7a4 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -2686,8 +2686,22 @@ static inline int _base_scsi_dma_map(struct scsi_cmnd *cmd)
- 	 * (e.g. AMD hosts). Avoid such issue by making the report zones buffer
- 	 * mapping bi-directional.
- 	 */
--	if (cmd->cmnd[0] == ZBC_IN && cmd->cmnd[1] == ZI_REPORT_ZONES)
--		cmd->sc_data_direction = DMA_BIDIRECTIONAL;
-+
-+		switch (cmd->cmnd[0]) {
-+		case SECURITY_PROTOCOL_IN:
-+			cmd->sc_data_direction = DMA_BIDIRECTIONAL;
-+			break;
-+		case ZBC_IN:
-+			if  (cmd->cmnd[1] == ZI_REPORT_ZONES)
-+				cmd->sc_data_direction = DMA_BIDIRECTIONAL;
-+			break;
-+		case SERVICE_ACTION_IN_16:
-+			if (cmd->cmnd[1] == 0x17)
-+				cmd->sc_data_direction = DMA_BIDIRECTIONAL;
-+			break;
-+		default:
-+			break;
-+	}
- 
- 	return scsi_dma_map(cmd);
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 2e584a8bf66b..e58658ade770 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -10,6 +10,7 @@
+ #include <linux/vmalloc.h>
+ #include <linux/slab.h>
+ #include <linux/delay.h>
++#include <linux/string_choices.h>
+
+ static int qla24xx_vport_disable(struct fc_vport *, bool);
+
+@@ -1722,7 +1723,7 @@ qla2x00_allow_cna_fw_dump_show(struct device *dev,
+ 		return scnprintf(buf, PAGE_SIZE, "\n");
+ 	else
+ 		return scnprintf(buf, PAGE_SIZE, "%s\n",
+-		    vha->hw->allow_cna_fw_dump ? "true" : "false");
++		    str_true_false(vha->hw->allow_cna_fw_dump));
  }
--- 
-2.31.1
 
+ static ssize_t
+-- 
+2.27.0
