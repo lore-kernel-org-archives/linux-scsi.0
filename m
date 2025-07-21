@@ -1,89 +1,156 @@
-Received: from mxhk.zte.com.cn (mxhk.zte.com.cn [160.30.148.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1755F22EF5;
-	Mon, 21 Jul 2025 12:01:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=160.30.148.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1649228C5BC
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 12:04:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753099306; cv=none; b=sdZ871iJBvUNQ1QOBnspYYHfJGYE2Ef256/cZ5h0R2dYqZWU8dI8EEUJY6QcJTd7+70j+siBi9nAevY24Fefsp8ImbAnGvvAo7O/P0SisqtzuK/E0hOgQtXbPeCcl/9VVkkO96QZ5y3880Y7jaWm9QSuFmGmvtIZ5dK19az5Sdw=
+	t=1753099498; cv=none; b=Bu1Kk3IJZzX1AWOlILeb6SIF1aMmd/KSKvNYqr3IvfUVEh291aKpcI1uDAgWQlKpU+/UbkBwN+xy1jXdyN8I0aVmKPrry+5BNRxrSUhQOcRDKrfQe3sgbPs9jcNMVVW/IstYlbdi6yomKOo47jdugV678Kp2gS/U/OYmsVfuBOg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753099306; c=relaxed/simple;
-	bh=Wb+HX4VKOUFl91tCoHBuhfncV72kvghandqQDQ/1Yxk=;
-	h=Date:Message-ID:Mime-Version:From:To:Cc:Subject:Content-Type; b=O+cAYsRfqlrgPuUxnIBb68ZDTxtKjYlbL8iySvoeSo10OukzH5acdKzp0z+T/826V1dWjgFSKY7rSzvHqKS2uCc+u/WFnGiZv3Y23b1tIP7gE3CkiQ/K90jI6ECFgRHuJuD8DF2v2J3lM5vtGTHdkeC33l3SYWnyKkeKicPhAv4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn; spf=pass smtp.mailfrom=zte.com.cn; arc=none smtp.client-ip=160.30.148.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=zte.com.cn
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zte.com.cn
-Received: from mse-fl2.zte.com.cn (unknown [10.5.228.133])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mxhk.zte.com.cn (FangMail) with ESMTPS id 4blzX05sh2z8Xs70;
-	Mon, 21 Jul 2025 20:01:36 +0800 (CST)
-Received: from xaxapp05.zte.com.cn ([10.99.98.109])
-	by mse-fl2.zte.com.cn with SMTP id 56LC1Z4p001219;
-	Mon, 21 Jul 2025 20:01:35 +0800 (+08)
-	(envelope-from liu.xuemei1@zte.com.cn)
-Received: from mapi (xaxapp04[null])
-	by mapi (Zmail) with MAPI id mid32;
-	Mon, 21 Jul 2025 20:01:38 +0800 (CST)
-Date: Mon, 21 Jul 2025 20:01:38 +0800 (CST)
-X-Zmail-TransId: 2afb687e2c22ffffffffd82-2e7c3
-X-Mailer: Zmail v1.0
-Message-ID: <20250721200138431dOU9KyajGyGi5339ma26p@zte.com.cn>
+	s=arc-20240116; t=1753099498; c=relaxed/simple;
+	bh=AgmplPpBkqPJHRgbv/ilKQnYSL6wMtJX7Lhc35iZubw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=iUzwTDWXIuJW/GWxHJPWiTr91aCUHYwmZ4+XtpfV2hVUajrWho+xc9H5woNvcBTMYis/7lndm4gox/gsuzjr1vpHfvPRxsfvEQ81DJi0pKP2GD7yzee5HNTnUqSWH3MJYS3oAahZCOUlghqQJSPbi2C4DImJYV23Ucd4bsuVbnY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=Ty9Sb9yT; arc=none smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="Ty9Sb9yT"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-3a4ef2c2ef3so3172611f8f.2
+        for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 05:04:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1753099495; x=1753704295; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=yFsy0N8dFit2yuYg6+8lEXnZLwOaEpoo8BHtjGWuFq8=;
+        b=Ty9Sb9yTvEGhe+x2nQJ7otZm+LVhHzxmFeZiJMi1mx4cbrFQFhSkTRX2mXujpFZBDm
+         GoZvGwi86N9M3oiigTLQ0b4Xef6cqHIHsCfjd6Hkx+80AA0EPTiWYk9H07sGC3xDItz+
+         FeZ+oEZN3qMRDnAzl9DxmEjs3lxW8ZS01uQA22EtAk91T3I/nH/CJut4vbqO2S+tTEGu
+         +DSAOt2aLsTLwFUsp7fWHluV+wkSBJB8wJWX4ntV3JSEK7E8itbCeWkNotRIpVoBCB7v
+         lmjZCpoMT079EvDKplnS6ogXSSfZQsFt4CItGIaj2ul+NNX6j5C2oC0dect5mR1MLNrX
+         a9iQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753099495; x=1753704295;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=yFsy0N8dFit2yuYg6+8lEXnZLwOaEpoo8BHtjGWuFq8=;
+        b=IK71smj5DfvVb1Hw1izN++W5Qk2HSWu2eZlpPl/Fbv/6Gh048FweQl3tob1VOL9Eka
+         tr07TAjSgzhbQGcsffjJBUylBvsAoF9tQNtmcZWf8lXerMmeJUVCCOTY12Mme2L/cGpC
+         ZV3iBzY4C4aeCyS6b5YZTAr6cYQHVvaq280Q7vCph+wr9M4maYaqJhp1CXCNo4Rdr+TF
+         pKtm9w0CkWDFygPhrXJKNXxXRj1yiIFFYjPY+e3CzXmy4Hp0rzorOltQa18fOC35BK4i
+         J9q7mytPynVBz0sDcPeuurBoERTAoDZzao3JwruzCd8c19mOA3yMRAqBfZdERpAONlrw
+         x7PA==
+X-Forwarded-Encrypted: i=1; AJvYcCX65bDhs5UwDtUbpbW7eOvUyv3Jbd5LZwsghbIY6Pyl/FVqNwxapDW2rtBemFoscHub139FZn/orsEw@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw23hlw8viW7cU4Vu4K6ZbQH2/kf+wlouerEaVWzpenpZSLBhlv
+	El17gzJiz2oe0uUMjTgw+B67pgPCPIdTR52uYOmNWclxfbSvn9KtAXXDgKqMziOgEpw=
+X-Gm-Gg: ASbGncuBI/jVSxMhlzp/rQL6U5cfWKAmmAvQfy+P2yQGp2omQ5ZfxOBr/PRpsMDGKgL
+	AWTo8m5hiyFYy0JC5ixuouGhASyAFTgJETtlmI88RQeRbezIYi5+eUd3hiZ0c9i8O+SzaKP/TW2
+	hPv/UyuD/+eP6MC0bubRiGlsCHj5rnmdMkwnx3IR/PXOI9gt1+DzaxL1PhTROQ2QZQhjQJy8A3l
+	oWDOj747d1LFNovVb45xNcn1c0xKp6PaorS+oPyVXjq6aKaVP0xlgz1HiQqvnnVUnaL56q7WWQU
+	wFlAzpV8ySrgKaS6P6LXFsSitPz/JyFlCnGtniisytK8iQ23R8831XmykM8ohpT+8y0VvY3VC8a
+	QiLVuyHUhkJ6UBzQMDTOegrib/w==
+X-Google-Smtp-Source: AGHT+IGjfeFn2Z+6zri73vruVzHD1bBxX9f1u0kiaMUuw25HI377CkPNalTMB/vUfycg6NzuXJEDNg==
+X-Received: by 2002:a05:6000:2385:b0:3a4:dd8e:e16d with SMTP id ffacd0b85a97d-3b60e4c2194mr16565406f8f.15.1753099495341;
+        Mon, 21 Jul 2025 05:04:55 -0700 (PDT)
+Received: from draszik.lan ([80.111.64.44])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3b61ca487a5sm10222123f8f.42.2025.07.21.05.04.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 21 Jul 2025 05:04:54 -0700 (PDT)
+Message-ID: <1e06161bf49a3a88c4ea2e7a406815be56114c4f.camel@linaro.org>
+Subject: Re: [PATCH RFT v3 3/3] ufs: core: delegate the interrupt service
+ routine to a threaded irq handler
+From: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>
+To: Neil Armstrong <neil.armstrong@linaro.org>, Alim Akhtar	
+ <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Bart Van
+ Assche	 <bvanassche@acm.org>, "James E.J. Bottomley"	
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"	
+ <martin.petersen@oracle.com>
+Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>, 
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Peter Griffin <peter.griffin@linaro.org>,
+ Will McVicker <willmcvicker@google.com>, kernel-team@android.com, Tudor
+ Ambarus <tudor.ambarus@linaro.org>
+Date: Mon, 21 Jul 2025 13:04:53 +0100
+In-Reply-To: <20250407-topic-ufs-use-threaded-irq-v3-3-08bee980f71e@linaro.org>
+References: 
+	<20250407-topic-ufs-use-threaded-irq-v3-0-08bee980f71e@linaro.org>
+	 <20250407-topic-ufs-use-threaded-irq-v3-3-08bee980f71e@linaro.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.1-1+build1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-From: <liu.xuemei1@zte.com.cn>
-To: <james.bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>
-Cc: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-        <huobean@gmail.com>, <peter.wang@mediatek.com>, <tanghuan@vivo.com>,
-        <liu.song13@zte.com.cn>, <viro@zeniv.linux.org.uk>,
-        <quic_nguyenb@quicinc.com>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>
-Subject: =?UTF-8?B?W1BBVENIXSBzY3NpOiB1ZnM6IGNvcmU6IFVzZSBzdHJfdHJ1ZV9mYWxzZSgpIGhlbHBlciBpbiBVRlNfRkxBRygp?=
-Content-Type: text/plain;
-	charset="UTF-8"
-X-MAIL:mse-fl2.zte.com.cn 56LC1Z4p001219
-X-TLS: YES
-X-SPF-DOMAIN: zte.com.cn
-X-ENVELOPE-SENDER: liu.xuemei1@zte.com.cn
-X-SPF: None
-X-SOURCE-IP: 10.5.228.133 unknown Mon, 21 Jul 2025 20:01:36 +0800
-X-Fangmail-Anti-Spam-Filtered: true
-X-Fangmail-MID-QID: 687E2C20.004/4blzX05sh2z8Xs70
+MIME-Version: 1.0
 
-From: Liu Song <liu.song13@zte.com.cn>
+Hi,
 
-Remove hard-coded strings by using the str_true_false() helper function.
+On Mon, 2025-04-07 at 12:17 +0200, Neil Armstrong wrote:
+> On systems with a large number request slots and unavailable MCQ ESI,
+> the current design of the interrupt handler can delay handling of
+> other subsystems interrupts causing display artifacts, GPU stalls
+> or system firmware requests timeouts.
+>=20
+> Since the interrupt routine can take quite some time, it's
+> preferable to move it to a threaded handler and leave the
+> hard interrupt handler wake up the threaded interrupt routine,
+> the interrupt line would be masked until the processing is
+> finished in the thread thanks to the IRQS_ONESHOT flag.
+>=20
+> When MCQ & ESI interrupts are enabled the I/O completions are now
+> directly handled in the "hard" interrupt routine to keep IOPs high
+> since queues handling is done in separate per-queue interrupt routines.
 
-Signed-off-by: Liu Song <liu.song13@zte.com.cn>
----
- drivers/ufs/core/ufs-sysfs.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+This patch adversely affects Pixel 6 UFS performance. It has a
+UFSHCI v3.x controller I believe (and therefore probably all
+devices with < v4) - if my limited understanding is correct,
+MCQ & ESI are a feature of v4 controllers only.
 
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 00948378a719..4bd7d491e3c5 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -5,6 +5,7 @@
- #include <linux/string.h>
- #include <linux/bitfield.h>
- #include <linux/unaligned.h>
-+#include <linux/string_choices.h>
+On Pixel 6, fio reports following performance on linux-next with
+this patch:
 
- #include <ufs/ufs.h>
- #include <ufs/unipro.h>
-@@ -1516,7 +1517,7 @@ static ssize_t _name##_show(struct device *dev,				\
- 		ret = -EINVAL;						\
- 		goto out;						\
- 	}								\
--	ret = sysfs_emit(buf, "%s\n", flag ? "true" : "false");		\
-+	ret = sysfs_emit(buf, "%s\n", str_true_false(flag));		\
- out:									\
- 	up(&hba->host_sem);						\
- 	return ret;							\
--- 
-2.27.0
+read [1] / write [2]:
+   READ: bw=3D17.1MiB/s (17.9MB/s), 17.1MiB/s-17.1MiB/s (17.9MB/s-17.9MB/s)=
+, io=3D684MiB (718MB), run=3D40001-40001msec
+  WRITE: bw=3D20.6MiB/s (21.5MB/s), 20.6MiB/s-20.6MiB/s (21.5MB/s-21.5MB/s)=
+, io=3D822MiB (862MB), run=3D40003-40003msec
+
+With this patch reverted, performance changes back to:
+
+read [1] / write [2]:
+
+   READ: bw=3D19.9MiB/s (20.8MB/s), 19.9MiB/s-19.9MiB/s (20.8MB/s-20.8MB/s)=
+, io=3D795MiB (833MB), run=3D40001-40001msec
+  WRITE: bw=3D28.0MiB/s (29.4MB/s), 28.0MiB/s-28.0MiB/s (29.4MB/s-29.4MB/s)=
+, io=3D1122MiB (1176MB), run=3D40003-40003msec
+
+all over multiple runs.
+
+which is a ~26% reduction for write and ~14% reduction for read.
+
+PCBenchmark even reports performance drops of ~41%.
+
+
+I don't know much about UFS at this stage, but could the code simply
+check for the controller version and revert to original behaviour
+if < v4? Any thoughts on such a change?
+
+
+[1]: fio --name=3Drandread --rw=3Drandread --ioengine=3Dlibaio --direct=3D1=
+ \
+         --bs=3D4k --numjobs=3D1 --size=3D1g --ramp_time=3D10 --runtime=3D4=
+0 --time_based \
+         --end_fsync=3D1 --group_reporting --filename=3D/foo
+
+[2]: fio --name=3Drandwrite --rw=3Drandwrite --ioengine=3Dlibaio --direct=
+=3D1 \
+         --bs=3D4k --numjobs=3D1 --size=3D1g --ramp_time=3D10 --runtime=3D4=
+0 --time_based \
+         --end_fsync=3D1 --group_reporting --filename=3D/foo
+
+Cheers,
+Andre'
