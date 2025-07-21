@@ -1,310 +1,373 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 436A7DDC3;
-	Mon, 21 Jul 2025 18:51:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753123916; cv=fail; b=u1MucEgfqniDQc85VVjtSokDMk93hbVIDMD3lPZoNJyxOkRi9Es27axWyAtr/Z0QMBlCfjOcNCPFlGnVsewF294hdqoZ3R56I50OO18RtbtVU3ForJPoe2F/SD9wSOkvWUvhXmD5zlng6761CLVN4ryeQR9DaL94g7d/PK8zK1U=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753123916; c=relaxed/simple;
-	bh=8UcXx3OiYkeocOoVNOu7usu/3PgIszunE5FGzWHc4EI=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=AGubNbJGI0GS6N+UWkGkeByHdMFq7SfHBvlF7FtT3A6Kijm5zlmHE5+v+dwH3pMJmnzPCr+W5zVjo3x89Xn1Ooh+KavXCx3smpU4atDbjokdEMoA4zulgV2nxhyqcj6Ei3btmxrLj1jFAiE65HCgN6uKiMezxKOOAii4WxfCyKY=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=kzGjMa9z; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=txCoY6uy; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1A0923E34C
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 21:23:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1753132999; cv=none; b=sVYDEouWko5KY5OKoKZL2rG/eFoUjfiwklvPAZsr7Odqwuw6NTofK+XoKXqMl2T8VGquRI3y8cnZT36oA8tub6H5zNjzMIlEYKlAi2bP6Bk2CHpveKOIwQ1KFQ3x8tcndgWX9aI9wtg792wNCGbXfC9/GpsgZipDkkBiayDCO8Y=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1753132999; c=relaxed/simple;
+	bh=V0+HQypSMNWWlGdLaU3WLdyNxVOnaYxaP68d7ZXNJw0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=oSHmwak/ngE0B0psGK2Td6+T2sHDOwY2iQe4HoBExWn+JpCJJBrSBaVsK7vGuy+JcboU8428qEl8+sHPCKmquVZcWGKRedptd4PQwoTk3fhMj+vji4LKQ3kJXKoSbT8EtCSRjPWONIci02WLy+H1VA8bilLUVJMaBdrrlVGeiU0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xZ9UQ8/u; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="kzGjMa9z";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="txCoY6uy"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56LHfg6p032557;
-	Mon, 21 Jul 2025 18:51:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2025-04-25; bh=CgA5v6ZUPQN7Riw6
-	NGFg+7PfFJXDK72bB17xYWgOSwQ=; b=kzGjMa9zL2kvZqVRgSY4s7pn1v4qVQ1p
-	jLh8EHc0smDl2ta60rqeGVlw97RNaXHQvqPXo6pjsYlHGjdPdFRAw/dWU/5ODPek
-	jpIj//xHYOjaL/1LIG0VTVLnSluQlge5QoXRd8/B1oEsgWxNDAwQYS2ovrM6vhKr
-	/Wwo5tNLEv7p7hweTeh7S80HT3Kh+av2WZ7D09wZa024FuZ857rTsUKIqy++G+qa
-	GtHDBG04Eeey2HFWGl8CE5j1sc3SgANJho0SBR8vv9nVYJE+Pqz63084Uf7rGH0J
-	9wUOVjKNTkFrYGfA+gOTumeiZ90uKnmzo1SreXXFVII8KLZs+WljfA==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 48057quhmf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 21 Jul 2025 18:51:52 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56LIcxBv005773;
-	Mon, 21 Jul 2025 18:51:51 GMT
-Received: from nam02-sn1-obe.outbound.protection.outlook.com (mail-sn1nam02on2087.outbound.protection.outlook.com [40.107.96.87])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4801t8dgrg-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 21 Jul 2025 18:51:51 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=fLe9wbjz+p+NTxl0KU2jH3UWoO4qgDAq9ECQpVEp363jGyUlDMDcNnbuZYePNc2a8++sjm9GtIjpkepkn2ca3TlAP+TEyKOYhWTTPNqt92eBM+HFVzvWj6y8W3brsPqpaoM/9wh0DEd0iCiNTQOVfUaX1DWIi2SUcgfX6rmKNeGP4GsDAvuaQ2paAGHEu1k/VY3/GkWtAOBVl2bR9mRW9SaDFMEIDI5pLNIa66QzrbdtGmCqJfsmOfk7C9c/TSwVhAKacfOMn7qJ6r7jqBPy85GhdgnUBqJXWDQSXTCXiXFjmyjA8rBErCPTnot01PlTSF5gQT8oFuR3oIW4l8C7ZA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=CgA5v6ZUPQN7Riw6NGFg+7PfFJXDK72bB17xYWgOSwQ=;
- b=s+vRGqQquMOKdCun4xVfbM/U78r/7YM4EhZTEqODvZKIFgPKdnQlqoENUl5/OQzw9k1Tv1L2pfLWb299GTw8jKSIL8EVgDUelULuiG4iVwLSZbrN3KFy2OeOXqdqbq5J8vSJgPKraE4lTCJzYOxoDeCeM7P0U+Z2LUru1By8US25zBceO7MF8CrTA77EUkswjCYgXYg9eMtUEhku34Zni7XzpsOLKo3DYdIu9xzekQC9wkDFB4AOLJnd/1ur+N4zBmx3up4JP9Cp6Pha7v6iNi3sTKYaq8rmMnHKky6vpqoSnVph28zX6J8bW+GU0rkRJ8WlOn+oA5SrRRRAjshfHQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=CgA5v6ZUPQN7Riw6NGFg+7PfFJXDK72bB17xYWgOSwQ=;
- b=txCoY6uy6FmDwclYzWmC5z40RA+VrzlUO+3Rw8TBsccKJbpvtutPIzm9xdjZ29GddmjzKNYmvgSYHs++9t7YbH2B4o0RpHD9D8D6/r28Cej/B7Kh/5Uh1ZVFn8Dn2FNVk3Ba05SxKg9qrE0d+XGIbkEdkQv9MJ4y2IVpogwHbBI=
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
- by LV3PR10MB7817.namprd10.prod.outlook.com (2603:10b6:408:1b8::9) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8943.29; Mon, 21 Jul
- 2025 18:51:47 +0000
-Received: from CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0]) by CY8PR10MB7243.namprd10.prod.outlook.com
- ([fe80::b779:d0be:9e3a:34f0%4]) with mapi id 15.20.8943.029; Mon, 21 Jul 2025
- 18:51:47 +0000
-From: Mike Christie <michael.christie@oracle.com>
-To: martin.petersen@oracle.com, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org
-Cc: Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH 1/1] target_core_iblock: Allow iblock devices to be shared
-Date: Mon, 21 Jul 2025 13:51:45 -0500
-Message-ID: <20250721185145.20913-1-michael.christie@oracle.com>
-X-Mailer: git-send-email 2.43.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: DS2PEPF00004563.namprd21.prod.outlook.com
- (2603:10b6:f:fc00::519) To CY8PR10MB7243.namprd10.prod.outlook.com
- (2603:10b6:930:7c::10)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xZ9UQ8/u"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bmD043d30zlgqV5;
+	Mon, 21 Jul 2025 21:23:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:mime-version
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1753132993; x=1755724994; bh=6cLAE
+	7i5fnR5FW+tZnKaWxMhsSmq+TxNFQXGOHOHwIc=; b=xZ9UQ8/ux5ZvRLozRzI/S
+	e4D9i09BCS/twpOJFRH/ORg/2MQjJaCEnHBC+AZSYDEA36bcc7KgNIWKjXr7ZB+p
+	JS6M+8JYqdf2IqPkB+EpTCVMlLAMt68k3J+Gj1d/Y7qcTxRKvW/vjadHFywTKV+q
+	99HhD2QOGt6P9aFrbccSNI7mPa/bYtxFbGyRStCLAHb+7GLfqjKY6/ETg971C015
+	pMfwlQ/fJjnUgwc2unjiV+V24kOowmFWFIRhp6hSNQhHKQUxLqvvxOwt+qHPITTG
+	qoKVnCxIKH5C/j+e0nqBzz6mXmpavt6wgfufvxTva4+mu5Y3FlTHSrnJ/JKXHTW4
+	Q==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 3YNMgz4H_uHW; Mon, 21 Jul 2025 21:23:13 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bmCzt325rzlgqVJ;
+	Mon, 21 Jul 2025 21:23:05 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bean Huo <huobean@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Subject: [PATCH] ufs: core: Fix IRQ lock inversion
+Date: Mon, 21 Jul 2025 14:22:28 -0700
+Message-ID: <20250721212236.2852001-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.50.0.727.gbf7dc18ff4-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|LV3PR10MB7817:EE_
-X-MS-Office365-Filtering-Correlation-Id: d06de099-ab5e-4b16-1aa0-08ddc887a4e5
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|366016|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?U0LqgGiAeYTRff83I2dd/zgfZHQReJcDDf4SwnoHSH0/xYRRDWe6af07XHR6?=
- =?us-ascii?Q?FXO35ehczPB4k7rr8GTLIuzzxM+EnR5frKGpIDTRfRGukJPS+pBCKFYom2SO?=
- =?us-ascii?Q?Q4da1O8nXIp+IQa7TjV0dOak2aNEZcjEcz/djMQO34VVGpACy/BS+Qeq0eU3?=
- =?us-ascii?Q?Z5TStNPFFiTHw8gnqYTnIQfD0PDPLZC9Rd509fdUZYuoqw7xul2FyJoW1GVf?=
- =?us-ascii?Q?E8vmYDMrGGSsCInEHJ0aLVZOOUHka5o5PctLjqDZCNOMKufDCA/Lvgrci9oV?=
- =?us-ascii?Q?JHJtlkSCpAqxv2PJYbQLt+oyn8uPev/bMCEWoCRA5cXv6l96rj1mKMO5Rwxv?=
- =?us-ascii?Q?yf5MVpdtppLpvkT11h697KFdvVT42aoSV8r0n/zMuOJ4q54oA9EgR4u0hPFX?=
- =?us-ascii?Q?57xyDHMx62xCxc/NAyceGyiSiBVHO2coqAmcQtzuBFtvqhlb0L5SpJiePItu?=
- =?us-ascii?Q?Psd/Pisji9lHAtYZkt2hha5+bx3pjhsYiTJTxgAdL9YoZVVk8E7PePoyz2Hh?=
- =?us-ascii?Q?Cx4bHSj5YN29LxvYf7/atd/wWn9sVsOZDRDqyAmOntAuLPzadRFnuDq5Ta7x?=
- =?us-ascii?Q?VEtnidEdj8+0kym4bvaYyi6jKXfbMrxuLYHOqm4+zb+Yp0JPXKUmQAvDkOGf?=
- =?us-ascii?Q?NSropQSWycGB99IoojKFIvubGSbXpCbRbRnCfhSC0VN5YLiOxkUIxbYjq5rq?=
- =?us-ascii?Q?8FSXkBsE6ktT5QKw0rNC/aBmnt49e802SxGytvUAb+MqdtCW+ygr9BivgB3n?=
- =?us-ascii?Q?goA9n/7hBzNTacUoO46piCeO93hXE7G+eMxdDa7WtvlQL0mPMaO4ihd6zSjg?=
- =?us-ascii?Q?Z30V8SuEAuiHbjv6C8bG/+zyljiaQIdf6ykHEBpJeRpza4D3HwEsrjW09Dda?=
- =?us-ascii?Q?uQtGHAEVAg6nwjVMUkReEjIfUUTTuNZxNJ9nB98f7TR8sy5k3jAxevipf2fR?=
- =?us-ascii?Q?dRjyBs6hiJu8iIsJ2FFfU7eon7pPk6jnWgIIEQVJRT6AvyisSqiq+fNGyWLN?=
- =?us-ascii?Q?mQo2D2sWFyBtQmB6EyE1uCJQVRzHDrGGwzBW5unt/GtIus7qpCuehhcHlXEA?=
- =?us-ascii?Q?7c67Nnf4Z9j6US0rrFalM5NmoLiIAeI/XCo2aHbQgHSpqXXuOLXD9b0sG2cr?=
- =?us-ascii?Q?QP8TDf+lr+lWYKcS74mGWrz/IQUFPyy33JfqTR2cfR+ElRco4NipePLZryvs?=
- =?us-ascii?Q?i+ONoFGdrH71JSRbqArPCrJ8Hm+xLv6OHA5rkoQTA4NLiNYoeP68AdKgM14s?=
- =?us-ascii?Q?pXp07vfYcP67SBTQiLa+JFQcxwrv0bMy6Oq8E5QaXNi5fD1M3vDCjHqjXXT9?=
- =?us-ascii?Q?Uns6FxFqfZHh4DAJDzPeYXkqPlu7LNro0XhKAb0qLy+6sFhn4feqk+3bajEy?=
- =?us-ascii?Q?EdqoN7gQrugC49CHx2RiqGietrYQgjLRLegtcVY9QjpdfhDsJk2uH0NesdRI?=
- =?us-ascii?Q?DwY9c0nRN7c=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?vEfTa0+56AL1OKEELD2MtuqRiuvKZN+suA+tYd/MDW6Cq8kcgJEHVj/ciCPk?=
- =?us-ascii?Q?mIjNkNqFxuJBk2M2DOyv3DAWfTXwjUghaFMPgUWsuP13Am6TlhzLqvuJxEZr?=
- =?us-ascii?Q?aRtFyLxHSrEYmN+IZ8NK1oVryZ4rNVn8hA/5eaaw8FM1KZsjHT/prO6lENtb?=
- =?us-ascii?Q?5szzSaGExweLP4dI157hz0lYQJZ7D7lU+PW1SE2XBPAvxw+ILuVQUqbXftb+?=
- =?us-ascii?Q?1B+cs/L+b0kVvBryu2IshAq/0K9ie8UwPj5hioU++Oked9Nb6BWdlMd/Z3V4?=
- =?us-ascii?Q?emDCu3A0hAxbuTiq8KyjhO4ZMFALZZ53sZMciq4899VFcbq4mHN6gle4LP7U?=
- =?us-ascii?Q?vOhC0HRknu0Oai1ZCIGrOBLjgw1kXYvhERHUDvqhpd67Iy29RXLYdA6y/XK1?=
- =?us-ascii?Q?Z7VKQvRTAXTCbA1CKYzArks4QyXa9++G8OfdCp3v7hOqnegFyBjFRFJttJRc?=
- =?us-ascii?Q?Y/qwjJHxw7/3q+tz5iwVJY9RpB2+YCg2GyW3R/L4EPFPGel1lgWGJNhL5A3I?=
- =?us-ascii?Q?TTKdb0lD2ca+8T5ZtH1q7Kj/zCa6vOutRlbENoQ6JN/mlVm08GP9F7ZRzVHi?=
- =?us-ascii?Q?/e1GhmBDk0+L6s1GJCXHd9RfxWhCSF6bZZBIMdD3VdugrmlazdF6l6XxLy5O?=
- =?us-ascii?Q?z2wkVGrZ5fovWF4Tb8QQ23xOtChnwpRhrEB7a5zzLJiWj1cRU8HpXP/YcpKu?=
- =?us-ascii?Q?zJ5GtdEbgCnwcb7DRjpZYBEsfIJZX/u1pCumLOImjJaGR0rSksm0XANQmbnU?=
- =?us-ascii?Q?3MRRSor+EtZIvt88Qp1Ij6JHWRp0enHWv3SgsuPv98wNAK51+P8VePvEEntC?=
- =?us-ascii?Q?9tuNoF4TA5A/bAlgMr5FC0SotOIMVk6Q2UtT/9PIlI7B9kYMT1kAN1ObNXHL?=
- =?us-ascii?Q?Sw7Ag2Cw9WWwL23DDie0nICXKPX3YVu4wg9+IklbGzdl5XwaEY+UPVbxfImK?=
- =?us-ascii?Q?eMu2Lv/Ew5XYsPYAmRDZ8KDG7bo8CHh75KapWn22wn4u/Ou17D4qRAB6HAD+?=
- =?us-ascii?Q?caPA7QTArlw9u+L25lmakWWcYoXyF0lcI5Vym0qu29Aq2mN6vWBmBBBzYhNa?=
- =?us-ascii?Q?MYhJN5NjaUUmWEsHFw0ihqpqRmIhv6wMR2JdqMDxeWXfEYGf1AGT4aBXZfKt?=
- =?us-ascii?Q?oE9wYTcVV7Bv4444z4gGeWuj5UnTE2RJ4k2RZBJEMAiYG+PlhPT2VCQ2UjVv?=
- =?us-ascii?Q?3IBboggzHLR5btN16kQ2hJszaQAaMqzaFhGzJUbNklXakuyCorjf46Tx63sb?=
- =?us-ascii?Q?t238BuTF5P1JXC9ln17WxeYVQibDwvLkTtCvv8bBlxxC3PLO5N61trvSi3CU?=
- =?us-ascii?Q?XT7q/aB3EV9BxbNlXyMTNETcQBxkguAc2A74bw8IObnJDv9g4vpuh7iO3Tkq?=
- =?us-ascii?Q?sV7f2xOD09D6oxBzSYHtpXh3KpnNtWrXlHutGLG1ROEOix1L4dPzT194nfKx?=
- =?us-ascii?Q?drI9BDtW7CR/lxgCS1qmj58+rSG6YLXG7/evP4nP3oEHWH9EOprbtDZa5CAt?=
- =?us-ascii?Q?1YDkuruGBLARUNJbEDo4k/HwrbV9G27Z9exFN2i14zegl7dUuV0KU5YXsvzk?=
- =?us-ascii?Q?3wpHQQEJHM8/q+/t9n62mbmIige4BqGQ5DjZZZSskFL9vSYd58R7TrKMPc4s?=
- =?us-ascii?Q?Xw=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	5e9PdPaUkWZ4RJ+uzHjGJbIqWqq8gsZM6EAvdoCahlihyb1V5EHDzA5TrZXl1k5L83BMTW0Q+pX1LSMXWoEDn9xQjSjJQwIdVkFUBLvRnlEtCKUVlC+DdKSlhwcixignkDA3YMIb+D2op53BSAkHl7osTs/+ND/Jdds1oYUmLplfKYMtTVXX59uyR//svpjIFGIp/BRF383iQ54O9TKx0YZ06PfQC7q97c2wH5nBlLQZCsB/6jfxlgI62pJFcl3H0Tjs3X7dye3DffK2wDtRjKVVoGwFDQ4k1Tfk/I9OmnDWlTc5B8GsZgLbtG2AbosLa/s7mf5Hpu7OI4xX/0MewT/H9VJDoXan+4PWZyx99zl4HI65GfGxEgq57lQ6U5TVA6PP/8jPOL7hjszK9US7iPyh5KTRLYPBFCtxWASqE1cIYYXQbzUiZ9JFiXD7D1+fbt9orCSvlViZPcXsqVgBdivv9XzjQupBc6W56F9BnQ887rR+JcUY0ZnOr8WdR/i1hGWJqYiZf6Mjyoaq9pmlIQ94cxEXFfwJ1vm+wsDl5FcKWuei/NkC/tjVCKHD8e8Gj/xJhGERXcy0SNIvMv9wxqaMGdh883YWcsWBFGInJYs=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d06de099-ab5e-4b16-1aa0-08ddc887a4e5
-X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 21 Jul 2025 18:51:47.3271
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: wv7nNOZvdk13utytRVFIsv5m2/N9hkGSjmvX1tDpdPZLVQCi1ySVfp8MS8iczbCvEfa+jgiBfndvHLE9gw53ssxWiiuWZ1DsrDOu0IGQdKU=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: LV3PR10MB7817
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-21_05,2025-07-21_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxlogscore=999
- bulkscore=0 phishscore=0 adultscore=0 suspectscore=0 spamscore=0
- mlxscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2505160000 definitions=main-2507210167
-X-Authority-Analysis: v=2.4 cv=MNRgmNZl c=1 sm=1 tr=0 ts=687e8c48 cx=c_pps
- a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19
- a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19 a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19
- a=xqWC_Br6kY4A:10 a=Wb1JkmetP80A:10 a=GoEa3M9JfhUA:10 a=yPCof4ZbAAAA:8
- a=T5qRgKQKIx96wK50R78A:9
-X-Proofpoint-ORIG-GUID: hwc4ZeOmKMuzr1kVg9u_ZA48DdGFroQs
-X-Proofpoint-GUID: hwc4ZeOmKMuzr1kVg9u_ZA48DdGFroQs
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIxMDE2NyBTYWx0ZWRfX9nfSIA2pDudQ
- U3VZKesypdAiVZIZBHmgFnSFzV/v4j2PaGd/tH+6ZN8GpIDrqug076mJxjt8umAqsrOdeNHoiyQ
- O++IlMQa4qaqkNCohvi7+2dhXatAFV21/a7Mf0ahSZGdjHyvE1NnwUj45Hy6pi9dbud8+r+a35d
- 5jfdZz5X66kr0kKlT53Oxy8Mcc1tmGOA/3zCqeZUt3G9A1A3d/7rVez4AIwOyf7z/SVd27a8oe5
- fLZF9vCigi52xOtnnTh2RnijkL98bMTrR5khdAzVnvU+g8rlc/S4UlZxlBKmyJdWSrpvYtAYtnM
- GKNoHxfo4d7oQ1jbQNZcFcxNXCxMjWoLYYP+WiHnlBaiWDd8tFi/wTLUzxGrKvm0KfUqrxtm7aN
- Xy3Istgba4MLum+8mpwddMopNEcY1SGzr599wEtX9kdhvIpYf93aOq/EahlwS/kKANaQCiD4
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-We might be running a local application that also interacts with the
-backing device. In this setup we have some clustering type of
-software that manages the ownwer of it, so we don't want the kernel
-to restrict us. This patch allows the user to control if the driver
-gets exclusive access.
+Commit 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service
+routine to a threaded IRQ handler") introduced IRQ lock inversion. Fix
+this lock inversion by changing the spin_lock_irq() calls into
+spin_lock_irqsave() calls in code that can be called either from
+interrupt context or from thread context.
 
-Signed-off-by: Mike Christie <michael.christie@oracle.com>
----
- drivers/target/target_core_iblock.c | 33 ++++++++++++++++++++++++-----
- drivers/target/target_core_iblock.h |  1 +
- 2 files changed, 29 insertions(+), 5 deletions(-)
+WARNING: possible irq lock inversion dependency detected
+6.12.30-android16-5-maybe-dirty-4k #1 Tainted: G        W  OE
+--------------------------------------------------------
+kworker/u28:0/12 just changed the state of lock:
+ffffff881e29dd60 (&hba->clk_gating.lock){-...}-{2:2}, at: ufshcd_release_=
+scsi_cmd+0x60/0x110
+but this lock took another, HARDIRQ-unsafe lock in the past:
+ (shost->host_lock){+.+.}-{2:2}
 
-diff --git a/drivers/target/target_core_iblock.c b/drivers/target/target_core_iblock.c
-index 73564efd11d2..66c292b7d74b 100644
---- a/drivers/target/target_core_iblock.c
-+++ b/drivers/target/target_core_iblock.c
-@@ -64,6 +64,7 @@ static struct se_device *iblock_alloc_device(struct se_hba *hba, const char *nam
- 		pr_err("Unable to allocate struct iblock_dev\n");
- 		return NULL;
- 	}
-+	ib_dev->ibd_exclusive = true;
- 
- 	ib_dev->ibd_plug = kcalloc(nr_cpu_ids, sizeof(*ib_dev->ibd_plug),
- 				   GFP_KERNEL);
-@@ -95,6 +96,7 @@ static int iblock_configure_device(struct se_device *dev)
- 	struct block_device *bd;
- 	struct blk_integrity *bi;
- 	blk_mode_t mode = BLK_OPEN_READ;
-+	void *holder = ib_dev;
- 	unsigned int max_write_zeroes_sectors;
- 	int ret;
- 
-@@ -109,15 +111,18 @@ static int iblock_configure_device(struct se_device *dev)
- 		goto out;
- 	}
- 
--	pr_debug( "IBLOCK: Claiming struct block_device: %s\n",
--			ib_dev->ibd_udev_path);
-+	pr_debug("IBLOCK: Claiming struct block_device: %s: %d\n",
-+		 ib_dev->ibd_udev_path, ib_dev->ibd_exclusive);
- 
- 	if (!ib_dev->ibd_readonly)
- 		mode |= BLK_OPEN_WRITE;
- 	else
- 		dev->dev_flags |= DF_READ_ONLY;
- 
--	bdev_file = bdev_file_open_by_path(ib_dev->ibd_udev_path, mode, ib_dev,
-+	if (!ib_dev->ibd_exclusive)
-+		holder = NULL;
-+
-+	bdev_file = bdev_file_open_by_path(ib_dev->ibd_udev_path, mode, holder,
- 					NULL);
- 	if (IS_ERR(bdev_file)) {
- 		ret = PTR_ERR(bdev_file);
-@@ -560,13 +565,14 @@ iblock_execute_write_same(struct se_cmd *cmd)
+and interrupts could create inverse lock ordering between them.
+
+other info that might help us debug this:
+ Possible interrupt unsafe locking scenario:
+
+       CPU0                    CPU1
+       ----                    ----
+  lock(shost->host_lock);
+                               local_irq_disable();
+                               lock(&hba->clk_gating.lock);
+                               lock(shost->host_lock);
+  <Interrupt>
+    lock(&hba->clk_gating.lock);
+
+ *** DEADLOCK ***
+
+4 locks held by kworker/u28:0/12:
+ #0: ffffff8800ac6158 ((wq_completion)async){+.+.}-{0:0}, at: process_one=
+_work+0x1bc/0x65c
+ #1: ffffffc085c93d70 ((work_completion)(&entry->work)){+.+.}-{0:0}, at: =
+process_one_work+0x1e4/0x65c
+ #2: ffffff881e29c0e0 (&shost->scan_mutex){+.+.}-{3:3}, at: __scsi_add_de=
+vice+0x74/0x120
+ #3: ffffff881960ea00 (&hwq->cq_lock){-...}-{2:2}, at: ufshcd_mcq_poll_cq=
+e_lock+0x28/0x104
+
+the shortest dependencies between 2nd lock and 1st lock:
+ -> (shost->host_lock){+.+.}-{2:2} {
+    HARDIRQ-ON-W at:
+                      lock_acquire+0x134/0x2b4
+                      _raw_spin_lock+0x48/0x64
+                      ufshcd_sl_intr+0x4c/0xa08
+                      ufshcd_threaded_intr+0x70/0x12c
+                      irq_thread_fn+0x48/0xa8
+                      irq_thread+0x130/0x1ec
+                      kthread+0x110/0x134
+                      ret_from_fork+0x10/0x20
+    SOFTIRQ-ON-W at:
+                      lock_acquire+0x134/0x2b4
+                      _raw_spin_lock+0x48/0x64
+                      ufshcd_sl_intr+0x4c/0xa08
+                      ufshcd_threaded_intr+0x70/0x12c
+                      irq_thread_fn+0x48/0xa8
+                      irq_thread+0x130/0x1ec
+                      kthread+0x110/0x134
+                      ret_from_fork+0x10/0x20
+    INITIAL USE at:
+                     lock_acquire+0x134/0x2b4
+                     _raw_spin_lock+0x48/0x64
+                     ufshcd_sl_intr+0x4c/0xa08
+                     ufshcd_threaded_intr+0x70/0x12c
+                     irq_thread_fn+0x48/0xa8
+                     irq_thread+0x130/0x1ec
+                     kthread+0x110/0x134
+                     ret_from_fork+0x10/0x20
+  }
+  ... key      at: [<ffffffc085ba1a98>] scsi_host_alloc.__key+0x0/0x10
+  ... acquired at:
+   _raw_spin_lock_irqsave+0x5c/0x80
+   __ufshcd_release+0x78/0x118
+   ufshcd_send_uic_cmd+0xe4/0x118
+   ufshcd_dme_set_attr+0x88/0x1c8
+   ufs_google_phy_initialization+0x68/0x418 [ufs]
+   ufs_google_link_startup_notify+0x78/0x27c [ufs]
+   ufshcd_link_startup+0x84/0x720
+   ufshcd_init+0xf3c/0x1330
+   ufshcd_pltfrm_init+0x728/0x7d8
+   ufs_google_probe+0x30/0x84 [ufs]
+   platform_probe+0xa0/0xe0
+   really_probe+0x114/0x454
+   __driver_probe_device+0xa4/0x160
+   driver_probe_device+0x44/0x23c
+   __driver_attach_async_helper+0x60/0xd4
+   async_run_entry_fn+0x4c/0x17c
+   process_one_work+0x26c/0x65c
+   worker_thread+0x33c/0x498
+   kthread+0x110/0x134
+   ret_from_fork+0x10/0x20
+
+-> (&hba->clk_gating.lock){-...}-{2:2} {
+   IN-HARDIRQ-W at:
+                    lock_acquire+0x134/0x2b4
+                    _raw_spin_lock_irqsave+0x5c/0x80
+                    ufshcd_release_scsi_cmd+0x60/0x110
+                    ufshcd_compl_one_cqe+0x2c0/0x3f4
+                    ufshcd_mcq_poll_cqe_lock+0xb0/0x104
+                    ufs_google_mcq_intr+0x80/0xa0 [ufs]
+                    __handle_irq_event_percpu+0x104/0x32c
+                    handle_irq_event+0x40/0x9c
+                    handle_fasteoi_irq+0x170/0x2e8
+                    generic_handle_domain_irq+0x58/0x80
+                    gic_handle_irq+0x48/0x104
+                    call_on_irq_stack+0x3c/0x50
+                    do_interrupt_handler+0x7c/0xd8
+                    el1_interrupt+0x34/0x58
+                    el1h_64_irq_handler+0x18/0x24
+                    el1h_64_irq+0x68/0x6c
+                    _raw_spin_unlock_irqrestore+0x3c/0x6c
+                    debug_object_assert_init+0x16c/0x21c
+                    __mod_timer+0x4c/0x48c
+                    schedule_timeout+0xd4/0x16c
+                    io_schedule_timeout+0x48/0x70
+                    do_wait_for_common+0x100/0x194
+                    wait_for_completion_io_timeout+0x48/0x6c
+                    blk_execute_rq+0x124/0x17c
+                    scsi_execute_cmd+0x18c/0x3f8
+                    scsi_probe_and_add_lun+0x204/0xd74
+                    __scsi_add_device+0xbc/0x120
+                    ufshcd_async_scan+0x80/0x3c0
+                    async_run_entry_fn+0x4c/0x17c
+                    process_one_work+0x26c/0x65c
+                    worker_thread+0x33c/0x498
+                    kthread+0x110/0x134
+                    ret_from_fork+0x10/0x20
+   INITIAL USE at:
+                   lock_acquire+0x134/0x2b4
+                   _raw_spin_lock_irqsave+0x5c/0x80
+                   ufshcd_hold+0x34/0x14c
+                   ufshcd_send_uic_cmd+0x28/0x118
+                   ufshcd_dme_set_attr+0x88/0x1c8
+                   ufs_google_phy_initialization+0x68/0x418 [ufs]
+                   ufs_google_link_startup_notify+0x78/0x27c [ufs]
+                   ufshcd_link_startup+0x84/0x720
+                   ufshcd_init+0xf3c/0x1330
+                   ufshcd_pltfrm_init+0x728/0x7d8
+                   ufs_google_probe+0x30/0x84 [ufs]
+                   platform_probe+0xa0/0xe0
+                   really_probe+0x114/0x454
+                   __driver_probe_device+0xa4/0x160
+                   driver_probe_device+0x44/0x23c
+                   __driver_attach_async_helper+0x60/0xd4
+                   async_run_entry_fn+0x4c/0x17c
+                   process_one_work+0x26c/0x65c
+                   worker_thread+0x33c/0x498
+                   kthread+0x110/0x134
+                   ret_from_fork+0x10/0x20
  }
- 
- enum {
--	Opt_udev_path, Opt_readonly, Opt_force, Opt_err
-+	Opt_udev_path, Opt_readonly, Opt_force, Opt_exclusive, Opt_err,
- };
- 
- static match_table_t tokens = {
- 	{Opt_udev_path, "udev_path=%s"},
- 	{Opt_readonly, "readonly=%d"},
- 	{Opt_force, "force=%d"},
-+	{Opt_exclusive, "exclusive=%d"},
- 	{Opt_err, NULL}
- };
- 
-@@ -576,7 +582,7 @@ static ssize_t iblock_set_configfs_dev_params(struct se_device *dev,
- 	struct iblock_dev *ib_dev = IBLOCK_DEV(dev);
- 	char *orig, *ptr, *arg_p, *opts;
- 	substring_t args[MAX_OPT_ARGS];
--	int ret = 0, token;
-+	int ret = 0, token, tmp_exclusive;
- 	unsigned long tmp_readonly;
- 
- 	opts = kstrdup(page, GFP_KERNEL);
-@@ -623,6 +629,22 @@ static ssize_t iblock_set_configfs_dev_params(struct se_device *dev,
- 			ib_dev->ibd_readonly = tmp_readonly;
- 			pr_debug("IBLOCK: readonly: %d\n", ib_dev->ibd_readonly);
- 			break;
-+		case Opt_exclusive:
-+			arg_p = match_strdup(&args[0]);
-+			if (!arg_p) {
-+				ret = -ENOMEM;
-+				break;
-+			}
-+			ret = kstrtoint(arg_p, 0, &tmp_exclusive);
-+			kfree(arg_p);
-+			if (ret < 0) {
-+				pr_err("kstrtoul() failed for exclusive=\n");
-+				goto out;
-+			}
-+			ib_dev->ibd_exclusive = tmp_exclusive;
-+			pr_debug("IBLOCK: exclusive: %d\n",
-+				 ib_dev->ibd_exclusive);
-+			break;
- 		case Opt_force:
- 			break;
- 		default:
-@@ -647,6 +669,7 @@ static ssize_t iblock_show_configfs_dev_params(struct se_device *dev, char *b)
- 		bl += sprintf(b + bl, "  UDEV PATH: %s",
- 				ib_dev->ibd_udev_path);
- 	bl += sprintf(b + bl, "  readonly: %d\n", ib_dev->ibd_readonly);
-+	bl += sprintf(b + bl, "  exclusive: %d\n", ib_dev->ibd_exclusive);
- 
- 	bl += sprintf(b + bl, "        ");
- 	if (bd) {
-diff --git a/drivers/target/target_core_iblock.h b/drivers/target/target_core_iblock.h
-index 91f6f4280666..e2f28a69a11c 100644
---- a/drivers/target/target_core_iblock.h
-+++ b/drivers/target/target_core_iblock.h
-@@ -34,6 +34,7 @@ struct iblock_dev {
- 	struct block_device *ibd_bd;
- 	struct file *ibd_bdev_file;
- 	bool ibd_readonly;
-+	bool ibd_exclusive;
- 	struct iblock_dev_plug *ibd_plug;
- } ____cacheline_aligned;
- 
--- 
-2.47.1
+ ... key      at: [<ffffffc085ba6fe8>] ufshcd_init.__key+0x0/0x10
+ ... acquired at:
+   mark_lock+0x1c4/0x224
+   __lock_acquire+0x438/0x2e1c
+   lock_acquire+0x134/0x2b4
+   _raw_spin_lock_irqsave+0x5c/0x80
+   ufshcd_release_scsi_cmd+0x60/0x110
+   ufshcd_compl_one_cqe+0x2c0/0x3f4
+   ufshcd_mcq_poll_cqe_lock+0xb0/0x104
+   ufs_google_mcq_intr+0x80/0xa0 [ufs]
+   __handle_irq_event_percpu+0x104/0x32c
+   handle_irq_event+0x40/0x9c
+   handle_fasteoi_irq+0x170/0x2e8
+   generic_handle_domain_irq+0x58/0x80
+   gic_handle_irq+0x48/0x104
+   call_on_irq_stack+0x3c/0x50
+   do_interrupt_handler+0x7c/0xd8
+   el1_interrupt+0x34/0x58
+   el1h_64_irq_handler+0x18/0x24
+   el1h_64_irq+0x68/0x6c
+   _raw_spin_unlock_irqrestore+0x3c/0x6c
+   debug_object_assert_init+0x16c/0x21c
+   __mod_timer+0x4c/0x48c
+   schedule_timeout+0xd4/0x16c
+   io_schedule_timeout+0x48/0x70
+   do_wait_for_common+0x100/0x194
+   wait_for_completion_io_timeout+0x48/0x6c
+   blk_execute_rq+0x124/0x17c
+   scsi_execute_cmd+0x18c/0x3f8
+   scsi_probe_and_add_lun+0x204/0xd74
+   __scsi_add_device+0xbc/0x120
+   ufshcd_async_scan+0x80/0x3c0
+   async_run_entry_fn+0x4c/0x17c
+   process_one_work+0x26c/0x65c
+   worker_thread+0x33c/0x498
+   kthread+0x110/0x134
+   ret_from_fork+0x10/0x20
 
+stack backtrace:
+CPU: 6 UID: 0 PID: 12 Comm: kworker/u28:0 Tainted: G        W  OE      6.=
+12.30-android16-5-maybe-dirty-4k #1 ccd4020fe444bdf629efc3b86df6be920b8df=
+7d0
+Tainted: [W]=3DWARN, [O]=3DOOT_MODULE, [E]=3DUNSIGNED_MODULE
+Hardware name: Spacecraft board based on MALIBU (DT)
+Workqueue: async async_run_entry_fn
+Call trace:
+ dump_backtrace+0xfc/0x17c
+ show_stack+0x18/0x28
+ dump_stack_lvl+0x40/0xa0
+ dump_stack+0x18/0x24
+ print_irq_inversion_bug+0x2fc/0x304
+ mark_lock_irq+0x388/0x4fc
+ mark_lock+0x1c4/0x224
+ __lock_acquire+0x438/0x2e1c
+ lock_acquire+0x134/0x2b4
+ _raw_spin_lock_irqsave+0x5c/0x80
+ ufshcd_release_scsi_cmd+0x60/0x110
+ ufshcd_compl_one_cqe+0x2c0/0x3f4
+ ufshcd_mcq_poll_cqe_lock+0xb0/0x104
+ ufs_google_mcq_intr+0x80/0xa0 [ufs dd6f385554e109da094ab91d5f7be18625a22=
+22a]
+ __handle_irq_event_percpu+0x104/0x32c
+ handle_irq_event+0x40/0x9c
+ handle_fasteoi_irq+0x170/0x2e8
+ generic_handle_domain_irq+0x58/0x80
+ gic_handle_irq+0x48/0x104
+ call_on_irq_stack+0x3c/0x50
+ do_interrupt_handler+0x7c/0xd8
+ el1_interrupt+0x34/0x58
+ el1h_64_irq_handler+0x18/0x24
+ el1h_64_irq+0x68/0x6c
+ _raw_spin_unlock_irqrestore+0x3c/0x6c
+ debug_object_assert_init+0x16c/0x21c
+ __mod_timer+0x4c/0x48c
+ schedule_timeout+0xd4/0x16c
+ io_schedule_timeout+0x48/0x70
+ do_wait_for_common+0x100/0x194
+ wait_for_completion_io_timeout+0x48/0x6c
+ blk_execute_rq+0x124/0x17c
+ scsi_execute_cmd+0x18c/0x3f8
+ scsi_probe_and_add_lun+0x204/0xd74
+ __scsi_add_device+0xbc/0x120
+ ufshcd_async_scan+0x80/0x3c0
+ async_run_entry_fn+0x4c/0x17c
+ process_one_work+0x26c/0x65c
+ worker_thread+0x33c/0x498
+ kthread+0x110/0x134
+ ret_from_fork+0x10/0x20
+
+Cc: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Andr=C3=A9 Draszik <andre.draszik@linaro.org>
+Fixes: 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service rou=
+tine to a threaded IRQ handler")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/ufs/core/ufshcd.c | 11 ++++-------
+ 1 file changed, 4 insertions(+), 7 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index acfc1b4691fa..564143d751d1 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5566,7 +5566,7 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
+hba *hba, u32 intr_status)
+ 	irqreturn_t retval =3D IRQ_NONE;
+ 	struct uic_command *cmd;
+=20
+-	spin_lock(hba->host->host_lock);
++	guard(spinlock_irqsave, hba->host->host_lock);
+ 	cmd =3D hba->active_uic_cmd;
+ 	if (WARN_ON_ONCE(!cmd))
+ 		goto unlock;
+@@ -5593,8 +5593,6 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
+hba *hba, u32 intr_status)
+ 		ufshcd_add_uic_command_trace(hba, cmd, UFS_CMD_COMP);
+=20
+ unlock:
+-	spin_unlock(hba->host->host_lock);
+-
+ 	return retval;
+ }
+=20
+@@ -6455,10 +6453,9 @@ void ufshcd_schedule_eh_work(struct ufs_hba *hba)
+=20
+ static void ufshcd_force_error_recovery(struct ufs_hba *hba)
+ {
+-	spin_lock_irq(hba->host->host_lock);
++	guard(spinlock_irqsave)(hba->host->host_lock);
+ 	hba->force_reset =3D true;
+ 	ufshcd_schedule_eh_work(hba);
+-	spin_unlock_irq(hba->host->host_lock);
+ }
+=20
+ static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
+@@ -6922,7 +6919,7 @@ static irqreturn_t ufshcd_check_errors(struct ufs_h=
+ba *hba, u32 intr_status)
+ 	bool queue_eh_work =3D false;
+ 	irqreturn_t retval =3D IRQ_NONE;
+=20
+-	spin_lock(hba->host->host_lock);
++	guard(spinlock_irqsave)(hba->host->host_lock);
+ 	hba->errors |=3D UFSHCD_ERROR_MASK & intr_status;
+=20
+ 	if (hba->errors & INT_FATAL_ERRORS) {
+@@ -6981,7 +6978,7 @@ static irqreturn_t ufshcd_check_errors(struct ufs_h=
+ba *hba, u32 intr_status)
+ 	 */
+ 	hba->errors =3D 0;
+ 	hba->uic_error =3D 0;
+-	spin_unlock(hba->host->host_lock);
++
+ 	return retval;
+ }
+=20
