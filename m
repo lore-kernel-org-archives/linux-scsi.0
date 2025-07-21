@@ -1,49 +1,48 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5AC522877C4
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 08:36:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E31C287503
+	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 08:36:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753086997; cv=none; b=e7vSs4QgcqmCuAyQ/ph5PrU25gl+UY7TtiKOc6olkERTppLGqkLwb3o9EAGFa/f6tXAyoRojGnzLyNbsj27N4Fde5IlDTFNNqtA2u1J0R5Ha6vVtGkbvFMNRP96gvTyoDwQNxdt50Pl2vgm2ekjs8RU2wtz/XsRJnihZObskkzk=
+	t=1753086997; cv=none; b=kCTsBylE7cERseSqPIxGitTsFqpBMbXC7RnbfCcWaRLP0TRjwbB4vkceupcQIKfvm3CfvV5yNjvyB2SD8JplvRdsQti+9lOv8Pp3z9oQ5r7iiwsSuvsaoqqVdxheX2jSkge6huRaMObRsfouj7j8ajadsFNsLQYZbLub0XCQ5pU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1753086997; c=relaxed/simple;
-	bh=WqN3NwwnzeHGd+qPVSTJwgaQ/usKQGE7ayoRpPMcums=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gFkR70JYvGqFoQE+VJBryQdShAsyxe7sUow/OpdKUT4MwkMUzTdcykGS6V0Ef9JsYmSmSbd+Ddh9bxKKXv7/jy5RMfBxYZ6E4rwMAjhqS9wj0J0OIfPw0Hb7KxloTLaCxIikH3hT3QliIWfRkwpO/APlgV1m9pzRrqVrHla/R40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=bpy1b5hv; arc=none smtp.client-ip=60.244.123.138
+	bh=BDjRm0OOoX8m1/dMvn+Bn58gxtXHUpfQA+XrngCN+G4=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=r886SRPV+tvCwm99BHe7vA6VXkw2EL84UcvSeerl+2+9GwuFL1zlNRz32eeTUDOFPtbbZ9kqhw7UTVxh3T7TgoPzPZFethxYyaBzu0EKERBCMf6bJc/onf345d32VKnZEkuEib1PEK7OSksBWi+ql1Y6b2pt9qz92uMXd6iJBcc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=uxckixYy; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="bpy1b5hv"
-X-UUID: cdccbd2e660d11f08b7dc59d57013e23-20250721
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="uxckixYy"
+X-UUID: ccff4b3c660d11f0b33aeb1e7f16c2b6-20250721
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=SSPjWjnXK1p7ouwQNXUsmhbVLQ9zcrsQ+wS0Gsfao50=;
-	b=bpy1b5hvBYw304UMD/21r2JQTdczpMX05C8zv81gZ/B5nE0wE9Q3uQa/eyf6dMScRh04Uzqq8xh3Ge6D90gnqei7wIouy0BR+fiZBMsMF2AZ1v3vWRLM+YdqEXKyKmu4uFDLDDXWIeONjnTI7fZuwfW9f2x0uajyPz1/4hLT8Iw=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=DevNDz8BFw1anNLJvpEp1t+vYuylJ5UpZ56Fi6uRKas=;
+	b=uxckixYyTO46NxLX4Uz/fkm/WT6spbdMkJ7jwbU9XYHc6Hx0isYfGafNtp+7o+J1InMrno4H9L8cGgi79FJG8KgysomDTwFjUjLwfudBIT/wwv5XShxwvIjjWT76k+M/TPyokYuVa/f1NE/UGBWFAUQozixGsHwCN88kyxCWbgw=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.2,REQID:2ce3e442-22a6-4267-bf31-ed3d3382be1c,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:9eb4ff7,CLOUDID:815caa84-a7ec-4748-8ac1-dca5703e241f,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
-	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
-	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-O-INFO: VERSION:1.3.2,REQID:cf8b27ac-fda8-4f09-b1ed-690e17ed3ae6,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:9eb4ff7,CLOUDID:04d7199a-32fc-44a3-90ac-aa371853f23f,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
+	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: cdccbd2e660d11f08b7dc59d57013e23-20250721
-Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw01.mediatek.com
+X-UUID: ccff4b3c660d11f0b33aeb1e7f16c2b6-20250721
+Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw02.mediatek.com
 	(envelope-from <peter.wang@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1678245677; Mon, 21 Jul 2025 16:36:32 +0800
+	with ESMTP id 918243939; Mon, 21 Jul 2025 16:36:30 +0800
 Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
  MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Mon, 21 Jul 2025 16:36:30 +0800
+ 15.2.1258.39; Mon, 21 Jul 2025 16:36:29 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Mon, 21 Jul 2025 16:36:29 +0800
+ 15.2.1258.39 via Frontend Transport; Mon, 21 Jul 2025 16:36:28 +0800
 From: <peter.wang@mediatek.com>
 To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
 CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
@@ -53,12 +52,10 @@ CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
 	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
 	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
 	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
-Subject: [PATCH v3 9/9] ufs: host: mediatek: Support FDE (AES) clock scaling
-Date: Mon, 21 Jul 2025 16:35:18 +0800
-Message-ID: <20250721083626.1801668-10-peter.wang@mediatek.com>
+Subject: [PATCH v3 0/9] ufs: host: mediatek: Provide features and fixes in MediaTek platforms
+Date: Mon, 21 Jul 2025 16:35:09 +0800
+Message-ID: <20250721083626.1801668-1-peter.wang@mediatek.com>
 X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250721083626.1801668-1-peter.wang@mediatek.com>
-References: <20250721083626.1801668-1-peter.wang@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,146 +68,36 @@ X-MTK: N
 
 From: Peter Wang <peter.wang@mediatek.com>
 
-This patch adds support for scaling the FDE (AES) clock to achieve higher
-performance, particularly for HS-G5. The implementation includes:
-1. Parsing DTS settings for FDE min/max mux.
-2. Scaling up the FDE clock when required for enhanced performance.
+This series fixes some defects and provide features in MediaTek UFS drivers.
 
-These changes ensure that the FDE clock can be dynamically adjusted
-based on performance needs, leveraging DTS configurations.
+Changes since v2:
+1. Remove unnecessary parentheses in patch:
+  ufs: host: mediatek: Remove unnecessary boolean conversion and
+    parentheses
+2. Fix comment or patch description in patch:
+  ufs: host: mediatek: Add DDR_EN setting
+  ufs: host: mediatek: Set IRQ affinity policy for MCQ mode
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Chun-Hung Wu <chun-hung.wu@mediatek.com>
----
- drivers/ufs/host/ufs-mediatek.c | 54 ++++++++++++++++++++++++++++++++-
- drivers/ufs/host/ufs-mediatek.h |  3 ++
- 2 files changed, 56 insertions(+), 1 deletion(-)
+Peter Wang (7):
+  ufs: host: mediatek: Remove unnecessary boolean conversion and
+    parentheses
+  ufs: host: mediatek: Change ref-clk timeout policy
+  ufs: host: mediatek: Handle broken RTC based on DTS setting
+  ufs: host: mediatek: Set IRQ affinity policy for MCQ mode
+  ufs: host: mediatek: Add clock scaling query function
+  ufs: host: mediatek: Support clock scaling with Vcore binding
+  ufs: host: mediatek: Support FDE (AES) clock scaling
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index a0c53d796a60..91a2f3428b9f 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -953,9 +953,23 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
- 			host->mclk.ufs_sel_min_clki = clki;
- 			clk_disable_unprepare(clki->clk);
- 			list_del(&clki->list);
-+		} else if (!strcmp(clki->name, "ufs_fde")) {
-+			host->mclk.ufs_fde_clki = clki;
-+		} else if (!strcmp(clki->name, "ufs_fde_max_src")) {
-+			host->mclk.ufs_fde_max_clki = clki;
-+			clk_disable_unprepare(clki->clk);
-+			list_del(&clki->list);
-+		} else if (!strcmp(clki->name, "ufs_fde_min_src")) {
-+			host->mclk.ufs_fde_min_clki = clki;
-+			clk_disable_unprepare(clki->clk);
-+			list_del(&clki->list);
- 		}
- 	}
- 
-+	list_for_each_entry(clki, head, list) {
-+		dev_info(hba->dev, "clk \"%s\" present", clki->name);
-+	}
-+
- 	if (!ufs_mtk_is_clk_scale_ready(hba)) {
- 		hba->caps &= ~UFSHCD_CAP_CLK_SCALING;
- 		dev_info(hba->dev,
-@@ -1758,14 +1772,16 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 	struct ufs_mtk_clk *mclk = &host->mclk;
- 	struct ufs_clk_info *clki = mclk->ufs_sel_clki;
-+	struct ufs_clk_info *fde_clki = mclk->ufs_fde_clki;
- 	struct regulator *reg;
- 	int volt, ret = 0;
- 	bool clk_bind_vcore = false;
-+	bool clk_fde_scale = false;
- 
- 	if (!hba->clk_scaling.is_initialized)
- 		return;
- 
--	if (!clki)
-+	if (!clki || !fde_clki)
- 		return;
- 
- 	reg = host->mclk.reg_vcore;
-@@ -1773,6 +1789,9 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 	if (reg && volt != 0)
- 		clk_bind_vcore = true;
- 
-+	if (mclk->ufs_fde_max_clki && mclk->ufs_fde_min_clki)
-+		clk_fde_scale = true;
-+
- 	ret = clk_prepare_enable(clki->clk);
- 	if (ret) {
- 		dev_info(hba->dev,
-@@ -1780,6 +1799,15 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 		return;
- 	}
- 
-+	if (clk_fde_scale) {
-+		ret = clk_prepare_enable(fde_clki->clk);
-+		if (ret) {
-+			dev_info(hba->dev,
-+				 "fde clk_prepare_enable() fail, ret: %d\n", ret);
-+			return;
-+		}
-+	}
-+
- 	if (scale_up) {
- 		if (clk_bind_vcore) {
- 			ret = regulator_set_voltage(reg, volt, INT_MAX);
-@@ -1795,7 +1823,28 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
- 				ret);
- 		}
-+
-+		if (clk_fde_scale) {
-+			ret = clk_set_parent(fde_clki->clk,
-+				mclk->ufs_fde_max_clki->clk);
-+			if (ret) {
-+				dev_info(hba->dev,
-+					"Failed to set fde clk mux, ret = %d\n",
-+					ret);
-+			}
-+		}
- 	} else {
-+		if (clk_fde_scale) {
-+			ret = clk_set_parent(fde_clki->clk,
-+				mclk->ufs_fde_min_clki->clk);
-+			if (ret) {
-+				dev_info(hba->dev,
-+					"Failed to set fde clk mux, ret = %d\n",
-+					ret);
-+				goto out;
-+			}
-+		}
-+
- 		ret = clk_set_parent(clki->clk, mclk->ufs_sel_min_clki->clk);
- 		if (ret) {
- 			dev_info(hba->dev, "Failed to set clk mux, ret = %d\n",
-@@ -1814,6 +1863,9 @@ static void _ufs_mtk_clk_scale(struct ufs_hba *hba, bool scale_up)
- 
- out:
- 	clk_disable_unprepare(clki->clk);
-+
-+	if (clk_fde_scale)
-+		clk_disable_unprepare(fde_clki->clk);
- }
- 
- /**
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index 0b25ce5aa836..e46dc5fa209d 100644
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -149,6 +149,9 @@ struct ufs_mtk_clk {
- 	struct ufs_clk_info *ufs_sel_clki; /* Mux */
- 	struct ufs_clk_info *ufs_sel_max_clki; /* Max src */
- 	struct ufs_clk_info *ufs_sel_min_clki; /* Min src */
-+	struct ufs_clk_info *ufs_fde_clki; /* Mux */
-+	struct ufs_clk_info *ufs_fde_max_clki; /* Max src */
-+	struct ufs_clk_info *ufs_fde_min_clki; /* Min src */
- 	struct regulator *reg_vcore;
- 	int vcore_volt;
- };
+Naomi Chu (1):
+  ufs: host: mediatek: Add DDR_EN setting
+
+Alice Chao (1):
+  ufs: host: mediatek: Add more UFSCHI hardware versions
+
+ drivers/ufs/host/ufs-mediatek.c | 329 ++++++++++++++++++++++++++++----
+ drivers/ufs/host/ufs-mediatek.h |  32 ++++
+ 2 files changed, 328 insertions(+), 33 deletions(-)
+
 -- 
 2.45.2
 
