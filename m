@@ -1,65 +1,71 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0CDA273810;
-	Tue, 22 Jul 2025 03:47:49 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14D6B5223;
+	Tue, 22 Jul 2025 03:47:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753156071; cv=none; b=ts1XGtJVcPh6bddPYYzjrgScPb5bMSDplXC1RIOPllKBPW0QafONlscaBH9dgeHFirs+BCKTHnvOSjP/uNKa/BRgv7LX5xBkh5oHrhvoxtsZBPIEoqFW6ATqy0Ujx084mYNq7XAHD5/BsQjFBosR6qD8tEuHRA2H3xbrx3E8VC0=
+	t=1753156081; cv=none; b=M0e0WFsA3nty77zBjvh4hvhDfzL78N8oaR+2gWy3TUQu8zaPSSYo9rIViZdSIsLhD2Vcovey3ZnSXO0UUFiJUy/NHgMgi9SJj0VO62ms3sBjl6vTsV1QJJmp5cTYz4QK1UiIwQMaHThUdM5TGS/sk5i5oGSE40GMwkxFqtQHOGw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753156071; c=relaxed/simple;
-	bh=VlZoKkXfILCyhXWvhcKL/QC8xzbbAYgtnW23SdG77m8=;
+	s=arc-20240116; t=1753156081; c=relaxed/simple;
+	bh=gQFsTz9p6akgBad2u3koCkG0Ki7dMqALMGCjJIbmhrY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iDOQHAt9XtBV1VqNmN8PEn/dBsiJGVSUkBkQ19cbSzDQJKsHWQi38UjAuKUWG4NFVHW591j0d7YLa1LjYVmyTRq+x8BgIAHTb+fKRZkqrvbBM8k9AtTMP2b8C099pDqYIsv6ldq9ZnAMtWd1WrmcWO36vDEHhxl46qfE634Pafg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=AArSDzSu; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=fwbEIPcm4mrVj5lgnG+CZ4R+jhqR+g59JvV7KTHLlIAYh2Pc+LpeVShmIXCS27lAN7LA4x7jwZWpOnl8ny0RAUsbn21BSYSFZUUoH1uU/A2UNDedu2J20ac8SNVFEV5nYlsMCAEAISSAv3UPnJUWvC0TufnGtRkjqkZWYpFqb4o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mbIoHmQh; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="AArSDzSu"
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mbIoHmQh"
 Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56M1C55d019819;
-	Tue, 22 Jul 2025 03:47:40 GMT
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56M1BtYp018886;
+	Tue, 22 Jul 2025 03:47:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=0vRilnNnXZdvoasg9Ce1BQpVV8hGMzrXKEEvgSPViTI=; b=
-	AArSDzSuQOfdjNlakSBXL0hlENtl2zmfH+TpcG41Lr/o5db6ls/Iw+TUHN2D+KyF
-	tTgk3gE81SnQ/GSL3ojVFU6AEbsGmV13oUlyqiuf4Pd5L1wVGTiKGnJ0XXDE5NK6
-	CuuPH70ADgYdWYX5Gbolqobhi2ipOw1DNqtiarW82urV4miISjF+Aesk0NyGeqTn
-	o+LN6fQ8ZgJnmBDiUP6A7WyBLBA/KtbAZtcHbbUcvLDb7DsKxuBc14MjD30fE8Aj
-	+bBJ8SFwBUEWyBOdTsRayPb28r5+fhHmmK9xlaGS4Xw+2quYdiI3Gd9V9pfx4zJ0
-	M1+yqfwqSeyqRyvBu/N7yw==
+	corp-2025-04-25; bh=mhwFevJ8wCIuN2/MKjYQuMAXk9L7k7QGGb1ltPjkRmA=; b=
+	mbIoHmQhllrTEJRRaZsg+BxKO6NhiGXbLEQkkQxRuIFKUNBvchHKRb7qVjJIf0aH
+	nngejMC0uJp8kJPsMYgJbWrjHrjzrTxAVcsiC/h2GRJB6lxYN28qQlmyBviJmzwq
+	wKbxI2JMLn1jrIy4KHGMO9CgncpeNVmQcLwxKNYbXEkcpB/d12Uj1JZOU+tzWpLH
+	5rluNxb6i9Due9Y8uua2FMCmi+bl/1V6fqonARbk2SnD8el46DMUcuuOalNY+znO
+	kvFj4ZHOcOQFs8g5WhjYfZ6UtWPyg7DrfKbMe/HmLL+iG3RQpoMCQ9pQX9PkNgrO
+	VMFgOLySWgpvZIqwZHiqHw==
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 480576m5vt-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 480576m5vq-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 22 Jul 2025 03:47:40 +0000 (GMT)
+	Tue, 22 Jul 2025 03:47:37 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56M0F3XL038366;
-	Tue, 22 Jul 2025 03:47:39 GMT
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56M17ReC038404;
+	Tue, 22 Jul 2025 03:47:36 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4801t8tean-1
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4801t8te97-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 22 Jul 2025 03:47:39 +0000
+	Tue, 22 Jul 2025 03:47:36 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56M3lZjH031915;
-	Tue, 22 Jul 2025 03:47:39 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56M3lZix031915;
+	Tue, 22 Jul 2025 03:47:35 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4801t8te8u-10;
-	Tue, 22 Jul 2025 03:47:39 +0000
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4801t8te8u-1;
+	Tue, 22 Jul 2025 03:47:35 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com, bvanassche@acm.org,
-        avri.altman@wdc.com, ebiggers@google.com, neil.armstrong@linaro.org,
-        konrad.dybcio@oss.qualcomm.com,
-        Nitin Rawat <quic_nitirawa@quicinc.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>,
+        Peter Griffin <peter.griffin@linaro.org>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Krzysztof Kozlowski <krzk@kernel.org>,
+        Seungwon Jeon <essuuj@gmail.com>, Avri Altman <avri.altman@wdc.com>,
+        Kiwoong Kim <kwmad.kim@samsung.com>,
+        =?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V5 0/3] ufs: ufs-qcom: Align programming sequence as per HW spec
-Date: Mon, 21 Jul 2025 23:47:03 -0400
-Message-ID: <175315388541.3946361.263020629496331023.b4-ty@oracle.com>
+        Tudor Ambarus <tudor.ambarus@linaro.org>,
+        Will McVicker <willmcvicker@google.com>, kernel-team@android.com,
+        linux-scsi@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
+        linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+        stable@vger.kernel.org
+Subject: Re: [PATCH] scsi: ufs: exynos: fix programming of HCI_UTRL_NEXUS_TYPE
+Date: Mon, 21 Jul 2025 23:46:54 -0400
+Message-ID: <175315388530.3946361.1712627502152861268.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250714075336.2133-1-quic_nitirawa@quicinc.com>
-References: <20250714075336.2133-1-quic_nitirawa@quicinc.com>
+In-Reply-To: <20250707-ufs-exynos-shift-v1-1-1418e161ae40@linaro.org>
+References: <20250707-ufs-exynos-shift-v1-1-1418e161ae40@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -72,43 +78,39 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-07-21_05,2025-07-21_02,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 suspectscore=0
- bulkscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxlogscore=615
+ bulkscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxlogscore=999
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
  definitions=main-2507220028
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIyMDAyOCBTYWx0ZWRfXye+kLrXN52Cn
- EOWvh+kr5Iaw3eG0Jy1YUmg6vFaRLKk8WfdHZI0V77HLEpRjNwOdI+gPVX+J+6mmLZ2lBicPiCd
- zJG1/NVmT0k7IYQvVViYAWhdoZbznjfKUcphfbOkm37L+fdlaPwWHbQBGc82SGNNLws1c10fudY
- O/bLKof/isWpHe6r3BP7TCxRAi68gUI5flP2hp8vyFXTjPQzMZzEo/LKF2SyCBW55yiCRf41PEl
- NH1cK3bWSoEZF+fTRPQdCJuMR1vEXAnBu/dVWndgGdVd5NxvQ1BtMLnRUqKDp8eMqHnD+mUTOxy
- Lc07gwBK/Xbw0aBicQGVID1dVdHML/GoEHFRXPOCOuSbtBIRijqJ1b1Oiwn/TmYsjUQKqHWhAgz
- /0hMQ+g9pUU7OdsPUTrfOEHQCp4Qgt3b7YlGiw8GQhZgSwLpUlnezL5RQWSc1NUl+n8d3ET8
-X-Authority-Analysis: v=2.4 cv=doDbC0g4 c=1 sm=1 tr=0 ts=687f09dc b=1 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIyMDAyOCBTYWx0ZWRfXyLtUcpfI4Bsd
+ Wq3e1GV2GFAeL7YUi5nFS2j67zzAW1mKMZFGoluhIM7SxNT9E/6aZhNOlnd/crH9eE3SWKpfC0A
+ 2H3CSKXT7qBCw6rYl5NQ4vTswTW6eNCqY4pgZb0HAgxjiP/GW6G7dT4rQxsqnfctEXhpiCiLBCX
+ 6o00vEG2vEagbibdbHWcWU30FlFaWZEJFsmSJiNoA7bocKkKrJ5LZjeLBf42gdILv9BZEdPx3i9
+ DTzQOuDp6psaEVrfjtAwsq3noWdXvngH7MnPxX9i2v6VEKO1t6nl2CUR9mdXbX3ABwjUb2AhLfy
+ rEBXRpKqwNF1MZ/YADCao/Q2ieztVuJmUKoglb60R7cx748/hjQvvL8/gJAlxpPVCA1ulXbCyIV
+ hNQqIr6QBdygis543zd2tM6LAJY9dABawtHNlxeFWXWFXLfOhEx0YqZhp0dFxyWEQsx28z5b
+X-Authority-Analysis: v=2.4 cv=doDbC0g4 c=1 sm=1 tr=0 ts=687f09d9 b=1 cx=c_pps
  a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
- a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=lFOT_AtsMLTQ2iPLmPAA:9
- a=QEXdDO2ut3YA:10 cc=ntf awl=host:12062
-X-Proofpoint-GUID: w_XxEuUbPxr4JrUdnduw_VYbu86WyTNK
-X-Proofpoint-ORIG-GUID: w_XxEuUbPxr4JrUdnduw_VYbu86WyTNK
+ a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=NBqH-hezJh6qG-O4bPsA:9
+ a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10 cc=ntf awl=host:12062
+X-Proofpoint-GUID: oZgBROvOr0m2tP7ifFP0KXsH_bC0PZUn
+X-Proofpoint-ORIG-GUID: oZgBROvOr0m2tP7ifFP0KXsH_bC0PZUn
 
-On Mon, 14 Jul 2025 13:23:33 +0530, Nitin Rawat wrote:
+On Mon, 07 Jul 2025 18:05:27 +0100, André Draszik wrote:
 
-> This patch series adds programming support for Qualcomm UFS
-> to align with Hardware Specification.
+> On Google gs101, the number of UTP transfer request slots (nutrs) is
+> 32, and in this case the driver ends up programming the UTRL_NEXUS_TYPE
+> incorrectly as 0.
 > 
-> In this patch series below changes are taken care.
-> 
-> 1. Enable QUnipro Internal Clock Gating
-> 2. Update esi_vec_mask for HW major version >= 6
+> This is because the left hand side of the shift is 1, which is of type
+> int, i.e. 31 bits wide. Shifting by more than that width results in
+> undefined behaviour.
 > 
 > [...]
 
 Applied to 6.17/scsi-queue, thanks!
 
-[1/3] ufs: ufs-qcom: Update esi_vec_mask for HW major version >= 6
-      https://git.kernel.org/mkp/scsi/c/7a9d5195a7f5
-[2/3] scsi: ufs: core: Add ufshcd_dme_rmw to modify DME attributes
-      https://git.kernel.org/mkp/scsi/c/c49601642f95
-[3/3] ufs: ufs-qcom: Enable QUnipro Internal Clock Gating
-      https://git.kernel.org/mkp/scsi/c/5a6f304f39c2
+[1/1] scsi: ufs: exynos: fix programming of HCI_UTRL_NEXUS_TYPE
+      https://git.kernel.org/mkp/scsi/c/01aad16c2257
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
