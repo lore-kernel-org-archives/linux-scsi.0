@@ -1,67 +1,66 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB8C728C86F;
-	Tue, 22 Jul 2025 03:47:47 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E60C5145323
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 03:47:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753156069; cv=none; b=T/wuNDI00Cjy5o7bx062bLUn2CmVEdd6ZPLOUvWMznGQO9rfUkUGYVKCDdlrJxAaQAzweAB/OR/1t6+gsw6XxDAQYHExhTit3OwuGILfRid9sOvAs/aUFHHdZF1ta8apHWNr+U9I89WTfaE7gE7xqI4wppqpqMuCbqwye8782Qs=
+	t=1753156070; cv=none; b=aH+b2QY/NwVwfZs5xQihEi3v+WhHu4+FTlmBSygy5Ss1CqK3mVMREttDuQZxPJA2tKaBPJFBi0TeXh/A21f+VFlkOMQmRFVc5e7Iz9r0aNiAmjmRxfKRSvaBBmoa4YJEYGckbHO9O8NiqhzgO3PqgEmD2vlsII3wWFTQ6MlXNMc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753156069; c=relaxed/simple;
-	bh=gVIMYQ5j2AagXpIJ0uMBVoUNtf+0IjZXyodWmxdCY/0=;
+	s=arc-20240116; t=1753156070; c=relaxed/simple;
+	bh=kXHzS8s3u8gSO7kNPimk2aAhF0S5pYKgZt3D1E5qNgQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XV4gJCURhAeJghhO0svkYM9ljh0ErIqbp5tR96yfCghINGv+tYZJcMwFLk7TBKTUey4F6IMTLiDGYqwG6W2UsSOIJR90nHPsUMFys6jHjjuBawGuLhT7V8vILd3oIvuHwrAs94j3Kt/DVin79zEuYqCgQC5W4a9bxw+tjJMYrIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=RASdUTLh; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=CLPynry1oCYVNmdOzej5GVw6EBxCbs8mqhkp7zKsgJyBjSW3zzT0cmyKEhkQrNAwPnjKOzmeF/5nHllBGACsCqzCw23as2wxxPdjz2CUxbSq8iQyVwOJvFauvcWXMPfJ0mWO+2bIWW1Y2/AkVdP3e1FFNaQTsqm18wpLG4xCUBc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=jUEWFPFL; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="RASdUTLh"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56M1BtYq018886;
-	Tue, 22 Jul 2025 03:47:39 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="jUEWFPFL"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56M1CvLA024986;
+	Tue, 22 Jul 2025 03:47:38 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=aiUSZgrEEPeJ1gV9vVCacUT0s1TXJ+BP+RloL3Y5++4=; b=
-	RASdUTLhXWXmN0pKIpaWcX3Dngd/E1ZZGaoHmrJFgg2AOW72261xij5GQH2hKVhI
-	0N9zSDnCXnwg9hq309Abp+qz899WJGgqMikPcSqtG1KCU1GI79C1CZ1GJJgDFyHU
-	wUdRxVPoZ/c0RnYKzNWgu/5fpLg/y4VZPu76hg5/tsoxz1bhct0dmQbQCYajtvvE
-	wY+/gw5EeTNwRHrIgEVpJ1gl47iF7fGKZ8kbMUhQuKXADQzV7/5s3WiWgpIjDPqC
-	CJe0XRYPIFQyZgbnYmTZSSY7QuyCYwrxnBBGcDm0vvpp4uL8u2Oo0dOpiG03P6JD
-	YvYfMDx9TSpj4nc3v6G0cg==
+	corp-2025-04-25; bh=5FsFNHQDWnGH9HJwiCxhUxWiyD4qLlPV1cQ6DuHDNr8=; b=
+	jUEWFPFLplYL3pEJZ1XYMoe0MvnYw7WOxoQ+cxlhd5FhLTiVPRy7MSj5qVarrZfc
+	sGpApWjyZa+2BiKBiy77O9guh9H1eqKodznjUIRO7fgAlOk2p5yeGK4nLEfwJpeL
+	IKxfVF3qZ0Kcb4+I+vjpdndAt8e26xq7cF4HkUwXFSs70eHDOcrfFTZKGICareVP
+	xcF9c/4djrTUoaw+uuXiwAe91ch4zXY/NNaO0MyUILjT4+CaVl5XwTlIFSYaKoH5
+	sLZh2y8rQPHGUt+mq8OI2srwwqFdQvrAaQlPT5Pc+s8/udwyAfwQwbOYoGP72ish
+	D9Lxlbgt93IFxB7mmJrd9A==
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 480576m5vs-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4805e2c6re-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 22 Jul 2025 03:47:39 +0000 (GMT)
+	Tue, 22 Jul 2025 03:47:38 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56M1W27m038352;
-	Tue, 22 Jul 2025 03:47:38 GMT
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56M1RQVS038445;
+	Tue, 22 Jul 2025 03:47:37 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4801t8tea9-1
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4801t8te9r-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 22 Jul 2025 03:47:38 +0000
+	Tue, 22 Jul 2025 03:47:37 +0000
 Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56M3lZjD031915;
-	Tue, 22 Jul 2025 03:47:38 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56M3lZj5031915;
+	Tue, 22 Jul 2025 03:47:36 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4801t8te8u-8;
-	Tue, 22 Jul 2025 03:47:38 +0000
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4801t8te8u-4;
+	Tue, 22 Jul 2025 03:47:36 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Thomas Fourier <fourier.thomas@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        James Smart <james.smart@broadcom.com>,
-        Ram Vegesna <ram.vegesna@broadcom.com>,
+        linux-scsi@vger.kernel.org,
         "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        Peter Wang <peter.wang@mediatek.com>, Hannes Reinecke <hare@suse.de>,
-        Daniel Wagner <dwagner@suse.de>, linux-scsi@vger.kernel.org,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: elx: efct: Fix dma_unmap_sg() nents value
-Date: Mon, 21 Jul 2025 23:47:01 -0400
-Message-ID: <175315388534.3946361.13563089829199949177.b4-ty@oracle.com>
+        Peter Wang <peter.wang@mediatek.com>,
+        Avri Altman <avri.altman@sandisk.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Subject: Re: [PATCH] scsi: ufs: core: Improve return value documentation
+Date: Mon, 21 Jul 2025 23:46:57 -0400
+Message-ID: <175315388509.3946361.9865852407962374771.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250627114117.188480-2-fourier.thomas@gmail.com>
-References: <20250627114117.188480-2-fourier.thomas@gmail.com>
+In-Reply-To: <20250623215909.4169007-1-bvanassche@acm.org>
+References: <20250623215909.4169007-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -77,31 +76,36 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxs
  bulkscore=0 malwarescore=0 adultscore=0 spamscore=0 mlxlogscore=706
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
  definitions=main-2507220028
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIyMDAyOCBTYWx0ZWRfX/lld8WpQKPBi
- QgWm4kxZTTZBUwagaosrwDznHdBU2aSk+CM52ODXP5uUxW6XJbVMUedHtCJfy51/zi/LlkcVIqN
- CO+vOEnL62SFFcegoXKwMOVvMz6w/Y9U6oV33cnLyDzCR8dNlGdHPCxgrZE53tkUqqyJUxkud/A
- 5A4M2sWkkR4kmDHTeDKZiBuRTkc7jDZj6qx1r6gTLSM3iwDvUwMgfhyQKBwtjnRb40JIF3cvGDi
- z42DQLyV0H13l7PHqYBR9oNpJZEuhTQzX79svlD7wNR5aXMB0j62gJbLKzC18wMXHIYfX1PhA4Q
- oB6UQAnCVxcjcrXuRB80cO7NYr3nsznc7ziIie0Ca+OjhY2ujAO5rmlxHkSTZNJM26LH8Hz4BN0
- bb4mvFUncKLkK5Pb6N79/wSO6GJvFCBjrlXcPyTsCGNxJpWfUVTxe3n8chdC0YzBy5+OlL6F
-X-Authority-Analysis: v=2.4 cv=doDbC0g4 c=1 sm=1 tr=0 ts=687f09db b=1 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=WaYMa1hX c=1 sm=1 tr=0 ts=687f09da b=1 cx=c_pps
  a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
- a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=HazmFS4AVfT1MZ3w-mIA:9
+ a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=h4hMIWmyErcOlFBlmwAA:9
  a=QEXdDO2ut3YA:10 cc=ntf awl=host:12062
-X-Proofpoint-GUID: 66Y9FXSniasOkURNjRvGqeSSxT-smizK
-X-Proofpoint-ORIG-GUID: 66Y9FXSniasOkURNjRvGqeSSxT-smizK
+X-Proofpoint-GUID: 95m7Xc45GClFtTKLaLKDc9j82hZzVEV2
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIyMDAyOCBTYWx0ZWRfX2tArGkgOtP0v
+ yGcXeguRh/Sck52eZOgT8dqOdnBvKM2SAHl4b/zQpciWjZObfiGpZkoCs3Vsc1nTxJ+vRkWSPYV
+ zbYYdaiMr0IKU5X5WtO+LVzfs0JdvOsoR5I2CJTZCV3RN6mNIhc7q3+iIYzXiYAThteQdT/TwYS
+ 0oWwgFJUnUfhVM5CyrMcpybKFX008G7V5E9yF2biY7I1f8CyCHX0cb7o0HRFQ2tGJR2dxDhMI8r
+ IoenT7dQtWfSYj9M5C3zwALYZm+9GXlgtDAxZXpBhAwRU8RLWScgUK5dX9XErZ9YwolkaTAlx8N
+ H+0Fjv4p974QsuV4Vk3hhXxAq/4Hgpxlfq72CEs8I1IvlB35qWrl3/70N02rUpoIRF54o4bdwym
+ 9I2elLHJyEyJSWtUACA3GklLyuP3g+Z2yE6Vie/VYwWujk8Pak/z4XtrAKZK3KK4OC5KZjyC
+X-Proofpoint-ORIG-GUID: 95m7Xc45GClFtTKLaLKDc9j82hZzVEV2
 
-On Fri, 27 Jun 2025 13:41:13 +0200, Thomas Fourier wrote:
+On Mon, 23 Jun 2025 14:59:01 -0700, Bart Van Assche wrote:
 
-> The dma_unmap_sg() functions should be called with the same nents as the
-> dma_map_sg(), not the value the map function returned.
+> Some functions return a negative value to indicate an error while other
+> functions return a value != 0 to indicate an error. Document the return
+> value behavior where this documentation is missing and fix the return
+> value documentation where necessary. Add warnings to detect mismatches
+> between documentation and implementation. This matters because several
+> sysfs callback functions only work correctly if a negative value is
+> returned upon error.
 > 
-> 
+> [...]
 
 Applied to 6.17/scsi-queue, thanks!
 
-[1/1] scsi: elx: efct: Fix dma_unmap_sg() nents value
-      https://git.kernel.org/mkp/scsi/c/3a988d0b65d7
+[1/1] scsi: ufs: core: Improve return value documentation
+      https://git.kernel.org/mkp/scsi/c/cc59f3b68542
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
