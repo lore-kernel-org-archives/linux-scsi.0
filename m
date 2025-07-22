@@ -1,48 +1,49 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABBB328B7E7
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 03:08:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B1111AF0C1
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 03:08:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753153729; cv=none; b=omGl961nJ+N9gupLQyd+3Td7C5bUmxqdo1ZtK1ccLdix7TDnaulIlEbkkdlx/OEMhPkhuny53GtVBp/pnvKMcuqDU/iaMvAjXrhiRrnIpqJL7EjJdMJpPOGn/w42cGVNXg2W+UAIaPNZd5LC1/L3kIj/kptje9ac2420w0ilO2Q=
+	t=1753153741; cv=none; b=Pj9gqAMuFDs+9jvd7LJsQ5xc8H+qFfryjIqPkekJDsJ7sDbxT1cSOnfptgQSUhDURbTN5X9xFGtFvzJdN05CZpeiVkftn152zk79lRagx4rcH0ss5pWrShqHvZj2eb2UIomo7zp2A4vGmc5jpc+f2dzC+prt7iZztS6d3pu9/6U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753153729; c=relaxed/simple;
-	bh=7hceeehtu73p5Nq3VCXv/cATIE8wXlTpXHADdDz3jdk=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EnQWdyL8B3+ql4K0EGQUBtddHvUlxAdN6MmtY0bbXdUHZDSDd/czioRjZmyTUHhiW+RDSvrz+kv4pvO/0tpEld8URTE6s7vq90aJM1Pi8OUUFlxxSDob5wUO6rYtVkTm7cVMqK6OkCHDrBdNk0zxJZumS7aLxZEnCsVW4/6mgH4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=RQ8eYkhu; arc=none smtp.client-ip=60.244.123.138
+	s=arc-20240116; t=1753153741; c=relaxed/simple;
+	bh=FhzVvZ9NSL5ldhpB5A3JG51RFgQ6GHo8pNNtk4v6GEA=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=N3YXzkhWTZt7Y1j8nFfc18bClRteVdGe8JR++cUXC6roO0h+DC2EiYiEGCY2krLp5EX9n0L3v0ayMErKxoS751C6eVdjbIjDQNLOKKfh+tzpCdvLZQd3tD5OM7D71gbiypJcxXJKgpMRBJ+0jws6ezFhVQNLxT+sp48jo4bpXIg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=EUdcVYIV; arc=none smtp.client-ip=210.61.82.184
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="RQ8eYkhu"
-X-UUID: 2d358d0e66a911f08b7dc59d57013e23-20250722
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EUdcVYIV"
+X-UUID: 2e9f3db666a911f0b33aeb1e7f16c2b6-20250722
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=jpp0D6ahLCY9ZcROn41fc2M+etc1qjW0yfnCgAab/W4=;
-	b=RQ8eYkhuIqQgl8BLIWWZT3zLU0J2rZmuynyqlh8d8vvQ2wWDlG3ziNfOnFHvSEPnbmqFmy0qFmDRgUbwTqg70AvU/XujLImflz77H9JLxf1WT8vldnGp0aLwOylC5UZT8ew9JnWspLoQ3NL/7ZAZVqez4Yn3q3d6YoInpH4pKJ4=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=5Pi5P+FwZFfw7EkZYdI0mOEEfVb9ihzQxwHeoxEl064=;
+	b=EUdcVYIV05L4S6rmcc6Mi8tzsgoR+Xqojyv+rIs8DktdtaZBmVMrSeN7iP1sqcI3ipz1/3v5ZCJn19lH+5KWFb3bsNfoA0844TVlQQlTwMFjNBZFTDKgUPTPD1ulxAfVsf0sq/S4d7uJLYCHsh/4jy8lqLeehu1NmVZ2f2Wxj/Q=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.2,REQID:dda01152-ed26-4be6-9edc-1c4375644af1,IP:0,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:0
-X-CID-META: VersionHash:9eb4ff7,CLOUDID:0b93b184-a7ec-4748-8ac1-dca5703e241f,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
-	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
-	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-O-INFO: VERSION:1.3.2,REQID:f09b57d5-3a80-4e5e-a388-251c7365702b,IP:0,UR
+	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-25
+X-CID-META: VersionHash:9eb4ff7,CLOUDID:69ce1b50-93b9-417a-b51d-915a29f1620f,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
+	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
+	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
 X-CID-BVR: 0
 X-CID-BAS: 0,_,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 2d358d0e66a911f08b7dc59d57013e23-20250722
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
+X-UUID: 2e9f3db666a911f0b33aeb1e7f16c2b6-20250722
+Received: from mtkmbs09n2.mediatek.inc [(172.21.101.94)] by mailgw02.mediatek.com
 	(envelope-from <peter.wang@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1790337710; Tue, 22 Jul 2025 11:08:44 +0800
+	with ESMTP id 2126212715; Tue, 22 Jul 2025 11:08:46 +0800
 Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Tue, 22 Jul 2025 11:08:42 +0800
+ 15.2.1258.39; Tue, 22 Jul 2025 11:08:43 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Tue, 22 Jul 2025 11:08:42 +0800
+ 15.2.1258.39 via Frontend Transport; Tue, 22 Jul 2025 11:08:43 +0800
 From: <peter.wang@mediatek.com>
 To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
 CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
@@ -52,10 +53,12 @@ CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
 	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
 	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
 	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
-Subject: [PATCH v4 0/9] ufs: host: mediatek: Provide features and fixes in MediaTek platforms
-Date: Tue, 22 Jul 2025 11:07:15 +0800
-Message-ID: <20250722030841.1998783-1-peter.wang@mediatek.com>
+Subject: [PATCH v4 7/9] ufs: host: mediatek: Add clock scaling query function
+Date: Tue, 22 Jul 2025 11:07:22 +0800
+Message-ID: <20250722030841.1998783-8-peter.wang@mediatek.com>
 X-Mailer: git-send-email 2.45.2
+In-Reply-To: <20250722030841.1998783-1-peter.wang@mediatek.com>
+References: <20250722030841.1998783-1-peter.wang@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,31 +71,56 @@ X-MTK: N
 
 From: Peter Wang <peter.wang@mediatek.com>
 
-This series fixes some defects and provide features in MediaTek UFS drivers.
+This patch introduces a clock scaling readiness query function to
+streamline the process of checking clock scaling parameters.
+This function simplifies the code by encapsulating the logic
+for determining if clock scaling is ready.
 
-Changes since v3:
-1. Fix comment message in patch:
-  ufs: host: mediatek: Simplify boolean conversion
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Reviewed-by: Chun-Hung Wu <chun-hung.wu@mediatek.com>
+---
+ drivers/ufs/host/ufs-mediatek.c | 14 +++++++++++---
+ 1 file changed, 11 insertions(+), 3 deletions(-)
 
-Peter Wang (7):
-  ufs: host: mediatek: Simplify boolean conversion
-  ufs: host: mediatek: Change ref-clk timeout policy
-  ufs: host: mediatek: Handle broken RTC based on DTS setting
-  ufs: host: mediatek: Set IRQ affinity policy for MCQ mode
-  ufs: host: mediatek: Add clock scaling query function
-  ufs: host: mediatek: Support clock scaling with Vcore binding
-  ufs: host: mediatek: Support FDE (AES) clock scaling
-
-Naomi Chu (1):
-  ufs: host: mediatek: Add DDR_EN setting
-
-Alice Chao (1):
-  ufs: host: mediatek: Add more UFSCHI hardware versions
-
- drivers/ufs/host/ufs-mediatek.c | 329 ++++++++++++++++++++++++++++----
- drivers/ufs/host/ufs-mediatek.h |  32 ++++
- 2 files changed, 328 insertions(+), 33 deletions(-)
-
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 28aba44068da..0b3cce8d9787 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -141,6 +141,16 @@ static bool ufs_mtk_is_allow_vccqx_lpm(struct ufs_hba *hba)
+ 	return host->caps & UFS_MTK_CAP_ALLOW_VCCQX_LPM;
+ }
+ 
++static bool ufs_mtk_is_clk_scale_ready(struct ufs_hba *hba)
++{
++	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
++	struct ufs_mtk_clk *mclk = &host->mclk;
++
++	return mclk->ufs_sel_clki &&
++		mclk->ufs_sel_max_clki &&
++		mclk->ufs_sel_min_clki;
++}
++
+ static void ufs_mtk_cfg_unipro_cg(struct ufs_hba *hba, bool enable)
+ {
+ 	u32 tmp;
+@@ -922,7 +932,6 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
+ {
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+ 	struct list_head *head = &hba->clk_list_head;
+-	struct ufs_mtk_clk *mclk = &host->mclk;
+ 	struct ufs_clk_info *clki, *clki_tmp;
+ 
+ 	/*
+@@ -944,8 +953,7 @@ static void ufs_mtk_init_clocks(struct ufs_hba *hba)
+ 		}
+ 	}
+ 
+-	if (!mclk->ufs_sel_clki || !mclk->ufs_sel_max_clki ||
+-	    !mclk->ufs_sel_min_clki) {
++	if (!ufs_mtk_is_clk_scale_ready(hba)) {
+ 		hba->caps &= ~UFSHCD_CAP_CLK_SCALING;
+ 		dev_info(hba->dev,
+ 			 "%s: Clk-scaling not ready. Feature disabled.",
 -- 
 2.45.2
 
