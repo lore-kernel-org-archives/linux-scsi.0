@@ -1,166 +1,368 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72C5817E4
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 19:02:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4552117C224
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 20:01:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753210960; cv=none; b=KhrOs3Zn+OQiUboGB0PHiI1RHBqN/UQBKV9wUz7UHv9P/V0wwXN/4DuBGp0SOZkpYaM1ZqMxvwEIo0kiNkMCozOItdRRFHJZN/HGYllOOFPJlUpK00pMMppxDyaf01xtiNDS5LVRMEuyjdAKaQa/x5ay6mXmmi8mNqbN3qmfBwM=
+	t=1753214519; cv=none; b=h145k20kjn1pcvZEGX4nGRvm52XULzdWeWaHVe06JRnnUh25l+8NpOIqMdkFI5LP2SKi+Oqz7pfLie//6u3vnWobp644V31zXBtVfUnUCmPPQNDVtaqBNzIDYXZjYPVmaxq99s28RVX9JeS0bSW67/IPnCjlbc8QgTMJUC9E71U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753210960; c=relaxed/simple;
-	bh=1jW+AQBLmrBwT5OqSJctwQ/2tI0p4B8L4gpSCTjZz20=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ueNsDLI/pgDeGSw3V9RBtRs9qyPtskte36ki8uScpdfqWKqoY4Z3xGA1aiQJLivZ/AGaKfk8xLtsubAqwH4rEGrZmnUbt35aF57omB5FLuo933f3pxTnHC5WqKCKuRhoJAunwG6soeMDfS1J/1QZbDDHFS4sfYpACLUDDPtP8bM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=gyhtp8el; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1753214519; c=relaxed/simple;
+	bh=OT2lS1fhuyPQGi4EoLZAVesGgm+N2nFLlP7z6IsV+pM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=TDRNojrQ08Nuj9EDkdalCYdjrMW9n4FfUXzxW+kpSMJHCdS1mj0vZEsrb0K0oIb4btWgRdYcp6D3HBgX8Err9dKETCghf6yo2SsaHIMP+gUVFi3khkNwweCqXcSx0ZuPT8305ENoF2cTo6zr/gyirEduGcJ/GpQsMASfnvDFsSA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=GXjH5V1U; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="gyhtp8el"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56MEqw2Y020141
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 19:02:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=eeNJd288lALWCAPcNkFrKeWB
-	uzWCZ8l6rZ+MwXhFjY8=; b=gyhtp8elLmKM4dYCBMpPzjGY63U1H7BqaIPm3d/V
-	iuhp8iqecnu34Ssg+Ellxxf4780WhBLpFkf0vGOi+IrmadgAMyyR5N0NO8O2Xq/H
-	YOcsSfOgJg3dUuyS6FUsPrO6MBFYV+A7UCBTUpKGbz3CjI2GFSg3omVv1tZ/6Fm1
-	aHXhIhM3Ls5o+d8EFry9Bo8vN1HOuEwJRGYVRgMS2KPRlilyXuitfggnQk2txLOY
-	YnIXvrJ+KD0rShyIWHR1XAl/yglCuuHj79XtqxdIcR4UCsoAT+7ANPS6FF68Kv8g
-	Ucql98aRd1srlKnGkvac1UCcQgj4znjRLvHQjjnFnc0/wQ==
-Received: from mail-pl1-f200.google.com (mail-pl1-f200.google.com [209.85.214.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4804na0yrs-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 19:02:37 +0000 (GMT)
-Received: by mail-pl1-f200.google.com with SMTP id d9443c01a7336-2349498f00eso1578285ad.0
-        for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 12:02:37 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753210948; x=1753815748;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=eeNJd288lALWCAPcNkFrKeWBuzWCZ8l6rZ+MwXhFjY8=;
-        b=k6vdLYX9XbocXB0yglG2dfqbQXtZVyNLNiO5h/CLkK8a+WRIEHxjW5OGn68JiuWeb5
-         svvt2lHB8Oc1XnZbIS5F26N6rQ/mLp6puIk1r+LI6StVjh4zKn0Je5AyfV5xPGQ6frNQ
-         dVfDeIx0M4jURqvLvb99LMM3O6stwXCU8Asph7gCkhLM3GucRVvoGFnaxDrDRc8DxyKg
-         jQm9RLBr8u7Oymg71kMR9PXdsUT5uRhuDq6zWqcGVLYSgcAiLQHtOZPnF6EDibn/H+A9
-         CerK4RqCsOcICFg/tBqzXNv8AojEo4c9iKHBmMHfq9y14K9RMh5pV+dbhlaiYBhfEAho
-         y0sA==
-X-Forwarded-Encrypted: i=1; AJvYcCWB7/GmcTg4WVG4AVwRqVIr+kZ7FPQQprflUdKvAmauu2Cw+UGupZ4VpijP5AOLQLemfy17LAaVdaHP@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw9/7v74OIgcqyHaEsPHFsU4adSbvUp+bYofRv0d7LY8kI7Sork
-	UJMll5KqVIJ7LXY22/Bq6GmSBus1Qdc1U52fj1hZdKmKWOfjCU/xTc4a39OQB1CNlV9/1eBX57M
-	FLe2DtVhG7bY4Nr7V+QqEYpmy+YQTmu5DMCxI0+1aPB9NAZH0V54ZouYRZMKHMJTf
-X-Gm-Gg: ASbGncuRAgUuTvnE3DAIzPA1yqv5pd0TTLKT6hfdguZ0xwLnsE7MQy0J69wdiudPVKP
-	0b51ock1gEnd9n/aziKjSxX3vYsTLe6s3NmXxVgWf2PA2AbCUocaWdhW4ySKvzruEYfClAlsdUv
-	8FgejDeV8SFoTRIr0p2GPqrkTzheQipwm4zKcJiGRwh32E2x3zkg6QEPUG4tXrfdfWbwXsueLLA
-	nOL4NpwIEO0s161E+1hfUkfwUH5pbm6L8CkQh2NmvgLF8o7In5OXilBLwbnpEBj5rSx7Sj7wgB1
-	2xlgS90ZLrofcMVG2/1PVIL91jtGzhoRvVJwZJdCydbxiCUKtpjPV6Vpz1zj8nAvU3vscYUub5x
-	Td8GhyJgYvUICCJJ186Ds7GUpNMJ203WPvx6wATllzDzofY8o6mTO
-X-Received: by 2002:a17:902:ce8f:b0:21f:5063:d3ca with SMTP id d9443c01a7336-23f8acb16f9mr66352905ad.16.1753210947578;
-        Tue, 22 Jul 2025 12:02:27 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHTaRg7+RT9XmmVIQa9Z5l3X/9yEYapn9SUbtScQ0vSYOHwQTYMt6q/ro/+Isxq9+wASsihpg==
-X-Received: by 2002:a17:902:ce8f:b0:21f:5063:d3ca with SMTP id d9443c01a7336-23f8acb16f9mr66352225ad.16.1753210947052;
-        Tue, 22 Jul 2025 12:02:27 -0700 (PDT)
-Received: from umbar.lan (2001-14ba-a0c3-3a00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a0c3:3a00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-55a31d7c7a4sm2038313e87.130.2025.07.22.12.02.24
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Jul 2025 12:02:25 -0700 (PDT)
-Date: Tue, 22 Jul 2025 22:02:23 +0300
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-Cc: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org,
-        conor+dt@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
-        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        agross@kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 3/3] dt-bindings: ufs: qcom: Document HS gear and rate
- limit properties
-Message-ID: <6yhnlwyuimkrlifmmdihcsuhws6qkdjzmjxdupu6cevu24nmi6@f4vk5dffjie2>
-References: <20250722161103.3938-1-quic_rdwivedi@quicinc.com>
- <20250722161103.3938-4-quic_rdwivedi@quicinc.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="GXjH5V1U"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bmp7m05mvzm1HbZ;
+	Tue, 22 Jul 2025 20:01:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:mime-version
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1753214513; x=1755806514; bh=XSP1H
+	fDuHKbGWU1Yi9crV1bqafvyjdAWNjT2rUweiyQ=; b=GXjH5V1URni9NFTtVSKXL
+	TQMjFEOs+Hr9GNYxqONywrLaCIv+tZqTuA6NCtjvupp9yLIBGIr0AYlQrV3X2VZW
+	DKtbYD09P8E8Xzqesu6fBxe880pi4+PkbZlp9C1Lv68kz6kTpiFJitN5JWc8kpsS
+	+jmFYZXEpmKd0WEBSD3uWqNS6lBda1HWo+skTC1MbQyJQFDpy8CPtUgAJ1cd8Ip5
+	0NM6xw9vT/GDCy3XHYVLemXwIJTqhBFbKdVvNiFe2yLRyW/fSb/FZAUCwHSvYJvs
+	zSn4SGaOaVavM/Uf8FzLwoD2XCD239fE81NWOnCKaC+tG40gjhGRSgmgnAtNyEqp
+	g==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id t2I_ijkAr6eS; Tue, 22 Jul 2025 20:01:53 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bmp7W3JjYzm1HbY;
+	Tue, 22 Jul 2025 20:01:42 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Neil Armstrong <neil.armstrong@linaro.org>,
+	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Avri Altman <avri.altman@sandisk.com>,
+	Bean Huo <huobean@gmail.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+Subject: [PATCH v3] ufs: core: Fix IRQ lock inversion for the SCSI host lock
+Date: Tue, 22 Jul 2025 13:01:23 -0700
+Message-ID: <20250722200131.1322561-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.50.1.470.g6ba607880d-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250722161103.3938-4-quic_rdwivedi@quicinc.com>
-X-Proofpoint-GUID: O2mUp88IVpOW5OgXfte6FhHR5cuWS1Ff
-X-Proofpoint-ORIG-GUID: O2mUp88IVpOW5OgXfte6FhHR5cuWS1Ff
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzIyMDE2MyBTYWx0ZWRfX0lR5tWnmrRcG
- XC5hD1Kw3FFUABpkO+Gj/kmrtiGaE6bePLdsH53pJq/S2pGfopbQbZLKV4Pfnu8/3NQscyH1BTC
- 7Mp3CikglfoQe1qweMUNZ4BTTSqYrIyGwry+6JpYdf8VxGHkS3jFpXXZy1sRCIhNWkLTMgZ7q5q
- c5rZafcnr0mqot+r+IMOp4wYMg5IWKARkKWjqFlfgnjMSwhLTbTtUEVcikXsoSifY7TsfDv/NQR
- RsOdfPB3tL5bMe5NsoTN0zHR7KcjYi68I0+sTa9PeKt07Za12U/7NXtw7eyBLN+L+BlsbnsOG2N
- Ku5aqzAiPqiodYNRahtrIz164oDEqhAdKTYKY5/oTAz6WYvhXrFlYic8w1BhwAvhr4KTwiPbVro
- UW10Lqu7HzLIVlXtfofKodtL1K8y3H5ECrXDJUYrQ29AkFQ6Dy1ONOa01DC6SpHq9nTv6rf1
-X-Authority-Analysis: v=2.4 cv=DoFW+H/+ c=1 sm=1 tr=0 ts=687fe04d cx=c_pps
- a=IZJwPbhc+fLeJZngyXXI0A==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
- a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=rRQ5tug-ufnQS7fofaEA:9 a=CjuIK1q_8ugA:10
- a=uG9DUKGECoFWVXl0Dc02:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-22_02,2025-07-21_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 phishscore=0 clxscore=1015 mlxscore=0 mlxlogscore=999
- bulkscore=0 impostorscore=0 malwarescore=0 lowpriorityscore=0 adultscore=0
- spamscore=0 priorityscore=1501 classifier=spam authscore=0 authtc=n/a authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
- definitions=main-2507220163
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Tue, Jul 22, 2025 at 09:41:03PM +0530, Ram Kumar Dwivedi wrote:
-> Add documentation for two new optional properties:
->   - limit-hs-gear
->   - limit-rate
-> 
-> These properties allow platforms to restrict the maximum high-speed
-> gear and rate used by the UFS controller. This is required for
-> certain automotive platforms with hardware constraints.
+Commit 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service
+routine to a threaded IRQ handler") introduced an IRQ lock inversion
+issue. Fix this lock inversion by changing the spin_lock_irq() calls into
+spin_lock_irqsave() calls in code that can be called either from interrup=
+t
+context or from thread context. This patch fixes the following lockdep
+complaint:
 
-Please reformat other way around: describe the actual problem (which
-platforms, which constraints, what breaks, etc). Then describe your
-solution.
+WARNING: possible irq lock inversion dependency detected
+6.12.30-android16-5-maybe-dirty-4k #1 Tainted: G        W  OE
+--------------------------------------------------------
+kworker/u28:0/12 just changed the state of lock:
+ffffff881e29dd60 (&hba->clk_gating.lock){-...}-{2:2}, at: ufshcd_release_=
+scsi_cmd+0x60/0x110
+but this lock took another, HARDIRQ-unsafe lock in the past:
+ (shost->host_lock){+.+.}-{2:2}
 
-> 
-> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 10 ++++++++++
->  1 file changed, 10 insertions(+)
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index 6c6043d9809e..9dedd09df9e0 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -111,6 +111,16 @@ properties:
->      description:
->        GPIO connected to the RESET pin of the UFS memory device.
->  
-> +  limit-hs-gear:
+and interrupts could create inverse lock ordering between them.
 
-If the properties are generic, they should go to the ufs-common.yaml. If
-not (but why?), then they should be prefixed with 'qcom,' prefix, as
-usual.
+other info that might help us debug this:
+ Possible interrupt unsafe locking scenario:
 
-> +    maxItems: 1
-> +    description:
-> +      Limit max phy hs gear
-> +
-> +  limit-rate:
-> +    maxItems: 1
-> +    description:
-> +      Limit max phy hs rate
-> +
->  required:
->    - compatible
->    - reg
-> -- 
-> 2.50.1
-> 
+       CPU0                    CPU1
+       ----                    ----
+  lock(shost->host_lock);
+                               local_irq_disable();
+                               lock(&hba->clk_gating.lock);
+                               lock(shost->host_lock);
+  <Interrupt>
+    lock(&hba->clk_gating.lock);
 
--- 
-With best wishes
-Dmitry
+ *** DEADLOCK ***
+
+4 locks held by kworker/u28:0/12:
+ #0: ffffff8800ac6158 ((wq_completion)async){+.+.}-{0:0}, at: process_one=
+_work+0x1bc/0x65c
+ #1: ffffffc085c93d70 ((work_completion)(&entry->work)){+.+.}-{0:0}, at: =
+process_one_work+0x1e4/0x65c
+ #2: ffffff881e29c0e0 (&shost->scan_mutex){+.+.}-{3:3}, at: __scsi_add_de=
+vice+0x74/0x120
+ #3: ffffff881960ea00 (&hwq->cq_lock){-...}-{2:2}, at: ufshcd_mcq_poll_cq=
+e_lock+0x28/0x104
+
+the shortest dependencies between 2nd lock and 1st lock:
+ -> (shost->host_lock){+.+.}-{2:2} {
+    HARDIRQ-ON-W at:
+                      lock_acquire+0x134/0x2b4
+                      _raw_spin_lock+0x48/0x64
+                      ufshcd_sl_intr+0x4c/0xa08
+                      ufshcd_threaded_intr+0x70/0x12c
+                      irq_thread_fn+0x48/0xa8
+                      irq_thread+0x130/0x1ec
+                      kthread+0x110/0x134
+                      ret_from_fork+0x10/0x20
+    SOFTIRQ-ON-W at:
+                      lock_acquire+0x134/0x2b4
+                      _raw_spin_lock+0x48/0x64
+                      ufshcd_sl_intr+0x4c/0xa08
+                      ufshcd_threaded_intr+0x70/0x12c
+                      irq_thread_fn+0x48/0xa8
+                      irq_thread+0x130/0x1ec
+                      kthread+0x110/0x134
+                      ret_from_fork+0x10/0x20
+    INITIAL USE at:
+                     lock_acquire+0x134/0x2b4
+                     _raw_spin_lock+0x48/0x64
+                     ufshcd_sl_intr+0x4c/0xa08
+                     ufshcd_threaded_intr+0x70/0x12c
+                     irq_thread_fn+0x48/0xa8
+                     irq_thread+0x130/0x1ec
+                     kthread+0x110/0x134
+                     ret_from_fork+0x10/0x20
+  }
+  ... key      at: [<ffffffc085ba1a98>] scsi_host_alloc.__key+0x0/0x10
+  ... acquired at:
+   _raw_spin_lock_irqsave+0x5c/0x80
+   __ufshcd_release+0x78/0x118
+   ufshcd_send_uic_cmd+0xe4/0x118
+   ufshcd_dme_set_attr+0x88/0x1c8
+   ufs_google_phy_initialization+0x68/0x418 [ufs]
+   ufs_google_link_startup_notify+0x78/0x27c [ufs]
+   ufshcd_link_startup+0x84/0x720
+   ufshcd_init+0xf3c/0x1330
+   ufshcd_pltfrm_init+0x728/0x7d8
+   ufs_google_probe+0x30/0x84 [ufs]
+   platform_probe+0xa0/0xe0
+   really_probe+0x114/0x454
+   __driver_probe_device+0xa4/0x160
+   driver_probe_device+0x44/0x23c
+   __driver_attach_async_helper+0x60/0xd4
+   async_run_entry_fn+0x4c/0x17c
+   process_one_work+0x26c/0x65c
+   worker_thread+0x33c/0x498
+   kthread+0x110/0x134
+   ret_from_fork+0x10/0x20
+
+-> (&hba->clk_gating.lock){-...}-{2:2} {
+   IN-HARDIRQ-W at:
+                    lock_acquire+0x134/0x2b4
+                    _raw_spin_lock_irqsave+0x5c/0x80
+                    ufshcd_release_scsi_cmd+0x60/0x110
+                    ufshcd_compl_one_cqe+0x2c0/0x3f4
+                    ufshcd_mcq_poll_cqe_lock+0xb0/0x104
+                    ufs_google_mcq_intr+0x80/0xa0 [ufs]
+                    __handle_irq_event_percpu+0x104/0x32c
+                    handle_irq_event+0x40/0x9c
+                    handle_fasteoi_irq+0x170/0x2e8
+                    generic_handle_domain_irq+0x58/0x80
+                    gic_handle_irq+0x48/0x104
+                    call_on_irq_stack+0x3c/0x50
+                    do_interrupt_handler+0x7c/0xd8
+                    el1_interrupt+0x34/0x58
+                    el1h_64_irq_handler+0x18/0x24
+                    el1h_64_irq+0x68/0x6c
+                    _raw_spin_unlock_irqrestore+0x3c/0x6c
+                    debug_object_assert_init+0x16c/0x21c
+                    __mod_timer+0x4c/0x48c
+                    schedule_timeout+0xd4/0x16c
+                    io_schedule_timeout+0x48/0x70
+                    do_wait_for_common+0x100/0x194
+                    wait_for_completion_io_timeout+0x48/0x6c
+                    blk_execute_rq+0x124/0x17c
+                    scsi_execute_cmd+0x18c/0x3f8
+                    scsi_probe_and_add_lun+0x204/0xd74
+                    __scsi_add_device+0xbc/0x120
+                    ufshcd_async_scan+0x80/0x3c0
+                    async_run_entry_fn+0x4c/0x17c
+                    process_one_work+0x26c/0x65c
+                    worker_thread+0x33c/0x498
+                    kthread+0x110/0x134
+                    ret_from_fork+0x10/0x20
+   INITIAL USE at:
+                   lock_acquire+0x134/0x2b4
+                   _raw_spin_lock_irqsave+0x5c/0x80
+                   ufshcd_hold+0x34/0x14c
+                   ufshcd_send_uic_cmd+0x28/0x118
+                   ufshcd_dme_set_attr+0x88/0x1c8
+                   ufs_google_phy_initialization+0x68/0x418 [ufs]
+                   ufs_google_link_startup_notify+0x78/0x27c [ufs]
+                   ufshcd_link_startup+0x84/0x720
+                   ufshcd_init+0xf3c/0x1330
+                   ufshcd_pltfrm_init+0x728/0x7d8
+                   ufs_google_probe+0x30/0x84 [ufs]
+                   platform_probe+0xa0/0xe0
+                   really_probe+0x114/0x454
+                   __driver_probe_device+0xa4/0x160
+                   driver_probe_device+0x44/0x23c
+                   __driver_attach_async_helper+0x60/0xd4
+                   async_run_entry_fn+0x4c/0x17c
+                   process_one_work+0x26c/0x65c
+                   worker_thread+0x33c/0x498
+                   kthread+0x110/0x134
+                   ret_from_fork+0x10/0x20
+ }
+ ... key      at: [<ffffffc085ba6fe8>] ufshcd_init.__key+0x0/0x10
+ ... acquired at:
+   mark_lock+0x1c4/0x224
+   __lock_acquire+0x438/0x2e1c
+   lock_acquire+0x134/0x2b4
+   _raw_spin_lock_irqsave+0x5c/0x80
+   ufshcd_release_scsi_cmd+0x60/0x110
+   ufshcd_compl_one_cqe+0x2c0/0x3f4
+   ufshcd_mcq_poll_cqe_lock+0xb0/0x104
+   ufs_google_mcq_intr+0x80/0xa0 [ufs]
+   __handle_irq_event_percpu+0x104/0x32c
+   handle_irq_event+0x40/0x9c
+   handle_fasteoi_irq+0x170/0x2e8
+   generic_handle_domain_irq+0x58/0x80
+   gic_handle_irq+0x48/0x104
+   call_on_irq_stack+0x3c/0x50
+   do_interrupt_handler+0x7c/0xd8
+   el1_interrupt+0x34/0x58
+   el1h_64_irq_handler+0x18/0x24
+   el1h_64_irq+0x68/0x6c
+   _raw_spin_unlock_irqrestore+0x3c/0x6c
+   debug_object_assert_init+0x16c/0x21c
+   __mod_timer+0x4c/0x48c
+   schedule_timeout+0xd4/0x16c
+   io_schedule_timeout+0x48/0x70
+   do_wait_for_common+0x100/0x194
+   wait_for_completion_io_timeout+0x48/0x6c
+   blk_execute_rq+0x124/0x17c
+   scsi_execute_cmd+0x18c/0x3f8
+   scsi_probe_and_add_lun+0x204/0xd74
+   __scsi_add_device+0xbc/0x120
+   ufshcd_async_scan+0x80/0x3c0
+   async_run_entry_fn+0x4c/0x17c
+   process_one_work+0x26c/0x65c
+   worker_thread+0x33c/0x498
+   kthread+0x110/0x134
+   ret_from_fork+0x10/0x20
+
+stack backtrace:
+CPU: 6 UID: 0 PID: 12 Comm: kworker/u28:0 Tainted: G        W  OE      6.=
+12.30-android16-5-maybe-dirty-4k #1 ccd4020fe444bdf629efc3b86df6be920b8df=
+7d0
+Tainted: [W]=3DWARN, [O]=3DOOT_MODULE, [E]=3DUNSIGNED_MODULE
+Hardware name: Spacecraft board based on MALIBU (DT)
+Workqueue: async async_run_entry_fn
+Call trace:
+ dump_backtrace+0xfc/0x17c
+ show_stack+0x18/0x28
+ dump_stack_lvl+0x40/0xa0
+ dump_stack+0x18/0x24
+ print_irq_inversion_bug+0x2fc/0x304
+ mark_lock_irq+0x388/0x4fc
+ mark_lock+0x1c4/0x224
+ __lock_acquire+0x438/0x2e1c
+ lock_acquire+0x134/0x2b4
+ _raw_spin_lock_irqsave+0x5c/0x80
+ ufshcd_release_scsi_cmd+0x60/0x110
+ ufshcd_compl_one_cqe+0x2c0/0x3f4
+ ufshcd_mcq_poll_cqe_lock+0xb0/0x104
+ ufs_google_mcq_intr+0x80/0xa0 [ufs dd6f385554e109da094ab91d5f7be18625a22=
+22a]
+ __handle_irq_event_percpu+0x104/0x32c
+ handle_irq_event+0x40/0x9c
+ handle_fasteoi_irq+0x170/0x2e8
+ generic_handle_domain_irq+0x58/0x80
+ gic_handle_irq+0x48/0x104
+ call_on_irq_stack+0x3c/0x50
+ do_interrupt_handler+0x7c/0xd8
+ el1_interrupt+0x34/0x58
+ el1h_64_irq_handler+0x18/0x24
+ el1h_64_irq+0x68/0x6c
+ _raw_spin_unlock_irqrestore+0x3c/0x6c
+ debug_object_assert_init+0x16c/0x21c
+ __mod_timer+0x4c/0x48c
+ schedule_timeout+0xd4/0x16c
+ io_schedule_timeout+0x48/0x70
+ do_wait_for_common+0x100/0x194
+ wait_for_completion_io_timeout+0x48/0x6c
+ blk_execute_rq+0x124/0x17c
+ scsi_execute_cmd+0x18c/0x3f8
+ scsi_probe_and_add_lun+0x204/0xd74
+ __scsi_add_device+0xbc/0x120
+ ufshcd_async_scan+0x80/0x3c0
+ async_run_entry_fn+0x4c/0x17c
+ process_one_work+0x26c/0x65c
+ worker_thread+0x33c/0x498
+ kthread+0x110/0x134
+ ret_from_fork+0x10/0x20
+
+Cc: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Andr=C3=A9 Draszik <andre.draszik@linaro.org>
+Fixes: 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service rou=
+tine to a threaded IRQ handler")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+
+Changes compared to v2: backed out ufshcd_force_error_recovery() changes.
+
+Changes compared to v1: fixed a build error.
+
+ drivers/ufs/core/ufshcd.c | 8 +++-----
+ 1 file changed, 3 insertions(+), 5 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index acfc1b4691fa..820277f2a91d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5566,7 +5566,7 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
+hba *hba, u32 intr_status)
+ 	irqreturn_t retval =3D IRQ_NONE;
+ 	struct uic_command *cmd;
+=20
+-	spin_lock(hba->host->host_lock);
++	guard(spinlock_irqsave)(hba->host->host_lock);
+ 	cmd =3D hba->active_uic_cmd;
+ 	if (WARN_ON_ONCE(!cmd))
+ 		goto unlock;
+@@ -5593,8 +5593,6 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
+hba *hba, u32 intr_status)
+ 		ufshcd_add_uic_command_trace(hba, cmd, UFS_CMD_COMP);
+=20
+ unlock:
+-	spin_unlock(hba->host->host_lock);
+-
+ 	return retval;
+ }
+=20
+@@ -6922,7 +6920,7 @@ static irqreturn_t ufshcd_check_errors(struct ufs_h=
+ba *hba, u32 intr_status)
+ 	bool queue_eh_work =3D false;
+ 	irqreturn_t retval =3D IRQ_NONE;
+=20
+-	spin_lock(hba->host->host_lock);
++	guard(spinlock_irqsave)(hba->host->host_lock);
+ 	hba->errors |=3D UFSHCD_ERROR_MASK & intr_status;
+=20
+ 	if (hba->errors & INT_FATAL_ERRORS) {
+@@ -6981,7 +6979,7 @@ static irqreturn_t ufshcd_check_errors(struct ufs_h=
+ba *hba, u32 intr_status)
+ 	 */
+ 	hba->errors =3D 0;
+ 	hba->uic_error =3D 0;
+-	spin_unlock(hba->host->host_lock);
++
+ 	return retval;
+ }
+=20
