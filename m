@@ -1,123 +1,170 @@
-Received: from mail-qt1-f172.google.com (mail-qt1-f172.google.com [209.85.160.172])
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96CFE4C92;
-	Tue, 22 Jul 2025 20:32:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9472C238C1F
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 21:36:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753216341; cv=none; b=dEOQC25xTHgfbfzdtrDTZcaUyn6ez2wJYNqgQ4kZnxHjcmyyI4NJrKR7HutLpM44/9KHOyvYzop0YCSrX+LANj3DxqFOcCeI5mb1b1vc32LfDB+6qoGLQ4Eji+u25W/0T04cr4M9HGYOBxaoqNf3VZwYkL2jtoV2jw2FAhPf9mM=
+	t=1753220220; cv=none; b=MyO9zZacDaNZsMbZyhcUarn3C37kxmeZq0dTNfzSddw0P/LzYTUSyEYp/ktPfrxiqjKXQ9IMJsaF/0HEm5C4/LyMvzQEBV9TEe1dlTpt4Lmpt9EcbkUaVVCKiCKrpqlC9O8+phrYkNrxHkxQJi5c7hdT+B5ovX/VSPV3gQvfemY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753216341; c=relaxed/simple;
-	bh=SiE7peuWE5Z3IZWbTyAH0/m05LSMfAM5iBmRLL4a6P0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GnEmXY2v9BoJIb6seERXyRLO3kr7Z1EJhGpXpzn2iSpLs+5hyyVLycqXsydgXX7kUoI7mB4jazsLSRN1DbCAt8hoObiTU95+h+TD6hrm+NByRfLUlU1sCgUWVEZ2U2FfEL8qAijNd+k4c48D07waOt2ils922i5jwsyMXZMxUMI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Ag37R/j0; arc=none smtp.client-ip=209.85.160.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753220220; c=relaxed/simple;
+	bh=YO+QT0QrTtIUzwI07JKAwzmUxUrTf8fjGkBBSLuXK/M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=JyjAKE2e7hTzCetGuW45z7BFBvBp1BsAst6OJekNWc7Jh5u6cd7KmBCyWWtLffPfrT6AMZm0SOCoUGE7fQorw8SUpie1pHBR1AObMKp+zHBlw4toSNqhURiZhWbs50pazVJwthjUfLy4OxIMi6gl4AQbWvy1zm1ykIU2jik4FTg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=FmSB9Ij2; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Ag37R/j0"
-Received: by mail-qt1-f172.google.com with SMTP id d75a77b69052e-4aaaf1a63c1so45780871cf.3;
-        Tue, 22 Jul 2025 13:32:18 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="FmSB9Ij2"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-237f18108d2so63855ad.0
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 14:36:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753216337; x=1753821137; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=6UwaG0Ur5ZFEJrfPoRwyrNV2Un1EmxTc/2Z33GQL6KQ=;
-        b=Ag37R/j0dag34ZuVEoTQxbfIhbY01BXKTHUM/jerCGUYd5SixhVU5MwQQ3duGZUqvB
-         Qm+5pG9BxLB3dCIhPyLGdzgEx+Wb6/FpLR2dpoSNGhLd9uCT5mmhUlgoqtq8G8sJC1S0
-         UY4qDTkXyGJ1yBiIphN8O1JbMl/owim81+9szpc0KlXM0igKD5PP/iHmCq+JT6aFNgLG
-         mRKGQA4eHyEwuYZXBmRMGHQHWjT6GJW0RBAcolt9dia86aBKZlkeTOBxPZDKF8uuot+y
-         5jD2tFIM5I990pNZQelbOInNZ5edu2dIyb642eAowYiN9D4QaJGFReIPcY4zfyJJ+BuU
-         lNgw==
+        d=google.com; s=20230601; t=1753220218; x=1753825018; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=I7wjCY+Z7aogSgB0olKQb24xwsoM1JiEPp20xvwYl4o=;
+        b=FmSB9Ij2/me4qxcLLPsJUXCDIFBABB4NdzOB3US3i5181JUOY2q/MNH7C9YhGoyYEq
+         ODMsRTHx3JQSZQ7SZbbCjKe979hH1+BySNTsz/obYTYbi+RRryvq3+tIEVHR4dqIClJl
+         LI5S7Y1R7btHP1KPKN0oZ6CbYIf6v6LDjWn8nHjj98dzHjobLm2ScI9ZGtUclvQDOlsh
+         XrfrKOecMvVtTgajNDz4Q32+0vM5Xth+iBhcklpzR+2TSE1XU6U7T7m/tgPOMNkBx02a
+         NHVLgSHAAv944NjLRiIDiFfOgY57omRrpo37/BGA5xGQ6UWvq4ctg1iMVgWZgea1bXIy
+         n90g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753216337; x=1753821137;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=6UwaG0Ur5ZFEJrfPoRwyrNV2Un1EmxTc/2Z33GQL6KQ=;
-        b=Cfm+kBGJsKPwyJl+REWnOBelm9szT1lbtnz+lcb80W8DZbQkXI6+HPuSoRGwy8BS+Q
-         NuGvQiZ1lrhBeV6cfJKk94DAceoSRH5lfiTSKvPXrJ67ywnRcK/Ci80u5kd3qxZlH0N4
-         kQemK/qRBheH9yXMwqNH0gdc+VDrbhb2JaxCneNVNGMv8QEps/fTd67KF3KsCD2Wsr1A
-         ubOU852XoZf7HIZx0wvUavUhrYzOzUgEY2lZyzgBRXfAdeTenIMFwotikkmd6ZvXoIfb
-         VCeCpa2MWLkzkZ28jl+/OIswTZgDXDj/ZFOQFMXWcTgzXgF6khHoaDGXZy9vEw4zwd7r
-         +f2w==
-X-Forwarded-Encrypted: i=1; AJvYcCWxEeanu2HC23LnaCCDNosPZ9zhdV/THA4m9x+r8QX4/K7Q2DV9eQladRFtoeWQihbm09sb183wh+qWCNM=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzPPp/fdcv7e8gwFTSbwvOiJSXOFtH5uz0fHsvvj/OE8J5wzco7
-	wF4bGJf6M/nyAXe07nPYdn1oggLsvqDgVcdiyafnbrZXn3v7yVuDeyTx
-X-Gm-Gg: ASbGnctH8TAvvaB2HKsYMB4dYr5FiSVrVPeP9T3seYKWOxgK0+mI/rSbXAIlZ2ffXZU
-	ZEGlfLmad+XUgBb2+MDGpI3vmhh5KrR6GoFzHLovL6tvKkaeXdOCZV8R2g+TmDuBUFTt1sp1tst
-	U+MiZ7rigebEwypAhUVz8mAqgX52IJmZCxmL7X+nhVg6c5RxHGya1gNnjx1/7k1iPHPjndFw3MG
-	bVipyQAi1KRSIw2o4qSJCHf1i0GOvGgM63+aCgXRSX8CX3JAgT9uNXmURK1FMrU20UCTqBSmwwE
-	DrB0A2A0manrSD3v0h4d59MEMmc+rtyInlyxG2tAAgUcQdhI63n4mmc8R+jfnBB5MklS3HY/9EL
-	6ADbIvayRGzZj0d7sfrTS3apkzedMkIl+tMq7sS6O4Q0jiJ3oR11KYKlNlNuVqeOYGw4yHUUUUk
-	E=
-X-Google-Smtp-Source: AGHT+IFZO+INRxMBea9uQnl7mVblxY5p03lyGE73I1c+ipJwqdUZwqA6J9gpYponXblEKwi+0Ghzgw==
-X-Received: by 2002:ac8:5ccd:0:b0:4ab:38c1:f9a9 with SMTP id d75a77b69052e-4ae6de83addmr8039551cf.19.1753216337418;
-        Tue, 22 Jul 2025 13:32:17 -0700 (PDT)
-Received: from anbernal-thinkpadt14sgen2i.boston.csb ([2600:1000:b191:467c:33a8:e32c:94a8:9ef9])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4abb49c5c52sm56627991cf.30.2025.07.22.13.32.16
+        d=1e100.net; s=20230601; t=1753220218; x=1753825018;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=I7wjCY+Z7aogSgB0olKQb24xwsoM1JiEPp20xvwYl4o=;
+        b=FCzAc0/2Nf7Qu63Wm+FQYwPUs3AvDRZWG4Udata3mOwqOQ5RK2J01xJxyBUs6pxJsK
+         940j16X2uHCopNhUJ/lBZC1WA5g4kJOYg/U0TQ9j8jr7tkAopVCyNctY7Mh30+X4Oodi
+         nG7/JA6G8181xH9eSCxEfJ3T0nI18g5Qt3F/4EJx3BBBF3zcsK6O/Xu/VI57aWRQiWqc
+         Clmzy7qk1SNJ0VHMIZlP1gt52sX2oDpKREgiKPaZF2owvKpYinTw/Bf+q6h6CxOpV4Ur
+         RRut06XcOy93AIg6lqD5sO517WKVFtxfkfNQKfNyXmTlRPMEA4SV8goALlxG6p+LlXCq
+         8mLQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWZ8KQUnoD35HxgEBBRiTY3yHBd4AWe8NDmq20by8HBKpy8faBqO1Q8MfbcK/q10elx8/6kfWgoAsuA@vger.kernel.org
+X-Gm-Message-State: AOJu0YyRE2+iw4NTt6ixJmfc6D9QfBHVskw6lj94CEs1uWli5F64HuqF
+	mrjP8zb6LjJJkGVqHTrNPyjF+52Nal5aY1XfsqdsXWHLQKwjvQ6GCvUr5dRlbsG0+g==
+X-Gm-Gg: ASbGncvW+kVAEUeM+VBoefEbdsUTpEd17KQdz9Yl96MRfAf+sIyaARpST8oshs93e3B
+	ekostKtQzrPc69piCrM965mNAZMRoFEeewMYV5zvAfXzDIzduq4V2NZzJ654w3Mh4cLSuGqHR6y
+	MD3BqSwmDxpcqVe7//sqRqoSz9RBKxdz21A8U6ol0guTUu37kHJHhKE13Elo/ODKhkrHn3sfGVk
+	7Xvd4FO8WpFddmxkY0jyJRyKzoIW7nCPk/ohAQ4Y7vplgBhm3dU1doeGT00Xde0oVh6vtvdDakq
+	J+aWhYznYR2yx8tHX40t04Vf8ZbggYiL+89ytoj4N9sdOSo+48SqRY1H4YTEGKHzeOM69okuVLg
+	FLFUdE2t75B3lUpWRegNuk74z0ad1ZmowkJofWjJrCLjyAeG4ilDsv7tbYDuO+qF3NSPh
+X-Google-Smtp-Source: AGHT+IGGK+DAxs1GzSoXbQ2grgS4mpN1wVP0262WRd7SOctPda8IkUhMYYB7UIWHojx5EJ21zchK5Q==
+X-Received: by 2002:a17:902:f785:b0:234:48b2:fd63 with SMTP id d9443c01a7336-23f98ddd071mr319505ad.21.1753220217386;
+        Tue, 22 Jul 2025 14:36:57 -0700 (PDT)
+Received: from google.com (166.68.83.34.bc.googleusercontent.com. [34.83.68.166])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-75f89054d32sm1582230b3a.85.2025.07.22.14.36.55
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 22 Jul 2025 13:32:16 -0700 (PDT)
-From: Andrew Bernal <andrewlbernal@gmail.com>
-To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Andrew Bernal <andrewlbernal@gmail.com>
-Subject: [PATCH] scsi_debug: add implicit zones in max_open check
-Date: Tue, 22 Jul 2025 16:32:13 -0400
-Message-ID: <20250722203213.8762-1-andrewlbernal@gmail.com>
-X-Mailer: git-send-email 2.49.0
+        Tue, 22 Jul 2025 14:36:56 -0700 (PDT)
+Date: Tue, 22 Jul 2025 14:36:52 -0700
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: Niklas Cassel <cassel@kernel.org>,
+	Jack Wang <jinpu.wang@cloud.ionos.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Terrence Adams <tadamsjr@google.com>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] Revert "scsi: pm80xx: Do not use libsas port ID"
+Message-ID: <aIAEdNN88utN4sQJ@google.com>
+References: <20250717165606.3099208-2-cassel@kernel.org>
+ <aHlpNRsPbmrTgv0O@google.com>
+ <a09dea31-0de3-4859-95d9-2d83fc1ccc73@kernel.org>
+ <aHrLBPunX8Fuv1zz@google.com>
+ <70d2f593-3121-4684-8632-6a4ea1dc72ea@kernel.org>
+ <5056b88b-0f42-4a02-906f-197492d76827@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <5056b88b-0f42-4a02-906f-197492d76827@kernel.org>
 
-`max_open` also needs to check implicit open, not just explicit
-This is consistent with the logic in `zbc_open_zone`, on line 3809.
+On Tue, Jul 22, 2025 at 01:25:47PM +0900, Damien Le Moal wrote:
+> On 7/22/25 10:28 AM, Damien Le Moal wrote:
+> > On 7/19/25 7:30 AM, Igor Pylypiv wrote:
+> >> Hey Niklas,
+> >>
+> >> Could you try the following fix with your expander setup, please?
+> >> The fix assumes the problematic patch is not yet revered.
+> >>
+> >> $ git diff
+> >> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> >> index f7067878b34f..cd9513c23c71 100644
+> >> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> >> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> >> @@ -503,7 +503,7 @@ int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
+> >>         spin_lock_irqsave(&pm8001_ha->lock, flags);
+> >>  
+> >>         pm8001_dev = dev->lldd_dev;
+> >> -       port = pm8001_ha->phy[pm8001_dev->attached_phy].port;
+> >> +       port = dev->port->lldd_port;
+> >>  
+> >>         if (!internal_abort &&
+> >>             (DEV_IS_GONE(pm8001_dev) || !port || !port->port_attached)) {
+> > 
+> > Igor,
+> > 
+> > I tested this, or rather, a variation of it that clean things up at the same time:
+> > 
+> > diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> > index f7067878b34f..753c09363cbb 100644
+> > --- a/drivers/scsi/pm8001/pm8001_sas.c
+> > +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> > @@ -477,7 +477,7 @@ int pm8001_queue_command(struct sas_task *task, gfp_t
+> > gfp_flags)
+> >         struct pm8001_device *pm8001_dev = dev->lldd_dev;
+> >         bool internal_abort = sas_is_internal_abort(task);
+> >         struct pm8001_hba_info *pm8001_ha;
+> > -       struct pm8001_port *port = NULL;
+> > +       struct pm8001_port *port;
+> >         struct pm8001_ccb_info *ccb;
+> >         unsigned long flags;
+> >         u32 n_elem = 0;
+> > @@ -502,8 +502,7 @@ int pm8001_queue_command(struct sas_task *task, gfp_t
+> > gfp_flags)
+> > 
+> >         spin_lock_irqsave(&pm8001_ha->lock, flags);
+> > 
+> > -       pm8001_dev = dev->lldd_dev;
+> > -       port = pm8001_ha->phy[pm8001_dev->attached_phy].port;
+> > +       port = dev->port->lldd_port;
+> > 
+> >         if (!internal_abort &&
+> >             (DEV_IS_GONE(pm8001_dev) || !port || !port->port_attached)) {
+> > 
+> > 
+> > And it works, I can see the drives in the enclosure behind the expander.
+> > Care to send a proper path ?
+> > 
+> > I think this needs more testing though, especially special cases like yanking
+> > the SAS cable and doing device hotplug/unplug. Will do that later today.
+> 
+> So I did that. And things are not pretty... Even a simple "rmmod pm80xx"
+> crashes the kernel on a bad pointer dereference (invalid port address). Same if
+> I hot-unplug drives from the enclosure. But that happens even with only Niklas
+> revert patch applied. So I think that is unrelated to this change.
+> 
+> That said, I will dig further to understand how the port pointers become
+> invalid, and make sure this change is OK. Note that there are no issues that I
+> can see when there is no expander (drives directly attached to the HBA).
 
-https://zonedstorage.io/docs/introduction/zoned-storage Open Zones limit
-is defined as a "limit on the total number of zones that can simultaneously
-be in an implicit open or explicit open state"
+Thank you for testing, Damien!
 
-Signed-off-by: Andrew Bernal <andrewlbernal@gmail.com>
----
- drivers/scsi/scsi_debug.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+Just guessing, would defining the lldd_port_deformed() callback help?
+The callback can set lldd_port to NULL if the problem is due to a dangling
+lldd_port pointer.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index aef33d1e346a..0edb9a4698ca 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -3943,7 +3943,7 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
- 	/* Handle implicit open of closed and empty zones */
- 	if (zsp->z_cond == ZC1_EMPTY || zsp->z_cond == ZC4_CLOSED) {
- 		if (devip->max_open &&
--		    devip->nr_exp_open >= devip->max_open) {
-+		    devip->nr_imp_open + devip->nr_exp_open >= devip->max_open) {
- 			mk_sense_buffer(scp, DATA_PROTECT,
- 					INSUFF_RES_ASC,
- 					INSUFF_ZONE_ASCQ);
-@@ -6101,7 +6101,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	if (all) {
- 		/* Check if all closed zones can be open */
- 		if (devip->max_open &&
--		    devip->nr_exp_open + devip->nr_closed > devip->max_open) {
-+		    devip->nr_imp_open + devip->nr_exp_open + devip->nr_closed > devip->max_open) {
- 			mk_sense_buffer(scp, DATA_PROTECT, INSUFF_RES_ASC,
- 					INSUFF_ZONE_ASCQ);
- 			res = check_condition_result;
-@@ -6136,7 +6136,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 	if (zc == ZC3_EXPLICIT_OPEN || zc == ZC5_FULL)
- 		goto fini;
- 
--	if (devip->max_open && devip->nr_exp_open >= devip->max_open) {
-+	if (devip->max_open && devip->nr_imp_open + devip->nr_exp_open >= devip->max_open) {
- 		mk_sense_buffer(scp, DATA_PROTECT, INSUFF_RES_ASC,
- 				INSUFF_ZONE_ASCQ);
- 		res = check_condition_result;
--- 
-2.49.0
+Thanks,
+Igor
 
+> 
+> Cheers.
+> 
+> 
+> -- 
+> Damien Le Moal
+> Western Digital Research
