@@ -1,378 +1,118 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9437E221297
-	for <linux-scsi@vger.kernel.org>; Mon, 21 Jul 2025 21:51:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA9A3145323
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 01:31:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753134699; cv=none; b=P9M8l1Y2Nc88kHXWOub6MPgbntXyuUFi3on8XMef1bdR3ITXXoDBKY1F8KsUEqUIbv+3hlwhdtKlJXSlsGEtuteGER/DE2YNc4irHADwKSaoJalgjiRAS441BusGiyvCruWWEx95U7j7wifUU0jhhaYcIqPN+4sfVRDs0KJNauk=
+	t=1753147862; cv=none; b=ZoG3+F7iB7ioocx18MyaBv5pMQqiH2Wo+Cgfu5bg3N1NCc2qOxNAwqqA6MfaPriSX+StDLlRNc50xUNGpiujX3LNDy2N7w/oqF2MXMnMoI64EGAtSsYysuYR8wvTMeTeJKkzlbLY1ZOcRBM4Mk/cTrh4CYWWwT2CNH6g8l6974A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753134699; c=relaxed/simple;
-	bh=q2E5ogyWJlkTCmC79kqZ+7wET8oIVrWH+KliIR/G77o=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ACoMPczrWdRdsNO0TxiN0mn003YsZhBwd5yPVRKxiHUEEs7O0RGYK0O5iH64k9Yu/Kw6wdjd2i/YMeqfa3QW8TT5yL8PPl+klHKFO7Z2V9Ct41dLtUDr5Ki/V831Cz1T+kRoJetOENA605nTRi6VYjzQIXQcqGI8rFUVjykDYdk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=VQEHKSgW; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1753147862; c=relaxed/simple;
+	bh=GaAoXITOuW8MIkohiMm6BZsGpfNUB5dW93Aw5vqHpPA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=OlfBC5IBMX3TrazVFdbVoOTvGAouHNldsn2a3txXfMWmdor1UBOtqopZQwCP0VqtRrDiWp7+mxSEN4Mxs78Y34+7KF0srW8HDf6kWljh3/RoLMSux3imVmo+MUaYL3qCA3XgA/lKDcNBvH8rb/B7wHA9AGL/N/UkHYJ1Tx3nJnA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PblJkyRd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="VQEHKSgW"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bmDcl2yFYzlvRxq;
-	Mon, 21 Jul 2025 21:51:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:mime-version
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1753134692; x=1755726693; bh=bdUr8
-	IG8a+fzsVMpkAoZJDKKUro0Q4F+7GgZCPwJnng=; b=VQEHKSgWRjE5+EahOAoLA
-	Xa9kYxHXeisN9XqeZmE5nGZzt4+jIZ5D1/721coA6UvBZlUec7fIhrmPS1+81YU+
-	8Mn9qY1uKDI2XCUpvfNE1/udydygBDc2+vXNiB4D5n3WUkIBQnf1pQOR4y4Ug+pv
-	hOoueh8Q1rAiwdbtq4y/jrWHEf2voaAlrLLMvBpnsigPsH+yScodFpdUt2qIQNjw
-	GZNvR/C3MUx20Z18a1+iI9aAqW6tD1DMafC9Zy9DWmO7nrSzTZCPwO1JmatTMF0L
-	2AfUJqifyZCnFMNuhghXnyoKdswvUmuS+HcXjSHO693NaMAm3yKO9sookOK/ynMP
-	Q==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id K_eLLBOZDCzO; Mon, 21 Jul 2025 21:51:32 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bmDcY2PBKzlgqV6;
-	Mon, 21 Jul 2025 21:51:24 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	=?UTF-8?q?Andr=C3=A9=20Draszik?= <andre.draszik@linaro.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bean Huo <huobean@gmail.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Subject: [PATCH v2] ufs: core: Fix IRQ lock inversion
-Date: Mon, 21 Jul 2025 14:50:47 -0700
-Message-ID: <20250721215055.2885241-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.50.0.727.gbf7dc18ff4-goog
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PblJkyRd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 80F94C4CEED;
+	Tue, 22 Jul 2025 01:31:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753147862;
+	bh=GaAoXITOuW8MIkohiMm6BZsGpfNUB5dW93Aw5vqHpPA=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=PblJkyRd6ivG16eVHkWcNr3l2f1eUDseCoGG92dopKALg4+nU3zIOZxk6arr26Pxh
+	 Qg+/72mAx/0zWFvMoptNhntZFWIwAsBm5q6ZyXG3CRt8Yw2wertWD4QYEhbgFKdljK
+	 YOPMJMryUMRYsX+6XKqsCCrLXOmkV0b1SSUOmAxSLTtmWpKYpTt++I6KPhJdqXDGgk
+	 XzKtRVpgARUq2nEIOhNyh7oKNjjQcXNUaBzvcKTR9/gaRx2VY6HL9oYkr2QXzo7IUu
+	 IpWd7inavVXS+HD4M7Q3rSAi+p0ihOm1b2+eDXJ+BEFruDOu4ao81cjSej5JmWhtJX
+	 abUKskLpKs4Jg==
+Message-ID: <70d2f593-3121-4684-8632-6a4ea1dc72ea@kernel.org>
+Date: Tue, 22 Jul 2025 10:28:35 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] Revert "scsi: pm80xx: Do not use libsas port ID"
+To: Igor Pylypiv <ipylypiv@google.com>
+Cc: Niklas Cassel <cassel@kernel.org>, Jack Wang
+ <jinpu.wang@cloud.ionos.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Terrence Adams <tadamsjr@google.com>, linux-scsi@vger.kernel.org
+References: <20250717165606.3099208-2-cassel@kernel.org>
+ <aHlpNRsPbmrTgv0O@google.com>
+ <a09dea31-0de3-4859-95d9-2d83fc1ccc73@kernel.org>
+ <aHrLBPunX8Fuv1zz@google.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <aHrLBPunX8Fuv1zz@google.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-Commit 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service
-routine to a threaded IRQ handler") introduced an IRQ lock inversion
-issue. Fix this lock inversion by changing the spin_lock_irq() calls into
-spin_lock_irqsave() calls in code that can be called either from interrup=
-t
-context or from thread context. This patch fixes the following lockdep
-complaint:
+On 7/19/25 7:30 AM, Igor Pylypiv wrote:
+> Hey Niklas,
+> 
+> Could you try the following fix with your expander setup, please?
+> The fix assumes the problematic patch is not yet revered.
+> 
+> $ git diff
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+> index f7067878b34f..cd9513c23c71 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -503,7 +503,7 @@ int pm8001_queue_command(struct sas_task *task, gfp_t gfp_flags)
+>         spin_lock_irqsave(&pm8001_ha->lock, flags);
+>  
+>         pm8001_dev = dev->lldd_dev;
+> -       port = pm8001_ha->phy[pm8001_dev->attached_phy].port;
+> +       port = dev->port->lldd_port;
+>  
+>         if (!internal_abort &&
+>             (DEV_IS_GONE(pm8001_dev) || !port || !port->port_attached)) {
 
-WARNING: possible irq lock inversion dependency detected
-6.12.30-android16-5-maybe-dirty-4k #1 Tainted: G        W  OE
---------------------------------------------------------
-kworker/u28:0/12 just changed the state of lock:
-ffffff881e29dd60 (&hba->clk_gating.lock){-...}-{2:2}, at: ufshcd_release_=
-scsi_cmd+0x60/0x110
-but this lock took another, HARDIRQ-unsafe lock in the past:
- (shost->host_lock){+.+.}-{2:2}
+Igor,
 
-and interrupts could create inverse lock ordering between them.
+I tested this, or rather, a variation of it that clean things up at the same time:
 
-other info that might help us debug this:
- Possible interrupt unsafe locking scenario:
+diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
+index f7067878b34f..753c09363cbb 100644
+--- a/drivers/scsi/pm8001/pm8001_sas.c
++++ b/drivers/scsi/pm8001/pm8001_sas.c
+@@ -477,7 +477,7 @@ int pm8001_queue_command(struct sas_task *task, gfp_t
+gfp_flags)
+        struct pm8001_device *pm8001_dev = dev->lldd_dev;
+        bool internal_abort = sas_is_internal_abort(task);
+        struct pm8001_hba_info *pm8001_ha;
+-       struct pm8001_port *port = NULL;
++       struct pm8001_port *port;
+        struct pm8001_ccb_info *ccb;
+        unsigned long flags;
+        u32 n_elem = 0;
+@@ -502,8 +502,7 @@ int pm8001_queue_command(struct sas_task *task, gfp_t
+gfp_flags)
 
-       CPU0                    CPU1
-       ----                    ----
-  lock(shost->host_lock);
-                               local_irq_disable();
-                               lock(&hba->clk_gating.lock);
-                               lock(shost->host_lock);
-  <Interrupt>
-    lock(&hba->clk_gating.lock);
+        spin_lock_irqsave(&pm8001_ha->lock, flags);
 
- *** DEADLOCK ***
+-       pm8001_dev = dev->lldd_dev;
+-       port = pm8001_ha->phy[pm8001_dev->attached_phy].port;
++       port = dev->port->lldd_port;
 
-4 locks held by kworker/u28:0/12:
- #0: ffffff8800ac6158 ((wq_completion)async){+.+.}-{0:0}, at: process_one=
-_work+0x1bc/0x65c
- #1: ffffffc085c93d70 ((work_completion)(&entry->work)){+.+.}-{0:0}, at: =
-process_one_work+0x1e4/0x65c
- #2: ffffff881e29c0e0 (&shost->scan_mutex){+.+.}-{3:3}, at: __scsi_add_de=
-vice+0x74/0x120
- #3: ffffff881960ea00 (&hwq->cq_lock){-...}-{2:2}, at: ufshcd_mcq_poll_cq=
-e_lock+0x28/0x104
+        if (!internal_abort &&
+            (DEV_IS_GONE(pm8001_dev) || !port || !port->port_attached)) {
 
-the shortest dependencies between 2nd lock and 1st lock:
- -> (shost->host_lock){+.+.}-{2:2} {
-    HARDIRQ-ON-W at:
-                      lock_acquire+0x134/0x2b4
-                      _raw_spin_lock+0x48/0x64
-                      ufshcd_sl_intr+0x4c/0xa08
-                      ufshcd_threaded_intr+0x70/0x12c
-                      irq_thread_fn+0x48/0xa8
-                      irq_thread+0x130/0x1ec
-                      kthread+0x110/0x134
-                      ret_from_fork+0x10/0x20
-    SOFTIRQ-ON-W at:
-                      lock_acquire+0x134/0x2b4
-                      _raw_spin_lock+0x48/0x64
-                      ufshcd_sl_intr+0x4c/0xa08
-                      ufshcd_threaded_intr+0x70/0x12c
-                      irq_thread_fn+0x48/0xa8
-                      irq_thread+0x130/0x1ec
-                      kthread+0x110/0x134
-                      ret_from_fork+0x10/0x20
-    INITIAL USE at:
-                     lock_acquire+0x134/0x2b4
-                     _raw_spin_lock+0x48/0x64
-                     ufshcd_sl_intr+0x4c/0xa08
-                     ufshcd_threaded_intr+0x70/0x12c
-                     irq_thread_fn+0x48/0xa8
-                     irq_thread+0x130/0x1ec
-                     kthread+0x110/0x134
-                     ret_from_fork+0x10/0x20
-  }
-  ... key      at: [<ffffffc085ba1a98>] scsi_host_alloc.__key+0x0/0x10
-  ... acquired at:
-   _raw_spin_lock_irqsave+0x5c/0x80
-   __ufshcd_release+0x78/0x118
-   ufshcd_send_uic_cmd+0xe4/0x118
-   ufshcd_dme_set_attr+0x88/0x1c8
-   ufs_google_phy_initialization+0x68/0x418 [ufs]
-   ufs_google_link_startup_notify+0x78/0x27c [ufs]
-   ufshcd_link_startup+0x84/0x720
-   ufshcd_init+0xf3c/0x1330
-   ufshcd_pltfrm_init+0x728/0x7d8
-   ufs_google_probe+0x30/0x84 [ufs]
-   platform_probe+0xa0/0xe0
-   really_probe+0x114/0x454
-   __driver_probe_device+0xa4/0x160
-   driver_probe_device+0x44/0x23c
-   __driver_attach_async_helper+0x60/0xd4
-   async_run_entry_fn+0x4c/0x17c
-   process_one_work+0x26c/0x65c
-   worker_thread+0x33c/0x498
-   kthread+0x110/0x134
-   ret_from_fork+0x10/0x20
 
--> (&hba->clk_gating.lock){-...}-{2:2} {
-   IN-HARDIRQ-W at:
-                    lock_acquire+0x134/0x2b4
-                    _raw_spin_lock_irqsave+0x5c/0x80
-                    ufshcd_release_scsi_cmd+0x60/0x110
-                    ufshcd_compl_one_cqe+0x2c0/0x3f4
-                    ufshcd_mcq_poll_cqe_lock+0xb0/0x104
-                    ufs_google_mcq_intr+0x80/0xa0 [ufs]
-                    __handle_irq_event_percpu+0x104/0x32c
-                    handle_irq_event+0x40/0x9c
-                    handle_fasteoi_irq+0x170/0x2e8
-                    generic_handle_domain_irq+0x58/0x80
-                    gic_handle_irq+0x48/0x104
-                    call_on_irq_stack+0x3c/0x50
-                    do_interrupt_handler+0x7c/0xd8
-                    el1_interrupt+0x34/0x58
-                    el1h_64_irq_handler+0x18/0x24
-                    el1h_64_irq+0x68/0x6c
-                    _raw_spin_unlock_irqrestore+0x3c/0x6c
-                    debug_object_assert_init+0x16c/0x21c
-                    __mod_timer+0x4c/0x48c
-                    schedule_timeout+0xd4/0x16c
-                    io_schedule_timeout+0x48/0x70
-                    do_wait_for_common+0x100/0x194
-                    wait_for_completion_io_timeout+0x48/0x6c
-                    blk_execute_rq+0x124/0x17c
-                    scsi_execute_cmd+0x18c/0x3f8
-                    scsi_probe_and_add_lun+0x204/0xd74
-                    __scsi_add_device+0xbc/0x120
-                    ufshcd_async_scan+0x80/0x3c0
-                    async_run_entry_fn+0x4c/0x17c
-                    process_one_work+0x26c/0x65c
-                    worker_thread+0x33c/0x498
-                    kthread+0x110/0x134
-                    ret_from_fork+0x10/0x20
-   INITIAL USE at:
-                   lock_acquire+0x134/0x2b4
-                   _raw_spin_lock_irqsave+0x5c/0x80
-                   ufshcd_hold+0x34/0x14c
-                   ufshcd_send_uic_cmd+0x28/0x118
-                   ufshcd_dme_set_attr+0x88/0x1c8
-                   ufs_google_phy_initialization+0x68/0x418 [ufs]
-                   ufs_google_link_startup_notify+0x78/0x27c [ufs]
-                   ufshcd_link_startup+0x84/0x720
-                   ufshcd_init+0xf3c/0x1330
-                   ufshcd_pltfrm_init+0x728/0x7d8
-                   ufs_google_probe+0x30/0x84 [ufs]
-                   platform_probe+0xa0/0xe0
-                   really_probe+0x114/0x454
-                   __driver_probe_device+0xa4/0x160
-                   driver_probe_device+0x44/0x23c
-                   __driver_attach_async_helper+0x60/0xd4
-                   async_run_entry_fn+0x4c/0x17c
-                   process_one_work+0x26c/0x65c
-                   worker_thread+0x33c/0x498
-                   kthread+0x110/0x134
-                   ret_from_fork+0x10/0x20
- }
- ... key      at: [<ffffffc085ba6fe8>] ufshcd_init.__key+0x0/0x10
- ... acquired at:
-   mark_lock+0x1c4/0x224
-   __lock_acquire+0x438/0x2e1c
-   lock_acquire+0x134/0x2b4
-   _raw_spin_lock_irqsave+0x5c/0x80
-   ufshcd_release_scsi_cmd+0x60/0x110
-   ufshcd_compl_one_cqe+0x2c0/0x3f4
-   ufshcd_mcq_poll_cqe_lock+0xb0/0x104
-   ufs_google_mcq_intr+0x80/0xa0 [ufs]
-   __handle_irq_event_percpu+0x104/0x32c
-   handle_irq_event+0x40/0x9c
-   handle_fasteoi_irq+0x170/0x2e8
-   generic_handle_domain_irq+0x58/0x80
-   gic_handle_irq+0x48/0x104
-   call_on_irq_stack+0x3c/0x50
-   do_interrupt_handler+0x7c/0xd8
-   el1_interrupt+0x34/0x58
-   el1h_64_irq_handler+0x18/0x24
-   el1h_64_irq+0x68/0x6c
-   _raw_spin_unlock_irqrestore+0x3c/0x6c
-   debug_object_assert_init+0x16c/0x21c
-   __mod_timer+0x4c/0x48c
-   schedule_timeout+0xd4/0x16c
-   io_schedule_timeout+0x48/0x70
-   do_wait_for_common+0x100/0x194
-   wait_for_completion_io_timeout+0x48/0x6c
-   blk_execute_rq+0x124/0x17c
-   scsi_execute_cmd+0x18c/0x3f8
-   scsi_probe_and_add_lun+0x204/0xd74
-   __scsi_add_device+0xbc/0x120
-   ufshcd_async_scan+0x80/0x3c0
-   async_run_entry_fn+0x4c/0x17c
-   process_one_work+0x26c/0x65c
-   worker_thread+0x33c/0x498
-   kthread+0x110/0x134
-   ret_from_fork+0x10/0x20
+And it works, I can see the drives in the enclosure behind the expander.
+Care to send a proper path ?
 
-stack backtrace:
-CPU: 6 UID: 0 PID: 12 Comm: kworker/u28:0 Tainted: G        W  OE      6.=
-12.30-android16-5-maybe-dirty-4k #1 ccd4020fe444bdf629efc3b86df6be920b8df=
-7d0
-Tainted: [W]=3DWARN, [O]=3DOOT_MODULE, [E]=3DUNSIGNED_MODULE
-Hardware name: Spacecraft board based on MALIBU (DT)
-Workqueue: async async_run_entry_fn
-Call trace:
- dump_backtrace+0xfc/0x17c
- show_stack+0x18/0x28
- dump_stack_lvl+0x40/0xa0
- dump_stack+0x18/0x24
- print_irq_inversion_bug+0x2fc/0x304
- mark_lock_irq+0x388/0x4fc
- mark_lock+0x1c4/0x224
- __lock_acquire+0x438/0x2e1c
- lock_acquire+0x134/0x2b4
- _raw_spin_lock_irqsave+0x5c/0x80
- ufshcd_release_scsi_cmd+0x60/0x110
- ufshcd_compl_one_cqe+0x2c0/0x3f4
- ufshcd_mcq_poll_cqe_lock+0xb0/0x104
- ufs_google_mcq_intr+0x80/0xa0 [ufs dd6f385554e109da094ab91d5f7be18625a22=
-22a]
- __handle_irq_event_percpu+0x104/0x32c
- handle_irq_event+0x40/0x9c
- handle_fasteoi_irq+0x170/0x2e8
- generic_handle_domain_irq+0x58/0x80
- gic_handle_irq+0x48/0x104
- call_on_irq_stack+0x3c/0x50
- do_interrupt_handler+0x7c/0xd8
- el1_interrupt+0x34/0x58
- el1h_64_irq_handler+0x18/0x24
- el1h_64_irq+0x68/0x6c
- _raw_spin_unlock_irqrestore+0x3c/0x6c
- debug_object_assert_init+0x16c/0x21c
- __mod_timer+0x4c/0x48c
- schedule_timeout+0xd4/0x16c
- io_schedule_timeout+0x48/0x70
- do_wait_for_common+0x100/0x194
- wait_for_completion_io_timeout+0x48/0x6c
- blk_execute_rq+0x124/0x17c
- scsi_execute_cmd+0x18c/0x3f8
- scsi_probe_and_add_lun+0x204/0xd74
- __scsi_add_device+0xbc/0x120
- ufshcd_async_scan+0x80/0x3c0
- async_run_entry_fn+0x4c/0x17c
- process_one_work+0x26c/0x65c
- worker_thread+0x33c/0x498
- kthread+0x110/0x134
- ret_from_fork+0x10/0x20
+I think this needs more testing though, especially special cases like yanking
+the SAS cable and doing device hotplug/unplug. Will do that later today.
 
-Cc: Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Andr=C3=A9 Draszik <andre.draszik@linaro.org>
-Fixes: 3c7ac40d7322 ("scsi: ufs: core: Delegate the interrupt service rou=
-tine to a threaded IRQ handler")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
+Thanks !
 
-Changes compared to v1: fixed a build error.
-
- drivers/ufs/core/ufshcd.c | 11 ++++-------
- 1 file changed, 4 insertions(+), 7 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index acfc1b4691fa..8b72cf7811ca 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -5566,7 +5566,7 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
-hba *hba, u32 intr_status)
- 	irqreturn_t retval =3D IRQ_NONE;
- 	struct uic_command *cmd;
-=20
--	spin_lock(hba->host->host_lock);
-+	guard(spinlock_irqsave)(hba->host->host_lock);
- 	cmd =3D hba->active_uic_cmd;
- 	if (WARN_ON_ONCE(!cmd))
- 		goto unlock;
-@@ -5593,8 +5593,6 @@ static irqreturn_t ufshcd_uic_cmd_compl(struct ufs_=
-hba *hba, u32 intr_status)
- 		ufshcd_add_uic_command_trace(hba, cmd, UFS_CMD_COMP);
-=20
- unlock:
--	spin_unlock(hba->host->host_lock);
--
- 	return retval;
- }
-=20
-@@ -6455,10 +6453,9 @@ void ufshcd_schedule_eh_work(struct ufs_hba *hba)
-=20
- static void ufshcd_force_error_recovery(struct ufs_hba *hba)
- {
--	spin_lock_irq(hba->host->host_lock);
-+	guard(spinlock_irqsave)(hba->host->host_lock);
- 	hba->force_reset =3D true;
- 	ufshcd_schedule_eh_work(hba);
--	spin_unlock_irq(hba->host->host_lock);
- }
-=20
- static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
-@@ -6922,7 +6919,7 @@ static irqreturn_t ufshcd_check_errors(struct ufs_h=
-ba *hba, u32 intr_status)
- 	bool queue_eh_work =3D false;
- 	irqreturn_t retval =3D IRQ_NONE;
-=20
--	spin_lock(hba->host->host_lock);
-+	guard(spinlock_irqsave)(hba->host->host_lock);
- 	hba->errors |=3D UFSHCD_ERROR_MASK & intr_status;
-=20
- 	if (hba->errors & INT_FATAL_ERRORS) {
-@@ -6981,7 +6978,7 @@ static irqreturn_t ufshcd_check_errors(struct ufs_h=
-ba *hba, u32 intr_status)
- 	 */
- 	hba->errors =3D 0;
- 	hba->uic_error =3D 0;
--	spin_unlock(hba->host->host_lock);
-+
- 	return retval;
- }
-=20
+-- 
+Damien Le Moal
+Western Digital Research
