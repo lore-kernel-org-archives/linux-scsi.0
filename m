@@ -1,88 +1,102 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B58D02C159F
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 08:19:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B93202DA77B;
+	Tue, 22 Jul 2025 08:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753172355; cv=none; b=WiG3r/2vf4nmYsPFOMQe7aX8eZaesoHwN23JXE1Eit91F9+++saMxE9GMAFTBDqOBNHCc3ezwd1XUQMKFA7slnXBA4r0IEJM6ob+DNTS3wrr6YMAcVOgkMES16qH2jcV1TBsRZ7+xq4tNvHLFI9PbSIcLUUOl258YK0tfMLrGaY=
+	t=1753174664; cv=none; b=O0jnA+74L9kV7KaNQCDUqD8UBP9zr7RH10kkqUaerrCbySR5Eqgtq3eLPeOSu1hZH+OYJTFQHewvv5qKrSL3cHohttcdbTXLfazEGFv8zjgd/aipd6cQ93tZumQpM2kwMlX9iIZPadVImtL2YSqNi6uvLmSR9rZn3YRrXhU0v2I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753172355; c=relaxed/simple;
-	bh=2np78owCtY0zXiGio/2IvH6pWtbfqh7vq32px6BlLpI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=Nlwi18UlT2S1Uq4Vqq55EV7cra5Y8MYj9Ybeypjxtq5/Zsxq4tg0Dp+FG7VpF/OYBDDINCmWeOuhtmUylTFQMpQFpKviqPOA5zHIh4yGhAWRgTzOjTMiw0ZwUC+Tlul+JzgUPbpUL1Rs4tp8v19NnH0azvPA4x+hqWEPVvObJiI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=mTIn/bwS; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1753174664; c=relaxed/simple;
+	bh=9E0zTMeABK9zZr8b0mMAkejycqLX2gcQPf3uCJkIBVE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dm2pe8eJ89ZN+AevgM2sZL18+PZ9+5ZlpzzbzmZ//EelYnIPhQMOemjX861Sg7QDf2i6J4SInsATbaFn4YDtDjUp6pDqjRp+8LeLk41thwNiPC2hXcl67cAoz+c1oWou7XNIHZuoroKG8MVDmPKthXP57EW0P7UK7oVzWQWwIJ0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=ZZGs140n; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mTIn/bwS"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250722081911epoutp034ff12aea1c13c546edcc872f6022fd4f~UhPbxv-fO2655226552epoutp03A
-	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 08:19:11 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250722081911epoutp034ff12aea1c13c546edcc872f6022fd4f~UhPbxv-fO2655226552epoutp03A
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1753172351;
-	bh=AxUcsZm5yZiXaI15ZeDb0qU35ud3so0yBE1NGQ4Ni+U=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=mTIn/bwSlLWIwrUN5ufEHb0NRKcXvjBKHPRzPYXNYNzoUjm2fEPF88YQIsj/MRSBk
-	 mtzPEgapuDCYAWsto1mGPtHk1JKXnMLjmSI5PDNt2Sxh+wcNPmNce+RB5Ht8d8iIKm
-	 l1VbUPQFzrNZy7Ptpvk40sZkzLl9l/Dhg6CqPGOo=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20250722081910epcas5p442aa60e9967bf401c7041948a9ef0f58~UhPbKjWI00169401694epcas5p4A;
-	Tue, 22 Jul 2025 08:19:10 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.91]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4bmVXs4xG9z3hhT3; Tue, 22 Jul
-	2025 08:19:09 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250722081729epcas5p12dc547bda002c28435d83dc7e972c105~UhN86SA4s1721417214epcas5p1z;
-	Tue, 22 Jul 2025 08:17:29 +0000 (GMT)
-Received: from [107.122.10.194] (unknown [107.122.10.194]) by
-	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250722081727epsmtip1d6ed31e2cf992237114606f812d63623~UhN636tdp2238122381epsmtip1Z;
-	Tue, 22 Jul 2025 08:17:26 +0000 (GMT)
-Message-ID: <8072a659-0cab-43fc-bff7-618942346646@samsung.com>
-Date: Tue, 22 Jul 2025 13:47:22 +0530
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="ZZGs140n"
+X-UUID: eadc56b466d911f0b33aeb1e7f16c2b6-20250722
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=mv3/47QmIvP+O988l7nlJQz03ztom8RMCbLpNZqHgOE=;
+	b=ZZGs140n+rhhmGs5TWpdM1Hx0S1C7srNSxYXtTNe5BxkJrmT7HGGBXduIVv2moaX1tBaO5phdtUxGpJIYZhhS86uHZQIPuIQrRFrWDPoJGlc36zESI6gSRyLjlpGvQdBkf+aZE9EL2S4w9ADVCHU/+eHse4+4bpWzKF7RZg1Xy4=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.2,REQID:2e041f73-1a5c-47de-b11c-fd782c6f6130,IP:0,UR
+	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
+	release,TS:-5
+X-CID-META: VersionHash:9eb4ff7,CLOUDID:2a28b584-a7ec-4748-8ac1-dca5703e241f,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:nil,Content:0|50,EDM:-3,IP:ni
+	l,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES
+	:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 0
+X-CID-BAS: 0,_,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: eadc56b466d911f0b33aeb1e7f16c2b6-20250722
+Received: from mtkmbs14n2.mediatek.inc [(172.21.101.76)] by mailgw02.mediatek.com
+	(envelope-from <macpaul.lin@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1660595992; Tue, 22 Jul 2025 16:57:38 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ mtkmbs13n1.mediatek.inc (172.21.101.193) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.39; Tue, 22 Jul 2025 16:57:36 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Tue, 22 Jul 2025 16:57:36 +0800
+From: Macpaul Lin <macpaul.lin@mediatek.com>
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>, Peter Wang
+	<peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>, "James E . J
+ . Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
+	<martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>
+CC: Bear Wang <bear.wang@mediatek.com>, Pablo Sun <pablo.sun@mediatek.com>,
+	Ramax Lo <ramax.lo@mediatek.com>, Macpaul Lin <macpaul.lin@mediatek.com>,
+	Macpaul Lin <macpaul@gmail.com>, MediaTek Chromebook Upstream
+	<Project_Global_Chrome_Upstream_Group@mediatek.com>
+Subject: [PATCH v2 1/4] scsi: ufs: ufs-mediatek: Add UFS host support for MT8195 SoC
+Date: Tue, 22 Jul 2025 16:57:17 +0800
+Message-ID: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH for-next v5 0/4] add ioctl to query metadata and
- protection info capabilities
-To: Christoph Hellwig <hch@infradead.org>
-Cc: vincent.fu@samsung.com, jack@suse.cz, anuj1072538@gmail.com,
-	axboe@kernel.dk, viro@zeniv.linux.org.uk, brauner@kernel.org,
-	martin.petersen@oracle.com, ebiggers@kernel.org, adilger@dilger.ca,
-	linux-block@vger.kernel.org, linux-fsdevel@vger.kernel.org,
-	joshi.k@samsung.com, linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org, gost.dev@samsung.com
-Content-Language: en-US
-From: Anuj Gupta/Anuj Gupta <anuj20.g@samsung.com>
-In-Reply-To: <aH8xY3PyejzGdUp7@infradead.org>
-Content-Transfer-Encoding: 7bit
-X-CMS-MailID: 20250722081729epcas5p12dc547bda002c28435d83dc7e972c105
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250630090606epcas5p42edec1dfe34f53c9f1448acb0964bb8f
-References: <CGME20250630090606epcas5p42edec1dfe34f53c9f1448acb0964bb8f@epcas5p4.samsung.com>
-	<20250630090548.3317-1-anuj20.g@samsung.com>
-	<aH8xY3PyejzGdUp7@infradead.org>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On 7/22/2025 12:06 PM, Christoph Hellwig wrote:
-> What's the status of the fio patches to support PI now that this
-> has landed?
-> 
-Hi Christoph,
-Vincent and I have been working on the corresponding fio support - its
-nearly ready. We plan to post the patches soon. ITMT, here's the WIP
-branch for reference:
-https://github.com/vincentkfu/fio/tree/pi-block
+Add "mediatek,mt8195-ufshci" to the of_device_id table to enable
+support for MediaTek MT8195/MT8395 UFS host controller. This matches the
+device node entry in the MT8195/MT8395 device tree and allows proper driver
+binding.
+
+Signed-off-by: Macpaul Lin <macpaul.lin@mediatek.com>
+---
+ drivers/ufs/host/ufs-mediatek.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+Changes vor f2:
+ - No change.
+
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 182f58d0c9db..e1dbf0231c5e 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -50,6 +50,7 @@ static const struct ufs_dev_quirk ufs_mtk_dev_fixups[] = {
+ 
+ static const struct of_device_id ufs_mtk_of_match[] = {
+ 	{ .compatible = "mediatek,mt8183-ufshci" },
++	{ .compatible = "mediatek,mt8195-ufshci" },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
+-- 
+2.45.2
 
