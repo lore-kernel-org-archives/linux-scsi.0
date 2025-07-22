@@ -1,114 +1,106 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B673D2D879C;
-	Tue, 22 Jul 2025 08:57:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C03D2DAFCE
+	for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 09:22:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753174673; cv=none; b=PV3dv0msXhfQLtooNUYKnhj+i7QyGYkmBWJgmEqcT+6Re3YS0ehHZGN+SWJ+z/l5H3cgVQBnrqPjU5dh7drZV9QhDadKU6tz7vZ3MUTxNK9c7AXc/LwBWsYYPdg3aJigIaMjmYW2nfaxbshPtAp2r8kpOweohK/7bbgRwv/MW5M=
+	t=1753176149; cv=none; b=iT/CZi32UX7PlcEkHz6PhH9amedf4ERCvnmFvsLvAfJYzTIe3kpwwkdM/oHWKU+5s/TVdFLb4oxfa+plrO8ej1If7f+jtVaSmRGHGjfduivVvbiAuZ4q/C1L+i+9oc9eo95jfg/Sbh/l6aqYm/8anMKy32wFUb2JFoQjnRNdR4Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753174673; c=relaxed/simple;
-	bh=R6ZijVeg8VUkqySlYSIlCFa+USG4jCJR2hNpPOd8jxw=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CW7gHo9d4YJOhDkZlCRYKjP2hFWgNUGCoiQlko652H1fxwi7Fo0S6DE+TwW4RegOyWs7WeC6UqY5WRvJiEzuMRWbpHOSuJUuJNcucdLJCH01S4mxM/7tVbZjjwiCNrC8tp6jCMqWW1DpFZoGadSyXof7uqSNaWPsDRpUYjpEv7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=qdupOaGF; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1753176149; c=relaxed/simple;
+	bh=6yQpiSo0+rgmT/RnJIkn8LyzRl3XRGHtT6XWn0Ypfec=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=qaeT4b2Hgv3RESLY0qNyFGwOkYxMU66Z8I8krkZWY3iiOMWiHwCQ9R3DzoCz+RWydCjiJnL5B78l3fPXcEeLUsGNj2Y5LvNyEJlHxfqCvraKjfez8vqhtx20oXqQ+TSiHDHOmkUDAVvLYY/qpvLzOmVUv/zm1fkxNjfQB5b7YO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=owBWUb6P; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="qdupOaGF"
-X-UUID: ebe38b9a66d911f08b7dc59d57013e23-20250722
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=X0dKErEL1skRnp95LZxhIE6KOtuvu+ympj6r/1bWpSA=;
-	b=qdupOaGFq4ZL4PTC3NskoEy6J7MtspTaCh88QJP1nUv9nj+gVFpm/fMNJgi2FeaBdhphjp+QZB18y+FzjMO3S5E5z+7EC3BMmP8NUVwurA0+7cYaZ3yJz3I6zNLjtB6ZvfXFVPYxXsB51BFGYoVR7ULkpTxfa3TKKGR6PvP98uc=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.2,REQID:ff973ac8-da01-41a9-aa16-de0797252902,IP:0,UR
-	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-25
-X-CID-META: VersionHash:9eb4ff7,CLOUDID:1a641f50-93b9-417a-b51d-915a29f1620f,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:nil,Content:0|50,EDM:-3
-	,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV
-	:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 0
-X-CID-BAS: 0,_,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: ebe38b9a66d911f08b7dc59d57013e23-20250722
-Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw01.mediatek.com
-	(envelope-from <macpaul.lin@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 634969686; Tue, 22 Jul 2025 16:57:39 +0800
-Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
- MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Tue, 22 Jul 2025 16:57:36 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Tue, 22 Jul 2025 16:57:36 +0800
-From: Macpaul Lin <macpaul.lin@mediatek.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>, Peter Wang
-	<peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>, "James E . J
- . Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>, <linux-scsi@vger.kernel.org>,
-	<devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-mediatek@lists.infradead.org>
-CC: Bear Wang <bear.wang@mediatek.com>, Pablo Sun <pablo.sun@mediatek.com>,
-	Ramax Lo <ramax.lo@mediatek.com>, Macpaul Lin <macpaul.lin@mediatek.com>,
-	Macpaul Lin <macpaul@gmail.com>, MediaTek Chromebook Upstream
-	<Project_Global_Chrome_Upstream_Group@mediatek.com>, <stable@vger.kernel.org>
-Subject: [PATCH v2 2/4] dt-bindings: ufs: mediatek,ufs: add ufs-disable-mcq flag for UFS host
-Date: Tue, 22 Jul 2025 16:57:18 +0800
-Message-ID: <20250722085721.2062657-2-macpaul.lin@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
-References: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="owBWUb6P"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-3a4fb9c2436so2998439f8f.1
+        for <linux-scsi@vger.kernel.org>; Tue, 22 Jul 2025 02:22:27 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1753176145; x=1753780945; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=6yQpiSo0+rgmT/RnJIkn8LyzRl3XRGHtT6XWn0Ypfec=;
+        b=owBWUb6P3jQkk0NqHo6BRopLuf4z7b+ZsxaHcie1JbGAQXOh1mjnowEfGxmDQEKC/H
+         K+9U8xlMtqzLf0gDL+VIkfUcyz9tdAeze5jBpo/8mockt6xfZa/fY/f5t3o0vH11CD9J
+         wo9ZLX5hia1sRXXmM12E6Cmyl4+4ALsH/lHKyuLtaxl7GpVT2HmnLAS6cABb6MC3ZXw9
+         83sXbFItvn0dcvzHHpI7X9ImO1HYHhlscohthUdOiXZM0LTHG638JmQzIB66aLiSzwtz
+         u2AEo2JxRR8Icmue9aeKWEE1HtkgwjPDlr0iQn8Us7bB87NikI1QT/KytOr4AId4Q4Ha
+         xTdQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753176145; x=1753780945;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=6yQpiSo0+rgmT/RnJIkn8LyzRl3XRGHtT6XWn0Ypfec=;
+        b=EnL+Xds1TBlHVwgiMrqGUbwVFA3yACu68YhhWf5FnT3viyjfDn1uE602eJGTsUkMkL
+         S8+FAcnv4iH7GVRbJpYqfSYplgLwE07rbvc9B+kJoCvniXSQEefhrGuMUazjIEIMQaRE
+         NfRG4YSAGO5Y3UCCljEWQgAMwLn6iBehzM9cczGyTzxH2pOzdjYfDtnUJ0S9VTPyWH9R
+         FaGK4gafUlyCnS4d3Xp1PKxFEdL5WGOSNFZXa4aY3TFCbqnyeGwNnPdok9g7rTEEXRxq
+         6Oo7z1m2aIUDefFWzaObJUpn1pHu6uYKs+7GoPknSJb5nUpp9W8hDTIVia1Ks5kgydkC
+         BkLQ==
+X-Forwarded-Encrypted: i=1; AJvYcCW2ctnlLfUPpxvEQt9pJTeBxDqId2TUgMAmjv2s9w7ff//jNok2E/B0jg75n1Xn0+xk9pvrKpg0u2+Y@vger.kernel.org
+X-Gm-Message-State: AOJu0YwdxT3G2SUaGUA7K+umvuB3fjnuR+JO7UHrktrsZxCm772LHuRt
+	LFFVkhfWnDltSGZlHxZg7xEBJZaW/RPz8nNKpz/RwGKIBjtRd+9B7+19X418s4KimHs=
+X-Gm-Gg: ASbGncsBfR3+iaQupRSJUXuvoJ40zt1u2J+eiMtzJfOmml3WWyHV+AU9pq5FglrGYQq
+	iwp1DfPzRmbNlmDSo9GHrmgNaZ/qTaM9i7k7mBz2DOpeDdMbaxkgzJFw9Czc4gflgnfL332UY5X
+	YIQTQ9rnrWfqZeDPMFp0dlJrpVQwkmwPWMxY0/0D9YG8Fly+i4UFuoHbgJhCdiwL41DRr2YyHrk
+	YjgCl51rw4Whbv8dCFQfBAeMU/l4Ba38AmDTh1N4Q/ZsMc0vX+rKvuUqGk+JrWrjJB4rnslxyuT
+	SUBDVIEl/6xgGzdmhJwksHsWxAArGXNbP6jz5XlhBjlOU/f3ceMzXGg/Fcs8BOOQGZuBoFqBbwG
+	zVF+OdrOR4TCMsQbxCyXZnCF4lw==
+X-Google-Smtp-Source: AGHT+IFa0Cq8XCk1eei600ygP39rkbICfNwYJWpNDRsRQfPQ/EhYt57nAduutsvBoNK7GvU0uukHNQ==
+X-Received: by 2002:a05:6000:2903:b0:3a5:2cb5:6429 with SMTP id ffacd0b85a97d-3b61b222600mr13228880f8f.43.1753176145551;
+        Tue, 22 Jul 2025 02:22:25 -0700 (PDT)
+Received: from [10.1.1.59] ([80.111.64.44])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4562e8018a4sm186401235e9.9.2025.07.22.02.22.24
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 22 Jul 2025 02:22:25 -0700 (PDT)
+Message-ID: <f6573ba6fcb43f0c41239be728905fa2e936961e.camel@linaro.org>
+Subject: Re: [PATCH RFT v3 3/3] ufs: core: delegate the interrupt service
+ routine to a threaded irq handler
+From: =?ISO-8859-1?Q?Andr=E9?= Draszik <andre.draszik@linaro.org>
+To: Bart Van Assche <bvanassche@acm.org>, Neil Armstrong	
+ <neil.armstrong@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, Avri
+ Altman	 <avri.altman@wdc.com>, "James E.J. Bottomley"	
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"	
+ <martin.petersen@oracle.com>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, linux-arm-msm@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, Peter Griffin
+	 <peter.griffin@linaro.org>, Will McVicker <willmcvicker@google.com>, 
+	kernel-team@android.com, Tudor Ambarus <tudor.ambarus@linaro.org>
+Date: Tue, 22 Jul 2025 10:22:23 +0100
+In-Reply-To: <68631d36-6bb2-4389-99c1-288a63c82779@acm.org>
+References: 
+	<20250407-topic-ufs-use-threaded-irq-v3-0-08bee980f71e@linaro.org>
+	 <20250407-topic-ufs-use-threaded-irq-v3-3-08bee980f71e@linaro.org>
+	 <1e06161bf49a3a88c4ea2e7a406815be56114c4f.camel@linaro.org>
+	 <68631d36-6bb2-4389-99c1-288a63c82779@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.1-1+build1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
 
-Add the 'mediatek,ufs-disable-mcq' property to the UFS device-tree
-bindings. This flag corresponds to the UFS_MTK_CAP_DISABLE_MCQ host
-capability recently introduced in the UFS host driver, allowing it
-to disable the Multiple Circular Queue (MCQ) feature when present.
-The binding schema has also been updated to resolve DTBS check errors.
+On Mon, 2025-07-21 at 08:28 -0700, Bart Van Assche wrote:
+> On 7/21/25 5:04 AM, Andr=C3=A9 Draszik wrote:
+> > I don't know much about UFS at this stage, but could the code simply
+> > check for the controller version and revert to original behaviour
+> > if < v4? Any thoughts on such a change?
+>=20
+> I'm not sure that's the best possible solution. A more elegant solution
+> could be to remove the "if (!hba->mcq_enabled || !hba->mcq_esi_enabled)"
+> check, to restrict the number of commands completed by=20
+> ufshcd_transfer_req_compl() and only to return IRQ_WAKE_THREAD if more
+> commands are pending than a certain threshold.
 
-Cc: stable@vger.kernel.org
-Fixes: 46bd3e31d74b ("scsi: ufs: mediatek: Add UFS_MTK_CAP_DISABLE_MCQ")
-Signed-off-by: Macpaul Lin <macpaul.lin@mediatek.com>
----
- Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml | 4 ++++
- 1 file changed, 4 insertions(+)
+Thanks Bart. I'll try that instead,
 
-Changes for v2:
- - Split new property from the origin patch.
- - Add dependency description. Since the code in ufs-mediatek.c
-   has been backport to stable tree. The dt-bindings should be backport
-   to the same stable tree as well.
-
-diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-index 32fd535a514a..20f341d25ebc 100644
---- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
-@@ -33,6 +33,10 @@ properties:
- 
-   vcc-supply: true
- 
-+  mediatek,ufs-disable-mcq:
-+    $ref: /schemas/types.yaml#/definitions/flag
-+    description: The mask to disable MCQ (Multi-Circular Queue) for UFS host.
-+
- required:
-   - compatible
-   - clocks
--- 
-2.45.2
-
+Cheers,
+Andre'
