@@ -1,48 +1,48 @@
 Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 150C820C004
-	for <linux-scsi@vger.kernel.org>; Wed, 23 Jul 2025 16:59:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AC5D207DEE
+	for <linux-scsi@vger.kernel.org>; Wed, 23 Jul 2025 16:59:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753289958; cv=none; b=DdeK043qkbsoTPiPPnfvBG1pH4gFFqSPwEuZRLn0RmlOjFdhjJSu3l/q7fi8cX+zllicKw0u2Fd3yKamqlzxuu7FGDxr3geHr227RB1cYsICOVQlEPPhYBfUa5UMIXcy2Ql4yfw0yZbUuNDkDk4TqaAW7o+wguOpo+6hwv5Dvuo=
+	t=1753289960; cv=none; b=K9a9ocvGCwYNo20hqp0CdbRvltm55lxLEtIDlg6uiQ6YUMUvJD3ud29wvn42wxUVcRmY0CPyp5GONhrqPBdZ8WzQntI5RopPQ9SMweiBqIVHP0lhRN3x1+o6m9vWqVsUvYT3ApEfCoxkUvNO1G26iXTeem6i6sMBLdqpcGG1vVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753289958; c=relaxed/simple;
-	bh=2NmAcWfUNomPCHZleEheU0H7C5vyjGe+WEnOoWa6Qs0=;
+	s=arc-20240116; t=1753289960; c=relaxed/simple;
+	bh=oYuOM2u7VexSxghcVU4ht9bB/+yKiIoUC4Tz6EPzuA4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KBdE5gZObhqHxbL4kLoyThocWX2gWO8NBDi40N+2DzxzFFeIbP7Ojw/39b8fiGH2rH72UQLxRRHWvmi92xrKAXkI+X3JhDp/zq4NG1F8clOgJzxwdiP2p6DqYYj15cW4rvhBZZIQ0ngs1CdMcBaADgAaDFYyUDoeghcXpk0xqzk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SwLuSVPT; arc=none smtp.client-ip=198.175.65.16
+	 MIME-Version; b=l5VC9FKRyQBQy0HvjFnIq0har5KhDGAfvD5o/1P8cM+1Qtk9YqPZpmtm6i2rv5dubIeqbwyVRl1vKw51CjEqtF4taV90WhaLD2WX1BqpfutHGBHNFIlMY9RzDmM5ktw59RHVLtt/8E01u3SOXY1AXxvLKlFHcN5NVMhV1fBgWxk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UC4ki2pQ; arc=none smtp.client-ip=198.175.65.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SwLuSVPT"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UC4ki2pQ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1753289957; x=1784825957;
+  t=1753289959; x=1784825959;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=2NmAcWfUNomPCHZleEheU0H7C5vyjGe+WEnOoWa6Qs0=;
-  b=SwLuSVPT6pbkoySXg55tpr8ezRCbH8vG253V5ZAzYMdmWLwh9A9Z+izB
-   2UOjdh13J3dsB1iv1ZVmKL7ypmVCCWEdojtCrPTyova/uznw14UIQ0DBu
-   oD6vxPWTX0HEwFZGSpyhrOxU8pVM9oQ0G3v705ydKIdfwutS8Gt+jHYFr
-   RkqOxjTdAZeF1mVtb+M1AhXTfs3xzJpB0iFNhYR5KnoHDlA+bc3RV6Rgo
-   R9sTnI8qiKiF8Ep+Zuk73U0WgCFePvRKm+oxoU6FiBg0PPvNkyq49Tpnc
-   lSYF49bxGgYZYK7rPBEzqH1DAZHAkeqPvlVSnScqXoe9Au/TlEqsGlmDL
+  bh=oYuOM2u7VexSxghcVU4ht9bB/+yKiIoUC4Tz6EPzuA4=;
+  b=UC4ki2pQC1Bq1EwmFZvyTpO1phBOKZ8OWR5Q/g7/jHHufXfoTS8UibJm
+   taGlXVf8N/mbWwGDSCDSnZp+cw6bDjxL7l4V1/QDmoU7KWhtco7Pn9NEA
+   mSJNc/cNlp1DGKZexS6ZOuh0QAbNStUPi1vT3sNRxvO3TwzWPIGCVzihP
+   R8B9/vY0xFIQKR6mrMXCFaDo5B9GQqcC4wwkIGQWngYQQsVe81s2PPXsE
+   9Nu4EfYGRUtKK+uEMdsQEXAkZ5D80pJf3qEFGYHOhwP99yrK2oO5EFLQ4
+   yPQ5iSSKYF/Tn/F/s0GL4MgYGLs2cARGoFGxwDEtlnRmgAPq3X2S2U1vg
    w==;
-X-CSE-ConnectionGUID: jhWw4Fm7RRe9spZ9+Ebjww==
-X-CSE-MsgGUID: OR13cRhOSLurhGwtAEPShA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11501"; a="55735000"
+X-CSE-ConnectionGUID: CSS6nkVlQ2+cdZqcc/O7Aw==
+X-CSE-MsgGUID: wTmhe1GwR/Ws53UYGWEVPg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11501"; a="55735007"
 X-IronPort-AV: E=Sophos;i="6.16,333,1744095600"; 
-   d="scan'208";a="55735000"
+   d="scan'208";a="55735007"
 Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2025 09:59:17 -0700
-X-CSE-ConnectionGUID: J/RdQu9FQK+zDim3bv20DA==
-X-CSE-MsgGUID: 3JaPbqK6SqKvNM4/7zOQHg==
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2025 09:59:19 -0700
+X-CSE-ConnectionGUID: gefGgokXSJmMutx8PwVBug==
+X-CSE-MsgGUID: e4+TxL3OQviKVeqjmi6FeA==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.16,333,1744095600"; 
-   d="scan'208";a="196733002"
+   d="scan'208";a="196733008"
 Received: from pgcooper-mobl3.ger.corp.intel.com (HELO localhost.localdomain) ([10.245.245.72])
-  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2025 09:59:15 -0700
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 23 Jul 2025 09:59:17 -0700
 From: Adrian Hunter <adrian.hunter@intel.com>
 To: Martin K Petersen <martin.petersen@oracle.com>
 Cc: James EJ Bottomley <James.Bottomley@HansenPartnership.com>,
@@ -50,9 +50,9 @@ Cc: James EJ Bottomley <James.Bottomley@HansenPartnership.com>,
 	Avri Altman <avri.altman@sandisk.com>,
 	Archana Patni <archana.patni@intel.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH V2 3/8] scsi: ufs: ufs-pci: Remove UFS PCI driver's ->late_init() call back
-Date: Wed, 23 Jul 2025 19:58:51 +0300
-Message-ID: <20250723165856.145750-4-adrian.hunter@intel.com>
+Subject: [PATCH V2 4/8] scsi: ufs: core: Move ufshcd_enable_intr() and ufshcd_disable_intr()
+Date: Wed, 23 Jul 2025 19:58:52 +0300
+Message-ID: <20250723165856.145750-5-adrian.hunter@intel.com>
 X-Mailer: git-send-email 2.48.1
 In-Reply-To: <20250723165856.145750-1-adrian.hunter@intel.com>
 References: <20250723165856.145750-1-adrian.hunter@intel.com>
@@ -65,132 +65,86 @@ MIME-Version: 1.0
 Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
 
- ->late_init() was introduced to allow the default values for rpm_lvl and
-spm_lvl to be set.  Since commit bb9850704c04 ("scsi: ufs: core: Honor
-runtime/system PM levels if set by host controller drivers") and
-commit fe06b7c07f3f ("scsi: ufs: core: Set default runtime/system PM levels
-before ufshcd_hba_init()"), those default values can be set in the ->init()
-variant call back.
+Move ufshcd_enable_intr() and ufshcd_disable_intr() so they can be called
+in subsequent patches without forward declarations.
 
-Move the setting of default values for rpm_lvl and spm_lvl to ->init() and
-remove ->late_init().
+No functional change.
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 Signed-off-by: Adrian Hunter <adrian.hunter@intel.com>
 ---
+ drivers/ufs/core/ufshcd.c | 52 +++++++++++++++++++--------------------
+ 1 file changed, 26 insertions(+), 26 deletions(-)
 
-
-Changes in V2:
-	Adjust for change in patch 2
-	Add Bart's Rev'd-by
-
-
- drivers/ufs/host/ufshcd-pci.c | 46 +++++++----------------------------
- 1 file changed, 9 insertions(+), 37 deletions(-)
-
-diff --git a/drivers/ufs/host/ufshcd-pci.c b/drivers/ufs/host/ufshcd-pci.c
-index 8aff32d7057d..b29ec1904482 100644
---- a/drivers/ufs/host/ufshcd-pci.c
-+++ b/drivers/ufs/host/ufshcd-pci.c
-@@ -22,17 +22,12 @@
- 
- #define MAX_SUPP_MAC 64
- 
--struct ufs_host {
--	void (*late_init)(struct ufs_hba *hba);
--};
--
- enum intel_ufs_dsm_func_id {
- 	INTEL_DSM_FNS		=  0,
- 	INTEL_DSM_RESET		=  1,
- };
- 
- struct intel_host {
--	struct ufs_host ufs_host;
- 	u32		dsm_fns;
- 	u32		active_ltr;
- 	u32		idle_ltr;
-@@ -434,8 +429,14 @@ static int ufs_intel_ehl_init(struct ufs_hba *hba)
- 	return ufs_intel_common_init(hba);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index acfc1b4691fa..2fbd44514308 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -364,6 +364,32 @@ void ufshcd_disable_irq(struct ufs_hba *hba)
  }
+ EXPORT_SYMBOL_GPL(ufshcd_disable_irq);
  
--static void ufs_intel_lkf_late_init(struct ufs_hba *hba)
-+static int ufs_intel_lkf_init(struct ufs_hba *hba)
- {
-+	int err;
++/**
++ * ufshcd_enable_intr - enable interrupts
++ * @hba: per adapter instance
++ * @intrs: interrupt bits
++ */
++static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
++{
++	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
 +
-+	hba->nop_out_timeout = 200;
-+	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
-+	hba->caps |= UFSHCD_CAP_CRYPTO;
-+	err = ufs_intel_common_init(hba);
- 	/* LKF always needs a full reset, so set PM accordingly */
- 	if (hba->caps & UFSHCD_CAP_DEEPSLEEP) {
- 		hba->spm_lvl = UFS_PM_LVL_6;
-@@ -444,19 +445,6 @@ static void ufs_intel_lkf_late_init(struct ufs_hba *hba)
- 		hba->spm_lvl = UFS_PM_LVL_5;
- 		hba->rpm_lvl = UFS_PM_LVL_5;
- 	}
++	set |= intrs;
++	ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
++}
++
++/**
++ * ufshcd_disable_intr - disable interrupts
++ * @hba: per adapter instance
++ * @intrs: interrupt bits
++ */
++static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
++{
++	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
++
++	set &= ~intrs;
++	ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
++}
++
+ static void ufshcd_configure_wb(struct ufs_hba *hba)
+ {
+ 	if (!ufshcd_is_wb_allowed(hba))
+@@ -2681,32 +2707,6 @@ static int ufshcd_map_sg(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
+ 	return ufshcd_crypto_fill_prdt(hba, lrbp);
+ }
+ 
+-/**
+- * ufshcd_enable_intr - enable interrupts
+- * @hba: per adapter instance
+- * @intrs: interrupt bits
+- */
+-static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
+-{
+-	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+-
+-	set |= intrs;
+-	ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
 -}
 -
--static int ufs_intel_lkf_init(struct ufs_hba *hba)
+-/**
+- * ufshcd_disable_intr - disable interrupts
+- * @hba: per adapter instance
+- * @intrs: interrupt bits
+- */
+-static void ufshcd_disable_intr(struct ufs_hba *hba, u32 intrs)
 -{
--	struct ufs_host *ufs_host;
--	int err;
+-	u32 set = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
 -
--	hba->nop_out_timeout = 200;
--	hba->quirks |= UFSHCD_QUIRK_BROKEN_AUTO_HIBERN8;
--	hba->caps |= UFSHCD_CAP_CRYPTO;
--	err = ufs_intel_common_init(hba);
--	ufs_host = ufshcd_get_variant(hba);
--	ufs_host->late_init = ufs_intel_lkf_late_init;
- 	return err;
- }
- 
-@@ -468,23 +456,12 @@ static int ufs_intel_adl_init(struct ufs_hba *hba)
- 	return ufs_intel_common_init(hba);
- }
- 
--static void ufs_intel_mtl_late_init(struct ufs_hba *hba)
-+static int ufs_intel_mtl_init(struct ufs_hba *hba)
- {
- 	hba->rpm_lvl = UFS_PM_LVL_2;
- 	hba->spm_lvl = UFS_PM_LVL_2;
+-	set &= ~intrs;
+-	ufshcd_writel(hba, set, REG_INTERRUPT_ENABLE);
 -}
 -
--static int ufs_intel_mtl_init(struct ufs_hba *hba)
--{
--	struct ufs_host *ufs_host;
--	int err;
--
- 	hba->caps |= UFSHCD_CAP_CRYPTO | UFSHCD_CAP_WB_EN;
--	err = ufs_intel_common_init(hba);
--	/* Get variant after it is set in ufs_intel_common_init() */
--	ufs_host = ufshcd_get_variant(hba);
--	ufs_host->late_init = ufs_intel_mtl_late_init;
--	return err;
-+	return ufs_intel_common_init(hba);
- }
- 
- static int ufs_qemu_get_hba_mac(struct ufs_hba *hba)
-@@ -614,7 +591,6 @@ static void ufshcd_pci_remove(struct pci_dev *pdev)
- static int
- ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- {
--	struct ufs_host *ufs_host;
- 	struct ufs_hba *hba;
- 	void __iomem *mmio_base;
- 	int err;
-@@ -647,10 +623,6 @@ ufshcd_pci_probe(struct pci_dev *pdev, const struct pci_device_id *id)
- 		return err;
- 	}
- 
--	ufs_host = ufshcd_get_variant(hba);
--	if (ufs_host && ufs_host->late_init)
--		ufs_host->late_init(hba);
--
- 	pm_runtime_put_noidle(&pdev->dev);
- 	pm_runtime_allow(&pdev->dev);
- 
+ /**
+  * ufshcd_prepare_req_desc_hdr - Fill UTP Transfer request descriptor header according to request
+  * descriptor according to request
 -- 
 2.48.1
 
