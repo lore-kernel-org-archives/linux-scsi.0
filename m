@@ -1,38 +1,41 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56591277C8B
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 343DD277C8B
 	for <linux-scsi@vger.kernel.org>; Wed, 23 Jul 2025 08:54:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753260851; cv=none; b=CixHmHKbMvWVvo6gVZ80lUr0bPrFzsmfi+3bWER0cUd+QOoE64pRaZO+d9sPBUYH9qqhIZU7BGlNi2gsX3B80WJXVA6JS9SAK/xUrDWeHlrD2ZQqu7WbPYGVhkB7AMk0FNDJ3tDkBLsc38alwI566edx3cTlmwtCV+tN2tXHg/k=
+	t=1753260852; cv=none; b=js5jaq5A4owQdVJMdQDpGGlNGMmRA/DkRGcVS+xvuVUNcVzd5ago2jAnlVmiGBu/0lCBrjs52Pe8TEzEJl/v7lNHXEOjeMT6Nu6p5a5/8E5ZtLZrFULzBVakwmAUYeuf7p+Ndvk9JfrpGXo/lWSpJOy4n/goFcVxQNKZAPpPc5s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753260851; c=relaxed/simple;
-	bh=mKfCeGQUq77/r+GtnBsln8sExrFHwJgp/alcPKKSwww=;
-	h=From:To:Subject:Date:Message-ID:MIME-Version; b=N5Lc6lrZBOkt0cEtWmuKo6lHKIdQ4JT2tAMajr5HTF8k6BbHdkB1HtzvX2Cgo7l2X3TBVNVFzuxn259BOP+pabjuiG5K+XgWQPeLjiGigrP/u/KS4GMNHESIzZLnKE1K/JyRfsoNUSxP3oSmF0j3gMM5ZeL71/vkP+ItItwdIyE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nCEmIhM7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753260852; c=relaxed/simple;
+	bh=Bu5n1IV9TsNvGu5mGLpgaG/e/vqkcuvjNq438/yGlmU=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=bxz23meUZtvJ92EUQEgADqssHttTCK3j2pBSuKWT+iGSe6PpIaXS4DKHrz1zJ6f8Y0I0BK/sTO78yRE9EZNsftaw/uM0JX7hzk1/j5bSTO77d9ryaG4gUNy8Rlf0EG8J/yRQaNNcMdOJGFPnBVUSIogrKquc/4TVe3LO4DpX8aQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OPe00zcO; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nCEmIhM7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65F23C4CEF5;
-	Wed, 23 Jul 2025 08:54:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OPe00zcO"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 45742C4CEE7;
+	Wed, 23 Jul 2025 08:54:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753260850;
-	bh=mKfCeGQUq77/r+GtnBsln8sExrFHwJgp/alcPKKSwww=;
-	h=From:To:Subject:Date:From;
-	b=nCEmIhM7O9jmxBMkD+OnLuM9GpCEnfKGxMuWBb39665L/hIx7cbtteCfLlFuOHfLp
-	 ZJS+Sr3JqI+tErXEkSJUJzR+dN53UssojXehsp5UxdcUs3/1UZpfrYTPdLIrJQyg7p
-	 JaUHN6QJA08pPvL/kfpnVVa7zC2tdTXqhKKu/rVJSY7QJrb2uDyurDVOil4mO8IuEe
-	 PkI4uw/STOReTSzrEfsrEHMokScwcbrJbXvWfoXzxO2Zl0779jhcgw7Qu5W/HXZZas
-	 SaqKZuLaEqpAN1xpGwzJXPs1m2HTZjiuVgFICoAe/CQu9XDbawSqyr9SD5r3Cvac+X
-	 LZKtTYBLnLUsA==
+	s=k20201202; t=1753260851;
+	bh=Bu5n1IV9TsNvGu5mGLpgaG/e/vqkcuvjNq438/yGlmU=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=OPe00zcOsK0JaZG2pkJ39NwitBQZY3NLqgU6OvYtrY5TAaBZnDSh7/arHnRhDC9rA
+	 vXB+BbKbpNNTYUDDXHT00N1088JJhjfYcE30kFNtkaQidsCaV3NINL3bjTgShzS6Lw
+	 +bHz29+srTQfqdyJB+kZZBL0pDIHDmSMSJ0S+hv7JEQMdHmnEyEgfWtm73t4R3BbdH
+	 03gOOJVyIljhT4Ox6c/0EL99TesgSzHFmp0cOrG7ea7TU7nHH8e0Qi5qb4iqd41EUo
+	 hOpuCjNunm0w9z7Fo7Q9HfbO2coFbxYfCffUI7t+S28DIPMlfNSkQD+Qo9DwzrgtPe
+	 M1UDtOJXMSk9g==
 From: Damien Le Moal <dlemoal@kernel.org>
 To: linux-scsi@vger.kernel.org,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	John Garry <john.g.garry@oracle.com>
-Subject: [PATCH v2 0/5] libsas cleanups
-Date: Wed, 23 Jul 2025 17:51:38 +0900
-Message-ID: <20250723085143.134333-1-dlemoal@kernel.org>
+Subject: [PATCH v2 1/5] scsi: libsas: Refactor dev_is_sata()
+Date: Wed, 23 Jul 2025 17:51:39 +0900
+Message-ID: <20250723085143.134333-2-dlemoal@kernel.org>
 X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250723085143.134333-1-dlemoal@kernel.org>
+References: <20250723085143.134333-1-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -41,35 +44,54 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Martin, John,
+Use a switch statement in dev_is_sata() to make the code more readable
+(and probably slightly better than a series of or conditions). Also have
+this inline function return a boolean instead of an integer.
 
-While debugging an issue with the pm8001 driver, I generated these
-cleanup patches. No functional changes overall.
+No functional changes.
 
-These patches are against the 6.17/scsi-staging branch of the scsi tree.
+Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+---
+ include/scsi/sas_ata.h | 17 ++++++++++++-----
+ 1 file changed, 12 insertions(+), 5 deletions(-)
 
-Changes from v1:
- - Added patch 1
- - Modified patch 2 to not inline sas_ata_wait_eh()
- - Added review tags
-
-Damien Le Moal (5):
-  scsi: libsas: Refactor dev_is_sata()
-  scsi: libsas: Simplify sas_ata_wait_eh()
-  scsi: libsas: Make sas_get_ata_info() static
-  scsi: libsas: Move declarations of internal functions to sas_internal.h
-  scsi: libsas: Use a bool for sas_deform_port() second argument
-
- drivers/scsi/libsas/sas_ata.c      | 11 +---
- drivers/scsi/libsas/sas_discover.c |  2 +-
- drivers/scsi/libsas/sas_internal.h | 78 ++++++++++++++++++++++++-
- drivers/scsi/libsas/sas_phy.c      |  6 +-
- drivers/scsi/libsas/sas_port.c     | 13 ++---
- include/scsi/sas_ata.h             | 91 +++++-------------------------
- 6 files changed, 102 insertions(+), 99 deletions(-)
-
-
-base-commit: 3ea3a256ed81f95ab0f3281a0e234b01a9cae605
+diff --git a/include/scsi/sas_ata.h b/include/scsi/sas_ata.h
+index 92e27e7bf088..8dddd0036f99 100644
+--- a/include/scsi/sas_ata.h
++++ b/include/scsi/sas_ata.h
+@@ -15,10 +15,17 @@
+ 
+ #ifdef CONFIG_SCSI_SAS_ATA
+ 
+-static inline int dev_is_sata(struct domain_device *dev)
++static inline bool dev_is_sata(struct domain_device *dev)
+ {
+-	return dev->dev_type == SAS_SATA_DEV || dev->dev_type == SAS_SATA_PM ||
+-	       dev->dev_type == SAS_SATA_PM_PORT || dev->dev_type == SAS_SATA_PENDING;
++	switch (dev->dev_type) {
++	case SAS_SATA_DEV:
++	case SAS_SATA_PENDING:
++	case SAS_SATA_PM:
++	case SAS_SATA_PM_PORT:
++		return true;
++	default:
++		return false;
++	}
+ }
+ 
+ int sas_get_ata_info(struct domain_device *dev, struct ex_phy *phy);
+@@ -49,9 +56,9 @@ static inline void sas_ata_disabled_notice(void)
+ 	pr_notice_once("ATA device seen but CONFIG_SCSI_SAS_ATA=N\n");
+ }
+ 
+-static inline int dev_is_sata(struct domain_device *dev)
++static inline bool dev_is_sata(struct domain_device *dev)
+ {
+-	return 0;
++	return false;
+ }
+ static inline int sas_ata_init(struct domain_device *dev)
+ {
 -- 
 2.50.1
 
