@@ -1,127 +1,104 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f73.google.com (mail-pj1-f73.google.com [209.85.216.73])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2ADE2EB5AA
-	for <linux-scsi@vger.kernel.org>; Thu, 24 Jul 2025 17:29:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9884273D7E
+	for <linux-scsi@vger.kernel.org>; Thu, 24 Jul 2025 20:38:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.73
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753378202; cv=none; b=t8zTgVVI3JqUVCMxnE5rN5FzfMZn/dU9FyhlhGNa37gSaOreBcPDe3Xgu1VKT61Y7mX5NQuwAGA84cJZ+HjE8Btgp9KE6owqFv2ydPItg/JA50NiLcy04GcJLSrXTH6043mV/btU50ayaYLu4xWbpqXNWnyIME0HyEBK3V6+Zq4=
+	t=1753389495; cv=none; b=Fs5diUFY3jTI+yt8T0qn9d9lrwwGhR10mMg/s41fkZst4qtIGuSWDb482u4OFcILApcOpgfHpRy8FXBjEeT/fClkFYjSBJAk5tw0tA3Q39TOjG2AMzCcBm21RLdc2tlBV2DEBHA1aj64Go3EZpT73xf+BCk85T1QBJTyme9Wz4U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753378202; c=relaxed/simple;
-	bh=sH9LxECNBQOh4kwp4TPJOVvFUjsivO3uUOg2nTrqO/g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GWSO1IXEBstxepQb2GmEaMLtd7lO0teFTj5uDLUQy9kZL7Z7p8Rn8NR7x15KPTzuF4qqlcBI44VaX49puuDuT/kIzc12kHPvwZUTv2QPtfNNUY0K3FEEGhpIjLs6A/wVLVxHQ0+jQPYEeO1wjzTKUtr3z04LY0imPjyeeCl6b9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=cYTdHw1e; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1753389495; c=relaxed/simple;
+	bh=rnwg0fyNj14IsyUcW7zraNjJJfsVMuV1IWAbK23IUC8=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=e8NWkQHZ+xizMhVRU4Z6JtcdYQeS7Jo9ptEbqoSFz6eQak8kzS1N6nMluBuSZEe0kFgSywY01CEpKZ9Jm6Z/u1euP3tDMzBZilpBBmbGxYM/uL48W2xTWuozS0ibYswWfIQbxmGORGf4ZPYt1HklubejG3HDR7oyOt9gQeEkq1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=so30EaTm; arc=none smtp.client-ip=209.85.216.73
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--salomondush.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="cYTdHw1e"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1753378198;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=uW2BHJdp9dqv5cRVcuzbFR8mAZIwlu4AlfBTG+zyhZo=;
-	b=cYTdHw1eUbG+lKmZx93ULJkUtApfG7MCNWCqwqcOIN4Z2IRMldMzMU+pX9vEItNbtOr35g
-	ZRqmHt1y2yKpwIpHPVBfyqWybDlRlH+JDPSu6kBHwm4G86ay9oEQ0Dwr2ATOH+byz8YMnH
-	8yzy87fsh0NIaVxjeC3xF9ZZ6OyOA+o=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-369-mF4X7KdpOYuXH4JSL5WFpw-1; Thu,
- 24 Jul 2025 13:29:57 -0400
-X-MC-Unique: mF4X7KdpOYuXH4JSL5WFpw-1
-X-Mimecast-MFC-AGG-ID: mF4X7KdpOYuXH4JSL5WFpw_1753378196
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 16A3E180045C;
-	Thu, 24 Jul 2025 17:29:56 +0000 (UTC)
-Received: from [10.22.80.106] (unknown [10.22.80.106])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 487E218001D8;
-	Thu, 24 Jul 2025 17:29:54 +0000 (UTC)
-Message-ID: <f05f1a64-74f4-4f81-9df3-b1283c5ab39d@redhat.com>
-Date: Thu, 24 Jul 2025 13:29:53 -0400
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="so30EaTm"
+Received: by mail-pj1-f73.google.com with SMTP id 98e67ed59e1d1-3132e7266d3so1352626a91.2
+        for <linux-scsi@vger.kernel.org>; Thu, 24 Jul 2025 13:38:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1753389493; x=1753994293; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=vij2BC2mcGcQQ0GQvWklo4RarfwpuOFR+GxpFmV3AyM=;
+        b=so30EaTm3xoUToR8cSThvQ3cH4kBbtPnOvt/RVZikbEyBSWXBrkx0uk/9qR43++hy5
+         gUZDEV0qSEv9v52bVsbJ3nBPNHh6ZYMDXhYiFT7+EHwIi0chjBbcEemZ/AJUx73S2yZ5
+         QswzOHZtJGjvtVgF0A0dQNPFwGcMBv2kEEfT7704ak58n7FgR6g2cwDNnNfnhngxVgPW
+         HdQOa5cstAYPD1A4Uzn7uvuCsvS/NHpqAj5QGqQfUiZhVDAwLvnyPH1W/7sxKCyjN8fH
+         BQXE8cmxKHGcXI6FOC1aoBSbtksN6QIGvkKnLrb+lYDl7Ts545OL4AfcYDZoomdFkj5x
+         D+aw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753389493; x=1753994293;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=vij2BC2mcGcQQ0GQvWklo4RarfwpuOFR+GxpFmV3AyM=;
+        b=xH0lCCtl8QYRtaLg1B+qBaVZCUEizpPcGLwYDsT/A8XOjc3xSWatkPQ3s8IZbgpuDO
+         1P+ipjajWIUN1nXN5sbgWOTRPzzNznRWjZ1/SUwQJle2/LBJFM09U53zQS9WlTFnC/NA
+         7sYpeiAr06vFv4ESHOqRqrIa4WSHGrbh1zZJsa79FDSmTDAMwcU2vvbqTvF2z00Qo4QY
+         AcC3ZmoyjLn70K4hxT4LZZcJjxowmqiFvzyCBVaWnkTn59pbTjhaOZadZKPHwH1Atvg8
+         wTFmWwE5wb8qdqQfX269xj54hvzCR+/coSd8UIw3COAL+xAhHsZwp8TpjfDFV8oLXN9e
+         vZ7Q==
+X-Gm-Message-State: AOJu0Yx+72Tu1oS9XBbuLL0u5VhPs85pT7MwVsiTvK5qYzWxbi5nKTry
+	nfRqezTzucNKZZ1GYJ/d/rvf8mUBoDKfbbS/t9tKl51FhQXz01VsalryUnvZb/MarVdM2Y7cEtW
+	Ixu0D/Mc/qs9rFYKyF9hZxsLAOg==
+X-Google-Smtp-Source: AGHT+IFB9+7JDM5Z5/ZK869HjDWji/NS/K/eY8iUWB56KqX6g7hLiJyqwGX05uW8REXXxaWLboBjI200l+v1f+2Ucg==
+X-Received: from pjqq7.prod.google.com ([2002:a17:90b:5847:b0:31c:38fb:2958])
+ (user=salomondush job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:518e:b0:31c:913e:b121 with SMTP id 98e67ed59e1d1-31e50818ab6mr11706020a91.19.1753389493124;
+ Thu, 24 Jul 2025 13:38:13 -0700 (PDT)
+Date: Thu, 24 Jul 2025 20:38:05 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: aacraid: Stop using PCI_IRQ_AFFINITY
-To: John Garry <john.g.garry@oracle.com>, jejb@linux.vnet.ibm.com,
- martin.petersen@oracle.com, sagar.biradar@microchip.com
-Cc: linux-scsi@vger.kernel.org, hare@suse.com, ming.lei@redhat.com,
- Marco Patalano <mpatalan@redhat.com>
-References: <20250715111535.499853-1-john.g.garry@oracle.com>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <20250715111535.499853-1-john.g.garry@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.50.1.470.g6ba607880d-goog
+Message-ID: <20250724203805.93944-1-salomondush@google.com>
+Subject: [PATCH] scsi: sd: fix sd shutdown to issue START STOP UNIT command appropriately
+From: Salomon Dushimirimana <salomondush@google.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	Vishakha Channapattan <vishakhavc@google.com>, Salomon Dushimirimana <salomondush@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Closes: https://lore.kernel.org/linux-scsi/20250618192427.3845724-1-jmeneghi@redhat.com/
-Reviewed-by: John Meneghini <jmeneghi@redhat.com>
-Tested-by: John Meneghini <jmeneghi@redhat.com>
+Commit aa3998dbeb3a ("ata: libata-scsi: Disable scsi device
+manage_system_start_stop") enabled libata EH to manage device power mode
+trasitions for system suspend/resume and removed the flag from
+ata_scsi_dev_config. However, since the sd_shutdown() function still
+relies on the manage_system_start_stop flag, a spin-down command is not
+issued to the disk with command "echo 1 > /sys/block/sdb/device/delete"
 
-Martin, please merge this patch.  This fixes the aacraid driver issue we discussed at LSF/MM.
+sd_shutdown() can be called for both system/runtime start stop
+operations, so utilize the manage_run_time_start_stop flag set in the
+ata_scsi_dev_config and issue a spin-down command during disk removal
+when the system is running. This is in addition to when the system is
+powering off and manage_shutdown flag is set. The
+manage_system_start_stop flag will still be used for drivers that still
+set the flag.
 
-/John
+Signed-off-by: Salomon Dushimirimana <salomondush@google.com>
+---
+ drivers/scsi/sd.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
 
-On 7/15/25 7:15 AM, John Garry wrote:
-> When PCI_IRQ_AFFINITY is set for calling pci_alloc_irq_vectors(), it
-> means interrupts are spread around the available CPUs. It also means that
-> the interrupts become managed, which means that an interrupt is shutdown
-> when all the CPUs in the interrupt affinity mask go offline.
-> 
-> Using managed interrupts in this way means that we should ensure that
-> completions should not occur on HW queues where the associated interrupt
-> is shutdown. This is typically achieved by ensuring only CPUs which are
-> online can generate IO completion traffic to the HW queue which they are
-> mapped to (so that they can also serve completion interrupts for that
-> HW queue).
-> 
-> The problem in the driver is that a CPU can generate completions to
-> a HW queue whose interrupt may be shutdown, as the CPUs in the HW queue
-> interrupt affinity mask may be offline. This can cause IOs to never
-> complete and hang the system. The driver maintains its own CPU <-> HW
-> queue mapping for submissions, see aac_fib_vector_assign(), but this
-> does not reflect the CPU <-> HW queue interrupt affinity mapping.
-> 
-> Commit 9dc704dcc09e ("scsi: aacraid: Reply queue mapping to CPUs based on
-> IRQ affinity") tried to remedy this issue may mapping CPUs properly to
-> HW queue interrupts. However this was later reverted in commit c5becf57dd56
-> ("Revert "scsi: aacraid: Reply queue mapping to CPUs based on IRQ
-> affinity") - it seems that there were other reports of hangs. I guess that
-> this was due to some implementation issue in the original commit or
-> maybe a HW issue.
-> 
-> Fix the very original hang by just not using managed interrupts by not
-> setting PCI_IRQ_AFFINITY.  In this way, all CPUs will be in each HW
-> queue affinity mask, so should not create completion problems if any
-> CPUs go offline.
-> 
-> Signed-off-by: John Garry <john.g.garry@oracle.com>
-> ---
-> build tested only
-> 
-> diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
-> index 28cf18955a08..726c8531b7d3 100644
-> --- a/drivers/scsi/aacraid/comminit.c
-> +++ b/drivers/scsi/aacraid/comminit.c
-> @@ -481,8 +481,7 @@ void aac_define_int_mode(struct aac_dev *dev)
->   	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
->   		min_msix = 2;
->   		i = pci_alloc_irq_vectors(dev->pdev,
-> -					  min_msix, msi_count,
-> -					  PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
-> +					  min_msix, msi_count, PCI_IRQ_MSIX);
->   		if (i > 0) {
->   			dev->msi_enabled = 1;
->   			msi_count = i;
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index eeaa6af294b81..282000c761f8e 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -4173,7 +4173,9 @@ static void sd_shutdown(struct device *dev)
+ 	if ((system_state != SYSTEM_RESTART &&
+ 	     sdkp->device->manage_system_start_stop) ||
+ 	    (system_state == SYSTEM_POWER_OFF &&
+-	     sdkp->device->manage_shutdown)) {
++	     sdkp->device->manage_shutdown) ||
++	    (system_state == SYSTEM_RUNNING &&
++	     sdkp->device->manage_runtime_start_stop)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+-- 
+2.50.1.470.g6ba607880d-goog
 
