@@ -1,117 +1,86 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22818224225;
-	Fri, 25 Jul 2025 21:08:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C274622577C
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2025 21:29:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753477738; cv=none; b=gm8BphntC+Ni8ELKurBGrtYo4U4OIpfoDr/5N1Y86vo/YJJiDeYpT2iHS1s0rZNCblQJ405dcWFOcEikaJuxljxZpUbhipe2sjPbhz5g8DuO/wvvOk/v2BOMiXgULnwKBUjPSnaNRAN5PpXN/OfZzGrkEriOWTZv+XGfBb3boJQ=
+	t=1753478964; cv=none; b=gSANlnVAXRMHNniO1fH7K9RsSJuoQwzOlFVcwiYituBI+e1c1V6a4eDxnMQf6KfS4yrslziVX9yTBfSXOB3ExEDY3Bf1owlj10Cv+YFnTjwsr7FBuT5OmL0P3bJaggn1VdlETw/rXnn45kHV//Fo5bcupjwfPbve9YPVZxO0lhg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753477738; c=relaxed/simple;
-	bh=15RyTr4RmZ9HnrJ3N7IHIqyT4wgzIOUmPBJRpd+Hzoc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=GFngUNjJfq0M3gMX2QA0r2DxeVaK55Tq+V7oo2W3IvTtQohsjNfOYu0Omkn1WDhHYigtI68tBdTTBVAbL7L+JbVfAmjjTA/FFYd3XxDdluuSgkWtnpCqyOqQTUp3AjAZIAc3vk+OBTjpRb7WgJckia6aXcvUOao7pBta7vbAbpg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Pb1/uN8e; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1753478964; c=relaxed/simple;
+	bh=o5a02AoTMlYvHmtTwbpwhbVsxO+Mdk4E0d/3W5T6Cpo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hjLGbQt31cONfbnZBr4sLq38IYnXvuWfyiitpU7X0Fju3eJGn4o95M9b+F2zmNY/eoLuOdyDekHdexTzSsY8cwQ0Z1A48njMWFnDiWkEfJg7jlTzBJiRz59Q4JFKwfAG7ViT/gAYq/eVWGi9G8wYgGexU/gOad1etCaMSS3rxPE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=bYUKGpF7; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Pb1/uN8e"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bpgTf6025zm174C;
-	Fri, 25 Jul 2025 21:08:54 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1753477731; x=1756069732; bh=bRiZPnDhWKDfdU+eRq8PCZeA
-	SI8wNiw7DOE1Rlr/5No=; b=Pb1/uN8epUgzcEivLUfApsnXyhMHKXDpnvyDke9Y
-	HHwLfr2d+HamUy0Y0ity/gc3+pPqFLm1GWkE1PBCyG2YLHZmC2keMtMGTZhKPnnb
-	e77Pd+B2Vvb1+mRseZNH3zKKtP4cS2qWjaSNVXuMw5KuzvZQjroHAxuTZlin2653
-	M5Fr6GtrQtjljqrMmkFfoAXSOhw4tkIJ3OvOsaI2KfVR0AkQHaIcEuqx+iVhdUrj
-	kddkr5de6Nnp1uKMNKJfQt9fZEPKG2uiLe4u+3fAHpKlNrnbUiwH2D/EUXRDytxP
-	xUYIKNUHFZ371ToUwhU2BGouxeCDpMOrUCsKvMCPVtI/Gg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Y5oojwscMG0B; Fri, 25 Jul 2025 21:08:51 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="bYUKGpF7"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1753478961;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=jMM/1NHr6rVVyY/sOYr8j5VpQQPvz3VwMKNj5vmGIDI=;
+	b=bYUKGpF7opZPbxv31zh6G6Ij0kTslAj7jDQJB6YIExWRk1h9lWiG9l0VXcolWE1DWlDO8Y
+	lqUCcovBQlAKQXFv9jzUOdeIT5kqIF5DwwuQcI7M6fPf1G6m8mGHrTBxse2O00TiDxjfuY
+	JkObFu4AZYo80IeX1++/5NUZ2CcBdhQ=
+Received: from mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-340-RbWZ1I4WPxGcJYvq95zKig-1; Fri,
+ 25 Jul 2025 17:29:19 -0400
+X-MC-Unique: RbWZ1I4WPxGcJYvq95zKig-1
+X-Mimecast-MFC-AGG-ID: RbWZ1I4WPxGcJYvq95zKig_1753478958
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bpgTN2xV8zm0yQP;
-	Fri, 25 Jul 2025 21:08:38 +0000 (UTC)
-Message-ID: <c57a2ca7-b0c9-4e52-9d9d-5c06c7f56f1a@acm.org>
-Date: Fri, 25 Jul 2025 14:08:37 -0700
+	by mx-prod-mc-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id BEBF41955D95;
+	Fri, 25 Jul 2025 21:29:18 +0000 (UTC)
+Received: from cleech-thinkpadt14sgen2i.rmtusor.csb (unknown [10.2.16.27])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 292C8195608D;
+	Fri, 25 Jul 2025 21:29:16 +0000 (UTC)
+From: Chris Leech <cleech@redhat.com>
+To: linux-scsi@vger.kernel.org,
+	Nilesh Javali <njavali@marvell.com>
+Cc: Kees Cook <kees@kernel.org>,
+	"Gustavo A . R . Silva" <gustavoars@kernel.org>,
+	Bryan Gurney <bgurney@redhat.com>,
+	John Meneghini <jmeneghi@redhat.com>
+Subject: [PATCH 0/2] scsi: qla2xxx: flexible array / field-spanning write issue
+Date: Fri, 25 Jul 2025 14:27:30 -0700
+Message-ID: <20250725212732.2038027-1-cleech@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 2/2] scsi: ufs: core: move some irq handling back to
- hardirq (with time limit)
-To: =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Neil Armstrong <neil.armstrong@linaro.org>
-Cc: Peter Griffin <peter.griffin@linaro.org>,
- Tudor Ambarus <tudor.ambarus@linaro.org>,
- Will McVicker <willmcvicker@google.com>,
- Manivannan Sadhasivam <mani@kernel.org>, kernel-team@android.com,
- linux-arm-msm@vger.kernel.org, linux-samsung-soc@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- stable@vger.kernel.org
-References: <20250725-ufshcd-hardirq-v2-0-884c11e0b0df@linaro.org>
- <20250725-ufshcd-hardirq-v2-2-884c11e0b0df@linaro.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250725-ufshcd-hardirq-v2-2-884c11e0b0df@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 7/25/25 7:16 AM, Andr=C3=A9 Draszik wrote:
-> -	for_each_set_bit(tag, &completed_reqs, hba->nutrs)
-> +	for_each_set_bit(tag, &completed_reqs, hba->nutrs) {
->   		ufshcd_compl_one_cqe(hba, tag, NULL);
-> +		__clear_bit(tag, &completed_reqs);
-> +		if (time_limit && time_after_eq(jiffies, time_limit))
-> +			break;
-> +	}
+Bryan Gurney was running into these field-spanning write warnings while
+testing some in-progress NVMe FPIN work with qla2xxx.
 
-Has it been considered to use time_is_before_eq_jiffies(time_limit)
-instead of open-coding it?
+https://lore.kernel.org/linux-nvme/20250709211919.49100-1-bgurney@redhat.com/
+  >  kernel: memcpy: detected field-spanning write (size 60) of single field
+  >  "((uint8_t *)fpin_pkt + buffer_copy_offset)"
+  >  at drivers/scsi/qla2xxx/qla_isr.c:1221 (size 44)
 
-> @@ -5636,15 +5670,34 @@ static int ufshcd_poll(struct Scsi_Host *shost,=
- unsigned int queue_num)
->   	WARN_ONCE(completed_reqs & ~hba->outstanding_reqs,
->   		  "completed: %#lx; outstanding: %#lx\n", completed_reqs,
->   		  hba->outstanding_reqs);
-> -	hba->outstanding_reqs &=3D ~completed_reqs;
-> +
-> +	if (completed_reqs) {
-> +		pending =3D __ufshcd_transfer_req_compl(hba, completed_reqs,
-> +						      time_limit);
-> +		completed_reqs &=3D ~pending;
-> +		hba->outstanding_reqs &=3D ~completed_reqs;
-> +	}
-> +
->   	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
->  =20
-> -	if (completed_reqs)
-> -		__ufshcd_transfer_req_compl(hba, completed_reqs);
+I think these changes should fix up the non-standard flexible array
+allocations, and fix he warning for Bryan's testing.
 
-This change moves the __ufshcd_transfer_req_compl() call from outside to
-inside the critical section. I expect this to impact performance
-negatively because it makes it significantly more likely that the
-command submission code will have to wait while the completion code is
-holding hba->outstanding_lock. Can this be avoided, e.g. by limiting the
-number of commands that are completed instead of the time spent in
-interrupt context? usecs_to_jiffies(HARDIRQ_TIMELIMIT) will round up
-the time limit anyway from 20 microseconds to 1/HZ (one millisecond?).
+Chris Leech (2):
+  scsi: qla2xxx: replace non-standard flexible array purex_item.iocb
+  scsi: qla2xxx: unwrap purex_item.iocb.iocb so that __counted_by can be
+    used
 
-Thanks,
+ drivers/scsi/qla2xxx/qla_def.h  |  5 ++---
+ drivers/scsi/qla2xxx/qla_isr.c  | 15 +++++++--------
+ drivers/scsi/qla2xxx/qla_nvme.c |  2 +-
+ drivers/scsi/qla2xxx/qla_os.c   |  5 +++--
+ 4 files changed, 13 insertions(+), 14 deletions(-)
 
-Bart.
+-- 
+2.50.1
+
