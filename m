@@ -1,151 +1,120 @@
-Received: from smtp.ideco.ru (smtp.ideco.ru [51.250.56.165])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f52.google.com (mail-ed1-f52.google.com [209.85.208.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B4172E36EC;
-	Fri, 25 Jul 2025 13:48:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.250.56.165
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B2AC1A239A
+	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2025 14:16:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753451291; cv=none; b=QaYvR79i4TXYZhnKdrkDYvTS+n2r1er56GGY+eGeRsJxzZDp8om2LIi8Ra3pchogccmYX4pVS7XLXKfbRvStmYklxmstx+wJI9wMw19i9afdUw/l7NnGK3hv170ulpofaXjNb/GIe1Hwm5Hjr/BlOvaoN3/XzJH4D/7uywXCSq0=
+	t=1753452982; cv=none; b=EJFaUHdvZQNmS4SMkInlkt/kX5MfBOFBo346lCcbKRUyD/vqAo9TQ4TZ1pOw+qDjnzUrvzxBXfeSQcp+to0lsQyfhqTZDB45HCDAtPk0nhA++orV8OLXtGgY92cqM2LycoyNb8cPIH47pDckDmR1u84ceUlkt2sJfhHBcSdlTjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753451291; c=relaxed/simple;
-	bh=vvmrtrfPtBmzTKUhKgCJJooQy2tH0DPXS/a5E4jOwLk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OQePzmAiWjoJjwUbrqeUh6Z5NvPFGO+DMiRarGU0qkgDg1Ph3wksK60ukYKOY8TXO5P88pL/YUnWceNg74k1l+Hnmf/BBNLOR9AbXTNXkRKUIBMBuMvG507S30O30UIgsmeZdc+YJztr2ZrBwnIuBJn81+LLKiXqkROgW+fj2EQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru; spf=pass smtp.mailfrom=ideco.ru; dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b=f9KH/TOg; arc=none smtp.client-ip=51.250.56.165
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ideco.ru
+	s=arc-20240116; t=1753452982; c=relaxed/simple;
+	bh=8AW0wZtIdMTOecI8zEy7or/xRHq/+HDNB4Msky+fi4A=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=mJ5YKti12KizofCN9hlUAwq6QKBnOeayQZjy68qqQEkLfZzv3VZaTGqgpwVM/dOSR+qiKQGprpL9T6TRRJ2YdqgeHkcpfmO9u1sYJjABt3Vl1s7bxi2jyZkMpg2T8tmHxWRgyf/+xW0RiL2q+oMp55+Mj2TTIRVOfQCuDaPDsoE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=pBebP9rA; arc=none smtp.client-ip=209.85.208.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b="f9KH/TOg"
-Received: from [169.254.254.254] (localhost [127.0.0.1])
-	by smtp.ideco.ru (Postfix) with ESMTP id D083C102AA25;
-	Fri, 25 Jul 2025 18:48:01 +0500 (+05)
-Received: from fedora (unknown [94.159.101.170])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp.ideco.ru (Postfix) with ESMTPSA id 5B846102AA22;
-	Fri, 25 Jul 2025 18:47:58 +0500 (+05)
-DKIM-Filter: OpenDKIM Filter v2.11.0 smtp.ideco.ru 5B846102AA22
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ideco.ru; s=ics;
-	t=1753451280; bh=Ri2roldixm+NLica0ywCM25fyV2yKL675O5a9OlTJJ0=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References;
-	b=f9KH/TOgJ9iVKA96XwGaVgpZK0JVYhUgY7XfA3uPCb1Qf4r31VObf3lIMcsQHTAgf
-	 GN14O9Z0ipN1JtAbia/1CIrnx6Hx0+ChAk7h4R6qtRAj9MHmg2mf9Y/N3D0y2bdkwL
-	 Gd2f5H//yQNUHomeZJlyiz0RbAFHFJbFS4Pn22lwd2eChDRE3I/M2wa3FaB+YKFu9m
-	 1SUuGdGnLgheQcs9UcS9DkPWeHO/mkzWGCoXOmqyqmaQGi/x+dvk177IeDqcsWEPCA
-	 zgX5AFakdNC7E+Mkf3/jDfJhrkh52pCWY3nSBbMdFf50l401Ku8YtPqXDEJoStCcEB
-	 ZZcCxB0KcgCnQ==
-From: Petr Vaganov <p.vaganov@ideco.ru>
-To: stable@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Petr Vaganov <p.vaganov@ideco.ru>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	Tejun Heo <htejun@gmail.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	Boris Tonofa <b.tonofa@ideco.ru>
-Subject: [PATCH v2] scsi: fill in DMA padding bytes in scsi_alloc_sgtables
-Date: Fri, 25 Jul 2025 18:47:40 +0500
-Message-ID: <20250725134741.79887-1-p.vaganov@ideco.ru>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250725122202.77199-1-p.vaganov@ideco.ru>
-References: <20250725122202.77199-1-p.vaganov@ideco.ru>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pBebP9rA"
+Received: by mail-ed1-f52.google.com with SMTP id 4fb4d7f45d1cf-60bfcada295so3538643a12.1
+        for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2025 07:16:19 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1753452978; x=1754057778; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=0GYrZkLXVXcOZgbWnPr9ONxYHIczwht5gJlvJdmNzQk=;
+        b=pBebP9rALtTAJKnpPJpllQiQY9VyHBqULO3QVOWmJ5tHTNwIFaXLluiQHWXyiL6Xy0
+         PhL6Ido0qCPelByNCaLUEzqA3kJel/6i8NBKeOVLVA6tfG6fWetUM75BBKojyvH3CemT
+         2aD6LpUKdXpATcx9W+fWh9va6Rdfrk+2QKO7HDcLplrwT+N4Eh6Ncv3b6qJyPOeKCoa+
+         3aXEpODFl5Y5Vt/SowT0DixTR1wlN/snGgxQ5cIYPuGCXYMlUqdnjTMObT//AVbIJjNa
+         ngCDvW/QKYOCyittTgnCCR7/Od/oT4wO9oTXE/PejAjzg7k/7gtTB8rV4kPMUUnkgjoj
+         /zEw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753452978; x=1754057778;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=0GYrZkLXVXcOZgbWnPr9ONxYHIczwht5gJlvJdmNzQk=;
+        b=SjM5O+9rZG6SPcpTORl8DNGJ0PBLcRinqOriD9jR6wdNoIKz2YCiz6A6UlXFQ08+yA
+         wRMK9b/x6kESexKNJJtc8dNAqZ/YAdGR/E0INaWr2IkJW3ImkHSwd7lFNCMml14BrJQr
+         Zx2gns1w2AMpbfWtgPRU27NmI11OUAlmeSdMXuzqTSElQII4acOdeb6ARNgAX4yS5qFy
+         4cw61T5l9TeQpTLio+RXj+of0cLFIRIqeBiKnCvr4PrcQK5i8qdnmXu5s1Pcd27MyWuj
+         1c60sHuQouNmWw1gP4PG8vTiQA/usxZbOJghtrC3lIrburaFH/6aC6UwnOLyQIPTQU8X
+         Cbkw==
+X-Forwarded-Encrypted: i=1; AJvYcCU7VXuadqPn/cdXS5s/NRQwO+dkWUkfavzY7ZLhg4aPxehR3JwgHqTHwBto8sr5xBz6lATuH91t80or@vger.kernel.org
+X-Gm-Message-State: AOJu0YxRMuGHbpvkhuJHliuizbRMRPUI4zGdhYXKBXxGzX1m9nfhHPBp
+	3wRFpmTNeHDrRC4NL/t6Vo4/HefjMj2iihcu/SvzVjoagXHC6IROcoJzqFyTeEwaYKU=
+X-Gm-Gg: ASbGncvrnMg5SahF7tf4LPgxmJLzfsAFOMpiieP3qviu2HWqA+MeGTjmg8kpt3NZ1Lq
+	vAtrbvIVLgYf3Cxf9zTMn9pRDahIfgYWYnTetlBZMd7gFe35Lq2nXplEyxRR5jLfVkhq3DL0ipk
+	y9sTxeK+Xra39Q5aKgaVcJI0TM7UUsQs5yMVZF/Oj0hm/4sKooTEgiL8M9vCDuxSlGZsYxUCzMy
+	IR3KYgmbIOIfQrQA+E6H6p/801raemdaK0F79YlH4764DVsad6zmqO6i1fnn/qG+XeEf4m7XQ8X
+	z4lHNYZGpHfuLfqvqgG9ozu/cnf7ik5LoSbfdMvCwAdw3Enipg7OZ5IkAuc+7NtN7pMvyNRKgXl
+	Sq3Stvrgq+2c1KUyXdDMW/D/NZtyxc7/X9NIJNy4wVbD0ohmWhi2N+5euOe6m01+t+WRbkS61xO
+	Db8XGrZg==
+X-Google-Smtp-Source: AGHT+IESxxtSVuTR7JcpPvCin5sJRXnxskX5QKzVI4SQNZf89ZEV5qKL5Ev6pflyXfFUSgm5m/ZQVA==
+X-Received: by 2002:a17:907:7205:b0:ae3:bb4a:91fb with SMTP id a640c23a62f3a-af61ef2e6demr228089066b.59.1753452977655;
+        Fri, 25 Jul 2025 07:16:17 -0700 (PDT)
+Received: from puffmais.c.googlers.com (8.239.204.35.bc.googleusercontent.com. [35.204.239.8])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-af47f85e60bsm278398966b.96.2025.07.25.07.16.17
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 25 Jul 2025 07:16:17 -0700 (PDT)
+From: =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
+Subject: [PATCH v2 0/2] scsi: ufs: core: interrupt handling optimisations
+Date: Fri, 25 Jul 2025 15:16:14 +0100
+Message-Id: <20250725-ufshcd-hardirq-v2-0-884c11e0b0df@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
+X-B4-Tracking: v=1; b=H4sIAK6Rg2gC/13MQQrCMBCF4auUWRtpJ01aXXkP6SI0STMgjZ1oU
+ Ervbiy4cfk/eN8KyTG5BOdqBXaZEsW5BB4qGIOZJyfIlgasUdUdSvH0KYxWBMOWeBFjJ1F73aJ
+ TGsrpzs7TawevQ+lA6RH5vfu5+a4/qv2nciMaoeWpNwp972u83Gg2HI+RJxi2bfsAJzI6Da0AA
+ AA=
+X-Change-ID: 20250723-ufshcd-hardirq-c7326f642e56
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Peter Griffin <peter.griffin@linaro.org>, 
+ Tudor Ambarus <tudor.ambarus@linaro.org>, 
+ Will McVicker <willmcvicker@google.com>, 
+ Manivannan Sadhasivam <mani@kernel.org>, kernel-team@android.com, 
+ linux-arm-msm@vger.kernel.org, linux-samsung-soc@vger.kernel.org, 
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ =?utf-8?q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>, 
+ stable@vger.kernel.org
+X-Mailer: b4 0.14.2
 
-During fuzz testing, the following issue was discovered:
+UFS performance for < v4 controllers has reduced quite a bit in 6.16.
+This series addresses this regression and brings numbers more or less
+back to the previous level.
 
-BUG: KMSAN: uninit-value in __dma_map_sg_attrs+0x217/0x310
- __dma_map_sg_attrs+0x217/0x310
- dma_map_sg_attrs+0x4a/0x70
- ata_qc_issue+0x9f8/0x1420
- __ata_scsi_queuecmd+0x1657/0x1740
- ata_scsi_queuecmd+0x79a/0x920
- scsi_queue_rq+0x4472/0x4f40
- blk_mq_dispatch_rq_list+0x1cca/0x3ee0
- __blk_mq_sched_dispatch_requests+0x458/0x630
- blk_mq_sched_dispatch_requests+0x15b/0x340
- __blk_mq_run_hw_queue+0xe5/0x250
- __blk_mq_delay_run_hw_queue+0x138/0x780
- blk_mq_run_hw_queue+0x4bb/0x7e0
- blk_mq_sched_insert_request+0x2a7/0x4c0
- blk_execute_rq+0x497/0x8a0
- sg_io+0xbe0/0xe20
- scsi_ioctl+0x2b36/0x3c60
- sr_block_ioctl+0x319/0x440
- blkdev_ioctl+0x80f/0xd70
- __se_sys_ioctl+0x219/0x420
- __x64_sys_ioctl+0x93/0xe0
- x64_sys_call+0x1d6c/0x3ad0
- do_syscall_64+0x4c/0xa0
- entry_SYSCALL_64_after_hwframe+0x6e/0xd8
+See patch 2 for some benchmark (fio) results.
 
-Uninit was created at:
- __alloc_pages+0x5c0/0xc80
- alloc_pages+0xe0e/0x1050
- blk_rq_map_user_iov+0x2b77/0x6100
- blk_rq_map_user_io+0x2fa/0x4d0
- sg_io+0xad6/0xe20
- scsi_ioctl+0x2b36/0x3c60
- sr_block_ioctl+0x319/0x440
- blkdev_ioctl+0x80f/0xd70
- __se_sys_ioctl+0x219/0x420
- __x64_sys_ioctl+0x93/0xe0
- x64_sys_call+0x1d6c/0x3ad0
- do_syscall_64+0x4c/0xa0
- entry_SYSCALL_64_after_hwframe+0x6e/0xd8
-
-Bytes 14-15 of 16 are uninitialized
-Memory access of size 16 starts at ffff88800cbdb000
-
-When processing the last unaligned element of the scatterlist,
-it is supplemented with missing bytes in the amount of pad_len.
-These bytes remain uninitialized, which leads to a problem.
-
-Add zeroing pad_len bytes of padding by pad_offset offset before
-increasing its length. This ensures that the DMA does not receive
-uninitialized data and eliminates the KMSAN warning.
-
-In this case, the pages are not located in highmem, but in the
-general case they might be, so kmap_local_page() is used for mapping.
-
-Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
-
-Fixes: 40b01b9bbdf5 ("block: update bio according to DMA alignment padding")
-Cc: stable@vger.kernel.org
-Co-developed-by: Boris Tonofa <b.tonofa@ideco.ru>
-Signed-off-by: Boris Tonofa <b.tonofa@ideco.ru>
-Signed-off-by: Petr Vaganov <p.vaganov@ideco.ru>
+Signed-off-by: André Draszik <andre.draszik@linaro.org>
 ---
-v2: Added tag "Cc: stable@vger.kernel.org".
+Changes in v2:
+- patch 1: new patch as suggested by Bart during v1 review
+- patch 2: update commit message and some inline & kerneldoc comments
+- patch 2: add missing jiffies.h include
+- Link to v1: https://lore.kernel.org/r/20250724-ufshcd-hardirq-v1-1-6398a52f8f02@linaro.org
 
- drivers/scsi/scsi_lib.c | 5 +++++
- 1 file changed, 5 insertions(+)
+---
+André Draszik (2):
+      scsi: ufs: core: complete polled requests also from interrupt context
+      scsi: ufs: core: move some irq handling back to hardirq (with time limit)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 144c72f0737a..d287e24b6013 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1153,6 +1153,11 @@ blk_status_t scsi_alloc_sgtables(struct scsi_cmnd *cmd)
- 	if (blk_rq_bytes(rq) & rq->q->limits.dma_pad_mask) {
- 		unsigned int pad_len =
- 			(rq->q->limits.dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
-+		unsigned int pad_offset = last_sg->offset + last_sg->length;
-+		void *vaddr = kmap_local_page(sg_page(last_sg));
-+
-+		memset(vaddr + pad_offset, 0, pad_len);
-+		kunmap_local(vaddr);
- 
- 		last_sg->length += pad_len;
- 		cmd->extra_len += pad_len;
+ drivers/ufs/core/ufshcd.c | 211 +++++++++++++++++++++++++++++++++-------------
+ 1 file changed, 152 insertions(+), 59 deletions(-)
+---
+base-commit: 58ba80c4740212c29a1cf9b48f588e60a7612209
+change-id: 20250723-ufshcd-hardirq-c7326f642e56
+
+Best regards,
 -- 
-2.50.1
+André Draszik <andre.draszik@linaro.org>
 
