@@ -1,105 +1,93 @@
-Received: from fgw20-4.mail.saunalahti.fi (fgw20-4.mail.saunalahti.fi [62.142.5.107])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D32593234
-	for <linux-scsi@vger.kernel.org>; Fri, 25 Jul 2025 14:23:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=62.142.5.107
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 398D51E766F;
+	Fri, 25 Jul 2025 14:55:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753453397; cv=none; b=HjEfI7gqCfagB3OHoN9R0t4SfvbKRLwUTvrXFMV9NAUD1tnLsKnIhZywtVyV+ehT2CJeX4aOK0cAr1/XvcVQ0lO8URq2u42x2EtXjd7GqRsX1Y95nuFYqvw8AAz4d1fc9OECIm8Rv+rPk2O3dvj/9UBM3955qEd3fvtSGOr/WAg=
+	t=1753455313; cv=none; b=HNRZuJGI9RCDER1H/S9D4RrTds1IOlXWzz5VEeOyL6al0+85sDmuZnj2jpjGV9Tgbyi3Enl+nAWY7YOWXMNIokS6lCGW05WPJKtBk46/5ARyp2AZHX4UJ4Fv64h/bFnqUlDE7+vwxc6aXd0ohU3KYCJNR7vJj555bKy6U3DBGko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753453397; c=relaxed/simple;
-	bh=ajb2/mWlyP9UNR3Xs3PMINrIeFwOZXII+MmwsFew3IQ=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=Xw6ZQLRoqUzInAQ6pFPS0In5P7tdvPj1h8/76y5BLMhzc4HbcVzsxy3/6BWm05i80YL30ggVWuXivEtclf8+WWs8XQENKCPB97VBlUkxiePhXkOG1CF+ezoU89Br+t9ECIWWkqJHxVaUhQgjlCrSpfZBU0sbIs5BKyFzXTHnSF8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi; spf=pass smtp.mailfrom=kolumbus.fi; dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b=woeGkEMr; arc=none smtp.client-ip=62.142.5.107
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=kolumbus.fi
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kolumbus.fi
+	s=arc-20240116; t=1753455313; c=relaxed/simple;
+	bh=ySsrQyQZsReDOvURUlTKLUyfDDo7OmT+KPfcJMZKqvA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=gbyhAIkcdKHy7gMOsH+16vh8HJLqE7MVlwEHyQyUi7zLUm8mXRCyeBBlvJrztQLmBevGCGm3/ZdGKl23JVtqDNg1d7A9sDGtzuWuBgDJmeV8MiRVRfZAM/w8/k53Wi2A/ygUT1rdv2s2QFiwIA9NCXDlMySXyXv8u0M3yLapvyI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=oi9+E1QU; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kolumbus.fi header.i=@kolumbus.fi header.b="woeGkEMr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-	d=kolumbus.fi; s=elisa1;
-	h=to:references:message-id:content-transfer-encoding:cc:date:in-reply-to:from:
-	 subject:mime-version:content-type:feedback-id:from:to:cc:reply-to:subject:date:
-	 in-reply-to:references:list-archive:list-subscribe:list-unsubscribe:
-	 content-type:content-transfer-encoding:message-id;
-	bh=YWQEaTI19svUHOi7Hio8DzdqycarOL3A3oVoeQgeEng=;
-	b=woeGkEMrOxJckpvvAfH4JJavDV2CtmAf5Evtcgu1JOqLkx49ugL6b5oKFHthXQJROKpbCHVXbJ/YW
-	 fyJkl/hJ58QBDtX9cABylWC0PTYNmxPblAIrFqiTEjcJ/N/iUKg6hV+fbnpVao18hW+a+rxtqk13TE
-	 9eCxW+ArtKZik+zDZsr++brj8IyepPJwHhfyJg/vPWhhIomtMuRD+IAONmjYE+3QpJ69fO2wZTq/N9
-	 4yagLzKqabYSv4ENogyDxbOHAOLFlkTDmyJ7lRjNSbZWffV2fxg2TG3F7zHXs/Qh2Bp7xWBVAQeCrm
-	 6qyuSCRCd1FbZaWwt5rVvLkYb8syDaQ==
-Feedback-ID: 5c3835a5:74d1b5:smtpa:elisa
-Received: from smtpclient.apple (85-156-116-90.elisa-laajakaista.fi [85.156.116.90])
-	by fgw23.mail.saunalahti.fi (Halon) with ESMTPSA
-	id e2445e5d-6962-11f0-aa56-005056bdfda7;
-	Fri, 25 Jul 2025 17:23:08 +0300 (EEST)
-Content-Type: text/plain;
-	charset=us-ascii
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="oi9+E1QU"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bpWBK4zvVzm0yVZ;
+	Fri, 25 Jul 2025 14:55:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1753455302; x=1756047303; bh=ySsrQyQZsReDOvURUlTKLUyf
+	DDo7OmT+KPfcJMZKqvA=; b=oi9+E1QUrqlM02IzDKeAMW93yVx5BAhLCZCxyAWr
+	kVCKJ/+Gg7jsl3WaWERWTi0fF7nneN6KEAVIXD3T5O7nbX2K0gVS/ZkIER/TTj/Z
+	Sreme/RjmXFL8VPBlh83v7+agKdok12gwiJFK5vOI7T7BvE551NwflZXNO+3mXRa
+	i6FjKdcVYlGjzPML7t9P1Xm8Es1LDVbOGlH1aUkHuV7a80/PxJ0eZJsAjnpcCnNG
+	vRAc+gbG/UnJsmbkDTtz0H7GX52vsKBh/AlwsPqoIErBoq4rRBJEvGkAyjp94Wox
+	0UBb+rh5/Jm+vyycRdS5kB4Mvf4DNWqUZi+Phslm9ndSog==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id a7xvxFBIoncZ; Fri, 25 Jul 2025 14:55:02 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bpW9t60Xszm0ySc;
+	Fri, 25 Jul 2025 14:54:41 +0000 (UTC)
+Message-ID: <1989e794-6539-4875-9e87-518da0715083@acm.org>
+Date: Fri, 25 Jul 2025 07:54:40 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.600.51.1.1\))
-Subject: Re: [PATCH] scsi:st.c replace snprintf() with sysfs_emit()
-From: =?utf-8?B?IkthaSBNw6RraXNhcmEgKEtvbHVtYnVzKSI=?= <kai.makisara@kolumbus.fi>
-In-Reply-To: <CAG+54DbmHbw4MWUSF3x1qQC4bF7Uuu8mDD7aAZyBtbJ1D51MUw@mail.gmail.com>
-Date: Fri, 25 Jul 2025 17:22:57 +0300
-Cc: James.Bottomley@hansenpartnership.com,
- martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- Shuah Khan <skhan@linuxfoundation.org>,
- linux-kernel-mentees@lists.linux.dev,
- bvanassche@acm.org
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] scsi: ufs: core: Don't perform UFS clkscale if host
+ asyn scan in progress
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "beanhuo@micron.com" <beanhuo@micron.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "quic_rampraka@quicinc.com" <quic_rampraka@quicinc.com>,
+ "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+ "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+ "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+ "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
+ "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
+ "luca.weiss@fairphone.com" <luca.weiss@fairphone.com>,
+ "konrad.dybcio@oss.qualcomm.com" <konrad.dybcio@oss.qualcomm.com>,
+ "junwoo80.lee@samsung.com" <junwoo80.lee@samsung.com>,
+ "mani@kernel.org" <mani@kernel.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ =?UTF-8?B?VHplLW5hbiBXdSAo5ZCz5r6k5Y2XKQ==?= <Tze-nan.Wu@mediatek.com>,
+ "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+ "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <20250522081233.2358565-1-quic_ziqichen@quicinc.com>
+ <5f3911ffd2c09b6d86300c3905e9c760698df069.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <5f3911ffd2c09b6d86300c3905e9c760698df069.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
-Message-Id: <AA11A711-6652-4A0C-A890-38FAC7D518A2@kolumbus.fi>
-References: <CAG+54DbmHbw4MWUSF3x1qQC4bF7Uuu8mDD7aAZyBtbJ1D51MUw@mail.gmail.com>
-To: Rujra Bhatt <braker.noob.kernel@gmail.com>
-X-Mailer: Apple Mail (2.3826.600.51.1.1)
 
+On 7/25/25 2:13 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> Could consider luns_avail instead mutex?
 
-> On 24. Jul 2025, at 3.58, Rujra Bhatt <braker.noob.kernel@gmail.com> =
-wrote:
->=20
-> replace snprintf() with sysfs_emit() or sysfs_emit_at() in st.c file =
-to
-> follow kernel's guidelines from Documentation/filesystems/sysfs.rst
-> This improves safety, consistency and easier to maintain and update it
-> in the future.
->=20
-Bart already wrote that these changes are required for existing drivers. =
-I am a little hesitant about these kind of changes that don't fix =
-anything  and don't add improvements. Any changes risk breaking =
-something.
+That would be wrong. I think it is essential that scan_mutex is used in
+this patch. Additionally, the lock inversion is between devfreq->lock
+and (c->notifiers)->rwsem so it seems unlikely to me that Ziqi's patch
+is the patch that introduced the reported lock inversion.
 
-But, since I have wondered what these sysfs_emit* functions do, I =
-decided to take a look...
-
-> Signed-off-by: Rujra Bhatt <braker.noob.kernel@gmail.com>
-> ---
-> drivers/scsi/st.c | 42 +++++++++++++++++++++---------------------
-> 1 file changed, 21 insertions(+), 21 deletions(-)
->=20
-> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-> index 74a6830b7ed8..38badba472d7 100644
-> --- a/drivers/scsi/st.c
-> +++ b/drivers/scsi/st.c
-> @@ -4564,25 +4564,25 @@ module_exit(exit_st);
-> /* The sysfs driver interface. Read-only at the moment */
-> static ssize_t try_direct_io_show(struct device_driver *ddp, char =
-*buf)
-> {
-> -       return scnprintf(buf, PAGE_SIZE, "%d\n", try_direct_io);
-> +       return sysfs_emit_at(buf, PAGE_SIZE, "%d\n", try_direct_io);
-
-This "maps back" to vscnprintf(buf + PAGE_SIZE, 0, "%d\n", =
-try_direct_io), which does not match the existing code (i.e., would =
-return nothing). (Actually the problem is caught already by the check at =
-the beginning of sysfs_emit_at()).
-
-I am not happy to find out that this patch seems not to have been tested =
-before submission. (Well, maybe compile tested.)
-
-Kai
-
+Bart.
