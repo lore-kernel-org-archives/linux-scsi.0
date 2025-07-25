@@ -1,114 +1,145 @@
-Received: from mail-lj1-f176.google.com (mail-lj1-f176.google.com [209.85.208.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.ideco.ru (smtp.ideco.ru [51.250.56.165])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32FC51EC01B;
-	Fri, 25 Jul 2025 12:16:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF4E72E7F34;
+	Fri, 25 Jul 2025 12:28:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=51.250.56.165
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753445800; cv=none; b=Q3sz25sh94RJ7S1p77NI+7LR+oK+rRcx+2enHg8JUuli/cpaGRwcZBzjTu6h0svBJtcnR1LdhoUBeP6LV6ghyzz5oG6ttNi5jDCgs0tHMwwwc0Ct8S3T/49qQnkhyhG4POZyPBPQU3TIS2+PAg/oQAa+EDF6h56ktUdCjsS7zvE=
+	t=1753446539; cv=none; b=tkHqb/NoOeC/o+HA++yCmeiTyMPRxVCcmtnkOjX9jrJf2Bq0slKpzNA1yfnaG8zSYB2sAfjW8yFdv9sb/bS5xDlcFh9nJYmwJ2ATd9mcTmzwU6dg1YWQKBw64jiExFnIcdrUiVQPGvrySBuVjIIF6gGqSI/UKBc544X03wkEC40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753445800; c=relaxed/simple;
-	bh=OuG1CTeRyKj1R4vzsa0DIZZsT/WphxujjGAB6utzPSM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=EZseZQ/5P+oeFx96TZSqOIW+NMrxoAVNQznihJt8NuGfQVfelUC86tnzhzvgymZJY7FWy38yqtptrnsRLXQf3GKbnuFFyZVov6QniGrekC06rCysdo+W8+Zx5DOV4lOs6qRigAshVb467fa/k+tTgXWdkQbZ5YINDOfgM4WSJZg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HhwJPIXe; arc=none smtp.client-ip=209.85.208.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753446539; c=relaxed/simple;
+	bh=x+b3x2AvTB4xVeTuWWrwabGOIoHBfzemRqb2/v57SAY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=GPuc+kNKdx+pGVUa4kEmt7/63oEm+Wpx3OrMtDGAXAWTCf4xp+FmdyTYu57mrkMe5aUuM2Wn2lEkHc6s+JRB96x9wV6mzsYBMC3VTAtUQRsUsjzMMqx1cnt9Z7Mr3T3y1SygfT6LiZoWNa2pfHxbg3X09Oo3r+fKkE8HvbnH1NM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru; spf=pass smtp.mailfrom=ideco.ru; dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b=SLpbuS1c; arc=none smtp.client-ip=51.250.56.165
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=ideco.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ideco.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HhwJPIXe"
-Received: by mail-lj1-f176.google.com with SMTP id 38308e7fff4ca-32b7123edb9so26507001fa.2;
-        Fri, 25 Jul 2025 05:16:38 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753445797; x=1754050597; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=FWqM+C7auc61yVm1rsNVEwh3eE+ELNPdk6XGXZ1WIxc=;
-        b=HhwJPIXe4fC1draeoaaDc6V3iWFtbgsnuLDiN9QmqvfcS80Z4OcdG09Zm1fogsWFLI
-         EBuB8koGehjpgz3PmGpxDz63sV+wdyerxuTmHp0qP6j1Fa4HW6XDRDJaoXN/QNc2IMzG
-         /LUGRwUAZtHjXM1xfGjI3XF7kGNNqerp87d1N6eccAIhVDGrsAX5EMYxl95FrHOswG4V
-         1IJOo12OjMAmrZIVynLTPi66TPclaWnKRKtFIUvOkI6XN7DckIEPRIRETriHVfkRdGkR
-         0o5Ekl6Yhnr8b6jaMtKTBPN5idmCkwRQeAamZALgG9plx6YfiV+2r4lI6bjK1Eo2LJE7
-         SISg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753445797; x=1754050597;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=FWqM+C7auc61yVm1rsNVEwh3eE+ELNPdk6XGXZ1WIxc=;
-        b=M16xb+ROF8aYn6zmSL92V7FN2+/4W5269wjH5mZDSCJLziV5Zs0MEYvutEGQWkaXwG
-         ynob+Zf1QCCb+VKMc3IVNFmkS9gWYODN8Nx/vLvstwY9xMThcpvVXlj/I3Zi7WcEYjZJ
-         nn8nDzRmhpltwNe21sw1ckMz1oz5UN1jI7y9ZMRUK27Jq3fDZsREePFXbh17sHA4yd0n
-         lpfnrTr6xID3V/XGbTnDA2DyleKBiWbrAEkeKMuN10o++RQJC4UkSObNSFHeb7gaWcU0
-         x237er8+mUVmn4k62hpjOPimg9bXtUouDG66eErEuAIITgj+3iMVQxIDtzpGe2G2191K
-         b2yA==
-X-Forwarded-Encrypted: i=1; AJvYcCWGdDJcfOnVbh4h/n0GCOiTvFWBtAhl5REnMkT1hxEHN68EUvSkyWMOhPQQKDLG7zvJA9O59QgKjUdOHEA=@vger.kernel.org, AJvYcCXZzqLefHAbxowoxMxZ+z8EYEUvjbKU+PN0Ezm9q8zXLegL/ng3GESbCGSL24VhgN24UYWq0Z6DbTqJ4mVW@vger.kernel.org
-X-Gm-Message-State: AOJu0YyiVVqp/u5ChF4fTGM+L0ke/8QFq6EaNgV+FP6VETjI5H+AL2Lp
-	Q+E7SEzmftALgkUbf8nUCwX0rXgq3QDr/LvxdbaOuwqrwkRPR3VvBkYenuaXECo9TXlfL4C3o4e
-	jvTjChDSC6pEz2unPk0wGuaUIBDYek5M=
-X-Gm-Gg: ASbGnct94VBkxKL61HLY08EQnN0BQK/ywUEZ4bbDOAtTDHxdkg+5C4vBIH0Xm2yyZhU
-	MKipABsPgKK5AaqCdMijfB7Y3+8j7t4yztIIX8pko9U9Hdi919YDu73JyUH3V4BfQtY1HANsFt8
-	0gLNan9L+ibrhKZ0QqABwoAZcB3X0eugv7j+A/QL2RpcFNROq/hKO8ImVfeLqrAp//LEyvLw5gO
-	/VD6iA7jiIW0y8zEmaRv7TVZPBDG/irXBFSrSJ+ag==
-X-Google-Smtp-Source: AGHT+IHyqCZRpQ3iwmGQDc1/6kxptmmlPmdgHw1lqiVZmo2HMouuishREQW96mVd4w6lxf84JBGVClbJXSwOIYFcvQ4=
-X-Received: by 2002:a05:651c:3248:10b0:32b:75d7:fc62 with SMTP id
- 38308e7fff4ca-331ee7aab3dmr3420251fa.38.1753445796930; Fri, 25 Jul 2025
- 05:16:36 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ideco.ru header.i=@ideco.ru header.b="SLpbuS1c"
+Received: from [169.254.254.254] (localhost [127.0.0.1])
+	by smtp.ideco.ru (Postfix) with ESMTP id 14F8B102AA20;
+	Fri, 25 Jul 2025 17:23:10 +0500 (+05)
+Received: from fedora (unknown [94.159.101.170])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp.ideco.ru (Postfix) with ESMTPSA id C0706102AA1D;
+	Fri, 25 Jul 2025 17:23:06 +0500 (+05)
+DKIM-Filter: OpenDKIM Filter v2.11.0 smtp.ideco.ru C0706102AA1D
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ideco.ru; s=ics;
+	t=1753446189; bh=trP0XJpooGTDkJ3CKgo2EF7+uta1JC7E8Yz2rzhwif0=;
+	h=From:To:Cc:Subject:Date;
+	b=SLpbuS1cB/S+wAKgJURID3eIyiM4BwrTN3EsWju5g7oo6kRGIkFzZn51pyCjgNiyb
+	 5Ek/4WguWCEIDoL6KCMaOdZOtz2toNtFqMWHQXJWjBtX3OaPnS7szcv5b89aSc97A5
+	 NCcuSYK8fnWG9iaoStgvRJaMCXuq3H8svsimkUDJ0i1tBCrzcDhpLPSM4hycOlyPl2
+	 kxa+h6/UZOjsq4icZfhUrT+Fgi2UxuetxdOzUgvnR7CWE5npEzDBHBduCmkkzn5RAH
+	 Nnv0dlcUIBYJG+MHPxX8K/qypX4X7j325sCPfehG/tttUmph9O0rj6KhJvpVAkl8NO
+	 8U8fl5w6c0KPQ==
+From: Petr Vaganov <p.vaganov@ideco.ru>
+To: stable@vger.kernel.org,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: Petr Vaganov <p.vaganov@ideco.ru>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Tejun Heo <htejun@gmail.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	lvc-project@linuxtesting.org,
+	Boris Tonofa <b.tonofa@ideco.ru>
+Subject: [PATCH] scsi: fill in DMA padding bytes in scsi_alloc_sgtables
+Date: Fri, 25 Jul 2025 17:21:59 +0500
+Message-ID: <20250725122202.77199-1-p.vaganov@ideco.ru>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250706092522.9298-1-pranav.tyagi03@gmail.com> <yq1bjp9rqh5.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1bjp9rqh5.fsf@ca-mkp.ca.oracle.com>
-From: Pranav Tyagi <pranav.tyagi03@gmail.com>
-Date: Fri, 25 Jul 2025 17:46:24 +0530
-X-Gm-Features: Ac12FXwul_qh-KD85e-MrQnYOfSIuco3toGb2OQLyA0Tzh4yRvOKtzf3etCfmig
-Message-ID: <CAH4c4jKgPv-Mb1=WvOW+jvGMABXcEgaDMxV0Wit32LPgJitekQ@mail.gmail.com>
-Subject: Re: [PATCH] target/core: replace strncpy with strscpy
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, skhan@linuxfoundation.org, 
-	linux-kernel-mentees@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-On Fri, Jul 25, 2025 at 7:22=E2=80=AFAM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Pranav,
->
-> > strncpy() is deprecated and its use is discouraged. Replace strncpy()
-> > with safer strscpy() as the p_buf buffer should be NUL-terminated,
-> > since it holds human readable debug output strings.
->
-> If you must do this, please change all the similar occurrences of
-> strncpy() in that file instead of just one of them.
->
-> However, given the fixed size of the buffer and the length of all the
-> defined static strings, what is the actual problem you are fixing?
->
-> --
-> Martin K. Petersen
+During fuzz testing, the following issue was discovered:
 
-Hi Martin,
+BUG: KMSAN: uninit-value in __dma_map_sg_attrs+0x217/0x310
+ __dma_map_sg_attrs+0x217/0x310
+ dma_map_sg_attrs+0x4a/0x70
+ ata_qc_issue+0x9f8/0x1420
+ __ata_scsi_queuecmd+0x1657/0x1740
+ ata_scsi_queuecmd+0x79a/0x920
+ scsi_queue_rq+0x4472/0x4f40
+ blk_mq_dispatch_rq_list+0x1cca/0x3ee0
+ __blk_mq_sched_dispatch_requests+0x458/0x630
+ blk_mq_sched_dispatch_requests+0x15b/0x340
+ __blk_mq_run_hw_queue+0xe5/0x250
+ __blk_mq_delay_run_hw_queue+0x138/0x780
+ blk_mq_run_hw_queue+0x4bb/0x7e0
+ blk_mq_sched_insert_request+0x2a7/0x4c0
+ blk_execute_rq+0x497/0x8a0
+ sg_io+0xbe0/0xe20
+ scsi_ioctl+0x2b36/0x3c60
+ sr_block_ioctl+0x319/0x440
+ blkdev_ioctl+0x80f/0xd70
+ __se_sys_ioctl+0x219/0x420
+ __x64_sys_ioctl+0x93/0xe0
+ x64_sys_call+0x1d6c/0x3ad0
+ do_syscall_64+0x4c/0xa0
+ entry_SYSCALL_64_after_hwframe+0x6e/0xd8
 
-As far as I looked, I could only find the following 4 instances of
-strncpy() for the file target_core_transport.c:
+Uninit was created at:
+ __alloc_pages+0x5c0/0xc80
+ alloc_pages+0xe0e/0x1050
+ blk_rq_map_user_iov+0x2b77/0x6100
+ blk_rq_map_user_io+0x2fa/0x4d0
+ sg_io+0xad6/0xe20
+ scsi_ioctl+0x2b36/0x3c60
+ sr_block_ioctl+0x319/0x440
+ blkdev_ioctl+0x80f/0xd70
+ __se_sys_ioctl+0x219/0x420
+ __x64_sys_ioctl+0x93/0xe0
+ x64_sys_call+0x1d6c/0x3ad0
+ do_syscall_64+0x4c/0xa0
+ entry_SYSCALL_64_after_hwframe+0x6e/0xd8
 
-target_core_transport.c:1115:           strncpy(p_buf, buf, p_buf_len);
-target_core_transport.c:1165:           strncpy(p_buf, buf, p_buf_len);
-target_core_transport.c:1225:           strncpy(p_buf, buf, p_buf_len);
-target_core_transport.c:1279:           strncpy(p_buf, buf, p_buf_len);
+Bytes 14-15 of 16 are uninitialized
+Memory access of size 16 starts at ffff88800cbdb000
 
-And I have changed all of them in my patch. Kindly point me out to
-other instances, if I am missing any.
+When processing the last unaligned element of the scatterlist,
+it is supplemented with missing bytes in the amount of pad_len.
+These bytes remain uninitialized, which leads to a problem.
 
-Also, I intended this to be a cleanup patch for the deprecated
-strncpy() function and wanted to replace it with strscpy()
-which is encouraged. No functional changes were intended.
+Add zeroing pad_len bytes of padding by pad_offset offset before
+increasing its length. This ensures that the DMA does not receive
+uninitialized data and eliminates the KMSAN warning.
 
-Regards
-Pranav Tyagi
+In this case, the pages are not located in highmem, but in the
+general case they might be, so kmap_local_page() is used for mapping.
+
+Found by Linux Verification Center (linuxtesting.org) with Syzkaller.
+
+Fixes: 40b01b9bbdf5 ("block: update bio according to DMA alignment padding")
+Co-developed-by: Boris Tonofa <b.tonofa@ideco.ru>
+Signed-off-by: Boris Tonofa <b.tonofa@ideco.ru>
+Signed-off-by: Petr Vaganov <p.vaganov@ideco.ru>
+---
+ drivers/scsi/scsi_lib.c | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 144c72f0737a..d287e24b6013 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1153,6 +1153,11 @@ blk_status_t scsi_alloc_sgtables(struct scsi_cmnd *cmd)
+ 	if (blk_rq_bytes(rq) & rq->q->limits.dma_pad_mask) {
+ 		unsigned int pad_len =
+ 			(rq->q->limits.dma_pad_mask & ~blk_rq_bytes(rq)) + 1;
++		unsigned int pad_offset = last_sg->offset + last_sg->length;
++		void *vaddr = kmap_local_page(sg_page(last_sg));
++
++		memset(vaddr + pad_offset, 0, pad_len);
++		kunmap_local(vaddr);
+ 
+ 		last_sg->length += pad_len;
+ 		cmd->extra_len += pad_len;
+-- 
+2.50.1
+
