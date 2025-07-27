@@ -1,77 +1,72 @@
-Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de [85.215.255.23])
+Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de [85.215.255.20])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 10D9F223316
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2025 18:03:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2949610D
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2025 18:06:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.20
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753639437; cv=pass; b=TJ3aGmnQz/EouA6PX0vDjQuezjgKXXESh4AycMVDQcyhkwHbMDnX4Bo+DbJJPCJ/g8pH4u6ZIUjhQVavsMdn+KLP+5DlYydZI8KrhYoLMS48tDxw7H+lJAep+GlY0ZzZUdxzdX5FwqfXqleK49dalTs4FkavDQgr/6P7QcjMEXk=
+	t=1753639606; cv=pass; b=oH81aE+2CLz33Q9Sr+I9toS9A3o4wPeAOIgq6XF2ICXTvB8LyBoN/VMGiNcOVBA0+vDRBAUSV5pvhHunK7y+w+UhWWiy4z89Q0rcvzGF6uFSVw/Qm2A7HBeXfVyER44ekuh/S4CsyyiyauebuqzJi5/XUxgbyEWhWYrS1GPg5EE=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753639437; c=relaxed/simple;
-	bh=7Rrj6BiRSOgGKoR6LtvffnB3VuDQGNMFHXAoFDUfOwU=;
-	h=Content-Type:Message-ID:Date:MIME-Version:Subject:From:To:
-	 References:In-Reply-To; b=JZgejVsdyDRXgyFvyp85tKl93tbrg+nVbh4a3OP52DAtvhwDW99+wNB5Icjpefj/hJLFOgThxmqEMu56gj/S9GgYvsVk8B5CG5WGSc2DatMi0uTMCqDD6ahgjNwKSnIcL2EA0JYiTW/IQbqu3SGWgLitW23pScGbnbsCphp1yTE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=garloff.de; spf=none smtp.mailfrom=garloff.de; dkim=pass (2048-bit key) header.d=garloff.de header.i=@garloff.de header.b=WD3V0RRm; dkim=permerror (0-bit key) header.d=garloff.de header.i=@garloff.de header.b=bTTBnoxP; arc=pass smtp.client-ip=85.215.255.23
+	s=arc-20240116; t=1753639606; c=relaxed/simple;
+	bh=p0KNEe8E+fzDlhJpSHPwOfC7judgBKjRrta1bCUBO58=;
+	h=Message-ID:Date:MIME-Version:To:From:Subject:Content-Type; b=bxNWbR0JjY+QGaC1b4sDxj3C5B3MABUE9RhRdOw5VcyNaYpDfvZn1+RUtl4nrVVejz/QCB54dbOE1VROr821LylID6NNtmoRKQ/epgEcBS5wBYJ3IJpJCt5RkaE7Ileg2gWe0zF4B4mEvGm/hrArejkgz03CtCPNYWpU9VA9Rls=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=garloff.de; spf=none smtp.mailfrom=garloff.de; dkim=pass (2048-bit key) header.d=garloff.de header.i=@garloff.de header.b=EInEXTUv; dkim=permerror (0-bit key) header.d=garloff.de header.i=@garloff.de header.b=GhksvSse; arc=pass smtp.client-ip=85.215.255.20
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=garloff.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=garloff.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=garloff.de header.i=@garloff.de header.b="WD3V0RRm";
-	dkim=permerror (0-bit key) header.d=garloff.de header.i=@garloff.de header.b="bTTBnoxP"
-ARC-Seal: i=1; a=rsa-sha256; t=1753639247; cv=none;
+	dkim=pass (2048-bit key) header.d=garloff.de header.i=@garloff.de header.b="EInEXTUv";
+	dkim=permerror (0-bit key) header.d=garloff.de header.i=@garloff.de header.b="GhksvSse"
+ARC-Seal: i=1; a=rsa-sha256; t=1753639601; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=ANE/jm7Mg6nIV9V/FvCcwZ837wiRLmhBE0anDRXSXSQX36bGKDboLyBorCy29Ou1dr
-    fg8lCxNt+Lb7bW79YSZto4I7rgOcOSbQbzImVOBmQNncHP/LbusSv8+6EJW32jDTSYqF
-    b2v/sDAAZuZP/iWphS9mITccyb/q0vLhnpSPXOWLshZQrLuEYw+Fb48JptMlMxHeNo8M
-    cbCTbAbNwGAOJNBzRZEY+UH9RM5rAVnG/x4KdQNU47yYBPmvckXjSxVwgC+Fu77VBUJQ
-    vfcZPUUb0P91DUhDpf/c6chxdr6E7UOscOq2pFCf54EiDMl0yXoe3EHWnMqzTejx8pzs
-    w6AQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1753639247;
+    b=rmnLYcz2U+Qp03AEAUehYZ+XXQbausVtH4NGRya7dl7P8YJC5g0H9MCNQzTayuxDNp
+    bY4FWnMfhS5P57HukpqryobD0D0n8oxhhG8Ul7Rb3BINsWkyxDWKv1jh3wOWt3t7LJY4
+    CHCuePWnq2qI6HkMbGZTNRlqX1bARG0QpTM6vDZmJ/q0Kwj0BW9+1spoQT2txAWQteui
+    HxUnSiGYpCpPl+FTAy6SRKq54TWtLNtCfXEq3PLlpbrnX6ZXzWLVEjQp9EAIR93wdqDP
+    rKpEVnKqru4dy3vwPEIXZMbDiijeUSXmsnT4rAU0oscAyHoog3ygqzCVPHoWS0mbvoXC
+    ygAQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1753639601;
     s=strato-dkim-0002; d=strato.com;
-    h=In-Reply-To:References:To:From:Subject:Date:Message-ID:Cc:Date:From:
-    Subject:Sender;
-    bh=aqfj/O5NHRdSz4FlFX8hxG9vEyGC/E22uEvXGS7LT/E=;
-    b=C+DJW2LOoeQvYZJ1irO2vABG3ogF2CYCQ+vDSMysoi0CH4oX2NYg1+g1nGFNLqc1j5
-    f011tRoAJK9lVh/O7HOTxuvOuNEiMpFFpewlHt3KvZDnXJTSJ0FUny9U6CACV2ywp9Jy
-    TMcXTIWoDPkNvPbkXSXsujzexsV20eCbm6bVKOLI1n9CEz1IEtCRGVNWfepUKiiYunKU
-    DqkBQsej7A16YvECONqHn8FJ1fhV4/XK8jlsAhaSr/1+IUXb+L90PJSX5t1dNou3fGY9
-    S/VYK3Wvds54ywaXMLMa6D1zEEPu2LucrBl/eOzkUaNhtm9h4IKMNypSLykMbzicJHeW
-    41pA==
+    h=Subject:From:To:Date:Message-ID:Cc:Date:From:Subject:Sender;
+    bh=0J5JV5wr8LRcgkj8Qv57bDe3YKMXirdEo4W8bmBAs+w=;
+    b=gKQ2wp/l7TyIspxuD7QLgLd2HoSXOAiG1Y+TJhgh8f/LRXEDigdEo8sWpx9Ez+qVYe
+    SuNfV4kt6rwOZwxK1JY5wYiug3Oy9PhmJ2xksp+/vduwlAmeam+gr851MAvE6xhw5z6w
+    lGzjz0KDb5wObnJvlePULa7r02FD2zLdCHuwhHlxlMsNHvZqgR+6qw+ODAJl0pFhXWAo
+    6r5IMCjPPjWmAemG+fRpqhZKzb7s42lI3IBgpmJg9sTQcSVqQjWtCRtK/8xIV6kbeba4
+    ri0yRoqGP92E25/OUPZv1GW/qNK7oRfJ3JrB2qHu3ml7HJ8K8ahy/OM5JbkAreHgCxPq
+    7GXg==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
 X-RZG-CLASS-ID: mo00
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1753639247;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1753639601;
     s=strato-dkim-0002; d=garloff.de;
-    h=In-Reply-To:References:To:From:Subject:Date:Message-ID:Cc:Date:From:
-    Subject:Sender;
-    bh=aqfj/O5NHRdSz4FlFX8hxG9vEyGC/E22uEvXGS7LT/E=;
-    b=WD3V0RRmJuNiEfW6tN5Gr2SYDe05Ft25RdWELsYUAR7elCAGdt5QZ+GL3S4BSCC8ng
-    lKlTnr2g/coW/BsNMDd0JQp+Qh7wHiiPkL9/TdSD/4BkW5pwHOQgSNDPSRmzmAjFLS/L
-    zhjNX7J3+WUqqnXBJL8wiT+TAKUaHULGjRiE8RQF3hDXHtFaiU7lo/R3hcfYETojWThz
-    JIKZiaBIAnjzQcoKYyajEeZiavhGQMv4LKX85b0kPldphspHXSBZlptZZcqC6XQwuERO
-    btxd4g+zyYHW5Xn2omJ7X4Lpzc1JZ4TnvkeFSDiDsFALp07GamZjEu6KEvK4duFyUPZa
-    4Iiw==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1753639247;
+    h=Subject:From:To:Date:Message-ID:Cc:Date:From:Subject:Sender;
+    bh=0J5JV5wr8LRcgkj8Qv57bDe3YKMXirdEo4W8bmBAs+w=;
+    b=EInEXTUvLv2+5gNkxVs1s2TUuE+eeAYb11fqQOQRR6hTcYBRKvjqlc0Yh+fvpJnEeI
+    jfPYAxqFwzKnJlhGz0apEoQhqcJXkjZbWhxRaIwNxS4ZcD5ewEKlEAogZDyqdieOeNFn
+    lJRhtLSQe4CZqX8ZtD7b6p3cNurBe0aNwMoDFafAIrweBSGCKMJuw0EdCdW2ZkN5Rqs0
+    ADBg5f0msINBbfNy7vIhRXQIpuyz7T6eU4wyRj+jX/D+5NX65M2/9VSjIXmNeOXRyOJ0
+    vGWeaE5CDs303WsOcrODMvQwv0Aiz79gqqSqImTegeHXY6D9vqsrZPajfP4/kG1xkSZG
+    Xkhw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1753639601;
     s=strato-dkim-0003; d=garloff.de;
-    h=In-Reply-To:References:To:From:Subject:Date:Message-ID:Cc:Date:From:
-    Subject:Sender;
-    bh=aqfj/O5NHRdSz4FlFX8hxG9vEyGC/E22uEvXGS7LT/E=;
-    b=bTTBnoxPQaqKoxf+Iv7KE7ffVbregscxd5VvH0YVybWojCmlEBjZ3eY4PlGuCCVFSe
-    ciVoH1H4cLhq2gmB2bCg==
+    h=Subject:From:To:Date:Message-ID:Cc:Date:From:Subject:Sender;
+    bh=0J5JV5wr8LRcgkj8Qv57bDe3YKMXirdEo4W8bmBAs+w=;
+    b=GhksvSseMUaocu0Wl8C/3qu85zTfbbIKjQ+PUQSxXyzR1MSPNSH6yJiNIufT8DKfmV
+    Qzv3uzpBD180JeYbfHCA==
 X-RZG-AUTH: ":J3kWYWCveu3U88BfwGxYwcN+YZ41GOdzUdLW+J8VEEt2iJSgSWY/glqoxjGO"
 Received: from mail.garloff.de
     by smtp.strato.de (RZmta 52.1.2 DYNA|AUTH)
-    with ESMTPSA id L60c3716RI0lbBk
+    with ESMTPSA id L60c3716RI6fbCU
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate)
     for <linux-scsi@vger.kernel.org>;
-    Sun, 27 Jul 2025 20:00:47 +0200 (CEST)
+    Sun, 27 Jul 2025 20:06:41 +0200 (CEST)
 Received: from [192.168.155.137] (ap5.garloff.de [192.168.155.10])
-	by mail.garloff.de (Postfix) with ESMTPSA id CA43B62479
-	for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2025 20:00:46 +0200 (CEST)
-Content-Type: multipart/mixed; boundary="------------IS4o05Sea7qUDbsv7rADI8NT"
-Message-ID: <bb781675-50eb-40d0-a877-18eb3c3be6fd@garloff.de>
-Date: Sun, 27 Jul 2025 20:00:44 +0200
+	by mail.garloff.de (Postfix) with ESMTPSA id 32F9C62479
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2025 20:06:41 +0200 (CEST)
+Message-ID: <936a460e-eacd-40a8-834a-76021bf3ce8c@garloff.de>
+Date: Sun, 27 Jul 2025 20:06:38 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -79,13 +74,10 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: Patch [3/3] Enable eager_unmap by default.
-From: Kurt Garloff <kurt@garloff.de>
-To: linux-scsi@vger.kernel.org
-References: <021904d2-f59d-44f3-9eec-6dfd7379b3f0@garloff.de>
- <b8ae15bd-7a26-4f7c-ae61-ad282bc59562@garloff.de>
- <2678e985-71da-4602-a9bc-ed26ca03da65@garloff.de>
 Content-Language: en-US
+To: linux-scsi@vger.kernel.org
+From: Kurt Garloff <kurt@garloff.de>
+Subject: Patch [0/3] Support eager_unmap for non ldpme sd devs
 Autocrypt: addr=kurt@garloff.de; keydata=
  xsFNBFPOcbQBEACwCji59LkgneDQbfcGS3EZW+Ez35y30Bpq3GJPHf9/nq8D7Q8LhjIvHOd9
  ky/FFNr8dx7f6lRqQUrcaeA7dasJwJjLBzkKEVKnZwHS3ytsi0lzlc+UcxdePYBsvT7mx1dD
@@ -129,66 +121,48 @@ Autocrypt: addr=kurt@garloff.de; keydata=
  6EQ+Tp/qhz1vhVD8MA1aFVuhvXFyv1sltSm5nqlBA8/4nLMZqslJZ5VLVtkEXiSEh/7Mj9xg
  +WPo2/4FAu2ngbxN5/qWuPBnjQN7KKOhLSV7uf07XlmLwcPw+LFsoFjc54WrmieJuCnH/UVQ
  6dmc1ZUGwVkPKj/1orKQwaVSKdT9DAhbTowyDfPxESLmruJLx4AWj6jZML1VE+fnnAIS
-In-Reply-To: <2678e985-71da-4602-a9bc-ed26ca03da65@garloff.de>
-Content-Transfer-Encoding: 7bit
-
-This is a multi-part message in MIME format.
---------------IS4o05Sea7qUDbsv7rADI8NT
-Content-Type: multipart/alternative;
- boundary="------------b6k4a950m1sLjShINJlBgNar"
-
---------------b6k4a950m1sLjShINJlBgNar
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+Hi,
 
---------------b6k4a950m1sLjShINJlBgNar
-Content-Type: text/html; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+(Resent, the original message was not text/plain only. It's too long
+that I have interacted with linux MLs, sorry.)
 
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-  </head>
-  <body text="#000000" bgcolor="#deddda">
-    <br>
-  </body>
-</html>
+I had to do some rearrangement of NVMe drives over several of my
+machines recently. I was using a few USB NVMe enclosures for this.
+One of the things that was annoying was that I had no way to discard
+free space using fstrim (or with blkdiscard or mkfs / mkswap options).
 
---------------b6k4a950m1sLjShINJlBgNar--
---------------IS4o05Sea7qUDbsv7rADI8NT
-Content-Type: text/x-patch; charset=UTF-8; name="eager-unmap-3.diff"
-Content-Disposition: attachment; filename="eager-unmap-3.diff"
-Content-Transfer-Encoding: base64
+The SCSI disk driver (sd_mod) would just claim that discard is not
+supported. It's not true. The NVMes support it as do the enclosures.
+I have a few, though all have variants of RTL9210 chips.
 
-Y29tbWl0IDliMzg4MmViZWQ4NmIwN2QwNjMwYmY0NzdlYmE4ZDAyMjU2ODY0NzkKQXV0aG9y
-OiBLdXJ0IEdhcmxvZmYgPGt1cnRAZ2FybG9mZi5kZT4KRGF0ZTogICBTdW4gSnVsIDI3IDE3
-OjI0OjQ0IDIwMjUgKzAwMDAKCiAgICBFbmFibGUgZWFnZXJfdW5tYXAgYnkgZGVmYXVsdC4K
-ICAgIAogICAgVGhpcyBpcyB0aGUgbW9zdCByaXNreSBwaWVjZS4gRXZlbiB0aG91Z2ggd2Ug
-dGVzdCBmb3IgU0JDID49IDMsIHRoZXJlCiAgICBpcyBhIGNoYW5jZSB0aGF0IGEgaGFyZHdh
-cmUgdmVuZG9yIGhhcyBzY3Jld2VkIHVwIGFuZCBsb2NrcyB1cCB1cG9uCiAgICBnZXR0aW5n
-IHJlcXVlc3RzIGZvciBWUEQgcGFnZXMgb3IgdXBvbiByZWNlaXZpbmcgdW5tYXAvd3MxNi93
-czEwCiAgICBjb21tYW5kcyBkZXNwaXRlIGhhdmluZyBjbGFpbWVkIHN1cHBvcnQgZm9yIGl0
-LgogICAgSXQgd29ya3Mgb24gdHdvIGRpZmZlcmVudCBraW5kcyBvZiBVU0ItTlZNZSBlbmNs
-b3N1cmVzIHRoYXQgSSB1c2VkCiAgICBmb3IgdGVzdGluZyAoU2FicmVudCBSVEwgOTIxMCBh
-bmQgcGxhaW4gUmVhbHRlayA5MjEwQiBiYXNlZCBvbmVzKS4KICAgIAogICAgSSBzdWdnZXN0
-IHRvIGVuYWJsZSB0aGlzIGFuZCByZXZlcnQgdGhpcyBwYXRjaCBpZiB0aGVyZSBpcyBzaWdu
-aWZpY2FudAogICAgZmFsbG91dCBkdXJpbmcgdGhlIHJjIHBoYXNlLgogICAgCiAgICBTaWdu
-ZWQtb2ZmLWJ5OiBLdXJ0IEdhcmxvZmYgPGt1cnRAZ2FybG9mZi5kZT4KCmRpZmYgLS1naXQg
-YS9kcml2ZXJzL3Njc2kvc2QuYyBiL2RyaXZlcnMvc2NzaS9zZC5jCmluZGV4IDhjZmE4ZDU3
-OWU1NS4uNTY0NDc4MzQ2ZDliIDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc2QuYworKysg
-Yi9kcml2ZXJzL3Njc2kvc2QuYwpAQCAtNzksMTEgKzc5LDExIEBAIE1PRFVMRV9BVVRIT1Io
-IkVyaWMgWW91bmdkYWxlIik7CiBNT0RVTEVfREVTQ1JJUFRJT04oIlNDU0kgZGlzayAoc2Qp
-IGRyaXZlciIpOwogTU9EVUxFX0xJQ0VOU0UoIkdQTCIpOwogCi1zdGF0aWMgaW50IHNkX2Vh
-Z2VyX3VubWFwID0gMDsKK3N0YXRpYyBpbnQgc2RfZWFnZXJfdW5tYXAgPSAxOwogbW9kdWxl
-X3BhcmFtX25hbWVkKGVhZ2VyX3VubWFwLCBzZF9lYWdlcl91bm1hcCwgaW50LCBTX0lSVUdP
-IHwgU19JV1VTUik7CiBNT0RVTEVfUEFSTV9ERVNDKGVhZ2VyX3VubWFwLCAidXNlIHVubWFw
-L3dzMTAvd3MxNiBhbHNvIGZvciBkZXZpY2VzICIKIAkJInRoYXQgc3VwcG9ydCBpdCBpbiBM
-QlAgcGFnZSB3aXRob3V0IGNsYWltaW5nIExCUE1FICIKLQkJIih0aGlubHkgcHJvdmlzaW9u
-ZWQgZGV2aWNlcyksIGRlZmF1bHQgPSAwIik7CisJCSIodGhpbmx5IHByb3Zpc2lvbmVkIGRl
-dmljZXMpLCBkZWZhdWx0ID0gMSIpOwogCiBNT0RVTEVfQUxJQVNfQkxPQ0tERVZfTUFKT1Io
-U0NTSV9ESVNLMF9NQUpPUik7CiBNT0RVTEVfQUxJQVNfQkxPQ0tERVZfTUFKT1IoU0NTSV9E
-SVNLMV9NQUpPUik7Cg==
+But sd was too conservative to let me do it.
 
---------------IS4o05Sea7qUDbsv7rADI8NT--
+Attached series of patches address this. (Patches are against 6.16.0-rc7.)
+
+1/3: Introduces an eager_unmap module parameter which lets the sd driver
+      unmap/ws16/ws10 capabilities and issue these commands even for
+      devices without ldpme support (thin provisioning). The VPD pages are
+      being queried for all devices advertising SBC >= 3 to avoid breaking
+      old hardware that might barf of being asked for VPDs.
+2/3: Makes the approach more conservative by guarding the requesting of
+      VPD pages also on eager_unmap being set. With this patch, the default
+      behavior is the same as before the eager_unmap patches unless the
+      parameter is set to non-zero.
+3/3: This changes the default of eager_unmap to 1. It should be safe based
+      on the SBC >= 3 protection, but it's hard to know for sure with all
+      the possible broken hardware out there. So leave the parameter for
+      admins that need to set it to 0. In case we have significant fallout,
+      this is the one patch that would need to get reverted.
+
+I have been running kernels with variants of these patches for over a year
+now.
+
+PS: Please copy me one responses, I have stopped being subscribed to
+LKML and linux-scsi a long time ago. Sorry!
+
+-- 
+Kurt Garloff <kurt@garloff.de>, Cologne
+
