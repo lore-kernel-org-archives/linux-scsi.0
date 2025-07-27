@@ -1,66 +1,77 @@
-Received: from mail-ed1-f42.google.com (mail-ed1-f42.google.com [209.85.208.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de [85.215.255.20])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 327A72B9B7;
-	Sun, 27 Jul 2025 10:50:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.42
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753613454; cv=none; b=jSHa+8mlzxUXKF08prs6sEFp1w7hAC2WjiZOPNSZWB1VsVyHkbQ97ZlnElBJaRkYhHHxpj5PrnMTIBfBAJ3w3Phr4fqg/JiT0cjGsXhkecCABIz4rffZLdCl5pF5z+HwBEQWn6GopCWtYgi/NPgO8ugXsURsfx+XzcQ47cZypls=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753613454; c=relaxed/simple;
-	bh=nJJt0PWAEW7qWLJBibqep/glZnUSFIRPI0ZmD9jLzpA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=G17bS8F2gOuGJFYl9RigQvceLzm1ACPgT3l9BN5GvYoo2ZUEnNeW1SozUg+/B4wtxbNlbTerhFJEoY8hbwUxFwOgfWNaG3b3wSvvDIPid69YBs+5Tc5wSatwhJakxOsY0D5iimKzHEE/ciSiRRjDVajOLBigm064BiNOVVggoxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BeMiIejR; arc=none smtp.client-ip=209.85.208.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 374A21DC1AB
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2025 17:58:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.20
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1753639130; cv=pass; b=bZ2e/ntRspGB6x2FtQMag3QrcsVICX0miuz3oGkF7h1UpGD4HVXoFZi+aqElZlZxXlOhDeIssdxtB40B51ob76fz0jIDmE+Cqqw9BXtfQ4vzGIMqdJ2HJyVw+AH5nbmvg81FVw3VYajTspn7tcn/DVUpW4tqdQBJuEcSVqeVgxc=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1753639130; c=relaxed/simple;
+	bh=DY9wnwBtnksXvfM8NCQmlVQDwC2ahgcZpsbVrpPaYr8=;
+	h=Content-Type:Message-ID:Date:MIME-Version:Subject:From:To:
+	 References:In-Reply-To; b=ojc42jn5yyylowKMArDPwxoDgvnNikPhXvA4ZklK8LUqRIlgOx0SWBbsJG1PzzmJwohv8UiVQprxISPyS/cuaFce4yQZNvso7PYHE5F2BNZxChY7U1due5MxgDTFgZhkWK5Ax1KVFdYinZIgo7C24ht4J5OiL09S553M6ISOvYk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=garloff.de; spf=none smtp.mailfrom=garloff.de; dkim=pass (2048-bit key) header.d=garloff.de header.i=@garloff.de header.b=P6ZmmZF4; dkim=permerror (0-bit key) header.d=garloff.de header.i=@garloff.de header.b=QYW1ojZ5; arc=pass smtp.client-ip=85.215.255.20
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=garloff.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=garloff.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BeMiIejR"
-Received: by mail-ed1-f42.google.com with SMTP id 4fb4d7f45d1cf-60bfcada295so5709359a12.1;
-        Sun, 27 Jul 2025 03:50:51 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753613450; x=1754218250; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=1k8lEaluAubMWH/68CvxHBh8kK6RARI4kO0mTJ25QH8=;
-        b=BeMiIejRRTbO12Vx8oCVZwINDuFqbAIqPB6W8+PvieQgNZq4t+eX4Wzw/Bs4tixz1d
-         sdUDlllF9mUiRr+Ui4MDO84gPMmdEaurtzJhqDSu+lH8qoRiAnCueB/0J0xzccZyFJJS
-         Ut/BXTMMe35JwGEfh1W/RK0N6gGAgvh1hCXe3IXD98hHKfGt6wgCqVMsF+fFYm9Hezdo
-         SFobJOZZq6a5fpq5TolQT6gpbAP8T8HPdzdKOPUlnbqFJNWl1kBCfdtKCzIjtVN8iZsl
-         qmd9lyUhkrfrKcupVYBdcvGJQHv40wzvDajy+8ZtaYPTbqaR585WGg23F87fh4mcJV75
-         ARIw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753613450; x=1754218250;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=1k8lEaluAubMWH/68CvxHBh8kK6RARI4kO0mTJ25QH8=;
-        b=GnHvoPLm3kXE043SrAsZ5XsSaCiLfGNW02EBMubfH3dCXcpf0Qdn/W8v+q9X559bxj
-         1eygaFYgL//ByBXuuX5IkyNTTWW+2JQZ1DDNuIB+S/c+HKFj1Sds+Sprcj0lidq9WWeX
-         3ZYvDm9q9KFmgzpFVakIybY3a5J3mLWE6wSMQxZ8W8YhOS6JkxTdpgkz4+IkRr3z34Na
-         g+pHXbRxKwC2h7oQGbPuguOPXQOnWminjcWad0gH/MSPWKlHoRN9KPPQxYlzOihAj/0i
-         u/6URNIpckw8NZHT2PKB++UA+OzdZhwOCmnBqWgiFrgTYkRAA9sMQKv0rD88Gt5JyIoh
-         +TXg==
-X-Forwarded-Encrypted: i=1; AJvYcCWiYQHxbi2lPao2e/LUWuZZ3jDW+hbi/DKbqoyN2n72LkV3R7IVVPhoooo9+TWL7mFIUTnXdA+S6TPh@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxv6fTYBJUwS6Kdk1ZBlv3h5sfNb8CLfkqz9FNO3cmDAXbxzbPa
-	6+DU8Kn1clmE1XMgYbGS43PBgHNpYMmGprbezgw4oEnWATIlY6to4Fuq
-X-Gm-Gg: ASbGnctsez+GRxliFChyQYH9Up9n2AIJ95nX7M1BYSrj2JGM02RikHgsJ3G092rn6nh
-	oaLjUeJcJFflwbwhO4NE2eH+tA38BKpnGjPLh3rEJQAd3R/2AqfxhLJ+ToYXVfU+Ba/YBFk0EtY
-	JJDrQVHZ+eReyEg+P2XVlR865P7EpIb1RvLxs6HN6ZXtVWRi2zRxEmpqkvdEjJBjhsbbAnGGQhT
-	an4S6tH3tN9QCXwJXvUAJLzWHWIXO2bYYoB4V7CpAU+nBZiJrFgMDD2OW52319skITX1YuXbUui
-	hG0j4VSVStkjGyhfL83LjlU3i3OARC4v0tAybWHgyC8DXSBMcZLOOidSxGQL5pxNSYPkK2kO4Ud
-	0vm8tb+dXy4BrdGSsIpHFy2KD2SdXEcKxg+j30POPEtQKaqQbtJgVGng4AIgMGZvsckuCrsCbhc
-	W6W8cuJ9Q0w+L8
-X-Google-Smtp-Source: AGHT+IFgMX/fMwKAl4co6ltWf3TS6ljsYk5mHIgfdpSUlcZpIq0pzRFBDhzWsj9kkna1wHLSwdj+nA==
-X-Received: by 2002:a05:6402:26c6:b0:615:1084:9d66 with SMTP id 4fb4d7f45d1cf-6151084dde2mr3711703a12.7.1753613450061;
-        Sun, 27 Jul 2025 03:50:50 -0700 (PDT)
-Received: from [192.168.72.73] (catv-188-142-181-47.catv.fixed.one.hu. [188.142.181.47])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-61500aedabfsm1870111a12.60.2025.07.27.03.50.49
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sun, 27 Jul 2025 03:50:49 -0700 (PDT)
-Message-ID: <bdf20964-e1ee-45a9-bf24-3396e957ff67@gmail.com>
-Date: Sun, 27 Jul 2025 12:50:48 +0200
+	dkim=pass (2048-bit key) header.d=garloff.de header.i=@garloff.de header.b="P6ZmmZF4";
+	dkim=permerror (0-bit key) header.d=garloff.de header.i=@garloff.de header.b="QYW1ojZ5"
+ARC-Seal: i=1; a=rsa-sha256; t=1753639120; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=ayRdoi2468kvo0GSL+EonxT17NIosDDbqhIRVyHelLI1y6GXnB/twW0VIzieRfhwNX
+    nuvW7244gUdhswT3Vku6hzB4BCWTQvr/bgDksmHQO2YvpoV0BX8rVKCt+ovtKZ3B87Zw
+    RIGoW2hXXH79/p7kYGpGtNN8wk1DMR5kyR4WbApSowjyk/qAk/472SJ5/z8Qkk/97Swj
+    HpNSxhz9MLAPRavDEA58BMv52V+kqxCPWWGCFgDCIUSqTzZsGjKYOErNBwvvbED8cvG8
+    4LmU42ElhvhEu6qLCPkU/qMayVEafm1P2LK2T+AqceYw3AqG91RmPi/LWszz8Ebuz0XC
+    sqmA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1753639120;
+    s=strato-dkim-0002; d=strato.com;
+    h=In-Reply-To:References:To:From:Subject:Date:Message-ID:Cc:Date:From:
+    Subject:Sender;
+    bh=wavFCnQzRo5ujqo7n2oapOLiGCP2CQ+bQKP63brHZDw=;
+    b=KXcZVX4BAZVcuCznWJVkmpreae8FHZbXaeHUvMdWJtIaQkgRkHojY1lYp/4kTQnp30
+    /Udj5FBY02y9g9uOxxHHa5Ehg3Pz58mrVxKC2dHelIdvJ77fnVF1kLPZXsQm8MpLsJLG
+    8Jd6oM6qO4ShOjZ7OuFZCEwYmB3V2ILqyk1X4bl/QJFRpT8oKUyJZw4rIe156/2h04A+
+    +LmANmfAUsbXEHM6WF89f3E3NGuAGk7m4LieHp5sCFY/DMwJgLcwQvphNnI5lncd+Nvp
+    sMDL5Vs62p/veyfq2Al1P+w3ulOWyLviGRk9B7qfrRWixlsoyOQNASgZVsWhbVaRtkaZ
+    VHjA==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo00
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1753639120;
+    s=strato-dkim-0002; d=garloff.de;
+    h=In-Reply-To:References:To:From:Subject:Date:Message-ID:Cc:Date:From:
+    Subject:Sender;
+    bh=wavFCnQzRo5ujqo7n2oapOLiGCP2CQ+bQKP63brHZDw=;
+    b=P6ZmmZF4zjqMI3cdN0rwZDbsLkOqgbhu3zg7pnJj9hE2yMyZiaQDVI5+ZymTsP/L6N
+    Q4iH5WYjbwTq4mv0ZVvAV/zJzFZuY2qL4e0OVS8txrtd41vJhMGqupKXJwCZK6tFsGwO
+    qLb8wejvMkVVCoBqAlqS1lkl1Blo8JP8bBzmzgfq3j+ol/b1PmBqg967T7Sx973pbWXm
+    D7y1toux+QEy/LaPg4HxWD37JvyxUIefCQfwhC05aTqTfMmD1+oCTG75+IIjCDxOzzpy
+    W6iXt20KvpuMlIqAKsKpaVrRaAgDOFwIzwjbMn66cOqxLPs/9ZqlL/t5wQpziZg/WDj1
+    5yiQ==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1753639120;
+    s=strato-dkim-0003; d=garloff.de;
+    h=In-Reply-To:References:To:From:Subject:Date:Message-ID:Cc:Date:From:
+    Subject:Sender;
+    bh=wavFCnQzRo5ujqo7n2oapOLiGCP2CQ+bQKP63brHZDw=;
+    b=QYW1ojZ5xmaHjEBSUCoaS+mmIblOuBL/CyCO9xNZ03q2wBmtQuoUg94Zu75SZTio2D
+    6nfSbbDVC9iRS3MCHjCw==
+X-RZG-AUTH: ":J3kWYWCveu3U88BfwGxYwcN+YZ41GOdzUdLW+J8VEEt2iJSgSWY/glqoxjGO"
+Received: from mail.garloff.de
+    by smtp.strato.de (RZmta 52.1.2 DYNA|AUTH)
+    with ESMTPSA id L60c3716RHwebAy
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate)
+    for <linux-scsi@vger.kernel.org>;
+    Sun, 27 Jul 2025 19:58:40 +0200 (CEST)
+Received: from [192.168.155.137] (ap5.garloff.de [192.168.155.10])
+	by mail.garloff.de (Postfix) with ESMTPSA id BF83362479
+	for <linux-scsi@vger.kernel.org>; Sun, 27 Jul 2025 19:58:39 +0200 (CEST)
+Content-Type: multipart/mixed; boundary="------------ptMhzKIYuZTkHnbDE7pSvgxs"
+Message-ID: <b8ae15bd-7a26-4f7c-ae61-ad282bc59562@garloff.de>
+Date: Sun, 27 Jul 2025 19:58:37 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,179 +79,164 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: Improper io_opt setting for md raid5
-To: Coly Li <colyli@kernel.org>, hch@lst.de
-Cc: linux-block@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, Damien Le Moal <dlemoal@kernel.org>
-References: <ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2dzisd@f5ikoyo3sfq5>
-Content-Language: en-US, hu
-From: =?UTF-8?Q?Csord=C3=A1s_Hunor?= <csordas.hunor@gmail.com>
-In-Reply-To: <ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2dzisd@f5ikoyo3sfq5>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Subject: Re: Patch [1/3] Support eager_unmap for non ldpme sd devs
+From: Kurt Garloff <kurt@garloff.de>
+To: linux-scsi@vger.kernel.org
+References: <021904d2-f59d-44f3-9eec-6dfd7379b3f0@garloff.de>
+Content-Language: en-US
+Autocrypt: addr=kurt@garloff.de; keydata=
+ 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
+In-Reply-To: <021904d2-f59d-44f3-9eec-6dfd7379b3f0@garloff.de>
+Content-Transfer-Encoding: 7bit
 
-Adding the SCSI maintainers because I believe the culprit is in
-drivers/scsi/sd.c, and Damien Le Moal because because he has a pending
-patch modifying the relevant part and he might be interested in the
-implications.
+This is a multi-part message in MIME format.
+--------------ptMhzKIYuZTkHnbDE7pSvgxs
+Content-Type: multipart/alternative;
+ boundary="------------nDqhjkE4FUxzbBFQo6ALg0Ue"
 
-On 7/15/2025 5:56 PM, Coly Li wrote:
-> Let me rescript the problem I encountered.
-> 1, There is an 8 disks raid5 with 64K chunk size on my machine, I observe
-> /sys/block/md0/queue/optimal_io_size is very large value, which isn’t
-> reasonable size IMHO.
+--------------nDqhjkE4FUxzbBFQo6ALg0Ue
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-I have come across the same problem after moving all 8 disks of a RAID6
-md array from two separate SATA controllers to an mpt3sas device. In my
-case, the readahead on the array became almost 4 GB:
 
-# grep ^ /sys/block/{sda,md_helium}/queue/{optimal_io_size,read_ahead_kb}
-/sys/block/sda/queue/optimal_io_size:16773120
-/sys/block/sda/queue/read_ahead_kb:32760
-/sys/block/md_helium/queue/optimal_io_size:4293918720
-/sys/block/md_helium/queue/read_ahead_kb:4192256
+--------------nDqhjkE4FUxzbBFQo6ALg0Ue
+Content-Type: text/html; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Note: the readahead is supposed to be twice the optimal I/O size (after
-a unit conversion). On the md array it isn't because of an overflow in
-blk_apply_bdi_limits. This overflow is avoidable but basically
-irrelevant; however, it nicely highlights the fact that io_opt should
-really never get this large.
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+  </head>
+  <body text="#000000" bgcolor="#deddda">
+    <br>
+  </body>
+</html>
 
-> 2,  It was from drivers/scsi/mpt3sas/mpt3sas_scsih.c, 
-> 11939 static const struct scsi_host_template mpt3sas_driver_template = {
-...
-> 11960         .max_sectors                    = 32767,
-...
-> 11969 };
-> at line 11960, max_sectors of mpt3sas driver is defined as 32767.
-> 
-> Then in drivers/scsi/scsi_transport_sas.c, at line 241 inside sas_host_setup(),
-> shots->opt_sectors is assigned by 32767 from the following code,
-> 240         if (dma_dev->dma_mask) {
-> 241                 shost->opt_sectors = min_t(unsigned int, shost->max_sectors,
-> 242                                 dma_opt_mapping_size(dma_dev) >> SECTOR_SHIFT);
-> 243         }
-> 
-> Then in drivers/scsi/sd.c, inside sd_revalidate_disk() from the following coce,
-> 3785         /*
-> 3786          * Limit default to SCSI host optimal sector limit if set. There may be
-> 3787          * an impact on performance for when the size of a request exceeds this
-> 3788          * host limit.
-> 3789          */
-> 3790         lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
-> 3791         if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
-> 3792                 lim.io_opt = min_not_zero(lim.io_opt,
-> 3793                                 logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
-> 3794         }
-> 
-> lim.io_opt of all my sata disks attached to mpt3sas HBA are all 32767 sectors,
-> because the above code block.
-> 
-> Then when my raid5 array sets its queue limits, because its io_opt is 64KiB*7,
-> and the raid component sata hard drive has io_opt with 32767 sectors, by
-> calculation in block/blk-setting.c:blk_stack_limits() at line 753,
-> 753         t->io_opt = lcm_not_zero(t->io_opt, b->io_opt);
-> the calculated opt_io_size of my raid5 array is more than 1GiB. It is too large.
-> 
-> I know the purpose of lcm_not_zero() is to get an optimized io size for both
-> raid device and underlying component devices, but the resulted io_opt is bigger
-> than 1 GiB that's too big.
-> 
-> For me, I just feel uncomfortable that using max_sectors as opt_sectors in
-> sas_host_stup(), but I don't know a better way to improve. Currently I just
-> modify the mpt3sas_driver_template's max_sectors from 32767 to 64, and observed
-> 5~10% sequetial write performance improvement (direct io) for my raid5 devices
-> by fio.
+--------------nDqhjkE4FUxzbBFQo6ALg0Ue--
+--------------ptMhzKIYuZTkHnbDE7pSvgxs
+Content-Type: text/x-patch; charset=UTF-8; name="eager-unmap-1.diff"
+Content-Disposition: attachment; filename="eager-unmap-1.diff"
+Content-Transfer-Encoding: base64
 
-In my case, the impact was more noticable. The system seemed to work
-surprisingly fine under light loads, but an increased number of
-parallel I/O operations completely tanked its performance until I
-set the readaheads to their expected values and gave the system some
-time to recover.
+Y29tbWl0IGExNGQzNzc1NzhhZjNjOGZjOGRkMWFmYjE4ZjNlZDRhZTk1ZmRlMzkKQXV0aG9y
+OiBLdXJ0IEdhcmxvZmYgPGt1cnRAZ2FybG9mZi5kZT4KRGF0ZTogICBTdW4gSnVsIDI3IDE1
+OjUxOjUxIDIwMjUgKzAwMDAKCiAgICBlYWdlcl91bm1hcDogRW5hYmxlIHVubWFwIGZvciBk
+ZXZzIHdpdGhvdXQgbGJwbWUuCiAgICAKICAgIFdlIHRyeSB0byByZXRyaWV2ZSBWUEQgZGF0
+YSBpZiBTQ1NJX0xFVkVMID49IDMgYW5kIFNCQyA+PSAzLgogICAgV2UgdXNlIHRoZSBoZWxw
+IGZyb20gTWFydGluIEsuIFBldGVyc2VuIDxtYXJ0aW4ucGV0ZXJzZW5Ab3JhY2xlLmNvbT4K
+ICAgIHRvIGNoZWNrIHRoZSBTQkMgdmVyc2lvbiwgc28gd2UgYXZvaWQgcXVlcnlpbmcgVlBE
+IHBhZ2VzIGZvciBvbGQKICAgIGRldmljZXMgdGhhdCBtYXkgcmVhY3QgdW5ncmFjaW91c2x5
+LgogICAgCiAgICBEZWZhdWx0IHRvIHVzaW5nIHVubWFwIGZvciBkZXZpY2VzIHRoYXQgc3Vw
+cG9ydCBpdCAoU1NEcykKICAgIGV2ZW4gaWYgTEJQTUUgaXMgbm90IHNldCBJRiBzeXNhZG1p
+biB3YW50cyBzbyBieSBzZXR0aW5nIHNkJ3MKICAgIGVhZ2VyX3VubWFwIG1vZHVsZSBwYXJh
+bWV0ZXIgdG8gbm9uLXplcm8uIERlZmF1bHQgdG8gMCB0byBub3QgY2hhbmdlCiAgICBwcmV2
+aW91cyBiZWhhdmlvciBieSBkZWZhdWx0LgogICAgCiAgICBTaWduZWQtb2ZmLWJ5OiBLdXJ0
+IEdhcmxvZmYgPGt1cnRAZ2FybG9mZi5kZT4KCmRpZmYgLS1naXQgYS9kcml2ZXJzL3Njc2kv
+c2QuYyBiL2RyaXZlcnMvc2NzaS9zZC5jCmluZGV4IGVlYWE2YWYyOTRiOC4uZWEzOGZlMTU0
+OWU1IDEwMDY0NAotLS0gYS9kcml2ZXJzL3Njc2kvc2QuYworKysgYi9kcml2ZXJzL3Njc2kv
+c2QuYwpAQCAtNzksNiArNzksMTIgQEAgTU9EVUxFX0FVVEhPUigiRXJpYyBZb3VuZ2RhbGUi
+KTsKIE1PRFVMRV9ERVNDUklQVElPTigiU0NTSSBkaXNrIChzZCkgZHJpdmVyIik7CiBNT0RV
+TEVfTElDRU5TRSgiR1BMIik7CiAKK3N0YXRpYyBpbnQgc2RfZWFnZXJfdW5tYXAgPSAwOwor
+bW9kdWxlX3BhcmFtX25hbWVkKGVhZ2VyX3VubWFwLCBzZF9lYWdlcl91bm1hcCwgaW50LCBT
+X0lSVUdPIHwgU19JV1VTUik7CitNT0RVTEVfUEFSTV9ERVNDKGVhZ2VyX3VubWFwLCAidXNl
+IHVubWFwL3dzMTAvd3MxNiBhbHNvIGZvciBkZXZpY2VzICIKKwkJInRoYXQgc3VwcG9ydCBp
+dCBpbiBMQlAgcGFnZSB3aXRob3V0IGNsYWltaW5nIExCUE1FICIKKwkJIih0aGlubHkgcHJv
+dmlzaW9uZWQgZGV2aWNlcyksIGRlZmF1bHQgPSAwIik7CisKIE1PRFVMRV9BTElBU19CTE9D
+S0RFVl9NQUpPUihTQ1NJX0RJU0swX01BSk9SKTsKIE1PRFVMRV9BTElBU19CTE9DS0RFVl9N
+QUpPUihTQ1NJX0RJU0sxX01BSk9SKTsKIE1PRFVMRV9BTElBU19CTE9DS0RFVl9NQUpPUihT
+Q1NJX0RJU0syX01BSk9SKTsKQEAgLTMzMDUsNyArMzMxMSw3IEBAIHN0YXRpYyB2b2lkIHNk
+X3JlYWRfYXBwX3RhZ19vd24oc3RydWN0IHNjc2lfZGlzayAqc2RrcCwgdW5zaWduZWQgY2hh
+ciAqYnVmZmVyKQogCiBzdGF0aWMgdW5zaWduZWQgaW50IHNkX2Rpc2NhcmRfbW9kZShzdHJ1
+Y3Qgc2NzaV9kaXNrICpzZGtwKQogewotCWlmICghc2RrcC0+bGJwbWUpCisJaWYgKCFzZGtw
+LT5sYnBtZSAmJiAhc2RfZWFnZXJfdW5tYXApCiAJCXJldHVybiBTRF9MQlBfRlVMTDsKIAog
+CWlmICghc2RrcC0+bGJwdnBkKSB7CkBAIC0zMzQ4LDcgKzMzNTQsNyBAQCBzdGF0aWMgdm9p
+ZCBzZF9yZWFkX2Jsb2NrX2xpbWl0cyhzdHJ1Y3Qgc2NzaV9kaXNrICpzZGtwLAogCiAJCXNk
+a3AtPm1heF93c19ibG9ja3MgPSAodTMyKWdldF91bmFsaWduZWRfYmU2NCgmdnBkLT5kYXRh
+WzM2XSk7CiAKLQkJaWYgKCFzZGtwLT5sYnBtZSkKKwkJaWYgKCFzZF9lYWdlcl91bm1hcCAm
+JiAhc2RrcC0+bGJwbWUpCiAJCQlnb3RvIGNvbmZpZ19hdG9taWM7CiAKIAkJbGJhX2NvdW50
+ID0gZ2V0X3VuYWxpZ25lZF9iZTMyKCZ2cGQtPmRhdGFbMjBdKTsKQEAgLTM0MzAsNyArMzQz
+Niw3IEBAIHN0YXRpYyB2b2lkIHNkX3JlYWRfYmxvY2tfcHJvdmlzaW9uaW5nKHN0cnVjdCBz
+Y3NpX2Rpc2sgKnNka3ApCiB7CiAJc3RydWN0IHNjc2lfdnBkICp2cGQ7CiAKLQlpZiAoc2Rr
+cC0+bGJwbWUgPT0gMCkKKwlpZiAoIXNkX2VhZ2VyX3VubWFwICYmIHNka3AtPmxicG1lID09
+IDApCiAJCXJldHVybjsKIAogCXJjdV9yZWFkX2xvY2soKTsKQEAgLTM2ODYsNiArMzY5Miw0
+NSBAQCBzdGF0aWMgdm9pZCBzZF9yZWFkX2Jsb2NrX3plcm8oc3RydWN0IHNjc2lfZGlzayAq
+c2RrcCkKIAlrZnJlZShidWZmZXIpOwogfQogCisKK2VudW0geworCUlOUVVJUllfREVTQ19T
+VEFSVCAgICAgID0gNTgsCisJSU5RVUlSWV9ERVNDX0VORAk9IDc0LAorCUlOUVVJUllfREVT
+Q19TSVpFICAgICAgID0gMiwKK307CisKKy8qKiBFeHRyYWN0IFNCQyB2ZXJzaW9uIGZyb20g
+SU5RVUlSWSAqLworc3RhdGljIHVuc2lnbmVkIGludCBzZF9zYmNfdmVyc2lvbihzdHJ1Y3Qg
+c2NzaV9kZXZpY2UgKnNkcCkKK3sKKwl1bnNpZ25lZCBpbnQgaTsKKwl1bnNpZ25lZCBpbnQg
+bWF4OworCisJaWYgKHNkcC0+aW5xdWlyeV9sZW4gPCBJTlFVSVJZX0RFU0NfU1RBUlQgKyBJ
+TlFVSVJZX0RFU0NfU0laRSkKKwkJcmV0dXJuIDA7CisKKwltYXggPSBtaW5fdCh1bnNpZ25l
+ZCBpbnQsIHNkcC0+aW5xdWlyeV9sZW4sIElOUVVJUllfREVTQ19FTkQpOworCW1heCA9IHJv
+dW5kZG93bihtYXgsIElOUVVJUllfREVTQ19TSVpFKTsKKworCWZvciAoaSA9IElOUVVJUllf
+REVTQ19TVEFSVCA7IGkgPCBtYXggOyBpICs9IElOUVVJUllfREVTQ19TSVpFKSB7CisJCXUx
+NiBkZXNjID0gZ2V0X3VuYWxpZ25lZF9iZTE2KCZzZHAtPmlucXVpcnlbaV0pOworCisJCXN3
+aXRjaCAoZGVzYykgeworCQljYXNlIDB4MDYwMDoKKwkJCXJldHVybiA0OworCQljYXNlIDB4
+MDRjMDogY2FzZSAweDA0YzM6IGNhc2UgMHgwNGM1OiBjYXNlIDB4MDRjODoKKwkJCXJldHVy
+biAzOworCQljYXNlIDB4MDMyMDogY2FzZSAweDAzMjI6IGNhc2UgMHgwMzI0OiBjYXNlIDB4
+MDMzQjoKKwkJY2FzZSAweDAzM0Q6IGNhc2UgMHgwMzNFOgorCQkJcmV0dXJuIDI7CisJCWNh
+c2UgMHgwMTgwOiBjYXNlIDB4MDE5YjogY2FzZSAweDAxOWM6CisJCQlyZXR1cm4gMTsKKwkJ
+fQorCX0KKworCXJldHVybiAwOworfQorCisKIC8qKgogICoJc2RfcmV2YWxpZGF0ZV9kaXNr
+IC0gY2FsbGVkIHRoZSBmaXJzdCB0aW1lIGEgbmV3IGRpc2sgaXMgc2VlbiwKICAqCXBlcmZv
+cm1zIGRpc2sgc3BpbiB1cCwgcmVhZF9jYXBhY2l0eSwgZXRjLgpAQCAtMzY5OSw2ICszNzQ0
+LDcgQEAgc3RhdGljIGludCBzZF9yZXZhbGlkYXRlX2Rpc2soc3RydWN0IGdlbmRpc2sgKmRp
+c2spCiAJc3RydWN0IHF1ZXVlX2xpbWl0cyBsaW07CiAJdW5zaWduZWQgY2hhciAqYnVmZmVy
+OwogCXVuc2lnbmVkIGludCBkZXZfbWF4OworCXVuc2lnbmVkIGludCBzYmNfdmVyc2lvbjsK
+IAlpbnQgZXJyOwogCiAJU0NTSV9MT0dfSExRVUVVRSgzLCBzZF9wcmludGsoS0VSTl9JTkZP
+LCBzZGtwLApAQCAtMzcyMSw2ICszNzY3LDE2IEBAIHN0YXRpYyBpbnQgc2RfcmV2YWxpZGF0
+ZV9kaXNrKHN0cnVjdCBnZW5kaXNrICpkaXNrKQogCXNkX3NwaW51cF9kaXNrKHNka3ApOwog
+CiAJbGltID0gcXVldWVfbGltaXRzX3N0YXJ0X3VwZGF0ZShzZGtwLT5kaXNrLT5xdWV1ZSk7
+CisJc2JjX3ZlcnNpb24gPSBzZF9zYmNfdmVyc2lvbihzZHApOworCWlmIChzZHAtPnNjc2lf
+bGV2ZWwgPj0gU0NTSV8zICYmIHNiY192ZXJzaW9uID49IDMgJiYgc2RwLT5za2lwX3ZwZF9w
+YWdlcykgeworCQlzZF9wcmludGsoS0VSTl9OT1RJQ0UsIHNka3AsCisJCQkiU0JDIHZlcnNp
+b24gJXUsIGNsZWFyIHNraXBfdnBkX3BhZ2VzXG4iLCBzYmNfdmVyc2lvbik7CisJCXNkcC0+
+c2tpcF92cGRfcGFnZXMgPSAwOworCQlzY3NpX2F0dGFjaF92cGQoc2RwKTsKKwl9IGVsc2UK
+KwkJc2RfcHJpbnRrKEtFUk5fREVCVUcsIHNka3AsCisJCQkiU0JDIHZlcnNpb24gJXUsIFND
+U0kgbGV2ZWwgJWksIHNraXBfdnBkX3BhZ2VzICVpXG4iLAorCQkJc2JjX3ZlcnNpb24sIHNk
+cC0+c2NzaV9sZXZlbCwgc2RwLT5za2lwX3ZwZF9wYWdlcyk7CiAKIAkvKgogCSAqIFdpdGhv
+dXQgbWVkaWEgdGhlcmUgaXMgbm8gcmVhc29uIHRvIGFzazsgbW9yZW92ZXIsIHNvbWUgZGV2
+aWNlcwo=
 
-I came to the same conclusion as Coly Li: io_opt ultimately gets
-populated from shost->max_sectors, which (in the case of mpt3sas and
-several other SCSI controllers) contains a value which is both:
-- unnecessarily large for this purpose and, more importantly,
-- not a nice number without any large odd divisors, as blk_stack_limits
-  clearly expects.
-
-Populating io_opt from shost->max_sectors happens via
-shost->opt_sectors. This variable was introduced in commits
-608128d391fa ("scsi: sd: allow max_sectors be capped at DMA optimal
-size limit") and 4cbfca5f7750 ("scsi: scsi_transport_sas: cap shost
-opt_sectors according to DMA optimal limit"). Despite the (in hindsight
-perhaps unfortunate) name, it wasn't used to set io_opt. It was optimal
-in a different sense: it was used as a (user-overridable) upper limit
-to max_sectors, constraining the size of requests to play nicely with
-IOMMU which might get slow with large mappings.
-
-Commit 608128d391fa even mentions io_opt:
-
-    It could be considered to have request queues io_opt value initially
-    set at Scsi_Host.opt_sectors in __scsi_init_queue(), but that is not
-    really the purpose of io_opt.
-
-The last part is correct. shost->opt_sectors is an _upper_ bound on the
-size of requests, while io_opt is used both as a sort of _lower_ bound
-(in the form of readahead), and as a sort of indivisible "block size"
-for I/O (by blk_stack_limits). These two existing purposes may or may
-not already be too much for a single variable; adding a third one
-clearly doesn't work well.
-
-It was commit a23634644afc ("block: take io_opt and io_min into account
-for max_sectors") which started setting io_opt from shost->opt_sectors.
-It did so to stop abusing max_user_sectors to set max_sectors from
-shost->opt_sectors, but it ended up misusing another variable for this
-purpose -- perhaps due to inadvertently conflating the two "optimal"
-transfer sizes, which are optimal in two very different contexts.
-
-Interestingly, while I've verified that the increased values for io_opt
-and readahead on the actual disks definitely comes from this commit
-(a23634644afc), the io_opt and readahead of the md array are unaffected
-until commit 9c0ba14828d6 ("blk-settings: round down io_opt to
-physical_block_size") due to a weird coincidence. This commit rounds
-io_opt down to the physical block size in blk_validate_limits. Without
-this commit, io_opt for the disks is 16776704, which looks even worse
-at first glance (512 * 32767 instead of 4096 * 4095). However, this
-ends up overflowing in a funny way when combined with the fact that
-blk_stack_limits (and thus lcm_not_zero) is called once per component
-device:
-
-u32 t = 3145728; // 3 MB, the optimal I/O size for the array
-u32 b = 16776704; // the (incorrect) optimal I/O size of the disks
-u32 x = lcm(t, b); // x == (u32)103076069376 == 4291821568
-u32 y = lcm(x, b); // y == (u32)140630117318656 == t
-
-Repeat for an even number of component devices to get the right answer
-from the wrong inputs by an incorrect method.
-
-I'm sure the issue can be reproduced before commit 9c0ba14828d6
-(although I haven't actually tried -- if I had to, I'd start with an
-array with an odd number of component devices), but at the same time,
-the issue may be still present and hidden on some systems even after
-that commit (for example, the rounding does nothing if the physical
-block size is 512). This might help a little bit to explain why the
-problem doesn't seem more widespread.
-
-> So there should be something to fix. Can you take a look, or give me some hint
-> to fix?
-> 
-> Thanks in advance.
-> 
-> Coly Li
-
-I would have loved to finish with a patch here but I'm not sure what
-the correct fix is. shost->opt_sectors was clearly added for a reason
-and it should reach max_sectors in struct queue_limits in some way. It
-probably isn't included in max_hw_sectors because it's meant to be
-overridable. Apparently just setting max_sectors causes problems, and
-so does setting max_sectors and max_user_sectors. I don't know how to
-to fix this correctly without introducing a new variable to struct
-queue_limits but maybe people more familiar with the code can think of
-a less intrusive way.
-
-Hunor Csordás
-
+--------------ptMhzKIYuZTkHnbDE7pSvgxs--
