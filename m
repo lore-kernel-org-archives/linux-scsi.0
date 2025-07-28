@@ -1,130 +1,115 @@
-Received: from omta034.useast.a.cloudfilter.net (omta034.useast.a.cloudfilter.net [44.202.169.33])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 404C521D59B
-	for <linux-scsi@vger.kernel.org>; Mon, 28 Jul 2025 19:55:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A400E2E3708
+	for <linux-scsi@vger.kernel.org>; Mon, 28 Jul 2025 21:15:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753732506; cv=none; b=Ir5Yf/9Tw0+3ffnfefqWpMYI8yVCQ2PeNI7DDBq/lVajvq2TjUJ1q0E01016i1Ve6fo3DKRiuR5/GoIUll4i7SUx7W8OyPXsR0T2V22niAY60d50+0kcuhx4CJ1TrnDr2gIkH3sS65UCKNmpt806UIHt6l9u3OjjqpozQ3zw3+w=
+	t=1753737321; cv=none; b=rJJfWUrN6KejjOGmbjCFBXtlc0CU1wRi4u7ZE22w4VdjL1x7fJxmCuVJo6gpmAxmCJFqAKIO8SN+GmYnxQFYOEsTavQHfpmUxyzq7kR3M5IK8zjZ7igy4HAU9+uqTHYnekXd/yDElSJveqTQfp76cMtjbcLEkPCNie5SOfd+qYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753732506; c=relaxed/simple;
-	bh=wzOZmKdYr2XDNsPEJe0/216HRPZVpM832zpy6yN02Xg=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=dnudSPnyFg2B4QQ1S6FRD4YIFiLXARWfUwZ+tkDp+csRI12E1jWiAbk1EAvjnSgWMfiJeIrMXOv+HN6olnwRetPRRsscxXOBE86LJBcbtMgzEgjJMtI2AY0Up5FuN+NWKBYyJ37QWuntStKYULx0yv6euqb+XD9tTSrCHTAOjwM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=Vm89DGaE; arc=none smtp.client-ip=44.202.169.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
+	s=arc-20240116; t=1753737321; c=relaxed/simple;
+	bh=7YCr/BI0V1exliX8uMWZpL//Cl1ab4ic96b+eUfW9s4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tpcknQdhlHip45gr5wg2OUKa74igZXHMli84g25ZYFwcefQ/+PnFKVlR1pklsNwjwPASb+Ipthy6/n8CmNHhW+YmEwmzGp6tPyhiSxLEXQsKLc+Seid3l8LFS3neZhS7yHTg4+qCLcOdVUSYJS6fpVCSY8cS+kRzTpHqDe7Kjqo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=U6LcpL2Z; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="Vm89DGaE"
-Received: from eig-obgw-6009a.ext.cloudfilter.net ([10.0.30.184])
-	by cmsmtp with ESMTPS
-	id g5ogugtGhcOgkgTw1uMKZa; Mon, 28 Jul 2025 19:54:57 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-	by cmsmtp with ESMTPS
-	id gTw0uyOOSBuAYgTw0uESgZ; Mon, 28 Jul 2025 19:54:56 +0000
-X-Authority-Analysis: v=2.4 cv=PKsJ++qC c=1 sm=1 tr=0 ts=6887d590
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=elAakMZAzsQyfqpwiXQzJA==:17
- a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=7T7KSl7uo7wA:10
- a=VBor_q6NEPEnCzcv8DoA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=xYX6OU9JNrHFPr8prv8u:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:References:Cc:To:From:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=E0qGcwBYr1bbIB0m3Gszulve26FolcFHxXey11owiBc=; b=Vm89DGaExhbK+ngc3b6i4I/rUf
-	RrQnvtHhz+3MyGDzr6FkgJpRWT06veaNTq0dtaHqG03LXnyhU07VpDPKBsUdKbq6wktgebm35qrPS
-	3xVCmP11OEsOXkVhhJCBpVQ3ErSDmEn4tR9UdMIDU7T3OKRHYhHoEOv/R4DpoUfClyYLjV1G4HIy4
-	qRSZkb3BJLEEvaNN1JrY05nPOP0JLbYzJP6xmZPNmHjOIO08mlsWRCx+zvMt0UT6OhHlE3lfMEkcJ
-	h670seCNrJEa8Pe7atOWbtWglneO325WPavEQdrv+SshUlKIbda6Bcyb1VfvwavwevtSmveZTQXgK
-	gVuaoA4A==;
-Received: from [177.238.16.239] (port=40448 helo=[192.168.0.21])
-	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.1)
-	(envelope-from <gustavo@embeddedor.com>)
-	id 1ugTvz-00000000Bbc-1mt8;
-	Mon, 28 Jul 2025 14:54:56 -0500
-Message-ID: <c157fcc7-9fc0-404d-8fd5-7c60d44a27c9@embeddedor.com>
-Date: Mon, 28 Jul 2025 13:54:49 -0600
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="U6LcpL2Z"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1753737317;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YOiH+OPMuIGkAD2Owl47JAsoBYaMh5LQK2mDPjRCWcw=;
+	b=U6LcpL2ZGyI93n9U81i/MELftG6yLCkyLAL9LcwFoJ6nToNEfr128zDGYkPD7A2ALog4m0
+	mkQ5octEhoN+DU0UGSlbYDPb7IACNJ2zTNnERrsaY3DkSeWpSulb2Pjx8m8gY/QIBALm6f
+	RrMqOIXrYbd6LpfuFJ2cxV27PqMA12M=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-102-DJ0RjMILPjC5nn3DMjKl6w-1; Mon,
+ 28 Jul 2025 17:15:14 -0400
+X-MC-Unique: DJ0RjMILPjC5nn3DMjKl6w-1
+X-Mimecast-MFC-AGG-ID: DJ0RjMILPjC5nn3DMjKl6w_1753737311
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 70C3519560B2;
+	Mon, 28 Jul 2025 21:15:11 +0000 (UTC)
+Received: from my-developer-toolbox-latest (unknown [10.2.16.27])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A3D861955F16;
+	Mon, 28 Jul 2025 21:15:09 +0000 (UTC)
+Date: Mon, 28 Jul 2025 14:15:06 -0700
+From: Chris Leech <cleech@redhat.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+	Kees Cook <kees@kernel.org>, Bryan Gurney <bgurney@redhat.com>,
+	"Gustavo A . R . Silva" <gustavoars@kernel.org>,
+	John Meneghini <jmeneghi@redhat.com>
+Subject: Re: [PATCH v2 1/1] scsi: qla2xxx: replace non-standard flexible
+ array purex_item.iocb
+Message-ID: <aIfoWk_I1V0KUx4T@my-developer-toolbox-latest>
+References: <20250725212732.2038027-2-cleech@redhat.com>
+ <20250728185725.2501761-1-cleech@redhat.com>
+ <a1c61211-816e-4479-81ce-e71a0d2b8ec2@embeddedor.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/1] scsi: qla2xxx: replace non-standard flexible array
- purex_item.iocb
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-To: Chris Leech <cleech@redhat.com>, linux-scsi@vger.kernel.org
-Cc: Nilesh Javali <njavali@marvell.com>, Kees Cook <kees@kernel.org>,
- Bryan Gurney <bgurney@redhat.com>,
- "Gustavo A . R . Silva" <gustavoars@kernel.org>,
- John Meneghini <jmeneghi@redhat.com>
-References: <20250725212732.2038027-2-cleech@redhat.com>
- <20250728185725.2501761-1-cleech@redhat.com>
- <a1c61211-816e-4479-81ce-e71a0d2b8ec2@embeddedor.com>
-Content-Language: en-US
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 In-Reply-To: <a1c61211-816e-4479-81ce-e71a0d2b8ec2@embeddedor.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 177.238.16.239
-X-Source-L: No
-X-Exim-ID: 1ugTvz-00000000Bbc-1mt8
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([192.168.0.21]) [177.238.16.239]:40448
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 13
-X-Org: HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfGkIrEi6cKkqikQYcfNwGhg0jmWd0RHth7hGZCTYtia5mhTOqXJXl7lJhRXl2R9DXF2UAwyAVaaY6JVwsJ9rpBwyn2IG/LP/bMOeLTKPYF591Xy3OQU5
- 8yXkj1cehTTf1Dq01qzgv6P9S4yk+NWSjrqbsh7DJUovc81aX9waLOHlGfH5qGCgHi7GSi7b9NU2M06m6iiRHulm0oWtM1+2MPaMLzjw6UmMpLiHOjBOLXjV
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-
->> --- a/drivers/scsi/qla2xxx/qla_isr.c
->> +++ b/drivers/scsi/qla2xxx/qla_isr.c
->> @@ -1077,17 +1077,17 @@ static struct purex_item *
->>   qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint16_t size)
->>   {
->>       struct purex_item *item = NULL;
->> -    uint8_t item_hdr_size = sizeof(*item);
->>       if (size > QLA_DEFAULT_PAYLOAD_SIZE) {
->> -        item = kzalloc(item_hdr_size +
->> -            (size - QLA_DEFAULT_PAYLOAD_SIZE), GFP_ATOMIC);
->> +        item = kzalloc(struct_size(item, iocb, size), GFP_ATOMIC);
+On Mon, Jul 28, 2025 at 01:43:10PM -0600, Gustavo A. R. Silva wrote:
+> On 28/07/25 12:57, Chris Leech wrote:
+> > diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+> > index fe98c76e9be32..a00c06a9898ec 100644
+> > --- a/drivers/scsi/qla2xxx/qla_isr.c
+> > +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> > @@ -1077,17 +1077,17 @@ static struct purex_item *
+> >   qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint16_t size)
+> >   {
+> >   	struct purex_item *item = NULL;
+> > -	uint8_t item_hdr_size = sizeof(*item);
+> >   	if (size > QLA_DEFAULT_PAYLOAD_SIZE) {
+> > -		item = kzalloc(item_hdr_size +
+> > -		    (size - QLA_DEFAULT_PAYLOAD_SIZE), GFP_ATOMIC);
+> > +		item = kzalloc(struct_size(item, iocb, size), GFP_ATOMIC);
 > 
 > With the inclusion of `counted_by`, I think `item->size` should be updated
 > here:
->          item->size = size;
+> 		item->size = size;
 > 
->>       } else {
->>           if (atomic_inc_return(&vha->default_item.in_use) == 1) {
->> -            item = &vha->default_item;
->> +            item = (struct purex_item *)&vha->default_item;
->>               goto initialize_purex_header;
->>           } else {
->> -            item = kzalloc(item_hdr_size, GFP_ATOMIC);
->> +            item = kzalloc(
->> +                struct_size(item, iocb, QLA_DEFAULT_PAYLOAD_SIZE),
->> +                GFP_ATOMIC);
+> >   	} else {
+> >   		if (atomic_inc_return(&vha->default_item.in_use) == 1) {
+> > -			item = &vha->default_item;
+> > +			item = (struct purex_item *)&vha->default_item;
+> >   			goto initialize_purex_header;
+> >   		} else {
+> > -			item = kzalloc(item_hdr_size, GFP_ATOMIC);
+> > +			item = kzalloc(
+> > +				struct_size(item, iocb, QLA_DEFAULT_PAYLOAD_SIZE),
+> > +				GFP_ATOMIC);
 > 
 > ...and here:
->              item->size = QLA_DEFAULT_PAYLOAD_SIZE;
+> 			item->size = QLA_DEFAULT_PAYLOAD_SIZE;
 > 
 > Then remove `item->size = size;` just before `return item;`
 
-... or probably set to zero `item->size = 0;` ?
+Hmm, I don't think I agree with that. The single assignment before
+returning just keeps the allocation failure check in one place.
+The conditional nesting in this function is a little odd, but I don't
+want to start reworking it completly for this.
 
-Thanks
--Gustavo
+Is there a problem with the size referenced by counted_by potentially
+being smaller than the allocation?  That looks possible in the case of
+using the single pre-allocated default_item, but not needing to use the
+entire 64-bytes (I don't know if that happens).
+
+- Chris
 
