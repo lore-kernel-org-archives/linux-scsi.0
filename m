@@ -1,199 +1,192 @@
-Received: from esa4.hgst.iphmx.com (esa4.hgst.iphmx.com [216.71.154.42])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C5FE13D51E;
-	Mon, 28 Jul 2025 07:31:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.42
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753687892; cv=fail; b=kwEvqW2N/Yeylh/ggG9ROteDObOtqFOD/+UGiiw75TZSfVy4X3Dk0RZXR609Py0PUwPGItnirU9e+OIHpOxOreOb9Pl5Z3/ciDyxYolbjT2C0d4kEfGxSTYrZWn5bF8NaJK1Qxd42fHMSHSs0RVu4N6bL6tloR623SO6p4BuyFc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753687892; c=relaxed/simple;
-	bh=uOIYZkFuXPCBtXOKCgFoODAAPXb//KwWggVIUMmyU+g=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=i+pJXJCwrPWmeyv2KJFXl+CajsQOKY4y87QJXEl37CQF4tXfbvjFtXEk/2ZtDKHE1zATM/xlz3rawC5MEdEGlS/7Y0BOx68MvGg1F3V6HoN0t1Nlw9ttxMNLsq2mxzdl86G+/Hi8oNda9iMWJLnJNOIFdqKYKuQzxhZRpchmL6g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com; spf=pass smtp.mailfrom=wdc.com; dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b=nNg3A3+c; dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b=nyov2Bk3; arc=fail smtp.client-ip=216.71.154.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wdc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wdc.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 980D919D09C;
+	Mon, 28 Jul 2025 07:46:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1753688806; cv=none; b=ZwNqQveAyJNSFIT7AKpBfudvxOKlYkcakO3Quyf5vFcFKBV5e6EVAIgWn8EegEZaeKlV+gRk580ijPLXxz11E+dVa1d8J/oHQynxTNyGQUbyk0+DqYDZBNsNpcx4H+9Amq2W/d0AhQu0sO1U7Ba7kiDLamDI8jnUA89OCCqWa+c=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1753688806; c=relaxed/simple;
+	bh=wPMAgCo78CSUFgTRwa6J+xWxxs7B9n+X+mKNLhmxlPQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=JIjFIzH6JuPZ2owT2OJr0JArh/0j2bdvVRM2pxZbxY8BURpaieeXZYMQLSv5GhYt7n6+0eb9OUoC1vTIts+xm5BRQLKBoCuNainm320MXbfv1d6Lj4OyWXNdmy9opFEjgX2q5bD7WDnLBHwRteQqm2IU6/pOBMP+K5LYofsKEEI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=q9pAXjRp; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wdc.com header.i=@wdc.com header.b="nNg3A3+c";
-	dkim=pass (1024-bit key) header.d=sharedspace.onmicrosoft.com header.i=@sharedspace.onmicrosoft.com header.b="nyov2Bk3"
-DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
-  d=wdc.com; i=@wdc.com; q=dns/txt; s=dkim.wdc.com;
-  t=1753687890; x=1785223890;
-  h=from:to:subject:date:message-id:references:in-reply-to:
-   content-id:content-transfer-encoding:mime-version;
-  bh=uOIYZkFuXPCBtXOKCgFoODAAPXb//KwWggVIUMmyU+g=;
-  b=nNg3A3+co69Zu7p8zWkP8OJD/d4DSXnIyojDqaC7qybIMeUPRcNTrliG
-   4fhOMHlyFzxff7txp8CN2A2VkPzDfRuL/SOSWhuyYAgJ0SkAk/yE/MX2f
-   yVZhv3So8PIb+9wAgazkTpBnnRDtOzgKKeaRvqpk7E1LV8SV66JVyQFdO
-   5Gk2k8oX1fipDMsndiqj4t56iTPLZYIKp/4l6jOvLal+HqKaeMb3tFiMi
-   dA1rl8D8ZKyyvQPTElWfOkEkDMc9KhKZNQi+YGo99/PGnygdiTpHx7bcl
-   Z7TcLHzDWciRmuDgWstf2M5OLQr7RNZMHZOElCSFpsHd7cW/1lfDbmwd7
-   w==;
-X-CSE-ConnectionGUID: 2WDe9AL9R7+vteQFznfZDQ==
-X-CSE-MsgGUID: 9WNP/uv9QGupJ8TKBgQaZw==
-X-IronPort-AV: E=Sophos;i="6.16,339,1744041600"; 
-   d="scan'208";a="100936929"
-Received: from mail-dm6nam11on2040.outbound.protection.outlook.com (HELO NAM11-DM6-obe.outbound.protection.outlook.com) ([40.107.223.40])
-  by ob1.hgst.iphmx.com with ESMTP; 28 Jul 2025 15:31:23 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=xlW8ROwMPQTycm+cgWPVel4wj1H1aKjrApwBmRpNiSXjfDreygqjkliWf7bAM2z6+0wh+nY/wJ6kNoEj0ntTfYq8GI1Z3JGktJm5XBWTDblLe2gBoEVn+5kQ0StbJQnOEhuYXIClvTpa1+VtEuVLL5OUFtaZQk7zNF/ZaMgVZb/UodgCJ/O+40P4SGIS23yQF25BTZjYXN/AkXDQopPZV+RNFvsaIa05mH8YQfGFRCWOd3vyVaxWDjgu8M5c6FUvKj6Ct5sk3akbag16WGn2pBLLYvf6T7FO5iuhY4MHt71trrmaF/MyFoKqdPEk0Cc2QCofLTnVAwmnFeTn+ph60A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=uOIYZkFuXPCBtXOKCgFoODAAPXb//KwWggVIUMmyU+g=;
- b=d8Pv6CkaOlyR9x9GWJdLat5HPHqaXYSfjNYbfCTxHLPm9m7N8FxM+LkjF2I2ozt9oMIhoOb7Hu97u1qGbp0c/RNZiQjPD41E0DHkjoK2EkTw5/iv6jBe2RgCjOvHHTb+7aqxEXSFdhr2aw4jJ+hTE3A8jg3Qn5mvVCPEOK6JcnL8L9OyzNI/A/knaTJLgHsvT3oPAGlcXgMzzcFqLFgCG5CF1uqHTgEqH+hrvpJ9gzWEpLsk6pukKNKTqr9zCXGowdkT19lIAx4DT7KgrHKarFk9UEM6OAQ0bNvWvqGUNkwKg6rh2G/KCjFFat84gr6sbCRroJgsu8zLyrIsrsUpuw==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=wdc.com; dmarc=pass action=none header.from=wdc.com; dkim=pass
- header.d=wdc.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=sharedspace.onmicrosoft.com; s=selector2-sharedspace-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=uOIYZkFuXPCBtXOKCgFoODAAPXb//KwWggVIUMmyU+g=;
- b=nyov2Bk3ez0Recil4fw2+2M2Hkqp8PxMIJUEEcMSnhdCMTqKagf33GnsXodYcdo3w7AZpJcux2tXPNZU8l2SRUa+hcvn2Q4ql38Gvit2swm2LpTDZUUyDJrsSnlj5PzbwltpgdrORpEcdSFWwKEt8E/7rhk+OIuFiOIasRNSqn8=
-Received: from SN7PR04MB8532.namprd04.prod.outlook.com (2603:10b6:806:350::6)
- by CH0PR04MB8195.namprd04.prod.outlook.com (2603:10b6:610:fc::6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.8964.24; Mon, 28 Jul
- 2025 07:31:22 +0000
-Received: from SN7PR04MB8532.namprd04.prod.outlook.com
- ([fe80::4e14:94e7:a9b3:a4d4]) by SN7PR04MB8532.namprd04.prod.outlook.com
- ([fe80::4e14:94e7:a9b3:a4d4%6]) with mapi id 15.20.8964.023; Mon, 28 Jul 2025
- 07:31:22 +0000
-From: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-To: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org"
-	<linux-rdma@vger.kernel.org>
-Subject: Re: blktests failures with v6.16 kernel
-Thread-Topic: blktests failures with v6.16 kernel
-Thread-Index: AQHb/4mRgOMLSibtgEqjkONubGGqb7RHJCeA
-Date: Mon, 28 Jul 2025 07:31:21 +0000
-Message-ID: <4rej3npws4fcz7nrcs3excimhic2hydq5smifiiw6wwjqu5tnj@wkuqeydamxvj>
-References: <g4svtamuk3jhhhzb52reoj3nj2agi4ws7fwyc45vca5uykjkb4@glfr4emapv7n>
-In-Reply-To: <g4svtamuk3jhhhzb52reoj3nj2agi4ws7fwyc45vca5uykjkb4@glfr4emapv7n>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=wdc.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN7PR04MB8532:EE_|CH0PR04MB8195:EE_
-x-ms-office365-filtering-correlation-id: 73dc5c77-44d1-4a2a-c768-08ddcda8c047
-wdcipoutbound: EOP-TRUE
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|19092799006|1800799024|376014|366016|38070700018;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?xkeUkQlWmnv97x5GPBQX9AszrLmaRqw/KM8Q7Mx8XNPqsCcYxsSCVTJXJXhT?=
- =?us-ascii?Q?ISOf992x7vtKtufxpZmraDrtvn3HU52l3r6d2xjH6DpBGokZQ/ieFl5guupq?=
- =?us-ascii?Q?bc/q+5nfOK2xfZNBf/sImcKQI2ZuO+6na4FOp8jcLbD8g3VPw6+RpNnrgM5v?=
- =?us-ascii?Q?Pe/y8ZH3Vv/AYIPTOvIw8rINn6Cflm0bR3Q52+fkehupCNMl9OhPSDL182XF?=
- =?us-ascii?Q?AfGf8fdj9OjGMlS/WG/4acc6jepWmX4Mu3GIqMbaVLTTpSn3O4LLrDxtyi38?=
- =?us-ascii?Q?B50YvsAK7infjgq57Z7ctffKhTNnLOQAxGZXaeSqKdT/a9X+U3XAPPXegNqu?=
- =?us-ascii?Q?l+CHCdIUK2tWY54rVDEorJSv/w+olMrc6or9p5ubF+ogMjVn6E2NdI8eefw3?=
- =?us-ascii?Q?SA26R+X7Rb7E1egXL2CVP6yICMJvl1eYWmEZdxgLpmwq27S9xwqd5Wjztofh?=
- =?us-ascii?Q?KoIUS3JSPv3DLzRmmnd2JmzkReAaKlQajsA/1aPs2fxfZe97jmBtWW21dDek?=
- =?us-ascii?Q?21G7aig/zV90VtWrcgnGmqzYBcyS/F8PEceQjm5ThNEPa1m19GQeExwNwSA2?=
- =?us-ascii?Q?YdJ1ItMHXH3kYDq71n9zwE1/x4dheAyeUrWkhHBUeWCi1n2U2mK74omR/c+3?=
- =?us-ascii?Q?9gWfOYvOXn23RwOyjucNvGyTIZZ3XcXreWEHeUHP8tBwBnRtVltL3DFuBraa?=
- =?us-ascii?Q?BRjZcKPtSzw1JIfhs/3lrJZ5LhEk4OuD3AZwycxGICFRntzcv9nlpEcHHgtJ?=
- =?us-ascii?Q?kE8SnfFLthfMw+aoPQiN7gEGBNBwxr9OWTEceBHqfuRMdq5zV09A8X72AfDR?=
- =?us-ascii?Q?oIbSJbTSWN/d8YtigkZn05Z/DbHvMMCFPgUC++Vqw5BZiLFhrl16SiipWULb?=
- =?us-ascii?Q?/7CDr2LcCHI8QwUesdYEe+5Aq1dp/aCM525idrS6CNWZTomDxhVC4etII3Bq?=
- =?us-ascii?Q?RhrjiweIu6SQe+tbpsD14V4krHEoIBRrYcEbIY2xKYKLvZdAuGjwuaufpZn4?=
- =?us-ascii?Q?XVxTrR57uqMiJksxzxaSSBXcvwShvyFTfLdRSTCvueFRQX7Ebh/+knTS9rmi?=
- =?us-ascii?Q?joe9Nxo1AJiwUilpZa0TUf3q5++exZFJC1H9Y2A+r9DVPZiiox7Kgi2sE/At?=
- =?us-ascii?Q?vGla9nIA7jMyQ3vvbVbJWHGqq49Y2wtkr6TMYmWZcvCe3xP13rXxEcdSQyLj?=
- =?us-ascii?Q?YDckjO1ueKpMtkPE92cVFIEFvS+2sW/vKw+Wn5vSep62COMXgXbc+Rngv7O0?=
- =?us-ascii?Q?wlDxFFk20nW0X06miZYMQwOiL6oe54EawS9/a2pRf5O2TYqLgc4LrnZQi9sK?=
- =?us-ascii?Q?fO3LV/08uZSzOhApunhx2pwqAxt9P9joL+4iG/VxnPCIbsD2yLElIaiC2dd6?=
- =?us-ascii?Q?9fwVCIOY382Z3744pmkwIaKu+dY4KroOV1w14S+nTVsBd+oKTEYng/JwJqot?=
- =?us-ascii?Q?ukrXjjL3xeCV/OVG3e7H4Nb5GHlXmKwwbeTt9hMX/m9+cmuWut9nUqtlycCr?=
- =?us-ascii?Q?/fb0ScLA8z4Ej6o=3D?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SN7PR04MB8532.namprd04.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(19092799006)(1800799024)(376014)(366016)(38070700018);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?kvc6bizO8ylK6Bw4JKGn7yvRggIbi/KRQW6VCAN/LnsL4SsBTFSJlFyhwXJT?=
- =?us-ascii?Q?5iqnPmsUAMksJ00gPIj/OdR/Dcse21wyMltCOCUf06PX7r4xlqCQWKJy5F27?=
- =?us-ascii?Q?wW/O+tHsyBOc2ThXmUcX/mxiQtRNEeGUa4+w5CZ7nrD4rS+ZNpMGXD1gyqgR?=
- =?us-ascii?Q?BG0VsTVtW8ReXMz5VB234gHVGeV0jpEZ+UkDGkRYvS2hwmORQNWOvhewnMDg?=
- =?us-ascii?Q?91GXa6bTUQ7uq5gjjS83DTfBFkGRCXjr9XrpPY1uqq+wMo5eqANeuDMBSv45?=
- =?us-ascii?Q?Ek6JBSjQUADh+cjfL7wFCXtDoIlmWU4p1cNRugQJRFbC0f85tb16ogDtNGT4?=
- =?us-ascii?Q?Y6TvioAAuV714cFqZ1VX3tnER3oyi7fL+ztrEMU8o4mhgPjR28hU63teJUa+?=
- =?us-ascii?Q?lkJQfwe7jzi/aj8AN1mND7Nxu1obPE1KltZ04bT+I48b6RI3KxqxdiE2X4EX?=
- =?us-ascii?Q?uZVxqQC2Ce3J/mTRmulA9x5dOEWpPf8/oIVNcJD2agNAVOHHBTJVehBfZxgQ?=
- =?us-ascii?Q?XQqElONZvDZdpWw6pkoMz2hiUtrpzL0hluz3ZpALm70YpwvLaNpYVePU3ska?=
- =?us-ascii?Q?a5V+JS0K4cW7+MW58IMnlQqYf3KHKBtq456yxmhYQ1+SFGCpayRIqBigNb5R?=
- =?us-ascii?Q?mFMv5niuAXK7eRYNqky3XnAjias/y0t2oGBMoqZQa5m16iZ5APFC5p+7HAin?=
- =?us-ascii?Q?cV/io1HUI+K4BQ0KJa1ofk+ofRwB8Qa+lKvygCbJpCZ0OhQF6eU/wEKwjGMm?=
- =?us-ascii?Q?zj0QuXDENbENSUZKJgQkNi79Oo5U/T5bTAlDe6ij2LmJbgojrt7sb0v8SZyg?=
- =?us-ascii?Q?tTb4F3QkHKbE3ZFky3nmD0zeN9+9O8JIIjcxDZVLKBVaG//g9NaBvEPlsH1l?=
- =?us-ascii?Q?0brEBFNQuC7syloiV9E14qiiWauGb8jmO/c5/eACllWh8TxhBHxEuAT7F8b5?=
- =?us-ascii?Q?Cu+MSaLyTWW2BBSDnSfZhxVi3v73LrN1OmaC0RQgB4JnwrvlKdQq9UlRhmqy?=
- =?us-ascii?Q?kGw9YlM5lQSyh/S2GA6PzQqxXkWHPbS4AipQk/XCg/izxgBkCCo2BsvQFM39?=
- =?us-ascii?Q?pDVDWGHHAFesCCIsccs8twxLYCQ2gWGulTu+cl3Xont70+SJfwMIlUIaRawP?=
- =?us-ascii?Q?YrayB2+PYKlqsjLOso6iNNqkdLADVjwce7VuKyQB2CsgAiRaHVptJ+UZw4F9?=
- =?us-ascii?Q?f1VMaP6CZspflDTH/F+V8GODZ5CGkNjDENFnOfqGkS4kuz5l5yD9ddJjc8GZ?=
- =?us-ascii?Q?Bve51WSPp09KxCLFyVeCta/hkwvTnGzf+/lp3SznB2g08BM02iDNnAf1AXYb?=
- =?us-ascii?Q?lZBaMhUY9RXD1jj6XzTBV1g3SZ529D4wphESRuKvOJDXqzAAlsEs86sapPPn?=
- =?us-ascii?Q?/3TL0Wzn/P1e3MUiDTt3apbguPgmc5Kxbhr6Q9DvvnEUWdNrpkCP/3h/ATkp?=
- =?us-ascii?Q?9h2xxzptakz5xA4NR+sBYOx+NHAaElswrgH15h/tFaJSqenNwrWUTRa3Pgki?=
- =?us-ascii?Q?yfpStoVwWmev92kYE8qa8jCa32z6AyEGxCFZDQ7C6i8hIk10YXisWrIgmtGW?=
- =?us-ascii?Q?t078fgfweNfk4ikJKzvYHvTEc8yh7xizUCf4ZFu7HxYbHD1g465WOoqAtbDQ?=
- =?us-ascii?Q?sA=3D=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-ID: <0EF3C8D2E2B6534D87B200C4EFB84B9F@namprd04.prod.outlook.com>
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="q9pAXjRp"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B7664C4CEE7;
+	Mon, 28 Jul 2025 07:46:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753688806;
+	bh=wPMAgCo78CSUFgTRwa6J+xWxxs7B9n+X+mKNLhmxlPQ=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=q9pAXjRpHtfETH41PFoSRhMNDE6KW96W7d3VQSdxiffZeFWMWQvMoxBylfBMdA2FW
+	 z5TVPV5ikkjRXo7SiyLO0JeQ3T3q6FEgAnVEykriQz4ci7MtULLOrEJhzkj6CL5t8U
+	 4Vkp/U4fY9Too1qTWd1u5CyPICNs1bpbEhp1l9Wk9RXksQVhbA5JXsDw27ijTDG98n
+	 iE5O3xSu2g4I9EtEDcbXFNfbs+FyLH42O5KyzkJ/SFQvNFmHi+I+21e+tHopqBfXOk
+	 9y12rwjEtriSez+V3OdTqfb8pzAgCcuK+KuZcyiSwtls+VUFyZTacDpVMsICLmckWa
+	 pdUhG2h14cKYA==
+Message-ID: <fa2f9406-4ee8-45f9-a784-b5042e9f4411@kernel.org>
+Date: Mon, 28 Jul 2025 16:44:14 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	cu89AmbK5EqefHsxzg2zghkivLFuv8kpd8tQDOD++dp8SW5T7dMXXi9pgI9U7rLZqFv6X2Ga/NRkqQ2JxcqXIUSVNbxitWwscP7IDOuwJxjvrfiRpgnjru2AkJ+UbF1l1TVu+kfzLTmS/49z5mHGSHCh9BpnbRxg7FPGQzrNtMAJVtbvOY4ccH3RdzCow+V0q3+fYdahcrVTjXbQ8ku1f2GpcP8FA5aeC6Tcu/d6wgGW9MqgKAj89qkZKjsZCGaimaz57KWx8sgrr/b0bJihidXjJyjktxIzHq+GSw6NzOwiy9/39cOmHVf17Gu0Y+EbXBkQ9CN0+33EKSK/y0/AwM3WfYx29UVPgaD2/klavBV5i4HQHWxh+Rbpz2xQdIYIUFV813FOfd4QkH/mpEFedFP/2vrcl76RJNcO5NfBTELtIemFuj3nw7WCXKZCJzZyJfkT2YvADurFFQPSoijW+pTu3KByhwWWXVEaOO5ANVVcd0jq90iQxPDir8gW804spkpJM92A1lth7vHtQYZsgRJ6rWKwp9DvokXlnZtWjg6WgAC0GTuWmqJbzbTqiPW7Yg6bElOGVXw8HXelmZ8kkTdr877XB9AptdoEE3QN7UB2W9ZD9WTV6qv4iSsBg0rP
-X-OriginatorOrg: wdc.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN7PR04MB8532.namprd04.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 73dc5c77-44d1-4a2a-c768-08ddcda8c047
-X-MS-Exchange-CrossTenant-originalarrivaltime: 28 Jul 2025 07:31:22.0263
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: b61c8803-16f3-4c35-9b17-6f65f441df86
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: a2HinNVfc5jpihkjRPaHzXXXDoNsBPyHHcXc/kmRQQh0xtq9reVnennWoMiJdcWfodjjnfrr7Cj06hpr+/cDHM+CYOpJRvDmGxgyJeGKRu4=
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR04MB8195
+User-Agent: Mozilla Thunderbird
+Subject: Re: Improper io_opt setting for md raid5
+To: Yu Kuai <yukuai1@huaweicloud.com>, =?UTF-8?Q?Csord=C3=A1s_Hunor?=
+ <csordas.hunor@gmail.com>, Coly Li <colyli@kernel.org>, hch@lst.de
+Cc: linux-block@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
+References: <ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2dzisd@f5ikoyo3sfq5>
+ <bdf20964-e1ee-45a9-bf24-3396e957ff67@gmail.com>
+ <2b22f745-bbd5-4071-be9b-de9e4536f2d5@kernel.org>
+ <6ab1be6e-380b-d4aa-dd71-f53373a66e29@huaweicloud.com>
+ <655cb7e6-897a-4fab-a8ce-8832f2bc7274@kernel.org>
+ <4767823c-2332-b3e1-67a6-2d7f55b48156@huaweicloud.com>
+ <a1626eef-9846-4824-a899-2fbd8e369fac@kernel.org>
+ <9c6f300a-f78f-de6e-4b99-453df377c7ba@huaweicloud.com>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <9c6f300a-f78f-de6e-4b99-453df377c7ba@huaweicloud.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Jul 28, 2025 / 15:33, Shin'ichiro Kawasaki wrote:
-> Hi all,
->=20
-> I ran the latest blktests (git hash: d24f7445c575) with the v6.16-rc1 ker=
-nel. I
+On 7/28/25 4:14 PM, Yu Kuai wrote:
+>>> With git log, start from commit 7e5f5fb09e6f ("block: Update topology
+>>> documentation"), the documentation start contain specail explanation for
+>>> raid array, and the optimal_io_size says:
+>>>
+>>> For RAID arrays it is usually the
+>>> stripe width or the internal track size.  A properly aligned
+>>> multiple of optimal_io_size is the preferred request size for
+>>> workloads where sustained throughput is desired.
+>>>
+>>> And this explanation is exactly what raid5 did, it's important that
+>>> io size is aligned multiple of io_opt.
+>>
+>> Looking at the sysfs doc for the above fields, they are described as follows:
+>>
+>> * /sys/block/<disk>/queue/minimum_io_size
+>>
+>> [RO] Storage devices may report a granularity or preferred
+>> minimum I/O size which is the smallest request the device can
+>> perform without incurring a performance penalty.  For disk
+>> drives this is often the physical block size.  For RAID arrays
+>> it is often the stripe chunk size.  A properly aligned multiple
+>> of minimum_io_size is the preferred request size for workloads
+>> where a high number of I/O operations is desired.
+>>
+>> So this matches the SCSI limit OPTIMAL TRANSFER LENGTH GRANULARITY and for a
+>> RAID array, this indeed should be the stride x number of data disks.
+> 
+> Do you mean stripe here? io_min for raid array is always just one
+> chunksize.
 
-I made a mistake about the kernel version above: s/v6.16-rc1/v6.16/
+My bad, yes, that is the definition in sysfs. So io_min is the stride size, where:
 
-I ran the latest blktests (git hash: d24f7445c575) with the _v6.16_ kernel,=
- and
-I still observe the 4 failures. Sorry for the confusion.
+stride size x number of data disks == stripe_size.
 
-> observed 4 failures listed below. Comparing with the previous report with=
- the
-> v6.16-rc1 kernel, there is no change in the list. All of the 4 failures a=
-re
-> still observed with the v6.16 kernel.
->=20
-> [1] https://lore.kernel.org/linux-block/4fdm37so3o4xricdgfosgmohn63aa7wj3=
-ua4e5vpihoamwg3ui@fq42f5q5t5ic/
->=20
-> List of failures
-> =3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-> #1: block/005
-> #2: nvme/041 (fc transport)
-> #3: nvme/061 failure (fc transport)
-> #4: nvme/063 failure (tcp transport)=
+Note that chunk_sectors limit is the *stripe* size, not per drive stride.
+Beware of the wording here to avoid confusion (this is all already super
+confusing !).
+
+Well, at least, that is how I interpret the io_min definition of
+minimum_io_size in Documentation/ABI/stable/sysfs-block. But the wording "For
+RAID arrays it is often the stripe chunk size." is super confusing. Not
+entirely sure if stride or stripe was meant here...
+
+
+>> * /sys/block/<disk>/queue/optimal_io_size
+>>
+>> Storage devices may report an optimal I/O size, which is
+>> the device's preferred unit for sustained I/O.  This is rarely
+>> reported for disk drives.  For RAID arrays it is usually the
+>> stripe width or the internal track size.  A properly aligned
+>> multiple of optimal_io_size is the preferred request size for
+>> workloads where sustained throughput is desired.  If no optimal
+>> I/O size is reported this file contains 0.
+>>
+>> Well, I find this definition not correct *at all*. This is repeating the
+>> definition of minimum_io_size (limits->io_min) and completely disregard the
+>> eventual optimal_io_size limit of the drives in the array. For a raid array,
+>> this value should obviously be a multiple of minimum_io_size (the array stripe
+>> size), but it can be much larger, since this should be an upper bound for IO
+>> size. read_ahead_kb being set using this value is thus not correct I think.
+>> read_ahead_kb should use max_sectors_kb, with alignment to minimum_io_size.
+> 
+> I think this is actually different than io_min, and io_opt for different
+> levels are not the same, for raid0, raid10, raid456(raid1 doesn't have
+> chunksize):
+>  - lim.io_min = mddev->chunk_sectors << 9;
+
+See above. Given how confusing the definition of minimum_io_size is, not sure
+that is correct. This code assumes that io_min is the stripe size and not the
+stride size.
+
+>  - lim.io_opt = lim.io_min * (number of data copies);
+
+I do not understand what you mean with "number of data copies"... There is no
+data copy in a RAID 5/6 array.
+
+> And I think they do match the definition above, specifically:
+>  - properly multiple aligned io_min to *prevent performance penalty*;
+
+Yes.
+
+>  - properly multiple aligned io_opt to *get optimal performance*, the
+>    number of data copies times the performance of a single disk;
+
+That is how this field is defined for RAID, but that is far from what it means
+for a single disk. It is unfortunate that it was defined like that.
+
+For a single disk, io_opt is NOT about getting optimal_performance. It is about
+an upper bound for the IO size to NOT get a performance penalty (e.g. due to a
+DMA mapping that is too large for what the IOMMU can handle).
+
+And for a RAID array, it means that we should always have io_min == io_opt but
+it seems that the scsi code and limit stacking code try to make this limit an
+upper bound on the IO size, aligned to the stripe size.
+
+> The orginal problem is that scsi disks report unusual io_opt 32767,
+> and raid5 set io_opt to 64k * 7(8 disks with 64k chunksise). The
+> lcm_not_zero() from blk_stack_limits() end up with a huge value:
+> 
+> blk_stack_limits()
+>  t->io_min = max(t->io_min, b->io_min);
+>  t->io_opt = lcm_not_zero(t->io_opt, b->io_opt);
+
+I understand the "problem" that was stated. There is an overflow that result in
+a large io_opt and a ridiculously large read_ahead_kb.
+io_opt being large should in my opinion not be an issue in itself, since it
+should be an upper bound on IO size and not the stripe size (io_min indicates
+that).
+
+>> read_ahead_kb should use max_sectors_kb, with alignment to minimum_io_size.
+> 
+> The io_opt is used in raid array as minimal aligned size to get optimal
+> IO performance, not the upper bound. With the respect of this, use this
+> value for ra_pages make sense. However, if scsi is using this value as
+> IO upper bound, it's right this doesn't make sense.
+
+Here is your issue. People misunderstood optimal_io_size and used that instead
+of using minimal_io_size/io_min limit for the granularity/alignment of IOs.
+Using optimal_io_size as the "granularity" for optimal IOs that do not require
+read-modify-write of RAID stripes is simply wrong in my optinion.
+io_min/minimal_io_size is the attribute indicating that.
+
+As for read_ahead_kb, it should be bounded by io_opt (upper bound) but should
+be initialized to a smaller value aligned to io_min (if io_opt is unreasonably
+large).
+
+Given all of that and how misused io_opt seems to be, I am not sure how to fix
+this though.
+
+-- 
+Damien Le Moal
+Western Digital Research
