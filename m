@@ -1,48 +1,48 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0D9B7207A0C;
-	Tue, 29 Jul 2025 16:20:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A269226CEB;
+	Tue, 29 Jul 2025 16:25:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753806006; cv=none; b=j9gp3h7UdO/7goEvBNfKuhHNPxCI/9zic4yFq5CW0UjWg4gB17XFuSPkYmrECqFAUcqOMxchkKSqegKKTCgNa8hIssW1OyO8T9Eh+euyjedWjfqwQoF2ac0+9P6RvrEXDl00h7bgGki36IIwzJWTjSIuFtNkVKHedL4Szi3vGGo=
+	t=1753806304; cv=none; b=DOoLd+1OmFs/vfq6YJku1F+idPadD3yD560g5U32ZoFvKL6rM45/A6Y/ccyK0JoYSACEsDHtI+usVQR9YzbpvpR/5vdUe88rZHh9ug/Y0NWHL+R+FNuv6XYUk1tCaJurHJ0dROQsPMujKzcIcpYAtls3whWNSsViFZ1O2zkHZ3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753806006; c=relaxed/simple;
-	bh=xz834h4007/oGqcbudNCDcTtAzbRhiJqFWAJsGu6b4s=;
+	s=arc-20240116; t=1753806304; c=relaxed/simple;
+	bh=SyCSftqdPl8NtlGZzifCpu53xzr59hPAihDgHQzj5iA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cVgBLoNJpYBl4KyLaY/MDwQbgoagh1BM9lNXSSKtW57hH1QXXMXzlM8TYluqbNQHzAA/wPnKMu/l0EQfk7Tm+yVTye4+//davlwx0QwhMIN1H4YrMxEY3Qf0SYkX/CNNEF08QrkfhEARqCVohy+jYe+GewarW5f5Cjnm4vnvA9s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=EZa+QSPB; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=caXJPGwBsCvqVirC6f0H+AwuLa2CQtmDVnBsYMT2lQkXuum46m043qoCoI552oYlD53o7sRz+YMmHmIaDopA4nYisUEmtmREzEdXgzf4EG8VyJKFDXzZhzMK6T5MgVLhDjPZf6bko4qYihkqdqPiV7yDl0bmk5TIQlKApT+RTpA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=PzMyn007; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="EZa+QSPB"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="PzMyn007"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bs0tQ4Qj7zm0ySX;
-	Tue, 29 Jul 2025 16:19:58 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bs10G3bMRzm174J;
+	Tue, 29 Jul 2025 16:25:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1753805997; x=1756397998; bh=ZdlVI0SgJVmqsaSjcEMnRebz
-	60rKATRsCrMenRccPcg=; b=EZa+QSPB1eu0ShsEV4MENTv7Oy6IzAZUNnaybCqI
-	RtkqAaaYh3IeGnNKAafIFolQqNHpRNUWNTA8GTv8PCIMZy4DueVscVEZKuBoP3sE
-	4ZZ5J9nuMVK9Yvoi1JiALDiVt4f7ePU69+MIAcRcPBL2R7vNd0Q05vc1eoqFaUIA
-	J66YzkENbknqBiZdqNdt34t+3L37Nuoc7HCF2FaRwMFP+qN3Zgp3B3len1mOm0CE
-	ANa+CeNJ1Ctpbo3T07E7RalmaEUD6IpndoRx719QhvLg89mXMJnptET3ybUUMGPM
-	0GfYPsBfvLPVNzVC3YDOwQauUtT1QZrDwupKYCQUuVAWAw==
+	 s=mr01; t=1753806299; x=1756398300; bh=SyCSftqdPl8NtlGZzifCpu53
+	xzr59hPAihDgHQzj5iA=; b=PzMyn007yVTXvL5CjYqqh5vmGc64b7t5+J+zJdXc
+	CoAwALZs9xOrqMc/bhHsJ1hjP1WFyBJo4LVU62yTRxJ16t6+4/1cRnNhEThncEks
+	WL2+PWIA9L0iciot3eafstkSMpYPG+7Lew7CK/CAM1XnIAUyeZefY9DxsQeQzlhk
+	rMbNhrLSJecQG/ocyXwyUvvGx2T/C+mx8rWsb9gnpZemp2TpVM+cyyCXPfRhl4nN
+	eprQ89d/BxfcGzFZEfES4jTtlwyx2IPQ63ISodgZ9JUck4d8iaEHjy7ilV2/qUAK
+	wfAK7XqIDo8vlHYSWaqx95v9O3RUF5m3TYLZfGiGfLEYFQ==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id hO1igF0WTK7s; Tue, 29 Jul 2025 16:19:57 +0000 (UTC)
+ id 1QUm-vRmba9L; Tue, 29 Jul 2025 16:24:59 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bs0tK07RHzm174x;
-	Tue, 29 Jul 2025 16:19:51 +0000 (UTC)
-Message-ID: <ccac04ec-fe14-46bd-a482-b9cbb65fadf5@acm.org>
-Date: Tue, 29 Jul 2025 09:19:49 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bs1014X18zm1745;
+	Tue, 29 Jul 2025 16:24:48 +0000 (UTC)
+Message-ID: <0fd86741-f72e-4a52-9d2c-2388c4a26115@acm.org>
+Date: Tue, 29 Jul 2025 09:24:47 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,77 +50,37 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi_debug: add implicit zones in max_open check
-To: Andrew Bernal <andrewlbernal@gmail.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- Damien Le Moal <dlemoal@kernel.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250722203213.8762-1-andrewlbernal@gmail.com>
+Subject: Re: [PATCH V1] ufs: core: Fix interrupt handling for MCQ Mode in
+ ufshcd_intr
+To: Nitin Rawat <quic_nitirawa@quicinc.com>, alim.akhtar@samsung.com,
+ avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
+ huobean@gmail.com, mani@kernel.org, martin.petersen@oracle.com,
+ beanhuo@micron.com, peter.wang@mediatek.com, andre.draszik@linaro.org
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, Palash Kambar <quic_pkambar@quicinc.com>
+References: <20250728225711.29273-1-quic_nitirawa@quicinc.com>
+ <a7cfe930-44b6-41dc-a84b-00f5ba314946@acm.org>
+ <1b418968-2a53-443e-8766-9d280447bb2d@quicinc.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250722203213.8762-1-andrewlbernal@gmail.com>
+In-Reply-To: <1b418968-2a53-443e-8766-9d280447bb2d@quicinc.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 7/22/25 1:32 PM, Andrew Bernal wrote:
-> https://zonedstorage.io/docs/introduction/zoned-storage Open Zones limit
-> is defined as a "limit on the total number of zones that can simultaneously
-> be in an implicit open or explicit open state"
+On 7/29/25 7:37 AM, Nitin Rawat wrote:
+> I reviewed your patch and test it locally=E2=80=94it resolves the issue=
+.
 
-That's not an official standard and hence should not be used to motivate
-this patch. Additionally, I don't see how a zone could be simultaneously 
-in the implicit open and the explicit open state. According to the ZBC-2 
-standard, these states are mutually exclusive.
+Thanks!
 
-devip->max_open is reported to the initiator in VPD page B6
-as the MAXIMUM NUMBER OF OPEN SEQUENTIAL WRITE REQUIRED ZONES. From
-ZBC-2 section 4.5.3.4.2: "If the value in the MAXIMUM NUMBER OF OPEN
-SEQUENTIAL WRITE REQUIRED ZONES field (see 6.5.2) is non-zero and
-the number of zones with a Zone Condition of EXPLICITLY OPENED is equal
-to the value in the MAXIMUM NUMBER OF OPEN SEQUENTIAL WRITE REQUIRED
-ZONES field, then a command that writes to or attempts to open a
-sequential write required zone with a zone condition of EMPTY or CLOSED
-is terminated with CHECK CONDITION status with sense key set to DATA
-PROTECT and the additional sense code set to INSUFFICIENT ZONE RESOURCES
-(see 4.5.3.2.8)."
+> The patch looks good. Since this path handles only UIC, TM, and error=20
+> conditions with no IO for MCQ, we still check for outstanding_reqs and=20
+> UTP_TRANSFER_REQ_COMPL for the error case within ufshcd_threaded_intr i=
+n=20
+> the patch. In my opinion, we can skip these additional checks.
 
-> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> index aef33d1e346a..0edb9a4698ca 100644
-> --- a/drivers/scsi/scsi_debug.c
-> +++ b/drivers/scsi/scsi_debug.c
-> @@ -3943,7 +3943,7 @@ static int check_zbc_access_params(struct scsi_cmnd *scp,
->   	/* Handle implicit open of closed and empty zones */
->   	if (zsp->z_cond == ZC1_EMPTY || zsp->z_cond == ZC4_CLOSED) {
->   		if (devip->max_open &&
-> -		    devip->nr_exp_open >= devip->max_open) {
-> +		    devip->nr_imp_open + devip->nr_exp_open >= devip->max_open) {
->   			mk_sense_buffer(scp, DATA_PROTECT,
->   					INSUFF_RES_ASC,
->   					INSUFF_ZONE_ASCQ);
-> @@ -6101,7 +6101,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
->   	if (all) {
->   		/* Check if all closed zones can be open */
->   		if (devip->max_open &&
-> -		    devip->nr_exp_open + devip->nr_closed > devip->max_open) {
-> +		    devip->nr_imp_open + devip->nr_exp_open + devip->nr_closed > devip->max_open) {
->   			mk_sense_buffer(scp, DATA_PROTECT, INSUFF_RES_ASC,
->   					INSUFF_ZONE_ASCQ);
->   			res = check_condition_result;
-> @@ -6136,7 +6136,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
->   	if (zc == ZC3_EXPLICIT_OPEN || zc == ZC5_FULL)
->   		goto fini;
->   
-> -	if (devip->max_open && devip->nr_exp_open >= devip->max_open) {
-> +	if (devip->max_open && devip->nr_imp_open + devip->nr_exp_open >= devip->max_open) {
->   		mk_sense_buffer(scp, DATA_PROTECT, INSUFF_RES_ASC,
->   				INSUFF_ZONE_ASCQ);
->   		res = check_condition_result;
-
-Do you agree that the current code in the scsi_debug driver follows the
-ZBC standard and also that the above changes would break compatibility
-with the ZBC standard?
-
-Thanks,
+We can only skip the outstanding_reqs check if MCQ is enabled. Andr=C3=A9
+Draszik is working on a patch that will cause ufshcd_intr() to be called
+again for legacy mode so I prefer to keep the outstanding_reqs check.
 
 Bart.
