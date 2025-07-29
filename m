@@ -1,119 +1,150 @@
-Received: from mail-lj1-f173.google.com (mail-lj1-f173.google.com [209.85.208.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mo4-p00-ob.smtp.rzone.de (mo4-p00-ob.smtp.rzone.de [85.215.255.21])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 200C9213E66;
-	Tue, 29 Jul 2025 09:17:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753780662; cv=none; b=nXivYwl8cYnp9uHs5msFpXG6TWqtNXi0y6T6PY0DBEzFNhrB8j9bMQ4viei5OB9G/Tb8RZZzE3jmHAPYh00vqBNnR7KlmhIzdD77N6ydU0RlXpsj6T2PSCmjcOy5I6EWupupP25FkF6xRl6v8eCqpJnhpAeqJkgL7Ww1v+TSKU8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753780662; c=relaxed/simple;
-	bh=WeLGtTB9ar+BFGQpy4yU7poIY2hEMrxYQX6hMxIuhwg=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=qIzNnApQ0KLy6tQMQQDNY7vyZpLNjhVDOmen8C1OOf3ojjp+3ptySfWJWGTRxhBql5MujvHnzDuS3oeyNGyWWN/mpoQwK9uBQ9h1q3nh+F5sX1uHlMhKeOMzpSUbSDGOYdA/dVUhq24DDZLZdlQZWHh9k+mZf6nwY7EP+QPVWm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WM3R40ET; arc=none smtp.client-ip=209.85.208.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 649511A76BB
+	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2025 09:43:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.21
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1753782197; cv=pass; b=LuKafbv6eM+8wwFpwZmU2o9yhl1q92Aq5HfJJCC0j0e0Y4zIbD++UkCSlCpPn0aMGh19xbV87FMil4VoXgBLbK9DDL6by63a2iz8y1w5IZ+vpJxKDQIHZ6pH+dduGx2aMHCg29nWAbHIrysPlIUmdg5UOQBBJ1jMUPl3WZ4qmOA=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1753782197; c=relaxed/simple;
+	bh=/8FNLYmU3Y+SldEx5dHrhpue5/hGTJJKb9AuzxJbu+U=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:References:Cc:
+	 In-Reply-To:Content-Type; b=BjrUTtUoUv4z1xFyDKCKa6MVlxAMwSjTPURvRFuyPFb5NCpISYsZw5SvUzdVyf+OWzf2xkvht5ARlHAzTbCyR05fNA9eEus2agu+Z/gSGYH5Pd7xcZjZfDgqcJu4JhLsZHlMXs3MWXN2TWsn8/fRBCEVZuDUV0X/GNnNa2recq8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=garloff.de; spf=none smtp.mailfrom=garloff.de; dkim=pass (2048-bit key) header.d=garloff.de header.i=@garloff.de header.b=ZRR9gIUw; dkim=permerror (0-bit key) header.d=garloff.de header.i=@garloff.de header.b=CYct/AKu; arc=pass smtp.client-ip=85.215.255.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=garloff.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=garloff.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WM3R40ET"
-Received: by mail-lj1-f173.google.com with SMTP id 38308e7fff4ca-3321296a8cfso8761441fa.0;
-        Tue, 29 Jul 2025 02:17:40 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753780659; x=1754385459; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7MNtzty7rFJgUySAkQlJV2O9frQXPFb7bbFYFWr20zY=;
-        b=WM3R40ETp41Ez6M7Iy4pjJPeeiagPA1iDLQ8aov1L6wqRPX9LO1A3/NmrMqoZmarYO
-         zXNF78qyguhLFHN6eyjGjasSyj4VGNhuHqp2wnaHjCtcwKhuir73FqsHTv6Rs5VNd6Oz
-         OMxO2Rf00qq36aI71y93qSSPFX39egpUexscUbnPAsn7LD7Dpp/riCJ58NQkShZvdblK
-         S9+wbEQZIyP/XShLsbyok5iDbcMbaghhgkr88fiCXYHNT4RGczRYsKy9VTV1troCIlhB
-         wx/9KUVJDs4+I3hCu4dwDb9nZ/DZinyXcKUJGlLVFTzQcNQBEu7CnbQBl1rI1aOur7uw
-         g0SA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753780659; x=1754385459;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=7MNtzty7rFJgUySAkQlJV2O9frQXPFb7bbFYFWr20zY=;
-        b=Q0k3M9S1FeRI7Zofd8fa5WtcYjELrmUN2+nNyDLWL8pky9tVO+9XRofb9JjoSa5lIh
-         xb8J34hZ8quoiDqroonJPqt6vRlUsEJ7WiMXEpILEuveG+6H+dewjmXzy7mq7cP3+mgT
-         Ba4PWktMBkDd1kANmU8yLmqoi1XuECiUNs/A439V9VyIwwgxxwgLS9DL1Q3UE95zSxX9
-         akYrYt2kEaYDjR8hZGx2e/8K3bS8i89aLxwHVMKN/wAxoxshxUtR6aEEZ84j69bzOCRQ
-         o2EVQI4IKcxcjOvZKC2s9HDFkJiH2DhHjgZpMa98DyBR/MhYtWxxDWXG2zVmY2CcuWJD
-         a47Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUJpmuwFO8u5GDEuf2Rf3w2qc/ewSCkqdcRO8opYKvV/hkBN/dl4AE+miBeSvlz+nqb2RxzQPDD94bpTLSF@vger.kernel.org, AJvYcCVsI4EePX2l0ODlVYVb/StG4BHCPbFpOk0RGOWWbWIxCJ+q5zZzIXG3+C2Hh/a5pvzTK/WODxZkRvQIQ2M=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx3YGb+PFKPVzFluJJSvBuLTWydg8GD1No1Qo8UWqrADutfeVKg
-	9izr2v7NI1luibsN4STFq19J+3edkbc7ZS6YQjNkNui/ztDjKquKW63fB+cibXM1UwTREfLHJmw
-	4KdBmrNGx4PiWnQApWVziEDkBuHSeBx1uAA==
-X-Gm-Gg: ASbGncukjNuKlIL1wm+N1xWnKq+Xdjpwc+K1pM+qjH8BE3xArLDpSxLp//1ByJUJAFT
-	rzLbHU0tjfEdMzD72yfTRCPocqdP3RV+O3ZeHO1k7caR5mDMsoemKhgwSlfGfOVL76taV9Mb25P
-	ewzp1oToeuIwv+Lg1qTQlWNr3yopgtlfk70/hvAeNw9LPflXgUXAvSLdm9q+1K/2Sn0XKT5Mgaz
-	sDw37venBxw8b9mQmAJV7pTs9WPH4v9mU2AFo2BSg==
-X-Google-Smtp-Source: AGHT+IGvbJZAYxRsjQOkwEVXEYQywo57A1btn+K9lLr1jxhzGNtgg07v1w1L3IEbQ5Apyb52E4PdbuNWX7sIR3uM1sE=
-X-Received: by 2002:a05:651c:1108:10b0:32b:4932:d5ad with SMTP id
- 38308e7fff4ca-33215441211mr4929531fa.10.1753780658895; Tue, 29 Jul 2025
- 02:17:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=garloff.de header.i=@garloff.de header.b="ZRR9gIUw";
+	dkim=permerror (0-bit key) header.d=garloff.de header.i=@garloff.de header.b="CYct/AKu"
+ARC-Seal: i=1; a=rsa-sha256; t=1753781830; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=VDETIZj02B97LWKVuGFRCV/VLSTKrSTWVW+D+/sw0oRWc2DbqjMIMoBfmbayLIRix+
+    qSNfXucPrkErGj7BXjZZGzovNY1APdMUgdtao7UNwd8zfOAfttY88+YVB3ruFnUee9Zl
+    hXSPCo3U44yI77Hw6E9xapybGNcmMSxq/ywaoZHfVWDl95557TY2t+MymbZsuuQRTkKV
+    w1Owki7v5BL5Gw1IKoWXLD7bPPVw2uz0DYvl8XDfsCyPIdQh5flY+w1PochckTtKhoNE
+    YTWGpt7zWPA8xjL9Yo+qkk2ffeL54bKXSXTQQ540nWDq5PIEK9tRqCCnQx55B4dB1+Nq
+    vqjg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1753781830;
+    s=strato-dkim-0002; d=strato.com;
+    h=In-Reply-To:Cc:References:To:From:Subject:Date:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=8iItuTREvtrZA5OfdSVjpdZ+QrxhITdbyG9UcPtlYV4=;
+    b=e1TdkcYwjK9/TAA7fda0LEFqk49z5nwA0mI+l/glUHD6rxonC+QXgWTDzVEougDRfW
+    SUbHkiSDYB6PKu7vRUW3+AIp1bN3/SXtjnz7eKx3+Ch6juau+oL7tqDV6VYpPNGwgVA0
+    q25IkEvkY5JG6t9vsmIo59KziY55m1xRntWgVUGBKtRfmI3rS9O7fm8uNi5CDzBZ+tOY
+    +ufZFKVi5xbOgz22dTBxmTw8iJkdFTIiHl9apFmxtW5ws4/r/RaPICtT0Sm9i9cR3kvh
+    2Ct94ormm5/V9eDwwsHLoTXLpotV8PN4T+NmlWMXrwX4KOtTNTeejwYiG76shxzi9Gwx
+    8QSA==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo00
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1753781830;
+    s=strato-dkim-0002; d=garloff.de;
+    h=In-Reply-To:Cc:References:To:From:Subject:Date:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=8iItuTREvtrZA5OfdSVjpdZ+QrxhITdbyG9UcPtlYV4=;
+    b=ZRR9gIUw5y5SoFII+3F8q+9+dxsX12XUJYWlzyTUjAc/sPlLAOuEwXK6S75nu5b5Dg
+    JIKIQg3Q0azFVALsztOG6CMQKpr31Rt6XPAvmacJ3aL4Dw64sZ/iltJK5aLuEWk/MCmb
+    ofMw+XZkdTS0CReFUJEuRXsK2FDSEa9eTIZxiDaNAGaeCdr2vkWbbnHPUq7YJ/ocojuE
+    rhHNUBmWT0dRLIS98g0CByLb8TtRd1cuLZ3Y4Y+NmM2r3WXJhTlT8qdKoXsre7tA2mYy
+    G652/hEVY3tdBY+/7ZKOlB95h3192R4Nlzidq2ce2WVHdHC2NSCZwEjLsTjjUNdvrGzV
+    yLhg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1753781830;
+    s=strato-dkim-0003; d=garloff.de;
+    h=In-Reply-To:Cc:References:To:From:Subject:Date:Message-ID:Cc:Date:
+    From:Subject:Sender;
+    bh=8iItuTREvtrZA5OfdSVjpdZ+QrxhITdbyG9UcPtlYV4=;
+    b=CYct/AKuLuVICKCLsQcn7GdsKBRhVN0KusCsh9Srr7VCUoQbMz8NH+090Ad+aI+Upp
+    HBIOn4FqF6AlCcY+WNAw==
+X-RZG-AUTH: ":J3kWYWCveu3U88BfwGxYwcN+YZ41GOdzUdLW+J8VEEt2iJSgSWY4hojoXxE="
+Received: from mail.garloff.de
+    by smtp.strato.de (RZmta 52.1.2 DYNA|AUTH)
+    with ESMTPSA id L60c3716T9bAhax
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Tue, 29 Jul 2025 11:37:10 +0200 (CEST)
+Received: from [192.168.155.137] (ap5.garloff.de [192.168.155.10])
+	by mail.garloff.de (Postfix) with ESMTPSA id 1239462481;
+	Tue, 29 Jul 2025 11:37:10 +0200 (CEST)
+Message-ID: <1b21d928-7b4d-4f97-b0c1-7cf9536f393a@garloff.de>
+Date: Tue, 29 Jul 2025 11:37:07 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250706092522.9298-1-pranav.tyagi03@gmail.com>
- <yq1bjp9rqh5.fsf@ca-mkp.ca.oracle.com> <CAH4c4jKgPv-Mb1=WvOW+jvGMABXcEgaDMxV0Wit32LPgJitekQ@mail.gmail.com>
- <yq1ms8nn2g8.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1ms8nn2g8.fsf@ca-mkp.ca.oracle.com>
-From: Pranav Tyagi <pranav.tyagi03@gmail.com>
-Date: Tue, 29 Jul 2025 14:47:27 +0530
-X-Gm-Features: Ac12FXyXbTfsF4-xJHUYe8uTZLOfsxIie85dgr712UYsyAkEnOXJkJFEnqYZ7zs
-Message-ID: <CAH4c4jJ+BjGyhapXbHqM5HBmSm1ZNzgsYWS-mNQjbc0XpMns4w@mail.gmail.com>
-Subject: Re: [PATCH] target/core: replace strncpy with strscpy
+User-Agent: Mozilla Thunderbird
+Subject: Re: Patch [0/3] Support eager_unmap for non ldpme sd devs
+From: Kurt Garloff <kurt@garloff.de>
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, target-devel@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, skhan@linuxfoundation.org, 
-	linux-kernel-mentees@lists.linux.dev
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+References: <936a460e-eacd-40a8-834a-76021bf3ce8c@garloff.de>
+ <yq1ms8nlhtk.fsf@ca-mkp.ca.oracle.com>
+ <ccc3be81-1c8a-4960-a340-bd424749de55@garloff.de>
+ <10f05317-4282-4d1d-be6d-ea110ce2d54f@garloff.de>
+Content-Language: en-US
+Cc: linux-scsi@vger.kernel.org
+Autocrypt: addr=kurt@garloff.de; keydata=
+ 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
+In-Reply-To: <10f05317-4282-4d1d-be6d-ea110ce2d54f@garloff.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, Jul 29, 2025 at 8:39=E2=80=AFAM Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
->
->
-> Hi Pranav!
->
-> > As far as I looked, I could only find the following 4 instances of
-> > strncpy() for the file target_core_transport.c:
-> >
-> > target_core_transport.c:1115:           strncpy(p_buf, buf, p_buf_len);
-> > target_core_transport.c:1165:           strncpy(p_buf, buf, p_buf_len);
-> > target_core_transport.c:1225:           strncpy(p_buf, buf, p_buf_len);
-> > target_core_transport.c:1279:           strncpy(p_buf, buf, p_buf_len);
-> >
-> > And I have changed all of them in my patch. Kindly point me out to
-> > other instances, if I am missing any.
->
-> Sorry, I guess I didn't read far enough. I was focused on the VPD
-> identifier dump function and whether it could overrun the static buffer.
->
-> > Also, I intended this to be a cleanup patch for the deprecated
-> > strncpy() function and wanted to replace it with strscpy() which is
-> > encouraged. No functional changes were intended.
->
-> In our experience cleanup patches come with a very high risk of
-> introducing regressions. Regressions in the I/O stack could potentially
-> lead to issues such as systems failing to boot or people losing their
-> data. So we generally only merge patches if it can be demonstrated that
-> they fix an actual problem.
->
-> --
-> Martin K. Petersen
+Hi,
 
-Hi Martin,
+On 29.07.25 11:15, Kurt Garloff wrote:
+> with attached script in /usr/local/sbin/set-unmap.sh*
+> *It's somewhat error proof, but probably would not have hit the mark
+> yet for inclusion into a Linux distro.*
 
-I did not know about the risks involved with cleanup patches for the
-I/O stack. I understand that this could lead to regressions and it is best
-to drop this patch. Thank you for reviewing it.
+Well, and add a true into the debug function.
+Apparently bash thinks that an empty function is illegal.
 
-Regards
-Pranav Tyagi
+Cheers,
+
+-- 
+Kurt Garloff <kurt@garloff.de>, Cologne
+
