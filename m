@@ -1,95 +1,35 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40380256C87
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2025 06:13:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 58A06262BE;
+	Tue, 29 Jul 2025 06:25:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753769616; cv=none; b=aumeG72gn6SFYMxtVoTAmDO/2Mb+K4P+eSymLTSQU62pRZeizL5kDDr2UEEvGjhPtQK0hJkA9RQzB/Z+JyUueNRV8Ebner127Ll5nH5aomRRFEBjtyCpgnL+4bCWV/EThzZKxSdc4MNscJgbiWZ0aJD2S8nyjG21BPbMyTCbWTQ=
+	t=1753770316; cv=none; b=I8R2llF8GKAgVc0glyXbx1KfxH+2C+oX/+fvKHAUT+3PGv2sbMjuROxdCEY0d4kona50tU3d96SUV/8cA7R23YXdTfx91jD79MwKsas4229RwdhSKZvKuzmA3l4KB5pqEyY2oyqJvGlUithmvkokveMu5rLocP+aHoVtJ02B35E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753769616; c=relaxed/simple;
-	bh=Za6avbG/kTSnuR3LozRWPpCYhBnr74YBEpeRjHvSUYA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sfVCxIIUf6vvx1qfQJpeXq+6r1BGC63dnd5bzKzl4n4DEeOz2Mj16mO+Xu9kfcYNM0XZjzkjHnRLgnSqn5OyMtqvlS94xkLmSz16eExM9+eXBEw/v3L2P7BqRaIsXAF/E3IRmS+cW6VbXBWznYUcqy2z5YuDSMJm1y9iF1hygZc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LAlgUlU3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=OIFH+agL; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LAlgUlU3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=OIFH+agL; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LAlgUlU3";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="OIFH+agL";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LAlgUlU3";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="OIFH+agL"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 60CBC21275;
-	Tue, 29 Jul 2025 06:13:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1753769612; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I70hZQZVJ/i2Ijczo/FBOLW5wrJGgJWLRk0bf2YcPl8=;
-	b=LAlgUlU30l/sBT3yleHzqXULr3gNFKljjZYk6n8lOW+NGtLFh8lAIAxAzvTqCrzgVO2y/m
-	wmZOmw9T+ERyls5Z1TUuohl1ZgqG5xvHohkGIsaCEJbMWjWrjOUi8IJb+no20MFgylmEUk
-	dMRg/44EnSQEQtU0wBqhAbNpagEdzsw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1753769612;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I70hZQZVJ/i2Ijczo/FBOLW5wrJGgJWLRk0bf2YcPl8=;
-	b=OIFH+agLBT/oczuSTK7TMsvpv8LWZUjd0mFlq1RMKs0IJp+khg3RYuLNF1VxKdrRNUq/Z5
-	fBvqOe1rwyJX2OCw==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=LAlgUlU3;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=OIFH+agL
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1753769612; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I70hZQZVJ/i2Ijczo/FBOLW5wrJGgJWLRk0bf2YcPl8=;
-	b=LAlgUlU30l/sBT3yleHzqXULr3gNFKljjZYk6n8lOW+NGtLFh8lAIAxAzvTqCrzgVO2y/m
-	wmZOmw9T+ERyls5Z1TUuohl1ZgqG5xvHohkGIsaCEJbMWjWrjOUi8IJb+no20MFgylmEUk
-	dMRg/44EnSQEQtU0wBqhAbNpagEdzsw=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1753769612;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=I70hZQZVJ/i2Ijczo/FBOLW5wrJGgJWLRk0bf2YcPl8=;
-	b=OIFH+agLBT/oczuSTK7TMsvpv8LWZUjd0mFlq1RMKs0IJp+khg3RYuLNF1VxKdrRNUq/Z5
-	fBvqOe1rwyJX2OCw==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EC6CD13876;
-	Tue, 29 Jul 2025 06:13:31 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Zi0YOItmiGj5EQAAD6G6ig
-	(envelope-from <hare@suse.de>); Tue, 29 Jul 2025 06:13:31 +0000
-Message-ID: <9e85c424-6722-4315-b125-d0d26fc4574b@suse.de>
-Date: Tue, 29 Jul 2025 08:13:31 +0200
-Precedence: bulk
-X-Mailing-List: linux-scsi@vger.kernel.org
-List-Id: <linux-scsi.vger.kernel.org>
-List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+	s=arc-20240116; t=1753770316; c=relaxed/simple;
+	bh=A0F3+vXcBFEr9aTuAeflnKb4l3r3h80UXkHDV392pDk=;
+	h=Subject:To:Cc:References:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=UAPZhyfmfcDHnGhQpS0HUca90eIlFQwqz90v++cqIX6G0yQq5RzszBZM3eDtZIBk38an8vJn7XemRZgx2Mbj8PmahN4z20eVdc99P6wEpKwVrVM08tZYbRmTz8Kj88gNkNywJoiMdzhtB2TmSJFRJV3Bc9s5asKTb9Zg/pHGOH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4brlh70jLZzYQvLf;
+	Tue, 29 Jul 2025 14:25:11 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id C49C21A1B88;
+	Tue, 29 Jul 2025 14:25:09 +0800 (CST)
+Received: from [10.174.179.143] (unknown [10.174.179.143])
+	by APP4 (Coremail) with SMTP id gCh0CgBXIBFDaYhoV5RrBw--.21629S3;
+	Tue, 29 Jul 2025 14:25:09 +0800 (CST)
 Subject: Re: Improper io_opt setting for md raid5
-To: Yu Kuai <yukuai1@huaweicloud.com>, Damien Le Moal <dlemoal@kernel.org>,
- =?UTF-8?Q?Csord=C3=A1s_Hunor?= <csordas.hunor@gmail.com>,
- Coly Li <colyli@kernel.org>, hch@lst.de
-Cc: linux-block@vger.kernel.org,
+To: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Yu Kuai <yukuai1@huaweicloud.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+ =?UTF-8?Q?Csord=c3=a1s_Hunor?= <csordas.hunor@gmail.com>,
+ Coly Li <colyli@kernel.org>, hch@lst.de, linux-block@vger.kernel.org,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
  linux-scsi@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
 References: <ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2dzisd@f5ikoyo3sfq5>
  <bdf20964-e1ee-45a9-bf24-3396e957ff67@gmail.com>
@@ -101,115 +41,114 @@ References: <ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2dzisd@f5ikoyo3sfq5>
  <9c6f300a-f78f-de6e-4b99-453df377c7ba@huaweicloud.com>
  <fa2f9406-4ee8-45f9-a784-b5042e9f4411@kernel.org>
  <c8c4d140-4ca4-9998-dea3-62341a28c7c5@huaweicloud.com>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <c8c4d140-4ca4-9998-dea3-62341a28c7c5@huaweicloud.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+ <yq1zfcnljtw.fsf@ca-mkp.ca.oracle.com>
+From: Yu Kuai <yukuai1@huaweicloud.com>
+Message-ID: <43515af4-2b4c-7ca0-ef85-44c8906a2f90@huaweicloud.com>
+Date: Tue, 29 Jul 2025 14:25:07 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:60.0) Gecko/20100101
+ Thunderbird/60.9.1
+Precedence: bulk
+X-Mailing-List: linux-scsi@vger.kernel.org
+List-Id: <linux-scsi.vger.kernel.org>
+List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+In-Reply-To: <yq1zfcnljtw.fsf@ca-mkp.ca.oracle.com>
+Content-Type: text/plain; charset=gbk; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-3.01 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	TO_DN_SOME(0.00)[];
-	FREEMAIL_TO(0.00)[huaweicloud.com,kernel.org,gmail.com,lst.de];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	FREEMAIL_ENVRCPT(0.00)[gmail.com];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCPT_COUNT_SEVEN(0.00)[10];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TAGGED_RCPT(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:dkim,suse.de:email]
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Rspamd-Queue-Id: 60CBC21275
-X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
-X-Rspamd-Action: no action
-X-Spam-Score: -3.01
+X-CM-TRANSID:gCh0CgBXIBFDaYhoV5RrBw--.21629S3
+X-Coremail-Antispam: 1UD129KBjvJXoWxGrW3CryUAF4UXw47tFW3GFg_yoW5GryxpF
+	ZIkFyDtrn5Zr1jyw4qya47Xan0v395JF1rCFZ5CrWUWr1rJrW2qryxJryY9rZ3urs7Ww12
+	vw4xZ34DWF1vv3DanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUBF14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_Jr0_Jr4lYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvEwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2Y2ka
+	0xkIwI1lc7I2V7IY0VAS07AlzVAYIcxG8wCY1x0262kKe7AKxVWUtVW8ZwCF04k20xvY0x
+	0EwIxGrwCFx2IqxVCFs4IE7xkEbVWUJVW8JwC20s026c02F40E14v26r1j6r18MI8I3I0E
+	7480Y4vE14v26r106r1rMI8E67AF67kF1VAFwI0_Jw0_GFylIxkGc2Ij64vIr41lIxAIcV
+	C0I7IYx2IY67AKxVWUJVWUCwCI42IY6xIIjxv20xvEc7CjxVAFwI0_Jr0_Gr1lIxAIcVCF
+	04k26cxKx2IYs7xG6r1j6r1xMIIF0xvEx4A2jsIE14v26r1j6r4UMIIF0xvEx4A2jsIEc7
+	CjxVAFwI0_Gr0_Gr1UYxBIdaVFxhVjvjDU0xZFpf9x0JUd-B_UUUUU=
+X-CM-SenderInfo: 51xn3trlr6x35dzhxuhorxvhhfrp/
 
-On 7/28/25 11:02, Yu Kuai wrote:
-> Hi,
+Hi, Martin
+
+�� 2025/07/29 12:23, Martin K. Petersen д��:
 > 
-> 在 2025/07/28 15:44, Damien Le Moal 写道:
->> On 7/28/25 4:14 PM, Yu Kuai wrote:
->>>>> With git log, start from commit 7e5f5fb09e6f ("block: Update topology
->>>>> documentation"), the documentation start contain specail 
->>>>> explanation for
->>>>> raid array, and the optimal_io_size says:
->>>>>
->>>>> For RAID arrays it is usually the
->>>>> stripe width or the internal track size.  A properly aligned
->>>>> multiple of optimal_io_size is the preferred request size for
->>>>> workloads where sustained throughput is desired.
->>>>>
->>>>> And this explanation is exactly what raid5 did, it's important that
->>>>> io size is aligned multiple of io_opt.
->>>>
->>>> Looking at the sysfs doc for the above fields, they are described as 
->>>> follows:
->>>>
->>>> * /sys/block/<disk>/queue/minimum_io_size
->>>>
->>>> [RO] Storage devices may report a granularity or preferred
->>>> minimum I/O size which is the smallest request the device can
->>>> perform without incurring a performance penalty.  For disk
->>>> drives this is often the physical block size.  For RAID arrays
->>>> it is often the stripe chunk size.  A properly aligned multiple
->>>> of minimum_io_size is the preferred request size for workloads
->>>> where a high number of I/O operations is desired.
->>>>
->>>> So this matches the SCSI limit OPTIMAL TRANSFER LENGTH GRANULARITY 
->>>> and for a
->>>> RAID array, this indeed should be the stride x number of data disks.
->>>
->>> Do you mean stripe here? io_min for raid array is always just one
->>> chunksize.
+>> Ok, looks like there are two problems now:
 >>
->> My bad, yes, that is the definition in sysfs. So io_min is the stride 
->> size, where:
+>> a) io_min, size to prevent performance penalty;
 >>
->> stride size x number of data disks == stripe_size.
+>>   1) For raid5, to avoid read-modify-write, this value should be 448k,
+>>      but now it's 64k;
+> 
+> You have two penalties for RAID5: Writes smaller than the stripe chunk
+> size and writes smaller than the full stripe width.
+
+Yes, the internal IO size for raid5 is 4k, however, only full stripe
+write can prevent read-modify-write, which is 448k.
+> 
+>>   2) For raid0/raid10, this value is set to 64k now, however, this value
+>>      should not set. If the value in member disks is 4k, issue 4k is just
+>>      fine, there won't be any performance penalty;
+> 
+> Correct.
+> 
+>>   3) For raid1, this value is not set, and will use member disks, this is
+>>      correct.
+> 
+> Correct.
+> 
+>> b) io_opt, size to ???
+>>   4) For raid0/raid10/rai5, this value is set to mininal IO size to get
+>>      best performance.
+> 
+> For RAID 0 you want to set io_opt to the stripe width. io_opt is for
+> sequential, throughput-optimized I/O. Presumably the MD stripe chunk
+> size has been chosen based on knowledge about the underlying disks and
+> their performance. And thus maximum throughput will be achieved when
+> doing full stripe writes across all drives.
+
+Yes, raid0/raid10/raid5 are all the same logic, multiple aligned
+sequential IO can get the number of data disks times sigle disk
+performance.
+> 
+> For software RAID I am not sure how much this really matters in a modern
+> context. It certainly did 25 years ago when we benchmarked things for
+> XFS. Full stripe writes were a big improvement with both software and
+> hardware RAID. But how much this matters today, I am not sure.
+
+For raid1, write will be less than single disk performance. However, for
+read, the io_opt should be the sum of io_opt of member disks, see
+should_choose_next(), for sequential read, raid1 will switch to next
+rdev to read after reading io_opf of this rdev.
+> 
+>>   5) For raid1, this value is not set, and will use member disks.
+> 
+> Correct.
+> 
 >>
-> Yes.
+>> If io_opt should be *upper bound*, problem 4) should be fixed like case
+>> 5), and other places like blk_apply_bdi_limits() setting ra_pages by
+>> io_opt should be fixed as well.
 > 
->> Note that chunk_sectors limit is the *stripe* size, not per drive stride.
->> Beware of the wording here to avoid confusion (this is all already super
->> confusing !).
+> I understand Damien's "upper bound" interpretation but it does not take
+> alignment and granularity into account. And both are imperative for
+> io_opt.
 > 
-> This is something we're not in the same page :( For example, 8 disks
-> raid5, with default chunk size. Then the above calculation is:
+>> If io_opt should be *mininal IO size to get best performance*,
 > 
-> 64k * 7 = 448k
+> What is "best performance"? IOPS or throughput?
 > 
-> The chunksize I said is 64k...
+> io_min is about IOPS. io_opt is about throughput.
 
-Hmm. I always thought that the 'chunksize' is the limit which I/O must
-not cross to avoid being split.
-So for RAID 4/5/6 I would have thought this to be the stride size,
-as MD must split larger I/O onto two disks.
-Sure, one could argue that the stripe size is the chunk size, but then
-MD will have to split that I/O...
+I mean throughput here.
+> 
 
-Cheers,
+Thanks,
+Kuai
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
