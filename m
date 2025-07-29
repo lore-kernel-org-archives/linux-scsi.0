@@ -1,48 +1,48 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 204D71C3BFC;
-	Tue, 29 Jul 2025 14:39:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC2D420ED;
+	Tue, 29 Jul 2025 16:02:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753799971; cv=none; b=BXNBt06bxBsVtYGZDrbRdT80DITqJZi/4P3z0yDSg6vLKc3PAxh8qiobuXYyVtckF6v1YdXI1+Eam2tojCjakwSKCM+aFVPFrjVGqUhtzYi77w9uZgKHmeuNtjyjFFqA2Vih7H2PwUN8UbDxhBHM37kWP10KqZFnEZ8KFVEVgLo=
+	t=1753804946; cv=none; b=G7/aQ0PLaBMMqgeUkIqBLKEHGDMi2ZKP6HcQ5uFseNo1ByU2nsLJGPefGt+RZAi188QMxQFudV/bEDG4zkn5FEh8awerS1nB2b4pTaMw/Dopj5kW3Dsa4uFTCz5qNJ74J3aubKRsbZn3kqsZ0x6BmoyUXh/SEJHNMIYVjpd1ac4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753799971; c=relaxed/simple;
-	bh=pMU2OSNH3+7WmAmc4OQkGAuEXy2akRIsfAbl+PqskoM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Y7xEPECDWeG8cAjgEaY9sfvh7ffkjCDoujledsMbdbjAE7FrC54Mz/XPQWSYM8XwRZwFCPNc6EaLd4yaqemZc3afu0tVGZFZwWyfg39ZxRJTnRr8QXqaS8C8bORpsMYdBUmgUpZHz75ZPFCsY22eV64qPUavgb+eTbnTDqA3AcA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=UJRrIw/3; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1753804946; c=relaxed/simple;
+	bh=DgOOyW4bnQ1fsfxtNFV0vK/zBqC5/IWaRvqjVw7oaKU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SZY4PM7hkN3aY99koQUGP5KRNi2LXGBmeNHLw+eEzwaUFoj83Vs7AW11LydlGxUl87Z6Z/aMnmdk01HVnboVLIGcynbpN/JtuqOwRn46/kl0iQoMC9Wwrc4a/+nnHKT+N+bM6efx1azzDt53I61QjKpCEktIqqgbkubN2TRDh2E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=IoAm2fx7; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="UJRrIw/3"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56T9qdaF019418;
-	Tue, 29 Jul 2025 14:39:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	ZSqa+8jf1mRhHxk5cDfpJZjqT/nDDTt36/8KgHlImIA=; b=UJRrIw/3iIQx2+/g
-	OEUbiqQyvMvLVJegf9MGsi2xC6vP6ytWnC2RyJFh2jnHJMQwPsAWdfzu+Uz810Z3
-	6J4nQ2zr2kJdxg3RDcj6/Npl0Z3W5PSfUwq4IqJt5vJFMb6uAbfTnEasQJpQgujn
-	PIhodxBFxrAp4eVniAiCAjhQBI1KPjk+VoK/3/7WACAQ27h70/h7Mb/SpYcfftgQ
-	gqMcKZdy3n4+ytxPvT92K/4V2VXF8nhNIzyqWU1Ag9/TOjUCBWwhSzqAS1wZA1dg
-	z3XG+N55K7l3BMz3O5CvF4EI5unA2J8S2ZXWLbsh4DRfqyQzd91LNNipFsRdYQRu
-	JjdvlA==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 484pm2gbyt-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 29 Jul 2025 14:39:01 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 56TEd0mU012782
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 29 Jul 2025 14:39:00 GMT
-Received: from [10.218.7.247] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Tue, 29 Jul
- 2025 07:38:56 -0700
-Message-ID: <1b418968-2a53-443e-8766-9d280447bb2d@quicinc.com>
-Date: Tue, 29 Jul 2025 20:07:33 +0530
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="IoAm2fx7"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bs0V210qwzlgqTt;
+	Tue, 29 Jul 2025 16:02:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1753804936; x=1756396937; bh=DgOOyW4bnQ1fsfxtNFV0vK/z
+	BqC5/IWaRvqjVw7oaKU=; b=IoAm2fx7IGKBJ+/B+kVLOyRQA0b11mRbVYTc+0vU
+	qTdliOFH+U9Md4XrpJuZsfQ+YO+90yZj0ULXvGJ+v7PHHmRKnzvFrYd+e9nKEBbF
+	SKqaTxyUwxMB2y7RlMnIRO8rAQg7SiWLcQ2UfJ/WmGP7tqxwf6vBe0N+ZrMUq2YT
+	NvR6pJeEpMjdTlU6a1/2Nuj/V3BQZsAniOnMFH3hi0LMNIw8Qc4NTidQ8e84KJEh
+	0vd9X7QQuvREyIEXSQgsk1w2B+b3jrMhAMnk659CuZ/at9TeTHz8pPGMMvD049ys
+	RjgvEn4mTldTDKXxTlgo7SNCImw0tM7XO+iU15yiETN7vw==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id IakzHzLVHy8P; Tue, 29 Jul 2025 16:02:16 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bs0Tw4vh8zlgqTs;
+	Tue, 29 Jul 2025 16:02:11 +0000 (UTC)
+Message-ID: <b08bc755-e70d-41a4-8323-30958aa7df86@acm.org>
+Date: Tue, 29 Jul 2025 09:02:10 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,107 +50,22 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1] ufs: core: Fix interrupt handling for MCQ Mode in
- ufshcd_intr
-To: Bart Van Assche <bvanassche@acm.org>, <alim.akhtar@samsung.com>,
-        <avri.altman@wdc.com>, <James.Bottomley@HansenPartnership.com>,
-        <huobean@gmail.com>, <mani@kernel.org>, <martin.petersen@oracle.com>,
-        <beanhuo@micron.com>, <peter.wang@mediatek.com>,
-        <andre.draszik@linaro.org>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>,
-        Palash Kambar <quic_pkambar@quicinc.com>
-References: <20250728225711.29273-1-quic_nitirawa@quicinc.com>
- <a7cfe930-44b6-41dc-a84b-00f5ba314946@acm.org>
+Subject: Re: [PATCH][next] scsi: scsi_debug: make read-only arrays static
+ const
+To: Colin Ian King <colin.i.king@gmail.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org
+Cc: kernel-janitors@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250729064930.1659007-1-colin.i.king@gmail.com>
 Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <a7cfe930-44b6-41dc-a84b-00f5ba314946@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: zPQjVRaClD9MVTJ-ioqRd9_YUinhhsVe
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzI5MDExMiBTYWx0ZWRfX/8cqitGdm+dP
- LDsn6aUjT9k4v7+lecGVERIlS2ZHUAQfr+0S94thQ6+a1LMt6CT/nvX7/ZvY7AtlXNUZzZEmM+t
- sTSOkm/tUz9htpN0fUTtUzK9SQDr7eHfk6K1C5a6OC+2pn/ZTnBXDNAoT+kjCKczvA3KfvQaaK1
- o+GTpQVz8j2BYQ7yH0b2czgdEj/h9ynYEBEldwoQJ0uBHB1251Qu6B3zh07YsV/X98C1txh468L
- Qv85+PHZfdnT9R9ikLw7x838UGmkQ9BofyiSZoDlNwvNgoGnu4pMKUiGJiJsqnpwkvEOEhesJK1
- fB+6aElm5rkUnVtFlnhi8I96jBWCjvdBnlqonHcgnTOYYJ6gSpful3gZes5QnwZ5FkW3GXMRSaW
- 1dTOjGQOz4YihM4FHFBRA5hK285T6Egvv8eG0jPHEfOQU0z4nqXMbV6Cpv7w3GSJKmOwTYo5
-X-Authority-Analysis: v=2.4 cv=HfYUTjE8 c=1 sm=1 tr=0 ts=6888dd05 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8
- a=N54-gffFAAAA:8 a=ihll0qYU2PzsKsSyJ9QA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: zPQjVRaClD9MVTJ-ioqRd9_YUinhhsVe
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-29_03,2025-07-28_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- mlxscore=0 clxscore=1015 bulkscore=0 suspectscore=0 impostorscore=0
- spamscore=0 lowpriorityscore=0 adultscore=0 mlxlogscore=999 phishscore=0
- priorityscore=1501 malwarescore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2507290112
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250729064930.1659007-1-colin.i.king@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 7/28/25 11:49 PM, Colin Ian King wrote:
+> Don't populate the read-only arrays on the stack at run time, instead
+> make them static const. Also reduces overall size.
 
-
-On 7/29/2025 5:11 AM, Bart Van Assche wrote:
-> On 7/28/25 3:57 PM, Nitin Rawat wrote:
->> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
->> index fd8015ed36a4..5413464d63c8 100644
->> --- a/drivers/ufs/core/ufshcd.c
->> +++ b/drivers/ufs/core/ufshcd.c
->> @@ -7145,14 +7145,19 @@ static irqreturn_t ufshcd_threaded_intr(int 
->> irq, void *__hba)
->>   static irqreturn_t ufshcd_intr(int irq, void *__hba)
->>   {
->>       struct ufs_hba *hba = __hba;
->> +    u32 intr_status, enabled_intr_status;
->>
->>       /* Move interrupt handling to thread when MCQ & ESI are not 
->> enabled */
->>       if (!hba->mcq_enabled || !hba->mcq_esi_enabled)
->>           return IRQ_WAKE_THREAD;
->>
->> +    intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
->> +    enabled_intr_status = intr_status & ufshcd_readl(hba, 
->> REG_INTERRUPT_ENABLE);
->> +
->> +    ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
->> +
->>       /* Directly handle interrupts since MCQ ESI handlers does the 
->> hard job */
->> -    return ufshcd_sl_intr(hba, ufshcd_readl(hba, REG_INTERRUPT_STATUS) &
->> -                   ufshcd_readl(hba, REG_INTERRUPT_ENABLE));
->> +    return ufshcd_sl_intr(hba, enabled_intr_status);
->>   }
-> 
-> Hi Nitin,
-> 
-> Thank you for having published this patch. It seems like we both have 
-> been working on a fix independently and without knowing about each 
-> other's efforts. Can you please take a look at this patch and let me
-> know which version you prefer?
-
-Hi Bart,
-
-I reviewed your patch and test it locally—it resolves the issue.
-
-The patch looks good. Since this path handles only UIC, TM, and error 
-conditions with no IO for MCQ, we still check for outstanding_reqs and 
-UTP_TRANSFER_REQ_COMPL for the error case within ufshcd_threaded_intr in 
-the patch. In my opinion, we can skip these additional checks.
-
-Thanks,
-Nitin
-
-> 
-> https://lore.kernel.org/linux-scsi/20250728212731.899429-1- 
-> bvanassche@acm.org/
-> 
-> Thanks,
-> 
-> Bart.
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
