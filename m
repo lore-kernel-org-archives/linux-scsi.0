@@ -1,56 +1,44 @@
-Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87D911F6667
-	for <linux-scsi@vger.kernel.org>; Tue, 29 Jul 2025 22:02:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD7A4192D6B;
+	Tue, 29 Jul 2025 22:24:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753826571; cv=none; b=pKBZJHiRz0aArr+8TYFgvgQth130QtJI1D4PIy0YLpgsMEry2IsDRtlRK68iPRYL9x8kViUdeeGcR6bgdDNdRXTRv6Yrv/D1KbZkJY295rOPwr/9+9FL+JQGYbYNKvYpYVlF13ywxKga0jm+YW0aOLM1LXPEzKJl4TJeiaIcvME=
+	t=1753827860; cv=none; b=P5KNPJObYPkuSmw7At2cLecv2Duzt4J5GIjdbJVYCxCgFardI7AaXmpw3SCVsM2ozswI1apYrBO1+a8YUIrQPwG1B036ses1ug4Nh1bNjlmALixMdqregFvWjhuDL1CnqNl7XCiTWrMVFplqFYTqkwStbOoeNhrNM7pubWPFZvg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753826571; c=relaxed/simple;
-	bh=yRg6eOA2pI7VR9kP3GRY/9wTmCvwN1H2Fw/73v4WPJE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=tcUWZmvNsze+Nt7h16zf2tRlNSV3BSs381dhJxh2d1Sby6iRHdhL2yEgnMuT/uZNcAPi5lLOhO7LfiYY1bowlu7kqWCMKLQrbMFJRJ8ZBkLsnK1kHQ+pP6DtVQecuPWNnGmYD2ENb/JDGagAzrGCQDzr1FuqC3IynAyjkVCQYc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=YcV9Cq+4; arc=none smtp.client-ip=72.215.153.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
+	s=arc-20240116; t=1753827860; c=relaxed/simple;
+	bh=m+dW8qFaDNCO9oHehMLMxPVDKuVPYt5FuFimxhrAGkM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=XP+U1CXIv59eVdLgoWmA4UurYVFxKclnCHB2kBIkofB7Lq34hfkNOAYed3GK3As1JsLQizbkOCf2zve7R+BJ/Lotve8OieUzkQhOeDGvvMQzTDqMCjFeq/FcmjwlADBNSZR1U7TBzT6nP50dF2+qXBt7GSblxXXtYBdWmrfNNjg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LCFt9qDx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="YcV9Cq+4"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id sfeZ1V2l5i9jbe1X; Tue, 29 Jul 2025 18:02:47 -0400 (EDT)
-X-Barracuda-Envelope-From: tonyb@cybernetics.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
-X-ASG-Whitelist: Client
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=drEJ5gCcWsTBvPdShlimCesu062Qnv7hfBvDrm5Ny80=;
-	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:
-	Content-Language:Subject:MIME-Version:Date:Message-ID; b=YcV9Cq+4nqsBwxY6uuIO
-	cjbV7lphu+VBUHIBPbMnu1Rzw7T8wNhWlxvgmJOUjtShH/HemmU9ojRnoh6YBNBD98tl1HTqkmeEr
-	E4P/5+HXD5NQHl1GTDfTKSGc3bpboOjOV56+VDvXzaARzWgGWVyVwUicKc5CE1TvLb9KHB9lVc=
-Received: from [10.157.2.224] (HELO [192.168.200.1])
-  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14114401; Tue, 29 Jul 2025 18:02:47 -0400
-Message-ID: <6b1fd11b-9947-4d60-bf9b-cdd66ba1e39a@cybernetics.com>
-X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Tue, 29 Jul 2025 18:02:47 -0400
-Precedence: bulk
-X-Mailing-List: linux-scsi@vger.kernel.org
-List-Id: <linux-scsi.vger.kernel.org>
-List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
-List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LCFt9qDx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89D95C4CEEF;
+	Tue, 29 Jul 2025 22:24:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753827860;
+	bh=m+dW8qFaDNCO9oHehMLMxPVDKuVPYt5FuFimxhrAGkM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=LCFt9qDxsClSD68kzlnnlGhD+eOvATHtBbZccCr+h3+s0FQkyBnwNNShoYC7cBieT
+	 fk8FMnmfacFVzUTXfFYWln1EhZCNc83YAUuGpvxWOrinvokUD6VUIb3CydxnNsCFQ/
+	 HirmFXPZp77xMYa7xBgRZQFbszVdRFY62G1c6XQ4RkVAuRhnSXntucoNqsZX3sY+NQ
+	 SA44QD6gFchobzO4+zcDETBb4a1qaiMzGCG+a5n3JUPg53CMiFnAhI3ddjRPdDXZS+
+	 cF90ou9Bs72KQNCOtbqkxQ02sdrR8rUYiqKPgtYo7GtFS98arc4Caxeutj8o60L8za
+	 UgGZiQR5lPlag==
+Date: Tue, 29 Jul 2025 16:24:17 -0600
+From: Keith Busch <kbusch@kernel.org>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Yu Kuai <yukuai1@huaweicloud.com>, Damien Le Moal <dlemoal@kernel.org>,
+	=?iso-8859-1?Q?Csord=E1s?= Hunor <csordas.hunor@gmail.com>,
+	Coly Li <colyli@kernel.org>, hch@lst.de,
+	linux-block@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
 Subject: Re: Improper io_opt setting for md raid5
-Content-Language: en-US
-X-ASG-Orig-Subj: Re: Improper io_opt setting for md raid5
-To: "Martin K. Petersen" <martin.petersen@oracle.com>,
- Yu Kuai <yukuai1@huaweicloud.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
- =?UTF-8?Q?Csord=C3=A1s_Hunor?= <csordas.hunor@gmail.com>,
- Coly Li <colyli@kernel.org>, hch@lst.de, linux-block@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- linux-scsi@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-References: <ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2dzisd@f5ikoyo3sfq5>
- <bdf20964-e1ee-45a9-bf24-3396e957ff67@gmail.com>
+Message-ID: <aIlKEWx_0hf-IGQw@kbusch-mbp>
+References: <bdf20964-e1ee-45a9-bf24-3396e957ff67@gmail.com>
  <2b22f745-bbd5-4071-be9b-de9e4536f2d5@kernel.org>
  <6ab1be6e-380b-d4aa-dd71-f53373a66e29@huaweicloud.com>
  <655cb7e6-897a-4fab-a8ce-8832f2bc7274@kernel.org>
@@ -59,39 +47,36 @@ References: <ywsfp3lqnijgig6yrlv2ztxram6ohf5z4yfeebswjkvp2dzisd@f5ikoyo3sfq5>
  <9c6f300a-f78f-de6e-4b99-453df377c7ba@huaweicloud.com>
  <fa2f9406-4ee8-45f9-a784-b5042e9f4411@kernel.org>
  <c8c4d140-4ca4-9998-dea3-62341a28c7c5@huaweicloud.com>
- <yq1zfcnljtw.fsf@ca-mkp.ca.oracle.com>
-From: Tony Battersby <tonyb@cybernetics.com>
-In-Reply-To: <yq1zfcnljtw.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1753826567
-X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 1
-X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 953
-X-ASG-Debug-ID: 1753826567-1cf43947df83650001-ziuLRu
+ <9e85c424-6722-4315-b125-d0d26fc4574b@suse.de>
+Precedence: bulk
+X-Mailing-List: linux-scsi@vger.kernel.org
+List-Id: <linux-scsi.vger.kernel.org>
+List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
+List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <9e85c424-6722-4315-b125-d0d26fc4574b@suse.de>
 
-On 7/29/25 00:23, Martin K. Petersen wrote:
->> b) io_opt, size to ???
->>  4) For raid0/raid10/rai5, this value is set to mininal IO size to get
->>     best performance.
-> For software RAID I am not sure how much this really matters in a modern
-> context. It certainly did 25 years ago when we benchmarked things for
-> XFS. Full stripe writes were a big improvement with both software and
-> hardware RAID. But how much this matters today, I am not sure.
->
-FWIW, I just posted a patch that aligns writes to stripe boundaries
-using io_opt:
+On Tue, Jul 29, 2025 at 08:13:31AM +0200, Hannes Reinecke wrote:
+> > > Note that chunk_sectors limit is the *stripe* size, not per drive stride.
+> > > Beware of the wording here to avoid confusion (this is all already super
+> > > confusing !).
+> > 
+> > This is something we're not in the same page :( For example, 8 disks
+> > raid5, with default chunk size. Then the above calculation is:
+> > 
+> > 64k * 7 = 448k
+> > 
+> > The chunksize I said is 64k...
+> 
+> Hmm. I always thought that the 'chunksize' is the limit which I/O must
+> not cross to avoid being split.
+> So for RAID 4/5/6 I would have thought this to be the stride size,
+> as MD must split larger I/O onto two disks.
+> Sure, one could argue that the stripe size is the chunk size, but then
+> MD will have to split that I/O...
 
-https://lore.kernel.org/all/55deda1d-967d-4d68-a9ba-4d5139374a37@cybernetics.com/
-
-I get about a 2.3% performance improvement with md-raid6, but I have an
-out-of-tree RAID driver that gets more like 4x improvement.
-
-If io_opt means different things to different code, might we consider
-adding another field to the queue limits to give explicit stripe parameters?
-
-Tony Battersby
-Cybernetics
-
+Yah, I think that makes sense. At least the way nvme uses "chunk_size",
+it was assumed to mean the boundary for when the backend handling will
+split your request for different isolated media.
