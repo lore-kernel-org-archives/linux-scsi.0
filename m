@@ -1,449 +1,125 @@
-Received: from mail-qv1-f42.google.com (mail-qv1-f42.google.com [209.85.219.42])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73E4B299937
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 12:36:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 561E5217736;
+	Wed, 30 Jul 2025 12:44:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753878964; cv=none; b=RTJM0+JwMpk3YI2qZL89oyFq7qq241L+GzfmB4+VKth05Dw4ML2tTBdtipUV4xfdh35+AxZdTJEHFUZjr33LBq12fAp2Gfoo+2PoFQWrIga6ihM1yv1bnROxK6b7WAA7+cTYGuiAYHiX5B962Y7pq0Qm3wSjFOa5YvK+mBjfV9k=
+	t=1753879476; cv=none; b=LoivbqubktvMAZ37+JizjXf3+Af8b9jx50BdlCGGbyYAbE2xgS1YcdKA2cjeu5RBApqwUx9Qihqh1bXTUeZhpGLm3pYkHMkdn3dt8wr7asAgtuTKguzGkUID2bs6YLnvU2wsjKMEoxP6SfS46LNwHL8Qbj186ZN0onM4/HzCPjg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753878964; c=relaxed/simple;
-	bh=boCA9V7sdFxzCI0LILmKKujCbe1eahhsFvEftXk76ec=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=Gahfn2iSex9JjtTm5MVF27w1rGMS35A4acZXelMw+08wERGjckSVxth98vGc4cLBqftm+mvWjMrApl+/lRzLE/wQ9lwFVu8O/eVYm/+rDA3g39GQERK6olkrtbNZYGzHeLD0XIdc36IU+eUYjUqRW/lY3YQR1/o+fX9Cpxn96y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=XNapruVw; arc=none smtp.client-ip=209.85.219.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1753879476; c=relaxed/simple;
+	bh=jCoiiWdENTEfMwdXA/0mmzNCCV7rvV0enSCM+Dcen5g=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=ucO2ypipVsz+QjoIvOtPOtDFHvq/J9k5Y11KYwitxpYCkFkO229nbPRyb5394gjxM1xFed6pjAnUSrZJ2oAnvWkFUxBtmq24JeXAGAnf6xu7UQ0z3zq880dfxEVzoeGFh4RoalqonHNWWIeNkP13gQ5PHqTAJZqkwwWuA1+eap0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UQpr8lWe; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XNapruVw"
-Received: by mail-qv1-f42.google.com with SMTP id 6a1803df08f44-70742520205so7870136d6.2
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 05:36:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1753878961; x=1754483761; darn=vger.kernel.org;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=BK+Qe1LGAkGbTPbl50bCcrtO0BrMrgGPtaP514sRKAg=;
-        b=XNapruVwAZ3nr6taQHElCBAURa6wbUV9Bv1/xT3Inz5rYKmAMxxnCNYRfvImJSEClr
-         SnqQO5cwxhBs4BGZQqRbGZAR/9x1SauPrp3Yo+0Ve1eqQCwkZ02qBh14a9yqUysotF19
-         /9DA5aTxuNqSj/c1paWClvaOCS2LctfNoDoEW4mE4Oi4szOYPob2wAZ+BBVtWAB5HJOJ
-         eCwVIwnfU7nohhAvGpp7CAH4axGGZcrpDdJ4VURH5kmw9rr4CXP8NWep9n+TkB9ZkZsQ
-         vTScUW1jJnp8tq162ZjDynnHBYNGcf5Puz5mXWB7I8ht7XK1sI7uk235Dsmch1U6uOiI
-         +mAA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753878961; x=1754483761;
-        h=cc:to:in-reply-to:references:message-id:content-transfer-encoding
-         :mime-version:subject:date:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=BK+Qe1LGAkGbTPbl50bCcrtO0BrMrgGPtaP514sRKAg=;
-        b=UxG79/3iQoqae+OqXj5221E2w7rseq9HVv6i+q3BLRLLpegEvvaeV++4sjPN3STRTZ
-         6xPHADU3hEwWr18MVa8mq6V30FCgR5l7t078OhwcsSDEJr9GW+PuFggbniP+zfRWeMnH
-         vPDb9WNxlx03s1U62BVIeo0nyDM0ynKf7/ydIZHIxc43tpfYSwski9yM0xgDyT4v8/ks
-         8xDVq8VgKDNteqEChctggwxCu4ZWj9W3AXKoDMtmZ9ksHbgs+E0AFuJarShUPXF13SDG
-         E5a5uusUmQDaCjzRfknJhY0wyxbsG3pBtk+2/igRS/Fvx/9e5aaN8dgq6DI+048JV7SN
-         r8ug==
-X-Forwarded-Encrypted: i=1; AJvYcCU+6nNXD491og+v0tN5a8ziTixKpR2qdWrWYrPa7HSzhGmasr8u6S/izlalc7Bxq3Bzn397+Ti9Ne+g@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy+qQFd4FvDrUQL5euJnXIKUJubvNHB1suROiHEE9f6zw7a5fIl
-	K9J7fg0XAlgx+LHwFk1FIoH2Ta8DAMacZ2mIElVkGmzSRa1gcw/+0dUo6ZbDf66HIiw=
-X-Gm-Gg: ASbGnctIOACNqrjqBRkhfMYxw6FIhQf1NBwAv4v688yKFFGaZCDXFQb+hMERbrgC5NI
-	Za/ex8UJuWHamSQmQ1FK9b1LbxBBQfYMkTeqb5zx6q5y89pLirEYu04FEi3FbbPMaHciNs2/pUE
-	cz2+xoXLX/nZk87aO3tULR8jqbVLdrvUjNRRSQ6DkGIp/t3GXNSh2gIce7TIZtCEoIEWtluQMwZ
-	bVf5Ozh1MKYajDHQLwpk/TG7kfvOAoYUz4jTFGTR5oVyoizoTboJuQ6PYci8B9LXGpxBKoCUkYH
-	dAh3mqcgyFUgXg0/Ads1ekD9qAC1MxB8n7DoKIryp3vYz5tXbtypDP/wUbrxpwCU3Jg3q4XZK5S
-	7iqOaAWJra5J7mnLQ6cZBjHUXBW02QBAW0s2AcII=
-X-Google-Smtp-Source: AGHT+IEW0cadrg1ZN1RG03vDTq0f84xR/ulVr2IH6hMSVwOLg+CysA5FEmskNDvHn4664OUgc7jtLg==
-X-Received: by 2002:a05:6214:1c0d:b0:705:b43:10fa with SMTP id 6a1803df08f44-70766d387f8mr19703356d6.1.1753878961384;
-        Wed, 30 Jul 2025 05:36:01 -0700 (PDT)
-Received: from [127.0.1.1] ([178.197.218.223])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-7076a647d47sm10105716d6.9.2025.07.30.05.35.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 30 Jul 2025 05:36:00 -0700 (PDT)
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Date: Wed, 30 Jul 2025 14:35:37 +0200
-Subject: [PATCH 2/2] dt-bindings: ufs: qcom: Split SC7280 and similar
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UQpr8lWe"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 253DCC4CEE7;
+	Wed, 30 Jul 2025 12:44:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1753879476;
+	bh=jCoiiWdENTEfMwdXA/0mmzNCCV7rvV0enSCM+Dcen5g=;
+	h=Date:Subject:From:To:Cc:References:In-Reply-To:From;
+	b=UQpr8lWen9uGW+/WsqGxilWkKjeYM3vz8AsUSBFO/23blC2MIz/HiCD3F4uVdsF2K
+	 N2US1i6G4qGQTMcPsGXVIZ+ygkbq98Z30K0ZLJyQOLdaoc4QagZbdk5MeOyCos/D5X
+	 zk+XBKr6CVoH/1rkYKUV84KXGjCFzNqDawJjML3KXMHsRqdC8KaEwqBmZqxvE6W7iF
+	 xj7Yt+LFe+BMSXWKF+PRSXbaXBlG3UwB28U4KU16eWWhH3cfTqL9DI9Leeof8VR06C
+	 N4xOo8uFbRD+JJtt9PCXyecadxuFAezIWcYKDg1l5kSq0+knY5FhzK5SShwkcGN0wy
+	 iHNnE58tixLSQ==
+Message-ID: <01f2c5d5-6321-49af-b73c-6924f46d6646@kernel.org>
+Date: Wed, 30 Jul 2025 14:44:30 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20250730-dt-bindings-ufs-qcom-v1-2-4cec9ff202dc@linaro.org>
-References: <20250730-dt-bindings-ufs-qcom-v1-0-4cec9ff202dc@linaro.org>
-In-Reply-To: <20250730-dt-bindings-ufs-qcom-v1-0-4cec9ff202dc@linaro.org>
-To: Alim Akhtar <alim.akhtar@samsung.com>, 
- Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
- Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
- Conor Dooley <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
- Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
- Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, 
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-X-Mailer: b4 0.14.2
-X-Developer-Signature: v=1; a=openpgp-sha256; l=11790;
- i=krzysztof.kozlowski@linaro.org; h=from:subject:message-id;
- bh=boCA9V7sdFxzCI0LILmKKujCbe1eahhsFvEftXk76ec=;
- b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBoihGmr6jo7Aor+3UbS6k3j6a1qWb3wcXpYEu+S
- T1fluxxheSJAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCaIoRpgAKCRDBN2bmhouD
- 17SAEACBDvyabLZV9xW21iI3QDfAHNg47RgcHyKNjkIuhv7ybSQQxw5B+DBbI4ZAxwJzZAUdshl
- 7MPRQi2TIxISDnVlYJaihDuewG+yDg+oCzUDOf4Phb3vwAqr/IhNAZXOaHi3jKbrk9vzGiH25gi
- jIlzKZGPJaq4isRelT3qHTuED60497uQ/dEKqLeER2SUv+WuBmt0mUpsQoqUlcCzq7kzWj35uW2
- H7R8LaDnc/KgY4/RyuO2EIb9rxFaP/DnLK1UXXqOO+rvmDTwbXaax8yzDWLpFDDueAaYAvtpgIl
- Dhb4vSG9zG7LhP60gL7+QTjow+9dv5daju1pG4G6QvpItb+1lHjvmMk2qrwaTwaJsqvB3mer1zr
- XYkzTOVtPjQGUytlWbneoBCjgoBS1jWUgeeot9d/OiZdGevgs7ZkD5e2pCdZHRUYU15Wx65OWwL
- 3uyZvMEsa6Ivxdl2dgNWjdVCe5+t1W8PFwcyDF1PpKSWNKlKtLDYMD0Z2nBwdGa3zWHT0w+5y81
- JbpMhsC/U8VGeqsGSBfOAe4YbFxLh5PCKHjKZK1Kh8UjZpT4mlus/R37CM2mjN/f6TB6ELrYs0T
- xcFFPGBet1lxlBXc2WqOh4GQUQRWzABPoGWgMMcSvUsO7eB70356rm06XECyZbWs+tmkT4tihP2
- Pxm5As5ZuT2v5Fg==
-X-Developer-Key: i=krzysztof.kozlowski@linaro.org; a=openpgp;
- fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V1 1/3] dt-bindings: ufs: qcom: Add reg and reg-names
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, mani@kernel.org,
+ alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ andersson@kernel.org, konradybcio@kernel.org, agross@kernel.org
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250730082229.23475-1-quic_rdwivedi@quicinc.com>
+ <20250730082229.23475-2-quic_rdwivedi@quicinc.com>
+ <466a42c4-54f5-45b2-b7f0-2d51695eac8e@kernel.org>
+ <78998e50-a20c-41de-a2b8-a467475210cf@quicinc.com>
+ <bc07c850-c3ba-48bf-8ca2-a6ffda8440e8@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <bc07c850-c3ba-48bf-8ca2-a6ffda8440e8@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-The binding for Qualcomm SoC UFS controllers grew and it will grow
-further.  Split SC7280 and several other devices which:
-1. Do not reference ICE as IO address space, but as phandle,
-2. Have same order of clocks.
+On 30/07/2025 13:33, Krzysztof Kozlowski wrote:
+>>> "extending" but you are not extending at all.
+>>>
+>>> Recent qcom patches love to break ABI and impact users. No.
+>>>
+>>> Best regards,
+>>> Krzysztof
+>>
+>>
+>> Hi Krzysztof,
+>>
+>> Thanks for your feedback.
+>>
+>> Regarding your concern about this being an incompatible change — could you please clarify what specific aspect you believe breaks compatibility? 
+>> From my side, I’ve carefully tested the patch and verified that it does not break any existing DTs. I ran the following command to validate against the schema:
+> 
+> 
+> I missed that earlier list is not actually used for SM8550 and SM8650.
+> The syntax is a bit confusing after looking only at diff, which probably
+> means this binding is getting messy.
+> 
+> I think binding should be just split the constraints are easier to follow.
 
-The split allows easier review and further growth with MCQ IO address
-space.
+I sent a patch for splitting the bindings.
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- .../devicetree/bindings/ufs/qcom,sc7280-ufshc.yaml | 149 +++++++++++++++++++++
- .../devicetree/bindings/ufs/qcom,ufs.yaml          | 107 +++++----------
- 2 files changed, 183 insertions(+), 73 deletions(-)
-
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,sc7280-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sc7280-ufshc.yaml
-new file mode 100644
-index 0000000000000000000000000000000000000000..0f2fe48860a7847819f325bb8170692a82af2ae3
---- /dev/null
-+++ b/Documentation/devicetree/bindings/ufs/qcom,sc7280-ufshc.yaml
-@@ -0,0 +1,149 @@
-+# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
-+%YAML 1.2
-+---
-+$id: http://devicetree.org/schemas/ufs/qcom,sc7280-ufshc.yaml#
-+$schema: http://devicetree.org/meta-schemas/core.yaml#
-+
-+title: Qualcomm SC7280 and Other SoCs UFS Controllers
-+
-+maintainers:
-+  - Bjorn Andersson <bjorn.andersson@linaro.org>
-+
-+# Select only our matches, not all jedec,ufs-2.0
-+select:
-+  properties:
-+    compatible:
-+      contains:
-+        enum:
-+          - qcom,msm8998-ufshc
-+          - qcom,qcs8300-ufshc
-+          - qcom,sa8775p-ufshc
-+          - qcom,sc7280-ufshc
-+          - qcom,sc8180x-ufshc
-+          - qcom,sc8280xp-ufshc
-+          - qcom,sm8250-ufshc
-+          - qcom,sm8350-ufshc
-+          - qcom,sm8450-ufshc
-+          - qcom,sm8550-ufshc
-+          - qcom,sm8650-ufshc
-+          - qcom,sm8750-ufshc
-+  required:
-+    - compatible
-+
-+properties:
-+  compatible:
-+    items:
-+      - enum:
-+          - qcom,msm8998-ufshc
-+          - qcom,qcs8300-ufshc
-+          - qcom,sa8775p-ufshc
-+          - qcom,sc7280-ufshc
-+          - qcom,sc8180x-ufshc
-+          - qcom,sc8280xp-ufshc
-+          - qcom,sm8250-ufshc
-+          - qcom,sm8350-ufshc
-+          - qcom,sm8450-ufshc
-+          - qcom,sm8550-ufshc
-+          - qcom,sm8650-ufshc
-+          - qcom,sm8750-ufshc
-+      - const: qcom,ufshc
-+      - const: jedec,ufs-2.0
-+
-+  reg:
-+    maxItems: 1
-+
-+  reg-names:
-+    items:
-+      - const: std
-+
-+  clocks:
-+    minItems: 8
-+    maxItems: 8
-+
-+  clock-names:
-+    items:
-+      - const: core_clk
-+      - const: bus_aggr_clk
-+      - const: iface_clk
-+      - const: core_clk_unipro
-+      - const: ref_clk
-+      - const: tx_lane0_sync_clk
-+      - const: rx_lane0_sync_clk
-+      - const: rx_lane1_sync_clk
-+
-+  qcom,ice:
-+    $ref: /schemas/types.yaml#/definitions/phandle
-+    description: phandle to the Inline Crypto Engine node
-+
-+required:
-+  - compatible
-+  - reg
-+
-+allOf:
-+  - $ref: qcom,ufs-common.yaml
-+
-+unevaluatedProperties: false
-+
-+examples:
-+  - |
-+    #include <dt-bindings/clock/qcom,gcc-sm8450.h>
-+    #include <dt-bindings/clock/qcom,rpmh.h>
-+    #include <dt-bindings/gpio/gpio.h>
-+    #include <dt-bindings/interconnect/qcom,sm8450.h>
-+    #include <dt-bindings/interrupt-controller/arm-gic.h>
-+
-+    soc {
-+        #address-cells = <2>;
-+        #size-cells = <2>;
-+
-+        ufs@1d84000 {
-+            compatible = "qcom,sm8450-ufshc", "qcom,ufshc",
-+                         "jedec,ufs-2.0";
-+            reg = <0x0 0x01d84000 0x0 0x3000>;
-+            interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-+            phys = <&ufs_mem_phy_lanes>;
-+            phy-names = "ufsphy";
-+            lanes-per-direction = <2>;
-+            #reset-cells = <1>;
-+            resets = <&gcc GCC_UFS_PHY_BCR>;
-+            reset-names = "rst";
-+            reset-gpios = <&tlmm 210 GPIO_ACTIVE_LOW>;
-+
-+            vcc-supply = <&vreg_l7b_2p5>;
-+            vcc-max-microamp = <1100000>;
-+            vccq-supply = <&vreg_l9b_1p2>;
-+            vccq-max-microamp = <1200000>;
-+
-+            power-domains = <&gcc UFS_PHY_GDSC>;
-+            iommus = <&apps_smmu 0xe0 0x0>;
-+            interconnects = <&aggre1_noc MASTER_UFS_MEM &mc_virt SLAVE_EBI1>,
-+                            <&gem_noc MASTER_APPSS_PROC &config_noc SLAVE_UFS_MEM_CFG>;
-+            interconnect-names = "ufs-ddr", "cpu-ufs";
-+
-+            clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-+                     <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-+                     <&gcc GCC_UFS_PHY_AHB_CLK>,
-+                     <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-+                     <&rpmhcc RPMH_CXO_CLK>,
-+                     <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-+                     <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-+                     <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-+            clock-names = "core_clk",
-+                          "bus_aggr_clk",
-+                          "iface_clk",
-+                          "core_clk_unipro",
-+                          "ref_clk",
-+                          "tx_lane0_sync_clk",
-+                          "rx_lane0_sync_clk",
-+                          "rx_lane1_sync_clk";
-+            freq-table-hz = <75000000 300000000>,
-+                            <0 0>,
-+                            <0 0>,
-+                            <75000000 300000000>,
-+                            <75000000 300000000>,
-+                            <0 0>,
-+                            <0 0>,
-+                            <0 0>;
-+            qcom,ice = <&ice>;
-+        };
-+    };
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index fc0f7b8d1cd1c4a2168f29cffcc0c2ff660424df..b34da3df841a11eb50022fa7d091ebfbb33b1d17 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -15,7 +15,16 @@ select:
-   properties:
-     compatible:
-       contains:
--        const: qcom,ufshc
-+        enum:
-+          - qcom,msm8994-ufshc
-+          - qcom,msm8996-ufshc
-+          - qcom,qcs615-ufshc
-+          - qcom,sc7180-ufshc
-+          - qcom,sdm845-ufshc
-+          - qcom,sm6115-ufshc
-+          - qcom,sm6125-ufshc
-+          - qcom,sm6350-ufshc
-+          - qcom,sm8150-ufshc
-   required:
-     - compatible
- 
-@@ -25,25 +34,13 @@ properties:
-       - enum:
-           - qcom,msm8994-ufshc
-           - qcom,msm8996-ufshc
--          - qcom,msm8998-ufshc
-           - qcom,qcs615-ufshc
--          - qcom,qcs8300-ufshc
--          - qcom,sa8775p-ufshc
-           - qcom,sc7180-ufshc
--          - qcom,sc7280-ufshc
--          - qcom,sc8180x-ufshc
--          - qcom,sc8280xp-ufshc
-           - qcom,sdm845-ufshc
-           - qcom,sm6115-ufshc
-           - qcom,sm6125-ufshc
-           - qcom,sm6350-ufshc
-           - qcom,sm8150-ufshc
--          - qcom,sm8250-ufshc
--          - qcom,sm8350-ufshc
--          - qcom,sm8450-ufshc
--          - qcom,sm8550-ufshc
--          - qcom,sm8650-ufshc
--          - qcom,sm8750-ufshc
-       - const: qcom,ufshc
-       - const: jedec,ufs-2.0
- 
-@@ -92,44 +89,6 @@ allOf:
-         reg-names:
-           maxItems: 1
- 
--  - if:
--      properties:
--        compatible:
--          contains:
--            enum:
--              - qcom,msm8998-ufshc
--              - qcom,qcs8300-ufshc
--              - qcom,sa8775p-ufshc
--              - qcom,sc7280-ufshc
--              - qcom,sc8180x-ufshc
--              - qcom,sc8280xp-ufshc
--              - qcom,sm8250-ufshc
--              - qcom,sm8350-ufshc
--              - qcom,sm8450-ufshc
--              - qcom,sm8550-ufshc
--              - qcom,sm8650-ufshc
--              - qcom,sm8750-ufshc
--    then:
--      properties:
--        clocks:
--          minItems: 8
--          maxItems: 8
--        clock-names:
--          items:
--            - const: core_clk
--            - const: bus_aggr_clk
--            - const: iface_clk
--            - const: core_clk_unipro
--            - const: ref_clk
--            - const: tx_lane0_sync_clk
--            - const: rx_lane0_sync_clk
--            - const: rx_lane1_sync_clk
--        reg:
--          minItems: 1
--          maxItems: 1
--        reg-names:
--          maxItems: 1
--
-   - if:
-       properties:
-         compatible:
-@@ -246,10 +205,10 @@ unevaluatedProperties: false
- 
- examples:
-   - |
--    #include <dt-bindings/clock/qcom,gcc-sm8450.h>
-+    #include <dt-bindings/clock/qcom,gcc-sm8150.h>
-     #include <dt-bindings/clock/qcom,rpmh.h>
-     #include <dt-bindings/gpio/gpio.h>
--    #include <dt-bindings/interconnect/qcom,sm8450.h>
-+    #include <dt-bindings/interconnect/qcom,sm8150.h>
-     #include <dt-bindings/interrupt-controller/arm-gic.h>
- 
-     soc {
-@@ -257,9 +216,12 @@ examples:
-         #size-cells = <2>;
- 
-         ufs@1d84000 {
--            compatible = "qcom,sm8450-ufshc", "qcom,ufshc",
-+            compatible = "qcom,sm8150-ufshc", "qcom,ufshc",
-                          "jedec,ufs-2.0";
--            reg = <0 0x01d84000 0 0x3000>;
-+            reg = <0x0 0x01d84000 0x0 0x2500>,
-+                  <0x0 0x01d90000 0x0 0x8000>;
-+            reg-names = "std", "ice";
-+
-             interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-             phys = <&ufs_mem_phy_lanes>;
-             phy-names = "ufsphy";
-@@ -275,19 +237,8 @@ examples:
-             vccq-max-microamp = <1200000>;
- 
-             power-domains = <&gcc UFS_PHY_GDSC>;
--            iommus = <&apps_smmu 0xe0 0x0>;
--            interconnects = <&aggre1_noc MASTER_UFS_MEM &mc_virt SLAVE_EBI1>,
--                            <&gem_noc MASTER_APPSS_PROC &config_noc SLAVE_UFS_MEM_CFG>;
--            interconnect-names = "ufs-ddr", "cpu-ufs";
-+            iommus = <&apps_smmu 0x300 0>;
- 
--            clock-names = "core_clk",
--                          "bus_aggr_clk",
--                          "iface_clk",
--                          "core_clk_unipro",
--                          "ref_clk",
--                          "tx_lane0_sync_clk",
--                          "rx_lane0_sync_clk",
--                          "rx_lane1_sync_clk";
-             clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-                      <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-                      <&gcc GCC_UFS_PHY_AHB_CLK>,
-@@ -295,15 +246,25 @@ examples:
-                      <&rpmhcc RPMH_CXO_CLK>,
-                      <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-                      <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
--                     <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
--            freq-table-hz = <75000000 300000000>,
-+                     <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>,
-+                     <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+            clock-names = "core_clk",
-+                          "bus_aggr_clk",
-+                          "iface_clk",
-+                          "core_clk_unipro",
-+                          "ref_clk",
-+                          "tx_lane0_sync_clk",
-+                          "rx_lane0_sync_clk",
-+                          "rx_lane1_sync_clk",
-+                          "ice_core_clk";
-+            freq-table-hz = <37500000 300000000>,
-                             <0 0>,
-                             <0 0>,
--                            <75000000 300000000>,
--                            <75000000 300000000>,
-+                            <37500000 300000000>,
-                             <0 0>,
-                             <0 0>,
--                            <0 0>;
--            qcom,ice = <&ice>;
-+                            <0 0>,
-+                            <0 0>,
-+                            <0 300000000>;
-         };
-     };
-
--- 
-2.48.1
-
+Best regards,
+Krzysztof
