@@ -1,53 +1,64 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BD7A4192D6B;
-	Tue, 29 Jul 2025 22:24:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 744643D69
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 00:05:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753827860; cv=none; b=P5KNPJObYPkuSmw7At2cLecv2Duzt4J5GIjdbJVYCxCgFardI7AaXmpw3SCVsM2ozswI1apYrBO1+a8YUIrQPwG1B036ses1ug4Nh1bNjlmALixMdqregFvWjhuDL1CnqNl7XCiTWrMVFplqFYTqkwStbOoeNhrNM7pubWPFZvg=
+	t=1753833913; cv=none; b=NC90dA/AacBnQOPO3DnVmclKKhmMl4yGCSr6PbU929ZdhtMaxo19L24CoZh03GXFuqGrctFTMjjPZImckGgf8oJMh5r0d5agSF67V9jGqK52fgWHi+gAfyUBCtstz6wQxFsDb/N8F3hHG8sQPsYRDb0wMv9IOP/K7ipY5UYlFf8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753827860; c=relaxed/simple;
-	bh=m+dW8qFaDNCO9oHehMLMxPVDKuVPYt5FuFimxhrAGkM=;
+	s=arc-20240116; t=1753833913; c=relaxed/simple;
+	bh=DaGkeKEYfGPxiOX5XZ521SqomIWxHWix3NiJ8VBxUwA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XP+U1CXIv59eVdLgoWmA4UurYVFxKclnCHB2kBIkofB7Lq34hfkNOAYed3GK3As1JsLQizbkOCf2zve7R+BJ/Lotve8OieUzkQhOeDGvvMQzTDqMCjFeq/FcmjwlADBNSZR1U7TBzT6nP50dF2+qXBt7GSblxXXtYBdWmrfNNjg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LCFt9qDx; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=rzeRQFOD/tYw+7eCVwi63moBG4D+u/Z45dP9h7c/MqjQKcRsKiLAdQWRouAnk+akx+tKKi36BpknH8mELEaBJvdfcGCoBwfX0bBAqRGtKu92K3rxQ7WADqFpS6ElPEQzd9u9/NrlbCKc/ZODKCD8dtcQ1st/AMIXT0p3V3zlfRM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=XcCmnCT4; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LCFt9qDx"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 89D95C4CEEF;
-	Tue, 29 Jul 2025 22:24:19 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753827860;
-	bh=m+dW8qFaDNCO9oHehMLMxPVDKuVPYt5FuFimxhrAGkM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LCFt9qDxsClSD68kzlnnlGhD+eOvATHtBbZccCr+h3+s0FQkyBnwNNShoYC7cBieT
-	 fk8FMnmfacFVzUTXfFYWln1EhZCNc83YAUuGpvxWOrinvokUD6VUIb3CydxnNsCFQ/
-	 HirmFXPZp77xMYa7xBgRZQFbszVdRFY62G1c6XQ4RkVAuRhnSXntucoNqsZX3sY+NQ
-	 SA44QD6gFchobzO4+zcDETBb4a1qaiMzGCG+a5n3JUPg53CMiFnAhI3ddjRPdDXZS+
-	 cF90ou9Bs72KQNCOtbqkxQ02sdrR8rUYiqKPgtYo7GtFS98arc4Caxeutj8o60L8za
-	 UgGZiQR5lPlag==
-Date: Tue, 29 Jul 2025 16:24:17 -0600
-From: Keith Busch <kbusch@kernel.org>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Yu Kuai <yukuai1@huaweicloud.com>, Damien Le Moal <dlemoal@kernel.org>,
-	=?iso-8859-1?Q?Csord=E1s?= Hunor <csordas.hunor@gmail.com>,
-	Coly Li <colyli@kernel.org>, hch@lst.de,
-	linux-block@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, "yukuai (C)" <yukuai3@huawei.com>
-Subject: Re: Improper io_opt setting for md raid5
-Message-ID: <aIlKEWx_0hf-IGQw@kbusch-mbp>
-References: <bdf20964-e1ee-45a9-bf24-3396e957ff67@gmail.com>
- <2b22f745-bbd5-4071-be9b-de9e4536f2d5@kernel.org>
- <6ab1be6e-380b-d4aa-dd71-f53373a66e29@huaweicloud.com>
- <655cb7e6-897a-4fab-a8ce-8832f2bc7274@kernel.org>
- <4767823c-2332-b3e1-67a6-2d7f55b48156@huaweicloud.com>
- <a1626eef-9846-4824-a899-2fbd8e369fac@kernel.org>
- <9c6f300a-f78f-de6e-4b99-453df377c7ba@huaweicloud.com>
- <fa2f9406-4ee8-45f9-a784-b5042e9f4411@kernel.org>
- <c8c4d140-4ca4-9998-dea3-62341a28c7c5@huaweicloud.com>
- <9e85c424-6722-4315-b125-d0d26fc4574b@suse.de>
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="XcCmnCT4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1753833909;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=T5CG1mCyiMgOuAFC8VT29nFYfEFTff+omQN6RM6ipy0=;
+	b=XcCmnCT4FL0fV8rl2F6QAJKsN1Ukadz02JlYQGNmFu4+5IykXcIebaJJBJ4K5MAcFqF2sb
+	QPTV3sYmfJ3TTdS/tKWjVy+01vDnJydj7DiBfgtAemTbG3brsgll5fK4BqhLRlErqLR2q2
+	aKPOqE0YHOToiMHhUOFFaknyPKVvx3A=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-475-6B5kBh7mPI626SEbmXaVmg-1; Tue,
+ 29 Jul 2025 20:05:05 -0400
+X-MC-Unique: 6B5kBh7mPI626SEbmXaVmg-1
+X-Mimecast-MFC-AGG-ID: 6B5kBh7mPI626SEbmXaVmg_1753833904
+Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E0993180045B;
+	Wed, 30 Jul 2025 00:05:03 +0000 (UTC)
+Received: from my-developer-toolbox-latest (unknown [10.2.16.27])
+	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AE00C1800242;
+	Wed, 30 Jul 2025 00:05:01 +0000 (UTC)
+Date: Tue, 29 Jul 2025 17:04:58 -0700
+From: Chris Leech <cleech@redhat.com>
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: linux-scsi@vger.kernel.org, Nilesh Javali <njavali@marvell.com>,
+	Kees Cook <kees@kernel.org>, Bryan Gurney <bgurney@redhat.com>,
+	"Gustavo A . R . Silva" <gustavoars@kernel.org>,
+	John Meneghini <jmeneghi@redhat.com>
+Subject: Re: [PATCH v2 1/1] scsi: qla2xxx: replace non-standard flexible
+ array purex_item.iocb
+Message-ID: <aIlhqnjTI_7K-Iws@my-developer-toolbox-latest>
+References: <20250725212732.2038027-2-cleech@redhat.com>
+ <20250728185725.2501761-1-cleech@redhat.com>
+ <a1c61211-816e-4479-81ce-e71a0d2b8ec2@embeddedor.com>
+ <aIfoWk_I1V0KUx4T@my-developer-toolbox-latest>
+ <98ef5001-2ad4-4f2c-946e-57251cd264c4@embeddedor.com>
+ <aIgNUw8IfNGOz3tl@my-developer-toolbox-latest>
+ <f9525216-5721-4f9e-99ab-d697506e0e8f@embeddedor.com>
+ <6d8f13c8-405f-4fa0-ad23-09c9e4c5cd54@embeddedor.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -56,27 +67,25 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <9e85c424-6722-4315-b125-d0d26fc4574b@suse.de>
+In-Reply-To: <6d8f13c8-405f-4fa0-ad23-09c9e4c5cd54@embeddedor.com>
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
 
-On Tue, Jul 29, 2025 at 08:13:31AM +0200, Hannes Reinecke wrote:
-> > > Note that chunk_sectors limit is the *stripe* size, not per drive stride.
-> > > Beware of the wording here to avoid confusion (this is all already super
-> > > confusing !).
-> > 
-> > This is something we're not in the same page :( For example, 8 disks
-> > raid5, with default chunk size. Then the above calculation is:
-> > 
-> > 64k * 7 = 448k
-> > 
-> > The chunksize I said is 64k...
+On Mon, Jul 28, 2025 at 08:20:12PM -0600, Gustavo A. R. Silva wrote:
 > 
-> Hmm. I always thought that the 'chunksize' is the limit which I/O must
-> not cross to avoid being split.
-> So for RAID 4/5/6 I would have thought this to be the stride size,
-> as MD must split larger I/O onto two disks.
-> Sure, one could argue that the stripe size is the chunk size, but then
-> MD will have to split that I/O...
+> I just noticed that the new TRAILING_OVERLAP() helper just landed in
+> Linus' tree, and this issue seems to be a perfect candidate for it.
+> 
+> The (untested) patch below avoids the use of `struct_group_tagged()`
+> and the casts to `struct purex_item *`:
 
-Yah, I think that makes sense. At least the way nvme uses "chunk_size",
-it was assumed to mean the boundary for when the backend handling will
-split your request for different isolated media.
+(I was largely basing my use of struct_group on your blog post from a
+few month back, but now there's another new macro!)
+
+Yes, that looks like it would work as long as the driver maintainer
+doesn't object to moving that field around in scsi_qla_host.
+
+I'm getting ready to be away from the computer for a week, so I have to
+leave this for now. Maybe Nilesh has an opinion?
+
+- Chris
+
