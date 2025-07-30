@@ -1,164 +1,134 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qv1-f46.google.com (mail-qv1-f46.google.com [209.85.219.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB760264A7F;
-	Wed, 30 Jul 2025 11:33:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2C039283FE5
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 12:35:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753875193; cv=none; b=Q4ZJ4NSONwLWy0RvO8yFjpXmEhuQcJLFWMSr9EOrNW7ItZMpz4CWbqrMX2fX0IxTXIZqo+EAvymkVaE3JVzXV+UfxhCHxV6SBCrm2P3YRqG6CeL43c3MT/mmgl+VzjDqUPP6v16WMWDKs7H9tSHEpv1/MkPWs199b6xQMGhz9r8=
+	t=1753878957; cv=none; b=tCqaVGM6BEb1KwObEIcnNa1IUpbvREzX3Er4oijmfTihhUUDxL/ltyaSjSDSKDIvmVV9rXZQVCWe+xKLJUdh3T3vjLZ+XfwFVMGbf7iBTAWjICGZvFGc+GcbmgwhwZeSShJyftziv1Rt+nqeh0uAze363/CUt7DgNVGLJTT+ju4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753875193; c=relaxed/simple;
-	bh=0ch3wD2Z47F0F7X58wFKGOUCAeW+CDgG+zpHUo2tKo4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=r4BzTGLk/HcKiq0yqx5sHScsWpv6jV4v1vMEeJZgluEN6QQtFaq1q/0xp+XC+g1/pUkw3INYcaETtb2mV6d23Ay+wy1lZe3ntikfxgFk172oxIESNCU6hYCIgBB9clCfyOqzfqHmhvWqAAAmCdohBlh9id7KXmLEu99P34xNEI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kzu5HJXY; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753878957; c=relaxed/simple;
+	bh=TL1jslkYbGnwFQhxIVDseQLkHj1wo3EdT3LmGuFst8U=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=VabRJn6Vaa5/5y+DLsNr2ThvB90eHtjGk8t0eTTvxOP4EGLXlMjW1oNqB1yos4qfWmk6SiW3Rt2OSfkRDnJFTU0hShvY8Lf//ll9Ly96dvQrIac9KI4zZRcdKygCP271Hj/2HZJ6JORTPIdBBFmFYZMWtiVqutlOrAR+0GDFOyk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=dK9Xc8b0; arc=none smtp.client-ip=209.85.219.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kzu5HJXY"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F1933C4CEE7;
-	Wed, 30 Jul 2025 11:33:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753875193;
-	bh=0ch3wD2Z47F0F7X58wFKGOUCAeW+CDgG+zpHUo2tKo4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=kzu5HJXYvybAlXjdJRAFnNiZFhgPfbRtb2Xd46KAK5iJhNRDlwl+g2+9VZtVwiJrQ
-	 IP8EWSv3rNLJZMi6pctoKCNkRXpZEyfhGd+El0knvArAdpuSd5QdD7aK59q4VW5taE
-	 q4ifjmyVMxBTkGNTf75WvpaSJpzMlaTUFIeNdKJce4XjLyotkHgFW7QGNw17dnBA9k
-	 XFVnHQ1Xt5oFvrxkVyT/FRg/z3nK1idf0U5u9S109q1OYO5SYTE05Q9malbikT9ptP
-	 7LvDHUNvCBtuul7iueOaECQ3H4ITCDGZMsIcr9VuqmANrssAiJYO+E2ouYx0M+aISn
-	 DIoRfLCjbc3Aw==
-Message-ID: <bc07c850-c3ba-48bf-8ca2-a6ffda8440e8@kernel.org>
-Date: Wed, 30 Jul 2025 13:33:08 +0200
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="dK9Xc8b0"
+Received: by mail-qv1-f46.google.com with SMTP id 6a1803df08f44-70742520205so7869846d6.2
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 05:35:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1753878955; x=1754483755; darn=vger.kernel.org;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=CjCcWWa4qk/EoiiwDodc2dHJ7c4wzCVNfTSg63QPfzs=;
+        b=dK9Xc8b0CDWCFOc4cVm3iLvlrhsS5bi2v7X19qbRVe+Tu+Q0zNCigUeD8o5XG++JDy
+         crL/1/zZxl17ICAz0v0y80So5kBTPkV6lPL9YjgOaERMKLe00s3EoJgoC6bhICPaIA70
+         meLf8mfFpVA2Z5cR5hPxvqOMB7jRsfe926IRMxTJqtXGrTcnuB5YE7zTqXhUqbP5suuK
+         cp5sbCjP6BrX8NfWpXVfW9oFE6UGwmLr3SJQ+PS41zm3m9+p7AcUFNqsus6dro5cSW5q
+         IbgH+kTG3EMxqzUdriUOY/GyN0ZUlmedExgnFgWrjHBeBVjUcFj7D/Z56FQhRO/3viW5
+         3Weg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753878955; x=1754483755;
+        h=cc:to:content-transfer-encoding:mime-version:message-id:date
+         :subject:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CjCcWWa4qk/EoiiwDodc2dHJ7c4wzCVNfTSg63QPfzs=;
+        b=tT7pIh/QSSCclg9LQs9r4bDimJvhqhmFV+biJDo1X3tdmLQ1W11jYKO7D2bQ11jafW
+         sKtiPOTUbcDXE0F5g/Rkj240YQ4PXGGl/lGwWUEYDHLtN54NaBBXMf4KPJd2o2qzpf2k
+         GwcVPi/KLMmMiR6InHzTktmfjFvQWVCwO4qoA4mEIU30WvhLH15XFtiP7YS3lnMYHpyt
+         vvMtNyfW1nNt8hQ4BbsSQL8KOUz88Moz+nRjZd3biDsA9q9OcdUWb1GbjlflU3XCBGno
+         QOsehRC1PR1nKSGCu8fSLHo5FG+RaUffH2oUL+YhDRbPAcVI5RdfZpavL8wnn4N1cp6s
+         TBsg==
+X-Forwarded-Encrypted: i=1; AJvYcCX3Dyc06xizJQYYSioCwwtdsO3slbxqYcPacCoI9WDy6NgWBy91zi1dVLGzoX4/GqqImex5cJj1Z6Gr@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz95fBI0n5vlrGbC7K6pLlwoP9PWO6UCFJuQXf9lqVTVa2p2QnQ
+	YpVbZ9TtL/SrXkmFzEnL6gvY7cvrPm39ka8QXneK0Dgnq6BjL09ox3U/hNc8KSpqXBD3eNahDWv
+	OnEcY
+X-Gm-Gg: ASbGncsLrYvWy2fFL90UrlB5RVVJ3P3iEmX7V4xLD3oNRw2XJhtr6vJdKlzCUv/bnhM
+	dyMXGJ1v3ry8zRBnNnJkqCQZy0/QsWITyhN1YyCYx8BFR+4d23ivwstYeYcR8mLf1eXVN7c7dII
+	oOGMPNJJy/Vce4dv3Gtz1+2Kd2h1J8cX6Gzt/dpEXOftQ//tvce4bEXbkDBxUu69O0AJy4hQpnB
+	9ZAX4lxVjw67aGEOTGU5BBN3O4GJ/XBF1enGPewvL26XJxs9sBn+zgNaV9M4mxMyz42Zr7twbOO
+	69kY0+GWZMjsZdLuVDjADGNX+IhQlbDmEoS9MnjJffL8IGN6+hOpOEBruYzfTUxJVWLJYSYd1/k
+	WWBYQEiu6vmTS3dv40S321nC28rfKhHkob9+IZbc=
+X-Google-Smtp-Source: AGHT+IGwmNhyLd0DJNnkCT8/jZWKIr1CBuLvQyt8ZpffWXjV7NHNiRP2B0ipuCo3xhp1GZHIOlRERQ==
+X-Received: by 2002:a05:6214:cae:b0:707:4daf:62f with SMTP id 6a1803df08f44-70767230172mr19957096d6.7.1753878954791;
+        Wed, 30 Jul 2025 05:35:54 -0700 (PDT)
+Received: from [127.0.1.1] ([178.197.218.223])
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-7076a647d47sm10105716d6.9.2025.07.30.05.35.51
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 30 Jul 2025 05:35:54 -0700 (PDT)
+From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+Subject: [PATCH 0/2] dt-bindings: ufs: qcom: Split SC7280 and similar into
+ separate file
+Date: Wed, 30 Jul 2025 14:35:35 +0200
+Message-Id: <20250730-dt-bindings-ufs-qcom-v1-0-4cec9ff202dc@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 1/3] dt-bindings: ufs: qcom: Add reg and reg-names
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, mani@kernel.org,
- alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
- robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- andersson@kernel.org, konradybcio@kernel.org, agross@kernel.org
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250730082229.23475-1-quic_rdwivedi@quicinc.com>
- <20250730082229.23475-2-quic_rdwivedi@quicinc.com>
- <466a42c4-54f5-45b2-b7f0-2d51695eac8e@kernel.org>
- <78998e50-a20c-41de-a2b8-a467475210cf@quicinc.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <78998e50-a20c-41de-a2b8-a467475210cf@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAJcRimgC/x3MTQ5AMBBA4avIrE0yiPi5ili0OpiFooNIxN01l
+ t/ivQeUg7BCmzwQ+BKV1UdkaQLDbPzEKC4acspLqgpCd6AV78RPiueouA/rgk1NVVOydWQMxHQ
+ LPMr9b7v+fT+nToDBZgAAAA==
+X-Change-ID: 20250730-dt-bindings-ufs-qcom-980795ebd0aa
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, 
+ Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, 
+ Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+X-Mailer: b4 0.14.2
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1146;
+ i=krzysztof.kozlowski@linaro.org; h=from:subject:message-id;
+ bh=TL1jslkYbGnwFQhxIVDseQLkHj1wo3EdT3LmGuFst8U=;
+ b=owEBbQKS/ZANAwAKAcE3ZuaGi4PXAcsmYgBoihGhB/RGRzrg5Tdt3rmYaNBElttGKFnKKlPZR
+ CgVwij/l3eJAjMEAAEKAB0WIQTd0mIoPREbIztuuKjBN2bmhouD1wUCaIoRoQAKCRDBN2bmhouD
+ 18OJD/4wpVCzAyd22DzRzFtEz75KU8fQ6hsp8mAxyM5GPjK00GuPcR+lthX4JfMXIiHGBd0n2Sb
+ iHQ8uj9GGEOUlxYlNPI4BtyDqVu5K9yuF3PMjpYriQwuYacPVczW/zgEUpHg2oL8VJtTJF6kxch
+ 88h1ivpTvFLKdF8Q+CKKQbhbfTAy9Eixrsn9ZsZORDYbbb897TJ6a6uTqnEPXLb5octEOyihwgK
+ B7EfkrHg6XhBoGh4F3ZNrPfg3moQDO23eNnSLwd0bW2VaXLPcSx0tEyU2Rjzu9y40xR/QTWtKJz
+ g2QCZdj98DV3RcwW/Pc6YqoUZCN5m4bH+brGElQgCuWAM3T7hwuKvWrgshygIzXOfPFBSuwNUNr
+ /ruUjfYMIJ8mT+Bw148mb8b2wg1o3ojuWvsgZ6JAPm5hv3rCOyD+Aer9FIKe6m7X3m8Dk7SLCMw
+ w5X6ufiK5nz9svvavOhsEVa60kYvI6d1mXEMt5brtjONMZFG0hgCBAtUuYCV5hbrVbXYydr0qgO
+ +4Fdgni0ISqZG9AlSMCcqX1UcMObmIrowhLW7qij33qA2mEHXb6fHBsupeX+ArcaSteQi4Jwkyk
+ RTmE5ZX0XBpmUHWrcqVJGjfkNB1swDtzPF3Qx5mg4rQJMpPh1wbrm08M4u4xUHjC+1h9XeO5J1O
+ jRaoPR+XZc8wLBQ==
+X-Developer-Key: i=krzysztof.kozlowski@linaro.org; a=openpgp;
+ fpr=9BD07E0E0C51F8D59677B7541B93437D3B41629B
 
-On 30/07/2025 12:27, Ram Kumar Dwivedi wrote:
-> 
-> 
-> On 30-Jul-25 2:41 PM, Krzysztof Kozlowski wrote:
->> On 30/07/2025 10:22, Ram Kumar Dwivedi wrote:
->>> Update the Qualcomm UFS device tree bindings to support Multi-Circular
->>> Queue (MCQ) operation. This includes increasing the maximum number of
->>> register entries from 2 to 3 and extending the accepted values for
->>> reg-names to include "mcq_sqd" and "mcq_vs".
->>>
->>> These changes are required to enable MCQ support via Device Tree for
->>> platforms such as SM8650 and SM8750.
->>>
->>> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
->>> ---
->>>  .../devicetree/bindings/ufs/qcom,ufs.yaml     | 21 ++++++++++++-------
->>>  1 file changed, 13 insertions(+), 8 deletions(-)
->>>
->>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>> index 6c6043d9809e..de263118b552 100644
->>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
->>> @@ -86,12 +86,17 @@ properties:
->>>  
->>>    reg:
->>>      minItems: 1
->>> -    maxItems: 2
->>> +    maxItems: 3
->>>  
->>>    reg-names:
->>> -    items:
->>> -      - const: std
->>> -      - const: ice
->>> +    oneOf:
->>> +      - items:
->>> +          - const: std
->>> +          - const: ice
->>> +      - items:
->>> +          - const: ufs_mem
->>> +          - const: mcq_sqd
->>> +          - const: mcq_vs
->>
->> This is incompatible change and commit msg is inaccurate here. It says
->> "extending" but you are not extending at all.
->>
->> Recent qcom patches love to break ABI and impact users. No.
->>
->> Best regards,
->> Krzysztof
-> 
-> 
-> Hi Krzysztof,
-> 
-> Thanks for your feedback.
-> 
-> Regarding your concern about this being an incompatible change — could you please clarify what specific aspect you believe breaks compatibility? 
-> From my side, I’ve carefully tested the patch and verified that it does not break any existing DTs. I ran the following command to validate against the schema:
+The binding for Qualcomm SoC UFS controllers grew and it will grow
+further.  It already includes several conditionals, partially for
+difference in handling encryption block (ICE, either as phandle or as IO
+address space) but it will further grow for MCQ.
 
+See also: lore.kernel.org/r/20250730082229.23475-1-quic_rdwivedi@quicinc.com
 
-I missed that earlier list is not actually used for SM8550 and SM8650.
-The syntax is a bit confusing after looking only at diff, which probably
-means this binding is getting messy.
-
-I think binding should be just split the constraints are easier to follow.
+The question is whether SM8650 and SM8750 should have their own schemas,
+but based on bindings above I think all devices here have MCQ?
 
 Best regards,
 Krzysztof
+
+---
+Krzysztof Kozlowski (2):
+      dt-bindings: ufs: qcom: Split common part to qcom,ufs-common.yaml
+      dt-bindings: ufs: qcom: Split SC7280 and similar
+
+ .../devicetree/bindings/ufs/qcom,sc7280-ufshc.yaml | 149 +++++++++++++++++++
+ .../devicetree/bindings/ufs/qcom,ufs-common.yaml   |  67 +++++++++
+ .../devicetree/bindings/ufs/qcom,ufs.yaml          | 160 +++++----------------
+ 3 files changed, 251 insertions(+), 125 deletions(-)
+---
+base-commit: d7af19298454ed155f5cf67201a70f5cf836c842
+change-id: 20250730-dt-bindings-ufs-qcom-980795ebd0aa
+
+Best regards,
+-- 
+Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
+
