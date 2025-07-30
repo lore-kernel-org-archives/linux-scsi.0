@@ -1,159 +1,253 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from omta036.useast.a.cloudfilter.net (omta036.useast.a.cloudfilter.net [44.202.169.35])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA0321DFD96
-	for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 16:25:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A09D42222C4
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 20:55:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.35
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753892716; cv=none; b=R0+4VFYFsqgwQ09uMxxvmVh41D2tL3UdsJOAdjTHigmXzqKlTt66JU5LNxjd2OBjmmg0sTwg6H4odGfKwOyU73LKakYG9qI0kmpIRH/K+28N6mQCsj3E7733H3Rjbj/CX9/CYb+pkI0sT0nri4/KwKTVinaeJC69tJiyO6QGA4Y=
+	t=1753908935; cv=none; b=ONyRyHC1zj8NyH0+S/uY/F6rU5VANHsOJLboyDW+n7n2bQvrXIu55oqH9ms1I3ZAfevtaqh1GHpZX1pt768gVJjFuG1MlMqcHFqhbtsdIcqoqrtv+jhUoS47fn9bPeiNruLJDl/i9VZdMY4/owXyEssAviZadq8sXfYAAN2OX1I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753892716; c=relaxed/simple;
-	bh=EI0bMvYv5hSpvnTUf2HMOBA5DoaU+c0LboV5ElVAY00=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 Cc:Content-Type; b=DKpfqAAP8fYnDBwWgHlwxrfh13K9J1j5iuLxF6QemvNAnf8++PMO3Dh4BR3wVwt87uh79jCqBUwwAG/ihsqpxK9NuluZ8kiYPgAPFCbTOhc73euO48f1HAHjquniWu0ulQwhRIqYtyWwTxRbw3HO9S5iJXsYE6RcasEpclQqaLs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nBbnRBXd; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1753908935; c=relaxed/simple;
+	bh=A8Aw+mPrgehuW8bHrr+C5YTDn03XNzH2c2IiRR3j5WY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=I5Vl5Z8WUz8JYKjheCfTynYdYZGfAwXWkofS9G8dy+4jGad/lUNDPDQL58qWFz1xPuAVGBNsVK0mQalz0SMuTUZq1+JNdhLoN/8H0w1kU/J6N6R/cpF3V2Tn4tJNSp7HqAnr48nF7QCck8kQb5Sr3ecdq4on02lZPF8wDGQO5vE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=NbkHkpA7; arc=none smtp.client-ip=44.202.169.35
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nBbnRBXd"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-24099fade34so769595ad.0
-        for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 09:25:14 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1753892714; x=1754497514; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=E9XySPgRxGKmddhBeo4PW8+eY+WMXaAjgeL+q5qCHG4=;
-        b=nBbnRBXdoZHjwYvmM+loUeIjj5Ln4jufldqxQg8o9YARYGKU9VN5kYRQtVrFy9Yyum
-         LsUTVisxfAgrM3Ty4lfXqS8venvoPVYsncw8JBbQrvuVXyUX0MxTQ56CA0DWWf9unqcb
-         BXT0Co58FVIMCbUrYoDoxkLgaxIIU2sLJq5O4fjInLhkJw+DKmVTz0z/QK4Oc5iYUdaA
-         bdU8viCqX6yiH5AXngtU29uRa7Oom+FtqfMv35sUgAp5fOXymVcVksDSjQqzwDax8/zE
-         WADO0F4Os9bTddILA8yaEp9TSLSXuU5gB8J24sKI0arufhfQvhhaVMYuzD0HJu1eeFcc
-         GKfg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753892714; x=1754497514;
-        h=content-transfer-encoding:cc:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=E9XySPgRxGKmddhBeo4PW8+eY+WMXaAjgeL+q5qCHG4=;
-        b=MtZ4GoWvR6h+XWPFCTib0RuAEaeOl931a6EcXt5arYWitIk+XRkxtgJHs0yLlrfIws
-         M4NwXrYDnmAo0x1jnKxMeqEOoSKTSfObIRZOB0K3bE9iEtXkrxRsiUc0gVw/tacJTxAl
-         vuJkd3fu0f8heYUYIwSEPGmb3D9nSO79BCe/qz6WNuHuDkyHXegGUqgfopKdQuxtUrj8
-         1JcyMD2MMfbj/JmjUuRKQfW+qmwgn7M5q8LdcLLmkyZdnzn0M3PL4pCBvlh17TulAsT3
-         g0HdJmbCFREPAVB8iLcRztICDbPoUakcflEzDwKjSo9GR8gjLqtwiNw2ixJDsrFjjgOI
-         8Hpg==
-X-Gm-Message-State: AOJu0Yxjo4vk+TNiACWt8jeBd/oTctjCsja6EPxrIPwniIG1mZ8bW8FY
-	Lvn43rkTSimpEhnInC3V9ZIPvWRn9FBYs9Jk3h7szTfDFLEjB+JjWpFd4Y/njMXpy5EummNF6+x
-	zHLBysC8fKVKPlwN+BpVEpN6xJD03G0TFa3fpuBgsMQ==
-X-Gm-Gg: ASbGncuhKjTaLJPnZIVCRQk7k6DTc36FFOiH+SsYb7h3jB7tJbNxbkca/huC09b2bg1
-	dOIv4MLmohM9yQwzpO/S7w+8LoHp3fSJjvTGvYdu50+VDNx8DnoAYP7Ggb6IxaN/phedOt86/Jg
-	9pFhBmRG5FYK6w4gkmALF1KRwmLYf5tdRn2+aGBLk+a7Entq28lTbZyNUY9vJ1TjoZkippDIFsk
-	/Pg80QCN6bSSevKpa1T5ocCunPsGi9nP4bPFtrDpA==
-X-Received: by 2002:a17:903:b4f:b0:240:92cc:8fcf with SMTP id
- d9443c01a7336-24096b34743mt53106115ad.49.1753892713686; Wed, 30 Jul 2025
- 09:25:13 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="NbkHkpA7"
+Received: from eig-obgw-5001b.ext.cloudfilter.net ([10.0.29.181])
+	by cmsmtp with ESMTPS
+	id hD3xupJdP1jt6hDpkutYEk; Wed, 30 Jul 2025 20:55:32 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+	by cmsmtp with ESMTPS
+	id hDpjuTG185MXOhDpkuImSf; Wed, 30 Jul 2025 20:55:32 +0000
+X-Authority-Analysis: v=2.4 cv=et7fzppX c=1 sm=1 tr=0 ts=688a86c4
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=elAakMZAzsQyfqpwiXQzJA==:17
+ a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=7T7KSl7uo7wA:10 a=20KFwNOVAAAA:8
+ a=_Wotqz80AAAA:8 a=TJLAJ6qVr0XwJw5lu-gA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+ a=buJP51TR1BpY-zbLSsyS:22 a=xYX6OU9JNrHFPr8prv8u:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=dHh2fkqoc0wYykD0z2uFJ60z/WmFdyPmF/+FyL5LJiU=; b=NbkHkpA7Qj256LuQbnPD8kq+Dr
+	fxMLagQqLY/Jq9iVzuDGY5vM6L1mTpLwF2R8oP0l/GqCLdPGaz947A38rFSkBpW1M4DeXHiUyF82q
+	WRzO3YIjgaLuMu20D+QIj3eeAsQV0it5yGE6NKvyt2cDoqYKunzqGO0T0u8gxy+57LrxSA92ZMOaG
+	pHWe+5Xp0e7/kVcleNiiiI/SRBd3ZGQ9rapykppamVN1qji2KC6hYNBhbbHXrbKiU01+/giEg5X5K
+	2TmeoZlHjc7hmuvbYg14cYs1/GIzkL9kOo+2qfukjxbZ5gMKsUTIgkEyB9J1FwetwELKAcRCQYe4F
+	AB35WiVA==;
+Received: from [177.238.16.239] (port=60462 helo=[192.168.0.21])
+	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.1)
+	(envelope-from <gustavo@embeddedor.com>)
+	id 1uhDpi-000000018m0-3DLT;
+	Wed, 30 Jul 2025 15:55:31 -0500
+Message-ID: <3e1ef565-3f3b-4fd9-8ae7-2af3d2581f99@embeddedor.com>
+Date: Wed, 30 Jul 2025 14:55:23 -0600
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250722203213.8762-1-andrewlbernal@gmail.com> <ccac04ec-fe14-46bd-a482-b9cbb65fadf5@acm.org>
-In-Reply-To: <ccac04ec-fe14-46bd-a482-b9cbb65fadf5@acm.org>
-From: Andrew Bernal <andrewlbernal@gmail.com>
-Date: Wed, 30 Jul 2025 12:25:02 -0400
-X-Gm-Features: Ac12FXz0zlijZdaLwoj5plPalzSt0irQiMMJ3O6QVUPamPWsNCHOxHvejkCXcOM
-Message-ID: <CAPj058cx390W=GE9fFXKY101GL7S=XNn=0YSTfojkvhybKEBvA@mail.gmail.com>
-Subject: Re: [PATCH] scsi_debug: add implicit zones in max_open check
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/1] scsi: qla2xxx: replace non-standard flexible array
+ purex_item.iocb
+To: Bryan Gurney <bgurney@redhat.com>
+Cc: Chris Leech <cleech@redhat.com>, linux-scsi@vger.kernel.org,
+ Nilesh Javali <njavali@marvell.com>, Kees Cook <kees@kernel.org>,
+ "Gustavo A . R . Silva" <gustavoars@kernel.org>,
+ John Meneghini <jmeneghi@redhat.com>, linux-hardening@vger.kernel.org
+References: <20250725212732.2038027-2-cleech@redhat.com>
+ <20250728185725.2501761-1-cleech@redhat.com>
+ <a1c61211-816e-4479-81ce-e71a0d2b8ec2@embeddedor.com>
+ <aIfoWk_I1V0KUx4T@my-developer-toolbox-latest>
+ <98ef5001-2ad4-4f2c-946e-57251cd264c4@embeddedor.com>
+ <aIgNUw8IfNGOz3tl@my-developer-toolbox-latest>
+ <f9525216-5721-4f9e-99ab-d697506e0e8f@embeddedor.com>
+ <6d8f13c8-405f-4fa0-ad23-09c9e4c5cd54@embeddedor.com>
+ <22825ff4-0545-4e6b-92a6-64ddfac82b55@embeddedor.com>
+ <CAHhmqcSzwnz+jir+vMjH2j7k+4JtyJ5wvr0deLXJvinSiSKzCg@mail.gmail.com>
+Content-Language: en-US
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <CAHhmqcSzwnz+jir+vMjH2j7k+4JtyJ5wvr0deLXJvinSiSKzCg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 177.238.16.239
+X-Source-L: No
+X-Exim-ID: 1uhDpi-000000018m0-3DLT
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.0.21]) [177.238.16.239]:60462
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 7
+X-Org: HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfKzKvRpJJQP6JQpd9EKXOtPE+5zS3zSmLrUnT0X0KG7OlCna34xn2JE+5Ftra0mCpyjl1L8dHQBQpNLWwDg3ihRD7C4LLwUiXVsoMXZdekABvDcXtBmU
+ XH4xvgDWjdhrBF2VWJ8K8hxp0P1gY2JtS7mdF2ISz4OTA3uBBgAcM83nAtBXZpzXUghIcVuGcsvUSaxmgQyaNBKorazpjtGnrypqBo47VIPB0zAUQ4yGTCQY
 
-Hi Bart,
-Yes, I've read the real standard now, and I see how it clearly defines
-the OPEN ZONE function.
-Thank you for your reply, I really appreciate the explanation. Sorry
-for the patch, I'll be more careful in the future.
-
-(my previous reply was sent to the email addresses, but didn't send to
-the mailing lists because it wasn't plaintext)
-
-Sincerely,
-Andrew Bernal
 
 
-On Tue, Jul 29, 2025 at 12:19=E2=80=AFPM Bart Van Assche <bvanassche@acm.or=
-g> wrote:
->
-> On 7/22/25 1:32 PM, Andrew Bernal wrote:
-> > https://zonedstorage.io/docs/introduction/zoned-storage Open Zones limi=
-t
-> > is defined as a "limit on the total number of zones that can simultaneo=
-usly
-> > be in an implicit open or explicit open state"
->
-> That's not an official standard and hence should not be used to motivate
-> this patch. Additionally, I don't see how a zone could be simultaneously
-> in the implicit open and the explicit open state. According to the ZBC-2
-> standard, these states are mutually exclusive.
->
-> devip->max_open is reported to the initiator in VPD page B6
-> as the MAXIMUM NUMBER OF OPEN SEQUENTIAL WRITE REQUIRED ZONES. From
-> ZBC-2 section 4.5.3.4.2: "If the value in the MAXIMUM NUMBER OF OPEN
-> SEQUENTIAL WRITE REQUIRED ZONES field (see 6.5.2) is non-zero and
-> the number of zones with a Zone Condition of EXPLICITLY OPENED is equal
-> to the value in the MAXIMUM NUMBER OF OPEN SEQUENTIAL WRITE REQUIRED
-> ZONES field, then a command that writes to or attempts to open a
-> sequential write required zone with a zone condition of EMPTY or CLOSED
-> is terminated with CHECK CONDITION status with sense key set to DATA
-> PROTECT and the additional sense code set to INSUFFICIENT ZONE RESOURCES
-> (see 4.5.3.2.8)."
->
-> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> > index aef33d1e346a..0edb9a4698ca 100644
-> > --- a/drivers/scsi/scsi_debug.c
-> > +++ b/drivers/scsi/scsi_debug.c
-> > @@ -3943,7 +3943,7 @@ static int check_zbc_access_params(struct scsi_cm=
-nd *scp,
-> >       /* Handle implicit open of closed and empty zones */
-> >       if (zsp->z_cond =3D=3D ZC1_EMPTY || zsp->z_cond =3D=3D ZC4_CLOSED=
-) {
-> >               if (devip->max_open &&
-> > -                 devip->nr_exp_open >=3D devip->max_open) {
-> > +                 devip->nr_imp_open + devip->nr_exp_open >=3D devip->m=
-ax_open) {
-> >                       mk_sense_buffer(scp, DATA_PROTECT,
-> >                                       INSUFF_RES_ASC,
-> >                                       INSUFF_ZONE_ASCQ);
-> > @@ -6101,7 +6101,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, =
-struct sdebug_dev_info *devip)
-> >       if (all) {
-> >               /* Check if all closed zones can be open */
-> >               if (devip->max_open &&
-> > -                 devip->nr_exp_open + devip->nr_closed > devip->max_op=
-en) {
-> > +                 devip->nr_imp_open + devip->nr_exp_open + devip->nr_c=
-losed > devip->max_open) {
-> >                       mk_sense_buffer(scp, DATA_PROTECT, INSUFF_RES_ASC=
-,
-> >                                       INSUFF_ZONE_ASCQ);
-> >                       res =3D check_condition_result;
-> > @@ -6136,7 +6136,7 @@ static int resp_open_zone(struct scsi_cmnd *scp, =
-struct sdebug_dev_info *devip)
-> >       if (zc =3D=3D ZC3_EXPLICIT_OPEN || zc =3D=3D ZC5_FULL)
-> >               goto fini;
-> >
-> > -     if (devip->max_open && devip->nr_exp_open >=3D devip->max_open) {
-> > +     if (devip->max_open && devip->nr_imp_open + devip->nr_exp_open >=
-=3D devip->max_open) {
-> >               mk_sense_buffer(scp, DATA_PROTECT, INSUFF_RES_ASC,
-> >                               INSUFF_ZONE_ASCQ);
-> >               res =3D check_condition_result;
->
-> Do you agree that the current code in the scsi_debug driver follows the
-> ZBC standard and also that the above changes would break compatibility
-> with the ZBC standard?
->
+On 30/07/25 09:43, Bryan Gurney wrote:
+> Hi Gustavo,
+> 
+> Yes, it passes.  When I test this on top of the NVMe FPIN link
+> integrity v9 patchset, I only see the "kernel: qla2xxx... : FPIN ELS"
+> event.
+> 
+> Tested-by: Bryan Gurney <bgurney@redhat.com>
+
+Awesome. :)
+
+Thanks!
+-Gustavo
+
+> 
+> 
 > Thanks,
->
-> Bart.
+> 
+> Bryan
+> 
+> On Tue, Jul 29, 2025 at 11:45 PM Gustavo A. R. Silva
+> <gustavo@embeddedor.com> wrote:
+>>
+>> Hi Bryan,
+>>
+>> I wonder if you could run your tests on the patch below and let me
+>> know if it passes. If it does, I'll go ahead and submit it as a
+>> proper patch (including your Tested-by tag) to the SCSI list.
+>>
+>> Thank you!
+>> -Gustavo
+>>
+>>>
+>>> The (untested) patch below avoids the use of `struct_group_tagged()`
+>>> and the casts to `struct purex_item *`:
+>>>
+>>> diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+>>> index cb95b7b12051..4bdf8adf04ed 100644
+>>> --- a/drivers/scsi/qla2xxx/qla_def.h
+>>> +++ b/drivers/scsi/qla2xxx/qla_def.h
+>>> @@ -4890,9 +4890,7 @@ struct purex_item {
+>>>                                struct purex_item *pkt);
+>>>           atomic_t in_use;
+>>>           uint16_t size;
+>>> -       struct {
+>>> -               uint8_t iocb[64];
+>>> -       } iocb;
+>>> +       uint8_t iocb[] __counted_by(size);
+>>>    };
+>>>
+>>>    #include "qla_edif.h"
+>>> @@ -5101,7 +5099,6 @@ typedef struct scsi_qla_host {
+>>>                   struct list_head head;
+>>>                   spinlock_t lock;
+>>>           } purex_list;
+>>> -       struct purex_item default_item;
+>>>
+>>>           struct name_list_extended gnl;
+>>>           /* Count of active session/fcport */
+>>> @@ -5130,6 +5127,10 @@ typedef struct scsi_qla_host {
+>>>    #define DPORT_DIAG_IN_PROGRESS                 BIT_0
+>>>    #define DPORT_DIAG_CHIP_RESET_IN_PROGRESS      BIT_1
+>>>           uint16_t dport_status;
+>>> +
+>>> +       TRAILING_OVERLAP(struct purex_item, default_item, iocb,
+>>> +               uint8_t __default_item_iocb[QLA_DEFAULT_PAYLOAD_SIZE];
+>>> +       );
+>>>    } scsi_qla_host_t;
+>>>
+>>>    struct qla27xx_image_status {
+>>> diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+>>> index c4c6b5c6658c..4559b490614d 100644
+>>> --- a/drivers/scsi/qla2xxx/qla_isr.c
+>>> +++ b/drivers/scsi/qla2xxx/qla_isr.c
+>>> @@ -1077,17 +1077,17 @@ static struct purex_item *
+>>>    qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint16_t size)
+>>>    {
+>>>           struct purex_item *item = NULL;
+>>> -       uint8_t item_hdr_size = sizeof(*item);
+>>>
+>>>           if (size > QLA_DEFAULT_PAYLOAD_SIZE) {
+>>> -               item = kzalloc(item_hdr_size +
+>>> -                   (size - QLA_DEFAULT_PAYLOAD_SIZE), GFP_ATOMIC);
+>>> +               item = kzalloc(struct_size(item, iocb, size), GFP_ATOMIC);
+>>>           } else {
+>>>                   if (atomic_inc_return(&vha->default_item.in_use) == 1) {
+>>>                           item = &vha->default_item;
+>>>                           goto initialize_purex_header;
+>>>                   } else {
+>>> -                       item = kzalloc(item_hdr_size, GFP_ATOMIC);
+>>> +                       item = kzalloc(
+>>> +                               struct_size(item, iocb, QLA_DEFAULT_PAYLOAD_SIZE),
+>>> +                               GFP_ATOMIC);
+>>>                   }
+>>>           }
+>>>           if (!item) {
+>>> @@ -1127,17 +1127,16 @@ qla24xx_queue_purex_item(scsi_qla_host_t *vha, struct purex_item *pkt,
+>>>     * @vha: SCSI driver HA context
+>>>     * @pkt: ELS packet
+>>>     */
+>>> -static struct purex_item
+>>> -*qla24xx_copy_std_pkt(struct scsi_qla_host *vha, void *pkt)
+>>> +static struct purex_item *
+>>> +qla24xx_copy_std_pkt(struct scsi_qla_host *vha, void *pkt)
+>>>    {
+>>>           struct purex_item *item;
+>>>
+>>> -       item = qla24xx_alloc_purex_item(vha,
+>>> -                                       QLA_DEFAULT_PAYLOAD_SIZE);
+>>> +       item = qla24xx_alloc_purex_item(vha, QLA_DEFAULT_PAYLOAD_SIZE);
+>>>           if (!item)
+>>>                   return item;
+>>>
+>>> -       memcpy(&item->iocb, pkt, sizeof(item->iocb));
+>>> +       memcpy(&item->iocb, pkt, QLA_DEFAULT_PAYLOAD_SIZE);
+>>>           return item;
+>>>    }
+>>>
+>>> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
+>>> index 8ee2e337c9e1..92488890bc04 100644
+>>> --- a/drivers/scsi/qla2xxx/qla_nvme.c
+>>> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+>>> @@ -1308,7 +1308,7 @@ void qla2xxx_process_purls_iocb(void **pkt, struct rsp_que **rsp)
+>>>
+>>>           ql_dbg(ql_dbg_unsol, vha, 0x2121,
+>>>                  "PURLS OP[%01x] size %d xchg addr 0x%x portid %06x\n",
+>>> -              item->iocb.iocb[3], item->size, uctx->exchange_address,
+>>> +              item->iocb[3], item->size, uctx->exchange_address,
+>>>                  fcport->d_id.b24);
+>>>           /* +48    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
+>>>            * ----- -----------------------------------------------
+>>> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+>>> index d4b484c0fd9d..253f802605d6 100644
+>>> --- a/drivers/scsi/qla2xxx/qla_os.c
+>>> +++ b/drivers/scsi/qla2xxx/qla_os.c
+>>> @@ -6459,9 +6459,10 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha,
+>>>    void
+>>>    qla24xx_free_purex_item(struct purex_item *item)
+>>>    {
+>>> -       if (item == &item->vha->default_item)
+>>> +       if (item == &item->vha->default_item) {
+>>>                   memset(&item->vha->default_item, 0, sizeof(struct purex_item));
+>>> -       else
+>>> +               memset(&item->vha->__default_item_iocb, 0, QLA_DEFAULT_PAYLOAD_SIZE);
+>>> +       } else
+>>>                   kfree(item);
+>>>
+>>> Thanks
+>>> -Gustavo
+>>
+> 
+
