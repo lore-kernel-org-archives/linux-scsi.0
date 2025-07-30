@@ -1,108 +1,243 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4777B78F4E;
-	Wed, 30 Jul 2025 15:42:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC95B26D4F9
+	for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 15:44:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753890159; cv=none; b=i+V1fgoxVtxZAKdI2dNY/dyIHjAfh5tx4Zs5XwFe2PeyYHDLeDaTzUQqly6mb1seEx0Aa/qbh/+k80b9ngvK815LcWs/KveXCH/5CW4Mh3pogMAKHeJlPqFrH2VBFZhg03nccx/dJwDb+bVM1FqFhGDfJ1JXTr5n0RmhKXZ78gE=
+	t=1753890255; cv=none; b=hEvvzALLQ8kHLmXbr9PTFn2DBhFkbcgSC0VRmyzeOWCMlV9eu/3HZav1wZV7a/0CBqzjiA3lHp1z6c7p8mKYfBZ7/gJY2gBFppG8HcgjSs9G6Scy3R6BLMcfKD0JnC96oOLg7cZQeUnCGL/uDVXOgAoYKb2v1Ki8zlNbrLhBzV8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753890159; c=relaxed/simple;
-	bh=8y0o//TYzUzbKwKRuy6EOZNwYhkcVWNfb8USVc/H+ws=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=qcl1FHjkULgsdAcyN2lTQ1nb1pxnkPVadIKKZKtRwwU6DfCXhzEEoFjiq1X5de+CFMbsB0FAr7JABOChr9zm/8xZUF/sgGvlmlHQ0rUYMm2AZsD8V17csRTumWDmUUNW5hYQal0OC4nHtBNkxE4+sT3BngsyeYbe7jsEaGhDKxE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tE0oIhur; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1753890255; c=relaxed/simple;
+	bh=dIC6ZiiJLCATn2aEYXAbpEgT7yRi9w27BFSgneF2QG0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=mB0Pdiyp6WZlxZP3Vq55Fv+gk+WYy2iSME5JO0yZTRRqLfj0g4G1fACi/0nXKKIZzWmrUdGO4uvS1UAxgIU2qrLz6xBTuMijJlbWHzgPJf0ka5LJbc2fo2/OOzm8PClsjRXyQDOG7SxfP4XDqQYbdQb84w3bV3ey6hdLbu6eNf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=S+bQTE40; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tE0oIhur"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4bsc0s19BRzm1Hbb;
-	Wed, 30 Jul 2025 15:42:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:content-language:references:from:from:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1753890153; x=1756482154; bh=8y0o//TYzUzbKwKRuy6EOZNw
-	YhkcVWNfb8USVc/H+ws=; b=tE0oIhurTvTl46X/22wx7u2BKSPF4cM37pJUBT++
-	6rWWQs2uw7oSkyzxzjNFgbx0sJBHoRj1Z56mTr+sOZMHNNrKjRMfkW+EkMFW485b
-	FMY9kxvHL4bBEZbeoxV2uPhVQWntH6VrgV8W6B3TzsTzggug88JOKFZoexc3KdVs
-	c0nmXGgxuFdzZW6Go2qT3rhrpFuEaqNdYnIILxLHExbKomwoM3H00d/9HbwtKQdx
-	Ydbquv1p9zhVv7g8bDBSyv43d6UP14ym2IQaiJRNGEQIVhwHmA/iMvmaSAhG7nl2
-	E96fai7L0YF08pABzqGTsEWnfXpRZENnjvQRyGoUsU03iQ==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id YzB5OBHMuh-f; Wed, 30 Jul 2025 15:42:33 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4bsc0T0VLMzm1HcS;
-	Wed, 30 Jul 2025 15:42:16 +0000 (UTC)
-Message-ID: <3ad6282f-bb41-42c2-9dda-337a0e0be68a@acm.org>
-Date: Wed, 30 Jul 2025 08:42:15 -0700
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="S+bQTE40"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1753890252;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=/HX7tF362TSeYajHYNsWX4IpMPfRgzNyrPz6eFnUfIs=;
+	b=S+bQTE40zo+s8vVa9FM08M6IsL4aTYBc9zLnYeVkj3Ix4t5WFD+B7IRYqvVmHCNgWpl76A
+	w8W9cqd63pWuVY0ZVazrQ9KXDV6C18fGJo6bE+CblbCpso+fKvDNm+OB0pqKRFnhfkYCCi
+	qtfXik/oKqPYfyNo+95+RmGllLuEFGs=
+Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
+ [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-658--NWqE5t6PzuZbCAj37kBuA-1; Wed, 30 Jul 2025 11:44:10 -0400
+X-MC-Unique: -NWqE5t6PzuZbCAj37kBuA-1
+X-Mimecast-MFC-AGG-ID: -NWqE5t6PzuZbCAj37kBuA_1753890250
+Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-3b7892c42b7so2207966f8f.0
+        for <linux-scsi@vger.kernel.org>; Wed, 30 Jul 2025 08:44:10 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753890248; x=1754495048;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=/HX7tF362TSeYajHYNsWX4IpMPfRgzNyrPz6eFnUfIs=;
+        b=xQyaAWrK01w3YQYa+FO1Q19fhvfiJ4n/dEmZJDUPxZ7x4lFcN3sq2gn94WwDX37mEk
+         HRukIgulm52u6Y0fGZiWgu7jpBh8J3x1G4M5sMZWUvHNwidyxdliUggt3+5QpmfyyXga
+         72O19I20ET//CGUSUMhXOLSOnKltb3DUfKUnXv/TS5wqBUz+tIeSSabAkzMQo5LCLnAt
+         foEdGwWYMcNm8WOrmq8+D+7xUxllP43+pZe0HDm3JCrq8wfmlbRAwGRwYk54LEh/lSUp
+         9J8eJf2RiOonm4sd1yGdvtZsM8M0dkU+Wbe3omExELoub4TQ7ouOW+aP95rQ78A/TK9T
+         frFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXm5WHZKlsLbRW12GIC+VGyoFfMEzzBBGK04IAhfkVYL/J4mrsbgpL3TQeGL2VteDsCx6mdwGgEYN5t@vger.kernel.org
+X-Gm-Message-State: AOJu0YyGy4tRXSPAXB6i8iTgXeOhk6TQGHN60j8wvSC5zuxlSLE2Vyza
+	0lHDZelJ93WezVmBylRtmwo7WJUlpUrEEHhh2p2Zs7e+snD5AlrBDjTD/aoboj6ovAEc/vHw32q
+	/SCCGyLPs+Jotcly7sIh9eaCxdbEncpV1/d3ZwgIH/uurBdesoIQ0GgrKmgmygExfr/uuwbCx3s
+	LwdqZLskQ3NCcpnpdD6VgFMTscsNvCU4i4CrAUdA==
+X-Gm-Gg: ASbGncu/e2SPrv2afp88RcHXKt6bIDVatSBMzpEZNoB4MX6GJrCzuHFaxxxA1znkYZo
+	pld1Q1eeGcl96s4KOBNKPdrgAxJg9+QDo45zIEPM0EJhUw/Hkt3EmBeO9GkcfdSjAcB5GSQBTY8
+	j/VrThbLM6zsbHRPIXaMr+Eg==
+X-Received: by 2002:a05:6000:288b:b0:3b7:9350:44d4 with SMTP id ffacd0b85a97d-3b794fc2be0mr3119868f8f.11.1753890247835;
+        Wed, 30 Jul 2025 08:44:07 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGoLlLj9O2vn2HKZAx3EicapBRkBqUgFETWiZtsSxqaHMeqqbRpulPD3KvMXfTkj/NZN6DdDyZiFIlCTp+YhAU=
+X-Received: by 2002:a05:6000:288b:b0:3b7:9350:44d4 with SMTP id
+ ffacd0b85a97d-3b794fc2be0mr3119848f8f.11.1753890247461; Wed, 30 Jul 2025
+ 08:44:07 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4] scsi: ufs: core: Don't perform UFS clkscale if host
- asyn scan in progress
-From: Bart Van Assche <bvanassche@acm.org>
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "beanhuo@micron.com" <beanhuo@micron.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
- "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
- "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
- "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
- "quic_ziqichen@quicinc.com" <quic_ziqichen@quicinc.com>,
- "luca.weiss@fairphone.com" <luca.weiss@fairphone.com>,
- "konrad.dybcio@oss.qualcomm.com" <konrad.dybcio@oss.qualcomm.com>,
- "mani@kernel.org" <mani@kernel.org>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "quic_rampraka@quicinc.com" <quic_rampraka@quicinc.com>,
- "junwoo80.lee@samsung.com" <junwoo80.lee@samsung.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- =?UTF-8?B?VHplLW5hbiBXdSAo5ZCz5r6k5Y2XKQ==?= <Tze-nan.Wu@mediatek.com>,
- "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
- "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <20250522081233.2358565-1-quic_ziqichen@quicinc.com>
- <5f3911ffd2c09b6d86300c3905e9c760698df069.camel@mediatek.com>
- <1989e794-6539-4875-9e87-518da0715083@acm.org>
- <10b41d77c287393d4f6e50e712c3713839cb6a8c.camel@mediatek.com>
- <673e1960-f911-451d-ab18-3dc30abddd79@quicinc.com>
- <418bfbe4bfb3f04e805af8fa667144f148787aeb.camel@mediatek.com>
- <ea382e7c-2436-4e82-a2b5-d5b7737b8828@acm.org>
-Content-Language: en-US
-In-Reply-To: <ea382e7c-2436-4e82-a2b5-d5b7737b8828@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+References: <20250725212732.2038027-2-cleech@redhat.com> <20250728185725.2501761-1-cleech@redhat.com>
+ <a1c61211-816e-4479-81ce-e71a0d2b8ec2@embeddedor.com> <aIfoWk_I1V0KUx4T@my-developer-toolbox-latest>
+ <98ef5001-2ad4-4f2c-946e-57251cd264c4@embeddedor.com> <aIgNUw8IfNGOz3tl@my-developer-toolbox-latest>
+ <f9525216-5721-4f9e-99ab-d697506e0e8f@embeddedor.com> <6d8f13c8-405f-4fa0-ad23-09c9e4c5cd54@embeddedor.com>
+ <22825ff4-0545-4e6b-92a6-64ddfac82b55@embeddedor.com>
+In-Reply-To: <22825ff4-0545-4e6b-92a6-64ddfac82b55@embeddedor.com>
+From: Bryan Gurney <bgurney@redhat.com>
+Date: Wed, 30 Jul 2025 11:43:54 -0400
+X-Gm-Features: Ac12FXzRyh4uM52E8k5ajExwrkZ5U4nZwMppnvP5GWh9XUgWJ3fcCpDB5ViCjks
+Message-ID: <CAHhmqcSzwnz+jir+vMjH2j7k+4JtyJ5wvr0deLXJvinSiSKzCg@mail.gmail.com>
+Subject: Re: [PATCH v2 1/1] scsi: qla2xxx: replace non-standard flexible array purex_item.iocb
+To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+Cc: Chris Leech <cleech@redhat.com>, linux-scsi@vger.kernel.org, 
+	Nilesh Javali <njavali@marvell.com>, Kees Cook <kees@kernel.org>, 
+	"Gustavo A . R . Silva" <gustavoars@kernel.org>, John Meneghini <jmeneghi@redhat.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On 7/30/25 8:37 AM, Bart Van Assche wrote:
-> On 7/30/25 5:55 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
->> However, in theory, this issue should still be solvable
->> without using a lock.
->> Another idea is to only start ufshcd_devfreq_init
->> when shost->async_scan =3D 0.
->=20
-> Does the lockdep complaint mentioned in this email thread occur on
-> multiple platforms or only on MediaTek platforms? I don't see any
-> lockdep complaints with Martin's SCSI for-next branch on my
-> development platform. If this warning only occurs on MediaTek
-> platforms, why to modify the UFSHCI core driver to eliminate this
-> lockdep complaint?
+Hi Gustavo,
 
-Answering my own question: clock scaling is not enabled on my
-development platform and that's why I'm not seeing this lockdep
-complaint.
+Yes, it passes.  When I test this on top of the NVMe FPIN link
+integrity v9 patchset, I only see the "kernel: qla2xxx... : FPIN ELS"
+event.
 
-Bart.
+Tested-by: Bryan Gurney <bgurney@redhat.com>
+
+
+Thanks,
+
+Bryan
+
+On Tue, Jul 29, 2025 at 11:45=E2=80=AFPM Gustavo A. R. Silva
+<gustavo@embeddedor.com> wrote:
+>
+> Hi Bryan,
+>
+> I wonder if you could run your tests on the patch below and let me
+> know if it passes. If it does, I'll go ahead and submit it as a
+> proper patch (including your Tested-by tag) to the SCSI list.
+>
+> Thank you!
+> -Gustavo
+>
+> >
+> > The (untested) patch below avoids the use of `struct_group_tagged()`
+> > and the casts to `struct purex_item *`:
+> >
+> > diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_=
+def.h
+> > index cb95b7b12051..4bdf8adf04ed 100644
+> > --- a/drivers/scsi/qla2xxx/qla_def.h
+> > +++ b/drivers/scsi/qla2xxx/qla_def.h
+> > @@ -4890,9 +4890,7 @@ struct purex_item {
+> >                               struct purex_item *pkt);
+> >          atomic_t in_use;
+> >          uint16_t size;
+> > -       struct {
+> > -               uint8_t iocb[64];
+> > -       } iocb;
+> > +       uint8_t iocb[] __counted_by(size);
+> >   };
+> >
+> >   #include "qla_edif.h"
+> > @@ -5101,7 +5099,6 @@ typedef struct scsi_qla_host {
+> >                  struct list_head head;
+> >                  spinlock_t lock;
+> >          } purex_list;
+> > -       struct purex_item default_item;
+> >
+> >          struct name_list_extended gnl;
+> >          /* Count of active session/fcport */
+> > @@ -5130,6 +5127,10 @@ typedef struct scsi_qla_host {
+> >   #define DPORT_DIAG_IN_PROGRESS                 BIT_0
+> >   #define DPORT_DIAG_CHIP_RESET_IN_PROGRESS      BIT_1
+> >          uint16_t dport_status;
+> > +
+> > +       TRAILING_OVERLAP(struct purex_item, default_item, iocb,
+> > +               uint8_t __default_item_iocb[QLA_DEFAULT_PAYLOAD_SIZE];
+> > +       );
+> >   } scsi_qla_host_t;
+> >
+> >   struct qla27xx_image_status {
+> > diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_=
+isr.c
+> > index c4c6b5c6658c..4559b490614d 100644
+> > --- a/drivers/scsi/qla2xxx/qla_isr.c
+> > +++ b/drivers/scsi/qla2xxx/qla_isr.c
+> > @@ -1077,17 +1077,17 @@ static struct purex_item *
+> >   qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint16_t size)
+> >   {
+> >          struct purex_item *item =3D NULL;
+> > -       uint8_t item_hdr_size =3D sizeof(*item);
+> >
+> >          if (size > QLA_DEFAULT_PAYLOAD_SIZE) {
+> > -               item =3D kzalloc(item_hdr_size +
+> > -                   (size - QLA_DEFAULT_PAYLOAD_SIZE), GFP_ATOMIC);
+> > +               item =3D kzalloc(struct_size(item, iocb, size), GFP_ATO=
+MIC);
+> >          } else {
+> >                  if (atomic_inc_return(&vha->default_item.in_use) =3D=
+=3D 1) {
+> >                          item =3D &vha->default_item;
+> >                          goto initialize_purex_header;
+> >                  } else {
+> > -                       item =3D kzalloc(item_hdr_size, GFP_ATOMIC);
+> > +                       item =3D kzalloc(
+> > +                               struct_size(item, iocb, QLA_DEFAULT_PAY=
+LOAD_SIZE),
+> > +                               GFP_ATOMIC);
+> >                  }
+> >          }
+> >          if (!item) {
+> > @@ -1127,17 +1127,16 @@ qla24xx_queue_purex_item(scsi_qla_host_t *vha, =
+struct purex_item *pkt,
+> >    * @vha: SCSI driver HA context
+> >    * @pkt: ELS packet
+> >    */
+> > -static struct purex_item
+> > -*qla24xx_copy_std_pkt(struct scsi_qla_host *vha, void *pkt)
+> > +static struct purex_item *
+> > +qla24xx_copy_std_pkt(struct scsi_qla_host *vha, void *pkt)
+> >   {
+> >          struct purex_item *item;
+> >
+> > -       item =3D qla24xx_alloc_purex_item(vha,
+> > -                                       QLA_DEFAULT_PAYLOAD_SIZE);
+> > +       item =3D qla24xx_alloc_purex_item(vha, QLA_DEFAULT_PAYLOAD_SIZE=
+);
+> >          if (!item)
+> >                  return item;
+> >
+> > -       memcpy(&item->iocb, pkt, sizeof(item->iocb));
+> > +       memcpy(&item->iocb, pkt, QLA_DEFAULT_PAYLOAD_SIZE);
+> >          return item;
+> >   }
+> >
+> > diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla=
+_nvme.c
+> > index 8ee2e337c9e1..92488890bc04 100644
+> > --- a/drivers/scsi/qla2xxx/qla_nvme.c
+> > +++ b/drivers/scsi/qla2xxx/qla_nvme.c
+> > @@ -1308,7 +1308,7 @@ void qla2xxx_process_purls_iocb(void **pkt, struc=
+t rsp_que **rsp)
+> >
+> >          ql_dbg(ql_dbg_unsol, vha, 0x2121,
+> >                 "PURLS OP[%01x] size %d xchg addr 0x%x portid %06x\n",
+> > -              item->iocb.iocb[3], item->size, uctx->exchange_address,
+> > +              item->iocb[3], item->size, uctx->exchange_address,
+> >                 fcport->d_id.b24);
+> >          /* +48    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
+> >           * ----- -----------------------------------------------
+> > diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_o=
+s.c
+> > index d4b484c0fd9d..253f802605d6 100644
+> > --- a/drivers/scsi/qla2xxx/qla_os.c
+> > +++ b/drivers/scsi/qla2xxx/qla_os.c
+> > @@ -6459,9 +6459,10 @@ void qla24xx_process_purex_rdp(struct scsi_qla_h=
+ost *vha,
+> >   void
+> >   qla24xx_free_purex_item(struct purex_item *item)
+> >   {
+> > -       if (item =3D=3D &item->vha->default_item)
+> > +       if (item =3D=3D &item->vha->default_item) {
+> >                  memset(&item->vha->default_item, 0, sizeof(struct pure=
+x_item));
+> > -       else
+> > +               memset(&item->vha->__default_item_iocb, 0, QLA_DEFAULT_=
+PAYLOAD_SIZE);
+> > +       } else
+> >                  kfree(item);
+> >
+> > Thanks
+> > -Gustavo
+>
+
