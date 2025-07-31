@@ -1,280 +1,187 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f182.google.com (mail-lj1-f182.google.com [209.85.208.182])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D6424DCED
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 17:43:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 850BE242D63
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 17:52:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753983819; cv=none; b=n5JR44vg4E/j9OVu5uRFpibuw2tOpgdN7a46uIBQ2sI39Olx90ASkvb1G8HTCWVUWZ96g78x9tp17S9hOLPM4kVNDsT2lyTAWNAhTewV6UTYT0u9mLYJEPsTqtOBnv6CZts2ar8/WVLKIlT9Monupvn8cum7QjL8yVVDwLnBEiA=
+	t=1753984339; cv=none; b=Hbyz1KNpCKkvfmmpmwFafEPYXItOZFvGGY9ZcJLEI8gcBTeIZSBg8V6LuKl9xL/u4bYXhWRz59UONnlBuTUHes+tnlKmdZIYbsjufd1Qzt9fyA4VqUimRUgulR+rO7ImG2n8vndXoCOuO/9j7o8OesEj8D0xdbvQK0ZypO8lx/Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753983819; c=relaxed/simple;
-	bh=gF/Lfov/BGotqFyFDG+Y7IiqHn/X1SmvmbjPZQA1YBo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jGHHWzauJkRiTNSUFgpzCmKn/EB8QRHGXFRrViGN7+xWjpa25a+U7p3SPYZoB+uKx+Q7G6uQmU2jEkx/cKIMJD/38QjplDTSACmIlr7+ApULpl7g7JdxZEAbnWsmH4eYUf7KfjP7wbnirnpjhDO1RM2eloMMV0kF+HbdJzo57y4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=HW6b4fRA; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1753984339; c=relaxed/simple;
+	bh=P79qlG9i7PeXFBhyYi8UV/N5oSiSCkmpu3PuXdFYDL0=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=knsQSZHRDK7Mlhv3C/dqyxUuc9tiUShE1+BsvRLbEem5TPzzTLofcVM61cAkao6CtZb5Vqqso7Y8ZS1x96yuP2CliIFpHCbDCAFfS07hCocv2S9eo8BUpcDH3gELpTq9p3QCjLitrMA49tg1jFypDYRSOs6dUHduNjm8aNjE/so=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=dzwG6coV; arc=none smtp.client-ip=209.85.208.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="HW6b4fRA"
-Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56VDfCNI020480
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 17:43:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	XgQLj33jhp7/creFx0MYZQCfK0nDYyjfst1wTym5RW4=; b=HW6b4fRAnBY7ty2S
-	X4MA4g42Md+jfRahHHBZ88RIglcBUzDoEwehI/32C0VBdPJGVAc0KZh9ZCkEPOd2
-	7BtgraezHj17WtQ6JkJPp887JBa+E+PQonkuOtcpHvHOrZSH7L0+NVs4yMmi8747
-	+lXSGpnnu4MYDR9EL7FsqwS59X+cY69tx+vPJJzX/pzEbXo1U25Rvy6u4eX+guIz
-	54IUGbd20L6ciyDmd7LaMS9hl+1AKwFuS99F7vpYExZl5RB7iyw/Fjdfa2rTQlnO
-	4c2t/e4YTTYE45uRcEoXvnOadEJLVOKk80DQCAQltuVzjtJJRGwNIEJ0vCvZUvO0
-	IWj6ZA==
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 484p1armjc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 17:43:35 +0000 (GMT)
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-4ab69fff4deso20363701cf.3
-        for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 10:43:35 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="dzwG6coV"
+Received: by mail-lj1-f182.google.com with SMTP id 38308e7fff4ca-33211f7f06eso5917771fa.2
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 10:52:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1753984334; x=1754589134; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=Xv4pmNqc7b10p35ne7lVzeVRY83kFI6B6P65K1NKtDo=;
+        b=dzwG6coVM7FQkH3mSOFhIyopXlojxKS9bTwHxJ/Ms50yt8nrj9KwxHI5EgNBA8CuWz
+         UfeI5D1P6xaUMbt7+fFjmU9Q1vppvpaU6gT5c6HmwFlq3fm2nPpHul5ymr6sPfJFfB/M
+         wt6/vVWGAHtrOf2/SiTnt7+EIUyiLlX3MzPcU=
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1753983814; x=1754588614;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=XgQLj33jhp7/creFx0MYZQCfK0nDYyjfst1wTym5RW4=;
-        b=dKu/a0YgdTxvQ1NPs60b90koYvvN8rHmNyqNazGSGUra+NlBV8OYmWAMPbZncJsWXT
-         WuwGHWBcMP1W970GZcfwL3x881/fAzOc9HUxjWOoTzY6c5rtt6fanSgam1iCFmCBkHEY
-         0X9sS/gy9UkVW6EoN0nr6Bg6bAlYX4zeihCIkTBTq7Tzhm+ipJg58lWxd78eeMGUgppe
-         S25TwTGlQ/Emj2WA13WES5ibv+h+RuqUgZJOnRfgPtorNw7+QTiSGSIwywOEr4fLXaX5
-         0cKubVocVHKaeUvA7XWUjtN2jSR2W+ulHRmIyGxi1iAdVfMl0gbvaVyn0dSOqPqkIAOp
-         gTkA==
-X-Forwarded-Encrypted: i=1; AJvYcCViKudcpYjEePfV2C3fkRK0SFklEFcBKAf53ejTmxrDdfm/dWQQmZrv216THOKh2pkttSzLZFH9AW/0@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx+wit+A/kAoDQLopJhGpsyKzd8GmfgR1z3ZhYiQcmZr31ve7DC
-	MSiY7MpDHfuFTMUCfYANONx7AtssI5Z3RCeDMX9cVZdRQYncaxZmcAFKZJObdviaCGaFWgoHyt+
-	e03skdRgl7c919RB3I6zHQsD1DFb4LlYF5dyt1NvmDsQe+BdsWXZGQMjL7KJaCi3x
-X-Gm-Gg: ASbGncsgnbjjt4n6ObjcJ45yPJyPlamN9sfAEcSVj+Jf2KACVDu+6lnFljqo1YaLgql
-	bU9MZ/RHbozcDgQsZ0aByxIWcwS6jF9DvdNRG/54pfEAfimsPN+BD3KQxdhj/U6aHlH60dJlqCa
-	0nMBytdssCiZ8/P/HKIVwSQFq9sCTAaNgGMLEcN4UX0yONd36s9tmejxPcH8I8V4sIpJeUwmT4w
-	xGsECc7pYhvF4bkVBgS8LcPba+IAoFpY0CxeI8X0g8iC6xrnH7zmaZbRC9H2VgS5QPmXAkYaKm7
-	sn4LOMvZlM0LtdHQEH6SauOefOBs0+SNqvcmMldfWlWcGGL5MUa8RCvE1pLli855kMl6dbztb9y
-	D08C8BX+DrejkyNL/QTmX4eE98zMU0O/FGRT94MTA3FEIisyRw2Vj
-X-Received: by 2002:ac8:7dc5:0:b0:4a9:e225:fb6d with SMTP id d75a77b69052e-4aedb99e470mr112576991cf.21.1753983814149;
-        Thu, 31 Jul 2025 10:43:34 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IEU41tcMiInT49q2UVBzc1ln2V3fBjU5vwnqygxgxHg5zY8lqlNmM/ASrKrTWFHWA7RYA25DA==
-X-Received: by 2002:ac8:7dc5:0:b0:4a9:e225:fb6d with SMTP id d75a77b69052e-4aedb99e470mr112576371cf.21.1753983813558;
-        Thu, 31 Jul 2025 10:43:33 -0700 (PDT)
-Received: from umbar.lan (2001-14ba-a0c3-3a00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a0c3:3a00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-55b88cae541sm317422e87.153.2025.07.31.10.43.32
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 31 Jul 2025 10:43:32 -0700 (PDT)
-Date: Thu, 31 Jul 2025 20:43:30 +0300
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-Cc: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org,
-        conor+dt@kernel.org, andersson@kernel.org, konradybcio@kernel.org,
-        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        agross@kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH 1/3] ufs: ufs-qcom: Add support for DT-based gear and
- rate limiting
-Message-ID: <fl4t5fpyd5o535djn3f5vbq4lqqtwx2dzcphxfdf7s6kxedcsb@yz65chgbcgd3>
-References: <20250722161103.3938-1-quic_rdwivedi@quicinc.com>
- <20250722161103.3938-2-quic_rdwivedi@quicinc.com>
- <2ihbf52nryduic5vzlqdldzgx2fe4zidt4hzcugurqsuosiawq@qs66zxptpmqf>
- <f61ac7b6-5e63-49cb-b051-a749037e0c8b@quicinc.com>
- <CAO9ioeWLLW1UgJfByBAXp9-v81AqmRV9Acs5Eae9k4Gkr1U0MA@mail.gmail.com>
- <728cde88-1601-4c36-976a-3c934a64be35@quicinc.com>
+        d=1e100.net; s=20230601; t=1753984334; x=1754589134;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Xv4pmNqc7b10p35ne7lVzeVRY83kFI6B6P65K1NKtDo=;
+        b=GB5vMgU73E4Qxd5tb2fSqfUbCYz7w+bJSiOtyYV2T2FxsL+3+vvs+Vg7HlATOBsHFC
+         NPFGGGtf7rlrxUDXY8i4Nac+JW7TKQOYNYs9Zp6648nuqHloUZ9mUFeHSalwE8knXrCa
+         omMVBUcP4ko/18W6SaS81QsZJbqLHAYS6HvxTr2as88T0aJS2gTPF4A2UB00P2KtwCyP
+         F+FU9M92DHw4yt+6KliEsefZDaAQdO9RG02qiId4e04GxjvQfuZg484rtGXLKDo57xcP
+         pDLDTn6bfPIkpxVOhKBDnABXTNaq+P5FAFuFHswcPO68Sqmp1z7Nw8/Sjp0/BzIi7O5H
+         IaTg==
+X-Forwarded-Encrypted: i=1; AJvYcCUb4bm6f7fXQcLza/t5X+ZzokN6wQaBdu5W6dYunLlRjswAFSblLd3o19CK3+tbsyN0zINnWCaNGLHs@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz/rA3KZsRZqHBT6IAWPD+X0tO1+qLus/WXV5zCFd2B1bDmOEnv
+	5gkbtLDRiToygbHjmjXQz8KJnMNw3dMLN6GkeJuvj0C4dFdUd8+3kQD3SfnsCJZeYhD95EiLYiM
+	jCX++F+UzZFL9tZTmzeAagcmNxoUECv8+UuD3cL0=
+X-Gm-Gg: ASbGnct26o08ujSGzhEwZaTsnLhRl5B88G4s3zU5ZfxP8xhSfEuKx06uDRvGSt/O0FQ
+	xlDLH913D5KzPE5bl3vLmkTKdqnwGPGsqqceUUZ++QFmGKEQDyKpfgct2aTtCg8lvUXhfKBbfGD
+	PHPcajujkD0oNNF6jusGhlkt7yel7tlENsP/dkA+xRKuIv6aTJn0Ojf2IBIqdd46B8Fpj2yQE+W
+	nZQJkBC2XY/5JTwUQ==
+X-Google-Smtp-Source: AGHT+IG5PZurRI5LiDHiLaAftktQ8WPNkX88NCZd1O5e2zYvEmu3MlepJGeTRScjm2Dlw4AoAqz5sf3iw4Den4kQXrQ=
+X-Received: by 2002:a2e:a016:0:20b0:32a:8855:f214 with SMTP id
+ 38308e7fff4ca-33224bd600bmr14909431fa.27.1753984334505; Thu, 31 Jul 2025
+ 10:52:14 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <728cde88-1601-4c36-976a-3c934a64be35@quicinc.com>
-X-Proofpoint-ORIG-GUID: E68g2O3ws5XkHO2O4TONbAcUQ3RyLk2n
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzMxMDEyMyBTYWx0ZWRfX9vrL2nTCrtOf
- IRNfslhor0K+P9rPyFuM+Cm3RtpNENxwSMfyxVEWhJtOCQ1ahwNUMGAZ8C8mZg6LT1qzx/MSCfZ
- ay5MKMC33dbxAt+4n7nu9LnVG6OX0d1OnQ3jhyYbrHyvBIpfwbgVz3w18JltdGJwU/np75XmplW
- NTZmM9l/UpiSXnlIqylTcZBrqPnL58qbrCquVqyI350JhX9xU1pwuQ+RekKcTt5YXGZca0ijw4f
- O3jow3wZ3dSYXxLKiVt1EUSR6C/8yKkLINmqvYvtIM2XE1qrFn66j/o1VM/00bDKgcWCY2VJMv0
- 7cZ9oWZzPvvk5Em3qlvaEgxiNTa/oP4U5injj7YdkLD6bCxu4zRfTx8C4zShWC/wEUQjKtTjhlS
- IUTaVHGGnfXQYjo/HP/UC5xXJ16cbwCaMQtbEbaTSh5bneVf1TlPGyqOKhioYjhhWFbx6EkE
-X-Proofpoint-GUID: E68g2O3ws5XkHO2O4TONbAcUQ3RyLk2n
-X-Authority-Analysis: v=2.4 cv=KtNN2XWN c=1 sm=1 tr=0 ts=688bab47 cx=c_pps
- a=EVbN6Ke/fEF3bsl7X48z0g==:117 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=Wb1JkmetP80A:10 a=COk6AnOGAAAA:8 a=w8oFfr48thh2NtF-ymIA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=a_PwQJl-kcHnX1M80qC6:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-07-31_03,2025-07-31_03,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 priorityscore=1501 lowpriorityscore=0 suspectscore=0
- adultscore=0 mlxlogscore=999 bulkscore=0 spamscore=0 impostorscore=0
- mlxscore=0 malwarescore=0 phishscore=0 classifier=spam authscore=0 authtc=n/a
- authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2505280000 definitions=main-2507310123
+References: <20250721110546.100355-1-ranjan.kumar@broadcom.com>
+ <aH8oUpyOhTlo-sZc@infradead.org> <CAFdVvOx2RCtwc2H-K=QOQ+fG2=5s-TN4oOd0qJsCXvzfOpM69g@mail.gmail.com>
+ <aICAoqAYPsy2ErLg@infradead.org>
+In-Reply-To: <aICAoqAYPsy2ErLg@infradead.org>
+From: Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>
+Date: Thu, 31 Jul 2025 11:51:56 -0600
+X-Gm-Features: Ac12FXymO2kHL332LPZT3HZD0suhB_Qm_cX1QOVmF8ac1c0ejFmJiZTm9cfnoyU
+Message-ID: <CAFdVvOwW1QA5hhCdxYhnE7vVtG3s15JWf25N5DJnD15_-waxtw@mail.gmail.com>
+Subject: Re: [PATCH v1] mpt3sas: Set DMA_BIDIRECTIONAL for additional SCSI commands
+To: Christoph Hellwig <hch@infradead.org>
+Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com
+Content-Type: multipart/signed; protocol="application/pkcs7-signature"; micalg=sha-256;
+	boundary="0000000000003a7ad6063b3d4d34"
 
-On Thu, Jul 31, 2025 at 09:58:47PM +0530, Ram Kumar Dwivedi wrote:
-> 
-> 
-> On 24-Jul-25 2:11 PM, Dmitry Baryshkov wrote:
-> > On Thu, 24 Jul 2025 at 10:35, Ram Kumar Dwivedi
-> > <quic_rdwivedi@quicinc.com> wrote:
-> >>
-> >>
-> >>
-> >> On 23-Jul-25 12:24 AM, Dmitry Baryshkov wrote:
-> >>> On Tue, Jul 22, 2025 at 09:41:01PM +0530, Ram Kumar Dwivedi wrote:
-> >>>> Add optional device tree properties to limit Tx/Rx gear and rate during UFS
-> >>>> initialization. Parse these properties in ufs_qcom_init() and apply them to
-> >>>> host->host_params to enforce platform-specific constraints.
-> >>>>
-> >>>> Use this mechanism to cap the maximum gear or rate on platforms with
-> >>>> hardware limitations, such as those required by some automotive customers
-> >>>> using SA8155. Preserve the default behavior if the properties are not
-> >>>> specified in the device tree.
-> >>>>
-> >>>> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-> >>>> ---
-> >>>>  drivers/ufs/host/ufs-qcom.c | 28 ++++++++++++++++++++++------
-> >>>>  1 file changed, 22 insertions(+), 6 deletions(-)
-> >>>>
-> >>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> >>>> index 4bbe4de1679b..5e7fd3257aca 100644
-> >>>> --- a/drivers/ufs/host/ufs-qcom.c
-> >>>> +++ b/drivers/ufs/host/ufs-qcom.c
-> >>>> @@ -494,12 +494,8 @@ static int ufs_qcom_power_up_sequence(struct ufs_hba *hba)
-> >>>>       * If the HS-G5 PHY gear is used, update host_params->hs_rate to Rate-A,
-> >>>>       * so that the subsequent power mode change shall stick to Rate-A.
-> >>>>       */
-> >>>> -    if (host->hw_ver.major == 0x5) {
-> >>>> -            if (host->phy_gear == UFS_HS_G5)
-> >>>> -                    host_params->hs_rate = PA_HS_MODE_A;
-> >>>> -            else
-> >>>> -                    host_params->hs_rate = PA_HS_MODE_B;
-> >>>> -    }
-> >>>> +    if (host->hw_ver.major == 0x5 && host->phy_gear == UFS_HS_G5)
-> >>>> +            host_params->hs_rate = PA_HS_MODE_A;
-> >>>
-> >>> Why? This doesn't seem related.
-> >>
-> >> Hi Dmitry,
-> >>
-> >> I have refactored the patch to put this part in a separate patch in latest patchset.
-> >>
-> >> Thanks,
-> >> Ram.
-> >>
-> >>>
-> >>>>
-> >>>>      mode = host_params->hs_rate == PA_HS_MODE_B ? PHY_MODE_UFS_HS_B : PHY_MODE_UFS_HS_A;
-> >>>>
-> >>>> @@ -1096,6 +1092,25 @@ static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
-> >>>>      }
-> >>>>  }
-> >>>>
-> >>>> +static void ufs_qcom_parse_limits(struct ufs_qcom_host *host)
-> >>>> +{
-> >>>> +    struct ufs_host_params *host_params = &host->host_params;
-> >>>> +    struct device_node *np = host->hba->dev->of_node;
-> >>>> +    u32 hs_gear, hs_rate = 0;
-> >>>> +
-> >>>> +    if (!np)
-> >>>> +            return;
-> >>>> +
-> >>>> +    if (!of_property_read_u32(np, "limit-hs-gear", &hs_gear)) {
-> >>>
-> >>> These are generic properties, so they need to be handled in a generic
-> >>> code path.
-> >>
-> >> Hi Dmitry,
-> >>
-> >>
-> >> Below is the probe path for the UFS-QCOM platform driver:
-> >>
-> >> ufs_qcom_probe
-> >>   └─ ufshcd_platform_init
-> >>        └─ ufshcd_init
-> >>             └─ ufs_qcom_init
-> >>                  └─ ufs_qcom_set_host_params
-> >>                       └─ ufshcd_init_host_params (initialized with default values)
-> >>                            └─ ufs_qcom_get_hs_gear (overrides gear based on controller capability)
-> >>                                 └─ ufs_qcom_set_phy_gear (further overrides based on controller limitations)
-> >>
-> >>
-> >> The reason I added the logic in ufs-qcom.c is that even if it's placed in ufshcd-platform.c, the values get overridden in ufs-qcom.c.
-> >> If you prefer, I can move the parsing logic API to ufshcd-platform.c but still it needs to be called from ufs-qcom.c.
-> > 
-> > I was thinking about ufshcd_init() or similar function.
-> Hi Dmitry,
-> 
-> It appears we can't move the logic to ufshcd.c because the PHY is initialized in ufs-qcom.c, and the gear must be set during that initialization.
-> 
-> Limiting the gear and lane in ufshcd.c won’t be effective, as qcom_init sets the PHY to the maximum supported gear by default. As a result, the PHY would still initialize with the max gear, defeating the purpose of the limits.
-> 
-> To ensure the PHY is initialized with the intended gear, the limits needs to be applied directly in ufs_qcom.c
+--0000000000003a7ad6063b3d4d34
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The limits are to be applied in ufs_qcom.c, but they can (and should) be
-parsed in the generic code.
+On Wed, Jul 23, 2025 at 12:26=E2=80=AFAM Christoph Hellwig <hch@infradead.o=
+rg> wrote:
+>
+> On Tue, Jul 22, 2025 at 09:06:10AM -0600, Sathya Prakash Veerichetty wrot=
+e:
+> > There is a resource issue which prevents SATL from doing double
+> > buffering and RMW of the contents to map the data from SATA drives to
+> > the host buffers for the specific commands.  Our firmware changes
+> > leads to performance and functional issues, So we are left with either
+> > failing those commands in the driver or changing the mapping, We
+> > decided to go with changing the DMA mapping as we know those commands
+> > require both read/write access to the buffers.
+> > Any functional issue of changing the DMA mapping?
+>
+> Well, we have to change the mapping to make your broken hardware work.
+> But these kinds of hacks in firmware are really problematic.  When an
+> application does a passthrough of a SCSI command it can very much
+> expect that the payload is not changed by a call to SG_IO, and this
+> breaks it.
+>
+Agree, that is the reason, we don't want to change the mapping outside
+the driver.  In this case, the problem is with reading the payload
+(the write access was already available in the default mapping).  We
+tried a couple of long term solutions in the firmware and with the
+current hardware capabilities they were not successful.  The other
+option we have other than modifying the mapping is to fail the
+commands but that will result in functional failure. So we took the
+least impactful approach.
 
-> 
-> Please let me know if you have any concerns.
-> 
-> Thanks,
-> Ram.
-> 
-> 
-> > 
-> >>
-> >> Thanks,
-> >> Ram.
-> >>
-> >>
-> >>>
-> >>> Also, the patch with bindings should preceed driver and DT changes.
-> >>
-> >> Hi Dmitry,
-> >>
-> >> I have reordered the patch series to place the DT binding change as the first patch in latest patchset.
-> >>
-> >> Thanks,
-> >> Ram.
-> >>
-> >>
-> >>>
-> >>>> +            host_params->hs_tx_gear = hs_gear;
-> >>>> +            host_params->hs_rx_gear = hs_gear;
-> >>>> +            host->phy_gear = hs_gear;
-> >>>> +    }
-> >>>> +
-> >>>> +    if (!of_property_read_u32(np, "limit-rate", &hs_rate))
-> >>>> +            host_params->hs_rate = hs_rate;
-> >>>> +}
-> >>>> +
-> >>>>  static void ufs_qcom_set_host_params(struct ufs_hba *hba)
-> >>>>  {
-> >>>>      struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> >>>> @@ -1337,6 +1352,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
-> >>>>      ufs_qcom_advertise_quirks(hba);
-> >>>>      ufs_qcom_set_host_params(hba);
-> >>>>      ufs_qcom_set_phy_gear(host);
-> >>>> +    ufs_qcom_parse_limits(host);
-> >>>>
-> >>>>      err = ufs_qcom_ice_init(host);
-> >>>>      if (err)
-> >>>> --
-> >>>> 2.50.1
-> >>>>
-> >>>
-> >>
-> > 
-> > 
-> 
+--0000000000003a7ad6063b3d4d34
+Content-Type: application/pkcs7-signature; name="smime.p7s"
+Content-Transfer-Encoding: base64
+Content-Disposition: attachment; filename="smime.p7s"
+Content-Description: S/MIME Cryptographic Signature
 
--- 
-With best wishes
-Dmitry
+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
+v82E+npLwqC8bSHh1m6BJewfpawx72uKM9aFs6SVpLPtN6a5369OCwVeEwkk2FeFU9tZXWBnI4Wu
+d1Q4a3vhOColD6PdTWv74Ez2I3ahCkmpeEQ1YMt61TUH3W8NUJJeYN2xkR6OGsA1AgMBAAGjggHc
+MIIB2DAOBgNVHQ8BAf8EBAMCBaAwgaMGCCsGAQUFBwEBBIGWMIGTME4GCCsGAQUFBzAChkJodHRw
+Oi8vc2VjdXJlLmdsb2JhbHNpZ24uY29tL2NhY2VydC9nc2djY3IzcGVyc29uYWxzaWduMmNhMjAy
+MC5jcnQwQQYIKwYBBQUHMAGGNWh0dHA6Ly9vY3NwLmdsb2JhbHNpZ24uY29tL2dzZ2NjcjNwZXJz
+b25hbHNpZ24yY2EyMDIwME0GA1UdIARGMEQwQgYKKwYBBAGgMgEoCjA0MDIGCCsGAQUFBwIBFiZo
+dHRwczovL3d3dy5nbG9iYWxzaWduLmNvbS9yZXBvc2l0b3J5LzAJBgNVHRMEAjAAMEkGA1UdHwRC
+MEAwPqA8oDqGOGh0dHA6Ly9jcmwuZ2xvYmFsc2lnbi5jb20vZ3NnY2NyM3BlcnNvbmFsc2lnbjJj
+YTIwMjAuY3JsMCYGA1UdEQQfMB2BG3NhdGh5YS5wcmFrYXNoQGJyb2FkY29tLmNvbTATBgNVHSUE
+DDAKBggrBgEFBQcDBDAfBgNVHSMEGDAWgBSWM9HmWBdbNHWKgVZk1b5I3qGPzzAdBgNVHQ4EFgQU
+VyBc/F5XGkYNCP9Rb96mru8lU4AwDQYJKoZIhvcNAQELBQADggEBACiysbqj0ggjcc9uzOpBkt1Q
+nGtvHhd9pbNmshJRUoNL11pQEzupSsUkDoAa6hPrOaJVobIO+yC84D4GXQc13Jk0QZQhRJJRYLwk
+vdq704JPh4ULIwofTWqwsiZ1OvINzX9h9KEw/+h+Mc3YUCO7tvKBGLJTUaUhrjxyjLQdEK1Xp/8B
+kYd5quZssxYPJ3nl37Moy/U9ZM2F0Ivv4U3wyP5y5cdmBUBAGOd94rH60fVDVogEo5F9gXrZhT/4
+jKzCG3LclOOzLinCkK2J5GYngIUHSmnqk909QPG6jkx5RJWwkpTzm+AAVbJ9a+1F/8iR3FiDddEK
+8wQJuWG84jqd/9wxggJgMIICXAIBATBrMFsxCzAJBgNVBAYTAkJFMRkwFwYDVQQKExBHbG9iYWxT
+aWduIG52LXNhMTEwLwYDVQQDEyhHbG9iYWxTaWduIEdDQyBSMyBQZXJzb25hbFNpZ24gMiBDQSAy
+MDIwAgx2rp2oPFt1hdtt8l8wDQYJYIZIAWUDBAIBBQCggccwLwYJKoZIhvcNAQkEMSIEII0FD5Ik
+4Sk8IxN2CxGMZWjeKS/HHp1HarCMZPRteii1MBgGCSqGSIb3DQEJAzELBgkqhkiG9w0BBwEwHAYJ
+KoZIhvcNAQkFMQ8XDTI1MDczMTE3NTIxNFowXAYJKoZIhvcNAQkPMU8wTTALBglghkgBZQMEASow
+CwYJYIZIAWUDBAEWMAsGCWCGSAFlAwQBAjAKBggqhkiG9w0DBzALBgkqhkiG9w0BAQcwCwYJYIZI
+AWUDBAIBMA0GCSqGSIb3DQEBAQUABIIBAJpSOtPXVjwh1LnPvdiH4HYQpeOhLcjeeSbBcNTDeaDZ
+3oSmdzOm3qUhZG3mYLItxpPuvlvcE3Ppa06nssvnjSLBRCW0o3QbJ68DZQ7DyvbcwD63yvpmlZpl
+lze7mitEf330RQTduxMBNzZFUcCgUWiZBTDw/zrMbKwusYodhp3lPQS/RsLa5QYo5HjwkHJCupMl
+xIczD81IIIfICWvhXLwE2Uo7DbJ+OHByfcdl3pWjeq866rHPL/nX4S+/2IizuwRUiuYwuU2HUF8W
+Bz7ZAe4Q8SsPmNeBNXLMDbljuvBCBXgBE91uAedOub12vVd6QYgCCk5+oWm2/+XJ7q71OkI=
+--0000000000003a7ad6063b3d4d34--
