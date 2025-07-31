@@ -1,82 +1,65 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C5A62C327C;
-	Thu, 31 Jul 2025 14:09:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E18A14885D;
+	Thu, 31 Jul 2025 14:24:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753970997; cv=none; b=R3GJxOTnlUbhVfxECyIOMWN+WYGe3HN/8SrVPNvWiJZ9Tn/r7lvxIQM7dpDdTcAiO6fnakzLRzcLYVAXVibiLY4NOVgAhK/y1aoC55sbcJEz1i7AhDWV6v0NjoaZF+t2PGjDOzcin3aUMdzh3ExiXqS7QwAfB08ppq5GdRP73Gs=
+	t=1753971866; cv=none; b=poOAQGwIi5ErdkHw1g4YdwXOkNw7JRBPuwbCp9XHwRPGjbrsmWMz7olDed/xvdbrPUEPhaVHkoWNIlW0oXI9ZU/FC30pTjZE8A86JgtKraLaagxWmPl//06HGYP407NH+rldTPiqkBmjK/jikXGwW5kIJr+JhHg/qgxmOj64uDI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753970997; c=relaxed/simple;
-	bh=4ckXLUcQZWuhpX7TQln+X9HK9J5VqakPRCNMdtfv1Gg=;
+	s=arc-20240116; t=1753971866; c=relaxed/simple;
+	bh=NnD75Ujp3G/TbxqafNqnap7QmOy7eTehmQZP6bmHfqQ=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NRQd1UyHxSeALwLrxa6iPabkXLMoXfwgi30Zdpis+LQ4i6mwX4+7rfTJINDtf6oFyefEFE52/DZDUNGa7RZL2tJcl8MMi9jLVoPxkAzvat+BPKTJdLgEiZHVNKeskQQONmRWHKw0aFAJLw1ytjYoTZiHr11mVOZWn5yyUxSR7Ss=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PVlzUc49; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=jIMyyn3yA4rxOklLuk7rAT3QNG1DV2EdTKjNeucKjglQOIAD+O3Ip5IcbF0hlyj1aDlHjkSdtRSNu5z6MtrSa8kQ173m2AW9yQRfx5EUxPkj12oaxPTtHO2S7/qzEWSfp+oUsI8tuq3DZ3nf3Z+P9sV4bVP0Aa273WM+tYWUmy4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Mmtd6I12; arc=none smtp.client-ip=198.137.202.133
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PVlzUc49"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5BE5FC4CEEF;
-	Thu, 31 Jul 2025 14:09:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753970996;
-	bh=4ckXLUcQZWuhpX7TQln+X9HK9J5VqakPRCNMdtfv1Gg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=PVlzUc49RRm8vqrxmeXNbKIhB1Sc0+GQq97exspTp8tl0Jg6bxqcyh6nWeU69Iomr
-	 Dd5avAdxDVXDV9Q8Lw0Goamf7acl6QZh7dM0f8jqLDM3FGGBpg5LZcuTGc9hOKbUmM
-	 m25J/KjRWoRmf28O0R7ka7sToUgejXIUBmQG4gV8TS6efQk3X2rJ37is0STzQDhMUS
-	 6lK3Sc1HSmc0GI1eAURGgV/TBcmmUVPZ2Uut6AK7boQMNArDhtv2TQTzgWPD/IFhA5
-	 1uemOiOwths/U8Y0LIkfJYR6F6JBPdtX/G+t3Xy07sgc5gjUQERvectZGhrbPiQVXs
-	 r98Ty/c7Dnwyg==
-Date: Thu, 31 Jul 2025 19:39:43 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: Nitin Rawat <quic_nitirawa@quicinc.com>, 
-	Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-Subject: Re: [PATCH 0/2] dt-bindings: ufs: qcom: Split SC7280 and similar
- into separate file
-Message-ID: <qemlydifa7u3zwrjnnp7umjsprjrje27ghzghyyoutufeyiimn@g2ejdt72opz3>
-References: <20250730-dt-bindings-ufs-qcom-v1-0-4cec9ff202dc@linaro.org>
- <df8b3c85-d572-4cee-863b-35fe6a5ed9ff@quicinc.com>
- <6ebe7084-bb00-4fac-b64d-e08e188f3005@kernel.org>
- <148b46f3-2109-4c15-b7d8-17963b38095a@quicinc.com>
- <1547e339-5be2-4d87-ab35-98a9be0d250e@kernel.org>
+	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Mmtd6I12"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
+	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description;
+	bh=m+2A9w+aUv0ZDr6hyfhfJ9HUaAAeP1mYbGPx8VhkZ6U=; b=Mmtd6I12WJKczi2mR7i+xITNFM
+	sOfWaZUgUz3JFXpZNwsbRLs1hhExh5YzY91cqHMoWPoeqGRHyRBM9tT3vue1c5m1lF8pGgDNaM6rP
+	ubfo8sSOAbrlHFxsaX02k0svRGz6fvacssSXM6ok7m1/8qxnyZEwn7EPf8CnJfy20SZgd/HPj4SAr
+	4vhUuKI8KHFZcsBZYx2POSv4GCYe/YaXtCDCTV3LOjcobIV8aZyEKGhJhCJxtGVucTJp2jhWLyO+h
+	S6BOmnt96+A3t8zh7R0CoCHCN6PhILaZ/57EDI0AazF8K4EpzDigUJFgFV1RhpLavdsPdnTl3dWwY
+	nB/bHQhQ==;
+Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
+	id 1uhUCh-00000003p9x-3wsg;
+	Thu, 31 Jul 2025 14:24:19 +0000
+Date: Thu, 31 Jul 2025 07:24:19 -0700
+From: Christoph Hellwig <hch@infradead.org>
+To: Xiang Gao <gxxa03070307@gmail.com>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	jaegeuk@kernel.org, chao@kernel.org, alim.akhtar@samsung.com,
+	avri.altman@wdc.com, bvanassche@acm.org, peter.wang@mediatek.com,
+	beanhuo@micron.com, mani@kernel.org, quic_nguyenb@quicinc.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-f2fs-devel@lists.sourceforge.net,
+	gaoxiang17 <gaoxiang17@xiaomi.com>
+Subject: Re: [PATCH] fs: export some tracepoints for iotrace
+Message-ID: <aIt8kzlJ2sW7nKir@infradead.org>
+References: <20250729160345.3420908-1-gxxa03070307@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1547e339-5be2-4d87-ab35-98a9be0d250e@kernel.org>
+In-Reply-To: <20250729160345.3420908-1-gxxa03070307@gmail.com>
+X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
 
-On Thu, Jul 31, 2025 at 09:04:48AM GMT, Krzysztof Kozlowski wrote:
-> On 31/07/2025 08:59, Nitin Rawat wrote:
-> >> Hm?
-> >>
-> >>>
-> >>> For reference, only SM8650 and SM8750 currently support MCQ, though more
-> >>> targets may be added later.
-> >>
-> >> Are you sure? Are you claiming that SM8550 hardware does not support MCQ?
-> > 
-> > Offcourse I can say that because I am working on Qualcomm UFS Driver.
+On Wed, Jul 30, 2025 at 12:03:45AM +0800, Xiang Gao wrote:
+> From: gaoxiang17 <gaoxiang17@xiaomi.com>
 > 
-> Qualcomm sent many patches which were not related to hardware at all,
-> just based on drivers, so my question is completely valid based on
-> previous experience with Qualcomm.
-> 
+> Signed-off-by: gaoxiang17 <gaoxiang17@xiaomi.com>
 
-SM8550 indeed doesn't support MCQ. Even though it is based on UFSHCD 4.x, it
-doesn't support MCQ due to hardware design. MCQ support only starts from SM8650.
+Random exports without a user of even explanation are weird.
 
-- Mani
+What up with Android folks that this kind of junk keeps getting sent
+over and over?
 
--- 
-மணிவண்ணன் சதாசிவம்
