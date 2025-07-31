@@ -1,130 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 720D115573F;
-	Thu, 31 Jul 2025 14:53:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C4ED51C5A
+	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 15:45:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753973627; cv=none; b=MVNsoyPJvYgpNV1Ko1zXaib9K9NaXixyeV0B5lJx1RpCqeBsjCrtxR298esJtsPw+viPgnTi8vvUbygxOhn600Mo/3YEFzTo2IEItk/c44YfLDSKtxWliu7fInU2VRB0EUeRMko4xZcyU8gD8A69WOSZh5qf9w/dZVNCFpExx4w=
+	t=1753976718; cv=none; b=bTPbO3M5WaI86v2BuTElNwebefP3qcsvv2lTmr7s9hE6UTeFDtfe2DOQnQthpVVPRdp6jkjBtw3D46tJC4jKB7MvjneVTn+EVi2rNARL+o30/lHTO+4EC+Y1I05PIP9z4ILR4MPUkihGN9cIU1/LlCNQal6JYqEi4ZH2ho4yn4s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753973627; c=relaxed/simple;
-	bh=BH+xJfVd8P1OMzhEptvJZEuLhWDdvxoqPKB2+LX+Isk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=aCHszQG1d4mYM9lWaNfbJT03++Idqj7Jq5MY1w0CPQ3C6H8ZDhfAkX7utHXSij3Wi1OjbeJqekb59kfMrsiAsfr7M0jdAXrSV70K/1IH5cl4oYEC1SR1mJvNFXUYvUXMWOgmoVqHzXPzFDUsEuRgpwN2r+/ArAazQ3xLwQpxNaA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kpi8aEeN; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1753976718; c=relaxed/simple;
+	bh=jZlOt1YZkVCFwV07TI+TAfO2Qv0hXeA8f+UU9YjpSgg=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=sAsBXQdvyQE4Qjp2aq+i7k3ve7nAk8JkTc7UbiuS4zzh7mFGlpcwujkVg7xDspQRHlo40Fs5IsFKPpFqoiAxJaTGJo0I6l06PypM1LymQgwb4qLQKKMw0PfxpLYLoCh4NREyHTqVtqEqWvWfTjsK7Y3ebMJ9VMwaogCdHoqxeFI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=ndPXYK4N; arc=none smtp.client-ip=209.85.221.48
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kpi8aEeN"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65142C4CEEF;
-	Thu, 31 Jul 2025 14:53:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1753973627;
-	bh=BH+xJfVd8P1OMzhEptvJZEuLhWDdvxoqPKB2+LX+Isk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=kpi8aEeNbTv1oce/RogYtbW0tseYmoCFpjWum9y3PPI/WiazyTJlUEdEbRfT1ShZQ
-	 SPz1is62J06pv+Nn7H/ssASOgakKv3HwQ/32Lvn1bLbzU/LMA//ro9gohKcI14x9M3
-	 /+43v7sHtijaXZ3eSWKplfuVDl8A0ZKPLmsAT3TKYciN+L+4K44unMRqH71gZeGXDu
-	 upO58ItRggZZeNv0FUQyHS9y4MbDpRjtHocUvtZIYq+8NcLwS9ECTab7jUyoMAeMLe
-	 Ywj4pRU1lO651/DIOLa3gF9qYCYjfbwO5zeb2UsqhJj/AkS3yxplaNqGWCIVZaSsXi
-	 +CY/QHZxaikaw==
-Message-ID: <a8eb1574-39f2-4b71-b6be-bb28b43eb6f8@kernel.org>
-Date: Thu, 31 Jul 2025 16:53:41 +0200
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="ndPXYK4N"
+Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-3b780bdda21so909006f8f.3
+        for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 08:45:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1753976715; x=1754581515; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=Ja/Or7TtQWbgvEBjUvVLczjO5A/ZgQzAqJjlnzQL2m4=;
+        b=ndPXYK4Nim6pZVKTkxJOBdhISbo7+ye9j7qTHpv8PRfpbSgpH/MeF83RwzYVruQI1B
+         Yvj/eQTRq54ZdiWAD74GU47YYQba6MZsplC5QvdpJgNZ5ZmT6dev9PBbl7aOubS3Q+C1
+         /o0wtKraV0vm8UNLgl/CjG5WgWwegJyqfVNvMYmp9hnhoYkOMDKxiQk8RtwBfkcrvIjS
+         2knvHOyVVwYsUFElTlGpzb1Sn8zAhuyijZz/GYjXdm5VfNrgGXVMH5zT3yotkYcPXnhE
+         0+5Klo1AwyI/md+/bMhuKHTPjCq7g6aCMDSawwq8Fww+xthrRmVJiwZETajwLMLsX9Q/
+         CkyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753976715; x=1754581515;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Ja/Or7TtQWbgvEBjUvVLczjO5A/ZgQzAqJjlnzQL2m4=;
+        b=OohAmHxq7KmvK+iGZsHtIJwveRT1fs58pKbjLgr6E0+ObbAA5fsJ+/cBhHU1W86hU5
+         wtVQTem3EBlXJ7G8801Jh/3xHz6yiQoEEx1DdjETEjOT2rcLooJYNIpQcOnnSlG2Neiw
+         i1MKLBlCweeVKmUgUldFzd6VHwvBGkmOxSpKgLI5Or0clx4aNHXQu4VFkdcSnHa5KON3
+         +XeRPwwJg/5Cz+VctTGqs5JgK9j5gFq7fnXnS9+Oi13mTtF5RDG9CuMtVvg8G+pGPRps
+         kF1sJ+AR80St+YkqX3EzqqMwiVB+vQFpMZp1uyU88lO5PMxzDS+cykTCkd+y6mBTS0Hg
+         KdpA==
+X-Forwarded-Encrypted: i=1; AJvYcCVf+5VhbwBFbJu2eqnmHIun8u6ZqrDW9Fgng2dTx7olBfeQTAt9D3L66WBNu4fPIz9KK48yEHO2zE9r@vger.kernel.org
+X-Gm-Message-State: AOJu0YzL9dTGfc7vI3GQy1hJMMhWlkeZF6kL2EOoE/Usf0P1YjdRQ2ii
+	wbFNa1bo+OVMe0UvyaAU4RzwzHCnAQDW0x3LaThDQSVShWW8687JtBPwc8YYK2d3NJw=
+X-Gm-Gg: ASbGncvacaMAswr+6MwqM6kkCZSj14fboL2Xjs72SVfE30PzV6FoN3ICR1zFpYcJocB
+	6Q3sDsc5LVX5r/PXY2ODCyp/+CFsSxIU2NB8Ag2dN/rJGDDaWiphxrnvnAAFjX1J0CV7NILXMKw
+	mL5828S5dwgAPsqXsC0Zyv6Vu9fbR/NOUbMPjNmK/s9hoFvjKXg8ChemFRTzo0YJvzkcbGgg7A+
+	I9Pqufo+up3rjMDEMZEmwFgK6MsdD+nTfU6nrf17T+D+RcvOkyMiU3NoEvOkW1IU3ECalQa/aiO
+	6oRCGyz6avl1h2u6Kct9N6RzSfPRn2byfcHQa9pbn91+C420rd1Z7CfF1xSreZTQg/Omjkh/csK
+	Zg60GOQ0QtBU3yJ0fQYQXLSiwS/8=
+X-Google-Smtp-Source: AGHT+IHhJG3LfxP6KYv87rmvm8BnH4eV9UZ3r9hVeSwsBncQIEv9CMsfvZuSXXuKKKjdvWf4dmJKKg==
+X-Received: by 2002:a05:6000:188c:b0:3b7:9dde:2a8 with SMTP id ffacd0b85a97d-3b79dde085cmr2503864f8f.35.1753976714859;
+        Thu, 31 Jul 2025 08:45:14 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3b79c453d6esm2803852f8f.37.2025.07.31.08.45.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 31 Jul 2025 08:45:14 -0700 (PDT)
+Date: Thu, 31 Jul 2025 18:45:10 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: oe-kbuild@lists.linux.dev,
+	Salomon Dushimirimana <salomondush@google.com>, bvanassche@acm.org
+Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev,
+	James.Bottomley@hansenpartnership.com, kashyap.desai@broadcom.com,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+	salomondush@google.com, sathya.prakash@broadcom.com,
+	sreekanth.reddy@broadcom.com, sumit.saxena@broadcom.com
+Subject: Re: [PATCH v2] scsi: mpi3mr: Emit uevent on controller diagnostic
+ fault
+Message-ID: <ba460132-50b0-4b77-b12a-4b9097b93fd9@suswa.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/2] dt-bindings: ufs: qcom: Split SC7280 and similar into
- separate file
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Nitin Rawat <quic_nitirawa@quicinc.com>,
- Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>,
- Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org,
- linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-References: <20250730-dt-bindings-ufs-qcom-v1-0-4cec9ff202dc@linaro.org>
- <df8b3c85-d572-4cee-863b-35fe6a5ed9ff@quicinc.com>
- <6ebe7084-bb00-4fac-b64d-e08e188f3005@kernel.org>
- <148b46f3-2109-4c15-b7d8-17963b38095a@quicinc.com>
- <1547e339-5be2-4d87-ab35-98a9be0d250e@kernel.org>
- <qemlydifa7u3zwrjnnp7umjsprjrje27ghzghyyoutufeyiimn@g2ejdt72opz3>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <qemlydifa7u3zwrjnnp7umjsprjrje27ghzghyyoutufeyiimn@g2ejdt72opz3>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250717194025.3218107-1-salomondush@google.com>
 
-On 31/07/2025 16:09, Manivannan Sadhasivam wrote:
-> On Thu, Jul 31, 2025 at 09:04:48AM GMT, Krzysztof Kozlowski wrote:
->> On 31/07/2025 08:59, Nitin Rawat wrote:
->>>> Hm?
->>>>
->>>>>
->>>>> For reference, only SM8650 and SM8750 currently support MCQ, though more
->>>>> targets may be added later.
->>>>
->>>> Are you sure? Are you claiming that SM8550 hardware does not support MCQ?
->>>
->>> Offcourse I can say that because I am working on Qualcomm UFS Driver.
->>
->> Qualcomm sent many patches which were not related to hardware at all,
->> just based on drivers, so my question is completely valid based on
->> previous experience with Qualcomm.
->>
-> 
-> SM8550 indeed doesn't support MCQ. Even though it is based on UFSHCD 4.x, it
-> doesn't support MCQ due to hardware design. MCQ support only starts from SM8650.
+Hi Salomon,
 
-Yeah, I checked later in datasheets and programming guide. That's why I
-sent v2 and marked it in Patchwork as changes-requested.
+kernel test robot noticed the following build warnings:
 
-Best regards,
-Krzysztof
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Salomon-Dushimirimana/scsi-mpi3mr-Emit-uevent-on-controller-diagnostic-fault/20250718-034234
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20250717194025.3218107-1-salomondush%40google.com
+patch subject: [PATCH v2] scsi: mpi3mr: Emit uevent on controller diagnostic fault
+config: x86_64-randconfig-161-20250720 (https://download.01.org/0day-ci/archive/20250721/202507211423.eXWSnhP5-lkp@intel.com/config)
+compiler: gcc-11 (Debian 11.3.0-12) 11.3.0
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+| Closes: https://lore.kernel.org/r/202507211423.eXWSnhP5-lkp@intel.com/
+
+New smatch warnings:
+drivers/scsi/mpi3mr/mpi3mr_fw.c:1639 mpi3mr_fault_uevent_emit() error: uninitialized symbol 'env'.
+
+vim +/env +1639 drivers/scsi/mpi3mr/mpi3mr_fw.c
+
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1636  static void mpi3mr_fault_uevent_emit(struct mpi3mr_ioc *mrioc, u16 reset_type,
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1637  	u16 reset_reason)
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1638  {
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17 @1639  	struct kobj_uevent_env *env __free(kfree);
+
+This has to be initialized before we return
+
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1640  
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1641  	if (reset_type != MPI3_SYSIF_HOST_DIAG_RESET_ACTION_DIAG_FAULT)
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1642  		return;
+
+otherwise this is an uninitialized variable at this return.
+
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1643  
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1644  	env = kzalloc(sizeof(*env), GFP_KERNEL);
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1645  	if (!env)
+8fe63dbd42cc3b Salomon Dushimirimana 2025-07-17  1646  		return;
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
