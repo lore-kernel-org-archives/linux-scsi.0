@@ -1,104 +1,80 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f171.google.com (mail-yb1-f171.google.com [209.85.219.171])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B5331FAC48;
-	Thu, 31 Jul 2025 16:52:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4152D24BC09;
+	Thu, 31 Jul 2025 16:53:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753980782; cv=none; b=Ov8j837JtW8oteW9ix44HH6+WoqFKaS14aDt6ARODjvDVzfelbFUbtMtbGAs4NNl3xiV5wvdAGTg+ltg0+34GyPcsi+0oXUjvHdXIWlcR0J/WP+p0dNKqcH0WM/lrvd7JDpn8DnHmnx7O0jxZX/FHRXz7B46jSZH7/nrc5KOATc=
+	t=1753980784; cv=none; b=Gr/bdj7Wf7tUHZEka5unrE54aZTlM/yIgBSmBxQbUtlpO5Nfhu9ckaMDoJiquXL58ZXthNyfeL6cDKNF7kgv2RLhcXZtSNerHuHaHz38NV8u9950BuIZd1r7x77Mwu2qJga6pKXgdi4ebUrw+Mgf4Vlin50MPK3QdHr4wUap97c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753980782; c=relaxed/simple;
-	bh=oM9rSevoQ7JkUN01oUeMRghVmEpm4moYN3as8s68inc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Egfp5HL7wZBC0xk7ISfVPoafQMDPV4qdwA3s9X7xkw+uN2mF+N57oCm9VLdwXd5YJc7HAqMMRYJ6oBerARwXV2V9ivgJiuAFeJZpColOEjVYc3O2H2V+TvSd2EF07TI1EeMiDz5zFxBUuczQrsbSdvomP3El8fVH1W6Lf2mfMsM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QATD2swK; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1753980784; c=relaxed/simple;
+	bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=MOXJpVR/J+bdbG6gO6FRFvxsZDCY202PA74ZRWlhnJQrn0/xvy9qA1afeSn/wPsZOP6Q5pyiPy4z68HGX7bYIKVGRSnUlWfPbFR4SVa10Cx4DNnSM9ieY/xxl4wZvRDnQqdxfhVWE4qgQaSYwQwmNTp7+h7DjyVMLk7uDM7ADDQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JM48qgJD; arc=none smtp.client-ip=209.85.219.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QATD2swK"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4btFWb0G0Gzm0pKP;
-	Thu, 31 Jul 2025 16:52:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1753980776; x=1756572777; bh=q+N8OqzcjFRQTlP1J8tBBS2b
-	KX+Af+zJ2IQ7vZkBgiA=; b=QATD2swKrjfG8BEzdtfQA37NHcgBsIBlw0vIMSCu
-	DUKyfra0dNbroIY4I6OgVhyylFQ8NLJUTPLUuoAHFrn/BcjY6h5LHrhtxS4kDXlz
-	GOyi2X6i16XSwItBCbjYq738FO3nwkfx2PaF6HmCOv5x3W3eEBXpwKJ//of2FrWn
-	BlVrznNgurkAwpzuYgY1bTsbLgI7Nixnj4N2bXWHfMZ5CtGbRX2m2MOeu9P1Tqj6
-	bnopXq4Jh1rrL0Hy/7miTLMxLP3o9/VJSjqdCxplzse5TX5dtFWPO//LpZ2KDB2p
-	61UNkVtltjCTN+Q7SUpiZqb7bCM8c3EIuVKakaupNkmlBg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id u58zs7n3NP8I; Thu, 31 Jul 2025 16:52:56 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4btFWM1yGczm0yVJ;
-	Thu, 31 Jul 2025 16:52:45 +0000 (UTC)
-Message-ID: <c516ed73-5947-4b18-a1d9-18a9901e30e3@acm.org>
-Date: Thu, 31 Jul 2025 09:52:44 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JM48qgJD"
+Received: by mail-yb1-f171.google.com with SMTP id 3f1490d57ef6-e8e014c1d19so963369276.3;
+        Thu, 31 Jul 2025 09:53:03 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1753980782; x=1754585582; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+        b=JM48qgJDdpBThpJTDXfAq78NJCGcyHUNmMqiEFYbJdUjLr3EEhsWaFopdSoAQZ9tcm
+         Glx0Amt6FGDg7YffrvAaDniutwmFLoKdG54qpiEWgev/P6fEiiSpkgVgREaPnH6aHnR0
+         slP8dCbRqu+yXbzRUBkHMhtInbF2TrZZGe4Q1Jm6qcJsjepfEgcgfLSn11r28I7OXh2w
+         dxOkNJDth757GkVHL5MYi4DE/p6gm/Yz0GrOGD93D5cz54Ip6pf2JK6Pa87AVEAzgNuM
+         e+zLwWCWHcMwFsvmGaufVGbNpVuN/X9qW3g2FMQG90+ChOhu4VTL54AANSrkYqCPAsKe
+         6Zxw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1753980782; x=1754585582;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+        b=g2KVMZ+UkVhZvzBY1ZQBJWuxUT6QqKlgQaW9Z9C94Mc4poVyNJ4e8xIJQHKhOzst+J
+         AqhNUT3e8NV2Dtldwyi0ngPnUJTveenVuVSwwmeydM7a1wPzVRhgvNdPGQDyoM4QNiky
+         ReY3YksKYX89Lx6PReRGAlKWCE876/eOnS/BzVp8g0dh1p/vSzTSvlXMpTCkOfzwOLFA
+         VrF5K/NtZJAXfjTdnwWjkAn5huk1lHmj9wWHcwKNl40c8Yy1kgEFvgQbKjkMzwANWjNX
+         WGm2UKFS98c9tdCSOuehSbranmLJIzSMUOUVOflTgHnT02w89hYYydKYxNq5lM+K8JVP
+         TDUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUEsa2XHcACmbhoxUH4uxWiHijP+iJRJYNX8EUEaoTb8xkD3Dm8mbV+X46gD4n+ESXaZ875KUEZi8S2nFQ=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwNpUvfavfcQCRtBajR57XI/d9WPa8jrg449uX0icmuNSKSTsLs
+	yqU5WSz3bD0KYWVo01FvL5RiiM37L5fj69R0Mr5hpGFjvQZuJke7X1kk+j6J275+UODcdpoTCCq
+	MXDxr8J4SyWRpy3KIzkkLHsogqgWcOGQ=
+X-Gm-Gg: ASbGncvbY/uDr6wKkf9yvpFpP9Oyy+RIethEI1LotdRzzajk+nspo2JuHutj9qKQBMh
+	WdUjUWm1wfGv66SCkrRvlISivKsK2/IWvP6wUcmrJer1OBw4eURY0oRUYg9xaH2ve7eSsYdBQyt
+	ve8fojILNbJ4XPZSCBRpghAOr6x+AAGq3taQJqKNJ3TDXVcDqX2bu0wyDLobmoLfqCy+q3XhiAR
+	SDMQGuE9e26QCRomJo=
+X-Google-Smtp-Source: AGHT+IGG7jDXqdUvjVgGITVdC1V3/YSkkYuOC0wnwU1VV2FsJ94rRReKf3bN54SUFBzXT6JQMTm+EhGQfwVz8PlYn50=
+X-Received: by 2002:a05:690c:f87:b0:71a:2065:525f with SMTP id
+ 00721157ae682-71a465f3075mr116714527b3.8.1753980782250; Thu, 31 Jul 2025
+ 09:53:02 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1] ufs: core: Fix interrupt handling for MCQ Mode in
- ufshcd_intr
-To: Nitin Rawat <quic_nitirawa@quicinc.com>, alim.akhtar@samsung.com,
- avri.altman@wdc.com, James.Bottomley@HansenPartnership.com,
- huobean@gmail.com, mani@kernel.org, martin.petersen@oracle.com,
- beanhuo@micron.com, peter.wang@mediatek.com, andre.draszik@linaro.org
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, Palash Kambar <quic_pkambar@quicinc.com>
-References: <20250728225711.29273-1-quic_nitirawa@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250728225711.29273-1-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20250731133311.52034cc4@endymion>
+In-Reply-To: <20250731133311.52034cc4@endymion>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Thu, 31 Jul 2025 09:51:40 -0700
+X-Gm-Features: Ac12FXybp4pgZpZXLIRPRfHGdWaGmxo_TZx534y5ah3VYvQh-vmf27OVsB-q2Ts
+Message-ID: <CABPRKS_SV7H6S_NyyUmYPt6MzWFEs1zuFCR7dXHV2A=Z0hSkMw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: Fix wrong function reference in a comment
+To: Jean Delvare <jdelvare@suse.de>
+Cc: linux-scsi@vger.kernel.org, James Smart <james.smart@broadcom.com>, 
+	Dick Kennedy <dick.kennedy@broadcom.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, LKML <linux-kernel@vger.kernel.org>, 
+	Justin Tee <justin.tee@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 7/28/25 3:57 PM, Nitin Rawat wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index fd8015ed36a4..5413464d63c8 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -7145,14 +7145,19 @@ static irqreturn_t ufshcd_threaded_intr(int irq, void *__hba)
->   static irqreturn_t ufshcd_intr(int irq, void *__hba)
->   {
->   	struct ufs_hba *hba = __hba;
-> +	u32 intr_status, enabled_intr_status;
-> 
->   	/* Move interrupt handling to thread when MCQ & ESI are not enabled */
->   	if (!hba->mcq_enabled || !hba->mcq_esi_enabled)
->   		return IRQ_WAKE_THREAD;
-> 
-> +	intr_status = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
-> +	enabled_intr_status = intr_status & ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-> +
-> +	ufshcd_writel(hba, intr_status, REG_INTERRUPT_STATUS);
-> +
->   	/* Directly handle interrupts since MCQ ESI handlers does the hard job */
-> -	return ufshcd_sl_intr(hba, ufshcd_readl(hba, REG_INTERRUPT_STATUS) &
-> -				   ufshcd_readl(hba, REG_INTERRUPT_ENABLE));
-> +	return ufshcd_sl_intr(hba, enabled_intr_status);
->   }
-> 
->   static int ufshcd_clear_tm_cmd(struct ufs_hba *hba, int tag)
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-
-Martin, this patch seems to be more popular than my "[PATCH v2] ufs:
-core: Fix interrupt handling". Please consider queuing this patch when
-this is convenient for you.
-
-Thanks,
-
-Bart.
+Regards,
+Justin
