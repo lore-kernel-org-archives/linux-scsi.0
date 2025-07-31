@@ -1,67 +1,75 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3EDD4198E81
-	for <linux-scsi@vger.kernel.org>; Thu, 31 Jul 2025 04:44:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94682198E81;
+	Thu, 31 Jul 2025 04:44:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1753937091; cv=none; b=s7bkNfq/hlE/v/agHMXrq9WV8/G0eiJXvF2JGEnte8smA7czhRwAtLRi6UjPU8/MoTo8m4mK4qn2DhaSRkDzhlj/LrI5vF+m/XF2whli5eUJAts7dkhR6M0Irl3tH3HZZ4hA4NkVd+nZUVlzqE4sNTI9Bg/J3irlWSLcbWMX+tI=
+	t=1753937094; cv=none; b=H3FddVMWaTeopDdM935XDxWRklebGsuhU+Y0pFmMOLJoDZ4hGKW3yZo4ACKz9QN9va/X4Nqqk+K4+xz2My7EXPCXwYKt4Se7xFiVB81rlajbSxW8OK/urtweoyeuzV8iViI80n+B7EW3bWX11A3Tzv1vZbLkNsPOqJZkfAMoco4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1753937091; c=relaxed/simple;
-	bh=bJJ43t5azEGyf8n/hFL7jyFulyRwBP74cezHhYiSsSA=;
+	s=arc-20240116; t=1753937094; c=relaxed/simple;
+	bh=pU6U4YP2NrNvJO1ANYmbymbAyxTzfedHxagQuA7XwKk=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=oDGvzPrFbfYTy+1d6hyhHBuRKZtuhkMD3IzTwbeXCbaP09o4mUA0g/s8gX/Uoj4EhMKt83OcWxjmLsJCuKrgdhTU6oGZSbB7l1OSFarVpmV3DHsZA+gWCfRHzuCsrVgjTce8erR4TjvOhFQ633rTd/ktWmV52+7B4m7myg1S7So=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=NNqs/Xf8; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=W3duJ0lMbES8ZqZjb9zHLT2k32HWrS4372ljQlkBa5nCO1vg3GHHtaoeD28GYRQjEZOM69T1Hits1HiPVqFnbRcC0QDKaxqZXQtsOR0LGPUOnIHGL+3zehl4Wmq/UgNtfzuk1MIRIkruKS61ZV4QnC9Czw2ut4y1dYw4CORrlyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=oeB5ywcs; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NNqs/Xf8"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56V2gN3Y031797;
-	Thu, 31 Jul 2025 04:44:38 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="oeB5ywcs"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 56V2gPvg030695;
+	Thu, 31 Jul 2025 04:44:37 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=xJ8iu3jZoiRrtYFwj61oSYpGXm8vhe4hBIcesrlQsFI=; b=
-	NNqs/Xf8Jell3KNpCRRlUw4zf2VQcyz/4tgqCHUHjRY7ynvfBlyveXxvYbcKWgBI
-	M5AUxWl/yZaxQhIUG3FWr3WiWS1BbsEEUoQZnE5lzNg+h6tQ8a5kaXL2DE8AgecC
-	7Zk19BCqbJr64PsocaJYmQDeQupbmrYvZh0oymUBOkr2VITWHqqcl2Rv44oDc3gj
-	wFjELXQ4rv4x73Yc2PWdikb3Cfa3hHY5w5BK3i4CthQCgtA9TFV6J24jBWV2qdbj
-	RRbHun1JJQB1NoX26gxQaoNTxbuCAxAs3wOd6Uw8EXkkFGURYWyngCJJcp5mfryr
-	vQ8+gtBOjH6c+6wzTAZm8g==
+	corp-2025-04-25; bh=I83MFnCiFXCiIp5e2+LBV1sV8BJ5k9xK1eQKah6+dzI=; b=
+	oeB5ywcsynEPWrIZpHiooUp7LDcm26sOUoltFGrXOj7E4oUZfpO/Sv+0sGryCuw4
+	xU+L32Al5QdljiknJP7Qe77gn9aDGtnWUZrN3sBq+eTSH37JslKrdQKr7nGhXCRw
+	57riVXcF3At2rWvfkJOu423STTbV+QJYF1N9DJaycpBbcYFgpURC+6/nkRJMJfYF
+	b8q5N4I76hK1buwLqhY+s1abU/kdexVPVrg0OMXUIQogOTjgWx1FYaH6cYfDyQCr
+	FiU60vzLJKcvOA5PVVmbNzebB12VtsvZVbayvtnX4KS2I9Qd2TPOFqzhsy91wlWL
+	iJiom95AGKZMk0PjJNp5AA==
 Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 484q4yk9n5-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 487y2p06cv-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 31 Jul 2025 04:44:38 +0000 (GMT)
+	Thu, 31 Jul 2025 04:44:37 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56V4eJOg016759;
-	Thu, 31 Jul 2025 04:44:37 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 484nfjb2uv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 31 Jul 2025 04:44:37 +0000
-Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56V4iX49035411;
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 56V36bKd016669;
 	Thu, 31 Jul 2025 04:44:36 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 484nfjb2tg-8;
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 484nfjb2ud-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
 	Thu, 31 Jul 2025 04:44:36 +0000
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 56V4iX43035411;
+	Thu, 31 Jul 2025 04:44:35 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 484nfjb2tg-5;
+	Thu, 31 Jul 2025 04:44:35 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: linux-scsi@vger.kernel.org, peter.wang@mediatek.com
+To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley <conor+dt@kernel.org>,
+        Matthias Brugger <matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+        Peter Wang <peter.wang@mediatek.com>,
+        Stanley Jhu <chu.stanley@gmail.com>,
+        "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+        linux-mediatek@lists.infradead.org,
+        Macpaul Lin <macpaul.lin@mediatek.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
-        chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-        cc.chou@mediatek.com, chaotian.jing@mediatek.com,
-        jiajie.hao@mediatek.com, yi-fan.peng@mediatek.com,
-        qilin.tan@mediatek.com, lin.gui@mediatek.com, tun-yu.yu@mediatek.com,
-        eddie.huang@mediatek.com, naomi.chu@mediatek.com, ed.tsai@mediatek.com,
-        bvanassche@acm.org
-Subject: Re: [PATCH v4 0/9] ufs: host: mediatek: Provide features and fixes in MediaTek platforms
-Date: Thu, 31 Jul 2025 00:44:26 -0400
-Message-ID: <175375581133.455613.799244421685167637.b4-ty@oracle.com>
+        Bear Wang <bear.wang@mediatek.com>, Pablo Sun <pablo.sun@mediatek.com>,
+        Ramax Lo <ramax.lo@mediatek.com>, Macpaul Lin <macpaul@gmail.com>,
+        MediaTek Chromebook Upstream <Project_Global_Chrome_Upstream_Group@mediatek.com>
+Subject: Re: [PATCH v2 1/4] scsi: ufs: ufs-mediatek: Add UFS host support for MT8195 SoC
+Date: Thu, 31 Jul 2025 00:44:23 -0400
+Message-ID: <175375581146.455613.10975874538933316960.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250722030841.1998783-1-peter.wang@mediatek.com>
-References: <20250722030841.1998783-1-peter.wang@mediatek.com>
+In-Reply-To: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
+References: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -77,59 +85,39 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 spams
  phishscore=0 suspectscore=0 mlxlogscore=999 adultscore=0 malwarescore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2505160000
  definitions=main-2507310030
-X-Proofpoint-GUID: 6FEtWkgKqFa5YhMAPJA5i4fVrs5NV5eG
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzMxMDAzMCBTYWx0ZWRfX30e6SzO6ITaZ
- QuXAP1UZ+llrR0aD37/KMlwVBUMIr+1HkPDKrx2ou3qqtHREC0SDeaqfXgD6rZ9o0DPmhUM+CFt
- 4P3Au1Sn7H/uHTFarorzuIsgymSwwFqNAFsFK0g047PYMwBDC4Qcp1IvAT0i5d1Wtt8UM/4IVmk
- O066788j2OtQ8v1WGhBAMQbE6r6RU0RUa/2DHeo+eRLZjCJnTOzKDDn2WQZHakdGwnFvut07FGi
- C3YXhcT6b82PFBffUKu5oZGzGyQnr1F7Mui0xKyvawlgV1hJklJOJlM2Y/mWTgghb1fjgx/ma/b
- 4v1ZY/0p4I2NKL4hmxQ9qGfXgurtd0Pu0wbD7WYO0whm6KUKG/ISUATzK1OFpNQnPPEvdFxEye9
- Da6Epr+11fD6CyCdDz+nhr+7gE9EBSiwlGfd89QXGEyfYvyrC6O851m12apJ8jNGnno63fSj
-X-Authority-Analysis: v=2.4 cv=ZMjXmW7b c=1 sm=1 tr=0 ts=688af4b6 b=1 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=COwqXQrD c=1 sm=1 tr=0 ts=688af4b5 b=1 cx=c_pps
  a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
- a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=mpaa-ttXAAAA:8
- a=M1Cv4AyAfq6yeDsx1bgA:9 a=QEXdDO2ut3YA:10 cc=ntf awl=host:12070
-X-Proofpoint-ORIG-GUID: 6FEtWkgKqFa5YhMAPJA5i4fVrs5NV5eG
+ a=IkcTkHD0fZMA:10 a=Wb1JkmetP80A:10 a=VwQbUJbxAAAA:8 a=Sz4xQF61w0hT1LMIHCkA:9
+ a=QEXdDO2ut3YA:10 cc=ntf awl=host:12070
+X-Proofpoint-ORIG-GUID: Y8eRtjW2yVAzR-f2CA9cdFL5iiSi5iTs
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwNzMxMDAyOSBTYWx0ZWRfXww8Fhxoti4mV
+ 1itO/IqhdDBarORqZisMtXyeMabxZnpmHq577rG3cV9RZi2kZMY726J11kD/E+Wa3i2q2zfO9l3
+ w1mVPawTAxmhCwSXy4ckAGIasxnL8g4qiFOU8qB4BgHghhsR3e/l0135vvailU8AaOzuU78Gf+w
+ OLOcyEI86yWXspiY8Byjm+uBTaVCDSoS+OaaIZieDxnzfQpqwu5ENNioZea5Tius4IC8mCaQxqj
+ mTwUlHGXgLSxIyL0j9wENVsMyVEi6sWWl2cKgkZX4gx4lVA7NaPgTxUp0pmBZc3RjcuUR0WYF4E
+ G6P2xMDJCyYuc+gZ1u+Hink0xnmW/E2RQHUjMKHQtPf0Uf5g+GzBi/8OSAVsBQYq5FOX9/swyjA
+ GksggwWNJb2DIwHzPHWYGiah0DRNVpSm/Qs/aHQdZ7/gfV2LcUYhmdOdA3qmpO53ZlnWaRe+
+X-Proofpoint-GUID: Y8eRtjW2yVAzR-f2CA9cdFL5iiSi5iTs
 
-On Tue, 22 Jul 2025 11:07:15 +0800, peter.wang@mediatek.com wrote:
+On Tue, 22 Jul 2025 16:57:17 +0800, Macpaul Lin wrote:
 
-> This series fixes some defects and provide features in MediaTek UFS drivers.
+> Add "mediatek,mt8195-ufshci" to the of_device_id table to enable
+> support for MediaTek MT8195/MT8395 UFS host controller. This matches the
+> device node entry in the MT8195/MT8395 device tree and allows proper driver
+> binding.
 > 
-> Changes since v3:
-> 1. Fix comment message in patch:
->   ufs: host: mediatek: Simplify boolean conversion
 > 
-> Peter Wang (7):
->   ufs: host: mediatek: Simplify boolean conversion
->   ufs: host: mediatek: Change ref-clk timeout policy
->   ufs: host: mediatek: Handle broken RTC based on DTS setting
->   ufs: host: mediatek: Set IRQ affinity policy for MCQ mode
->   ufs: host: mediatek: Add clock scaling query function
->   ufs: host: mediatek: Support clock scaling with Vcore binding
->   ufs: host: mediatek: Support FDE (AES) clock scaling
-> 
-> [...]
 
 Applied to 6.17/scsi-queue, thanks!
 
-[1/9] ufs: host: mediatek: Simplify boolean conversion
-      https://git.kernel.org/mkp/scsi/c/262893939604
-[2/9] ufs: host: mediatek: Add DDR_EN setting
-      https://git.kernel.org/mkp/scsi/c/a84a9ba7888f
-[3/9] ufs: host: mediatek: Change ref-clk timeout policy
-      https://git.kernel.org/mkp/scsi/c/16b30c7a4c56
-[4/9] ufs: host: mediatek: Handle broken RTC based on DTS setting
-      https://git.kernel.org/mkp/scsi/c/a44ff97f895b
-[5/9] ufs: host: mediatek: Set IRQ affinity policy for MCQ mode
-      https://git.kernel.org/mkp/scsi/c/66e26a4b8a77
-[6/9] ufs: host: mediatek: Add more UFSCHI hardware versions
-      https://git.kernel.org/mkp/scsi/c/7996746394df
-[7/9] ufs: host: mediatek: Add clock scaling query function
-      https://git.kernel.org/mkp/scsi/c/ff40f31216ff
-[8/9] ufs: host: mediatek: Support clock scaling with Vcore binding
-      https://git.kernel.org/mkp/scsi/c/31a20e9f7c76
-[9/9] ufs: host: mediatek: Support FDE (AES) clock scaling
-      https://git.kernel.org/mkp/scsi/c/5e5976f5242d
+[1/4] scsi: ufs: ufs-mediatek: Add UFS host support for MT8195 SoC
+      https://git.kernel.org/mkp/scsi/c/6f1fd3e0279f
+[2/4] dt-bindings: ufs: mediatek,ufs: add ufs-disable-mcq flag for UFS host
+      https://git.kernel.org/mkp/scsi/c/794ff7a0a6e7
+[3/4] dt-bindings: ufs: mediatek,ufs: add MT8195 compatible and update clock nodes
+      https://git.kernel.org/mkp/scsi/c/d01cfeac89e9
+[4/4] arm64: dts: mediatek: mt8195: add UFSHCI node
+      https://git.kernel.org/mkp/scsi/c/a28f98103890
 
 -- 
 Martin K. Petersen	Oracle Linux Engineering
