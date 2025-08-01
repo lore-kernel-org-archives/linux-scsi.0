@@ -1,77 +1,73 @@
-Received: from mail-yw1-f176.google.com (mail-yw1-f176.google.com [209.85.128.176])
+Received: from mail-yw1-f169.google.com (mail-yw1-f169.google.com [209.85.128.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE7381D5CE5;
-	Fri,  1 Aug 2025 18:35:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB5AE199237;
+	Fri,  1 Aug 2025 18:52:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754073350; cv=none; b=PHtxwOp0ULf4fnTdozGwNtky79KgVA4nKRKGjsXxFkpceP0/S0VFmM9yV6qqTsac9Bd5T0iYzbXwDUxXhPg1H3ncj8cK1BlFEdItJJ+jbNkwMPrfKvJO7EvXdJPxQg1Qs+O1ENfQO55EzlYMfsfBgfr75pCTJqcvzeLQyc43yVA=
+	t=1754074328; cv=none; b=hcQjbFvpZc7hVz8+zMkljnsNFNppLWFCHTwmGp/weHGDSwDz3qIKenF/p6Hnuv+PcvBF2mctNW8r//kVDz/fmp0Wh5cTk+EioCiQweOLeEV34YyU04Kd5q4M5gMvN9VFwxyDIEflhUHJels+HOwnY3YVEERRMeP5xxuf/xf6aFw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754073350; c=relaxed/simple;
-	bh=B27OjJv8jOXqJdC/glwPPLA78Xh2lF+0QgwazJeHe98=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=DxiF2piZXkqVfzTPvIpJrHDUnV5gW+uazxgPfNCXD7blcFkni4xnJc+BuL/LvAewA9RDzPwbEOUCxUwuHs9d0pdn2JcqruwlLrTCRC2CRgfCOqjA3WKTxpJXyGWuwrUXsBfuLSFI3WcxDpjAINWlS/G6JlqnW2Cb1GoreSj3oCs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=cpc0LNxB; arc=none smtp.client-ip=209.85.128.176
+	s=arc-20240116; t=1754074328; c=relaxed/simple;
+	bh=Xp2PK/ovVd/fbBmlJEJTx+dwye2Em0IHjMJyreXtfhg=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=gEk9jRXO08cfM6pcfEN1iBBWmmghlUuEXNnegye7fvm1vl4v6Xcw5lc0RN02UF1I4I/nh+WygCSh50yRGLe0jEW9/zEoLRg9xbruuY61n8r/0LaU97aBLrfW5gK7Ro/Wg7hZ7HulbYMayNoi8B0Y5COcdTGR2dDoudEPToEUTg0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WsgTPKk5; arc=none smtp.client-ip=209.85.128.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="cpc0LNxB"
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-708d90aa8f9so27100557b3.3;
-        Fri, 01 Aug 2025 11:35:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WsgTPKk5"
+Received: by mail-yw1-f169.google.com with SMTP id 00721157ae682-712be7e034cso20307727b3.0;
+        Fri, 01 Aug 2025 11:52:06 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1754073348; x=1754678148; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1754074325; x=1754679125; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=qfIH0tozfiW0Hsw51f6VO5Q0JxUmTtpKoc44LZzdrkU=;
-        b=cpc0LNxB/QFLh5U4hE/O8mLdEhsL2KhtxT2pLvni0Qcx+5UoRJGXRjmlNONqrxOCpP
-         +sN1pjbMe9S+UJrNRgYMxJmjKgmdwFo7/fVJwFu7xNkCMiDIt0iJ1SuMwXgLdPN6tKx5
-         sIiNlYef2BILRBPJkQL1izJBuz8QHiGe3PNLm/leFNDCTjCy0EK432EMWWcOB4sy3M3E
-         xXUqgCscV3P7JiUH84XmGT064ZA9GOVERY/eNo4PiLYF927yrCjMDwO7fq7ZrQDVRcVe
-         06+CEkGyyk05i8Bo6LZ51/QrtrB8RaadCApoIVxVk8ZvMUWzcsd+wJol64RCLB1BUnyg
-         ksnQ==
+        bh=gFoIxDRp2pfiB127p9uyJxKIANShZZkJHHrE2Rq6b24=;
+        b=WsgTPKk5AiBFyCYyfXYroQyd1xSCYFOPU0q1YOhmQPnMtjVkn5Vp6vDSYmYPg1EMqg
+         QfKYJeIRsw8OTyr1BewBVq/YGtpGVYR75TQz8oHNnvhdycaF0PcYc8xRTQ/96KsvqQ4r
+         EGhT5uzxUmqYOXjQ0xmgya+xRpaH4iiifiIpsQK8AF3CL6p71TqbKCyuKR1ffM2IXLqe
+         ZKrqDAxVRNSiQ0DFNPF2hrJOquR/CcxWKIRL6JXrzz9gb+542zVF5G5ZqQxyluvKefgx
+         pHpUMnSdqwW+ZRxsa/AA1hSg+OF2R2vVJ5ZtlbshM2NqxofEeVcRLtNzuTAkmGl2R0l/
+         Ly1A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754073348; x=1754678148;
+        d=1e100.net; s=20230601; t=1754074325; x=1754679125;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=qfIH0tozfiW0Hsw51f6VO5Q0JxUmTtpKoc44LZzdrkU=;
-        b=uBcPG9sAz1qQE/r2OhQX55CdN3bJ85urEqeWspb2xgP1ZTd5Aycsl4pywM/yD/wXaM
-         q+2SllyQ8ftDJFJ8yEvOLmjv6YCvZCRDDUmHcxDa9vr1wBl0Jppn6EcmQ+f82EcNXggv
-         Ucvm+ZyaZkdwdQ7598G/980wG/lkb6ZzopPiCeXFpdoXYV/yxViSOUK2f2sTGZr5Yd5m
-         34YmRXB4HB55+zMGQNpL/iuwTHlNWsYh82NJQAVj46Sk4eNtTzebB5efVVPSpYXL3qZn
-         CiFPA214497KSCgKMZ3C2GFhOU993/LgBAZW5J8d+a3eb8xDF+dcyaVXvS+LuYRXgdqG
-         tw3Q==
-X-Forwarded-Encrypted: i=1; AJvYcCV8mIvqu7MBB4hsGkwjPB6JaluAtrvy61PZuDelDWVFAR+2qo7yUXfF0wZBlWJRbhn9p/tlEQJ+792mO2c=@vger.kernel.org, AJvYcCXP3RgLjFRRwmIEEEhDirU5iuwmjQ+gcZWuQaGOl5JwaVi8NQ+m2r1zpYHQ34QHlwt+YsqRU+hzrSP57w==@vger.kernel.org
-X-Gm-Message-State: AOJu0YxqKps/kpdBlX2QRqd+RPnmbgp/YpTs+Gc0/GvuiRxc8ZsaH0Do
-	LLctW+pv5i5tgG4ANBtgY39wXG1VPTqQPrbZ1SK11Uwy8k2dCRruNigD
-X-Gm-Gg: ASbGncsoQasEXWBINIvrino3gsV4pn4rslk33JqjG1j4gzgIhr38dLhPQUEhqhrXmjK
-	xKCK8Tl3GoqDPgmIxUzBQJLXTgbVdZVve3oPqAWVX21nKcQwUu5AoWlOpCpv/+D9lHc7nobSpkQ
-	CLrsRG9HUnAGxCiQi2CkYBzWdqUGL7Fih9WZ3st0Z+ga2bxyfnMY9ibCJZgk8+khDtDY/7g64n2
-	bTSErhsgsw2RdsRYsqSuO3t6jE3sb2nOcfevuTMMdxcKLk1U7O3Ta39wPJoieKv6QMY9FweGqr/
-	4WSZ3+g4TfxT932WiOZ6xw+Ce/F9NcAHrtlo1wV4kKqFHB7soCp+01ud5AmMW8aTkBHVHPbFWwj
-	qPBTL5lX/lHBsYYtCU7ySeEWnxUdHXh1OS4EihJ0FwF4/
-X-Google-Smtp-Source: AGHT+IG0Zy2onfPOCf3cQqr9oNwibRTwFlFoKRASJD+QGncsrGzGltXHMxWZXfPCP+kSB0ggJQ37AQ==
-X-Received: by 2002:a05:690c:6312:b0:71b:6635:df33 with SMTP id 00721157ae682-71b7f07fcb1mr10967007b3.30.1754073347587;
-        Fri, 01 Aug 2025 11:35:47 -0700 (PDT)
+        bh=gFoIxDRp2pfiB127p9uyJxKIANShZZkJHHrE2Rq6b24=;
+        b=NLJ6/HbBHIppeuELMV6IA58bvt4vIUw4LonT93WU44q/+Q6MRdRbc6Rr2Ku8O3ywpa
+         yI4BovMPDaVlrPi7vdAra0g93kcmENgRHYdiQWSzARAfrzjhqHPW+i1wfwa4aCya6Z28
+         qlSLU+RHK/vnPZo7lIYvi5lbrfzSgVYVk1N17oNr6cmsjmRATodSHiYzJlq0NB6r2EnU
+         ODxEZdGhirREiCqgvUUHnwOFMuwNe19OTvIHPS03dGGBylQp3Q6gSaQLbPW8Jdjmo/5g
+         UBUALwunw8DsxWgkcnq6c7GUM9RCQL8IER++IA21NKaISBNI6oRl1UYDAGkvp4V38DF7
+         TPcg==
+X-Forwarded-Encrypted: i=1; AJvYcCVIUN5EAWn9Sx3Xf13WAXdGDKW6GqoHymuFEJmB+tkxBiHt+gvGxUS4zqTfjCGkgZaKGXgErsxIDHUjhuk=@vger.kernel.org, AJvYcCX05osIQS/E2OBeuux1s51xbEnVjSNUvzGstdzMfiidQUgzAIPCujc6sMmQU8OD90LZon8Ie+YzBvYFww==@vger.kernel.org
+X-Gm-Message-State: AOJu0YzAPY2yslWXBcSdOCQjN9jzobF6C3xQ5QURFARWFf9jE1Gnxmh1
+	gjkKWrsRpWp/ffIDVw6amQXWk9xO7uwSmESYuPFCFw+RjUr0fgqcsMYG
+X-Gm-Gg: ASbGncsQK5c7pLRtlXYLvsFeuA6AmNgAvu7aeYke7SxkHeXNwYrA6GYpVWXmEwzDuc2
+	kFPzl2sP3+Sh65c5NDoliVYVFVZvTwUsx9IeqGRCHjKKNg59jmEFGl3RAfA+yqC1rl6s1UpY5oN
+	GJCWBtIUfTu8PEu/JXKF5Wf2nXrXxIrN346H3BnptLuTDKjAXtgWPl9tKbyuCdrmbfMcjKOxwuT
+	y8RXVrMjhjXvpwZu90I5ESE6VR0NK68Zk/VtCWo7pTGXL6rWM5wywh3fz+ykkGv9j0yYJeDVJ0h
+	L++AiQTMNWat0OvKTorbI5mIjiQRcpupmZmt/Ue/WzYSNg7+WdstA6loioHL7RUktuBIYrMAQpX
+	TpUJ+4Pcd+JbctqKusHImBnVWP94FTwBf/45qAsrDn9xW
+X-Google-Smtp-Source: AGHT+IG11Q9HW6siAAFooyZVFBl4g+RmMYc5D7VV9HCDdBzn7WKu6WMLld0/77W2Gy7aNrJTJaGWCA==
+X-Received: by 2002:a05:690c:4612:b0:71a:251e:36c5 with SMTP id 00721157ae682-71b7f87f472mr8703197b3.28.1754074325316;
+        Fri, 01 Aug 2025 11:52:05 -0700 (PDT)
 Received: from newman.cs.purdue.edu ([128.10.127.250])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-71b5a42187esm11931567b3.41.2025.08.01.11.35.46
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-71b5a5cdde5sm11928817b3.78.2025.08.01.11.52.04
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 01 Aug 2025 11:35:46 -0700 (PDT)
+        Fri, 01 Aug 2025 11:52:04 -0700 (PDT)
 From: Jiasheng Jiang <jiashengjiangcool@gmail.com>
-To: Kashyap Desai <kashyap.desai@broadcom.com>,
-	Sumit Saxena <sumit.saxena@broadcom.com>,
-	Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
-	Chandrakanth patil <chandrakanth.patil@broadcom.com>
+To: James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>
 Cc: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Tomas Henzl <thenzl@redhat.com>,
-	Sasikumar Chandrasekaran <sasikumar.pc@broadcom.com>,
-	megaraidlinux.pdl@broadcom.com,
+	Hannes Reinecke <hare@suse.de>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Jiasheng Jiang <jiashengjiangcool@gmail.com>
-Subject: [PATCH] scsi: megaraid_sas: Add check to avoid potential NULL pointer dereference
-Date: Fri,  1 Aug 2025 18:35:44 +0000
-Message-Id: <20250801183544.38154-1-jiashengjiangcool@gmail.com>
+Subject: [PATCH] scsi: lpfc: Remove redundant assignment to avoid memory leak
+Date: Fri,  1 Aug 2025 18:52:02 +0000
+Message-Id: <20250801185202.42631-1-jiashengjiangcool@gmail.com>
 X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -81,30 +77,26 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Add check for the return value of megasas_get_cmd_fusion() to avoid
-potential NULL pointer dereference in megasas_prepare_secondRaid1_IO()
-if r1_cmd is NULL.
+Remove the redundant assignment if kzalloc() succeeds to avoid memory leak.
 
-Fixes: 69c337c0f8d7 ("scsi: megaraid_sas: SAS3.5 Generic Megaraid Controllers Fast Path for RAID 1/10 Writes")
+Fixes: bd2cdd5e400f ("scsi: lpfc: NVME Initiator: Add debugfs support")
 Signed-off-by: Jiasheng Jiang <jiashengjiangcool@gmail.com>
 ---
- drivers/scsi/megaraid/megaraid_sas_fusion.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/lpfc/lpfc_debugfs.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-diff --git a/drivers/scsi/megaraid/megaraid_sas_fusion.c b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-index a6794f49e9fa..4f1c1a5a71a8 100644
---- a/drivers/scsi/megaraid/megaraid_sas_fusion.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_fusion.c
-@@ -3426,7 +3426,8 @@ megasas_build_and_issue_cmd_fusion(struct megasas_instance *instance,
- 	if (cmd->r1_alt_dev_handle != MR_DEVHANDLE_INVALID) {
- 		r1_cmd = megasas_get_cmd_fusion(instance,
- 				scsi_cmd_to_rq(scmd)->tag + instance->max_fw_cmds);
--		megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
-+		if (r1_cmd)
-+			megasas_prepare_secondRaid1_IO(instance, cmd, r1_cmd);
- 	}
- 
- 
+diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
+index 2db8d9529b8f..7c4d7bb3a56f 100644
+--- a/drivers/scsi/lpfc/lpfc_debugfs.c
++++ b/drivers/scsi/lpfc/lpfc_debugfs.c
+@@ -6280,7 +6280,6 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
+ 			}
+ 			phba->nvmeio_trc_on = 1;
+ 			phba->nvmeio_trc_output_idx = 0;
+-			phba->nvmeio_trc = NULL;
+ 		} else {
+ nvmeio_off:
+ 			phba->nvmeio_trc_size = 0;
 -- 
 2.25.1
 
