@@ -1,45 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C238F1C7013;
-	Fri,  1 Aug 2025 12:29:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E83491F16B;
+	Fri,  1 Aug 2025 12:44:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754051347; cv=none; b=qA4ocxyqf8w7Voz4O+NUotSRIsyEPwKXvesSPfKArFtwG0gROvnYTUyXsZ7m59D44EqVGPbCNuK78/mZA4diVRK5KHh37UqlBx8HBhDFWnvIkOuy5faBxGs4eviD9aHZi8jcXg87Tv9lTM2jfU9IFMNAJQGz7nUdxNItR6E8T/Y=
+	t=1754052243; cv=none; b=oqXujBushCaRUYdVBH8BlQ8g3OazA7Nlmmra3o7/9V1Ak5ggFmr3DZrAIqH02WrfJVhr41okiRgwi8NnQKE28RJU5voPbxkTSxkSRntVikyrklHhdEm+oA6oy211kQCdEHSg4wvT9UX2rtbdcD1ndeX8lHk6y/jVxZV9TBWkiao=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754051347; c=relaxed/simple;
-	bh=wlIBB/eIgR2re6DiPVNzk8QMFfESpsLmaL9VuUr1IVI=;
+	s=arc-20240116; t=1754052243; c=relaxed/simple;
+	bh=FiT0425S7X3WbHUWOMIF4UULdXiBKCkvWg3ZnMqeZM0=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=nEOkJ+ibbOgjtc84IKTJRicBDbLrWELMi/gUmCMucxGRFo+zVycDZUhnvxZu80Ul8hZcdSx1p1IyUcCrIUJJGZrGQgpCJKyB7Uv8nP+bThQM+WpY91yoH+JpyTrMj/5pbbEgEEHcFcCfAj/1kQZfxspibwFClv1YIWybQu1/NfI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NzTbyrat; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=aZ2nb/wdKerkWPI0n7Qpk7ntw1uw4QzO85t6vmzwoBr08Kuh3LQUHWaDej1ACs2nQJ9vkrlZ6cdeeXMlXOWnAZHnEqHXccopdU0RaEwqBTnfwqIA2prTTLsM2eVs1cNY/pnD+R2AnP4lZ7kw4BsWvzAkaxNMKTlCDHcEZN0f0jc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=E4xz+r+3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NzTbyrat"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8679CC4CEF4;
-	Fri,  1 Aug 2025 12:29:02 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="E4xz+r+3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6E529C4CEE7;
+	Fri,  1 Aug 2025 12:43:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754051347;
-	bh=wlIBB/eIgR2re6DiPVNzk8QMFfESpsLmaL9VuUr1IVI=;
+	s=k20201202; t=1754052242;
+	bh=FiT0425S7X3WbHUWOMIF4UULdXiBKCkvWg3ZnMqeZM0=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=NzTbyrate5K5AWjfX68CgNw+g6OW1a8UtXWcF0NkI0vTiDBYOs7aW0XRqHtV6z1gL
-	 bYObdtOqWWgfA/neO+fNHN7eUbigO49gO17lrDApUahVwZ3g8Zj3W1ONZquTWzDYjU
-	 SS7c6IayBTdhpkyQ0O7uoLlgFcdwGxIS4KN7R4voVwlYHxhl0HLceVbmh64JkOplQD
-	 MxK3ICiGhlVW7KTiqi18vGT/QlOoqyBluEQGAWUQZpCz2YHFVh8eCqgGN1rD/903s4
-	 Ji33A7oIoR0sSHFW0yxU056rDRDQdmaSgzUlmTIttWW4XxPz6Q3ibg3u7F3MtE6eYl
-	 8JOoLAaAcPmBA==
-Date: Fri, 1 Aug 2025 17:58:55 +0530
+	b=E4xz+r+32ZjXVU+0L086jLIp1hvyCbtHgcWwNT6uf6pw9E3Nup1mfRV+FBNlkUCbJ
+	 DunzKp65I/bVG5wz5ZAldHNQzx+0TNCGZDB8B9GxmV22IGd4k2Sncj0GnrDFVIkfH5
+	 zyXHELvWnEh5taOHjSjau+NDYsQG6ELyNzaOl7BnRsPUpmQ60581KLfjkXjFwgZLu/
+	 QNKdJcz4emONeLI0/u+dxcM+ncndrzTz8XDE4I4lPJLQ6e0uKf9PpnHpsnIZBAR1KS
+	 ysojmaTd0rAVZLGMRQzLG2nRPQGXQ9A0miAMOO5TqasPSBX5zQosSQ4NRiFjRaM0LJ
+	 CW+BxBMS1TkXA==
+Date: Fri, 1 Aug 2025 18:13:52 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
-	Conor Dooley <conor+dt@kernel.org>, Bjorn Andersson <andersson@kernel.org>, 
-	Andy Gross <agross@kernel.org>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-Subject: Re: [PATCH v2 3/3] dt-bindings: ufs: qcom: Split SM8650 and similar
-Message-ID: <l733rhzqpl5guulziufwgewp6ljv4vhekcnvlqh4baycvqnwd4@ywcexv3racyc>
-References: <20250731-dt-bindings-ufs-qcom-v2-0-53bb634bf95a@linaro.org>
- <20250731-dt-bindings-ufs-qcom-v2-3-53bb634bf95a@linaro.org>
+To: Neil Armstrong <neil.armstrong@linaro.org>
+Cc: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, alim.akhtar@samsung.com, 
+	avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org, 
+	conor+dt@kernel.org, andersson@kernel.org, konradybcio@kernel.org, agross@kernel.org, 
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V1 0/3] Enable UFS MCQ support for SM8650 and SM8750
+Message-ID: <u27jbp3wkgw2cyyans3rmxspqqwufymkztvyfjacrke252nbud@yfutnxhwcspr>
+References: <20250730082229.23475-1-quic_rdwivedi@quicinc.com>
+ <aff38b98-23ff-4dcd-afab-2a0d8c8ad599@linaro.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,283 +47,123 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250731-dt-bindings-ufs-qcom-v2-3-53bb634bf95a@linaro.org>
+In-Reply-To: <aff38b98-23ff-4dcd-afab-2a0d8c8ad599@linaro.org>
 
-On Thu, Jul 31, 2025 at 09:15:54AM GMT, Krzysztof Kozlowski wrote:
-> The binding for Qualcomm SoC UFS controllers grew and it will grow
-> further.  Split SM8650 and SM8750 UFS controllers which:
-> 1. Do not reference ICE as IO address space, but as phandle,
-> 2. Have same order of clocks.
-> 3. Have MCQ IO address space. Document that MCQ address space as
->    optional to maintain backwards compatibility and because Linux
->    drivers can operate perfectly fine without it (thus without MCQ
->    feature).  Linux driver already uses "mcq" as possible name for
->    "reg-names" property.
+On Thu, Jul 31, 2025 at 10:50:21AM GMT, neil.armstrong@linaro.org wrote:
+> Hi,
+> 
+> On 30/07/2025 10:22, Ram Kumar Dwivedi wrote:
+> > This patch series enables Multi-Circular Queue (MCQ) support for the UFS
+> > host controller on Qualcomm SM8650 and SM8750 platforms. MCQ is a modern
+> > queuing model that improves performance and scalability by allowing
+> > multiple hardware queues.
+> > 
+> > Although MCQ support has been present in the UFS driver for several years,
+> > this is the first time it is being enabled via Device Tree for these
+> > platforms.
+> > 
+> > Patch 1 updates the device tree bindings to allow the additional register
+> > regions and reg-names required for MCQ operation.
+> > 
+> > Patches 2 and 3 update the device trees for SM8650 and SM8750 respectively
+> > to enable MCQ by adding the necessary register mappings and MSI parent.
+> > 
+> > Tested on internal hardware for both platforms.
+> > 
+> > Palash Kambar (1):
+> >    arm64: dts: qcom: sm8750: Enable MCQ support for UFS controller
+> > 
+> > Ram Kumar Dwivedi (2):
+> >    dt-bindings: ufs: qcom: Add MCQ support to reg and reg-names
+> >    arm64: dts: qcom: sm8650: Enable MCQ support for UFS controller
+> > 
+> >   .../devicetree/bindings/ufs/qcom,ufs.yaml     | 21 ++++++++++++-------
+> >   arch/arm64/boot/dts/qcom/sm8650.dtsi          |  9 +++++++-
+> >   arch/arm64/boot/dts/qcom/sm8750.dtsi          | 10 +++++++--
+> >   3 files changed, 29 insertions(+), 11 deletions(-)
+> > 
+> 
+> I ran some tests on the SM8650-QRD, and it works so please add my:
+> Tested-by: Neil Armstrong <neil.armstrong@linaro.org> # on SM8650-QRD
+> 
 
-Since Qcom SoC memory maps have holes and shared registers in the whole 'mcq'
-region, it is preferred to map only the required parts. So please drop 'mcq' and
-add 'mcq_sqd', 'mcq_vs' regions.
+Thanks Neil for testing it out!
 
-With the above change, 
+> I ran some fio tests, comparing the v6.15, v6.16 (with threaded irqs)
+> and next + mcq support, and here's the analysis on the results:
+> 
+> Significant Performance Gains in Write Operations with Multiple Jobs:
+> The "mcq" change shows a substantial improvement in both IOPS and bandwidth for write operations with 8 jobs.
+> Moderate Improvement in Single Job Operations (Read and Write):
+> For single job operations (read and write), the "mcq" change generally leads to positive, albeit less dramatic, improvements in IOPS and bandwidth.
+> Slight Decrease in Read Operations with Multiple Jobs:
+> Interestingly, for read operations with 8 jobs, there's a slight decrease in both IOPS and bandwidth with the "mcq" kernel.
+> 
+> The raw results are:
+> Board: sm8650-qrd
+> 
+> read / 1 job
+>                v6.15     v6.16  next+mcq
+> iops (min)  3,996.00  5,921.60  4,661.20
+> iops (max)  4,772.80  6,491.20  5,027.60
+> iops (avg)  4,526.25  6,295.31  4,979.81
+> cpu % usr       4.62      2.96      5.68
+> cpu % sys      21.45     17.88     25.58
+> bw (MB/s)      18.54     25.78     20.40
+> 
 
-Acked-by: Manivannan Sadhasivam <mani@kernel.org>
+It is interesting to note the % of CPU time spent with MCQ in the 1 job case.
+Looks like it is spending more time here. I'm wondering if it is the ESI
+limitation/overhead.
 
 - Mani
 
+> read / 8 job
+>                 v6.15      v6.16   next+mcq
+> iops (min)  51,867.60  51,575.40  56,818.40
+> iops (max)  67,513.60  64,456.40  65,379.60
+> iops (avg)  64,314.80  62,136.76  63,016.07
+> cpu % usr        3.98       3.72       3.85
+> cpu % sys       16.70      17.16      14.87
+> bw (MB/s)      263.60     254.40     258.20
 > 
-> The split allows easier review and maintenance of the binding.
+> write / 1 job
+>                v6.15     v6.16  next+mcq
+> iops (min)  5,654.80  8,060.00  7,117.20
+> iops (max)  6,720.40  8,852.00  7,706.80
+> iops (avg)  6,576.91  8,579.81  7,459.97
+> cpu % usr       7.48      3.79      6.73
+> cpu % sys      41.09     23.27     30.66
+> bw (MB/s)      26.96     35.16     30.56
 > 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> ---
->  .../devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml | 178 +++++++++++++++++++++
->  .../devicetree/bindings/ufs/qcom,ufs.yaml          |  32 ----
->  2 files changed, 178 insertions(+), 32 deletions(-)
+> write / 8 job
+>                  v6.15       v6.16    next+mcq
+> iops (min)   84,687.80   95,043.40  114,054.00
+> iops (max)  107,620.80  113,572.00  164,526.00
+> iops (avg)   97,910.86  105,927.38  149,071.43
+> cpu % usr         5.43        4.38        2.88
+> cpu % sys        21.73       20.29       16.09
+> bw (MB/s)       400.80      433.80      610.40
 > 
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-> new file mode 100644
-> index 0000000000000000000000000000000000000000..aaa0bbb5bfe1673e3e0d25812c2829350b137abb
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,sm8650-ufshc.yaml
-> @@ -0,0 +1,178 @@
-> +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ufs/qcom,sm8650-ufshc.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: Qualcomm SM8650 and Other SoCs UFS Controllers
-> +
-> +maintainers:
-> +  - Bjorn Andersson <bjorn.andersson@linaro.org>
-> +
-> +# Select only our matches, not all jedec,ufs-2.0
-> +select:
-> +  properties:
-> +    compatible:
-> +      contains:
-> +        enum:
-> +          - qcom,sm8650-ufshc
-> +          - qcom,sm8750-ufshc
-> +  required:
-> +    - compatible
-> +
-> +properties:
-> +  compatible:
-> +    items:
-> +      - enum:
-> +          - qcom,sm8650-ufshc
-> +          - qcom,sm8750-ufshc
-> +      - const: qcom,ufshc
-> +      - const: jedec,ufs-2.0
-> +
-> +  reg:
-> +    minItems: 1
-> +    maxItems: 2
-> +
-> +  reg-names:
-> +    minItems: 1
-> +    items:
-> +      - const: std
-> +      - const: mcq
-> +
-> +  clocks:
-> +    minItems: 8
-> +    maxItems: 8
-> +
-> +  clock-names:
-> +    items:
-> +      - const: core_clk
-> +      - const: bus_aggr_clk
-> +      - const: iface_clk
-> +      - const: core_clk_unipro
-> +      - const: ref_clk
-> +      - const: tx_lane0_sync_clk
-> +      - const: rx_lane0_sync_clk
-> +      - const: rx_lane1_sync_clk
-> +
-> +  qcom,ice:
-> +    $ref: /schemas/types.yaml#/definitions/phandle
-> +    description: phandle to the Inline Crypto Engine node
-> +
-> +required:
-> +  - compatible
-> +  - reg
-> +
-> +allOf:
-> +  - $ref: qcom,ufs-common.yaml
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/clock/qcom,sm8650-gcc.h>
-> +    #include <dt-bindings/clock/qcom,sm8650-tcsr.h>
-> +    #include <dt-bindings/clock/qcom,rpmh.h>
-> +    #include <dt-bindings/gpio/gpio.h>
-> +    #include <dt-bindings/interconnect/qcom,icc.h>
-> +    #include <dt-bindings/interconnect/qcom,sm8650-rpmh.h>
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +
-> +    soc {
-> +        #address-cells = <2>;
-> +        #size-cells = <2>;
-> +
-> +        ufshc@1d84000 {
-> +            compatible = "qcom,sm8650-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
-> +            reg = <0x0 0x01d84000 0x0 0x3000>;
-> +
-> +            interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH 0>;
-> +
-> +            clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-> +                     <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-> +                     <&gcc GCC_UFS_PHY_AHB_CLK>,
-> +                     <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-> +                     <&tcsr TCSR_UFS_PAD_CLKREF_EN>,
-> +                     <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-> +                     <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-> +                     <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> +            clock-names = "core_clk",
-> +                          "bus_aggr_clk",
-> +                          "iface_clk",
-> +                          "core_clk_unipro",
-> +                          "ref_clk",
-> +                          "tx_lane0_sync_clk",
-> +                          "rx_lane0_sync_clk",
-> +                          "rx_lane1_sync_clk";
-> +
-> +            resets = <&gcc GCC_UFS_PHY_BCR>;
-> +            reset-names = "rst";
-> +            reset-gpios = <&tlmm 210 GPIO_ACTIVE_LOW>;
-> +
-> +            interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-> +                             &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-> +                            <&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ACTIVE_ONLY
-> +                             &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ACTIVE_ONLY>;
-> +            interconnect-names = "ufs-ddr",
-> +                         "cpu-ufs";
-> +
-> +            power-domains = <&gcc UFS_PHY_GDSC>;
-> +            required-opps = <&rpmhpd_opp_nom>;
-> +
-> +            operating-points-v2 = <&ufs_opp_table>;
-> +
-> +            iommus = <&apps_smmu 0x60 0>;
-> +
-> +            lanes-per-direction = <2>;
-> +            qcom,ice = <&ice>;
-> +
-> +            phys = <&ufs_mem_phy>;
-> +            phy-names = "ufsphy";
-> +
-> +            #reset-cells = <1>;
-> +
-> +            vcc-supply = <&vreg_l7b_2p5>;
-> +            vcc-max-microamp = <1100000>;
-> +            vccq-supply = <&vreg_l9b_1p2>;
-> +            vccq-max-microamp = <1200000>;
-> +
-> +            ufs_opp_table: opp-table {
-> +                compatible = "operating-points-v2";
-> +
-> +                opp-100000000 {
-> +                    opp-hz = /bits/ 64 <100000000>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <100000000>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>;
-> +                    required-opps = <&rpmhpd_opp_low_svs>;
-> +                };
-> +
-> +                opp-201500000 {
-> +                    opp-hz = /bits/ 64 <201500000>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <201500000>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>;
-> +                    required-opps = <&rpmhpd_opp_svs>;
-> +                };
-> +
-> +                opp-403000000 {
-> +                    opp-hz = /bits/ 64 <403000000>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <403000000>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>,
-> +                             /bits/ 64 <0>;
-> +                    required-opps = <&rpmhpd_opp_nom>;
-> +                };
-> +            };
-> +        };
-> +    };
-> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> index 191b88120d139a47632e3dce3d3f3a37d7a55c72..1dd41f6d5258014d59c8c8005bc54f7994351a52 100644
-> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-> @@ -24,8 +24,6 @@ select:
->            - qcom,sm6125-ufshc
->            - qcom,sm6350-ufshc
->            - qcom,sm8150-ufshc
-> -          - qcom,sm8650-ufshc
-> -          - qcom,sm8750-ufshc
->    required:
->      - compatible
->  
-> @@ -41,8 +39,6 @@ properties:
->            - qcom,sm6125-ufshc
->            - qcom,sm6350-ufshc
->            - qcom,sm8150-ufshc
-> -          - qcom,sm8650-ufshc
-> -          - qcom,sm8750-ufshc
->        - const: qcom,ufshc
->        - const: jedec,ufs-2.0
->  
-> @@ -66,34 +62,6 @@ required:
->  allOf:
->    - $ref: qcom,ufs-common.yaml
->  
-> -  - if:
-> -      properties:
-> -        compatible:
-> -          contains:
-> -            enum:
-> -              - qcom,sm8650-ufshc
-> -              - qcom,sm8750-ufshc
-> -    then:
-> -      properties:
-> -        clocks:
-> -          minItems: 8
-> -          maxItems: 8
-> -        clock-names:
-> -          items:
-> -            - const: core_clk
-> -            - const: bus_aggr_clk
-> -            - const: iface_clk
-> -            - const: core_clk_unipro
-> -            - const: ref_clk
-> -            - const: tx_lane0_sync_clk
-> -            - const: rx_lane0_sync_clk
-> -            - const: rx_lane1_sync_clk
-> -        reg:
-> -          minItems: 1
-> -          maxItems: 1
-> -        reg-names:
-> -          maxItems: 1
-> -
->    - if:
->        properties:
->          compatible:
+> The test suite is:
+> for rw in read write ; do
+>     echo "rw: ${rw}"
+>     for jobs in 1 8 ; do
+>         echo "jobs: ${jobs}"
+>         for it in $(seq 1 5) ; do
+>             fio --name=rand${rw} --rw=rand${rw} \
+>                 --ioengine=libaio --direct=1 \
+>                 --bs=4k --numjobs=${jobs} --size=32m \
+>                 --runtime=30 --time_based --end_fsync=1 \
+>                 --group_reporting --filename=/dev/disk/by-partlabel/super \
+>             | grep -E '(iops|sys=|READ:|WRITE:)'
+>             sleep 5
+>         done
+>     done
+> done
 > 
-> -- 
-> 2.48.1
-> 
+> Thanks,
+> Neil
 
 -- 
 மணிவண்ணன் சதாசிவம்
