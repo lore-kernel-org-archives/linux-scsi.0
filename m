@@ -1,75 +1,82 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AFDE272E51;
-	Mon,  4 Aug 2025 15:50:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8217138FA6
+	for <linux-scsi@vger.kernel.org>; Mon,  4 Aug 2025 22:37:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754322649; cv=none; b=YGV/Q0lOKfknEigK4V8wyT68aIbLiQ1rB5ClnloIEBvLdjZzcUwq9u23tgJdpb1NPo8+VcRjLMT2kgsCbSuz2NqflW+JYlZWk2lU+nEcV7Rt2Wewdv5uyBUH60oolbtCxGPkTlJpPHQqDQ+vHnz8Dsxq/BouL9O99sblplBdsqo=
+	t=1754347032; cv=none; b=JuP9BHVNNHt1uMdxyfKnfWY1eEPDsJnRLexieIH18EKPxJ45tPuhStcJEpuPV+d7N8XiWgnFwfiJPI1GEr2odKuzyz1WSmCb2NuvRGpaI3qzQs8vPbhWpm3gQWmB/1X+n37BPhN1/sDUAZ26VgfBAV0V6nL03T0gNi7dK3ewMMg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754322649; c=relaxed/simple;
-	bh=OXb4kAhtQWP6JExhGvhynrJSzXGqr/WFFL7vd70xgRQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=TUdDhygrxkrZ80TAWK5sTTgwlULVcN8iIb4iyeSfY4EdRCQOe2H8Di4bTJe7HeUDJZ3vP4Hc1VcKWz+M3fGYSQvXZ0e6vvWWUdbMpZw3RdsNUkHiY3AfY6G7cM2bpAoQglKZp8jwIW3Yi9F109nnOohVi6VZSoZFmnfS95YlYuQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Y0gj3Bce; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1754347032; c=relaxed/simple;
+	bh=rvOmNuRjrpYOCiRpzSFV6COwklfNpBPUa2nTcMAKkmA=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=uTX9pvYRhhl/b/txvDFWVRf/I+HbjWrrOMFZEOVuuZuuQdwnX0Z6SSN295DY2h4P73MU9QZyUfH363qwYvJDvzVf+QTjVYJw8mY1RIJuvKukLLi3GCcan1wkTmiCia/1WIgsG4Esx/GVKcilFSCIIcmzsBgFsC77PP8rHhrxVS4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Q+W/I/x1; arc=none smtp.client-ip=209.85.219.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Y0gj3Bce"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bwgxz213DzlgqW0;
-	Mon,  4 Aug 2025 15:50:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1754322644; x=1756914645; bh=iQeGcdNTmDV9u8BQri6krA1j
-	KTYUzUD2thgbYEL0q7M=; b=Y0gj3Bcew/lQ2lir013/f+R2LHWbbQgrQ4eskQzS
-	y1ydylcDBFAsHKgm97W/jVWzQl4D89dpptf3QsUAxN0kjYzeopkiOj1MFMMylb2e
-	TJHn9Di0+i75rVZ+t1omrbHx6xGgbzqm13r1VyjdpC362y3e5v7UF3IKdePyS74T
-	4AfDDwkc5dZ2Mlormj8lpRTIp1HmB7sGrIs71jkJ9gTNahfeHj7R4biBYIqmJaUH
-	3pYhNwih45WI76KIojW2P+uYPrN+sUOIaa3g+r0EjRAXDhVYiaVO2+7P7Rtz0YgD
-	toUN/xKdRmI0t8NiibnrtYrqFYQefoEd1D617OQf5+ptFg==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id M4mmXZ0FCTup; Mon,  4 Aug 2025 15:50:44 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bwgxr3FvWzlgqV9;
-	Mon,  4 Aug 2025 15:50:38 +0000 (UTC)
-Message-ID: <ff3455b4-b0f2-4931-95e1-da08f54dac70@acm.org>
-Date: Mon, 4 Aug 2025 08:50:37 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Q+W/I/x1"
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e8fe5f3f340so2845936276.1
+        for <linux-scsi@vger.kernel.org>; Mon, 04 Aug 2025 15:37:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1754347029; x=1754951829; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=x0awKfMw7P5tI2d1IzekjXr8z+pmeSfwL4Wb6NZh+0U=;
+        b=Q+W/I/x1W3U62l6gApq4BoySzejYJ4O781jFT4V9i1NzGp/ndT2mw5X0jb720RBDCq
+         F9Eut+md7gaKjMZj8b8v5+kvVaOWAn8FLILgYipWPVkAt3hZ33v75/OBwJXYt3XfxMdm
+         m5IbbzHRN+/rI7FQeEfi/PLUE6G6qMpUaEbIkkD+oNGAi1DG5bADUthhJWq2lcNXJDqo
+         zbiEawaFwS1ZHYDWpsmdh8m1BHQbHbHzRzglx6Lo7D4Sbi7vegaIvbnsO648aSvMn+Pr
+         wV+qAklOcgqg1b8GIeGl7UK1IBKgs+4nLSjjOFFG2+yxRKzMRNP090qWdPToSbLu4AC6
+         +lAQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754347029; x=1754951829;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=x0awKfMw7P5tI2d1IzekjXr8z+pmeSfwL4Wb6NZh+0U=;
+        b=kcOUMdwo9ZAbIfp5r3jaxQlFojMnCLOy/0M4KY4avsg8hvfFsZ9dsCXSb9j7lsFFUY
+         aWulbrwxL+qFCL0J0eJ47ZCiK48OpTlBgS+wmlzk7P129H+OkW1CixY97XE7HW20yinu
+         YbEZgzqTVP5tDgYKs4JrsPse8nknFOF40Aa+Xt4TaG/uyznP/NJx1mWFCEvLqSYFszOV
+         mTOumMrCUkXh88OpaFetr68NS9KFJG0fL80m+A6Tq4eNFb3bp38B+EvHq+fVxXxHoNds
+         ltiJcaldb/2jWdlPAmqbVVfGDRr2UjwlbSMsxjzDFFopn/bD25Fl5N/wPyGf43ZnKVDm
+         9Gew==
+X-Forwarded-Encrypted: i=1; AJvYcCUVw2DNiGPwErx6HEiWPGNZpN00KFtIdljdG6GNIfryKynDUZ3m4BBlJAKeKMmGVR08up+nLpjmpYFj@vger.kernel.org
+X-Gm-Message-State: AOJu0YzxrQPLjP3ck7CaL+5Y2dPnA6MXJ4kyeEgsjiv0v+DMTxdYyI/O
+	jfW1yuf8A27XKnWxVn57WJI9atS7nUxecDyhArdxuf/qakegGhC9kMAVTfOj/8JRoyBPRMgEz+X
+	leMWkbD5EmeIynHlcJ/9UNZEI9imu4U8=
+X-Gm-Gg: ASbGncsYn/s4VTfa5AeEYe5bBXPg8N6t68fbPcLt5EZNlfd3oOxTNB8NidhFjnZOElw
+	5U0EMg/YYM4rMm3gjfi1YE+IioCP7N5902ySOaxxA3MXczKdrd3qAAWIPeRihXyLtJG+N9hj9WR
+	wLSxIp/l2ku/lAGDM8ZcHeOAv8q8o5VBsGV//5nab+Dk/kN80ZIkP1rrC21xsW7N5jYw4CIAhUY
+	XCeAtse
+X-Google-Smtp-Source: AGHT+IGq6c55SULzvfzKL17Xva7Iq87Ruhk7FOZVgJ6Kx6mk69ie5lek0QTV1PEhe+/x2/GuzwkwQjlKYXGEbrMpRLk=
+X-Received: by 2002:a05:690c:7088:b0:71b:6950:c708 with SMTP id
+ 00721157ae682-71bb6ee9c21mr19487847b3.21.1754347029393; Mon, 04 Aug 2025
+ 15:37:09 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: Use vmalloc_array and vcalloc to simplify code
-To: Qianfeng Rong <rongqianfeng@vivo.com>, Brian King <brking@us.ibm.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250804063652.104424-1-rongqianfeng@vivo.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250804063652.104424-1-rongqianfeng@vivo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <SJ0PR19MB459028F515C43C5B91E662B4B223A@SJ0PR19MB4590.namprd19.prod.outlook.com>
+In-Reply-To: <SJ0PR19MB459028F515C43C5B91E662B4B223A@SJ0PR19MB4590.namprd19.prod.outlook.com>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Mon, 4 Aug 2025 15:35:44 -0700
+X-Gm-Features: Ac12FXxQz4DIslq_ec2G8EnsTUcIQP_VhwWAfLmcM_rW-TroWdUFpL5qLvlcBsw
+Message-ID: <CABPRKS8ja20chFQZmXTw2SOkzcMXMrust3HVu7Pq71ctuc9X4Q@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: Fix eq count mask error
+To: "Lee, John" <John.Lee4@dell.com>
+Cc: "justin.tee@broadcom.com" <justin.tee@broadcom.com>, 
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
 
-On 8/3/25 11:36 PM, Qianfeng Rong wrote:
->   drivers/scsi/ipr.c        | 8 ++++----
->   drivers/scsi/scsi_debug.c | 6 ++----
->   2 files changed, 6 insertions(+), 8 deletions(-)
+Hi John,
 
-This patch modifies two independent drivers. One patch per driver
-please.
+Thanks for reaching out through the upstream community.  This patch
+pertains to specifics better discussed in a different setting.  I will
+get in touch with you separately.
 
-Thanks,
-
-Bart.
+Regards,
+Justin
