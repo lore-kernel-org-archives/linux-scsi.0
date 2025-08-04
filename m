@@ -1,200 +1,156 @@
-Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazon11012060.outbound.protection.outlook.com [40.107.75.60])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1D6C22AE65;
-	Mon,  4 Aug 2025 06:37:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.75.60
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754289430; cv=fail; b=GqGcMCkgkGwMIwZpaYEM0mEU4muw7aTCTQgMMRtW+awvL6OUYpYEubALFfF3X7r4t0gyFZ57+tcikdCL7ulLp4IY595c1u+49iPKUl8LTBLlvpjbllvbeOu1I+GZSGyJxnrGaUqEBAPjR8DIOUoVmRoa4sm9zOcC5NpsGC7BUvU=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754289430; c=relaxed/simple;
-	bh=clnBbShbtrCu/SAjiDHxB8Tyado6pRiQVLdpVmEwBKo=;
-	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=QTgAcxlHQMh1JQQBLUWulyYDizCRafJ3e8U8HefV9CHApYEcljksCijsjhUs9TCypFnBaJ8+KBhIxmZDtaNIh7hwDXBnY7KHKdfWtQosD29CEutgmH/ET/0BTMu0GXYt1O/NF0iRhDxUh2R72YeXi3X4XNeqSpPxgr+usNVpcLU=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=ny/NehVn; arc=fail smtp.client-ip=40.107.75.60
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 646D0215175;
+	Mon,  4 Aug 2025 07:56:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1754294170; cv=none; b=L/S5/3nT0eeuXaojKaR+6YsOpltHW2t+u5EPfKoYHkxfDDbExeDw8HBjm8jj23kR2mo+HjEhJb3WM2P43u+eIQVKXlMHs50ZvkOirt1A8OPRPFFYS5j6Pw9HtYWSUhnO3RExtBeZwGYz/64cRLch0ugNNLh+wXYJ1tCnZmqYhKQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1754294170; c=relaxed/simple;
+	bh=lm17tgLKjJF4SzPXWVZGaDlWlAX255lSnXGwss8XjE0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=QJ2LhDaoXVTCG+/XvqCzVrto1MEpIKVG3LajE6ngDEz4SX9V7r0hac+n9gLHxzajPCKQKLz7n5xpWr/B7M4eA2hb0HJlbyCo6E1W1J8yXdG7eI5gLePEaHpqMsG4PUW03dk5p1Xd6vqlHqKII48h1DLJksxZUavQnSJw5JLLRpk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=A3ZHFk3H; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="ny/NehVn"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=il0+VFQ+Fmrc8SP/NVZs0Z9Q2/WQBw/e01irhntBQpYH5BkqyQOSThwZpj5e+tzW6GfQR4KfBFPfa6YB1SUJG+ECzDaiEitFKkkGGGaNqvUE9CYyzH9516nkWiATIi/tVumlw5vTPJtoxQbTmqGkerhSn3b5fmwSZXaV+FVpIoGcCH/vvvnCDTj0tu4R+dPE9iwY6Ld7k17mIYf2GElrmlKxXNSEt3IZUs5k3vTTdvOpLpcMf5okTqdi/tNyuU/bfpplJ/qLl3vzEGqMGsO2FYm4N/E7Aupg3ZY4/pjZNttgMeC0tqyDc3yPoTZQR6QRL23lRBSSm7vfpJ+NmWn1RA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=/MM0pdc5Y4H27HLoINhCwzlYUAQlMAw71ooB6wJqw6Q=;
- b=mvWlla6nIKFnTQoZlit7o+1HPNmBV98CYbO2K6/b25xrjU4YobV6unHKeS5MJYUM2npyr6Y8jKML3ndmvL9l9x6K39cTTWF2HELbIPL4hZNiKkldq0DtPSbTJYefyVZzeopD6Mo1wO0sYrTgzkU093DNs+ztSoTmExO+DWVB2hetE7INqjHlweWNYvDbsMFuCVdzH0/ScdbXE5Zt12dG/ecCQeg95Ihinmg4rUAl3RStNuOpLOjEbb++J+92mblE/CfGpPwnekIPXiWd/u5FbSMZM6p5JV8Dmohx3N4hPhOy9/JriNwqKnwlCzLq9NFdU/3Bg42wj5TBVpZauGKSzA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
- dkim=pass header.d=vivo.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=/MM0pdc5Y4H27HLoINhCwzlYUAQlMAw71ooB6wJqw6Q=;
- b=ny/NehVn83uRMQcJPwEaZaFpErsWdh7Uju7D55m7KNPqxVVb6XjXoONdRbZ2mSY1zr8k+bV0YzydYZZ5or8kNhDRoQxYaSrMaoDousDNpxpb9BODKp2Coi575C1VmR5RJYZMEHqs2WiTkXLQrcG3v7gSZ1t9I3eU0nEeqyvtVy5REFPlPvkswI+TKWFd5CWrSjDipJ1UoHHMzYoEUSuI2PQW32M4VkFc2OInPEaCMQJNnel0vpHmPNXJyF5lDUXjcXRsWdjtNtykvPYFg7YHa0pwAC2Rz8waO61waI8Zmjse2Dq8u0U3KSDv8i6alqcXEB+k31sicYggLz1ayg+SSA==
-Authentication-Results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=vivo.com;
-Received: from SI2PR06MB5140.apcprd06.prod.outlook.com (2603:1096:4:1af::9) by
- KUZPR06MB8075.apcprd06.prod.outlook.com (2603:1096:d10:2f::7) with Microsoft
- SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.8989.20; Mon, 4 Aug 2025 06:37:03 +0000
-Received: from SI2PR06MB5140.apcprd06.prod.outlook.com
- ([fe80::468a:88be:bec:666]) by SI2PR06MB5140.apcprd06.prod.outlook.com
- ([fe80::468a:88be:bec:666%4]) with mapi id 15.20.8989.017; Mon, 4 Aug 2025
- 06:37:03 +0000
-From: Qianfeng Rong <rongqianfeng@vivo.com>
-To: Brian King <brking@us.ibm.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Qianfeng Rong <rongqianfeng@vivo.com>
-Subject: [PATCH] scsi: Use vmalloc_array and vcalloc to simplify code
-Date: Mon,  4 Aug 2025 14:36:52 +0800
-Message-Id: <20250804063652.104424-1-rongqianfeng@vivo.com>
-X-Mailer: git-send-email 2.34.1
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: TYXPR01CA0063.jpnprd01.prod.outlook.com
- (2603:1096:403:a::33) To SI2PR06MB5140.apcprd06.prod.outlook.com
- (2603:1096:4:1af::9)
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="A3ZHFk3H"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 573MqVgW017513;
+	Mon, 4 Aug 2025 07:55:23 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	WYVf3T2qWGt3FlgJYqHsrgLL3dcTk1Xx1KJWsOAO5ZM=; b=A3ZHFk3HZmRMyx0q
+	RXzF3WSjQZcJ1akiU6hkO4zcPRLe8DN7Z069rxeHcnmDZD47MLzQEc3OUwc2tD7U
+	HGWOVR8Ii5b56oyBPb0HmHq9DMFfkxvB/hfiiZiYB+80MTrbDBIetfJmm5xDL5Sn
+	MVARXb22+vmSu++wYiLzamlE1bFUpxJWAmdLFGp+nweM7gp6xIwdQ/cTXFwWG5nn
+	MUegBTl3j21+tR/5hnb56QhWuXZ2lRFlpESnBwdcnW++PMWYIupacWipqFoPDGNB
+	FNXWV+I8asDOxmYdzyoL/IklHVYNji+PjyY/wFlULGWV36BB/fUpaHhGOdvuKny5
+	N9f7fw==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 489byc3xgt-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 04 Aug 2025 07:55:22 +0000 (GMT)
+Received: from nasanex01b.na.qualcomm.com (nasanex01b.na.qualcomm.com [10.46.141.250])
+	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5747sHeR014809
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 4 Aug 2025 07:54:17 GMT
+Received: from [10.239.155.136] (10.80.80.8) by nasanex01b.na.qualcomm.com
+ (10.46.141.250) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Mon, 4 Aug
+ 2025 00:54:12 -0700
+Message-ID: <8a918075-627b-4707-94db-cc86b2f7a5e4@quicinc.com>
+Date: Mon, 4 Aug 2025 15:54:09 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SI2PR06MB5140:EE_|KUZPR06MB8075:EE_
-X-MS-Office365-Filtering-Correlation-Id: b0406483-5df5-4783-9e8b-08ddd3215275
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|366016|1800799024|376014|52116014|38350700014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?FSgcjpenAwTUO9UyfSs3vwblu+Imav2a9mpN3/eFMIKyJ5TzNm7xAOs8rV02?=
- =?us-ascii?Q?WHkfPQvE5e4bMdHnqZR9Gv4qULnccYCX1ryCSH09DaHnph01hSLeSr058Oz6?=
- =?us-ascii?Q?V2es+V4nGleIys0ao7tk+yFD4Jt+fCg1ylnxjxKU75LR/cc5Nc1+d9m9/G1h?=
- =?us-ascii?Q?m2gN9nhCod0DdmT6zH0xXmtic13iuMPtwWi0kf3+LNJ5aCjvCqr2n2EJrnhl?=
- =?us-ascii?Q?ty8VXtC/G3gXN7NCo5HsZhMjmxm6s0ljKnx94lQSnEjOJ4oibetPWsbuXDC6?=
- =?us-ascii?Q?knWmd7wi21YrKihf7X0GL1cCqlrQHngaiqur98hFqMuoYplf/f4OkvFa7ahw?=
- =?us-ascii?Q?i7g5lU5j+cizB9Wbv6nnkvqBNPbz5jEj6dcaFo43sUEdo1ZeUR5Fmht/G0qZ?=
- =?us-ascii?Q?dIwxocSHkrH1WarNVOxHRnxjIQIJ8KgTjJunAhDUgL8lckyrMOvKNaKNxpHk?=
- =?us-ascii?Q?EhGmRsITiqVZmdYlKfSYXEJ1BiqI9g4LMFhbZDSP9EZtN4l2dDYwvZLj6l1P?=
- =?us-ascii?Q?aNozNrws8yKFh7pTvWijCiqollvFNNiMkHQWQ/K9GQ35OK3BvpznVkrz48A0?=
- =?us-ascii?Q?PaDkKG1E+ToLhZ3xuS5YVAC2i6Vn35ajSngmKt+URnhlV3FGrKS6dlmX97BG?=
- =?us-ascii?Q?sLQt6xJU3RkBU5Bx/mpYziZ/hYrRMl6gROTcCpjR1Gd3hIGDn2eg9d39E2T7?=
- =?us-ascii?Q?ae8PAmjrsiieSvETiyiaWrWqD0ScHEqa+MFSzqS4+r1ALxIkV6J3uf8lPrxk?=
- =?us-ascii?Q?vGhwJ4cUjy4EKYYdoRQn6ac0dAR8UZWHPOn93mn9Oxjs4lSYUrumOietWrv+?=
- =?us-ascii?Q?9pd3QGdkL9VgJ9zWljZcubjfClklRLa9N8kNGjfe9V8cVxfof8WZPzrWd/0g?=
- =?us-ascii?Q?qPgF7p4m3LysldH0zWNPbKS7UdxBpU6ir6rKpbKcp9zp7NyPS54ulNjZQm17?=
- =?us-ascii?Q?NHHE3P8JIaBwStzGsHXgPiX1yMSqTficaUaIiVuiWixQcypDIyIQsvVo7PNl?=
- =?us-ascii?Q?U1sFosUD3ylieR2I13+td7wBBOjNTnOgWZLNI7hukVVzFDXrSj6NtIe1mSOO?=
- =?us-ascii?Q?pfQ0KCzsK44WZVj3R9MxNlEfk2i5rmw+gmZcs9MSiokHKZnSC7uH6919CUC7?=
- =?us-ascii?Q?fy3eaX8QQTBI1jNzWnbLTnZdntncjMYN5L5NG+t8wj2eosBM/yZZjzmkoqkc?=
- =?us-ascii?Q?lMDGS/gA/efowY5NzNcctY35yofL43UUOqAPm44kWyrmaH5NuSiUdWhAGH+j?=
- =?us-ascii?Q?ih8IVATuigNVhwLevrHmneRgA3QLxpjvY7FMTKt4PSs1QDdvw8wV1HpQMYUM?=
- =?us-ascii?Q?v+z88F8ciNknH6Xq3r3AgCN/nT26URAN+WpFFiyuFto3KgrYAEseR54LDEuu?=
- =?us-ascii?Q?wWOQeCenNifM56/5DRYmk2bZ9et/AAhvX2eSgmjftAA5x4/2CbaJUkm/9Kvj?=
- =?us-ascii?Q?PfNzqDX75rIc+Flrn0gZVuG0Pu46cnqGoef28MSN00DN9V3VRBg3bQ=3D=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SI2PR06MB5140.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(52116014)(38350700014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?SMA1dIoL6vFFIKp+De5zPaZ9fHvg3jFtwVvurZjEdAfSF2smtp6PxMV51Uo+?=
- =?us-ascii?Q?7yUp7YWKTyITLIUry+NoF5m4jKeG5N//iOD4SxlnRXkLb0YNXmDWaWF/OwY/?=
- =?us-ascii?Q?S4XFpL80G13WHm6uMfhjSpbj64tIozoPKsPZaBGhtjNMwI0rpQgnEYXXfnsX?=
- =?us-ascii?Q?VFiB4dxu9yC6Yi8KXa2iLI/8/+q2zxwtJgBmTJENeA64jHMzD9azVwd7RY6o?=
- =?us-ascii?Q?Rd5dmeJnU0yfOGO9gctnLAdp32UgImjNf60yJDuQxqXOz6HcnUYL0dIewDpn?=
- =?us-ascii?Q?rGhaIaP1OVUY1dj+pbIyeswP4I5AY8fUw0KrIB4jWS7ztJJMeH1ePigUQ00B?=
- =?us-ascii?Q?eVVS6Zc9nBsZ+EK2rp3l+Qt2+rMPbAIkrD1MneKzEc26Ds/oqNaaDOXEfhdy?=
- =?us-ascii?Q?dO7i77O3I5X2YaJ5D5CutDKppY40Vaavig4tZZOcZxUnVfod1VuoOAoUH3gi?=
- =?us-ascii?Q?MbkKxWYiJ7k5EbcWV6Ia1Kj9bu/5xTE5TKycfvCkl9ruFxKzeaQgXlmxBQG8?=
- =?us-ascii?Q?OR7KEu7wZrL5f7PQK3/16A18V7Kd4SS9HBKwL/yuhWpfs4OIWZRQ1TrHF/Am?=
- =?us-ascii?Q?5pTIkeuxJemGbbEAAAEa3bbBkgihFKjM37JHxG95jKbBBPf7RFd/o8GPvTPJ?=
- =?us-ascii?Q?64I7v0CG/qXKK101CrAz0GMX5YMD4BAMFEU80kpK/MPxGT6XSUr0kDO47wQU?=
- =?us-ascii?Q?mF3nE+K2LWJGQZy3kqwpokzpIMyn0ezlhnvgyhMwSZJV2vIgcjHG5U5ECCbT?=
- =?us-ascii?Q?sJhdxVL+bLuwYgyLYOCnQfekNfeo0yhSysmwA0QVmwvHqHRGaqlpAAl0zP3X?=
- =?us-ascii?Q?uYUwoogSAHegY9SiT0/glKJmY/ITzo59EHpk4eAUeSzn2ny7V29RQwG/6d3q?=
- =?us-ascii?Q?o5nouebw+/4sq0DC0v+ajTpTePiU6aiaVmolrn8S4dPjETfPgFUmvryc0uvg?=
- =?us-ascii?Q?ibCUYIzORsuvhddcXBu5ZzZXCnW/51PdTasLA1W/Ce0gcDauMuuq1r+Njhfp?=
- =?us-ascii?Q?UsprgI8knwDbP6BMri16AOpBSaiyV36PJ7KL7mrJmrQhEkiTZ74dIN2xtkSS?=
- =?us-ascii?Q?6zkHnq6Ap0m8vrOInkUx3cBxTErYJJLbOi8CsnNGjp1wTJqKLlQx6I+KYm67?=
- =?us-ascii?Q?aFXZRTav5TqpIUxAbYdVN79HFhQV9N3UYx/S4pU8AKaGnrhWg0Ai6IrUGWw3?=
- =?us-ascii?Q?WsrVxhR83avLnz1azFxRg5HT6N9NJ9/z63ar1u0TSFb5D78VBtSv/5Db4Nid?=
- =?us-ascii?Q?O71QqT8Rg/5oSILoDRPk2s8frF4oHcuT6Yh7cNkd5+JgiDWEyevPaLPNIYGR?=
- =?us-ascii?Q?YpbUYHft1TZiTmM5LA1IYl3BpPs4T8Itk72lbZjvMDHhnq9IPjKCojh5k9c/?=
- =?us-ascii?Q?zutIctIf4UBOlFzuyKgUgox0/ZmLRqbVTaLXYablS6psKkP4wMqwpj6buCIC?=
- =?us-ascii?Q?BlaSXr1JXumQlmNmKQnxeDyipl8OOqh2RJMkeDplnwvCyhu8+8yWnsejZWKX?=
- =?us-ascii?Q?upfMJT3TUxDxWQS2mqfBeSD/4cGgFsxOvB66H7WhUbMJOxtdV6AKBeGAiZK/?=
- =?us-ascii?Q?ibATHgo7VpyniaG7DLI6iTcmGpl12OYTqZ1wbdKl?=
-X-OriginatorOrg: vivo.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: b0406483-5df5-4783-9e8b-08ddd3215275
-X-MS-Exchange-CrossTenant-AuthSource: SI2PR06MB5140.apcprd06.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Aug 2025 06:37:03.0709
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: FWxjVJjCOVRFHK2my7W5FcSsknnHPxnuB5/e32wmg3SL7I9YEaEB8vZFtgVDqttssQtDPGDWYaqVP9VrgZIlRg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: KUZPR06MB8075
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4] scsi: ufs: core: Don't perform UFS clkscale if host
+ asyn scan in progress
+To: Bart Van Assche <bvanassche@acm.org>,
+        =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+        "beanhuo@micron.com" <beanhuo@micron.com>,
+        "avri.altman@wdc.com"
+	<avri.altman@wdc.com>,
+        "neil.armstrong@linaro.org"
+	<neil.armstrong@linaro.org>,
+        "quic_cang@quicinc.com" <quic_cang@quicinc.com>,
+        "quic_nitirawa@quicinc.com" <quic_nitirawa@quicinc.com>,
+        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+        "luca.weiss@fairphone.com" <luca.weiss@fairphone.com>,
+        "konrad.dybcio@oss.qualcomm.com" <konrad.dybcio@oss.qualcomm.com>,
+        "mani@kernel.org" <mani@kernel.org>,
+        "martin.petersen@oracle.com"
+	<martin.petersen@oracle.com>,
+        "quic_rampraka@quicinc.com"
+	<quic_rampraka@quicinc.com>,
+        "junwoo80.lee@samsung.com"
+	<junwoo80.lee@samsung.com>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+        =?UTF-8?B?VHplLW5hbiBXdSAo5ZCz5r6k5Y2XKQ==?= <Tze-nan.Wu@mediatek.com>,
+        "linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+        "manivannan.sadhasivam@linaro.org" <manivannan.sadhasivam@linaro.org>,
+        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+        "James.Bottomley@HansenPartnership.com"
+	<James.Bottomley@HansenPartnership.com>,
+        "linux-kernel@vger.kernel.org"
+	<linux-kernel@vger.kernel.org>
+References: <20250522081233.2358565-1-quic_ziqichen@quicinc.com>
+ <5f3911ffd2c09b6d86300c3905e9c760698df069.camel@mediatek.com>
+ <1989e794-6539-4875-9e87-518da0715083@acm.org>
+ <10b41d77c287393d4f6e50e712c3713839cb6a8c.camel@mediatek.com>
+ <673e1960-f911-451d-ab18-3dc30abddd79@quicinc.com>
+ <418bfbe4bfb3f04e805af8fa667144f148787aeb.camel@mediatek.com>
+ <08dcffa6-6cf9-4c79-8aa9-a82bd42d3932@acm.org>
+Content-Language: en-US
+From: Ziqi Chen <quic_ziqichen@quicinc.com>
+In-Reply-To: <08dcffa6-6cf9-4c79-8aa9-a82bd42d3932@acm.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nasanex01b.na.qualcomm.com (10.46.141.250)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: mfVgWPSsa3GAE0xpR8f5ZVOXSaoOk1Yn
+X-Authority-Analysis: v=2.4 cv=Y6D4sgeN c=1 sm=1 tr=0 ts=6890676a cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10
+ a=6jBOxqxfYNOoAjozJqoA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: mfVgWPSsa3GAE0xpR8f5ZVOXSaoOk1Yn
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA0MDA0MSBTYWx0ZWRfX5O9qv0J5lkrF
+ lWIQWnJjyWWPGNrzfxs2yoUzG9SVe25uqv6Kl7Ra3+7eR7z7/u31CUjjIfo8WyF+tz+8FKNLxLJ
+ uk9pcm+4eNC8yN5teZM0/bOzkHGipuSLH4y71WYuQkkT3+W310s50CyXl5mxpUV4n1GpwByZ7cI
+ i3dGF6X+VM2/DXPbXEeNNlIsEXjPKLpeo8Z8rU3U1AF+ZPRf/RkNOebQWBl4Wa41zjmL3VqGjMn
+ HtgmSOTFa29Eecd8Z4eD8XwfIEUX689crWJdhFHW/TC4JqmjE9ozfydOAsyRNWnh+wPafTe77UQ
+ SxojC8KW3Sui8RnYzliRiafOJZ5nLsJzSZEbmp9YXmJGZMPT2dN+NCNp7By5xDqmX1K7ev3oX5e
+ Nb/0HBXy3HYHLp6V63TstbKXLDuUGCtBRriLh4t2SgzLcrc4qVfZBKu1I0gWEK4QIgJ0eGMt
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-04_03,2025-08-04_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ mlxscore=0 mlxlogscore=999 suspectscore=0 clxscore=1015 lowpriorityscore=0
+ phishscore=0 malwarescore=0 adultscore=0 spamscore=0 impostorscore=0
+ priorityscore=1501 bulkscore=0 classifier=spam authscore=0 authtc=n/a authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.19.0-2505280000
+ definitions=main-2508040041
 
-Use vmalloc_array() instead of vmalloc() to simplify the functions
-ipr_alloc_dump().
 
-Use vcalloc() instead of vmalloc() followed by bitmap_zero() to simplify
-the functions sdebug_add_store().
 
-Compile-tested only.
+On 7/30/2025 11:50 PM, Bart Van Assche wrote:
+> On 7/30/25 5:55 AM, Peter Wang (王信友) wrote:
+>> Another idea is to only start ufshcd_devfreq_init
+>> when shost->async_scan = 0.
+> 
+> Hmm ... I don't think that this is a solution. There are multiple
+> ways for triggering a LUN scan and my understanding is that the
+> clock scaling code should be serialized against LUN scanning.
+> 
+> Here is an example of how LUN scanning can be triggered from user
+> space by writing into the 'scan' sysfs attribute, even if
+> shost->async_scan = 0:
+> 
+> echo "- - -" > /sys/class/scsi_host/host.../scan
+> 
+> Bart.
 
-Signed-off-by: Qianfeng Rong <rongqianfeng@vivo.com>
----
- drivers/scsi/ipr.c        | 8 ++++----
- drivers/scsi/scsi_debug.c | 6 ++----
- 2 files changed, 6 insertions(+), 8 deletions(-)
+Hi  Peter && Bart,
 
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index d06b79f03538..4fb5654472d8 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -4281,11 +4281,11 @@ static int ipr_alloc_dump(struct ipr_ioa_cfg *ioa_cfg)
- 	}
- 
- 	if (ioa_cfg->sis64)
--		ioa_data = vmalloc(array_size(IPR_FMT3_MAX_NUM_DUMP_PAGES,
--					      sizeof(__be32 *)));
-+		ioa_data = vmalloc_array(IPR_FMT3_MAX_NUM_DUMP_PAGES,
-+					 sizeof(__be32 *));
- 	else
--		ioa_data = vmalloc(array_size(IPR_FMT2_MAX_NUM_DUMP_PAGES,
--					      sizeof(__be32 *)));
-+		ioa_data = vmalloc_array(IPR_FMT2_MAX_NUM_DUMP_PAGES,
-+					 sizeof(__be32 *));
- 
- 	if (!ioa_data) {
- 		ipr_err("Dump memory allocation failed\n");
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 353cb60e1abe..14e2d6e94dd2 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -8805,8 +8805,8 @@ static int sdebug_add_store(void)
- 	/* Logical Block Provisioning */
- 	if (scsi_debug_lbp()) {
- 		map_size = lba_to_map_index(sdebug_store_sectors - 1) + 1;
--		sip->map_storep = vmalloc(array_size(sizeof(long),
--						     BITS_TO_LONGS(map_size)));
-+		sip->map_storep = vcalloc(BITS_TO_LONGS(map_size),
-+					  sizeof(long));
- 
- 		pr_info("%lu provisioning blocks\n", map_size);
- 
-@@ -8815,8 +8815,6 @@ static int sdebug_add_store(void)
- 			goto err;
- 		}
- 
--		bitmap_zero(sip->map_storep, map_size);
--
- 		/* Map first 1KB for partition table */
- 		if (sdebug_num_parts)
- 			map_region(sip, 0, 2);
--- 
-2.34.1
+How do you think about using
+
+if (!mutex_trylock(&hba->host->scan_mutex))
+	return -EAGAIN;
+
+instead of
+
+mutex_lock(&hba->host->scan_mutex);
+
+But this way will cause one line print of devfreq failed.
+
+BRs
+Ziqi
 
