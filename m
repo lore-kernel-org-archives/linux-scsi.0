@@ -1,115 +1,81 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E10126F44D
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Aug 2025 13:34:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2679327464F;
+	Mon,  4 Aug 2025 15:47:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754314493; cv=none; b=jydKJHN/u90VssKiaeZ0Kzh2ePMAiyXrUBow5qO78aLaVtL+5yxlMWZ/HsGSoK+UTZlGWEgM9cEhFOqss29716seD02kkqIld4D1AWAMKmYxP4eLajPUCCi0j89uSeRFzoBj9NZxRiIEMSGJfqTQwu+OfCJgsajEvAN7vRWn1+w=
+	t=1754322441; cv=none; b=EpYZP7waknsa77Bd1oKbyUpVpYJPcVryuToYjtXRsHY4XJCxZjMu/FQMbce0ArmQZS3KB0f/xRh8HGYJ1+t6luGsj+XEwGSYSLTx5SHlnU6+8Izov/Af03vkondfrebTMRnNuQFlUrbRTg8AZCRzSon0PvVko650/bVnJCqElBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754314493; c=relaxed/simple;
-	bh=NK+E7i4SF9xONO+tY0AUV10ypXRnVmeU59H+CPBgCM8=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type:
-	 References; b=fBkG6KZPdAowOR+ZM65Zl4eHeGkblurNhFsa5EboICGHMMFAPvxLqvb6NNqbNu5jeUSsMYZJ9pFUhJLtw42P+/rawn0Wh2nkPFY3ZmRhgdFkzcQiDxZOTKYgyhdivViBF04P1zo1zRBN9slH0DuYyWlu9lfjCfDDUS1R+ASB8bw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=UeB9aEBW; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1754322441; c=relaxed/simple;
+	bh=7ITKNxyhyM+XiYJjTDaSLuVW+z1B1zw/mgNG+UlmUm0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=AoF7XzWBmGat9QKroVtXnZ7DkGAONsE1F0QXCNTaJnjWB3pvdj3SVaHHio14kPPBik3xDEgambOPewLyc/TK6XDf+6csmZdAl6o7TYNdjURfRGZoSrcNxCqNQVVzNGEqb3FerTPU39pozsbuGI660vzratA5Mim58r9G5UzZ91w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=BrJZy/f2; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="UeB9aEBW"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250804133443epoutp011dfcaf2b0883c05961d6e8a979e76efc~Yk7pnRK-M2936829368epoutp01a
-	for <linux-scsi@vger.kernel.org>; Mon,  4 Aug 2025 13:34:43 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250804133443epoutp011dfcaf2b0883c05961d6e8a979e76efc~Yk7pnRK-M2936829368epoutp01a
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1754314483;
-	bh=sueo5FzJALTgcvMOuRIM5QQ0PClRb+SDXbInCek3SMA=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=UeB9aEBWEFlrA5DhY7AzlHd0VxJgsYpQndITSlMkzmCrkDNgnUx6oK+ieOQVbtH/v
-	 rDu/I3g4tuje/GmqsubqXaegC+d7EwJahFJmzk5vvM+CHvCoIYetwriWHVvtXHVE1N
-	 A5o41RdpumwW3mPNFIe1jQuc9LlOe3QGm4UYw6Q4=
-Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
-	20250804133442epcas5p2f2ea67fdb98a648a8f980c284c050ce4~Yk7oNtz_c0438204382epcas5p2J;
-	Mon,  4 Aug 2025 13:34:42 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.92]) by
-	epsnrtp04.localdomain (Postfix) with ESMTP id 4bwcwx3WChz6B9m5; Mon,  4 Aug
-	2025 13:34:41 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250804113654epcas5p1dc2a495e16ff0f66eafc54be67550f23~YjUx9a2j51246212462epcas5p1D;
-	Mon,  4 Aug 2025 11:36:54 +0000 (GMT)
-Received: from cheetah.samsungds.net (unknown [107.109.115.53]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20250804113652epsmtip213f4596d1526ebbf9840e78bb83ae723~YjUwbwAjr0602706027epsmtip2T;
-	Mon,  4 Aug 2025 11:36:52 +0000 (GMT)
-From: Bharat Uppal <bharat.uppal@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	linux-samsung-soc@vger.kernel.org
-Cc: pankaj.dubey@samsung.com, aswani.reddy@samsung.com, Bharat Uppal
-	<bharat.uppal@samsung.com>, Nimesh Sati <nimesh.sati@samsung.com>
-Subject: [PATCH] scsi: ufs: exynos: fsd: Gate ref_clk and put UFS device in
- reset on suspend
-Date: Mon,  4 Aug 2025 17:06:43 +0530
-Message-ID: <20250804113643.75140-1-bharat.uppal@samsung.com>
-X-Mailer: git-send-email 2.49.0
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="BrJZy/f2"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bwgsr6XPCzlgqyC;
+	Mon,  4 Aug 2025 15:47:12 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1754322430; x=1756914431; bh=8h6LkW+9Y/F+yA58YI9n4Cyy
+	7CwoIORIsoVtJY8sZck=; b=BrJZy/f2W9S26puuWGJtOc0S4JT7gYpTpbz6LQFw
+	EzsuBjc1Ad1y8wJ9+m2q9kRhY15Wpu54KFhO7zDm0s8Jc/HZMmvw3MYIRdq4QEED
+	hHCQkCJPVlrJPgCukoqbkJ8c5J2KUAIoQQ4e+Y2QAPjOKWo+1zGq1dHBiMd2vBQI
+	SAZg+JqslaJn9aQaXLF49D66+S3pveubkxVF7/cAlkYNAHHilqHtYIy+6gCTgN/J
+	tfDMw9mCGnQ1R33LS+DCmYagtNsb7rsWUhWaqYmFZNgES/Aye3nzUdyhCFlr05k1
+	JCerje6hTVyhU0d5ZtKzz5F38HwRFRZGA5/zno+vAFsc+g==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id DstBBlAYGuUv; Mon,  4 Aug 2025 15:47:10 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bwgsd3GVpzlgqy6;
+	Mon,  4 Aug 2025 15:46:59 +0000 (UTC)
+Message-ID: <c9cd3d39-37ec-42cf-9458-e3242fe1f302@acm.org>
+Date: Mon, 4 Aug 2025 08:46:58 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20250804113654epcas5p1dc2a495e16ff0f66eafc54be67550f23
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-541,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250804113654epcas5p1dc2a495e16ff0f66eafc54be67550f23
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: ufs: exynos: fsd: Gate ref_clk and put UFS device
+ in reset on suspend
+To: Bharat Uppal <bharat.uppal@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ linux-samsung-soc@vger.kernel.org
+Cc: pankaj.dubey@samsung.com, aswani.reddy@samsung.com,
+ Nimesh Sati <nimesh.sati@samsung.com>
 References: <CGME20250804113654epcas5p1dc2a495e16ff0f66eafc54be67550f23@epcas5p1.samsung.com>
+ <20250804113643.75140-1-bharat.uppal@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250804113643.75140-1-bharat.uppal@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On FSD platform, gating the reference clock (ref_clk) and putting the
-UFS device in reset by asserting the reset signal during UFS suspend,
-improves the power savings and ensures the PHY is fully turned off.
+On 8/4/25 4:36 AM, Bharat Uppal wrote:
+> +static int fsd_ufs_suspend(struct exynos_ufs *ufs)
+> +{
+> +	exynos_ufs_gate_clks(ufs);
+> +	hci_writel(ufs, 0 << 0, HCI_GPIO_OUT);
+> +	return 0;
+> +}
 
-These operations are added as FSD specific suspend hook to avoid
-unintended side effects on other SoCs supported by this driver.
+Why '0 << 0' instead of just '0'? Isn't the latter easier to read?
 
-Signed-off-by: Nimesh Sati  <nimesh.sati@samsung.com>
-Signed-off-by: Bharat Uppal <bharat.uppal@samsung.com>
----
- drivers/ufs/host/ufs-exynos.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Thanks,
 
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 3e545af536e5..b19a9f0d25f6 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -1896,6 +1896,13 @@ static int fsd_ufs_pre_pwr_change(struct exynos_ufs *ufs,
- 	return 0;
- }
- 
-+static int fsd_ufs_suspend(struct exynos_ufs *ufs)
-+{
-+	exynos_ufs_gate_clks(ufs);
-+	hci_writel(ufs, 0 << 0, HCI_GPIO_OUT);
-+	return 0;
-+}
-+
- static inline u32 get_mclk_period_unipro_18(struct exynos_ufs *ufs)
- {
- 	return (16 * 1000 * 1000000UL / ufs->mclk_rate);
-@@ -2162,6 +2169,7 @@ static const struct exynos_ufs_drv_data fsd_ufs_drvs = {
- 	.pre_link               = fsd_ufs_pre_link,
- 	.post_link              = fsd_ufs_post_link,
- 	.pre_pwr_change         = fsd_ufs_pre_pwr_change,
-+	.suspend                = fsd_ufs_suspend,
- };
- 
- static const struct exynos_ufs_drv_data gs101_ufs_drvs = {
--- 
-2.49.0
-
+Bart.
