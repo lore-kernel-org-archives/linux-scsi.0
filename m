@@ -1,48 +1,48 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2679327464F;
-	Mon,  4 Aug 2025 15:47:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4AFDE272E51;
+	Mon,  4 Aug 2025 15:50:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754322441; cv=none; b=EpYZP7waknsa77Bd1oKbyUpVpYJPcVryuToYjtXRsHY4XJCxZjMu/FQMbce0ArmQZS3KB0f/xRh8HGYJ1+t6luGsj+XEwGSYSLTx5SHlnU6+8Izov/Af03vkondfrebTMRnNuQFlUrbRTg8AZCRzSon0PvVko650/bVnJCqElBE=
+	t=1754322649; cv=none; b=YGV/Q0lOKfknEigK4V8wyT68aIbLiQ1rB5ClnloIEBvLdjZzcUwq9u23tgJdpb1NPo8+VcRjLMT2kgsCbSuz2NqflW+JYlZWk2lU+nEcV7Rt2Wewdv5uyBUH60oolbtCxGPkTlJpPHQqDQ+vHnz8Dsxq/BouL9O99sblplBdsqo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754322441; c=relaxed/simple;
-	bh=7ITKNxyhyM+XiYJjTDaSLuVW+z1B1zw/mgNG+UlmUm0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AoF7XzWBmGat9QKroVtXnZ7DkGAONsE1F0QXCNTaJnjWB3pvdj3SVaHHio14kPPBik3xDEgambOPewLyc/TK6XDf+6csmZdAl6o7TYNdjURfRGZoSrcNxCqNQVVzNGEqb3FerTPU39pozsbuGI660vzratA5Mim58r9G5UzZ91w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=BrJZy/f2; arc=none smtp.client-ip=199.89.3.6
+	s=arc-20240116; t=1754322649; c=relaxed/simple;
+	bh=OXb4kAhtQWP6JExhGvhynrJSzXGqr/WFFL7vd70xgRQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=TUdDhygrxkrZ80TAWK5sTTgwlULVcN8iIb4iyeSfY4EdRCQOe2H8Di4bTJe7HeUDJZ3vP4Hc1VcKWz+M3fGYSQvXZ0e6vvWWUdbMpZw3RdsNUkHiY3AfY6G7cM2bpAoQglKZp8jwIW3Yi9F109nnOohVi6VZSoZFmnfS95YlYuQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Y0gj3Bce; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="BrJZy/f2"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Y0gj3Bce"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bwgsr6XPCzlgqyC;
-	Mon,  4 Aug 2025 15:47:12 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bwgxz213DzlgqW0;
+	Mon,  4 Aug 2025 15:50:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1754322430; x=1756914431; bh=8h6LkW+9Y/F+yA58YI9n4Cyy
-	7CwoIORIsoVtJY8sZck=; b=BrJZy/f2W9S26puuWGJtOc0S4JT7gYpTpbz6LQFw
-	EzsuBjc1Ad1y8wJ9+m2q9kRhY15Wpu54KFhO7zDm0s8Jc/HZMmvw3MYIRdq4QEED
-	hHCQkCJPVlrJPgCukoqbkJ8c5J2KUAIoQQ4e+Y2QAPjOKWo+1zGq1dHBiMd2vBQI
-	SAZg+JqslaJn9aQaXLF49D66+S3pveubkxVF7/cAlkYNAHHilqHtYIy+6gCTgN/J
-	tfDMw9mCGnQ1R33LS+DCmYagtNsb7rsWUhWaqYmFZNgES/Aye3nzUdyhCFlr05k1
-	JCerje6hTVyhU0d5ZtKzz5F38HwRFRZGA5/zno+vAFsc+g==
+	 s=mr01; t=1754322644; x=1756914645; bh=iQeGcdNTmDV9u8BQri6krA1j
+	KTYUzUD2thgbYEL0q7M=; b=Y0gj3Bcew/lQ2lir013/f+R2LHWbbQgrQ4eskQzS
+	y1ydylcDBFAsHKgm97W/jVWzQl4D89dpptf3QsUAxN0kjYzeopkiOj1MFMMylb2e
+	TJHn9Di0+i75rVZ+t1omrbHx6xGgbzqm13r1VyjdpC362y3e5v7UF3IKdePyS74T
+	4AfDDwkc5dZ2Mlormj8lpRTIp1HmB7sGrIs71jkJ9gTNahfeHj7R4biBYIqmJaUH
+	3pYhNwih45WI76KIojW2P+uYPrN+sUOIaa3g+r0EjRAXDhVYiaVO2+7P7Rtz0YgD
+	toUN/xKdRmI0t8NiibnrtYrqFYQefoEd1D617OQf5+ptFg==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id DstBBlAYGuUv; Mon,  4 Aug 2025 15:47:10 +0000 (UTC)
+ id M4mmXZ0FCTup; Mon,  4 Aug 2025 15:50:44 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bwgsd3GVpzlgqy6;
-	Mon,  4 Aug 2025 15:46:59 +0000 (UTC)
-Message-ID: <c9cd3d39-37ec-42cf-9458-e3242fe1f302@acm.org>
-Date: Mon, 4 Aug 2025 08:46:58 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bwgxr3FvWzlgqV9;
+	Mon,  4 Aug 2025 15:50:38 +0000 (UTC)
+Message-ID: <ff3455b4-b0f2-4931-95e1-da08f54dac70@acm.org>
+Date: Mon, 4 Aug 2025 08:50:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,31 +50,25 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: exynos: fsd: Gate ref_clk and put UFS device
- in reset on suspend
-To: Bharat Uppal <bharat.uppal@samsung.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
- linux-samsung-soc@vger.kernel.org
-Cc: pankaj.dubey@samsung.com, aswani.reddy@samsung.com,
- Nimesh Sati <nimesh.sati@samsung.com>
-References: <CGME20250804113654epcas5p1dc2a495e16ff0f66eafc54be67550f23@epcas5p1.samsung.com>
- <20250804113643.75140-1-bharat.uppal@samsung.com>
+Subject: Re: [PATCH] scsi: Use vmalloc_array and vcalloc to simplify code
+To: Qianfeng Rong <rongqianfeng@vivo.com>, Brian King <brking@us.ibm.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250804063652.104424-1-rongqianfeng@vivo.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250804113643.75140-1-bharat.uppal@samsung.com>
+In-Reply-To: <20250804063652.104424-1-rongqianfeng@vivo.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 8/4/25 4:36 AM, Bharat Uppal wrote:
-> +static int fsd_ufs_suspend(struct exynos_ufs *ufs)
-> +{
-> +	exynos_ufs_gate_clks(ufs);
-> +	hci_writel(ufs, 0 << 0, HCI_GPIO_OUT);
-> +	return 0;
-> +}
+On 8/3/25 11:36 PM, Qianfeng Rong wrote:
+>   drivers/scsi/ipr.c        | 8 ++++----
+>   drivers/scsi/scsi_debug.c | 6 ++----
+>   2 files changed, 6 insertions(+), 8 deletions(-)
 
-Why '0 << 0' instead of just '0'? Isn't the latter easier to read?
+This patch modifies two independent drivers. One patch per driver
+please.
 
 Thanks,
 
