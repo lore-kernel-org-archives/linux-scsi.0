@@ -1,43 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74252274651;
-	Tue,  5 Aug 2025 13:10:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2245A274B4B;
+	Tue,  5 Aug 2025 13:10:49 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754399444; cv=none; b=Jt0V+SRIU7bdqq0Aew6mTJXH2oxGlcQcd1DH/Z5XUUZArCxr+HYboG6ya9KhHKRxUjCt6l2yu6QZLZow7NgyXVuX50kpEi+fkFmfhqWbnkdf7aH8N3wksIuUGayai3la2b6PrlYt2pN0clMfc5pqCAM/J8squjjf5Jp9mUAH/Js=
+	t=1754399449; cv=none; b=q7glrEnYstYOxMtuLJOFfXWxnKrmT8wkSaY60Jd6ML2UO+ChSbIGhTd/IsoYf1tdpfdpKzcgPEX3zz+i9hnnsoBw03u9bNPYUHCB0Gly9cTWQ1f0Gv3rWvIJlzYg+i/mua/1JAn/qCDiVc3MZXRe4JwtgwkuMorh/65nKX9t2lo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754399444; c=relaxed/simple;
-	bh=RPLYFw87xRFzFOY2foOyT+uHWsKDa7jdOzKw1GAFObY=;
+	s=arc-20240116; t=1754399449; c=relaxed/simple;
+	bh=LZGLItp07dcwe7VHSIu5FA/hpY/wckqr1tY+RSkuAUg=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=nTMHI+Kl+SlcULmyaNCz6KsqPlgnabNY8N74NNZGe8wiKJA030zaGRMiqwIbKTGtlEV9kTAuGQjjZvOmr4S5hYrBpxPDquNswimGim87fh1cPKvfz2TlzV5AIOIg4X4+zmrWAccCjJ8zGcvEhHMWL7Oxio1UGMulnzvyBb4Lexk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gKMmO/Xj; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=U7WZhmLBitXPfZ56/Wz/eJ2E+R7Wpp/rPts/DvsjnSSVOd8SUYA10//BitYD4Cjumfr813Ls9CLdSFEFH41op079kHDj4ae59MsJXq0JV/N/OzyC29P7SX1ZUF7C8ab9NcjM0NGddHbB7xDclEHWJS7nuQ5b/kJ5vjE7kDfINkY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UZkycmS9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gKMmO/Xj"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 10AB1C4CEF7;
-	Tue,  5 Aug 2025 13:10:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UZkycmS9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B3764C4CEF0;
+	Tue,  5 Aug 2025 13:10:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754399444;
-	bh=RPLYFw87xRFzFOY2foOyT+uHWsKDa7jdOzKw1GAFObY=;
+	s=k20201202; t=1754399449;
+	bh=LZGLItp07dcwe7VHSIu5FA/hpY/wckqr1tY+RSkuAUg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=gKMmO/XjlR+lsij5p16dzxZFs9tcyV/ac1oMBgTr7kXhCHqJNCjSq1orn9ZbBcC2W
-	 FXu/PNQf/aWv4I7XmpMa1O/1yRnaQZstKTMZfHLbW3ogYzth8ATC0xXT0ShCsJwoAx
-	 KWb53sCAxGRRuaXuhhnvvQat7akdEcF6F0xitInsVvL6DjlHWGEVJP+deAHccd6XTP
-	 7edxwaa2NAmFkBbqPXE1z88on4+N2lk9LvHL2bu64Ssrfl/D0ABmAeDg+cPiczihua
-	 g+cQFYqe9tvWBANO7fGyHO8Yf3WLSio18OR42TYvF+EIKg2ubP7ymsAp0E45+mB+wn
-	 OO3d3w+PT79FA==
+	b=UZkycmS91Sz+b6SgUJArkZ00NGHuAJvKsl4L9+szmyl7IKj9AWYjgMON0IszoyQsw
+	 VwJXS8+hGGBlA3jqL+jjrAPWBHFiBZ4kBMC6h/vaPrpluy9hRQxXjWs8a715zQSgY1
+	 6MoidscbtpFpzeMQv/aN+u6h/OhJRdtVfyp0Wv0XKGBTvWX3DA3mQFVdgoH+cCEDPB
+	 8j3F+K9C+FrhEFI6f+kbEruQw3aRGK0LG2cHIqJnNzfNQyAn9+IjKxiGJqAkilqib4
+	 nAuUFmOHSvoI3ByiTLp7GtMADVvKkWjGObATB7LFq98vNVJBuI5wcEv/9C0LEif4ex
+	 cG+eVXWIGNhsw==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
+Cc: Francisco Gutierrez <frankramirez@google.com>,
+	Jack Wang <jinpu.wang@ionos.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
+	jinpu.wang@cloud.ionos.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.16-5.4] scsi: lpfc: Check for hdwq null ptr when cleaning up lpfc_vport structure
-Date: Tue,  5 Aug 2025 09:09:01 -0400
-Message-Id: <20250805130945.471732-26-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.16-6.15] scsi: pm80xx: Free allocated tags after failure
+Date: Tue,  5 Aug 2025 09:09:03 -0400
+Message-Id: <20250805130945.471732-28-sashal@kernel.org>
 X-Mailer: git-send-email 2.39.5
 In-Reply-To: <20250805130945.471732-1-sashal@kernel.org>
 References: <20250805130945.471732-1-sashal@kernel.org>
@@ -52,109 +52,107 @@ X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.16
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Francisco Gutierrez <frankramirez@google.com>
 
-[ Upstream commit 6698796282e828733cde3329c887b4ae9e5545e9 ]
+[ Upstream commit 258a0a19621793b811356fc9d1849f950629d669 ]
 
-If a call to lpfc_sli4_read_rev() from lpfc_sli4_hba_setup() fails, the
-resultant cleanup routine lpfc_sli4_vport_delete_fcp_xri_aborted() may
-occur before sli4_hba.hdwqs are allocated.  This may result in a null
-pointer dereference when attempting to take the abts_io_buf_list_lock for
-the first hardware queue.  Fix by adding a null ptr check on
-phba->sli4_hba.hdwq and early return because this situation means there
-must have been an error during port initialization.
+This change frees resources after an error is detected.
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Link: https://lore.kernel.org/r/20250618192138.124116-4-justintee8345@gmail.com
+Signed-off-by: Francisco Gutierrez <frankramirez@google.com>
+Link: https://lore.kernel.org/r/20250617210443.989058-1-frankramirez@google.com
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-So, the issue is:
-1. During driver initialization in `lpfc_sli4_pci_probe()` (around line
-   14868), `lpfc_sli4_hba_setup()` is called
-2. Inside `lpfc_sli4_hba_setup()` at line 8517, `lpfc_sli4_read_rev()`
-   is called
-3. If `lpfc_sli4_read_rev()` fails, we goto `out_free_mbox` which
-   returns error
-4. The queue creation (`lpfc_sli4_queue_create()` at line 8811) that
-   allocates `hdwq` is never reached
-5. When the error is returned to `lpfc_sli4_pci_probe()`, it goes to
-   `out_free_sysfs_attr`
-6. This error path calls `lpfc_destroy_shost()` -> `destroy_port()` ->
-   `lpfc_cleanup()` -> `lpfc_cleanup_vports_rrqs()` ->
-   `lpfc_sli4_vport_delete_fcp_xri_aborted()`
-7. `lpfc_sli4_vport_delete_fcp_xri_aborted()` tries to access
-   `phba->sli4_hba.hdwq[idx]` which is NULL, causing a null pointer
-   dereference
-
-## Backport Analysis
-
-**YES**
+**Backport Status: YES**
 
 This commit should be backported to stable kernel trees for the
 following reasons:
 
-1. **Critical Bug Fix**: The commit fixes a NULL pointer dereference
-   that can cause a kernel crash. This is a serious bug that affects
-   system stability when the lpfc driver fails to initialize properly.
+## Bug Fix Analysis
 
-2. **Clear Error Path Issue**: The bug occurs in a well-defined error
-   handling path - when `lpfc_sli4_read_rev()` fails during HBA setup.
-   This is not a theoretical issue but can happen in real-world
-   scenarios when hardware initialization fails.
+1. **Clear Resource Leak Bug**: The commit fixes a resource leak where
+   tags allocated via `pm8001_tag_alloc()` are not freed when
+   `pm8001_mpi_build_cmd()` fails. Looking at the code:
+   - In `pm80xx_chip_phy_start_req()` at line 4652-4656, a tag is
+     allocated
+   - If `pm8001_mpi_build_cmd()` fails (returns error), the function
+     returns directly without freeing the allocated tag
+   - The same pattern exists in `pm80xx_chip_phy_stop_req()`
 
-3. **Small and Contained Fix**: The fix is minimal - just adding a NULL
-   check with early return (4 lines of code). This follows the stable
-   kernel criteria of being a small, focused fix that addresses a
-   specific issue.
+2. **Actual Runtime Impact**: The `pm8001_mpi_build_cmd()` function can
+   fail with `-ENOMEM` when no free MPI buffers are available (as shown
+   in the function implementation). This is a realistic failure scenario
+   under memory pressure or high I/O load, making this a real-world bug.
 
-4. **No Architectural Changes**: The fix doesn't introduce any new
-   features or change the driver architecture. It simply adds defensive
-   programming to prevent accessing unallocated memory.
+3. **Resource Exhaustion Risk**: The driver uses a limited tag pool
+   (PM8001_RESERVE_SLOT tags). Each leaked tag reduces the available
+   pool, potentially leading to:
+   - Tag exhaustion over time
+   - Inability to issue new PHY start/stop commands
+   - Degraded SCSI controller functionality
 
-5. **Low Risk of Regression**: The added check `if
-   (!phba->sli4_hba.hdwq) return;` is safe - if hdwq is NULL, the
-   function cannot proceed anyway. The early return prevents the crash
-   without affecting normal operation when hdwq is properly allocated.
+4. **Consistent Pattern Fix**: The codebase already has established
+   patterns for properly freeing tags on error paths, as evidenced by:
+   - Multiple existing instances where `pm8001_tag_free()` is called
+     after `pm8001_mpi_build_cmd()` failures
+   - Previous similar fix in commit c13e73317458 for tag leaks in
+     `OPC_INB_SET_CONTROLLER_CONFIG` command
 
-6. **Matches Stable Rules**: According to stable kernel rules, fixes for
-   kernel crashes and oopses are prime candidates for backporting. This
-   commit specifically prevents a NULL pointer dereference that would
-   result in a kernel oops.
+5. **Small and Contained Fix**: The changes are minimal (4 lines added
+   in total), localized to two functions, and follow existing error
+   handling patterns in the driver. This minimizes regression risk.
 
-7. **Driver Initialization Robustness**: The issue affects error
-   handling during driver initialization, which is a critical path.
-   Failures during initialization should be handled gracefully without
-   causing system crashes.
+6. **No New Features or Architecture Changes**: The commit purely fixes
+   a resource leak without introducing new functionality or changing
+   driver behavior.
 
-The commit message clearly describes the problem scenario and the
-solution, making it easy for stable maintainers to understand the
-importance of this fix. The fact that it adds a defensive check before
-dereferencing a pointer that may not be allocated in error paths is
-exactly the type of robustness improvement that stable kernels should
-receive.
+7. **Maintainer Acknowledgment**: The fix is acknowledged by the
+   subsystem maintainer (Jack Wang), indicating it's a legitimate issue
+   that needed addressing.
 
- drivers/scsi/lpfc/lpfc_scsi.c | 4 ++++
- 1 file changed, 4 insertions(+)
+The fix aligns perfectly with stable kernel criteria - it's a clear bug
+fix for a resource leak that can impact system stability over time, with
+minimal code changes and low regression risk.
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 8acb744febcd..31a9f142bcb9 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -390,6 +390,10 @@ lpfc_sli4_vport_delete_fcp_xri_aborted(struct lpfc_vport *vport)
- 	if (!(vport->cfg_enable_fc4_type & LPFC_ENABLE_FCP))
- 		return;
+ drivers/scsi/pm8001/pm80xx_hwi.c | 12 ++++++++++--
+ 1 file changed, 10 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80xx_hwi.c
+index 5b373c53c036..c4074f062d93 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.c
++++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+@@ -4677,8 +4677,12 @@ pm80xx_chip_phy_start_req(struct pm8001_hba_info *pm8001_ha, u8 phy_id)
+ 		&pm8001_ha->phy[phy_id].dev_sas_addr, SAS_ADDR_SIZE);
+ 	payload.sas_identify.phy_id = phy_id;
  
-+	/* may be called before queues established if hba_setup fails */
-+	if (!phba->sli4_hba.hdwq)
-+		return;
+-	return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
++	ret = pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
+ 				    sizeof(payload), 0);
++	if (ret < 0)
++		pm8001_tag_free(pm8001_ha, tag);
 +
- 	spin_lock_irqsave(&phba->hbalock, iflag);
- 	for (idx = 0; idx < phba->cfg_hdw_queue; idx++) {
- 		qp = &phba->sli4_hba.hdwq[idx];
++	return ret;
+ }
+ 
+ /**
+@@ -4704,8 +4708,12 @@ static int pm80xx_chip_phy_stop_req(struct pm8001_hba_info *pm8001_ha,
+ 	payload.tag = cpu_to_le32(tag);
+ 	payload.phy_id = cpu_to_le32(phy_id);
+ 
+-	return pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
++	ret = pm8001_mpi_build_cmd(pm8001_ha, 0, opcode, &payload,
+ 				    sizeof(payload), 0);
++	if (ret < 0)
++		pm8001_tag_free(pm8001_ha, tag);
++
++	return ret;
+ }
+ 
+ /*
 -- 
 2.39.5
 
