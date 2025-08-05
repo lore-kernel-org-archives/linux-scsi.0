@@ -1,94 +1,156 @@
-Received: from bmailout1.hostsharing.net (bmailout1.hostsharing.net [83.223.95.100])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9369B27381C
-	for <linux-scsi@vger.kernel.org>; Tue,  5 Aug 2025 13:07:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.100
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E3A52B9B7;
+	Tue,  5 Aug 2025 13:09:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754399258; cv=none; b=lvozcibmOeBTpfYYS+bE2MpZOmUav9FRHHyK0z73CXk57siTXKBJxYETKdJKBlBBScQvXBMWFvrVroYfoUyhWXD5dKG89oNO+w02vKH8nx1YLUE6iNo2PMWAH9oSLDot+YLY8BnWGYnuj5Zd5y0hrKRtsE6vCN/pj93nR66vyv8=
+	t=1754399395; cv=none; b=D71LWj7FhCD7DMIVv6GMGqV+SsVE/hrhpOdYWAbVipfK5c6njE9Qnxbkk9+rRLuEMaxcNdQ1WgJeKD07ZM4mG+CmRCqPJ77uyG91T0m8m1MP2ucS0JLpc70dQKjwRaBG5lrCT6D0r1gg+A1xt6djEq6VpBOltKbA/C3k7/wyP9k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754399258; c=relaxed/simple;
-	bh=Nx+HG52Xy2f7DBk6DrUGLe9XUErsJVSHWb3eiwygXNg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Dm3NgNOOp+UAV1XKtR7gsL6l3Td1qD9HAjj4cTjWDLzeJIzt3QGM2TA3HBlYKd+iSLLVYCTSyr9OnGEpO9HQKj/twbn1YOOnnweStxRUGkkPyCPNQptCW85GE7EFW4ElYZe8tICV+N1lsL1+Ar89vaIs0hCeYBnbQBpkZA5VywA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=none smtp.mailfrom=h08.hostsharing.net; arc=none smtp.client-ip=83.223.95.100
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=h08.hostsharing.net
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by bmailout1.hostsharing.net (Postfix) with ESMTPS id 4A9B42C06644;
-	Tue,  5 Aug 2025 15:07:27 +0200 (CEST)
-Received: by h08.hostsharing.net (Postfix, from userid 100393)
-	id 43AA620DEFE; Tue,  5 Aug 2025 15:07:27 +0200 (CEST)
-Date: Tue, 5 Aug 2025 15:07:27 +0200
-From: Lukas Wunner <lukas@wunner.de>
-To: James Smart <jsmart2021@gmail.com>
-Cc: linux-scsi@vger.kernel.org, Ram Vegesna <ram.vegesna@broadcom.com>,
-	Daniel Wagner <dwagner@suse.de>, Hannes Reinecke <hare@suse.de>
-Subject: Re: [PATCH v9 18/31] elx: efct: Driver initialization routines
-Message-ID: <aJICD3jH6gZ7RuI9@wunner.de>
-References: <20210601235512.20104-1-jsmart2021@gmail.com>
- <20210601235512.20104-19-jsmart2021@gmail.com>
+	s=arc-20240116; t=1754399395; c=relaxed/simple;
+	bh=LfKbFTBPnzgytpkU5tg4y4KPR2bD6qhAJApDeT2+Qxs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=Oh50taueUw6USpC9SBIgABrrm+sjiBWnTrWAmGCDGaf9b5Zre72SWaT9eJaRAha6s2yDp3sQV2uHSIqRYj+oaDJRCfoACvXL1vgZbZaXIi4sR0iPogp3PIVXcsATs+Otzu6uahpeevT5WIgrehZEfPmk0q0XIEyVDjv33uk+Lkc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XtMsc4Ou; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XtMsc4Ou"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 56F75C4CEF0;
+	Tue,  5 Aug 2025 13:09:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1754399394;
+	bh=LfKbFTBPnzgytpkU5tg4y4KPR2bD6qhAJApDeT2+Qxs=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=XtMsc4Ou9IaAphSnljnMPo+spFH6K66FAyKchIpcPgf36QTAmlRn6/2CooL7L8LeP
+	 1onBPZO+eZp2RPZg3v7kqLBBNxiwFuEy2ZVUhBQIzI6swLFESc9Vg8ppXTwC6JfHCg
+	 dyvrmUqYWyzjR5qJkIqngoIGcVJE7d22T1bsGQj8F7lHm7e9WuJG9i5S0kAJGiReQw
+	 +BNUQuT2bsR8p4t7XYkII1lmtKIAmXiDzIICzncbEgxlb8Wch44HYZnbSyM9uTy8VD
+	 QP79tnp9Di9mVvyNwyiCguwx93f6It4pRQzUlE4ZidWJ6d9i7T5lezg5bG+bHG8KMC
+	 qaOpWEfjObglg==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: jackysliu <1972843537@qq.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	anil.gurumurthy@qlogic.com,
+	sudarsana.kalluru@qlogic.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.16-5.4] scsi: bfa: Double-free fix
+Date: Tue,  5 Aug 2025 09:08:39 -0400
+Message-Id: <20250805130945.471732-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250805130945.471732-1-sashal@kernel.org>
+References: <20250805130945.471732-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20210601235512.20104-19-jsmart2021@gmail.com>
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.16
+Content-Transfer-Encoding: 8bit
 
-On Tue, Jun 01, 2021 at 04:54:59PM -0700, James Smart wrote:
-> This patch continues the efct driver population.
-> 
-> This patch adds driver definitions for:
-> Emulex FC Target driver init, attach and hardware setup routines.
+From: jackysliu <1972843537@qq.com>
 
-The above was committed as 4df84e846624 ("scsi: elx: efct: Driver
-initialization routines").
+[ Upstream commit add4c4850363d7c1b72e8fce9ccb21fdd2cf5dc9 ]
 
-Just noticed the following while inspecting the pci_error_handlers
-of this driver:
+When the bfad_im_probe() function fails during initialization, the memory
+pointed to by bfad->im is freed without setting bfad->im to NULL.
 
-When handling a Fatal Error, after a Secondary Bus Reset has been
-performed to recover from the error, efct_pci_io_slot_reset()
-calls efct_device_detach() + efct_device_attach():
+Subsequently, during driver uninstallation, when the state machine enters
+the bfad_sm_stopping state and calls the bfad_im_probe_undo() function,
+it attempts to free the memory pointed to by bfad->im again, thereby
+triggering a double-free vulnerability.
 
-> +static pci_ers_result_t
-> +efct_pci_io_slot_reset(struct pci_dev *pdev)
-> +{
-[...]
-> +	/* Perform device reset */
-> +	efct_device_detach(efct);
-> +	/* Bring device to online*/
-> +	efct_device_attach(efct);
-> +
-> +	return PCI_ERS_RESULT_RECOVERED;
-> +}
+Set bfad->im to NULL if probing fails.
 
-And then efct_pci_io_resume() does the same *again*:
+Signed-off-by: jackysliu <1972843537@qq.com>
+Link: https://lore.kernel.org/r/tencent_3BB950D6D2D470976F55FC879206DE0B9A09@qq.com
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+---
 
-> +static void
-> +efct_pci_io_resume(struct pci_dev *pdev)
-> +{
-> +	struct efct *efct = pci_get_drvdata(pdev);
-> +
-> +	/* Perform device reset */
-> +	efct_device_detach(efct);
-> +	/* Bring device to online*/
-> +	efct_device_attach(efct);
-> +}
+LLM Generated explanations, may be completely bogus:
 
-Is that intentional / really needed?  It would seem to me that
-the calls to efct_device_detach() + efct_device_attach() in
-efct_pci_io_slot_reset() are superfluous.
+**Backport Status: YES**
 
-Am I missing something?
+This commit is a clear candidate for backporting to stable kernel trees.
+Here's my extensive analysis:
 
-Thanks,
+## Bug Analysis
 
-Lukas
+The commit fixes a **critical double-free vulnerability** in the BFA
+(Brocade Fibre Channel Adapter) SCSI driver. The issue occurs in the
+following scenario:
+
+1. During driver initialization, `bfad_im_probe()` allocates memory for
+   `bfad->im` (line 700: `im = kzalloc(sizeof(struct bfad_im_s),
+   GFP_KERNEL)`)
+2. The pointer is assigned to `bfad->im` (line 704: `bfad->im = im`)
+3. If `bfad_thread_workq()` fails (line 707), the function frees the
+   memory (line 708: `kfree(im)`) but **fails to set `bfad->im = NULL`**
+4. Later, during driver uninstallation, when the state machine enters
+   `bfad_sm_stopping` state, it calls `bfad_im_probe_undo()` (line 714
+   in bfad.c)
+5. `bfad_im_probe_undo()` checks `if (bfad->im)` (line 720) and since
+   the pointer wasn't nulled, it attempts to free the already-freed
+   memory again (line 722: `kfree(bfad->im)`)
+
+## Why This Should Be Backported
+
+1. **Security Impact**: Double-free vulnerabilities can lead to memory
+   corruption, system crashes, and potentially be exploited for
+   privilege escalation. This is a real security issue.
+
+2. **Simple Fix**: The fix is minimal - just a single line addition
+   (`bfad->im = NULL;`) after the `kfree(im)` call. This follows the
+   exact same pattern already used in `bfad_im_probe_undo()` where after
+   freeing, the pointer is set to NULL (line 723).
+
+3. **Clear Bug**: The bug is straightforward - the code inconsistently
+   handles the cleanup path. The fix makes it consistent with the
+   cleanup function's expectations.
+
+4. **Limited Scope**: The change is confined to error handling in a
+   single function (`bfad_im_probe()`). It doesn't modify any normal
+   operation paths or introduce new features.
+
+5. **Low Risk**: Setting a pointer to NULL after freeing is a standard
+   defensive programming practice with essentially zero risk of
+   regression.
+
+6. **Affects Users**: Any system using Brocade Fibre Channel adapters
+   could hit this issue if the driver initialization fails (e.g., due to
+   memory allocation failure in `bfad_thread_workq()`).
+
+7. **Follows Stable Rules**: The commit:
+   - Fixes a real bug (double-free vulnerability)
+   - Is small and contained (1 line change)
+   - Has clear causality
+   - Doesn't introduce new features
+   - Has minimal risk of causing regressions
+
+The commit follows the Linux stable kernel rules perfectly - it's a
+small, obvious fix for a real bug that could affect users in production
+environments.
+
+ drivers/scsi/bfa/bfad_im.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/bfa/bfad_im.c b/drivers/scsi/bfa/bfad_im.c
+index a719a18f0fbc..f56e008ee52b 100644
+--- a/drivers/scsi/bfa/bfad_im.c
++++ b/drivers/scsi/bfa/bfad_im.c
+@@ -706,6 +706,7 @@ bfad_im_probe(struct bfad_s *bfad)
+ 
+ 	if (bfad_thread_workq(bfad) != BFA_STATUS_OK) {
+ 		kfree(im);
++		bfad->im = NULL;
+ 		return BFA_STATUS_FAILED;
+ 	}
+ 
+-- 
+2.39.5
+
