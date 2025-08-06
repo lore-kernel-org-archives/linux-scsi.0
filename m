@@ -1,150 +1,173 @@
-Received: from mail-ed1-f50.google.com (mail-ed1-f50.google.com [209.85.208.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C4FA1F561D
-	for <linux-scsi@vger.kernel.org>; Wed,  6 Aug 2025 05:58:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6DCD273FE;
+	Wed,  6 Aug 2025 06:34:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754459900; cv=none; b=TUkMmTAFNliww0YIZ3YR/6yPzsJfMBTbxG2c8FxQKIUImJiI8G25scfsu1PmoDZofgLTiwHbKtPQ+giEb9p+ZgiaxYfK+tOXDD72C/U2ThwvmwDNGNq5qMxm0hIJKMjoSpDNGPkaR0u/TthqrBdSnkuUNVx3fGydRvCiVDQHCX8=
+	t=1754462085; cv=none; b=KVR6971L2FcZehJfsdON6mXwV3jOD54SA1aqG60vL4k4qRK3UywTtVf9d+XRVjz5M7owHiBidL0RQRkhNoXcmEe13tv3YgKChh+I5tnoiS26OnQIQHfnMUxRpOvZHknIKzQLOIpYLlw2P4V76Sf/HCiO8dxrGsbIUCymYJusHg4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754459900; c=relaxed/simple;
-	bh=0wRXWn07qZNdwQLWXGu6/e6uroSeA3oZMDdv+cemm/Y=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a/K+Xvrz6/3kRp2SB5AeUIKYtIyw+U6tscX4YVoiu7rrxv5LwHuN8T+H+6e6X6y9cHsuQZMLDh4QL3V9gEF4iMEc35jmj/77Bw3GUkSye+7hFzd8o4QdoEbCa4WG5AgrIMjtHbfLBB1KdvlyBmww4AwuxWgTCW2bG0gxEGzQDVQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=buB0JW6U; arc=none smtp.client-ip=209.85.208.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1754462085; c=relaxed/simple;
+	bh=qUdYCIIdKr7SEvpooMFVGs4pXzUkgFe/nb9ErgZWh+o=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gaHnbBQAXXUJPkwtuTTkAFRvzu7qfntA5Mzpwd4oCA2oLtVvjl1BLEkM8tCkMOT36qtAWakoG2xf7RXYt/FhGf6O5aoSIlBFNRQumW2qxK+zX1JcgokW8RXdjc2ARubHX+sNyWyfKtudC8+S78d7e0gM75KV84RiDEeaMyvrR7Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Y4m/aDlS; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="buB0JW6U"
-Received: by mail-ed1-f50.google.com with SMTP id 4fb4d7f45d1cf-61539f6815fso1041011a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 05 Aug 2025 22:58:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1754459896; x=1755064696; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:from:to:cc:subject:date:message-id:reply-to;
-        bh=lujnusIOjVna7AWXW37RrttIaPYgCcALZjbW0FcrlsY=;
-        b=buB0JW6U1frAANZoApn/DEBHagqDYAP1ZGDEKb8bn2lDnYhEKCam4Mgabl73S8QTZf
-         zSirLjJ96biPP5dlgHMTU1bHYAdPGmcjFEekgAJEdte+H6QJ9bAQb1c78jMy+4tdecEh
-         zeYE7Hy74NiivKIzgrzpm4dYid29MdDbreMNfsW6BV8X5weMCKkyC8LH+lzk7CMZg2pc
-         7oubyX4HMROp+DtB4+q884UavLUIx6jlTWNRe9Y/SSDKo8y5DVJHbW0TtzL6tsZcdywM
-         yTiX3Uh13EhcusumjS6WVwqvut1Hip7GQMYMxja3ODmXW9iEFol6c8G0s/MmY1j2otwm
-         lDvQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754459896; x=1755064696;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=lujnusIOjVna7AWXW37RrttIaPYgCcALZjbW0FcrlsY=;
-        b=T6pGDKcDy/01xNljER/4NFo1ztcCeGgqXKoervJxQXAPJDE17MBCbMl71yIhl87wvM
-         2FVZZ5JS7yxugZDutByUgiIIRMHUib8hkJZVOOL5AFhJJElbvtvcbzzml0UflTx2/G8d
-         bU9HCrUn+7UCEHtC7TVe3JsgU7DFHwhm67EH0DRZnzF4nbefMjYmPEzePR7eECvVccnV
-         IZZcxujz5eKlvTeA2Qn1rUK/QjAt5bhXMXYpj+t8ORSoCUZ4c5eLUkftkX3o6Yz66rJb
-         XT7/CgowjaykcHu7fRwH5wNnQ5oEYAPryfzbeKhEvbpB8HbZIo9r9Fnk19a44XiqTbOv
-         umSA==
-X-Forwarded-Encrypted: i=1; AJvYcCXTnLZ7Trb1P+YQKBEbW1qK9Xo4uj+i0NPfJVwhRcIBDGIGkQeLEdcGKi4YmAbKaAb+YfjAKWfxuRrM@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx6fSS0S7xgA8Vq6JUZhnM+UWAOT99TMtyScAcSJtRoxb86/LI8
-	9g56h2NRYXaoIJXGTtQY5h7c18I7usProMemS3pdESt7FyffzvvsN694EvnmIFsy2Mk=
-X-Gm-Gg: ASbGncsAcxJ5UPJuUDfC/bZD2QiSP4tUlTbReujPUo7MpZ2BKWoJPai/Pa/J8dh/PW0
-	Vpt/HFG0UYFU/GIkHXuPE8+TYjfQ0Bbe0AByyuFpZg4a1JJDfIP0ihKRibkKMdT05p5/6wYe0TW
-	h4vYgtNsnUTC1br4O12Fto+bGXce8SjDDUCCubnE27Yr+vgT/MjB3dxEzXfTs+FP77FmjCpZ94c
-	/nObLwpeBUcmjq+LtrFnMUUUPdnDlbbIQMtjpBMJ8lwCcpsriCVkGTeoyVVAlmgi5bCfPzAQHMx
-	rF1BT5vpJAdhL04aIMyDxDC8L/dl3SWchpIRNIIGN/3p+q+lBHNefRA2tSz4xk/ECL2KJPlqCN4
-	zasQSsKFpLPyuSlizpp0/I/oPioUz7UBrD+8wqEIgb1c=
-X-Google-Smtp-Source: AGHT+IF5PBw1AWigxP/i3lXZ9qZ3IjP70cb7iYCKvwuxa85ErvQ/KvH596gR5FjO/aMn2ru4M+YOEg==
-X-Received: by 2002:a05:6402:3595:b0:612:e258:33e2 with SMTP id 4fb4d7f45d1cf-617961d10dfmr592247a12.4.1754459895685;
-        Tue, 05 Aug 2025 22:58:15 -0700 (PDT)
-Received: from [192.168.1.29] ([178.197.218.223])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-615a9115562sm9686773a12.59.2025.08.05.22.58.14
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 05 Aug 2025 22:58:15 -0700 (PDT)
-Message-ID: <279fb589-d22c-47f8-9c71-4e959bce3800@linaro.org>
-Date: Wed, 6 Aug 2025 07:58:13 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Y4m/aDlS"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5765j2k9028558;
+	Wed, 6 Aug 2025 06:34:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=hAPrrDQdkT6XUkpWNAW0D1
+	gBeoZRHRhvK9v8/gEvPEw=; b=Y4m/aDlSWM+GZFieih61xc4/uR8TUm3gIJG2tj
+	21PP/auuLCwbG0af1kr7cH7AJRQalq1NqjrYlT90ixiSVeJagSbWitzYclJulJ+Z
+	o/w6pnLnQKjw6whnIJY4MMB18tcNPgH749Sk4vme5AXMMG6EHUUAwKoNz2aq0ip6
+	0PzVbNSwahnw5RQTTIlKg0wB17xEP0IrLFScpvSmFlPRX25Zw3qLSP2X+iFLilPC
+	nBXUjdkvm84W6T/k+i3ku1M0FDeBDmFZ43Pf3bAKzXp6bX2JZQbIYyrnvCq8AQT6
+	CSTI+/NxftW+u+uu7K0rR7ahzTjeiz+V0JzDt5JrJ8XV9tvQ==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48bpvxsrm3-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 06 Aug 2025 06:34:38 +0000 (GMT)
+Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
+	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5766YbGh023669
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 6 Aug 2025 06:34:37 GMT
+Received: from hu-pkambar-hyd.qualcomm.com (10.80.80.8) by
+ nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.10; Tue, 5 Aug 2025 23:34:34 -0700
+From: Palash Kambar <quic_pkambar@quicinc.com>
+To: <mani@kernel.org>, <James.Bottomley@HansenPartnership.com>,
+        <martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
+        Palash Kambar
+	<quic_pkambar@quicinc.com>
+Subject: [PATCH v1] ufs: ufs-qcom: Align programming sequence of Shared ICE for  UFS controller v5
+Date: Wed, 6 Aug 2025 12:04:09 +0530
+Message-ID: <20250806063409.21206-1-quic_pkambar@quicinc.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/3] dt-bindings: ufs: qcom: Split SC7180, SM8650 and
- similar into separate file
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley
- <conor+dt@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>,
- Bjorn Andersson <andersson@kernel.org>, Andy Gross <agross@kernel.org>,
- linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-References: <20250731-dt-bindings-ufs-qcom-v2-0-53bb634bf95a@linaro.org>
- <yq1ms8d9nx2.fsf@ca-mkp.ca.oracle.com>
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Content-Language: en-US
-Autocrypt: addr=krzysztof.kozlowski@linaro.org; keydata=
- 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
- 2+47PN9NZAOyb771QoVr8A==
-In-Reply-To: <yq1ms8d9nx2.fsf@ca-mkp.ca.oracle.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nasanex01a.na.qualcomm.com (10.52.223.231)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA2MDAwOSBTYWx0ZWRfXz+QM59+XXiBP
+ 9xgppuGyr93vWHtP54JhBhXID7awFJi/EUjrO1GQ4EozX4lR2PRcTXDWsmnzn1hEUPwKee6ggwD
+ mpZvHhScji6K01wn0U3j/+JovLkD51gynQ+VdC6Dx51DYPo96f2rP0mAu1k+W7lN1Vm67JT0z1W
+ wNk/LX5iUkXkC7jeGC/Ts0lGQkpBPJwaVu6SqJT4p6R2OypFuVt4wkq0a8UuXBSlwL+UxdGuI5Q
+ GQk2+cAK/HOvU7NyAEgtEaaPQAsvbSHVRmwYopCiz4P178JHFyUy5ZV/C+WW52Mhv2LYdXbkfFo
+ KxlD7CGytqlIEaxyZFNKrEqYf+xMToVzM/sGiRK56I02acPsbZsW1LmA0Tm2lPJJe53NNEFh/rs
+ YbNBak3q
+X-Proofpoint-ORIG-GUID: sMjgbZXqMsGQlQzn9qrpjY67KwZaWKi_
+X-Proofpoint-GUID: sMjgbZXqMsGQlQzn9qrpjY67KwZaWKi_
+X-Authority-Analysis: v=2.4 cv=U5WSDfru c=1 sm=1 tr=0 ts=6892f77e cx=c_pps
+ a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
+ a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8 a=-znHbD6HCO9yz4AjyS4A:9
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-06_01,2025-08-04_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ bulkscore=0 spamscore=0 adultscore=0 clxscore=1015 priorityscore=1501
+ phishscore=0 impostorscore=0 suspectscore=0 malwarescore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508060009
 
-On 06/08/2025 04:37, Martin K. Petersen wrote:
-> 
-> Krzysztof,
-> 
->> The binding for Qualcomm SoC UFS controllers grew and it will grow
->> further. It already includes several conditionals, partially for
->> difference in handling encryption block (ICE, either as phandle or as
->> IO address space) but it will further grow for MCQ.
-> 
-> Which tree did you intend to route this through?
+Disable of AES core in Shared ICE is not supported during power
+collapse for UFS Host Controller V5.0.
 
+Hence follow below steps to reset the ICE upon exiting power collapse
+and align with Hw programming guide.
 
-These are bindings, so please take them via UFS tree. Just like with
-every other driver or bindings patch.
+a. Write 0x18 to UFS_MEM_ICE_CFG
+b. Write 0x0 to UFS_MEM_ICE_CFG
 
-Best regards,
-Krzysztof
+Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 24 ++++++++++++++++++++++++
+ drivers/ufs/host/ufs-qcom.h |  2 ++
+ 2 files changed, 26 insertions(+)
+
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 444a09265ded..2744614bbc32 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -744,6 +744,8 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+ 	if (ufs_qcom_is_link_off(hba) && host->device_reset)
+ 		ufs_qcom_device_reset_ctrl(hba, true);
+ 
++	host->vdd_hba_pc = true;
++
+ 	return ufs_qcom_ice_suspend(host);
+ }
+ 
+@@ -759,6 +761,27 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	return ufs_qcom_ice_resume(host);
+ }
+ 
++static void ufs_qcom_hibern8_notify(struct ufs_hba *hba,
++				    enum uic_cmd_dme uic_cmd,
++				    enum ufs_notify_change_status status)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	/* Apply shared ICE WA */
++	if (uic_cmd == UIC_CMD_DME_HIBER_EXIT &&
++	    status == POST_CHANGE &&
++	    host->hw_ver.major == 0x5 &&
++	    host->hw_ver.minor == 0x0 &&
++	    host->hw_ver.step == 0x0 &&
++	    host->vdd_hba_pc) {
++		host->vdd_hba_pc = false;
++		ufshcd_writel(hba, 0x18, UFS_MEM_ICE);
++		ufshcd_readl(hba, UFS_MEM_ICE);
++		ufshcd_writel(hba, 0x0, UFS_MEM_ICE);
++		ufshcd_readl(hba, UFS_MEM_ICE);
++	}
++}
++
+ static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
+ {
+ 	if (host->dev_ref_clk_ctrl_mmio &&
+@@ -2258,6 +2281,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.hce_enable_notify      = ufs_qcom_hce_enable_notify,
+ 	.link_startup_notify    = ufs_qcom_link_startup_notify,
+ 	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
++	.hibern8_notify		= ufs_qcom_hibern8_notify,
+ 	.apply_dev_quirks	= ufs_qcom_apply_dev_quirks,
+ 	.fixup_dev_quirks       = ufs_qcom_fixup_dev_quirks,
+ 	.suspend		= ufs_qcom_suspend,
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index 6840b7526cf5..8a8bd44a8e22 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -60,6 +60,7 @@ enum {
+ 	UFS_AH8_CFG				= 0xFC,
+ 
+ 	UFS_RD_REG_MCQ				= 0xD00,
++	UFS_MEM_ICE				= 0x2600,
+ 
+ 	REG_UFS_MEM_ICE_CONFIG			= 0x260C,
+ 	REG_UFS_MEM_ICE_NUM_CORE		= 0x2664,
+@@ -290,6 +291,7 @@ struct ufs_qcom_host {
+ 	u32 phy_gear;
+ 
+ 	bool esi_enabled;
++	bool vdd_hba_pc;
+ 	unsigned long active_cmds;
+ };
+ 
+-- 
+2.34.1
+
