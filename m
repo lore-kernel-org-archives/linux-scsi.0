@@ -1,70 +1,94 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19307218AAB;
-	Wed,  6 Aug 2025 15:20:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B434F1A08BC;
+	Wed,  6 Aug 2025 17:39:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754493649; cv=none; b=tXkfJE/IgzdYZ40Ij/0HWHqQ//fnD0hMCN6o+wB2IEHHJgiOKw7ivlgWA/1eIMeU6eDEPLuBxhBe4XHKNVcxa2fOBZlgAvh2qTbal5LMqt77bz4hyS8Ze9EqRdvOkxIGbu7bI1JEvBGU26kyrt5/LSiTgabjqvCAcZKy/CpuLvM=
+	t=1754501947; cv=none; b=nn93GbUCIdTJP+1Id2wiZwhMyAZDz1FUBL3vOVQVJMpBBT5As1SRWRT/Hr+LbAKtvbY2luDNo6z/Z6cC6bDFIaXctDCqBOh4ahTUK9lg3EUoh/YRDsuuPrI/E0aYPF3H973Fjkyy7blptX496g5tcPUknA5PrGvWvbgX+I9q3AM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754493649; c=relaxed/simple;
-	bh=XGQJb4LU654T55f4PGiolkbAuas2zj6x5h5p9HkoeM8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=G3+qBgyKv6/fWJmtsVNWsyAIg14z9sxzvJdrml4qJN1HUlpNT0mS0ADHsJb5uIc9cVG9t0nnx2esUs5do6BaU0RXsvq6HMwGxhssyZowDR7khEzW/Tn3reuYQPcAjolGE5LZshG3nrt9mw5DPPYoIELe4ymuoTm+FsaWEpdg9dY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=alU79TDB; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1754501947; c=relaxed/simple;
+	bh=sC3xqR0PE11fVdcrxja9ytXlDo8MBamvw+7NE88bt8c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ofOYP8rfYnnweZXRzyWUs/bUI2xMrVCHF4F2tqKegFA+QyQ3qQ0/Y4w3+7etPbHrHv+mj1jJl90SEURiqpdU7i+3hQ5GSwyVOoHYHSvBjlGvX6d512TqcAkuS5GEYsPq5U4WzcoBUlp7ZOqnEhW5/SuVHtzu00BXjhK3b0+HgBs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=OGeb6EZU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="alU79TDB"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4bxvBQ6qSwzlgqxq;
-	Wed,  6 Aug 2025 15:20:46 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1754493645; x=1757085646; bh=XGQJb4LU654T55f4PGiolkbA
-	uas2zj6x5h5p9HkoeM8=; b=alU79TDB0IBqhtzlBLcut7X9seQVgixdKj+3Jkv/
-	9B9rnsvGXy1aAdLuyN+CpTC1UCf99O+rMTJ3pGd9Ws39tBPUcqViTOJbuVU+mROz
-	d5ATQPhXvpbvtDzBD6j7XXJh71wJWcrGf1K+d65RrrtB+tKznxoue1xDn4G+XrOg
-	v2un0lTEvOjRGqYz/pKJNYyKQFKJLBCYsaof8uRCZXsN6N04KOWp4hx7kHlXja09
-	AM3UEqAhA+O5wi3UXxSRv1KqzaRaarkJ8D479JBkBESJNMswEs5/CbUlt2aCSzvd
-	U0Bj4arBYedt+8dsVopBrwtyuH5x7bbzB2eASfmQPMEb5g==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id dCEeOApnnWAy; Wed,  6 Aug 2025 15:20:45 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4bxvBL0WXgzlgqTp;
-	Wed,  6 Aug 2025 15:20:40 +0000 (UTC)
-Message-ID: <331d2dcc-3c1b-4bb7-8fbc-4e7bff26cea2@acm.org>
-Date: Wed, 6 Aug 2025 08:20:39 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="OGeb6EZU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 891E4C4CEE7;
+	Wed,  6 Aug 2025 17:39:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1754501947;
+	bh=sC3xqR0PE11fVdcrxja9ytXlDo8MBamvw+7NE88bt8c=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=OGeb6EZUlNe9NsKLmyBHXf+7FA8adUHNspzFF6Jzf+vcJ207Q7Cs/HgwnhHVfnx3o
+	 ah5CeWmiCiCeLqjMA+XoLMXSvufwYxg0udJdObZB3tFgLzfbaoNGEim6wbwAh6C6p+
+	 CHh9ZL8u6t9aD8OobNVPBITBhDRhJjf2wrHk+tYvXU4GcdNb+0y2m5Z6BIIfLrLgMa
+	 GJ7SPeyWJtD38+wMKgm/ON3nRBHhXPX7X6azct7pGsb+ZKO6A7frxl1Bd63ZoKXGzX
+	 AbwltQAN2hxQU4SaKGsKeV2otYypxi5oLtqhm7FwE42r/eZcBJArHRQ5MZabaeSodd
+	 I8BNydrIGeRvQ==
+Date: Wed, 6 Aug 2025 23:09:00 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+Cc: Palash Kambar <quic_pkambar@quicinc.com>, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, quic_nitirawa@quicinc.com
+Subject: Re: [PATCH v1] ufs: ufs-qcom: Align programming sequence of Shared
+ ICE for UFS controller v5
+Message-ID: <mhridnexscaevsmssu6k3l4x276cj63gl2rlvypym23kj2kgov@pw323zkhqcrg>
+References: <20250806063409.21206-1-quic_pkambar@quicinc.com>
+ <ucr4imzntw6ghcvpeioprmva7gxrqnkphjirjppnqgdpq5ghss@y5nwjzzpvluj>
+ <c62c2744-0d07-4fe8-8d2a-febc5fa8720a@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 2/2] scsi: scsi_debug: use vcalloc to simplify code
-To: Qianfeng Rong <rongqianfeng@vivo.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
- open list <linux-kernel@vger.kernel.org>
-References: <20250806124633.383426-1-rongqianfeng@vivo.com>
- <20250806124633.383426-3-rongqianfeng@vivo.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250806124633.383426-3-rongqianfeng@vivo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <c62c2744-0d07-4fe8-8d2a-febc5fa8720a@oss.qualcomm.com>
 
-On 8/6/25 5:46 AM, Qianfeng Rong wrote:
-> Use vcalloc() instead of vmalloc() followed by bitmap_zero() to simplify
-> the function sdebug_add_store().
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+On Wed, Aug 06, 2025 at 02:56:43PM GMT, Konrad Dybcio wrote:
+> On 8/6/25 1:14 PM, Manivannan Sadhasivam wrote:
+> > On Wed, Aug 06, 2025 at 12:04:09PM GMT, Palash Kambar wrote:
+> >> Disable of AES core in Shared ICE is not supported during power
+> >> collapse for UFS Host Controller V5.0.
+> >>
+> >> Hence follow below steps to reset the ICE upon exiting power collapse
+> >> and align with Hw programming guide.
+> >>
+> >> a. Write 0x18 to UFS_MEM_ICE_CFG
+> >> b. Write 0x0 to UFS_MEM_ICE_CFG
+> >>
+> >> Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
+> >> ---
+> 
+> [...]
+> 
+> > 
+> >> +		ufshcd_readl(hba, UFS_MEM_ICE);
+> >> +		ufshcd_writel(hba, 0x0, UFS_MEM_ICE);
+> >> +		ufshcd_readl(hba, UFS_MEM_ICE);
+> > 
+> > Why do you need readl()? Writes to device memory won't get reordered.
+> 
+> I'm not sure if we need a delay between them, otherwise they'll happen
+> within a couple cycles of each other which may not be enough since this
+> is a synchronous reset and the clock period is 20-50ns when running at
+> XO (19.2 / 38.4 MHz) rate
+> 
+
+IIUC, the second register write is just reenabling the mask, so there is no
+delay required between these two writes. If that's not true, and if there is a
+delay required, then do:
+
+	ufshcd_writel(0x18);
+	ufshcd_readl();
+	usleep()/msleep();
+	ufshcd_write(0x0);
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
