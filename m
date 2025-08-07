@@ -1,99 +1,191 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FC8C26E173
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Aug 2025 16:35:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDA8626FA4E
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Aug 2025 16:38:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754584535; cv=none; b=kRanLmmWlXpyqCJYK8X88PVUPrDDT5Zs/OvdmbXQKq41XHFdemJHIZHqcC0uykFEV2BFGROmTFX+EfS+HvMeeLLEZKo/gaUKAW3BnxIUoxnGWa/YSqTdhFCvKkbAheMiR+eN+QjPfEbq0G7gc3G9xuBn53zsljrE0kJlfCqZeuo=
+	t=1754584723; cv=none; b=GbfbpP8NgULIcE3uBpwT2spYJHcJabWNRKHZ1HonOPzqkNV610g02UQrnf8YJg3OZiXuUTzNeQMu9xM3xYai4BXnCfUeI3p1eRUXAVlQBXoxsFrt/3xDC/WxM7fcDX5HPyb/lKABfocPrXcc6D3KSKtwTxzjK0d3YtPaYxGFEKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754584535; c=relaxed/simple;
-	bh=QvKcfi1roqQEDucIfNSPPtN25j8B+TEWLS3XRQRbCPc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sy0XxGY8iXGOhoBs5/N8z3wKOeIoJA8Wi5TCbUgvILIUhRFRR0K/2UjB4g8NoCa2E7rb5a8fp1lyb2NElhCVa6mEZt6TsnBJougAOB2UxJpwdtZ35BbceJqauLiE1npdHxNrWkKIvuhCnU49RKL9Q5HN2D9E7Rmf57JxsGIXjms=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=TFclSWGt; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1754584723; c=relaxed/simple;
+	bh=RNN38tsTm5gD4/5zcgMkN8UqPOSEJ3iJYtKGRjL3GEo=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=nhCn+VquuRG9bEfmwAp5hBmHkCs1XOy6R6bwMJgw/7A77CPUtzUeVuRFIel2ECEh67MTamslVzp4qLMQO0rROs6QKmREHXvGuGw8TR2CToZkDtl2Gdk4ITG5MnaEgfucCwcVS8DWiNmiaR+OuI0/v5xXUQKg0YXHS82Ulr+nZnM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=RRrqPL7I; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="TFclSWGt"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4byXpD3HLpzlgqyj;
-	Thu,  7 Aug 2025 16:35:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1754584531; x=1757176532; bh=qsMxqDAlu8RAOAfuAdOTXCW8
-	fb156S+EqdRC3/iWft4=; b=TFclSWGtuiWO8RyIVGPv0zxyJ3HnwpVNUHo3rbJs
-	cm4azCKkYMryYtGqcVOsL2RJWiVSJ6HMsDXAThveSYAJlYO37UC7sorq/dPOq1i8
-	a6hre0/ISF60CJHlSWlfMH4GlLIRrl2k8xuyjQhNjRKCs02B/ZAgsV1tIFKaD3Kl
-	dGs27hs1eGkn9THgZhAxtCmfz//gOs8AOS4ISNv4yRAyZrns8AipvWSkP5ueK79h
-	ozhyusJ6trrjHeHo6jithdePT7F14gSLRR7eYHvxf4eDBwQkWArpaASmgZ2i9Rg+
-	vmjrzC1UmuailaIlGwFsJaPe29WFNdudOhl9YMcNde9btA==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id qKgeIYQIrDXB; Thu,  7 Aug 2025 16:35:31 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4byXp725lpzlgqVy;
-	Thu,  7 Aug 2025 16:35:26 +0000 (UTC)
-Message-ID: <6187e1bf-73e0-49e1-8f30-4cc31f197c78@acm.org>
-Date: Thu, 7 Aug 2025 09:35:25 -0700
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="RRrqPL7I"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250807163838epoutp010e4805888380a4511328f892f6559c51~ZiYFprIGY1029910299epoutp01k
+	for <linux-scsi@vger.kernel.org>; Thu,  7 Aug 2025 16:38:38 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250807163838epoutp010e4805888380a4511328f892f6559c51~ZiYFprIGY1029910299epoutp01k
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1754584718;
+	bh=RNN38tsTm5gD4/5zcgMkN8UqPOSEJ3iJYtKGRjL3GEo=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=RRrqPL7I1BR8u5+IhTUXbdIyg84Nu+3FtTbZUnq42fRt9nfCz4qBX8jq7bRhQw1Cp
+	 HXl8wqC+o0ErtP2+pj3nL7GXvy7Y3/6R/zoQ9RDn2II6eYCK7HoVw1X3JIglDcjie9
+	 XyvmQFvgk/CoFA/IYjMXP3eafxhjwdzFraUF48FE=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20250807163837epcas5p14ae55f821c4afb408ac72af9bbb0e179~ZiYEvxws-1656116561epcas5p1h;
+	Thu,  7 Aug 2025 16:38:37 +0000 (GMT)
+Received: from epcas5p2.samsung.com (unknown [182.195.38.95]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4byXsn0gNKz2SSKX; Thu,  7 Aug
+	2025 16:38:37 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
+	20250807163836epcas5p15300402e991a5be93922a414f2bd3959~ZiYDPHN-30434604346epcas5p1M;
+	Thu,  7 Aug 2025 16:38:36 +0000 (GMT)
+Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250807163833epsmtip1ba365b680e7c3d3c40d24d2656f73c35~ZiYA86Fky1962119621epsmtip1g;
+	Thu,  7 Aug 2025 16:38:33 +0000 (GMT)
+From: "Alim Akhtar" <alim.akhtar@samsung.com>
+To: "'Manivannan Sadhasivam'" <mani@kernel.org>
+Cc: "'Konrad Dybcio'" <konrad.dybcio@oss.qualcomm.com>, "'Krzysztof
+ Kozlowski'" <krzk@kernel.org>, "'Ram Kumar Dwivedi'"
+	<quic_rdwivedi@quicinc.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
+	<robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+	<andersson@kernel.org>, <konradybcio@kernel.org>,
+	<James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
+	<agross@kernel.org>, <linux-arm-msm@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+In-Reply-To: <nkefidnifmbnhvamjjyl7sq7hspdkhyoc3we7cvjby3qd7sgho@ddmuyngsomzu>
+Subject: RE: [PATCH 2/3] arm64: dts: qcom: sa8155: Add gear and rate limit
+ properties to UFS
+Date: Thu, 7 Aug 2025 22:08:32 +0530
+Message-ID: <0d6801dc07b9$b869adf0$293d09d0$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 04/24] scsi: core: Implement reserved command handling
-To: Hannes Reinecke <hare@suse.de>, John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250403211937.2225615-1-bvanassche@acm.org>
- <20250403211937.2225615-5-bvanassche@acm.org>
- <3c2fe290-5e24-4985-833c-24d8b80b98b7@oracle.com>
- <e1cc3f08-e7e0-4eea-82a8-c5d2e7618238@acm.org>
- <bff407bb-ed99-42b1-bfc8-05b8aa76957c@oracle.com>
- <27e5c0e9-a042-45e3-9852-31adb966b781@acm.org>
- <74679b46-a823-426e-9406-29ce7b5807ed@suse.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <74679b46-a823-426e-9406-29ce7b5807ed@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: en-us
+Thread-Index: AQHWPm1h7sMntUE9BjOfqFdL0FvwlQKqKM9CAg+/nxMBCUK1JQJtFIHyAldjN/MB24cyRgGnpjwRAmX4p5MB936htgLh1QaLARPOx0SzsAOLcA==
+X-CMS-MailID: 20250807163836epcas5p15300402e991a5be93922a414f2bd3959
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250806112542epcas5p15f2fdea9b635a43c54885dbdffa03b60
+References: <b235e338-8c16-439b-b7a5-24856893fb5d@oss.qualcomm.com>
+	<061b01dc062d$25c47800$714d6800$@samsung.com>
+	<i6eyiscdf2554znc4aaglhi22opfgyicif3y7kzjafwsrtdrtm@jjpzak64gdft>
+	<061c01dc062f$70ec34b0$52c49e10$@samsung.com>
+	<87c37d65-5ab1-4443-a428-dc3592062cdc@oss.qualcomm.com>
+	<061d01dc0631$c1766c00$44634400$@samsung.com>
+	<3cd33dce-f6b9-4f60-8cb2-a3bf2942a1e5@oss.qualcomm.com>
+	<06d201dc0689$9f438200$ddca8600$@samsung.com>
+	<wpfchmssbrfhcxnoe37agonyc5s7e2onark77dxrlt5jrxxzo2@g57mdqrgj7uk>
+	<06f301dc0695$6bf25690$43d703b0$@samsung.com>
+	<CGME20250806112542epcas5p15f2fdea9b635a43c54885dbdffa03b60@epcas5p1.samsung.com>
+	<nkefidnifmbnhvamjjyl7sq7hspdkhyoc3we7cvjby3qd7sgho@ddmuyngsomzu>
 
-On 4/16/25 12:33 AM, Hannes Reinecke wrote:
-> As rightly noted, we need an sdev to use the reserved command handling
-> trick. There are two choices:
-> -> use the existing sdev for per-LUN TMFs. If the driver only uses
->  =C2=A0=C2=A0 ABORT TASK/ABORT TASK_SET/RESET LUN we already know which=
- sdev to
->  =C2=A0=C2=A0 use, so that is easy.
-> -> allocate a 'fake' scsi device for the host. Not pretty, but gives
->  =C2=A0=C2=A0 us a nice combined interface to deal with reserved comman=
-ds.
+
+
+> -----Original Message-----
+> From: 'Manivannan Sadhasivam' <mani=40kernel.org>
+> Sent: Wednesday, August 6, 2025 4:56 PM
+> To: Alim Akhtar <alim.akhtar=40samsung.com>
+> Cc: 'Konrad Dybcio' <konrad.dybcio=40oss.qualcomm.com>; 'Krzysztof
+=5B...=5D
+
+> > >
+> > > On Wed, Aug 06, 2025 at 09:51:43AM GMT, Alim Akhtar wrote:
+> > >
+> > > =5B...=5D
+> > >
+> > > > > >> Introducing generic solutions preemptively for problems that
+> > > > > >> are simple in concept and can occur widely is good practice
+> > > > > >> (although it's sometimes hard to gauge whether this is a
+> > > > > >> one-off), as if the issue spreads a generic solution will
+> > > > > >> appear at some point, but we'll have to keep supporting the
+> > > > > >> odd ones as well
+> > > > > >>
+> > > > > > Ok,
+> > > > > > I would prefer if we add a property which sounds like =22poor
+> > > > > > thermal dissipation=22 or =22routing channel loss=22 rather tha=
+n
+> > > > > > adding limiting UFS gear
+> > > > > properties.
+> > > > > > Poor thermal design or channel losses are generic enough and
+> > > > > > can happen
+> > > > > on any board.
+> > > > >
+> > > > > This is exactly what I'm trying to avoid through my suggestion -
+> > > > > one board may have poor thermal dissipation, another may have
+> > > > > channel losses, yet another one may feature a special batch of
+> > > > > UFS chips that will set the world on fire if instructed to
+> > > > > attempt link training at gear 7 - they all are causes, as
+> > > > > opposed to describing what needs to happen (i.e. what the
+> > > > > hardware must be treated as - gear N incapable despite what can
+> > > > > be discovered at runtime), with perhaps a comment on the side
+> > > > >
+> > > > But the solution for all possible board problems can't be by
+> > > > limiting Gear
+> > > speed.
+> > >
+> > > Devicetree properties should precisely reflect how they are relevant
+> > > to the hardware. 'limiting-gear-speed' is self-explanatory that the
+> > > gear speed is getting limited (for a reason), but the devicetree
+> > > doesn't need to describe the
+> > > *reason* itself.
+> > >
+> > > > So it should be known why one particular board need to limit the ge=
+ar.
+> > >
+> > > That goes into the description, not in the property name.
+> > >
+> > > > I understand that this is a static configuration, where it is
+> > > > already known
+> > > that board is broken for higher Gear.
+> > > > Can this be achieved by limiting the clock? If not, can we add a
+> > > > board
+> > > specific _quirk_ and let the _quirk_ to be enabled from vendor
+> > > specific hooks?
+> > > >
+> > >
+> > > How can we limit the clock without limiting the gears? When we limit
+> > > the gear/mode, both clock and power are implicitly limited.
+> > >
+> > Possibly someone need to check with designer of the SoC if that is poss=
+ible
+> or not.
 >=20
-> Bart, from my reading the UFS driver only requires a TMF for command
-> abort and device reset, in both cases we should have a scsi device
-> available. Can't you use that?
-
-(replying to an email from four months ago)
-
-The UFS driver submits multiple reserved commands to the UFS device
-before LUN scanning starts, e.g. to initialize the UFS device.
-Submitting these reserved commands to the UFS device after the WLUN has
-been scanned is not possible. So I prefer the pseudo SCSI device
-approach. I'm referring here to all the code that is called by
-ufshcd_init() after the SCSI host has been added
-(ufshcd_add_scsi_host(hba)) and before LUN scanning happens
-(async_schedule(ufshcd_async_scan, hba)).
-
-Thanks,
-
-Bart.
+> It's not just clock. We need to consider reducing regulator, interconnect
+> votes also. But as I said above, limiting the gear/mode will take care of=
+ all
+> these parameters.
+>=20
+> > Did we already tried _quirk_? If not, why not?
+> > If the board is so poorly designed and can't take care of the channel
+> > loses or heat dissipation etc, Then I assumed the gear negotiation
+> > between host and device should fail for the higher gear and driver can =
+have
+> a re-try logic to re-init / re-try =22power mode change=22 at the lower g=
+ear. Is
+> that not possible / feasible?
+> >
+>=20
+> I don't see why we need to add extra logic in the UFS driver if we can ex=
+tract
+> that information from DT.
+>=20
+You didn=E2=80=99t=20answer=20my=20question=20entirely,=20I=20am=20still=20=
+not=20able=20to=20visualised=20how=20come=20Linkup=20is=20happening=20in=20=
+higher=20gear=20and=20then=20=0D=0ASuddenly=20it=20is=20failing=20and=20we=
+=20need=20to=20reduce=20the=20gear=20to=20solve=20that?=0D=0AThat's=20why=
+=20my=20suggestion=20is=20to=20go=20for=20a=20re-try=20at=20lower=20gear=20=
+when=20problem=20happens.=0D=0AIt=20is=20not=20that=20since=20adding=20DT=
+=20property=20is=20simple=20to=20just=20go=20that=20path,=20that=20is=20sol=
+ving=20_just_=20this=20case,=20may=20be.=20=0D=0A=0D=0A=0D=0A=0D=0A>=20-=20=
+Mani=0D=0A>=20=0D=0A>=20--=0D=0A>=20=E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=
+=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=E0=AF=8D=20=E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=
+=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=E0=AF=8D=0D=0A=0D=0A
