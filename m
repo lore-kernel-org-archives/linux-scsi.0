@@ -1,191 +1,242 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDA8626FA4E
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Aug 2025 16:38:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27260186A;
+	Thu,  7 Aug 2025 18:29:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754584723; cv=none; b=GbfbpP8NgULIcE3uBpwT2spYJHcJabWNRKHZ1HonOPzqkNV610g02UQrnf8YJg3OZiXuUTzNeQMu9xM3xYai4BXnCfUeI3p1eRUXAVlQBXoxsFrt/3xDC/WxM7fcDX5HPyb/lKABfocPrXcc6D3KSKtwTxzjK0d3YtPaYxGFEKw=
+	t=1754591365; cv=none; b=JjMaVwFqpR01IVrnvl/UsGwfV66KUay20QNAh0iFrRIO6Td0V9LP1LunTj1ohTUZePXEBqgTt/QlsQn/mc+KtJJ4WSv2mXc/w7DQikRTLLqYT/hZk4T4ql/puTUAKUcOEzIzmpZwNLELooub+FfK2vhLl9pkyQdriIHQpj5Uu7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754584723; c=relaxed/simple;
-	bh=RNN38tsTm5gD4/5zcgMkN8UqPOSEJ3iJYtKGRjL3GEo=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=nhCn+VquuRG9bEfmwAp5hBmHkCs1XOy6R6bwMJgw/7A77CPUtzUeVuRFIel2ECEh67MTamslVzp4qLMQO0rROs6QKmREHXvGuGw8TR2CToZkDtl2Gdk4ITG5MnaEgfucCwcVS8DWiNmiaR+OuI0/v5xXUQKg0YXHS82Ulr+nZnM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=RRrqPL7I; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1754591365; c=relaxed/simple;
+	bh=0MjuKQe8s182P5fSAkQSVzVV7ppG+0BIhgH4H7HpCyU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=bOfA1J6I29I3cDBH0qjOfDh+kGkO7rnfoeZOGgIMTP9RxL305kBOJi8NHiIPqfaFGSUcV67RXDWqNnJP6vl7s+MbijDchT8rL5wirZ8giSoCR72rNPslvNAjZ8oaXHwM6uMoZMP2e/fYSOsBWT1VYjIw3vsvbd/u2BLlzvatSnQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RF1kC5Ba; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="RRrqPL7I"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250807163838epoutp010e4805888380a4511328f892f6559c51~ZiYFprIGY1029910299epoutp01k
-	for <linux-scsi@vger.kernel.org>; Thu,  7 Aug 2025 16:38:38 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250807163838epoutp010e4805888380a4511328f892f6559c51~ZiYFprIGY1029910299epoutp01k
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1754584718;
-	bh=RNN38tsTm5gD4/5zcgMkN8UqPOSEJ3iJYtKGRjL3GEo=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=RRrqPL7I1BR8u5+IhTUXbdIyg84Nu+3FtTbZUnq42fRt9nfCz4qBX8jq7bRhQw1Cp
-	 HXl8wqC+o0ErtP2+pj3nL7GXvy7Y3/6R/zoQ9RDn2II6eYCK7HoVw1X3JIglDcjie9
-	 XyvmQFvgk/CoFA/IYjMXP3eafxhjwdzFraUF48FE=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
-	20250807163837epcas5p14ae55f821c4afb408ac72af9bbb0e179~ZiYEvxws-1656116561epcas5p1h;
-	Thu,  7 Aug 2025 16:38:37 +0000 (GMT)
-Received: from epcas5p2.samsung.com (unknown [182.195.38.95]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4byXsn0gNKz2SSKX; Thu,  7 Aug
-	2025 16:38:37 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250807163836epcas5p15300402e991a5be93922a414f2bd3959~ZiYDPHN-30434604346epcas5p1M;
-	Thu,  7 Aug 2025 16:38:36 +0000 (GMT)
-Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250807163833epsmtip1ba365b680e7c3d3c40d24d2656f73c35~ZiYA86Fky1962119621epsmtip1g;
-	Thu,  7 Aug 2025 16:38:33 +0000 (GMT)
-From: "Alim Akhtar" <alim.akhtar@samsung.com>
-To: "'Manivannan Sadhasivam'" <mani@kernel.org>
-Cc: "'Konrad Dybcio'" <konrad.dybcio@oss.qualcomm.com>, "'Krzysztof
- Kozlowski'" <krzk@kernel.org>, "'Ram Kumar Dwivedi'"
-	<quic_rdwivedi@quicinc.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-	<robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-	<andersson@kernel.org>, <konradybcio@kernel.org>,
-	<James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-	<agross@kernel.org>, <linux-arm-msm@vger.kernel.org>,
-	<linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-In-Reply-To: <nkefidnifmbnhvamjjyl7sq7hspdkhyoc3we7cvjby3qd7sgho@ddmuyngsomzu>
-Subject: RE: [PATCH 2/3] arm64: dts: qcom: sa8155: Add gear and rate limit
- properties to UFS
-Date: Thu, 7 Aug 2025 22:08:32 +0530
-Message-ID: <0d6801dc07b9$b869adf0$293d09d0$@samsung.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RF1kC5Ba"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-23dc5bcf49eso14925945ad.2;
+        Thu, 07 Aug 2025 11:29:23 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1754591363; x=1755196163; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=PXpLzh9f2OcRoQYEADq7bQNjN64p9yrTziTkYXi0ngg=;
+        b=RF1kC5Ba0Da5wapBT1FxQhE4rFsJi5Jov9SMq+IKq4lUj5w7m67EiMAHqGjcOEEuDE
+         NrlhzcUeV0p/E1OByDuvN/NnBojd9P0qHskYMgbLNnWHnZjtXNSyVPGA5FV5yzi0Hlij
+         b27fRBJnx1P5Xmm6zeW45XA73XMUKsqUVyxFqAQHuPaF4bQBXqSjDIPmH4xYEoDzeQtR
+         u1qKFBUsF+EsLJqvQ5ND4L6srlmsxj/JcmKm+GdtbDlh5zT9W7bcMprrs83IgNUliSb7
+         VzccyWc+5eEofIswjrRQftUvzxa25pcBgGQZEVWP57KecoEN1uf5WDOI0+x4JY7oupsH
+         Y+lA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754591363; x=1755196163;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=PXpLzh9f2OcRoQYEADq7bQNjN64p9yrTziTkYXi0ngg=;
+        b=hSVU0ipZ64jcLnQ7R7gcFVsfmPur4VlRzINruVhHe1M0YcpJ23N7Fh/wdkGI5zNJVJ
+         DxwWQvRb+tNYOy9lGU+J83CsHEm3t2oSY+h12EN4n8U304527qUemkFeAuzNZAkSfqmz
+         y5+foSx1QMjrq/RHe+6Ni4+I/Xxp1DVJvbAhUUGf2Bk6BPWyPo1ybwNFMDO7STLZcaOL
+         FtQ/CJYhluuXkIZuad2LmBaQqChnqXz6pNjeAnp7x5cg2q7HAqRauDCrQtpCeS4kvo7g
+         K8/RVYOBXTtQ8aTXWno5q7sUt+Mg1UDAC2YjN82dWh4ZwVKctBfJoQlj8toy6dwUXN0Q
+         h7PA==
+X-Forwarded-Encrypted: i=1; AJvYcCWV5iOn9z0RihBRK/IW7dEzToiQAjzH8D1SJbzL0wPfiJ5G+clzHNbP0RcKnunmyAxKlYkuXvlh8/QGQg==@vger.kernel.org, AJvYcCXV6wEB9xlVdXOEMCQW+MMLcYMGqPoZ5xrymL56JfkB8gNRs14l55esUv+aaM26bVtXe2E2gaZxcFcK53s=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBPMht29fTK2pckJzRlNxXfev4MEMwgjeai618L3EW0HutbglU
+	zc39cwdhYUcu5V4ocsar7M9G7biNvIaoXy/5LeTCP28CiP90RE/wCJdL
+X-Gm-Gg: ASbGncuMaqggJ6afHghClbYLjXi4WmL6hxrA+czKPHr/JkLiwiOqxKsM3SpAo3OIoJz
+	4byaA1CAN57N+XNPUbd50T3B6DeuOHmiOztJrrT3cx5l/gYod4Z4GD0KTBKDVhtJ9a20UPWqwzx
+	eLKSKN9ilwiO+jXP55PC055JAMVj5W52fzSVCRp3GJ5Z/OgnHBRm2spnVrc7M97Bssp365jl3A4
+	Av975QpZ2RJLj3jOfwSQ+qXlFnEs+UHjSMeZQARTQTshqiplji17B3qPaNNu3evuZxlQtN4sb8o
+	z7WWX3FJahbdj06jQxL0T3v2ZMWTw4rmaC29YFL73LUu83IggEO1IFvQsFAMQTtZLXNK6qpVqai
+	kM7OIBJGaBQ16wm5552ArJIJkpC0vi5L/
+X-Google-Smtp-Source: AGHT+IEy6szDYvTpU5CXrnpu3V8cht2UYWOWNUxx22SUkuhwuo/Zno/RTiNiAgDk+fvXMjq2JtYryQ==
+X-Received: by 2002:a17:902:c992:b0:220:c164:6ee1 with SMTP id d9443c01a7336-242c21dd9c0mr219435ad.32.1754591363281;
+        Thu, 07 Aug 2025 11:29:23 -0700 (PDT)
+Received: from avinash ([2406:8800:9014:d938:f647:9d6a:9509:bc41])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-241d1f0f603sm191567695ad.48.2025.08.07.11.29.20
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 07 Aug 2025 11:29:22 -0700 (PDT)
+From: Abinash Singh <abinashsinghlalotra@gmail.com>
+To: James.Bottomley@HansenPartnership.com
+Cc: martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Abinash Singh <abinashsinghlalotra@gmail.com>
+Subject: [PATCH RFC] scsi: sd: Fix build warning in sd_revalidate_disk()
+Date: Fri,  8 Aug 2025 00:00:00 +0530
+Message-ID: <20250807183000.31465-1-abinashsinghlalotra@gmail.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Content-Language: en-us
-Thread-Index: AQHWPm1h7sMntUE9BjOfqFdL0FvwlQKqKM9CAg+/nxMBCUK1JQJtFIHyAldjN/MB24cyRgGnpjwRAmX4p5MB936htgLh1QaLARPOx0SzsAOLcA==
-X-CMS-MailID: 20250807163836epcas5p15300402e991a5be93922a414f2bd3959
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250806112542epcas5p15f2fdea9b635a43c54885dbdffa03b60
-References: <b235e338-8c16-439b-b7a5-24856893fb5d@oss.qualcomm.com>
-	<061b01dc062d$25c47800$714d6800$@samsung.com>
-	<i6eyiscdf2554znc4aaglhi22opfgyicif3y7kzjafwsrtdrtm@jjpzak64gdft>
-	<061c01dc062f$70ec34b0$52c49e10$@samsung.com>
-	<87c37d65-5ab1-4443-a428-dc3592062cdc@oss.qualcomm.com>
-	<061d01dc0631$c1766c00$44634400$@samsung.com>
-	<3cd33dce-f6b9-4f60-8cb2-a3bf2942a1e5@oss.qualcomm.com>
-	<06d201dc0689$9f438200$ddca8600$@samsung.com>
-	<wpfchmssbrfhcxnoe37agonyc5s7e2onark77dxrlt5jrxxzo2@g57mdqrgj7uk>
-	<06f301dc0695$6bf25690$43d703b0$@samsung.com>
-	<CGME20250806112542epcas5p15f2fdea9b635a43c54885dbdffa03b60@epcas5p1.samsung.com>
-	<nkefidnifmbnhvamjjyl7sq7hspdkhyoc3we7cvjby3qd7sgho@ddmuyngsomzu>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
+A build warning was triggered due to excessive stack usage in
+sd_revalidate_disk():
 
+drivers/scsi/sd.c: In function ‘sd_revalidate_disk.isra’:
+drivers/scsi/sd.c:3824:1: warning: the frame size of 1160 bytes is larger than 1024 bytes [-Wframe-larger-than=]
 
-> -----Original Message-----
-> From: 'Manivannan Sadhasivam' <mani=40kernel.org>
-> Sent: Wednesday, August 6, 2025 4:56 PM
-> To: Alim Akhtar <alim.akhtar=40samsung.com>
-> Cc: 'Konrad Dybcio' <konrad.dybcio=40oss.qualcomm.com>; 'Krzysztof
-=5B...=5D
+This is caused by a large local struct queue_limits (~400B) allocated
+on the stack. Replacing it with a heap allocation using kmalloc()
+significantly reduces frame usage. Kernel stack is limited (~8 KB),
+and allocating large structs on the stack is discouraged.
+As the function already performs heap allocations (e.g. for buffer),
+this change fits well.
 
-> > >
-> > > On Wed, Aug 06, 2025 at 09:51:43AM GMT, Alim Akhtar wrote:
-> > >
-> > > =5B...=5D
-> > >
-> > > > > >> Introducing generic solutions preemptively for problems that
-> > > > > >> are simple in concept and can occur widely is good practice
-> > > > > >> (although it's sometimes hard to gauge whether this is a
-> > > > > >> one-off), as if the issue spreads a generic solution will
-> > > > > >> appear at some point, but we'll have to keep supporting the
-> > > > > >> odd ones as well
-> > > > > >>
-> > > > > > Ok,
-> > > > > > I would prefer if we add a property which sounds like =22poor
-> > > > > > thermal dissipation=22 or =22routing channel loss=22 rather tha=
-n
-> > > > > > adding limiting UFS gear
-> > > > > properties.
-> > > > > > Poor thermal design or channel losses are generic enough and
-> > > > > > can happen
-> > > > > on any board.
-> > > > >
-> > > > > This is exactly what I'm trying to avoid through my suggestion -
-> > > > > one board may have poor thermal dissipation, another may have
-> > > > > channel losses, yet another one may feature a special batch of
-> > > > > UFS chips that will set the world on fire if instructed to
-> > > > > attempt link training at gear 7 - they all are causes, as
-> > > > > opposed to describing what needs to happen (i.e. what the
-> > > > > hardware must be treated as - gear N incapable despite what can
-> > > > > be discovered at runtime), with perhaps a comment on the side
-> > > > >
-> > > > But the solution for all possible board problems can't be by
-> > > > limiting Gear
-> > > speed.
-> > >
-> > > Devicetree properties should precisely reflect how they are relevant
-> > > to the hardware. 'limiting-gear-speed' is self-explanatory that the
-> > > gear speed is getting limited (for a reason), but the devicetree
-> > > doesn't need to describe the
-> > > *reason* itself.
-> > >
-> > > > So it should be known why one particular board need to limit the ge=
-ar.
-> > >
-> > > That goes into the description, not in the property name.
-> > >
-> > > > I understand that this is a static configuration, where it is
-> > > > already known
-> > > that board is broken for higher Gear.
-> > > > Can this be achieved by limiting the clock? If not, can we add a
-> > > > board
-> > > specific _quirk_ and let the _quirk_ to be enabled from vendor
-> > > specific hooks?
-> > > >
-> > >
-> > > How can we limit the clock without limiting the gears? When we limit
-> > > the gear/mode, both clock and power are implicitly limited.
-> > >
-> > Possibly someone need to check with designer of the SoC if that is poss=
-ible
-> or not.
->=20
-> It's not just clock. We need to consider reducing regulator, interconnect
-> votes also. But as I said above, limiting the gear/mode will take care of=
- all
-> these parameters.
->=20
-> > Did we already tried _quirk_? If not, why not?
-> > If the board is so poorly designed and can't take care of the channel
-> > loses or heat dissipation etc, Then I assumed the gear negotiation
-> > between host and device should fail for the higher gear and driver can =
-have
-> a re-try logic to re-init / re-try =22power mode change=22 at the lower g=
-ear. Is
-> that not possible / feasible?
-> >
->=20
-> I don't see why we need to add extra logic in the UFS driver if we can ex=
-tract
-> that information from DT.
->=20
-You didn=E2=80=99t=20answer=20my=20question=20entirely,=20I=20am=20still=20=
-not=20able=20to=20visualised=20how=20come=20Linkup=20is=20happening=20in=20=
-higher=20gear=20and=20then=20=0D=0ASuddenly=20it=20is=20failing=20and=20we=
-=20need=20to=20reduce=20the=20gear=20to=20solve=20that?=0D=0AThat's=20why=
-=20my=20suggestion=20is=20to=20go=20for=20a=20re-try=20at=20lower=20gear=20=
-when=20problem=20happens.=0D=0AIt=20is=20not=20that=20since=20adding=20DT=
-=20property=20is=20simple=20to=20just=20go=20that=20path,=20that=20is=20sol=
-ving=20_just_=20this=20case,=20may=20be.=20=0D=0A=0D=0A=0D=0A=0D=0A>=20-=20=
-Mani=0D=0A>=20=0D=0A>=20--=0D=0A>=20=E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=
-=AE=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=E0=AF=8D=20=E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=
-=AE=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=E0=AF=8D=0D=0A=0D=0A
+Signed-off-by: Abinash Singh <abinashsinghlalotra@gmail.com>
+
+---
+This was further confirmed by compiling sd.c with -fstack-usage flag
+
+Before: drivers/scsi/sd.c:3694:12:sd_revalidate_disk.isra 1248 dynamic,bounded
+After:  drivers/scsi/sd.c:3695:12:sd_revalidate_disk.isra  840 dynamic,bounded
+
+Already we had a heap allocation in this function so I think  we can do this
+without any issues.
+I have followed the same pattern on allocation failure as done for
+`buffer`.
+
+This function appears stable; if it's not under active development,
+we may consider cleaning up unused goto statements in a follow-up patch.
+
+Thanks For your valuable Time
+
+Best regards
+Abinash
+---
+ drivers/scsi/sd.c | 41 ++++++++++++++++++++++++-----------------
+ 1 file changed, 24 insertions(+), 17 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 4a68b2ab2804..a03844400e51 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -34,6 +34,7 @@
+  */
+ 
+ #include <linux/bio-integrity.h>
++#include <linux/cleanup.h>
+ #include <linux/module.h>
+ #include <linux/fs.h>
+ #include <linux/kernel.h>
+@@ -3696,11 +3696,16 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	struct scsi_disk *sdkp = scsi_disk(disk);
+ 	struct scsi_device *sdp = sdkp->device;
+ 	sector_t old_capacity = sdkp->capacity;
+-	struct queue_limits lim;
+ 	unsigned char *buffer;
+ 	unsigned int dev_max;
+ 	int err;
+ 
++	struct queue_limits *lim __free(kfree) = kmalloc(sizeof(*lim), GFP_KERNEL);
++	if (!lim) {
++		sd_printk(KERN_WARNING, sdkp, "sd_revalidate_disk: Memory allocation failure.\n");
++		goto out;
++	}
++
+ 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
+ 				      "sd_revalidate_disk\n"));
+ 
+@@ -3720,14 +3726,14 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 
+ 	sd_spinup_disk(sdkp);
+ 
+-	lim = queue_limits_start_update(sdkp->disk->queue);
++	*lim = queue_limits_start_update(sdkp->disk->queue);
+ 
+ 	/*
+ 	 * Without media there is no reason to ask; moreover, some devices
+ 	 * react badly if we do.
+ 	 */
+ 	if (sdkp->media_present) {
+-		sd_read_capacity(sdkp, &lim, buffer);
++		sd_read_capacity(sdkp, lim, buffer);
+ 		/*
+ 		 * Some USB/UAS devices return generic values for mode pages
+ 		 * until the media has been accessed. Trigger a READ operation
+@@ -3741,17 +3747,17 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 		 * cause this to be updated correctly and any device which
+ 		 * doesn't support it should be treated as rotational.
+ 		 */
+-		lim.features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
++		lim->features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
+ 
+ 		if (scsi_device_supports_vpd(sdp)) {
+ 			sd_read_block_provisioning(sdkp);
+-			sd_read_block_limits(sdkp, &lim);
++			sd_read_block_limits(sdkp, lim);
+ 			sd_read_block_limits_ext(sdkp);
+-			sd_read_block_characteristics(sdkp, &lim);
+-			sd_zbc_read_zones(sdkp, &lim, buffer);
++			sd_read_block_characteristics(sdkp, lim);
++			sd_zbc_read_zones(sdkp, lim, buffer);
+ 		}
+ 
+-		sd_config_discard(sdkp, &lim, sd_discard_mode(sdkp));
++		sd_config_discard(sdkp, lim, sd_discard_mode(sdkp));
+ 
+ 		sd_print_capacity(sdkp, old_capacity);
+ 
+@@ -3761,45 +3767,45 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 		sd_read_app_tag_own(sdkp, buffer);
+ 		sd_read_write_same(sdkp, buffer);
+ 		sd_read_security(sdkp, buffer);
+-		sd_config_protection(sdkp, &lim);
++		sd_config_protection(sdkp, lim);
+ 	}
+ 
+ 	/*
+ 	 * We now have all cache related info, determine how we deal
+ 	 * with flush requests.
+ 	 */
+-	sd_set_flush_flag(sdkp, &lim);
++	sd_set_flush_flag(sdkp, lim);
+ 
+ 	/* Initial block count limit based on CDB TRANSFER LENGTH field size. */
+ 	dev_max = sdp->use_16_for_rw ? SD_MAX_XFER_BLOCKS : SD_DEF_XFER_BLOCKS;
+ 
+ 	/* Some devices report a maximum block count for READ/WRITE requests. */
+ 	dev_max = min_not_zero(dev_max, sdkp->max_xfer_blocks);
+-	lim.max_dev_sectors = logical_to_sectors(sdp, dev_max);
++	lim->max_dev_sectors = logical_to_sectors(sdp, dev_max);
+ 
+ 	if (sd_validate_min_xfer_size(sdkp))
+-		lim.io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
++		lim->io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
+ 	else
+-		lim.io_min = 0;
++		lim->io_min = 0;
+ 
+ 	/*
+ 	 * Limit default to SCSI host optimal sector limit if set. There may be
+ 	 * an impact on performance for when the size of a request exceeds this
+ 	 * host limit.
+ 	 */
+-	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
++	lim->io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
+ 	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
+-		lim.io_opt = min_not_zero(lim.io_opt,
++		lim->io_opt = min_not_zero(lim->io_opt,
+ 				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
+ 	}
+ 
+ 	sdkp->first_scan = 0;
+ 
+ 	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
+-	sd_config_write_same(sdkp, &lim);
++	sd_config_write_same(sdkp, lim);
+ 	kfree(buffer);
+ 
+-	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
++	err = queue_limits_commit_update_frozen(sdkp->disk->queue, lim);
+ 	if (err)
+ 		return err;
+ 
+-- 
+2.50.1
+
