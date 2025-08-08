@@ -1,63 +1,63 @@
-Received: from mail-pg1-f171.google.com (mail-pg1-f171.google.com [209.85.215.171])
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB872253FE;
-	Fri,  8 Aug 2025 20:57:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B9282253FE;
+	Fri,  8 Aug 2025 20:58:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754686670; cv=none; b=DwTUTnzTrXsZSwR5ysjlje2TW7hYj7OClckq0WmT8Qd0fDgVo9kxhUfUncAFY9JdqKBob9BRLthfjriOLATogLZyYiQ0uv8ZYIZQr8SyF0FYn5CYsNCWAp2nftOhNDdiIbQQ0aRkf/3stH8hwcAM6qcIVhvfW5pVrhJm/WExQxc=
+	t=1754686691; cv=none; b=efV68lXgl7oK3VXNHegBXE5+ZOPfX1KDcjBq5ES7fa15iM0+AxklqbesDHaOd4zg3WDtSiW/erhr5kdeF3gLN2pNkEcFHFuDfLKlVmIM91bAvN0eAA+034sWeo1sJ4xZbxM8q4j31ovSt7lF2ZrYEXO5iS9SK6+VHoOaS2FomVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754686670; c=relaxed/simple;
-	bh=hdh9IovPgVS3WH8HOUQv61w5RPs9mEoCUMA0fqjjBZ0=;
+	s=arc-20240116; t=1754686691; c=relaxed/simple;
+	bh=TyJQUH8dHZ46FhzJ+l2L31lXtQBdoSRQf/tGmeQC7CY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=V8JPJozN5rIwvXt/4umBj5Fts9rUqmpOXslUXL4NIOBbWMKBvJ+kIjj/Y5fssxvYcFw8rdsJshBeRtT6x0tVpLJrKRVFtOJVR4g0OMSMsgH4D2cBbxVjg8FQjcidwM+PYhqxPxmScLk26YSFVVbgS/SF13CpJqzmM3PR8hhP+1Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fCEq5gOU; arc=none smtp.client-ip=209.85.215.171
+	 MIME-Version:Content-Type; b=KD9f68L5b2EAQ9u8ziJplfCP51o7d7BVhLjHMQCkr0LCeAwS+84h4klBMuHdWokiqjD3+1h3wq8pW272IwOkhfpD6AIo67LOLltIpysVpWBZOl3ZUeqSiUk4tt0iRVC4xsgfvXgZwU//qThqETnb5UZNr3Up95YN1TmH3gLXMY0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Yul6fmaD; arc=none smtp.client-ip=209.85.214.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fCEq5gOU"
-Received: by mail-pg1-f171.google.com with SMTP id 41be03b00d2f7-b3507b63c6fso2691604a12.2;
-        Fri, 08 Aug 2025 13:57:48 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yul6fmaD"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-24049d16515so22127665ad.1;
+        Fri, 08 Aug 2025 13:58:10 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1754686668; x=1755291468; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1754686689; x=1755291489; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=iGsDopcx/0+LNXwYB8z1G5F5ZCC6MPmJTYcTpgAvOtc=;
-        b=fCEq5gOUQVpzz+qi50fo8JmycjO4KcGFtmJ9hcG56JMiMxVt2Xcum/dgq7/yb87HRX
-         Af+2Zh6FhBYTbAyvCpXTa3TVnzLUmKJOW9C8MTrYJl/J/ijmV6a8p/R6UF7b2snCd1XT
-         QFIkqha8yRNrJ3BwCdeJveLE0nvBrUUe1gG5l38VRn2uKDH/SEDuJueMO2pS78maFC2B
-         EF0/2P0Aol/csZLm594idsYA/zQUHzbKxPNVBb0V7++rnqiNQCIY/K4zukktsbGRGSI0
-         T+qChOW5r63x2D/8xXrTZR7M6Cf2wPwBB33ROhPLekmbC45F73SitaOEIeuyZlucqga0
-         cUiQ==
+        bh=rnHfT5Qo8qf2TJOAloAsKSB5a9DbpjCeLYVaNSXEctw=;
+        b=Yul6fmaD36a/Fo4cgjk7JIV8AKmMfTv/BCN500dEsHfiCrs0x3t9mP1Nc6epeFlbwt
+         T9t56ViIyT09/4UE+6/HDo7LOr7hEQQQYXaGW3N0QmqL2g4SDJDCsIRISQui0x41EAG4
+         XXrtddElKAEI/1IQeO5rLTWmjA5I3Ci3N4Nr0ZDl1UcDjHMelT2iOhUJdWiXh5/uArx5
+         NCRYxf37jG2+qUhzj2bjZds6ofy0mM1rhsOzuNz3Azqbhe46UG+ShoQrqVfS6Ic8DVjQ
+         Fl9OfsOHryluL3E90FklZTEHtZQupfxWzHNQbEIJn36UrrepbE6X9+Ai5F45LHrLMerD
+         lLLQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1754686668; x=1755291468;
+        d=1e100.net; s=20230601; t=1754686689; x=1755291489;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=iGsDopcx/0+LNXwYB8z1G5F5ZCC6MPmJTYcTpgAvOtc=;
-        b=ekb4cXHp8oeYfUIoieCnOri6fiBgETXs25q9jwqxZlpNJQ6iKr74Us+VjLKtF6z+VE
-         I3zOSOlppI2PnPZRAY7fINhiZLljOHOKP4PZiG8Cp+iLjRXgUUUxrbTHVHPSPOzH7x0s
-         UdRdkoPTIczwFDHrhUXz0PRNrZrfG1RnTn+S0joRTOslBywFFJJkyLh0+0hg4o6o+yyL
-         llHI/5W0JKa7pJNgvIZiAApc6VyfnW3K0RrYkq89Ap12aFLANK6+E8moBaSro/Ne8PxT
-         HYeGqJXR0BTksxJH+/Nep6yW80f8DNyVrDOpuRPsn7b8mxZ3L+ZbAiDKq8FAbYv7agqg
-         7noA==
-X-Forwarded-Encrypted: i=1; AJvYcCVRREKq7vA3CW/4Xvcg9ywnNTIuLpSGLetChIOLOFIXStqfL6abwTwV0vKsbjjYYWsCmv79W9cQcf9ilbk=@vger.kernel.org, AJvYcCX3/t516PDnGAxWDgV5olHFnZnQYriRjLidzNHaRKsPruywtNvV5r8esIvLTjwdUxHJXA87dCoE2728fQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwjTpCwYaTF1LmiMXxbaoItwMegpmAXMUM3Y+M0APuqKXS6RQ9M
-	agu9G5HSsHWmpXih/NuAr2qKaqNR8UXsB0mKTftBrGPedCIkeaQXBNyp
-X-Gm-Gg: ASbGncuQ/aH+OTOP8PN/w5WFK7Qh3QTO6WYTVMeSpubB60lrUbmutS4aFnBAnjE4f/5
-	DHwc+FKR9e2xhrUSKdFqZGFgOwBmt64TQEW/z6cpchb1Kc8LxaF9jJ+0otfIGUsugH4aS57LLut
-	Ju7GEV6Bg3BpH+Xho2FioURAWPVP2ftltMCTF8g67CpcYhs+2s+rVpclSdPHxTmdef5uj6zRl8s
-	1DzsA/dysLfMYkEYL7CD4efa4FSg0855B30Eczx01S0rKCvSabD9agpAggE7QOzrhlPcxqXIG7Y
-	CNQ9TqbYWeoS3a3Y70DbjwRJyBYhIxdgsjtQ0Pt/ads1WuuqKwuU0cH5wjCIwgrpLQ3IFmjUHhf
-	qjp8ckihNEpjwL9NOL7GJw340uXPSzeZf
-X-Google-Smtp-Source: AGHT+IFM2HXcdR7jWcwXWog1LLxuetCGcmbqxs9DMmqehimupOuuZJBbhzHFWOP6tTeokELKeMoooA==
-X-Received: by 2002:a17:903:1b26:b0:23f:e869:9a25 with SMTP id d9443c01a7336-242c224f2cfmr74361005ad.44.1754686667964;
-        Fri, 08 Aug 2025 13:57:47 -0700 (PDT)
+        bh=rnHfT5Qo8qf2TJOAloAsKSB5a9DbpjCeLYVaNSXEctw=;
+        b=AK7CCWm+PfwKFosF5/URVIEMd3NvTWBPfYOrWT2ZDjVMOob0DRsNIQAL3/ufVOogpb
+         SeO1+V7qokzKaHHUS8Kn1gb0kkf7exYymWU1TIYj27/YSIiBB7dxAl9LtLmfp+e74zKC
+         yMv5X7dM8VuHJDo2dNVNtbU5lixx4M2mI1MYfpUG3V5hEEA9A4s7iK2mHT5CFhHw74E2
+         gDVMGFop3BlaOlVHNphcRJp+jDDLwYCR3j8OnqwFJkU2qQcG1cdwkzxmwO2yb6RnqerU
+         sQMfxmRT6anC0U62MR24jjhXeh0LjxptS2uY89smgc8sfObDiABLkmSnXXRiMEWg8M7m
+         SQiA==
+X-Forwarded-Encrypted: i=1; AJvYcCUSwitgryu3upbW9HbfAu0Eq1pUcs9hS9Y3ETJuPwYF5JPsEIDoQV0dk7nu/dEzPAnb6TxhoLSOpoSEJA==@vger.kernel.org, AJvYcCWtKzzeHCLYTay4VxTsD1IIlvg2W37ELd4O2oKcFw6poRS0qilwVY5OUDnYLiS0xaCRn8t6OtVNHmPyIHE=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwRSuEwEDdAj2I7iIok9eshHOkO3wyWsLci97ahUMCwbDqZdhWg
+	/Ebp4QAuyEvIRKXcSWahGulAEvEYT13lBgTrDA+cvAzqL9ryZHHAUXrm
+X-Gm-Gg: ASbGnctJ3fv++n2/hM+RZFhi/2bMASX2UZrmfUuxdDPwh0PPGiosqf6HUzb+HNLaOj3
+	SyaM9q5d5lpMV/EYqe1pn897iS/gpc29hYcSXqm2EOpUInmkdvBbgbvLAJ9nQUX5RiymAMb4uhM
+	tEOxt37OXriXI019jLpOE4QMYqxP6Trg6Q/QjgZaavNFlxAuZ+8xQdBXJ8mgLmTe4RTeaj0GAde
+	NPKQIZd73yh4gQnRj9UjELGBO40nXj+9tWmV2NJ6hyYGuUKcFRkffEB/1TSkdfE9aFcUf71T22D
+	lzwruuQferZDy9MRF+EYr/G8/E9NXr1OzCN4YaygQUsG68efqPTqr6U/obbC1hUqHjYoy3p3q4/
+	UCcDVYbYUxTGBxPVYROJWKw/QRbJCPYpv
+X-Google-Smtp-Source: AGHT+IFZbUctANYJ/CeWiY6FK0Ci9xEWrnhxRKGWGdndMkE6kbcoC1j4wEfK2UbCtcoDhNUSK88miA==
+X-Received: by 2002:a17:902:c94a:b0:240:3913:7c84 with SMTP id d9443c01a7336-242c1ecc793mr60770215ad.4.1754686689380;
+        Fri, 08 Aug 2025 13:58:09 -0700 (PDT)
 Received: from avinash ([2406:8800:9014:d938:f647:9d6a:9509:bc41])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-241e89768a7sm216840965ad.83.2025.08.08.13.57.44
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-241e89768a7sm216840965ad.83.2025.08.08.13.58.06
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 08 Aug 2025 13:57:47 -0700 (PDT)
+        Fri, 08 Aug 2025 13:58:09 -0700 (PDT)
 From: Abinash Singh <abinashsinghlalotra@gmail.com>
 To: bvanassche@acm.org
 Cc: James.Bottomley@HansenPartnership.com,
@@ -66,9 +66,9 @@ Cc: James.Bottomley@HansenPartnership.com,
 	linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
-Subject: [PATCH v5 1/2] scsi: sd: make sd_revalidate_disk() return void
-Date: Sat,  9 Aug 2025 02:28:18 +0530
-Message-ID: <20250808205819.29517-2-abinashsinghlalotra@gmail.com>
+Subject: [PATCH v5 2/2] scsi: sd: Fix build warning in sd_revalidate_disk()
+Date: Sat,  9 Aug 2025 02:28:19 +0530
+Message-ID: <20250808205819.29517-3-abinashsinghlalotra@gmail.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250808205819.29517-1-abinashsinghlalotra@gmail.com>
 References: <20250808205819.29517-1-abinashsinghlalotra@gmail.com>
@@ -78,58 +78,159 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The sd_revalidate_disk() function currently returns 0 for
-both success and memory allocation failure.Since none of its
-callers use the return value, this return code is both unnecessary
-and potentially misleading.
+A build warning was triggered due to excessive stack usage in
+sd_revalidate_disk():
 
-Change the return type of sd_revalidate_disk() from int to void and remove all return value handling.
-This makes the function semantics clearer and avoids confusion about unused return codes.
+drivers/scsi/sd.c: In function ‘sd_revalidate_disk.isra’:
+drivers/scsi/sd.c:3824:1: warning: the frame size of 1160 bytes is larger than 1024 bytes [-Wframe-larger-than=]
+
+This is caused by a large local struct queue_limits (~400B) allocated
+on the stack. Replacing it with a heap allocation using kmalloc()
+significantly reduces frame usage. Kernel stack is limited (~8 KB),
+and allocating large structs on the stack is discouraged.
+As the function already performs heap allocations (e.g. for buffer),
+this change fits well.
 
 Signed-off-by: Abinash Singh <abinashsinghlalotra@gmail.com>
 ---
- drivers/scsi/sd.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/sd.c | 48 +++++++++++++++++++++++++++--------------------
+ 1 file changed, 28 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 4a68b2ab2804..2f9381dcbcce 100644
+index 2f9381dcbcce..7e9c8d08120a 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -106,7 +106,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
- 		unsigned int mode);
- static void sd_config_write_same(struct scsi_disk *sdkp,
- 		struct queue_limits *lim);
--static int  sd_revalidate_disk(struct gendisk *);
-+static void  sd_revalidate_disk(struct gendisk *);
- static void sd_unlock_native_capacity(struct gendisk *disk);
- static void sd_shutdown(struct device *);
- static void scsi_disk_release(struct device *cdev);
-@@ -3691,7 +3691,7 @@ static void sd_read_block_zero(struct scsi_disk *sdkp)
-  *	performs disk spin up, read_capacity, etc.
-  *	@disk: struct gendisk we care about
-  **/
--static int sd_revalidate_disk(struct gendisk *disk)
-+static void sd_revalidate_disk(struct gendisk *disk)
- {
+@@ -3696,8 +3696,8 @@ static void sd_revalidate_disk(struct gendisk *disk)
  	struct scsi_disk *sdkp = scsi_disk(disk);
  	struct scsi_device *sdp = sdkp->device;
-@@ -3801,7 +3801,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	sector_t old_capacity = sdkp->capacity;
+-	struct queue_limits lim;
+-	unsigned char *buffer;
++	struct queue_limits *lim = NULL;
++	unsigned char *buffer = NULL;
+ 	unsigned int dev_max;
+ 	int err;
  
- 	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
- 	if (err)
--		return err;
+@@ -3711,6 +3711,13 @@ static void sd_revalidate_disk(struct gendisk *disk)
+ 	if (!scsi_device_online(sdp))
+ 		goto out;
+ 
++	lim = kmalloc(size(*lim), GFP_KERNEL);
++	if (!lim) {
++		sd_printk(KERN_WARNING, sdkp,
++			"sd_revalidate_disk: Disk limit allocation failure.\n");
 +		goto out;
++	}
++
+ 	buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL);
+ 	if (!buffer) {
+ 		sd_printk(KERN_WARNING, sdkp, "sd_revalidate_disk: Memory "
+@@ -3720,14 +3727,14 @@ static void sd_revalidate_disk(struct gendisk *disk)
+ 
+ 	sd_spinup_disk(sdkp);
+ 
+-	lim = queue_limits_start_update(sdkp->disk->queue);
++	*lim = queue_limits_start_update(sdkp->disk->queue);
  
  	/*
- 	 * Query concurrent positioning ranges after
-@@ -3820,7 +3820,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	 * Without media there is no reason to ask; moreover, some devices
+ 	 * react badly if we do.
+ 	 */
+ 	if (sdkp->media_present) {
+-		sd_read_capacity(sdkp, &lim, buffer);
++		sd_read_capacity(sdkp, lim, buffer);
+ 		/*
+ 		 * Some USB/UAS devices return generic values for mode pages
+ 		 * until the media has been accessed. Trigger a READ operation
+@@ -3741,17 +3748,17 @@ static void sd_revalidate_disk(struct gendisk *disk)
+ 		 * cause this to be updated correctly and any device which
+ 		 * doesn't support it should be treated as rotational.
+ 		 */
+-		lim.features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
++		lim->features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
+ 
+ 		if (scsi_device_supports_vpd(sdp)) {
+ 			sd_read_block_provisioning(sdkp);
+-			sd_read_block_limits(sdkp, &lim);
++			sd_read_block_limits(sdkp, lim);
+ 			sd_read_block_limits_ext(sdkp);
+-			sd_read_block_characteristics(sdkp, &lim);
+-			sd_zbc_read_zones(sdkp, &lim, buffer);
++			sd_read_block_characteristics(sdkp, lim);
++			sd_zbc_read_zones(sdkp, lim, buffer);
+ 		}
+ 
+-		sd_config_discard(sdkp, &lim, sd_discard_mode(sdkp));
++		sd_config_discard(sdkp, lim, sd_discard_mode(sdkp));
+ 
+ 		sd_print_capacity(sdkp, old_capacity);
+ 
+@@ -3761,45 +3768,44 @@ static void sd_revalidate_disk(struct gendisk *disk)
+ 		sd_read_app_tag_own(sdkp, buffer);
+ 		sd_read_write_same(sdkp, buffer);
+ 		sd_read_security(sdkp, buffer);
+-		sd_config_protection(sdkp, &lim);
++		sd_config_protection(sdkp, lim);
+ 	}
+ 
+ 	/*
+ 	 * We now have all cache related info, determine how we deal
+ 	 * with flush requests.
+ 	 */
+-	sd_set_flush_flag(sdkp, &lim);
++	sd_set_flush_flag(sdkp, lim);
+ 
+ 	/* Initial block count limit based on CDB TRANSFER LENGTH field size. */
+ 	dev_max = sdp->use_16_for_rw ? SD_MAX_XFER_BLOCKS : SD_DEF_XFER_BLOCKS;
+ 
+ 	/* Some devices report a maximum block count for READ/WRITE requests. */
+ 	dev_max = min_not_zero(dev_max, sdkp->max_xfer_blocks);
+-	lim.max_dev_sectors = logical_to_sectors(sdp, dev_max);
++	lim->max_dev_sectors = logical_to_sectors(sdp, dev_max);
+ 
+ 	if (sd_validate_min_xfer_size(sdkp))
+-		lim.io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
++		lim->io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
+ 	else
+-		lim.io_min = 0;
++		lim->io_min = 0;
+ 
+ 	/*
+ 	 * Limit default to SCSI host optimal sector limit if set. There may be
+ 	 * an impact on performance for when the size of a request exceeds this
+ 	 * host limit.
+ 	 */
+-	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
++	lim->io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
+ 	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
+-		lim.io_opt = min_not_zero(lim.io_opt,
++		lim->io_opt = min_not_zero(lim->io_opt,
+ 				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
+ 	}
+ 
+ 	sdkp->first_scan = 0;
+ 
+ 	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
+-	sd_config_write_same(sdkp, &lim);
+-	kfree(buffer);
++	sd_config_write_same(sdkp, lim);
+ 
+-	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
++	err = queue_limits_commit_update_frozen(sdkp->disk->queue, lim);
+ 	if (err)
+ 		goto out;
+ 
+@@ -3820,7 +3826,9 @@ static void sd_revalidate_disk(struct gendisk *disk)
  		set_capacity_and_notify(disk, 0);
  
   out:
--	return 0;
-+	/* Placeholder for future cleanup */
+-	/* Placeholder for future cleanup */
++	kfree(lim);
++	kfree(buffer);
++
  }
  
  /**
