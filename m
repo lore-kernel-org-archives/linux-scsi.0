@@ -1,180 +1,221 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8096D27CB31;
-	Fri,  8 Aug 2025 13:38:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5273A27F75F
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Aug 2025 15:08:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754660319; cv=none; b=uLtABjYdX1AII76RPCpqa2KWp6satLmKe+2e98iNxrCX7rTpx/qOBhc+6X8Tbifb86u8L2IdcpmmtSSxSF0/i9mB07Jn+bP2v0g67qjzVoRtE236gPeKacWsyIecqq5XjSQ6QuJ08Q9XikAFsl8wGd0J7XthiAMH/zYECZ9lemI=
+	t=1754665699; cv=none; b=caEgNexiM8Bd0fZIl6THqLjFyAIQ1EKSVDZH1T9X7nze+TNMB/sGL1xqMXRJ4mtGEe8bWAgaFHpby1EoJLinWoNX1IaenoKlbkqU2o21XOlilXZn/9FtmSdh3m6tSIEuNf6VGQN5ruUlG9vVewIL7IB3nGGpF64+zDHdJBj48Bg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754660319; c=relaxed/simple;
-	bh=xNNphpZVuuV6U/Jc9k5AyTfzIpZRp1BJyfmovI8qRz0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=K6LrWFmsIdCHafkwd6vTE5oHpDJzCs0zYSDMLVNYzlPrImUiofone2F+akr/BtvGn4AAPF25K6MkPY26KeIQT2V/Jbrqbtk647ezrSWrRWOzZINqTk9U36y48EZyQ599i+ogUTd/GGr5fFW0DZbxadP0Lwnin77elR92xQZ28PQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=fYfqvPRp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1754665699; c=relaxed/simple;
+	bh=KbyBa2RMxGvUa2qTjS8DYpX+dKFyENEXQ3F7PVCsezM=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=iYBY0VdxNbImQBsA39zTMLyZGmOqKPrGcr2QkdNhw/m9KBcrUtCexD43QoY8UbYcrvtcWRM3NEdNvHR7U7D4bQGfMHuLZERBjf9xFJ+RZOq4j1PtyTfYsHg1Mc9+z22ryGyWuokUxHDbo7kzXvqDbvg8YocghTXzcUH0QAUzMgM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=YeblZxfC; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="fYfqvPRp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 408EEC4CEED;
-	Fri,  8 Aug 2025 13:38:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754660318;
-	bh=xNNphpZVuuV6U/Jc9k5AyTfzIpZRp1BJyfmovI8qRz0=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=fYfqvPRpqL9tPn1XlTBGjZCrl23fSZnBBxWkK3d0SLIQYUv1mTmhtGw+SYAOZFsEc
-	 8jGV1OPcY71+2hanQRPlvCztRXRtCZrg+TDzTXOraT0FFPKC9LFc01OerloGi3BDR+
-	 rOsK+gTRzCfS7yG6KxwdXCfEG/57frdX+ARcwKa+ehuqlHoqK5po3JAlHypiLQoM9n
-	 akslpsAr4M7T6RjNxYjsa542e3DHK5aLxAVffmPIxCDb5PEfb/kLjhGgl6latNHpa5
-	 VFLIpcR2UIWUe4vX+MODn1F0r/OAqHW3lJIfHuFC0ESRh3oleZ9Hfg6qj8eA+Int1I
-	 XFgAP/0KswDiw==
-Message-ID: <4786fbb9-5d25-4d86-b902-61cc78a9b138@kernel.org>
-Date: Fri, 8 Aug 2025 22:38:37 +0900
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="YeblZxfC"
+Received: from epcas5p4.samsung.com (unknown [182.195.41.42])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250808150815epoutp040290ea64870dfbcff715495f3fdb1fc7~Z0ydIi2NH3110431104epoutp048
+	for <linux-scsi@vger.kernel.org>; Fri,  8 Aug 2025 15:08:15 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250808150815epoutp040290ea64870dfbcff715495f3fdb1fc7~Z0ydIi2NH3110431104epoutp048
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1754665695;
+	bh=KbyBa2RMxGvUa2qTjS8DYpX+dKFyENEXQ3F7PVCsezM=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=YeblZxfCRgVAJ8Yhk6OeVGS4jBSJVQgSw4NoEDq8vypGi4G2OIvH2FK8R3EIsbqW0
+	 G0LfWv9ovZUUVCvze7Y/PaFncOSoG0USMMFQ8E4IulrWrPa+MBCmsy7axwL2pW/jBl
+	 FPwN/1wvT/oa73OJ5G5pzr6sEWjKivAIMB+0Xn0w=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20250808150814epcas5p1819cab380f954c265dfc00d7557e35e9~Z0ycfsPfM2113721137epcas5p1t;
+	Fri,  8 Aug 2025 15:08:14 +0000 (GMT)
+Received: from epcas5p4.samsung.com (unknown [182.195.38.91]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4bz6q20zKBz3hhT3; Fri,  8 Aug
+	2025 15:08:14 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20250808150813epcas5p3eb081f2f6e90a15593e545ced68435f1~Z0ya_Ijdo2389323893epcas5p3J;
+	Fri,  8 Aug 2025 15:08:13 +0000 (GMT)
+Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20250808150810epsmtip1f6ba1f6f143b53b5c12bf28410693323~Z0yYxxj3c1978819788epsmtip1Y;
+	Fri,  8 Aug 2025 15:08:10 +0000 (GMT)
+From: "Alim Akhtar" <alim.akhtar@samsung.com>
+To: "'Manivannan Sadhasivam'" <mani@kernel.org>
+Cc: "'Konrad Dybcio'" <konrad.dybcio@oss.qualcomm.com>, "'Krzysztof
+ Kozlowski'" <krzk@kernel.org>, "'Ram Kumar Dwivedi'"
+	<quic_rdwivedi@quicinc.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
+	<robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+	<andersson@kernel.org>, <konradybcio@kernel.org>,
+	<James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
+	<agross@kernel.org>, <linux-arm-msm@vger.kernel.org>,
+	<linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+In-Reply-To: <fh7y7stt5jm65zlpyhssc7dfmmejh3jzmt75smkz5uirbv6ktf@zyd2qmm2spjs>
+Subject: RE: [PATCH 2/3] arm64: dts: qcom: sa8155: Add gear and rate limit
+ properties to UFS
+Date: Fri, 8 Aug 2025 20:38:09 +0530
+Message-ID: <0f8c01dc0876$427cf1c0$c776d540$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: sd: Fix build warning in sd_revalidate_disk()
-To: Abinash Singh <abinashsinghlalotra@gmail.com>
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-References: <5cfefec0-b64b-4f96-a943-4de3205d3c50@kernel.org>
- <20250808113019.20177-1-abinashsinghlalotra@gmail.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20250808113019.20177-1-abinashsinghlalotra@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-
-On 8/8/25 20:30, Abinash Singh wrote:
-> A build warning was triggered due to excessive stack usage in
-> sd_revalidate_disk():
-> 
-> drivers/scsi/sd.c: In function ‘sd_revalidate_disk.isra’:
-> drivers/scsi/sd.c:3824:1: warning: the frame size of 1160 bytes is larger than 1024 bytes [-Wframe-larger-than=]
-> 
-> This is caused by a large local struct queue_limits (~400B) allocated
-> on the stack. Replacing it with a heap allocation using kmalloc()
-> significantly reduces frame usage. Kernel stack is limited (~8 KB),
-> and allocating large structs on the stack is discouraged.
-> As the function already performs heap allocations (e.g. for buffer),
-> this change fits well.
-> 
-> Signed-off-by: Abinash Singh <abinashsinghlalotra@gmail.com>
-> ---
-> 
-> Hi,
-> 
-> Thank you very much for your comments.
-> I have addressed all your suggestions from v1.
-> 
-> As you mentioned concerns regarding the readability of
-> the __free(kfree) attribute, I have used the classic
-> approach in v2. Additionally, I will also send v3
-> where the __free() attribute is used instead.
-> 
-> We can proceed with patch version you
-> find more suitable, and do let me know if you have
-> any further feedback.
-> 
-> changelog v1->v2:
-> 	moved declarations together
-> 	avoided "unreadable" cleanup attribute
-> 	splited long line
-> 	changed the log message to diiferentiate with buffer allocation
-> 
-> Thanks,
-> 
-> ---
->  drivers/scsi/sd.c | 49 +++++++++++++++++++++++++++++------------------
->  1 file changed, 30 insertions(+), 19 deletions(-)
-> 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 4a68b2ab2804..f5ab2a422df6 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -3696,7 +3696,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	struct scsi_disk *sdkp = scsi_disk(disk);
->  	struct scsi_device *sdp = sdkp->device;
->  	sector_t old_capacity = sdkp->capacity;
-> -	struct queue_limits lim;
-> +	struct queue_limits *lim;
->  	unsigned char *buffer;
->  	unsigned int dev_max;
->  	int err;
-
-If you change this to "int err = 0", then...
-
-> @@ -3711,23 +3711,30 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	if (!scsi_device_online(sdp))
->  		goto out;
->  
-> +	lim = kmalloc(sizeof(*lim), GFP_KERNEL);
-> +	if (!lim) {
-> +		sd_printk(KERN_WARNING, sdkp,
-> +			"sd_revalidate_disk: Disk limit allocation failure.\n");
-> +		goto out;
-> +	}
-> +
->  	buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL);
->  	if (!buffer) {
->  		sd_printk(KERN_WARNING, sdkp, "sd_revalidate_disk: Memory "
->  			  "allocation failure.\n");
-> -		goto out;
-> +		goto free_lim;
-
-Yout can do a "goto out" here...
-
->  	}
->  
-
-[...]
-
->  	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
-> -	sd_config_write_same(sdkp, &lim);
-> +	sd_config_write_same(sdkp, lim);
->  	kfree(buffer);
-
-Move this line after the "out" label...
-
->  
-> -	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
-> -	if (err)
-> +	err = queue_limits_commit_update_frozen(sdkp->disk->queue, lim);
-> +	if (err) {
-
-just do a goto out here...
-
-> +		kfree(lim);
->  		return err;
-> +	}
->  
->  	/*
->  	 * Query concurrent positioning ranges after
-> @@ -3819,6 +3828,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	if (sd_zbc_revalidate_zones(sdkp))
->  		set_capacity_and_notify(disk, 0);
->  
-> + free_lim:
-> +	kfree(lim);
->   out:
-
-And this becomes:
-
- out:
-	kfree(lim);
-	kfree(buffer)
-
-	return err;
-
-Much cleaner :)
-
->  	return 0;
->  }
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Content-Language: en-us
+Thread-Index: AQEJQrUlLhd2k13YhwqtNcYaDataOQJtFIHyAldjN/MB24cyRgGnpjwRAmX4p5MB936htgLh1QaLARPOx0QCD7g8CwGFQGz5tVzi6iA=
+X-CMS-MailID: 20250808150813epcas5p3eb081f2f6e90a15593e545ced68435f1
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250806112542epcas5p15f2fdea9b635a43c54885dbdffa03b60
+References: <061c01dc062f$70ec34b0$52c49e10$@samsung.com>
+	<87c37d65-5ab1-4443-a428-dc3592062cdc@oss.qualcomm.com>
+	<061d01dc0631$c1766c00$44634400$@samsung.com>
+	<3cd33dce-f6b9-4f60-8cb2-a3bf2942a1e5@oss.qualcomm.com>
+	<06d201dc0689$9f438200$ddca8600$@samsung.com>
+	<wpfchmssbrfhcxnoe37agonyc5s7e2onark77dxrlt5jrxxzo2@g57mdqrgj7uk>
+	<06f301dc0695$6bf25690$43d703b0$@samsung.com>
+	<CGME20250806112542epcas5p15f2fdea9b635a43c54885dbdffa03b60@epcas5p1.samsung.com>
+	<nkefidnifmbnhvamjjyl7sq7hspdkhyoc3we7cvjby3qd7sgho@ddmuyngsomzu>
+	<0d6801dc07b9$b869adf0$293d09d0$@samsung.com>
+	<fh7y7stt5jm65zlpyhssc7dfmmejh3jzmt75smkz5uirbv6ktf@zyd2qmm2spjs>
 
 
--- 
-Damien Le Moal
-Western Digital Research
+
+> -----Original Message-----
+> From: 'Manivannan Sadhasivam' <mani=40kernel.org>
+> Sent: Friday, August 8, 2025 6:14 PM
+> To: Alim Akhtar <alim.akhtar=40samsung.com>
+> Cc: 'Konrad Dybcio' <konrad.dybcio=40oss.qualcomm.com>; 'Krzysztof
+> Kozlowski' <krzk=40kernel.org>; 'Ram Kumar Dwivedi'
+> <quic_rdwivedi=40quicinc.com>; avri.altman=40wdc.com;
+> bvanassche=40acm.org; robh=40kernel.org; krzk+dt=40kernel.org;
+> conor+dt=40kernel.org; andersson=40kernel.org; konradybcio=40kernel.org;
+> James.Bottomley=40hansenpartnership.com; martin.petersen=40oracle.com;
+> agross=40kernel.org; linux-arm-msm=40vger.kernel.org; linux-
+> scsi=40vger.kernel.org; devicetree=40vger.kernel.org; linux-
+> kernel=40vger.kernel.org
+> Subject: Re: =5BPATCH 2/3=5D arm64: dts: qcom: sa8155: Add gear and rate =
+limit
+> properties to UFS
+>=20
+> On Thu, Aug 07, 2025 at 10:08:32PM GMT, Alim Akhtar wrote:
+> >
+> >
+> > > -----Original Message-----
+> > > From: 'Manivannan Sadhasivam' <mani=40kernel.org>
+> > > Sent: Wednesday, August 6, 2025 4:56 PM
+> > > To: Alim Akhtar <alim.akhtar=40samsung.com>
+> > > Cc: 'Konrad Dybcio' <konrad.dybcio=40oss.qualcomm.com>; 'Krzysztof
+> > =5B...=5D
+> >
+> > > > >
+> > > > > On Wed, Aug 06, 2025 at 09:51:43AM GMT, Alim Akhtar wrote:
+> > > > >
+> > > > > =5B...=5D
+> > > > >
+> > > > > > > >> Introducing generic solutions preemptively for problems
+> > > > > > > >> that are simple in concept and can occur widely is good
+> > > > > > > >> practice (although it's sometimes hard to gauge whether
+> > > > > > > >> this is a one-off), as if the issue spreads a generic
+> > > > > > > >> solution will appear at some point, but we'll have to
+> > > > > > > >> keep supporting the odd ones as well
+> > > > > > > >>
+> > > > > > > > Ok,
+> > > > > > > > I would prefer if we add a property which sounds like
+> > > > > > > > =22poor thermal dissipation=22 or =22routing channel loss=
+=22
+> > > > > > > > rather than adding limiting UFS gear
+> > > > > > > properties.
+> > > > > > > > Poor thermal design or channel losses are generic enough
+> > > > > > > > and can happen
+> > > > > > > on any board.
+> > > > > > >
+> > > > > > > This is exactly what I'm trying to avoid through my
+> > > > > > > suggestion - one board may have poor thermal dissipation,
+> > > > > > > another may have channel losses, yet another one may feature
+> > > > > > > a special batch of UFS chips that will set the world on fire
+> > > > > > > if instructed to attempt link training at gear 7 - they all
+> > > > > > > are causes, as opposed to describing what needs to happen
+> > > > > > > (i.e. what the hardware must be treated as - gear N
+> > > > > > > incapable despite what can be discovered at runtime), with
+> > > > > > > perhaps a comment on the side
+> > > > > > >
+> > > > > > But the solution for all possible board problems can't be by
+> > > > > > limiting Gear
+> > > > > speed.
+> > > > >
+> > > > > Devicetree properties should precisely reflect how they are
+> > > > > relevant to the hardware. 'limiting-gear-speed' is
+> > > > > self-explanatory that the gear speed is getting limited (for a
+> > > > > reason), but the devicetree doesn't need to describe the
+> > > > > *reason* itself.
+> > > > >
+> > > > > > So it should be known why one particular board need to limit th=
+e
+> gear.
+> > > > >
+> > > > > That goes into the description, not in the property name.
+> > > > >
+> > > > > > I understand that this is a static configuration, where it is
+> > > > > > already known
+> > > > > that board is broken for higher Gear.
+> > > > > > Can this be achieved by limiting the clock? If not, can we add
+> > > > > > a board
+> > > > > specific _quirk_ and let the _quirk_ to be enabled from vendor
+> > > > > specific hooks?
+> > > > > >
+> > > > >
+> > > > > How can we limit the clock without limiting the gears? When we
+> > > > > limit the gear/mode, both clock and power are implicitly limited.
+> > > > >
+> > > > Possibly someone need to check with designer of the SoC if that is
+> > > > possible
+> > > or not.
+> > >
+> > > It's not just clock. We need to consider reducing regulator,
+> > > interconnect votes also. But as I said above, limiting the gear/mode
+> > > will take care of all these parameters.
+> > >
+> > > > Did we already tried _quirk_? If not, why not?
+> > > > If the board is so poorly designed and can't take care of the
+> > > > channel loses or heat dissipation etc, Then I assumed the gear
+> > > > negotiation between host and device should fail for the higher
+> > > > gear and driver can have
+> > > a re-try logic to re-init / re-try =22power mode change=22 at the low=
+er
+> > > gear. Is that not possible / feasible?
+> > > >
+> > >
+> > > I don't see why we need to add extra logic in the UFS driver if we
+> > > can extract that information from DT.
+> > >
+> > You didn=E2=80=99t=20answer=20my=20question=20entirely,=20I=20am=20stil=
+l=20not=20able=20to=0D=0A>=20>=20visualised=20how=20come=20Linkup=20is=20ha=
+ppening=20in=20higher=20gear=20and=20then=20Suddenly=0D=0A>=20it=20is=20fai=
+ling=20and=20we=20need=20to=20reduce=20the=20gear=20to=20solve=20that?=0D=
+=0A>=20=0D=0A>=20Oh=20well,=20this=20is=20the=20source=20of=20confusion=20h=
+ere.=20I=20didn't=20(also=20the=20patch)=20claim=0D=0A>=20that=20the=20link=
+=20up=20will=20happen=20with=20higher=20speed.=20It=20will=20most=20likely=
+=20fail=20if=20it=0D=0A>=20couldn't=20operate=20at=20the=20higher=20speed=
+=20and=20that's=20why=20we=20need=20to=20limit=20it=20to=0D=0A>=20lower=20g=
+ear/mode=20*before*=20bringing=20the=20link=20up.=0D=0A>=20=0D=0ARight,=20t=
+hat's=20why=20a=20re-try=20logic=20to=20negotiate=20a=20__working__=20power=
+=20mode=20change=20can=20help,=20instead=20of=20introducing=20new=20binding=
+=20for=20this=20case.=0D=0AAnd=20that=20approach=20can=20be=20useful=20for=
+=20many=20platforms.=0D=0AAnyway=20coming=20back=20with=20the=20same=20poin=
+t=20again=20and=20again=20is=20not=20productive.=0D=0AI=20gave=20my=20opini=
+on=20and=20suggestions.=20Rest=20is=20on=20the=20maintainers.=0D=0A=0D=0A>=
+=20As=20you=20can=20see,=20the=20driver=20patch=20is=20parsing=20the=20limi=
+ts=20in=20its=0D=0A>=20ufs_hba_variant_ops::init()=20callback,=20which=20ge=
+ts=20called=20during=0D=0A>=20ufshcd_hba_init().=0D=0A>=20=0D=0A>=20-=20Man=
+i=0D=0A>=20=0D=0A>=20--=0D=0A>=20=E0=AE=AE=E0=AE=A3=E0=AE=BF=E0=AE=B5=E0=AE=
+=A3=E0=AF=8D=E0=AE=A3=E0=AE=A9=E0=AF=8D=20=E0=AE=9A=E0=AE=A4=E0=AE=BE=E0=AE=
+=9A=E0=AE=BF=E0=AE=B5=E0=AE=AE=E0=AF=8D=0D=0A=0D=0A
