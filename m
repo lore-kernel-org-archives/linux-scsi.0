@@ -1,195 +1,266 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f177.google.com (mail-pl1-f177.google.com [209.85.214.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 779FA26D4FC;
-	Fri,  8 Aug 2025 08:51:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94F6C2749D6;
+	Fri,  8 Aug 2025 11:30:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754643117; cv=none; b=OHBkjBstsYvCe9EoYdQwHg0tKLdXP/3ee5uhCNBv3XXMkgGnaKrXnMtkQfWcNU2XNmllQeFSUwqfvffCRDsY13itNb9R99VRVBaDsFh/GZNBawGOMEKXQlMXFK+Smk5T2b4tr6h7uazMi9v3fu7u7PLqHrbYEdgICyqn2Hl/QRY=
+	t=1754652612; cv=none; b=EvktDgnzVONeWHobni9i/frmkMtDhtiBLwKyokdVTBkLatBhiyKvblLBGCqlY5xtM/90WXrjgmhdop1S6rZ/Py9I6eZrWi1alD1kepOyQmXj9IpQF+JUOm+mMQ/JMaF8AFUK+Q6WP7ms/CMMdjMduGR2g++m/DDFA98UIOxOdmQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754643117; c=relaxed/simple;
-	bh=Y3NNHPx4fORziUcmNLQU0bwJJTkr3LUpZj/FoP+Amgk=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=mnZaICrVKZZ4afZgbKbYGLEeFeDa5I64Q3bg1j/waMiJQ12ywoQ9rQ/5i1zPvJs+FC4GKK6iDl1uJPZoNlX8hnGt1RlNVBqfuOtw1++bRppRLX/U/Eroy7os/SX1wAKNCgAq+L9WEdty3oNbOJp2nnseouozErpcwofbwHdSjjY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=CuGJQvtq; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1754652612; c=relaxed/simple;
+	bh=iLjpoxLf0qOX77ifa4m8bxEY9uwoNlccTc4Gack3f+I=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=H0HFfcpTRGIyU3/Unm8NHWBgMFfjh+MDrNNzI8d5PhWAZAAZ42a3hDrGxQHN7I6zGvnYFC4c6Y4H3rJt1I3ConDMqlf4HJLsDyrPFqGy+PBKzYHvaiNnjwBfYzcwQrqwd6ZfBwD0J6SvNWkLfY1QWWIj32DaFPyDCw6VqlPOQ6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nnoDSKCM; arc=none smtp.client-ip=209.85.214.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="CuGJQvtq"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5787DZVn020307;
-	Fri, 8 Aug 2025 08:51:50 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=qcppdkim1; bh=fN6XVA3Zt3AXfvSpB4Cul2
-	8Gzg6BqsjsXR/p9Ea7nlY=; b=CuGJQvtqRc9xfpMNNjkDwrFcrpCJnAVQJRvK6d
-	KpyQ6CJinpP8tNSZKhfxku9v6e1ctdE1CH9qBvmUFhP/nIJr7lPoBtxg6sTnsv/l
-	4g6pP/8Y9nFJCYiBR03HLokxwHewjKMFezEiBpsZxa9phvSQrRJUYM56jbhSNA/o
-	/87kJ57683y48p88e7nu35I/KN1FT/ClhLuASzxo9Pe2+K8+K7tsOXVc1VaFP8Kl
-	afnEEevTnnQZNgdj56itrPwWJTmf7rbj6XuleABkl9mDGXJbfY58O+0FXcmdzWPL
-	yhLgxdHYS8uDqwmiS8M3mLsrdKSYesK8kIjgwQ0Ud30dKRMA==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48bpy8hde4-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 08 Aug 2025 08:51:50 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5788pnFH025006
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Fri, 8 Aug 2025 08:51:49 GMT
-Received: from hu-pkambar-hyd.qualcomm.com (10.80.80.8) by
- nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Fri, 8 Aug 2025 01:51:46 -0700
-From: Palash Kambar <quic_pkambar@quicinc.com>
-To: <mani@kernel.org>, <James.Bottomley@HansenPartnership.com>,
-        <martin.petersen@oracle.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>,
-        Palash Kambar
-	<quic_pkambar@quicinc.com>
-Subject: [PATCH v2] ufs: ufs-qcom: Align programming sequence of Shared ICE for  UFS controller v5
-Date: Fri, 8 Aug 2025 14:21:26 +0530
-Message-ID: <20250808085126.871736-1-quic_pkambar@quicinc.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nnoDSKCM"
+Received: by mail-pl1-f177.google.com with SMTP id d9443c01a7336-23ffa7b3b30so18377575ad.1;
+        Fri, 08 Aug 2025 04:30:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1754652610; x=1755257410; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=Xnq6/UX07eReMzK5ZN8hAJv9987nwdnK/ysZjlqefRM=;
+        b=nnoDSKCMc7r4bMqBlb50BMhS2LBCZT+QKKXAAb3eBboPCciBllL1zh/wVRS5m2m3yQ
+         RxyrjLuLQ/kK1U9cKYNyG8DDq7eBjzVKfxfqynBk7mWUjRIRfkPaz2EefdImUHDkXsxh
+         b5Yd46yXM/XnUl7MPNOav+HxPAr7vka7SxSI0sq8oclQjzaOIBgeq19ufYeN1NK3G6G5
+         SBCl0CVYfZnSMLZwoz5nVjVrIPEdhfh4R7/lCzrT4/OoymNsljpC23fgrNNORFx36IZd
+         TAE7YxM0dMrwm+leVvQm2EMsK66MlS9E2UUEkUbOvcl9/s0bceDxZ4Okf336p7Fa/+ID
+         tNeA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754652610; x=1755257410;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=Xnq6/UX07eReMzK5ZN8hAJv9987nwdnK/ysZjlqefRM=;
+        b=su9Lr5uoA6AHoG0nD8+OV9KZgM/fGwRPZYmY3vYfgJS+AX66n5bft4pzGG1SIKSUi+
+         R7xKdtPs54wjJsW1+eI0kY6Q0pFnIQYHjGj87U45vVt+4iMdR90InRNb8RWNG1SN7RYe
+         u1LkY6qDrKvmgjVBYgATLz0kZYNSSc0S9aBJGNBdrCa1tMJyL34NtE3K4XgsI8TTsJ1b
+         aFbbjxu63RKOT26ZYXRTm3G+AR4HTzJR9NvsdDItel/nxqDFWGMSBL45XRGVbcGTfzsX
+         H6nRswEKCuj1bU7Qmv4KPc07PC9TSySlPZQ4CJHn0YYlbB7jSVhMChxqC3K9nu/LoGi/
+         E02g==
+X-Forwarded-Encrypted: i=1; AJvYcCVmb4VHhcxof4CgUS4Fow+G7GlY7HNSskGzjKJiht18Pq6Vu9yK2c79VgCtSkpQlKUJ0fBjlP1I0cTrRk4=@vger.kernel.org, AJvYcCWoOznqsu4Wy6MMUSJBJ1H+cvNENeIXEmOrTTaDRBdluIqvKTXRGLeCE203IcpfJ1MTWVf/lLA4M5sQIw==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx0i/D+QMcHUF4Pn3s/J8/xyNiSt3ig4xHhh3IwS8fapTkdiiEc
+	nR+GhtK3sFKQDkHIMp56XnwKCzktZ9ZchJRmFJ3hfJ690tnWIdZ2dEneT41+u3/H
+X-Gm-Gg: ASbGncvCP/tcJqZKj9mlHcrug6TNqtOIN1xnLplrfs4z6EJuPNBVAknKs+FoqcrsCtE
+	6hV7zO1A2XBQuMo7YbtndoF/hfUVnMWr5X/pkHL933pCCHri6a1wrvx89Jr50+5G6SiB736WVfu
+	ULP4rAv/DqhDwerM3g/zPAGf96xYmS4CwQRtlvqA5b90QJnvHnVAivr1KZTg9H7MWQSWUMp5r9O
+	JEs/6bMEGLomiMDZgYCCzDUzax/Ha+UTC8h8dBiZ4ez5rrdjG+w484qUfgJQh5WwcLCzyxaSKhw
+	9YDFVelTvVE4XchoPH4ZN8/Y+VDJn7OzKxKmU/AsljSqaOzTuMEpasGStWR/ITKL2Xbqw5elsOM
+	JZ08NmPd/kJky8SGju+z7EXsMEcKxwzhM
+X-Google-Smtp-Source: AGHT+IFM6JtYCt41E1Kw64sQYV7xpp/Seh4jkDVJEc8ccJ0k1FBKGDFTpNKkKtkDGvfZhpUE/lI+gQ==
+X-Received: by 2002:a17:903:41c7:b0:240:38ee:9434 with SMTP id d9443c01a7336-242c225adbbmr47664635ad.47.1754652609579;
+        Fri, 08 Aug 2025 04:30:09 -0700 (PDT)
+Received: from avinash ([2406:8800:9014:d938:f647:9d6a:9509:bc41])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-241e8aaa829sm207024455ad.149.2025.08.08.04.30.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 08 Aug 2025 04:30:09 -0700 (PDT)
+From: Abinash Singh <abinashsinghlalotra@gmail.com>
+To: dlemoal@kernel.org
+Cc: James.Bottomley@HansenPartnership.com,
+	abinashsinghlalotra@gmail.com,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Subject: [PATCH v2] scsi: sd: Fix build warning in sd_revalidate_disk()
+Date: Fri,  8 Aug 2025 17:00:18 +0530
+Message-ID: <20250808113019.20177-1-abinashsinghlalotra@gmail.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <5cfefec0-b64b-4f96-a943-4de3205d3c50@kernel.org>
+References: <5cfefec0-b64b-4f96-a943-4de3205d3c50@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: GWtehTyzJA_pOXB9GVRik7sb1YU5aywh
-X-Proofpoint-ORIG-GUID: GWtehTyzJA_pOXB9GVRik7sb1YU5aywh
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA2MDAwOSBTYWx0ZWRfX8zJ9kyQUZcyT
- CPcyZFHUI/5sX4/AnsPwKh7brXXAbUmDhSVZifgw/74YFavfipJMDjdHORii7j4yEyzSmF3YNRf
- gPrLH7+s8u0Ew/MQB0h7tClDCFe3T+JoQhvBjgbLK3UYqMJw1k94tkbfVy2LVPN7rftZo6FCZpw
- UZMEKfHMKVMoPL6AT2SJWr2kpJMRzeou8jqqrXv69TFADddd7m8iGXfPR4prPedV3Gzsdwb0EOS
- yxdPIuPndcN9OI31qWjqcxozZSrUg6YrvmIGAauKDeRoOUsE0DhY5xSpvoZWg7Dag1qmT8zCWmE
- g9ajatls/YWAhl2RHI+JqhT0o+2sNQUR5SAf5kQl4ieB3yvP5+l2IPbqgGDXriEzcTjKSrKGSix
- 8fqML5tT
-X-Authority-Analysis: v=2.4 cv=GrlC+l1C c=1 sm=1 tr=0 ts=6895baa6 cx=c_pps
- a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8 a=a9TggHSXhy7HR8-QzyIA:9
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-08_02,2025-08-06_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 malwarescore=0 clxscore=1015 suspectscore=0 priorityscore=1501
- phishscore=0 adultscore=0 bulkscore=0 impostorscore=0 classifier=typeunknown
- authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2508060009
 
-Disable of AES core in Shared ICE is not supported during power
-collapse for UFS Host Controller V5.0.
+A build warning was triggered due to excessive stack usage in
+sd_revalidate_disk():
 
-Hence follow below steps to reset the ICE upon exiting power collapse
-and align with Hw programming guide.
+drivers/scsi/sd.c: In function ‘sd_revalidate_disk.isra’:
+drivers/scsi/sd.c:3824:1: warning: the frame size of 1160 bytes is larger than 1024 bytes [-Wframe-larger-than=]
 
-a. Write 0x18 to UFS_MEM_ICE_CFG
-b. Write 0x0 to UFS_MEM_ICE_CFG
+This is caused by a large local struct queue_limits (~400B) allocated
+on the stack. Replacing it with a heap allocation using kmalloc()
+significantly reduces frame usage. Kernel stack is limited (~8 KB),
+and allocating large structs on the stack is discouraged.
+As the function already performs heap allocations (e.g. for buffer),
+this change fits well.
 
----
-changes from V1
-1) Incorporated feedback from Konrad and Manivannan by adding a delay
-   between ICE reset assertion and deassertion.
-2) Removed magic numbers and replaced them with meaningful constants.
+Signed-off-by: Abinash Singh <abinashsinghlalotra@gmail.com>
 ---
 
-Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
----
- drivers/ufs/host/ufs-qcom.c | 32 ++++++++++++++++++++++++++++++++
- drivers/ufs/host/ufs-qcom.h |  2 ++
- 2 files changed, 34 insertions(+)
+Hi,
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 444a09265ded..44252c05d1b2 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -38,6 +38,13 @@
- #define DEEMPHASIS_3_5_dB	0x04
- #define NO_DEEMPHASIS		0x0
+Thank you very much for your comments.
+I have addressed all your suggestions from v1.
+
+As you mentioned concerns regarding the readability of
+the __free(kfree) attribute, I have used the classic
+approach in v2. Additionally, I will also send v3
+where the __free() attribute is used instead.
+
+We can proceed with patch version you
+find more suitable, and do let me know if you have
+any further feedback.
+
+changelog v1->v2:
+	moved declarations together
+	avoided "unreadable" cleanup attribute
+	splited long line
+	changed the log message to diiferentiate with buffer allocation
+
+Thanks,
+
+---
+ drivers/scsi/sd.c | 49 +++++++++++++++++++++++++++++------------------
+ 1 file changed, 30 insertions(+), 19 deletions(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 4a68b2ab2804..f5ab2a422df6 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -3696,7 +3696,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	struct scsi_disk *sdkp = scsi_disk(disk);
+ 	struct scsi_device *sdp = sdkp->device;
+ 	sector_t old_capacity = sdkp->capacity;
+-	struct queue_limits lim;
++	struct queue_limits *lim;
+ 	unsigned char *buffer;
+ 	unsigned int dev_max;
+ 	int err;
+@@ -3711,23 +3711,30 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	if (!scsi_device_online(sdp))
+ 		goto out;
  
-+#define UFS_ICE_RESET_ASSERT_VALUE	0x18
-+#define ICE_RESET_DEASSERT_VALUE	0x00
-+#define UFS_HW_VER_MAJOR_FIVE		0x5
-+#define UFS_HW_VER_MINOR_ZERO		0x0
-+#define UFS_HW_VER_STEP_ZERO		0x0
-+#define UFS_ICE_RESET_DELAY		0x5
-+
- enum {
- 	TSTBUS_UAWM,
- 	TSTBUS_UARM,
-@@ -744,6 +751,8 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 	if (ufs_qcom_is_link_off(hba) && host->device_reset)
- 		ufs_qcom_device_reset_ctrl(hba, true);
- 
-+	host->ufs_power_collapse = true;
-+
- 	return ufs_qcom_ice_suspend(host);
- }
- 
-@@ -759,6 +768,28 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
- 	return ufs_qcom_ice_resume(host);
- }
- 
-+static void ufs_qcom_hibern8_notify(struct ufs_hba *hba,
-+				    enum uic_cmd_dme uic_cmd,
-+				    enum ufs_notify_change_status status)
-+{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+
-+	/* Apply shared ICE WA */
-+	if (uic_cmd == UIC_CMD_DME_HIBER_EXIT &&
-+	    status == POST_CHANGE &&
-+	    host->hw_ver.major == UFS_HW_VER_MAJOR_FIVE &&
-+	    host->hw_ver.minor == UFS_HW_VER_MINOR_ZERO &&
-+	    host->hw_ver.step == UFS_HW_VER_STEP_ZERO &&
-+	    host->ufs_power_collapse) {
-+		host->ufs_power_collapse = false;
-+		ufshcd_writel(hba, UFS_ICE_RESET_ASSERT_VALUE, UFS_MEM_ICE);
-+		ufshcd_readl(hba, UFS_MEM_ICE);
-+		msleep(UFS_ICE_RESET_DELAY);
-+		ufshcd_writel(hba, ICE_RESET_DEASSERT_VALUE, UFS_MEM_ICE);
-+		ufshcd_readl(hba, UFS_MEM_ICE);
++	lim = kmalloc(sizeof(*lim), GFP_KERNEL);
++	if (!lim) {
++		sd_printk(KERN_WARNING, sdkp,
++			"sd_revalidate_disk: Disk limit allocation failure.\n");
++		goto out;
 +	}
-+}
 +
- static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
- {
- 	if (host->dev_ref_clk_ctrl_mmio &&
-@@ -2258,6 +2289,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
- 	.hce_enable_notify      = ufs_qcom_hce_enable_notify,
- 	.link_startup_notify    = ufs_qcom_link_startup_notify,
- 	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
-+	.hibern8_notify		= ufs_qcom_hibern8_notify,
- 	.apply_dev_quirks	= ufs_qcom_apply_dev_quirks,
- 	.fixup_dev_quirks       = ufs_qcom_fixup_dev_quirks,
- 	.suspend		= ufs_qcom_suspend,
-diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
-index 6840b7526cf5..6bd205804feb 100644
---- a/drivers/ufs/host/ufs-qcom.h
-+++ b/drivers/ufs/host/ufs-qcom.h
-@@ -60,6 +60,7 @@ enum {
- 	UFS_AH8_CFG				= 0xFC,
+ 	buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL);
+ 	if (!buffer) {
+ 		sd_printk(KERN_WARNING, sdkp, "sd_revalidate_disk: Memory "
+ 			  "allocation failure.\n");
+-		goto out;
++		goto free_lim;
+ 	}
  
- 	UFS_RD_REG_MCQ				= 0xD00,
-+	UFS_MEM_ICE				= 0x2600,
+ 	sd_spinup_disk(sdkp);
  
- 	REG_UFS_MEM_ICE_CONFIG			= 0x260C,
- 	REG_UFS_MEM_ICE_NUM_CORE		= 0x2664,
-@@ -290,6 +291,7 @@ struct ufs_qcom_host {
- 	u32 phy_gear;
+-	lim = queue_limits_start_update(sdkp->disk->queue);
++	*lim = queue_limits_start_update(sdkp->disk->queue);
  
- 	bool esi_enabled;
-+	bool ufs_power_collapse;
- 	unsigned long active_cmds;
- };
+ 	/*
+ 	 * Without media there is no reason to ask; moreover, some devices
+ 	 * react badly if we do.
+ 	 */
+ 	if (sdkp->media_present) {
+-		sd_read_capacity(sdkp, &lim, buffer);
++		sd_read_capacity(sdkp, lim, buffer);
+ 		/*
+ 		 * Some USB/UAS devices return generic values for mode pages
+ 		 * until the media has been accessed. Trigger a READ operation
+@@ -3741,17 +3748,17 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 		 * cause this to be updated correctly and any device which
+ 		 * doesn't support it should be treated as rotational.
+ 		 */
+-		lim.features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
++		lim->features |= (BLK_FEAT_ROTATIONAL | BLK_FEAT_ADD_RANDOM);
  
+ 		if (scsi_device_supports_vpd(sdp)) {
+ 			sd_read_block_provisioning(sdkp);
+-			sd_read_block_limits(sdkp, &lim);
++			sd_read_block_limits(sdkp, lim);
+ 			sd_read_block_limits_ext(sdkp);
+-			sd_read_block_characteristics(sdkp, &lim);
+-			sd_zbc_read_zones(sdkp, &lim, buffer);
++			sd_read_block_characteristics(sdkp, lim);
++			sd_zbc_read_zones(sdkp, lim, buffer);
+ 		}
+ 
+-		sd_config_discard(sdkp, &lim, sd_discard_mode(sdkp));
++		sd_config_discard(sdkp, lim, sd_discard_mode(sdkp));
+ 
+ 		sd_print_capacity(sdkp, old_capacity);
+ 
+@@ -3761,47 +3768,49 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 		sd_read_app_tag_own(sdkp, buffer);
+ 		sd_read_write_same(sdkp, buffer);
+ 		sd_read_security(sdkp, buffer);
+-		sd_config_protection(sdkp, &lim);
++		sd_config_protection(sdkp, lim);
+ 	}
+ 
+ 	/*
+ 	 * We now have all cache related info, determine how we deal
+ 	 * with flush requests.
+ 	 */
+-	sd_set_flush_flag(sdkp, &lim);
++	sd_set_flush_flag(sdkp, lim);
+ 
+ 	/* Initial block count limit based on CDB TRANSFER LENGTH field size. */
+ 	dev_max = sdp->use_16_for_rw ? SD_MAX_XFER_BLOCKS : SD_DEF_XFER_BLOCKS;
+ 
+ 	/* Some devices report a maximum block count for READ/WRITE requests. */
+ 	dev_max = min_not_zero(dev_max, sdkp->max_xfer_blocks);
+-	lim.max_dev_sectors = logical_to_sectors(sdp, dev_max);
++	lim->max_dev_sectors = logical_to_sectors(sdp, dev_max);
+ 
+ 	if (sd_validate_min_xfer_size(sdkp))
+-		lim.io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
++		lim->io_min = logical_to_bytes(sdp, sdkp->min_xfer_blocks);
+ 	else
+-		lim.io_min = 0;
++		lim->io_min = 0;
+ 
+ 	/*
+ 	 * Limit default to SCSI host optimal sector limit if set. There may be
+ 	 * an impact on performance for when the size of a request exceeds this
+ 	 * host limit.
+ 	 */
+-	lim.io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
++	lim->io_opt = sdp->host->opt_sectors << SECTOR_SHIFT;
+ 	if (sd_validate_opt_xfer_size(sdkp, dev_max)) {
+-		lim.io_opt = min_not_zero(lim.io_opt,
++		lim->io_opt = min_not_zero(lim->io_opt,
+ 				logical_to_bytes(sdp, sdkp->opt_xfer_blocks));
+ 	}
+ 
+ 	sdkp->first_scan = 0;
+ 
+ 	set_capacity_and_notify(disk, logical_to_sectors(sdp, sdkp->capacity));
+-	sd_config_write_same(sdkp, &lim);
++	sd_config_write_same(sdkp, lim);
+ 	kfree(buffer);
+ 
+-	err = queue_limits_commit_update_frozen(sdkp->disk->queue, &lim);
+-	if (err)
++	err = queue_limits_commit_update_frozen(sdkp->disk->queue, lim);
++	if (err) {
++		kfree(lim);
+ 		return err;
++	}
+ 
+ 	/*
+ 	 * Query concurrent positioning ranges after
+@@ -3819,6 +3828,8 @@ static int sd_revalidate_disk(struct gendisk *disk)
+ 	if (sd_zbc_revalidate_zones(sdkp))
+ 		set_capacity_and_notify(disk, 0);
+ 
++ free_lim:
++	kfree(lim);
+  out:
+ 	return 0;
+ }
 -- 
-2.34.1
+2.50.1
 
