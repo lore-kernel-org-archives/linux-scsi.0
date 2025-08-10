@@ -1,265 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mout.web.de (mout.web.de [212.227.17.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3651D4C9F;
-	Sun, 10 Aug 2025 00:21:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA5B201276;
+	Sun, 10 Aug 2025 12:01:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754785285; cv=none; b=KwxM1cDEIEUmyhViQXpGhY1Clwjk27WTsBZx2LcZY8zrU2E2GSX4EJzxTl3e0zeVtzCAaNGlUEIujenibVQyWjJIsw+HvLMhOQ7yzTB5WdUFPK54kCMM2BFOYIZXpHAiToP5/i2i7pcIVPmOA/EhcjwgP5R8De4KBSiACU77XG4=
+	t=1754827275; cv=none; b=AhkQ/T8+Xp+zw1ihj4OLHib8vCMRiUjqbdZm3BP++jyZwAKhvc7Qz/gJACTvfGTLgTIxR0XKjF7PzgSYfvBKDcreWTP2rVyFTBmpysOkhWVjDvb6Fl1Hk3YVYySGp6/VX187D0zfsKuZsRk4Z/XZvRhlFSx+6UYtvqhueZKoYzU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754785285; c=relaxed/simple;
-	bh=jeoA254isR7T1Cz0HSUWsDyvPf9kVzICJGvd3hDuKrg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=BzGLjOQu+ccfm46W2WbXzax2rwIu1qif4eHudZz8Kzd+fk8cXy43X0vInd4YIS4zcskrXN9MNyHTZEscKGLsaNgp5JBIz31O3ieCDS97uq3qXYZDfZ/kFBKdnZPHt5sfebccxcrKY7pz4DUMu7+om1VUYtiwo31fg6GRdKIpr3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=joVhhOzf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1754827275; c=relaxed/simple;
+	bh=k9B2JCKmSZUIJRpLV8OYvueqHpattOGdK+TE2s+olQo=;
+	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
+	 In-Reply-To:Content-Type; b=e3vm4FgcoeCieW33RuUxn3G1bRaUfRFNL6vPZZMjO0tGDZVbD4wWdzbdrXy4KOTljdotAg7pgAo4WvFeSto2fRDBS+uTEe1wYd6bNELG7eP2tyVYTzo1Rw47k3zTge8w9Hz3KInfZL/PMsAPZNoqrLeI+yCPnop3qXiMrzDMC0s=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=mIzuZOW9; arc=none smtp.client-ip=212.227.17.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="joVhhOzf"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 993E8C4CEE7;
-	Sun, 10 Aug 2025 00:21:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754785284;
-	bh=jeoA254isR7T1Cz0HSUWsDyvPf9kVzICJGvd3hDuKrg=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=joVhhOzfl8ab1+JO+HcOGkiGy5KGHzljy5I4q+YZ5lFpdzeD8KPd1N/84G9omzlAZ
-	 vhLad59SCAlQ8RSUtqNJYNSfReQNv5y7ivef//qxRf4GOuqwU9pkuD5NIsE6vHtISS
-	 DJFhh5fTIFK34YDjSMflY0oCXIc6eyCVGfHpqHFcJNZwSgPtru39sWj+0K2b7wUWS7
-	 hsc43uDtdnxEUoe3YBM666OEKLG9ltULwUJ3LaF9YvbXDc38AzLXogWLJ9vdVHJ9uX
-	 zrMeBtGvfsH1Fy1xi8v3uZ9bcJC3MjdQR+pe6vl14OeHfUXu2DQ7tdppoaIWKRNraM
-	 DD7XKag3/PwpQ==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Ranjan Kumar <ranjan.kumar@broadcom.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.16-5.4] scsi: Fix sas_user_scan() to handle wildcard and multi-channel scans
-Date: Sat,  9 Aug 2025 20:20:57 -0400
-Message-Id: <20250810002104.1545396-8-sashal@kernel.org>
-X-Mailer: git-send-email 2.39.5
-In-Reply-To: <20250810002104.1545396-1-sashal@kernel.org>
-References: <20250810002104.1545396-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="mIzuZOW9"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
+	s=s29768273; t=1754827228; x=1755432028; i=markus.elfring@web.de;
+	bh=k9B2JCKmSZUIJRpLV8OYvueqHpattOGdK+TE2s+olQo=;
+	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
+	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
+	 cc:content-transfer-encoding:content-type:date:from:message-id:
+	 mime-version:reply-to:subject:to;
+	b=mIzuZOW9AmBMkZTdiU7utnISbkl3IulkF7GPN3DkHzlaeXQM8kElU9cqrA14v3Yc
+	 K/4AkgNaSzcC6nZaXO1WlRYuf6C2y2igskfsmhRmPyxIMXtus51mISN6bCIGZaU+e
+	 yvBD0NxMkB0f+JQpjroeX4ar2GAr+04aAttuyH5WZkXhc+h4KIGRKYgXaB4ZmOi7u
+	 iJ8MdXB1oQ6wC9gk7lI5HAlu8yol6DlqMcS/7AeVcZqo5RycSEUD9rgMumCk/yD15
+	 qBLBu/mj80MP1HrU61fxxDCHmn7RP7fuCIVaXtQ8tN6k3M61kb528Jue8kHp0sFmD
+	 KRZnchNFK/IQpO0Tjw==
+X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
+Received: from [192.168.178.29] ([94.31.69.214]) by smtp.web.de (mrweb105
+ [213.165.67.124]) with ESMTPSA (Nemesis) id 1MhWor-1u8BOp19xj-00bziI; Sun, 10
+ Aug 2025 14:00:28 +0200
+Message-ID: <f9dfcc92-4591-41bb-973b-86d12ca37e19@web.de>
+Date: Sun, 10 Aug 2025 14:00:25 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.16
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+To: Nitin Rawat <quic_nitirawa@quicinc.com>, linux-scsi@vger.kernel.org,
+ linux-arm-msm@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
+ James Bottomley <James.Bottomley@HansenPartnership.com>,
+ Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Neil Armstrong <neil.armstrong@linaro.org>,
+ Thomas Gleixner <tglx@linutronix.de>
+Cc: LKML <linux-kernel@vger.kernel.org>
+References: <20250809134445.19050-1-quic_nitirawa@quicinc.com>
+Subject: Re: [PATCH] ufs: ufs-qcom: Fix ESI null pointer dereference
+Content-Language: en-GB, de-DE
+From: Markus Elfring <Markus.Elfring@web.de>
+In-Reply-To: <20250809134445.19050-1-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
+X-Provags-ID: V03:K1:tNAT3Y3hWHkN00T5qgcJuljXa+yFPG9RuKonbjG/0VKoePFkuWa
+ 948cjId320pm7wQ9NFN7a1HCBmCesSs3MipV3dzH+7AiyD2ruroIZKELOvDgSbGJ9HgazpL
+ uANwvQl1XDvnWdGAL8d3YkdRPSgkZHy8y6tMvQXLwJ/PO5eDOmdRK0KJzZjqblGj+2cnUeg
+ RahUq7PdROeG79Oe8bZeQ==
+X-Spam-Flag: NO
+UI-OutboundReport: notjunk:1;M01:P0:r257I7fehCY=;1kvrFLrPT3nppF9dBHcFwLnRsiB
+ 9ZSvHPzEnkA+RGHO2uA7Aj1W6fOgmab9x5tg+FHRP/QNJALu+11LqUcTt/amw2G8DdVqR3oVN
+ nIDNgArfMC6tFi4WtoB0ZauqpAyTPl2wgGnYwdABRT8jZAjq06/St3yJ4fL0AKf4kjuRRvRxA
+ 2j3fJGXACEMIDDR7RtMZF/dbfsRTO5IouQgBy5+2pV8LtIhv3Yd5Zn4UjwOtYqBa9WBrnS3B/
+ F5cyrweM9eh0BwnuMo35c2fxII98g+/eVWEB9XSJ4A+ssx+jhFIxyvHlzajOE1jGVubpOt0Nb
+ mIu2G4J+X8k+krNYLYXer/Jk6/LVlH3rfWKR8v1abwsT990FN91cRnMT70sj582F1cEUHNnFs
+ Iy3ovmLT8uyT9uvWFqjR7n2QYBU02Ziiy9YwwUYnpwahYXlqz8AJIHgNRromL+x7FBVnY9GGz
+ 9ioXG1bKI8/fvrQKggd0f323R6i4DD2WVBiZmQrdzab2luU4o9R0xJnFk126SjBdzqKfxQiaU
+ ZHVoQ8X8ESN7pllvcHjW+TLJvDs8xZ/JDCwoAhPn5zhh+hY5OCxLU9LV5e8w8hJeEoMsEDENr
+ GlXJrKlxr70w6iFygryjDvp5SIASIWlSedFOEIvzOEu2BkI1nSkBvruxNnzL4741xAnaO9lLY
+ xm8nImMlQrjRZ7zFgehppQ8klrmWDuUFj6nkMOWtH4Dyrag5lj2yy4uebOKZ7qzw3fKzdtuzZ
+ +zf6QyOPnnNKcIN18Lbg06X7aRbxDfn8Yv4CjeJxt4qL/gEiHTWMIlgZ/+BAgEbAMtqmkRmWT
+ Plk9TCEmVajcwdr12j0b7hJuGcpIFcN8mmeGrIYiM5BZk/b5GoK25sm+o5nGHbcw18o9Eu2cn
+ J0Cb4bcsPo9i36Wd85rAXjheUpl8whVR07ZMTBG7vuz2lGYr0GUiu1dD4dodDbTIJ16+aj303
+ xHCfM2ORQgNFSNoFkR+ziRncyptvwY3f2wih7PR3b8XK+dEIWabe2Y8lcaKcbZevR+qQvT637
+ JVPUPW4JKDEQ3sVeoo+NInFnJpk3kr5GGyBPA9+exorVfdNKZVLQoPzLYKRwzK4I1YnUPmusE
+ lWzp7x2q7DBbWUtuxPU1zcNeyqmAJes+FAZJASXXKhzdPtQVxWO2bqvgxrWRVs3ZqhZdUAL/e
+ 1l5zjS+GUyuuaHk9kCB0ZK4IbtpF2oVswwaiOfZy3XYXH5hb8RTrIOmb0r/yhDeTITEd/fLee
+ 7XZC8cQPZgQgDRKWO2VUWLdW4oWBMACpVlvSwwrKhwnpvYl2js8sElK6z4wln9lMmnpVeArKu
+ TtXQKO4cmecEc8LKDbm7w21CIv5p/00HFv5h2KMZZSSZe+kd5Mr5oBeOuNBGVop6YO8Yj6PP9
+ SGUoO5pGJVB+U0+Wryx85Vte6evRvhVufiKHyCN1g+IYGKzsIhDpESIlxvVqf12+nFjDBPEEy
+ y8X9eo1f9docynqjhduevsH7QxxdqA698tMz1JxjMDxXCHap4MyR27DnPESqjTRmAtRmeDO3v
+ d52EpnQNgJpk0LieXgMggWOckx7bLtBWz5YXlk5PtvV2FQM8BFnXYWmkx9176iut6zLhAPE/P
+ ehvDWp6R+JR7D74RwufhFPbOlDfC/Ex5cn/k+XzIJLg6lhTre0woFfGLzNTtXrgaDT4lurJDc
+ uKytCe8rphq3JCjXyC2BfV42zvVGdSGnjLyaIhklqjCrowm1KX5g/id+4fg8o33FFPR4G1cOW
+ B/O9XWOUhrCjWBI1lUR/jAb08Q6/Ai1y3v0wbC42hLzB8NaABc+mh5nUg7mWFBgX8QhPda0PA
+ pPsZV07lWXipS7kLKXS/HTgO8xTg21j4srsccKT1ToH4sU1U//501EmHY6pxlh96MAMUxiCE5
+ zeEK2IMj88C//afs/6Kjno5I7BUV7f7kHKz0GvIGg3ekOZxHH6A3hSSlWTKKN7u7y/G9g4Ot3
+ bLqMcFx/lL0wUWfOfCJ5w3418KN0nFAeB3bEo0WcC3oAfi4J3P+3090ijrI7/vV7+q/SdDMgc
+ IVvX3kFhUoiE/GyUM4/3GLDOiAWnH+54+WwKlqIzWMpptncewv1QKSaU9xosma10TPN6fmug6
+ HB4grWUfKDEjBIDzgR4X3swQ9SkNIOsTRqeQyl2yoFxR1CuCI+8SHdpGcpjEHjqqVVexATE9C
+ /x7gpldJKzbqvH2MKsR4AyF/2Elawl0RBw+ntDcLCPdofdHnd4cj4MLRYGYVdt6zqiLldn8Oy
+ ZcnASKXrplK49p1k8sUtC3n7DEl8xWaPDSDr2DtH1zIwRQOuAYQgDC921kipCQEHCiig1J0gN
+ YKB5fB4JSQfTbOcheuff3zO6HuDQdVwqE9m95mpJITw7U92dcsTYUY57IakJIn3qngDXdoa1i
+ TLptRbep/n/T/H+Cq5NTr5U01Ljcf4RDmskgXaKvhxhA02m0KZMU0PZ/tn4bmSR/Ww568pwj+
+ /nBAkOM7ItltxNuS1UeJAV0e6JjT2NHzdOOevd2lUKzJGENgnJzzA/eVpbMO6tQxMHUvmDNJE
+ rZO9XoMswcpta5/xlKnQGrkMzq31xfJuTKg2knjEz9JnxefX+zXaLzf06V+QhzQAPoaBi+gZN
+ /KE+4Wp32iIz9hipbic1wRF6JUYuzgm8NtlJvT1BiZIz6NBVgrb4NDOkqGw0E4bCSqOjUyWLw
+ frLnOVg4dAAX8TsAmAIKHFPaH3z9wnT++57m9D2LL5MGpcSlZkbYFcV+Zhs4n0IqJGFZD6bcO
+ XHM03jYwVQ+F3rnKuGNHsocwnlTOb37LjXfomvshfg4ylyc70XeTdfW8jmzCaX9GCopMZDA8l
+ Av+ZPV2DLI6WjbMGNLfi85JwVQQMWBRSENccnSKSqWHRs6az+lfJj/jj8XGOVPEY0rxGY2sfv
+ tRu+xZvqGYlI++02Q6LyR9HrEnqDMyJBiEGZAlkDV5xvdRyA7NpRfCS3/iHgd5LqhWiX23iEe
+ j+XRDm81GS5iO7goD8bavLtWr2MbCOdPtZ4ZjLTkKP5Td5Vj/k4pn0sMvhxew8B3EvALg3qlb
+ HGuUDmJSbdiBPGrXCzaNS1wd8RK1+Q7yy7iSgE3KkdzNJMrk/g0mRcyse9OjCU+QAlqIgwHEw
+ Xssc5OczGkab6g+O7N6yc/AHAuw+WN+7yIRK6gQHg50+2ERxZI4qbpmR6w6WmLRa/iNFH99PG
+ dtZcqR8X8oQhP6ytMEEUAtu/bqQzpBFqtVtdA6GLehKK1YtgsBN6NqSIr0iCVWuN1FIDB+wsy
+ AL/RuEKnWumQAApxokuR2xEDhtllET47HmHkvPQLq4VSIhregqEUaMdT4cUd1j+qlbB+Vk5qu
+ jiKh0U7qDTgzmVYIFc78ggfdNiwHl0msuo7cFvWCIOh8VXaXe1ZoQPaW99F1J4Pi2Szy8Atxq
+ gF1jiOLPJEVSjEL5hUsSswyReW/I3aubcv9gh0QIWAGIqVbcVn2mmdnI98qidSPE58C1C+Rly
+ FwrvMHXAKZQ==
 
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+=E2=80=A6
+> Fix by restructuring the ESI configuration to try MSI allocation
+> first, before any other resource allocation and =E2=80=A6
 
-[ Upstream commit 37c4e72b0651e7697eb338cd1fb09feef472cc1a ]
+How do you think about to add any tags (like =E2=80=9CFixes=E2=80=9D and =
+=E2=80=9CCc=E2=80=9D) accordingly?
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
+cumentation/process/submitting-patches.rst?h=3Dv6.16#n145
 
-sas_user_scan() did not fully process wildcard channel scans
-(SCAN_WILD_CARD) when a transport-specific user_scan() callback was
-present. Only channel 0 would be scanned via user_scan(), while the
-remaining channels were skipped, potentially missing devices.
-
-user_scan() invokes updated sas_user_scan() for channel 0, and if
-successful, iteratively scans remaining channels (1 to
-shost->max_channel) via scsi_scan_host_selected().  This ensures complete
-wildcard scanning without affecting transport-specific scanning behavior.
-
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
-Link: https://lore.kernel.org/r/20250624061649.17990-1-ranjan.kumar@broadcom.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
-
-LLM Generated explanations, may be completely bogus:
-
-**Backport Status: YES**
-
-This commit should be backported to stable kernel trees. Here's my
-detailed analysis:
-
-## Bug Fix Analysis
-
-This commit fixes a **functional bug** in the SAS transport layer where
-wildcard channel scans (`SCAN_WILD_CARD`) were not working correctly
-when a transport-specific `user_scan()` callback was present. The bug
-manifested as:
-
-1. **Incomplete device discovery**: When performing wildcard scans, only
-   channel 0 devices would be scanned via the SAS-specific
-   `sas_user_scan()`, while channels 1 through `max_channel` were
-   completely skipped.
-2. **Missing devices**: This could result in SAS devices on non-zero
-   channels not being discovered during rescans, which is a serious
-   issue for storage management.
-
-## Code Changes Analysis
-
-The fix involves two key changes:
-
-1. **Export of `scsi_scan_host_selected()`** in
-   `drivers/scsi/scsi_scan.c:1902`:
-   - This makes the function available to transport modules
-   - Simple one-line addition: `EXPORT_SYMBOL(scsi_scan_host_selected);`
-
-2. **Rewrite of `sas_user_scan()` logic** in
-   `drivers/scsi/scsi_transport_sas.c`:
-   - Refactored to handle three cases properly:
-     - Channel 0: Scan SAS-specific devices only
-     - `SCAN_WILD_CARD`: First scan channel 0 SAS devices, then iterate
-       through channels 1 to `max_channel` using
-       `scsi_scan_host_selected()`
-     - Other channels: Delegate to `scsi_scan_host_selected()`
-   - The new code properly handles multi-channel configurations
-
-## Stable Backport Criteria
-
-This commit meets the stable kernel criteria:
-
-1. **Fixes a real bug**: The inability to discover devices on non-zero
-   channels during wildcard scans is a clear functional bug that affects
-   users.
-
-2. **Small and contained**: The changes are limited to:
-   - One export symbol addition
-   - One function rewrite in the SAS transport layer
-   - Total diff is relatively small (~100 lines)
-
-3. **No architectural changes**: This is a targeted fix that doesn't
-   change any kernel subsystem architecture or APIs.
-
-4. **Low regression risk**:
-   - The changes are confined to the SCSI SAS transport subsystem
-   - The fix preserves existing behavior for non-wildcard scans
-   - Error handling paths remain intact
-
-5. **Important for users**: Multi-channel SAS configurations are common
-   in enterprise storage systems, and the ability to properly rescan all
-   channels is critical for:
-   - Hot-plug scenarios
-   - Device recovery after errors
-   - Storage management operations
-
-## Additional Context
-
-Looking at the commit history, there have been previous issues with SAS
-scanning (e.g., commit e9dedc13bb11 "scsi: hisi_sas: Fix rescan after
-deleting a disk"), indicating this is an area where proper functioning
-is critical and has had issues before.
-
-The fix is straightforward and correct - it ensures that wildcard scans
-actually scan all channels as intended, not just channel 0. This is
-essential functionality that should work correctly in stable kernels.
-
- drivers/scsi/scsi_scan.c          |  2 +-
- drivers/scsi/scsi_transport_sas.c | 60 ++++++++++++++++++++++++-------
- 2 files changed, 49 insertions(+), 13 deletions(-)
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 4833b8fe251b..396fcf194b6b 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -1899,7 +1899,7 @@ int scsi_scan_host_selected(struct Scsi_Host *shost, unsigned int channel,
- 
- 	return 0;
- }
--
-+EXPORT_SYMBOL(scsi_scan_host_selected);
- static void scsi_sysfs_add_devices(struct Scsi_Host *shost)
- {
- 	struct scsi_device *sdev;
-diff --git a/drivers/scsi/scsi_transport_sas.c b/drivers/scsi/scsi_transport_sas.c
-index 351b028ef893..d69c7c444a31 100644
---- a/drivers/scsi/scsi_transport_sas.c
-+++ b/drivers/scsi/scsi_transport_sas.c
-@@ -40,6 +40,8 @@
- #include <scsi/scsi_transport_sas.h>
- 
- #include "scsi_sas_internal.h"
-+#include "scsi_priv.h"
-+
- struct sas_host_attrs {
- 	struct list_head rphy_list;
- 	struct mutex lock;
-@@ -1683,32 +1685,66 @@ int scsi_is_sas_rphy(const struct device *dev)
- }
- EXPORT_SYMBOL(scsi_is_sas_rphy);
- 
--
--/*
-- * SCSI scan helper
-- */
--
--static int sas_user_scan(struct Scsi_Host *shost, uint channel,
--		uint id, u64 lun)
-+static void scan_channel_zero(struct Scsi_Host *shost, uint id, u64 lun)
- {
- 	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
- 	struct sas_rphy *rphy;
- 
--	mutex_lock(&sas_host->lock);
- 	list_for_each_entry(rphy, &sas_host->rphy_list, list) {
- 		if (rphy->identify.device_type != SAS_END_DEVICE ||
- 		    rphy->scsi_target_id == -1)
- 			continue;
- 
--		if ((channel == SCAN_WILD_CARD || channel == 0) &&
--		    (id == SCAN_WILD_CARD || id == rphy->scsi_target_id)) {
-+		if (id == SCAN_WILD_CARD || id == rphy->scsi_target_id) {
- 			scsi_scan_target(&rphy->dev, 0, rphy->scsi_target_id,
- 					 lun, SCSI_SCAN_MANUAL);
- 		}
- 	}
--	mutex_unlock(&sas_host->lock);
-+}
- 
--	return 0;
-+/*
-+ * SCSI scan helper
-+ */
-+
-+static int sas_user_scan(struct Scsi_Host *shost, uint channel,
-+		uint id, u64 lun)
-+{
-+	struct sas_host_attrs *sas_host = to_sas_host_attrs(shost);
-+	int res = 0;
-+	int i;
-+
-+	switch (channel) {
-+	case 0:
-+		mutex_lock(&sas_host->lock);
-+		scan_channel_zero(shost, id, lun);
-+		mutex_unlock(&sas_host->lock);
-+		break;
-+
-+	case SCAN_WILD_CARD:
-+		mutex_lock(&sas_host->lock);
-+		scan_channel_zero(shost, id, lun);
-+		mutex_unlock(&sas_host->lock);
-+
-+		for (i = 1; i <= shost->max_channel; i++) {
-+			res = scsi_scan_host_selected(shost, i, id, lun,
-+						      SCSI_SCAN_MANUAL);
-+			if (res)
-+				goto exit_scan;
-+		}
-+		break;
-+
-+	default:
-+		if (channel < shost->max_channel) {
-+			res = scsi_scan_host_selected(shost, channel, id, lun,
-+						      SCSI_SCAN_MANUAL);
-+		} else {
-+			res = -EINVAL;
-+		}
-+		break;
-+	}
-+
-+exit_scan:
-+	return res;
- }
- 
- 
--- 
-2.39.5
-
+Regards,
+Markus
