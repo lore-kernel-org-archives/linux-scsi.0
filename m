@@ -1,205 +1,176 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1693719049B;
-	Sat,  9 Aug 2025 13:45:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 53A848F40;
+	Sun, 10 Aug 2025 00:21:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754747131; cv=none; b=Swds9sdzGkD3USV7cDlViyAoUEvoqOqKfJVWUcCFs/1X/CWIehCD026xYAwnIyC82JxSrawIg5VOvHl2+nR451LA3hM/fRqy0mJcoQrnYLTVH8UhfuNUksVniVtyE+Le+1ANIJfiYC1OAE+kd1J92KVYYQY7d70vNkfZ6WUhL9M=
+	t=1754785278; cv=none; b=dB1gYK9jR2+MdUmKsk9OliTA4rHJJ1nS4VvPKM96DPFuD4opa1BxlKYLp0fdRekbPMIMaeVdzAJnmx/VvvTgRWGNxQjoc9IfhqD7L0pvVrWUz1JS7n5rvEyRoVsMRf4uNXiBCCGqX0y5wwfInj0QB9qSLW34t7L/POji1eGT/tk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754747131; c=relaxed/simple;
-	bh=ydFHCGuoBScykYKE90uFJyDswDmXxIBtqGIzFZRDmE0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oCiysh2lD438dORGr7x9SYsYfN4bijeJNj7W4hxIY8XeU8HCJbYFw02VTglIWmUOLZ9PBjk+V/wIGkCzq61waQKyKcR4C+jamerdqDOM/QkxpamFx8TyWUkFFN9yc7vNO/Dpc+KVEXiX6GMZlOzmuTvfiOXEwQiP+oHPLDbyDyY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Mp8fVqDL; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1754785278; c=relaxed/simple;
+	bh=jF5+vpSw1piGFAaLgeRuqY58Lkc7w1syTJvqiPUdCr0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=GDkr7qH+kHky1lPkQb8IuARiXk2uQaLTYOzMxIwz7eJEEXW0E7BJNx7FKF10C4w52ErTV4bQ4IR+yIXbrDcxHC/PQSH/fZt+9Y3yHF3/CE/49P3bOED27V1aPZaGDwn5qWZFxLI65aHsxJ7QoEs57Oax7zs6tXSSACHHktu+8l8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KRS+qyVD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Mp8fVqDL"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 579DA4UA004805;
-	Sat, 9 Aug 2025 13:44:53 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=OG3d0lDrcuXWFch/2X4e2K4a3EtHmuRoI+T
-	86cCg/bQ=; b=Mp8fVqDL4RHrC9ownhrxU8Wkj//AVqYe8TN7QpDq/YKxIl/EfnV
-	3Q+n/fVVtOeAAwxqTcAM7rUKr+YZk4PTdMPzGxeDsAQ7tdtVo6nY5d4GD6rD/LE4
-	v0IpEW+3JO3M2dfn+PotWaJyiXYl1bDmQgDytuEfeGzN8DXOtUgWc6l30XMWN9mz
-	pWZTjXZfyGJweXw8vAKMwQByudPvlSQL09/HBPayGod1KRywcEowHOVP+TocuR/O
-	IUT80IepWJkRdprPNS0VjOzSPHeM8Hfjiq3+WBNlPcYhBdRdcQ5EZkR4ZKZzqfOJ
-	0NuHa415Il9CgjBbLv3Ck7kH7Vneb5yjE0Q==
-Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48dygm8k2n-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sat, 09 Aug 2025 13:44:52 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 579DimsD019700;
-	Sat, 9 Aug 2025 13:44:48 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 48dydktb6c-1;
-	Sat, 09 Aug 2025 13:44:48 +0000
-Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 579Dim0B019694;
-	Sat, 9 Aug 2025 13:44:48 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 579Dilik019693;
-	Sat, 09 Aug 2025 13:44:48 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id 22AE15729CC; Sat,  9 Aug 2025 19:14:47 +0530 (+0530)
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com, bvanassche@acm.org,
-        neil.armstrong@linaro.org, konrad.dybcio@oss.qualcomm.com,
-        tglx@linutronix.de
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Nitin Rawat <quic_nitirawa@quicinc.com>
-Subject: [PATCH V1] ufs: ufs-qcom: Fix ESI null pointer dereference
-Date: Sat,  9 Aug 2025 19:14:45 +0530
-Message-ID: <20250809134445.19050-1-quic_nitirawa@quicinc.com>
-X-Mailer: git-send-email 2.48.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KRS+qyVD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A15C0C4CEF1;
+	Sun, 10 Aug 2025 00:21:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1754785277;
+	bh=jF5+vpSw1piGFAaLgeRuqY58Lkc7w1syTJvqiPUdCr0=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=KRS+qyVDE1pxq3VSNcoEz/u9x2woqXgw6BIQUo/gIgOZsCLW/2RAwaFOpEK0ip91A
+	 u01y6tB6Bp27bQIHnoVgtqj/r1aeCf1Rf6ivu5QjBsF6nVteoNnaFsNlpQsjztPuZR
+	 uNG3p/k0mgAXJhwLT580tcO1Xq3VlSWVNucFFRzD6ucoQ5mu4DrZj3MWccqKy3y9+e
+	 GTNpbACPmucKTThkUluBiOqatCp7QF6MiFoANYYbxelrHwBctTu4TmcttdZ5g2yUSq
+	 l1wr5r6uDIQEgZyXmD0HHurXJ74KPLJmPQqMA1hmCc7ub/FsXzZoTuwWqYpRkNoudv
+	 C0xrtJj57Bj+g==
+From: Sasha Levin <sashal@kernel.org>
+To: patches@lists.linux.dev,
+	stable@vger.kernel.org
+Cc: John Garry <john.g.garry@oracle.com>,
+	John Meneghini <jmeneghi@redhat.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Sasha Levin <sashal@kernel.org>,
+	aacraid@microsemi.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.16-5.4] scsi: aacraid: Stop using PCI_IRQ_AFFINITY
+Date: Sat,  9 Aug 2025 20:20:53 -0400
+Message-Id: <20250810002104.1545396-4-sashal@kernel.org>
+X-Mailer: git-send-email 2.39.5
+In-Reply-To: <20250810002104.1545396-1-sashal@kernel.org>
+References: <20250810002104.1545396-1-sashal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-stable: review
+X-Patchwork-Hint: Ignore
+X-stable-base: Linux 6.16
 Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA5MDAzNSBTYWx0ZWRfX+VgGfB/IWru1
- s4/3Hw7ZfGiH6/5RwRMzu/U4ybsIdk1Ar2wzzRen38f5m1LLt+Mc8ECQ46sOLZ5NWiVT7Wx4j6S
- 4sw86j6b4vHiDPXab3hUjB16f0QX9IMiY5SJjSgnfkQFvtzvQ6YX+IF3Somq2AF4B4jo1wbvwt/
- zFH6JOiiLYGDd4seYCj4JYgtUca32MxoX5rBps1VZ2rUCTq2HO9/Am0+uaq1PFv4XNPk7tddujz
- eDLJQVJccQeY6NrSolUeWL79SB3C6J0KldwUY/j7lQiB8SEC0EpOx7r9glbazsXlTtiOWfMoltH
- QEQYu1OhjcM3KUhDByRkp5t4x2mmZTKTSYqQk9qae/IbzwABdauiMJL38rdI4nC5TBq8uG4e0HO
- 62xGoYRe
-X-Authority-Analysis: v=2.4 cv=FvMF/3rq c=1 sm=1 tr=0 ts=689750d5 cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8 a=xPyU-xE4Y_ssW17iAtgA:9
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-GUID: YLgI4I5zzs0HyKADvIiaEr9n-nIJ_ByT
-X-Proofpoint-ORIG-GUID: YLgI4I5zzs0HyKADvIiaEr9n-nIJ_ByT
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-09_04,2025-08-06_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 malwarescore=0 bulkscore=0 suspectscore=0 phishscore=0
- clxscore=1011 impostorscore=0 spamscore=0 adultscore=0 classifier=typeunknown
- authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2508090035
 
-ESI/MSI is a performance optimization feature that provides dedicated
-interrupts per MCQ hardware queue . This is optional feature and
-UFS MCQ should work with and without ESI feature.
+From: John Garry <john.g.garry@oracle.com>
 
-Commit fc87dd58d8f9("scsi: ufs: qcom: Remove the MSI descriptor abuse")
-brings a regression in ESI (Enhanced System Interrupt) configuration
-that causes a null pointer dereference when Platform MSI allocation
-fails.
+[ Upstream commit dafeaf2c03e71255438ffe5a341d94d180e6c88e ]
 
-The issue occurs in when platform_device_msi_init_and_alloc_irqs()
-in ufs_qcom_config_esi() fails (returns -EINVAL) but the current
-code uses __free() macro for automatic cleanup free MSI resources
-that were never successfully allocated.
+When PCI_IRQ_AFFINITY is set for calling pci_alloc_irq_vectors(), it
+means interrupts are spread around the available CPUs. It also means that
+the interrupts become managed, which means that an interrupt is shutdown
+when all the CPUs in the interrupt affinity mask go offline.
 
-Unable to handle kernel NULL pointer dereference at virtual
-address 0000000000000008
+Using managed interrupts in this way means that we should ensure that
+completions should not occur on HW queues where the associated interrupt
+is shutdown. This is typically achieved by ensuring only CPUs which are
+online can generate IO completion traffic to the HW queue which they are
+mapped to (so that they can also serve completion interrupts for that HW
+queue).
 
-  Call trace:
-  mutex_lock+0xc/0x54 (P)
-  platform_device_msi_free_irqs_all+0x1c/0x40
-  ufs_qcom_config_esi+0x1d0/0x220 [ufs_qcom]
-  ufshcd_config_mcq+0x28/0x104
-  ufshcd_init+0xa3c/0xf40
-  ufshcd_pltfrm_init+0x504/0x7d4
-  ufs_qcom_probe+0x20/0x58 [ufs_qcom]
+The problem in the driver is that a CPU can generate completions to a HW
+queue whose interrupt may be shutdown, as the CPUs in the HW queue
+interrupt affinity mask may be offline. This can cause IOs to never
+complete and hang the system. The driver maintains its own CPU <-> HW
+queue mapping for submissions, see aac_fib_vector_assign(), but this does
+not reflect the CPU <-> HW queue interrupt affinity mapping.
 
-Fix by restructuring the ESI configuration to try MSI allocation
-first, before any other resource allocation and instead use
-explicit cleanup instead of __free() macro to avoid cleanup
-of unallocated resources.
+Commit 9dc704dcc09e ("scsi: aacraid: Reply queue mapping to CPUs based on
+IRQ affinity") tried to remedy this issue may mapping CPUs properly to HW
+queue interrupts. However this was later reverted in commit c5becf57dd56
+("Revert "scsi: aacraid: Reply queue mapping to CPUs based on IRQ
+affinity") - it seems that there were other reports of hangs. I guess
+that this was due to some implementation issue in the original commit or
+maybe a HW issue.
 
-Tested on SM8750 platform with MCQ enabled, both with and without
-Platform ESI support.
+Fix the very original hang by just not using managed interrupts by not
+setting PCI_IRQ_AFFINITY.  In this way, all CPUs will be in each HW queue
+affinity mask, so should not create completion problems if any CPUs go
+offline.
 
-Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Signed-off-by: John Garry <john.g.garry@oracle.com>
+Link: https://lore.kernel.org/r/20250715111535.499853-1-john.g.garry@oracle.com
+Closes: https://lore.kernel.org/linux-scsi/20250618192427.3845724-1-jmeneghi@redhat.com/
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Tested-by: John Meneghini <jmeneghi@redhat.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
- drivers/ufs/host/ufs-qcom.c | 39 ++++++++++++++-----------------------
- 1 file changed, 15 insertions(+), 24 deletions(-)
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 4bbe4de1679b..bef8dc12de20 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -2078,17 +2078,6 @@ static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *data)
- 	return IRQ_HANDLED;
- }
+LLM Generated explanations, may be completely bogus:
 
--static void ufs_qcom_irq_free(struct ufs_qcom_irq *uqi)
--{
--	for (struct ufs_qcom_irq *q = uqi; q->irq; q++)
--		devm_free_irq(q->hba->dev, q->irq, q->hba);
--
--	platform_device_msi_free_irqs_all(uqi->hba->dev);
--	devm_kfree(uqi->hba->dev, uqi);
--}
--
--DEFINE_FREE(ufs_qcom_irq, struct ufs_qcom_irq *, if (_T) ufs_qcom_irq_free(_T))
--
- static int ufs_qcom_config_esi(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-@@ -2103,18 +2092,18 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
- 	 */
- 	nr_irqs = hba->nr_hw_queues - hba->nr_queues[HCTX_TYPE_POLL];
+Based on my analysis, here is my determination:
 
--	struct ufs_qcom_irq *qi __free(ufs_qcom_irq) =
--		devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi), GFP_KERNEL);
--	if (!qi)
--		return -ENOMEM;
--	/* Preset so __free() has a pointer to hba in all error paths */
--	qi[0].hba = hba;
--
- 	ret = platform_device_msi_init_and_alloc_irqs(hba->dev, nr_irqs,
- 						      ufs_qcom_write_msi_msg);
- 	if (ret) {
--		dev_err(hba->dev, "Failed to request Platform MSI %d\n", ret);
--		return ret;
-+		dev_warn(hba->dev, "Platform MSI not supported or failed, continuing without ESI\n");
-+		return ret; /* Continue without ESI */
-+	}
-+
-+	struct ufs_qcom_irq *qi = devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi), GFP_KERNEL);
-+
-+	if (!qi) {
-+		platform_device_msi_free_irqs_all(hba->dev);
-+		return -ENOMEM;
- 	}
+**Backport Status: YES**
 
- 	for (int idx = 0; idx < nr_irqs; idx++) {
-@@ -2125,15 +2114,17 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
- 		ret = devm_request_irq(hba->dev, qi[idx].irq, ufs_qcom_mcq_esi_handler,
- 				       IRQF_SHARED, "qcom-mcq-esi", qi + idx);
- 		if (ret) {
--			dev_err(hba->dev, "%s: Fail to request IRQ for %d, err = %d\n",
-+			dev_err(hba->dev, "%s: Failed to request IRQ for %d, err = %d\n",
- 				__func__, qi[idx].irq, ret);
--			qi[idx].irq = 0;
-+			/* Free previously allocated IRQs */
-+			for (int j = 0; j < idx; j++)
-+				devm_free_irq(hba->dev, qi[j].irq, qi + j);
-+			platform_device_msi_free_irqs_all(hba->dev);
-+			devm_kfree(hba->dev, qi);
- 			return ret;
- 		}
- 	}
+This commit should be backported to stable kernel trees for the
+following reasons:
 
--	retain_and_null_ptr(qi);
--
- 	if (host->hw_ver.major >= 6) {
- 		ufshcd_rmwl(hba, ESI_VEC_MASK, FIELD_PREP(ESI_VEC_MASK, MAX_ESI_VEC - 1),
- 			    REG_UFS_CFG3);
---
-2.48.1
+1. **Fixes a Critical Bug**: The commit fixes a system hang issue that
+   occurs when CPUs go offline. The code change shows it removes
+   `PCI_IRQ_AFFINITY` flag from `pci_alloc_irq_vectors()` call (line 485
+   changing from `PCI_IRQ_MSIX | PCI_IRQ_AFFINITY` to just
+   `PCI_IRQ_MSIX`). This prevents managed interrupts from being shut
+   down when CPUs go offline, which was causing I/O operations to never
+   complete and hang the system.
+
+2. **Long-Standing Issue with History**: The commit message reveals this
+   is addressing a long-standing problem that has been attempted to be
+   fixed before:
+   - Commit 9dc704dcc09e tried to fix it by mapping CPUs properly to HW
+     queue interrupts
+   - That fix was reverted in commit c5becf57dd56 due to other hang
+     reports
+   - The revert commit (c5becf57dd56) was even marked with `Cc:
+     <stable@vger.kernel.org>`, indicating the severity of the issue
+
+3. **Small and Contained Change**: The actual code change is minimal -
+   just removing the `PCI_IRQ_AFFINITY` flag from a single function
+   call. This is a one-line change that doesn't introduce new features
+   or architectural changes.
+
+4. **Well-Tested Fix**: The commit has both "Reviewed-by" and "Tested-
+   by" tags from John Meneghini, indicating it has been properly tested
+   and validated.
+
+5. **No Side Effects Beyond the Fix**: The change simply reverts to non-
+   managed interrupts, allowing all CPUs to be in each HW queue affinity
+   mask. This is a conservative approach that avoids the complexity of
+   trying to properly coordinate CPU-to-queue mappings with interrupt
+   affinities.
+
+6. **Affects Production Systems**: The linked bug report
+   (https://lore.kernel.org/linux-
+   scsi/20250618192427.3845724-1-jmeneghi@redhat.com/) and the previous
+   kernel bugzilla entry (#217599) indicate this affects real production
+   systems experiencing hangs.
+
+7. **Driver-Specific Fix**: The change is confined to the aacraid driver
+   subsystem and doesn't affect other kernel components, minimizing the
+   risk of regression in other areas.
+
+The fix follows stable tree rules perfectly: it fixes an important bug
+(system hangs), is minimal in scope (one-line change), has low
+regression risk (reverting to simpler interrupt handling), and is
+confined to a specific driver subsystem.
+
+ drivers/scsi/aacraid/comminit.c | 3 +--
+ 1 file changed, 1 insertion(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/aacraid/comminit.c b/drivers/scsi/aacraid/comminit.c
+index 28cf18955a08..726c8531b7d3 100644
+--- a/drivers/scsi/aacraid/comminit.c
++++ b/drivers/scsi/aacraid/comminit.c
+@@ -481,8 +481,7 @@ void aac_define_int_mode(struct aac_dev *dev)
+ 	    pci_find_capability(dev->pdev, PCI_CAP_ID_MSIX)) {
+ 		min_msix = 2;
+ 		i = pci_alloc_irq_vectors(dev->pdev,
+-					  min_msix, msi_count,
+-					  PCI_IRQ_MSIX | PCI_IRQ_AFFINITY);
++					  min_msix, msi_count, PCI_IRQ_MSIX);
+ 		if (i > 0) {
+ 			dev->msi_enabled = 1;
+ 			msi_count = i;
+-- 
+2.39.5
 
