@@ -1,40 +1,48 @@
-Received: from mout.web.de (mout.web.de [212.227.17.12])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AA5B201276;
-	Sun, 10 Aug 2025 12:01:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.17.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B9D81E515;
+	Sun, 10 Aug 2025 19:16:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754827275; cv=none; b=AhkQ/T8+Xp+zw1ihj4OLHib8vCMRiUjqbdZm3BP++jyZwAKhvc7Qz/gJACTvfGTLgTIxR0XKjF7PzgSYfvBKDcreWTP2rVyFTBmpysOkhWVjDvb6Fl1Hk3YVYySGp6/VX187D0zfsKuZsRk4Z/XZvRhlFSx+6UYtvqhueZKoYzU=
+	t=1754853393; cv=none; b=k5Zg9XPLiiO00f4aLjn/FdR6qqr4sNfvOfMHd9Nx1P+WQHOXhYZWrrfKtXYcn/tAzmCwQuvFu8VMvS7/Xdzh4/ptbaCA13jXUPCvfeTEyZy1kOuQASwq+lZLurKoRBQVDKdxq1+GWd4e5cGAETz4plFZTba8nf6qQDwcsMsWXIo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754827275; c=relaxed/simple;
-	bh=k9B2JCKmSZUIJRpLV8OYvueqHpattOGdK+TE2s+olQo=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=e3vm4FgcoeCieW33RuUxn3G1bRaUfRFNL6vPZZMjO0tGDZVbD4wWdzbdrXy4KOTljdotAg7pgAo4WvFeSto2fRDBS+uTEe1wYd6bNELG7eP2tyVYTzo1Rw47k3zTge8w9Hz3KInfZL/PMsAPZNoqrLeI+yCPnop3qXiMrzDMC0s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=mIzuZOW9; arc=none smtp.client-ip=212.227.17.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1754853393; c=relaxed/simple;
+	bh=Xb9tycNB9p5Q6NvE/8a3k8CIomgb8P1+goDjyPYBESY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=OuqAhFlTE+qLTDtHbPn3P5YzEwyTQeiQkqVnoDCXlIFu9qNhZwe7IA5nXaUb8nY9QOS3CLz2nux/p5bbnMEo/4Pr+109szQGiVdQ37yRbLh2/AjeuKfbpQrqZqB+oMp70E633tvzQ8U54jn6EzyHcFx2enL73FpNYIr8bnXTbpE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=cvJ+/Vdw; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="mIzuZOW9"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1754827228; x=1755432028; i=markus.elfring@web.de;
-	bh=k9B2JCKmSZUIJRpLV8OYvueqHpattOGdK+TE2s+olQo=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=mIzuZOW9AmBMkZTdiU7utnISbkl3IulkF7GPN3DkHzlaeXQM8kElU9cqrA14v3Yc
-	 K/4AkgNaSzcC6nZaXO1WlRYuf6C2y2igskfsmhRmPyxIMXtus51mISN6bCIGZaU+e
-	 yvBD0NxMkB0f+JQpjroeX4ar2GAr+04aAttuyH5WZkXhc+h4KIGRKYgXaB4ZmOi7u
-	 iJ8MdXB1oQ6wC9gk7lI5HAlu8yol6DlqMcS/7AeVcZqo5RycSEUD9rgMumCk/yD15
-	 qBLBu/mj80MP1HrU61fxxDCHmn7RP7fuCIVaXtQ8tN6k3M61kb528Jue8kHp0sFmD
-	 KRZnchNFK/IQpO0Tjw==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.69.214]) by smtp.web.de (mrweb105
- [213.165.67.124]) with ESMTPSA (Nemesis) id 1MhWor-1u8BOp19xj-00bziI; Sun, 10
- Aug 2025 14:00:28 +0200
-Message-ID: <f9dfcc92-4591-41bb-973b-86d12ca37e19@web.de>
-Date: Sun, 10 Aug 2025 14:00:25 +0200
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="cvJ+/Vdw"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57AI0fuG028125;
+	Sun, 10 Aug 2025 19:15:51 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	ozIY8WvBwqxK3xwEYAdMoffurOJUZYYSHvkeKeqjDMc=; b=cvJ+/VdwarB+07Ch
+	6GDxByhK3woxrVvKiYojAJ8sMMUPCcljQqq9NnePrW3bPViyalYcQviIlhSSNCJG
+	+8H23P5guBiSPg0hnyTFqJF6if/ldXairItUHfMF1S2XH9kDMeL31Bt2rxFQP2P3
+	GcuPzqvauO2WrmuOt+kXckLG6WSkkCAAlyESklVBVyVimSMsccui4t8OKBhUdPA5
+	ZbcIU2BDsV57PuJAB0RrP+X/2eq6xnauD5gahSDLLrQuzmRUf9FQeO6eDaQEoa7l
+	oBRmLHZv31rBNvZ0PDyr6ObHFVWkrZ5N6TEt0yM6YiEg1y5DMYwpVAIwLW+4F6jn
+	CNrNTQ==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48dygmab0t-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 10 Aug 2025 19:15:51 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57AJFoI8029094
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 10 Aug 2025 19:15:50 GMT
+Received: from [10.216.19.42] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Sun, 10 Aug
+ 2025 12:15:46 -0700
+Message-ID: <4ce3b453-1941-42ac-ae03-e66c09f40852@quicinc.com>
+Date: Mon, 11 Aug 2025 00:45:43 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -42,86 +50,66 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-To: Nitin Rawat <quic_nitirawa@quicinc.com>, linux-scsi@vger.kernel.org,
- linux-arm-msm@vger.kernel.org, Bart Van Assche <bvanassche@acm.org>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>,
- Manivannan Sadhasivam <mani@kernel.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Neil Armstrong <neil.armstrong@linaro.org>,
- Thomas Gleixner <tglx@linutronix.de>
-Cc: LKML <linux-kernel@vger.kernel.org>
-References: <20250809134445.19050-1-quic_nitirawa@quicinc.com>
 Subject: Re: [PATCH] ufs: ufs-qcom: Fix ESI null pointer dereference
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20250809134445.19050-1-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:tNAT3Y3hWHkN00T5qgcJuljXa+yFPG9RuKonbjG/0VKoePFkuWa
- 948cjId320pm7wQ9NFN7a1HCBmCesSs3MipV3dzH+7AiyD2ruroIZKELOvDgSbGJ9HgazpL
- uANwvQl1XDvnWdGAL8d3YkdRPSgkZHy8y6tMvQXLwJ/PO5eDOmdRK0KJzZjqblGj+2cnUeg
- RahUq7PdROeG79Oe8bZeQ==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:r257I7fehCY=;1kvrFLrPT3nppF9dBHcFwLnRsiB
- 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
- FwrvMHXAKZQ==
+To: Markus Elfring <Markus.Elfring@web.de>, <linux-scsi@vger.kernel.org>,
+        <linux-arm-msm@vger.kernel.org>, Bart Van Assche <bvanassche@acm.org>,
+        "James
+ Bottomley" <James.Bottomley@HansenPartnership.com>,
+        Konrad Dybcio
+	<konrad.dybcio@oss.qualcomm.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        "Martin K. Petersen" <martin.petersen@oracle.com>,
+        Neil Armstrong
+	<neil.armstrong@linaro.org>,
+        Thomas Gleixner <tglx@linutronix.de>
+CC: LKML <linux-kernel@vger.kernel.org>
+References: <20250809134445.19050-1-quic_nitirawa@quicinc.com>
+ <f9dfcc92-4591-41bb-973b-86d12ca37e19@web.de>
+Content-Language: en-US
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <f9dfcc92-4591-41bb-973b-86d12ca37e19@web.de>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA5MDAzNSBTYWx0ZWRfXzxDVuCiTJpyD
+ pFoI4L1LzDARe9gCTGqN6pMHD7Fa2TyDOtrFhzuBpCyJxdsWp40vy4BcufhAfJNEz+asUMbZfY0
+ qgxrX7q+5pQu11T3taqkNsY0yzWxxG7nGZeJogEbv7biH224sgMgVqFSxGlK0mM7m6KUv6o37Cc
+ DdTJokRdjQwXVbUEuO+UesxWKOSrRujfdRXwGr5p+9b9xxybqQeJ1oll3Q+sjy/S3y+VeeZ+xvD
+ ULwN2qZkt9usmhpLjLvO1g9Sa37SYUn7ImgxrqjQnwk3iJmSNiPurjseE+iGuSHyUdjJ5X5FLLT
+ 68+Qcv7alhkiweqb25ht+VFsEKQ0wACf9axfQJyjpdqdG77Xi03Umbendzs2t+e53K6TGh6XmWH
+ Dbqqcp4P
+X-Authority-Analysis: v=2.4 cv=FvMF/3rq c=1 sm=1 tr=0 ts=6898efe7 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=VwQbUJbxAAAA:8
+ a=HzWNzFUQfMb5d4qv6N8A:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: LnelRXfXVI-dNVbs95V_RgZYNLcejWrA
+X-Proofpoint-ORIG-GUID: LnelRXfXVI-dNVbs95V_RgZYNLcejWrA
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-10_05,2025-08-06_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 malwarescore=0 bulkscore=0 suspectscore=0 phishscore=0
+ clxscore=1011 impostorscore=0 spamscore=0 adultscore=0 classifier=typeunknown
+ authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2508090035
 
-=E2=80=A6
-> Fix by restructuring the ESI configuration to try MSI allocation
-> first, before any other resource allocation and =E2=80=A6
 
-How do you think about to add any tags (like =E2=80=9CFixes=E2=80=9D and =
-=E2=80=9CCc=E2=80=9D) accordingly?
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
-cumentation/process/submitting-patches.rst?h=3Dv6.16#n145
 
-Regards,
-Markus
+On 8/10/2025 5:30 PM, Markus Elfring wrote:
+> …
+>> Fix by restructuring the ESI configuration to try MSI allocation
+>> first, before any other resource allocation and …
+> 
+> How do you think about to add any tags (like “Fixes” and “Cc”) accordingly?
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/submitting-patches.rst?h=v6.16#n145
+
+Sorry, I missed adding the Fixes tag in the commit message. Thanks for 
+pointing it out.  I’ll make sure to include in next patchset.
+
+> 
+> Regards,
+> Markus
+
