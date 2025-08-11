@@ -1,46 +1,46 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A269E29BDB8
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 17:40:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 596CC21771B
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 17:40:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754934012; cv=none; b=bM5Ntbhg1hS/0N+yJoD5Xd7uw0SmqpQ/nwWUMv6An3aD1vm0OYM5/pXD5cOIE0u2xcqCmEqUnT5I0iUSLI3XybfdbiTEqE+NXth4nvpW+h4Z+c6AeL+R4zrN+zb6vnA2frpATqR+ncuqbEreZp1TA7MaE5HloAt9G5ZCgKrpkXs=
+	t=1754934020; cv=none; b=OasSAlc4UHvKQrLep77vOx+mVa10FDMVA0nz1hZIGee0bQozGS28j996J8uspfyLzwYzG86ESs+sB6KFA/SGiq5VKA1R07HIcl94mNOfN+5JBY+1eThdTACmtWfPDjVjYdRW37Ltk5AVbbrKc17J819GgGnXhn7LExSE0GG785U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754934012; c=relaxed/simple;
-	bh=/DBbv9aPB0AGCG5FONp05VLRV9H8qDjieblcXgs5hZU=;
+	s=arc-20240116; t=1754934020; c=relaxed/simple;
+	bh=GgXqbr453Qc5xHXcHjWzUlbxST2SQ5ET0Lq1hiAHeuQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=saRJO7p8vr4XQT1N0pR/GsVs8T7ypgWbofpTZOfuoGYxTQxQdvTrG4pdM7Nx0Z3jObNh1G8R36XEXKn+GCGIcl3vuRUUVncAv1cMFI8jCZneR9X3HDG7zm2/Y8JJ5RhoSxs/drap/ipKpszg7eGH68TjUxq4EpLOBgAJYbSgQRc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Z7/s5Sam; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=pTo/PeHEzhyDFXMcDR357E6d76yQM+weuHiDXf0toSJmTJuCTiKEkSaoxTzB1KxTiHPSKAuzO2dL3q8tl6HeHiSMFYqSaKLb2aahM/piIMws9vxxKlIGmugQN+ZUNB+6ZnyETSFUDI9n9bDQYLIMGYyiyyB0kpAO5ghUrxgm+oE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4YNOjkj9; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Z7/s5Sam"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4YNOjkj9"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c122y0578zlgqTr;
-	Mon, 11 Aug 2025 17:40:10 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c12363dtJzlgqV3;
+	Mon, 11 Aug 2025 17:40:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1754934008; x=1757526009; bh=L4kqg
-	jE+MZ18GYlhx5KaBYS+YGGYoXWwlt+UBmvhrXI=; b=Z7/s5Sam4BRNICVoR+8vM
-	leUKvGVayhGoHicJP53VaDGJTm5VNUdj7ZioWAQgTCDClW0ht9cMaln4J1H5d60Q
-	8XKD17HIJzhR44k/UV9BlGUJOqG8Ip1BDnhOovFNkwyZRFpDIlD/SXUDf/Cqxpg2
-	0s3fAnZad17MmoR6wwUJe2Ijb/X7j0mW9MKS3IYoyxzzqGZd9GkLplvv8c8xHm4i
-	Z8XiRD5p/n+aCVfaESq6N6ACwj0w8IAHFWV4ww6GUI+1pag2kmEA2IGGb23/AFl+
-	8E2DwcUetXJ/F/YNEt7XrGM/Y8WkEGVCD6Ac2nVsXII2ZUVnC3wuRzD5tu4rc1wc
+	:received:received; s=mr01; t=1754934016; x=1757526017; bh=Pucff
+	X2161vpGZ4670Pkoo2zAylJlRx+EnztIeo/l88=; b=4YNOjkj9rwfWA/GiunwHK
+	bQMlAr9Y2ae62tt4PgHdC2Bd3RpmP7mBAkqQl5sUIf9+djwZH0kXdWr5E5EYBJQB
+	ZOS0cSeL3v3Zm5GOH16J2QOHsfXLKZLJ/Xc89NCCyRIKcemq0r4OSIu/RrrX3l5y
+	Y+u2pnS0I6sL/SZuuF0ERuIEUGhWvyz2+CEW/+XkgZZsRvNtRVmIMsCnqjj+OFyJ
+	ivExHULhgRaRUdb8cYDDaETS3PIE3sYX1N24ok89ogB3ugU9q75SasxfFiZdzipj
+	APBl5D0JKVUF1P1oO4bcp0d3+WlwlVMXFjxzdnC95u38fOoPi5lXscHJpk1aXmok
 	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ZCZq7KDUINed; Mon, 11 Aug 2025 17:40:08 +0000 (UTC)
+ id s4QhhAGCbFsa; Mon, 11 Aug 2025 17:40:16 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c122r1dfszlgqVP;
-	Mon, 11 Aug 2025 17:40:03 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c12304fphzlgqTq;
+	Mon, 11 Aug 2025 17:40:11 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Peter Wang <peter.wang@mediatek.com>,
 	Avri Altman <avri.altman@sandisk.com>,
 	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v2 18/30] ufs: core: Add an argument to ufshcd_alloc_mcq()
-Date: Mon, 11 Aug 2025 10:34:30 -0700
-Message-ID: <20250811173634.514041-19-bvanassche@acm.org>
+Subject: [PATCH v2 19/30] ufs: core: Call ufshcd_mcq_init() once
+Date: Mon, 11 Aug 2025 10:34:31 -0700
+Message-ID: <20250811173634.514041-20-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.rc0.155.g4a0f42376b-goog
 In-Reply-To: <20250811173634.514041-1-bvanassche@acm.org>
 References: <20250811173634.514041-1-bvanassche@acm.org>
@@ -63,42 +63,45 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Prepare for allocating SCSI commands in two steps by making the UFS devic=
+In a later patch scsi_host_template.cmd_size will be set to make struct
+scsi_cmnd and struct ufshcd_lrb adjacent. Since scsi_add_host() allocates
+memory for SCSI commands,  the SCSI host must be allocated before any
+device management commands are sent to the UFS device and before the UFS
+device queue depth has been queried. Hence, the queue depth must be
+modified after the UFS device queue depth has been queried. Modifiying th=
 e
-queue depth an argument of ufshcd_alloc_mcq().
+queue depth involves calling ufshcd_alloc_mcq() a second time. This patch
+prepares for calling ufshcd_alloc_mcq() twice and makes sure that
+ufshcd_mcq_init() is called once even if ufshcd_alloc_mcq() is called
+twice.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ufs/core/ufshcd.c | 13 ++++++++++---
+ 1 file changed, 10 insertions(+), 3 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index bed88caea319..d63bf5b3a414 100644
+index d63bf5b3a414..23f7734d3cc1 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -8870,12 +8870,12 @@ static void ufshcd_memory_free(struct ufs_hba *hb=
-a)
- 	}
- }
-=20
--static int ufshcd_alloc_mcq(struct ufs_hba *hba)
-+static int ufshcd_alloc_mcq(struct ufs_hba *hba, int ufs_dev_qd)
- {
- 	int ret;
- 	int old_nutrs =3D hba->nutrs;
-=20
--	ret =3D ufshcd_mcq_decide_queue_depth(hba, hba->dev_info.bqueuedepth);
-+	ret =3D ufshcd_mcq_decide_queue_depth(hba, ufs_dev_qd);
- 	if (ret < 0)
+@@ -8880,9 +8880,16 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba, i=
+nt ufs_dev_qd)
  		return ret;
 =20
-@@ -10569,7 +10569,7 @@ static int ufshcd_add_scsi_host(struct ufs_hba *h=
-ba)
+ 	hba->nutrs =3D ret;
+-	ret =3D ufshcd_mcq_init(hba);
+-	if (ret)
+-		goto err;
++	if (hba->host->nr_hw_queues =3D=3D 0) {
++		/*
++		 * ufshcd_mcq_init() is independent of hba->nutrs. Hence, only
++		 * call ufshcd_mcq_init() the first time ufshcd_alloc_mcq() is
++		 * called.
++		 */
++		ret =3D ufshcd_mcq_init(hba);
++		if (ret)
++			goto err;
++	}
 =20
- 	if (is_mcq_supported(hba)) {
- 		ufshcd_mcq_enable(hba);
--		err =3D ufshcd_alloc_mcq(hba);
-+		err =3D ufshcd_alloc_mcq(hba, hba->dev_info.bqueuedepth);
- 		if (!err) {
- 			ufshcd_config_mcq(hba);
- 		} else {
+ 	/*
+ 	 * Previously allocated memory for nutrs may not be enough in MCQ mode.
