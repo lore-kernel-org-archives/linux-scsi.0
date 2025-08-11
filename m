@@ -1,48 +1,33 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B17F12512EE;
-	Mon, 11 Aug 2025 14:35:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1AA523BCE3;
+	Mon, 11 Aug 2025 14:42:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754922915; cv=none; b=qlQVoKuJKwh8a6DxM/lLS5b9QMUh2m1sEe9WEOl2REBmmavYj2GOsIiDSUl+oTbVJncipj8WUVCbSoylMXt8lFs6ekBC4ScS/JKXIL8x1q2xwdb+nFM5uZSnjnavK7fOkZc/E0tPo5MdZa5CnsOy3Z0E7II9HZKehUhfZjTvpF4=
+	t=1754923350; cv=none; b=s7FJg0acTrcTutnzYx8DAQY/hES9fWz8gydCI23FFgNYDz3ahlGqg1wg/807NiGBd7WoIEi8MzsX4ncVofybzL/T8OLnJ8i/cSoH+sIpDCgslWyzSO9m8Yf6zhE8yd96+Os5li963+vsA0Dsr7G0CpV7ds3vS/xs/+/PHYXjxIE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754922915; c=relaxed/simple;
-	bh=pDvr9YWQ+V0w5SRTL+f0yoh7gyCQhQ/n25ntJP00x30=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=hH9McqbTKFnY1Ge2JRuO4lYxePJA6prhfhYSUMROdSHKD7vIo0hvsf5kY8TtyruukPtNGz+3xxQuZs5yFEp/fWLqWJ/XwI/QrRvdu0OEJzsOAFnE4ODLVjqI++q4HOwUxRk0bodWGmHNppsYekfNklwn+fYiiRb3uy653PXbJlQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=WuWOlH8q; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1754923350; c=relaxed/simple;
+	bh=N4dy+EkDKWQXITuY/eS4xrGj4y3P2uiaBJ0qqcWhWrw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Fgpj4xJTz72SAxAoCm/A6ZvLaVfBnch/bXs4SPLRQJ40uDF9V3zO3PUB/HR4x3TlSqDYQo9cMhYP2/yWIfiY4QHzucbJM8wIMVG9+3OIn+y08XUYorXW6NkdXtpeiVag7UqMKk0Hk+/jqx5OIh3dWDaOLYHbW6qangw8BwAcmUE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=P5Hlbwp/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="WuWOlH8q"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57B9dB0v029132;
-	Mon, 11 Aug 2025 14:35:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	TiyjpQQ2X6AyzQCC+HNvU+VY/cb+U+kZ0/V9a/Pn//o=; b=WuWOlH8q+g2g/Z/i
-	ryK+JJTNneY03bEFZhgnPvhh42ujZ8C5DUzvGjNuM9bh6GEY+4xcS2iTX97HUcGg
-	zwrGeUe81O8vALFz3sZzVPVFxedV8WvUVDz2mKHapc/+lE/yct8NK74ptFIcBaZR
-	gKsuEHSloOrQlofGgJmKAJkaBP2+bB4byqAiKRnTkrpVbAZxNVraOhoEVzgFRqiF
-	/BPAYkuSqFZThxFxxVPHBgHOu7/a1lZWT4fz1Un1Li/lwm9CFfS8oT4CzmjHdr0l
-	Ys/LY/OC23bLUGOLGBVWpIqZLUKhxwZkOByaq9pgP2m6e7Na8qySC6XmeKtJGWqC
-	0ShZDw==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48dw9smv25-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 11 Aug 2025 14:35:05 +0000 (GMT)
-Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57BEZ4UM011433
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 11 Aug 2025 14:35:04 GMT
-Received: from [10.218.4.141] (10.80.80.8) by nalasex01b.na.qualcomm.com
- (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Mon, 11 Aug
- 2025 07:35:00 -0700
-Message-ID: <a7ad5022-78b6-4ebc-9ce1-7c1182c43a89@quicinc.com>
-Date: Mon, 11 Aug 2025 20:04:50 +0530
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="P5Hlbwp/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6970FC4CEED;
+	Mon, 11 Aug 2025 14:42:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1754923350;
+	bh=N4dy+EkDKWQXITuY/eS4xrGj4y3P2uiaBJ0qqcWhWrw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=P5Hlbwp/YfP1lkQ3Xt/J5pFIojL8xWtozyAxN1fX6vKW4DjVwiPEhs1W3W49Bu8i+
+	 xlIdL+SHBpvzfByW5LB3/S3FpqpEW7hqKnBjcZ5vsudk7S8uhdE6ZUCH+lsPxPqhiO
+	 9Gsp5h+ZeK18+fkWATIvDuL84H2MezJhpiZwHdqxOHi211XBnG+g7rW6/vmrmXJvNo
+	 exrWbBYr/pt1NNjwZtdkHyKvZoCvo4jPOSlLW1y+OISdgomtiv5v/+MBD5twci/aIZ
+	 zKPUG9cgC52rAFodeNBcdQzlirf4b93dIEAqIoIoVcB4n82ozI7UjZhLNKPvGsyCj6
+	 2A/dm0ijsfTpA==
+Message-ID: <f8405e89-9449-4564-82d1-3146d9b75655@kernel.org>
+Date: Mon, 11 Aug 2025 16:42:24 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,161 +35,99 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V1 2/3] arm64: dts: qcom: sm8650: Enable MCQ support for
- UFS controller
-To: Manivannan Sadhasivam <mani@kernel.org>,
-        Krzysztof Kozlowski
-	<krzk@kernel.org>
-CC: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-        <robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <andersson@kernel.org>, <konradybcio@kernel.org>, <agross@kernel.org>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-References: <20250730082229.23475-1-quic_rdwivedi@quicinc.com>
- <20250730082229.23475-3-quic_rdwivedi@quicinc.com>
- <eab85cb3-7185-4474-9428-8699fbe4a8e5@kernel.org>
- <40ace3bc-7e5d-417a-b51a-148c5f498992@quicinc.com>
- <2a7bf809-73d9-4cb6-bcc9-3625ef1eb1fa@kernel.org>
- <kayobeddgln5oi3g235ruh7f7adbqr7srim7tmt3iwa3zn33m4@cenneffnuhnv>
- <5a32e933-03b9-4cc3-914c-46bdb2cedce6@kernel.org>
- <54gttzkpxg55vrh5wsvyvteovki377w3yjfejjddpzzrvldwkg@p7sc4knnvla3>
- <4fa9074e-609a-42aa-975a-a6daa7dd6d42@kernel.org>
- <5se3wgpfabzlcidflef5orwtl62jk2dtg4lx47gnqcqn7mya46@i6zir5uny7gi>
+Subject: Re: [PATCH V2 1/4] dt-bindings: ufs: qcom: Document MCQ register
+ space for UFS
+To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, mani@kernel.org,
+ alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+ robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+ andersson@kernel.org, konradybcio@kernel.org, agross@kernel.org,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <20250811143139.16422-1-quic_rdwivedi@quicinc.com>
+ <20250811143139.16422-2-quic_rdwivedi@quicinc.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
-From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-In-Reply-To: <5se3wgpfabzlcidflef5orwtl62jk2dtg4lx47gnqcqn7mya46@i6zir5uny7gi>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01b.na.qualcomm.com (10.47.209.197)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=J+Wq7BnS c=1 sm=1 tr=0 ts=6899ff99 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8
- a=ZRovytJ3VJirhm_mrpIA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
- a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: G2ecdMvgEqREVqqjN3YPNbAgsax4YMDd
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA5MDAxNSBTYWx0ZWRfXy/UdVcjPnFvt
- SUqLhP0q9Pn/UstVVeUb/RAlRjzdCV4va9nMNRXtX4rGSdLIAcIMcH8pmczGmmE70PLn7kkpO0Q
- YiDXpYGjNSo+XzPAOv3u+IHnTrFvpFrW2EZJJgxPUZlF8kT/x3zp1CUAGniUsjC97CMwRVzE13R
- TucP7MyeKmITEp8Bvt5sJo64nFYcatKU17KM4iRohCpCB8sDpYX9mmPBj12nDF4MhKotYMOfNiJ
- ppHhVvynghxEoIptYOd/7lXbGUjolzyFT863qraHqsH6M2o//pwzr/ynqz5l66dYoaLSyeW/1xe
- RoTS/eOQmPpPoHl379R4lpmm5BFLo/3zRNKpqjP3e7KcuSmH8poegshzkRoUslwkK5bXrv0AhXr
- NhSxXHon
-X-Proofpoint-GUID: G2ecdMvgEqREVqqjN3YPNbAgsax4YMDd
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-11_03,2025-08-11_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 adultscore=0 malwarescore=0 impostorscore=0 bulkscore=0
- phishscore=0 suspectscore=0 spamscore=0 clxscore=1015 classifier=typeunknown
- authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2508090015
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <20250811143139.16422-2-quic_rdwivedi@quicinc.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-
-
-On 11-Aug-25 2:57 PM, Manivannan Sadhasivam wrote:
-> On Fri, Aug 01, 2025 at 06:09:18PM GMT, Krzysztof Kozlowski wrote:
->> On 01/08/2025 17:33, Manivannan Sadhasivam wrote:
->>> On Fri, Aug 01, 2025 at 04:20:37PM GMT, Krzysztof Kozlowski wrote:
->>>> On 01/08/2025 14:24, Manivannan Sadhasivam wrote:
->>>>> On Thu, Jul 31, 2025 at 10:38:56AM GMT, Krzysztof Kozlowski wrote:
->>>>>> On 31/07/2025 10:34, Ram Kumar Dwivedi wrote:
->>>>>>>
->>>>>>>
->>>>>>> On 31-Jul-25 12:15 PM, Krzysztof Kozlowski wrote:
->>>>>>>> On 30/07/2025 10:22, Ram Kumar Dwivedi wrote:
->>>>>>>>> Enable Multi-Circular Queue (MCQ) support for the UFS host controller
->>>>>>>>> on the Qualcomm SM8650 platform by updating the device tree node. This
->>>>>>>>> includes adding new register regions and specifying the MSI parent
->>>>>>>>> required for MCQ operation.
->>>>>>>>>
->>>>>>>>> MCQ is a modern queuing model for UFS that improves performance and
->>>>>>>>> scalability by allowing multiple hardware queues. 
->>>>>>>>>
->>>>>>>>> Changes:
->>>>>>>>> - Add reg entries for mcq_sqd and mcq_vs regions.
->>>>>>>>> - Define reg-names for the new regions.
->>>>>>>>> - Specify msi-parent for interrupt routing.
->>>>>>>>>
->>>>>>>>> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
->>>>>>>>> ---
->>>>>>>>>  arch/arm64/boot/dts/qcom/sm8650.dtsi | 9 ++++++++-
->>>>>>>>>  1 file changed, 8 insertions(+), 1 deletion(-)
->>>>>>>>>
->>>>>>>>> diff --git a/arch/arm64/boot/dts/qcom/sm8650.dtsi b/arch/arm64/boot/dts/qcom/sm8650.dtsi
->>>>>>>>> index e14d3d778b71..5d164fe511ba 100644
->>>>>>>>> --- a/arch/arm64/boot/dts/qcom/sm8650.dtsi
->>>>>>>>> +++ b/arch/arm64/boot/dts/qcom/sm8650.dtsi
->>>>>>>>> @@ -3982,7 +3982,12 @@ ufs_mem_phy: phy@1d80000 {
->>>>>>>>>  
->>>>>>>>>  		ufs_mem_hc: ufshc@1d84000 {
->>>>>>>>>  			compatible = "qcom,sm8650-ufshc", "qcom,ufshc", "jedec,ufs-2.0";
->>>>>>>>> -			reg = <0 0x01d84000 0 0x3000>;
->>>>>>>>> +			reg = <0 0x01d84000 0 0x3000>,
->>>>>>>>> +			      <0 0x01da5000 0 0x2000>,
->>>>>>>>> +			      <0 0x01da4000 0 0x0010>;
->>>>>>>>
->>>>>>>>
->>>>>>>> These are wrong address spaces. Open your datasheet and look there.
->>>>>>>>
->>>>>>> Hi Krzysztof,
->>>>>>>
->>>>>>> I’ve reviewed it again, and it is correct and functioning as expected both on our upstream and downstream codebase.
->>>>>>> I think it is probably overlooked by you. Can you please double check from your end?
->>>>>>>
->>>>>>
->>>>>> No, it is not overlooked. There is no address space of length 0x10 at
->>>>>> 0x01da4000 in qcom doc/datasheet system. Just open the doc and look
->>>>>> there by yourself. The size is 0x15000.
->>>>>>
->>>>>
->>>>> The whole UFS MCQ region is indeed of size 0x15000, but the SQD and VS registers
->>>>> are at random offsets, not fixed across the SoC revisions. And there are some
->>>>> big holes within the whole region for things like ICE and all.
-Hi Krzysztof,
-
-I have addressed your comment by using single MCQ region mapping and accordingly updated dt bindings.
-
-Thanks,
-Ram.
->>>>>
->>>>> So it makes sense to map only the part of these regions and leave the unused
->>>>> ones.
->>>> Each item in the reg represents some continuous, dedicated address
->>>> space, not individual registers or artificially decided subsection. The
->>>> holes in such address space is not a problem, we do it all the time for
->>>> all other devices as well.
->>>>
->>>> You need to use the definition of that address space.
->>>>
->>>
->>> What if some of the registers in that whole address space is shared with other
->>> peripherals such as ICE?
->>
->>
->> It will be a different address space. We don't talk about imaginary
->> 3rd-party SoC. Qualcomm datasheet lists address spaces in very precise
->> way. We were recently fixing all address spaces for remoterpocs based on
->> that.
->>
->>>
->>> I agree with the fact that artifically creating separate register spaces leads
->>> to issues, but here I'm worried about hardcoding the offsets in the driver which
->>> can change between SoCs and also the shared address space with ICE.
->>
->> Drivers are expected to hard-code offsets and all drivers do it. Look at
->> display, sound codecs (both SoC and soundwire devices). Everything
->> hard-coded offsets internal to address space.
->>
->> What you essentially want is (making it border case) "reg" per register.
->>
+On 11/08/2025 16:31, Ram Kumar Dwivedi wrote:
+> Document Multi-Circular Queue (MCQ) register space for
+> Qualcomm UFS controllers.
 > 
-> I was worried about the ICE overlap, but I got access to the documentation and
-> verified myself (also with Nitin) that there is no ICE overlap. So yes, we can
-> map the entire MCQ region and live with the hardcoded offsets.
+> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> ---
+>  .../devicetree/bindings/ufs/qcom,ufs.yaml        | 16 ++++++++++------
+>  1 file changed, 10 insertions(+), 6 deletions(-)
 > 
-> - Mani
-> 
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> index 6c6043d9809e..daf681b0e23b 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> @@ -89,9 +89,13 @@ properties:
+>      maxItems: 2
+>  
+>    reg-names:
+> -    items:
+> -      - const: std
+> -      - const: ice
+> +    oneOf:
+> +      - items:
+> +          - const: std
+> +          - const: ice
+> +      - items:
+> +          - const: ufs_mem
+> +          - const: mcq
 
+No. Why are you sending this? You have been Cc-ed here:
+
+https://lore.kernel.org/all/20250731-dt-bindings-ufs-qcom-v2-3-53bb634bf95a@linaro.org/
+
+Above is neither correct nor aligned with what I told you.
+
+Best regards,
+Krzysztof
