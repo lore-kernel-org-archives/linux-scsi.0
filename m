@@ -1,95 +1,93 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A92422BE7BA;
-	Mon, 11 Aug 2025 11:20:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D92BE2DAFA3
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 13:14:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754911250; cv=none; b=H1TVsyIWQp7jJnxA0jIwkw3mOocErA2gGbRxEbxEZenxujXshguqZ+evqH1JiJsbZnJVf1O6gHmEg1tPdDv1KqagA7pa8f4INK1dBPbsKVj2rJZa236tbiAoRw3crzmPLZ+VpcEmAa83oIS4OBw+aB1yuaJOqrt55CBgQ2NShMQ=
+	t=1754918075; cv=none; b=Ygs7VcUT4pPCLeEQYaJsSQe1tVnfyi1av6Q0pLvvcdKacyF8hgiVKHtb+4LRclY/JsLWOfdD2EAt3/eaSP9uFgIfbyU4uYEg+ZOXifMAM/xkHsrsnvlsq1ntF2eS5URauiBO8L2AQMpw6N13z7sUOO7eLRCFXHkKD5eUnxw95bw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754911250; c=relaxed/simple;
-	bh=pBbxrF/v4p+dPGARecY4kudNE5BRKDJf4leCspsoL70=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=A38kfp/t3b3XNlPLtoA1ua3TUbSe90ntliVPpbu+0RCyKPP2fkJTQYmDDpv97975zQ8RqNHTqsSCepRzsg1zdJTOVyNwA8+xvL6NTO2VJMrZmIXC2NuQZl00VVkMPX3X8myp3eQ9Y4c0WnNk5SKuzaR4XHL/4HMV5MScpjdygeo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=A+XqGTl7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1754918075; c=relaxed/simple;
+	bh=I6jT5G0LISNKHKworuoUJOFys0ZJ/vXptMt+JWh3DTE=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=MHaAlk/hKXLFg6R/TthanTa79ElJBpMY4vVxx8P6u6cd+hzy5BqvImX8xcPYQxt0RdSv1kYn9LdEJl7AHbI2XmarmpWGSmk6VngnjfA3kDASF7/H4r8qIX4M8IG/gOZXMSteB2jdNshq8Oa2fZUpo1do1vIALxEBN4OXKYSJLn0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=d8WGCaNd; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="A+XqGTl7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB942C4CEED;
-	Mon, 11 Aug 2025 11:20:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1754911250;
-	bh=pBbxrF/v4p+dPGARecY4kudNE5BRKDJf4leCspsoL70=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=A+XqGTl7tBrIfAFiVBnLA1HwIWXtrucrrkz2iFzHTo+6GWeFwdOzWsZUC4qU2ac+t
-	 hu6Sf+sJsRlyUZS7E4dP3zQ3joNEM6z2FROM49wTE0VB1e4dxMkvmnblX4PiUeJ+Ip
-	 U+Bw7B1upueQcdILjC/mAoZ/05Gur1IoHIsdUjts=
-Date: Mon, 11 Aug 2025 13:20:47 +0200
-From: Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-To: Markus Elfring <Markus.Elfring@web.de>
-Cc: Shivani Agarwal <shivani.agarwal@broadcom.com>,
-	bcm-kernel-feedback-list@broadcom.com, linux-scsi@vger.kernel.org,
-	Sasha Levin <sashal@kernel.org>, Viswas G <Viswas.G@microchip.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Ajish Koshy <Ajish.Koshy@microchip.com>,
-	Jack Wang <jinpu.wang@ionos.com>, stable@vger.kernel.org,
-	LKML <linux-kernel@vger.kernel.org>,
-	Ajay Kaher <ajay.kaher@broadcom.com>,
-	Alexey Makhalov <alexey.makhalov@broadcom.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	James Bottomley <James.Bottomley@hansenpartnership.com>,
-	Tapas Kundu <tapas.kundu@broadcom.com>
-Subject: Re: [PATCH v5.10] scsi: pm80xx: Fix memory leak during rmmod
-Message-ID: <2025081141-voltage-tribesman-350d@gregkh>
-References: <20250811052035.145021-1-shivani.agarwal@broadcom.com>
- <7c7aedbf-389d-4e5a-83d0-33c51cda1d8a@web.de>
- <CANTE3ihiPx2GZDcUWcO-YR8h-tNrsCtJ=jH7Kzd08Y8qDxZk9A@mail.gmail.com>
- <7010c6e0-009c-49d7-9621-b20ff5122602@web.de>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="d8WGCaNd"
+X-UUID: 1abda6f476b511f0b33aeb1e7f16c2b6-20250811
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=zE7VaC4MONDwK4PE8r0v7fr0w4FR+FHjUHLbyoOF2zs=;
+	b=d8WGCaNdZGKemkIrv6UWaJNogDLixsyW5SdiS5uRWCoH74PUhHpLd6WwUcFh8/PGrpGDpcW05z2m/dkMXleLXQzw4MFdfr0oWLeAX5tWDn6vu9QAxHjPbUWWWmq0oZquflX7opbhdIhlRVNSa1t0S7Kcp78AjwDhTOeQxjNjLJU=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.3,REQID:834df459-6e03-409a-b89e-d97a5160a2d5,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:f1326cf,CLOUDID:7ea549ce-1ac4-40cd-97d9-e8f32bab97d5,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:-5,Content:0|15|50,EDM:-3,IP:
+	nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,L
+	ES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 3,DMD|SSN|SDN
+X-CID-BAS: 3,DMD|SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 1abda6f476b511f0b33aeb1e7f16c2b6-20250811
+Received: from mtkmbs09n1.mediatek.inc [(172.21.101.35)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 1748575200; Mon, 11 Aug 2025 21:14:25 +0800
+Received: from mtkmbs13n2.mediatek.inc (172.21.101.108) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.39; Mon, 11 Aug 2025 21:14:24 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Mon, 11 Aug 2025 21:14:24 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
+	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
+Subject: [PATCH v1 00/10] ufs: host: mediatek: Provide features and fixes in MediaTek platforms
+Date: Mon, 11 Aug 2025 21:11:16 +0800
+Message-ID: <20250811131423.3444014-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <7010c6e0-009c-49d7-9621-b20ff5122602@web.de>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Mon, Aug 11, 2025 at 12:50:24PM +0200, Markus Elfring wrote:
-> >> May curly brackets be omitted here?
-> >> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Documentation/process/coding-style.rst?h=v6.16#n197
-> > 
-> > Thanks, Markus. I agree with you and have no objection. However, for
-> > the stable branches, we usually keep the patches unchanged.
-> 
-> I am unsure how many source code adjustments would be supported
-> also according to coding style concerns.
-> 
-> 
-> > I think it would be good to remove these curly braces in the Linux
-> > master branch as well. Should I go ahead and submit a patch for the
-> > master branch too?
-> 
-> Corresponding refinements would be nice.
-> https://elixir.bootlin.com/linux/v6.16/source/drivers/scsi/pm8001/pm8001_init.c#L1311-L1316
+From: Peter Wang <peter.wang@mediatek.com>
 
+This series fixes some defects and provide features in MediaTek UFS drivers.
 
-Hi,
+Peter Wang (8):
+  ufs: host: mediatek: Simplify variable usage
+  ufs: host: mediatek: Fix auto-hibern8 timer configuration
+  ufs: host: mediatek: Add debug information for Auto-Hibern8
+  ufs: host: mediatek: Fine-tune clock scaling
+  ufs: host: mediatek: Fix PWM mode switch issue
+  ufs: host: mediatek: Optimize power mode change handling
+  ufs: host: mediatek: Fix UniPro setting for MT6989
+  ufs: host: mediatek: Change reset sequence for improved stability
 
-This is the semi-friendly patch-bot of Greg Kroah-Hartman.
+Alice Chao (2):
+  ufs: host: mediatek: Assign power mode userdata before FASTAUTO mode
+    change
+  ufs: host: mediatek: Fix invalid access in vccqx handling
 
-Markus, you seem to have sent a nonsensical or otherwise pointless
-review comment to a patch submission on a Linux kernel developer mailing
-list.  I strongly suggest that you not do this anymore.  Please do not
-bother developers who are actively working to produce patches and
-features with comments that, in the end, are a waste of time.
+ drivers/ufs/host/ufs-mediatek.c | 185 +++++++++++++++++++++++++++-----
+ 1 file changed, 156 insertions(+), 29 deletions(-)
 
-Patch submitter, please ignore Markus's suggestion; you do not need to
-follow it at all.  The person/bot/AI that sent it is being ignored by
-almost all Linux kernel maintainers for having a persistent pattern of
-behavior of producing distracting and pointless commentary, and
-inability to adapt to feedback.  Please feel free to also ignore emails
-from them.
+-- 
+2.45.2
 
-thanks,
-
-greg k-h's patch email bot
