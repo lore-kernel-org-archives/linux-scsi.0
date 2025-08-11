@@ -1,116 +1,117 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 497F3253B42;
-	Mon, 11 Aug 2025 14:44:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65F7C2DF3F2;
+	Mon, 11 Aug 2025 15:02:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754923445; cv=none; b=JTqJ9DnsgXrX17F9CF5FclUWJicLGTSeQ1VsZ/brgsZWpFuR8rm2WIt3iOGi29lH0m6m719EXMbrBwWGzl1VMxaRS2g1IAxkxsX41u8Pp+pxDvgaqZA7O5U9N8UUucswPdpck2bIfWnYIzq5NNaMnL1pqQGiZP56sbmQxFfv0eg=
+	t=1754924549; cv=none; b=lovPsJXW30LMxcM+DNktDYYmRu+lp+E3qC763zraIAaN2TI7xkf3Zmp/85QQD3v3bFbigGA5r4cOc44h9liqlsbfzAvQsz9856NskA+12YU/TeoTyHPAqe9SUFdtJiGKWlbrRC6RUyh0ywNGjTUeWHyWQ/CSEut7KAeH1h7fnZ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754923445; c=relaxed/simple;
-	bh=W+VGi/n0WjUYmmcqvfG/6Z/pBx9Gsr2/SuoZYs+30pY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=J7uVvrl8VaJlsmN24JvuhNQtSsyYOLUaelpR+pcs2YJiNzgaPoYckR59l1gYTTflWnAz3m9oyArrEcDnNi5Mz0oKUW0++oVTcQZRQltkEk4ik/c1duKW8hyVuMMzY0GdZhTarMwvxb6CVz6o4QNx7lt4RMxf14UUsV9f4wsItlw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DUeRpwiC; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1754924549; c=relaxed/simple;
+	bh=jJoLAVezPU1buWN29GzwKEGln1MoMx0OWBXK+R1plKQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fhTg/fsu/g1sky92JmDZ8dITsMzHYDXs9XFGNCDnNfMHH23mQHqY6YdkPwOF+LI7+esoTz+wYevMISFZF34TsJTASq1LDIwTazf1BHB5RJSTP3A0ymmDHhLDIbvrk5pDX2o7TjXVpDPApvJOHnNhbHJsP5AdwyuDDGkQ4o77JqQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hYHFpV0R; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DUeRpwiC"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C8A0EC4CEED;
-	Mon, 11 Aug 2025 14:44:00 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hYHFpV0R"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 35B9DC4CEF5;
+	Mon, 11 Aug 2025 15:02:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754923444;
-	bh=W+VGi/n0WjUYmmcqvfG/6Z/pBx9Gsr2/SuoZYs+30pY=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=DUeRpwiCnlg0tQcfu/x8U9zCUrldW9eAUOuFGz7Swfh1oURjiQGooOiGic+dsDRFC
-	 5OGHlF+bKbszLlFGzZOuu3EHgR07m24Hfr0Wv30xLJb3C2d+vluz+Ft34E/kqF4YBv
-	 etvu16q7VKqXOMBZ2dR9eDSu6TWnLXhF8SVcnOkUDpowEFGSy2cHrWp9tXLP31v9Ju
-	 fvbqx7FHIfSB55Sd8/n5oqryL8in4e8grePfCyKrcvSmXF3x7j1siqmVZYftpC7a6z
-	 cRLlNgpe4shTl8hlhvfCUrhYNo3gyi5FVt7UK9xnApvAScG92jvmRhnM8n7Ax4XWAb
-	 4aaDfG6XUZORg==
-Message-ID: <67aedb2a-3ccc-4440-b2ff-b3dbedf5e25c@kernel.org>
-Date: Mon, 11 Aug 2025 16:43:59 +0200
+	s=k20201202; t=1754924549;
+	bh=jJoLAVezPU1buWN29GzwKEGln1MoMx0OWBXK+R1plKQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=hYHFpV0RvSYMCnQn8ztGXzou+dfcbniPNOGJxZFnBhU0Qc93aVjnInBNDqkkw6KXl
+	 4e9IYdVCGcclZcx9zy5rtKM/3tTjseBuLGesNUCNsPP0XH2a3ICuMfzHXEBlT49rC5
+	 48l1skQHcACrb0kmTKvsEDIHF+F46CBqVXBSk7K52RDza78b1C6EzphwvIu8FeDsf+
+	 AMDm2/DPIMnmKd6rO5gFoRfxmqiZBx1nmefXjYV150TQi4RNXtmwKcn624CsUtm86v
+	 4TsQRcSxSmxhJG0BNh9176dBY1QuVBRGTFM9/eM4oWGkN6SBm+Lkk6knYZ5j3SD4Ug
+	 wyCH2mbMEKL+g==
+Date: Mon, 11 Aug 2025 10:02:26 -0500
+From: Bjorn Andersson <andersson@kernel.org>
+To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+Cc: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com, 
+	bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	konradybcio@kernel.org, agross@kernel.org, James.Bottomley@hansenpartnership.com, 
+	martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2 1/4] dt-bindings: ufs: qcom: Document MCQ register
+ space for UFS
+Message-ID: <gcjyrmfxv7s2j7zkm5gcfn7bmuihq4lrm7cwjgpax6hnok7pxm@wanm5thogmzd>
+References: <20250811143139.16422-1-quic_rdwivedi@quicinc.com>
+ <20250811143139.16422-2-quic_rdwivedi@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2 2/4] arm64: dts: qcom: sm8650: Enable MCQ support for
- UFS controller
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, mani@kernel.org,
- alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
- robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
- andersson@kernel.org, konradybcio@kernel.org, agross@kernel.org,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250811143139.16422-1-quic_rdwivedi@quicinc.com>
- <20250811143139.16422-3-quic_rdwivedi@quicinc.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- xsFNBFVDQq4BEAC6KeLOfFsAvFMBsrCrJ2bCalhPv5+KQF2PS2+iwZI8BpRZoV+Bd5kWvN79
- cFgcqTTuNHjAvxtUG8pQgGTHAObYs6xeYJtjUH0ZX6ndJ33FJYf5V3yXqqjcZ30FgHzJCFUu
- JMp7PSyMPzpUXfU12yfcRYVEMQrmplNZssmYhiTeVicuOOypWugZKVLGNm0IweVCaZ/DJDIH
- gNbpvVwjcKYrx85m9cBVEBUGaQP6AT7qlVCkrf50v8bofSIyVa2xmubbAwwFA1oxoOusjPIE
- J3iadrwpFvsZjF5uHAKS+7wHLoW9hVzOnLbX6ajk5Hf8Pb1m+VH/E8bPBNNYKkfTtypTDUCj
- NYcd27tjnXfG+SDs/EXNUAIRefCyvaRG7oRYF3Ec+2RgQDRnmmjCjoQNbFrJvJkFHlPeHaeS
- BosGY+XWKydnmsfY7SSnjAzLUGAFhLd/XDVpb1Een2XucPpKvt9ORF+48gy12FA5GduRLhQU
- vK4tU7ojoem/G23PcowM1CwPurC8sAVsQb9KmwTGh7rVz3ks3w/zfGBy3+WmLg++C2Wct6nM
- Pd8/6CBVjEWqD06/RjI2AnjIq5fSEH/BIfXXfC68nMp9BZoy3So4ZsbOlBmtAPvMYX6U8VwD
- TNeBxJu5Ex0Izf1NV9CzC3nNaFUYOY8KfN01X5SExAoVTr09ewARAQABzSVLcnp5c3p0b2Yg
- S296bG93c2tpIDxrcnprQGtlcm5lbC5vcmc+wsGVBBMBCgA/AhsDBgsJCAcDAgYVCAIJCgsE
- FgIDAQIeAQIXgBYhBJvQfg4MUfjVlne3VBuTQ307QWKbBQJoF1BKBQkWlnSaAAoJEBuTQ307
- QWKbHukP/3t4tRp/bvDnxJfmNdNVn0gv9ep3L39IntPalBFwRKytqeQkzAju0whYWg+R/rwp
- +r2I1Fzwt7+PTjsnMFlh1AZxGDmP5MFkzVsMnfX1lGiXhYSOMP97XL6R1QSXxaWOpGNCDaUl
- ajorB0lJDcC0q3xAdwzRConxYVhlgmTrRiD8oLlSCD5baEAt5Zw17UTNDnDGmZQKR0fqLpWy
- 786Lm5OScb7DjEgcA2PRm17st4UQ1kF0rQHokVaotxRM74PPDB8bCsunlghJl1DRK9s1aSuN
- hL1Pv9VD8b4dFNvCo7b4hfAANPU67W40AaaGZ3UAfmw+1MYyo4QuAZGKzaP2ukbdCD/DYnqi
- tJy88XqWtyb4UQWKNoQqGKzlYXdKsldYqrLHGoMvj1UN9XcRtXHST/IaLn72o7j7/h/Ac5EL
- 8lSUVIG4TYn59NyxxAXa07Wi6zjVL1U11fTnFmE29ALYQEXKBI3KUO1A3p4sQWzU7uRmbuxn
- naUmm8RbpMcOfa9JjlXCLmQ5IP7Rr5tYZUCkZz08LIfF8UMXwH7OOEX87Y++EkAB+pzKZNNd
- hwoXulTAgjSy+OiaLtuCys9VdXLZ3Zy314azaCU3BoWgaMV0eAW/+gprWMXQM1lrlzvwlD/k
- whyy9wGf0AEPpLssLVt9VVxNjo6BIkt6d1pMg6mHsUEVzsFNBFVDXDQBEADNkrQYSREUL4D3
- Gws46JEoZ9HEQOKtkrwjrzlw/tCmqVzERRPvz2Xg8n7+HRCrgqnodIYoUh5WsU84N03KlLue
- MNsWLJBvBaubYN4JuJIdRr4dS4oyF1/fQAQPHh8Thpiz0SAZFx6iWKB7Qrz3OrGCjTPcW6ei
- OMheesVS5hxietSmlin+SilmIAPZHx7n242u6kdHOh+/SyLImKn/dh9RzatVpUKbv34eP1wA
- GldWsRxbf3WP9pFNObSzI/Bo3kA89Xx2rO2roC+Gq4LeHvo7ptzcLcrqaHUAcZ3CgFG88CnA
- 6z6lBZn0WyewEcPOPdcUB2Q7D/NiUY+HDiV99rAYPJztjeTrBSTnHeSBPb+qn5ZZGQwIdUW9
- YegxWKvXXHTwB5eMzo/RB6vffwqcnHDoe0q7VgzRRZJwpi6aMIXLfeWZ5Wrwaw2zldFuO4Dt
- 91pFzBSOIpeMtfgb/Pfe/a1WJ/GgaIRIBE+NUqckM+3zJHGmVPqJP/h2Iwv6nw8U+7Yyl6gU
- BLHFTg2hYnLFJI4Xjg+AX1hHFVKmvl3VBHIsBv0oDcsQWXqY+NaFahT0lRPjYtrTa1v3tem/
- JoFzZ4B0p27K+qQCF2R96hVvuEyjzBmdq2esyE6zIqftdo4MOJho8uctOiWbwNNq2U9pPWmu
- 4vXVFBYIGmpyNPYzRm0QPwARAQABwsF8BBgBCgAmAhsMFiEEm9B+DgxR+NWWd7dUG5NDfTtB
- YpsFAmgXUF8FCRaWWyoACgkQG5NDfTtBYptO0w//dlXJs5/42hAXKsk+PDg3wyEFb4NpyA1v
- qmx7SfAzk9Hf6lWwU1O6AbqNMbh6PjEwadKUk1m04S7EjdQLsj/MBSgoQtCT3MDmWUUtHZd5
- RYIPnPq3WVB47GtuO6/u375tsxhtf7vt95QSYJwCB+ZUgo4T+FV4hquZ4AsRkbgavtIzQisg
- Dgv76tnEv3YHV8Jn9mi/Bu0FURF+5kpdMfgo1sq6RXNQ//TVf8yFgRtTUdXxW/qHjlYURrm2
- H4kutobVEIxiyu6m05q3e9eZB/TaMMNVORx+1kM3j7f0rwtEYUFzY1ygQfpcMDPl7pRYoJjB
- dSsm0ZuzDaCwaxg2t8hqQJBzJCezTOIkjHUsWAK+tEbU4Z4SnNpCyM3fBqsgYdJxjyC/tWVT
- AQ18NRLtPw7tK1rdcwCl0GFQHwSwk5pDpz1NH40e6lU+NcXSeiqkDDRkHlftKPV/dV+lQXiu
- jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
- zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
- XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20250811143139.16422-3-quic_rdwivedi@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250811143139.16422-2-quic_rdwivedi@quicinc.com>
 
-On 11/08/2025 16:31, Ram Kumar Dwivedi wrote:
-> Enable Multi-Circular Queue (MCQ) support for the UFS host controller
-> on the Qualcomm SM8650 platform by updating the device tree node. This
-> includes adding new register region for MCQ and specifying the MSI parent
-> required for MCQ operation.
+On Mon, Aug 11, 2025 at 08:01:36PM +0530, Ram Kumar Dwivedi wrote:
+> Document Multi-Circular Queue (MCQ) register space for
+> Qualcomm UFS controllers.
 > 
 > Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
 > ---
->  arch/arm64/boot/dts/qcom/sm8650.dtsi | 7 ++++++-
->  1 file changed, 6 insertions(+), 1 deletion(-)
+>  .../devicetree/bindings/ufs/qcom,ufs.yaml        | 16 ++++++++++------
+>  1 file changed, 10 insertions(+), 6 deletions(-)
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> index 6c6043d9809e..daf681b0e23b 100644
+> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+> @@ -89,9 +89,13 @@ properties:
+>      maxItems: 2
+>  
+>    reg-names:
+> -    items:
+> -      - const: std
+> -      - const: ice
+> +    oneOf:
+> +      - items:
+> +          - const: std
+> +          - const: ice
+> +      - items:
+> +          - const: ufs_mem
+> +          - const: mcq
 
-Way you organize your patchset is confusing. Why DTS is in the middle?
-It suggests dependency and this would be strong objection from me.
+So you can either "std" and "ice", or "ufs_mem" and "mcq".
 
-Please read carefully writing bindings, submitting patches in DT and SoC
-maintainer profile.
+Does this imply that "std" changes name to "ufs_mem"? Why?
+Is MCQ incompatible with ICE?
 
-Best regards,
-Krzysztof
+
+Please use the commit message to document why this is.
+
+Regards,
+Bjorn
+
+>  
+>    required-opps:
+>      maxItems: 1
+> @@ -177,9 +181,9 @@ allOf:
+>              - const: rx_lane1_sync_clk
+>          reg:
+>            minItems: 1
+> -          maxItems: 1
+> +          maxItems: 2
+>          reg-names:
+> -          maxItems: 1
+> +          maxItems: 2
+>  
+>    - if:
+>        properties:
+> @@ -280,7 +284,7 @@ allOf:
+>      then:
+>        properties:
+>          reg:
+> -          maxItems: 1
+> +          maxItems: 2
+>          clocks:
+>            minItems: 7
+>            maxItems: 8
+> -- 
+> 2.50.1
+> 
