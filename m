@@ -1,146 +1,78 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5368427450;
-	Mon, 11 Aug 2025 15:21:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C072129BD81
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 15:47:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754925679; cv=none; b=OezQvZK9LS+yJUQFiLs797ZIFxiZDtWcTecNO8dmrcQHHLRFuVLnwxy1cEQUc++lWx03WX6h4YZVul6X5ZKKQIyuULO+y/B2Cms7KjZ5h7x6d+8EScrNCvhm/tsLcmpwOLuvkawdTSUGgBHggBBUMLUGf3Os2Z1+M21o7+CmTiY=
+	t=1754927252; cv=none; b=iNS4YLfKwKDEILvnzO7G0JBByqujQLXKLBbr0ya40uz6/kcFlxgcpViRxmbAf6Pstc1dTmK5/jXBd3p4JyLlkZQ7WcDJNNTmau0K8AYyz1hNCKxmOyBxZHEcPcK/Lt0wIgS25NW+YbwQUNEVQBW7bM/eCLpkmGgXa8m6LLVNVv4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754925679; c=relaxed/simple;
-	bh=g+RQRkkszfbdSg7213zDy1B4rHgKQs0ei2wUNx1J994=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=k/rxRsHMNwoOAHT9ZP+q23iK5k1QulQiq3dLejzhamT4IVbwiZlYOF5gqWOy+R7ts6QfbUZXZbDSyFZQrDgueMJukh/pIbatsgtugqGFplxRHppc3Y8AZuZZUMA1SzZlFMxhzWfAVyahtHD5g9fWFjH5AEMF69THL9FK7m74WI4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sfFIOhQ6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1754927252; c=relaxed/simple;
+	bh=ZR5EojHbs1ISO1Nf4V+cFngL4XA/cjmJZ7cUF5MTYIU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=V/t6V+hnzTf6Wz47NTOqN5T/gdlupiewlmlo75MWOeWfj86QaHYZvaJrVvaq2wqMFru6wQJRbIXvDREva2XVX3c9WG+Gm7h4Rucm2o+Vtglu87OaVyhP6gNGxkisU3haioLA/Zzf5vHOe6FTMqDRnwsepRMKdv1JQtYRAE90nH4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3QEfdfg6; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sfFIOhQ6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8F8E3C4CEED;
-	Mon, 11 Aug 2025 15:21:18 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1754925679;
-	bh=g+RQRkkszfbdSg7213zDy1B4rHgKQs0ei2wUNx1J994=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=sfFIOhQ68/RAxqoFcR1zZbNQku8UP72P9pjySP0IjiVSnY7MKFBUBugXgxgc3Fz8/
-	 0UYpCldrrlKvDpeEkYvhZIow5V509Quwx3W7IJk1ax85DZD62cisbiXNi/ci+5/uDi
-	 XmPO1yx18aALQeyBbAI160eFIuAR+1CtJdUlKKNSs6BBEcPgG2L5gAwJ1Py65vKquo
-	 DDznEZZaSeWZ3jN7MpUbh7XjbckgobZHx5Vr6EieDyM7l82HCtRMdi85lPm6vkpEDK
-	 IX0OT5CyrVBdgctsCCL3JnPZBhtXcV6PaEj+olR8qxixrx/K70Cf8kVuZnE7lnK+Bh
-	 CH6jZQjrRbgFw==
-Date: Mon, 11 Aug 2025 17:21:12 +0200
-From: Greg Kroah-Hartman <gregkh@kernel.org>
-To: Li Lingfeng <lilingfeng3@huawei.com>
-Cc: cve@kernel.org, linux-kernel@vger.kernel.org,
-	linux-cve-announce@vger.kernel.org, lduncan@suse.com,
-	cleech@redhat.com, Mike Christie <michael.christie@oracle.com>,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	open-iscsi@googlegroups.com, linux-scsi@vger.kernel.org,
-	yangerkun <yangerkun@huawei.com>,
-	"zhangyi (F)" <yi.zhang@huawei.com>, Hou Tao <houtao1@huawei.com>,
-	"yukuai (C)" <yukuai3@huawei.com>,
-	"chengzhihao1@huawei.com" <chengzhihao1@huawei.com>,
-	liumingrui@huawei.com
-Subject: Re: CVE-2022-50031: scsi: iscsi: Fix HW conn removal use after free
-Message-ID: <2025081122-supernova-ointment-e379@gregkh>
-References: <2025061839-CVE-2022-50031-f2bc@gregkh>
- <563d1da8-abd8-48e6-9aab-5a4f13859995@huawei.com>
- <2025070318-slinging-germproof-7da9@gregkh>
- <1b283ae6-d972-4b85-bd4c-bfbb58492914@huawei.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3QEfdfg6"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c0zXx4fYFzlgqVH;
+	Mon, 11 Aug 2025 15:47:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:mime-version
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1754927248; x=1757519249; bh=cWH4z
+	6GzjJhSEAsP1+k76iVtlCZMMn6sc2iz9B5A0ow=; b=3QEfdfg6dj16Yu6f5XQWE
+	bfka8cog3x+R4U2oMZ/WQGHFVNuWoLG/HIYoGmLnqxZKncZ9yUdH6/Ls/dnJIFRO
+	rMUfrSuVADXVMi3IuKHNLGUCa2CK8lt24ucmhZNqT/v1VQdfiXgewddUeWQmub0Z
+	qmsB7oBHaM0dO1+OuL5+pBHK0WeOeRH5HM5oLQCHUhBYHa3O9gCjRiEcfNkmZSNl
+	kRdx15d9P8HPouGMWJ+YrrC0vRNs/GfzjCuO3rposw+SPVkCvlOqr5UzMDs1EtYc
+	yJ/Mlx8dJesLdMpYkxrWt1mK5m2r1XZwHOIL0wKB6/pfCgm/S03SJ3p5Toc7ag4Q
+	Q==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id OmfCal2rmDXj; Mon, 11 Aug 2025 15:47:28 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c0zXt5pNHzlgqV2;
+	Mon, 11 Aug 2025 15:47:25 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH 0/4] UFS driver bug fixes
+Date: Mon, 11 Aug 2025 08:46:54 -0700
+Message-ID: <20250811154711.394297-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.50.1.703.g449372360f-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <1b283ae6-d972-4b85-bd4c-bfbb58492914@huawei.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 07, 2025 at 09:35:25AM +0800, Li Lingfeng wrote:
-> Hi, Greg
-> 
-> 在 2025/7/3 22:33, Greg Kroah-Hartman 写道:
-> > On Thu, Jul 03, 2025 at 10:16:58PM +0800, Li Lingfeng wrote:
-> > > Hi, Greg
-> > > 
-> > > 在 2025/6/18 19:01, Greg Kroah-Hartman 写道:
-> > > > From: Greg Kroah-Hartman <gregkh@kernel.org>
-> > > > 
-> > > > Description
-> > > > ===========
-> > > > 
-> > > > In the Linux kernel, the following vulnerability has been resolved:
-> > > > 
-> > > > scsi: iscsi: Fix HW conn removal use after free
-> > > > 
-> > > > If qla4xxx doesn't remove the connection before the session, the iSCSI
-> > > > class tries to remove the connection for it. We were doing a
-> > > > iscsi_put_conn() in the iter function which is not needed and will result
-> > > > in a use after free because iscsi_remove_conn() will free the connection.
-> > > > 
-> > > > The Linux kernel CVE team has assigned CVE-2022-50031 to this issue.
-> > > > 
-> > > > 
-> > > > Affected and fixed versions
-> > > > ===========================
-> > > > 
-> > > > 	Fixed in 5.19.4 with commit 0483ffc02ebb953124c592485a5c48ac4ffae5fe
-> > > > 	Fixed in 6.0 with commit c577ab7ba5f3bf9062db8a58b6e89d4fe370447e
-> > > > 
-> > > > Please see https://www.kernel.org for a full list of currently supported
-> > > > kernel versions by the kernel community.
-> > > > 
-> > > > Unaffected versions might change over time as fixes are backported to
-> > > > older supported kernel versions.  The official CVE entry at
-> > > > 	https://cve.org/CVERecord/?id=CVE-2022-50031
-> > > > will be updated if fixes are backported, please check that for the most
-> > > > up to date information about this issue.
-> > > > 
-> > > > 
-> > > > Affected files
-> > > > ==============
-> > > > 
-> > > > The file(s) affected by this issue are:
-> > > > 	drivers/scsi/scsi_transport_iscsi.c
-> > > > 
-> > > > 
-> > > > Mitigation
-> > > > ==========
-> > > > 
-> > > > The Linux kernel CVE team recommends that you update to the latest
-> > > > stable kernel version for this, and many other bugfixes.  Individual
-> > > > changes are never tested alone, but rather are part of a larger kernel
-> > > > release.  Cherry-picking individual commits is not recommended or
-> > > > supported by the Linux kernel community at all.  If however, updating to
-> > > > the latest release is impossible, the individual changes to resolve this
-> > > > issue can be found at these commits:
-> > > > 	https://git.kernel.org/stable/c/0483ffc02ebb953124c592485a5c48ac4ffae5fe
-> > > > 	https://git.kernel.org/stable/c/c577ab7ba5f3bf9062db8a58b6e89d4fe370447e
-> > > > 
-> > > Based on the details described in the linked discussion, I have concerns
-> > > that this patch may not fully resolve the Use-After-Free vulnerability.
-> > > Instead, it appears the changes could potentially introduce memory leak
-> > > issues.
-> > Great, then that is a different type of issue, and when fixed, would get
-> > a different CVE assigned to it.
-> > 
-> > > Given these concerns, I'd recommend ​rejecting this CVE until we can
-> > > thoroughly investigate and validate the complete solution.
-> > This fixes a known issue, why would it be rejected as such?  The only
-> > way we would reject this is if the upstream commit is reverted because
-> > it was deemed to not be correct at all.  If you feel this is the case,
-> > please work to get that commit reverted there first.
-> Since it has been reverted by commit 7bdc68921481 ("scsi: Revert "scsi:
-> iscsi: Fix HW conn removal use after free""), can this CVE be rejected
-> now?
-> 
-> Links:
-> https://lore.kernel.org/all/20250715073926.3529456-1-lilingfeng3@huawei.com/
+Hi Martin,
 
-Yes it can, it just got caught by my "find_reverts" script which I run
-every so often:
-	CVE-2022-50031 with sha c577ab7ba5f3bf9062db8a58b6e89d4fe370447e has been reverted, check to see if this is still a valid CVE
+This patch series includes three bug fixes and one rename patch for the U=
+FS
+driver. Please consider this patch series for the next merge window.
 
-Will go reject it now, thanks!
+Thanks,
 
-greg k-h
+Bart.
+
+Bart Van Assche (4):
+  ufs: core: Fix IRQ lock inversion for the SCSI host lock
+  ufs: core: Remove WARN_ON_ONCE() call from ufshcd_uic_cmd_compl()
+  ufs: core: Fix the return value documentation
+  ufs: core: Rename ufshcd_wait_for_doorbell_clr()
+
+ drivers/ufs/core/ufshcd.c | 76 ++++++++++++++++++++++-----------------
+ 1 file changed, 44 insertions(+), 32 deletions(-)
+
