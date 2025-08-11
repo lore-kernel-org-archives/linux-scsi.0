@@ -1,58 +1,57 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E69822D47E2
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 17:40:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40E0F311C16
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 17:41:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754934060; cv=none; b=uiLo/6fk4G4+rtu0suMlgCt1J2zClG5BceJnJLs1AhnEMrS1IUfBr517hruYwrFpUneswRDDqr5vHHUkkiq+Do8AXmC9/oKteiA+hYnDNBUmj5iKCqOH2CMKSiQrqPt7Yttoo0B3OWGxzFm+P03vSxD4riFfOr7D/cZApa10bAM=
+	t=1754934068; cv=none; b=ohGRIl0JKhOVszDQITfA6wknTkIdyUE6WtKnBMIoOYe8aUQ4yLw3/fWbTWqodCNg36aonKgN280nEmlEd4mZ7yLL5mS4wz43LFBwAyB+soWG7h6GLhKL1PwWgqoPUV7/xlB4mtnSEYXgS7JrV21krcqj6t1V4QyOinTrhyA4R78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754934060; c=relaxed/simple;
-	bh=s/qIKboXXIIUS1z34FlUoJSTPErPtn+13uKBRfPzbv8=;
+	s=arc-20240116; t=1754934068; c=relaxed/simple;
+	bh=7OUG1Bij2BI/1BIBGgD755On3SiY8hoUY3TAkbUpmbg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Dud46ozAtwFi7o0BG3TRaWuGnnctVVdoax5gb63F23e89R7q6MNpBd76MSgsNkSUY9AHeLYbC0F0j9MrylMkrMdU2CsFgUaeo8xZ0bmsN9hutz1LU+jFWSTp+IF2eFojtiei4UuMC4FAh+g7P0qOU2gXF3Uoa1EvhLVqtK8FJd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3B5oyqmL; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=Za+g3uPWuijjg5RzfIlObcjdVZfCpR2ty+BSNJNMprXM3PzYAmh8yUJ+jOBG+MNKMnQ3e4ZH25j/ofrtnti7UDN41v+H0Q+CwurherHgY3dZ2wWp5kDEtb3KHZD7NVOoPZj8nsoqSV5Zzi4itpAj9hjeR42EU4WgbNSE4DjnjCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=rw/sBeSL; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3B5oyqmL"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="rw/sBeSL"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c123t1kYCzlgqTr;
-	Mon, 11 Aug 2025 17:40:58 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c12423gmszlgqTr;
+	Mon, 11 Aug 2025 17:41:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1754934056; x=1757526057; bh=5l9h7
-	MTaxGQ351s7hkcn3XN6G58/QJdB/j/lcgaAxp8=; b=3B5oyqmLwjxIV6DNaPPKq
-	Bl3vvqSciDtBIM0QBI+VHStRTUPncC5f7OHEMJvzWjOEKjWjsVJUCKXgOuXbgQfH
-	KIEWJZhr2cYKybvFXSNRyHDXPeA7f5JdkT3KP0+o4IYISNlywtA9avdKfNvxj6vQ
-	XjnWYsFHFPwM4mzimTQ0FuhYhBBrj2Ws2FpddrkbqMtgj0S/MTJlIgT8Qe6lTbP5
-	TEuboXkSTQ1cuaLN/6xhbhPEpiRsonOO/1QDzmIVXaWM8kFjH6GlB53wUN2Q/q2x
-	A2HvOD87ruE6kYOTs4/JwFtW4YLzqoJN5fG+vb8BtB482aNjdnvaG+zyEj9tWN9Q
-	Q==
+	:received:received; s=mr01; t=1754934065; x=1757526066; bh=6ULWe
+	PwbImgpb6WAbSrl7hgeYLgCqBTYaHFHNWRGkLQ=; b=rw/sBeSLmLJ0kP6/4Xgvh
+	ZcHRKF+T8AScVAV9+sEfAAllouuypEESJfUsZvAPtcRirEtUSv+rjrETuymsts1B
+	lvHO/kWGfRxVZBEPYRriHhmACeGWfzf5Nmht1XpIikG3ubNHfoTo2QWTS7bXkEpw
+	BEHbpewpNrGKB6s74kgTP1CnDhcwNEdhLuST6V4xbjSV8nAgQTG39DeKvf9EUAun
+	vH5C5lkFr6ry1x2K0maIXirrKxy7W8+28aIl5lEWjpwgmTrTMwIfM2c8ut+uyZlB
+	JlIntU34SiKqi3SZXK2kAkKqTPUbpzi5JCw1XgW2s1yj//uc7q6w/5MhY7hXomef
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id k4YlqC4QLzrr; Mon, 11 Aug 2025 17:40:56 +0000 (UTC)
+ id JvPJMgqrjNBY; Mon, 11 Aug 2025 17:41:05 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c123l4BXZzlgqTq;
-	Mon, 11 Aug 2025 17:40:50 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c123w5KcvzlgqTq;
+	Mon, 11 Aug 2025 17:40:59 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Peter Wang <peter.wang@mediatek.com>,
-	Chenyuan Yang <chenyuan0y@gmail.com>,
-	"ping.gao" <ping.gao@samsung.com>,
-	Al Viro <viro@zeniv.linux.org.uk>
-Subject: [PATCH v2 23/30] ufs: core: Use hba->reserved_slot
-Date: Mon, 11 Aug 2025 10:34:35 -0700
-Message-ID: <20250811173634.514041-24-bvanassche@acm.org>
+	Avri Altman <avri.altman@sandisk.com>,
+	Bean Huo <beanhuo@micron.com>
+Subject: [PATCH v2 24/30] ufs: core: Make the reserved slot a reserved request
+Date: Mon, 11 Aug 2025 10:34:36 -0700
+Message-ID: <20250811173634.514041-25-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.rc0.155.g4a0f42376b-goog
 In-Reply-To: <20250811173634.514041-1-bvanassche@acm.org>
 References: <20250811173634.514041-1-bvanassche@acm.org>
@@ -64,25 +63,50 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Use hba->reserved_slot instead of open-coding it. This patch prepares
-for changing the value of hba->reserved_slot.
+Instead of letting the SCSI core allocate hba->nutrs - 1 commands, let
+the SCSI core allocate hba->nutrs commands, set the number of reserved
+tags to 1 and use the reserved tag for device management commands. This
+patch changes the 'reserved slot' from hba->nutrs - 1 into 0 because
+the block layer reserves the smallest tags for reserved commands.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufs-mcq.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 6a1838ced02e..da2da57130c8 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -547,7 +547,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int ta=
-sk_tag)
- 	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
- 		return -ETIMEDOUT;
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index a932f62c5c2c..8014b6ec0e42 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -2466,7 +2466,7 @@ static inline int ufshcd_hba_capabilities(struct uf=
+s_hba *hba)
+ 	hba->nutrs =3D (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) +=
+ 1;
+ 	hba->nutmrs =3D
+ 	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
+-	hba->reserved_slot =3D hba->nutrs - 1;
++	hba->reserved_slot =3D 0;
 =20
--	if (task_tag !=3D hba->nutrs - UFSHCD_NUM_RESERVED) {
-+	if (task_tag !=3D hba->reserved_slot) {
- 		if (!cmd)
- 			return -EINVAL;
- 		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+ 	hba->nortt =3D FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities=
+) + 1;
+=20
+@@ -8912,7 +8912,8 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba, in=
+t ufs_dev_qd)
+ 		goto err;
+=20
+ 	hba->host->can_queue =3D hba->nutrs - UFSHCD_NUM_RESERVED;
+-	hba->reserved_slot =3D hba->nutrs - UFSHCD_NUM_RESERVED;
++	hba->host->nr_reserved_cmds =3D UFSHCD_NUM_RESERVED;
++	hba->reserved_slot =3D 0;
+=20
+ 	return 0;
+ err:
+@@ -10757,6 +10758,7 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
+ *mmio_base, unsigned int irq)
+=20
+ 	host->can_queue =3D hba->nutrs - UFSHCD_NUM_RESERVED;
+ 	host->cmd_per_lun =3D hba->nutrs - UFSHCD_NUM_RESERVED;
++	host->nr_reserved_cmds =3D UFSHCD_NUM_RESERVED;
+ 	host->max_id =3D UFSHCD_MAX_ID;
+ 	host->max_lun =3D UFS_MAX_LUNS;
+ 	host->max_channel =3D UFSHCD_MAX_CHANNEL;
