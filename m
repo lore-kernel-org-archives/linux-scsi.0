@@ -1,139 +1,220 @@
-Received: from mout.web.de (mout.web.de [212.227.15.4])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A2F61FE451;
-	Mon, 11 Aug 2025 08:01:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=212.227.15.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12D4D1E834B;
+	Mon, 11 Aug 2025 08:17:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754899296; cv=none; b=FErWbJxjmNzVaj0N2meUObvzyvzXekXOEhfnv+iIGKO6waeOVn5qW5Xp3wtBcNWGn6Y3VrPgXIsheEbKVLmlKMd0Ty1zHDrGPniDXMFf9/367Rs1Ln78ntIDeJHd9Av74c0RCLQLCu/71QqnIxV8lWgQpjjhsx23hezhqdYqRUo=
+	t=1754900228; cv=none; b=E9ymAyDIZMBxuqTI4mA1y6fTzY+B5fPhS5lIQyxWq+uYsHOx67xNsDqHwdWFw1emJpunFi0PhsAjFXnYj5+ZkuZpoNGnN3RCFQZdbP+3MGIyRBU1r+e6ssL6n0HpFtdG1ULTKa7jfA4I7iY7DCCrdCh3xNzMVk62VD568lirGtc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754899296; c=relaxed/simple;
-	bh=0JyXYXb9KFtCU8BzpWHuC7G+pxNfzDxCizbDh/SkI/o=;
-	h=Message-ID:Date:MIME-Version:To:Cc:References:Subject:From:
-	 In-Reply-To:Content-Type; b=psC3S4j/9KS0eJbWlEDnp2Z+3KHoUVhiMs007vPHhYERaPnsbhAfvg1hO6wPDkht5BgK4ZU6veOcT9QVcyBJpez5oK44J4bmBXVoejthfn8A/LfFubxdHRjApU849hEfBXpng8rgzT2DWkuGQn9yyGPOAIPCyPII4mKBvx3AS0I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de; spf=pass smtp.mailfrom=web.de; dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b=aIw++hJL; arc=none smtp.client-ip=212.227.15.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=web.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=web.de
+	s=arc-20240116; t=1754900228; c=relaxed/simple;
+	bh=yL/qUikanLs+aGEmFjlLt7vxOWxjOZmEwCqPg0afrV4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Kngh4iWH4Bh9MTSzLfmY9k05Jr+jM5Bhe/SGoQEX2opK8FvjK2egKNq6q+2LfeDsgBRmM1Ap1OMCpp1ZNKu10ppuuCKu7VpcaFZvBa7nvYXKKfo5YyTRbcefZ9NVaN271zLt+k9H3W6EpUgrXFTCcTm3BpjFoihyTE3/3iF6oEY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=UI48hWft; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=web.de header.i=markus.elfring@web.de header.b="aIw++hJL"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=web.de;
-	s=s29768273; t=1754899243; x=1755504043; i=markus.elfring@web.de;
-	bh=aKaiW5eywj05zLSL70x4dRdH0RtSj6BDlVRQ1gRnWCM=;
-	h=X-UI-Sender-Class:Message-ID:Date:MIME-Version:To:Cc:References:
-	 Subject:From:In-Reply-To:Content-Type:Content-Transfer-Encoding:
-	 cc:content-transfer-encoding:content-type:date:from:message-id:
-	 mime-version:reply-to:subject:to;
-	b=aIw++hJLAMhEnqTLgo7AK9euO8U59z+wTSwSjju9Cmxi75Hnw9FL1KJ6vqUzU5j7
-	 zbA3+LkSHRrpf5ISuSghOSTiBz8CcJOWLG9Gum9ITbWnmXiDhzLSiCZzv5TknaKNK
-	 94RJKBiYzUbM/AMe41ysb2yhF4AR6DzcMRCO4/FVBs/R8pmai8uVB6gsUAR0pVB5p
-	 Dvc3QlX0m+FoNpZq4w0qd9ghqqXq+wIExp5/DUPvU0ys4mhKlkGhGnXVWnIfefqSW
-	 wTBya+fR8VLuMiqUGaHkBrWmFN8cR5w/lS/z6PfaXN78/7Ro+jhxqY99CoAab2/c8
-	 NETOGxXjjw8iS1JZ/w==
-X-UI-Sender-Class: 814a7b36-bfc1-4dae-8640-3722d8ec6cd6
-Received: from [192.168.178.29] ([94.31.69.213]) by smtp.web.de (mrweb006
- [213.165.67.108]) with ESMTPSA (Nemesis) id 1N3Xjb-1uckOG0U5r-00tZNM; Mon, 11
- Aug 2025 10:00:43 +0200
-Message-ID: <7c7aedbf-389d-4e5a-83d0-33c51cda1d8a@web.de>
-Date: Mon, 11 Aug 2025 10:00:40 +0200
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="UI48hWft"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 15B2AC4CEF6;
+	Mon, 11 Aug 2025 08:17:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1754900227;
+	bh=yL/qUikanLs+aGEmFjlLt7vxOWxjOZmEwCqPg0afrV4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=UI48hWft/oTk2ppV8lEBCRugT2YlIFQQaaS2fdZwl/4hq5z6Al8aeBmZhUQy9qDIV
+	 oWE1/rQxs5lZI20al/Kzhp23oW49q6idQJTpxGMBTJz6bxVwxDba0N81Xq6YiLgOve
+	 HFHnOpUA0dQoZmVuax6F7T2awFOoAkaGaFBvemFcrTUvKLapi1qwuEYZpXNK0FZhai
+	 64kXHx9qwq+kZw41mLJRl0kh85GWcdbNxPa71l8Mc3mDTF3DAEFIQT73x7gFUF2Lft
+	 nFuwfc81MeOtQX7BkBVjapukZkBIik1uIiGroU3msCHO0spiMal7f5Y5tK5v1aQ9kt
+	 QplmBTHv/ExQg==
+Date: Mon, 11 Aug 2025 13:46:55 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Palash Kambar <quic_pkambar@quicinc.com>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	quic_nitirawa@quicinc.com
+Subject: Re: [PATCH v1] ufs: ufs-qcom: Align programming sequence of Shared
+ ICE for UFS controller v5
+Message-ID: <edrf3bobjnknwydzeitfwns7lehgf65p5prcohmc7eexhzoami@ywlamyweunmn>
+References: <20250806063409.21206-1-quic_pkambar@quicinc.com>
+ <ucr4imzntw6ghcvpeioprmva7gxrqnkphjirjppnqgdpq5ghss@y5nwjzzpvluj>
+ <2e655067-cd7e-4584-aa07-998b517ac314@quicinc.com>
+ <pewnau4ltrf2yu3xxdq6rs6xhz45zlo3dt3jnkzhxitmezz2ft@2k7pgpoz5iey>
+ <3601cdce-a269-4d29-bc21-b925fcc499e2@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-To: Shivani Agarwal <shivani.agarwal@broadcom.com>,
- Sasha Levin <sashal@kernel.org>, Viswas G <Viswas.G@microchip.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Ajish Koshy <Ajish.Koshy@microchip.com>, Jack Wang <jinpu.wang@ionos.com>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-scsi@vger.kernel.org
-Cc: bcm-kernel-feedback-list@broadcom.com, stable@vger.kernel.org,
- LKML <linux-kernel@vger.kernel.org>, Ajay Kaher <ajay.kaher@broadcom.com>,
- Alexey Makhalov <alexey.makhalov@broadcom.com>,
- Jack Wang <jinpu.wang@cloud.ionos.com>,
- James Bottomley <James.Bottomley@HansenPartnership.com>,
- Tapas Kundu <tapas.kundu@broadcom.com>
-References: <20250811052035.145021-1-shivani.agarwal@broadcom.com>
-Subject: Re: [PATCH v5.10] scsi: pm80xx: Fix memory leak during rmmod
-Content-Language: en-GB, de-DE
-From: Markus Elfring <Markus.Elfring@web.de>
-In-Reply-To: <20250811052035.145021-1-shivani.agarwal@broadcom.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
-X-Provags-ID: V03:K1:NNkzAAUaSKDfGikxHGlUy3z99Kpc3+L+T9HTNfok57D+Sbcoqbd
- 7k+ILh7L4/N13ut3HnHtXq7ffkKLo32kQz4esoCsaOCuFheMmF/VK4BQZD1vXXVlpRWBzWE
- s8LkempUdbPAqaH3y/lhLVOboP3HC6KuNm+OYsiccz1f+wMXMTPSaurcY0QCo7BbRCEzEED
- W7DiFhvSaUXpglPEGSADw==
-X-Spam-Flag: NO
-UI-OutboundReport: notjunk:1;M01:P0:xdpwiihKzBQ=;gmk+iyXzkC0v0ETOoAOGAVA2IEO
- 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
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <3601cdce-a269-4d29-bc21-b925fcc499e2@quicinc.com>
 
-=E2=80=A6
-> +++ b/drivers/scsi/pm8001/pm8001_init.c
-=E2=80=A6
-> @@ -1226,6 +1227,16 @@ static void pm8001_pci_remove(struct pci_dev *pde=
-v)
->  			tasklet_kill(&pm8001_ha->tasklet[j]);
->  #endif
->  	scsi_host_put(pm8001_ha->shost);
-> +
-> +	for (i =3D 0; i < pm8001_ha->ccb_count; i++) {
-> +		dma_free_coherent(&pm8001_ha->pdev->dev,
-> +			sizeof(struct pm8001_prd) * PM8001_MAX_DMA_SG,
-> +			pm8001_ha->ccb_info[i].buf_prd,
-> +			pm8001_ha->ccb_info[i].ccb_dma_handle);
-> +	}
+On Thu, Aug 07, 2025 at 03:50:58PM GMT, Palash Kambar wrote:
+> 
+> 
+> On 8/6/2025 11:19 PM, Manivannan Sadhasivam wrote:
+> > On Wed, Aug 06, 2025 at 06:11:09PM GMT, Palash Kambar wrote:
+> >>
+> >>
+> >> On 8/6/2025 4:44 PM, Manivannan Sadhasivam wrote:
+> >>> On Wed, Aug 06, 2025 at 12:04:09PM GMT, Palash Kambar wrote:
+> >>>> Disable of AES core in Shared ICE is not supported during power
+> >>>> collapse for UFS Host Controller V5.0.
+> >>>>
+> >>>> Hence follow below steps to reset the ICE upon exiting power collapse
+> >>>> and align with Hw programming guide.
+> >>>>
+> >>>> a. Write 0x18 to UFS_MEM_ICE_CFG
+> >>>> b. Write 0x0 to UFS_MEM_ICE_CFG
+> >>>>
+> >>>> Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
+> >>>> ---
+> >>>>  drivers/ufs/host/ufs-qcom.c | 24 ++++++++++++++++++++++++
+> >>>>  drivers/ufs/host/ufs-qcom.h |  2 ++
+> >>>>  2 files changed, 26 insertions(+)
+> >>>>
+> >>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> >>>> index 444a09265ded..2744614bbc32 100644
+> >>>> --- a/drivers/ufs/host/ufs-qcom.c
+> >>>> +++ b/drivers/ufs/host/ufs-qcom.c
+> >>>> @@ -744,6 +744,8 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+> >>>>  	if (ufs_qcom_is_link_off(hba) && host->device_reset)
+> >>>>  		ufs_qcom_device_reset_ctrl(hba, true);
+> >>>>  
+> >>>> +	host->vdd_hba_pc = true;
+> >>>
+> >>> What does this variable correspond to?
+> >> Hi Manivannan,
+> >>
+> >> It corresponds to power collapse, will rename it for better readability.
+> >>
+> > 
+> > What is 'power collapse' from UFS perspective?
+> 
+> As part of UFS controller power collapse, UFS controller and PHY enters HIBERNATE_STATE
+> during idle periods .The UFS controller is power-collapsed with essential registers 
+> retained (for ex ICE), while PHY maintains M-PHY compliant signaling. Upon data transfer
+> requests, software restores power and exits HIBERNATE_STATE without requiring re-initialization, 
+> as configurations and ICE encryption keys are preserved.
+> 
 
-May curly brackets be omitted here?
-https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/tree/Do=
-cumentation/process/coding-style.rst?h=3Dv6.16#n197
+AFAIK, Hibern8 is a UFS *link* specific feature, not controller specific. In
+other peripherals, power collapse means powering off the controller entirely and
+then relying on the hardware logic to retain the register states. I believe the
+same behavior applies to UFS also.
 
-Regards,
-Markus
+In that case, I would expect you to check for the power collapse in
+ufs_qcom_resume() using some logic and toggle the relevant bits in UFS_MEM_ICE.
+
+The current logic you proposed doesn't really make sure that the controller is
+power collapsed. You just assume that ufs_qcom_suspend() would allow the
+controller to enter power collapse state, but it won't. If the user has opted
+for 'spm_lvl' to be '0', then I don't think the controller can enter power
+collapse state.
+
+> > 
+> >>>
+> >>>> +
+> >>>>  	return ufs_qcom_ice_suspend(host);
+> >>>>  }
+> >>>>  
+> >>>> @@ -759,6 +761,27 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+> >>>>  	return ufs_qcom_ice_resume(host);
+> >>>>  }
+> >>>>  
+> >>>> +static void ufs_qcom_hibern8_notify(struct ufs_hba *hba,
+> >>>> +				    enum uic_cmd_dme uic_cmd,
+> >>>> +				    enum ufs_notify_change_status status)
+> >>>> +{
+> >>>> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> >>>> +
+> >>>> +	/* Apply shared ICE WA */
+> >>>
+> >>> Are you really sure it is *shared ICE*?
+> >>
+> >>  Yes Manivannan, I am.
+> >>
+> > 
+> > Well, there are two kind of registers defined in the internal doc that I can
+> > see: UFS_MEM_ICE and UFS_MEM_SHARED_ICE. And hence the question.
+> > 
+> >>>
+> >>>> +	if (uic_cmd == UIC_CMD_DME_HIBER_EXIT &&
+> >>>> +	    status == POST_CHANGE &&
+> >>>> +	    host->hw_ver.major == 0x5 &&
+> >>>> +	    host->hw_ver.minor == 0x0 &&
+> >>>> +	    host->hw_ver.step == 0x0 &&
+> >>>> +	    host->vdd_hba_pc) {
+> >>>> +		host->vdd_hba_pc = false;
+> >>>> +		ufshcd_writel(hba, 0x18, UFS_MEM_ICE);
+> >>>
+> >>> Define the actual bits instead of writing magic values.
+> >>
+> >> Sure.
+> >>
+> >>>
+> >>>> +		ufshcd_readl(hba, UFS_MEM_ICE);
+> >>>> +		ufshcd_writel(hba, 0x0, UFS_MEM_ICE);
+> >>>> +		ufshcd_readl(hba, UFS_MEM_ICE);
+> >>>
+> >>> Why do you need readl()? Writes to device memory won't get reordered.
+> >>
+> >> Since these are hardware register, there is a potential for reordering.
+> >>
+> > 
+> > Really? Who said that? Please cite the reference.
+> > 
+> >>>
+> >>>> +	}
+> >>>> +}
+> >>>> +
+> >>>>  static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
+> >>>>  {
+> >>>>  	if (host->dev_ref_clk_ctrl_mmio &&
+> >>>> @@ -2258,6 +2281,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+> >>>>  	.hce_enable_notify      = ufs_qcom_hce_enable_notify,
+> >>>>  	.link_startup_notify    = ufs_qcom_link_startup_notify,
+> >>>>  	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
+> >>>> +	.hibern8_notify		= ufs_qcom_hibern8_notify,
+> >>>
+> >>> This callback is not called anywhere. Regardeless of that, why can't you use
+> >>> ufs_qcom_clk_scale_notify()?
+> >>>
+> >>
+> >> According to the HPG guidelines, as part of this workaround, we are required to reset the ICE controller during the Hibern8 exit sequence when the UFS controller resumes from power collapse. Therefore, this reset logic has been added to the H8 exit notifier callback.
+> >>
+> > 
+> > Please wrap the replies to 80 column.
+> > 
+> > Well, we do call ufshcd_uic_hibern8_exit() from these callbacks. So why can't
+> > you reset the ICE after calling ufshcd_uic_hibern8_exit() here?
+> 
+> As per HPG guidance, the ICE Reset workaround is required only after the
+> controller undergoes a power collapse. In the UFS subsystem, power collapse
+> is managed via the GDSC (GCC_UFS_MEM_PHY_GDSC), which is part of GenPD
+> (power domains). Since GenPD is tied to runtime suspend operations, we are
+> setting the power collapse flag during runtime suspend and checking this
+> flag during hibernate exit.
+> 
+> 
+> > 
+> >> The ufs_clk_scale_notify function is invoked whenever clock scaling (up or down) occurs, regardless of whether a power collapse has taken place. Hence, the ICE controller reset was specifically added to the H8 exit notifier to ensure it is executed only in the appropriate context.
+> >>
+> > 
+> > Please define what 'power collapse' mean here. And as I said before, you are
+> > not at all calling this newly introduced callback.
+> 
+> This is not a newly introduced callback, Mani. We are registering for
+> an already existing notifier. You may refer to ufshcd.c, where this
+> notifier is invoked.
+> 
+
+Okay, my bad. You could've mentioned something about this callback in the commit
+message to make others aware that you are reusing an existing callback.
+
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
