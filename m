@@ -1,46 +1,46 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 511CA1FAC34;
-	Mon, 11 Aug 2025 20:10:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA49D2D949D;
+	Mon, 11 Aug 2025 20:11:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754943059; cv=none; b=li6SWQQfvxyozC7i0sO249A7MjY7d2oWR6xV6+Lhb6EwvS2vVWp/kaDj0RnXmxibPfYUpzWHgpvFIOmprMEKRDWbm6euHAvKeO/ofI90z0Sz2VhgQkWXwyFknhpQybwPR2/gvlSYYyS7t6jJJbyvjj9OXXMtZ6aJGivmQPM71NM=
+	t=1754943068; cv=none; b=clV2vPMZdZdN/Bqz08bTUBjDjOGRep3RzsvNciocPkBDBERMbWbczbjYU5+TFt4frACj6wHpTeiwrhxKw97WtmGHTNx9GMZQtMRNIM+md/JZK4L6VCOdGc993Ed04auT0od/kK90jkTCojoEPxLahfDlvibJvWlQVFvz8ZDIbbs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754943059; c=relaxed/simple;
-	bh=FtMkBOaZpvtbTvnIg1Try6JpT6+hqXGv6mr4zfVHsqM=;
+	s=arc-20240116; t=1754943068; c=relaxed/simple;
+	bh=4bxsvPVBqqKAawMBDHV9HnWDID49t/gFbfxmnJ51P3U=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=oV0WFdRb9TN8zMstLm+Q+kvYilDQMTjE04nea8bntYxrC4hvhnDDgZgVTWk4C9JAyTa9sAayPucp+7Bo6UH9yNTllwqdeBlLLZUoSX9qLyGmXdxN9kc3iuHQnZg0tyf7u4lZulDftsgfc6kZWIonsgMh1D96GwwJws/dC+o+1xU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=e1Z8ZESS; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=Tz/6r65K3XiN57uIjYdmjm/Q1gSzMu8yJMs3HLzqSRUrzlmmz+2Y5QA4TAK8lcQ7XcMTlqNpJDgfdxEqVlOd3KkL9meZghKcLVbXQpuivTkhDs+9pIRL3tvk/F5ufySeDIi2QfcemqQusQSWmy/mBqQMIHzcCfAnil8Uul/UJhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=uGGlFE3R; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="e1Z8ZESS"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="uGGlFE3R"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c15Nx4lsHzm0ySq;
-	Mon, 11 Aug 2025 20:10:57 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c15P626Zvzm0ySq;
+	Mon, 11 Aug 2025 20:11:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1754943055; x=1757535056; bh=5RQus
-	nApJu9g3cHLH+jJybZyE2/ODcFaeLeMM4wdAhk=; b=e1Z8ZESS7d6KtqISwl1aX
-	tjKg89Zv4/B80bhjPPBVnMDfvF6DZUo4yB9ue5taxAlaQQJu3adkkwKg+jdbZ0Ng
-	7yKXRFc3UQwk5b2EsSinIMyHCUccIk3EFfLGrkDyCzTD48Iwlghh22+vpE/cCEJV
-	aQW1IZXcMXDb09cIJiHBxN/0hFeffVV2sdvLRMA9lfpeTcOAuOZYvBuOfHnT2ypn
-	b13YuLgdp/27oqS1eqnh406Yvfuc4sR4S2AXsHeTTrxnXAl7vNONzkvTof8BTKpn
-	YQL+BEMrJGB0qcnLgzWlA10VbbCpPr/MCOqbL7Hor4e4Mnj3KkFUCzpCTTaK4ez2
-	w==
+	:received:received; s=mr01; t=1754943064; x=1757535065; bh=BwbF9
+	3iRKJX5gmvSTUmwE22gNq0uCPfHdCkUrkFvWCQ=; b=uGGlFE3RAZgq7jB08SRN4
+	JFk4Ns/YFxicPcS6PYvBQrF2IaUnYxNTsnO22rYTIJ9Clr8duDNY0qBzAUfpZk3q
+	eDMw39um15bgOfxf0P15cn61ycesjiT+XdRFz1ujTqL2/1VZYbUWIPurcGYT0nLe
+	OOEKVrz/sZIbbXhKXryUnr93fTLbaxuS9bAUZ/lo5rR75BwREfsGgKEts62eUa0b
+	uk+j5Q6xhg/BoreG16C5I6Oe6MFOaUsaiU0xpbor/xeSZqDUAaOfpreDTTpsEaOy
+	M4y99nfO9YDvt0L9PcnqNuK5Zt66GKbPs2lHgb9SxSt9ZLpT/VlGm77iUnjGQRM2
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id uye4npdKgoZ8; Mon, 11 Aug 2025 20:10:55 +0000 (UTC)
+ id uRWS80KUNUpE; Mon, 11 Aug 2025 20:11:04 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c15Nn3cTdzm0ytb;
-	Mon, 11 Aug 2025 20:10:48 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c15Nw5fNFzm0yVQ;
+	Mon, 11 Aug 2025 20:10:55 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -48,12 +48,13 @@ Cc: linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>,
-	Douglas Gilbert <dgilbert@interlog.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v23 15/16] scsi: scsi_debug: Support injecting unaligned write errors
-Date: Mon, 11 Aug 2025 13:08:50 -0700
-Message-ID: <20250811200851.626402-16-bvanassche@acm.org>
+	Avri Altman <avri.altman@wdc.com>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	Can Guo <quic_cang@quicinc.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Subject: [PATCH v23 16/16] ufs: core: Inform the block layer about write ordering
+Date: Mon, 11 Aug 2025 13:08:51 -0700
+Message-ID: <20250811200851.626402-17-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.rc0.155.g4a0f42376b-goog
 In-Reply-To: <20250811200851.626402-1-bvanassche@acm.org>
 References: <20250811200851.626402-1-bvanassche@acm.org>
@@ -65,54 +66,50 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Allow user space software, e.g. a blktests test, to inject unaligned
-write errors.
+From the UFSHCI 4.0 specification, about the MCQ mode:
+"Command Submission
+1. Host SW writes an Entry to SQ
+2. Host SW updates SQ doorbell tail pointer
 
-Acked-by: Douglas Gilbert <dgilbert@interlog.com>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Command Processing
+3. After fetching the Entry, Host Controller updates SQ doorbell head
+   pointer
+4. Host controller sends COMMAND UPIU to UFS device"
+
+In other words, in MCQ mode, UFS controllers are required to forward
+commands to the UFS device in the order these commands have been
+received from the host.
+
+This patch improves performance as follows on a test setup with UFSHCI
+4.0 controller:
+- When not using an I/O scheduler: 2.3x more IOPS for small writes.
+- With the mq-deadline scheduler: 2.0x more IOPS for small writes.
+
+Reviewed-by: Avri Altman <avri.altman@wdc.com>
+Cc: Bao D. Nguyen <quic_nguyenb@quicinc.com>
+Cc: Can Guo <quic_cang@quicinc.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: Christoph Hellwig <hch@lst.de>
-Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_debug.c | 12 +++++++++++-
- 1 file changed, 11 insertions(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index f38cc1ce23a1..f84b9744c79d 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -230,6 +230,7 @@ struct tape_block {
- #define SDEBUG_OPT_NO_CDB_NOISE		0x4000
- #define SDEBUG_OPT_HOST_BUSY		0x8000
- #define SDEBUG_OPT_CMD_ABORT		0x10000
-+#define SDEBUG_OPT_UNALIGNED_WRITE	0x20000
- #define SDEBUG_OPT_ALL_NOISE (SDEBUG_OPT_NOISE | SDEBUG_OPT_Q_NOISE | \
- 			      SDEBUG_OPT_RESET_NOISE)
- #define SDEBUG_OPT_ALL_INJECTING (SDEBUG_OPT_RECOVERED_ERR | \
-@@ -237,7 +238,8 @@ struct tape_block {
- 				  SDEBUG_OPT_DIF_ERR | SDEBUG_OPT_DIX_ERR | \
- 				  SDEBUG_OPT_SHORT_TRANSFER | \
- 				  SDEBUG_OPT_HOST_BUSY | \
--				  SDEBUG_OPT_CMD_ABORT)
-+				  SDEBUG_OPT_CMD_ABORT | \
-+				  SDEBUG_OPT_UNALIGNED_WRITE)
- #define SDEBUG_OPT_RECOV_DIF_DIX (SDEBUG_OPT_RECOVERED_ERR | \
- 				  SDEBUG_OPT_DIF_ERR | SDEBUG_OPT_DIX_ERR)
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 96ad57c3144b..28ef6188b806 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -5317,6 +5317,13 @@ static int ufshcd_sdev_configure(struct scsi_devic=
+e *sdev,
+ 	struct ufs_hba *hba =3D shost_priv(sdev->host);
+ 	struct request_queue *q =3D sdev->request_queue;
 =20
-@@ -4915,6 +4917,14 @@ static int resp_write_dt0(struct scsi_cmnd *scp, s=
-truct sdebug_dev_info *devip)
- 	u8 *cmd =3D scp->cmnd;
- 	bool meta_data_locked =3D false;
-=20
-+	if (unlikely(sdebug_opts & SDEBUG_OPT_UNALIGNED_WRITE &&
-+		     atomic_read(&sdeb_inject_pending))) {
-+		atomic_set(&sdeb_inject_pending, 0);
-+		mk_sense_buffer(scp, ILLEGAL_REQUEST, LBA_OUT_OF_RANGE,
-+				UNALIGNED_WRITE_ASCQ);
-+		return check_condition_result;
-+	}
++	/*
++	 * The write order is preserved per MCQ. Without MCQ, auto-hibernation
++	 * may cause write reordering that results in unaligned write errors.
++	 */
++	if (hba->mcq_enabled)
++		lim->features |=3D BLK_FEAT_ORDERED_HWQ;
 +
- 	switch (cmd[0]) {
- 	case WRITE_16:
- 		ei_lba =3D 0;
+ 	lim->dma_pad_mask =3D PRDT_DATA_BYTE_COUNT_PAD - 1;
+=20
+ 	/*
