@@ -1,46 +1,46 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 77FB7311C16
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 17:42:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4D850311C16
+	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 17:42:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754934126; cv=none; b=QPLZm1YhWmrfeEqD3RFy+u67z22kP8pOLQrogf0ZEr651XwCs/8aBosyRouzpr0uLq7qxf4qMaCKPcRsbtw8VBQF3mpdw91kxZEhtSYS7Z1ZL8u16PBR9YMKmwla2y7qTt3pGueBDddVh9VT2atuEBoGHLrqH8sK3uHbXGXiGSo=
+	t=1754934135; cv=none; b=dJy71bLhz+S6yC2Loa6D0XzL0dp+j8I1OGUctzNiOZSZGeouUt8ZWG+sRpxdMVWqm5eiWVWz0p0z8/CUM9gyh8mpqkkmPj7f5/NKjmmLoBdaYB8uvcq3tRXbYrk81NmfIXDMzhTa8MkB7hdMvrDbgvgGFNuZvNyBQ+xFgmnDeiM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754934126; c=relaxed/simple;
-	bh=3FbW8asltJncG1Swyv8UXAu6vGZBc4rXiWjkTgYprxs=;
+	s=arc-20240116; t=1754934135; c=relaxed/simple;
+	bh=dpNUToctrX9kLKCdxqKyP4Kw6nFglxVsBoOjgHYwMKU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OgPv50MT5XTPCfI9i3D6nOzdCh9XPVRjB6Ju+/KEa5WmNLrfqc07o/Xjv+S8Ext0v2n1j2hsSy7prqzOLaxFtlNbxi9KQ2sP/OKENog1+tInc1UUIQKraY9f4wQr+IcVUoEsSRPcleSjFNmWNC5nEQomaGLOydBoXyBXhb1WyHc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jAtv8P3C; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=jpF7A2TqhBxKkXokQj7h7YI+IQAdidqwVkwmFcXaeFGvpTxLNMBdj94WuXvCpYZNX9FazUVjKEtUuzF7n6TRoPtbmvzQPZPVEg1LZIqrVFzuelcxKpdWubOUStbnIHSBYl+eV9RKfGNIXcMoRhs/t5JSLcbt6IdYvF69+Mk4VzI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ylYBHET7; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jAtv8P3C"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ylYBHET7"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c125863H3zlgqTr;
-	Mon, 11 Aug 2025 17:42:04 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c125K4Q0RzlgqTq;
+	Mon, 11 Aug 2025 17:42:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1754934123; x=1757526124; bh=I5TVa
-	puIYMu2KqX57b/k6jAQ41LaPczPjCZwN8CPJQg=; b=jAtv8P3Cp/EDOYZN68iJt
-	4KGequp1VsHBqtZKsFqNS78bMapP18Y4Qi3Cul73vIBxeFNo0gaZX3GXDXUoqgEs
-	7GaGGHTgLjOXOtMCV/NBV1dc2xacDzgtHa62qGBQUuqr7z3mdjQwb2Gd2ZbYEMX3
-	v0yCKymhZhkpDL+C1JZ3aXexFhwd+mLU4/HbsRLZ3lK6gX3M5AY4Rl9uoEaJPqB+
-	9KsWIhMQAh/Vkvk9NWMDgE/cgK6JpDspPfiN72w1ysVoiC5DMBa7Hd2nd1iHviP2
-	aWBBVL4sqtxviO/UKXSpxbR327RLzql0GdlF/n3zKAW463ZdNJfgwpl15La4FgoO
-	Q==
+	:received:received; s=mr01; t=1754934132; x=1757526133; bh=Bm6jv
+	m+VEYHNbub5stUs42TOP0G3wsDytkJIWLZTK34=; b=ylYBHET7AO3+t6nqz01rr
+	p9byiWv++9hRZF9HqpIoEILuKTjYmGDzQLLFNIhDgGKY8hfgL+HVxjIC+iHEGJdF
+	KvZzkDkggWsPsUnNptgwlRUMKtqyP9AbrQGIuqbA/jjDvC9iNfrlKnECNNHOh3FT
+	vNeqlSz/D4iLWAmYUrpceZ33p0KG7q5p6GPVgx+brlD2Eomos1iGRVPki+eR1vsQ
+	yfz3MtWAI07isBKVjWY7QUnfS/pkMPcLxYfiGPg8TTKyDq7ICjLN3F6mRFFtqi0N
+	KhvivcmDrSWqnZ90h9LRmHggT74bhzaoosHANYD+43zsx6imD1ese9cCjzvPKxhu
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Nes4-mj6Hs8s; Mon, 11 Aug 2025 17:42:03 +0000 (UTC)
+ id XlUaseOUv-G3; Mon, 11 Aug 2025 17:42:12 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c125306J3zlgqTq;
-	Mon, 11 Aug 2025 17:41:58 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c125C5pwzzlgqTr;
+	Mon, 11 Aug 2025 17:42:06 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -49,9 +49,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Peter Wang <peter.wang@mediatek.com>,
 	Avri Altman <avri.altman@sandisk.com>,
 	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v2 28/30] ufs: core: Initialize the 'hwq' variable earlier
-Date: Mon, 11 Aug 2025 10:34:40 -0700
-Message-ID: <20250811173634.514041-29-bvanassche@acm.org>
+Subject: [PATCH v2 29/30] ufs: core: Make blk_mq_tagset_busy_iter() skip reserved requests
+Date: Mon, 11 Aug 2025 10:34:41 -0700
+Message-ID: <20250811173634.514041-30-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.rc0.155.g4a0f42376b-goog
 In-Reply-To: <20250811173634.514041-1-bvanassche@acm.org>
 References: <20250811173634.514041-1-bvanassche@acm.org>
@@ -63,46 +63,68 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-In ufshcd_queuecommand(), initialize the 'hwq' variable earlier. This pat=
-ch
-prepares for adding more code that uses this variable. No functionality h=
-as
-been changed.
+A later patch will convert hba->reserved_slot into a reserved tag. Make
+blk_mq_tagset_busy_iter() skip reserved requests such that device
+management commands are skipped.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 9 ++++-----
- 1 file changed, 4 insertions(+), 5 deletions(-)
+ drivers/ufs/core/ufshcd.c | 12 ++++++++----
+ 1 file changed, 8 insertions(+), 4 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 9b021567dbdb..56af37706155 100644
+index 56af37706155..84875a6aee4e 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -3025,10 +3025,12 @@ static int ufshcd_init_cmd_priv(struct Scsi_Host =
-*host, struct scsi_cmnd *cmd)
-  */
- static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd =
-*cmd)
- {
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
- 	struct ufs_hba *hba =3D shost_priv(host);
--	int tag =3D scsi_cmd_to_rq(cmd)->tag;
-+	struct ufs_hw_queue *hwq =3D
-+		hba->mcq_enabled ? ufshcd_mcq_req_to_hwq(hba, rq) : NULL;
-+	int tag =3D rq->tag;
- 	int err =3D 0;
--	struct ufs_hw_queue *hwq =3D NULL;
+@@ -644,7 +644,8 @@ static bool ufshcd_print_tr_iter(struct request *req,=
+ void *priv)
+ 	struct Scsi_Host *shost =3D sdev->host;
+ 	struct ufs_hba *hba =3D shost_priv(shost);
 =20
- 	switch (hba->ufshcd_state) {
- 	case UFSHCD_STATE_OPERATIONAL:
-@@ -3086,9 +3088,6 @@ static int ufshcd_queuecommand(struct Scsi_Host *ho=
-st, struct scsi_cmnd *cmd)
- 		goto out;
- 	}
+-	ufshcd_print_tr(hba, blk_mq_rq_to_pdu(req), *(bool *)priv);
++	if (!blk_mq_is_reserved_rq(req))
++		ufshcd_print_tr(hba, blk_mq_rq_to_pdu(req), *(bool *)priv);
 =20
--	if (hba->mcq_enabled)
--		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
--
- 	ufshcd_send_command(hba, cmd, hwq);
+ 	return true;
+ }
+@@ -5730,7 +5731,7 @@ static bool ufshcd_mcq_force_compl_one(struct reque=
+st *rq, void *priv)
+ 	struct ufs_hba *hba =3D shost_priv(shost);
+ 	struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
 =20
- out:
+-	if (!hwq)
++	if (blk_mq_is_reserved_rq(rq) || !hwq)
+ 		return true;
+=20
+ 	ufshcd_mcq_compl_all_cqes_lock(hba, hwq);
+@@ -5757,7 +5758,7 @@ static bool ufshcd_mcq_compl_one(struct request *rq=
+, void *priv)
+ 	struct ufs_hba *hba =3D shost_priv(shost);
+ 	struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
+=20
+-	if (hwq)
++	if (!blk_mq_is_reserved_rq(rq) && hwq)
+ 		ufshcd_mcq_poll_cqe_lock(hba, hwq);
+=20
+ 	return true;
+@@ -6624,6 +6625,9 @@ static bool ufshcd_abort_one(struct request *rq, vo=
+id *priv)
+ 	struct Scsi_Host *shost =3D sdev->host;
+ 	struct ufs_hba *hba =3D shost_priv(shost);
+=20
++	if (blk_mq_is_reserved_rq(rq))
++		return true;
++
+ 	*ret =3D ufshcd_try_to_abort_task(hba, tag);
+ 	dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
+ 		ufshcd_is_scsi_cmd(cmd) ? cmd->cmnd[0] : -1,
+@@ -7560,7 +7564,7 @@ static bool ufshcd_clear_lu_cmds(struct request *re=
+q, void *priv)
+ 	const u64 lun =3D *(u64 *)priv;
+ 	const u32 tag =3D req->tag;
+=20
+-	if (sdev->lun !=3D lun)
++	if (blk_mq_is_reserved_rq(req) || sdev->lun !=3D lun)
+ 		return true;
+=20
+ 	if (ufshcd_clear_cmd(hba, tag) < 0) {
