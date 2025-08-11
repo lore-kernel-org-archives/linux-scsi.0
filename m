@@ -1,102 +1,145 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52A9E29BDB1
-	for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 15:48:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4C3172E06EA;
+	Mon, 11 Aug 2025 16:12:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754927303; cv=none; b=Up2xhfIGSy6lI/KXD34NvC94dtq91H1eB1o5zxwtDAKAfHBXaKRHreTNQR3S5792bTTFiPszpFqys0UOketXhgr6tbCD9gUKGMprkt3urOINbl/jiGFZZ0FkPIl+NJY77hCab+zazr9kL9nGCWjcXC1DrTU+iXBVU7bsFcMTbXo=
+	t=1754928774; cv=none; b=Nrs9lldOxuizuUwmm+0Dq6pyCPxJULrRMSj9GzaFslVo9d56QUGwk5hWtr/sLk1h3vuEydTrgla7GhT7CUL/FNTqppORDg5BTwVXccLet/ugciKeOwZR1BZjJ62CxN6uhtQkL7QwvuGK67onvcrrqJd/K2HJusV0V88BPlcfwmw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754927303; c=relaxed/simple;
-	bh=ZK/WWuX28AWbYgyXHumYqFHa7aogZk4ykYWRx6LBZjc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fxEmfhvDHDbxiIRSdL9d3MFPMjf257//L0SvFCbzS4hIeLdDrA/UvpsduaAi3uIpD/Km8CwRyAT4r85x8MKtv4YwiJdfDDNUknU4TjvNltPTCOls4m+BP5PVn/JAkwddTtEnt9OfNmUoxIiRsXoxgeiAZZJa8RIn68CxT5b5CIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=v28rUmHf; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1754928774; c=relaxed/simple;
+	bh=PJzclgFaw/7oF3ER7+6r3nUI9ZR5wx5E/Dkl3HE0Hc8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=ADjcFtVUOA2ijeaLulGjXXNh7IAcTnHky/fVhwM6gs5Z9TDV4b/WVtAiH16Ffx5HQyAGNSfKMKlKSI3qZt5f0KHNauz1wqvYIfHAftbuyKub1hBI69MEJoSFZy/LTH6GPyik8PZVdaXam5BNod1KVs3uDB5EdZwev21424W9jG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=dHnp3DXe; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="v28rUmHf"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c0zYx1GWczlgqV2;
-	Mon, 11 Aug 2025 15:48:21 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1754927299; x=1757519300; bh=I4usz
-	R0oaEWC6G0dUhjTaBrrexeHqYnPjhxL7S94liM=; b=v28rUmHfl9DmYDvWWyUuM
-	xaABYnxKDzM8JRwGc8CXYLwesNXfhnbVzv8EN32i+E/c35ylnfstIwy7p+ljltub
-	9cbaw9bqbcQrMQk41h+hZOe6RJoIyV1sTeVwUiotkL82Gc0saObJgwV4PIGE/R/m
-	WcM8Qk/2p/zcGI7RpcN33sxj+pG5cbIaH7Tbaubxq6xizYHQ1OhCt+4UA0Gs7vLS
-	+pGoTcavPYlcHhiZVUtNLxUdS7Vk9xv0K8uPVRtugVGLqAgXuPhYumlcnX0GA9rb
-	z6H6UemR1VvKwn4iM1qFpJwPH0zjYP8QwoNRw5N902qhaM4oSD1di1XQwijDkeT8
-	Q==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id m3DDd6IwEJcT; Mon, 11 Aug 2025 15:48:19 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c0zYl4DFCzlsxFC;
-	Mon, 11 Aug 2025 15:48:10 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH 4/4] ufs: core: Rename ufshcd_wait_for_doorbell_clr()
-Date: Mon, 11 Aug 2025 08:46:58 -0700
-Message-ID: <20250811154711.394297-5-bvanassche@acm.org>
-X-Mailer: git-send-email 2.50.1.703.g449372360f-goog
-In-Reply-To: <20250811154711.394297-1-bvanassche@acm.org>
-References: <20250811154711.394297-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="dHnp3DXe"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57BFxiNA005283;
+	Mon, 11 Aug 2025 16:12:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	I1o1Pk0355qzwcIB30VXMUZsa3a58W/7wwbkNHvqf0w=; b=dHnp3DXeQBRpj79L
+	meSqUFVq/lf129/r7sotIAA3+xJMRtr3Un62fcv5ZKz41QhrJ3h5xwcQi7FThzpe
+	76E63C5AMWTKXNOvjCqi1Fw07sR6L9MQdHo7dkA2owZnzT+HwbfvD4G69bR+mT6B
+	Ex1dSvMV1K2wsMHezMlXV73gpa/Q4a6os6s0izhaGdATbbe2n79i6vTRXwQZfUWt
+	JAqz8sFBsdVujS+jaQcjTfYZSESUy/hqmku0Hk8KXTnAOs2BdSHSEx97KYbhl1vI
+	cU66m2HAG7shf6GeR7GVbjo75abJqg0AljEHe8jNNsXwh0kxyxz2IAtsiDEaQDlc
+	ySBWhw==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48eqhx393h-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 11 Aug 2025 16:12:38 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57BGCbLG018631
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 11 Aug 2025 16:12:38 GMT
+Received: from [10.218.4.141] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Mon, 11 Aug
+ 2025 09:12:32 -0700
+Message-ID: <adb94e86-38a2-4456-9363-d02c487ff7b8@quicinc.com>
+Date: Mon, 11 Aug 2025 21:42:29 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V2 1/4] dt-bindings: ufs: qcom: Document MCQ register
+ space for UFS
+To: Krzysztof Kozlowski <krzk@kernel.org>, <mani@kernel.org>,
+        <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
+        <robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <andersson@kernel.org>, <konradybcio@kernel.org>, <agross@kernel.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+References: <20250811143139.16422-1-quic_rdwivedi@quicinc.com>
+ <20250811143139.16422-2-quic_rdwivedi@quicinc.com>
+ <f8405e89-9449-4564-82d1-3146d9b75655@kernel.org>
+Content-Language: en-US
+From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+In-Reply-To: <f8405e89-9449-4564-82d1-3146d9b75655@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODEwMDA1NyBTYWx0ZWRfX65p4MT9gqbCI
+ LooDpNESSd/n3QnsMVWpl9cU4V7/i9Ogo3ipIFmeJ+rNYdgvNdzJpwuuI2eKpzEBcrDlIS3rcLi
+ hkHST/ktkG4Iq2tCbfuwy3WOfBft30KVo4U2A4pTMQluRnBRuUtjyV+ujKvBIDeXndtoHwS5m+b
+ /J9u3uDgc+zMoN0Ok2DFItSEyzNGDSoTnx47zQOQ6Ulz4TqHRwv1KnVc4ns9q0ZvL6JJX8lFjg6
+ b+vfB21Z75/4U+r7KFktPxeAamdGMcionJ7ZsumyyXLuy268FFYc+ZzDIyZCtFGmc2BQ9nmfKfu
+ 6YxsUa7gygiZZIE3kMQdCpvAUzSh9xhQlDqFhGdaWryjkhiu8N1RlkYKKLhyhxmLTzJTEijmpk5
+ gslGXMw1
+X-Proofpoint-GUID: Q8K1_Sdj4k2ZPaEeTCCQJ1VxD4V1rQSC
+X-Authority-Analysis: v=2.4 cv=aYNhnQot c=1 sm=1 tr=0 ts=689a1677 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=VwQbUJbxAAAA:8
+ a=KKAkSRfTAAAA:8 a=COk6AnOGAAAA:8 a=n52dHJ6fqxtmaawsWVAA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=cvBusfyB2V15izCimMoJ:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-ORIG-GUID: Q8K1_Sdj4k2ZPaEeTCCQJ1VxD4V1rQSC
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-11_03,2025-08-11_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ spamscore=0 adultscore=0 priorityscore=1501 suspectscore=0 phishscore=0
+ impostorscore=0 bulkscore=0 malwarescore=0 clxscore=1015
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508100057
 
-The name ufshcd_wait_for_doorbell_clr() refers to legacy mode. Commit
-8d077ede48c1 ("scsi: ufs: Optimize the command queueing code") added
-support for MCQ mode in this function. Since then the name of this
-function is misleading. Hence change the name of this function into
-something that is appropriate for both legacy and MCQ mode.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b5057ce27aa9..1b8e2e68c600 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1303,7 +1303,7 @@ static u32 ufshcd_pending_cmds(struct ufs_hba *hba)
-  *
-  * Return: 0 upon success; -EBUSY upon timeout.
-  */
--static int ufshcd_wait_for_doorbell_clr(struct ufs_hba *hba,
-+static int ufshcd_wait_for_pending_cmds(struct ufs_hba *hba,
- 					u64 wait_timeout_us)
- {
- 	int ret =3D 0;
-@@ -1431,7 +1431,7 @@ static int ufshcd_clock_scaling_prepare(struct ufs_=
-hba *hba, u64 timeout_us)
- 	down_write(&hba->clk_scaling_lock);
-=20
- 	if (!hba->clk_scaling.is_allowed ||
--	    ufshcd_wait_for_doorbell_clr(hba, timeout_us)) {
-+	    ufshcd_wait_for_pending_cmds(hba, timeout_us)) {
- 		ret =3D -EBUSY;
- 		up_write(&hba->clk_scaling_lock);
- 		mutex_unlock(&hba->wb_mutex);
+On 11-Aug-25 8:12 PM, Krzysztof Kozlowski wrote:
+> On 11/08/2025 16:31, Ram Kumar Dwivedi wrote:
+>> Document Multi-Circular Queue (MCQ) register space for
+>> Qualcomm UFS controllers.
+>>
+>> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+>> ---
+>>  .../devicetree/bindings/ufs/qcom,ufs.yaml        | 16 ++++++++++------
+>>  1 file changed, 10 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> index 6c6043d9809e..daf681b0e23b 100644
+>> --- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> +++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
+>> @@ -89,9 +89,13 @@ properties:
+>>      maxItems: 2
+>>  
+>>    reg-names:
+>> -    items:
+>> -      - const: std
+>> -      - const: ice
+>> +    oneOf:
+>> +      - items:
+>> +          - const: std
+>> +          - const: ice
+>> +      - items:
+>> +          - const: ufs_mem
+>> +          - const: mcq
+> 
+> No. Why are you sending this? You have been Cc-ed here:
+> 
+> https://lore.kernel.org/all/20250731-dt-bindings-ufs-qcom-v2-3-53bb634bf95a@linaro.org/
+
+Hi Krzysztof,
+
+I understand I was Cc-ed on the patch thread you linked. However, if I send my patch on top of yours before it’s merged, the kernel bot might flag it due to missing base changes. Please let me know if you're okay with that — I can proceed with pushing my patch on top of yours.
+
+Thanks,
+Ram.
+
+
+> 
+> Above is neither correct nor aligned with what I told you.
+> 
+> Best regards,
+> Krzysztof
+
