@@ -1,86 +1,139 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6A822E2F1B
-	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2025 15:27:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD15D2F90C9;
+	Tue, 12 Aug 2025 16:24:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755012471; cv=none; b=Efil7P4jEEz6gSHBqI2iR7evOU0PSMMdLWOTRnSjNSdCaoct0xhupPBGBZ5VQFcvpq0Pex0g7w6EpFpzrw/uUbEXbZGhNfYfA6oTDybgFdozELrR+mryKaJ4zxe4xgXHd0R54MJnG36M0P4OQnQxoEBqAPpPUvRw652qLjKkhyQ=
+	t=1755015867; cv=none; b=kUhu/voN3F3+hDEc2Z542qoipYJeQ5RKARUNDx3r+XikfwTQZtfIZQhagz75LbE2/gWCkgyKJHsCST/rIi1TrqRrSnWVXsSFcYdQbHculPymyP8CzfAw1jK1HKm2cJO73CQYZI8gQqmEmZ/4IM/9XlCZ2NR7CrCiOKeGAnZB42A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755012471; c=relaxed/simple;
-	bh=36WnI53yYhsMEKg/KImQiWb/N9OULXE8Yrsy/GHWBDI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=nKbB1zyLRPWpJIIPog2VrX2DgwPirdUBAiVKhRfXXO+A3I9ibGU83ZQuluOS9/VPfQI9S8CfyTSGFMxu+xnRL6PPSEDXPaPhbDJ1qt6h/f7yIBI7LvB3GkaN9J8sQq2rwOgRn3SD/9d3B6q7RNcIfV1p4FbUrQmSxmEvxEJu0Go=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=EPg2N2Gh; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755015867; c=relaxed/simple;
+	bh=q3ATWwbJnmhEV0tER11ue3lL09n8bcsLC90p1qBToR0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PKm94dsritkodVsglInj+fFxXgGvW2ppUKtQYAgwT+H+6v3rkiQVD4zMKDBGvKKgehhwX7QQWv7jMi2fdt50aN5HoIreY7jaK25sP00SRGG5HCVEvnyZMLtSCG0cwivsOEB3bNdq8FXKebUorSjoQYbZnQ9lsX1Y3wW7KvsenS0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BD1X9zBY; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="EPg2N2Gh"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c1b3m5Xwyzm1748;
-	Tue, 12 Aug 2025 15:27:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755012466; x=1757604467; bh=36WnI53yYhsMEKg/KImQiWb/
-	N9OULXE8Yrsy/GHWBDI=; b=EPg2N2GhXUnsCnFG2GXngEBrbiMw9gIZqJ+uO+9Q
-	80vpcpTw4KUysNE7wv7dGb1fh45/lKNTSCf4WlP3M/kLTFF+aBe/eYoQmYQgUmhU
-	pVaQeseGWeqbxXcxoYrn3ToZIsnXzy8RBQhvwIjna0JktiPEiia/3ez34o1ZHIWM
-	9PF8H9U2VxBdsO8iiKUP15p1W/IjdW5tp4VZ+SpkJ9dTpL2Ydox4w9EXKsbkGsuV
-	TA9yCeqdOvYOmvFXe/btWlZN283Wz7Olkis7SeeGndPEwNmpzTkbgJ+hcClbC5BN
-	waDvE7OSTndJ69PePHHmAjzuTCgpE8wQMquOlmvgbg0JBw==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id opuMSM5L4B4a; Tue, 12 Aug 2025 15:27:46 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c1b3X4xYCzm0ysj;
-	Tue, 12 Aug 2025 15:27:35 +0000 (UTC)
-Message-ID: <3b370551-0a01-4f82-a9f3-7cfabe010f10@acm.org>
-Date: Tue, 12 Aug 2025 08:27:34 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BD1X9zBY"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1755015866; x=1786551866;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=q3ATWwbJnmhEV0tER11ue3lL09n8bcsLC90p1qBToR0=;
+  b=BD1X9zBY/U8VTu6XBGOF+2j5ZS+oYGAFfCZ2DRzPcFrXtKpD5jJ8tjr8
+   io2l5JKHeNrE74PDPjEK+GAnQRnFwlkjknkFwBCNLki11WJIDxKdqmGdF
+   fyhrUtR9lRKxCw1wu7wnjeQ65Rpce8rs+AyFqSVtSblhu/XDoqJ382iz8
+   UD/kEVeVc7zbZdk1Bb6pdhCgMnxE+1Fs6JBbmvZVG5sv7jfgmpLt/GGpp
+   Yu3VZF3Y9Xs2bES32TiIAbzgIbt98L7rFPcRQ4jYq/mSE0EYgaR2YFh/F
+   wsqTZH5nZPBjkX50VecjG20kO75pue5U077Qk/obrQCxu4Xxpx5Ay7G7M
+   Q==;
+X-CSE-ConnectionGUID: agXSYFprReS5hKqseFr7kQ==
+X-CSE-MsgGUID: 8ZOqbmgpR1O/YgbrijuX8g==
+X-IronPort-AV: E=McAfee;i="6800,10657,11520"; a="57378392"
+X-IronPort-AV: E=Sophos;i="6.17,284,1747724400"; 
+   d="scan'208";a="57378392"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2025 09:24:25 -0700
+X-CSE-ConnectionGUID: yC4pQlA5TSWMd4+9pje4Aw==
+X-CSE-MsgGUID: aWFQrDsnQvqkjbg6wiAiLg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.17,284,1747724400"; 
+   d="scan'208";a="170457391"
+Received: from lkp-server02.sh.intel.com (HELO 4ea60e6ab079) ([10.239.97.151])
+  by fmviesa005.fm.intel.com with ESMTP; 12 Aug 2025 09:24:20 -0700
+Received: from kbuild by 4ea60e6ab079 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1ulrnN-0006zD-1K;
+	Tue, 12 Aug 2025 16:24:17 +0000
+Date: Wed, 13 Aug 2025 00:23:28 +0800
+From: kernel test robot <lkp@intel.com>
+To: "Mario Limonciello (AMD)" <superm1@kernel.org>,
+	"Rafael J . Wysocki" <rafael@kernel.org>,
+	Bjorn Helgaas <helgaas@kernel.org>
+Cc: oe-kbuild-all@lists.linux.dev, Pavel Machek <pavel@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	"(open list:HIBERNATION (aka Software Suspend, aka swsusp))" <linux-pm@vger.kernel.org>,
+	amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-usb@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+	AceLan Kao <acelan.kao@canonical.com>,
+	Kai-Heng Feng <kaihengf@nvidia.com>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	Merthan =?utf-8?Q?Karaka=C5=9F?= <m3rthn.k@gmail.com>,
+	Eric Naim <dnaim@cachyos.org>,
+	"Mario Limonciello (AMD)" <superm1@kernel.org>
+Subject: Re: [PATCH v5 04/11] USB: Pass PMSG_POWEROFF event to
+ suspend_common() for poweroff with S4 flow
+Message-ID: <202508130049.aA2DXgHW-lkp@intel.com>
+References: <20250811194102.864225-5-superm1@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] ufs: core: Fix the return value documentation
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "beanhuo@micron.com" <beanhuo@micron.com>, "mani@kernel.org"
- <mani@kernel.org>, "avri.altman@sandisk.com" <avri.altman@sandisk.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
- "adrian.hunter@intel.com" <adrian.hunter@intel.com>
-References: <20250811154711.394297-1-bvanassche@acm.org>
- <20250811154711.394297-4-bvanassche@acm.org>
- <871b506eea930ac2981cc1d332a6b6ed5e2eccc0.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <871b506eea930ac2981cc1d332a6b6ed5e2eccc0.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250811194102.864225-5-superm1@kernel.org>
 
-On 8/12/25 2:02 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> On Mon, 2025-08-11 at 08:46 -0700, Bart Van Assche wrote:
->> =C2=A0/*
->> - * Return: 0 upon success; < 0 upon failure.
->> + * Return: 0 upon success; < 0 upon timeout; > 0 in case the UFS
->> device
->> + * reported an OCS error.
->> =C2=A0 */
->=20
-> A return value less than 0 shouldn=E2=80=99t only indicate a timeout,
-> There should also be cases like -EAGAIN and -EINVAL, right?
+Hi Mario,
 
-Agreed. Let me double check which comments need to be refined further.
+kernel test robot noticed the following build errors:
 
-Bart.
+[auto build test ERROR on 8f5ae30d69d7543eee0d70083daf4de8fe15d585]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Mario-Limonciello-AMD/PM-Introduce-new-PMSG_POWEROFF-event/20250812-034228
+base:   8f5ae30d69d7543eee0d70083daf4de8fe15d585
+patch link:    https://lore.kernel.org/r/20250811194102.864225-5-superm1%40kernel.org
+patch subject: [PATCH v5 04/11] USB: Pass PMSG_POWEROFF event to suspend_common() for poweroff with S4 flow
+config: i386-randconfig-013-20250812 (https://download.01.org/0day-ci/archive/20250813/202508130049.aA2DXgHW-lkp@intel.com/config)
+compiler: gcc-12 (Debian 12.2.0-14+deb12u1) 12.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250813/202508130049.aA2DXgHW-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202508130049.aA2DXgHW-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/usb/core/hcd-pci.c:650:27: error: 'hcd_pci_poweroff' undeclared here (not in a function); did you mean 'hcd_pci_poweroff_late'?
+     650 |         .poweroff       = hcd_pci_poweroff,
+         |                           ^~~~~~~~~~~~~~~~
+         |                           hcd_pci_poweroff_late
+
+
+vim +650 drivers/usb/core/hcd-pci.c
+
+   640	
+   641	const struct dev_pm_ops usb_hcd_pci_pm_ops = {
+   642		.suspend	= hcd_pci_suspend,
+   643		.suspend_noirq	= hcd_pci_suspend_noirq,
+   644		.resume_noirq	= hcd_pci_resume_noirq,
+   645		.resume		= hcd_pci_resume,
+   646		.freeze		= hcd_pci_freeze,
+   647		.freeze_noirq	= check_root_hub_suspended,
+   648		.thaw_noirq	= NULL,
+   649		.thaw		= hcd_pci_resume,
+ > 650		.poweroff	= hcd_pci_poweroff,
+   651		.poweroff_late	= hcd_pci_poweroff_late,
+   652		.poweroff_noirq	= hcd_pci_suspend_noirq,
+   653		.restore_noirq	= hcd_pci_resume_noirq,
+   654		.restore	= hcd_pci_restore,
+   655		.runtime_suspend = hcd_pci_runtime_suspend,
+   656		.runtime_resume	= hcd_pci_runtime_resume,
+   657	};
+   658	EXPORT_SYMBOL_GPL(usb_hcd_pci_pm_ops);
+   659	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
