@@ -1,267 +1,158 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f225.google.com (mail-pf1-f225.google.com [209.85.210.225])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C5572C13B;
-	Tue, 12 Aug 2025 05:04:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E8E42C21CE
+	for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2025 06:21:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1754975084; cv=none; b=B2guxTwC4tMlryratrocl+KJjHb/8pA7uZJaAnYoZrMdeSwAxb3u8SliTVIOCSyV0Q4wf7AFs3vtT56Dr/cLxq2NQNreRLzUW/AiSjNHx/7/luE0GjX569bZa1ynKQIvngS6ub7snj6omZRP7WNOY7QUaWGUB3bqCDnj2uohF7I=
+	t=1754979711; cv=none; b=gh+NeDnR3HWbsrYJZ6fgovfbZ/7qfkEt96+4R5EXcBdGrHxSHocA4+sVtnkrbkEynHuMlWhEDJ/rzhu7gU56/uwO4925YXhwwe2TdIjNQLe8Wwui3ESOJt1XH6Q0FKyWW3Q7EMQSOFpRrAJNiBU+QiVFYN7DxiQf2nGpA5/TmJo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1754975084; c=relaxed/simple;
-	bh=QCjOBXPQUnrhGirSu0BA8xOITyqq5mxLhUNynRYIzcU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=UIpdjZ2Aaont16eFCUrSJopUJClQ/kdnWgJdGzlNFi0LLx5TnlSxBdLpWKN0qh9QKTNze+fvri0VfGpLFq1NUO/x7AyQgHolqkxFKBuLR6KXYkgZc5GWlXUL/wbbFG+vbJDoJ9EQy325b58c5gENqWp5PzoZRap6a35exoR3sz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=PIJdZe+m; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1754979711; c=relaxed/simple;
+	bh=j9SeDoRL/zhcDIxNSS4UctRBSHg1RCzqAgMYHl9qkqo=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qgkKbFtxRd3b9wWFarXTZPA0OejaNSsMt+3iL/y36JGheBGUMZZ5+V/6VgYjGQ/cIZnaSSyWpBuGWbqnCfCzA9K4SL5rQXjBh1zXp4ow1EB//O9Gv34Zakop9YZJPpUBVNgJlzfRCGMlISWPpCyDikzXmt6eAcNIiIah56AqoEU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=JYH5YnHQ; arc=none smtp.client-ip=209.85.210.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="PIJdZe+m"
-Received: from pps.filterd (m0279862.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57BH4gD1018323;
-	Tue, 12 Aug 2025 05:04:37 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	Gyk8nTn/w4XA7A6fcdgGrOSMV0k0C1DVcXZvhZhLu40=; b=PIJdZe+mgosElZDm
-	OR8hkzxZ5cGlr1elr6mQOH88eIaae269vcshbBpCKzuY6LkYckNRlL+hg4Fl0jTA
-	nivadYiR14nTDR1kKP1ESh2I3j/TQEr3+OAuF7qtIe6tjvOmOtRYpB9D1qMbkdZv
-	R+B51Ardf2M50B5vY7nZzCSviCgCJiFLCB9RmiYum/p/XOS8vT8TkmfhdPP8/hQI
-	OiE0jo6ss/aFH0y3KmiYELRyf/PAtgQP1xUbAs6SQKpr8r0aZTOEILLeS4CN+il6
-	Dp1bSRjKsT303c62OAykCQX0uei3gOIgnYlQ/rtnp7kZwhRrqv8JsenZQKcPmVhB
-	NIK0Nw==
-Received: from nasanppmta03.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48dy3g6snk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Aug 2025 05:04:37 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57C54aTw006170
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 12 Aug 2025 05:04:36 GMT
-Received: from [10.216.40.226] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Mon, 11 Aug
- 2025 22:04:34 -0700
-Message-ID: <738eb16b-68c2-4582-9858-e2cb8465a00b@quicinc.com>
-Date: Tue, 12 Aug 2025 10:34:31 +0530
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="JYH5YnHQ"
+Received: by mail-pf1-f225.google.com with SMTP id d2e1a72fcca58-76bf3dafaa5so5587143b3a.0
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 23:21:50 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1754979710; x=1755584510;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=wCHLE6MOqroEiy+1R8X845jTZo3rM4OTlMeoN6yXvZg=;
+        b=lVlhvXUvOtIk+KUiDyL71rCSS6me0YONvs4oFeU+pa8c63rtofa/jAkWv93dOwD/jN
+         JKbYSSt+rjUR6FdpkFcN3p8NkRYvpav9Io9eHwa9qNqRM86B2eeVKX22JEw++yNWcJLK
+         FBWKxJWqwN+8QbHcTVF8RpvMw7WdHsbiioYxMYZg/sQMA90isIJ6vgAFZ6del9nVoLJm
+         c20HC+QNSQ7B1R0z4+wqZkmCn/M0Npn0iKDQmdzY2HiXL4id8g6kM9zoU4yJGUef1SWD
+         FCrzGfQS8ZgCc7yec7B0ya99/8PTi3fgkDubQI6yCg4y255Qu+HH9ZytMee/Ve+W8DOU
+         8MXA==
+X-Forwarded-Encrypted: i=1; AJvYcCVb6/ggxCAvCSyVbWCe5SaL1nZ2ogpNlSqzd7OFxeK4eNhAr36OFOrBBzw655/ixRzcc9HcInaoVutB@vger.kernel.org
+X-Gm-Message-State: AOJu0YwL/K8KY0ipRynTvfz3H5LwM/PQWkdb8zZ1bC4F3pk2fVfcEl13
+	8Ct5mF1IpA9dx9I1Fcr19Qh9ZAJIge8bdPraZwzDyDXLWXHcq+3MyIPhS79BVnxfwE4opx1H4Kp
+	UCOaeX3HHJir1XMcvEtcG4iaIX8QB7UFpR9/fE3ISER2VpcQG+U7KmIO1ABJiKQQbwvUePuSMeS
+	WxZ29+KerbPHgU14FjjZlmdv5rIme6fTu+r6XDSptJRTiD/OQCQOoxdLpMS0Ko895Bewxv5Ft5b
+	ocOoovrnJQ9lkEiX2Nh
+X-Gm-Gg: ASbGncsS0+HfxMZ2h6bwbXkmvnt7NZt29Hwgi+iXKx7v76S1kFWTO1xtHxbC2wKsvnd
+	Kjf5B/wqXc/DDjpqp3+ZB2fi7LnBbobcC3T9lxOTDJ62g41ki9sryG6ulDv46MTrZl4VV8tWSXb
+	56gia1MdkKYAb/0wlt8dHT6UoS0pDAHlBuvffionfOu2hoxkumWmrXF0+O0a3jcz/MR6dtvZoM/
+	a6aGBkQxB8k3kKepSx46CuCs6Vo2qJLBi8X/KieF6irANpAgSvEqc7iR9Syh2QHMSoD/1LAimRE
+	inV+polbL2yuiXKY3SwObTsJfEyyUzbL2xY3/mjXN2hb+3Var/pwQIJwm7Yy8YsRHLc0s/ivLcp
+	HSeOzL307kjA/WPCXpdU7H+vkbuUkB+HmxSL3f+ACgArwm3bAHv7p3J9hhVLjNwAUm1K0UaVeYD
+	3dcuqPeQ==
+X-Google-Smtp-Source: AGHT+IHOHrxROB1uMyzNatGD8wpf2VZx1JnwzCZQ4+UhTp9sEjEi8uadND3qpL+0di/Vt/IfoKJqSRFo9pxP
+X-Received: by 2002:a17:902:e1c4:b0:242:fea2:8bf2 with SMTP id d9443c01a7336-242fea29fcfmr15817305ad.5.1754979709752;
+        Mon, 11 Aug 2025 23:21:49 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-122.dlp.protect.broadcom.com. [144.49.247.122])
+        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-241e899d1e2sm18346765ad.79.2025.08.11.23.21.49
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Mon, 11 Aug 2025 23:21:49 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-qk1-f200.google.com with SMTP id af79cd13be357-7c790dc38b4so1132079285a.0
+        for <linux-scsi@vger.kernel.org>; Mon, 11 Aug 2025 23:21:48 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1754979708; x=1755584508; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=wCHLE6MOqroEiy+1R8X845jTZo3rM4OTlMeoN6yXvZg=;
+        b=JYH5YnHQbjvf+g2d+XFQbDxl2nbUFvOxWnBsmHvnGvFI1TWIWIWCVnG2DoR1dfbL2Z
+         0J+p6X/inANSbCCX8XWudKGae6KIVgy+n500419nVsgyUyptzq/we3Mqo6sJbXT7sNda
+         DskgSjig9wC/ajj7H8A/IMEN0qNYeiV9+qwo0=
+X-Forwarded-Encrypted: i=1; AJvYcCUbKsohPgGYmhadShImWPOBujA1r0zwr7LciUsSbYXtDMreK1bwN8Pfg9WTuQY/PiaybvTAlgS2LWcU@vger.kernel.org
+X-Received: by 2002:a05:620a:bd6:b0:7e8:71b:96ac with SMTP id af79cd13be357-7e858daee46mr342622785a.11.1754979708283;
+        Mon, 11 Aug 2025 23:21:48 -0700 (PDT)
+X-Received: by 2002:a05:620a:bd6:b0:7e8:71b:96ac with SMTP id af79cd13be357-7e858daee46mr342619985a.11.1754979707824;
+        Mon, 11 Aug 2025 23:21:47 -0700 (PDT)
+Received: from shivania.lvn.broadcom.net ([192.19.161.250])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-7e826e22c13sm800422385a.50.2025.08.11.23.21.45
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 11 Aug 2025 23:21:47 -0700 (PDT)
+From: Shivani Agarwal <shivani.agarwal@broadcom.com>
+To: stable@vger.kernel.org,
+	gregkh@linuxfoundation.org
+Cc: bcm-kernel-feedback-list@broadcom.com,
+	linux-kernel@vger.kernel.org,
+	ajay.kaher@broadcom.com,
+	alexey.makhalov@broadcom.com,
+	tapas.kundu@broadcom.com,
+	james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	James Smart <jsmart2021@gmail.com>,
+	Justin Tee <justin.tee@broadcom.com>,
+	Sasha Levin <sashal@kernel.org>,
+	Shivani Agarwal <shivani.agarwal@broadcom.com>
+Subject: [PATCH v5.10] scsi: lpfc: Fix link down processing to address NULL pointer  dereference
+Date: Mon, 11 Aug 2025 23:08:22 -0700
+Message-Id: <20250812060822.149216-1-shivani.agarwal@broadcom.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] ufs: ufs-qcom: Align programming sequence of Shared
- ICE for UFS controller v5
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>
-References: <20250806063409.21206-1-quic_pkambar@quicinc.com>
- <ucr4imzntw6ghcvpeioprmva7gxrqnkphjirjppnqgdpq5ghss@y5nwjzzpvluj>
- <2e655067-cd7e-4584-aa07-998b517ac314@quicinc.com>
- <pewnau4ltrf2yu3xxdq6rs6xhz45zlo3dt3jnkzhxitmezz2ft@2k7pgpoz5iey>
- <3601cdce-a269-4d29-bc21-b925fcc499e2@quicinc.com>
- <edrf3bobjnknwydzeitfwns7lehgf65p5prcohmc7eexhzoami@ywlamyweunmn>
-Content-Language: en-US
-From: Palash Kambar <quic_pkambar@quicinc.com>
-In-Reply-To: <edrf3bobjnknwydzeitfwns7lehgf65p5prcohmc7eexhzoami@ywlamyweunmn>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=X4lSKHTe c=1 sm=1 tr=0 ts=689acb65 cx=c_pps
- a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8
- a=KL1xR9xCuBu-OXqa_t4A:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODA5MDAzMSBTYWx0ZWRfX3mNRXt56U5a+
- wIjlUwDxL2sLmgjUkXqPa/28xX6SiQ+/ACbTQf23fDWv8c2s+c2ef/mQaKic/opEkvrGBS9xu3N
- CPbIzSOdDboQyBHD1rjoyB85QRR0tqr98TORV8J/jH52DiPPCLNinr5vM/tqx5YCfL1q+6fcSEf
- 0JzWiGYqQjsOZw2l1biZw+qJmq4UPUUcF/+eA4IFtEZK2AcQismRVRic4+B7N05D2xTJULbz6lk
- 8nSBdT758JVOprm3zrHlSb76g+2H2dZn7x2zY9Y1DadYJLTU+D0BNXcYvNuZtv397y5CbGr2n2+
- DXnoVJdC1bu5OwhEY4wzqYg2Zs3cOm79rlikMj94WRnAk3MPeNcngs05YrxTgEWGXG456W2zWNX
- zBlGF22N
-X-Proofpoint-GUID: wklxtPwH5igRfyD7rIpgqqKqnFkVwMT2
-X-Proofpoint-ORIG-GUID: wklxtPwH5igRfyD7rIpgqqKqnFkVwMT2
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-12_01,2025-08-11_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 priorityscore=1501 clxscore=1015 malwarescore=0 adultscore=0
- spamscore=0 bulkscore=0 suspectscore=0 impostorscore=0 classifier=typeunknown
- authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2508090031
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
+From: James Smart <jsmart2021@gmail.com>
 
+[ Upstream commit 1854f53ccd88ad4e7568ddfafafffe71f1ceb0a6 ]
 
-On 8/11/2025 1:46 PM, Manivannan Sadhasivam wrote:
-> On Thu, Aug 07, 2025 at 03:50:58PM GMT, Palash Kambar wrote:
->>
->>
->> On 8/6/2025 11:19 PM, Manivannan Sadhasivam wrote:
->>> On Wed, Aug 06, 2025 at 06:11:09PM GMT, Palash Kambar wrote:
->>>>
->>>>
->>>> On 8/6/2025 4:44 PM, Manivannan Sadhasivam wrote:
->>>>> On Wed, Aug 06, 2025 at 12:04:09PM GMT, Palash Kambar wrote:
->>>>>> Disable of AES core in Shared ICE is not supported during power
->>>>>> collapse for UFS Host Controller V5.0.
->>>>>>
->>>>>> Hence follow below steps to reset the ICE upon exiting power collapse
->>>>>> and align with Hw programming guide.
->>>>>>
->>>>>> a. Write 0x18 to UFS_MEM_ICE_CFG
->>>>>> b. Write 0x0 to UFS_MEM_ICE_CFG
->>>>>>
->>>>>> Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
->>>>>> ---
->>>>>>  drivers/ufs/host/ufs-qcom.c | 24 ++++++++++++++++++++++++
->>>>>>  drivers/ufs/host/ufs-qcom.h |  2 ++
->>>>>>  2 files changed, 26 insertions(+)
->>>>>>
->>>>>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->>>>>> index 444a09265ded..2744614bbc32 100644
->>>>>> --- a/drivers/ufs/host/ufs-qcom.c
->>>>>> +++ b/drivers/ufs/host/ufs-qcom.c
->>>>>> @@ -744,6 +744,8 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
->>>>>>  	if (ufs_qcom_is_link_off(hba) && host->device_reset)
->>>>>>  		ufs_qcom_device_reset_ctrl(hba, true);
->>>>>>  
->>>>>> +	host->vdd_hba_pc = true;
->>>>>
->>>>> What does this variable correspond to?
->>>> Hi Manivannan,
->>>>
->>>> It corresponds to power collapse, will rename it for better readability.
->>>>
->>>
->>> What is 'power collapse' from UFS perspective?
->>
->> As part of UFS controller power collapse, UFS controller and PHY enters HIBERNATE_STATE
->> during idle periods .The UFS controller is power-collapsed with essential registers 
->> retained (for ex ICE), while PHY maintains M-PHY compliant signaling. Upon data transfer
->> requests, software restores power and exits HIBERNATE_STATE without requiring re-initialization, 
->> as configurations and ICE encryption keys are preserved.
->>
-> 
-> AFAIK, Hibern8 is a UFS *link* specific feature, not controller specific. In
-> other peripherals, power collapse means powering off the controller entirely and
-> then relying on the hardware logic to retain the register states. I believe the
-> same behavior applies to UFS also.
-> 
-> In that case, I would expect you to check for the power collapse in
-> ufs_qcom_resume() using some logic and toggle the relevant bits in UFS_MEM_ICE.
-> 
-> The current logic you proposed doesn't really make sure that the controller is
-> power collapsed. You just assume that ufs_qcom_suspend() would allow the
-> controller to enter power collapse state, but it won't. If the user has opted
-> for 'spm_lvl' to be '0', then I don't think the controller can enter power
-> collapse state.
+If an FC link down transition while PLOGIs are outstanding to fabric well
+known addresses, outstanding ABTS requests may result in a NULL pointer
+dereference. Driver unload requests may hang with repeated "2878" log
+messages.
 
-Sure Mani, will modify as per your suggestion.
+The Link down processing results in ABTS requests for outstanding ELS
+requests. The Abort WQEs are sent for the ELSs before the driver had set
+the link state to down. Thus the driver is sending the Abort with the
+expectation that an ABTS will be sent on the wire. The Abort request is
+stalled waiting for the link to come up. In some conditions the driver may
+auto-complete the ELSs thus if the link does come up, the Abort completions
+may reference an invalid structure.
 
-- Palash K> 
->>>
->>>>>
->>>>>> +
->>>>>>  	return ufs_qcom_ice_suspend(host);
->>>>>>  }
->>>>>>  
->>>>>> @@ -759,6 +761,27 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->>>>>>  	return ufs_qcom_ice_resume(host);
->>>>>>  }
->>>>>>  
->>>>>> +static void ufs_qcom_hibern8_notify(struct ufs_hba *hba,
->>>>>> +				    enum uic_cmd_dme uic_cmd,
->>>>>> +				    enum ufs_notify_change_status status)
->>>>>> +{
->>>>>> +	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
->>>>>> +
->>>>>> +	/* Apply shared ICE WA */
->>>>>
->>>>> Are you really sure it is *shared ICE*?
->>>>
->>>>  Yes Manivannan, I am.
->>>>
->>>
->>> Well, there are two kind of registers defined in the internal doc that I can
->>> see: UFS_MEM_ICE and UFS_MEM_SHARED_ICE. And hence the question.
->>>
->>>>>
->>>>>> +	if (uic_cmd == UIC_CMD_DME_HIBER_EXIT &&
->>>>>> +	    status == POST_CHANGE &&
->>>>>> +	    host->hw_ver.major == 0x5 &&
->>>>>> +	    host->hw_ver.minor == 0x0 &&
->>>>>> +	    host->hw_ver.step == 0x0 &&
->>>>>> +	    host->vdd_hba_pc) {
->>>>>> +		host->vdd_hba_pc = false;
->>>>>> +		ufshcd_writel(hba, 0x18, UFS_MEM_ICE);
->>>>>
->>>>> Define the actual bits instead of writing magic values.
->>>>
->>>> Sure.
->>>>
->>>>>
->>>>>> +		ufshcd_readl(hba, UFS_MEM_ICE);
->>>>>> +		ufshcd_writel(hba, 0x0, UFS_MEM_ICE);
->>>>>> +		ufshcd_readl(hba, UFS_MEM_ICE);
->>>>>
->>>>> Why do you need readl()? Writes to device memory won't get reordered.
->>>>
->>>> Since these are hardware register, there is a potential for reordering.
->>>>
->>>
->>> Really? Who said that? Please cite the reference.
->>>
->>>>>
->>>>>> +	}
->>>>>> +}
->>>>>> +
->>>>>>  static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
->>>>>>  {
->>>>>>  	if (host->dev_ref_clk_ctrl_mmio &&
->>>>>> @@ -2258,6 +2281,7 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
->>>>>>  	.hce_enable_notify      = ufs_qcom_hce_enable_notify,
->>>>>>  	.link_startup_notify    = ufs_qcom_link_startup_notify,
->>>>>>  	.pwr_change_notify	= ufs_qcom_pwr_change_notify,
->>>>>> +	.hibern8_notify		= ufs_qcom_hibern8_notify,
->>>>>
->>>>> This callback is not called anywhere. Regardeless of that, why can't you use
->>>>> ufs_qcom_clk_scale_notify()?
->>>>>
->>>>
->>>> According to the HPG guidelines, as part of this workaround, we are required to reset the ICE controller during the Hibern8 exit sequence when the UFS controller resumes from power collapse. Therefore, this reset logic has been added to the H8 exit notifier callback.
->>>>
->>>
->>> Please wrap the replies to 80 column.
->>>
->>> Well, we do call ufshcd_uic_hibern8_exit() from these callbacks. So why can't
->>> you reset the ICE after calling ufshcd_uic_hibern8_exit() here?
->>
->> As per HPG guidance, the ICE Reset workaround is required only after the
->> controller undergoes a power collapse. In the UFS subsystem, power collapse
->> is managed via the GDSC (GCC_UFS_MEM_PHY_GDSC), which is part of GenPD
->> (power domains). Since GenPD is tied to runtime suspend operations, we are
->> setting the power collapse flag during runtime suspend and checking this
->> flag during hibernate exit.
->>
->>
->>>
->>>> The ufs_clk_scale_notify function is invoked whenever clock scaling (up or down) occurs, regardless of whether a power collapse has taken place. Hence, the ICE controller reset was specifically added to the H8 exit notifier to ensure it is executed only in the appropriate context.
->>>>
->>>
->>> Please define what 'power collapse' mean here. And as I said before, you are
->>> not at all calling this newly introduced callback.
->>
->> This is not a newly introduced callback, Mani. We are registering for
->> an already existing notifier. You may refer to ufshcd.c, where this
->> notifier is invoked.
->>
-> 
-> Okay, my bad. You could've mentioned something about this callback in the commit
-> message to make others aware that you are reusing an existing callback.
-> 
-> - Mani
-> 
+Fix by ensuring that Abort set the flag to avoid link traffic if issued due
+to conditions where the link failed.
+
+Link: https://lore.kernel.org/r/20211020211417.88754-7-jsmart2021@gmail.com
+Co-developed-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
+Signed-off-by: Sasha Levin <sashal@kernel.org>
+[Shivani: Modified to apply on 5.10.y]
+Signed-off-by: Shivani Agarwal <shivani.agarwal@broadcom.com>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 8 +++++---
+ 1 file changed, 5 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index ff39c596f000..49931577da38 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -11432,10 +11432,12 @@ lpfc_sli_abort_iotag_issue(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	if (cmdiocb->iocb_flag & LPFC_IO_FOF)
+ 		abtsiocbp->iocb_flag |= LPFC_IO_FOF;
+ 
+-	if (phba->link_state >= LPFC_LINK_UP)
+-		iabt->ulpCommand = CMD_ABORT_XRI_CN;
+-	else
++	if (phba->link_state < LPFC_LINK_UP ||
++	    (phba->sli_rev == LPFC_SLI_REV4 &&
++	     phba->sli4_hba.link_state.status == LPFC_FC_LA_TYPE_LINK_DOWN))
+ 		iabt->ulpCommand = CMD_CLOSE_XRI_CN;
++	else
++		iabt->ulpCommand = CMD_ABORT_XRI_CN;
+ 
+ 	abtsiocbp->iocb_cmpl = lpfc_sli_abort_els_cmpl;
+ 	abtsiocbp->vport = vport;
+-- 
+2.40.4
 
