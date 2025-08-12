@@ -1,139 +1,102 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD15D2F90C9;
-	Tue, 12 Aug 2025 16:24:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E25C92D0636;
+	Tue, 12 Aug 2025 23:57:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755015867; cv=none; b=kUhu/voN3F3+hDEc2Z542qoipYJeQ5RKARUNDx3r+XikfwTQZtfIZQhagz75LbE2/gWCkgyKJHsCST/rIi1TrqRrSnWVXsSFcYdQbHculPymyP8CzfAw1jK1HKm2cJO73CQYZI8gQqmEmZ/4IM/9XlCZ2NR7CrCiOKeGAnZB42A=
+	t=1755043053; cv=none; b=UkJV4HcxuGrjdUBAJRZTn5eRXpkMgXU3a+4y0BjtFi0eeIcSaoX8rr+pnd4FMy1x1hybciEfsZKhUf++0P2UI52gWE7Ccdhdw1QFuelnPj/xc65wTDQhC/oMf5bkrjOtGdehZGxFaIe4Xyhhp0xQCsH6AAHmZANC0MTt8fSZZoI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755015867; c=relaxed/simple;
-	bh=q3ATWwbJnmhEV0tER11ue3lL09n8bcsLC90p1qBToR0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PKm94dsritkodVsglInj+fFxXgGvW2ppUKtQYAgwT+H+6v3rkiQVD4zMKDBGvKKgehhwX7QQWv7jMi2fdt50aN5HoIreY7jaK25sP00SRGG5HCVEvnyZMLtSCG0cwivsOEB3bNdq8FXKebUorSjoQYbZnQ9lsX1Y3wW7KvsenS0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=BD1X9zBY; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1755043053; c=relaxed/simple;
+	bh=GGJfHCS1Y79aXwZEvamO03h73lyHIOOftgkTQcMTVyE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jYatJLl+7vc9bt+Cq4vnbnNE/D18u7zXJhHid78I8YHBeU/lXQUqu4WZXM3tb8Qb2crTY/4j1CMngnDz4YzC5tL6smLs4RXPVMkQZYelcGJDjDG5+31hQvfVYwgc+34Cl2ekg3RA6sudzCiEUjOb0wOqJuX1iZYUA++FMSDTgxo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Fw1+WWFr; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="BD1X9zBY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1755015866; x=1786551866;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=q3ATWwbJnmhEV0tER11ue3lL09n8bcsLC90p1qBToR0=;
-  b=BD1X9zBY/U8VTu6XBGOF+2j5ZS+oYGAFfCZ2DRzPcFrXtKpD5jJ8tjr8
-   io2l5JKHeNrE74PDPjEK+GAnQRnFwlkjknkFwBCNLki11WJIDxKdqmGdF
-   fyhrUtR9lRKxCw1wu7wnjeQ65Rpce8rs+AyFqSVtSblhu/XDoqJ382iz8
-   UD/kEVeVc7zbZdk1Bb6pdhCgMnxE+1Fs6JBbmvZVG5sv7jfgmpLt/GGpp
-   Yu3VZF3Y9Xs2bES32TiIAbzgIbt98L7rFPcRQ4jYq/mSE0EYgaR2YFh/F
-   wsqTZH5nZPBjkX50VecjG20kO75pue5U077Qk/obrQCxu4Xxpx5Ay7G7M
-   Q==;
-X-CSE-ConnectionGUID: agXSYFprReS5hKqseFr7kQ==
-X-CSE-MsgGUID: 8ZOqbmgpR1O/YgbrijuX8g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11520"; a="57378392"
-X-IronPort-AV: E=Sophos;i="6.17,284,1747724400"; 
-   d="scan'208";a="57378392"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 12 Aug 2025 09:24:25 -0700
-X-CSE-ConnectionGUID: yC4pQlA5TSWMd4+9pje4Aw==
-X-CSE-MsgGUID: aWFQrDsnQvqkjbg6wiAiLg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.17,284,1747724400"; 
-   d="scan'208";a="170457391"
-Received: from lkp-server02.sh.intel.com (HELO 4ea60e6ab079) ([10.239.97.151])
-  by fmviesa005.fm.intel.com with ESMTP; 12 Aug 2025 09:24:20 -0700
-Received: from kbuild by 4ea60e6ab079 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1ulrnN-0006zD-1K;
-	Tue, 12 Aug 2025 16:24:17 +0000
-Date: Wed, 13 Aug 2025 00:23:28 +0800
-From: kernel test robot <lkp@intel.com>
-To: "Mario Limonciello (AMD)" <superm1@kernel.org>,
-	"Rafael J . Wysocki" <rafael@kernel.org>,
-	Bjorn Helgaas <helgaas@kernel.org>
-Cc: oe-kbuild-all@lists.linux.dev, Pavel Machek <pavel@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	"(open list:HIBERNATION (aka Software Suspend, aka swsusp))" <linux-pm@vger.kernel.org>,
-	amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	linux-pci@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-usb@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
-	AceLan Kao <acelan.kao@canonical.com>,
-	Kai-Heng Feng <kaihengf@nvidia.com>,
-	Mark Pearson <mpearson-lenovo@squebb.ca>,
-	Merthan =?utf-8?Q?Karaka=C5=9F?= <m3rthn.k@gmail.com>,
-	Eric Naim <dnaim@cachyos.org>,
-	"Mario Limonciello (AMD)" <superm1@kernel.org>
-Subject: Re: [PATCH v5 04/11] USB: Pass PMSG_POWEROFF event to
- suspend_common() for poweroff with S4 flow
-Message-ID: <202508130049.aA2DXgHW-lkp@intel.com>
-References: <20250811194102.864225-5-superm1@kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Fw1+WWFr"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c1pMt52TrzlgqyY;
+	Tue, 12 Aug 2025 23:57:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1755043049; x=1757635050; bh=KvXXGnQ5MoPMBp5T9DHr4a9c
+	jIUnuCTQFIAzi8COOVA=; b=Fw1+WWFrdwd7v8GvGNpZDfFL5rByCVSw6K1GG9rL
+	MXmaMdrl4WVoh6Vj2PwCa8+pueif264Q11WIIwYTDgGh7S0GHxoOB0ZbGDgaUA9c
+	xnNqZft2Ra+1xw0lGu2tXjTABJ6IE0YT+iw1Lph9tfk/aXHxZzdALfNmf5Ciorqy
+	tcyStF3UirfcoZlhlskOSY1KwQZ28UAwye5G/ANGCJ76veK75pqodiwEvKO/AATQ
+	6n3bfWWRfZyzt2kPhcct1REqpIdlS5pH1b6cgtCwwtKGDlDWA8TsEGt17qXcZk+e
+	swkrkwyABt52sMJVli/G5NHuA0H3MYv+0TE18ixm8EaG6g==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 3NLawijAN5EK; Tue, 12 Aug 2025 23:57:29 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c1pMn2YRhzlv4Tt;
+	Tue, 12 Aug 2025 23:57:24 +0000 (UTC)
+Message-ID: <6b56a20a-3ff6-40c3-b165-2f3e4dfda45a@acm.org>
+Date: Tue, 12 Aug 2025 16:57:17 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250811194102.864225-5-superm1@kernel.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v23 01/16] block: Support block devices that preserve the
+ order of write requests
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
+Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>
+References: <20250811200851.626402-1-bvanassche@acm.org>
+ <20250811200851.626402-2-bvanassche@acm.org>
+ <7570f60f-932b-4b76-a87d-8f3f0760c44f@kernel.org>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <7570f60f-932b-4b76-a87d-8f3f0760c44f@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi Mario,
+On 8/11/25 7:12 PM, Damien Le Moal wrote:
+> On 8/12/25 5:08 AM, Bart Van Assche wrote:
+>> Some storage controllers preserve the request order per hardware queue.
+>> Some but not all device mapper drivers preserve the bio order. Introduce
+>> the feature flag BLK_FEAT_ORDERED_HWQ to allow block drivers and stacked
+>> drivers to indicate that the order of write commands is preserved per
+>> hardware queue and hence that serialization of writes per zone is not
+>> required if all pending writes are submitted to the same hardware queue.
+>> Add a sysfs attribute for controlling write pipelining support.
+> 
+> Why ? Why would you want to disable write pipelining since it give better
+> performance ?
+> 
+> The commit message also does not describe BLK_FEAT_PIPELINE_ZWR, but I think
+> this enable/disable flag is not needed.
 
-kernel test robot noticed the following build errors:
+Hi Damien,
 
-[auto build test ERROR on 8f5ae30d69d7543eee0d70083daf4de8fe15d585]
+Having a control in sysfs for enabling and disabling write pipelining is
+very convenient when measuring the performance impact of write
+pipelining. Adding such a control in each block driver would be
+cumbersome because it would require to add the following sequence in
+every block driver:
+* Freeze the request queue.
+* Call queue_limits_start_update().
+* Toggle the BLK_FEAT_ORDERED_HWQ flag.
+* Call queue_limits_commit_update_frozen().
+* Unfreeze the request queue.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Mario-Limonciello-AMD/PM-Introduce-new-PMSG_POWEROFF-event/20250812-034228
-base:   8f5ae30d69d7543eee0d70083daf4de8fe15d585
-patch link:    https://lore.kernel.org/r/20250811194102.864225-5-superm1%40kernel.org
-patch subject: [PATCH v5 04/11] USB: Pass PMSG_POWEROFF event to suspend_common() for poweroff with S4 flow
-config: i386-randconfig-013-20250812 (https://download.01.org/0day-ci/archive/20250813/202508130049.aA2DXgHW-lkp@intel.com/config)
-compiler: gcc-12 (Debian 12.2.0-14+deb12u1) 12.2.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250813/202508130049.aA2DXgHW-lkp@intel.com/reproduce)
+Do you agree that this the "pipeline_zoned_writes" sysfs attribute is
+useful? If not, I will drop the newly introduced sysfs attribute and 
+also the BLK_FEAT_PIPELINE_ZWR flag.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202508130049.aA2DXgHW-lkp@intel.com/
+Thanks,
 
-All errors (new ones prefixed by >>):
-
->> drivers/usb/core/hcd-pci.c:650:27: error: 'hcd_pci_poweroff' undeclared here (not in a function); did you mean 'hcd_pci_poweroff_late'?
-     650 |         .poweroff       = hcd_pci_poweroff,
-         |                           ^~~~~~~~~~~~~~~~
-         |                           hcd_pci_poweroff_late
-
-
-vim +650 drivers/usb/core/hcd-pci.c
-
-   640	
-   641	const struct dev_pm_ops usb_hcd_pci_pm_ops = {
-   642		.suspend	= hcd_pci_suspend,
-   643		.suspend_noirq	= hcd_pci_suspend_noirq,
-   644		.resume_noirq	= hcd_pci_resume_noirq,
-   645		.resume		= hcd_pci_resume,
-   646		.freeze		= hcd_pci_freeze,
-   647		.freeze_noirq	= check_root_hub_suspended,
-   648		.thaw_noirq	= NULL,
-   649		.thaw		= hcd_pci_resume,
- > 650		.poweroff	= hcd_pci_poweroff,
-   651		.poweroff_late	= hcd_pci_poweroff_late,
-   652		.poweroff_noirq	= hcd_pci_suspend_noirq,
-   653		.restore_noirq	= hcd_pci_resume_noirq,
-   654		.restore	= hcd_pci_restore,
-   655		.runtime_suspend = hcd_pci_runtime_suspend,
-   656		.runtime_resume	= hcd_pci_runtime_resume,
-   657	};
-   658	EXPORT_SYMBOL_GPL(usb_hcd_pci_pm_ops);
-   659	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Bart.
