@@ -1,91 +1,104 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DAA272632
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Aug 2025 00:22:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 876451A23A6;
+	Wed, 13 Aug 2025 02:26:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755044562; cv=none; b=Q+wxBlqBuEEsUE+7XVn1j1WqKvXZRfhoyXuSzQvzDbdRKawbsvyinvVlQd9ORBm+S9tYMuyXnBYAr3Osc0kbZ1t/m+X9V7NaemLia/cuyyNmkI3QUAlFmu58pyTMx6JMTbKKGlSWNyB6Ta7kgKhjTIiswfsi5a9GolPWRAze+Ao=
+	t=1755052004; cv=none; b=t/0DpGygRizkVzE1dvbjBRFcd0fdVTG72dEtKyq2EvIBYNSw+44ktJV/MuakSekLZMxy8syTTWTm3/L2coDhisdIbbQYrsI6/7El/mLrkDWv0zC6A6X0S/hSS5ws/+Giuw2cK9fiUBtSCaOFe7IPhoB5S8L5/OzHMpmj9MXln7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755044562; c=relaxed/simple;
-	bh=gFquGyl+k5Yd3XiLJSstTNZ323n+UunyAJM9MM5tH1U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=WMTcRf2eflZwvbB5EuikP4c7/AOa6MhQMr5mx5ZOyFNXCk9+kWXGB7cbGhPGIykU4X6bMKU4GVu7fwXLReruTcE4FKoH/GNuEt3j9cR5XNJhSnCTfKhuOZffuxzO0bL0R26dH00jbjvlT3WUHUs2+aIdC154EFaKP/b5D36DwB8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Ep0IFGvF; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755052004; c=relaxed/simple;
+	bh=8ArkzmJg+3YtGE9V7c+QleBD0CKmJU3WsT2mXUJZFWQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=iQR2AUvc98qytA3jdJeSmJwhGH6oljA1FGY4GX0XYTs9FcxMGzFCj0vAmLVMGsdsk7tgPJ6u8IcHvswEghm+i64Ab1EDD6KNNQF4HA9Ahc6S/krFbFuYSRyxkq/awt/ShlJyxXSTnwJbUQ/XYjZWFkOwPF/9gKGLh/WvttaAtfM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=meMRg+s9; arc=none smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Ep0IFGvF"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c1pwt1yRKzlgqVc;
-	Wed, 13 Aug 2025 00:22:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755044555; x=1757636556; bh=rqTFKiGNMyNcVB61vAj1CKsm
-	iqNYzecFW+FL7ChoicY=; b=Ep0IFGvFMClHsL8l0CX9kXXz475K0h7JZoTjo3JN
-	c4ROd1OVLiBLZIyRWriSSX7cZ2xNsugo5Of2nBjEa/Sj4T+3dnD/e9erZqP5l/kT
-	bWF4fFefK8LA66KQKPf46e1j3Z9A1KDnReC2qdLZT56ein5cZWRVCk+iU/km7wku
-	46lhredW7Map7TQRBqzKI5ORn/ty14QUI/TwsS6GvQkWKY77LtpG9tzWGyScBHyZ
-	59TI/lhBxSRJjirrYSyynYOmETq64lk9JWMWpW14xf7I0U8FVpnd9Pe0wJ8bFWW8
-	NOlgweYneqtsKCeVTgRBkz5LoDGb61MMPN17JXiu4nHb5A==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id CShDvj__o50x; Wed, 13 Aug 2025 00:22:35 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c1pwm55FGzlgqVj;
-	Wed, 13 Aug 2025 00:22:31 +0000 (UTC)
-Message-ID: <754714a8-0d6a-477f-8715-6c431ef5bf2a@acm.org>
-Date: Tue, 12 Aug 2025 17:22:30 -0700
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="meMRg+s9"
+Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57CLR3TB005322;
+	Wed, 13 Aug 2025 02:26:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=vj3hmSPNTV8YLRr3JR6vfBr0AZ2RzLr2XCBSfE0011Y=; b=
+	meMRg+s9VbOegh1btfKsniapdQbrqfoAOzD7fM3U5GOV8j8OyCUvvQeiySxZUDba
+	zGyamyKVBUyqB1hKtGIdGe3mGbrK4gvmPsQNU4AQIYL8RcPADeg50XSfUe9imKot
+	FMcGSuwHEKxxbpTPanDO7OpkWDOoAzXBTwPgaGc/UamzOWj9HwHXNahQJyVXeRf4
+	vtMDS0qYuZRYlNEpgYLVdRE1wArj7xsBCprEd10YkxJJwn2AADd0nUdiSiEtDpGX
+	u+KJfa3rSPYkLErwHuR862n0jx8azazR/534zCLQY+XnhO6ftHIwqYenDthbr1pK
+	tS5fsn8NADIjAiswnPf7Ew==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 48dvrfx6b8-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 13 Aug 2025 02:26:37 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 57D10E3U030242;
+	Wed, 13 Aug 2025 02:26:37 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 48dvsarqqd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 13 Aug 2025 02:26:36 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 57D2QaNY004410;
+	Wed, 13 Aug 2025 02:26:36 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 48dvsarqpw-1;
+	Wed, 13 Aug 2025 02:26:36 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: linux-scsi@vger.kernel.org, Jean Delvare <jdelvare@suse.de>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+        James Smart <james.smart@broadcom.com>,
+        Dick Kennedy <dick.kennedy@broadcom.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+        LKML <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH] scsi: lpfc: Fix wrong function reference in a comment
+Date: Tue, 12 Aug 2025 22:26:26 -0400
+Message-ID: <175504926140.959040.17675997595494377981.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250731133311.52034cc4@endymion>
+References: <20250731133311.52034cc4@endymion>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/5] scsi: sd: Have scsi-ml retry read_capacity_16 errors
-To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
-Cc: michael.christie@oracle.com, dgilbert@interlog.com
-References: <20250716184833.67055-1-emilne@redhat.com>
- <20250716184833.67055-2-emilne@redhat.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250716184833.67055-2-emilne@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-12_08,2025-08-11_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
+ adultscore=0 mlxscore=0 bulkscore=0 spamscore=0 mlxlogscore=540
+ suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2507300000 definitions=main-2508130022
+X-Authority-Analysis: v=2.4 cv=B/S50PtM c=1 sm=1 tr=0 ts=689bf7de cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
+ a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=VwQbUJbxAAAA:8 a=9vGR7LhBC7VkbwwelnIA:9
+ a=QEXdDO2ut3YA:10
+X-Proofpoint-ORIG-GUID: DXp7BaAbPSdi0teP5ZnpROehXcGAmyZ9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODEzMDAyMiBTYWx0ZWRfXwCsB583CC/7N
+ Uc0+VUWHWbOyubiY7ErGpn5McZvtwq4cmc9rSWJpq7ihDzg3NdafRKhzSjdu7j0ny5pqr4l90oa
+ emQWzVXLKeEd97q+IKB6sY+8eOAqAD7PikFFXGUX+XmiznoeeWwS4T1MLYjWAE+HYwCXSdpq5YH
+ +TfZS8+Wvvdwqri174s7j2pHGuuSFGBQyzdzbF5d4ht78l6IBs5NfrvBoINYtsp259TBP492Zw2
+ jFw/Z/rDwhPGnkLxPMXpeh+jWN73ZREnUSWvB/TdhY8aDdy56eBMXrnOprLY0bobtszASNg/8Pr
+ bTv2I+oAiZzn02C64ouoabD7W6eWkxYrKLJyBqxnCl8FkXozXZlkxZnzVTRbBBwvXLGuw1+/6p/
+ I7dprVZl0shGBlWM9ji9x4WRfS1x8P/+Zn8gZdHPfI452PUe/X5u17PpDgsnMoeYEhW085i9
+X-Proofpoint-GUID: DXp7BaAbPSdi0teP5ZnpROehXcGAmyZ9
 
-On 7/16/25 11:48 AM, Ewan D. Milne wrote:
-> This has read_capacity_16 have scsi-ml retry errors instead of driving
-> them itself.
+On Thu, 31 Jul 2025 13:33:11 +0200, Jean Delvare wrote:
+
+> Function scsi_host_remove doesn't exist, the actual function name is
+> scsi_remove_host.
 > 
-> There are 2 behavior changes with this patch:
-> 1. There is one behavior change where we no longer retry when
-> scsi_execute_cmd returns < 0, but we should be ok. We don't need to retry
-> for failures like the queue being removed, and for the case where there
-> are no tags/reqs since the block layer waits/retries for us. For possible
-> memory allocation failures from blk_rq_map_kern we use GFP_NOIO, so
-> retrying will probably not help.
-> 2. For the specific UAs we checked for and retried, we would get
-> READ_CAPACITY_RETRIES_ON_RESET retries plus whatever retries were left
-> from the main loop's retries. Each UA now gets
-> READ_CAPACITY_RETRIES_ON_RESET reties, and the other errors get up to 3
-> retries. This is most likely ok, because READ_CAPACITY_RETRIES_ON_RESET
-> is already 10 and is not based on anything specific like a spec or
-> device, so the extra 3 we got from the main loop was probably just an
-> accident and is not going to help.
+> 
 
-Is this the same patch as 
-https://lore.kernel.org/linux-scsi/89938a66-7203-4809-8d45-c820b5a21d4c@oracle.com/? 
-If so, does
-John Garry's Reviewed-by still apply?
+Applied to 6.17/scsi-fixes, thanks!
 
-Thanks,
+[1/1] scsi: lpfc: Fix wrong function reference in a comment
+      https://git.kernel.org/mkp/scsi/c/a59976116a01
 
-Bart.
+-- 
+Martin K. Petersen	Oracle Linux Engineering
