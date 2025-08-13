@@ -1,108 +1,210 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B61101DFE09;
-	Wed, 13 Aug 2025 02:26:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1256E24DD0B;
+	Wed, 13 Aug 2025 02:48:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755052012; cv=none; b=azPXUm43bZy0JbGdxBEVdYNtr1QBaTmtxH0NE8Ozf/7g2bz7Atbb80nb6SxADGkptDmNpaQd/Pyf+awI9nRuS/+ehrqDVtWvXTK14u5mk0DTXnncZ8siAmOYNhVFAFHHIIDdIHoHWk3hTkaiNZO0Vtdbkp03fDqrsPy1itRI5S0=
+	t=1755053292; cv=none; b=ZjuZtEOaAw/fTeFbbSHF02XNOilN9KuPUqAudIR6kcGrPoBH94XQz02uGOATvur/OZpBZFg3Qu7x0eUpVUp53CiUJ4C2rs5c/BOqgHmg3+CLXHAMxogW9Mba5NKeRz5izcG+XbjJYykUu+VlkpJVTEyn+8z6Puhllg9dFULFLno=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755052012; c=relaxed/simple;
-	bh=qZ/ufpn8BKzL1WoHIgc6fius6PHeGC33aJ9tGGnau2I=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e8iLEMyp00MjOSbMAIoHl3/6yUDGqazS5Cnpwew39uLC+QQepd27+rgRELV+zQ3yxGDFaeUp9HETRJ9PPeQAeV7yFg9LjENUvO8ihCxDE8xd5pKl4cqbBsbQbcuSM99fEa8koh/xD6PBX0/XRBMHR0zy0xrfecSmqgunP72VwO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Eo+1ssNh; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Eo+1ssNh"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57CLR71U027960;
-	Wed, 13 Aug 2025 02:26:41 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=Um7Ftz2a9Gxqh6yDazlSEYLyO0pibTwEm7GgOmUbkzk=; b=
-	Eo+1ssNhN6650v8o/LMZx2FW9gAWagdhwNRLl+ubpPrY4O+R5K9N12zEhNjAvV4r
-	dtrr4WzVJVfhjTuyez6fyzEmLgbUFEh9RlugPT6oj63Rct+QYcvKSlJzwP/2irTj
-	ZoTf/2B87ytlFe+ZNlnqiprvIk7gaKW8a7jvGaekzQslF4HfTyuxDqseu4D9k3u8
-	Cf9ecZ2tym4s7iltwX68Vp+uCgAFFt6/R4K7duOSTLfkwwadVHRtYRBVa+YCCQSj
-	9G3/nwQurZOpUhuFDi0QHBs0fRExmFFvVFIZvjwss6i7LDmeQ8CE8ij7bHhppTWx
-	DrS0t45YOPv3Hw524ZA7Ng==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 48dxcf69hr-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 13 Aug 2025 02:26:40 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 57D25ou5030254;
-	Wed, 13 Aug 2025 02:26:40 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 48dvsarqrd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 13 Aug 2025 02:26:40 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 57D2QaNc004410;
-	Wed, 13 Aug 2025 02:26:39 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 48dvsarqpw-3;
-	Wed, 13 Aug 2025 02:26:39 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Waqar Hameed <waqar.hameed@axis.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, kernel@axis.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: ufs: core: Remove error print for devm_add_action_or_reset()
-Date: Tue, 12 Aug 2025 22:26:28 -0400
-Message-ID: <175504926155.959040.11869002718065823267.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <pndtt2mkt8v.a.out@axis.com>
-References: <pndtt2mkt8v.a.out@axis.com>
+	s=arc-20240116; t=1755053292; c=relaxed/simple;
+	bh=tZ9QqB/EuyK2i06le0UC9Txj9cWiMawGnDax1Flyk8M=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=P119h/NNrAdixkzji79UhU4fhBAJy4VIBYMT/WvARONF86wostx8QwKPyjj7bJ+BppkEBe8LIhfCJtIMSHkInX894O0er1Q5CmJiAB9oW2Z2PU7TU5qEWDFaUuCDA1IQP3DKcpYJrtmp2RbmVO+dCmmn4mlPlFWbaMB8Mezvr20=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.216])
+	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c1t8l0WNPzKHMkv;
+	Wed, 13 Aug 2025 10:48:07 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.252])
+	by mail.maildlp.com (Postfix) with ESMTP id 50CC01A1303;
+	Wed, 13 Aug 2025 10:48:06 +0800 (CST)
+Received: from huaweicloud.com (unknown [10.175.104.67])
+	by APP3 (Coremail) with SMTP id _Ch0CgAHgdva_JtofdW_DQ--.32695S4;
+	Wed, 13 Aug 2025 10:48:02 +0800 (CST)
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+To: linux-fsdevel@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev,
+	linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	linux-api@vger.kernel.org,
+	hch@lst.de,
+	tytso@mit.edu,
+	djwong@kernel.org,
+	bmarzins@redhat.com,
+	chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com,
+	brauner@kernel.org,
+	martin.petersen@oracle.com,
+	yi.zhang@huawei.com,
+	yi.zhang@huaweicloud.com,
+	chengzhihao1@huawei.com,
+	yukuai3@huawei.com,
+	yangerkun@huawei.com
+Subject: [PATCH util-linux v2] fallocate: add FALLOC_FL_WRITE_ZEROES support
+Date: Wed, 13 Aug 2025 10:40:15 +0800
+Message-Id: <20250813024015.2502234-1-yi.zhang@huaweicloud.com>
+X-Mailer: git-send-email 2.39.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-12_08,2025-08-11_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 phishscore=0
- adultscore=0 mlxscore=0 bulkscore=0 spamscore=0 mlxlogscore=916
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2507300000 definitions=main-2508130022
-X-Proofpoint-GUID: BAvCVtlCWjQMdT78Yj-y5SpCg0e8lXSu
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODEzMDAyMiBTYWx0ZWRfX90KX3tldT5V2
- +gp4jwn8nYHU0cs2Uh+huTOO03M52QdVUqZuemmxDi71vbSD5f7TPZFk6P20KajFnL5XGZ2dTD9
- lEDr+AgJvIAgYqxwjIJvBV0mRSIf5MLXXVLUF9oWXC3MayB9r1ndM2fW0XwMoPrnFw0XshYNPx3
- 8onHik0DfGVJCc2UFRHEo9/dQb5WzvLvmn5yR02z32UqYrYcR7n/Km8ay8/TdAx/XQ73WDdOcHM
- YaBH6wlBh7t3sbWk09OStb73G6fUnJVBDcMs9icK4JElaVSHgBoSuucbm55Era2IuQ4/EGPfkIr
- ltMFjYkkwVOeHc4xHNLgNIiajCvhAOCajQ1Ng+HoBOLstJ3tEdu0Ndm0WIcUjFUd6pRcKAaidRx
- EeIbV/t9cLR77qcz04m4g0g4osTTKqzJrLeMo4oVSWjiYUIUMjvLlwRUd6T9rZP1BypLyXT6
-X-Authority-Analysis: v=2.4 cv=W8M4VQWk c=1 sm=1 tr=0 ts=689bf7e1 cx=c_pps
- a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
- a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=VwQbUJbxAAAA:8 a=mpvREF5a7mMPylFIW4IA:9
- a=QEXdDO2ut3YA:10
-X-Proofpoint-ORIG-GUID: BAvCVtlCWjQMdT78Yj-y5SpCg0e8lXSu
+X-CM-TRANSID:_Ch0CgAHgdva_JtofdW_DQ--.32695S4
+X-Coremail-Antispam: 1UD129KBjvJXoWxtFW7XFy3Cw43JFy5XFWkZwb_yoWxXryDpF
+	W5tF18K3yFgw4xGw1xAw4kWw15Zws5WrW5CrZ2grykAr13Ga17Ka1vgryFgasrXrWvka15
+	Xryavry3ur48AaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
+	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
+	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
+	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
+	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
+	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
+	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
+	zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
+	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
+	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
+	nIWIevJa73UjIFyTuYvjTRRBT5DUUUU
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On Tue, 05 Aug 2025 11:33:36 +0200, Waqar Hameed wrote:
+From: Zhang Yi <yi.zhang@huawei.com>
 
-> When `devm_add_action_or_reset()` fails, it is due to a failed memory
-> allocation and will thus return `-ENOMEM`. `dev_err_probe()` doesn't do
-> anything when error is `-ENOMEM`. Therefore, remove the useless call to
-> `dev_err_probe()` when `devm_add_action_or_reset()` fails, and just
-> return the value instead.
-> 
-> 
-> [...]
+The Linux kernel (since version 6.17) supports FALLOC_FL_WRITE_ZEROES in
+fallocate(2). Add support for FALLOC_FL_WRITE_ZEROES to the fallocate
+utility by introducing a new option -w|--write-zeroes.
 
-Applied to 6.17/scsi-fixes, thanks!
+Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=278c7d9b5e0c
+Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+---
+v1->v2:
+ - Minor description modification to align with the kernel.
 
-[1/1] scsi: ufs: core: Remove error print for devm_add_action_or_reset()
-      https://git.kernel.org/mkp/scsi/c/72fc388d8bc0
+ sys-utils/fallocate.1.adoc | 11 +++++++++--
+ sys-utils/fallocate.c      | 20 ++++++++++++++++----
+ 2 files changed, 25 insertions(+), 6 deletions(-)
 
+diff --git a/sys-utils/fallocate.1.adoc b/sys-utils/fallocate.1.adoc
+index 44ee0ef4c..0ec9ff9a9 100644
+--- a/sys-utils/fallocate.1.adoc
++++ b/sys-utils/fallocate.1.adoc
+@@ -12,7 +12,7 @@ fallocate - preallocate or deallocate space to a file
+ 
+ == SYNOPSIS
+ 
+-*fallocate* [*-c*|*-p*|*-z*] [*-o* _offset_] *-l* _length_ [*-n*] _filename_
++*fallocate* [*-c*|*-p*|*-z*|*-w*] [*-o* _offset_] *-l* _length_ [*-n*] _filename_
+ 
+ *fallocate* *-d* [*-o* _offset_] [*-l* _length_] _filename_
+ 
+@@ -28,7 +28,7 @@ The exit status returned by *fallocate* is 0 on success and 1 on failure.
+ 
+ The _length_ and _offset_ arguments may be followed by the multiplicative suffixes KiB (=1024), MiB (=1024*1024), and so on for GiB, TiB, PiB, EiB, ZiB, and YiB (the "iB" is optional, e.g., "K" has the same meaning as "KiB") or the suffixes KB (=1000), MB (=1000*1000), and so on for GB, TB, PB, EB, ZB, and YB.
+ 
+-The options *--collapse-range*, *--dig-holes*, *--punch-hole*, *--zero-range* and *--posix* are mutually exclusive.
++The options *--collapse-range*, *--dig-holes*, *--punch-hole*, *--zero-range*, *--write-zeroes* and *--posix* are mutually exclusive.
+ 
+ *-c*, *--collapse-range*::
+ Removes a byte range from a file, without leaving a hole. The byte range to be collapsed starts at _offset_ and continues for _length_ bytes. At the completion of the operation, the contents of the file starting at the location __offset__+_length_ will be appended at the location _offset_, and the file will be _length_ bytes smaller. The option *--keep-size* may not be specified for the collapse-range operation.
+@@ -76,6 +76,13 @@ Option *--keep-size* can be specified to prevent file length modification.
+ +
+ Available since Linux 3.14 for ext4 (only for extent-based files) and XFS.
+ 
++*-w*, *--write-zeroes*::
++Zeroes space in the byte range starting at _offset_ and continuing for _length_ bytes. Within the specified range, blocks are preallocated for the regions that span the holes in the file. After a successful call, subsequent reads from this range will return zeroes, subsequent writes to that range do not require further changes to the file mapping metadata.
+++
++Zeroing is done within the filesystem by preferably submitting write zeores commands, the alternative way is submitting actual zeroed data, the specified range will be converted into written extents. The write zeroes command is typically faster than write actual data if the device supports unmap write zeroes, the specified range will not be physically zeroed out on the device.
+++
++Options *--keep-size* can not be specified for the write-zeroes operation.
++
+ include::man-common/help-version.adoc[]
+ 
+ == AUTHORS
+diff --git a/sys-utils/fallocate.c b/sys-utils/fallocate.c
+index 13bf52915..8d37fdad7 100644
+--- a/sys-utils/fallocate.c
++++ b/sys-utils/fallocate.c
+@@ -40,7 +40,7 @@
+ #if defined(HAVE_LINUX_FALLOC_H) && \
+     (!defined(FALLOC_FL_KEEP_SIZE) || !defined(FALLOC_FL_PUNCH_HOLE) || \
+      !defined(FALLOC_FL_COLLAPSE_RANGE) || !defined(FALLOC_FL_ZERO_RANGE) || \
+-     !defined(FALLOC_FL_INSERT_RANGE))
++     !defined(FALLOC_FL_INSERT_RANGE) || !defined(FALLOC_FL_WRITE_ZEROES))
+ # include <linux/falloc.h>	/* non-libc fallback for FALLOC_FL_* flags */
+ #endif
+ 
+@@ -65,6 +65,10 @@
+ # define FALLOC_FL_INSERT_RANGE		0x20
+ #endif
+ 
++#ifndef FALLOC_FL_WRITE_ZEROES
++# define FALLOC_FL_WRITE_ZEROES		0x80
++#endif
++
+ #include "nls.h"
+ #include "strutils.h"
+ #include "c.h"
+@@ -94,6 +98,7 @@ static void __attribute__((__noreturn__)) usage(void)
+ 	fputs(_(" -o, --offset <num>   offset for range operations, in bytes\n"), out);
+ 	fputs(_(" -p, --punch-hole     replace a range with a hole (implies -n)\n"), out);
+ 	fputs(_(" -z, --zero-range     zero and ensure allocation of a range\n"), out);
++	fputs(_(" -w, --write-zeroes   write zeroes and ensure allocation of a range\n"), out);
+ #ifdef HAVE_POSIX_FALLOCATE
+ 	fputs(_(" -x, --posix          use posix_fallocate(3) instead of fallocate(2)\n"), out);
+ #endif
+@@ -304,6 +309,7 @@ int main(int argc, char **argv)
+ 	    { "dig-holes",      no_argument,       NULL, 'd' },
+ 	    { "insert-range",   no_argument,       NULL, 'i' },
+ 	    { "zero-range",     no_argument,       NULL, 'z' },
++	    { "write-zeroes",   no_argument,       NULL, 'w' },
+ 	    { "offset",         required_argument, NULL, 'o' },
+ 	    { "length",         required_argument, NULL, 'l' },
+ 	    { "posix",          no_argument,       NULL, 'x' },
+@@ -312,8 +318,8 @@ int main(int argc, char **argv)
+ 	};
+ 
+ 	static const ul_excl_t excl[] = {	/* rows and cols in ASCII order */
+-		{ 'c', 'd', 'i', 'p', 'x', 'z'},
+-		{ 'c', 'i', 'n', 'x' },
++		{ 'c', 'd', 'i', 'p', 'w', 'x', 'z'},
++		{ 'c', 'i', 'n', 'w', 'x' },
+ 		{ 0 }
+ 	};
+ 	int excl_st[ARRAY_SIZE(excl)] = UL_EXCL_STATUS_INIT;
+@@ -323,7 +329,7 @@ int main(int argc, char **argv)
+ 	textdomain(PACKAGE);
+ 	close_stdout_atexit();
+ 
+-	while ((c = getopt_long(argc, argv, "hvVncpdizxl:o:", longopts, NULL))
++	while ((c = getopt_long(argc, argv, "hvVncpdizwxl:o:", longopts, NULL))
+ 			!= -1) {
+ 
+ 		err_exclusive_options(c, longopts, excl, excl_st);
+@@ -353,6 +359,9 @@ int main(int argc, char **argv)
+ 		case 'z':
+ 			mode |= FALLOC_FL_ZERO_RANGE;
+ 			break;
++		case 'w':
++			mode |= FALLOC_FL_WRITE_ZEROES;
++			break;
+ 		case 'x':
+ #ifdef HAVE_POSIX_FALLOCATE
+ 			posix = 1;
+@@ -429,6 +438,9 @@ int main(int argc, char **argv)
+ 			else if (mode & FALLOC_FL_ZERO_RANGE)
+ 				fprintf(stdout, _("%s: %s (%ju bytes) zeroed.\n"),
+ 								filename, str, length);
++			else if (mode & FALLOC_FL_WRITE_ZEROES)
++				fprintf(stdout, _("%s: %s (%ju bytes) write zeroed.\n"),
++								filename, str, length);
+ 			else
+ 				fprintf(stdout, _("%s: %s (%ju bytes) allocated.\n"),
+ 								filename, str, length);
 -- 
-Martin K. Petersen	Oracle Linux Engineering
+2.39.2
+
