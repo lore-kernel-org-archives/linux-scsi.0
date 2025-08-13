@@ -1,118 +1,100 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f179.google.com (mail-pl1-f179.google.com [209.85.214.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 806A9303CB7
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Aug 2025 17:50:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA63A20D50C
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Aug 2025 19:43:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755107414; cv=none; b=XvguJYmck9jkQiAw1Hrr4oQv6Al6S/+EbuOHGGUdlOmqFNZE4Jd9gNOqbMx0q5fVgsuX7rU8IqanaHO2wXvmXwqyQHTYqZdh5RGpU6ZCuN8LmG2GSsmwtLZR5P0EKAhgrAdugjJAKLatfZoXYupz3dgRQDApBzyYkC4MdKipb2w=
+	t=1755114182; cv=none; b=qPCnWmgplZbzqhqXcZEv1p32iBPMvwA2xxvQYlKdK+UyPU+dkzqD65aKpVm3osMyKF3r8k5uoL+4nk0Zcdupu7qLAJx4wNDeRHHC0H8SOOxNGYx3+t3z1hvWa+xlm0rJ7cuh1NIQbXHmHytxE94f7Iw1kuQZI8l6kiTRoBr5rJg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755107414; c=relaxed/simple;
-	bh=V+ikqvY90DQRJvTEGADcxWxCYOW0HTy+dUDlTEgdOOI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=UmhrCZD+T10anjizyKZYFveWEBVDgltJ2YyVkqpx8+082/Zd0GdUixma0z17m51IjVF2jAjAtMawc0ZpctAh6gi2o/xqjK5uEvOJ4kfaBvers64EaeNWXsUC9fksDiuZ4LAJnxWRVEne/gGFXBgy7Z9lNQN9oKOd6IQEhhY6R8E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tjriV75Y; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755114182; c=relaxed/simple;
+	bh=S3+lEZFxzNFrR1dDHVo0nGH6n5NzkJBRG7g9FCSGDBg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=irbkAJH4LGfioGE7nZGYbAFwbih9vYomMYIpG6t1AVZM7UDh4N8DAnq4/p5tGcaFoIMabxU4FTtcdBU9GnN6HC7J8ishnvNSaZ5ZK7RID0qKFGwc1WvdpFU997kgGIyY/PU+j5kSCgbFMDpVWJlmddfFAaHARWzL5xKG4V0hVVI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=dUfpT8dB; arc=none smtp.client-ip=209.85.214.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tjriV75Y"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c2G9b4CV4zlvNRT;
-	Wed, 13 Aug 2025 17:50:11 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755107410; x=1757699411; bh=N4bEyW3COAKK6HkHHVMD4swf
-	2J+Nb7srE5su5kcTGwU=; b=tjriV75Yc5iBDm5gaA3OAz5s5y7YVt6rL7KNZKlM
-	QQW3zLN0BGGzCxeTg9ob68HiYRa+YXBupKs3WEV+M9LJqS/GfwOirq60GsXJMNPw
-	yNN4uLHrXv43zT/yAkMv3ZlOPyh+ZNEYdaUqSLxR+kkU8CC/5SJRtcX3gwQOxRsr
-	/7yKz72ON4gfuEVBmSjORoxFyJwRuVxFT2JdASUYMLaya3uzb2iF/rAJ39LVhTLb
-	BcntmWLjzhiFm2Ces32pwtSH29CmLRrXQ15gN8VbPPkIalrCTsH2Gn97JU78i0Zz
-	hvNj2KtyS1KClCxv0/96Ibo0kFT49UvYIhB+1tKmTElh9w==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id a2nSOZxYw4jM; Wed, 13 Aug 2025 17:50:10 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c2G9W6CHBzlvNR7;
-	Wed, 13 Aug 2025 17:50:07 +0000 (UTC)
-Message-ID: <31fd2c7b-9b1a-4ff3-9b9c-6eaef269a5ea@acm.org>
-Date: Wed, 13 Aug 2025 10:50:06 -0700
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="dUfpT8dB"
+Received: by mail-pl1-f179.google.com with SMTP id d9443c01a7336-242d3be5bdfso1325ad.1
+        for <linux-scsi@vger.kernel.org>; Wed, 13 Aug 2025 12:43:00 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1755114180; x=1755718980; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=e5yjeBF0Fvuj+XdIYTIoaakOdeBP3QCm0K+Uemswf7w=;
+        b=dUfpT8dB6EKOKBAWPGXJfJQhCJkQpIYTNX1NistmLf9xexotK563v18Gn6RXZzc/HB
+         KMbZIlJGbyonjTvc2O8jD1R+pq8llZIVISJf2cgIaVmgkUYm8fU4gCTiMkzyTFqcyGPr
+         15eO2EX+MyXGExVtHXKSx4mqqFX77+SJPIpu7UIzrqR4xdTxVIl5N19E6pKpOUQCUQMf
+         e61sMoLI0z7l4uVU8eTfFdoHGsQAaAvhcSB5F4OMTL5jKZeAEOBtIInugSOgw9Iw8bJg
+         YqUSbIlBTPyI429fbZdiNu0BDVEDZM/2bRer1KRmjOucL8bmW1bQyQ45vc/P18zOqocJ
+         ZfRg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755114180; x=1755718980;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=e5yjeBF0Fvuj+XdIYTIoaakOdeBP3QCm0K+Uemswf7w=;
+        b=NiF39zVkzbwmBcDNhdiA1Wo0KmERfPfwSctGbM9WBjK670MyoXnGBu8/8vOSlw9+D8
+         6MaF76/Y/q4MskB08x+JCkw3wDIF3UlilgUA41ZwjlnXMeGZUYpjSwmyrSktFilaWJHJ
+         6mfG7jW9k7N+nCB5QiVKvpQpHgb6VjilI5FlnNGxjsdKktK7/7rDw37/kmk9aM++Wlxt
+         14TqUlMxzj2qyzUGCm40UV/BAQvv2rL1dpRbJjWA3LZGXrTrmpoBzSVVYgPr4ASVXtgN
+         Pe1LgtC071cSjHZ7nwId0MWFUaSmYtC6Mh1g0uXTE6NSLsdG1r5PjmK9c4OjyhqJ6zXB
+         JpRg==
+X-Forwarded-Encrypted: i=1; AJvYcCXIQfHTS8WGHKtftNvCWDmF9U1YJUOcPhqWx27KqZlQyNDZ8iMk/cLNMsWwSbVr4s+cj7XEJsFZjh0b@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzzdopoe+v2atVz5HYgAVtYLZfMw/HdnM2Kn//brySgOFDoi/n1
+	bJtrXKQqPy7tEPM/M2FTLrNOcJHy33vRqLUR+b18ZtwKwWJQClK+dJ0/ibcEeSSVMA==
+X-Gm-Gg: ASbGncsQC9Xypxdo+2Bife0/SNf+QTog8EwRs7dqChztSRujijUK3xu0LiYMz2SIc9F
+	1sUBEFqGaGpuUFYKwgA4kBc/inUnkdKDa43mBKhTbMXNE1RrWrhuZvjeQNfMUSAa+lACDggQVz4
+	h0RbmgKosg24CE3jr3eLQWnybi5OaXOJhk/M/8LOVxYSpiC9ux2WDEHyYbtTEJqWAqJQs2KJR5o
+	V9Mzp3l+pZzfShWDbnLSH4Ruit20tKPvP0D8Lv0Z1O5sO81CDRnqzJdCroxriDxJUP60qQUMZU4
+	BZyi3IebTX+yiJFtjxkv9jODzfZqvxAFsxIpJbou1lhZFe8yjcu6DQCWS13MvqfBDVHwnKvDYE9
+	dPaTlgdpDka0ZX1kEknheuRV9PZJIi23E5GOh+yMEoExaxnL+qUPFoTbTkw==
+X-Google-Smtp-Source: AGHT+IFB4a9Tlba7GPaRUSvgnWq6N832jg/KaVdUpCZA0Nv9gL9PzqWfSTUd4LufwdODQPn8/jVjzw==
+X-Received: by 2002:a17:903:11c7:b0:23f:df2c:9f0d with SMTP id d9443c01a7336-24458e56fb8mr197455ad.21.1755114179780;
+        Wed, 13 Aug 2025 12:42:59 -0700 (PDT)
+Received: from google.com (57.23.105.34.bc.googleusercontent.com. [34.105.23.57])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-241d1f0f603sm333079445ad.48.2025.08.13.12.42.58
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Aug 2025 12:42:58 -0700 (PDT)
+Date: Wed, 13 Aug 2025 12:42:54 -0700
+From: Igor Pylypiv <ipylypiv@google.com>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Terrence Adams <tadamsjr@google.com>,
+	Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/5] scsi: pm80xx: Restore support for expanders
+Message-ID: <aJzqvp4QPn1qQa_Q@google.com>
+References: <20250813114107.916919-7-cassel@kernel.org>
+ <20250813114107.916919-8-cassel@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/5] scsi: sd: Have scsi-ml retry read_capacity_16 errors
-To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
-Cc: michael.christie@oracle.com, dgilbert@interlog.com
-References: <20250716184833.67055-1-emilne@redhat.com>
- <20250716184833.67055-2-emilne@redhat.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250716184833.67055-2-emilne@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250813114107.916919-8-cassel@kernel.org>
 
-On 7/16/25 11:48 AM, Ewan D. Milne wrote:
-> +		/*
-> +		 * Do not retry Invalid Command Operation Code or Invalid
-> +		 * Field in CDB.
-> +		 */
-> +		{
-> +			.sense = ILLEGAL_REQUEST,
-> +			.asc = 0x20,
-> +			.result = SAM_STAT_CHECK_CONDITION,
-> +		},
-> +		{
-> +			.sense = ILLEGAL_REQUEST,
-> +			.asc = 0x24,
-> +			.result = SAM_STAT_CHECK_CONDITION,
-> +		},
-> +		/* Do not retry Medium Not Present */
-> +		{
-> +			.sense = UNIT_ATTENTION,
-> +			.asc = 0x3A,
-> +			.result = SAM_STAT_CHECK_CONDITION,
-> +		},
-> +		{
-> +			.sense = NOT_READY,
-> +			.asc = 0x3A,
-> +			.result = SAM_STAT_CHECK_CONDITION,
-> +		},
-> +		/* Device reset might occur several times so retry a lot */
-> +		{
-> +			.sense = UNIT_ATTENTION,
-> +			.asc = 0x29,
-> +			.allowed = READ_CAPACITY_RETRIES_ON_RESET,
-> +			.result = SAM_STAT_CHECK_CONDITION,
-> +		},
+On Wed, Aug 13, 2025 at 01:41:08PM +0200, Niklas Cassel wrote:
+> Commit 0f630c58e31a ("scsi: pm80xx: Do not use libsas port ID") broke
+> support for expanders. After the commit, devices behind an expander are no
+> longer detected.
+> 
+> Simply reverting the commit restores support for devices behind an
+> expander.
+> 
+> Instead of reverting the commit (and reintroducing a helper to get the
+> port), get the port directly from the lldd_port pointer in struct
+> asd_sas_port.
+> 
+> Suggested-by: Igor Pylypiv <ipylypiv@google.com>
+> Fixes: 0f630c58e31a ("scsi: pm80xx: Do not use libsas port ID")
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-For the first, second and fifth array elements above: leaving out .ascq
-is the same as requiring that the ASCQ value is zero. I prefer to make
-this explicit by adding ".ascq = 0," in these array elements.
+Thank you for fixing this, Niklas!
 
-Additionally, media_not_present() doesn't check the ASCQ value while
-the above array only accepts ASCQ == 0 if ASC == 0x3a. Please either
-mention this behavior change in the patch description or add the
-following in the third and fourth array elements:
-".ascq = SCMD_FAILURE_ASCQ_ANY,".
-
-> +	memset(buffer, 0, RC16_LEN);
-
-Isn't the preferred style "memset(buffer, 0, ARRAY_SIZE(buffer))"? This
-makes it easier for readers to verify that the third argument is
-correct.
-
-Otherwise this patch looks good to me.
-
-Thanks,
-
-Bart.
+Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
