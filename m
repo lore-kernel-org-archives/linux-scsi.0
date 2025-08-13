@@ -1,48 +1,48 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9FC627F011;
-	Wed, 13 Aug 2025 16:02:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB535287510
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Aug 2025 16:04:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755100935; cv=none; b=PaPdjHqqCnFJr/wWBWtq9omE6UXOjxZDSBWfxR+aAvKoXCWTmSgHOy5KipiC/L8PWvAIJqEQAyhaCkLi/BsA9FVIWVV7NE4a8wsriH4u1K/Vi2Gka5jBht2S43ByslbWH01ogHmZwAizZ09TwMlUq5NGUIwEXFyeSURgNTAPs8M=
+	t=1755101063; cv=none; b=j6fIXJQQv1IjkibHBBw98TYFdHeZxxrZ6EfveUH6e6rrjuDMw6EqYaqrk0uqJ9BzVPqbxvkJCBsoP7ER8yF9qPmdXjCcRfz3HWiUuvTr8DouJhHVm9hb3vbb6gnGE9XKNP+KdGZo1hRSZ7NBa9a/oMrk/qxSV0xmWzY+TBC7utI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755100935; c=relaxed/simple;
-	bh=/IInu1GSbHtzTPZpYgApvUKxtuzp3AMbxp5bRS+CSKs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=DLy0Z9e/W35dk8UUBOU4zWFoX8OrAHxDmvvookorLHn09kUwuPySZmZhiieBGSfGySR7OlX46TUTyV1NJ/qobxAi3Inmk5sm0g4kpOMqLGaAuQnHT3/TjP0vK95G5ZhOHbpc2xfOcL1ftLXr2v38KufUACchtz40CO4etUkWsU4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=HciJ1eXc; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1755101063; c=relaxed/simple;
+	bh=1CdDSLxLxNhC8aamI1JOnJ1KxEvA5UCJHIOgIBzP7Zg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Kb372G0JZBJJzfW4mTlYZ+F0Ydtk1Pn+NRvPbvk7ZAZW9ZOSViMrPrw9kQzy6to475hWT6TOw2mjxDs78pby/XF0HhSLb7Pp95s5cCNsAzpf+POSfBotEiup46p37pbe/lex9vlVYwcXXCP7A0WI3Z0XIjhH0qTA+HyoEyRTXdE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fDZ1hVao; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="HciJ1eXc"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57DBLtgL012998;
-	Wed, 13 Aug 2025 16:02:04 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	tOU6SdsJCLYdXKqlaVp+vUFgj1ZmLPafp6bUHKPnOgU=; b=HciJ1eXc4aRksPmt
-	Jc8vdM9ipLuQKYcy8P5hkSZIQ6xc7XLvYxIMpbeom658YqF0sFIrFfTqXimTyR/S
-	LDrexqLzVKGiv6eALosS1VA4ndUFrjIs9EGkbPRWS4pjvNErhKuabX1zq/XiS/TS
-	cu477Sz40q3gta1tShS8ADvzr25+9tP8/IqbDDkBJx6sWWPHSZexg4MTMYqNNw4F
-	NIuSwBt4QIX4OglJnOVCDEpN+nbOUTSt5v2DQd2FVN8WTPSSB6AFOAjHTHPiNpI2
-	0tlKLvrtHq/CseoJvPJbl01T/oVEbzTrrvUxBQH/VOT5GYX3AY2T/3fqmnHLep4S
-	dugjJA==
-Received: from nasanppmta02.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48eqhxagtf-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Aug 2025 16:02:04 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57DG23tN012748
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 13 Aug 2025 16:02:03 GMT
-Received: from [10.216.60.81] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Wed, 13 Aug
- 2025 09:02:00 -0700
-Message-ID: <4c70139e-2026-4221-88d8-b64f675ad78e@quicinc.com>
-Date: Wed, 13 Aug 2025 21:31:57 +0530
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fDZ1hVao"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c2CqM4MrVzltP0T;
+	Wed, 13 Aug 2025 16:04:15 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1755101053; x=1757693054; bh=1CdDSLxLxNhC8aamI1JOnJ1K
+	xEvA5UCJHIOgIBzP7Zg=; b=fDZ1hVaotGNJD3PIccepHVZCapjB04NqwiqqnpHM
+	nVSMmGCBNXdiANHgpZ6zpOzYguDnSnoiBr4V8bXfF5ET/UDthIhpbfkVjNIJLhTG
+	Fi1FBKPtU2rg3GowPxAs0d9hwsbw9Yv3PWO744MHJb9FR+9ZacWq1wPVTB8Swj7b
+	dTyz7OQQPyuEpZrNYOgLcOOZujUTBcKhek4enyu12Kb9GwOYkitdPC7wicjNvtiY
+	9gVV+nP+p9Eg1vxdvcvQPu4abHoH4BbvzjCN75Irr4gkTEaK/1n4MbtwdbMzx2Q3
+	OdNeIqSRaTgo/Fl8uT4RuwFEjEeQW4rEHwcoeXvQnzuQig==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id gQFAD1fkPDFT; Wed, 13 Aug 2025 16:04:13 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c2Cq73jn3zlfnBh;
+	Wed, 13 Aug 2025 16:04:02 +0000 (UTC)
+Message-ID: <b707f40c-707f-4ef4-af9d-915dd8d5ea52@acm.org>
+Date: Wed, 13 Aug 2025 09:04:01 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,151 +50,34 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3] ufs: ufs-qcom: Align programming sequence of Shared
- ICE for UFS controller v5
-To: Manivannan Sadhasivam <mani@kernel.org>
-CC: <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-        <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <quic_nitirawa@quicinc.com>
-References: <20250812091714.774868-1-quic_pkambar@quicinc.com>
- <x5pkfdxwnpqv66d4y3bucpd6vpxbsahdt2mdj6mdlb43emfkxn@dktn4wpuosgr>
+Subject: Re: [PATCH 4/4] ufs: core: Rename ufshcd_wait_for_doorbell_clr()
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "beanhuo@micron.com" <beanhuo@micron.com>, "mani@kernel.org"
+ <mani@kernel.org>, "avri.altman@sandisk.com" <avri.altman@sandisk.com>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
+ "adrian.hunter@intel.com" <adrian.hunter@intel.com>
+References: <20250811154711.394297-1-bvanassche@acm.org>
+ <20250811154711.394297-5-bvanassche@acm.org>
+ <f11710482738e2550ede731eb8699a2c9967fe8a.camel@mediatek.com>
 Content-Language: en-US
-From: Palash Kambar <quic_pkambar@quicinc.com>
-In-Reply-To: <x5pkfdxwnpqv66d4y3bucpd6vpxbsahdt2mdj6mdlb43emfkxn@dktn4wpuosgr>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODEwMDA1NyBTYWx0ZWRfX25yngnbUoLE1
- IYj5Ds1okxAwSVEX1P0ZDB+8g8kmXVuPrmahmBREVwk2K6TPLMaut+eDKD82IAjxP0PNHtIGKRN
- eENLp/wLxofNyKcPgHyAaR76Vc7ATMwZj58xpy/Qy7oyegkXuUtJNB8rlVdZX/iZQ9sgPBkouHY
- 0rwajmcLXoIPDKTCdBWMBWyhvKDoGzOOhgRQliNr2Kb+/WctkIN6Y9m+DjH/172iJMCNYfS+lWb
- YS5DDDbPZ4yJpXfV1s+2KDWPc4PdvFjsn+qDMr62YUWeE1Eng3mXusW9RSdNDStykF+1Ms9k3Cm
- iDwE5A9/HU5xaaaPZ1qrzoin/tpxshEXsYyKfTv0SwrNtT7zRy59D31uJZAmNhHaAafp9CfOOMo
- GZegczhy
-X-Proofpoint-GUID: ZAK3Cs5ebEjQLy8SDZYd8uuD6eL4VohX
-X-Authority-Analysis: v=2.4 cv=aYNhnQot c=1 sm=1 tr=0 ts=689cb6fc cx=c_pps
- a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8
- a=bFtwN0H5KFSSgKAYKl4A:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: ZAK3Cs5ebEjQLy8SDZYd8uuD6eL4VohX
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-13_01,2025-08-11_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- spamscore=0 adultscore=0 priorityscore=1501 suspectscore=0 phishscore=0
- impostorscore=0 bulkscore=0 malwarescore=0 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508100057
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <f11710482738e2550ede731eb8699a2c9967fe8a.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
+On 8/12/25 2:03 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> According to the UFS specification, switching gears does not
+> require waiting for IO to complete. Therefore, should we consider
+> removing this function entirely?
 
+I don't think so. Switching gears involves submitting an UIC power mode=20
+change. From the UFSHCI 4.1 standard: "The Adapt is always performed in
+conjunction with Power Mode Change. During the Power Mode Change
+(and hence for the whole duration of the Adapt sequence) there will be
+no data traffic on the link."
 
-On 8/13/2025 3:25 PM, Manivannan Sadhasivam wrote:
-> On Tue, Aug 12, 2025 at 02:47:14PM GMT, Palash Kambar wrote:
->> Disable of AES core in Shared ICE is not supported during power
->> collapse for UFS Host Controller V5.0.
->>
-> 
-> Could you please add more info on the issue observed?
-
-Sure Mani.
-
-> 
->> Hence follow below steps to reset the ICE upon exiting power collapse
->> and align with Hw programming guide.
->>
->> a. Write 0x18 to UFS_MEM_ICE_CFG
->> b. Write 0x0 to UFS_MEM_ICE_CFG
->>
-> 
-> Please be explicit about the fields you are writing to.
-> 
->> Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
->>
->> ---
->> changes from V1:
->> 1) Incorporated feedback from Konrad and Manivannan by adding a delay
->>    between ICE reset assertion and deassertion.
->> 2) Removed magic numbers and replaced them with meaningful constants.
->>
->> changes from V2:
->> 1) Addressed Manivannan's comment and moved change to ufs_qcom_resume.
->> ---
->>  drivers/ufs/host/ufs-qcom.c | 14 ++++++++++++++
->>  drivers/ufs/host/ufs-qcom.h |  2 +-
->>  2 files changed, 15 insertions(+), 1 deletion(-)
->>
->> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
->> index 444a09265ded..60bf5e60b747 100644
->> --- a/drivers/ufs/host/ufs-qcom.c
->> +++ b/drivers/ufs/host/ufs-qcom.c
->> @@ -38,6 +38,9 @@
->>  #define DEEMPHASIS_3_5_dB	0x04
->>  #define NO_DEEMPHASIS		0x0
->>  
->> +#define UFS_ICE_RESET_ASSERT_VALUE	0x18
->> +#define UFS_ICE_RESET_DEASSERT_VALUE	0x00
-> 
-> Please define the actual bits as per the documentation, not the value you are
-> writing. Here, you are changing two fields:
-> 
-> ICE_SYNC_RST_SEL BIT(3)
-> ICE_SYNC_RST_SW BIT(4)
-
-ok Mani.
-
->> +
->>  enum {
->>  	TSTBUS_UAWM,
->>  	TSTBUS_UARM,
->> @@ -756,6 +759,17 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
->>  	if (err)
->>  		return err;
->>  
->> +	if ((!ufs_qcom_is_link_active(hba)) &&
->> +	    host->hw_ver.major == 5 &&
->> +	    host->hw_ver.minor == 0 &&
->> +	    host->hw_ver.step == 0) {
->> +		ufshcd_writel(hba, UFS_ICE_RESET_ASSERT_VALUE, UFS_MEM_ICE);
->> +		ufshcd_readl(hba, UFS_MEM_ICE);
->> +		usleep_range(50, 100);
-> 
-> Please add a comment above the delay to make it clear that the delay is not as
-> per the doc:
-
-Sure.
-
-> 		/*
-> 		 * HW documentation doesn't recommend any delay between the
-> 		 * reset set and clear. But we are enforcing an arbitrary delay
-> 		 * to give flops enough time to settle in.
-> 		 */
-> 
->> +		ufshcd_writel(hba, UFS_ICE_RESET_DEASSERT_VALUE, UFS_MEM_ICE);
->> +		ufshcd_readl(hba, UFS_MEM_ICE);
->> +	}
->> +
->>  	return ufs_qcom_ice_resume(host);
->>  }
->>  
->> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
->> index 6840b7526cf5..cc1324ce05c7 100644
->> --- a/drivers/ufs/host/ufs-qcom.h
->> +++ b/drivers/ufs/host/ufs-qcom.h
->> @@ -60,7 +60,7 @@ enum {
->>  	UFS_AH8_CFG				= 0xFC,
->>  
->>  	UFS_RD_REG_MCQ				= 0xD00,
->> -
->> +	UFS_MEM_ICE				= 0x2600,
-> 
-> As the internal doc, this register is called UFS_MEM_ICE_CFG.
-
-Ok will update the register name.
-
-
-> - Mani
-> 
-
+Bart.
