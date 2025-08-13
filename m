@@ -1,95 +1,118 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BEE6303C87
-	for <linux-scsi@vger.kernel.org>; Wed, 13 Aug 2025 17:11:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 806A9303CB7
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Aug 2025 17:50:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755105073; cv=none; b=Q4zSvv+MURmmN/MzUofOcZNtHPQKkHuXS4qlGHfIi//XdEUE6piEN/QTBdTzl1UzO2LeNIY7IAZ+yCPSFJV39R6r7BL/B4qvRj88j1Giw1eFA08AwhjEtK7rjZRSqOFOird78AkkuEwCEud1O7vxKULTY4Aq1Ol29xvbh7NBnB8=
+	t=1755107414; cv=none; b=XvguJYmck9jkQiAw1Hrr4oQv6Al6S/+EbuOHGGUdlOmqFNZE4Jd9gNOqbMx0q5fVgsuX7rU8IqanaHO2wXvmXwqyQHTYqZdh5RGpU6ZCuN8LmG2GSsmwtLZR5P0EKAhgrAdugjJAKLatfZoXYupz3dgRQDApBzyYkC4MdKipb2w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755105073; c=relaxed/simple;
-	bh=boO7ZDd3fcmEsW9fX3PKV6hzuYiMkvyY7qzLgX2AyfQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=YdnMn88P0S96//LIqC6Bm6DVISrS3oT/nMU9PQCkeB2iZC4g93hp5YSg0WLj0kOvBZL+VhuNeOMlKZK+WSKstiCltI2a+wBvChmBgz1GXlLM8Hp0ldGxrEXRIRRpQ4Dpe9Basn2isXK7iqGHgOXZG+tPSe9KxAcqqDNDFbxXSzI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ljU4hAw0; arc=none smtp.client-ip=199.89.3.6
+	s=arc-20240116; t=1755107414; c=relaxed/simple;
+	bh=V+ikqvY90DQRJvTEGADcxWxCYOW0HTy+dUDlTEgdOOI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=UmhrCZD+T10anjizyKZYFveWEBVDgltJ2YyVkqpx8+082/Zd0GdUixma0z17m51IjVF2jAjAtMawc0ZpctAh6gi2o/xqjK5uEvOJ4kfaBvers64EaeNWXsUC9fksDiuZ4LAJnxWRVEne/gGFXBgy7Z9lNQN9oKOd6IQEhhY6R8E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tjriV75Y; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ljU4hAw0"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tjriV75Y"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c2FJb0fQtzlfnBh;
-	Wed, 13 Aug 2025 17:11:11 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c2G9b4CV4zlvNRT;
+	Wed, 13 Aug 2025 17:50:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1755105069; x=1757697070; bh=k2orm+3JzanzWs9O6muAGRMF8kMFRKD7g03
-	HTh7Xe5w=; b=ljU4hAw0W2zdLt9g3Tibv3pp825C47ZFREB6mVUVgUroJFoVUFS
-	hQ44LC5E/CJQ4kgdLoxGFHRWMKvtn+xpRLTUxzw0ot3EdAGshgaKL6kKi28qWvAx
-	zGRrrfdg1vAaPit3sEgGL5SO1lyt6emw6y/kV/l6v311s8JIJuTmi+gQhyiX5q97
-	GpcrdAbv4rh0GVb+v+YPTwYhspqp0szA8c8e9A+Ggk4MgiJ3TfWHCn1Gs0LH77yk
-	RYyIFy+CyJoUz3hMQpc4uqF1J0y18ywuJ419a6cE0QnZq7whJFH0p7KYeg2B3sTr
-	jSWhcg1mNS5YBkzK4e3D5w/q2QyJ8zyeglA==
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1755107410; x=1757699411; bh=N4bEyW3COAKK6HkHHVMD4swf
+	2J+Nb7srE5su5kcTGwU=; b=tjriV75Yc5iBDm5gaA3OAz5s5y7YVt6rL7KNZKlM
+	QQW3zLN0BGGzCxeTg9ob68HiYRa+YXBupKs3WEV+M9LJqS/GfwOirq60GsXJMNPw
+	yNN4uLHrXv43zT/yAkMv3ZlOPyh+ZNEYdaUqSLxR+kkU8CC/5SJRtcX3gwQOxRsr
+	/7yKz72ON4gfuEVBmSjORoxFyJwRuVxFT2JdASUYMLaya3uzb2iF/rAJ39LVhTLb
+	BcntmWLjzhiFm2Ces32pwtSH29CmLRrXQ15gN8VbPPkIalrCTsH2Gn97JU78i0Zz
+	hvNj2KtyS1KClCxv0/96Ibo0kFT49UvYIhB+1tKmTElh9w==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id WT7t_csPzmwT; Wed, 13 Aug 2025 17:11:09 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+ id a2nSOZxYw4jM; Wed, 13 Aug 2025 17:50:10 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c2FJQ02zjzltH6Q;
-	Wed, 13 Aug 2025 17:11:01 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH] ufs: core: Improve IOPS
-Date: Wed, 13 Aug 2025 10:10:41 -0700
-Message-ID: <20250813171049.3399387-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.51.0.rc1.163.g2494970778-goog
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c2G9W6CHBzlvNR7;
+	Wed, 13 Aug 2025 17:50:07 +0000 (UTC)
+Message-ID: <31fd2c7b-9b1a-4ff3-9b9c-6eaef269a5ea@acm.org>
+Date: Wed, 13 Aug 2025 10:50:06 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/5] scsi: sd: Have scsi-ml retry read_capacity_16 errors
+To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
+Cc: michael.christie@oracle.com, dgilbert@interlog.com
+References: <20250716184833.67055-1-emilne@redhat.com>
+ <20250716184833.67055-2-emilne@redhat.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250716184833.67055-2-emilne@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Measurements have shown that IOPS improve by 2% - 3% on my UFS 4 test
-setup every time a ktime_get() call is removed from the UFS driver
-command processing path. Hence this patch that modifies
-ufshcd_clk_scaling_start_busy() such that ktime_get() is only called
-if the returned value will be used.
+On 7/16/25 11:48 AM, Ewan D. Milne wrote:
+> +		/*
+> +		 * Do not retry Invalid Command Operation Code or Invalid
+> +		 * Field in CDB.
+> +		 */
+> +		{
+> +			.sense = ILLEGAL_REQUEST,
+> +			.asc = 0x20,
+> +			.result = SAM_STAT_CHECK_CONDITION,
+> +		},
+> +		{
+> +			.sense = ILLEGAL_REQUEST,
+> +			.asc = 0x24,
+> +			.result = SAM_STAT_CHECK_CONDITION,
+> +		},
+> +		/* Do not retry Medium Not Present */
+> +		{
+> +			.sense = UNIT_ATTENTION,
+> +			.asc = 0x3A,
+> +			.result = SAM_STAT_CHECK_CONDITION,
+> +		},
+> +		{
+> +			.sense = NOT_READY,
+> +			.asc = 0x3A,
+> +			.result = SAM_STAT_CHECK_CONDITION,
+> +		},
+> +		/* Device reset might occur several times so retry a lot */
+> +		{
+> +			.sense = UNIT_ATTENTION,
+> +			.asc = 0x29,
+> +			.allowed = READ_CAPACITY_RETRIES_ON_RESET,
+> +			.result = SAM_STAT_CHECK_CONDITION,
+> +		},
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
+For the first, second and fifth array elements above: leaving out .ascq
+is the same as requiring that the ASCQ value is zero. I prefer to make
+this explicit by adding ".ascq = 0," in these array elements.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b20f262fc8e4..9579e2481062 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2231,11 +2231,13 @@ static void ufshcd_exit_clk_gating(struct ufs_hba=
- *hba)
- static void ufshcd_clk_scaling_start_busy(struct ufs_hba *hba)
- {
- 	bool queue_resume_work =3D false;
--	ktime_t curr_t =3D ktime_get();
-+	ktime_t curr_t;
-=20
- 	if (!ufshcd_is_clkscaling_supported(hba))
- 		return;
-=20
-+	curr_t =3D ktime_get();
-+
- 	guard(spinlock_irqsave)(&hba->clk_scaling.lock);
-=20
- 	if (!hba->clk_scaling.active_reqs++)
+Additionally, media_not_present() doesn't check the ASCQ value while
+the above array only accepts ASCQ == 0 if ASC == 0x3a. Please either
+mention this behavior change in the patch description or add the
+following in the third and fourth array elements:
+".ascq = SCMD_FAILURE_ASCQ_ANY,".
+
+> +	memset(buffer, 0, RC16_LEN);
+
+Isn't the preferred style "memset(buffer, 0, ARRAY_SIZE(buffer))"? This
+makes it easier for readers to verify that the third argument is
+correct.
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
