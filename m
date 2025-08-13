@@ -1,138 +1,107 @@
-Received: from mailout1.hostsharing.net (mailout1.hostsharing.net [83.223.95.204])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 208EA2BF3F4;
-	Wed, 13 Aug 2025 05:38:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=83.223.95.204
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 98DA12D0C8E
+	for <linux-scsi@vger.kernel.org>; Wed, 13 Aug 2025 05:49:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755063539; cv=none; b=qeyDwsSW/2+BzuOg+rTmKZw7o1rzpS8fIjaxuKs8ujh1bNvsjqIMJOk8vuKK0bFQBFpjK+uDQ54DnXNu44hkY2yOwuh1Ew8casB9GEwcO/EFoj/SKqLqk9t76YlTb0v95irRxJcRKUvFyyye7vcV3/Jl4XWZfeEEg2PpC9vd/N4=
+	t=1755064155; cv=none; b=dhFP8z3GJ50ktAA58YmDSEVJxZGoGWnDPcPAORslT/JiXMR/IG3yM6wrqS6yh7LlhcFrE4oTWDg8uvHnHCp/br8bsvCpwQ00F4K9IlXGNPzUCm8Jkf+quSA7g5koaO+l4En4KLyhR5qFPvVra38XMJk8Isjg5ri1GNRzrLmqYUs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755063539; c=relaxed/simple;
-	bh=DnHe/8uhrTSolwGbLrqRvX8yq71GzArGeEqXIun4kOI=;
-	h=Message-ID:In-Reply-To:References:From:Date:Subject:To:Cc; b=AN10cT6lITsWABmvIZ3U6TxQbb4bD98xTZCrwzRPm1D9kIsBhajOdJgIMZu1OPoOuU3GkEwA4IRSo8HMcbeLyo4rI2xx8jVuB/M5Q/pio87JKwva0Kib5kHva7af2+/xwjE1CQ57u1EN7mjnPhM7Mrj2WaRJn2sIGir2Im0adxM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de; spf=pass smtp.mailfrom=wunner.de; arc=none smtp.client-ip=83.223.95.204
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=wunner.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wunner.de
-Received: from h08.hostsharing.net (h08.hostsharing.net [IPv6:2a01:37:1000::53df:5f1c:0])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256
-	 client-signature RSA-PSS (4096 bits) client-digest SHA256)
-	(Client CN "*.hostsharing.net", Issuer "RapidSSL TLS RSA CA G1" (verified OK))
-	by mailout1.hostsharing.net (Postfix) with UTF8SMTPS id C5F3A18C4C;
-	Wed, 13 Aug 2025 07:38:54 +0200 (CEST)
-Received: from localhost (unknown [89.246.108.87])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange ECDHE (prime256v1) server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by h08.hostsharing.net (Postfix) with UTF8SMTPSA id 8F1496031AA6;
-	Wed, 13 Aug 2025 07:38:54 +0200 (CEST)
-X-Mailbox-Line: From 4517af6359ffb9d66152b827a5d2833459144e3f Mon Sep 17 00:00:00 2001
-Message-ID: <4517af6359ffb9d66152b827a5d2833459144e3f.1755008151.git.lukas@wunner.de>
-In-Reply-To: <cover.1755008151.git.lukas@wunner.de>
-References: <cover.1755008151.git.lukas@wunner.de>
-From: Lukas Wunner <lukas@wunner.de>
-Date: Wed, 13 Aug 2025 07:11:04 +0200
-Subject: [PATCH 4/5] PCI/ERR: Update device error_state already after reset
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: Riana Tauro <riana.tauro@intel.com>, Aravind Iddamsetty <aravind.iddamsetty@linux.intel.com>, "Sean C. Dardis" <sean.c.dardis@intel.com>, Terry Bowman <terry.bowman@amd.com>, Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, Niklas Schnelle <schnelle@linux.ibm.com>, Linas Vepstas <linasvepstas@gmail.com>, "Mahesh J Salgaonkar" <mahesh@linux.ibm.com>, "Oliver OHalloran" <oohall@gmail.com>, Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org, Shahed Shaikh <shshaikh@marvell.com>, Manish Chopra <manishc@marvell.com>, GR-Linux-NIC-Dev@marvell.com, Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, Andrew Lunn <andrew+netdev@lunn.ch>, "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, Jakub Kicinski <ku
- ba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org
+	s=arc-20240116; t=1755064155; c=relaxed/simple;
+	bh=5XEzjMGKnaeMJFhQb3Nwzbat+idzevLzr/emeLMFnok=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=Drqic3y1WSI4NibVb/bzzZB+vHg547wn1RtZ2AsXfDJZzA5RPacZAMwLazW4Z3BRDQn4QIEJbKbvR87DpU95eVY8FcBF7LVx6Z7M0RlPzW27MEDNlMq0Zkjkt9KJHtlEFas7rmRE0TjeUxbDBGpU4puRbVCdQ//VXdU4WvNMnXw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=MmliNpgi; arc=none smtp.client-ip=209.85.221.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="MmliNpgi"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-3b913a76ba9so1204933f8f.3
+        for <linux-scsi@vger.kernel.org>; Tue, 12 Aug 2025 22:49:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1755064152; x=1755668952; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=1NATFWYnL9FpvCQHaSEVWqiysmgBFz5wmTJhKI3JDuA=;
+        b=MmliNpgiE/VmRLHxzAL0+iYkaLFqIm9XMYYpGoXkcCzDp1VE3K+5MqRTwqY2MKT0Q9
+         UYnD9ZkOVjPAp4HTLJhXxtFsHVPDPteUtVL/XEwK3O76gkIdu9eIPT8chZnbMMee3UDe
+         kgfaTZBLJdvKhFVU6dosQTRlRlIFc912tK4LVFnWyAw6pZtbi0yQDPY1v1ISCAOfI7qI
+         c53Ibvhg6ZSTjr9Rh/495y5pbY4h6pNnxfBCweBdFFFAXJgmYckQe62/un09B3tv8zBJ
+         TV+9qAhEu1s+WIJTCdJkixR601r0p2yuSpfkuLxbJuhRu6RFSnVIe+O+Zd+YqWP+xh4I
+         38fw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755064152; x=1755668952;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=1NATFWYnL9FpvCQHaSEVWqiysmgBFz5wmTJhKI3JDuA=;
+        b=WwcPeugRfza/b5VC2vqqziU+4/1bjIMrmr8HaZ03mpJ2WdcYCZvFcQwpv4EL2nWtuS
+         oH/gaz0ers0sKNBLago2X1Ig4OTWCNGGnfNoj4x+7Ak1Yaz9Veg6mTxfMOylYhfqKoWk
+         tLGgP3MAW84sKFjaWgq6W5zTuVqlUdaZOHZiVa0zakReB3H1M9vz6QtNuzqKZPXfTyeI
+         m4yxpDxfMdhWtxJSojuhdIkHOstJZRXC6/r+7u4FJMQ2j8S7PA52Xej8zix8bl3Sik2z
+         6m8s7eESV5CivawP4QjTUN3nGIL1odw005SrtwVK1pcrIc8Hbh+ZC3dAqCGXz6lYZltS
+         WuXw==
+X-Forwarded-Encrypted: i=1; AJvYcCXtU0BT0Dde+29OWybp92FTXm7tIfEAePLrNJ+m5Or/pyinW3tZT9pVYCXvCzvlqJ5JNb9DiEZJnOVP@vger.kernel.org
+X-Gm-Message-State: AOJu0YwnbsByOE9TYw7D1o9IiR4orzCV+t1E05eoIOX5YXXmGLy7Gdxs
+	1ctSMfiw3b4a0OL896f0p/TqKDHI5YPd7U34eYC5Mw0z4pLwFpB+ckTMSr0Ym+dtH8U=
+X-Gm-Gg: ASbGnctI4cPEzrB69j8xWF6MNm4cakEuQklvk9clUhM49ZLHPY+2L4Vws4qn8w3M0n9
+	rdkrIV9ngpe7KJHQ9WAXN+jREmgDuDJI+Cg8iZSH/sLgVdmj69l0IpJ1p4k94EmCwWp9U/pu7B5
+	C1WtE6R/hxjBkn79OiUL3NLCPSuKU/YuVBQADzLG8bxfsUVk7wxRNV9qzMgMTtma9SB9CqfPZuZ
+	VoFS/Ql6GxnnxDmJJD3KPi0eCXzQ1WEqkCgKXG5mu/RzEGDmKXd2CBXHIpJrfqtbcyMscSMXCtg
+	+FeztWo7BEG36DyIfZSTXXVRAbXm+z/5dLqHiHzCL9gih/GYgwa7LY3doXPYK2XfmaLNKwaZzCJ
+	y11F5h5RbpqiI3D/29JMdO7pw4TY0NM1fK/vkAQ==
+X-Google-Smtp-Source: AGHT+IFDvLxnIU17Hp8mu8s/hfxqo91PU/ydIDKmiqnIJjDK4g9R/0BJmMQ3yTeiQ09ZscNds3uIlA==
+X-Received: by 2002:a05:6000:4205:b0:3b8:d493:31f4 with SMTP id ffacd0b85a97d-3b917eb6c5bmr1136780f8f.48.1755064151797;
+        Tue, 12 Aug 2025 22:49:11 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3b79c4696c8sm45376480f8f.55.2025.08.12.22.49.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 12 Aug 2025 22:49:11 -0700 (PDT)
+Date: Wed, 13 Aug 2025 08:49:08 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Mike Christie <michaelc@cs.wisc.edu>
+Cc: Nilesh Javali <njavali@marvell.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	James Bottomley <JBottomley@parallels.com>,
+	Ravi Anand <ravi.anand@qlogic.com>, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: qla4xxx: Prevent a potential error pointer dereference
+Message-ID: <aJwnVKS9tHsw1tEu@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
 
-After a Fatal Error has been reported by a device and has been recovered
-through a Secondary Bus Reset, AER updates the device's error_state to
-pci_channel_io_normal before invoking its driver's ->resume() callback.
+The qla4xxx_get_ep_fwdb() function is supposed to return NULL on error,
+but qla4xxx_ep_connect() returns error pointers.  Propagating the error
+pointers will lead to an Oops in the caller, so change the error
+pointers to NULL.
 
-By contrast, EEH updates the error_state earlier, namely after resetting
-the device and before invoking its driver's ->slot_reset() callback.
-Commit c58dc575f3c8 ("powerpc/pseries: Set error_state to
-pci_channel_io_normal in eeh_report_reset()") explains in great detail
-that the earlier invocation is necessitated by various drivers checking
-accessibility of the device with pci_channel_offline() and avoiding
-accesses if it returns true.  It returns true for any other error_state
-than pci_channel_io_normal.
-
-The device should be accessible already after reset, hence the reasoning
-is that it's safe to update the error_state immediately afterwards.
-
-This deviation between AER and EEH seems problematic because drivers
-behave differently depending on which error recovery mechanism the
-platform uses.  Three drivers have gone so far as to update the
-error_state themselves, presumably to work around AER's behavior.
-
-For consistency, amend AER to update the error_state at the same recovery
-steps as EEH.  Drop the now unnecessary workaround from the three drivers.
-
-Keep updating the error_state before ->resume() in case ->error_detected()
-or ->mmio_enabled() return PCI_ERS_RESULT_RECOVERED, which causes
-->slot_reset() to be skipped.  There are drivers doing this even for Fatal
-Errors, e.g. mhi_pci_error_detected().
-
-Signed-off-by: Lukas Wunner <lukas@wunner.de>
+Fixes: 13483730a13b ("[SCSI] qla4xxx: fix flash/ddb support")
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
 ---
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c | 1 -
- drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c    | 2 --
- drivers/pci/pcie/err.c                              | 3 ++-
- drivers/scsi/qla2xxx/qla_os.c                       | 5 -----
- 4 files changed, 2 insertions(+), 9 deletions(-)
+ drivers/scsi/qla4xxx/ql4_os.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c
-index d7cdea8f604d..91e7b38143ea 100644
---- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c
-+++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c
-@@ -4215,7 +4215,6 @@ static pci_ers_result_t qlcnic_83xx_io_slot_reset(struct pci_dev *pdev)
- 	struct qlcnic_adapter *adapter = pci_get_drvdata(pdev);
- 	int err = 0;
+diff --git a/drivers/scsi/qla4xxx/ql4_os.c b/drivers/scsi/qla4xxx/ql4_os.c
+index a39f1da4ce47..a761c0aa5127 100644
+--- a/drivers/scsi/qla4xxx/ql4_os.c
++++ b/drivers/scsi/qla4xxx/ql4_os.c
+@@ -6606,6 +6606,8 @@ static struct iscsi_endpoint *qla4xxx_get_ep_fwdb(struct scsi_qla_host *ha,
  
--	pdev->error_state = pci_channel_io_normal;
- 	err = pci_enable_device(pdev);
- 	if (err)
- 		goto disconnect;
-diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-index 53cdd36c4123..e051d8c7a28d 100644
---- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-+++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-@@ -3766,8 +3766,6 @@ static int qlcnic_attach_func(struct pci_dev *pdev)
- 	struct qlcnic_adapter *adapter = pci_get_drvdata(pdev);
- 	struct net_device *netdev = adapter->netdev;
- 
--	pdev->error_state = pci_channel_io_normal;
--
- 	err = pci_enable_device(pdev);
- 	if (err)
- 		return err;
-diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-index 930bb60fb761..bebe4bc111d7 100644
---- a/drivers/pci/pcie/err.c
-+++ b/drivers/pci/pcie/err.c
-@@ -153,7 +153,8 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
- 
- 	device_lock(&dev->dev);
- 	pdrv = dev->driver;
--	if (!pdrv || !pdrv->err_handler || !pdrv->err_handler->slot_reset)
-+	if (!pci_dev_set_io_state(dev, pci_channel_io_normal) ||
-+	    !pdrv || !pdrv->err_handler || !pdrv->err_handler->slot_reset)
- 		goto out;
- 
- 	err_handler = pdrv->err_handler;
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d4b484c0fd9d..4460421834cb 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -7883,11 +7883,6 @@ qla2xxx_pci_slot_reset(struct pci_dev *pdev)
- 	       "Slot Reset.\n");
- 
- 	ha->pci_error_state = QLA_PCI_SLOT_RESET;
--	/* Workaround: qla2xxx driver which access hardware earlier
--	 * needs error state to be pci_channel_io_online.
--	 * Otherwise mailbox command timesout.
--	 */
--	pdev->error_state = pci_channel_io_normal;
- 
- 	pci_restore_state(pdev);
+ 	ep = qla4xxx_ep_connect(ha->host, (struct sockaddr *)dst_addr, 0);
+ 	vfree(dst_addr);
++	if (IS_ERR(ep))
++		return NULL;
+ 	return ep;
+ }
  
 -- 
 2.47.2
