@@ -1,53 +1,53 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56A8F2FC886;
-	Wed, 13 Aug 2025 23:43:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8670D1CFBA;
+	Thu, 14 Aug 2025 00:40:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755128629; cv=none; b=WLm7VcHLIDuRi7DNC5O/aZ/C0++bIIWym9G4adVAWcFIbA8FEy0BepHdVScplUX0kHgSOW+AYcuTG/EeORGNvvgxfhYvBaMxYnIocjLSxPoeh2lB+fyKomUDn3WfOf67LvBwDLoypUrvVTuLfHwhZPr/P6vZGx2Ulpqa7fkRjnc=
+	t=1755132028; cv=none; b=W6bkMtY6pzR0URPxBj2Wpa8PKISTffWLseMhAGQgH0o0U4kL8NegBDXZgImdF78d2dOKrVz+tl1yHkPCJDLEVIIkA7pnb1l4hD3f0NJSKdDPmS8Eaq9c80ULSLXYMWo6Eet6Qk2b5Ps2pbZ5FBs4jOK6qaEgvxZpdwExsx8q7OM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755128629; c=relaxed/simple;
-	bh=qRxoXpbBePERoZiqB5iiVIHqtdhuZpMxZUw6Tz0skzY=;
+	s=arc-20240116; t=1755132028; c=relaxed/simple;
+	bh=TN6yIRy/n3GAXu3+Cz6SHsLoEcKFJfcymnW3CHC41C4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SRC7A5zDIcSdI3Vy8ayIcD7m1suRf0Wai0zOHukXFTPyKxrGahJhQTiwz/GDZ41WrCShrUcL/NrgL0Af4Q/hNpXH+twuGyBQEBQsrTuYWlkxehMCvjNBj5jmaTHt+AT+RCoFT+qYVnor86CkQHHrFXvuWNavpKWTbOdWTFOJwts=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FBNcZZls; arc=none smtp.client-ip=198.175.65.16
+	 In-Reply-To:Content-Type; b=cSjQvQCA8T827mMVXHAxfS9w2Pio/rosbeQAJ0GyeQ2flouhrRksI3tm8rVNNF+4PEXPgvHMxZAkfZRomT62uwyRqNB316MYRVui0y1cZvciSr3scZk3ymmAWRjWvC0RjNqCWagayFCNnm0DyBq5pI/mlrOZzNdfaiL4cNaDClE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FfrfAHCs; arc=none smtp.client-ip=198.175.65.13
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FBNcZZls"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FfrfAHCs"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1755128627; x=1786664627;
+  t=1755132026; x=1786668026;
   h=message-id:date:mime-version:subject:to:cc:references:
    from:in-reply-to:content-transfer-encoding;
-  bh=qRxoXpbBePERoZiqB5iiVIHqtdhuZpMxZUw6Tz0skzY=;
-  b=FBNcZZlsZ3kgM53EAPE1YjuCTKQBBoqtnMhitVxojYz/sX3/CMWqar5o
-   0yak0eJAgTpsBxba1d0yL0Q6yevjXZyj5VFLHmDnWbvYEm8svldrkIU1q
-   2DioRciZIfi8Zirw8klrLcGwTXfj9pkCBoXquCE7Rq1nlbdE+cQlG24qn
-   gLpglKCYWnJyvi6kXYjyDUdcQsPHTDBsDMb7IDUZClX+OntEnuWfYmmFA
-   jGFXjPrXaw9tGdlQtDvd0zttuGvVSD14jsR+gndEx6in00NusO25VWXd2
-   imV5GTLL82bw25jmGBSsL2Lum8pToGl6lbiywb466c+P//aThCSubWd5B
-   w==;
-X-CSE-ConnectionGUID: hqPhqe3jR0Kc/ruLY6qSLA==
-X-CSE-MsgGUID: OfnURqTnRf6ugzJrvSKyaw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11520"; a="57587506"
+  bh=TN6yIRy/n3GAXu3+Cz6SHsLoEcKFJfcymnW3CHC41C4=;
+  b=FfrfAHCsmTz1bXgAU6DRqc2T2Rbq7h4HlQKFl1gJAfIPZNKjYwlEew9y
+   2AjWGWSzn0S4EEkdPn+Qbv5tAvm6F4SuZ1qvtJBo7LFuhZwQWp4QIzklY
+   0DZ6n97T1SJviVZTNxp2ihhmBjETNUo0Zr79wBa7XZ90TeJiyc4sVuYrl
+   trnBTAs8hq4TrnimdzMxPxtnEPwVEkzynZSene0SeavaqpxU89FrQplMg
+   S4HR76hCyF/1Uxn1Uh42i2mXzKDu8dMhY15qKTt6RO8nNADj5T/a5wie5
+   WU1gmLWbAOBHUT5+KQz4qQqMVwZ/I72nmQqHKu/lIvBXZ1ovu6LbZLYtn
+   g==;
+X-CSE-ConnectionGUID: ARk6lH2QTW+e7DCLS4fZjA==
+X-CSE-MsgGUID: Ww4LaJb9Sy2cjXqBTbYhjQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11520"; a="68521636"
 X-IronPort-AV: E=Sophos;i="6.17,287,1747724400"; 
-   d="scan'208";a="57587506"
-Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2025 16:43:46 -0700
-X-CSE-ConnectionGUID: 9F0bpJSxThyqZILBaQAzWA==
-X-CSE-MsgGUID: ZiFmjh7ESXuPu5OPvIUMsA==
+   d="scan'208";a="68521636"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2025 17:40:25 -0700
+X-CSE-ConnectionGUID: 3UkUsY5oR+mykk3Pf1Th3Q==
+X-CSE-MsgGUID: ba5Gof1LSTa66Z6VAA22jg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.17,287,1747724400"; 
-   d="scan'208";a="197595334"
+   d="scan'208";a="203795622"
 Received: from linux.intel.com ([10.54.29.200])
-  by orviesa002.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2025 16:43:46 -0700
+  by orviesa001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2025 17:40:25 -0700
 Received: from [10.124.222.231] (unknown [10.124.222.231])
-	by linux.intel.com (Postfix) with ESMTP id 18A7920B571C;
-	Wed, 13 Aug 2025 16:43:45 -0700 (PDT)
-Message-ID: <004298f7-ae08-428e-9b98-995fc56e55b1@linux.intel.com>
-Date: Wed, 13 Aug 2025 16:43:39 -0700
+	by linux.intel.com (Postfix) with ESMTP id 82EC720B571C;
+	Wed, 13 Aug 2025 17:40:23 -0700 (PDT)
+Message-ID: <59308229-24ed-4b8a-b398-cc47c61dfc47@linux.intel.com>
+Date: Wed, 13 Aug 2025 17:40:17 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -55,8 +55,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 4/5] PCI/ERR: Update device error_state already after
- reset
+Subject: Re: [PATCH 5/5] PCI/ERR: Remove remnants of .link_reset() callback
 To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
 Cc: Riana Tauro <riana.tauro@intel.com>,
  Aravind Iddamsetty <aravind.iddamsetty@linux.intel.com>,
@@ -67,120 +66,104 @@ Cc: Riana Tauro <riana.tauro@intel.com>,
  Oliver OHalloran <oohall@gmail.com>,
  Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
  linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
- Shahed Shaikh <shshaikh@marvell.com>, Manish Chopra <manishc@marvell.com>,
- GR-Linux-NIC-Dev@marvell.com, Nilesh Javali <njavali@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com,
+ Edward Cree <ecree.xilinx@gmail.com>, linux-net-drivers@amd.com,
+ James Smart <james.smart@broadcom.com>,
+ Dick Kennedy <dick.kennedy@broadcom.com>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
  "Martin K. Petersen" <martin.petersen@oracle.com>,
  linux-scsi@vger.kernel.org, Andrew Lunn <andrew+netdev@lunn.ch>,
  "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <"ku ba"@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
  netdev@vger.kernel.org
 References: <cover.1755008151.git.lukas@wunner.de>
- <4517af6359ffb9d66152b827a5d2833459144e3f.1755008151.git.lukas@wunner.de>
+ <1d72a891a7f57115e78a73046e776f7e0c8cd68f.1755008151.git.lukas@wunner.de>
 Content-Language: en-US
 From: Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <4517af6359ffb9d66152b827a5d2833459144e3f.1755008151.git.lukas@wunner.de>
+In-Reply-To: <1d72a891a7f57115e78a73046e776f7e0c8cd68f.1755008151.git.lukas@wunner.de>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 
 On 8/12/25 10:11 PM, Lukas Wunner wrote:
-> After a Fatal Error has been reported by a device and has been recovered
-> through a Secondary Bus Reset, AER updates the device's error_state to
-> pci_channel_io_normal before invoking its driver's ->resume() callback.
+> Back in 2017, commit 2fd260f03b6a ("PCI/AER: Remove unused .link_reset()
+> callback") removed .link_reset() from struct pci_error_handlers, but left
+> a few code comments behind which still mention it.  Remove them.
 >
-> By contrast, EEH updates the error_state earlier, namely after resetting
-> the device and before invoking its driver's ->slot_reset() callback.
-> Commit c58dc575f3c8 ("powerpc/pseries: Set error_state to
-> pci_channel_io_normal in eeh_report_reset()") explains in great detail
-> that the earlier invocation is necessitated by various drivers checking
-> accessibility of the device with pci_channel_offline() and avoiding
-> accesses if it returns true.  It returns true for any other error_state
-> than pci_channel_io_normal.
->
-> The device should be accessible already after reset, hence the reasoning
-> is that it's safe to update the error_state immediately afterwards.
->
-> This deviation between AER and EEH seems problematic because drivers
-> behave differently depending on which error recovery mechanism the
-> platform uses.  Three drivers have gone so far as to update the
-> error_state themselves, presumably to work around AER's behavior.
->
-> For consistency, amend AER to update the error_state at the same recovery
-> steps as EEH.  Drop the now unnecessary workaround from the three drivers.
->
-> Keep updating the error_state before ->resume() in case ->error_detected()
-> or ->mmio_enabled() return PCI_ERS_RESULT_RECOVERED, which causes
-> ->slot_reset() to be skipped.  There are drivers doing this even for Fatal
-> Errors, e.g. mhi_pci_error_detected().
+> The code comments in the SolarFlare Ethernet drivers point out that no
+> .mmio_enabled() callback is needed because the driver's .error_detected()
+> callback always returns PCI_ERS_RESULT_NEED_RESET, which causes
+> pcie_do_recovery() to skip .mmio_enabled().  That's not quite correct
+> because efx_io_error_detected() does return PCI_ERS_RESULT_RECOVERED under
+> certain conditions and then .mmio_enabled() would indeed be called if it
+> were implemented.  Remove this misleading portion of the code comment as
+> well.
 >
 > Signed-off-by: Lukas Wunner <lukas@wunner.de>
 > ---
 
 Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
 
->   drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c | 1 -
->   drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c    | 2 --
->   drivers/pci/pcie/err.c                              | 3 ++-
->   drivers/scsi/qla2xxx/qla_os.c                       | 5 -----
->   4 files changed, 2 insertions(+), 9 deletions(-)
+>   drivers/net/ethernet/sfc/efx_common.c       | 3 ---
+>   drivers/net/ethernet/sfc/falcon/efx.c       | 3 ---
+>   drivers/net/ethernet/sfc/siena/efx_common.c | 3 ---
+>   drivers/scsi/lpfc/lpfc_init.c               | 2 +-
+>   4 files changed, 1 insertion(+), 10 deletions(-)
 >
-> diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c
-> index d7cdea8f604d..91e7b38143ea 100644
-> --- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c
-> +++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_83xx_hw.c
-> @@ -4215,7 +4215,6 @@ static pci_ers_result_t qlcnic_83xx_io_slot_reset(struct pci_dev *pdev)
->   	struct qlcnic_adapter *adapter = pci_get_drvdata(pdev);
->   	int err = 0;
+> diff --git a/drivers/net/ethernet/sfc/efx_common.c b/drivers/net/ethernet/sfc/efx_common.c
+> index 5a14d94163b1..e8fdbb62d872 100644
+> --- a/drivers/net/ethernet/sfc/efx_common.c
+> +++ b/drivers/net/ethernet/sfc/efx_common.c
+> @@ -1258,9 +1258,6 @@ static void efx_io_resume(struct pci_dev *pdev)
 >   
-> -	pdev->error_state = pci_channel_io_normal;
->   	err = pci_enable_device(pdev);
->   	if (err)
->   		goto disconnect;
-> diff --git a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> index 53cdd36c4123..e051d8c7a28d 100644
-> --- a/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> +++ b/drivers/net/ethernet/qlogic/qlcnic/qlcnic_main.c
-> @@ -3766,8 +3766,6 @@ static int qlcnic_attach_func(struct pci_dev *pdev)
->   	struct qlcnic_adapter *adapter = pci_get_drvdata(pdev);
->   	struct net_device *netdev = adapter->netdev;
+>   /* For simplicity and reliability, we always require a slot reset and try to
+>    * reset the hardware when a pci error affecting the device is detected.
+> - * We leave both the link_reset and mmio_enabled callback unimplemented:
+> - * with our request for slot reset the mmio_enabled callback will never be
+> - * called, and the link_reset callback is not used by AER or EEH mechanisms.
+>    */
+>   const struct pci_error_handlers efx_err_handlers = {
+>   	.error_detected = efx_io_error_detected,
+> diff --git a/drivers/net/ethernet/sfc/falcon/efx.c b/drivers/net/ethernet/sfc/falcon/efx.c
+> index b07f7e4e2877..0c784656fde9 100644
+> --- a/drivers/net/ethernet/sfc/falcon/efx.c
+> +++ b/drivers/net/ethernet/sfc/falcon/efx.c
+> @@ -3128,9 +3128,6 @@ static void ef4_io_resume(struct pci_dev *pdev)
 >   
-> -	pdev->error_state = pci_channel_io_normal;
-> -
->   	err = pci_enable_device(pdev);
->   	if (err)
->   		return err;
-> diff --git a/drivers/pci/pcie/err.c b/drivers/pci/pcie/err.c
-> index 930bb60fb761..bebe4bc111d7 100644
-> --- a/drivers/pci/pcie/err.c
-> +++ b/drivers/pci/pcie/err.c
-> @@ -153,7 +153,8 @@ static int report_slot_reset(struct pci_dev *dev, void *data)
+>   /* For simplicity and reliability, we always require a slot reset and try to
+>    * reset the hardware when a pci error affecting the device is detected.
+> - * We leave both the link_reset and mmio_enabled callback unimplemented:
+> - * with our request for slot reset the mmio_enabled callback will never be
+> - * called, and the link_reset callback is not used by AER or EEH mechanisms.
+>    */
+>   static const struct pci_error_handlers ef4_err_handlers = {
+>   	.error_detected = ef4_io_error_detected,
+> diff --git a/drivers/net/ethernet/sfc/siena/efx_common.c b/drivers/net/ethernet/sfc/siena/efx_common.c
+> index a0966f879664..35036cc902fe 100644
+> --- a/drivers/net/ethernet/sfc/siena/efx_common.c
+> +++ b/drivers/net/ethernet/sfc/siena/efx_common.c
+> @@ -1285,9 +1285,6 @@ static void efx_io_resume(struct pci_dev *pdev)
 >   
->   	device_lock(&dev->dev);
->   	pdrv = dev->driver;
-> -	if (!pdrv || !pdrv->err_handler || !pdrv->err_handler->slot_reset)
-> +	if (!pci_dev_set_io_state(dev, pci_channel_io_normal) ||
-> +	    !pdrv || !pdrv->err_handler || !pdrv->err_handler->slot_reset)
->   		goto out;
->   
->   	err_handler = pdrv->err_handler;
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index d4b484c0fd9d..4460421834cb 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -7883,11 +7883,6 @@ qla2xxx_pci_slot_reset(struct pci_dev *pdev)
->   	       "Slot Reset.\n");
->   
->   	ha->pci_error_state = QLA_PCI_SLOT_RESET;
-> -	/* Workaround: qla2xxx driver which access hardware earlier
-> -	 * needs error state to be pci_channel_io_online.
-> -	 * Otherwise mailbox command timesout.
-> -	 */
-> -	pdev->error_state = pci_channel_io_normal;
->   
->   	pci_restore_state(pdev);
->   
+>   /* For simplicity and reliability, we always require a slot reset and try to
+>    * reset the hardware when a pci error affecting the device is detected.
+> - * We leave both the link_reset and mmio_enabled callback unimplemented:
+> - * with our request for slot reset the mmio_enabled callback will never be
+> - * called, and the link_reset callback is not used by AER or EEH mechanisms.
+>    */
+>   const struct pci_error_handlers efx_siena_err_handlers = {
+>   	.error_detected = efx_io_error_detected,
+> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+> index 4081d2a358ee..cf08bb5b37c3 100644
+> --- a/drivers/scsi/lpfc/lpfc_init.c
+> +++ b/drivers/scsi/lpfc/lpfc_init.c
+> @@ -14377,7 +14377,7 @@ lpfc_sli_prep_dev_for_perm_failure(struct lpfc_hba *phba)
+>    * as desired.
+>    *
+>    * Return codes
+> - * 	PCI_ERS_RESULT_CAN_RECOVER - can be recovered with reset_link
+> + *	PCI_ERS_RESULT_CAN_RECOVER - can be recovered without reset
+>    * 	PCI_ERS_RESULT_NEED_RESET - need to reset before recovery
+>    * 	PCI_ERS_RESULT_DISCONNECT - device could not be recovered
+>    **/
 
 -- 
 Sathyanarayanan Kuppuswamy
