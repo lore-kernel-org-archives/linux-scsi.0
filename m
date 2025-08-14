@@ -1,121 +1,200 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC8731E4BE
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2025 16:51:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF9D12EB11;
+	Thu, 14 Aug 2025 16:52:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755190311; cv=none; b=N8imlU7znCkkmRzraPKwRmu9OunkKDDwZZgZzhUqg18XPn1myziFS64pFiaLFTwfREZ4kRf7oc/1Ne1Bf31iis1yY1EmEZUR6HgcQfI0RIC04YYYLwE7H21e/ZxWOgpvk2HF6kuel/Qr0Ttax0tX/g6eoHyBbaRuE6ZcL7dutLI=
+	t=1755190340; cv=none; b=f1dd+eF3JLMy4c24EDBSfcV+nVcKl1KXq8TXPXlgXzRVnwB6mbmaeoS3OFH+g4Sfe7yB7MLjt2I+JvS9UootXoprmg+fNTkQqnkdlJYPDA0HoHz7Gbnn85CnMeXZxtCIx6T4yFnGZKbdP4EA14y+TXT4CaUPZAWQT1o9Pz1JHNI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755190311; c=relaxed/simple;
-	bh=/dbHY105+wt/iesX1nJqZjCddkbYYto+U/f4Q/Cmynk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Br3sycf+IYkrYLtO1vItcaYo82/UP9tkJHxm2uL3DP+E64VIm15AIeiCVrZelymaTTBTNJ26ezMYJuDQOgW3bVQ9Fs229jgeIXavrP7P9FWgjCLLi4/qsK7avAYcuMJtRoht+9nui2QLO7uEClAmYTsFiy5cm97/GSmYTeR4+FQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=wNG/MTRd; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755190340; c=relaxed/simple;
+	bh=xDCJGRAkBOyLHPMWTglfKooDZPEiLk+khkQLFD0KVoE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=bmYVBai0wjtTkd7+V+krRHrMjhwer9C0pgg3YGM+L61sz6MMagpX44RSnZPIdEygMQgJNIrj6xG2kGAqHroHV+ukXbmGJzRLgoc6HLH4LWmgp1YgfHzJtrFzSX84PT6VdiithbHR+fAC2rmLPr99727g0noPZTEjgwtPQaXVTR4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BUS4ikf7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="wNG/MTRd"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c2rqg5gNKzm1747;
-	Thu, 14 Aug 2025 16:51:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755190302; x=1757782303; bh=eVIJsG8zQygobyapUg6E4edm
-	GiNoPKVX/Q9Xp0aTHB0=; b=wNG/MTRdi/aXRP64SlRf2Ufs6NFQUsvDZqVqfwQX
-	CWHeSa/RZlDXYlAJUL0nJRQkVMrY7doL1NWO9VJB8KpRCcrEjmSyuqSpYua4v1kE
-	TSLLOoZQT0e6RfY4L1An6MaE+2UledGViZRX5if/iewyrhp5nLLiUgaskP6n8as2
-	ApdRb7SeqqqqU/wRdYyz4IKwPbrcPGM6HYwOJydSkgwBm1ARNv+1cp80Z/3U4bPv
-	r2v89hQKHhfJDXvZBs/xV6qBJ8jcGZia9HGgoeBzLAXlAgMgV3HXVmGM2YwSL7ON
-	sfAYr4A1GDLhjBObdkuL0WZbpfxCtJwRCXVLtQ2wGMJyOw==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id CdSLP7yCdh73; Thu, 14 Aug 2025 16:51:42 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c2rqb44DRzm174N;
-	Thu, 14 Aug 2025 16:51:38 +0000 (UTC)
-Message-ID: <e651aa7e-aad2-4e4e-afff-3e89a61f13f9@acm.org>
-Date: Thu, 14 Aug 2025 09:51:37 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BUS4ikf7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 65A1CC4CEED;
+	Thu, 14 Aug 2025 16:52:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755190339;
+	bh=xDCJGRAkBOyLHPMWTglfKooDZPEiLk+khkQLFD0KVoE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=BUS4ikf7AX6C88z+F2/XSv+1M5hXVOMeC77XiWieyZa2GUP+2JJyYoUpfS/WdwAsu
+	 ODwd2O9RQzqvCWcRwAYScP7FOJ4OValdyb74tAUxKwmMZuHw3kAOuuK/32EFAlIB6W
+	 qNW9YJ/ibCooE9homzMY+TCAM+G0BVHnPrpXHw+jcSJ9xVgSohIjtZZ0quEJMUShat
+	 gX6/7xyHZgEggW9goPqtgemixofVOS7TxSvMic1AsL8yErqzhTzcIu5N5UqooXONtH
+	 roS/Aif++L6UcDVzhcuO7rzAZWCyapIDdUPBjaUBawYOz7SE45r5e0bZRAAMk1oF1l
+	 xHgOiDmsucQQg==
+Date: Thu, 14 Aug 2025 09:52:18 -0700
+From: "Darrick J. Wong" <djwong@kernel.org>
+To: Zhang Yi <yi.zhang@huaweicloud.com>
+Cc: linux-fsdevel@vger.kernel.org, linux-block@vger.kernel.org,
+	dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-api@vger.kernel.org, hch@lst.de, tytso@mit.edu,
+	bmarzins@redhat.com, chaitanyak@nvidia.com,
+	shinichiro.kawasaki@wdc.com, brauner@kernel.org,
+	martin.petersen@oracle.com, yi.zhang@huawei.com,
+	chengzhihao1@huawei.com, yukuai3@huawei.com, yangerkun@huawei.com
+Subject: Re: [PATCH util-linux v2] fallocate: add FALLOC_FL_WRITE_ZEROES
+ support
+Message-ID: <20250814165218.GQ7942@frogsfrogsfrogs>
+References: <20250813024015.2502234-1-yi.zhang@huaweicloud.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/30] Optimize the hot path in the UFS driver
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, hch@lst.de, hare@suse.com
-References: <20250811173634.514041-1-bvanassche@acm.org>
- <d5cd0109-915f-4fe7-b6c2-34681b4b1763@oracle.com>
- <d4151040-ab1a-4b3c-b5f9-577e907b43fc@acm.org>
- <ff0705fe-0bac-408e-a073-a833525dabf8@oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <ff0705fe-0bac-408e-a073-a833525dabf8@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250813024015.2502234-1-yi.zhang@huaweicloud.com>
 
-On 8/14/25 1:40 AM, John Garry wrote:
-> Some further initial points on this series:
-> - the driver still has the separate tmf tag set. Why cannot the tmf be 
-> allocated as a reserved command in the shost tagset?
+On Wed, Aug 13, 2025 at 10:40:15AM +0800, Zhang Yi wrote:
+> From: Zhang Yi <yi.zhang@huawei.com>
+> 
+> The Linux kernel (since version 6.17) supports FALLOC_FL_WRITE_ZEROES in
+> fallocate(2). Add support for FALLOC_FL_WRITE_ZEROES to the fallocate
+> utility by introducing a new option -w|--write-zeroes.
+> 
+> Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=278c7d9b5e0c
+> Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
+> ---
+> v1->v2:
+>  - Minor description modification to align with the kernel.
+> 
+>  sys-utils/fallocate.1.adoc | 11 +++++++++--
+>  sys-utils/fallocate.c      | 20 ++++++++++++++++----
+>  2 files changed, 25 insertions(+), 6 deletions(-)
+> 
+> diff --git a/sys-utils/fallocate.1.adoc b/sys-utils/fallocate.1.adoc
+> index 44ee0ef4c..0ec9ff9a9 100644
+> --- a/sys-utils/fallocate.1.adoc
+> +++ b/sys-utils/fallocate.1.adoc
+> @@ -12,7 +12,7 @@ fallocate - preallocate or deallocate space to a file
 
-The UFSHCI standard defines different tag spaces for TMFs and for UFS
-commands: [0..hba->nutmrs) for TMFs and [0..hba->nutrs) for UFS
-commands. These ranges have to be kept separate because of how UFS host
-controllers use these numbers. The TMF tag is passed to UFS host
-controllers by writing it into a bitwise register. From
-__ufshcd_issue_tm_cmd():
+<snip all the long lines>
 
-  	ufshcd_writel(hba, 1 << task_tag, REG_UTP_TASK_REQ_DOOR_BELL);
+> +*-w*, *--write-zeroes*::
+> +Zeroes space in the byte range starting at _offset_ and continuing
+> for _length_ bytes. Within the specified range, blocks are
+> preallocated for the regions that span the holes in the file. After a
+> successful call, subsequent reads from this range will return zeroes,
+> subsequent writes to that range do not require further changes to the
+> file mapping metadata.
 
-The UFS command tag ends up in a protocol header. From 
-ufshcd_prepare_utp_scsi_cmd_upiu():
+"...will return zeroes and subsequent writes to that range..." ?
 
-	ucd_req_ptr->header = (struct utp_upiu_header){
-		[ ... ]
-		.task_tag = lrbp->task_tag,
-		[ ... ]
-	};
+> ++
+> +Zeroing is done within the filesystem by preferably submitting write
 
-Mixing up TMFs and the reserved UFS command and allocating all these
-from a single tag space would require a additional code and data
-structures to translate reserved tags from the [0..hba->nutmrs]
-range to the [0..hba->nutmrs) range. In other words, code would become
-more complex and harder to maintain. Hence, I prefer to keep the TMF tag
-set.
+I think we should say less about what the filesystem actually does to
+preserve some flexibility:
 
-> - I like that you are using blk_execute_rq(), but why do we need the 
-> pseudo sdev (and not the ufs sdev)? The idea of the psuedo sdev was 
-> originally for sending reserved commands for the host.
+"Zeroing is done within the filesystem. The filesystem may use a
+hardware accelerated zeroing command, or it may submit regular writes.
+The behavior depends on the filesystem design and available hardware."
 
-In the UFS driver several reserved commands are sent before
-ufshcd_scsi_add_wlus() and scsi_scan_host() are called. Hence, the
-pseudo sdev is the only sdev that is available when sending reserved
-commands like the initial NOP OUT. Allocating the well-known LUNs before
-sending the initial NOP OUT is not possible because ufshcd_sdev_init() 
-gets called while adding WLUNs and there is code in that function that 
-is based on the assumption that UFS device initialization has completed
-(ufshcd_lu_init() calls ufshcd_read_unit_desc_param()).
+> zeores commands, the alternative way is submitting actual zeroed data,
+> the specified range will be converted into written extents. The write
+> zeroes command is typically faster than write actual data if the
+> device supports unmap write zeroes, the specified range will not be
+> physically zeroed out on the device.
+> ++
+> +Options *--keep-size* can not be specified for the write-zeroes
+> operation.
+> +
+>  include::man-common/help-version.adoc[]
+>  
+>  == AUTHORS
+> diff --git a/sys-utils/fallocate.c b/sys-utils/fallocate.c
+> index 13bf52915..8d37fdad7 100644
+> --- a/sys-utils/fallocate.c
+> +++ b/sys-utils/fallocate.c
+> @@ -40,7 +40,7 @@
+>  #if defined(HAVE_LINUX_FALLOC_H) && \
+>      (!defined(FALLOC_FL_KEEP_SIZE) || !defined(FALLOC_FL_PUNCH_HOLE) || \
+>       !defined(FALLOC_FL_COLLAPSE_RANGE) || !defined(FALLOC_FL_ZERO_RANGE) || \
+> -     !defined(FALLOC_FL_INSERT_RANGE))
+> +     !defined(FALLOC_FL_INSERT_RANGE) || !defined(FALLOC_FL_WRITE_ZEROES))
+>  # include <linux/falloc.h>	/* non-libc fallback for FALLOC_FL_* flags */
+>  #endif
+>  
+> @@ -65,6 +65,10 @@
+>  # define FALLOC_FL_INSERT_RANGE		0x20
+>  #endif
+>  
+> +#ifndef FALLOC_FL_WRITE_ZEROES
+> +# define FALLOC_FL_WRITE_ZEROES		0x80
+> +#endif
+> +
+>  #include "nls.h"
+>  #include "strutils.h"
+>  #include "c.h"
+> @@ -94,6 +98,7 @@ static void __attribute__((__noreturn__)) usage(void)
+>  	fputs(_(" -o, --offset <num>   offset for range operations, in bytes\n"), out);
+>  	fputs(_(" -p, --punch-hole     replace a range with a hole (implies -n)\n"), out);
+>  	fputs(_(" -z, --zero-range     zero and ensure allocation of a range\n"), out);
+> +	fputs(_(" -w, --write-zeroes   write zeroes and ensure allocation of a range\n"), out);
+>  #ifdef HAVE_POSIX_FALLOCATE
+>  	fputs(_(" -x, --posix          use posix_fallocate(3) instead of fallocate(2)\n"), out);
+>  #endif
+> @@ -304,6 +309,7 @@ int main(int argc, char **argv)
+>  	    { "dig-holes",      no_argument,       NULL, 'd' },
+>  	    { "insert-range",   no_argument,       NULL, 'i' },
+>  	    { "zero-range",     no_argument,       NULL, 'z' },
+> +	    { "write-zeroes",   no_argument,       NULL, 'w' },
+>  	    { "offset",         required_argument, NULL, 'o' },
+>  	    { "length",         required_argument, NULL, 'l' },
+>  	    { "posix",          no_argument,       NULL, 'x' },
+> @@ -312,8 +318,8 @@ int main(int argc, char **argv)
+>  	};
+>  
+>  	static const ul_excl_t excl[] = {	/* rows and cols in ASCII order */
+> -		{ 'c', 'd', 'i', 'p', 'x', 'z'},
+> -		{ 'c', 'i', 'n', 'x' },
+> +		{ 'c', 'd', 'i', 'p', 'w', 'x', 'z'},
+> +		{ 'c', 'i', 'n', 'w', 'x' },
+>  		{ 0 }
+>  	};
+>  	int excl_st[ARRAY_SIZE(excl)] = UL_EXCL_STATUS_INIT;
+> @@ -323,7 +329,7 @@ int main(int argc, char **argv)
+>  	textdomain(PACKAGE);
+>  	close_stdout_atexit();
+>  
+> -	while ((c = getopt_long(argc, argv, "hvVncpdizxl:o:", longopts, NULL))
+> +	while ((c = getopt_long(argc, argv, "hvVncpdizwxl:o:", longopts, NULL))
+>  			!= -1) {
+>  
+>  		err_exclusive_options(c, longopts, excl, excl_st);
+> @@ -353,6 +359,9 @@ int main(int argc, char **argv)
+>  		case 'z':
+>  			mode |= FALLOC_FL_ZERO_RANGE;
+>  			break;
+> +		case 'w':
+> +			mode |= FALLOC_FL_WRITE_ZEROES;
+> +			break;
+>  		case 'x':
+>  #ifdef HAVE_POSIX_FALLOCATE
+>  			posix = 1;
+> @@ -429,6 +438,9 @@ int main(int argc, char **argv)
+>  			else if (mode & FALLOC_FL_ZERO_RANGE)
+>  				fprintf(stdout, _("%s: %s (%ju bytes) zeroed.\n"),
+>  								filename, str, length);
+> +			else if (mode & FALLOC_FL_WRITE_ZEROES)
+> +				fprintf(stdout, _("%s: %s (%ju bytes) write zeroed.\n"),
 
-> - IIRC, I was advised to have a check in the scsi core dispatch command 
-> patch to check for a reserved command, and have a separate handler for 
-> that, i.e. don't use sht->queuecommand for reserved commands. I can try 
-> to find the exact discussion if you like.
+"write zeroed" is a little strange, but I don't have a better
+suggestion. :)
 
-It would be appreciated if a link to that conversation could be shared.
+--D
 
-Thanks,
-
-Bart.
-
-
+> +								filename, str, length);
+>  			else
+>  				fprintf(stdout, _("%s: %s (%ju bytes) allocated.\n"),
+>  								filename, str, length);
+> -- 
+> 2.39.2
+> 
+> 
