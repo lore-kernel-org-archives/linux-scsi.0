@@ -1,44 +1,40 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 42A6028642D
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2025 17:32:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D11AB28642D
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2025 17:32:58 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755192777; cv=none; b=klnTUhnHk3MtEHGRA8VQUcCaxv/P2CqrFlUZrXS2vnucZIquO3xw+aR9n3S/cpsm4gv0edELlam5Qj+ielJuy/zSVNcghT3U5dgftyuVu46UmD/JJWAUREzRm4dM2UotM0cvMuBXHVVihyfz0t096BOuefBf8J25KiCJnOeFQrg=
+	t=1755192778; cv=none; b=N3OXK5vUi9U8F+GSSJ7Uh4r/XXCWi58lJxx1hkKAHdVri5xnKx+t5BK7ryMNamj42le3doWSKcGXpugINeBoIQ9rhLoHa5DJBXM3b766m1tM/PxPbn1gywu7Hwdik99q3PoDhTm3jutM47/e1Rh/7W59UYFp9+fTK/7WztnYcrw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755192777; c=relaxed/simple;
-	bh=Xvh5OwfOFxk3ctNGhprq/ggKxR8+ol9+di+i4AwRSHo=;
+	s=arc-20240116; t=1755192778; c=relaxed/simple;
+	bh=GUr7viIYP6VHLsxTY/cYpdlc6AFuetHD8JkVFK8hvi4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LjLfaeZrV5kN3ECdgrvPBPVUfIH1EN2ug9BG4tnm+XstGnWuIB+vwm7rgOBS1BbDlm9nAGFlz7tg2/rUE96932VkrKA1PKwfVeFd4DpjwEQT7Y0YYnq+ay3AoivJIEIIWWVzmPvop+2wEjriJXjF3mR5Ddbgtn4whYGqLoCZkPw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XDQIAjww; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=Eyio2dTG1F++mMLWfL/5+49vJVRW4QEfnxao4ccYK9pmlB9MEW8xtE1D38DWlPJlARhhGLh2tqRm3+MAQglrdZ4+ir3ojb6Pr2SB6n4/t2dSXZLvXPcOC6LyOEwfdc0FEyjPXmGgjyMY1+Jku3I4o31RxmCdveXkS/W3rEB8yC0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aETytHjZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XDQIAjww"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C4A27C4CEED;
-	Thu, 14 Aug 2025 17:32:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aETytHjZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E09DC4CEEF;
+	Thu, 14 Aug 2025 17:32:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755192776;
-	bh=Xvh5OwfOFxk3ctNGhprq/ggKxR8+ol9+di+i4AwRSHo=;
+	s=k20201202; t=1755192778;
+	bh=GUr7viIYP6VHLsxTY/cYpdlc6AFuetHD8JkVFK8hvi4=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=XDQIAjwwagqxEa/wm17kyl3ZxxB/rSVSIkDfGLypgcwnxUdFoUwXreK2KlmMdqHTG
-	 6EE1ylo63QivBIePk1FiV0VFXU+yQH4+KELSYN9/BMNr/MzTZxEX3qY4bf2m1HXAqQ
-	 yUPVvjXBdheI7JRpyEMwvUH//8ycGb8sJepjCWKqr7I4KeKspbD+J86dgKCm9XrEX0
-	 TC/U//VCYmXKTHXJRPcA1Dou6MJN5bVSo/DVFX0p0j86KTOXm0K7Hjc9VdrnJQeWKp
-	 QU/x/REV+0NNQ2GjyKX20Q26ppxgKJDjCTW9/4qVwczOde80quPe8w7BSGCnqv1l9F
-	 yYu0z+p9eQVLQ==
+	b=aETytHjZ6OAvWxduTxprykJzv+V3eWxeq0O8oglzKXkaxw7gHzu7UHBE+zam2xFqH
+	 qKEOgmk5RQ37EAuXCZYNFLoj2xo+qVkSxDFFulCFCWDD+kMfQNS4nPjXfxoYfS7Pbn
+	 zDuBAlEYGdJfuemLP9sZUTUMB4cX6U20sTBwQwvHLhYRGffZnrFjUfz43QNWlR5jy5
+	 1t7mXmKU1SOUFTkHpb79Vr5eNtoNqNHRGBgV/00DvakOwyDSX8HHrJoEAJJ6/jxrZs
+	 82dhw3OsSu0ORkB1T1byDYv1ftxtMnUmbxyNC+/z+lHZMWqovFTXBM1sK+TbHTLQ1H
+	 k9IfIWOl4fRBQ==
 From: Niklas Cassel <cassel@kernel.org>
 To: Jack Wang <jinpu.wang@cloud.ionos.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Deepak Ukey <deepak.ukey@microsemi.com>,
-	Viswas G <Viswas.G@microsemi.com>
+	"Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: Niklas Cassel <cassel@kernel.org>,
-	Igor Pylypiv <ipylypiv@google.com>,
-	Jack Wang <jinpu.wang@profitbricks.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH v2 09/10] scsi: pm80xx: Fix pm8001_abort_task() for chip_8006 when using an expander
-Date: Thu, 14 Aug 2025 19:32:24 +0200
-Message-ID: <20250814173215.1765055-21-cassel@kernel.org>
+Subject: [PATCH v2 10/10] scsi: pm80xx: Use pm80xx_get_local_phy_id() to access phy array
+Date: Thu, 14 Aug 2025 19:32:25 +0200
+Message-ID: <20250814173215.1765055-22-cassel@kernel.org>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250814173215.1765055-12-cassel@kernel.org>
 References: <20250814173215.1765055-12-cassel@kernel.org>
@@ -48,62 +44,47 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Developer-Signature: v=1; a=openpgp-sha256; l=2123; i=cassel@kernel.org; h=from:subject; bh=Xvh5OwfOFxk3ctNGhprq/ggKxR8+ol9+di+i4AwRSHo=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDLmya5IPHN45waLhDbdqdN9p20uO/Msvy/0OWvTl9vGF UFiiyXaOkpZGMS4GGTFFFl8f7jsL+52n3Jc8Y4NzBxWJpAhDFycAjCRQjaGfxZhDlWfjh3NPv1a qOaqmff7pf+4c1Zp1oQyaW6OUn29w4uRoVtrf63ge9v/7nk5Maw1xo/Xv0pp/2t7Lnfq4nqWqT/ 5eQA=
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1679; i=cassel@kernel.org; h=from:subject; bh=GUr7viIYP6VHLsxTY/cYpdlc6AFuetHD8JkVFK8hvi4=; b=owGbwMvMwCV2MsVw8cxjvkWMp9WSGDLmya5gMuzRC/x/YtOC6t1B2890PX20m0PB88HnJTL3L j7umCv3oqOUhUGMi0FWTJHF94fL/uJu9ynHFe/YwMxhZQIZwsDFKQATafVmZDjDXGD8avfk3hmf bpr1N8xxnfBv2dc7K+Y2PfzO0Jp+LLiNkeHIz0dKxpZe5W2+sh2v0zV5ZX7HlOzZpXL3sGWu7r9 1LFwA
 X-Developer-Key: i=cassel@kernel.org; a=openpgp; fpr=5ADE635C0E631CBBD5BE065A352FE6582ED9B5DA
 Content-Transfer-Encoding: 8bit
 
-For a direct attached device, attached_phy contains the local phy id.
-For a device behind an expander, attached_phy contains the remote phy id,
-not the local phy id.
+While the current code is perfectly fine (because we verify that the
+device is directly attached before using attached_phy to index the
+pm8001_ha->phy array), let's use the pm80xx_get_local_phy_id() helper
+anyway, to reduce the chance that someone will copy paste this pattern to
+other parts of the driver.
 
-The pm8001_ha->phy array only contains the phys of the HBA.
-It does not contain the phys of the expander.
+Note that in this specific case, we still need to keep the check that the
+device is not behind an expander, because we do not want to clear
+attached_phy of the expander if a device behind the expander disappears
+(as that would disable all the other devices behind the expander).
 
-Thus, you cannot use attached_phy to index the pm8001_ha->phy array,
-without first verifying that the device is directly attached.
+However, if it is the expander itself that disappears, attached_phy will
+be cleared, just like it would for any other directly attached device.
 
-Use the pm80xx_get_local_phy_id() helper to make sure that we use the
-local phy id to index the array, regardless if the device is directly
-attached or not.
-
-Fixes: 869ddbdcae3b ("scsi: pm80xx: corrected SATA abort handling sequence.")
-Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
 Signed-off-by: Niklas Cassel <cassel@kernel.org>
 ---
- drivers/scsi/pm8001/pm8001_sas.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/pm8001/pm8001_sas.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
 diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 5595913eb7fc..c5354263b45e 100644
+index c5354263b45e..6a8d35aea93a 100644
 --- a/drivers/scsi/pm8001/pm8001_sas.c
 +++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -1063,7 +1063,7 @@ int pm8001_abort_task(struct sas_task *task)
- 	struct pm8001_hba_info *pm8001_ha;
- 	struct pm8001_device *pm8001_dev;
- 	int rc = TMF_RESP_FUNC_FAILED, ret;
--	u32 phy_id, port_id;
-+	u32 port_id;
- 	struct sas_task_slow slow_task;
- 
- 	if (!task->lldd_task || !task->dev)
-@@ -1072,7 +1072,6 @@ int pm8001_abort_task(struct sas_task *task)
- 	dev = task->dev;
- 	pm8001_dev = dev->lldd_dev;
- 	pm8001_ha = pm8001_find_ha_by_dev(dev);
--	phy_id = pm8001_dev->attached_phy;
- 
- 	if (PM8001_CHIP_DISP->fatal_errors(pm8001_ha)) {
- 		// If the controller is seeing fatal errors
-@@ -1104,7 +1103,8 @@ int pm8001_abort_task(struct sas_task *task)
- 		if (pm8001_ha->chip_id == chip_8006) {
- 			DECLARE_COMPLETION_ONSTACK(completion_reset);
- 			DECLARE_COMPLETION_ONSTACK(completion);
--			struct pm8001_phy *phy = pm8001_ha->phy + phy_id;
+@@ -780,8 +780,11 @@ static void pm8001_dev_gone_notify(struct domain_device *dev)
+ 		 * The phy array only contains local phys. Thus, we cannot clear
+ 		 * phy_attached for a device behind an expander.
+ 		 */
+-		if (!dev_parent_is_expander(dev))
+-			pm8001_ha->phy[pm8001_dev->attached_phy].phy_attached = 0;
++		if (!dev_parent_is_expander(dev)) {
 +			u32 phy_id = pm80xx_get_local_phy_id(dev);
-+			struct pm8001_phy *phy = &pm8001_ha->phy[phy_id];
- 			port_id = phy->port->port_id;
- 
- 			/* 1. Set Device state as Recovery */
++
++			pm8001_ha->phy[phy_id].phy_attached = 0;
++		}
+ 		pm8001_free_dev(pm8001_dev);
+ 	} else {
+ 		pm8001_dbg(pm8001_ha, DISC, "Found dev has gone.\n");
 -- 
 2.50.1
 
