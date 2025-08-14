@@ -1,171 +1,120 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f177.google.com (mail-pf1-f177.google.com [209.85.210.177])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8670D1CFBA;
-	Thu, 14 Aug 2025 00:40:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E87C01BC2A;
+	Thu, 14 Aug 2025 00:59:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755132028; cv=none; b=W6bkMtY6pzR0URPxBj2Wpa8PKISTffWLseMhAGQgH0o0U4kL8NegBDXZgImdF78d2dOKrVz+tl1yHkPCJDLEVIIkA7pnb1l4hD3f0NJSKdDPmS8Eaq9c80ULSLXYMWo6Eet6Qk2b5Ps2pbZ5FBs4jOK6qaEgvxZpdwExsx8q7OM=
+	t=1755133189; cv=none; b=e+fLrnWebqzWkVaI+NpnZHKe1mVxFwRjdyD13O2h8RqW+xgVwNGPLNRNm/ZhziXCJ578GvWVgbd8+R+y+2Y/SfffJUwDcJJ1NVz/Eq511jUwa5SEKtDvRmkz3bZKkNCtUwGClo6N5n5BMVUAAwEu8lD1XoyBX9CyYayGA6JfDco=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755132028; c=relaxed/simple;
-	bh=TN6yIRy/n3GAXu3+Cz6SHsLoEcKFJfcymnW3CHC41C4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=cSjQvQCA8T827mMVXHAxfS9w2Pio/rosbeQAJ0GyeQ2flouhrRksI3tm8rVNNF+4PEXPgvHMxZAkfZRomT62uwyRqNB316MYRVui0y1cZvciSr3scZk3ymmAWRjWvC0RjNqCWagayFCNnm0DyBq5pI/mlrOZzNdfaiL4cNaDClE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=none smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=FfrfAHCs; arc=none smtp.client-ip=198.175.65.13
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1755133189; c=relaxed/simple;
+	bh=sUJ1hwgm3BilO93f+COLaWq26QSMqiNh20olbxtH8wk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Fls0L9KDrdcfUrG7iQhUfh3o1FKzgBL9+YqIQSJb6H/8R2sXj8OA/qU8BMgKxKlV78kSeTQzY/7OAalCt9/Rf4yyHeMvVo0IpwkCQcFCnb9ouj76Q4EFr4HC0BqcSsY1BRrddSjaAPDYQ/TyBOXVGM4VBMrOaJvBLZY2yrQeMAY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YWM6d4Em; arc=none smtp.client-ip=209.85.210.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="FfrfAHCs"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1755132026; x=1786668026;
-  h=message-id:date:mime-version:subject:to:cc:references:
-   from:in-reply-to:content-transfer-encoding;
-  bh=TN6yIRy/n3GAXu3+Cz6SHsLoEcKFJfcymnW3CHC41C4=;
-  b=FfrfAHCsmTz1bXgAU6DRqc2T2Rbq7h4HlQKFl1gJAfIPZNKjYwlEew9y
-   2AjWGWSzn0S4EEkdPn+Qbv5tAvm6F4SuZ1qvtJBo7LFuhZwQWp4QIzklY
-   0DZ6n97T1SJviVZTNxp2ihhmBjETNUo0Zr79wBa7XZ90TeJiyc4sVuYrl
-   trnBTAs8hq4TrnimdzMxPxtnEPwVEkzynZSene0SeavaqpxU89FrQplMg
-   S4HR76hCyF/1Uxn1Uh42i2mXzKDu8dMhY15qKTt6RO8nNADj5T/a5wie5
-   WU1gmLWbAOBHUT5+KQz4qQqMVwZ/I72nmQqHKu/lIvBXZ1ovu6LbZLYtn
-   g==;
-X-CSE-ConnectionGUID: ARk6lH2QTW+e7DCLS4fZjA==
-X-CSE-MsgGUID: Ww4LaJb9Sy2cjXqBTbYhjQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11520"; a="68521636"
-X-IronPort-AV: E=Sophos;i="6.17,287,1747724400"; 
-   d="scan'208";a="68521636"
-Received: from orviesa001.jf.intel.com ([10.64.159.141])
-  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2025 17:40:25 -0700
-X-CSE-ConnectionGUID: 3UkUsY5oR+mykk3Pf1Th3Q==
-X-CSE-MsgGUID: ba5Gof1LSTa66Z6VAA22jg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.17,287,1747724400"; 
-   d="scan'208";a="203795622"
-Received: from linux.intel.com ([10.54.29.200])
-  by orviesa001.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Aug 2025 17:40:25 -0700
-Received: from [10.124.222.231] (unknown [10.124.222.231])
-	by linux.intel.com (Postfix) with ESMTP id 82EC720B571C;
-	Wed, 13 Aug 2025 17:40:23 -0700 (PDT)
-Message-ID: <59308229-24ed-4b8a-b398-cc47c61dfc47@linux.intel.com>
-Date: Wed, 13 Aug 2025 17:40:17 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YWM6d4Em"
+Received: by mail-pf1-f177.google.com with SMTP id d2e1a72fcca58-76e34c4ce54so38443b3a.0;
+        Wed, 13 Aug 2025 17:59:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1755133187; x=1755737987; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=rf/DLFSblEwpBIKMV7nOMC43XFgeeGPKDZbsy7aPkt4=;
+        b=YWM6d4EmCOugQ6VbPkR9UgF2FGcI4pseiE6nvtLNzDiUmWBBwigmzneIAc7YvLOZuV
+         amdZE5w7oqyBCGPW9Gz324vlNp9v3i0I5MAsHHhAjg33DIMXyHps6AhcEqJb/NUIYb6q
+         LEFN6fAGceYxzLOTxfI5PZGGrGwN6rcEtn/rt4zJ9LvMGRNJ9E71SmHzRF4EcUGY41nf
+         YU8GAoQY8Oyyfc+WX5rYNqKoDLSBLAXIVwoqmT1hJ0+bf5suhqhYxw2GIfLFhvC0vDK8
+         xkX5lUskyTa5ObcxLpW6WxWgFNue/bDFSk93pMme6INFb3U/xf+wXEpD/kTF/d1lgOB6
+         DReQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755133187; x=1755737987;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=rf/DLFSblEwpBIKMV7nOMC43XFgeeGPKDZbsy7aPkt4=;
+        b=Me07EKvzcxXYGyuDwS2ynJ2pHpWygbAc1VMgdtIO5pPXVtMk4wy8mcxOm+fYq3hZbJ
+         /TTGDq8C4Ck7NFuMILcIJiPTRtShDvP2OdqNLG2i2e5P6V2BkEwJICSyPsPNluZqoQB6
+         HBg61bywUBhbb9f5x+5uVcRYYW+KC2WPD0qwbmVqtYFMTExOu8l6SPETXxOUFpo1NnOl
+         vpY9BuFejg7l7aD52xge3nGZQEX4fG4qJvmHaDn+7aquEKgX7vRwpNiQagCKUY97jCtd
+         XgXCe+thrcPqENTeji69h7lo3xF4mYyzZ7OcG0PyN1y4m+LQy9JXbuYTyowD51woU19H
+         xr4Q==
+X-Forwarded-Encrypted: i=1; AJvYcCVeOYreYRTpCQjW8nuRBFg/ArYl7s0SB+v0lOIQzwZBe8qXtUVQj1FyYORcbuhZghSJ+Cen7flwmSqqWA==@vger.kernel.org, AJvYcCWQQjeD+62a/3SdxGNVr0Gp7PDzFefzFBW0JefZSXkcIg8hIr0n5RiKFGwKpf9eQr+p6KtfHlH+8HIzl4vvWw==@vger.kernel.org, AJvYcCX/4cIwgtBADIWr/aWW7+vyTAjzQjxTe73bjsvX2H81MMnFPxFE5ygXWnuWCDAEfmvRpcH9/Tolr7pF@vger.kernel.org, AJvYcCXPcQ4/OoSeQVYO9+Yfk9relIX+6+xI32KwK+56yFWnLKIB0GhVN9G7te7ijwVno4U2ZeRvur9RoqZmIX2A@vger.kernel.org
+X-Gm-Message-State: AOJu0YwkWjNetyGhbJi3U7PlecVJVB/X5qPM4Qw3oq3JSpsCtbSvf8E7
+	KnKvKJ5enxRKmq7IrSbk3sR2RJIbMNuLgkLqFa4AIVKYGu3Ze+baN/Bt
+X-Gm-Gg: ASbGnctzFliGTTK/Qnfnl6krsLVmPZ7aFJy8H2PVAY71EKSep/gZcJGdZi+5dmPPlJj
+	hnMpiXGIXcD1uLZazOmnDWFcSK32d0q8w3eikV05YabGBKQWxpwhExXdyzGJwS0R17emZZwxfPJ
+	pUnb0vYdm/fdiByxb7B7KqnvLbhO11y2xZ80O6w2J0cX4ZUY/1Ww7LMUQIqGUZ1Eb72b3g0H/ZB
+	sxXxwOBQaJG2B0ZPZc1nOpxYWZxLB5ZyC08ucRuMNXSxEdBaKjcTqwiKfixMU4wf/EONIriwCgT
+	K3jZ2zCO9BfEmRB/Obu/OKdA91FDl5PHMSocyEivm6N+nVYlKxrE4ekYBfI4TGcYOO20bjHA7Tg
+	s03jJJ/13f24Uhf3i+bcyDkQ5KxB3YJ1Lvgka0lU/kd/wGDjHk7UepaT9xWCYLr9Cuc8bWZ7AxY
+	3bh9p+YlhLmgxVsU2lumc+qQ==
+X-Google-Smtp-Source: AGHT+IFRkVLTCUcZUx+09+v3Wv/zc+P6dtPoSwg7WCBNLF8VkIc7dKXeFpMC8/XRheQQ4K8C/bprdA==
+X-Received: by 2002:a05:6a00:3e08:b0:748:e289:6bc with SMTP id d2e1a72fcca58-76e326c2c54mr949982b3a.1.1755133187112;
+        Wed, 13 Aug 2025 17:59:47 -0700 (PDT)
+Received: from harrison-Surface-Pro-12in-1st-Ed-with-Snapdragon.lan ([101.178.35.31])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-76be9143983sm28875783b3a.1.2025.08.13.17.59.40
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 13 Aug 2025 17:59:46 -0700 (PDT)
+From: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>
+To: marcus@nazgul.ch,
+	kirill@korins.ky,
+	vkoul@kernel.org,
+	kishon@kernel.org,
+	robh@kernel.org,
+	krzk+dt@kernel.org,
+	conor+dt@kernel.org,
+	mani@kernel.org,
+	alim.akhtar@samsung.com,
+	avri.altman@wdc.com,
+	bvanassche@acm.org,
+	andersson@kernel.org,
+	agross@kernel.org,
+	linux-arm-msm@vger.kernel.org,
+	linux-phy@lists.infradead.org,
+	devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>
+Subject: [PATCH 0/3] Describe x1e80100 ufs
+Date: Thu, 14 Aug 2025 10:59:01 +1000
+Message-ID: <20250814005904.39173-1-harrison.vanderbyl@gmail.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 5/5] PCI/ERR: Remove remnants of .link_reset() callback
-To: Lukas Wunner <lukas@wunner.de>, Bjorn Helgaas <helgaas@kernel.org>
-Cc: Riana Tauro <riana.tauro@intel.com>,
- Aravind Iddamsetty <aravind.iddamsetty@linux.intel.com>,
- "Sean C. Dardis" <sean.c.dardis@intel.com>,
- Terry Bowman <terry.bowman@amd.com>, Niklas Schnelle
- <schnelle@linux.ibm.com>, Linas Vepstas <linasvepstas@gmail.com>,
- Mahesh J Salgaonkar <mahesh@linux.ibm.com>,
- Oliver OHalloran <oohall@gmail.com>,
- Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>,
- linuxppc-dev@lists.ozlabs.org, linux-pci@vger.kernel.org,
- Edward Cree <ecree.xilinx@gmail.com>, linux-net-drivers@amd.com,
- James Smart <james.smart@broadcom.com>,
- Dick Kennedy <dick.kennedy@broadcom.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, Andrew Lunn <andrew+netdev@lunn.ch>,
- "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
- Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
- netdev@vger.kernel.org
-References: <cover.1755008151.git.lukas@wunner.de>
- <1d72a891a7f57115e78a73046e776f7e0c8cd68f.1755008151.git.lukas@wunner.de>
-Content-Language: en-US
-From: Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>
-In-Reply-To: <1d72a891a7f57115e78a73046e776f7e0c8cd68f.1755008151.git.lukas@wunner.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
+Describes the UFS nodes for the x1e80100/x1p42100 chipset.
 
-On 8/12/25 10:11 PM, Lukas Wunner wrote:
-> Back in 2017, commit 2fd260f03b6a ("PCI/AER: Remove unused .link_reset()
-> callback") removed .link_reset() from struct pci_error_handlers, but left
-> a few code comments behind which still mention it.  Remove them.
->
-> The code comments in the SolarFlare Ethernet drivers point out that no
-> .mmio_enabled() callback is needed because the driver's .error_detected()
-> callback always returns PCI_ERS_RESULT_NEED_RESET, which causes
-> pcie_do_recovery() to skip .mmio_enabled().  That's not quite correct
-> because efx_io_error_detected() does return PCI_ERS_RESULT_RECOVERED under
-> certain conditions and then .mmio_enabled() would indeed be called if it
-> were implemented.  Remove this misleading portion of the code comment as
-> well.
->
-> Signed-off-by: Lukas Wunner <lukas@wunner.de>
-> ---
+This is relevant to the following devices/patches:
+Surface Pro 12 Inch 
+HONOR MagicBook Art 14 
+Link: https://lore.kernel.org/r/871px910m1.wl-kirill@korins.ky/
+Samsung Galaxy Book4 Edge 
+Link: https://lore.kernel.org/r/p3mhtj2rp6y2ezuwpd2gu7dwx5cbckfu4s4pazcudi4j2wogtr@4yecb2bkeyms/
 
-Reviewed-by: Kuppuswamy Sathyanarayanan <sathyanarayanan.kuppuswamy@linux.intel.com>
+Forthcoming work *not* included in this patch:
+Surface 12in display description
+Surface 12in Surface Aggregator Module description
+Surface 12in device tree
 
->   drivers/net/ethernet/sfc/efx_common.c       | 3 ---
->   drivers/net/ethernet/sfc/falcon/efx.c       | 3 ---
->   drivers/net/ethernet/sfc/siena/efx_common.c | 3 ---
->   drivers/scsi/lpfc/lpfc_init.c               | 2 +-
->   4 files changed, 1 insertion(+), 10 deletions(-)
->
-> diff --git a/drivers/net/ethernet/sfc/efx_common.c b/drivers/net/ethernet/sfc/efx_common.c
-> index 5a14d94163b1..e8fdbb62d872 100644
-> --- a/drivers/net/ethernet/sfc/efx_common.c
-> +++ b/drivers/net/ethernet/sfc/efx_common.c
-> @@ -1258,9 +1258,6 @@ static void efx_io_resume(struct pci_dev *pdev)
->   
->   /* For simplicity and reliability, we always require a slot reset and try to
->    * reset the hardware when a pci error affecting the device is detected.
-> - * We leave both the link_reset and mmio_enabled callback unimplemented:
-> - * with our request for slot reset the mmio_enabled callback will never be
-> - * called, and the link_reset callback is not used by AER or EEH mechanisms.
->    */
->   const struct pci_error_handlers efx_err_handlers = {
->   	.error_detected = efx_io_error_detected,
-> diff --git a/drivers/net/ethernet/sfc/falcon/efx.c b/drivers/net/ethernet/sfc/falcon/efx.c
-> index b07f7e4e2877..0c784656fde9 100644
-> --- a/drivers/net/ethernet/sfc/falcon/efx.c
-> +++ b/drivers/net/ethernet/sfc/falcon/efx.c
-> @@ -3128,9 +3128,6 @@ static void ef4_io_resume(struct pci_dev *pdev)
->   
->   /* For simplicity and reliability, we always require a slot reset and try to
->    * reset the hardware when a pci error affecting the device is detected.
-> - * We leave both the link_reset and mmio_enabled callback unimplemented:
-> - * with our request for slot reset the mmio_enabled callback will never be
-> - * called, and the link_reset callback is not used by AER or EEH mechanisms.
->    */
->   static const struct pci_error_handlers ef4_err_handlers = {
->   	.error_detected = ef4_io_error_detected,
-> diff --git a/drivers/net/ethernet/sfc/siena/efx_common.c b/drivers/net/ethernet/sfc/siena/efx_common.c
-> index a0966f879664..35036cc902fe 100644
-> --- a/drivers/net/ethernet/sfc/siena/efx_common.c
-> +++ b/drivers/net/ethernet/sfc/siena/efx_common.c
-> @@ -1285,9 +1285,6 @@ static void efx_io_resume(struct pci_dev *pdev)
->   
->   /* For simplicity and reliability, we always require a slot reset and try to
->    * reset the hardware when a pci error affecting the device is detected.
-> - * We leave both the link_reset and mmio_enabled callback unimplemented:
-> - * with our request for slot reset the mmio_enabled callback will never be
-> - * called, and the link_reset callback is not used by AER or EEH mechanisms.
->    */
->   const struct pci_error_handlers efx_siena_err_handlers = {
->   	.error_detected = efx_io_error_detected,
-> diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-> index 4081d2a358ee..cf08bb5b37c3 100644
-> --- a/drivers/scsi/lpfc/lpfc_init.c
-> +++ b/drivers/scsi/lpfc/lpfc_init.c
-> @@ -14377,7 +14377,7 @@ lpfc_sli_prep_dev_for_perm_failure(struct lpfc_hba *phba)
->    * as desired.
->    *
->    * Return codes
-> - * 	PCI_ERS_RESULT_CAN_RECOVER - can be recovered with reset_link
-> + *	PCI_ERS_RESULT_CAN_RECOVER - can be recovered without reset
->    * 	PCI_ERS_RESULT_NEED_RESET - need to reset before recovery
->    * 	PCI_ERS_RESULT_DISCONNECT - device could not be recovered
->    **/
+harrisonvanderbyl (3):
+  dt-bindings: describe x1e80100 ufs
+  ufs: ufs-qcom: describe x1e80100 quirks
+  dts: describe x1e80100 ufs
+
+ .../phy/qcom,sc8280xp-qmp-ufs-phy.yaml        |  2 +
+ .../devicetree/bindings/ufs/qcom,ufs.yaml     |  2 +
+ arch/arm64/boot/dts/qcom/x1e80100.dtsi        | 91 +++++++++++++++++++
+ drivers/phy/qualcomm/phy-qcom-qmp-ufs.c       |  3 +
+ drivers/ufs/host/ufs-qcom.c                   |  1 +
+ 5 files changed, 99 insertions(+)
 
 -- 
-Sathyanarayanan Kuppuswamy
-Linux Kernel Developer
+2.48.1
 
