@@ -1,206 +1,87 @@
-Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7887219E97C;
-	Thu, 14 Aug 2025 01:00:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 447F8237704
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2025 02:06:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755133218; cv=none; b=SaHV2AygsEl6yEp2Z48O5F76scRfMPWYRaNh4HwQFzSkd6e6/rRiwjGQHi76twxsiDgOnSWmRe6uTSek65zFwrz9I6WI/J/MuUnUDg54aersZBG79AEz2gkNoL/kneN6NGDyCSlT15t/2kx3bdiZqJuakDFn1Sk0dxR2LxA/5K0=
+	t=1755137166; cv=none; b=IvgHpEsHtVKJWXNcGymY94su1eoFntHEG2+X5PUFKPHZzjkpCATfPIWBciVhFs8DZ+uqW7SR7dAELGK1/k5oScCrkMkWwWGvjKIi1O05Iy3fw9IxuA4K1Ee1/ha7s0N21YPtHpmeYZqbuNEhWbBV1RKZY76miDFvI0CcBMU2HfM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755133218; c=relaxed/simple;
-	bh=tALAK8xqaH8y1+EPvZKslVpqf2BWQ3XZPDqnYG1nZss=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=tZiehl9AEJWQvQtg4DXHwGRBl7NYJncxZct8h/x5vlkY7pVwEnwdzlLoS6hef5LK98Wg3pN0CvHDP5+Vf+bd6uXEEYEft9B8XORFt3ainVCr2cke8DBaQUfqZmVjDKrNa5R76D4wXQC+a1oahE7Nm2/LINH/jLyzno8UfFtVLw4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=BIrtdiQt; arc=none smtp.client-ip=209.85.210.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1755137166; c=relaxed/simple;
+	bh=SqYfdoiNVwzLIQF9tmCb269l+hvCVV6ZmiWR1b/6OvE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ThviF4hOU1uBQpsTuKLDoJg/IZehSUJVDZpv42e21lLKvN0bPkUlnvHBojy7WRjFmrdcNaA4m4JmDWjajmPIYluxdQxu9PPu3ZdhnGKcW6aYvJyebrQ9yLoUtVcV3vEmFpNZ+TND4gfyUqZoYZ7Wnl/d7AVRPNNmp6bWB2UMIR8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qm4iqzeY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="BIrtdiQt"
-Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-76e2e89bebaso363029b3a.1;
-        Wed, 13 Aug 2025 18:00:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1755133215; x=1755738015; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=9VkS0f72EnaqiMcIZjME5kwPlMnOQ+cNlZJhtfFnKns=;
-        b=BIrtdiQt62MHuZSm44mg56pjrGsR5N6rrzbdj7XsxfCF/CCS9zGxHUTRG6n/tgSfLy
-         o4IbVS62JYtRf9BHPvn7TrGv/twi+Wr8ppVQQVFgxKXW8mkEBxp0vfVyy6en9Jn62Y8P
-         DszP6YRggyqJsFl/7ALckNuz7DZU7ojrjfeox+WQpl+2dkg4CFRvCurtFSy8UISC3WbD
-         L7Pr6EuhyYZg6/+WJzzybMnst7B0OxMlWBEYlKKIQtrsKadAfjxp45p7URZuz70BNBpK
-         dGLn2Lfh6FrQGTWuaZMzhlP7oeqnEE5P3BjWD9lfw4EVCAC2rjVJM0akMd357FeR+G1d
-         cdvA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755133215; x=1755738015;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=9VkS0f72EnaqiMcIZjME5kwPlMnOQ+cNlZJhtfFnKns=;
-        b=naaEFEutPjLJt300c7cn3vWrzYElf2ZvXUGKlC5AxSpbuFY3ctp5xrWquat5Cnpxpy
-         ZoJbYdK9apS+tIe3FnIEtEJrO+CrsrdddgBUWfQcTZ5RKYeVSPTr+00/axRpjku/qZUZ
-         to+PCYhchHX5S3Vx0+upqEM5SOPo5cJl0lUcTAFrbPUGGqXyWY+pAOe6jkppBDlswe3V
-         h6tISF4BNUi34XSORlo4XoMp/D66kAr3jb+oBU1fFvJEESdWJw9PjU7YCBjo1cC8Qc6D
-         Isb4eeUEVdRZ9AAF3bQHiYNyjmN+ctm18L9FPEV6X3bPbcJTuew8n8QJw4OfNwZ+LltT
-         iKEg==
-X-Forwarded-Encrypted: i=1; AJvYcCUij3owipRDDrlT60YvmDNpkNXtDRNj059J349INPiHEtmpQqg1ClAJ8IgqCJ+CSWGCX1tVNEXHf4UNhQ==@vger.kernel.org, AJvYcCVwWrQCTVEuUcONjzv1i1hQLqiLuoK8N+DBsB5Wsomwi7rSMBTdvQVGnvkwpK9eA3eQH49zqdeKSvmD@vger.kernel.org, AJvYcCWfnVTP3Mw7bOUZ7Y8uPswzAqKJPXopRHjHJYvKhR+JFsv/mn7Q8EBt7YqLuWnJ42x7or1Dp4NWSGVa4ScR@vger.kernel.org, AJvYcCWhq10s7we+NKIHiW5YWK98i9QftL6pXiMpqZi9pgPjtpZ6lJsoyXnUbzsguncA6QgDR7VUkU2HZ9Dv0WLgQg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz6kR2dINORoPpK1TsuA0chaYCQawvbemuY1aGz7Js0VXBo3ot9
-	P+tgFq0LnKZpIkFIIZjuQ3WepNlfmEqCGiy84DA9j+AxFLLjBemVwH07
-X-Gm-Gg: ASbGnctHPmcGW8T3WYWEfexAcjCATI2eg0cPo7gZuHsL4bSS1VYHLl44jyQGfBJKkt4
-	B3lsE+jRYRxPm0H7Piwnh2+rhoQ6EZr9izhR2phE8Zc75FkknaGjlFaNusgeXdfGaxtCPRkCUaC
-	vq2W+A2P13AIdIcw5IntBN2MaUavAU6DcLCVQdhYO/+eOiYnp1sstvCnwrsV5XXn3H9oR/AP5ff
-	Ikr7Hvbt0S0jk831tx97ulJyEYcbAEVipkSM7qoBJox1aSjReyHVrQ4o4Fs6VClSDTUz9kXBD1I
-	5Qn8QNDHiS28zx5V+OnL5lzzEdfRbHn2XjiqW2E+g1RR8U9ZmmrZBSKzd00vA4MJCx3Gt7oTmEw
-	MT1/foaUMJ/lLp/R+v2WFWvsrnM5e1BPk3UITjvPA43cV/VUaooJkpYD9MEUAeI30nPL2mZjV4T
-	ZhJa2tCDFIU3cE24voSNz+4/4b+9uBR+Tc
-X-Google-Smtp-Source: AGHT+IEodCVdxdACkatFb9yR9vBUxSKBbYFsKdRI8HyvoJW/occz78XqVQVb7+h+2Ld7qrl4V57YzQ==
-X-Received: by 2002:a05:6a00:3d4d:b0:76b:e16f:ca91 with SMTP id d2e1a72fcca58-76e31eb967emr1104856b3a.1.1755133214668;
-        Wed, 13 Aug 2025 18:00:14 -0700 (PDT)
-Received: from harrison-Surface-Pro-12in-1st-Ed-with-Snapdragon.lan ([101.178.35.31])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-76be9143983sm28875783b3a.1.2025.08.13.18.00.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 13 Aug 2025 18:00:13 -0700 (PDT)
-From: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>
-To: marcus@nazgul.ch,
-	kirill@korins.ky,
-	vkoul@kernel.org,
-	kishon@kernel.org,
-	robh@kernel.org,
-	krzk+dt@kernel.org,
-	conor+dt@kernel.org,
-	mani@kernel.org,
-	alim.akhtar@samsung.com,
-	avri.altman@wdc.com,
-	bvanassche@acm.org,
-	andersson@kernel.org,
-	agross@kernel.org,
-	linux-arm-msm@vger.kernel.org,
-	linux-phy@lists.infradead.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>
-Subject: [PATCH 3/3] dts: describe x1e80100 ufs
-Date: Thu, 14 Aug 2025 10:59:04 +1000
-Message-ID: <20250814005904.39173-4-harrison.vanderbyl@gmail.com>
-X-Mailer: git-send-email 2.48.1
-In-Reply-To: <20250814005904.39173-1-harrison.vanderbyl@gmail.com>
-References: <20250814005904.39173-1-harrison.vanderbyl@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qm4iqzeY"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EA58DC4CEEB;
+	Thu, 14 Aug 2025 02:06:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755137165;
+	bh=SqYfdoiNVwzLIQF9tmCb269l+hvCVV6ZmiWR1b/6OvE=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=qm4iqzeYpTPXzlDWuo/IBWAcpuCZbLXpxT7XFmkYunqyTCh3yHh+MJ4rinMiUvOuk
+	 dJsq+ZFxQJWejdUgp/YrQUOuwL+0MdaU7A3cFlR75MT4EUDr+9iejTcPLYuvUD+oTQ
+	 /PO37NkVkA+hBl1HKLsk+mWhHSe1oTk4s3UqmiCuvKBEILfLqBwsRmpT/0r1T6w91V
+	 fLG31azaR7DT+fqpCz+IZzf9XM75ufQXQdIxvyuAzkWkdfbu+2FjJAKhrcm7J6l11Y
+	 e4K7JiievS/4jakq3NhPLjchTH2/ywrjHhulnRiAqj3wWpuwr80zXTmVLWn+5yzBjw
+	 3DmM4pHnDUoug==
+Message-ID: <6552eaa2-4ab2-4283-b9d3-8e5512f6769f@kernel.org>
+Date: Thu, 14 Aug 2025 11:03:23 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/5] scsi: pm80xx: Add helper function to get the local
+ phy id
+To: Niklas Cassel <cassel@kernel.org>, Jack Wang
+ <jinpu.wang@cloud.ionos.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Igor Pylypiv <ipylypiv@google.com>, Terrence Adams <tadamsjr@google.com>,
+ linux-scsi@vger.kernel.org
+References: <20250813114107.916919-7-cassel@kernel.org>
+ <20250813114107.916919-10-cassel@kernel.org>
+From: Damien Le Moal <dlemoal@kernel.org>
+Content-Language: en-US
+Organization: Western Digital Research
+In-Reply-To: <20250813114107.916919-10-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Describe device tree entry for x1e80100 ufs device
-Signed-off-by: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>
----
- arch/arm64/boot/dts/qcom/x1e80100.dtsi | 91 ++++++++++++++++++++++++++
- 1 file changed, 91 insertions(+)
+On 8/13/25 8:41 PM, Niklas Cassel wrote:
+> Avoid duplicated code by adding a helper to get the local phy id.
+> 
+> No functional changes intended.
+> 
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-diff --git a/arch/arm64/boot/dts/qcom/x1e80100.dtsi b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
-index a9a7bb676c6f..effa776e3dd0 100644
---- a/arch/arm64/boot/dts/qcom/x1e80100.dtsi
-+++ b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
-@@ -2819,6 +2819,97 @@ tsens3: thermal-sensor@c274000 {
- 			#thermal-sensor-cells = <1>;
- 		};
- 
-+
-+		ufs_mem_hc: ufs@1d84000 {
-+			compatible = "qcom,x1e80100-ufshc",
-+			"qcom,ufshc", "jedec,ufs-2.0";
-+			reg = <0 0x01d84000 0 0x3000>;     
-+			
-+			
-+			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-+
-+			phys = <&ufs_mem_phy>;
-+			phy-names = "ufsphy";
-+
-+			lanes-per-direction = <2>;
-+
-+			#reset-cells = <1>;
-+			resets = <&gcc GCC_UFS_PHY_BCR>;
-+
-+			reset-gpios = <&tlmm 238 GPIO_ACTIVE_LOW>;
-+			reset-names = "rst";
-+
-+			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
-+
-+			iommus = <&apps_smmu 0x1a0 0x0>;
-+
-+			clock-names = "core_clk",
-+				      "bus_aggr_clk",
-+				      "iface_clk",
-+				      "core_clk_unipro",
-+				      "ref_clk",
-+				      "tx_lane0_sync_clk",
-+				      "rx_lane0_sync_clk",
-+				      "rx_lane1_sync_clk";
-+
-+			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-+				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-+				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-+				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-+				 <&rpmhcc RPMH_CXO_CLK>,
-+				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-+				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-+
-+			freq-table-hz = <100000000 403000000>,
-+					<0 0>,
-+					<0 0>,
-+					<100000000 403000000>,
-+					<100000000 403000000>,
-+					<0 0>,
-+					<0 0>,
-+					<0 0>;
-+
-+			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-+					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-+					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-+					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
-+			interconnect-names = "ufs-ddr", "cpu-ufs";
-+
-+			qcom,ice = <&ice>;
-+
-+			status = "disabled";
-+		};
-+
-+		ufs_mem_phy: phy@1d80000 {
-+			compatible = "qcom,x1e80100-qmp-ufs-phy";
-+			reg = <0 0x01d80000 0 0x2000>;
-+
-+			clocks = <&rpmhcc RPMH_CXO_CLK>,
-+				 <&gcc GCC_UFS_PHY_PHY_AUX_CLK>;
-+
-+			clock-names = "ref",
-+				      "ref_aux",
-+				      "qref";
-+
-+			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
-+
-+			resets = <&ufs_mem_hc 0>;
-+			reset-names = "ufsphy";
-+
-+			#phy-cells = <0>;
-+
-+			status = "disabled";
-+		};
-+
-+		ice: crypto@1d90000 {
-+			compatible = "qcom,x1e80100-inline-crypto-engine",
-+				     "qcom,inline-crypto-engine";
-+			reg = <0 0x1d88000 0 0x8000>;
-+
-+			clocks = <&gcc GCC_UFS_PHY_ICE_CORE_CLK>;
-+		};
-+
- 		usb_1_ss0_hsphy: phy@fd3000 {
- 			compatible = "qcom,x1e80100-snps-eusb2-phy",
- 				     "qcom,sm8550-snps-eusb2-phy";
+[...]
+
+> +u32 pm80xx_get_local_phy_id(struct domain_device *dev)
+> +{
+> +	struct pm8001_device *pm8001_dev = dev->lldd_dev;
+> +	struct domain_device *parent_dev = dev->parent;
+> +
+> +	if (parent_dev && dev_is_expander(parent_dev->dev_type))
+> +		return parent_dev->ex_dev.ex_phy->phy_id;
+> +	else
+> +		return pm8001_dev->attached_phy;
+
+Nit: no need for else after a return.
+Also, maybe reverse the condition to have this a tad faster for direct attach
+devices ?
+
+	if (!parent_dev || !dev_is_expander(parent_dev->dev_type))
+		return pm8001_dev->attached_phy;
+
+	return parent_dev->ex_dev.ex_phy->phy_id;
+
+Other than this, this looks good !
+
 -- 
-2.48.1
-
+Damien Le Moal
+Western Digital Research
