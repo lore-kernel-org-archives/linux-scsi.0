@@ -1,55 +1,55 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72E65227581
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2025 18:29:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6A3A221FB2
+	for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2025 18:29:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755196166; cv=none; b=ee3/YKfz0DsbGC/QsPFLdaa5ZM+vN0Sji9rdxKeRGr2HzydZ/Qko6FHtxgxTTJjdJEx2D+oi5uJ3oSiyS8TrEILRWM39KOJj9dDFgg/ltXizP932+rzEqhaSJ8rS4y9+ryeH6sTQqgB+QkL0zqhVOWz7oQVqwIhd94AUPBzVid0=
+	t=1755196167; cv=none; b=LxgRqMNCO3KWnof3UiDzaMVBSsiLQ6qBqGQrnTdEKotoJYihLsprxHcT3cL4/3hNtepxZejGR5hl9+1JT2srJRPLH3jMUbngIVO07jcNFG9fPePs+Exive6f2azXrgaMKaWCFIXa3a/ZCXU8us4rLY7pR6Q8cSkl6t5Vx5zoKKw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755196166; c=relaxed/simple;
-	bh=wlbYv9yMm97KjU9YzVO6ZfUj5bHkWLptBZY0owbcFPE=;
+	s=arc-20240116; t=1755196167; c=relaxed/simple;
+	bh=ZOcRcKidGIFGZEPBogvHIz89iH5YjF91QT+lpDyOi9M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=ti6leSjx0i04eqZTJMGysKAwEHHxwXApLXJtjcL+WlFWlXtD+z2KDzSKTF0cKuxkjD8CP3BYtFKK09XHs0YTk/TsnvYTXSTqlPEfJm+uDquud43KzeSW5m/hKx/EHkWXu7Vfvd5tHtukamLi+ZbGT8QPUQx3FEs3avLjiHWcr4E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=iXo8MA0Y; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=qF+QW8bYC5s7/0ylWWD53mPBFq57uBIVzFT1EHMFveaDWSrcrFmscbe7kMcNKirXtV025Q0eATL3iMcGwbZcyl1w+iJGB1DALu4L2inRj4gj4M2eoXbqmPDUrAcJwhsfr519zB6r9lSev1XWT8fOaCk/gsnyIS2n8eSWazAbLY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dNkP3ugS; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="iXo8MA0Y"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dNkP3ugS"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1755196163;
+	s=mimecast20190719; t=1755196164;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=/4aKbDUmx161WBExvL/83Y9UXD3LJzhQVfV/TVfZzsY=;
-	b=iXo8MA0Yx4wKMISsXbasHCMS6UIE9gwfbk6RmluogOlcI+6g/JQkX3A+Zb1pVWwrP1RIz/
-	WfS6563nOoOaZ5F9neoMgQnoQK4Z5WgMpxVQ5R5i+pLIdZU65nJ71AJmXAHe6m/RIxzO8y
-	umeim3z17rXJrswj7hUU9G/ofup8tp4=
-Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=6TwlC3bQn7t26Yf+3zif0QT/B3Df+A67p9Cp5BXX8C0=;
+	b=dNkP3ugS5IMvdOc46EXwgs88Mt9esB3HVfYFMBGnzvlEMenY1Cs1PvI5fCHMuJtSwe7pcx
+	p1v/UarrXNn/vRxiV9Oke7VqmIxNxmDxrKybh96vp0ViIVTEsRaEEoxxv9uPYFcC3OYBx5
+	1lGUSlpAkgf1yjlXTK1Ob5AbSBvNbmM=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-391-QdvaGtrVPXabIkclE2iYZw-1; Thu,
- 14 Aug 2025 14:29:20 -0400
-X-MC-Unique: QdvaGtrVPXabIkclE2iYZw-1
-X-Mimecast-MFC-AGG-ID: QdvaGtrVPXabIkclE2iYZw_1755196159
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-600-Qlq5Rb4tMvKI30G56J0Apg-1; Thu,
+ 14 Aug 2025 14:29:23 -0400
+X-MC-Unique: Qlq5Rb4tMvKI30G56J0Apg-1
+X-Mimecast-MFC-AGG-ID: Qlq5Rb4tMvKI30G56J0Apg_1755196162
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3C92F1955BD9;
-	Thu, 14 Aug 2025 18:29:19 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3D807180034D;
+	Thu, 14 Aug 2025 18:29:22 +0000 (UTC)
 Received: from emilne-na.westford.csb (unknown [10.22.65.61])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 0619A1800280;
-	Thu, 14 Aug 2025 18:29:17 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 197571800280;
+	Thu, 14 Aug 2025 18:29:20 +0000 (UTC)
 From: "Ewan D. Milne" <emilne@redhat.com>
 To: linux-scsi@vger.kernel.org
 Cc: michael.christie@oracle.com,
 	dgilbert@interlog.com,
 	bvanassche@acm.org
-Subject: [PATCH v2 6/9] scsi: sd: Remove checks for -EOVERFLOW in sd_read_capacity()
-Date: Thu, 14 Aug 2025 14:29:04 -0400
-Message-ID: <20250814182907.1501213-7-emilne@redhat.com>
+Subject: [PATCH v2 8/9] scsi: Simplify nested if conditional in scsi_probe_lun()
+Date: Thu, 14 Aug 2025 14:29:06 -0400
+Message-ID: <20250814182907.1501213-9-emilne@redhat.com>
 In-Reply-To: <20250814182907.1501213-1-emilne@redhat.com>
 References: <20250814182907.1501213-1-emilne@redhat.com>
 Precedence: bulk
@@ -61,36 +61,34 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-Remove checks for -EOVERFLOW in sd_read_capacity() because this value has not
-been returned to it since commit 72deb455b5ec ("block: remove CONFIG_LBDAF").
+Make code congruent with similar code in read_capacity_16()/read_capacity_10().
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/sd.c | 4 ----
- 1 file changed, 4 deletions(-)
+ drivers/scsi/scsi_scan.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 10ba6ec5012d..f1ab2409ea3e 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -2869,8 +2869,6 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index c754b1d566e0..1346a52f55c4 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -717,14 +717,13 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
+ 				"scsi scan: INQUIRY %s with code 0x%x\n",
+ 				result ? "failed" : "successful", result));
  
- 	if (sd_try_rc16_first(sdp)) {
- 		sector_size = read_capacity_16(sdkp, sdp, lim, buffer, buflen);
--		if (sector_size == -EOVERFLOW)
--			goto got_data;
- 		if (sector_size == -ENODEV)
- 			return;
- 		if (sector_size < 0)
-@@ -2880,8 +2878,6 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
- 			return;
- 	} else {
- 		sector_size = read_capacity_10(sdkp, sdp, buffer, buflen);
--		if (sector_size == -EOVERFLOW)
--			goto got_data;
- 		if (sector_size < 0)
- 			return;
- 		if ((sizeof(sdkp->capacity) > 4) &&
+-		if (result == 0) {
++		if ((result == 0) && (resid == try_inquiry_len)) {
+ 			/*
+ 			 * if nothing was transferred, we try
+ 			 * again. It's a workaround for some USB
+ 			 * devices.
+ 			 */
+-			if (resid == try_inquiry_len)
+-				continue;
++			continue;
+ 		}
+ 		break;
+ 	}
 -- 
 2.47.1
 
