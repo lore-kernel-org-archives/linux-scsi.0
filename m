@@ -1,125 +1,271 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C630C1F1518
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 17:30:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36EF431771D
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 18:32:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755279048; cv=none; b=n6MSdD7UktJohuKVGphBmp9WL9TSvguKCPiHZC0h/T9SHvLmWx5pzJ1UZ09s88Ya1zLpCE4EBMeAuDjS0JaUuLPl6E6d0L94rjSHorYezUfUNiGBjHPUibkoNeUUi7Kik1kGjQO1pZDJs4RwO259ao+6L4pUxLfnt0PlJoXoqg0=
+	t=1755282738; cv=none; b=Si7ViNkdGGnjojZdZLno7Oru7FTdySkHWmdojLOJKXjpldH0yu1RI78C/EzGC5Yzip87BcTg7DOpiHOo6+OxDGORCbI1A24Sxh1rqj7vhYjnBDF1oXq4Lnok6Bz9q4qV6tonUXWGfjvh7sKc7TLx98G8Nnvn0YOlfni/hV1q4wI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755279048; c=relaxed/simple;
-	bh=q+oEdlSTPlcG6zBGJ/zzdpkB3dihEAAcHq0wvuWtbI4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VjlNdI+YsIeTBNxY1nnOTj2G5v0bCRPnwBxIeXrn+pc6SrYq9p+CHYrZxuWUCZbpD5xNFzXaDFQt4vd3giylO0z9fYW7dXl1iwZVii4pPAkPqeb+tVqMMxOqKW/jlZocb1PSvCFaFGQ8ULqRLCkYxThc3hxJMFFEyCph0KJio5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=yekW0Knv; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755282738; c=relaxed/simple;
+	bh=hLJVS8VkzU78Ho2HAJVBvBBpVkRZdtahlY2zkbcyKX4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=fsYpnx3EvcAPtnqRKRaYfLjuDKshOpU7sRhmjeDK/BxSIOCY+p9VbMCYYuM42c7ZKeb4R154XdSXOUh/GdXNwfhcKwWqnY8c+wvlA2FCVXg/AOm0TOeqTX+L2ejl8aflm0cy5eGfpTUFYGDFZiDFjM0kyX31uhMrBFMltqr2c1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Edox1tHU; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="yekW0Knv"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c3Tf8240yzm174W;
-	Fri, 15 Aug 2025 17:30:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755279038; x=1757871039; bh=epxtctQqThlqjejGqty3LmjJ
-	95zavbs/+6xMwZsY1GY=; b=yekW0KnvSAi0rSgV9rGt4m3b3zNZTRfKHRj1RxZ8
-	XjG4R+r3F9OOlUTqzrdi5/qPCc8USLFu+HsSTnkWDGrrAQZWLRIpXrzjmW/zRGiO
-	UK8mkLgUdD/zsqyphbIi8eVyp0ZgW1mMGxGLuT/FkyJyvDiGiZYqwS8pd5YnAF41
-	Eb+odDgvHbx8U41p1UsM/I95rEuxifsDDb0nqAkRXBybOOthbHiTd4z2jSYTA+dG
-	ynUPgPAQhF1pYcFBKz4Olv7vZBWhcEtI5twyc59ckMOf6xICzjLjqtIp0lSnHcFK
-	XyFQ5/VXb8Xf1EyEPgox++x/vhgzPJd27CUmw1VwI7Fcqg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id NYvbtm55TF7r; Fri, 15 Aug 2025 17:30:38 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c3Tf36B7tzm174R;
-	Fri, 15 Aug 2025 17:30:34 +0000 (UTC)
-Message-ID: <5a5c975e-9514-4adf-9888-4149e6d201a0@acm.org>
-Date: Fri, 15 Aug 2025 10:30:33 -0700
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Edox1tHU"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1755282733;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=E82lGwAqbqrp+ZkmV201DAGc8O5VIlfSDJWWv94uZqQ=;
+	b=Edox1tHUVXcONNDaBE26y4Ja3LZPJC7l7G/sRwGWiEezmHCMTpZu8RU0WHEzPxuegbSpiY
+	VGZ/OuBKsmGQWfwHZn6jJ6gHdOQ/9InO/c8YHcGJ5UQjAe2gaIXEEiboeawwyKgJfUYwtm
+	9DEwV3Lto0P3Pxbab+mznWp/hxIRCFE=
+Received: from mail-yw1-f197.google.com (mail-yw1-f197.google.com
+ [209.85.128.197]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-436-B7watmEENwSqiCd4mGs1dQ-1; Fri, 15 Aug 2025 14:32:06 -0400
+X-MC-Unique: B7watmEENwSqiCd4mGs1dQ-1
+X-Mimecast-MFC-AGG-ID: B7watmEENwSqiCd4mGs1dQ_1755282726
+Received: by mail-yw1-f197.google.com with SMTP id 00721157ae682-71e71886fbeso9195707b3.0
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 11:32:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755282726; x=1755887526;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=E82lGwAqbqrp+ZkmV201DAGc8O5VIlfSDJWWv94uZqQ=;
+        b=CfWb1fW9+EJmnK5vYFd0bI4zXGwRLIjo4q8p4bMH8UUryfFu+HLTrf5NOPPPKDTTte
+         Txnz5MrVkazV+W88PTc4MVAxYqxwZfYVrvNx6tE2USzsHd65ETOYRdZmuA/Re3/WDAXf
+         UpMjpHfhl/fyo2Mw3ehaGneNcJPVSnCRc71SYQ/asuIPfqi0r/ZIVcTOxPOMr9Spyjom
+         Y2cECJOLCzJ78vwVak33xeeST9oLbUp3rrG1i18jdKM4XDggxnnODOlQJOFzNDCQBnUQ
+         4UMGkE14rq8Iq9KpG0UWx43A2TxjsAliuVeyt7dYlTsM87bboHhvCdaCfrqKvhgDgxcW
+         uIGA==
+X-Gm-Message-State: AOJu0Yw2Zk9lmXWjk/TXhi3a0NJMlcN1Mrry2EhMFwOdStp9wEyEHVsh
+	m4C1hqi9A129q4G6YfjFetUhoo9VgnMaV6qmM+VDYh9ZXIXv9RRoH2Kxr3SFP0o4U8lG8skOgNV
+	kCtKoPr6hfqHZfx/ZN3bnspQ13W/b/V48ijBxQDm4uYH4pNmhaeWsirZfL2V9IUQIZIkSz0v7Jn
+	KwVV6exGVqUi4k9qQe/AxIdQTnOyC2PQy/J16msA==
+X-Gm-Gg: ASbGnctjVcGAUVkg/xzT1jNcEOBtZsE4Wf7tsvsmmFxHFZai7DCt8F1W8I4fuwnGiTY
+	9TkWY4AA/Uds0tJRjyle+qS9zJ6Cr5mFVzargT2/yEpihV9AXRntvYhuNfWye1PO7KE5FTJ6yxf
+	xf20JS/MKHNJsvOHIjTW/YEg==
+X-Received: by 2002:a05:6902:1105:b0:e93:3a67:689e with SMTP id 3f1490d57ef6-e933a676a0fmr2401143276.11.1755282726087;
+        Fri, 15 Aug 2025 11:32:06 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHGaig28EEk/9YrEsX0f8ys23FWxrSjaapsjxN9Y9rEC1H5Cj3uo7VkVWFlXtL99tJWluxBfPuC8RYTvOQWt0M=
+X-Received: by 2002:a05:6902:1105:b0:e93:3a67:689e with SMTP id
+ 3f1490d57ef6-e933a676a0fmr2401086276.11.1755282725513; Fri, 15 Aug 2025
+ 11:32:05 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/30] Optimize the hot path in the UFS driver
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, hch@lst.de, hare@suse.com
-References: <20250811173634.514041-1-bvanassche@acm.org>
- <d5cd0109-915f-4fe7-b6c2-34681b4b1763@oracle.com>
- <d4151040-ab1a-4b3c-b5f9-577e907b43fc@acm.org>
- <ff0705fe-0bac-408e-a073-a833525dabf8@oracle.com>
- <e651aa7e-aad2-4e4e-afff-3e89a61f13f9@acm.org>
- <71a41bd0-1243-4fb3-ae83-c2cfae229296@oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <71a41bd0-1243-4fb3-ae83-c2cfae229296@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20250814182907.1501213-1-emilne@redhat.com> <20250814182907.1501213-8-emilne@redhat.com>
+ <7a503388-d466-491b-aa1e-e56515266eab@kernel.org>
+In-Reply-To: <7a503388-d466-491b-aa1e-e56515266eab@kernel.org>
+From: Ewan Milne <emilne@redhat.com>
+Date: Fri, 15 Aug 2025 14:31:54 -0400
+X-Gm-Features: Ac12FXyxeCBeiLyzkkwkTF62Nz6OQGPJSAuOGPOVtPhKIAoqIZkuDnrRh-nL-ns
+Message-ID: <CAGtn9rncPyhO9u75X__5T8QiGQtBrO+Th7AousKkJsa7XG0tiA@mail.gmail.com>
+Subject: Re: [PATCH v2 7/9] scsi: sd: Check for and retry in case of
+ READ_CAPCITY(10)/(16) returning no data
+To: Damien Le Moal <dlemoal@kernel.org>
+Cc: linux-scsi@vger.kernel.org, michael.christie@oracle.com, 
+	dgilbert@interlog.com, bvanassche@acm.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 8/15/25 12:50 AM, John Garry wrote:
-> Maybe so. But it is still less than ideal how the TMF tags are managed 
-> in the UFS driver, specifically having a stub in ufshcd_tmf_ops. Have 
-> you considered modelling on how the NVMe driver manages the admin queue?
-
-The PCIe NVMe driver has different tag sets for the admin queue and I/O
-queues. Additionally, it allocates separate request queues for admin
-commands and for I/O commands, just like the UFS driver. Can you be more
-specific about why you are referring to the NVMe driver?
-
-Regarding the stub in ufshcd_tmf_ops: moving the code for queueing a TMF
-into ufshcd_queue_tmf() and switching to blk_execute_rq() for submitting
-TMFs shouldn't be that hard. However, I consider that change as
-out-of-scope for this patch series.
-
->>> - I like that you are using blk_execute_rq(), but why do we need the
->>> pseudo sdev (and not the ufs sdev)? The idea of the psuedo sdev was 
->>> originally for sending reserved commands for the host.
->>
->> In the UFS driver several reserved commands are sent before
->> ufshcd_scsi_add_wlus() and scsi_scan_host() are called. 
+On Thu, Aug 14, 2025 at 10:50=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org=
+> wrote:
 >
-> If you must send "host" reserved commands (which are not for a specific 
-> SCSI target), then it would be ok.
-> 
-> But do you need to send any "reserved" commands to a specific SCSI 
-> target (which are not TMFs)?
+> On 8/15/25 03:29, Ewan D. Milne wrote:
+> > sd_read_capacity_10() and sd_read_capacity_16() do not check for underf=
+low
+> > and can extract invalid (e.g. zero) data when a malfunctioning device d=
+oes
+> > not actually transfer any data, but returnes a good status otherwise.
+> > Check for this and retry, and log a message and return -EINVAL if we ca=
+n't
+> > get the capacity information.
+> >
+> > We encountered a device that did this once but returned good data after=
+wards.
+> >
+> > See similar commit 5cd3bbfad088 ("[SCSI] retry with missing data for IN=
+QUIRY")
+> >
+> > Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> > ---
+> >  drivers/scsi/sd.c | 56 ++++++++++++++++++++++++++++++++++++++++-------
+> >  1 file changed, 48 insertions(+), 8 deletions(-)
+> >
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index f1ab2409ea3e..20b5eebba968 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -2639,6 +2639,7 @@ static int read_capacity_16(struct scsi_disk *sdk=
+p, struct scsi_device *sdp,
+> >
+> > -     the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buffer,
+> > -                                   RC16_LEN, SD_TIMEOUT, sdkp->max_ret=
+ries,
+> > -                                   &exec_args);
+> > +             the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
+> > +                                           buffer, RC16_LEN, SD_TIMEOU=
+T,
+> > +                                           sdkp->max_retries, &exec_ar=
+gs);
+> > +
+> > +             if ((the_result =3D=3D 0) && (resid =3D=3D RC16_LEN)) {
+>
+> You do not need the inner parenthesis. Also, it seems to me that this che=
+ck
+> should simply be:
+>
+>                 if (resid)
+>
+> Because any incomplete read capacity buffer is bound to be invalid.
 
-In this patch series, reserved commands are used for communicating with
-the UFS device. It doesn't matter which struct scsi_device instance is
-used for sending reserved commands since UFS host controllers only
-support a single UFS device.
+No.  Because if the result is nonzero we want to exit the retry
+(break: vs. continue;).
+The retry is only intended to handle the case where the status was
+good but there
+was no data transferred (there will be no data transferred if the result !=
+=3D 0).
 
->>> - IIRC, I was advised to have a check in the scsi core dispatch 
->>> command patch to check for a reserved command, and have a separate 
->>> handler for that, i.e. don't use sht->queuecommand for reserved 
->>> commands. I can try to find the exact discussion if you like.
->>
->> It would be appreciated if a link to that conversation could be shared.
-> 
-> I looked, but I could not find it. It may have been a private 
-> conversation while at my old employer (so now lost).
-> 
-> Anyway, here is a reference implementation:
-> https://lore.kernel.org/linux-scsi/1666693096-180008-5-git-send-email- 
-> john.garry@huawei.com/
+Parenthesis, sure.
 
-The description of that patch says what the patch does but not why the
-.reserved_queuecommand() function pointer is introduced. Integrating
-that patch into this UFS kernel driver series wouldn't simplify any code
-but would lead to some code duplication. Hence, I will leave it to
-someone else to integrate that patch in the upstream kernel.
+>
+> > +                     /*
+> > +                      * if nothing was transferred, we try
+> > +                      * again. It's a workaround for a broken
+> > +                      * device.
+> > +                      */
+> > +                     continue;
+> > +             }
+> > +             break;
+> > +     }
+> >
+> >       if (the_result > 0) {
+> >               if (media_not_present(sdkp, &sshdr))
+> > @@ -2728,6 +2742,12 @@ static int read_capacity_16(struct scsi_disk *sd=
+kp, struct scsi_device *sdp,
+> >               return -EINVAL;
+> >       }
+> >
+> > +     if (resid =3D=3D RC16_LEN) {
+> > +             sd_printk(KERN_ERR, sdkp,
+> > +                       "Read Capacity(16) returned good status but no =
+data");
+>
+> Shouldn't this be a warning instead of error ? After all, there was no er=
+ror...
+> And I would prefer seeing a warning for a bad device. The message would a=
+lso be
+> better mentioning that this is the device fault.
 
-Thanks,
+KERN_ERR was on purpose, some people have dmesg -n set to suppress warnings=
+.
+I mean, it is an error, although the language in SBC is I think
+unclear, it is definitely
+implied that a certain amount of data is supposed to be returned.
+(SBC-3 5.10 / 5.11
+don't actually say "shall").
 
-Bart.
+Although the case I looked at was caused by a F/W bug on a hard drive, you =
+could
+imagine that a similar problem might be e.g. USB bridge or something
+(see the code
+in scsi_probe_lun()).  So I prefer to just explain just what the
+kernel actually sees.
+
+
+>
+> > +             return -EINVAL;
+> > +     }
+> > +
+> >       sector_size =3D get_unaligned_be32(&buffer[8]);
+> >       lba =3D get_unaligned_be64(&buffer[0]);
+> >
+> > @@ -2770,6 +2790,7 @@ static int read_capacity_10(struct scsi_disk *sdk=
+p, struct scsi_device *sdp,
+> >  {
+> >       static const u8 cmd[10] =3D { READ_CAPACITY };
+> >       struct scsi_sense_hdr sshdr;
+> > +     int count, resid;
+> >       struct scsi_failure failure_defs[] =3D {
+> >               /* Do not retry Medium Not Present */
+> >               {
+> > @@ -2804,17 +2825,30 @@ static int read_capacity_10(struct scsi_disk *s=
+dkp, struct scsi_device *sdp,
+> >       };
+> >       const struct scsi_exec_args exec_args =3D {
+> >               .sshdr =3D &sshdr,
+> > +             .resid =3D &resid,
+> >               .failures =3D &failures,
+> >       };
+> >       int the_result;
+> >       sector_t lba;
+> >       unsigned sector_size;
+> >
+> > -     memset(buffer, 0, buflen);
+> > +     for (count =3D 0; count < 3; ++count) {
+> > +             memset(buffer, 0, buflen);
+> >
+> > -     the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buffer,
+> > -                                   8, SD_TIMEOUT, sdkp->max_retries,
+> > -                                   &exec_args);
+> > +             the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
+> > +                                           buffer, RC10_LEN, SD_TIMEOU=
+T,
+> > +                                           sdkp->max_retries, &exec_ar=
+gs);
+> > +
+> > +             if ((the_result =3D=3D 0) && (resid =3D=3D RC16_LEN)) {
+>
+> Same comment here: if (resid) ?
+
+See above.
+
+-Ewan
+
+>
+> > +                     /*
+> > +                      * if nothing was transferred, we try
+> > +                      * again. It's a workaround for a broken
+> > +                      * device.
+> > +                      */
+> > +                     continue;
+> > +             }
+> > +             break;
+> > +     }
+> >
+> >       if (the_result > 0) {
+> >               if (media_not_present(sdkp, &sshdr))
+> > @@ -2827,6 +2861,12 @@ static int read_capacity_10(struct scsi_disk *sd=
+kp, struct scsi_device *sdp,
+> >               return -EINVAL;
+> >       }
+> >
+> > +     if (resid =3D=3D RC10_LEN) {
+> > +             sd_printk(KERN_ERR, sdkp,
+> > +                       "Read Capacity(10) returned good status but no =
+data");
+> > +             return -EINVAL;
+> > +     }
+> > +
+> >       sector_size =3D get_unaligned_be32(&buffer[4]);
+> >       lba =3D get_unaligned_be32(&buffer[0]);
+> >
+>
+>
+> --
+> Damien Le Moal
+> Western Digital Research
+>
 
