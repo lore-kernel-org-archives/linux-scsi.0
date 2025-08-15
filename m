@@ -1,268 +1,190 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36EF431771D
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 18:32:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B6A59308F2D
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 18:53:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755282738; cv=none; b=Si7ViNkdGGnjojZdZLno7Oru7FTdySkHWmdojLOJKXjpldH0yu1RI78C/EzGC5Yzip87BcTg7DOpiHOo6+OxDGORCbI1A24Sxh1rqj7vhYjnBDF1oXq4Lnok6Bz9q4qV6tonUXWGfjvh7sKc7TLx98G8Nnvn0YOlfni/hV1q4wI=
+	t=1755284018; cv=none; b=oXCPI1PlHStuhWoVNFiU9b32+OHLmevbM+2yLWgc8kfC09Ey1H7TMBzascP8jjXFyJXGwkP65ITVZ/vwG1+6MEi9iyzj2vPCFft0SpBDXLGBg831ONTj3liRBS5UOjN40XlMJwnJoPKeimk268WhPoGXf38klv9QplBisBLOHYY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755282738; c=relaxed/simple;
-	bh=hLJVS8VkzU78Ho2HAJVBvBBpVkRZdtahlY2zkbcyKX4=;
+	s=arc-20240116; t=1755284018; c=relaxed/simple;
+	bh=kM6YhzCQlhSazav9/gIArDzOFjcfGFKXQd/Jcs17UCk=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fsYpnx3EvcAPtnqRKRaYfLjuDKshOpU7sRhmjeDK/BxSIOCY+p9VbMCYYuM42c7ZKeb4R154XdSXOUh/GdXNwfhcKwWqnY8c+wvlA2FCVXg/AOm0TOeqTX+L2ejl8aflm0cy5eGfpTUFYGDFZiDFjM0kyX31uhMrBFMltqr2c1I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Edox1tHU; arc=none smtp.client-ip=170.10.133.124
+	 To:Cc:Content-Type; b=DjAg1VlfmtHP9mLCpzMknpjbF26Vt35UoN72IBXnhVA+G6RL3P9wdeDa0riiiE1a+pTxAO1c/GB8zmEC8F2A4mmRCp+1+85mVUpcsMX26D/y+RUdMaVQB6YTblmV996XGz4IKSWYJ4YBSjpR/K0ZMfMp3OlnlMDWj7ceoE2tr1U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=O8FpbZ4W; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Edox1tHU"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="O8FpbZ4W"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1755282733;
+	s=mimecast20190719; t=1755284015;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=E82lGwAqbqrp+ZkmV201DAGc8O5VIlfSDJWWv94uZqQ=;
-	b=Edox1tHUVXcONNDaBE26y4Ja3LZPJC7l7G/sRwGWiEezmHCMTpZu8RU0WHEzPxuegbSpiY
-	VGZ/OuBKsmGQWfwHZn6jJ6gHdOQ/9InO/c8YHcGJ5UQjAe2gaIXEEiboeawwyKgJfUYwtm
-	9DEwV3Lto0P3Pxbab+mznWp/hxIRCFE=
-Received: from mail-yw1-f197.google.com (mail-yw1-f197.google.com
- [209.85.128.197]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=AcwM4LjMupp/Rcj8BvUpaPIi/jVP7jX3UapLQdfB+6M=;
+	b=O8FpbZ4WSOCTyJek4m2q04gN+rpCaq9Dljx1IqLV7LZ57KzlowGv4xtVH8ucBLNlMFKaZb
+	kB789Tq6EngTuDMJu1xGCJK1iipPxbHQPJ+2R95TG0QcZoD7HVO5vfyMdbAM+yGjO0QWgI
+	Kml0No+0lath4BNNyQagiXhxZsskpsk=
+Received: from mail-yb1-f200.google.com (mail-yb1-f200.google.com
+ [209.85.219.200]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-436-B7watmEENwSqiCd4mGs1dQ-1; Fri, 15 Aug 2025 14:32:06 -0400
-X-MC-Unique: B7watmEENwSqiCd4mGs1dQ-1
-X-Mimecast-MFC-AGG-ID: B7watmEENwSqiCd4mGs1dQ_1755282726
-Received: by mail-yw1-f197.google.com with SMTP id 00721157ae682-71e71886fbeso9195707b3.0
-        for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 11:32:06 -0700 (PDT)
+ us-mta-554-1ZD7rk3MNXeVCXJpE8CmdA-1; Fri, 15 Aug 2025 14:53:34 -0400
+X-MC-Unique: 1ZD7rk3MNXeVCXJpE8CmdA-1
+X-Mimecast-MFC-AGG-ID: 1ZD7rk3MNXeVCXJpE8CmdA_1755284014
+Received: by mail-yb1-f200.google.com with SMTP id 3f1490d57ef6-e933de3872eso10850276.0
+        for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 11:53:34 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755282726; x=1755887526;
+        d=1e100.net; s=20230601; t=1755284014; x=1755888814;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=E82lGwAqbqrp+ZkmV201DAGc8O5VIlfSDJWWv94uZqQ=;
-        b=CfWb1fW9+EJmnK5vYFd0bI4zXGwRLIjo4q8p4bMH8UUryfFu+HLTrf5NOPPPKDTTte
-         Txnz5MrVkazV+W88PTc4MVAxYqxwZfYVrvNx6tE2USzsHd65ETOYRdZmuA/Re3/WDAXf
-         UpMjpHfhl/fyo2Mw3ehaGneNcJPVSnCRc71SYQ/asuIPfqi0r/ZIVcTOxPOMr9Spyjom
-         Y2cECJOLCzJ78vwVak33xeeST9oLbUp3rrG1i18jdKM4XDggxnnODOlQJOFzNDCQBnUQ
-         4UMGkE14rq8Iq9KpG0UWx43A2TxjsAliuVeyt7dYlTsM87bboHhvCdaCfrqKvhgDgxcW
-         uIGA==
-X-Gm-Message-State: AOJu0Yw2Zk9lmXWjk/TXhi3a0NJMlcN1Mrry2EhMFwOdStp9wEyEHVsh
-	m4C1hqi9A129q4G6YfjFetUhoo9VgnMaV6qmM+VDYh9ZXIXv9RRoH2Kxr3SFP0o4U8lG8skOgNV
-	kCtKoPr6hfqHZfx/ZN3bnspQ13W/b/V48ijBxQDm4uYH4pNmhaeWsirZfL2V9IUQIZIkSz0v7Jn
-	KwVV6exGVqUi4k9qQe/AxIdQTnOyC2PQy/J16msA==
-X-Gm-Gg: ASbGnctjVcGAUVkg/xzT1jNcEOBtZsE4Wf7tsvsmmFxHFZai7DCt8F1W8I4fuwnGiTY
-	9TkWY4AA/Uds0tJRjyle+qS9zJ6Cr5mFVzargT2/yEpihV9AXRntvYhuNfWye1PO7KE5FTJ6yxf
-	xf20JS/MKHNJsvOHIjTW/YEg==
-X-Received: by 2002:a05:6902:1105:b0:e93:3a67:689e with SMTP id 3f1490d57ef6-e933a676a0fmr2401143276.11.1755282726087;
-        Fri, 15 Aug 2025 11:32:06 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IHGaig28EEk/9YrEsX0f8ys23FWxrSjaapsjxN9Y9rEC1H5Cj3uo7VkVWFlXtL99tJWluxBfPuC8RYTvOQWt0M=
-X-Received: by 2002:a05:6902:1105:b0:e93:3a67:689e with SMTP id
- 3f1490d57ef6-e933a676a0fmr2401086276.11.1755282725513; Fri, 15 Aug 2025
- 11:32:05 -0700 (PDT)
+        bh=AcwM4LjMupp/Rcj8BvUpaPIi/jVP7jX3UapLQdfB+6M=;
+        b=DhIdYJPssfFxCbf/aNatSXwQvuys4qDh2S6kFD/F4ztzZ7AWUq3T8AKgi0cDqKlKCW
+         KOCW4nGAsQSSmqNCYOPwOZkkm3HnHyGxCmvP98QwCFOWfPi74RYi079ruvm0T4W7hYN4
+         faeabRO5JYjzvY/JEfguzMNyFFDmrxSPNqS7IGiMzxGyhD8H10ChqQgJLnUnhm4DFpoS
+         NL+QE9GprEl15BVx3vGZnJfN/VJBlvw4h+7P4Akvv5IrcKWNhf1ISqO4cWKjyQH3qlKo
+         J+Vb2wIjxijm6NA8Z34cFyQzz/Ah2w74AKGs/rn5efJu1K65iyhlJA3v5YjBSwouf8Ep
+         JwoQ==
+X-Gm-Message-State: AOJu0Yw9V71T/zuuBwqzNjjtVTJiw5iRDSSSGzTt88WjjwELjNmSF8E8
+	cmYVKgBbxx7Yb+FWWZaeiIeLQRjWzdmpw54E0frOCoNRIluaPHRhqfgm8o2M3/q9QM0uApKqAnf
+	7MF6iJkBKfeqpS0vPcQeML+zGEzskXGzOKMj38NX2arHNBFSgoPbsAgGLoorQC4Xw8Y69ZiHTnI
+	KCOtkS2f90mdgbZzte3oV5PO7ug6IYG7wWBFGJYA==
+X-Gm-Gg: ASbGncvxYWkRIxCfvIXaN848/7wYWeTun/j6v9H7VUrCHkJJnyvoFQn8K6r+nWHyxJJ
+	1HS8dB9YYyDvox2cGMQsbLsgByYfBp5fjxj5QLEIebcerH9Xx+Scehfcr6TYW+xgU8AIpwqqsE1
+	W6VkVK6oHzJx3o6x8RO+OOuA==
+X-Received: by 2002:a05:6902:154a:b0:e93:abb:8557 with SMTP id 3f1490d57ef6-e93324bb4cbmr3224429276.28.1755284013594;
+        Fri, 15 Aug 2025 11:53:33 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IHKwaYyj3CUCqu4c2O/EJO3/35z8UwnihpPizfiNnV+32A8nm/xUF6hIh92oL5npZOKm2FiZO1QiJWFf6/8Mco=
+X-Received: by 2002:a05:6902:154a:b0:e93:abb:8557 with SMTP id
+ 3f1490d57ef6-e93324bb4cbmr3224400276.28.1755284013133; Fri, 15 Aug 2025
+ 11:53:33 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250814182907.1501213-1-emilne@redhat.com> <20250814182907.1501213-8-emilne@redhat.com>
- <7a503388-d466-491b-aa1e-e56515266eab@kernel.org>
-In-Reply-To: <7a503388-d466-491b-aa1e-e56515266eab@kernel.org>
+References: <20250814182907.1501213-1-emilne@redhat.com> <20250814182907.1501213-4-emilne@redhat.com>
+ <1305ccb7-4e23-436e-bdb3-79ebb8681bfc@kernel.org>
+In-Reply-To: <1305ccb7-4e23-436e-bdb3-79ebb8681bfc@kernel.org>
 From: Ewan Milne <emilne@redhat.com>
-Date: Fri, 15 Aug 2025 14:31:54 -0400
-X-Gm-Features: Ac12FXyxeCBeiLyzkkwkTF62Nz6OQGPJSAuOGPOVtPhKIAoqIZkuDnrRh-nL-ns
-Message-ID: <CAGtn9rncPyhO9u75X__5T8QiGQtBrO+Th7AousKkJsa7XG0tiA@mail.gmail.com>
-Subject: Re: [PATCH v2 7/9] scsi: sd: Check for and retry in case of
- READ_CAPCITY(10)/(16) returning no data
+Date: Fri, 15 Aug 2025 14:53:21 -0400
+X-Gm-Features: Ac12FXwmnnlI7WI_QdA1ldRzmkC7ArnV9aa_iY2QE-dlJ_omFlvIGGWuhsdzYh4
+Message-ID: <CAGtn9rmAxwQE57km=ERwOyByaoQ7ivvctDFGJsG1QGtAMrkiEg@mail.gmail.com>
+Subject: Re: [PATCH v2 3/9] scsi: sd: Pass buffer length as argument to
+ sd_read_capacity() et al.
 To: Damien Le Moal <dlemoal@kernel.org>
 Cc: linux-scsi@vger.kernel.org, michael.christie@oracle.com, 
 	dgilbert@interlog.com, bvanassche@acm.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Thu, Aug 14, 2025 at 10:50=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org=
+On Thu, Aug 14, 2025 at 10:47=E2=80=AFPM Damien Le Moal <dlemoal@kernel.org=
 > wrote:
 >
 > On 8/15/25 03:29, Ewan D. Milne wrote:
-> > sd_read_capacity_10() and sd_read_capacity_16() do not check for underf=
-low
-> > and can extract invalid (e.g. zero) data when a malfunctioning device d=
-oes
-> > not actually transfer any data, but returnes a good status otherwise.
-> > Check for this and retry, and log a message and return -EINVAL if we ca=
-n't
-> > get the capacity information.
-> >
-> > We encountered a device that did this once but returned good data after=
-wards.
-> >
-> > See similar commit 5cd3bbfad088 ("[SCSI] retry with missing data for IN=
-QUIRY")
-> >
-> > Signed-off-by: Ewan D. Milne <emilne@redhat.com>
-> > ---
-> >  drivers/scsi/sd.c | 56 ++++++++++++++++++++++++++++++++++++++++-------
-> >  1 file changed, 48 insertions(+), 8 deletions(-)
-> >
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index f1ab2409ea3e..20b5eebba968 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -2639,6 +2639,7 @@ static int read_capacity_16(struct scsi_disk *sdk=
-p, struct scsi_device *sdp,
-> >
-> > -     the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buffer,
-> > -                                   RC16_LEN, SD_TIMEOUT, sdkp->max_ret=
-ries,
-> > -                                   &exec_args);
-> > +             the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
-> > +                                           buffer, RC16_LEN, SD_TIMEOU=
-T,
-> > +                                           sdkp->max_retries, &exec_ar=
-gs);
-> > +
-> > +             if ((the_result =3D=3D 0) && (resid =3D=3D RC16_LEN)) {
+> > That will make it easier to spot an inconsistent buffer size value.
 >
-> You do not need the inner parenthesis. Also, it seems to me that this che=
-ck
-> should simply be:
->
->                 if (resid)
->
-> Because any incomplete read capacity buffer is bound to be invalid.
-
-No.  Because if the result is nonzero we want to exit the retry
-(break: vs. continue;).
-The retry is only intended to handle the case where the status was
-good but there
-was no data transferred (there will be no data transferred if the result !=
-=3D 0).
-
-Parenthesis, sure.
-
->
-> > +                     /*
-> > +                      * if nothing was transferred, we try
-> > +                      * again. It's a workaround for a broken
-> > +                      * device.
-> > +                      */
-> > +                     continue;
-> > +             }
-> > +             break;
-> > +     }
-> >
-> >       if (the_result > 0) {
-> >               if (media_not_present(sdkp, &sshdr))
-> > @@ -2728,6 +2742,12 @@ static int read_capacity_16(struct scsi_disk *sd=
-kp, struct scsi_device *sdp,
-> >               return -EINVAL;
-> >       }
-> >
-> > +     if (resid =3D=3D RC16_LEN) {
-> > +             sd_printk(KERN_ERR, sdkp,
-> > +                       "Read Capacity(16) returned good status but no =
-data");
->
-> Shouldn't this be a warning instead of error ? After all, there was no er=
-ror...
-> And I would prefer seeing a warning for a bad device. The message would a=
-lso be
-> better mentioning that this is the device fault.
-
-KERN_ERR was on purpose, some people have dmesg -n set to suppress warnings=
+> How ? the buffer size is actually not checked. You only memset the buffer=
 .
-I mean, it is an error, although the language in SBC is I think
-unclear, it is definitely
-implied that a certain amount of data is supposed to be returned.
-(SBC-3 5.10 / 5.11
-don't actually say "shall").
 
-Although the case I looked at was caused by a F/W bug on a hard drive, you =
-could
-imagine that a similar problem might be e.g. USB bridge or something
-(see the code
-in scsi_probe_lun()).  So I prefer to just explain just what the
-kernel actually sees.
+Because Bart asked for this in an earlier review (he actually wanted the co=
+de to
+use ARRAY_SIZE(), but since the buffer is obtained from kmalloc() that
+won't work.
 
+I'll just remove this all in v3, it isn't actually required for what
+the series fixes.
 
 >
-> > +             return -EINVAL;
-> > +     }
-> > +
-> >       sector_size =3D get_unaligned_be32(&buffer[8]);
-> >       lba =3D get_unaligned_be64(&buffer[0]);
-> >
-> > @@ -2770,6 +2790,7 @@ static int read_capacity_10(struct scsi_disk *sdk=
-p, struct scsi_device *sdp,
-> >  {
-> >       static const u8 cmd[10] =3D { READ_CAPACITY };
-> >       struct scsi_sense_hdr sshdr;
-> > +     int count, resid;
-> >       struct scsi_failure failure_defs[] =3D {
-> >               /* Do not retry Medium Not Present */
-> >               {
-> > @@ -2804,17 +2825,30 @@ static int read_capacity_10(struct scsi_disk *s=
-dkp, struct scsi_device *sdp,
-> >       };
-> >       const struct scsi_exec_args exec_args =3D {
-> >               .sshdr =3D &sshdr,
-> > +             .resid =3D &resid,
-> >               .failures =3D &failures,
-> >       };
-> >       int the_result;
-> >       sector_t lba;
-> >       unsigned sector_size;
-> >
-> > -     memset(buffer, 0, buflen);
-> > +     for (count =3D 0; count < 3; ++count) {
-> > +             memset(buffer, 0, buflen);
-> >
-> > -     the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buffer,
-> > -                                   8, SD_TIMEOUT, sdkp->max_retries,
-> > -                                   &exec_args);
-> > +             the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
-> > +                                           buffer, RC10_LEN, SD_TIMEOU=
-T,
-> > +                                           sdkp->max_retries, &exec_ar=
-gs);
-> > +
-> > +             if ((the_result =3D=3D 0) && (resid =3D=3D RC16_LEN)) {
+> > Also, memset() the entire buffer rather than the 8 or 32 bytes expected
+> > back from READ CAPACITY(10) or READ CAPACITY(16).
 >
-> Same comment here: if (resid) ?
+> Why ? There is no explanation why that is needed. The command will not re=
+turn
+> more than the transfer length specified. So memsetting bytes that will ne=
+ver be
+> used seems useless.
 
-See above.
+It's not really needed, I guess, no other routines that use this
+buffer do the memset().
+I'll just leave it using RC10_LEN / RC16_LEN as you suggested.
 
 -Ewan
 
 >
-> > +                     /*
-> > +                      * if nothing was transferred, we try
-> > +                      * again. It's a workaround for a broken
-> > +                      * device.
-> > +                      */
-> > +                     continue;
-> > +             }
-> > +             break;
-> > +     }
 > >
-> >       if (the_result > 0) {
-> >               if (media_not_present(sdkp, &sshdr))
-> > @@ -2827,6 +2861,12 @@ static int read_capacity_10(struct scsi_disk *sd=
-kp, struct scsi_device *sdp,
-> >               return -EINVAL;
-> >       }
+> > Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> > ---
+> >  drivers/scsi/sd.c | 28 ++++++++++++++++++----------
+> >  1 file changed, 18 insertions(+), 10 deletions(-)
 > >
-> > +     if (resid =3D=3D RC10_LEN) {
-> > +             sd_printk(KERN_ERR, sdkp,
-> > +                       "Read Capacity(10) returned good status but no =
-data");
-> > +             return -EINVAL;
-> > +     }
-> > +
-> >       sector_size =3D get_unaligned_be32(&buffer[4]);
-> >       lba =3D get_unaligned_be32(&buffer[0]);
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index e3b802b26f0e..ae8eac4b1cb2 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -2629,7 +2629,8 @@ static void read_capacity_error(struct scsi_disk =
+*sdkp, struct scsi_device *sdp,
+> >  #define READ_CAPACITY_RETRIES_ON_RESET       10
 > >
+> >  static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device=
+ *sdp,
+> > -             struct queue_limits *lim, unsigned char *buffer)
+> > +                         struct queue_limits *lim, unsigned char *buff=
+er,
+> > +                         unsigned int buflen)
+> >  {
+> >       unsigned char cmd[16];
+> >       struct scsi_sense_hdr sshdr;
+> > @@ -2651,7 +2652,7 @@ static int read_capacity_16(struct scsi_disk *sdk=
+p, struct scsi_device *sdp,
+> >               cmd[0] =3D SERVICE_ACTION_IN_16;
+> >               cmd[1] =3D SAI_READ_CAPACITY_16;
+> >               cmd[13] =3D RC16_LEN;
+> > -             memset(buffer, 0, RC16_LEN);
+> > +             memset(buffer, 0, buflen);
 >
+> I would leave this as-is.
+
+Sure.  See above.
+
+>
+> >  >            the_result =3D scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
+> >                                             buffer, RC16_LEN, SD_TIMEOU=
+T,
+> > @@ -2719,8 +2720,13 @@ static int read_capacity_16(struct scsi_disk *sd=
+kp, struct scsi_device *sdp,
+> >       return sector_size;
+> >  }
+> >
+> > +#define RC10_LEN 8
+> > +#if RC10_LEN > SD_BUF_SIZE
+> > +#error RC10_LEN must not be more than SD_BUF_SIZE
+> > +#endif
+> > +
+> >  static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device=
+ *sdp,
+> > -                                             unsigned char *buffer)
+> > +                         unsigned char *buffer, unsigned int buflen)
+> >  {
+> >       static const u8 cmd[10] =3D { READ_CAPACITY };
+> >       struct scsi_sense_hdr sshdr;
+> > @@ -2765,7 +2771,7 @@ static int read_capacity_10(struct scsi_disk *sdk=
+p, struct scsi_device *sdp,
+> >       sector_t lba;
+> >       unsigned sector_size;
+> >
+> > -     memset(buffer, 0, 8);
+> > +     memset(buffer, 0, buflen);
+>
+> Same here, but maybe define RC10_LEN instead of having the magic "8" valu=
+e
+> hardcoded ?
+
+Right.  I'll put this in the other patch.
+
+-Ewan
 >
 > --
 > Damien Le Moal
