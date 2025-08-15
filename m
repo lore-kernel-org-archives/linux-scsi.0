@@ -1,56 +1,56 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C379F2836F
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 21:15:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A13BA242D6A
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 21:15:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755292538; cv=none; b=Yed8hMuAviuKynXNIIN3R26b9F/rc55mggPtRdv5tibldUp0k4eYG/qqGimgDn4Npo8iNuKH+pktYBN1r82Jtv6wHhZsXup0oAXd44aHy7IK3J7rZmwks7LPfFlSROa3U3RqP6XPdt1iSG1qA6jlObtZh/Vq5nhihQ12W09717U=
+	t=1755292540; cv=none; b=YgBlsdTz5JjRKeOdJYCZnaPwuA92mAIqv7mTt0eon4Pep3JAmuXx6hQSagswVzQ8+eCCdUsWhSEM9/nwuxvkP30c+P0/2Y13V0eGckxVsJtZDeUGAFY/IuzqMk9cdBP6W6jjZcz8B3W1XIDbbL0N9Imw2bI1sMV/UtJAs8CJX+Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755292538; c=relaxed/simple;
-	bh=53T2nta0oYWE9uUPGGKUzFMVFFtqHTKj24e5AWGmA6A=;
+	s=arc-20240116; t=1755292540; c=relaxed/simple;
+	bh=/GzHMxzX7xkxUP+eCMrnfTZf/mba148qI/Ado4oksX0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SsohJBWOPAczVkdlniMufeCPYEirCOJNsIJqnlz/D652gwBJMe1j0kzH/PEDAdPmQW9UpV/Rdo9wVWcRefZ4b9kBxAWnYd70M4b3hXgFR8/TtcjZDrhooa0bcK0oRJFtvelH89M3Z1U8cVNOn4dfJ06ZaO6BH//WV6ZhVHaws/A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=b5FPDzxr; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=UjRC6gV4A6NR1c4L5txmObgmh5/Q0t2c6si4X4Z/xSiHcgHKaNBU2ODlslLBIROzB++nJF+qK4fflodwlJD/+zCcCVSDUjX70RbGCEc+Z/zYgmxFjawW4YvoTmeGLtTLxOGXLpCuHKhpHhUsFvon64wywrLt/bgKGEnvioGrNsk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=VEV9Dk4A; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="b5FPDzxr"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="VEV9Dk4A"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1755292534;
+	s=mimecast20190719; t=1755292536;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Gocn/7hpql95UK491SYXtCL4s2osIrDGn+cZF2NJ9t8=;
-	b=b5FPDzxrTZ09ZgBEfhL5UlgJYVuOcHIqQLZYIU5Xn/mxwZg8+sMtvp+/XEb1gVWgIkKr8u
-	wPC+ug6nII2qQoqubfm4sxVsLjnmD6q4xoPimHYa7C9SynBvQ8LrrbDUKQJ0klK6qtaJ3P
-	+1RsLGkbZoPcJ+SXTWBTESzwpslMr/k=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=pdWkzujkuMEwipgRYycG3ttxc1yVnqyfors5+AaitVY=;
+	b=VEV9Dk4AmBVZsOVTQOesrnviwTP7+YTHhad/Zp0kq8TySsP6UNi9oKozLznBehdqjeZL34
+	egl9a0DD9AAxtsm5+kll7REgkZGef+xnVuuLbOYVBah1CLuJ7dJfAe3CZ/PLkzbEQwbG2q
+	5681NVlsUVBLhowUK4KGYGVJDyuPdTc=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-681-20jARxOsN5-ScXouBQsPZw-1; Fri,
- 15 Aug 2025 17:15:31 -0400
-X-MC-Unique: 20jARxOsN5-ScXouBQsPZw-1
-X-Mimecast-MFC-AGG-ID: 20jARxOsN5-ScXouBQsPZw_1755292530
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-428-4E3GpbtyOGKABCdAtOOloA-1; Fri,
+ 15 Aug 2025 17:15:34 -0400
+X-MC-Unique: 4E3GpbtyOGKABCdAtOOloA-1
+X-Mimecast-MFC-AGG-ID: 4E3GpbtyOGKABCdAtOOloA_1755292533
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 00D751800340;
-	Fri, 15 Aug 2025 21:15:30 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 544C01953941;
+	Fri, 15 Aug 2025 21:15:33 +0000 (UTC)
 Received: from emilne-na.westford.csb (unknown [10.22.65.61])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9DBFA19327C0;
-	Fri, 15 Aug 2025 21:15:28 +0000 (UTC)
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 37C7E19327C0;
+	Fri, 15 Aug 2025 21:15:32 +0000 (UTC)
 From: "Ewan D. Milne" <emilne@redhat.com>
 To: linux-scsi@vger.kernel.org
 Cc: michael.christie@oracle.com,
 	dgilbert@interlog.com,
 	bvanassche@acm.org,
 	dlemoal@kernel.org
-Subject: [PATCH v3 1/8] scsi: Explicitly specify .ascq = 0x00 for ASC 0x28/0x29 scsi_failures
-Date: Fri, 15 Aug 2025 17:15:18 -0400
-Message-ID: <20250815211525.1524254-2-emilne@redhat.com>
+Subject: [PATCH v3 3/8] scsi: sd: Have scsi-ml retry read_capacity_16 errors
+Date: Fri, 15 Aug 2025 17:15:20 -0400
+Message-ID: <20250815211525.1524254-4-emilne@redhat.com>
 In-Reply-To: <20250815211525.1524254-1-emilne@redhat.com>
 References: <20250815211525.1524254-1-emilne@redhat.com>
 Precedence: bulk
@@ -62,47 +62,166 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-This does not change any behavior (since .ascq was initialized to 0 by
-the compiler) but makes explicit that the entry in the scsi_failures
-array does not handle cases where ASCQ is nonzero, consistent with other
-usage.
+This has read_capacity_16 have scsi-ml retry errors instead of driving
+them itself.
+
+There are 2 behavior changes with this patch:
+1. There is one behavior change where we no longer retry when
+scsi_execute_cmd returns < 0, but we should be ok. We don't need to retry
+for failures like the queue being removed, and for the case where there
+are no tags/reqs since the block layer waits/retries for us. For possible
+memory allocation failures from blk_rq_map_kern we use GFP_NOIO, so
+retrying will probably not help.
+2. For the specific UAs we checked for and retried, we would get
+READ_CAPACITY_RETRIES_ON_RESET retries plus whatever retries were left
+from the main loop's retries. Each UA now gets
+READ_CAPACITY_RETRIES_ON_RESET reties, and the other errors get up to 3
+retries. This is most likely ok, because READ_CAPACITY_RETRIES_ON_RESET
+is already 10 and is not based on anything specific like a spec or
+device, so the extra 3 we got from the main loop was probably just an
+accident and is not going to help.
+
+Original patch by Mike Christie <michael.christie@oracle.com> modified
+based upon review comments for an earlier version of this patch.
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/scsi_scan.c | 2 ++
- drivers/scsi/sd.c        | 1 +
- 2 files changed, 3 insertions(+)
+ drivers/scsi/sd.c | 107 +++++++++++++++++++++++++++++++---------------
+ 1 file changed, 73 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3c6e089e80c3..c754b1d566e0 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -660,11 +660,13 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		{
- 			.sense = UNIT_ATTENTION,
- 			.asc = 0x28,
-+			.ascq = 0x00,
- 			.result = SAM_STAT_CHECK_CONDITION,
- 		},
- 		{
- 			.sense = UNIT_ATTENTION,
- 			.asc = 0x29,
-+			.ascq = 0x00,
- 			.result = SAM_STAT_CHECK_CONDITION,
- 		},
- 		{
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5b8668accf8e..78f5903cc8d0 100644
+index e3b802b26f0e..25561d01f972 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -2740,6 +2740,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
- 		{
- 			.sense = UNIT_ATTENTION,
- 			.asc = 0x29,
+@@ -2631,14 +2631,66 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 		struct queue_limits *lim, unsigned char *buffer)
+ {
+-	unsigned char cmd[16];
++	static const u8 cmd[16] = {
++		[0] = SERVICE_ACTION_IN_16,
++		[1] = SAI_READ_CAPACITY_16,
++		[13] = RC16_LEN,
++	};
+ 	struct scsi_sense_hdr sshdr;
++	struct scsi_failure failure_defs[] = {
++		/*
++		 * Do not retry Invalid Command Operation Code or Invalid
++		 * Field in CDB.
++		 */
++		{
++			.sense = ILLEGAL_REQUEST,
++			.asc = 0x20,
 +			.ascq = 0x00,
- 			.allowed = READ_CAPACITY_RETRIES_ON_RESET,
- 			.result = SAM_STAT_CHECK_CONDITION,
- 		},
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{
++			.sense = ILLEGAL_REQUEST,
++			.asc = 0x24,
++			.ascq = 0x00,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		/* Do not retry Medium Not Present */
++		{
++			.sense = UNIT_ATTENTION,
++			.asc = 0x3A,
++			.ascq = SCMD_FAILURE_ASCQ_ANY,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		{
++			.sense = NOT_READY,
++			.asc = 0x3A,
++			.ascq = SCMD_FAILURE_ASCQ_ANY,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		/* Device reset might occur several times so retry a lot */
++		{
++			.sense = UNIT_ATTENTION,
++			.asc = 0x29,
++			.ascq = 0x00,
++			.allowed = READ_CAPACITY_RETRIES_ON_RESET,
++			.result = SAM_STAT_CHECK_CONDITION,
++		},
++		/* Any other error not listed above retry 3 times */
++		{
++			.result = SCMD_FAILURE_RESULT_ANY,
++			.allowed = 3,
++		},
++		{}
++	};
++	struct scsi_failures failures = {
++		.failure_definitions = failure_defs,
++	};
+ 	const struct scsi_exec_args exec_args = {
+ 		.sshdr = &sshdr,
++		.failures = &failures,
+ 	};
+ 	int sense_valid = 0;
+ 	int the_result;
+-	int retries = 3, reset_retries = READ_CAPACITY_RETRIES_ON_RESET;
+ 	unsigned int alignment;
+ 	unsigned long long lba;
+ 	unsigned sector_size;
+@@ -2646,40 +2698,27 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+ 	if (sdp->no_read_capacity_16)
+ 		return -EINVAL;
+ 
+-	do {
+-		memset(cmd, 0, 16);
+-		cmd[0] = SERVICE_ACTION_IN_16;
+-		cmd[1] = SAI_READ_CAPACITY_16;
+-		cmd[13] = RC16_LEN;
+-		memset(buffer, 0, RC16_LEN);
+-
+-		the_result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
+-					      buffer, RC16_LEN, SD_TIMEOUT,
+-					      sdkp->max_retries, &exec_args);
+-		if (the_result > 0) {
+-			if (media_not_present(sdkp, &sshdr))
+-				return -ENODEV;
++	memset(buffer, 0, RC16_LEN);
+ 
+-			sense_valid = scsi_sense_valid(&sshdr);
+-			if (sense_valid &&
+-			    sshdr.sense_key == ILLEGAL_REQUEST &&
+-			    (sshdr.asc == 0x20 || sshdr.asc == 0x24) &&
+-			    sshdr.ascq == 0x00)
+-				/* Invalid Command Operation Code or
+-				 * Invalid Field in CDB, just retry
+-				 * silently with RC10 */
+-				return -EINVAL;
+-			if (sense_valid &&
+-			    sshdr.sense_key == UNIT_ATTENTION &&
+-			    sshdr.asc == 0x29 && sshdr.ascq == 0x00)
+-				/* Device reset might occur several times,
+-				 * give it one more chance */
+-				if (--reset_retries > 0)
+-					continue;
+-		}
+-		retries--;
++	the_result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buffer,
++				      RC16_LEN, SD_TIMEOUT, sdkp->max_retries,
++				      &exec_args);
+ 
+-	} while (the_result && retries);
++	if (the_result > 0) {
++		if (media_not_present(sdkp, &sshdr))
++			return -ENODEV;
++
++		sense_valid = scsi_sense_valid(&sshdr);
++		if (sense_valid && sshdr.sense_key == ILLEGAL_REQUEST &&
++		    (sshdr.asc == 0x20 || sshdr.asc == 0x24) &&
++		     sshdr.ascq == 0x00) {
++			/*
++			 * Invalid Command Operation Code or Invalid Field in
++			 * CDB, just retry silently with RC10
++			 */
++			return -EINVAL;
++		}
++	}
+ 
+ 	if (the_result) {
+ 		sd_print_result(sdkp, "Read Capacity(16) failed", the_result);
 -- 
 2.47.1
 
