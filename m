@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A11996A33B
-	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 02:43:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EFA11EEA55
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 02:50:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755225799; cv=none; b=fPbhV0CjRMvzJTHFfUJHC2GhyigyK/Ird13YG1qs+o6q/Vaf5fFVpzPxg82FUFLyri9UyyMyI13VI0l6ogRn56lDxPy4S4U7pfYzH9jkwqCZ0YB+KZtd723pp1OCE4Olbofcf3QRENfTyqWvrGSB0DIpaqXasMxIBud/AIOZ/GA=
+	t=1755226226; cv=none; b=rfCD2vRUcPmGbTbN9EMTk1DM+VSJa4VF+M6SN7a69m9q3c1A0WSXHujx+uB5eBOip/DlWBte7ECrdljaXfRcY0YDikuKF6Okk/CFfVSu1+S9ATxWlaZkRju6fKhj8Q7J7SxFvkZUJ/lqpQgqDnwamRvsoW1GKe5VJn61u9B9axc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755225799; c=relaxed/simple;
-	bh=9aEPL1yv3cya6cXPU2UdL/LH0mgaZjBjaDPq89ALH4c=;
+	s=arc-20240116; t=1755226226; c=relaxed/simple;
+	bh=yfGiorSYWWSZw/DfZyvTHJqhr8vIdi0nWJS7M2Cf3ys=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=XV1zT6akZcgJQUJ/WJI5RQZ+WMVgMyFfEcd1Av7eLRkUgK24daozG6zJ4F5vqIYCzTawW9cTCzTsKsRyIWDmN8odGORNZG11npe88mQX8z26ngIunpyrWnWeSdZXmbyWIlyRFLNI5KXnOdGgJKu0qnHDsCDLxbbMc6AHvx+X7VM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nelDdSaX; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=HZCK/rcClml2zSRmJydiGxv/vPBG3K53zmqQlV6RF3Tjj4EANkspiVZw8cAIzCjZvHm0VsUdy5FEMuDWAbjVSHJXfogY6nn1+851aWvCkAwaCR960RjJtJH5AVyIyqwIJUf2OKZQ25pK1PF1UtlCyv3hBuknZ2gaK3a3Ii0H+Fw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GWE4zNu7; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nelDdSaX"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 809D6C4CEED;
-	Fri, 15 Aug 2025 02:43:18 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GWE4zNu7"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 68026C4CEED;
+	Fri, 15 Aug 2025 02:50:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755225799;
-	bh=9aEPL1yv3cya6cXPU2UdL/LH0mgaZjBjaDPq89ALH4c=;
+	s=k20201202; t=1755226226;
+	bh=yfGiorSYWWSZw/DfZyvTHJqhr8vIdi0nWJS7M2Cf3ys=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=nelDdSaXBVo3fwOyZd8BDOtlgPZLW5DWopyPBi8Pfjwq6xfiPiULd7ieHMRRP0fV7
-	 1hlUZTJlAM5vCr6lDOLsEw83otlE0W8dQm1ryxRXTtLKAhbiRMxiLuoRymg6xkGwEk
-	 icCtfC33PY677Ki1CrITq4nc6hJV8huNtaqtnP6MOV0AxVVKt3P5TKkYv7rE8ussnU
-	 zDcKj9QivA1wVVvDBz1nIFPGIOiUwT3NQws7vdKt5w4jI/4OJdpv3mbhx7sTILtvBH
-	 FTOLt/2X7ZS1ZVcWgosGMLOhQERSMkSVWbbtS8NC57zBY+0gchzOq4/sg+jtUXcZY8
-	 lxPZSZX4vdK3Q==
-Message-ID: <1305ccb7-4e23-436e-bdb3-79ebb8681bfc@kernel.org>
-Date: Fri, 15 Aug 2025 11:43:17 +0900
+	b=GWE4zNu7NKI5DEvWNAw0XrJJnaI13W+KAwb1K5LrTxhdrdPy1gXSKx+3VjoYpWa69
+	 rviLN37YvNah8X1E4jFiVo8aIb4VLW53YHgLBxeLsnIaCllBwLpnAZx0VggHgbyTt6
+	 Zy3oVaXrEQo4+COq3blrZmR8fyYfWmw3g/HtIdzTkCzKL9Ft/6WDkuzZb6BFEJhyLr
+	 AfOP22v4TccWxepMIOq/s6fBqe2tk09svvznUC2y9X3EGsFaQrU8RxX7IaYtZCdzK3
+	 EIPJ0+0cZ9z41pQ2tbKw2UoNHthB9YFheEtZ99fKo+2CJDBE+O2HKqTSBHpzF9RNqg
+	 +gLTWOw55wLwQ==
+Message-ID: <7a503388-d466-491b-aa1e-e56515266eab@kernel.org>
+Date: Fri, 15 Aug 2025 11:50:24 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,86 +35,169 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/9] scsi: sd: Pass buffer length as argument to
- sd_read_capacity() et al.
+Subject: Re: [PATCH v2 7/9] scsi: sd: Check for and retry in case of
+ READ_CAPCITY(10)/(16) returning no data
 To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 Cc: michael.christie@oracle.com, dgilbert@interlog.com, bvanassche@acm.org
 References: <20250814182907.1501213-1-emilne@redhat.com>
- <20250814182907.1501213-4-emilne@redhat.com>
+ <20250814182907.1501213-8-emilne@redhat.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20250814182907.1501213-4-emilne@redhat.com>
+In-Reply-To: <20250814182907.1501213-8-emilne@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 8/15/25 03:29, Ewan D. Milne wrote:
-> That will make it easier to spot an inconsistent buffer size value.
-
-How ? the buffer size is actually not checked. You only memset the buffer.
-
-> Also, memset() the entire buffer rather than the 8 or 32 bytes expected
-> back from READ CAPACITY(10) or READ CAPACITY(16).
-
-Why ? There is no explanation why that is needed. The command will not return
-more than the transfer length specified. So memsetting bytes that will never be
-used seems useless.
-
+> sd_read_capacity_10() and sd_read_capacity_16() do not check for underflow
+> and can extract invalid (e.g. zero) data when a malfunctioning device does
+> not actually transfer any data, but returnes a good status otherwise.
+> Check for this and retry, and log a message and return -EINVAL if we can't
+> get the capacity information.
+> 
+> We encountered a device that did this once but returned good data afterwards.
+> 
+> See similar commit 5cd3bbfad088 ("[SCSI] retry with missing data for INQUIRY")
 > 
 > Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 > ---
->  drivers/scsi/sd.c | 28 ++++++++++++++++++----------
->  1 file changed, 18 insertions(+), 10 deletions(-)
+>  drivers/scsi/sd.c | 56 ++++++++++++++++++++++++++++++++++++++++-------
+>  1 file changed, 48 insertions(+), 8 deletions(-)
 > 
 > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index e3b802b26f0e..ae8eac4b1cb2 100644
+> index f1ab2409ea3e..20b5eebba968 100644
 > --- a/drivers/scsi/sd.c
 > +++ b/drivers/scsi/sd.c
-> @@ -2629,7 +2629,8 @@ static void read_capacity_error(struct scsi_disk *sdkp, struct scsi_device *sdp,
->  #define READ_CAPACITY_RETRIES_ON_RESET	10
->  
->  static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
-> -		struct queue_limits *lim, unsigned char *buffer)
-> +			    struct queue_limits *lim, unsigned char *buffer,
-> +			    unsigned int buflen)
->  {
->  	unsigned char cmd[16];
+> @@ -2639,6 +2639,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  		[13] = RC16_LEN,
+>  	};
 >  	struct scsi_sense_hdr sshdr;
-> @@ -2651,7 +2652,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
->  		cmd[0] = SERVICE_ACTION_IN_16;
->  		cmd[1] = SAI_READ_CAPACITY_16;
->  		cmd[13] = RC16_LEN;
-> -		memset(buffer, 0, RC16_LEN);
-> +		memset(buffer, 0, buflen);
-
-I would leave this as-is.
-
->  >  		the_result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
->  					      buffer, RC16_LEN, SD_TIMEOUT,
-> @@ -2719,8 +2720,13 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
->  	return sector_size;
->  }
+> +	int count, resid;
+>  	struct scsi_failure failure_defs[] = {
+>  		/*
+>  		 * Do not retry Invalid Command Operation Code or Invalid
+> @@ -2689,6 +2690,7 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  	};
+>  	const struct scsi_exec_args exec_args = {
+>  		.sshdr = &sshdr,
+> +		.resid = &resid,
+>  		.failures = &failures,
+>  	};
+>  	int sense_valid = 0;
+> @@ -2700,11 +2702,23 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  	if (sdp->no_read_capacity_16)
+>  		return -EINVAL;
 >  
-> +#define RC10_LEN 8
-> +#if RC10_LEN > SD_BUF_SIZE
-> +#error RC10_LEN must not be more than SD_BUF_SIZE
-> +#endif
+> -	memset(buffer, 0, buflen);
+> +	for (count = 0; count < 3; ++count) {
+> +		memset(buffer, 0, buflen);
+>  
+> -	the_result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buffer,
+> -				      RC16_LEN, SD_TIMEOUT, sdkp->max_retries,
+> -				      &exec_args);
+> +		the_result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
+> +					      buffer, RC16_LEN, SD_TIMEOUT,
+> +					      sdkp->max_retries, &exec_args);
 > +
->  static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
-> -						unsigned char *buffer)
-> +			    unsigned char *buffer, unsigned int buflen)
+> +		if ((the_result == 0) && (resid == RC16_LEN)) {
+
+You do not need the inner parenthesis. Also, it seems to me that this check
+should simply be:
+
+		if (resid)
+
+Because any incomplete read capacity buffer is bound to be invalid.
+
+> +			/*
+> +			 * if nothing was transferred, we try
+> +			 * again. It's a workaround for a broken
+> +			 * device.
+> +			 */
+> +			continue;
+> +		}
+> +		break;
+> +	}
+>  
+>  	if (the_result > 0) {
+>  		if (media_not_present(sdkp, &sshdr))
+> @@ -2728,6 +2742,12 @@ static int read_capacity_16(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (resid == RC16_LEN) {
+> +		sd_printk(KERN_ERR, sdkp,
+> +			  "Read Capacity(16) returned good status but no data");
+
+Shouldn't this be a warning instead of error ? After all, there was no error...
+And I would prefer seeing a warning for a bad device. The message would also be
+better mentioning that this is the device fault.
+
+> +		return -EINVAL;
+> +	}
+> +
+>  	sector_size = get_unaligned_be32(&buffer[8]);
+>  	lba = get_unaligned_be64(&buffer[0]);
+>  
+> @@ -2770,6 +2790,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
 >  {
 >  	static const u8 cmd[10] = { READ_CAPACITY };
 >  	struct scsi_sense_hdr sshdr;
-> @@ -2765,7 +2771,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+> +	int count, resid;
+>  	struct scsi_failure failure_defs[] = {
+>  		/* Do not retry Medium Not Present */
+>  		{
+> @@ -2804,17 +2825,30 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  	};
+>  	const struct scsi_exec_args exec_args = {
+>  		.sshdr = &sshdr,
+> +		.resid = &resid,
+>  		.failures = &failures,
+>  	};
+>  	int the_result;
 >  	sector_t lba;
 >  	unsigned sector_size;
 >  
-> -	memset(buffer, 0, 8);
-> +	memset(buffer, 0, buflen);
+> -	memset(buffer, 0, buflen);
+> +	for (count = 0; count < 3; ++count) {
+> +		memset(buffer, 0, buflen);
+>  
+> -	the_result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN, buffer,
+> -				      8, SD_TIMEOUT, sdkp->max_retries,
+> -				      &exec_args);
+> +		the_result = scsi_execute_cmd(sdp, cmd, REQ_OP_DRV_IN,
+> +					      buffer, RC10_LEN, SD_TIMEOUT,
+> +					      sdkp->max_retries, &exec_args);
+> +
+> +		if ((the_result == 0) && (resid == RC16_LEN)) {
 
-Same here, but maybe define RC10_LEN instead of having the magic "8" value
-hardcoded ?
+Same comment here: if (resid) ?
+
+> +			/*
+> +			 * if nothing was transferred, we try
+> +			 * again. It's a workaround for a broken
+> +			 * device.
+> +			 */
+> +			continue;
+> +		}
+> +		break;
+> +	}
+>  
+>  	if (the_result > 0) {
+>  		if (media_not_present(sdkp, &sshdr))
+> @@ -2827,6 +2861,12 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>  		return -EINVAL;
+>  	}
+>  
+> +	if (resid == RC10_LEN) {
+> +		sd_printk(KERN_ERR, sdkp,
+> +			  "Read Capacity(10) returned good status but no data");
+> +		return -EINVAL;
+> +	}
+> +
+>  	sector_size = get_unaligned_be32(&buffer[4]);
+>  	lba = get_unaligned_be32(&buffer[0]);
+>  
+
 
 -- 
 Damien Le Moal
