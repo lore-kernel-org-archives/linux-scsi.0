@@ -1,48 +1,33 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA84B27C17E
-	for <linux-scsi@vger.kernel.org>; Thu, 14 Aug 2025 21:41:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A14529B8CC
+	for <linux-scsi@vger.kernel.org>; Fri, 15 Aug 2025 02:30:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755207711; cv=none; b=XKE+Qp5/udlo+TOTDGgf2/4KOJdF1pd8cSQkJuTXr2bZTYFhBQCuJreVZc4u01M+OhN6XWe1B8bjLbIVXFOKxVCqyi0xqmh1KNG7xnwjzT8cZfVaIHxxYund6MFDsg5az+6L5SvCR6qHQPGmA3whJUZBtHa6hHbYM0uk2+aWLV4=
+	t=1755225018; cv=none; b=l3UfnBxfHoUMzad7+wv5UM62qrSxZ/imDpdxoFidGqdcp0aU6nqeIwHndX7+RB7FCAructCkkV8XhFcG1CYo4zjVyop230nVXy3zyFO+wtUFwLE8b89bt9Q6SjD7Q6xSJ9pvW9LCmNrNNNn6KVTitQVIPZ3fM9E1JnwbYcoJTDc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755207711; c=relaxed/simple;
-	bh=sUrUtrSj/FCbgJB1/5Al0ag/wAU5am9D+gq8ngBMHx8=;
+	s=arc-20240116; t=1755225018; c=relaxed/simple;
+	bh=r/vJuTW1oWdBUyThbeRGGAyiesdRy1FJsmisj/++hJY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=A9xXGGbgX8mVYpzpyoevCtcHc3KVm9TmdqXAnf1M6qZ1EGLZ3TsCmXBlaRuLno4iPI4Ajaee3UKhj7RnFfHfplztYv41HN6v5HUmHYqGEk8/uaeXZEqLCwcxoWVPD3NBBnnMOMH44Wd5uHHwUzIlvpd5KlTRaOBLYQFbUZtsrTc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1wOsFS+D; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=UOx229eCxiWC8ypxBN0iY3EYr/siR+IHh95rMuSrWQKsuslaYMvQ0qRk9teZREH3y3z9zJvFwR/3q8+UshPg0ZzplqUK8pMCdsHS3rFWfFF//2LJwam5zBBPie8/u5Jib6YptLgVnRcw6KYMMBf/necfZRWDFaHDrRc6qieASTs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=cYd+r0tk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1wOsFS+D"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c2zGP0MqDzm0yVK;
-	Thu, 14 Aug 2025 21:41:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755207707; x=1757799708; bh=sUrUtrSj/FCbgJB1/5Al0ag/
-	wAU5am9D+gq8ngBMHx8=; b=1wOsFS+DNmaiCc5LBoeDZ3mRMtnJiZ+thEgbYA2R
-	zIUy5eDDS0M+QZp4hWqQrpqml1tJyweFMMVC66e9BfanrDL1rshl+hle9L/BY7j4
-	1AT5JhWkGik+Dl0ObUTVvTdzkRcNcNuKJsH+7qF7dxUoxE7n+P4r1ZSGxr3LCH+B
-	loQeLxeFQ+OcwBS3dfzXIhsxytHhO8laOHFFWNF3eGGhwHo14GtUaLtf22emULAz
-	5rfYI9GMpM65DasYJ58YfixM6H6eYVP3KYyr0/ItI3RCTj+Lm5I/tjuZNKoU86Rt
-	lG83IWz8USbw0rqoFIJsG8YHyGbBC+NxPTQAgLHpso2Q5Q==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id emc1quCnk37L; Thu, 14 Aug 2025 21:41:47 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c2zGK0dgSzm0yTf;
-	Thu, 14 Aug 2025 21:41:43 +0000 (UTC)
-Message-ID: <63dc4976-d5c7-45b2-9056-8500f120156d@acm.org>
-Date: Thu, 14 Aug 2025 14:41:41 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="cYd+r0tk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 14723C4CEED;
+	Fri, 15 Aug 2025 02:30:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755225018;
+	bh=r/vJuTW1oWdBUyThbeRGGAyiesdRy1FJsmisj/++hJY=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=cYd+r0tk1SvGtRUi5vIlh2bzQ5cPWzOlI3KjNv4wbcvgspJzT1wJXQcVqaFPPIU8f
+	 DdyuFwxGAhyfUX47Y52Hxkqk1kLa4Fn9kp37Okju0ob4xk94oxTq+LS4EubEFwDhuZ
+	 J8kItN73HnUe0fxf34INAD3YMEZT4RfQZUo68jdteF1A4+P63ypZP+VNcc288n/7ZK
+	 PezMK9Krz6Qb9PDfBhWi6WNzYLxlhr8XkHz8twozuzFbRmVOvJ/9pTwkwz07NNm7bz
+	 D6ARbMOZPRA+uUlbaKTeuOJ+ud/48Q3XItFBuviUlbwMuXJ4XgXLV0lOSZSYmXl4NM
+	 cexKFuZIzAgbw==
+Message-ID: <3e710f91-efe0-4241-9d2f-bdca9f28d5e6@kernel.org>
+Date: Fri, 15 Aug 2025 11:30:15 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,20 +35,42 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 9/9] scsi: scsi_debug: Add option to suppress returned
- data but return good status
-To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
-Cc: michael.christie@oracle.com, dgilbert@interlog.com
-References: <20250814182907.1501213-1-emilne@redhat.com>
- <20250814182907.1501213-10-emilne@redhat.com>
+Subject: Re: [PATCH v2 01/10] scsi: pm80xx: Restore support for expanders
+To: Niklas Cassel <cassel@kernel.org>, Jack Wang
+ <jinpu.wang@cloud.ionos.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Igor Pylypiv <ipylypiv@google.com>, Terrence Adams <tadamsjr@google.com>
+Cc: linux-scsi@vger.kernel.org
+References: <20250814173215.1765055-12-cassel@kernel.org>
+ <20250814173215.1765055-13-cassel@kernel.org>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250814182907.1501213-10-emilne@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <20250814173215.1765055-13-cassel@kernel.org>
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 8/14/25 11:29 AM, Ewan D. Milne wrote:
-> This is used to test the earlier read_capacity_10()/16() retry patch.
+On 8/15/25 02:32, Niklas Cassel wrote:
+> Commit 0f630c58e31a ("scsi: pm80xx: Do not use libsas port ID") broke
+> support for expanders. After the commit, devices behind an expander are no
+> longer detected.
+> 
+> Simply reverting the commit restores support for devices behind an
+> expander.
+> 
+> Instead of reverting the commit (and reintroducing a helper to get the
+> port), get the port directly from the lldd_port pointer in struct
+> asd_sas_port.
+> 
+> Fixes: 0f630c58e31a ("scsi: pm80xx: Do not use libsas port ID")
+> Suggested-by: Igor Pylypiv <ipylypiv@google.com>
+> Reviewed-by: Igor Pylypiv <ipylypiv@google.com>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Tested-by: Damien Le Moal <dlemoal@kernel.org>
 
+-- 
+Damien Le Moal
+Western Digital Research
