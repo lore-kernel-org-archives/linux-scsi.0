@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94D0EC133
-	for <linux-scsi@vger.kernel.org>; Sat, 16 Aug 2025 00:42:34 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 666C34A00
+	for <linux-scsi@vger.kernel.org>; Sat, 16 Aug 2025 00:44:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755304954; cv=none; b=KqkF9xPyC4oaCC5qe/mdnhufmuFvuES8ps43vXCC+BELqhn8e0g73WgJVnl4AesqAX7Y+Xg7PLxlZO4Z50gOk99i0ObD9xsPGhNdK/9vlriWqAsncCVWyRGjS4JLFTwQiBwWTqTyAjW8/ohHk9YaUEFpQwR5eCvptTwheu2i5SM=
+	t=1755305069; cv=none; b=tDxR9rBOpwgPIC9/XtVnV1uUogvpyJ+Q92wqQnTJsFDOYsUDQVEHMV9CnN89Hbp4Bh9r5StJL7ChXRWzTIg+Ft0OAQIeBgo3f25KfmIAmEi3C5yeA4JNKZJtaErMDUuOILdAhh4/4V2iIIR48ce7WlkctjlF93WAhLFOR7OSUac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755304954; c=relaxed/simple;
-	bh=gnfYzxcIQFPulF1J3vBdgC7u2fzQGkuNnNJXINCyvvQ=;
+	s=arc-20240116; t=1755305069; c=relaxed/simple;
+	bh=QgB5XNVGBBk63SVPEIlKByq6wlpXk7MI4VcUdOZ0sJA=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NzCJcGMbLT/+3xV8CLnG8/ti1V+8zTJiOEMQtTeFdrrJUXjpabCFY03iuub4Sgb9MA88v55HqmPGZRSGqb548URzoDP6jucChSCdlWLutWpsxBuogmCPSiI/BNDm6aW8I5NF1ZP9EjrK6bNf4byp+H2LcbnhARhlxmt/KYfoqPU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=oXUkOTeM; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=ZNvBXX4HgJGkStbHWhQHbaglwwDJpg9tQg9N4jlJHKhpT2dRnJpGlTFD0rM/F3JWgqNE0w4abuTmw+pnPIbHu/U+F4P8yJuCanIjBQTv1LL2eCw49JnnNtPda8YZIThbFEIsklXiFV3Rb1AU++f3l5gQdsJ69HI88RG4Ogrm47E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DzbyXQpS; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="oXUkOTeM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5CBEBC4CEEB;
-	Sat, 16 Aug 2025 00:42:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DzbyXQpS"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 22575C4CEEB;
+	Sat, 16 Aug 2025 00:44:27 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755304954;
-	bh=gnfYzxcIQFPulF1J3vBdgC7u2fzQGkuNnNJXINCyvvQ=;
+	s=k20201202; t=1755305068;
+	bh=QgB5XNVGBBk63SVPEIlKByq6wlpXk7MI4VcUdOZ0sJA=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=oXUkOTeMwO0Xk4bcUeFD+9rkggdh/YQRR6vKstUla/7Gwp7PWWrnumM0v5y7lG1es
-	 QchMcesjCgbu8gIPXqEt1YhQ72QzMZP3UTlfvHOfppQd2bCI77nL510OjRG588vxZG
-	 c8QIzhqWrQKifHrNVp9B99oCP28R40/OhinZf3ApNLaTTO3gekDs70AiUDOWMzvcPJ
-	 R90P1BsBjVW2h9fqTmACZ9rFHRAWbkhBblhbXhYOjYQCQYPsfR0d9k+lg8QjJHkuby
-	 UMpDb3s3ryKT76tVr0Lm3yeNPEfNmaveTqXQ94HR4uFYBqbA0G49CMMljXne8WRAF1
-	 FJWmqiVshqdrw==
-Message-ID: <1b764459-791c-410b-adb3-bbea8a43cd29@kernel.org>
-Date: Sat, 16 Aug 2025 09:42:32 +0900
+	b=DzbyXQpSy6Y6qjYITmElJWtbJOFRSihe2CF672atjK8RBeEyutb/vfQviIdhEDHUM
+	 RZCG0v5PLLklWc+dLOUlmHBcxsFBk90pLjSOt8YTQk9ZObYmPOTUrYmUyloFvI66hp
+	 rkHs+guj0WeWtHsJ4bwhz0/r4JJEF47ASF37HJlkDomyU2bBBoDurfezbBoDSHJ5Me
+	 58rCZpQxfLrbDKaqgrj40JVs/tNvVmWlD8v+RDiS6CMmP6td7pFJHLNPK/+enIAul5
+	 Mgkya1RNz8hrV2n/TymJa3I6GgHDmmYQ0aswizbjBsYspl7coEWp+EOT7YVkU21QAQ
+	 m6SbxxmL0zB2w==
+Message-ID: <1b8c0005-5862-4b5a-b0ab-98e4a1a2d655@kernel.org>
+Date: Sat, 16 Aug 2025 09:44:26 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,45 +35,30 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 3/8] scsi: sd: Have scsi-ml retry read_capacity_16
- errors
+Subject: Re: [PATCH v3 4/8] scsi: sd: Avoid passing potentially uninitialized
+ "sense_valid" to read_capacity_error()
 To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 Cc: michael.christie@oracle.com, dgilbert@interlog.com, bvanassche@acm.org
 References: <20250815211525.1524254-1-emilne@redhat.com>
- <20250815211525.1524254-4-emilne@redhat.com>
+ <20250815211525.1524254-5-emilne@redhat.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20250815211525.1524254-4-emilne@redhat.com>
+In-Reply-To: <20250815211525.1524254-5-emilne@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 8/16/25 06:15, Ewan D. Milne wrote:
-> This has read_capacity_16 have scsi-ml retry errors instead of driving
-> them itself.
-> 
-> There are 2 behavior changes with this patch:
-> 1. There is one behavior change where we no longer retry when
-> scsi_execute_cmd returns < 0, but we should be ok. We don't need to retry
-> for failures like the queue being removed, and for the case where there
-> are no tags/reqs since the block layer waits/retries for us. For possible
-> memory allocation failures from blk_rq_map_kern we use GFP_NOIO, so
-> retrying will probably not help.
-> 2. For the specific UAs we checked for and retried, we would get
-> READ_CAPACITY_RETRIES_ON_RESET retries plus whatever retries were left
-> from the main loop's retries. Each UA now gets
-> READ_CAPACITY_RETRIES_ON_RESET reties, and the other errors get up to 3
-> retries. This is most likely ok, because READ_CAPACITY_RETRIES_ON_RESET
-> is already 10 and is not based on anything specific like a spec or
-> device, so the extra 3 we got from the main loop was probably just an
-> accident and is not going to help.
-> 
-> Original patch by Mike Christie <michael.christie@oracle.com> modified
-> based upon review comments for an earlier version of this patch.
+> read_capacity_10() sets "sense_valid" in a different conditional statement prior to
+> calling read_capacity_error(), and does not use this value otherwise.  Move the call
+> to scsi_sense_valid() to read_capacity_error() instead of passing it as a parameter
+> from read_capacity_16() and read_capacity_10().
 > 
 > Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 
-Looks OK.
+Does this maybe need a Fixes tag ?
+
+Regardless, looks OK to me.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 
