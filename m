@@ -1,42 +1,36 @@
-Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA1D453A7;
-	Sun, 17 Aug 2025 08:15:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
+Received: from m16.mail.163.com (m16.mail.163.com [117.135.210.2])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3E69B1922FA;
+	Sun, 17 Aug 2025 09:03:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=117.135.210.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755418528; cv=none; b=Bg2D4OyGRCHjVxup8mdk4H5GRD8HUk/iuaixg2+n5XtJ0KUxF+6l/2SzLyqsDU3ogdMdBXbxeCdwpXVVmHx8bjRVVHlqjmYH0X6c4dN6BYVqEy05sNmrowhOQrDRydrVbv2MXL6Jk4DingkJ9StwwsUT+db7wVWLRu8i7ykGzMQ=
+	t=1755421418; cv=none; b=oMQFhEiotJfaqFjEfAqvglztxyjO7nc1LzM7l7+mSui1Yx9F4T9rJiaqgRw4Rl/Yc5H69V1/lv6N6CeSHQSi4o6rDRVtG+cqWbp2TItnkMZ/8r3Hkx6Y4Knp5DBx6N01rncqvpw0U1J5lpH9xAQwDq4Fmlcfkj9TeHTTEXikRtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755418528; c=relaxed/simple;
-	bh=8eGpRLEnXOEIrwJWExVSb4pmH7LNtWDNvC/pY+U/3ks=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=NL/YVAX8qF9whqM/j16ttUDJH5ZikXn0KaN131A0RFIfMjC0R7sTxFJUwQP5C/yVviZAiWWMGd6hmah/hoHHYvblovbluxA8Iz2oxWB8zYd6EmA+eB4kvFz7hv/Gp7dNEJVLAlXmR4TUI2oleSKpoUIBlyjj5vIb8H1hKRqHZmw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.189
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
-Received: from mail.maildlp.com (unknown [172.19.88.105])
-	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4c4T7T2fp6zdc9c;
-	Sun, 17 Aug 2025 16:11:01 +0800 (CST)
-Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
-	by mail.maildlp.com (Postfix) with ESMTPS id 00B9F1402DA;
-	Sun, 17 Aug 2025 16:15:23 +0800 (CST)
-Received: from localhost.localdomain (10.175.104.170) by
- kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Sun, 17 Aug 2025 16:15:21 +0800
-From: JiangJianJun <jiangjianjun3@huawei.com>
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<linux-scsi@vger.kernel.org>
-CC: <linux-kernel@vger.kernel.org>, <hare@suse.de>, <bvanassche@acm.org>,
-	<michael.christie@oracle.com>, <hch@infradead.org>, <haowenchao22@gmail.com>,
-	<john.g.garry@oracle.com>, <hewenliang4@huawei.com>, <yangyun50@huawei.com>,
-	<wuyifeng10@huawei.com>, <wubo40@huawei.com>, <yangxingui@h-partners.com>
-Subject: [PATCH 00/14] scsi: scsi_error: Introduce new error handle mechanism
-Date: Sun, 17 Aug 2025 16:46:33 +0800
-Message-ID: <20250817084633.1409286-1-jiangjianjun3@huawei.com>
-X-Mailer: git-send-email 2.33.0
-In-Reply-To: <20250816112417.3581253-1-jiangjianjun3@huawei.com>
-References: <20250816112417.3581253-1-jiangjianjun3@huawei.com>
+	s=arc-20240116; t=1755421418; c=relaxed/simple;
+	bh=oWbHlvhNrCUi01ZmpVUNOz/rsyeSjcW2QtSKuvit2fs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=p8aydrkyAHIqclgEJAZT3f+nBAROZWQdhXxF2f9krYhErucr2IJtlaPR3svS0heAaDZIzIIhTmN9rKOAlfauq0E5xXoDQfMr2NljCnDraPo99w096LDqvfle1LVOaqZx/pHWQJ+a4SBACyan64u4gkrI+OHPLmZ5JV6TflUAJLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=FPWO+6VE; arc=none smtp.client-ip=117.135.210.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="FPWO+6VE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=d+
+	r7VvRvyaGmunmyhrAQ6EiZWjRh6kAGY25XOgYsC1w=; b=FPWO+6VE4tKEbA0qb8
+	sXiUTD5smHJsmeoJE5l3tmYxAT1AJU/szHWVTANfTeNT/liE+pPpnoP0SDOaZDt+
+	Iwtmu/RmguzVtI4I6PWP0WKn9YlajFwf6lKdL0Hh7O+G5/gAqLb2Vm/D6WB+YunL
+	SmWcYO8BnG4xyiWbMEfuvABrU=
+Received: from localhost.localdomain (unknown [])
+	by gzsmtp5 (Coremail) with SMTP id QCgvCgDnzpXemqFoQwYSAg--.12870S2;
+	Sun, 17 Aug 2025 17:03:26 +0800 (CST)
+From: Yang Xiuwei <yangxiuwei2025@163.com>
+To: martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	Yang Xiuwei <yangxiuwei@kylinos.cn>
+Subject: [PATCH] scsi: target: use IS_ERR_OR_NULL() to simplify error checking
+Date: Sun, 17 Aug 2025 17:03:24 +0800
+Message-Id: <20250817090324.2333676-1-yangxiuwei2025@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -44,33 +38,56 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
- kwepemk500001.china.huawei.com (7.202.194.86)
+X-CM-TRANSID:QCgvCgDnzpXemqFoQwYSAg--.12870S2
+X-Coremail-Antispam: 1Uf129KBjvJXoW7ZF1DGFW8XFy7AFW3tF13Jwb_yoW8Xw1xpF
+	W5Arn0g343JFWqg3y8Ca4Fqry8Jas7KFWFkFs3GF1rJ3y3ZrWUGF92q3W7A3WfGF95Kry3
+	GFWkAr1qy3y8ZFUanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDUYxBIdaVFxhVjvjDU0xZFpf9x07jNManUUUUU=
+X-CM-SenderInfo: p1dqw55lxzvxisqskqqrwthudrp/xtbBDh2skGihkvF+MwABsJ
 
-I apologize for taking too long to test and modify these patches.Here
-are the revision points, with the first two being the main ones:
-  1. The scsi_target.can_queue value can control the increment and
-    decrement operations of scsi_target.target_busy. The new error
-    handler also needs to adjust target_busy. Both Bart and Mike opposed
-    removing this control condition. In this version, I have only added
-    the error handler check when scsi_target.can_queue <= 0.
-    link: https://lore.kernel.org/linux-scsi/daba5c92-2395-4eee-b212-978fbe83b56f@oracle.com/
-  2. I have added callbacks for setting and clearing the error handler
-    in scsi_host_template. Drivers can support device or target error
-    handlers by setting these callbacks. I believe the advantage of this
-    approach is that driver developers will be aware of this feature
-    when they see the callback prototypes and comments, and it can be
-    used even without device or target initialization callbacks.
-    However, this means that the modparam controlling the enablement can
-    only be removed. I have considered adding configurations only for
-    the virtio_scsi and iscsi_tcp drivers. 
-    link: https://lore.kernel.org/linux-scsi/b8350de1-6ac8-4d5f-aaa7-7b03e2f7aa93@oracle.com/
-  3. In scsi_eh_scmd_add, a return statement was added under the
-    condition of xxx_in_recovery because each branch ultimately calls
-    scsi_eh_scmd_add_shost, which does not fail. Therefore, continuing
-    further would result in duplicate additions.
-  4. The return type of ->is_busy was changed to bool. 
+From: Yang Xiuwei <yangxiuwei@kylinos.cn>
 
-I have retained the original content of Wenchao's email in cover letter.
+Replace the combination of IS_ERR() and NULL checks with the more
+concise IS_ERR_OR_NULL() macro in fabric_configfs functions:
+- target_fabric_make_np()
+- target_fabric_make_tpg()
+- target_fabric_make_wwn()
+
+This change improves code readability without altering functionality.
+
+Signed-off-by: Yang Xiuwei <yangxiuwei@kylinos.cn>
+
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 7156a4dc1ca7..1448a7ab0491 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -479,7 +479,7 @@ static struct config_group *target_fabric_make_np(
+ 	}
+ 
+ 	se_tpg_np = tf->tf_ops->fabric_make_np(se_tpg, group, name);
+-	if (!se_tpg_np || IS_ERR(se_tpg_np))
++	if (IS_ERR_OR_NULL(se_tpg_np))
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	se_tpg_np->tpg_np_parent = se_tpg;
+@@ -937,7 +937,7 @@ static struct config_group *target_fabric_make_tpg(
+ 	}
+ 
+ 	se_tpg = tf->tf_ops->fabric_make_tpg(wwn, name);
+-	if (!se_tpg || IS_ERR(se_tpg))
++	if (IS_ERR_OR_NULL(se_tpg))
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	config_group_init_type_name(&se_tpg->tpg_group, name,
+@@ -1112,7 +1112,7 @@ static struct config_group *target_fabric_make_wwn(
+ 	}
+ 
+ 	wwn = tf->tf_ops->fabric_make_wwn(tf, group, name);
+-	if (!wwn || IS_ERR(wwn))
++	if (IS_ERR_OR_NULL(wwn))
+ 		return ERR_PTR(-EINVAL);
+ 
+ 	wwn->cmd_compl_affinity = SE_COMPL_AFFINITY_CPUID;
+-- 
+2.25.1
 
