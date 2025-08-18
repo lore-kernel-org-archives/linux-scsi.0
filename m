@@ -1,81 +1,80 @@
 Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F26B930DEA5
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Aug 2025 12:08:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E701130FF29
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Aug 2025 12:09:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755518937; cv=none; b=EgTj9oqU2lV8jXiS1SpO9bN0HyuoTgfunFMN32dEUMa4qvecxg7MDMCsqVyBcfuRrjgzScKeiVsGUowb/IRl87JxEnicrqJWxAT9atnNKT7qwDP8G7UyZHQSz8xSfObnJfViZ71+7PrPNR6QdKBJBDs+C3wZiGOAXrd7alHOBWc=
+	t=1755518980; cv=none; b=r9pro31OKVqDRSmo0y1kPC/CQ9Xx5rf3W5o5tOTf5AG6lqT8ToNdCwMs81UHs2SsgfKEYgdA/g1L1tstE8+8yFst2iJ+4uuq/8lC3/60YX1zuTl5xsAqEzDuHez+tG/bqtCjbhhQNVP3tCvdK50kPbHTDl3WHndxC1E3mearwPk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755518937; c=relaxed/simple;
-	bh=jJN2uGn5MrFkuLS3KgZuxtiY7V+tisePw+Y8OAmWN5Q=;
+	s=arc-20240116; t=1755518980; c=relaxed/simple;
+	bh=9qWx7BkyfLYOLEY6sDlKN1+mpMEbaTvKAYeANxKLZU4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SVXmgvHFlSHIP7FH8I3SxGm4WoT2ubwNeZQTrQRp86e55gso2d+H9oKRNsaCjJwirMwKlYLKH9uM8n6l6VGt2yYtrkakoJqeo5VLbEM9gWHzgTcV42RdH4iqgiRI+obbn9P56AGD4xaigBtPqKySSYowERQjFfiOUtlx1rw9O5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=r7PankZq; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=DNPq30xG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=B0EsDtP+; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=lyrUFTqo; arc=none smtp.client-ip=195.135.223.130
+	 In-Reply-To:Content-Type; b=vARXOR/JVM8u9/ckzmnLLnsLsynMn6lQvaTBgRYf8Kgo+wyEpyZj0drHzLD2EbMq51+N3shqGjR7RgIQQWfRXs3ACFShyBxQFh54+cI5QEm5XXB4lIl2VBBcCDuoJHaBrzxhsMyGhwEBWPZbKKEE1TrZf3AT4kDBzvsZmDlr4UA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YUbXf7UY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=I8DoeFmY; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=YUbXf7UY; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=I8DoeFmY; arc=none smtp.client-ip=195.135.223.130
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="r7PankZq";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="DNPq30xG";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="B0EsDtP+";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="lyrUFTqo"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YUbXf7UY";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="I8DoeFmY";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="YUbXf7UY";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="I8DoeFmY"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id DB0932128E;
-	Mon, 18 Aug 2025 12:08:52 +0000 (UTC)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 036A32124D;
+	Mon, 18 Aug 2025 12:09:37 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1755518933; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1755518977; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=kPTpstXK1uhHeiPUD0PwNG6zzyoQRgmjzQq+yDwQz3g=;
-	b=r7PankZqONbsTJ6r4dGD63HBbooYFkHxQoit4T5vSuWucjmwwXg2Gf8gnhfKT3C67HbRkF
-	leTw50l7JomMYlskZDdWvG+uIVKCuyftDdSPm7V58Eloc4uR8EPCxWkUdMidrOi2Kzd1Vm
-	+nAuIm7U5VWMj2ZjkGWEHyDdAXdW6eM=
+	bh=2TDja4sBe4l2ODJgwXxS+SB6K8YOu/fJ10g9nuTc0y4=;
+	b=YUbXf7UY5Uk7xB1RgeRtjEKRIQqrkP6Xd5D8TS4CDWQ4ywOIEvhF33jt+d19bBXmIfxWtV
+	uVzxZASiDAC9qCpym7owltpw8Iq8gkdiW4yNWVjnjMga+pa3ZRq6fZ6QccFiYimyRxUBnB
+	MxlH9gDr7WWHYdi6bYJBcTjqk3SQ+yI=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1755518933;
+	s=susede2_ed25519; t=1755518977;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=kPTpstXK1uhHeiPUD0PwNG6zzyoQRgmjzQq+yDwQz3g=;
-	b=DNPq30xGvZjYhP0a66hxKNakdBUitLLVPw3QNbG90zzKALlYm+d9xKEqaKsHTr1JgNc6Xt
-	stqyc2g5GP2GZUCQ==
+	bh=2TDja4sBe4l2ODJgwXxS+SB6K8YOu/fJ10g9nuTc0y4=;
+	b=I8DoeFmY/uzvcxF9WKpFlU8MARQ8RzRFO0Y4xMka6TPUtlTfPsiguv/B/uRq5YWMjcvw3f
+	qE1Vq4hgGjw+lRBg==
 Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=B0EsDtP+;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=lyrUFTqo
+	none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1755518932; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	t=1755518977; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=kPTpstXK1uhHeiPUD0PwNG6zzyoQRgmjzQq+yDwQz3g=;
-	b=B0EsDtP+KaktcEy8fmYPtqzpJ8wkY/gY20s33l8smEBOTb+rlK9p29OFt2iTq6d/uqIUY4
-	no+oasGvPch5+tI/rYPYd+0ChQedoEJGXw2jMluvvHhKX+jgluYalUccBsEruiu+aqJ4kh
-	sE9XIQqgXaU8Y6zuoqUFe25CyliA7E8=
+	bh=2TDja4sBe4l2ODJgwXxS+SB6K8YOu/fJ10g9nuTc0y4=;
+	b=YUbXf7UY5Uk7xB1RgeRtjEKRIQqrkP6Xd5D8TS4CDWQ4ywOIEvhF33jt+d19bBXmIfxWtV
+	uVzxZASiDAC9qCpym7owltpw8Iq8gkdiW4yNWVjnjMga+pa3ZRq6fZ6QccFiYimyRxUBnB
+	MxlH9gDr7WWHYdi6bYJBcTjqk3SQ+yI=
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1755518932;
+	s=susede2_ed25519; t=1755518977;
 	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
 	 mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=kPTpstXK1uhHeiPUD0PwNG6zzyoQRgmjzQq+yDwQz3g=;
-	b=lyrUFTqo5/hb54kKiqR0NfkN0AZ0A2rJ9zobu7j1EpgYg6a9dBsBnQFFyw0l/D6l4OUrvW
-	8lMoZnA24ygrwACw==
+	bh=2TDja4sBe4l2ODJgwXxS+SB6K8YOu/fJ10g9nuTc0y4=;
+	b=I8DoeFmY/uzvcxF9WKpFlU8MARQ8RzRFO0Y4xMka6TPUtlTfPsiguv/B/uRq5YWMjcvw3f
+	qE1Vq4hgGjw+lRBg==
 Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
 	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id C98E313A55;
-	Mon, 18 Aug 2025 12:08:51 +0000 (UTC)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E308213686;
+	Mon, 18 Aug 2025 12:09:35 +0000 (UTC)
 Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
 	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id eDBwLdMXo2gcbgAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 18 Aug 2025 12:08:51 +0000
-Message-ID: <0d4629ca-d448-49ec-81cb-56af569a081c@suse.de>
-Date: Mon, 18 Aug 2025 14:08:51 +0200
+	id 2zedM/8Xo2hUbgAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 18 Aug 2025 12:09:35 +0000
+Message-ID: <851fd010-60c5-42a5-8cda-3863b55e8d59@suse.de>
+Date: Mon, 18 Aug 2025 14:09:35 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -83,8 +82,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 8/9] nvme-multipath: queue-depth support for marginal
- paths
+Subject: Re: [PATCH v9 9/9] scsi: qla2xxx: Fix memcpy field-spanning write
+ issue
 To: Bryan Gurney <bgurney@redhat.com>, linux-nvme@lists.infradead.org,
  kbusch@kernel.org, hch@lst.de, sagi@grimberg.me, axboe@kernel.dk
 Cc: james.smart@broadcom.com, njavali@marvell.com,
@@ -92,57 +91,89 @@ Cc: james.smart@broadcom.com, njavali@marvell.com,
  kees@kernel.org, gustavoars@kernel.org, jmeneghi@redhat.com,
  emilne@redhat.com
 References: <20250813200744.17975-1-bgurney@redhat.com>
- <20250813200744.17975-9-bgurney@redhat.com>
+ <20250813200744.17975-10-bgurney@redhat.com>
 Content-Language: en-US
 From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250813200744.17975-9-bgurney@redhat.com>
+In-Reply-To: <20250813200744.17975-10-bgurney@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: DB0932128E
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
 	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
 	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
 	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_TLS_ALL(0.00)[];
 	RCVD_VIA_SMTP_AUTH(0.00)[];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
 	ARC_NA(0.00)[];
 	RCPT_COUNT_TWELVE(0.00)[14];
-	MIME_TRACE(0.00)[0:+];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
 	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
 	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
 	FROM_HAS_DN(0.00)[];
 	TO_DN_SOME(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:mid,suse.de:email];
-	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
 	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Score: -4.51
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spam-Score: -4.30
 
 On 8/13/25 22:07, Bryan Gurney wrote:
-> From: John Meneghini <jmeneghi@redhat.com>
+> From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
 > 
-> Exclude marginal paths from queue-depth io policy. In the case where all
-> paths are marginal and no optimized or non-optimized path is found, we
-> fall back to __nvme_find_path which selects the best marginal path.
+> purex_item.iocb is defined as a 64-element u8 array, but 64 is the
+> minimum size and it can be allocated larger. This makes it a standard
+> empty flex array.
+> 
+> This was motivated by field-spanning write warnings during FPIN testing.
+> https://lore.kernel.org/linux-nvme/20250709211919.49100-1-bgurney@redhat.com/
+> 
+>    >  kernel: memcpy: detected field-spanning write (size 60) of single field
+>    >  "((uint8_t *)fpin_pkt + buffer_copy_offset)"
+>    >  at drivers/scsi/qla2xxx/qla_isr.c:1221 (size 44)
+> 
+> I removed the outer wrapper from the iocb flex array, so that it can be
+> linked to `purex_item.size` with `__counted_by`.
+> 
+> These changes remove the default minimum 64-byte allocation, requiring
+> further changes.
+> 
+>    In `struct scsi_qla_host` the embedded `default_item` is now followed
+>    by `__default_item_iocb[QLA_DEFAULT_PAYLOAD_SIZE]` to reserve space
+>    that will be used as `default_item.iocb`. This is wrapped using the
+>    `TRAILING_OVERLAP()` macro helper, which effectively creates a union
+>    between flexible-array member `default_item.iocb` and `__default_item_iocb`.
+> 
+>    Since `struct pure_item` now contains a flexible-array member, the
+>    helper must be placed at the end of `struct scsi_qla_host` to prevent
+>    a `-Wflex-array-member-not-at-end` warning.
+> 
+>    `qla24xx_alloc_purex_item()` is adjusted to no longer expect the
+>    default minimum size to be part of `sizeof(struct purex_item)`,
+>    the entire flexible array size is added to the structure size for
+>    allocation.
+> 
+> This also slightly changes the layout of the purex_item struct, as
+> 2-bytes of padding are added between `size` and `iocb`. The resulting
+> size is the same, but iocb is shifted 2-bytes (the original `purex_item`
+> structure was padded at the end, after the 64-byte defined array size).
+> I don't think this is a problem.
 > 
 > Tested-by: Bryan Gurney <bgurney@redhat.com>
-> Signed-off-by: John Meneghini <jmeneghi@redhat.com>
+> Co-developed-by: Chris Leech <cleech@redhat.com>
+> Signed-off-by: Chris Leech <cleech@redhat.com>
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 > ---
->   drivers/nvme/host/multipath.c | 7 ++++++-
->   1 file changed, 6 insertions(+), 1 deletion(-)
+>   drivers/scsi/qla2xxx/qla_def.h  | 10 ++++++----
+>   drivers/scsi/qla2xxx/qla_isr.c  | 17 ++++++++---------
+>   drivers/scsi/qla2xxx/qla_nvme.c |  2 +-
+>   drivers/scsi/qla2xxx/qla_os.c   |  5 +++--
+>   4 files changed, 18 insertions(+), 16 deletions(-)
 > 
+Not sure if this shouldn't be a stand-alone patch, but anyway:
+
 Reviewed-by: Hannes Reinecke <hare@suse.de>
 
 Cheers,
