@@ -1,87 +1,88 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yb1-f169.google.com (mail-yb1-f169.google.com [209.85.219.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FFBA32C315
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Aug 2025 17:17:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BDDE2264B1;
+	Mon, 18 Aug 2025 20:40:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755537447; cv=none; b=CS1TBM4dKqGe7evfLOgq3chqJhOGhmghrLp9Bo019pH/sVcK3KT/hEO1BZ969WIpQwME4a18B4AazD7tYrWwdL3lRwSBQVoBYSs4VgNGVsSQDSBfwAxbAiSEPoYWfAPpTEVgYU2xfG3k/H/NNAWd7qTdDUcZxKfZ9WKL0rJEig8=
+	t=1755549602; cv=none; b=D3tbsLlAK5yvdAoqgaEtPth4rH5uwi5UpJU9Ce9zJY9WJ4JUDG2ZYJ7wAIwGtJR69Y1kwCTg8mP2Z27K+fzMglJ92cRYisCX1dGcGWliSOpLOR0yq8tIaHg2FswynMpojCGw2FjCXo+JrDCbsKXU+SDsT0JRJWCjVRW63JBysAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755537447; c=relaxed/simple;
-	bh=lYq19ZIXDOaVcfz8juSCjsvBbm5PkUUNyYkVdZF+gF4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=TBX+EO2XqY3KX/xIjMsgeuTCP1ytjHEYmHZlyZfpw6m9ENzAs6u6N4pevAp1KosVq0nK3vLj7Edvj0AYGQkpfGl3X5qvlN+D8WKcEJiorjtnf4oTa2r5AOoaQwf5Gtam6EZAmAWi2H7TEDxAZapNgp1DCAATvusSOyo8cBFabMw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FZS2gB8H; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755549602; c=relaxed/simple;
+	bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=T7b7GG5ho5/5PbEzjghNa9OfPH9c7DYLjf8j0EiUb2tQz27+Y+TiaMZ5pOtzmOnLUMewvr+cmzP2f9bI72XXvQIV6hDw7FsdwmrppYj2+3WFXEGxveVvQ18qpbHe/ZtgNS0AFYnbjjBUYfnd9YqHs4CkG3q5o0+XW8QjtYUCjls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=K0cwNf+l; arc=none smtp.client-ip=209.85.219.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FZS2gB8H"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c5KCR6bV8zlgqxv;
-	Mon, 18 Aug 2025 17:17:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755537442; x=1758129443; bh=VBkq2ehhCNsaVJERtFFGt0Ue
-	CHylKs5Dwwk629JpUKI=; b=FZS2gB8HKrm3hpRXrLj3HybuRuxTQthnfaTrj3j7
-	gkYeMchvL1zBZUjgOxZSdaI8MeYnqSVByAZuJ3UVEVXpOBEAViIWdEFrJ4L/Q0YP
-	1gWEKTtArFSoWj+TBAJCqPSlrkIs/83y8A8dr+dsWBZn1ECp+WjfYV2gNF47WjS3
-	810GXS+ekv2+t3LY9keBnvJsNLKa97EYewgWVG5iTO3hFZhKz2CwPx5bc1XOy4Nl
-	MUwtHRq8emCi68gMHdjSU8whLf/FCzjk0BAoiq/o/0XOtqsodIaIadAE1CwVWqLC
-	bEGvn2nNhYGirYFabDebMD8GytDQXUCz7NAMyjVqSxahRw==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id j5E5ya3Un713; Mon, 18 Aug 2025 17:17:22 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c5KCM3NW2zlgqTy;
-	Mon, 18 Aug 2025 17:17:18 +0000 (UTC)
-Message-ID: <2dada22d-2e1d-469b-8aa6-4a026a670b57@acm.org>
-Date: Mon, 18 Aug 2025 10:17:17 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="K0cwNf+l"
+Received: by mail-yb1-f169.google.com with SMTP id 3f1490d57ef6-e934724e512so1821186276.2;
+        Mon, 18 Aug 2025 13:40:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1755549600; x=1756154400; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+        b=K0cwNf+lvtJB5alhLKO2xsjCCSCcPOz+AWFHjotePZQUQgAQE4msH/cgrMUI11PwGf
+         I2lfCgj5XPOSdVJ25H2EXTGH8uF5OMeDZM9t+h3FOP0PoMCQwpdQIKLx2yVr2HQEjzbw
+         Gh0L1IskNrcdKWLISCN/3wPFWF/0JDhii2X0k42AQJTcavdEtrBOHvPbvp9we/CEgQuA
+         YR0FSWJEQ6099nBmf8Ads5u2uWxgFTHMUfS8g+iTHD4z7G9iYsD9XeduDXvbf3vJui3G
+         TEUfK/HLP8GDoG9H2vqgMIM4idKktl0TU/cTcUJSBi4O/4Lws3pA5pofopm9Vh0uBe9K
+         DKkw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755549600; x=1756154400;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+        b=lQnwXlpUj6olfi0UmeqD9IKj2JSrYbYU1rdEdrttigx2ONnJVemeSdZFjV17UZybHx
+         tqTEkiectVnTfgTVLrHNzsgJgSMTYEWd4TBuNJS8Y035lpAIZ4Ao8qiA+yjFgQWdZNZd
+         XZgnT6A/oxxgNrcI/Eokl+DOHqm3A2cNfKaD+rN6hlIQB4AQYbxA+4OyrS8INlJtqMvk
+         eIsd/uDNF+j9wG4/kG15bh6qm+nkCCI6qBsFIHEsa+Fej1iddLuMuz1+Rgce2BeMorOY
+         Tg9HcVhVThD3cABmMUqw6SnSvN9ii8qoLPtfnMugpsTgX5KtxDjTRE7QeyDnw8UA5SYo
+         THUQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUOOPs1cW/zr1f64gYPqyJNkozMXs7dTWggtnJnMOpY6uNoxyp2iHG2tM2NmpmZYdOVxwwaDPiLiUYG4A==@vger.kernel.org, AJvYcCWLT1RwJMTuAfvig60HMcmjTFo7gf9kWrrwJ2sO4jCb/SWKjJsw+oIyHCsbPPcsGDFUWGxToQQl@vger.kernel.org, AJvYcCXnOGLrcN/7RuoRloY+E+XdVXZUDpt9ZaSY3LjmAE8LuL5Jeo9dHMLTsezVHhD0Ur8tYx/hIxrPpu8=@vger.kernel.org
+X-Gm-Message-State: AOJu0YyV4EIA81wApp65d1vcN8K5jbmbf5rEdIQlzdnjh0NCSHprvMBv
+	PB7Pw5nPYUYJqj4n7AIxoMFa2GwF6ihPPdQ8gHfe5oOh+lFXCCSL/Jz07GoEgFjXvvJKj988tal
+	2bL0iNnrR990/2547jiX2+oEmXBWiABQ=
+X-Gm-Gg: ASbGncvWHUic0D+ar7CUkQ6godb2b23zkx5qwjHjYETnDhFqFI3Awxwn87e0qQjOaSF
+	5mNZjttBb/6UHKTqHx2Qn7blh7Nj+3Cnn6737176kmTSYp/p6hynpI80vi4j1MwuSwNLXnvSUay
+	WgbQE2MpwD6uBBul+5vRYBEdy943a8Ss9oFD93wFCgUbJfDJU9HAJCB7FaI0SfdErQfbsVrt75i
+	h2uEwoy
+X-Google-Smtp-Source: AGHT+IHAkrMwRZwdoy3Q6/RtnyzaiM2nQ7nvYBpI05C2SR0hHHKABaQ1e/OsdyKPymfqcGip2s/dKheOtKjQqr4m2vE=
+X-Received: by 2002:a05:6902:6d09:b0:e93:4b5c:d50d with SMTP id
+ 3f1490d57ef6-e94e6284bd7mr364154276.25.1755549600338; Mon, 18 Aug 2025
+ 13:40:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/24] scsi: core: Make scsi_cmd_to_rq() accept const
- arguments
-To: Hannes Reinecke <hare@suse.de>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250403211937.2225615-1-bvanassche@acm.org>
- <20250403211937.2225615-2-bvanassche@acm.org>
- <83347952-255f-4362-a7e4-f9f501ce6cb5@suse.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <83347952-255f-4362-a7e4-f9f501ce6cb5@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Justin Tee <justintee8345@gmail.com>
+Date: Mon, 18 Aug 2025 13:39:47 -0700
+X-Gm-Features: Ac12FXzDVK05Bcq9rvaz1Jfc1bgieWIBNch0-7wIMNa4XPotGC44yPqhEIVj_vg
+Message-ID: <CABPRKS_Ut8Z+rvM4+-E0YvEwUKbMb0SDpLBdH+g1sYEh+YcxFA@mail.gmail.com>
+Subject: Re: [PATCH 5/5] PCI/ERR: Remove remnants of .link_reset() callback
+To: Lukas Wunner <lukas@wunner.de>
+Cc: Bjorn Helgaas <helgaas@kernel.org>, Riana Tauro <riana.tauro@intel.com>, 
+	Aravind Iddamsetty <aravind.iddamsetty@linux.intel.com>, 
+	"Sean C. Dardis" <sean.c.dardis@intel.com>, Terry Bowman <terry.bowman@amd.com>, 
+	Sathyanarayanan Kuppuswamy <sathyanarayanan.kuppuswamy@linux.intel.com>, 
+	Niklas Schnelle <schnelle@linux.ibm.com>, Linas Vepstas <linasvepstas@gmail.com>, 
+	Mahesh J Salgaonkar <mahesh@linux.ibm.com>, Oliver OHalloran <oohall@gmail.com>, 
+	Manivannan Sadhasivam <manivannan.sadhasivam@oss.qualcomm.com>, linuxppc-dev@lists.ozlabs.org, 
+	linux-pci@vger.kernel.org, Shahed Shaikh <shshaikh@marvell.com>, 
+	Manish Chopra <manishc@marvell.com>, GR-Linux-NIC-Dev@marvell.com, 
+	Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com, 
+	Edward Cree <ecree.xilinx@gmail.com>, linux-net-drivers@amd.com, 
+	James Smart <james.smart@broadcom.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Andrew Lunn <andrew+netdev@lunn.ch>, 
+	"David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>, 
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>, netdev@vger.kernel.org, 
+	"open list:EMULEX/BROADCOM LPFC FC/FCOE SCSI DRIVER" <linux-scsi@vger.kernel.org>, Justin Tee <justin.tee@broadcom.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On 8/17/25 11:03 PM, Hannes Reinecke wrote:
-> Is there a cover letter for this patchset?
-> My mailer bunched it up under the first patch, leading to the wrong 
-> impression that it's just about converting to 'const' arguments...
-> (And me nearly ignoring the patchset altogether).
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 
-Hi Hannes,
-
-The cover letter is available here:
-
-https://lore.kernel.org/linux-scsi/20250403211937.2225615-1-bvanassche@acm.org/
-
-A more detailed description of the purpose of this patch series than
-what is available in the cover letter is available here:
-
-https://lore.kernel.org/linux-scsi/3affc917-6634-47fc-a6d2-5b57a2e34bef@acm.org/
-
-Thanks,
-
-Bart.
+Regards,
+Justin
