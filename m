@@ -1,219 +1,210 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-ed1-f45.google.com (mail-ed1-f45.google.com [209.85.208.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A066E17A300
-	for <linux-scsi@vger.kernel.org>; Mon, 18 Aug 2025 06:03:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 410083FE7
+	for <linux-scsi@vger.kernel.org>; Mon, 18 Aug 2025 07:45:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755497040; cv=none; b=EK3gfPyRGADCfCI58kFIAISmTq/ybi7xrbhSo5uZCwWvx+6Nol7+AtcQYDIKIysshnZcJACGzOlMpduNR2d8wzFCycxR7rNv0rT9xwAyaYtqrQuEdX7nu7+bpgNBoZFyz1euuSsD087vfI1IQIFwS0CQfiq/8Y+LaMJStduxh0c=
+	t=1755503159; cv=none; b=t5YtZ7AV9BY75SFks6miOvEl5+pYlLZggTAuIGoc06bp2UOZOi6XMtAiy30DLPP46LgNa5CWXg5isBNlsnLwqxaFuVTzg5Hv/THYjFWGtOqq7N2BcegjQtPk4RmtA6eJX7qDHmv0gdWmPQfGtYUyGnROtpLvclDiCGgcd2ffvrg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755497040; c=relaxed/simple;
-	bh=9SY1om2XkTFw0XC3NhJK4YOGvYDx2vRTpLInfBaznyA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=SEMowk2x5IWvHU6CsJ+lwXoJRt0abIqzvpzNQROeBrv96CF95B2Up7Jz+DLDa2rS0RNxqDLRFfRBvfnXEpr+Ly3N0AyD977Fp7GG6zo9JScAx16qy1UdrraKveYaRo4eE9+LZWv/VMtQOwhjUlsjF7lldyxBLHXK1UW5/yeEjng=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=NS9HKsIL; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Fnhv9cGZ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=NS9HKsIL; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Fnhv9cGZ; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1755503159; c=relaxed/simple;
+	bh=lxrCEU5vJ9AZITvtmXWbjHxYgKSqJ0ksV/YYq2qqpsM=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=efBTndHJ65ElRtUf0Ag1TVU/AebI3wzp8Jf9JZmGjBY0KhU5MCQOEIb/Fe0Ij4MMb836UkJQ7ObZmRzYvqr8q4xOleaBCDAZPGGb/lb1TJ9sSBLYFxx5SemajKcjoWXaDrqRttUkGoLdfnC17WGjYUOIKeRBqWQ49uY/ShDoQAo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=Ejgge7Hw; arc=none smtp.client-ip=209.85.208.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="NS9HKsIL";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Fnhv9cGZ";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="NS9HKsIL";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Fnhv9cGZ"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 805561F45E;
-	Mon, 18 Aug 2025 06:03:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1755497035; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hi5ZxsYpORgkF+1KDIh+o646W1fqejvqpriSX42Ue+Y=;
-	b=NS9HKsILOcoalMUflraT5Wo/4QlrjFMxMSo0aGXVH6y6M9zLUfbPlcPlSo8bY8AKp9dV+9
-	lx4qHc1sRHJ6CGLxab0j9sK7TfXrt+bC0Nqkc/AEgLiLdIQthcYpjTiAQ1bmxv324b9deW
-	nIwIJlOisyyTXtcmJADrKExCjZufzls=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1755497035;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hi5ZxsYpORgkF+1KDIh+o646W1fqejvqpriSX42Ue+Y=;
-	b=Fnhv9cGZN6lWYRdnWE/ESsYODSqV27gyfVyboTDVAKLE26rymozTqwEZvkIwSikeDlVqjt
-	JfgvpXA9CfPa81CQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=NS9HKsIL;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=Fnhv9cGZ
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1755497035; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hi5ZxsYpORgkF+1KDIh+o646W1fqejvqpriSX42Ue+Y=;
-	b=NS9HKsILOcoalMUflraT5Wo/4QlrjFMxMSo0aGXVH6y6M9zLUfbPlcPlSo8bY8AKp9dV+9
-	lx4qHc1sRHJ6CGLxab0j9sK7TfXrt+bC0Nqkc/AEgLiLdIQthcYpjTiAQ1bmxv324b9deW
-	nIwIJlOisyyTXtcmJADrKExCjZufzls=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1755497035;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=hi5ZxsYpORgkF+1KDIh+o646W1fqejvqpriSX42Ue+Y=;
-	b=Fnhv9cGZN6lWYRdnWE/ESsYODSqV27gyfVyboTDVAKLE26rymozTqwEZvkIwSikeDlVqjt
-	JfgvpXA9CfPa81CQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id D006313A55;
-	Mon, 18 Aug 2025 06:03:27 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id RAQjJi/ComiieAAAD6G6ig
-	(envelope-from <hare@suse.de>); Mon, 18 Aug 2025 06:03:27 +0000
-Message-ID: <83347952-255f-4362-a7e4-f9f501ce6cb5@suse.de>
-Date: Mon, 18 Aug 2025 08:03:14 +0200
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="Ejgge7Hw"
+Received: by mail-ed1-f45.google.com with SMTP id 4fb4d7f45d1cf-61a483149e8so41035a12.2
+        for <linux-scsi@vger.kernel.org>; Mon, 18 Aug 2025 00:45:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=ionos.com; s=google; t=1755503155; x=1756107955; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=ei+HPjKwvUT7ejrRmtqCcgAxjKia4Jkk5str3P3S/y4=;
+        b=Ejgge7HwY6jc/HjpRG0K83Hx7yN/eho7yDlnvp+GBnLKSp99NxBNQigRPR4M67IiFJ
+         BY/XIe0gLComKFBMWpT3Y8IN3aaG4UkJ22x3VJMjQfK09VbD/5AyUL6l2Y+oBDnn6YHa
+         ONsH737ZCGRJUkq06e8I+nDh2dH5qcwcFF2lJkJkK7J06iUGOqGbKcloSOLqYThkzH+T
+         2RXQb/dbrnwc8TmKQUmUFY+BaTRvL4IzKrRqikgSm6FXMI6dGnmkKlZj5D+SIyTE+Tqk
+         11NkTiftxWAmwbytjrdimHb3X4nkDZ2OhJyz773CaQwVBAWkU7/kf3OU9vAa9d7gjGOC
+         bpww==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755503155; x=1756107955;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=ei+HPjKwvUT7ejrRmtqCcgAxjKia4Jkk5str3P3S/y4=;
+        b=nOJzfSAL/JDcs0SnIFhu+7nHQoXNkKHUYRmBHfg+DCaMQSmyG3oRvBz1xmVrIeXkWy
+         IpjBjOM10/6a7j+ei+lOz3NRBMgRwSVRv99nvmoR0faIMaPdvw66hL6m6dfhLSwxjx9R
+         W7Ahh6sfFGZa9FuyvDuPm/kv3Om/q4I8yHw2PaC7XKG41WFA5btu81Q0eJoBFPzxPkP/
+         +iEcyIkmcljX4PER7HVMbW1TykNpUun5rnh9w7phRtNBgvQ41TsNYcjICIGZbx09VGMC
+         o6dlOgJaI5WG5nUytynIxIN6J7zyDKKXqL0mp6h3IOiZ3wFLPnEHy7oJxOyWdek4JwNM
+         7VFw==
+X-Forwarded-Encrypted: i=1; AJvYcCXnOnZQUFhEEiuXjfBud4/sGz3/aEzW8bUlH2IdVjJzn62eTu5x72d343JHiIDW+VZEOp+WGCOpRwBc@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBB4gCmEHMUzLzDwGNr30/yzBdRwfBy3zBOU+tOS7zr29kITni
+	ZS6y/iJdGbmhllxNdtqUGnB0Cp6s+zlG9qDghjk+vm4uSzondO41Pa8AxaAlnPKTeyNENtvTjsR
+	19+ZPZ1zMUEpA9Ig0rVAF5jqbTLNdJ9sQk8h62akjmg==
+X-Gm-Gg: ASbGncsKD7HiOlV3iTH9v3uLchF0qP0hOfvGtnQF+ZOTpqAEeWSmMrfiopU8LMI1A8/
+	0GdZTR2nLDIL6ElIpHCaiXE2SYUfyBF/NRl2p/X3+dkJiQQ11Bh8MmHB3VRqxS4xiGrWSwH07OZ
+	oJP4ryHTVY9QA44N869GhokxnLSgpQfEsw4ZujOxcNfgGC5BhAI3MPqk/YxM37cfFDVX1G1VRax
+	US4ejpTLCDjsljhjA==
+X-Google-Smtp-Source: AGHT+IHja3wcgkVkImJVSmXPTbdYjF3aHYDpccIVvhrKzOH1XoTW3pkuuLdmzv/qdtyRQ52hzantH1WonqLJdo1Jocc=
+X-Received: by 2002:a05:6402:3510:b0:615:ec05:a628 with SMTP id
+ 4fb4d7f45d1cf-618b04b9edemr4173561a12.0.1755503155402; Mon, 18 Aug 2025
+ 00:45:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/24] scsi: core: Make scsi_cmd_to_rq() accept const
- arguments
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250403211937.2225615-1-bvanassche@acm.org>
- <20250403211937.2225615-2-bvanassche@acm.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250403211937.2225615-2-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 805561F45E
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-6.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	DWL_DNSWL_MED(-2.00)[suse.de:dkim];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_TLS_ALL(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	RCVD_COUNT_TWO(0.00)[2];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Score: -6.51
+References: <20250814173215.1765055-12-cassel@kernel.org> <20250814173215.1765055-19-cassel@kernel.org>
+In-Reply-To: <20250814173215.1765055-19-cassel@kernel.org>
+From: Jinpu Wang <jinpu.wang@ionos.com>
+Date: Mon, 18 Aug 2025 09:45:43 +0200
+X-Gm-Features: Ac12FXyeOLeLUcnS0-76dhF1XtIVZzYIbZYnX4EXg_p2tW3azx99jhHm6LWMvEM
+Message-ID: <CAMGffE=YD=d7C5aY+n_XXGaUOEHM_YY0Amsgit6Lv1oAAEjTfQ@mail.gmail.com>
+Subject: Re: [PATCH v2 07/10] scsi: pm80xx: Use dev_parent_is_expander() helper
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 4/3/25 23:17, Bart Van Assche wrote:
-> Instead of requiring the caller to cast away constness, make
-> scsi_cmd_to_rq() accept const arguments.
-> 
-> Cc: Hannes Reinecke <hare@suse.de>
-> Cc: John Garry <john.g.garry@oracle.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On Thu, Aug 14, 2025 at 7:32=E2=80=AFPM Niklas Cassel <cassel@kernel.org> w=
+rote:
+>
+> Make use of the dev_parent_is_expander() helper.
+>
+> Signed-off-by: Niklas Cassel <cassel@kernel.org>
+Acked-by: Jack Wang <jinpu.wang@ionos.com>
 > ---
->   drivers/scsi/scsi_logging.c | 10 +++++-----
->   include/scsi/scsi_cmnd.h    |  9 +++++----
->   2 files changed, 10 insertions(+), 9 deletions(-)
-> 
-> diff --git a/drivers/scsi/scsi_logging.c b/drivers/scsi/scsi_logging.c
-> index b02af340c2d3..5aaff629b999 100644
-> --- a/drivers/scsi/scsi_logging.c
-> +++ b/drivers/scsi/scsi_logging.c
-> @@ -28,7 +28,7 @@ static void scsi_log_release_buffer(char *bufptr)
->   
->   static inline const char *scmd_name(const struct scsi_cmnd *scmd)
->   {
-> -	struct request *rq = scsi_cmd_to_rq((struct scsi_cmnd *)scmd);
-> +	const struct request *rq = scsi_cmd_to_rq(scmd);
->   
->   	if (!rq->q || !rq->q->disk)
->   		return NULL;
-> @@ -94,7 +94,7 @@ void scmd_printk(const char *level, const struct scsi_cmnd *scmd,
->   	if (!logbuf)
->   		return;
->   	off = sdev_format_header(logbuf, logbuf_len, scmd_name(scmd),
-> -				 scsi_cmd_to_rq((struct scsi_cmnd *)scmd)->tag);
-> +				 scsi_cmd_to_rq(scmd)->tag);
->   	if (off < logbuf_len) {
->   		va_start(args, fmt);
->   		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
-> @@ -374,8 +374,8 @@ EXPORT_SYMBOL(__scsi_print_sense);
->   void scsi_print_sense(const struct scsi_cmnd *cmd)
->   {
->   	scsi_log_print_sense(cmd->device, scmd_name(cmd),
-> -			     scsi_cmd_to_rq((struct scsi_cmnd *)cmd)->tag,
-> -			     cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE);
-> +			     scsi_cmd_to_rq(cmd)->tag, cmd->sense_buffer,
-> +			     SCSI_SENSE_BUFFERSIZE);
->   }
->   EXPORT_SYMBOL(scsi_print_sense);
->   
-> @@ -393,7 +393,7 @@ void scsi_print_result(const struct scsi_cmnd *cmd, const char *msg,
->   		return;
->   
->   	off = sdev_format_header(logbuf, logbuf_len, scmd_name(cmd),
-> -				 scsi_cmd_to_rq((struct scsi_cmnd *)cmd)->tag);
-> +				 scsi_cmd_to_rq(cmd)->tag);
->   
->   	if (off >= logbuf_len)
->   		goto out_printk;
-> diff --git a/include/scsi/scsi_cmnd.h b/include/scsi/scsi_cmnd.h
-> index 8ecfb94049db..154fbb39ca0c 100644
-> --- a/include/scsi/scsi_cmnd.h
-> +++ b/include/scsi/scsi_cmnd.h
-> @@ -144,10 +144,11 @@ struct scsi_cmnd {
->   };
->   
->   /* Variant of blk_mq_rq_from_pdu() that verifies the type of its argument. */
-> -static inline struct request *scsi_cmd_to_rq(struct scsi_cmnd *scmd)
-> -{
-> -	return blk_mq_rq_from_pdu(scmd);
-> -}
-> +#define scsi_cmd_to_rq(scmd)                                       \
-> +	_Generic(scmd,                                             \
-> +		const struct scsi_cmnd *: (const struct request *) \
-> +			blk_mq_rq_from_pdu((void *)scmd),          \
-> +		struct scsi_cmnd *: blk_mq_rq_from_pdu((void *)scmd))
->   
->   /*
->    * Return the driver private allocation behind the command.
-
-Is there a cover letter for this patchset?
-My mailer bunched it up under the first patch, leading to the wrong 
-impression that it's just about converting to 'const' arguments...
-(And me nearly ignoring the patchset altogether).
-
-Cheers,
-
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+>  drivers/scsi/pm8001/pm8001_hwi.c | 8 +++-----
+>  drivers/scsi/pm8001/pm8001_sas.c | 5 ++---
+>  drivers/scsi/pm8001/pm80xx_hwi.c | 8 +++-----
+>  3 files changed, 8 insertions(+), 13 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.c b/drivers/scsi/pm8001/pm800=
+1_hwi.c
+> index 42a4eeac24c9..fb4913547b00 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.c
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.c
+> @@ -2163,8 +2163,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
+ha, void *piomb)
+>         /* Print sas address of IO failed device */
+>         if ((status !=3D IO_SUCCESS) && (status !=3D IO_OVERFLOW) &&
+>                 (status !=3D IO_UNDERFLOW)) {
+> -               if (!((t->dev->parent) &&
+> -                       (dev_is_expander(t->dev->parent->dev_type)))) {
+> +               if (!dev_parent_is_expander(t->dev)) {
+>                         for (i =3D 0, j =3D 4; j <=3D 7 && i <=3D 3; i++,=
+ j++)
+>                                 sata_addr_low[i] =3D pm8001_ha->sas_addr[=
+j];
+>                         for (i =3D 0, j =3D 0; j <=3D 3 && i <=3D 3; i++,=
+ j++)
+> @@ -4168,7 +4167,6 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hb=
+a_info *pm8001_ha,
+>         u16 firstBurstSize =3D 0;
+>         u16 ITNT =3D 2000;
+>         struct domain_device *dev =3D pm8001_dev->sas_device;
+> -       struct domain_device *parent_dev =3D dev->parent;
+>         struct pm8001_port *port =3D dev->port->lldd_port;
+>
+>         memset(&payload, 0, sizeof(payload));
+> @@ -4186,8 +4184,8 @@ static int pm8001_chip_reg_dev_req(struct pm8001_hb=
+a_info *pm8001_ha,
+>                         dev_is_expander(pm8001_dev->dev_type))
+>                         stp_sspsmp_sata =3D 0x01; /*ssp or smp*/
+>         }
+> -       if (parent_dev && dev_is_expander(parent_dev->dev_type))
+> -               phy_id =3D parent_dev->ex_dev.ex_phy->phy_id;
+> +       if (dev_parent_is_expander(dev))
+> +               phy_id =3D dev->parent->ex_dev.ex_phy->phy_id;
+>         else
+>                 phy_id =3D pm8001_dev->attached_phy;
+>         opc =3D OPC_INB_REG_DEV;
+> diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm800=
+1_sas.c
+> index 3e1dac4b820f..2bdeace6c6bf 100644
+> --- a/drivers/scsi/pm8001/pm8001_sas.c
+> +++ b/drivers/scsi/pm8001/pm8001_sas.c
+> @@ -700,7 +700,7 @@ static int pm8001_dev_found_notify(struct domain_devi=
+ce *dev)
+>         dev->lldd_dev =3D pm8001_device;
+>         pm8001_device->dev_type =3D dev->dev_type;
+>         pm8001_device->dcompletion =3D &completion;
+> -       if (parent_dev && dev_is_expander(parent_dev->dev_type)) {
+> +       if (dev_parent_is_expander(dev)) {
+>                 int phy_id;
+>
+>                 phy_id =3D sas_find_attached_phy_id(&parent_dev->ex_dev, =
+dev);
+> @@ -749,7 +749,6 @@ static void pm8001_dev_gone_notify(struct domain_devi=
+ce *dev)
+>         unsigned long flags =3D 0;
+>         struct pm8001_hba_info *pm8001_ha;
+>         struct pm8001_device *pm8001_dev =3D dev->lldd_dev;
+> -       struct domain_device *parent_dev =3D dev->parent;
+>
+>         pm8001_ha =3D pm8001_find_ha_by_dev(dev);
+>         spin_lock_irqsave(&pm8001_ha->lock, flags);
+> @@ -771,7 +770,7 @@ static void pm8001_dev_gone_notify(struct domain_devi=
+ce *dev)
+>                  * The phy array only contains local phys. Thus, we canno=
+t clear
+>                  * phy_attached for a device behind an expander.
+>                  */
+> -               if (!(parent_dev && dev_is_expander(parent_dev->dev_type)=
+))
+> +               if (!dev_parent_is_expander(dev))
+>                         pm8001_ha->phy[pm8001_dev->attached_phy].phy_atta=
+ched =3D 0;
+>                 pm8001_free_dev(pm8001_dev);
+>         } else {
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.c b/drivers/scsi/pm8001/pm80x=
+x_hwi.c
+> index c1bae995a412..546d0d26f7a1 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.c
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.c
+> @@ -2340,8 +2340,7 @@ mpi_sata_completion(struct pm8001_hba_info *pm8001_=
+ha,
+>         /* Print sas address of IO failed device */
+>         if ((status !=3D IO_SUCCESS) && (status !=3D IO_OVERFLOW) &&
+>                 (status !=3D IO_UNDERFLOW)) {
+> -               if (!((t->dev->parent) &&
+> -                       (dev_is_expander(t->dev->parent->dev_type)))) {
+> +               if (!dev_parent_is_expander(t->dev)) {
+>                         for (i =3D 0, j =3D 4; i <=3D 3 && j <=3D 7; i++,=
+ j++)
+>                                 sata_addr_low[i] =3D pm8001_ha->sas_addr[=
+j];
+>                         for (i =3D 0, j =3D 0; i <=3D 3 && j <=3D 3; i++,=
+ j++)
+> @@ -4780,7 +4779,6 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hb=
+a_info *pm8001_ha,
+>         u16 firstBurstSize =3D 0;
+>         u16 ITNT =3D 2000;
+>         struct domain_device *dev =3D pm8001_dev->sas_device;
+> -       struct domain_device *parent_dev =3D dev->parent;
+>         struct pm8001_port *port =3D dev->port->lldd_port;
+>
+>         memset(&payload, 0, sizeof(payload));
+> @@ -4799,8 +4797,8 @@ static int pm80xx_chip_reg_dev_req(struct pm8001_hb=
+a_info *pm8001_ha,
+>                         dev_is_expander(pm8001_dev->dev_type))
+>                         stp_sspsmp_sata =3D 0x01; /*ssp or smp*/
+>         }
+> -       if (parent_dev && dev_is_expander(parent_dev->dev_type))
+> -               phy_id =3D parent_dev->ex_dev.ex_phy->phy_id;
+> +       if (dev_parent_is_expander(dev))
+> +               phy_id =3D dev->parent->ex_dev.ex_phy->phy_id;
+>         else
+>                 phy_id =3D pm8001_dev->attached_phy;
+>
+> --
+> 2.50.1
+>
