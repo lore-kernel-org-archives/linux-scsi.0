@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB672322C9F
-	for <linux-scsi@vger.kernel.org>; Tue, 19 Aug 2025 19:28:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5DB0F25484D
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Aug 2025 19:34:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755631699; cv=none; b=fxVwdaqZvc3/TU5P01BrRaFo40ga1Vuk11GWSlRFJXQEuQHw6X1PmRPGfSuJ0E2pax+qc0bOKebDfZjAGQdkO3eOp8HYt+hGrs515au7gxbAZfpNR0ARctYno9CVXa3MBIgjPlJJsMHh0gV4ohFuGsMaEt8ebXSFAS7LUJA/VW8=
+	t=1755632096; cv=none; b=o23kzvwRnkQKUKgbRcyYXv6I/TK/ZTGbPI7Pt03R3Fi7oqAvNSY6ydvKpC/vx3ACUedQRw5MAf8t9os87Sb+A3k/Ql3F0mStvhiUq/kMBWVpgS/JqJI8FRtnUzC+fr6foPa7NMIyKKIvqh7WmJgkjlNbPdQARlht5lxi3BciNI0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755631699; c=relaxed/simple;
-	bh=KT4GvZigG6yKnqty/9EcAf5Ia7vCnSci7jfL2GO8bDU=;
+	s=arc-20240116; t=1755632096; c=relaxed/simple;
+	bh=wHCSnFZcvrei1FkVshjb/4U9VwdFDhDMGIse+keDzQ4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mUzMNPQHGoHsWFg7IS/Xqg9hXPF6NmVogI8PcdAHRFRR5g/zajfsm8U9EF7Z8KIOx3pL0YYC1qlYmUTwPA/x/vy0jQ+C9X4XJr6gGV/OcX8dK/6nff703iqMPZnOd4/87IWHhLE3o1j6Ym7QSdgUQXU5o39N63KOujM15NJbmN4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Djwpe4qI; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=DzBas33y5AofPxA03DufrmzVGLBQkTfBchvgWZ/8OdCv8AlA5VNo5d6AY0wML6bfA+4l8tZGm4WiTZMngGD0zesxXu6Gw6ohWM/0W0cDoJmAyvpSMRoUbz84rNQg+MocE2pFXrrnSPpjgzlPRES4t43opWBY6wyutvkXMemZs3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ICLFhGOl; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Djwpe4qI"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ICLFhGOl"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c603y6F5DzlgqVc;
-	Tue, 19 Aug 2025 19:28:14 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c60Cc1fplzm1746;
+	Tue, 19 Aug 2025 19:34:52 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755631693; x=1758223694; bh=KT4GvZigG6yKnqty/9EcAf5I
-	a7vCnSci7jfL2GO8bDU=; b=Djwpe4qIOHLgS8tgR8AzI8+siwzi8Z5BBh/Gdi3g
-	OFf9vCD4TOiKaSImAK04hRqmItTghACY2u6qHGWdvfxLZjIrJfsCuqMtu3mAJyuo
-	BDysjwWcRK5BXYAIATo9V5xixg8GJxh+LO9on6224BPHLFx1x+wx1PnV4Cf4T99I
-	hPx34rDSfaVqxZozhtyds1AXqADwuE0W6PGrcdGhEjl66SuWc4wplZVlvs4T0a38
-	6eOVIGrVyUFCrgk/eDPVUknnxNU82SGSj22P38C7RSw9G/QBc/XiCWZwUrCAfBp9
-	yUBIU6TPB3lWjh1Pgogj7JsvkGtVIyupU7JJyCMvSfayCg==
+	 s=mr01; t=1755632090; x=1758224091; bh=ZIPFj2VegJq6DW8msHpTQqlM
+	Trzb6H4vCI6R80OGJxA=; b=ICLFhGOldqUr22HqlCv1IuVud3WntJ1WDAZw1yrR
+	w1yUX2h1k4wu8wtdT+EKwDb0D6bhD3zixtAXT/JplrNC7Wquzl91dBkIaSCvdbTU
+	eiy1zZBqotq4aUwq0rrZKi8+v0ootv/d9DRl1poL8j+2bEKD+nvRzczSoDNkY86/
+	4BPvuTJjY7EykZvTG1qzGsnl1Z6aVO9slguPKedKRofkMAOJjf7OPOTl+V9NAvA6
+	p+2ZSK8aGeSrWcYzWtnkR9mQngsCE8x3HsBgNWowuH9gSfhIJPG1/SA6+XMNFdMZ
+	1cTae9cI8wWezrYBAJD6/sRFrZAWvLQHEFVfvh2QpmwYrg==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id YXCLwgnd2ozt; Tue, 19 Aug 2025 19:28:13 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id MkHw9tLW8Hlg; Tue, 19 Aug 2025 19:34:50 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c603t2Rf9zlgqxv;
-	Tue, 19 Aug 2025 19:28:09 +0000 (UTC)
-Message-ID: <115db9fd-b67b-4cc1-8cc7-563582c92bf8@acm.org>
-Date: Tue, 19 Aug 2025 12:28:08 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c60CW0ZBZzm1742;
+	Tue, 19 Aug 2025 19:34:45 +0000 (UTC)
+Message-ID: <a0049c01-3bae-46bd-a5b9-57dc9c537ae9@acm.org>
+Date: Tue, 19 Aug 2025 12:34:44 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,21 +50,50 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 1/8] scsi: Explicitly specify .ascq = 0x00 for ASC
- 0x28/0x29 scsi_failures
+Subject: Re: [PATCH v3 2/8] scsi: sd: Explicitly specify .ascq =
+ SCMD_FAILURE_ASCQ_ANY for ASC 0x3a
 To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 Cc: michael.christie@oracle.com, dgilbert@interlog.com, dlemoal@kernel.org
 References: <20250815211525.1524254-1-emilne@redhat.com>
- <20250815211525.1524254-2-emilne@redhat.com>
+ <20250815211525.1524254-3-emilne@redhat.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250815211525.1524254-2-emilne@redhat.com>
+In-Reply-To: <20250815211525.1524254-3-emilne@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 8/15/25 2:15 PM, Ewan D. Milne wrote:
-> This does not change any behavior (since .ascq was initialized to 0 by
-> the compiler) but makes explicit that the entry in the scsi_failures
-> array does not handle cases where ASCQ is nonzero, consistent with other
-> usage.
+> This makes the handling in read_capacity_10() consistent with other
+> cases, e.g. sd_spinup_disk().  Omitting .ascq in scsi_failure did not
+> result in wildcard matching, it only handled ASCQ 0x00.  This patch
+> changes the retry behavior, we no longer retry 3 times on ASC 0x3a
+> if a nonzero ASCQ is ever returned.
+> 
+> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> ---
+>   drivers/scsi/sd.c | 2 ++
+>   1 file changed, 2 insertions(+)
+> 
+> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> index 78f5903cc8d0..e3b802b26f0e 100644
+> --- a/drivers/scsi/sd.c
+> +++ b/drivers/scsi/sd.c
+> @@ -2729,11 +2729,13 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+>   		{
+>   			.sense = UNIT_ATTENTION,
+>   			.asc = 0x3A,
+> +			.ascq = SCMD_FAILURE_ASCQ_ANY,
+>   			.result = SAM_STAT_CHECK_CONDITION,
+>   		},
+>   		{
+>   			.sense = NOT_READY,
+>   			.asc = 0x3A,
+> +			.ascq = SCMD_FAILURE_ASCQ_ANY,
+>   			.result = SAM_STAT_CHECK_CONDITION,
+>   		},
+>   		 /* Device reset might occur several times so retry a lot */
+
+If this patch is reposted, please consider shortening the title of this 
+patch to e.g. "Do not retry ASC 0x3a". Anyway:
+
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
