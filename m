@@ -1,48 +1,48 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3350525229C;
-	Tue, 19 Aug 2025 19:26:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DB672322C9F
+	for <linux-scsi@vger.kernel.org>; Tue, 19 Aug 2025 19:28:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755631592; cv=none; b=D+yVcqhvncZJpN1qdTfuf8vw4f7yfHyd8FLKniORmKWOy3kuJbTQh3gnqVQOS4RML6HdV/0qzp77JOB8t1e9HiJnAdwpswVoI8ydOA9d7lVola5zxUiOYEWzXZ8ESEmdw9I1Xmv7RYDiQrQuzS8tqZu6N1G7SszaecMrXlGkT+k=
+	t=1755631699; cv=none; b=fxVwdaqZvc3/TU5P01BrRaFo40ga1Vuk11GWSlRFJXQEuQHw6X1PmRPGfSuJ0E2pax+qc0bOKebDfZjAGQdkO3eOp8HYt+hGrs515au7gxbAZfpNR0ARctYno9CVXa3MBIgjPlJJsMHh0gV4ohFuGsMaEt8ebXSFAS7LUJA/VW8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755631592; c=relaxed/simple;
-	bh=g/B9mTSY/+UICJqMryQGfX+yQjeoKc3Ak/00kTWxqvI=;
+	s=arc-20240116; t=1755631699; c=relaxed/simple;
+	bh=KT4GvZigG6yKnqty/9EcAf5Ia7vCnSci7jfL2GO8bDU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jTWt62CQiOlzX1wz6ZTltWwMbGI0+dI5IFB9/8vlwn1G5pudWyZUQASMSD+7WvKmQerRI78IjuHm0DJ8e8mu+Eh77BVpS5KFHNRvUsPWxUXGTo+7iQVead/dGFxNkdx8RA64Ys/d+wIvZAXQhN/vi9NtA+GQqerIEYKJSiYp8dM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4Pno7lCV; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=mUzMNPQHGoHsWFg7IS/Xqg9hXPF6NmVogI8PcdAHRFRR5g/zajfsm8U9EF7Z8KIOx3pL0YYC1qlYmUTwPA/x/vy0jQ+C9X4XJr6gGV/OcX8dK/6nff703iqMPZnOd4/87IWHhLE3o1j6Ym7QSdgUQXU5o39N63KOujM15NJbmN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Djwpe4qI; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4Pno7lCV"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Djwpe4qI"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c601y1TtPzlgqVs;
-	Tue, 19 Aug 2025 19:26:30 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c603y6F5DzlgqVc;
+	Tue, 19 Aug 2025 19:28:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755631588; x=1758223589; bh=Yq5Aj08KW1djtAlM0LGorNvs
-	4Qbc56CZobz9HEueZEM=; b=4Pno7lCVFtoBrbaTV+Bh8U9FenHUp9QJJYE+1X5b
-	gEtH+/ML+FeO66NeOBY9h9U7Xg10Ut0Zw6m7kXLHOthU5KIb1C4RxRxaUjCMa1G1
-	+VBdpJjw6Be9ZtdkqrD7bWgg9U6FvVQau8hZt3qZETSyh1Tn3tyKntv3VD80yEOo
-	K7FgrL8YHdkk0HnlUNutCsVA12Yy4wfoS9S5MnmEwLWkeRSgcTgfenkIOF33yJvR
-	i1woIIzmvNyNpiPsZ6Jm46Ap+SM33Oj3LsUS7P4sz1tGv1ylO9G5UXGOpRUE4+Wr
-	XYDfkkdglXOWu7X6VlXmWS+0QiC3KcXSlXTdPQengSZKsg==
+	 s=mr01; t=1755631693; x=1758223694; bh=KT4GvZigG6yKnqty/9EcAf5I
+	a7vCnSci7jfL2GO8bDU=; b=Djwpe4qIOHLgS8tgR8AzI8+siwzi8Z5BBh/Gdi3g
+	OFf9vCD4TOiKaSImAK04hRqmItTghACY2u6qHGWdvfxLZjIrJfsCuqMtu3mAJyuo
+	BDysjwWcRK5BXYAIATo9V5xixg8GJxh+LO9on6224BPHLFx1x+wx1PnV4Cf4T99I
+	hPx34rDSfaVqxZozhtyds1AXqADwuE0W6PGrcdGhEjl66SuWc4wplZVlvs4T0a38
+	6eOVIGrVyUFCrgk/eDPVUknnxNU82SGSj22P38C7RSw9G/QBc/XiCWZwUrCAfBp9
+	yUBIU6TPB3lWjh1Pgogj7JsvkGtVIyupU7JJyCMvSfayCg==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 2uxluotg-br0; Tue, 19 Aug 2025 19:26:28 +0000 (UTC)
+ id YXCLwgnd2ozt; Tue, 19 Aug 2025 19:28:13 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c601s5cByzlgqTq;
-	Tue, 19 Aug 2025 19:26:24 +0000 (UTC)
-Message-ID: <240eec29-860d-437c-8e46-9c7af3e4a0fc@acm.org>
-Date: Tue, 19 Aug 2025 12:26:23 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c603t2Rf9zlgqxv;
+	Tue, 19 Aug 2025 19:28:09 +0000 (UTC)
+Message-ID: <115db9fd-b67b-4cc1-8cc7-563582c92bf8@acm.org>
+Date: Tue, 19 Aug 2025 12:28:08 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,25 +50,21 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 1/2] scsi: sd: Fix build warning in
- sd_revalidate_disk()
-To: Abinash Singh <abinashsinghlalotra@gmail.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250816205329.404116-1-abinashsinghlalotra@gmail.com>
- <20250816205329.404116-2-abinashsinghlalotra@gmail.com>
+Subject: Re: [PATCH v3 1/8] scsi: Explicitly specify .ascq = 0x00 for ASC
+ 0x28/0x29 scsi_failures
+To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
+Cc: michael.christie@oracle.com, dgilbert@interlog.com, dlemoal@kernel.org
+References: <20250815211525.1524254-1-emilne@redhat.com>
+ <20250815211525.1524254-2-emilne@redhat.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250816205329.404116-2-abinashsinghlalotra@gmail.com>
+In-Reply-To: <20250815211525.1524254-2-emilne@redhat.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 8/16/25 1:53 PM, Abinash Singh wrote:
-> +	kfree(lim);
-> +	kfree(buffer);
-
-The traditional order for kfree() statements is the opposite order of
-the corresponding kmalloc() calls. With or without this change:
-
+On 8/15/25 2:15 PM, Ewan D. Milne wrote:
+> This does not change any behavior (since .ascq was initialized to 0 by
+> the compiler) but makes explicit that the entry in the scsi_failures
+> array does not handle cases where ASCQ is nonzero, consistent with other
+> usage.
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
