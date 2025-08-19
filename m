@@ -1,161 +1,94 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A65673093B6;
-	Tue, 19 Aug 2025 17:35:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1A712D248A;
+	Tue, 19 Aug 2025 19:21:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755624925; cv=none; b=R2m4QB1EAC3ZE7P0Owz9c4k8cmsFgbKlg33IHxbEhsElhk5uwFSAphl28ghFAdSM3mRHN04LKKpuXsrYCwMmB+zTu38AyiiOqc93vq9nxX96+Xq0GjGO+01rcoDrvnHKHGPHT9yyg44dQJeJTtcnHbIvdE9Tltr9qBZYnF2qSao=
+	t=1755631268; cv=none; b=IK3u2OQxQna8Ct7nn7tfxdwFtQVPFPNPzrN4VqxObKHV6SUPejAlPTvkvuepHAH6L0FFOSFQ3xYYcUInZNxsClGQeUmt+tBulspWYBj8R6uVH5khROkLF7EnMroZP9mkmH+Aq3O1csMNSh9/P/UvPPzZfcszZIZFUbYUO0dJP/c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755624925; c=relaxed/simple;
-	bh=8WmBZafSgbICkwV8fKCnBbgxO2LMYVZ2kbyop77JIzA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=DFRrRpLILGlZmyXf8Is8InrZm+wDJAJztb/VZgXrAZuxRcWQ7JJtIxeWagnsT3f5OIyljpGwbIGr1t1LEjUy9gDKePpC6wKtwpPq5zOfAiU8LcvQmiWyeOOvk2cii+CUlPhTvJnK1Pqj6dwGG3dYr3OTOeAYFAvSApEiiD6/TbU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VPKEo2jQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1755631268; c=relaxed/simple;
+	bh=tOGoJFPH16Dim7LwFxXMTdrj4KdFpOiw6TPs3YcSlrQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FOzBj/efI7+LLZaptRvTFC5okxxKJiFrLvEKxXji6Nv9rMi+CNi8/p5b6KRbvti7Fsd0WteEL0LEuFc7SlFHjEeYMBDvk1fasNxrfl0GuvxT67xcZM6a3kwDuf8Gbx4738bR53Ht6RS8AgUuF8G/sHeo8GgiD9yaus12+8rd9qs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=zI3ZRqRA; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VPKEo2jQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB251C116D0;
-	Tue, 19 Aug 2025 17:35:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755624925;
-	bh=8WmBZafSgbICkwV8fKCnBbgxO2LMYVZ2kbyop77JIzA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=VPKEo2jQNsBsZ86PNrJefPpUWtHqE8Gjb3i68nZ9hzfOSyOvj+KOV6hHX+0D53nUi
-	 5GFXLl0Mgi9JbB9QGPely8UQ/MuzJn9SsScjmGxI1AkIrcQO/JwCClTff4nJRXQksN
-	 ju5EdOw6WODz0JItEQTy7gOr5w8pzQzv/w6GLQkG4ADqjuvzIr+XpPRYunm2nap9f8
-	 kebRVkHzPNuehDT3+F4/QbPoFjkFRPk+RlZfZMOE0N3u91XRFOVaYsTExIAbaq/xpj
-	 wN4N7L+7QKAag9prFy06dk+1Kv1+Xq9lxAXN0foiJXYaKXsdOjypSNCGclwgIWgReU
-	 crogjMOodki+g==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	John Garry <john.g.garry@oracle.com>,
-	Johannes Thumshin <johannes.thumshirn@wdc.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	James.Bottomley@HansenPartnership.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.16-5.4] scsi: core: sysfs: Correct sysfs attributes access rights
-Date: Tue, 19 Aug 2025 13:35:13 -0400
-Message-ID: <20250819173521.1079913-3-sashal@kernel.org>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250819173521.1079913-1-sashal@kernel.org>
-References: <20250819173521.1079913-1-sashal@kernel.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="zI3ZRqRA"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c5zvZ1cBFzm1748;
+	Tue, 19 Aug 2025 19:20:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1755631256; x=1758223257; bh=pRzdCfFjYk8Vdokz4fCzqwUQ
+	FMX4J9WA10x/e7yFMmA=; b=zI3ZRqRA0iRGYMbIaM0u0d65VEJ4b74Nt6gQEKOy
+	mPuN5UuTA4jNxYd55Cf5heyBeKyYBTKAI6E4EAKDfUtiOh+EHE68Kptk/7AXSwFO
+	KV0016uuhuj13JPOtIA1UYL7eXFivjiS/UnUNdpLxgrEUFfVytz375Q0WrEe+S92
+	RWhaZ8YHhY7FMiNIujQTybTLXHfc2Av4hGcu/aVL0zogtRH6CrlNHYUKVdneaKa8
+	LDzFFDvJ+alRqap+F+Y4c3OGaxFgJ5ccsP1uJ+87pkCEkByBCb/SRq1G8b4ebFPS
+	9specoeAuije11jgih2O+lgiD+AMcBVaSpD+jn/x6zS7mg==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id w_oA_IcGjZ7N; Tue, 19 Aug 2025 19:20:56 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c5zvT1nX9zm1743;
+	Tue, 19 Aug 2025 19:20:52 +0000 (UTC)
+Message-ID: <2899b7cb-106b-48dc-890f-9cc80f1d1f8b@acm.org>
+Date: Tue, 19 Aug 2025 12:20:51 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.16.1
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [BUG] general protection fault when connecting an old mp3/usb
+ device
+To: phil@philpotter.co.uk
+Cc: David Wang <00107082@163.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com
+References: <20250818095008.6473-1-00107082@163.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250818095008.6473-1-00107082@163.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Damien Le Moal <dlemoal@kernel.org>
+On 8/18/25 2:50 AM, David Wang wrote:
+> [Sat Aug 23 03:56:09 2025] Oops: general protection fault, probably for non-canonical address 0x2e2e2f2e2e2f308e: 0000 [#1] SMP NOPTI
+> [Sat Aug 23 03:56:09 2025] Call Trace:
+> [Sat Aug 23 03:56:09 2025]  <TASK>
+> [Sat Aug 23 03:56:09 2025]  sr_do_ioctl+0x5b/0x1c0 [sr_mod]
+> [Sat Aug 23 03:56:09 2025]  sr_packet+0x2c/0x50 [sr_mod]
+> [Sat Aug 23 03:56:09 2025]  cdrom_get_disc_info+0x60/0xe0 [cdrom]
+> [Sat Aug 23 03:56:09 2025]  cdrom_mrw_exit+0x29/0xb0 [cdrom]
+> [Sat Aug 23 03:56:09 2025]  ? xa_destroy+0xaa/0x120
+> [Sat Aug 23 03:56:09 2025]  unregister_cdrom+0x76/0xc0 [cdrom]
+> [Sat Aug 23 03:56:09 2025]  sr_free_disk+0x44/0x50 [sr_mod]
+> [Sat Aug 23 03:56:09 2025]  disk_release+0xb0/0xe0
+> [Sat Aug 23 03:56:09 2025]  device_release+0x37/0x90
+> [Sat Aug 23 03:56:09 2025]  kobject_put+0x8e/0x1d0
+> [Sat Aug 23 03:56:09 2025]  blkdev_release+0x11/0x20
+> [Sat Aug 23 03:56:09 2025]  __fput+0xe3/0x2a0
+> [Sat Aug 23 03:56:09 2025]  task_work_run+0x59/0x90
+> [Sat Aug 23 03:56:09 2025]  exit_to_user_mode_loop+0xd6/0xe0
+> [Sat Aug 23 03:56:09 2025]  do_syscall_64+0x1c1/0x1e0
+> [Sat Aug 23 03:56:09 2025]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
 
-[ Upstream commit a2f54ff15c3bdc0132e20aae041607e2320dbd73 ]
+Phillip, is this behavior perhaps introduced by commit 5ec9d26b78c4
+("cdrom: Call cdrom_mrw_exit from cdrom_release function")? Please do
+not call code that invokes ioctls from the disk_release() callback.
 
-The SCSI sysfs attributes "supported_mode" and "active_mode" do not
-define a store method and thus cannot be modified.  Correct the
-DEVICE_ATTR() call for these two attributes to not include S_IWUSR to
-allow write access as they are read-only.
+Thanks,
 
-Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
-Link: https://lore.kernel.org/r/20250728041700.76660-1-dlemoal@kernel.org
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Reviewed-by: Johannes Thumshin <johannes.thumshirn@wdc.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
-
-LLM Generated explanations, may be completely bogus:
-
-**Backport Status: YES**
-
-This commit should be backported to stable kernel trees for the
-following reasons:
-
-## Bug Fix Nature
-The commit fixes a clear bug where sysfs attributes `supported_mode` and
-`active_mode` incorrectly have write permissions (S_IWUSR) despite
-having no store method defined (NULL is passed as the store parameter to
-DEVICE_ATTR). This is a longstanding bug dating back to 2007 when these
-attributes were first introduced in commit 5dc2b89e1242.
-
-## Security and Stability Implications
-1. **Misleading permissions**: The incorrect S_IWUSR permission suggests
-   these attributes are writable when they are not, which could confuse
-   userspace tools and administrators.
-
-2. **Potential crashes**: While the kernel's sysfs framework likely
-   handles the NULL store method gracefully, having write permissions on
-   read-only attributes is incorrect and could potentially lead to
-   issues if userspace attempts to write to these files.
-
-3. **Permission principle violation**: This violates the principle of
-   least privilege - files should only have the permissions they
-   actually support.
-
-## Small and Contained Fix
-The fix is extremely minimal - it simply removes the S_IWUSR flag from
-two DEVICE_ATTR declarations. The changes are:
-- Line 268: `S_IRUGO | S_IWUSR` → `S_IRUGO` for supported_mode
-- Line 282: `S_IRUGO | S_IWUSR` → `S_IRUGO` for active_mode
-
-## No Architectural Changes
-This is a straightforward permission correction with:
-- No functional changes to the SCSI subsystem
-- No changes to data structures or APIs
-- No new features added
-- Minimal risk of regression
-
-## Long-standing Issue
-This bug has existed since 2007 (commit 5dc2b89e1242), meaning it
-affects all stable kernels that include the SCSI host mode attributes.
-The fact that it went unnoticed for so long suggests it's not causing
-critical failures, but it's still incorrect behavior that should be
-fixed.
-
-## Stable Tree Criteria
-This meets the stable tree criteria as it:
-- Fixes an obvious bug (incorrect permissions)
-- Is a trivial fix (2 lines changed)
-- Has essentially zero risk of introducing regressions
-- Corrects a violation of kernel coding standards (attributes without
-  store methods should not have write permissions)
-
-The commit is an ideal candidate for stable backporting as it's a
-simple, safe correction of a longstanding permission bug in the SCSI
-sysfs interface.
-
- drivers/scsi/scsi_sysfs.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index d772258e29ad..e6464b998960 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -265,7 +265,7 @@ show_shost_supported_mode(struct device *dev, struct device_attribute *attr,
- 	return show_shost_mode(supported_mode, buf);
- }
- 
--static DEVICE_ATTR(supported_mode, S_IRUGO | S_IWUSR, show_shost_supported_mode, NULL);
-+static DEVICE_ATTR(supported_mode, S_IRUGO, show_shost_supported_mode, NULL);
- 
- static ssize_t
- show_shost_active_mode(struct device *dev,
-@@ -279,7 +279,7 @@ show_shost_active_mode(struct device *dev,
- 		return show_shost_mode(shost->active_mode, buf);
- }
- 
--static DEVICE_ATTR(active_mode, S_IRUGO | S_IWUSR, show_shost_active_mode, NULL);
-+static DEVICE_ATTR(active_mode, S_IRUGO, show_shost_active_mode, NULL);
- 
- static int check_reset_type(const char *str)
- {
--- 
-2.50.1
+Bart.
 
