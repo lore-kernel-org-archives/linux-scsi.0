@@ -1,85 +1,85 @@
-Received: from mail-il1-f227.google.com (mail-il1-f227.google.com [209.85.166.227])
+Received: from mail-il1-f226.google.com (mail-il1-f226.google.com [209.85.166.226])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4603E1EBA0D
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 08:47:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86A03286D4E
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 08:47:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.226
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755679649; cv=none; b=fHSsQBgUci5KEx4ww0ZBgJotDpgxzKgtS3LhCbovODko3adB71ISpJf8qMX4+gHMvJakF8j30lP4y8crik8del4+GKLcoYkettADqDn8TspEkIw0bT6TruHEKTauxMzj2j4Pw8VtOhfpk89ot72ZtXP0RGtqRmPvKE5KZ+4RmSA=
+	t=1755679656; cv=none; b=k9e8ekgHieC5XZeSWdi+C5XTiDP8m5fcu5JdLWLemGO2apvHWm0EuIeOIqjqEJKZmnrIBVyCN93RCJ3cSEo8Txmt80eo8Pj1k5fJaBakk1YABo4RSXeDHZk+KzSXtAD9MkArNDPqKLvAEUnViE5GQrsr6cCkppu/Ipa/doi0rbk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755679649; c=relaxed/simple;
-	bh=evrgWFQHTqUjHUipcSDGMidTr4uWVIns4a2kbqZrxVA=;
+	s=arc-20240116; t=1755679656; c=relaxed/simple;
+	bh=TWRlDdq57+0cdC6r7YhqlO1oAeJu6hd87hPuMS32kE8=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=iBCLO3U+3ip/JD4ihqdgCQrEpiRiH4f/CioBOZ/ePZUxpbBR3ska+KCpNCFOlOp6UXo4oAwch0xw6ImFFcyECpbTExX35gM4wDeeAsjUVctVyGbVrn7pMbKoqWED8ublVU68+aigPEOxMZPbntWfEveOzYZjhzQ2G3JooAViHZo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=athPiiJG; arc=none smtp.client-ip=209.85.166.227
+	 MIME-Version; b=sTH8/eSKDbxtJQnY22mMWRj9/GVX6lRkrrYQulf1Ajg9Oc+X1Xf5eaXjoCZWa9eTuOK+uGLWwylDv5y3lpHYsAKskAULURW0NAE0o7oWfWx3rBcYwlQW2a2gVraGTuqwS3AiAyJa7IxIdJCrwi/t1pwTcjdWjj9Y5+NrZRr09SI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=SObGmji2; arc=none smtp.client-ip=209.85.166.226
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="athPiiJG"
-Received: by mail-il1-f227.google.com with SMTP id e9e14a558f8ab-3e570045e05so53505465ab.2
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:28 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="SObGmji2"
+Received: by mail-il1-f226.google.com with SMTP id e9e14a558f8ab-3e67dde929bso1423395ab.2
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:35 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755679647; x=1756284447;
+        d=1e100.net; s=20230601; t=1755679654; x=1756284454;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sSeb7Z5Var7LnP6jF5ldv6kzbEeqeahVSNtorw9zTxU=;
-        b=tKSeycGwzhtvpYPL1N6dfsPh0wE+3XN1AjiU5Hi8eOETAe2GZkWbiVLKpaCklWDerJ
-         hJCg2muR+t64hEaqyQNRLlnRfQqy94nKKoDBwnQUE0q7liDFw7CPMrUwZlFHcs0w1WIC
-         VpwCoiPiYFG+aFFskDsOt7SN/IotM5Jsptg2FU5vpWkrGuwQnTCrDq2VVmoz4o9dUcHA
-         g6vwNHH6liqhQk/hBkUKgG9vAfPjtodwhKD3EMrGFkOPEAkCPy/kGfeH7CQpMgTn1siG
-         Rm/bDYGBmM1pJo5+MJow6S8I7lMiKiasntcPnU1YpU6VqStaeXmZzLgpZOJ/dPf+US6o
-         G8gA==
-X-Gm-Message-State: AOJu0Yw/cggUSSyZG3a+lC0/pKArRGkvMxuVm0qyIxMwsN3hVW78LGI/
-	8ZZcCzE/yQ/M8rEFTGM2IcXrS2RXX82ygIiAYFLaIdJ/G62TTTuD2NRFgI+wVAZXldjKPsy8zcL
-	vrRm6utg2oiBvBJ39cQzlhdZpZansdcBAZnkX9vJ3FO5b3pT7URNQxx58E2U5/FIUK5559XCAa8
-	3na8mi16Ieb1RzbbnH92d8PuYXYRSDq5QL50WLQgxFanlpBdJffJaNYtGG6Iay4bEcjG8FagYLv
-	FrAXWuMSMNOeU6gaf+xTYj6
-X-Gm-Gg: ASbGnctR/aKU6I17LAERSjLijwNWNo+ExRWWrdandPcczSgdUMDb7B/WZzbq41gVoar
-	/fQEZYtZ/xx42pXV5W/85UNUjZuLuyTgXHxUTyNV3bamQuxO8lUt/AwMzx9TJStNqiN4UQNQ54y
-	orMOAX4lc+IdqLE7G8DAuQpFpW3A+BhllD8lYln8yF9VAHEt8ooncZWFN6FUnkmdxhGUiHo/5Xw
-	r129U+KcxoyuKuIUdpprTaaVLHI1HjQYQN9Fvp/QNFIJOsZ7st+9y1vnaLxRMunZT5bTzK7xiOb
-	hya5C6OdybOVyBBAmTzptWT5gNDMvDaPM6hbFmIrBZtbCgcJNC2EtUYd18klo7ZcYF7DWxADnXe
-	Grh0fg57E6Ykc6lh6q4ajo2r5/u1LQmYnRPtA2vJ16qwKg6Uzgm6JLVrPI7TVC6bPUt/O50Y8PT
-	6+aW3rrdKszA==
-X-Google-Smtp-Source: AGHT+IFG/kBZqwMaFnJISFjFxD6JDDJv7CjQ5DOBPyQVlYabJsnsH2z9BiHhLCmFF/VnFKblN0kGHrAxICh9
-X-Received: by 2002:a05:6e02:2591:b0:3e6:7c38:f4d6 with SMTP id e9e14a558f8ab-3e67ca22dcdmr39843675ab.14.1755679647337;
-        Wed, 20 Aug 2025 01:47:27 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
-        by smtp-relay.gmail.com with ESMTPS id e9e14a558f8ab-3e57e775d2bsm9879255ab.49.2025.08.20.01.47.26
+        bh=TYrO7CtHiX+U4W3utEytf32ydj4SAMzUElkKGzu4Rx0=;
+        b=T/wbZo56/7Z9NhQEvEREqoMW9tStOcZqgvmg5T7bFL7RecjazXHdnmHGU+u9UFiYNd
+         oXV06hKmloSc1CVWXbWh887dlC1yNEBACrXCA09T2S1e+L7t0bVFZiw/2GMOLDOng/gs
+         9Z4Y+i1imWiHTjxzxS9hwIAkDLB2ca+qclITC8QVMpvPndiL4vvK2cd8P/GxnHpIHUmK
+         BmPv4aAP6JabLfWg38K16UZwU66bJ+92n3U1YIsOPXaXSvLAcyrZHvv4uTyz3dk9WaW8
+         pJr0MYddQwAAaLoRoVd16xgns3/fTxxGKShMHmPHxEsSSBwz9Vec4GoyVGbMD2N2jjQ3
+         g1Gg==
+X-Gm-Message-State: AOJu0YyziHM+fcvLcBOOrT9+Nhmo6DzblLa4Zo063UYYVd1bjmBobZyt
+	g3LhI5COB6PPutPyLfoI19Bva7dbJmx4MN12PtCTIL/Cdq+PEznvqgYum2gDw0D/KTIey/u3xFc
+	+imVZzCQNIvBTArltSvFUbqf2XBp6SiMOj+0cvU5JT4yzahmq7pEFlckHwq/fUpy5XQvVhIlrjQ
+	hQlm5bzoIS6z3f+hpAIK3RZ/53meopK8rmDTlK1UcVIWwtUXzJPrdlhIAg3D4rA2oiN0eDIB989
+	3/OLAgjMc+izjvKbXHeE2Tb
+X-Gm-Gg: ASbGncub/gQrsNVHHX3LnYzMu64PX0aBNSFzSAbQNlovkhiCnUY6FrmXnnNKNIi2dvL
+	4Wrebao0LfF1nEJYcmBZssml2uQq0PRWYUh7/dL42R4gIlTk9EtMw7fZ4yCxmxggEbrWDLnB+Hn
+	sPUEKI9r3ahiesvys6HQAtQPEC7pfPS4SQvyo1++lh7K2ud45tJhp8w/IIszSnzY/GJLgruUgkv
+	3Mq1Fj3X3uVitIhYDHgzzGakvbifRMfzxgJbc6vW4XboMeDMaPnT6dP/KuPX66sTaqxsgEfY0zp
+	3pkGIla2Gq2as/rKJSNeZJ2nQMPiVloz4/AE05dmYCgrxo6PwP+mHGASFxYZNNGpzOBJ2bSp9Sx
+	93qoRPCt9h/DxI2vSAWTPMt9hEic8FVk7HHk8hI0GRGvrw++6L6RLhmcRdOmD4ujWGpzWlp3TdZ
+	tB0l/bb7jNRQ==
+X-Google-Smtp-Source: AGHT+IFTGB/aB5JBJECBoRzGEZbvhDiElcO9cBC64mu1NGUeiu85LmGTkzu5e2ikkbHGvVFidHm2ubSFENOP
+X-Received: by 2002:a05:6e02:3a04:b0:3e5:81ef:b099 with SMTP id e9e14a558f8ab-3e67ca1dbd1mr37805815ab.1.1755679654261;
+        Wed, 20 Aug 2025 01:47:34 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-121.dlp.protect.broadcom.com. [144.49.247.121])
+        by smtp-relay.gmail.com with ESMTPS id e9e14a558f8ab-3e67d95f824sm829315ab.46.2025.08.20.01.47.33
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 20 Aug 2025 01:47:27 -0700 (PDT)
+        Wed, 20 Aug 2025 01:47:34 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-32326779c67so5996064a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:26 -0700 (PDT)
+Received: by mail-pg1-f200.google.com with SMTP id 41be03b00d2f7-b4761f281a8so884316a12.0
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:33 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1755679645; x=1756284445; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1755679652; x=1756284452; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=sSeb7Z5Var7LnP6jF5ldv6kzbEeqeahVSNtorw9zTxU=;
-        b=athPiiJGA6+RNDA53os7y+fcU54dyrNmETXKgBqYAC5lSaA0WTc9PYmKM83fjDzDuM
-         u05VjE7rv3JPccX3/sZSY/U4QSUGnOn1b8VkaDmwvjOM51fguV4WTaN2V6Jz8pzN7EFp
-         vdPwjMKNEUEpeVzY4RJrrHtAL6MKiyzmyCpNs=
-X-Received: by 2002:a17:90b:5284:b0:324:e298:3eba with SMTP id 98e67ed59e1d1-324e29842b5mr2255038a91.7.1755679645289;
-        Wed, 20 Aug 2025 01:47:25 -0700 (PDT)
-X-Received: by 2002:a17:90b:5284:b0:324:e298:3eba with SMTP id 98e67ed59e1d1-324e29842b5mr2255005a91.7.1755679644685;
-        Wed, 20 Aug 2025 01:47:24 -0700 (PDT)
+        bh=TYrO7CtHiX+U4W3utEytf32ydj4SAMzUElkKGzu4Rx0=;
+        b=SObGmji244+/MdPl0aaPeSEDNdF2ZoJkYgq5Bla4POvxf2Dix57ZHdArSiRnsPaZaT
+         2bVZ8z0zYOgmcKyy+ACFlk7EE9DBjjC0SCuezjU6oaF/9qGAEiyvjTHvvvf7aJdtgRZ1
+         zqqQKbeneODexT2qnSaNJa4dg/NDfqgpZfsmg=
+X-Received: by 2002:a17:90b:5590:b0:321:a2d4:11b6 with SMTP id 98e67ed59e1d1-324e12d65c9mr3375940a91.12.1755679652175;
+        Wed, 20 Aug 2025 01:47:32 -0700 (PDT)
+X-Received: by 2002:a17:90b:5590:b0:321:a2d4:11b6 with SMTP id 98e67ed59e1d1-324e12d65c9mr3375902a91.12.1755679651563;
+        Wed, 20 Aug 2025 01:47:31 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-324e2643bafsm1604034a91.23.2025.08.20.01.47.22
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-324e2643bafsm1604034a91.23.2025.08.20.01.47.29
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Aug 2025 01:47:24 -0700 (PDT)
+        Wed, 20 Aug 2025 01:47:31 -0700 (PDT)
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To: linux-scsi@vger.kernel.org
 Cc: sathya.prakash@broadcom.com,
 	ranjan.kumar@broadcom.com,
 	prayas.patel@broadcom.com,
 	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 1/6] mpi3mr: Fix device loss during enclosure reboot due to zero link speed
-Date: Wed, 20 Aug 2025 14:11:33 +0530
-Message-Id: <20250820084138.228471-2-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 2/6] mpi3mr: Fix controller init failure on fault during queue creation
+Date: Wed, 20 Aug 2025 14:11:34 +0530
+Message-Id: <20250820084138.228471-3-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20250820084138.228471-1-chandrakanth.patil@broadcom.com>
 References: <20250820084138.228471-1-chandrakanth.patil@broadcom.com>
@@ -92,84 +92,46 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-During enclosure reboot or expander reset, firmware may report a link
-speed of 0 in "Device Add" events while the link is still coming up.
-The driver drops such devices, leaving them missing even after the link
-recovers.
+Firmware can enter a transient fault while creating operational queues.
+The driver fails the load immediately.
 
-Fix this by treating link speed 0 as 1.5 Gbps during device addition so
-the device is exposed to the OS. The actual link speed will be updated
-later when link-up events arrive.
+Add a retry loop that checks controller status and history bit after
+queue creation. If either indicates a fault, retry init up to a set
+limit before failing.
 
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_os.c        |  8 ++++----
- drivers/scsi/mpi3mr/mpi3mr_transport.c | 11 +++++++++--
- 2 files changed, 13 insertions(+), 6 deletions(-)
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index e467b56949e9..1582cdbc6630 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2049,8 +2049,8 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
- 	if (!fwevt->process_evt)
- 		goto evt_ack;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 0152d31d430a..124a0aa0ed9e 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2353,6 +2353,8 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
+ {
+ 	int retval = 0;
+ 	u16 num_queues = 0, i = 0, msix_count_op_q = 1;
++	u32 ioc_status;
++	enum mpi3mr_iocstate ioc_state;
  
--	dprint_event_bh(mrioc, "processing event(0x%02x) in the bottom half handler\n",
--	    fwevt->event_id);
-+	dprint_event_bh(mrioc, "processing event(0x%02x) -(0x%08x) in the bottom half handler\n",
-+			fwevt->event_id, fwevt->evt_ctx);
- 
- 	switch (fwevt->event_id) {
- 	case MPI3_EVENT_DEVICE_ADDED:
-@@ -3076,8 +3076,8 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
+ 	num_queues = min_t(int, mrioc->facts.max_op_reply_q,
+ 	    mrioc->facts.max_op_req_q);
+@@ -2408,6 +2410,14 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
+ 		retval = -1;
+ 		goto out_failed;
  	}
- 	if (process_evt_bh || ack_req) {
- 		dprint_event_th(mrioc,
--			"scheduling bottom half handler for event(0x%02x),ack_required=%d\n",
--			evt_type, ack_req);
-+		    "scheduling bottom half handler for event(0x%02x) - (0x%08x), ack_required=%d\n",
-+		    evt_type, le32_to_cpu(event_reply->event_context), ack_req);
- 		sz = event_reply->event_data_length * 4;
- 		fwevt = mpi3mr_alloc_fwevt(sz);
- 		if (!fwevt) {
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-index c8d6ced5640e..d70f002d6487 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
-@@ -413,9 +413,11 @@ static void mpi3mr_remove_device_by_sas_address(struct mpi3mr_ioc *mrioc,
- 			 sas_address, hba_port);
- 	if (tgtdev) {
- 		if (!list_empty(&tgtdev->list)) {
--			list_del_init(&tgtdev->list);
- 			was_on_tgtdev_list = 1;
--			mpi3mr_tgtdev_put(tgtdev);
-+			if (tgtdev->state == MPI3MR_DEV_REMOVE_HS_STARTED) {
-+				list_del_init(&tgtdev->list);
-+				mpi3mr_tgtdev_put(tgtdev);
-+			}
- 		}
- 	}
- 	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
-@@ -2079,6 +2081,8 @@ int mpi3mr_expander_add(struct mpi3mr_ioc *mrioc, u16 handle)
- 				link_rate = (expander_pg1.negotiated_link_rate &
- 				    MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
- 				    MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT;
-+				if (link_rate < MPI3_SAS_NEG_LINK_RATE_1_5)
-+					link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
- 				mpi3mr_update_links(mrioc, sas_address_parent,
- 				    handle, i, link_rate, hba_port);
- 			}
-@@ -2388,6 +2392,9 @@ int mpi3mr_report_tgtdev_to_sas_transport(struct mpi3mr_ioc *mrioc,
- 
- 	link_rate = mpi3mr_get_sas_negotiated_logical_linkrate(mrioc, tgtdev);
- 
-+	if (link_rate < MPI3_SAS_NEG_LINK_RATE_1_5)
-+		link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
-+
- 	mpi3mr_update_links(mrioc, sas_address_parent, tgtdev->dev_handle,
- 	    parent_phy_number, link_rate, hba_port);
- 
++	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
++	ioc_state = mpi3mr_get_iocstate(mrioc);
++	if ((ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) ||
++	    ioc_state != MRIOC_STATE_READY) {
++		mpi3mr_print_fault_info(mrioc);
++		retval = -1;
++		goto out_failed;
++	}
+ 	mrioc->num_op_reply_q = mrioc->num_op_req_q = i;
+ 	ioc_info(mrioc,
+ 	    "successfully created %d operational queue pairs(default/polled) queue = (%d/%d)\n",
 -- 
 2.43.5
 
