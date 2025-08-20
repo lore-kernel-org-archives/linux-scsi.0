@@ -1,84 +1,85 @@
-Received: from mail-pf1-f225.google.com (mail-pf1-f225.google.com [209.85.210.225])
+Received: from mail-pl1-f225.google.com (mail-pl1-f225.google.com [209.85.214.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A86612D94BA
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 08:47:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.225
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 874451990B7
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 08:47:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755679663; cv=none; b=E7y2+9k2fprJmdJyxWuiT5R9n7hC7bP+m0zjQ+D0EF+bXETCf7vhr3wnWsGlUPCm2pnhOUfLotvd+g4SlnbQc715CJX4nVRy0BvNM3MmnMZXMDede9TYUh0wbVBk7DsN4bzZK3v7lfHgZeLpoQyo4z6UagRhegyxKhzNseo/tSU=
+	t=1755679668; cv=none; b=lXiiXx+9QY6akvgQ7oflbHpen0OrJfEDkLbwdoKOlCdvZrQ1N1wGZ1PV1RyG10af9GVTdTl36v020ALGWEInRB5hXrJfaGucxtfmgKD61lzPzXW6gj5ZbhZJJ7KA4gs4exfmSMbFtWS3ZF6S0h9vQ3JJpVS4EpSXjTDmzNLpGzM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755679663; c=relaxed/simple;
-	bh=1+y/YNT1GohaTiaydZPin3/P+vTl88MpKE1GrA3lX7c=;
+	s=arc-20240116; t=1755679668; c=relaxed/simple;
+	bh=k8nxU+HdtiVScXfeW4yg+T5nSeTmsh4+1sOUKUZ4GBs=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=Qm1BjlE9Pe+P3GHWYg3gL85PROT1FRTuwldTw6fw9BG/Ft3/aF2aExTIpxqUfDzjk6Kr7/GMGxdGiAf9caI19RFHLYK1p2eWtjYcKuCjy0zrvzSRWyOhXvs1/RLP9zCo4tFmeLacX+l5Zebxc6BrSlWHcmIAFUW90sN047S8C0o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=Uq7OqeeX; arc=none smtp.client-ip=209.85.210.225
+	 MIME-Version; b=nGoDVMD88oGHbP/sp63fIpLq7lnjhTZ6hs+c0e8i+StcljeFQHjnmiTYUEOCFQkRGvAq6jHAU08aOiwqrZhAVIAJqIFNRvIPV2Gv8Kkr628/OJn1bTv8bKnAYzKfp4LMhICMpSxPwLdjkDPPXcpQvifR6+ZMDRugN6Enfw9Pkwg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=FCbCntfK; arc=none smtp.client-ip=209.85.214.225
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="Uq7OqeeX"
-Received: by mail-pf1-f225.google.com with SMTP id d2e1a72fcca58-76e2e89bebaso4595484b3a.1
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:41 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="FCbCntfK"
+Received: by mail-pl1-f225.google.com with SMTP id d9443c01a7336-24458242b33so59050415ad.3
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:47 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755679661; x=1756284461;
+        d=1e100.net; s=20230601; t=1755679667; x=1756284467;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=sVJn5sdsD9oK9TbPSPWwes61frSKyr49J6+e6eRr9Rk=;
-        b=ZDTds1AXtMH3b9nvEI8EHFoGDWywH/qIRFmOFB2lJUlgKVQqFW+ynjyLFYsKUE7E5X
-         S73ZJIEvpLzv/u88GpCpvmYLpGXtIUI8sTWw9WZROh57mXzgk2qTFvKDV+4RlEdRzp5X
-         xJgzAu50dNJrYOoM2a0VDDrvT+p5fZFrB7ko0a1KuOAGB6VrIGN29Q3FTh/vXUDk+VSA
-         2ubUYwHrFZuze9KQFJesmwMftuv0oqv7eYy/Jtg7Jq1MKRd2oC+xfKfAwjp3hKJNGa45
-         yM1vKQOghOIGlP0TyJvLpKeFhkysxnWM35RcgbLOg+nkNI7EEssuFWVTZTjjUnmNr7Ag
-         6vfw==
-X-Gm-Message-State: AOJu0Yw7C7D/2BJkGWsmdAOqQpGz/vK/cgXUS74D0gtYUm+BkPLak/Ci
-	ltTtA1aEMlxY4H3FV3MdV1kieHRSaKItXUM3QmVtewoYVrL7//7QEv0Wx39X0NZLw3T2jACWaQm
-	unRsjQsDN5NR3DLTgYvHS52TDFiEySLtevFLSeAunWiVMvHzS/ncpohc+DTwjtKu2or7U7I/8eg
-	9t4wbx0amoq3qv7sVdfOGHOx8iY7E7w+RES4eAWih4pnRrSMBs7sOyr3eryWO8pzrj8YVXs6VSp
-	SZoNiCo0GkXBg4qRYwT6HEG
-X-Gm-Gg: ASbGncvidonC/Sx0yMnplvLyioKmnqW4cNMiR44eaQpL0lj0byw6dZK+kkYuRH8PADo
-	x0y7RcASQF1R3wl/IAZxI4L2ROJhZvKALZvd6nRujqd8PJgBKQrHhYYeeFO8slp2lEZcjiH5TMr
-	zoSiXJUvk5Y9RnHYoi9i0VyQVcVFyVfDG7DY1HSWALLe406KhmKNS5zHvfEuGb0FlybNqhKhANI
-	f84m75uKr/iLwKaFNc7lVOu7VvpfpccAXon0OJ2vEpeFyzhFRWgKK5RN562R1XlO7AFxuPjHJii
-	0cMOUVZh3Cxv3pqIQiZmOMP+ymYTohjrvQu0f4pHnWW7UHulv3AzKSzUT/7L6+hmfanM9/3JKuY
-	5KilXq/oOAHYXlQBpJWlbqK0ZhQ/P+14=
-X-Google-Smtp-Source: AGHT+IHCO6D8oulf+ql4VBPfabK5xqar4qymBOOO70fUJrmurZKHAe5MODUV5eXG6/vp2REO1iYXRsQrzFwB
-X-Received: by 2002:a17:902:ec8c:b0:245:f7b9:3895 with SMTP id d9443c01a7336-245f7b93a8fmr2503795ad.12.1755679660820;
-        Wed, 20 Aug 2025 01:47:40 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com ([144.49.247.127])
-        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-245ed32cf65sm1768095ad.7.2025.08.20.01.47.40
+        bh=2try8nbfcpWuOsjdMg7dDEuSkRMMVSf5h/THxqtQ0Lk=;
+        b=f2bUtMi066SusBOdSjgXDCwQXS30xfsX9BV0JsC4KnMsN7ixEtpZJ0K0g1+hfb1mgL
+         EZsrmoUjWXFU7IwlJM4AQN4B7WXx3h1ZgimdlqAPOvnaGzB94lRRN6J+Bf6iRTHRJ0K5
+         5W+o6fiyyr4XZW2yQTuFC2QamNcpldEgjL//1jp8OQ/E5qksXpT6sCD+xctP3szs/EXt
+         GFRYAWql36KlFAdAmzwofhqgNlYRrB+3WtTqvxZlu2/SFdLIL3ZDqRzqLuUvxfLh7OV7
+         XBruLEtSJRH320Lt4q6rkwIkclm2fSpH6zBa8VYIzEONGsJ7VSZZpLgrrUCCm+TPG3XB
+         32YQ==
+X-Gm-Message-State: AOJu0YzRoBbQlqBRt4RNpMeIlUhonsxNxkQjIqC28Nm96D4zFn4DypYk
+	CuDlFbbXL1iIZLN31H22BVnAt+4gJD4r2wzoa2VExQDUlFO55GXmWpNlYrvOSKt5xyk0R8F66zs
+	EwK+InGGv4IhIYVOuGEim3KrLQ3M7+sKUQt4hJfvVKG23lk7J95Eet5MYyvg3JzNKNhHs/V8qMT
+	tkLv/UTCQg2OCQ4yDL6RxfVksnmERyiDKlRqR8GvkVnvtVJD7mV4fXvN2HLNLRAVk71g0nDHWGg
+	B3/OaJX+u4YiTFACO3gGgAT
+X-Gm-Gg: ASbGnctFuTD/uDEig4iOko2pW5z5sfIKFVi9XVNA2BfEhSU5O9wRieL+dbg7nb23T3O
+	anduWbpY74jkPI0oXlPfRHgh8n8ILAvcCoqxqHaQbn9oqKKhnRlk+g3jCrvN+1vgVAmHlbWHoGl
+	PvbSWcXJSQAS+C3nre2+gesBkzr0o/VbwQB7s5/XEB51aWLw80SrxgOq2aHtYezoAfqTWOOlm5U
+	pzcG1lvZWdlpVRP1E2v6nYGS3xxROGlGQVwjuQ8O8eODN8gzZH1TCWZTmHQxbePPBaegmKZsMoi
+	lI5wVPHD2zgcZYQ5W53ohqAoTmaSXjlzhJUEbcoP5oJpVM5VojwK99DdvR2YPWTJJ6AFU4Iflwn
+	QLv4j2nYKJRyNXFNHYYWFYkS9xmNQXJdT87Dh3RzlRWLZWo9+fRb9e4W/rplcVFbuR7umVmkTs0
+	xxv8Bbc+6GSg==
+X-Google-Smtp-Source: AGHT+IHxzklo8yMaN1WmIIylhpywRiOgctDWP/3YWKwQFhnDvpMUEmcLS2bqY8Il0s2S+ETxdGNyykH58yAl
+X-Received: by 2002:a17:902:ccd2:b0:240:981d:a4f5 with SMTP id d9443c01a7336-245ef258899mr21495965ad.42.1755679666715;
+        Wed, 20 Aug 2025 01:47:46 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-123.dlp.protect.broadcom.com. [144.49.247.123])
+        by smtp-relay.gmail.com with ESMTPS id d9443c01a7336-245ed47cb56sm1924515ad.49.2025.08.20.01.47.46
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 20 Aug 2025 01:47:40 -0700 (PDT)
+        Wed, 20 Aug 2025 01:47:46 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pj1-f72.google.com with SMTP id 98e67ed59e1d1-32326779c67so5996189a91.1
-        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:39 -0700 (PDT)
+Received: by mail-pj1-f70.google.com with SMTP id 98e67ed59e1d1-32326bd712cso5833756a91.2
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:45 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1755679658; x=1756284458; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1755679664; x=1756284464; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=sVJn5sdsD9oK9TbPSPWwes61frSKyr49J6+e6eRr9Rk=;
-        b=Uq7OqeeXJnQE1UrCgj3FjyX7g4LGAsjHFfMJc0pNjKnIR9MFh75dLel5b0SOyU7qR9
-         ABJSZJU5RJbotc02MrwXS2SDrg3XTZyY3+A4P6pfxvPvucFr9nlhQnqXIPbMsJh6dIEL
-         9oM13lTkyBg9SLHXr/UIce+LFgOhkhFUMPrK0=
-X-Received: by 2002:a17:90a:e7cf:b0:321:c81b:29cd with SMTP id 98e67ed59e1d1-324e12e819dmr2554887a91.1.1755679658513;
-        Wed, 20 Aug 2025 01:47:38 -0700 (PDT)
-X-Received: by 2002:a17:90a:e7cf:b0:321:c81b:29cd with SMTP id 98e67ed59e1d1-324e12e819dmr2554863a91.1.1755679657867;
-        Wed, 20 Aug 2025 01:47:37 -0700 (PDT)
+        bh=2try8nbfcpWuOsjdMg7dDEuSkRMMVSf5h/THxqtQ0Lk=;
+        b=FCbCntfK5xcTYwKnKADYKZ5CyaeUfQ8NswdRgHf9Frvac1VuNIespJeStF9680tR4z
+         kN1n8XyO7CUi28Gbeke8REeryonrBNodH3cCDogs32JLzZ2+lKdyRvKjWR9h2r/tcm4N
+         hcSaUsTDhMcbEso9JtLloslG/FGkIrj2dKoQ8=
+X-Received: by 2002:a17:90b:4a:b0:321:abd4:b108 with SMTP id 98e67ed59e1d1-324e1334fe2mr3582536a91.12.1755679664139;
+        Wed, 20 Aug 2025 01:47:44 -0700 (PDT)
+X-Received: by 2002:a17:90b:4a:b0:321:abd4:b108 with SMTP id 98e67ed59e1d1-324e1334fe2mr3582498a91.12.1755679663572;
+        Wed, 20 Aug 2025 01:47:43 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-324e2643bafsm1604034a91.23.2025.08.20.01.47.35
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-324e2643bafsm1604034a91.23.2025.08.20.01.47.41
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 20 Aug 2025 01:47:37 -0700 (PDT)
+        Wed, 20 Aug 2025 01:47:43 -0700 (PDT)
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 To: linux-scsi@vger.kernel.org
 Cc: sathya.prakash@broadcom.com,
 	ranjan.kumar@broadcom.com,
 	prayas.patel@broadcom.com,
 	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Subject: [PATCH 3/6] mpi3mr: Fix I/O failures during controller reset
-Date: Wed, 20 Aug 2025 14:11:35 +0530
-Message-Id: <20250820084138.228471-4-chandrakanth.patil@broadcom.com>
+Subject: [PATCH 4/6] mpi3mr: Update MPI headers to revision 37
+Date: Wed, 20 Aug 2025 14:11:36 +0530
+Message-Id: <20250820084138.228471-5-chandrakanth.patil@broadcom.com>
 X-Mailer: git-send-email 2.31.1
 In-Reply-To: <20250820084138.228471-1-chandrakanth.patil@broadcom.com>
 References: <20250820084138.228471-1-chandrakanth.patil@broadcom.com>
@@ -91,65 +92,123 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-I/Os can race with controller reset and fail.
+Sync MPI header files to revision 37 to match current firmware/spec
+definitions.
 
-Block requests at the mid layer when reset starts using
-scsi_host_block(), and resume with scsi_host_unblock() after reset
-completes.
+No functional change.
 
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +++
- drivers/scsi/mpi3mr/mpi3mr_os.c | 2 ++
- 2 files changed, 5 insertions(+)
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 38 ++++++++++++++++++++++-
+ drivers/scsi/mpi3mr/mpi/mpi30_pci.h       |  2 ++
+ drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |  1 +
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h |  2 +-
+ 4 files changed, 41 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 124a0aa0ed9e..8fe6e0bf342e 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -5430,6 +5430,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	    mpi3mr_reset_rc_name(reset_reason));
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+index 96401eb7e231..8c8bfbbdd34e 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h
+@@ -322,6 +322,9 @@ struct mpi3_man6_gpio_entry {
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_MASK                       (0x01)
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_EDGE                       (0x00)
+ #define MPI3_MAN6_GPIO_EXTINT_PARAM1_FLAGS_TRIGGER_LEVEL                      (0x01)
++#define MPI3_MAN6_GPIO_OVER_TEMP_PARAM1_LEVEL_WARNING                         (0x00)
++#define MPI3_MAN6_GPIO_OVER_TEMP_PARAM1_LEVEL_CRITICAL                        (0x01)
++#define MPI3_MAN6_GPIO_OVER_TEMP_PARAM1_LEVEL_FATAL                           (0x02)
+ #define MPI3_MAN6_GPIO_PORT_GREEN_PARAM1_PHY_STATUS_ALL_UP                    (0x00)
+ #define MPI3_MAN6_GPIO_PORT_GREEN_PARAM1_PHY_STATUS_ONE_OR_MORE_UP            (0x01)
+ #define MPI3_MAN6_GPIO_CABLE_MGMT_PARAM1_INTERFACE_MODULE_PRESENT             (0x00)
+@@ -1250,6 +1253,37 @@ struct mpi3_io_unit_page17 {
+ 	__le32                             current_key[];
+ };
+ #define MPI3_IOUNIT17_PAGEVERSION		(0x00)
++struct mpi3_io_unit_page18 {
++	struct mpi3_config_page_header		header;
++	u8					flags;
++	u8					poll_interval;
++	__le16					reserved0a;
++	__le32					reserved0c;
++};
++
++#define MPI3_IOUNIT18_PAGEVERSION                                   (0x00)
++#define MPI3_IOUNIT18_FLAGS_DIRECTATTACHED_ENABLE                   (0x01)
++#define MPI3_IOUNIT18_POLLINTERVAL_DISABLE                          (0x00)
++#ifndef MPI3_IOUNIT19_DEVICE_MAX
++#define MPI3_IOUNIT19_DEVICE_MAX                                    (1)
++#endif
++struct mpi3_iounit19_device {
++	__le16                             temperature;
++	__le16                             dev_handle;
++	__le16                             persistent_id;
++	__le16                             reserved06;
++};
++
++#define MPI3_IOUNIT19_DEVICE_TEMPERATURE_UNAVAILABLE                (0x8000)
++struct mpi3_io_unit_page19 {
++	struct mpi3_config_page_header		header;
++	__le16					num_devices;
++	__le16					reserved0a;
++	__le32					reserved0c;
++	struct mpi3_iounit19_device		device[MPI3_IOUNIT19_DEVICE_MAX];
++};
++
++#define MPI3_IOUNIT19_PAGEVERSION                                   (0x00)
+ struct mpi3_ioc_page0 {
+ 	struct mpi3_config_page_header         header;
+ 	__le32                             reserved08;
+@@ -2356,7 +2390,9 @@ struct mpi3_device0_vd_format {
+ 	__le16     io_throttle_group;
+ 	__le16     io_throttle_group_low;
+ 	__le16     io_throttle_group_high;
+-	__le32     reserved0c;
++	u8         vd_abort_to;
++	u8         vd_reset_to;
++	__le16     reserved0e;
+ };
+ #define MPI3_DEVICE0_VD_STATE_OFFLINE                       (0x00)
+ #define MPI3_DEVICE0_VD_STATE_PARTIALLY_DEGRADED            (0x01)
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_pci.h b/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
+index 7c15e5851ce4..4eeb11c3c73e 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_pci.h
+@@ -9,9 +9,11 @@
+ #define MPI3_NVME_ENCAP_CMD_MAX               (1)
+ #endif
+ #define MPI3_NVME_FLAGS_FORCE_ADMIN_ERR_REPLY_MASK      (0x0002)
++#define MPI3_NVME_FLAGS_FORCE_ADMIN_ERR_REPLY_SHIFT     (1)
+ #define MPI3_NVME_FLAGS_FORCE_ADMIN_ERR_REPLY_FAIL_ONLY (0x0000)
+ #define MPI3_NVME_FLAGS_FORCE_ADMIN_ERR_REPLY_ALL       (0x0002)
+ #define MPI3_NVME_FLAGS_SUBMISSIONQ_MASK                (0x0001)
++#define MPI3_NVME_FLAGS_SUBMISSIONQ_SHIFT               (0)
+ #define MPI3_NVME_FLAGS_SUBMISSIONQ_IO                  (0x0000)
+ #define MPI3_NVME_FLAGS_SUBMISSIONQ_ADMIN               (0x0001)
  
- 	mrioc->device_refresh_on = 0;
-+	scsi_block_requests(mrioc->shost);
- 	mrioc->reset_in_progress = 1;
- 	mrioc->stop_bsgs = 1;
- 	mrioc->prev_reset_result = -1;
-@@ -5538,6 +5539,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	if (!retval) {
- 		mrioc->diagsave_timeout = 0;
- 		mrioc->reset_in_progress = 0;
-+		scsi_unblock_requests(mrioc->shost);
- 		mrioc->pel_abort_requested = 0;
- 		if (mrioc->pel_enabled) {
- 			mrioc->pel_cmds.retry_count = 0;
-@@ -5562,6 +5564,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 		mrioc->device_refresh_on = 0;
- 		mrioc->unrecoverable = 1;
- 		mrioc->reset_in_progress = 0;
-+		scsi_unblock_requests(mrioc->shost);
- 		mrioc->stop_bsgs = 0;
- 		retval = -1;
- 		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 1582cdbc6630..5516ac62a506 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_os.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2866,12 +2866,14 @@ static void mpi3mr_preparereset_evt_th(struct mpi3mr_ioc *mrioc,
- 		    "prepare for reset event top half with rc=start\n");
- 		if (mrioc->prepare_for_reset)
- 			return;
-+		scsi_block_requests(mrioc->shost);
- 		mrioc->prepare_for_reset = 1;
- 		mrioc->prepare_for_reset_timeout_counter = 0;
- 	} else if (evtdata->reason_code == MPI3_EVENT_PREPARE_RESET_RC_ABORT) {
- 		dprint_event_th(mrioc,
- 		    "prepare for reset top half with rc=abort\n");
- 		mrioc->prepare_for_reset = 0;
-+		scsi_unblock_requests(mrioc->shost);
- 		mrioc->prepare_for_reset_timeout_counter = 0;
- 	}
- 	if ((event_reply->msg_flags & MPI3_EVENT_NOTIFY_MSGFLAGS_ACK_MASK)
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_sas.h b/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
+index 4a93c67d335f..190b06508b00 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_sas.h
+@@ -11,6 +11,7 @@
+ #define MPI3_SAS_DEVICE_INFO_STP_INITIATOR          (0x00000010)
+ #define MPI3_SAS_DEVICE_INFO_SMP_INITIATOR          (0x00000008)
+ #define MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_MASK       (0x00000007)
++#define MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_SHIFT      (0)
+ #define MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_NO_DEVICE  (0x00000000)
+ #define MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_END_DEVICE (0x00000001)
+ #define MPI3_SAS_DEVICE_INFO_DEVICE_TYPE_EXPANDER   (0x00000002)
+diff --git a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
+index 5c522e2531c3..28ab2efb3baa 100644
+--- a/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
++++ b/drivers/scsi/mpi3mr/mpi/mpi30_transport.h
+@@ -18,7 +18,7 @@ union mpi3_version_union {
+ 
+ #define MPI3_VERSION_MAJOR                                              (3)
+ #define MPI3_VERSION_MINOR                                              (0)
+-#define MPI3_VERSION_UNIT                                               (35)
++#define MPI3_VERSION_UNIT                                               (37)
+ #define MPI3_VERSION_DEV                                                (0)
+ #define MPI3_DEVHANDLE_INVALID                                          (0xffff)
+ struct mpi3_sysif_oper_queue_indexes {
 -- 
 2.43.5
 
