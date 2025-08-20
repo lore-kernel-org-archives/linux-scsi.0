@@ -1,108 +1,142 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f43.google.com (mail-wm1-f43.google.com [209.85.128.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 112FE2629F
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 17:53:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EED4924DCE8;
+	Wed, 20 Aug 2025 17:57:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755712422; cv=none; b=Ivy4tNJxHcLGS6pPdzBgoPhaR9JK0ykUsgIOX8eEbI/tMHaTo9ctskzyb8rARhPBVHLak4OvxM6vHm88wO9fGu0bAhG4nuW8Y7BpkXanCsKaPzjqM/HBPXKMzvkviW6yJeci4yNF4qKcRxy/IwZQlzyquEVgN3x+OlwvSizdZWU=
+	t=1755712663; cv=none; b=f5tcPswx4EoK04u44inaO6o5Y1XBCs8pjCVT47aQhHlfEpkFyIFnVlQL9NcTE5vtbVHVEBBwEsQtS8V/Cx15CwCX8dy0bXNzwHlnSVGnEPAFJ9EA+nhNKOYMKXiqeeMgD4xwl4/Ni2v/s4hIFVG0dRjAC6o20grKdQ54BHKebPw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755712422; c=relaxed/simple;
-	bh=rslm4Ed01UwYHA4SPAVx87QAUDp9j7NTOp2Xg8efnxY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VG6IKgWO/p+5VzZbfjk0+7mp5qtOetDjufXPrLuVqRF39fX3TGXLbIjJFDjvQaj0l1jcjvNFeUVUngrrO/KX1OFOA+UJqaf5R5yvWgDVzOj22nV3vI0t8veDsRuN2gJwMQeg7l8UQUr61ce+1vbHoK0nZPfcR8atruI3wXAQNHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Zo4hJSAr; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755712663; c=relaxed/simple;
+	bh=YgOyd1md4yh3PvGF0lWJK+9ZhKIDFB441+Lc7xSmBuo=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ZGp4DY6GhH2ntpr/ZldQD1lPNpKsV0jRY3yVF5mKMp9mbH46MrTFe37c3k+wYaidWy5jIXJ4G23ihWDz4u9dwFq7qSMtp8y0Zhcke4hmwULu8toxlhZzR6/rwVs2Q6hK2Dfo9B8Jk+BryIgBNj04HvKmrwO3c4Qk6XMpdcBb8Xo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nKhvLx61; arc=none smtp.client-ip=209.85.128.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Zo4hJSAr"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c6YwN06tVzm174N;
-	Wed, 20 Aug 2025 17:53:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755712418; x=1758304419; bh=rslm4Ed01UwYHA4SPAVx87QA
-	UDp9j7NTOp2Xg8efnxY=; b=Zo4hJSArjlCVEipaqroMaEo2GixEjCrxq0+dF4Pk
-	GM1cIoutEP8Uc3E1z8+M9pRukyHTulJVnqv0MbCd8eMzuIemlZFAcbdiDERwxPlk
-	951UwwzzFTDYrHH5SOiuOxXPaOBxYp9aYlGQu0V/zeJq+bzywncS3F4IGuIZytrZ
-	0MgVWBQk8xU87Jv2DOMNwYS5z+fC2HHroMwybiN5HbgJggeb11eC3jg0uJvtNLbX
-	fpb7sU3klyqJTPO+qJzMSqTs7cOcA3lhpxFYY0XvulFtkrKM3xUOxZpHu+R93EPh
-	mYc9EF5YegSQCGIok69pGhopYd9tw5+VjnHQPEPbPjh64Q==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Df13wAHc-TWQ; Wed, 20 Aug 2025 17:53:38 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c6YwG2skkzm174J;
-	Wed, 20 Aug 2025 17:53:33 +0000 (UTC)
-Message-ID: <0acda254-32a6-405b-a2d0-eef2401dbd83@acm.org>
-Date: Wed, 20 Aug 2025 10:53:32 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nKhvLx61"
+Received: by mail-wm1-f43.google.com with SMTP id 5b1f17b1804b1-45a1b0d224dso765655e9.3;
+        Wed, 20 Aug 2025 10:57:41 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1755712660; x=1756317460; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=MNRyeTj6JP2zchDiFIJuoMZDsJl1Picm6cQPtxKj9O8=;
+        b=nKhvLx617L4HNBrcyQHv3zapQ8IH0UYAnsNP35GosiTNazq3sanXj2xSv0c2nCQvEa
+         lHOoDcWuUQmofkDAKNmuyxA46lCKQwPU3uLQUosJw3DpVKPgqIfNOHI1qWzPmIxKS1Y4
+         ijaBnmumJyAqeZkmRLknM6tC8++2BOYps8U5QSbTkphJutLMlMvuxKiiwde3nBILSDWd
+         BaNkFTPP6fblHcpYSt6p7ewjcuTjZUCtGTpQe7hOlkuee55IjFRlPCKlm+lwSwLoXNeQ
+         tPNT0VXYL2hgUo7KZXr2HjpRYHKkXt1NMf88NLDXJ0J1TbHY4xWds7jz5EuqxLDAcecJ
+         OnpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755712660; x=1756317460;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=MNRyeTj6JP2zchDiFIJuoMZDsJl1Picm6cQPtxKj9O8=;
+        b=ew73abhY8yuppELxzQcLntbjziZ42cSSq6gT807ZNFxD7umKqkUd84y7LfW5o0NlD5
+         U7jedZ8dziv8JT8iC7tzQm75tP0gxMmGmwtsSGafs1sK800Owux/rMkLqaz7dledCn61
+         kLLRzFiH9LDHRrSBg5ksgzoI/fhAkfh9qEGxahDtHmuWrcOsLWK92TZTkXo5YC51Ftja
+         xZ1Osi0pacIhFlvEFahJ6FRNSWJrkivvt0vth76mRAkAekdUMsaC/PyCE49/jKWcNEww
+         6Ly3EnKtKo8fq4sXpdMnqggBDcJfGNwnEgDdOjgw/2tefTZY1jCjoCIqYshDBI1Srzu4
+         zFFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXjydz2yaKFW8lqTF8hw4U1Udq5msQjTMXS1H7tLMKR/OsalGWdS3QdXMZYyziPWQXfzjDQrdpdVd0Mog==@vger.kernel.org, AJvYcCXvFGgPnsLYCV7B+geJd/XcyMgUgHhq31RrKHA5daOsHvppkLoxhVRLV/BNAqDPaEwyrWFy8AH3mqXPpTY=@vger.kernel.org
+X-Gm-Message-State: AOJu0YzWykIujbuOXmxR3gOD6OU0UBpewZV+r+CGHn1O/hr1JEE5f/Nq
+	5a6byRJQ+GttJ+zR5Mpzh2GV/BQ8lgDRTrepBoBXx95iEGFif3ARE7jS
+X-Gm-Gg: ASbGncuzYKt/eetifQI3kU8vCGc5wUidfMixxezeV4EWDgt4aJEiOOddEzRlYV0F0Qh
+	4lKZxLQmKuL3U3bEUObO6cWXVYTPJidMVnGL7k2J1rRsrBhl1XOytxLQfSOojT7k/tllLYAZ3Fh
+	cbcw6rpgV02n4/gFAgJEZ4zXUPE5r0fatlVnGAqonhwuMczXnDEM2BpK4iGpiWI4WTA1VqGygOo
+	Tl9QGAlDCHG0t9bBTbqKREbHbbTBHbDuyzhno47QLxR3gcebF+ao746nhr2WGQx1gq9LkNwn+hN
+	dVUfM95Qt4Kqz0HxCjA8O63hqXzw40cJdUX4NTYWUlHDmgUQbLgcFhsgUxBCj888bwleac0JvHo
+	j2ucADfbiPZVWx7e7SvB+6BvdDsnAUWoci4d9cdZYF5yK6RHDgSUacLJmS3BbfYNE
+X-Google-Smtp-Source: AGHT+IGO9cP1IoD1trDUUw+EfjPUt69BwvZtgepLa76EO/eu7DfLC5c6gd+ECukky3h1zGOw8/4dVw==
+X-Received: by 2002:a05:600c:1c9d:b0:45b:43cc:e559 with SMTP id 5b1f17b1804b1-45b4bdb5f70mr10581205e9.36.1755712659923;
+        Wed, 20 Aug 2025 10:57:39 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3c0771c1aa3sm8147073f8f.32.2025.08.20.10.57.39
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Aug 2025 10:57:39 -0700 (PDT)
+Date: Wed, 20 Aug 2025 18:57:38 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Qianfeng Rong <rongqianfeng@vivo.com>
+Cc: Don Brace <don.brace@microchip.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, "open list:HEWLETT-PACKARD SMART ARRAY RAID
+ DRIVER (hpsa)" <storagedev@microchip.com>, "open list:HEWLETT-PACKARD SMART
+ ARRAY RAID DRIVER (hpsa)" <linux-scsi@vger.kernel.org>, open list
+ <linux-kernel@vger.kernel.org>
+Subject: Re: [PATCH 2/6] scsi: hpsa: use min()/min_t() to improve code
+Message-ID: <20250820185738.098a49f9@pumpkin>
+In-Reply-To: <deee5abe-1992-426d-a62d-51249014bdc9@vivo.com>
+References: <20250815121609.384914-1-rongqianfeng@vivo.com>
+	<20250815121609.384914-3-rongqianfeng@vivo.com>
+	<20250820130237.111cc3a7@pumpkin>
+	<deee5abe-1992-426d-a62d-51249014bdc9@vivo.com>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 03/30] scsi: core: Do not allocate a budget token for
- reserved commands
-To: Hannes Reinecke <hare@suse.de>, John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250811173634.514041-1-bvanassche@acm.org>
- <20250811173634.514041-4-bvanassche@acm.org>
- <f2d65247-ad6b-44ea-a687-808d8c398afc@suse.de>
- <30b475dc-3287-4bcb-99be-f2b6649217a5@oracle.com>
- <004de5e3-ad51-4a49-b7c7-e418587d3ef7@suse.de>
- <3a1f6959-8d74-4bb9-8e4b-31b5105734f9@acm.org>
- <36c7bf20-7dd4-4e19-8bc0-461a9f8a4228@suse.de>
- <58622f7d-a075-40b8-a2ea-190058d2737e@acm.org>
- <66a096d7-8ed1-4a08-a207-533f945f6784@suse.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <66a096d7-8ed1-4a08-a207-533f945f6784@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On 8/19/25 11:54 PM, Hannes Reinecke wrote:
-> On 8/19/25 21:49, Bart Van Assche wrote:
->> On 8/18/25 11:34 PM, Hannes Reinecke wrote:
->>> and if we move TMFs and all non-I/O commands to reserved commands
->>> cmd_per_lun will only be applicable to I/O commands.
- >>
->> Whether or not reserved commands should be used for allocating TMFs
->> depends on the SCSI transport. As an example, the approach mentioned
->> above is not appropriate for the UFS driver. The UFS driver assigns
->> integers in the range 0..31 to TMFs. These integers are passed directly
->> to the UFS host controller. Hence, allocating TMFs as reserved commands
->> from the same tag set as SCSI commands is not appropriate for the UFS
->> host controller driver.
->>
-> So TMFs use a separate tagset than normal commands?
-> IE can I submit TMF tag '3' when I/O tag '3' is currently
-> in flight?
+On Wed, 20 Aug 2025 20:50:08 +0800
+Qianfeng Rong <rongqianfeng@vivo.com> wrote:
 
-Yes, that's correct. This follows directly from the UFSHCI
-specification. In legacy mode (which is easier to explain than MCQ
-mode), there is one bitwise doorbell register for regular commands
-(UTRLDBR = UTP Transfer Request List DoorBell Register) and another
-bitwise doorbell register for task management functions (UTMRLDBR = UTP
-Task Management Request List DoorBell Register). A command is submitted
-by setting the appropriate bit in the UTRLDBR register. A TMF is
-submitted by setting the appropriate bit in the UTMRLDBR register. This
-is why the UFS driver allocates two tag sets - one for regular commands
-and another for TMFs.
+> =E5=9C=A8 2025/8/20 20:02, David Laight =E5=86=99=E9=81=93:
+> > [You don't often get email from david.laight.linux@gmail.com. Learn why=
+ this is important at https://aka.ms/LearnAboutSenderIdentification ]
+> >
+> > On Fri, 15 Aug 2025 20:16:04 +0800
+> > Qianfeng Rong <rongqianfeng@vivo.com> wrote:
+> > =20
+> >> Use min()/min_t() to reduce the code in complete_scsi_command() and
+> >> hpsa_vpd_page_supported(), and improve readability.
+> >>
+> >> Signed-off-by: Qianfeng Rong <rongqianfeng@vivo.com>
+> >> ---
+> >>   drivers/scsi/hpsa.c | 11 +++--------
+> >>   1 file changed, 3 insertions(+), 8 deletions(-)
+> >>
+> >> diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+> >> index c73a71ac3c29..95dfcbac997f 100644
+> >> --- a/drivers/scsi/hpsa.c
+> >> +++ b/drivers/scsi/hpsa.c
+> >> @@ -2662,10 +2662,8 @@ static void complete_scsi_command(struct Comman=
+dList *cp)
+> >>        case CMD_TARGET_STATUS:
+> >>                cmd->result |=3D ei->ScsiStatus;
+> >>                /* copy the sense data */
+> >> -             if (SCSI_SENSE_BUFFERSIZE < sizeof(ei->SenseInfo))
+> >> -                     sense_data_size =3D SCSI_SENSE_BUFFERSIZE;
+> >> -             else
+> >> -                     sense_data_size =3D sizeof(ei->SenseInfo);
+> >> +             sense_data_size =3D min_t(unsigned long, SCSI_SENSE_BUFF=
+ERSIZE,
+> >> +                                     sizeof(ei->SenseInfo)); =20
+> > Why min_t() ?
+> > A plain min() should be fine.
+> > If it isn't you should really need to justify why the type of one param=
+eter
+> > can't be changes before using min_t().
 
-These registers are called REG_UTP_TRANSFER_REQ_DOOR_BELL and
-REG_UTP_TASK_REQ_DOOR_BELL in the UFS driver source code.
+> SCSI_SENSE_BUFFERSIZE is a macro definition and is generally of type int.
+> The return type of sizeof(ei->SenseInfo) is size_t, so I used min_t()
+> here.=C2=A0 However, as you mentioned, min() can also be used.=C2=A0 Do I=
+ need to
+> send v2?
 
-Thanks,
+The thing to remember is that min_t(type, a, b) is just min((type)a, (type)=
+b))
+and you really would never write the latter.
 
-Bart.
+	David
+
+>=20
+> Best regards,
+> Qianfeng
+
