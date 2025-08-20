@@ -1,150 +1,112 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+Received: from mail-qv1-f97.google.com (mail-qv1-f97.google.com [209.85.219.97])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF4DD2D2389
-	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 06:54:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8686B27602C
+	for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 08:47:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.97
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755672891; cv=none; b=oQ3ncDS5XP0+1fUcqc/GiLO1QT07hure2pFD5X+MGQl8YiBy8/FwEqMFGRoc77m6f7yhV2sUqkNGUTJ8eUMUApPrZ1Khd53PeAkJH/x1jNu4TMeVU5C+BJtSYttKNf7lDZ29766jWjPtciwJrXZiSyCy3PdOa3n49YD+qQSVYgs=
+	t=1755679637; cv=none; b=IXOR0iA0XP/RJy3FJpB8LBYjaDXbTOBMJuCQpmud6zUl0jHFdT0PH3D0nZvLxZFgK9SMDExPGN5NbXpW6N32qQUxzcyxETLSUH5mGuaiE9clVuo97alPZnfZqnU9oYiKI3OHp2q5uTISqB1oWcuyOQDA916MJx2ELBCP5BI6k8I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755672891; c=relaxed/simple;
-	bh=kYgdq0vapV0btQjkiN7fDZgp/v8Eajh7Id6D9TM/hf4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=F2/ioAsedByHlI1I20j6whyZX8p/iNN+Z+xALxOnguC5FCr+AEGeCn4X7Pnu5GPHpjZkIHFejWbk/4Xua/esuJ4AaGiXgoIBJC+DYpSKHjllooyG4ue5sITJ/Sijsc/AyDnO1syTy1HI17bZyt1y7LAUkaVBh4wkRLwGVH7dTZY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LPqyDyHm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=9cY+j7IJ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=LPqyDyHm; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=9cY+j7IJ; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1755679637; c=relaxed/simple;
+	bh=sfCgg/NAV6tLHgTLAcNIJ4LMvj4Gai48XZd3s3Twyqw=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=OxsNbOO1pJa0BaV6PPm3otaGiug9fl8SpF1pmtNKur2LIish/X2DV1gQCEfRam8YPDu9rkFyHrknAWyNvNBJmuhS9kxiopQtqDWxEXsWsN5CsAwlcgIqqltZtA+IwtjAU5PvFhcfBiB7os3EkccOeItvbwV2no6Ls7t+6CwdiXY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=T66qeP6c; arc=none smtp.client-ip=209.85.219.97
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LPqyDyHm";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="9cY+j7IJ";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="LPqyDyHm";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="9cY+j7IJ"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 469EF1F7A9;
-	Wed, 20 Aug 2025 06:54:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1755672882; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=E8X3jtLVFzJEzEyPeertAdvkSUGqohtPfikDq9tfVas=;
-	b=LPqyDyHmH1uUjrj/clEUNcjTuCcC9mip6WlmNQr1W1IxutUaLr9xy+i6uU82UOvBD57c+Z
-	3BG5Zn4PVatWAcvLzCkOTe6emgcSyqABhZMFjUz2SA3d7jTKR7kpuQh/b/jJvUwXUp6gJ/
-	35iYbBsHhYmb9v7D4pCCXW/VQRpC8to=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1755672882;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=E8X3jtLVFzJEzEyPeertAdvkSUGqohtPfikDq9tfVas=;
-	b=9cY+j7IJVrdTheW2NzmwtUuSBIi91BvfHeueOiwXiwGCKTOI51wOjZk6HLyDGs6y+MLeL6
-	RNZvzXfBp2pErjBA==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1755672882; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=E8X3jtLVFzJEzEyPeertAdvkSUGqohtPfikDq9tfVas=;
-	b=LPqyDyHmH1uUjrj/clEUNcjTuCcC9mip6WlmNQr1W1IxutUaLr9xy+i6uU82UOvBD57c+Z
-	3BG5Zn4PVatWAcvLzCkOTe6emgcSyqABhZMFjUz2SA3d7jTKR7kpuQh/b/jJvUwXUp6gJ/
-	35iYbBsHhYmb9v7D4pCCXW/VQRpC8to=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1755672882;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=E8X3jtLVFzJEzEyPeertAdvkSUGqohtPfikDq9tfVas=;
-	b=9cY+j7IJVrdTheW2NzmwtUuSBIi91BvfHeueOiwXiwGCKTOI51wOjZk6HLyDGs6y+MLeL6
-	RNZvzXfBp2pErjBA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EFC221368B;
-	Wed, 20 Aug 2025 06:54:41 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id RCBkODFxpWibTQAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 20 Aug 2025 06:54:41 +0000
-Message-ID: <66a096d7-8ed1-4a08-a207-533f945f6784@suse.de>
-Date: Wed, 20 Aug 2025 08:54:41 +0200
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="T66qeP6c"
+Received: by mail-qv1-f97.google.com with SMTP id 6a1803df08f44-70a9282141fso68084536d6.1
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:15 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755679634; x=1756284434;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mLuT0CId6O/1kw4RhoqIf/1C5616RIOfBXLgM6dqNIE=;
+        b=G9OHgpdRbtvjHVD9uUssWQ0ti6J6uwfowyiNxGQe1WjsxvepBxxZXenaFIlVcXRIYX
+         uFACvCjww3oUT2Fz/aSkPZ0ZkcmGWv/+8e1epqD/XRaC3WhPSHSVni/nGMfgaqCzLS8r
+         CvvZrhfZ5fX8vEmTzJZwfPfoJxRu8XIAH3WolQTDWE57c/qBQqqrBhwAv6nhpgbnuwnw
+         n2knB3QbgFfDsPS5ryHWmU2JK5nqvJrsr8LIMngWyWHvZp8QfQ9K73oWn/J78LWBNa1x
+         VuMl88kDEhCaMjoeVdlyl5Ki1Hg1foJ6QT0Uqs041feJ3/meCjduN2z/Za8V5ugRzG/Q
+         ZrIg==
+X-Gm-Message-State: AOJu0YwgU1vri6i7qPmXTSFFluV5C0PgvlGhDdIvAN2C5zkAJL8aAM7I
+	Eae34FnuTlgMAY3/UJBlp/lBDZZegyo/FyR3E0LMVr5AzXjVdWJ+oY0A1ZsGswevZkvJRtxSqSz
+	QcDoVX0jMe9T1/lPsNOEjZ27qSJO33kbICy2HG0QrknGq7tTn/mIb6gaQe1snA8LlW46oTbDay/
+	JVGSnJNfXEApq5MEXtaXfpcWa+QeFF1JeCSuhgu4kKS9wn0DAuuOWUzfHX9E9WWaKh2vtVsdgNt
+	dvn/77eAjpcjlpHCdjyODzL
+X-Gm-Gg: ASbGncuQJFjuar38cV2CXEQQkUPzJ7tJmfDnN3xvq+gJt4I5uNvzB4INQJim8miuTic
+	eO6+VLplEg0pyWl47xVsNcotZ+GDrcLgLAhuI1Te0ofCA4Pky45Xp3nfRcmtFWGp6FisEWPxysA
+	UinNH+uwA5U8YypoB1cLdeMG7mM8oo56Vn/Ev7oV+oezJlglawpISG8guvDdx7Q4Gn5cQcUVTfy
+	62H6uTe2DrrkDRLQNp1aBGFsGk7V2k1+pUt9h1uGoLFRuObBpZ64hKboawQkwp/pr3cXuuNEx7i
+	315UtwkZ5yqLGKMRHsZkfEcjXLMxxkoWD8ShD+rmGGl8LNY+icwFYGFGTP494rQCbZ4NzORntJi
+	R+6HYl3jXi4dKLtpwXcogIev404dQN0Y=
+X-Google-Smtp-Source: AGHT+IG69ap6cMxknNEq3hr6Mwr99bTa4wDu59M37fDP3/XOJyafYc3SzLCivXnwEm8Fe9fTGeL2ar4foYW6
+X-Received: by 2002:a05:6214:2b0f:b0:707:7694:4604 with SMTP id 6a1803df08f44-70d76fc3801mr23180406d6.30.1755679634215;
+        Wed, 20 Aug 2025 01:47:14 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com ([144.49.247.127])
+        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-70ba924f4c3sm8326246d6.35.2025.08.20.01.47.13
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 20 Aug 2025 01:47:14 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-76e2e8afd68so5516339b3a.1
+        for <linux-scsi@vger.kernel.org>; Wed, 20 Aug 2025 01:47:13 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1755679632; x=1756284432; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=mLuT0CId6O/1kw4RhoqIf/1C5616RIOfBXLgM6dqNIE=;
+        b=T66qeP6cbS6B+69lrC1Ly9KEUheB8FRowLyiBO7EZ0hLM/nS/dZKcJOGF8KkK839yj
+         +IFYst/+xavrYbAshGh58JsWksVpmpGAZ05hAuLBse8lWdl6Oe5LxdKwjnO1lMbdkbVm
+         PxJIIry/Ie7znbsjT/lPdqzto600PLl5+xmJQ=
+X-Received: by 2002:a05:6a20:a110:b0:243:78a:8294 with SMTP id adf61e73a8af0-2431ba5cb08mr3518043637.59.1755679632632;
+        Wed, 20 Aug 2025 01:47:12 -0700 (PDT)
+X-Received: by 2002:a05:6a20:a110:b0:243:78a:8294 with SMTP id adf61e73a8af0-2431ba5cb08mr3518003637.59.1755679632097;
+        Wed, 20 Aug 2025 01:47:12 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-324e2643bafsm1604034a91.23.2025.08.20.01.47.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 20 Aug 2025 01:47:11 -0700 (PDT)
+From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+To: linux-scsi@vger.kernel.org
+Cc: sathya.prakash@broadcom.com,
+	ranjan.kumar@broadcom.com,
+	prayas.patel@broadcom.com,
+	Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+Subject: [PATCH 0/6] mpi3mr: bug fixes and minor updates
+Date: Wed, 20 Aug 2025 14:11:32 +0530
+Message-Id: <20250820084138.228471-1-chandrakanth.patil@broadcom.com>
+X-Mailer: git-send-email 2.31.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 03/30] scsi: core: Do not allocate a budget token for
- reserved commands
-To: Bart Van Assche <bvanassche@acm.org>, John Garry
- <john.g.garry@oracle.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250811173634.514041-1-bvanassche@acm.org>
- <20250811173634.514041-4-bvanassche@acm.org>
- <f2d65247-ad6b-44ea-a687-808d8c398afc@suse.de>
- <30b475dc-3287-4bcb-99be-f2b6649217a5@oracle.com>
- <004de5e3-ad51-4a49-b7c7-e418587d3ef7@suse.de>
- <3a1f6959-8d74-4bb9-8e4b-31b5105734f9@acm.org>
- <36c7bf20-7dd4-4e19-8bc0-461a9f8a4228@suse.de>
- <58622f7d-a075-40b8-a2ea-190058d2737e@acm.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <58622f7d-a075-40b8-a2ea-190058d2737e@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.998];
-	MIME_GOOD(-0.10)[text/plain];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spam-Score: -4.30
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-On 8/19/25 21:49, Bart Van Assche wrote:
-> On 8/18/25 11:34 PM, Hannes Reinecke wrote:
->> and if we move TMFs and all non-I/O commands to reserved commands
->> cmd_per_lun will only be applicable to I/O commands.
-> Whether or not reserved commands should be used for allocating TMFs
-> depends on the SCSI transport. As an example, the approach mentioned
-> above is not appropriate for the UFS driver. The UFS driver assigns
-> integers in the range 0..31 to TMFs. These integers are passed directly
-> to the UFS host controller. Hence, allocating TMFs as reserved commands
-> from the same tag set as SCSI commands is not appropriate for the UFS
-> host controller driver.
-> 
-So TMFs use a separate tagset than normal commands?
-IE can I submit TMF tag '3' when I/O tag '3' is currently
-in flight?
+This series contains mpi3mr driver fixes and minor updates.
 
-Cheers,
+Chandrakanth Patil (6):
+  mpi3mr: Fix device loss during enclosure reboot due to zero link speed
+  mpi3mr: Fix controller init failure on fault during queue creation
+  mpi3mr: Fix I/O failures during controller reset
+  mpi3mr: Update MPI headers to revision 37
+  mpi3mr: Fix premature TM timeouts on virtual drives
+  mpi3mr: Update driver version to 8.15.0.5.50
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+ drivers/scsi/mpi3mr/mpi/mpi30_cnfg.h      | 38 ++++++++++++++++++++++-
+ drivers/scsi/mpi3mr/mpi/mpi30_pci.h       |  2 ++
+ drivers/scsi/mpi3mr/mpi/mpi30_sas.h       |  1 +
+ drivers/scsi/mpi3mr/mpi/mpi30_transport.h |  2 +-
+ drivers/scsi/mpi3mr/mpi3mr.h              |  8 +++--
+ drivers/scsi/mpi3mr/mpi3mr_fw.c           | 13 ++++++++
+ drivers/scsi/mpi3mr/mpi3mr_os.c           | 28 +++++++++++------
+ drivers/scsi/mpi3mr/mpi3mr_transport.c    | 11 +++++--
+ 8 files changed, 88 insertions(+), 15 deletions(-)
+
+--
+2.43.5
+
