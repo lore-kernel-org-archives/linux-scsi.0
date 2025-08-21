@@ -1,60 +1,54 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 142D12F5483;
-	Thu, 21 Aug 2025 10:17:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B11792153E7;
+	Thu, 21 Aug 2025 11:25:02 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755771423; cv=none; b=rbkiKJ8WlkoBG4zpy5FPVtmMVt1ymEYu9/0BHl+4ntlLA4nEN7xdbPkzPxcwwDWyvmdjZ0l8hKBVw+D+bbrmpi0Fsis2JYoxWmFl0l3a8vIWAnAU/C+CEfCPW4QEzvFMgSx2w8mZl9L0ogxOlLUxK1E826fVYJsGQQFPBD0RwXs=
+	t=1755775504; cv=none; b=aOgPvdKpKBx9lLXYCDeiM7p0uv+u3ULYWhEnm1iDxV70VC3QFQKz3TEGeMLP5yzTnpRfFsPfXriK9RmnH5K8fypjbscdiB6ATkXyk1FN+CRZ/TEDRRZ4nEIq9xoTJRY+Kxd6jY5uIBVUuj0RlgmfK+ntCA7JFy+TFglJ7YQfisY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755771423; c=relaxed/simple;
-	bh=8eYUMhvn+IIZ06qLAmibbHFTwdcu3kwbiOXeFVmY048=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gGz0kv+eNsS6h50j9mwIZ7WDQDmD7w5nBA2L9O1z8Z14woArrplraLR+3utJVFzb+L5heVvxlXDRRIS2z+WEw5jrNHqTPOh0nZp2t4/J63uImv4AHOm10VOtS9ovWmusyt3Z+WvyG93WrHnRyUi2firECnVY7tvc1iWerxG6i7w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=YOPq8Kme; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1755775504; c=relaxed/simple;
+	bh=kPfmGuwFf1kMfm7JGSdPsxEDOubFA6Jez1gBV82/D1Y=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=jlgtHBBhPmavoYv/7qO/iKlITQFMPGBtgA0Pjs21nt7dq9NRqm4WFO0dYCAdwpV1/zua/K2Y3mzY0ahGNrqrRwt6uQASqtVPzY/rVlt/nqe7iFQpMOrEHSMwZZsF2evd3PhqtiOJuP9W6r1piMgult6KujwCaPfO0e7MIE+y6Hw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=HOlQqZjn; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="YOPq8Kme"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57L9b7Cq014677;
-	Thu, 21 Aug 2025 10:16:51 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="HOlQqZjn"
+Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57L9bD9u027108;
+	Thu, 21 Aug 2025 11:24:56 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	t7EPwV5hN2UKWWwQJXTqQgiIfLRoD8LnWdqlkMnK+d0=; b=YOPq8KmeKbND9hhH
-	oF9I18OI4S19RvHgUVmw1Ktrv9wmLPi/o9ZzvYXPiU4rIVjPWgB7dbCY7PVpuOv6
-	0WWLRDkfWMBhuS5hKigncR/cE8qWxIZJ0vId7rtx0mdBQwZeEvBCm6Sw3+v0yAa+
-	dex3D+ZB+CcVo15GjLUttJ8oQXetBoF24ipBFBI9kTfryfcDc1uf/wqJEne7XqyF
-	Vb7n11jiOuHw471KtqbciEX6ObqhF+SzV9+pBUYWR+EjWRqvGP9Zg71NnjHTqHhk
-	DTRy4kDnP0TZ47hnkmVnkjpuOcbUeawOuoHlgnBJ3+SqAMzij6uSH609V3pH4HKR
-	UIikjg==
-Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48n528w071-1
+	cc:content-transfer-encoding:content-type:date:from:message-id
+	:mime-version:subject:to; s=qcppdkim1; bh=ncz350tN3idw0xFydFdh0X
+	Ae81YIbOJSLboHqQlJXvo=; b=HOlQqZjn7C1L0MGgvqXQGAB+N2TpIunLTpv2d8
+	ULao867HZQndlQU2NV+D/HVOknpXDHhl7zNt0mLczNG2cn2uSqyE3HAcUW2+Lsxu
+	PLsGWnpNbTLKUVQdgdSsAaCor1BvTrWq66opzbMejTFRHEGY7PeVoxExBjJNyZmK
+	7fP1wzCQFmA9ef3eAQc68l0SMlU/WqOTKjvxodOBWM6PR58s/ZKIKA/WV79yMmf/
+	htz5IiVEzkzJ+ey4ymknPU4y/8Ms0yrPw4eTJruXZtO8ddq6BWYTziv2CvEbh9rn
+	psuY5djDaBQw+WCJWWtTOWi98SrTT0qeXTWoLVZJjLUqLk6g==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48n528w6a1-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Aug 2025 10:16:51 +0000 (GMT)
+	Thu, 21 Aug 2025 11:24:56 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57LAGo1Q000671
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57LBOttu016594
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Aug 2025 10:16:50 GMT
+	Thu, 21 Aug 2025 11:24:55 GMT
 Received: from hu-rdwivedi-hyd.qualcomm.com (10.80.80.8) by
  nalasex01b.na.qualcomm.com (10.47.209.197) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Thu, 21 Aug 2025 03:16:45 -0700
+ 15.2.1748.10; Thu, 21 Aug 2025 04:24:51 -0700
 From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-To: <mani@kernel.org>, <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
-        <bvanassche@acm.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
-        <conor+dt@kernel.org>, <andersson@kernel.org>,
-        <konradybcio@kernel.org>, <agross@kernel.org>,
+To: <andersson@kernel.org>, <konradybcio@kernel.org>, <robh@kernel.org>,
+        <krzk+dt@kernel.org>, <conor+dt@kernel.org>, <mani@kernel.org>,
         <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>
-Subject: [PATCH V2 4/4] ufs: ufs-qcom: Add support for limiting HS gear and rate
-Date: Thu, 21 Aug 2025 15:46:09 +0530
-Message-ID: <20250821101609.20235-5-quic_rdwivedi@quicinc.com>
+CC: <linux-arm-msm@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+Subject: [PATCH V3 0/5] Enable UFS MCQ support for SM8650 and SM8750
+Date: Thu, 21 Aug 2025 16:53:58 +0530
+Message-ID: <20250821112403.12078-1-quic_rdwivedi@quicinc.com>
 X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250821101609.20235-1-quic_rdwivedi@quicinc.com>
-References: <20250821101609.20235-1-quic_rdwivedi@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -63,74 +57,84 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=fpOFpF4f c=1 sm=1 tr=0 ts=68a6f213 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=I4c8hNgg c=1 sm=1 tr=0 ts=68a70208 cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=COk6AnOGAAAA:8 a=YZsCTDY-3J_n_fZr9xEA:9
- a=TjNXssC_j7lpFel5tvFf:22 a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-GUID: 4ggwesiU1qExUjFQI9lifa8hdmnVIr7o
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIwMDAxMyBTYWx0ZWRfXy3npf0/BvzIz
- ajqUPr3GV8wORQb/8LWCg/YhK4Xt4D8UhRvCMqUua/BxzGNG5U6U5IcHHqhPx9Rrn1FQaUO5jyJ
- +65Yn2KDL9oLuLWjKS/TmiCv3QM2CpXnubBa04k5GD62yC1xGHd9dsgP55344ZZk2lwsBiY8wGM
- wtWAVPvN3KdqbXvEJkwlrOCT17xahWMm21AJ7xidhmkMbkV4F7AvamS43vIEfg57D2ZLpZsiJCy
- POjJr4gt3VJdlUjufDjEBZL3IxP3NfAzitRrqJfvxPRQysP2P/YwoJ20I5xpaq4mJeJnY1Nrzep
- oozkIKMxfy1JOZyy35ePE7D3ioAdByWa2/ze/yDWQDIHOML5jb1Hd9FANr+dR4Wr3a8Z51hB8Ja
- /qlEQYfJq9m/WkbYynt7v2GiuE2ARw==
-X-Proofpoint-ORIG-GUID: 4ggwesiU1qExUjFQI9lifa8hdmnVIr7o
+ a=GEpy-HfZoHoA:10 a=2OwXVqhp2XgA:10 a=LEFlebn9EtuLqDGMg7kA:9
+ a=cPQSjfK2_nFv0Q5t_7PE:22
+X-Proofpoint-GUID: jziUfZQRfARq2k3c0Od9rGlRFFEXNpSb
+X-Proofpoint-ORIG-GUID: jziUfZQRfARq2k3c0Od9rGlRFFEXNpSb
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIwMDAxMyBTYWx0ZWRfX5eGjSVhDVxQb
+ 0Ve1aJmby4yB3pmsB9FAuEY15cfnyIlEY5n4oF7FH+nyO2S40FRJcUFnjUYl98gAT3/wq6Bo4XE
+ pfTQKllXAQXOvfnGS+bkj5zVw0Wr56YwCH5CkxMn13DjnVEfi+n94RqpS7+g0W1vUGXI0Y+I8vv
+ NVE2zsAke8g9Pc1yyBPlORL8L7E14Rbd3b0kXJG8kC1rBS0HYWZT07GIdCoC7HSOo4N1xE2KNBl
+ gyqg2GmZ/udquJWEhVCPBL78tD3IOs7DbZKOwIP7Qfgs6DlPWAhtuHiEl7mGbInD8q1FcmdiTGc
+ CWNruOo6zbHMlXToQyTj8M+sXeJYR/sxfz0vIkLfcs+b6zemylF+jDeFXYhtFJUJPOMbSFINmVX
+ 8sX8DmOksbQrR2SjKigA7XnAgF5Zeg==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-21_02,2025-08-20_03,2025-03-28_01
+ definitions=2025-08-21_03,2025-08-20_03,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 priorityscore=1501 spamscore=0 clxscore=1015 adultscore=0
- suspectscore=0 bulkscore=0 phishscore=0 impostorscore=0 lowpriorityscore=0
+ adultscore=0 clxscore=1015 malwarescore=0 spamscore=0 priorityscore=1501
+ lowpriorityscore=0 phishscore=0 impostorscore=0 bulkscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.19.0-2508110000 definitions=main-2508200013
 
-Add support to limit Tx/Rx gear and rate during UFS initialization
-based on DT property.
+This patch series enables Multi-Circular Queue (MCQ) support for the UFS
+host controller on Qualcomm SM8650 and SM8750 platforms. MCQ improves
+performance and scalability by allowing multiple hardware queues.
 
-Also update the phy_gear to ensure PHY calibrations align with
-the required gear and rate.
+The series streamlines MCQ resource mapping by using a single MCQ region
+mapping instead of multiple separate resource regions, making the driver
+more maintainable and less prone to resource mapping errors.
 
-Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
----
- drivers/ufs/host/ufs-qcom.c | 13 +++++++++++++
- 1 file changed, 13 insertions(+)
+Patch 1 streamlines UFS MCQ resource mapping with a single MCQ region
+mapping, simplifying the current approach that involved multiple resource
+mappings and dynamic resource allocation.
 
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 1a93351fb70e..53c64d5fb95d 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -1092,6 +1092,18 @@ static void ufs_qcom_set_phy_gear(struct ufs_qcom_host *host)
- 	}
- }
- 
-+static void ufs_qcom_parse_limits(struct ufs_hba *hba)
-+{
-+	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-+	struct ufs_host_params *host_params = &host->host_params;
-+	u32 hs_gear_old = host_params->hs_tx_gear;
-+
-+	ufshcd_parse_limits(hba, host_params);
-+	if (host_params->hs_tx_gear != hs_gear_old) {
-+		host->phy_gear = host_params->hs_tx_gear;
-+	}
-+}
-+
- static void ufs_qcom_set_host_params(struct ufs_hba *hba)
- {
- 	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-@@ -1333,6 +1345,7 @@ static int ufs_qcom_init(struct ufs_hba *hba)
- 	ufs_qcom_advertise_quirks(hba);
- 	ufs_qcom_set_host_params(hba);
- 	ufs_qcom_set_phy_gear(host);
-+	ufs_qcom_parse_limits(hba);
- 
- 	err = ufs_qcom_ice_init(host);
- 	if (err)
+Patch 2 refactors MCQ register dump logic to align with the new resource
+mapping approach, updating function signatures and using direct base
+addresses.
+
+Patch 3 removes the unused ufshcd_res_info structure and associated enum
+definitions that are no longer needed after the resource mapping refactor.
+
+Patches 4 and 5 update the device trees for SM8650 and SM8750 respectively
+to enable MCQ by adding the necessary register mappings and MSI parent.
+
+Tested on SM8650 and SM8750.
+
+Changes from v2:
+1. Removed dt-bindings patch as existing binding supports required
+   reg-names format.
+2. Added patch to refactor MCQ register dump logic for new resource
+   mapping.
+3. Added patch to remove unused ufshcd_res_info structure from UFS core.
+4. Changed reg-names from "ufs_mem" to "std" in device tree patches.
+5. Reordered patches with driver changes first, then device tree changes.
+6. Updated SM8750 MCQ region size from 0x2000 to 0x15000
+
+Nitin Rawat (3):
+  ufs: ufs-qcom: Streamline UFS MCQ resource mapping
+  ufs: ufs-qcom: Refactor MCQ register dump logic
+  scsi: ufs: core: Remove unused ufshcd_res_info structure
+
+Palash Kambar (1):
+  arm64: dts: qcom: sm8750: Enable MCQ support for UFS controller
+
+Ram Kumar Dwivedi (1):
+  arm64: dts: qcom: sm8650: Enable MCQ support for UFS controller
+
+ arch/arm64/boot/dts/qcom/sm8650.dtsi |   7 +-
+ arch/arm64/boot/dts/qcom/sm8750.dtsi |   8 +-
+ drivers/ufs/host/ufs-qcom.c          | 180 +++++++++++----------------
+ drivers/ufs/host/ufs-qcom.h          |  22 +++-
+ include/ufs/ufshcd.h                 |  25 ----
+ 5 files changed, 104 insertions(+), 138 deletions(-)
+
 -- 
 2.50.1
 
