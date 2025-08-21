@@ -1,217 +1,174 @@
-Received: from dggsgout12.his.huawei.com (dggsgout12.his.huawei.com [45.249.212.56])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41AD414B06C;
-	Thu, 21 Aug 2025 06:21:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.56
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3862427057B
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 06:42:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755757291; cv=none; b=FLDhuPufv4UVUSJ1orDeizHOFEHlih9VRQJXcs98Q3RilobQPYwvtc4doCfgMnXWWcP6KhjyESAegXIG1LhsIJG9EQJR/MIgnBJL5gleqqLimZwvZ0EXiKfpLHJT8Hhe1zXV+3tX52vF08pe3B3npKQH5h3meItFMmuUzbCWWHU=
+	t=1755758531; cv=none; b=eaXtmI2Cmi7n4hhf7njyOtYxo+FxNvLAGx3Hm5SFYFivaW2iYITkABxpD76wbLk/N/1tXnTg1F0j7dGXcyP8TK+64bH7RyMHuujCZ8XS2DYc6zXY2EtY2GrlHSzbSXZImF6YKV/cpWtG6Rvv5LmfIZfZI1xos+6WW+0XRMNt4gw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755757291; c=relaxed/simple;
-	bh=3XaR4vmSB7jpSEvMaAX61qPKgqAZ/1lwztzPFQxpWpA=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=B99Ta222PqrghSW9xS3ztAN14hEt4U02FvEPopXE2C1fAMjNIwjxt3Br2L20ZmOc1svVD0VhLvmKJ6JWhVO5r0NEEqKhpZIxivvH7/ICD9Y1YK9iWBiZGblNaQug1bTHxvoTtkK5NxTY/jQC1Y43PqBpHfZj08kVYx6hVEc2fGY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.56
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
-Received: from mail.maildlp.com (unknown [172.19.93.142])
-	by dggsgout12.his.huawei.com (SkyGuard) with ESMTPS id 4c6tWB1YYDzKHNZS;
-	Thu, 21 Aug 2025 14:21:26 +0800 (CST)
-Received: from mail02.huawei.com (unknown [10.116.40.128])
-	by mail.maildlp.com (Postfix) with ESMTP id A4D811A0AD1;
-	Thu, 21 Aug 2025 14:21:25 +0800 (CST)
-Received: from huaweicloud.com (unknown [10.175.104.67])
-	by APP4 (Coremail) with SMTP id gCh0CgAHzw_duqZoIKmhEQ--.35680S4;
-	Thu, 21 Aug 2025 14:21:24 +0800 (CST)
-From: Zhang Yi <yi.zhang@huaweicloud.com>
-To: linux-fsdevel@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	dm-devel@lists.linux.dev,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org,
-	hch@lst.de,
-	tytso@mit.edu,
-	djwong@kernel.org,
-	bmarzins@redhat.com,
-	chaitanyak@nvidia.com,
-	shinichiro.kawasaki@wdc.com,
-	brauner@kernel.org,
-	martin.petersen@oracle.com,
-	yi.zhang@huawei.com,
-	yi.zhang@huaweicloud.com,
-	chengzhihao1@huawei.com,
-	yukuai3@huawei.com,
-	yangerkun@huawei.com
-Subject: [PATCH util-linux v4] fallocate: add FALLOC_FL_WRITE_ZEROES support
-Date: Thu, 21 Aug 2025 14:13:07 +0800
-Message-Id: <20250821061307.1770368-1-yi.zhang@huaweicloud.com>
-X-Mailer: git-send-email 2.39.2
+	s=arc-20240116; t=1755758531; c=relaxed/simple;
+	bh=O1dwfSUFJxf2/RljKQ3XI9UELcNJp30SUCWlQFoh/KM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Nir9Yf7AAft03sTD2Q35a29BsN7C/2udk04P3486z5+3BK4A38qa0BeBoh7yUZMN+CHm0zJIpBAQVQKmuYWL3DN/Vc6Pod9XpUBbjH7kJos7a2MoPwwwsvUC2VuN2ptmwCAuq0PGt21KwfiAe/CUpd5G/b67QsmwByujRii963Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=WepxEiN/; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SqP0WeAJ; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=WepxEiN/; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=SqP0WeAJ; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="WepxEiN/";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SqP0WeAJ";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="WepxEiN/";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="SqP0WeAJ"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 427D61F7EE;
+	Thu, 21 Aug 2025 06:42:07 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1755758527; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lD9dkxYvW2iTGhfTN3mGvg9dNiJVqaa/VIZguVvnSJM=;
+	b=WepxEiN/sFJFDPQUqeYiniZkHET/wPRyvNdAA2/eEeIyNl5/AL37fyLAWYcchKK3S3EQYS
+	UWDgDiapoQuUR0Vvy0rFOoZhrgKMjWGXdQEhl+jS5WQcF9ZVu8LOQwe+90XfBrelmu8DjS
+	TCWhU/yAlq88RjUhrH2N+bSYpHedptA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1755758527;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lD9dkxYvW2iTGhfTN3mGvg9dNiJVqaa/VIZguVvnSJM=;
+	b=SqP0WeAJk7M4usOLiqRH0dM3/tkEhMx7znexY04730TQdVs7YeeDdq0oswoBPpWIzpXRlL
+	yEb43s/02qhu0XBA==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1755758527; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lD9dkxYvW2iTGhfTN3mGvg9dNiJVqaa/VIZguVvnSJM=;
+	b=WepxEiN/sFJFDPQUqeYiniZkHET/wPRyvNdAA2/eEeIyNl5/AL37fyLAWYcchKK3S3EQYS
+	UWDgDiapoQuUR0Vvy0rFOoZhrgKMjWGXdQEhl+jS5WQcF9ZVu8LOQwe+90XfBrelmu8DjS
+	TCWhU/yAlq88RjUhrH2N+bSYpHedptA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1755758527;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=lD9dkxYvW2iTGhfTN3mGvg9dNiJVqaa/VIZguVvnSJM=;
+	b=SqP0WeAJk7M4usOLiqRH0dM3/tkEhMx7znexY04730TQdVs7YeeDdq0oswoBPpWIzpXRlL
+	yEb43s/02qhu0XBA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 06929139A8;
+	Thu, 21 Aug 2025 06:42:06 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id hkwnO76/pmjedQAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 21 Aug 2025 06:42:06 +0000
+Message-ID: <76de3bab-edf5-43eb-a5d6-28dcced2130a@suse.de>
+Date: Thu, 21 Aug 2025 08:42:06 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 03/30] scsi: core: Do not allocate a budget token for
+ reserved commands
+To: Bart Van Assche <bvanassche@acm.org>, John Garry
+ <john.g.garry@oracle.com>, "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20250811173634.514041-1-bvanassche@acm.org>
+ <20250811173634.514041-4-bvanassche@acm.org>
+ <f2d65247-ad6b-44ea-a687-808d8c398afc@suse.de>
+ <30b475dc-3287-4bcb-99be-f2b6649217a5@oracle.com>
+ <004de5e3-ad51-4a49-b7c7-e418587d3ef7@suse.de>
+ <3a1f6959-8d74-4bb9-8e4b-31b5105734f9@acm.org>
+ <36c7bf20-7dd4-4e19-8bc0-461a9f8a4228@suse.de>
+ <58622f7d-a075-40b8-a2ea-190058d2737e@acm.org>
+ <66a096d7-8ed1-4a08-a207-533f945f6784@suse.de>
+ <0acda254-32a6-405b-a2d0-eef2401dbd83@acm.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <0acda254-32a6-405b-a2d0-eef2401dbd83@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-CM-TRANSID:gCh0CgAHzw_duqZoIKmhEQ--.35680S4
-X-Coremail-Antispam: 1UD129KBjvJXoWxtFW7XFyDWFyUCryrKF15Arb_yoWxAr48pF
-	W5tF18K3yrWw4xGwn7Za1kWw15Zws5Wr45CrZ2grykAr13Wa17Ka1vgryFgasrXFWkCa15
-	Xr1avry3ur48AaDanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUU9Y14x267AKxVW5JVWrJwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26F1j6w1UM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4U
-	JVWxJr1l84ACjcxK6I8E87Iv67AKxVW0oVCq3wA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Gc
-	CE3s1le2I262IYc4CY6c8Ij28IcVAaY2xG8wAqx4xG64xvF2IEw4CE5I8CrVC2j2WlYx0E
-	2Ix0cI8IcVAFwI0_JrI_JrylYx0Ex4A2jsIE14v26r1j6r4UMcvjeVCFs4IE7xkEbVWUJV
-	W8JwACjcxG0xvY0x0EwIxGrwACjI8F5VA0II8E6IAqYI8I648v4I1lFIxGxcIEc7CjxVA2
-	Y2ka0xkIwI1lc7CjxVAaw2AFwI0_GFv_Wryl42xK82IYc2Ij64vIr41l4I8I3I0E4IkC6x
-	0Yz7v_Jr0_Gr1lx2IqxVAqx4xG67AKxVWUJVWUGwC20s026x8GjcxK67AKxVWUGVWUWwC2
-	zVAF1VAY17CE14v26r4a6rW5MIIYrxkI7VAKI48JMIIF0xvE2Ix0cI8IcVAFwI0_Jr0_JF
-	4lIxAIcVC0I7IYx2IY6xkF7I0E14v26r4j6F4UMIIF0xvE42xK8VAvwI8IcIk0rVWUJVWU
-	CwCI42IY6I8E87Iv67AKxVWUJVW8JwCI42IY6I8E87Iv6xkF7I0E14v26r4j6r4UJbIYCT
-	nIWIevJa73UjIFyTuYvjTRRBT5DUUUU
-X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.998];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,suse.de:email]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spam-Score: -4.30
 
-From: Zhang Yi <yi.zhang@huawei.com>
+On 8/20/25 19:53, Bart Van Assche wrote:
+> On 8/19/25 11:54 PM, Hannes Reinecke wrote:
+>> On 8/19/25 21:49, Bart Van Assche wrote:
+>>> On 8/18/25 11:34 PM, Hannes Reinecke wrote:
+>>>> and if we move TMFs and all non-I/O commands to reserved commands
+>>>> cmd_per_lun will only be applicable to I/O commands.
+>  >>
+>>> Whether or not reserved commands should be used for allocating TMFs
+>>> depends on the SCSI transport. As an example, the approach mentioned
+>>> above is not appropriate for the UFS driver. The UFS driver assigns
+>>> integers in the range 0..31 to TMFs. These integers are passed directly
+>>> to the UFS host controller. Hence, allocating TMFs as reserved commands
+>>> from the same tag set as SCSI commands is not appropriate for the UFS
+>>> host controller driver.
+>>>
+>> So TMFs use a separate tagset than normal commands?
+>> IE can I submit TMF tag '3' when I/O tag '3' is currently
+>> in flight?
+> 
+> Yes, that's correct. This follows directly from the UFSHCI
+> specification. In legacy mode (which is easier to explain than MCQ
+> mode), there is one bitwise doorbell register for regular commands
+> (UTRLDBR = UTP Transfer Request List DoorBell Register) and another
+> bitwise doorbell register for task management functions (UTMRLDBR = UTP
+> Task Management Request List DoorBell Register). A command is submitted
+> by setting the appropriate bit in the UTRLDBR register. A TMF is
+> submitted by setting the appropriate bit in the UTMRLDBR register. This
+> is why the UFS driver allocates two tag sets - one for regular commands
+> and another for TMFs.
+> 
+> These registers are called REG_UTP_TRANSFER_REQ_DOOR_BELL and
+> REG_UTP_TASK_REQ_DOOR_BELL in the UFS driver source code.
+> 
+Ah. But then you can allocate two separate queues & tagsets, one for
+TMFs and one for 'normal' commands (like NVMe does it).
+Then you wouldn't need reserved commands at all; they only make sense
+if TMFs and commands share the same tagspace.
 
-The Linux kernel (since version 6.17) supports FALLOC_FL_WRITE_ZEROES in
-fallocate(2). Add support for FALLOC_FL_WRITE_ZEROES to the fallocate
-utility by introducing a new option -w|--write-zeroes.
+Cheers,
 
-Link: https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=278c7d9b5e0c
-Signed-off-by: Zhang Yi <yi.zhang@huawei.com>
-Reviewed-by: "Darrick J. Wong" <djwong@kernel.org>
----
-v3->v4:
- - Fix a minor grammatical mistake.
-v2->v3:
- - Say less about what the filesystem actually implements as Darrick
-   suggested and clarify the reason why "--keep-size" cannot be used
-   together in the man page.
- - Modify the verbose output message.
-v1->v2:
- - Minor description modification to align with the kernel.
-
- sys-utils/fallocate.1.adoc | 11 +++++++++--
- sys-utils/fallocate.c      | 20 ++++++++++++++++----
- 2 files changed, 25 insertions(+), 6 deletions(-)
-
-diff --git a/sys-utils/fallocate.1.adoc b/sys-utils/fallocate.1.adoc
-index 44ee0ef4c..69602f01c 100644
---- a/sys-utils/fallocate.1.adoc
-+++ b/sys-utils/fallocate.1.adoc
-@@ -12,7 +12,7 @@ fallocate - preallocate or deallocate space to a file
- 
- == SYNOPSIS
- 
--*fallocate* [*-c*|*-p*|*-z*] [*-o* _offset_] *-l* _length_ [*-n*] _filename_
-+*fallocate* [*-c*|*-p*|*-z*|*-w*] [*-o* _offset_] *-l* _length_ [*-n*] _filename_
- 
- *fallocate* *-d* [*-o* _offset_] [*-l* _length_] _filename_
- 
-@@ -28,7 +28,7 @@ The exit status returned by *fallocate* is 0 on success and 1 on failure.
- 
- The _length_ and _offset_ arguments may be followed by the multiplicative suffixes KiB (=1024), MiB (=1024*1024), and so on for GiB, TiB, PiB, EiB, ZiB, and YiB (the "iB" is optional, e.g., "K" has the same meaning as "KiB") or the suffixes KB (=1000), MB (=1000*1000), and so on for GB, TB, PB, EB, ZB, and YB.
- 
--The options *--collapse-range*, *--dig-holes*, *--punch-hole*, *--zero-range* and *--posix* are mutually exclusive.
-+The options *--collapse-range*, *--dig-holes*, *--punch-hole*, *--zero-range*, *--write-zeroes* and *--posix* are mutually exclusive.
- 
- *-c*, *--collapse-range*::
- Removes a byte range from a file, without leaving a hole. The byte range to be collapsed starts at _offset_ and continues for _length_ bytes. At the completion of the operation, the contents of the file starting at the location __offset__+_length_ will be appended at the location _offset_, and the file will be _length_ bytes smaller. The option *--keep-size* may not be specified for the collapse-range operation.
-@@ -76,6 +76,13 @@ Option *--keep-size* can be specified to prevent file length modification.
- +
- Available since Linux 3.14 for ext4 (only for extent-based files) and XFS.
- 
-+*-w*, *--write-zeroes*::
-+Zeroes space in the byte range starting at _offset_ and continuing for _length_ bytes. Within the specified range, written blocks are preallocated for the regions that span the holes in the file. After a successful call, subsequent reads from this range will return zeroes and subsequent writes to that range do not require further changes to the file mapping metadata.
-++
-+Zeroing is done within the filesystem. The filesystem may use a hardware-accelerated zeroing command or may submit regular writes. The behavior depends on the filesystem design and the available hardware.
-++
-+Options *--keep-size* cannot be specified for the write-zeroes operation because allocating written blocks beyond the inode size is not permitted.
-+
- include::man-common/help-version.adoc[]
- 
- == AUTHORS
-diff --git a/sys-utils/fallocate.c b/sys-utils/fallocate.c
-index 13bf52915..afd615537 100644
---- a/sys-utils/fallocate.c
-+++ b/sys-utils/fallocate.c
-@@ -40,7 +40,7 @@
- #if defined(HAVE_LINUX_FALLOC_H) && \
-     (!defined(FALLOC_FL_KEEP_SIZE) || !defined(FALLOC_FL_PUNCH_HOLE) || \
-      !defined(FALLOC_FL_COLLAPSE_RANGE) || !defined(FALLOC_FL_ZERO_RANGE) || \
--     !defined(FALLOC_FL_INSERT_RANGE))
-+     !defined(FALLOC_FL_INSERT_RANGE) || !defined(FALLOC_FL_WRITE_ZEROES))
- # include <linux/falloc.h>	/* non-libc fallback for FALLOC_FL_* flags */
- #endif
- 
-@@ -65,6 +65,10 @@
- # define FALLOC_FL_INSERT_RANGE		0x20
- #endif
- 
-+#ifndef FALLOC_FL_WRITE_ZEROES
-+# define FALLOC_FL_WRITE_ZEROES		0x80
-+#endif
-+
- #include "nls.h"
- #include "strutils.h"
- #include "c.h"
-@@ -94,6 +98,7 @@ static void __attribute__((__noreturn__)) usage(void)
- 	fputs(_(" -o, --offset <num>   offset for range operations, in bytes\n"), out);
- 	fputs(_(" -p, --punch-hole     replace a range with a hole (implies -n)\n"), out);
- 	fputs(_(" -z, --zero-range     zero and ensure allocation of a range\n"), out);
-+	fputs(_(" -w, --write-zeroes   write zeroes and ensure allocation of a range\n"), out);
- #ifdef HAVE_POSIX_FALLOCATE
- 	fputs(_(" -x, --posix          use posix_fallocate(3) instead of fallocate(2)\n"), out);
- #endif
-@@ -304,6 +309,7 @@ int main(int argc, char **argv)
- 	    { "dig-holes",      no_argument,       NULL, 'd' },
- 	    { "insert-range",   no_argument,       NULL, 'i' },
- 	    { "zero-range",     no_argument,       NULL, 'z' },
-+	    { "write-zeroes",   no_argument,       NULL, 'w' },
- 	    { "offset",         required_argument, NULL, 'o' },
- 	    { "length",         required_argument, NULL, 'l' },
- 	    { "posix",          no_argument,       NULL, 'x' },
-@@ -312,8 +318,8 @@ int main(int argc, char **argv)
- 	};
- 
- 	static const ul_excl_t excl[] = {	/* rows and cols in ASCII order */
--		{ 'c', 'd', 'i', 'p', 'x', 'z'},
--		{ 'c', 'i', 'n', 'x' },
-+		{ 'c', 'd', 'i', 'p', 'w', 'x', 'z'},
-+		{ 'c', 'i', 'n', 'w', 'x' },
- 		{ 0 }
- 	};
- 	int excl_st[ARRAY_SIZE(excl)] = UL_EXCL_STATUS_INIT;
-@@ -323,7 +329,7 @@ int main(int argc, char **argv)
- 	textdomain(PACKAGE);
- 	close_stdout_atexit();
- 
--	while ((c = getopt_long(argc, argv, "hvVncpdizxl:o:", longopts, NULL))
-+	while ((c = getopt_long(argc, argv, "hvVncpdizwxl:o:", longopts, NULL))
- 			!= -1) {
- 
- 		err_exclusive_options(c, longopts, excl, excl_st);
-@@ -353,6 +359,9 @@ int main(int argc, char **argv)
- 		case 'z':
- 			mode |= FALLOC_FL_ZERO_RANGE;
- 			break;
-+		case 'w':
-+			mode |= FALLOC_FL_WRITE_ZEROES;
-+			break;
- 		case 'x':
- #ifdef HAVE_POSIX_FALLOCATE
- 			posix = 1;
-@@ -429,6 +438,9 @@ int main(int argc, char **argv)
- 			else if (mode & FALLOC_FL_ZERO_RANGE)
- 				fprintf(stdout, _("%s: %s (%ju bytes) zeroed.\n"),
- 								filename, str, length);
-+			else if (mode & FALLOC_FL_WRITE_ZEROES)
-+				fprintf(stdout, _("%s: %s (%ju bytes) written as zeroes.\n"),
-+								filename, str, length);
- 			else
- 				fprintf(stdout, _("%s: %s (%ju bytes) allocated.\n"),
- 								filename, str, length);
+Hannes
 -- 
-2.39.2
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
