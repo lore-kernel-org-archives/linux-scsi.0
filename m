@@ -1,113 +1,121 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94F1F2E1F02
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 15:54:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7637D35948;
+	Thu, 21 Aug 2025 16:49:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755791687; cv=none; b=bJaP7GOF8Fwah5DG9lIY5IADsbfA1K7WaIdSU5Mnf4AcYklOUDGXSxb2aieiWg5npjMED91C5Ehql4C5Zv9+xwydLgFG2BSkYu05ouV5n+PL1BqYwAz+utliFSWqngXYex+gzzyVNSbNXSAKDun+0ZxvXr39SEkaZN4SpTo7XEQ=
+	t=1755794998; cv=none; b=uOCRonFXOFWNhmR8LEF02QM+MGVFToYrAxantLcehZ3IUrCGjHsstoJrHL9gIuiGsjsXd7Z4tT14OAcVq5FUnye5UD/QeioAq+g/mfXjbOWBw4JHrRjnRIiEOTByxEP8HT3pTiewTzM39onU/WR0tq8PAQDyXOFLc9FO5YmmLac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755791687; c=relaxed/simple;
-	bh=OLNVwL82Xi8KJgcx26c429GmirRggnUat2++83qs53U=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YRDOpbt9/zsBSXOk2nqI6KV2L/60jbEwacI6e9TDksRUK2s8lmfGQw48J3O8v7oVg0kExkBS7AbXA45kFo030Ozh9R1d6UzVwmBwuTshKi4KplK8TO2hb5jy6oA1Nhdp1Yfa9XEvT7zL8hjIdCJ/ZInIIJEc7jh3cpfmBusr2rY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QvecMpXS; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755794998; c=relaxed/simple;
+	bh=j1HPu+xf82+sSceY4BTW4wlDho9OJP75SC6covMR4QQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bI7qJUmTX/vsPWg5U9/Gc5VSWB7NLxkeuO6VY3gKOK3JRqdIwnHyyskUhMJMWh9M/1RtT/jBzUJuXYc8+J7VwQcqGE4pV9r4Kx8LziOzXC+/mLeboJ9579cjrosTTNMJTMxnFRun0ntQavB6bsqNEHs5HbetmLV2k2jBrLVmfUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jlFkCIyJ; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QvecMpXS"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c77Dh3r4xzm0yQF;
-	Thu, 21 Aug 2025 15:54:44 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755791683; x=1758383684; bh=5N3MV1KxfQpsEBXk6fetnj97
-	/s3Yi/K0ZEE7X1JY5x4=; b=QvecMpXShbuB8g9q9yauUMxGxdKntQcT/ilkrZBi
-	EeWxpynA3r9LEC8yhF6Tve/U4Sxl5BA1NpEy+JtqgBZa0T9xras6/Z04KKIO5yIj
-	pIZiKPeIo68ha/mHVjjFqdWpDFD9FGNAIOtp2Bq6tpcgYTKAgIs3SP1fmSCMfRNX
-	T4O2Y2EpRics1yQKNiNUV1VnNMEWUyyytK+cWILEjnh6rdRAj/V7y75xjYI6oTZY
-	a7HVyypy2X90dvd6xrynA4CpWPmZfRiOw+Eldv36820x0DhTkzl3yqVI+p78fsjJ
-	d3Gr6btXgqiGKCKO3GtHGrH8fNmz4xKdnZuyGtMJ91EmKw==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id zximmsy1NVmq; Thu, 21 Aug 2025 15:54:43 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c77DV6GZLzm174J;
-	Thu, 21 Aug 2025 15:54:33 +0000 (UTC)
-Message-ID: <3a0c9dcb-71b9-4d58-bca1-53018248b018@acm.org>
-Date: Thu, 21 Aug 2025 08:54:32 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jlFkCIyJ"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-45a1b05a59dso579545e9.1;
+        Thu, 21 Aug 2025 09:49:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1755794994; x=1756399794; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=f7t2f88agrRS1B1iAJwzfiSnfOHeW10+a3UdQ2eynTw=;
+        b=jlFkCIyJdPpZp9cv+wThVfw5O3orf1muAxV2u0PVlNil7seqL05MYWkIEBTa5EFjkx
+         uV7AVMBx0QlkCy4EbzpMv3efd6/cg3FV3IH3527/sBSLgGqzhYKa+YRWXHUsFYyrBDLl
+         BzQcew4upZu1zdMygKRHvRAm+fIrFwLFbzTNKpMcgnnbkwobasmomV8PjhpiOIEDLdwB
+         jCBewRos8cBCfprZbjixzuy+X4F+esGnzXcjKNEqKlPHWRAVglCj9MQhGXx3fqVG/hwr
+         ZP+yXrQPZEhpb6NVtOq+INnLbFsXtnwZSvKQL3f1FLCvfGQNfjHSlbuXdM0iPF/pWP7B
+         jDZQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755794994; x=1756399794;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=f7t2f88agrRS1B1iAJwzfiSnfOHeW10+a3UdQ2eynTw=;
+        b=FpE5p9cI4fSUWEzsqi2xdybi7ksQPBBqalWZg7bXJyNnz5/C+5QhvL8e6nM8xLx4f4
+         zIo7rOyJ57R3FtPx+8AzTAcrqtLw4BJ+DxsCx0O1eFqcCRlxaxfHLNqSkxe8doYOl0px
+         zfMJd43yNmsjqhNRve3vh8+Rl29HWdYKDQ5E8mBQyNJKHmP+23Ii4c+CDlqnbnDTnGoI
+         o3wobDner8aBwxreMOEY6DFHaUA44OQVZd7hUBibU11t8aHm31EBOUJzsa277773tlUa
+         a4Zj9f+3I94TbjPzp2BtPX7czVCRfdQ/JpHERAjABXhcq5pDmXREj32Va4vDMn0u4xQs
+         JOfQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVgTh+38llosaYvM85oT9QcwSb0BcsXkIpqPit/++ZZ8IgZu6IQcZgjtMe2RA6IeSrdkkAIriSWGh78xQ==@vger.kernel.org, AJvYcCW0h0Rn0erMGEh7sJc42PjL2kGxq0FkDnDCJtIFo5bcAOAq2W+NkyOzyNubmxoVtwNvZvlGTfsw6XqfCQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YwmnwRslLd4TJXZPDiFrU4XW9YSPuhlkW40xGlg166fCj92VU/Z
+	KupWrEqyoxAXAOQ6heoCzm51Hx0d28n1OR6IX1du8x29OMOYW2w5yL0=
+X-Gm-Gg: ASbGncsZzaEJhP6geWcD/2ml3/J3V5+dktrzio+ib4ivQZZjXawH8pTPCbiv52Klnyd
+	RFcMBZ0ZCu3nQ5ESIrLNPvsFH3znlux39uqWnZHcBdncrQ4cgYGwIp2eZupmZ5fC0VsXeXZHEtF
+	WjRNY14AHoqv1Oo6qaAAjyI9nZGYItjlEbEoOL5HutJs5QUsz85WJDWd6KUW0fmL+0DLlqFbcI8
+	PuuNE8EU0ntivhS2fST0BF/A1UUQYj+I2cnCLHQIJ3K8tTTA408erjLHxLjPqKxaGhz5L7oe84z
+	/eMPX8C4Kz3Kdsk3Va0H56418gxsEf5qPCB6Vh8kgAiLVdeHh9hTGUYEl9XogYLZdvybek/25iC
+	qZXx/oQ7hn+mYZdTJqNtuvA/gvLXdDDx2o3QVv+I43/+yoqkHT3rbDXoVvZdE
+X-Google-Smtp-Source: AGHT+IEFCzGcsgNZSCK8jgQNmnNP6XuCcbIjfi+E7Ny9nmr/AplG4StiUki6eZCbqEcqFRU22rFM4Q==
+X-Received: by 2002:a05:600c:a16:b0:459:ddd6:1cbf with SMTP id 5b1f17b1804b1-45b4d74b053mr15281275e9.0.1755794993528;
+        Thu, 21 Aug 2025 09:49:53 -0700 (PDT)
+Received: from localhost (67.red-80-39-24.staticip.rima-tde.net. [80.39.24.67])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b50dea2b9sm3562025e9.15.2025.08.21.09.49.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 21 Aug 2025 09:49:53 -0700 (PDT)
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: 
+Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+	Daniel Wagner <dwagner@suse.de>,
+	Daniel Wagner <wagi@monom.org>,
+	BLOCK-ML <linux-block@vger.kernel.org>,
+	NVME-ML <linux-nvme@lists.infradead.org>,
+	SCSI-ML <linux-scsi@vger.kernel.org>,
+	DM_DEVEL-ML <dm-devel@lists.linux.dev>
+Subject: [PATCH] nvme-cli: add 80-nvmf-storage_arrays.rules
+Date: Thu, 21 Aug 2025 18:49:51 +0200
+Message-ID: <20250821164952.148153-1-xose.vazquez@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 03/30] scsi: core: Do not allocate a budget token for
- reserved commands
-To: Hannes Reinecke <hare@suse.de>, John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Ming Lei <ming.lei@redhat.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250811173634.514041-1-bvanassche@acm.org>
- <20250811173634.514041-4-bvanassche@acm.org>
- <f2d65247-ad6b-44ea-a687-808d8c398afc@suse.de>
- <30b475dc-3287-4bcb-99be-f2b6649217a5@oracle.com>
- <004de5e3-ad51-4a49-b7c7-e418587d3ef7@suse.de>
- <3a1f6959-8d74-4bb9-8e4b-31b5105734f9@acm.org>
- <36c7bf20-7dd4-4e19-8bc0-461a9f8a4228@suse.de>
- <58622f7d-a075-40b8-a2ea-190058d2737e@acm.org>
- <66a096d7-8ed1-4a08-a207-533f945f6784@suse.de>
- <0acda254-32a6-405b-a2d0-eef2401dbd83@acm.org>
- <76de3bab-edf5-43eb-a5d6-28dcced2130a@suse.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <76de3bab-edf5-43eb-a5d6-28dcced2130a@suse.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-Patchwork-Bot: notify
+Content-Transfer-Encoding: 8bit
 
-On 8/20/25 11:42 PM, Hannes Reinecke wrote:
-> Ah. But then you can allocate two separate queues & tagsets, one for
-> TMFs and one for 'normal' commands (like NVMe does it).
+Missing from previous patch.
 
-Agreed.
+Cc: Daniel Wagner <dwagner@suse.de>
+Cc: Daniel Wagner <wagi@monom.org>
+Cc: BLOCK-ML <linux-block@vger.kernel.org>
+Cc: NVME-ML <linux-nvme@lists.infradead.org>
+Cc: SCSI-ML <linux-scsi@vger.kernel.org>
+Cc: DM_DEVEL-ML <dm-devel@lists.linux.dev>
+Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+---
+ meson.build  | 1 +
+ nvme.spec.in | 1 +
+ 2 files changed, 2 insertions(+)
 
-> Then you wouldn't need reserved commands at all; they only make sense
-> if TMFs and commands share the same tagspace.
+diff --git a/meson.build b/meson.build
+index 3afd8ba3..8c0877e1 100644
+--- a/meson.build
++++ b/meson.build
+@@ -270,6 +270,7 @@ udev_files = [
+   '71-nvmf-hpe.rules',
+   '71-nvmf-netapp.rules',
+   '71-nvmf-vastdata.rules',
++  '80-nvmf-storage_arrays.rules',
+ ]
+ 
+ foreach file : udev_files
+diff --git a/nvme.spec.in b/nvme.spec.in
+index 5f7645d7..fa921f81 100644
+--- a/nvme.spec.in
++++ b/nvme.spec.in
+@@ -36,6 +36,7 @@ touch %{buildroot}@SYSCONFDIR@/nvme/hostid
+ @UDEVRULESDIR@/71-nvmf-hpe.rules
+ @UDEVRULESDIR@/71-nvmf-netapp.rules
+ @UDEVRULESDIR@/71-nvmf-vastdata.rules
++@UDEVRULESDIR@/80-nvmf-storage_arrays.rules
+ @DRACUTRILESDIR@/70-nvmf-autoconnect.conf
+ @SYSTEMDDIR@/nvmf-connect@.service
+ @SYSTEMDDIR@/nvmefc-boot-connections.service
+-- 
+2.51.0
 
-That's wrong. There are other use cases for reserved commands, e.g. a
-SCSI LLD driver allocating and submitting a SCSI or non-SCSI command to
-the storage controller.
-
-Here is an overview of the types of commands submitted by the UFS driver
-to a UFS host controller:
-* Task management functions. As explained in the previous email, TMFs
-   have their own tag space that is separate from SCSI and non-SCSI
-   commands.
-* SCSI commands that are the result of a block layer request having been
-   translated into a SCSI command, e.g. to implement filesystem I/O.
-* SCSI passthrough commands submitted through the SG I/O interface.
-* SCSI commands allocated and submitted by the SCSI core, e.g. the
-   INQUIRY and MODE SELECT commands.
-* SCSI commands allocated by the UFS driver, e.g. START STOP UNIT to
-   change the power mode of the UFS device during runtime and system-wide
-   power transitions.
-* non-SCSI UPIU commands allocated by the UFS driver to perform tasks
-   supported by the UFS standard that fall outside the scope of the
-   SCSI standard, e.g. to query the supported queue depth or to interact
-   with the real-time clock in the UFS device.
-* non-SCSI UPIU commands submitted through the BSG interface.
-
-The upstream UFS driver implements its own mechanism for reserving a tag
-for non-SCSI UPIU commands (hba->reserved_slot). This patch series
-converts that mechanism into allocating a reserved tag
-(BLK_MQ_REQ_RESERVED).
-
-Bart.
