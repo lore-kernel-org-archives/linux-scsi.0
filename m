@@ -1,121 +1,227 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7637D35948;
-	Thu, 21 Aug 2025 16:49:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DA12343D76
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 18:20:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755794998; cv=none; b=uOCRonFXOFWNhmR8LEF02QM+MGVFToYrAxantLcehZ3IUrCGjHsstoJrHL9gIuiGsjsXd7Z4tT14OAcVq5FUnye5UD/QeioAq+g/mfXjbOWBw4JHrRjnRIiEOTByxEP8HT3pTiewTzM39onU/WR0tq8PAQDyXOFLc9FO5YmmLac=
+	t=1755800432; cv=none; b=FgeYGQQ7rrf4GnxY8335HmpxrYIXSRV6TqA84qgKx9osC+pHM6GzICkaIC9GrtCaawaC9JTvnUrZb4ajJC7Phyargvvtqd3Ph6Gdz+JSavYl9cR9G5/N8EljvUQbts4AKB+Xt0iDAn+GAeP+zxKFGRoVy6TisZ+FD0JIFb6yl0A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755794998; c=relaxed/simple;
-	bh=j1HPu+xf82+sSceY4BTW4wlDho9OJP75SC6covMR4QQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bI7qJUmTX/vsPWg5U9/Gc5VSWB7NLxkeuO6VY3gKOK3JRqdIwnHyyskUhMJMWh9M/1RtT/jBzUJuXYc8+J7VwQcqGE4pV9r4Kx8LziOzXC+/mLeboJ9579cjrosTTNMJTMxnFRun0ntQavB6bsqNEHs5HbetmLV2k2jBrLVmfUU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=jlFkCIyJ; arc=none smtp.client-ip=209.85.128.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1755800432; c=relaxed/simple;
+	bh=zNxEAnYBYyd2jVal04xja+3hPhbUKjMh0QQ4sMuIWjs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=jnv2sY7YAbuQmJCz+KKp4jrJ5vzSstv57vSdPafrv5VBd9yek66GP9qO5VXydnH7ZLwHHGmqb5MB2ost9m7c9dsOxehWsvhjgjjaXI940wdXLU8e9bieZOJQnQLwU1cNi0ccw+A2vI8NhCVnsyFOSpKfXoUy2w0Fqf3wmxb4qL8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Q6wNmJgX; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="jlFkCIyJ"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-45a1b05a59dso579545e9.1;
-        Thu, 21 Aug 2025 09:49:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1755794994; x=1756399794; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=f7t2f88agrRS1B1iAJwzfiSnfOHeW10+a3UdQ2eynTw=;
-        b=jlFkCIyJdPpZp9cv+wThVfw5O3orf1muAxV2u0PVlNil7seqL05MYWkIEBTa5EFjkx
-         uV7AVMBx0QlkCy4EbzpMv3efd6/cg3FV3IH3527/sBSLgGqzhYKa+YRWXHUsFYyrBDLl
-         BzQcew4upZu1zdMygKRHvRAm+fIrFwLFbzTNKpMcgnnbkwobasmomV8PjhpiOIEDLdwB
-         jCBewRos8cBCfprZbjixzuy+X4F+esGnzXcjKNEqKlPHWRAVglCj9MQhGXx3fqVG/hwr
-         ZP+yXrQPZEhpb6NVtOq+INnLbFsXtnwZSvKQL3f1FLCvfGQNfjHSlbuXdM0iPF/pWP7B
-         jDZQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755794994; x=1756399794;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=f7t2f88agrRS1B1iAJwzfiSnfOHeW10+a3UdQ2eynTw=;
-        b=FpE5p9cI4fSUWEzsqi2xdybi7ksQPBBqalWZg7bXJyNnz5/C+5QhvL8e6nM8xLx4f4
-         zIo7rOyJ57R3FtPx+8AzTAcrqtLw4BJ+DxsCx0O1eFqcCRlxaxfHLNqSkxe8doYOl0px
-         zfMJd43yNmsjqhNRve3vh8+Rl29HWdYKDQ5E8mBQyNJKHmP+23Ii4c+CDlqnbnDTnGoI
-         o3wobDner8aBwxreMOEY6DFHaUA44OQVZd7hUBibU11t8aHm31EBOUJzsa277773tlUa
-         a4Zj9f+3I94TbjPzp2BtPX7czVCRfdQ/JpHERAjABXhcq5pDmXREj32Va4vDMn0u4xQs
-         JOfQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVgTh+38llosaYvM85oT9QcwSb0BcsXkIpqPit/++ZZ8IgZu6IQcZgjtMe2RA6IeSrdkkAIriSWGh78xQ==@vger.kernel.org, AJvYcCW0h0Rn0erMGEh7sJc42PjL2kGxq0FkDnDCJtIFo5bcAOAq2W+NkyOzyNubmxoVtwNvZvlGTfsw6XqfCQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0YwmnwRslLd4TJXZPDiFrU4XW9YSPuhlkW40xGlg166fCj92VU/Z
-	KupWrEqyoxAXAOQ6heoCzm51Hx0d28n1OR6IX1du8x29OMOYW2w5yL0=
-X-Gm-Gg: ASbGncsZzaEJhP6geWcD/2ml3/J3V5+dktrzio+ib4ivQZZjXawH8pTPCbiv52Klnyd
-	RFcMBZ0ZCu3nQ5ESIrLNPvsFH3znlux39uqWnZHcBdncrQ4cgYGwIp2eZupmZ5fC0VsXeXZHEtF
-	WjRNY14AHoqv1Oo6qaAAjyI9nZGYItjlEbEoOL5HutJs5QUsz85WJDWd6KUW0fmL+0DLlqFbcI8
-	PuuNE8EU0ntivhS2fST0BF/A1UUQYj+I2cnCLHQIJ3K8tTTA408erjLHxLjPqKxaGhz5L7oe84z
-	/eMPX8C4Kz3Kdsk3Va0H56418gxsEf5qPCB6Vh8kgAiLVdeHh9hTGUYEl9XogYLZdvybek/25iC
-	qZXx/oQ7hn+mYZdTJqNtuvA/gvLXdDDx2o3QVv+I43/+yoqkHT3rbDXoVvZdE
-X-Google-Smtp-Source: AGHT+IEFCzGcsgNZSCK8jgQNmnNP6XuCcbIjfi+E7Ny9nmr/AplG4StiUki6eZCbqEcqFRU22rFM4Q==
-X-Received: by 2002:a05:600c:a16:b0:459:ddd6:1cbf with SMTP id 5b1f17b1804b1-45b4d74b053mr15281275e9.0.1755794993528;
-        Thu, 21 Aug 2025 09:49:53 -0700 (PDT)
-Received: from localhost (67.red-80-39-24.staticip.rima-tde.net. [80.39.24.67])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b50dea2b9sm3562025e9.15.2025.08.21.09.49.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 21 Aug 2025 09:49:53 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: 
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Daniel Wagner <dwagner@suse.de>,
-	Daniel Wagner <wagi@monom.org>,
-	BLOCK-ML <linux-block@vger.kernel.org>,
-	NVME-ML <linux-nvme@lists.infradead.org>,
-	SCSI-ML <linux-scsi@vger.kernel.org>,
-	DM_DEVEL-ML <dm-devel@lists.linux.dev>
-Subject: [PATCH] nvme-cli: add 80-nvmf-storage_arrays.rules
-Date: Thu, 21 Aug 2025 18:49:51 +0200
-Message-ID: <20250821164952.148153-1-xose.vazquez@gmail.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Q6wNmJgX"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c7BSs27T5zm0yQp;
+	Thu, 21 Aug 2025 18:20:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1755800427; x=1758392428; bh=HICNePmOOq1Qvn3MCTUr9IR7
+	kmkelfiS6FVWZ60T0Gs=; b=Q6wNmJgXQB/FdCGXbuF/BdSNy1mbmUMtIjAwnQrx
+	7pJMTHHdV8k0c/ClJG/ozR0ALRKyB05L99qgVoGBlanMg9iylje+pS5HkIpSfG2V
+	rNLrdjlii8C1AngaYH1ZMAAkEd+Kp6PWvUb1RaLhPxsZoWQjJt7ZI4pma2ZENdBV
+	mUXQ/GB1w29QhCeBXeHnnzG2bpfAtaxdvNP3F3KSw4K4K20KrpF8ukYWxzQfr/bq
+	Ump6qCk0ngjcNG3H4j3jubIYt4gAiLmd7eja0AuoU3f4VErNXY9JyGq98f4+Ypkf
+	kJxLNKlUum4CzUbz/YZDsAoWYBDPHVdqSgmNcB4K6E8oDg==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id KZkUA7b3i_5C; Thu, 21 Aug 2025 18:20:27 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c7BSl6TGKzm0ySm;
+	Thu, 21 Aug 2025 18:20:22 +0000 (UTC)
+Message-ID: <368972fc-ce10-48f3-b527-be876092e17a@acm.org>
+Date: Thu, 21 Aug 2025 11:20:21 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Patchwork-Bot: notify
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 00/30] Optimize the hot path in the UFS driver
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, hch@lst.de, hare@suse.com
+References: <20250811173634.514041-1-bvanassche@acm.org>
+ <d5cd0109-915f-4fe7-b6c2-34681b4b1763@oracle.com>
+ <d4151040-ab1a-4b3c-b5f9-577e907b43fc@acm.org>
+ <ff0705fe-0bac-408e-a073-a833525dabf8@oracle.com>
+ <e651aa7e-aad2-4e4e-afff-3e89a61f13f9@acm.org>
+ <71a41bd0-1243-4fb3-ae83-c2cfae229296@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <71a41bd0-1243-4fb3-ae83-c2cfae229296@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Missing from previous patch.
+On 8/15/25 12:50 AM, John Garry wrote:
+> Anyway, here is a reference implementation:
+> https://lore.kernel.org/linux-scsi/1666693096-180008-5-git-send-email- 
+> john.garry@huawei.com/
 
-Cc: Daniel Wagner <dwagner@suse.de>
-Cc: Daniel Wagner <wagi@monom.org>
-Cc: BLOCK-ML <linux-block@vger.kernel.org>
-Cc: NVME-ML <linux-nvme@lists.infradead.org>
-Cc: SCSI-ML <linux-scsi@vger.kernel.org>
-Cc: DM_DEVEL-ML <dm-devel@lists.linux.dev>
-Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+How about using the (lightly tested) patch below instead of that patch?
+The patch below has the advantage that it doesn't duplicate any SCSI
+core code. Additionally, it preserves the logic for initializing driver-
+private data for reserved commands.
+
+Thanks,
+
+Bart.
+
+[PATCH] scsi: core: Bypass the queue limit checks for reserved commands
+
+Reserved commands can be TMFs or commands allocated and submitted by the
+LLD. These commands can be SCSI commands or non-SCSI commands. For all
+these cases, bypass the SCSI host, target and device queue limit checks
+for reserved commands. Additionally, do not activate the SCSI error
+handler if a reserved command fails.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+[ bvanassche: modified patch title and patch description. Renamed
+   .reserved_queuecommand() into .queue_reserved_command(). Changed
+   the second argument of __blk_mq_end_request() from 0 into error
+   code in the completion path if cmd->result != 0. Rewrote the
+   scsi_queue_rq() changes. See also
+  
+https://lore.kernel.org/linux-scsi/1666693096-180008-5-git-send-email-john.garry@huawei.com/ 
+]
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- meson.build  | 1 +
- nvme.spec.in | 1 +
- 2 files changed, 2 insertions(+)
+  drivers/scsi/hosts.c     |  6 +++++
+  drivers/scsi/scsi_lib.c  | 54 ++++++++++++++++++++++++++++------------
+  include/scsi/scsi_host.h |  7 ++++++
+  3 files changed, 51 insertions(+), 16 deletions(-)
 
-diff --git a/meson.build b/meson.build
-index 3afd8ba3..8c0877e1 100644
---- a/meson.build
-+++ b/meson.build
-@@ -270,6 +270,7 @@ udev_files = [
-   '71-nvmf-hpe.rules',
-   '71-nvmf-netapp.rules',
-   '71-nvmf-vastdata.rules',
-+  '80-nvmf-storage_arrays.rules',
- ]
- 
- foreach file : udev_files
-diff --git a/nvme.spec.in b/nvme.spec.in
-index 5f7645d7..fa921f81 100644
---- a/nvme.spec.in
-+++ b/nvme.spec.in
-@@ -36,6 +36,7 @@ touch %{buildroot}@SYSCONFDIR@/nvme/hostid
- @UDEVRULESDIR@/71-nvmf-hpe.rules
- @UDEVRULESDIR@/71-nvmf-netapp.rules
- @UDEVRULESDIR@/71-nvmf-vastdata.rules
-+@UDEVRULESDIR@/80-nvmf-storage_arrays.rules
- @DRACUTRILESDIR@/70-nvmf-autoconnect.conf
- @SYSTEMDDIR@/nvmf-connect@.service
- @SYSTEMDDIR@/nvmefc-boot-connections.service
--- 
-2.51.0
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index e860ac93499d..75fe624366c3 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -231,6 +231,12 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, 
+struct device *dev,
+  		goto fail;
+  	}
+
++	if (shost->nr_reserved_cmds && !sht->queue_reserved_command) {
++		shost_printk(KERN_ERR, shost,
++			     "nr_reserved_cmds set but no method to queue\n");
++		goto fail;
++	}
++
+  	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
+  	shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
+  				   shost->can_queue);
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0112ad3859ff..2d81fd837d47 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1539,6 +1539,14 @@ static void scsi_complete(struct request *rq)
+  	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+  	enum scsi_disposition disposition;
+
++	if (blk_mq_is_reserved_rq(rq)) {
++		/* Only pass-through requests are supported in this code path. */
++		WARN_ON_ONCE(!blk_rq_is_passthrough(scsi_cmd_to_rq(cmd)));
++		scsi_mq_uninit_cmd(cmd);
++		__blk_mq_end_request(rq, scsi_result_to_blk_status(cmd->result));
++		return;
++	}
++
+  	INIT_LIST_HEAD(&cmd->eh_entry);
+
+  	atomic_inc(&cmd->device->iodone_cnt);
+@@ -1828,25 +1836,31 @@ static blk_status_t scsi_queue_rq(struct 
+blk_mq_hw_ctx *hctx,
+  	WARN_ON_ONCE(cmd->budget_token < 0);
+
+  	/*
+-	 * If the device is not in running state we will reject some or all
+-	 * commands.
++	 * Bypass the SCSI device, SCSI target and SCSI host checks for
++	 * reserved commands.
+  	 */
+-	if (unlikely(sdev->sdev_state != SDEV_RUNNING)) {
+-		ret = scsi_device_state_check(sdev, req);
+-		if (ret != BLK_STS_OK)
+-			goto out_put_budget;
+-	}
++	if (!blk_mq_is_reserved_rq(req)) {
++		/*
++		 * If the device is not in running state we will reject some or
++		 * all commands.
++		 */
++		if (unlikely(sdev->sdev_state != SDEV_RUNNING)) {
++			ret = scsi_device_state_check(sdev, req);
++			if (ret != BLK_STS_OK)
++				goto out_put_budget;
++		}
+
+-	ret = BLK_STS_RESOURCE;
+-	if (!scsi_target_queue_ready(shost, sdev))
+-		goto out_put_budget;
+-	if (unlikely(scsi_host_in_recovery(shost))) {
+-		if (cmd->flags & SCMD_FAIL_IF_RECOVERING)
+-			ret = BLK_STS_OFFLINE;
+-		goto out_dec_target_busy;
++		ret = BLK_STS_RESOURCE;
++		if (!scsi_target_queue_ready(shost, sdev))
++			goto out_put_budget;
++		if (unlikely(scsi_host_in_recovery(shost))) {
++			if (cmd->flags & SCMD_FAIL_IF_RECOVERING)
++				ret = BLK_STS_OFFLINE;
++			goto out_dec_target_busy;
++		}
++		if (!scsi_host_queue_ready(q, shost, sdev, cmd))
++			goto out_dec_target_busy;
+  	}
+-	if (!scsi_host_queue_ready(q, shost, sdev, cmd))
+-		goto out_dec_target_busy;
+
+  	/*
+  	 * Only clear the driver-private command data if the LLD does not supply
+@@ -1875,6 +1889,14 @@ static blk_status_t scsi_queue_rq(struct 
+blk_mq_hw_ctx *hctx,
+  	cmd->submitter = SUBMITTED_BY_BLOCK_LAYER;
+
+  	blk_mq_start_request(req);
++	if (blk_mq_is_reserved_rq(req)) {
++		reason = shost->hostt->queue_reserved_command(shost, cmd);
++		if (reason) {
++			ret = BLK_STS_RESOURCE;
++			goto out_put_budget;
++		}
++		return BLK_STS_OK;
++	}
+  	reason = scsi_dispatch_cmd(cmd);
+  	if (reason) {
+  		scsi_set_blocked(cmd, reason);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 3b5150759c44..a615dcaa0ae8 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -86,6 +86,13 @@ struct scsi_host_template {
+  	 */
+  	int (* queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
+
++	/*
++	 * Queue a reserved command (BLK_MQ_REQ_RESERVED). The .queuecommand()
++	 * documentation also applies to the .queue_reserved_command() callback.
++	 *
++	 */
++	int (*queue_reserved_command)(struct Scsi_Host *, struct scsi_cmnd *);
++
+  	/*
+  	 * The commit_rqs function is used to trigger a hardware
+  	 * doorbell after some requests have been queued with
 
