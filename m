@@ -1,223 +1,366 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 879F51A9FAB;
-	Thu, 21 Aug 2025 19:32:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 982E92E92D1
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 20:07:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755804744; cv=none; b=h+xZ50T+wvGKEQTxLb4HNBkQ5m/X0XEAAMl8IJpCG63Jglp/1KDYw7tC7K7DkISTTAPA+LstLisxAyJlLMadN0qOBJN/622Ce67uBBaDaMRHHAT8cyw9FSMg1TpHxlLMHjTZFEmU5zPGmcZ8ROuy7YhxGqneE7rQ2Xu8RMmwy2c=
+	t=1755806833; cv=none; b=QFtz9iVt+N/F3wz0LT0THmeO7QtJoVqomu7GNbMv92ZtCAvi4GD5FVTR6th7sIEiJGtPE4rPz/vi6xFEZCyr/qRZow0CGKpp9E0BVmIWycv9jfYXiKv4J88E1xq1MR76HTDcpjsv6X35sv/rZGjJkQCJwL8KoQ/0X/c//32sxeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755804744; c=relaxed/simple;
-	bh=0frOgS9WIcvtIG2b13AfgNHG9HYu1+yVQ2P6qgQCUbY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=iHpJhAx4FsUdRmYuNALlcWNZ//jzs2o2NuJry1SUhJkbzEhXV38GRd9C541Gu/h+mCKChyySZsNffv5C/wFbuUb9fT2BfwofgNt8DItjCwB8dcr2LUQM015X1xdVF6l4p8yPLndMHquP692fLge6TyXzuge7NsKOE3v5iwoO7og=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=H+lfUFqK; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1755806833; c=relaxed/simple;
+	bh=1aX6aTG8s6ax1CtK3pZ1UQ/TXpBX5+Ze6lBjUUjUQPw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bAO2o2sK8V3zpLLQ4MLuJmi1opLyr+wVH/SAqdxpeKZYVI8vkmTjXdhRW5C7Yvpt4oiLrLHPvhVJcUz8wJ/LHgbrzDPl6qQ7Fvw2OUkVcd8GSmec0akaBC+3M9zAvFVcj3EVSoEpwxB5hT8deo7Cvri+cCDgxplVwwoa3y+T5ic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=V/j5m5aa; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="H+lfUFqK"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57LI9sAu008967;
-	Thu, 21 Aug 2025 19:31:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	tYpWCcbISjCNUzk4vHLgNXmnOMo66w5kv2nzcQwVeHo=; b=H+lfUFqKGGg8M2J5
-	WVJlM29tMWt/LolQvFZmYxbpSdErl8a8vVIz9Mclp+gnf/aXul4Mo9R1/ybdW4YF
-	XjgKac13UrX0/dcKgFKuFYdUccKG+/BmWBtQL7j/mchcstQ9XEJ6/i7mOMuE6kh/
-	ySndJwnRf5VuaOXQC5BlWABS0khPtKx2LujBAmFAiygPUP6p1EGjxl6xqty2R5Bt
-	Ro5OnJ1NF76v+27ZGkxKh1B1F8qTkP6BhNhyEduQdh7vTgpNk4UB1nIAp2kkz3ST
-	gdO/7mIsOM0kevZ4Z6vJAthBbOVP3ndkk/uorhM8/925TYLU/enQd+7ct0B87MEW
-	ckmQAQ==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48n52cpmsp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Aug 2025 19:31:55 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57LJVtmK019161
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 21 Aug 2025 19:31:55 GMT
-Received: from [10.216.47.227] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Thu, 21 Aug
- 2025 12:31:51 -0700
-Message-ID: <37563dd8-341f-4db4-8a4b-c7f96dbfebff@quicinc.com>
-Date: Fri, 22 Aug 2025 01:01:47 +0530
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="V/j5m5aa"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1755806830;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=LLdMjSHtv+zm1bY5U2c0p8D/d+U3cemLYeHBKaj7voE=;
+	b=V/j5m5aaGnkbuWEUpHL+pKDhqiCyKflPBA+oxbyRAWuWEbCjY8zAPXMQiAB2he823LdfK6
+	XiGPsCCPmnU5XlbXhRmonUJlrV8r1K8nTbfqT+gcgNS7IpzIghbyyuylWmFMA2GXdI2Upu
+	ElHPR+cdFXMPflowz2DQzTxdRcEXC0E=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-439-FcUpwLQ3OH6hnVAUrLdJ5g-1; Thu, 21 Aug 2025 16:07:07 -0400
+X-MC-Unique: FcUpwLQ3OH6hnVAUrLdJ5g-1
+X-Mimecast-MFC-AGG-ID: FcUpwLQ3OH6hnVAUrLdJ5g_1755806827
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-45b51411839so818905e9.0
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 13:07:07 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1755806826; x=1756411626;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=LLdMjSHtv+zm1bY5U2c0p8D/d+U3cemLYeHBKaj7voE=;
+        b=TXJF06QqJiB8vEn6VqZMGacgkGpy1bJ47WeXOq4NIKnwsRgTXdbAPdKlySi18UH0Ru
+         ryqmrPTFXcFvmRcDPzmt+eyu2wnuyD8cIQ+GSqmVYELSKQbtqN92Lo05AEnFmNX6hzxo
+         eQKEPSRPfM0/0EI6Sx99US5SoLu24stC/NxpiV8naAmDC7PRg3vLx4Pq5HyGQ9JOVvNk
+         cojccOxY0i39AuIyFqBJ513bMiN9MC1LcqeAxNAkyIZW4o3Ffy0SjCrc/bUuM/Wgcb/s
+         Uqj82wtzYNzV5m0Rg8g/8SnpCPokF5yjA9ig2dZNSmdpZzVBzJVIWcQRdrWJhPSdyL+6
+         9jfg==
+X-Forwarded-Encrypted: i=1; AJvYcCV5oxcMuh/bq/DhYcYPllRpVAD/HJx80imaZvTU1xRvi4/PViqQr0Riut9XOobqrt/8pTyO8baadLev@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywd4acgvpU5cnHO1euYaBeAE7KdLNgh3Ccnfrof0V32csO/8L28
+	+HzoQQf1rFygvDbPCdW3RBjVtkIN1jxyF1DcUiZSIA+qiTqy1WJU9PpAGRoDLr1KkvsB4K3W24S
+	BhrPsB7YMK74uv3QdHWD1+fFyjMMe6Shu7plSLGj9KpS88TpuDitsg0mCh4j3BFQ=
+X-Gm-Gg: ASbGncsV0xQ1eL6kyKVehoplRNGXInrz2tQrtWWq2dB3297J+oV/p2F3D4qmVoqANII
+	ef/7aYJCEtfyVM3e+FzMBaITYtKlHqszDQJ9nrWPqiTMeCXvy3UUPn8GzyaJMhYbHPBw8SrNIXA
+	nruITTNw26OBL4/Vg2/8z1Wb7K1WTtDEzn8Jc8fEZZXqhfxjLWdgf+3VnwWo7SXRiLrlDcYEV2F
+	BEOZ3MypmN1rkuUT1rZnniOb0OW6GgptgCVMP3fwupvkIOUjeGpI+R1f9HVwV+02Eg5D5pLx46G
+	22ZXUUIEYB98ivyX/ztfXMrqfngH4o5HiSdkaxZVNeWs35Aa3yC7DghT27NXnBP+7/BRIMheDjy
+	6q31gpC4+yvoAjpCIfk8VTQ==
+X-Received: by 2002:a05:600c:4506:b0:456:1bae:5470 with SMTP id 5b1f17b1804b1-45b5179b6camr3191185e9.8.1755806826473;
+        Thu, 21 Aug 2025 13:07:06 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG7XEacdneicK9OezeDu7E6BzvwjamEpx7+RbUEh0t7qSo20kryXdXhBwYQdhu2/m95zw+e6A==
+X-Received: by 2002:a05:600c:4506:b0:456:1bae:5470 with SMTP id 5b1f17b1804b1-45b5179b6camr3190665e9.8.1755806825859;
+        Thu, 21 Aug 2025 13:07:05 -0700 (PDT)
+Received: from localhost (p200300d82f26ba0008036ec5991806fd.dip0.t-ipconnect.de. [2003:d8:2f26:ba00:803:6ec5:9918:6fd])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3c077788df7sm12764142f8f.48.2025.08.21.13.07.02
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 21 Aug 2025 13:07:05 -0700 (PDT)
+From: David Hildenbrand <david@redhat.com>
+To: linux-kernel@vger.kernel.org
+Cc: David Hildenbrand <david@redhat.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Jason Gunthorpe <jgg@nvidia.com>,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	"Liam R. Howlett" <Liam.Howlett@oracle.com>,
+	Vlastimil Babka <vbabka@suse.cz>,
+	Mike Rapoport <rppt@kernel.org>,
+	Suren Baghdasaryan <surenb@google.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	John Hubbard <jhubbard@nvidia.com>,
+	Peter Xu <peterx@redhat.com>,
+	Alexander Potapenko <glider@google.com>,
+	Marco Elver <elver@google.com>,
+	Dmitry Vyukov <dvyukov@google.com>,
+	Brendan Jackman <jackmanb@google.com>,
+	Johannes Weiner <hannes@cmpxchg.org>,
+	Zi Yan <ziy@nvidia.com>,
+	Dennis Zhou <dennis@kernel.org>,
+	Tejun Heo <tj@kernel.org>,
+	Christoph Lameter <cl@gentwo.org>,
+	Muchun Song <muchun.song@linux.dev>,
+	Oscar Salvador <osalvador@suse.de>,
+	x86@kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mips@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-crypto@vger.kernel.org,
+	linux-ide@vger.kernel.org,
+	intel-gfx@lists.freedesktop.org,
+	dri-devel@lists.freedesktop.org,
+	linux-mmc@vger.kernel.org,
+	linux-arm-kernel@axis.com,
+	linux-scsi@vger.kernel.org,
+	kvm@vger.kernel.org,
+	virtualization@lists.linux.dev,
+	linux-mm@kvack.org,
+	io-uring@vger.kernel.org,
+	iommu@lists.linux.dev,
+	kasan-dev@googlegroups.com,
+	wireguard@lists.zx2c4.com,
+	netdev@vger.kernel.org,
+	linux-kselftest@vger.kernel.org,
+	linux-riscv@lists.infradead.org,
+	Albert Ou <aou@eecs.berkeley.edu>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Alexandre Ghiti <alex@ghiti.fr>,
+	Alex Dubov <oakad@yahoo.com>,
+	Alex Williamson <alex.williamson@redhat.com>,
+	Andreas Larsson <andreas@gaisler.com>,
+	Borislav Petkov <bp@alien8.de>,
+	Brett Creeley <brett.creeley@amd.com>,
+	Catalin Marinas <catalin.marinas@arm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Christophe Leroy <christophe.leroy@csgroup.eu>,
+	Damien Le Moal <dlemoal@kernel.org>,
+	Dave Hansen <dave.hansen@linux.intel.com>,
+	David Airlie <airlied@gmail.com>,
+	"David S. Miller" <davem@davemloft.net>,
+	Doug Gilbert <dgilbert@interlog.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Herbert Xu <herbert@gondor.apana.org.au>,
+	Huacai Chen <chenhuacai@kernel.org>,
+	Ingo Molnar <mingo@redhat.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Jani Nikula <jani.nikula@linux.intel.com>,
+	"Jason A. Donenfeld" <Jason@zx2c4.com>,
+	Jason Gunthorpe <jgg@ziepe.ca>,
+	Jesper Nilsson <jesper.nilsson@axis.com>,
+	Joonas Lahtinen <joonas.lahtinen@linux.intel.com>,
+	Kevin Tian <kevin.tian@intel.com>,
+	Lars Persson <lars.persson@axis.com>,
+	Madhavan Srinivasan <maddy@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Maxim Levitsky <maximlevitsky@gmail.com>,
+	Michael Ellerman <mpe@ellerman.id.au>,
+	Nicholas Piggin <npiggin@gmail.com>,
+	Niklas Cassel <cassel@kernel.org>,
+	Palmer Dabbelt <palmer@dabbelt.com>,
+	Paul Walmsley <paul.walmsley@sifive.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Shameer Kolothum <shameerali.kolothum.thodi@huawei.com>,
+	Shuah Khan <shuah@kernel.org>,
+	Simona Vetter <simona@ffwll.ch>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Thomas Bogendoerfer <tsbogend@alpha.franken.de>,
+	Thomas Gleixner <tglx@linutronix.de>,
+	Tvrtko Ursulin <tursulin@ursulin.net>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	WANG Xuerui <kernel@xen0n.name>,
+	Will Deacon <will@kernel.org>,
+	Yishai Hadas <yishaih@nvidia.com>
+Subject: [PATCH RFC 00/35] mm: remove nth_page()
+Date: Thu, 21 Aug 2025 22:06:26 +0200
+Message-ID: <20250821200701.1329277-1-david@redhat.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V2] ufs: ufs-qcom: Fix ESI null pointer dereference
-To: <mani@kernel.org>, <James.Bottomley@HansenPartnership.com>,
-        <martin.petersen@oracle.com>, <bvanassche@acm.org>,
-        <neil.armstrong@linaro.org>, <konrad.dybcio@oss.qualcomm.com>,
-        <tglx@linutronix.de>
-CC: <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-        <linux-scsi@vger.kernel.org>,
-        Manivannan Sadhasivam
-	<manivannan.sadhasivam@linaro.org>
-References: <20250811073330.20230-1-quic_nitirawa@quicinc.com>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <20250811073330.20230-1-quic_nitirawa@quicinc.com>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: kgP4i14-hbJhaFOxUebTEomm4VdDMgRK
-X-Proofpoint-ORIG-GUID: kgP4i14-hbJhaFOxUebTEomm4VdDMgRK
-X-Authority-Analysis: v=2.4 cv=Xpij+VF9 c=1 sm=1 tr=0 ts=68a7742b cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=KKAkSRfTAAAA:8
- a=bLk-5xynAAAA:8 a=COk6AnOGAAAA:8 a=oc46TbI3oXTmutG3ynwA:9 a=QEXdDO2ut3YA:10
- a=cvBusfyB2V15izCimMoJ:22 a=zSyb8xVVt2t83sZkrLMb:22 a=TjNXssC_j7lpFel5tvFf:22
- a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIwMDAxMyBTYWx0ZWRfX5k8QbofMx7l3
- gLXsxr8OzxCQR7tLyR7oFzuhNY07cqdZ/zg0xxMNPREyePvv8iSO0hB0i/YFrQun4RSB6Nj7w9e
- eOiVgGqe/Dz80UUtkop2qUbCWEn3UqoIezdBeelxgdJLwoVmymR/uwO9nj1cOmUDL1e79F4w0/z
- u0fu6XWGOfB1kgoSb2G40CMDnaxb5NOzbOEGKSaXCAd56Qc/7jZqLJNCOcERWoQtPUgW3mZrXkH
- BPaxr3TL7lTNBWbmRxQ8Jvz+Xmvrk6shGcJuC/L8AWS4nqTokR+Qnxhl4udXGkTGFO1zLEmRtxl
- XoGT5Gj5u7jcD53aX2529/kAKttZnnp6imv5a9Ogj7Oua1JmL+SU7B8ztY0C+lhL0JqgxdOs9af
- 3GOAM+3GawpGXYaGLT/pcoPChWiUJg==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-21_03,2025-08-20_03,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 clxscore=1015 lowpriorityscore=0 bulkscore=0 impostorscore=0
- adultscore=0 spamscore=0 phishscore=0 malwarescore=0 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2508110000 definitions=main-2508200013
+Content-Transfer-Encoding: 8bit
+
+This is based on mm-unstable and was cross-compiled heavily.
+
+I should probably have already dropped the RFC label but I want to hear
+first if I ignored some corner case (SG entries?) and I need to do
+at least a bit more testing.
+
+I will only CC non-MM folks on the cover letter and the respective patch
+to not flood too many inboxes (the lists receive all patches).
+
+---
+
+As discussed recently with Linus, nth_page() is just nasty and we would
+like to remove it.
+
+To recap, the reason we currently need nth_page() within a folio is because
+on some kernel configs (SPARSEMEM without SPARSEMEM_VMEMMAP), the
+memmap is allocated per memory section.
+
+While buddy allocations cannot cross memory section boundaries, hugetlb
+and dax folios can.
+
+So crossing a memory section means that "page++" could do the wrong thing.
+Instead, nth_page() on these problematic configs always goes from
+page->pfn, to the go from (++pfn)->page, which is rather nasty.
+
+Likely, many people have no idea when nth_page() is required and when
+it might be dropped.
+
+We refer to such problematic PFN ranges and "non-contiguous pages".
+If we only deal with "contiguous pages", there is not need for nth_page().
+
+Besides that "obvious" folio case, we might end up using nth_page()
+within CMA allocations (again, could span memory sections), and in
+one corner case (kfence) when processing memblock allocations (again,
+could span memory sections).
+
+So let's handle all that, add sanity checks, and remove nth_page().
+
+Patch #1 -> #5   : stop making SPARSEMEM_VMEMMAP user-selectable + cleanups
+Patch #6 -> #12  : disallow folios to have non-contiguous pages
+Patch #13 -> #20 : remove nth_page() usage within folios
+Patch #21        : disallow CMA allocations of non-contiguous pages
+Patch #22 -> #31 : sanity+check + remove nth_page() usage within SG entry
+Patch #32        : sanity-check + remove nth_page() usage in
+                   unpin_user_page_range_dirty_lock()
+Patch #33        : remove nth_page() in kfence
+Patch #34        : adjust stale comment regarding nth_page
+Patch #35        : mm: remove nth_page()
+
+A lot of this is inspired from the discussion at [1] between Linus, Jason
+and me, so cudos to them.
+
+[1] https://lore.kernel.org/all/CAHk-=wiCYfNp4AJLBORU-c7ZyRBUp66W2-Et6cdQ4REx-GyQ_A@mail.gmail.com/T/#u
+
+Cc: Andrew Morton <akpm@linux-foundation.org>
+Cc: Linus Torvalds <torvalds@linux-foundation.org>
+Cc: Jason Gunthorpe <jgg@nvidia.com>
+Cc: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Cc: "Liam R. Howlett" <Liam.Howlett@oracle.com>
+Cc: Vlastimil Babka <vbabka@suse.cz>
+Cc: Mike Rapoport <rppt@kernel.org>
+Cc: Suren Baghdasaryan <surenb@google.com>
+Cc: Michal Hocko <mhocko@suse.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Marek Szyprowski <m.szyprowski@samsung.com>
+Cc: Robin Murphy <robin.murphy@arm.com>
+Cc: John Hubbard <jhubbard@nvidia.com>
+Cc: Peter Xu <peterx@redhat.com>
+Cc: Alexander Potapenko <glider@google.com>
+Cc: Marco Elver <elver@google.com>
+Cc: Dmitry Vyukov <dvyukov@google.com>
+Cc: Brendan Jackman <jackmanb@google.com>
+Cc: Johannes Weiner <hannes@cmpxchg.org>
+Cc: Zi Yan <ziy@nvidia.com>
+Cc: Dennis Zhou <dennis@kernel.org>
+Cc: Tejun Heo <tj@kernel.org>
+Cc: Christoph Lameter <cl@gentwo.org>
+Cc: Muchun Song <muchun.song@linux.dev>
+Cc: Oscar Salvador <osalvador@suse.de>
+Cc: x86@kernel.org
+Cc: linux-arm-kernel@lists.infradead.org
+Cc: linux-mips@vger.kernel.org
+Cc: linux-s390@vger.kernel.org
+Cc: linux-crypto@vger.kernel.org
+Cc: linux-ide@vger.kernel.org
+Cc: intel-gfx@lists.freedesktop.org
+Cc: dri-devel@lists.freedesktop.org
+Cc: linux-mmc@vger.kernel.org
+Cc: linux-arm-kernel@axis.com
+Cc: linux-scsi@vger.kernel.org
+Cc: kvm@vger.kernel.org
+Cc: virtualization@lists.linux.dev
+Cc: linux-mm@kvack.org
+Cc: io-uring@vger.kernel.org
+Cc: iommu@lists.linux.dev
+Cc: kasan-dev@googlegroups.com
+Cc: wireguard@lists.zx2c4.com
+Cc: netdev@vger.kernel.org
+Cc: linux-kselftest@vger.kernel.org
+Cc: linux-riscv@lists.infradead.org
+
+David Hildenbrand (35):
+  mm: stop making SPARSEMEM_VMEMMAP user-selectable
+  arm64: Kconfig: drop superfluous "select SPARSEMEM_VMEMMAP"
+  s390/Kconfig: drop superfluous "select SPARSEMEM_VMEMMAP"
+  x86/Kconfig: drop superfluous "select SPARSEMEM_VMEMMAP"
+  wireguard: selftests: remove CONFIG_SPARSEMEM_VMEMMAP=y from qemu
+    kernel config
+  mm/page_alloc: reject unreasonable folio/compound page sizes in
+    alloc_contig_range_noprof()
+  mm/memremap: reject unreasonable folio/compound page sizes in
+    memremap_pages()
+  mm/hugetlb: check for unreasonable folio sizes when registering hstate
+  mm/mm_init: make memmap_init_compound() look more like
+    prep_compound_page()
+  mm/hugetlb: cleanup hugetlb_folio_init_tail_vmemmap()
+  mm: sanity-check maximum folio size in folio_set_order()
+  mm: limit folio/compound page sizes in problematic kernel configs
+  mm: simplify folio_page() and folio_page_idx()
+  mm/mm/percpu-km: drop nth_page() usage within single allocation
+  fs: hugetlbfs: remove nth_page() usage within folio in
+    adjust_range_hwpoison()
+  mm/pagewalk: drop nth_page() usage within folio in folio_walk_start()
+  mm/gup: drop nth_page() usage within folio when recording subpages
+  io_uring/zcrx: remove "struct io_copy_cache" and one nth_page() usage
+  io_uring/zcrx: remove nth_page() usage within folio
+  mips: mm: convert __flush_dcache_pages() to
+    __flush_dcache_folio_pages()
+  mm/cma: refuse handing out non-contiguous page ranges
+  dma-remap: drop nth_page() in dma_common_contiguous_remap()
+  scatterlist: disallow non-contigous page ranges in a single SG entry
+  ata: libata-eh: drop nth_page() usage within SG entry
+  drm/i915/gem: drop nth_page() usage within SG entry
+  mspro_block: drop nth_page() usage within SG entry
+  memstick: drop nth_page() usage within SG entry
+  mmc: drop nth_page() usage within SG entry
+  scsi: core: drop nth_page() usage within SG entry
+  vfio/pci: drop nth_page() usage within SG entry
+  crypto: remove nth_page() usage within SG entry
+  mm/gup: drop nth_page() usage in unpin_user_page_range_dirty_lock()
+  kfence: drop nth_page() usage
+  block: update comment of "struct bio_vec" regarding nth_page()
+  mm: remove nth_page()
+
+ arch/arm64/Kconfig                            |  1 -
+ arch/mips/include/asm/cacheflush.h            | 11 +++--
+ arch/mips/mm/cache.c                          |  8 ++--
+ arch/s390/Kconfig                             |  1 -
+ arch/x86/Kconfig                              |  1 -
+ crypto/ahash.c                                |  4 +-
+ crypto/scompress.c                            |  8 ++--
+ drivers/ata/libata-sff.c                      |  6 +--
+ drivers/gpu/drm/i915/gem/i915_gem_pages.c     |  2 +-
+ drivers/memstick/core/mspro_block.c           |  3 +-
+ drivers/memstick/host/jmb38x_ms.c             |  3 +-
+ drivers/memstick/host/tifm_ms.c               |  3 +-
+ drivers/mmc/host/tifm_sd.c                    |  4 +-
+ drivers/mmc/host/usdhi6rol0.c                 |  4 +-
+ drivers/scsi/scsi_lib.c                       |  3 +-
+ drivers/scsi/sg.c                             |  3 +-
+ drivers/vfio/pci/pds/lm.c                     |  3 +-
+ drivers/vfio/pci/virtio/migrate.c             |  3 +-
+ fs/hugetlbfs/inode.c                          | 25 ++++------
+ include/crypto/scatterwalk.h                  |  4 +-
+ include/linux/bvec.h                          |  7 +--
+ include/linux/mm.h                            | 48 +++++++++++++++----
+ include/linux/page-flags.h                    |  5 +-
+ include/linux/scatterlist.h                   |  4 +-
+ io_uring/zcrx.c                               | 34 ++++---------
+ kernel/dma/remap.c                            |  2 +-
+ mm/Kconfig                                    |  3 +-
+ mm/cma.c                                      | 36 +++++++++-----
+ mm/gup.c                                      | 13 +++--
+ mm/hugetlb.c                                  | 23 ++++-----
+ mm/internal.h                                 |  1 +
+ mm/kfence/core.c                              | 17 ++++---
+ mm/memremap.c                                 |  3 ++
+ mm/mm_init.c                                  | 13 ++---
+ mm/page_alloc.c                               |  5 +-
+ mm/pagewalk.c                                 |  2 +-
+ mm/percpu-km.c                                |  2 +-
+ mm/util.c                                     | 33 +++++++++++++
+ tools/testing/scatterlist/linux/mm.h          |  1 -
+ .../selftests/wireguard/qemu/kernel.config    |  1 -
+ 40 files changed, 203 insertions(+), 150 deletions(-)
 
 
-
-On 8/11/2025 1:03 PM, Nitin Rawat wrote:
-> ESI/MSI is a performance optimization feature that provides dedicated
-> interrupts per MCQ hardware queue . This is optional feature and
-> UFS MCQ should work with and without ESI feature.
-> 
-> Commit e46a28cea29a ("scsi: ufs: qcom: Remove the MSI descriptor abuse")
-> brings a regression in ESI (Enhanced System Interrupt) configuration
-> that causes a null pointer dereference when Platform MSI allocation
-> fails.
-> 
-> The issue occurs in when platform_device_msi_init_and_alloc_irqs()
-> in ufs_qcom_config_esi() fails (returns -EINVAL) but the current
-> code uses __free() macro for automatic cleanup free MSI resources
-> that were never successfully allocated.
-> 
-> Unable to handle kernel NULL pointer dereference at virtual
-> address 0000000000000008
-> 
->    Call trace:
->    mutex_lock+0xc/0x54 (P)
->    platform_device_msi_free_irqs_all+0x1c/0x40
->    ufs_qcom_config_esi+0x1d0/0x220 [ufs_qcom]
->    ufshcd_config_mcq+0x28/0x104
->    ufshcd_init+0xa3c/0xf40
->    ufshcd_pltfrm_init+0x504/0x7d4
->    ufs_qcom_probe+0x20/0x58 [ufs_qcom]
-> 
-> Fix by restructuring the ESI configuration to try MSI allocation
-> first, before any other resource allocation and instead use
-> explicit cleanup instead of __free() macro to avoid cleanup
-> of unallocated resources.
-> 
-> Tested on SM8750 platform with MCQ enabled, both with and without
-> Platform ESI support.
-> 
-> Fixes: e46a28cea29a ("scsi: ufs: qcom: Remove the MSI descriptor abuse")
-> Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
-> Cc: Thomas Gleixner <tglx@linutronix.de>
-> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> ---
-> Changes from v1:
-> 1. Added correct sha1 of change id which caused regression.
-> 2. Address Markus comment to add fixes: and Cc: tags.
-> ---
->   drivers/ufs/host/ufs-qcom.c | 39 ++++++++++++++-----------------------
->   1 file changed, 15 insertions(+), 24 deletions(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 4bbe4de1679b..bef8dc12de20 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -2078,17 +2078,6 @@ static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *data)
->   	return IRQ_HANDLED;
->   }
-> 
-> -static void ufs_qcom_irq_free(struct ufs_qcom_irq *uqi)
-> -{
-> -	for (struct ufs_qcom_irq *q = uqi; q->irq; q++)
-> -		devm_free_irq(q->hba->dev, q->irq, q->hba);
-> -
-> -	platform_device_msi_free_irqs_all(uqi->hba->dev);
-> -	devm_kfree(uqi->hba->dev, uqi);
-> -}
-> -
-> -DEFINE_FREE(ufs_qcom_irq, struct ufs_qcom_irq *, if (_T) ufs_qcom_irq_free(_T))
-> -
->   static int ufs_qcom_config_esi(struct ufs_hba *hba)
->   {
->   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
-> @@ -2103,18 +2092,18 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
->   	 */
->   	nr_irqs = hba->nr_hw_queues - hba->nr_queues[HCTX_TYPE_POLL];
-> 
-> -	struct ufs_qcom_irq *qi __free(ufs_qcom_irq) =
-> -		devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi), GFP_KERNEL);
-> -	if (!qi)
-> -		return -ENOMEM;
-> -	/* Preset so __free() has a pointer to hba in all error paths */
-> -	qi[0].hba = hba;
-> -
->   	ret = platform_device_msi_init_and_alloc_irqs(hba->dev, nr_irqs,
->   						      ufs_qcom_write_msi_msg);
->   	if (ret) {
-> -		dev_err(hba->dev, "Failed to request Platform MSI %d\n", ret);
-> -		return ret;
-> +		dev_warn(hba->dev, "Platform MSI not supported or failed, continuing without ESI\n");
-> +		return ret; /* Continue without ESI */
-> +	}
-> +
-> +	struct ufs_qcom_irq *qi = devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi), GFP_KERNEL);
-> +
-> +	if (!qi) {
-> +		platform_device_msi_free_irqs_all(hba->dev);
-> +		return -ENOMEM;
->   	}
-> 
->   	for (int idx = 0; idx < nr_irqs; idx++) {
-> @@ -2125,15 +2114,17 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
->   		ret = devm_request_irq(hba->dev, qi[idx].irq, ufs_qcom_mcq_esi_handler,
->   				       IRQF_SHARED, "qcom-mcq-esi", qi + idx);
->   		if (ret) {
-> -			dev_err(hba->dev, "%s: Fail to request IRQ for %d, err = %d\n",
-> +			dev_err(hba->dev, "%s: Failed to request IRQ for %d, err = %d\n",
->   				__func__, qi[idx].irq, ret);
-> -			qi[idx].irq = 0;
-> +			/* Free previously allocated IRQs */
-> +			for (int j = 0; j < idx; j++)
-> +				devm_free_irq(hba->dev, qi[j].irq, qi + j);
-> +			platform_device_msi_free_irqs_all(hba->dev);
-> +			devm_kfree(hba->dev, qi);
->   			return ret;
->   		}
->   	}
-> 
-> -	retain_and_null_ptr(qi);
-> -
->   	if (host->hw_ver.major >= 6) {
->   		ufshcd_rmwl(hba, ESI_VEC_MASK, FIELD_PREP(ESI_VEC_MASK, MAX_ESI_VEC - 1),
->   			    REG_UFS_CFG3);
-> --
-> 2.48.1
-> 
-
-Gentle Reminder!!
+base-commit: c0e3b3f33ba7b767368de4afabaf7c1ddfdc3872
+-- 
+2.50.1
 
