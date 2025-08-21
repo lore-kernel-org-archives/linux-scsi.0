@@ -1,70 +1,70 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EDF437289B
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 20:08:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 46107374289
+	for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 20:08:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755806907; cv=none; b=HUGeoL5H4wKk/MYrTjvwhUymqSu8Bel4ajmQo+TPZcZXl+gwxM7cA1LluiVxHqiKEYNnXR4E/7D+epb3rx5KHaYdBUoH08PAseypKS8WC+++U/Ujw8munLngYdIIBX2hwNxOxrM4WkrNCNBBwOI7QgxnAh4L+0cKBj9fTI08/0s=
+	t=1755806909; cv=none; b=Jj8EQgMWB4MPh0HE6q+/uJOiJNm42oUp4hr51ts/X2bI2aZ+zOpnBaiK7n1vRQWVgX5HRnefBsE7tZotolbX8TO+s1lVxQkb1LEYZEOIb+EG1aolecGhZc7LgBr7mVOf/Ydx+qOso7IJRN6gslZ76cGnGkjtT0wAB9icezH/si4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755806907; c=relaxed/simple;
-	bh=sP22NtXAK7RUwr0f+hWxIzaLt9EECIyrZ2EEKfR5Am4=;
+	s=arc-20240116; t=1755806909; c=relaxed/simple;
+	bh=bq2gWh1hWRAlT57D1zXSNbOueAtiEim7ETzHNFHN/Ro=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sUeiHRBWWbXMo8WsPFisjoEfaP7ys5dJgyCPas/1SD1FbQye0z/LVjs5KZkwVQ4f4CqlrZLDn9cuFc1YPTXPM4LtVZMEArptpPsuR8sy892cnOB7h6f2+FJbj1Kr8cdYyG/4W0srRTQS63JRYvrXsWso8xklIE6xNcldTHtyERE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QwRLkPIR; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=o5Xw3LJdGQVt2Z0JgPdRTyKD+bKi7487d3v/RxHdzzWqWi0wS8UDEt6/cZi8S/Y9RMY4V5/i1EvC6rN3/LWipEq5SGgqH5sMu0akau9bRMZ5hWelFoRZ2QgbT/jy0EwIfa5h5XC8TnibKkhwiZys5jE/54BS020yV1pnyHq8kzM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fdA0r21N; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QwRLkPIR"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fdA0r21N"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1755806904;
+	s=mimecast20190719; t=1755806906;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=5m4ogAvLOK+AKMqlHwhkjmyVbS/4gGgmBykcdwEFmjg=;
-	b=QwRLkPIRQJar9QXzAMrCIHPucU14oN4FlrZoD0fhCyPb1aTLhJj7/3LpoqPNPFLvBOI6Zx
-	74pATYiShwnQ9rTAwnMMQ3dVTUdbk/CkmO8v5Z2pnsFSIWjBE76cqtlZ2pUMgwqk3zZfJL
-	ZroEdUEWDye6/obpB5nSueoL7M5v3BA=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
+	bh=yR/3u5W37RASrGsn/s3pQVQ78UUgH4ByCavV3b4UG3M=;
+	b=fdA0r21N38x+v2UQLIZ9WgOzWypzyF/gGbyMtQrNNeIBCBkAH7jv3EsB2igOSoB1bm5R0u
+	zwSo3epyzhY1kDhsD1gVzR3BS/SSw7j4pFu5qqw1G9nF2GyfOSX3B4rDzNGsDz+YRLxAib
+	yGhcCmMtiIyZzytyFFCB9WOUCQp/uaY=
+Received: from mail-wm1-f72.google.com (mail-wm1-f72.google.com
+ [209.85.128.72]) by relay.mimecast.com with ESMTP with STARTTLS
  (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-269-kaoO0HD5OGWWdFsZZ2Ttsw-1; Thu, 21 Aug 2025 16:08:21 -0400
-X-MC-Unique: kaoO0HD5OGWWdFsZZ2Ttsw-1
-X-Mimecast-MFC-AGG-ID: kaoO0HD5OGWWdFsZZ2Ttsw_1755806900
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-45b4d6f3ab0so8382815e9.0
-        for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 13:08:21 -0700 (PDT)
+ us-mta-253-QgAX_ijlNmKccTIMXKlNuQ-1; Thu, 21 Aug 2025 16:08:25 -0400
+X-MC-Unique: QgAX_ijlNmKccTIMXKlNuQ-1
+X-Mimecast-MFC-AGG-ID: QgAX_ijlNmKccTIMXKlNuQ_1755806904
+Received: by mail-wm1-f72.google.com with SMTP id 5b1f17b1804b1-45a15fd6b45so10809195e9.1
+        for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 13:08:24 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1755806900; x=1756411700;
+        d=1e100.net; s=20230601; t=1755806904; x=1756411704;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=5m4ogAvLOK+AKMqlHwhkjmyVbS/4gGgmBykcdwEFmjg=;
-        b=ZkdngnZc0K5gbbyQ2j10npOWBk+UP+2CcsW6e9nn0mcQUSjYoyrwPqlqzloPqHdkO/
-         J0BmPF57Dv6b3g/zmzCcY1x5k1Yopag/v0TGrQh7J+gPxPs9j4vchPyKjQzAsS0vY//e
-         GXiCakkVz2zirgBGzZ8Ibmzppx4KverfuT7jMHzy7+dME7ukWpUFgdchFiKyOuPhfARn
-         y4tBS2Tics/bYJKv1MpmO+VOXmUDYV47hmHF/DNIDbsPD+i4RSQ1RVtBHffzDTJQm7yN
-         s3dATqKL9RmgQ8jvkJgTzg7lwkrxqj0jDb3Y6Ja3T2YB4MomrH9HhsSR2hpyjD/v2YbP
-         RNYw==
-X-Forwarded-Encrypted: i=1; AJvYcCU+2x/+7Jq7xx0gHDGvdYVVIXvHNJRdxdRRyA1Eq/0aTw86zRoA+8XqvPkX26LrugbySJfTdn6XS7cW@vger.kernel.org
-X-Gm-Message-State: AOJu0YwVm9EdZjdCr5r/OK3vs/HT7h1ZsEeweunG9CbCFwKMXXrwK/B1
-	iM0dMGVh9C/HEKkCW2zvAWCVUBAAarzdk4Wgxdduo/rI5+ZYxOXsGRiCq28vYobTPs1vvDpGZ7+
-	7wZ6qD7EXgF3Gz6GsoNF/aB2f/vUK/PEeBAF4K+XGSr6WHiHx1GHoa05VbSh01Nw=
-X-Gm-Gg: ASbGnct9jIH4MFf5i6p3D4Jyh6F+jTRucK6MOakmFZmGjjyVOX9yCmBPUzbLNoBojAD
-	NJ9/ME8uDbykrWetqK3oSaNyMatWNvuS/iIbS7+yifMK5INlJTBrQQ6E5WvZY7nUR4yGoU4CMtR
-	tr1KtF4XJkC7FlpNRlLbp9H3mqOcsP5uCVWzxB1fpAiQ507bV4i+McS40PUeajD0xtfp4YXX3Lf
-	821Jf0vXbQtAQMICmGJmFlDOO5Gh6Uxak1djrqa6/q53emaIz0rdMaFkh8B8wxvQRlp4hgIsKSl
-	AMeRbJoGOMUvZBe4dMQEdCHjDYgiZbMUDCy2oXZP5vGvpHNRZxhkcjlWSLd72sHVcceK9IFHdBx
-	UaNG1rLuXDC/l8cS4eXuaIA==
-X-Received: by 2002:a05:600d:15a:10b0:458:bc3f:6a77 with SMTP id 5b1f17b1804b1-45b51f2fe8dmr510015e9.2.1755806900253;
-        Thu, 21 Aug 2025 13:08:20 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGpV2b3uhR/IYbmrTMgtg0gx1wkF4+JdBDenNBBSMhYf9nynPUCNMa8PTADPxo4/liFiw6TqA==
-X-Received: by 2002:a05:600d:15a:10b0:458:bc3f:6a77 with SMTP id 5b1f17b1804b1-45b51f2fe8dmr509915e9.2.1755806899756;
-        Thu, 21 Aug 2025 13:08:19 -0700 (PDT)
+        bh=yR/3u5W37RASrGsn/s3pQVQ78UUgH4ByCavV3b4UG3M=;
+        b=kKXMG/5/HYpToG/a5JFPJUcv64t6TMq9MPtoEOcNjisobcnrey9540hHmWpT3fsWfR
+         Sk2Tt3pgNVXJHDCff3WVBiB/GS90uP39AHM3kLp5iWXeVCJjkAkdF3pEgUFemJqzOpAe
+         y1QiBUGsBf+fQVB8+G/0TuzLs6MxveEX+kasvLKSwPe2VEbOS+6G0LGA6nFHRbe0Kg+S
+         KJi5GQ5xFnKKiRrPSUPKUEXh2p/7M2eAspK5TRvF/M6MDJbkJ2IlrEkl4vX2cq0jKjrQ
+         pJqMVQXtg1ylZfUaBPnJ4JM+GMlFGqlCWBrIXj+8bb1o2FlE4ZcaRFy5H5NwO7FF5UYx
+         6A/g==
+X-Forwarded-Encrypted: i=1; AJvYcCVjvrZFbk+tInKIT6vMa9i2xIPmCppYuZfd0M0o7LrEzkFsxnUvkUqykohReMlrT2jZVi+eDgUXUMJk@vger.kernel.org
+X-Gm-Message-State: AOJu0YweHUInf1CJ97ScCEPwoKQOBCKiG7z6PAOHCtFQ/x8JirX0Mq6q
+	H4gA1VpAlpa4rMXNvp2mc3HWtAahCVWnwlxcstKFFhnNy+ni1qA2ClwNyq72/xnWznZoNjFXyVo
+	P8F86PnkyDVh72ZASGAvQQpwiK3JZZ24pP6HzMvowvoYAGBTvZKtYO8a57BYZgmU=
+X-Gm-Gg: ASbGncsautZtIAsmHTfkvagHTNkV1WMkT3LIBbU+DkSLG/n+MkAiZEX+qexdxhOtx9s
+	7peETW7PKrjoOmJiWy0rSLhqMGlt/4Fe0Rg9t4VMWGCh9JQHjZy5GHhQfaLz18KZRVzalmcDJBK
+	wbocF6l+bkiAeu6jSulq3Njm7D73qMrdfHS5hfxq9bZCKUN/x5B9VYj6UUgSSJOM5X6x5ZV6+TI
+	gjuoBWyhSF6glVc3ctcWHgWQ+Rm3BTU6IqNvAwB4ZN95hp8RcIGcrfEQDz7bo/O35sHttoSn6sn
+	6at//b55jguhp9+QlNZhMzl8mxdqTECJZHPIFnXJ69sdDCQGWrzKIv37bA5tabXNkJeDDcQtnue
+	heTAEsr5n/5s3gwDYVSZdFg==
+X-Received: by 2002:a05:6000:310e:b0:3c3:5406:12b0 with SMTP id ffacd0b85a97d-3c5d53b40abmr247311f8f.30.1755806903848;
+        Thu, 21 Aug 2025 13:08:23 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IH+53ePp4gOBoZK5+aLlST4uu6G3xHtHBUa0vmdrbtPfJ4bf44S3Zn2IpCr0m84pAneAOD81g==
+X-Received: by 2002:a05:6000:310e:b0:3c3:5406:12b0 with SMTP id ffacd0b85a97d-3c5d53b40abmr247245f8f.30.1755806903113;
+        Thu, 21 Aug 2025 13:08:23 -0700 (PDT)
 Received: from localhost (p200300d82f26ba0008036ec5991806fd.dip0.t-ipconnect.de. [2003:d8:2f26:ba00:803:6ec5:9918:6fd])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3c07487986fsm13999227f8f.1.2025.08.21.13.08.17
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-3c0771c1708sm13032145f8f.38.2025.08.21.13.08.20
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 21 Aug 2025 13:08:19 -0700 (PDT)
+        Thu, 21 Aug 2025 13:08:22 -0700 (PDT)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: David Hildenbrand <david@redhat.com>,
@@ -117,9 +117,9 @@ Cc: David Hildenbrand <david@redhat.com>,
 	wireguard@lists.zx2c4.com,
 	x86@kernel.org,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH RFC 26/35] mspro_block: drop nth_page() usage within SG entry
-Date: Thu, 21 Aug 2025 22:06:52 +0200
-Message-ID: <20250821200701.1329277-27-david@redhat.com>
+Subject: [PATCH RFC 27/35] memstick: drop nth_page() usage within SG entry
+Date: Thu, 21 Aug 2025 22:06:53 +0200
+Message-ID: <20250821200701.1329277-28-david@redhat.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20250821200701.1329277-1-david@redhat.com>
 References: <20250821200701.1329277-1-david@redhat.com>
@@ -139,23 +139,38 @@ Cc: Alex Dubov <oakad@yahoo.com>
 Cc: Ulf Hansson <ulf.hansson@linaro.org>
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- drivers/memstick/core/mspro_block.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/memstick/host/jmb38x_ms.c | 3 +--
+ drivers/memstick/host/tifm_ms.c   | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/memstick/core/mspro_block.c b/drivers/memstick/core/mspro_block.c
-index c9853d887d282..985cfca3f6944 100644
---- a/drivers/memstick/core/mspro_block.c
-+++ b/drivers/memstick/core/mspro_block.c
-@@ -560,8 +560,7 @@ static int h_mspro_block_transfer_data(struct memstick_dev *card,
- 		t_offset += msb->current_page * msb->page_size;
+diff --git a/drivers/memstick/host/jmb38x_ms.c b/drivers/memstick/host/jmb38x_ms.c
+index cddddb3a5a27f..c5e71d39ffd51 100644
+--- a/drivers/memstick/host/jmb38x_ms.c
++++ b/drivers/memstick/host/jmb38x_ms.c
+@@ -317,8 +317,7 @@ static int jmb38x_ms_transfer_data(struct jmb38x_ms_host *host)
+ 		unsigned int p_off;
  
- 		sg_set_page(&t_sg,
--			    nth_page(sg_page(&(msb->req_sg[msb->current_seg])),
--				     t_offset >> PAGE_SHIFT),
-+			    sg_page(&(msb->req_sg[msb->current_seg])) + t_offset / PAGE_SIZE,
- 			    msb->page_size, offset_in_page(t_offset));
+ 		if (host->req->long_data) {
+-			pg = nth_page(sg_page(&host->req->sg),
+-				      off >> PAGE_SHIFT);
++			pg = sg_page(&host->req->sg) + off / PAGE_SIZE;
+ 			p_off = offset_in_page(off);
+ 			p_cnt = PAGE_SIZE - p_off;
+ 			p_cnt = min(p_cnt, length);
+diff --git a/drivers/memstick/host/tifm_ms.c b/drivers/memstick/host/tifm_ms.c
+index db7f3a088fb09..0d64184ca10a9 100644
+--- a/drivers/memstick/host/tifm_ms.c
++++ b/drivers/memstick/host/tifm_ms.c
+@@ -201,8 +201,7 @@ static unsigned int tifm_ms_transfer_data(struct tifm_ms *host)
+ 		unsigned int p_off;
  
- 		memstick_init_req_sg(*mrq, msb->data_dir == READ
+ 		if (host->req->long_data) {
+-			pg = nth_page(sg_page(&host->req->sg),
+-				      off >> PAGE_SHIFT);
++			pg = sg_page(&host->req->sg) + off / PAGE_SIZE;
+ 			p_off = offset_in_page(off);
+ 			p_cnt = PAGE_SIZE - p_off;
+ 			p_cnt = min(p_cnt, length);
 -- 
 2.50.1
 
