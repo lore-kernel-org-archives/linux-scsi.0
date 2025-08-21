@@ -1,48 +1,48 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DA12343D76
-	for <linux-scsi@vger.kernel.org>; Thu, 21 Aug 2025 18:20:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 879F51A9FAB;
+	Thu, 21 Aug 2025 19:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755800432; cv=none; b=FgeYGQQ7rrf4GnxY8335HmpxrYIXSRV6TqA84qgKx9osC+pHM6GzICkaIC9GrtCaawaC9JTvnUrZb4ajJC7Phyargvvtqd3Ph6Gdz+JSavYl9cR9G5/N8EljvUQbts4AKB+Xt0iDAn+GAeP+zxKFGRoVy6TisZ+FD0JIFb6yl0A=
+	t=1755804744; cv=none; b=h+xZ50T+wvGKEQTxLb4HNBkQ5m/X0XEAAMl8IJpCG63Jglp/1KDYw7tC7K7DkISTTAPA+LstLisxAyJlLMadN0qOBJN/622Ce67uBBaDaMRHHAT8cyw9FSMg1TpHxlLMHjTZFEmU5zPGmcZ8ROuy7YhxGqneE7rQ2Xu8RMmwy2c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755800432; c=relaxed/simple;
-	bh=zNxEAnYBYyd2jVal04xja+3hPhbUKjMh0QQ4sMuIWjs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jnv2sY7YAbuQmJCz+KKp4jrJ5vzSstv57vSdPafrv5VBd9yek66GP9qO5VXydnH7ZLwHHGmqb5MB2ost9m7c9dsOxehWsvhjgjjaXI940wdXLU8e9bieZOJQnQLwU1cNi0ccw+A2vI8NhCVnsyFOSpKfXoUy2w0Fqf3wmxb4qL8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Q6wNmJgX; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755804744; c=relaxed/simple;
+	bh=0frOgS9WIcvtIG2b13AfgNHG9HYu1+yVQ2P6qgQCUbY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=iHpJhAx4FsUdRmYuNALlcWNZ//jzs2o2NuJry1SUhJkbzEhXV38GRd9C541Gu/h+mCKChyySZsNffv5C/wFbuUb9fT2BfwofgNt8DItjCwB8dcr2LUQM015X1xdVF6l4p8yPLndMHquP692fLge6TyXzuge7NsKOE3v5iwoO7og=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=H+lfUFqK; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Q6wNmJgX"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4c7BSs27T5zm0yQp;
-	Thu, 21 Aug 2025 18:20:29 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755800427; x=1758392428; bh=HICNePmOOq1Qvn3MCTUr9IR7
-	kmkelfiS6FVWZ60T0Gs=; b=Q6wNmJgXQB/FdCGXbuF/BdSNy1mbmUMtIjAwnQrx
-	7pJMTHHdV8k0c/ClJG/ozR0ALRKyB05L99qgVoGBlanMg9iylje+pS5HkIpSfG2V
-	rNLrdjlii8C1AngaYH1ZMAAkEd+Kp6PWvUb1RaLhPxsZoWQjJt7ZI4pma2ZENdBV
-	mUXQ/GB1w29QhCeBXeHnnzG2bpfAtaxdvNP3F3KSw4K4K20KrpF8ukYWxzQfr/bq
-	Ump6qCk0ngjcNG3H4j3jubIYt4gAiLmd7eja0AuoU3f4VErNXY9JyGq98f4+Ypkf
-	kJxLNKlUum4CzUbz/YZDsAoWYBDPHVdqSgmNcB4K6E8oDg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id KZkUA7b3i_5C; Thu, 21 Aug 2025 18:20:27 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4c7BSl6TGKzm0ySm;
-	Thu, 21 Aug 2025 18:20:22 +0000 (UTC)
-Message-ID: <368972fc-ce10-48f3-b527-be876092e17a@acm.org>
-Date: Thu, 21 Aug 2025 11:20:21 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="H+lfUFqK"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57LI9sAu008967;
+	Thu, 21 Aug 2025 19:31:56 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	tYpWCcbISjCNUzk4vHLgNXmnOMo66w5kv2nzcQwVeHo=; b=H+lfUFqKGGg8M2J5
+	WVJlM29tMWt/LolQvFZmYxbpSdErl8a8vVIz9Mclp+gnf/aXul4Mo9R1/ybdW4YF
+	XjgKac13UrX0/dcKgFKuFYdUccKG+/BmWBtQL7j/mchcstQ9XEJ6/i7mOMuE6kh/
+	ySndJwnRf5VuaOXQC5BlWABS0khPtKx2LujBAmFAiygPUP6p1EGjxl6xqty2R5Bt
+	Ro5OnJ1NF76v+27ZGkxKh1B1F8qTkP6BhNhyEduQdh7vTgpNk4UB1nIAp2kkz3ST
+	gdO/7mIsOM0kevZ4Z6vJAthBbOVP3ndkk/uorhM8/925TYLU/enQd+7ct0B87MEW
+	ckmQAQ==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48n52cpmsp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 21 Aug 2025 19:31:55 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57LJVtmK019161
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 21 Aug 2025 19:31:55 GMT
+Received: from [10.216.47.227] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.10; Thu, 21 Aug
+ 2025 12:31:51 -0700
+Message-ID: <37563dd8-341f-4db4-8a4b-c7f96dbfebff@quicinc.com>
+Date: Fri, 22 Aug 2025 01:01:47 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,178 +50,174 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 00/30] Optimize the hot path in the UFS driver
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, hch@lst.de, hare@suse.com
-References: <20250811173634.514041-1-bvanassche@acm.org>
- <d5cd0109-915f-4fe7-b6c2-34681b4b1763@oracle.com>
- <d4151040-ab1a-4b3c-b5f9-577e907b43fc@acm.org>
- <ff0705fe-0bac-408e-a073-a833525dabf8@oracle.com>
- <e651aa7e-aad2-4e4e-afff-3e89a61f13f9@acm.org>
- <71a41bd0-1243-4fb3-ae83-c2cfae229296@oracle.com>
+Subject: Re: [PATCH V2] ufs: ufs-qcom: Fix ESI null pointer dereference
+To: <mani@kernel.org>, <James.Bottomley@HansenPartnership.com>,
+        <martin.petersen@oracle.com>, <bvanassche@acm.org>,
+        <neil.armstrong@linaro.org>, <konrad.dybcio@oss.qualcomm.com>,
+        <tglx@linutronix.de>
+CC: <linux-arm-msm@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>,
+        Manivannan Sadhasivam
+	<manivannan.sadhasivam@linaro.org>
+References: <20250811073330.20230-1-quic_nitirawa@quicinc.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <71a41bd0-1243-4fb3-ae83-c2cfae229296@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <20250811073330.20230-1-quic_nitirawa@quicinc.com>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: kgP4i14-hbJhaFOxUebTEomm4VdDMgRK
+X-Proofpoint-ORIG-GUID: kgP4i14-hbJhaFOxUebTEomm4VdDMgRK
+X-Authority-Analysis: v=2.4 cv=Xpij+VF9 c=1 sm=1 tr=0 ts=68a7742b cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=KKAkSRfTAAAA:8
+ a=bLk-5xynAAAA:8 a=COk6AnOGAAAA:8 a=oc46TbI3oXTmutG3ynwA:9 a=QEXdDO2ut3YA:10
+ a=cvBusfyB2V15izCimMoJ:22 a=zSyb8xVVt2t83sZkrLMb:22 a=TjNXssC_j7lpFel5tvFf:22
+ a=cPQSjfK2_nFv0Q5t_7PE:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIwMDAxMyBTYWx0ZWRfX5k8QbofMx7l3
+ gLXsxr8OzxCQR7tLyR7oFzuhNY07cqdZ/zg0xxMNPREyePvv8iSO0hB0i/YFrQun4RSB6Nj7w9e
+ eOiVgGqe/Dz80UUtkop2qUbCWEn3UqoIezdBeelxgdJLwoVmymR/uwO9nj1cOmUDL1e79F4w0/z
+ u0fu6XWGOfB1kgoSb2G40CMDnaxb5NOzbOEGKSaXCAd56Qc/7jZqLJNCOcERWoQtPUgW3mZrXkH
+ BPaxr3TL7lTNBWbmRxQ8Jvz+Xmvrk6shGcJuC/L8AWS4nqTokR+Qnxhl4udXGkTGFO1zLEmRtxl
+ XoGT5Gj5u7jcD53aX2529/kAKttZnnp6imv5a9Ogj7Oua1JmL+SU7B8ztY0C+lhL0JqgxdOs9af
+ 3GOAM+3GawpGXYaGLT/pcoPChWiUJg==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-21_03,2025-08-20_03,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 clxscore=1015 lowpriorityscore=0 bulkscore=0 impostorscore=0
+ adultscore=0 spamscore=0 phishscore=0 malwarescore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2508110000 definitions=main-2508200013
 
-On 8/15/25 12:50 AM, John Garry wrote:
-> Anyway, here is a reference implementation:
-> https://lore.kernel.org/linux-scsi/1666693096-180008-5-git-send-email- 
-> john.garry@huawei.com/
 
-How about using the (lightly tested) patch below instead of that patch?
-The patch below has the advantage that it doesn't duplicate any SCSI
-core code. Additionally, it preserves the logic for initializing driver-
-private data for reserved commands.
 
-Thanks,
+On 8/11/2025 1:03 PM, Nitin Rawat wrote:
+> ESI/MSI is a performance optimization feature that provides dedicated
+> interrupts per MCQ hardware queue . This is optional feature and
+> UFS MCQ should work with and without ESI feature.
+> 
+> Commit e46a28cea29a ("scsi: ufs: qcom: Remove the MSI descriptor abuse")
+> brings a regression in ESI (Enhanced System Interrupt) configuration
+> that causes a null pointer dereference when Platform MSI allocation
+> fails.
+> 
+> The issue occurs in when platform_device_msi_init_and_alloc_irqs()
+> in ufs_qcom_config_esi() fails (returns -EINVAL) but the current
+> code uses __free() macro for automatic cleanup free MSI resources
+> that were never successfully allocated.
+> 
+> Unable to handle kernel NULL pointer dereference at virtual
+> address 0000000000000008
+> 
+>    Call trace:
+>    mutex_lock+0xc/0x54 (P)
+>    platform_device_msi_free_irqs_all+0x1c/0x40
+>    ufs_qcom_config_esi+0x1d0/0x220 [ufs_qcom]
+>    ufshcd_config_mcq+0x28/0x104
+>    ufshcd_init+0xa3c/0xf40
+>    ufshcd_pltfrm_init+0x504/0x7d4
+>    ufs_qcom_probe+0x20/0x58 [ufs_qcom]
+> 
+> Fix by restructuring the ESI configuration to try MSI allocation
+> first, before any other resource allocation and instead use
+> explicit cleanup instead of __free() macro to avoid cleanup
+> of unallocated resources.
+> 
+> Tested on SM8750 platform with MCQ enabled, both with and without
+> Platform ESI support.
+> 
+> Fixes: e46a28cea29a ("scsi: ufs: qcom: Remove the MSI descriptor abuse")
+> Cc: Manivannan Sadhasivam <manivannan.sadhasivam@linaro.org>
+> Cc: Thomas Gleixner <tglx@linutronix.de>
+> Cc: James Bottomley <James.Bottomley@HansenPartnership.com>
+> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> ---
+> Changes from v1:
+> 1. Added correct sha1 of change id which caused regression.
+> 2. Address Markus comment to add fixes: and Cc: tags.
+> ---
+>   drivers/ufs/host/ufs-qcom.c | 39 ++++++++++++++-----------------------
+>   1 file changed, 15 insertions(+), 24 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 4bbe4de1679b..bef8dc12de20 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -2078,17 +2078,6 @@ static irqreturn_t ufs_qcom_mcq_esi_handler(int irq, void *data)
+>   	return IRQ_HANDLED;
+>   }
+> 
+> -static void ufs_qcom_irq_free(struct ufs_qcom_irq *uqi)
+> -{
+> -	for (struct ufs_qcom_irq *q = uqi; q->irq; q++)
+> -		devm_free_irq(q->hba->dev, q->irq, q->hba);
+> -
+> -	platform_device_msi_free_irqs_all(uqi->hba->dev);
+> -	devm_kfree(uqi->hba->dev, uqi);
+> -}
+> -
+> -DEFINE_FREE(ufs_qcom_irq, struct ufs_qcom_irq *, if (_T) ufs_qcom_irq_free(_T))
+> -
+>   static int ufs_qcom_config_esi(struct ufs_hba *hba)
+>   {
+>   	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+> @@ -2103,18 +2092,18 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+>   	 */
+>   	nr_irqs = hba->nr_hw_queues - hba->nr_queues[HCTX_TYPE_POLL];
+> 
+> -	struct ufs_qcom_irq *qi __free(ufs_qcom_irq) =
+> -		devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi), GFP_KERNEL);
+> -	if (!qi)
+> -		return -ENOMEM;
+> -	/* Preset so __free() has a pointer to hba in all error paths */
+> -	qi[0].hba = hba;
+> -
+>   	ret = platform_device_msi_init_and_alloc_irqs(hba->dev, nr_irqs,
+>   						      ufs_qcom_write_msi_msg);
+>   	if (ret) {
+> -		dev_err(hba->dev, "Failed to request Platform MSI %d\n", ret);
+> -		return ret;
+> +		dev_warn(hba->dev, "Platform MSI not supported or failed, continuing without ESI\n");
+> +		return ret; /* Continue without ESI */
+> +	}
+> +
+> +	struct ufs_qcom_irq *qi = devm_kcalloc(hba->dev, nr_irqs, sizeof(*qi), GFP_KERNEL);
+> +
+> +	if (!qi) {
+> +		platform_device_msi_free_irqs_all(hba->dev);
+> +		return -ENOMEM;
+>   	}
+> 
+>   	for (int idx = 0; idx < nr_irqs; idx++) {
+> @@ -2125,15 +2114,17 @@ static int ufs_qcom_config_esi(struct ufs_hba *hba)
+>   		ret = devm_request_irq(hba->dev, qi[idx].irq, ufs_qcom_mcq_esi_handler,
+>   				       IRQF_SHARED, "qcom-mcq-esi", qi + idx);
+>   		if (ret) {
+> -			dev_err(hba->dev, "%s: Fail to request IRQ for %d, err = %d\n",
+> +			dev_err(hba->dev, "%s: Failed to request IRQ for %d, err = %d\n",
+>   				__func__, qi[idx].irq, ret);
+> -			qi[idx].irq = 0;
+> +			/* Free previously allocated IRQs */
+> +			for (int j = 0; j < idx; j++)
+> +				devm_free_irq(hba->dev, qi[j].irq, qi + j);
+> +			platform_device_msi_free_irqs_all(hba->dev);
+> +			devm_kfree(hba->dev, qi);
+>   			return ret;
+>   		}
+>   	}
+> 
+> -	retain_and_null_ptr(qi);
+> -
+>   	if (host->hw_ver.major >= 6) {
+>   		ufshcd_rmwl(hba, ESI_VEC_MASK, FIELD_PREP(ESI_VEC_MASK, MAX_ESI_VEC - 1),
+>   			    REG_UFS_CFG3);
+> --
+> 2.48.1
+> 
 
-Bart.
-
-[PATCH] scsi: core: Bypass the queue limit checks for reserved commands
-
-Reserved commands can be TMFs or commands allocated and submitted by the
-LLD. These commands can be SCSI commands or non-SCSI commands. For all
-these cases, bypass the SCSI host, target and device queue limit checks
-for reserved commands. Additionally, do not activate the SCSI error
-handler if a reserved command fails.
-
-Signed-off-by: John Garry <john.garry@huawei.com>
-[ bvanassche: modified patch title and patch description. Renamed
-   .reserved_queuecommand() into .queue_reserved_command(). Changed
-   the second argument of __blk_mq_end_request() from 0 into error
-   code in the completion path if cmd->result != 0. Rewrote the
-   scsi_queue_rq() changes. See also
-  
-https://lore.kernel.org/linux-scsi/1666693096-180008-5-git-send-email-john.garry@huawei.com/ 
-]
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
-  drivers/scsi/hosts.c     |  6 +++++
-  drivers/scsi/scsi_lib.c  | 54 ++++++++++++++++++++++++++++------------
-  include/scsi/scsi_host.h |  7 ++++++
-  3 files changed, 51 insertions(+), 16 deletions(-)
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e860ac93499d..75fe624366c3 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -231,6 +231,12 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, 
-struct device *dev,
-  		goto fail;
-  	}
-
-+	if (shost->nr_reserved_cmds && !sht->queue_reserved_command) {
-+		shost_printk(KERN_ERR, shost,
-+			     "nr_reserved_cmds set but no method to queue\n");
-+		goto fail;
-+	}
-+
-  	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
-  	shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
-  				   shost->can_queue);
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0112ad3859ff..2d81fd837d47 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -1539,6 +1539,14 @@ static void scsi_complete(struct request *rq)
-  	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-  	enum scsi_disposition disposition;
-
-+	if (blk_mq_is_reserved_rq(rq)) {
-+		/* Only pass-through requests are supported in this code path. */
-+		WARN_ON_ONCE(!blk_rq_is_passthrough(scsi_cmd_to_rq(cmd)));
-+		scsi_mq_uninit_cmd(cmd);
-+		__blk_mq_end_request(rq, scsi_result_to_blk_status(cmd->result));
-+		return;
-+	}
-+
-  	INIT_LIST_HEAD(&cmd->eh_entry);
-
-  	atomic_inc(&cmd->device->iodone_cnt);
-@@ -1828,25 +1836,31 @@ static blk_status_t scsi_queue_rq(struct 
-blk_mq_hw_ctx *hctx,
-  	WARN_ON_ONCE(cmd->budget_token < 0);
-
-  	/*
--	 * If the device is not in running state we will reject some or all
--	 * commands.
-+	 * Bypass the SCSI device, SCSI target and SCSI host checks for
-+	 * reserved commands.
-  	 */
--	if (unlikely(sdev->sdev_state != SDEV_RUNNING)) {
--		ret = scsi_device_state_check(sdev, req);
--		if (ret != BLK_STS_OK)
--			goto out_put_budget;
--	}
-+	if (!blk_mq_is_reserved_rq(req)) {
-+		/*
-+		 * If the device is not in running state we will reject some or
-+		 * all commands.
-+		 */
-+		if (unlikely(sdev->sdev_state != SDEV_RUNNING)) {
-+			ret = scsi_device_state_check(sdev, req);
-+			if (ret != BLK_STS_OK)
-+				goto out_put_budget;
-+		}
-
--	ret = BLK_STS_RESOURCE;
--	if (!scsi_target_queue_ready(shost, sdev))
--		goto out_put_budget;
--	if (unlikely(scsi_host_in_recovery(shost))) {
--		if (cmd->flags & SCMD_FAIL_IF_RECOVERING)
--			ret = BLK_STS_OFFLINE;
--		goto out_dec_target_busy;
-+		ret = BLK_STS_RESOURCE;
-+		if (!scsi_target_queue_ready(shost, sdev))
-+			goto out_put_budget;
-+		if (unlikely(scsi_host_in_recovery(shost))) {
-+			if (cmd->flags & SCMD_FAIL_IF_RECOVERING)
-+				ret = BLK_STS_OFFLINE;
-+			goto out_dec_target_busy;
-+		}
-+		if (!scsi_host_queue_ready(q, shost, sdev, cmd))
-+			goto out_dec_target_busy;
-  	}
--	if (!scsi_host_queue_ready(q, shost, sdev, cmd))
--		goto out_dec_target_busy;
-
-  	/*
-  	 * Only clear the driver-private command data if the LLD does not supply
-@@ -1875,6 +1889,14 @@ static blk_status_t scsi_queue_rq(struct 
-blk_mq_hw_ctx *hctx,
-  	cmd->submitter = SUBMITTED_BY_BLOCK_LAYER;
-
-  	blk_mq_start_request(req);
-+	if (blk_mq_is_reserved_rq(req)) {
-+		reason = shost->hostt->queue_reserved_command(shost, cmd);
-+		if (reason) {
-+			ret = BLK_STS_RESOURCE;
-+			goto out_put_budget;
-+		}
-+		return BLK_STS_OK;
-+	}
-  	reason = scsi_dispatch_cmd(cmd);
-  	if (reason) {
-  		scsi_set_blocked(cmd, reason);
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 3b5150759c44..a615dcaa0ae8 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -86,6 +86,13 @@ struct scsi_host_template {
-  	 */
-  	int (* queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
-
-+	/*
-+	 * Queue a reserved command (BLK_MQ_REQ_RESERVED). The .queuecommand()
-+	 * documentation also applies to the .queue_reserved_command() callback.
-+	 *
-+	 */
-+	int (*queue_reserved_command)(struct Scsi_Host *, struct scsi_cmnd *);
-+
-  	/*
-  	 * The commit_rqs function is used to trigger a hardware
-  	 * doorbell after some requests have been queued with
+Gentle Reminder!!
 
