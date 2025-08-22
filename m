@@ -1,76 +1,146 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9AE0A3128B2;
-	Fri, 22 Aug 2025 15:17:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 782B821ABA8;
+	Fri, 22 Aug 2025 15:27:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755875870; cv=none; b=szlxzhVMT8i6ZDOit7bNbT48LhT6PXy5fESWTTITme48V2QORFCbvVI4tAP2V81BgN6RnmuTcWm3tImIzuLLozlHnkD85JbZRTps9ZzCdRn8IWjVZ4g98YewXEK6G82LxkF7aPAqpo2dElqLOptzls9o0xLBbDBjrMeuq65Jf+8=
+	t=1755876461; cv=none; b=C1lFzeSJNW9RrPeAkXeN6bC1MnD+IKxhNI2mKAcEYDmpwA/AtRS2X/srO46DylZFSnJdRylNr+pUFW9ZUYjz11K5IlBDchNwsuhJeUTY8KVX3z2KXFZoXtElg3QNALZHsizNdZ/gtaJSB2QtB/DMMNUM9RXJISJ+pAzUEkoQAr4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755875870; c=relaxed/simple;
-	bh=UUIuMemQ4yZziJD9+AhK63S0jT0r3OEI9F9PpDNfyqo=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fq8bIoPtXPfDEg0itUyKDYZkgo1dyuLbn9tfr4ViQmWczIvmhJclozgqH3KCAXDoxtI+KTsqjeTlO/hxTcaLyhuCVximJOwB8jlZ3ufDr6P8FpyMZuCxg5WiQLVS8IghzXuov51EVW2roWN+pCbr0OJ7NZnuI76oww/iGWxM2uc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dqIR5Wql; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1755876461; c=relaxed/simple;
+	bh=0qR8BCWLBcRlRrpkcs+atUvi5PdtJ50YHK9esf5ZAKk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=U+71PgDkq+jvmV9v8sNxv3h/PBa1RJTfEuDTKtsZHyiL4nPiCgd3TXo8C3HPX66K7TAiPYXucKiSnPI3VAiO85U1iKKsFglqZFiyxdow9sSLJ3p/MfwSrEVugsfP502LneEn2L6GnsL8F2AhM7D0zE5U0b5YCA/ATvc15RcjbCo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CMSA8/iN; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dqIR5Wql"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c7kMb1LwVzlgqV7;
-	Fri, 22 Aug 2025 15:17:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755875865; x=1758467866; bh=UUIuMemQ4yZziJD9+AhK63S0
-	jT0r3OEI9F9PpDNfyqo=; b=dqIR5WqltNR+dQ1XaLcvCrR5egeC1Zup4+GYgj+G
-	YGdJzeqdjBbuy+ySQsReRXjaK1BeAJgbUygifczyzuvsP4HFIEY30rzepOOhNEx/
-	l+3ftG2ATZjyi/JLybYCXz43zalScYwA7pazZqmO4U7RNSicOLk7CKZqEBji5AFW
-	tr/KtEbTTctjsCvy1R9PgOXQaQjPSbFoLifaefVzTj/FrZfMTb5wEUGjIkHAmZQc
-	SefAkPHRV23fB8lcdzO+aLml6hcxq6AkD+2JlkeyAyq8GZnyEcHv3VKxTl/FWs/K
-	lkhfteDGIrnp85R+xawNoiObBS7IbgemUxgsLJeMCkF2bw==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id MeLRszCoK-qj; Fri, 22 Aug 2025 15:17:45 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c7kMQ1MQdzlgqVr;
-	Fri, 22 Aug 2025 15:17:36 +0000 (UTC)
-Message-ID: <f02e9bb8-3477-4fa7-8b20-72bd518407ed@acm.org>
-Date: Fri, 22 Aug 2025 08:17:35 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CMSA8/iN"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95AB4C4CEF4;
+	Fri, 22 Aug 2025 15:27:26 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1755876460;
+	bh=0qR8BCWLBcRlRrpkcs+atUvi5PdtJ50YHK9esf5ZAKk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CMSA8/iNRQzGZkbIDx5A4cJNOwmFhybJqReMu4HdwOVn3PNotQlsB8AgT+yFZA8Y8
+	 tXDvC072J+TRehmdgF6MQY8T9LhOc8Vm8r28olhGEPc9En2no+wNDu0dVCg2CmWd50
+	 VDF4ewu4MW0eWpp/VV3ju+VCox+NXDJKc5r3/Tt5bBkHB/AdI2MAkYGs2yDcmuxBr5
+	 hcRW5ZzeP6W5XkLDFTOtzNceF2yrK9Br6VLgJmKNP6QZnYnlUbDho/SCHAoD5sdcAx
+	 wQt2gTTeyRZX4my8A32bD2sZ4a3Ym/R4GffRVx6rLGX5yIxOwM3XEG7ZllyzhSW098
+	 +DeEOtb4E7cHQ==
+Date: Fri, 22 Aug 2025 18:27:22 +0300
+From: Mike Rapoport <rppt@kernel.org>
+To: David Hildenbrand <david@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Brendan Jackman <jackmanb@google.com>,
+	Christoph Lameter <cl@gentwo.org>, Dennis Zhou <dennis@kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>, dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org, iommu@lists.linux.dev,
+	io-uring@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>,
+	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+	John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com,
+	kvm@vger.kernel.org, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-mips@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	Marco Elver <elver@google.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
+	netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
+	Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
+	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
+	virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
+	wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
+Subject: Re: [PATCH RFC 09/35] mm/mm_init: make memmap_init_compound() look
+ more like prep_compound_page()
+Message-ID: <aKiMWoZMyXYTAPJj@kernel.org>
+References: <20250821200701.1329277-1-david@redhat.com>
+ <20250821200701.1329277-10-david@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 0/4] scsi: hisi_sas: Switch to use tasklet over threaded
- irq handling
-To: Yihang Li <liyihang9@h-partners.com>, martin.petersen@oracle.com,
- James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linuxarm@huawei.com, liyihang9@huawei.com, liuyonglong@huawei.com,
- prime.zeng@hisilicon.com
-References: <20250822075951.2051639-1-liyihang9@h-partners.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250822075951.2051639-1-liyihang9@h-partners.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250821200701.1329277-10-david@redhat.com>
 
-On 8/22/25 12:59 AM, Yihang Li wrote:
-> We found that when the CPU handling the interrupt thread is occupied by
-> other high-priority processes, the interrupt thread will not be scheduled.
-> So there is a change to switch the driver to use tasklet over threaded
-> interrupt handling.
-Tasklets have severe disadvantages and hence their removal has been
-proposed several times. See e.g. https://lwn.net/Articles/960041/.
-There must be a better solution than switching to tasklets.
+On Thu, Aug 21, 2025 at 10:06:35PM +0200, David Hildenbrand wrote:
+> Grepping for "prep_compound_page" leaves on clueless how devdax gets its
+> compound pages initialized.
+> 
+> Let's add a comment that might help finding this open-coded
+> prep_compound_page() initialization more easily.
+> 
+> Further, let's be less smart about the ordering of initialization and just
+> perform the prep_compound_head() call after all tail pages were
+> initialized: just like prep_compound_page() does.
+> 
+> No need for a lengthy comment then: again, just like prep_compound_page().
+> 
+> Note that prep_compound_head() already does initialize stuff in page[2]
+> through prep_compound_head() that successive tail page initialization
+> will overwrite: _deferred_list, and on 32bit _entire_mapcount and
+> _pincount. Very likely 32bit does not apply, and likely nobody ever ends
+> up testing whether the _deferred_list is empty.
+> 
+> So it shouldn't be a fix at this point, but certainly something to clean
+> up.
+> 
+> Signed-off-by: David Hildenbrand <david@redhat.com>
+> ---
+>  mm/mm_init.c | 13 +++++--------
+>  1 file changed, 5 insertions(+), 8 deletions(-)
+> 
+> diff --git a/mm/mm_init.c b/mm/mm_init.c
+> index 5c21b3af216b2..708466c5b2cc9 100644
+> --- a/mm/mm_init.c
+> +++ b/mm/mm_init.c
+> @@ -1091,6 +1091,10 @@ static void __ref memmap_init_compound(struct page *head,
+>  	unsigned long pfn, end_pfn = head_pfn + nr_pages;
+>  	unsigned int order = pgmap->vmemmap_shift;
+>  
+> +	/*
+> +	 * This is an open-coded prep_compound_page() whereby we avoid
+> +	 * walking pages twice by initializing them in the same go.
+> +	 */
 
-Bart.
+While on it, can you also mention that prep_compound_page() is not used to
+properly set page zone link?
+
+With this
+
+Reviewed-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
+
+>  	__SetPageHead(head);
+>  	for (pfn = head_pfn + 1; pfn < end_pfn; pfn++) {
+>  		struct page *page = pfn_to_page(pfn);
+> @@ -1098,15 +1102,8 @@ static void __ref memmap_init_compound(struct page *head,
+>  		__init_zone_device_page(page, pfn, zone_idx, nid, pgmap);
+>  		prep_compound_tail(head, pfn - head_pfn);
+>  		set_page_count(page, 0);
+> -
+> -		/*
+> -		 * The first tail page stores important compound page info.
+> -		 * Call prep_compound_head() after the first tail page has
+> -		 * been initialized, to not have the data overwritten.
+> -		 */
+> -		if (pfn == head_pfn + 1)
+> -			prep_compound_head(head, order);
+>  	}
+> +	prep_compound_head(head, order);
+>  }
+>  
+>  void __ref memmap_init_zone_device(struct zone *zone,
+> -- 
+> 2.50.1
+> 
+
+-- 
+Sincerely yours,
+Mike.
