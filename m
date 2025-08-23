@@ -1,48 +1,30 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from dggsgout11.his.huawei.com (dggsgout11.his.huawei.com [45.249.212.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C295F1DE89B;
-	Fri, 22 Aug 2025 19:47:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 783822566;
+	Sat, 23 Aug 2025 04:37:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755892072; cv=none; b=sN/jj3FGWqUOhXfpQVKJs4yg8N0YKsesmXna6gZqTmcYVY3qMRlp/SPgY37Ij431cZduZGlxf3fsqwNZ0eZFBjH0aC5VOcWDlZrP+8X8ZHtvaMhHojrz2ZC7QckpiNj6lNg4HbacwriBR/PJWvA9aAfhgf1Kv40NITMzQzbpHiE=
+	t=1755923846; cv=none; b=TAM3XiEHu9mQmC8wVB7tbQqQq0+gvrJjRkztv7ZEDJgkAIlskP/aOqNVRyOfw3YFCn9XV87FJSYR+JWP1ddVaFDvIv/aZ9viqS1CXG93tKMRKUC9P843v4XfX2RoPUFxRpvV6g1GaIg2A3K8lthKCKoBIT+f7gG2Xb3lh/KMJps=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755892072; c=relaxed/simple;
-	bh=VFUz7WD1YgTNzevzRIp7UXr/xOtM/q4luKbzZz2jgLY=;
+	s=arc-20240116; t=1755923846; c=relaxed/simple;
+	bh=jOsk/0E2M1AqmaAoj/SNM6dDuTwerjrCn1XIBMFUI0c=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AhgrKlRCcMeblZMuhR530W9QY+qeUcUxmSANOYu4qwSkDVn0a8rx75ajPGp8PIgrukCOTDnmqF0urVqV+CITxNWcWmsw/Zk78xaD9oiNE2A5iRLElbJmXhHvIbM++5MWQ5CvpXF5cawesfUwdwpXMQQ2+l5GkMwMZ1tGMzLSwz4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ZRHWKRPO; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ZRHWKRPO"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4c7rM95C3lzlgqxy;
-	Fri, 22 Aug 2025 19:47:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1755892068; x=1758484069; bh=MLBOiNYx24swkpiYJhVCDHw2
-	FrCecYca5CX2eV7uvAs=; b=ZRHWKRPOtPI7SJBbYJlx5MiYn1juOZi3tFOBmBnc
-	/yTo7Maudt8GRku4F7Wks1ad9oJFNTTM76r0taPNPR6Z1A2vhtfUXpwCFfQb0czY
-	2tjvQMFn+CM2gyQajM2dinM0hAcLDY1I7KNU63pnKkU84LAiu4YmoXdQemcL0G1y
-	giRGK6HAseVXQh96oCl2QIT26PyPObkn+2ndyK0yCmY7S03VDgSEudqbCp2xVhT/
-	dVf4+k+GgsF0H7RLqIkMeU4IhWQSKS47RKF7ZrIVpHTP4JKsEcTodFYlSrUOcOLR
-	OEl7LzKKJFNvTAB9yDvd7okhpQjpj5sRPH66BD3VNQAJ5g==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ccTbk4axFGzl; Fri, 22 Aug 2025 19:47:48 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4c7rM45yNqzlgqxq;
-	Fri, 22 Aug 2025 19:47:43 +0000 (UTC)
-Message-ID: <660498d6-3526-4f1c-99d8-776fa9967747@acm.org>
-Date: Fri, 22 Aug 2025 12:47:42 -0700
+	 In-Reply-To:Content-Type; b=dQ3BT225vnekFI4KeePC8WledVmOiomTusLGqSZER/jr5FWJwiN9bTW/WfQW1EGsi7cADNE7GbfooYBQCVJ2ygvN5Q6U/He/LuwK7iZt2MdqQ4S1R4hMQy6PlhQZwz/2qigRGz31DcwnhFYPbaeg832U4N+FeCYaW/TMM59hAcU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com; spf=pass smtp.mailfrom=huaweicloud.com; arc=none smtp.client-ip=45.249.212.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=huaweicloud.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=huaweicloud.com
+Received: from mail.maildlp.com (unknown [172.19.163.235])
+	by dggsgout11.his.huawei.com (SkyGuard) with ESMTPS id 4c84691PCYzYQvXl;
+	Sat, 23 Aug 2025 12:37:21 +0800 (CST)
+Received: from mail02.huawei.com (unknown [10.116.40.128])
+	by mail.maildlp.com (Postfix) with ESMTP id AF3481A06DD;
+	Sat, 23 Aug 2025 12:37:19 +0800 (CST)
+Received: from [10.174.179.80] (unknown [10.174.179.80])
+	by APP4 (Coremail) with SMTP id gCh0CgBHERJ9Ralopph+Eg--.26768S3;
+	Sat, 23 Aug 2025 12:37:19 +0800 (CST)
+Message-ID: <bf778cf7-6ae5-4f57-a40c-fbae5cbe00a7@huaweicloud.com>
+Date: Sat, 23 Aug 2025 12:37:17 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,44 +32,87 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 1/2] scsi: sd: Fix build warning in
- sd_revalidate_disk()
-To: Abinash Singh <abinashsinghlalotra@gmail.com>,
- martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- dlemoal@kernel.org
-References: <20250820144511.15329-1-abinashsinghlalotra@gmail.com>
- <20250820144511.15329-2-abinashsinghlalotra@gmail.com>
+Subject: Re: [PATCH v2 1/9] block: introduce
+ max_{hw|user}_wzeroes_unmap_sectors to queue limits
+To: John Garry <john.g.garry@oracle.com>, linux-fsdevel@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-block@vger.kernel.org,
+ dm-devel@lists.linux.dev, linux-nvme@lists.infradead.org,
+ linux-scsi@vger.kernel.org
+Cc: linux-xfs@vger.kernel.org, linux-kernel@vger.kernel.org, hch@lst.de,
+ tytso@mit.edu, djwong@kernel.org, bmarzins@redhat.com,
+ chaitanyak@nvidia.com, shinichiro.kawasaki@wdc.com, brauner@kernel.org,
+ martin.petersen@oracle.com, yi.zhang@huawei.com, chengzhihao1@huawei.com,
+ yukuai3@huawei.com, yangerkun@huawei.com
+References: <20250619111806.3546162-1-yi.zhang@huaweicloud.com>
+ <20250619111806.3546162-2-yi.zhang@huaweicloud.com>
+ <803a2183-a0bb-4b7a-92f1-afc5097630d2@oracle.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250820144511.15329-2-abinashsinghlalotra@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Zhang Yi <yi.zhang@huaweicloud.com>
+In-Reply-To: <803a2183-a0bb-4b7a-92f1-afc5097630d2@oracle.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:gCh0CgBHERJ9Ralopph+Eg--.26768S3
+X-Coremail-Antispam: 1UD129KBjvJXoW7CF1Utr4furyDGrW7CryxAFb_yoW8Zw4xpF
+	y8uryIq34rJFs29w4Utw1UuFyFy3yru345Gr9rJ3Z3A3ykCrnIgF45u3ZFgFW7XrWrGw18
+	t3WYyFZxZr4UZ37anT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUv0b4IE77IF4wAFF20E14v26ryj6rWUM7CY07I20VC2zVCF04k2
+	6cxKx2IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4
+	vEj48ve4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_Ar0_tr1l84ACjcxK6xIIjxv20xvEc7Cj
+	xVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x
+	0267AKxVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc02F40EFcxC0VAKzVAqx4xG
+	6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAFwI0_Jr0_Gr1lOx8S6xCaFV
+	Cjc4AY6r1j6r4UM4x0Y48IcVAKI48JM4IIrI8v6xkF7I0E8cxan2IY04v7MxkF7I0En4kS
+	14v26r4a6rW5MxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I
+	8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVW8ZVWr
+	XwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x
+	0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_
+	Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7IU0
+	s2-5UUUUU==
+X-CM-SenderInfo: d1lo6xhdqjqx5xdzvxpfor3voofrz/
 
-On 8/20/25 7:45 AM, Abinash Singh wrote:
-> +	lim = kmalloc(sizeof(*lim), GFP_KERNEL);
-> +	if (!lim) {
-> +		sd_printk(KERN_WARNING, sdkp,
-> +			"sd_revalidate_disk: Disk limit allocation failure.\n");
-> +		goto out;
-> +	}
+On 8/21/2025 8:55 PM, John Garry wrote:
+> On 19/06/2025 12:17, Zhang Yi wrote:
+>>   }
+>> @@ -333,6 +335,12 @@ int blk_validate_limits(struct queue_limits *lim)
+>>       if (!lim->max_segments)
+>>           lim->max_segments = BLK_MAX_SEGMENTS;
+>>   +    if (lim->max_hw_wzeroes_unmap_sectors &&
+>> +        lim->max_hw_wzeroes_unmap_sectors != lim->max_write_zeroes_sectors)
+>> +        return -EINVAL;
+> 
+> JFYI, I noticed that I am failing this check in raid0_set_limits() -> queue_limits_set() -> queue_limits_commit_update() -> blk_validate_limits() for v6.17-rc2
+> 
+> The raid0 array consists of NVMe partitions. Here lim->max_hw_wzeroes_unmap_sectors = 4096 and lim->max_write_zeroes_sectors = 0 values for the failure, above.
+> 
+> john@raspberrypi:~ $ cat /sys/block/nvme0n1/queue/write_zeroes_max_bytes
+> 2097152
+> john@raspberrypi:~ $ cat /sys/block/nvme0n1/queue/write_zeroes_unmap_max_bytes
+> 2097152
+> john@raspberrypi:~ $ cat
+> /sys/block/nvme0n1/queue/write_zeroes_unmap_max_hw_bytes
+> 2097152
+> john@raspberrypi:~ $
+> 
+> 
 
- From Documentation/process/coding-style.rst:
+Thank you for checking on this!
 
-These generic allocation functions all emit a stack dump on failure when 
-used
-without __GFP_NOWARN so there is no use in emitting an additional failure
-message when NULL is returned.
-
->   	buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL);
->   	if (!buffer) {
->   		sd_printk(KERN_WARNING, sdkp, "sd_revalidate_disk: Memory "
-
-Has this example perhaps been followed? I think it is safe to remove
-this sd_printk() statement.
-
-Otherwise this patch looks good to me.
+The problem is that raid0_set_limits() only sets max_write_zeroes_sectors
+without synchronously setting max_hw_wzeroes_unmap_sectors. It appears
+that all stacked drivers that call blk_set_stacking_limits() to
+initialize stacked limits but independently adjust
+max_write_zeroes_sectors are problematic, including all md drivers and
+drbd. These drivers need to update max_hw_wzeroes_unmap_sectors as well, I
+will send out a fix soon.
 
 Thanks,
+Yi.
 
-Bart.
+> 
+>> +    lim->max_wzeroes_unmap_sectors = min(lim->max_hw_wzeroes_unmap_sectors,
+>> +            lim->max_user_wzeroes_unmap_sectors);
+>> +
+>>       lim->max_discard_sectors =
+>>           min(lim->max_hw_discard_sectors, lim->max_user_discard_sectors);
+>>   @@ -418,10 +426,11 @@ int blk_set_default_limits(struct queue_limits *lim)
+
