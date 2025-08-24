@@ -1,77 +1,79 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
+Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CC152DF701;
-	Sun, 24 Aug 2025 18:02:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6CC321858D
+	for <linux-scsi@vger.kernel.org>; Sun, 24 Aug 2025 18:45:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756058572; cv=none; b=dFBluYvvCYEm3llB+IRY46lSRkM6G71u6G6VWbDsHjp4laJ4XEVKXqKGrrwMmlHGgCiSM/MiSJmyTpIl9Ubx/KqBA3C0Gh+WA+FMMZfk4NFyn/FI8C09KZFMmRGvE5VqcuHuv/6lIG0KbwzS9q3iFeVycG0cY+1c197RxSqsMRA=
+	t=1756061118; cv=none; b=NzyhDLN/Bm9wI8WKrDH5tBhk3//ssbLuyyx4NQmAbAFn4jjdtm/exr+x5JSHTU9LbrVIRT1jcyqDXe4t4I4PcWjxFljjIiDC4qTqK+1pAPsAoWD+kmNaWDgFn7VCH+PRL3jGoFAkiZPspYFFgPKKO1l33gAGE4R3FG3Bn6Sj0K4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756058572; c=relaxed/simple;
-	bh=C8Wx/V1kWrXKW9xvkgo8ZriLoR7tlGu2v9fC1G12fic=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bC+8DhihLoNUy3Fhmz8OV3wugKUSMRusLy9rcni+26laWHlxvzZ+qAAGrrBTBV1L77u6KGgNJ1WymggK/Bcs2h4U9zVZVtMwGX+wv1TIBw1SbWEjbQNt0zxCBgGFuFfuv4bUvG1ptXkD/5ln2WyqkH7xlFwoRfCX8Vo9Xi+D4GY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ebDMGhbh; arc=none smtp.client-ip=209.85.210.174
+	s=arc-20240116; t=1756061118; c=relaxed/simple;
+	bh=Eio3MD/quSpT3RIT6DOrvAh+pLcqT7Yu2Cd2MKytK5Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NbZ7nxd58dbfIRUgUzpZJWF4QajKY7yw1mfSaTARbtSIutQrsiqz1807JoNCPt6Qa5UW0GW/6nWUibDY23q8JUOJiVkjzBCAZq9Ef15tqVfRk/F1aI7r/idigaPJaBPBukjz3Y2VMusHBEAdWxW7pBpnQiDVdt4/tCKL8tEh8UQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TJSh5XX2; arc=none smtp.client-ip=209.85.160.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ebDMGhbh"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-76e4fc419a9so3172540b3a.0;
-        Sun, 24 Aug 2025 11:02:51 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TJSh5XX2"
+Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-4b2979628f9so41498531cf.2
+        for <linux-scsi@vger.kernel.org>; Sun, 24 Aug 2025 11:45:16 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756058571; x=1756663371; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wsl4Vyv86VdWxaOZ5lMXC35Raah6QnnsSnoFlh2WVOk=;
-        b=ebDMGhbhGZUu7OJw/4jMlCHrmXqhaZGzLkTPB8M2Db0kJC+BrHL7lKEI/Rmd6P+hn7
-         PO327EpuG5wx42S3temVN4kqgRN9Vm2Zt3sAfDhqvjA8Y/G1EvswqKoybA4SwqjMn3CB
-         B8sZGOc0uezO78MO4MTyCg2NboEj4j+ldlz+mDunQzHGuyI/UyLBVguEyiHTEFwvKhrs
-         xNRlXV/R84MYkNLfa189q5v+wbQdR3vKLgp1EtfjwVpIEhg7AGsHINK01wDb0dvLpDPg
-         tmWQ63f5T4WMUtqvaG/tuEch8A2vUeyPT5/DSlgyMxMY8ukZhDgvnXBfCLg3TD0yoNue
-         eNtg==
+        d=gmail.com; s=20230601; t=1756061115; x=1756665915; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=9jf8pvuIHsijmo+aLexlCckPmDErJY+IsD9aTk8QLyo=;
+        b=TJSh5XX2X8NRW9Ul5Cyd5utHS6xzLbhsmttRNsZiJovZmOaF5CoHK9/yDEDuHwOQIf
+         Olba/gC/r8b1KedsY9a7S4bqFcRx7c660UpNY+R6TPweJtFtW138ggBppev4e/T4kTbd
+         TqxMh7xk1fi5bHR+5cm/6RfMTTy98wJtvV45JaSnHiM7bid8aGPWIi0fSLBQ/P6RZ2uI
+         KMmpU7teLXUzramNdbbAE09ac1N8h/1YPBYSyKUss3U8z5zFIPLqJ5riBqSbQu7t10GF
+         8Rmjrmu3ms7BUcX/1RAq6hc5kSWhEfaUFjK+AhgvdHOvp4EgoAPpdsy/lT+r4Rhyhufo
+         Uiow==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756058571; x=1756663371;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wsl4Vyv86VdWxaOZ5lMXC35Raah6QnnsSnoFlh2WVOk=;
-        b=d8rL7Q6bVAw4CTvuUXXGoWCxPdks4DjHmpQSDQDQEBvu5f5DfzKssHHDFvA2hG6hCU
-         hxEWIFM+itd1yD8P1rFI4IMRuvv+kgY6bAjLCrJZ+VGtbIW9laHFNYSHJ7uJNcbkHeqx
-         h6NMipa2E84+spYdGmnhJDgQ7iF8IBumFAIAfJIRu8SzFmhTjtuW9WVp1TbGerSeelo0
-         UTyzbrM/9M0n4xocZhldCG8JA+72Ngkjy/CT4dT3clo6rsgqvI/v4yxJ/vSK6gXoeago
-         Mq9iU1Yj7BB6mR5EW82oJ3iOavxf/oURLJxzBp80TuqPwTt/8cd2U+Fziwuuo37YlleF
-         ZT1w==
-X-Forwarded-Encrypted: i=1; AJvYcCX4S9a/3tLWvJokHv9vIbg0PMbMIKh/ITsCqPWc55ioT/bI0zLiMgfQmcYfDZsLyKkAQlSUafd0gxmpPw==@vger.kernel.org, AJvYcCXA5Z6+6PsSPPLp73tYyHIqOCPZ0DgcGEe9GsDq7i6FvveoCjWxhDJXJEdzo0OR6nMSvjd63L7tMIkHdhY=@vger.kernel.org
-X-Gm-Message-State: AOJu0YxSvpDT409d028wdWeCxtBsQbeRHNGT+mYg/6gKm3Zl26SlWGiC
-	+M09PDewNMmQFHBYXu58uZfYS67EaW7DXlL6phLpEDuCjmCagB+QpMvJ
-X-Gm-Gg: ASbGncsA8oid71wgQE2QZCeQEjSMjXULbjKDsCdLIvI6FA4akwO9uh5Bu6R+FB4oz7P
-	tqnGWjGbWbPF+TDPkcXV0PgkF/haHrf1FImtwYe2rjJEQ1EWAsPw0NTZY5d9QJJhuvOYjCX6Xiq
-	g7Dg4qMYq+GIodp67Cz226wW/d5rz09O5ooHYEStxijlQm5ddNN6AgbkwhnZDHrjLiyiQU8PFDK
-	2fZO/CvVqvtG9knGeucw/bWknAyJeGqDDA1AQI/Z3hSQNgwdnDX5NlEi1W7HETUBH4thDYzfIRy
-	qmLF1ykbVGk+1yp+4f7BNZwDtecoB1jqdK9+rREU4VZ9bX7xHNRc62ZQmpYsPsRvsmst69d6w84
-	PESADFkJCQ2/i/qQOOL5zD2Xp8WFbty3SHujfQ7VtVDHihA==
-X-Google-Smtp-Source: AGHT+IHAoZJae+FbhWcaoxxUI6hdRjNNBOrpxTBTUFcC36w6MXZtfhvK6X+MjocHkbPictzwppacKA==
-X-Received: by 2002:a05:6a20:2448:b0:243:78a:829a with SMTP id adf61e73a8af0-24340e06a0cmr13377826637.51.1756058570606;
-        Sun, 24 Aug 2025 11:02:50 -0700 (PDT)
-Received: from localhost.localdomain ([202.83.40.77])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b49cbb7b6fbsm4743532a12.30.2025.08.24.11.02.47
+        d=1e100.net; s=20230601; t=1756061115; x=1756665915;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=9jf8pvuIHsijmo+aLexlCckPmDErJY+IsD9aTk8QLyo=;
+        b=hx2M87Uwbx1DDkXXrUtqyt/sMiR1PXpkCGE37NKfvIu2dHNqEy7TDEH47GCuWPNg5Y
+         XR7OBn/yMVa504dV8sAweAGn6e3k89MA1Qjrfx4gPj9K7wfMdHssbMmNEm3rQfqSPAY3
+         Ja4ie8MJOblRq66HBjkbJqbCXjoP1z1dmvajtGoPFya42i5CF+3JCY3z9Hr2hOwIBSHf
+         DQzLmQLI34q3irym0P6Ea/AZR7DSAnbcYW8rGHJu7CWIXayQr8MCjuor4EIAvOZQO/Kv
+         d3MAQRukjP3u+jfhDVLg0sfwmloSe20QkcIZe0P+W/UkbUFaOs95cG9VWoxbWqZUCelc
+         D1pQ==
+X-Gm-Message-State: AOJu0Yyw8hPn9gQPbTK9+hRWIL4XX2tjeZVKBeqjyMHqQhJqZ+eKL8zL
+	82ysAqoiW5eKysYQibRSpz8Pvtbs7rxOCHTboX5LtZ2cE9ktnZRjNx5rA7FiobFPcBI=
+X-Gm-Gg: ASbGncv4RgXgSW572PyPaP7IGehDamJOLTayMr2W7XsmHg0ij0zKWc197GhILsrxR5O
+	R1/grYiqtwdgtucOPw98Td0dFMTdQZasIBYfjvX2MjEPk/khE2s1yTJ+nMMKTQn3eGBidE0L+Y2
+	hRl5ylmEF2QzE6u+nLCwMD7fXmv9ne14gV7xbRzrx3ulxp+oPDgFK1kOpCIX1b+oG4j2eFbStGx
+	s4rgNlENt4FmHZUWDz7F40GfLe2/7vLO74H9XAONir/tAu86+J18wIavaDAMXgbEaNfP4cdl1Uc
+	OiytbQKtBDjACKNd/TU+r/ABexZiuyJtnXbnaUAcoNFpF1jzUwI/+gXWx6BSNRjq3BGMGMGUqNb
+	61730DhQ6oPWk+8K80YUbCmVxqQdiNwhVYT/UXsULpdCLr3RPAXtBZ7LjrQ==
+X-Google-Smtp-Source: AGHT+IF1mE3pDzONuvbDVw/ZD9A7vT/q4p1ackzTZzK3ILDE7f8/7efvTJvZZVeu2N+pNirC5d7OsA==
+X-Received: by 2002:ac8:7f0f:0:b0:4b2:9bd2:8176 with SMTP id d75a77b69052e-4b2aaa8128amr133033991cf.27.1756061115173;
+        Sun, 24 Aug 2025 11:45:15 -0700 (PDT)
+Received: from cr-x-redhat96-nsd-2.fyre.ibm.com ([129.41.87.0])
+        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4b2b8e45c4asm36600501cf.46.2025.08.24.11.45.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Aug 2025 11:02:50 -0700 (PDT)
-From: Abinash Singh <abinashsinghlalotra@gmail.com>
-To: bvanassche@acm.org
-Cc: James.Bottomley@HansenPartnership.com,
-	abinashsinghlalotra@gmail.com,
-	dlemoal@kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Subject: [PATCH v9 3/3] scsi: sd: make sd_revalidate_disk() return void
-Date: Sun, 24 Aug 2025 23:32:18 +0530
-Message-ID: <20250824180218.39498-4-abinashsinghlalotra@gmail.com>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250824180218.39498-1-abinashsinghlalotra@gmail.com>
-References: <20250824180218.39498-1-abinashsinghlalotra@gmail.com>
+        Sun, 24 Aug 2025 11:45:14 -0700 (PDT)
+From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+To: fischer@norbit.de,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	don.brace@microchip.com,
+	brking@us.ibm.com,
+	sathya.prakash@broadcom.com,
+	willy@infradead.org
+Cc: linux-scsi@vger.kernel.org,
+	storagedev@microchip.com,
+	linuxppc-dev@lists.ozlabs.org,
+	open-iscsi@googlegroups.com,
+	megaraidlinux.pdl@broadcom.com,
+	MPT-FusionLinux.pdl@broadcom.com,
+	Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+Subject: [PATCH] scsi: Use string choices helpers
+Date: Sun, 24 Aug 2025 11:44:57 -0700
+Message-ID: <20250824184457.2423422-1-chelsyratnawat2001@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,74 +82,457 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The sd_revalidate_disk() function currently returns 0 for
-both success and memory allocation failure.Since none of its
-callers use the return value, this return code is both unnecessary
-and potentially misleading.
+Use string_choices.h helpers instead of hard-coded strings.
 
-Change the return type of sd_revalidate_disk() from int to void
-and remove all return value handling. This makes the function
-semantics clearer and avoids confusion about unused return codes.
-
-Signed-off-by: Abinash Singh <abinashsinghlalotra@gmail.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
 ---
- drivers/scsi/sd.c | 11 +++++------
- 1 file changed, 5 insertions(+), 6 deletions(-)
+ drivers/scsi/aha152x.c                    | 17 +++++++++--------
+ drivers/scsi/aic7xxx/aic79xx_pci.c        |  3 ++-
+ drivers/scsi/be2iscsi/be_iscsi.c          |  5 +++--
+ drivers/scsi/hpsa.c                       |  5 +++--
+ drivers/scsi/ibmvscsi/ibmvfc.c            |  3 ++-
+ drivers/scsi/ipr.c                        |  3 ++-
+ drivers/scsi/libiscsi.c                   |  5 +++--
+ drivers/scsi/megaraid/megaraid_sas_base.c |  9 +++++----
+ drivers/scsi/mpt3sas/mpt3sas_base.c       |  3 ++-
+ drivers/scsi/nsp32.c                      |  3 ++-
+ drivers/scsi/qedf/qedf_debugfs.c          |  3 ++-
+ drivers/scsi/qla2xxx/qla_attr.c           |  3 ++-
+ drivers/scsi/qla2xxx/qla_init.c           |  5 +++--
+ drivers/scsi/qla2xxx/qla_os.c             |  4 ++--
+ drivers/scsi/sd.c                         |  5 +++--
+ drivers/scsi/st.c                         |  3 ++-
+ drivers/scsi/sym53c8xx_2/sym_glue.c       |  3 ++-
+ 17 files changed, 49 insertions(+), 33 deletions(-)
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 35856685d7fa..b3926c43e700 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -106,7 +106,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
- 		unsigned int mode);
- static void sd_config_write_same(struct scsi_disk *sdkp,
- 		struct queue_limits *lim);
--static int  sd_revalidate_disk(struct gendisk *);
-+static void  sd_revalidate_disk(struct gendisk *);
- static void sd_unlock_native_capacity(struct gendisk *disk);
- static void sd_shutdown(struct device *);
- static void scsi_disk_release(struct device *cdev);
-@@ -3691,7 +3691,7 @@ static void sd_read_block_zero(struct scsi_disk *sdkp)
-  *	performs disk spin up, read_capacity, etc.
-  *	@disk: struct gendisk we care about
-  **/
--static int sd_revalidate_disk(struct gendisk *disk)
-+static void sd_revalidate_disk(struct gendisk *disk)
- {
- 	struct scsi_disk *sdkp = scsi_disk(disk);
- 	struct scsi_device *sdp = sdkp->device;
-@@ -3699,7 +3699,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	struct queue_limits *lim = NULL;
- 	unsigned char *buffer = NULL;
- 	unsigned int dev_max;
--	int err = 0;
-+	int err;
+diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
+index e94c0a19c435..f42328781d1c 100644
+--- a/drivers/scsi/aha152x.c
++++ b/drivers/scsi/aha152x.c
+@@ -243,6 +243,7 @@
+ #include <linux/workqueue.h>
+ #include <linux/list.h>
+ #include <linux/slab.h>
++#include <linux/string_choices.h>
  
- 	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
- 				      "sd_revalidate_disk\n"));
-@@ -3709,11 +3709,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	 * of the other niceties.
- 	 */
- 	if (!scsi_device_online(sdp))
--		goto out;
-+		return;
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -796,11 +797,11 @@ struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
+ 	       shpnt->io_port, HOSTIOPORT0, HOSTIOPORT1,
+ 	       shpnt->irq,
+ 	       shpnt->this_id,
+-	       RECONNECT ? "enabled" : "disabled",
+-	       PARITY ? "enabled" : "disabled",
+-	       SYNCHRONOUS ? "enabled" : "disabled",
++	       str_enabled_disabled(RECONNECT),
++	       str_enabled_disabled(PARITY),
++	       str_enabled_disabled(SYNCHRONOUS),
+ 	       DELAY,
+-	       EXT_TRANS ? "enabled" : "disabled");
++	       str_enabled_disabled(EXT_TRANS));
  
- 	lim = kmalloc(sizeof(*lim), GFP_KERNEL);
- 	if (!lim)
--		goto out;
-+		return;
+ 	/* not expecting any interrupts */
+ 	SETPORT(SIMODE0, 0);
+@@ -2616,7 +2617,7 @@ static void get_ports(struct seq_file *m, struct Scsi_Host *shpnt)
  
- 	buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL);
- 	if (!buffer)
-@@ -3823,7 +3823,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
- 	kfree(buffer);
- 	kfree(lim);
+ 	seq_puts(m, "); ");
  
--	return err;
+-	seq_printf(m, "INTSTAT (%s); ", TESTHI(DMASTAT, INTSTAT) ? "hi" : "lo");
++	seq_printf(m, "INTSTAT (%s); ", str_hi_lo(TESTHI(DMASTAT, INTSTAT)));
+ 
+ 	seq_puts(m, "SSTAT( ");
+ 	s = GETPORT(SSTAT0);
+@@ -2867,11 +2868,11 @@ static int aha152x_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
+ 		shpnt->io_port, shpnt->io_port + shpnt->n_io_port - 1);
+ 	seq_printf(m, "interrupt 0x%02x\n", shpnt->irq);
+ 	seq_printf(m, "disconnection/reconnection %s\n",
+-		RECONNECT ? "enabled" : "disabled");
++		str_enabled_disabled(RECONNECT));
+ 	seq_printf(m, "parity checking %s\n",
+-		PARITY ? "enabled" : "disabled");
++		str_enabled_disabled(PARITY));
+ 	seq_printf(m, "synchronous transfers %s\n",
+-		SYNCHRONOUS ? "enabled" : "disabled");
++		str_enabled_disabled(SYNCHRONOUS));
+ 	seq_printf(m, "%d commands currently queued\n", HOSTDATA(shpnt)->commands);
+ 
+ 	if(SYNCHRONOUS) {
+diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
+index 5fad41b1ab58..a4bd68da4549 100644
+--- a/drivers/scsi/aic7xxx/aic79xx_pci.c
++++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
+@@ -44,6 +44,7 @@
+ #include "aic79xx_osm.h"
+ #include "aic79xx_inline.h"
+ #include "aic79xx_pci.h"
++#include <linux/string_choices.h>
+ 
+ static inline uint64_t
+ ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
+@@ -647,7 +648,7 @@ ahd_configure_termination(struct ahd_softc *ahd, u_int adapter_control)
+ 		devconfig |= STPWLEVEL;
+ 	if (bootverbose)
+ 		printk("%s: STPWLEVEL is %s\n",
+-		       ahd_name(ahd), (devconfig & STPWLEVEL) ? "on" : "off");
++		       ahd_name(ahd), str_on_off(devconfig & STPWLEVEL));
+ 	ahd_pci_write_config(ahd->dev_softc, DEVCONFIG, devconfig, /*bytes*/4);
+  
+ 	/* Make sure current sensing is off. */
+diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
+index 8d374ae863ba..b35a2a5e0e11 100644
+--- a/drivers/scsi/be2iscsi/be_iscsi.c
++++ b/drivers/scsi/be2iscsi/be_iscsi.c
+@@ -22,6 +22,7 @@
+ #include <scsi/scsi.h>
+ 
+ #include "be_iscsi.h"
++#include <linux/string_choices.h>
+ 
+ extern struct iscsi_transport beiscsi_iscsi_transport;
+ 
+@@ -601,10 +602,10 @@ int beiscsi_iface_get_param(struct iscsi_iface *iface,
+ 	case ISCSI_NET_PARAM_IFACE_ENABLE:
+ 		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
+ 			len = sprintf(buf, "%s\n",
+-				      phba->ipv4_iface ? "enable" : "disable");
++				      str_enable_disable(phba->ipv4_iface));
+ 		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
+ 			len = sprintf(buf, "%s\n",
+-				      phba->ipv6_iface ? "enable" : "disable");
++				      str_enable_disable(phba->ipv6_iface));
+ 		break;
+ 	case ISCSI_NET_PARAM_IPV4_GW:
+ 		memset(&gateway, 0, sizeof(gateway));
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c73a71ac3c29..aa87a6e0aaa1 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -55,6 +55,7 @@
+ #include <asm/div64.h>
+ #include "hpsa_cmd.h"
+ #include "hpsa.h"
++#include <linux/string_choices.h>
+ 
+ /*
+  * HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.'
+@@ -465,7 +466,7 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
+ 	h->acciopath_status = !!status;
+ 	dev_warn(&h->pdev->dev,
+ 		"hpsa: HP SSD Smart Path %s via sysfs update.\n",
+-		h->acciopath_status ? "enabled" : "disabled");
++		str_enabled_disabled(h->acciopath_status));
+ 	return count;
  }
  
- /**
+@@ -552,7 +553,7 @@ static ssize_t host_show_hp_ssd_smart_path_status(struct device *dev,
+ 
+ 	h = shost_to_hba(shost);
+ 	return snprintf(buf, 30, "HP SSD Smart Path %s\n",
+-		(h->acciopath_status == 1) ?  "enabled" : "disabled");
++		str_enabled_disabled(h->acciopath_status == 1));
+ }
+ 
+ /* List of controllers which cannot be hard reset on kexec with reset_devices */
+diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
+index 228daffb286d..08945f296635 100644
+--- a/drivers/scsi/ibmvscsi/ibmvfc.c
++++ b/drivers/scsi/ibmvscsi/ibmvfc.c
+@@ -31,6 +31,7 @@
+ #include <scsi/scsi_transport_fc.h>
+ #include <scsi/scsi_bsg_fc.h>
+ #include "ibmvfc.h"
++#include <linux/string_choices.h>
+ 
+ static unsigned int init_timeout = IBMVFC_INIT_TIMEOUT;
+ static unsigned int default_timeout = IBMVFC_DEFAULT_TIMEOUT;
+@@ -3854,7 +3855,7 @@ static int ibmvfc_toggle_scrq_irq(struct ibmvfc_queue *scrq, int enable)
+ 
+ 	if (rc)
+ 		dev_err(dev, "Couldn't %s sub-crq[%lu] irq. rc=%ld\n",
+-			enable ? "enable" : "disable", scrq->hwq_id, rc);
++			str_enable_disable(enable), scrq->hwq_id, rc);
+ 
+ 	return rc;
+ }
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index d06b79f03538..9c711ce91b1e 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -70,6 +70,7 @@
+ #include <scsi/scsi_eh.h>
+ #include <scsi/scsi_cmnd.h>
+ #include "ipr.h"
++#include <linux/string_choices.h>
+ 
+ /*
+  *   Global Data
+@@ -4613,7 +4614,7 @@ static ssize_t ipr_store_raw_mode(struct device *dev,
+ 			len = strlen(buf);
+ 			if (res->sdev)
+ 				sdev_printk(KERN_INFO, res->sdev, "raw mode is %s\n",
+-					res->raw_mode ? "enabled" : "disabled");
++					str_enabled_disabled(res->raw_mode));
+ 		} else
+ 			len = -EINVAL;
+ 	} else
+diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
+index c9f410c50978..feb3c6153258 100644
+--- a/drivers/scsi/libiscsi.c
++++ b/drivers/scsi/libiscsi.c
+@@ -28,6 +28,7 @@
+ #include <scsi/scsi_transport_iscsi.h>
+ #include <scsi/libiscsi.h>
+ #include <trace/events/iscsi.h>
++#include <linux/string_choices.h>
+ 
+ static int iscsi_dbg_lib_conn;
+ module_param_named(debug_libiscsi_conn, iscsi_dbg_lib_conn, int,
+@@ -435,8 +436,8 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
+ 	conn->scsicmd_pdus_cnt++;
+ 	ISCSI_DBG_SESSION(session, "iscsi prep [%s cid %d sc %p cdb 0x%x "
+ 			  "itt 0x%x len %d cmdsn %d win %d]\n",
+-			  sc->sc_data_direction == DMA_TO_DEVICE ?
+-			  "write" : "read", conn->id, sc, sc->cmnd[0],
++			  str_write_read(sc->sc_data_direction == DMA_TO_DEVICE),
++			  conn->id, sc, sc->cmnd[0],
+ 			  task->itt, transfer_length,
+ 			  session->cmdsn,
+ 			  session->max_cmdsn - session->exp_cmdsn + 1);
+diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
+index 615e06fd4ee8..ae8af8064a5a 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_base.c
++++ b/drivers/scsi/megaraid/megaraid_sas_base.c
+@@ -37,6 +37,7 @@
+ #include <linux/poll.h>
+ #include <linux/vmalloc.h>
+ #include <linux/irq_poll.h>
++#include <linux/string_choices.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -6325,7 +6326,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 		"current msix/max num queues\t: (%d/%u)\n",
+ 		instance->msix_vectors, blk_mq_num_online_queues(0));
+ 	dev_info(&instance->pdev->dev,
+-		"RDPQ mode\t: (%s)\n", instance->is_rdpq ? "enabled" : "disabled");
++		"RDPQ mode\t: (%s)\n", str_enabled_disabled(instance->is_rdpq));
+ 
+ 	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
+ 		(unsigned long)instance);
+@@ -6484,11 +6485,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
+ 		le16_to_cpu(ctrl_info->pci.sub_vendor_id),
+ 		le16_to_cpu(ctrl_info->pci.sub_device_id));
+ 	dev_info(&instance->pdev->dev, "unevenspan support	: %s\n",
+-		instance->UnevenSpanSupport ? "yes" : "no");
++		str_yes_no(instance->UnevenSpanSupport));
+ 	dev_info(&instance->pdev->dev, "firmware crash dump	: %s\n",
+-		instance->crash_dump_drv_support ? "yes" : "no");
++		str_yes_no(instance->crash_dump_drv_support));
+ 	dev_info(&instance->pdev->dev, "JBOD sequence map	: %s\n",
+-		instance->use_seqnum_jbod_fp ? "enabled" : "disabled");
++		str_enabled_disabled(instance->use_seqnum_jbod_fp));
+ 
+ 	instance->max_sectors_per_req = instance->max_num_sge *
+ 						SGE_BUFFER_SIZE / 512;
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index bd3efa5b46c7..c2e18a132dab 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -60,6 +60,7 @@
+ #include <linux/ktime.h>
+ #include <linux/kthread.h>
+ #include <asm/page.h>        /* To get host page size per arch */
++#include <linux/string_choices.h>
+ 
+ 
+ #include "mpt3sas_base.h"
+@@ -3526,7 +3527,7 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
+ 	}
+ 
+ 	ioc_info(ioc, "High IOPs queues : %s\n",
+-			ioc->high_iops_queues ? "enabled" : "disabled");
++			str_enabled_disabled(ioc->high_iops_queues));
+ 
+ 	return 0;
+ 
+diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
+index abc4ce9eae74..a484425f3fd2 100644
+--- a/drivers/scsi/nsp32.c
++++ b/drivers/scsi/nsp32.c
+@@ -26,6 +26,7 @@
+ #include <linux/delay.h>
+ #include <linux/ctype.h>
+ #include <linux/dma-mapping.h>
++#include <linux/string_choices.h>
+ 
+ #include <asm/dma.h>
+ #include <asm/io.h>
+@@ -1473,7 +1474,7 @@ static int nsp32_show_info(struct seq_file *m, struct Scsi_Host *host)
+ 
+ #ifdef CONFIG_PM
+ 	seq_printf(m, "Power Management:      %s\n",
+-		   (mode_reg & OPTF) ? "yes" : "no");
++		   str_yes_no(mode_reg & OPTF));
+ #endif
+ 	seq_printf(m, "OEM:                   %ld, %s\n",
+ 		   (mode_reg & (OEM0|OEM1)), nsp32_model[model]);
+diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
+index 96174353e389..c03b61597e63 100644
+--- a/drivers/scsi/qedf/qedf_debugfs.c
++++ b/drivers/scsi/qedf/qedf_debugfs.c
+@@ -9,6 +9,7 @@
+ #include <linux/debugfs.h>
+ #include <linux/module.h>
+ #include <linux/vmalloc.h>
++#include <linux/string_choices.h>
+ 
+ #include "qedf.h"
+ #include "qedf_dbg.h"
+@@ -201,7 +202,7 @@ qedf_dbg_stop_io_on_error_cmd_read(struct file *filp, char __user *buffer,
+ 
+ 	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "entered\n");
+ 	cnt = scnprintf(cbuf, sizeof(cbuf), "%s\n",
+-	    qedf->stop_io_on_error ? "true" : "false");
++	    str_true_false(qedf->stop_io_on_error));
+ 
+ 	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
+ }
+diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
+index 2e584a8bf66b..e58658ade770 100644
+--- a/drivers/scsi/qla2xxx/qla_attr.c
++++ b/drivers/scsi/qla2xxx/qla_attr.c
+@@ -10,6 +10,7 @@
+ #include <linux/vmalloc.h>
+ #include <linux/slab.h>
+ #include <linux/delay.h>
++#include <linux/string_choices.h>
+ 
+ static int qla24xx_vport_disable(struct fc_vport *, bool);
+ 
+@@ -1722,7 +1723,7 @@ qla2x00_allow_cna_fw_dump_show(struct device *dev,
+ 		return scnprintf(buf, PAGE_SIZE, "\n");
+ 	else
+ 		return scnprintf(buf, PAGE_SIZE, "%s\n",
+-		    vha->hw->allow_cna_fw_dump ? "true" : "false");
++		    str_true_false(vha->hw->allow_cna_fw_dump));
+ }
+ 
+ static ssize_t
+diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
+index be211ff22acb..9e035e1318a4 100644
+--- a/drivers/scsi/qla2xxx/qla_init.c
++++ b/drivers/scsi/qla2xxx/qla_init.c
+@@ -9,6 +9,7 @@
+ #include <linux/delay.h>
+ #include <linux/slab.h>
+ #include <linux/vmalloc.h>
++#include <linux/string_choices.h>
+ 
+ #include "qla_devtbl.h"
+ 
+@@ -4850,13 +4851,13 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
+ 			(le32_to_cpu(mid_init_cb->init_cb.firmware_options_1) &
+ 			 BIT_7) != 0;
+ 		ql_dbg(ql_dbg_init, vha, 0x0191, "DPORT Support: %s.\n",
+-		    (ha->flags.dport_enabled) ? "enabled" : "disabled");
++		    str_enabled_disabled(ha->flags.dport_enabled));
+ 		/* FA-WWPN Status */
+ 		ha->flags.fawwpn_enabled =
+ 			(le32_to_cpu(mid_init_cb->init_cb.firmware_options_1) &
+ 			 BIT_6) != 0;
+ 		ql_dbg(ql_dbg_init, vha, 0x00bc, "FA-WWPN Support: %s.\n",
+-		    (ha->flags.fawwpn_enabled) ? "enabled" : "disabled");
++		    str_enabled_disabled(ha->flags.fawwpn_enabled));
+ 		/* Init_cb will be reused for other command(s).  Save a backup copy of port_name */
+ 		memcpy(ha->port_name, ha->init_cb->port_name, WWN_SIZE);
+ 	}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index d4b484c0fd9d..b93f1186ab90 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -17,6 +17,7 @@
+ #include <linux/crash_dump.h>
+ #include <linux/trace_events.h>
+ #include <linux/trace.h>
++#include <linux/string_choices.h>
+ 
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsicam.h>
+@@ -3221,8 +3222,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	qla2x00_config_dma_addressing(ha);
+ 	ql_dbg_pci(ql_dbg_init, pdev, 0x0020,
+ 	    "64 Bit addressing is %s.\n",
+-	    ha->flags.enable_64bit_addressing ? "enable" :
+-	    "disable");
++	    str_enable_disable(ha->flags.enable_64bit_addressing));
+ 	ret = qla2x00_mem_alloc(ha, req_length, rsp_length, &req, &rsp);
+ 	if (ret) {
+ 		ql_log_pci(ql_log_fatal, pdev, 0x0031,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5b8668accf8e..984d91f39fd6 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -58,6 +58,7 @@
+ #include <linux/t10-pi.h>
+ #include <linux/uaccess.h>
+ #include <linux/unaligned.h>
++#include <linux/string_choices.h>
+ 
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_cmnd.h>
+@@ -3161,8 +3162,8 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
+ 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
+ 			sd_printk(KERN_NOTICE, sdkp,
+ 				  "Write cache: %s, read cache: %s, %s\n",
+-				  sdkp->WCE ? "enabled" : "disabled",
+-				  sdkp->RCD ? "disabled" : "enabled",
++				  str_enabled_disabled(sdkp->WCE),
++				  str_disabled_enabled(sdkp->RCD),
+ 				  sdkp->DPOFUA ? "supports DPO and FUA"
+ 				  : "doesn't support DPO or FUA");
+ 
+diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+index 74a6830b7ed8..32ed32b0b31d 100644
+--- a/drivers/scsi/st.c
++++ b/drivers/scsi/st.c
+@@ -43,6 +43,7 @@ static const char *verstr = "20160209";
+ #include <linux/idr.h>
+ #include <linux/delay.h>
+ #include <linux/mutex.h>
++#include <linux/string_choices.h>
+ 
+ #include <linux/uaccess.h>
+ #include <asm/dma.h>
+@@ -4434,7 +4435,7 @@ static int st_probe(struct device *dev)
+ 	sdev_printk(KERN_NOTICE, SDp,
+ 		    "Attached scsi tape %s\n", tpnt->name);
+ 	sdev_printk(KERN_INFO, SDp, "%s: try direct i/o: %s (alignment %d B)\n",
+-		    tpnt->name, tpnt->try_dio ? "yes" : "no",
++		    tpnt->name, str_yes_no(tpnt->try_dio),
+ 		    queue_dma_alignment(SDp->request_queue) + 1);
+ 
+ 	return 0;
+diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
+index 57637a81776d..77fd6cc18d47 100644
+--- a/drivers/scsi/sym53c8xx_2/sym_glue.c
++++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
+@@ -29,6 +29,7 @@
+ #include <linux/module.h>
+ #include <linux/moduleparam.h>
+ #include <linux/spinlock.h>
++#include <linux/string_choices.h>
+ #include <scsi/scsi.h>
+ #include <scsi/scsi_tcq.h>
+ #include <scsi/scsi_device.h>
+@@ -761,7 +762,7 @@ static void sym_tune_dev_queuing(struct sym_tcb *tp, int lun, u_short reqtags)
+ 	if (reqtags != oldtags) {
+ 		dev_info(&tp->starget->dev,
+ 		         "tagged command queuing %s, command queue depth %d.\n",
+-		          lp->s.reqtags ? "enabled" : "disabled", reqtags);
++			 str_enabled_disabled(lp->s.reqtags), reqtags);
+ 	}
+ }
+ 
 -- 
-2.43.0
+2.47.3
 
