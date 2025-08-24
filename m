@@ -1,147 +1,78 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E76D23D7DB;
-	Sat, 23 Aug 2025 09:00:08 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22783262FC1;
+	Sun, 24 Aug 2025 09:29:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1755939608; cv=none; b=dXrcrm8x496Q3BhRjfrSmPxOp10jyaAinCDl3BOpaKl4l+/KIdn03FlNPqs4ilQwhpbkb1umSvHME8OQCqxgTBWu6J9I6ZNqPiOMmDX8eAlzyh0aihrJAqHvO4mdNnbvAhsTDi8I3jWTrPbOxPZH6geh1gylc1FrKylxVqK3u/M=
+	t=1756027762; cv=none; b=VpJi0IuOWmGmgllscwWGhU0yviIWhpR9XrXe/6HWvM3I7lf79YWSqUYAV2CSUCFSG+ir5dNGleolpovO8cM+2YMmwEIXwUYLRUTc0TW9ECGkoUGXGTXk0+hDKNU/DmJl86b1bFzK9dPVKcXm+lJVWZWpE3AA2vLBi/lGSu14oHs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1755939608; c=relaxed/simple;
-	bh=aU4s6rL8qphUf3ASSPtkvFhSbnF7KQL/5p/AkB6ZkD0=;
+	s=arc-20240116; t=1756027762; c=relaxed/simple;
+	bh=cSkJEEyBPIJyXDtyo5nFOPAKxDPEKL1H9DoVn2/BkYM=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=eUiIZIYSWxXBZ5vRjGUYEEVuNZoE907Mj7xmlK0WI1X4JtxeY1DqQqbAdzGyW4/Z7FamBh1rsXSz4dWNDT3q2Kr3UKbvUHrj1Iy0hTwIUfXEXhZ3TQ/mFBTJvm62+sgrlBm20EoYf5Qy3vfRayfDYY7ra+nyEcnfmQZeCMVMYks=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rOGkWtsU; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=pEhB9yKxhg5JJV6oGbsJ0QA72KU2VA0CQ25ruMMVt3pozrXf76AYP4CHU7RhE/Bj7pw8kxdy8ianVvopjUy8WYz9FgKoPpEyqAkj9O3FtuvduZqtsrWCpfbU0PFm4D9MnDNv0K1FIdDNMIHTdpJAo5ftLR2Xt/X9N8hPdfZ/iMc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I0K/RGGk; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rOGkWtsU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F35E6C113D0;
-	Sat, 23 Aug 2025 08:59:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I0K/RGGk"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B8CEC4CEEB;
+	Sun, 24 Aug 2025 09:29:19 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1755939608;
-	bh=aU4s6rL8qphUf3ASSPtkvFhSbnF7KQL/5p/AkB6ZkD0=;
+	s=k20201202; t=1756027760;
+	bh=cSkJEEyBPIJyXDtyo5nFOPAKxDPEKL1H9DoVn2/BkYM=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=rOGkWtsURQmqeVJWZZ8QU1TwZHK57H1RHXwc/i48rhECw+oAVRa4mF0zfqNM3aJ7b
-	 K4ufsfNlCAWHsLgknGRRJAM8fAg49ifByU7aHcJpd60KD5n2ftLsVEjekOSHSO2hKf
-	 TyNgVi/IP/sZ+Zv1HQC39pwpdaVXtYVat6Ea2uqdZXF6QBRAllDzvBMajMv+E6mXfL
-	 wV6BxOvsD2NYhNSk4hF0URYans98VMn0JY+kTDajsHLCy41MHKhsR0ynwpYDfvi23F
-	 uDIHwC7s5hdPOSqfKNvqn2djgrkhoLcYMLwZ0RX2xL3FelT1nsv2lD+CEaDl2f3oOX
-	 wFjm0sW7YW4bQ==
-Date: Sat, 23 Aug 2025 11:59:50 +0300
-From: Mike Rapoport <rppt@kernel.org>
-To: David Hildenbrand <david@redhat.com>
-Cc: Mika =?iso-8859-1?Q?Penttil=E4?= <mpenttil@redhat.com>,
-	linux-kernel@vger.kernel.org,
-	Alexander Potapenko <glider@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Brendan Jackman <jackmanb@google.com>,
-	Christoph Lameter <cl@gentwo.org>, Dennis Zhou <dennis@kernel.org>,
-	Dmitry Vyukov <dvyukov@google.com>, dri-devel@lists.freedesktop.org,
-	intel-gfx@lists.freedesktop.org, iommu@lists.linux.dev,
-	io-uring@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>,
-	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
-	John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com,
-	kvm@vger.kernel.org, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
-	linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-mips@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-mm@kvack.org,
-	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
-	Marco Elver <elver@google.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
-	netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
-	Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
-	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
-	virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
-	wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
-Subject: Re: [PATCH RFC 10/35] mm/hugetlb: cleanup
- hugetlb_folio_init_tail_vmemmap()
-Message-ID: <aKmDBobyvEX7ZUWL@kernel.org>
-References: <20250821200701.1329277-1-david@redhat.com>
- <20250821200701.1329277-11-david@redhat.com>
- <9156d191-9ec4-4422-bae9-2e8ce66f9d5e@redhat.com>
- <7077e09f-6ce9-43ba-8f87-47a290680141@redhat.com>
+	b=I0K/RGGkV+/PTur/t2+0HGKOunPAX7DgRFsVTRHVbKvqtegKwGTKkRtJibQHt8n5e
+	 wSo3KW86pk2sxa5/+CkP2HF+QAN4eXctfbxo+/FgBeTpo2YtNBfP6rT4naaByO0LAW
+	 1UpfkhcS6nnUprSbcjgCbv+kgcRdC9WE/XzFkt/Ywbo25UPYrEDMHJtWCIectLp3rr
+	 9Cci2MBHRspPJ4pdCCpjEDfpv6xj8ZDtmih4EUiJmLW65yHyL15Cz4PyHZtUcEbrks
+	 5P+/iDt7MaFQCVPf3sn1HnPQZwVv0s0WSD5ifw3nmQmF3bKlc3f+88LdtIfQBwHzWS
+	 3I1yDp4gBDL1A==
+Date: Sun, 24 Aug 2025 11:29:18 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+Cc: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com, 
+	bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	andersson@kernel.org, konradybcio@kernel.org, agross@kernel.org, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V2 1/4] ufs: dt-bindings: Document gear and rate limit
+ properties
+Message-ID: <20250824-elated-granite-leopard-5633c7@kuoka>
+References: <20250821101609.20235-1-quic_rdwivedi@quicinc.com>
+ <20250821101609.20235-2-quic_rdwivedi@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <7077e09f-6ce9-43ba-8f87-47a290680141@redhat.com>
+In-Reply-To: <20250821101609.20235-2-quic_rdwivedi@quicinc.com>
 
-On Fri, Aug 22, 2025 at 08:24:31AM +0200, David Hildenbrand wrote:
-> On 22.08.25 06:09, Mika Penttilä wrote:
-> > 
-> > On 8/21/25 23:06, David Hildenbrand wrote:
-> > 
-> > > All pages were already initialized and set to PageReserved() with a
-> > > refcount of 1 by MM init code.
-> > 
-> > Just to be sure, how is this working with MEMBLOCK_RSRV_NOINIT, where MM is supposed not to
-> > initialize struct pages?
-> 
-> Excellent point, I did not know about that one.
-> 
-> Spotting that we don't do the same for the head page made me assume that
-> it's just a misuse of __init_single_page().
-> 
-> But the nasty thing is that we use memblock_reserved_mark_noinit() to only
-> mark the tail pages ...
+On Thu, Aug 21, 2025 at 03:46:06PM +0530, Ram Kumar Dwivedi wrote:
+> +  limit-hs-gear:
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+> +    minimum: 1
+> +    maximum: 5
 
-And even nastier thing is that when CONFIG_DEFERRED_STRUCT_PAGE_INIT is
-disabled struct pages are initialized regardless of
-memblock_reserved_mark_noinit().
+default:
 
-I think this patch should go in before your updates:
+> +    description:
+> +      Restricts the maximum HS gear used in both TX and RX directions,
+> +      typically for hardware or power constraints in automotive use cases.
+> +
+> +  limit-rate:
+> +    $ref: /schemas/types.yaml#/definitions/uint32
+> +    enum: [1, 2]
 
-diff --git a/mm/hugetlb.c b/mm/hugetlb.c
-index 753f99b4c718..1c51788339a5 100644
---- a/mm/hugetlb.c
-+++ b/mm/hugetlb.c
-@@ -3230,6 +3230,22 @@ int __alloc_bootmem_huge_page(struct hstate *h, int nid)
- 	return 1;
- }
- 
-+/*
-+ * Tail pages in a huge folio allocated from memblock are marked as 'noinit',
-+ * which means that when CONFIG_DEFERRED_STRUCT_PAGE_INIT is enabled their
-+ * struct page won't be initialized
-+ */
-+#ifdef CONFIG_DEFERRED_STRUCT_PAGE_INIT
-+static void __init hugetlb_init_tail_page(struct page *page, unsigned long pfn,
-+					enum zone_type zone, int nid)
-+{
-+	__init_single_page(page, pfn, zone, nid);
-+}
-+#else
-+static inline void hugetlb_init_tail_page(struct page *page, unsigned long pfn,
-+					enum zone_type zone, int nid) {}
-+#endif
-+
- /* Initialize [start_page:end_page_number] tail struct pages of a hugepage */
- static void __init hugetlb_folio_init_tail_vmemmap(struct folio *folio,
- 					unsigned long start_page_number,
-@@ -3244,7 +3260,7 @@ static void __init hugetlb_folio_init_tail_vmemmap(struct folio *folio,
- 	for (pfn = head_pfn + start_page_number; pfn < end_pfn; pfn++) {
- 		struct page *page = pfn_to_page(pfn);
- 
--		__init_single_page(page, pfn, zone, nid);
-+		hugetlb_init_tail_page(page, pfn, zone, nid);
- 		prep_compound_tail((struct page *)folio, pfn - head_pfn);
- 		ret = page_ref_freeze(page, 1);
- 		VM_BUG_ON(!ret);
- 
-> Let me revert back to __init_single_page() and add a big fat comment why
-> this is required.
-> 
-> Thanks!
+default:
 
--- 
-Sincerely yours,
-Mike.
+> +    description:
+> +      Restricts the UFS controller to Rate A (1) or Rate B (2) for both
+
+Is 1 and 2 known in UFS spec? Feels like you wanted here string for 'a'
+and 'b'.
+
+Best regards,
+Krzysztof
+
