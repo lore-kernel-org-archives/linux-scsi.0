@@ -1,131 +1,154 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3AA0B1D555;
-	Mon, 25 Aug 2025 02:01:02 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 259E31F19A;
+	Mon, 25 Aug 2025 08:10:53 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756087262; cv=none; b=JfGTr9/Qo+r65pRW5F/C6njkGutQ0Iej5CtN+XNv5mtnUL3oakxuiQGP6mf70hp3RtBKcALgZz5o4YTy5qrWQOBHrShXaVBJS5uQBVsMVfXawEZq3O/37nx8vccnsC5FQi8sDNrDlH47LbUMAgqUYFIasT8gWqNYgTQrT5Z1xk0=
+	t=1756109454; cv=none; b=mXRxjYquFbrb92O43OTtg+J04MVO492gElZBz09BqXtm1V1SvvaLGdjVI4tC/q2DYpqz+h2lid5gZsePXitk+R40+3+/jGONvdXzCq5KDIO4/KkeDk9oWYjNiYzUoIM7xals0GLEdpNO1JhRadlhOpHL0XmkWnCC4wcKYqYO2yg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756087262; c=relaxed/simple;
-	bh=TCrlxBFeP+9vYrSLJjaxpk5OMuGV1M2/hfVIgdh7Q/g=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=VeelHwfbOCdawAB8BogLrJCVQwhumuvnI8xNX0fIJmTJFE2UiN6pHomqSsSGZOy6epd3yLa2fIlddBtBQ1IymbOQTSkqsMBci3uJytviB8mcw9Lb7OTtKXhbpKu3IR/i8KnwTsJRMnSAhWSNp17HI8RvkI4tfebMXhyehWUoX5s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GgmsXD9j; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1756109454; c=relaxed/simple;
+	bh=BihhbLsDzRmPKeOAZEC9nAUboJNMLrQjryghluirl+8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ooZG1s4fJBH8snM9wNHdhLJlYEM+NpRskrRqPtJe1KI0dJ0LeSy5XPOouT1vAjItG/8nklHP/rSJNnVu9juTy92EDkWtH6KYUH7w03qUftD+svBmG4lLCEKdNPHb/GViSpVc17FLNo0tEnNUhlWillR2+9PuseZ/dLPJGTXMacM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aumFNw3h; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GgmsXD9j"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4E7DFC4CEEB;
-	Mon, 25 Aug 2025 02:01:01 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aumFNw3h"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2799C4CEED;
+	Mon, 25 Aug 2025 08:10:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756087262;
-	bh=TCrlxBFeP+9vYrSLJjaxpk5OMuGV1M2/hfVIgdh7Q/g=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=GgmsXD9jBFxyvpE9Bx+ZJyVIwCUjdE4fmn2ZXb6Z9He/4FLLfNZ8rF2h7tE6P/iZO
-	 4I69yJi/uCmPAmY2ncIwP5cg+g9SEkvYs3wsfqPZjWUH0ItQ8JdURQcBTnPCD0Hezp
-	 eQSrMAqBioxStZxrC1QkOsQf65QJFYcxriJmQJMmDcGKbqTTZ1B7vb5VHqQHchqdqz
-	 LfpGKtXPBf65VrldOGgAlBTK/mhvIQXeG1KmP5Yd5qmc9IHXLT0boN3CMEvYfssMpQ
-	 kFWiK+w5UDq+ozPdCKhHf8wFKmKbqzybZ8JAefELudsa5xP04T4L9x2VUz4rw0FDgN
-	 9e9mJwYMf5zrw==
-Message-ID: <91f0fb20-1313-47c6-b40f-65520cd8c85b@kernel.org>
-Date: Mon, 25 Aug 2025 10:58:13 +0900
+	s=k20201202; t=1756109453;
+	bh=BihhbLsDzRmPKeOAZEC9nAUboJNMLrQjryghluirl+8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=aumFNw3h3qQ2VRqJkfw+ukOzuQwleIS2F5k1Chf5Zh2JNibASN8Qskt5lTEE9/Kt5
+	 WHwJ8+O5MM90oqEv07eGJZBRCSo/2JYWMv1ypCCeqtXlLiyPxliDodC7aR+ap5Meq/
+	 6upBpYFhCL1DHVs7Dy6Ac+5o/JdBFpkMB1axm5JKsDX7SN1SNXw9sh6G1qD57AKKSA
+	 3y23k8lfFIhea7x6qeOr1CX6LpdjrgK7TnbIPiz5tT/mJmVUDw5NKCza7voErIBmxM
+	 FUSyWGiABGFHcdrMY6QtkRwWzAT8IgId/KGbQ/YVLj4jppFzCZJLw1Ss0y+Gje8mp8
+	 nl7xjg0oFTkLA==
+Date: Mon, 25 Aug 2025 13:40:37 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Nitin Rawat <quic_nitirawa@quicinc.com>, krzk+dt@kernel.org
+Cc: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>, marcus@nazgul.ch, 
+	kirill@korins.ky, vkoul@kernel.org, kishon@kernel.org, robh@kernel.org, 
+	conor+dt@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	andersson@kernel.org, agross@kernel.org, linux-arm-msm@vger.kernel.org, 
+	linux-phy@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 3/3] dts: describe x1e80100 ufs
+Message-ID: <cp33qzgnc5i6e3nratfk7p6rhblltmem6nokk3wls3dtpattvt@cb2rbhbbe4vx>
+References: <20250814005904.39173-1-harrison.vanderbyl@gmail.com>
+ <20250814005904.39173-4-harrison.vanderbyl@gmail.com>
+ <bc001360-1cfe-4886-a023-367a8edc21c5@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v9 3/3] scsi: sd: make sd_revalidate_disk() return void
-To: Abinash Singh <abinashsinghlalotra@gmail.com>, bvanassche@acm.org
-Cc: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-References: <20250824180218.39498-1-abinashsinghlalotra@gmail.com>
- <20250824180218.39498-4-abinashsinghlalotra@gmail.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250824180218.39498-4-abinashsinghlalotra@gmail.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <bc001360-1cfe-4886-a023-367a8edc21c5@quicinc.com>
 
-On 8/25/25 3:02 AM, Abinash Singh wrote:
-> The sd_revalidate_disk() function currently returns 0 for
-> both success and memory allocation failure.Since none of its
-> callers use the return value, this return code is both unnecessary
-> and potentially misleading.
+On Thu, Aug 14, 2025 at 12:50:17PM GMT, Nitin Rawat wrote:
 > 
-> Change the return type of sd_revalidate_disk() from int to void
-> and remove all return value handling. This makes the function
-> semantics clearer and avoids confusion about unused return codes.
 > 
-> Signed-off-by: Abinash Singh <abinashsinghlalotra@gmail.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/sd.c | 11 +++++------
->  1 file changed, 5 insertions(+), 6 deletions(-)
+> On 8/14/2025 6:29 AM, Harrison Vanderbyl wrote:
+> > Describe device tree entry for x1e80100 ufs device
+> > Signed-off-by: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>
+> > ---
+> >   arch/arm64/boot/dts/qcom/x1e80100.dtsi | 91 ++++++++++++++++++++++++++
+> >   1 file changed, 91 insertions(+)
+> > 
+> > diff --git a/arch/arm64/boot/dts/qcom/x1e80100.dtsi b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
+> > index a9a7bb676c6f..effa776e3dd0 100644
+> > --- a/arch/arm64/boot/dts/qcom/x1e80100.dtsi
+> > +++ b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
+> > @@ -2819,6 +2819,97 @@ tsens3: thermal-sensor@c274000 {
+> >   			#thermal-sensor-cells = <1>;
+> >   		};
+> > +
+> > +		ufs_mem_hc: ufs@1d84000 {
+> > +			compatible = "qcom,x1e80100-ufshc",
+> > +			"qcom,ufshc", "jedec,ufs-2.0";
+
+This controller is UFS 3.0 based. Also, JEDEC has two specs for UFS:
+
+1. UFSHCI (Host controllers found in SoCs)
+2. UFS (UFS devices)
+
+And this compatible 'jedec,ufs-2.0' is mostly for UFS devices, not Host
+controllers. So using we should be using 'jedec,ufshc-3.0' here and in other
+bindings.
+
+krzk: Is it OK to change the compatible for all bindings and dts? Atleast linux
+is not making use of this compatible, but I'm not sure about other DT users.
+
+> > +			reg = <0 0x01d84000 0 0x3000>;
+> > +			
+> > +			
+> > +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+> > +
+> > +			phys = <&ufs_mem_phy>;
+> > +			phy-names = "ufsphy";
+> > +
+> > +			lanes-per-direction = <2>;
+> > +
+> > +			#reset-cells = <1>;
+> > +			resets = <&gcc GCC_UFS_PHY_BCR>;
+> > +
+> > +			reset-gpios = <&tlmm 238 GPIO_ACTIVE_LOW>;
+> > +			reset-names = "rst";
+> > +
+> > +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
+> > +
+> > +			iommus = <&apps_smmu 0x1a0 0x0>;
+> > +
+> > +			clock-names = "core_clk",
+> > +				      "bus_aggr_clk",
+> > +				      "iface_clk",
+> > +				      "core_clk_unipro",
+> > +				      "ref_clk",
+> > +				      "tx_lane0_sync_clk",
+> > +				      "rx_lane0_sync_clk",
+> > +				      "rx_lane1_sync_clk";
+> > +
+> > +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
+> > +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
+> > +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
+> > +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
+> > +				 <&rpmhcc RPMH_CXO_CLK>,
+> > +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
+> > +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
+> > +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
+> > +
+> > +			freq-table-hz = <100000000 403000000>,
+> > +					<0 0>,
+> > +					<0 0>,
+> > +					<100000000 403000000>,
+> > +					<100000000 403000000>,
+> > +					<0 0>,
+> > +					<0 0>,
+> > +					<0 0>;
+> > +
+> Please use OPP table instead of freq-table-hz.
 > 
-> diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> index 35856685d7fa..b3926c43e700 100644
-> --- a/drivers/scsi/sd.c
-> +++ b/drivers/scsi/sd.c
-> @@ -106,7 +106,7 @@ static void sd_config_discard(struct scsi_disk *sdkp, struct queue_limits *lim,
->  		unsigned int mode);
->  static void sd_config_write_same(struct scsi_disk *sdkp,
->  		struct queue_limits *lim);
-> -static int  sd_revalidate_disk(struct gendisk *);
-> +static void  sd_revalidate_disk(struct gendisk *);
->  static void sd_unlock_native_capacity(struct gendisk *disk);
->  static void sd_shutdown(struct device *);
->  static void scsi_disk_release(struct device *cdev);
-> @@ -3691,7 +3691,7 @@ static void sd_read_block_zero(struct scsi_disk *sdkp)
->   *	performs disk spin up, read_capacity, etc.
->   *	@disk: struct gendisk we care about
->   **/
-> -static int sd_revalidate_disk(struct gendisk *disk)
-> +static void sd_revalidate_disk(struct gendisk *disk)
->  {
->  	struct scsi_disk *sdkp = scsi_disk(disk);
->  	struct scsi_device *sdp = sdkp->device;
-> @@ -3699,7 +3699,7 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	struct queue_limits *lim = NULL;
->  	unsigned char *buffer = NULL;
->  	unsigned int dev_max;
-> -	int err = 0;
-> +	int err;
->  
->  	SCSI_LOG_HLQUEUE(3, sd_printk(KERN_INFO, sdkp,
->  				      "sd_revalidate_disk\n"));
-> @@ -3709,11 +3709,11 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	 * of the other niceties.
->  	 */
->  	if (!scsi_device_online(sdp))
-> -		goto out;
-> +		return;
->  
->  	lim = kmalloc(sizeof(*lim), GFP_KERNEL);
->  	if (!lim)
-> -		goto out;
-> +		return;
->  
->  	buffer = kmalloc(SD_BUF_SIZE, GFP_KERNEL);
->  	if (!buffer)
+> 
+> > +			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
+> > +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
+> > +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
+> > +					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
+> 
+> For Config Path, use QCOM_ICC_TAG_ACTIVE_ONLY.
+> 
+> YOu can refer to ICC discussion link for SM8750 - https://lore.kernel.org/linux-devicetree/354f8710-a5ec-47b5-bcfa-bff75ac3ca71@oss.qualcomm.com/
+> 
 
-OK. So you can ignore the nit I commented on patch 1.
+Nitin, question for you: Is this controller cache coherent as like its ancerstor
+sm8550?
 
-Looks good.
-
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-> @@ -3823,7 +3823,6 @@ static int sd_revalidate_disk(struct gendisk *disk)
->  	kfree(buffer);
->  	kfree(lim);
->  
-> -	return err;
->  }
->  
->  /**
-
+- Mani
 
 -- 
-Damien Le Moal
-Western Digital Research
+மணிவண்ணன் சதாசிவம்
