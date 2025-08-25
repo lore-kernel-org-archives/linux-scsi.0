@@ -1,154 +1,79 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 259E31F19A;
-	Mon, 25 Aug 2025 08:10:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D85A52D948D;
+	Mon, 25 Aug 2025 10:10:03 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756109454; cv=none; b=mXRxjYquFbrb92O43OTtg+J04MVO492gElZBz09BqXtm1V1SvvaLGdjVI4tC/q2DYpqz+h2lid5gZsePXitk+R40+3+/jGONvdXzCq5KDIO4/KkeDk9oWYjNiYzUoIM7xals0GLEdpNO1JhRadlhOpHL0XmkWnCC4wcKYqYO2yg=
+	t=1756116604; cv=none; b=ajTdACqzCyzTFhTrMnaD2uZkkmn0ggEwXbTncQ/7BdiQDmzeYHVWqOgqfYQ1tQMBOGM1Utq3l3qnWjBJuXnOn0d0IyrEfCfJzowffObhw3cNKzatilhNcOdi5AhgnGktM3yMV+h8D1ZAiLivcR7afZ57Pg7yB79m+3SlJ6tX4No=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756109454; c=relaxed/simple;
-	bh=BihhbLsDzRmPKeOAZEC9nAUboJNMLrQjryghluirl+8=;
+	s=arc-20240116; t=1756116604; c=relaxed/simple;
+	bh=y2WZ+B7tgeuKJW7dG7eCxLPf07QClN6hhHPYNmFlzh4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ooZG1s4fJBH8snM9wNHdhLJlYEM+NpRskrRqPtJe1KI0dJ0LeSy5XPOouT1vAjItG/8nklHP/rSJNnVu9juTy92EDkWtH6KYUH7w03qUftD+svBmG4lLCEKdNPHb/GViSpVc17FLNo0tEnNUhlWillR2+9PuseZ/dLPJGTXMacM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aumFNw3h; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=C0YkRs5MxCAbYQthp74RVsV4GlvUIvD3HYWiaZn8xgHavxCe7hTG6qGQottGYKETmn1Zbo+SgvA+AdJucLPGAmCl4A1yGgsYKRL0CXgkXqCr4FC8kWFbnG4GYMw1i6E2F+2MWeqCo9b6O/9EpwZmH3WtjFHyY4NmSgUgZEVdzd0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R84dDUek; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aumFNw3h"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2799C4CEED;
-	Mon, 25 Aug 2025 08:10:47 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R84dDUek"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16A3AC4CEED;
+	Mon, 25 Aug 2025 10:09:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756109453;
-	bh=BihhbLsDzRmPKeOAZEC9nAUboJNMLrQjryghluirl+8=;
+	s=k20201202; t=1756116603;
+	bh=y2WZ+B7tgeuKJW7dG7eCxLPf07QClN6hhHPYNmFlzh4=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=aumFNw3h3qQ2VRqJkfw+ukOzuQwleIS2F5k1Chf5Zh2JNibASN8Qskt5lTEE9/Kt5
-	 WHwJ8+O5MM90oqEv07eGJZBRCSo/2JYWMv1ypCCeqtXlLiyPxliDodC7aR+ap5Meq/
-	 6upBpYFhCL1DHVs7Dy6Ac+5o/JdBFpkMB1axm5JKsDX7SN1SNXw9sh6G1qD57AKKSA
-	 3y23k8lfFIhea7x6qeOr1CX6LpdjrgK7TnbIPiz5tT/mJmVUDw5NKCza7voErIBmxM
-	 FUSyWGiABGFHcdrMY6QtkRwWzAT8IgId/KGbQ/YVLj4jppFzCZJLw1Ss0y+Gje8mp8
-	 nl7xjg0oFTkLA==
-Date: Mon, 25 Aug 2025 13:40:37 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Nitin Rawat <quic_nitirawa@quicinc.com>, krzk+dt@kernel.org
-Cc: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>, marcus@nazgul.ch, 
-	kirill@korins.ky, vkoul@kernel.org, kishon@kernel.org, robh@kernel.org, 
-	conor+dt@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
-	andersson@kernel.org, agross@kernel.org, linux-arm-msm@vger.kernel.org, 
-	linux-phy@lists.infradead.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 3/3] dts: describe x1e80100 ufs
-Message-ID: <cp33qzgnc5i6e3nratfk7p6rhblltmem6nokk3wls3dtpattvt@cb2rbhbbe4vx>
-References: <20250814005904.39173-1-harrison.vanderbyl@gmail.com>
- <20250814005904.39173-4-harrison.vanderbyl@gmail.com>
- <bc001360-1cfe-4886-a023-367a8edc21c5@quicinc.com>
+	b=R84dDUekJqdaEOIacf9j3xK+NqOW8OLGOyByxdYxUOLU94CfwLOaxaQt66m5ESk2W
+	 ZmO01EPHsoPzbIWZ0Nl5bX9m9Owsmnpj2QymCNGi9Dp/IcvvIkYmbbSVDIT5GKD2Xo
+	 1cOO4RYUWnw4AZ+/GlW972LthSDcFwGoFbrgLCSvdsO74uYWdeU7zcj4/evUOIBYjq
+	 k30TJo9qjysxgdQdXIk1hxsLJZH4RBbgwBx70LhiEP942EaiiUc+HeprdGNN3n9a8M
+	 +LeH8TgScRyMavWvfVwpTsYx4dLx7BLFfAAjkNz0ZI6rkGC/3P8WZBAl8lfvSC6FMN
+	 R9R9F/lFjhqxg==
+Date: Mon, 25 Aug 2025 12:09:48 +0200
+From: Alexey Gladkov <legion@kernel.org>
+To: Nathan Chancellor <nathan@kernel.org>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	Nicolas Schier <nicolas.schier@linux.dev>,
+	Masahiro Yamada <masahiroy@kernel.org>,
+	Petr Pavlu <petr.pavlu@suse.com>,
+	Luis Chamberlain <mcgrof@kernel.org>,
+	Sami Tolvanen <samitolvanen@google.com>,
+	Daniel Gomez <da.gomez@samsung.com>, linux-kernel@vger.kernel.org,
+	linux-modules@vger.kernel.org, linux-kbuild@vger.kernel.org,
+	Khalid Aziz <khalid@gonehiking.org>, linux-scsi@vger.kernel.org,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Arnd Bergmann <arnd@arndb.de>, Damien Le Moal <dlemoal@kernel.org>
+Subject: Re: [PATCH v6 4/9] scsi: Always define blogic_pci_tbl structure
+Message-ID: <aKw2bKTjmHBGjxt_@example.org>
+References: <cover.1755170493.git.legion@kernel.org>
+ <93ca6c988e2d8a294ae0941747a6e654e6e8e8b8.1755170493.git.legion@kernel.org>
+ <yq1v7mkxe2h.fsf@ca-mkp.ca.oracle.com>
+ <20250819071817.GA1540193@ax162>
+ <yq18qjeyd4a.fsf@ca-mkp.ca.oracle.com>
+ <20250820161142.GB3805667@ax162>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <bc001360-1cfe-4886-a023-367a8edc21c5@quicinc.com>
+In-Reply-To: <20250820161142.GB3805667@ax162>
 
-On Thu, Aug 14, 2025 at 12:50:17PM GMT, Nitin Rawat wrote:
-> 
-> 
-> On 8/14/2025 6:29 AM, Harrison Vanderbyl wrote:
-> > Describe device tree entry for x1e80100 ufs device
-> > Signed-off-by: Harrison Vanderbyl <harrison.vanderbyl@gmail.com>
-> > ---
-> >   arch/arm64/boot/dts/qcom/x1e80100.dtsi | 91 ++++++++++++++++++++++++++
-> >   1 file changed, 91 insertions(+)
+On Wed, Aug 20, 2025 at 09:11:42AM -0700, Nathan Chancellor wrote:
+> On Tue, Aug 19, 2025 at 09:52:10PM -0400, Martin K. Petersen wrote:
+> > >> Applied to 6.18/scsi-staging, thanks!
+> > >
+> > > I think I will need this change to apply patch 7 [1] to kbuild-next
+> > > without any issues [2]. If there is little risk of conflict, could I
+> > > take it with your Ack?
 > > 
-> > diff --git a/arch/arm64/boot/dts/qcom/x1e80100.dtsi b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
-> > index a9a7bb676c6f..effa776e3dd0 100644
-> > --- a/arch/arm64/boot/dts/qcom/x1e80100.dtsi
-> > +++ b/arch/arm64/boot/dts/qcom/x1e80100.dtsi
-> > @@ -2819,6 +2819,97 @@ tsens3: thermal-sensor@c274000 {
-> >   			#thermal-sensor-cells = <1>;
-> >   		};
-> > +
-> > +		ufs_mem_hc: ufs@1d84000 {
-> > +			compatible = "qcom,x1e80100-ufshc",
-> > +			"qcom,ufshc", "jedec,ufs-2.0";
-
-This controller is UFS 3.0 based. Also, JEDEC has two specs for UFS:
-
-1. UFSHCI (Host controllers found in SoCs)
-2. UFS (UFS devices)
-
-And this compatible 'jedec,ufs-2.0' is mostly for UFS devices, not Host
-controllers. So using we should be using 'jedec,ufshc-3.0' here and in other
-bindings.
-
-krzk: Is it OK to change the compatible for all bindings and dts? Atleast linux
-is not making use of this compatible, but I'm not sure about other DT users.
-
-> > +			reg = <0 0x01d84000 0 0x3000>;
-> > +			
-> > +			
-> > +			interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
-> > +
-> > +			phys = <&ufs_mem_phy>;
-> > +			phy-names = "ufsphy";
-> > +
-> > +			lanes-per-direction = <2>;
-> > +
-> > +			#reset-cells = <1>;
-> > +			resets = <&gcc GCC_UFS_PHY_BCR>;
-> > +
-> > +			reset-gpios = <&tlmm 238 GPIO_ACTIVE_LOW>;
-> > +			reset-names = "rst";
-> > +
-> > +			power-domains = <&gcc GCC_UFS_PHY_GDSC>;
-> > +
-> > +			iommus = <&apps_smmu 0x1a0 0x0>;
-> > +
-> > +			clock-names = "core_clk",
-> > +				      "bus_aggr_clk",
-> > +				      "iface_clk",
-> > +				      "core_clk_unipro",
-> > +				      "ref_clk",
-> > +				      "tx_lane0_sync_clk",
-> > +				      "rx_lane0_sync_clk",
-> > +				      "rx_lane1_sync_clk";
-> > +
-> > +			clocks = <&gcc GCC_UFS_PHY_AXI_CLK>,
-> > +				 <&gcc GCC_AGGRE_UFS_PHY_AXI_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_AHB_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_UNIPRO_CORE_CLK>,
-> > +				 <&rpmhcc RPMH_CXO_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_TX_SYMBOL_0_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_0_CLK>,
-> > +				 <&gcc GCC_UFS_PHY_RX_SYMBOL_1_CLK>;
-> > +
-> > +			freq-table-hz = <100000000 403000000>,
-> > +					<0 0>,
-> > +					<0 0>,
-> > +					<100000000 403000000>,
-> > +					<100000000 403000000>,
-> > +					<0 0>,
-> > +					<0 0>,
-> > +					<0 0>;
-> > +
-> Please use OPP table instead of freq-table-hz.
+> > Sure, no problem. Dropped the patch from my tree.
+> > 
+> > Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
 > 
-> 
-> > +			interconnects = <&aggre1_noc MASTER_UFS_MEM QCOM_ICC_TAG_ALWAYS
-> > +					 &mc_virt SLAVE_EBI1 QCOM_ICC_TAG_ALWAYS>,
-> > +					<&gem_noc MASTER_APPSS_PROC QCOM_ICC_TAG_ALWAYS
-> > +					 &config_noc SLAVE_UFS_MEM_CFG QCOM_ICC_TAG_ALWAYS>;
-> 
-> For Config Path, use QCOM_ICC_TAG_ACTIVE_ONLY.
-> 
-> YOu can refer to ICC discussion link for SM8750 - https://lore.kernel.org/linux-devicetree/354f8710-a5ec-47b5-bcfa-bff75ac3ca71@oss.qualcomm.com/
-> 
+> Thanks a lot!
 
-Nitin, question for you: Is this controller cache coherent as like its ancerstor
-sm8550?
-
-- Mani
+Has these patches been added somewhere, I can't find it in kbuild?
 
 -- 
-மணிவண்ணன் சதாசிவம்
+Rgrds, legion
+
