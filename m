@@ -1,79 +1,98 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D85A52D948D;
-	Mon, 25 Aug 2025 10:10:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B2BFB2A1CF
+	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2025 10:18:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756116604; cv=none; b=ajTdACqzCyzTFhTrMnaD2uZkkmn0ggEwXbTncQ/7BdiQDmzeYHVWqOgqfYQ1tQMBOGM1Utq3l3qnWjBJuXnOn0d0IyrEfCfJzowffObhw3cNKzatilhNcOdi5AhgnGktM3yMV+h8D1ZAiLivcR7afZ57Pg7yB79m+3SlJ6tX4No=
+	t=1756117107; cv=none; b=VIW3pONv34NPC6zQoqxkONqaQlufQHcXM4b27TvtKBoSEFUFecadEoINtIwqPrnFVverirUaee0MEuI9XEpPv9XoHk9oMya8uU/j02McKvGjKR4VtB/v59E/Bsw5TnMKqwaf4vMuPLNkXiymAcfuoi/RRue2LIJZcof/mG6sD3I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756116604; c=relaxed/simple;
-	bh=y2WZ+B7tgeuKJW7dG7eCxLPf07QClN6hhHPYNmFlzh4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=C0YkRs5MxCAbYQthp74RVsV4GlvUIvD3HYWiaZn8xgHavxCe7hTG6qGQottGYKETmn1Zbo+SgvA+AdJucLPGAmCl4A1yGgsYKRL0CXgkXqCr4FC8kWFbnG4GYMw1i6E2F+2MWeqCo9b6O/9EpwZmH3WtjFHyY4NmSgUgZEVdzd0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=R84dDUek; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1756117107; c=relaxed/simple;
+	bh=H6a4Jn3mmKGN51V9brjzLqb7GvJ7zeGktHzAyaioPko=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ktwaL5NMxjuZeBgsCiwOekG704DZrag7fPFeD6VfP2WQCFqY8HlORo/KgvRohxDkN8XBrDU3DND5lxYYj1RbqzlifxJOsiWTO0VTKhgufPQkTGGlY9DZfuf27QcuOjwG6kFjD+OsyJa2uI11UKJ4a5gJ0VFvlV1SOZVTxdXrfEc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=f3sa8kkW; arc=none smtp.client-ip=60.244.123.138
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="R84dDUek"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 16A3AC4CEED;
-	Mon, 25 Aug 2025 10:09:57 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756116603;
-	bh=y2WZ+B7tgeuKJW7dG7eCxLPf07QClN6hhHPYNmFlzh4=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=R84dDUekJqdaEOIacf9j3xK+NqOW8OLGOyByxdYxUOLU94CfwLOaxaQt66m5ESk2W
-	 ZmO01EPHsoPzbIWZ0Nl5bX9m9Owsmnpj2QymCNGi9Dp/IcvvIkYmbbSVDIT5GKD2Xo
-	 1cOO4RYUWnw4AZ+/GlW972LthSDcFwGoFbrgLCSvdsO74uYWdeU7zcj4/evUOIBYjq
-	 k30TJo9qjysxgdQdXIk1hxsLJZH4RBbgwBx70LhiEP942EaiiUc+HeprdGNN3n9a8M
-	 +LeH8TgScRyMavWvfVwpTsYx4dLx7BLFfAAjkNz0ZI6rkGC/3P8WZBAl8lfvSC6FMN
-	 R9R9F/lFjhqxg==
-Date: Mon, 25 Aug 2025 12:09:48 +0200
-From: Alexey Gladkov <legion@kernel.org>
-To: Nathan Chancellor <nathan@kernel.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
-	Nicolas Schier <nicolas.schier@linux.dev>,
-	Masahiro Yamada <masahiroy@kernel.org>,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Daniel Gomez <da.gomez@samsung.com>, linux-kernel@vger.kernel.org,
-	linux-modules@vger.kernel.org, linux-kbuild@vger.kernel.org,
-	Khalid Aziz <khalid@gonehiking.org>, linux-scsi@vger.kernel.org,
-	James Bottomley <James.Bottomley@hansenpartnership.com>,
-	Arnd Bergmann <arnd@arndb.de>, Damien Le Moal <dlemoal@kernel.org>
-Subject: Re: [PATCH v6 4/9] scsi: Always define blogic_pci_tbl structure
-Message-ID: <aKw2bKTjmHBGjxt_@example.org>
-References: <cover.1755170493.git.legion@kernel.org>
- <93ca6c988e2d8a294ae0941747a6e654e6e8e8b8.1755170493.git.legion@kernel.org>
- <yq1v7mkxe2h.fsf@ca-mkp.ca.oracle.com>
- <20250819071817.GA1540193@ax162>
- <yq18qjeyd4a.fsf@ca-mkp.ca.oracle.com>
- <20250820161142.GB3805667@ax162>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="f3sa8kkW"
+X-UUID: d1fbd42a819c11f0b2125946c7b33498-20250825
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=J7g3d4Sf0BMZgiD7mJvVRCUZXsOADAvbi+DruDyMICw=;
+	b=f3sa8kkWn7/tAv1EigGjPsQctxHfBDBUMk6xt9fOEe3f6CbDpZ7BuKBsZtipAgIduwwsmWUjntORxoGH3g/Ylnb9IZ4VCki8NUdruPy0QEx3Ej1C9znFo7jtf57IZuJ9eqwcXSfUsnt6fLUm9zwxyCQ8hhc2oISNR3SatPgMTvg=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.3,REQID:f0e39ac7-744e-47ef-b715-b38797925717,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:f1326cf,CLOUDID:d69f4bf4-66cd-4ff9-9728-6a6f64661009,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102,TC:-5,Content:0|15|50,EDM:-3,IP:
+	nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,L
+	ES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 3,DMD|SSN|SDN
+X-CID-BAS: 3,DMD|SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: d1fbd42a819c11f0b2125946c7b33498-20250825
+Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 254774915; Mon, 25 Aug 2025 18:18:18 +0800
+Received: from mtkmbs11n2.mediatek.inc (172.21.101.187) by
+ MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1258.39; Mon, 25 Aug 2025 18:18:16 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs11n2.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1258.39 via Frontend Transport; Mon, 25 Aug 2025 18:18:16 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
+CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
+	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
+	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
+	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
+	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
+	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
+	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <sanjeev.y@mediatek.com>
+Subject: [PATCH v1 00/10] ufs: host: mediatek: Power Management and Stability Enhancements
+Date: Mon, 25 Aug 2025 18:10:08 +0800
+Message-ID: <20250825101815.2891905-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250820161142.GB3805667@ax162>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-On Wed, Aug 20, 2025 at 09:11:42AM -0700, Nathan Chancellor wrote:
-> On Tue, Aug 19, 2025 at 09:52:10PM -0400, Martin K. Petersen wrote:
-> > >> Applied to 6.18/scsi-staging, thanks!
-> > >
-> > > I think I will need this change to apply patch 7 [1] to kbuild-next
-> > > without any issues [2]. If there is little risk of conflict, could I
-> > > take it with your Ack?
-> > 
-> > Sure, no problem. Dropped the patch from my tree.
-> > 
-> > Acked-by: Martin K. Petersen <martin.petersen@oracle.com>
-> 
-> Thanks a lot!
+From: Peter Wang <peter.wang@mediatek.com>
 
-Has these patches been added somewhere, I can't find it in kbuild?
+These patches collectively enhance the UFS host driver's reliability,
+power management efficiency, and error recovery mechanisms on MediaTek
+platforms. They address critical issues and introduce optimizations
+that improve system stability and performance.
+
+Peter Wang (7):
+  ufs: host: mediatek: Enhance recovery on hibernation exit failure
+  ufs: host: mediatek: Enhance recovery on resume failure
+  ufs: host: mediatek: Correct system PM flow
+  ufs: host: mediatek: Support UFS PHY runtime PM and correct sequence
+  ufs: host: mediatek: Disable auto-hibern8 during power mode changes
+  ufs: host: mediatek: Fix unbalanced IRQ enable issue
+  ufs: host: mediatek: Fix device power control
+
+Alice Chao (2):
+  ufs: host: mediatek: Correct resume flow for LPM and MTCMOS
+  ufs: host: mediatek: Fix adapt issue after PA_Init
+
+Sanjeev Y (1):
+  ufs: host: mediatek: Return error directly on idle wait timeout
+
+ drivers/ufs/host/ufs-mediatek.c | 176 ++++++++++++++++++++++++++------
+ drivers/ufs/host/ufs-mediatek.h |   1 +
+ 2 files changed, 147 insertions(+), 30 deletions(-)
 
 -- 
-Rgrds, legion
+2.45.2
 
