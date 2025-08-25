@@ -1,231 +1,119 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f52.google.com (mail-pj1-f52.google.com [209.85.216.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 09F5D30EF8F
-	for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2025 18:32:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 78EAC19D081;
+	Mon, 25 Aug 2025 18:41:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756146761; cv=none; b=evJ0uXwi8LQImTsSDzgcljLLlqqYYtrQTSdYr47fVpT0yQZdvvsQSfTnElKschslkYyXBgpW2BS9+gVD7l9sGvdhykJFPUMBbi+CPb/74FhZjoKofxSjfTv20dZVSxbrkkwGgqVDGu29hE1+ZwDSinVvAvK+jzrpSxX4rci0mKM=
+	t=1756147277; cv=none; b=KBTfuTHGk/AWREcPM5YGeC6Uc8W2FLfsEtcskGT1rLFfXF+FOh3FvcUTJT0Yn/Pzbks/wz+YDx3QYn8uWvlZ5dUvlUorcE2TexR4WXP1Q7wCOLBnazYrg4eCTit+3qTSpM3hvnKzF4w6cdJXdgKKzy6R72ZhILUSndhjCHgcFgA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756146761; c=relaxed/simple;
-	bh=5gSbG4LawMNJ/PWjEAWfSVGPawomJWAQkNEyrTBhXtk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=a7ZYdBYhSdzEQKbGLTU8FLp/OARUclR8XZSdhUCEumFn8CPoOw3NiAwksMxTVYNKD7ZzFkf06eObqizLsqbsmnk4M50r7v9HgJADugZxXYidmLMYSFdiOgtnydQrNx4kB3PNLRCJwjJhRysZJVXmNowrIcHVQaNIPI7Ftgei2N8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=chYnQjrw; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1756147277; c=relaxed/simple;
+	bh=R+hnRo6vqHPwh1NzmvZP3vz3Qa3DIKd1T9XAuzIt6T0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=dfeLAY9m4YS5gySi7PDnGXo8B8vXguFapDz4uLWw1NAVxCF52wFpok/rORH/jiwXFhaU30WuUMFkqh2HNkI4PywkHPRnhSw8DZX7eYfhn4/r8Yrvi7tY5P/A/iPNtC3MwX7KpnO/+tYi5lJbu0GQkq6lcp5mk7gGayRPR8g1Bic=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=N1+5gbEX; arc=none smtp.client-ip=209.85.216.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="chYnQjrw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756146758;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=bluti57k39MttADONVHVsAxBvXyqb5R7ZWo2ok70EgM=;
-	b=chYnQjrwjnPOL+mLVfI57Hr9F/jU2bESnYc+eDdLKinUI+z0J7DAQdO7LuwiuKHredEUrc
-	kCRd86XkjQypi4g12vtOVCKo9c+4A/cmrVfp5bSJG20P1/RGFTu8nUhpnJpDvd7SOoq4LX
-	WPKnVF5oKeRpJqBiuxyTPB20f05FgMg=
-Received: from mail-wm1-f71.google.com (mail-wm1-f71.google.com
- [209.85.128.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-544-5tsIsyKwPtCSAd68dsPEzQ-1; Mon, 25 Aug 2025 14:32:33 -0400
-X-MC-Unique: 5tsIsyKwPtCSAd68dsPEzQ-1
-X-Mimecast-MFC-AGG-ID: 5tsIsyKwPtCSAd68dsPEzQ_1756146752
-Received: by mail-wm1-f71.google.com with SMTP id 5b1f17b1804b1-45a1b0b46bbso21329575e9.2
-        for <linux-scsi@vger.kernel.org>; Mon, 25 Aug 2025 11:32:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="N1+5gbEX"
+Received: by mail-pj1-f52.google.com with SMTP id 98e67ed59e1d1-325393d0ddaso2082421a91.3;
+        Mon, 25 Aug 2025 11:41:16 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1756147276; x=1756752076; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=GfxD7FsdTZBtjvRUIXNfBgoLkEqGJVu5BF6NG9G4Rp8=;
+        b=N1+5gbEXVPYH1K0j3eBbVo6L7OjZNgVrnwDRwi2BomcCZJScwgP1eLVuxL4wKTW+Y4
+         fzbtz6mTHzh9mSCi1iqhvXjMgx44ubRaBHkQA/KRyOUh+Pwwd+R5DMP9JWzFXpZel1nh
+         HXbbJCzAwgkk3J3dAjs7nk7KWxKZggiSD8R3Pp6zovIJPnQoicDtsIjSt2W/6j/lnH3L
+         D2U7n58NqQR/iS7hw4nVW5Au2pigP+evam/R2LxIkjVsdaxGtc6G+uUT0j19ANGxM7j/
+         eZQyHRRilO3q15bf9U7hBz8lS0GkYjWS6I+A3ezl4saQ7O2L8cJ48sCUiR4Z/gga3Iul
+         rVWw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756146752; x=1756751552;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
+        d=1e100.net; s=20230601; t=1756147276; x=1756752076;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=bluti57k39MttADONVHVsAxBvXyqb5R7ZWo2ok70EgM=;
-        b=u7XVKY0W5QW3YQBp9qQ/sUsVmZZA2LSUyVA2ew64KvgIME90Vs+7wGbtbnpfqFRJer
-         tTqKKLdc0Q7W9KirDDW84pABoMQgeyaRl60T6jAWbhDbvxJKX4hHADL/QiuWQZ742hBZ
-         uwvK5a/dzKcwILMpF36IU6Ue4mY9pmoIqipRCBbDab+Hwupxj2DpUm6aNwyEunxYrUal
-         Y3O8740eouAQvXdd555G9WZFxFvdythVn0RJce79O83ktraLS8Pus4tXlfa4mhOAINB8
-         GDkj7PFxGd1TTj2dkCMJa5M+C93IdJxAexWWvR+L7OuFfG4SVrrSaR3rZxXZCvV7J3Qg
-         bWOQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXlQf5DpYes+yES4NEPJoOQskMh+kGaH8eN/Vn5Z3OvfwZemS+rhVxDNfdcHw+HNkeyXEMuHM5jWkbh@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxtge2AwpArA6LXYR6S5YAyjcmg8c3RXQkGGfoHcdWF0d48gx4J
-	JlYMnTLCxxF9kJHG+3Zq3+/SOmoudj6JOl7MXTo1T2gesBrdec6QHmQ+Bcl+QmkgWk4pJSfcKMw
-	zeRm9C6dczbJfaZvk4rUSlOmTu0GMGSGKSIQ65iDVK1x0QjUifCX5YOA9zNGRSB0=
-X-Gm-Gg: ASbGncsn9b8ohmCJZ75+ZJc81Q6G5HJQHaz+KHpSJbe6YIXCmoKL7ETAYZJgIp4F2k3
-	XvuKhbnUud3E8jXbRNNSNk8TJU326+X8UEPEcWBC2l+wv7B6Fu9nuFqXs3WpG8pedvwry9R3WHF
-	ARFdxq11hfrJgCjc+wfUAzmzUfsnWGgNaEZA+KuHLtiN4yXLUs2RTBXlPMTIu26sbaJEr+kHLXY
-	zaRYJpPX7G6oRyWwFoKpKvwF9aQIBR6BssrA3N4L5u92u4Zgxqy1mrLbZl6sinaiVGSWLnq5WrR
-	TKjLaBgA73hsMRi7R46YmfbqV9zp5ZFs+/P/dMHxSlpCBv3m7U6OhNzvEqat+JDZkn10ql5ZIQN
-	YEkQPj9JCvoyupsSD9xUOWlaCVdXdf5o2lWg7U3o3uwN94jBOr3j56qgLz/hYL0TBBz4=
-X-Received: by 2002:a05:600c:4e90:b0:458:a559:a693 with SMTP id 5b1f17b1804b1-45b517b957emr126710805e9.18.1756146752240;
-        Mon, 25 Aug 2025 11:32:32 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFxuQzAylX90vNEmmjxyPSaWFpv8tCbOTWCm8WazHqaDOnMAPM4HK8CKvM3oYkR/BEIZaOMIA==
-X-Received: by 2002:a05:600c:4e90:b0:458:a559:a693 with SMTP id 5b1f17b1804b1-45b517b957emr126710235e9.18.1756146751795;
-        Mon, 25 Aug 2025 11:32:31 -0700 (PDT)
-Received: from ?IPV6:2003:d8:2f4f:1300:42f1:98e5:ddf8:3a76? (p200300d82f4f130042f198e5ddf83a76.dip0.t-ipconnect.de. [2003:d8:2f4f:1300:42f1:98e5:ddf8:3a76])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3c7119c4200sm12481975f8f.53.2025.08.25.11.32.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 25 Aug 2025 11:32:31 -0700 (PDT)
-Message-ID: <7ffd0abd-27a1-40a8-b538-9a01e21abb29@redhat.com>
-Date: Mon, 25 Aug 2025 20:32:27 +0200
+        bh=GfxD7FsdTZBtjvRUIXNfBgoLkEqGJVu5BF6NG9G4Rp8=;
+        b=M4X1Euq1ysSvK6Kfy4+tw+gG8AITIw41/G20V55GoXzMlL8WRGMt1NvIiE/LHLBZyw
+         ymvSDpOhyZ7v9FTyuQ2bswNxA3FjURBHe4v6WbORMmoXevkeJ18UeQC5M4IjUX57UBPl
+         jWJF9YSFgDcaQH87+uWKUiA0yLNsLrOLpsid+80UgNSCybxgarAueL0By2OjykMH++KZ
+         mmD8Mo/TdxQHBuyhvI/Z5SLKEC+ukyRsZ3qnOG7z1FbVz8Qf6mw3iAOVilaRE3zXSq4P
+         wxzdTVpX1xmNSrHuGP40xEMFFCZ9sSiXOMaTsk57H0F+97ojr/6GjNFUZZL1qMy3MjuE
+         2PoA==
+X-Forwarded-Encrypted: i=1; AJvYcCWGAtdLD762D8nWdS+BeQUIOZN4ot0mujhshjmL7+yBv47ahLTY9jckuFxbe8SulScARcpSbVoqkvGeJnU=@vger.kernel.org, AJvYcCWOBB7Jor6ZUvv57XV29w0OKh5/PpxCJUDKrOkB/6UTdEfqnXeBQoIy6ZjwX15WvxAtH5NKyKeFvwnIHQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxtooG3d6pIC9a8g7EmS6gvJ/c2mt9lzMRYj4avndb3Ph7J17O7
+	1R8rd8wMlPPWgvFnqQZ8JzrSboVhaebOvX6kMosQ+ioF0cqE774hslpw
+X-Gm-Gg: ASbGncsw7q3vqaS2fVtuoBtveJ0uQojWlQr3WqciQbMfMHGIP/kW0jBNo8H30eKQJ82
+	Bv4DXKjiFR6wQ88cRb40aRNVOsd8kI+aPRfQp5PmxrqrmQtZhQfa4gaTbbH5UmAF/8Yu81mvFHf
+	dpsTNVs9tGJ3qooJQe2q4gXEGy2kkLgbfvYPgKSvOGrE8LP5hMOB3M+KbFxCBtiN7t/+3dJV4TW
+	YucOglLWfhMkn56L/r2JqN3nYp1cUSmcTUM1SW9KPQdV0T1zPlpfnvKwtXgS4Hb0JodrsxZ8IAY
+	idH1Si0yS60lVF4led0GyXp3ecqxiA1clVklZUQhzhdpOjvdxaD3tivm08Q9jZSCVAAzgHv6BwH
+	tR46s7L/Z+iMWPH04mxiG4Nxh/43nItAntVF1bEhOJV1pez883uShPD9Z
+X-Google-Smtp-Source: AGHT+IHBHR74v0GCDgx0UUm53HK/WUflxLL9nhAuFa8HO+gag1KeMoJmS12OjdcfbhXOGANZD1Lm5A==
+X-Received: by 2002:a17:90b:388b:b0:325:40a8:56e0 with SMTP id 98e67ed59e1d1-32540a8583amr11414029a91.30.1756147275718;
+        Mon, 25 Aug 2025 11:41:15 -0700 (PDT)
+Received: from localhost.localdomain ([202.83.40.77])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77040249e37sm8155142b3a.105.2025.08.25.11.41.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 25 Aug 2025 11:41:15 -0700 (PDT)
+From: Abinash Singh <abinashsinghlalotra@gmail.com>
+To: bvanassche@acm.org
+Cc: James.Bottomley@HansenPartnership.com,
+	abinashsinghlalotra@gmail.com,
+	dlemoal@kernel.org,
+	linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Subject: [PATCH v10 0/3] scsi: sd: Cleanups and warning fixes in sd_revalidate_disk()
+Date: Tue, 26 Aug 2025 00:09:37 +0530
+Message-ID: <20250825183940.13211-1-abinashsinghlalotra@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: update kernel-doc for MEMBLOCK_RSRV_NOINIT
-To: Mike Rapoport <rppt@kernel.org>
-Cc: =?UTF-8?Q?Mika_Penttil=C3=A4?= <mpenttil@redhat.com>,
- linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
- Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
- iommu@lists.linux.dev, io-uring@vger.kernel.org,
- Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
- Johannes Weiner <hannes@cmpxchg.org>, John Hubbard <jhubbard@nvidia.com>,
- kasan-dev@googlegroups.com, kvm@vger.kernel.org,
- "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
- linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
- Marco Elver <elver@google.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
- netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
- Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
- virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
- wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
-References: <9156d191-9ec4-4422-bae9-2e8ce66f9d5e@redhat.com>
- <7077e09f-6ce9-43ba-8f87-47a290680141@redhat.com>
- <aKmDBobyvEX7ZUWL@kernel.org>
- <a90cf9a3-d662-4239-ad54-7ea917c802a5@redhat.com>
- <aKxz9HLQTflFNYEu@kernel.org>
- <a72080b4-5156-4add-ac7c-1160b44e0dfe@redhat.com>
- <aKx6SlYrj_hiPXBB@kernel.org>
- <f8140a17-c4ec-489b-b314-d45abe48bf36@redhat.com>
- <aKyMfvWe8JetkbRL@kernel.org>
- <dbd2ec55-0e7f-407a-a8bd-e1ac83ac2a0a@redhat.com>
- <aKyWIriZ1bmnIrBW@kernel.org>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- qIws/H2t
-In-Reply-To: <aKyWIriZ1bmnIrBW@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On 25.08.25 18:58, Mike Rapoport wrote:
-> On Mon, Aug 25, 2025 at 06:23:48PM +0200, David Hildenbrand wrote:
->>
->> I don't quite understand the interaction with PG_Reserved and why anybody
->> using this function should care.
->>
->> So maybe you can rephrase in a way that is easier to digest, and rather
->> focuses on what callers of this function are supposed to do vs. have the
->> liberty of not doing?
-> 
-> How about
->   
-> diff --git a/include/linux/memblock.h b/include/linux/memblock.h
-> index b96746376e17..fcda8481de9a 100644
-> --- a/include/linux/memblock.h
-> +++ b/include/linux/memblock.h
-> @@ -40,8 +40,9 @@ extern unsigned long long max_possible_pfn;
->    * via a driver, and never indicated in the firmware-provided memory map as
->    * system RAM. This corresponds to IORESOURCE_SYSRAM_DRIVER_MANAGED in the
->    * kernel resource tree.
-> - * @MEMBLOCK_RSRV_NOINIT: memory region for which struct pages are
-> - * not initialized (only for reserved regions).
-> + * @MEMBLOCK_RSRV_NOINIT: reserved memory region for which struct pages are not
-> + * fully initialized. Users of this flag are responsible to properly initialize
-> + * struct pages of this region
->    * @MEMBLOCK_RSRV_KERN: memory region that is reserved for kernel use,
->    * either explictitly with memblock_reserve_kern() or via memblock
->    * allocation APIs. All memblock allocations set this flag.
-> diff --git a/mm/memblock.c b/mm/memblock.c
-> index 154f1d73b61f..46b411fb3630 100644
-> --- a/mm/memblock.c
-> +++ b/mm/memblock.c
-> @@ -1091,13 +1091,20 @@ int __init_memblock memblock_clear_nomap(phys_addr_t base, phys_addr_t size)
->   
->   /**
->    * memblock_reserved_mark_noinit - Mark a reserved memory region with flag
-> - * MEMBLOCK_RSRV_NOINIT which results in the struct pages not being initialized
-> - * for this region.
-> + * MEMBLOCK_RSRV_NOINIT
-> + *
->    * @base: the base phys addr of the region
->    * @size: the size of the region
->    *
-> - * struct pages will not be initialized for reserved memory regions marked with
-> - * %MEMBLOCK_RSRV_NOINIT.
-> + * The struct pages for the reserved regions marked %MEMBLOCK_RSRV_NOINIT will
-> + * not be fully initialized to allow the caller optimize their initialization.
-> + *
-> + * When %CONFIG_DEFERRED_STRUCT_PAGE_INIT is enabled, setting this flag
-> + * completely bypasses the initialization of struct pages for such region.
-> + *
-> + * When %CONFIG_DEFERRED_STRUCT_PAGE_INIT is disabled, struct pages in this
-> + * region will be initialized with default values but won't be marked as
-> + * reserved.
 
-Sounds good.
+Hi all,
 
-I am surprised regarding "reserved", but I guess that's because we don't 
-end up calling "reserve_bootmem_region()" on these regions in 
-memmap_init_reserved_pages().
+This v10 series addresses a build warning and does minor cleanups in
+sd_revalidate_disk().
 
+Changes since v9:
+  - Moved the build warning fix to patch 1/3 so that it can be
+    easily backported.
+  - Added "Fixes:" and "Cc: stable" tags to patch 1/3 as suggested
+    by Damien.
+  - Moved the redundant printk removal to patch 2/3, since it is
+    not a backport candidate and also removed "fixes:" tag from it as 
+    it is not a bug.
+  - Incorporated Reviewed-by tags from  Damien.
+  - Updated changelogs accordingly.
+
+Summary of changes:
+  1. Fix excessive stack usage warning in sd_revalidate_disk() by
+     replacing a large local struct with a kmalloc() allocation.
+  2. Remove a redundant "out of memory" printk after kmalloc()
+     failure. The page allocator already reports allocation failures.
+  3. Make sd_revalidate_disk() return void, since its return value
+     is unused by all callers.
+
+Thanks for the reviews and guidance.
+
+Abinash
+
+Abinash Singh (3):
+  scsi: sd: Fix build warning in sd_revalidate_disk()
+  scsi: sd: Remove redundant printk after kmalloc failure
+  scsi: sd: make sd_revalidate_disk() return void
+
+ drivers/scsi/sd.c | 58 ++++++++++++++++++++++++-----------------------
+ 1 file changed, 30 insertions(+), 28 deletions(-)
 
 -- 
-Cheers
-
-David / dhildenb
+2.43.0
 
