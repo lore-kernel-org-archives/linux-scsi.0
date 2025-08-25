@@ -1,538 +1,71 @@
-Received: from mail-qt1-f169.google.com (mail-qt1-f169.google.com [209.85.160.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6CC321858D
-	for <linux-scsi@vger.kernel.org>; Sun, 24 Aug 2025 18:45:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCAA0CA6F;
+	Mon, 25 Aug 2025 01:42:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756061118; cv=none; b=NzyhDLN/Bm9wI8WKrDH5tBhk3//ssbLuyyx4NQmAbAFn4jjdtm/exr+x5JSHTU9LbrVIRT1jcyqDXe4t4I4PcWjxFljjIiDC4qTqK+1pAPsAoWD+kmNaWDgFn7VCH+PRL3jGoFAkiZPspYFFgPKKO1l33gAGE4R3FG3Bn6Sj0K4=
+	t=1756086166; cv=none; b=gI+CJTXrMde15Q3hlzXd2b+32Wxm9uiADaNIOL2LAushtIHkNC17OoYu5BEF8LMQ9oph2XWjy9SF6QbEBiZS8ZhQIZ3oNt/UGiKDCYFVPdFwz0zOhzg/RhBB6oE4Lf4lPQ5r6mfUodSgBq69jwORFxGEFnI41PWyvukH6qC2Ais=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756061118; c=relaxed/simple;
-	bh=Eio3MD/quSpT3RIT6DOrvAh+pLcqT7Yu2Cd2MKytK5Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=NbZ7nxd58dbfIRUgUzpZJWF4QajKY7yw1mfSaTARbtSIutQrsiqz1807JoNCPt6Qa5UW0GW/6nWUibDY23q8JUOJiVkjzBCAZq9Ef15tqVfRk/F1aI7r/idigaPJaBPBukjz3Y2VMusHBEAdWxW7pBpnQiDVdt4/tCKL8tEh8UQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TJSh5XX2; arc=none smtp.client-ip=209.85.160.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TJSh5XX2"
-Received: by mail-qt1-f169.google.com with SMTP id d75a77b69052e-4b2979628f9so41498531cf.2
-        for <linux-scsi@vger.kernel.org>; Sun, 24 Aug 2025 11:45:16 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756061115; x=1756665915; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=9jf8pvuIHsijmo+aLexlCckPmDErJY+IsD9aTk8QLyo=;
-        b=TJSh5XX2X8NRW9Ul5Cyd5utHS6xzLbhsmttRNsZiJovZmOaF5CoHK9/yDEDuHwOQIf
-         Olba/gC/r8b1KedsY9a7S4bqFcRx7c660UpNY+R6TPweJtFtW138ggBppev4e/T4kTbd
-         TqxMh7xk1fi5bHR+5cm/6RfMTTy98wJtvV45JaSnHiM7bid8aGPWIi0fSLBQ/P6RZ2uI
-         KMmpU7teLXUzramNdbbAE09ac1N8h/1YPBYSyKUss3U8z5zFIPLqJ5riBqSbQu7t10GF
-         8Rmjrmu3ms7BUcX/1RAq6hc5kSWhEfaUFjK+AhgvdHOvp4EgoAPpdsy/lT+r4Rhyhufo
-         Uiow==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756061115; x=1756665915;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=9jf8pvuIHsijmo+aLexlCckPmDErJY+IsD9aTk8QLyo=;
-        b=hx2M87Uwbx1DDkXXrUtqyt/sMiR1PXpkCGE37NKfvIu2dHNqEy7TDEH47GCuWPNg5Y
-         XR7OBn/yMVa504dV8sAweAGn6e3k89MA1Qjrfx4gPj9K7wfMdHssbMmNEm3rQfqSPAY3
-         Ja4ie8MJOblRq66HBjkbJqbCXjoP1z1dmvajtGoPFya42i5CF+3JCY3z9Hr2hOwIBSHf
-         DQzLmQLI34q3irym0P6Ea/AZR7DSAnbcYW8rGHJu7CWIXayQr8MCjuor4EIAvOZQO/Kv
-         d3MAQRukjP3u+jfhDVLg0sfwmloSe20QkcIZe0P+W/UkbUFaOs95cG9VWoxbWqZUCelc
-         D1pQ==
-X-Gm-Message-State: AOJu0Yyw8hPn9gQPbTK9+hRWIL4XX2tjeZVKBeqjyMHqQhJqZ+eKL8zL
-	82ysAqoiW5eKysYQibRSpz8Pvtbs7rxOCHTboX5LtZ2cE9ktnZRjNx5rA7FiobFPcBI=
-X-Gm-Gg: ASbGncv4RgXgSW572PyPaP7IGehDamJOLTayMr2W7XsmHg0ij0zKWc197GhILsrxR5O
-	R1/grYiqtwdgtucOPw98Td0dFMTdQZasIBYfjvX2MjEPk/khE2s1yTJ+nMMKTQn3eGBidE0L+Y2
-	hRl5ylmEF2QzE6u+nLCwMD7fXmv9ne14gV7xbRzrx3ulxp+oPDgFK1kOpCIX1b+oG4j2eFbStGx
-	s4rgNlENt4FmHZUWDz7F40GfLe2/7vLO74H9XAONir/tAu86+J18wIavaDAMXgbEaNfP4cdl1Uc
-	OiytbQKtBDjACKNd/TU+r/ABexZiuyJtnXbnaUAcoNFpF1jzUwI/+gXWx6BSNRjq3BGMGMGUqNb
-	61730DhQ6oPWk+8K80YUbCmVxqQdiNwhVYT/UXsULpdCLr3RPAXtBZ7LjrQ==
-X-Google-Smtp-Source: AGHT+IF1mE3pDzONuvbDVw/ZD9A7vT/q4p1ackzTZzK3ILDE7f8/7efvTJvZZVeu2N+pNirC5d7OsA==
-X-Received: by 2002:ac8:7f0f:0:b0:4b2:9bd2:8176 with SMTP id d75a77b69052e-4b2aaa8128amr133033991cf.27.1756061115173;
-        Sun, 24 Aug 2025 11:45:15 -0700 (PDT)
-Received: from cr-x-redhat96-nsd-2.fyre.ibm.com ([129.41.87.0])
-        by smtp.gmail.com with ESMTPSA id d75a77b69052e-4b2b8e45c4asm36600501cf.46.2025.08.24.11.45.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 24 Aug 2025 11:45:14 -0700 (PDT)
-From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
-To: fischer@norbit.de,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	don.brace@microchip.com,
-	brking@us.ibm.com,
-	sathya.prakash@broadcom.com,
-	willy@infradead.org
-Cc: linux-scsi@vger.kernel.org,
-	storagedev@microchip.com,
-	linuxppc-dev@lists.ozlabs.org,
-	open-iscsi@googlegroups.com,
-	megaraidlinux.pdl@broadcom.com,
-	MPT-FusionLinux.pdl@broadcom.com,
-	Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
-Subject: [PATCH] scsi: Use string choices helpers
-Date: Sun, 24 Aug 2025 11:44:57 -0700
-Message-ID: <20250824184457.2423422-1-chelsyratnawat2001@gmail.com>
-X-Mailer: git-send-email 2.47.3
+	s=arc-20240116; t=1756086166; c=relaxed/simple;
+	bh=cV/AGyl5DgDOuNkUqkhvjHqP2OA+S+ziWi6EL5cmydQ=;
+	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
+	 In-Reply-To:Content-Type; b=RN612y1kID0Dc4tphZLsD1gsPIzX8oVis9tixwgDkbiYgY3rGUR7kN63clQAWEo3tCgYIL1lN3vr+hJCptg8Qq3BECSQ6dJMWG/CpQx70LqiaKcI+25BlPti7HD9JTA9eScBwtlqJBJQYUn4VlC0slAlT2yXuKSN5zFbCmJc2OE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+Received: from mail.maildlp.com (unknown [172.19.163.44])
+	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4c9D2T0Wqrz2Cftt;
+	Mon, 25 Aug 2025 09:38:09 +0800 (CST)
+Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
+	by mail.maildlp.com (Postfix) with ESMTPS id DB98D1401F2;
+	Mon, 25 Aug 2025 09:42:33 +0800 (CST)
+Received: from [10.67.120.126] (10.67.120.126) by
+ kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Mon, 25 Aug 2025 09:42:33 +0800
+Subject: Re: [PATCH 0/4] scsi: hisi_sas: Switch to use tasklet over threaded
+ irq handling
+To: Bart Van Assche <bvanassche@acm.org>, <martin.petersen@oracle.com>,
+	<James.Bottomley@HansenPartnership.com>
+References: <20250822075951.2051639-1-liyihang9@h-partners.com>
+ <f02e9bb8-3477-4fa7-8b20-72bd518407ed@acm.org>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <liuyonglong@huawei.com>,
+	<prime.zeng@hisilicon.com>
+From: Yihang Li <liyihang9@h-partners.com>
+Message-ID: <2f2e5534-a368-547d-dedf-78f8ca2fc999@h-partners.com>
+Date: Mon, 25 Aug 2025 09:42:32 +0800
+User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
+ Thunderbird/45.7.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+In-Reply-To: <f02e9bb8-3477-4fa7-8b20-72bd518407ed@acm.org>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
+ kwepemh200005.china.huawei.com (7.202.181.112)
 
-Use string_choices.h helpers instead of hard-coded strings.
+Hi Bart,
 
-Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
----
- drivers/scsi/aha152x.c                    | 17 +++++++++--------
- drivers/scsi/aic7xxx/aic79xx_pci.c        |  3 ++-
- drivers/scsi/be2iscsi/be_iscsi.c          |  5 +++--
- drivers/scsi/hpsa.c                       |  5 +++--
- drivers/scsi/ibmvscsi/ibmvfc.c            |  3 ++-
- drivers/scsi/ipr.c                        |  3 ++-
- drivers/scsi/libiscsi.c                   |  5 +++--
- drivers/scsi/megaraid/megaraid_sas_base.c |  9 +++++----
- drivers/scsi/mpt3sas/mpt3sas_base.c       |  3 ++-
- drivers/scsi/nsp32.c                      |  3 ++-
- drivers/scsi/qedf/qedf_debugfs.c          |  3 ++-
- drivers/scsi/qla2xxx/qla_attr.c           |  3 ++-
- drivers/scsi/qla2xxx/qla_init.c           |  5 +++--
- drivers/scsi/qla2xxx/qla_os.c             |  4 ++--
- drivers/scsi/sd.c                         |  5 +++--
- drivers/scsi/st.c                         |  3 ++-
- drivers/scsi/sym53c8xx_2/sym_glue.c       |  3 ++-
- 17 files changed, 49 insertions(+), 33 deletions(-)
+On 2025/8/22 23:17, Bart Van Assche wrote:
+> On 8/22/25 12:59 AM, Yihang Li wrote:
+>> We found that when the CPU handling the interrupt thread is occupied by
+>> other high-priority processes, the interrupt thread will not be scheduled.
+>> So there is a change to switch the driver to use tasklet over threaded
+>> interrupt handling.
+> Tasklets have severe disadvantages and hence their removal has been
+> proposed several times. See e.g. https://lwn.net/Articles/960041/.
+> There must be a better solution than switching to tasklets.
+> 
 
-diff --git a/drivers/scsi/aha152x.c b/drivers/scsi/aha152x.c
-index e94c0a19c435..f42328781d1c 100644
---- a/drivers/scsi/aha152x.c
-+++ b/drivers/scsi/aha152x.c
-@@ -243,6 +243,7 @@
- #include <linux/workqueue.h>
- #include <linux/list.h>
- #include <linux/slab.h>
-+#include <linux/string_choices.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -796,11 +797,11 @@ struct Scsi_Host *aha152x_probe_one(struct aha152x_setup *setup)
- 	       shpnt->io_port, HOSTIOPORT0, HOSTIOPORT1,
- 	       shpnt->irq,
- 	       shpnt->this_id,
--	       RECONNECT ? "enabled" : "disabled",
--	       PARITY ? "enabled" : "disabled",
--	       SYNCHRONOUS ? "enabled" : "disabled",
-+	       str_enabled_disabled(RECONNECT),
-+	       str_enabled_disabled(PARITY),
-+	       str_enabled_disabled(SYNCHRONOUS),
- 	       DELAY,
--	       EXT_TRANS ? "enabled" : "disabled");
-+	       str_enabled_disabled(EXT_TRANS));
- 
- 	/* not expecting any interrupts */
- 	SETPORT(SIMODE0, 0);
-@@ -2616,7 +2617,7 @@ static void get_ports(struct seq_file *m, struct Scsi_Host *shpnt)
- 
- 	seq_puts(m, "); ");
- 
--	seq_printf(m, "INTSTAT (%s); ", TESTHI(DMASTAT, INTSTAT) ? "hi" : "lo");
-+	seq_printf(m, "INTSTAT (%s); ", str_hi_lo(TESTHI(DMASTAT, INTSTAT)));
- 
- 	seq_puts(m, "SSTAT( ");
- 	s = GETPORT(SSTAT0);
-@@ -2867,11 +2868,11 @@ static int aha152x_show_info(struct seq_file *m, struct Scsi_Host *shpnt)
- 		shpnt->io_port, shpnt->io_port + shpnt->n_io_port - 1);
- 	seq_printf(m, "interrupt 0x%02x\n", shpnt->irq);
- 	seq_printf(m, "disconnection/reconnection %s\n",
--		RECONNECT ? "enabled" : "disabled");
-+		str_enabled_disabled(RECONNECT));
- 	seq_printf(m, "parity checking %s\n",
--		PARITY ? "enabled" : "disabled");
-+		str_enabled_disabled(PARITY));
- 	seq_printf(m, "synchronous transfers %s\n",
--		SYNCHRONOUS ? "enabled" : "disabled");
-+		str_enabled_disabled(SYNCHRONOUS));
- 	seq_printf(m, "%d commands currently queued\n", HOSTDATA(shpnt)->commands);
- 
- 	if(SYNCHRONOUS) {
-diff --git a/drivers/scsi/aic7xxx/aic79xx_pci.c b/drivers/scsi/aic7xxx/aic79xx_pci.c
-index 5fad41b1ab58..a4bd68da4549 100644
---- a/drivers/scsi/aic7xxx/aic79xx_pci.c
-+++ b/drivers/scsi/aic7xxx/aic79xx_pci.c
-@@ -44,6 +44,7 @@
- #include "aic79xx_osm.h"
- #include "aic79xx_inline.h"
- #include "aic79xx_pci.h"
-+#include <linux/string_choices.h>
- 
- static inline uint64_t
- ahd_compose_id(u_int device, u_int vendor, u_int subdevice, u_int subvendor)
-@@ -647,7 +648,7 @@ ahd_configure_termination(struct ahd_softc *ahd, u_int adapter_control)
- 		devconfig |= STPWLEVEL;
- 	if (bootverbose)
- 		printk("%s: STPWLEVEL is %s\n",
--		       ahd_name(ahd), (devconfig & STPWLEVEL) ? "on" : "off");
-+		       ahd_name(ahd), str_on_off(devconfig & STPWLEVEL));
- 	ahd_pci_write_config(ahd->dev_softc, DEVCONFIG, devconfig, /*bytes*/4);
-  
- 	/* Make sure current sensing is off. */
-diff --git a/drivers/scsi/be2iscsi/be_iscsi.c b/drivers/scsi/be2iscsi/be_iscsi.c
-index 8d374ae863ba..b35a2a5e0e11 100644
---- a/drivers/scsi/be2iscsi/be_iscsi.c
-+++ b/drivers/scsi/be2iscsi/be_iscsi.c
-@@ -22,6 +22,7 @@
- #include <scsi/scsi.h>
- 
- #include "be_iscsi.h"
-+#include <linux/string_choices.h>
- 
- extern struct iscsi_transport beiscsi_iscsi_transport;
- 
-@@ -601,10 +602,10 @@ int beiscsi_iface_get_param(struct iscsi_iface *iface,
- 	case ISCSI_NET_PARAM_IFACE_ENABLE:
- 		if (iface->iface_type == ISCSI_IFACE_TYPE_IPV4)
- 			len = sprintf(buf, "%s\n",
--				      phba->ipv4_iface ? "enable" : "disable");
-+				      str_enable_disable(phba->ipv4_iface));
- 		else if (iface->iface_type == ISCSI_IFACE_TYPE_IPV6)
- 			len = sprintf(buf, "%s\n",
--				      phba->ipv6_iface ? "enable" : "disable");
-+				      str_enable_disable(phba->ipv6_iface));
- 		break;
- 	case ISCSI_NET_PARAM_IPV4_GW:
- 		memset(&gateway, 0, sizeof(gateway));
-diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
-index c73a71ac3c29..aa87a6e0aaa1 100644
---- a/drivers/scsi/hpsa.c
-+++ b/drivers/scsi/hpsa.c
-@@ -55,6 +55,7 @@
- #include <asm/div64.h>
- #include "hpsa_cmd.h"
- #include "hpsa.h"
-+#include <linux/string_choices.h>
- 
- /*
-  * HPSA_DRIVER_VERSION must be 3 byte values (0-255) separated by '.'
-@@ -465,7 +466,7 @@ static ssize_t host_store_hp_ssd_smart_path_status(struct device *dev,
- 	h->acciopath_status = !!status;
- 	dev_warn(&h->pdev->dev,
- 		"hpsa: HP SSD Smart Path %s via sysfs update.\n",
--		h->acciopath_status ? "enabled" : "disabled");
-+		str_enabled_disabled(h->acciopath_status));
- 	return count;
- }
- 
-@@ -552,7 +553,7 @@ static ssize_t host_show_hp_ssd_smart_path_status(struct device *dev,
- 
- 	h = shost_to_hba(shost);
- 	return snprintf(buf, 30, "HP SSD Smart Path %s\n",
--		(h->acciopath_status == 1) ?  "enabled" : "disabled");
-+		str_enabled_disabled(h->acciopath_status == 1));
- }
- 
- /* List of controllers which cannot be hard reset on kexec with reset_devices */
-diff --git a/drivers/scsi/ibmvscsi/ibmvfc.c b/drivers/scsi/ibmvscsi/ibmvfc.c
-index 228daffb286d..08945f296635 100644
---- a/drivers/scsi/ibmvscsi/ibmvfc.c
-+++ b/drivers/scsi/ibmvscsi/ibmvfc.c
-@@ -31,6 +31,7 @@
- #include <scsi/scsi_transport_fc.h>
- #include <scsi/scsi_bsg_fc.h>
- #include "ibmvfc.h"
-+#include <linux/string_choices.h>
- 
- static unsigned int init_timeout = IBMVFC_INIT_TIMEOUT;
- static unsigned int default_timeout = IBMVFC_DEFAULT_TIMEOUT;
-@@ -3854,7 +3855,7 @@ static int ibmvfc_toggle_scrq_irq(struct ibmvfc_queue *scrq, int enable)
- 
- 	if (rc)
- 		dev_err(dev, "Couldn't %s sub-crq[%lu] irq. rc=%ld\n",
--			enable ? "enable" : "disable", scrq->hwq_id, rc);
-+			str_enable_disable(enable), scrq->hwq_id, rc);
- 
- 	return rc;
- }
-diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
-index d06b79f03538..9c711ce91b1e 100644
---- a/drivers/scsi/ipr.c
-+++ b/drivers/scsi/ipr.c
-@@ -70,6 +70,7 @@
- #include <scsi/scsi_eh.h>
- #include <scsi/scsi_cmnd.h>
- #include "ipr.h"
-+#include <linux/string_choices.h>
- 
- /*
-  *   Global Data
-@@ -4613,7 +4614,7 @@ static ssize_t ipr_store_raw_mode(struct device *dev,
- 			len = strlen(buf);
- 			if (res->sdev)
- 				sdev_printk(KERN_INFO, res->sdev, "raw mode is %s\n",
--					res->raw_mode ? "enabled" : "disabled");
-+					str_enabled_disabled(res->raw_mode));
- 		} else
- 			len = -EINVAL;
- 	} else
-diff --git a/drivers/scsi/libiscsi.c b/drivers/scsi/libiscsi.c
-index c9f410c50978..feb3c6153258 100644
---- a/drivers/scsi/libiscsi.c
-+++ b/drivers/scsi/libiscsi.c
-@@ -28,6 +28,7 @@
- #include <scsi/scsi_transport_iscsi.h>
- #include <scsi/libiscsi.h>
- #include <trace/events/iscsi.h>
-+#include <linux/string_choices.h>
- 
- static int iscsi_dbg_lib_conn;
- module_param_named(debug_libiscsi_conn, iscsi_dbg_lib_conn, int,
-@@ -435,8 +436,8 @@ static int iscsi_prep_scsi_cmd_pdu(struct iscsi_task *task)
- 	conn->scsicmd_pdus_cnt++;
- 	ISCSI_DBG_SESSION(session, "iscsi prep [%s cid %d sc %p cdb 0x%x "
- 			  "itt 0x%x len %d cmdsn %d win %d]\n",
--			  sc->sc_data_direction == DMA_TO_DEVICE ?
--			  "write" : "read", conn->id, sc, sc->cmnd[0],
-+			  str_write_read(sc->sc_data_direction == DMA_TO_DEVICE),
-+			  conn->id, sc, sc->cmnd[0],
- 			  task->itt, transfer_length,
- 			  session->cmdsn,
- 			  session->max_cmdsn - session->exp_cmdsn + 1);
-diff --git a/drivers/scsi/megaraid/megaraid_sas_base.c b/drivers/scsi/megaraid/megaraid_sas_base.c
-index 615e06fd4ee8..ae8af8064a5a 100644
---- a/drivers/scsi/megaraid/megaraid_sas_base.c
-+++ b/drivers/scsi/megaraid/megaraid_sas_base.c
-@@ -37,6 +37,7 @@
- #include <linux/poll.h>
- #include <linux/vmalloc.h>
- #include <linux/irq_poll.h>
-+#include <linux/string_choices.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -6325,7 +6326,7 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		"current msix/max num queues\t: (%d/%u)\n",
- 		instance->msix_vectors, blk_mq_num_online_queues(0));
- 	dev_info(&instance->pdev->dev,
--		"RDPQ mode\t: (%s)\n", instance->is_rdpq ? "enabled" : "disabled");
-+		"RDPQ mode\t: (%s)\n", str_enabled_disabled(instance->is_rdpq));
- 
- 	tasklet_init(&instance->isr_tasklet, instance->instancet->tasklet,
- 		(unsigned long)instance);
-@@ -6484,11 +6485,11 @@ static int megasas_init_fw(struct megasas_instance *instance)
- 		le16_to_cpu(ctrl_info->pci.sub_vendor_id),
- 		le16_to_cpu(ctrl_info->pci.sub_device_id));
- 	dev_info(&instance->pdev->dev, "unevenspan support	: %s\n",
--		instance->UnevenSpanSupport ? "yes" : "no");
-+		str_yes_no(instance->UnevenSpanSupport));
- 	dev_info(&instance->pdev->dev, "firmware crash dump	: %s\n",
--		instance->crash_dump_drv_support ? "yes" : "no");
-+		str_yes_no(instance->crash_dump_drv_support));
- 	dev_info(&instance->pdev->dev, "JBOD sequence map	: %s\n",
--		instance->use_seqnum_jbod_fp ? "enabled" : "disabled");
-+		str_enabled_disabled(instance->use_seqnum_jbod_fp));
- 
- 	instance->max_sectors_per_req = instance->max_num_sge *
- 						SGE_BUFFER_SIZE / 512;
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
-index bd3efa5b46c7..c2e18a132dab 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
-@@ -60,6 +60,7 @@
- #include <linux/ktime.h>
- #include <linux/kthread.h>
- #include <asm/page.h>        /* To get host page size per arch */
-+#include <linux/string_choices.h>
- 
- 
- #include "mpt3sas_base.h"
-@@ -3526,7 +3527,7 @@ _base_enable_msix(struct MPT3SAS_ADAPTER *ioc)
- 	}
- 
- 	ioc_info(ioc, "High IOPs queues : %s\n",
--			ioc->high_iops_queues ? "enabled" : "disabled");
-+			str_enabled_disabled(ioc->high_iops_queues));
- 
- 	return 0;
- 
-diff --git a/drivers/scsi/nsp32.c b/drivers/scsi/nsp32.c
-index abc4ce9eae74..a484425f3fd2 100644
---- a/drivers/scsi/nsp32.c
-+++ b/drivers/scsi/nsp32.c
-@@ -26,6 +26,7 @@
- #include <linux/delay.h>
- #include <linux/ctype.h>
- #include <linux/dma-mapping.h>
-+#include <linux/string_choices.h>
- 
- #include <asm/dma.h>
- #include <asm/io.h>
-@@ -1473,7 +1474,7 @@ static int nsp32_show_info(struct seq_file *m, struct Scsi_Host *host)
- 
- #ifdef CONFIG_PM
- 	seq_printf(m, "Power Management:      %s\n",
--		   (mode_reg & OPTF) ? "yes" : "no");
-+		   str_yes_no(mode_reg & OPTF));
- #endif
- 	seq_printf(m, "OEM:                   %ld, %s\n",
- 		   (mode_reg & (OEM0|OEM1)), nsp32_model[model]);
-diff --git a/drivers/scsi/qedf/qedf_debugfs.c b/drivers/scsi/qedf/qedf_debugfs.c
-index 96174353e389..c03b61597e63 100644
---- a/drivers/scsi/qedf/qedf_debugfs.c
-+++ b/drivers/scsi/qedf/qedf_debugfs.c
-@@ -9,6 +9,7 @@
- #include <linux/debugfs.h>
- #include <linux/module.h>
- #include <linux/vmalloc.h>
-+#include <linux/string_choices.h>
- 
- #include "qedf.h"
- #include "qedf_dbg.h"
-@@ -201,7 +202,7 @@ qedf_dbg_stop_io_on_error_cmd_read(struct file *filp, char __user *buffer,
- 
- 	QEDF_INFO(qedf_dbg, QEDF_LOG_DEBUGFS, "entered\n");
- 	cnt = scnprintf(cbuf, sizeof(cbuf), "%s\n",
--	    qedf->stop_io_on_error ? "true" : "false");
-+	    str_true_false(qedf->stop_io_on_error));
- 
- 	return simple_read_from_buffer(buffer, count, ppos, cbuf, cnt);
- }
-diff --git a/drivers/scsi/qla2xxx/qla_attr.c b/drivers/scsi/qla2xxx/qla_attr.c
-index 2e584a8bf66b..e58658ade770 100644
---- a/drivers/scsi/qla2xxx/qla_attr.c
-+++ b/drivers/scsi/qla2xxx/qla_attr.c
-@@ -10,6 +10,7 @@
- #include <linux/vmalloc.h>
- #include <linux/slab.h>
- #include <linux/delay.h>
-+#include <linux/string_choices.h>
- 
- static int qla24xx_vport_disable(struct fc_vport *, bool);
- 
-@@ -1722,7 +1723,7 @@ qla2x00_allow_cna_fw_dump_show(struct device *dev,
- 		return scnprintf(buf, PAGE_SIZE, "\n");
- 	else
- 		return scnprintf(buf, PAGE_SIZE, "%s\n",
--		    vha->hw->allow_cna_fw_dump ? "true" : "false");
-+		    str_true_false(vha->hw->allow_cna_fw_dump));
- }
- 
- static ssize_t
-diff --git a/drivers/scsi/qla2xxx/qla_init.c b/drivers/scsi/qla2xxx/qla_init.c
-index be211ff22acb..9e035e1318a4 100644
---- a/drivers/scsi/qla2xxx/qla_init.c
-+++ b/drivers/scsi/qla2xxx/qla_init.c
-@@ -9,6 +9,7 @@
- #include <linux/delay.h>
- #include <linux/slab.h>
- #include <linux/vmalloc.h>
-+#include <linux/string_choices.h>
- 
- #include "qla_devtbl.h"
- 
-@@ -4850,13 +4851,13 @@ qla2x00_init_rings(scsi_qla_host_t *vha)
- 			(le32_to_cpu(mid_init_cb->init_cb.firmware_options_1) &
- 			 BIT_7) != 0;
- 		ql_dbg(ql_dbg_init, vha, 0x0191, "DPORT Support: %s.\n",
--		    (ha->flags.dport_enabled) ? "enabled" : "disabled");
-+		    str_enabled_disabled(ha->flags.dport_enabled));
- 		/* FA-WWPN Status */
- 		ha->flags.fawwpn_enabled =
- 			(le32_to_cpu(mid_init_cb->init_cb.firmware_options_1) &
- 			 BIT_6) != 0;
- 		ql_dbg(ql_dbg_init, vha, 0x00bc, "FA-WWPN Support: %s.\n",
--		    (ha->flags.fawwpn_enabled) ? "enabled" : "disabled");
-+		    str_enabled_disabled(ha->flags.fawwpn_enabled));
- 		/* Init_cb will be reused for other command(s).  Save a backup copy of port_name */
- 		memcpy(ha->port_name, ha->init_cb->port_name, WWN_SIZE);
- 	}
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d4b484c0fd9d..b93f1186ab90 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -17,6 +17,7 @@
- #include <linux/crash_dump.h>
- #include <linux/trace_events.h>
- #include <linux/trace.h>
-+#include <linux/string_choices.h>
- 
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsicam.h>
-@@ -3221,8 +3222,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 	qla2x00_config_dma_addressing(ha);
- 	ql_dbg_pci(ql_dbg_init, pdev, 0x0020,
- 	    "64 Bit addressing is %s.\n",
--	    ha->flags.enable_64bit_addressing ? "enable" :
--	    "disable");
-+	    str_enable_disable(ha->flags.enable_64bit_addressing));
- 	ret = qla2x00_mem_alloc(ha, req_length, rsp_length, &req, &rsp);
- 	if (ret) {
- 		ql_log_pci(ql_log_fatal, pdev, 0x0031,
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5b8668accf8e..984d91f39fd6 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -58,6 +58,7 @@
- #include <linux/t10-pi.h>
- #include <linux/uaccess.h>
- #include <linux/unaligned.h>
-+#include <linux/string_choices.h>
- 
- #include <scsi/scsi.h>
- #include <scsi/scsi_cmnd.h>
-@@ -3161,8 +3162,8 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned char *buffer)
- 		    old_rcd != sdkp->RCD || old_dpofua != sdkp->DPOFUA)
- 			sd_printk(KERN_NOTICE, sdkp,
- 				  "Write cache: %s, read cache: %s, %s\n",
--				  sdkp->WCE ? "enabled" : "disabled",
--				  sdkp->RCD ? "disabled" : "enabled",
-+				  str_enabled_disabled(sdkp->WCE),
-+				  str_disabled_enabled(sdkp->RCD),
- 				  sdkp->DPOFUA ? "supports DPO and FUA"
- 				  : "doesn't support DPO or FUA");
- 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 74a6830b7ed8..32ed32b0b31d 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -43,6 +43,7 @@ static const char *verstr = "20160209";
- #include <linux/idr.h>
- #include <linux/delay.h>
- #include <linux/mutex.h>
-+#include <linux/string_choices.h>
- 
- #include <linux/uaccess.h>
- #include <asm/dma.h>
-@@ -4434,7 +4435,7 @@ static int st_probe(struct device *dev)
- 	sdev_printk(KERN_NOTICE, SDp,
- 		    "Attached scsi tape %s\n", tpnt->name);
- 	sdev_printk(KERN_INFO, SDp, "%s: try direct i/o: %s (alignment %d B)\n",
--		    tpnt->name, tpnt->try_dio ? "yes" : "no",
-+		    tpnt->name, str_yes_no(tpnt->try_dio),
- 		    queue_dma_alignment(SDp->request_queue) + 1);
- 
- 	return 0;
-diff --git a/drivers/scsi/sym53c8xx_2/sym_glue.c b/drivers/scsi/sym53c8xx_2/sym_glue.c
-index 57637a81776d..77fd6cc18d47 100644
---- a/drivers/scsi/sym53c8xx_2/sym_glue.c
-+++ b/drivers/scsi/sym53c8xx_2/sym_glue.c
-@@ -29,6 +29,7 @@
- #include <linux/module.h>
- #include <linux/moduleparam.h>
- #include <linux/spinlock.h>
-+#include <linux/string_choices.h>
- #include <scsi/scsi.h>
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsi_device.h>
-@@ -761,7 +762,7 @@ static void sym_tune_dev_queuing(struct sym_tcb *tp, int lun, u_short reqtags)
- 	if (reqtags != oldtags) {
- 		dev_info(&tp->starget->dev,
- 		         "tagged command queuing %s, command queue depth %d.\n",
--		          lp->s.reqtags ? "enabled" : "disabled", reqtags);
-+			 str_enabled_disabled(lp->s.reqtags), reqtags);
- 	}
- }
- 
--- 
-2.47.3
+Thanks you for your reply. I will consider some other solution.
+Additionally, do you have any good suggestions?
 
+> Bart.
+> .
+> 
