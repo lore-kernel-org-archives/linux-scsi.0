@@ -1,30 +1,30 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 407592D3A74
-	for <linux-scsi@vger.kernel.org>; Tue, 26 Aug 2025 06:23:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 766F52F5488
+	for <linux-scsi@vger.kernel.org>; Tue, 26 Aug 2025 06:23:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756189407; cv=none; b=GPHRq3wszYxasxc9pZgKU+n9pVX0iOq35kVbeNqHBzyFpzJr5GTaSK2Nkog+n9xC9J8z5AD8GVe/viutKgus6DswfIVuXhI/yRSae8QIm4hdyMIZWaK6Np922LL7aYK3GyuuVRmi4RWG9xIEVmDAtvRq0x4f12xbTDTjHBVhgMM=
+	t=1756189411; cv=none; b=EE8LhcSx7EIcyDcZNZBXxVgxaMLAdOVorlvwDO+0aAn12xClZg2E4b94BQnhQ3mAPh6IrhQBBiFWJterZAA4oD3RLxc0I6XDmpK3E6f8LgzAe9CWabG2gP9c9p95HQ4YgJzK94YV23cqzLUVPv2X8idHZlEB6ZZA7U963QuH4E8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756189407; c=relaxed/simple;
-	bh=muOJAHOeB960Mrm2cUWIYLNdmnLgMAlVQbum4Ua52Rg=;
+	s=arc-20240116; t=1756189411; c=relaxed/simple;
+	bh=EDcupz2kE13k2gdrG9zv6MW46pE7qI5AGLA0UaiHeXM=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=LWXaDWM64NN+TWyVoG83ZFUFzr2S7o9aM2vMwFh/ZglJe9PydJ7oT3Yz7LZM84tto6OZG2wKM98Gf+Uw+u+MjqinhjRmfgsZzHN8UwbAVQGhyiVwpztQTz2NhGagnrDC+SQ3qeHQbClifa/NOssyGs3Wl+UrteZq+2lyMHr6k5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=rdt7EbEW; arc=none smtp.client-ip=210.61.82.184
+	 MIME-Version:Content-Type; b=tyOq4F582JOjMeEnSbYJ0TOWioVkFpU1x9hGdz+cxlAHmHaP4YezQ9aCfykYAo+QmzEoW8iPMFcym7zK6su/v19Ox3AX0zxHj2DljTnGN6W0q/Mr0tduPTajvRn80nNbfItYFzSTTueUKIyJhjot0RWggekojdA8HDcgUf49nRA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=LAjyfPOF; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="rdt7EbEW"
-X-UUID: 28783afc824511f0b33aeb1e7f16c2b6-20250826
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="LAjyfPOF"
+X-UUID: 289d4540824511f0b2125946c7b33498-20250826
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=NSbxHKWrd0StscxB+O/Edj0ZKxQuS08QZUMxsvboj2o=;
-	b=rdt7EbEWuhcQLplOSK/E2qDHCkRPZkjXvCO0yqZjhzR0FAWt7AnVSgdTqKTXP7gutoFlrs9pFC2SOIrK7scyuSWuRjwsnayGZNpZDpj2JwvaFuuBt/A+wDwEbxYcCG24ffxf+OcGC5nASTWjSiyYn/ABMBqAAPACP4kntEmuQA8=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=3pC+boWbqpKPv1v8Fz+ONtOXpAm3S87+tubKxPggFV8=;
+	b=LAjyfPOFb0kwzwYwVC7jb2VxhEQqJRx4QHJvyO92/YGQwmh9o0tM6e9Pa/VSDhnceAontXVgbI51AMexteqCZn4P7hsTwYrTK7+h3OYVVRSBQlOddw7YXjTKhQhCqqWTc+B7pCXbzgmgAKnFK77kujkjpJgbEROcEZ8a1LqHT0U=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.3,REQID:1a4dfbf0-934e-449c-a7e6-3a61bcaad933,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:f1326cf,CLOUDID:a8e09d6d-c2f4-47a6-876f-59a53e9ecc6e,B
+X-CID-O-INFO: VERSION:1.3.3,REQID:f71c99a4-c27a-4d1c-9eb3-90390205695e,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:f1326cf,CLOUDID:a3e09d6d-c2f4-47a6-876f-59a53e9ecc6e,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102,TC:-5,Content:0|15|50,EDM:
 	-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,OSA:0,
 	AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -32,18 +32,18 @@ X-CID-BVR: 3,DMD|SSN|SDN
 X-CID-BAS: 3,DMD|SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 28783afc824511f0b33aeb1e7f16c2b6-20250826
-Received: from mtkmbs10n1.mediatek.inc [(172.21.101.34)] by mailgw02.mediatek.com
+X-UUID: 289d4540824511f0b2125946c7b33498-20250826
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw01.mediatek.com
 	(envelope-from <peter.wang@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 2017627981; Tue, 26 Aug 2025 14:23:19 +0800
+	with ESMTP id 370919758; Tue, 26 Aug 2025 14:23:19 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
+ MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Tue, 26 Aug 2025 14:23:16 +0800
+ 15.2.1258.39; Tue, 26 Aug 2025 14:23:17 +0800
 Received: from mtksitap99.mediatek.inc (10.233.130.16) by
  mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Tue, 26 Aug 2025 14:23:16 +0800
+ 15.2.1258.39 via Frontend Transport; Tue, 26 Aug 2025 14:23:17 +0800
 From: <peter.wang@mediatek.com>
 To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
 CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
@@ -54,9 +54,9 @@ CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
 	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
 	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <sanjeev.y@mediatek.com>,
 	<bvanassche@acm.org>
-Subject: [PATCH v2 01/10] ufs: host: mediatek: Enhance recovery on hibernation exit failure
-Date: Tue, 26 Aug 2025 14:22:15 +0800
-Message-ID: <20250826062314.3070425-2-peter.wang@mediatek.com>
+Subject: [PATCH v2 04/10] ufs: host: mediatek: Correct resume flow for LPM and MTCMOS
+Date: Tue, 26 Aug 2025 14:22:18 +0800
+Message-ID: <20250826062314.3070425-5-peter.wang@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20250826062314.3070425-1-peter.wang@mediatek.com>
 References: <20250826062314.3070425-1-peter.wang@mediatek.com>
@@ -70,92 +70,39 @@ Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
 X-MTK: N
 
-From: Peter Wang <peter.wang@mediatek.com>
+From: Alice Chao <alice.chao@mediatek.com>
 
-This patch improves the recovery process when exiting hibernation
-mode fails. It triggers the error handler and breaks the suspend
-operation, ensuring that the system can recover from hibernation
-errors more effectively. The error handling mechanism is activated
-by setting 'force_reset' and scheduling the error handler work.
+This patch corrects the system resume flow by ensuring that MTCMOS
+is turned on before setting LPM to false.
+During system suspend, LPM is set to true and MTCMOS is turned off.
+The updated resume sequence ensures proper power management and
+system stability.
 
 Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Alice Chao <alice.chao@mediatek.com>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 ---
- drivers/ufs/core/ufshcd.c       |  3 ++-
- drivers/ufs/host/ufs-mediatek.c | 14 +++++++++++---
- include/ufs/ufshcd.h            |  1 +
- 3 files changed, 14 insertions(+), 4 deletions(-)
+ drivers/ufs/host/ufs-mediatek.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 50adfb8b335b..a74aa8804caa 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6410,13 +6410,14 @@ void ufshcd_schedule_eh_work(struct ufs_hba *hba)
- 	}
- }
- 
--static void ufshcd_force_error_recovery(struct ufs_hba *hba)
-+void ufshcd_force_error_recovery(struct ufs_hba *hba)
- {
- 	spin_lock_irq(hba->host->host_lock);
- 	hba->force_reset = true;
- 	ufshcd_schedule_eh_work(hba);
- 	spin_unlock_irq(hba->host->host_lock);
- }
-+EXPORT_SYMBOL_GPL(ufshcd_force_error_recovery);
- 
- static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
- {
 diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 5ef0ba4527e4..1aa14a8dc161 100644
+index d762f096e32e..a47713a047c1 100644
 --- a/drivers/ufs/host/ufs-mediatek.c
 +++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1686,7 +1686,7 @@ static void ufs_mtk_dev_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
- 	}
- }
+@@ -2327,11 +2327,11 @@ static int ufs_mtk_system_resume(struct device *dev)
+ 	if (pm_runtime_suspended(hba->dev))
+ 		goto out;
  
--static void ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
-+static int ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
- {
- 	int ret;
+-	ufs_mtk_dev_vreg_set_lpm(hba, false);
+-
+ 	if (ufs_mtk_is_rtff_mtcmos(hba))
+ 		ufs_mtk_mtcmos_ctrl(true, res);
  
-@@ -1697,8 +1697,16 @@ static void ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
- 	ufs_mtk_wait_idle_state(hba, 5);
- 
- 	ret = ufs_mtk_wait_link_state(hba, VS_LINK_UP, 100);
--	if (ret)
-+	if (ret) {
- 		dev_warn(hba->dev, "exit h8 state fail, ret=%d\n", ret);
++	ufs_mtk_dev_vreg_set_lpm(hba, false);
 +
-+		ufshcd_force_error_recovery(hba);
-+
-+		/* trigger error handler and break suspend */
-+		ret = -EBUSY;
-+	}
-+
-+	return ret;
- }
+ out:
+ 	ret = ufshcd_system_resume(dev);
  
- static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
-@@ -1709,7 +1717,7 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 
- 	if (status == PRE_CHANGE) {
- 		if (ufshcd_is_auto_hibern8_supported(hba))
--			ufs_mtk_auto_hibern8_disable(hba);
-+			return ufs_mtk_auto_hibern8_disable(hba);
- 		return 0;
- 	}
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9b3515cee711..93f91b09589d 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1507,5 +1507,6 @@ int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
- int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
- 			     const u16 *other_mask, u16 set, u16 clr);
-+void ufshcd_force_error_recovery(struct ufs_hba *hba);
- 
- #endif /* End of Header */
 -- 
 2.45.2
 
