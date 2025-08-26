@@ -1,79 +1,121 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f193.google.com (mail-pg1-f193.google.com [209.85.215.193])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C505C275846;
-	Tue, 26 Aug 2025 15:37:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECD5836CC88;
+	Tue, 26 Aug 2025 19:56:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.193
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756222646; cv=none; b=h5HiafqqfgZwfz/7NvrKy15IWh0x0YJ0IrgJS4oowmyRMfitrvbw8QMEAnVvFGKP0s1QNb5RLBmz/+H2dDlSCUs6PWMgV2I8hGTGePKHJnwDCyC2cTzCu9eH5IL5JZDdwZZMnx1A60aziBZVN8Z5WznTxA3qANcaQmGQqfoL5NA=
+	t=1756238214; cv=none; b=m8XDzvtNZVIWLwBI239NpFytScIxp2Ubzn5+le/qiTY/CLotHdNTCsBPiModX9V+dkXgASId49gP7MANvuR5m4ylymtD5eFSi44UX+QMnnKbSdSlv+hcnb09w2CAeo2C/I2HXP3NxB3G/Nl/Rqql4KEDa06hmcGEE0I0XlVdmgU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756222646; c=relaxed/simple;
-	bh=p5Ia2UkL1gSkUpVbyg44R0xxKioiOVXdPhRaJnyPKKI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=YmH/DOD0Gt3XQGLj13Wj4xCxtPU0JWFi593OydMHMfcaspCTGDQYrG5liCYCJfVun9aVb4a6OhDpbwzDigbR34Z/bCxvsqHJvUEIhnlTXHjnCLYLVw2ZyRrhoTa3N2mCJUSbRzJ0ugNnf6zFjikA4rGUJaVvEMx2EB88byP3Khk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=bYCicNHc; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1756238214; c=relaxed/simple;
+	bh=xJa+W3UokioulPwGvLVtg35a5+SMdSqwOfR7pM6zUSI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JGjP8kNhhiX6zMeQ6nBfs1U39KE63i9SDmVsq4AQqlrv2fJHxyR+laHsQXlMLN4EVS/SALPTXR4VBW95260TxknhcS8HNt6zs9bveSuNwIK3rEf+tbQkascQWZCcy9xsKk0J/V/+BsD0m3ue5Hz1fgMnRToE2BojKx5xFk8eK3g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JTG1lPK/; arc=none smtp.client-ip=209.85.215.193
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="bYCicNHc"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cBBcM6FRTzm0xkM;
-	Tue, 26 Aug 2025 15:37:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1756222641; x=1758814642; bh=Aty5rBS8ib98Ag2efoWSBCwL
-	80kil2PQtshbYyKaoJs=; b=bYCicNHcB4CRxzTtHu+to111Wa4NfJcLDX5hk353
-	NqIeoqKHFkgH2s6CcbFgtxGlt5bQTrSudmixhfSyJqT76uHhK9UeIwl6EFHwLK+e
-	6dr9VJ3vf6z53QumY7nlBzacSFsaxwzDRi3hr+hxA0TEw16MuDB9cFPRwlrEUcZH
-	G5aUf3vJ5FbYekLcEOqMcBZimgYrsM6vulPrrWo9tDMj0YWghMf8DuX2y7WuJQb3
-	5HNRXCuPvSoiXiKTaR+NFUtbqssfMuVD8LYJjNGt83IVlWip34brUecyFJYoBPJP
-	oHw5OZjNfMLsXlSZWB4msjcUIvL1FiGi3tkeMPi8QP+z9g==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id PAwBTlCF_ECP; Tue, 26 Aug 2025 15:37:21 +0000 (UTC)
-Received: from [172.20.6.188] (unknown [208.98.210.68])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cBBc76jw6zm174K;
-	Tue, 26 Aug 2025 15:37:10 +0000 (UTC)
-Message-ID: <db0a8b86-b048-489b-9b23-6987f48e9419@acm.org>
-Date: Tue, 26 Aug 2025 08:37:10 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JTG1lPK/"
+Received: by mail-pg1-f193.google.com with SMTP id 41be03b00d2f7-b4c1ed55930so2476468a12.1;
+        Tue, 26 Aug 2025 12:56:52 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1756238212; x=1756843012; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=4vNLOlgD3vPK4LvPKDOvALHCAxJkia83pN01LYsamok=;
+        b=JTG1lPK/q1nXvSkVjNY3CTdTNnSCMKbR1DXfhiw2/HF6AA252WwFuPnQcbJjQ1sCsz
+         3xv+diTl7XAmh4+tg3ROJFL2QomTVQQfWieKC/jq2ItgQ4JdnUjCAxzMORpfnzXdggzo
+         1zdSYGsAtvpN3+7x609kUEk4XfiJ6q3nZmG8wUvk0ufN0HIkPFFkEgUh/mjRxWQlRwR6
+         vE1ZPURAhQ2LKzKO2PsV1Dm5rmkcRfLCEfTLHwGv0sOL77Si5LhB7IPXLrDeCY/K+Sbi
+         rZ0MnFruqvOIODEq1NKeRNx5kIuRaLw2lUuGKsJNc5GfIpRNoJgy2kr9Uxmw7YcfLAM4
+         rmbw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756238212; x=1756843012;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=4vNLOlgD3vPK4LvPKDOvALHCAxJkia83pN01LYsamok=;
+        b=g/hz3zSdXWjlsY1iqRGvAVSKiGzMopGGO2uKHQgRSF7stjHuqDWjGGbdIFB7d2GHvs
+         dvGcYsmL9wfY0OCdjSklzR31D9sdBWt0Ic4MTpGdaVs14iL3L2Zo5SfuawLkOEe2v0EF
+         V/3UbW978VXxeDgq6O44KFKPnsIvWFB/ix28Nz9P4OjvpzuYwOWhNSJIE3g3pvziMMix
+         Dbu4qjxOR62aOqZUdNNjot+NmYnn7u7t4ydJU0QXcAm0ms0QIng78MNOSNaUCe/8XfcL
+         l1q/1ruFdBXZrs0JNqLlqiH6t7y5APchh5HEhpySccjtCB4JAjPZki+iUN3i9/8gxe04
+         nNFQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVfNK9TZ5Mm1ERWOaAurss+tZ5a7sICvtdpxhkBFstYNbDMPHg7XEbtcyohyVhOjn5m6mjIwVWddYLyZd8=@vger.kernel.org, AJvYcCXRPztz6f2mRijPbBXWoCmjSgIC79kW05EZJ+mZaMoTJKazVw1cQ20D0f/L7GxaWD1kyZ5R1R11@vger.kernel.org
+X-Gm-Message-State: AOJu0YxPaqK00XUGt9KMyoLSQjWIW4JCBLdpMqaXZdoGvxHGmGwhNNgN
+	YP9EeXYWJ6vZyFiiyBsVizHK+10j9BxEcZQq2NLSny0OVBDaj9499JQg
+X-Gm-Gg: ASbGncuix5tm895pfpiqgttd5SqsBOb7ZjBEv84WwduiXl+r07eMVxDd4U5lq0D3GdT
+	vHQA1IuLEOuOkCmeqbJ7jApfFEF9oMUbXDxWRQP8BuOqHHvPKICr689tlvmvx/tONoGbtp898Lc
+	pPNFGfZWlhJIiI/IeGwZMeg93FUqgLGTXWCqxjX1ZbCgrKdgx8MZqjrfmSSCKvMb/GUy7l9BCyL
+	vUtbh/FbIe+3KMl/Zum4UE6NN2UB3ACDcCwOZqzVuv+2YqOXYyucV/h7H9JgzsbyRcVVrsfTybf
+	eQMAKcz0GAY50RZmTxInj2ZaCsGSAg4iWS5uCpxw9J+F01N6f7GBGIxjhK8GQRYZlBQ76zzv3u9
+	2V0vUwMdDiuGu6/euhDTzTvak4yPGyGCH3mrBl293keHcxHAbM48twiP0wMPuUiL5IMoXJwhY
+X-Google-Smtp-Source: AGHT+IFfIJ+TQCebVZNnXSchhRPJtNdtNYjqf8pcWiVrCLWy2yGcohk7uncuJrAvb/82tP/d800VpA==
+X-Received: by 2002:a17:903:37c5:b0:246:cfc4:9a52 with SMTP id d9443c01a7336-246cfc4a0ccmr102210245ad.52.1756238212185;
+        Tue, 26 Aug 2025 12:56:52 -0700 (PDT)
+Received: from 2045D.localdomain (65.sub-72-110-66.myvzw.com. [72.110.66.65])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24896721727sm2214555ad.84.2025.08.26.12.56.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 26 Aug 2025 12:56:51 -0700 (PDT)
+From: John Evans <evans1210144@gmail.com>
+To: james.smart@broadcom.com,
+	dick.kennedy@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	stable@vger.kernel.org
+Subject: [PATCH] scsi: lpfc: Fix buffer free/clear order in deferred receive path
+Date: Tue, 26 Aug 2025 15:56:45 -0400
+Message-ID: <20250826195645.720-1-evans1210144@gmail.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 4/4] ufs: ufs-qcom: Add support for limiting HS gear
- and rate
-To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, alim.akhtar@samsung.com,
- avri.altman@wdc.com, robh@kernel.org, krzk+dt@kernel.org,
- conor+dt@kernel.org, mani@kernel.org, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-References: <20250826150855.7725-1-quic_rdwivedi@quicinc.com>
- <20250826150855.7725-5-quic_rdwivedi@quicinc.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250826150855.7725-5-quic_rdwivedi@quicinc.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 8/26/25 8:08 AM, Ram Kumar Dwivedi wrote:
-> +	if (host_params->hs_tx_gear != hs_gear_old) {
-> +		host->phy_gear = host_params->hs_tx_gear;
-> +	}
+Fix a use-after-free window by correcting the buffer release sequence in
+the deferred receive path. The code freed the RQ buffer first and only
+then cleared the context pointer under the lock. Concurrent paths
+(e.g., ABTS and the repost path) also inspect and release the same
+pointer under the lock, so the old order could lead to double-free/UAF.
 
-The recommended style in Linux kernel code is not to surround single
-statements with braces.
+Note that the repost path already uses the correct pattern: detach the
+pointer under the lock, then free it after dropping the lock. The deferred
+path should do the same.
 
-Thanks,
+Fixes: 472e146d1cf3 ("scsi: lpfc: Correct upcalling nvmet_fc transport during io done downcall")
+Cc: stable@vger.kernel.org
+Signed-off-by: John Evans <evans1210144@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_nvmet.c | 11 ++++++++---
+ 1 file changed, 8 insertions(+), 3 deletions(-)
 
-Bart.
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
+index fba2e62027b7..766319543680 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1264,10 +1264,15 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgtport,
+ 		atomic_inc(&tgtp->rcv_fcp_cmd_defer);
+ 
+ 	/* Free the nvmebuf since a new buffer already replaced it */
+-	nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
+ 	spin_lock_irqsave(&ctxp->ctxlock, iflag);
+-	ctxp->rqb_buffer = NULL;
+-	spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
++	nvmebuf = ctxp->rqb_buffer;
++	if (nvmebuf) {
++		ctxp->rqb_buffer = NULL;
++		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
++		nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
++	} else {
++		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
++	}
+ }
+ 
+ /**
+-- 
+2.43.0
+
