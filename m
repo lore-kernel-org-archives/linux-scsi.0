@@ -1,121 +1,104 @@
-Received: from mail-pg1-f193.google.com (mail-pg1-f193.google.com [209.85.215.193])
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ECD5836CC88;
-	Tue, 26 Aug 2025 19:56:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.193
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A61C2FFDEA;
+	Tue, 26 Aug 2025 23:14:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756238214; cv=none; b=m8XDzvtNZVIWLwBI239NpFytScIxp2Ubzn5+le/qiTY/CLotHdNTCsBPiModX9V+dkXgASId49gP7MANvuR5m4ylymtD5eFSi44UX+QMnnKbSdSlv+hcnb09w2CAeo2C/I2HXP3NxB3G/Nl/Rqql4KEDa06hmcGEE0I0XlVdmgU=
+	t=1756250042; cv=none; b=eMXnBhxYZ4K5tJ2bQDjifYB60clAPTp28ej7ets+0sV6z5iTpZnimRT37rlxdqwdQuDIK72b5XDpPdEPoQiNLsX+Rb7eVQecEeF+/BFsTP4zy6OsvecaJL0zvIwGw52nB7gYiRKK0AY3QHY3c404uX434opGDevyFud3dxre2UY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756238214; c=relaxed/simple;
-	bh=xJa+W3UokioulPwGvLVtg35a5+SMdSqwOfR7pM6zUSI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JGjP8kNhhiX6zMeQ6nBfs1U39KE63i9SDmVsq4AQqlrv2fJHxyR+laHsQXlMLN4EVS/SALPTXR4VBW95260TxknhcS8HNt6zs9bveSuNwIK3rEf+tbQkascQWZCcy9xsKk0J/V/+BsD0m3ue5Hz1fgMnRToE2BojKx5xFk8eK3g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JTG1lPK/; arc=none smtp.client-ip=209.85.215.193
+	s=arc-20240116; t=1756250042; c=relaxed/simple;
+	bh=uEBCYYiDbq0M6wu6/+ZsrGgRMhqz9f6/uMequ3aaZKo=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=sHaFnSFj9Yacl/8O4g1vAkOPGgjOl4KEEFQuSEwEx7bbb/l1LLGlpsGBA5HPhoPK3RhDLoB289vQseZHhGo0SQHbiP7UaSdRZsUDychLRykU+CRZUh92JbJDJBoiOBmVCEVzXNtZLEURuga9UI3iStnwH1gYGTBIgyA24jb3JwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=OFoWbZ/d; arc=none smtp.client-ip=209.85.128.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JTG1lPK/"
-Received: by mail-pg1-f193.google.com with SMTP id 41be03b00d2f7-b4c1ed55930so2476468a12.1;
-        Tue, 26 Aug 2025 12:56:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="OFoWbZ/d"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-71fd55c0320so2711977b3.0;
+        Tue, 26 Aug 2025 16:14:00 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756238212; x=1756843012; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=4vNLOlgD3vPK4LvPKDOvALHCAxJkia83pN01LYsamok=;
-        b=JTG1lPK/q1nXvSkVjNY3CTdTNnSCMKbR1DXfhiw2/HF6AA252WwFuPnQcbJjQ1sCsz
-         3xv+diTl7XAmh4+tg3ROJFL2QomTVQQfWieKC/jq2ItgQ4JdnUjCAxzMORpfnzXdggzo
-         1zdSYGsAtvpN3+7x609kUEk4XfiJ6q3nZmG8wUvk0ufN0HIkPFFkEgUh/mjRxWQlRwR6
-         vE1ZPURAhQ2LKzKO2PsV1Dm5rmkcRfLCEfTLHwGv0sOL77Si5LhB7IPXLrDeCY/K+Sbi
-         rZ0MnFruqvOIODEq1NKeRNx5kIuRaLw2lUuGKsJNc5GfIpRNoJgy2kr9Uxmw7YcfLAM4
-         rmbw==
+        d=gmail.com; s=20230601; t=1756250040; x=1756854840; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=W4Fpo+bnVLEPLNMI5Cu33Asj6pQ7wj72t3+k/d2zvlk=;
+        b=OFoWbZ/dCl2mlPyRkhkCL3sh1Y7Mwwo5zZWArxLq50GcEYyhhQt6Wp9gwpcE6uqeuJ
+         F+lDonUh6ZPHHNiOmGcrw9Yr3fL8r6kpaFFXXzbjG10Yr7ew0/4hWD9pr7xCQiZ7crS4
+         iv2FL3N/9slaYNjFruMZFo4d1XBm/9Y5W2mDiSChws3pSm67NNQKiz949MCNQ8p90ISe
+         9KklSwTFbWgZZj3rbRquoWAwASCZqeAqVyx+UnG1COeANormrUHl/BPnSZdggWAHV/uI
+         9BTQMicT8xhmasMVLLWcX5OBA92BHNBIqUIGQgJkGkWh1jBtvCDawkF/aWzLL1OuNd2v
+         ydwA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756238212; x=1756843012;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=4vNLOlgD3vPK4LvPKDOvALHCAxJkia83pN01LYsamok=;
-        b=g/hz3zSdXWjlsY1iqRGvAVSKiGzMopGGO2uKHQgRSF7stjHuqDWjGGbdIFB7d2GHvs
-         dvGcYsmL9wfY0OCdjSklzR31D9sdBWt0Ic4MTpGdaVs14iL3L2Zo5SfuawLkOEe2v0EF
-         V/3UbW978VXxeDgq6O44KFKPnsIvWFB/ix28Nz9P4OjvpzuYwOWhNSJIE3g3pvziMMix
-         Dbu4qjxOR62aOqZUdNNjot+NmYnn7u7t4ydJU0QXcAm0ms0QIng78MNOSNaUCe/8XfcL
-         l1q/1ruFdBXZrs0JNqLlqiH6t7y5APchh5HEhpySccjtCB4JAjPZki+iUN3i9/8gxe04
-         nNFQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVfNK9TZ5Mm1ERWOaAurss+tZ5a7sICvtdpxhkBFstYNbDMPHg7XEbtcyohyVhOjn5m6mjIwVWddYLyZd8=@vger.kernel.org, AJvYcCXRPztz6f2mRijPbBXWoCmjSgIC79kW05EZJ+mZaMoTJKazVw1cQ20D0f/L7GxaWD1kyZ5R1R11@vger.kernel.org
-X-Gm-Message-State: AOJu0YxPaqK00XUGt9KMyoLSQjWIW4JCBLdpMqaXZdoGvxHGmGwhNNgN
-	YP9EeXYWJ6vZyFiiyBsVizHK+10j9BxEcZQq2NLSny0OVBDaj9499JQg
-X-Gm-Gg: ASbGncuix5tm895pfpiqgttd5SqsBOb7ZjBEv84WwduiXl+r07eMVxDd4U5lq0D3GdT
-	vHQA1IuLEOuOkCmeqbJ7jApfFEF9oMUbXDxWRQP8BuOqHHvPKICr689tlvmvx/tONoGbtp898Lc
-	pPNFGfZWlhJIiI/IeGwZMeg93FUqgLGTXWCqxjX1ZbCgrKdgx8MZqjrfmSSCKvMb/GUy7l9BCyL
-	vUtbh/FbIe+3KMl/Zum4UE6NN2UB3ACDcCwOZqzVuv+2YqOXYyucV/h7H9JgzsbyRcVVrsfTybf
-	eQMAKcz0GAY50RZmTxInj2ZaCsGSAg4iWS5uCpxw9J+F01N6f7GBGIxjhK8GQRYZlBQ76zzv3u9
-	2V0vUwMdDiuGu6/euhDTzTvak4yPGyGCH3mrBl293keHcxHAbM48twiP0wMPuUiL5IMoXJwhY
-X-Google-Smtp-Source: AGHT+IFfIJ+TQCebVZNnXSchhRPJtNdtNYjqf8pcWiVrCLWy2yGcohk7uncuJrAvb/82tP/d800VpA==
-X-Received: by 2002:a17:903:37c5:b0:246:cfc4:9a52 with SMTP id d9443c01a7336-246cfc4a0ccmr102210245ad.52.1756238212185;
-        Tue, 26 Aug 2025 12:56:52 -0700 (PDT)
-Received: from 2045D.localdomain (65.sub-72-110-66.myvzw.com. [72.110.66.65])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-24896721727sm2214555ad.84.2025.08.26.12.56.49
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 26 Aug 2025 12:56:51 -0700 (PDT)
-From: John Evans <evans1210144@gmail.com>
-To: james.smart@broadcom.com,
-	dick.kennedy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: [PATCH] scsi: lpfc: Fix buffer free/clear order in deferred receive path
-Date: Tue, 26 Aug 2025 15:56:45 -0400
-Message-ID: <20250826195645.720-1-evans1210144@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        d=1e100.net; s=20230601; t=1756250040; x=1756854840;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=W4Fpo+bnVLEPLNMI5Cu33Asj6pQ7wj72t3+k/d2zvlk=;
+        b=cQ/0YSWiAIIDeOFLupiUW7IEAbLhBFiq63JYQFkUaIh4k++cERcb1obarYHJWYXs2g
+         l6a4oF46zOpuazZfGIjRjANMIKmVPmtwB5V7bOSQ8WiG9Q+AXURAvShpOEf49r0xxwUu
+         WeoSbU8lCWEPqrZ4rX40pODvW0FjEEc1d4imz0Z8Y3fpSHyBtOtYSQ2q3A0kZ7i+SUWG
+         vLEP80kp9jJXbK6CTRBN/lcB8rXCZhiKINPaC30fKb32Cx8n2orPkw6S8YlR1D4Pww4r
+         3IpPNtuVcCGasdQFa/5RnirncMwWMhLVqXTvE6hzUJS+UvVQgic5rLHZExt5yoTac1zm
+         x3Iw==
+X-Forwarded-Encrypted: i=1; AJvYcCV0VSa3GchXwIKUH5AQp6AO4ocaFSxbPUmtiNh34gEy4S/uo2QPGMXESKnEkIrvsNbzisaJmtUeCmkAqg==@vger.kernel.org, AJvYcCVUE59R8ROkLfBF3syRgTG1IHvCvPrX0cWm8F4sxF92vY+uOnEuZp7iABBfHV585Sy+9/CZWqQ0/p4ZbV+0udw=@vger.kernel.org, AJvYcCXx6dB13uFH8bhE4Lz/u6yqAlwKr8SPGumk54N3UnST+Xle5q/u5SX8YI0h4mxEVltGyAH69jKbZx4b2pDy@vger.kernel.org
+X-Gm-Message-State: AOJu0YwDzTWqfxx1XRwssQt8gfgICKk8VfG6BrL+XmLtIooMoZHCTt1w
+	ZpGEO8fqo5V8oQGI04Q+SFDoQ7MXN18Vq+HZ7gN2CmoxQkA/eQTr2o+5H1qFkxnTehsp+Q61LLt
+	0GxLPrf8Dq0dFbDw1dVhMIBVuGs/IYCE=
+X-Gm-Gg: ASbGnctJoGo2K9cstXUCvigMngUgPV1HFcRPTiVgFs2/P3lgY6Lj+CDPb9eBep/piLc
+	88eKCHk9uvFaA6gHyItbouLkDhoDH12EHQfdu3uYxcqGvt3f9cYBM3d+6+ap6E4UkS1hqAWdjdA
+	ShK3F/XgX2WSEJj08IWw9qlKdvFxtrU5u9uMJulYF7MznCijohmG5/gQ1fP2gAC4KumTyJpD7Ve
+	RUPc69mEN9L2wvN4PE=
+X-Google-Smtp-Source: AGHT+IGPpTai+Exw2wSm6MraadrRYEspyiWkBZE8ZhNfLkN2VhYHtvZ1erXSLq9GjDyxjrkR49sWBbvK2c28IxztJvc=
+X-Received: by 2002:a05:690c:640b:b0:71a:31cd:1848 with SMTP id
+ 00721157ae682-72132cd773cmr34133487b3.14.1756250039691; Tue, 26 Aug 2025
+ 16:13:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <aJtMETERd-geyP1q@kspp> <yq1seheonya.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1seheonya.fsf@ca-mkp.ca.oracle.com>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Tue, 26 Aug 2025 16:13:38 -0700
+X-Gm-Features: Ac12FXyZ0Scojy-Aw_qoW4SP2GXPH0SSCLu1s0QhQxjKMJ-gtu4kh9t0yVDeDaQ
+Message-ID: <CABPRKS9BVsGhBDmNVbts9QhMsJ-mZhMKDB4u-NnfVcVLsfWrAg@mail.gmail.com>
+Subject: Re: [PATCH][next] scsi: fc: Avoid -Wflex-array-member-not-at-end warnings
+To: "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: James Smart <james.smart@broadcom.com>, Justin Tee <justin.tee@broadcom.com>, 
+	Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Fix a use-after-free window by correcting the buffer release sequence in
-the deferred receive path. The code freed the RQ buffer first and only
-then cleared the context pointer under the lock. Concurrent paths
-(e.g., ABTS and the repost path) also inspect and release the same
-pointer under the lock, so the old order could lead to double-free/UAF.
+Hi Martin and Gustavo,
 
-Note that the repost path already uses the correct pattern: detach the
-pointer under the lock, then free it after dropping the lock. The deferred
-path should do the same.
+Regarding the maintainers file, yes Broadcom will push a patch to update so=
+on.
 
-Fixes: 472e146d1cf3 ("scsi: lpfc: Correct upcalling nvmet_fc transport during io done downcall")
-Cc: stable@vger.kernel.org
-Signed-off-by: John Evans <evans1210144@gmail.com>
----
- drivers/scsi/lpfc/lpfc_nvmet.c | 11 ++++++++---
- 1 file changed, 8 insertions(+), 3 deletions(-)
+Regarding Gustavo=E2=80=99s patch, I think we should also update the
+assignment of rdf.desc_len in lpfc_els.c like below.
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index fba2e62027b7..766319543680 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1264,10 +1264,15 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgtport,
- 		atomic_inc(&tgtp->rcv_fcp_cmd_defer);
- 
- 	/* Free the nvmebuf since a new buffer already replaced it */
--	nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
- 	spin_lock_irqsave(&ctxp->ctxlock, iflag);
--	ctxp->rqb_buffer = NULL;
--	spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
-+	nvmebuf = ctxp->rqb_buffer;
-+	if (nvmebuf) {
-+		ctxp->rqb_buffer = NULL;
-+		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
-+		nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
-+	} else {
-+		spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
-+	}
- }
- 
- /**
--- 
-2.43.0
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index fca81e0c7c2e..432761fb49de 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -3762,7 +3762,7 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport,
+uint8_t retry)
+        memset(prdf, 0, cmdsize);
+        prdf->rdf.fpin_cmd =3D ELS_RDF;
+        prdf->rdf.desc_len =3D cpu_to_be32(sizeof(struct lpfc_els_rdf_req) =
+-
+-                                        sizeof(struct fc_els_rdf));
++                                        sizeof(struct fc_els_rdf_hdr));
+        prdf->reg_d1.reg_desc.desc_tag =3D cpu_to_be32(ELS_DTAG_FPIN_REGIST=
+ER);
+        prdf->reg_d1.reg_desc.desc_len =3D cpu_to_be32(
+                                FC_TLV_DESC_LENGTH_FROM_SZ(prdf->reg_d1));
 
+Thanks,
+Justin Tee
