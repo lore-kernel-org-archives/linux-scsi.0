@@ -1,111 +1,81 @@
-Received: from foss.arm.com (foss.arm.com [217.140.110.172])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 78069268C40;
-	Tue, 26 Aug 2025 13:11:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=217.140.110.172
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CDFB1C3314;
+	Tue, 26 Aug 2025 13:45:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756213907; cv=none; b=CWw58cRYt3KhGuBAmyGe0ej5N0Uobsfe9VJ+JbLq3U2uLHuG1Q3NcYFItyxKKEZvKjBEPCIpMMaTPK6S7X5MmRr1dV4cEEt9emRUHdJHAOPeCULy4mJCGAe2OLQA6OfTsNjMkbyKg9fNaXYsdXSh3VsLrL0Zo3aNmkFi8Brb0RY=
+	t=1756215928; cv=none; b=P6SlXvw3Yp4yzjkYHN/PC6CPjHpDM59mm1mQqcNlIicfifHMRpe/p9fKTXOqFlgyy0KtV77cUkqLRZUMLi8i0El7njvVRJkkATPr4/Rb9e7ddKwmPKKy4kTXdbgS3DTVS+qZkuGlI6APnsIb81I7fM8AT7s/aIsLkjE9i88t2OY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756213907; c=relaxed/simple;
-	bh=r4P1fcbNrMFnG8T5p3u4dMJamruaFASdwNbmXce96jM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=q6grDa1aR3QZkWBsvSGDnCL7tfbQP8dhNLUDMb19LemWKdTEjBOq72cfFmZR1Mqs8Md/zjPHgK1/8DF15lB16+tyS2LPhRkmihg+XFZYtQMXi0jCGNyPerA9Yr8aPY48Shi9z7nQHj5LNSZj0KmrKe10799+LmQmDWo4+TgI2rU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com; spf=pass smtp.mailfrom=arm.com; arc=none smtp.client-ip=217.140.110.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arm.com
-Received: from usa-sjc-imap-foss1.foss.arm.com (unknown [10.121.207.14])
-	by usa-sjc-mx-foss1.foss.arm.com (Postfix) with ESMTP id 7C1B82BF2;
-	Tue, 26 Aug 2025 06:11:36 -0700 (PDT)
-Received: from raptor (usa-sjc-mx-foss1.foss.arm.com [172.31.20.19])
-	by usa-sjc-imap-foss1.foss.arm.com (Postfix) with ESMTPSA id 0B7A13F63F;
-	Tue, 26 Aug 2025 06:11:36 -0700 (PDT)
-Date: Tue, 26 Aug 2025 14:11:34 +0100
-From: Alexandru Elisei <alexandru.elisei@arm.com>
-To: David Hildenbrand <david@redhat.com>
-Cc: linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
-	Andrew Morton <akpm@linux-foundation.org>,
-	Brendan Jackman <jackmanb@google.com>,
-	Christoph Lameter <cl@gentwo.org>, Dennis Zhou <dennis@kernel.org>,
-	Dmitry Vyukov <dvyukov@google.com>, dri-devel@lists.freedesktop.org,
-	intel-gfx@lists.freedesktop.org, iommu@lists.linux.dev,
-	io-uring@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>,
-	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
-	John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com,
-	kvm@vger.kernel.org, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
-	linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-kselftest@vger.kernel.org, linux-mips@vger.kernel.org,
-	linux-mmc@vger.kernel.org, linux-mm@kvack.org,
-	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
-	Marco Elver <elver@google.com>,
-	Marek Szyprowski <m.szyprowski@samsung.com>,
-	Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
-	Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
-	Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
-	Robin Murphy <robin.murphy@arm.com>,
-	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
-	virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
-	wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
-Subject: Re: [PATCH RFC 21/35] mm/cma: refuse handing out non-contiguous page
- ranges
-Message-ID: <aK2yhtQ0M_0hqQHh@raptor>
-References: <20250821200701.1329277-1-david@redhat.com>
- <20250821200701.1329277-22-david@redhat.com>
- <aK2QZnzS1ErHK5tP@raptor>
- <ad521f4f-47aa-4728-916f-3704bf01f770@redhat.com>
- <aK2wlGYvCaFQXzBm@raptor>
- <ecc599ee-4175-4356-ab66-1d76a75f44f7@redhat.com>
+	s=arc-20240116; t=1756215928; c=relaxed/simple;
+	bh=ujLpd+pLkmK69KjW1Z9e5OVycYRAIFGQcUpYZa/du6U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Pr49BOBUQDzaKRwQR2u3WGab4XkCV8FLFhLnX4M7QOClEeoD6LK2zEPMN4G0tN1z+2495xcgZzLsOe5wPj2p5RtspWdoIcdyL9EWGGtOCBtG+zMwgHbLJLB3Y/ecjDay2IBZN17Ehi+qmlPfeg1rKnv+cEhp+7kH+ulO6jBL0Q4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=S7aRCycT; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="S7aRCycT"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cB8790nNlzm174K;
+	Tue, 26 Aug 2025 13:45:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1756215923; x=1758807924; bh=5MKSiEzjkldvDf+0Dulez47A
+	pFhe7CYYC5lZzFYHk+c=; b=S7aRCycTq2cqHYoHO5anNLu0O/qBoyoV3tJPQF5F
+	XN3b8+hAw4/RKQVLV/BJbA57/24LmiUavd6BVbMSP+g+ObT7THGIV9sHTkhKrJdd
+	2tEX6f9FnG2uW7fTOSM79lefOR25+9EQVuoxF1Kp6LGaASnFaTolSTY6v+s3eB83
+	H9lTbnvOCD83IaBulZNtQwtJIuJ7k0Q710oidvWSYhYFZbeqeq4IcG8HzNSOppcB
+	fb0K0Yw75hNfTScwosjVzBk2Oy+GQqXzqqnaXHKZpTt8LhDgAm1yZnrvRM0sb7dt
+	dJJEnWco+QcGYZfw2TtKteSdL9kS/djrGH5A9WQ4WKX1hA==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id GrdjopkJutjx; Tue, 26 Aug 2025 13:45:23 +0000 (UTC)
+Received: from [172.20.6.188] (unknown [208.98.210.68])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cB8703kWZzm174W;
+	Tue, 26 Aug 2025 13:45:15 +0000 (UTC)
+Message-ID: <c0510108-30ed-4301-ad2f-00bcbba7bf1a@acm.org>
+Date: Tue, 26 Aug 2025 06:45:14 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <ecc599ee-4175-4356-ab66-1d76a75f44f7@redhat.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/4] scsi: hisi_sas: Switch to use tasklet over threaded
+ irq handling
+To: Jason Yan <yanaijie@huawei.com>, Yihang Li <liyihang9@h-partners.com>,
+ martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxarm@huawei.com, liuyonglong@huawei.com, prime.zeng@hisilicon.com
+References: <20250822075951.2051639-1-liyihang9@h-partners.com>
+ <f02e9bb8-3477-4fa7-8b20-72bd518407ed@acm.org>
+ <2f2e5534-a368-547d-dedf-78f8ca2fc999@h-partners.com>
+ <41077713-8119-4898-8307-731a0d8f346e@huawei.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <41077713-8119-4898-8307-731a0d8f346e@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi David,
 
-On Tue, Aug 26, 2025 at 03:08:08PM +0200, David Hildenbrand wrote:
-> On 26.08.25 15:03, Alexandru Elisei wrote:
-> > Hi David,
-> > 
-> > On Tue, Aug 26, 2025 at 01:04:33PM +0200, David Hildenbrand wrote:
-> > ..
-> > > > Just so I can better understand the problem being fixed, I guess you can have
-> > > > two consecutive pfns with non-consecutive associated struct page if you have two
-> > > > adjacent memory sections spanning the same physical memory region, is that
-> > > > correct?
-> > > 
-> > > Exactly. Essentially on SPARSEMEM without SPARSEMEM_VMEMMAP it is not
-> > > guaranteed that
-> > > 
-> > > 	pfn_to_page(pfn + 1) == pfn_to_page(pfn) + 1
-> > > 
-> > > when we cross memory section boundaries.
-> > > 
-> > > It can be the case for early boot memory if we allocated consecutive areas
-> > > from memblock when allocating the memmap (struct pages) per memory section,
-> > > but it's not guaranteed.
-> > 
-> > Thank you for the explanation, but I'm a bit confused by the last paragraph. I
-> > think what you're saying is that we can also have the reverse problem, where
-> > consecutive struct page * represent non-consecutive pfns, because memmap
-> > allocations happened to return consecutive virtual addresses, is that right?
-> 
-> Exactly, that's something we have to deal with elsewhere [1]. For this code,
-> it's not a problem because we always allocate a contiguous PFN range.
-> 
-> > 
-> > If that's correct, I don't think that's the case for CMA, which deals out
-> > contiguous physical memory. Or were you just trying to explain the other side of
-> > the problem, and I'm just overthinking it?
-> 
-> The latter :)
+On 8/26/25 1:47 AM, Jason Yan wrote:
+> It seems the official replacement of tasklets is WQ_BH. However there 
+> are very few users now. I'm not sure if the stability and performance 
+> can meet our requirements.
 
-Ok, sorry for the noise then, and thank you for educating me.
+I'm not aware of any stability issues related to WQ_BH.
 
-Alex
+The alternative that I proposed should result in better performance and 
+lower latency than tasklets and shouldn't have the disadvantages of an
+approach based on tasklets.
+
+Bart.
