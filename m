@@ -1,56 +1,58 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E9A730CD85;
-	Wed, 27 Aug 2025 21:31:09 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C729D30CD85;
+	Wed, 27 Aug 2025 21:31:15 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756330270; cv=none; b=W75sEUqwrrN02bbNF44Sz5mV9o/xBs/0DXSRvQPEB6SwYdEpGHlu7eF2hpCxSi1JUzNBgtTwf1vqKLjupDtquradH735bLjVmGf6zCVuTLNXQbnpSamSoK/4pyCsvf07hqYFeRMNiTXgx3LQM1quJ1URjY0iIJjiPoQWBPy8Ng4=
+	t=1756330277; cv=none; b=s+sh77KzQpaQV2DHTIjfnS4mjwPSiAd39W2V+5HI+ZDrRy/Jctpoa0D2B9qdzqsFtd/eqWoloMc5oyvKLGkJqU9Q+tQ/TSMsMP9efk05b4t96lyxikFIfslEQ3jNjbAP6hBlQDawAgS6OR+U3PHXFn1iqngADOUhvAlsjX2dwDQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756330270; c=relaxed/simple;
-	bh=5GZoWX7mj5OhJcbRZfQTq/JNzd21YGMbL2VQ3za8Wsg=;
+	s=arc-20240116; t=1756330277; c=relaxed/simple;
+	bh=vx+URFFoX2y+Fr7FHZNrk6xy2Np7LEh6hQy/PohAEOg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=aKaPrZVRbZtMloKNTHAiMsc+fzCLnAg23XOPlYtheR10uXObuwB24rNH7Mmsg2+S4ohNVz07yR0pD4T5rrFRJgteamn/1r8Q4CrWkS6ti1awgpA6haKX45tlat9aP3JIFkVz7IiyKfZPfy4rzA7yTCX1pD8s6A6ePwTBL0gki10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=wGfgWsiS; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=Dj4EyRekMqPc0/ABdJ4btdJ9TeYA5hMoKW4m+UFj03jQgeFOhUizWKpQRptvfVcUONP0dNXrz/jTOkmADk9nt4hxaOL6xE4fZk7T7wN20EGVCw9mHlstetfs+SG+ZE+t8lEHfxJhCfiv84JtkHW+yn23KmYTXhrPTogiivON8HQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=TM1EAIE8; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="wGfgWsiS"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="TM1EAIE8"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cByQ43qrwzm174J;
-	Wed, 27 Aug 2025 21:31:08 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cByQB6RxNzm174H;
+	Wed, 27 Aug 2025 21:31:14 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1756330267; x=1758922268; bh=4c3a0
-	2TlJ32LxgJveaToQP9kXCQMM+p3rPRVbLzXyN4=; b=wGfgWsiS4XAdWqW30Lfaq
-	Z2ix2Wl+N7hgg52xRIzWQMECn/HKAAdK3TSZLJVkulYHYj0/2sFmQc1t8LpsIM4L
-	HafDNLswfZC73qh0a8qUZcAHRTApEmJXUlCSDt2ZtfOMKUOJsXjP9AQOrGVkghX2
-	rXlEDDu85DenwndXMBVJd5YcIoXLEAtw0fu4M3Bzg9aKUJM9dFtWg671rKazmHKL
-	SkYx+/P7o2Fyz6QwyJiyoOPv4ez8rIAIHCTpXqi9g2hC1X5gQNQPj+1ZO5ajHnIr
-	3ACCTAchvkXpejl7l6lXQXIXgEHMrSYs/aNwkkoD5IY1AYzF22N8zTpbkwFyQt1U
-	Q==
+	:received:received; s=mr01; t=1756330272; x=1758922273; bh=U7Wxt
+	Cpksc6+5gKUgMalhJM+/uGQ9rfYULDAFngKYjo=; b=TM1EAIE8LOje2H07juzm4
+	tgKah2PM9dFE2Py2qSP8tm/eDyhwJ+rgL/5VSJ31086oSIbL1PVssiRw4OVN9W0q
+	vhqWH8ZNy3+GjJbnxp6YAUaHwdlba5n0Gc7Q6xgCJ6fIsN431I4JSS+r+ENhvIKp
+	TdzXv0LZ5VREo05nmItiB+2bZKdIRfyMYv3yKJYEE2InjSopkmNc5QoW53QVAdNc
+	ZtSxgZBr78dN5txpUQMsuEu3zLJTzFyMZhUlV478LNtoxGDHWLYcCMllU6cVwu8s
+	KacH2rg/wjKIdUXnmwXOhE0m582ppXneCEsgMc8W1HTxrsqjc2ci3vUQRlqWvD7p
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id mtoNwMpg436c; Wed, 27 Aug 2025 21:31:07 +0000 (UTC)
+ id 96en2gObU0OI; Wed, 27 Aug 2025 21:31:12 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cByPy6FH4zm0yV7;
-	Wed, 27 Aug 2025 21:31:02 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cByQ36n9Zzm174D;
+	Wed, 27 Aug 2025 21:31:07 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Damien Le Moal <dlemoal@kernel.org>,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v24 13/18] null_blk: Add the preserves_write_order attribute
-Date: Wed, 27 Aug 2025 14:29:32 -0700
-Message-ID: <20250827212937.2759348-14-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Ming Lei <ming.lei@redhat.com>
+Subject: [PATCH v24 14/18] scsi: core: Retry unaligned zoned writes
+Date: Wed, 27 Aug 2025 14:29:33 -0700
+Message-ID: <20250827212937.2759348-15-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.318.gd7df087d1a-goog
 In-Reply-To: <20250827212937.2759348-1-bvanassche@acm.org>
 References: <20250827212937.2759348-1-bvanassche@acm.org>
@@ -62,60 +64,46 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Support configuring the BLK_FEAT_ORDERED_HWQ flag in the null_blk driver =
-to
-make it easier to test write pipelining
+If zoned writes (REQ_OP_WRITE) for a sequential write required zone have
+a starting LBA that differs from the write pointer, e.g. because a prior
+write triggered a unit attention condition, then the storage device will
+respond with an UNALIGNED WRITE COMMAND error. Retry commands that failed
+with an unaligned write error.
 
-Cc: Damien Le Moal <dlemoal@kernel.org>
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: Christoph Hellwig <hch@lst.de>
+Cc: Ming Lei <ming.lei@redhat.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/block/null_blk/main.c     | 4 ++++
- drivers/block/null_blk/null_blk.h | 1 +
- 2 files changed, 5 insertions(+)
+ drivers/scsi/scsi_error.c | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/block/null_blk/main.c b/drivers/block/null_blk/main.=
-c
-index 91642c9a3b29..86d72979d899 100644
---- a/drivers/block/null_blk/main.c
-+++ b/drivers/block/null_blk/main.c
-@@ -475,6 +475,7 @@ NULLB_DEVICE_ATTR(fua, bool, NULL);
- NULLB_DEVICE_ATTR(rotational, bool, NULL);
- NULLB_DEVICE_ATTR(badblocks_once, bool, NULL);
- NULLB_DEVICE_ATTR(badblocks_partial_io, bool, NULL);
-+NULLB_DEVICE_ATTR(preserves_write_order, bool, NULL);
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 746ff6a1f309..812b18e9b9de 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -713,6 +713,22 @@ enum scsi_disposition scsi_check_sense(struct scsi_c=
+mnd *scmd)
+ 		fallthrough;
 =20
- static ssize_t nullb_device_power_show(struct config_item *item, char *p=
-age)
- {
-@@ -613,6 +614,7 @@ static struct configfs_attribute *nullb_device_attrs[=
-] =3D {
- 	&nullb_device_attr_no_sched,
- 	&nullb_device_attr_poll_queues,
- 	&nullb_device_attr_power,
-+	&nullb_device_attr_preserves_write_order,
- 	&nullb_device_attr_queue_mode,
- 	&nullb_device_attr_rotational,
- 	&nullb_device_attr_shared_tag_bitmap,
-@@ -1979,6 +1981,8 @@ static int null_add_dev(struct nullb_device *dev)
- 	if (dev->virt_boundary)
- 		lim.virt_boundary_mask =3D PAGE_SIZE - 1;
- 	null_config_discard(nullb, &lim);
-+	if (dev->preserves_write_order)
-+		lim.features |=3D BLK_FEAT_ORDERED_HWQ;
- 	if (dev->zoned) {
- 		rv =3D null_init_zoned_dev(dev, &lim);
- 		if (rv)
-diff --git a/drivers/block/null_blk/null_blk.h b/drivers/block/null_blk/n=
-ull_blk.h
-index 7bb6128dbaaf..08b732cf853f 100644
---- a/drivers/block/null_blk/null_blk.h
-+++ b/drivers/block/null_blk/null_blk.h
-@@ -110,6 +110,7 @@ struct nullb_device {
- 	bool shared_tag_bitmap; /* use hostwide shared tags */
- 	bool fua; /* Support FUA */
- 	bool rotational; /* Fake rotational device */
-+	bool preserves_write_order;
- };
-=20
- struct nullb {
+ 	case ILLEGAL_REQUEST:
++		/*
++		 * Unaligned write command. This may indicate that zoned writes
++		 * have been received by the device in the wrong order. If write
++		 * pipelining is enabled, retry.
++		 */
++		if (sshdr.asc =3D=3D 0x21 && sshdr.ascq =3D=3D 0x04 &&
++		    blk_pipeline_zwr(req->q) &&
++		    blk_rq_is_seq_zoned_write(req) &&
++		    scsi_cmd_retry_allowed(scmd)) {
++			SCSI_LOG_ERROR_RECOVERY(1,
++				sdev_printk(KERN_WARNING, scmd->device,
++				"Retrying unaligned write at LBA %#llx.\n",
++				scsi_get_lba(scmd)));
++			return NEEDS_RETRY;
++		}
++
+ 		if (sshdr.asc =3D=3D 0x20 || /* Invalid command operation code */
+ 		    sshdr.asc =3D=3D 0x21 || /* Logical block address out of range */
+ 		    sshdr.asc =3D=3D 0x22 || /* Invalid function */
