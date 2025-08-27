@@ -1,100 +1,178 @@
-Received: from mail-yw1-f178.google.com (mail-yw1-f178.google.com [209.85.128.178])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92F7B2FE04B;
-	Tue, 26 Aug 2025 23:14:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.178
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 036344C6C
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 00:08:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756250098; cv=none; b=n7XtzyF5kmXqwC5aglg2Mrlgi044liUr3o4SHP2s+lAIBX4+w7/q8ZCX0Q+b4b0MJ80M4ptd5zBtNGNobcRNBVEZOp483SMyAMjBNTZ08G42ZJB2V/RoZFEDHeCPbbxnbxB+Cn+Uao0fdzOC9rckV5fbystSdY9x/qCL+/rRcp0=
+	t=1756253326; cv=none; b=msmwGCANXhHV6bjCUuyQRzTv3dKfV/IfQtPfsEev3jllnGlsawbHr5IFUjLIG9vmgZCfr8jJSD4tHbXrsXPqEAyF9/J72vLq6sd1rhuYsyb8a4J+hWXCkGUpDCisyWa5529HSod+USmTiy5Z+h1Y5T2aQfq5Agr7hXFlmTh0wpk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756250098; c=relaxed/simple;
-	bh=0mjq+wGRx76lc4+Ib1RSaVtbOPEeN5Up8R/ODNc/ONM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IsMQYEAnPl3bYvhyPdKopZA7pMmpcxTRkdGp7+oR4Oji+Po32F8gmscLi2WoAoDH4pjYDaPIzxj2jbrc6l9ZJn6sOjsJjK9/0X3n3tZ2nnBbN9lRnHBcUjA8Faw+wEjsuqHpUhXetxKoSB1Fb3ylc1eSreVvv++kaQerM+4uDVc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=H8LqNVE3; arc=none smtp.client-ip=209.85.128.178
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1756253326; c=relaxed/simple;
+	bh=4uqTpLFiBZqEjRR4l6UayJ0pVUBXszvltS+pNMU9CXc=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f5wyOyplN66pc+Iyv95Ef00Se5seQVw9fhNFjUIE5MdnN2860hhujAoGJ71spoGzuO4GWiK2d/sgPQJiP4QM4CPm0vw7/qOc1l73NbPMHXjNu7VjspfSIOeSOAwHet1VUk/SFspfo+v3n/aur0eXiUFTKzDwLtb/R/9P6p88Wls=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Qc3ruxyC; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="H8LqNVE3"
-Received: by mail-yw1-f178.google.com with SMTP id 00721157ae682-71d601859f5so47753457b3.0;
-        Tue, 26 Aug 2025 16:14:56 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756250095; x=1756854895; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=A+EFGwnFQ0zaBF7IhihKwTXTzSktVRC7dTsbkkQBCco=;
-        b=H8LqNVE3e5glwN4rfjlw0So9b/zIh8hhbn7qbpkChnVDo8pcWPVfQglTxRV4yk76Zi
-         2ZzYNgYQaTnMofQAiarzn8iHBZ3QV7QhtS0u0GKbP41bStw377OVr4UuFPX3tKZymTSD
-         ViAEu7Ytzk7OxHdx+LBu1vuGOuP4icPcNN8P6GOnAErweUOg7For85qZ+fsx6zISDiEt
-         iwQtIYbDF2q/Mr11faXkTPPHOQ+X4WhXiZEL2R+ALp+cJRJHQmUvYwL3g8VaGIth1jkM
-         pRNh1Chpr1L6MUC/9F6SwDsCdIFwJIRFMEjf7SxKNLDcB2ElsbcehCZb1I1vlF9FtZBf
-         X2fA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756250095; x=1756854895;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=A+EFGwnFQ0zaBF7IhihKwTXTzSktVRC7dTsbkkQBCco=;
-        b=kUvGB0kv0dAg+MknPSIkUvujEcJ2x2JtpfYBIky7B8xopv8+BEHz9RicwUYlLFigEk
-         NdchUgUA/6C/st3r6BqLy+t7dYUucaGqLlDcfkdoYRxNzolGyZTYgT71vqbkcSbJa/6t
-         x74jtXm8xziaOA0KM+zPpqnirzPJ+l5AtPtxrejiHvRs/rt5gq5sTSHe4TbB/Pc+GxMY
-         0gGo+DuRkjMf8G6RHRgK+m4yl48eUIKkaubqzmeRa2QCGQAik35JB4ZPR761Wg/WTzMz
-         mk5ggXiEue5W8orI990zfOE0xdeQDvpe5TNXJD2dJ30dbpwoC+U1Mo/2FZwe56w04nx8
-         JtDg==
-X-Forwarded-Encrypted: i=1; AJvYcCUWBewWQHot8HFtSgBERa2w6bZy6qYO7dlifV/i2Bc3GNoCi0cI1E0UGDf6Jd3EOQ4OKkMyZVVoDLniIgU=@vger.kernel.org, AJvYcCUt0Ok9SAhG+I9yhBWEAbrojy8ZhLa8OA/uIytxbKFltxC1nZXyoRAm/5wWHwpAfPkDYHaKc7ou6aJ4Uw==@vger.kernel.org, AJvYcCWAilv10UqRMw67zHHj2fLiePbcMRt0XELBitEvHyh+xcQV7FuZMMDdNlcwNE3fNwEVD1CnhXZq@vger.kernel.org
-X-Gm-Message-State: AOJu0YwJjGcfU6XzhgNExC1ppjUbH3qql2Ih7MlJZBubQ7nRkrD34XPj
-	YyxkI56WBUSJkSKG0xqGSbrnLIZw5Ec15X6vqGq9+WN543+hsS06zEbxUFno5KnbL14l2Ild+q8
-	zamNjDwyuzipL70YqoyVXtmh2p6PsVbY/aV8C
-X-Gm-Gg: ASbGncu5eZWNqvwb6Wt2d0KhzKKCEcX2qAS0QQotTik8SavjzYCUNwF2twb4q2w6X9f
-	EWFeEslPGExatl0KMpjv6qQMEEhQZFHGcivAFxB1kfFksDcLS6usQdx/sHzlqe6rZPQ4naE71y+
-	pQP2Sppm7dVg6fe+zyL/fv9AA+20I7ZIdE6m2IDzwWZADI39kUx3QlBSVElz2p5B/g4J3wy+I+V
-	rCkgltd7/usKE1J8lY=
-X-Google-Smtp-Source: AGHT+IHRhiuDXAJL4fwVjOJfXYiK9ILV/CWlaTxpOiILiMB1tVJbT6akcH2yFIfNsYRAnBvMa0fbcdad1KWgireB250=
-X-Received: by 2002:a05:690c:680c:b0:71c:e6ff:3236 with SMTP id
- 00721157ae682-71fdc560610mr200912877b3.37.1756250095435; Tue, 26 Aug 2025
- 16:14:55 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Qc3ruxyC"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cBPyL6btqzm0ysy;
+	Wed, 27 Aug 2025 00:08:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1756253321; x=1758845322; bh=JmTjRUXyx35wP+iAy+s8iT+Q/0m4/SuCMBc
+	rCDPJi7s=; b=Qc3ruxyCJjpZ0erBlO4ZCiC2ZKv8i8Svf/2P9B7Vipvqfg4ZnD5
+	zhN3UT/JSzM58QTzAI7npkPw1qyIjQJ4vvRnpF3Lv2n9BlgTBaVtq7DsJKiApSNC
+	GhuKkTSq4DiXeJVorOCxXHAQ4CMEt5JLkYGsr0DfwNltH0lmjI2Q+P+NgxdfMSWg
+	7temlVqdRDPCKVqk7wMPPYVhDYkuXBX0gGawRlru53fX9qWcy1dSPHzuJXQU2JUn
+	jBP3H7pXj8OkX32Saj/O2wsH/UhsZ9Ztj8HA3eqzxyIO08k0fqB0OLU+W82UKI0W
+	oXE4Igu/UlttON1nh1tuzktuBQil3EICWlQ==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 7T6W0QutaMFJ; Wed, 27 Aug 2025 00:08:41 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cBPyJ2Q8vzm0yQq;
+	Wed, 27 Aug 2025 00:08:39 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v3 00/26] Optimize the hot path in the UFS driver
+Date: Tue, 26 Aug 2025 17:06:04 -0700
+Message-ID: <20250827000816.2370150-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.51.0.261.g7ce5a0a67e-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250826195645.720-1-evans1210144@gmail.com>
-In-Reply-To: <20250826195645.720-1-evans1210144@gmail.com>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Tue, 26 Aug 2025 16:14:34 -0700
-X-Gm-Features: Ac12FXxsfrKwbToWOjAlHaF_eg4heEL8Xuz4AynQE3ic7BPc-ny2pfUiWwKJA0I
-Message-ID: <CABPRKS_bKK-6ph1ETQ1pLsY_KPPQBnCyBsqfd9V2JrOQXHQT7Q@mail.gmail.com>
-Subject: Re: [PATCH] scsi: lpfc: Fix buffer free/clear order in deferred
- receive path
-To: John Evans <evans1210144@gmail.com>
-Cc: james.smart@broadcom.com, Justin Tee <justin.tee@broadcom.com>, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi John,
+Hi Martin,
 
-nvmebuf NULL ptr check is already performed earlier in this routine.
+This patch series optimizes the hot path of the UFS driver by making
+struct scsi_cmnd and struct ufshcd_lrb adjacent. Making these two data
+structures adjacent is realized as follows:
 
-Maybe this patch should rather look like:
+@@ -9040,6 +9046,7 @@ static const struct scsi_host_template ufshcd_drive=
+r_template =3D {
+     .name            =3D UFSHCD,
+     .proc_name        =3D UFSHCD,
+     .map_queues        =3D ufshcd_map_queues,
++    .cmd_size        =3D sizeof(struct ufshcd_lrb),
+     .init_cmd_priv        =3D ufshcd_init_cmd_priv,
+     .queuecommand        =3D ufshcd_queuecommand,
+     .mq_poll        =3D ufshcd_poll,
 
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.c
-index fba2e62027b7..cd527324eae7 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1264,10 +1264,10 @@ lpfc_nvmet_defer_rcv(struct
-nvmet_fc_target_port *tgtport,
-                atomic_inc(&tgtp->rcv_fcp_cmd_defer);
+The following changes had to be made prior to making these two data
+structures adjacent:
+* Add support for driver-internal and reserved commands in the SCSI core.
+* Instead of making the reserved command slot (hba->reserved_slot)
+  invisible to the SCSI core, let the SCSI core allocate a reserved comma=
+nd.
+* Remove all UFS data structure members that are no longer needed
+  because struct scsi_cmnd and struct ufshcd_lrb are now adjacent
+* Call ufshcd_init_lrb() from inside ufshcd_queuecommand() instead of
+  calling this function before I/O starts. This is necessary because
+  ufshcd_memory_alloc() allocates fewer instances than the block layer
+  allocates requests. See also the following code in the block layer
+  core:
 
-        /* Free the nvmebuf since a new buffer already replaced it */
--       nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
-        spin_lock_irqsave(&ctxp->ctxlock, iflag);
-        ctxp->rqb_buffer = NULL;
-        spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
-+       nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
- }
+    if (blk_mq_init_request(set, hctx->fq->flush_rq, hctx_idx,
+                hctx->numa_node))
 
-Regards,
-Justin Tee
+  Although the UFS driver could be modified such that ufshcd_init_lrb()
+  is called from ufshcd_init_cmd_priv(), realizing this would require
+  moving the memory allocations that happen from inside
+  ufshcd_memory_alloc() into ufshcd_init_cmd_priv(). That would make
+  this patch series even larger. Although ufshcd_init_lrb() is called for=
+ each
+  command, the benefits of reduced indirection and better cache efficienc=
+y
+  outweigh the small overhead of per-command lrb initialization.
+* ufshcd_add_scsi_host() happens now before any device management
+  commands are submitted. This change is necessary because this patch
+  makes device management command allocation happen when the SCSI host
+  is allocated.
+* Allocate as many command slots as the host controller supports. Decreas=
+e
+  host->cmds_per_lun if necessary once it is clear whether or not the UFS
+  device supports less command slots than the host controller.
+
+Changes compared to v2:
+ - Removed scsi_host_update_can_queue() and also the UFS driver refactori=
+ng
+   patches that were introduced to support this call.
+-- Added .queue_reserved_command(). Added ufshcd_queue_reserved_command()=
+.
+-- Removed a BUG_ON() statement from ufshcd_get_dev_mgmt_cmd().
+-- Modified and renamed ufshcd_mcq_decide_queue_depth().
+
+Changes compared to v1:
+ - Left out the kernel patches related to support for const SCSI command
+   arguments.
+ - Added SCSI core patches for allocating a pseudo SCSI device and reserv=
+ed
+   command support.
+ - Added several kernel patches to switch the UFS driver from a hardcoded
+   reserved slot to calling scsi_get_internal_cmd().
+ - Enable .alloc_pseudo_sdev in the scsi_debug driver.
+
+*** BLURB HERE ***
+
+Bart Van Assche (22):
+  scsi: core: Do not allocate a budget token for reserved commands
+  scsi_debug: Set .alloc_pseudo_sdev
+  ufs: core: Move an assignment
+  ufs: core: Change the type of one ufshcd_add_cmd_upiu_trace() argument
+  ufs: core: Only call ufshcd_add_command_trace() for SCSI commands
+  ufs: core: Change the type of one ufshcd_add_command_trace() argument
+  ufs: core: Change the type of one ufshcd_send_command() argument
+  ufs: core: Only call ufshcd_should_inform_monitor() for SCSI commands
+  ufs: core: Change the monitor function argument types
+  ufs: core: Rework ufshcd_mcq_compl_pending_transfer()
+  ufs: core: Rework ufshcd_eh_device_reset_handler()
+  ufs: core: Allocate more commands for the SCSI host
+  ufs: core: Allocate the SCSI host earlier
+  ufs: core: Call ufshcd_init_lrb() later
+  ufs: core: Use hba->reserved_slot
+  ufs: core: Make the reserved slot a reserved request
+  ufs: core: Do not clear driver-private command data
+  ufs: core: Optimize the hot path
+  ufs: core: Pass a SCSI pointer instead of an LRB pointer
+  ufs: core: Remove the ufshcd_lrb task_tag member
+  ufs: core: Make blk_mq_tagset_busy_iter() skip reserved requests
+  ufs: core: Switch to scsi_get_internal_cmd()
+
+Hannes Reinecke (3):
+  scsi: core: Support allocating reserved commands
+  scsi: core: Support allocating a pseudo SCSI device
+  scsi: core: Add scsi_{get,put}_internal_cmd() helpers
+
+John Garry (1):
+  scsi: core: Bypass the queue limit checks for reserved commands
+
+ drivers/scsi/hosts.c             |  17 +
+ drivers/scsi/scsi.c              |   7 +-
+ drivers/scsi/scsi_debug.c        |   1 +
+ drivers/scsi/scsi_lib.c          | 151 +++++-
+ drivers/scsi/scsi_priv.h         |   2 +
+ drivers/scsi/scsi_scan.c         |  70 ++-
+ drivers/scsi/scsi_sysfs.c        |   4 +-
+ drivers/ufs/core/ufs-mcq.c       |  51 +-
+ drivers/ufs/core/ufshcd-crypto.h |  18 +-
+ drivers/ufs/core/ufshcd-priv.h   |  20 +-
+ drivers/ufs/core/ufshcd.c        | 802 +++++++++++++++++--------------
+ include/scsi/scsi_cmnd.h         |   2 +
+ include/scsi/scsi_device.h       |  23 +
+ include/scsi/scsi_host.h         |  37 +-
+ include/ufs/ufshcd.h             |  12 -
+ 15 files changed, 763 insertions(+), 454 deletions(-)
+
