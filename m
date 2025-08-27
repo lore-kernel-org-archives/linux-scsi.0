@@ -1,57 +1,55 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 03B24F9D6
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 00:08:59 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 14D131EEF9
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 00:09:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756253341; cv=none; b=fjXbzmAuV1fReTTerU1kqPPoqMYMOnKnBxBy2BCAp2AFij8bt7xxdcjURzB8dTI4wF4XxOaKVKDwYm83lP7UP5jiGuj2vkWK3tQklcNdYIPXAItoGqrJ5WJCzl3btpwgRqy6cdlIJklXqevtELJcs5aPD7HEgB+tZqHr9BKay6o=
+	t=1756253346; cv=none; b=KAgP1KPHZdLiouBi8yGTr6cKa5AdFNcNJy2b9bfgeqL3FyRXqTgpe63B2uH+XwjsNEBXiAx1We8o5+qGVtIWKTx7+Qfzf8P4R6VMGwuO0UIHogGY8kCoLzP8ofnF6J2wX7ASxQm8Hy0kRzUWc7KI2R0wGpqWUnWM5Eyub5h8Wo8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756253341; c=relaxed/simple;
-	bh=d2bGuKqXG+D3hfnXJonpbGzHleUyQGgdE1oBMdtx2cE=;
+	s=arc-20240116; t=1756253346; c=relaxed/simple;
+	bh=tOt3Xz6hs0eIcQTLT1GxIjn8yo1aU1RpEC6O4w/v8WY=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=YMa+6aDJ6Be/exjasJDmqC8O2hH5UWr/6JRIN4xMOC6cq8NeN93WKoZe5Es/uuu0dfUaOMrPXVZ4VFDGLhc/GVKYk4yOSQvIhMBjesl1SJV2Lu1FbDwY4W85Iyj0Dtb1I2L9j6yTP9Tubu5TjD98v+Rgti1zHAXxv89iIy7AjDY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=36DgtYSA; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=qd2T7ao3xrJW2p8zhZg7EQU1hO+E2p5Fbt6DzAvxN+NSmZ6iDyRYhJXIVvoO+fxXWmREmRwtZTYrMlWSFuJZRa9sRpU3spj972O5usoVl7V19auC93gyOGskrnfHMuIZzaaCTeddsttQIPE6T4kvxWp61bKRXAwOudxjK0/1amI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=yNw0Swrx; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="36DgtYSA"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="yNw0Swrx"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cBPyf6NSgzm0ysy;
-	Wed, 27 Aug 2025 00:08:58 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cBPym0xmvzm0ysy;
+	Wed, 27 Aug 2025 00:09:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1756253337; x=1758845338; bh=+ykvf
-	ADyz0Ppg5/hmNlZR7oMNFSG7VwkgDNgUPHAKI0=; b=36DgtYSA5mGSNUe1PtqwB
-	6ZVOPH0EsXczCJ6fJEpl4Rxl38gciRFsyPguLXuzyp1xLXUYjZY8Xpx7P4LF7Mmj
-	bAnKAEE3qlxb+aT+Hy0kMqTEeht+u7vlIWN75BKgG1+j9kEmZj9+NgS/K7iDQLOv
-	Px6KL1WXYJWSGjdwwYKiMs+wuhPeJQVfQgcpDv75eRV1hpdT50uG84iomIw4AWAM
-	0OH1c4nqaC12gNy96BgzgZdonBdyRXKNebU4NeaIJuto8B7ySczWFr+W/ywkF8Tm
-	YJ0NAokdU7ayNmX0YK2LlwIehTuoBz/7kK5BUagRGskdl2Uqg6gA7J0IfD9ddp9V
-	w==
+	:received:received; s=mr01; t=1756253342; x=1758845343; bh=uNl7M
+	662b6rTAc3w7eNNsrRnRvweyUqgQlB/3Gg0vgA=; b=yNw0Swrxw170XFfuLM4ug
+	rUcfQlmYatmhFgvrKw83iRwEqTn4LGiA3UFOrTByLly+xucf5SnWudDourDQlKuX
+	FZSF/2XJKy7ZacY28Bxk9ROr3wETkpdLwQUSZHe0uQIjmm/xRqkZQ+QaI0MgezCX
+	E+X7l7woygWzasJ/WfpimVg5RtuD6tYV8RT5qvzi6dXT/fchhCclyE2vJqaQhfoP
+	WCLkMvWf5ZAVR0Tc8mFoH8ElwC2QDai3b7qfkCqaFAvG82+rMIRXCMooiFHATLJW
+	MnJS7ZhSVqDQTwHw+lvAcyw1gQC+J+eFYJOOOOzH6GX3HXE1PAv7txP73WJG6cUZ
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Mqh_kbhtsixW; Wed, 27 Aug 2025 00:08:57 +0000 (UTC)
+ id NFsC56nsZ3Qh; Wed, 27 Aug 2025 00:09:02 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cBPyX3Kktzm0yQq;
-	Wed, 27 Aug 2025 00:08:51 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cBPyf5pvPzm0xkQ;
+	Wed, 27 Aug 2025 00:08:57 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Hannes Reinecke <hare@suse.de>,
-	John Garry <john.g.garry@oracle.com>,
-	Ming Lei <ming.lei@redhat.com>,
+	John Garry <john.garry@huawei.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v3 03/26] scsi: core: Do not allocate a budget token for reserved commands
-Date: Tue, 26 Aug 2025 17:06:07 -0700
-Message-ID: <20250827000816.2370150-4-bvanassche@acm.org>
+Subject: [PATCH v3 04/26] scsi: core: Bypass the queue limit checks for reserved commands
+Date: Tue, 26 Aug 2025 17:06:08 -0700
+Message-ID: <20250827000816.2370150-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.261.g7ce5a0a67e-goog
 In-Reply-To: <20250827000816.2370150-1-bvanassche@acm.org>
 References: <20250827000816.2370150-1-bvanassche@acm.org>
@@ -63,59 +61,147 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-The SCSI budget mechanism is used to implement the host->cmd_per_lun limi=
-t.
-This limit does not apply to reserved commands. Hence, do not allocate a
-budget token for reserved commands.
+From: John Garry <john.garry@huawei.com>
 
-Cc: Hannes Reinecke <hare@suse.de>
-Cc: John Garry <john.g.garry@oracle.com>
-Cc: Ming Lei <ming.lei@redhat.com>
+Reserved commands will be used by SCSI LLDs for submitting internal
+commands. The SCSI host, target and device limits do not apply to these
+use cases. Additionally, do not activate the SCSI error handler if a
+reserved command fails such that reserved commands can be submitted from
+inside the SCSI error handler.
+
+Signed-off-by: John Garry <john.garry@huawei.com>
+[ bvanassche: modified patch title and patch description. Renamed
+  .reserved_queuecommand() into .queue_reserved_command(). Changed
+  the second argument of __blk_mq_end_request() from 0 into error
+  code in the completion path if cmd->result !=3D 0. Rewrote the
+  scsi_queue_rq() changes. See also
+  https://lore.kernel.org/linux-scsi/1666693096-180008-5-git-send-email-j=
+ohn.garry@huawei.com/ ]
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_lib.c | 14 ++++++++++++--
- 1 file changed, 12 insertions(+), 2 deletions(-)
+ drivers/scsi/hosts.c     |  6 +++++
+ drivers/scsi/scsi_lib.c  | 54 ++++++++++++++++++++++++++++------------
+ include/scsi/scsi_host.h |  6 +++++
+ 3 files changed, 50 insertions(+), 16 deletions(-)
 
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index e860ac93499d..75fe624366c3 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -231,6 +231,12 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, =
+struct device *dev,
+ 		goto fail;
+ 	}
+=20
++	if (shost->nr_reserved_cmds && !sht->queue_reserved_command) {
++		shost_printk(KERN_ERR, shost,
++			     "nr_reserved_cmds set but no method to queue\n");
++		goto fail;
++	}
++
+ 	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
+ 	shost->cmd_per_lun =3D min_t(int, shost->cmd_per_lun,
+ 				   shost->can_queue);
 diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 9c67e04265ce..0112ad3859ff 100644
+index 0112ad3859ff..2d81fd837d47 100644
 --- a/drivers/scsi/scsi_lib.c
 +++ b/drivers/scsi/scsi_lib.c
-@@ -396,7 +396,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, str=
-uct scsi_cmnd *cmd)
- 	if (starget->can_queue > 0)
- 		atomic_dec(&starget->target_busy);
+@@ -1539,6 +1539,14 @@ static void scsi_complete(struct request *rq)
+ 	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(rq);
+ 	enum scsi_disposition disposition;
 =20
--	sbitmap_put(&sdev->budget_map, cmd->budget_token);
-+	if (cmd->budget_token < INT_MAX)
-+		sbitmap_put(&sdev->budget_map, cmd->budget_token);
- 	cmd->budget_token =3D -1;
- }
++	if (blk_mq_is_reserved_rq(rq)) {
++		/* Only pass-through requests are supported in this code path. */
++		WARN_ON_ONCE(!blk_rq_is_passthrough(scsi_cmd_to_rq(cmd)));
++		scsi_mq_uninit_cmd(cmd);
++		__blk_mq_end_request(rq, scsi_result_to_blk_status(cmd->result));
++		return;
++	}
++
+ 	INIT_LIST_HEAD(&cmd->eh_entry);
 =20
-@@ -1360,6 +1361,14 @@ static inline int scsi_dev_queue_ready(struct requ=
-est_queue *q,
- {
- 	int token;
+ 	atomic_inc(&cmd->device->iodone_cnt);
+@@ -1828,25 +1836,31 @@ static blk_status_t scsi_queue_rq(struct blk_mq_h=
+w_ctx *hctx,
+ 	WARN_ON_ONCE(cmd->budget_token < 0);
+=20
+ 	/*
+-	 * If the device is not in running state we will reject some or all
+-	 * commands.
++	 * Bypass the SCSI device, SCSI target and SCSI host checks for
++	 * reserved commands.
+ 	 */
+-	if (unlikely(sdev->sdev_state !=3D SDEV_RUNNING)) {
+-		ret =3D scsi_device_state_check(sdev, req);
+-		if (ret !=3D BLK_STS_OK)
+-			goto out_put_budget;
+-	}
++	if (!blk_mq_is_reserved_rq(req)) {
++		/*
++		 * If the device is not in running state we will reject some or
++		 * all commands.
++		 */
++		if (unlikely(sdev->sdev_state !=3D SDEV_RUNNING)) {
++			ret =3D scsi_device_state_check(sdev, req);
++			if (ret !=3D BLK_STS_OK)
++				goto out_put_budget;
++		}
+=20
+-	ret =3D BLK_STS_RESOURCE;
+-	if (!scsi_target_queue_ready(shost, sdev))
+-		goto out_put_budget;
+-	if (unlikely(scsi_host_in_recovery(shost))) {
+-		if (cmd->flags & SCMD_FAIL_IF_RECOVERING)
+-			ret =3D BLK_STS_OFFLINE;
+-		goto out_dec_target_busy;
++		ret =3D BLK_STS_RESOURCE;
++		if (!scsi_target_queue_ready(shost, sdev))
++			goto out_put_budget;
++		if (unlikely(scsi_host_in_recovery(shost))) {
++			if (cmd->flags & SCMD_FAIL_IF_RECOVERING)
++				ret =3D BLK_STS_OFFLINE;
++			goto out_dec_target_busy;
++		}
++		if (!scsi_host_queue_ready(q, shost, sdev, cmd))
++			goto out_dec_target_busy;
+ 	}
+-	if (!scsi_host_queue_ready(q, shost, sdev, cmd))
+-		goto out_dec_target_busy;
+=20
+ 	/*
+ 	 * Only clear the driver-private command data if the LLD does not suppl=
+y
+@@ -1875,6 +1889,14 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw=
+_ctx *hctx,
+ 	cmd->submitter =3D SUBMITTED_BY_BLOCK_LAYER;
+=20
+ 	blk_mq_start_request(req);
++	if (blk_mq_is_reserved_rq(req)) {
++		reason =3D shost->hostt->queue_reserved_command(shost, cmd);
++		if (reason) {
++			ret =3D BLK_STS_RESOURCE;
++			goto out_put_budget;
++		}
++		return BLK_STS_OK;
++	}
+ 	reason =3D scsi_dispatch_cmd(cmd);
+ 	if (reason) {
+ 		scsi_set_blocked(cmd, reason);
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index 3b5150759c44..0c7235410cc0 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -86,6 +86,12 @@ struct scsi_host_template {
+ 	 */
+ 	int (* queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
 =20
 +	/*
-+	 * Do not allocate a budget token for reserved SCSI commands. Budget
-+	 * tokens are used to enforce the cmd_per_lun limit. That limit does no=
-t
-+	 * apply to reserved commands.
++	 * Queue a reserved command (BLK_MQ_REQ_RESERVED). The .queuecommand()
++	 * documentation also applies to the .queue_reserved_command() callback=
+.
 +	 */
-+	if (scsi_device_is_pseudo_dev(sdev))
-+		return INT_MAX;
++	int (*queue_reserved_command)(struct Scsi_Host *, struct scsi_cmnd *);
 +
- 	token =3D sbitmap_get(&sdev->budget_map);
- 	if (token < 0)
- 		return -1;
-@@ -1749,7 +1758,8 @@ static void scsi_mq_put_budget(struct request_queue=
- *q, int budget_token)
- {
- 	struct scsi_device *sdev =3D q->queuedata;
-=20
--	sbitmap_put(&sdev->budget_map, budget_token);
-+	if (budget_token < INT_MAX)
-+		sbitmap_put(&sdev->budget_map, budget_token);
- }
-=20
- /*
+ 	/*
+ 	 * The commit_rqs function is used to trigger a hardware
+ 	 * doorbell after some requests have been queued with
