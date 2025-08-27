@@ -1,126 +1,127 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E7C7B2820BA
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 10:19:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81C142F39A9
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 11:36:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756289966; cv=none; b=W3XwLDZZEH563Z4+y8w1AM1DsHyTPKMxkLNZ2rNNfp43FlOifgFeLy/5nH5fjIi3W1th7b7ZOKrcwVApo4Nttrnwg7Jl/tZczJ2mKpRwlvhgmj1JR103XAoEvfY3Ngo+XkYAsRQf/cMucQNyyASa784DWnuALqX8TtEopfo6/I8=
+	t=1756294569; cv=none; b=g97Yxy2JTJdFHH/CN+zgkOZeXrx8NbMW/Pcba58m9rd9PhgeGQTFBGFNEWxEkPD2jDQdtZamSCGBBcbRyv2QED+1/t95N+sCtFE3yoOLIUd7Ap2tLujCfIQ4s3EN62qYRQQemk2Ey2G/mXrrvFH3dSZp1N1H2xnTtzdR0mHpo7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756289966; c=relaxed/simple;
-	bh=dCfxmqI5NQievIDHdaUucZ8EXZqp2k9O4S3tudNYjfc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hB2zXJ1cdpXcnR4Q0qTW4ULptZG4Ysb2aPm+CCxpB01Vbl6nrlzv1bdfejdiSxVWULxC7ykgkOzB/qrDj8boh8Vfp/5VHqnN/uX4oOlwDO4zDOPvewn17Q3Qgpi++KCawWGC32MTYHvWgsSc1rkGZtvCoFg6fWbHzzOOA59pgJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Sx5RwQl4; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IydAXml5; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Sx5RwQl4; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IydAXml5; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1756294569; c=relaxed/simple;
+	bh=wgh29TBAWfK7IKN4tu05jI5GQ1jj7c3Y9FY4aM9NduY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TkH+/mXt+nb+Im/DgpMdbrgze86SfJXRZRMo/OqPGy5fAiruhsyuquLnrl2WtFz3829Mhu8KBCuiCu3TKSHyYAJi7wgE+hm7/wMNk5pPQE2vKt3an0bup89mc3iwRH5M4XA5hSm+S5kbunHpsIlOx0r6ifIib445z5yNf1F6c9g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=WvvTTz0b; arc=none smtp.client-ip=170.10.133.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Sx5RwQl4";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IydAXml5";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Sx5RwQl4";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IydAXml5"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="WvvTTz0b"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1756294566;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=39v9pRG04LvRBmUW/1LxWE2Bfz+SiAEdqQeLGr3S5f8=;
+	b=WvvTTz0bV9SSspe1Cktklf9eX3Cz5a3ULZrgrpGFTZBCvaaPT776uKglIi8qK/dUC1chcN
+	h9cYErBSJEsmIx5p1uIMBt7KBBVDzmAsx0+JpEEDYlt62j3mO529rSmd8gvqg7GIP1bYtp
+	gqgtaMUOvE2YH3xrrFru0pyl9dDrqZc=
+Received: from mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-490-dKZKw90oNq2ZzKzLX-7iCA-1; Wed,
+ 27 Aug 2025 07:36:05 -0400
+X-MC-Unique: dKZKw90oNq2ZzKzLX-7iCA-1
+X-Mimecast-MFC-AGG-ID: dKZKw90oNq2ZzKzLX-7iCA_1756294564
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 1304D22221;
-	Wed, 27 Aug 2025 10:10:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1756289427; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NxE5rKnj5TjaBsXbpbII/rsOANqwX+dNrTnexSalI0E=;
-	b=Sx5RwQl4mdrvGKXWphXUQ0hvtykvK3pbomkWvnnY3C/J3xN+x2ZHAOSBJLxC4GLt4+IHP6
-	fhIb397Tjh7ZItBttJVZrcn5W6MbblkxSPnUuMkh2m4qZnlZylUmCvuzsNJNQDI/fgYDPT
-	CxFKOH1aH8JG61b+9eFz6FNE5WZULgs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1756289427;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NxE5rKnj5TjaBsXbpbII/rsOANqwX+dNrTnexSalI0E=;
-	b=IydAXml5RA8wO5fCwvDAMvtOzsuRqzJS78ZPyZQjET5bKCdXt3mdY6VsEVH2Z8wcR9Zny6
-	ul1gwma8lALLX1Cg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1756289427; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NxE5rKnj5TjaBsXbpbII/rsOANqwX+dNrTnexSalI0E=;
-	b=Sx5RwQl4mdrvGKXWphXUQ0hvtykvK3pbomkWvnnY3C/J3xN+x2ZHAOSBJLxC4GLt4+IHP6
-	fhIb397Tjh7ZItBttJVZrcn5W6MbblkxSPnUuMkh2m4qZnlZylUmCvuzsNJNQDI/fgYDPT
-	CxFKOH1aH8JG61b+9eFz6FNE5WZULgs=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1756289427;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=NxE5rKnj5TjaBsXbpbII/rsOANqwX+dNrTnexSalI0E=;
-	b=IydAXml5RA8wO5fCwvDAMvtOzsuRqzJS78ZPyZQjET5bKCdXt3mdY6VsEVH2Z8wcR9Zny6
-	ul1gwma8lALLX1Cg==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 038D713310;
-	Wed, 27 Aug 2025 10:10:26 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id Z+iAO5LZrmg1JQAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Wed, 27 Aug 2025 10:10:26 +0000
-Date: Wed, 27 Aug 2025 12:10:26 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
-Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
-	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
-Subject: Re: blktests failures with v6.17-rc1 kernel
-Message-ID: <ff748a3f-9f07-4933-b4b3-b4f58aacac5b@flourine.local>
-References: <suhzith2uj75uiprq4m3cglvr7qwm3d7gi4tmjeohlxl6fcmv3@zu6zym6nmvun>
+	by mx-prod-mc-04.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id EA6261955F29;
+	Wed, 27 Aug 2025 11:36:03 +0000 (UTC)
+Received: from localhost (unknown [10.72.116.24])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 85AA730001A8;
+	Wed, 27 Aug 2025 11:36:02 +0000 (UTC)
+From: Ming Lei <ming.lei@redhat.com>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Cc: linux-block@vger.kernel.org,
+	Ming Lei <ming.lei@redhat.com>,
+	Christoph Hellwig <hch@lst.de>
+Subject: [PATCH] scsi: sr: Set rotational feature flag back
+Date: Wed, 27 Aug 2025 19:35:50 +0800
+Message-ID: <20250827113550.2614535-1-ming.lei@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <suhzith2uj75uiprq4m3cglvr7qwm3d7gi4tmjeohlxl6fcmv3@zu6zym6nmvun>
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	TO_DN_EQ_ADDR_SOME(0.00)[];
-	MISSING_XM_UA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[6];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
+Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
 
-On Wed, Aug 13, 2025 at 10:50:34AM +0000, Shinichiro Kawasaki wrote:
-> #4: nvme/061 (fc transport)
-> 
->     The test case nvme/061 sometimes fails for fc transport due to a WARN and
->     refcount message "refcount_t: underflow; use-after-free." Refer to the
->     report for the v6.15 kernel [5].
-> 
->     [5]
->     https://lore.kernel.org/linux-block/2xsfqvnntjx5iiir7wghhebmnugmpfluv6ef22mghojgk6gilr@mvjscqxroqqk/
+Set rotational feature flag back for cd-rom which is really rotational disk,
+and the flag is `cleared` since commit bd4a633b6f7c ("block: move the nonrot
+flag to queue_limits"). And this way breaks some applications.
 
-This one might be fixed with
+Move queue limits configuration from get_sectorsize() to
+sr_revalidate_disk(), so that it is more readable to set rotational
+feature flag and sector size limit in sr_revalidate_disk().
 
-https://lore.kernel.org/linux-nvme/20250821-fix-nvmet-fc-v1-1-3349da4f416e@kernel.org/
+Cc: Christoph Hellwig <hch@lst.de>
+Fixes: bd4a633b6f7c ("block: move the nonrot flag to queue_limits")
+Signed-off-by: Ming Lei <ming.lei@redhat.com>
+---
+ drivers/scsi/sr.c | 16 ++++++++++------
+ 1 file changed, 10 insertions(+), 6 deletions(-)
+
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index b17796d5ee66..add13e306898 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -475,13 +475,21 @@ static blk_status_t sr_init_command(struct scsi_cmnd *SCpnt)
+ 
+ static int sr_revalidate_disk(struct scsi_cd *cd)
+ {
++	struct request_queue *q = cd->device->request_queue;
+ 	struct scsi_sense_hdr sshdr;
++	struct queue_limits lim;
++	int sector_size;
+ 
+ 	/* if the unit is not ready, nothing more to do */
+ 	if (scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr))
+ 		return 0;
+ 	sr_cd_check(&cd->cdi);
+-	return get_sectorsize(cd);
++	sector_size = get_sectorsize(cd);
++
++	lim = queue_limits_start_update(q);
++	lim.logical_block_size = sector_size;
++	lim.features |= BLK_FEAT_ROTATIONAL;
++	return queue_limits_commit_update_frozen(q, &lim);
+ }
+ 
+ static int sr_block_open(struct gendisk *disk, blk_mode_t mode)
+@@ -721,10 +729,8 @@ static int sr_probe(struct device *dev)
+ 
+ static int get_sectorsize(struct scsi_cd *cd)
+ {
+-	struct request_queue *q = cd->device->request_queue;
+ 	static const u8 cmd[10] = { READ_CAPACITY };
+ 	unsigned char buffer[8] = { };
+-	struct queue_limits lim;
+ 	int err;
+ 	int sector_size;
+ 	struct scsi_failure failure_defs[] = {
+@@ -795,9 +801,7 @@ static int get_sectorsize(struct scsi_cd *cd)
+ 		set_capacity(cd->disk, cd->capacity);
+ 	}
+ 
+-	lim = queue_limits_start_update(q);
+-	lim.logical_block_size = sector_size;
+-	return queue_limits_commit_update_frozen(q, &lim);
++	return sector_size;
+ }
+ 
+ static int get_capabilities(struct scsi_cd *cd)
+-- 
+2.47.1
+
