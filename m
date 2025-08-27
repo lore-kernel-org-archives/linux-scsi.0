@@ -1,51 +1,52 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80D5927F182
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 22:10:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F88231E107
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 22:10:59 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756332638; cv=none; b=MTt2qyl2ZnqDva/VTvFsYszteYX5XNMuCqpArO6uwsG1ShJtILnq74sSwn+hrYNNdbGlbTf9c5LeyLg/Hclxukr67nDsfQTtSsaP0sfmEiS2DbV2s1Dh3lqsLsHnqTkJwqcRlBu2YUYjLJQ/ej4Y2EpMBmGYyCBUEa2M3kZ3XGA=
+	t=1756332660; cv=none; b=k8dbZ1W4YMbUuQ6NO07F+jTGYWPlBXHCXGGeQM5OvxDWspFyzFY5bWfIGZqiJ/CJqn1jYjtAon93w9tB9FSy1UX1nvZblMZDKL1gxmCR/08GeV62UxsAdRCasm4ZRB/4Gp5K8aGi1zRULND4tPLB2ASf1E0iG1zuA/Vi0A5RGu4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756332638; c=relaxed/simple;
-	bh=ScFnEdlVWJT7MkMwoMVPG9IJshbpzk+Qin/aS8uvudM=;
+	s=arc-20240116; t=1756332660; c=relaxed/simple;
+	bh=W2zURd3mlNFD6+8/G7aYSvH/DtIoVv4hio5y/lKVdHg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=mxif6LXGST4c1wTRtGzZWm+txrUAmAOYYxl8BMvewYfvC009XVbXnAr/5d/v7xVUho+d3JG7CczSk313Pyn4DjpQPRIetNWIKohB49e/Ee8R9UTAH5BCNFaDS0yG0UO+jrH4Ngv2DsXiQOhhJOkDYadXVZtXccqN3rpctlpaDr4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RSHE6mOF; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=latz9GO1r91QAnFkqOgTeGDVmjquHuGe+Ar1HuKO2ttnacMdVfrf5Ajsm5c+PSiud4P3+tQY6PxCgWvudXfnUR40dC2UaaaEcUagE1jsB/bFcLCQxNd+ALgv9PV+NF0YszmmWChlzqWvrFUZfJDe8YV5woJK5hWLxygoQyi+Joc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=g0nAnq4X; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RSHE6mOF"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="g0nAnq4X"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756332634;
+	s=mimecast20190719; t=1756332658;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=KMi10d6QgZutAbGzL3nSBlY7ky4aRhvMewcb8M9EfzA=;
-	b=RSHE6mOF4jDRR6cA2kxb7sthoVzNGM5RbOrmAenb+uu/6k7R1gLhM6TviL8IyJ8t26ZwPO
-	FDZmZ/0YFNZKQ1c0BTRcEm4rVjR4LIJ70O5/i9yu3EwYLAExfEvkQVW96til3Md5qvA26W
-	jekpO4VHyAeC7HMw+xTR6Rxak+6xkKQ=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=YpVNTL/msyfj4quk+zG5idx/zOSmESitaXX9oJyyDlo=;
+	b=g0nAnq4XgTG2L2ug8RY2NySNvv7YddFKyMzDSFGB0CwrT8VlHDKaXaETYIhZ2cGz+p8WW+
+	5BQm/9JUapgcUbUL6YSzNDx9T1VKgImopWiwS7Ixgzsz5sU3sq0CM+hiYrwaOb1OlLk/RE
+	0kZpxkY929T51uaHUyTdUQiiPWDuFdQ=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-126-Kk9fYkzwMM6MQxKq-D-h2g-1; Wed,
- 27 Aug 2025 18:10:29 -0400
-X-MC-Unique: Kk9fYkzwMM6MQxKq-D-h2g-1
-X-Mimecast-MFC-AGG-ID: Kk9fYkzwMM6MQxKq-D-h2g_1756332624
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-628-sl5k46szNKGimV3zS5dDew-1; Wed,
+ 27 Aug 2025 18:10:45 -0400
+X-MC-Unique: sl5k46szNKGimV3zS5dDew-1
+X-Mimecast-MFC-AGG-ID: sl5k46szNKGimV3zS5dDew_1756332640
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 0FA831956087;
-	Wed, 27 Aug 2025 22:10:24 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 75B6D180034F;
+	Wed, 27 Aug 2025 22:10:40 +0000 (UTC)
 Received: from t14s.redhat.com (unknown [10.22.80.195])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id DC4FD30001A1;
-	Wed, 27 Aug 2025 22:10:07 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A20E430001A1;
+	Wed, 27 Aug 2025 22:10:24 +0000 (UTC)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: David Hildenbrand <david@redhat.com>,
 	Bart Van Assche <bvanassche@acm.org>,
+	Doug Gilbert <dgilbert@interlog.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Alexander Potapenko <glider@google.com>,
@@ -94,9 +95,9 @@ Cc: David Hildenbrand <david@redhat.com>,
 	wireguard@lists.zx2c4.com,
 	x86@kernel.org,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH v1 29/36] scsi: scsi_lib: drop nth_page() usage within SG entry
-Date: Thu, 28 Aug 2025 00:01:33 +0200
-Message-ID: <20250827220141.262669-30-david@redhat.com>
+Subject: [PATCH v1 30/36] scsi: sg: drop nth_page() usage within SG entry
+Date: Thu, 28 Aug 2025 00:01:34 +0200
+Message-ID: <20250827220141.262669-31-david@redhat.com>
 In-Reply-To: <20250827220141.262669-1-david@redhat.com>
 References: <20250827220141.262669-1-david@redhat.com>
 Precedence: bulk
@@ -112,27 +113,28 @@ It's no longer required to use nth_page() when iterating pages within a
 single SG entry, so let's drop the nth_page() usage.
 
 Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Cc: Doug Gilbert <dgilbert@interlog.com>
 Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- drivers/scsi/scsi_lib.c | 3 +--
+ drivers/scsi/sg.c | 3 +--
  1 file changed, 1 insertion(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0c65ecfedfbd6..d7e42293b8645 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -3148,8 +3148,7 @@ void *scsi_kmap_atomic_sg(struct scatterlist *sgl, int sg_count,
- 	/* Offset starting from the beginning of first page in this sg-entry */
- 	*offset = *offset - len_complete + sg->offset;
- 
--	/* Assumption: contiguous pages can be accessed as "page + i" */
--	page = nth_page(sg_page(sg), (*offset >> PAGE_SHIFT));
-+	page = sg_page(sg) + (*offset >> PAGE_SHIFT);
- 	*offset &= ~PAGE_MASK;
- 
- 	/* Bytes in this sg-entry from *offset to the end of the page */
+diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+index 3c02a5f7b5f39..4c62c597c7be9 100644
+--- a/drivers/scsi/sg.c
++++ b/drivers/scsi/sg.c
+@@ -1235,8 +1235,7 @@ sg_vma_fault(struct vm_fault *vmf)
+ 		len = vma->vm_end - sa;
+ 		len = (len < length) ? len : length;
+ 		if (offset < len) {
+-			struct page *page = nth_page(rsv_schp->pages[k],
+-						     offset >> PAGE_SHIFT);
++			struct page *page = rsv_schp->pages[k] + (offset >> PAGE_SHIFT);
+ 			get_page(page);	/* increment page count */
+ 			vmf->page = page;
+ 			return 0; /* success */
 -- 
 2.50.1
 
