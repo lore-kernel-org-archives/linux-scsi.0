@@ -1,84 +1,82 @@
-Received: from szxga02-in.huawei.com (szxga02-in.huawei.com [45.249.212.188])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE37925BEE7;
-	Wed, 27 Aug 2025 02:15:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.188
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48A3430CD98;
+	Wed, 27 Aug 2025 03:18:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756260904; cv=none; b=ul+tznfhuUiVwyMpiZMD9f8wrBFbIU/+m8iRPEOv1zx0myC8pbBkLmRIPK4un9dBZG5El0qLbMSPI2p7ML/XNLYLo9CDG2uvSxY7tl88y7SMqglt4d03Aht+RlDFJTvP+kWvpOLvjFnjfPZOOH4MVAY5qjhgkp393boHNuZSpRU=
+	t=1756264727; cv=none; b=e5pNku363BMJgfIBBSR03+pTtro4G9KeRj2+A2uSQpWNmM0HiJNxPoDn6S4qBaSRY5cIHdSwW+euFdw763CwRQ2Pojbxx/LYoeefvavt4Nxh+A3mSI4JTZo97umENpkMltUJwONwAGC2sYvFRMf/o6mEOFD29z98f1qDbAUzqO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756260904; c=relaxed/simple;
-	bh=FlxkxCmqZG6UN0Js21iWVeMu1t3W5dSBaknWCf2D5es=;
-	h=Subject:To:References:CC:From:Message-ID:Date:MIME-Version:
-	 In-Reply-To:Content-Type; b=txB9o+kXU+o29KbjSYfiEYkEXGtYAK7e2fKjjAVBs8dPZM34nyRsIimNreYO7kbTXlsJzVIQa5yiZ3t/87YonCPFUdb8I7Fg6QwMhBlU6bot1UtFjSKVo9FpzQcWmB0SeB6Sd8Jxb31HuxkSUFBgOhrDbXfXwJTUedmfpJFUKVE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.188
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=h-partners.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
-Received: from mail.maildlp.com (unknown [172.19.162.254])
-	by szxga02-in.huawei.com (SkyGuard) with ESMTP id 4cBSfj5vY4zPqTy;
-	Wed, 27 Aug 2025 10:10:21 +0800 (CST)
-Received: from kwepemh200005.china.huawei.com (unknown [7.202.181.112])
-	by mail.maildlp.com (Postfix) with ESMTPS id 03F0F180485;
-	Wed, 27 Aug 2025 10:14:58 +0800 (CST)
-Received: from [10.67.120.126] (10.67.120.126) by
- kwepemh200005.china.huawei.com (7.202.181.112) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 27 Aug 2025 10:14:57 +0800
-Subject: Re: [PATCH 0/4] scsi: hisi_sas: Switch to use tasklet over threaded
- irq handling
-To: Jason Yan <yanaijie@huawei.com>, Bart Van Assche <bvanassche@acm.org>,
-	<martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>
-References: <20250822075951.2051639-1-liyihang9@h-partners.com>
- <f02e9bb8-3477-4fa7-8b20-72bd518407ed@acm.org>
- <2f2e5534-a368-547d-dedf-78f8ca2fc999@h-partners.com>
- <41077713-8119-4898-8307-731a0d8f346e@huawei.com>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
-	<linuxarm@huawei.com>, <liuyonglong@huawei.com>, <prime.zeng@hisilicon.com>,
-	Yihang Li <liyihang9@h-partners.com>
-From: Yihang Li <liyihang9@h-partners.com>
-Message-ID: <58f31c71-1d70-e763-45b4-66b4778ba028@h-partners.com>
-Date: Wed, 27 Aug 2025 10:14:56 +0800
-User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64; rv:45.0) Gecko/20100101
- Thunderbird/45.7.1
+	s=arc-20240116; t=1756264727; c=relaxed/simple;
+	bh=4hE1oU+4pTsfvlqMOOtDJyxVzsrXq+9cfnki53nuljc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=FN5SOCh8Oc4eLyxYgCoQ1Pmi1JQl1tZdQDRDaM07AOloNewKcA1570bLIOPjN28LGncyEl+MrQnbAsTq7zqncpkyzrWr4HrtfIf+NwYkkcSThRJHTwnBpIhb4TUTynQOoAdi3fbGmP7jv7Y28tQV3OcMsJJ+OUfEcKPp5HVxkN8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=iNvjIy7z; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="iNvjIy7z"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cBV9c0ljGzlgqyS;
+	Wed, 27 Aug 2025 03:18:44 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1756264722; x=1758856723; bh=LOEdC127eBsOZiHvCgEzALfT
+	+5Y8etm3iu37IW8m95Y=; b=iNvjIy7zqXJgv/8b7uPw4N9+++8iKyMvyCOoqm4C
+	767ecvmd/crtU+DEADsGQ5wkZ0fhPDa+oTBwCk/4R1dxmroHCR+9Y3ZluDwe8sIK
+	m7OHBJewJLYZmZc44259a6MAaJdlm1zmum/cpWWx24zXS7c9ffX1V7s3DsnN4ZwO
+	bBMOV4ydIwQdCuN+MbPefUyUq3KPgOZ3iGiNZ2FqMO4hnHtNdxBuq47okzBN6O00
+	bCGRMA/wXv9fv9GUc10Z+OV/2MLD7b6VhO2Wmc3bQ4O6owclJIzj4PaUQFLNci9k
+	e45/FcNbfU/VikkmnW6MnOFyPBOomRkRIpIGXAIOX9D7yQ==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id h2E81GhPXYB6; Wed, 27 Aug 2025 03:18:42 +0000 (UTC)
+Received: from [172.20.6.188] (unknown [208.98.210.68])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cBV9R6XkQzlgn8k;
+	Wed, 27 Aug 2025 03:18:35 +0000 (UTC)
+Message-ID: <bfdffd81-d844-4984-a8dd-ffad3e906f96@acm.org>
+Date: Tue, 26 Aug 2025 20:18:29 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-In-Reply-To: <41077713-8119-4898-8307-731a0d8f346e@huawei.com>
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: kwepems500001.china.huawei.com (7.221.188.70) To
- kwepemh200005.china.huawei.com (7.202.181.112)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 0/4] scsi: hisi_sas: Switch to use tasklet over threaded
+ irq handling
+To: Yihang Li <liyihang9@h-partners.com>, martin.petersen@oracle.com,
+ James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+ linuxarm@huawei.com, liuyonglong@huawei.com, prime.zeng@hisilicon.com
+References: <20250822075951.2051639-1-liyihang9@h-partners.com>
+ <f02e9bb8-3477-4fa7-8b20-72bd518407ed@acm.org>
+ <2f2e5534-a368-547d-dedf-78f8ca2fc999@h-partners.com>
+ <62a58038-75da-4976-aec7-016491437735@acm.org>
+ <f996d9cd-7be8-876e-680a-acf842afed5b@h-partners.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <f996d9cd-7be8-876e-680a-acf842afed5b@h-partners.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Hi, Jason
+On 8/26/25 7:11 PM, Yihang Li wrote:
+> In the interrupt thread context, the main tasks are handling abnormal I/O
+> and calling.task_done()->scsi_done(). I believe these tasks are not
+> suitable for execution in the interrupt context.
 
-On 2025/8/26 16:47, Jason Yan wrote:
-> 在 2025/8/25 9:42, Yihang Li 写道:
->> Hi Bart,
->>
->> On 2025/8/22 23:17, Bart Van Assche wrote:
->>> On 8/22/25 12:59 AM, Yihang Li wrote:
->>>> We found that when the CPU handling the interrupt thread is occupied by
->>>> other high-priority processes, the interrupt thread will not be scheduled.
->>>> So there is a change to switch the driver to use tasklet over threaded
->>>> interrupt handling.
->>> Tasklets have severe disadvantages and hence their removal has been
->>> proposed several times. See e.g. https://lwn.net/Articles/960041/.
->>> There must be a better solution than switching to tasklets.
->>>
->>
->> Thanks you for your reply. I will consider some other solution.
->> Additionally, do you have any good suggestions?
-> 
-> It seems the official replacement of tasklets is WQ_BH. However there are very few users now. I'm not sure if the stability and performance can meet our requirements.
-> 
-
-Yes, so I will first attempt to modify it using WQ_BH,
-and after thorough testing and verification,
-I will report the solution to everyone.
+Most code that can be used in tasklet context is also safe to use in 
+interrupt context. Does this patch series complete I/O requests from
+tasklet context? Does that mean that it is also possible to complete
+I/O requests from interrupt context? Or am I perhaps missing something?
 
 Thanks,
 
-Yihang.
+Bart.
