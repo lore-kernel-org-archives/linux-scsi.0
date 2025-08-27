@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0CCC0319848
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 22:09:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A23EE31A554
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 22:10:01 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756332586; cv=none; b=fKMAnqRifrBdCXgQ7TG5QtMOiGgPq3ddc7Bdn+PZS+d49eHXLqbRCuYN7EoySOudtl/pylP5IPZ5vklUzmH2xAmr8/hOgkq8nb3wEbrJv9+Igi5X2+TYfbICyHUqw7+4yeypulttX/NjXhmb6JhQIypf+VBc96qVDAZL3obgp04=
+	t=1756332603; cv=none; b=jxEsDt08OKkQyvLDNDPgYNrodm/BZD3HwGmGNNhN+ZsZd1zMZqiGR20iD/FUtr+HQ/2oJI4YXE4eqcyZFZnKDzX2cWjJ7j7FDwDi3eXTpbhFr+09b8+psgrSDz9O5DfDw/pDFrFLtlIUqV8bMpPK0xfhMAssZaTyJYmlW7b7dPI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756332586; c=relaxed/simple;
-	bh=vikAjgMEfu34bB+DcMPi8QXprFk9ySNOBn+h2WXbfDc=;
+	s=arc-20240116; t=1756332603; c=relaxed/simple;
+	bh=N1v9UA/QRYGQm6CSj/DvrAk3dhh2ai3p0H8BW+jGGK4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=CRV4Co9mf/W4EcMKGeWEb0vC0sWiRj9OFmcCxE2Ewh5GhYaFmlHE3HfN6YQjHU93LolVY9NcFCJZ4nWYDT8YBzUxEvY9oFiUaj3cIrvEOGsx9o+LOqJovT8P00pLVhvZnVm2AWl+DttQND3DUM5rYx//q1NhIuOuE0Fqk+20k9Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QDPF+yu/; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=j3xD5iNf55Cers9p04qAB5h3v6uy3d5Ebk2OATITgStVBoboBFiLGMCfAPny8glzrjrKbFUKaqMu27K5Xk6n5eUZvKdzLZibPc9jsaQYj+UvLjsKTITOstfOb6cVBB0lUXY7OCmcB42fwTBzKChAMegtF+fuudS17K9lvVkuhEE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Xlo4f4Wp; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QDPF+yu/"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Xlo4f4Wp"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756332583;
+	s=mimecast20190719; t=1756332600;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=8SUmSf66LiCJvVJzeEx0UA2HTOESqflB/UZ9jC2+86E=;
-	b=QDPF+yu/zCyx63L61fjkPKi3muSJmzNjyOxhLCTnEEWgN74F3ZPMTJMkqKiEQxv/8zIsO1
-	yN41oHw8iy2Oxjic25wQhL5QMOE4oT13dJLMU1prFCYgygTpU1Vr40cPD9MJ75iJXgeGBO
-	jKUT0gvCAmilIaWI2Sqqy+R+3hLDwNo=
-Received: from mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+	bh=GXg5sKb3LQ8Ovlzb+xXgvQsFzOeAfDPZ/pDh6HDj700=;
+	b=Xlo4f4WpByFIKvloR9wPp5yDaO4tLLMzZrbhjMspKAeuTmk4pjHeBu142gbIEa5DYTZVfw
+	0nkguwp+ON1hn98kXEbfnyrUEoC/RSdsWlVf5a+nTn4AuDUO70PpT1cI7AJn5TqbL3GVun
+	c55NMCXpgPjUwhKIqUsGawo22Mn9YP4=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-638-wuVJZl_PPm-kz40j0XhWgA-1; Wed,
- 27 Aug 2025 18:09:38 -0400
-X-MC-Unique: wuVJZl_PPm-kz40j0XhWgA-1
-X-Mimecast-MFC-AGG-ID: wuVJZl_PPm-kz40j0XhWgA_1756332573
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-474-6glRl4KNPgiaFeNg7_zkYg-1; Wed,
+ 27 Aug 2025 18:09:55 -0400
+X-MC-Unique: 6glRl4KNPgiaFeNg7_zkYg-1
+X-Mimecast-MFC-AGG-ID: 6glRl4KNPgiaFeNg7_zkYg_1756332590
 Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-02.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 006A91956095;
-	Wed, 27 Aug 2025 22:09:33 +0000 (UTC)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id F370918002C4;
+	Wed, 27 Aug 2025 22:09:49 +0000 (UTC)
 Received: from t14s.redhat.com (unknown [10.22.80.195])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C1B9F30001A1;
-	Wed, 27 Aug 2025 22:09:16 +0000 (UTC)
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 9186830001A1;
+	Wed, 27 Aug 2025 22:09:33 +0000 (UTC)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: David Hildenbrand <david@redhat.com>,
@@ -94,9 +94,9 @@ Cc: David Hildenbrand <david@redhat.com>,
 	wireguard@lists.zx2c4.com,
 	x86@kernel.org,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH v1 26/36] mspro_block: drop nth_page() usage within SG entry
-Date: Thu, 28 Aug 2025 00:01:30 +0200
-Message-ID: <20250827220141.262669-27-david@redhat.com>
+Subject: [PATCH v1 27/36] memstick: drop nth_page() usage within SG entry
+Date: Thu, 28 Aug 2025 00:01:31 +0200
+Message-ID: <20250827220141.262669-28-david@redhat.com>
 In-Reply-To: <20250827220141.262669-1-david@redhat.com>
 References: <20250827220141.262669-1-david@redhat.com>
 Precedence: bulk
@@ -117,23 +117,38 @@ Cc: Alex Dubov <oakad@yahoo.com>
 Cc: Ulf Hansson <ulf.hansson@linaro.org>
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- drivers/memstick/core/mspro_block.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/memstick/host/jmb38x_ms.c | 3 +--
+ drivers/memstick/host/tifm_ms.c   | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/memstick/core/mspro_block.c b/drivers/memstick/core/mspro_block.c
-index c9853d887d282..d3f160dc0da4c 100644
---- a/drivers/memstick/core/mspro_block.c
-+++ b/drivers/memstick/core/mspro_block.c
-@@ -560,8 +560,7 @@ static int h_mspro_block_transfer_data(struct memstick_dev *card,
- 		t_offset += msb->current_page * msb->page_size;
+diff --git a/drivers/memstick/host/jmb38x_ms.c b/drivers/memstick/host/jmb38x_ms.c
+index cddddb3a5a27f..79e66e30417c1 100644
+--- a/drivers/memstick/host/jmb38x_ms.c
++++ b/drivers/memstick/host/jmb38x_ms.c
+@@ -317,8 +317,7 @@ static int jmb38x_ms_transfer_data(struct jmb38x_ms_host *host)
+ 		unsigned int p_off;
  
- 		sg_set_page(&t_sg,
--			    nth_page(sg_page(&(msb->req_sg[msb->current_seg])),
--				     t_offset >> PAGE_SHIFT),
-+			    sg_page(&(msb->req_sg[msb->current_seg])) + (t_offset >> PAGE_SHIFT),
- 			    msb->page_size, offset_in_page(t_offset));
+ 		if (host->req->long_data) {
+-			pg = nth_page(sg_page(&host->req->sg),
+-				      off >> PAGE_SHIFT);
++			pg = sg_page(&host->req->sg) + (off >> PAGE_SHIFT);
+ 			p_off = offset_in_page(off);
+ 			p_cnt = PAGE_SIZE - p_off;
+ 			p_cnt = min(p_cnt, length);
+diff --git a/drivers/memstick/host/tifm_ms.c b/drivers/memstick/host/tifm_ms.c
+index db7f3a088fb09..0b6a90661eee5 100644
+--- a/drivers/memstick/host/tifm_ms.c
++++ b/drivers/memstick/host/tifm_ms.c
+@@ -201,8 +201,7 @@ static unsigned int tifm_ms_transfer_data(struct tifm_ms *host)
+ 		unsigned int p_off;
  
- 		memstick_init_req_sg(*mrq, msb->data_dir == READ
+ 		if (host->req->long_data) {
+-			pg = nth_page(sg_page(&host->req->sg),
+-				      off >> PAGE_SHIFT);
++			pg = sg_page(&host->req->sg) + (off >> PAGE_SHIFT);
+ 			p_off = offset_in_page(off);
+ 			p_cnt = PAGE_SIZE - p_off;
+ 			p_cnt = min(p_cnt, length);
 -- 
 2.50.1
 
