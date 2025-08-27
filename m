@@ -1,54 +1,59 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1498D28695
-	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 00:09:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3459235966
+	for <linux-scsi@vger.kernel.org>; Wed, 27 Aug 2025 00:09:24 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756253355; cv=none; b=NkOrFLENPDAsp3RIHWB9/42jljj+Or/I2gn4NaH020zz7OUZxm2vw6fwiaQL75j82QeWO3VXKe3acLTD6Ks2a/IBIXUbM6t47peW3oapWTuRaHwB4x5J0sSM5dX6TWiToIn1Y4nscd7EIx5xikSRj5U0Mch/eDqB8JUsjJz1gdM=
+	t=1756253366; cv=none; b=CMCcA6spIipqLqDvAu4suaeNJQEvdFfnYv6GOaS8k5l2r7tChTurgEmLRHhylS3a7K0AV9NrNd8lATpiByZ8OOAkcCNgjgQEV7k/W5PrRUw4DUzq/opkTbOIaUINf0F+Pl9ISfl+0NjyzQXwTxIE3HTZka8yg9XhlM4KHqtZTU0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756253355; c=relaxed/simple;
-	bh=NNopB7HsCw5hHHmASnR7hShJanHtgx8YYzdYd7VsIZY=;
+	s=arc-20240116; t=1756253366; c=relaxed/simple;
+	bh=DpQSRniKPS9kGlVlxtRyDsCfVsFJDoaaya2P7Ytimcc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JpX1re98IeoLCSYPFZ68KC/NjnuXK0fiwSpiooq/bMQoOnuCF1KwfaLJqulO/LpKB3fjDx5zwbkhM8iwGOYLF2QnXS9OPDuLfK3MQ12ypJdsqk9pWKmBeUBXmbM490ZWv/AyCYak45L1fddXDvV/Kig+82nBGsH5BV29IVo673s=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=sHPmu1Qc; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=q4PblXfTR7sLCFzeMSSNtG/Q2//Lr6wLv7YGOxSnQF4TkVeyO+QaN/f2KGhBaiHw8KFJ71FZotIlz3ouvOWPrKRZiFNEFsWXjDWsFe0rgPZHFcKjswVU0C8HPBoUgZLwYy7hMuyYKbf5r5h8sAmxzM4GAz4S5LVCbx+8DrN7No8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WCHtyrUx; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="sHPmu1Qc"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WCHtyrUx"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cBPyx0rrWzm174B;
-	Wed, 27 Aug 2025 00:09:13 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cBPz81Xdlzm1742;
+	Wed, 27 Aug 2025 00:09:24 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1756253351; x=1758845352; bh=yDfGy
-	WS/uTQKnUHYuHZXSD3qnaDGCdN1IM8f2ZiCM90=; b=sHPmu1QcrkavyOcSG2CnC
-	JztKf6c00lpiDRrq8eU8m84hkabsuq3J8VX1J76tAAsXMeQymDYY9rYaNQU+O5gK
-	ou7ekycg9p2vfm6RY9/kfeJp1nwszjcc8X5kSoWN3/8VRMDFNibPAmdAocnXQFd5
-	4fgTrcp6TN3M55uNUQHRQ5uIZZp91Lxc0HPGuFGeiRR5RPdJKGHg6G30qBjnoDTp
-	7f2UD+Zkidfi5sj9wxu/22Kw7nF6u7pVUmB22OOALuKEWxber0OWl2piiq/4GYVr
-	kcYCBBq1YzPUhaPKzppTyHjYSTIK27jdKTCoUcgnJH+c3UO4TnnNZYEGFegb03FM
-	Q==
+	:received:received; s=mr01; t=1756253362; x=1758845363; bh=DfbNJ
+	Mp+Yu/k05y74HWGTPkAbeKT6hU9F4/+u0XP2lQ=; b=WCHtyrUxYw/c5PKH4rGtV
+	Xj+jvvGXHogIGI1YSuTZTFgzKE1AyfAEj0CayJNXt6BIhW8Qg0lzEiTVWHjPMWqD
+	IIRZC3pVQKkT/aBvFnPs9bSpD6HPovm8vM2yEsb2ExafmSIhX4RWukDs07UIvJLS
+	OhsO3woBh6BVrh4vh9VNI9G3PhKmfellz8S4cMeN4DRMsho3WcOBlytRlDwaSC2D
+	EfqxUHBXV0c+bEEJa/rh9v6+GmC3ruFsJjuVJTaQdux7ousAIpLqr3x7Hmx1PDcz
+	E2Oz5NIWnYznM+i2zlkBGUr6A5kEtfGQAov/AZm5nMIKJ6YiR8JmXETo7sVQh6+K
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id F50pOVCj_Xj0; Wed, 27 Aug 2025 00:09:11 +0000 (UTC)
+ id dfIz3TCsm6MY; Wed, 27 Aug 2025 00:09:22 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cBPys0Dfgzm1742;
-	Wed, 27 Aug 2025 00:09:08 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cBPz02Td5zm174D;
+	Wed, 27 Aug 2025 00:09:15 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v3 06/26] scsi_debug: Set .alloc_pseudo_sdev
-Date: Tue, 26 Aug 2025 17:06:10 -0700
-Message-ID: <20250827000816.2370150-7-bvanassche@acm.org>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	"ping.gao" <ping.gao@samsung.com>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	Chenyuan Yang <chenyuan0y@gmail.com>,
+	Al Viro <viro@zeniv.linux.org.uk>
+Subject: [PATCH v3 07/26] ufs: core: Move an assignment
+Date: Tue, 26 Aug 2025 17:06:11 -0700
+Message-ID: <20250827000816.2370150-8-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.261.g7ce5a0a67e-goog
 In-Reply-To: <20250827000816.2370150-1-bvanassche@acm.org>
 References: <20250827000816.2370150-1-bvanassche@acm.org>
@@ -60,25 +65,28 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Make sure that the code for allocating a pseudo SCSI device gets triggere=
-d
-while running blktests.
+Prepare for introducing a WARN_ON_ONCE() call in ufshcd_mcq_get_tag() if
+the tag lookup fails.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_debug.c | 1 +
- 1 file changed, 1 insertion(+)
+ drivers/ufs/core/ufs-mcq.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 90943857243c..83bb84ea2ea4 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -9438,6 +9438,7 @@ static const struct scsi_host_template sdebug_drive=
-r_template =3D {
- 	.module =3D		THIS_MODULE,
- 	.skip_settle_delay =3D	1,
- 	.track_queue_depth =3D	1,
-+	.alloc_pseudo_sdev =3D	1,
- 	.cmd_size =3D sizeof(struct sdebug_scsi_cmd),
- 	.init_cmd_priv =3D sdebug_init_cmd_priv,
- 	.target_alloc =3D		sdebug_target_alloc,
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 1e50675772fe..4eb4f1af7800 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -303,9 +303,10 @@ static void ufshcd_mcq_process_cqe(struct ufs_hba *h=
+ba,
+ 				   struct ufs_hw_queue *hwq)
+ {
+ 	struct cq_entry *cqe =3D ufshcd_mcq_cur_cqe(hwq);
+-	int tag =3D ufshcd_mcq_get_tag(hba, cqe);
+=20
+ 	if (cqe->command_desc_base_addr) {
++		int tag =3D ufshcd_mcq_get_tag(hba, cqe);
++
+ 		ufshcd_compl_one_cqe(hba, tag, cqe);
+ 		/* After processed the cqe, mark it empty (invalid) entry */
+ 		cqe->command_desc_base_addr =3D 0;
