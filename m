@@ -1,66 +1,48 @@
-Received: from mail-pl1-f173.google.com (mail-pl1-f173.google.com [209.85.214.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2AF8F322778;
-	Thu, 28 Aug 2025 16:44:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B880C22A4D5;
+	Thu, 28 Aug 2025 16:45:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756399471; cv=none; b=DsQBPvUcpISkJZ4mkVM323IGs7r69B9TjMcIo7ArRgBvFg3NZlaiSt5PwoNweXpqZyMCaxQY6y1jOYVhYkG2K8DqcTjJJcyJoHt/8xY72wwxYdfnP3STHr1y6mNfUMJiQaDuX2WFqoHq+5nh8gDs7OLw2KV5NbegtEBxm91sSvQ=
+	t=1756399533; cv=none; b=HckIpRBDeU9+PS9FPDyqFCwE/q/YOOoxLJBOnWC6bLRANp7BVXB0rOihVdVR8Uzrkolb3Kuhp7Xk4aZxRxYhwiRJXavX2KiZmDzCKa5F11t+671rwqbXJyhbQxMgJtZkIxEXoduYqnb0RCNIO5ucw0FSJREE5L7UsrAtFCe8n4g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756399471; c=relaxed/simple;
-	bh=IzMsAG1GZ4aAkOguc3o9/Q9LDoF5c5V+y4FmJ36iQtE=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ftVbVvphkn0ZiXZ9DD4CS1GjBgh1Zz4uio7vvYrTzb+8YXVde3tt1Bk1Oq7WBvRIeWqeib6GgSPpEG9XqCni4TCo+y8bD3ClC3QIG/p3X6u6XHohbgcn3gDy4TLEot8gDc627SAKdCfUuuE7qhBDx2C4XDGGNgWu5g4xXi52WQg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Jm/XY8nS; arc=none smtp.client-ip=209.85.214.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1756399533; c=relaxed/simple;
+	bh=ybJ1f8sBP5axyBxUa6IjKhhSOFJ+7mVTnYkNAwqNI6U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=tEQdO4yK/6AY30swd0xTT9ydv1PKHOOa4IVgrStIst5nUIfIu0o7qnr6ztxsMKX7ZnV0y8n3Fat6912fFQshSXVPepNLZ6Ldua2g0IP3OElHCs6J84sleg1/jE6j4nr+zEPAHK87dJ+/AzZxcCdcOeNSwlCpqZG44ASWmkkoL/A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Gp3eUQDr; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Jm/XY8nS"
-Received: by mail-pl1-f173.google.com with SMTP id d9443c01a7336-24879ed7c17so9042495ad.1;
-        Thu, 28 Aug 2025 09:44:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756399469; x=1757004269; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=zshhWi5YHiW5uPIrkm590EqnrvqYM5zhKkyNgQFwd6Q=;
-        b=Jm/XY8nSW/kVfuHYujZpVULuVYijBIOnoLDGz0+cTITyUL0eeGQkPPh660pXNyGxj+
-         iPdueXONayN3a/S0enK+/uIntbUVg8ElzJ1/pkK05WKwmm9S5SthY++4oUHr1Kdlw3Kt
-         FpmcLsTP1ROIARObWVmStV/aDkdA3WvPUTAw53IYXaDDxS3c+VQwXLSR37MDD/Oq/Unz
-         v2FoklYru6NQeTb6Xzc4EGu8MVah1HQUSxi9ibKbK70qsro9pNXy0XFX5EOUaFQLx1/u
-         5BuS9nAeanZocTSaSYdPdD0DyDKMXZjl0NXJozB7E6EdsHA3QF9wyQBiVtMJ6PXPYXuE
-         cGvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756399469; x=1757004269;
-        h=content-transfer-encoding:in-reply-to:from:references:cc:to
-         :content-language:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=zshhWi5YHiW5uPIrkm590EqnrvqYM5zhKkyNgQFwd6Q=;
-        b=nUioQtj9mE95vzx8jnWlGQckq3kkwGugrHnS3du0zEyqRkLaKUL0jmbX5hDCRj1n9h
-         0DbdgwL6jaso5Dh1Wk34BCgD4OpvVIoC1l1u7K/4S6mvQIczRMlgoQlLOs6sDDXSxLoV
-         yOa+qIEg1u0Hs3dQkItvPmd/6jpgvRbSQkI+c/8hkAn7IrxEGbfSR65mGGe6QZqrDLiC
-         psReVzEEO0F6S8Naquo7aBB6EC1o7bH0iBzGhnamNIEWudAks1MR3H0601MP0zf7Q4m+
-         KTRs8paHu9o8FZDUxEyh3vd1JgKje9ay+GM9bDHAAi6gxNiJXw3DaoumCAEmHES8GAg0
-         PO2g==
-X-Forwarded-Encrypted: i=1; AJvYcCWavzPOJSlxp7qmI44FF5308ThZHETScc3NFH7dIVQG73RT9F6C97jlpiifjk6+5vvqkP+e+Hpmo/ViGqQ=@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxsu/SjVP0M+p2S9w3JXD/k8tvRuYAHn9rlcxSiSJI3usvrgHF5
-	a8q7irzmXKxjx0c3rpkdf4li0+D46RD6DCMrNhcV3HnfyQynru5XT4+uLz4YKaKubDU=
-X-Gm-Gg: ASbGnct0F4WvaN2Yu8pKW3zt3Y/5g97AcrndyyL22vfOqlcdnGnxR6y7GRjoaRpT+Q/
-	RWdE2CpkhPB/Zwe5Y0rF47D3w/SMD6EoRvqoeZvOBgiChm6frHEzh154CluNCbNhdZpm0zRpMCc
-	/wPTZGF2CmKaAXk1SvJ83mBNgP6OJjGaw/3psm81uuC0aFW4IN5qUjkbwjH6HgX3CtniNoI++mo
-	dlPTBJyXsgZngVjh9TyT81ua/SHg5Hpg/tbuN1SUGrWtsGKrWLUeeZ90JYK8IzYU4AJ8Q8d7kO4
-	/xdgbZ/rnaxgZv6nPrwV5avO227n4G3Fz+HPHlKUt2RNXf/wD/jgyGAT4x3Mmzc9lJAETfRlqvt
-	d4P09M3c1hmQE/gLyiPqz95MjfAQm/X+NLOqtD00kGIfyQacnYU6aa300Z68v6nngjfOhyg0MaI
-	Yh5ZRvrnY=
-X-Google-Smtp-Source: AGHT+IG4WfkEPA3lOee3Ow8olkw2rjrtL+9dQ/qGp9hlNjdHLoNKXq5t7w7MtSfbA/XPD3EHiKiuFw==
-X-Received: by 2002:a17:903:2ecb:b0:245:f1bb:9bf9 with SMTP id d9443c01a7336-2462ee2bc3cmr349265055ad.12.1756399469365;
-        Thu, 28 Aug 2025 09:44:29 -0700 (PDT)
-Received: from [192.168.1.43] (c-24-5-244-16.hsd1.ca.comcast.net. [24.5.244.16])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-249065ad59fsm96085ad.123.2025.08.28.09.44.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 28 Aug 2025 09:44:28 -0700 (PDT)
-Message-ID: <50f040d2-ebf8-46d5-90a9-d102e38791a8@gmail.com>
-Date: Thu, 28 Aug 2025 09:44:27 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Gp3eUQDr"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57SEOjrX030104;
+	Thu, 28 Aug 2025 16:45:19 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	G+zrw1XxE5Jzdovbrl0Kr12pWeJHN+sdic6+TdiAkcY=; b=Gp3eUQDry5LNXElk
+	LialPHIcKeDtxqa2HTryv9BzHLxg2bV7kQ0+sLhBNdCANkwggG5AIPKhfbZowaLt
+	voC+xXnA+EXrj0e8XkQcSZhm54erjX+m+Qb4JcM4kBoxHr+oMBO/xE3wrFYrldfg
+	rhWQLMSmiP69wXJYteLmkqvmAzxnoEgUGVeWsh6GKW8CcXQ+IZhOdiF2zFe/H5cq
+	oTKLJVo954iIuGwrS875hgfAc2AeGtGR8hBcp/obvILD00N9gYgkLVKg5AjZTez7
+	CM1HOeEP/LWlEQPAPjbvo7Xwr8BmyLZL2WRtu+hFEYL9w7JVqiBxSkfNAwqKM9Fo
+	ywxf9g==
+Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48q5up0tbq-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 28 Aug 2025 16:45:19 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 57SGjHwY030600
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Thu, 28 Aug 2025 16:45:18 GMT
+Received: from [10.218.4.141] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.24; Thu, 28 Aug
+ 2025 09:45:13 -0700
+Message-ID: <8d705694-498a-4592-b93a-7df6a1dd5211@quicinc.com>
+Date: Thu, 28 Aug 2025 22:15:10 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,77 +50,95 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RESEND] scsi: qla2xxx: Use secs_to_jiffies() instead of
- msecs_to_jiffies()
+Subject: Re: [PATCH V3 1/4] ufs: dt-bindings: Document gear and rate limit
+ properties
+To: Bart Van Assche <bvanassche@acm.org>, <alim.akhtar@samsung.com>,
+        <avri.altman@wdc.com>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+        <conor+dt@kernel.org>, <mani@kernel.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+References: <20250826150855.7725-1-quic_rdwivedi@quicinc.com>
+ <20250826150855.7725-2-quic_rdwivedi@quicinc.com>
+ <9944c595-da68-43c0-8364-6a8665a0fc3f@acm.org>
 Content-Language: en-US
-To: Thorsten Blum <thorsten.blum@linux.dev>,
- Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250828161153.3676-2-thorsten.blum@linux.dev>
-From: Himanshu Madhani <hmadhani2024@gmail.com>
-In-Reply-To: <20250828161153.3676-2-thorsten.blum@linux.dev>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+In-Reply-To: <9944c595-da68-43c0-8364-6a8665a0fc3f@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: OIZbKr9G7_QKE2ZRxphkiSdihz1WdmEw
+X-Proofpoint-ORIG-GUID: OIZbKr9G7_QKE2ZRxphkiSdihz1WdmEw
+X-Authority-Analysis: v=2.4 cv=JJo7s9Kb c=1 sm=1 tr=0 ts=68b0879f cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10
+ a=1l4myg9UuvIpqwvpMjoA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIzMDAzMSBTYWx0ZWRfX9bjh0rHnDqbH
+ CTKRTtbPPV3MLRG+bO747gUjE9Cl8bfKAFK32jbRkmxk6frppPoH1mC/as31a5uVQMGyfynlkpf
+ C16WF205BOKDTOKfNMT4vVe/nxQjIdqJIq0Xwt92/1fXwz3b7MmDgdqYYITZIHgVVW7/VIEf7pE
+ McgDLJrPpI+Qrte78KAuBmFI144BW89649rvRltcBCEA5VT8bmWTJ6+ccb7qNHUM/lBC8v6Cte6
+ p5XaLbeyAUfI3bxq9pP1t+vdNqMMUMhfHbAhRtoHeM4wCtyMQUWqrMj1vftzZeXV3d31LMPXIXY
+ x+ifwv2dlWK/sbltGashPoPo/GffC+NxesPhEKQjWBWzWJIiV6oxY0z5iFe/QGqsCV7PZPzo9Gj
+ qCooHLb7
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-28_04,2025-08-28_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 adultscore=0 bulkscore=0 spamscore=0 impostorscore=0
+ malwarescore=0 clxscore=1015 priorityscore=1501 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508230031
 
-On 8/28/25 9:11 AM, Thorsten Blum wrote:
-> Use secs_to_jiffies() instead of msecs_to_jiffies() and avoid scaling
-> 'ratov_j' to milliseconds.
+
+
+On 26-Aug-25 9:05 PM, Bart Van Assche wrote:
+> On 8/26/25 8:08 AM, Ram Kumar Dwivedi wrote:
+>> +  limit-hs-gear:
+>> +    $ref: /schemas/types.yaml#/definitions/uint32
+>> +    minimum: 1
+>> +    maximum: 5
+>> +    default: 5
+>> +    description:
+>> +      Restricts the maximum HS gear used in both TX and RX directions,
+>> +      typically for hardware or power constraints in automotive use cases.
 > 
-> No functional changes intended.
+> The UFSHCI 5.0 spec will add gear 6 soon. So why to restrict the maximum
+> gear to 5?
 > 
-> Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
-> ---
->   drivers/scsi/qla2xxx/qla_bsg.c | 4 ++--
->   drivers/scsi/qla2xxx/qla_os.c  | 8 ++++----
->   2 files changed, 6 insertions(+), 6 deletions(-)
+>> +  limit-rate:
+>> +    $ref: /schemas/types.yaml#/definitions/uint32
+>> +    enum: [1, 2]
+>> +    default: 2
+>> +    description:
+>> +      Restricts the UFS controller to Rate A (1) or Rate B (2) for both
+>> +      TX and RX directions, often required in automotive environments due
+>> +      to hardware limitations.
 > 
-> diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-> index 10431a67d202..ccfc2d26dd37 100644
-> --- a/drivers/scsi/qla2xxx/qla_bsg.c
-> +++ b/drivers/scsi/qla2xxx/qla_bsg.c
-> @@ -3106,8 +3106,8 @@ static bool qla_bsg_found(struct qla_qpair *qpair, struct bsg_job *bsg_job)
->   	switch (rval) {
->   	case QLA_SUCCESS:
->   		/* Wait for the command completion. */
-> -		ratov_j = ha->r_a_tov / 10 * 4 * 1000;
-> -		ratov_j = msecs_to_jiffies(ratov_j);
-> +		ratov_j = ha->r_a_tov / 10 * 4;
-> +		ratov_j = secs_to_jiffies(ratov_j);
->   
->   		if (!wait_for_completion_timeout(&comp, ratov_j)) {
->   			ql_log(ql_log_info, vha, 0x7089,
-> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-> index d4b484c0fd9d..9a2f328200ab 100644
-> --- a/drivers/scsi/qla2xxx/qla_os.c
-> +++ b/drivers/scsi/qla2xxx/qla_os.c
-> @@ -1291,8 +1291,8 @@ qla2xxx_eh_abort(struct scsi_cmnd *cmd)
->   	       "Abort command mbx cmd=%p, rval=%x.\n", cmd, rval);
->   
->   	/* Wait for the command completion. */
-> -	ratov_j = ha->r_a_tov/10 * 4 * 1000;
-> -	ratov_j = msecs_to_jiffies(ratov_j);
-> +	ratov_j = ha->r_a_tov / 10 * 4;
-> +	ratov_j = secs_to_jiffies(ratov_j);
->   	switch (rval) {
->   	case QLA_SUCCESS:
->   		if (!wait_for_completion_timeout(&comp, ratov_j)) {
-> @@ -1806,8 +1806,8 @@ static void qla2x00_abort_srb(struct qla_qpair *qp, srb_t *sp, const int res,
->   		rval = ha->isp_ops->abort_command(sp);
->   		/* Wait for command completion. */
->   		ret_cmd = false;
-> -		ratov_j = ha->r_a_tov/10 * 4 * 1000;
-> -		ratov_j = msecs_to_jiffies(ratov_j);
-> +		ratov_j = ha->r_a_tov / 10 * 4;
-> +		ratov_j = secs_to_jiffies(ratov_j);
->   		switch (rval) {
->   		case QLA_SUCCESS:
->   			if (wait_for_completion_timeout(&comp, ratov_j)) {
+> As far as I know no numeric values are associated with these rates in
+> the UFSHCI 4.1 standard nor in any of the previous versions of this
+> standard. Does the .yaml syntax support something like "enum: [A, B]"?
+Hi Bart,
 
-Looks okay.
+As per the MIPI UniPro spec:
 
-Reviewed-by: Himanshu Madhani <hmadhani2024@gmail.com>
+In Section 5.7.12.3.2, the hs_series is defined as:
+hs_series = Flags[3] + 1;
 
----
-Himanshu Madhani
+In Section 5.7.7.1, Flags[3] is described as:
+Set to ‘0’ for Series A and ‘1’ for Series B (PA_HSSeries).
+
+While issuing the DME command from the UFS driver to set the rate,
+the values 1 and 2 are passed as arguments for Rate A and Rate B
+respectively. Additionally, the hs_rate variable is of type u32.
+
+Thanks,
+Ram
+
+> 
+> Thanks,
+> 
+> Bart.
+
