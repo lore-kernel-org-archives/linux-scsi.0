@@ -1,94 +1,80 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f172.google.com (mail-yw1-f172.google.com [209.85.128.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE5D218E377;
-	Thu, 28 Aug 2025 18:27:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7DEF430CD84;
+	Thu, 28 Aug 2025 18:43:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756405672; cv=none; b=O/B0UQFNu5MzojZghA/IPksFZtMkHFeDtrEEmhGuLVdC/vpRm4AYns6N8YDF10zFUIYS0I78FkEUyOz7I6f0zGyOphw4PllIq4B8Wq/FUPMks6ahnNdIVGDWUXGBMYj4k5JBYtZj2xFKOVKclU8V+ikd6PpYi+zYPir3M5iwRRw=
+	t=1756406637; cv=none; b=bfUMCjHrwp2K+njuxmbGQRLdgG+bpb2V1+LgAFevO9O1wJu81fcumfBTDFDL82wTOHn9ZaNVm4Oowp68/JJz3MSjIWqkEE10WyLoF4R6YYeikPFKIYrK3J1PltoOZQ+HMpUM0L21dwrZUOfhIKhN+K1WGJqDuZ6ZZcX7gVNnq2g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756405672; c=relaxed/simple;
-	bh=18LdtOFXKOJg3DyeNVbctOmZ9oWQXbv1iQ5ztloYB9s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ARRUIo0O+EKfCaXM5/c266TnCsfjTEatzIKhw7QiNOG3suCwOCXS63RHi4BWp/Wfkx4bHnu3PbkueOBuSofnYtxB5MbclOneJ5s/b02/4uuI8Xc7K5W70z530kx9GRLLxfXA/BeHmLeG0nOWSRIo4J9nBu5HsTuoB4MJgiRLZE4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=j+SgAZgk; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1756406637; c=relaxed/simple;
+	bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=VjHmg+RvwbQKWAiaQDhDpDgc3Rh5+PrjmkrvEyGiNu9442kI9Lo5uBES4r//hBcB9BQ5s50aSfHN3F2wKxjIxxsWjT4i6hn44NssFm8tRh/xZU+VQapC6looEJC9hyA1RSUnV0amgaKDj60Vhq/9kHeEOvIEuXKctdrSZ2f0bFM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZfKw449y; arc=none smtp.client-ip=209.85.128.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="j+SgAZgk"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cCVJ56flyzm0yVg;
-	Thu, 28 Aug 2025 18:27:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1756405667; x=1758997668; bh=fCFTF+N52C0czaoE9/4vxFQB
-	xphUlPInr06EwfDDb9I=; b=j+SgAZgkMBU19DRwZPXuxMzFRgPi0POAgw0g/NOu
-	ReCp+FMIqntcO3eOksN1qDUl5NCoS0017rrgDPD/6Yf1LFzu7Fr29slzScEZyGts
-	cl/IUVU+VA/LcztImzJqzkTXiQ0Fh1wCszpK/YCPehSxeANj1qo6wfPTOUZoCVVW
-	rsKcxYumAfFjfhrFCnOuJ8mTeqKnCF8U2y8e9hQPsSHijwK/MRZ4W3oXQNDMHdrh
-	ebepTY2tD5081yAtDSWiTekuxuiKYr6pwptKSo7X9Ny8Wqo8YyG0EXSU7dzgRE3c
-	+MLI5ZvcETsj/vpLXFgjBG2pye0EIY1QgotGCWE8tNd+wg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id D9hLUZSu0D4v; Thu, 28 Aug 2025 18:27:47 +0000 (UTC)
-Received: from [172.20.6.188] (unknown [208.98.210.68])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cCVHq1FqPzm0yVV;
-	Thu, 28 Aug 2025 18:27:34 +0000 (UTC)
-Message-ID: <1824553d-a038-4ba8-941e-cad64875cb92@acm.org>
-Date: Thu, 28 Aug 2025 11:27:25 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZfKw449y"
+Received: by mail-yw1-f172.google.com with SMTP id 00721157ae682-71d6051aeafso10570587b3.2;
+        Thu, 28 Aug 2025 11:43:56 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1756406635; x=1757011435; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+        b=ZfKw449yFTzJQfQF6zMm62wpa07fDBROpxVboHH3cjh0/wtFFETzJ5YqlhFLmgPwk/
+         1+iy8wEWDVHcVoL7DlKWFc8Y57Sgo93iZN4YJ9/bZAXhLeXEKo0gjslzZz9R3WZEkrYs
+         ghmWK2skrardUa4X2PlsgP1vIpqgn7p0vkNsCoJuIbGS7h7fjBNCWevVtPJmaSIcJH/K
+         E+B4M5Q1ADg8EcY4Nkxy5bhcMQQMxwc+eg6JkDhvXmHaNRe8iHIBVFZWUZ2Kdj/W0kd3
+         531pXxQor7B9caOYCPVRAQ4SbdnRRVRcC1b7+mbPz69uu+C2nZodB0dKjE0eB5O/i9Ha
+         5qNQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756406635; x=1757011435;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
+        b=P9RTzvnBBL636L8+W06RRSZf7P3YZPM3VFFxDMxAEhMQ7vvZwHOtb6C/MMqjiM17SF
+         bBcAjVmHtOnQKV+IcW2L3kMoVWHxwPNp/E3FtP5VDoiURfM6MfodJkG/QRzZ26w+ggvw
+         UpsVRlhPGM+nYTizD//o5tg2AGd6WyyVaNal+mOIPBk6qFX1AIzEJcjfRvfg/2kiagY1
+         gpsjYlKOV4/5xMkZzDvQgCPr0UFKWC15fpStZAewLsHkBFO1kZujUdLaBM0nb2xj0SX0
+         OjLydFt8SZF2nmYxhJ+To1jOvZ/Rrhatx3k+mKnee9UXRxkV/g2yReHM0w70O1ZRkhoK
+         qjOw==
+X-Forwarded-Encrypted: i=1; AJvYcCUqFJNiAHxtmUrvldwFo73wDAU+8E8TtWrVrIwRGGUdGQTIAuqFgzAqz6V2WzMUB+Ygm4CyOH2ICMumGg==@vger.kernel.org, AJvYcCVlNcYX9nFXls0Yly+jZ0m+4Whq3ZC1N/jTPakLVxU1fpU2n5wfdPWSu7lLLbGvtOfZLZK3iu5ynNdjmd0=@vger.kernel.org, AJvYcCVliVGiF3ICZNv71RUvPE7hO1D3K7evp4yZ8HjPs3VzoRfw8sXx6YPyVp3X5M93Iq2ZNlKdq+HV@vger.kernel.org
+X-Gm-Message-State: AOJu0YxoMk6jK+HPUGVEPkDsEdPOzPP7mLd6eYgEYzlor+nsi8yOG5qX
+	baRthOUEVtBrqRg+Ce8nf1Jv3TrjgY6Xhn5+4FMYUBQCbX1VLwNlCdxzlAdYFGUfl2LjGZUdH1M
+	gpwmS0etoTeboLyNppu2CpSIDwqQDDRc=
+X-Gm-Gg: ASbGncvUXSBhiviwqesD/Cr0+ddYH6qzkDMcHrjAYbn1lutzuWNXDEsE8JFAxKyxuH/
+	819v5rTMxXTB3oxQ3e6tq+rzf+rAbcFFHcnW3yedxJ8CEHOZdm5R7XpiFsHAUbNEu48E/tqJCO1
+	ry5En4pDChbfXSwXaD3AjFNvEfkV8D9878LWMYJQ6mMG2KadprlT/KR4V9CBneER2iDuC7tp+Oh
+	flJc3R8
+X-Google-Smtp-Source: AGHT+IFy63WMeZNhOuRDVpfQOR+pfgibyhHVjJNYLVee/M+lcgwVVswCucuVjgttdjmHIXWzZf1LW1ffV+ApiOKukuY=
+X-Received: by 2002:a05:690c:4442:b0:720:bb3:ec31 with SMTP id
+ 00721157ae682-7200bb3f427mr206360037b3.47.1756406635372; Thu, 28 Aug 2025
+ 11:43:55 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 1/4] ufs: dt-bindings: Document gear and rate limit
- properties
-To: Krzysztof Kozlowski <krzk@kernel.org>,
- Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, alim.akhtar@samsung.com,
- avri.altman@wdc.com, robh@kernel.org, krzk+dt@kernel.org,
- conor+dt@kernel.org, mani@kernel.org, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
-References: <20250826150855.7725-1-quic_rdwivedi@quicinc.com>
- <20250826150855.7725-2-quic_rdwivedi@quicinc.com>
- <9944c595-da68-43c0-8364-6a8665a0fc3f@acm.org>
- <25844eea-a41c-4a36-b132-8824e629568d@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <25844eea-a41c-4a36-b132-8824e629568d@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20250828044008.743-1-evans1210144@gmail.com>
+In-Reply-To: <20250828044008.743-1-evans1210144@gmail.com>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Thu, 28 Aug 2025 11:43:31 -0700
+X-Gm-Features: Ac12FXy8pmO_hIDFfsZ-8mDU0Ugusa134O92VRib-NK2xTbN6UWn5KwyYADjHbk
+Message-ID: <CABPRKS9N8ZVpJWgy9vhNCO2_nPPghYQDbHMK53rELWnF--D6gA@mail.gmail.com>
+Subject: Re: [PATCH v2] scsi: lpfc: Fix buffer free/clear order in deferred
+ receive path
+To: John Evans <evans1210144@gmail.com>
+Cc: james.smart@broadcom.com, Justin Tee <justin.tee@broadcom.com>, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	stable@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 8/28/25 10:40 AM, Krzysztof Kozlowski wrote:
-> On 26/08/2025 17:35, Bart Van Assche wrote:
->>
->>> +  limit-rate:
->>> +    $ref: /schemas/types.yaml#/definitions/uint32
->>> +    enum: [1, 2]
->>> +    default: 2
->>> +    description:
->>> +      Restricts the UFS controller to Rate A (1) or Rate B (2) for both
->>> +      TX and RX directions, often required in automotive environments due
->>> +      to hardware limitations.
->>
->> As far as I know no numeric values are associated with these rates in
->> the UFSHCI 4.1 standard nor in any of the previous versions of this
->> standard. Does the .yaml syntax support something like "enum: [A, B]"?
-> 
-> That's what I also requested and answer was "1" and "2" are coming from
-> the spec. So now I am confused.
+Reviewed-by: Justin Tee <justin.tee@broadcom.com>
 
-Ram quoted from the MIPI spec. That's another standard than what I
-referred to (UFSHCI).
-
-Bart.
+Regards,
+Justin
