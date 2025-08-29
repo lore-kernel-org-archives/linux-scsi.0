@@ -1,146 +1,75 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8403833EAED
-	for <linux-scsi@vger.kernel.org>; Fri, 29 Aug 2025 15:39:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E78B5225416;
+	Fri, 29 Aug 2025 16:18:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756481946; cv=none; b=epDdSotJLoUfXMZ/VpsZNxXbWhcqWgwQk9f7O+0iDfcRP7DQK4HFq/97pXMsxlRP4+9/AbHDukIbOrfps5h/YLJh2a/2HqtKFUE8BnEWXp/0HwloJo5YQzFhblMGFTlqNO+E3jr72kvG6rEYfEgzloAOVsPiLEF87Pgd/2BScYc=
+	t=1756484314; cv=none; b=QWJupE3SWxMatnIyCPdC3X2IQ4lFWDZf5LRsatcJl+42Euw/0C3lbxMBxzRM1nqLSAoyuPY9GQChrIpilhZCwBSfiRi96fGQZh+ksy3RYP8NRsjOTXAYwdGrv0ceqqmcYnx9Za2v6BPIPpf2camH1E6msZc0LmYZI1DuSPVw/8M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756481946; c=relaxed/simple;
-	bh=a+vLyGG0Fcg6LhbVoTzq/ANJh0o1edwPsXRAuBsQXOg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qXXOiZWDBGpXZiiu74PX+UrNspw5fXPhxukbOPw0WNQaPeXraCmphqAQ9I8dq96nxVc3rgvz1qDeFb3sVq0fQCoxC7RNT2XxltmPJjxA1dRR+7oy6IgbG092idBGLKdxTkZwrLMYmfdxkr2w1gRzh5dzS70fhxkhJWLin9esFQM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=NK6Z0icq; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1756484314; c=relaxed/simple;
+	bh=MFQsfv8Cz9Oh1G2afn6djZh8geSo030aLbqRSoj5J+4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Vs+Yk9Hdj+JfdCob/uzD/xArh3lHf5FebovYtcGW+sHexPxUevHml/Amz68ELZwDGtS5+CUMWu1XZAB0VnNTDhky05yPMaHeyc+VTA0lmcEvLmEI8HsQx1eqKPuW9XCgoYORpLdwHoCM1dg/SGMToyWIZTLv4t/9tdTupoSp1nA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jSVpmAqE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="NK6Z0icq"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cD2Vt4C0LzlgqVs;
-	Fri, 29 Aug 2025 15:39:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1756481940; x=1759073941; bh=zJKn/VuGAlpaZ7GH7uDuo7cPkm4j13guzyf
-	MZOkbZLs=; b=NK6Z0icqt0mEaqlS0YhdfmlubziOqbe1WWud6oF9teoH1u2pFoM
-	mA6uIsoe5Gn5ReWzL35ghryJOxaDpwwPLhs/5E1TSpz+OQr3gD2B3LgeohmwIsBb
-	jpaaaPbqPMcqyqPO8dwAxW945rOGMrgqYLxUoc54ON3sRQGthm/161miIueADkxP
-	l20LB/rsAshOCDIQcuo8PcMt4P1feXfkthBfKBuRL9wukL4oqi3DcaMLdb/6O/qr
-	OLg/TqG84Mb08Yy8r84B6M9GCCXV3sFZE3MasX8Rk/wkebv2twUs3uBUWye4jZ5F
-	Bbo3SKXnw+KC4cNSVXn7ypgZGHR1yVscVWA==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id hQTRlIrLBT4o; Fri, 29 Aug 2025 15:39:00 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cD2Vl2xxVzlgqVh;
-	Fri, 29 Aug 2025 15:38:54 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Huan Tang <tanghuan@vivo.com>
-Subject: [PATCH] ufs: core: Move the tracing enumeration types into a new file
-Date: Fri, 29 Aug 2025 08:38:16 -0700
-Message-ID: <20250829153841.2201700-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.51.0.318.gd7df087d1a-goog
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jSVpmAqE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C064CC4CEF0;
+	Fri, 29 Aug 2025 16:18:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756484313;
+	bh=MFQsfv8Cz9Oh1G2afn6djZh8geSo030aLbqRSoj5J+4=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=jSVpmAqEVBzfccSg3L0kOe7HQQ2MdIJDImfKIRoY7pDaC/4VhiG7756xw7IulSsY8
+	 /ksu+Y49nSACdEB0VI3vvJFu+QiwOriwa15jIfwP2cc0jv6FCiiGtEhWaQnz03oX9k
+	 NpgFm+ExKAShT4785PhhZ1JjHkEZ9dOrf228yfBiy+dU75FnJHHo5PPs0yBkvva41M
+	 7dD7OMRXJPELd26COxsysM3mrJzpXtyK0m4972GdrMwxju3KT6+X/TzIsydXY6KGd/
+	 pCRyTBUTlQeHRlCvvwnuiI7dsjhw3nozF6d+eGspG0bhnNT23FUdxkHgF7FwR67AI7
+	 PC2DkV0l75y5w==
+Date: Fri, 29 Aug 2025 21:48:25 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, andersson@kernel.org, 
+	konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH V3 4/5] arm64: dts: qcom: sm8650: Enable MCQ support for
+ UFS controller
+Message-ID: <34aqaxgkykyhenrjfj3vrarin2c3uebgfaya7rxi7d5p5skhom@ie4gitcw36mr>
+References: <20250821112403.12078-1-quic_rdwivedi@quicinc.com>
+ <20250821112403.12078-5-quic_rdwivedi@quicinc.com>
+ <eeecc7a3-8ce3-4cfd-8d40-988736fc0c59@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <eeecc7a3-8ce3-4cfd-8d40-988736fc0c59@kernel.org>
 
-The <ufs/ufs.h> header file defines constants and data structures
-related to the UFS standard. Move the enumeration types related to
-tracing into a new header file because these are not defined in the UFS
-standard. An intended side effect of this patch is that the tracing
-enumeration types are no longer visible to UFS host drivers.
+On Thu, Aug 21, 2025 at 01:49:36PM GMT, Krzysztof Kozlowski wrote:
+> On 21/08/2025 13:24, Ram Kumar Dwivedi wrote:
+> > Enable Multi-Circular Queue (MCQ) support for the UFS host controller
+> > on the Qualcomm SM8650 platform by updating the device tree node. This
+> > includes adding new register region for MCQ and specifying the MSI parent
+> > required for MCQ operation.
+> > 
+> > Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> > ---
+> >  arch/arm64/boot/dts/qcom/sm8650.dtsi | 7 ++++++-
+> 
+> I don't understand why you combine DTS patch into UFS patchset. This
+> creates impression of dependent work, which would be a trouble for merging.
+> 
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs_trace.h       |  1 +
- drivers/ufs/core/ufs_trace_types.h | 24 ++++++++++++++++++++++++
- include/ufs/ufs.h                  | 17 -----------------
- 3 files changed, 25 insertions(+), 17 deletions(-)
- create mode 100644 drivers/ufs/core/ufs_trace_types.h
+What trouble? Even if the DTS depends on the driver/bindings change, can't it
+still go through a different tree for the same cycle? It happened previously as
+well, unless the rule changed now.
 
-diff --git a/drivers/ufs/core/ufs_trace.h b/drivers/ufs/core/ufs_trace.h
-index caa32e23ffa5..584c2b5c6ad9 100644
---- a/drivers/ufs/core/ufs_trace.h
-+++ b/drivers/ufs/core/ufs_trace.h
-@@ -11,6 +11,7 @@
-=20
- #include <ufs/ufs.h>
- #include <linux/tracepoint.h>
-+#include "ufs_trace_types.h"
-=20
- #define str_opcode(opcode)						\
- 	__print_symbolic(opcode,					\
-diff --git a/drivers/ufs/core/ufs_trace_types.h b/drivers/ufs/core/ufs_tr=
-ace_types.h
-new file mode 100644
-index 000000000000..f2d5ad1d92b9
---- /dev/null
-+++ b/drivers/ufs/core/ufs_trace_types.h
-@@ -0,0 +1,24 @@
-+/* SPDX-License-Identifier: GPL-2.0-only */
-+#ifndef _UFS_TRACE_TYPES_H_
-+#define _UFS_TRACE_TYPES_H_
-+
-+enum ufs_trace_str_t {
-+	UFS_CMD_SEND,
-+	UFS_CMD_COMP,
-+	UFS_DEV_COMP,
-+	UFS_QUERY_SEND,
-+	UFS_QUERY_COMP,
-+	UFS_QUERY_ERR,
-+	UFS_TM_SEND,
-+	UFS_TM_COMP,
-+	UFS_TM_ERR
-+};
-+
-+enum ufs_trace_tsf_t {
-+	UFS_TSF_CDB,
-+	UFS_TSF_OSF,
-+	UFS_TSF_TM_INPUT,
-+	UFS_TSF_TM_OUTPUT
-+};
-+
-+#endif /* _UFS_TRACE_TYPES_H_ */
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 72fd385037a6..245a6a829ce9 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -653,21 +653,4 @@ struct ufs_dev_info {
- 	bool hid_sup;
- };
-=20
--/*
-- * This enum is used in string mapping in ufs_trace.h.
-- */
--enum ufs_trace_str_t {
--	UFS_CMD_SEND, UFS_CMD_COMP, UFS_DEV_COMP,
--	UFS_QUERY_SEND, UFS_QUERY_COMP, UFS_QUERY_ERR,
--	UFS_TM_SEND, UFS_TM_COMP, UFS_TM_ERR
--};
--
--/*
-- * Transaction Specific Fields (TSF) type in the UPIU package, this enum=
- is
-- * used in ufs_trace.h for UFS command trace.
-- */
--enum ufs_trace_tsf_t {
--	UFS_TSF_CDB, UFS_TSF_OSF, UFS_TSF_TM_INPUT, UFS_TSF_TM_OUTPUT
--};
--
- #endif /* End of Header */
+- Mani
+
+-- 
+மணிவண்ணன் சதாசிவம்
