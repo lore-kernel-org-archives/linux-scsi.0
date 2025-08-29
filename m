@@ -1,305 +1,279 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id F256533F3;
-	Fri, 29 Aug 2025 00:29:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756427360; cv=none; b=JK2QLEBALbR4oiRy5Oa8g35NpP0qGmseE5DgBB7wH/rVh12K3lsYIpLsaXmakgYExzH224IkS+23tcs7ySHm5v60XFdQg56L+NK6N9qvvKJwajTrYh47qKwEIOybFVXJmkGQvSgoBm32lqSFBZ8q73KybVib7XYC7AHbQy3Es1E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756427360; c=relaxed/simple;
-	bh=ot+2HrtyJInU0ZA8JMHPx+dOY9PU6YtQ3mFvDFCoH7s=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RIxvUR3DbNQIhA70+AkWz2otQX4i07araYZK2eBBVHHd4jZPigqe9rcShhXvZCEl3Q1mHs5ZKsTRe3a+ZMeZTReSzUu67NOOeNKTfN2AF8Fu3n8T4fDgt/zpbnGTNi9FXUCsbniiFduCfgvdPd2LkM4Qyf6cCiUI6dKvtwjeHCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=poRzDjXW; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD41117B50F;
+	Fri, 29 Aug 2025 00:29:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1756427362; cv=fail; b=cJhWSIqxk6mey4ZEb6VeTNPQ0waIkS4LYwLCIbXNH3euogFaGk8HYshjwZ2W3X57VCfxBs87UKo/8+XsXtfT9mkAp6g+z8mZ5NOQjKpVIir4eCgL9/KrtQ2ASRuKhDNnFyOukhTWk6v5i8CnHIB4vRvQSM980jbKFKh4uvV7Vrk=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1756427362; c=relaxed/simple;
+	bh=DCV/OqLD/Z3koxmgK2pplJetn6KYnnS5dCQv/FiXbE8=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:Content-Type:
+	 Content-Disposition:In-Reply-To:MIME-Version; b=cTI+LQx4Oglr6uYx0SrMf3ZsyeiO31qjh1L8k+eJbpRlMPvmMgZSBsbM2cTmFN4T4pzMBErb6uELSX95IsGsuKcOzpoPlBSKeA1Kt3LaIcT9AkxXDvZXSVePozovwjojkL8m5FP0B4/mPTC2544BqB/vhUrnXJC7SPbWiZGpZ2E=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Ti8JGuhs; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=DUR3gkoZ; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="poRzDjXW"
-Received: from [100.65.128.219] (unknown [20.236.10.129])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 3777F2110812;
-	Thu, 28 Aug 2025 17:29:17 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 3777F2110812
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1756427357;
-	bh=lN42qcmFwBXn/PPaiN936XEpQO05ChrgbLHgB+gVPCM=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=poRzDjXWcBGz/dgzPSyW1ppmtP825pJeqPejDqwKNVGb33ej7TTJ+3Ach1tMOgmXf
-	 UfstC1uq7Eb3h0PplNHv8x1bjse//kq4B740aQWslp8GjShWZNxIaZLDOPMvR3Jfdk
-	 hMvBIf3bJYfTGBVb0bkjZCmb6awBBsX0yDMrYaQ0=
-Message-ID: <5003d5e8-a025-4827-b8a0-6fe11877421b@linux.microsoft.com>
-Date: Thu, 28 Aug 2025 17:29:16 -0700
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ti8JGuhs";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="DUR3gkoZ"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57SLUsm0010137;
+	Fri, 29 Aug 2025 00:28:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2025-04-25; bh=lqutLdcBPO8kl3/S0m
+	YwIHT4kDlP0mAzom40But1s2w=; b=Ti8JGuhs7XUSoAm4GtdXSF79HPSzPAz3UU
+	D2kOG0ceJQVXtzkNTVVPytl6BSSB+dbzKIZHqfPWmf/JZutlsImbm2pee4OgZPDG
+	WEXjZhyDEPQtf94Bx/DP+GY9kXj+CgPLna408r91o17mGB4sa5YwFu71I9zXdYPK
+	cjXm/dX9icUcriwajK7spDN1/UGhJMqigiy1ZrBFQPNLiYy4X2F20Wj1ebdHp9+5
+	O+3Pqvzf7h8icYeEtvjhQQUU3q5IbTgR43o0AycuKripFbWON3EIrmWrUG7b2eR1
+	Z4KJAM5lPsv8HY7VGXZicHq6vYnmIrUrdE1oQyh2voRMBTBHM/eA==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 48q5pt9rsu-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 29 Aug 2025 00:28:36 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 57T04Of6005562;
+	Fri, 29 Aug 2025 00:28:35 GMT
+Received: from nam10-mw2-obe.outbound.protection.outlook.com (mail-mw2nam10on2068.outbound.protection.outlook.com [40.107.94.68])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 48q43cnw17-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Fri, 29 Aug 2025 00:28:35 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=JJup2BWrG2rc+Zqy9EdoHZp9evkbmdvHdwHUZV6Cf9nlK+N2BU1A0PVYdvgIy/Q8DeHeuGkBpXmGN+51t3WbMCtyZtFxz4vVN6Yf6i9/EbtVkaLAsi8Y7l9hvAhpl//fHQ17ELAN/PPY5PYGAcEU8YEmP+sJkx1Tf7oR9QfCANQcBObYVvYw2Df3qiwqAOf5Jf0mKgTt5Rg1qZIp+FeH6hscdkgDFCGtywqa1TS1LilJqnhkE+I/sDIKT+AZqoH0dgOTIyNg9J3mRz96U1yB0Q2+o4wTu9UQ9ygpa4zVznnAYExUT4MyssDjNcyDBpLsDx+u3nNcVUcX0T09OVzz8A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=lqutLdcBPO8kl3/S0mYwIHT4kDlP0mAzom40But1s2w=;
+ b=bJYEXeeqcj1dCnhULjqjPkpQIw+F4A2XAkwGv1E4uCRT4Hh49WqY3VZPmWUNofpe8JDrqXYac/yYAbNIB9GDlIsFJx9esfo1gwdYCMC0M4JoGJUtFPLZN92jgYlCUAHyz56lNXlUGY42j16aCZVIPLYwAzVYXn5L0kEKVrE1zqUGxS4sQHsvxNkWhK5pCZEe8fp6/9g8sFyo1KfXywpP19brGgO2fjM/SS54COdLvAl8VTVcZct6mAlNoJn5ySVgND8MjIvXqaCuTIk4/4OyFW0ft127PYpDxfT79NlnglSfzlxObUk0DCXkps/inphCSAeCkaCNAFRKtruMFwsakw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=lqutLdcBPO8kl3/S0mYwIHT4kDlP0mAzom40But1s2w=;
+ b=DUR3gkoZhWFmU6d5/aPxtssf28ld6Bpx2SgvLxOXWa5VwhnaLAy6G2o5T9Xl+zl86Jf8SkNcLQjZZjP7DyJXZ/XSru/EjGrP7lQOsEwgg0VVzpGjXJdcRJIiRAyQeA/QxZGU0vsuhDNjIpOoXxnuvXS1C8xl0HWftJtEJGzCym4=
+Received: from PH0PR10MB5777.namprd10.prod.outlook.com (2603:10b6:510:128::16)
+ by PH7PR10MB6481.namprd10.prod.outlook.com (2603:10b6:510:1ec::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9031.17; Fri, 29 Aug
+ 2025 00:28:17 +0000
+Received: from PH0PR10MB5777.namprd10.prod.outlook.com
+ ([fe80::75a8:21cc:f343:f68c]) by PH0PR10MB5777.namprd10.prod.outlook.com
+ ([fe80::75a8:21cc:f343:f68c%5]) with mapi id 15.20.9052.019; Fri, 29 Aug 2025
+ 00:28:17 +0000
+Date: Thu, 28 Aug 2025 20:28:09 -0400
+From: "Liam R. Howlett" <Liam.Howlett@oracle.com>
+To: David Hildenbrand <david@redhat.com>
+Cc: linux-kernel@vger.kernel.org,
+        "Mike Rapoport (Microsoft)" <rppt@kernel.org>,
+        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+        Alexander Gordeev <agordeev@linux.ibm.com>,
+        Christian Borntraeger <borntraeger@linux.ibm.com>,
+        Sven Schnelle <svens@linux.ibm.com>,
+        Alexander Potapenko <glider@google.com>,
+        Andrew Morton <akpm@linux-foundation.org>,
+        Brendan Jackman <jackmanb@google.com>,
+        Christoph Lameter <cl@gentwo.org>, Dennis Zhou <dennis@kernel.org>,
+        Dmitry Vyukov <dvyukov@google.com>, dri-devel@lists.freedesktop.org,
+        intel-gfx@lists.freedesktop.org, iommu@lists.linux.dev,
+        io-uring@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>,
+        Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+        John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com,
+        kvm@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>,
+        linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
+        linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
+        linux-kselftest@vger.kernel.org, linux-mips@vger.kernel.org,
+        linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+        linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+        linux-scsi@vger.kernel.org,
+        Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+        Marco Elver <elver@google.com>,
+        Marek Szyprowski <m.szyprowski@samsung.com>,
+        Michal Hocko <mhocko@suse.com>, Muchun Song <muchun.song@linux.dev>,
+        netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
+        Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
+        Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
+        virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
+        wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
+Subject: Re: [PATCH v1 03/36] s390/Kconfig: drop superfluous "select
+ SPARSEMEM_VMEMMAP"
+Message-ID: <sulfte6cczeegb4lkmhflb2wp657ijsmyit3osicqmv43ypxmp@pmmcxdi2l54p>
+Mail-Followup-To: "Liam R. Howlett" <Liam.Howlett@oracle.com>, 
+	David Hildenbrand <david@redhat.com>, linux-kernel@vger.kernel.org, 
+	"Mike Rapoport (Microsoft)" <rppt@kernel.org>, Heiko Carstens <hca@linux.ibm.com>, 
+	Vasily Gorbik <gor@linux.ibm.com>, Alexander Gordeev <agordeev@linux.ibm.com>, 
+	Christian Borntraeger <borntraeger@linux.ibm.com>, Sven Schnelle <svens@linux.ibm.com>, 
+	Alexander Potapenko <glider@google.com>, Andrew Morton <akpm@linux-foundation.org>, 
+	Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>, 
+	Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>, 
+	dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org, iommu@lists.linux.dev, 
+	io-uring@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>, 
+	Johannes Weiner <hannes@cmpxchg.org>, John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com, 
+	kvm@vger.kernel.org, Linus Torvalds <torvalds@linux-foundation.org>, 
+	linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org, 
+	linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org, 
+	linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org, 
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>, Marco Elver <elver@google.com>, 
+	Marek Szyprowski <m.szyprowski@samsung.com>, Michal Hocko <mhocko@suse.com>, 
+	Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>, 
+	Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>, 
+	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>, virtualization@lists.linux.dev, 
+	Vlastimil Babka <vbabka@suse.cz>, wireguard@lists.zx2c4.com, x86@kernel.org, 
+	Zi Yan <ziy@nvidia.com>
+References: <20250827220141.262669-1-david@redhat.com>
+ <20250827220141.262669-4-david@redhat.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250827220141.262669-4-david@redhat.com>
+User-Agent: NeoMutt/20250510
+X-ClientProxiedBy: YQBPR01CA0088.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:c01:3::24) To PH0PR10MB5777.namprd10.prod.outlook.com
+ (2603:10b6:510:128::16)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V0 1/2] hyper-v: Add CONFIG_HYPERV_VMBUS option
-To: Mukesh Rathor <mrathor@linux.microsoft.com>,
- dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
- linux-input@vger.kernel.org, linux-hyperv@vger.kernel.org,
- netdev@vger.kernel.org, linux-pci@vger.kernel.org,
- linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
- linux-arch@vger.kernel.org, virtualization@lists.linux.dev
-Cc: maarten.lankhorst@linux.intel.com, mripard@kernel.org,
- tzimmermann@suse.de, airlied@gmail.com, simona@ffwll.ch, jikos@kernel.org,
- bentiss@kernel.org, kys@microsoft.com, haiyangz@microsoft.com,
- wei.liu@kernel.org, decui@microsoft.com, dmitry.torokhov@gmail.com,
- andrew+netdev@lunn.ch, davem@davemloft.net, edumazet@google.com,
- kuba@kernel.org, pabeni@redhat.com, bhelgaas@google.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- gregkh@linuxfoundation.org, deller@gmx.de, arnd@arndb.de,
- sgarzare@redhat.com, horms@kernel.org
-References: <20250828005952.884343-1-mrathor@linux.microsoft.com>
- <20250828005952.884343-2-mrathor@linux.microsoft.com>
-Content-Language: en-US
-From: Nuno Das Neves <nunodasneves@linux.microsoft.com>
-In-Reply-To: <20250828005952.884343-2-mrathor@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: PH0PR10MB5777:EE_|PH7PR10MB6481:EE_
+X-MS-Office365-Filtering-Correlation-Id: ccb34583-8279-4f2e-6391-08dde692f306
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|7416014|376014|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?XlGAmDhbcRq3fUGH5DeNfcc2ZyiKLDc3FZGhqu45ueXzyHIoBHgxvUmqkTv0?=
+ =?us-ascii?Q?APo93/BSh+UmHLIyee+EiNaU763sWjzLfPrNzfTMus16OkdJumfpqsxe/W/6?=
+ =?us-ascii?Q?T9fYheHBDCr53B7clfVUkXAw6c0hiwd6u7hAIqCv4eE4GuwjsyDV4RF+4hze?=
+ =?us-ascii?Q?YPc0ow1mgW7uXIVdvVWGI8DQf4rKnNvwJL63u7hkFZX3zszqj6frUlKqF75b?=
+ =?us-ascii?Q?KWGkYBUOM4ZIzAjuJ3xXFNs2u+6Mt5m66zwIc2R75FoTnn6byE3zWdVrSrRx?=
+ =?us-ascii?Q?qZLrWzirtSs9l5zC1yk6KipYCNrYs+YpHSypfQXXyxbRwm9mIDDllqyuaoEE?=
+ =?us-ascii?Q?Yl4aHXGfKYI3nRieXhYJkAaIYACRjfQb5tyRkQKSl2WnDZYRNCZTF6ZOoz4k?=
+ =?us-ascii?Q?/dbWJHJkBp6ctDaPvbGCqeSRT/nnrT/jfMAWty7lB0RENPn+pPaMBUWSdDdm?=
+ =?us-ascii?Q?CEkGGUZI1i4AVl65lom7kHDE0sOKttIwn46N6iDtlTttEUQz1OVlDddUO3gy?=
+ =?us-ascii?Q?6Me3u2f6IkLfushOpeSR04siX9UXf5P1vot1lUgE18CG1P4SyGl4qdlFoM/1?=
+ =?us-ascii?Q?TtZBK5pCriuW9+hL1NcW3AEt99ZCcKX9hzaANS/dsMx+ovfOh/DtChdgTTL7?=
+ =?us-ascii?Q?/OZI2skw8zY/ZZtyxjLcdbdDejRMdi/x2ZaANWwssmtvP//ooYaN/WKG/BqN?=
+ =?us-ascii?Q?xMFqF4672TueqCEYJQhJvFV0rj2Noq8O5jHIS1vn0iX9AxUY7aKdhBgDX9PK?=
+ =?us-ascii?Q?kzc/d0Ts9YOQHS8CLgRbdPCsX1LFRnafDsde/5whR9M5/5rBa/pPFjouQ+Rs?=
+ =?us-ascii?Q?ffMZtS0n4bVSaWl5i+ScyG2ErcaQ7ppxTj4XCUsvc+bDMTXJkPwTR9zKr6z9?=
+ =?us-ascii?Q?jtILAMWBmtIPcvfX0H26ncMiPEjS/WNH9UXpUhgfwANpNWlRspH5B5wA1Tti?=
+ =?us-ascii?Q?S3AgvF6JKzTWivarXhbzINgFHeBSzfPP4rHn8evQ9xBJ/DxvT3NOzSrGvPkr?=
+ =?us-ascii?Q?ltnBNQbx88oDn9mONe9Ns+N/D11WDJpLo6YuwAJ4OaWTXPWEU9um42ita53a?=
+ =?us-ascii?Q?ncriIPNjJtF637wcIuBeyFJzlPfA5KPgJhpj3PxzoY7u5hyzdiAw8/PQDWj+?=
+ =?us-ascii?Q?CN2t9HCBmXdoJi64MIo35qZUX+FdwDpUAoIt9D40UjTwjODIrXXVlDLtwb4U?=
+ =?us-ascii?Q?ReKqpkg/8MOV8LDwnBwbftr2kQASgTHdVmza8bXQ9F8aIDGejELD47CAQWRL?=
+ =?us-ascii?Q?fOplE6iZ1kF7VJkAR70MuvH5mAXvx4iTv0ME3UxLb5aIee/NzzRA+I6PWFfI?=
+ =?us-ascii?Q?MrfbENiuqsEq+b6swJuire0pbj8fEH0EvAYp6qu2S4BmMZ8Knvt5hQmNmUZH?=
+ =?us-ascii?Q?e5E6GJhKdN/5Xx/pl1K2AK/j3qXkb+Npn8pbArsG9XiCOaIRfRTJFcolIkaq?=
+ =?us-ascii?Q?7MRb1Ap38II=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH0PR10MB5777.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(7416014)(376014)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?dn1sjCJMPdSLEuUv9NyBKnshj6ZIX6FfyUQGDmvWzHQ8MF2MEs+whowXBLel?=
+ =?us-ascii?Q?e4jDgSoC/44aPk6I4siSkO8Xp4ljEQbVHkIkyMsqPVqoCdCK5Ladl3l4owvG?=
+ =?us-ascii?Q?GlN/Qhk2bZE0Yf6WSuls7WOSypGxLfUAgmHYbrmbEDUuCFjIdpGpJ+/Pyy17?=
+ =?us-ascii?Q?unTYiu5mRJ+BFmjM6dTYc5RdAtjZzmL3BDJm/vBpXcy/+/apgHKipoR/QB3E?=
+ =?us-ascii?Q?1giLkgTFKXRhuokxPwKVbENpTLiEOOZgj0zPr+AiPm079t1ISOtKCnDKDvLR?=
+ =?us-ascii?Q?AXQhj7vIwTSk/deRbHNOmxuhpfHEDZZedhbbJY2QcBGKYtMMIehy5d7r45pS?=
+ =?us-ascii?Q?8LYuKgtkmHqNTGbAMnbJmmbJ9xp/EDj/k/0K8NuuNJ79xT2OE59zx8HQ8MMp?=
+ =?us-ascii?Q?qiKSNo7hF7m5W2uUS+vTKcEzPJlupacuTadzaCKor/ueZPR5QbCDwb5QAg/C?=
+ =?us-ascii?Q?+s+yLpxKCOV6r8IDTNKWlzrA0TC4HLR16wuDeEZAFhwE0HcrjvWqAdL0xE2A?=
+ =?us-ascii?Q?/4FA7rnyKMbqMOCHwOqVqCUAbEhjGyg6I1HfiDx6iQN8XttrcEPW/xpCnNdD?=
+ =?us-ascii?Q?7HQPHFKVtRsTf7b584XtCz8DQVo39BuQ8iYlOr5pqtO5nqS6sk8D4UxEtHGk?=
+ =?us-ascii?Q?RramqcuAykFrJoBLs7QqSHK9LwE/avWuAcjm3az+cJe9pV+TdmqFKZVcjG+/?=
+ =?us-ascii?Q?glgIB+JzN653RXKmF54r61A3XILdUXyC1znGpj+aMD7h2o70Jzjr4jG1IQF0?=
+ =?us-ascii?Q?lDX2zD4yvgJv9DCXwGgrIiPmnWSP/KlxXKu77JN+BfobuWKgVcHj9kRdVeBG?=
+ =?us-ascii?Q?TXdai0AIpKiyo3wQdiOZ0Cro5vDtJeSJXjZdtmGZ5+Z8u8922P/hpOOmkm7F?=
+ =?us-ascii?Q?mERuNyM1bvlLUSjR0icWwkIXAHHCX1fJ7IGy72XvRNbQ6WbvUCLb+bGF/KpE?=
+ =?us-ascii?Q?ioENytVisRBLF/rsFIGAhz62NEar4T70zUFp/ioeZe1I24C5+oXvhBtIsU1G?=
+ =?us-ascii?Q?ECZnT5OvB/li0C/5h2qIv59hgHMwrap+z4S+ojbIoDOyDwQeCQ/HBsWalK5y?=
+ =?us-ascii?Q?sy99GE/woSQp7PKHtktb+V4Ung9ZLwf9NEqFWYtc/EE6rM2eEAgPB4lirXPm?=
+ =?us-ascii?Q?suwsmvO3+kbyQyKvg2f/lR2+YYlhIFbC/NW9Y/ebpItCXouzJrnWmzqXhhOI?=
+ =?us-ascii?Q?l6xyDlsVpYQHoFg3zX07NHOuGhRj64mSFOh9Omkux4Nn6DtnPwrX0xn6PqIG?=
+ =?us-ascii?Q?VitEb1ho7r7mLmHJZOzaOsCLSQvu7zXe29xced/nFQZvW6slheYzPjTV8igL?=
+ =?us-ascii?Q?rxe9vc8/f+TXHzhH+yn8vAXch9As42XwnmSnaeqavdq2/gV1HrZ/6gX80FOC?=
+ =?us-ascii?Q?z1XYNmLKghLT06zHtHl2ZvoktSQom5kl3BryQPqbzW598p75ld4wcT7pF332?=
+ =?us-ascii?Q?gJPzvjDXRgFK/VdRQkQiXGy8Yrt7L7LV6N+aQ0rjQrJQTOvCtDk62zpjlG6i?=
+ =?us-ascii?Q?MeAh8Y+ngd3OtxnVrqmlQSthNwU7ZOjaOP39/gKrTFecxmkNr6fxSFakUSFW?=
+ =?us-ascii?Q?+b10awDECHtmgVHkWPnMTSWRfqttqqcGq+4uRDn8Y5/XK2W//A0RdvN4RrsY?=
+ =?us-ascii?Q?kg=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	KwTXalOiyBFuGvPe25NWbeeRxsd8Jq09EnxPS77FyOwRtvJRh7et7GWD+PtJtKsGCjQBYmw8T/I6gops+EJ6e8wwnTLpqqkh2vlt4spdB2bd2ljdVMkMXRwwaFxErwnrBfTLcXfWN1Dxqms0hUT3JhU/Tp5G9Wza+ekjQpYJFQK1jY0kUAqAlc7NDJZ7fE5lqbpGDMlPqV4PLxVfJ/BYfyH5UkhBhsAQrHctf1raNLDIIXcvk+Ldy5qKx2DvmE8XsJPuCgoStJy8QMgwsUC1CNQD1OqQTl7DD6uO+RuM0SuaT17v/GXm7J30fAb0p0XelnTcRLrthdV3cBkYobAJ8lJlOkH50NezmVe+KYKR1q1czsDYuw7rkudZ5CRR+3tWKPDCLEVUy5J+qu50UtBbjzECirjeNh+RRbnCihEOfBiWYeDFBnHpvQ46Zgm1w4dPDG/F4qbr0KqxLk5vkvp5UKsMCL94H2pkgbKeNyynHDIInq9kRn+SkMoqpYayfJgl7ZaWrLOjb5t3Lu8v76lyLN+ZqU2ASLu2x09SEWvWV6QEQmzKeh10byoYXCH36PEioynW2VuOGxa165L7IL6u088cwiYx+PHzfGz7R1rcEUc=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ccb34583-8279-4f2e-6391-08dde692f306
+X-MS-Exchange-CrossTenant-AuthSource: PH0PR10MB5777.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 29 Aug 2025 00:28:17.5421
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: XsC5HrhkBAOCnpck6rZ/MaCaG/c25MTzjYvJCwJEB0BQT4RM0q/1lTtrRRVfw8v163AmAeA/Se5Ord60JzASug==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6481
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-08-28_04,2025-08-28_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0
+ mlxlogscore=958 spamscore=0 suspectscore=0 malwarescore=0 mlxscore=0
+ adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2508110000 definitions=main-2508290002
+X-Proofpoint-ORIG-GUID: NZaMI1tGQ1DeIarhdpjXzRXYCNWODKZV
+X-Proofpoint-GUID: NZaMI1tGQ1DeIarhdpjXzRXYCNWODKZV
+X-Authority-Analysis: v=2.4 cv=EcXIQOmC c=1 sm=1 tr=0 ts=68b0f434 b=1 cx=c_pps
+ a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
+ a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=2OwXVqhp2XgA:10 a=GoEa3M9JfhUA:10 a=20KFwNOVAAAA:8 a=VwQbUJbxAAAA:8
+ a=VnNF1IyMAAAA:8 a=yPCof4ZbAAAA:8 a=2LonWNWx6ZCzk-tnfBwA:9 a=CjuIK1q_8ugA:10
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODIzMDAzMCBTYWx0ZWRfX+x741LvJpXgx
+ 7QJrBcSjqjQXCu6pleOB2wrDKUmVF5fZXSoAMDGT/EfyQ71EHCHtyk7xaNSzXN6ltAkEj80+xIQ
+ QT5t/q1z99ny7U8JFlJWHqVzxQ7Xr5sAAG9nTDvWwaglbk+L2J1Wb5RaZthMhRYvK3hV3fAAGuk
+ v2du81zLc03mxmRmRoP3zOg5Jnjwz/7sUaIYstmmyHz19ZgllwXar6aSVzn+yqyVIW8h6Iwq8BY
+ kAHHdQjcq+GG4Sc8QG/SRUVUD41NImS8C5Su6ylvKYiItxxjDCvMBakot6eJYkFPS5AZBTGJlAV
+ GShx1Q/uJF+pdBUkQrMKzU4R4GnJyNSMTa0M7Qa9NH+VonrKjg4b8WMNCRs6hGzCS7LipMKQmd2
+ /OkmsEXs
 
-On 8/27/2025 5:59 PM, Mukesh Rathor wrote:
-> Somehow vmbus driver is hinged on CONFIG_HYPERV. It appears this is initial
-> code that did not get addressed when the scope of CONFIG_HYPERV went beyond
-> vmbus. This commit creates a fine grained HYPERV_VMBUS option and updates
-> drivers that depend on VMBUS.
+* David Hildenbrand <david@redhat.com> [250827 18:03]:
+> Now handled by the core automatically once SPARSEMEM_VMEMMAP_ENABLE
+> is selected.
 > 
+> Reviewed-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
+> Cc: Heiko Carstens <hca@linux.ibm.com>
+> Cc: Vasily Gorbik <gor@linux.ibm.com>
+> Cc: Alexander Gordeev <agordeev@linux.ibm.com>
+> Cc: Christian Borntraeger <borntraeger@linux.ibm.com>
+> Cc: Sven Schnelle <svens@linux.ibm.com>
+> Signed-off-by: David Hildenbrand <david@redhat.com>
 
-The commit message can be improved. The docs are helpful here:
-https://docs.kernel.org/process/submitting-patches.html#describe-your-changes
+I have a little fear of the Cc's that may come with this one, but..
 
-In particular, some clearer reasons for the change.
-e.g.
-- CONFIG_HYPERV encompasses too much right now. It's not always clear what
-  depends on builtin hyperv code and what depends on vmbus.
+Reviewed-by: Liam R. Howlett <Liam.Howlett@oracle.com>
 
-- Since there is so much builtin hyperv code, building CONFIG_HYPERV as a
-  module doesn't make intuitive sense. Building vmbus support as a module does.
-
-- There are actually some real scenarios someone may want to compile with
-  CONFIG_HYPERV but without vmbus, like baremetal root partition.
-
-FWIW I think it's a good idea, interested to hear what others think.
-
-Nuno
-
-> Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
 > ---
->  drivers/gpu/drm/Kconfig        |  2 +-
->  drivers/hid/Kconfig            |  2 +-
->  drivers/hv/Kconfig             | 12 +++++++++---
->  drivers/hv/Makefile            |  2 +-
->  drivers/input/serio/Kconfig    |  4 ++--
->  drivers/net/hyperv/Kconfig     |  2 +-
->  drivers/pci/Kconfig            |  2 +-
->  drivers/scsi/Kconfig           |  2 +-
->  drivers/uio/Kconfig            |  2 +-
->  drivers/video/fbdev/Kconfig    |  2 +-
->  include/asm-generic/mshyperv.h |  8 +++++---
->  net/vmw_vsock/Kconfig          |  2 +-
->  12 files changed, 25 insertions(+), 17 deletions(-)
+>  arch/s390/Kconfig | 1 -
+>  1 file changed, 1 deletion(-)
 > 
-> diff --git a/drivers/gpu/drm/Kconfig b/drivers/gpu/drm/Kconfig
-> index f7ea8e895c0c..58f34da061c6 100644
-> --- a/drivers/gpu/drm/Kconfig
-> +++ b/drivers/gpu/drm/Kconfig
-> @@ -398,7 +398,7 @@ source "drivers/gpu/drm/imagination/Kconfig"
+> diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
+> index bf680c26a33cf..145ca23c2fff6 100644
+> --- a/arch/s390/Kconfig
+> +++ b/arch/s390/Kconfig
+> @@ -710,7 +710,6 @@ menu "Memory setup"
+>  config ARCH_SPARSEMEM_ENABLE
+>  	def_bool y
+>  	select SPARSEMEM_VMEMMAP_ENABLE
+> -	select SPARSEMEM_VMEMMAP
 >  
->  config DRM_HYPERV
->  	tristate "DRM Support for Hyper-V synthetic video device"
-> -	depends on DRM && PCI && HYPERV
-> +	depends on DRM && PCI && HYPERV_VMBUS
->  	select DRM_CLIENT_SELECTION
->  	select DRM_KMS_HELPER
->  	select DRM_GEM_SHMEM_HELPER
-> diff --git a/drivers/hid/Kconfig b/drivers/hid/Kconfig
-> index a57901203aeb..fe3dc8c0db99 100644
-> --- a/drivers/hid/Kconfig
-> +++ b/drivers/hid/Kconfig
-> @@ -1162,7 +1162,7 @@ config GREENASIA_FF
->  
->  config HID_HYPERV_MOUSE
->  	tristate "Microsoft Hyper-V mouse driver"
-> -	depends on HYPERV
-> +	depends on HYPERV_VMBUS
->  	help
->  	Select this option to enable the Hyper-V mouse driver.
->  
-> diff --git a/drivers/hv/Kconfig b/drivers/hv/Kconfig
-> index 2e8df09db599..08c4ed005137 100644
-> --- a/drivers/hv/Kconfig
-> +++ b/drivers/hv/Kconfig
-> @@ -44,18 +44,24 @@ config HYPERV_TIMER
->  
->  config HYPERV_UTILS
->  	tristate "Microsoft Hyper-V Utilities driver"
-> -	depends on HYPERV && CONNECTOR && NLS
-> +	depends on HYPERV_VMBUS && CONNECTOR && NLS
->  	depends on PTP_1588_CLOCK_OPTIONAL
->  	help
->  	  Select this option to enable the Hyper-V Utilities.
->  
->  config HYPERV_BALLOON
->  	tristate "Microsoft Hyper-V Balloon driver"
-> -	depends on HYPERV
-> +	depends on HYPERV_VMBUS
->  	select PAGE_REPORTING
->  	help
->  	  Select this option to enable Hyper-V Balloon driver.
->  
-> +config HYPERV_VMBUS
-> +	tristate "Microsoft Hyper-V Vmbus driver"
-> +	depends on HYPERV
-> +	help
-> +	  Select this option to enable Hyper-V Vmbus driver.
-> +
->  config MSHV_ROOT
->  	tristate "Microsoft Hyper-V root partition support"
->  	depends on HYPERV && (X86_64 || ARM64)
-> @@ -75,7 +81,7 @@ config MSHV_ROOT
->  
->  config MSHV_VTL
->  	tristate "Microsoft Hyper-V VTL driver"
-> -	depends on X86_64 && HYPERV_VTL_MODE
-> +	depends on X86_64 && HYPERV_VTL_MODE && HYPERV_VMBUS
->  	# Mapping VTL0 memory to a userspace process in VTL2 is supported in OpenHCL.
->  	# VTL2 for OpenHCL makes use of Huge Pages to improve performance on VMs,
->  	# specially with large memory requirements.
-> diff --git a/drivers/hv/Makefile b/drivers/hv/Makefile
-> index c53a0df746b7..050517756a82 100644
-> --- a/drivers/hv/Makefile
-> +++ b/drivers/hv/Makefile
-> @@ -1,5 +1,5 @@
->  # SPDX-License-Identifier: GPL-2.0
-> -obj-$(CONFIG_HYPERV)		+= hv_vmbus.o
-> +obj-$(CONFIG_HYPERV_VMBUS)	+= hv_vmbus.o
->  obj-$(CONFIG_HYPERV_UTILS)	+= hv_utils.o
->  obj-$(CONFIG_HYPERV_BALLOON)	+= hv_balloon.o
->  obj-$(CONFIG_MSHV_ROOT)		+= mshv_root.o
-> diff --git a/drivers/input/serio/Kconfig b/drivers/input/serio/Kconfig
-> index 17edc1597446..c7ef347a4dff 100644
-> --- a/drivers/input/serio/Kconfig
-> +++ b/drivers/input/serio/Kconfig
-> @@ -276,8 +276,8 @@ config SERIO_OLPC_APSP
->  
->  config HYPERV_KEYBOARD
->  	tristate "Microsoft Synthetic Keyboard driver"
-> -	depends on HYPERV
-> -	default HYPERV
-> +	depends on HYPERV_VMBUS
-> +	default HYPERV_VMBUS
->  	help
->  	  Select this option to enable the Hyper-V Keyboard driver.
->  
-> diff --git a/drivers/net/hyperv/Kconfig b/drivers/net/hyperv/Kconfig
-> index c8cbd85adcf9..982964c1a9fb 100644
-> --- a/drivers/net/hyperv/Kconfig
-> +++ b/drivers/net/hyperv/Kconfig
-> @@ -1,7 +1,7 @@
->  # SPDX-License-Identifier: GPL-2.0-only
->  config HYPERV_NET
->  	tristate "Microsoft Hyper-V virtual network driver"
-> -	depends on HYPERV
-> +	depends on HYPERV_VMBUS
->  	select UCS2_STRING
->  	select NLS
->  	help
-> diff --git a/drivers/pci/Kconfig b/drivers/pci/Kconfig
-> index 9a249c65aedc..7065a8e5f9b1 100644
-> --- a/drivers/pci/Kconfig
-> +++ b/drivers/pci/Kconfig
-> @@ -221,7 +221,7 @@ config PCI_LABEL
->  
->  config PCI_HYPERV
->  	tristate "Hyper-V PCI Frontend"
-> -	depends on ((X86 && X86_64) || ARM64) && HYPERV && PCI_MSI && SYSFS
-> +	depends on ((X86 && X86_64) || ARM64) && HYPERV_VMBUS && PCI_MSI && SYSFS
->  	select PCI_HYPERV_INTERFACE
->  	select IRQ_MSI_LIB
->  	help
-> diff --git a/drivers/scsi/Kconfig b/drivers/scsi/Kconfig
-> index 5522310bab8d..19d0884479a2 100644
-> --- a/drivers/scsi/Kconfig
-> +++ b/drivers/scsi/Kconfig
-> @@ -589,7 +589,7 @@ config XEN_SCSI_FRONTEND
->  
->  config HYPERV_STORAGE
->  	tristate "Microsoft Hyper-V virtual storage driver"
-> -	depends on SCSI && HYPERV
-> +	depends on SCSI && HYPERV_VMBUS
->  	depends on m || SCSI_FC_ATTRS != m
->  	default HYPERV
->  	help
-> diff --git a/drivers/uio/Kconfig b/drivers/uio/Kconfig
-> index b060dcd7c635..6f86a61231e6 100644
-> --- a/drivers/uio/Kconfig
-> +++ b/drivers/uio/Kconfig
-> @@ -140,7 +140,7 @@ config UIO_MF624
->  
->  config UIO_HV_GENERIC
->  	tristate "Generic driver for Hyper-V VMBus"
-> -	depends on HYPERV
-> +	depends on HYPERV_VMBUS
->  	help
->  	  Generic driver that you can bind, dynamically, to any
->  	  Hyper-V VMBus device. It is useful to provide direct access
-> diff --git a/drivers/video/fbdev/Kconfig b/drivers/video/fbdev/Kconfig
-> index c21484d15f0c..72c63eaeb983 100644
-> --- a/drivers/video/fbdev/Kconfig
-> +++ b/drivers/video/fbdev/Kconfig
-> @@ -1774,7 +1774,7 @@ config FB_BROADSHEET
->  
->  config FB_HYPERV
->  	tristate "Microsoft Hyper-V Synthetic Video support"
-> -	depends on FB && HYPERV
-> +	depends on FB && HYPERV_VMBUS
->  	select DMA_CMA if HAVE_DMA_CONTIGUOUS && CMA
->  	select FB_IOMEM_HELPERS_DEFERRED
->  	help
-> diff --git a/include/asm-generic/mshyperv.h b/include/asm-generic/mshyperv.h
-> index 1d2ad1304ad4..66c58c91b530 100644
-> --- a/include/asm-generic/mshyperv.h
-> +++ b/include/asm-generic/mshyperv.h
-> @@ -165,6 +165,7 @@ static inline u64 hv_generate_guest_id(u64 kernel_version)
->  
->  void __init hv_mark_resources(void);
->  
-> +#if IS_ENABLED(CONFIG_HYPERV_VMBUS)
->  /* Free the message slot and signal end-of-message if required */
->  static inline void vmbus_signal_eom(struct hv_message *msg, u32 old_msg_type)
->  {
-> @@ -200,6 +201,10 @@ static inline void vmbus_signal_eom(struct hv_message *msg, u32 old_msg_type)
->  	}
->  }
->  
-> +extern int vmbus_interrupt;
-> +extern int vmbus_irq;
-> +#endif /* CONFIG_HYPERV_VMBUS */
-> +
->  int hv_get_hypervisor_version(union hv_hypervisor_version_info *info);
->  
->  void hv_setup_vmbus_handler(void (*handler)(void));
-> @@ -213,9 +218,6 @@ void hv_setup_crash_handler(void (*handler)(struct pt_regs *regs));
->  void hv_remove_crash_handler(void);
->  void hv_setup_mshv_handler(void (*handler)(void));
->  
-> -extern int vmbus_interrupt;
-> -extern int vmbus_irq;
-> -
->  #if IS_ENABLED(CONFIG_HYPERV)
->  /*
->   * Hypervisor's notion of virtual processor ID is different from
-> diff --git a/net/vmw_vsock/Kconfig b/net/vmw_vsock/Kconfig
-> index 56356d2980c8..8e803c4828c4 100644
-> --- a/net/vmw_vsock/Kconfig
-> +++ b/net/vmw_vsock/Kconfig
-> @@ -72,7 +72,7 @@ config VIRTIO_VSOCKETS_COMMON
->  
->  config HYPERV_VSOCKETS
->  	tristate "Hyper-V transport for Virtual Sockets"
-> -	depends on VSOCKETS && HYPERV
-> +	depends on VSOCKETS && HYPERV_VMBUS
->  	help
->  	  This module implements a Hyper-V transport for Virtual Sockets.
->  
-
+>  config ARCH_SPARSEMEM_DEFAULT
+>  	def_bool y
+> -- 
+> 2.50.1
+> 
