@@ -1,132 +1,261 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B8811A5BBF;
-	Mon,  1 Sep 2025 08:06:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 216E12FABF8
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Sep 2025 08:34:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756713962; cv=none; b=hf+CLCd4CvDXBnjobmxHwoo/ALPBFfwWB78OQmLlXsCSbAu/uq/lr8Aj2WqPONo7xHfV0GlBFMTsU91Sie99NmItVKuS8hYeZW1zldgro7U9gDUR6BREV1pzu0MqXoSxnGt0sf3vDJU5Nl/LQJSWkSvvKPYqGY53xG0r0yNIpws=
+	t=1756715667; cv=none; b=U11IB3uXwiIsqn6W39kGkspr95vI9MYb+LiTGWphKzDn6FZCsG+H7qMXY+lDFLnH8dH+CB8w4Vny0NCqK1sCAoUBymnCVbpxsXB2V4ifnbWoov9YOB8P3QPhnLY46qMt+zWyV4SKC95F+jR/kR1BAR1e4iRpE6Vod+JG12W9dvo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756713962; c=relaxed/simple;
-	bh=bnNAN6za/atPZ+puSToYaKFOAZ7qP0i0YUB/QHVuRx8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=DprEg0fjB3JTdaYy3zPhxa4Htqk9GLppthH9DWezI4gkyAO6x1UfnMzI8KLWKm5kDJvX4GK3o9qJOLrYeyZM30hSkUoj1qp27zo7vFMQiKWYgR6puAuy1/5id9651YCsdjgp0rf4Q//gKNxmFqIHIO6uPGJ3cgr4T3N63n3D8yY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d31Dni85; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1756715667; c=relaxed/simple;
+	bh=CX+TO9gDNqsfYA4iSTZNQQzCZgBpeGXDXpWJCsncFrU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eQ8apJxCvqgjhNyyRgnxzEGjKI+hz7EE9LIM5/M4aI6qV+w5pzcipTbvOEhpEGAZBKevAP3HbBeSkjNQnCYPA45KOiC5UsgS7gFIoSa2FCpN0JrGwYsa1T5rfFMw+rfnqpLJPsWl116xRoz5kp5k2ku4JPMcJ+km1rZJjAX4sUU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Sc0b3nr2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BxHqpGY1; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=Sc0b3nr2; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=BxHqpGY1; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d31Dni85"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4EE62C4CEF0;
-	Mon,  1 Sep 2025 08:05:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756713961;
-	bh=bnNAN6za/atPZ+puSToYaKFOAZ7qP0i0YUB/QHVuRx8=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=d31Dni85W91IBxBr02Ry1P3ZzoYllduxEH5O5Pokxdgkbhw0B4WKpGWvf4HdiVLzg
-	 RBh8ycIKkbTztectlGpYlrCounHSt6BHPvfqnM366t9jRu9HOpnRXer6zYqh3m5Tf/
-	 IQrUBXiv7AlJKxvMp4hG8HAiV4zJMV+Kn8kQVWJWMZtj/91RkVQ87DgtTcS9yEdymM
-	 KY7m4S+teqtndQKepixaS+NnlJxSzMlsScoiyZ5WFdBHdYaKXVlCkmlZStDSladVBT
-	 0wuLBqTeL42GQS4CHIjpjtrcHFqGFz15j8h1d/7DYiwd842i1N82y3Ooi3UVKQsBcv
-	 sAsTvS8dc1T0w==
-Message-ID: <b049c4be-f3c1-49e4-8737-c29c52185e60@kernel.org>
-Date: Mon, 1 Sep 2025 10:05:56 +0200
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Sc0b3nr2";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BxHqpGY1";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="Sc0b3nr2";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="BxHqpGY1"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 45F2F21A19;
+	Mon,  1 Sep 2025 08:34:23 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1756715663; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sUs0tvmNOhyGihKsdzrfm7Mns2CmpxurqjG3WitBJfk=;
+	b=Sc0b3nr2ige8EVi76LakLqqkQVNbLrDvb0J6XGyVHRXjq1NZwQL5KtTkRsZBX0hiKQjKx9
+	oZ2SQyYcncPwwNIdOBQMBXNEEcqZOo6X5zOJ+SItRwWCFI3p6NcunB+LXyrwrY34VXvwM0
+	ciPOTFOw9o6ku/3JilKbm168I61O70M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1756715663;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sUs0tvmNOhyGihKsdzrfm7Mns2CmpxurqjG3WitBJfk=;
+	b=BxHqpGY1rvjhaflWoPzUdUz+03Yl3md7QpYrdNENyDY1xPmyCv4skO5A1y+Q7XfsRRjA0e
+	o9jCj3X7T7lcLsBw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1756715663; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sUs0tvmNOhyGihKsdzrfm7Mns2CmpxurqjG3WitBJfk=;
+	b=Sc0b3nr2ige8EVi76LakLqqkQVNbLrDvb0J6XGyVHRXjq1NZwQL5KtTkRsZBX0hiKQjKx9
+	oZ2SQyYcncPwwNIdOBQMBXNEEcqZOo6X5zOJ+SItRwWCFI3p6NcunB+LXyrwrY34VXvwM0
+	ciPOTFOw9o6ku/3JilKbm168I61O70M=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1756715663;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=sUs0tvmNOhyGihKsdzrfm7Mns2CmpxurqjG3WitBJfk=;
+	b=BxHqpGY1rvjhaflWoPzUdUz+03Yl3md7QpYrdNENyDY1xPmyCv4skO5A1y+Q7XfsRRjA0e
+	o9jCj3X7T7lcLsBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 3376E136ED;
+	Mon,  1 Sep 2025 08:34:23 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id UB1ADI9atWhjXQAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Mon, 01 Sep 2025 08:34:23 +0000
+Date: Mon, 1 Sep 2025 10:34:14 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+Subject: Re: blktests failures with v6.17-rc1 kernel
+Message-ID: <629ddb72-c10d-4930-9d81-61d7322ed3b0@flourine.local>
+References: <suhzith2uj75uiprq4m3cglvr7qwm3d7gi4tmjeohlxl6fcmv3@zu6zym6nmvun>
+ <ff748a3f-9f07-4933-b4b3-b4f58aacac5b@flourine.local>
+ <rsdinhafrtlguauhesmrrzkybpnvwantwmyfq2ih5aregghax5@mhr7v3eryci3>
+ <6ef89cb5-1745-4b98-9203-51ba6de40799@flourine.local>
+ <u4ttvhnn7lark5w3sgrbuy2rxupcvosp4qmvj46nwzgeo5ausc@uyrkdls2muwx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 4/5] arm64: dts: qcom: sm8650: Enable MCQ support for
- UFS controller
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, andersson@kernel.org,
- konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
- conor+dt@kernel.org, James.Bottomley@hansenpartnership.com,
- martin.petersen@oracle.com, linux-arm-msm@vger.kernel.org,
- devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org
-References: <20250821112403.12078-1-quic_rdwivedi@quicinc.com>
- <20250821112403.12078-5-quic_rdwivedi@quicinc.com>
- <eeecc7a3-8ce3-4cfd-8d40-988736fc0c59@kernel.org>
- <34aqaxgkykyhenrjfj3vrarin2c3uebgfaya7rxi7d5p5skhom@ie4gitcw36mr>
- <ba227580-add8-4ea8-a973-c39083301e67@kernel.org>
- <aonf4hobz6b3a75lwiblu44gxvae4hnp2mcnh5sqlyzo6k7hwe@a5toymspbkdy>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <aonf4hobz6b3a75lwiblu44gxvae4hnp2mcnh5sqlyzo6k7hwe@a5toymspbkdy>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <u4ttvhnn7lark5w3sgrbuy2rxupcvosp4qmvj46nwzgeo5ausc@uyrkdls2muwx>
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.999];
+	MIME_GOOD(-0.10)[text/plain];
+	ARC_NA(0.00)[];
+	TO_DN_EQ_ADDR_SOME(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	RCPT_COUNT_FIVE(0.00)[6]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spam-Score: -4.30
 
-On 01/09/2025 06:15, Manivannan Sadhasivam wrote:
->>>>
->>>> I don't understand why you combine DTS patch into UFS patchset. This
->>>> creates impression of dependent work, which would be a trouble for merging.
->>>>
->>>
->>> What trouble? Even if the DTS depends on the driver/bindings change, can't it
->>> still go through a different tree for the same cycle? It happened previously as
->>
->> It all depends on sort of dependency.
->>
->>> well, unless the rule changed now.
->>
->> No, the point is that there is absolutely nothing relevant between the
->> DTS and drivers here. Combining unrelated patches, completely different
->> ones, targeting different subsystems into one patchset was always a
->> mistake. This makes only life of maintainers more difficult, for no gain.
->>
+On Sat, Aug 30, 2025 at 01:15:48PM +0000, Shinichiro Kawasaki wrote:
+> On Aug 28, 2025 / 13:33, Daniel Wagner wrote:
+> > Would you mind to give the attached patch a try? It fixes the problem I
+> > was able to reproduce.
 > 
-> Ok. Since patch 2 is just a refactoring, it should not be required for enabling
-> MCQ. But it is not clear if that is the case.
-> 
-> @Ram/Nitin: Please confirm if MCQ can be enabled without patch 2. If yes, then
-> post the DTS separately, otherwise, you need to rewrite the commit message of
-> patch 2 to state it explicitly.
+> Thanks for the effort. I applied the patch attached to v6.17-rc3 kernel an
+> repeated nvme/061. It avoided the WARN and the refcount_t message. This looks
+> good.
 
-Dependency of DTS on driver would be another issue and in any case must
-be clearly documented, not implicit via patch order.
+Glad to hear this!
 
-Best regards,
-Krzysztof
+> However, unfortunately, I observed a different failure symptom with KASAN
+> slab-use-after-free [*]. I'm not sure if the fix patch unveiled this KASAN, or
+> if created this KASAN. This failure is observed on my test systems in stable
+> manner, but it is required to repeat nvme/061 a few hundreds of times to
+> recreated it.
+
+I am not surprised that there are more bugs popping up. Maybe it was
+hidden by the previous one. Anyway let's have a look.
+
+> Aug 29 15:26:06 testnode1 kernel: nvme nvme2: Please enable CONFIG_NVME_MULTIPATH for full support of multi-port devices.
+
+Do you happen to know if this is necessary to reproduce? After looking
+at it, I don't think it matters.
+
+> Aug 29 15:26:06 testnode1 kernel: nvme nvme2: NVME-FC{0}: controller connect complete
+> Aug 29 15:26:06 testnode1 kernel: (NULL device *): {0:0} Association deleted
+> Aug 29 15:26:07 testnode1 kernel: nvme nvme2: NVME-FC{0}: io failed due to lldd error 6
+> Aug 29 15:26:07 testnode1 kernel: nvme nvme2: NVME-FC{0}: transport association event: transport detected io error
+> Aug 29 15:26:07 testnode1 kernel: nvme nvme2: NVME-FC{0}: resetting controller
+> Aug 29 15:26:07 testnode1 kernel: (NULL device *): {0:0} Association freed
+> Aug 29 15:26:07 testnode1 kernel: nvme nvme2: NVME-FC{0}: create association : host wwpn 0x20001100aa000001  rport wwpn 0x20001100ab000001: NQN "blktests-subsystem-1"
+> Aug 29 15:26:07 testnode1 kernel: (NULL device *): queue 0 connect admin queue failed (-111).
+> Aug 29 15:26:07 testnode1 kernel: nvme nvme2: NVME-FC{0}: controller connectivity lost. Awaiting Reconnect
+> Aug 29 15:26:07 testnode1 kernel: ==================================================================
+> Aug 29 15:26:07 testnode1 kernel: BUG: KASAN: slab-use-after-free in fcloop_remoteport_delete+0x150/0x190 [nvme_fcloop]
+> Aug 29 15:26:07 testnode1 kernel: Write of size 8 at addr ffff8881145fa700 by task kworker/u16:9/95
+> Aug 29 15:26:07 testnode1 kernel: 
+> Aug 29 15:26:07 testnode1 kernel: CPU: 0 UID: 0 PID: 95 Comm: kworker/u16:9 Not tainted 6.17.0-rc3+ #356 PREEMPT(voluntary) 
+> Aug 29 15:26:07 testnode1 kernel: Hardware name: QEMU Standard PC (i440FX + PIIX, 1996), BIOS 1.16.3-4.fc42 04/01/2014
+> Aug 29 15:26:07 testnode1 kernel: Workqueue: nvme-wq nvme_fc_connect_ctrl_work [nvme_fc]
+> Aug 29 15:26:07 testnode1 kernel: Call Trace:
+> Aug 29 15:26:07 testnode1 kernel:  <TASK>
+> Aug 29 15:26:07 testnode1 kernel:  dump_stack_lvl+0x6a/0x90
+> Aug 29 15:26:07 testnode1 kernel:  ? fcloop_remoteport_delete+0x150/0x190 [nvme_fcloop]
+> Aug 29 15:26:07 testnode1 kernel:  print_report+0x170/0x4f3
+> Aug 29 15:26:07 testnode1 kernel:  ? __virt_addr_valid+0x22e/0x4e0
+> Aug 29 15:26:07 testnode1 kernel:  ? fcloop_remoteport_delete+0x150/0x190 [nvme_fcloop]
+> Aug 29 15:26:07 testnode1 kernel:  kasan_report+0xad/0x170
+> Aug 29 15:26:07 testnode1 kernel:  ? fcloop_remoteport_delete+0x150/0x190 [nvme_fcloop]
+> Aug 29 15:26:07 testnode1 kernel:  fcloop_remoteport_delete+0x150/0x190 [nvme_fcloop]
+> Aug 29 15:26:07 testnode1 kernel:  nvme_fc_ctlr_inactive_on_rport.isra.0+0x1b1/0x210 [nvme_fc]
+> Aug 29 15:26:07 testnode1 kernel:  nvme_fc_connect_ctrl_work.cold+0x33f/0x348e [nvme_fc]
+> Aug 29 15:26:07 testnode1 kernel:  ? lock_acquire+0x170/0x310
+> Aug 29 15:26:07 testnode1 kernel:  ? __pfx_nvme_fc_connect_ctrl_work+0x10/0x10 [nvme_fc]
+> Aug 29 15:26:07 testnode1 kernel:  ? lock_acquire+0x180/0x310
+> Aug 29 15:26:07 testnode1 kernel:  ? process_one_work+0x722/0x14b0
+> Aug 29 15:26:07 testnode1 kernel:  ? lock_release+0x1ad/0x300
+> Aug 29 15:26:07 testnode1 kernel:  ? rcu_is_watching+0x11/0xb0
+> Aug 29 15:26:07 testnode1 kernel:  process_one_work+0x868/0x14b0
+> Aug 29 15:26:07 testnode1 kernel:  ? __pfx_process_one_work+0x10/0x10
+> Aug 29 15:26:07 testnode1 kernel:  ? lock_acquire+0x170/0x310
+> Aug 29 15:26:07 testnode1 kernel:  ? assign_work+0x156/0x390
+> Aug 29 15:26:07 testnode1 kernel:  worker_thread+0x5ee/0xfd0
+> Aug 29 15:26:07 testnode1 kernel:  ? __pfx_worker_thread+0x10/0x10
+> Aug 29 15:26:07 testnode1 kernel:  kthread+0x3af/0x770
+> Aug 29 15:26:07 testnode1 kernel:  ? lock_acquire+0x180/0x310
+> Aug 29 15:26:07 testnode1 kernel:  ? __pfx_kthread+0x10/0x10
+> Aug 29 15:26:07 testnode1 kernel:  ? ret_from_fork+0x1d/0x4e0
+> Aug 29 15:26:07 testnode1 kernel:  ? lock_release+0x1ad/0x300
+> Aug 29 15:26:07 testnode1 kernel:  ? rcu_is_watching+0x11/0xb0
+> Aug 29 15:26:07 testnode1 kernel:  ? __pfx_kthread+0x10/0x10
+> Aug 29 15:26:07 testnode1 kernel:  ret_from_fork+0x3be/0x4e0
+> Aug 29 15:26:07 testnode1 kernel:  ? __pfx_kthread+0x10/0x10
+> Aug 29 15:26:07 testnode1 kernel:  ? __pfx_kthread+0x10/0x10
+> Aug 29 15:26:07 testnode1 kernel:  ret_from_fork_asm+0x1a/0x30
+> Aug 29 15:26:07 testnode1 kernel:  </TASK>
+> Aug 29 15:26:07 testnode1 kernel: 
+> Aug 29 15:26:07 testnode1 kernel: Allocated by task 14561:
+> Aug 29 15:26:07 testnode1 kernel:  kasan_save_stack+0x2c/0x50
+> Aug 29 15:26:07 testnode1 kernel:  kasan_save_track+0x10/0x30
+> Aug 29 15:26:07 testnode1 kernel:  __kasan_kmalloc+0x96/0xb0
+> Aug 29 15:26:07 testnode1 kernel:  fcloop_alloc_nport.isra.0+0xdb/0x910 [nvme_fcloop]
+> Aug 29 15:26:07 testnode1 kernel:  fcloop_create_target_port+0xa6/0x5a0 [nvme_fcloop]
+> Aug 29 15:26:07 testnode1 kernel:  kernfs_fop_write_iter+0x39a/0x5a0
+> Aug 29 15:26:07 testnode1 kernel:  vfs_write+0x523/0xf80
+> Aug 29 15:26:07 testnode1 kernel:  ksys_write+0xfb/0x200
+> Aug 29 15:26:07 testnode1 kernel:  do_syscall_64+0x94/0x3d0
+> Aug 29 15:26:07 testnode1 kernel:  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> Aug 29 15:26:07 testnode1 kernel: 
+> Aug 29 15:26:07 testnode1 kernel: Freed by task 14126:
+> Aug 29 15:26:07 testnode1 kernel:  kasan_save_stack+0x2c/0x50
+> Aug 29 15:26:07 testnode1 kernel:  kasan_save_track+0x10/0x30
+> Aug 29 15:26:07 testnode1 kernel:  kasan_save_free_info+0x37/0x70
+> Aug 29 15:26:07 testnode1 kernel:  __kasan_slab_free+0x5f/0x70
+> Aug 29 15:26:07 testnode1 kernel:  kfree+0x13a/0x4c0
+> Aug 29 15:26:07 testnode1 kernel:  fcloop_delete_remote_port+0x238/0x390 [nvme_fcloop]
+> Aug 29 15:26:07 testnode1 kernel:  kernfs_fop_write_iter+0x39a/0x5a0
+> Aug 29 15:26:07 testnode1 kernel:  vfs_write+0x523/0xf80
+> Aug 29 15:26:07 testnode1 kernel:  ksys_write+0xfb/0x200
+> Aug 29 15:26:07 testnode1 kernel:  do_syscall_64+0x94/0x3d0
+> Aug 29 15:26:07 testnode1 kernel:  entry_SYSCALL_64_after_hwframe+0x76/0x7e
+> Aug 29 15:26:07 testnode1 kernel: 
+> Aug 29 15:26:07 testnode1 kernel: The buggy address belongs to the object at ffff8881145fa700
+>                                    which belongs to the cache kmalloc-96 of size 96
+> Aug 29 15:26:07 testnode1 kernel: The buggy address is located 0 bytes inside of
+>                                    freed 96-byte region [ffff8881145fa700, ffff8881145fa760)
+> Aug 29 15:26:07 testnode1 kernel: 
+> Aug 29 15:26:07 testnode1 kernel: The buggy address belongs to the physical page:
+> Aug 29 15:26:07 testnode1 kernel: page: refcount:0 mapcount:0 mapping:0000000000000000 index:0x0 pfn:0x1145fa
+> Aug 29 15:26:07 testnode1 kernel: flags: 0x17ffffc0000000(node=0|zone=2|lastcpupid=0x1fffff)
+> Aug 29 15:26:07 testnode1 kernel: page_type: f5(slab)
+> Aug 29 15:26:07 testnode1 kernel: raw: 0017ffffc0000000 ffff888100042280 ffffea0004792400 dead000000000002
+> Aug 29 15:26:07 testnode1 kernel: raw: 0000000000000000 0000000080200020 00000000f5000000 0000000000000000
+> Aug 29 15:26:07 testnode1 kernel: page dumped because: kasan: bad access detected
+> Aug 29 15:26:07 testnode1 kernel: 
+> Aug 29 15:26:07 testnode1 kernel: Memory state around the buggy address:
+> Aug 29 15:26:07 testnode1 kernel:  ffff8881145fa600: 00 00 00 00 00 00 00 00 00 00 00 fc fc fc fc fc
+> Aug 29 15:26:07 testnode1 kernel:  ffff8881145fa680: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+> Aug 29 15:26:07 testnode1 kernel: >ffff8881145fa700: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+> Aug 29 15:26:07 testnode1 kernel:                    ^
+> Aug 29 15:26:07 testnode1 kernel:  ffff8881145fa780: fa fb fb fb fb fb fb fb fb fb fb fb fc fc fc fc
+> Aug 29 15:26:07 testnode1 kernel:  ffff8881145fa800: 00 00 00 00 00 00 00 00 00 fc fc fc fc fc fc fc
+> Aug 29 15:26:07 testnode1 kernel: ==================================================================
+
+The test is removing the ports while the host driver is about to
+reconnect and accesses a stale pointer.
+
+nvme_fc_create_association is calling nvme_fc_ctlr_inactive_on_rport in
+the error path. The problem is that nvme_fc_create_association gets half
+through the setup and then fails. In the cleanup path
+
+	dev_warn(ctrl->ctrl.device,
+		"NVME-FC{%d}: create_assoc failed, assoc_id %llx ret %d\n",
+		ctrl->cnum, ctrl->association_id, ret);
+
+is issued and then nvme_fc_ctlr_inactive_on_rport is called. And there
+is the log message above, so it's clear the error path is taken.
+
+But the thing is fcloop is not supposed to remove the ports when the
+host driver is still using it. So there is a race window where it's
+possible to enter nvme_fc_create_assocation and fcloop removing the
+ports.
+
+So between nvme_fc_create_assocation and nvme_fc_ctlr_active_on_rport.
