@@ -1,102 +1,111 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5CAAE1F03D9;
-	Sun, 31 Aug 2025 02:11:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 777B115E8B
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Sep 2025 01:31:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756606319; cv=none; b=hMXe8ASO42e+m4wdi2keIYqDFKuKoMecBMAWd8Ol7+BcFKK+qwvwjZ2A3zzW/7N8rQ2mTeGM2TiX09ZHLO6bjVfHLf8ywhtY3YPN2NqH8eQo0EopWDr+oVOiZbf55O1Ao5rURKyUKVn0tVWMIjBUYqKMO2T0Lrnbp6UJR5ckdao=
+	t=1756690295; cv=none; b=P64wEnHLjIkc1U5tzajZ3s7KppO1XIk6MVkzOtCn0Ra/IF7fFn71FqnIpW5N+32acKciGJ9nu3GqxsQWpduD2WLHAvKFij73Ifitrhjd6v0Xyl1mp/gmS5OoQTRtLPL/1xPQRqD4aZNNWG93GgzeBztASLxkhjogpYeTLDa+YJ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756606319; c=relaxed/simple;
-	bh=t+K1tqbRrmA6tSz4mhK3Qm1oaO3eVmNyNZS5NfOY0uE=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=S5D/aqqNK5Ss0rRdZeoQgJNCBusrFbUEgU0ZrwCKTAvxaDQSw0CC7d1gmLSd472ZzBxfH1+Qyl2AO5r4cmNRCwSVCujmvUqGqP1EiGUb7ZfDc95DbaQoqGI4CLF0X+S2QMZiqbws3ISaaH+fTH7j1VtidERZUO//pxwb8+Qtfcs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=S9wk2RzJ; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1756690295; c=relaxed/simple;
+	bh=k2yIBHeetjvIe2eMsGwblYzWcuhy4DxsR0y7wG7BIis=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=O+y/GBLn8gZEZxVktnRx8A0xVp5fKcdXUjaaJfY+kPPHmTaXgedkqrPs+35lHAMN4ua0bUTXJW9o7jF2RafUvxoQWvk2uZBkSvjQRucAWqS/4lFh1wud/HaDIL7NxZJp8vPt9vX+DxvsHIlpkAXsHw0TJgk0xftLij+eJt5BVxs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Te+0EPpe; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="S9wk2RzJ"
-Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 57V11dZ4014044;
-	Sun, 31 Aug 2025 02:11:48 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=bWfBoLSO/BGmnnhjp4SzbSWAL/yaL13fTaNCsbIQFxc=; b=
-	S9wk2RzJVgFQJEsEViI4rv98U6shbf0Z+sUI5tYptYJ+00Piayrs26A/wZPMj1Ed
-	VW0FoLfSS1JigyDSUvhIMMxU+SlzrFQHkW1AD5h/BjjH3UTnKSr9LEK10xAVSzib
-	RiJxlESPxdbZHVJy8pGr34FoG3IRIGED7FWj9yX6R0iT6/AYXS11+3IAQ+pd5p11
-	3sQsCYjM4ALJsOLmM5wHc9bIo/O84lKyL4aNOlftz4MCVXjfsXA8jICjtowU26+d
-	UYvLW1/Jw4OCsQFcBv5EW/CyueV3/JxQlm7xVyz+3GaCN4kPiZtUDUOy+o3GoDBl
-	ekU0UJPxCR4NMdVav74coA==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 48v8p4g3qc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 31 Aug 2025 02:11:47 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 57V1WJLl028718;
-	Sun, 31 Aug 2025 02:11:46 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 48uqr72m5b-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 31 Aug 2025 02:11:46 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 57V2BjAu019355;
-	Sun, 31 Aug 2025 02:11:46 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 48uqr72m4v-4;
-	Sun, 31 Aug 2025 02:11:46 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: James.Bottomley@HansenPartnership.com, liuqiangneo@163.com
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Qiang Liu <liuqiang@kylinos.cn>
-Subject: Re: [PATCH] scsi: aic94xx: remove self-assigned redundant code
-Date: Sat, 30 Aug 2025 22:11:43 -0400
-Message-ID: <175660145353.2188324.11138266229721694330.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250819023006.15216-1-liuqiangneo@163.com>
-References: <20250819023006.15216-1-liuqiangneo@163.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Te+0EPpe"
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250901013130epoutp01adcd007bb8745b771db577edbf9c4ba0~hBIMF7DIJ0047800478epoutp01f
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Sep 2025 01:31:30 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250901013130epoutp01adcd007bb8745b771db577edbf9c4ba0~hBIMF7DIJ0047800478epoutp01f
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1756690290;
+	bh=qEQukgl2nisoCJ8UWKyqaVr+jS40V1s8aqemUXAu1rI=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=Te+0EPpeoKU0Mtjy5czxZjs3wqLE9W1xvGUH0/BBtc/zRGl4/wjdHGv/3q83DmIVS
+	 C0d1R5SvehPNdQVFa8l2ZLQBC62g5gQJ5HuG47JHCR8F2cp34gh4Cp/EcZEjFkTk6u
+	 yhykp1yo59XTgF63fsMFnvawcT9RslHWLW8CjB/M=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPS id
+	20250901013129epcas1p3b6322e441267fa862de9dffd227598c4~hBILVJwzJ2586925869epcas1p3J;
+	Mon,  1 Sep 2025 01:31:29 +0000 (GMT)
+Received: from epcas1p1.samsung.com (unknown [182.195.36.224]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4cFWYY1Rbbz3hhTG; Mon,  1 Sep
+	2025 01:31:29 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
+	20250901013128epcas1p43eed1b6be716dc182920ec93476a2854~hBIKXlGAL2416324163epcas1p41;
+	Mon,  1 Sep 2025 01:31:28 +0000 (GMT)
+Received: from dh0421hwang02 (unknown [10.253.101.58]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250901013128epsmtip223e40759f883573dea159c4dc387b14b~hBIKQx2LO1772517725epsmtip2N;
+	Mon,  1 Sep 2025 01:31:28 +0000 (GMT)
+From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <James.Bottomley@HansenPartnership.com>,
+	<martin.petersen@oracle.com>, <peter.wang@mediatek.com>,
+	<manivannan.sadhasivam@linaro.org>, <quic_mnaresh@quicinc.com>
+Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
+	<junwoo80.lee@samsung.com>, <jangsub.yi@samsung.com>,
+	<sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
+	<sh8267.baek@samsung.com>, <wkon.kim@samsung.com>
+In-Reply-To: <239ea120-841f-478d-b6b4-9627aa453795@acm.org>
+Subject: RE: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs
+ cmd error
+Date: Mon, 1 Sep 2025 10:31:28 +0900
+Message-ID: <093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQEmYeTjtFjYRI1QNWxgWL0Y7ybfIwITLn2gAaoUPAICiJScSrW2zAQQ
+Content-Language: ko
+X-CMS-MailID: 20250901013128epcas1p43eed1b6be716dc182920ec93476a2854
+X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-08-31_01,2025-08-28_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=664 adultscore=0
- suspectscore=0 spamscore=0 phishscore=0 mlxscore=0 malwarescore=0
- bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2508110000 definitions=main-2508310022
-X-Proofpoint-ORIG-GUID: qY0k9w9uTc5UNDEFabBvUYDUngMzA3pp
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDIyMiBTYWx0ZWRfX7KaJ7BUUv84u
- vO407VOowdV1VoRVpPx/zYOPz1/X1TmI9KLt5Qvg+80M5dZPdJq1/QAnaRj34azBKDpLz4aLkVO
- UjWZsMTM6ZlR1Ee6Zd6otNb1MtfqzCLlDmU5XMBf6gaYTEBLSJDaUc/pfbkRf7kAkT5basrSXMx
- A03+gMlQ7sxpCoAHxB36qmO0JhYHinicsUTuRiT5PKJtEKSzlhVJWHET3Avivn8SlhpMtJsk0wi
- /yJDsFteUVc7aduYEdeo0cSArLHeHW9ORuoIkF8F6S93OQUtkpCxC5r2UL7RF7NJ6FegFl2vmbD
- v+yFMeI6HSahNYOh7IL8FgMMOuSgkTifXlvNL0jTdgdPT7ce3FMf0bKmN99W+89eHmuy8IbA99s
- 2V1a8gbwNTA/5TKfw+8j0zOuxEDb1Q==
-X-Authority-Analysis: v=2.4 cv=doHbC0g4 c=1 sm=1 tr=0 ts=68b3af64 b=1 cx=c_pps
- a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
- a=IkcTkHD0fZMA:10 a=2OwXVqhp2XgA:10 a=VwQbUJbxAAAA:8 a=Byx-y9mGAAAA:8
- a=cFgQZym8HoIPNOZtx30A:9 a=QEXdDO2ut3YA:10 a=VTmGLo8Mz9AA:10 cc=ntf
- awl=host:13602
-X-Proofpoint-GUID: qY0k9w9uTc5UNDEFabBvUYDUngMzA3pp
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d
+References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+	<CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
+	<20250417023405.6954-2-dh0421.hwang@samsung.com>
+	<239ea120-841f-478d-b6b4-9627aa453795@acm.org>
 
-On Tue, 19 Aug 2025 10:30:06 +0800, liuqiangneo@163.com wrote:
-
-> Assigning ssp_task.retry_count to itself has no effect
+On 8/29/25 8:15 PM, Bart Van Assche wrote:
+> On 4/16/25 7:34 PM, DooHyun Hwang wrote:
+> > +	EM(UFS_CMD_ERR,		"req_complete_err")		\
 > 
+> Does UFS_CMD_ERR stand for "command error" or "completion error"? Please
+> make the enum label and the text that is displayed in error messages
+> consistent.
 > 
+> Bart.
 
-Applied to 6.18/scsi-queue, thanks!
+UFS_CMD_ERR stands for "completion error".
+The enum is converted to a string in the trace log according
+to the definition below.
 
-[1/1] scsi: aic94xx: remove self-assigned redundant code
-      https://git.kernel.org/mkp/scsi/c/00f4699872d0
+in include/trace/events/ufs.h
+#define UFS_CMD_TRACE_STRINGS					\
+	EM(UFS_CMD_SEND,	"send_req")			\
+	EM(UFS_CMD_COMP,	"complete_rsp")			\
++	EM(UFS_CMD_ERR,		"req_complete_err")		\
+	EM(UFS_DEV_COMP,	"dev_complete")			\
+	EM(UFS_QUERY_SEND,	"query_send")			\
+	EM(UFS_QUERY_COMP,	"query_complete")		\
+	EM(UFS_QUERY_ERR,	"query_complete_err")		\
+	EM(UFS_TM_SEND,		"tm_send")			\
+	EM(UFS_TM_COMP,		"tm_complete")			\
+	EMe(UFS_TM_ERR,		"tm_complete_err")
 
--- 
-Martin K. Petersen
+Thank you.
+DooHyun Hwang.
+
