@@ -1,131 +1,100 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A65713E02A;
-	Mon,  1 Sep 2025 16:08:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 775FD22FE18;
+	Mon,  1 Sep 2025 21:41:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756742920; cv=none; b=E8n6Jpige6s7zS5ujl04sz1S2LMY5/YdQHSncQzSWcBmZHgtryCUDKXmYhBjjKTOiPdQvNmTDPW1lTuMH37u3ewl34eLF95XVZO2XP/FOjDbD0V4tQ6NynhVNzfVynhjsjom1NHdTGoMqPngEU/Ej2UHvpgzC4vpN8b+jS34uJA=
+	t=1756762916; cv=none; b=Bfmlw8JcAaSskThMql2YXLx+DM1KTFmXwWQbtFtOqDzDTiQx66RJ+1MvDl8RTjfNnZ4J9THKyX9OVw4UBz4XPgqaglp9N0WfzFXF8TOWWZBd//M/NAugfWGOk6Gr7YZl6pct1h6lTQqsuPaKgbMD9HYnbY0rGy4yTEU01rDoWPE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756742920; c=relaxed/simple;
-	bh=EqeoXDvX4Ec7OVi70BK9y0ZJUtPChN7RnVzhxWXW0xA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=ceY6Rvi3ykPHvS5y48Hhz8OU7jRQBECgwLU3FwslfJ5RSp0EeRIJOW4SRfXyxuNpGnAvhsBww1DRMT4TC5BaCmZ1ZYUB0N5li3me3EjQxm1G93aDy8FvdBHu7vWBVgU0U8asbVq+cnzr9qPGx7hNConHKoHXF2y74wyA+9KLQrE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Kl0c3/a6; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1756762916; c=relaxed/simple;
+	bh=lqAsxVN8esNlj7zuyk9BoJWQsdCAllz+VcYWaymWJpQ=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Naxwj5czsQURfNI49YiCYpp8bBjVJJkd3pITwqU+lZxZTd1aObyAthc27YmU5TGwRyKqGKI4UC5FT9i6z4R14Wy1P7h2+1PJ0gjDj4XJ4ql5ks8ArXTy69N8Re7GmlRGEg6NU3shU+OWUFvLf9a5hGnXGjTfyH573zYCOw7WtdI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FfS3Ejv/; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Kl0c3/a6"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 581B4KB5015350;
-	Mon, 1 Sep 2025 16:08:34 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	8NHbnWA+ivENT66Nk4iYanDhKZZcbI1nQw9qnGL0QzM=; b=Kl0c3/a6dcN8+wt+
-	E8q1c5TiWkCSDeMFZ8qEneTZ/4NLbs9FLHJzW8Jy5HhLAMcpb50sSy4kZobmTy0N
-	ut1q5qCN7pl7PPTO7fh8gaC5LpnxautUE/Qgdg7kXGa8r6VLrgo6AfpW3sWpfOXl
-	5HEveiY//dFDBAOBd0wFFLwX8P8e+hPNRZ/0FXiJ46lE5CH6f3EbzzDTSKRK4STc
-	V5tpr2kYiPQim5CkhHH4GTl81cQL6i3r1FHpTpSfOP8AfjTivg7iT5vyf5vFrwZO
-	mQDgHdMXRDTJz9pvIClNWM/VuPxCE03gRlg4KRDRT3M6IteCE2kxF4GWHeQ1unLy
-	D/sexA==
-Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48utfkd63h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 01 Sep 2025 16:08:34 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 581G8XJb026669
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 1 Sep 2025 16:08:33 GMT
-Received: from [10.216.44.84] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.24; Mon, 1 Sep
- 2025 09:08:28 -0700
-Message-ID: <1efa429d-7576-49da-a769-b1eba9345958@quicinc.com>
-Date: Mon, 1 Sep 2025 21:38:25 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FfS3Ejv/"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-61cf8280f02so5096474a12.0;
+        Mon, 01 Sep 2025 14:41:54 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1756762913; x=1757367713; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=bObIG6hbz8i815o0CAvkZBfrxIXvHs9F3PjwpTRGK7o=;
+        b=FfS3Ejv/OFXnsEJyg7+Wmr1SU1egd0Csku55p7D/Pdhebt/ai4HE1iFwSne8t3tPt4
+         2aCGInJZmhftCplPmzdBNNP3IKuLnwKQl3jF4YB6GkaIAFO69mMgWUBn6wX6fy0K0iid
+         r5NeoaMPGApectiCb7VRZ7Ry/GI2SwFyBWKGXn48/lGBUVK6G4UhC0yEuHymovaTK1eL
+         OymW44BgXlzxapq6N37KaQ7BmHncv87MgsA1L+JEZxlPXDO65NoPRtXV6XI1jcDXptZV
+         SqVrxyNESvl9vkA1nAFB5eqVqUQyi5MQYQpEh2/wKubsZbO9Fm+n+GZpsw4onj1nMI22
+         fhrw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1756762913; x=1757367713;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=bObIG6hbz8i815o0CAvkZBfrxIXvHs9F3PjwpTRGK7o=;
+        b=ICifNQSv+ZIZ95TH/ptNCUUQV5CM/n1RR+DH/1BGfB71e79KLBqSnGfrKAPC6ieTQy
+         ar+08ZluI7VU82O1DNSBL+iXsufUn32EXGac/ITR7TLY2U5denqvWaTotI7CFft1sfKv
+         k5bMH+WCRsbsIXdpkEvHTqtIYWg3U+slVzLzH3wxyyI2jdNpTpjBqIw+tTCgtKj/+OZg
+         UCN6bveYkSBgxF0229Lr6S0hgKfIeTAvpu0Jfo6EJEEw/aekUnMQePcRbxK4eOz38v0q
+         sGXXWGCUlShBlD6rqb/jlSHkmW14xkfSGW1uKAiTH+BSaXZNnYtqURLSS6b+dMETRD4T
+         6PHQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUs7JoieQDn42ojmJ46hbNK406CfIFNCjawrocMe2ZP0pj6OaJOmqYgxSIxDmduYv0LFOIM73EXMacz+A==@vger.kernel.org, AJvYcCWF2Ryl8rDxvVMhJxhfebFH0ie8Tdu30pG/4C2NeYaqpLUVWoyEf5mLrbmGURuEXg+SnA8LB5fkccqfrg==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw7x8w3MBnwqMghJ6VbseT6z6f20FnPGDBLFK6VdZxAGqDoen19
+	rCDp6HzDjUSnuaXkw8CFjevPoSxfaYbOZTzAYwxQki7oE0nP1+0lvlHU76TX6UgrDofRsNXEZMs
+	go5KXvBELoH0cbmhjHbnhWN1jRoCRDvQ=
+X-Gm-Gg: ASbGncu4qDaeWfpUjZuT7rY0i9jTzuDHD5xOQ53Nn7fgD3kkiDm+pdC3XA9UQ/ERZ8v
+	VIM9Ekg/NTDQJ9CPWtK7l/UW95TNU5iCRe8QLJH2nbENcSlK1nPz3fsGhVoYZoaqB779I2PN7TC
+	PoNOFYA9qvMHLXtWZSCxxEfF6qGU3zToCczPxg8ySAlgIF4kbHCPKedvBFk2o+mYSinMZyZmts1
+	WglUBVesc6sS3XxAa4=
+X-Google-Smtp-Source: AGHT+IFjZmaPKoPQcXDGfF/kV1IP9uFU1Wv2mkfLSbSa6IhmowhwufpcDeP30Fu2i1LBz23Ff2FFDH8N8TzSkKHWIco=
+X-Received: by 2002:a05:6402:3508:b0:61c:30cf:885a with SMTP id
+ 4fb4d7f45d1cf-61d2686a2b1mr9013843a12.7.1756762912523; Mon, 01 Sep 2025
+ 14:41:52 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 3/5] scsi: ufs: core: Remove unused ufshcd_res_info
- structure
-To: Krzysztof Kozlowski <krzk@kernel.org>,
-        Ram Kumar Dwivedi
-	<quic_rdwivedi@quicinc.com>, <andersson@kernel.org>,
-        <konradybcio@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
-        <conor+dt@kernel.org>, <mani@kernel.org>,
-        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-CC: <linux-arm-msm@vger.kernel.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
-References: <20250821112403.12078-1-quic_rdwivedi@quicinc.com>
- <20250821112403.12078-4-quic_rdwivedi@quicinc.com>
- <1ccecf69-0bd8-4156-945d-e5876b6dea01@kernel.org>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <1ccecf69-0bd8-4156-945d-e5876b6dea01@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=eaQ9f6EH c=1 sm=1 tr=0 ts=68b5c502 cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=COk6AnOGAAAA:8
- a=2ANJes_M-wHGjwGGIWkA:9 a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-ORIG-GUID: baEnfMBlZR06je6vcouClH91UY1MjV6O
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDA0MCBTYWx0ZWRfXz+Lr2ypsoGVA
- fvl6l4jVny94Npt2x20KpJaxFMPEfpZVdsvCugGNvymdT7q0VP5tFytfRt4BbyWal3xmdwUeE+H
- dzffcQb3kARYwbXUHm3ZFuDLQl7EiiA5wm1uXz95Pjv3YpJLe95iqcXrYhBT894N1E8+OJZB170
- DGYHXMhYb0WanT/hIS8+YUBeCdBD1zE1dStdubPTcsu/cFe/ny5XhU4lx+7Tafl+sgVHVRR0REb
- FWJNkrWPuG4XXMwYviDt96ZjBGlyXXieAtuUa9PXzwcPOFCB5vS75g9BNEJApKrS/GQooDFnegO
- 85PHvwOFJKfo5QxhKJLcJIf1kCKHI70yUMBnG0CLxxUQfkNOXuIPxwxWK4byUP2meeEPsL9nYD+
- ES0bBnx7
-X-Proofpoint-GUID: baEnfMBlZR06je6vcouClH91UY1MjV6O
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-01_06,2025-08-28_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- suspectscore=0 phishscore=0 impostorscore=0 spamscore=0 malwarescore=0
- adultscore=0 bulkscore=0 priorityscore=1501 clxscore=1015
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508300040
+References: <20250728163752.9778-1-linmag7@gmail.com> <alpine.DEB.2.21.2507291750390.5060@angie.orcam.me.uk>
+ <CA+=Fv5TJRpFJ=p1MLcORDaqnSG-0AUEtSUw3Kek0vPGKbQZT9g@mail.gmail.com>
+In-Reply-To: <CA+=Fv5TJRpFJ=p1MLcORDaqnSG-0AUEtSUw3Kek0vPGKbQZT9g@mail.gmail.com>
+From: Magnus Lindholm <linmag7@gmail.com>
+Date: Mon, 1 Sep 2025 23:41:41 +0200
+X-Gm-Features: Ac12FXwEn4h8KFioy4gm04oCGmHsT0V4q3Qz4SLvH-ToJAxH82DDnje25_EBIdc
+Message-ID: <CA+=Fv5QmqAFLyToOsCKzgWSdnMXGr7FjeW_fO5reTUgJJP27Sg@mail.gmail.com>
+Subject: Re: [PATCH 0/1] scsi: qla1280: Make 64-bit DMA addressing a Kconfig option
+To: "Maciej W. Rozycki" <macro@orcam.me.uk>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-alpha@vger.kernel.org, martin.petersen@oracle.com, 
+	James.Bottomley@hansenpartnership.com, hch@infradead.org
+Content-Type: text/plain; charset="UTF-8"
 
+Hi,
 
+> >  If it turns out a generic issue with DAC handling in the Tsunami chipset,
+> > then a better approach would be a generic workaround for all potentially
+> > affected devices, but it does not appear we have existing infrastructure
+> > for that.  Just setting the global DMA mask would unnecessarily cripple
+> > 64-bit option cards as well, but it seems to me there might be something
+> > relevant in arch/mips/pci/fixup-sb1250.c; see `quirk_sb1250_pci_dac' and
+> > the comments above it.
 
-On 8/21/2025 5:18 PM, Krzysztof Kozlowski wrote:
-> On 21/08/2025 13:24, Ram Kumar Dwivedi wrote:
->> From: Nitin Rawat <quic_nitirawa@quicinc.com>
->>
->> Remove the ufshcd_res_info structure and associated enum ufshcd_res
->> definitions from the UFS host controller header. These were previously
->> used for MCQ resource mapping but are no longer needed following recent
->> refactoring to use direct base addresses instead of multiple separate
->> resource regions
->>
->> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> 
-> Incomplete SoB chain.
-> 
-> But anyway this makes no sense as independent patch. First you remove
-> users of it making it redundant... and then you remove it? No.
+I've been taking a closer look at the quirk_sb1250_pci_dac. It should indeed
+be possible to implement a similar workaround on Alpha. I believe that would
+require some fixes to the Alpha specific implementations in pci_iommu.c. For
+one thing, the implementation does not respect 'dev->bus_dma_limit' which
+is used in  the quirk_sb1250_pci_dac implementation.
 
-Hi Krzysztof,
+I've put together a patch, and I'm testing it right now, that implements a quirk
+similar to quirk_sb1250_pci_dac as well as makes stuff in pci_iommu.c take
+'dev->bus_dma_limit' into consideration on Alpha. If this approach makes
+sense I'll put out a new patch for review. Since this approach does not
+touch the qla1280 SCSI driver, I won't send it to the linux-scsi list.
 
-The driver changes are in the UFS Qualcomm platform driver, which uses 
-the definitions, while ufshcd.h is part of the UFS core driver. Hence 
-kept in 2 separate patch.
+Regards
 
-Thanks,
-Nitin
-
-> 
-> Organize your patches in logical chunks.
-> 
-> Best regards,
-> Krzysztof
-> 
-
+Magnus
