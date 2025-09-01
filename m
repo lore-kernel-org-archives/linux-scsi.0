@@ -1,48 +1,48 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9DE61A9FB9;
-	Mon,  1 Sep 2025 14:04:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF3B34167B;
+	Mon,  1 Sep 2025 14:51:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756735445; cv=none; b=YQ0mCsd/1gUbzzzbXgiiE1uR7Xj6MSDoxbVg8iaAU926qARt7VSmvwJBPmWLP7cZU4WgRETm25edWG5ck3XRvJTwV87mMHBj47Oqznn7K8pgGQTVMWj+EGcTpfCSkYOoMHkhR8iqmGbbo4S2jP4PM0CCJN4iJMKu5QWeyRbbZiA=
+	t=1756738271; cv=none; b=HDregFQB0keeXvhGfGKOFVMuda96wqaVHJrmjj31/uRxun6Mq+Igt0nR00PK2vb9CrMURiLp2SJocrFD8pFrdO4w3/QjxH+cjV84Ask4BQh9r1a+WJKZpPSIItz53sZ6IIIJuHkOL7tdZl8bIULdv8uk6YYv+0ohgfI8MC9g7QA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756735445; c=relaxed/simple;
-	bh=+hwP3xG8hny6UJazsfzuu5L1juPTsKDvfJvUA7LZdA8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NfDy+1MyrZgpsM4qb8r7clKlCAk08GDnTYamCCJOT6r4cLi2YUgf7GnRCkALbj1a5DwOuUl90YwPuH7svWB8OlWRuB/7YCEgk85yvVqSl/ysAGxUXdj84q+0cbd08RJUKdcUrSxZrFl87t25QEHOog1yVplVpfcU6d/kuTYtej8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=v67RJxNk; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1756738271; c=relaxed/simple;
+	bh=HMfcWtZH4GfvP8ZQjqKKGaNEwZCreXFhbBtPKK8hH3I=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=hxDoqNUtfUJ1hIbSNnoJhB2s+NcAFV5XsLYMnzFn7koIYmJhwSLU4r8hxdKXRaDotOLL6pHUgqd7Q7/XNVDGK6MBmEZ+hPZcByFqZ49gN20saModee2S4JDuNv/NxGgxHdsm1n0xJHhf1OnV0fWiWaijT5tGjHylT+orHy523QE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=U6I6+Ffd; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="v67RJxNk"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cFrFt52cczm0ytk;
-	Mon,  1 Sep 2025 14:04:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1756735434; x=1759327435; bh=dgHC5+NvmTQCkq0nfHgYdKe4
-	UamSLLVPI9XD16xmMcE=; b=v67RJxNk5DmUb/ID4E+4iQSa9hmNGPOZee/x46Rg
-	xR+108g//t260r5DlpD3h3U4K4SwfNoQFuRUIDUuiMBN0tVCKDa0XkV956iMmV+y
-	E3UcUjPT/c6y/qpVEEtlqkjcD9LdqYBkG5t9On6LnqNPi62LCfVZlcQbfhQxIcvE
-	S0WXsT1ZHYZikiTr1t7bxbQUHWkWQkfscnKmD8OeEhdDvWagtyUEd4DOsHSw8VCC
-	AuOfPTJ9L1JVUkIiMBC7GeOpf7HmWwG6lP3PLT9mvRMNTOgOCG41XQp2lnNAwyTV
-	BGCBSCc7T0Dkjyn2jUkoura9vVDK7aLQzDfJ+ub7hfYzNw==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 4gL-uVnhvnOO; Mon,  1 Sep 2025 14:03:54 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cFrFJ2wTCzm1743;
-	Mon,  1 Sep 2025 14:03:31 +0000 (UTC)
-Message-ID: <27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
-Date: Mon, 1 Sep 2025 07:03:27 -0700
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="U6I6+Ffd"
+Received: from pps.filterd (m0279869.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 581B4I7B013737;
+	Mon, 1 Sep 2025 14:50:38 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	WylkCM7GEVrZp/hwxRtLeGV36zbXgc2z6PnvbtJ5bTc=; b=U6I6+Ffd9KhhFhgg
+	aX76Nih1gnjMMXNYR8+C5ZtuND0JQaKvRrFC8nD3LOhWhy3rKgpglfZjbSERqmvD
+	KcXyVJB1xFYCaVD0eANfRHpkAk9GTBI60MfiKnJlbW0/Yq4Frd8+sNenqHtM/jZH
+	4MxXPefptHLKNdPnThRaHGbchXg9aaJtUWuExdCdhjr2XNm1VSXPbjHZkFca1yHh
+	8kH+PVJvaMOj1+ZGqnRfUv4f+EaP0e7GIBVO41Q1udRu0HrK4zy0jWRA4+jZk2Ml
+	WVg5ZyAYHhwZkyMefBgxlqDuwyVGUMbMaOMRAlIkBLQKTkYRKVKgb3kbqnGyAwlV
+	tpqWlA==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48ura8n2ys-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 01 Sep 2025 14:50:37 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 581Eoawx020499
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Mon, 1 Sep 2025 14:50:36 GMT
+Received: from [10.216.44.84] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.24; Mon, 1 Sep
+ 2025 07:50:31 -0700
+Message-ID: <0fb24c50-1f4f-4dd8-a3c7-4c84fd0bb7c1@quicinc.com>
+Date: Mon, 1 Sep 2025 20:20:29 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,32 +50,100 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs cmd
- error
-To: DooHyun Hwang <dh0421.hwang@samsung.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
- quic_mnaresh@quicinc.com
-Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
- jangsub.yi@samsung.com, sh043.lee@samsung.com, cw9316.lee@samsung.com,
- sh8267.baek@samsung.com, wkon.kim@samsung.com
-References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
- <CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
- <20250417023405.6954-2-dh0421.hwang@samsung.com>
- <239ea120-841f-478d-b6b4-9627aa453795@acm.org>
- <093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
+Subject: Re: [PATCH V3 4/5] arm64: dts: qcom: sm8650: Enable MCQ support for
+ UFS controller
+To: Krzysztof Kozlowski <krzk@kernel.org>,
+        Manivannan Sadhasivam
+	<mani@kernel.org>
+CC: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, <andersson@kernel.org>,
+        <konradybcio@kernel.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+        <conor+dt@kernel.org>, <James.Bottomley@hansenpartnership.com>,
+        <martin.petersen@oracle.com>, <linux-arm-msm@vger.kernel.org>,
+        <devicetree@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+        <linux-scsi@vger.kernel.org>
+References: <20250821112403.12078-1-quic_rdwivedi@quicinc.com>
+ <20250821112403.12078-5-quic_rdwivedi@quicinc.com>
+ <eeecc7a3-8ce3-4cfd-8d40-988736fc0c59@kernel.org>
+ <34aqaxgkykyhenrjfj3vrarin2c3uebgfaya7rxi7d5p5skhom@ie4gitcw36mr>
+ <ba227580-add8-4ea8-a973-c39083301e67@kernel.org>
+ <aonf4hobz6b3a75lwiblu44gxvae4hnp2mcnh5sqlyzo6k7hwe@a5toymspbkdy>
+ <b049c4be-f3c1-49e4-8737-c29c52185e60@kernel.org>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <b049c4be-f3c1-49e4-8737-c29c52185e60@kernel.org>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-ORIG-GUID: 1Az8Emd4kY7JrAF6MIzkayett6GvseOy
+X-Proofpoint-GUID: 1Az8Emd4kY7JrAF6MIzkayett6GvseOy
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDAyMCBTYWx0ZWRfXzTCkh25E7X7T
+ VQcMM6bincj015S4W+/aheJUuVxgHnBwRv8M4N+1EY7U/ML7AwQGQUlXhOmFJzxOqqsiUTFC28G
+ sXRQ+cvXdvKFmV7unLCeXOZpMScuOYLpYuCF8K7VQ53WCmGEn+fnH2W4RjQbGFMb2uEiIUuBuIE
+ KRUWiyhFlDM7NhLNFAw0rqefJgStjpgF7KHKerVkaA850mihnr4mrIMbd0xDimuTkfIRYKQ3VCi
+ P/WnCcj1NQDd+lzLZu9F5pjOIpxvLpaYdybogeX0qdfNt2aZ2kIfLL9Bx1OOZAZMDGDFyd94m4F
+ 4tXSQfdflrtazmJCUzbWpcJrh2qkv28DRwkiEpXRZJiSaDaU4pDhaM6DB5NqcSJHClXqoRH0atX
+ J1xeTLJ+
+X-Authority-Analysis: v=2.4 cv=VNndn8PX c=1 sm=1 tr=0 ts=68b5b2bd cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10
+ a=WDwdR3GTf5Sq1hJQ3NcA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-01_06,2025-08-28_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ suspectscore=0 spamscore=0 impostorscore=0 malwarescore=0 bulkscore=0
+ clxscore=1015 adultscore=0 priorityscore=1501 phishscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508300020
 
-On 8/31/25 6:31 PM, DooHyun Hwang wrote:
-> UFS_CMD_ERR stands for "completion error".
 
-No it doesn't. In the UFS driver and also in many other driver "cmd" 
-stands for "command" and not for "completion". Please change the
-"UFS_CMD_ERR" enum label.
 
-Bart.
+On 9/1/2025 1:35 PM, Krzysztof Kozlowski wrote:
+> On 01/09/2025 06:15, Manivannan Sadhasivam wrote:
+>>>>>
+>>>>> I don't understand why you combine DTS patch into UFS patchset. This
+>>>>> creates impression of dependent work, which would be a trouble for merging.
+>>>>>
+>>>>
+>>>> What trouble? Even if the DTS depends on the driver/bindings change, can't it
+>>>> still go through a different tree for the same cycle? It happened previously as
+>>>
+>>> It all depends on sort of dependency.
+>>>
+>>>> well, unless the rule changed now.
+>>>
+>>> No, the point is that there is absolutely nothing relevant between the
+>>> DTS and drivers here. Combining unrelated patches, completely different
+>>> ones, targeting different subsystems into one patchset was always a
+>>> mistake. This makes only life of maintainers more difficult, for no gain.
+>>>
+>>
+>> Ok. Since patch 2 is just a refactoring, it should not be required for enabling
+>> MCQ. But it is not clear if that is the case.
+>>
+>> @Ram/Nitin: Please confirm if MCQ can be enabled without patch 2. If yes, then
+>> post the DTS separately, otherwise, you need to rewrite the commit message of
+>> patch 2 to state it explicitly.
+> 
+> Dependency of DTS on driver would be another issue and in any case must
+> be clearly documented, not implicit via patch order.
+
+Hi Krzysztof/Mani,
+
+We've verified that the driver and DTS function correctly when tested 
+independently. We Will submit separate patches for the driver and DTS.
+
+Regards,
+Nitin
+
+
+
+
+> 
+> Best regards,
+> Krzysztof
+> 
+
