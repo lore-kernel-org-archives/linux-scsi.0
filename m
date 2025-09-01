@@ -1,57 +1,58 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2A2F4368082
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Sep 2025 15:13:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A5123064BD
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Sep 2025 15:13:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756739622; cv=none; b=I/HRZU6KQ5JcNtAxB8ccpeqkYAMgWXEMXzvPWyhA3wlQtA6LDVUHRzEISwOKL/35Y/qwI0fw1MSXg2v6W6KxNIg0d0CaynQ5VGy5A5abOfypEKOZwrVPtcYlmHjV06Csjq5cO00JJfxhoXh8ghiSNjsvwAYgBtC3Grpsac26Idk=
+	t=1756739636; cv=none; b=akHKKG51Q1MFh88lkDAH1UJ8O9LgfjfFsakNOmk+TmsSzAK3+7+nyJ5rIPWFPD1hRu1RLtUprrhPaPpmQ6kVhk0GVrb745k2OR4sAzbjtTmYHkPMGSAYh/G1EeL5IjRD+rOEWpZ11M80ss4Xj7rJ2y6emj1OwAld3GDMhP18Yz8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756739622; c=relaxed/simple;
-	bh=TJ+w8XgHVngtsYoUkbnalUd2IkW8XPnS1tNEHQvdiUI=;
+	s=arc-20240116; t=1756739636; c=relaxed/simple;
+	bh=SHV0Z0u3GPcSt0cRX1hoDRyiVJ2oS372bo4yODFGcWU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=pgGjvweSpeRuOPAIZpmhbhXYEAFnIoR79RTmEGS9ccxrhTPFQ3zlwCam2LXsg/NLvjT6RTGss424xSaOHdPTP5O3Q2gnNGDqYVBOI8kxp6clDH6QnvjZm+QtsCRSYsCoTPZhC2BqNCo4M6oqMlIJ74JQaI5bNymhkO/8WjL6vy0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=PZYQAclM; arc=none smtp.client-ip=170.10.133.124
+	 MIME-Version; b=IMbcW5c/Aq1sv2R/+jxPthAFLVHk/ujw9uzGIF92dGdsuE3koE5MQxFFtSmyThf+781bp8EeMFmm6XhJRag40VxFM5RpFwl1kZkIb2TvSZoSXrqqJWv5VIwT7dtfjnzH5kf5QaxqTowzrfyJ+DxgwucSe+O5kNRdC4SQjd7uQ+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Y29IaNWE; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="PZYQAclM"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Y29IaNWE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756739618;
+	s=mimecast20190719; t=1756739633;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=kPHmZzTajGoiIu4Pb16cc/zxagZSiNHTxiRnREwqsAY=;
-	b=PZYQAclMa9O33BJ0b5fGUBIXonyJORLVhEyERoZxNYpsnNB/ggnM7fGI2P/8cefNLcktYZ
-	nS8UZO4C5kP4LbpXKWUTKFo8V3Mew1PckyXSqtVlMnO2J6/zcPYW4z8yZZr1416YBYSeIi
-	qFPv5UlHnWop96CFkYVoqZOomKnu1w0=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+	bh=jkEShtyZMAsDf/J3X4vsiABth2SEec0fiHHSpv4k9x8=;
+	b=Y29IaNWEb2HmdS2DE24+xmh9Lk5GDkEr9GsQ/CicHvFodo6FwgH1BxQgKqEr+QHhtsz1hh
+	v4IOe2FV4CFtL0ORMAzL7SZFOvebnYfcORABa+7mwtkLo+sbl9PjLBTF3FB/KocS0QXlS/
+	oEAVWoy3H3gVgBNYUIvNw4BUPsQ46tg=
+Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-626-GrEIet-nN5GvzvRvynVS6A-1; Mon,
- 01 Sep 2025 11:13:35 -0400
-X-MC-Unique: GrEIet-nN5GvzvRvynVS6A-1
-X-Mimecast-MFC-AGG-ID: GrEIet-nN5GvzvRvynVS6A_1756739610
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-1-o2-TD6CtMRuqF-LwyESxUQ-1; Mon,
+ 01 Sep 2025 11:13:51 -0400
+X-MC-Unique: o2-TD6CtMRuqF-LwyESxUQ-1
+X-Mimecast-MFC-AGG-ID: o2-TD6CtMRuqF-LwyESxUQ_1756739625
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 5BC2F18004A7;
-	Mon,  1 Sep 2025 15:13:30 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4DA9F1800561;
+	Mon,  1 Sep 2025 15:13:45 +0000 (UTC)
 Received: from t14s.fritz.box (unknown [10.22.88.45])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8D7A81800447;
-	Mon,  1 Sep 2025 15:13:15 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id CF9891800447;
+	Mon,  1 Sep 2025 15:13:30 +0000 (UTC)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: David Hildenbrand <david@redhat.com>,
+	Marco Elver <elver@google.com>,
 	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
 	Alexander Potapenko <glider@google.com>,
+	Dmitry Vyukov <dvyukov@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Brendan Jackman <jackmanb@google.com>,
 	Christoph Lameter <cl@gentwo.org>,
 	Dennis Zhou <dennis@kernel.org>,
-	Dmitry Vyukov <dvyukov@google.com>,
 	dri-devel@lists.freedesktop.org,
 	intel-gfx@lists.freedesktop.org,
 	iommu@lists.linux.dev,
@@ -75,7 +76,6 @@ Cc: David Hildenbrand <david@redhat.com>,
 	linux-riscv@lists.infradead.org,
 	linux-s390@vger.kernel.org,
 	linux-scsi@vger.kernel.org,
-	Marco Elver <elver@google.com>,
 	Marek Szyprowski <m.szyprowski@samsung.com>,
 	Michal Hocko <mhocko@suse.com>,
 	Mike Rapoport <rppt@kernel.org>,
@@ -91,9 +91,9 @@ Cc: David Hildenbrand <david@redhat.com>,
 	wireguard@lists.zx2c4.com,
 	x86@kernel.org,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH v2 34/37] mm/gup: drop nth_page() usage in unpin_user_page_range_dirty_lock()
-Date: Mon,  1 Sep 2025 17:03:55 +0200
-Message-ID: <20250901150359.867252-35-david@redhat.com>
+Subject: [PATCH v2 35/37] kfence: drop nth_page() usage
+Date: Mon,  1 Sep 2025 17:03:56 +0200
+Message-ID: <20250901150359.867252-36-david@redhat.com>
 In-Reply-To: <20250901150359.867252-1-david@redhat.com>
 References: <20250901150359.867252-1-david@redhat.com>
 Precedence: bulk
@@ -105,51 +105,78 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
-There is the concern that unpin_user_page_range_dirty_lock() might do
-some weird merging of PFN ranges -- either now or in the future -- such
-that PFN range is contiguous but the page range might not be.
+We want to get rid of nth_page(), and kfence init code is the last user.
 
-Let's sanity-check for that and drop the nth_page() usage.
+Unfortunately, we might actually walk a PFN range where the pages are
+not contiguous, because we might be allocating an area from memblock
+that could span memory sections in problematic kernel configs (SPARSEMEM
+without SPARSEMEM_VMEMMAP).
 
+We could check whether the page range is contiguous
+using page_range_contiguous() and failing kfence init, or making kfence
+incompatible these problemtic kernel configs.
+
+Let's keep it simple and simply use pfn_to_page() by iterating PFNs.
+
+Reviewed-by: Marco Elver <elver@google.com>
 Reviewed-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Cc: Alexander Potapenko <glider@google.com>
+Cc: Dmitry Vyukov <dvyukov@google.com>
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- mm/gup.c | 8 +++++++-
- 1 file changed, 7 insertions(+), 1 deletion(-)
+ mm/kfence/core.c | 12 +++++++-----
+ 1 file changed, 7 insertions(+), 5 deletions(-)
 
-diff --git a/mm/gup.c b/mm/gup.c
-index f0f4d1a68e094..010fe56f6e132 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -237,7 +237,7 @@ void folio_add_pin(struct folio *folio)
- static inline struct folio *gup_folio_range_next(struct page *start,
- 		unsigned long npages, unsigned long i, unsigned int *ntails)
+diff --git a/mm/kfence/core.c b/mm/kfence/core.c
+index 0ed3be100963a..727c20c94ac59 100644
+--- a/mm/kfence/core.c
++++ b/mm/kfence/core.c
+@@ -594,15 +594,14 @@ static void rcu_guarded_free(struct rcu_head *h)
+  */
+ static unsigned long kfence_init_pool(void)
  {
--	struct page *next = nth_page(start, i);
-+	struct page *next = start + i;
- 	struct folio *folio = page_folio(next);
- 	unsigned int nr = 1;
+-	unsigned long addr;
+-	struct page *pages;
++	unsigned long addr, start_pfn;
+ 	int i;
  
-@@ -342,6 +342,10 @@ EXPORT_SYMBOL(unpin_user_pages_dirty_lock);
-  * "gup-pinned page range" refers to a range of pages that has had one of the
-  * pin_user_pages() variants called on that page.
-  *
-+ * The page range must be truly physically contiguous: the page range
-+ * corresponds to a contiguous PFN range and all pages can be iterated
-+ * naturally.
-+ *
-  * For the page ranges defined by [page .. page+npages], make that range (or
-  * its head pages, if a compound page) dirty, if @make_dirty is true, and if the
-  * page range was previously listed as clean.
-@@ -359,6 +363,8 @@ void unpin_user_page_range_dirty_lock(struct page *page, unsigned long npages,
- 	struct folio *folio;
- 	unsigned int nr;
+ 	if (!arch_kfence_init_pool())
+ 		return (unsigned long)__kfence_pool;
  
-+	VM_WARN_ON_ONCE(!page_range_contiguous(page, npages));
+ 	addr = (unsigned long)__kfence_pool;
+-	pages = virt_to_page(__kfence_pool);
++	start_pfn = PHYS_PFN(virt_to_phys(__kfence_pool));
+ 
+ 	/*
+ 	 * Set up object pages: they must have PGTY_slab set to avoid freeing
+@@ -613,11 +612,12 @@ static unsigned long kfence_init_pool(void)
+ 	 * enters __slab_free() slow-path.
+ 	 */
+ 	for (i = 0; i < KFENCE_POOL_SIZE / PAGE_SIZE; i++) {
+-		struct slab *slab = page_slab(nth_page(pages, i));
++		struct slab *slab;
+ 
+ 		if (!i || (i % 2))
+ 			continue;
+ 
++		slab = page_slab(pfn_to_page(start_pfn + i));
+ 		__folio_set_slab(slab_folio(slab));
+ #ifdef CONFIG_MEMCG
+ 		slab->obj_exts = (unsigned long)&kfence_metadata_init[i / 2 - 1].obj_exts |
+@@ -665,10 +665,12 @@ static unsigned long kfence_init_pool(void)
+ 
+ reset_slab:
+ 	for (i = 0; i < KFENCE_POOL_SIZE / PAGE_SIZE; i++) {
+-		struct slab *slab = page_slab(nth_page(pages, i));
++		struct slab *slab;
+ 
+ 		if (!i || (i % 2))
+ 			continue;
 +
- 	for (i = 0; i < npages; i += nr) {
- 		folio = gup_folio_range_next(page, npages, i, &nr);
- 		if (make_dirty && !folio_test_dirty(folio)) {
++		slab = page_slab(pfn_to_page(start_pfn + i));
+ #ifdef CONFIG_MEMCG
+ 		slab->obj_exts = 0;
+ #endif
 -- 
 2.50.1
 
