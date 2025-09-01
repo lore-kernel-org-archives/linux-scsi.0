@@ -1,73 +1,48 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DDD83148A8
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Sep 2025 11:35:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9DE61A9FB9;
+	Mon,  1 Sep 2025 14:04:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756726514; cv=none; b=bWYaS9EjivHSySwdJpm6Pwlm65UCSHZymqS4TA6oEIYsjbMljU63CmtMVqCdW+DuQnCom55Ud5RXQCQBPzl434rJ8FWlIN3tybnMyfKmz1sAqwSOHTw/V2KhIMlvNs50/4wcTCTdDDKPtfQ7ZhcWO6hJ9o5yKzw7jiOgFYxsMpU=
+	t=1756735445; cv=none; b=YQ0mCsd/1gUbzzzbXgiiE1uR7Xj6MSDoxbVg8iaAU926qARt7VSmvwJBPmWLP7cZU4WgRETm25edWG5ck3XRvJTwV87mMHBj47Oqznn7K8pgGQTVMWj+EGcTpfCSkYOoMHkhR8iqmGbbo4S2jP4PM0CCJN4iJMKu5QWeyRbbZiA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756726514; c=relaxed/simple;
-	bh=yAPERDIoeRASAaUpYs1LNdA8p7G30Qgz6mkvFlYbF3c=;
+	s=arc-20240116; t=1756735445; c=relaxed/simple;
+	bh=+hwP3xG8hny6UJazsfzuu5L1juPTsKDvfJvUA7LZdA8=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z5L91rbhwA+huRCZLD1LD2dmFRs4kcJOsoOIIQEdoom8C51kmCSta2g7cKyASAJJS6PZe0dnkYeCPc7SsJDa3YOOkQMlOCC8sNI92UMpMtoG37t3TXfa2hOzmYW8lTMU/gsCxC6WbcafkmiYXay8ui59g5lG6U4tZFigDVLEZNU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Oi4kPtKW; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	 In-Reply-To:Content-Type; b=NfDy+1MyrZgpsM4qb8r7clKlCAk08GDnTYamCCJOT6r4cLi2YUgf7GnRCkALbj1a5DwOuUl90YwPuH7svWB8OlWRuB/7YCEgk85yvVqSl/ysAGxUXdj84q+0cbd08RJUKdcUrSxZrFl87t25QEHOog1yVplVpfcU6d/kuTYtej8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=v67RJxNk; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Oi4kPtKW"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756726511;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=89QceRiDVJR9qzpuoMtjZ42nHjE3zxx93/plzyge73k=;
-	b=Oi4kPtKW6msMclc99VeFrwikaUAGGqFo1qJnSWm3pfX32GugEguMEBTt/RA9KGrQE3tb4j
-	YtiYW6OJ1Nf+URcS2bvEOvL21+u3d0ZwUU+NiPfSgFJGlqRVG2YtLvYkpcs3/KyhMvLVUd
-	76BrqD6X7mJLnFX2+Ua8oSR8rNiVpn4=
-Received: from mail-wr1-f70.google.com (mail-wr1-f70.google.com
- [209.85.221.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-44-0ZrV84xkP5K1tJFrgp1AuQ-1; Mon, 01 Sep 2025 07:35:10 -0400
-X-MC-Unique: 0ZrV84xkP5K1tJFrgp1AuQ-1
-X-Mimecast-MFC-AGG-ID: 0ZrV84xkP5K1tJFrgp1AuQ_1756726509
-Received: by mail-wr1-f70.google.com with SMTP id ffacd0b85a97d-3ce7f782622so1806654f8f.1
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Sep 2025 04:35:10 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756726509; x=1757331309;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=89QceRiDVJR9qzpuoMtjZ42nHjE3zxx93/plzyge73k=;
-        b=DNEjXRIGLVbJUbdhNCsf4Wfoo2KVbkPG8z09YRLlRyJyhyxypsghB4fdFigdGioL0h
-         A/BQzQk6ufqvK3XoTFqft3mlLfe2NQxa+2uQvFNIHRToUDbJuQ4H0vTIeF+1xLHMKWVt
-         wWSwq50bBB+YJsP6XhyIWF7QnSTez9O8Zj521jFpMOoM46y6afM915IvIuu20+k/sRrU
-         fAXW7kCgXHEdOVD7VfSkLewl9OjtI+y/6QyTw6fGcCLzAyDNsz45UYb17gneX7LYzuZf
-         jegfIcpydPd95eqs4wcQk3DPTlSGsmANi4sn+Mz/eAYnmY7P0sjPa2JprUq1dbcM5hQi
-         RDNg==
-X-Forwarded-Encrypted: i=1; AJvYcCW4HX7Bj2xsKQA2L0ZDsmqaJyk+HvIl5sYjOLQZEiBdgSG176e0XwqFqKm6Grarl5kod8b/WA5DnE81@vger.kernel.org
-X-Gm-Message-State: AOJu0YxnmD7kAQpoUb2FrwzG1KbiRHa4HrQtIiTdTxcTjtQhC0LNX3d5
-	TYnV1VS7C1vvABPP4Tx2N2wCP6VKNcK8Ejh2pJbFCycvGeFzv5k56FSbk82Yvl5dUWlo86p4kMC
-	IJ1J1ck401hiKwT+U7i0MmjddqxHq0VtucIEEm4jU6jhBzvElG4Wh8XeywSgDbxs=
-X-Gm-Gg: ASbGncuBJsIAQ/3Pndezdk23GXER6mYvQVX9Re/zeUZPL0pBn+271p9pfFJcCZ4E0+F
-	Jb+kOf2umlDhgBmd0Lfrsg3K6xHnVBO2dIxDF4gVVvlKsucHOq5X6coTF9szjDcM3aiZDGrKxbG
-	h7w1Vt47jx2UjTDrpdH4156ZPgeAK+22MflxXr4LibGuRpNy/lh0n647SIk9PUoJtiVlWcaurCo
-	XOX3+RJPI3zIyjBqSVH1uYqQhsVsgcLlNVJn6tXnKu6+J4olkokJRi1VrUTWIMM5PUhsurWs0gm
-	6va66VbFJtiBqx0UxuLJm4lTaEt9X83XBGyvcNI72x1W/0D7Cu1dfaRYyLAsr1+1AQnTF1PSOkD
-	dJn4wO6IgjASVocQsRZ6e79nN138mdFCRQNAmsERtkx3ii38vvlQMR/uIEiwlH7eHS+g=
-X-Received: by 2002:a5d:5f8c:0:b0:3cf:5f17:f350 with SMTP id ffacd0b85a97d-3d1b16f0165mr6056392f8f.18.1756726508806;
-        Mon, 01 Sep 2025 04:35:08 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IE0RKJ8MgbrMGxtF+aataA+fh1iSiigcyDX0AK/3/6NRoLPIE0BwSmxJshAaTyrpOEmePBJCw==
-X-Received: by 2002:a5d:5f8c:0:b0:3cf:5f17:f350 with SMTP id ffacd0b85a97d-3d1b16f0165mr6056350f8f.18.1756726508320;
-        Mon, 01 Sep 2025 04:35:08 -0700 (PDT)
-Received: from ?IPV6:2003:d8:2f37:2b00:948c:dd9f:29c8:73f4? (p200300d82f372b00948cdd9f29c873f4.dip0.t-ipconnect.de. [2003:d8:2f37:2b00:948c:dd9f:29c8:73f4])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-45b6f0c6fe5sm233831875e9.5.2025.09.01.04.35.06
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 01 Sep 2025 04:35:07 -0700 (PDT)
-Message-ID: <44072455-fc68-430d-ad38-0b9ce6a10b8d@redhat.com>
-Date: Mon, 1 Sep 2025 13:35:05 +0200
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="v67RJxNk"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cFrFt52cczm0ytk;
+	Mon,  1 Sep 2025 14:04:02 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1756735434; x=1759327435; bh=dgHC5+NvmTQCkq0nfHgYdKe4
+	UamSLLVPI9XD16xmMcE=; b=v67RJxNk5DmUb/ID4E+4iQSa9hmNGPOZee/x46Rg
+	xR+108g//t260r5DlpD3h3U4K4SwfNoQFuRUIDUuiMBN0tVCKDa0XkV956iMmV+y
+	E3UcUjPT/c6y/qpVEEtlqkjcD9LdqYBkG5t9On6LnqNPi62LCfVZlcQbfhQxIcvE
+	S0WXsT1ZHYZikiTr1t7bxbQUHWkWQkfscnKmD8OeEhdDvWagtyUEd4DOsHSw8VCC
+	AuOfPTJ9L1JVUkIiMBC7GeOpf7HmWwG6lP3PLT9mvRMNTOgOCG41XQp2lnNAwyTV
+	BGCBSCc7T0Dkjyn2jUkoura9vVDK7aLQzDfJ+ub7hfYzNw==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 4gL-uVnhvnOO; Mon,  1 Sep 2025 14:03:54 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cFrFJ2wTCzm1743;
+	Mon,  1 Sep 2025 14:03:31 +0000 (UTC)
+Message-ID: <27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
+Date: Mon, 1 Sep 2025 07:03:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,188 +50,32 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 18/36] mm/gup: drop nth_page() usage within folio when
- recording subpages
-To: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-Cc: linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
- Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
- iommu@lists.linux.dev, io-uring@vger.kernel.org,
- Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
- Johannes Weiner <hannes@cmpxchg.org>, John Hubbard <jhubbard@nvidia.com>,
- kasan-dev@googlegroups.com, kvm@vger.kernel.org,
- "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
- linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, Marco Elver <elver@google.com>,
- Marek Szyprowski <m.szyprowski@samsung.com>, Michal Hocko <mhocko@suse.com>,
- Mike Rapoport <rppt@kernel.org>, Muchun Song <muchun.song@linux.dev>,
- netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
- Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
- virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
- wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
-References: <20250827220141.262669-1-david@redhat.com>
- <20250827220141.262669-19-david@redhat.com>
- <c0dadc4f-6415-4818-a319-e3e15ff47a24@lucifer.local>
- <632fea32-28aa-4993-9eff-99fc291c64f2@redhat.com>
- <8a26ae97-9a78-4db5-be98-9c1f6e4fb403@lucifer.local>
-From: David Hildenbrand <david@redhat.com>
+Subject: Re: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs cmd
+ error
+To: DooHyun Hwang <dh0421.hwang@samsung.com>, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+ peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
+ quic_mnaresh@quicinc.com
+Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
+ jangsub.yi@samsung.com, sh043.lee@samsung.com, cw9316.lee@samsung.com,
+ sh8267.baek@samsung.com, wkon.kim@samsung.com
+References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+ <CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
+ <20250417023405.6954-2-dh0421.hwang@samsung.com>
+ <239ea120-841f-478d-b6b4-9627aa453795@acm.org>
+ <093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
 Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- qIws/H2t
-In-Reply-To: <8a26ae97-9a78-4db5-be98-9c1f6e4fb403@lucifer.local>
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
->>
->>
->> The nice thing is that we only record pages in the array if they actually passed our tests.
-> 
-> Yeah that's nice actually.
-> 
-> This is fine (not the meme :P)
+On 8/31/25 6:31 PM, DooHyun Hwang wrote:
+> UFS_CMD_ERR stands for "completion error".
 
-:D
+No it doesn't. In the UFS driver and also in many other driver "cmd" 
+stands for "command" and not for "completion". Please change the
+"UFS_CMD_ERR" enum label.
 
-> 
-> So yes let's do this!
-
-That leaves us with the following on top of this patch:
-
- From 4533c6e3590cab0c53e81045624d5949e0ad9015 Mon Sep 17 00:00:00 2001
-From: David Hildenbrand <david@redhat.com>
-Date: Fri, 29 Aug 2025 15:41:45 +0200
-Subject: [PATCH] mm/gup: remove record_subpages()
-
-We can just cleanup the code by calculating the #refs earlier,
-so we can just inline what remains of record_subpages().
-
-Calculate the number of references/pages ahead of times, and record them
-only once all our tests passed.
-
-Signed-off-by: David Hildenbrand <david@redhat.com>
----
-  mm/gup.c | 25 ++++++++-----------------
-  1 file changed, 8 insertions(+), 17 deletions(-)
-
-diff --git a/mm/gup.c b/mm/gup.c
-index 89ca0813791ab..5a72a135ec70b 100644
---- a/mm/gup.c
-+++ b/mm/gup.c
-@@ -484,19 +484,6 @@ static inline void mm_set_has_pinned_flag(struct mm_struct *mm)
-  #ifdef CONFIG_MMU
-  
-  #ifdef CONFIG_HAVE_GUP_FAST
--static int record_subpages(struct page *page, unsigned long sz,
--			   unsigned long addr, unsigned long end,
--			   struct page **pages)
--{
--	int nr;
--
--	page += (addr & (sz - 1)) >> PAGE_SHIFT;
--	for (nr = 0; addr != end; nr++, addr += PAGE_SIZE)
--		pages[nr] = page++;
--
--	return nr;
--}
--
-  /**
-   * try_grab_folio_fast() - Attempt to get or pin a folio in fast path.
-   * @page:  pointer to page to be grabbed
-@@ -2963,8 +2950,8 @@ static int gup_fast_pmd_leaf(pmd_t orig, pmd_t *pmdp, unsigned long addr,
-  	if (pmd_special(orig))
-  		return 0;
-  
--	page = pmd_page(orig);
--	refs = record_subpages(page, PMD_SIZE, addr, end, pages + *nr);
-+	refs = (end - addr) >> PAGE_SHIFT;
-+	page = pmd_page(orig) + ((addr & ~PMD_MASK) >> PAGE_SHIFT);
-  
-  	folio = try_grab_folio_fast(page, refs, flags);
-  	if (!folio)
-@@ -2985,6 +2972,8 @@ static int gup_fast_pmd_leaf(pmd_t orig, pmd_t *pmdp, unsigned long addr,
-  	}
-  
-  	*nr += refs;
-+	for (; refs; refs--)
-+		*(pages++) = page++;
-  	folio_set_referenced(folio);
-  	return 1;
-  }
-@@ -3003,8 +2992,8 @@ static int gup_fast_pud_leaf(pud_t orig, pud_t *pudp, unsigned long addr,
-  	if (pud_special(orig))
-  		return 0;
-  
--	page = pud_page(orig);
--	refs = record_subpages(page, PUD_SIZE, addr, end, pages + *nr);
-+	refs = (end - addr) >> PAGE_SHIFT;
-+	page = pud_page(orig) + ((addr & ~PUD_MASK) >> PAGE_SHIFT);
-  
-  	folio = try_grab_folio_fast(page, refs, flags);
-  	if (!folio)
-@@ -3026,6 +3015,8 @@ static int gup_fast_pud_leaf(pud_t orig, pud_t *pudp, unsigned long addr,
-  	}
-  
-  	*nr += refs;
-+	for (; refs; refs--)
-+		*(pages++) = page++;
-  	folio_set_referenced(folio);
-  	return 1;
-  }
--- 
-2.50.1
-
-
--- 
-Cheers
-
-David / dhildenb
-
+Bart.
