@@ -1,55 +1,58 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 653C033473F
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Sep 2025 15:05:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27BEA341673
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Sep 2025 15:05:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756739122; cv=none; b=cRUyV4mG8u7aRK5yTW1tlTXhw66Nz0LavRyut+g0HS+XF4XfoAJ2hzFZNFy/QZWeS+1YQW7Fhqn3he2prT/Xn7atzPSZE93WCXHM4FsggeYFE2nI7BSfsxCEBXpb2UueMSmg0JvMBJcO+SjPDG6+rglcMiHIjA9/mv0anHd2jO0=
+	t=1756739140; cv=none; b=rIQvlZ+uR2fSclu5/0+sH4pteDYyc0Doomd0hleGvSdFPp9nomnkthR8GdOIJ5gC49Mw8NrXHGdE07zNfSeK5+Z+9WnM37u75rxncKFVf+m3DvhadfUNheOiLUhfXfGV6XNxbvUhC7R4sEhIT9/mMRIR948mht41EbMYyPCsxcY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756739122; c=relaxed/simple;
-	bh=zEzDbUSaLbq8RtZVRp4iWWe5wyPeq+WhbqkRz91zOF0=;
+	s=arc-20240116; t=1756739140; c=relaxed/simple;
+	bh=LDg2RT3QOWvKysywqDDtHs4UOF/o8P55UZ9JBjhJXx0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=GJmvE5Sk4YjD3A5yHkuh4B//leks13E2UceUTiS6wE58O8P4zKmRFPYjwMw3+flIrY5VO9DT6a8TEnNOo9nhpljWkLxiDqeMIDAlcSsXWuMiB6jdJ7Mjb4RPAj5IbknkWUkWdOySRGkmh6dPD9m9oejnXpS/5bZjOdAXoeLFBhA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=dtescmam; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=NVBoLzR0w/qJgVsYxprNtvogB2Tidh8+tYkZEA6WAgNAuvMinhY4mQA3PVkS8KjvyIoglAilTiAMwegzVVO6g6t5eK/N0a6UMd37hcbsMroXEeupWcdZfabMEHOofD9D+4QS2Dw1TTxpvB9hcNubfIlLODT2Wc0uHAUbukYwNRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fKwtrDk7; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="dtescmam"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fKwtrDk7"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1756739119;
+	s=mimecast20190719; t=1756739138;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=lga6UMMa0aQahAKpa9DbBvj6lFfUW2++fx2DNoNdxSA=;
-	b=dtescmamydL95wCW3k9NCFBm3OoIjFl6YBEXeCBa8YOZVWgbxqtJvsMzi4emClhgHuxtJh
-	cBLNmz2mYjC3CyDZeFeq+PrJB0+Jw66h3OSXU1YbZyQRZ4dgz8/v3+IliyI9EPh3iDVXUQ
-	W8XREl1YX4PFIRF4Kl/Y9r3OBJnmRAI=
+	bh=vbF+Eclm8a76znTMytGJjLFZFrrqxTZ8tlcAavdISGA=;
+	b=fKwtrDk716jS9buU/TBei5TfEowXTW7YkmTk/Kb1y/S7RnMtToQ4gitzX3V9ECMng8ll1V
+	CtiimDJ4zjx34XXbu2uLRkJHop6nU28snOtzvGWddeoKFqvLwx93gM7oJRlQDKHXHPsxnp
+	IKcRcbNFFDNgh62xzdZ7/jfyZBoGL0U=
 Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
  (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-357-kjaS4mfWPCWoOwPIngtDKg-1; Mon,
- 01 Sep 2025 11:05:17 -0400
-X-MC-Unique: kjaS4mfWPCWoOwPIngtDKg-1
-X-Mimecast-MFC-AGG-ID: kjaS4mfWPCWoOwPIngtDKg_1756739112
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-444-EqzKMDgCOYua6LxcHPSp-g-1; Mon,
+ 01 Sep 2025 11:05:34 -0400
+X-MC-Unique: EqzKMDgCOYua6LxcHPSp-g-1
+X-Mimecast-MFC-AGG-ID: EqzKMDgCOYua6LxcHPSp-g_1756739129
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9E3B8180028C;
-	Mon,  1 Sep 2025 15:05:11 +0000 (UTC)
+	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 3EC86180035C;
+	Mon,  1 Sep 2025 15:05:28 +0000 (UTC)
 Received: from t14s.fritz.box (unknown [10.22.88.45])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 418001800447;
-	Mon,  1 Sep 2025 15:04:56 +0000 (UTC)
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 3D05F18003FC;
+	Mon,  1 Sep 2025 15:05:11 +0000 (UTC)
 From: David Hildenbrand <david@redhat.com>
 To: linux-kernel@vger.kernel.org
 Cc: David Hildenbrand <david@redhat.com>,
 	"Mike Rapoport (Microsoft)" <rppt@kernel.org>,
-	Catalin Marinas <catalin.marinas@arm.com>,
 	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
 	"Liam R. Howlett" <Liam.Howlett@oracle.com>,
-	Will Deacon <will@kernel.org>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
 	Alexander Potapenko <glider@google.com>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Brendan Jackman <jackmanb@google.com>,
@@ -93,9 +96,9 @@ Cc: David Hildenbrand <david@redhat.com>,
 	wireguard@lists.zx2c4.com,
 	x86@kernel.org,
 	Zi Yan <ziy@nvidia.com>
-Subject: [PATCH v2 02/37] arm64: Kconfig: drop superfluous "select SPARSEMEM_VMEMMAP"
-Date: Mon,  1 Sep 2025 17:03:23 +0200
-Message-ID: <20250901150359.867252-3-david@redhat.com>
+Subject: [PATCH v2 03/37] s390/Kconfig: drop superfluous "select SPARSEMEM_VMEMMAP"
+Date: Mon,  1 Sep 2025 17:03:24 +0200
+Message-ID: <20250901150359.867252-4-david@redhat.com>
 In-Reply-To: <20250901150359.867252-1-david@redhat.com>
 References: <20250901150359.867252-1-david@redhat.com>
 Precedence: bulk
@@ -111,26 +114,29 @@ Now handled by the core automatically once SPARSEMEM_VMEMMAP_ENABLE
 is selected.
 
 Reviewed-by: Mike Rapoport (Microsoft) <rppt@kernel.org>
-Acked-by: Catalin Marinas <catalin.marinas@arm.com>
 Reviewed-by: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
 Reviewed-by: Liam R. Howlett <Liam.Howlett@oracle.com>
-Cc: Will Deacon <will@kernel.org>
+Cc: Heiko Carstens <hca@linux.ibm.com>
+Cc: Vasily Gorbik <gor@linux.ibm.com>
+Cc: Alexander Gordeev <agordeev@linux.ibm.com>
+Cc: Christian Borntraeger <borntraeger@linux.ibm.com>
+Cc: Sven Schnelle <svens@linux.ibm.com>
 Signed-off-by: David Hildenbrand <david@redhat.com>
 ---
- arch/arm64/Kconfig | 1 -
+ arch/s390/Kconfig | 1 -
  1 file changed, 1 deletion(-)
 
-diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
-index e9bbfacc35a64..b1d1f2ff2493b 100644
---- a/arch/arm64/Kconfig
-+++ b/arch/arm64/Kconfig
-@@ -1570,7 +1570,6 @@ source "kernel/Kconfig.hz"
+diff --git a/arch/s390/Kconfig b/arch/s390/Kconfig
+index bf680c26a33cf..145ca23c2fff6 100644
+--- a/arch/s390/Kconfig
++++ b/arch/s390/Kconfig
+@@ -710,7 +710,6 @@ menu "Memory setup"
  config ARCH_SPARSEMEM_ENABLE
  	def_bool y
  	select SPARSEMEM_VMEMMAP_ENABLE
 -	select SPARSEMEM_VMEMMAP
  
- config HW_PERF_EVENTS
+ config ARCH_SPARSEMEM_DEFAULT
  	def_bool y
 -- 
 2.50.1
