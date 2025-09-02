@@ -1,100 +1,107 @@
-Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 775FD22FE18;
-	Mon,  1 Sep 2025 21:41:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B55D9285C8E
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Sep 2025 01:09:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756762916; cv=none; b=Bfmlw8JcAaSskThMql2YXLx+DM1KTFmXwWQbtFtOqDzDTiQx66RJ+1MvDl8RTjfNnZ4J9THKyX9OVw4UBz4XPgqaglp9N0WfzFXF8TOWWZBd//M/NAugfWGOk6Gr7YZl6pct1h6lTQqsuPaKgbMD9HYnbY0rGy4yTEU01rDoWPE=
+	t=1756775386; cv=none; b=QVbD87YaOdN31oppHfnHBaoIlYEYcqDRxAMT7EWnbaRgV7CtCPHeZ0ucJXP88b/lKcg2qABjAboahei69fPAezN/TY8jLFGlH1cYK5fWVhne1hXoWK0FVLHx2bUOByJGUufL1o3GKsoZRLj/X+BhTKRVbsDOO3NzlLWtMeoBubo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756762916; c=relaxed/simple;
-	bh=lqAsxVN8esNlj7zuyk9BoJWQsdCAllz+VcYWaymWJpQ=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Naxwj5czsQURfNI49YiCYpp8bBjVJJkd3pITwqU+lZxZTd1aObyAthc27YmU5TGwRyKqGKI4UC5FT9i6z4R14Wy1P7h2+1PJ0gjDj4XJ4ql5ks8ArXTy69N8Re7GmlRGEg6NU3shU+OWUFvLf9a5hGnXGjTfyH573zYCOw7WtdI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=FfS3Ejv/; arc=none smtp.client-ip=209.85.208.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1756775386; c=relaxed/simple;
+	bh=28lIoBNkTDCxPNEm4BrzkouEj/x9/gTOUR7NfDnv/I8=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=GdsYyb2XuRrnwbwKy7PFvXO0CBt9IsglYtkuEUPR+2FMsJuF+X/28JYOCyUxtBpGdLBnqCT+uFowKcQC1mFih4gQyiM1D1ufpgA90aLY6gPlb7BdhLXLQLk81thG6FggaXbmie5sgn9RZh/R4ndOo6GODULTPxAG96GqofP9ItU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=n+sCHdj2; arc=none smtp.client-ip=203.254.224.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="FfS3Ejv/"
-Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-61cf8280f02so5096474a12.0;
-        Mon, 01 Sep 2025 14:41:54 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1756762913; x=1757367713; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=bObIG6hbz8i815o0CAvkZBfrxIXvHs9F3PjwpTRGK7o=;
-        b=FfS3Ejv/OFXnsEJyg7+Wmr1SU1egd0Csku55p7D/Pdhebt/ai4HE1iFwSne8t3tPt4
-         2aCGInJZmhftCplPmzdBNNP3IKuLnwKQl3jF4YB6GkaIAFO69mMgWUBn6wX6fy0K0iid
-         r5NeoaMPGApectiCb7VRZ7Ry/GI2SwFyBWKGXn48/lGBUVK6G4UhC0yEuHymovaTK1eL
-         OymW44BgXlzxapq6N37KaQ7BmHncv87MgsA1L+JEZxlPXDO65NoPRtXV6XI1jcDXptZV
-         SqVrxyNESvl9vkA1nAFB5eqVqUQyi5MQYQpEh2/wKubsZbO9Fm+n+GZpsw4onj1nMI22
-         fhrw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756762913; x=1757367713;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=bObIG6hbz8i815o0CAvkZBfrxIXvHs9F3PjwpTRGK7o=;
-        b=ICifNQSv+ZIZ95TH/ptNCUUQV5CM/n1RR+DH/1BGfB71e79KLBqSnGfrKAPC6ieTQy
-         ar+08ZluI7VU82O1DNSBL+iXsufUn32EXGac/ITR7TLY2U5denqvWaTotI7CFft1sfKv
-         k5bMH+WCRsbsIXdpkEvHTqtIYWg3U+slVzLzH3wxyyI2jdNpTpjBqIw+tTCgtKj/+OZg
-         UCN6bveYkSBgxF0229Lr6S0hgKfIeTAvpu0Jfo6EJEEw/aekUnMQePcRbxK4eOz38v0q
-         sGXXWGCUlShBlD6rqb/jlSHkmW14xkfSGW1uKAiTH+BSaXZNnYtqURLSS6b+dMETRD4T
-         6PHQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUs7JoieQDn42ojmJ46hbNK406CfIFNCjawrocMe2ZP0pj6OaJOmqYgxSIxDmduYv0LFOIM73EXMacz+A==@vger.kernel.org, AJvYcCWF2Ryl8rDxvVMhJxhfebFH0ie8Tdu30pG/4C2NeYaqpLUVWoyEf5mLrbmGURuEXg+SnA8LB5fkccqfrg==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw7x8w3MBnwqMghJ6VbseT6z6f20FnPGDBLFK6VdZxAGqDoen19
-	rCDp6HzDjUSnuaXkw8CFjevPoSxfaYbOZTzAYwxQki7oE0nP1+0lvlHU76TX6UgrDofRsNXEZMs
-	go5KXvBELoH0cbmhjHbnhWN1jRoCRDvQ=
-X-Gm-Gg: ASbGncu4qDaeWfpUjZuT7rY0i9jTzuDHD5xOQ53Nn7fgD3kkiDm+pdC3XA9UQ/ERZ8v
-	VIM9Ekg/NTDQJ9CPWtK7l/UW95TNU5iCRe8QLJH2nbENcSlK1nPz3fsGhVoYZoaqB779I2PN7TC
-	PoNOFYA9qvMHLXtWZSCxxEfF6qGU3zToCczPxg8ySAlgIF4kbHCPKedvBFk2o+mYSinMZyZmts1
-	WglUBVesc6sS3XxAa4=
-X-Google-Smtp-Source: AGHT+IFjZmaPKoPQcXDGfF/kV1IP9uFU1Wv2mkfLSbSa6IhmowhwufpcDeP30Fu2i1LBz23Ff2FFDH8N8TzSkKHWIco=
-X-Received: by 2002:a05:6402:3508:b0:61c:30cf:885a with SMTP id
- 4fb4d7f45d1cf-61d2686a2b1mr9013843a12.7.1756762912523; Mon, 01 Sep 2025
- 14:41:52 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="n+sCHdj2"
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250902010941epoutp03b56ddc61cb732290933cccf50dbf919a~hUeba2B7C2359023590epoutp03p
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Sep 2025 01:09:41 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250902010941epoutp03b56ddc61cb732290933cccf50dbf919a~hUeba2B7C2359023590epoutp03p
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1756775381;
+	bh=1/UtzH7xsaHxgW2UhoJ9KKV96kB1hG4FdJjnjA+butU=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=n+sCHdj2Uoz1xZmm+WzFctNCQzHwrXG13DPurgudX0PV7L27Hnm264tqN9zenc0QF
+	 gKIdvciPoJBYwKfGBWhS2hBPJSqTZNhtidLJG2QxFrrgC612ek7nphPR+UhtHM7Dfh
+	 q2hol1c2C5QGvjFPxqv1szYXuzhbepnKKVf+DP0I=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPS id
+	20250902010940epcas1p4e2e6b8972c8388e1e51aa08d6474359b~hUeaklFJt0117601176epcas1p4k;
+	Tue,  2 Sep 2025 01:09:40 +0000 (GMT)
+Received: from epcas1p1.samsung.com (unknown [182.195.38.243]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4cG71w2Vdmz6B9mD; Tue,  2 Sep
+	2025 01:09:40 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas1p1.samsung.com (KnoxPortal) with ESMTPA id
+	20250902010939epcas1p1f732e3259ca818e4d4aa2e00fcb30f72~hUeZrWmt02602526025epcas1p1B;
+	Tue,  2 Sep 2025 01:09:39 +0000 (GMT)
+Received: from dh0421hwang02 (unknown [10.253.101.58]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20250902010939epsmtip10f38c99a3f1fb8993da62ec03bc8e774~hUeZkAScT0137501375epsmtip1S;
+	Tue,  2 Sep 2025 01:09:39 +0000 (GMT)
+From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <James.Bottomley@HansenPartnership.com>,
+	<martin.petersen@oracle.com>, <peter.wang@mediatek.com>,
+	<manivannan.sadhasivam@linaro.org>, <quic_mnaresh@quicinc.com>
+Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
+	<junwoo80.lee@samsung.com>, <jangsub.yi@samsung.com>,
+	<sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
+	<sh8267.baek@samsung.com>, <wkon.kim@samsung.com>
+In-Reply-To: <27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
+Subject: RE: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs
+ cmd error
+Date: Tue, 2 Sep 2025 10:09:39 +0900
+Message-ID: <17db01dc1ba6$41d37350$c57a59f0$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250728163752.9778-1-linmag7@gmail.com> <alpine.DEB.2.21.2507291750390.5060@angie.orcam.me.uk>
- <CA+=Fv5TJRpFJ=p1MLcORDaqnSG-0AUEtSUw3Kek0vPGKbQZT9g@mail.gmail.com>
-In-Reply-To: <CA+=Fv5TJRpFJ=p1MLcORDaqnSG-0AUEtSUw3Kek0vPGKbQZT9g@mail.gmail.com>
-From: Magnus Lindholm <linmag7@gmail.com>
-Date: Mon, 1 Sep 2025 23:41:41 +0200
-X-Gm-Features: Ac12FXwEn4h8KFioy4gm04oCGmHsT0V4q3Qz4SLvH-ToJAxH82DDnje25_EBIdc
-Message-ID: <CA+=Fv5QmqAFLyToOsCKzgWSdnMXGr7FjeW_fO5reTUgJJP27Sg@mail.gmail.com>
-Subject: Re: [PATCH 0/1] scsi: qla1280: Make 64-bit DMA addressing a Kconfig option
-To: "Maciej W. Rozycki" <macro@orcam.me.uk>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-alpha@vger.kernel.org, martin.petersen@oracle.com, 
-	James.Bottomley@hansenpartnership.com, hch@infradead.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQEmYeTjtFjYRI1QNWxgWL0Y7ybfIwITLn2gAaoUPAICiJScSgGs7ud4AZvu8PK1nhF6oA==
+Content-Language: ko
+X-CMS-MailID: 20250902010939epcas1p1f732e3259ca818e4d4aa2e00fcb30f72
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d
+References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+	<CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
+	<20250417023405.6954-2-dh0421.hwang@samsung.com>
+	<239ea120-841f-478d-b6b4-9627aa453795@acm.org>
+	<093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
+	<27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
 
-Hi,
+On 9/1/25 7:4 AM, Bart Van Assche wrote:
+> On 8/31/25 6:31 PM, DooHyun Hwang wrote:
+> > UFS_CMD_ERR stands for "completion error".
+> 
+> No it doesn't. In the UFS driver and also in many other driver "cmd"
+> stands for "command" and not for "completion". Please change the
+> "UFS_CMD_ERR" enum label.
+> 
+> Bart.
 
-> >  If it turns out a generic issue with DAC handling in the Tsunami chipset,
-> > then a better approach would be a generic workaround for all potentially
-> > affected devices, but it does not appear we have existing infrastructure
-> > for that.  Just setting the global DMA mask would unnecessarily cripple
-> > 64-bit option cards as well, but it seems to me there might be something
-> > relevant in arch/mips/pci/fixup-sb1250.c; see `quirk_sb1250_pci_dac' and
-> > the comments above it.
+I'm sorry. There was a misunderstanding in my previous comment.
 
-I've been taking a closer look at the quirk_sb1250_pci_dac. It should indeed
-be possible to implement a similar workaround on Alpha. I believe that would
-require some fixes to the Alpha specific implementations in pci_iommu.c. For
-one thing, the implementation does not respect 'dev->bus_dma_limit' which
-is used in  the quirk_sb1250_pci_dac implementation.
+The UFS_CMD_ERR stands for "command completion error."
+I wanted to make it consistent with the other enums.
+For example, query errors are defined as UFS_QUERY_ERR,
+and Task Management errors are defined as UFS_TM_ERR.
 
-I've put together a patch, and I'm testing it right now, that implements a quirk
-similar to quirk_sb1250_pci_dac as well as makes stuff in pci_iommu.c take
-'dev->bus_dma_limit' into consideration on Alpha. If this approach makes
-sense I'll put out a new patch for review. Since this approach does not
-touch the qla1280 SCSI driver, I won't send it to the linux-scsi list.
+I hope to use UFS_CMD_ERR for the same classification purposes
+as UFS_CMD_SEND or UFS_CMD_COMP.
+Therefore, UFS_CMD_ERR can be used for logging SCSI or UIC commands.
 
-Regards
+Thank you.
+DooHyun Hwang.
 
-Magnus
