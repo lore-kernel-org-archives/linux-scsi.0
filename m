@@ -1,152 +1,161 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6DDF1DFFD;
-	Tue,  2 Sep 2025 06:32:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 012DF2E03ED
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Sep 2025 06:37:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756794744; cv=none; b=Oped70tVsVwm1ImWP4iKPO5mz2/M+tFnLdQpSERJrO6sBUUjzVm63iqEqT1v7S/GULXVF1x5cDWz1w4ZTWg5R5JC2Upk5Tbd05aSb8L6/qwXwbbLOlylUgVAL5Q2e1q379YQm5MXB73V9TuKq8/3fJAthnqWSgznvybnk8JRHCc=
+	t=1756795071; cv=none; b=MsxW2LGm8wNlj0ntZlPuaADhmC797GL159LMZ0Eex5vCxhKqGM2/3HcAYlJ+RmpmCgVDq1gr9iRgItRf6WmwPA6Sigxjy9+uUgeGBFVkVz4JSqxN6vt7OHUgKrX1SU/9S6lHWw6fopSDARFseAxfTkODTsN/Btq9bIr4AHmBWmA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756794744; c=relaxed/simple;
-	bh=RMQkvomOLLAE9BCgJJ7rozPydCyG9TQK4oYVCVv2aYg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=PnXlD8RG40X6xOGhvZ7RRO+DmUgszk680aU3HvdpuAyjOvlHo+Fu6FdyuHQPnt/TRMzo23TVY5bNEuVUwwRPZ6gZC0w+txlW8YlOfGPR14ke7F41DwT7NIX5JaHAdnTVgt/yAx/hGyOuk7osCr6n7joJx/7L61ojt6BbM7K5Vy8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DDRQAaBF; arc=none smtp.client-ip=198.175.65.9
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1756795071; c=relaxed/simple;
+	bh=sPE4Kc+Unl6reAmFjTL5aOHW/HQarIXSqOC1cc+Qdo4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=sr9D4qMSyL44LAc1eNw75fHn1jGfC/Pnri9LpBJ5hhmy9qIdSkkyFf6PDzaKpVs6m9vwlpjf5lBBahPJBlVrDcUkIeGVP3bmVKV9OahV82vi6eODbvlY+zY8UrgHJnZ8hUvY6gdgdgqJA9gNtzAysXqie+sYa/uo6a3gC7B9AmE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=X1pcGz/i; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NPNvzpdO; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=X1pcGz/i; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=NPNvzpdO; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DDRQAaBF"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1756794743; x=1788330743;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=RMQkvomOLLAE9BCgJJ7rozPydCyG9TQK4oYVCVv2aYg=;
-  b=DDRQAaBFNM6K354v5jJZCuRJVmoKb8O8txcpS4EbCGNmlf7lmfkxSZj+
-   XE/uDYeaB/EuvHaaSnTTmxSn6/Ocmc6biQM/84q3ghebdRq9W/pGF4cOk
-   6a4l7sR1tdAS1I/ZLrtysslHsAyx7eeyemSqNcvK2T8pnlCvgvY+3SzP7
-   lDgXUg8dWWaHKmzvNwqs6h4bDa1SSD6VkMRgwuVtmAz2UEUq59cWfZVT+
-   npqGi+hrvzQguttbeLRQc8tSCumIRSJ9v+ZQu5wfaVSQsYbgR1/eqEPxb
-   SCpgy9UQxFiZe4W7esXbu4D8Dc9fzRkVQmMsYPryfQ5ja00P5ruM6vU7s
-   g==;
-X-CSE-ConnectionGUID: RHsJSnH4RAGCIvc2M2XAEg==
-X-CSE-MsgGUID: nCAdhD6RRBKWSv7Clk5pbA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="81635642"
-X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
-   d="scan'208";a="81635642"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2025 23:32:22 -0700
-X-CSE-ConnectionGUID: msWB30CGTKybT0ha7abKAg==
-X-CSE-MsgGUID: +QSl33vHQXaB9NE9KO9NEA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.18,230,1751266800"; 
-   d="scan'208";a="170741958"
-Received: from lkp-server02.sh.intel.com (HELO 06ba48ef64e9) ([10.239.97.151])
-  by fmviesa007.fm.intel.com with ESMTP; 01 Sep 2025 23:32:17 -0700
-Received: from kbuild by 06ba48ef64e9 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1utKYK-0001Vj-35;
-	Tue, 02 Sep 2025 06:31:58 +0000
-Date: Tue, 2 Sep 2025 14:30:19 +0800
-From: kernel test robot <lkp@intel.com>
-To: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>, alim.akhtar@samsung.com,
-	avri.altman@wdc.com, bvanassche@acm.org,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Cc: oe-kbuild-all@lists.linux.dev, peter.wang@mediatek.com,
-	tanghuan@vivo.com, liu.song13@zte.com.cn, quic_nguyenb@quicinc.com,
-	viro@zeniv.linux.org.uk, huobean@gmail.com, adrian.hunter@intel.com,
-	can.guo@oss.qualcomm.com, ebiggers@kernel.org,
-	neil.armstrong@linaro.org, angelogioacchino.delregno@collabora.com,
-	quic_narepall@quicinc.com, quic_mnaresh@quicinc.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	nitin.rawat@oss.qualcomm.com, ziqi.chen@oss.qualcomm.com,
-	zhongqiu.han@oss.qualcomm.com
-Subject: Re: [PATCH] scsi: ufs: core: Fix data race in CPU latency PM QoS
- request handling
-Message-ID: <202509021425.HuVijyYS-lkp@intel.com>
-References: <20250901085117.86160-1-zhongqiu.han@oss.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="X1pcGz/i";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NPNvzpdO";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="X1pcGz/i";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="NPNvzpdO"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 3F3CB1F395;
+	Tue,  2 Sep 2025 06:37:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1756795062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YdW9vvIXltHFOltrHb059oMVAnYxDBFx4gR2hd/NFC8=;
+	b=X1pcGz/isnEA46NWN/CHqhQfFqd8a9jeTqsFicrxXPdpLUaZh/kL1pAVmf4UHaMj+EFLax
+	igLYGnbCcfXKGPqqfD0MhlsneO9sL5ZkZ519Uu5Ne+lZCyih8rcyfuvoMgIYh+yf9ntmZS
+	h3qAG5vICmXOCL17LFDGKB8D5yZNbMg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1756795062;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YdW9vvIXltHFOltrHb059oMVAnYxDBFx4gR2hd/NFC8=;
+	b=NPNvzpdO8s+0zZ/YNfwgT2fHAllyj8EEBrcgASCamUi0cTsZon2c1X8R92MN6YO3S5YjoC
+	PLBhzR5bBZIWDxCQ==
+Authentication-Results: smtp-out2.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1756795062; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YdW9vvIXltHFOltrHb059oMVAnYxDBFx4gR2hd/NFC8=;
+	b=X1pcGz/isnEA46NWN/CHqhQfFqd8a9jeTqsFicrxXPdpLUaZh/kL1pAVmf4UHaMj+EFLax
+	igLYGnbCcfXKGPqqfD0MhlsneO9sL5ZkZ519Uu5Ne+lZCyih8rcyfuvoMgIYh+yf9ntmZS
+	h3qAG5vICmXOCL17LFDGKB8D5yZNbMg=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1756795062;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YdW9vvIXltHFOltrHb059oMVAnYxDBFx4gR2hd/NFC8=;
+	b=NPNvzpdO8s+0zZ/YNfwgT2fHAllyj8EEBrcgASCamUi0cTsZon2c1X8R92MN6YO3S5YjoC
+	PLBhzR5bBZIWDxCQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E32E813888;
+	Tue,  2 Sep 2025 06:37:41 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id X+MiNbWQtmg/UwAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 02 Sep 2025 06:37:41 +0000
+Message-ID: <dc15bdf0-9b16-43a3-ba8a-b335b8042934@suse.de>
+Date: Tue, 2 Sep 2025 08:37:41 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250901085117.86160-1-zhongqiu.han@oss.qualcomm.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 00/14] scsi: scsi_error: Introduce new error handle
+ mechanism
+To: JiangJianJun <jiangjianjun3@huawei.com>, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, hewenliang4@huawei.com,
+ yangyun50@huawei.com, wuyifeng10@huawei.com, yangxingui@h-partners.com
+References: <17230842-0a7a-403e-abc7-a15e3aa5d424@suse.de>
+ <20250902055628.2524926-1-jiangjianjun3@huawei.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20250902055628.2524926-1-jiangjianjun3@huawei.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.998];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_SEVEN(0.00)[7];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_DN_SOME(0.00)[]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Spam-Score: -4.30
 
-Hi Zhongqiu,
+On 9/2/25 07:56, JiangJianJun wrote:
+>> I fully agree that SCSI EH is in need of reworking. But adding
+>> another layer of complexity on top of the existing one ... not sure.
+> 
+> Perhaps it would have been better to use only the error handler on the
+> device from the start. Users might wonder why a single disk failure
+> could cause other disks to become blocking.
+> 
+>> Additionally: TARGET RESET TMF is dead, and has been removed from SAM
+>> since several years. It really is not worthwhile implementing.
+> 
+> Hmm.
+> 
+>> Can't we take a simple step, and just try to have a non-blocking version
+>> of device reset?
+>> I think that should cover quite some issues already.
+> 
+> Do you think it's necessary to escalate the issue after the device reset
+> fails? Should we reset the bus or the host?
+> Moreover, a failed device reset does not necessarily indicate a fault
+> with the target or host.
+> And what means of "non-blocking"?
+> 
+On the contrary, a failed device reset _always_ needs to be escalated.
+The problem is that all EH issues start with a failed command (ignoring
+the sg_reset case for now).
+And a command typically is associated with data buffers / memory areas.
+So when a command is failed we need to know when these buffers can be
+released. If the device reset fails the command could not be reset,
+and the buffers cannot be released. And without further escalation the
+buffers remain locked until the next reboot.
+That's why host reset is so important: that typically resets the entire
+HBA (via a PCI-level reset or similar), so we can be sure that
+afterwards all buffers are released and the command can be completed.
 
-kernel test robot noticed the following build warnings:
+Cheers,
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next linus/master v6.17-rc4 next-20250901]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Zhongqiu-Han/scsi-ufs-core-Fix-data-race-in-CPU-latency-PM-QoS-request-handling/20250901-165540
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20250901085117.86160-1-zhongqiu.han%40oss.qualcomm.com
-patch subject: [PATCH] scsi: ufs: core: Fix data race in CPU latency PM QoS request handling
-config: arc-randconfig-002-20250902 (https://download.01.org/0day-ci/archive/20250902/202509021425.HuVijyYS-lkp@intel.com/config)
-compiler: arc-linux-gcc (GCC) 9.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250902/202509021425.HuVijyYS-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202509021425.HuVijyYS-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
-   drivers/ufs/core/ufshcd.c: In function 'ufshcd_pm_qos_init':
->> drivers/ufs/core/ufshcd.c:1052:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
-    1052 |  if (hba->pm_qos_enabled)
-         |  ^~
-   drivers/ufs/core/ufshcd.c:1054:3: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
-    1054 |   return;
-         |   ^~~~~~
-   drivers/ufs/core/ufshcd.c: In function 'ufshcd_pm_qos_exit':
-   drivers/ufs/core/ufshcd.c:1072:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
-    1072 |  if (!hba->pm_qos_enabled)
-         |  ^~
-   drivers/ufs/core/ufshcd.c:1074:3: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
-    1074 |   return;
-         |   ^~~~~~
-   drivers/ufs/core/ufshcd.c: In function 'ufshcd_pm_qos_update':
-   drivers/ufs/core/ufshcd.c:1090:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
-    1090 |  if (!hba->pm_qos_enabled)
-         |  ^~
-   drivers/ufs/core/ufshcd.c:1092:3: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
-    1092 |   return;
-         |   ^~~~~~
-
-
-vim +/if +1052 drivers/ufs/core/ufshcd.c
-
-7a3e97b0dc4bba drivers/scsi/ufs/ufshcd.c Santosh Yaraganavi 2012-02-29  1043  
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1044  /**
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1045   * ufshcd_pm_qos_init - initialize PM QoS request
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1046   * @hba: per adapter instance
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1047   */
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1048  void ufshcd_pm_qos_init(struct ufs_hba *hba)
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1049  {
-5824c3647e1ad8 drivers/ufs/core/ufshcd.c Zhongqiu Han       2025-09-01  1050  	mutex_lock(&hba->pm_qos_mutex);
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1051  
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19 @1052  	if (hba->pm_qos_enabled)
-5824c3647e1ad8 drivers/ufs/core/ufshcd.c Zhongqiu Han       2025-09-01  1053  		mutex_unlock(&hba->pm_qos_mutex);
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1054  		return;
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1055  
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1056  	cpu_latency_qos_add_request(&hba->pm_qos_req, PM_QOS_DEFAULT_VALUE);
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1057  
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1058  	if (cpu_latency_qos_request_active(&hba->pm_qos_req))
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1059  		hba->pm_qos_enabled = true;
-5824c3647e1ad8 drivers/ufs/core/ufshcd.c Zhongqiu Han       2025-09-01  1060  
-5824c3647e1ad8 drivers/ufs/core/ufshcd.c Zhongqiu Han       2025-09-01  1061  	mutex_unlock(&hba->pm_qos_mutex);
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1062  }
-2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1063  
-
+Hannes
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
