@@ -1,132 +1,152 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC9212E3B12;
-	Tue,  2 Sep 2025 06:18:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6DDF1DFFD;
+	Tue,  2 Sep 2025 06:32:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756793899; cv=none; b=K4K8bKl4IXqs7b7frKAa4U3W3O5ZNqX5WhKsT5xLctr2ucwIsa+r5OqjquC9N4YCInj8FUuzZF2pdWa/jzl9ooICONn4kuuj2DxH6TZQejl087WYbURu0dnaWg5hvOv1/k629tG0VwxqZEC2m6E6d1+rnAu7oxzs3H9/8RmX468=
+	t=1756794744; cv=none; b=Oped70tVsVwm1ImWP4iKPO5mz2/M+tFnLdQpSERJrO6sBUUjzVm63iqEqT1v7S/GULXVF1x5cDWz1w4ZTWg5R5JC2Upk5Tbd05aSb8L6/qwXwbbLOlylUgVAL5Q2e1q379YQm5MXB73V9TuKq8/3fJAthnqWSgznvybnk8JRHCc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756793899; c=relaxed/simple;
-	bh=fCCieUa2bOrYzWEYwRiPHXPLqo498Xg5NLm++31//28=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=NbndypuOLsMNdhiLK73782n7QLVOrSRcXel77+BZ3/1Vs1vV052pu8EdZY8TVNAYIl4nfEGXFggKLNXKvjsgO4N+6lfuyuDSBX2WGR3LNuxSiZFChiSV0t905eYpmOsfe9MfcC6MtCmvvIVcO+oW9Trvy7wO6BLG0EhkeuzAjXc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=f4SpTO5H; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1756794744; c=relaxed/simple;
+	bh=RMQkvomOLLAE9BCgJJ7rozPydCyG9TQK4oYVCVv2aYg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=PnXlD8RG40X6xOGhvZ7RRO+DmUgszk680aU3HvdpuAyjOvlHo+Fu6FdyuHQPnt/TRMzo23TVY5bNEuVUwwRPZ6gZC0w+txlW8YlOfGPR14ke7F41DwT7NIX5JaHAdnTVgt/yAx/hGyOuk7osCr6n7joJx/7L61ojt6BbM7K5Vy8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=DDRQAaBF; arc=none smtp.client-ip=198.175.65.9
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="f4SpTO5H"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B427BC4CEF6;
-	Tue,  2 Sep 2025 06:18:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756793898;
-	bh=fCCieUa2bOrYzWEYwRiPHXPLqo498Xg5NLm++31//28=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=f4SpTO5HbRtl7Xi3xwi8h9tTRsTDr/hJDP6knv0cso5gBMYkfhcoUf95iAd9UJ/GW
-	 pEHAuNQoNfdzTa8g3jUWSkTx3S6j6SWPRIq01YiDpVyT7oV9nB6okj61kBiUI2iAXJ
-	 yUHnc9WM5iPtWyNpkDsB/aDgAY0RsrT8ZOHU7f79M50ts0hX72u4U8px7IFerwMYI7
-	 P8o8jxCwaTQ1FUvAXTViK/RrudPro5cttYm2Adeikk1MK27oR7FK6jiGu57CeOIZ08
-	 tIiEqid2BaOqGe9CM1ah1Y1wFIFzcN5+i8rj8qncG0ydH2jhJqYHXfwG97R5pnGm3S
-	 nGKzVIwgqDAcA==
-Message-ID: <79555a86-d434-414f-bafc-be311a92482c@kernel.org>
-Date: Tue, 2 Sep 2025 08:18:12 +0200
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="DDRQAaBF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1756794743; x=1788330743;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=RMQkvomOLLAE9BCgJJ7rozPydCyG9TQK4oYVCVv2aYg=;
+  b=DDRQAaBFNM6K354v5jJZCuRJVmoKb8O8txcpS4EbCGNmlf7lmfkxSZj+
+   XE/uDYeaB/EuvHaaSnTTmxSn6/Ocmc6biQM/84q3ghebdRq9W/pGF4cOk
+   6a4l7sR1tdAS1I/ZLrtysslHsAyx7eeyemSqNcvK2T8pnlCvgvY+3SzP7
+   lDgXUg8dWWaHKmzvNwqs6h4bDa1SSD6VkMRgwuVtmAz2UEUq59cWfZVT+
+   npqGi+hrvzQguttbeLRQc8tSCumIRSJ9v+ZQu5wfaVSQsYbgR1/eqEPxb
+   SCpgy9UQxFiZe4W7esXbu4D8Dc9fzRkVQmMsYPryfQ5ja00P5ruM6vU7s
+   g==;
+X-CSE-ConnectionGUID: RHsJSnH4RAGCIvc2M2XAEg==
+X-CSE-MsgGUID: nCAdhD6RRBKWSv7Clk5pbA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="81635642"
+X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
+   d="scan'208";a="81635642"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by orvoesa101.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 01 Sep 2025 23:32:22 -0700
+X-CSE-ConnectionGUID: msWB30CGTKybT0ha7abKAg==
+X-CSE-MsgGUID: +QSl33vHQXaB9NE9KO9NEA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.18,230,1751266800"; 
+   d="scan'208";a="170741958"
+Received: from lkp-server02.sh.intel.com (HELO 06ba48ef64e9) ([10.239.97.151])
+  by fmviesa007.fm.intel.com with ESMTP; 01 Sep 2025 23:32:17 -0700
+Received: from kbuild by 06ba48ef64e9 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1utKYK-0001Vj-35;
+	Tue, 02 Sep 2025 06:31:58 +0000
+Date: Tue, 2 Sep 2025 14:30:19 +0800
+From: kernel test robot <lkp@intel.com>
+To: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>, alim.akhtar@samsung.com,
+	avri.altman@wdc.com, bvanassche@acm.org,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, peter.wang@mediatek.com,
+	tanghuan@vivo.com, liu.song13@zte.com.cn, quic_nguyenb@quicinc.com,
+	viro@zeniv.linux.org.uk, huobean@gmail.com, adrian.hunter@intel.com,
+	can.guo@oss.qualcomm.com, ebiggers@kernel.org,
+	neil.armstrong@linaro.org, angelogioacchino.delregno@collabora.com,
+	quic_narepall@quicinc.com, quic_mnaresh@quicinc.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	nitin.rawat@oss.qualcomm.com, ziqi.chen@oss.qualcomm.com,
+	zhongqiu.han@oss.qualcomm.com
+Subject: Re: [PATCH] scsi: ufs: core: Fix data race in CPU latency PM QoS
+ request handling
+Message-ID: <202509021425.HuVijyYS-lkp@intel.com>
+References: <20250901085117.86160-1-zhongqiu.han@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V3 3/5] scsi: ufs: core: Remove unused ufshcd_res_info
- structure
-To: Nitin Rawat <quic_nitirawa@quicinc.com>,
- Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>, andersson@kernel.org,
- konradybcio@kernel.org, robh@kernel.org, krzk+dt@kernel.org,
- conor+dt@kernel.org, mani@kernel.org, James.Bottomley@HansenPartnership.com,
- martin.petersen@oracle.com
-Cc: linux-arm-msm@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
-References: <20250821112403.12078-1-quic_rdwivedi@quicinc.com>
- <20250821112403.12078-4-quic_rdwivedi@quicinc.com>
- <1ccecf69-0bd8-4156-945d-e5876b6dea01@kernel.org>
- <1efa429d-7576-49da-a769-b1eba9345958@quicinc.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <1efa429d-7576-49da-a769-b1eba9345958@quicinc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250901085117.86160-1-zhongqiu.han@oss.qualcomm.com>
 
-On 01/09/2025 18:08, Nitin Rawat wrote:
-> 
-> 
-> On 8/21/2025 5:18 PM, Krzysztof Kozlowski wrote:
->> On 21/08/2025 13:24, Ram Kumar Dwivedi wrote:
->>> From: Nitin Rawat <quic_nitirawa@quicinc.com>
->>>
->>> Remove the ufshcd_res_info structure and associated enum ufshcd_res
->>> definitions from the UFS host controller header. These were previously
->>> used for MCQ resource mapping but are no longer needed following recent
->>> refactoring to use direct base addresses instead of multiple separate
->>> resource regions
->>>
->>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
->>
->> Incomplete SoB chain.
->>
->> But anyway this makes no sense as independent patch. First you remove
->> users of it making it redundant... and then you remove it? No.
-> 
-> Hi Krzysztof,
-> 
-> The driver changes are in the UFS Qualcomm platform driver, which uses 
-> the definitions, while ufshcd.h is part of the UFS core driver. Hence 
-> kept in 2 separate patch.
-Don't explain the obvious but address the comment. I am going to repeat
-since you just respond whatever:
+Hi Zhongqiu,
 
-This makes no sense as independent patch. First you remove
-users of it making it redundant... and then you remove it? No.
+kernel test robot noticed the following build warnings:
 
-Best regards,
-Krzysztof
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.17-rc4 next-20250901]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Zhongqiu-Han/scsi-ufs-core-Fix-data-race-in-CPU-latency-PM-QoS-request-handling/20250901-165540
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20250901085117.86160-1-zhongqiu.han%40oss.qualcomm.com
+patch subject: [PATCH] scsi: ufs: core: Fix data race in CPU latency PM QoS request handling
+config: arc-randconfig-002-20250902 (https://download.01.org/0day-ci/archive/20250902/202509021425.HuVijyYS-lkp@intel.com/config)
+compiler: arc-linux-gcc (GCC) 9.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250902/202509021425.HuVijyYS-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202509021425.HuVijyYS-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+   drivers/ufs/core/ufshcd.c: In function 'ufshcd_pm_qos_init':
+>> drivers/ufs/core/ufshcd.c:1052:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+    1052 |  if (hba->pm_qos_enabled)
+         |  ^~
+   drivers/ufs/core/ufshcd.c:1054:3: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+    1054 |   return;
+         |   ^~~~~~
+   drivers/ufs/core/ufshcd.c: In function 'ufshcd_pm_qos_exit':
+   drivers/ufs/core/ufshcd.c:1072:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+    1072 |  if (!hba->pm_qos_enabled)
+         |  ^~
+   drivers/ufs/core/ufshcd.c:1074:3: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+    1074 |   return;
+         |   ^~~~~~
+   drivers/ufs/core/ufshcd.c: In function 'ufshcd_pm_qos_update':
+   drivers/ufs/core/ufshcd.c:1090:2: warning: this 'if' clause does not guard... [-Wmisleading-indentation]
+    1090 |  if (!hba->pm_qos_enabled)
+         |  ^~
+   drivers/ufs/core/ufshcd.c:1092:3: note: ...this statement, but the latter is misleadingly indented as if it were guarded by the 'if'
+    1092 |   return;
+         |   ^~~~~~
+
+
+vim +/if +1052 drivers/ufs/core/ufshcd.c
+
+7a3e97b0dc4bba drivers/scsi/ufs/ufshcd.c Santosh Yaraganavi 2012-02-29  1043  
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1044  /**
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1045   * ufshcd_pm_qos_init - initialize PM QoS request
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1046   * @hba: per adapter instance
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1047   */
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1048  void ufshcd_pm_qos_init(struct ufs_hba *hba)
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1049  {
+5824c3647e1ad8 drivers/ufs/core/ufshcd.c Zhongqiu Han       2025-09-01  1050  	mutex_lock(&hba->pm_qos_mutex);
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1051  
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19 @1052  	if (hba->pm_qos_enabled)
+5824c3647e1ad8 drivers/ufs/core/ufshcd.c Zhongqiu Han       2025-09-01  1053  		mutex_unlock(&hba->pm_qos_mutex);
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1054  		return;
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1055  
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1056  	cpu_latency_qos_add_request(&hba->pm_qos_req, PM_QOS_DEFAULT_VALUE);
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1057  
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1058  	if (cpu_latency_qos_request_active(&hba->pm_qos_req))
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1059  		hba->pm_qos_enabled = true;
+5824c3647e1ad8 drivers/ufs/core/ufshcd.c Zhongqiu Han       2025-09-01  1060  
+5824c3647e1ad8 drivers/ufs/core/ufshcd.c Zhongqiu Han       2025-09-01  1061  	mutex_unlock(&hba->pm_qos_mutex);
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1062  }
+2777e73fc154e2 drivers/ufs/core/ufshcd.c Maramaina Naresh   2023-12-19  1063  
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
