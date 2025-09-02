@@ -1,74 +1,69 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from szxga03-in.huawei.com (szxga03-in.huawei.com [45.249.212.189])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 482962DF15F;
-	Tue,  2 Sep 2025 05:11:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD1E354652;
+	Tue,  2 Sep 2025 05:25:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.189
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756789896; cv=none; b=J9wJHAV+oBzxlg85VG5G8Rvoy3OwplxVy58y6pxqzh66Wri/lGkV2FeExJHK76W/n9X2KJSjeBOX1BsB+FtA/WDUA9iFnIlLtFfR9gdHHp6dgkSD5vIctCkxMZKiflzotqbT5/HFtIEG8UqluLu1RHCt9hno5VWckVvv5yNPVOU=
+	t=1756790752; cv=none; b=ShgEL2UUnBfD1iiIkU5Tjfxz+W67B/qyIcxYYKWsOyKY75Ch35oLBVwKmc6xRNDBFk02lVymhUvV+81RUL9OLbk0DHGF5IfPcuuBjN+Kb+jxnaAOFfgx9hPkvUG+Z80VaIACyrAdPtW1EWF1GuKJYB/QMpUptIknvVhpMlWlV/k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756789896; c=relaxed/simple;
-	bh=nPVyH9G9lI1Km2IUyFQw8xE1zC3zi2xNgVGYJNHZqbU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=D3ieN7e4G48XzJkGxNSnlLxbXiU9TwxhaNQ/PVaz3i4hP7tYd+G40MjUJ4Nx3/z4C2HuzQPadJV0RKdzGtvn/Xc5EZ2wCTR5/v4vJbCRP0uW4eZ+vFr1e9QLkmT//Rc3wUMDIeTEicHrHAR6pTchYrcdbHoDduNbj7IA/1uzn0g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LjSvL828; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LjSvL828"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DA721C4CEED;
-	Tue,  2 Sep 2025 05:11:34 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756789895;
-	bh=nPVyH9G9lI1Km2IUyFQw8xE1zC3zi2xNgVGYJNHZqbU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=LjSvL828CIbAl0U97ocjMgI6rbpyQvR4Xa9hlBR0gkwI1h0oRbH1dXf1ZHqLxE4BZ
-	 XgFQTuGufApZrPE5k5RN7dNqm0oaIiSJJpXhpZP9Rgo0m66rklXDXAqwbCtYeShOa1
-	 ihf6d96GHlurSFR5owb8uQWjfqa2iyykdUDJ4i52PiCj49pPIDG8Hj75meDvtPerOv
-	 cYQNqDBE+lJA4AB/T+GVWHlA5FB4ru/f5pPQWfHnqSctN00tNZIv+L9Jn/4Jubxsil
-	 ceauTeNAxAae4r26afYYezKrUB5581loje4hrrkS2KcitxH46jIrgxCv5wbkszRTI6
-	 SipCcM5hvr7Pw==
-Message-ID: <04ca315e-e375-40ab-8596-613f8d453008@kernel.org>
-Date: Tue, 2 Sep 2025 14:08:41 +0900
+	s=arc-20240116; t=1756790752; c=relaxed/simple;
+	bh=Edb5dwU4QvcqbknGt64YIP/IHrA1tAFqQjzkUztbUx4=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=lzwMJGCB7rMY1vd1CyYJXSb3Ku4NvwY3bDN6Ee/tRgd8SOcG2Nb7L73RP1Zqx8t9m9a14PQGj14GymIssl7GsPV48T/G3dSenthXDjIS+l5A3c4+6heiUCq35hE4DsWUbRbcsGxoin5bZdiw29VtcXL/bLdg1DmjgbKaSvrmXCU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.189
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+Received: from mail.maildlp.com (unknown [172.19.162.254])
+	by szxga03-in.huawei.com (SkyGuard) with ESMTP id 4cGDc75zW0zdclP;
+	Tue,  2 Sep 2025 13:21:11 +0800 (CST)
+Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
+	by mail.maildlp.com (Postfix) with ESMTPS id 92153180490;
+	Tue,  2 Sep 2025 13:25:40 +0800 (CST)
+Received: from localhost.localdomain (10.175.104.170) by
+ kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 2 Sep 2025 13:25:39 +0800
+From: JiangJianJun <jiangjianjun3@huawei.com>
+To: <hare@suse.de>, <linux-scsi@vger.kernel.org>
+CC: <linux-kernel@vger.kernel.org>, <hewenliang4@huawei.com>,
+	<yangyun50@huawei.com>, <wuyifeng10@huawei.com>, <yangxingui@h-partners.com>
+Subject: [PATCH 00/14] scsi: scsi_error: Introduce new error handle mechanism
+Date: Tue, 2 Sep 2025 13:56:28 +0800
+Message-ID: <20250902055628.2524926-1-jiangjianjun3@huawei.com>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <17230842-0a7a-403e-abc7-a15e3aa5d424@suse.de>
+References: <17230842-0a7a-403e-abc7-a15e3aa5d424@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 00/14] scsi: scsi_error: Introduce new error handle
- mechanism
-To: JiangJianJun <jiangjianjun3@huawei.com>, linux-scsi@vger.kernel.org
-Cc: linux-kernel@vger.kernel.org, hewenliang4@huawei.com,
- yangyun50@huawei.com, wuyifeng10@huawei.com, yangxingui@h-partners.com
-References: <f02f049f-efa3-481b-b681-cf75308bfbc4@kernel.org>
- <20250902053035.2486666-1-jiangjianjun3@huawei.com>
-From: Damien Le Moal <dlemoal@kernel.org>
-Content-Language: en-US
-Organization: Western Digital Research
-In-Reply-To: <20250902053035.2486666-1-jiangjianjun3@huawei.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemk500001.china.huawei.com (7.202.194.86)
 
-On 9/2/25 2:30 PM, JiangJianJun wrote:
->> Barely half of your emails have made it through for me and they landed in my
->> spam folder. So please check your email setup.
-> 
-> I also find it strange, but my colleague can receive it. Maybe i reset email
-> and send again? 
-> 
->> Also, was this all tested with libata and libsas attached devices as well ?
->> They all depend on scsi EH.
-> 
-> There is currently no tool available for injecting faults into hard drives,
-> but we have implemented this solution in our company's products. So i just
-> test with scsi_debug.
+>I fully agree that SCSI EH is in need of reworking. But adding 
+>another layer of complexity on top of the existing one ... not sure.
 
-Use write long command to "destroy" sectors. Then try to read them. That will
-generate uncorrectable read errors.
+Perhaps it would have been better to use only the error handler on the
+device from the start. Users might wonder why a single disk failure
+could cause other disks to become blocking.
 
-See sg_write_long (sg3utils).
+>Additionally: TARGET RESET TMF is dead, and has been removed from SAM
+>since several years. It really is not worthwhile implementing.
 
+Hmm.
 
--- 
-Damien Le Moal
-Western Digital Research
+>Can't we take a simple step, and just try to have a non-blocking version
+>of device reset?
+>I think that should cover quite some issues already.
+
+Do you think it's necessary to escalate the issue after the device reset
+fails? Should we reset the bus or the host? 
+Moreover, a failed device reset does not necessarily indicate a fault
+with the target or host. 
+And what means of "non-blocking"?
+
