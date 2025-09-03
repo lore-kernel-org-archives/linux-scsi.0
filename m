@@ -1,143 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 851CA6BB5B;
-	Wed,  3 Sep 2025 11:14:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FE3F2FCBE5
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 12:36:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756898072; cv=none; b=pbDh/idD6hXVSvZWHdseErqur5lGAaNdIubmyX9bixEaiIMOTp0AiR6TWm8MrEL02bMWGIrA0Sj3b5v+rLfWH79ndKEdV75b3VhmVcuwFC/x1srCFSXpWO47XJA75os9Wpa/Q/zcHfp3ti0bKgkKrHz8nqTQ0Ppuk2wXcXkWMZ8=
+	t=1756902997; cv=none; b=jG0bX13WmbnZP8G0TjwV1Bgm9iG6pJXsoopY2NAMOkhsLhlAVS6ghHck16mGPuUc+rf+GdJ0bYtMPaWMBKhWfM30+z/XT+gsQ2NFLkrBID3m/9Xo5p8kMnJsZAOt7SumZNHsZ36u5e7PkbtIQ6i/tBQzFLC2CyOYymNCryC+640=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756898072; c=relaxed/simple;
-	bh=vm2XwpR6G5MsEs9Dn0NTqtZEBq4V49QV1VyjT2uiFhE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Mm/phWZVxEilPI2pNLnZ02n9jXBbhzN3azb5xsbtuDPPK913r6Fm6UZh20p3Nk9XB5wkmOrEzXJ1c+TNFZy2nQenUHMrvjp7QqO7/8rzDO3uPCv2+DPtc0joWPhlqQENFUEsXv5ZCgEo/wO7/YfuZqx3b4c9nd/S5kBJTZU1hec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kalyoq8L; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1756902997; c=relaxed/simple;
+	bh=l/WUmSKmcloVy0aJQRPVTdT7iDD8Xpxi1iTBHrSsDs0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=UbHZIVB01mSF0Yxs1d2caJz42zrnXhi/KNfFaYcU8lxkeKumsWZSRczjlYUgtZ4lNxAODQcYfdZ8LGCeJKhoJo2yGTGc0EX5zA4FFNjMM25+qSn+h73j9t9nIySVHTPSHOcYPgr+FJe3Bqajwwj3BzP0l1geaQgFeCB8JkDDn/Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kVjoFdCg; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JC7gL9++; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=kVjoFdCg; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JC7gL9++; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kalyoq8L"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0628EC4AF0B;
-	Wed,  3 Sep 2025 11:14:31 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1756898072;
-	bh=vm2XwpR6G5MsEs9Dn0NTqtZEBq4V49QV1VyjT2uiFhE=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=kalyoq8LVQW7m3mKRob6fOKRe//8tQVSnrsGtI4fcNKOcDAc/PfD9KCXn3KIowLVC
-	 VsfuNWiPnZYImatY7gJ89l3u9uDxVhbbEnddnYAT+KElOAH2mmVXquFpg5m5NTNYbV
-	 lEHaYSVlHITD9qR2fWWrlIw5ON7duo6dxtj/8kDhnDtUUfn4iBiM/KFzFWi9BpEGcc
-	 sNQ/6Uwq+8jaHqoRGWnaAJCOp5Tsq1WYxScT17K6B3cJ8hgZ7sQ3p8ymRvNNyO0sRU
-	 i3xKVKOB29SoKQonPzRIUP7KdR+UjBGdMtoq7KtijJFN8qvJoZDtJwNVr9vkV6oxB3
-	 pXmG/OM4XQAyw==
-Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-74542b1b2bcso6298184a34.3;
-        Wed, 03 Sep 2025 04:14:31 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCULhJp9th0FDfiBrr8HiFjQYmx/1wGq6PbpICiVhHfLVhwg4pWhyxeQvEOVwCMQUMqBIYiU3Omt/7M=@vger.kernel.org, AJvYcCVviN7VZRTxgVVTKzRvE6u0/i6H0483bRGRF1yAGcycWflJKgKkXs4SzlkHu5kuZ0uPF3GbeU3ZYJE=@vger.kernel.org, AJvYcCX2BDL1w4X8M8hrbLxO/fbXzJGzSOvqjqV+lq17VUZOL+ZfmrZsGmiWk/4VIvRD9sivuQCI4bYVlDfk@vger.kernel.org, AJvYcCXJEpvmJ7007DoT8FeecimNcMsr1ChaxSb+L2aXtv7uG7gkw3Y4e3hzmz8y1m6LELZxrlOgyLyuci1YiG48ZQjpK4sn@vger.kernel.org, AJvYcCXZUlXpzV/xESgMaAZR3/zw+wLvwYuzQU+5qyvIPw6tBbbkuahRo9QbpW9ZvZGriop0Q2EP/s8+RrIGxQ==@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy5PzwNcJsGUepV+pM7xZyPDqLW6GQMolo0/iZhOcnq2SSwcr7r
-	k7gl12uoGLr/NZ+jaxIKAPBVJiHLRVNNWYRfAYS9dyUM722sbu6CPgV+Z1oiZZkUKn1A00u8hT8
-	SB1uc1DWymCY9OG6oJ3+RslNSGNwf25Q=
-X-Google-Smtp-Source: AGHT+IFYtjUdNN091mPJ/megBC3ceMzIS6ZlVy0m6f3KXcMJbRJK/ufd2TNnsBvKPVbrcFu/dkcLveR5ZqO+tEUHKi0=
-X-Received: by 2002:a05:6830:258f:b0:741:c51c:9d9 with SMTP id
- 46e09a7af769-74569d79ca2mr6941662a34.1.1756898071379; Wed, 03 Sep 2025
- 04:14:31 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kVjoFdCg";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JC7gL9++";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="kVjoFdCg";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JC7gL9++"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id 53B3A1F453;
+	Wed,  3 Sep 2025 12:36:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1756902994; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z4dkn1xOtjZMvux09Ypde4SPog5LI5mjRt8sFdLaY4U=;
+	b=kVjoFdCgu/5/fm2+jELu+JLMX4XJc08ulrCIWfDshl3SRtjuY50CbL41pdnlV1OKFRuenV
+	FPAoq4yhQZqcXvNj3heuoiNr6bzpfxXstXbAkQ7u9kfZU81EfA4D+VFODrDuySMAohMReg
+	zzO9RSlJ8LNx3dXJLq2V+Q8WFDVle98=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1756902994;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z4dkn1xOtjZMvux09Ypde4SPog5LI5mjRt8sFdLaY4U=;
+	b=JC7gL9++1ZpB9YCxnC/6M9nz3W8JxHmybvcmSdFTfEWWWDkcRfZCWClUCvdzzxdxrLUTIf
+	yBSx//eaP2+gDMAA==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=kVjoFdCg;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=JC7gL9++
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1756902994; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z4dkn1xOtjZMvux09Ypde4SPog5LI5mjRt8sFdLaY4U=;
+	b=kVjoFdCgu/5/fm2+jELu+JLMX4XJc08ulrCIWfDshl3SRtjuY50CbL41pdnlV1OKFRuenV
+	FPAoq4yhQZqcXvNj3heuoiNr6bzpfxXstXbAkQ7u9kfZU81EfA4D+VFODrDuySMAohMReg
+	zzO9RSlJ8LNx3dXJLq2V+Q8WFDVle98=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1756902994;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Z4dkn1xOtjZMvux09Ypde4SPog5LI5mjRt8sFdLaY4U=;
+	b=JC7gL9++1ZpB9YCxnC/6M9nz3W8JxHmybvcmSdFTfEWWWDkcRfZCWClUCvdzzxdxrLUTIf
+	yBSx//eaP2+gDMAA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 4149513A31;
+	Wed,  3 Sep 2025 12:36:34 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id XMvsD1I2uGj2MAAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Wed, 03 Sep 2025 12:36:34 +0000
+Date: Wed, 3 Sep 2025 14:36:33 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Hannes Reinecke <hare@suse.de>
+Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
+	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
+	"Michael S. Tsirkin" <mst@redhat.com>, Aaron Tomlin <atomlin@atomlin.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, Thomas Gleixner <tglx@linutronix.de>, 
+	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
+	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>, 
+	Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, 
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
+	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
+	storagedev@microchip.com, virtualization@lists.linux.dev, 
+	GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH v7 01/10] lib/group_cpus: Add group_masks_cpus_evenly()
+Message-ID: <5397286b-bb1f-493b-9d7d-b4168a67efe6@flourine.local>
+References: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org>
+ <20250702-isolcpus-io-queues-v7-1-557aa7eacce4@kernel.org>
+ <db0cbbe2-792c-4263-8be9-14b76eb0f7e6@suse.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250818020101.3619237-1-superm1@kernel.org> <29e61472-5f41-4e76-9b5b-f3e106d6a629@kernel.org>
-In-Reply-To: <29e61472-5f41-4e76-9b5b-f3e106d6a629@kernel.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 3 Sep 2025 13:14:18 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0hLO5xhmjniO4=rLK1JK9OM8naxXVEGuHUT3cuhRp=Atw@mail.gmail.com>
-X-Gm-Features: Ac12FXzNMS5NRD7LbxBvydgvS_DdIA-2JZ6IFCfa_y9sZ_Fxqc7W0P6m00WI9xA
-Message-ID: <CAJZ5v0hLO5xhmjniO4=rLK1JK9OM8naxXVEGuHUT3cuhRp=Atw@mail.gmail.com>
-Subject: Re: [PATCH v6 00/11] Improvements to S5 power consumption
-To: Mario Limonciello <superm1@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Danilo Krummrich <dakr@kernel.org>
-Cc: Bjorn Helgaas <bhelgaas@google.com>, Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
-	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Steven Rostedt <rostedt@goodmis.org>, 
-	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>, 
-	"open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>, 
-	"open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>, 
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, 
-	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, 
-	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>, 
-	"open list:TRACING" <linux-trace-kernel@vger.kernel.org>, AceLan Kao <acelan.kao@canonical.com>, 
-	Kai-Heng Feng <kaihengf@nvidia.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
-	=?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>, 
-	Eric Naim <dnaim@cachyos.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <db0cbbe2-792c-4263-8be9-14b76eb0f7e6@suse.de>
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	ARC_NA(0.00)[];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[26];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_SOME(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	R_RATELIMIT(0.00)[to_ip_from(RL71uuc3g3e76oxfn4mu5aogan)];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:dkim];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Rspamd-Queue-Id: 53B3A1F453
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.51
 
-On Wed, Sep 3, 2025 at 6:41=E2=80=AFAM Mario Limonciello <superm1@kernel.or=
-g> wrote:
->
-> On 8/17/2025 9:00 PM, Mario Limonciello (AMD) wrote:
-> > A variety of issues both in function and in power consumption have been
-> > raised as a result of devices not being put into a low power state when
-> > the system is powered off.
-> >
-> > There have been some localized changes[1] to PCI core to help these iss=
-ues,
-> > but they have had various downsides.
-> >
-> > This series instead tries to use the S4 flow when the system is being
-> > powered off.  This lines up the behavior with what other operating syst=
-ems
-> > do as well.  If for some reason that fails or is not supported, run the=
-ir
-> > shutdown() callbacks.
-> >
-> > Cc: AceLan Kao <acelan.kao@canonical.com>
-> > Cc: Kai-Heng Feng <kaihengf@nvidia.com>
-> > Cc: Mark Pearson <mpearson-lenovo@squebb.ca>
-> > Cc: Merthan Karaka=C5=9F <m3rthn.k@gmail.com>
-> > Cc: Eric Naim <dnaim@cachyos.org>
-> > ---
-> > v5->v6:
-> >   * Fix for LKP robot issue
-> >   * Some commit message changes
-> >   * Rebase on 6.17-rc2
-> >
-> > Mario Limonciello (AMD) (11):
-> >    PM: Introduce new PMSG_POWEROFF event
-> >    scsi: Add PM_EVENT_POWEROFF into suspend callbacks
-> >    usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
-> >    USB: Pass PMSG_POWEROFF event to suspend_common() for poweroff with =
-S4
-> >      flow
-> >    PCI: PM: Disable device wakeups when halting system through S4 flow
-> >    PCI: PM: Split out code from pci_pm_suspend_noirq() into helper
-> >    PCI: PM: Run bridge power up actions as part of restore phase
-> >    PCI: PM: Use pci_power_manageable() in pci_pm_poweroff_noirq()
-> >    PCI: Put PCIe bridges with downstream devices into D3 at hibernate
-> >    drm/amd: Avoid evicting resources at S5
-> >    PM: Use hibernate flows for system power off
-> >
-> >   drivers/base/power/main.c                  |  7 ++
-> >   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  4 +
-> >   drivers/pci/pci-driver.c                   | 99 +++++++++++++++------=
--
-> >   drivers/scsi/mesh.c                        |  1 +
-> >   drivers/scsi/stex.c                        |  1 +
-> >   drivers/usb/core/hcd-pci.c                 | 11 ++-
-> >   drivers/usb/host/sl811-hcd.c               |  1 +
-> >   include/linux/pm.h                         |  5 +-
-> >   include/trace/events/power.h               |  3 +-
-> >   kernel/reboot.c                            |  6 ++
-> >   10 files changed, 103 insertions(+), 35 deletions(-)
-> >
->
-> Rafael, Bjorn,
->
-> Any feedback for this series?
+On Thu, Jul 03, 2025 at 08:18:50AM +0200, Hannes Reinecke wrote:
+> > +/**
+> > + * group_mask_cpus_evenly - Group all CPUs evenly per NUMA/CPU locality
+> > + * @numgrps: number of groups
+> > + * @cpu_mask: CPU to consider for the grouping
+> > + * @nummasks: number of initialized cpusmasks
+> > + *
+> > + * Return: cpumask array if successful, NULL otherwise. And each element
+> > + * includes CPUs assigned to this group.
+> > + *
+> > + * Try to put close CPUs from viewpoint of CPU and NUMA locality into
+> > + * same group. Allocate present CPUs on these groups evenly.
+> > + */
+> 
+> Description could be improved. Point is that you do not do any
+> calculation here, you just call __group_cpus_evenly() with
+> a different mask.
 
-I still have the same basic concern as before: It is an intrusive
-change likely to cause regressions to occur.
-
-It also changes the driver ABI quite dramatically because different
-callbacks will now be used for system shutdown and kexec, for example,
-at least on some platforms.
-
-Frankly, I'd like to know Greg's and Danilo's opinions on the direction her=
-e.
+I updated the documentation, it matches with group_cpus_evenly but with
+the constrain mask.
