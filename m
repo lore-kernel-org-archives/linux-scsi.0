@@ -1,103 +1,70 @@
-Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B6C019DF4F
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 06:39:26 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F21CD1FBEB9;
+	Wed,  3 Sep 2025 06:44:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756881568; cv=none; b=S4nTklGz4WroVlkbcfALjJYdEbcHgY4fvHI8gYRdEt6P33DjK1LrdaiSjnvcBhzFLEwjkTMB0FvNSIeTJ4dFCafdbKG5l/N/5U8unk7gpX7OPDgROwPZwQyu5IeekMJ6h6qxWaHbaXLie4vUgDeVkUeH+okFuRsq4lzKaUZP+So=
+	t=1756881877; cv=none; b=ipptZtIudmU3PrV4JFtSCBpK94DtteBS4Gm551gFzo0rZsgR7JuOIs75BfBuBUvoxhnpVHopfGW4olx/J1LCbrhjPTaT7wkp2wHEkJhGV0ZGgMu9EhkXsoyXLKOIbohN74M7hwXSseHs2hoBD0aN3KdYteRxDWmZIw2UTABgU4c=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756881568; c=relaxed/simple;
-	bh=Bd/B1elhO6Fp4x1SMGEuPwSPiPNHgZ3GUb1dqFAV3bo=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=Xx+TW7B6QFBuuq43Z1340V+vkyaWLAqChBd65WEKhdFk9cpTXIlcn/WEpH5QUZ1JD17F71WdS0Jy/557R31aBrz8wfLYMXduwz4XmJtL79MaJIQByrMas4ginOSqCOkNk36Rdo7N1w7bIfYkA70z5p2KON2dEUzD+/sscIcSClg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=mPNY2G1l; arc=none smtp.client-ip=203.254.224.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1756881877; c=relaxed/simple;
+	bh=Zwr9IIXnV40wO6P6KjOHxt6dvUvQanzuoguq6G06ZAY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=Uqqw1x0MoucujmLDtHDiWG8UUwM3SrTVspfOgRframwvq0w/hmgKaRbfOTFS8d9BH34Wdo0Qs2xdkvCfejZgpD7FLj/Y0Go6oYMPsasXwNMfn3fE/8RNQajISOwdn0GHQEKaAJ9s5lXvgUrOyx/Ztq5LSjzvA2NI841n4yoy/V8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Gv7wPx7+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mPNY2G1l"
-Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250903063924epoutp033c1b3b7e49d6a1588468a5c23ef59bee~hsnlxmau31867218672epoutp03Z
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 06:39:24 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250903063924epoutp033c1b3b7e49d6a1588468a5c23ef59bee~hsnlxmau31867218672epoutp03Z
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1756881564;
-	bh=Bd/B1elhO6Fp4x1SMGEuPwSPiPNHgZ3GUb1dqFAV3bo=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=mPNY2G1lkGii26iMBZhskoOSiI5dfRIr5VRSzPjRbCtqIXMxrQQaQvZPywGoz9R+O
-	 YJ/VTo225T5/bQ56Xu7Of7xPbVzP6uEjjmaKrEoDQHHLKP+8aduUjPHY+/boRM34kG
-	 k6XSa1b0M/9dR2Now0Kt0btGiEiO/s+c1MtN2ibY=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas1p1.samsung.com (KnoxPortal) with ESMTPS id
-	20250903063923epcas1p1d1b1e70ed3cb7680f269c949ab4b7215~hsnlG9Nqa1823018230epcas1p1H;
-	Wed,  3 Sep 2025 06:39:23 +0000 (GMT)
-Received: from epcas1p2.samsung.com (unknown [182.195.38.247]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4cGtHv1MFhz6B9mF; Wed,  3 Sep
-	2025 06:39:23 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
-	20250903063922epcas1p35e96f325bc193191cc9ec37d8e4935f3~hsnjp4Ppt2315123151epcas1p3k;
-	Wed,  3 Sep 2025 06:39:22 +0000 (GMT)
-Received: from dh0421hwang02 (unknown [10.253.101.58]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20250903063921epsmtip2e4c97d6aa76f0c28b44ce6e860768d5a~hsnjjlJwV2752127521epsmtip2I;
-	Wed,  3 Sep 2025 06:39:21 +0000 (GMT)
-From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
-To: "'Bart Van Assche'" <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
-	<avri.altman@wdc.com>, <James.Bottomley@HansenPartnership.com>,
-	<martin.petersen@oracle.com>, <peter.wang@mediatek.com>,
-	<manivannan.sadhasivam@linaro.org>, <quic_mnaresh@quicinc.com>
-Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
-	<junwoo80.lee@samsung.com>, <jangsub.yi@samsung.com>,
-	<sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
-	<sh8267.baek@samsung.com>, <wkon.kim@samsung.com>
-In-Reply-To: <6e854090-a071-416a-b7a5-cc8ee0122a90@acm.org>
-Subject: RE: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs
- cmd error
-Date: Wed, 3 Sep 2025 15:39:21 +0900
-Message-ID: <2add01dc1c9d$7b5cba30$72162e90$@samsung.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Gv7wPx7+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id CFCBAC4CEF0;
+	Wed,  3 Sep 2025 06:44:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756881876;
+	bh=Zwr9IIXnV40wO6P6KjOHxt6dvUvQanzuoguq6G06ZAY=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Gv7wPx7+ULsQFf93hMfnS/BUrXoBUQDheaEOEV5fIu3jyQ2QKVxdE79rIJM/ptYLS
+	 vla7yPEp/Ml2yHJklTe8a17uBFHyvkujY93p9acJ+KyVpmkRYI9WBfvOqtIbO+c36X
+	 tf7winVfJd6z+ncg8bJwr2X0Nb275TK9PU32ZSqZQAs6owkutiit9r1NiCMhyE+xV2
+	 ZF9dMugQ9vWRTLgpDi6WzekZlmIQOO+1OUT5q2oAy8lmgr9RFDHZWBC1jTJb06FXwW
+	 tTW/bbVWL8lcboTVfoV8DX2kHHDJfCEb1CFIBIJkwbF1W0xyOrsxKEoiboID2MQSAC
+	 ILftzF2TbRoQg==
+Date: Wed, 3 Sep 2025 08:44:33 +0200
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org, 
+	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, mani@kernel.org, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, linux-scsi@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, linux-arm-msm@vger.kernel.org
+Subject: Re: [PATCH V5 1/4] ufs: dt-bindings: Document gear and rate limit
+ properties
+Message-ID: <20250903-sincere-brass-rhino-19f61a@kuoka>
+References: <20250902164900.21685-1-quic_rdwivedi@quicinc.com>
+ <20250902164900.21685-2-quic_rdwivedi@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQEmYeTjtFjYRI1QNWxgWL0Y7ybfIwITLn2gAaoUPAICiJScSgGs7ud4AZvu8PIB4FCAbgHlrZjytYHPHfA=
-Content-Language: ko
-X-CMS-MailID: 20250903063922epcas1p35e96f325bc193191cc9ec37d8e4935f3
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d
-References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
-	<CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
-	<20250417023405.6954-2-dh0421.hwang@samsung.com>
-	<239ea120-841f-478d-b6b4-9627aa453795@acm.org>
-	<093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
-	<27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
-	<17db01dc1ba6$41d37350$c57a59f0$@samsung.com>
-	<6e854090-a071-416a-b7a5-cc8ee0122a90@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20250902164900.21685-2-quic_rdwivedi@quicinc.com>
 
-On 9/2/25 9:35 AM, Bart Van Assche wrote:
-> On 9/1/25 6:09 PM, DooHyun Hwang wrote:
-> > The UFS_CMD_ERR stands for =22command completion error.=22
->=20
-> I've never before seen anyone abbreviating =22completion=22 as =22CMD=22.
-> Please choose a better enumeration label name.
->=20
-> Bart.
+On Tue, Sep 02, 2025 at 10:18:57PM +0530, Ram Kumar Dwivedi wrote:
+> Add optional "limit-hs-gear" and "limit-rate" properties to the
+> UFS controller common binding. These properties allow limiting
+> the maximum HS gear and rate.
+> 
+> This is useful in cases where the customer board may have signal
+> integrity, clock configuration or layout issues that prevent reliable
+> operation at higher gears. Such limitations are especially critical in
+> those platforms, where stability is prioritized over peak performance.
+> 
+> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> ---
+>  .../devicetree/bindings/ufs/ufs-common.yaml      | 16 ++++++++++++++++
+>  1 file changed, 16 insertions(+)
 
-When I reviewed the UFS_CMD_TRACE_STRINGS definition,
-I noticed that =22query_complete_err=22 is referred to as UFS_QUERY_ERR,
-and =22tm_complete_err=22 is referred to as UFS_TM_ERR.
+Reviewed-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
 
-I followed the naming convention specified in this STRINGS definition,
-but I=E2=80=99m=20not=20entirely=20clear=20on=20what=20changes=20are=20bein=
-g=20requested.=0D=0A=0D=0ACould=20you=20please=20provide=20some=20guidance=
-=20or=20suggestions?=0D=0A=0D=0AThank=20you.=0D=0ADooHyun=20Hwang.=0D=0A=0D=
-=0A
+Best regards,
+Krzysztof
+
