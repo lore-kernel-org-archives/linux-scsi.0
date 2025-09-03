@@ -1,187 +1,122 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37FEA2D3204
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 04:28:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F2C02D3A71;
+	Wed,  3 Sep 2025 04:41:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756873708; cv=none; b=tn4XMJX2LAMoY3IZqNXrlDP97UcsP3+8aQegOkNJfL/HLt6c3Bhc2gdu5Kk+loukZ/ZUY4H8WMx/iXxwdAwAot80e1ptHu3DjHtEkWIOsoYZQdR1a5zqOqaHaJK25B5/a1RE6N0ndu/nHAYd2nd50gfVkc0EPgMiuO1crs6iwwQ=
+	t=1756874516; cv=none; b=B+NgY05FhnMe9/GGYizIUfc2kR89n73Qit/Q3xbIKge6nxlqgdmB03IS0TtbJN51cnLTpoerHgMQy6rqFBSX1uJKWl1a/Bic9JuNo0iuiOLlkUuAN/EPitQKsSlbJAq03UrA6yL9Y+tPHui0MGRCvaFt7SGygDOZ42UDrHQIIJA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756873708; c=relaxed/simple;
-	bh=rzQOIiOOgo8Bl7ImQyPmenuJvoK1gvj5EgcM1s5npLY=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=LZC0wc+SDgStaIeK39LHTDcDIni3dCY641E4s1QHz6A3dNB5tC/ny+/VUAVSjsifQ5uDyocDXX2R2DuiDJSYMraeFsGrwFDJJLqM6CiaXngOezTzmiGkcW7FNup0BmUp+wbiLCRqRFmaHkjCOHQWoiJvUvuAre/GIzurs94Nrdg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=dBqIbFBp; arc=none smtp.client-ip=203.254.224.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1756874516; c=relaxed/simple;
+	bh=Ce5ETH+F6WnWDEeaq7pLglfV4JdFcr3PKEJyxp/keno=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XN1gnNkX7wy3aXifhWNBNemX2RmarO9zHhtk1Ze6t0g6gjegt/ZxAMu8qTJ6Hi/Yt/LwYqJAyhhuOmXvSkrZQx7UFXHeLf9Rr93OO5gXQrCVwHhHApvfKP981Mpzds8AMMnBpMoCYBI5jbjN4aFiDKh14WrcYF49m2VMjN3vIqs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=s/wbSSBA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="dBqIbFBp"
-Received: from epcas5p2.samsung.com (unknown [182.195.41.40])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250903042823epoutp017d3c62ebd0a3fcd6fb7d14314eb3cbd4~hq1MeQKIe2146621466epoutp01N
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 04:28:23 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250903042823epoutp017d3c62ebd0a3fcd6fb7d14314eb3cbd4~hq1MeQKIe2146621466epoutp01N
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1756873703;
-	bh=4z/3Wi1eUiYqGMgmAAnBBhtwdX8IJWlmAPv7y2AI0zY=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=dBqIbFBpomLu+s0zM90unBBR3MaFPNORAEP361BccKz6lrWpPzv7Xwe7sDlkyFNha
-	 xRW8G/YWYdspAeAyz0hNRRxD6CV0DohNstOPCrb/5ElseQcNmi84ZLDI85oNJv9nQ5
-	 ps+uPRf/e1wyPqbqS/GbruHjJFXlwwkb11foZfSU=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20250903042822epcas5p41e705b5815d3ca3fc53e39b4eb58a097~hq1MJKBRg0277702777epcas5p4E;
-	Wed,  3 Sep 2025 04:28:22 +0000 (GMT)
-Received: from epcas5p3.samsung.com (unknown [182.195.38.94]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4cGqNj2Ss4z3hhT4; Wed,  3 Sep
-	2025 04:28:21 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250903042820epcas5p2811be3432a678c59f99a118e28a9f820~hq1Jmde3W0253402534epcas5p2J;
-	Wed,  3 Sep 2025 04:28:20 +0000 (GMT)
-Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250903042818epsmtip1fdc1da40fbc789005c33ac7a6322b930~hq1H2bREI0216802168epsmtip1O;
-	Wed,  3 Sep 2025 04:28:18 +0000 (GMT)
-From: "Alim Akhtar" <alim.akhtar@samsung.com>
-To: "'Ram Kumar Dwivedi'" <quic_rdwivedi@quicinc.com>,
-	<avri.altman@wdc.com>, <bvanassche@acm.org>, <robh@kernel.org>,
-	<krzk+dt@kernel.org>, <conor+dt@kernel.org>, <mani@kernel.org>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-Cc: <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>, "'Nitin
- Rawat'" <quic_nitirawa@quicinc.com>
-In-Reply-To: <20250902164900.21685-4-quic_rdwivedi@quicinc.com>
-Subject: RE: [PATCH V5 3/4] ufs: pltfrm: Allow limiting HS gear and rate via
- DT
-Date: Wed, 3 Sep 2025 09:58:16 +0530
-Message-ID: <3a9001dc1c8b$2d303c40$8790b4c0$@samsung.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="s/wbSSBA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C2AAC4CEF0;
+	Wed,  3 Sep 2025 04:41:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756874516;
+	bh=Ce5ETH+F6WnWDEeaq7pLglfV4JdFcr3PKEJyxp/keno=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=s/wbSSBARIKT8Fd9JqzskawfzifT7+BPOBAzwXDl6WBxhU410noLNvQWfHvv+Nb4Q
+	 SbPcIb3hxSHQY5dHlRH7uTb7j/F/Gu7pEGr7MuO33HXsvNskDBMUab0jPLJFQsfQGn
+	 DBDR9JuXyqBeBGip1IjfApmvbUcrJdSUfPe1zWbEw+SMhMPPGSNw74IL9FARn5fKmF
+	 zjHgI792YdyiwMwWOpQd3S9Oo3Edup8Zqq77sQ1wl2zqgUT6OeYww9IfARtdlcDtB3
+	 vOHV/VFLi6+2jqm//3XxZoeker+XP6Xe8Qrr8AEKkb368Q3fZA1sXUVv4Sn/GGGapn
+	 XGwAwOPKYtzMA==
+Message-ID: <29e61472-5f41-4e76-9b5b-f3e106d6a629@kernel.org>
+Date: Tue, 2 Sep 2025 23:41:52 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQDbtq+ZX022GZqTIcIYj1g81c9NHgJq+hI3AQZfT0q2ZhhPUA==
-Content-Language: en-us
-X-CMS-MailID: 20250903042820epcas5p2811be3432a678c59f99a118e28a9f820
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250902164940epcas5p47c93faf63a98377e97f3f6d06fe23f96
-References: <20250902164900.21685-1-quic_rdwivedi@quicinc.com>
-	<CGME20250902164940epcas5p47c93faf63a98377e97f3f6d06fe23f96@epcas5p4.samsung.com>
-	<20250902164900.21685-4-quic_rdwivedi@quicinc.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 00/11] Improvements to S5 power consumption
+To: "Rafael J . Wysocki" <rafael@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>
+Cc: Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Danilo Krummrich <dakr@kernel.org>,
+ =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Steven Rostedt <rostedt@goodmis.org>,
+ "open list:HIBERNATION (aka Software Suspend, aka swsusp)"
+ <linux-pm@vger.kernel.org>,
+ "open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>,
+ "open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>,
+ "open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>,
+ "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+ "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
+ "open list:TRACING" <linux-trace-kernel@vger.kernel.org>,
+ AceLan Kao <acelan.kao@canonical.com>, Kai-Heng Feng <kaihengf@nvidia.com>,
+ Mark Pearson <mpearson-lenovo@squebb.ca>,
+ =?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>,
+ Eric Naim <dnaim@cachyos.org>
+References: <20250818020101.3619237-1-superm1@kernel.org>
+Content-Language: en-US
+From: Mario Limonciello <superm1@kernel.org>
+In-Reply-To: <20250818020101.3619237-1-superm1@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
 
-
-
-> -----Original Message-----
-> From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-> Sent: Tuesday, September 2, 2025 10:19 PM
-> To: alim.akhtar@samsung.com; avri.altman@wdc.com;
-> bvanassche@acm.org; robh@kernel.org; krzk+dt@kernel.org;
-> conor+dt@kernel.org; mani@kernel.org;
-> James.Bottomley@HansenPartnership.com; martin.petersen@oracle.com
-> Cc: linux-scsi@vger.kernel.org; devicetree@vger.kernel.org; linux-
-> kernel@vger.kernel.org; linux-arm-msm@vger.kernel.org; Nitin Rawat
-> <quic_nitirawa@quicinc.com>
-> Subject: [PATCH V5 3/4] ufs: pltfrm: Allow limiting HS gear and rate via
-DT
+On 8/17/2025 9:00 PM, Mario Limonciello (AMD) wrote:
+> A variety of issues both in function and in power consumption have been
+> raised as a result of devices not being put into a low power state when
+> the system is powered off.
 > 
-> Add support for parsing 'limit-hs-gear' and 'limit-rate' device tree
-properties
-> to restrict high-speed gear and rate during initialization.
+> There have been some localized changes[1] to PCI core to help these issues,
+> but they have had various downsides.
 > 
-> This is useful in cases where the customer board may have signal
-integrity,
-> clock configuration or layout issues that prevent reliable operation at
-higher
-> gears. Such limitations are especially critical in those platforms, where
-> stability is prioritized over peak performance.
+> This series instead tries to use the S4 flow when the system is being
+> powered off.  This lines up the behavior with what other operating systems
+> do as well.  If for some reason that fails or is not supported, run their
+> shutdown() callbacks.
 > 
-> Co-developed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
-> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> Cc: AceLan Kao <acelan.kao@canonical.com>
+> Cc: Kai-Heng Feng <kaihengf@nvidia.com>
+> Cc: Mark Pearson <mpearson-lenovo@squebb.ca>
+> Cc: Merthan Karakaş <m3rthn.k@gmail.com>
+> Cc: Eric Naim <dnaim@cachyos.org>
 > ---
->  drivers/ufs/host/ufshcd-pltfrm.c | 36
-> ++++++++++++++++++++++++++++++++  drivers/ufs/host/ufshcd-pltfrm.h
-> |  1 +
->  2 files changed, 37 insertions(+)
+> v5->v6:
+>   * Fix for LKP robot issue
+>   * Some commit message changes
+>   * Rebase on 6.17-rc2
 > 
-> diff --git a/drivers/ufs/host/ufshcd-pltfrm.c b/drivers/ufs/host/ufshcd-
-> pltfrm.c
-> index ffe5d1d2b215..4df6885f0dc0 100644
-> --- a/drivers/ufs/host/ufshcd-pltfrm.c
-> +++ b/drivers/ufs/host/ufshcd-pltfrm.c
-> @@ -430,6 +430,42 @@ int ufshcd_negotiate_pwr_params(const struct
-> ufs_host_params *host_params,  }
-> EXPORT_SYMBOL_GPL(ufshcd_negotiate_pwr_params);
+> Mario Limonciello (AMD) (11):
+>    PM: Introduce new PMSG_POWEROFF event
+>    scsi: Add PM_EVENT_POWEROFF into suspend callbacks
+>    usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
+>    USB: Pass PMSG_POWEROFF event to suspend_common() for poweroff with S4
+>      flow
+>    PCI: PM: Disable device wakeups when halting system through S4 flow
+>    PCI: PM: Split out code from pci_pm_suspend_noirq() into helper
+>    PCI: PM: Run bridge power up actions as part of restore phase
+>    PCI: PM: Use pci_power_manageable() in pci_pm_poweroff_noirq()
+>    PCI: Put PCIe bridges with downstream devices into D3 at hibernate
+>    drm/amd: Avoid evicting resources at S5
+>    PM: Use hibernate flows for system power off
 > 
-> +/**
-> + * ufshcd_parse_limits - Parse DT-based gear and rate limits for UFS
-> + * @hba: Pointer to UFS host bus adapter instance
-> + * @host_params: Pointer to UFS host parameters structure to be updated
-> + *
-> + * This function reads optional device tree properties to apply
-> + * platform-specific constraints.
-> + *
-> + * "limit-hs-gear": Specifies the max HS gear.
-> + * "limit-rate": Specifies the max High-Speed rate.
-> + */
-> +void ufshcd_parse_limits(struct ufs_hba *hba, struct ufs_host_params
+>   drivers/base/power/main.c                  |  7 ++
+>   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  4 +
+>   drivers/pci/pci-driver.c                   | 99 +++++++++++++++-------
+>   drivers/scsi/mesh.c                        |  1 +
+>   drivers/scsi/stex.c                        |  1 +
+>   drivers/usb/core/hcd-pci.c                 | 11 ++-
+>   drivers/usb/host/sl811-hcd.c               |  1 +
+>   include/linux/pm.h                         |  5 +-
+>   include/trace/events/power.h               |  3 +-
+>   kernel/reboot.c                            |  6 ++
+>   10 files changed, 103 insertions(+), 35 deletions(-)
+> 
 
-May be s/ufshcd_parse_limits/ ufshcd_parse_gear_limits()
+Rafael, Bjorn,
 
-"Limits" is very generic and also not aligning with the property names.
-Also suggest to change limit-rate to limit-gear-rate.
+Any feedback for this series?
 
-> +*host_params) {
-> +	struct device_node *np = hba->dev->of_node;
-> +	u32 hs_gear;
-> +	const char *hs_rate;
-> +
-> +	if (!np)
-> +		return;
-Probably a overkill here, please check if this will ever hit? 
-
-> +
-> +	if (!of_property_read_u32(np, "limit-hs-gear", &hs_gear)) {
-> +		host_params->hs_tx_gear = hs_gear;
-> +		host_params->hs_rx_gear = hs_gear;
-> +	}
-> +
-> +	if (!of_property_read_string(np, "limit-rate", &hs_rate)) {
-> +		if (!strcmp(hs_rate, "rate-a"))
-> +			host_params->hs_rate = PA_HS_MODE_A;
-> +		else if (!strcmp(hs_rate, "rate-b"))
-> +			host_params->hs_rate = PA_HS_MODE_B;
-> +		else
-> +			dev_warn(hba->dev, "Invalid limit-rate: %s\n",
-> hs_rate);
-> +	}
-> +}
-> +EXPORT_SYMBOL_GPL(ufshcd_parse_limits);
-> +
->  void ufshcd_init_host_params(struct ufs_host_params *host_params)  {
->  	*host_params = (struct ufs_host_params){ diff --git
-> a/drivers/ufs/host/ufshcd-pltfrm.h b/drivers/ufs/host/ufshcd-pltfrm.h
-> index 3017f8e8f93c..1617f2541273 100644
-> --- a/drivers/ufs/host/ufshcd-pltfrm.h
-> +++ b/drivers/ufs/host/ufshcd-pltfrm.h
-> @@ -29,6 +29,7 @@ int ufshcd_negotiate_pwr_params(const struct
-> ufs_host_params *host_params,
->  				const struct ufs_pa_layer_attr *dev_max,
->  				struct ufs_pa_layer_attr *agreed_pwr);  void
-> ufshcd_init_host_params(struct ufs_host_params *host_params);
-> +void ufshcd_parse_limits(struct ufs_hba *hba, struct ufs_host_params
-> +*host_params);
->  int ufshcd_pltfrm_init(struct platform_device *pdev,
->  		       const struct ufs_hba_variant_ops *vops);  void
-> ufshcd_pltfrm_remove(struct platform_device *pdev);
-> --
-> 2.50.1
-
-
+Thanks,
