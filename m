@@ -1,138 +1,143 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4678F2DFA32;
-	Wed,  3 Sep 2025 07:48:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 851CA6BB5B;
+	Wed,  3 Sep 2025 11:14:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756885711; cv=none; b=BR9Daqtt6A9IyhsMJD7/+NRVk/5+HfZAZXRh5q8RGY3zFOJX2lDEhhFBAgmKBe+unIUGY0HcJhdW3l7H+WCF3rH1tFYLBLLax/7ht+zowGISmhw7JcvX9cxgQ8ToIQIwAPf7W13GcJtCaLnX65WnPu3N+mHtHYs0SUBm+H4cRtU=
+	t=1756898072; cv=none; b=pbDh/idD6hXVSvZWHdseErqur5lGAaNdIubmyX9bixEaiIMOTp0AiR6TWm8MrEL02bMWGIrA0Sj3b5v+rLfWH79ndKEdV75b3VhmVcuwFC/x1srCFSXpWO47XJA75os9Wpa/Q/zcHfp3ti0bKgkKrHz8nqTQ0Ppuk2wXcXkWMZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756885711; c=relaxed/simple;
-	bh=ekV89ztcUUM04r/EH7Ns10zAuWI+BWjAkTrTpxo9IgI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RxsxHkBs6Ils9w8VdVsWqbMad4h41i8ni1zg8VTptqshB9GmZJQl8qlHcL55DmPRU0fe15Rzmn+HPf8Muf3GTI/tLSNwTCU3I7RPo6Tgfv5qvCKNlDG0TjYxBGPhBtmMJpiH0AMB4XnOVQhJCKy/17mc+uroxPVKTacz2o37mCw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=f9MHhEzK; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1756898072; c=relaxed/simple;
+	bh=vm2XwpR6G5MsEs9Dn0NTqtZEBq4V49QV1VyjT2uiFhE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Mm/phWZVxEilPI2pNLnZ02n9jXBbhzN3azb5xsbtuDPPK913r6Fm6UZh20p3Nk9XB5wkmOrEzXJ1c+TNFZy2nQenUHMrvjp7QqO7/8rzDO3uPCv2+DPtc0joWPhlqQENFUEsXv5ZCgEo/wO7/YfuZqx3b4c9nd/S5kBJTZU1hec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kalyoq8L; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="f9MHhEzK"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 583226mj010160;
-	Wed, 3 Sep 2025 07:48:22 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=c6gSvhUD4QNOxBE8w00jNIVNkEQ2p6oZEqB
-	J+wRDybw=; b=f9MHhEzKouQiX1yHrGorPCNfKFxhJhw4L66DLnL6ukqxmxiSkQ0
-	ZuJdhfaaqUMA1H6DwR83PIy6wV8qk8/h++ixMwUtBeib56LACs6d8pnJIPVIDjmK
-	CbE79yke9FDoS4juQ1c2w1Qbdjx9TwFtOfzVvHeu2vZTDOGI+387BvKvh+2qXXm2
-	/4+OBP9N5z7bEohEl/kP+j88JEtZMg5WgUhYqILq0PxU55DlpGEm5zZ/bZFVRMo3
-	4GAoPEXyWNtolGeO1arhRj/Rqt16DRpnamL3YIBKDiyQ0Hmz8O58pYoBpiUWJFiS
-	30iT+GgtrDvBZjvlGvu5TJ8bcBUw+0UmpCQ==
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48uq0ejt9h-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 03 Sep 2025 07:48:21 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5837mInO002086;
-	Wed, 3 Sep 2025 07:48:18 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 48utcm5cxy-1;
-	Wed, 03 Sep 2025 07:48:18 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5837mHG1002078;
-	Wed, 3 Sep 2025 07:48:17 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 5837mHCv002076;
-	Wed, 03 Sep 2025 07:48:17 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id 9C8C9600A0D; Wed,  3 Sep 2025 13:18:16 +0530 (+0530)
-From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com
-Cc: krzk+dt@kernel.org, linux-arm-msm@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Subject: [PATCH V4 0/2] Simplify MCQ resource mapping
-Date: Wed,  3 Sep 2025 13:18:13 +0530
-Message-ID: <20250903074815.8176-1-nitin.rawat@oss.qualcomm.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kalyoq8L"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0628EC4AF0B;
+	Wed,  3 Sep 2025 11:14:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756898072;
+	bh=vm2XwpR6G5MsEs9Dn0NTqtZEBq4V49QV1VyjT2uiFhE=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=kalyoq8LVQW7m3mKRob6fOKRe//8tQVSnrsGtI4fcNKOcDAc/PfD9KCXn3KIowLVC
+	 VsfuNWiPnZYImatY7gJ89l3u9uDxVhbbEnddnYAT+KElOAH2mmVXquFpg5m5NTNYbV
+	 lEHaYSVlHITD9qR2fWWrlIw5ON7duo6dxtj/8kDhnDtUUfn4iBiM/KFzFWi9BpEGcc
+	 sNQ/6Uwq+8jaHqoRGWnaAJCOp5Tsq1WYxScT17K6B3cJ8hgZ7sQ3p8ymRvNNyO0sRU
+	 i3xKVKOB29SoKQonPzRIUP7KdR+UjBGdMtoq7KtijJFN8qvJoZDtJwNVr9vkV6oxB3
+	 pXmG/OM4XQAyw==
+Received: by mail-ot1-f45.google.com with SMTP id 46e09a7af769-74542b1b2bcso6298184a34.3;
+        Wed, 03 Sep 2025 04:14:31 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCULhJp9th0FDfiBrr8HiFjQYmx/1wGq6PbpICiVhHfLVhwg4pWhyxeQvEOVwCMQUMqBIYiU3Omt/7M=@vger.kernel.org, AJvYcCVviN7VZRTxgVVTKzRvE6u0/i6H0483bRGRF1yAGcycWflJKgKkXs4SzlkHu5kuZ0uPF3GbeU3ZYJE=@vger.kernel.org, AJvYcCX2BDL1w4X8M8hrbLxO/fbXzJGzSOvqjqV+lq17VUZOL+ZfmrZsGmiWk/4VIvRD9sivuQCI4bYVlDfk@vger.kernel.org, AJvYcCXJEpvmJ7007DoT8FeecimNcMsr1ChaxSb+L2aXtv7uG7gkw3Y4e3hzmz8y1m6LELZxrlOgyLyuci1YiG48ZQjpK4sn@vger.kernel.org, AJvYcCXZUlXpzV/xESgMaAZR3/zw+wLvwYuzQU+5qyvIPw6tBbbkuahRo9QbpW9ZvZGriop0Q2EP/s8+RrIGxQ==@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy5PzwNcJsGUepV+pM7xZyPDqLW6GQMolo0/iZhOcnq2SSwcr7r
+	k7gl12uoGLr/NZ+jaxIKAPBVJiHLRVNNWYRfAYS9dyUM722sbu6CPgV+Z1oiZZkUKn1A00u8hT8
+	SB1uc1DWymCY9OG6oJ3+RslNSGNwf25Q=
+X-Google-Smtp-Source: AGHT+IFYtjUdNN091mPJ/megBC3ceMzIS6ZlVy0m6f3KXcMJbRJK/ufd2TNnsBvKPVbrcFu/dkcLveR5ZqO+tEUHKi0=
+X-Received: by 2002:a05:6830:258f:b0:741:c51c:9d9 with SMTP id
+ 46e09a7af769-74569d79ca2mr6941662a34.1.1756898071379; Wed, 03 Sep 2025
+ 04:14:31 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: qcFuh5dOQz_Jzh3-gWmqKzSmCWD2rWSp
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDAwNCBTYWx0ZWRfX+9ZbaBfT8sbi
- E+qzfcQlWervnS5Yd0z1G0WZOKEQ/3kPPMLKDdmqItj+K4OGJRSxETyw80DMEe4Lmavh74Rq8S7
- 8RhjqtrOtyaL5QcU/wMSi3pTgKFWa0HqF2iJ+dBvGupAoHf/KkZUDVveYqqDbYYs7Co3YHf/Z/t
- oq1X899Iw0tnpHy+Aay/aBOBp8vwwUmZz98blKIATPklK5R8FzlNqKEiisnujnJKZYT+0i/hgoL
- Gxa4Ghxf/TedCdZMTsR9NJxggVh0ZNYmeqzylX1RhW02SC/txK98u5Z97hdWPpuPIN9WlrqmThI
- VYVAB6xCu21H6rkpnPTOmuRLRIqDVAyft6Kpl7xEaayeXAuGQSYBcRthWfkmLoaJbXimDEmiJrH
- FIsA1G8u
-X-Proofpoint-ORIG-GUID: qcFuh5dOQz_Jzh3-gWmqKzSmCWD2rWSp
-X-Authority-Analysis: v=2.4 cv=ea09f6EH c=1 sm=1 tr=0 ts=68b7f2c6 cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=yJojWOMRYYMA:10 a=wVAk1EbIBTWD6_sQaNMA:9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-03_04,2025-08-28_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 suspectscore=0 clxscore=1011 malwarescore=0 phishscore=0
- bulkscore=0 spamscore=0 priorityscore=1501 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2508300004
+References: <20250818020101.3619237-1-superm1@kernel.org> <29e61472-5f41-4e76-9b5b-f3e106d6a629@kernel.org>
+In-Reply-To: <29e61472-5f41-4e76-9b5b-f3e106d6a629@kernel.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Wed, 3 Sep 2025 13:14:18 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0hLO5xhmjniO4=rLK1JK9OM8naxXVEGuHUT3cuhRp=Atw@mail.gmail.com>
+X-Gm-Features: Ac12FXzNMS5NRD7LbxBvydgvS_DdIA-2JZ6IFCfa_y9sZ_Fxqc7W0P6m00WI9xA
+Message-ID: <CAJZ5v0hLO5xhmjniO4=rLK1JK9OM8naxXVEGuHUT3cuhRp=Atw@mail.gmail.com>
+Subject: Re: [PATCH v6 00/11] Improvements to S5 power consumption
+To: Mario Limonciello <superm1@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Danilo Krummrich <dakr@kernel.org>
+Cc: Bjorn Helgaas <bhelgaas@google.com>, Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>, 
+	=?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K . Petersen" <martin.petersen@oracle.com>, Steven Rostedt <rostedt@goodmis.org>, 
+	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>, 
+	"open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>, 
+	"open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>, 
+	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, 
+	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, 
+	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>, 
+	"open list:TRACING" <linux-trace-kernel@vger.kernel.org>, AceLan Kao <acelan.kao@canonical.com>, 
+	Kai-Heng Feng <kaihengf@nvidia.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
+	=?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>, 
+	Eric Naim <dnaim@cachyos.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The patch series simplifies the UFS MCQ (Multi Circular Queue) resource
-mapping in the Qualcomm UFS host controller driver by replacing the complex
-multi-resource approach with a streamlined single-resource implementation.
+On Wed, Sep 3, 2025 at 6:41=E2=80=AFAM Mario Limonciello <superm1@kernel.or=
+g> wrote:
+>
+> On 8/17/2025 9:00 PM, Mario Limonciello (AMD) wrote:
+> > A variety of issues both in function and in power consumption have been
+> > raised as a result of devices not being put into a low power state when
+> > the system is powered off.
+> >
+> > There have been some localized changes[1] to PCI core to help these iss=
+ues,
+> > but they have had various downsides.
+> >
+> > This series instead tries to use the S4 flow when the system is being
+> > powered off.  This lines up the behavior with what other operating syst=
+ems
+> > do as well.  If for some reason that fails or is not supported, run the=
+ir
+> > shutdown() callbacks.
+> >
+> > Cc: AceLan Kao <acelan.kao@canonical.com>
+> > Cc: Kai-Heng Feng <kaihengf@nvidia.com>
+> > Cc: Mark Pearson <mpearson-lenovo@squebb.ca>
+> > Cc: Merthan Karaka=C5=9F <m3rthn.k@gmail.com>
+> > Cc: Eric Naim <dnaim@cachyos.org>
+> > ---
+> > v5->v6:
+> >   * Fix for LKP robot issue
+> >   * Some commit message changes
+> >   * Rebase on 6.17-rc2
+> >
+> > Mario Limonciello (AMD) (11):
+> >    PM: Introduce new PMSG_POWEROFF event
+> >    scsi: Add PM_EVENT_POWEROFF into suspend callbacks
+> >    usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
+> >    USB: Pass PMSG_POWEROFF event to suspend_common() for poweroff with =
+S4
+> >      flow
+> >    PCI: PM: Disable device wakeups when halting system through S4 flow
+> >    PCI: PM: Split out code from pci_pm_suspend_noirq() into helper
+> >    PCI: PM: Run bridge power up actions as part of restore phase
+> >    PCI: PM: Use pci_power_manageable() in pci_pm_poweroff_noirq()
+> >    PCI: Put PCIe bridges with downstream devices into D3 at hibernate
+> >    drm/amd: Avoid evicting resources at S5
+> >    PM: Use hibernate flows for system power off
+> >
+> >   drivers/base/power/main.c                  |  7 ++
+> >   drivers/gpu/drm/amd/amdgpu/amdgpu_device.c |  4 +
+> >   drivers/pci/pci-driver.c                   | 99 +++++++++++++++------=
+-
+> >   drivers/scsi/mesh.c                        |  1 +
+> >   drivers/scsi/stex.c                        |  1 +
+> >   drivers/usb/core/hcd-pci.c                 | 11 ++-
+> >   drivers/usb/host/sl811-hcd.c               |  1 +
+> >   include/linux/pm.h                         |  5 +-
+> >   include/trace/events/power.h               |  3 +-
+> >   kernel/reboot.c                            |  6 ++
+> >   10 files changed, 103 insertions(+), 35 deletions(-)
+> >
+>
+> Rafael, Bjorn,
+>
+> Any feedback for this series?
 
-The current MCQ implementation uses multiple separate resource mappings
-(RES_UFS, RES_MCQ, RES_MCQ_SQD, RES_MCQ_VS) with dynamic resource
-allocation, which increases code complexity and potential for resource
-mapping errors. This approach also doesn't align with the device tree
-binding specification that defines a single 'mcq' memory region.
+I still have the same basic concern as before: It is an intrusive
+change likely to cause regressions to occur.
 
-Replace the multi-resource mapping with a single "mcq" resource that
-encompasses the entire MCQ configuration space. The doorbell registers
-(SQD, CQD, SQIS, CQIS) are accessed using predefined offsets relative
-to the MCQ base address, providing clearer memory layout organization.
+It also changes the driver ABI quite dramatically because different
+callbacks will now be used for system shutdown and kexec, for example,
+at least on some platforms.
 
-Tested on Qualcomm platforms SM8650 and SM8750 with UFS MCQ enabled.
-
-Changes from v3:
-1. Addressed Krzysztof comment to separate device tree and driver
-   patch independently in different patch series. This series caters
-   driver changes.
-2. Addressed Manivannan's change to update commit text and remove
-   redundant null check in mcq code.
-3. Addressed Manivannan's to Update few offsets as fixed definition
-   instead of enum.
-
-Changes from v2:
-1. Removed dt-bindings patch as existing binding supports required
-   reg-names format.
-2. Added patch to refactor MCQ register dump logic for new resource
-   mapping.
-3. Added patch to remove unused ufshcd_res_info structure from UFS core.
-4. Changed reg-names from "ufs_mem" to "std" in device tree patches.
-5. Reordered patches with driver changes first, then device tree changes.
-6. Updated SM8750 MCQ region size from 0x2000 to 0x15000
-
-
-Nitin Rawat (2):
-  ufs: ufs-qcom: Streamline UFS MCQ resource mapping
-  ufs: ufs-qcom: Refactor MCQ register dump logic
-
- drivers/ufs/host/ufs-qcom.c | 174 +++++++++++++-----------------------
- drivers/ufs/host/ufs-qcom.h |  26 +++++-
- include/ufs/ufshcd.h        |  25 ------
- 3 files changed, 85 insertions(+), 140 deletions(-)
-
---
-2.50.1
-
+Frankly, I'd like to know Greg's and Danilo's opinions on the direction her=
+e.
