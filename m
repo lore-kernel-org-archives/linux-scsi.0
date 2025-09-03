@@ -1,91 +1,101 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73D35291C3F;
-	Wed,  3 Sep 2025 15:56:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB2373629B8;
+	Wed,  3 Sep 2025 18:44:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756915011; cv=none; b=ugWgkNBM+LNlIZhTO4LWdU97r23iW5rtFUUpVAUDrVHIPt/T0RxIM8NtDwMLRq0a4c1qpcW5qo8A8N2hzrTeyRq48WvKdJRd2Fxo6605YZIqlVU+W19zNbQxKemJNhdQ7VKU0XWEsGewLUcHyk8fVEjZDN+8QoXV3cBxGqg33fA=
+	t=1756925093; cv=none; b=XOZ1W5JgYb/382n5cZOlvXHk2hwydnm96/XsyBGNPi0loXDqclJlOZHZIMyhdww/tbjW1qaJq8EprUigZl8UEX12TU3O4HJANATzV1RDIuEs2Sw2INAjXOAnGuRoy7bR+GZu372jiHoP55Bq1UlZgCzLVDNAheIAmHYNe/0UIMM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756915011; c=relaxed/simple;
-	bh=3y/OeHLtZhmJFtl2aB0Vsz631BEjZjuD9mctK915Tcw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=oIypCHMPddmWDJgVgI24fJ5KGunWOe6DiNXdqg5xY7IzuCXhcVUlMLOpQT3TPNH9GnwHEqQf8je05CjSi3GLPmMpHDkjHnW7+fK9mKt2QCLDPSnKiQ1N4d+H/7UJAzCoMwMEOhUBENK6Y+rgZ9+TSnGWNx17FNkZiPCAeLweios=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=SmYanSsk; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1756925093; c=relaxed/simple;
+	bh=GsUokiikwbKp5vg1/26TrgCL7azSzjz7RAsIuuQWZKg=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=X7IskcLbfTS++/MTHiAac3/s1p9zuo6/BZ/TEAeeRFRvl8fqYR+dnPhBRCwBYmozigbiUP6rItQijPBRwhHOcIuiVZ1PLliCsR7i4b4iYNsft6itCakVMnwqKx6RAezySekiSXAqM36MKWj2bneaLGRJdOBWps4dnja68rUlD28=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZuTkKTjo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="SmYanSsk"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cH6g31PL0zlgqyd;
-	Wed,  3 Sep 2025 15:56:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1756914999; x=1759507000; bh=uxwEnZtSBaI8eE1xPU/YOeBA
-	dFGKEdN+2bj9iOVRL8k=; b=SmYanSsks+RAHlXcPcHdi/u37/7qKPHLYscymHwx
-	ppS1c9WVtu5xl2oVde93y+8JDG/wYeZEzFOxGLY+HiSAFKL/ToRBJXxBnxYdcohI
-	r/0BqnlYU47dstBv79K3hhXGkTHnQ16gWxSEItwRsg2Z4R/QXDbb7VByl8F8q/Qy
-	pvI3z4TPTLxgi4FgPLvmUOt2Qt4wLGbJqXDlLSQcIHpaVSFIOx7/NnR42fHZ91NY
-	GbhhbXuo72fMIcte7BGFFeUQOUc5fjyeFzfuyf7cs9/APxfMAqE1K7eZM+OZ62/u
-	yiMvDn15IGbroSez6MLlnLm+WGU0kLeSQoV9yu0N0sixKA==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ZVZOk3Tfha6D; Wed,  3 Sep 2025 15:56:39 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cH6fd4l9dzlgqyB;
-	Wed,  3 Sep 2025 15:56:24 +0000 (UTC)
-Message-ID: <854fad23-e7f8-42c8-b0e2-03460f481366@acm.org>
-Date: Wed, 3 Sep 2025 08:56:23 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZuTkKTjo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5D4ECC4CEE7;
+	Wed,  3 Sep 2025 18:44:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1756925093;
+	bh=GsUokiikwbKp5vg1/26TrgCL7azSzjz7RAsIuuQWZKg=;
+	h=Date:From:To:Cc:Subject:From;
+	b=ZuTkKTjoEfTXoELvBN4x5Vvt61F9HopbzRHhVwsomujm55IvVPjrn8Dsz2VuHFiKR
+	 GgaTpXgnmSo02sJ1gzW+9z4tIGzbzICm9HDSWjyiVSxr2MwW9wBKVPhiGgGudgbZtj
+	 zrGuf6svxGvVDj2Om5BI5Qfbdwuu5499T9DaLs2ixe2U4G6QmW1U8ew0Yb8brCT+/3
+	 0zVqM5pYO/LfsOVYTwplfkdw8S7WcWZPcRdfKt7nQqlRlpO2YytvfojS3YLKTSaLsJ
+	 DPBvNlOU/yCCGABD3NMC30dLCanuLZmxE96ief2Do9IkkxIMwGvas+PcIXPUGx2g30
+	 ox8dKnYCeMqIQ==
+Date: Wed, 3 Sep 2025 20:44:48 +0200
+From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+To: Jack Wang <jinpu.wang@cloud.ionos.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
+	linux-hardening@vger.kernel.org
+Subject: [PATCH][next] scsi: pm80xx: Avoid -Wflex-array-member-not-at-end
+ warning
+Message-ID: <aLiMoNzLs1_bu4eJ@kspp>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs cmd
- error
-To: DooHyun Hwang <dh0421.hwang@samsung.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
- quic_mnaresh@quicinc.com
-Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
- jangsub.yi@samsung.com, sh043.lee@samsung.com, cw9316.lee@samsung.com,
- sh8267.baek@samsung.com, wkon.kim@samsung.com
-References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
- <CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
- <20250417023405.6954-2-dh0421.hwang@samsung.com>
- <239ea120-841f-478d-b6b4-9627aa453795@acm.org>
- <093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
- <27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
- <17db01dc1ba6$41d37350$c57a59f0$@samsung.com>
- <6e854090-a071-416a-b7a5-cc8ee0122a90@acm.org>
- <2add01dc1c9d$7b5cba30$72162e90$@samsung.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <2add01dc1c9d$7b5cba30$72162e90$@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-On 9/2/25 11:39 PM, DooHyun Hwang wrote:
-> Could you please provide some guidance or suggestions?
+-Wflex-array-member-not-at-end was introduced in GCC-14, and we are
+getting ready to enable it, globally.
 
-How about this approach?
-* In a separate patch, remove UFS_DEV_COMP because it is not used.
-* Call the new enumeration label UFS_UIC_ERR (UFS UIC command error)
-   since "UIC" is how the UFS standard refers to UIC commands (these are
-   called "device commands" in the UFS driver).
+Move the conflicting declarations to the end of the corresponding
+structures. Notice that `struct ssp_response_iu` is a flexible
+structure, this is a structure that contains a flexible-array member.
 
-If anyone else has a different opinion, please speak up.
+With these changes fix the following warnings:
 
-Thanks,
+drivers/scsi/pm8001/pm8001_hwi.h:342:33: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
+drivers/scsi/pm8001/pm80xx_hwi.h:561:32: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
 
-Bart.
+Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+---
+ drivers/scsi/pm8001/pm8001_hwi.h | 4 +++-
+ drivers/scsi/pm8001/pm80xx_hwi.h | 4 +++-
+ 2 files changed, 6 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
+index fc2127dcb58d..7dc7870a8f86 100644
+--- a/drivers/scsi/pm8001/pm8001_hwi.h
++++ b/drivers/scsi/pm8001/pm8001_hwi.h
+@@ -339,8 +339,10 @@ struct ssp_completion_resp {
+ 	__le32	status;
+ 	__le32	param;
+ 	__le32	ssptag_rescv_rescpad;
+-	struct ssp_response_iu  ssp_resp_iu;
+ 	__le32	residual_count;
++
++	/* Must be last --ends in a flexible-array member. */
++	struct ssp_response_iu  ssp_resp_iu;
+ } __attribute__((packed, aligned(4)));
+ 
+ 
+diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
+index eb8fd37b2066..21afc28d9875 100644
+--- a/drivers/scsi/pm8001/pm80xx_hwi.h
++++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+@@ -558,8 +558,10 @@ struct ssp_completion_resp {
+ 	__le32	status;
+ 	__le32	param;
+ 	__le32	ssptag_rescv_rescpad;
+-	struct ssp_response_iu ssp_resp_iu;
+ 	__le32	residual_count;
++
++	/* Must be last --ends in a flexible-array member. */
++	struct ssp_response_iu ssp_resp_iu;
+ } __attribute__((packed, aligned(4)));
+ 
+ #define SSP_RESCV_BIT	0x00010000
+-- 
+2.43.0
+
