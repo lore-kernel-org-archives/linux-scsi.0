@@ -1,47 +1,47 @@
-Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
+Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F1142D47EC
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 04:48:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1A7A2D4814
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 04:53:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756874899; cv=none; b=UpW83WCyeI6CN4oDvo/ipIKy+r6+usBmWf20bRNF9XY/jKcZdUugrJSq/knnS4E/yypZCRGAgOqnqJRCJx1BQPyKU7ZqtOchDigKiPmhuzKwSEf0mThrYvcALHOah+G8eUCMsCnA+d56/NHVyVNEeUX3X04Vws3+lXahz8zDCCo=
+	t=1756875215; cv=none; b=ZBRHM6h+OzUzWMBxkFAhwcKJrkWtoy6HPqMvjz+jCgH5fcu+cMw464XnB0dRrnYxG98Ko8et+rZ4oAkAlBF02AIbxqKb0PA79nDAwtiTehFGvSCbjTIy1wnJW08Z1JR4FQHlPvsKtdbZ1cWNlmixIMgWm/97QrroM9uMvbKJuVA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756874899; c=relaxed/simple;
-	bh=I6zNRD3w00lAX47piaPwY1NvvSVWY6LUT0pycpnZXLs=;
+	s=arc-20240116; t=1756875215; c=relaxed/simple;
+	bh=R3DhZ6mfg1h+sJtmD78zCTphaI6OPacxMmjj6u3H1Es=;
 	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=p/1Wi9fcI+Xf2lpUstPLU+YVqWpznHli6qrqnCynX5beVWEDmTnnGximxGxdo2F4yDDGPgSpfb9n1KOHLXIu+Ivf5QT7CawN3UCOyq+C+C+LhOsi75kYES35q5O06QJhFJcfYxFKFcJMfspArZlW+NcAn2YNo1YDGek127Q2WRk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=a2FNrJmm; arc=none smtp.client-ip=203.254.224.24
+	 Content-Type:References; b=QmE2F1yiam+N+q6NzFY3d4pSNHn+/qtEK/KFA9G0N+F4AegTw9J6izyq+T2dZ6dgaoJsQ4TjaqNlHsxbl0JQ9091mrrUPRDy35yllbWT8LqiSBtsrVRu5M1r4ORtEd22srnAq+NMxlzzwcqTY+Gdzw/o8HNFn9R411cxslnVbpk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=seAx/fyD; arc=none smtp.client-ip=203.254.224.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="a2FNrJmm"
-Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
-	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20250903044815epoutp01f5c7c3a726064a70e48203b92f0d1930~hrGi8qU1p0974909749epoutp01I
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 04:48:15 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20250903044815epoutp01f5c7c3a726064a70e48203b92f0d1930~hrGi8qU1p0974909749epoutp01I
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="seAx/fyD"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250903045329epoutp033743b4a2022d2aaffb9222aa45ea36ed~hrLHgtCQV0452004520epoutp03k
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 04:53:29 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250903045329epoutp033743b4a2022d2aaffb9222aa45ea36ed~hrLHgtCQV0452004520epoutp03k
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1756874895;
-	bh=8zXvDNoOwy72sNEXyL1WkEq1p5c03frKH9bQVnfpEdI=;
+	s=mail20170921; t=1756875209;
+	bh=21B5w+1lssADMm+k2ZLitCCdTF49rGjLr51Zj+pcqQk=;
 	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=a2FNrJmmOsTo0j35RIxp3rTfXO7J44apBEFsDnYgLHjL9qqXgdkV2jHIKnEuqgKsv
-	 Z0Zpv3vAq0Vb+AsMA9KyFiDIeIEJCITjRELzyo5tg0cAsycWl9uXSlChH4UOSRB8kM
-	 i5SaUBCwiLccbGKqBO/Juesq3Cp0GJRAMbsoALgw=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20250903044815epcas5p36d2334cc729bc607a0db3151e4354e30~hrGiheA0L2034820348epcas5p3_;
-	Wed,  3 Sep 2025 04:48:15 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.91]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4cGqqd64yRz3hhTG; Wed,  3 Sep
-	2025 04:48:13 +0000 (GMT)
+	b=seAx/fyDbNrkUWlz3g3+ruYtmPX95TLZkHbTtU6AlDU8zT4ftLtFP1g4kQFeM51St
+	 8t3s4tXz80u0mz6v/8qHzPJe6y8mhni0Tfg3JN69oQWnh9FXxVKR91a129QsmewQ42
+	 etTGIkI9e0vQBMXARDTvQkdy27DMf9wumAZpW4tU=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
+	20250903045329epcas5p4d0f89b732ea8235d08c55b5a2b041fe0~hrLHJawFo2982929829epcas5p4v;
+	Wed,  3 Sep 2025 04:53:29 +0000 (GMT)
+Received: from epcas5p3.samsung.com (unknown [182.195.38.88]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4cGqxh3glKz6B9mH; Wed,  3 Sep
+	2025 04:53:28 +0000 (GMT)
 Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPA id
-	20250903044813epcas5p1020d1e0cd0cba938c7205d018cd72703~hrGhAtNUT0683506835epcas5p1N;
-	Wed,  3 Sep 2025 04:48:13 +0000 (GMT)
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250903045327epcas5p2a97e15cae1c6a759a59a6756e4891e92~hrLF9ypcc2711927119epcas5p2y;
+	Wed,  3 Sep 2025 04:53:27 +0000 (GMT)
 Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
 	(KnoxPortal) with ESMTPA id
-	20250903044811epsmtip1a9aef2f137d586d0ecab89f16bf3a338~hrGfT64ld1389713897epsmtip1P;
-	Wed,  3 Sep 2025 04:48:11 +0000 (GMT)
+	20250903045326epsmtip122cca7fe6eb21dabe242b0fd7239af86~hrLEWBRlQ1713217132epsmtip1K;
+	Wed,  3 Sep 2025 04:53:26 +0000 (GMT)
 From: "Alim Akhtar" <alim.akhtar@samsung.com>
 To: "'Ram Kumar Dwivedi'" <quic_rdwivedi@quicinc.com>,
 	<avri.altman@wdc.com>, <bvanassche@acm.org>, <robh@kernel.org>,
@@ -49,10 +49,11 @@ To: "'Ram Kumar Dwivedi'" <quic_rdwivedi@quicinc.com>,
 	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
 Cc: <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
 	<linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
-In-Reply-To: <20250902164900.21685-1-quic_rdwivedi@quicinc.com>
-Subject: RE: [PATCH V5 0/4] Add DT-based gear and rate limiting support
-Date: Wed, 3 Sep 2025 10:18:10 +0530
-Message-ID: <3a9101dc1c8d$f476b8e0$dd642aa0$@samsung.com>
+In-Reply-To: <20250902164900.21685-3-quic_rdwivedi@quicinc.com>
+Subject: RE: [PATCH V5 2/4] ufs: ufs-qcom: Remove redundant re-assignment to
+ hs_rate
+Date: Wed, 3 Sep 2025 10:23:25 +0530
+Message-ID: <3a9201dc1c8e$affa1c10$0fee5430$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -61,19 +62,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 7bit
 X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQMIDrMCzT3okebP/WChCnWdAdn6nwDbtq+ZsiIfvNA=
+Thread-Index: AQDbtq+ZX022GZqTIcIYj1g81c9NHgHu7PnKAbEBfqC2ZK+0sA==
 Content-Language: en-us
-X-CMS-MailID: 20250903044813epcas5p1020d1e0cd0cba938c7205d018cd72703
+X-CMS-MailID: 20250903045327epcas5p2a97e15cae1c6a759a59a6756e4891e92
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
 CMS-TYPE: 105P
 cpgsPolicy: CPGSC10-542,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250902164927epcas5p459352c28c0d5c5a4c04bd88345a049f0
-References: <CGME20250902164927epcas5p459352c28c0d5c5a4c04bd88345a049f0@epcas5p4.samsung.com>
-	<20250902164900.21685-1-quic_rdwivedi@quicinc.com>
+X-CMS-RootMailID: 20250902164935epcas5p14139d20b5d385b99edfc0da60865dd98
+References: <20250902164900.21685-1-quic_rdwivedi@quicinc.com>
+	<CGME20250902164935epcas5p14139d20b5d385b99edfc0da60865dd98@epcas5p1.samsung.com>
+	<20250902164900.21685-3-quic_rdwivedi@quicinc.com>
 
-Hi Ram
+
 
 > -----Original Message-----
 > From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
@@ -84,62 +86,48 @@ Hi Ram
 > James.Bottomley@HansenPartnership.com; martin.petersen@oracle.com
 > Cc: linux-scsi@vger.kernel.org; devicetree@vger.kernel.org; linux-
 > kernel@vger.kernel.org; linux-arm-msm@vger.kernel.org
-> Subject: [PATCH V5 0/4] Add DT-based gear and rate limiting support
+> Subject: [PATCH V5 2/4] ufs: ufs-qcom: Remove redundant re-assignment to
+> hs_rate
 > 
-> This patch series adds support for limiting the maximum high-speed gear
-and
-> rate used by the UFS controller via device tree properties.
+> Remove the redundant else block that assigns PA_HS_MODE_B to hs_rate,
+> as it is already assigned in ufshcd_init_host_params(). This avoids
+> unnecessary reassignment and prevents overwriting hs_rate when it is
+> explicitly set to a different value.
 > 
-> Some platforms may have signal integrity, clock configuration, or layout
-> issues that prevent reliable operation at higher gears or rates.
-> This is especially critical in automotive and other platforms where
-stability is
-> prioritized over peak performance.
-> 
-> The series follows this logical progression:
-> 1. Document the new DT properties in the common UFS binding 2. Clean up
-> existing redundant code in the qcom driver 3. Add platform-level parsing
-> support for the new properties 4. Integrate the platform support in the
-qcom
-> driver
-> 
-> This approach makes the functionality available to other UFS host drivers
-and
-> provides a cleaner, more maintainable implementation.
-> 
-> Changes from V1:
-> - Restructured patch series for better logical flow and maintainability.
-> - Moved DT bindings to ufs-common.yaml making it available for all UFS
->   controllers.
-> - Added platform-level support in ufshcd-pltfrm.c for code reusability.
-> - Separated the cleanup patch to remove redundant hs_rate assignment in
->   qcom driver.
-> - Removed SA8155 DTS changes to keep the series focused on core
->   functionality.
-> - Improved commit messages with better technical rationale.
-> 
-> Changes from V2:
-> - Documented default values of limit-rate and limit-hs-gear in DT bindings
->   as per Krzysztof's suggestion.
-> 
-> Changes from V3:
-> - Changed limit-rate property from numeric values 1 and 2 to string values
->   Rate-A and Rate-B for better readability and clarity as suggested by
->   Bart and Krzysztof.
-> - Added Co-developed-by tag for Nitin Rawat in 3rd patch.
-> 
-> Changes from V4:
-> - Added the missing argument to the error message while parsing
->   limit-rate property.
-> - Updated the maximum supported value and default for limit-gear
->   property to gear 6, as per Krzysztof's and Bart's recommendation.
-> - Renamed Rate-A and Rate-B to lowercase (rate-a, rate-b) as suggested
->   by Krzysztof.
-> 
-Please allow minimum 4 ~ 5 days for reviewers to complete the review before
-posting next version.
-That will also help to reduce the number of iteration a patch goes through.
-Thanks
+> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> ---
+Better to send non-dependent patches separately.
 
+Feel free to add:
+Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>  
+
+>  drivers/ufs/host/ufs-qcom.c | 8 ++------
+>  1 file changed, 2 insertions(+), 6 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index
+> 9574fdc2bb0f..1a93351fb70e 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -494,12 +494,8 @@ static int ufs_qcom_power_up_sequence(struct
+> ufs_hba *hba)
+>  	 * If the HS-G5 PHY gear is used, update host_params->hs_rate to
+> Rate-A,
+>  	 * so that the subsequent power mode change shall stick to Rate-A.
+>  	 */
+> -	if (host->hw_ver.major == 0x5) {
+> -		if (host->phy_gear == UFS_HS_G5)
+> -			host_params->hs_rate = PA_HS_MODE_A;
+> -		else
+> -			host_params->hs_rate = PA_HS_MODE_B;
+> -	}
+> +	if (host->hw_ver.major == 0x5 && host->phy_gear == UFS_HS_G5)
+> +		host_params->hs_rate = PA_HS_MODE_A;
+> 
+>  	mode = host_params->hs_rate == PA_HS_MODE_B ?
+> PHY_MODE_UFS_HS_B : PHY_MODE_UFS_HS_A;
+> 
+> --
+> 2.50.1
 
 
