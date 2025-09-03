@@ -1,73 +1,48 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35C3E2D94BF
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 07:10:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80253253359;
+	Wed,  3 Sep 2025 07:29:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756883460; cv=none; b=VA0qAAEXrkpw5VPHhGGZ9gUhhqjEDH9Guse6rU2tyHPKI2zDjFY+y5TKjVojCivF/pkFkDJHbdIYC+hfpQrt/6r2zzVLD/wti4MBpZivHFa3wskjV/sMdE/1DWp+oeI/l8Ilap1UneYT5tEqjSStwStU1BIBRt6yac6Yz6cZf5s=
+	t=1756884565; cv=none; b=Isco7nK1PcJkzn44O3Ajj8e1jCTk32cihdJHAXnnyMVO5kRHyu2NwfLXD846KTo4+dIuySWfWn1XjWk/bglEYv6nTvZTjLuDtsc8SHGU0RmYgjE13zjPsZ1dhI0/Wf0MqnKrBUxnhCEvEQWMRaqIkjBYHggsWng73xVVGH3k+hs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756883460; c=relaxed/simple;
-	bh=NkJDUgCFlbUdgLwbxb1k7PnToJXeJ3p25k8wOV3yMxI=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=edVZY2rfYT7f1WtA2OqqeKwv40C8v6tB7k6te76YLj+CVO6uHt13KRy4Mk/CLC236Q6OfzB5EO0KBZtcHvoRgID/klXjGzsE3b2XNboE5iLWZtVr1QwpJDuF4ZGyqMop92KoLRRjojGaUa+JIZ8DiowErZJpPX8lquVW+oZ6QK8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=XsIYEA/b; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1756884565; c=relaxed/simple;
+	bh=il0bQUUF/awkUBDSMgmNGFru+HmxoYrIPzM8y0uvesM=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=a7MW7mgLvEiCgUqNmdKxXvggMpHU9ngVwPhXe3PpKsI0mzrwbXIUMqCuF+DKFFKaz4XYEcWRYhxJlEr3RuR2oxMpFpgg7yxEq22wMAwB66httlJ/wQQl2vKu5qe5ZTsfjERW7VHYcAmhwVeG48uiuGx1QClkvjgnlbKa9c0/5uU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=ODqpf1MW; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="XsIYEA/b"
-Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5832M5J9018242
-	for <linux-scsi@vger.kernel.org>; Wed, 3 Sep 2025 07:10:58 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="ODqpf1MW"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5831v7aM024029;
+	Wed, 3 Sep 2025 07:28:26 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/dDVWY2+oCb5XWd4OqmdYITmU2/sa3YvmpoTH2f3ZDM=; b=XsIYEA/bw/FQm4mH
-	Cu/ZwP2Q2zw5O5Z4lyp+Y1rWQoA07Ts0eraA/CfvJq0UAjKfrUQ1o0RmoM/6LFgL
-	s84d98lIwd4y5dWq4vxtooRg8avR/A6jJAvu1wud3yxW/jBMDbfCPSAnsaIi1KcD
-	VLyonCzLe/dYADYhCDD03kiJg8okuKahc3ZpKSVurkZ36KO9XjygiMijnfwx4gND
-	t24bqGNTbdkf6jqLZehx9z9MCJ+rtExy5zJ8WGFOTAVRdHi/bZPDUgMuPDeAWX0+
-	UCOHD6b8o3jZXYChQGOGcfmt9KOrP+XAjjovYPoq6rXj8vLwkJ8+ev8oQFhxBg0x
-	vIDlFA==
-Received: from mail-pf1-f200.google.com (mail-pf1-f200.google.com [209.85.210.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48wqvwca3y-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 03 Sep 2025 07:10:58 +0000 (GMT)
-Received: by mail-pf1-f200.google.com with SMTP id d2e1a72fcca58-77250d676b0so805714b3a.0
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Sep 2025 00:10:58 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1756883457; x=1757488257;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=/dDVWY2+oCb5XWd4OqmdYITmU2/sa3YvmpoTH2f3ZDM=;
-        b=tURrxlTSo/ZkfXcOc8KIMivtHeMp8HfOabCs+Izyq8Jg7E41k20VDQvZaMsucioSyR
-         Z6/PQPSlFhxncMOn64mKg7+GhmhkAfpr/hkjj19vqQClc6yWY+ZzSLs504tHfZjm0Wah
-         EXDKXE03/eHgekJsIpcnR72f8rBVzbGORkXqygcLf2BTcEY86WLmyY5lNg1sZsGunkAs
-         WQFfGc3DJA2tKCXaw0CQ4Q6HJdzGmZxVpMoOjPQ8wTUkn8FYSlTa4lCNb+dSCj4JHnxr
-         RWWsILntuWFAyJABFwJBt1w3PlCfr8bEIe43cJM5Rix9w7r5hlWCQbmoaLwf62YxndhX
-         uO+w==
-X-Forwarded-Encrypted: i=1; AJvYcCUd0vWq6eYyeF3jmdwu05+xcITC22oJlM2xRC9w6Gq0bmeVj/k87xkwx1a8dGYnv56S3f99eooSyJiP@vger.kernel.org
-X-Gm-Message-State: AOJu0YzRzG1lZN30cJAoRkYExyLFb6af4Lo3vluwi5GzvTQRMW1ac4dz
-	3vXoWFvyKyW/txpa6vicVz2hzkY7weZTdMt38gFIUkGoLwR6cBFpRYtmw4X3JGCrsSEz0KaI81g
-	pDe3kffhu3mfdOR8tw6E2cKnFiUgRfNTbjvBw0WpOzF5q+qCMW2p0rOhxjnvzxSJq
-X-Gm-Gg: ASbGncv9vdGUjZznfbnXzZcuxfnd5QG93t2wB41bY5GkWjoJ1PRbpICQQ2CVyFh0fja
-	Ckwza4ZiyDhcilhHrP3qVOug9gQ8c0Q31ZonKLosG9BR3DYY4DYdkTzxqgIG5cNHA3/HTwJE+sf
-	PQaukf2Lpqnv9Lv0MqKGZm1EIfzdsTKe9eJK2POzailanKLvudn99wuEkpjC9UmRQ26p5SVRRRs
-	r13RX//OcDncz0z7Go1+yPppuGaWdLHJFwoXRPmY19z6qOWj25pFwEorPQ/MXd0LfdgCeAuVFqy
-	iDMfYQ7IEvOOjXZsJ+qDg8A2QxULo/KWimUH90Fu1+DpUTDiE7jxyv+pnXOA8IgkZFgwPSlvBO6
-	s+gVMOASz2AJRN4udwLu8PxWDGyxG
-X-Received: by 2002:a05:6a20:a9a9:b0:244:aefe:71f6 with SMTP id adf61e73a8af0-244aefe7619mr5585794637.19.1756883457297;
-        Wed, 03 Sep 2025 00:10:57 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG+djaLJqUygkmqEGXB5M3J6WOaqKxMcULLmnz7boTMV0+9fLiRCsdhUkH3DfauU6APsZUMAw==
-X-Received: by 2002:a05:6a20:a9a9:b0:244:aefe:71f6 with SMTP id adf61e73a8af0-244aefe7619mr5585763637.19.1756883456801;
-        Wed, 03 Sep 2025 00:10:56 -0700 (PDT)
-Received: from [10.133.33.19] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-3298520c7d0sm10207741a91.3.2025.09.03.00.10.52
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 03 Sep 2025 00:10:56 -0700 (PDT)
-Message-ID: <07d8fbd5-54b1-49c2-a12a-c9b44bf1b1f4@oss.qualcomm.com>
-Date: Wed, 3 Sep 2025 15:10:51 +0800
+	yG0U+/OZ6lNHnt3xeIqCpgOxd+sMU4u6meLZ/uRO9to=; b=ODqpf1MWFf0Kc20T
+	12Y0MvqiZqw4tnHIAllxkJufCFtnx6+07TIvdkqlipkqaTSkCkaqS8S8jHA2lzwq
+	2igy4v/KeitlI0ZSqe7IDfjHf/oNaml4Ze18vAoSsEe7fNzfC1kArHMBDIuChV10
+	/4zfcTQ/H9gkAlfcTptHtinMEiwBBSWgygoUKm5k1benEw7wS6NVr8fXQHu/AUb+
+	Spj5p19M4QGmZiIQXarcLI1qwZ5Q3Wmo2rGDTHcAbSLAOaAyJaQOcQLsJ4yRJYE0
+	JcpQLsYMlTl4AN4QtJtTebkSxerYHZQhD3bp2BqeX3fJfvmtH6iwIQGF08TJvyhb
+	ZcA86Q==
+Received: from nalasppmta03.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 48ush32g6h-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 03 Sep 2025 07:28:26 +0000 (GMT)
+Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
+	by NALASPPMTA03.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5837SPwu002743
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 3 Sep 2025 07:28:25 GMT
+Received: from [10.216.0.245] (10.80.80.8) by nalasex01a.na.qualcomm.com
+ (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.24; Wed, 3 Sep
+ 2025 00:28:01 -0700
+Message-ID: <013a91f9-7a8e-4606-9f5a-5d675f78117c@quicinc.com>
+Date: Wed, 3 Sep 2025 12:57:58 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,159 +50,353 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: ufs: core: Fix data race in CPU latency PM QoS
- request handling
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
-        "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-        "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
-        "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
-        "avri.altman@wdc.com" <avri.altman@wdc.com>,
-        "bvanassche@acm.org" <bvanassche@acm.org>
-Cc: "tanghuan@vivo.com" <tanghuan@vivo.com>,
-        AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-        "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-        "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-        "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-        "ebiggers@kernel.org" <ebiggers@kernel.org>,
-        "quic_mnaresh@quicinc.com" <quic_mnaresh@quicinc.com>,
-        "ziqi.chen@oss.qualcomm.com" <ziqi.chen@oss.qualcomm.com>,
-        "viro@zeniv.linux.org.uk" <viro@zeniv.linux.org.uk>,
-        "quic_narepall@quicinc.com" <quic_narepall@quicinc.com>,
-        "nitin.rawat@oss.qualcomm.com" <nitin.rawat@oss.qualcomm.com>,
-        "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>,
-        "huobean@gmail.com" <huobean@gmail.com>,
-        "neil.armstrong@linaro.org" <neil.armstrong@linaro.org>,
-        "liu.song13@zte.com.cn" <liu.song13@zte.com.cn>,
-        "can.guo@oss.qualcomm.com" <can.guo@oss.qualcomm.com>,
-        zhongqiu.han@oss.qualcomm.com
-References: <20250902074829.657343-1-zhongqiu.han@oss.qualcomm.com>
- <d8be2a553690ebcf915cd1ad395c3394158abd58.camel@mediatek.com>
+Subject: Re: [PATCH V3 1/5] ufs: ufs-qcom: Streamline UFS MCQ resource mapping
+To: Manivannan Sadhasivam <mani@kernel.org>,
+        Ram Kumar Dwivedi
+	<quic_rdwivedi@quicinc.com>
+CC: <andersson@kernel.org>, <konradybcio@kernel.org>, <robh@kernel.org>,
+        <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
+        <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
+        <linux-arm-msm@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+References: <20250821112403.12078-1-quic_rdwivedi@quicinc.com>
+ <20250821112403.12078-2-quic_rdwivedi@quicinc.com>
+ <ljgirap5pa74fchujk3wrg7wt66x2pub7ezdhuxfbqswymepbe@cu6o5mqg4lak>
 Content-Language: en-US
-From: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
-In-Reply-To: <d8be2a553690ebcf915cd1ad395c3394158abd58.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTAyMDAyNCBTYWx0ZWRfX9gmF7gJV4A1h
- JTUSp0mUXnMoLPZDZrTB5cKf1nqSHUJX2N6W8LcWa7HO1ak5aGB3/dOJIctqIrdyCvMC7AjAGD6
- 9iQV+kIHqN5WBt49PW6wnU/ujTVqhgpohZqIJVxuVae/jVSiRU32TDqcyo4s7mQAP3xfYDaYLv8
- /R41ke9JhIzGSUGn+IU8US5dygejitzCT9h0vSyes5lu9Gyy5MR+JLpfic5NXg1ZvnZkvJcXAox
- vRl5bpRfEfVhn7rTO81oIgU9hU8xjwJuIDmcSfjjVxvZAyKOtRdtltNSBPoJFf/arA3fszHxtHV
- ysFK156WntDacbEdhFVBgWMXp9UdM9Ua75LxuYuUNmNTyfHnuxcwj49B2HYyPXdDiR3fglmqtJF
- 9wTgdfsq
-X-Authority-Analysis: v=2.4 cv=WKh/XmsR c=1 sm=1 tr=0 ts=68b7ea02 cx=c_pps
- a=mDZGXZTwRPZaeRUbqKGCBw==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=I3z-T-4cxT6kGIpvpuIA:9
- a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10 a=zc0IvFSfCIW2DFIPzwfm:22
-X-Proofpoint-GUID: ABpCkIBdQtjHSWNPAebT8UOAiZt1Uyd1
-X-Proofpoint-ORIG-GUID: ABpCkIBdQtjHSWNPAebT8UOAiZt1Uyd1
+From: Nitin Rawat <quic_nitirawa@quicinc.com>
+In-Reply-To: <ljgirap5pa74fchujk3wrg7wt66x2pub7ezdhuxfbqswymepbe@cu6o5mqg4lak>
+Content-Type: text/plain; charset="UTF-8"; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
+ nalasex01a.na.qualcomm.com (10.47.209.196)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwODMwMDAzMiBTYWx0ZWRfXwOvPGzr56bzb
+ OvPtie7mcABacUF97jRgAVxmoaR3j5379SKvXXHTaMoB3UwsL3hPGxjeGalExRNgf6KNnBSHvxt
+ nte0socvH4vzLNCl7P++RXvHiPcDv40+S7mAscqDTDSPVkcr8C6lqmpKxwp6xTPA/lk0Dw9uEpD
+ KYd71jaOAdnNbld6a812Wz2ud5FDSASJ0SaocyixJqhXFORBYobIz2yCvhMQA5poTu47R71zD+L
+ i4I9qfAtRjZo7A7eqdUiutICJr/Gk+QeC3fyHcUYv4zA7aRDH6GrF4s7iHR4deEhs+BnIbWf58y
+ Tpa0leL7WrexjbE63AXjHHF0wLuyayID27L/ihSe3e0iMI7zBhC3VhNwkOHejNlx6JgliyEpB3K
+ H2l5StLb
+X-Proofpoint-ORIG-GUID: YbcDXk9bCDq-DfRjiuyJM1uXmpwY1KHW
+X-Proofpoint-GUID: YbcDXk9bCDq-DfRjiuyJM1uXmpwY1KHW
+X-Authority-Analysis: v=2.4 cv=M9NNKzws c=1 sm=1 tr=0 ts=68b7ee1a cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=COk6AnOGAAAA:8
+ a=IakwTT1RSBMIzvV5xi4A:9 a=r0ZRNBMo7uGkUgGo:21 a=QEXdDO2ut3YA:10
+ a=TjNXssC_j7lpFel5tvFf:22
 X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1099,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-03_02,2025-08-28_01,2025-03-28_01
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-03_04,2025-08-28_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 suspectscore=0 bulkscore=0 phishscore=0 adultscore=0
- spamscore=0 malwarescore=0 impostorscore=0 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509020024
-
-On 9/2/2025 8:39 PM, Peter Wang (王信友) wrote:
-> On Tue, 2025-09-02 at 15:48 +0800, Zhongqiu Han wrote:
->> 
->> External email : Please do not click links or open attachments until
->> you have verified the sender or the content.
->> 
->> 
->> The cpu_latency_qos_add/remove/update_request interfaces lack
->> internal
->> synchronization by design, requiring the caller to ensure thread
->> safety.
->> The current implementation relies on the `pm_qos_enabled` flag, which
->> is
->> insufficient to prevent concurrent access and cannot serve as a
->> proper
->> synchronization mechanism. This has led to data races and list
->> corruption
->> issues.
->> 
->> A typical race condition call trace is:
->> 
->> [Thread A]
->> ufshcd_pm_qos_exit()
->>   --> cpu_latency_qos_remove_request()
->>     --> cpu_latency_qos_apply();
->>       --> pm_qos_update_target()
->>         --> plist_del              <--(1) delete plist node
->>     --> memset(req, 0, sizeof(*req));
->>   --> hba->pm_qos_enabled = false;
->> 
->> [Thread B]
->> ufshcd_devfreq_target
->>   --> ufshcd_devfreq_scale
->>     --> ufshcd_scale_clks
->>       --> ufshcd_pm_qos_update     <--(2) pm_qos_enabled is true
->>         --> cpu_latency_qos_update_request
->>           --> pm_qos_update_target
->>             --> plist_del          <--(3) plist node use-after-free
->> 
->> This patch introduces a dedicated mutex to serialize PM QoS
->> operations,
->> preventing data races and ensuring safe access to PM QoS resources.
->> Additionally, READ_ONCE is used in the sysfs interface to ensure
->> atomic
->> read access to pm_qos_enabled flag.
-> 
-> 
-> Hi Zhongqiu,
-> 
-> Introducing an additional mutex lock would impact the efficiency of
-> devfreq.
-> Wouldn’t it be better to simply adjust the sequence to avoid race
-> conditions?
-> For instance,
-> ufshcd_pm_qos_exit(hba);
-> ufshcd_exit_clk_scaling(hba);
-> could be changed to
-> ufshcd_exit_clk_scaling(hba);
-> ufshcd_pm_qos_exit(hba);
-> This ensures that clock scaling is stopped before pm_qos is removed.
-> 
-> Thanks.
-> Peter
-> 
-> 
-> 
-> ************* MEDIATEK Confidentiality Notice ********************
-> The information contained in this e-mail message (including any
-> attachments) may be confidential, proprietary, privileged, or otherwise
-> exempt from disclosure under applicable laws. It is intended to be
-> conveyed only to the designated recipient(s). Any use, dissemination,
-> distribution, printing, retaining or copying of this e-mail (including its
-> attachments) by unintended recipient(s) is strictly prohibited and may
-> be unlawful. If you are not an intended recipient of this e-mail, or believe
-> that you have received this e-mail in error, please notify the sender
-> immediately (by replying to this e-mail), delete any and all copies of
-> this e-mail (including any attachments) from your system, and do not
-> disclose the content of this e-mail to any other person. Thank you!
-> 
-
-Hi Peter,
-Thank you for your review and suggestion~
-
-1.While adjusting the sequence of operations may help avoid race
-conditions, it is not a reliable solution and increases the risk of
-future maintenance issues.
-
-2.There are additional race paths beyond the one discussed. For example,
-user-triggered sysfs interactions pm_qos_enable_store can occur at
-unpredictable times, potentially leading to concurrent access to PM QoS
-resources.
-
-3.The critical section protected by the mutex is relatively small, so
-the performance impact is expected to be minimal.
-
-Thanks again for your feedback!
+ impostorscore=0 adultscore=0 spamscore=0 priorityscore=1501 malwarescore=0
+ clxscore=1015 suspectscore=0 phishscore=0 bulkscore=0 classifier=typeunknown
+ authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2508300032
 
 
--- 
-Thx and BRs,
-Zhongqiu Han
+
+On 8/22/2025 2:34 PM, Manivannan Sadhasivam wrote:
+> On Thu, Aug 21, 2025 at 04:53:59PM GMT, Ram Kumar Dwivedi wrote:
+>> From: Nitin Rawat <quic_nitirawa@quicinc.com>
+>>
+>> The current MCQ resource configuration involves multiple resource
+>> mappings and dynamic resource allocation.
+>>
+>> Simplify the resource mapping by directly mapping the single "mcq"
+>> resource from device tree to hba->mcq_base instead of mapping multiple
+>> separate resources (RES_UFS, RES_MCQ, RES_MCQ_SQD, RES_MCQ_VS).
+>>
+>> It also uses predefined offsets for MCQ doorbell registers (SQD,
+>> CQD, SQIS, CQIS) relative to the MCQ base,providing clearer memory
+>> layout clarity.
+>>
+>> Additionally update vendor-specific register offset UFS_MEM_CQIS_VS
+>> offset from 0x8 to 0x4008 to align with the hardware programming guide.
+>>
+>> The new approach assumes the device tree provides a single "mcq"
+>> resource that encompasses the entire MCQ configuration space, making
+>> the driver more maintainable and less prone to resource mapping errors.
+>>
+> 
+> Also make it clear that the binding only requires a single 'mcq' region and not
+> the separate ones as the driver is using. Otherwise, it sounds like a breakage.
+
+Sure, I'll update this in commit text as part of next patch set.
+
+
+> 
+>> Co-developed-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+>> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+>> Signed-off-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+> 
+> Tag order is messed up. Please fix it.
+
+Sure, I'll address this in next patch set.
+
+
+> 
+>> ---
+>>   drivers/ufs/host/ufs-qcom.c | 146 +++++++++++++-----------------------
+>>   drivers/ufs/host/ufs-qcom.h |  22 +++++-
+>>   2 files changed, 73 insertions(+), 95 deletions(-)
+>>
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+>> index 9574fdc2bb0f..6c6a385543ef 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -1910,116 +1910,73 @@ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
+>>   	hba->clk_scaling.suspend_on_no_request = true;
+>>   }
+>>   
+>> -/* Resources */
+>> -static const struct ufshcd_res_info ufs_res_info[RES_MAX] = {
+>> -	{.name = "ufs_mem",},
+>> -	{.name = "mcq",},
+>> -	/* Submission Queue DAO */
+>> -	{.name = "mcq_sqd",},
+>> -	/* Submission Queue Interrupt Status */
+>> -	{.name = "mcq_sqis",},
+>> -	/* Completion Queue DAO */
+>> -	{.name = "mcq_cqd",},
+>> -	/* Completion Queue Interrupt Status */
+>> -	{.name = "mcq_cqis",},
+>> -	/* MCQ vendor specific */
+>> -	{.name = "mcq_vs",},
+>> -};
+>> -
+>>   static int ufs_qcom_mcq_config_resource(struct ufs_hba *hba)
+>>   {
+>>   	struct platform_device *pdev = to_platform_device(hba->dev);
+>> -	struct ufshcd_res_info *res;
+>> -	struct resource *res_mem, *res_mcq;
+>> -	int i, ret;
+>> -
+>> -	memcpy(hba->res, ufs_res_info, sizeof(ufs_res_info));
+>> -
+>> -	for (i = 0; i < RES_MAX; i++) {
+>> -		res = &hba->res[i];
+>> -		res->resource = platform_get_resource_byname(pdev,
+>> -							     IORESOURCE_MEM,
+>> -							     res->name);
+>> -		if (!res->resource) {
+>> -			dev_info(hba->dev, "Resource %s not provided\n", res->name);
+>> -			if (i == RES_UFS)
+>> -				return -ENODEV;
+>> -			continue;
+>> -		} else if (i == RES_UFS) {
+>> -			res_mem = res->resource;
+>> -			res->base = hba->mmio_base;
+>> -			continue;
+>> -		}
+>> +	struct resource *res;
+>>   
+>> -		res->base = devm_ioremap_resource(hba->dev, res->resource);
+>> -		if (IS_ERR(res->base)) {
+>> -			dev_err(hba->dev, "Failed to map res %s, err=%d\n",
+>> -					 res->name, (int)PTR_ERR(res->base));
+>> -			ret = PTR_ERR(res->base);
+>> -			res->base = NULL;
+>> -			return ret;
+>> -		}
+>> +	/* Map the MCQ configuration region */
+>> +	res = platform_get_resource_byname(pdev, IORESOURCE_MEM, "mcq");
+>> +	if (!res) {
+>> +		dev_err(hba->dev, "MCQ resource not found in device tree\n");
+>> +		return -ENODEV;
+>>   	}
+>>   
+>> -	/* MCQ resource provided in DT */
+>> -	res = &hba->res[RES_MCQ];
+>> -	/* Bail if MCQ resource is provided */
+>> -	if (res->base)
+>> -		goto out;
+>> -
+>> -	/* Explicitly allocate MCQ resource from ufs_mem */
+>> -	res_mcq = devm_kzalloc(hba->dev, sizeof(*res_mcq), GFP_KERNEL);
+>> -	if (!res_mcq)
+>> -		return -ENOMEM;
+>> -
+>> -	res_mcq->start = res_mem->start +
+>> -			 MCQ_SQATTR_OFFSET(hba->mcq_capabilities);
+>> -	res_mcq->end = res_mcq->start + hba->nr_hw_queues * MCQ_QCFG_SIZE - 1;
+>> -	res_mcq->flags = res_mem->flags;
+>> -	res_mcq->name = "mcq";
+>> -
+>> -	ret = insert_resource(&iomem_resource, res_mcq);
+>> -	if (ret) {
+>> -		dev_err(hba->dev, "Failed to insert MCQ resource, err=%d\n",
+>> -			ret);
+>> -		return ret;
+>> +	hba->mcq_base = devm_ioremap_resource(hba->dev, res);
+>> +	if (IS_ERR(hba->mcq_base)) {
+>> +		dev_err(hba->dev, "Failed to map MCQ region: %ld\n",
+> 
+> Do you really need to print errnos of size 'long int'?
+
+
+
+On Failure devm_ioremap_resource, returns an error pointer using ERR_PTR 
+which is type long. Hence %ld is used.
+
+
+
+> 
+>> +			PTR_ERR(hba->mcq_base));
+>> +		return PTR_ERR(hba->mcq_base);
+>>   	}
+>>   
+>> -	res->base = devm_ioremap_resource(hba->dev, res_mcq);
+>> -	if (IS_ERR(res->base)) {
+>> -		dev_err(hba->dev, "MCQ registers mapping failed, err=%d\n",
+>> -			(int)PTR_ERR(res->base));
+>> -		ret = PTR_ERR(res->base);
+>> -		goto ioremap_err;
+>> -	}
+>> -
+>> -out:
+>> -	hba->mcq_base = res->base;
+>>   	return 0;
+>> -ioremap_err:
+>> -	res->base = NULL;
+>> -	remove_resource(res_mcq);
+>> -	return ret;
+>>   }
+>>   
+>>   static int ufs_qcom_op_runtime_config(struct ufs_hba *hba)
+>>   {
+>> -	struct ufshcd_res_info *mem_res, *sqdao_res;
+>>   	struct ufshcd_mcq_opr_info_t *opr;
+>>   	int i;
+>> +	u32 doorbell_offsets[OPR_MAX];
+>>   
+>> -	mem_res = &hba->res[RES_UFS];
+>> -	sqdao_res = &hba->res[RES_MCQ_SQD];
+>> -
+>> -	if (!mem_res->base || !sqdao_res->base)
+>> +	if (!hba->mcq_base) {
+>> +		dev_err(hba->dev, "MCQ base not mapped\n");
+>>   		return -EINVAL;
+>> +	}
+> 
+> Is it possible to hit this error?
+
+No as per current code. So i can remove this in next patch set.
+
+> 
+>> +
+>> +	/*
+>> +	 * Configure doorbell address offsets in MCQ configuration registers.
+>> +	 * These values are offsets relative to mmio_base (UFS_HCI_BASE).
+>> +	 *
+>> +	 * Memory Layout:
+>> +	 * - mmio_base = UFS_HCI_BASE
+>> +	 * - mcq_base  = MCQ_CONFIG_BASE = mmio_base + (UFS_QCOM_MCQCAP_QCFGPTR * 0x200)
+>> +	 * - Doorbell registers are at: mmio_base + (UFS_QCOM_MCQCAP_QCFGPTR * 0x200) +
+>> +	 * -				UFS_QCOM_MCQ_SQD_OFFSET
+>> +	 * - Which is also: mcq_base +  UFS_QCOM_MCQ_SQD_OFFSET
+>> +	 */
+>> +
+>> +	doorbell_offsets[OPR_SQD] = UFS_QCOM_SQD_ADDR_OFFSET;
+>> +	doorbell_offsets[OPR_SQIS] = UFS_QCOM_SQIS_ADDR_OFFSET;
+>> +	doorbell_offsets[OPR_CQD] = UFS_QCOM_CQD_ADDR_OFFSET;
+>> +	doorbell_offsets[OPR_CQIS] = UFS_QCOM_CQIS_ADDR_OFFSET;
+>>   
+>> +	/*
+>> +	 * Configure MCQ operation registers.
+>> +	 *
+>> +	 * The doorbell registers are physically located within the MCQ region:
+>> +	 * - doorbell_physical_addr = mmio_base + doorbell_offset
+>> +	 * - doorbell_physical_addr = mcq_base + (doorbell_offset - MCQ_CONFIG_OFFSET)
+>> +	 */
+>>   	for (i = 0; i < OPR_MAX; i++) {
+>>   		opr = &hba->mcq_opr[i];
+>> -		opr->offset = sqdao_res->resource->start -
+>> -			      mem_res->resource->start + 0x40 * i;
+>> -		opr->stride = 0x100;
+>> -		opr->base = sqdao_res->base + 0x40 * i;
+>> +		opr->offset = doorbell_offsets[i];  /* Offset relative to mmio_base */
+>> +		opr->stride = UFS_QCOM_MCQ_STRIDE;  /* 256 bytes between queues */
+>> +
+>> +		/*
+>> +		 * Calculate the actual doorbell base address within MCQ region:
+>> +		 * base = mcq_base + (doorbell_offset - MCQ_CONFIG_OFFSET)
+>> +		 */
+>> +		opr->base = hba->mcq_base + (opr->offset - UFS_QCOM_MCQ_CONFIG_OFFSET);
+>>   	}
+>>   
+>>   	return 0;
+>> @@ -2034,12 +1991,13 @@ static int ufs_qcom_get_hba_mac(struct ufs_hba *hba)
+>>   static int ufs_qcom_get_outstanding_cqs(struct ufs_hba *hba,
+>>   					unsigned long *ocqs)
+>>   {
+>> -	struct ufshcd_res_info *mcq_vs_res = &hba->res[RES_MCQ_VS];
+>> -
+>> -	if (!mcq_vs_res->base)
+>> +	if (!hba->mcq_base) {
+>> +		dev_err(hba->dev, "MCQ base not mapped\n");
+>>   		return -EINVAL;
+>> +	}
+> 
+> Same here.
+
+Sure, I'll address this in next patch set.
+
+
+> 
+>>   
+>> -	*ocqs = readl(mcq_vs_res->base + UFS_MEM_CQIS_VS);
+>> +	/* Read from MCQ vendor-specific register in MCQ region */
+>> +	*ocqs = readl(hba->mcq_base + UFS_MEM_CQIS_VS);
+>>   
+>>   	return 0;
+>>   }
+>> diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+>> index e0e129af7c16..8c2c94390a50 100644
+>> --- a/drivers/ufs/host/ufs-qcom.h
+>> +++ b/drivers/ufs/host/ufs-qcom.h
+>> @@ -33,6 +33,25 @@
+>>   #define DL_VS_CLK_CFG_MASK GENMASK(9, 0)
+>>   #define DME_VS_CORE_CLK_CTRL_DME_HW_CGC_EN             BIT(9)
+>>   
+>> +/* Qualcomm MCQ Configuration */
+>> +#define UFS_QCOM_MCQCAP_QCFGPTR     224  /* 0xE0 in hex */
+>> +#define UFS_QCOM_MCQ_CONFIG_OFFSET  (UFS_QCOM_MCQCAP_QCFGPTR * 0x200)  /* 0x1C000 */
+>> +
+>> +/* Doorbell offsets within MCQ region (relative to MCQ_CONFIG_BASE) */
+>> +#define UFS_QCOM_MCQ_SQD_OFFSET     0x5000
+>> +#define UFS_QCOM_MCQ_CQD_OFFSET     0x5080
+>> +#define UFS_QCOM_MCQ_SQIS_OFFSET    0x5040
+>> +#define UFS_QCOM_MCQ_CQIS_OFFSET    0x50C0
+>> +#define UFS_QCOM_MCQ_STRIDE         0x100
+>> +
+>> +/* Calculated doorbell address offsets (relative to mmio_base) */
+>> +#define UFS_QCOM_SQD_ADDR_OFFSET    (UFS_QCOM_MCQ_CONFIG_OFFSET + UFS_QCOM_MCQ_SQD_OFFSET)
+>> +#define UFS_QCOM_CQD_ADDR_OFFSET    (UFS_QCOM_MCQ_CONFIG_OFFSET + UFS_QCOM_MCQ_CQD_OFFSET)
+>> +#define UFS_QCOM_SQIS_ADDR_OFFSET   (UFS_QCOM_MCQ_CONFIG_OFFSET + UFS_QCOM_MCQ_SQIS_OFFSET)
+>> +#define UFS_QCOM_CQIS_ADDR_OFFSET   (UFS_QCOM_MCQ_CONFIG_OFFSET + UFS_QCOM_MCQ_CQIS_OFFSET)
+>> +
+>> +#define REG_UFS_MCQ_STRIDE          UFS_QCOM_MCQ_STRIDE
+>> +
+>>   /* QCOM UFS host controller vendor specific registers */
+>>   enum {
+>>   	REG_UFS_SYS1CLK_1US                 = 0xC0,
+>> @@ -96,7 +115,8 @@ enum {
+>>   };
+>>   
+>>   enum {
+>> -	UFS_MEM_CQIS_VS		= 0x8,
+>> +	UFS_MEM_VS_BASE         = 0x4000,
+>> +	UFS_MEM_CQIS_VS		= 0x4008,
+> 
+> Why are these offsets 'enum'? Can't they be fixed definitions like other
+> offsets?
+
+Sure, I'll address this in next patch set.
+
+Thanks,
+Nitin
+
+> 
+> - Mani
+
