@@ -1,133 +1,103 @@
 Received: from mailout3.samsung.com (mailout3.samsung.com [203.254.224.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1A7A2D4814
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 04:53:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5B6C019DF4F
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 06:39:26 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756875215; cv=none; b=ZBRHM6h+OzUzWMBxkFAhwcKJrkWtoy6HPqMvjz+jCgH5fcu+cMw464XnB0dRrnYxG98Ko8et+rZ4oAkAlBF02AIbxqKb0PA79nDAwtiTehFGvSCbjTIy1wnJW08Z1JR4FQHlPvsKtdbZ1cWNlmixIMgWm/97QrroM9uMvbKJuVA=
+	t=1756881568; cv=none; b=S4nTklGz4WroVlkbcfALjJYdEbcHgY4fvHI8gYRdEt6P33DjK1LrdaiSjnvcBhzFLEwjkTMB0FvNSIeTJ4dFCafdbKG5l/N/5U8unk7gpX7OPDgROwPZwQyu5IeekMJ6h6qxWaHbaXLie4vUgDeVkUeH+okFuRsq4lzKaUZP+So=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756875215; c=relaxed/simple;
-	bh=R3DhZ6mfg1h+sJtmD78zCTphaI6OPacxMmjj6u3H1Es=;
+	s=arc-20240116; t=1756881568; c=relaxed/simple;
+	bh=Bd/B1elhO6Fp4x1SMGEuPwSPiPNHgZ3GUb1dqFAV3bo=;
 	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=QmE2F1yiam+N+q6NzFY3d4pSNHn+/qtEK/KFA9G0N+F4AegTw9J6izyq+T2dZ6dgaoJsQ4TjaqNlHsxbl0JQ9091mrrUPRDy35yllbWT8LqiSBtsrVRu5M1r4ORtEd22srnAq+NMxlzzwcqTY+Gdzw/o8HNFn9R411cxslnVbpk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=seAx/fyD; arc=none smtp.client-ip=203.254.224.33
+	 Content-Type:References; b=Xx+TW7B6QFBuuq43Z1340V+vkyaWLAqChBd65WEKhdFk9cpTXIlcn/WEpH5QUZ1JD17F71WdS0Jy/557R31aBrz8wfLYMXduwz4XmJtL79MaJIQByrMas4ginOSqCOkNk36Rdo7N1w7bIfYkA70z5p2KON2dEUzD+/sscIcSClg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=mPNY2G1l; arc=none smtp.client-ip=203.254.224.33
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="seAx/fyD"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250903045329epoutp033743b4a2022d2aaffb9222aa45ea36ed~hrLHgtCQV0452004520epoutp03k
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 04:53:29 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250903045329epoutp033743b4a2022d2aaffb9222aa45ea36ed~hrLHgtCQV0452004520epoutp03k
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="mPNY2G1l"
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+	by mailout3.samsung.com (KnoxPortal) with ESMTP id 20250903063924epoutp033c1b3b7e49d6a1588468a5c23ef59bee~hsnlxmau31867218672epoutp03Z
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Sep 2025 06:39:24 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout3.samsung.com 20250903063924epoutp033c1b3b7e49d6a1588468a5c23ef59bee~hsnlxmau31867218672epoutp03Z
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1756875209;
-	bh=21B5w+1lssADMm+k2ZLitCCdTF49rGjLr51Zj+pcqQk=;
+	s=mail20170921; t=1756881564;
+	bh=Bd/B1elhO6Fp4x1SMGEuPwSPiPNHgZ3GUb1dqFAV3bo=;
 	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=seAx/fyDbNrkUWlz3g3+ruYtmPX95TLZkHbTtU6AlDU8zT4ftLtFP1g4kQFeM51St
-	 8t3s4tXz80u0mz6v/8qHzPJe6y8mhni0Tfg3JN69oQWnh9FXxVKR91a129QsmewQ42
-	 etTGIkI9e0vQBMXARDTvQkdy27DMf9wumAZpW4tU=
+	b=mPNY2G1lkGii26iMBZhskoOSiI5dfRIr5VRSzPjRbCtqIXMxrQQaQvZPywGoz9R+O
+	 YJ/VTo225T5/bQ56Xu7Of7xPbVzP6uEjjmaKrEoDQHHLKP+8aduUjPHY+/boRM34kG
+	 k6XSa1b0M/9dR2Now0Kt0btGiEiO/s+c1MtN2ibY=
 Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p4.samsung.com (KnoxPortal) with ESMTPS id
-	20250903045329epcas5p4d0f89b732ea8235d08c55b5a2b041fe0~hrLHJawFo2982929829epcas5p4v;
-	Wed,  3 Sep 2025 04:53:29 +0000 (GMT)
-Received: from epcas5p3.samsung.com (unknown [182.195.38.88]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4cGqxh3glKz6B9mH; Wed,  3 Sep
-	2025 04:53:28 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250903045327epcas5p2a97e15cae1c6a759a59a6756e4891e92~hrLF9ypcc2711927119epcas5p2y;
-	Wed,  3 Sep 2025 04:53:27 +0000 (GMT)
-Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250903045326epsmtip122cca7fe6eb21dabe242b0fd7239af86~hrLEWBRlQ1713217132epsmtip1K;
-	Wed,  3 Sep 2025 04:53:26 +0000 (GMT)
-From: "Alim Akhtar" <alim.akhtar@samsung.com>
-To: "'Ram Kumar Dwivedi'" <quic_rdwivedi@quicinc.com>,
-	<avri.altman@wdc.com>, <bvanassche@acm.org>, <robh@kernel.org>,
-	<krzk+dt@kernel.org>, <conor+dt@kernel.org>, <mani@kernel.org>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
-Cc: <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
-In-Reply-To: <20250902164900.21685-3-quic_rdwivedi@quicinc.com>
-Subject: RE: [PATCH V5 2/4] ufs: ufs-qcom: Remove redundant re-assignment to
- hs_rate
-Date: Wed, 3 Sep 2025 10:23:25 +0530
-Message-ID: <3a9201dc1c8e$affa1c10$0fee5430$@samsung.com>
+	epcas1p1.samsung.com (KnoxPortal) with ESMTPS id
+	20250903063923epcas1p1d1b1e70ed3cb7680f269c949ab4b7215~hsnlG9Nqa1823018230epcas1p1H;
+	Wed,  3 Sep 2025 06:39:23 +0000 (GMT)
+Received: from epcas1p2.samsung.com (unknown [182.195.38.247]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4cGtHv1MFhz6B9mF; Wed,  3 Sep
+	2025 06:39:23 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
+	20250903063922epcas1p35e96f325bc193191cc9ec37d8e4935f3~hsnjp4Ppt2315123151epcas1p3k;
+	Wed,  3 Sep 2025 06:39:22 +0000 (GMT)
+Received: from dh0421hwang02 (unknown [10.253.101.58]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20250903063921epsmtip2e4c97d6aa76f0c28b44ce6e860768d5a~hsnjjlJwV2752127521epsmtip2I;
+	Wed,  3 Sep 2025 06:39:21 +0000 (GMT)
+From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <James.Bottomley@HansenPartnership.com>,
+	<martin.petersen@oracle.com>, <peter.wang@mediatek.com>,
+	<manivannan.sadhasivam@linaro.org>, <quic_mnaresh@quicinc.com>
+Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
+	<junwoo80.lee@samsung.com>, <jangsub.yi@samsung.com>,
+	<sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
+	<sh8267.baek@samsung.com>, <wkon.kim@samsung.com>
+In-Reply-To: <6e854090-a071-416a-b7a5-cc8ee0122a90@acm.org>
+Subject: RE: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs
+ cmd error
+Date: Wed, 3 Sep 2025 15:39:21 +0900
+Message-ID: <2add01dc1c9d$7b5cba30$72162e90$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQDbtq+ZX022GZqTIcIYj1g81c9NHgHu7PnKAbEBfqC2ZK+0sA==
-Content-Language: en-us
-X-CMS-MailID: 20250903045327epcas5p2a97e15cae1c6a759a59a6756e4891e92
+Thread-Index: AQEmYeTjtFjYRI1QNWxgWL0Y7ybfIwITLn2gAaoUPAICiJScSgGs7ud4AZvu8PIB4FCAbgHlrZjytYHPHfA=
+Content-Language: ko
+X-CMS-MailID: 20250903063922epcas1p35e96f325bc193191cc9ec37d8e4935f3
 X-Msg-Generator: CA
 Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
 X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250902164935epcas5p14139d20b5d385b99edfc0da60865dd98
-References: <20250902164900.21685-1-quic_rdwivedi@quicinc.com>
-	<CGME20250902164935epcas5p14139d20b5d385b99edfc0da60865dd98@epcas5p1.samsung.com>
-	<20250902164900.21685-3-quic_rdwivedi@quicinc.com>
+X-CMS-RootMailID: 20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d
+References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+	<CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
+	<20250417023405.6954-2-dh0421.hwang@samsung.com>
+	<239ea120-841f-478d-b6b4-9627aa453795@acm.org>
+	<093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
+	<27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
+	<17db01dc1ba6$41d37350$c57a59f0$@samsung.com>
+	<6e854090-a071-416a-b7a5-cc8ee0122a90@acm.org>
 
+On 9/2/25 9:35 AM, Bart Van Assche wrote:
+> On 9/1/25 6:09 PM, DooHyun Hwang wrote:
+> > The UFS_CMD_ERR stands for =22command completion error.=22
+>=20
+> I've never before seen anyone abbreviating =22completion=22 as =22CMD=22.
+> Please choose a better enumeration label name.
+>=20
+> Bart.
 
+When I reviewed the UFS_CMD_TRACE_STRINGS definition,
+I noticed that =22query_complete_err=22 is referred to as UFS_QUERY_ERR,
+and =22tm_complete_err=22 is referred to as UFS_TM_ERR.
 
-> -----Original Message-----
-> From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-> Sent: Tuesday, September 2, 2025 10:19 PM
-> To: alim.akhtar@samsung.com; avri.altman@wdc.com;
-> bvanassche@acm.org; robh@kernel.org; krzk+dt@kernel.org;
-> conor+dt@kernel.org; mani@kernel.org;
-> James.Bottomley@HansenPartnership.com; martin.petersen@oracle.com
-> Cc: linux-scsi@vger.kernel.org; devicetree@vger.kernel.org; linux-
-> kernel@vger.kernel.org; linux-arm-msm@vger.kernel.org
-> Subject: [PATCH V5 2/4] ufs: ufs-qcom: Remove redundant re-assignment to
-> hs_rate
-> 
-> Remove the redundant else block that assigns PA_HS_MODE_B to hs_rate,
-> as it is already assigned in ufshcd_init_host_params(). This avoids
-> unnecessary reassignment and prevents overwriting hs_rate when it is
-> explicitly set to a different value.
-> 
-> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-> ---
-Better to send non-dependent patches separately.
-
-Feel free to add:
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>  
-
->  drivers/ufs/host/ufs-qcom.c | 8 ++------
->  1 file changed, 2 insertions(+), 6 deletions(-)
-> 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index
-> 9574fdc2bb0f..1a93351fb70e 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -494,12 +494,8 @@ static int ufs_qcom_power_up_sequence(struct
-> ufs_hba *hba)
->  	 * If the HS-G5 PHY gear is used, update host_params->hs_rate to
-> Rate-A,
->  	 * so that the subsequent power mode change shall stick to Rate-A.
->  	 */
-> -	if (host->hw_ver.major == 0x5) {
-> -		if (host->phy_gear == UFS_HS_G5)
-> -			host_params->hs_rate = PA_HS_MODE_A;
-> -		else
-> -			host_params->hs_rate = PA_HS_MODE_B;
-> -	}
-> +	if (host->hw_ver.major == 0x5 && host->phy_gear == UFS_HS_G5)
-> +		host_params->hs_rate = PA_HS_MODE_A;
-> 
->  	mode = host_params->hs_rate == PA_HS_MODE_B ?
-> PHY_MODE_UFS_HS_B : PHY_MODE_UFS_HS_A;
-> 
-> --
-> 2.50.1
-
-
+I followed the naming convention specified in this STRINGS definition,
+but I=E2=80=99m=20not=20entirely=20clear=20on=20what=20changes=20are=20bein=
+g=20requested.=0D=0A=0D=0ACould=20you=20please=20provide=20some=20guidance=
+=20or=20suggestions?=0D=0A=0D=0AThank=20you.=0D=0ADooHyun=20Hwang.=0D=0A=0D=
+=0A
