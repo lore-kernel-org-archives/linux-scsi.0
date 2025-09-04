@@ -1,48 +1,48 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5734215DBC1
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Sep 2025 19:25:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C504225E469
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Sep 2025 19:41:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757013935; cv=none; b=ZV8OoBGyhNb6TVnd7yH/+YzaMD/DWnHeTS6Kl22QMnSgom5hgd8m9oHuaKudiimcTCAXyQqq6uCbJMZmV3f3tBkHI+OK2G8ow5aXs/fa3IfTUmExBrLONO14EfCltfKBPui7Ci8/QKyRxt4+DJAF1gEIssRWwYHcVN8s3mHlRX4=
+	t=1757014908; cv=none; b=QR0pUGnbCIHmllKdFaSD2xVCtWdrFWS2ZTX/k5SFFVWGe+CVrdR16PX45dFXOgWrj50Y63HkR8Mxpyk9crwb9JSDFf5I4iY/1ZdvdMZKLg90Z9n4aqA+WIpUUnBtjHB3Qdi0FsC18zSvQwEX/B/zIXZInaDVUooeq6LX8tc1Umo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757013935; c=relaxed/simple;
-	bh=UFCR1Mcto6jEewKwUt7I3C917kzOzULOWzsP0uOMMp0=;
+	s=arc-20240116; t=1757014908; c=relaxed/simple;
+	bh=QJ9Mt/N6eh5HbTf+5ouoZXczd2teHAUGBmnaRW17Wgo=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V72PhaSQzKsbxhaYh1dbj7csEBTHY4RPGH7YCKpUEnAvleuyGt3p+wpmc2w59HTt2WJLf/8XGEztDiMNAc39/psMXXZlhfN2/JKNNlyvn9SLlJSCqx63mT2FEothMe7laeTk01v9olE80GeQWlrZf0LjEpTwByFK9knGJ1/d3Zg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pzLIdeVT; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=tV7pyRMnOniz2HbQ2GKHdAB4mui5TCyUy1EjcjyrvJssvOdEUwrp+CfU0thlxP4SbCYOxP+lQkMdvh0BA/8ekumz1kcdM6ONB14VNBdYiGhuhaFFhC71VExPCfAI8qN7C8q61zoGJTCcb/a0ppC/JEYtcrqOe44qErDRxC4cs1k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jg3ht1Rr; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pzLIdeVT"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jg3ht1Rr"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cHqFK0s51zm174F;
-	Thu,  4 Sep 2025 19:25:25 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cHqc84HVvzlgqVG;
+	Thu,  4 Sep 2025 19:41:44 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1757013921; x=1759605922; bh=UFCR1Mcto6jEewKwUt7I3C91
-	7kzOzULOWzsP0uOMMp0=; b=pzLIdeVTOQhQOZuF5xv5XxGFkrMcknJXMMyl3ncg
-	LiBjkp+yDSsjRj7YOL9/lnHZxZ+g3e2VsSIPL7Nwm6T62JNHrUBlj1fKoB4spdT+
-	eOsAByXLTwId/KYmdlmlR8czSn8GJZXF0+82MsqTKx/UnyOg/8V47Gw2fkzXbW56
-	UQN81o9D83NqKXoMVfyHFT+WWsdZJSTysRde0OBPo42ktDivQ6gSv6LaWM7GRjH9
-	76nrNeO0wYnrlvvyweM3DqtnXSF5ehScGMkQZYKl127ILtm+RpcdTxPBEGLOJiZQ
-	ysaXMpiW6X3WmPf72XNtnkqf4AYutY2tzopOQbrQPy4f7g==
+	 s=mr01; t=1757014901; x=1759606902; bh=44v9q6WMqWPV2qOL47kE8QvT
+	oioRL7BnPVAOtzLA9P8=; b=jg3ht1RrpxsfGVO+UPsdhjrD4PhynmyY0/O8CDAx
+	lhjYaa6c41uvoBXVrw1dFnQd5b4qS9v6TGaiTzb1vDJ+r9m1WcuL3vPWwxFWaA8q
+	qt3VhFbdy3orQxqQSuSDQqFJmZPHrqWsO4wZ2qtg1qK5/F12TqXUxohAp0PGeSAq
+	CmrhuzTOAnDKjbIrH1ud8KqWeNlgeE2iyUdBcOexHG70dA9a//SlafAQsjEQ0dkU
+	A1d/zpSpeW443KQrHpQnm06w2b4mnXkuAIWuDZ0XbERocPMd8b90sjmQnQwz/9jP
+	Tjtt+AWhQA9BZUOzERtU3q2JjYG4Azvr1/McZ8WIh0UINQ==
 X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ZJwRsxhvjjQL; Thu,  4 Sep 2025 19:25:21 +0000 (UTC)
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 6tO78b-YteyP; Thu,  4 Sep 2025 19:41:41 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cHqFB5Nshzm174T;
-	Thu,  4 Sep 2025 19:25:17 +0000 (UTC)
-Message-ID: <883d6a67-40f8-4a13-a433-d452d0c75571@acm.org>
-Date: Thu, 4 Sep 2025 12:25:16 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cHqc22wW1zlgqVk;
+	Thu,  4 Sep 2025 19:41:37 +0000 (UTC)
+Message-ID: <ccf0f76f-1e9f-487d-9844-b8847565532d@acm.org>
+Date: Thu, 4 Sep 2025 12:41:36 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,73 +50,37 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 04/26] scsi: core: Bypass the queue limit checks for
- reserved commands
+Subject: Re: [PATCH v3 05/26] scsi: core: Add scsi_{get,put}_internal_cmd()
+ helpers
 To: John Garry <john.g.garry@oracle.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 References: <20250827000816.2370150-1-bvanassche@acm.org>
- <20250827000816.2370150-5-bvanassche@acm.org>
- <e555a601-2b87-4139-ace7-0e6158cc93af@oracle.com>
+ <20250827000816.2370150-6-bvanassche@acm.org>
+ <b9ebed12-0e89-495d-8aa2-a615603cec4f@oracle.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <e555a601-2b87-4139-ace7-0e6158cc93af@oracle.com>
+In-Reply-To: <b9ebed12-0e89-495d-8aa2-a615603cec4f@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-On 9/4/25 2:49 AM, John Garry wrote:
+On 9/4/25 2:56 AM, John Garry wrote:
 > On 27/08/2025 01:06, Bart Van Assche wrote:
->> [ bvanassche: modified patch title and patch description.=20
->=20
-> it's an odd name now... I don't know which queue limits we are bypassin=
-g
+>> Add helper functions to allow LLDDs to allocate and free internal 
+>> commands.
+> 
+> did you consider reusing/refactoring scsi_execute_cmd() here? I'm just 
+> wondering if it is possible.
 
-I can change "queue" into "SCSI host" in the patch title.
+That should be possible by adding more members into struct
+scsi_exec_args. However, I'm not sure this will result in a code
+reduction. As one can see in the last patch in this series, the amount
+of code shared between scsi_execute_cmd() and ufshcd_issue_dev_cmd() is
+minimal:
 
->> --- a/drivers/scsi/scsi_lib.c
->> +++ b/drivers/scsi/scsi_lib.c
->> @@ -1539,6 +1539,14 @@ static void scsi_complete(struct request *rq)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct scsi_cmnd *cmd =3D blk_mq_rq_to_=
-pdu(rq);
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enum scsi_disposition disposition;
->> +=C2=A0=C2=A0=C2=A0 if (blk_mq_is_reserved_rq(rq)) {
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /* Only pass-through reque=
-sts are supported in this code=20
->> path. */
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 WARN_ON_ONCE(!blk_rq_is_pa=
-ssthrough(scsi_cmd_to_rq(cmd)));
->=20
-> eh, do we really have passthough reserved command?
-
-All reserved commands that end up in scsi_complete() should be
-pass-through commands (REQ_OP_DRV_IN / REQ_OP_DRV_OUT), isn't it?
-I don't think that we should allow other request types for reserved
-commands.
->> -=C2=A0=C2=A0=C2=A0 if (unlikely(sdev->sdev_state !=3D SDEV_RUNNING)) =
-{
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ret =3D scsi_device_state_=
-check(sdev, req);
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ret !=3D BLK_STS_OK)
->> -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 go=
-to out_put_budget;
->> -=C2=A0=C2=A0=C2=A0 }
->> +=C2=A0=C2=A0=C2=A0 if (!blk_mq_is_reserved_rq(req)) {
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 /*
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * If the device is n=
-ot in running state we will reject some or
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 * all commands.
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 */
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (unlikely(sdev->sdev_st=
-ate !=3D SDEV_RUNNING)) {
->=20
-> I am curious about this. I mentioned previously if we only send reserve=
-d=20
-> commands to the psuedo sdev (in this seris). If so, would the psuedo=20
-> sdev not always be running state?
-
-Has the above code change perhaps been misread? The above change causes
-the sdev->sdev_state check to be skipped for pseudo SCSI devices.
+	rq->timeout = timeout;
+	blk_execute_rq(rq, true);
 
 Thanks,
 
