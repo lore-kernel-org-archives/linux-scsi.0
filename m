@@ -1,48 +1,48 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 32D2F335BA5
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Sep 2025 18:06:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 069E2223328
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Sep 2025 18:18:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757009176; cv=none; b=jVeNiQI1x0BxJqy3dqTT0yLwIP76GQA4m+QdMPB6lXEePVoFKKZL42cbzmxISqUldc2QaKjzC4GV8hArkfIZ0GxkXjqqm6WIbuqQIOwMopGRK+6ff4Lz57ouOqCi+tyC0+lRWIkNd4PexXxmexD42LVJ3JJ8n+IgNxXoUugdhAA=
+	t=1757009887; cv=none; b=gBJhKhN3u1szhroJha+OwfgWR75oWNw1jggQlG9rTdUFZ8J36/PcGb7c3tYNP4w/Au93bJo527HDUBTwW4ZlTRJnuLdKgS1cfqGAiP5wSK+P78oOnmouVRSperi0MeA1wyuyqeHG1L53lxBdr3zRr/ls5fHYOj0gdXB5JvD2vpU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757009176; c=relaxed/simple;
-	bh=uuPIjEaR/kJ4cQ/V6qHiqDtLPlnck4iEGKM3LLytRvg=;
+	s=arc-20240116; t=1757009887; c=relaxed/simple;
+	bh=6hVK3eD1/bP1T8tIySgw5xLfCRyJLAFWVpLDpmHPJfU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=j80NiGYbdEu1pAcGAW4SWEpUp+u1GuXrZ67FY6mLiKnx3NHPYzdkWEo1MeBHYmMq69tYZsryi0x6amhqizvcoUHs/Gq3yntN77ugSXvUsIVtv8EZa0X4qBlK3qNh8GT8Y4CeAmHrwstUtlhCj2Pzapd6gdtMJSmgLbr2rQlOItM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=duO8kbRB; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=T1oDSsJFeP5LYzO4gpaWAbB6o9d45Gxr8HsYA8+4p7c2lusO5RbNMq0DbjTTfVGMoONniAERQUPTGjtoT5ZnwyQ16+J5j+5oCqPJyD1h1Hj2XoPemo8Wzxf047LYJ93zA02oHE1sKklMET3h1ZyGIdaEgtwznrf8gGB2lwasIYU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pseUpq7k; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="duO8kbRB"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pseUpq7k"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cHnTp6VcPzlgqVV;
-	Thu,  4 Sep 2025 18:06:06 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cHnld0PfzzlgqVj;
+	Thu,  4 Sep 2025 18:18:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1757009163; x=1759601164; bh=OC8qCaiETXgjdhM+/T7KUFHL
-	jN3c+WQdu4cCTEjIn0I=; b=duO8kbRBYGZlvUl6TXGdc6cazQUrAxD0QWMSXysw
-	yiqBl4gl29qfyMf3fOjZdyGGVahG+HlOjl1yjaP53a9TKLWNCuJ5J9fBZox8X/1T
-	BVfhZPo19xtDrUOq77+xG7dTB+CBcjWrJw16UYpschlXZsf/pO7sWRT8T+MMyCCs
-	7lqQXos+mGObdMbA7cpPF0sHbtvmOOIKxDDA2MDvjgWo2QURtYHeX492BdYfstQd
-	t8MlHjH6/Vt8wMmXP12PW4W+U6TH2RR0xm5eoNjqeYgEl9y7hm05dWzXotx0qERx
-	EbyqAPLO9idoF+tI0Bl6+cMIs6fTesdcuU1p51C90DdjiQ==
+	 s=mr01; t=1757009881; x=1759601882; bh=UUMamEfhS4ZdxLbgh0v5GToI
+	fTqMm4GAROAXHYyTNyA=; b=pseUpq7k3v4xg1zzKk977iiDum8roh2fwhYt7i6e
+	zBru47+Ah/2c7baHqpz6vhsJGHbUcDh6bV+VLMXDeRsCqgA/g/xhh8BApBgqg/V8
+	SMMeVgJ+0qyp69zkPCsngMqNE8TTSmTmsPjlQUiZl9wjfz+bVpt7LIZHKRTU0PO8
+	ANLafO69gF/KcLrlDmyGSs/etuy4P5FJ8DiJbM4+D7NsBcG8OWU+FAC+jxeZ/pAS
+	OPyOijTtFB7eIAsfzDeXtZ/VoRHUZpIp3IFJjU27jdYG0/dP87xbzfDVza9Chf8Y
+	O4K2GXq2BRoUy0jEwHZQsJCdqk6YvMTAwQuc722jgx1V5A==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id XP4NDU6OPPWY; Thu,  4 Sep 2025 18:06:03 +0000 (UTC)
+ id Emt2T2G4FOD2; Thu,  4 Sep 2025 18:18:01 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cHnTh1CGlzlgn8k;
-	Thu,  4 Sep 2025 18:05:59 +0000 (UTC)
-Message-ID: <ff39215f-3900-426b-a273-60c7ebe83c82@acm.org>
-Date: Thu, 4 Sep 2025 11:05:58 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cHnlT1Wj9zltJQL;
+	Thu,  4 Sep 2025 18:17:56 +0000 (UTC)
+Message-ID: <719e714a-6f15-46b9-b4f1-b697ea00ef66@acm.org>
+Date: Thu, 4 Sep 2025 11:17:55 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,114 +50,66 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 02/26] scsi: core: Support allocating a pseudo SCSI
- device
+Subject: Re: [PATCH v3 03/26] scsi: core: Do not allocate a budget token for
+ reserved commands
 To: John Garry <john.g.garry@oracle.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+ Ming Lei <ming.lei@redhat.com>,
  "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 References: <20250827000816.2370150-1-bvanassche@acm.org>
- <20250827000816.2370150-3-bvanassche@acm.org>
- <5070296c-5fd2-4698-88f2-0870caab051f@oracle.com>
+ <20250827000816.2370150-4-bvanassche@acm.org>
+ <7341ada1-05c4-4a70-94e3-cd208d47231d@oracle.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <5070296c-5fd2-4698-88f2-0870caab051f@oracle.com>
+In-Reply-To: <7341ada1-05c4-4a70-94e3-cd208d47231d@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-On 9/4/25 2:29 AM, John Garry wrote:
+On 9/4/25 2:41 AM, John Garry wrote:
 > On 27/08/2025 01:06, Bart Van Assche wrote:
->> --- a/drivers/scsi/scsi_scan.c
->> +++ b/drivers/scsi/scsi_scan.c
->> @@ -365,7 +365,7 @@ static struct scsi_device *scsi_alloc_sdev(struct=20
->> scsi_target *starget,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 scsi_sysfs_device_initialize(sdev);
+>> +=C2=A0=C2=A0=C2=A0 if (scsi_device_is_pseudo_dev(sdev))
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return INT_MAX;
 >=20
-> is the pseudo sdev visible in sysfs?
+> It's not ideal to have this extra check in the fast path always.
 
-Pseudo SCSI devices are not visible in sysfs.=20
-scsi_sysfs_device_initialize() does not make a SCSI device visible in=20
-sysfs - it initializes multiple data structures and also includes some
-code that is important but not related to sysfs visibility. As an
-example, the dev_set_name() calls in that function initialize names that
-are used by SCSI tracing code.
+Can you provide more detail about your concern? This is a simple integer
+check and hence the time this check takes is negligible compared to the
+atomic instructions required to update the budget map. BTW, if no budget
+map is allocated for pseudo SCSI devices, the above check can be changed
+into this:
 
->> @@ -1077,7 +1077,7 @@ static int scsi_add_lun(struct scsi_device=20
->> *sdev, unsigned char *inq_result,
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 else if (*bflags & BLIST_MAX_1024)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 lim.max_hw_sect=
-ors =3D 1024;
->> -=C2=A0=C2=A0=C2=A0 if (hostt->sdev_configure)
->> +=C2=A0=C2=A0=C2=A0 if (!scsi_device_is_pseudo_dev(sdev) && hostt->sde=
-v_configure)
->=20
-> we also have an sdev_configure check later for calling=20
-> scsi_realloc_sdev_budget_map() (not shown) - should we have that call=20
-> (to scsi_realloc_sdev_budget_map())?
+	if (!sdev->budget_map)
+		return INT_MAX;
 
-No, since the budget map is not used for pseudo SCSI devices. I will
-make sure that scsi_realloc_sdev_budget_map() is not called for pseudo
-SCSI devices.
+The performance impact of this test should be even smaller than the
+above test since the budget_map pointer is already used by
+scsi_dev_queue_ready().
 
->=20
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 ret =3D hostt->=
-sdev_configure(sdev, &lim);
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (ret) {
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 queue_limits_ca=
-ncel_update(sdev->request_queue);
->=20
-> should we really be updating the queue limits (not shown) for the pseud=
-o=20
+> My original problem in this area was that we were trying to send=20
+> reserved commands for real sdevs and those sdevs may have run out of=20
+> budget. So I was suggesting to not get budget for reserved commands. Bu=
+t=20
+> would it really be possible to run our of budget for the shost psuedo=20
 > sdev?
 
-As far as I can tell the queue limit update calls in scsi_scan.c are
-only relevant if BLIST_MAX_512 and/or BLIST_MAX_1024 have been set.=20
-These flags are not set for pseudo SCSI devices and hence updating the
-queue limits for pseudo SCSI devices is not necessary.
+Yes. The UFS error handler may be invoked if the SCSI budget has been=20
+exhausted and may have to allocate a reserved command to recover from
+the encountered error. The UFS error handler may e.g. submit a START
+STOP UNIT command if the UFS device is in the suspended state to bring
+it back to a fully powered state. See also the ufshcd_rpm_get_sync(hba)
+call in ufshcd_err_handling_prepare().
 
-> don't we already have a pointer to pseudo_sdev in shost->pseudo_sdev?
->=20
->> +=C2=A0=C2=A0=C2=A0 if (pseudo_sdev)
->> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 __scsi_remove_device(pseud=
-o_sdev);
+> BTW, you are only sending reserved commands to shost pseudo sdev in thi=
+s=20
+> series, right? I mean, I think that you don't send them to real sdevs.
 
-Indeed. Let's use that pointer here.
+In this patch series all reserved commands are allocated from the pseudo
+SCSI device. From a later patch:
 
-> can we do better than jumping backwards? Maybe
->=20
->=20
->  =C2=A0=C2=A0=C2=A0=C2=A0sdev =3D scsi_alloc_sdev(starget, U64_MAX, NUL=
-L);
->  =C2=A0=C2=A0=C2=A0=C2=A0if (!sdev) {
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 scsi_target_reap(starget);
->  =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 goto put_target;
->=20
->  =C2=A0=C2=A0=C2=A0=C2=A0}
-
-I will include this change.
-
->> +}
->> diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
->> index 169af7d47ce7..f1d509f74f17 100644
->> --- a/drivers/scsi/scsi_sysfs.c
->> +++ b/drivers/scsi/scsi_sysfs.c
->> @@ -1406,6 +1406,8 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev=
-)
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 int error;
->> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct scsi_target *starget =3D sdev->s=
-dev_target;
->> +=C2=A0=C2=A0=C2=A0 WARN_ON_ONCE(scsi_device_is_pseudo_dev(sdev));
->=20
-> should we also error out?
-
-That sounds good to me.
-
-> Can we seem to be able to call this from scsi_add_lun() - is that prope=
-r?
-
-It's a bug that should be fixed. I didn't hit that code path because I=20
-only tested asynchronous scanning. I will include a fix when I repost=20
-this patch.
+	return scsi_get_internal_cmd_hctx(
+		hba->host->pseudo_sdev, DMA_TO_DEVICE,
+		BLK_MQ_REQ_RESERVED | BLK_MQ_REQ_NOWAIT, 0);
 
 Thanks,
 
