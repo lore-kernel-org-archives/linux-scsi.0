@@ -1,102 +1,173 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazon11012040.outbound.protection.outlook.com [40.107.75.40])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB2542F3626;
-	Thu,  4 Sep 2025 12:39:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1756989592; cv=none; b=uNCSx+A1QPWkQpjD8dvRTm1+iMW5KSt3CgkqSnNvgwl+PMl3bbsH9eF3buUBhuklfEPXOARV+oBzlZb+oECMKdFKdsD5UrH9KuEX4PoZrrprPgak0PUMxRSSGJzWiRCWQN51TRIMGpEcEdFMDq+dwAE5h9fORsdZ2+whO2AAIow=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1756989592; c=relaxed/simple;
-	bh=WImbDcvNgaOY6gWJtivhJYt6Urfmm/XDBLbKaosswu8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=UMtmo5foHEcZZW3e0eWixr9Rgcq9Z/gidNB4JP0PXCEDFSBLL794Y/yueZ/ZJ8q8vyexPtAyO4Jy3KS8PQqbhy6uBb+h0ibZWJ0Dzk+otrPsg4nS/a6qD//GD2P2fBBI2kDUBKPyqsINhVaoR4g0Fl2ScjIyKRrwyg45FlIx+0A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=paQZS3HY; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 533CC2FF178;
+	Thu,  4 Sep 2025 13:24:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.75.40
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1756992251; cv=fail; b=p0dgqAwm/xx+G3NbI7sYD7X0v4iuc1AgAH8TZiYAZNferQc/9le5urYEi2Fze9nrdZZLBDse7XlcDv3EBYYAcK2k7wwJ8fNk7t/ENI6KcIGL24dGk2wzdvLaXst+xEp5B2SbpL1n4TN4MFeZiDUk4BhzcuX0f8IPuSGnU1CErQI=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1756992251; c=relaxed/simple;
+	bh=dWPxEkDjcnCZg50BFit7Jf/uZsgIl5XkEH1FbHa9uY8=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=icsjB54b9QKrfRSQ1FjpuKUVAC60yCdIOZjfa2s8qazJZDarJ+vPb86bOopolXYGIYddEUz3BfDx3ECv/fNPZUcJhOIEwKYwzEl+dJw8vCNaSiEwYN6/iD/4MHpqqI3mxKdo0qquhgkh0UB1zYN0SAeJnjwBnuJ1GeRWJ2qoBbE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=dGL+LvlD; arc=fail smtp.client-ip=40.107.75.40
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="paQZS3HY"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1756989588;
-	bh=WImbDcvNgaOY6gWJtivhJYt6Urfmm/XDBLbKaosswu8=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=paQZS3HYWipc9lv3ukH6ZpiW+DKGOrvzRXOEDKl1liuLQgLV/h+6bBO1Ajk5S2tKn
-	 D9/vzLV3i0/GfwjoD5bWRZT9PHd2toCfOgZInMtxdxRxg/qNq0SDpn9P+Z3mtwn7Wy
-	 1bDja2EooAq0mk0/OIC1rulWRV8gGmnqqcNiu+O0=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 57A121C0012;
-	Thu, 04 Sep 2025 08:39:48 -0400 (EDT)
-Message-ID: <b79c69e27b4ccd9556c89a88bf6c69ed441193ea.camel@HansenPartnership.com>
-Subject: Re: [PATCH][next] scsi: pm80xx: Avoid
- -Wflex-array-member-not-at-end warning
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: John Garry <john.g.garry@oracle.com>, "Gustavo A. R. Silva"
- <gustavoars@kernel.org>, Jack Wang <jinpu.wang@cloud.ionos.com>, "Martin K.
- Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-hardening@vger.kernel.org
-Date: Thu, 04 Sep 2025 08:39:47 -0400
-In-Reply-To: <7b60681e-a964-494a-a6fa-aba00086b7f7@oracle.com>
-References: <aLiMoNzLs1_bu4eJ@kspp>
-	 <7b60681e-a964-494a-a6fa-aba00086b7f7@oracle.com>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="dGL+LvlD"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=iVUGC3seAe05dn67+7YELPksKOC4YLp8xD7GmqRJnHrNlcPKlYzwRQY9ZmopOGT2hFg93U3wca2DtYCWbhVH9zfNQIfdaOgvbAA9BBdKWGVeshslZac+mTx9HmXahSpk9Yro7ma9B5SkzLsS8ZWZ/5pncfMu2SQMginzTLRB0CAqkSWQVIxLrx845pQ+e2fWqCptcSP60EyTJCoFxMq2rTuJoBMISq/z9jmNTNQaobgJJtQ8SJQ4dskyBwtkMbOcXIG2llaxSXfd0eR9pxp2sWRf3+nBh1UmWpgZUCEkEv2Y5jgzOCA4ZNnFKYpHwsEfFZ6dhY7d95P9hn//hqpOGg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=4tJwXR3HdyuM6hhyJlD4ssxmL33SeixlaN2w4XuRCHg=;
+ b=eBPtfsmvjFvk3iFw7T0obbj+kt+Mws0nXnWsdicz/jXYeoy5ogb9/LJMF8OASKUr0+/CaJr8LQbqji91LGb+u5jFL+kbS+zE/uDPfg+uOkcQfaywwuHicF4/nAitW6gT1I7Sk/EQcnuyJZ1VSULQy03yLsauFY21umccTLV7gb0SZuE9PbAtC3Oogr4sIoXOesb+T8xDwAyj2J0DylwA23fsi7jRabwB9FNM4OMefOpJjTHwgUc1QMr5FROFR6P7iZp+7qUyor32zSLKZShJfjLzQN03IXgc/vcxttsFCu+GVYr+S5sv6ZUpSCTvgAuox7elvA8y2Nl/vLoPhBRvrw==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=4tJwXR3HdyuM6hhyJlD4ssxmL33SeixlaN2w4XuRCHg=;
+ b=dGL+LvlDax3oFJjnCd/D9lMKHxUhaTj68L+FTXLLxHeYw28vHjl8r7yGMc0wLcxGnrGA+Kh6RuHlg1V8Ms5aFcMT4AkihPdFOHK0SI2qoowiAijpHZS7cnZxwYHcUKVtRM2nkYJrmZsN6T3HAQJQQTFqRKNFKg3dAVKgjp2fknmYJB9zqz2aM5ezfM6k9EGH1ytjRy8FhVi65vvMQjpTmTbGA3NBVZc1JrhIr++a6EcDVh2jZDouCGJXkXWHOuCJDtBIIPzp8BmsWn0koHMH8/DdWdXEdKWPVzpIy1iDqq6/5z1WYdi3Ss/4Xuij9UpBO+TGUMuACXF6vNdMGNYokw==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from SI2PR06MB5140.apcprd06.prod.outlook.com (2603:1096:4:1af::9) by
+ SE2PPFD1755A465.apcprd06.prod.outlook.com (2603:1096:108:1::7ec) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9052.13; Thu, 4 Sep
+ 2025 13:24:03 +0000
+Received: from SI2PR06MB5140.apcprd06.prod.outlook.com
+ ([fe80::468a:88be:bec:666]) by SI2PR06MB5140.apcprd06.prod.outlook.com
+ ([fe80::468a:88be:bec:666%5]) with mapi id 15.20.9094.017; Thu, 4 Sep 2025
+ 13:24:03 +0000
+From: Qianfeng Rong <rongqianfeng@vivo.com>
+To: James Smart <james.smart@broadcom.com>,
+	Dick Kennedy <dick.kennedy@broadcom.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Qianfeng Rong <rongqianfeng@vivo.com>
+Subject: [PATCH] scsi: lpfc: Use int type to store negative error codes
+Date: Thu,  4 Sep 2025 21:23:51 +0800
+Message-Id: <20250904132351.483297-1-rongqianfeng@vivo.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SI1PR02CA0023.apcprd02.prod.outlook.com
+ (2603:1096:4:1f4::19) To SI2PR06MB5140.apcprd06.prod.outlook.com
+ (2603:1096:4:1af::9)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SI2PR06MB5140:EE_|SE2PPFD1755A465:EE_
+X-MS-Office365-Filtering-Correlation-Id: a7d4a732-da10-49be-3f41-08ddebb65116
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|376014|52116014|38350700014;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?1701FlJz2vPBEfSYZsxqU762myVmK88hxr/I3jKFU7PC3JE0tXcmWnNWzzrL?=
+ =?us-ascii?Q?rT5ccgamCkNiuLnuxaPUCiygepb4qelBrePiFlHzArsC+CeiAopHN6pBiPeT?=
+ =?us-ascii?Q?PI0VBRf+UgMwHXBjaMEc20iVkBJdD+OdwDCnaRCB9bWP4z9x3WP6Px2x72ww?=
+ =?us-ascii?Q?eMRrjhlS+LG4Lj7953islAaqqx64NXD/XteuWN0r8QOyNLfTJg6TNB9SO/bn?=
+ =?us-ascii?Q?jO5cI4f40Cuh/Hj6t6vP5gak3tccsEnM+vuqj3HCkSs5xiBIEeeD9X6IFZFW?=
+ =?us-ascii?Q?tbbMV2wL03a7dHChhxhzkLavcvTI3+JmoRmpyBcXmpMWYeAi0bPrhgmyc/Oh?=
+ =?us-ascii?Q?g+dJoKGegZgw7AnWlBO4NkIr/YM9qyWYy2/i4kRC5bMLV+9pKBWFfGVxNdfu?=
+ =?us-ascii?Q?HhrBhuXUYHNkNv4CHn3IhxIr7jJdwQmIw4nLhQoyuCXN27Vu49N/JEyvjooR?=
+ =?us-ascii?Q?giu0EQJaea1J7kbb5/5ohyp7BNK29am1OTjGuaoLic7v/kg2ShSJ4etvqp7N?=
+ =?us-ascii?Q?s2NjM1L6znnwUOPxQoSQRYWc2sw7IWgj56h5UK0oZASGY/xyocBNz1oxnMTI?=
+ =?us-ascii?Q?vgl2Afc5aA7MJB/kODBaKymyUcOnUnDbHtQ9NaYT4D46hrJVeZiRSVXkHmWC?=
+ =?us-ascii?Q?tKExdowC/cJkSRvoYAIc9W6lyeP16+64pc5WcCQCEISLHXMTxuse8FzG1b3A?=
+ =?us-ascii?Q?2GozZ1G/khem0+WVUbZbSMTwHqaGmQ0FT69G8ZYZRXreZ49DxqxrrSvNLrw9?=
+ =?us-ascii?Q?9GXP+BSC1VOv5DGuMNT8yNz9/J1Rsy4+xgIJbINZKuka+oB7ueOfI8oQ2PT3?=
+ =?us-ascii?Q?uGtvP34U3vJPo0SSmdTATDFJJrFXLuIfwVq5r8BVIHPcWDysz+HNjLr4PmBG?=
+ =?us-ascii?Q?p9Xxw4yZUr7onBnldOUxZHAK0PBXOqayV+7x9UrsDOQgJhy3270yuZnJE+OT?=
+ =?us-ascii?Q?GrMMTIlEFD4kJCfRhpdNtWeuP/tElNYQrtFNKYZJAi3/vFsbASHf7+llEEVH?=
+ =?us-ascii?Q?U0wHP3CK8PTzLq2TE/eBn76UvrUTinaM2XN8M9rScNUtfhb5LK4sYjD7OysU?=
+ =?us-ascii?Q?52n+l6Lm9tU9l6AqUKxXc+yr36WohayAyzUyWg13OP1l2MtbRcuvVdhtWFhP?=
+ =?us-ascii?Q?z+UwL/cZ7U9sZGkNDFqukMn3LNeX0roa6WJnQO/wSZtnRoqdWhRBewrnFgjn?=
+ =?us-ascii?Q?+NgF1CuJqKVDZ4QKM/5cYHA/7wAZe136Zg1UlsQMY7X0h0N/gTi7CjA7cm8u?=
+ =?us-ascii?Q?MGnu3E79jTrf3+9aIyNeImlH79uakyKlDS5fJvgvs7DCpp+jCHOUih31LJbj?=
+ =?us-ascii?Q?0ygx2GdCBDdVow6iXZr0rdCnMz+CfK/QCVHgouJVFZzcFdokjzrXUIW/noUo?=
+ =?us-ascii?Q?4XuSrwDM4vUUbQWkfSLT3fCq4MCx/dBM6XB7jUGIqgim/NaQd2x5vEFRHb3p?=
+ =?us-ascii?Q?HM0FKvx7nOQ4q2PbGAtGNYjqhGplMHUGQACwyN/gnkzjCg5SUK6YMg=3D=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SI2PR06MB5140.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(52116014)(38350700014);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?vFRsp7TIZBWR76ZPQhWDUo54ThZj8EsdfLT4YO0xZy8zetAnw640R0GvBk0R?=
+ =?us-ascii?Q?b2BA2UDE5IQ3YP0cE/MopIdp0N6gWDy7sk8Y0lx4ZTwMalhGmW+RlADxWdbm?=
+ =?us-ascii?Q?TjUUJ41nQf5Qw8B2nXThfsNmUYKzu+MBpDKCKuvbcQZCihf2RAXgXQoKOEc6?=
+ =?us-ascii?Q?kSFXerNVi1OkSrHDk6E/xNgQ/e9THda3bMBo+1Th8AGbmazkk+QIMFIi/bbl?=
+ =?us-ascii?Q?9xHwC2/lyGPBoW0Ed70Fd9+GHDZO92VMmRp7NltMqHXcVc+Sf4V6DaSNY6r8?=
+ =?us-ascii?Q?zYPLmJk7baKrE3Z4pdvQsgZ5ujU0EttsGjl879LF76aEbNxcbC11N46FDQAB?=
+ =?us-ascii?Q?wHY4pWlcFtjARd2wp29s56oI4CZIRLlj3pS19UHUm27RN8Xnb6WJVMNLbzKk?=
+ =?us-ascii?Q?8wVoKWaAqQMJ7RPJHXwCX/Q5gc+4CveDyVWcH/gHn8QIZu2ptT2SQAfgDS5j?=
+ =?us-ascii?Q?ShsFmObQXNZy3uozpHZkX784Za7b+15q8EzJ9GUU+x0nnC310PBzmxAMEbhG?=
+ =?us-ascii?Q?w2VVBjOjQdzfQ/uiIot36vvfgtccR+DRXLLF1EGItPaUSgJcRXRX8rC0vRwy?=
+ =?us-ascii?Q?TxC0a651bVbfUuirPry5gy/amP+a2amsBPHaMNVgHw7SsKIJ1h9cmBy5EI9l?=
+ =?us-ascii?Q?E3H1iaAxN23anrphsk2+XA2amNfH2SEf39BDkQA0A6x4mBkAWfLJhZNa0ZWG?=
+ =?us-ascii?Q?sJEtpwaG7blUBKv98l+ohnY2USRWJgkXJs35leS9bYnSD2Fl1kih7OrmGYeZ?=
+ =?us-ascii?Q?VhfCzmbiQfXkzD9DkJrYo3WWKESYq1pvz6C9EmtzSMFBPCE2fWleELkVpTov?=
+ =?us-ascii?Q?rwuOQVTWAYY8WDXZck4bVqQxyOuJxiOug9/e2OJyzfPkFr0vD6cEfaIrcA4n?=
+ =?us-ascii?Q?nQ9bcpNhGQZ+9NawcLjyF78sUI0WqhCejrY9aH6GFAbPHI6reNCKVBW4AsHU?=
+ =?us-ascii?Q?4h3Duwp0/jSgrg43juJAlNKKj0Ll5YH0GKBOickKbJLo1T4QaJEqjBQI7Zs5?=
+ =?us-ascii?Q?Tez4deD9SMxSWTTTw48QYvlDk9kHDEmtHotpzyL9frCnC+aLa0/p0dzCLWw8?=
+ =?us-ascii?Q?HkP/I3tJo1eNJFUeI2eyOzZQb8dLKVhLWDRBiuos7R9Jf7v/VlebtjYmeTZq?=
+ =?us-ascii?Q?lfQeJf6kU08V5N7V/Rsyk5ngW5xDl+1uAamhzw8cvXIbPvvzY3lqXD6tx2mI?=
+ =?us-ascii?Q?V+Qf+2U8hTPZQgxyrKctAnlHaaVDDt64a78/crBQT1PECMDwWVFidZVyawxO?=
+ =?us-ascii?Q?2pXInImkpbcVpA91ZeirZaZxn5H6XIsOT8rXoEbnqYsOrl+pqPgE2i782xYe?=
+ =?us-ascii?Q?YU/oBmsu2SpXeYko2dX///P9k8ka33gYWXkvHvjg+E4jYsqUek+IroDl34oa?=
+ =?us-ascii?Q?XSzNeebiTVsFdCEILaMJc2mTgwSJQQpJ9iBkJv4iAYqraAAnMZoeeyqUk+3M?=
+ =?us-ascii?Q?r2iAQ50LY/iu4qf/1uSke7z06NBAnhJUL1F7XQ0Q5s6BA1La1eaqiV3St7NK?=
+ =?us-ascii?Q?3oiwfhEI8rCzi0wLjgZEIv3qFO7DlpPOGlholXgz6rFAzLarm9D+XhLtan54?=
+ =?us-ascii?Q?V6epn9gJMRGWNKBE+Iz5wRNmR1U5Mc2FTSB17bqD?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: a7d4a732-da10-49be-3f41-08ddebb65116
+X-MS-Exchange-CrossTenant-AuthSource: SI2PR06MB5140.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 04 Sep 2025 13:24:03.5457
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: 200QMGMM0rhJRuOhXiSCSgI5goSuJrR4uG4/Wotay8tkSITE4Aj2A7mdb3lu8ND/yxMeI6s6Mllu8AaXHw3+Yg==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SE2PPFD1755A465
 
-On Thu, 2025-09-04 at 07:52 +0100, John Garry wrote:
-> On 03/09/2025 19:44, Gustavo A. R. Silva wrote:
-> > diff --git a/drivers/scsi/pm8001/pm8001_hwi.h
-> > b/drivers/scsi/pm8001/pm8001_hwi.h
-> > index fc2127dcb58d..7dc7870a8f86 100644
-> > --- a/drivers/scsi/pm8001/pm8001_hwi.h
-> > +++ b/drivers/scsi/pm8001/pm8001_hwi.h
-> > @@ -339,8 +339,10 @@ struct ssp_completion_resp {
-> > =C2=A0=C2=A0	__le32	status;
-> > =C2=A0=C2=A0	__le32	param;
-> > =C2=A0=C2=A0	__le32	ssptag_rescv_rescpad;
-> > -	struct ssp_response_iu=C2=A0 ssp_resp_iu;
-> > =C2=A0=C2=A0	__le32	residual_count;
-> > +
-> > +	/* Must be last --ends in a flexible-array member. */
-> > +	struct ssp_response_iu=C2=A0 ssp_resp_iu;
->=20
-> this is a HW structure, right? I did not think that it is ok to
-> simply re-order them...
+Change the 'ret' variable in lpfc_sli4_issue_wqe() from uint32_t to int,
+as it needs to store either negative error codes or zero returned by
+lpfc_sli4_wq_put().
 
-Agreed, this is a standards defined information unit corresponding to
-an on the wire data structure.  The patch is clearly wrong.
+Storing the negative error codes in unsigned type, doesn't cause an issue
+at runtime but can be confusing.  Additionally, assigning negative error
+codes to unsigned type may trigger a GCC warning when the -Wsign-conversion
+flag is enabled.
 
-That being said, the three things the flexible member can contain are
-no data, response data or sense data.  None of them has a residual
-count at the beginning and, indeed, this field is never referred to in
-the driver, so it looks like it can simply be deleted to fix the
-warning.
+No effect on runtime.
 
-That being said, this pattern of adding fields after flexible members
-to represent data that's common to all content types of the union is
-not unknown in SCSI so if you want to enable this warning, what are we
-supposed to do when we encounter a genuine use case?
+Signed-off-by: Qianfeng Rong <rongqianfeng@vivo.com>
+---
+ drivers/scsi/lpfc/lpfc_sli.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Regards,
-
-James
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index a8fbdf7119d8..8a2434a96919 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -21373,7 +21373,7 @@ lpfc_sli4_issue_wqe(struct lpfc_hba *phba, struct lpfc_sli4_hdw_queue *qp,
+ 	struct lpfc_sglq *sglq;
+ 	struct lpfc_sli_ring *pring;
+ 	unsigned long iflags;
+-	uint32_t ret = 0;
++	int ret = 0;
+ 
+ 	/* NVME_LS and NVME_LS ABTS requests. */
+ 	if (pwqe->cmd_flag & LPFC_IO_NVME_LS) {
+-- 
+2.34.1
 
