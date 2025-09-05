@@ -1,129 +1,184 @@
-Received: from smtp.smtpout.orange.fr (smtp-24.smtpout.orange.fr [80.12.242.24])
-	(using TLSv1.2 with cipher AES128-GCM-SHA256 (128/128 bits))
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B7147271476;
-	Fri,  5 Sep 2025 16:56:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=80.12.242.24
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F16E429BD9C;
+	Fri,  5 Sep 2025 20:03:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757091392; cv=none; b=HuU5khpp0Y62tttsTysED0UyEBReE5EjGuL/k06OoC0f6S+7A5m3OnG+ar4br5EDhb6K1dud0ICVvoswqz0kRKc4LZ3rVlyS2RbPESuWB7cXE+tX8nf5/qI91Ppf4wkTIGlvD1COHOEKU/ubUtdGi473FNXeCrSIwueTTuRrnz4=
+	t=1757102592; cv=none; b=Wn36ji6S2YcR5w63jJURZyRe5zkIazBnpKSS4nTDtsoG8GBHwErwku5jLSYea/0WAa3RQm3attVirJhZyNex3WT0ldGn128T/CGhxWpwmZh+EozWBd5KbxZ0iaovSRsBJ+kgQ5EDfcACV+LqYhZ6C1qUg8cjSN6UCf9srA52fqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757091392; c=relaxed/simple;
-	bh=TuRbWA+paLP80gqnHWXiSfdala+EjdV4QRw8DUB/WZA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=pWfE/svXet3IBBGtzDjqFSnEAzglw8pceIiuPNlH1BQMS9+MOrcyUrRpvp3+AieFw+i0MJ7VO5c44D3FD3rynurJzhr5pwnMWf0QtHw8jazyEAF5xNZhEJSMA2N7AnuQpSJmDSeiCg3E9zgIrHE5f7cgk9icJxw9HZ8B/J0Z3TI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr; spf=pass smtp.mailfrom=wanadoo.fr; dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b=gBi2zOEu; arc=none smtp.client-ip=80.12.242.24
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=wanadoo.fr
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=wanadoo.fr
+	s=arc-20240116; t=1757102592; c=relaxed/simple;
+	bh=/BLTqeSIpB5s6ouWRR3xCLXSMkfoJgSu6pgsd5pyguQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=GPr+hk60/1WIrZTZNVxTtVg60PCfqC13beZQ4E9X9r46GaVGIZX+mp3+OEsDPTFqwYX0QhZKYR3BYuMICuBQqVd2fziyCOJyu27JODJaiBTRATK7ypZuPGIPfcC66wZyiqjdRYKvpLhSJQ4jcUglatZ+rKYXJ5GHsojFOq35TsU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=GyUYPJaA; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=wanadoo.fr header.i=@wanadoo.fr header.b="gBi2zOEu"
-Received: from [IPV6:2a01:cb10:785:b00:8347:f260:7456:7662]
- ([IPv6:2a01:cb10:785:b00:8347:f260:7456:7662])
-	by smtp.orange.fr with ESMTPA
-	id uZb1ug1sx63svuZb1uhvjB; Fri, 05 Sep 2025 18:47:32 +0200
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=wanadoo.fr;
-	s=t20230301; t=1757090852;
-	bh=4Xobza1waQZY33Kz6ZkMF8GxQ6TDexbRjSgDFCeZnPM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:From;
-	b=gBi2zOEu92MrFceinj3plnCpwcktoY05krToBRPT2t7o2kb/XRJz7aLZKq70Vf+gs
-	 GyGjV2v1Oowk7svTtX4sCA1Zan4A5twaWTBXi9uOJWAM3R04chjrsofdc80ZIX6wjJ
-	 UOilxLf7bmnDdvX/DVn4GenkGdAOKjcooF+Ra+MequZKxbMZVLrwJ+Le4atDEiN7tv
-	 NT17gtRB5WVaVk4j1XhgqIY3XiSKs8P/OV/4LiZ6OflZ3ljFMUbM6RxPG2e4Zm776c
-	 9iMS3yRNiXFRiF9UPagE87gIy3ndXd9vpGJP+1sGKxwLGyhawPXqcegOmf351L7s0G
-	 5EgQTQcfBK04A==
-X-ME-Helo: [IPV6:2a01:cb10:785:b00:8347:f260:7456:7662]
-X-ME-Auth: bWFyaW9uLmphaWxsZXRAd2FuYWRvby5mcg==
-X-ME-Date: Fri, 05 Sep 2025 18:47:32 +0200
-X-ME-IP: 2a01:cb10:785:b00:8347:f260:7456:7662
-Message-ID: <5e63e836-5611-4198-9d83-d289f727bcce@wanadoo.fr>
-Date: Fri, 5 Sep 2025 18:47:28 +0200
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="GyUYPJaA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1757102587;
+	bh=/BLTqeSIpB5s6ouWRR3xCLXSMkfoJgSu6pgsd5pyguQ=;
+	h=Message-ID:Subject:From:To:Date:From;
+	b=GyUYPJaAkYWsj/4KRIMp8hMQ5LZmb6zGBvs9ofvM2y+MYIj8y7mKGOsG53tZmhzWt
+	 TpatnfQSXIw03hS79Tj5j1tMk/+02/3vtEpkUHqqpaFAcHov0hf5v6p1vvqDAvQH6w
+	 nDlXrdqaKzrE3vYUJVp/snzRYzb27vjv+SxcZzOw=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 221591C02EF;
+	Fri, 05 Sep 2025 16:03:07 -0400 (EDT)
+Message-ID: <8bc12ae71082b754ffb51490b26e310077d0162d.camel@HansenPartnership.com>
+Subject: [GIT PULL] SCSI fixes for 6.17-rc4
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Fri, 05 Sep 2025 16:03:06 -0400
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNElecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHURfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvdHRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmBLmY0FCRs1hL0ACgkQgUrkfCFIVNaEiQgAg18F4G7PGWQ68xqnIrccke7Reh5thjUz6kQIii6Dh64BDW6/UvXn20UxK2uSs/0TBLO81k1mV4c6rNE+H8b7IEjieGR9frBsp/+Q01JpToJfzzMUY7ZTDV1IXQZ+AY9L7vRzyimnJHx0Ba4JTlAyHB+Ly5i4Ab2+uZcnNfBXquWrG3oPWz+qPK88LJLya5Jxse1m1QT6R/isDuPivBzntLOooxPk+Cwf5sFAAJND+idTAzWzslexr9j7rtQ1UW6FjO4CvK9yVNz7dgG6FvEZl6J/HOr1rivtGgpCZTBzKNF8jg034n49zGfKkkzWLuXbPUOp3/oGfsKv8pnEu1c2GbQpSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT6JAVYEEwEIAEACGwMHCwkIBwMCAQYVC
+	AIJCgsEFgIDAQIeAQIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mXBQkbNYS9AAoJEIFK5HwhSFTWEYEH/1YZpV+1uCI2MVz0wTRlnO/3OW/xnyigrw+K4cuO7MToo0tHJb/qL9CBJ2ddG6q+GTnF5kqUe87t7M7rSrIcAkIZMbJmtIbKk0j5EstyYqlE1HzvpmssGpg/8uJBBuWbU35af1ubKCjUs1+974mYXkfLmS0a6h+cG7atVLmyClIc2frd3o0zHF9+E7BaB+HQzT4lheQAXv9KI+63ksnbBpcZnS44t6mi1lzUE65+Am1z+1KJurF2Qbj4AkICzJjJa0bXa9DmFunjPhLbCU160LppaG3OksxuNOTkGCo/tEotDOotZNBYejWaXN2nr9WrH5hDfQ5zLayfKMtLSd33T9u0IUphbWVzIEJvdHRvbWxleSA8amVqYkBrZXJuZWwub3JnPokBVQQTAQgAPwIbAwYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AWIQTVYG5zyLRicb6tmt+BSuR8IUhU1gUCYEuZmAUJGzWEvQAKCRCBSuR8IUhU1gacCAC+QZN+RQd+FOoh5g884HQm8S07ON0/2EMiaXBiL6KQb5yP3w2PKEhug3+uPzugftUfgPEw6emRucrFFpwguhriGhB3pgWJIrTD4JUevrBgjEGOztJpbD73bLLyitSiPQZ6OFVOqIGhdqlc3n0qoNQ45n/w3LMVj6yP43SfBQeQGEdq4yHQxXPs0XQCbmr6Nf2p8mNsIKRYf90fCDmABH1lfZxoGJH/frQOBCJ9bMRNCNy+aFtjd5m8ka5M7gcDvM7TAsKhD5O5qFs4aJHGajF4gCGoWmXZGrISQvrNl9kWUhgsvoPqb2OTTeAQVRuV8C4FQamxzE3MRNH25j6s/qujtCRKYW1lcyBCb3R0b21sZXkgPGplamJAbGludXguaWJtLmNvbT6JAVQEEwEIAD
+	4CGwMFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AWIQTVYG5zyLRicb6tmt+BSuR8IUhU1gUCYEuZmQUJGzWEvQAKCRCBSuR8IUhU1kyHB/9VIOkf8RapONUdZ+7FgEpDgESE/y3coDeeb8jrtJyeefWCA0sWU8GSc9KMcMoSUetUreB+fukeVTe/f2NcJ87Bkq5jUEWff4qsbqf5PPM+wlD873StFc6mP8koy8bb7QcH3asH9fDFXUz7Oz5ubI0sE8+qD+Pdlk5qmLY5IiZ4D98V239nrKIhDymcuL7VztyWfdFSnbVXmumIpi79Ox536P2aMe3/v+1jAsFQOIjThMo/2xmLkQiyacB2veMcBzBkcair5WC7SBgrz2YsMCbC37X7crDWmCI3xEuwRAeDNpmxhVCb7jEvigNfRWQ4TYQADdC4KsilPfuW8Edk/8tPtCVKYW1lcyBCb3R0b21sZXkgPEpCb3R0b21sZXlAT2Rpbi5jb20+iQEfBDABAgAJBQJXI+B0Ah0gAAoJEIFK5HwhSFTWzkwH+gOg1UG/oB2lc0DF3lAJPloSIDBW38D3rezXTUiJtAhenWrH2Cl/ejznjdTukxOcuR1bV8zxR9Zs9jhUin2tgCCxIbrdvFIoYilMMRKcue1q0IYQHaqjd7ko8BHn9UysuX8qltJFar0BOClIlH95gdKWJbK46mw7bsXeD66N9IhAsOMJt6mSJmUdIOMuKy4dD4X3adegKMmoTRvHOndZQClTZHiYt5ECRPO534Lb/gyKAKQkFiwirsgx11ZSx3zGlw28brco6ohSLMBylna/Pbbn5hII86cjrCXWtQ4mE0Y6ofeFjpmMdfSRUxy6LHYd3fxVq9PoAJTv7vQ6bLTDFNa0KkphbWVzIEJvdHRvbWxleSA8SkJvdHRvbWxleUBQYXJhbGxlbHMuY29tPokBHwQwAQIACQUCVyPgjAIdIAAKCRCBSuR8IUhU1tXiB/9D9OOU8qB
+	CZPxkxB6ofp0j0pbZppRe6iCJ+btWBhSURz25DQzQNu5GVBRQt1Us6v3PPGU1cEWi5WL935nw+1hXPIVB3x8hElvdCO2aU61bMcpFd138AFHMHJ+emboKHblnhuY5+L1OlA1QmPw6wQooCor1h113lZiBZGrPFxjRYbWYVQmVaM6zhkiGgIkzQw/g9v57nAzYuBhFjnVHgmmu6/B0N8z6xD5sSPCZSjYSS38UG9w189S8HVr4eg54jReIEvLPRaxqVEnsoKmLisryyaw3EpqZcYAWoX0Am+58CXq3j5OvrCvbyqQIWFElba3Ka/oT7CnTdo/SUL/jPNobtCxKYW1lcyBCb3R0b21sZXkgPGplamJAaGFuc2VucGFydG5lcnNoaXAuY29tPokBVwQTAQgAQRYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJjg2eQAhsDBQkbNYS9BQsJCAcCAiICBhUKCQgLAgQWAgMBAh4HAheAAAoJEIFK5HwhSFTWbtAH/087y9vzXYAHMPbjd8etB/I3OEFKteFacXBRBRDKXI9ZqK5F/xvd1fuehwQWl2Y/sivD4cSAP0iM/rFOwv9GLyrr82pD/GV/+1iXt9kjlLY36/1U2qoyAczY+jsS72aZjWwcO7Og8IYTaRzlqif9Zpfj7Q0Q1e9SAefMlakI6dcZTSlZWaaXCefdPBCc7BZ0SFY4kIg0iqKaagdgQomwW61nJZ+woljMjgv3HKOkiJ+rcB/n+/moryd8RnDhNmvYASheazYvUwaF/aMj5rIb/0w5p6IbFax+wGF5RmH2U5NeUlhIkTodUF/P7g/cJf4HCL+RA1KU/xS9o8zrAOeut2+4UgRaZ7bmEwgqhkjOPQMBBwIDBH4GsIgL0yQij5S5ISDZmlR7qDQPcWUxMVx6zVPsAoITdjKFjaDmUATkS+l5zmiCrUBcJ6MBavPiYQ4kqn4/xwaJAbMEGAEIACYCGwIWIQTVYG5zyLRi
+	cb6tmt+BSuR8IUhU1gUCZag0LwUJDwLkSQCBdiAEGRMIAB0WIQTnYEDbdso9F2cI+arnQslM7pishQUCWme25gAKCRDnQslM7pishdi9AQDyOvLYOBkylBqiTlJrMnGCCsWgGZwPpKq3e3s7JQ/xBAEAlx29pPY5z0RLyIDUsjf9mtkSNTaeaQ6TIjDrFa+8XH8JEIFK5HwhSFTWkasH/j7LL9WH9dRfwfTwuMMj1/KGzjU/4KFIu4uKxDaevKpGS7sDx4F56mafCdGD8u4+ri6bJr/3mmuzIdyger0vJdRlTrnpX3ONXvR57p1JHgCljehE1ZB0RCzIk0vKhdt8+CDBQWfKbbKBTmzA7wR68raMQb2D7nQ9d0KXXbtr7Hag29yj92aUAZ/sFoe9RhDOcRUptdYyPKU1JHgJyc0Z7HwNjRSJ4lKJSKP+Px0/XxT3gV3LaDLtHuHa2IujLEAKcPzTr5DOV+xsgA3iSwTYI6H5aEe+ZRv/rA4sdjqRiVpo2d044aCUFUNQ3PiIHPAZR3KK5O64m6+BJMDXBvgSsMy4VgRaZ7clEggqhkjOPQMBBwIDBMfuMuE+PECbOoYjkD0Teno7TDbcgxJNgPV7Y2lQbNBnexMLOEY6/xJzRi1Xm/o9mOyZ+VIj8h4G5V/eWSntNkwDAQgHiQE8BBgBCAAmAhsMFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmWoNBwFCQ8C4/cACgkQgUrkfCFIVNZs4AgAnIjU1QEPLdpotiy3X01sKUO+hvcT3/Cd6g55sJyKJ5/U0o3f8fdSn6MWPhi1m62zbAxcLJFiTZ3OWNCZAMEvwHrXFb684Ey6yImQ9gm2dG2nVuCzr1+9gIaMSBeZ+4kUJqhdWSJjrNLQG38GbnBuYOJUD+x6oJ2AT10/mQfBVZ3qWDQXr/je2TSf0OIXaWyG6meG5yTqOEv0eaTH22yBb1nbodoZkmlMMb56jzRGZuorhFE06
+	N0Eb0kiGz5cCIrHZoH10dHWoa7/Z+AzfL0caOKjcmsnUPcmcrqmWzJTEibLA81z15GBCrldfQVt+dF7Us2kc0hKUgaWeI8Gv4CzwLkCDQRUdhaZARAApeF9gbNSBBudW8xeMQIiB/CZwK4VOEP7nGHZn3UsWemsvE9lvjbFzbqcIkbUp2V6ExM5tyEgzio2BavLe1ZJGHVaKkL3cKLABoYi/yBLEnogPFzzYfK2fdipm2G+GhLaqfDxtAQ7cqXeo1TCsZLSvjD+kLVV1TvKlaHS8tUCh2oUyR7fTbv6WHi5H8DLyR0Pnbt9E9/Gcs1j11JX+MWJ7jset2FVDsB5U1LM70AjhXiDiQCtNJzKaqKdMei8zazWS50iMKKeo4m/adWBjG/8ld3fQ7/Hcj6Opkh8xPaCnmgDZovYGavw4Am2tjRqE6G6rPQpS0we5I6lSsKNBP/2FhLmI9fnsBnZC1l1NrASRSX1BK0xf4LYB2Ww3fYQmbbApAUBbWZ/1aQoc2ECKbSK9iW0gfZ8rDggfMw8nzpmEEExl0hU6wtJLymyDV+QGoPx5KwYK/6qAUNJQInUYz8z2ERM/HOI09Zu3jiauFBDtouSIraX/2DDvTf7Lfe1+ihARFSlp64kEMAsjKutNBK2u5oj4H7hQ7zD+BvWLHxMgysOtYYtwggweOrM/k3RndsZ/z3nsGqF0ggct1VLuH2eznDksI+KkZ3Bg0WihQyJ7Z9omgaQAyRDFct+jnJsv2Iza+xIvPei+fpbGNAyFvj0e+TsZoQGcC34/ipGwze651UAEQEAAYkBHwQoAQIACQUCVT6BaAIdAwAKCRCBSuR8IUhU1p5QCAC7pgjOM17Hxwqz9mlGELilYqjzNPUoZt5xslcTFGxj/QWNzu0K8gEQPePnc5dTfumzWL077nxhdKYtoqwm2C6fOmXiJBZx6khBfRqctUvN2DlOB6dFf5I+1QT9TRBvceGzw01E4Gi0xjWKAB6OII
+	MAdnPcDVFzaXJdlAAJdjfg/lyJtAyxifflG8NnXJ3elwGqoBso84XBNWWzbc5VKmatzhYLOvXtfzDhu4mNPv/z7S1HTtRguI0NlH5RVBzSvfzybin9hysE3/+r3C0HJ2xiOHzucNAmG03aztzZYDMTbKQW4bQqeD5MJxT68vBYu8MtzfIe41lSLpb/qlwq1qg0iQElBBgBAgAPBQJUdhaZAhsMBQkA7U4AAAoJEIFK5HwhSFTW3YgH/AyJL2rlCvGrkLcas94ND9Pmn0cUlVrPl7wVGcIV+6I4nrw6u49TyqNMmsYam2YpjervJGgbvIbMzoHFCREi6R9XyUsw5w7GCRoWegw2blZYi5A52xe500+/RruG//MKfOtVUotu3N+u7FcXaYAg9gbYeGNZCV70vI+cnFgq0AEJRdjidzfCWVKPjafTo7jHeFxX7Q22kUfWOkMzzhoDbFg0jPhVYNiEXpNyXCwirzvKA7bvFwZPlRkbfihaiXDE7QKIUtQ10i5kw4C9rqDKwx8F0PaWDRF9gGaKd7/IJGHJaac/OcSJ36zxgkNgLsVX5GUroJ2GaZcR7W9Vppj5H+C4UgRkuRyTEwgqhkjOPQMBBwIDBOySomnsW2SkApXv1zUBaD38dFEj0LQeDEMdSE7bm1fnrdjAYt0f/CtbUUiDaPodQk2qeHzOP6wA/2K6rrjwNIWJAT0EGAEIACcDGyAEFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmWoM/gFCQSxfmUACgkQgUrkfCFIVNZhTgf/VQxtQ5rgu2aoXh2KOH6naGzPKDkYDJ/K7XCJAq3nJYEpYN8G+F8mL/ql0hrihAsHfjmoDOlt+INa3AcG3v0jDZIMEzmcjAlu7g5NcXS3kntcMHgw3dCgE9eYDaKGipUCubdXvBaZWU6AUlTldaB8FE6u7It7+UO+IW4/L+KpLYKs8V5POInu2rqahlm7vgxY5iv4Txz4EvCW2e4dAlG
+	8mT2Eh9SkH+YVOmaKsajgZgrBxA7fWmGoxXswEVxJIFj3vW7yNc0C5HaUdYa5iGOMs4kg2ht4s7yy7NRQuh7BifWjo6BQ6k4S1H+6axZucxhSV1L6zN9d+lr3Xo/vy1unzA==
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: mpi3mr: Replace one-element arrays with
- flexible-array members
-To: Pedro Demarchi Gomes <pedrodemargomes@gmail.com>,
- martin.petersen@oracle.com, James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250905014345.7054-1-pedrodemargomes@gmail.com>
-From: Christophe JAILLET <christophe.jaillet@wanadoo.fr>
-Content-Language: en-US, fr-FR
-In-Reply-To: <20250905014345.7054-1-pedrodemargomes@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
 
-Le 05/09/2025 à 03:43, Pedro Demarchi Gomes a écrit :
-> One-element arrays are deprecated, and we are replacing them with flexible
-> array members instead. So, replace one-element arrays with flexible-array
-> members in multiple structures.
-> 
-> Signed-off-by: Pedro Demarchi Gomes <pedrodemargomes@gmail.com>
-> ---
->   include/uapi/scsi/scsi_bsg_mpi3mr.h | 10 +++++-----
->   1 file changed, 5 insertions(+), 5 deletions(-)
-> 
-> diff --git a/include/uapi/scsi/scsi_bsg_mpi3mr.h b/include/uapi/scsi/scsi_bsg_mpi3mr.h
-> index f5ea1db92339..9e5b6ced53ab 100644
-> --- a/include/uapi/scsi/scsi_bsg_mpi3mr.h
-> +++ b/include/uapi/scsi/scsi_bsg_mpi3mr.h
-> @@ -205,7 +205,7 @@ struct mpi3mr_all_tgt_info {
->   	__u16	num_devices;
->   	__u16	rsvd1;
->   	__u32	rsvd2;
-> -	struct mpi3mr_device_map_info dmi[1];
-> +	struct mpi3mr_device_map_info dmi[];
->   };
->   
->   /**
-> @@ -248,7 +248,7 @@ struct mpi3mr_logdata_entry {
->   	__u8	valid_entry;
->   	__u8	rsvd1;
->   	__u16	rsvd2;
-> -	__u8	data[1]; /* Variable length Array */
-> +	__u8	data[]; /* Variable length Array */
->   };
->   
->   /**
-> @@ -259,7 +259,7 @@ struct mpi3mr_logdata_entry {
->    * @entry: Variable length Log data entry array
->    */
->   struct mpi3mr_bsg_in_log_data {
-> -	struct mpi3mr_logdata_entry entry[1];
-> +	__DECLARE_FLEX_ARRAY(struct mpi3mr_logdata_entry, entry);
->   };
->   
->   /**
-> @@ -307,7 +307,7 @@ struct mpi3mr_bsg_in_hdb_status {
->   	__u8    element_trigger_format;
->   	__u16	rsvd2;
->   	__u32	rsvd3;
-> -	struct mpi3mr_hdb_entry entry[1];
-> +	struct mpi3mr_hdb_entry entry[];
+Obvious driver patch plus update to sr to add back rotational media
+flag since CDROMS are rotational.
 
-I think that the -1 at [1] should be removed, and struct_size() used 
-instead.
+The patch is available here:
 
-The same kind of issue is maybe also relevant for the other changes, but 
-I've not spotted such places myself.
+git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-CJ
+The short changelog is:
 
-[1]: 
-https://elixir.bootlin.com/linux/v6.17-rc4/source/drivers/scsi/mpi3mr/mpi3mr_app.c#L1245
+John Evans (1):
+      scsi: lpfc: Fix buffer free/clear order in deferred receive path
 
->   };
->   
->   /**
-> @@ -416,7 +416,7 @@ struct mpi3mr_buf_entry_list {
->   	__u8	rsvd1;
->   	__u16	rsvd2;
->   	__u32	rsvd3;
-> -	struct mpi3mr_buf_entry buf_entry[1];
-> +	struct mpi3mr_buf_entry buf_entry[];
->   };
->   /**
->    * struct mpi3mr_bsg_mptcmd -  Generic bsg data
+Ming Lei (1):
+      scsi: sr: Reinstate rotational media flag
+
+And the diffstat:
+
+ drivers/scsi/lpfc/lpfc_nvmet.c | 10 ++++++----
+ drivers/scsi/sr.c              | 16 ++++++++++------
+ 2 files changed, 16 insertions(+), 10 deletions(-)
+
+With full diff below.
+
+Regards,
+
+James
+
+---
+
+diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.=
+c
+index fba2e62027b7..4cfc928bcf2d 100644
+--- a/drivers/scsi/lpfc/lpfc_nvmet.c
++++ b/drivers/scsi/lpfc/lpfc_nvmet.c
+@@ -1243,7 +1243,7 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgt=
+port,
+ struct lpfc_nvmet_tgtport *tgtp;
+ struct lpfc_async_xchg_ctx *ctxp =3D
+ container_of(rsp, struct lpfc_async_xchg_ctx, hdlrctx.fcp_req);
+- struct rqb_dmabuf *nvmebuf =3D ctxp->rqb_buffer;
++ struct rqb_dmabuf *nvmebuf;
+ struct lpfc_hba *phba =3D ctxp->phba;
+ unsigned long iflag;
+=20
+@@ -1251,13 +1251,18 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *t=
+gtport,
+ lpfc_nvmeio_data(phba, "NVMET DEFERRCV: xri x%x sz %d CPU %02x\n",
+ ctxp->oxid, ctxp->size, raw_smp_processor_id());
+=20
++ spin_lock_irqsave(&ctxp->ctxlock, iflag);
++ nvmebuf =3D ctxp->rqb_buffer;
+ if (!nvmebuf) {
++ spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
+ lpfc_printf_log(phba, KERN_INFO, LOG_NVME_IOERR,
+ "6425 Defer rcv: no buffer oxid x%x: "
+ "flg %x ste %x\n",
+ ctxp->oxid, ctxp->flag, ctxp->state);
+ return;
+ }
++ ctxp->rqb_buffer =3D NULL;
++ spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
+=20
+ tgtp =3D phba->targetport->private;
+ if (tgtp)
+@@ -1265,9 +1270,6 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgt=
+port,
+=20
+ /* Free the nvmebuf since a new buffer already replaced it */
+ nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
+- spin_lock_irqsave(&ctxp->ctxlock, iflag);
+- ctxp->rqb_buffer =3D NULL;
+- spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
+ }
+=20
+ /**
+diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
+index b17796d5ee66..add13e306898 100644
+--- a/drivers/scsi/sr.c
++++ b/drivers/scsi/sr.c
+@@ -475,13 +475,21 @@ static blk_status_t sr_init_command(struct scsi_cmnd =
+*SCpnt)
+=20
+ static int sr_revalidate_disk(struct scsi_cd *cd)
+ {
++ struct request_queue *q =3D cd->device->request_queue;
+ struct scsi_sense_hdr sshdr;
++ struct queue_limits lim;
++ int sector_size;
+=20
+ /* if the unit is not ready, nothing more to do */
+ if (scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr))
+ return 0;
+ sr_cd_check(&cd->cdi);
+- return get_sectorsize(cd);
++ sector_size =3D get_sectorsize(cd);
++
++ lim =3D queue_limits_start_update(q);
++ lim.logical_block_size =3D sector_size;
++ lim.features |=3D BLK_FEAT_ROTATIONAL;
++ return queue_limits_commit_update_frozen(q, &lim);
+ }
+=20
+ static int sr_block_open(struct gendisk *disk, blk_mode_t mode)
+@@ -721,10 +729,8 @@ static int sr_probe(struct device *dev)
+=20
+ static int get_sectorsize(struct scsi_cd *cd)
+ {
+- struct request_queue *q =3D cd->device->request_queue;
+ static const u8 cmd[10] =3D { READ_CAPACITY };
+ unsigned char buffer[8] =3D { };
+- struct queue_limits lim;
+ int err;
+ int sector_size;
+ struct scsi_failure failure_defs[] =3D {
+@@ -795,9 +801,7 @@ static int get_sectorsize(struct scsi_cd *cd)
+ set_capacity(cd->disk, cd->capacity);
+ }
+=20
+- lim =3D queue_limits_start_update(q);
+- lim.logical_block_size =3D sector_size;
+- return queue_limits_commit_update_frozen(q, &lim);
++ return sector_size;
+ }
+=20
+ static int get_capabilities(struct scsi_cd *cd)
 
