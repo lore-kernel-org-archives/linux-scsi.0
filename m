@@ -1,199 +1,63 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 837102F83AF;
-	Fri,  5 Sep 2025 21:41:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A7C4F524F;
+	Fri,  5 Sep 2025 22:34:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757108520; cv=none; b=MQJqL/pGz2CFe2fkZl2KyT1aejkWRldRcNFE+8xoZ3zWm1i48uR7NWuUXgw0qFdnX7h9JBM75j0I9yf9Lq2m1mFTqeTeOs/z28I50wmnOqPnOviCO47QnkTP8X4OCWGMfd+Uz0J8saOBYMgUPNNXwPyWZiUxsPGFq2Ho6OsVRaM=
+	t=1757111651; cv=none; b=jwclaVsyrFBKmCEFZCQCh7cmW6RolBWPOuSCQ0h/4yAjcr9HxaDJXwlg3mSNTLLk/jXj4LaPFx3MWfR3e0yFsRNRRVZgZV2/B/ykfLRkXnD6y4Z9sM5IA+zmZpe1PjinS/zTS87tVFNy9Py0Q0Ubl+ShiAO5aX8u0J4Nw5nxMX0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757108520; c=relaxed/simple;
-	bh=n1zL1dghlRy0+A8PIhiVW/ZsMjbvNqyCZS6VPJicZms=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ULjqqPZZB6CNffRIHL9Z1SeaR67XtwP2lg2+kcfxU7Nyc4F30/DxK6V/2O+1C8z8kaPttbr7PT+7Du6Rh6RgA4SDDzAXYoDwnsrBtzOmW2iWhvSepkNDvhdWuyASaLfoGav0xNT6xEvX7ApAn0a7ZixX3aXj/A5eIB3+OMOwKp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=RBETcqgZ; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1757111651; c=relaxed/simple;
+	bh=vCpW1InwO8WiFbbZ8I8bMMczuH0/+ZOb0YGtmmi6NZM=;
+	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=HdeNoI4MnuZ59I38DTHCgtnd5iT6voaZUjzqR146b4gqHFzq2JRyHWwXABXVDAt0xibWFAVebemL5EsMj0MXvUUKWNp9lafVEcK36zLiRzFk1qesEUYPWLxpRRf9APGj+m5U+ZGvUj3I2U6TmLEMo0lsWota3Mh5ZV6flOHgPII=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=psKpq4bC; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="RBETcqgZ"
-Received: from [192.168.0.88] (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
-	by linux.microsoft.com (Postfix) with ESMTPSA id 7E61E20171D3;
-	Fri,  5 Sep 2025 14:41:53 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 7E61E20171D3
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1757108514;
-	bh=pLTx4Rr8G6NQmZqkGo3pXfMpnw5bZX2ma0h+xMq8JrA=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=RBETcqgZyxhP4vA+SY74JeEifpJbs8CGGsV8LNL4b3jFuP9zvIq+hI8kC5wZPgcC6
-	 1WT2cgW4wYPCxkj6xOu4yy4jAknNRtnBrBlRHaMKitBQ2PX1olNc+ZlDBCF0VUFtnh
-	 NIUJ2ivqX8aQgh1dtNqaU2+PbzVKxt32fdpclyYk=
-Message-ID: <6a26cbf8-7877-4f39-0ed3-7bbc306f9fe5@linux.microsoft.com>
-Date: Fri, 5 Sep 2025 14:41:52 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="psKpq4bC"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 879DEC4CEF1;
+	Fri,  5 Sep 2025 22:34:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1757111651;
+	bh=vCpW1InwO8WiFbbZ8I8bMMczuH0/+ZOb0YGtmmi6NZM=;
+	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
+	b=psKpq4bCesSM6+o4fAz3GG/8XC3Ku5Tz5CX069lX0dguIqmxCyhd3N1SxywjxZ7Hg
+	 Q30mpe5Kk2+krM+NnijOrrVCdWXb3N54o0O+15NCnYtCB6SkHB1BIXYr598oTO1XWK
+	 Vh3KGeHAuehp6jrg56l9esl0AEH/IMI7l6bmXsE4eRP89Fv5C2sopuU9AKcblEb+Mw
+	 tAZC0/yHR9eiT8oJJIeWsUHvsYRgI9OganRoefk9yKdCX+USEtkRokpvx6GKwwAB1p
+	 Fn2B7H6+B6lp778f3fur+pHxsfMZahlMoAaApHmw3IFLf47JNLP+umm0lrRJu7yDkc
+	 XHbmQnOPo2mpA==
+Received: from [10.30.226.235] (localhost [IPv6:::1])
+	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id 33EE2383BF69;
+	Fri,  5 Sep 2025 22:34:17 +0000 (UTC)
+Subject: Re: [GIT PULL] SCSI fixes for 6.17-rc4
+From: pr-tracker-bot@kernel.org
+In-Reply-To: <8bc12ae71082b754ffb51490b26e310077d0162d.camel@HansenPartnership.com>
+References: <8bc12ae71082b754ffb51490b26e310077d0162d.camel@HansenPartnership.com>
+X-PR-Tracked-List-Id: <linux-scsi.vger.kernel.org>
+X-PR-Tracked-Message-Id: <8bc12ae71082b754ffb51490b26e310077d0162d.camel@HansenPartnership.com>
+X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+X-PR-Tracked-Commit-Id: 708e2371f77a9d3f2f1d54d1ec835d71b9d0dafe
+X-PR-Merge-Tree: torvalds/linux.git
+X-PR-Merge-Refname: refs/heads/master
+X-PR-Merge-Commit-Id: d3e45016f75e3efc2366e9060241d38e3fd03a8f
+Message-Id: <175711165571.2706660.9891093180578940676.pr-tracker-bot@kernel.org>
+Date: Fri, 05 Sep 2025 22:34:15 +0000
+To: James Bottomley <James.Bottomley@HansenPartnership.com>
+Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla/5.0 (X11; Linux x86_64; rv:91.0) Gecko/20100101
- Thunderbird/91.13.1
-Subject: Re: [PATCH V0 0/2] Fix CONFIG_HYPERV and vmbus related anamoly
-Content-Language: en-US
-To: Nuno Das Neves <nunodasneves@linux.microsoft.com>,
- Michael Kelley <mhklinux@outlook.com>,
- "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
- "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
- "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
- "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>,
- "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
- "virtualization@lists.linux.dev" <virtualization@lists.linux.dev>
-Cc: "maarten.lankhorst@linux.intel.com" <maarten.lankhorst@linux.intel.com>,
- "mripard@kernel.org" <mripard@kernel.org>,
- "tzimmermann@suse.de" <tzimmermann@suse.de>,
- "airlied@gmail.com" <airlied@gmail.com>, "simona@ffwll.ch"
- <simona@ffwll.ch>, "jikos@kernel.org" <jikos@kernel.org>,
- "bentiss@kernel.org" <bentiss@kernel.org>,
- "kys@microsoft.com" <kys@microsoft.com>,
- "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
- "wei.liu@kernel.org" <wei.liu@kernel.org>,
- "decui@microsoft.com" <decui@microsoft.com>,
- "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
- "andrew+netdev@lunn.ch" <andrew+netdev@lunn.ch>,
- "davem@davemloft.net" <davem@davemloft.net>,
- "edumazet@google.com" <edumazet@google.com>,
- "kuba@kernel.org" <kuba@kernel.org>, "pabeni@redhat.com"
- <pabeni@redhat.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
- "deller@gmx.de" <deller@gmx.de>, "arnd@arndb.de" <arnd@arndb.de>,
- "sgarzare@redhat.com" <sgarzare@redhat.com>,
- "horms@kernel.org" <horms@kernel.org>
-References: <20250828005952.884343-1-mrathor@linux.microsoft.com>
- <SN6PR02MB4157917D84D00DBDAF54BD69D406A@SN6PR02MB4157.namprd02.prod.outlook.com>
- <ff4c58f1-564d-ddfa-bdff-48ffee6e0d72@linux.microsoft.com>
- <SN6PR02MB41573C5451F21286667C5441D400A@SN6PR02MB4157.namprd02.prod.outlook.com>
- <4f38c613-255c-eaf6-0d50-28f8ffc02fff@linux.microsoft.com>
- <231f05cb-4f33-48ac-bb2e-1359ed52e606@linux.microsoft.com>
-From: Mukesh R <mrathor@linux.microsoft.com>
-In-Reply-To: <231f05cb-4f33-48ac-bb2e-1359ed52e606@linux.microsoft.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
 
-On 9/5/25 13:08, Nuno Das Neves wrote:
-> On 9/4/2025 11:18 AM, Mukesh R wrote:
->> On 9/4/25 09:26, Michael Kelley wrote:
->>> From: Mukesh R <mrathor@linux.microsoft.com> Sent: Wednesday, September 3, 2025 7:17 PM
->>>>
->>>> On 9/2/25 07:42, Michael Kelley wrote:
->>>>> From: Mukesh Rathor <mrathor@linux.microsoft.com> Sent: Wednesday, August 27, 2025 6:00 PM
->>>>>>
->>>>>> At present, drivers/Makefile will subst =m to =y for CONFIG_HYPERV for hv
->>>>>> subdir. Also, drivers/hv/Makefile replaces =m to =y to build in
->>>>>> hv_common.c that is needed for the drivers. Moreover, vmbus driver is
->>>>>> built if CONFIG_HYPER is set, either loadable or builtin.
->>>>>>
->>>>>> This is not a good approach. CONFIG_HYPERV is really an umbrella config that
->>>>>> encompasses builtin code and various other things and not a dedicated config
->>>>>> option for VMBUS. Vmbus should really have a config option just like
->>>>>> CONFIG_HYPERV_BALLOON etc. This small series introduces CONFIG_HYPERV_VMBUS
->>>>>> to build VMBUS driver and make that distinction explicit. With that
->>>>>> CONFIG_HYPERV could be changed to bool.
->>>>>
->>>>> Separating the core hypervisor support (CONFIG_HYPERV) from the VMBus
->>>>> support (CONFIG_HYPERV_VMBUS) makes sense to me. Overall the code
->>>>> is already mostly in separate source files code, though there's some
->>>>> entanglement in the handling of VMBus interrupts, which could be
->>>>> improved later.
->>>>>
->>>>> However, I have a compatibility concern. Consider this scenario:
->>>>>
->>>>> 1) Assume running in a Hyper-V VM with a current Linux kernel version
->>>>>     built with CONFIG_HYPERV=m.
->>>>> 2) Grab a new version of kernel source code that contains this patch set.
->>>>> 3) Run 'make olddefconfig' to create the .config file for the new kernel.
->>>>> 4) Build the new kernel. This succeeds.
->>>>> 5) Install and run the new kernel in the Hyper-V VM. This fails.
->>>>>
->>>>> The failure occurs because CONFIG_HYPERV=m is no longer legal,
->>>>> so the .config file created in Step 3 has CONFIG_HYPERV=n. The
->>>>> newly built kernel has no Hyper-V support and won't run in a
->>>>> Hyper-V VM.
-> 
-> It surprises me a little that =m doesn't get 'fixed up' to =y in this case.
-> I guess any invalid value turns to =n, which makes sense most of the time.
-> 
->>>>>
->>>>> As a second issue, if in Step 1 the current kernel was built with
->>>>> CONFIG_HYPERV=y, then the .config file for the new kernel will have
->>>>> CONFIG_HYPERV=y, which is better. But CONFIG_HYPERV_VMBUS
->>>>> defaults to 'n', so the new kernel doesn't have any VMBus drivers
->>>>> and won't run in a typical Hyper-V VM.
->>>>>
->>>>> The second issue could be fixed by assigning CONFIG_HYPERV_VMBUS
->>>>> a default value, such as whatever CONFIG_HYPERV is set to. But
->>>>> I'm not sure how to fix the first issue, except by continuing to
->>>>> allow CONFIG_HYPERV=m.
-> 
-> I'm wondering, is there a path for this change, then? Are there some
-> intermediate step/s we could take to minimize the problem?
-> 
->>>>
->>>> To certain extent, imo, users are expected to check config files
->>>> for changes when moving to new versions/releases, so it would be a
->>>> one time burden. 
->>>
->>> I'm not so sanguine about the impact. For those of us who work with
->>> Hyper-V frequently, yes, it's probably not that big of an issue -- we can
->>> figure it out. But a lot of Azure/Hyper-V users aren't that familiar with
->>> the details of how the Kconfig files are put together. And the issue occurs
->>> with no error messages that something has gone wrong in building
->>> the kernel, except that it won't boot. Just running "make olddefconfig"
->>> has worked in the past, so some users will be befuddled and end up
->>> generating Azure support incidents. I also wonder about breaking
->>> automated test suites for new kernels, as they are likely to be running
->>> "make olddefconfig" or something similar as part of the automation.
->>>
->>>> CONFIG_HYPERV=m is just broken imo as one sees that
->>>> in .config but magically symbols in drivers/hv are in kerenel.
->>>>
->>>
->>> I agree that's not ideal. But note that some Hyper-V code and symbols
->>> like ms_hyperv_init_platform() and related functions show up when
->>> CONFIG_HYPERVISOR_GUEST=y, even if CONFIG_HYPERV=n. That's
->>> the code in arch/x86/kernel/cpu/mshyperv.c and it's because Hyper-V
->>> is one of the recognized and somewhat hardwired hypervisors (like
->>> VMware, for example).
->>>
->>> Finally, there are about a dozen other places in the kernel that use
->>> the same Makefile construct to make some code built-in even though
->>> the CONFIG option is set to "m". That may not be enough occurrences
->>> to make it standard practice, but Hyper-V guests are certainly not the
->>> only case.
->>>
->>> In my mind, this is judgment call with no absolute right answer. What
->>> do others think about the tradeoffs?
->>
->> Wei had said in private message that he agrees this is a good idea. Nuno
->> said earlier above: 
->>
->> "FWIW I think it's a good idea, interested to hear what others think."
->>
-> That was before Michael pointed out the potential issues which I was
-> unaware of. Let's see if there's a path that is smoother for all the
-> downstream users who may be compiling with CONFIG_HYPERV=m.
+The pull request you sent on Fri, 05 Sep 2025 16:03:06 -0400:
 
-Ok, we've already thought of it for sometime and not able to come up
-with any. IMO, it's a minor hickup, not major. This is stalling
-upcoming iommu and other patches which will use CONFIG_HYPERV and 
-add more dependencies, and it would be much harder to straighten 
-out then. So I hope you guys can come up with some solution sooner than
-later, I can't think of any.
+> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
 
-Thanks,
--Mukesh
+has been merged into torvalds/linux.git:
+https://git.kernel.org/torvalds/c/d3e45016f75e3efc2366e9060241d38e3fd03a8f
 
+Thank you!
 
+-- 
+Deet-doot-dot, I am a bot.
+https://korg.docs.kernel.org/prtracker.html
