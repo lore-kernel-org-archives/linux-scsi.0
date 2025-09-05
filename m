@@ -1,175 +1,163 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from OS8PR02CU002.outbound.protection.outlook.com (mail-japanwestazon11012061.outbound.protection.outlook.com [40.107.75.61])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA763261B64
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Sep 2025 07:41:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757058108; cv=none; b=aDK2bHqC+50q72vGJufiBZhaAFViDptKPjvRMyoyiYv2UwEEpt05IVktATEvtS0elIvVoZ7Mw6EyeYjXtmVaPsfMJw/pqxG5Nqk+H5fSzCj9gvYrMGQXZ7ikPizIkHsSmBtb2kL34fzrFqIWx2E9JqgdaRRAvQR468yblvHvx7Q=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757058108; c=relaxed/simple;
-	bh=5EnOooRLaWG+1zujjxFTjqAcUilh1DuvKP0af/61SK8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RpWiblFLb6czRCAsZjrkPEohYwlwYDSVd/iIXVRIQ7An5qp2GMwB433QbP4YUYpCBHhYqgypvD3W8oydd72nMV/taAD+bz1Ei1xYTPVuiu7dOLX0nrIvLpUSP5xQ6hE7g0aZ9H7VSOXuwrOPJpoL04GwA0M20Jza6Bg69476c94=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MFDWFDQT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=d6wvA4x6; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MFDWFDQT; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=d6wvA4x6; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 423F72F39D0;
+	Fri,  5 Sep 2025 07:55:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.75.61
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1757058904; cv=fail; b=FsFRdTV4KHFNjYifJdVJBL/ydcSPzNXK8r0WutLjsIldI/J7akuWPz7hws4c4PXaj6rfz8p+VxFnx96WPFZN5JUI7K05BoUgpjC8Irei8JinU/HQtYkZBgzlmiECImPgOCsEEuQPqVfhPyieph/JDhcpF7d9bMxyf4C82UyAlN8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1757058904; c=relaxed/simple;
+	bh=cB4rwy6ZwWn4cguLH6/mucctLxu82yHn0ZAENJwEWRo=;
+	h=From:To:Cc:Subject:Date:Message-Id:Content-Type:MIME-Version; b=qgjZt+neKz9vp3CpbQ/gzrtQxTjViapIlySW+gKaFFN/Nosmz39DIUtl4ueV4FSecQG7YTM8rvxfESVqc6NACDzLVoAoPj7Z7VTpYrNDB7cJrOh69PmDrJT4jfQSU7HLDvGr98GdWLAzzXXwsO/L+0Prat9F274g1+DkokxJWd0=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com; spf=pass smtp.mailfrom=vivo.com; dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b=UnMQUgXM; arc=fail smtp.client-ip=40.107.75.61
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=vivo.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=vivo.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MFDWFDQT";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="d6wvA4x6";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MFDWFDQT";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="d6wvA4x6"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id A39294D92A;
-	Fri,  5 Sep 2025 07:41:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757058102; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m+BAVyD25FezVwTZNryOXCPxljZr03tkbPhnVekdh0Q=;
-	b=MFDWFDQTxyFbha5g/xmtOkY9FdHT1TPudDjvqYwHsDk5SImSbZxn/UexebPgLDQHU8YU8d
-	Ec/gXDhN2/z3m4tj5II4pl3G+w4J0GRW34tpKZA95RKBLjeOyGVXzGP9VQBMKmiOocDEtZ
-	xeAKH9om4Tp7ACLeDNE8xAxEZUJQ8Hk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757058102;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m+BAVyD25FezVwTZNryOXCPxljZr03tkbPhnVekdh0Q=;
-	b=d6wvA4x60pwWJ3Inxph2sEG+i20Ywu9+zBr/tJXUPI175gQzsXaSR0gHnEvoxXuMpERJG9
-	XFSiqAUMRxQCGBAA==
-Authentication-Results: smtp-out1.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=MFDWFDQT;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=d6wvA4x6
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757058102; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m+BAVyD25FezVwTZNryOXCPxljZr03tkbPhnVekdh0Q=;
-	b=MFDWFDQTxyFbha5g/xmtOkY9FdHT1TPudDjvqYwHsDk5SImSbZxn/UexebPgLDQHU8YU8d
-	Ec/gXDhN2/z3m4tj5II4pl3G+w4J0GRW34tpKZA95RKBLjeOyGVXzGP9VQBMKmiOocDEtZ
-	xeAKH9om4Tp7ACLeDNE8xAxEZUJQ8Hk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757058102;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=m+BAVyD25FezVwTZNryOXCPxljZr03tkbPhnVekdh0Q=;
-	b=d6wvA4x60pwWJ3Inxph2sEG+i20Ywu9+zBr/tJXUPI175gQzsXaSR0gHnEvoxXuMpERJG9
-	XFSiqAUMRxQCGBAA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 8C07E13306;
-	Fri,  5 Sep 2025 07:41:42 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 4CXcITaUumiHCwAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Fri, 05 Sep 2025 07:41:42 +0000
-Date: Fri, 5 Sep 2025 09:41:42 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, Aaron Tomlin <atomlin@atomlin.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
-	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	storagedev@microchip.com, virtualization@lists.linux.dev, 
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v7 05/10] scsi: Use block layer helpers to constrain
- queue affinity
-Message-ID: <71598d89-b29c-4b21-83ee-49fe9b890043@flourine.local>
-References: <20250702-isolcpus-io-queues-v7-0-557aa7eacce4@kernel.org>
- <20250702-isolcpus-io-queues-v7-5-557aa7eacce4@kernel.org>
- <d95de280-8cd7-4697-933a-37dc53f4c552@suse.de>
+	dkim=pass (2048-bit key) header.d=vivo.com header.i=@vivo.com header.b="UnMQUgXM"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=lPkV1lERlK51ZX9RvTm2/0Gy4Ypy4dlMfCk6IGlLNc9Pbs0rNK+DnyZD1wf3vrTlq7o9AkFjtOP0mBWBrFGrBmc2dLnBmcUDMu27jlvtka03HmoY1fTwmxgRYLYUsyAn8EltfNWMfXxO0SIxvDR+X20fVyMLocQOKspmnGPvxZXRLlMIECXQuDo2rSm8jbB3DJVI9uPpVNvo4n+N5/4u6vK+Iz+SHLxcwlM/6nwQSQvsDtPeZ/XYQiuhsHKxbUCz7ORctsyim6SZvzxvEsAJW/xkbhBgNy7uSUztSwqyHTcQUDoJJ9Xo9QqmPqNntJuD1qjsze7/XE18Y7rtNp6d4Q==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=xqr14afdrFYj3dsLgWdMVK+bol22+3THlrCp0VpjeFk=;
+ b=gxJ5V4KyMkUIIrv3+riW39eV2KJJV4uX9a3fobRjcgAfJN9e8pNCQwGzNNj/ThiTqyktG038PTH7YON0hsRskyjS0ahmkT7zlls9z+1occHtouzBBQN1SkeXBnT/LTAgAem4WaWGnSCwUBTS0GzlrGzc8hAPiupu/wG+8PEiCA2Ng/rZ5QeaGXf+w7RzcjYd7KMU7tC7JeE1hDy9OGKGrVeQYE5VYZ2yi0DUPpHPpek8FPQDHaRVRiDFJzFRExsQwz11/bBlcGhCeRY16eO5yXf7Yj825DZIbKTzw3XIvZpVYG/ZRT82iqKf/DMLNvhIRtDeb7NcxmHv9fjNARGQrQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=vivo.com; dmarc=pass action=none header.from=vivo.com;
+ dkim=pass header.d=vivo.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=vivo.com; s=selector2;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=xqr14afdrFYj3dsLgWdMVK+bol22+3THlrCp0VpjeFk=;
+ b=UnMQUgXMC/ug0/pAaVmyyVu1jmPh3o0Scmtcg9LX+k1Z7USz6EIoOvQLVA1KNRh0a7mWCgEpUXYaYzDaShhdulpKcOn/y1y8Hnp4bUENVGrBeqDG4epUlPAZ6JLVmPeoIMK7jsEO2PY57sreBV/XswltcISSaaxBKZzQSJUSI73E9BcUnD/lr/Hqwg9hFttNGa/zCwXaSRBwQIVwloWtszMTj3jJsQ640Gl/klV2jdSgg0oKXsIJxcc0PspQI+ZuC6ZVuMSCmHRIHx83W+Ee5DXkB/5cg1MbAPmKQwJErvMoa32abHE9dA/kJO6/UmlAJND1wUtIuKnZfBP6TRzjZA==
+Authentication-Results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=vivo.com;
+Received: from SI2PR06MB5140.apcprd06.prod.outlook.com (2603:1096:4:1af::9) by
+ SEYPR06MB6012.apcprd06.prod.outlook.com (2603:1096:101:de::6) with Microsoft
+ SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.20.9094.18; Fri, 5 Sep 2025 07:54:59 +0000
+Received: from SI2PR06MB5140.apcprd06.prod.outlook.com
+ ([fe80::468a:88be:bec:666]) by SI2PR06MB5140.apcprd06.prod.outlook.com
+ ([fe80::468a:88be:bec:666%5]) with mapi id 15.20.9094.017; Fri, 5 Sep 2025
+ 07:54:59 +0000
+From: Qianfeng Rong <rongqianfeng@vivo.com>
+To: Nilesh Javali <njavali@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com (maintainer:QLOGIC QLA2XXX FC-SCSI DRIVER,blamed_fixes:1/1=100%),
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Quinn Tran <qutran@marvell.com>,
+	himanshu.madhani@oracle.com,
+	Manish Rangankar <mrangankar@marvell.com>,
+	linux-scsi@vger.kernel.org (open list:QLOGIC QLA2XXX FC-SCSI DRIVER),
+	linux-kernel@vger.kernel.org (open list)
+Cc: Qianfeng Rong <rongqianfeng@vivo.com>
+Subject: [PATCH 0/3] scsi: qla2xxx: Fix incorrect sign of error code
+Date: Fri,  5 Sep 2025 15:54:42 +0800
+Message-Id: <20250905075446.381139-1-rongqianfeng@vivo.com>
+X-Mailer: git-send-email 2.34.1
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: SG2PR06CA0244.apcprd06.prod.outlook.com
+ (2603:1096:4:ac::28) To SI2PR06MB5140.apcprd06.prod.outlook.com
+ (2603:1096:4:1af::9)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <d95de280-8cd7-4697-933a-37dc53f4c552@suse.de>
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: A39294D92A
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
-	ARC_NA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[26];
-	MIME_TRACE(0.00)[0:+];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_TRACE(0.00)[suse.de:+];
-	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received,2a07:de40:b281:104:10:150:64:97:from];
-	RCVD_COUNT_TWO(0.00)[2];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_DN_SOME(0.00)[];
-	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
-	MISSING_XM_UA(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RL71uuc3g3e76oxfn4mu5aogan)];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Score: -4.51
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: SI2PR06MB5140:EE_|SEYPR06MB6012:EE_
+X-MS-Office365-Filtering-Correlation-Id: 44bc1814-6b07-4c0b-711e-08ddec5182e2
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam:
+	BCL:0;ARA:13230040|1800799024|366016|52116014|376014|38350700014|921020;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?HaQ+1sVYT1dDLdyYwjQ+D2fYygP2b4ibpJAkeVOe3NpMDToWX6UMkvXyNydS?=
+ =?us-ascii?Q?QkObhC3vAhcSHO6hafNQZ5xzwYKyYjBQ0s32BBOkwbMJvM0CqEvrnlEVZLBL?=
+ =?us-ascii?Q?hEs+fhw7NUSn8pBp+/v+w9TILulbZnUwPMxdB6+MkuRLPSISX5rZQ59cEbU2?=
+ =?us-ascii?Q?Z7geYfjl+L1T4ufZ4HwSV20hHq4dq/h8j9tKdOSNySXyu6LVqtzm8qSEUX0j?=
+ =?us-ascii?Q?COvBjzCuWyXqDwMepLD+ECZv0dQNIABEi6X03nucIn20YYtzJSmnoXQWitGO?=
+ =?us-ascii?Q?h/DtMECxqdBsUb1Vqw4S771lQeSiJIBxdv3D0IAiDGwxTPmxnEis7l/L2v/H?=
+ =?us-ascii?Q?joyAHhAHkrwZa2TvzaiqEX9UDhDKioHYdIeRQNT8xusiw4DVqO8oYy1LxPQV?=
+ =?us-ascii?Q?eooCFGfErkDDM95xR9MFTnupajDzB2xqorLe7qVuenxVEhywBiqUQ6dWEgpl?=
+ =?us-ascii?Q?ehgcvYPXHgV8CjddTX/i2evqsl3yOyrOOSm3subX8bYeqegXYJR9sHNm/cAa?=
+ =?us-ascii?Q?iOWquSnYLGsqhwFXAcX8lSOLGv/TqnnYTHVP4X4CwBj4aZ0ZCtggnUxojHAc?=
+ =?us-ascii?Q?6Uu+nLjZN/zgO3wP2ipVN1FVyeT+0nk4q22N8RkzyqwRcf7BWI/P/2QHTfeV?=
+ =?us-ascii?Q?twXRDZ+ZIJLIkm9liIzMi6soQQVwct8QgsrGkoUPve6fu7WzejVjs9vZhBZB?=
+ =?us-ascii?Q?guAGaROPJyyN0MIqC4U33HQMHPNGKnZFQ9GlhGiChRYSINaLSfbxR7RhxFqG?=
+ =?us-ascii?Q?VOaNFPvrMoDpjZlMusgxl9djjd/2geR1wPJKkHQUdhbYOec0CvlDmxw7doUF?=
+ =?us-ascii?Q?3vdxBc7/dj/yiV4+K0VyyyxQUbqF27VTe3C0PeNti3FKSB55pviTWxa8gFUk?=
+ =?us-ascii?Q?bhKybxIH7p2NHJ5323OlSAuDSXvBiRCxXhtViTRChZZvrI+aU+J4PE60nRbx?=
+ =?us-ascii?Q?TePplNBH9Nefrb/uy1gaI4R/G81lYebIIEkYw8PUIZiBalx9Cp34aH4uor3Z?=
+ =?us-ascii?Q?rbfPAGAlkscZdvzibdtqXFQ7hbR1trb7YTHJmVSx1xBZzTult+WSvcii5ksZ?=
+ =?us-ascii?Q?t+3YvVPCfK+z7uwIw1ooGK5X9BC6r65+sqtGyqTbHMBNRxrR880NJCISe4B+?=
+ =?us-ascii?Q?I5C5/0CxstutDBKLLgAkXjohImtio93jdHQcqmNqZ7uuiKIdV1rlXg1y/tin?=
+ =?us-ascii?Q?kW5ahy8vUs3EhVj2mYJSEboZnZILtxWo+TlVgQDN5JsH/4grzOWSunScvBFx?=
+ =?us-ascii?Q?SeMNOajoKbon4lltahHw3OmFLO2u+32iE2+QSTWhPgEpbfblW75ZL0uiqKcc?=
+ =?us-ascii?Q?97gsGlekoJXNcH0BpXHg821s1XitvrTVUUuZFeN0WBit4TW22MJQ3buiBebU?=
+ =?us-ascii?Q?wGhohij851gTZYM1O7uYcTWY1M1VlgAdV7VIJy5P5COIaCZ0mGZLOnpNrt7O?=
+ =?us-ascii?Q?NsTcQVBglMKWQtwwnOPiX093AKUDseQ1C/lk1ZWNE4oKfHDTq4DyBvBwAv+0?=
+ =?us-ascii?Q?oHxhyFOXNnlFrh4=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SI2PR06MB5140.apcprd06.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(52116014)(376014)(38350700014)(921020);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?9ezIjj7gxiSPpA4yjoUcTSQPIOe3bKv/6/unIhyVPXltQ81Kp7Hr/J/XKjUk?=
+ =?us-ascii?Q?pkd6LdkQn3wkHdNuqharJIgTdRTOiMRQctdxdlv4CP7xzH4FgCMwC4W3Z+qO?=
+ =?us-ascii?Q?Y2zpPCdBfO2oAnhvFoU9dS+jnCiQhN04oSV+1o2nyt5dlCVJE78vzb4FibER?=
+ =?us-ascii?Q?O51urU6pT5vIMOIYLrzXgu4vsuQ/NNBVjQW8nPeBKnPN1PtlVVrNDttSlN3m?=
+ =?us-ascii?Q?Uk3FBYJMyreU1nX6wOvNQEvh9MSg9nwoqoQSDnAbLFSTLZYb92vVcRos7bq2?=
+ =?us-ascii?Q?cCSXmzSbscgg3PP9lUVWkVi3tWg4xPgoSPBOWRNK1wd5Lqeny9QEN0UKfeKh?=
+ =?us-ascii?Q?Ikq7EEzUhvdBlPqvQKXlVO84FzhZl6QULU2cLmnByyBQU3TJduM5J0PiyiYB?=
+ =?us-ascii?Q?0+FixVkje2dgNeFKQm8rZ/DHajsFKfIiZZQD7fdHl8wPftigOKXkc8tp10no?=
+ =?us-ascii?Q?5OXv6Pm0PM/VADcfpTv8t4G6zIX/CfsGZmTt1KZ2X3lFxCMq4Hhd0fXuFUgZ?=
+ =?us-ascii?Q?k+LjKXiXqQkdfxi3f5Cezg+0swohE+NQxBR+kBg9AtFTGsLEwWnbQ+Aic09M?=
+ =?us-ascii?Q?I4zzXP1A2ceZW7gHvNRH2QG+k3vb1opb5HIO6Aa7o49QS195ojenS6wYsQMy?=
+ =?us-ascii?Q?lYQ5ryfP23AJGd4SH6yYF9iTSMR4vJzUUdwVMSKPuNf3rZ9HBK/vQfvFZ15W?=
+ =?us-ascii?Q?f4Ya17/bHE5RnEcsW5oglf2DCcAb7cW82EBdY4aa0J4Zl3aoCeg4mxmu9iVT?=
+ =?us-ascii?Q?97hFrQvCjdzxZft5lZm48ePnxnW74vOmjxJQ3cSwVNYtRQKMXJ/LhLQugsY4?=
+ =?us-ascii?Q?EMC/7ENPmFViIUQ7DXhReirF1C56ZMbLKuvy4CdFA1C3JlpAPNJOCYYhMHn1?=
+ =?us-ascii?Q?KXOvcjsiIorA0+yC6WjKjWlmPSLs1gR0IoWY2NnKIhZvyrxIiobt+bWjuXJp?=
+ =?us-ascii?Q?1nasB5brWFjsB4VQl2AgXlxadxIm6tdYG4jTp0f1eguMtpYAEZyej2JIjhK4?=
+ =?us-ascii?Q?q49hABxUjDBOX+iOXEUgR542Z8dY3EQZesr82zwYik7bIrmgY0kGwsX4ypme?=
+ =?us-ascii?Q?kmNsiFytd+iHP61KFaXLhkWtkeTLBh+OueOX2D+Ves5Pwy2ZdSQaHRvzHSUg?=
+ =?us-ascii?Q?c23zivaH6Q+PjoMjd9tk4LQA3DgLemVEwcQpCh1W2WNRZOPgxl/yViottZBb?=
+ =?us-ascii?Q?GW3bfiIWlWYldnG6XGxXldk3eWP8Ax903ZAQoi+5cUKEqZD0v76tzQdL/HCp?=
+ =?us-ascii?Q?xzp+Oi6Q8/cTFAXyfPMyyyKsFDNarQcdoSEQhTZljj+3yxdnxe/uDzMBc3f9?=
+ =?us-ascii?Q?Jbcthyv40D1mGwOh8MqZLEo2o03UHpnBNxx6g0kA7IRI2vZF2vSCZ5L8iYHS?=
+ =?us-ascii?Q?FrUwOL5DyCOwxr6nqRLdDJW+EjTdx+uE3zjNZIF1JLQvG4qZM3zc9bbG+Nw1?=
+ =?us-ascii?Q?QingFKopy3OcvsErEhPWZ1ZffpqGKiL4JvGjFb1pH9lQCwP6TYDELlxI76Gq?=
+ =?us-ascii?Q?dKhm5ZrsV1TKcAp000gXLYac22bpCUn0XthaWEeLWFn7ThFTR8ZUOcf0tLEv?=
+ =?us-ascii?Q?clX6VfCHXXPJAJyVWESLgmzsEjIgOluwirRXvR0H?=
+X-OriginatorOrg: vivo.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 44bc1814-6b07-4c0b-711e-08ddec5182e2
+X-MS-Exchange-CrossTenant-AuthSource: SI2PR06MB5140.apcprd06.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 05 Sep 2025 07:54:59.1260
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 923e42dc-48d5-4cbe-b582-1a797a6412ed
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: DWA5l/p0AeBlMEmSvUlX9aNs6vnM+wanFi11ZIE7ZCW1IBm73oNmdQ/NboBVqisPmLbq/kXpEpZWwP8KZCTLmw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SEYPR06MB6012
 
-On Thu, Jul 03, 2025 at 08:43:01AM +0200, Hannes Reinecke wrote:
-> >   drivers/scsi/fnic/fnic_isr.c              | 7 +++++--
-> >   drivers/scsi/hisi_sas/hisi_sas_v3_hw.c    | 1 +
-> >   drivers/scsi/megaraid/megaraid_sas_base.c | 5 ++++-
-> >   drivers/scsi/mpi3mr/mpi3mr_fw.c           | 6 +++++-
-> >   drivers/scsi/mpt3sas/mpt3sas_base.c       | 5 ++++-
-> >   drivers/scsi/pm8001/pm8001_init.c         | 1 +
-> >   drivers/scsi/qla2xxx/qla_isr.c            | 1 +
-> >   drivers/scsi/smartpqi/smartpqi_init.c     | 7 +++++--
-> >   8 files changed, 26 insertions(+), 7 deletions(-)
-> >
-> 
-> All of these drivers are not aware of CPU hotplug, and as such
-> will not be notified when the number of CPUs changes.
-> But you use 'blk_mq_online_queue_affinity()' for all of these
-> drivers.
-> Wouldn't 'blk_mq_possible_queue_affinit()' a better choice here
-> to insulate against CPU hotplug effects?
-> 
-> Also some drivers which are using irq affinity (eg aacraid, lpfc) are
-> missing from these conversions. Why?
+qla2x00_start_sp() returns only negative error codes or QLA_SUCCESS.
+Therefore, comparing its return value with positive error codes 
+(e.g., if (_rval == EAGAIN)) causes logical errors.
 
-I've updated both drivers to use pci_alloc_irq_vectors_affinity with the
-PCI_IRQ_AFFINITY flag. But then I saw this:
+Qianfeng Rong (3):
+  scsi: qla2xxx: edif: Fix incorrect sign of error code
+  scsi: qla2xxx: Fix incorrect sign of error code in
+    START_SP_W_RETRIES()
+  scsi: qla2xxx: Fix incorrect sign of error code in
+    qla_nvme_xmt_ls_rsp()
 
-  dafeaf2c03e7 ("scsi: aacraid: Stop using PCI_IRQ_AFFINITY")
+ drivers/scsi/qla2xxx/qla_edif.c | 4 ++--
+ drivers/scsi/qla2xxx/qla_init.c | 4 ++--
+ drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
-So we need be careful here.
+-- 
+2.34.1
 
-In the case of lpfc (and qla2xxx), the nvme-fabrics core needs to be
-updated too (gets out ouf sync with the number of queues allocated). I
-already have patches for this. But I'd say we first continue with this
-series before the next set of patches.
-
-Thus I decided to drop all the driver updates which are currently not
-using pci_alloc_irq_vectors_affinity and PCI_IRQ_AFFINITY. These are
-supporting managed irqs thus these should be all ready for this feature.
-
-For the rest of the drivers, I'd rather update one by one so we don't
-introduce regressions (e.g. aacraid)
