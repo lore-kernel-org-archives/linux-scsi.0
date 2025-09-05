@@ -1,137 +1,141 @@
-Received: from mail-oa1-f42.google.com (mail-oa1-f42.google.com [209.85.160.42])
+Received: from mail-ed1-f47.google.com (mail-ed1-f47.google.com [209.85.208.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4D3EB661;
-	Fri,  5 Sep 2025 01:50:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9335E21767A
+	for <linux-scsi@vger.kernel.org>; Fri,  5 Sep 2025 06:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757037061; cv=none; b=nO1tddJzN5RzEd6j56bnkEG/iA8pPcL6fsYOXhRGja/uTeEjeHaV8M64W9Ux7ueSttwHKcqg1/JTEP49vb5Xqt0P7NoPtuyyr9At/mzvTujWQ8BIJ2vu97lTO2B0DP5cSDmjR8//ed8LhthveyCPmW2fLSj//1EIK8qLv/lpX78=
+	t=1757052916; cv=none; b=G6fdqhZnsvQq/tA8A0M7in3r6O8PzmEIKeR47x2OMOFPB/MKKJBVXNK867H5It0VvCBcUUaACo6B7Z+ttQy0SxdTi5KgKspUKDXNJWotqItRPiSRrJGKULsosVFip6ALmwYcqDcKfqvqnvnW5ADtJJEZXyIARBv5Ux4cjWCip64=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757037061; c=relaxed/simple;
-	bh=mtUCiZFkROrmNmZueNDQiWOeAr2ehmsSpZK0qNYFgkI=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=qiol/+mYpgQBqfOtrMXbT2GnLWlhDS16z5Ax/oDSTgoVTH/+foDfw+dkPKwdek8wQUsqBzGtfrTiBN7XnCv/EtwHyZ2v4A0MHNhk4aQ3lsxkjNaOsYojoUEllpPfLbF8hGJ/PztBboX918JsGAyADdjBZIvpxwqp0Tr8DKYt5Ik=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=RD+pAQH1; arc=none smtp.client-ip=209.85.160.42
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1757052916; c=relaxed/simple;
+	bh=4QB78LNQwxKAsA68SulDE/sw/iH3uDbwsF2AQjDBOCs=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=p+f7RlR+KoOpedebpDcwIc883MW/XvUHSeGDU7N4BUysn54xaBf6LkqpEltS2aojMZEJr+L0X50T8Lx922IvAuVSjaGfAPy1n3lmsRSN9zmD5IR0AoWVhdiBz77pmxp0q92ryJyBC7sF9iawb+D0UitB/BKDJANC9UndM4QZSss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com; spf=pass smtp.mailfrom=ionos.com; dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b=WCewLAdo; arc=none smtp.client-ip=209.85.208.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=ionos.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=ionos.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="RD+pAQH1"
-Received: by mail-oa1-f42.google.com with SMTP id 586e51a60fabf-30ccea8a199so1681024fac.2;
-        Thu, 04 Sep 2025 18:50:59 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=ionos.com header.i=@ionos.com header.b="WCewLAdo"
+Received: by mail-ed1-f47.google.com with SMTP id 4fb4d7f45d1cf-61c78dc8b12so352900a12.3
+        for <linux-scsi@vger.kernel.org>; Thu, 04 Sep 2025 23:15:13 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757037059; x=1757641859; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8JY0OivZfKZISUUtnUE77EU75I1wp67Mbf/W+WdkKKE=;
-        b=RD+pAQH1aqQEM5sazVYmKev95fa3DNuPejOposje2zr4HsLas+dsAmyL/GC+GG+JPa
-         yM+W0vNMabqbRHmZaqqzWmJGIPK1Rl/xZ4O0QKmWjyO7KvcbsodZslU6jdpg9TaQl+NW
-         tBiSFccHuo4tOfUEvOGc/5MadlFufuJAdFy7AhDdpehD5s/6TFZZSFTyPMgHJ/yjFuGT
-         04YVruPFwS7Qeo6f49fXvAipUWCjJJVIyYJlR32Chcf4QZRx4KM+6AIi7hZ4wRcGdKd5
-         HMh/Nes7Wo7k7fcmTT45Xs2ptp86cuZUhwru7JrwGHA5WxCCTgsTOrOEJcRrYyOvRGuT
-         iusA==
+        d=ionos.com; s=google; t=1757052912; x=1757657712; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=67Fan9f0fhfdCk8yqG4XmOKNFNUAhVKb3cVNbIqGl/s=;
+        b=WCewLAdoKtdo8jkGFbffWFrZVuD9nvvpv6EPBWGIrbZwEUUWtItcvNcQoYoaszr4PW
+         y4Ajw2DZSXyGk9schrUGWnCguNtZQtN1dG7XbbcPJZ9bQ3O4VCeN9fjFcs3Z3zs/a828
+         OR7sHZAUQlRZ/CbaPvFsjDiKUBjIt+MHCW6nDu/ZRZrA5JDsIMQfqw89/bFpupSTMTDZ
+         QpO7dkLYfykfvD7j3J08M1LWT9FlZZ+/Zp0PNfCOYFSi576Z+970F4Thxi8F4fMMcpOk
+         4WVSkGmKZztk8QAvnBqQuNd/Wc0qXrZdxSRlKGXeYKHtsHDgxfqWkxj3lnNuo7vGUxiK
+         CS7Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757037059; x=1757641859;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8JY0OivZfKZISUUtnUE77EU75I1wp67Mbf/W+WdkKKE=;
-        b=a4eM/g5MesZbCxQr3uXDqil3SecaJINFRDIbdyk3eWHmyIr5td8vIE1Z/x/Cp0MfsN
-         AOrvTriv8SHC20s3eFTBwLU1F2C+9cbX88NCPASuc5ffCAQXWcJpWYQqVHoirGvV74hQ
-         cqSofNd0TVJaXSijIjelyES2Zeu2FJhjwhC6R5CkEIN9bLsM3bOJYu7AGTixsiM/NCn1
-         1JLdJIIEX9jkARaO5SkOGAVPCMTb6xlj5zS/okxPTXfQ9JbPTxnjG5GyUXGI3sUNVUiX
-         Ixb+XhZqYIBY9z+8b4cezIRPulrRR2oSavTcIob0n23vJxIHOthajJilhz2ORem05BMS
-         ma0A==
-X-Forwarded-Encrypted: i=1; AJvYcCUtwBEA0YJl83aNSFbnGzR/jxKNF0+XMt6MGSF4pnkZEZHOOwOukWjd3smgAU2MAFXR7+BR90PfzKT4sKI=@vger.kernel.org
-X-Gm-Message-State: AOJu0YzgIoqCXcUlNQKpfPBYxwvDdD2luoYTwEd9P4zT2TMQpDBG4JNy
-	PQoA3FZoG5+N5r3Hi9uALBywbFnSAyKAxvmlXRC3O+zNhgBqBWcpSPwyg4St4CcH
-X-Gm-Gg: ASbGncvO3OP9lzYlQRbbEVHLoYI1AoxELhQiYPrstrNZsiJ5vC8L9iIT5CEeAiN14Wo
-	MY+cPwPTl/YtCj6010RIboAaeoqWJKape0VcXJr5T8+AD0QhvEigr21RM+PyXXSpdLSaymAI8D1
-	tDbbH2i64FLjupOT+sfgmo4/lFln84qTKxBgnvhTE9WBCttwu3rGMRWbIsr2wfZASKdo4rVGQyD
-	Dq5FbWxXZB9Pqb+6xjpahx+yfEdtSDb6eV2x8fNsMUWvefqW8zktcbAkjZIq/YMzl+NEbc82X8v
-	kGXAYncQ6bmDO3Jqaqxr/vc9wsQg0ZiMRr4K5lT92HzkWhT+400nCf2xYOV7Vxiqiw/iGYCUTGC
-	PuUz1NGri9+FaePPREHHq0NiDRwRQuaiv4KOaug==
-X-Google-Smtp-Source: AGHT+IEUOSHI82q+qUqzWnyKrSzQRvdztHSGTkGFLJQrV/Qab/Uy462NQfF+hyPQzgE+WUmNpDc60w==
-X-Received: by 2002:a05:6871:230c:b0:30c:9385:bf11 with SMTP id 586e51a60fabf-3196309acf7mr10018044fac.3.1757037058680;
-        Thu, 04 Sep 2025 18:50:58 -0700 (PDT)
-Received: from ryzoh.. ([2804:14c:5fc8:8033:c6df:ff74:ed73:ebff])
-        by smtp.googlemail.com with ESMTPSA id 586e51a60fabf-32128eaef7bsm229154fac.26.2025.09.04.18.50.56
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 04 Sep 2025 18:50:58 -0700 (PDT)
-From: Pedro Demarchi Gomes <pedrodemargomes@gmail.com>
-To: martin.petersen@oracle.com,
-	James.Bottomley@HansenPartnership.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Pedro Demarchi Gomes <pedrodemargomes@gmail.com>
-Subject: [PATCH] scsi: mpi3mr: Replace one-element arrays with flexible-array members 
-Date: Thu,  4 Sep 2025 22:43:45 -0300
-Message-Id: <20250905014345.7054-1-pedrodemargomes@gmail.com>
-X-Mailer: git-send-email 2.39.5
+        d=1e100.net; s=20230601; t=1757052912; x=1757657712;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=67Fan9f0fhfdCk8yqG4XmOKNFNUAhVKb3cVNbIqGl/s=;
+        b=Jwh++ooTNHIi5MAPFkfj7NCRczIxVwZMGgrTpWaaR14gkgnrBHGPYGsJ6soejAy0CI
+         6mRMKKjpOp0ru7qw1zcx2IDMpW66bZWcbQ76xmjV/tO1lU+D5iJbpK+DBa5Ah9MS41wT
+         LsmGXiH4nth+5SCsGB1AliUubnyND/UX+8RXJtlfSZrYg+6IkjmhkqND4600RCF2VSbx
+         nvB+xFCLXRdusXKiu1SNHEVO4bWYzVacKW+V0gFlhiRo5zZR/uLBmUwoZt3HK8WxOQVe
+         1MVVtrxuSbbvGYkogIDHcmN4s40zrbnkCGi20OkAGiyaXFv02TdKSMVJTrWPz9eLXy/s
+         6twQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUendHZ415mU26MHG7GWti6cw6kAL/bUv5MS/r1IOSkZhbCWK/UlSlBE2w4BVT4+5ut3jA9BtslaAr5@vger.kernel.org
+X-Gm-Message-State: AOJu0YxkjtIUZAhtoA29CTVJu2yIocnbCTbWyIreCFxe29rnYnHfhg0l
+	lgBvfaADaT1Fv+xRKJD5w6prknHLKcFBhvsU4vQNiT2rOaLz1Tt3elPYe1XfiHYD8qN8N+nZbat
+	OUJqgjSIkYzRq3PNt5GV1LU+jFGEYDGqT980kKUp2bA==
+X-Gm-Gg: ASbGncu9j2NoESqV84pHE4yPsWasszMc6quQfs+a3C3Wzn8EsHpngqBVkLIXz2EhUmi
+	v/MBzaALUmbJYmhqIAKdEtulSqwk/2Q0Sgq7pru2ItHqih0guHWBFI4ftKYV/lCuADf6X2qI5ns
+	j9waRp5XR5rheuJZiOOpk8k3YiRSSDX5ncrxeYXH9Mc7NQeuzBY7Gw86rqXhFVhupK16Y8BHn9U
+	mcmEK34
+X-Google-Smtp-Source: AGHT+IGQxtNMXZdvajLZ7J8QVJRCMBGrRVcTSOlLx1yX827VXeUjk0Y0uoYjfJG3Qk/GwD1+mtNnIEotbRORPtK5gAk=
+X-Received: by 2002:a05:6402:430b:b0:620:bf3a:f6dc with SMTP id
+ 4fb4d7f45d1cf-620bf3afabamr1472744a12.4.1757052911908; Thu, 04 Sep 2025
+ 23:15:11 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+References: <aLmoE8CznVPres5r@kspp>
+In-Reply-To: <aLmoE8CznVPres5r@kspp>
+From: Jinpu Wang <jinpu.wang@ionos.com>
+Date: Fri, 5 Sep 2025 08:15:02 +0200
+X-Gm-Features: Ac12FXzLRYvr9qxSpOLdM_cu9n8ZpiBkps4v2s9lawoV77lRbVRWUjzUv-Bi5yo
+Message-ID: <CAMGffE=4KUt2y_-C32YaVtJVFiyU+1T=gnu1D0m+MxXs=X05kQ@mail.gmail.com>
+Subject: Re: [PATCH v2][next] scsi: pm80xx: Avoid -Wflex-array-member-not-at-end
+ warnings
+To: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: Jack Wang <jinpu.wang@cloud.ionos.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-One-element arrays are deprecated, and we are replacing them with flexible
-array members instead. So, replace one-element arrays with flexible-array
-members in multiple structures.
-
-Signed-off-by: Pedro Demarchi Gomes <pedrodemargomes@gmail.com>
----
- include/uapi/scsi/scsi_bsg_mpi3mr.h | 10 +++++-----
- 1 file changed, 5 insertions(+), 5 deletions(-)
-
-diff --git a/include/uapi/scsi/scsi_bsg_mpi3mr.h b/include/uapi/scsi/scsi_bsg_mpi3mr.h
-index f5ea1db92339..9e5b6ced53ab 100644
---- a/include/uapi/scsi/scsi_bsg_mpi3mr.h
-+++ b/include/uapi/scsi/scsi_bsg_mpi3mr.h
-@@ -205,7 +205,7 @@ struct mpi3mr_all_tgt_info {
- 	__u16	num_devices;
- 	__u16	rsvd1;
- 	__u32	rsvd2;
--	struct mpi3mr_device_map_info dmi[1];
-+	struct mpi3mr_device_map_info dmi[];
- };
- 
- /**
-@@ -248,7 +248,7 @@ struct mpi3mr_logdata_entry {
- 	__u8	valid_entry;
- 	__u8	rsvd1;
- 	__u16	rsvd2;
--	__u8	data[1]; /* Variable length Array */
-+	__u8	data[]; /* Variable length Array */
- };
- 
- /**
-@@ -259,7 +259,7 @@ struct mpi3mr_logdata_entry {
-  * @entry: Variable length Log data entry array
-  */
- struct mpi3mr_bsg_in_log_data {
--	struct mpi3mr_logdata_entry entry[1];
-+	__DECLARE_FLEX_ARRAY(struct mpi3mr_logdata_entry, entry);
- };
- 
- /**
-@@ -307,7 +307,7 @@ struct mpi3mr_bsg_in_hdb_status {
- 	__u8    element_trigger_format;
- 	__u16	rsvd2;
- 	__u32	rsvd3;
--	struct mpi3mr_hdb_entry entry[1];
-+	struct mpi3mr_hdb_entry entry[];
- };
- 
- /**
-@@ -416,7 +416,7 @@ struct mpi3mr_buf_entry_list {
- 	__u8	rsvd1;
- 	__u16	rsvd2;
- 	__u32	rsvd3;
--	struct mpi3mr_buf_entry buf_entry[1];
-+	struct mpi3mr_buf_entry buf_entry[];
- };
- /**
-  * struct mpi3mr_bsg_mptcmd -  Generic bsg data
--- 
-2.39.5
-
+On Thu, Sep 4, 2025 at 4:54=E2=80=AFPM Gustavo A. R. Silva
+<gustavoars@kernel.org> wrote:
+>
+> Remove unused field residual_count in a couple of structures,
+> and with this, fix the following -Wflex-array-member-not-at-end
+> warnings:
+>
+> drivers/scsi/pm8001/pm8001_hwi.h:342:33: warning: structure containing a =
+flexible array member is not at the end of another structure [-Wflex-array-=
+member-not-at-end]
+> drivers/scsi/pm8001/pm80xx_hwi.h:561:32: warning: structure containing a =
+flexible array member is not at the end of another structure [-Wflex-array-=
+member-not-at-end]
+>
+> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+oh, indeed, v1 is wrong, and v2 is right fix.
+Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
+> ---
+> Changes in v2:
+>  - Remove unused field residual_count. (James)
+>
+> v1:
+>  - Link: https://lore.kernel.org/linux-hardening/aLiMoNzLs1_bu4eJ@kspp/
+>
+>  drivers/scsi/pm8001/pm8001_hwi.h | 3 ++-
+>  drivers/scsi/pm8001/pm80xx_hwi.h | 3 ++-
+>  2 files changed, 4 insertions(+), 2 deletions(-)
+>
+> diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm800=
+1_hwi.h
+> index fc2127dcb58d..170853dbf952 100644
+> --- a/drivers/scsi/pm8001/pm8001_hwi.h
+> +++ b/drivers/scsi/pm8001/pm8001_hwi.h
+> @@ -339,8 +339,9 @@ struct ssp_completion_resp {
+>         __le32  status;
+>         __le32  param;
+>         __le32  ssptag_rescv_rescpad;
+> +
+> +       /* Must be last --ends in a flexible-array member. */
+>         struct ssp_response_iu  ssp_resp_iu;
+> -       __le32  residual_count;
+>  } __attribute__((packed, aligned(4)));
+>
+>
+> diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80x=
+x_hwi.h
+> index eb8fd37b2066..b13d42701b1b 100644
+> --- a/drivers/scsi/pm8001/pm80xx_hwi.h
+> +++ b/drivers/scsi/pm8001/pm80xx_hwi.h
+> @@ -558,8 +558,9 @@ struct ssp_completion_resp {
+>         __le32  status;
+>         __le32  param;
+>         __le32  ssptag_rescv_rescpad;
+> +
+> +       /* Must be last --ends in a flexible-array member. */
+>         struct ssp_response_iu ssp_resp_iu;
+> -       __le32  residual_count;
+>  } __attribute__((packed, aligned(4)));
+>
+>  #define SSP_RESCV_BIT  0x00010000
+> --
+> 2.43.0
+>
