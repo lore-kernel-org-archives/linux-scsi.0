@@ -1,184 +1,191 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F16E429BD9C;
-	Fri,  5 Sep 2025 20:03:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 34184280A5F;
+	Fri,  5 Sep 2025 20:08:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757102592; cv=none; b=Wn36ji6S2YcR5w63jJURZyRe5zkIazBnpKSS4nTDtsoG8GBHwErwku5jLSYea/0WAa3RQm3attVirJhZyNex3WT0ldGn128T/CGhxWpwmZh+EozWBd5KbxZ0iaovSRsBJ+kgQ5EDfcACV+LqYhZ6C1qUg8cjSN6UCf9srA52fqw=
+	t=1757102884; cv=none; b=esA16IQtJunG5a/yJlCxqpuHOTonFUMzxg8Cho092RblnRaQJs+A/xWdfhapuaemdUf6VJB3grEGd5/QmCZ8LHFMR+hYxF7ckA4XSXnQA7t2cyqTiAZgZLvfvxBeYby7n9ctEb1AGOi3Vio3OYLNdllXTe4KK0IixudKBpblwWE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757102592; c=relaxed/simple;
-	bh=/BLTqeSIpB5s6ouWRR3xCLXSMkfoJgSu6pgsd5pyguQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:MIME-Version; b=GPr+hk60/1WIrZTZNVxTtVg60PCfqC13beZQ4E9X9r46GaVGIZX+mp3+OEsDPTFqwYX0QhZKYR3BYuMICuBQqVd2fziyCOJyu27JODJaiBTRATK7ypZuPGIPfcC66wZyiqjdRYKvpLhSJQ4jcUglatZ+rKYXJ5GHsojFOq35TsU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=GyUYPJaA; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1757102884; c=relaxed/simple;
+	bh=2m6fPzkCRC92qTFZavMPj/0W9huhFTFWzZEWQiM0e+Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=XHkWP3iDOcjvFbJHx4muxFHr7g4fXfk81u3/MHI+YSg72AqwIglilC0FypKhl+1OanhWhH+U1qG/f8bzr7/WRGgS4cfuZKeNrjkQvqDgsSsE8bZqa08UVVeWVgeK443OLjG8LY89tUgG3QaCLNZlLMJsPE6TqsvI9oI9XolngIY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=bsZ+Tv9v; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="GyUYPJaA"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1757102587;
-	bh=/BLTqeSIpB5s6ouWRR3xCLXSMkfoJgSu6pgsd5pyguQ=;
-	h=Message-ID:Subject:From:To:Date:From;
-	b=GyUYPJaAkYWsj/4KRIMp8hMQ5LZmb6zGBvs9ofvM2y+MYIj8y7mKGOsG53tZmhzWt
-	 TpatnfQSXIw03hS79Tj5j1tMk/+02/3vtEpkUHqqpaFAcHov0hf5v6p1vvqDAvQH6w
-	 nDlXrdqaKzrE3vYUJVp/snzRYzb27vjv+SxcZzOw=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 221591C02EF;
-	Fri, 05 Sep 2025 16:03:07 -0400 (EDT)
-Message-ID: <8bc12ae71082b754ffb51490b26e310077d0162d.camel@HansenPartnership.com>
-Subject: [GIT PULL] SCSI fixes for 6.17-rc4
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
-	 <torvalds@linux-foundation.org>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
-	 <linux-kernel@vger.kernel.org>
-Date: Fri, 05 Sep 2025 16:03:06 -0400
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="bsZ+Tv9v"
+Received: from [10.0.0.114] (c-67-182-156-199.hsd1.wa.comcast.net [67.182.156.199])
+	by linux.microsoft.com (Postfix) with ESMTPSA id 98B5220171C4;
+	Fri,  5 Sep 2025 13:08:01 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 98B5220171C4
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1757102882;
+	bh=uotTTD65zan8TmCm5oKAbPiE7QB78kRP80SKbUy3768=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=bsZ+Tv9vlFvx3FSsyyJQ00ypVCg071rBzhVBQzQ/LnPzkj/syqiM8BQWw8v4Czew8
+	 +mS7K/hwRDMDO3GD3r5fPtl8h2fOvZArSQGq0dxtTszR8YTrcw26eytE3rGQ7MMIqk
+	 vnwEKn2ou0NMnA2ymmTpNmSgop+6sZ4I9ED+9giU=
+Message-ID: <231f05cb-4f33-48ac-bb2e-1359ed52e606@linux.microsoft.com>
+Date: Fri, 5 Sep 2025 13:08:00 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V0 0/2] Fix CONFIG_HYPERV and vmbus related anamoly
+To: Mukesh R <mrathor@linux.microsoft.com>,
+ Michael Kelley <mhklinux@outlook.com>,
+ "dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+ "linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+ "netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+ "linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-fbdev@vger.kernel.org" <linux-fbdev@vger.kernel.org>,
+ "linux-arch@vger.kernel.org" <linux-arch@vger.kernel.org>,
+ "virtualization@lists.linux.dev" <virtualization@lists.linux.dev>
+Cc: "maarten.lankhorst@linux.intel.com" <maarten.lankhorst@linux.intel.com>,
+ "mripard@kernel.org" <mripard@kernel.org>,
+ "tzimmermann@suse.de" <tzimmermann@suse.de>,
+ "airlied@gmail.com" <airlied@gmail.com>, "simona@ffwll.ch"
+ <simona@ffwll.ch>, "jikos@kernel.org" <jikos@kernel.org>,
+ "bentiss@kernel.org" <bentiss@kernel.org>,
+ "kys@microsoft.com" <kys@microsoft.com>,
+ "haiyangz@microsoft.com" <haiyangz@microsoft.com>,
+ "wei.liu@kernel.org" <wei.liu@kernel.org>,
+ "decui@microsoft.com" <decui@microsoft.com>,
+ "dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+ "andrew+netdev@lunn.ch" <andrew+netdev@lunn.ch>,
+ "davem@davemloft.net" <davem@davemloft.net>,
+ "edumazet@google.com" <edumazet@google.com>,
+ "kuba@kernel.org" <kuba@kernel.org>, "pabeni@redhat.com"
+ <pabeni@redhat.com>, "bhelgaas@google.com" <bhelgaas@google.com>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "gregkh@linuxfoundation.org" <gregkh@linuxfoundation.org>,
+ "deller@gmx.de" <deller@gmx.de>, "arnd@arndb.de" <arnd@arndb.de>,
+ "sgarzare@redhat.com" <sgarzare@redhat.com>,
+ "horms@kernel.org" <horms@kernel.org>
+References: <20250828005952.884343-1-mrathor@linux.microsoft.com>
+ <SN6PR02MB4157917D84D00DBDAF54BD69D406A@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <ff4c58f1-564d-ddfa-bdff-48ffee6e0d72@linux.microsoft.com>
+ <SN6PR02MB41573C5451F21286667C5441D400A@SN6PR02MB4157.namprd02.prod.outlook.com>
+ <4f38c613-255c-eaf6-0d50-28f8ffc02fff@linux.microsoft.com>
+Content-Language: en-US
+From: Nuno Das Neves <nunodasneves@linux.microsoft.com>
+In-Reply-To: <4f38c613-255c-eaf6-0d50-28f8ffc02fff@linux.microsoft.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-Obvious driver patch plus update to sr to add back rotational media
-flag since CDROMS are rotational.
+On 9/4/2025 11:18 AM, Mukesh R wrote:
+> On 9/4/25 09:26, Michael Kelley wrote:
+>> From: Mukesh R <mrathor@linux.microsoft.com> Sent: Wednesday, September 3, 2025 7:17 PM
+>>>
+>>> On 9/2/25 07:42, Michael Kelley wrote:
+>>>> From: Mukesh Rathor <mrathor@linux.microsoft.com> Sent: Wednesday, August 27, 2025 6:00 PM
+>>>>>
+>>>>> At present, drivers/Makefile will subst =m to =y for CONFIG_HYPERV for hv
+>>>>> subdir. Also, drivers/hv/Makefile replaces =m to =y to build in
+>>>>> hv_common.c that is needed for the drivers. Moreover, vmbus driver is
+>>>>> built if CONFIG_HYPER is set, either loadable or builtin.
+>>>>>
+>>>>> This is not a good approach. CONFIG_HYPERV is really an umbrella config that
+>>>>> encompasses builtin code and various other things and not a dedicated config
+>>>>> option for VMBUS. Vmbus should really have a config option just like
+>>>>> CONFIG_HYPERV_BALLOON etc. This small series introduces CONFIG_HYPERV_VMBUS
+>>>>> to build VMBUS driver and make that distinction explicit. With that
+>>>>> CONFIG_HYPERV could be changed to bool.
+>>>>
+>>>> Separating the core hypervisor support (CONFIG_HYPERV) from the VMBus
+>>>> support (CONFIG_HYPERV_VMBUS) makes sense to me. Overall the code
+>>>> is already mostly in separate source files code, though there's some
+>>>> entanglement in the handling of VMBus interrupts, which could be
+>>>> improved later.
+>>>>
+>>>> However, I have a compatibility concern. Consider this scenario:
+>>>>
+>>>> 1) Assume running in a Hyper-V VM with a current Linux kernel version
+>>>>     built with CONFIG_HYPERV=m.
+>>>> 2) Grab a new version of kernel source code that contains this patch set.
+>>>> 3) Run 'make olddefconfig' to create the .config file for the new kernel.
+>>>> 4) Build the new kernel. This succeeds.
+>>>> 5) Install and run the new kernel in the Hyper-V VM. This fails.
+>>>>
+>>>> The failure occurs because CONFIG_HYPERV=m is no longer legal,
+>>>> so the .config file created in Step 3 has CONFIG_HYPERV=n. The
+>>>> newly built kernel has no Hyper-V support and won't run in a
+>>>> Hyper-V VM.
 
-The patch is available here:
+It surprises me a little that =m doesn't get 'fixed up' to =y in this case.
+I guess any invalid value turns to =n, which makes sense most of the time.
 
-git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+>>>>
+>>>> As a second issue, if in Step 1 the current kernel was built with
+>>>> CONFIG_HYPERV=y, then the .config file for the new kernel will have
+>>>> CONFIG_HYPERV=y, which is better. But CONFIG_HYPERV_VMBUS
+>>>> defaults to 'n', so the new kernel doesn't have any VMBus drivers
+>>>> and won't run in a typical Hyper-V VM.
+>>>>
+>>>> The second issue could be fixed by assigning CONFIG_HYPERV_VMBUS
+>>>> a default value, such as whatever CONFIG_HYPERV is set to. But
+>>>> I'm not sure how to fix the first issue, except by continuing to
+>>>> allow CONFIG_HYPERV=m.
 
-The short changelog is:
+I'm wondering, is there a path for this change, then? Are there some
+intermediate step/s we could take to minimize the problem?
 
-John Evans (1):
-      scsi: lpfc: Fix buffer free/clear order in deferred receive path
+>>>
+>>> To certain extent, imo, users are expected to check config files
+>>> for changes when moving to new versions/releases, so it would be a
+>>> one time burden. 
+>>
+>> I'm not so sanguine about the impact. For those of us who work with
+>> Hyper-V frequently, yes, it's probably not that big of an issue -- we can
+>> figure it out. But a lot of Azure/Hyper-V users aren't that familiar with
+>> the details of how the Kconfig files are put together. And the issue occurs
+>> with no error messages that something has gone wrong in building
+>> the kernel, except that it won't boot. Just running "make olddefconfig"
+>> has worked in the past, so some users will be befuddled and end up
+>> generating Azure support incidents. I also wonder about breaking
+>> automated test suites for new kernels, as they are likely to be running
+>> "make olddefconfig" or something similar as part of the automation.
+>>
+>>> CONFIG_HYPERV=m is just broken imo as one sees that
+>>> in .config but magically symbols in drivers/hv are in kerenel.
+>>>
+>>
+>> I agree that's not ideal. But note that some Hyper-V code and symbols
+>> like ms_hyperv_init_platform() and related functions show up when
+>> CONFIG_HYPERVISOR_GUEST=y, even if CONFIG_HYPERV=n. That's
+>> the code in arch/x86/kernel/cpu/mshyperv.c and it's because Hyper-V
+>> is one of the recognized and somewhat hardwired hypervisors (like
+>> VMware, for example).
+>>
+>> Finally, there are about a dozen other places in the kernel that use
+>> the same Makefile construct to make some code built-in even though
+>> the CONFIG option is set to "m". That may not be enough occurrences
+>> to make it standard practice, but Hyper-V guests are certainly not the
+>> only case.
+>>
+>> In my mind, this is judgment call with no absolute right answer. What
+>> do others think about the tradeoffs?
+> 
+> Wei had said in private message that he agrees this is a good idea. Nuno
+> said earlier above: 
+> 
+> "FWIW I think it's a good idea, interested to hear what others think."
+> 
+That was before Michael pointed out the potential issues which I was
+unaware of. Let's see if there's a path that is smoother for all the
+downstream users who may be compiling with CONFIG_HYPERV=m.
 
-Ming Lei (1):
-      scsi: sr: Reinstate rotational media flag
+Nuno
 
-And the diffstat:
-
- drivers/scsi/lpfc/lpfc_nvmet.c | 10 ++++++----
- drivers/scsi/sr.c              | 16 ++++++++++------
- 2 files changed, 16 insertions(+), 10 deletions(-)
-
-With full diff below.
-
-Regards,
-
-James
-
----
-
-diff --git a/drivers/scsi/lpfc/lpfc_nvmet.c b/drivers/scsi/lpfc/lpfc_nvmet.=
-c
-index fba2e62027b7..4cfc928bcf2d 100644
---- a/drivers/scsi/lpfc/lpfc_nvmet.c
-+++ b/drivers/scsi/lpfc/lpfc_nvmet.c
-@@ -1243,7 +1243,7 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgt=
-port,
- struct lpfc_nvmet_tgtport *tgtp;
- struct lpfc_async_xchg_ctx *ctxp =3D
- container_of(rsp, struct lpfc_async_xchg_ctx, hdlrctx.fcp_req);
-- struct rqb_dmabuf *nvmebuf =3D ctxp->rqb_buffer;
-+ struct rqb_dmabuf *nvmebuf;
- struct lpfc_hba *phba =3D ctxp->phba;
- unsigned long iflag;
-=20
-@@ -1251,13 +1251,18 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *t=
-gtport,
- lpfc_nvmeio_data(phba, "NVMET DEFERRCV: xri x%x sz %d CPU %02x\n",
- ctxp->oxid, ctxp->size, raw_smp_processor_id());
-=20
-+ spin_lock_irqsave(&ctxp->ctxlock, iflag);
-+ nvmebuf =3D ctxp->rqb_buffer;
- if (!nvmebuf) {
-+ spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
- lpfc_printf_log(phba, KERN_INFO, LOG_NVME_IOERR,
- "6425 Defer rcv: no buffer oxid x%x: "
- "flg %x ste %x\n",
- ctxp->oxid, ctxp->flag, ctxp->state);
- return;
- }
-+ ctxp->rqb_buffer =3D NULL;
-+ spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
-=20
- tgtp =3D phba->targetport->private;
- if (tgtp)
-@@ -1265,9 +1270,6 @@ lpfc_nvmet_defer_rcv(struct nvmet_fc_target_port *tgt=
-port,
-=20
- /* Free the nvmebuf since a new buffer already replaced it */
- nvmebuf->hrq->rqbp->rqb_free_buffer(phba, nvmebuf);
-- spin_lock_irqsave(&ctxp->ctxlock, iflag);
-- ctxp->rqb_buffer =3D NULL;
-- spin_unlock_irqrestore(&ctxp->ctxlock, iflag);
- }
-=20
- /**
-diff --git a/drivers/scsi/sr.c b/drivers/scsi/sr.c
-index b17796d5ee66..add13e306898 100644
---- a/drivers/scsi/sr.c
-+++ b/drivers/scsi/sr.c
-@@ -475,13 +475,21 @@ static blk_status_t sr_init_command(struct scsi_cmnd =
-*SCpnt)
-=20
- static int sr_revalidate_disk(struct scsi_cd *cd)
- {
-+ struct request_queue *q =3D cd->device->request_queue;
- struct scsi_sense_hdr sshdr;
-+ struct queue_limits lim;
-+ int sector_size;
-=20
- /* if the unit is not ready, nothing more to do */
- if (scsi_test_unit_ready(cd->device, SR_TIMEOUT, MAX_RETRIES, &sshdr))
- return 0;
- sr_cd_check(&cd->cdi);
-- return get_sectorsize(cd);
-+ sector_size =3D get_sectorsize(cd);
-+
-+ lim =3D queue_limits_start_update(q);
-+ lim.logical_block_size =3D sector_size;
-+ lim.features |=3D BLK_FEAT_ROTATIONAL;
-+ return queue_limits_commit_update_frozen(q, &lim);
- }
-=20
- static int sr_block_open(struct gendisk *disk, blk_mode_t mode)
-@@ -721,10 +729,8 @@ static int sr_probe(struct device *dev)
-=20
- static int get_sectorsize(struct scsi_cd *cd)
- {
-- struct request_queue *q =3D cd->device->request_queue;
- static const u8 cmd[10] =3D { READ_CAPACITY };
- unsigned char buffer[8] =3D { };
-- struct queue_limits lim;
- int err;
- int sector_size;
- struct scsi_failure failure_defs[] =3D {
-@@ -795,9 +801,7 @@ static int get_sectorsize(struct scsi_cd *cd)
- set_capacity(cd->disk, cd->capacity);
- }
-=20
-- lim =3D queue_limits_start_update(q);
-- lim.logical_block_size =3D sector_size;
-- return queue_limits_commit_update_frozen(q, &lim);
-+ return sector_size;
- }
-=20
- static int get_capabilities(struct scsi_cd *cd)
+> Thanks,> -Mukesh
+> 
+> 
 
