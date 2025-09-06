@@ -1,194 +1,74 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED13922D780
-	for <linux-scsi@vger.kernel.org>; Sat,  6 Sep 2025 07:01:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 411AE1F4262;
+	Sat,  6 Sep 2025 11:36:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757142063; cv=none; b=L+w6rKa0qjZioMovjDaj5r+lmWh2YGIbmRfNu0e9pg1llL8YBkngfCrp5IPrnqZ84Xm5V1yNakCvWLPMMaVPZ/7OWvA28BtoqUqT1cWZawmSplqQ31q/kXt9mymr7tnpGleeWWAKLaYjVO5nUiTT7otGOU9fMMh26GYpS7ZJLNQ=
+	t=1757158593; cv=none; b=qque5uN4GLkhcTtSnnFrdmA7B4w+lUfk1apkskN1UBzkicfOlsOroIFegETJCnrPF4dWZQqJtcUdXEBOkxSE+NEW2KUvQwJXQqsrfDDKCZFve9MBEhgty1RRXKmedROAdtajGYXemjxW7aFN1mhT5qxi86XNMuAi9t2MjNQj+O4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757142063; c=relaxed/simple;
-	bh=IG++ZkBD59wzKHu12fgNu7jyIoQUxrPSNiCWC9IyrGQ=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=gwIM7RDgtJIi2jVyTjqdx4Ueq9l0Xiu7BqVw7MsYieupVkboeB/U0KqVPFqPaWmmDtRKbqKCSOTJ/UOIxO6rBmEPnL+TAyXYLFaUVnTc6ZIIEZkpEwEREGhgiTJ9Bt/ZJnWXzXtiXuqJFQD/JP6pbshO3ekiWV67lr1tXNuOnpM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KGpHYhHx; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1757158593; c=relaxed/simple;
+	bh=uk14O7Fz7KUhWd0Sz/kWIAmHtwPD3Rvd0igyAAMEZO0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=OyaWNEbUCywTiBc0slJ282jhn0JaEAqhjuHUb/pGiiKB9OEcXEo8890WsianK/SuUSh1n+mpUtnCTOqWlkngkbzYKTU3Bkx7TU5Zza3cq0HNoSz1NCmPRKwCTpS6rNtTMSR72Fev7DBgncAJPwRsDsPNZSr7qZVdapUYHPIyp1M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=0aS3Hmnx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KGpHYhHx"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1757142061;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=T2JJG+ZfsCIb5mNyWFksWhvinuGju8fueKzmBULEe5U=;
-	b=KGpHYhHxiD+7YN+3JLfySWCD7JyAQN3s8PfW4RiZZ9qT9dRIHfry+6iURcKqBrBPRxXdWb
-	rXSxYNYPeWOMiXtxXanJGit9pBd2MNdqtU4X89wcEcOUuSM+qI+s3tcka3S09glBbgvt0y
-	QDjNdBfQd+6hmiwdej2bcPn8MaAjUPI=
-Received: from mail-wr1-f71.google.com (mail-wr1-f71.google.com
- [209.85.221.71]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-507-uw2Y-KrYMBC7grG6aXqnNw-1; Sat, 06 Sep 2025 03:00:59 -0400
-X-MC-Unique: uw2Y-KrYMBC7grG6aXqnNw-1
-X-Mimecast-MFC-AGG-ID: uw2Y-KrYMBC7grG6aXqnNw_1757142058
-Received: by mail-wr1-f71.google.com with SMTP id ffacd0b85a97d-3e5190bcba1so797317f8f.2
-        for <linux-scsi@vger.kernel.org>; Sat, 06 Sep 2025 00:00:59 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757142058; x=1757746858;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :references:cc:to:from:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=T2JJG+ZfsCIb5mNyWFksWhvinuGju8fueKzmBULEe5U=;
-        b=J1WB7rT8D9WassEaw6en50xprqFUyPNkIci0WVJHm8AV1h5esRJVuS6hA9pLxsV8fM
-         YNFqjAAopVaDSQAn3SFBnvaEO+jx6+p+5AoejM/1w8A78AqLQ7QmCgklpZ/qPhfmOZUB
-         lgueFZsDS9xge8+/baCr05Cao7zbRQ9XaMDgySXI5+hO2BxXXIXh2DxOOwm1igy/aoFS
-         mk4F7ktuns7/0xo7kpCngBOfoszfZIISNa0ZCy2UOzgu2CAjKEIOXbgh9epRvVyX7Ua+
-         hvzg2v46o3Sh5qpTjb0fkdT9zg9Hm9/3vyMegZq7vVII+S7CQ403ER1y6dqIqBlvNyr0
-         hdfQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVuiWimOucn5ExVMgKfikDoViuYF/HYWqwzWZ9vRfwU9mWqgbl4YYy6x/EaFLZs52o70Xx5Wx0gFcGi@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy5XOMtOdIZ6CYIcZJvK7xB/0LTVu3ZZZg9hNQy2bzUDE//ev/H
-	2DEr2dHXQswCOoXgxcu5XtYZfmOA16J7A7wsM5fRkp5s1olaqHd2tld6pNITEWkOPdUsgI8m29m
-	KRMcYKWpy/tDo7T4rDvKD/d+3fBarI9pxgQ7RVbTP0vDyIiCrX3M9ZQubxXPfVHw=
-X-Gm-Gg: ASbGncvgJe0ymnaYJHvKEeJ0e1oJvSiDqqQwuZCFSqokiamQdKM+jjNu1VChtff0XnN
-	X3VLSgdrpgJIAnxWf3VabVcKbJGJ/fX382UBcYudj5NaGTYc2Vurx1bAyNlk6EA+oV1w2ayO991
-	xxqKDjxSHlC5G2zCdLnh3VXweIVkGDe5dCskOJORIY/g1W5mPd2qPbxeUlPr5KeKDQVHpZ4bzC9
-	F6csGPpeKELBQKFdIgKx/we/iTDQpYabCouACufs3TN0LXdIrGQE7tB4gj+NPw7TRrFgAS4HL5F
-	e8M4EBKCwV1ba3VqxMkky9xiz3Z+bRbwOAN1D78F0dTbce4raD493OHw2k5wx5v8BO2Z4lvPxB1
-	A8+HTMB7BEizUkwoqLl8uTh7wBMAJmrFVZm4RuxRBwwhpipKGBY2gNUdEaRsAEwvNj5w=
-X-Received: by 2002:a5d:5f87:0:b0:3e2:804b:bfed with SMTP id ffacd0b85a97d-3e64c1c2183mr835257f8f.42.1757142058260;
-        Sat, 06 Sep 2025 00:00:58 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGdr4VmZX14HWt6vWJrgVQl61309Yoz3EBz+B4BvfuTuYDfgHO59nfbR4v+s7YipRZZX7VN6g==
-X-Received: by 2002:a5d:5f87:0:b0:3e2:804b:bfed with SMTP id ffacd0b85a97d-3e64c1c2183mr835230f8f.42.1757142057809;
-        Sat, 06 Sep 2025 00:00:57 -0700 (PDT)
-Received: from ?IPV6:2003:d8:2f30:de00:8132:f6dc:cba2:9134? (p200300d82f30de008132f6dccba29134.dip0.t-ipconnect.de. [2003:d8:2f30:de00:8132:f6dc:cba2:9134])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3cf3458a67fsm6794555f8f.62.2025.09.06.00.00.54
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Sat, 06 Sep 2025 00:00:56 -0700 (PDT)
-Message-ID: <815cbde4-a56d-446d-b517-c63e12e473de@redhat.com>
-Date: Sat, 6 Sep 2025 09:00:54 +0200
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="0aS3Hmnx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D48BC4CEE7;
+	Sat,  6 Sep 2025 11:36:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1757158592;
+	bh=uk14O7Fz7KUhWd0Sz/kWIAmHtwPD3Rvd0igyAAMEZO0=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=0aS3Hmnx1CryU2e8d8QkOVtY86s28a5CJwX3iD4L/zCnvZ3VRSZioBEsT1D5SGC2n
+	 qlGxzX7lagXQMgx99wPQaX+CwbKjWV9JJmFzHhstRlca5J9tPne/uDFASjxrfCGThb
+	 s7V98zzqhWdiq67ZCxiWvHf4MLO/UF2F4FkmihIA=
+Date: Sat, 6 Sep 2025 13:36:30 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Mukesh Rathor <mrathor@linux.microsoft.com>
+Cc: dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	linux-input@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-arch@vger.kernel.org, virtualization@lists.linux.dev,
+	maarten.lankhorst@linux.intel.com, mripard@kernel.org,
+	tzimmermann@suse.de, airlied@gmail.com, simona@ffwll.ch,
+	jikos@kernel.org, bentiss@kernel.org, kys@microsoft.com,
+	haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+	dmitry.torokhov@gmail.com, andrew+netdev@lunn.ch,
+	davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+	pabeni@redhat.com, bhelgaas@google.com,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	deller@gmx.de, arnd@arndb.de, sgarzare@redhat.com, horms@kernel.org
+Subject: Re: [PATCH v1 2/2] Drivers: hv: Make CONFIG_HYPERV bool
+Message-ID: <2025090621-rumble-cost-2c0d@gregkh>
+References: <20250906010952.2145389-1-mrathor@linux.microsoft.com>
+ <20250906010952.2145389-3-mrathor@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 19/37] mm/gup: remove record_subpages()
-From: David Hildenbrand <david@redhat.com>
-To: John Hubbard <jhubbard@nvidia.com>, linux-kernel@vger.kernel.org
-Cc: Alexander Potapenko <glider@google.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
- Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
- iommu@lists.linux.dev, io-uring@vger.kernel.org,
- Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
- Johannes Weiner <hannes@cmpxchg.org>, kasan-dev@googlegroups.com,
- kvm@vger.kernel.org, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
- linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
- Marco Elver <elver@google.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
- Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
- Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
- Robin Murphy <robin.murphy@arm.com>, Suren Baghdasaryan <surenb@google.com>,
- Tejun Heo <tj@kernel.org>, virtualization@lists.linux.dev,
- Vlastimil Babka <vbabka@suse.cz>, wireguard@lists.zx2c4.com, x86@kernel.org,
- Zi Yan <ziy@nvidia.com>
-References: <20250901150359.867252-1-david@redhat.com>
- <20250901150359.867252-20-david@redhat.com>
- <016307ba-427d-4646-8e4d-1ffefd2c1968@nvidia.com>
- <85e760cf-b994-40db-8d13-221feee55c60@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- qIws/H2t
-In-Reply-To: <85e760cf-b994-40db-8d13-221feee55c60@redhat.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250906010952.2145389-3-mrathor@linux.microsoft.com>
 
+On Fri, Sep 05, 2025 at 06:09:52PM -0700, Mukesh Rathor wrote:
+> With CONFIG_HYPERV and CONFIG_HYPERV_VMBUS separated, change CONFIG_HYPERV
+> to bool from tristate. CONFIG_HYPERV now becomes the core Hyper-V
+> hypervisor support, such as hypercalls, clocks/timers, Confidential
+> Computing setup, PCI passthru, etc. that doesn't involve VMBus or VMBus
+> devices.
 
->    	pmdp = pmd_offset_lockless(pudp, pud, addr);
-> @@ -3046,23 +3041,21 @@ static int gup_fast_pmd_range(pud_t *pudp, pud_t pud, unsigned long addr,
->    
->    		next = pmd_addr_end(addr, end);
->    		if (!pmd_present(pmd))
-> -			return 0;
-> +			break;
->    
-> -		if (unlikely(pmd_leaf(pmd))) {
-> -			/* See gup_fast_pte_range() */
-> -			if (pmd_protnone(pmd))
-> -				return 0;
-> +		if (unlikely(pmd_leaf(pmd)))
-> +			cur_nr_pages = gup_fast_pmd_leaf(pmd, pmdp, addr, next, flags, pages);
-> +		else
-> +			cur_nr_pages = gup_fast_pte_range(pmd, pmdp, addr, next, flags, pages);
->    
-> -			if (!gup_fast_pmd_leaf(pmd, pmdp, addr, next, flags,
-> -				pages, nr))
-> -				return 0;
-> +		nr_pages += cur_nr_pages;
-> +		pages += cur_nr_pages;
->    
-> -		} else if (!gup_fast_pte_range(pmd, pmdp, addr, next, flags,
-> -					       pages, nr))
-> -			return 0;
-> +		if (nr_pages != (next - addr) >> PAGE_SIZE)
-> +			break;
+But why are you making it so that this can not be a module anymore?  You
+are now forcing ALL Linux distro users to always have this code in their
+system, despite not ever using the feature.  That feels like a waste to
+me.
 
-^ cur_nr_pages. Open for suggestions on how to make that thing here even 
-better.
+What is preventing this from staying as a module?  Why must you always
+have this code loaded at all times for everyone?
 
--- 
-Cheers
+thanks,
 
-David / dhildenb
-
+greg k-h
