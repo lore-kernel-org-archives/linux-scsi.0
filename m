@@ -1,72 +1,71 @@
-Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id 9286B145B16;
-	Sat,  6 Sep 2025 01:10:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+Received: from mail-vk1-f169.google.com (mail-vk1-f169.google.com [209.85.221.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0A2D21367;
+	Sat,  6 Sep 2025 05:27:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757121008; cv=none; b=es+VMxo9rCetYxd+Pc2rs7SKCS2p0zwvjPG+KmOf9lT+A3vOmdoJ/u82U8vztLC/+gckNTP2Y35cC7Sedkyu/wIqesAcY9ko/aczLfceQdXSi1ug8aFojWb8twg8z6Sd3/rRTxRKzIZ/jFyKg2S/myoZqZQ/97Fl6V1xkHkBW+U=
+	t=1757136459; cv=none; b=l9+iALC/bvxVCfEwu3+gqy+M+l6+d8M21vwMobd26VM2DJqmely+Q8RmlpF5MFVpSAAipz6a3ZOL8kXoY1g7zxuIQa9NMWvaaYGuvMrGGu2uznqk/RWiiHIUPQoO8zxx71uBkFfjjrfDC0iakef8CBem8d6IcMnH/ymhaEhXPdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757121008; c=relaxed/simple;
-	bh=D3d4EEm9KfZVZrOZRrxKFOPjUiMwSN5Ik0Y3pM8gFgg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=hTu2qd7RthnHw2dMcQaTHwGa9iEbxCp2wtHY1mFbiOCYocZmqJB/X8lzAfIjCFQXILdBkvw2bs9ivj8WyHVj+14Krff5yyZOe4q8b18E2iOu+hyUfRDf4e0uA+EQgG3ncE2IPE4OtUitG4cOgYeFptZ+umL2Wr1PVMxCgTD4otw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=BX9NEf/X; arc=none smtp.client-ip=13.77.154.182
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
+	s=arc-20240116; t=1757136459; c=relaxed/simple;
+	bh=ILx/IqUEAf5dNfgv1RCPobsMBAq478CLLLrBl/sSiig=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fqeR1XZV1BpToVAu4Ss9Zqi4r8c+os0zY3QNdFwOL5pS12tF/akmcrY2aR5JvsY9PLhg9Mnv75GczQACoFgnxzodT7yFaoJUJjWPxIyxxNCyrmiZscU6r8samrC99lQDPo2fTvACe/kWhQlPGcWP8T/18ChaG0uEt9Q3bZzIu0c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QdPTDbBK; arc=none smtp.client-ip=209.85.221.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="BX9NEf/X"
-Received: from mrdev.corp.microsoft.com (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
-	by linux.microsoft.com (Postfix) with ESMTPSA id CA22720171A1;
-	Fri,  5 Sep 2025 18:10:04 -0700 (PDT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com CA22720171A1
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
-	s=default; t=1757121005;
-	bh=+CCS9We1Ij6uOlVmGq9+uq+1zOrHP0OdRaRPzrFp1GA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=BX9NEf/X1VneNtjEYWoIbC4svFLWsPr6TE+eGFC7ATnibEAF5CZhHO4BkQA3huB1H
-	 G+vqfIWfbg5hEOs2bwIui5RjjStP2xdsiq/mMkkajOrdNM34AIT7Bqid50NJZSBjcZ
-	 DoYg+VV6O+/ka1HcE7xVbEhJmP4lFjkaKOTv7a2k=
-From: Mukesh Rathor <mrathor@linux.microsoft.com>
-To: dri-devel@lists.freedesktop.org,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QdPTDbBK"
+Received: by mail-vk1-f169.google.com with SMTP id 71dfb90a1353d-544acb1f41dso1220266e0c.2;
+        Fri, 05 Sep 2025 22:27:37 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1757136457; x=1757741257; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=tQdhQjCLnbttw1C2tIoR+bnhZgK38rRIuMpPdmFaKlg=;
+        b=QdPTDbBK1OBczpcAVRj1kA1pV/TOzY6wPJcRqZgDhdUXkhVRu8c87OCiHt3lu1SE+g
+         wwQN6Jszn4SoB/BpIijPKLmwuY+zGbSk/4MGEXs41bE+eYPfIkqOydzI4RU1LShmYBSa
+         ozuu6w2w/jd5odHEgSvQMA6aClQYECpwGYvWlP20ldoPcMZEwq6tLf+/tWN+YFapwFqW
+         wRtrcUzjx9L9RXe/cl7vmNLTvXo22BDuNiFzP10jAYH3FJJC5Xa9aiauBle2+CuEiHb8
+         knMI3BQ2SrT88reTUbT0VF1IqJCCQ6VFI6KWkByxZ4rjdQIMxIEftnQ/izU+WYU7WCzU
+         4YSg==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757136457; x=1757741257;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=tQdhQjCLnbttw1C2tIoR+bnhZgK38rRIuMpPdmFaKlg=;
+        b=W/NaKKJw8+UhO0p5O+W2SyEmCEReA5JAENp95tayq7BwPei8YfsC9Kt7gUQO8XtmJI
+         GuV8+XoE1klpdLDPB17Mo8TL6ZAdwR4irznSUapIhEPrDLCVWrCaXMqHFgg/N2wuwxPu
+         yQzayXPKEkb2umlvuYTscvFne4NWlDKFBT0pJdoMXGiO0nFAuvXobK9SYHiLA0Qy54hO
+         EtmSNc5Ef2v/Oob9N7VfOiQz1heCosxr4ljmegWe+OUWr8wE11paTnHgScmzSGaOoDzK
+         nHV6eVI8lrfxKMbzll/Tb312DqCKEkfwV4XfW3Ng4plYajlA4+65BgOUGmWjYf2Kx5OX
+         0vMg==
+X-Forwarded-Encrypted: i=1; AJvYcCX9yLhrI5FrnVQnHTxQoVe/Gfxk41kLTjmZmYCX0RU8KtHW/GoHYxsAWyzvOZznjxFXQmu5mo/Gfl3evTI=@vger.kernel.org
+X-Gm-Message-State: AOJu0YwgASKuGfNM8koEAjv5BX09h2M+N08dsSxr8MrSzd0Tcqoasioz
+	p8Jg2PvX9gDvlzwQizC86y1sTb8X9ebYn6yGUlipL38M2qKk6dkE7STSblJg4tA/
+X-Gm-Gg: ASbGncugrKpLyrUK/gcCGtG6Tpd4fVk5Rd4la2XT3mCqt5UvWMpKhstJFLjFe96BB/6
+	2oWmyJQaONpsSA8fqNieLqDkzVgNZCQFEXd5i5gCXACH7GYMooQjmBRJaGBKpr2wHPLCJ+IcmUU
+	nvfaJJiN6wjw/qjtWmsPXxJoKdygqccSV5WC25YBvzVYqcYXCaJqpwxGK96V5egi4cCtuqoklBI
+	+vROjigS32aVK3/067Nqyp1gsKq6mIDCcrxRiVkIICO8e6Hgu3wNoaaPGTWtlFSJ8yR73cwPfpK
+	U3E7u2SLtOcJI7s0HD9+dp5fKdIjZ9qBncWAUh5ZH2xYdHBQJzflmz3xg/pcqWwMUb706SZSYTx
+	GvBvGpKrSjEhtseFVoISMqa29YHenV3V8oTtH
+X-Google-Smtp-Source: AGHT+IFnLfCtooVCkNri1sHLTys6A8NIDo6CEVuTcuHXJ+a+CVUdg0e4kqKxuKx5jEUnuUguy/d4pQ==
+X-Received: by 2002:a05:6122:7c9:b0:539:33b1:5571 with SMTP id 71dfb90a1353d-5473aac04c1mr375378e0c.4.1757136456668;
+        Fri, 05 Sep 2025 22:27:36 -0700 (PDT)
+Received: from ryzoh.. ([2804:14c:5fc8:8033:2f8:6aa5:de03:ccda])
+        by smtp.googlemail.com with ESMTPSA id 71dfb90a1353d-544912eef59sm10643006e0c.8.2025.09.05.22.27.34
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 05 Sep 2025 22:27:36 -0700 (PDT)
+From: Pedro Demarchi Gomes <pedrodemargomes@gmail.com>
+To: martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com
+Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	linux-input@vger.kernel.org,
-	linux-hyperv@vger.kernel.org,
-	netdev@vger.kernel.org,
-	linux-pci@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-fbdev@vger.kernel.org,
-	linux-arch@vger.kernel.org,
-	virtualization@lists.linux.dev
-Cc: maarten.lankhorst@linux.intel.com,
-	mripard@kernel.org,
-	tzimmermann@suse.de,
-	airlied@gmail.com,
-	simona@ffwll.ch,
-	jikos@kernel.org,
-	bentiss@kernel.org,
-	kys@microsoft.com,
-	haiyangz@microsoft.com,
-	wei.liu@kernel.org,
-	decui@microsoft.com,
-	dmitry.torokhov@gmail.com,
-	andrew+netdev@lunn.ch,
-	davem@davemloft.net,
-	edumazet@google.com,
-	kuba@kernel.org,
-	pabeni@redhat.com,
-	bhelgaas@google.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com,
-	gregkh@linuxfoundation.org,
-	deller@gmx.de,
-	arnd@arndb.de,
-	sgarzare@redhat.com,
-	horms@kernel.org
-Subject: [PATCH v1 2/2] Drivers: hv: Make CONFIG_HYPERV bool
-Date: Fri,  5 Sep 2025 18:09:52 -0700
-Message-Id: <20250906010952.2145389-3-mrathor@linux.microsoft.com>
-X-Mailer: git-send-email 2.36.1.vfs.0.0
-In-Reply-To: <20250906010952.2145389-1-mrathor@linux.microsoft.com>
-References: <20250906010952.2145389-1-mrathor@linux.microsoft.com>
+	Pedro Demarchi Gomes <pedrodemargomes@gmail.com>
+Subject: [PATCH v2] scsi: mpi3mr: Replace one-element arrays with flexible-array members
+Date: Sat,  6 Sep 2025 02:20:41 -0300
+Message-Id: <20250906052041.242671-1-pedrodemargomes@gmail.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,58 +74,102 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-With CONFIG_HYPERV and CONFIG_HYPERV_VMBUS separated, change CONFIG_HYPERV
-to bool from tristate. CONFIG_HYPERV now becomes the core Hyper-V
-hypervisor support, such as hypercalls, clocks/timers, Confidential
-Computing setup, PCI passthru, etc. that doesn't involve VMBus or VMBus
-devices.
-
-Signed-off-by: Mukesh Rathor <mrathor@linux.microsoft.com>
+One-element arrays are deprecated, and we are replacing them with flexible
+array members instead. So, replace one-element arrays with flexible-array
+members in multiple structures.
 ---
- drivers/Makefile    | 2 +-
- drivers/hv/Kconfig  | 2 +-
- drivers/hv/Makefile | 2 +-
- 3 files changed, 3 insertions(+), 3 deletions(-)
+Change in v2:
+- Use struct_size
+---
+ drivers/scsi/mpi3mr/mpi3mr_app.c    | 11 +++--------
+ include/uapi/scsi/scsi_bsg_mpi3mr.h | 10 +++++-----
+ 2 files changed, 8 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/Makefile b/drivers/Makefile
-index b5749cf67044..7ad5744db0b6 100644
---- a/drivers/Makefile
-+++ b/drivers/Makefile
-@@ -161,7 +161,7 @@ obj-$(CONFIG_SOUNDWIRE)		+= soundwire/
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_app.c b/drivers/scsi/mpi3mr/mpi3mr_app.c
+index 0e5478d62580..cdcdecb21b37 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_app.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_app.c
+@@ -1241,10 +1241,7 @@ static long mpi3mr_bsg_query_hdb(struct mpi3mr_ioc *mrioc,
+ 	uint32_t data_in_sz = 0;
  
- # Virtualization drivers
- obj-$(CONFIG_VIRT_DRIVERS)	+= virt/
--obj-$(subst m,y,$(CONFIG_HYPERV))	+= hv/
-+obj-$(CONFIG_HYPERV)		+= hv/
+ 	data_in_sz = job->request_payload.payload_len;
+-
+-	length = (sizeof(*hbd_status) + ((MPI3MR_MAX_NUM_HDB - 1) *
+-		    sizeof(*hbd_status_entry)));
+-	hbd_status = kmalloc(length, GFP_KERNEL);
++	hbd_status = kmalloc(struct_size(hbd_status, entry, MPI3MR_MAX_NUM_HDB), GFP_KERNEL);
+ 	if (!hbd_status)
+ 		return -ENOMEM;
+ 	hbd_status_entry = &hbd_status->entry[0];
+@@ -1466,7 +1463,7 @@ static long mpi3mr_bsg_pel_enable(struct mpi3mr_ioc *mrioc,
+ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+ 	struct bsg_job *job)
+ {
+-	u16 num_devices = 0, i = 0, size;
++	u16 num_devices = 0, i = 0;
+ 	unsigned long flags;
+ 	struct mpi3mr_tgt_dev *tgtdev;
+ 	struct mpi3mr_device_map_info *devmap_info = NULL;
+@@ -1492,9 +1489,7 @@ static long mpi3mr_get_all_tgt_info(struct mpi3mr_ioc *mrioc,
+ 		return 0;
+ 	}
  
- obj-$(CONFIG_PM_DEVFREQ)	+= devfreq/
- obj-$(CONFIG_EXTCON)		+= extcon/
-diff --git a/drivers/hv/Kconfig b/drivers/hv/Kconfig
-index fe29f8dca2b5..7e56c51c5080 100644
---- a/drivers/hv/Kconfig
-+++ b/drivers/hv/Kconfig
-@@ -3,7 +3,7 @@
- menu "Microsoft Hyper-V guest support"
+-	kern_entrylen = num_devices * sizeof(*devmap_info);
+-	size = sizeof(u64) + kern_entrylen;
+-	alltgt_info = kzalloc(size, GFP_KERNEL);
++	alltgt_info = kzalloc(struct_size(alltgt_info, dmi, num_devices), GFP_KERNEL);
+ 	if (!alltgt_info)
+ 		return -ENOMEM;
  
- config HYPERV
--	tristate "Microsoft Hyper-V client drivers"
-+	bool "Microsoft Hyper-V core hypervisor support"
- 	depends on (X86 && X86_LOCAL_APIC && HYPERVISOR_GUEST) \
- 		|| (ARM64 && !CPU_BIG_ENDIAN)
- 	select PARAVIRT
-diff --git a/drivers/hv/Makefile b/drivers/hv/Makefile
-index 050517756a82..8b04a33e4dd8 100644
---- a/drivers/hv/Makefile
-+++ b/drivers/hv/Makefile
-@@ -18,7 +18,7 @@ mshv_root-y := mshv_root_main.o mshv_synic.o mshv_eventfd.o mshv_irq.o \
- mshv_vtl-y := mshv_vtl_main.o
+diff --git a/include/uapi/scsi/scsi_bsg_mpi3mr.h b/include/uapi/scsi/scsi_bsg_mpi3mr.h
+index f5ea1db92339..9e5b6ced53ab 100644
+--- a/include/uapi/scsi/scsi_bsg_mpi3mr.h
++++ b/include/uapi/scsi/scsi_bsg_mpi3mr.h
+@@ -205,7 +205,7 @@ struct mpi3mr_all_tgt_info {
+ 	__u16	num_devices;
+ 	__u16	rsvd1;
+ 	__u32	rsvd2;
+-	struct mpi3mr_device_map_info dmi[1];
++	struct mpi3mr_device_map_info dmi[];
+ };
  
- # Code that must be built-in
--obj-$(subst m,y,$(CONFIG_HYPERV)) += hv_common.o
-+obj-$(CONFIG_HYPERV) += hv_common.o
- obj-$(subst m,y,$(CONFIG_MSHV_ROOT)) += hv_proc.o
- ifneq ($(CONFIG_MSHV_ROOT) $(CONFIG_MSHV_VTL),)
-     obj-y += mshv_common.o
+ /**
+@@ -248,7 +248,7 @@ struct mpi3mr_logdata_entry {
+ 	__u8	valid_entry;
+ 	__u8	rsvd1;
+ 	__u16	rsvd2;
+-	__u8	data[1]; /* Variable length Array */
++	__u8	data[]; /* Variable length Array */
+ };
+ 
+ /**
+@@ -259,7 +259,7 @@ struct mpi3mr_logdata_entry {
+  * @entry: Variable length Log data entry array
+  */
+ struct mpi3mr_bsg_in_log_data {
+-	struct mpi3mr_logdata_entry entry[1];
++	__DECLARE_FLEX_ARRAY(struct mpi3mr_logdata_entry, entry);
+ };
+ 
+ /**
+@@ -307,7 +307,7 @@ struct mpi3mr_bsg_in_hdb_status {
+ 	__u8    element_trigger_format;
+ 	__u16	rsvd2;
+ 	__u32	rsvd3;
+-	struct mpi3mr_hdb_entry entry[1];
++	struct mpi3mr_hdb_entry entry[];
+ };
+ 
+ /**
+@@ -416,7 +416,7 @@ struct mpi3mr_buf_entry_list {
+ 	__u8	rsvd1;
+ 	__u16	rsvd2;
+ 	__u32	rsvd3;
+-	struct mpi3mr_buf_entry buf_entry[1];
++	struct mpi3mr_buf_entry buf_entry[];
+ };
+ /**
+  * struct mpi3mr_bsg_mptcmd -  Generic bsg data
 -- 
-2.36.1.vfs.0.0
+2.39.5
 
