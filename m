@@ -1,144 +1,122 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-qk1-f169.google.com (mail-qk1-f169.google.com [209.85.222.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 37F1D1E9B1A
-	for <linux-scsi@vger.kernel.org>; Sun,  7 Sep 2025 10:00:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBA7926AC3
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Sep 2025 18:17:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.222.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757239236; cv=none; b=PCwUXoSFTcbCLTsLjSoUj/CIDpmQFcmmtlCu6iAY+UDZvIK0Pkxu7Hp6aJqPFOvFOd+2xWLGY2mnclOVDwmTkTBBDKmJTBmKosZ32RIxqGxmimeKCg4U4hMiGoNKx152rClEpUBiSocCLq9lnrpytjg302MIaYUPW3TVMygeAtI=
+	t=1757269077; cv=none; b=BrJ7fIXbimzPKYuDvJbAYcL0Z42d8Wy9XGHZzkYTBS1/1L74gJloAgB9BaClGL83Bw1EtmgfG/y6hLXXaazAJuECn2QtUfu+TQsy4+hCavxYAnLZJkgcjHnorMfPqF0XEC91FyfsTAMytvYjuXVrsyT/ZHafo99hFXVhKLfPqFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757239236; c=relaxed/simple;
-	bh=ZghqaZbP6otsbrM7NnlZiFEc7J4Jwli5zVhs7n7YAXw=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=hxGHFi+Na8ZdzHJi28d3LVk1b/LBN+PpjcNaRSc3zvGDnN8wsdAJaZdCxUmT46DewcXInvpUphfK4n6JlBRWxTf2XymQlcZK26aac6DG7Sw4YBQ+rCkyJhhrj/CAO8zCqdwyA7SrLeXDXinG9iT2WB61DAMOEAeBfjMqFAW9OAk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=leQD7IJe; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1757269077; c=relaxed/simple;
+	bh=XPgaWkah8Y2mK3Eo2ru8JyaZylT88+cyR11FCRO4djQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Y40AhDN311Wpe8YJhtmtCBfkQwwcgfDkppPLgcc7eCdxGRKTxR88xsMbnhodOBvjVsJiQUUTbIdGbTFLhcJxhg8wBu6+lKgHo71F7w4VdsDdavITqYwE1Sz0ISuCbw+juu8hsJY+9eXu7watFNg4RpR0fJaIboDrbLi13D9gTq8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=gz7lXzpE; arc=none smtp.client-ip=209.85.222.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="leQD7IJe"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20250907100029epoutp022a2804532f7f331c1be519519a4dfe1f~i98TG8AfU0851508515epoutp02Y
-	for <linux-scsi@vger.kernel.org>; Sun,  7 Sep 2025 10:00:29 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20250907100029epoutp022a2804532f7f331c1be519519a4dfe1f~i98TG8AfU0851508515epoutp02Y
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1757239229;
-	bh=SbHDtPkviZlO/LgkXzGe9eikNE8oo3x9pUKOqZtyP0k=;
-	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
-	b=leQD7IJe2VjE+EsF4S7jZpFVB8Ok5heo3mOAbvUzL1NbWzHRgZpK+pR48ccgns5S+
-	 ytw0LGXloMaBB/8LkcWrbKRsSGhV9lROS8zaqZOABD3Io5HUiq1Orqj6Sxs1Qy892L
-	 eU7Ccw/zfXDAXM1Kbp/wc/8V93jOzMgnIWJyW9Zg=
-Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
-	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
-	20250907100028epcas5p14ee9dcee16c57c7fc61bbb6b2b5f00c7~i98SwfqVZ1432614326epcas5p1N;
-	Sun,  7 Sep 2025 10:00:28 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.86]) by
-	epsnrtp03.localdomain (Postfix) with ESMTP id 4cKQZ35nmJz3hhT7; Sun,  7 Sep
-	2025 10:00:27 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250907100027epcas5p249d149f0d10eb6f9dea8f86b59cb34ca~i98Rf9xdi0141601416epcas5p2C;
-	Sun,  7 Sep 2025 10:00:27 +0000 (GMT)
-Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20250907100025epsmtip161b00d26b7ac98bc1b1a50a891bd95e8~i98PoOEs10915609156epsmtip1w;
-	Sun,  7 Sep 2025 10:00:25 +0000 (GMT)
-From: "Alim Akhtar" <alim.akhtar@samsung.com>
-To: "'Alok Tiwari'" <alok.a.tiwari@oracle.com>, <mani@kernel.org>,
-	<quic_cang@quicinc.com>, <quic_asutoshd@quicinc.com>,
-	<peter.wang@mediatek.com>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <bvanassche@acm.org>,
-	<James.Bottomley@HansenPartnership.com>, <linux-scsi@vger.kernel.org>
-Cc: <linux-kernel@vger.kernel.org>
-In-Reply-To: <20250906203636.3103586-1-alok.a.tiwari@oracle.com>
-Subject: RE: [PATCH] scsi: ufs: mcq: Fix memory allocation checks for SQE
- and CQE
-Date: Sun, 7 Sep 2025 15:30:22 +0530
-Message-ID: <473a01dc1fde$3c7df240$b579d6c0$@samsung.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="gz7lXzpE"
+Received: by mail-qk1-f169.google.com with SMTP id af79cd13be357-80a6937c8c6so473870385a.2
+        for <linux-scsi@vger.kernel.org>; Sun, 07 Sep 2025 11:17:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1757269075; x=1757873875; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=W8qx9AhhhjD0idoW7JOHfxPMgeRydqvjqRxl5OChfs8=;
+        b=gz7lXzpEbFlnxuiOaq6/VjgRNUx+cg0S4KEMu57/3mwkKLzNAP/8onrKsxGshgGBe6
+         6kXr3llcAwGfs2MlXlzgaaATem3nGFx3wG2Zp/c72vwwKEWtnWn9glSZzNigUNftVPVG
+         ZUUvLxOmFFPMhB4a7rTTQGq/ilk+qtXLiyc48Kw+AEnKxch7ciNQ78Ycr9CFyVRgMMHR
+         ldv9AcAstv96i3y7YAT++CfGj+pWfTlDlcPhY3z0w1qvqI5Dn23wpxxpepMgMU6QdjoA
+         YtGEg1Ss3OpbJtobTcHI13m3vghfzJqe5wLBUKsT00qOQ/wvW94lICcmUK0TgbxpeOUx
+         CNFA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757269075; x=1757873875;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=W8qx9AhhhjD0idoW7JOHfxPMgeRydqvjqRxl5OChfs8=;
+        b=ZhGjfRrhAAygkxFwr2d9zFRyb6+mNV48GuXCBlBamaeOOeYCPQM2HvSoaDY2wLtQ61
+         oHpZpBDRZJvS1ig7pIeOtNm6LrFTyKq57CsVns2zVj7Q/Rk3+C596OmiPKO798KxRBjV
+         ACZcDFp4nsovO/z5KYXk5YKrFAyzjrH24xDJE81as5phFbaQjDzaPWZEvV+CPBfMV05i
+         hdxgq0CAve+meAp2a8i4I0beSNjfwRLA8f1TOdsT+VI6LVQk2VvZjRwTzK1Fibtbtlw+
+         VRNv2stMjeYhMw7tfK1Ekt3otWlH3JPehugUdfpKicqON5ADTx9FVfdm6ktBlckN8Tu3
+         cDSQ==
+X-Gm-Message-State: AOJu0YygxPzzgk6eSQJoBZkKvdtg/WJKTj5VL7UKctBvtDlpAOizoOPH
+	e5TkmOX8iNXNbmTQhIiVfyIheSQKIEDxdhRhgLRgH++u04Y7yJS8e5lBJGxklFnLl7E=
+X-Gm-Gg: ASbGncsxzzq6y7kTT5nXYVcEyzcHy9or/MwT7y69fx9B26D4ez2d14j0quCjNc5rTYd
+	te5a+M//2XVUf/h0/MwwGkHCKURz6MBKOLNBJG96k/3w3LVEt6mrBz/ktm2Lo/YX/GbCR9IjyfA
+	pLCkoxOi55VHomr6HmQj9IsxsmCq6uDqovVKvHCUdCMoAImwBcqIPJ8Z4Zp33/TwDD2vHG7z8QJ
+	W8Pofu7vgZImLcPMjcFeVFibsn6raVs+kHSx3WbXYT2L4IIe2mxRtPKw/mBiqSdU7hEjgDLV87z
+	WeCsSReTflGyBO31X1Qz1QnoT30uYDS0WM6U53BTbbObhsTCYTKttRU6AG8pJ0VLzU8V0bEf7R4
+	XY8AX99C/KJMKuYKbsdBpnU0SjWDMJI8qNxXVCxCMUEBP1qzgwuA9haqZ6gyrvp2ZoOhOaB7yKc
+	1ONdSNXyE=
+X-Google-Smtp-Source: AGHT+IGVscvCDVasNcW6t1N4ZNKcod+KH3jvWejgvxk9OEyKsl7YAmL4b8+RgZg03jQlPKVINV8g/A==
+X-Received: by 2002:a05:620a:190f:b0:80a:fc34:563c with SMTP id af79cd13be357-813c34d5f5bmr496356585a.69.1757269074642;
+        Sun, 07 Sep 2025 11:17:54 -0700 (PDT)
+Received: from cr-x-redhat96-client-2.fyre.ibm.com ([129.41.87.1])
+        by smtp.gmail.com with ESMTPSA id af79cd13be357-80aab87f336sm856796185a.53.2025.09.07.11.17.53
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 07 Sep 2025 11:17:54 -0700 (PDT)
+From: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+To: kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	shivasharan.srikanteshwara@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+Subject: [PATCH] scsi: megaraid: Fix potential divide-by-zero errors
+Date: Sun,  7 Sep 2025 11:17:39 -0700
+Message-ID: <20250907181739.97897-1-chelsyratnawat2001@gmail.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7bit
-X-Mailer: Microsoft Outlook 16.0
-Thread-Index: AQJ+JsRPtJ5DiQn8XjdVTu6jdShjxwJ7OyEXsy+RRoA=
-Content-Language: en-us
-X-CMS-MailID: 20250907100027epcas5p249d149f0d10eb6f9dea8f86b59cb34ca
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-542,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20250906203658epcas5p335a6395bad2fa2f9f2d629d80a3dcb38
-References: <CGME20250906203658epcas5p335a6395bad2fa2f9f2d629d80a3dcb38@epcas5p3.samsung.com>
-	<20250906203636.3103586-1-alok.a.tiwari@oracle.com>
+Content-Transfer-Encoding: 8bit
 
-Hi Alok
+Both mega_mod64() and mega_div64_32() perform division using a 32-bit
+divisor. Previously, these functions only logged an error when the
+divisor was zero, but did not prevent the division from occurring,
+which could result in undefined behavior or kernel crashes.
 
-> -----Original Message-----
-> From: Alok Tiwari <alok.a.tiwari@oracle.com>
-> Sent: Sunday, September 7, 2025 2:06 AM
-> To: mani@kernel.org; quic_cang@quicinc.com; quic_asutoshd@quicinc.com;
-> peter.wang@mediatek.com; martin.petersen@oracle.com;
-> alim.akhtar@samsung.com; avri.altman@wdc.com; bvanassche@acm.org;
-> James.Bottomley@HansenPartnership.com; linux-scsi@vger.kernel.org
-> Cc: alok.a.tiwari@oracle.com; linux-kernel@vger.kernel.org
-> Subject: [PATCH] scsi: ufs: mcq: Fix memory allocation checks for SQE and
-> CQE
-> 
-> The previous checks incorrectly tested the DMA addresses returned by
-> dmam_alloc_coherent instead of the returned virtual addresses.
-> This could cause allocation failures to go unnoticed.
-> 
-> dmam_alloc_coherent returns the CPU address, not the DMA address.
-> Using DMA pointer for NULL check is incorrect.
-> 
-Right, Zero/NULL can be a valid DMA address and  NULL retuned by
-dmam_alloc_coherent()
-Is allocation failure. 
-May be rephrase your commit message to be more clearer and this patch is
-good to go.
+Add a proper check to return 0 early if the divisor is zero.
 
-> Change checks to verify sqe_base_addr and cqe_base_addr instead of
-> sqe_dma_addr and cqe_dma_addr
-> 
-> Fixes: 4682abfae2eb ("scsi: ufs: core: mcq: Allocate memory for MCQ mode")
-> Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
-> ---
-For v2 patch, feel free to add
-Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+Signed-off-by: Chelsy Ratnawat <chelsyratnawat2001@gmail.com>
+---
+ drivers/scsi/megaraid/megaraid_sas_fp.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
->  drivers/ufs/core/ufs-mcq.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c index
-> 1e50675772fe..cc88aaa106da 100644
-> --- a/drivers/ufs/core/ufs-mcq.c
-> +++ b/drivers/ufs/core/ufs-mcq.c
-> @@ -243,7 +243,7 @@ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba)
->  		hwq->sqe_base_addr = dmam_alloc_coherent(hba->dev,
-> utrdl_size,
->  							 &hwq-
-> >sqe_dma_addr,
->  							 GFP_KERNEL);
-> -		if (!hwq->sqe_dma_addr) {
-> +		if (!hwq->sqe_base_addr) {
->  			dev_err(hba->dev, "SQE allocation failed\n");
->  			return -ENOMEM;
->  		}
-> @@ -252,7 +252,7 @@ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba)
->  		hwq->cqe_base_addr = dmam_alloc_coherent(hba->dev,
-> cqe_size,
->  							 &hwq-
-> >cqe_dma_addr,
->  							 GFP_KERNEL);
-> -		if (!hwq->cqe_dma_addr) {
-> +		if (!hwq->cqe_base_addr) {
->  			dev_err(hba->dev, "CQE allocation failed\n");
->  			return -ENOMEM;
->  		}
-> --
-> 2.50.1
-
+diff --git a/drivers/scsi/megaraid/megaraid_sas_fp.c b/drivers/scsi/megaraid/megaraid_sas_fp.c
+index b8b388a4e28f..1d591beecfef 100644
+--- a/drivers/scsi/megaraid/megaraid_sas_fp.c
++++ b/drivers/scsi/megaraid/megaraid_sas_fp.c
+@@ -72,8 +72,10 @@ u32 mega_mod64(u64 dividend, u32 divisor)
+ 	u64 d;
+ 	u32 remainder;
+ 
+-	if (!divisor)
++	if (!divisor) {
+ 		printk(KERN_ERR "megasas : DIVISOR is zero, in div fn\n");
++		return 0;
++	}
+ 	d = dividend;
+ 	remainder = do_div(d, divisor);
+ 	return remainder;
+@@ -90,8 +92,10 @@ static u64 mega_div64_32(uint64_t dividend, uint32_t divisor)
+ {
+ 	u64 d = dividend;
+ 
+-	if (!divisor)
++	if (!divisor) {
+ 		printk(KERN_ERR "megasas : DIVISOR is zero in mod fn\n");
++		return 0;
++	}
+ 
+ 	do_div(d, divisor);
+ 
+-- 
+2.47.3
 
