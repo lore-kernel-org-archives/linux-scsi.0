@@ -1,259 +1,518 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 849B812B73
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2025 15:12:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757344365; cv=fail; b=feiYegoOY6k80tiCVo+9D6D/VyIooc/aJ5/poEKmRdQVn0W8XNlZLjab9b3rfZwV6mDP6ITktJ7xL8zhXwuiy4JHQn92x3fMr6NrWB6V1vQrzy3MJS0pkwEISJUl0DHvby47+gYgejFeVRozI/MElo5zXuEDtjZEvI1htB72Stc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757344365; c=relaxed/simple;
-	bh=vgM6sGDT0BoU6PrSRIIqd4yH9clVGrmEgP/h3plOUPw=;
-	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=JMsdQ5Lh1qt556cyDtZPeqBsd98/cbkVMVn6b35FtXr5RSkLOEmfS0ibq6cM6/xlZT8MiGSVvTbouVeIRe8eBqoUksxXzn5/Ou/gKe8X5chq2Eqz5OgGYIKR7/cFh2n2mVAyOWVK7cCWKrrFFzuBO4l7Y6GLQu0ZLCy/JPrsw04=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=HrCD5sfZ; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=pF/iZvV6; arc=fail smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF1F519DF5F;
+	Mon,  8 Sep 2025 15:16:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1757344586; cv=none; b=NA1hJlFcrfkaqOPKPMKRkLmwleOF3MXGpW2S2Ks7Lwc/CQrqWk2QQRUpaXaHhKBS2LpPQJpUmH4V0gBy/QFkfsBXECNTDzsXKioOZlifsVsje83EFL6obN/ZvTB4SDsup2iCu0E6LNHaqf/3qW7M264hwOTcVnCzm3bm2+gjQMc=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1757344586; c=relaxed/simple;
+	bh=umvdsJFWdtigWKmoxQL4B75JWYUmxJL5Q2ubcYGL9BE=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=MPgck4iy0tCKjN++EtH+hspczswWJIYbVaM2AFru0dztF4if/78F/cYebw1J6BOZyw88oNlJIXgI7Q2AUDxu4v/hz9bULaii2vKMt/gX6CTNUPo+2FhwuY8vdGe+dgEtk7u7Q9X1NYbzIF9KeQRCV5aVhZK0hRR+U1/nrs6vH9M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Xt4oq4p+; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="HrCD5sfZ";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="pF/iZvV6"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 588ExTX8029206;
-	Mon, 8 Sep 2025 15:12:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:message-id
-	:mime-version:subject:to; s=corp-2025-04-25; bh=W1onO3UHvRsh41+q
-	sr6gjcVl3f1UF9rZSajh2aXFiNc=; b=HrCD5sfZTlMnp0QLYgLfZiXP9FpJH2r/
-	lI2qHxZtHLPq+uwx0DXx0Y4xC1jET9h00sgjQXQZghqac1oULbemd/dc6DdImcAM
-	JFqbExdihGKDAjMwDuyKCkyTytLav22ZISkwVhf14jMouyGF3gFvA/Jm2/R6H7dS
-	hUecy5ixyozXN3AvCULOjX6Cw/V1DIOgeUx1Ff2SCKT1Ts3BcEiza7ywbDF3YkvE
-	I1wwTVgcr59DW6xLsT3M6EtQkkjtdf3GXrcG6DFQlcrw2X2iaDqQhanoGf3MT6Et
-	O0d9dgor63hiILOAZ76hRJVvAIlF22SxQ0zg/tt3Lugdh/+fQmqR/g==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4921cyr1ft-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 08 Sep 2025 15:12:34 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 588Epv7B002888;
-	Mon, 8 Sep 2025 15:12:34 GMT
-Received: from nam12-bn8-obe.outbound.protection.outlook.com (mail-bn8nam12on2075.outbound.protection.outlook.com [40.107.237.75])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 490bdeuqxq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 08 Sep 2025 15:12:34 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=Eb5l/6PVkZMwSY9AoRtya+xO5fO5rOaaCSjI9ALX5a9sdPKSu2nfdyRpSu+0o6kAoHvw/cT98eqVTiTXZok1x5PwvXgpjL7rrU09yDoKxHONjxZgehcw5mxzJpHJ9VKgwhYzzrFhjqAUXo1l4WVaMx9bwU7+XsTqP3E/+k1IGpCuqZu6TuyoA/6M4+1UNchoOpUR8fGbTlq00YuGrel/etWNXfG1YCY4e1jOFP4wqn4uMENgBY4HoZl8u+TLx4PNyHxVHdCNINTFz2/2n37Uo0VjBnBLS+xScoifiXAlPRxD43Hl5MVD3fY2nZoLg6ylBExA03C9T3hXbP9CZXX5iA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=W1onO3UHvRsh41+qsr6gjcVl3f1UF9rZSajh2aXFiNc=;
- b=WCRim7OpI7xx0nRDtKc21k7vM+G5Ur5LjAcGJ6oNA+5DNpUcYrBqQTT8lIsPj9uz5YsGYjMQFFDxks2YIUInI4BfYkSyR71RIPaBkU1Sev/fBeIb0gytfTPCI1/94j4jRb6lXKyRQwJ72OODMkVqceeqLKtCMyjLm8e4SrARICMcoQ1T5WUl/YeSSJ3ocZD7EQdPVobvGlhAAtJwze21gEOLVXHP/7WKkeFhP6lBaVnGW5p7hRY9xuws2r/pVuBtzx7qhF7TxZk0y/3RjTRCq545XQgWiK7HUnVFq7h8GWM4Dy+njB/T53B8DHm59FsTzs9v3K5MoM+FUSOv85U+QQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=W1onO3UHvRsh41+qsr6gjcVl3f1UF9rZSajh2aXFiNc=;
- b=pF/iZvV6cEZe8K/06fUtPJzwfuPhkeESqdePoHmkd2wSCeMlnD6XkjHrsvj6SbdYzH6GwTbwVbSBZ8vlxqSFObqh0p5oHVPcwDJzQXw79b6ugfw/MHopE8Y5Sfbcav04ynx959FpJiCodI0xjC1KAtraKdsumK+cv5/FHxTZzpY=
-Received: from MN2PR10MB4320.namprd10.prod.outlook.com (2603:10b6:208:1d5::16)
- by SJ0PR10MB6327.namprd10.prod.outlook.com (2603:10b6:a03:44d::16) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9094.19; Mon, 8 Sep
- 2025 15:12:30 +0000
-Received: from MN2PR10MB4320.namprd10.prod.outlook.com
- ([fe80::42ec:1d58:8ba8:800c]) by MN2PR10MB4320.namprd10.prod.outlook.com
- ([fe80::42ec:1d58:8ba8:800c%7]) with mapi id 15.20.9094.021; Mon, 8 Sep 2025
- 15:12:29 +0000
-From: John Garry <john.g.garry@oracle.com>
-To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org, ming.lei@redhat.com, bvanassche@acm.org,
-        hare@suse.com, John Garry <john.g.garry@oracle.com>
-Subject: [PATCH RFC] scsi: ensure sdev queue_depth does not exceed that of cmd_per_lun
-Date: Mon,  8 Sep 2025 15:12:22 +0000
-Message-ID: <20250908151222.964621-1-john.g.garry@oracle.com>
-X-Mailer: git-send-email 2.43.5
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: PH0PR07CA0004.namprd07.prod.outlook.com
- (2603:10b6:510:5::9) To MN2PR10MB4320.namprd10.prod.outlook.com
- (2603:10b6:208:1d5::16)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Xt4oq4p+"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88CCDC4CEF1;
+	Mon,  8 Sep 2025 15:16:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1757344585;
+	bh=umvdsJFWdtigWKmoxQL4B75JWYUmxJL5Q2ubcYGL9BE=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=Xt4oq4p+eD6fB5GwqIdO+UcpoPHMpVgOjZ8rtdUH+AoQ2sUDN+DrW2BOo+n7MfOU/
+	 +4/cJTNl6BuJrNnN19q+pFGWWXkpZ54aWal2xvK7iy/cJcYj3QGCf3ieXdXUYixs/0
+	 4hoCWj0HqQOsGrcnoeLOI2o1rNzwesdi75IxniAnM40twnZZtf866OXUbvikKfBt3o
+	 nGmXqe9RfkG0dO4wrT6PikHasjtmbO9iaFheITzsr+MRrb8jjjp5lwhwfNSQGJZmEt
+	 9YYLKFXKhVNqw5jqLv7CEFKLsntebK7HHGRfq56DDBQDLt+RFtDzVdmMy1THqPN9Bz
+	 eNGyEWhH1mDQw==
+Date: Mon, 8 Sep 2025 16:16:13 +0100
+From: Mark Brown <broonie@kernel.org>
+To: David Hildenbrand <david@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Brendan Jackman <jackmanb@google.com>,
+	Christoph Lameter <cl@gentwo.org>, Dennis Zhou <dennis@kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>, dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org, iommu@lists.linux.dev,
+	io-uring@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>,
+	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+	John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com,
+	kvm@vger.kernel.org, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-mips@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	Marco Elver <elver@google.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
+	Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
+	Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
+	virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
+	wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
+Subject: Re: [PATCH v2 19/37] mm/gup: remove record_subpages()
+Message-ID: <f5032553-9ec0-494c-8689-0e3a6a73853c@sirena.org.uk>
+References: <20250901150359.867252-1-david@redhat.com>
+ <20250901150359.867252-20-david@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN2PR10MB4320:EE_|SJ0PR10MB6327:EE_
-X-MS-Office365-Filtering-Correlation-Id: d8f7d7e0-ba31-43ed-0415-08ddeeea2094
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
-X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?ViTPdveeVkyUiEhMLnQFzDbvZd8bYbV/EhKvnYPLAf7OlyImnRCnt625Ar4V?=
- =?us-ascii?Q?0fY0s6SURZUiMDmUCb6dWhSH+wbb1b/PTnHoN0AxU5MVGHTLZQt0wlKC0ceA?=
- =?us-ascii?Q?0TwYF6EtWLczTU8LGIkwQvXz+mf6aHT+XrGO8MvYe+JsKNpolBnQsjg0f4Ha?=
- =?us-ascii?Q?R93z08ZMGm43Tp3frSXbL9XGpfUVl9LlFy6M8dxMDST5liM44zndeK3+byw6?=
- =?us-ascii?Q?hMFdS5knQlC8jEYCw7SCNAbmGd9lWj8ab7cr4WFI8Q01dBwgDeM6PhWJjxAE?=
- =?us-ascii?Q?ia6XLDkaFnb5QIuM9wef+oJmSXz9kUNqgIFtg0jqDQLKcI+bGH6crrcVxhF1?=
- =?us-ascii?Q?80NhGQkrSXUOoCGlkHotPj/61T5igkpN8Wcuyud+rIV9tUQE744vK16uaK7R?=
- =?us-ascii?Q?UHXbOnJbPSIF5wx82YEv5tUGS3otHu/Cc+LaTpdUXHEqUpXKYq9yW14BAz5K?=
- =?us-ascii?Q?3Zr60i8sDVbx2UNlcvszynVoCPGBmgo/wo8WXYKhCN5EKiStNyYSWL+S93n7?=
- =?us-ascii?Q?eDAf+m2nEPzzqK4pGplUZAM7u5mlUREXohh1Cs91N2LJCwShlZ9/JE6bygfm?=
- =?us-ascii?Q?yr/0NmbLJqA41A35eWgy0wqiUz5tmwTRkaZB6U+1cXWdV4QXs61J66Kp5dCd?=
- =?us-ascii?Q?e3M+AQZeIo61FJGAWVhALRhm9xy2FLnZIwCgd40RZSTUaZG949PurcteOc5v?=
- =?us-ascii?Q?T/pTb2OVi+AAuwxXh8CgTlCcCMOgeSt68LxuwlFpaUCzguZ4F4goWAzJJyc2?=
- =?us-ascii?Q?BB0/AEZN+e/1fEgmVTZK6ZImFOsTyEVYdiQEwpBFiQ8bUyDBFqTXlPKksOdi?=
- =?us-ascii?Q?D01Tddl9b/eGae3z3VDmgscaIckz6pN4lhPqVLeAG9BM3oI3u5VC0guUj6W7?=
- =?us-ascii?Q?79ML8jQe4I5KnQZJfnFSqB9pCr6A4es93j6LTRhbmXXck2+DcIFR49axvoYJ?=
- =?us-ascii?Q?qQNFJau2TZWedqIXyXxDgt+MXtJJJ2obPtBllzIpetM0yJqbUsJZnkFiXfZb?=
- =?us-ascii?Q?gHBnCVMiGAKi4XSelMG6nXr3gqPduA2By0idlMjaSagVjraxa39ifw4WjWZa?=
- =?us-ascii?Q?gy09MvlAf20exP7YFESbNklSTScKXzO22IVJmQsXRy0j7n2HlCKpLEGO6jjm?=
- =?us-ascii?Q?yZND6C7reOFcXRW3jxt+NHrDYQ6I+K8uHH5+Fx1YBzBO8MCFWRrt1YjyKDbu?=
- =?us-ascii?Q?J4SVLlwGToDZgN07UI9JLVp/MCmqufBfqSoJN6KZt6cwBQRYUpI0Fuw4ztDg?=
- =?us-ascii?Q?oURKv/eVQ3bGtqmSAnYAgt2sN2tpKdRKCMITaxg4BWNa1hwm4TU6eIpzrmJe?=
- =?us-ascii?Q?KFazcG5TVbPQ3tD3jWjM1gIQlUH03P5JyWOuHgCIwo8BDrrWGqa4mdUWAjoa?=
- =?us-ascii?Q?LcCXEJUoDkE4Oxh019Gu138CxvjXVuTZRXuTjUGYp9LTMHowyb/Q5GZnc/cl?=
- =?us-ascii?Q?7ul7Vf82zKo=3D?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR10MB4320.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?I+0utfzDLozqyKOm/Zh58VlzSRTrd7rwTpDSPUmTO8KJ4/qhmpBGF9q33TvX?=
- =?us-ascii?Q?ftNToHbwZnfafqEcSodW0LpGTdVQ6pIXVmjcl2X4O288Y+TC6gb58r/aLS1G?=
- =?us-ascii?Q?wkFASz4+J3/30lLMkkuSUb36Qsot4cU6o94J8mmDopFAGSpO+8vS1Iog70Pq?=
- =?us-ascii?Q?T7j0w2iHrrUb5UuKs8c3wChzj9e15bP/W1VTEUZOsol75vDD77AF64yOs9CB?=
- =?us-ascii?Q?AltxIaIDC/i7ZDO628TJOGHopZPmUtOsoADL50Y43W7/mmBjonneamghwbFz?=
- =?us-ascii?Q?04TFspHHJRyE5QsO/Jta8Pm4J1e1pH/xPq6lwhKIY0lTnVwvWE8/xm2Wn0oW?=
- =?us-ascii?Q?d5sKowonjw75HdWUIcRIee/Wa8WwkTbAMmsNEIaCunaJbUfbvJF0Ysa6zuZU?=
- =?us-ascii?Q?FN5DJ0Q+lvOh+H9daQuNZbWZfsx1xicZFmUkZjXjpHJGiRbIjk6yuexE/JSh?=
- =?us-ascii?Q?OvNa+hRIHUXbqj0mc+kYCeR8LCV5t2K5M9O+SjL3V7b7NxzTFL3v2D7jmVsX?=
- =?us-ascii?Q?cJxCfMHebmwd54m4w3n7flx8fmfg2UpS/Wlnl/0Ymj8+Wcz65aJstzy52xcg?=
- =?us-ascii?Q?3r25dYBsh4gdMPlC3ubZZF4Wb8IAs4sqeaduVYGnNKARqbnInDZ5r1W9deO6?=
- =?us-ascii?Q?sfF/nZ3xZ9i4WSspX+iSsvILZKAUHooEKGdlq5WS6imJi8j49w54wyNDfiVM?=
- =?us-ascii?Q?oN4HLSQV7ehkfDm52XOYtbcaoaQD6ZRkJOziFVXXqSCheQufIynWVnmJ9BeX?=
- =?us-ascii?Q?fWpfDFzYgeXCw4sxyVd0R0Voomi7GxpcMCGiCiJpFCFkRD7XzORqe6llRAmr?=
- =?us-ascii?Q?U0kQFUKg+voEkiVmodCkazaBUN+2oPybmEVt/EcdoIWlcKfaU8Y1zoqBWssn?=
- =?us-ascii?Q?7R4E4JGeSsfcaS3ZldBE6Z/Z2WGv03dlzuLJygJeIGjeuP1kvO2kdYnKThe3?=
- =?us-ascii?Q?u4CibJWSn+U7caacby75e4PsN6Nm64T2URxiZE3jGUfqVolp2fTwaYh/+1tf?=
- =?us-ascii?Q?bOLFfpz1c8C5rwfYtVH00l4vvmMsrI8ERhdqLSQ3cjfREAOj0IM5BdONT7B1?=
- =?us-ascii?Q?NXN0urlTkE9/KpnE1nf4yHIlnNtpdWCbfkIKDGOnHaHJD6E51QXS91MGgRh5?=
- =?us-ascii?Q?yTyTCnLfitVpvCZdYtd5QiJHgZyxS2BFLeM7tEyDHIRvkVOKlH73JQLicOQn?=
- =?us-ascii?Q?LHmOOVi25DhJank1iuFcauu8Pp5xcbIH7IIb9ik/nDJU2wJhu3NMOKdUSDpb?=
- =?us-ascii?Q?GkaJywMGmLTqOy3nTiUjohOe0BT0g/24u+f5fglpGLh/nCZOWA2IgOe94n/h?=
- =?us-ascii?Q?vWNC++nzYj1SYBzDUtCVzuwoNGr1jDmeHXNFfv7QkATTJu9aoe7INgGiy54f?=
- =?us-ascii?Q?frpa7eTm5ZsFcjqnLYo32JiurWLpKDe6bFjsrfB2vns+6rVASkPw53+FX0/+?=
- =?us-ascii?Q?2xde7R/iBrJCfj4tgyfpmd+HFhV/t/u8wRIzU5FDpeR3PIJ/eZRePsSFOQO4?=
- =?us-ascii?Q?jIKRpiN7FlhdXKYfQq7f9TIBvyIedbGhriZwQL+QIyVAyCEbZu//SzqLQqop?=
- =?us-ascii?Q?quz4iNzceMwgbPQmWruy5DnZ1bJULTmrtQ0xI8LhBQoCjYV2x1/V0w3BX6yg?=
- =?us-ascii?Q?6Q=3D=3D?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	J+6SsIvvVbpx7CT0mcLadVnoBiRxpEJg6lWRpjHDLCgbzGbu54BGxkbn+ew15Y6THTXFss8gqVmlJDah/d7UFLJvmChHwU2w7h+KUV/sTTvrLUiZ3gTKURiRRk7BEtGOCRGqP24wY+4aW7BIStEP8DekZXi0kn4CnGTKNwLsPRQJtoGszgqPm9QHERZmfLs5GYLrmEQMEKR9AYegEk4+v8+OifQWho+2XFUdUV3WP33Tsdr4M0sKeojajr3Au8iQ3hvjUU2YBf88hpxS+8OA2EaQHvWiwK1xmNiKjEGYmh0fR33Qz6I1blfEYSc4p6EGYomGrBAxBFDfP288ZY/HbVBBH3WUWdF27pvywHTPYw/OP83rx/Ok2lz0UtcTdZxuTmzZV8cVw7cD1ACjg2aAKNWQHDlScqXqQTw+SShiRLBt2HJyF8Tg8utPQ9WJhe6u/xouhqlJ/6dzrOB7l2tDp0gNH5DcbuV0m+qvMbKkwIkaIcOOh7r5CXN+EenTx9pUeWK5BGGuIntQE49EDmFxNYaCOKaujYJLb4jY7GiXIVIc8uNEheIg3i3Yb6L6YBQx5EdZm+xiMm21hR7N7YKP4AZK1xvPz6G8TaV89vtOXRA=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: d8f7d7e0-ba31-43ed-0415-08ddeeea2094
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR10MB4320.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 08 Sep 2025 15:12:29.4471
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: IKnem4iM9GSU+Fo+F1/ty4xZl9jDgVYPhE59ELnv7msKmYkZDz1bcNuWgIqXsNDpX9A26Ycs74hxqmYfW1sR6Q==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR10MB6327
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-08_05,2025-09-08_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 suspectscore=0
- bulkscore=0 mlxscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
- definitions=main-2509080152
-X-Proofpoint-GUID: CL3ONr_d-hyYpVYSphwz5crJQfG0jYWc
-X-Authority-Analysis: v=2.4 cv=BvmdwZX5 c=1 sm=1 tr=0 ts=68bef262 b=1 cx=c_pps
- a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
- a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=yJojWOMRYYMA:10
- a=GoEa3M9JfhUA:10 a=yPCof4ZbAAAA:8 a=GeWqdH6bTUks2XsLHo8A:9 cc=ntf
- awl=host:12069
-X-Proofpoint-ORIG-GUID: CL3ONr_d-hyYpVYSphwz5crJQfG0jYWc
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA4MDE1MCBTYWx0ZWRfX7LkKr8xcx/t5
- TasaoQrBIgWcJ8KCZhDindbhWAkgKbUNlr6FHtNj0jolOavzdj9CP/H5xqAQAhykghtFlA1b4QM
- v4He+qtS436YDT1UklNCES2GLBvoA/73gEF+t7wyUbvkcaQl8s/BR/1lk9seZ/AJkP/YwDI/NsO
- zYtR271J+xVHK0S392ACoLFL7/I0WMn4v4NChC2ENpDd5yehjLGw/YjNIcqB4Je/lLuDVGrza5u
- WdbnkDX3Aok2nOOjoGgVeNeL5YzLexWTMUCgJ3Jigm2/7+M3mg+CQI4RSgXMSP85VdIwfMSbIi8
- YEDVolQl7rVlSeb/8utk7EZXvZaY0Ik6b1mEgPmgEYlBsSg7h0QRq4ShqlxyxgJ+FvP0l46jH25
- NI4pQ12CoZw8sd6+rZW/xLpFAWnJOQ==
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="V80dSr/3LzMwjpsi"
+Content-Disposition: inline
+In-Reply-To: <20250901150359.867252-20-david@redhat.com>
+X-Cookie: Trouble always comes at the wrong time.
 
-Currently it is possible to increase the queue depth of a sdev to
-exceed shost->cmd_per_lun, as we only check against shost->can_queue in
-sdev_store_queue_depth() and scsi_change_queue_depth() ->
-scsi_device_max_queue_depth() [and shost->cmd_per_lun may not equal
-shost->can_queue].
 
-The value in shost->cmd_per_lun should be treated as a hard limit.
+--V80dSr/3LzMwjpsi
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Signed-off-by: John Garry <john.g.garry@oracle.com>
----
-Marked as RFC, as this does not seem to be completely the right thing to
-do.
+On Mon, Sep 01, 2025 at 05:03:40PM +0200, David Hildenbrand wrote:
+> We can just cleanup the code by calculating the #refs earlier,
+> so we can just inline what remains of record_subpages().
+>=20
+> Calculate the number of references/pages ahead of times, and record them
+> only once all our tests passed.
 
-Checking fnic.c, it sets cmd_per_lun = 3 in the sht, but also changes
-the sdev queue depth in fnic_sdev_init() ->
-scsi_change_queue_depth(fnic_max_qdepth) to any value [fnic_max_qdepth
-is not sanitized]. So, in this case, cmd_per_lun is meaningless when
-fnic_max_depth modparam is set.
+I'm seeing failures in kselftest-mm in -next on at least Raspberry Pi 4
+and Orion O6 which bisect to this patch.  I'm seeing a NULL pointer
+dereference during the GUP test (which isn't actually doing anything as
+I'm just using a standard defconfig rather than one with the mm
+fragment):
 
-However, for be_main.c, it sets cmd_per_lun and does not configure the
-sdev queue depth elsewhere. Since it also sets .change_queue_depth =
-scsi_change_queue_depth, the sdev queue depth can be changed from sysfs
-to a value larger than cmd_per_lun - this does not seem proper, since it
-is it implied that the HW cannot support that. iscsi_tcp seems to be
-another example of a driver which follows the pattern of be_main.c.
+# # # [RUN] R/O longterm GUP-fast pin in MAP_SHARED file mapping .[   92.20=
+9804] Unable to handle kernel NULL pointer dereference at virtual address 0=
+000000000000008
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index cc5d05dc395c4..b8cbc6cafa0cc 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -232,8 +232,11 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
- 	}
- 
- 	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
--	shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
--				   shost->can_queue);
-+	if (!shost->cmd_per_lun)
-+		shost->cmd_per_lun = shost->can_queue;
-+	else
-+		shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
-+					   shost->can_queue);
- 
- 	error = scsi_init_sense_cache(shost);
- 	if (error)
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 9a0f467264b35..26970a0ffe88c 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -204,7 +204,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
-  */
- int scsi_device_max_queue_depth(struct scsi_device *sdev)
- {
--	return min_t(int, sdev->host->can_queue, 4096);
-+	return min_t(int, sdev->host->cmd_per_lun, 4096);
- }
- 
- /**
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 15ba493d21386..90c1321bfe22e 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1039,7 +1039,7 @@ sdev_store_queue_depth(struct device *dev, struct device_attribute *attr,
- 
- 	depth = simple_strtoul(buf, NULL, 0);
- 
--	if (depth < 1 || depth > sdev->host->can_queue)
-+	if (depth < 1 || depth > sdev->host->cmd_per_lun)
- 		return -EINVAL;
- 
- 	retval = sht->change_queue_depth(sdev, depth);
--- 
-2.43.5
+=2E..
 
+[   92.443816] Call trace:
+[   92.446284]  io_check_coalesce_buffer+0xd4/0x160 (P)
+[   92.451306]  io_sqe_buffers_register+0x1b0/0x22c
+[   92.455976]  __arm64_sys_io_uring_register+0x330/0xe74
+[   92.461176]  invoke_syscall+0x48/0x104
+[   92.464966]  el0_svc_common.constprop.0+0x40/0xe0
+
+Full log:
+
+  https://lava.sirena.org.uk/scheduler/job/1778528#L1985
+
+The bisect looks to converge reasonably clearly, I didn't make much more
+effort to diagnose:
+
+# bad: [be5d4872e528796df9d7425f2bd9b3893eb3a42c] Add linux-next specific f=
+iles for 20250905
+# good: [5fe42852269dc659c8d511864410bd5cf3393e91] Merge branch 'for-linux-=
+next-fixes' of https://gitlab.freedesktop.org/drm/misc/kernel.git
+# good: [0ccc1eeda155c947d88ef053e0b54e434e218ee2] ASoC: dt-bindings: wlf,w=
+m8960: Document routing strings (pin names)
+# good: [7748328c2fd82efed24257b2bfd796eb1fa1d09b] ASoC: dt-bindings: qcom,=
+lpass-va-macro: Update bindings for clocks to support ADSP
+# good: [dd7ae5b8b3c291c0206f127a564ae1e316705ca0] ASoC: cs42l43: Shutdown =
+jack detection on suspend
+# good: [ce1a46b2d6a8465a86f7a6f71beb4c6de83bce5c] ASoC: codecs: lpass-wsa-=
+macro: add Codev version 2.9
+# good: [ce57b718006a069226b5e5d3afe7969acd59154e] ASoC: Intel: avs: ssm456=
+7: Adjust platform name
+# good: [94b39cb3ad6db935b585988b36378884199cd5fc] spi: mxs: fix "transfere=
+d"->"transferred"
+# good: [5cc49b5a36b32a2dba41441ea13b93fb5ea21cfd] spi: spi-fsl-dspi: Repor=
+t FIFO overflows as errors
+# good: [3279052eab235bfb7130b1fabc74029c2260ed8d] ASoC: SOF: ipc4-topology=
+: Fix a less than zero check on a u32
+# good: [8f57dcf39fd0864f5f3e6701fe885e55f45d0d3a] ASoC: qcom: audioreach: =
+convert to cpu endainess type before accessing
+# good: [9d35d068fb138160709e04e3ee97fe29a6f8615b] regulator: scmi: Use int=
+ type to store negative error codes
+# good: [8a9772ec08f87c9e45ab1ad2c8d2b8c1763836eb] ASoC: soc-dapm: rename s=
+nd_soc_kcontrol_component() to snd_soc_kcontrol_to_component()
+# good: [07752abfa5dbf7cb4d9ce69fa94dc3b12bc597d9] ASoC: SOF: sof-client: I=
+ntroduce sof_client_dev_entry structure
+# good: [d57d27171c92e9049d5301785fb38de127b28fbf] ASoC: SOF: sof-client-pr=
+obes: Add available points_info(), IPC4 only
+# good: [f7c41911ad744177d8289820f01009dc93d8f91c] ASoC: SOF: ipc4-topology=
+: Add support for float sample type
+# good: [3d439e1ec3368fae17db379354bd7a9e568ca0ab] ASoC: sof: ipc4-topology=
+: Add support to sched_domain attribute
+# good: [5c39bc498f5ff7ef016abf3f16698f3e8db79677] ASoC: SOF: Intel: only d=
+etect codecs when HDA DSP probe
+# good: [f522da9ab56c96db8703b2ea0f09be7cdc3bffeb] ASoC: doc: Internally li=
+nk to Writing an ALSA Driver docs
+# good: [f4672dc6e9c07643c8c755856ba8e9eb9ca95d0c] regmap: use int type to =
+store negative error codes
+# good: [b088b6189a4066b97cef459afd312fd168a76dea] ASoC: mediatek: common: =
+Switch to for_each_available_child_of_node_scoped()
+# good: [c42e36a488c7e01f833fc9f4814f735b66b2d494] spi: Drop dev_pm_domain_=
+detach() call
+# good: [a37280daa4d583c7212681c49b285de9464a5200] ASoC: Intel: avs: Allow =
+i2s test and non-test boards to coexist
+# good: [ff9a7857b7848227788f113d6dc6a72e989084e0] spi: rb4xx: use devm for=
+ clk_prepare_enable
+# good: [edb5c1f885207d1d74e8a1528e6937e02829ee6e] ASoC: renesas: msiof: st=
+art DMAC first
+# good: [e2ab5f600bb01d3625d667d97b3eb7538e388336] rust: regulator: use `to=
+_result` for error handling
+# good: [5b4dcaf851df8c414bfc2ac3bf9c65fc942f3be4] ASoC: amd: acp: Remove (=
+explicitly) unused header
+# good: [899fb38dd76dd3ede425bbaf8a96d390180a5d1c] regulator: core: Remove =
+redundant ternary operators
+# good: [11f5c5f9e43e9020bae452232983fe98e7abfce0] ASoC: qcom: use int type=
+ to store negative error codes
+# good: [a12b74d2bd4724ee1883bc97ec93eac8fafc8d3c] ASoC: tlv320aic32x4: use=
+ dev_err_probe() for regulators
+# good: [f840737d1746398c2993be34bfdc80bdc19ecae2] ASoC: SOF: imx: Remove t=
+he use of dev_err_probe()
+# good: [d78e48ebe04e9566f8ecbf51471e80da3adbceeb] ASoC: dt-bindings: Minor=
+ whitespace cleanup in example
+# good: [96bcb34df55f7fee99795127c796315950c94fed] ASoC: test-component: Us=
+e kcalloc() instead of kzalloc()
+# good: [c232495d28ca092d0c39b10e35d3d613bd2414ab] ASoC: dt-bindings: omap-=
+twl4030: convert to DT schema
+# good: [87a877de367d835b527d1086f75727123ef85fc4] KVM: x86: Rename handle_=
+fastpath_set_msr_irqoff() to handle_fastpath_wrmsr()
+# good: [c26675447faff8c4ddc1dc5d2cd28326b8181aaf] KVM: x86: Zero XSTATE co=
+mponents on INIT by iterating over supported features
+# good: [ec0be3cdf40b5302248f3fb27a911cc630e8b855] regulator: consumer.rst:=
+ document bulk operations
+# good: [27848c082ba0b22850fd9fb7b185c015423dcdc7] spi: s3c64xx: Remove the=
+ use of dev_err_probe()
+# good: [c1dd310f1d76b4b13f1854618087af2513140897] spi: SPISG: Use devm_kca=
+lloc() in aml_spisg_clk_init()
+# good: [da9881d00153cc6d3917f6b74144b1d41b58338c] ASoC: qcom: audioreach: =
+add support for SMECNS module
+# good: [cf65182247761f7993737b710afe8c781699356b] ASoC: codecs: wsa883x: H=
+andle shared reset GPIO for WSA883x speakers
+# good: [2a55135201d5e24b80b7624880ff42eafd8e320c] ASoC: Intel: avs: Stream=
+line register-component function names
+# good: [550bc517e59347b3b1af7d290eac4fb1411a3d4e] regulator: bd718x7: Use =
+kcalloc() instead of kzalloc()
+# good: [0056b410355713556d8a10306f82e55b28d33ba8] spi: offload trigger: ad=
+i-util-sigma-delta: clean up imports
+# good: [daf855f76a1210ceed9541f71ac5dd9be02018a6] ASoC: es8323: enable DAP=
+M power widgets for playback DAC
+# good: [90179609efa421b1ccc7d8eafbc078bafb25777c] spi: spl022: use min_t()=
+ to improve code
+# good: [258384d8ce365dddd6c5c15204de8ccd53a7ab0a] ASoC: es8323: enable DAP=
+M power widgets for playback DAC and output
+# good: [6d068f1ae2a2f713d7f21a9a602e65b3d6b6fc6d] regulator: rt5133: Fix s=
+pelling mistake "regualtor" -> "regulator"
+# good: [a46e95c81e3a28926ab1904d9f754fef8318074d] ASoC: wl1273: Remove
+# good: [48124569bbc6bfda1df3e9ee17b19d559f4b1aa3] spi: remove unneeded 'fa=
+st_io' parameter in regmap_config
+# good: [37533933bfe92cd5a99ef4743f31dac62ccc8de0] regulator: remove unneed=
+ed 'fast_io' parameter in regmap_config
+# good: [0e62438e476494a1891a8822b9785bc6e73e9c3f] ASoC: Intel: sst: Remove=
+ redundant semicolons
+# good: [5c36b86d2bf68fbcad16169983ef7ee8c537db59] regmap: Remove superfluo=
+us check for !config in __regmap_init()
+# good: [714165e1c4b0d5b8c6d095fe07f65e6e7047aaeb] regulator: rt5133: Add R=
+T5133 PMIC regulator Support
+# good: [9c45f95222beecd6a284fd1284d54dd7a772cf59] spi: spi-qpic-snand: han=
+dle 'use_ecc' parameter of qcom_spi_config_cw_read()
+# good: [bab4ab484a6ca170847da9bffe86f1fa90df4bbe] ASoC: dt-bindings: Conve=
+rt brcm,bcm2835-i2s to DT schema
+# good: [b832b19318534bb4f1673b24d78037fee339c679] spi: loopback-test: Don'=
+t use %pK through printk
+# good: [8c02c8353460f8630313aef6810f34e134a3c1ee] ASoC: dt-bindings: realt=
+ek,alc5623: convert to DT schema
+# good: [6b7e2aa50bdaf88cd4c2a5e2059a7bf32d85a8b1] spi: spi-qpic-snand: rem=
+ove 'clr*status' members of struct 'qpic_ecc'
+# good: [2291a2186305faaf8525d57849d8ba12ad63f5e7] MAINTAINERS: Add entry f=
+or FourSemi audio amplifiers
+# good: [a54ef14188519a0994d0264f701f5771815fa11e] regulator: dt-bindings: =
+Clean-up active-semi,act8945a duplication
+# good: [a1d0b0ae65ae3f32597edfbb547f16c75601cd87] spi: spi-qpic-snand: avo=
+id double assignment in qcom_spi_probe()
+# good: [cf25eb8eae91bcae9b2065d84b0c0ba0f6d9dd34] ASoC: soc-component: unp=
+ack snd_soc_component_init_bias_level()
+# good: [595b7f155b926460a00776cc581e4dcd01220006] ASoC: Intel: avs: Condit=
+ional-path support
+# good: [3059067fd3378a5454e7928c08d20bf3ef186760] ASoC: cs48l32: Use PTR_E=
+RR_OR_ZERO() to simplify code
+# good: [2d86d2585ab929a143d1e6f8963da1499e33bf13] ASoC: pxa: add GPIOLIB_L=
+EGACY dependency
+# good: [9a200cbdb54349909a42b45379e792e4b39dd223] rust: regulator: impleme=
+nt Send and Sync for Regulator<T>
+# good: [162e23657e5379f07c6404dbfbf4367cb438ea7d] regulator: pf0900: Add P=
+MIC PF0900 support
+# good: [886f42ce96e7ce80545704e7168a9c6b60cd6c03] regmap: mmio: Add missin=
+g MODULE_DESCRIPTION()
+# good: [6684aba0780da9f505c202f27e68ee6d18c0aa66] XArray: Add extra debugg=
+ing check to xas_lock and friends
+git bisect start 'be5d4872e528796df9d7425f2bd9b3893eb3a42c' '5fe42852269dc6=
+59c8d511864410bd5cf3393e91' '0ccc1eeda155c947d88ef053e0b54e434e218ee2' '774=
+8328c2fd82efed24257b2bfd796eb1fa1d09b' 'dd7ae5b8b3c291c0206f127a564ae1e3167=
+05ca0' 'ce1a46b2d6a8465a86f7a6f71beb4c6de83bce5c' 'ce57b718006a069226b5e5d3=
+afe7969acd59154e' '94b39cb3ad6db935b585988b36378884199cd5fc' '5cc49b5a36b32=
+a2dba41441ea13b93fb5ea21cfd' '3279052eab235bfb7130b1fabc74029c2260ed8d' '8f=
+57dcf39fd0864f5f3e6701fe885e55f45d0d3a' '9d35d068fb138160709e04e3ee97fe29a6=
+f8615b' '8a9772ec08f87c9e45ab1ad2c8d2b8c1763836eb' '07752abfa5dbf7cb4d9ce69=
+fa94dc3b12bc597d9' 'd57d27171c92e9049d5301785fb38de127b28fbf' 'f7c41911ad74=
+4177d8289820f01009dc93d8f91c' '3d439e1ec3368fae17db379354bd7a9e568ca0ab' '5=
+c39bc498f5ff7ef016abf3f16698f3e8db79677' 'f522da9ab56c96db8703b2ea0f09be7cd=
+c3bffeb' 'f4672dc6e9c07643c8c755856ba8e9eb9ca95d0c' 'b088b6189a4066b97cef45=
+9afd312fd168a76dea' 'c42e36a488c7e01f833fc9f4814f735b66b2d494' 'a37280daa4d=
+583c7212681c49b285de9464a5200' 'ff9a7857b7848227788f113d6dc6a72e989084e0' '=
+edb5c1f885207d1d74e8a1528e6937e02829ee6e' 'e2ab5f600bb01d3625d667d97b3eb753=
+8e388336' '5b4dcaf851df8c414bfc2ac3bf9c65fc942f3be4' '899fb38dd76dd3ede425b=
+baf8a96d390180a5d1c' '11f5c5f9e43e9020bae452232983fe98e7abfce0' 'a12b74d2bd=
+4724ee1883bc97ec93eac8fafc8d3c' 'f840737d1746398c2993be34bfdc80bdc19ecae2' =
+'d78e48ebe04e9566f8ecbf51471e80da3adbceeb' '96bcb34df55f7fee99795127c796315=
+950c94fed' 'c232495d28ca092d0c39b10e35d3d613bd2414ab' '87a877de367d835b527d=
+1086f75727123ef85fc4' 'c26675447faff8c4ddc1dc5d2cd28326b8181aaf' 'ec0be3cdf=
+40b5302248f3fb27a911cc630e8b855' '27848c082ba0b22850fd9fb7b185c015423dcdc7'=
+ 'c1dd310f1d76b4b13f1854618087af2513140897' 'da9881d00153cc6d3917f6b74144b1=
+d41b58338c' 'cf65182247761f7993737b710afe8c781699356b' '2a55135201d5e24b80b=
+7624880ff42eafd8e320c' '550bc517e59347b3b1af7d290eac4fb1411a3d4e' '0056b410=
+355713556d8a10306f82e55b28d33ba8' 'daf855f76a1210ceed9541f71ac5dd9be02018a6=
+' '90179609efa421b1ccc7d8eafbc078bafb25777c' '258384d8ce365dddd6c5c15204de8=
+ccd53a7ab0a' '6d068f1ae2a2f713d7f21a9a602e65b3d6b6fc6d' 'a46e95c81e3a28926a=
+b1904d9f754fef8318074d' '48124569bbc6bfda1df3e9ee17b19d559f4b1aa3' '3753393=
+3bfe92cd5a99ef4743f31dac62ccc8de0' '0e62438e476494a1891a8822b9785bc6e73e9c3=
+f' '5c36b86d2bf68fbcad16169983ef7ee8c537db59' '714165e1c4b0d5b8c6d095fe07f6=
+5e6e7047aaeb' '9c45f95222beecd6a284fd1284d54dd7a772cf59' 'bab4ab484a6ca1708=
+47da9bffe86f1fa90df4bbe' 'b832b19318534bb4f1673b24d78037fee339c679' '8c02c8=
+353460f8630313aef6810f34e134a3c1ee' '6b7e2aa50bdaf88cd4c2a5e2059a7bf32d85a8=
+b1' '2291a2186305faaf8525d57849d8ba12ad63f5e7' 'a54ef14188519a0994d0264f701=
+f5771815fa11e' 'a1d0b0ae65ae3f32597edfbb547f16c75601cd87' 'cf25eb8eae91bcae=
+9b2065d84b0c0ba0f6d9dd34' '595b7f155b926460a00776cc581e4dcd01220006' '30590=
+67fd3378a5454e7928c08d20bf3ef186760' '2d86d2585ab929a143d1e6f8963da1499e33b=
+f13' '9a200cbdb54349909a42b45379e792e4b39dd223' '162e23657e5379f07c6404dbfb=
+f4367cb438ea7d' '886f42ce96e7ce80545704e7168a9c6b60cd6c03' '6684aba0780da9f=
+505c202f27e68ee6d18c0aa66'
+# test job: [0ccc1eeda155c947d88ef053e0b54e434e218ee2] https://lava.sirena.=
+org.uk/scheduler/job/1773040
+# test job: [7748328c2fd82efed24257b2bfd796eb1fa1d09b] https://lava.sirena.=
+org.uk/scheduler/job/1773378
+# test job: [dd7ae5b8b3c291c0206f127a564ae1e316705ca0] https://lava.sirena.=
+org.uk/scheduler/job/1773233
+# test job: [ce1a46b2d6a8465a86f7a6f71beb4c6de83bce5c] https://lava.sirena.=
+org.uk/scheduler/job/1768983
+# test job: [ce57b718006a069226b5e5d3afe7969acd59154e] https://lava.sirena.=
+org.uk/scheduler/job/1768713
+# test job: [94b39cb3ad6db935b585988b36378884199cd5fc] https://lava.sirena.=
+org.uk/scheduler/job/1768603
+# test job: [5cc49b5a36b32a2dba41441ea13b93fb5ea21cfd] https://lava.sirena.=
+org.uk/scheduler/job/1769293
+# test job: [3279052eab235bfb7130b1fabc74029c2260ed8d] https://lava.sirena.=
+org.uk/scheduler/job/1762427
+# test job: [8f57dcf39fd0864f5f3e6701fe885e55f45d0d3a] https://lava.sirena.=
+org.uk/scheduler/job/1760074
+# test job: [9d35d068fb138160709e04e3ee97fe29a6f8615b] https://lava.sirena.=
+org.uk/scheduler/job/1758673
+# test job: [8a9772ec08f87c9e45ab1ad2c8d2b8c1763836eb] https://lava.sirena.=
+org.uk/scheduler/job/1758556
+# test job: [07752abfa5dbf7cb4d9ce69fa94dc3b12bc597d9] https://lava.sirena.=
+org.uk/scheduler/job/1752251
+# test job: [d57d27171c92e9049d5301785fb38de127b28fbf] https://lava.sirena.=
+org.uk/scheduler/job/1752624
+# test job: [f7c41911ad744177d8289820f01009dc93d8f91c] https://lava.sirena.=
+org.uk/scheduler/job/1752345
+# test job: [3d439e1ec3368fae17db379354bd7a9e568ca0ab] https://lava.sirena.=
+org.uk/scheduler/job/1753454
+# test job: [5c39bc498f5ff7ef016abf3f16698f3e8db79677] https://lava.sirena.=
+org.uk/scheduler/job/1751954
+# test job: [f522da9ab56c96db8703b2ea0f09be7cdc3bffeb] https://lava.sirena.=
+org.uk/scheduler/job/1751875
+# test job: [f4672dc6e9c07643c8c755856ba8e9eb9ca95d0c] https://lava.sirena.=
+org.uk/scheduler/job/1747876
+# test job: [b088b6189a4066b97cef459afd312fd168a76dea] https://lava.sirena.=
+org.uk/scheduler/job/1746202
+# test job: [c42e36a488c7e01f833fc9f4814f735b66b2d494] https://lava.sirena.=
+org.uk/scheduler/job/1746271
+# test job: [a37280daa4d583c7212681c49b285de9464a5200] https://lava.sirena.=
+org.uk/scheduler/job/1746918
+# test job: [ff9a7857b7848227788f113d6dc6a72e989084e0] https://lava.sirena.=
+org.uk/scheduler/job/1746336
+# test job: [edb5c1f885207d1d74e8a1528e6937e02829ee6e] https://lava.sirena.=
+org.uk/scheduler/job/1746134
+# test job: [e2ab5f600bb01d3625d667d97b3eb7538e388336] https://lava.sirena.=
+org.uk/scheduler/job/1746607
+# test job: [5b4dcaf851df8c414bfc2ac3bf9c65fc942f3be4] https://lava.sirena.=
+org.uk/scheduler/job/1747672
+# test job: [899fb38dd76dd3ede425bbaf8a96d390180a5d1c] https://lava.sirena.=
+org.uk/scheduler/job/1747375
+# test job: [11f5c5f9e43e9020bae452232983fe98e7abfce0] https://lava.sirena.=
+org.uk/scheduler/job/1747503
+# test job: [a12b74d2bd4724ee1883bc97ec93eac8fafc8d3c] https://lava.sirena.=
+org.uk/scheduler/job/1734077
+# test job: [f840737d1746398c2993be34bfdc80bdc19ecae2] https://lava.sirena.=
+org.uk/scheduler/job/1727318
+# test job: [d78e48ebe04e9566f8ecbf51471e80da3adbceeb] https://lava.sirena.=
+org.uk/scheduler/job/1706175
+# test job: [96bcb34df55f7fee99795127c796315950c94fed] https://lava.sirena.=
+org.uk/scheduler/job/1699577
+# test job: [c232495d28ca092d0c39b10e35d3d613bd2414ab] https://lava.sirena.=
+org.uk/scheduler/job/1699507
+# test job: [87a877de367d835b527d1086f75727123ef85fc4] https://lava.sirena.=
+org.uk/scheduler/job/1697972
+# test job: [c26675447faff8c4ddc1dc5d2cd28326b8181aaf] https://lava.sirena.=
+org.uk/scheduler/job/1698132
+# test job: [ec0be3cdf40b5302248f3fb27a911cc630e8b855] https://lava.sirena.=
+org.uk/scheduler/job/1694308
+# test job: [27848c082ba0b22850fd9fb7b185c015423dcdc7] https://lava.sirena.=
+org.uk/scheduler/job/1693100
+# test job: [c1dd310f1d76b4b13f1854618087af2513140897] https://lava.sirena.=
+org.uk/scheduler/job/1693035
+# test job: [da9881d00153cc6d3917f6b74144b1d41b58338c] https://lava.sirena.=
+org.uk/scheduler/job/1693416
+# test job: [cf65182247761f7993737b710afe8c781699356b] https://lava.sirena.=
+org.uk/scheduler/job/1687562
+# test job: [2a55135201d5e24b80b7624880ff42eafd8e320c] https://lava.sirena.=
+org.uk/scheduler/job/1685772
+# test job: [550bc517e59347b3b1af7d290eac4fb1411a3d4e] https://lava.sirena.=
+org.uk/scheduler/job/1685910
+# test job: [0056b410355713556d8a10306f82e55b28d33ba8] https://lava.sirena.=
+org.uk/scheduler/job/1685649
+# test job: [daf855f76a1210ceed9541f71ac5dd9be02018a6] https://lava.sirena.=
+org.uk/scheduler/job/1685441
+# test job: [90179609efa421b1ccc7d8eafbc078bafb25777c] https://lava.sirena.=
+org.uk/scheduler/job/1686081
+# test job: [258384d8ce365dddd6c5c15204de8ccd53a7ab0a] https://lava.sirena.=
+org.uk/scheduler/job/1673411
+# test job: [6d068f1ae2a2f713d7f21a9a602e65b3d6b6fc6d] https://lava.sirena.=
+org.uk/scheduler/job/1673133
+# test job: [a46e95c81e3a28926ab1904d9f754fef8318074d] https://lava.sirena.=
+org.uk/scheduler/job/1673748
+# test job: [48124569bbc6bfda1df3e9ee17b19d559f4b1aa3] https://lava.sirena.=
+org.uk/scheduler/job/1670184
+# test job: [37533933bfe92cd5a99ef4743f31dac62ccc8de0] https://lava.sirena.=
+org.uk/scheduler/job/1668977
+# test job: [0e62438e476494a1891a8822b9785bc6e73e9c3f] https://lava.sirena.=
+org.uk/scheduler/job/1669534
+# test job: [5c36b86d2bf68fbcad16169983ef7ee8c537db59] https://lava.sirena.=
+org.uk/scheduler/job/1667971
+# test job: [714165e1c4b0d5b8c6d095fe07f65e6e7047aaeb] https://lava.sirena.=
+org.uk/scheduler/job/1667699
+# test job: [9c45f95222beecd6a284fd1284d54dd7a772cf59] https://lava.sirena.=
+org.uk/scheduler/job/1667598
+# test job: [bab4ab484a6ca170847da9bffe86f1fa90df4bbe] https://lava.sirena.=
+org.uk/scheduler/job/1664664
+# test job: [b832b19318534bb4f1673b24d78037fee339c679] https://lava.sirena.=
+org.uk/scheduler/job/1659213
+# test job: [8c02c8353460f8630313aef6810f34e134a3c1ee] https://lava.sirena.=
+org.uk/scheduler/job/1659264
+# test job: [6b7e2aa50bdaf88cd4c2a5e2059a7bf32d85a8b1] https://lava.sirena.=
+org.uk/scheduler/job/1656585
+# test job: [2291a2186305faaf8525d57849d8ba12ad63f5e7] https://lava.sirena.=
+org.uk/scheduler/job/1655709
+# test job: [a54ef14188519a0994d0264f701f5771815fa11e] https://lava.sirena.=
+org.uk/scheduler/job/1656024
+# test job: [a1d0b0ae65ae3f32597edfbb547f16c75601cd87] https://lava.sirena.=
+org.uk/scheduler/job/1654201
+# test job: [cf25eb8eae91bcae9b2065d84b0c0ba0f6d9dd34] https://lava.sirena.=
+org.uk/scheduler/job/1654790
+# test job: [595b7f155b926460a00776cc581e4dcd01220006] https://lava.sirena.=
+org.uk/scheduler/job/1653119
+# test job: [3059067fd3378a5454e7928c08d20bf3ef186760] https://lava.sirena.=
+org.uk/scheduler/job/1655440
+# test job: [2d86d2585ab929a143d1e6f8963da1499e33bf13] https://lava.sirena.=
+org.uk/scheduler/job/1655917
+# test job: [9a200cbdb54349909a42b45379e792e4b39dd223] https://lava.sirena.=
+org.uk/scheduler/job/1654762
+# test job: [162e23657e5379f07c6404dbfbf4367cb438ea7d] https://lava.sirena.=
+org.uk/scheduler/job/1652978
+# test job: [886f42ce96e7ce80545704e7168a9c6b60cd6c03] https://lava.sirena.=
+org.uk/scheduler/job/1654270
+# test job: [6684aba0780da9f505c202f27e68ee6d18c0aa66] https://lava.sirena.=
+org.uk/scheduler/job/1738722
+# test job: [be5d4872e528796df9d7425f2bd9b3893eb3a42c] https://lava.sirena.=
+org.uk/scheduler/job/1778528
+# bad: [be5d4872e528796df9d7425f2bd9b3893eb3a42c] Add linux-next specific f=
+iles for 20250905
+git bisect bad be5d4872e528796df9d7425f2bd9b3893eb3a42c
+# test job: [c3ce85ecd0268df1e0ca692e8126bb181fc89a08] https://lava.sirena.=
+org.uk/scheduler/job/1779086
+# bad: [c3ce85ecd0268df1e0ca692e8126bb181fc89a08] Merge branch 'main' of ht=
+tps://git.kernel.org/pub/scm/linux/kernel/git/netdev/net-next.git
+git bisect bad c3ce85ecd0268df1e0ca692e8126bb181fc89a08
+# test job: [973a887a5bb9a42878e276209592e0f75c287bb6] https://lava.sirena.=
+org.uk/scheduler/job/1780104
+# bad: [973a887a5bb9a42878e276209592e0f75c287bb6] Merge branch 'fs-next' of=
+ linux-next
+git bisect bad 973a887a5bb9a42878e276209592e0f75c287bb6
+# test job: [fdabd8890022a9439b95d7395f7ae046544d96fd] https://lava.sirena.=
+org.uk/scheduler/job/1780530
+# bad: [fdabd8890022a9439b95d7395f7ae046544d96fd] Merge branch 'for-next' o=
+f https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git
+git bisect bad fdabd8890022a9439b95d7395f7ae046544d96fd
+# test job: [94bd0249a4a06131c4a1c2097b6134217a658976] https://lava.sirena.=
+org.uk/scheduler/job/1780904
+# bad: [94bd0249a4a06131c4a1c2097b6134217a658976] Merge branch 'for-next' o=
+f https://git.kernel.org/pub/scm/linux/kernel/git/soc/soc.git
+git bisect bad 94bd0249a4a06131c4a1c2097b6134217a658976
+# test job: [702b6c2f1008779e8fc8a4a4438410165309a4b4] https://lava.sirena.=
+org.uk/scheduler/job/1781370
+# bad: [702b6c2f1008779e8fc8a4a4438410165309a4b4] kasan-apply-write-only-mo=
+de-in-kasan-kunit-testcases-v7
+git bisect bad 702b6c2f1008779e8fc8a4a4438410165309a4b4
+# test job: [0ac48805721d5952a920356e454167bba8d27737] https://lava.sirena.=
+org.uk/scheduler/job/1781448
+# good: [0ac48805721d5952a920356e454167bba8d27737] mm: convert page_to_sect=
+ion() to memdesc_section()
+git bisect good 0ac48805721d5952a920356e454167bba8d27737
+# test job: [dc731eba2e47fa81d50aa1cb167100889253cfe0] https://lava.sirena.=
+org.uk/scheduler/job/1781608
+# good: [dc731eba2e47fa81d50aa1cb167100889253cfe0] mm/damon/paddr: support =
+addr_unit for MIGRATE_{HOT,COLD}
+git bisect good dc731eba2e47fa81d50aa1cb167100889253cfe0
+# test job: [e24bb041cafabaa5fa3d76386c86af389cc324f5] https://lava.sirena.=
+org.uk/scheduler/job/1781660
+# good: [e24bb041cafabaa5fa3d76386c86af389cc324f5] mm/memremap: reject unre=
+asonable folio/compound page sizes in memremap_pages()
+git bisect good e24bb041cafabaa5fa3d76386c86af389cc324f5
+# test job: [62fd63f4688f40f01a6df23225523ece10d4b69a] https://lava.sirena.=
+org.uk/scheduler/job/1781975
+# bad: [62fd63f4688f40f01a6df23225523ece10d4b69a] dma-remap: drop nth_page(=
+) in dma_common_contiguous_remap()
+git bisect bad 62fd63f4688f40f01a6df23225523ece10d4b69a
+# test job: [cb42f7f6d9e4eff4e5259cddf82fd913306b8fe7] https://lava.sirena.=
+org.uk/scheduler/job/1782145
+# good: [cb42f7f6d9e4eff4e5259cddf82fd913306b8fe7] fs: hugetlbfs: remove nt=
+h_page() usage within folio in adjust_range_hwpoison()
+git bisect good cb42f7f6d9e4eff4e5259cddf82fd913306b8fe7
+# test job: [db076b5db550aa34169dceee81d0974c7b2a2482] https://lava.sirena.=
+org.uk/scheduler/job/1782813
+# bad: [db076b5db550aa34169dceee81d0974c7b2a2482] mm/gup: remove record_sub=
+pages()
+git bisect bad db076b5db550aa34169dceee81d0974c7b2a2482
+# test job: [891d0b3189945a5c37ce92c4e5337ec2c17b6378] https://lava.sirena.=
+org.uk/scheduler/job/1782916
+# good: [891d0b3189945a5c37ce92c4e5337ec2c17b6378] mm/pagewalk: drop nth_pa=
+ge() usage within folio in folio_walk_start()
+git bisect good 891d0b3189945a5c37ce92c4e5337ec2c17b6378
+# test job: [21999f6315d786cbd21d5b2d0ad56f3f6125279f] https://lava.sirena.=
+org.uk/scheduler/job/1783020
+# good: [21999f6315d786cbd21d5b2d0ad56f3f6125279f] mm/gup: drop nth_page() =
+usage within folio when recording subpages
+git bisect good 21999f6315d786cbd21d5b2d0ad56f3f6125279f
+# first bad commit: [db076b5db550aa34169dceee81d0974c7b2a2482] mm/gup: remo=
+ve record_subpages()
+
+--V80dSr/3LzMwjpsi
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmi+8z0ACgkQJNaLcl1U
+h9C0HQf/YLILQMy3G3PZlLVziChCHgLklSdjOdu58eGRZBkdjWnggsnR8H+o1TRT
+qrYLTwPAQ7TkDlNC/IpdZTn6fTQnbmy/5CpEidfBuHIth4hUPlGHOHWwwaHo92Gd
+bJmRfogfYX4kma6egaQbjIHdXUWb3BHdc+K3JmaaPInJN0sRsX8Od85Oxtx4cRAW
+2A6bXjqDo+7pLzkMx+1LI15r2lS9AtPy53xbumPlHVmIOmn76VnDG+TaKlD6XmmD
+z3piY3bbxBbFy5iZuZbC/xvn1JCA5lp+OHriZcz+eB8UBWoReKPRtq0Ugar/jbfo
+bOBx+BGSWZGrrkT+5KyatEb3cS3IWw==
+=1t1P
+-----END PGP SIGNATURE-----
+
+--V80dSr/3LzMwjpsi--
