@@ -1,165 +1,127 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1D882E8B7C
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2025 07:36:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C0A52EA494
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2025 07:43:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757317000; cv=none; b=hzjTzHrVLXNKGJqKU9B1fT7UFpfczgWgkWIWZ0NzDjzWRZzZWqSFjs+IaCrhVrF1BRMXzGLQ1GrCPDbWQCeWqWyeU5ajKyiatruACUrXU5EfEDAQuSbLnVHvMX0kHLFgKM2fLW/Z+VSVd7K1jqoBFTBxWq7+7cwrTqcpulwplQc=
+	t=1757317437; cv=none; b=LStB9lS9j2pT7XR8wj+0eAcrciGhZ9YSpWxq7lpqcuDEjsOQ8fsKE0fiZj84dd6OaaRjbLYf0yu14UIAy+VS24FFlrDNHClrD4AxYEo4wYrBMXXhjtSOQSGwgOrPFALSQJp5XUeHmWOH+eHVbJU48VI94V5WPtPfEK4jw+fGBBw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757317000; c=relaxed/simple;
-	bh=d9ozopaFz+jFj0+KSjr9ERSECP5lEosJxYjuWQQk36k=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=dRoNMdw4GBqw45bvf6TNmNbzC8TVqEd9OzmmtG2aYG1QEKmuqtgnSjfw3dKZmg6LMCf3NZokV95ec291e2iN1GsBnCOYPAT4YDCqSDomG4ZAvhUhj65Y7sED6UlamcariEE0dmFp+l7/ZzHm7osXUKK0wifqmydSXP6l9obIPrQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j12DB15x; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=1STPvFql; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=j12DB15x; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=1STPvFql; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1757317437; c=relaxed/simple;
+	bh=wpueAdzFOsR+CPJDx/2e8jBSy3XC1zxVf5fsbWUrbso=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=Wh0F22wroHQvG08Oja1N/l+eBRpWch5IxKsOJVWPW8gl9qMdUXkrKVztsRjahj6moyYW4Rc8hE8mrVBhaUaLmkaJ7AUDZgpp4iBfzTtagOoCHlkdAKiAjwaL1dVA5OCVkFFVtJFHyIDyLOM9xfUOu8KxRvwawE2Wo3LYsL/qcgA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=BtyDee5d; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j12DB15x";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="1STPvFql";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="j12DB15x";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="1STPvFql"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 2887F24215;
-	Mon,  8 Sep 2025 07:36:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757316995; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=z3iORdkyQPwCpPLP7o4laiR1F+rqzx3WvY73dnkVN5c=;
-	b=j12DB15xycT1y2h8zkiOsuAbNDHxZ34VelYF/VA7yd3A0HRjXv4sY0GVQonjUyMkEaSnTR
-	x6RMcS5Kg5NYSrTQN9pNah/gnkV2wFFeUN59/T6Jdn5+KLSvneVrTwbwomHj5/KzQpQGYx
-	2YFF6GkK7SAPf79oJA4j7HDoHL8NoLk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757316995;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=z3iORdkyQPwCpPLP7o4laiR1F+rqzx3WvY73dnkVN5c=;
-	b=1STPvFqlIsD2EnCafT0BPj3XeX2imFQnh/uV+dg0VWNUEChSZv6AHBBJ13EFv50fQPZEvX
-	JfVqwg7LOKfelNDQ==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757316995; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=z3iORdkyQPwCpPLP7o4laiR1F+rqzx3WvY73dnkVN5c=;
-	b=j12DB15xycT1y2h8zkiOsuAbNDHxZ34VelYF/VA7yd3A0HRjXv4sY0GVQonjUyMkEaSnTR
-	x6RMcS5Kg5NYSrTQN9pNah/gnkV2wFFeUN59/T6Jdn5+KLSvneVrTwbwomHj5/KzQpQGYx
-	2YFF6GkK7SAPf79oJA4j7HDoHL8NoLk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757316995;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=z3iORdkyQPwCpPLP7o4laiR1F+rqzx3WvY73dnkVN5c=;
-	b=1STPvFqlIsD2EnCafT0BPj3XeX2imFQnh/uV+dg0VWNUEChSZv6AHBBJ13EFv50fQPZEvX
-	JfVqwg7LOKfelNDQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 1587213869;
-	Mon,  8 Sep 2025 07:36:35 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id iptWBIOHvmjwRAAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Mon, 08 Sep 2025 07:36:35 +0000
-Date: Mon, 8 Sep 2025 09:36:34 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: linux-nvme@lists.infradead.org
-Cc: Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, 
-	Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, Aaron Tomlin <atomlin@atomlin.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
-	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
-	megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, storagedev@microchip.com, 
-	virtualization@lists.linux.dev, GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v8 10/12] blk-mq: use hk cpus only when isolcpus=io_queue
- is enabled
-Message-ID: <c9ef4fa6-99a4-46fd-8623-b8979556566e@flourine.local>
-References: <20250905-isolcpus-io-queues-v8-0-885984c5daca@kernel.org>
- <20250905-isolcpus-io-queues-v8-10-885984c5daca@kernel.org>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="BtyDee5d"
+Received: from epcas1p1.samsung.com (unknown [182.195.41.45])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20250908074353epoutp047e23f202b103dde24b233580466818da~jPuUUP5To1009010090epoutp04J
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2025 07:43:53 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20250908074353epoutp047e23f202b103dde24b233580466818da~jPuUUP5To1009010090epoutp04J
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1757317433;
+	bh=fMu6m4Myk6rvvwL0qen9upyk1beh6Sb+VgXqEvbruYo=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=BtyDee5doGflxun6TXx2AkPXdKsk+ewiQQOrGfIRWT/rmO+JGuW4ODbzKrEE/F3rc
+	 aXJJEP7FbrMjcSiY65PN76+XBO7X781pD9PQuU+f2njhT2dRdUmH95hfJVJT3s5Xxm
+	 rVW3QCu2ypbNusa93ER4iyD/cmmoWe1LJjdrgIMI=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPS id
+	20250908074352epcas1p299b9387b7f14b9e9c25fd129987bcee4~jPuTpJENu0257602576epcas1p2V;
+	Mon,  8 Sep 2025 07:43:52 +0000 (GMT)
+Received: from epcas1p4.samsung.com (unknown [182.195.36.227]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4cKzV00mKBz6B9mG; Mon,  8 Sep
+	2025 07:43:52 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20250908074351epcas1p22e354de3ace0e8e1a74f3991e6221ddd~jPuSfDzo70257602576epcas1p2L;
+	Mon,  8 Sep 2025 07:43:51 +0000 (GMT)
+Received: from dh0421hwang02 (unknown [10.253.101.58]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20250908074351epsmtip1d6bf1c2323c1ed4bfc4f33b12622a331~jPuSYmobE1120011200epsmtip1o;
+	Mon,  8 Sep 2025 07:43:51 +0000 (GMT)
+From: "DooHyun Hwang" <dh0421.hwang@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <James.Bottomley@HansenPartnership.com>,
+	<martin.petersen@oracle.com>, <peter.wang@mediatek.com>,
+	<manivannan.sadhasivam@linaro.org>, <quic_mnaresh@quicinc.com>
+Cc: <grant.jung@samsung.com>, <jt77.jang@samsung.com>,
+	<junwoo80.lee@samsung.com>, <jangsub.yi@samsung.com>,
+	<sh043.lee@samsung.com>, <cw9316.lee@samsung.com>,
+	<sh8267.baek@samsung.com>, <wkon.kim@samsung.com>
+In-Reply-To: <854fad23-e7f8-42c8-b0e2-03460f481366@acm.org>
+Subject: RE: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs
+ cmd error
+Date: Mon, 8 Sep 2025 16:43:51 +0900
+Message-ID: <561a01dc2094$51b24b00$f516e100$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250905-isolcpus-io-queues-v8-10-885984c5daca@kernel.org>
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	MISSING_XM_UA(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[25];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Level: 
-X-Spam-Score: -4.30
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQEmYeTjtFjYRI1QNWxgWL0Y7ybfIwITLn2gAaoUPAICiJScSgGs7ud4AZvu8PIB4FCAbgHlrZjyAhv1i+YCmdARLrVkDxOg
+Content-Language: ko
+X-CMS-MailID: 20250908074351epcas1p22e354de3ace0e8e1a74f3991e6221ddd
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d
+References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
+	<CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
+	<20250417023405.6954-2-dh0421.hwang@samsung.com>
+	<239ea120-841f-478d-b6b4-9627aa453795@acm.org>
+	<093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
+	<27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
+	<17db01dc1ba6$41d37350$c57a59f0$@samsung.com>
+	<6e854090-a071-416a-b7a5-cc8ee0122a90@acm.org>
+	<2add01dc1c9d$7b5cba30$72162e90$@samsung.com>
+	<854fad23-e7f8-42c8-b0e2-03460f481366@acm.org>
 
-On Fri, Sep 05, 2025 at 04:59:56PM +0200, Daniel Wagner wrote:
->  void blk_mq_map_queues(struct blk_mq_queue_map *qmap)
->  {
-> -	const struct cpumask *masks;
-> +	struct cpumask *masks __free(kfree) = NULL;
-> +	const struct cpumask *constraint;
->  	unsigned int queue, cpu, nr_masks;
-> +	cpumask_var_t active_hctx;
->  
-> +	if (!zalloc_cpumask_var(&active_hctx, GFP_KERNEL))
-> +		goto fallback;
-> +
+On 9/3/25 8:57 AM, Bart Van Assche wrote:
+> On 9/2/25 11:39 PM, DooHyun Hwang wrote:
+> > Could you please provide some guidance or suggestions?
+> 
+> How about this approach?
+> * In a separate patch, remove UFS_DEV_COMP because it is not used.
+> * Call the new enumeration label UFS_UIC_ERR (UFS UIC command error)
+>    since "UIC" is how the UFS standard refers to UIC commands (these are
+>    called "device commands" in the UFS driver).
+> 
+> If anyone else has a different opinion, please speak up.
+> 
+> Thanks,
+> 
+> Bart.
 
-> +	free_cpumask_var(active_hctx);
-> +
-> +	return;
-> +
-> +free_fallback:
-> +	free_cpumask_var(active_hctx);
-> +
-> +fallback:
-> +	blk_mq_map_fallback(qmap);
+Thank you for your review. Your opinion is truly valuable to me.
 
-I am not so happy that the cpumask_var_t and __free doesn't work to
-together at this point due to the 'evil way' how cpumask_var_t is defined:
+Based on your suggestion, I understand that the change involves
+renaming UFS_DEV_COMP to UFS_UIC_ERR.
+Would it be acceptable to add UFS_UIC_SEND, UFS_UIC_COMP,
+and UFS_UIC_ERR at the end of the enum?
 
-	ifdef CONFIG_CPUMASK_OFFSTACK
-	typedef struct cpumask *cpumask_var_t;
-	#else
-	typedef struct cpumask cpumask_var_t[1];
-	#endif /* CONFIG_CPUMASK_OFFSTACK */
+I am aware that UFS_DEV_COMP is currently not used in the code,
+but I am concerned about whether it is appropriate to modify
+or remove existing enum labels.
+Therefore, I thought it would be better to discuss the removal
+of UFS_DEV_COMP in a separate commit.
+Additionally, I considered adding new enums as needed.
 
-In the previous version I used
+I decided to name the new enum UFS_CMD_ERR and add it
+in the same type's position, which led to a change in the enum order.
+I realized this could also potentially alter existing enum values,
+creating room for controversy.
+Furthermore, I acknowledged that the label UFS_CMD_ERR may not accurately
+represent the purpose of tracing UIC errors.
 
-	cpumask_var_t active_hctx __free(free_cpumask_var) = NULL;
+Thank you.
+DooHyun Hwang.
 
-which resulted in a way cleaner code. Though the kernel test robot
-complained with
-
-      >> block/blk-mq-cpumap.c:155:16: error: array initializer must be an initializer list
-           155 |         cpumask_var_t active_hctx __free(free_cpumask_var) = NULL;
-
-I try to figure out if it's possible to get this somehow working with
-some witchcraft (aka pre compiler magic).
