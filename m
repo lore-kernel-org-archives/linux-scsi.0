@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 378BB2DFA38;
-	Mon,  8 Sep 2025 21:34:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED3D02E0B64;
+	Mon,  8 Sep 2025 21:50:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757367278; cv=none; b=nVNfJWvnHOzYXVDxEBjYU/Rkj8MVXMYhWROCovjGIWzh5eqtMpfOueGR4LMu9Q1fP8ig/skHcszk8xV9uIxuFeWIPJT89IVPXqyMfB1WvDT7c/M/ffUYBtE9kc1uqEttz0hJQ6S4AQq4YbJgxJPzNnJ65r+g4BFFe2Vk0C2shxw=
+	t=1757368233; cv=none; b=MWZxebUlpO0/RrfNr01lKsT1aNVc7Y0nLYXIey1UeZU6ObVpsCuqkMQEspnx4dht3UORW1JyPwS/FO6/vM+t5BoJz1TQWA8eKPInGLY4pHuVLdi2HBWyLWludqSM0avM1b9rYNLdY18W7XbsZf72Y5yHTEexzfM4yhPROmNjNRo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757367278; c=relaxed/simple;
-	bh=NzbMSMpQ4f3Do6KUVa9pmwGpe4Sd68+LnHSAddc02hc=;
+	s=arc-20240116; t=1757368233; c=relaxed/simple;
+	bh=KefSjzm73w2HbGHRtz1VsVIvbTeN+FJ2LIqeCoIeTSc=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=B1s4PIkGbgBYJr+ScN37qa1B35KItZg55lRHCDkHlxlCSOPAJAKuhnJ+CCHoCxip6HB5Gysg0vTmwvsRiWoRQfsbUGxntRcqh8nXPnAvHPsWxIvYnXjq1Bva68l59KnV3oBwipvkfY3bOCKoq0nOLmIUNJ+w7vESvmYadOtLQSA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=KG0xsGVK; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition:In-Reply-To; b=QloGRUIjGqkRpV/pQmu9a2um7bU16JYUcB0Umi/vTm91sc34qPLeE97Ug+ppSj95kni+/kXgq1fFyvxDZK8Ek8DVhJbRvMNYBtlhETBaP/kFxS7r/keqpCU26823hd6aEnY7q636h2d0HPi+fqpLYjE8Lb7v200K8UdgrSYpVWA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=c1U2iAqi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="KG0xsGVK"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 95884C4CEF1;
-	Mon,  8 Sep 2025 21:34:37 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="c1U2iAqi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9F129C4CEF1;
+	Mon,  8 Sep 2025 21:50:32 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757367277;
-	bh=NzbMSMpQ4f3Do6KUVa9pmwGpe4Sd68+LnHSAddc02hc=;
+	s=k20201202; t=1757368232;
+	bh=KefSjzm73w2HbGHRtz1VsVIvbTeN+FJ2LIqeCoIeTSc=;
 	h=Date:From:To:Cc:Subject:In-Reply-To:From;
-	b=KG0xsGVKP50g/2MEAKc7sN+1zhMxdzclu/RHx9bMUgGoudP8nnKRnjTGCvWakiHcD
-	 7BhxiVTC6Xp/z989LDquWV9Mqeppxh8onBPSxzNPfFi29SBSOmyvb17FABTwAshXqa
-	 pfRK2KiQ1GzMrYFZLhZFEcd+vQ5OQx1EOaHKahYYZWahdltSQDUS70YkkRyA5uqDhg
-	 NQ+tiTpyReOIBucvYBR86yByR8r2tWIzuHishUj92EgsVC8pcxC53NrnFtSOLaViZo
-	 9s7opjqTUVpPIxAgNzXNUP6kVgIcE2AQGGdPA8X9cgOLETH5L5lx6WVFIEHiioBIzq
-	 ZEYlJbuyV5RfA==
-Date: Mon, 8 Sep 2025 16:34:36 -0500
+	b=c1U2iAqiQ03ZBi7PkxMTtfTBrrIm9wa75r9F5SolN9ABm7e2yC6NE5h6dBxrON9i6
+	 B1O70eYbU45+B+WhRb1m+aIG16ZZ7mRPvqrMDfn4f3gZDnUALUgUQ5Q0g51V6YACoQ
+	 YSZOijLUVgEWBRH6ZijmctH07Zz03fuK8kh8lyrtZar8wBD7Tre6Jm7phkd88VMlsH
+	 PAUbo3ahvKTlQPBi7k9VONHmMvvQCK2K4E1eMalH79ioMxkARTAUuKNkQO2ndEK4mk
+	 gUg+lgFGH4xNDy5Jx6VQM2c+UsoxFK5NycrlIix2NP7vu+OwaPtxOIH/29ffj0Bj7I
+	 eVx5lNo/LKArQ==
+Date: Mon, 8 Sep 2025 16:50:31 -0500
 From: Bjorn Helgaas <helgaas@kernel.org>
 To: "Mario Limonciello (AMD)" <superm1@kernel.org>
 Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
@@ -49,10 +49,11 @@ Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
 	Kai-Heng Feng <kaihengf@nvidia.com>,
 	Mark Pearson <mpearson-lenovo@squebb.ca>,
 	Merthan =?utf-8?Q?Karaka=C5=9F?= <m3rthn.k@gmail.com>,
-	Eric Naim <dnaim@cachyos.org>
-Subject: Re: [PATCH v6 05/11] PCI: PM: Disable device wakeups when halting
- system through S4 flow
-Message-ID: <20250908213436.GA1465429@bhelgaas>
+	Eric Naim <dnaim@cachyos.org>,
+	Denis Benato <benato.denis96@gmail.com>
+Subject: Re: [PATCH v6 09/11] PCI: Put PCIe bridges with downstream devices
+ into D3 at hibernate
+Message-ID: <20250908215031.GA1467002@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -61,64 +62,20 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20250818020101.3619237-6-superm1@kernel.org>
+In-Reply-To: <20250818020101.3619237-10-superm1@kernel.org>
 
-In subject, s|PCI: PM:|PCI/PM:| to follow previous practice.
+On Sun, Aug 17, 2025 at 09:00:59PM -0500, Mario Limonciello (AMD) wrote:
+> For the suspend flow PCIe bridges that have downstream devices are put into
+> the appropriate low power state (D3hot or D3cold depending upon specific
+> devices). For the hibernate flow, PCIe bridges with downstream devices
+> stay in D0 however. This can lead to PCIe bridges that are remained
+> powered on needlessly during hibernate.
 
-On Sun, Aug 17, 2025 at 09:00:55PM -0500, Mario Limonciello (AMD) wrote:
-> PCI devices can be programmed as a wakeup source from low power states
-> by sysfs.  However when using the S4 flow to go into S5 these wakeup
-> sources should be disabled to avoid what users would perceive as
-> spurious wakeup events.
+s/are remained/remain/ I guess?
 
-Is the "can be programmed vis sysfs" part relevant here?
-
-I think S4 and S5 are ACPI sleep states not applicable to all
-platforms.  Is it relevant that we got here via ACPI?
-
-I assume non-ACPI systems can also exercise this path.  Is there a way
-to describe this scenario in a way that would apply to all systems?
-
-I'm not sure what "using the S4 flow to go in to S5" means.
-
-It would be nice to have a spec reference or some sort of rationale
-for the requirement to disable all wakeup sources in SYSTEM_HALT and
-SYSTEM_POWER_OFF.
-
-> Tested-by: Eric Naim <dnaim@cachyos.org>
-> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
-> ---
-> v5:
->  * Re-order
->  * Add tags
-> v4:
->  * https://lore.kernel.org/linux-pci/20250616175019.3471583-1-superm1@kernel.org/
-> ---
->  drivers/pci/pci-driver.c | 4 ++++
->  1 file changed, 4 insertions(+)
+> Adjust the pci_pm_poweroff_noirq() to follow the same flow as
+> pci_pm_suspend_noirq() by using pci_pm_suspend_noirq_common().
 > 
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 63665240ae87f..f201d298d7173 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1139,6 +1139,10 @@ static int pci_pm_poweroff(struct device *dev)
->  	struct pci_dev *pci_dev = to_pci_dev(dev);
->  	const struct dev_pm_ops *pm = dev->driver ? dev->driver->pm : NULL;
->  
-> +	if (device_may_wakeup(dev) &&
-> +	    (system_state == SYSTEM_HALT || system_state == SYSTEM_POWER_OFF))
-> +		device_set_wakeup_enable(dev, false);
-
-I guess the suggestion is that we can't wake up at all from
-SYSTEM_HALT or SYSTEM_POWER_OFF?  Would both be considered S5?
-
-Does this mean we need a physical power button push to start up again?
-I guess ACPI r6.5, sec 16.1.5 kind of suggests that: "hardware does
-allow a transition to S0 due to power button press or a Remote Start."
-
->  	if (pci_has_legacy_pm_support(pci_dev))
->  		return pci_legacy_suspend(dev, PMSG_HIBERNATE);
->  
-> -- 
-> 2.43.0
-> 
+> This introduces a functional change that the hibernate flow will now
+> call pci_save_state() and unless bus PM is skipped will also set
+> the PCIe device into an unknown state.
