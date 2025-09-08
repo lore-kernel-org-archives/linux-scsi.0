@@ -1,111 +1,164 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C0A11D88D0;
-	Sun,  7 Sep 2025 20:28:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C4A82309BE
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2025 06:06:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757276886; cv=none; b=XYvlGKNQ/9DsCy/XZIJUA6qOkIQ8TalF2DS/hU+18XYdXb4g1RQT6PStesaDJbLyhl7K/Dt2R38yxqZ9ntxf4NJR0gjxOW3SlX30dVG4Q8gyjAEpVKyk5UPd7Mi3kVuRDtndET5bNpYAERnNqUO65NWI9Bd9k0XjHNF849Jbkvk=
+	t=1757311576; cv=none; b=tt8fExz9iDGEQrSvrhf8bUhGs0RzfzKY3ZfCYDqd+3won/hiTcx/ygpC4TQ5VrBAQTk4roj8ajl2AE7hm0OtQJeN57UyichmcT7CH9Hv4shLZX1qJuU9lb9UjZcJ4NLoDrOPm0Hxj/mgrFemRjbRtazulbg00tKxZowVM/tEpK8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757276886; c=relaxed/simple;
-	bh=8TQkgCKty2YVfN+St0YaHga2YrJ1lTbBbncd93Mr0OA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ILn51lwf+V1iQ8qPQqpacVBSIllkOTyQd8wgYcXg1pYlqoq+8IdmYztwamf06TnyGGuQMGEqmr+O7/BZS/f5OQ9LGHodtYucxvaCNP2P3KC2OYwvbqNLIL1bjnkSMK7CBE376HZGrc8foV55N1z0PGeNLL+W563JvGEeaKHirAo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=SDa86pr5; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1757311576; c=relaxed/simple;
+	bh=MNMoO5ZSxMijP7k+fy9/RMrnO7AfGEmLlYWp2adgo4k=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=ts4VuvWs3mg95Iep3BX6QM47AqF2n8MNG6RaVcKuw2A59gDOBrFAnw1O8inQ98t/vQfwh+38axvCgwi1Vf8kpBXY3lNrA60u4OEGpIJC1bpR+hG9erAIs0E1/DSX2V4f6WwpFmfuSLrWfGGT9M2yVBOq9dBAp9Je9PamdVwph8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=VTTm5WU3; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=1apyA0jq; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GZ2SbxOq; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=4HvCLfSc; arc=none smtp.client-ip=195.135.223.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="SDa86pr5"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 587JQfDe002038;
-	Sun, 7 Sep 2025 20:27:56 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=corp-2025-04-25; bh=nmDlQERdSOXnir4NGhI1dR5qcwx02
-	qQwlCj5SprR4PM=; b=SDa86pr5p08rwjFbqFrEiUUEBBMoeG8BEb744iL7RK99n
-	6DDpkFz3Dpd89nGiidlhlSginJuhssWO8qQg43FeIf/Qkn6ktRDbsJksT8AJYeNs
-	srBu0SgYq6badZ910cDVt3Ovkjz69UL9dSCAc7tlLJP118x4L11LAsfgQ4Vy0PGl
-	jlzz5+NFKcjdD+sD8/4+Notrh7K2adkakT1VUMG5HzYPQuzVg0pXojaeo678mSX3
-	aGRrhtYyPgqTrM7xIql+5FbE48HE8TksTtNJF2v+hzw3onxX9m9yKly+ty0E9nky
-	jXE6gTkGOCKlh6ORs5y/Wi4NkGV7IcqhvLE9WxP4A==
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 491fnug1nq-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 07 Sep 2025 20:27:56 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 587H3mNL025916;
-	Sun, 7 Sep 2025 20:27:55 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 490bd7d581-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sun, 07 Sep 2025 20:27:55 +0000
-Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 587KRtUA017327;
-	Sun, 7 Sep 2025 20:27:55 GMT
-Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 490bd7d57v-1;
-	Sun, 07 Sep 2025 20:27:55 +0000
-From: Alok Tiwari <alok.a.tiwari@oracle.com>
-To: alim.akhtar@samsung.com, krzk@kernel.org, peter.griffin@linaro.org,
-        martin.petersen@oracle.com, linux-samsung-soc@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-arm-kernel@lists.infradead.org
-Cc: alok.a.tiwari@oracle.com, linux-kernel@vger.kernel.org
-Subject: [PATCH] scsi: ufs: exynos: correct sync pattern mask timing comment
-Date: Sun,  7 Sep 2025 13:27:49 -0700
-Message-ID: <20250907202752.3613183-1-alok.a.tiwari@oracle.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="VTTm5WU3";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="1apyA0jq";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GZ2SbxOq";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="4HvCLfSc"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out2.suse.de (Postfix) with ESMTPS id CF40F25D0F;
+	Mon,  8 Sep 2025 06:06:05 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1757311566; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=33zHN0Ci2nsYAA6yJPzugyK4uZYR8sPBN6+QhEOeME8=;
+	b=VTTm5WU3gsVyWRU3QktGMLV/6wNuTlC1GvT11zmDJzV7/10JaU3gJN9oGS7GB8KBT+dpGE
+	56mNP8wZI2ZadrUFtyNlxzQmk7l2dLItE2Rw6TbXEYpqj/cRVsGVdvDNaHgM3+i9d3MxpW
+	m3VwxdFJbxGTRl1sWS0PSWYTWWZ1S0I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1757311566;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=33zHN0Ci2nsYAA6yJPzugyK4uZYR8sPBN6+QhEOeME8=;
+	b=1apyA0jqX6EwDS5uRd6bE48pTBzQ3FGvNFkOm6J5aco914Br93cxhN9D1G1A+iNMb+SqK5
+	U8h9sxulmcNDl5Cg==
+Authentication-Results: smtp-out2.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=GZ2SbxOq;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=4HvCLfSc
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1757311565; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=33zHN0Ci2nsYAA6yJPzugyK4uZYR8sPBN6+QhEOeME8=;
+	b=GZ2SbxOqRya+/f66Rdwoc0nc6Gz++0tmpkhcQZJK9vGquUwVgfq6ZpZQjsuPmU84U6B8/1
+	RdX/7/vEtdd9n77a9ypbLiIgt+W7lZS4qRukvNrYHExqhaH6VP/pOtcQhLhU5YX7OlwWxa
+	wC3uEpS4iTupAIB2cpAHXiuGSUIDUfU=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1757311565;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=33zHN0Ci2nsYAA6yJPzugyK4uZYR8sPBN6+QhEOeME8=;
+	b=4HvCLfScqdpJvmaTSMixKtHACubY9c8sezJNuwyHjtTwciLeYslu9lj3jGbPWpM82DGgsU
+	o2hBkBriWApNJiDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 10C2013946;
+	Mon,  8 Sep 2025 06:06:05 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id 3mn3AE1yvmhSLAAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 08 Sep 2025 06:06:05 +0000
+Message-ID: <8f493741-5e39-4a09-ac3a-0bf22479e88f@suse.de>
+Date: Mon, 8 Sep 2025 08:06:04 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 01/12] scsi: aacraid: use block layer helpers to
+ calculate num of queues
+To: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>,
+ Sagi Grimberg <sagi@grimberg.me>, "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Aaron Tomlin <atomlin@atomlin.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Thomas Gleixner <tglx@linutronix.de>, Costa Shulyupin
+ <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>,
+ Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>,
+ Ming Lei <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>,
+ Mel Gorman <mgorman@suse.de>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ linux-kernel@vger.kernel.org, linux-block@vger.kernel.org,
+ linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com,
+ linux-scsi@vger.kernel.org, storagedev@microchip.com,
+ virtualization@lists.linux.dev, GR-QLogic-Storage-Upstream@marvell.com
+References: <20250905-isolcpus-io-queues-v8-0-885984c5daca@kernel.org>
+ <20250905-isolcpus-io-queues-v8-1-885984c5daca@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20250905-isolcpus-io-queues-v8-1-885984c5daca@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-07_08,2025-09-04_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 phishscore=0 suspectscore=0
- mlxscore=0 adultscore=0 bulkscore=0 malwarescore=0 mlxlogscore=999
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
- definitions=main-2509070212
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA3MDE5NiBTYWx0ZWRfXwal4JroHskso
- IM9j+47Jpo4He0948KKf4t46KtJc66BNgZ0rtqIfB/XOxmEJWAvTO4cz1lIphAKfie5DXkXA3GS
- P5iLSH/eF89HYcnjwWNU1qZPmQd4d6ndeQbDQdr5SOwiu4RpRwMY1eVWNe3Z/lPq7O721itIu9w
- X4S/iwDavIbe398v4N2nj9aJhziBc49lzwPmoNRdL4JsFHGOz9f5j+58HyZCPWN0dHTDPj4rH0l
- sd7mAt7mDwpXefYQ2H+ZgEgokZbsNI34GL1Nmt10D6bVv+6q3Kb2iTNNKoK2sqeeC1xaFdmvkrm
- fO1z+fI2VyydGN3evUDhIzpf0EbKBh2UOVdfnU4Nw8R+rY74TufV5TIjn4lPJGSNvYdebwI1IDN
- JzqFz6j0r1QoVuh8bkeKh0lWQU7eLw==
-X-Proofpoint-GUID: h9X0dUTol4snrS75rdOUG_br4sshWGXU
-X-Proofpoint-ORIG-GUID: h9X0dUTol4snrS75rdOUG_br4sshWGXU
-X-Authority-Analysis: v=2.4 cv=LdI86ifi c=1 sm=1 tr=0 ts=68bdeacc b=1 cx=c_pps
- a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
- a=yJojWOMRYYMA:10 a=yPCof4ZbAAAA:8 a=xlVCHxDqw-qt9YOnf0sA:9 cc=ntf
- awl=host:13602
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: CF40F25D0F
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_TWELVE(0.00)[25];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:mid,suse.de:email];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Score: -4.51
 
-Fix the comment for SYNC_LEN_G2 in exynos_ufs_config_sync_pattern_mask().
-The actual value is 40us, not 44us, matching the configured mask timing.
-This change improves code clarity and avoids potential confusion for
-readers and maintainers.
+On 9/5/25 16:59, Daniel Wagner wrote:
+> The calculation of the upper limit for queues does not depend solely on
+> the number of online CPUs; for example, the isolcpus kernel
+> command-line option must also be considered.
+> 
+> To account for this, the block layer provides a helper function to
+> retrieve the maximum number of queues. Use it to set an appropriate
+> upper queue number limit.
+> 
+> Fixes: 94970cfb5f10 ("scsi: use block layer helpers to calculate num of queues")
+> Signed-off-by: Daniel Wagner <wagi@kernel.org>
+> ---
+>   drivers/scsi/aacraid/comminit.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-No functional changes.
+Cheers,
 
-Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
----
- drivers/ufs/host/ufs-exynos.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-exynos.c b/drivers/ufs/host/ufs-exynos.c
-index 513cbcfa10ac..70d195179eba 100644
---- a/drivers/ufs/host/ufs-exynos.c
-+++ b/drivers/ufs/host/ufs-exynos.c
-@@ -776,7 +776,7 @@ static void exynos_ufs_config_sync_pattern_mask(struct exynos_ufs *ufs,
- 	u32 mask, sync_len;
- 	enum {
- 		SYNC_LEN_G1 = 80 * 1000, /* 80us */
--		SYNC_LEN_G2 = 40 * 1000, /* 44us */
-+		SYNC_LEN_G2 = 40 * 1000, /* 40us */
- 		SYNC_LEN_G3 = 20 * 1000, /* 20us */
- 	};
- 	int i;
+Hannes
 -- 
-2.50.1
-
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
