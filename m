@@ -1,151 +1,102 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1A3022E7BB5
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2025 08:08:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8106F23CB;
+	Mon,  8 Sep 2025 08:50:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757318907; cv=none; b=nyChn8CpaKpWXoy2PcH9lE9fqzL1FztXyED/eRNBMoFpMzg+ODx4ueeRI+A4hqYOQV0Zd9YAtli9QfKQA0S8WAlzX0M/v2tt6WMjV+TmNGJdIVquvz/Xa8kLLU5tHblXGq60tR5vKCX8g7+C2LYpupY/vDPSMzkvpCGHwxZ38JQ=
+	t=1757321432; cv=none; b=BNS1FTvMALaUlFnoWL/qiBnzeAIoR7HY7BKrcQMYyzy5U/9lXN37KDtNmQUjC2LVXQm5RHct00pPboL/GYWbDl8ax1zrUAC+uaqo7NSdk6LERF7uMFaaDQo4qw8t+fvmNT4u/ZS/0LRo9aQa9stypl42XbP4sIco0KWTaKZZl60=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757318907; c=relaxed/simple;
-	bh=KlHyUYEthoEgZlA0iprUby6nKsW0V9HUhNrJBRjYfQo=;
+	s=arc-20240116; t=1757321432; c=relaxed/simple;
+	bh=hXy8jp4sCJyc6cb27KtrieaZLOF3mq0on6D17/uWSP8=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=K7uwh1IigwvwiUA6P8r/zHoVoad3j43tsjmVMiSjVRoe0X1recQdQf4qUTdfbhQg1wPOCkTniyOyxfN1fWIN8CI6Pno7u1TXpwh/hozNT2ujCgsclF2fAMfvid2CTWAq+w1CtjhhihCRaAIQsssB2aQaW+QfNb28fKFm9vzTc7M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GSc58UFV; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=kNG/Qagk; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=GSc58UFV; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=kNG/Qagk; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 Content-Type:Content-Disposition:In-Reply-To; b=SRL+qB4X3wIYVNzjeKAgXe8OFJ0szxERwt54PwQMEtkpr7wr/aKs6fmtYPwYJu8U0igzyQumTa4mSrrkJ3Aax1C8vmwLF9OoUbto6nkKgJKSsuN1c6spWqOudsh2k5ooChbfY9boO7HuJw2gwJiQTT6Ei/0L2VZYhvFjiuDkNAA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F38mM7rr; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GSc58UFV";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="kNG/Qagk";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="GSc58UFV";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="kNG/Qagk"
-Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 957BF2469A;
-	Mon,  8 Sep 2025 08:08:23 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757318903; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P5pBTmM/PWEIVyWVzMdHvPVxxzNBx2FFCHDJuwaqU5A=;
-	b=GSc58UFVTBVemNfSv3K5RRd2PbzAN1t15CH2bb7KVWiEeeiENr6cRFcCAQqbn5o565xSml
-	LwGcz1HXhk1H8PK2as9YUrEruyMEeIbUJ9pKVQdXGfvGQVE+hhv3ZWUPPriicLER27R+bf
-	aG76KqGkXc6sjkAC8ztLmVGJcAyDq+8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757318903;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P5pBTmM/PWEIVyWVzMdHvPVxxzNBx2FFCHDJuwaqU5A=;
-	b=kNG/Qagkulgsx/JdfRBRA8EW5Q2Nvo4I/vaaSU+/Din8rY4KuLeDH+TrlFeI5l090nAv2d
-	ZRyL8bhtpnWEl/BQ==
-Authentication-Results: smtp-out2.suse.de;
-	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=GSc58UFV;
-	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b="kNG/Qagk"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757318903; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P5pBTmM/PWEIVyWVzMdHvPVxxzNBx2FFCHDJuwaqU5A=;
-	b=GSc58UFVTBVemNfSv3K5RRd2PbzAN1t15CH2bb7KVWiEeeiENr6cRFcCAQqbn5o565xSml
-	LwGcz1HXhk1H8PK2as9YUrEruyMEeIbUJ9pKVQdXGfvGQVE+hhv3ZWUPPriicLER27R+bf
-	aG76KqGkXc6sjkAC8ztLmVGJcAyDq+8=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757318903;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=P5pBTmM/PWEIVyWVzMdHvPVxxzNBx2FFCHDJuwaqU5A=;
-	b=kNG/Qagkulgsx/JdfRBRA8EW5Q2Nvo4I/vaaSU+/Din8rY4KuLeDH+TrlFeI5l090nAv2d
-	ZRyL8bhtpnWEl/BQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 7692913946;
-	Mon,  8 Sep 2025 08:08:23 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id 9fvsHPeOvmhXTwAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Mon, 08 Sep 2025 08:08:23 +0000
-Date: Mon, 8 Sep 2025 10:08:23 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: Hannes Reinecke <hare@suse.de>
-Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, 
-	Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, 
-	"Michael S. Tsirkin" <mst@redhat.com>, Aaron Tomlin <atomlin@atomlin.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Thomas Gleixner <tglx@linutronix.de>, 
-	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
-	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	storagedev@microchip.com, virtualization@lists.linux.dev, 
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v8 10/12] blk-mq: use hk cpus only when isolcpus=io_queue
- is enabled
-Message-ID: <6ba78d1d-19e9-41dc-bc91-3c9da537cabe@flourine.local>
-References: <20250905-isolcpus-io-queues-v8-0-885984c5daca@kernel.org>
- <20250905-isolcpus-io-queues-v8-10-885984c5daca@kernel.org>
- <ff66801c-f261-411d-bbbf-b386e013d096@suse.de>
- <d11a0c60-1b75-49ec-a2f8-7df402c4adf2@flourine.local>
- <321277a3-7dcc-414b-a329-71acfb504e91@suse.de>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F38mM7rr"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E3AFCC4CEF8;
+	Mon,  8 Sep 2025 08:50:28 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1757321432;
+	bh=hXy8jp4sCJyc6cb27KtrieaZLOF3mq0on6D17/uWSP8=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=F38mM7rrSo1mV051FnK0O2gQGczbdPo/XOvo2ua63MdkpCRJcqYIPHziOiN+gQ/1J
+	 Y/zfhPrhUKmlCZptI3VXvTMY5Fjq7cfB65QoDM/rO5t8OgrzbxtaamdUZZU19AFgjR
+	 bTpWg1d92wGPnTr0lWTVOJXeGm1pbHXo0DMsgpWpPSb86P8Qmsu6BZqwJEyYI/ucbl
+	 ZVn9KVD30Gp/BF4llHSaGSif1G6WARmjqfbhhN2xNPKX5B0VEB6M3VYAC8Gv36e3pS
+	 TKIVU3oOIVBklu6iwkn8aLOb/tH/8yUaUwL9OQMbcyDpSk81qiSNht5B2OoznW0a3g
+	 0+nFXCOs7AIOQ==
+Date: Mon, 8 Sep 2025 14:20:25 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Alok Tiwari <alok.a.tiwari@oracle.com>
+Cc: quic_cang@quicinc.com, quic_asutoshd@quicinc.com, 
+	peter.wang@mediatek.com, martin.petersen@oracle.com, alim.akhtar@samsung.com, 
+	avri.altman@wdc.com, bvanassche@acm.org, James.Bottomley@hansenpartnership.com, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v2] scsi: ufs: mcq: Fix memory allocation checks for SQE
+ and CQE
+Message-ID: <fjcv7v3fli7gcdm4yyppfnazzt4eojzlo7yprefnvzcrxqu6xo@7zmecfu6m25f>
+References: <20250907194025.3611607-1-alok.a.tiwari@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
-In-Reply-To: <321277a3-7dcc-414b-a329-71acfb504e91@suse.de>
-X-Spam-Level: 
-X-Spam-Flag: NO
-X-Rspamd-Queue-Id: 957BF2469A
-X-Rspamd-Action: no action
-X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
-X-Spamd-Result: default: False [-4.51 / 50.00];
-	BAYES_HAM(-3.00)[99.99%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	MX_GOOD(-0.01)[];
-	RCPT_COUNT_TWELVE(0.00)[26];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	TO_DN_SOME(0.00)[];
-	ARC_NA(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	MIME_TRACE(0.00)[0:+];
-	MISSING_XM_UA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_EQ_ENVFROM(0.00)[];
-	FROM_HAS_DN(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RL71uuc3g3e76oxfn4mu5aogan)];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,flourine.local:mid,suse.de:dkim];
-	URIBL_BLOCKED(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,flourine.local:mid];
-	DKIM_TRACE(0.00)[suse.de:+]
-X-Spam-Score: -4.51
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250907194025.3611607-1-alok.a.tiwari@oracle.com>
 
-On Mon, Sep 08, 2025 at 09:51:34AM +0200, Hannes Reinecke wrote:
-> Wouldn't it be better to call 'cpumask_zero' before 'cpumask_and'?
+On Sun, Sep 07, 2025 at 12:40:16PM GMT, Alok Tiwari wrote:
+> Previous checks incorrectly tested the DMA addresses (dma_handle)
+> for NULL. Since dma_alloc_coherent() returns the CPU (virtual)
+> address, the NULL check should be performed on the *_base_addr
+> pointer to correctly detect allocation failures.
+> 
+> Update the checks to validate sqe_base_addr and cqe_base_addr
+> instead of sqe_dma_addr and cqe_dma_addr.
+> 
+> Fixes: 4682abfae2eb ("scsi: ufs: core: mcq: Allocate memory for MCQ mode")
+> Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
 
-I don't think this is necessary, from the docs :
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-  cpumask_and - *dstp = *src1p & *src2p
+- Mani
 
-cpumask_and call bitmap_and which is:
+> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>
+> ---
+> v1 -> v2
+> rephrase commit message and added Reviewed-by Alim
+> ---
+>  drivers/ufs/core/ufs-mcq.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+> index 1e50675772fe..cc88aaa106da 100644
+> --- a/drivers/ufs/core/ufs-mcq.c
+> +++ b/drivers/ufs/core/ufs-mcq.c
+> @@ -243,7 +243,7 @@ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba)
+>  		hwq->sqe_base_addr = dmam_alloc_coherent(hba->dev, utrdl_size,
+>  							 &hwq->sqe_dma_addr,
+>  							 GFP_KERNEL);
+> -		if (!hwq->sqe_dma_addr) {
+> +		if (!hwq->sqe_base_addr) {
+>  			dev_err(hba->dev, "SQE allocation failed\n");
+>  			return -ENOMEM;
+>  		}
+> @@ -252,7 +252,7 @@ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba)
+>  		hwq->cqe_base_addr = dmam_alloc_coherent(hba->dev, cqe_size,
+>  							 &hwq->cqe_dma_addr,
+>  							 GFP_KERNEL);
+> -		if (!hwq->cqe_dma_addr) {
+> +		if (!hwq->cqe_base_addr) {
+>  			dev_err(hba->dev, "CQE allocation failed\n");
+>  			return -ENOMEM;
+>  		}
+> -- 
+> 2.50.1
+> 
 
-static __always_inline
-bool bitmap_and(unsigned long *dst, const unsigned long *src1,
-		const unsigned long *src2, unsigned int nbits)
-{
-	if (small_const_nbits(nbits))
-		return (*dst = *src1 & *src2 & BITMAP_LAST_WORD_MASK(nbits)) != 0;
-	return __bitmap_and(dst, src1, src2, nbits);
-}
+-- 
+மணிவண்ணன் சதாசிவம்
