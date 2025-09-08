@@ -1,98 +1,109 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3822C30DD1E;
-	Mon,  8 Sep 2025 15:28:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5219D1C3BFC;
+	Mon,  8 Sep 2025 15:28:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757345296; cv=none; b=niS9//dqOtCIneGBmFVNDnlt+VSiBvVBUq54d/xfA3L0tzTZ01BxVd73CX+FKKOqgx88FFIVnWgZPPPtQbYRTRN/Bs6xXdfx9+EbJUxx/bEMN6bFe4Fmoex9a/t/bgGqX21V2Hkssl7ROG5Ka3G0qRITH/4z3MOjHZz7RjYvdog=
+	t=1757345320; cv=none; b=F9pRQWTJbOQIZLQj7TecVrUNYsIGKvkgMlnKeWQZ+02DXiTw6BJ+cEoUMEOqTrMLNp9fGj+WHqD3NjN1C3nnemMdMJt7OiIuGQCsDxWe2UQTNph3/NpCiO5uzJufEwk0ECni5ORiKrdWxDj4uOJdFAZLsIy6/r1Yz/hbUfnvnLA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757345296; c=relaxed/simple;
-	bh=IL9lnqQXoeEQECYNv61WPi9hBHFk6AjV/ccUc6R4VhA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fOFcNZF9EZBWPSZu/Nr2pU4eAGSznPWDqU6YgOAATAF3xpDZg36pSyvtxmyq9H8/moCrX0tZh71xlch5J4oomJCpLjCQViSVWry0OPbaH8jM9IUk+Y/m2M2kF4fE0QY84uDPz7Tw+yjITML7eogmfu1ZVagxmWtsFMdPB1S0E+M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HX1WumBP; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1757345320; c=relaxed/simple;
+	bh=Do6afPicQEb4NL8JqQTOF9ldvaOz/50hXlHx8t3d/Vk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=eGzLNGERbTrHqbtoaAGb4TQXF+tEIIiNimSM/AXqX+OsGkIqDygdFxI8mS+JceIDO5vj/+yVn11gApDtU+Sn5tLnMFB2ihSn9IfvElrfAblBxPYST6mqnaCU9y9i5iSRmjLkMe8bK+ZPxiDhYnBPoPZZ/lhHUAMMaWuTTRSFgTQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=PsNHM3XM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HX1WumBP"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cL9ng4tgMzm0ysv;
-	Mon,  8 Sep 2025 15:28:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1757345284; x=1759937285; bh=ZmP43ztIWQvs8cAYII3r0KAQ
-	bnKcLwOTP/pXj06Tob0=; b=HX1WumBP9tHG3MvDrbxHauDTh3flyaZ+1d4u2qsP
-	YqLR0qhAL3boFjIV1GN+jbMksvOoIXdiXXUyUYpbMpya8JBQilXwFjX4w5furYy+
-	zbQltR3Eo3cOfuDJ8c4/pHtxfKRNQZJrtFqL2mFmMJu5n767l2Vz/WxdppzEm6I9
-	Z5t2wnqQb+FuCtxBEn7aWB6kiPRb2SRJYlQMfYVc6efcPAPaS8S+VtsDNpHUgN/L
-	CctChEd8pKbm3B4vUGHpxfLEebEq1rhM00bZCluPkC9WJ4ilSld9+/FEyvWKWOYk
-	kIjP4CA9+ubPPigPw7pHSnMc+zFBcr8MS5R2C2gqweDxMA==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id LpbeJA7ztnSv; Mon,  8 Sep 2025 15:28:04 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cL9nN3RF3zm0yT6;
-	Mon,  8 Sep 2025 15:27:51 +0000 (UTC)
-Message-ID: <e090d044-992f-4f4e-b0ca-c310f733b4ed@acm.org>
-Date: Mon, 8 Sep 2025 08:27:50 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="PsNHM3XM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A1A6FC4CEF1;
+	Mon,  8 Sep 2025 15:28:31 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1757345319;
+	bh=Do6afPicQEb4NL8JqQTOF9ldvaOz/50hXlHx8t3d/Vk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=PsNHM3XMtszyc0MR1l+7nz70Pbv2C2OaoFSsE5TqVi1L0TWseb3dm8FxU4bOhGA4x
+	 K4Pbr34ZZu4GjLSy0wcBOLtbTfSDZ2sZXwcW4q/GMOmsbSZpLzPh3VE05cQHN1bvx6
+	 51Gz7lPPEfDUpWjzsa4c4LUlGmtD5Yh+xRUZwAvoz2gdSvkS4s3poGD4jvdFCM3JbR
+	 k937DQwE3qDKhikqJJbGzJuWzvxXLe1oyvTjXmvEVG3yc5Fy+l/qJEMutidM5xegfs
+	 8U0ArRBNo11ISeeVjRQuNSccclJrtzFk1VDZN9ty2Mo1sIkDvMoHTI/K2PNGM65fEw
+	 HzowuB88dAXMA==
+Date: Mon, 8 Sep 2025 16:28:28 +0100
+From: Mark Brown <broonie@kernel.org>
+To: David Hildenbrand <david@redhat.com>
+Cc: linux-kernel@vger.kernel.org, Alexander Potapenko <glider@google.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Brendan Jackman <jackmanb@google.com>,
+	Christoph Lameter <cl@gentwo.org>, Dennis Zhou <dennis@kernel.org>,
+	Dmitry Vyukov <dvyukov@google.com>, dri-devel@lists.freedesktop.org,
+	intel-gfx@lists.freedesktop.org, iommu@lists.linux.dev,
+	io-uring@vger.kernel.org, Jason Gunthorpe <jgg@nvidia.com>,
+	Jens Axboe <axboe@kernel.dk>, Johannes Weiner <hannes@cmpxchg.org>,
+	John Hubbard <jhubbard@nvidia.com>, kasan-dev@googlegroups.com,
+	kvm@vger.kernel.org, "Liam R. Howlett" <Liam.Howlett@oracle.com>,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	linux-arm-kernel@axis.com, linux-arm-kernel@lists.infradead.org,
+	linux-crypto@vger.kernel.org, linux-ide@vger.kernel.org,
+	linux-kselftest@vger.kernel.org, linux-mips@vger.kernel.org,
+	linux-mmc@vger.kernel.org, linux-mm@kvack.org,
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
+	Marco Elver <elver@google.com>,
+	Marek Szyprowski <m.szyprowski@samsung.com>,
+	Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
+	Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
+	Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
+	Robin Murphy <robin.murphy@arm.com>,
+	Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
+	virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
+	wireguard@lists.zx2c4.com, x86@kernel.org, Zi Yan <ziy@nvidia.com>
+Subject: Re: [PATCH v2 19/37] mm/gup: remove record_subpages()
+Message-ID: <e8428944-e2ef-4785-b0c2-d4896b291cb1@sirena.org.uk>
+References: <20250901150359.867252-1-david@redhat.com>
+ <20250901150359.867252-20-david@redhat.com>
+ <f5032553-9ec0-494c-8689-0e3a6a73853c@sirena.org.uk>
+ <83d3ef61-abc7-458d-b6ea-20094eeff6cd@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] scsi: ufs: Add an enum for ufs_trace to check ufs cmd
- error
-To: DooHyun Hwang <dh0421.hwang@samsung.com>, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
- peter.wang@mediatek.com, manivannan.sadhasivam@linaro.org,
- quic_mnaresh@quicinc.com
-Cc: grant.jung@samsung.com, jt77.jang@samsung.com, junwoo80.lee@samsung.com,
- jangsub.yi@samsung.com, sh043.lee@samsung.com, cw9316.lee@samsung.com,
- sh8267.baek@samsung.com, wkon.kim@samsung.com
-References: <20250417023405.6954-1-dh0421.hwang@samsung.com>
- <CGME20250417023417epcas1p31338c05e70e61b0a5e96d0ac0910713d@epcas1p3.samsung.com>
- <20250417023405.6954-2-dh0421.hwang@samsung.com>
- <239ea120-841f-478d-b6b4-9627aa453795@acm.org>
- <093601dc1ae0$2389c460$6a9d4d20$@samsung.com>
- <27882582-58b8-4ac2-9596-3602098e7c1d@acm.org>
- <17db01dc1ba6$41d37350$c57a59f0$@samsung.com>
- <6e854090-a071-416a-b7a5-cc8ee0122a90@acm.org>
- <2add01dc1c9d$7b5cba30$72162e90$@samsung.com>
- <854fad23-e7f8-42c8-b0e2-03460f481366@acm.org>
- <561a01dc2094$51b24b00$f516e100$@samsung.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <561a01dc2094$51b24b00$f516e100$@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="DHpSdvAG938A2yDi"
+Content-Disposition: inline
+In-Reply-To: <83d3ef61-abc7-458d-b6ea-20094eeff6cd@redhat.com>
+X-Cookie: Air is water with holes in it.
 
-On 9/8/25 12:43 AM, DooHyun Hwang wrote:
-> Would it be acceptable to add UFS_UIC_SEND, UFS_UIC_COMP,
-> and UFS_UIC_ERR at the end of the enum?
-> 
-> I am aware that UFS_DEV_COMP is currently not used in the code,
-> but I am concerned about whether it is appropriate to modify
-> or remove existing enum labels.
 
-Please take a look at Documentation/process/stable-api-nonsense.rst.
-While the Android GKI kernels have a stable ABI, the upstream kernel
-does not promise a stable ABI. Hence, the concerns that apply to GKI
-kernels regarding changing the numerical value of enum labels do not
-apply to the upstream kernel. It is the responsibility of anyone who
-backports an upstream patch to a GKI kernel branch to make sure that
-the GKI ABI is not modified.
+--DHpSdvAG938A2yDi
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 
-Thanks,
+On Mon, Sep 08, 2025 at 05:22:24PM +0200, David Hildenbrand wrote:
+> On 08.09.25 17:16, Mark Brown wrote:
 
-Bart.
+> > I'm seeing failures in kselftest-mm in -next on at least Raspberry Pi 4
+> > and Orion O6 which bisect to this patch.  I'm seeing a NULL pointer
+
+> On which -next label are you on? next-20250908 should no longer have that
+> commit.
+
+Ah, sorry - it was Friday's -next but I only saw the report this
+morning.  Sorry for the noise.
+
+--DHpSdvAG938A2yDi
+Content-Type: application/pgp-signature; name="signature.asc"
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAABCgAdFiEEreZoqmdXGLWf4p/qJNaLcl1Uh9AFAmi+9hwACgkQJNaLcl1U
+h9Dbtgf+Lll52kCjsemPK6UaH7DQkWfZmHDqtHqLwe5SzgAfSeqnhQgasjG5jMSv
+Nx5981jPRrpwjz/cI58x/+7VGV4mHF331CfuGkvW9jVYKznATgc/3x877cxjQPYg
+I0fxXcE59j2a4VQrjcWqpuF0unCRYckVgvCsxK0iBkltPEMKR6iqf1xBECY8ofae
+HYKT9ows31m6zoR1t0ed+9WHQqIH9nlo9gPcNJm6Vw2vMSwDBa5BuQv3MIIyOFq3
+9MutZOCRam8c+vwt91HNCNUP85vbnHqG+eZCecu4Y2rVwHaENgW7ayTBrmb1OQ4G
+cd9uBVEvCzE0tE1Rm7r+1srw8xc6vg==
+=z4uX
+-----END PGP SIGNATURE-----
+
+--DHpSdvAG938A2yDi--
