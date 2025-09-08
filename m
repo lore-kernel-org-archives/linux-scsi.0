@@ -1,111 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0B5071F790F;
-	Mon,  8 Sep 2025 18:42:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0297B31C57D
+	for <linux-scsi@vger.kernel.org>; Mon,  8 Sep 2025 18:48:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757356929; cv=none; b=lUAUElIH5m1Fz7kH7hBMrdoevEeKYueE9DXjK5CXW7I1ZVw4f7INMvv4IYwup0wfLGFugmXSvmTK0EpG1Jj1AF5r5o+V/8e7uyZuhsYlRwE8SOd2K0JU2ivT6M/Pdw0uMacGrqAeTqIBSEQUvEOOsr9+JwORilf/ZmTX7ggn6Vo=
+	t=1757357307; cv=none; b=QAm+NPrdQioWff0vWVdmqkArnnlMJVmkoGCPZzygbR6TRdIcFnLCad8T58ylABaISJxLNxMnP47n1mk90Xz1w+VTj1gtpZE4yUJfis2jiaVFJViLR1d/0B5MwKnZFh5JCqMUnefLwVbEDMoQ3pEi3ldhB4GulLd0AbU2MU8Uslk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757356929; c=relaxed/simple;
-	bh=72VHZnaP72CTpxdIwgdUNhKdw5m3kU5+PRYk/sWvmW4=;
-	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=pgcETTYrFBY0nAO1m9qAQoZKdz1g5X/zE3AElJwkHcpnD57OHME96PeLokAUIoGT3spjZttFSzz63SO8qPxlNV5GQClZrXtvNjJNb2OzwGNaASwS0JMq6QRXEgBTItB7qcZwn3uzoREqg9PB+zgX7JdBRqLLLLkgapKyEBjDBJs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Fbh3WVCo; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757357307; c=relaxed/simple;
+	bh=tZxYb0uG1pVYCFAlE2Xx8jInj2yfc8dt9AvIkZMhXeg=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=sJKx1sbdfT0yymjU9qkXySHi0+XIWZVoq24FBX4+G14NMBIWr+P0m+qUHP4UrfZt0bAsXHbFzSgaPdY7fiLms5ZE5I8TmJxa9GvX2AE1g/dU7h1VjjBMIARlsoE0wmNcJTZsw/Y/Rlj7m5ft0E5wuVt4YZkHAmb3qcDAMFzhdcM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=bXN/CCZ9; arc=none smtp.client-ip=72.215.153.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Fbh3WVCo"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AB8CBC4CEF1;
-	Mon,  8 Sep 2025 18:42:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757356928;
-	bh=72VHZnaP72CTpxdIwgdUNhKdw5m3kU5+PRYk/sWvmW4=;
-	h=Date:From:To:Cc:Subject:From;
-	b=Fbh3WVCo3JM3GvyJPCV7HUjNfU8ejuyRq+iumfCXe8Tq8JbnU5WHVu7yo6qPRzdAZ
-	 4lCO7Ub6+7pGQGSaRuqx4cZR49H1ZbH0g4wj0HINNg59He3EZh6Wh7gyYs6SxfjWsS
-	 h9u9dYK0YQG7IDvQdyXMdFQCoLAYRUZ6MIrd0hmnMsFvtns6Hqw9TWqwbdZxAtigZc
-	 +ihpBDbc2Fa7y9+AUAyf0R0qvnYc5qIyS2yMvkixRIYK3HEKcSTK8NMrhcvdX/blms
-	 xW1RJHyJwY1qVVPlGoa8yR7eyNDF9yyneN8oAQyDnXCCvs38SgMZgWfFXF5KN+jN16
-	 RaBAcjeMsk+nw==
-Date: Mon, 8 Sep 2025 20:42:01 +0200
-From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
-To: Jack Wang <jinpu.wang@cloud.ionos.com>,
-	John Garry <john.g.garry@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
-	linux-hardening@vger.kernel.org
-Subject: [PATCH v3][next] scsi: pm80xx: Avoid -Wflex-array-member-not-at-end
- warnings
-Message-ID: <aL8jeSJ8uKih9DNJ@kspp>
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="bXN/CCZ9"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id XKvqW97nBl2Yag9r; Mon, 08 Sep 2025 14:48:23 -0400 (EDT)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+	bh=2mEIfVXrub6Npv/Fr/lvqsQ058qpuI+GzoBKWdxKTCQ=;
+	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Cc:To:From:
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=bXN/CCZ9ug/1i2Xynx5i
+	P+so3tNX06MTAK83yy0HtQW9vYTDK3ERTQZ9qaYkJWhYOjSBVyDILI39U5nG2PRahT12LMcFU6yIe
+	xLKKpB+DrdlysR8n3TTkdQ/qnTZbGnNTSFimntGOYKuLvVj6jsyG21kqDg2AdjCj3ucBrs9LTY=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
+  with ESMTPS id 14189115; Mon, 08 Sep 2025 14:48:23 -0400
+Message-ID: <88982e77-f758-470b-92ea-6c18ef433e0f@cybernetics.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
+Date: Mon, 8 Sep 2025 14:48:23 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: [PATCH 02/15] scsi: qla2xxx: fix initiator mode with
+ qlini_mode=exclusive
+Content-Language: en-US
+X-ASG-Orig-Subj: [PATCH 02/15] scsi: qla2xxx: fix initiator mode with
+ qlini_mode=exclusive
+From: Tony Battersby <tonyb@cybernetics.com>
+To: Nilesh Javali <njavali@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
+ scst-devel@lists.sourceforge.net,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+References: <f8977250-638c-4d7d-ac0c-65f742b8d535@cybernetics.com>
+In-Reply-To: <f8977250-638c-4d7d-ac0c-65f742b8d535@cybernetics.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1757357303
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Barracuda-BRTS-Status: 1
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 1148
+X-ASG-Debug-ID: 1757357303-1cf43947df30c290001-ziuLRu
 
-Comment out unused field `residual_count` in a couple of structures,
-and with this, fix the following -Wflex-array-member-not-at-end
-warnings:
+When given the module parameter qlini_mode=exclusive, qla2xxx in
+initiator mode is initially unable to successfully send SCSI commands to
+devices it finds while scanning, resulting in an escalating series of
+resets until an adapter reset clears the issue.  Fix by checking the
+active mode instead of the module parameter.
 
-drivers/scsi/pm8001/pm8001_hwi.h:342:33: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-drivers/scsi/pm8001/pm80xx_hwi.h:561:32: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-
-Reviewed-by: Jack Wang <jinpu.wang@ionos.com>
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 ---
-Changes in v3:
- - Comment out unused field instead of removing it. (John Garry)
- - Update changelog text.
- - Add RB tags.
+ drivers/scsi/qla2xxx/qla_os.c | 8 +-------
+ 1 file changed, 1 insertion(+), 7 deletions(-)
 
-Changes in v2:
- - Remove unused field residual_count. (James)
- - Link: https://lore.kernel.org/linux-hardening/aLmoE8CznVPres5r@kspp/
-
-v1:
- - Link: https://lore.kernel.org/linux-hardening/aLiMoNzLs1_bu4eJ@kspp/
-
- drivers/scsi/pm8001/pm8001_hwi.h | 4 +++-
- drivers/scsi/pm8001/pm80xx_hwi.h | 4 +++-
- 2 files changed, 6 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/pm8001/pm8001_hwi.h b/drivers/scsi/pm8001/pm8001_hwi.h
-index fc2127dcb58d..f1ce8df082b0 100644
---- a/drivers/scsi/pm8001/pm8001_hwi.h
-+++ b/drivers/scsi/pm8001/pm8001_hwi.h
-@@ -339,8 +339,10 @@ struct ssp_completion_resp {
- 	__le32	status;
- 	__le32	param;
- 	__le32	ssptag_rescv_rescpad;
-+
-+	/* Must be last --ends in a flexible-array member. */
- 	struct ssp_response_iu  ssp_resp_iu;
--	__le32	residual_count;
-+	/* __le32  residual_count; */
- } __attribute__((packed, aligned(4)));
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index a52293972e10..f0b77f13628d 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -3438,13 +3438,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
+ 		ha->mqenable = 0;
  
+ 	if (ha->mqenable) {
+-		bool startit = false;
+-
+-		if (QLA_TGT_MODE_ENABLED())
+-			startit = false;
+-
+-		if (ql2x_ini_mode == QLA2XXX_INI_MODE_ENABLED)
+-			startit = true;
++		bool startit = !!(host->active_mode & MODE_INITIATOR);
  
-diff --git a/drivers/scsi/pm8001/pm80xx_hwi.h b/drivers/scsi/pm8001/pm80xx_hwi.h
-index eb8fd37b2066..d8a63b7fed6a 100644
---- a/drivers/scsi/pm8001/pm80xx_hwi.h
-+++ b/drivers/scsi/pm8001/pm80xx_hwi.h
-@@ -558,8 +558,10 @@ struct ssp_completion_resp {
- 	__le32	status;
- 	__le32	param;
- 	__le32	ssptag_rescv_rescpad;
-+
-+	/* Must be last --ends in a flexible-array member. */
- 	struct ssp_response_iu ssp_resp_iu;
--	__le32	residual_count;
-+	/* __le32  residual_count; */
- } __attribute__((packed, aligned(4)));
- 
- #define SSP_RESCV_BIT	0x00010000
+ 		/* Create start of day qpairs for Block MQ */
+ 		for (i = 0; i < ha->max_qpairs; i++)
 -- 
 2.43.0
+
 
