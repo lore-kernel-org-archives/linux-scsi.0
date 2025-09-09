@@ -1,159 +1,137 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5D604225415;
-	Tue,  9 Sep 2025 19:17:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACE2525393C
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Sep 2025 22:09:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757445424; cv=none; b=DTOmIWovHHygKtFUmVLp8K/Yt59fdZ1jv3/o3MERGv5Try95QmP+xPuq/geVd57dYfNHqwZS+oFaKeuSwJdxugQ7qUhZiGTu/1klKx2rIGfLTd+03BDveMacQOVH6uH0/IQ+yqvztifpEphLCvQuHOfsvRDWrXAyv2bSDaJUYrY=
+	t=1757455781; cv=none; b=GXIpg4ytGKm3TcC14B0VZavHHnokLbss9gvFvAWME1zUwXjKFXA5nfYjXFkkpt0BIlbZZrbnyJCe56qfEsk7j6D8JuKW1kfeC50RhaUUEiGaxo4aSQD0A3u7d1nJIx2OASUNJ3yBo9YVNUmKOeu/P/pYplp7df/b9djFnzHDJYk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757445424; c=relaxed/simple;
-	bh=gVzxOE/pl/exM5/3ViV8ssmW6tGDSsp+WYKa5FxPoEY=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h5olin/UFd7YO21u/deCoR1U8qdN/TWamRtaquA8vH7Bn/qGF7XbjKgJgNzCpqoxjjf8vFAUj3TigdAwBDMsEheTKqAD8SRIZxbQ5ONig36BW2/ivXgAscL726St8Qa4I3aWM3m5WWyWCOqpXM6PahitNeruj8ZVviFUiR9KSuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RSkozw1g; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757455781; c=relaxed/simple;
+	bh=Rl85ifHTqqcOljpR5uWWgDGTzWdXobghNEGRkdP76KY=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=j3t/GnfLAn5HfybFldVc4CtsS9NjLpQokJrHDu14vUbLCI4sS4q8lkTSQfaQ13X0S3oD3TIoD9a8e/6cUGxQJyxgTMxjBJ9hwIxOQ1Zx8fl1W6MKRpPh3YqQXDhDQpTbNGbSuBCYcpyZGpq10uBu7MueYJ/iiQwfgEnJxTTWb5Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TzMswMtw; arc=none smtp.client-ip=209.85.128.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RSkozw1g"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EB4B2C4CEF4;
-	Tue,  9 Sep 2025 19:17:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757445424;
-	bh=gVzxOE/pl/exM5/3ViV8ssmW6tGDSsp+WYKa5FxPoEY=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=RSkozw1g/nG+tUtkLwJcR5YP+2XwvAU++L0WUndrrz/c+jjIsjZLVcIdlHQHNZyg2
-	 il0Xe+pJk7IP0kyenCv5oitFAZB3uHCGXuQHm6eqP21QvXCOIr6y7y99FYK2r0Loa5
-	 /qfrvRMe2yAZDoN+IVzyENwZU+bpO5HxzRu08huVBQr/zmBi27gIPHhHwN82UrNXbg
-	 a/RMIiLygBst9XuqPL0YYkYuE+NzoS9sQD5NHiYvd//Wn87YYFnkGvmrsLgPnnwZpJ
-	 ws4lbjKAoOEzhCJ53lPNJOPQCRSixjZEkaTd6I44jjftM4WyFq77QM6pPyaU7ex/7k
-	 y3uBQcISsATrg==
-From: "Mario Limonciello (AMD)" <superm1@kernel.org>
-To: "Rafael J . Wysocki" <rafael@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Danilo Krummrich <dakr@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>
-Cc: Pavel Machek <pavel@kernel.org>,
-	Len Brown <lenb@kernel.org>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	linux-pm@vger.kernel.org (open list:HIBERNATION (aka Software Suspend, aka swsusp)),
-	amd-gfx@lists.freedesktop.org (open list:RADEON and AMDGPU DRM DRIVERS),
-	dri-devel@lists.freedesktop.org (open list:DRM DRIVERS),
-	linux-pci@vger.kernel.org (open list:PCI SUBSYSTEM),
-	linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
-	linux-usb@vger.kernel.org (open list:USB SUBSYSTEM),
-	linux-trace-kernel@vger.kernel.org (open list:TRACING),
-	AceLan Kao <acelan.kao@canonical.com>,
-	Kai-Heng Feng <kaihengf@nvidia.com>,
-	Mark Pearson <mpearson-lenovo@squebb.ca>,
-	=?UTF-8?q?Merthan=20Karaka=C5=9F?= <m3rthn.k@gmail.com>,
-	Eric Naim <dnaim@cachyos.org>,
-	"Guilherme G . Piccoli" <gpiccoli@igalia.com>,
-	"Mario Limonciello (AMD)" <superm1@kernel.org>
-Subject: [PATCH v7 12/12] Documentation: power: Add document on debugging shutdown hangs
-Date: Tue,  9 Sep 2025 14:16:19 -0500
-Message-ID: <20250909191619.2580169-13-superm1@kernel.org>
-X-Mailer: git-send-email 2.43.0
-In-Reply-To: <20250909191619.2580169-1-superm1@kernel.org>
-References: <20250909191619.2580169-1-superm1@kernel.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TzMswMtw"
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-71d603cebd9so60181707b3.1
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Sep 2025 15:09:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1757455779; x=1758060579; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:mime-version:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=XmJ5o+jPnqmlOrUzy3HJkAfKFx97iJc4+bwh0bc73yY=;
+        b=TzMswMtwKFYpxuG7MGPp5IWu3C/gPtGaHvjCi3bmfyi1/WoJl5ceBqIAqcoJEpK6q6
+         /R3o+hXqQMYOWSjjsr3oH22HUv5VWIZdMzUFw5Wzu6/jCIM1CRCAd17zYvTqJSXg/Cf6
+         7ZJ7HN5yAoVTi7jU3bC4t3UBEtcEIm5Ve4aYjVHNf+vyJDrGBexhI+H5RhcYxYns/B5W
+         qYv2jYeXRdOZHwU9lYhryqcwVifw5ON6BbduzOH5EkzNqSVYZrErKUSozy69cX1mWlec
+         gfgkRyQBMwEJ5nniYHk5Vlbk+AVZCJTZhdAacMJ140rcDrEaONVHAN1jvLE67Ynzt2ha
+         bEjA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757455779; x=1758060579;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=XmJ5o+jPnqmlOrUzy3HJkAfKFx97iJc4+bwh0bc73yY=;
+        b=upLmyonyW7kjYKlKPU97FeYztZRrPDudBdcdOzBdfkCx491ERmkMdZFUEFQQvCySaN
+         i/SKEsN4nOZ+GYvwEN4w4ohWWZXdq8B6t6ryh6+YK5nwUabRZ93mhUwwQ/jrnIm+juwX
+         hfUm5Lakdc63M0oynOjhmSWhvY7AHp2nEP6bna9MAfmYcCCSM5pIUYQUCXSKyiqBocjG
+         ibZdsIuvVXKj4NEKV/TblcUiiVxufLkBOpwBi2BEF3KndrHSnbj56JnayzS8wZrvi/J7
+         HUEUubc1snQWetjvM0jGv5KA311fcvj5GSQsLllDgHyHJ1cIPNs8jnVBOs3UKIQU0xm6
+         hyeQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXbnNsN9CClWxyMpbSRCiYSQG7DLM0cbJ19xiPfOaLB0wi7nY3LZhfoEBnVwVJP7jdJ8jku3Cld8EJo@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy1xXuebQr+mELjb1yVza7GCOxLQxkbgu5Sdu4d0SddSpcb3r5v
+	1pA6wCsb25ygI4JoKlqa84/bQzSYI3JFD71+U+oAgxirUy2teHdFttpZcXba1X3RErvswQWVjFM
+	9Z1IBceAHqg5gHlrSFapyJFI40Mo7sbyljW5E
+X-Gm-Gg: ASbGnctoD1/LsLZU2DLJ1OWXjKk6nP6qPybPAXipTK+3EB/YlYOQIqPMT05sFEcDDcX
+	B6k47obgcbOJnQC+TgdGnXSjt8puVTZyKrcmIQrpnGFE/AAWbbpGXzf7D8bVNMZOaiiRgreNEta
+	xrU754MkGtwmJ/N7/zI9eU+iZhvQ47jX/tKlhzl+EdslSlU58E6w2sFEqyX84wKhfm0PVIggcqC
+	Q0mFD3+L5uUvOOgIFWILZHj1bqbqMrYk1yhABn/fQqf9aaCkDrDI0KVe0NNUg==
+X-Google-Smtp-Source: AGHT+IFqNLkC+jmXhcN3ReNLmiASziY8GQzbu1BJxMjJ7N26Xo+bVXvGXy5YOxms8UmrenvJkTKUPDHd82QRK/PTE8U=
+X-Received: by 2002:a05:690c:fca:b0:72c:2eaf:1cc0 with SMTP id
+ 00721157ae682-72c2eaf361amr50796687b3.23.1757455778642; Tue, 09 Sep 2025
+ 15:09:38 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+From: Davy Davidse <davydavidse@gmail.com>
+Date: Wed, 10 Sep 2025 00:09:26 +0200
+X-Gm-Features: Ac12FXxpG4DYXH2BN4T5ajRp3bT0waYrA9jzpYOUgyBROKwgeF818Nlj_rCkAcs
+Message-ID: <CADzRqdBCLjA=6nLxUivDm=hA5vkfkMiE+BmC_zKtA2DCUxu2Dg@mail.gmail.com>
+Subject: [RFC] target: Support for CD/DVD device emulation in fileio backstore
+To: martin.petersen@oracle.com
+Cc: target-devel@vger.kernel.org, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-The kernel will attempt hibernation callbacks before shutdown callbacks.
-If there is any problem with this, ideally a UART log should be captured
-to debug the problem.  However if one isn't available users can use the
-pstore functionality to retrieve logs.  Add a document explaining how
-this works.
+Dear Linux SCSI Target maintainers,
 
-Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
----
-v7:
- * New patch
----
- Documentation/power/index.rst              |  1 +
- Documentation/power/shutdown-debugging.rst | 55 ++++++++++++++++++++++
- 2 files changed, 56 insertions(+)
- create mode 100644 Documentation/power/shutdown-debugging.rst
+I'm writing to discuss a limitation in the Linux Target subsystem regarding
+CD/DVD device emulation and to gauge interest in addressing this gap.
 
-diff --git a/Documentation/power/index.rst b/Documentation/power/index.rst
-index a0f5244fb4279..ea70633d9ce6c 100644
---- a/Documentation/power/index.rst
-+++ b/Documentation/power/index.rst
-@@ -19,6 +19,7 @@ Power Management
-     power_supply_class
-     runtime_pm
-     s2ram
-+    shutdown-debugging
-     suspend-and-cpuhotplug
-     suspend-and-interrupts
-     swsusp-and-swap-files
-diff --git a/Documentation/power/shutdown-debugging.rst b/Documentation/power/shutdown-debugging.rst
-new file mode 100644
-index 0000000000000..d4bf12000c1cd
---- /dev/null
-+++ b/Documentation/power/shutdown-debugging.rst
-@@ -0,0 +1,55 @@
-+.. SPDX-License-Identifier: GPL-2.0
-+
-+Debugging Kernel Shutdown Hangs with pstore
-++++++++++++++++++++++++++++++++++++++++++++
-+
-+Overview
-+========
-+When the system is shut down to either a halt or power off, the kernel will
-+attempt to run hibernation calls for all devices. If this fails, the kernel will
-+fall back to shutdown callbacks. If this process fails and the system hangs
-+the kernel logs will need to be retrieved to debug the issue.
-+
-+On systems that have a UART available, it is best to configure the kernel to use
-+this UART for kernel console output.
-+
-+If a UART isn't available, the ``pstore`` subsystem provides a mechanism to
-+persist this data across a system reset, allowing it to be retrieved on the next
-+boot.
-+
-+Kernel Configuration
-+====================
-+To enable ``pstore`` and enable saving kernel ring buffer logs, set the
-+following kernel configuration options:
-+
-+* ``CONFIG_PSTORE=y``
-+* ``CONFIG_PSTORE_CONSOLE=y``
-+
-+Additionally, enable a backend to store the data. Depending upon your platform
-+some options include:
-+
-+* ``CONFIG_EFI_VARS_PSTORE=y``
-+* ``CONFIG_PSTORE_RAM=y``
-+* ``CONFIG_PSTORE_FIRMWARE=y``
-+* ``CONFIG_PSTORE_BLK=y``
-+
-+Kernel Command-line Parameters
-+==============================
-+Add these parameters to your kernel command line:
-+
-+* ``printk.always_kmsg_dump=Y``
-+	* Forces the kernel to dump the entire message buffer to pstore during
-+		shutdown
-+* ``efi_pstore.pstore_disable=N``
-+	* For EFI-based systems, ensures the EFI backend is active
-+
-+Userspace Interaction and Log Retrieval
-+=======================================
-+On the next boot after a hang, pstore logs will be available in the pstore
-+filesystem (``/sys/fs/pstore``) and can be retrieved by userspace.
-+
-+On systemd systems, the ``systemd-pstore`` service will help do the following:
-+
-+#. Locate pstore data in ``/sys/fs/pstore``
-+#. Read and save it to ``/var/lib/systemd/pstore``
-+#. Clear pstore data for the next event
--- 
-2.43.0
+# Current Situation
 
+When serving ISO files via iSCSI targets, there's a significant behavioral
+difference between TGT (user-space) and Linux Target (kernel-space):
+
+TGT behavior:
+- Supports explicit device type configuration for ISO files
+- Presents ISO as TYPE_ROM (0x05) SCSI device when configured for optical media
+- Windows recognizes the ISO as an optical drive
+- ISO appears in File Explorer as a mounted volume
+- Can be browsed like a regular DVD/CD
+
+Linux Target behavior:
+- No device type configuration available for ISO files
+- Always presents ISO as TYPE_DISK (0x00) SCSI device
+- Windows sees the ISO as a regular disk in "diskpart list disk" but
+not as a volume with the type DVD-ROM
+- The disk cannot be read by Windows
+
+# Technical Root Cause
+
+The issue stems from the hardcoded device type in
+drivers/target/target_core_sbc.c:
+
+```
+u32 sbc_get_device_type(struct se_device *dev)
+{
+    return TYPE_DISK;  /* Always TYPE_DISK (0x00) */
+}
+```
+
+Both fileio and iblock backstores use this function, preventing any form
+of optical media emulation.
+
+# Comparison with Existing Solutions
+
+User-space alternatives like TGT provide this functionality:
+- Explicit device type selection via command-line parameters
+- Full MMC (MultiMedia Commands) implementation
+- Proper SCSI device type presentation
+
+Kernel infrastructure already supports multiple device types:
+- pscsi backend: Returns actual device type from underlying hardware
+- Core SPC module: Contains TYPE_ROM handling code
+- SCSI subsystem: Full support for all standard device types
+
+# Request for Comments
+
+Would the maintainers be interested in accepting a patch to add configurable
+device type support to the fileio backstore? This would:
+
+- Maintain full backward compatibility (default to TYPE_DISK)
+- Enable proper CD/DVD/ROM device emulation
+- Bring kernel-space target capabilities in line with user-space solutions
+- Address real deployment scenarios currently requiring TGT
+
+As someone primarily focused on high level coding languages, rather than kernel
+development, I'm hoping this RFC might inspire a kernel developer who sees
+value in this functionality to take on the implementation.
+
+Thank you for your time and consideration.
+
+Best regards,
+Davy
