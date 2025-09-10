@@ -1,58 +1,58 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E346A24A058;
-	Wed, 10 Sep 2025 17:48:51 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3360F295D90;
+	Wed, 10 Sep 2025 18:00:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757526533; cv=none; b=Omi43LN6BX5sNXr5PvC0sWHIAQfrKuKzPwZ/Ye596LckL5wR2a/kTFpU5ueeArJvRbMIS3alkcWqvffMfaL+IyIq4BPkdlkQeZ+cZmJyOuxhvzTEDC8ap4bBeRH+FMn85KOrSpq793VUFS6NWXIRpYg4hw3+qInEjuDgiJykW88=
+	t=1757527230; cv=none; b=nb0ZlO2Ll9lHMt5OtK4/QB25WeaLogVtLysc7y0wNK1HyzZQfrPEysfBz4YIxE3d/A3gr+CfxOaGGUqWmzo3dLC4PFuwCJ4kVEMM1rerqwrwrPYfCmgj2twwcfd8WdKaHV7+oTLzmJZ9a+qP0eMvKr9aXoIJobAR8ylutXzW+J8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757526533; c=relaxed/simple;
-	bh=JWkrCD/pUkyX9wjEhNii7+JjAOcFy0ueHFktHUQ0t80=;
+	s=arc-20240116; t=1757527230; c=relaxed/simple;
+	bh=aEYVwK9M9QzWa1yd7+FmJ7xSwSWsDm24bHNlO3+ZDiI=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=L9CZy39Ya0I9YHv2n8oB37u4DFd8enq/3lAhc5ExD16no1xbpe8OhAITHQrjVmcZdrNyE5JCQ9Ix0Q3S1g+i6wavRI4ISPlkwjoifU1ZGjtM3/O/TU44k0EEjajZ1BlhWHKYJKLX3P1tzft60FzrmDvpIF6tcQJqFZU5srcIZTY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=d6NDtd5A; arc=none smtp.client-ip=10.30.226.201
+	 To:Cc:Content-Type; b=flKqnytWKBZSm0fH0AVhySO5TTE4zb7mIzzMt6hjwLEVE+SxFPlxukj/tMItqsKezXz6/8AZVLPu8pj0cbmtKmPjw0XRSNu4ltwfe/LajrTdlR1DyNtLaNz6AQUVH6CobzKlj1JkCs1QeRShQCk+62YljYqmRNGqEOn8Hk7SnsQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XI5vXeh3; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="d6NDtd5A"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7C8F4C4CEF0;
-	Wed, 10 Sep 2025 17:48:51 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XI5vXeh3"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AD41AC116B1;
+	Wed, 10 Sep 2025 18:00:28 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757526531;
-	bh=JWkrCD/pUkyX9wjEhNii7+JjAOcFy0ueHFktHUQ0t80=;
+	s=k20201202; t=1757527228;
+	bh=aEYVwK9M9QzWa1yd7+FmJ7xSwSWsDm24bHNlO3+ZDiI=;
 	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=d6NDtd5AvkZ3cAyHiBAlhsfdUR3l9P2CxyKtdFH5/bGkhOLVPbOeOSka+H44aAKBn
-	 K/b1NClF/FVpo7KBFx/V6Lm5W5MqD3jLJcAVwJCwgIma8vkBVngnmL3Rjg5giNXbss
-	 GcsrEwC0wzJF6OlEkbBWdmv+S0xN55czfk1SKsmU5/bbzGwquE1FQ5KxZoNXHh5bV3
-	 DhGcyt2/rm+pcCmSKnhUsCXHRHPuR077rJpQCJTHoPfmo/sQQB/OcdvpLSzJcPI+M4
-	 51KrcuUa7vVoDJFlhhzMvuXO6Gnwfuyuu9tRoBj4EhQG7+YAxu+jIXI6IOdaSG5+ac
-	 HAEB2JxbRjDDg==
-Received: by mail-oo1-f41.google.com with SMTP id 006d021491bc7-62177052206so2196064eaf.1;
-        Wed, 10 Sep 2025 10:48:51 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCVVCiY7YEmXf//AT1snrQyk+A/aJW8w2XGIckcuFszwUAJDsTtyEMkwD8IIYXomJKtwdHCnzzWPJZ+K2OWD3ZoveaQQ@vger.kernel.org, AJvYcCVrGWYqk/k7ifUeAO2pyWzAdslqNLbDBmuncjgG6nx4ZkOj3mD5v8/treVwvO3N38V7AmYoPBHw/cc=@vger.kernel.org, AJvYcCXG6A7fBmrreliZ9tos2HRvpDmHXkZ8ZGysm3FHnnIHMaNhwMsBz1x7wGWGZBe5kDBxFFSk80BGNrk=@vger.kernel.org, AJvYcCXbdhzvfztzdZSsxvyp6U+6+yuFU178kxwiISf4arEFHoiRX92rn8LIX2ivHs0H08+jtG+20583R8CXdA==@vger.kernel.org, AJvYcCXdfG23CaRvalcussxjsbJp3CUQ4OYMRY0y7jxtmhl1MLNqnCOPdBFWf7j2lhsddxSmIW9vDU7bsN76@vger.kernel.org
-X-Gm-Message-State: AOJu0YwVoa/xa7IStNgGaGWsn6v+mpLhncvW1UNMyeKQZUPOdYWRl7RC
-	EtzQ0i2dNlaiVh/N/ctTeugJEpa/ikku4V33HVP6+80Yr9RkyD3Xo8CfSVx9cwE4FXfAer3nWUm
-	kf6RUah09wy4e7f/dBnozb+b9I7cqWyc=
-X-Google-Smtp-Source: AGHT+IHIQIF5cP+OhlL3KucdzEwULKP8UbyHlNW3Z/2yYgUbnpkKJtfuorEsV1W09cBVlr7j0fot96/NnMtI6HNTGd4=
-X-Received: by 2002:a05:6820:221c:b0:621:75a2:6791 with SMTP id
- 006d021491bc7-6217897ccc2mr7019038eaf.0.1757526530846; Wed, 10 Sep 2025
- 10:48:50 -0700 (PDT)
+	b=XI5vXeh3E69iRJQ42zyvWPbQrQ039vWYrF+m6PVa3bxOeSwQNFvmLv1XXtZCBZ2aN
+	 A6d0Hq6Hv+wlKq3HN9gRmnKmeTuUdSxHDOd97iLsBvu1LfV6wiQilyy8A6vgummyk5
+	 b+DwOjmuQsJkGZfEBN+ITZwQwrko7Yu2ekNwlp+0pwSMKwJKS6jc9sJnDiYaRBahjR
+	 x+YCUAykJaiVzneSzOmp3MExpKfsJQj60xlIhm+GxKK3QB8BliXx5Y7nFIWCl+B0yj
+	 0e8ca1ohSrfrJAyxfet5z74xk4aj6avc9MYHe3bC3tN+Xd0IP3yAichjp3gBqGNUzs
+	 LHbNdR3JLGJBg==
+Received: by mail-ot1-f52.google.com with SMTP id 46e09a7af769-74c1251df00so2781213a34.0;
+        Wed, 10 Sep 2025 11:00:28 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCU7R9sVOAAUEdYfeVuKPJdRXvyGmyrc6XQYYXvcCjzA/vPiAZagBfTzTnQtrBZoq2xFmdO5nFyswD8o@vger.kernel.org, AJvYcCVChhAJEr7Fn4SEBFHhl91z1uF7KXWjFCWgbLyL/wVjgJcoNnArVA4XCE5dHhemw5HSxWTTvWMW2aU=@vger.kernel.org, AJvYcCWWM7PM6v7Wy24Gkx/R4izuEC35hjUOTs3UDjts2M/AXOCisGdZGuGYECGILIBnYPzxaUgtTwYC674=@vger.kernel.org, AJvYcCX40Rl3cfvUhuT6M2R8k9FmiGxk94GeV9A8jjCRLcbnHIlAA9728rL2tAjuAwWw/gWaQ6gqwk80MXsHfwt0+08NJ0H2@vger.kernel.org, AJvYcCXPm+Ty7ILvYZ/ndfdblzPc60oGK5+keAchDb4gp7OGO0/tfGcSEGDAqDxiHDh65LRpxVV5j3On0uG2lg==@vger.kernel.org
+X-Gm-Message-State: AOJu0YxHvNjPIdkA6gwjKQloFfa3JQv6GcXVPLkSo7MXU99W+NMo2hQg
+	gbhT8PR6lZbI36Dsh56oJHkQE74INFomPNnVjFWuyOXWkwZ48I//pEuJyayFJAp1TgX6tcZPC03
+	9s25ICLn5rMK+vpApZDTeFJNzs6OIK5Q=
+X-Google-Smtp-Source: AGHT+IGS3DlLDZc5Hp9Wu7ymo9qCnnEjsWp392Wk609kXWdhdzzFbsXXgHOkn/CUlPsxX3QZUGBx4ariAoNkk9utRK4=
+X-Received: by 2002:a05:6830:2695:b0:745:a0f0:25c6 with SMTP id
+ 46e09a7af769-74c702bca54mr7780880a34.10.1757527227849; Wed, 10 Sep 2025
+ 11:00:27 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250909191619.2580169-1-superm1@kernel.org> <20250909191619.2580169-8-superm1@kernel.org>
-In-Reply-To: <20250909191619.2580169-8-superm1@kernel.org>
+References: <20250909191619.2580169-1-superm1@kernel.org> <20250909191619.2580169-2-superm1@kernel.org>
+ <CAJZ5v0i6+UaTHDnJE6z-VFuJrXbmfiAr7Gs=z9-xaX9mS7NqGA@mail.gmail.com> <9332e17e-380b-42cc-b078-7c5d9d09d798@kernel.org>
+In-Reply-To: <9332e17e-380b-42cc-b078-7c5d9d09d798@kernel.org>
 From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 10 Sep 2025 19:48:39 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0g8Hq4nfrkEPKByesAZ7SmKz4N8Cm9H_AmK_fez=0QtWw@mail.gmail.com>
-X-Gm-Features: Ac12FXyd_vL1lzVAXI-I3rJHVcPaSI6vkfuoiTOhlX1EtvOyF4XzkNpq89iEtOs
-Message-ID: <CAJZ5v0g8Hq4nfrkEPKByesAZ7SmKz4N8Cm9H_AmK_fez=0QtWw@mail.gmail.com>
-Subject: Re: [PATCH v7 07/12] PCI/PM: Run bridge power up actions as part of
- restore phase
-To: "Mario Limonciello (AMD)" <superm1@kernel.org>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+Date: Wed, 10 Sep 2025 20:00:16 +0200
+X-Gmail-Original-Message-ID: <CAJZ5v0ga0sejxa6DyN_1aCuB-fVsa_w-G1U=RR6kmGVn48QR2Q@mail.gmail.com>
+X-Gm-Features: Ac12FXwjW268LpbRAcls9flQhPZhEXycRZTW2tVrYiFw-ZH6X5s316VJMYfwl5Q
+Message-ID: <CAJZ5v0ga0sejxa6DyN_1aCuB-fVsa_w-G1U=RR6kmGVn48QR2Q@mail.gmail.com>
+Subject: Re: [PATCH v7 01/12] PM: Introduce new PMSG_POWEROFF event
+To: Mario Limonciello <superm1@kernel.org>
+Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
 	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Pavel Machek <pavel@kernel.org>, 
 	Len Brown <lenb@kernel.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
 	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
@@ -70,64 +70,71 @@ Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfo
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-On Tue, Sep 9, 2025 at 9:16=E2=80=AFPM Mario Limonciello (AMD)
-<superm1@kernel.org> wrote:
+On Wed, Sep 10, 2025 at 7:48=E2=80=AFPM Mario Limonciello <superm1@kernel.o=
+rg> wrote:
 >
-> Suspend resume actions will check the state of the device and whether
-> bus PM should be skipped.  These same actions make sense during hibernati=
-on
-> image restore.
-
-Not really (see below).
-
-They kind of would have made sense in the error code path attempting
-to roll back the power-off transition, but I'm not sure if this is
-worth the hassle because it would require ->restore() to be able to
-handle two different cases without knowing which case it is handling.
-
->  Apply them there as well.
+> On 9/10/25 8:58 AM, Rafael J. Wysocki wrote:
+> > On Tue, Sep 9, 2025 at 9:16=E2=80=AFPM Mario Limonciello (AMD)
+> > <superm1@kernel.org> wrote:
+> >>
+> >> PMSG_POWEROFF will be used for the PM core to allow differentiating be=
+tween
+> >> a hibernation or shutdown sequence when re-using callbacks.
+> >>
+> >> This event should not have wakeups enabled
+> >
+> > Why?
+> >
+> > It surely is valid to wake up the system while it is being powered
+> > off, especially in the hibernation case.
 >
-> Tested-by: Eric Naim <dnaim@cachyos.org>
-> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
-> ---
-> v7:
->  * Reword title
-> v5:
->  * Split out patch
-> ---
->  drivers/pci/pci-driver.c | 5 +++++
->  1 file changed, 5 insertions(+)
+> In the hibernation case - yes you want wakeups.
 >
-> diff --git a/drivers/pci/pci-driver.c b/drivers/pci/pci-driver.c
-> index 571a3809f163a..fb6f1f60b2f1f 100644
-> --- a/drivers/pci/pci-driver.c
-> +++ b/drivers/pci/pci-driver.c
-> @@ -1246,10 +1246,15 @@ static int pci_pm_restore_noirq(struct device *de=
-v)
->  {
->         struct pci_dev *pci_dev =3D to_pci_dev(dev);
->         const struct dev_pm_ops *pm =3D dev->driver ? dev->driver->pm : N=
-ULL;
-> +       pci_power_t prev_state =3D pci_dev->current_state;
-
-In the hibernation restore case, pci_dev->current_state is irrelevant
-because the system has gone through the entire init in the BIOS and
-boot loader, and the boot (restore) kernel before the control goes
-back to the image kernel which runs the ->restore() callbacks.  It may
-have changed three times since it was set during power-off.
-
-> +       bool skip_bus_pm =3D pci_dev->skip_bus_pm;
-
-This one is irrelevant either in that case.
-
+> But in what is perceived as powering off the machine it's not expected
+> that you would have wakeups.
 >
->         pci_pm_default_resume_early(pci_dev);
->         pci_fixup_device(pci_fixup_resume_early, pci_dev);
+> If I have a USB mouse connected and set as a wakeup source, I can click
+> the mouse and the machine wakes up.  A user wouldn't expect that happens
+> with a powered off machine.
 >
-> +       if (!skip_bus_pm && prev_state =3D=3D PCI_D3cold)
-> +               pci_pm_bridge_power_up_actions(pci_dev);
-> +
->         if (pci_has_legacy_pm_support(pci_dev))
->                 return 0;
+> That's certainly not how it works today at least.
+
+Sure, but you want to use the same transition mechanism to handle
+those two cases.  In one of them, you don't want wakeup events to be
+disabled, so you cannot do that at the transition type level.
+
+> >
+> > The "poweroff" transition is generally not recoverable, however, so it
+> > may be better to complete it and trigger a reboot if wakeup has been
+> > signaled.
 >
-> --
+> Hmm, I'm not sure about that.  Back to hypothesizing on the USB mouse cas=
+e:
+> If I'm entering suspend, the mouse is an enabled wakeup source and I'm
+> moving the mouse the suspend should be aborted.
+>
+> But if I requested the machine to be powered off and and I clicked the
+> mouse while powering off that would be an "aborted power off?.
+> Wouldn't that be really counterintuitive to reboot instead?
+
+I was talking about the last stage of hibernation, sorry if that
+wasn't clear enough.
+
+So in the last stage of hibernation, which also carries out a
+"power-off" transition (if run in the "platform" mode that is), you
+want wakeups to be enabled, don't you?
+
+But the "power-off" transition is not recoverable in general (IOW, it
+cannot be reliably rolled back, at least as of today), it may be
+better to complete it and make the kernel load the just created
+hibernation image and restore from it in response to a wakeup event.
+Something like the latter is already done in the "test_resume"
+hibernation mode.
+
+> IE as a user you expect that pressing the power button gets you an off
+> machine, not a different result based on other activity.
+
+That's a slightly different case, but if you press the power button
+once while hibernation is in progress, you may actually expect to get
+back to the pre-hibernation state (or at least hope that this is going
+to happen).
