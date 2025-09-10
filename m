@@ -1,65 +1,64 @@
 Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61F5C30F943;
-	Wed, 10 Sep 2025 08:20:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA189245028;
+	Wed, 10 Sep 2025 08:22:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757492431; cv=none; b=h6jaDzo8mYj90erAtclnX/ZLVAfohHCfer4hTCAbgCwhbG1DopOxJJdFIeyLAd3jSQ1r8iJ48eJd+h5Wrr4SUucN8xeLFDtITvk99vCaDnEG0xS7xsMue83mkh5ZtCzoTVLEpIvWyqx8beUO/HEn3f6vCkdRbLm3oarOLdTk0v8=
+	t=1757492549; cv=none; b=PMpbs0VRH9dUgFYFOZ0Wg4S6tfeslBkRUwZJ+/xQ1KEMTrOYHwxhVeAd/LpRy+QiGlFGS11LoUmG10kDQjjvUTKZuZmnyeDwbaaZUh0tfG8gHtEK8un2H+kNKWqK+DYHTWJvLqiuNWk/TEq4OzxP56kPNV5XBmCfx2mebzG7s+o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757492431; c=relaxed/simple;
-	bh=1uPEjYWxkLIek3T+4iAvG+2at77ecF4QIzsgSji0HkY=;
+	s=arc-20240116; t=1757492549; c=relaxed/simple;
+	bh=85UKcsOMfyn0E3yinLzfkoR/jW47TpISZIXdMgdVMIE=;
 	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
-	 MIME-Version:Content-Type; b=n082HXAmoCfwtEO9k0iyQEvnf+8TZC6A6n634VBi2R4Aqlb1XHLVxby1r1vkNLRKeb6eXC5KhHY/qO+NYMXobKo/vO4cGTo3ZzYWHGlE5Iw7c3xAS8uxs2zdOXc5ihc4asyo1YGFLaRfwu1TRlNcd9VW6RiDypU76Wc1r1DHUWk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=mNNqA8px; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=UOasHq1u; arc=none smtp.client-ip=193.142.43.55
+	 MIME-Version:Content-Type; b=fMxR3reGUJhmiyiP2FRD3tzAMZmp2IcqDy+GYc+T39V7Cw5K+vQmFY0254ueBDmhTXV1sB/lADnKdmzVEvd9RdzIuOzoPNJ+tXe+1kCppJ8Zz6mBQdl6s4alPOEel2GjZyGVTFBf9RhvqGHa+xO3MGMXN5ku0Eq7i8jpayc3TrE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=4OgNlmQT; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=k1RrGMx8; arc=none smtp.client-ip=193.142.43.55
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="mNNqA8px";
-	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="UOasHq1u"
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="4OgNlmQT";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="k1RrGMx8"
 From: Thomas Gleixner <tglx@linutronix.de>
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020; t=1757492427;
+	s=2020; t=1757492546;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+CP7a9wws54uQZjmYM4sfmOi5aU+3bjgiGZVeJJmASM=;
-	b=mNNqA8pxV739WOsKJHgEtTJOMzX94iX97K4Ca48VKToBLBDsOAuPRpnAviQ4cvMU6C0Bk7
-	A5mfIda9JkS3gxSPqX4A+hpyJFgpGHWTOOfmtQ1HAe/wSFGkeSscPc9fAM+Jfxb59IH/1I
-	0k0n5GyOhU6D34bkPuFoMEaCL7l9A95WcVb0RR++NMWymRaP241u2PPYxunvC6aJm4vHUH
-	43q626KUuKnVAHYivEM6NNaQuk/ZUwrMjLOg4MQTbqZIE8CpvaFQ6G6f6wB1RBE188f9vN
-	aeFANjWsi6tymtcat1kCVAgA1TyopPhL3jM96rdJctbl2DdhndatVkQKFYxAMg==
+	bh=WQUAVcjXn7tf95scgh3pOPJD9865+15BngQtRr5ID5E=;
+	b=4OgNlmQTqS4AyVDZHcTox0tlSaBwDkJEL/Ts7pkw/dx/M20Ltu0mrLteEBzdn9sJCVLD2y
+	dfcDP2k/EfsDTMJe8iTDcOHbq2BngCcR1pbaFFCTimZtO0pqy4HziY964ELyL3VGhPzbuS
+	I46WwDbecRUNZqYt1o8HVYCiswSpMka/TqCAedJJlSUhci4k9ImyLi3psTc+Rao3niCHBo
+	mDNGZo71G7ZhUHWl7fzzx0tPbWfneJvCy34cNAAEOFdknyQqPsI0i8u+u8+b/E2q+kPo4k
+	dVOmJyABT05U8tEgXNXEiJ9BjjvnFlL25g3XQ9eMAo54Isys05Y7C9zjDJj6tA==
 DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
-	s=2020e; t=1757492427;
+	s=2020e; t=1757492546;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=+CP7a9wws54uQZjmYM4sfmOi5aU+3bjgiGZVeJJmASM=;
-	b=UOasHq1uYa5lt0uQ97FDdS3UHchNqSx7ZJpnsh0V4afb/TZLgNqSAON8pWEePxp1gYSODg
-	Qy/0se5U0TRUFnCw==
-To: Daniel Wagner <dwagner@suse.de>, Hannes Reinecke <hare@suse.de>
-Cc: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, Keith
+	bh=WQUAVcjXn7tf95scgh3pOPJD9865+15BngQtRr5ID5E=;
+	b=k1RrGMx8UOcygrkA8B9pm+mc/YjWJfzFVvkuTYWUt4MA239Asn+1jaJhj5EpeHW+3neqBz
+	3wzspqNtmL4AzyBg==
+To: Daniel Wagner <wagi@kernel.org>, Jens Axboe <axboe@kernel.dk>, Keith
  Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, Sagi Grimberg
- <sagi@grimberg.me>, "Michael S. Tsirkin" <mst@redhat.com>, Aaron Tomlin
- <atomlin@atomlin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>,
- Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli
- <juri.lelli@redhat.com>, Valentin Schneider <vschneid@redhat.com>, Waiman
- Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>, Frederic
- Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, Mathieu
- Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org,
+ <sagi@grimberg.me>, "Michael S. Tsirkin" <mst@redhat.com>
+Cc: Aaron Tomlin <atomlin@atomlin.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, Costa Shulyupin <costa.shul@redhat.com>,
+ Juri Lelli <juri.lelli@redhat.com>, Valentin Schneider
+ <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei
+ <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mel
+ Gorman <mgorman@suse.de>, Hannes Reinecke <hare@suse.de>, Mathieu
+ Desnoyers <mathieu.desnoyers@efficios.com>, Aaron Tomlin
+ <atomlin@atomlin.com>, linux-kernel@vger.kernel.org,
  linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
  megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
  storagedev@microchip.com, virtualization@lists.linux.dev,
- GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v8 10/12] blk-mq: use hk cpus only when
- isolcpus=io_queue is enabled
-In-Reply-To: <d11a0c60-1b75-49ec-a2f8-7df402c4adf2@flourine.local>
+ GR-QLogic-Storage-Upstream@marvell.com, Daniel Wagner <wagi@kernel.org>
+Subject: Re: [PATCH v8 04/12] genirq/affinity: Add cpumask to struct
+ irq_affinity
+In-Reply-To: <20250905-isolcpus-io-queues-v8-4-885984c5daca@kernel.org>
 References: <20250905-isolcpus-io-queues-v8-0-885984c5daca@kernel.org>
- <20250905-isolcpus-io-queues-v8-10-885984c5daca@kernel.org>
- <ff66801c-f261-411d-bbbf-b386e013d096@suse.de>
- <d11a0c60-1b75-49ec-a2f8-7df402c4adf2@flourine.local>
-Date: Wed, 10 Sep 2025 10:20:26 +0200
-Message-ID: <87ms72u3at.ffs@tglx>
+ <20250905-isolcpus-io-queues-v8-4-885984c5daca@kernel.org>
+Date: Wed, 10 Sep 2025 10:22:25 +0200
+Message-ID: <87jz26u37i.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,38 +67,47 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
 
-On Mon, Sep 08 2025 at 09:26, Daniel Wagner wrote:
-> On Mon, Sep 08, 2025 at 08:13:31AM +0200, Hannes Reinecke wrote:
->> >   const struct cpumask *blk_mq_online_queue_affinity(void)
->> >   {
->> > +	if (housekeeping_enabled(HK_TYPE_IO_QUEUE)) {
->> > +		cpumask_and(&blk_hk_online_mask, cpu_online_mask,
->> > +			    housekeeping_cpumask(HK_TYPE_IO_QUEUE));
->> > +		return &blk_hk_online_mask;
->> 
->> Can you explain the use of 'blk_hk_online_mask'?
->> Why is a static variable?
+On Fri, Sep 05 2025 at 16:59, Daniel Wagner wrote:
+> Pass a cpumask to irq_create_affinity_masks as an additional constraint
+> to consider when creating the affinity masks. This allows the caller to
+> exclude specific CPUs, e.g., isolated CPUs (see the 'isolcpus' kernel
+> command-line parameter).
 >
-> The blk_mq_*_queue_affinity helpers return a const struct cpumask *, the
-> caller doesn't need to free the return value. Because cpumask_and needs
-> store its result somewhere, I opted for the global static variable.
+> Reviewed-by: Hannes Reinecke <hare@suse.de>
+> Signed-off-by: Daniel Wagner <wagi@kernel.org>
+> ---
+>  include/linux/interrupt.h | 16 ++++++++++------
+>  kernel/irq/affinity.c     | 12 ++++++++++--
+>  2 files changed, 20 insertions(+), 8 deletions(-)
 >
->> To my untrained eye it's being recalculated every time one calls
->> this function. And only the first invocation run on an empty mask,
->> all subsequent ones see a populated mask.
->
-> The cpu_online_mask might change over time, it's not a static bitmap.
-> Thus it's necessary to update the blk_hk_online_mask. Doing some sort of
-> caching is certainly possible. Given that we have plenty of cpumask
-> logic operation in the cpu_group_evenly code path later, I am not so
-> sure this really makes a huge difference.
+> diff --git a/include/linux/interrupt.h b/include/linux/interrupt.h
+> index 51b6484c049345c75816c4a63b4efa813f42f27b..b1a230953514da57e30e601727cd0e94796153d3 100644
+> --- a/include/linux/interrupt.h
+> +++ b/include/linux/interrupt.h
+> @@ -284,18 +284,22 @@ struct irq_affinity_notify {
+>   * @nr_sets:		The number of interrupt sets for which affinity
+>   *			spreading is required
+>   * @set_size:		Array holding the size of each interrupt set
+> + * @mask:		cpumask that constrains which CPUs to consider when
+> + *			calculating the number and size of the interrupt sets
 
-Sure,  but none of this is serialized against CPU hotplug operations. So
-the resulting mask, which is handed into the spreading code can be
-concurrently modified. IOW it's not as const as the code claims.
+You surely couldn't come up with a less descriptive name for this
+member, right?
 
-How is this even remotely correct?
+> diff --git a/kernel/irq/affinity.c b/kernel/irq/affinity.c
+> index 4013e6ad2b2f1cb91de12bb428b3281105f7d23b..c68156f7847a7920103e39124676d06191304ef6 100644
+> --- a/kernel/irq/affinity.c
+> +++ b/kernel/irq/affinity.c
+> @@ -70,7 +70,13 @@ irq_create_affinity_masks(unsigned int nvecs, struct irq_affinity *affd)
+>  	 */
+>  	for (i = 0, usedvecs = 0; i < affd->nr_sets; i++) {
+>  		unsigned int nr_masks, this_vecs = affd->set_size[i];
+> -		struct cpumask *result = group_cpus_evenly(this_vecs, &nr_masks);
+> +		struct cpumask *result;
+> +
+> +		if (affd->mask)
+> +			result = group_mask_cpus_evenly(this_vecs, affd->mask,
+> +							&nr_masks);
 
-Thanks,
+Please get rid of this line break. You have 100 characters.
 
-        tglx
