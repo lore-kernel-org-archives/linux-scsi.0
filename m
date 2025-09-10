@@ -1,157 +1,176 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from bsdbackstore.eu (128-116-240-228.dyn.eolo.it [128.116.240.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB128329F18
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2025 18:11:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BE27255F24;
+	Wed, 10 Sep 2025 18:13:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=128.116.240.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757527874; cv=none; b=Fm6YXuquM4HUC5X/NFX1BNqpTcRBrlYLl6hr1yG+Q9lV1Kk4a/UFyAHZZNZH2b2Fr4KwhtqVGPj0vZvHCCxwQs1v1bPeSsyOgp7thoL4P6rJShxDU3pVgMCi2zzGWpZ/P75bneKpCiYy1TzYxgg4+ASZIaOvH2QCc++ILXg9FWM=
+	t=1757528014; cv=none; b=YAxrGsvF2bdzLgCwbQGT5mkLcwGrgwt3kPO1RATHrnI6M5hEjKyTMVgo4QbbQagtGFj6t8tVA+IC5MaY/qL5C9n3Gplcw+Qj6i+Na3X2o4pxIM499fSWS+ZNTePCiMlug1GbN6Lu+Tcrj1jIuqjZzvseKIhm+iNxY/wsEusR28A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757527874; c=relaxed/simple;
-	bh=S8HMTlK93t3B+OAQYTeNw7WY0mVBtqh39tE/WiUkVq4=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Bm5fVD4RAEqAWGC0GuqIIvfb/qwL7fmRYFg3cdz6ZGDXHTPSnWH5M5XcBHJhK4u00kFLPjlZ7txl6xoj6rHXdSY/TRgDI+ZbhGESQ4cOliy/Y453OSnmSUAjbaTXvFIAWbTw5Y4z7OwCBbiaN+oI3ecYqCnUvlLVtoe8Xk2qvbk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p2Vz9JtB; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p2Vz9JtB"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A13C0C16AAE
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2025 18:11:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757527874;
-	bh=S8HMTlK93t3B+OAQYTeNw7WY0mVBtqh39tE/WiUkVq4=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=p2Vz9JtB4qPLclMWf8U9cL6BZJPwrrEjmTF7pjDqy7TJhQEpJoz7E6htuRAUX9OrW
-	 DiEnvhGV4Pf5JcVJbsGZ3Iou4RUQhPUyTy3dvMhLKD6kkt5oIGFUb/dH2o1n89TwZ1
-	 ot3at3Vx09CfEzDi1pjhTbxu8z0RYe1rmS5FLfrHIpYHHGYwJkAAQZICQOXzj6j70K
-	 pSbW9NH6vU6raSqbesVBrcLKQTECX/HFmsTV+Rz/F7IWRY9Stf/f4Cx4bTKktTOHGr
-	 Y93XRjP5SWy5o9lIvV8vpY1tz7iYOG9/1R4P6LHUz6g1OcppORIK5VcFeQYCa33mMM
-	 Uyjv12hSjcKAg==
-Received: by mail-oo1-f41.google.com with SMTP id 006d021491bc7-62182f350ddso2614780eaf.3
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2025 11:11:14 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCUEKCcNlA2tkL5n+9HuQNldT+NmMyP25RywXniTUr4HGr8j7PO/UG/GSQdPTe2QFgiEWSqRxqbYWbT/@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyxr5s9Y5Oqry5N/dZpJPCT3dzA2pTf9Vpi2KwBT96fuo+qqIu+
-	20BcVvrmOS2yNSVP5iKRpBk+l3HR/ala3/znevgcN5hLDD+HBfYGffF4BsOTlS0rNgfG/FQ/Qaa
-	rZms97fGlcS1DuKj5Wr8LUVDkJ6/G7O4=
-X-Google-Smtp-Source: AGHT+IGTSm11zpaMRBfmHdnY6TJXz12/bD9ev/202AUUsQjxBvHebprp+336DjRDm9VySYnrqJj3CUtw6WEC0dMU5gM=
-X-Received: by 2002:a05:6820:4305:b0:621:a8cc:3a64 with SMTP id
- 006d021491bc7-621a8cc3e9bmr1525050eaf.2.1757527873889; Wed, 10 Sep 2025
- 11:11:13 -0700 (PDT)
+	s=arc-20240116; t=1757528014; c=relaxed/simple;
+	bh=66IewO7UFTnc3G2DgscPYMaJ6YaubmawGe4S03S+mVI=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Subject:From:To:Cc:
+	 References:In-Reply-To; b=LBsMF1aCAPEQW+8zIfpcTBsCLv/l2aIuBRLcykMO3icL6HHiZcPWjk7Xj+7wFJxgbozVVHMN8xR21pryNx4+mPNKWU3Sdcdz8DMFwd/Fipchf5idZ255M6kFW/TjkKuEdBnPkSunb+nXDXmSNyk/yJQgUh2j1J0drLegA4iMCYY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bsdbackstore.eu; spf=pass smtp.mailfrom=bsdbackstore.eu; arc=none smtp.client-ip=128.116.240.228
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=bsdbackstore.eu
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bsdbackstore.eu
+Received: from localhost (128-116-240-228.dyn.eolo.it [128.116.240.228])
+	by bsdbackstore.eu (OpenSMTPD) with ESMTPSA id 37fe6665 (TLSv1.3:TLS_AES_256_GCM_SHA384:256:NO);
+	Wed, 10 Sep 2025 20:13:22 +0200 (CEST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-References: <20250909191619.2580169-1-superm1@kernel.org>
-In-Reply-To: <20250909191619.2580169-1-superm1@kernel.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 10 Sep 2025 20:11:01 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0jZaP41CC_2Q4NfKZWB8VazJbmiOtv55i3QDngh_3YGOw@mail.gmail.com>
-X-Gm-Features: Ac12FXzobk_htv7TNVqkwNPk1tfwfSSo2j8SCNAzmnpyqN6TqyM-aEdMTCWBlkc
-Message-ID: <CAJZ5v0jZaP41CC_2Q4NfKZWB8VazJbmiOtv55i3QDngh_3YGOw@mail.gmail.com>
-Subject: Re: [PATCH v7 00/12] Improvements to S5 power consumption
-To: "Mario Limonciello (AMD)" <superm1@kernel.org>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Pavel Machek <pavel@kernel.org>, 
-	Len Brown <lenb@kernel.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Steven Rostedt <rostedt@goodmis.org>, 
-	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>, 
-	"open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>, 
-	"open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>, 
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, 
-	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, 
-	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>, 
-	"open list:TRACING" <linux-trace-kernel@vger.kernel.org>, AceLan Kao <acelan.kao@canonical.com>, 
-	Kai-Heng Feng <kaihengf@nvidia.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
-	=?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>, 
-	Eric Naim <dnaim@cachyos.org>, "Guilherme G . Piccoli" <gpiccoli@igalia.com>
-Content-Type: text/plain; charset="UTF-8"
+Mime-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Wed, 10 Sep 2025 20:13:21 +0200
+Message-Id: <DCPBOHQA8AO3.36BA5ELXZJXMY@bsdbackstore.eu>
+Subject: Re: [RFC] target: Support for CD/DVD device emulation in fileio
+ backstore
+From: "Maurizio Lombardi" <mlombard@bsdbackstore.eu>
+To: "Davy Davidse" <davydavidse@gmail.com>, <martin.petersen@oracle.com>
+Cc: <target-devel@vger.kernel.org>, <linux-scsi@vger.kernel.org>
+X-Mailer: aerc
+References: <CADzRqdBCLjA=6nLxUivDm=hA5vkfkMiE+BmC_zKtA2DCUxu2Dg@mail.gmail.com>
+In-Reply-To: <CADzRqdBCLjA=6nLxUivDm=hA5vkfkMiE+BmC_zKtA2DCUxu2Dg@mail.gmail.com>
 
-Hi Mario,
-
-On Tue, Sep 9, 2025 at 9:16=E2=80=AFPM Mario Limonciello (AMD)
-<superm1@kernel.org> wrote:
+On Wed Sep 10, 2025 at 12:09 AM CEST, Davy Davidse wrote:
+> # Request for Comments
 >
-> A variety of issues both in function and in power consumption have been
-> raised as a result of devices not being put into a low power state when
-> the system is powered off.
+> Would the maintainers be interested in accepting a patch to add configura=
+ble
+> device type support to the fileio backstore? This would:
 >
-> There have been some localized changes[1] to PCI core to help these issue=
-s,
-> but they have had various downsides.
+> - Maintain full backward compatibility (default to TYPE_DISK)
+> - Enable proper CD/DVD/ROM device emulation
+> - Bring kernel-space target capabilities in line with user-space solution=
+s
+> - Address real deployment scenarios currently requiring TGT
 >
-> This series instead uses the driver hibernate flows when the system is
-> being powered off or halted.  This lines up the behavior with what other
-> operating systems do as well.  If for some reason that fails or is not
-> supported, run driver shutdown() callbacks.
+> As someone primarily focused on high level coding languages, rather than =
+kernel
+> development, I'm hoping this RFC might inspire a kernel developer who see=
+s
+> value in this functionality to take on the implementation.
 >
-> Rafael did mention in earlier versions of the series concerns about
-> regression risk.  He was looking for thoughts from Greg who isn't against
-> it but also isn't sure about how to maintain it. [1]
+> Thank you for your time and consideration.
 >
-> This has been validated by me and several others in AMD
-> on a variety of AMD hardware platforms. It's been validated by some
-> community members on their Intel hardware. To my knowledge it has not
-> been validated on non-x86.
 
-Still, the patches need more work (see my replies to the relevant patches).
+This sound like an interesting idea to me.
 
-> On my development laptop I have also contrived failures in the hibernatio=
-n
-> callbacks to make sure that the fallback to shutdown callback works.
->
-> In order to assist with potential regressions the series also includes
-> documentation to help with getting a kernel log at shutdown after
-> the disk is unmounted.
->
-> Cc: AceLan Kao <acelan.kao@canonical.com>
-> Cc: Kai-Heng Feng <kaihengf@nvidia.com>
-> Cc: Mark Pearson <mpearson-lenovo@squebb.ca>
-> Cc: Merthan Karaka=C5=9F <m3rthn.k@gmail.com>
-> Cc: Eric Naim <dnaim@cachyos.org>
-> Link: https://lore.kernel.org/linux-usb/2025090852-coma-tycoon-9f37@gregk=
-h/ [1]
-> ---
-> v6->v7:
->  * Add documentation on how to debug a shutdown hang
->  * Adjust commit messages per feedback from Bjorn
->
-> Mario Limonciello (AMD) (12):
->   PM: Introduce new PMSG_POWEROFF event
->   scsi: Add PM_EVENT_POWEROFF into suspend callbacks
->   usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
->   USB: Pass PMSG_POWEROFF event to suspend_common()
->   PCI/PM: Disable device wakeups when halting or powering off system
->   PCI/PM: Split out code from pci_pm_suspend_noirq() into helper
->   PCI/PM: Run bridge power up actions as part of restore phase
->   PCI/PM: Use pci_power_manageable() in pci_pm_poweroff_noirq()
->   PCI: Put PCIe bridges with downstream devices into D3 at hibernate
->   drm/amd: Avoid evicting resources at S5
->   PM: Use hibernate flows for system power off
->   Documentation: power: Add document on debugging shutdown hangs
+Maybe we could modify the file backstore to emulate a CDROM device when
+needed, something like the following:
 
-If I were you, I'd split this series into 3 parts.
+I didn't really tested it to see if works correctly, I've just verified
+that the initiator's lsblk sees the device like a CDROM.
 
-The first part would be the addition of PMSG_POWEROFF just for
-hibernation, which should not be objectionable (the first 4 patches
-above).
+diff --git a/drivers/target/target_core_file.c b/drivers/target/target_core=
+_file.c
+index 2d78ef74633c..ab36773d9177 100644
+--- a/drivers/target/target_core_file.c
++++ b/drivers/target/target_core_file.c
+@@ -689,7 +689,7 @@ fd_execute_rw(struct se_cmd *cmd, struct scatterlist *s=
+gl, u32 sgl_nents,
 
-The next one would be changes to allow PCI bridges to go into
-D3hot/cold during the last stage of hibernation (the "power-off"
-transition).  This can be justified by itself even before starting to
-use the same power-off flow for the last stage of hibernation and for
-system power-down.
+ enum {
+ 	Opt_fd_dev_name, Opt_fd_dev_size, Opt_fd_buffered_io,
+-	Opt_fd_async_io, Opt_err
++	Opt_fd_async_io, Opt_emulate_cdrom, Opt_err
+ };
 
-The last one would be the hibernation/power-down integration.
+ static match_table_t tokens =3D {
+@@ -697,6 +697,7 @@ static match_table_t tokens =3D {
+ 	{Opt_fd_dev_size, "fd_dev_size=3D%s"},
+ 	{Opt_fd_buffered_io, "fd_buffered_io=3D%d"},
+ 	{Opt_fd_async_io, "fd_async_io=3D%d"},
++	{Opt_emulate_cdrom, "emulate_cdrom=3D%d"},
+ 	{Opt_err, NULL}
+ };
 
-Each of the above can be posted separately and arguably you need to
-get the first part in before the other two and the second part in
-before the third one, preferably not in the same cycle.
+@@ -777,6 +778,20 @@ static ssize_t fd_set_configfs_dev_params(struct se_de=
+vice *dev,
 
-This way, if there are any regressions in the first two parts, there
-will be at least some time to address them before the last part goes
-in.
+ 			fd_dev->fbd_flags |=3D FDBD_HAS_ASYNC_IO;
+ 			break;
++		case Opt_emulate_cdrom:
++			ret =3D match_int(args, &arg);
++			if (ret)
++				goto out;
++			if (arg !=3D 1) {
++				pr_err("bogus emulate_cdrom=3D%d value\n", arg);
++				ret =3D -EINVAL;
++				goto out;
++			}
++
++			pr_debug("FILEIO: Emulating CDROM device type\n");
++
++			fd_dev->fbd_flags |=3D FDBD_HAS_EMULATE_CDROM;
++			break;
+ 		default:
+ 			break;
+ 		}
+@@ -793,11 +808,13 @@ static ssize_t fd_show_configfs_dev_params(struct se_=
+device *dev, char *b)
+ 	ssize_t bl =3D 0;
 
-Thanks!
+ 	bl =3D sprintf(b + bl, "TCM FILEIO ID: %u", fd_dev->fd_dev_id);
+-	bl +=3D sprintf(b + bl, "        File: %s  Size: %llu  Mode: %s Async: %d=
+\n",
++	bl +=3D sprintf(b + bl,
++		"        File: %s  Size: %llu  Mode: %s Async: %d cdrom: %d\n",
+ 		fd_dev->fd_dev_name, fd_dev->fd_dev_size,
+ 		(fd_dev->fbd_flags & FDBD_HAS_BUFFERED_IO_WCE) ?
+ 		"Buffered-WCE" : "O_DSYNC",
+-		!!(fd_dev->fbd_flags & FDBD_HAS_ASYNC_IO));
++		!!(fd_dev->fbd_flags & FDBD_HAS_ASYNC_IO),
++		!!(fd_dev->fbd_flags & FDBD_HAS_EMULATE_CDROM));
+ 	return bl;
+ }
+
+@@ -909,6 +926,14 @@ fd_parse_cdb(struct se_cmd *cmd)
+ 	return sbc_parse_cdb(cmd, &fd_exec_cmd_ops);
+ }
+
++static u32 fd_get_device_type(struct se_device *dev)
++{
++	if (FD_DEV(dev)->fbd_flags & FDBD_HAS_EMULATE_CDROM)
++		return TYPE_ROM;
++
++	return sbc_get_device_type(dev);
++}
++
+ static const struct target_backend_ops fileio_ops =3D {
+ 	.name			=3D "fileio",
+ 	.inquiry_prod		=3D "FILEIO",
+@@ -924,7 +949,7 @@ static const struct target_backend_ops fileio_ops =3D {
+ 	.parse_cdb		=3D fd_parse_cdb,
+ 	.set_configfs_dev_params =3D fd_set_configfs_dev_params,
+ 	.show_configfs_dev_params =3D fd_show_configfs_dev_params,
+-	.get_device_type	=3D sbc_get_device_type,
++	.get_device_type	=3D fd_get_device_type,
+ 	.get_blocks		=3D fd_get_blocks,
+ 	.init_prot		=3D fd_init_prot,
+ 	.format_prot		=3D fd_format_prot,
+diff --git a/drivers/target/target_core_file.h b/drivers/target/target_core=
+_file.h
+index 929b1ecd544e..8e36948cdaba 100644
+--- a/drivers/target/target_core_file.h
++++ b/drivers/target/target_core_file.h
+@@ -23,6 +23,7 @@
+ #define FBDF_HAS_SIZE		0x02
+ #define FDBD_HAS_BUFFERED_IO_WCE 0x04
+ #define FDBD_HAS_ASYNC_IO	 0x08
++#define FDBD_HAS_EMULATE_CDROM  0x10
+ #define FDBD_FORMAT_UNIT_SIZE	2048
+
+ struct fd_dev {
+--
+2.47.3
+
+
+$ lsblk=20
+NAME                                            MAJ:MIN RM   SIZE RO TYPE  =
+MOUNTPOINTS
+sr0                                              11:0    1     1G  0 rom=20
