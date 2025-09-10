@@ -1,64 +1,61 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B0018F4A;
-	Wed, 10 Sep 2025 03:04:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE39F238C08;
+	Wed, 10 Sep 2025 03:04:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757473472; cv=none; b=Nj7A4cUMbyV5+Ay9Fb790BI2Chtxcnqsw/o65RegAmP3V5AO/SUgXFW6ZL76fufEdzsgWicN+fYySwxp5EnGaRs/B0pcj35g1czjAlMnAQRMbVWNdqJxSB12enheUZs5Luzn29Rl+QGAy0H3lsw0gTqOx98YMkRvXqWo0/xRFsk=
+	t=1757473491; cv=none; b=IAkyqUWRbioCvf2yiPty/RN+S/B+Bm0liy6kvHHsfv70ChjNMYTH0Y0vG7gMlfCnZ+qwGa0aeSxhmMX5pY3Dhd9C09raElWLEI2AQWCCrlT8JB6xUHIhcopa1ZgRC0Fc1oCu2m6CJS3hVjCUNLcgwc0/L/QS+Gwots7xSKNI4u0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757473472; c=relaxed/simple;
-	bh=8vM6q6rKNwCyDlNLJkBBEpgor18DKoRDa4kVxCvLSio=;
+	s=arc-20240116; t=1757473491; c=relaxed/simple;
+	bh=1RWtBZfniRYhi6GItegTJS8IjI/lkuaZRrasVZYa844=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JOOmjIxpIyuV/N/TvqEd0TxFM1llHk2AVIdz4MQzw/0S5qjh56NmWhOVVm1WHZnmrSAQyv86iWtK04R7VnsIgqdWSqc9nJKBpTOUxWI5dEWAWy6dPHwgS+SxEoMkIEwJwUnsDW4LET6DXzOJZ6z2xlfH16DpXkOXStpruo1aySw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=mYc017R2; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=PUM7MOG/aNanRI4Re5om9fElsqWRTc10AQgvFJPdZ5USwRf95/IUGge44skSuPvOjGsFay5ueU2hk3UuIOmqoAEE/0xoP0/TfoXsXvquaAcWxdnOZ5HY/yLGbFMMqQtxXbhGfGn5ZKQeAAtH1PGTujYQzQppwZwAtKtFfwkKYfg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=WKRuCEGw; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="mYc017R2"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 589L0gAo031116;
-	Wed, 10 Sep 2025 03:04:18 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="WKRuCEGw"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 589L0k7I024171;
+	Wed, 10 Sep 2025 03:04:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=KL4t9EfLRkiw72wM2uBuCwhWndW37uOec8qj33ZcXuY=; b=
-	mYc017R2CwB+E7PYeB4HbPoP2of49qKWMKP2A18D7huSJ2kP99jmTtnU0RDoaaGU
-	dmWFb+3q3EWD8ENR0Sc68WhnGLrTSqntARwidvh9EbBMdCFeqHoRZW6nNUExzyq8
-	D13oOH//GOTVibZ2nnwAkLfrEcaxTWpAOf98K2GgLd9EErzKJStycGwXJQGSzd0J
-	Z4v2Ntiqv1/vnl2Z8BKiBJvwvfDt18lOSQnkF+wnutRVp363SUns9OzsMbyJykvP
-	X01ee8RdKD7Pk5gVffnrWauKaaI/0OMCvpS3Oap6hY2UxUvd5FS8jsnkos89J9JQ
-	WXXUWf9MgUFhV2DAWNLVwA==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4921peb9qj-1
+	corp-2025-04-25; bh=00X5uJhZwRCZDbQHyLsVyyJZjcJxfOkXt7BpphFLRws=; b=
+	WKRuCEGwqpCgkU6W4CQ2OmZnx0bajKAOtBjEnaRGKXsJxBzkev37Y/klnsx+wIaM
+	uIhtmpyAgfN4VTpvLzejCJUD/+UfU6UmsXWl5AZik8VyhIBqJVfc4jlzRqZkpM2c
+	+w6eRNpJPbyJp946SQVqzeLQaFLTGzrLg4akEIiu+fo0nTN365A7NGlSBeQzk6kV
+	2/3/6o/FsO4c1aoTVJ1iJ9imWKnTJM9v/VrMSX4tOM7zq/GDTuEYyLJ6M9acdjLW
+	ToEzmNDbyrJejzE3gF9iH1Ic/IkzV5TxOVG0iqABWBrt6aFp7X9288O6Yu5XJByh
+	wL2hwozVyz1pDA4d/O8pjg==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4922jgu5aj-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 10 Sep 2025 03:04:17 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58A00VCk032833;
-	Wed, 10 Sep 2025 03:04:17 GMT
+	Wed, 10 Sep 2025 03:04:48 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58A01XHT031542;
+	Wed, 10 Sep 2025 03:04:47 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 490bdbdy9c-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 490bdadcwa-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 10 Sep 2025 03:04:17 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 58A34GIe017468;
-	Wed, 10 Sep 2025 03:04:16 GMT
+	Wed, 10 Sep 2025 03:04:47 +0000
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 58A34g5e011326;
+	Wed, 10 Sep 2025 03:04:46 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 490bdbdy8u-1;
-	Wed, 10 Sep 2025 03:04:16 +0000
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 490bdadcur-6;
+	Wed, 10 Sep 2025 03:04:46 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: mani@kernel.org, quic_cang@quicinc.com, quic_asutoshd@quicinc.com,
-        peter.wang@mediatek.com, alim.akhtar@samsung.com, avri.altman@wdc.com,
-        bvanassche@acm.org, James.Bottomley@HansenPartnership.com,
-        linux-scsi@vger.kernel.org, Alok Tiwari <alok.a.tiwari@oracle.com>
+To: James.Bottomley@HansenPartnership.com, Xichao Zhao <zhao.xichao@vivo.com>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2] scsi: ufs: mcq: Fix memory allocation checks for SQE and CQE
-Date: Tue,  9 Sep 2025 23:04:11 -0400
-Message-ID: <175747321924.2920136.5249615498551213507.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: csiostor: Fix some spelling errors
+Date: Tue,  9 Sep 2025 23:04:38 -0400
+Message-ID: <175746865976.2804493.695778098703955774.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250907194025.3611607-1-alok.a.tiwari@oracle.com>
-References: <20250907194025.3611607-1-alok.a.tiwari@oracle.com>
+In-Reply-To: <20250827121611.497547-1-zhao.xichao@vivo.com>
+References: <20250827121611.497547-1-zhao.xichao@vivo.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,40 +67,34 @@ Content-Transfer-Encoding: 8bit
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-09-09_03,2025-09-08_02,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxscore=0 phishscore=0
- bulkscore=0 mlxlogscore=445 malwarescore=0 adultscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
- definitions=main-2509100024
-X-Proofpoint-GUID: VHwcmSR7r3pXsGX8MzuAvAJBO_orBD_j
-X-Proofpoint-ORIG-GUID: VHwcmSR7r3pXsGX8MzuAvAJBO_orBD_j
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA4MDE1MiBTYWx0ZWRfX1QndRRPDt5uM
- 8WZQVaJwQof755rKMfysoYvCEY6xE9otGTlhdFtF4c+5UBFRyCX3Fk9kIsOy0QMDzVJPqpiuCeI
- N7zz79HYSWSBsfsCeEOfsqkISy5cqW/8bnLgKyH2JwjskaosYoQ/GI6Jbz1QxVVqz44o+VR5x4b
- T8OgNdDEI7Le9lwsucLqJZvLsnTWIt3XJulvRuOOOD+NBODOy9pQ0nRkSTt4J7pdXXQdmUgSUUi
- vB1sZNTtnQwEDp/ZZG/Uia6czVucaYn7esYdY32HM0Wlmqe02/WgEVQmuqMmN+zKcy20hC1GnBH
- POFwHLFVh40fcNu4pUAjf2qlQgmIkzA2D/+bLHkb5zqT8sPSX/AuO6kmBpgWs+zCebZyhwa8Rak
- uNuxis4K
-X-Authority-Analysis: v=2.4 cv=b9Oy4sGx c=1 sm=1 tr=0 ts=68c0eab1 cx=c_pps
- a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
- a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=LbRfUqgqCajye2J0cYIA:9
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=807 adultscore=0
+ suspectscore=0 spamscore=0 phishscore=0 bulkscore=0 mlxscore=0
+ malwarescore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2508110000 definitions=main-2509100024
+X-Proofpoint-ORIG-GUID: 5talNjQfafGGy86V0ig3Sroshp2-UsPD
+X-Authority-Analysis: v=2.4 cv=PLMP+eqC c=1 sm=1 tr=0 ts=68c0ead0 cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
+ a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=7kqrXFrDgR_pPvtGJbcA:9
  a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: 5talNjQfafGGy86V0ig3Sroshp2-UsPD
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA4MDE2MiBTYWx0ZWRfXxqGjhyCyuvJg
+ Qh3F9rXwhhPLAVAUvo9SOORJtyju6L4Ta4zaJL9nNipGIXCjBTgQVdBd2/VD+ysbP26RpjvEtJx
+ NB/02BfARZbv3BoSiwbd8iFWd6Vkx2n954JDTunURBpBtlb4vNDtFcjYzdOseWTM3L7xnNeLksR
+ BRFPbrdv/bQUtR3/4EuxlGaU2cylHXlE03GngKYL4hdgMLHImAKHwkW+m710kwz2j2guAaKFmil
+ GX1o3fqz8H8S5BQaWugtsjBz2KyH7RY2EqX7Q77+fclsfsDZnoQmtyqtYtbhAVSDEyWBbZwbGHn
+ FQndUUmbCVM7OroObVahOPESKCk3Uw076+PkqozT6H1EpHGcatxHnvs00mVPm5bkEfjOvCQY1rx
+ x4yiXQyb
 
-On Sun, 07 Sep 2025 12:40:16 -0700, Alok Tiwari wrote:
+On Wed, 27 Aug 2025 20:16:11 +0800, Xichao Zhao wrote:
 
-> Previous checks incorrectly tested the DMA addresses (dma_handle)
-> for NULL. Since dma_alloc_coherent() returns the CPU (virtual)
-> address, the NULL check should be performed on the *_base_addr
-> pointer to correctly detect allocation failures.
+> Fix spelling errors in some comments.
 > 
-> Update the checks to validate sqe_base_addr and cqe_base_addr
-> instead of sqe_dma_addr and cqe_dma_addr.
 > 
-> [...]
 
-Applied to 6.17/scsi-fixes, thanks!
+Applied to 6.18/scsi-queue, thanks!
 
-[1/1] scsi: ufs: mcq: Fix memory allocation checks for SQE and CQE
-      https://git.kernel.org/mkp/scsi/c/5cb782ff3c62
+[1/1] scsi: csiostor: Fix some spelling errors
+      https://git.kernel.org/mkp/scsi/c/80093afdcc48
 
 -- 
 Martin K. Petersen
