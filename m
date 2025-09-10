@@ -1,127 +1,125 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E96D23C4FD;
-	Wed, 10 Sep 2025 19:07:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52D86308F32;
+	Wed, 10 Sep 2025 21:33:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757531254; cv=none; b=MUiNL0eQ4/3FHnQDT0dUSPrSAs/yoqJq7CwBR3kJmm3fhnHeBmZ0sIxzOoI6YwdDQgx44SQHnc5pwZNkcYb/PxwkuaTuRLWHvwb8D81qyMtAGKDkrVygMHIVP3BYMqBkN33dYvTxBPJMcWSCNZ4R7YAEQoNvz9bdUYDC3f79/7I=
+	t=1757540002; cv=none; b=aoGu1WjeoSBMWexWVIe8BFcPaSql8UR+R8/OwhVpAlvyPLK3d1vwj1aswy3yUaEHWc1C+B1t0sYk6xK4HTwZG/q7SGfBHrEufmF6ERoHXFH6FSnL3v/MkXhl9lvFQPhmIQLvGVA1SKZzO6F2MJSIphFDPHKE3vYRTcjSL4BPAbE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757531254; c=relaxed/simple;
-	bh=6aeO4MBjEAXMN7S+fFrX16T9MBul2DIntPn4+t3K6AY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MynogdrVhj2ZgtwNZHR+pIP+wRwZwdOdsnBaD17MPKUFQzAmPakhu5XZLz9VCl9uNAs+0Mxz7El+waPS9/yAXZt2dapGJxIZxS1HmIxfrL7FW2mNTrXnwXbxk7meDx3i/ptk3fpe6r6kQB1ujz/JSygRf//C2tXPF4LMgoObUd8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Wx8K6I/N; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1757540002; c=relaxed/simple;
+	bh=+Vz2C/szieCFu676AUaOfHrBLXbZidNiAnH2QkRXIxc=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=HrAkix9ksZdp9Jr1T3hC/zTSNcveqhW9jSkQgUI/2kSVgPoZql+zrfGK373ZMEmMBqHO5JYIwF0kyS3AQX0RjvKW34RWXPX+u4KRgJyspb3ux9v83Uq8rSYJNlNiIPWirqCgDJCvEDojSztbrXwlSKidG7Y3s89E8wP7B/VsWmM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lrYqQGDT; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Wx8K6I/N"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58AGfpj9007364;
-	Wed, 10 Sep 2025 19:07:31 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=corp-2025-04-25; bh=kSzH0FMWoF9ySM2kjUbzscFMAsip6
-	SiLjxWiLldgpEw=; b=Wx8K6I/NJEuefGgkoLiBCQ3tBgjOz0SjoMTOyHMWrBB0j
-	UIf3G9H88hOqJHI6pfh8/7oMU+WxX2Q4lKJl/iJoKuSW6fS1ynjDRnAGJFkQqLYs
-	Pq4i4BD9mgg9KWQiSo9Cy8/f9rkHUcM4ROQndNn+flmGvswkEIEYskbjRZCOfjes
-	DlSxHfLBshCVAsvRb/rwaTlz36ZEvxwAf68CsNflaNeU87JlnQOvXLJx3h2Bzl6v
-	Sh9IPQ23MnUnZY4NxKCNhygkWiOkPJvV1Yy81tpcy3JA++hbz8/a4vmGM2oBJrOq
-	9fz7n9oX085QlQ2qKKLJyWuoUW5drTySzrkP1eSdQ==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4921pecwdp-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 10 Sep 2025 19:07:31 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58AIErtA013640;
-	Wed, 10 Sep 2025 19:07:31 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 490bdbmn2v-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 10 Sep 2025 19:07:31 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 58AJ7UFj030945;
-	Wed, 10 Sep 2025 19:07:30 GMT
-Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 490bdbmn2p-1;
-	Wed, 10 Sep 2025 19:07:30 +0000
-From: Alok Tiwari <alok.a.tiwari@oracle.com>
-To: michael.christie@oracle.com, martin.petersen@oracle.com,
-        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
-Cc: alok.a.tiwari@oracle.com
-Subject: [PATCH] scsi: target: iscsi: fix typos and formatting in lio_target messages
-Date: Wed, 10 Sep 2025 12:07:20 -0700
-Message-ID: <20250910190728.3783157-1-alok.a.tiwari@oracle.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lrYqQGDT"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cMYp61z7czm174M;
+	Wed, 10 Sep 2025 21:33:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:references:in-reply-to
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1757539996; x=1760131997; bh=It5L8
+	r69M+QtfUVMCgTNLWZo1vOfzVnQ9/IfjgtO03o=; b=lrYqQGDTr+xZ/fQ1gnWQH
+	iYkZUz/+uMFWk6D9MPyPL9HgHYdenagO0bGtUd/tzgDH/S4zmrvwXC/Nui+JCD0b
+	MCKF80Oyudfh3283aSC0Dloffl8z3QMoP7XHuipKu8eutfB1DRWCgjq4j7Xcf8fG
+	DRoVnIW75mK4ju8b0tLzWe+CBEiqxTGT8ZQPSCZRzsFyizV9f16ZNFwP9I4mI/ML
+	ph3BLPI/RXhVbyhkkIO/OCZ1qXYKGBJVuWfs2sReiN+UY2AGE8yN05J5Cun68+BB
+	NeJ0UQMFUOR2TLfxXu552ZYxuGOXS3mBby1ySh4Ok5NgBBDmFHpBLGO55S4jSSfd
+	Q==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 7CYRhqKJpuE3; Wed, 10 Sep 2025 21:33:16 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cMYnz0lH8zm0yTF;
+	Wed, 10 Sep 2025 21:33:10 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-block@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Jens Axboe <axboe@kernel.dk>,
+	Christoph Hellwig <hch@infradead.org>,
+	Ming Lei <ming.lei@redhat.com>,
+	John Garry <john.g.garry@oracle.com>
+Subject: [PATCH 1/3] block: Export blk_mq_all_tag_iter()
+Date: Wed, 10 Sep 2025 14:32:49 -0700
+Message-ID: <20250910213254.1215318-2-bvanassche@acm.org>
+X-Mailer: git-send-email 2.51.0.384.g4c02a37b29-goog
+In-Reply-To: <20250910213254.1215318-1-bvanassche@acm.org>
+References: <20250910213254.1215318-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-10_03,2025-09-10_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 mlxscore=0
- mlxlogscore=999 adultscore=0 phishscore=0 bulkscore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
- definitions=main-2509100177
-X-Proofpoint-GUID: IVFXu0ekA-dbGXTMvkvK8M0ACyfaQOrh
-X-Proofpoint-ORIG-GUID: IVFXu0ekA-dbGXTMvkvK8M0ACyfaQOrh
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA4MDE1MiBTYWx0ZWRfX3y58blJPgWsO
- x/8dSal1LhqC78hF5lfW94ScHlg0RQrNxwT4gFrlSlhAVPe9rpIsJtTYFGt5QtcggV1AQrnBygG
- TShJBttoVE7TKHNEVwBIA4+WHIkHQm/YomNY1D/CJahML+J3rwBZgL9qNFW+GAi35MYQHZI7bn4
- IyvIloK9DM3Ok1nBEvuG8u46fawCCOhOWnEn/eMPGFFTVAHJ6ZDUraeR8rwzmvoG++9H5hyhPG0
- TZ8/920ril2cJIFXfB66RiEyVQYsN6oBAvsEO2x32iyfjXfuXVrOoGbWESp52y0we20t30RFW7O
- K6gTCAe1z8u+A+HP6KotzanE3NR1rtSgq3J9D9wubnL3julHtKblmN/V6QVx7Zt7UwhuUvC7lml
- HgGeeC1C
-X-Authority-Analysis: v=2.4 cv=b9Oy4sGx c=1 sm=1 tr=0 ts=68c1cc73 b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
- a=yJojWOMRYYMA:10 a=yPCof4ZbAAAA:8 a=u35TvG4S8WVXa3pOz-gA:9
+Content-Transfer-Encoding: quoted-printable
 
-Fix several minor issues in lio_target code and messages:
-- Correct typo "locatel" -> "locate" in error log.
-- Add missing space in pr_debug() message for better readability.
-- Fix comment typo: "contig_item" -> "config_item".
+Prepare for using blk_mq_all_tag_iter() in the SCSI core.
 
-These changes improve code clarity and log readability.
-
-Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: John Garry <john.g.garry@oracle.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/target/iscsi/iscsi_target_configfs.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ block/blk-mq-tag.c     | 1 +
+ block/blk-mq.h         | 2 --
+ include/linux/blk-mq.h | 2 ++
+ 3 files changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
-index 88db94f382bb..efe8cdb20060 100644
---- a/drivers/target/iscsi/iscsi_target_configfs.c
-+++ b/drivers/target/iscsi/iscsi_target_configfs.c
-@@ -665,7 +665,7 @@ static ssize_t lio_target_nacl_cmdsn_depth_store(struct config_item *item,
- 	}
- 	acl_ci = &se_nacl->acl_group.cg_item;
- 	if (!acl_ci) {
--		pr_err("Unable to locatel acl_ci\n");
-+		pr_err("Unable to locate acl_ci\n");
- 		return -EINVAL;
- 	}
- 	tpg_ci = &acl_ci->ci_parent->ci_group->cg_item;
-@@ -684,7 +684,7 @@ static ssize_t lio_target_nacl_cmdsn_depth_store(struct config_item *item,
- 
- 	ret = core_tpg_set_initiator_node_queue_depth(se_nacl, cmdsn_depth);
- 
--	pr_debug("LIO_Target_ConfigFS: %s/%s Set CmdSN Window: %u for"
-+	pr_debug("LIO_Target_ConfigFS: %s/%s Set CmdSN Window: %u for "
- 		"InitiatorName: %s\n", config_item_name(wwn_ci),
- 		config_item_name(tpg_ci), cmdsn_depth,
- 		config_item_name(acl_ci));
-@@ -1131,7 +1131,7 @@ static void lio_target_tiqn_deltpg(struct se_portal_group *se_tpg)
- 
- /* End items for lio_target_tiqn_cit */
- 
--/* Start LIO-Target TIQN struct contig_item lio_target_cit */
-+/* Start LIO-Target TIQN struct config_item lio_target_cit */
- 
- static ssize_t lio_target_wwn_lio_version_show(struct config_item *item,
- 		char *page)
--- 
-2.50.1
-
+diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
+index d880c50629d6..1d56ee8722c5 100644
+--- a/block/blk-mq-tag.c
++++ b/block/blk-mq-tag.c
+@@ -419,6 +419,7 @@ void blk_mq_all_tag_iter(struct blk_mq_tags *tags, bu=
+sy_tag_iter_fn *fn,
+ {
+ 	__blk_mq_all_tag_iter(tags, fn, priv, BT_TAG_ITER_STATIC_RQS);
+ }
++EXPORT_SYMBOL(blk_mq_all_tag_iter);
+=20
+ /**
+  * blk_mq_tagset_busy_iter - iterate over all started requests in a tag =
+set
+diff --git a/block/blk-mq.h b/block/blk-mq.h
+index affb2e14b56e..944668f34856 100644
+--- a/block/blk-mq.h
++++ b/block/blk-mq.h
+@@ -179,8 +179,6 @@ void blk_mq_tag_update_sched_shared_tags(struct reque=
+st_queue *q);
+ void blk_mq_tag_wakeup_all(struct blk_mq_tags *tags, bool);
+ void blk_mq_queue_tag_busy_iter(struct request_queue *q, busy_tag_iter_f=
+n *fn,
+ 		void *priv);
+-void blk_mq_all_tag_iter(struct blk_mq_tags *tags, busy_tag_iter_fn *fn,
+-		void *priv);
+=20
+ static inline struct sbq_wait_state *bt_wait_ptr(struct sbitmap_queue *b=
+t,
+ 						 struct blk_mq_hw_ctx *hctx)
+diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
+index 2a5a828f19a0..8ed09783f289 100644
+--- a/include/linux/blk-mq.h
++++ b/include/linux/blk-mq.h
+@@ -921,6 +921,8 @@ void blk_mq_delay_run_hw_queue(struct blk_mq_hw_ctx *=
+hctx, unsigned long msecs);
+ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx, bool async);
+ void blk_mq_run_hw_queues(struct request_queue *q, bool async);
+ void blk_mq_delay_run_hw_queues(struct request_queue *q, unsigned long m=
+secs);
++void blk_mq_all_tag_iter(struct blk_mq_tags *tags, busy_tag_iter_fn *fn,
++		void *priv);
+ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
+ 		busy_tag_iter_fn *fn, void *priv);
+ void blk_mq_tagset_wait_completed_request(struct blk_mq_tag_set *tagset)=
+;
