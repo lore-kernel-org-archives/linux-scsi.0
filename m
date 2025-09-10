@@ -1,181 +1,127 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90A652737E3
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2025 18:23:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E96D23C4FD;
+	Wed, 10 Sep 2025 19:07:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757528607; cv=none; b=cUi0mSbtuQEcVeQTPkYztJCs43I/WsVoTIJmhhJdGnm1xlV0FiGu6ZfvT+MBqgZxoLGIrWKT80Es5p+RYqxQRAfCu73qUAQD4hISOcG9Au5vJ2m1xH1IyucHjjIfzQIIpVxOYjesuTMbVJ+BKJ79hvrwUMOpYyRf6UoBIfsVlvE=
+	t=1757531254; cv=none; b=MUiNL0eQ4/3FHnQDT0dUSPrSAs/yoqJq7CwBR3kJmm3fhnHeBmZ0sIxzOoI6YwdDQgx44SQHnc5pwZNkcYb/PxwkuaTuRLWHvwb8D81qyMtAGKDkrVygMHIVP3BYMqBkN33dYvTxBPJMcWSCNZ4R7YAEQoNvz9bdUYDC3f79/7I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757528607; c=relaxed/simple;
-	bh=+xIR3asJwN5hgErdxA5RKk8TysQZx223OPFxmTPM6wk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=A4iCfWxfNmihjk2ciiodf/Jv9obYmMt5eLMq3ijtqjXN8U4r1KEenUTp9Zg11EoJ3yExk78eyb8TlfSr4VUjNka3ZR4YzREMLDuuvHF9g0pPYFLYIBm/n5bkcXU2vegvD5eMB6epyeJcQDgLPWBCN5rJkLsF7S+WjHT5XOPQVh8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ajblWDlc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1757531254; c=relaxed/simple;
+	bh=6aeO4MBjEAXMN7S+fFrX16T9MBul2DIntPn4+t3K6AY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=MynogdrVhj2ZgtwNZHR+pIP+wRwZwdOdsnBaD17MPKUFQzAmPakhu5XZLz9VCl9uNAs+0Mxz7El+waPS9/yAXZt2dapGJxIZxS1HmIxfrL7FW2mNTrXnwXbxk7meDx3i/ptk3fpe6r6kQB1ujz/JSygRf//C2tXPF4LMgoObUd8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Wx8K6I/N; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ajblWDlc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 39A12C113CF
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2025 18:23:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757528607;
-	bh=+xIR3asJwN5hgErdxA5RKk8TysQZx223OPFxmTPM6wk=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=ajblWDlcgnGiwv4b+87zSHaRuScxCB1stcp55whAoZulzhoBh1esX9XyuQoyzBH5Q
-	 4GSK+7JtMnuab6uFkuxlZrsgsLsvVBtEuklUFt3xFi95QVTELfNpDebmtYBcLBlo75
-	 0vv4KhNHLZDuIuayscRphfTdctDipKeB2p8aoUoq+xNNkPdksAqsuQLongju4KCmvU
-	 tVrb4MUmP6333fqMik7fkJ244k29ltCTwuXSc+MPNLVCGYMGTwaVtf+GWlbvt6GbGK
-	 jXawRaKAw7vuXbicbM3OsEnJrgvSWwmWMoqlNA+iI02ZC8N3GYfl/+CP19p/Comtxu
-	 OMTqecchv6uKw==
-Received: by mail-oo1-f51.google.com with SMTP id 006d021491bc7-62189987b47so2058751eaf.1
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2025 11:23:27 -0700 (PDT)
-X-Forwarded-Encrypted: i=1; AJvYcCXYZJiIW8NsR1KBC/zHCusdVlm7maj8WJrhI+bMcvAEwpxBCHGKVgc9A+d7/Oz8fS3jcbkTHAexVF4x@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz9KSrv6DoWQT6H7b5VziW+6e5ZYV7GnY9NFglmNJk+OdrGr5KM
-	08w4nJAW2ZZI1UfhmmmfGq9yEOsZ4CW5MO0FPzLHZHJIXrkIRyoVnILkvcqUXz+52xMXL87vATO
-	byXQM10nkYaXDLvEVSE3+iwvm6Dry9FI=
-X-Google-Smtp-Source: AGHT+IHuJvNxF2V1tX1VXNeWzG5+F8V+ZGBMwM/IMnADUgJ2KlwC42wDx0ddU1lVmFJOq6s4hYUdpYwCoggap1Mbof4=
-X-Received: by 2002:a05:6820:828:b0:620:7998:64aa with SMTP id
- 006d021491bc7-621789fd31cmr7712178eaf.1.1757528606440; Wed, 10 Sep 2025
- 11:23:26 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Wx8K6I/N"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58AGfpj9007364;
+	Wed, 10 Sep 2025 19:07:31 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=corp-2025-04-25; bh=kSzH0FMWoF9ySM2kjUbzscFMAsip6
+	SiLjxWiLldgpEw=; b=Wx8K6I/NJEuefGgkoLiBCQ3tBgjOz0SjoMTOyHMWrBB0j
+	UIf3G9H88hOqJHI6pfh8/7oMU+WxX2Q4lKJl/iJoKuSW6fS1ynjDRnAGJFkQqLYs
+	Pq4i4BD9mgg9KWQiSo9Cy8/f9rkHUcM4ROQndNn+flmGvswkEIEYskbjRZCOfjes
+	DlSxHfLBshCVAsvRb/rwaTlz36ZEvxwAf68CsNflaNeU87JlnQOvXLJx3h2Bzl6v
+	Sh9IPQ23MnUnZY4NxKCNhygkWiOkPJvV1Yy81tpcy3JA++hbz8/a4vmGM2oBJrOq
+	9fz7n9oX085QlQ2qKKLJyWuoUW5drTySzrkP1eSdQ==
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4921pecwdp-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 10 Sep 2025 19:07:31 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58AIErtA013640;
+	Wed, 10 Sep 2025 19:07:31 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 490bdbmn2v-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 10 Sep 2025 19:07:31 +0000
+Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 58AJ7UFj030945;
+	Wed, 10 Sep 2025 19:07:30 GMT
+Received: from ca-dev112.us.oracle.com (ca-dev112.us.oracle.com [10.129.136.47])
+	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 490bdbmn2p-1;
+	Wed, 10 Sep 2025 19:07:30 +0000
+From: Alok Tiwari <alok.a.tiwari@oracle.com>
+To: michael.christie@oracle.com, martin.petersen@oracle.com,
+        linux-scsi@vger.kernel.org, target-devel@vger.kernel.org
+Cc: alok.a.tiwari@oracle.com
+Subject: [PATCH] scsi: target: iscsi: fix typos and formatting in lio_target messages
+Date: Wed, 10 Sep 2025 12:07:20 -0700
+Message-ID: <20250910190728.3783157-1-alok.a.tiwari@oracle.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250909191619.2580169-1-superm1@kernel.org> <CAJZ5v0jZaP41CC_2Q4NfKZWB8VazJbmiOtv55i3QDngh_3YGOw@mail.gmail.com>
- <b013c9bb-cf7c-424e-9ab0-8136bb9dc744@kernel.org>
-In-Reply-To: <b013c9bb-cf7c-424e-9ab0-8136bb9dc744@kernel.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Wed, 10 Sep 2025 20:23:10 +0200
-X-Gmail-Original-Message-ID: <CAJZ5v0jHKp7c7dSQMZr5tmQOV6=fHOygTf-YG6Gx9YmurA9cTA@mail.gmail.com>
-X-Gm-Features: Ac12FXxP4R30XoZ1EAQoBcb1zrTQS_kNI4CD1-JlFf5ha5_0hv061p7vj9zUCZE
-Message-ID: <CAJZ5v0jHKp7c7dSQMZr5tmQOV6=fHOygTf-YG6Gx9YmurA9cTA@mail.gmail.com>
-Subject: Re: [PATCH v7 00/12] Improvements to S5 power consumption
-To: Mario Limonciello <superm1@kernel.org>
-Cc: "Rafael J. Wysocki" <rafael@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Pavel Machek <pavel@kernel.org>, 
-	Len Brown <lenb@kernel.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, Steven Rostedt <rostedt@goodmis.org>, 
-	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>, 
-	"open list:RADEON and AMDGPU DRM DRIVERS" <amd-gfx@lists.freedesktop.org>, 
-	"open list:DRM DRIVERS" <dri-devel@lists.freedesktop.org>, 
-	"open list:PCI SUBSYSTEM" <linux-pci@vger.kernel.org>, 
-	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, 
-	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>, 
-	"open list:TRACING" <linux-trace-kernel@vger.kernel.org>, AceLan Kao <acelan.kao@canonical.com>, 
-	Kai-Heng Feng <kaihengf@nvidia.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
-	=?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>, 
-	Eric Naim <dnaim@cachyos.org>, "Guilherme G . Piccoli" <gpiccoli@igalia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-10_03,2025-09-10_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 mlxscore=0
+ mlxlogscore=999 adultscore=0 phishscore=0 bulkscore=0 suspectscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
+ definitions=main-2509100177
+X-Proofpoint-GUID: IVFXu0ekA-dbGXTMvkvK8M0ACyfaQOrh
+X-Proofpoint-ORIG-GUID: IVFXu0ekA-dbGXTMvkvK8M0ACyfaQOrh
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA4MDE1MiBTYWx0ZWRfX3y58blJPgWsO
+ x/8dSal1LhqC78hF5lfW94ScHlg0RQrNxwT4gFrlSlhAVPe9rpIsJtTYFGt5QtcggV1AQrnBygG
+ TShJBttoVE7TKHNEVwBIA4+WHIkHQm/YomNY1D/CJahML+J3rwBZgL9qNFW+GAi35MYQHZI7bn4
+ IyvIloK9DM3Ok1nBEvuG8u46fawCCOhOWnEn/eMPGFFTVAHJ6ZDUraeR8rwzmvoG++9H5hyhPG0
+ TZ8/920ril2cJIFXfB66RiEyVQYsN6oBAvsEO2x32iyfjXfuXVrOoGbWESp52y0we20t30RFW7O
+ K6gTCAe1z8u+A+HP6KotzanE3NR1rtSgq3J9D9wubnL3julHtKblmN/V6QVx7Zt7UwhuUvC7lml
+ HgGeeC1C
+X-Authority-Analysis: v=2.4 cv=b9Oy4sGx c=1 sm=1 tr=0 ts=68c1cc73 b=1 cx=c_pps
+ a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
+ a=yJojWOMRYYMA:10 a=yPCof4ZbAAAA:8 a=u35TvG4S8WVXa3pOz-gA:9
 
-On Wed, Sep 10, 2025 at 8:19=E2=80=AFPM Mario Limonciello <superm1@kernel.o=
-rg> wrote:
->
-> On 9/10/25 1:11 PM, Rafael J. Wysocki wrote:
-> > Hi Mario,
-> >
-> > On Tue, Sep 9, 2025 at 9:16=E2=80=AFPM Mario Limonciello (AMD)
-> > <superm1@kernel.org> wrote:
-> >>
-> >> A variety of issues both in function and in power consumption have bee=
-n
-> >> raised as a result of devices not being put into a low power state whe=
-n
-> >> the system is powered off.
-> >>
-> >> There have been some localized changes[1] to PCI core to help these is=
-sues,
-> >> but they have had various downsides.
-> >>
-> >> This series instead uses the driver hibernate flows when the system is
-> >> being powered off or halted.  This lines up the behavior with what oth=
-er
-> >> operating systems do as well.  If for some reason that fails or is not
-> >> supported, run driver shutdown() callbacks.
-> >>
-> >> Rafael did mention in earlier versions of the series concerns about
-> >> regression risk.  He was looking for thoughts from Greg who isn't agai=
-nst
-> >> it but also isn't sure about how to maintain it. [1]
-> >>
-> >> This has been validated by me and several others in AMD
-> >> on a variety of AMD hardware platforms. It's been validated by some
-> >> community members on their Intel hardware. To my knowledge it has not
-> >> been validated on non-x86.
-> >
-> > Still, the patches need more work (see my replies to the relevant patch=
-es).
->
-> Yes, thanks for the review.
-> >
-> >> On my development laptop I have also contrived failures in the hiberna=
-tion
-> >> callbacks to make sure that the fallback to shutdown callback works.
-> >>
-> >> In order to assist with potential regressions the series also includes
-> >> documentation to help with getting a kernel log at shutdown after
-> >> the disk is unmounted.
-> >>
-> >> Cc: AceLan Kao <acelan.kao@canonical.com>
-> >> Cc: Kai-Heng Feng <kaihengf@nvidia.com>
-> >> Cc: Mark Pearson <mpearson-lenovo@squebb.ca>
-> >> Cc: Merthan Karaka=C5=9F <m3rthn.k@gmail.com>
-> >> Cc: Eric Naim <dnaim@cachyos.org>
-> >> Link: https://lore.kernel.org/linux-usb/2025090852-coma-tycoon-9f37@gr=
-egkh/ [1]
-> >> ---
-> >> v6->v7:
-> >>   * Add documentation on how to debug a shutdown hang
-> >>   * Adjust commit messages per feedback from Bjorn
-> >>
-> >> Mario Limonciello (AMD) (12):
-> >>    PM: Introduce new PMSG_POWEROFF event
-> >>    scsi: Add PM_EVENT_POWEROFF into suspend callbacks
-> >>    usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
-> >>    USB: Pass PMSG_POWEROFF event to suspend_common()
-> >>    PCI/PM: Disable device wakeups when halting or powering off system
-> >>    PCI/PM: Split out code from pci_pm_suspend_noirq() into helper
-> >>    PCI/PM: Run bridge power up actions as part of restore phase
-> >>    PCI/PM: Use pci_power_manageable() in pci_pm_poweroff_noirq()
-> >>    PCI: Put PCIe bridges with downstream devices into D3 at hibernate
-> >>    drm/amd: Avoid evicting resources at S5
-> >>    PM: Use hibernate flows for system power off
-> >>    Documentation: power: Add document on debugging shutdown hangs
-> >
-> > If I were you, I'd split this series into 3 parts.
-> >
-> > The first part would be the addition of PMSG_POWEROFF just for
-> > hibernation, which should not be objectionable (the first 4 patches
-> > above).
-> >
-> > The next one would be changes to allow PCI bridges to go into
-> > D3hot/cold during the last stage of hibernation (the "power-off"
-> > transition).  This can be justified by itself even before starting to
-> > use the same power-off flow for the last stage of hibernation and for
-> > system power-down.
-> >
-> > The last one would be the hibernation/power-down integration.
-> >
-> > Each of the above can be posted separately and arguably you need to
-> > get the first part in before the other two and the second part in
-> > before the third one, preferably not in the same cycle.
-> >
-> > This way, if there are any regressions in the first two parts, there
-> > will be at least some time to address them before the last part goes
-> > in.
-> >
-> > Thanks!
->
-> Thanks for this proposal.
->
-> I do like the idea of splitting it in 3 parts to give time for
-> regression control.
->
-> It's getting close to the end of this cycle, would you be opposed to a
-> re-spun first 4 patches for 6.18?
+Fix several minor issues in lio_target code and messages:
+- Correct typo "locatel" -> "locate" in error log.
+- Add missing space in pr_debug() message for better readability.
+- Fix comment typo: "contig_item" -> "config_item".
 
-No, I wouldn't.
+These changes improve code clarity and log readability.
 
-I think that they have been reviewed already.
+Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
+---
+ drivers/target/iscsi/iscsi_target_configfs.c | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index 88db94f382bb..efe8cdb20060 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -665,7 +665,7 @@ static ssize_t lio_target_nacl_cmdsn_depth_store(struct config_item *item,
+ 	}
+ 	acl_ci = &se_nacl->acl_group.cg_item;
+ 	if (!acl_ci) {
+-		pr_err("Unable to locatel acl_ci\n");
++		pr_err("Unable to locate acl_ci\n");
+ 		return -EINVAL;
+ 	}
+ 	tpg_ci = &acl_ci->ci_parent->ci_group->cg_item;
+@@ -684,7 +684,7 @@ static ssize_t lio_target_nacl_cmdsn_depth_store(struct config_item *item,
+ 
+ 	ret = core_tpg_set_initiator_node_queue_depth(se_nacl, cmdsn_depth);
+ 
+-	pr_debug("LIO_Target_ConfigFS: %s/%s Set CmdSN Window: %u for"
++	pr_debug("LIO_Target_ConfigFS: %s/%s Set CmdSN Window: %u for "
+ 		"InitiatorName: %s\n", config_item_name(wwn_ci),
+ 		config_item_name(tpg_ci), cmdsn_depth,
+ 		config_item_name(acl_ci));
+@@ -1131,7 +1131,7 @@ static void lio_target_tiqn_deltpg(struct se_portal_group *se_tpg)
+ 
+ /* End items for lio_target_tiqn_cit */
+ 
+-/* Start LIO-Target TIQN struct contig_item lio_target_cit */
++/* Start LIO-Target TIQN struct config_item lio_target_cit */
+ 
+ static ssize_t lio_target_wwn_lio_version_show(struct config_item *item,
+ 		char *page)
+-- 
+2.50.1
+
