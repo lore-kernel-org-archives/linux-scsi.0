@@ -1,203 +1,355 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ED9A61E868
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 02:38:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=60.244.123.138
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757558303; cv=fail; b=uB2/xft3cWEg3dAQR5eF0E1+iyJR+rL46dI4hYqfh4/lJiJgA2r7P1DGi354asYN4kyxNVImhoAI9pQIyHOuP5aCoUq/1Q/h0boDZXHxP3cMm0Rgubauq8UmD4EamrhWlh0PK2Y6duCozwWs8+vUDckcCtfceuBL0YG1KMk2UkI=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757558303; c=relaxed/simple;
-	bh=dYf0gkRPwANaip7+VCf5VflHS4zl8TADGQwoNkbevaw=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=dnpkuwfMTRbQFPU3PCBKInQGqkCNTajkVY/GsHbjwcAlBZOkoWltojnHioZu2hA89BqJinEH7X6RyEZLGSX8xLkXa9jBx+ejYbZ1p5OXSC/kDaeZUNecTKOFidj5jL4ooHEtMTxEUbrCajeODJkgeKqfKFaeuvEZQbQnhuKjs8Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=kfEDnV6k; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=ITnXF+Pv; arc=fail smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0B6826738C
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 06:40:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1757572860; cv=none; b=ZgF8Y67LtdQTieV0BZrhh+iJPvNad5SgkwUiQ8EobPSeqmJClX0xTH2LS4AkN9+UxXoC2N337GaAXCg6/4TbBj0YkgfuZXL1DrcRvIVDxYEI58P3gT3pGzQGyt9Qip49I6nEPaHN03JFk9qD1RM/djJ+3BualEKSQ3IgVLZaK3Q=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1757572860; c=relaxed/simple;
+	bh=oc3pfMxtwNalmPMOZFevwegSFiZUZK15z34En/YiVGc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=QXIWBY+ngstHhQB6Wla3tEwqUjs8EI8C56d7vGPZO+SrjIcMyo97yLlJXRau2Jotd+7m65yk/dc48Mas08xa1G7D9+IDn6kiGfxXfyjiQaPtZX//s8eepe5cDb+wqjX28RqjSIjy1CMvkFbnj9bsp87rdjkGLWMzE+9XsegrLzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=vuujZcv0; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=gHeHMCdN; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=swdOLtFG; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=1T2MnEf2; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="kfEDnV6k";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="ITnXF+Pv"
-X-UUID: 5e3894fa8eb811f0bd5779446731db89-20250911
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=dYf0gkRPwANaip7+VCf5VflHS4zl8TADGQwoNkbevaw=;
-	b=kfEDnV6kEx8MBgIRnaZM16EV61/LTcCAlfuj6gX7nRr9ShfVpWwPqqpr+kHsi0YDgQRqvXexHX3m6MGhBa7IFPu6sV2keQPr4dk78EPVDQQKdr6vz0M57Uw8O6P9htJoJLreXkpnoFx09yr77k62N5KUhlGHxtkIeaGMAuZknkY=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.4,REQID:a9ff9964-d9d1-4b3a-b6a4-9d809475b488,IP:0,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:0
-X-CID-META: VersionHash:1ca6b93,CLOUDID:130da984-5317-4626-9d82-238d715c253f,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111,TC:-5,Conten
-	t:0|15|50,EDM:-3,IP:nil,URL:0,File:nil,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:
-	0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5e3894fa8eb811f0bd5779446731db89-20250911
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 2111773459; Thu, 11 Sep 2025 10:38:15 +0800
-Received: from mtkmbs10n2.mediatek.inc (172.21.101.183) by
- mtkmbs11n2.mediatek.inc (172.21.101.187) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1258.39; Thu, 11 Sep 2025 10:38:13 +0800
-Received: from TYPPR03CU001.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server id
- 15.2.1258.39 via Frontend Transport; Thu, 11 Sep 2025 10:38:14 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=MPYHVTFTuBxr+nhWaiZ/B1Fg2br6doFDa1BiAEWF+ISjh+mrt5mKCCaIurj8gq2B9AzbuK0AInaa8/LKSEoD0dbWHz9zK64mfpwgiOCFPpC8A+2xvMbJTGrWx/3G5iy4GPsQWNti5VCXWmTjXmuHfGK8URMtKTzurWUFE95PAPkqDT3Ha8oHE9jKPmBMcZ1G50ueIa5OXsBx9YO1cvujqTC/PGj1MqXvyqyViF0BrjeH95ttYih89aEuLbGmKmRRWwuiFGArq4YwKT9f4gxF2gcFtLDSsp4Ey15BbKX/Z97Ouua/MvHVd23C3CXEvTeKsvBs5MjohCg2aNqMjiX8cw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=dYf0gkRPwANaip7+VCf5VflHS4zl8TADGQwoNkbevaw=;
- b=sB7kVe2ZCX2Hi+nOXmMOEl1Q+DViANMfLLWXkKduqRJ4xolReEJDYPfehiijBv8aYzV5NSd1Uqy/DNle0OFW9d7g0RJaqO7oMrjfzNMSyuzfdsK4j1DD0lhENHMry7Xr2zQiTusHGwlTqFmkbYaGJyGNbfS6XNUdlhwp1rVWm23tTDSpEYROG4aLtXyRreqjoV52cp9AXqPK3DNzZop0hcwKI1iNZCaVH3/ihSypxTAGua+oUuDi8/X4N4BwK1KYrRelaJnoBZheP/8t8nP7lQv6foiqOiR6jqaeVFYdGcrYP2tWd+KddfMm6/bLswA4rQ2Nz6Yg0g6PnL463P05ug==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=dYf0gkRPwANaip7+VCf5VflHS4zl8TADGQwoNkbevaw=;
- b=ITnXF+PvLJAoj9SNiiz8bHeUyBnXUSx2VWJ8H5zrt3hcqWv2N2xm+9zWhMOfXFIl93k6DKeY479y/Mg5WbOR+e4NADDzWlk2Ii+WPq883f9FL4HgYXHaqTNOd8/CM5ZM6UGv4ALEHCEecRei+8dSI6e/4qTWaHuPoIJnBr+6ojc=
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
- by SE2PPFB8E7763EE.apcprd03.prod.outlook.com (2603:1096:108:1::4a6) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9094.22; Thu, 11 Sep
- 2025 02:38:10 +0000
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::3945:7dbc:62bd:c31c]) by PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::3945:7dbc:62bd:c31c%6]) with mapi id 15.20.9094.021; Thu, 11 Sep 2025
- 02:38:10 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: "bvanassche@acm.org" <bvanassche@acm.org>, "martin.petersen@oracle.com"
-	<martin.petersen@oracle.com>
-CC: "beanhuo@micron.com" <beanhuo@micron.com>, "quic_nguyenb@quicinc.com"
-	<quic_nguyenb@quicinc.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>, "quic_mapa@quicinc.com"
-	<quic_mapa@quicinc.com>, "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
-	"avri.altman@sandisk.com" <avri.altman@sandisk.com>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "mani@kernel.org" <mani@kernel.org>
-Subject: Re: [PATCH] ufs: core: Disable timestamp functionality if not
- supported
-Thread-Topic: [PATCH] ufs: core: Disable timestamp functionality if not
- supported
-Thread-Index: AQHcIbztwIFSSd40j06CWZdmUZA8fbSNRr6A
-Date: Thu, 11 Sep 2025 02:38:10 +0000
-Message-ID: <3d09e0ff60640528b3113308c6d28841afe1635e.camel@mediatek.com>
-References: <20250909190614.3531435-1-bvanassche@acm.org>
-In-Reply-To: <20250909190614.3531435-1-bvanassche@acm.org>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|SE2PPFB8E7763EE:EE_
-x-ms-office365-filtering-correlation-id: 35d1a7d0-58fd-4526-1cd7-08ddf0dc3f7d
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|366016|1800799024|376014|7416014|38070700021;
-x-microsoft-antispam-message-info: =?utf-8?B?ZUlaUFhkbWR5WGE2YkRsNjN3NXBzMy9ITmRlMXR0VUpjaUNnUFlycWFWamtn?=
- =?utf-8?B?Vk52TDc1dnRJdFdVVGR4L091MmtGRkVTT3lwZm9PVDNPR2kxaTVGS3hySURE?=
- =?utf-8?B?VDRpVERmOWFzZzUwR3BNMXVVMGszZmlpcStZWDVOQUQ3VUgwVnJQNE9RSG9Z?=
- =?utf-8?B?WGIwSFI1U0JVbG1xNWlVbzBaTkl5QmR2cGZmYTh0dXJoaXVUb2RBYnBjK2pU?=
- =?utf-8?B?T2JTc2tYVnJ6dHhNOWhvRDNXaHpjUWlmWXY4S2ZNTmhrRUdCREtzYTRGTys5?=
- =?utf-8?B?TTE1WHRxTnc4bGxMUWpQSDAzengxS1NDdFJKVVhvRW5ZZ1YyUW0wNmhyWFFl?=
- =?utf-8?B?Uk0wcUNhbGFFdmdtWVV5Z2Fpb1d2L1VzdkFjSDRndlBtbGVmSXJiU093KzEy?=
- =?utf-8?B?Y3VpQU5WRy9tdVZUMG1DRzlQVjlRdWhqbERpMDBlaDhVaEhSVmsyT1V5dDRQ?=
- =?utf-8?B?eU1rNjhCODJBdXVmeUpFNFMwbXZlaGRxOFFxSUx0Wi9NdUdhdVNNeGJSUjRT?=
- =?utf-8?B?RDZkWVZGRlUrbU9iTHB3ZjNWTksrZkhjWTlMd2lJbzN1emt3cnYwQjZKT2VD?=
- =?utf-8?B?WlJZbit6UjcyTjdwSzdSTUp2ZFl0Q1gxQ3JRa213SE1Ra3ZUTElkZ3ZUOU5j?=
- =?utf-8?B?Yld3czdua250REtwRnVKV1g1VURWOUhOS0NvV0RIblc3SHkvODRwVkJsdnhm?=
- =?utf-8?B?aGNyQ205US9UNWhWdkFrMnR5ZE1XQW9oYW1qUFo1MWlKcjhGbHFPWFpHQ0VS?=
- =?utf-8?B?ZVZIZm15SW1pUGVlZGp1bE4yaHBQMnNuSjlXeXVhaTd2N2dWcGkyM2krWERE?=
- =?utf-8?B?dUZaZ3NMREZFLzVUSmN4SWFDQU5FWEh1TGN6d0pIb01xUEdZZkswdFNTSFR4?=
- =?utf-8?B?OVF0Qjk4VU9oSzVicTY3SUZ5T3RsVnFFeHRxV21qSndKZXNwZzN5QU9KSWhL?=
- =?utf-8?B?aTlvMWxyY0N4Zy8zck94QzkySThxS2p6d25FN2ZBTjBRR2JQbWFOc2tBTndv?=
- =?utf-8?B?R251Q2FwY2NYWEY2dlZpdEt4eXpPSlhrRlFjRzZEdEx3UGg5TWpVdnVQeDFL?=
- =?utf-8?B?THR0YXd2Y2VMODhRN01EcENKRFEvL1hTV0taQ0JqQy9xVzBxN3JuZ3F1VEY5?=
- =?utf-8?B?ZGY4ZGE2NENvMDJiTGtObENiM3F0dmNjbm5iaTVsdXp5KzcwaEovLzhPY3VE?=
- =?utf-8?B?T2Z2VGdkKzNNS0ZabnFFMjVhZmsyYU81ZUx6VmkwUmlIajIxdHFKQ1FSTlBP?=
- =?utf-8?B?NU8yZkhweDJoVTFKRklYS1VBcEFlbXFCTTBuWitsNjBlNVZKMkJ0Vk1XQi9P?=
- =?utf-8?B?ajFZQzBpRFgwOXNkWHNzNmQrYk0zUDdtallna01CYk0vdjcxcGhpUzRUbkV3?=
- =?utf-8?B?TW9Kd0MxbkkwZTBnZVZxN3d4ekNXUnUrVkJiMmZ6dVB2UjJCRDRrbm5GTUtN?=
- =?utf-8?B?WlFYNGpQVVN4T2Rxb2hkQWpOWGVEMDFDa1N6bDlMbkJENURhbEtzQzh5bUY0?=
- =?utf-8?B?QVdReEUwNkJpcThLZittZXBRMDdMbDlCSFZmRm9sc1FXRUQ5czJyMkRjRVBP?=
- =?utf-8?B?UmF2OHhQU2lOS3BxOVhpRHJXdGNGVG5USm9ZNVRFRkdYVWZmdDNtUjRRcW9C?=
- =?utf-8?B?WGhocTRKdkhLUkNNc0N6TjVQbE1ZKy93MW1nVExwNFI3ZmdhZFN1aVR6S0h3?=
- =?utf-8?B?R2UxcmxZVXkvU0tzQkk3bzA4UDZBYmxBNm1KcnpMQXJvK1hEL3ZRRm9Oeklr?=
- =?utf-8?B?YUxQZ1RlTHphVWExdlcwVHQvM2h6eUVlT1F5aGFYK3FIQjk4cElpR3N1TlRu?=
- =?utf-8?B?MUFBNk9zbi9nSGM2STA2d0hYNmVnL1ZzZDNmcFNENGN4TXZEV1RZWFlHeG5U?=
- =?utf-8?B?RTJGMGtBMmRCU2NKeS9xdEcvZGFCbVFldWhoTTF5dXNaS1c0VDQvTGVLT3lT?=
- =?utf-8?B?SlVpeDhhMWtWVmdZTXZvWmVjUVgzcmNISEpDclgrYzFVbkdCd2ZSMFRRMHFZ?=
- =?utf-8?Q?M74pMQ2tuRJdwRAicQdGkHo5I0KEuw=3D?=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014)(7416014)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?cG1uaHlXdjd1ZDRFVmpqMEpZamx1T3BxRkdkOFloRWVZcGdWQUVXbGJqbzhn?=
- =?utf-8?B?REYyY0svMUZLaXZ2YWczSTdPcFpsQ28rMzlMWW1TV1hsQkMxbm5scHBnZlJW?=
- =?utf-8?B?NlM2VkFhbHlNU2VOZjhqSEtDWkhjM0R2ZlBXaHp6QXVaWWhiUlJnMlNYSVRo?=
- =?utf-8?B?ODZETnNxVys0TG1yVjRkdW5KYlMyMGhiRXF5dyszS1lWemZvNWpXSHlIY0xy?=
- =?utf-8?B?WEp3THhoaUhibmwvVlFBTlVBKzkxaC8zOWtMSStTcmlkUm9aN0VvQ2pDd21F?=
- =?utf-8?B?V1JJRWN1WEFYbjhPeGd3OFlZWXRpVUJLMm9QeC9kU0w5cmtRek5HS0xOUjJz?=
- =?utf-8?B?RndFeitOSStnSUZZb1VIbG10Y1lzSWRaV1lsVUhCZDd0YXNVK3h3TWJhbFVL?=
- =?utf-8?B?WXdGbWZBNGpTTUUrbGh5a0U2eEpOMlRHZWZoMEhGbURZL2x4dnA0WXBmSWtY?=
- =?utf-8?B?MEZZbGNMcEtxMFdUd2lDVjFtQS9tdzBjTjBxR1d3NU1oTHU2NndjdHRtSUdh?=
- =?utf-8?B?dUhFMFJZamZtVlZ5aGNDRW5PSXdxK2VKR2VmMlJybDZtOGxHRWxJWk0venpQ?=
- =?utf-8?B?Y2ppRWM3YVAxdk90YUJKTmRtcUh6MGRiSzhFS3BKa0ExYXFIZWNpWi9JblZG?=
- =?utf-8?B?bm5kSG9RcTVCZkp5Lzg5aGczWElwMDNWRGRJbkF0UFhYbVFTNGpZZlJCaUJw?=
- =?utf-8?B?dTQvdUZjS3VIVno3SUVCWGxkRmdaZUIzZkVPeTVjVDYwcXhrOFRWcmdpbXE1?=
- =?utf-8?B?amxsODczRzladWU5Y0dsaGdFRTJ6bnhVb0ZGSmNRWU9kak1nbUNQYzE3Tm90?=
- =?utf-8?B?SUx6Y0tNOEZyYW9pK0F5YXNLdGoyc2kzVjZ5WlduQUdkeERBSlE3Q3d6dDlB?=
- =?utf-8?B?aHhFN1pwL1Q0SWlrVXBhTyt2endvRm1OK2JPTmlBcmdpVnhvdjY5b1lWOVZi?=
- =?utf-8?B?Z3FZdGg3dFhjYnE4VHBmK2JqUjJVR24zclE3MzluR21DS0MwRkVidFlXMjJ6?=
- =?utf-8?B?Uklkb0pLSFdsSGRySWRjYzhlLzRoc0Q5MzVXNXdZUEZmNHllWWtyVnl0Unkx?=
- =?utf-8?B?NUl4N3hhemsyNUNDWSs0VDNkOUtXL3ZFeTY5UEVYcDhEdTg5Y2xHNGNQZ3JG?=
- =?utf-8?B?TEtaZ1l6YWJLSVpyeThlY21YL01Nby96VlNRVXdoNStGVXBpbVdMUmFxWWNt?=
- =?utf-8?B?U2NFTEtxNlBhdDFsZVNFZDZoMUgvUENiaG5wSng5SnNJR2NxUGxqYVFwVnc5?=
- =?utf-8?B?SFoyQ21aVnZ1eGxyVmNkc2VxS1IrM2tjdWJxSEh6RXE1L05zOHFaVE92dFZS?=
- =?utf-8?B?VkxhTFVlekFHYXpwdmhQWEw0VTBxZUxvR2VPTkQrS0E0d294MDNyTE82Y0lU?=
- =?utf-8?B?aENocERhc1o3ZmYrVWg4L2JrZTAwT2Y5a29kMjlWZ0JacmdSR2N0c21aQVQw?=
- =?utf-8?B?L2N2QXdtMm5sNGNDZ0cveURveDZVWXBLU2I0ZUZ3d2toOXFlcG1DVlhDMTZY?=
- =?utf-8?B?RnJqK2lsTEljMmk4TWhxdU1paytPYkZPSS9MM05VcjVjS3NiMk9vTm43R3hX?=
- =?utf-8?B?OXpzTDQ5TGRoUElyTTcvdVkwakkwcUNZZUtsUytMRGZKTFpVNlVHZVZhUjU4?=
- =?utf-8?B?WmRmYU9UT1BHbW1VNDQrWEhqMWFsMjRuRjJWUEFhcWR4Y2doQllTVzc1R1l0?=
- =?utf-8?B?Rng0NjhqVjJmK3pCc21lUWJDZWd1bkxQdnRMSUNJbkplN0RDTmp6ZzZHM2sv?=
- =?utf-8?B?dVZyNllCQXdKVnhVa3VLdDlBWU1tODNuYk9OTFJSL0V1MTRjdmpJY1hhYUlO?=
- =?utf-8?B?ZzkwbTFGSWhJZTRzR2xDMVp6eU9JcmhNa1pqODVUNXAveWxWY0M0TTcxL056?=
- =?utf-8?B?anJFcHZyNVNQVWExL0hGRVVkTFRzU1FJeU5aRzdGbjlOU3o3V1VJYkxxN01v?=
- =?utf-8?B?V3lhRndNM0picm9ZckhRaFBxaldZa0lFdThkMHRudEpucmdXa2gxNDFCWDRy?=
- =?utf-8?B?SUFNYjVUUlJRWFBSQWZES1E2VVVKbWpUeUFmV3d4TjJoZ2Y5bytzcGlxK0oz?=
- =?utf-8?B?MURkQ3FCcXdUSG03RCtWYnRGNEtlcjRPdktqZHdQdDV0VVJYL2F4YW9rQ0Za?=
- =?utf-8?B?K2QyaTFOSzhhSkM2bS8wNzdXbnBRZTM4dnJpL2NzS1JFNVNiQlFYdEdpbkFG?=
- =?utf-8?B?dmc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <FFBEBD93297C904CAFA94D67100912FE@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="vuujZcv0";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="gHeHMCdN";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="swdOLtFG";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="1T2MnEf2"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id D4B783FA8D;
+	Thu, 11 Sep 2025 06:40:55 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1757572856; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5f5LJGeMPUM4kaRt+2xWRpOD4y/a+ZDx0gdKKdb/GO4=;
+	b=vuujZcv0GOnF53I0O5jfbyg4qyy0GZItpqsftuZ68n+VOgsxAMmhXIxCjCcOIdj0XjeE0e
+	q8baiAl/erMOPgtWzrQsnQL8xWbdZPrxYGPMPZxCJlPd+DRtZx3f6ojk2KbqSAjVdz6ueV
+	ReiVD5XDzN0vI6rVjCViKtw8cXbGa5I=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1757572856;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5f5LJGeMPUM4kaRt+2xWRpOD4y/a+ZDx0gdKKdb/GO4=;
+	b=gHeHMCdNa7C93YZ+DoxVaiaikhEfAcz0vQw6BYHZzivfhD2ddTkgk4vgAPCsjEqsjvS55V
+	IwQLOooA8/pCczBg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1757572855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5f5LJGeMPUM4kaRt+2xWRpOD4y/a+ZDx0gdKKdb/GO4=;
+	b=swdOLtFGFV5DcLRpW4g8nFlAR0AsSVgSO0HUrlPUIkRKzHPmNI1Y3cmUz5h+Nh0mcZETXg
+	nM1cIF6/3d4jHIsk2hSOsOh7mWySH/S+e5KgTMGvW2vqghNvYcLyoPnKTcpSsUQPbI/A8g
+	WVaVZRus2URybOrwoFignMwaPEiIlmo=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1757572855;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=5f5LJGeMPUM4kaRt+2xWRpOD4y/a+ZDx0gdKKdb/GO4=;
+	b=1T2MnEf2YdSCuWHMWLwfJvUpnsyyuzIBP1kpC23Y1u9ZGFBh0oF5V4EJdVIhAJG8smFdfo
+	G/xl5zyruLuSntDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 792711372E;
+	Thu, 11 Sep 2025 06:40:55 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id GvwGHPduwmilTgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 11 Sep 2025 06:40:55 +0000
+Message-ID: <efb81481-5af3-4bb6-b378-878dc24b9767@suse.de>
+Date: Thu, 11 Sep 2025 08:40:54 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 35d1a7d0-58fd-4526-1cd7-08ddf0dc3f7d
-X-MS-Exchange-CrossTenant-originalarrivaltime: 11 Sep 2025 02:38:10.4732
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: 8dZtYoTZNrcj+hjzurJVfqeViDAgIFU4wjwzwUTfUrFwMIMisnN21gzoKnn8lHy1obLRTegpaiYZdAOruqaipw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SE2PPFB8E7763EE
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] scsi: core: Improve IOPS in case of host-wide tags
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+ Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>,
+ Ming Lei <ming.lei@redhat.com>, John Garry <john.g.garry@oracle.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20250910213254.1215318-1-bvanassche@acm.org>
+ <20250910213254.1215318-4-bvanassche@acm.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20250910213254.1215318-4-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.998];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	RCPT_COUNT_SEVEN(0.00)[9];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-T24gVHVlLCAyMDI1LTA5LTA5IGF0IDEyOjA2IC0wNzAwLCBCYXJ0IFZhbiBBc3NjaGUgd3JvdGU6
-DQo+IFNvbWUgS2lveGlhIFVGUyA0IGRldmljZXMgZG8gbm90IHN1cHBvcnQgdGhlIHFUaW1lc3Rh
-bXAgYXR0cmlidXRlLg0KPiBTZXQgdGhlIFVGU19ERVZJQ0VfUVVJUktfTk9fVElNRVNUQU1QX1NV
-UFBPUlQgZm9yIHRoZXNlIGRldmljZXMgc3VjaA0KPiB0aGF0IG5vIGVycm9yIG1lc3NhZ2VzIGFw
-cGVhciBpbiB0aGUga2VybmVsIGxvZyBhYm91dCBmYWlsdXJlcyB0byBzZXQNCj4gdGhlIHFUaW1l
-c3RhbXAgYXR0cmlidXRlLg0KPiANCj4gU2lnbmVkLW9mZi1ieTogQmFydCBWYW4gQXNzY2hlIDxi
-dmFuYXNzY2hlQGFjbS5vcmc+DQoNClJldmlld2VkLWJ5OiBQZXRlciBXYW5nIDxwZXRlci53YW5n
-QG1lZGlhdGVrLmNvbT4NCg0K
+On 9/10/25 23:32, Bart Van Assche wrote:
+> The SCSI core uses the budget map to enforce the cmd_per_lun limit.
+> That limit cannot be exceeded if host->cmd_per_lun >= host->can_queue
+> and if the host tag set is shared across all hardware queues.
+> Since scsi_mq_get_budget() shows up in all CPU profiles for fast SCSI
+> devices, do not allocate a budget map if cmd_per_lun >= can_queue and
+> if the host tag set is shared across all hardware queues.
+> 
+> On my UFS 4 test setup this patch improves IOPS by 1% and reduces the
+> time spent in scsi_mq_get_budget() from 0.22% to 0.01%.
+> 
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: John Garry <john.g.garry@oracle.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/scsi.c        |  7 ++++-
+>   drivers/scsi/scsi_lib.c    | 60 +++++++++++++++++++++++++++++++++-----
+>   drivers/scsi/scsi_scan.c   | 11 ++++++-
+>   include/scsi/scsi_device.h |  5 +---
+>   4 files changed, 70 insertions(+), 13 deletions(-)
+> 
+That is actually a valid point.
+There are devices which set 'cmd_per_lun' to the same value
+as 'can_queue', rendering the budget map a bit pointless.
+But calling blk_mq_all_tag_iter() is more expensive than a simple
+sbitmap_weight(), so the improvement isn't _that_ big
+(as demonstrated by just 1% performance increase).
+
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 9a0f467264b3..06066b694d8a 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -216,6 +216,8 @@ int scsi_device_max_queue_depth(struct scsi_device *sdev)
+>    */
+>   int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
+>   {
+> +	struct Scsi_Host *shost = sdev->host;
+> +
+>   	depth = min_t(int, depth, scsi_device_max_queue_depth(sdev));
+>   
+>   	if (depth > 0) {
+> @@ -226,7 +228,10 @@ int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
+>   	if (sdev->request_queue)
+>   		blk_set_queue_depth(sdev->request_queue, depth);
+>   
+> -	sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
+> +	if (shost->host_tagset && depth >= shost->can_queue)
+> +		sbitmap_free(&sdev->budget_map);
+> +	else
+> +		sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
+>   
+>   	return sdev->queue_depth;
+>   }
+I would make this static, and only allocate a budget_map if the
+'cmd_per_lun' setting is smaller than the 'can_queue' setting.
+
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 0c65ecfedfbd..c546514d1049 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -396,7 +396,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
+>   	if (starget->can_queue > 0)
+>   		atomic_dec(&starget->target_busy);
+>   
+> -	sbitmap_put(&sdev->budget_map, cmd->budget_token);
+> +	if (sdev->budget_map.map)
+> +		sbitmap_put(&sdev->budget_map, cmd->budget_token);
+>   	cmd->budget_token = -1;
+>   }
+>   
+> @@ -445,6 +446,47 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
+>   	spin_unlock_irqrestore(shost->host_lock, flags);
+>   }
+>   
+> +struct sdev_in_flight_data {
+> +	const struct scsi_device *sdev;
+> +	int count;
+> +};
+> +
+> +static bool scsi_device_check_in_flight(struct request *rq, void *data)
+> +{
+> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+> +	struct sdev_in_flight_data *sifd = data;
+> +
+> +	if (cmd->device == sifd->sdev)
+> +		sifd->count++;
+> +
+> +	return true;
+> +}
+> +
+> +/**
+> + * scsi_device_busy() - Number of commands allocated for a SCSI device
+> + * @sdev: SCSI device.
+> + *
+> + * Note: There is a subtle difference between this function and
+> + * scsi_host_busy(). scsi_host_busy() counts the number of commands that have
+> + * been started. This function counts the number of commands that have been
+> + * allocated. At least the UFS driver depends on this function counting commands
+
+But then please don't name the callback 'scsi_device_check_in_flight',
+as 'in flight' means 'commands which have been started'.
+Please name it 'scsi_device_check_allocated' to make the distinction
+clear.
+
+> + * that have already been allocated but that have not yet been started.
+> + */
+> +int scsi_device_busy(const struct scsi_device *sdev)
+> +{
+> +	struct sdev_in_flight_data sifd = { .sdev = sdev };
+> +	struct blk_mq_tag_set *set = &sdev->host->tag_set;
+> +
+> +	if (sdev->budget_map.map)
+> +		return sbitmap_weight(&sdev->budget_map);
+> +	if (WARN_ON_ONCE(!set->shared_tags))
+> +		return 0;
+
+One wonders: what would happen if you would return '0' here if
+there is only one LUN?
+
+> +	blk_mq_all_tag_iter(set->shared_tags, scsi_device_check_in_flight,
+> +			    &sifd);
+> +	return sifd.count;
+> +}
+> +EXPORT_SYMBOL(scsi_device_busy);
+> +
+>   static inline bool scsi_device_is_busy(struct scsi_device *sdev)
+>   {
+>   	if (scsi_device_busy(sdev) >= sdev->queue_depth)
+> @@ -1358,11 +1400,13 @@ scsi_device_state_check(struct scsi_device *sdev, struct request *req)
+>   static inline int scsi_dev_queue_ready(struct request_queue *q,
+>   				  struct scsi_device *sdev)
+>   {
+> -	int token;
+> +	int token = INT_MAX;
+>   
+> -	token = sbitmap_get(&sdev->budget_map);
+> -	if (token < 0)
+> -		return -1;
+> +	if (sdev->budget_map.map) {
+> +		token = sbitmap_get(&sdev->budget_map);
+> +		if (token < 0)
+> +			return -1;
+> +	}
+>   
+>   	if (!atomic_read(&sdev->device_blocked))
+>   		return token;
+> @@ -1373,7 +1417,8 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+>   	 */
+>   	if (scsi_device_busy(sdev) > 1 ||
+>   	    atomic_dec_return(&sdev->device_blocked) > 0) {
+> -		sbitmap_put(&sdev->budget_map, token);
+> +		if (sdev->budget_map.map)
+> +			sbitmap_put(&sdev->budget_map, token);
+>   		return -1;
+>   	}
+>   
+> @@ -1749,7 +1794,8 @@ static void scsi_mq_put_budget(struct request_queue *q, int budget_token)
+>   {
+>   	struct scsi_device *sdev = q->queuedata;
+>   
+> -	sbitmap_put(&sdev->budget_map, budget_token);
+> +	if (sdev->budget_map.map)
+> +		sbitmap_put(&sdev->budget_map, budget_token);
+>   }
+>   
+>   /*
+> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+> index 3c6e089e80c3..6f2d0bf0e3ec 100644
+> --- a/drivers/scsi/scsi_scan.c
+> +++ b/drivers/scsi/scsi_scan.c
+> @@ -218,6 +218,7 @@ static void scsi_unlock_floptical(struct scsi_device *sdev,
+>   static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+>   					unsigned int depth)
+>   {
+> +	struct Scsi_Host *shost = sdev->host;
+>   	int new_shift = sbitmap_calculate_shift(depth);
+>   	bool need_alloc = !sdev->budget_map.map;
+>   	bool need_free = false;
+> @@ -225,6 +226,13 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+>   	int ret;
+>   	struct sbitmap sb_backup;
+>   
+> +	if (shost->host_tagset && depth >= shost->can_queue) {
+> +		memflags = blk_mq_freeze_queue(sdev->request_queue);
+> +		sbitmap_free(&sb_backup);
+
+What are you freeing here?
+The sbitmap was never allocated, so you should be able to simply
+return 0 here...
+
+> +		blk_mq_unfreeze_queue(sdev->request_queue, memflags);
+> +		return 0;
+> +	}
+> +
+>   	depth = min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev));
+>   
+>   	/*
+> @@ -1112,7 +1120,8 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
+>   	scsi_cdl_check(sdev);
+>   
+>   	sdev->max_queue_depth = sdev->queue_depth;
+> -	WARN_ON_ONCE(sdev->max_queue_depth > sdev->budget_map.depth);
+> +	WARN_ON_ONCE(sdev->budget_map.map &&
+> +		     sdev->max_queue_depth > sdev->budget_map.depth);
+>   	sdev->sdev_bflags = *bflags;
+>   
+>   	/*
+> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+> index 6d6500148c4b..3c7a95fa9b67 100644
+> --- a/include/scsi/scsi_device.h
+> +++ b/include/scsi/scsi_device.h
+> @@ -687,10 +687,7 @@ static inline int scsi_device_supports_vpd(struct scsi_device *sdev)
+>   	return 0;
+>   }
+>   
+> -static inline int scsi_device_busy(struct scsi_device *sdev)
+> -{
+> -	return sbitmap_weight(&sdev->budget_map);
+> -}
+> +int scsi_device_busy(const struct scsi_device *sdev);
+>   
+>   /* Macros to access the UNIT ATTENTION counters */
+>   #define scsi_get_ua_new_media_ctr(sdev) \
+> 
+Cheers,
+
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
