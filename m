@@ -1,40 +1,43 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0009022AE45;
-	Thu, 11 Sep 2025 17:05:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D21491AF4D5
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 17:17:22 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757610357; cv=none; b=UEZmZRLzmZRX2AhAmXyWruUF/BVcsv2v4qNqP544gOr7XGTs+txP0xdPdrVhi+hgOFTIdGEw0c2JxGKyPyN96/DWIBl9gQidEZONO+qPbtu1pMFZ359UNXcQb11Cpt2z0qSt4StiZEqM4eWVa9f0fktq/CMTeHsBHJUi5gx4ex0=
+	t=1757611042; cv=none; b=tVTjIwEUVPGOGu/Zd3j4JgDrSQbBUXNj5rzkcwTZCewu/gx5f76OFm3oo3c0OJxQB7gnev8XygcaOqAq0CX2kZ+Kly0e257U4IcXwXucs9OejdOMOcMS7YeDObnY627KtMhdHYV2CRLXOzsA5siCDjuFHOUy6VLDbRbkLvN7hHc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757610357; c=relaxed/simple;
-	bh=UCP4l+ePO9V9JvXhGoSlqVr4Thxy4s2Q/7YityqrEJU=;
+	s=arc-20240116; t=1757611042; c=relaxed/simple;
+	bh=DnnmUS/+70UrIWcSO7CIHZCbAgnAodbeYznCyk7E8Mk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=b2hpvmyk4uWlJVnRIPxDXkDS9XysNFpAGfdwWTW8H0L7uW/Y/SbG+RUU1f++X69L7WnH5lrT6jrqhtBHTj+oanBrB5Q4Rv+UV3bGC4ImwziCE19awEORRCwQGeywYrZPGo+nvWjOVsUqNq7e8cVLbJ2G7lyrAuXfcDSqlP3S6q4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HChqNQwZ; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=O3wqDQR0zXKQXq0CdPN/8mpzCTtwAJUJqL3qWdAUjt3uHzS0Bgsx2Uzs16RR0TfXJ8WFBgkkWmD487ScA//bHqTZEVpDVqXLs8QeYSZTezPA/uZ7gnx+WRhoqh344Lr2VnmETcZ7vdOrgJsEdPYIgzpuumcZYwz2wtsJKNxAdE0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=b7Qxe47V; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HChqNQwZ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 107ABC4CEF0;
-	Thu, 11 Sep 2025 17:05:53 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="b7Qxe47V"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D6F9C4CEF5;
+	Thu, 11 Sep 2025 17:17:18 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1757610356;
-	bh=UCP4l+ePO9V9JvXhGoSlqVr4Thxy4s2Q/7YityqrEJU=;
+	s=k20201202; t=1757611042;
+	bh=DnnmUS/+70UrIWcSO7CIHZCbAgnAodbeYznCyk7E8Mk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=HChqNQwZ9j7MKmL3/36PZ3PF+wQSEDS45AodMPLBTZiuZeApR63p9u01CM04U3QJZ
-	 63H0h6ILGAEf01qKGgRMDDH9Xa2EFgWhS3q78tYO+roO/wE5cM2jMth9pSFC69gjhi
-	 aYy9Q7cBVQQleaCESL/E82QW9pWxpIwOUtkR0gt6+dhRMk3GnNC9nxBzOZY9nbmSyh
-	 KTSzvMxaT3LgAwH2iQ38N+rl1VIHJLy9qbnNCnM9fro0tpUdYQMVUTGNuJHWuTopjW
-	 9tAzIkXAZYlNvnwfjjqcIPRUG2de2dsINRKXxDbvom3rE43IBJfEb3f901EOD42sPt
-	 UJt/twgwLcRig==
-Date: Thu, 11 Sep 2025 22:35:50 +0530
+	b=b7Qxe47VWpRjdtgvlTfUaWD0Ote8aQ1XUdHJda34Q9+DhnXaypPqVHNoXC0AX7w6Z
+	 TXO0n6VM6CCsUrOvumjIUZ6yvuV0ejg/SB0nuq54DiB8ihb8rMB3gqloxJ4/KwVbZt
+	 fnVxI89nEWHwj7BCWWgrVK7CaHSZ2KhA02gHP4D+o7uBMsEXE4n3IROQaAdQCaFMGY
+	 TJ5Ab+GGQ/bYfBs4eKS9yVxhPAVq5CKBKwVA1N5BPgHhk+gQyeYoq6SSMrffkSWNns
+	 kPSQRKCpQWAwZVUscXhu8/lES+NncaCHBjP/dcca6Jg6K5yJp2D/tD/evULt+WDHC8
+	 BFTrcdeUlEpAw==
+Date: Thu, 11 Sep 2025 22:47:13 +0530
 From: Manivannan Sadhasivam <mani@kernel.org>
-To: Palash Kambar <quic_pkambar@quicinc.com>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
-	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	quic_nitirawa@quicinc.com
-Subject: Re: [PATCH V2] ufs: ufs-qcom: disable lane clocks during phy hibern8
-Message-ID: <isafba2w6ddl2wqiescae6a5dab66ezuinuq7aaivriz3pnixt@j6ymwk3itcka>
-References: <20250909055149.2068737-1-quic_pkambar@quicinc.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>, 
+	Bean Huo <beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
+	Adrian Hunter <adrian.hunter@intel.com>, Manish Pandey <quic_mapa@quicinc.com>
+Subject: Re: [PATCH] ufs: core: Disable timestamp functionality if not
+ supported
+Message-ID: <r7bsoux2ghp66tujipckfffiupbbphg7gyzgeruwmtby5wxtan@aszoz45kzpbw>
+References: <20250909190614.3531435-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -44,66 +47,39 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20250909055149.2068737-1-quic_pkambar@quicinc.com>
+In-Reply-To: <20250909190614.3531435-1-bvanassche@acm.org>
 
-On Tue, Sep 09, 2025 at 11:21:49AM GMT, Palash Kambar wrote:
-> Currently, the UFS lane clocks remain enabled even after the link
-> enters the Hibern8 state and are only disabled during runtime/system
-> suspend.This patch modifies the behavior to disable the lane clocks
-> during ufs_qcom_setup_clocks(), which is invoked shortly after the
-> link enters Hibern8 via gate work.
+On Tue, Sep 09, 2025 at 12:06:07PM GMT, Bart Van Assche wrote:
+> Some Kioxia UFS 4 devices do not support the qTimestamp attribute.
+> Set the UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT for these devices such
+> that no error messages appear in the kernel log about failures to set
+> the qTimestamp attribute.
 > 
-> While hibern8_notify() offers immediate control, toggling clocks on
-> every transition isn't ideal due to varied contexts like clock scaling.
-> Since setup_clocks() manages PHY/controller resources and is invoked
-> soon after Hibern8 entry, it serves as a central and stable point
-> for clock gating.
-> 
-> Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
 Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-- Mani
+One comment below.
 
-> 
 > ---
-> changes from V1:
-> 1) Addressed Manivannan's comments and added detailed justification.
-> ---
->  drivers/ufs/host/ufs-qcom.c | 10 ++++++++++
->  1 file changed, 10 insertions(+)
+>  drivers/ufs/core/ufshcd.c | 6 +++++-
+>  include/ufs/ufs_quirks.h  | 3 +++
+>  2 files changed, 8 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index c0761ccc1381..83ad25ce053d 100644
-> --- a/drivers/ufs/host/ufs-qcom.c
-> +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -1092,6 +1092,13 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->  	case PRE_CHANGE:
->  		if (on) {
->  			ufs_qcom_icc_update_bw(host);
-> +			if (ufs_qcom_is_link_hibern8(hba)) {
-> +				err = ufs_qcom_enable_lane_clks(host);
-> +				if (err) {
-> +					dev_err(hba->dev, "enable lane clks failed, ret=%d\n", err);
-> +					return err;
-> +				}
-> +			}
->  		} else {
->  			if (!ufs_qcom_is_link_active(hba)) {
->  				/* disable device ref_clk */
-> @@ -1105,6 +1112,9 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
->  			if (ufshcd_is_hs_mode(&hba->pwr_info))
->  				ufs_qcom_dev_ref_clk_ctrl(host, true);
->  		} else {
-> +			if (ufs_qcom_is_link_hibern8(hba))
-> +				ufs_qcom_disable_lane_clks(host);
-> +
->  			ufs_qcom_icc_set_bw(host, ufs_qcom_bw_table[MODE_MIN][0][0].mem_bw,
->  					    ufs_qcom_bw_table[MODE_MIN][0][0].cfg_bw);
->  		}
-> -- 
-> 2.34.1
-> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index ca6a0f8ccbea..5d0793d8b0e9 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -316,6 +316,9 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
+>  	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
+>  	  .model = "THGLF2G9D8KBADG",
+>  	  .quirk = UFS_DEVICE_QUIRK_PA_TACTIVATE },
+> +	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
+
+Should we UFS_VENDOR_KIOXIA since the product itself is marketed as a KIOXIA UFS
+device?
+
+- Mani
 
 -- 
 மணிவண்ணன் சதாசிவம்
