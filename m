@@ -1,127 +1,109 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 057A024729C;
-	Thu, 11 Sep 2025 16:50:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0009022AE45;
+	Thu, 11 Sep 2025 17:05:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757609411; cv=none; b=NmD6U9QYJHR+MpUPgw1joS55fC5/dl/Ex2xe9pRaZ2LGGcfKwnsl9nhJjQdv6hEqPYH/o9hdXiAsuCE9ULw+xqIh0F1rU8WZvx2AjPqykmGFAY9woPbjsltnY8k12MLKwtSBI5if4JuGUiFWvX5R2xx29dvLDC9pRCmhuvY1Rus=
+	t=1757610357; cv=none; b=UEZmZRLzmZRX2AhAmXyWruUF/BVcsv2v4qNqP544gOr7XGTs+txP0xdPdrVhi+hgOFTIdGEw0c2JxGKyPyN96/DWIBl9gQidEZONO+qPbtu1pMFZ359UNXcQb11Cpt2z0qSt4StiZEqM4eWVa9f0fktq/CMTeHsBHJUi5gx4ex0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757609411; c=relaxed/simple;
-	bh=YeqbVBP4vNzPF1wRiebEVSkDqiEM36amBu3qj4kt2kc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=klLisHCV3A66wBIoeJtc8/xe2XQUcu1woDQIlqZeqrT4qV21dATKN0rx2SqFG1EjIkhCzrJTkQ9Lt4w3BxnKGRd99B2z988RoJWP04EsoJ5H5ghq3l6PPUQXQ2wA6bQxl4eTM9qPKvXKfiXZtxRzaft0EH5ARUbzJXWpe+H4lHQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=JrCjRENm; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1757610357; c=relaxed/simple;
+	bh=UCP4l+ePO9V9JvXhGoSlqVr4Thxy4s2Q/7YityqrEJU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=b2hpvmyk4uWlJVnRIPxDXkDS9XysNFpAGfdwWTW8H0L7uW/Y/SbG+RUU1f++X69L7WnH5lrT6jrqhtBHTj+oanBrB5Q4Rv+UV3bGC4ImwziCE19awEORRCwQGeywYrZPGo+nvWjOVsUqNq7e8cVLbJ2G7lyrAuXfcDSqlP3S6q4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HChqNQwZ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="JrCjRENm"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cN3Sx1bzXzm174P;
-	Thu, 11 Sep 2025 16:50:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1757609407; x=1760201408; bh=riXv5NSDCB7k8Wv9I+++n0TI
-	UpLSQajesA/AUgNadJM=; b=JrCjRENmh9/8DTR4kWH3swh/5ElmztJJcE7uMR5i
-	KmfKq4G9Qgg8jIBguAHD41yNvQvtTzLd9N6Brcxd6Dx/tP281Fs6WRF4EFpbpwTH
-	rFq1Sn0sgNg8brNiAngnKQXSIVQniE7HETMWbKu4QNDhNrmGi5eFmQKlVuy8i0fC
-	YTJ1LXh+t6vFwDtZF1MI5OiKbkj0sq76ZM5YeWQTAG4hAbESju96biSQ1j+h7P4a
-	xRz+A9VQouGTqXww9/+Mc8ZAFGBg/GVrwjaPf31/q9sN3sv3Yoa5O9STgp9Rnn8S
-	peDvbdtBhk3fyatK6zrErihQF16QYxUy1QFOnce4c7g74Q==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id G9kReXk2_kdl; Thu, 11 Sep 2025 16:50:07 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cN3Sl5gf1zm0yTF;
-	Thu, 11 Sep 2025 16:49:57 +0000 (UTC)
-Message-ID: <b890b767-fe4d-4096-81b9-ab94598a33d6@acm.org>
-Date: Thu, 11 Sep 2025 09:49:57 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HChqNQwZ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 107ABC4CEF0;
+	Thu, 11 Sep 2025 17:05:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1757610356;
+	bh=UCP4l+ePO9V9JvXhGoSlqVr4Thxy4s2Q/7YityqrEJU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=HChqNQwZ9j7MKmL3/36PZ3PF+wQSEDS45AodMPLBTZiuZeApR63p9u01CM04U3QJZ
+	 63H0h6ILGAEf01qKGgRMDDH9Xa2EFgWhS3q78tYO+roO/wE5cM2jMth9pSFC69gjhi
+	 aYy9Q7cBVQQleaCESL/E82QW9pWxpIwOUtkR0gt6+dhRMk3GnNC9nxBzOZY9nbmSyh
+	 KTSzvMxaT3LgAwH2iQ38N+rl1VIHJLy9qbnNCnM9fro0tpUdYQMVUTGNuJHWuTopjW
+	 9tAzIkXAZYlNvnwfjjqcIPRUG2de2dsINRKXxDbvom3rE43IBJfEb3f901EOD42sPt
+	 UJt/twgwLcRig==
+Date: Thu, 11 Sep 2025 22:35:50 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Palash Kambar <quic_pkambar@quicinc.com>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	quic_nitirawa@quicinc.com
+Subject: Re: [PATCH V2] ufs: ufs-qcom: disable lane clocks during phy hibern8
+Message-ID: <isafba2w6ddl2wqiescae6a5dab66ezuinuq7aaivriz3pnixt@j6ymwk3itcka>
+References: <20250909055149.2068737-1-quic_pkambar@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/3] block: Export blk_mq_all_tag_iter()
-To: Ming Lei <ming.lei@redhat.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>,
- John Garry <john.g.garry@oracle.com>
-References: <20250910213254.1215318-1-bvanassche@acm.org>
- <20250910213254.1215318-2-bvanassche@acm.org>
- <CAFj5m9+8qyEjmRXJHHhZbD1cAKQReTxqahGr69PMKuy=9JMHLg@mail.gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAFj5m9+8qyEjmRXJHHhZbD1cAKQReTxqahGr69PMKuy=9JMHLg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20250909055149.2068737-1-quic_pkambar@quicinc.com>
 
-On 9/11/25 1:32 AM, Ming Lei wrote:
-> On Thu, Sep 11, 2025 at 5:33=E2=80=AFAM Bart Van Assche <bvanassche@acm=
-.org> wrote:
->>
->> Prepare for using blk_mq_all_tag_iter() in the SCSI core.
->>
->> Cc: Jens Axboe <axboe@kernel.dk>
->> Cc: Christoph Hellwig <hch@infradead.org>
->> Cc: Ming Lei <ming.lei@redhat.com>
->> Cc: John Garry <john.g.garry@oracle.com>
->> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
->> ---
->>   block/blk-mq-tag.c     | 1 +
->>   block/blk-mq.h         | 2 --
->>   include/linux/blk-mq.h | 2 ++
->>   3 files changed, 3 insertions(+), 2 deletions(-)
->>
->> diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
->> index d880c50629d6..1d56ee8722c5 100644
->> --- a/block/blk-mq-tag.c
->> +++ b/block/blk-mq-tag.c
->> @@ -419,6 +419,7 @@ void blk_mq_all_tag_iter(struct blk_mq_tags *tags,=
- busy_tag_iter_fn *fn,
->>   {
->>          __blk_mq_all_tag_iter(tags, fn, priv, BT_TAG_ITER_STATIC_RQS)=
-;
->>   }
->> +EXPORT_SYMBOL(blk_mq_all_tag_iter);
->=20
-> IMO, it isn't correct to export an API for iterating over static
-> requests for drivers.
+On Tue, Sep 09, 2025 at 11:21:49AM GMT, Palash Kambar wrote:
+> Currently, the UFS lane clocks remain enabled even after the link
+> enters the Hibern8 state and are only disabled during runtime/system
+> suspend.This patch modifies the behavior to disable the lane clocks
+> during ufs_qcom_setup_clocks(), which is invoked shortly after the
+> link enters Hibern8 via gate work.
+> 
+> While hibern8_notify() offers immediate control, toggling clocks on
+> every transition isn't ideal due to varied contexts like clock scaling.
+> Since setup_clocks() manages PHY/controller resources and is invoked
+> soon after Hibern8 entry, it serves as a central and stable point
+> for clock gating.
+> 
+> Signed-off-by: Palash Kambar <quic_pkambar@quicinc.com>
 
-Hi Ming,
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-A possible alternative is to add a new function that is similar to
-blk_mq_tagset_busy_iter() except that it passes 0 as fourth argument to
-__blk_mq_all_tag_iter() instead of BT_TAG_ITER_STARTED. Something like
-this:
+- Mani
 
-void blk_mq_tagset_iter(struct blk_mq_tag_set *tagset,
-		blk_mq_tag_iter_fn *fn, void *priv)
-{
-	unsigned int flags =3D tagset->flags;
-	int i, nr_tags, srcu_idx;
+> 
+> ---
+> changes from V1:
+> 1) Addressed Manivannan's comments and added detailed justification.
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 10 ++++++++++
+>  1 file changed, 10 insertions(+)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index c0761ccc1381..83ad25ce053d 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1092,6 +1092,13 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+>  	case PRE_CHANGE:
+>  		if (on) {
+>  			ufs_qcom_icc_update_bw(host);
+> +			if (ufs_qcom_is_link_hibern8(hba)) {
+> +				err = ufs_qcom_enable_lane_clks(host);
+> +				if (err) {
+> +					dev_err(hba->dev, "enable lane clks failed, ret=%d\n", err);
+> +					return err;
+> +				}
+> +			}
+>  		} else {
+>  			if (!ufs_qcom_is_link_active(hba)) {
+>  				/* disable device ref_clk */
+> @@ -1105,6 +1112,9 @@ static int ufs_qcom_setup_clocks(struct ufs_hba *hba, bool on,
+>  			if (ufshcd_is_hs_mode(&hba->pwr_info))
+>  				ufs_qcom_dev_ref_clk_ctrl(host, true);
+>  		} else {
+> +			if (ufs_qcom_is_link_hibern8(hba))
+> +				ufs_qcom_disable_lane_clks(host);
+> +
+>  			ufs_qcom_icc_set_bw(host, ufs_qcom_bw_table[MODE_MIN][0][0].mem_bw,
+>  					    ufs_qcom_bw_table[MODE_MIN][0][0].cfg_bw);
+>  		}
+> -- 
+> 2.34.1
+> 
 
-	srcu_idx =3D srcu_read_lock(&tagset->tags_srcu);
-
-	nr_tags =3D blk_mq_is_shared_tags(flags) ? 1 : tagset->nr_hw_queues;
-
-	for (i =3D 0; i < nr_tags; i++) {
-		if (tagset->tags && tagset->tags[i])
-			__blk_mq_all_tag_iter(tagset->tags[i], fn, priv, 0);
-	}
-	srcu_read_unlock(&tagset->tags_srcu, srcu_idx);
-}
-EXPORT_SYMBOL(blk_mq_tagset_busy_iter);
-
-Thanks,
-
-Bart.
+-- 
+மணிவண்ணன் சதாசிவம்
