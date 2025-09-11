@@ -1,80 +1,73 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0B6826738C
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 06:40:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D8526A1B6
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 06:56:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757572860; cv=none; b=ZgF8Y67LtdQTieV0BZrhh+iJPvNad5SgkwUiQ8EobPSeqmJClX0xTH2LS4AkN9+UxXoC2N337GaAXCg6/4TbBj0YkgfuZXL1DrcRvIVDxYEI58P3gT3pGzQGyt9Qip49I6nEPaHN03JFk9qD1RM/djJ+3BualEKSQ3IgVLZaK3Q=
+	t=1757573802; cv=none; b=A9XJWod6YrOwbYf8F099E7yULHhxlpBmoSzMniL78nH0BIb/Y7dGTRhBq8DFw2mc/swjjXFQwOZxRLVHVhfxDs05QmaCj3puRwTBP48jCFd+OeaHgXjrmWnpc8WQiTDfHl7a2aKb7hcKq2MGZus5oQYQYYTzgzwmEmZ3BnIfhsQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757572860; c=relaxed/simple;
-	bh=oc3pfMxtwNalmPMOZFevwegSFiZUZK15z34En/YiVGc=;
+	s=arc-20240116; t=1757573802; c=relaxed/simple;
+	bh=sblEJvuu+yGOs0V9hFTmaATfIDhOqrS8xdqAJkutzKw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=QXIWBY+ngstHhQB6Wla3tEwqUjs8EI8C56d7vGPZO+SrjIcMyo97yLlJXRau2Jotd+7m65yk/dc48Mas08xa1G7D9+IDn6kiGfxXfyjiQaPtZX//s8eepe5cDb+wqjX28RqjSIjy1CMvkFbnj9bsp87rdjkGLWMzE+9XsegrLzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=vuujZcv0; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=gHeHMCdN; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=swdOLtFG; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=1T2MnEf2; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 In-Reply-To:Content-Type; b=CeuwtBZRgvfBj7XIrvq3uC/VmSlVs2i9IWG/q9QfR4fISlyoyLZoz9fH3cSsLn79/50wEXVXLTN9fgv/+Nk8hDkHSvhC//UtH67B1Wfy9FPgzzdwH8FJ2wPPhbh1h5NbVN8az2Y3d9Z94codjJX5cFE5Wll43lCXEfk0GhN9ucE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=k7TB30xJ; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="vuujZcv0";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="gHeHMCdN";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="swdOLtFG";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="1T2MnEf2"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id D4B783FA8D;
-	Thu, 11 Sep 2025 06:40:55 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757572856; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5f5LJGeMPUM4kaRt+2xWRpOD4y/a+ZDx0gdKKdb/GO4=;
-	b=vuujZcv0GOnF53I0O5jfbyg4qyy0GZItpqsftuZ68n+VOgsxAMmhXIxCjCcOIdj0XjeE0e
-	q8baiAl/erMOPgtWzrQsnQL8xWbdZPrxYGPMPZxCJlPd+DRtZx3f6ojk2KbqSAjVdz6ueV
-	ReiVD5XDzN0vI6rVjCViKtw8cXbGa5I=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757572856;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5f5LJGeMPUM4kaRt+2xWRpOD4y/a+ZDx0gdKKdb/GO4=;
-	b=gHeHMCdNa7C93YZ+DoxVaiaikhEfAcz0vQw6BYHZzivfhD2ddTkgk4vgAPCsjEqsjvS55V
-	IwQLOooA8/pCczBg==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757572855; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5f5LJGeMPUM4kaRt+2xWRpOD4y/a+ZDx0gdKKdb/GO4=;
-	b=swdOLtFGFV5DcLRpW4g8nFlAR0AsSVgSO0HUrlPUIkRKzHPmNI1Y3cmUz5h+Nh0mcZETXg
-	nM1cIF6/3d4jHIsk2hSOsOh7mWySH/S+e5KgTMGvW2vqghNvYcLyoPnKTcpSsUQPbI/A8g
-	WVaVZRus2URybOrwoFignMwaPEiIlmo=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757572855;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=5f5LJGeMPUM4kaRt+2xWRpOD4y/a+ZDx0gdKKdb/GO4=;
-	b=1T2MnEf2YdSCuWHMWLwfJvUpnsyyuzIBP1kpC23Y1u9ZGFBh0oF5V4EJdVIhAJG8smFdfo
-	G/xl5zyruLuSntDQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 792711372E;
-	Thu, 11 Sep 2025 06:40:55 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id GvwGHPduwmilTgAAD6G6ig
-	(envelope-from <hare@suse.de>); Thu, 11 Sep 2025 06:40:55 +0000
-Message-ID: <efb81481-5af3-4bb6-b378-878dc24b9767@suse.de>
-Date: Thu, 11 Sep 2025 08:40:54 +0200
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="k7TB30xJ"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58B2J1ng016853
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 06:56:39 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	L0/f9kwfpciu7DfEkuARJ15E4Z8kw8VAZZm5KrXW658=; b=k7TB30xJ6YBYISUC
+	t1Xchjhihv1zKFGNzmUAnVSpbPi3lhNYnUNDoYH/lkA3LUpiznRCmDrhD28ZYrI1
+	LI8R5eV1SA/r0ZiZ2JJJ0xvi+CBQa8EJRVtevg/KtY8021k8r63iKHPRPnALlEQp
+	l8lQO0YBOk4JQ4/LJV1O5inedvf0G+NdnUDpUIdfEGmGy3LjW1OGx5WRT6kAW9tZ
+	HUPPc4DnX3YPmeABeRNheK1z2q8cbyR+Zu9aQl05f8xjJsFR4+tdJcDl/PAhA4Dx
+	FN1W5h2xlddmbrD7+/TOM1O8Y5ML0/PZsFKTmXClSWscA7U07TgGcqGs9a0q2NXg
+	sG5aFQ==
+Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 491t38328s-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 06:56:39 +0000 (GMT)
+Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-7741ef59d18so381092b3a.3
+        for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2025 23:56:39 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1757573798; x=1758178598;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=L0/f9kwfpciu7DfEkuARJ15E4Z8kw8VAZZm5KrXW658=;
+        b=FDsvqqM7dlsx1w7plMmPN+eaqP78RYyuR/UtRiCtG+5+LCDGcBu4U3w+qtVOkzjZ+3
+         XlVl7vMdMxe7yd9QT0IZ1347FMGIj8oOeoBTSZzmYLvjv7aF9iIkK78jGtbMnseK2VOL
+         wjMYanBRcabln9olKJtuz5kjOaQ95+sg1SgrEdPhbPasNyx0THF9uv3OBuOwBodBM3JP
+         2VopQdm+kWt8Ztwxdd/ds32Env4FqGtHB9CLY+KQi2UkAmANRJE1cpJBZu0LB6o+2Jir
+         vkfXYAAkSxSzI8YPXSgIAipqPqSVGGvC+indyPsFIgBMwYP1TDbcsvQBxXKAj2k7DaQi
+         nM1Q==
+X-Forwarded-Encrypted: i=1; AJvYcCV3OcK4A54860mwQwhNQ8RR+Pvi/avMZKmLqvTo3+wJbcnhY4MSeRp1ZBIIBRyWrHNse6QRb6al7caB@vger.kernel.org
+X-Gm-Message-State: AOJu0YzR6M4x+/jj+SEZeRLnSS0cdJbn/mqpGrYdglN81qPzHHoLO7Cl
+	9vvqLxXgC8abJxDzqWqVs85Xr3VxEotQv6IeY75RyX51WY8yO8K3oCalg/IKq9sCKyMsOctwliB
+	EvfybYe7bUuodHD5T7okm9QQjjLmYwY9cIdfTizhGwY6camc4kbNKic+xGm8MgctegTNWb1tE
+X-Gm-Gg: ASbGncuCQISrlMmaBZ08WC60tkPQplEcaYBlX3XIZ//8WbHWCUUjkd5kgEdIOqTfbVm
+	E9QZuuYk/CO5QIzoUQVPZv+/yE/9DE8Z67Jk3w2By9jqjnp3AwaYsFfmfjxkT8OVz59f+dES8fi
+	6oKkpqHQvUvJi6d+MITU1nAV6DOiter40SoPoMzrnPhXfedspLWZV0IaymzCfGEgMtIyaEv9XkZ
+	shJKcV7LjZ/T234Zw4wvl2gYlggM4LEoo6WxrRNJf/FaskCDU5sIvVnbp9w4fZ7Q2uGuNWAS6V3
+	GdYqKSDWYNI2BUvlwmHM5B/eOJy2A0vfL2NW3VdaqTxcCxeSMdVlAbDTfBCtHNwtcoKWFefAh+n
+	+ysb0kpOMA9wPas3/ZsJDnoPcVXCjWLk=
+X-Received: by 2002:a05:6a00:13a0:b0:770:579a:bb84 with SMTP id d2e1a72fcca58-7742dca7eb8mr19249047b3a.5.1757573798338;
+        Wed, 10 Sep 2025 23:56:38 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGQJqIhfBQbD1AYfL/Znlo74DGsw2IRepNE1WdWQRW2mKhFrPcwTfZ5gu3E11Lb2M8x804pDw==
+X-Received: by 2002:a05:6a00:13a0:b0:770:579a:bb84 with SMTP id d2e1a72fcca58-7742dca7eb8mr19249026b3a.5.1757573797778;
+        Wed, 10 Sep 2025 23:56:37 -0700 (PDT)
+Received: from [10.133.33.180] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77607b33c45sm966960b3a.71.2025.09.10.23.56.32
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 10 Sep 2025 23:56:37 -0700 (PDT)
+Message-ID: <730f8cdd-e863-4b33-96b3-dcfb9cea7e1e@oss.qualcomm.com>
+Date: Thu, 11 Sep 2025 14:56:29 +0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -82,274 +75,209 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/3] scsi: core: Improve IOPS in case of host-wide tags
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
- Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>,
- Ming Lei <ming.lei@redhat.com>, John Garry <john.g.garry@oracle.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250910213254.1215318-1-bvanassche@acm.org>
- <20250910213254.1215318-4-bvanassche@acm.org>
+Subject: Re: [PATCH v2] scsi: ufs: core: Fix data race in CPU latency PM QoS
+ request handling
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
+Cc: peter.wang@mediatek.com, tanghuan@vivo.com, liu.song13@zte.com.cn,
+        quic_nguyenb@quicinc.com, viro@zeniv.linux.org.uk, huobean@gmail.com,
+        adrian.hunter@intel.com, can.guo@oss.qualcomm.com, ebiggers@kernel.org,
+        neil.armstrong@linaro.org, angelogioacchino.delregno@collabora.com,
+        quic_narepall@quicinc.com, quic_mnaresh@quicinc.com,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        nitin.rawat@oss.qualcomm.com, ziqi.chen@oss.qualcomm.com,
+        zhongqiu.han@oss.qualcomm.com
+References: <20250902074829.657343-1-zhongqiu.han@oss.qualcomm.com>
 Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20250910213254.1215318-4-bvanassche@acm.org>
+From: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
+In-Reply-To: <20250902074829.657343-1-zhongqiu.han@oss.qualcomm.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.998];
-	MIME_GOOD(-0.10)[text/plain];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	RCPT_COUNT_SEVEN(0.00)[9];
-	MID_RHS_MATCH_FROM(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	TO_DN_SOME(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid]
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
+Content-Transfer-Encoding: 7bit
+X-Proofpoint-ORIG-GUID: jWrCWU0TkvVfYIHTgj-6JCD_CPMyA9x4
+X-Proofpoint-GUID: jWrCWU0TkvVfYIHTgj-6JCD_CPMyA9x4
+X-Authority-Analysis: v=2.4 cv=NdLm13D4 c=1 sm=1 tr=0 ts=68c272a7 cx=c_pps
+ a=rEQLjTOiSrHUhVqRoksmgQ==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
+ a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
+ a=7YBbx7_t3QDw2YeiogQA:9 a=QEXdDO2ut3YA:10 a=2VI0MkxyNR6bbpdq8BZq:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA4MDA2NiBTYWx0ZWRfX37VQT//W0bHZ
+ 8gFrQKWGstVIErFczRmR4RN4LElh1qZuky/+cJvGht3BhhZn0iMuGmV1gmMpZ72mw56rqxnVfBN
+ 5IbcI5Cde1c8V+WFwGdp5LxpuymCoMvcTTZDog6RpCHt5qTgcCh9oy9TPU0yXp9vqqmZf16BzXD
+ ir0kwuWBjKNUIZv7vccTid1tq8WL6mo7c2jVRJffxsK+2HAuMMcx58T2AF9K1VOgCAP0V0HTDDT
+ caGlRGFyzJ9sxq+GsNw72JDjzF8lM6zgzEQHbV1wJrS6PolRG/3s+1R4Xn/SzsjbqlMOBC5GkhH
+ BlvOoLqDjmQQUWmn1oOr1dwB8PN/AVKKup1KVrmanMfqUR0PGEe7N+H4qROFQhpVYfzAu4JDA6X
+ iEeUlGL5
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-10_04,2025-09-10_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 bulkscore=0 adultscore=0 suspectscore=0 phishscore=0
+ clxscore=1015 impostorscore=0 spamscore=0 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509080066
 
-On 9/10/25 23:32, Bart Van Assche wrote:
-> The SCSI core uses the budget map to enforce the cmd_per_lun limit.
-> That limit cannot be exceeded if host->cmd_per_lun >= host->can_queue
-> and if the host tag set is shared across all hardware queues.
-> Since scsi_mq_get_budget() shows up in all CPU profiles for fast SCSI
-> devices, do not allocate a budget map if cmd_per_lun >= can_queue and
-> if the host tag set is shared across all hardware queues.
+On 9/2/2025 3:48 PM, Zhongqiu Han wrote:
+> The cpu_latency_qos_add/remove/update_request interfaces lack internal
+> synchronization by design, requiring the caller to ensure thread safety.
+> The current implementation relies on the `pm_qos_enabled` flag, which is
+> insufficient to prevent concurrent access and cannot serve as a proper
+> synchronization mechanism. This has led to data races and list corruption
+> issues.
 > 
-> On my UFS 4 test setup this patch improves IOPS by 1% and reduces the
-> time spent in scsi_mq_get_budget() from 0.22% to 0.01%.
+> A typical race condition call trace is:
 > 
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Cc: Christoph Hellwig <hch@infradead.org>
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: John Garry <john.g.garry@oracle.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> [Thread A]
+> ufshcd_pm_qos_exit()
+>    --> cpu_latency_qos_remove_request()
+>      --> cpu_latency_qos_apply();
+>        --> pm_qos_update_target()
+>          --> plist_del              <--(1) delete plist node
+>      --> memset(req, 0, sizeof(*req));
+>    --> hba->pm_qos_enabled = false;
+> 
+> [Thread B]
+> ufshcd_devfreq_target
+>    --> ufshcd_devfreq_scale
+>      --> ufshcd_scale_clks
+>        --> ufshcd_pm_qos_update     <--(2) pm_qos_enabled is true
+>          --> cpu_latency_qos_update_request
+>            --> pm_qos_update_target
+>              --> plist_del          <--(3) plist node use-after-free
+> 
+> This patch introduces a dedicated mutex to serialize PM QoS operations,
+> preventing data races and ensuring safe access to PM QoS resources.
+> Additionally, READ_ONCE is used in the sysfs interface to ensure atomic
+> read access to pm_qos_enabled flag.
+> 
+> Fixes: 2777e73fc154 ("scsi: ufs: core: Add CPU latency QoS support for UFS driver")
+> Signed-off-by: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
+
+Hi Martin K. Petersen,
+
+Just a gentle ping on this patch,
+
+Would appreciate any feedback when you have time. Thanks!
+
+
+
+
 > ---
->   drivers/scsi/scsi.c        |  7 ++++-
->   drivers/scsi/scsi_lib.c    | 60 +++++++++++++++++++++++++++++++++-----
->   drivers/scsi/scsi_scan.c   | 11 ++++++-
->   include/scsi/scsi_device.h |  5 +---
->   4 files changed, 70 insertions(+), 13 deletions(-)
+> v1 -> v2:
+> - Fix misleading indentation by adding braces to if statements in pm_qos logic.
+> - Resolve checkpatch strict mode warning by adding an inline comment for pm_qos_mutex.
+> - Link to v1: https://lore.kernel.org/all/20250901085117.86160-1-zhongqiu.han@oss.qualcomm.com/
 > 
-That is actually a valid point.
-There are devices which set 'cmd_per_lun' to the same value
-as 'can_queue', rendering the budget map a bit pointless.
-But calling blk_mq_all_tag_iter() is more expensive than a simple
-sbitmap_weight(), so the improvement isn't _that_ big
-(as demonstrated by just 1% performance increase).
-
-> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-> index 9a0f467264b3..06066b694d8a 100644
-> --- a/drivers/scsi/scsi.c
-> +++ b/drivers/scsi/scsi.c
-> @@ -216,6 +216,8 @@ int scsi_device_max_queue_depth(struct scsi_device *sdev)
+>   drivers/ufs/core/ufs-sysfs.c |  2 +-
+>   drivers/ufs/core/ufshcd.c    | 25 ++++++++++++++++++++++---
+>   include/ufs/ufshcd.h         |  3 +++
+>   3 files changed, 26 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index 4bd7d491e3c5..8f7975010513 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -512,7 +512,7 @@ static ssize_t pm_qos_enable_show(struct device *dev,
+>   {
+>   	struct ufs_hba *hba = dev_get_drvdata(dev);
+>   
+> -	return sysfs_emit(buf, "%d\n", hba->pm_qos_enabled);
+> +	return sysfs_emit(buf, "%d\n", READ_ONCE(hba->pm_qos_enabled));
+>   }
+>   
+>   /**
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 926650412eaa..98b9ce583386 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -1047,14 +1047,19 @@ EXPORT_SYMBOL_GPL(ufshcd_is_hba_active);
 >    */
->   int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
+>   void ufshcd_pm_qos_init(struct ufs_hba *hba)
 >   {
-> +	struct Scsi_Host *shost = sdev->host;
-> +
->   	depth = min_t(int, depth, scsi_device_max_queue_depth(sdev));
+> +	mutex_lock(&hba->pm_qos_mutex);
 >   
->   	if (depth > 0) {
-> @@ -226,7 +228,10 @@ int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
->   	if (sdev->request_queue)
->   		blk_set_queue_depth(sdev->request_queue, depth);
->   
-> -	sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
-> +	if (shost->host_tagset && depth >= shost->can_queue)
-> +		sbitmap_free(&sdev->budget_map);
-> +	else
-> +		sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
->   
->   	return sdev->queue_depth;
->   }
-I would make this static, and only allocate a budget_map if the
-'cmd_per_lun' setting is smaller than the 'can_queue' setting.
-
-> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-> index 0c65ecfedfbd..c546514d1049 100644
-> --- a/drivers/scsi/scsi_lib.c
-> +++ b/drivers/scsi/scsi_lib.c
-> @@ -396,7 +396,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
->   	if (starget->can_queue > 0)
->   		atomic_dec(&starget->target_busy);
->   
-> -	sbitmap_put(&sdev->budget_map, cmd->budget_token);
-> +	if (sdev->budget_map.map)
-> +		sbitmap_put(&sdev->budget_map, cmd->budget_token);
->   	cmd->budget_token = -1;
->   }
->   
-> @@ -445,6 +446,47 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
->   	spin_unlock_irqrestore(shost->host_lock, flags);
->   }
->   
-> +struct sdev_in_flight_data {
-> +	const struct scsi_device *sdev;
-> +	int count;
-> +};
-> +
-> +static bool scsi_device_check_in_flight(struct request *rq, void *data)
-> +{
-> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
-> +	struct sdev_in_flight_data *sifd = data;
-> +
-> +	if (cmd->device == sifd->sdev)
-> +		sifd->count++;
-> +
-> +	return true;
-> +}
-> +
-> +/**
-> + * scsi_device_busy() - Number of commands allocated for a SCSI device
-> + * @sdev: SCSI device.
-> + *
-> + * Note: There is a subtle difference between this function and
-> + * scsi_host_busy(). scsi_host_busy() counts the number of commands that have
-> + * been started. This function counts the number of commands that have been
-> + * allocated. At least the UFS driver depends on this function counting commands
-
-But then please don't name the callback 'scsi_device_check_in_flight',
-as 'in flight' means 'commands which have been started'.
-Please name it 'scsi_device_check_allocated' to make the distinction
-clear.
-
-> + * that have already been allocated but that have not yet been started.
-> + */
-> +int scsi_device_busy(const struct scsi_device *sdev)
-> +{
-> +	struct sdev_in_flight_data sifd = { .sdev = sdev };
-> +	struct blk_mq_tag_set *set = &sdev->host->tag_set;
-> +
-> +	if (sdev->budget_map.map)
-> +		return sbitmap_weight(&sdev->budget_map);
-> +	if (WARN_ON_ONCE(!set->shared_tags))
-> +		return 0;
-
-One wonders: what would happen if you would return '0' here if
-there is only one LUN?
-
-> +	blk_mq_all_tag_iter(set->shared_tags, scsi_device_check_in_flight,
-> +			    &sifd);
-> +	return sifd.count;
-> +}
-> +EXPORT_SYMBOL(scsi_device_busy);
-> +
->   static inline bool scsi_device_is_busy(struct scsi_device *sdev)
->   {
->   	if (scsi_device_busy(sdev) >= sdev->queue_depth)
-> @@ -1358,11 +1400,13 @@ scsi_device_state_check(struct scsi_device *sdev, struct request *req)
->   static inline int scsi_dev_queue_ready(struct request_queue *q,
->   				  struct scsi_device *sdev)
->   {
-> -	int token;
-> +	int token = INT_MAX;
->   
-> -	token = sbitmap_get(&sdev->budget_map);
-> -	if (token < 0)
-> -		return -1;
-> +	if (sdev->budget_map.map) {
-> +		token = sbitmap_get(&sdev->budget_map);
-> +		if (token < 0)
-> +			return -1;
+> -	if (hba->pm_qos_enabled)
+> +	if (hba->pm_qos_enabled) {
+> +		mutex_unlock(&hba->pm_qos_mutex);
+>   		return;
 > +	}
 >   
->   	if (!atomic_read(&sdev->device_blocked))
->   		return token;
-> @@ -1373,7 +1417,8 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
->   	 */
->   	if (scsi_device_busy(sdev) > 1 ||
->   	    atomic_dec_return(&sdev->device_blocked) > 0) {
-> -		sbitmap_put(&sdev->budget_map, token);
-> +		if (sdev->budget_map.map)
-> +			sbitmap_put(&sdev->budget_map, token);
->   		return -1;
->   	}
+>   	cpu_latency_qos_add_request(&hba->pm_qos_req, PM_QOS_DEFAULT_VALUE);
 >   
-> @@ -1749,7 +1794,8 @@ static void scsi_mq_put_budget(struct request_queue *q, int budget_token)
->   {
->   	struct scsi_device *sdev = q->queuedata;
->   
-> -	sbitmap_put(&sdev->budget_map, budget_token);
-> +	if (sdev->budget_map.map)
-> +		sbitmap_put(&sdev->budget_map, budget_token);
->   }
->   
->   /*
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index 3c6e089e80c3..6f2d0bf0e3ec 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -218,6 +218,7 @@ static void scsi_unlock_floptical(struct scsi_device *sdev,
->   static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
->   					unsigned int depth)
->   {
-> +	struct Scsi_Host *shost = sdev->host;
->   	int new_shift = sbitmap_calculate_shift(depth);
->   	bool need_alloc = !sdev->budget_map.map;
->   	bool need_free = false;
-> @@ -225,6 +226,13 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
->   	int ret;
->   	struct sbitmap sb_backup;
->   
-> +	if (shost->host_tagset && depth >= shost->can_queue) {
-> +		memflags = blk_mq_freeze_queue(sdev->request_queue);
-> +		sbitmap_free(&sb_backup);
-
-What are you freeing here?
-The sbitmap was never allocated, so you should be able to simply
-return 0 here...
-
-> +		blk_mq_unfreeze_queue(sdev->request_queue, memflags);
-> +		return 0;
-> +	}
+>   	if (cpu_latency_qos_request_active(&hba->pm_qos_req))
+>   		hba->pm_qos_enabled = true;
 > +
->   	depth = min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev));
->   
->   	/*
-> @@ -1112,7 +1120,8 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
->   	scsi_cdl_check(sdev);
->   
->   	sdev->max_queue_depth = sdev->queue_depth;
-> -	WARN_ON_ONCE(sdev->max_queue_depth > sdev->budget_map.depth);
-> +	WARN_ON_ONCE(sdev->budget_map.map &&
-> +		     sdev->max_queue_depth > sdev->budget_map.depth);
->   	sdev->sdev_bflags = *bflags;
->   
->   	/*
-> diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-> index 6d6500148c4b..3c7a95fa9b67 100644
-> --- a/include/scsi/scsi_device.h
-> +++ b/include/scsi/scsi_device.h
-> @@ -687,10 +687,7 @@ static inline int scsi_device_supports_vpd(struct scsi_device *sdev)
->   	return 0;
+> +	mutex_unlock(&hba->pm_qos_mutex);
 >   }
 >   
-> -static inline int scsi_device_busy(struct scsi_device *sdev)
-> -{
-> -	return sbitmap_weight(&sdev->budget_map);
-> -}
-> +int scsi_device_busy(const struct scsi_device *sdev);
+>   /**
+> @@ -1063,11 +1068,16 @@ void ufshcd_pm_qos_init(struct ufs_hba *hba)
+>    */
+>   void ufshcd_pm_qos_exit(struct ufs_hba *hba)
+>   {
+> -	if (!hba->pm_qos_enabled)
+> +	mutex_lock(&hba->pm_qos_mutex);
+> +
+> +	if (!hba->pm_qos_enabled) {
+> +		mutex_unlock(&hba->pm_qos_mutex);
+>   		return;
+> +	}
 >   
->   /* Macros to access the UNIT ATTENTION counters */
->   #define scsi_get_ua_new_media_ctr(sdev) \
-> 
-Cheers,
+>   	cpu_latency_qos_remove_request(&hba->pm_qos_req);
+>   	hba->pm_qos_enabled = false;
+> +	mutex_unlock(&hba->pm_qos_mutex);
+>   }
+>   
+>   /**
+> @@ -1077,10 +1087,15 @@ void ufshcd_pm_qos_exit(struct ufs_hba *hba)
+>    */
+>   static void ufshcd_pm_qos_update(struct ufs_hba *hba, bool on)
+>   {
+> -	if (!hba->pm_qos_enabled)
+> +	mutex_lock(&hba->pm_qos_mutex);
+> +
+> +	if (!hba->pm_qos_enabled) {
+> +		mutex_unlock(&hba->pm_qos_mutex);
+>   		return;
+> +	}
+>   
+>   	cpu_latency_qos_update_request(&hba->pm_qos_req, on ? 0 : PM_QOS_DEFAULT_VALUE);
+> +	mutex_unlock(&hba->pm_qos_mutex);
+>   }
+>   
+>   /**
+> @@ -10764,6 +10779,10 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
+>   	mutex_init(&hba->ee_ctrl_mutex);
+>   
+>   	mutex_init(&hba->wb_mutex);
+> +
+> +	/* Initialize mutex for PM QoS request synchronization */
+> +	mutex_init(&hba->pm_qos_mutex);
+> +
+>   	init_rwsem(&hba->clk_scaling_lock);
+>   
+>   	ufshcd_init_clk_gating(hba);
+> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+> index 30ff169878dc..a16f857a052f 100644
+> --- a/include/ufs/ufshcd.h
+> +++ b/include/ufs/ufshcd.h
+> @@ -962,6 +962,7 @@ enum ufshcd_mcq_opr {
+>    * @ufs_rtc_update_work: A work for UFS RTC periodic update
+>    * @pm_qos_req: PM QoS request handle
+>    * @pm_qos_enabled: flag to check if pm qos is enabled
+> + * @pm_qos_mutex: synchronizes PM QoS request and status updates
+>    * @critical_health_count: count of critical health exceptions
+>    * @dev_lvl_exception_count: count of device level exceptions since last reset
+>    * @dev_lvl_exception_id: vendor specific information about the
+> @@ -1135,6 +1136,8 @@ struct ufs_hba {
+>   	struct delayed_work ufs_rtc_update_work;
+>   	struct pm_qos_request pm_qos_req;
+>   	bool pm_qos_enabled;
+> +	/* synchronizes PM QoS request and status updates */
+> +	struct mutex pm_qos_mutex;
+>   
+>   	int critical_health_count;
+>   	atomic_t dev_lvl_exception_count;
 
-Hannes
+
 -- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+Thx and BRs,
+Zhongqiu Han
