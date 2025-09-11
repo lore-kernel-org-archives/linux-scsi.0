@@ -1,283 +1,381 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D8526A1B6
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 06:56:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757573802; cv=none; b=A9XJWod6YrOwbYf8F099E7yULHhxlpBmoSzMniL78nH0BIb/Y7dGTRhBq8DFw2mc/swjjXFQwOZxRLVHVhfxDs05QmaCj3puRwTBP48jCFd+OeaHgXjrmWnpc8WQiTDfHl7a2aKb7hcKq2MGZus5oQYQYYTzgzwmEmZ3BnIfhsQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757573802; c=relaxed/simple;
-	bh=sblEJvuu+yGOs0V9hFTmaATfIDhOqrS8xdqAJkutzKw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CeuwtBZRgvfBj7XIrvq3uC/VmSlVs2i9IWG/q9QfR4fISlyoyLZoz9fH3cSsLn79/50wEXVXLTN9fgv/+Nk8hDkHSvhC//UtH67B1Wfy9FPgzzdwH8FJ2wPPhbh1h5NbVN8az2Y3d9Z94codjJX5cFE5Wll43lCXEfk0GhN9ucE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=k7TB30xJ; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 359162E54B6;
+	Thu, 11 Sep 2025 08:15:32 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1757578535; cv=fail; b=YSYklm7vezqIBu5ZFY/rrgdbCfdqxIpLfm2tZEpr1XBNKsx6WvQWYAJDFQoB0aa4Oek8P8G6ZTtbgsTNx43MdYaTbxSclWAu9zLS9v1hy/Cxd/aH5htGNFX9t0ZPJX5DL1WwxKvRI9OeMFvQqWmLMNzDpSPRDsJyo8eE2u9MfW8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1757578535; c=relaxed/simple;
+	bh=7+cI6TrE6tYMbrNfOjOBxyFDibB7FVjogFV7x7VA5mw=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=R4Wl5r6TFgTnLASR9bHj5sOk6edx2eQ6NNkl8rNfjNDBeDHSRWy7n/6lwCURYs7cu49YjMSHDXQGTmyvWLXZj4+6oJqiXKLyfcxyctg8co54OW/T2NUh49W0MznEJkO8uJc0hzt8v+Cv3LcF/hknssad2lYp5rjukD5fNo2liJc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=o9lGr6Ok; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=BaKPwuwC; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="k7TB30xJ"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58B2J1ng016853
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 06:56:39 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	L0/f9kwfpciu7DfEkuARJ15E4Z8kw8VAZZm5KrXW658=; b=k7TB30xJ6YBYISUC
-	t1Xchjhihv1zKFGNzmUAnVSpbPi3lhNYnUNDoYH/lkA3LUpiznRCmDrhD28ZYrI1
-	LI8R5eV1SA/r0ZiZ2JJJ0xvi+CBQa8EJRVtevg/KtY8021k8r63iKHPRPnALlEQp
-	l8lQO0YBOk4JQ4/LJV1O5inedvf0G+NdnUDpUIdfEGmGy3LjW1OGx5WRT6kAW9tZ
-	HUPPc4DnX3YPmeABeRNheK1z2q8cbyR+Zu9aQl05f8xjJsFR4+tdJcDl/PAhA4Dx
-	FN1W5h2xlddmbrD7+/TOM1O8Y5ML0/PZsFKTmXClSWscA7U07TgGcqGs9a0q2NXg
-	sG5aFQ==
-Received: from mail-pf1-f197.google.com (mail-pf1-f197.google.com [209.85.210.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 491t38328s-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 11 Sep 2025 06:56:39 +0000 (GMT)
-Received: by mail-pf1-f197.google.com with SMTP id d2e1a72fcca58-7741ef59d18so381092b3a.3
-        for <linux-scsi@vger.kernel.org>; Wed, 10 Sep 2025 23:56:39 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757573798; x=1758178598;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=L0/f9kwfpciu7DfEkuARJ15E4Z8kw8VAZZm5KrXW658=;
-        b=FDsvqqM7dlsx1w7plMmPN+eaqP78RYyuR/UtRiCtG+5+LCDGcBu4U3w+qtVOkzjZ+3
-         XlVl7vMdMxe7yd9QT0IZ1347FMGIj8oOeoBTSZzmYLvjv7aF9iIkK78jGtbMnseK2VOL
-         wjMYanBRcabln9olKJtuz5kjOaQ95+sg1SgrEdPhbPasNyx0THF9uv3OBuOwBodBM3JP
-         2VopQdm+kWt8Ztwxdd/ds32Env4FqGtHB9CLY+KQi2UkAmANRJE1cpJBZu0LB6o+2Jir
-         vkfXYAAkSxSzI8YPXSgIAipqPqSVGGvC+indyPsFIgBMwYP1TDbcsvQBxXKAj2k7DaQi
-         nM1Q==
-X-Forwarded-Encrypted: i=1; AJvYcCV3OcK4A54860mwQwhNQ8RR+Pvi/avMZKmLqvTo3+wJbcnhY4MSeRp1ZBIIBRyWrHNse6QRb6al7caB@vger.kernel.org
-X-Gm-Message-State: AOJu0YzR6M4x+/jj+SEZeRLnSS0cdJbn/mqpGrYdglN81qPzHHoLO7Cl
-	9vvqLxXgC8abJxDzqWqVs85Xr3VxEotQv6IeY75RyX51WY8yO8K3oCalg/IKq9sCKyMsOctwliB
-	EvfybYe7bUuodHD5T7okm9QQjjLmYwY9cIdfTizhGwY6camc4kbNKic+xGm8MgctegTNWb1tE
-X-Gm-Gg: ASbGncuCQISrlMmaBZ08WC60tkPQplEcaYBlX3XIZ//8WbHWCUUjkd5kgEdIOqTfbVm
-	E9QZuuYk/CO5QIzoUQVPZv+/yE/9DE8Z67Jk3w2By9jqjnp3AwaYsFfmfjxkT8OVz59f+dES8fi
-	6oKkpqHQvUvJi6d+MITU1nAV6DOiter40SoPoMzrnPhXfedspLWZV0IaymzCfGEgMtIyaEv9XkZ
-	shJKcV7LjZ/T234Zw4wvl2gYlggM4LEoo6WxrRNJf/FaskCDU5sIvVnbp9w4fZ7Q2uGuNWAS6V3
-	GdYqKSDWYNI2BUvlwmHM5B/eOJy2A0vfL2NW3VdaqTxcCxeSMdVlAbDTfBCtHNwtcoKWFefAh+n
-	+ysb0kpOMA9wPas3/ZsJDnoPcVXCjWLk=
-X-Received: by 2002:a05:6a00:13a0:b0:770:579a:bb84 with SMTP id d2e1a72fcca58-7742dca7eb8mr19249047b3a.5.1757573798338;
-        Wed, 10 Sep 2025 23:56:38 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGQJqIhfBQbD1AYfL/Znlo74DGsw2IRepNE1WdWQRW2mKhFrPcwTfZ5gu3E11Lb2M8x804pDw==
-X-Received: by 2002:a05:6a00:13a0:b0:770:579a:bb84 with SMTP id d2e1a72fcca58-7742dca7eb8mr19249026b3a.5.1757573797778;
-        Wed, 10 Sep 2025 23:56:37 -0700 (PDT)
-Received: from [10.133.33.180] (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77607b33c45sm966960b3a.71.2025.09.10.23.56.32
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Wed, 10 Sep 2025 23:56:37 -0700 (PDT)
-Message-ID: <730f8cdd-e863-4b33-96b3-dcfb9cea7e1e@oss.qualcomm.com>
-Date: Thu, 11 Sep 2025 14:56:29 +0800
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="o9lGr6Ok";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="BaKPwuwC"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58B7thqH027597;
+	Thu, 11 Sep 2025 08:15:21 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=ZAx0uA3/sUNdeB8wvrmYnfDG5nyYzOwCOv095zntdjw=; b=
+	o9lGr6OkzHHOlRBJTFqFzrzl6JcdHQaG9gxkZnWQSBndOhA6MgxobSmxUuuh2X87
+	V0fXoh+/y6Wb/GjllTmU6CDH0gngY3ueoeAZqzAE3K0u9pVfBCUvCvr4tTWrPLBz
+	V2jpxA56TDUoAsQJ4H/DquLdO6jQ4bLRghK3626bylc3h2JjL71eAeSJbkUtba6a
+	E2JMP112Jw9lmMqF3Sonid2bQ8pyhA7Wt9lFPsY/G+mVYah1KWBc1Lx47DpNmci8
+	zqDLOJlaVpgoBl2R/UvtOOJPkwUi2rWbk2DcY6chq8rgyccdeOcehJllq/oRFdWd
+	a1q/XYjYryIXWh+/nUs2Fw==
+Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4922shwp1q-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 11 Sep 2025 08:15:20 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58B7ZipB002770;
+	Thu, 11 Sep 2025 08:15:20 GMT
+Received: from bl2pr02cu003.outbound.protection.outlook.com (mail-eastusazon11011006.outbound.protection.outlook.com [52.101.52.6])
+	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 490bdjnjk7-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 11 Sep 2025 08:15:20 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=wQb3fmT4DfsTHgG3ltSdtdSkzlinOO8PMZs8umau/NDbVGjn03H91vnCNjwpcfxXyMyimoqruXwU45Om5cCPohW7ln/1dDWHSMz98DIYjrWCjWOVbC+foKqCmz7Y2NHDXsMC+a7oqxG1610FTk6dfjXcWY4v+RejpChckGnMro4vzUYA2YW7PUc8taQo0/QpXi27hZR2L5v86R5K5mjxzPSk2qFb6rfgvdgfbkcatojEdmZlVK9IYenoEPUGGratZWy4qg96YfLsVjATMw08kvkr5z7kGXYrZbdOBhsPx6h6SHnmCHPFEZJmKmhxWjGOLOEJK3WFi4vqebrRLdI35w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=ZAx0uA3/sUNdeB8wvrmYnfDG5nyYzOwCOv095zntdjw=;
+ b=ERo5jfWyKb5QlyjxJWDWSp98pTXDHcjtnIhCDcwe75sFbir6oyS+BLtsNBtBxZZyc5Hag1IUzCKQMaxhWBQnKjUcvRgiWjFk4kF/+bwbp5yp45+aTy/aGn8e8f7TqqgucLWwmsj+C4bYIU+idB7t7k8b8btqyZYfCkLlBhQGonv3nVLnPUpyordynI4DKcFr5XOC3AiU6d728oNitwJmLhYDIhiF+ECkyyVomZZlzGBleu2ggnG0j6Yiq0cczj51rjmKG6oHeVNEvNRPlj4ru5dnaiE9zv8hbOAyY2zr53eMvv/RnPQV/Y2qr53DkWzfknpeCP5g23q6Rfq1ur4i1Q==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=ZAx0uA3/sUNdeB8wvrmYnfDG5nyYzOwCOv095zntdjw=;
+ b=BaKPwuwC+UHw3tBFaetwZAWZg7h7V7xIXGbFoxJzJLhWudBLWhk+v8VPCztfrrDPowDHKoVbkErQLR+kpN3WThdz3nKmZinpuRqmR1yROJOuFOK4BSv+cWrrN9GH2qj5b5FPF23HDEbf1heqtjEB7mfrhA1fg1ORZDTF+FtTiAw=
+Received: from MN2PR10MB4320.namprd10.prod.outlook.com (2603:10b6:208:1d5::16)
+ by MN6PR10MB8070.namprd10.prod.outlook.com (2603:10b6:208:4fd::21) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9094.22; Thu, 11 Sep
+ 2025 08:15:17 +0000
+Received: from MN2PR10MB4320.namprd10.prod.outlook.com
+ ([fe80::42ec:1d58:8ba8:800c]) by MN2PR10MB4320.namprd10.prod.outlook.com
+ ([fe80::42ec:1d58:8ba8:800c%7]) with mapi id 15.20.9094.021; Thu, 11 Sep 2025
+ 08:15:16 +0000
+Message-ID: <a28d07ef-34a9-41ed-bd4b-ddcbf3de13f4@oracle.com>
+Date: Thu, 11 Sep 2025 09:15:13 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/3] scsi: core: Improve IOPS in case of host-wide tags
+To: Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
+        Jens Axboe <axboe@kernel.dk>, Christoph Hellwig <hch@infradead.org>,
+        Ming Lei <ming.lei@redhat.com>,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20250910213254.1215318-1-bvanassche@acm.org>
+ <20250910213254.1215318-4-bvanassche@acm.org>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20250910213254.1215318-4-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LO4P265CA0294.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:38f::7) To MN2PR10MB4320.namprd10.prod.outlook.com
+ (2603:10b6:208:1d5::16)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] scsi: ufs: core: Fix data race in CPU latency PM QoS
- request handling
-To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: peter.wang@mediatek.com, tanghuan@vivo.com, liu.song13@zte.com.cn,
-        quic_nguyenb@quicinc.com, viro@zeniv.linux.org.uk, huobean@gmail.com,
-        adrian.hunter@intel.com, can.guo@oss.qualcomm.com, ebiggers@kernel.org,
-        neil.armstrong@linaro.org, angelogioacchino.delregno@collabora.com,
-        quic_narepall@quicinc.com, quic_mnaresh@quicinc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        nitin.rawat@oss.qualcomm.com, ziqi.chen@oss.qualcomm.com,
-        zhongqiu.han@oss.qualcomm.com
-References: <20250902074829.657343-1-zhongqiu.han@oss.qualcomm.com>
-Content-Language: en-US
-From: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
-In-Reply-To: <20250902074829.657343-1-zhongqiu.han@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: jWrCWU0TkvVfYIHTgj-6JCD_CPMyA9x4
-X-Proofpoint-GUID: jWrCWU0TkvVfYIHTgj-6JCD_CPMyA9x4
-X-Authority-Analysis: v=2.4 cv=NdLm13D4 c=1 sm=1 tr=0 ts=68c272a7 cx=c_pps
- a=rEQLjTOiSrHUhVqRoksmgQ==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8
- a=7YBbx7_t3QDw2YeiogQA:9 a=QEXdDO2ut3YA:10 a=2VI0MkxyNR6bbpdq8BZq:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA4MDA2NiBTYWx0ZWRfX37VQT//W0bHZ
- 8gFrQKWGstVIErFczRmR4RN4LElh1qZuky/+cJvGht3BhhZn0iMuGmV1gmMpZ72mw56rqxnVfBN
- 5IbcI5Cde1c8V+WFwGdp5LxpuymCoMvcTTZDog6RpCHt5qTgcCh9oy9TPU0yXp9vqqmZf16BzXD
- ir0kwuWBjKNUIZv7vccTid1tq8WL6mo7c2jVRJffxsK+2HAuMMcx58T2AF9K1VOgCAP0V0HTDDT
- caGlRGFyzJ9sxq+GsNw72JDjzF8lM6zgzEQHbV1wJrS6PolRG/3s+1R4Xn/SzsjbqlMOBC5GkhH
- BlvOoLqDjmQQUWmn1oOr1dwB8PN/AVKKup1KVrmanMfqUR0PGEe7N+H4qROFQhpVYfzAu4JDA6X
- iEeUlGL5
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN2PR10MB4320:EE_|MN6PR10MB8070:EE_
+X-MS-Office365-Filtering-Correlation-Id: acf0c7a7-6116-418d-7387-08ddf10b5703
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?bjhuUlo5VStMc3hyeTNHZjk5ZEpKRTNEWE55SUgwUUtGY2xJZWt6STZBRGc5?=
+ =?utf-8?B?OStuQUxZR2Y0Z0kwUW5SaUNOSDBXTGFiazhzdEk0Ukx0Y3JLVWVQVE9Za1Ux?=
+ =?utf-8?B?YW1CbkR2YktwTFZQaGVkMERENWR3ajlpczRCdnV1alYxY3pxTlVNMzN2ZXN5?=
+ =?utf-8?B?SDdrNDA5alo2QjdVVDdSUGYzNG9hUExCZGdObU80QTBhYnZPN203ZVlic05N?=
+ =?utf-8?B?cjNVV0FCek5uT1ZodGhQK3JXZzhpNDg1eHNUQTdOUjd1VGxoZlp6NzAzZVBq?=
+ =?utf-8?B?NnUxbXdDK1NwODczR3MyZ00vcE1IWGRSVmlpaXpRVTdZSml0VmRUTGE0amUx?=
+ =?utf-8?B?OFFNNUlVVjZnWGI1bXQxMmNGNVYwRWVpdHh3elFVeWdUOXFCYjVKdnRzeXQv?=
+ =?utf-8?B?L0VnQmpUVEoza0dMaU1rc2s4STk0RkdUMnZqTEJQcUhWZDIycm5XZEtubXNT?=
+ =?utf-8?B?R1UzQTZoKzNhbTJNY1FWbTNvWGFQQTB1enEwcnRvTTQ5aG9ONVZlcmcxaXhs?=
+ =?utf-8?B?U3ZzcDRvOVRZSHl1Nkl2Q3RIY3Z1WGJYbVAvT2FKWjF0Z0diSkxwTlVOd21U?=
+ =?utf-8?B?aFdaNEtPL2JUWnkzREt1N3cvTEhyMW96OWNaaktFdVdYZjZhNjJSZHJ2eEVk?=
+ =?utf-8?B?UmNzTmU4ZmkvT1psaXRTcW1uWk52ZmZ4SDZWVFU4ejJKdVBUNm9FWmZBb2JD?=
+ =?utf-8?B?ZDl5VERnSGRFSFpha29YSzVyRjBhUVpocHpvVHZHRmxyYysxTVBmWU5Icm5L?=
+ =?utf-8?B?VjF5ajVpcEV5V1k3ZlBSemtjbFpUU25KWUVhc1l0cGpPcXRKZk9YeUc1a3Nr?=
+ =?utf-8?B?WU9YbWltQUttTGVIMUNxcm1iMHlpd1N6UHFiTEs3d3hYZE5uSEZIMFFkWm1v?=
+ =?utf-8?B?enEyQTVneDR1K3dlRXB1M0tJRXE3RjhSM3dEK3FZMXBLMW9BcXVRTTFPdVBk?=
+ =?utf-8?B?S20wemNMLzgvR3R0S3JXNHQxVE1XK2lYMmhRTDFzc2UzbXVhUTFEdjFjeFJW?=
+ =?utf-8?B?ZGhGdTRMQmRmaEJDZ1NOaVZwNThXbXJWb29IWHZvOUpDUVY4TWhQbXFqQUE5?=
+ =?utf-8?B?TFlpVzFlK3RHSElYVGEyanRxSVlSTWQvT3Q1T3UrZWxyZmhpMTBMbzhoNktD?=
+ =?utf-8?B?ek9uWjRCV2lvcWVIeVJpZ2k0TGZJekVkVW9IVm80dU5qOUttSExheFZLbUxV?=
+ =?utf-8?B?dWZWcHFTK2hveGwvTjZqNGl2UThvWmUrcXNzNHkrU3ZIT0luMURhTWlNUTc4?=
+ =?utf-8?B?YkovT1llVXBIUTNVQ05zUEt4QitmUXk5OFN3VTZaT2JNaXMzSjR5TktlS0Vn?=
+ =?utf-8?B?bXZNb2FtSnZIUjVWdVhrREs3UDJSeHJLeGZldnhabXVqN054UzdQSHRiRFZN?=
+ =?utf-8?B?STViaWZnbitVck55ZVQ5ZEFRMXdCcGxFMWgza0xMT0VMbE03dVdlczR2ZHda?=
+ =?utf-8?B?SVIwN1FCSHhSaGhLWTRWY3Bud1hIaEVCWTV5dHY4OFdBQTd2d2tzMnZPbTZP?=
+ =?utf-8?B?L0d0cmM0S1lhWDZHVnc1dFJ3K3JRZlFmM3d6b2xpM1pWWUROKzlFMGFvZTVS?=
+ =?utf-8?B?eTJKUUJCMTJrV1lRdzF3cEhVak9ldUczRzBjWEJEK2dGLzRmbkpleUlBcDV4?=
+ =?utf-8?B?Qm1EZlBIc2JGVkltOWkrVnRnYURhTHkvMXlrZlpkSW1IblgxeGNkWFJ3eU1z?=
+ =?utf-8?B?ZW5UZHlNODdiMUhUakJ6bm55bUV4REhvdjNDVVEyOFgwS3ZpRlo0azVZYWNH?=
+ =?utf-8?B?UzJxMExOSFZJVExremZ3UnkvNVV2QTlFNFNzUlY2K0djOVNIMWFqZDl3elRt?=
+ =?utf-8?B?bnlqMnJMOW9RdEtSRGRXYmN3NVBiaFhZN1dXWjczdzBPUUpKb0t2SnhQSEJy?=
+ =?utf-8?B?aFY5dGw0K3FhVlZJQjgyWlRYcEwwbitNeDJuN0Y5L3N1ZmRiZ0ZXb1lTY0VR?=
+ =?utf-8?Q?ovgMGlEvZzM=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR10MB4320.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?YkhoeFBzcWlpTUNBVGlNWVFtejArWWErT0RRSzg3VVV1ZlFCL1lMNW9ERnJr?=
+ =?utf-8?B?Y3AwZ0lyL053b2VHWHN5ZUl3emd0eVFoTWFqOTN6ODVHZmZKRFJwWjc0aTlJ?=
+ =?utf-8?B?R29MT2k5NEJmL1dMMDBHTVpPbTNNeTNuWjFIelFmSGMrYW1vVmZabWRRUmxL?=
+ =?utf-8?B?R1krK05RenNYUmxsMHJkaHBWQnI4MGw0VHdVOURRM1M2dlBJOE9iZXMyNXJj?=
+ =?utf-8?B?NWZxREtLYUJjRmdrK2hMemxrVjBxK0dvSHh3bXFQbGVRb094YkgxNG5tY05D?=
+ =?utf-8?B?MlRJTHlwbCtySkdQMjAyWStzdHhrL0wzM0NzWkg0RG4vSFNDSC9WQVJodE8r?=
+ =?utf-8?B?RWxKSWV4TDJGY3E1c2c0SDBFQ3lEV0hxeDJUZEJUakVwS2FXK0d2NkFZRWRj?=
+ =?utf-8?B?TGVIQ1RtWnkweXhwSFNEdW1oMndFb2NBdFlNS1hpcFNRQ3FrZkoxUnJQT3g0?=
+ =?utf-8?B?VkM1QklYZENTTVpvR3g0K1hPSFNhR3ZaYzgyT3N0Y2xnQUdxSzZKWmRncXZN?=
+ =?utf-8?B?QTNMU01oSG9IVDJlWXZUNVJjVnlYYWhvRWVGYlkzdjNQYTVUU2plY3loT2ti?=
+ =?utf-8?B?aTNhZkIzaE9DYjdTSGRyUHNVbU5XOWJvemRsaHA0RVUrTXNwUjlKdjNaaFdI?=
+ =?utf-8?B?Z2RyQUViZlB1bDRLZGtldWNVMWlQakpVUzJHejhGV0FTbUtmTDVDS3Y4bXlJ?=
+ =?utf-8?B?RnhOSlJIeUpQZXROMXhpRWwxeUJEdVhoYU5xb0ZhUHFRMklBZlRaMmNmNDBi?=
+ =?utf-8?B?Qk9nR2dleGtxZnpjY0F2L0dTTC9qNk1yMkhMRHBGZ053TjZEaFpVYklzWlJs?=
+ =?utf-8?B?bm5wT0hMVWVYUytCbjhyWEMya1hlMGV1YTV4WUY0Q2I2VytyK0liU0FmMEgy?=
+ =?utf-8?B?OFdtTys5aktuN2crN1FVUlVqelFrTzV2eVljem51SXc1cXFtNG5VQzE0ajJK?=
+ =?utf-8?B?RllQOHArVFhBRmREOUpwNExyRlpwcWd5ZmRrR01ncmZUbG52Q1RUQnBPNlo4?=
+ =?utf-8?B?ODNxbEE3MnNKWFFoRjk4emVyaWwvQy9ZZFBrWjYwVkRNbmxqdmkraWlRaktS?=
+ =?utf-8?B?bDdRYTZhYklNeXA5OWUvQ01IMERtODhIZ2t6enYvVGUreGlTVWlLaFhoOGxi?=
+ =?utf-8?B?bU9NZEJ1NFJkR0JtbWxqRk9BeGhhdFN4L1QwRFNpS3p2eDZOcE5QNTNjZFNz?=
+ =?utf-8?B?bjhxZU5VT2FEVGt5d3FPZGNFY3VvUm1DT1lFOVMvVDZJdnI3U29rTmZ5MDYr?=
+ =?utf-8?B?dmk1azJJcktYRjdxZFBIU0hnYTNOdU9Bam02RDQ4c0lrMTJCUmFYeXNGTUI0?=
+ =?utf-8?B?YmRFbnhoREc5S0tGT1hsWUhjRWJsV011WjVUTnphcGpzemxnZ1pLbEdVa0w0?=
+ =?utf-8?B?L0l4cVZ5TnJHcEt3cDMreDBZaklweGVhNWJ5eXlxSWFsSkh0NU8xRXdhSFRx?=
+ =?utf-8?B?dXVvZlRZbEhyQm84U2Vob1BtUEVXTnBzK3RQZjRCaUlxVWlHNXVEckp0WjJN?=
+ =?utf-8?B?bXl5ejZNTGtET08zdEd6ak1VVWhPeWZZZ25wV2lCcFdtaENzTnE1V1oyd1dJ?=
+ =?utf-8?B?cmwvenZldThHL200ZkpmaVp2MzJnVlA3bHEvUHc3Q3F3bThwcFA1UTJ5anNX?=
+ =?utf-8?B?SUpWajkwVHdvVUt6SUMrRTFrZENTd0d0MnhhQW5uV3VxdUFPZ01SbHo1RHdR?=
+ =?utf-8?B?S1lNR2RwN3p2T09QaDh1S056YlNEY0plOU9uVkdTamhhcDBLOFY0MlJJOWxi?=
+ =?utf-8?B?MjRHRnhYL3pqamVYKzdDaFhaTDFXdEwvMUtNWVVjZGVPdHRqQ0hxYkpyNHIv?=
+ =?utf-8?B?U2FlempibjJtOTBESDFKNEtpTS9xSDQ3KzRmeGtkSlJzSTNVWEtKd1J2bk40?=
+ =?utf-8?B?RG5oZS92K2ovVW1iNUp0Rlp2azJmemM4Znh3QXYveHdXZjl4SEFTaHVEcHNN?=
+ =?utf-8?B?bEJNVVk1T29SZ05HaDNqdE93M09DdUZmSEhQbmtKV1ZzOXJvMjUvVnlrSm1v?=
+ =?utf-8?B?cWxnSDhBOGdabWprcE9ZelFzTmhSQ1RTNDN1c2IzdThNT0ZOc2hubmlRVXh2?=
+ =?utf-8?B?TlFHZGhwWTJmbEE0YjJXVElYczZXaG55WHkzbTNvY0oxQkxVVDlYU2JDUjIy?=
+ =?utf-8?Q?aEecwFOFshoqjzRaMIVY4Va6D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	8o0tRFxAkaGxOEFyc3mj6liudsBu6Hw68w3+soXbgcK2PagwufCe/tydcx1rYMLWHqiHIiuJcuaZa+wR2hn/QCyec+6i5OU6nA54PYs/bWkIGcf9CtpV8k05Pf04mps0y/jWaTcjUy04+itG19I2pFamvYhTjr/dPoy4+MguWc2lKjDBppuMWHr0ZWgXI6b1FcCAtDJPawkItlk17la9KJ04PwoDB8p86MYLLgqeOwiDP4XTJQMXTPV1P3XW2kEAg3dpg9pISIp5118KmVry+CcMoG+buyYcScy/K8Kuuzu+QpP1Pl9hb0OJNvmqqIfN5HfdaNh3W6+AbbE/kYZLOXs/DpA5+LOnnPGfq8l/o1twlLWud3CWmTPEGkFmFsq4dQFsPjQYXllO7UwPNklnfeBtpUBu/bBzon7WfBcRAFuXjvgMB55olR9GJ5iF9Y1g2Qf1JS4ylKSzO2plmnDisU+TIe7ikFE1pS5Hu18zs7xtOg7kfoH6D4KfbcNcpf58trX4ep/B1d7f6Pp9unPpifIvZ6YUSNBaDAl0UWPdKHoPXsiepo4qcFHtN3uUR3m8wTege70C+COIhvgBLusnkrmwx5Ze+fYfibZgGFXxsTY=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: acf0c7a7-6116-418d-7387-08ddf10b5703
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR10MB4320.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 11 Sep 2025 08:15:16.7916
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: WBtrFzIxB3bZIyV14SCYy4YBad33Z3/3W194tflYsylVHJQKBcdvYBnLmhkkHlNoxYfWUqO5Nr44sBq4cFOHYQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MN6PR10MB8070
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-09-10_04,2025-09-10_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 bulkscore=0 adultscore=0 suspectscore=0 phishscore=0
- clxscore=1015 impostorscore=0 spamscore=0 priorityscore=1501
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509080066
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 adultscore=0 suspectscore=0
+ bulkscore=0 mlxscore=0 mlxlogscore=999 phishscore=0 malwarescore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
+ definitions=main-2509110072
+X-Authority-Analysis: v=2.4 cv=esTfzppX c=1 sm=1 tr=0 ts=68c28518 b=1 cx=c_pps
+ a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
+ a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=yJojWOMRYYMA:10 a=GoEa3M9JfhUA:10 a=VwQbUJbxAAAA:8 a=N54-gffFAAAA:8
+ a=JfrnYn6hAAAA:8 a=20KFwNOVAAAA:8 a=yPCof4ZbAAAA:8 a=Bj0yz4kmN1o_EVaBk7MA:9
+ a=QEXdDO2ut3YA:10 a=1CNFftbPRP8L7MoqJWF3:22 cc=ntf awl=host:12084
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTA4MDE2NSBTYWx0ZWRfX9XkH7/v/8Byu
+ 6ch0HJpZn4ywLg7ixBoFmd4rtgx764o5d08iNFKsE+tDoaluUF+C0kGYES3kaBjm9e9S9AqZmus
+ F/HTlZyn5ZGXHzuOl88TgAi88dtzd+lkM0FZODcRO0ctghlCbg7HJldZEdXibn400CyXUNpj0Ha
+ e3wHFva8uUK48LEesXez9PTh4KMk3xKm0Ee0s3fGWOHNxohiS/erB03z+yoiZWeSW7UggxiXsg8
+ e58kxlA1YuoqiUikrygzUHsP3OjPg4DZxGxQVYkfOzxkpgUQcJUpVGf1/UkSB1xdF5CsczX+qN8
+ 6EexJqCXXtj8pDdzM//evXML6loF+sol/3GwYQ4BSR4djOVw2hzTkEBvHxseLdqbseIgQv+Z4P9
+ JAe2xADConExOMSQ52RpCXgcxTU0aQ==
+X-Proofpoint-GUID: 6NynjClbj4_TxWHEdi1vhA-vFBGwP6Uo
+X-Proofpoint-ORIG-GUID: 6NynjClbj4_TxWHEdi1vhA-vFBGwP6Uo
 
-On 9/2/2025 3:48 PM, Zhongqiu Han wrote:
-> The cpu_latency_qos_add/remove/update_request interfaces lack internal
-> synchronization by design, requiring the caller to ensure thread safety.
-> The current implementation relies on the `pm_qos_enabled` flag, which is
-> insufficient to prevent concurrent access and cannot serve as a proper
-> synchronization mechanism. This has led to data races and list corruption
-> issues.
+On 10/09/2025 22:32, Bart Van Assche wrote:
+> The SCSI core uses the budget map to enforce the cmd_per_lun limit.
+
+That's not strictly true, as I mentioned in 
+https://lore.kernel.org/linux-scsi/e7708546-c001-4f31-b895-69720755c3ac@acm.org/T/#m16d3bf6266faefee60addb48ae4b5cdd65e90a68
+
+cmd_per_lun may be completely ignored by the LLD setting its own sdev 
+queue depth.
+
+> That limit cannot be exceeded if host->cmd_per_lun >= host->can_queue
+
+Can host->cmd_per_lun > host->can_queue ever be true?
+
+> and if the host tag set is shared across all hardware queues.
+
+Sure, but what about single HW queue scenario? We should also enforce 
+host->cmd_per_lun <= host->can_queue && sdev->max_queue_depth <= 
+host->can_queue for that, right?
+
+Most/all single HW queue SCSI LLDs do not set .host_tagset (even though 
+they could).
+
+> Since scsi_mq_get_budget() shows up in all CPU profiles for fast SCSI
+> devices, do not allocate a budget map if cmd_per_lun >= can_queue and
+> if the host tag set is shared across all hardware queues.
 > 
-> A typical race condition call trace is:
+> On my UFS 4 test setup this patch improves IOPS by 1% and reduces the
+> time spent in scsi_mq_get_budget() from 0.22% to 0.01%.
 > 
-> [Thread A]
-> ufshcd_pm_qos_exit()
->    --> cpu_latency_qos_remove_request()
->      --> cpu_latency_qos_apply();
->        --> pm_qos_update_target()
->          --> plist_del              <--(1) delete plist node
->      --> memset(req, 0, sizeof(*req));
->    --> hba->pm_qos_enabled = false;
-> 
-> [Thread B]
-> ufshcd_devfreq_target
->    --> ufshcd_devfreq_scale
->      --> ufshcd_scale_clks
->        --> ufshcd_pm_qos_update     <--(2) pm_qos_enabled is true
->          --> cpu_latency_qos_update_request
->            --> pm_qos_update_target
->              --> plist_del          <--(3) plist node use-after-free
-> 
-> This patch introduces a dedicated mutex to serialize PM QoS operations,
-> preventing data races and ensuring safe access to PM QoS resources.
-> Additionally, READ_ONCE is used in the sysfs interface to ensure atomic
-> read access to pm_qos_enabled flag.
-> 
-> Fixes: 2777e73fc154 ("scsi: ufs: core: Add CPU latency QoS support for UFS driver")
-> Signed-off-by: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
-
-Hi Martin K. Petersen,
-
-Just a gentle ping on this patch,
-
-Would appreciate any feedback when you have time. Thanks!
-
-
-
-
+> Cc: Jens Axboe <axboe@kernel.dk>
+> Cc: Christoph Hellwig <hch@infradead.org>
+> Cc: Ming Lei <ming.lei@redhat.com>
+> Cc: John Garry <john.g.garry@oracle.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 > ---
-> v1 -> v2:
-> - Fix misleading indentation by adding braces to if statements in pm_qos logic.
-> - Resolve checkpatch strict mode warning by adding an inline comment for pm_qos_mutex.
-> - Link to v1: https://lore.kernel.org/all/20250901085117.86160-1-zhongqiu.han@oss.qualcomm.com/
+>   drivers/scsi/scsi.c        |  7 ++++-
+>   drivers/scsi/scsi_lib.c    | 60 +++++++++++++++++++++++++++++++++-----
+>   drivers/scsi/scsi_scan.c   | 11 ++++++-
+>   include/scsi/scsi_device.h |  5 +---
+>   4 files changed, 70 insertions(+), 13 deletions(-)
 > 
->   drivers/ufs/core/ufs-sysfs.c |  2 +-
->   drivers/ufs/core/ufshcd.c    | 25 ++++++++++++++++++++++---
->   include/ufs/ufshcd.h         |  3 +++
->   3 files changed, 26 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-> index 4bd7d491e3c5..8f7975010513 100644
-> --- a/drivers/ufs/core/ufs-sysfs.c
-> +++ b/drivers/ufs/core/ufs-sysfs.c
-> @@ -512,7 +512,7 @@ static ssize_t pm_qos_enable_show(struct device *dev,
->   {
->   	struct ufs_hba *hba = dev_get_drvdata(dev);
->   
-> -	return sysfs_emit(buf, "%d\n", hba->pm_qos_enabled);
-> +	return sysfs_emit(buf, "%d\n", READ_ONCE(hba->pm_qos_enabled));
->   }
->   
->   /**
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 926650412eaa..98b9ce583386 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -1047,14 +1047,19 @@ EXPORT_SYMBOL_GPL(ufshcd_is_hba_active);
+> diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+> index 9a0f467264b3..06066b694d8a 100644
+> --- a/drivers/scsi/scsi.c
+> +++ b/drivers/scsi/scsi.c
+> @@ -216,6 +216,8 @@ int scsi_device_max_queue_depth(struct scsi_device *sdev)
 >    */
->   void ufshcd_pm_qos_init(struct ufs_hba *hba)
+>   int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
 >   {
-> +	mutex_lock(&hba->pm_qos_mutex);
->   
-> -	if (hba->pm_qos_enabled)
-> +	if (hba->pm_qos_enabled) {
-> +		mutex_unlock(&hba->pm_qos_mutex);
->   		return;
-> +	}
->   
->   	cpu_latency_qos_add_request(&hba->pm_qos_req, PM_QOS_DEFAULT_VALUE);
->   
->   	if (cpu_latency_qos_request_active(&hba->pm_qos_req))
->   		hba->pm_qos_enabled = true;
+> +	struct Scsi_Host *shost = sdev->host;
 > +
-> +	mutex_unlock(&hba->pm_qos_mutex);
->   }
+>   	depth = min_t(int, depth, scsi_device_max_queue_depth(sdev));
 >   
->   /**
-> @@ -1063,11 +1068,16 @@ void ufshcd_pm_qos_init(struct ufs_hba *hba)
->    */
->   void ufshcd_pm_qos_exit(struct ufs_hba *hba)
->   {
-> -	if (!hba->pm_qos_enabled)
-> +	mutex_lock(&hba->pm_qos_mutex);
-> +
-> +	if (!hba->pm_qos_enabled) {
-> +		mutex_unlock(&hba->pm_qos_mutex);
->   		return;
-> +	}
+>   	if (depth > 0) {
+> @@ -226,7 +228,10 @@ int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
+>   	if (sdev->request_queue)
+>   		blk_set_queue_depth(sdev->request_queue, depth);
 >   
->   	cpu_latency_qos_remove_request(&hba->pm_qos_req);
->   	hba->pm_qos_enabled = false;
-> +	mutex_unlock(&hba->pm_qos_mutex);
->   }
->   
->   /**
-> @@ -1077,10 +1087,15 @@ void ufshcd_pm_qos_exit(struct ufs_hba *hba)
->    */
->   static void ufshcd_pm_qos_update(struct ufs_hba *hba, bool on)
->   {
-> -	if (!hba->pm_qos_enabled)
-> +	mutex_lock(&hba->pm_qos_mutex);
-> +
-> +	if (!hba->pm_qos_enabled) {
-> +		mutex_unlock(&hba->pm_qos_mutex);
->   		return;
-> +	}
->   
->   	cpu_latency_qos_update_request(&hba->pm_qos_req, on ? 0 : PM_QOS_DEFAULT_VALUE);
-> +	mutex_unlock(&hba->pm_qos_mutex);
->   }
->   
->   /**
-> @@ -10764,6 +10779,10 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
->   	mutex_init(&hba->ee_ctrl_mutex);
->   
->   	mutex_init(&hba->wb_mutex);
-> +
-> +	/* Initialize mutex for PM QoS request synchronization */
-> +	mutex_init(&hba->pm_qos_mutex);
-> +
->   	init_rwsem(&hba->clk_scaling_lock);
->   
->   	ufshcd_init_clk_gating(hba);
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 30ff169878dc..a16f857a052f 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -962,6 +962,7 @@ enum ufshcd_mcq_opr {
->    * @ufs_rtc_update_work: A work for UFS RTC periodic update
->    * @pm_qos_req: PM QoS request handle
->    * @pm_qos_enabled: flag to check if pm qos is enabled
-> + * @pm_qos_mutex: synchronizes PM QoS request and status updates
->    * @critical_health_count: count of critical health exceptions
->    * @dev_lvl_exception_count: count of device level exceptions since last reset
->    * @dev_lvl_exception_id: vendor specific information about the
-> @@ -1135,6 +1136,8 @@ struct ufs_hba {
->   	struct delayed_work ufs_rtc_update_work;
->   	struct pm_qos_request pm_qos_req;
->   	bool pm_qos_enabled;
-> +	/* synchronizes PM QoS request and status updates */
-> +	struct mutex pm_qos_mutex;
->   
->   	int critical_health_count;
->   	atomic_t dev_lvl_exception_count;
+> -	sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
+> +	if (shost->host_tagset && depth >= shost->can_queue)
+> +		sbitmap_free(&sdev->budget_map);
 
+eh, what happens if we call this twice?
 
--- 
-Thx and BRs,
-Zhongqiu Han
+> +	else
+> +		sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
+
+what if we set queue_depth = shost->can_queue (and free the budget map) 
+and then later set lower than shost->can_queue (and try to reference the 
+budget map)?
+
+>   
+>   	return sdev->queue_depth;
+>   }
+> diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+> index 0c65ecfedfbd..c546514d1049 100644
+> --- a/drivers/scsi/scsi_lib.c
+> +++ b/drivers/scsi/scsi_lib.c
+> @@ -396,7 +396,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
+>   	if (starget->can_queue > 0)
+>   		atomic_dec(&starget->target_busy);
+>   
+> -	sbitmap_put(&sdev->budget_map, cmd->budget_token);
+> +	if (sdev->budget_map.map)
+> +		sbitmap_put(&sdev->budget_map, cmd->budget_token);
+>   	cmd->budget_token = -1;
+>   }
+>   
+> @@ -445,6 +446,47 @@ static void scsi_single_lun_run(struct scsi_device *current_sdev)
+>   	spin_unlock_irqrestore(shost->host_lock, flags);
+>   }
+>   
+> +struct sdev_in_flight_data {
+> +	const struct scsi_device *sdev;
+> +	int count;
+> +};
+> +
+> +static bool scsi_device_check_in_flight(struct request *rq, void *data)
+
+so this does not check the cmd state (like scsi_host_check_in_flight() 
+does), but it uses the same naming (scsi_xxx_check_in_flight)
+
+> +{
+> +	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+> +	struct sdev_in_flight_data *sifd = data;
+> +
+> +	if (cmd->device == sifd->sdev)
+> +		sifd->count++;
+> +
+> +	return true;
+> +}
+> +
+> +/**
+> + * scsi_device_busy() - Number of commands allocated for a SCSI device
+> + * @sdev: SCSI device.
+> + *
+> + * Note: There is a subtle difference between this function and
+> + * scsi_host_busy(). scsi_host_busy() counts the number of commands that have
+> + * been started. This function counts the number of commands that have been
+> + * allocated. At least the UFS driver depends on this function counting commands
+> + * that have already been allocated but that have not yet been started.
+> + */
+> +int scsi_device_busy(const struct scsi_device *sdev)
+> +{
+> +	struct sdev_in_flight_data sifd = { .sdev = sdev };
+> +	struct blk_mq_tag_set *set = &sdev->host->tag_set;
+> +
+> +	if (sdev->budget_map.map)
+
+I really dislike these checks
+
+> +		return sbitmap_weight(&sdev->budget_map);
+> +	if (WARN_ON_ONCE(!set->shared_tags))
+> +		return 0;
+> +	blk_mq_all_tag_iter(set->shared_tags, scsi_device_check_in_flight,
+> +			    &sifd);
+> +	return sifd.count;
+> +}
+> +EXPORT_SYMBOL(scsi_device_busy);
+> +
+>   static inline bool scsi_device_is_busy(struct scsi_device *sdev)
+>   {
+>   	if (scsi_device_busy(sdev) >= sdev->queue_depth)
+> @@ -1358,11 +1400,13 @@ scsi_device_state_check(struct scsi_device *sdev, struct request *req)
+>   static inline int scsi_dev_queue_ready(struct request_queue *q,
+>   				  struct scsi_device *sdev)
+>   {
+> -	int token;
+> +	int token = INT_MAX;
+>   
+> -	token = sbitmap_get(&sdev->budget_map);
+> -	if (token < 0)
+> -		return -1;
+> +	if (sdev->budget_map.map) {
+
+this can race with a call to scsi_change_queue_depth() (which may free 
+sdev->budget_map.map), right?
+
+scsi_change_queue_depth() does not seem to do any queue freezing.
+
+> +		token = sbitmap_get(&sdev->budget_map);
+> +		if (token < 0)
+> +			return -1;
+> +	}
+>   
+
+thanks,
+John
