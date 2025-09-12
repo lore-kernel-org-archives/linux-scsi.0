@@ -1,96 +1,51 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9568274B39
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2025 08:32:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6877641C62;
+	Fri, 12 Sep 2025 11:43:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757665971; cv=none; b=NSfnMTiybXbz3oocZCl/8D2/eB7jWNNTbPmqXCi4JOfPeKTH1XscfRZokOeXHTOcFNW+OwRo4tTZW1ny27NjLeoLIVFmmlPxM+IshimyqSfrKIHzLvvpyPMUionWEed3igIcNhQLkehA3F87mVJEPiupV10p/OA3QzPCTFGv4Dc=
+	t=1757677406; cv=none; b=LqxhO0/hEm2CBiuRf2QSIZfrs1QADxDxXNs9KqooStFKWzUl2txum2r9uL7PH641ezl3Esgj3pwuJJxDmhf76yaZtrZ7qhFpmGAiJcCSdYL/1vH8W6OpWOjkfwr0zG6W3yCq3Lhh689Iuq9HvGW84gxLsOqDSmcQ6bxHUIFsLpo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757665971; c=relaxed/simple;
-	bh=LipYxOUh3mZhOquz2ghmpDRHwnWmjxQ7Y1qMaDoBYyY=;
+	s=arc-20240116; t=1757677406; c=relaxed/simple;
+	bh=vQZw18LyMNiHBfayqqKazzYbl6hyR7y4CM3GzrQTcKo=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=jiZd+Z7RyHWgWPVMZa0w5yWEUWogcraWGOqo1/waaMuOurQll1JdjZqkT15DYlL1jF5doaRkheal2ZgjKJjsJG+2FPPKxC8zoDJ2mpEmEySB/kbblbPmDPCTnseacVOrsh3wC0YA+QzyGCB2K/Xa57aXzUjaohF6XUl33tHZaoY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=NzGZs2Va; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IJRvEf8M; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=NzGZs2Va; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IJRvEf8M; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	 Content-Type:Content-Disposition:In-Reply-To; b=RyT9RI2j6qOlTnaYw0KIyVEqiCQewLMLd/nvCUsYpul/nevb3VCawDMMznzTt3QXW27xUIh4k04hjXrPzAaaw8HDSnnQ6fKvlkpQgzxNMzYIEVkbBae5QY+dpEWx5Gx7uILyul80jYkayGann837FbrbbgrtfJUJam7XhYXjr6A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=0TCwjyZx; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="NzGZs2Va";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IJRvEf8M";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="NzGZs2Va";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IJRvEf8M"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id 46C8C20706;
-	Fri, 12 Sep 2025 08:32:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757665967; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=E/CSSfN43nuBpCmvlSQv0g4m2YsMRqWgQtvSodhnH28=;
-	b=NzGZs2VaUva7nAB6VbcEuZSvhBSVlcW4blbtBY6HNBMWWAXbae08r9qYs3v5z+GdRFYgY/
-	VbeEpqO4pA7jByje53TP/rNV4Elzxv+SZjUQ0OFLzzAAZ+Kr/L3Bym88W7Dx4Ul2nVvL3l
-	TyT0M91a3S/Kr9Dj+CvBgTFiBddEJYI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757665967;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=E/CSSfN43nuBpCmvlSQv0g4m2YsMRqWgQtvSodhnH28=;
-	b=IJRvEf8MaAIKPa9ZL8mK7o1+fIpbj5bi9eT0ydLdxT6d/IYDCbkKoZdlcbLdgnxuO7SBlJ
-	gjmRz1UNrH/tLXCA==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1757665967; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=E/CSSfN43nuBpCmvlSQv0g4m2YsMRqWgQtvSodhnH28=;
-	b=NzGZs2VaUva7nAB6VbcEuZSvhBSVlcW4blbtBY6HNBMWWAXbae08r9qYs3v5z+GdRFYgY/
-	VbeEpqO4pA7jByje53TP/rNV4Elzxv+SZjUQ0OFLzzAAZ+Kr/L3Bym88W7Dx4Ul2nVvL3l
-	TyT0M91a3S/Kr9Dj+CvBgTFiBddEJYI=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1757665967;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=E/CSSfN43nuBpCmvlSQv0g4m2YsMRqWgQtvSodhnH28=;
-	b=IJRvEf8MaAIKPa9ZL8mK7o1+fIpbj5bi9eT0ydLdxT6d/IYDCbkKoZdlcbLdgnxuO7SBlJ
-	gjmRz1UNrH/tLXCA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 33B4113869;
-	Fri, 12 Sep 2025 08:32:47 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id YkOaDK/aw2hKLgAAD6G6ig
-	(envelope-from <dwagner@suse.de>); Fri, 12 Sep 2025 08:32:47 +0000
-Date: Fri, 12 Sep 2025 10:32:38 +0200
-From: Daniel Wagner <dwagner@suse.de>
-To: Thomas Gleixner <tglx@linutronix.de>
-Cc: Hannes Reinecke <hare@suse.de>, Daniel Wagner <wagi@kernel.org>, 
-	Jens Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, Christoph Hellwig <hch@lst.de>, 
-	Sagi Grimberg <sagi@grimberg.me>, "Michael S. Tsirkin" <mst@redhat.com>, 
-	Aaron Tomlin <atomlin@atomlin.com>, "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	Costa Shulyupin <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, 
-	Valentin Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei <ming.lei@redhat.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Mel Gorman <mgorman@suse.de>, 
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org, linux-block@vger.kernel.org, 
-	linux-nvme@lists.infradead.org, megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	storagedev@microchip.com, virtualization@lists.linux.dev, 
-	GR-QLogic-Storage-Upstream@marvell.com
-Subject: Re: [PATCH v8 10/12] blk-mq: use hk cpus only when isolcpus=io_queue
- is enabled
-Message-ID: <bc5ebdea-7091-4999-a021-ec2a65573aa0@flourine.local>
-References: <20250905-isolcpus-io-queues-v8-0-885984c5daca@kernel.org>
- <20250905-isolcpus-io-queues-v8-10-885984c5daca@kernel.org>
- <ff66801c-f261-411d-bbbf-b386e013d096@suse.de>
- <d11a0c60-1b75-49ec-a2f8-7df402c4adf2@flourine.local>
- <87ms72u3at.ffs@tglx>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="0TCwjyZx"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2916DC4CEF1;
+	Fri, 12 Sep 2025 11:43:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1757677405;
+	bh=vQZw18LyMNiHBfayqqKazzYbl6hyR7y4CM3GzrQTcKo=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=0TCwjyZxwiSPrLtFZN+IyniMywN3vL/LlOWbuAxsnEsOVAbzmqup0WIsjoDHMFsp4
+	 CZHsmzwRAvDxfPp9R9I5o3dTd0LaONRXa7YSjy5cAsJmZrkkOk9zpdlsnFkevQaLH4
+	 NT9opWe3xXbfYZRU1UCBvRT6dZZUiedrQxIwCvto=
+Date: Fri, 12 Sep 2025 13:43:22 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Mukesh R <mrathor@linux.microsoft.com>
+Cc: dri-devel@lists.freedesktop.org, linux-kernel@vger.kernel.org,
+	linux-input@vger.kernel.org, linux-hyperv@vger.kernel.org,
+	netdev@vger.kernel.org, linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-fbdev@vger.kernel.org,
+	linux-arch@vger.kernel.org, virtualization@lists.linux.dev,
+	maarten.lankhorst@linux.intel.com, mripard@kernel.org,
+	tzimmermann@suse.de, airlied@gmail.com, simona@ffwll.ch,
+	jikos@kernel.org, bentiss@kernel.org, kys@microsoft.com,
+	haiyangz@microsoft.com, wei.liu@kernel.org, decui@microsoft.com,
+	dmitry.torokhov@gmail.com, andrew+netdev@lunn.ch,
+	davem@davemloft.net, edumazet@google.com, kuba@kernel.org,
+	pabeni@redhat.com, bhelgaas@google.com,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	deller@gmx.de, arnd@arndb.de, sgarzare@redhat.com, horms@kernel.org
+Subject: Re: [PATCH v1 2/2] Drivers: hv: Make CONFIG_HYPERV bool
+Message-ID: <2025091253-overwrite-carol-b197@gregkh>
+References: <20250906010952.2145389-1-mrathor@linux.microsoft.com>
+ <20250906010952.2145389-3-mrathor@linux.microsoft.com>
+ <2025090621-rumble-cost-2c0d@gregkh>
+ <d7d7b23f-eaea-2dbc-9c9d-4bee082f6fe7@linux.microsoft.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -99,112 +54,66 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <87ms72u3at.ffs@tglx>
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-0.999];
-	MIME_GOOD(-0.10)[text/plain];
-	MISSING_XM_UA(0.00)[];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCPT_COUNT_TWELVE(0.00)[26];
-	MIME_TRACE(0.00)[0:+];
-	TO_DN_SOME(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	R_RATELIMIT(0.00)[to_ip_from(RL67935bhfdkbndpbo95z3ogoo)];
-	FROM_EQ_ENVFROM(0.00)[];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
+In-Reply-To: <d7d7b23f-eaea-2dbc-9c9d-4bee082f6fe7@linux.microsoft.com>
 
-On Wed, Sep 10, 2025 at 10:20:26AM +0200, Thomas Gleixner wrote:
-> On Mon, Sep 08 2025 at 09:26, Daniel Wagner wrote:
-> > On Mon, Sep 08, 2025 at 08:13:31AM +0200, Hannes Reinecke wrote:
-> >> >   const struct cpumask *blk_mq_online_queue_affinity(void)
-> >> >   {
-> >> > +	if (housekeeping_enabled(HK_TYPE_IO_QUEUE)) {
-> >> > +		cpumask_and(&blk_hk_online_mask, cpu_online_mask,
-> >> > +			    housekeeping_cpumask(HK_TYPE_IO_QUEUE));
-> >> > +		return &blk_hk_online_mask;
-> >> 
-> >> Can you explain the use of 'blk_hk_online_mask'?
-> >> Why is a static variable?
-> >
-> > The blk_mq_*_queue_affinity helpers return a const struct cpumask *, the
-> > caller doesn't need to free the return value. Because cpumask_and needs
-> > store its result somewhere, I opted for the global static variable.
-> >
-> >> To my untrained eye it's being recalculated every time one calls
-> >> this function. And only the first invocation run on an empty mask,
-> >> all subsequent ones see a populated mask.
-> >
-> > The cpu_online_mask might change over time, it's not a static bitmap.
-> > Thus it's necessary to update the blk_hk_online_mask. Doing some sort of
-> > caching is certainly possible. Given that we have plenty of cpumask
-> > logic operation in the cpu_group_evenly code path later, I am not so
-> > sure this really makes a huge difference.
+On Mon, Sep 08, 2025 at 02:01:34PM -0700, Mukesh R wrote:
+> On 9/6/25 04:36, Greg KH wrote:
+> > On Fri, Sep 05, 2025 at 06:09:52PM -0700, Mukesh Rathor wrote:
+> >> With CONFIG_HYPERV and CONFIG_HYPERV_VMBUS separated, change CONFIG_HYPERV
+> >> to bool from tristate. CONFIG_HYPERV now becomes the core Hyper-V
+> >> hypervisor support, such as hypercalls, clocks/timers, Confidential
+> >> Computing setup, PCI passthru, etc. that doesn't involve VMBus or VMBus
+> >> devices.
+> > 
+> > But why are you making it so that this can not be a module anymore?  You
+> > are now forcing ALL Linux distro users to always have this code in their
+> > system, despite not ever using the feature.  That feels like a waste to
+> > me.
+> > 
+> > What is preventing this from staying as a module?  Why must you always
+> > have this code loaded at all times for everyone?
 > 
-> Sure,  but none of this is serialized against CPU hotplug operations. So
-> the resulting mask, which is handed into the spreading code can be
-> concurrently modified. IOW it's not as const as the code claims.
+> This is currently not a module. I assume it was at the beginning. In
+> drivers/Makefile today:
+> 
+> obj-$(subst m,y,$(CONFIG_HYPERV))       += hv/
+> 
+> 
+> More context: CONFIG_HYPERV doesn't really reflect one module. It is
+> both for kernel built in code and building of stuff in drivers/hv.
+> 
+> drivers/hv then builds 4 modules:
+> 
+> obj-$(CONFIG_HYPERV)            += hv_vmbus.o
+> obj-$(CONFIG_HYPERV_UTILS)      += hv_utils.o
+> obj-$(CONFIG_HYPERV_BALLOON)    += hv_balloon.o
+> obj-$(CONFIG_MSHV_ROOT)         += mshv_root.o
+> 
+> Notice vmbus is using CONFIG_HYPERV because there is no 
+> CONFIG_HYPERV_VMBUS. We are trying to fix that here.
 
-Thanks for explaining.
+This series does not apply to my tree:
 
-In group_cpu_evenly:
+checking file drivers/gpu/drm/Kconfig
+checking file drivers/hid/Kconfig
+checking file drivers/hv/Kconfig
+Hunk #2 FAILED at 82.
+1 out of 2 hunks FAILED
+checking file drivers/hv/Makefile
+checking file drivers/input/serio/Kconfig
+checking file drivers/net/hyperv/Kconfig
+checking file drivers/pci/Kconfig
+checking file drivers/scsi/Kconfig
+checking file drivers/uio/Kconfig
+checking file drivers/video/fbdev/Kconfig
+checking file include/asm-generic/mshyperv.h
+Hunk #1 succeeded at 162 with fuzz 2 (offset -3 lines).
+Hunk #2 succeeded at 198 (offset -3 lines).
+Hunk #3 succeeded at 215 (offset -3 lines).
+checking file net/vmw_vsock/Kconfig
 
-	/*
-	 * Make a local cache of 'cpu_present_mask', so the two stages
-	 * spread can observe consistent 'cpu_present_mask' without holding
-	 * cpu hotplug lock, then we can reduce deadlock risk with cpu
-	 * hotplug code.
-	 *
-	 * Here CPU hotplug may happen when reading `cpu_present_mask`, and
-	 * we can live with the case because it only affects that hotplug
-	 * CPU is handled in the 1st or 2nd stage, and either way is correct
-	 * from API user viewpoint since 2-stage spread is sort of
-	 * optimization.
-	 */
-	cpumask_copy(npresmsk, data_race(cpu_present_mask));
+What was it made against?
 
+thanks,
 
-0263f92fadbb ("lib/group_cpus.c: avoid acquiring cpu hotplug lock in
-group_cpus_evenly"):
-
-  group_cpus_evenly() could be part of storage driver's error handler, such
-  as nvme driver, when may happen during CPU hotplug, in which storage queue
-  has to drain its pending IOs because all CPUs associated with the queue
-  are offline and the queue is becoming inactive.  And handling IO needs
-  error handler to provide forward progress.
-
-  Then deadlock is caused:
-
-  1) inside CPU hotplug handler, CPU hotplug lock is held, and blk-mq's
-     handler is waiting for inflight IO
-
-  2) error handler is waiting for CPU hotplug lock
-
-  3) inflight IO can't be completed in blk-mq's CPU hotplug handler
-     because error handling can't provide forward progress.
-
-  Solve the deadlock by not holding CPU hotplug lock in group_cpus_evenly(),
-  in which two stage spreads are taken: 1) the 1st stage is over all present
-  CPUs; 2) the end stage is over all other CPUs.
-
-  Turns out the two stage spread just needs consistent 'cpu_present_mask',
-  and remove the CPU hotplug lock by storing it into one local cache.  This
-  way doesn't change correctness, because all CPUs are still covered.
-
-This sounds like I should do something similar with cpu_online_mask.
-Anyway, I'll work on this.
-
-> How is this even remotely correct?
-
-It isn't :( I did hotplug tests but obviously these were not really up
-to the task. The kernel test bot gave me a pointer how I should test.
+greg k-h
