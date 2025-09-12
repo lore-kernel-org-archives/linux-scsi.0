@@ -1,87 +1,132 @@
-Received: from mail-oa1-f43.google.com (mail-oa1-f43.google.com [209.85.160.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from galois.linutronix.de (Galois.linutronix.de [193.142.43.55])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 495BB2E7BAE
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2025 13:18:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B1253148BB;
+	Fri, 12 Sep 2025 14:31:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=193.142.43.55
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757683127; cv=none; b=Zje8tNNC905f3xN4QQCahoq+792XYq4h2GGhZFVkr+e3+3nA/elUCeO1GjvkqQa9pwbXdqXN8vj1Uja+GVBZaZLzStXd+6CQ8X7Q41NZjr73ezU6LX5b7cUJYJVYjqo6HumURCi9VJSxPLoSkSj601xk2sQ4JkVZEyqXee7P7vA=
+	t=1757687519; cv=none; b=HdvGaz3VGcUwwuWgoaeNpG1dsiWmFEk79ocGCAp5n1BEUvBur8zscWFQXdRdl45rgkx6Nxcvqxiuksn8V/OoHiopLtm/7RLIw/aDyPISiQ/qmOwUvuqtDDBYljT1HYBIE5P5anGvPcZYk45TCXEKjhLvCS0lqCI78owvM/jFdAs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757683127; c=relaxed/simple;
-	bh=oeww4Ivx5YThdAfSYdbOCn1Gj1LUFzN/W4lJGwFtW3A=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=pgnbKZe6yceD8nRtN0XMcUiAqrVKP2MOtSgRgKTTRnQzmPaMRHYxOZtDtKu5DOK2AWwsIE0wTDrn/tGzdzYtGGmmqKxd57YNvS0vMIRak7qb3Y2ZHaYg8UKFuU8o8XyWZg/mZEajQmZQJ19w3jqLOw8kOpHq3jHgezYmdD6KSIU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=XaqoIiBN; arc=none smtp.client-ip=209.85.160.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1757687519; c=relaxed/simple;
+	bh=fpazFccOmbXGuWUXFS4kbPhns9qBLv/2/3RBg0fWiGI=;
+	h=From:To:Cc:Subject:In-Reply-To:References:Date:Message-ID:
+	 MIME-Version:Content-Type; b=Sjiz3uqw5NyFjT6tZv3jI2l9AnIoWdZA5XNCbnlcBuDlqLkUSvub3n22AQ0A5CkagntY/og/4pVwK7pC6+D9T96YQ8envdEBICEnUR14izUh7NGH4OglEf25SCof2CrmpoqPzXrHNNKDjKNoMF9KiOHZuQJtci3idZ/SRKUquuM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de; spf=pass smtp.mailfrom=linutronix.de; dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=E81D9Xs6; dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b=k18nEKxc; arc=none smtp.client-ip=193.142.43.55
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linutronix.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linutronix.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XaqoIiBN"
-Received: by mail-oa1-f43.google.com with SMTP id 586e51a60fabf-30cce892b7dso906155fac.1
-        for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2025 06:18:46 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1757683125; x=1758287925; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=oeww4Ivx5YThdAfSYdbOCn1Gj1LUFzN/W4lJGwFtW3A=;
-        b=XaqoIiBNSrrR2zrG++Bsaoq01VFgfEBGxJ+ysCJftMjj0hrGwBUazuS8iGMytsu/8+
-         lTgSxMhEpFJuwhmEn1BH4LoZXb+4OVkBjrOwayy1oNBLRD3QvKof5X70wP0OE6BjrqAj
-         Pyj/o9cUfpERUcSu749OXC2u09WfqzBhvJ8fwOUlATiCOTXxW+yURv9ck5QljCIWUDlT
-         awKwsMPlCDb510+qlAr2M0LZepenW4WnUIhkOS2NvH2+pk75XlcNBAMYZYa/bEe7rdFK
-         5Tpb8/xdAjXOZg4wYnwQDriqs9vJ9EZVUKb3ZqzkWdffm5cyc3VdJkVI3Ej7E8vDnMw4
-         uItA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757683125; x=1758287925;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=oeww4Ivx5YThdAfSYdbOCn1Gj1LUFzN/W4lJGwFtW3A=;
-        b=vlXX62CynR30QO+kADvB7bu65nACFTro8j8SRcyo3g9D6RVaZzZhBVK+u/orf9YS4M
-         h5RDcZY6q2Poi0kgxnazulOnh9QoNf17h/rS+3XLri6VYxi/eBuQP2kIR8Gs0DB8sziV
-         WY/PX41YiFOL1XR0ogAlj7VXq35pFEk36D8y7ZZ3VBiXbpkv22srHFz3UEbZgZYBUEeY
-         6BxnL8C6963yDG5NYMIEiuCyx03Y5AwBm+T1jxR68DPdfW0NJJiHi15qjainI7tDPY9F
-         iTxknyFZzcFebZXWs/T1LhHGEDaE8poWSSkvG6vz5gLxllOP5JMEPkBphtlIWwCHPA+Y
-         ieTA==
-X-Forwarded-Encrypted: i=1; AJvYcCU+TDHh4Th6Lrpia7EEmNfgdku0ydhC2gs/hGIJVvhL2eb3CbESBn68DjSmctA55/Dd7B97936vqyEa@vger.kernel.org
-X-Gm-Message-State: AOJu0YygdxOD++/5YKHDKn3hkb5m9CSDA/kfYmTx9BGMChLJZW6jOksS
-	G/HYtSPxYHU2ErivIhuHJ2Fq4Uzpal5VDL2tGbJju3ubltA6wCybr2AJ9DReiB4CatZHHrpF4Jt
-	XPAc5W3TfTI0h0sJusvztXTq6Ge10b++D6JpuukBA4A==
-X-Gm-Gg: ASbGnctNSGjVfmLc2XBq0xU73Cp7ayIt+PCkXcvQfYRflJMuZePFcIS+31E8MNGlCvH
-	Ger/USAi/GkkqgB0Arjan6vVbtJOAWnpMfuweHxpqGdFxGl9gOUMj2qzDz05WOMCBh6nxigZBL7
-	Jfdeph/wsbP5FGNWGKqlDp/c544t0bCB0pJa6cnVO65bE4NkuZBqBZ+slO6Sa2iDZlGSze1ggCW
-	AAfu7o=
-X-Google-Smtp-Source: AGHT+IGfSaVuijaDjlm+oIKN2iiydfgKjK+5YsMgIZmmXxQ/CONJDi7ONHUL/Qm+aJ4qj0ySkZLSHpb1XTjKs2wTKXo=
-X-Received: by 2002:a05:6871:154:b0:322:4639:f3a0 with SMTP id
- 586e51a60fabf-32e53e60589mr1203923fac.9.1757683125291; Fri, 12 Sep 2025
- 06:18:45 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="E81D9Xs6";
+	dkim=permerror (0-bit key) header.d=linutronix.de header.i=@linutronix.de header.b="k18nEKxc"
+From: Thomas Gleixner <tglx@linutronix.de>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020; t=1757687516;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YT6lK9VThWO2VoDv4flXldsg/lGV+uGD6AwCarpxbiA=;
+	b=E81D9Xs6MJnJtYyDYfeabzgtnhu+RMcm8DE0KDo9tBNGZp5iHi5LpNIKp0XivU7YySkQPF
+	3Md77jcnpzz2ktnuPXzcJxrAsxF6mzIwMzq7/PMk3PMS0uY1VFv6HJUHzlvcOd0psd09oj
+	lr4x7RI8MBh48uDdfptw5f7lPiPscrmKDn/W2DZzIusTWwLgeTdBSJHYQmbsjBlwJhi06l
+	CNp7Q2g4VO2A7sLlPAqoAtMvL5C6Gt6Kaeoy9lpdeu6E+g8ks9dmzGVzKaDHfGV321BAMk
+	YanvmSBztaAu0jwyA+z8jrWMqaobVb6idrFkdqn44z+qeEiReWNuqTlDk+yrIg==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=linutronix.de;
+	s=2020e; t=1757687516;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=YT6lK9VThWO2VoDv4flXldsg/lGV+uGD6AwCarpxbiA=;
+	b=k18nEKxcmY8iz/IYvo6R2LzsHnXZHqJa2ovPB8+4Z6Spdcm0Z6KyI4tDXGNnAuA/riu/pc
+	1ypcbeflQ7j/hkDQ==
+To: Daniel Wagner <dwagner@suse.de>
+Cc: Hannes Reinecke <hare@suse.de>, Daniel Wagner <wagi@kernel.org>, Jens
+ Axboe <axboe@kernel.dk>, Keith Busch <kbusch@kernel.org>, Christoph
+ Hellwig <hch@lst.de>, Sagi Grimberg <sagi@grimberg.me>, "Michael S.
+ Tsirkin" <mst@redhat.com>, Aaron Tomlin <atomlin@atomlin.com>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>, Costa Shulyupin
+ <costa.shul@redhat.com>, Juri Lelli <juri.lelli@redhat.com>, Valentin
+ Schneider <vschneid@redhat.com>, Waiman Long <llong@redhat.com>, Ming Lei
+ <ming.lei@redhat.com>, Frederic Weisbecker <frederic@kernel.org>, Mel
+ Gorman <mgorman@suse.de>, Mathieu Desnoyers
+ <mathieu.desnoyers@efficios.com>, linux-kernel@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
+ storagedev@microchip.com, virtualization@lists.linux.dev,
+ GR-QLogic-Storage-Upstream@marvell.com
+Subject: Re: [PATCH v8 10/12] blk-mq: use hk cpus only when
+ isolcpus=io_queue is enabled
+In-Reply-To: <bc5ebdea-7091-4999-a021-ec2a65573aa0@flourine.local>
+References: <20250905-isolcpus-io-queues-v8-0-885984c5daca@kernel.org>
+ <20250905-isolcpus-io-queues-v8-10-885984c5daca@kernel.org>
+ <ff66801c-f261-411d-bbbf-b386e013d096@suse.de>
+ <d11a0c60-1b75-49ec-a2f8-7df402c4adf2@flourine.local>
+ <87ms72u3at.ffs@tglx>
+ <bc5ebdea-7091-4999-a021-ec2a65573aa0@flourine.local>
+Date: Fri, 12 Sep 2025 16:31:55 +0200
+Message-ID: <87cy7vrbc4.ffs@tglx>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20250907202752.3613183-1-alok.a.tiwari@oracle.com>
-In-Reply-To: <20250907202752.3613183-1-alok.a.tiwari@oracle.com>
-From: Peter Griffin <peter.griffin@linaro.org>
-Date: Fri, 12 Sep 2025 14:18:34 +0100
-X-Gm-Features: Ac12FXyFWdruiBB0gYT4kEG-HddeFzWWyfMX32BSCDTTl49jpBagppTHhtL-eME
-Message-ID: <CADrjBPoByCUtKLR193QpfMv+1VTspq1s8Mzm4dzLCUai8P30Tg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: ufs: exynos: correct sync pattern mask timing comment
-To: Alok Tiwari <alok.a.tiwari@oracle.com>
-Cc: alim.akhtar@samsung.com, krzk@kernel.org, martin.petersen@oracle.com, 
-	linux-samsung-soc@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain
 
-On Sun, 7 Sept 2025 at 21:27, Alok Tiwari <alok.a.tiwari@oracle.com> wrote:
+On Fri, Sep 12 2025 at 10:32, Daniel Wagner wrote:
+> On Wed, Sep 10, 2025 at 10:20:26AM +0200, Thomas Gleixner wrote:
+>> > The cpu_online_mask might change over time, it's not a static bitmap.
+>> > Thus it's necessary to update the blk_hk_online_mask. Doing some sort of
+>> > caching is certainly possible. Given that we have plenty of cpumask
+>> > logic operation in the cpu_group_evenly code path later, I am not so
+>> > sure this really makes a huge difference.
+>> 
+>> Sure,  but none of this is serialized against CPU hotplug operations. So
+>> the resulting mask, which is handed into the spreading code can be
+>> concurrently modified. IOW it's not as const as the code claims.
 >
-> Fix the comment for SYNC_LEN_G2 in exynos_ufs_config_sync_pattern_mask().
-> The actual value is 40us, not 44us, matching the configured mask timing.
-> This change improves code clarity and avoids potential confusion for
-> readers and maintainers.
+> Thanks for explaining.
 >
-> No functional changes.
+> In group_cpu_evenly:
 >
-> Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
-> ---
+> 	/*
+> 	 * Make a local cache of 'cpu_present_mask', so the two stages
+> 	 * spread can observe consistent 'cpu_present_mask' without holding
+> 	 * cpu hotplug lock, then we can reduce deadlock risk with cpu
+> 	 * hotplug code.
+> 	 *
+> 	 * Here CPU hotplug may happen when reading `cpu_present_mask`, and
+> 	 * we can live with the case because it only affects that hotplug
+> 	 * CPU is handled in the 1st or 2nd stage, and either way is correct
+> 	 * from API user viewpoint since 2-stage spread is sort of
+> 	 * optimization.
+> 	 */
+> 	cpumask_copy(npresmsk, data_race(cpu_present_mask));
 
-Reviewed-by: Peter Griffin <peter.griffin@linaro.org>
+The present mask is very different from the online mask. The present
+mask only changes on physical hotplug when:
+
+     - a offline CPU is removed from the present set of CPUs
+
+     - a offline CPU is added to it.
+
+In neither case the CPU can be involved in any operation related to the
+actual offline/online operations.
+
+Also contrary to your approach, this code takes the possibility of
+a concurrently changing mask into account by taking a racy snapshot,
+which is immutable for the following operation.
+
+What you are doing with that static mask, makes it a target of
+concurrent modification, which is obviously a recipe for subtle bugs.
+
+>   Turns out the two stage spread just needs consistent 'cpu_present_mask',
+>   and remove the CPU hotplug lock by storing it into one local cache.  This
+>   way doesn't change correctness, because all CPUs are still covered.
+>
+> This sounds like I should do something similar with cpu_online_mask.
+
+Indeed.
+
+Thanks,
+
+        tglx
+
