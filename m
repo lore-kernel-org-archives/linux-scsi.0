@@ -1,46 +1,46 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0C37F3009D5
-	for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2025 18:26:04 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 595CA3009D5
+	for <linux-scsi@vger.kernel.org>; Fri, 12 Sep 2025 18:26:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757701565; cv=none; b=FFrrJ9dXwnFaYuYhQUUpMLaLRUKRmKdrAssqmoIJqfXtk800NlbtzQ72X5EMxsYsChb5wUGTDhIjr1jvN55f0tCK4UVs7+Xv4W31Y98BsYLfjRd/1Zo//d52X1dEGbunXHnJzu92XoUMebLVjvISOwKf8hg8siZv74Su1Oi2kls=
+	t=1757701579; cv=none; b=I4v7uRnuRYI5BZKu4uIDNw/gpHPfwBCyKJCPJNOuA7PKi4uZ+UCFuMwnAoJbBhW0LqtMBam3FfI4j/Q7sTgw36wtyoxxEXJWggWgiy8zs8XFEbASEKstSpakObhCZ2Kkp7R3Zf5an5S0x6J09DV3PwdcULngZsDAIlknlLSvR58=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757701565; c=relaxed/simple;
-	bh=3b3Ow4GPUAbpidXoGcAhDy2mIe7hMP2QhMUbYTt5PYE=;
+	s=arc-20240116; t=1757701579; c=relaxed/simple;
+	bh=0znlOhB13ndKfCRZxayLFSoLLX60icCnlhq8f4nw7jo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o4yUvc82O6b7mQ754fkHbSlJ7uwFi7mi0Ct0eOp0y39n6b0eRL1UrL3ei1WFPJQgR3/2tdJoxD46hrEBTDEg43GHra6m9Way5R+gkzEhaAxpioA6S28lTo29356LX9Udl5JBF9ZxvUi+dKF5cpJigdP691yj/720PPSvrZ6w5jQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=aHAOhzS9; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=jfY3zo4obYA20cUp+D1ZaXi4URVoda/+b55GFs9+Tf1Y6fTcyQt6MnGK9JKjZiUzt/RLXC/cIdIgMt4L2yT2s9+Y5tlI8cTSFzDkMCc3P1fgVqcY5IJNFTFc+Ktfk51XA+S0hm/qH5mBiby5zMoZg9qmCDGGxiBCNtDFS6G2LM0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3Jd5WKTf; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="aHAOhzS9"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3Jd5WKTf"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cNjY71HBTzlgqVx;
-	Fri, 12 Sep 2025 18:26:03 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cNjYK4prpzlgqVx;
+	Fri, 12 Sep 2025 18:26:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1757701561; x=1760293562; bh=il0MX
-	PaGD2d20qr9qcbQctcAjJAaGAhTnIABBmTpaBk=; b=aHAOhzS9ktDIqtF7g4Mxe
-	AgHALejqrEm67WaJEuPsgfhAdy7gRdFM8jLcmyY77mttPgoolnes0XYdnpakRGbL
-	CTIfR0AfaWBOoa/bjyQVdwZPgxyMtrP2gserUx0F5mAvXRSMwsb6jUZ+bHWF/VQZ
-	yh3VnuJ66LsGjKMgsPsaRiBlPxLKxRa163Gs2EedKp/pUbLfTbj530SM24EaqyX6
-	Ex12EO1jT9z5mMgr/8NaI6fbqMbGoijS70yDZ+vmCBLllI3H0gwum6PKPsxH7Sv5
-	y9T2VPewAAxl5vp66dJGnOX+YxKtojFiSs3iqsGQ+WDl0aIbLwyj2FDFlPJMYfM8
+	:received:received; s=mr01; t=1757701571; x=1760293572; bh=r8zus
+	MCbcpsPvTXC8YfzzAULUAO9l16S2NgtGxsdfFM=; b=3Jd5WKTfcMLAE2CDTJEwP
+	ioROiXlgGuf2g44VUMrcXNWezB1qpRWv7hO0Fr+9S4kejeTph6xpSWg4PjhT6au5
+	zjMAAc4zXgAqcJcM0JTWlzj1E4/X5jfqNsQwTsvjDvHDISFV4l1wTvoyrrs0r0dI
+	yrFLcZHk8CmmmRM7MoyGYxNX6ZpSklsN/RsCBYCTht23KecLpTIoHjViXtmFAakU
+	mApPuMWnVwErNrf20e9AjNKLUT0xV2ZNligCjRruMdC5SCWyyH8G1Lu8S29UyZhQ
+	BelplmGwoTWHunpNUTBKRyGxocSZ7TLyIztysm7ps5d4kHx5r5+0fMgWQ/2SYu/B
 	A==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Sq16B4Jt7VeZ; Fri, 12 Sep 2025 18:26:01 +0000 (UTC)
+ id amNO52WLlG9D; Fri, 12 Sep 2025 18:26:11 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cNjXz6qSJzlgqVJ;
-	Fri, 12 Sep 2025 18:25:55 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cNjY95FF7zlgqVJ;
+	Fri, 12 Sep 2025 18:26:04 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -51,9 +51,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Matthias Brugger <matthias.bgg@gmail.com>,
 	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
 	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v4 11/29] ufs: core: Change the type of one ufshcd_add_command_trace() argument
-Date: Fri, 12 Sep 2025 11:21:32 -0700
-Message-ID: <20250912182340.3487688-12-bvanassche@acm.org>
+Subject: [PATCH v4 12/29] ufs: core: Change the type of one ufshcd_send_command() argument
+Date: Fri, 12 Sep 2025 11:21:33 -0700
+Message-ID: <20250912182340.3487688-13-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.384.g4c02a37b29-goog
 In-Reply-To: <20250912182340.3487688-1-bvanassche@acm.org>
 References: <20250912182340.3487688-1-bvanassche@acm.org>
@@ -65,73 +65,57 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Change the 'tag' argument into a SCSI command pointer. This patch prepare=
-s
+Change the 'task_tag' argument into an LRB pointer. This patch prepares
 for the removal of the hba->lrb[] array.
 
 Reviewed-by: Avri Altman <avri.altman@sandisk.com>
 Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 12 ++++++------
- 1 file changed, 6 insertions(+), 6 deletions(-)
+ drivers/ufs/core/ufshcd.c | 13 ++++++-------
+ 1 file changed, 6 insertions(+), 7 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2b14d1510d92..a87983dde5cd 100644
+index a87983dde5cd..eb2c6fe5e7ea 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -475,7 +475,7 @@ static void ufshcd_add_uic_command_trace(struct ufs_h=
-ba *hba,
- 				 ufshcd_readl(hba, REG_UIC_COMMAND_ARG_3));
- }
-=20
--static void ufshcd_add_command_trace(struct ufs_hba *hba, unsigned int t=
-ag,
-+static void ufshcd_add_command_trace(struct ufs_hba *hba, struct scsi_cm=
-nd *cmd,
- 				     enum ufs_trace_str_t str_t)
+@@ -2346,14 +2346,13 @@ static void ufshcd_update_monitor(struct ufs_hba =
+*hba, const struct ufshcd_lrb *
+ /**
+  * ufshcd_send_command - Send SCSI or device management commands
+  * @hba: per adapter instance
+- * @task_tag: Task tag of the command
++ * @lrbp: Local reference block of SCSI command
+  * @hwq: pointer to hardware queue instance
+  */
+-static inline
+-void ufshcd_send_command(struct ufs_hba *hba, unsigned int task_tag,
+-			 struct ufs_hw_queue *hwq)
++static inline void ufshcd_send_command(struct ufs_hba *hba,
++				       struct ufshcd_lrb *lrbp,
++				       struct ufs_hw_queue *hwq)
  {
- 	u64 lba =3D 0;
-@@ -483,9 +483,9 @@ static void ufshcd_add_command_trace(struct ufs_hba *=
-hba, unsigned int tag,
- 	u32 doorbell =3D 0;
- 	u32 intr;
- 	u32 hwq_id =3D 0;
--	struct ufshcd_lrb *lrbp =3D &hba->lrb[tag];
--	struct scsi_cmnd *cmd =3D lrbp->cmd;
- 	struct request *rq =3D scsi_cmd_to_rq(cmd);
-+	unsigned int tag =3D rq->tag;
-+	struct ufshcd_lrb *lrbp =3D &hba->lrb[tag];
- 	int transfer_len =3D -1;
+-	struct ufshcd_lrb *lrbp =3D &hba->lrb[task_tag];
+ 	unsigned long flags;
 =20
- 	/* trace UPIU also */
-@@ -503,7 +503,7 @@ static void ufshcd_add_command_trace(struct ufs_hba *=
-hba, unsigned int tag,
- 		       be32_to_cpu(lrbp->ucd_req_ptr->sc.exp_data_transfer_len);
- 		lba =3D scsi_get_lba(cmd);
- 		if (opcode =3D=3D WRITE_10)
--			group_id =3D lrbp->cmd->cmnd[6];
-+			group_id =3D cmd->cmnd[6];
- 	} else if (opcode =3D=3D UNMAP) {
- 		/*
- 		 * The number of Bytes to be unmapped beginning with the lba.
-@@ -2363,7 +2363,7 @@ void ufshcd_send_command(struct ufs_hba *hba, unsig=
-ned int task_tag,
- 		lrbp->compl_time_stamp_local_clock =3D 0;
- 	}
- 	if (lrbp->cmd) {
--		ufshcd_add_command_trace(hba, task_tag, UFS_CMD_SEND);
-+		ufshcd_add_command_trace(hba, lrbp->cmd, UFS_CMD_SEND);
- 		ufshcd_clk_scaling_start_busy(hba);
- 	}
- 	if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-@@ -5630,7 +5630,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int =
-task_tag,
- 	if (cmd) {
- 		if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
- 			ufshcd_update_monitor(hba, lrbp);
--		ufshcd_add_command_trace(hba, task_tag, UFS_CMD_COMP);
-+		ufshcd_add_command_trace(hba, cmd, UFS_CMD_COMP);
- 		cmd->result =3D ufshcd_transfer_rsp_status(hba, lrbp, cqe);
- 		ufshcd_release_scsi_cmd(hba, lrbp);
- 		/* Do not touch lrbp after scsi done */
+ 	if (hba->monitor.enabled) {
+@@ -3062,7 +3061,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *ho=
+st, struct scsi_cmnd *cmd)
+ 	if (hba->mcq_enabled)
+ 		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+=20
+-	ufshcd_send_command(hba, tag, hwq);
++	ufshcd_send_command(hba, lrbp, hwq);
+=20
+ out:
+ 	if (ufs_trigger_eh(hba)) {
+@@ -3307,7 +3306,7 @@ static int ufshcd_issue_dev_cmd(struct ufs_hba *hba=
+, struct ufshcd_lrb *lrbp,
+ 	int err;
+=20
+ 	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
+-	ufshcd_send_command(hba, tag, hba->dev_cmd_queue);
++	ufshcd_send_command(hba, lrbp, hba->dev_cmd_queue);
+ 	err =3D ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
+=20
+ 	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
