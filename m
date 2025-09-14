@@ -1,24 +1,24 @@
-Received: from szxga04-in.huawei.com (szxga04-in.huawei.com [45.249.212.190])
+Received: from szxga06-in.huawei.com (szxga06-in.huawei.com [45.249.212.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A049C237713;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BEB4B238C0D;
 	Sun, 14 Sep 2025 10:11:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.190
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.249.212.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757844687; cv=none; b=R5WAKnmNML3BBD1B6rRI4L9bvHyDxPB/bvLFtgXlaO24bg5lhvRzaR8huy0x3xBjCJxisju3IhP0w0LagYZ33tPLKAUrJpDqCUwIurpYgcrKARaVdYapB1YXBOf7km+URJrO97JNZQlCYgopRiHpakKDo7tLR17MfeGO7NtcxlI=
+	t=1757844687; cv=none; b=CCX1JyHopM1m57GabsIBE6LLjwZzTAL+R/XFYlocBc2JCcuZt8HMM72laBoZi9OzgrQ/VpMLKsPaMCeuNg14Eo8STIoi0916a4IHxH7HBGtOF/M170ylyFC7LSKzRBmQT3Qn2uyySeEHpY+eY86C4Ophgvwh7AhJ2WPzpg+4FCg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1757844687; c=relaxed/simple;
-	bh=vL+au5akwb6Zlvmhtnpk9H6gQNiqpw3WdYDKasAzjRA=;
+	bh=Z4FKAKyAGyU1IB9jcpQbKJ1PUYxMFhEnjWUtXfsR3L0=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=a5EewklItlVXji7NIekwdiD7EyOh/Dn4Pi4KWZy6XHFzQhjKJwegQ9m8DIT2ps+6JkaXvcbqAT3y5wXoOUwINKR1wBg/elJ/TmhSQ3ENIM+aZNn0aPgWVpRv1CbE5ZVPimi/VFewWDBn5/+41m4PxvQ3sdrgbj5PAtAr+7z1iZk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.190
+	 MIME-Version:Content-Type; b=sGnfoqDN0qfg26JjzPHql5cqaMLR2Q7/Qx2mDQfevHmzMZqbR1cz7vqWCLBMybxyLMCrqZERoX47YaAKsIdSsxnpEX+nDyj1/T1iYTwY7YVpEWvJ0mYd8X11hSiX7ogRUCA4C55N4qu6ozW1FLwF2bMRiit+0LcZJQWitOaBioE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; arc=none smtp.client-ip=45.249.212.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
-Received: from mail.maildlp.com (unknown [172.19.88.163])
-	by szxga04-in.huawei.com (SkyGuard) with ESMTP id 4cPkN35ch4z2CgCX;
-	Sun, 14 Sep 2025 18:06:43 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.17])
+	by szxga06-in.huawei.com (SkyGuard) with ESMTP id 4cPkVf6tNxz27j0x;
+	Sun, 14 Sep 2025 18:12:26 +0800 (CST)
 Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
-	by mail.maildlp.com (Postfix) with ESMTPS id C5C4C180043;
+	by mail.maildlp.com (Postfix) with ESMTPS id 2A4781A0188;
 	Sun, 14 Sep 2025 18:11:17 +0800 (CST)
 Received: from localhost.localdomain (10.175.104.170) by
  kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
@@ -30,9 +30,9 @@ To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
 CC: <linux-kernel@vger.kernel.org>, <hare@suse.de>, <dlemoal@kernel.org>,
 	<hewenliang4@huawei.com>, <yangyun50@huawei.com>, <wuyifeng10@huawei.com>,
 	<yangxingui@h-partners.com>
-Subject: [RFC PATCH v4 3/9] scsi: scsi_error: Check if to do reset in scsi_try_xxx_reset
-Date: Sun, 14 Sep 2025 18:41:39 +0800
-Message-ID: <20250914104145.2239901-4-jiangjianjun3@huawei.com>
+Subject: [RFC PATCH v4 2/9] scsi: scsi_error: Move complete variable eh_action from shost to sdevice
+Date: Sun, 14 Sep 2025 18:41:38 +0800
+Message-ID: <20250914104145.2239901-3-jiangjianjun3@huawei.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20250914104145.2239901-1-jiangjianjun3@huawei.com>
 References: <17230842-0a7a-403e-abc7-a15e3aa5d424@suse.de>
@@ -50,87 +50,78 @@ X-ClientProxiedBy: kwepems200001.china.huawei.com (7.221.188.67) To
 
 From: Wenchao Hao <haowenchao2@huawei.com>
 
-This is preparation for a genernal LUN based error handle
-strategy, the strategy would reuse some error handler APIs,
-but some steps of these function should not be performed. For
-example, we should not perform bus/host reset if we just stop IOs
-on one single LUN.
+eh_action is used to wait for error handle command's completion if scsi
+command is send in error handle. Now the error handler might based on
+scsi_device, so move it to scsi_device.
 
-This change add checks in scsi_try_xxx_reset to make sure
-the reset operations would not be performed only if the condition
-is not satisfied.
+This is preparation for a genernal LUN based error handle strategy.
 
 Signed-off-by: Wenchao Hao <haowenchao2@huawei.com>
 Co-developed-by: JiangJianJun <jiangjianjun3@huawei.com>
 Signed-off-by: JiangJianJun <jiangjianjun3@huawei.com>
 ---
- drivers/scsi/scsi_error.c | 24 ++++++++++++++++++++----
- 1 file changed, 20 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi_error.c  | 6 +++---
+ include/scsi/scsi_device.h | 2 ++
+ include/scsi/scsi_host.h   | 2 --
+ 3 files changed, 5 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
-index d8b3f5b0fd47..80a85b387068 100644
+index b5b04f2c5d62..d8b3f5b0fd47 100644
 --- a/drivers/scsi/scsi_error.c
 +++ b/drivers/scsi/scsi_error.c
-@@ -926,7 +926,7 @@ void scsi_eh_done(struct scsi_cmnd *scmd)
-  * scsi_try_host_reset - ask host adapter to reset itself
-  * @scmd:	SCSI cmd to send host reset.
-  */
--static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
-+static enum scsi_disposition __scsi_try_host_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	enum scsi_disposition rtn;
-@@ -952,11 +952,19 @@ static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
- 	return rtn;
- }
+@@ -917,7 +917,7 @@ void scsi_eh_done(struct scsi_cmnd *scmd)
+ 	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
+ 			"%s result: %x\n", __func__, scmd->result));
  
-+static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
-+{
-+	if (!scsi_host_in_recovery(scmd->device->host))
-+		return FAILED;
-+
-+	return __scsi_try_host_reset(scmd);
-+}
-+
- /**
-  * scsi_try_bus_reset - ask host to perform a bus reset
-  * @scmd:	SCSI cmd to send bus reset.
-  */
--static enum scsi_disposition scsi_try_bus_reset(struct scsi_cmnd *scmd)
-+static enum scsi_disposition __scsi_try_bus_reset(struct scsi_cmnd *scmd)
- {
- 	unsigned long flags;
- 	enum scsi_disposition rtn;
-@@ -982,6 +990,14 @@ static enum scsi_disposition scsi_try_bus_reset(struct scsi_cmnd *scmd)
- 	return rtn;
+-	eh_action = scmd->device->host->eh_action;
++	eh_action = scmd->device->eh_action;
+ 	if (eh_action)
+ 		complete(eh_action);
  }
+@@ -1206,7 +1206,7 @@ static enum scsi_disposition scsi_send_eh_cmnd(struct scsi_cmnd *scmd,
  
-+static enum scsi_disposition scsi_try_bus_reset(struct scsi_cmnd *scmd)
-+{
-+	if (!scsi_host_in_recovery(scmd->device->host))
-+		return FAILED;
-+
-+	return __scsi_try_bus_reset(scmd);
-+}
-+
- static void __scsi_report_device_reset(struct scsi_device *sdev, void *data)
- {
- 	sdev->was_reset = 1;
-@@ -2547,12 +2563,12 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
- 			break;
- 		fallthrough;
- 	case SG_SCSI_RESET_BUS:
--		rtn = scsi_try_bus_reset(scmd);
-+		rtn = __scsi_try_bus_reset(scmd);
- 		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
- 			break;
- 		fallthrough;
- 	case SG_SCSI_RESET_HOST:
--		rtn = scsi_try_host_reset(scmd);
-+		rtn = __scsi_try_host_reset(scmd);
- 		if (rtn == SUCCESS)
- 			break;
- 		fallthrough;
+ retry:
+ 	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
+-	shost->eh_action = &done;
++	sdev->eh_action = &done;
+ 
+ 	scsi_log_send(scmd);
+ 	scmd->submitter = SUBMITTED_BY_SCSI_ERROR_HANDLER;
+@@ -1250,7 +1250,7 @@ static enum scsi_disposition scsi_send_eh_cmnd(struct scsi_cmnd *scmd,
+ 		rtn = SUCCESS;
+ 	}
+ 
+-	shost->eh_action = NULL;
++	sdev->eh_action = NULL;
+ 
+ 	scsi_log_completion(scmd, rtn);
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index c21b0a84bbd2..9d42858035ed 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -318,6 +318,8 @@ struct scsi_device {
+ 	enum scsi_device_state sdev_state;
+ 	struct task_struct	*quiesced_by;
+ 	struct scsi_device_eh	*eh;
++	struct completion	*eh_action;	/* Wait for specific actions */
++						/* on the device. */
+ 	unsigned long		sdev_data[];
+ } __attribute__((aligned(sizeof(unsigned long))));
+ 
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index c53812b9026f..46f57fe78505 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -558,8 +558,6 @@ struct Scsi_Host {
+ 	struct list_head	eh_abort_list;
+ 	struct list_head	eh_cmd_q;
+ 	struct task_struct    * ehandler;  /* Error recovery thread. */
+-	struct completion     * eh_action; /* Wait for specific actions on the
+-					      host. */
+ 	wait_queue_head_t       host_wait;
+ 	const struct scsi_host_template *hostt;
+ 	struct scsi_transport_template *transportt;
 -- 
 2.33.0
 
