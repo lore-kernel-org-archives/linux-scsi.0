@@ -1,119 +1,209 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EBD062DC78E;
-	Mon, 15 Sep 2025 21:26:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757971612; cv=none; b=h+PhxaotZcCeXwn5E3InePPIaISAbyk5XO0JtRtZHT2W/P9yF2Qs4b5GAtbfatmkq0gGbrRslzdshdScz35lsSFqCqp4NEKD92IQQhZOHZzRQ0kEagG9SmLjDQV1gYKpHwvrztjhmOEXw5Nr9ayS9OekPRxgC8mSYHO86QhEMo0=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757971612; c=relaxed/simple;
-	bh=F1ipfS8UGPGTKCo2J4DQxAs8vmHs6cZPnkAiHnP/5Hg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=UoCDZL23NdMf7/9WGJcJK2KTB+YR+PmVGFHfzeMssT55706lmrS+RFqQ/0bA+x07OUKMsJXqCyQzSBVTF2Ind3vHiQjFFxd/mgAylbs2xpt719C6UEQkPrqmjEuL+FQXPuozoVGu2CtxyZMTwjEtYldtu2Q47MKuGiIBNN9E8vs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=wkvea9OY; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 73F2524A05D;
+	Mon, 15 Sep 2025 21:49:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.171
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1757972974; cv=pass; b=fZZixAD22qKKCOlHP0ejWipfRLRW41mfKM5oNomP1TJdVH0CcKGNcYujbRU7JWmTEJxiUVVOmZsUnL9kzKnwL0sqhqfixOmTbCDvpWqxbU/VSkbbYAC8Pn7PQ7fOedcyZSExTQ1CPE+E/RpIJKOOQE1zTPWvW5Uyql/+l+mdf1M=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1757972974; c=relaxed/simple;
+	bh=qwiePEkOo4PDGdk+XqRZyGqMFzlt2biwthmfhMb/e6o=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=hxykcZ7v/mlQ6rkbSqkLSj9/NlKw1xurNn16f5jH3JndQVECwAHQSX9EMWocQdcVaMxF9IQ8Z2ADxlNA9IXLcBGnwSbFz0XGuFrLLa9fSlX6esyi+89ad1+ocrPMNNDtT1WAxjfDoyvs+yV4W7t/8nb2Xq18rZEnlaEjnYEBJqY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=knyZjcYE; arc=pass smtp.client-ip=81.169.146.171
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="wkvea9OY"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cQdQK606Vzm0ySc;
-	Mon, 15 Sep 2025 21:26:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1757971607; x=1760563608; bh=23miGv/7QuDmfuZP+/ZrmchU
-	VWkCWSYajP4qSG4TBvQ=; b=wkvea9OYD7LrQtPQZS+KNEDFppoqKn1W/cjEM0q5
-	ZuPeio2I25eY5AGxpk5XMasEYEwIUI9/547r2FOruI9PYelB1PKKA4iKezmP0N68
-	A15uemDg1FK2vfFCa6iYWftjQwsXeuk6tP2cyELgBN9cfQ+FQIKaBrRh6iMvla7j
-	91NxQa0g7E7XlqtIS77eQenkEv/UvetMICX+tKIxMt1tdLmjLuy6s8L3k+Ka9QiG
-	Y+If7nWmgX4nkFz1/ZjPxr9oXtl/xQELWy5Z4AjqZXHdG29dVVrLPtfk9FPMrCBX
-	E3nyrheu/lSgb6/c03+OwBd0gwpwsrs4LuqZLqiZEJitnA==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id BaI7MOOtGWAV; Mon, 15 Sep 2025 21:26:47 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cQdQ51p48zm0yT2;
-	Mon, 15 Sep 2025 21:26:35 +0000 (UTC)
-Message-ID: <191ca54f-0faa-4615-967a-7b4c86d59e0e@acm.org>
-Date: Mon, 15 Sep 2025 14:26:34 -0700
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="knyZjcYE"
+ARC-Seal: i=1; a=rsa-sha256; t=1757972782; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=s3J1256e9i0Y0tDEqmWv4Ys/082ZVG5PV03eEqp+nRTqBQlSUzeWToUtlqwrSeO0XG
+    2eiFyOAnt0Sh6O1+7hD/KfVcF93HGQJwV2/bGDUEP4Z6TuM9SK373yjgSxInuo2cV6NH
+    1evzMOX/P3tx01txVIx2ETkwgbk/dPuIHiMrSn1xnIS9dQK56c7TozGZyFMV8D6ymCWi
+    g6qHca5+X+YfoGsB4vtxGMrBLFelLEKsIzK6v10TmYq6aE9hzMosHsN6A24jzWst+VwU
+    G+nhwTEWtFYjSpZA7Gl1XzOy+fTk53XF0asSz3Gy2oZ1pvu6nlJLuPuUzzsE+2PMknZd
+    XaJA==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1757972782;
+    s=strato-dkim-0002; d=strato.com;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=0FA5vAsG3JRVpjxKIjbrtaM+d8WZfWAWyieDa0sc81U=;
+    b=azeEI1nLDvB6mDTI37q0YVKXyW0zysPg/RrDGOAIYMjZASmPtCFSr1NQw8Z2xGetAD
+    qlm31mkXPyGC8FZLHzVSrywYPCldc7XKATF0URQig/sO0Dk0rMx5YkNIz6mr8o0+Qjta
+    FX3mdTB5pKQu6TUBXIBi3egeE8vPsOlB2MB2KZ61AgRFgK85QQqwa2ziQleanSvl9hd/
+    RrN5WWm7e0E7h6d56DeJ7nZsRR/ZaPi/Qjc/g0vP63dFM5BdUJTvOJZo9qlUKb51Qulq
+    TMxRvHdzN70poZJJ/1DbCNHJVGNEwClHMvPpVj/zk1C9EZbZ+n3EEj9haa5kNbcUT/lh
+    kWjw==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1757972782;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=0FA5vAsG3JRVpjxKIjbrtaM+d8WZfWAWyieDa0sc81U=;
+    b=knyZjcYETkYdbONOQo/G7AGcMgPCtIBq+J7QJ+UcjZ7wUJFGsE+e6FXu8J9R/TEdDQ
+    4duZIeDOCzl1SQpzWkAO8a5KBkiTbxtZgTL/q0hBqn12CAtY1pGDBWIbWdXDIXlAy0eH
+    tiW5cROeNs8X/sr/OSQQjaOFHM2/VC7reS1ljmK+n31tkz+Khrw9vMALJFk0I4Q47ipX
+    ExrCX92Kfqt5qaDmzH4EtkZ35ESmPZljFkSM0yfFqdy//BxSpJi8WaexXteQdq91T/W5
+    G2YZsEaiMkh5fDry8AFUBjOA5NRCv0usQgO/nFa55QNrUKFiSApkqbvZgaKbq9zUkOv1
+    ItkQ==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O256fJ4HnWXON1RCg6IWQdI9ZW5fgNTLz+ViCLXbUTDqukxFTraA="
+Received: from Munilab01-lab.speedport.ip
+    by smtp.strato.de (RZmta 52.1.2 AUTH)
+    with ESMTPSA id z039d318FLkM3HD
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Mon, 15 Sep 2025 23:46:22 +0200 (CEST)
+From: Bean Huo <beanhuo@iokpp.de>
+To: avri.altman@wdc.com,
+	bvanassche@acm.org,
+	alim.akhtar@samsung.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	can.guo@oss.qualcomm.com,
+	ulf.hansson@linaro.org,
+	jens.wiklander@linaro.org
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	mikebi@micron.com,
+	lporzio@micron.com,
+	Bean Huo <beanhuo@micron.com>
+Subject: [RFC PATCH v1 1/2] rpmb: move rpmb_frame struct and constants to common header
+Date: Mon, 15 Sep 2025 23:46:13 +0200
+Message-Id: <20250915214614.179313-2-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20250915214614.179313-1-beanhuo@iokpp.de>
+References: <20250915214614.179313-1-beanhuo@iokpp.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/3] block: add support for device frequency PM QoS tuning
-To: Wang Jianzheng <wangjianzheng@vivo.com>, Jens Axboe <axboe@kernel.dk>,
- Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- "Rafael J. Wysocki" <rafael@kernel.org>, Peter Wang
- <peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>,
- "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
- Adrian Hunter <adrian.hunter@intel.com>, linux-block@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-pm@vger.kernel.org
-References: <20250914114549.650671-1-wangjianzheng@vivo.com>
- <20250914114549.650671-3-wangjianzheng@vivo.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250914114549.650671-3-wangjianzheng@vivo.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 
-On 9/14/25 4:45 AM, Wang Jianzheng wrote:
-> +#ifdef CONFIG_PM
-> +static void blk_mq_dev_frequency_work(struct work_struct *work)
-> +{
-> +	struct request_queue *q =
-> +			container_of(work, struct request_queue, dev_freq_work.work);
-> +	unsigned long timeout;
-> +	struct dev_pm_qos_request *qos = q->dev_freq_qos;
-> +
-> +	timeout = msecs_to_jiffies(q->disk->dev_freq_timeout);
-> +	if (!q || IS_ERR_OR_NULL(q->dev) || IS_ERR_OR_NULL(qos))
-> +		return;
-> +
-> +	if (q->pm_qos_status == PM_QOS_ACTIVE) {
-> +		q->pm_qos_status = PM_QOS_FREQ_SET;
-> +		dev_pm_qos_add_request(q->dev, qos, DEV_PM_QOS_MIN_FREQUENCY,
-> +				       FREQ_QOS_MAX_DEFAULT_VALUE);
-> +	} else {
-> +		if (time_after(jiffies, READ_ONCE(q->last_active) + timeout))
-> +			q->pm_qos_status = PM_QOS_FREQ_REMOV;
-> +	}
-> +
-> +	if (q->pm_qos_status == PM_QOS_FREQ_REMOV) {
-> +		dev_pm_qos_remove_request(qos);
-> +		q->pm_qos_status = PM_QOS_ACTIVE;
-> +	} else {
-> +		schedule_delayed_work(&q->dev_freq_work,
-> +				      q->last_active + timeout - jiffies);
-> +	}
-> +}
+From: Bean Huo <beanhuo@micron.com>
 
-The above code is similar in nature to the activity detection by the
-run-time power management (RPM) code. Why a new timer mechanism instead
-of adding more code in the UFS driver RPM callbacks?
+Move struct rpmb_frame and RPMB operation constants from MMC block
+driver to include/linux/rpmb.h for reuse across different RPMB
+implementations (UFS, NVMe, etc.).
 
-> @@ -3161,6 +3211,8 @@ void blk_mq_submit_bio(struct bio *bio)
->   		goto queue_exit;
->   	}
->   
-> +	blk_pm_qos_dev_freq_update(q, bio);
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/mmc/core/block.c | 42 ----------------------------------------
+ include/linux/rpmb.h     | 42 ++++++++++++++++++++++++++++++++++++++++
+ 2 files changed, 42 insertions(+), 42 deletions(-)
 
-Good luck with adding power-management code in the block layer hot path
-... I'm not sure anyone will be enthusiast seeing code being added in
-blk_mq_submit_bio().
+diff --git a/drivers/mmc/core/block.c b/drivers/mmc/core/block.c
+index b32eefcca4b7..bd5f6fcb03af 100644
+--- a/drivers/mmc/core/block.c
++++ b/drivers/mmc/core/block.c
+@@ -79,48 +79,6 @@ MODULE_ALIAS("mmc:block");
+ #define MMC_EXTRACT_INDEX_FROM_ARG(x) ((x & 0x00FF0000) >> 16)
+ #define MMC_EXTRACT_VALUE_FROM_ARG(x) ((x & 0x0000FF00) >> 8)
+ 
+-/**
+- * struct rpmb_frame - rpmb frame as defined by eMMC 5.1 (JESD84-B51)
+- *
+- * @stuff        : stuff bytes
+- * @key_mac      : The authentication key or the message authentication
+- *                 code (MAC) depending on the request/response type.
+- *                 The MAC will be delivered in the last (or the only)
+- *                 block of data.
+- * @data         : Data to be written or read by signed access.
+- * @nonce        : Random number generated by the host for the requests
+- *                 and copied to the response by the RPMB engine.
+- * @write_counter: Counter value for the total amount of the successful
+- *                 authenticated data write requests made by the host.
+- * @addr         : Address of the data to be programmed to or read
+- *                 from the RPMB. Address is the serial number of
+- *                 the accessed block (half sector 256B).
+- * @block_count  : Number of blocks (half sectors, 256B) requested to be
+- *                 read/programmed.
+- * @result       : Includes information about the status of the write counter
+- *                 (valid, expired) and result of the access made to the RPMB.
+- * @req_resp     : Defines the type of request and response to/from the memory.
+- *
+- * The stuff bytes and big-endian properties are modeled to fit to the spec.
+- */
+-struct rpmb_frame {
+-	u8     stuff[196];
+-	u8     key_mac[32];
+-	u8     data[256];
+-	u8     nonce[16];
+-	__be32 write_counter;
+-	__be16 addr;
+-	__be16 block_count;
+-	__be16 result;
+-	__be16 req_resp;
+-} __packed;
+-
+-#define RPMB_PROGRAM_KEY       0x1    /* Program RPMB Authentication Key */
+-#define RPMB_GET_WRITE_COUNTER 0x2    /* Read RPMB write counter */
+-#define RPMB_WRITE_DATA        0x3    /* Write data to RPMB partition */
+-#define RPMB_READ_DATA         0x4    /* Read data from RPMB partition */
+-#define RPMB_RESULT_READ       0x5    /* Read result request  (Internal) */
+-
+ #define RPMB_FRAME_SIZE        sizeof(struct rpmb_frame)
+ #define CHECK_SIZE_NEQ(val) ((val) != sizeof(struct rpmb_frame))
+ #define CHECK_SIZE_ALIGNED(val) IS_ALIGNED((val), sizeof(struct rpmb_frame))
+diff --git a/include/linux/rpmb.h b/include/linux/rpmb.h
+index cccda73eea4d..25b69ecf5392 100644
+--- a/include/linux/rpmb.h
++++ b/include/linux/rpmb.h
+@@ -61,6 +61,48 @@ struct rpmb_dev {
+ 
+ #define to_rpmb_dev(x)		container_of((x), struct rpmb_dev, dev)
+ 
++/**
++ * struct rpmb_frame - RPMB frame structure for authenticated access
++ *
++ * @stuff        : stuff bytes
++ * @key_mac      : The authentication key or the message authentication
++ *                 code (MAC) depending on the request/response type.
++ *                 The MAC will be delivered in the last (or the only)
++ *                 block of data.
++ * @data         : Data to be written or read by signed access.
++ * @nonce        : Random number generated by the host for the requests
++ *                 and copied to the response by the RPMB engine.
++ * @write_counter: Counter value for the total amount of the successful
++ *                 authenticated data write requests made by the host.
++ * @addr         : Address of the data to be programmed to or read
++ *                 from the RPMB. Address is the serial number of
++ *                 the accessed block (half sector 256B).
++ * @block_count  : Number of blocks (half sectors, 256B) requested to be
++ *                 read/programmed.
++ * @result       : Includes information about the status of the write counter
++ *                 (valid, expired) and result of the access made to the RPMB.
++ * @req_resp     : Defines the type of request and response to/from the memory.
++ *
++ * The stuff bytes and big-endian properties are modeled to fit to the spec.
++ */
++struct rpmb_frame {
++	u8     stuff[196];
++	u8     key_mac[32];
++	u8     data[256];
++	u8     nonce[16];
++	__be32 write_counter;
++	__be16 addr;
++	__be16 block_count;
++	__be16 result;
++	__be16 req_resp;
++} __packed;
++
++#define RPMB_PROGRAM_KEY       0x1    /* Program RPMB Authentication Key */
++#define RPMB_GET_WRITE_COUNTER 0x2    /* Read RPMB write counter */
++#define RPMB_WRITE_DATA        0x3    /* Write data to RPMB partition */
++#define RPMB_READ_DATA         0x4    /* Read data from RPMB partition */
++#define RPMB_RESULT_READ       0x5    /* Read result request  (Internal) */
++
+ #if IS_ENABLED(CONFIG_RPMB)
+ struct rpmb_dev *rpmb_dev_get(struct rpmb_dev *rdev);
+ void rpmb_dev_put(struct rpmb_dev *rdev);
+-- 
+2.34.1
 
-Thanks,
-
-Bart.
