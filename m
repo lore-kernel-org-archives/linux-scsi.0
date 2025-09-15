@@ -1,120 +1,123 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AECB1DB95E;
-	Mon, 15 Sep 2025 22:06:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 6417829617D;
+	Mon, 15 Sep 2025 23:46:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757973989; cv=none; b=pvWnOeZ5pNjEsXDQd1Eos0cj3RFSyGsaAlTNvCQopyhCdxa81DS/2uqI3pzsP8e4LGhhKUxCEOd19MZpjQQgu3+5Cs8USjwkfi9YPnyqKtYl+SSOZm/9hUlFdWQIoFq9yLpAn8kEOZrbSkBiuo8y34d3jKXhPu6Tr5wwZvGnPeQ=
+	t=1757979981; cv=none; b=WVkQIUoGGyb5DvFQ/Q35ufqgKy62bZUxyNrU+AENH4Bf+9f8oPqGcLdiGrZxq/ZGqTr/wnbFRMjeaRNj4mlDl2e/RbEC6ZCrC1DB5HGn4zK2fRPrzuIyqJ1GIqhgO0g0S1PxtMHhnro7T1nmm/2Oei9nzGs+T2mDaQM2Titr9qc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757973989; c=relaxed/simple;
-	bh=EoHhQejEr2Vi8c/HthGUOcammiFsAMWn/tq+9NcVbc0=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=RBd/6leI3j4p1zWGvdrLXHngkeFOuD/EgXLaHk7RrALXKLFirms2nc1XcBEFwO++OGbUVGvCbx6qIymhFxUIeHB8T4HSGc3OGXxiuzTlgeUA4U58QYJqB0bMm9Bp9sdt8oB7kE5/4bWxVVEuXCyy5YqiyQK02MKPBOx04F4J9LQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dy+frBl1; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1757979981; c=relaxed/simple;
+	bh=lW3xNWJvBeUd78+N4Yyo06/B2znJyfp8Mxfc+3/obNA=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Ej/C3FtzONFg6Uy0Sk7eN1qqR9fPu8tGF1XNjF5F4qU4EDzqPa13nhsduFM9/Z4zGzI12vylxaSZm3wFLkTW6xB34bPw22OxmmOAanYfH/6jKE46ckq5Y2Dy42XqAlBGMl53PFkspv5RHEMfnnXNJc5AWT3qJmVuy3N+hzMsAN4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=jtyIs3jT; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dy+frBl1"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cQfJ3134qzlgqTr;
-	Mon, 15 Sep 2025 22:06:27 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1757973984; x=1760565985; bh=L+fUpP1fZAVJuMPr5NKYU1pa
-	SSw2yx2U6EKOlOYGkEo=; b=dy+frBl1QroGqgxI/D5HPS8mXkiU2QBwxg2u/SeQ
-	+5SJo8ogSetDlYDiydP+0L+hvTuJGJFVtt6y4wzXIawSgcYYiKxceiFBrV9du1+r
-	qwpaF1ZX1kpQ40tIf1fDDNaMxnJnHLzyGt8wFeBq2fl1r+GqDFEYZesSUMlttIww
-	h2lby4xCTPgO7dp/g+MSezfFeLxFEZ2BXaMDhrmFHfRAvbTbAYqX2W4aSTdcG36N
-	Xdj4f03luC95LTYQycJ5CfbXn/VT3Z/wEEpwfoZl2ToZzZ1SnaqbrYjbIFtIr9PS
-	AWrySd656e5EfD6nSeiRRxzUb4xP5pHAfXJcoJLpdouQ9w==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id OpOYypynSxOq; Mon, 15 Sep 2025 22:06:24 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cQfHn30h2zlgqV0;
-	Mon, 15 Sep 2025 22:06:12 +0000 (UTC)
-Message-ID: <0f08376b-569a-48d6-a551-e10b72b32354@acm.org>
-Date: Mon, 15 Sep 2025 15:06:11 -0700
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="jtyIs3jT"
+Received: from mrdev.corp.microsoft.com (192-184-212-33.fiber.dynamic.sonic.net [192.184.212.33])
+	by linux.microsoft.com (Postfix) with ESMTPSA id A6840212329C;
+	Mon, 15 Sep 2025 16:46:18 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com A6840212329C
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1757979979;
+	bh=7luzChTMUszkb9nUQYYy7F6No80YdK2nCBJEz1e/6Zs=;
+	h=From:To:Cc:Subject:Date:From;
+	b=jtyIs3jTrdwZXnDw9vxxokbXUXOLvwgRveEkFIwYiy+pMrWiva5ENlTdDcwoZTzmu
+	 FBJ51hSc8k8vMU9Fiwr1q8p1aQUcRRLs2BkWEZHNAsahuKe/NddZwgTT7E21RFLNJR
+	 5fJJ1WTPMe2vBTDNUjFz+vcGC294CxqRnKvMTVqE=
+From: Mukesh Rathor <mrathor@linux.microsoft.com>
+To: dri-devel@lists.freedesktop.org,
+	linux-kernel@vger.kernel.org,
+	linux-input@vger.kernel.org,
+	linux-hyperv@vger.kernel.org,
+	netdev@vger.kernel.org,
+	linux-pci@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-fbdev@vger.kernel.org,
+	linux-arch@vger.kernel.org,
+	virtualization@lists.linux.dev
+Cc: maarten.lankhorst@linux.intel.com,
+	mripard@kernel.org,
+	tzimmermann@suse.de,
+	airlied@gmail.com,
+	simona@ffwll.ch,
+	jikos@kernel.org,
+	bentiss@kernel.org,
+	kys@microsoft.com,
+	haiyangz@microsoft.com,
+	wei.liu@kernel.org,
+	decui@microsoft.com,
+	dmitry.torokhov@gmail.com,
+	andrew+netdev@lunn.ch,
+	davem@davemloft.net,
+	edumazet@google.com,
+	kuba@kernel.org,
+	pabeni@redhat.com,
+	bhelgaas@google.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	gregkh@linuxfoundation.org,
+	deller@gmx.de,
+	arnd@arndb.de,
+	sgarzare@redhat.com,
+	horms@kernel.org
+Subject: [PATCH v2 0/2] Fix CONFIG_HYPERV and vmbus related anamoly
+Date: Mon, 15 Sep 2025 16:46:02 -0700
+Message-Id: <20250915234604.3256611-1-mrathor@linux.microsoft.com>
+X-Mailer: git-send-email 2.36.1.vfs.0.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [RFC PATCH v1 2/2] scsi: ufs: core: Add OP-TEE based RPMB driver
- for UFS devices
-To: Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com,
- alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
- can.guo@oss.qualcomm.com, ulf.hansson@linaro.org, jens.wiklander@linaro.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- mikebi@micron.com, lporzio@micron.com, Bean Huo <beanhuo@micron.com>
-References: <20250915214614.179313-1-beanhuo@iokpp.de>
- <20250915214614.179313-3-beanhuo@iokpp.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250915214614.179313-3-beanhuo@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 9/15/25 2:46 PM, Bean Huo wrote:
-> + * UFS OPTEE based RPMB Driver
+At present, drivers/Makefile will subst =m to =y for CONFIG_HYPERV
+for hv subdir. Also, drivers/hv/Makefile replaces =m to =y to build in
+hv_common.c that is needed for the drivers. Moreover, vmbus driver is
+built if CONFIG_HYPER is set, either loadable or builtin.
 
-Is the correct spelling OPTEE or OP-TEE?
+This is not a good approach. CONFIG_HYPERV is really an umbrella
+config that encompasses builtin code and various other things and not
+a dedicated config option for VMBus. VMBus should really have a config
+option just like CONFIG_HYPERV_BALLOON etc. This small series introduces
+CONFIG_HYPERV_VMBUS to build VMBus driver and make that distinction
+explicit. With that CONFIG_HYPERV could be changed to bool.
 
-> +#define UFS_RPMB_SEC_PROTOCOL	0xEC	/* JEDEC UFS application */
-> +#define UFS_RPMB_REGION_0	0x01	/* SECURITY PROTOCOL SPECIFIC: RPMB Protocl ID, Region 0 */
+For now, hv_common.c is left as is to reduce conflicts for upcoming
+patches, but once merges are mostly done, that and some others should
+be moved to virt/hyperv directory.
 
-Do these constants come from a standard? If so, please mention this.
+V2:
+ o rebased on hyper-next: commit 553d825fb2f0 
+        ("x86/hyperv: Switch to msi_create_parent_irq_domain()")
 
-> +	u8 cdb[12] = { 0, };
+V1:
+ o Change subject from hyper-v to "Drivers: hv:"
+ o Rewrite commit messages paying attention to VMBus and not vmbus
+ o Change some wordings in Kconfig
+ o Make new VMBUS config option default to HYPERV option for a smoother
+   transition
 
-Using "{ 0 }" or "{ 0, }" as an initializer is outdated. Please use "{}"
-instead.
+Mukesh Rathor (2):
+  Driver: hv: Add CONFIG_HYPERV_VMBUS option
+  Drivers: hv: Make CONFIG_HYPERV bool
 
-> +	if (need_result_read) {
-> +		struct rpmb_frame *frm_resp = (struct rpmb_frame *)resp;
-> +		memset(frm_resp, 0, sizeof(*frm_resp));
-> +		frm_resp->req_resp = cpu_to_be16(RPMB_RESULT_READ);
-> +		ret = ufs_sec_submit(hba, UFS_RPMB_REGION_0, resp, resp_len, true);
-> +	}
+ drivers/Makefile               |  2 +-
+ drivers/gpu/drm/Kconfig        |  2 +-
+ drivers/hid/Kconfig            |  2 +-
+ drivers/hv/Kconfig             | 13 ++++++++++---
+ drivers/hv/Makefile            |  4 ++--
+ drivers/input/serio/Kconfig    |  4 ++--
+ drivers/net/hyperv/Kconfig     |  2 +-
+ drivers/pci/Kconfig            |  2 +-
+ drivers/scsi/Kconfig           |  2 +-
+ drivers/uio/Kconfig            |  2 +-
+ drivers/video/fbdev/Kconfig    |  2 +-
+ include/asm-generic/mshyperv.h |  8 +++++---
+ net/vmw_vsock/Kconfig          |  2 +-
+ 13 files changed, 28 insertions(+), 19 deletions(-)
 
-Please leave a blank line between declarations and statements.
+-- 
+2.36.1.vfs.0.0
 
-> +	u32 cid[4] = { 0 };
-
-Same comment here about zero-initialization.
-
-> +	/*
-> +	 * Use serial number as device ID. Copy ASCII serial number data.
-> +	 * This provides a unique device identifier for RPMB operations.
-> +	 */
-> +	strncpy((char *)cid, sn, sizeof(cid) - 1);
-
-strncpy() into an u32 array? Really? There are multiple alternatives
-available in the kernel that are better than strncpy(). Are you sure
-that you want to use strncpy()? Additionally, does copying a string into
-a u32 array introduce any endianness issues?
-
-> +MODULE_DESCRIPTION("UFS RPMB integration into the RPBM framework using SCSI Secure In/Out");
-
-RPBM or RPMB?
-
->   	} else {
-> -		str = kmemdup(uc_str, uc_str->len, GFP_KERNEL);
-> +		str = kmemdup(uc_str->uc, uc_str->len, GFP_KERNEL);
-
-Is the above change perhaps a bug fix that is completely independent of
-the rest of this patch?
-
-Thanks,
-
-Bart.
