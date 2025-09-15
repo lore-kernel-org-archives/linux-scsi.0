@@ -1,72 +1,71 @@
-Received: from mail-qv1-f52.google.com (mail-qv1-f52.google.com [209.85.219.52])
+Received: from mail-qv1-f41.google.com (mail-qv1-f41.google.com [209.85.219.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 45B44289E0B
-	for <linux-scsi@vger.kernel.org>; Mon, 15 Sep 2025 17:39:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.52
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4353286891
+	for <linux-scsi@vger.kernel.org>; Mon, 15 Sep 2025 17:39:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1757957974; cv=none; b=uslZTt3IaBHrGP0d44zngbzk1QD90r9tGvdi8dgK4OXEHJzRAtQx+fzEClrW0OFmUxjALYGAn3dZXCwE/aoxcNS+pHr2zWxy3zt/qZvUHP9+XnudpwtngZrlS+7ofpRhZuDDCuzGMldV1+PLUlSnmVRJ5ZdM4IHR5CSIPvgZU6Y=
+	t=1757957977; cv=none; b=FPYxk3lQgjcX1kbJz0uH/u9q/DFQkzZ6IYTC5iG/tB1vgc4JlBJatEdZH6pMmzdWfaIZ2Tp2D8+hwT6FNZgZpp8M57AmqT0O0H+2jtEi1BMOQdXRJg/rww5D3YKY3TtDyBM0kFt4ge4N6a/0zv7KzsFKWGbTOxEQbBy5CnCzogM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1757957974; c=relaxed/simple;
-	bh=Ra8yqsjs9oWIfZWnfAfahqMKoWDXI/JR+p4qERVk1Ug=;
+	s=arc-20240116; t=1757957977; c=relaxed/simple;
+	bh=aRkTPad38ybvCXoLeRIKIp2UGjvmmlVm4pGiMIM+Ey0=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=DQkmMNhBVRTClSoM32xK248JbdBdH/aU4/5C44PAm85YC8UGz3jik3TVXV0xoRSyNARTBzbIdFr7bx/wKmdm8kX+aNRMcJ9maL1+QBU9AoCNciSV62hvZyep6KRTp0yRs/996OGcBUj8D92/S35suVriy1DfPKTeAqza1VAbEYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=fvf4GHhK; arc=none smtp.client-ip=209.85.219.52
+	 MIME-Version; b=TWHaMycM95z0jfWPoGaMcMovrcW9xMjO3UzOke/ABQt/lX7D2DJjH+Xx5oae154IFklwRxidrfx9HRLfQDzkFnlRa1nzl16PiznIieX21mNLCHnWqZS6aQ6QvyUTg0dn56EY9cQsHDgRXZqZCs26Sha3MD6+SRkBOckRu4DDu0Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WEBcXB+Z; arc=none smtp.client-ip=209.85.219.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="fvf4GHhK"
-Received: by mail-qv1-f52.google.com with SMTP id 6a1803df08f44-765936cbdfeso41819876d6.0
-        for <linux-scsi@vger.kernel.org>; Mon, 15 Sep 2025 10:39:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WEBcXB+Z"
+Received: by mail-qv1-f41.google.com with SMTP id 6a1803df08f44-777dbedf6f0so11570996d6.1
+        for <linux-scsi@vger.kernel.org>; Mon, 15 Sep 2025 10:39:35 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1757957972; x=1758562772; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1757957974; x=1758562774; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=RrHnGsxa2Fgxb/zsZ42xl6vwu7SnDgb8bc/AjLcxHFI=;
-        b=fvf4GHhKVFfAlBGJpXm8PRjAyfRSEWUuEeh5uFLnUiv8bpLDelOL8GOmLEabipJirq
-         t8a7zpnl29R/KJl1/ZEBd1e4bdFUkImBufh9BqOiubFNsGfYFl6ROR35P4wNoAKbosub
-         KKkWUxO9AzUD5Wpax2Z66J+f0yJvYPHDteHHVPZmeLvu46FOKCxIXmY8G8BFwYwViV09
-         C213WJ9obT6M7uN6zTqs3DrVM/ckOwPCt937Km/w0egPLEDYrHyYLWK/sPe3Ann0egA0
-         2wMulOubbl0hns1HOFMnrg83RpA/CSiUv7XMtdHZyFs/3Tql3p1hcfiuUJCo97zGB2Hn
-         cyRA==
+        bh=sJO/D8MJibsb8c/+xLiFsXY+BhEfZwvE6GNu1m+9yr8=;
+        b=WEBcXB+Z7pk/2HaS1Ynd+FYFn620QEvN/9zoXGM9qQg67s7qXpM37jciItuyiFAtpk
+         RHu+6hwqWIYF9ybkfpJ/swjfSa2XzrnGss0IvTSnQaoHqgnHGQnYmihqgK58bLM2CYaC
+         GkFwxg2rHwrlSQg3VLK3jjTx3DTgDoZb8HF1tGquF/2dwVO23rGOcvQ/78+81NKKEPhC
+         gPw/alxW8Kj4GnU8AuwhPice+YgZyi7JUBqgYlDwZs107d+tudrsy7u886sQ8yv+zTSU
+         1cQDwvUKVIXfFfP/C8+ZnxZ82js3+MfsbeeNLrOUMzDah/UQjHfmDiINBXA4vej4FMoR
+         HfrQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1757957972; x=1758562772;
+        d=1e100.net; s=20230601; t=1757957975; x=1758562775;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=RrHnGsxa2Fgxb/zsZ42xl6vwu7SnDgb8bc/AjLcxHFI=;
-        b=pqQ0OCyWJcw3PEBkKuwZMAozaidyJfglN8R6wFF3itK7FEXHltqXpflST4hFgdRXjg
-         jAJW6OwZKAx/ZtjVKAnGtLp1wUY/+Z8VXEy3fwmIdxANHHjrmDf1q4zcAgDWrWpRP+Zz
-         IO+El5mWHmR/xQfEzfIiA0+FyNyKnBJaUqY9iHHT+FqL5v2X5q8AadSQ8pETM50fasNZ
-         StHFNyrrehTAtf+F7BpWlDyKGWir19KStyGnoCtuQTiLUXretXYUQd1DSGaVaE/l1kMa
-         qSh2TH77eTxKH4Dqr6FBAzlnc/akG/Tf4XOT0tK6/+aIYHdMdCMkInA80RCbX6WNsM6+
-         Sxxw==
-X-Gm-Message-State: AOJu0YzC23WizAMDAkkkYTwHD5czv9dINO+6ntjffmpuM267xOg+5Osq
-	Glw9G15eFX4Bu55mtRfdyDGyNxRS4jszt9aLYy4DUgj/oUL7X+IxS4ed0v0hKg==
-X-Gm-Gg: ASbGncsVYSrz542ut4p6zsoCcwd4t1mWifzEKj2TtiZYVPy2h93X9ran3NUxKmW2RTM
-	AhvjSL6EEcimswWQMY1z9pdpXJMPD0LtGbXDIO7mHokMFcbMrFLvSU1muXBFrgwveuLHFb16TjK
-	ZfcddUqKg5MRv5IhO7sjtBNpnofJWKu+z66vOA7pXGpckx8LqWgFqrGZ1q5KqBTIPCSxmJnXujI
-	b77PhR7ffJwU3Fzvu+wpC2VEuJ1Kby3BiaS0GnVOow+tyGejIDmT4hOaOj5g5ZbmP+PlMyO2Xlt
-	XzF+P9yWL9JRFGlLneEP1UHb8USmgbZ0Qq+kVZNLSMe/2H7sOmJ/+jVmuttX5FP+UDWbVd0n2Oj
-	6EZAUFBNL7LOH1k3BeHHS3BBRdnlgHZqFgcKDQcCGHIAkX6g6CRBTN4D/blGBtFo8hV4lgwECAt
-	TTHwgmmKqY08OXsLRtLg==
-X-Google-Smtp-Source: AGHT+IGJR9DdRiboebYLi4fUErcgaHSvWAMctHyH4ArUPs5WqzM5saYr3EdpKOoYcRI4tsvI9SbZMQ==
-X-Received: by 2002:a05:6214:2428:b0:715:94ad:6add with SMTP id 6a1803df08f44-767c3772553mr208094626d6.47.1757957971936;
-        Mon, 15 Sep 2025 10:39:31 -0700 (PDT)
+        bh=sJO/D8MJibsb8c/+xLiFsXY+BhEfZwvE6GNu1m+9yr8=;
+        b=JRUp1lq0SJtZw/JkJoD7gxahZUIIVQFFYhxU6Xhhhp+2THZJBtklYyepvVi6sudTKF
+         0xkVM9gGGtaTdFKZl4ZSptzUUiQKjev9G9AwBLrVTJbaG7/a/FMQp86KLewGlEy4SG9r
+         W/7KxFgKbityfQ2B1hGgV917HdgN3mi9Nxiqbrnzddn1wdRRZL3GXdnZ4TT/ft0c7Hes
+         BKKlmP4FVdU7qa8iW//lsrD5WMcihnM54xLI/JeqMY7DAoybdZUWWilsUrWmjXC43kv4
+         2/Zh88gDttk2F8hgjzfb+YHbG/ZFusfz8fEqA+797Tcz1E2unGxt18lJqC5YIs76OzK+
+         yktA==
+X-Gm-Message-State: AOJu0YzF4+CJeLzbc4ndvymHkcxKIqJhwSNafU1c9abJZH6WZkA2e64r
+	W4Rk1wNMixQ4FIXqw6OE16eQhi0QRi3/p6b/6dVJn0miYLRMMlPoB6ws4KgvhA==
+X-Gm-Gg: ASbGncuKo5CM20nh9XSrNosKBDWjY9xMar7AFTYg2kteYODXI5trAGTbmBz+3zVlNeM
+	6e50zqYbHalef/ZxobllR1S22hl2izLoAoV4WLW3446fWBtfewuunSw+XXUp69ORGyjPzpEPoe3
+	XGpMl5ZVk/5WL2FazXITRkOW5rzlBZy/tRqq8PQ5Px8yOx7n1PmE3CeZhPfqLEOBBJ/CEhKovJr
+	yx1IXfd0QXNZ208WZZKPlQa5MUAV2DkXNSAoEM+7Nr0AjYIwIs3ISVN7rJSsNWMBb6yUf0giAQN
+	MwTd+VS6qCbV0iC0ajBJgxdvFGlw2WrksGSPJUX8Uastep6SCR+nQU5cTSwFHOloD92O49piuzE
+	8b5c9SENW+Gk2ifU+MsDzi73EJV9o4I+RgY1puYP9oekpDAqdAwUR9srb3pVj0V+9zDqiKRZhnb
+	XUO82cSOjGNtMfahPV2g==
+X-Google-Smtp-Source: AGHT+IHTBpscpDgfT6vvdIwlYnoAHLMPoEHpgAFmJP/n+q6MFanA3BO91sFs0ZRZYBjFN3Ii14cDdg==
+X-Received: by 2002:a05:6214:1bcc:b0:742:90e:d904 with SMTP id 6a1803df08f44-767c4012056mr192622636d6.50.1757957974413;
+        Mon, 15 Sep 2025 10:39:34 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-77ef70bcc4esm29710976d6.41.2025.09.15.10.39.30
+        by smtp.gmail.com with ESMTPSA id 6a1803df08f44-77ef70bcc4esm29710976d6.41.2025.09.15.10.39.33
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 15 Sep 2025 10:39:31 -0700 (PDT)
+        Mon, 15 Sep 2025 10:39:34 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
-	Justin Tee <justintee8345@gmail.com>,
-	Al Viro <viro@zeniv.linux.org.uk>
-Subject: [PATCH 12/14] lpfc: Convert debugfs directory counts from atomic to unsigned int
-Date: Mon, 15 Sep 2025 11:08:09 -0700
-Message-Id: <20250915180811.137530-13-justintee8345@gmail.com>
+	Justin Tee <justintee8345@gmail.com>
+Subject: [PATCH 13/14] lpfc: Update lpfc version to 14.4.0.11
+Date: Mon, 15 Sep 2025 11:08:10 -0700
+Message-Id: <20250915180811.137530-14-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20250915180811.137530-1-justintee8345@gmail.com>
 References: <20250915180811.137530-1-justintee8345@gmail.com>
@@ -78,106 +77,26 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Atomicity is not necessary for debugfs directory accounting because vport
-deletion and creation is already serialized.  Creation has always been
-serialized through sysfs.  Deletion is serialized via walking the
-lpfc_create_vport_work_array and calling fc_vport_terminate one-by-one for
-each NPIV port.
+Update lpfc version to 14.4.0.11
 
-Reported-by: Al Viro <viro@zeniv.linux.org.uk>
-Closes: https://lore.kernel.org/linux-fsdevel/20250702212917.GK3406663@ZenIV/
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc.h         |  2 +-
- drivers/scsi/lpfc/lpfc_debugfs.c | 18 +++++++++---------
- 2 files changed, 10 insertions(+), 10 deletions(-)
+ drivers/scsi/lpfc/lpfc_version.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index f0e7f7ee4760..8d9870764a8e 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -1332,7 +1332,7 @@ struct lpfc_hba {
- 	unsigned long last_ramp_down_time;
- #ifdef CONFIG_SCSI_LPFC_DEBUG_FS
- 	struct dentry *hba_debugfs_root;
--	atomic_t debugfs_vport_count;
-+	unsigned int debugfs_vport_count;
+diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+index 9ee3a3a4ec4d..31c3c5abdca6 100644
+--- a/drivers/scsi/lpfc/lpfc_version.h
++++ b/drivers/scsi/lpfc/lpfc_version.h
+@@ -20,7 +20,7 @@
+  * included with this package.                                     *
+  *******************************************************************/
  
- 	struct lpfc_debugfs_nvmeio_trc *nvmeio_trc;
- 	atomic_t nvmeio_trc_cnt;
-diff --git a/drivers/scsi/lpfc/lpfc_debugfs.c b/drivers/scsi/lpfc/lpfc_debugfs.c
-index eaedbaff5a78..92b5b2dbe847 100644
---- a/drivers/scsi/lpfc/lpfc_debugfs.c
-+++ b/drivers/scsi/lpfc/lpfc_debugfs.c
-@@ -5752,7 +5752,7 @@ static const struct file_operations lpfc_debugfs_op_slow_ring_trc = {
- };
+-#define LPFC_DRIVER_VERSION "14.4.0.10"
++#define LPFC_DRIVER_VERSION "14.4.0.11"
+ #define LPFC_DRIVER_NAME		"lpfc"
  
- static struct dentry *lpfc_debugfs_root = NULL;
--static atomic_t lpfc_debugfs_hba_count;
-+static unsigned int lpfc_debugfs_hba_count;
- 
- /*
-  * File operations for the iDiag debugfs
-@@ -6074,7 +6074,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 	/* Setup lpfc root directory */
- 	if (!lpfc_debugfs_root) {
- 		lpfc_debugfs_root = debugfs_create_dir("lpfc", NULL);
--		atomic_set(&lpfc_debugfs_hba_count, 0);
-+		lpfc_debugfs_hba_count = 0;
- 		if (IS_ERR(lpfc_debugfs_root)) {
- 			lpfc_vlog_msg(vport, KERN_WARNING, LOG_INIT,
- 				      "0527 Cannot create debugfs lpfc\n");
-@@ -6090,13 +6090,13 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 		pport_setup = true;
- 		phba->hba_debugfs_root =
- 			debugfs_create_dir(name, lpfc_debugfs_root);
--		atomic_set(&phba->debugfs_vport_count, 0);
-+		phba->debugfs_vport_count = 0;
- 		if (IS_ERR(phba->hba_debugfs_root)) {
- 			lpfc_vlog_msg(vport, KERN_WARNING, LOG_INIT,
- 				      "0528 Cannot create debugfs %s\n", name);
- 			return;
- 		}
--		atomic_inc(&lpfc_debugfs_hba_count);
-+		lpfc_debugfs_hba_count++;
- 
- 		/* Multi-XRI pools */
- 		debugfs_create_file("multixripools", 0644,
-@@ -6268,7 +6268,7 @@ lpfc_debugfs_initialize(struct lpfc_vport *vport)
- 				      "0529 Cannot create debugfs %s\n", name);
- 			return;
- 		}
--		atomic_inc(&phba->debugfs_vport_count);
-+		phba->debugfs_vport_count++;
- 	}
- 
- 	if (lpfc_debugfs_max_disc_trc) {
-@@ -6402,10 +6402,10 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
- 	if (vport->vport_debugfs_root) {
- 		debugfs_remove(vport->vport_debugfs_root); /* vportX */
- 		vport->vport_debugfs_root = NULL;
--		atomic_dec(&phba->debugfs_vport_count);
-+		phba->debugfs_vport_count--;
- 	}
- 
--	if (atomic_read(&phba->debugfs_vport_count) == 0) {
-+	if (!phba->debugfs_vport_count) {
- 		kfree(phba->slow_ring_trc);
- 		phba->slow_ring_trc = NULL;
- 
-@@ -6415,10 +6415,10 @@ lpfc_debugfs_terminate(struct lpfc_vport *vport)
- 		if (phba->hba_debugfs_root) {
- 			debugfs_remove(phba->hba_debugfs_root); /* fnX */
- 			phba->hba_debugfs_root = NULL;
--			atomic_dec(&lpfc_debugfs_hba_count);
-+			lpfc_debugfs_hba_count--;
- 		}
- 
--		if (atomic_read(&lpfc_debugfs_hba_count) == 0) {
-+		if (!lpfc_debugfs_hba_count) {
- 			debugfs_remove(lpfc_debugfs_root); /* lpfc */
- 			lpfc_debugfs_root = NULL;
- 		}
+ /* Used for SLI 2/3 */
 -- 
 2.38.0
 
