@@ -1,37 +1,48 @@
-Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB4C634A33D
-	for <linux-scsi@vger.kernel.org>; Tue, 16 Sep 2025 16:19:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EDA731BC92
+	for <linux-scsi@vger.kernel.org>; Tue, 16 Sep 2025 20:38:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758039554; cv=none; b=PP8bQwozcHfe3bwrOb1fCY+8AA7WNiPnkilpGLHfYivwIoq/A0S/emkiGCW7bHEvZNYhq8bvVoz1ZoWPv8AcmcXTe9jG6DhHlVCG3YmlQgAUz9bL5FsS86x4qfUoXpaMTdcekAoACOyI93OHycU7MN+bjcSd3yUR99UB9rGTUT0=
+	t=1758055123; cv=none; b=X5VUU3x+ugCec59VGrpSg8k3QnwtfJhA4MdGv0UPgT12DaAaQGtrFTv6lpv8LQiMRR9raztquUQr+QQssWP6If3qYXSN2T+IoRfMPDdLDgQ56ZeaCdy+ObS4nU8V/jOsPb7d/nIuy9guGtEZJm/aMjsbh1XWjA0xuaOSH8p/dNg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758039554; c=relaxed/simple;
-	bh=yK/Ydl3etOzjTdRkXqTdWHtWEHYqCZ/j4b9gW0Qz+QY=;
+	s=arc-20240116; t=1758055123; c=relaxed/simple;
+	bh=Qmkr4PameRO6Gj0BhyEO9IBW1PlDni9y50GtpXgGVcw=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hqi+n5KiXb2nR4fZ86reWtKLFYKkkoJdwTTUW32V/tGZOiKfr4v6zT0wqqRc0jOiryoAlgO6FjjoORA9oluLjMm1rAgMfyDyNxAzbvIrkVIYtBIGTiKdSKjzL6o1NmcmS9exyyNPlCMltpl7xaZxH4ycsmQHhKcIDIV+n51qYCI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=fail (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=KNyRqtGW reason="signature verification failed"; arc=none smtp.client-ip=72.215.153.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
+	 In-Reply-To:Content-Type; b=Y+ftb1Wy/NL+51Ff94uGvbp6EvB70Xgk3BwMPLmDiu4DYCVHNVC18EnYdd18Prrog13sK2Jd/3PFSkKLd3MUkTwLh5ml9JXgLDp5Q0Ov0Uz0td1EijJhSYbFut41MvfflRDS95dP8X+/jYadw4PQpI2uKrxy8NasFEZnF1I/7WY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=u54iwdLs; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="KNyRqtGW"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id IfZtsNituApaZ9Fi; Tue, 16 Sep 2025 12:04:11 -0400 (EDT)
-X-Barracuda-Envelope-From: tonyb@cybernetics.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
-X-ASG-Whitelist: Client
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=+j1F478vcj92uMdblBqQoeReNdWWKE441rh+Ff31m+U=;
-	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:Content-Language:
-	References:Cc:To:Subject:MIME-Version:Date:Message-ID; b=KNyRqtGWzpzZ7imU5qid
-	jyCP3EEZsm/8CWiZ/NqDMwewWquo1A+KJMxS62NYet5Z28A0OLV32CZH9FbtNJrto4+LZzLLbuN8P
-	+XBO94TsyVabILQsQXcYAmM6AmYyZGqrHkgF4vcMBWiUL38h/ogQxZrxvHtsgQRMc1g/4z5SlY=
-Received: from [10.157.2.224] (HELO [192.168.200.1])
-  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14200077; Tue, 16 Sep 2025 12:04:11 -0400
-Message-ID: <526d0d1b-79f1-47fd-bc44-6727898f381c@cybernetics.com>
-X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Tue, 16 Sep 2025 12:04:11 -0400
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="u54iwdLs"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cRDJJ2ybMzm0yVk;
+	Tue, 16 Sep 2025 20:38:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1758055119; x=1760647120; bh=JuzGTlY4Jc9N4NWm26N/d7dE
+	Qtmyk28Fxl26dy3t/1w=; b=u54iwdLs0mSxlat4WRcXRjvoJxXkOmoX/pU+LKRA
+	APmO3j1s3z4mXSbbBdFm3oGT1arZsIF/iPJpsbZwyHoh8XcqlDeYevgsbt+7EQp1
+	LGkQIbbdH2S8mLMyNW5mE5CsoGv0mNGL2vsVxnb8RZrkyqvuyg60qPz0iwJL4X7o
+	BQxJ+BWHuYsjOub+ohsUBrn1ARYbZzYrl1LpetzhIJvVu8pDlgmCtiPu/BZRuGhQ
+	qfAcNeklfZ4DbccuxALHTxKTczAbYMo6KQOjjzef3IvHkjhZk4CaJpwI1V6ooyiz
+	wR3EmJe484GYzttH0le/d7jAbh4lLyl1Sl5mUNOPggUQYg==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id z6Pno4jsO7HL; Tue, 16 Sep 2025 20:38:39 +0000 (UTC)
+Received: from [100.66.154.22] (unknown [104.135.204.82])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cRDJC4Ntdzm0ySc;
+	Tue, 16 Sep 2025 20:38:34 +0000 (UTC)
+Message-ID: <6a572ec0-0b28-4b76-b782-ee1f304ad0cd@acm.org>
+Date: Tue, 16 Sep 2025 13:38:33 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,71 +50,48 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/15] scsi: qla2xxx: fix TMR failure handling
-To: Dmitry Bogdanov <d.bogdanov@yadro.com>
-X-ASG-Orig-Subj: Re: [PATCH 10/15] scsi: qla2xxx: fix TMR failure handling
-Cc: Nilesh Javali <njavali@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
- scst-devel@lists.sourceforge.net,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-References: <f8977250-638c-4d7d-ac0c-65f742b8d535@cybernetics.com>
- <f7f93110-bd53-4ebc-9aed-abe5de82028d@cybernetics.com>
- <20250912143615.GB624@yadro.com>
+Subject: Re: [PATCH v4 03/29] scsi: core: Make the budget map optional
+To: Hannes Reinecke <hare@suse.de>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, John Garry <john.g.garry@oracle.com>,
+ Ming Lei <ming.lei@redhat.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20250912182340.3487688-1-bvanassche@acm.org>
+ <20250912182340.3487688-4-bvanassche@acm.org>
+ <aabc487c-ced6-499a-8231-6fc4866c12f9@suse.de>
 Content-Language: en-US
-From: Tony Battersby <tonyb@cybernetics.com>
-In-Reply-To: <20250912143615.GB624@yadro.com>
-Content-Type: text/plain; charset=UTF-8
-X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1758038651
-X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 0
-X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 1482
-Content-Transfer-Encoding: quoted-printable
-X-ASG-Debug-ID: 1758038651-1cf43947df3553c0001-ziuLRu
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <aabc487c-ced6-499a-8231-6fc4866c12f9@suse.de>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On 9/12/25 10:36, Dmitry Bogdanov wrote:
-> On Mon, Sep 08, 2025 at 03:02:49PM -0400, Tony Battersby wrote:
->> If handle_tmr() fails (e.g. -ENOMEM):
->> - qlt_send_busy() makes no sense because it sends a SCSI command
->>   response instead of a TMR response.
-> There is not only -ENOMEM can be returned by handle_tmr.
+On 9/16/25 1:34 AM, Hannes Reinecke wrote:
+> On 9/12/25 20:21, Bart Van Assche wrote:
+>> Prepare for not allocating a budget map for pseudo SCSI devices by
+>> checking whether a budget map has been allocated before using a budget
+>> map.
+>
+> Strictly speaking it's not related to reserved commands, but rather to 
+> cmd_per_lun. Wouldn't it be better to introduce a way to disable 
+> cmd_per_lun (eg by setting it to INT_MAX or somesuch), and then disable
+> the budget map when cmd_per_lun is disabled?
+> 
+> Other than that I really like the idea of being able to disable the
+> budget map. I always wondered if we won't be better off with dropping
+> the budget map for HBAs with a shared host tagset.
 
-Indeed.=C2=A0 I will remove mention of -ENOMEM since it isn't really rele=
-vant.
+Hi Hannes,
 
->> +               mcmd->fc_tm_rsp =3D FCP_TMF_REJECTED;
->>
-> FCP_TMF_REJECTED means that this TMF is not supported, FCP_TMF_FAILED i=
-s
-> more appretiate here.
+There is a cmd_per_lun member in struct scsi_host_template and also in
+struct Scsi_Host but not in struct scsi_device. I think we need a
+mechanism per SCSI device rather than a host-wide mechanism.
 
-I will make that change.
+Although adding a new member in struct scsi_device is easy, I prefer to
+add a new function that checks whether or not a budget map is necessary.
+Even if a new member would be added in struct scsi_device, such a new 
+function would be necessary anyway to decide what value to store in that
+new structure member.
 
->> - Calling mempool_free() directly can lead to memory-use-after-free.
-> No, it is a API contract between modules. If handle_tmr returned an err=
-or,
-> then the caller of handle_tmr is responsible to make a cleanup.
-> Otherwise, target module (tcm_qla2xxx) is responsible. The same rule is
-> for handle_cmd.
->> +               qlt_xmit_tm_rsp(mcmd);
-> qlt_xmit_tm_rsp does not free mcmd for TMF ABORT. So you introduce a me=
-mleak.
+Thanks,
 
-I just tested it, and there is no memleak.=C2=A0 qlt_build_abts_resp_iocb=
-()
-sets req->outstanding_cmds[h] to mcmd, and then
-qlt_handle_abts_completion() calls ->free_mcmd after getting a response
-from the ISP.
-
-The original code had a memory-use-after-free by calling
-qlt_build_abts_resp_iocb() and then mempool_free(), and
-then=C2=A0qlt_handle_abts_completion() used the freed mcmd.=C2=A0 I can r=
-eword the
-commit message to make this clearer.
-
-Tony
-
+Bart.
