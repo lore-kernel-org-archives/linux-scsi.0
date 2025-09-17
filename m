@@ -1,85 +1,85 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F3972DCBF7;
-	Wed, 17 Sep 2025 22:13:53 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 20A942DCBF7;
+	Wed, 17 Sep 2025 22:13:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758147235; cv=fail; b=JqsAMhpOsneaET7zzJ/4PXBYtkWwjm/ATVHNd/jkV7ZcPawClAsGzwS8RfV+QfHJqIYu2P8P8ezVs+CFyFe2vxrj8jPEjUqxCyrLNIX/3BBEPRvzFT0sa/WSkLQ6OIOd/+kQVojdytvgQztUPRtpS+JSICnYZrul3ZuqnJrTx4U=
+	t=1758147239; cv=fail; b=NR4z1v1Dta4vIGAIjbqOVhP0W+tXLKpDLxGY28wbLi8UKE6rzCWFQz6WlXPgI79ieeRe664kT71WqjBlFI8y0uuE9q3stagOsrR5dO0+mD6M/RRJ5xxGQ1k+H6++Mxc9sryVJBXKy4d3vqwgUoUdUxTcP4Gw//3pxtcS2mZTLWQ=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758147235; c=relaxed/simple;
-	bh=nrxkWTuRaElC7+WsaXcwpUEm7shmPLTwNVUjtiA/Ykg=;
+	s=arc-20240116; t=1758147239; c=relaxed/simple;
+	bh=G1I/JZGeWUNZnjXDxAc63uFJbORvT1YR8zhIgM6cWok=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=cpNkgGMgMRwM/CYlqNF17ixonktrdJkQmmT/tgKPOaFcFNlXILlEq7gWnJpwyuwqCymDYB9cO/e4cEG3jYEzmOJ+DZMTrCL2Y3D9rUNyVoj0eQ0plToFeidIBleiAlajQeDr2HPW+0ZVDnGvFrIGbAikURde3Aij3/p/C4S4JhM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=QYuTxKWT; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Ja8iAmt5; arc=fail smtp.client-ip=205.220.177.32
+	 Content-Type:MIME-Version; b=t7XXp9FSnRVggePa9XWZiA6O+l41+fTpDFt8/uHctpd+a1KOa11zjJhaVnNYCFMkoHIJzgmLk/zXYt5mKGY5Dckih9zlZXCpVRt1hxq/WfJ0S3x1xFbc+Q+KNUEt28pw7t6ysGsLZnpO6OrNFhLCiTEWU00QNw/WLS9WiC+JKeU=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=d+9ScluA; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Vn6VUkpf; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QYuTxKWT";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Ja8iAmt5"
-Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58HEITdl007388;
-	Wed, 17 Sep 2025 22:13:47 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="d+9ScluA";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Vn6VUkpf"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58HEIStJ001843;
+	Wed, 17 Sep 2025 22:13:50 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=DiDTUkik2k0m4+iQFRCz9lSJV6/byn2WTUpsXgGdP1w=; b=
-	QYuTxKWTBcpjvW53Xjg/nm4dp++pZTvyhHGDTQbVqPEzBLbhxW1q5coWKraA4+fk
-	SclfLX4EGfIWpCkQSm5SqqwEyM7VpT75KN+hGzv/THBL0Y8YGrUYWmpQ8CAfgrHf
-	7P+T8taOeLVaIGAztA8YhcqIGfY+YCZxcZNoeouL+6na6lEg8wUr35D9AM2v9msn
-	+c4nYAmm/m5fJo5R0xccNG2BZYXb1FqoIz/9SAtwmDqwldGzIuGFYXTOKV2998IT
-	uuEhviaSLwAuttfmXVLqgQbkFX3U3N48GGWM45f1/R1HcWyV25nhplP1TbSXZPZN
-	PqtwoGlHWJ5cSfU76jIDVw==
+	corp-2025-04-25; bh=rjtcbutGpAsYa79xH8ZPoLmgvZjcMkn4PkeQg8iRmi0=; b=
+	d+9ScluA1hYnpTJVi5efV5rbwn8rYrb48ivC5Qo8SGg036T2jj480P7bQFNpxA/M
+	0560jLTeUkk9U14rk+u1FQLotFH8UbE0qwuDmzB7GmmatHPdWx3Ah4+YxtxH8bwC
+	/QG/DQVxqc5qzDXM0WyVanXvnNF5eEc7c8dTpDXjcQ6BvIU3vP6iEIh+VkJXuY8P
+	AeypPhvvoQNezHkaEW1quZ9+wtT4c0B+AJynj22oI2oB0TSEwD2Q4JPZoDymTNjo
+	5iZhha2RQRelQrDNOInQbf9YW1YVucK6jehCsMtpgG/wU4En4c9VeRjJoMl6WnK5
+	UpSXDkkiy8F14mKPkqmE7A==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 497fx9295m-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 497fxd29fn-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 17 Sep 2025 22:13:46 +0000 (GMT)
+	Wed, 17 Sep 2025 22:13:49 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58HJocRa028809;
-	Wed, 17 Sep 2025 22:13:46 GMT
-Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazon11012070.outbound.protection.outlook.com [52.101.43.70])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 494y2eaq33-3
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58HL6hEe028808;
+	Wed, 17 Sep 2025 22:13:48 GMT
+Received: from ch4pr04cu002.outbound.protection.outlook.com (mail-northcentralusazon11013051.outbound.protection.outlook.com [40.107.201.51])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 494y2eaq3n-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 17 Sep 2025 22:13:46 +0000
+	Wed, 17 Sep 2025 22:13:48 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=RRhx9b2owOSJwLncL2mYfrpdMXKW5oWSYKsMwKG5kUjaH6sx+YgslVnc2rD4vCldI6weEvtgkQGfJeXizZ7yPwlIfC4Iu9myGK9vPWZRuXgTbMl0uaqcK+ykXqcGLphr1VvnfqcE8f+5mx64hLhXhfa6iLP3BwAFFhNpGbPXTKNL2oeFxwz9NtCDUFnqZ8s0/7bL+c1ACY3Bh9wUtwBqpoRJSWHLr2vV5W+uiHhitgQocDMjUC/+aT4lRICeOBkjGNLgwOEDgoR54iuAFA6c/9rwroTD0PDJYOqyfrV6cXZ0SRRLq1OXqPVkndypCRJF0BCtSqzU3ab1K+cHh2gwPQ==
+ b=hSVxSzHvAcB8/7tdfDg+W9rPZn3ZtcYmGInuTqhGso2yueFYfK/rBnc+ZAFpRinuJohwVLvyAeb3NM4Rjt0dW/XQZa1jrN1tOLyAIsrLLDOY2dC8lU0HQqNWNHHGelxSXyIOlRl3kbxKfypAwhYBc1f2jb8G6KhKyjNfEalS7qFSbK3wemokpeOW6qy14RXE48eSmYgcaU+m66n30gknCq7DlyCtDXzKW6VmcFQM9n8P3e3iThDPeb1GJSkBbCJpCtUYnOti3vTKZxzMlTzFd3ZSRu6SnVVPCe1PrFkdcLtrkiknSgEbLhKXmWASswJsPt7Z7Rl7FxFk5YoirRwhxA==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=DiDTUkik2k0m4+iQFRCz9lSJV6/byn2WTUpsXgGdP1w=;
- b=ZLnb+WTboG1PGfqs2AzmmE51KTAZMhl6Bnl1Dc0dCq2QHLaEIynkOuqNC1CLfwn//cZaZlhKokjSfcJlzKhI9S8/n/f55lSb+tvkcriXMbrZ0j4Qz7zxeGkfIB7nSXyJUyM1iuhof1YxH/SzBE5CIaUrE6M9W6PxkLRcGL3BgfzX8kf06JkSl1f2pwqClQDM7lLuGaZAtiXAQZbuV9bNG+PqXyhjB3jPhQoIbwMAo4N9QwlKiE1plnnXar5ylf1/250AcFLq1VlxNtDpmDmBtP0DHBdQeVg8iYBzSyprZMJarUmWtlF9GIiRdEtAp83/YN5X4NbsOjfvbXHFieCchg==
+ bh=rjtcbutGpAsYa79xH8ZPoLmgvZjcMkn4PkeQg8iRmi0=;
+ b=h1lOFA6oEOZXRyL04os+o5R/uZbWl9riAyV5AVVRcFUj9sxtJvRIsDYqCqrVoxr/lexpHLRAJqhpqDN6l+jCdX38p4bb75ysRvxwlL4FzUMrGF5iaIv+URwJO2IAF9K92NHTrKw16QFa3sDCq+kGsKYh4q2j4KKXaV54x6a4GsT5KlZy6xjSfeX/ZImj+XuyGXchrVW0YrpcMgIPr6MDw6ZVMuZIU53QKZcsZ/H0s6wvDf1tLJq8t8kQ3Xd9R8NChoI6k6qbaVURxr7oV/vH0Qf9uwCmSeCO6f3OgbK2ULnoJG6kXCKPzcaRUeJoa5MGYW7xJJOgnfLYer1AEJbfRA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=DiDTUkik2k0m4+iQFRCz9lSJV6/byn2WTUpsXgGdP1w=;
- b=Ja8iAmt52jXHJucy0w2XfFwjOxptIEi4twmLWLbzyaElLK3W5kVtsEdP4WGsc9QuFcC3bvs1UBglanjvAslKN7Z7yjRwgLAr92nEqLUSr0lj6K6+Sx1HJ+qnqp9146V/nccetX4Cbip1J6SauGWQB7QO+gM3X1uI73vxRfQF9xM=
+ bh=rjtcbutGpAsYa79xH8ZPoLmgvZjcMkn4PkeQg8iRmi0=;
+ b=Vn6VUkpfisYp1M/eomZEVs/SQaqFsZ6JeSLYQjmO2i3pFgR1CqZZoaR5iIZi9CcAgz8dQyId3S49bV3P2nSersvpPlGj86E3xsc7OgbR9+ohICrjJRrPK8CmX2ctruLDkZFOXvR/Bjppzs+gvQDZ+aVbYKJXADpN/AK3t3dJNO0=
 Received: from CY8PR10MB7243.namprd10.prod.outlook.com (2603:10b6:930:7c::10)
  by CH3PR10MB7564.namprd10.prod.outlook.com (2603:10b6:610:17d::22) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9115.18; Wed, 17 Sep
- 2025 22:13:44 +0000
+ 2025 22:13:45 +0000
 Received: from CY8PR10MB7243.namprd10.prod.outlook.com
  ([fe80::b779:d0be:9e3a:34f0]) by CY8PR10MB7243.namprd10.prod.outlook.com
  ([fe80::b779:d0be:9e3a:34f0%7]) with mapi id 15.20.9137.012; Wed, 17 Sep 2025
- 22:13:44 +0000
+ 22:13:45 +0000
 From: Mike Christie <michael.christie@oracle.com>
 To: mlombard@redhat.com, martin.petersen@oracle.com, d.bogdanov@yadro.com,
         bvanassche@acm.org, linux-scsi@vger.kernel.org,
         target-devel@vger.kernel.org
 Cc: Mike Christie <michael.christie@oracle.com>
-Subject: [PATCH v3 2/3] scsi: target: Create and use macro helpers for per CPU stats
-Date: Wed, 17 Sep 2025 17:12:54 -0500
-Message-ID: <20250917221338.14813-3-michael.christie@oracle.com>
+Subject: [PATCH v3 3/3] scsi: target: Move LUN stats to per CPU
+Date: Wed, 17 Sep 2025 17:12:55 -0500
+Message-ID: <20250917221338.14813-4-michael.christie@oracle.com>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20250917221338.14813-1-michael.christie@oracle.com>
 References: <20250917221338.14813-1-michael.christie@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: DS7PR07CA0019.namprd07.prod.outlook.com
- (2603:10b6:5:3af::7) To CY8PR10MB7243.namprd10.prod.outlook.com
+X-ClientProxiedBy: DM6PR07CA0047.namprd07.prod.outlook.com
+ (2603:10b6:5:74::24) To CY8PR10MB7243.namprd10.prod.outlook.com
  (2603:10b6:930:7c::10)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -89,81 +89,81 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
 X-MS-TrafficTypeDiagnostic: CY8PR10MB7243:EE_|CH3PR10MB7564:EE_
-X-MS-Office365-Filtering-Correlation-Id: 2a29dca4-b514-46b3-f9ec-08ddf637771f
+X-MS-Office365-Filtering-Correlation-Id: f7e07bc4-9417-49c8-3128-08ddf6377819
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|1800799024|376014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?JwnsIbVF5fteOhOr/IOm5HhxDZp9q6u5SpMhlT2/VI5V8evhXiZo22o42GKH?=
- =?us-ascii?Q?gqHrqcTs47sjnppXeIBcMTRZxZ4zweQ59lv54E4zw14BAmgMdeoxr91VawQ+?=
- =?us-ascii?Q?bz17H1iK9s53qirJUD4OG6s+z3k+UBaqb2DKB4eRy4GTAoqTzuTNTkHRRTGv?=
- =?us-ascii?Q?eEKH3UoLbVjA9bjcGEQssbCTFcVD1DKA6OSB9anYnbPQKpsJk/O8Yegl04Al?=
- =?us-ascii?Q?pFBeaPCQNeOmsJ5tU6b3ydHaoDxIk41Cz/LM2q9sumKKpegK0c4t4iPEHi2T?=
- =?us-ascii?Q?+jB2t7fqUPPQEcpV7MZ9G7kCg2T5CLejJAh8ntDzFLTV5tXQQpequIgvHOvH?=
- =?us-ascii?Q?97hVfN584ENNVgAmC3IOKqBr/l3X32VzJeHVq/DNgMl2z7KPm2bCBXoK3tDJ?=
- =?us-ascii?Q?qaA2QgeV5txzm1yAf2BDbf9586MaCZ1KNgj5iBlk6/3hFjIRcMSAA5xOUomO?=
- =?us-ascii?Q?qj+hInct6bMmbC7hmOnUcoSKblGJu22dzUhm0LDRs9YSy5HBiuOau/y/e259?=
- =?us-ascii?Q?dYoIqr/oJ2R8dgM2NnvMtQlDpyyhwRgnBHIg3B3hFCTDP3qrxG3c0QihvtWL?=
- =?us-ascii?Q?6oVyInfkm5OBIIzSqxDfuE47jym+f11782TW6dp//ZuFV+1MIcOwlHkj47Z2?=
- =?us-ascii?Q?O6GNC2d8j9gdIFBu9+DTqVZKWfW0IHzk361+g5zfLTEv+acxEay2FU7kRz3m?=
- =?us-ascii?Q?XuQZb9G3SvV0Xm+MrExyeN1z0zpbjG1VMurWOex5ngbaUNvA2r79gti8oFx+?=
- =?us-ascii?Q?FzxXO9CbAKHh64x0EDrk5HNO4hCZSzEC8KT2wxysh5/EJeNqjgrKJUmDMPAL?=
- =?us-ascii?Q?e+gVysBeqsXSSiumgfFXRhU8IxnS6AK7kFnB4ZQC9705Q51yCQDn5RlBxVvB?=
- =?us-ascii?Q?wDokvVPp06t9oeB14H3lHwErSRk96Gcx16shY+Z42tA36/kiRF+U1BoPq23C?=
- =?us-ascii?Q?Qo0Pk8KmuSPnnSzOysUi0bVpO5Tw82eSj3VKgP7pv8i5l5tI+Nr1mayOHpUN?=
- =?us-ascii?Q?xgcUUMLmzYlW4QP8/LwbQxuZ1hXsPIseAhgP4mjk/qKT0Lx3j8fGPWqnwsBN?=
- =?us-ascii?Q?gv1JJJZxXCq+T7N3FIce8LlzLbc3Z0STTkP+2657IJfrA19HvPhegzRZEhaK?=
- =?us-ascii?Q?zn623JnDhfUMoExTxg/dGZa0uobGQ5IfLW7XgP17rWT8O/gk5UQA8Y28uLGw?=
- =?us-ascii?Q?GEaDe+xcxyrTzI9A9QfuDMNm59SFJqu3rPCxRZaymLh4SN7h6Y5RNkO25JUN?=
- =?us-ascii?Q?O/a3MK9AzWyvSfJdXd6bG1XAKyqP3JoSNbzgy9HefHbMuW6Wg4CvyKf7m4KY?=
- =?us-ascii?Q?VJ7RFDDWgkQwbhFZgS2iD73r/FxRQUQAaeo2NM0H8DDOqz1Nqt823etoWyz8?=
- =?us-ascii?Q?yzRRVSB5vkZb/m7vAUdDajz3CNQi4yeShEViADhIULtN8yxdav+JIYClxn9D?=
- =?us-ascii?Q?Q7wAGz4MfQ0=3D?=
+	=?us-ascii?Q?b8f2mcKWjF8CNbL5S5uZ4+32BfGQYo1WpPP85cBfztZbMCtlNstA22+SbX5S?=
+ =?us-ascii?Q?4Yg9MhShTlZvBLqbzQP5RPEWyvdtFsFU6IVrrH2nGQTcDAXezXRFP+0BrwL1?=
+ =?us-ascii?Q?K6mSh1gav6lG85nr0KoGOroubJi3ffj4GuN9+aGkI98pBVoeNx8/7EiyHkVv?=
+ =?us-ascii?Q?+96pHJ02RcyaSmJMbHhWjWYaxOkeGXN5rgzD35ZWTVEa0htcivT0nZSg39nW?=
+ =?us-ascii?Q?QwOelR4cQccMbxJpn1JUL7wUbAVls8QRPgMM9ceJPy+PPqUykXEMSge2Ly0f?=
+ =?us-ascii?Q?e6cHSkHhJ1MD28bj+94EKmo/lWYAv0muuMs6K+adc8RCuKIs+/p8eMNMCEjI?=
+ =?us-ascii?Q?FSMFXDJEn2O1yUfU1x4YBvOA7G5y61oeZIubJ6dV3wbd6T9Dp3JGUVKCpzW0?=
+ =?us-ascii?Q?tKh9HTapa5eZ27XlL2TmokYi3nr69E7RWdiFk8NJn2mgivpBNeDXIr0H3T+w?=
+ =?us-ascii?Q?Z2uL4yAV1j4jhMR2XAibAoFl44vTAqSFM5o3OhFMRtmfRgLXW/cQuJnXfK/H?=
+ =?us-ascii?Q?/NMpU9OgeVOqF7HZckxvxkSD/Xr0mi8T4ePrWznXYcETgUprzgMKRC570gO/?=
+ =?us-ascii?Q?xwqn17ayziuO2yPdS0ZV6q+XCKuVEMCxOzINkMnqMuaTtcbKvETW4jtk0zpY?=
+ =?us-ascii?Q?dFg1uiG3LH1h54HRMKimCooULStxKI1fezlvZy02SWXFbFZKuGdkXQZJL2Uf?=
+ =?us-ascii?Q?iL973+s2FkbiIDNxu38J+v/SczdBehvFd8Axi6uHjAUUNWRg3XGct/yN1M4B?=
+ =?us-ascii?Q?RCZawRQ9fiaTrxEYL71IMFVfMH+7qXPs1P9eAGsyHwBT9WHNOOdupeDf/vwm?=
+ =?us-ascii?Q?ngTUS+Ha5zNLRkVHVrSCQX5jYYaHSs6zDaybgrqTPejjHhvbeAHfddRtSuBc?=
+ =?us-ascii?Q?ApQ3Hy2oJQlAxvq/YF2epZHs9Wt8tyOgzWTLHoUQUzqTjDx4wvPH5rSQnaeB?=
+ =?us-ascii?Q?4BkUmqt/Dizlq5m0sEm7TvibrOqD6jRYTCQEtlba1DJvVKJccupnzMhH7RzT?=
+ =?us-ascii?Q?9TRmym2Nig0Ec7x2XJrqAcP0F5r3jutXgJAdkjwGf7a1iD6vsAkE4GH0RLfC?=
+ =?us-ascii?Q?hmBXYQnatX5PhTiHreZxDE4iILmKSTrqA3cacPwWkHciY1S4wo+O4lteGgfs?=
+ =?us-ascii?Q?5qhMz548S855+BeA8RU2uUTX/Wll024rlUioI2+zhrR8oQXAhA6azX89oZYh?=
+ =?us-ascii?Q?BkK84CkCX78p5eBPIBpj8f2nUvWcl2vX2Ez+pnpCV9WsHM7U+iTLqn5gBQba?=
+ =?us-ascii?Q?3fw9YKyYJvNX7VXS92a2xxIT8A70Vma9hTvQ5ACaO3TyFDiXCX2EwBIQxUeD?=
+ =?us-ascii?Q?rbyvMPOmKlE+ztUA9DBzfk1sOAFL8fxUP5JUZbql9tNi/gSkkMc96DuKv2y+?=
+ =?us-ascii?Q?pV4BNgq6k3HEjcOpXMU/WkwOoCK2IVIqflulJY2/oKRabjphsfVzMC3w4XX5?=
+ =?us-ascii?Q?9KzjsRZ6Ksc=3D?=
 X-Forefront-Antispam-Report:
 	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CY8PR10MB7243.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(1800799024)(376014);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?hqocf5vgDiGbPn0ScOivI9PKba5ExbPrgfb1J7FMZI7Gumw7ZW0ydx/dfsbP?=
- =?us-ascii?Q?6spJFtVS/Kz7Y4jAZfMx/Xy2dLiMvJR5mvO2Om0YE/kv5RNIgiLAk+zQhSfG?=
- =?us-ascii?Q?jXAHNdJ8XgxFNhQDW3VgnGPG8bG+hokGJ9OPFQAFetKfCrYrNe+qVt9Hedvb?=
- =?us-ascii?Q?VsiopMpqcKo1ig7pqC2QvV8TLYd9jPyECwkuy6GJq1k9JvjBCa/S2OKdyFJ3?=
- =?us-ascii?Q?cfv9cFO+IC/LoLMzgIQxBy+Pb5uoJh2OVmsy5d0tqIGMqaOD7O2fOYEvbKry?=
- =?us-ascii?Q?ZDCnGzUxETRJHt1AoTyXHIKjswRORKymDtzJQ9dugeUY5qEw0Jq2MlyiPxB1?=
- =?us-ascii?Q?wzSWdc73hYv/fH0nRA5QrUd2iGWunxZb/uy+mFietKk6tgu+GLGP3iA+16Pu?=
- =?us-ascii?Q?loxkLcyNX7RXuZ/B7xgLWfFEn9qJKzR6BLugISntUTUHkKNi6+io4oboSeJh?=
- =?us-ascii?Q?yQJReRFNgx8hSJ1roGdvA0Z+HdJ+pzPLsMGRf5bFRq/Da0kmbc9V1D63AAWh?=
- =?us-ascii?Q?hIsVlblzC4zdhTUoFPS4YuZx8a5nGHFzODsFIGCJis3XbH1x+X3QxzSigp2a?=
- =?us-ascii?Q?1gKYxhJeK4xgZRMO+ry7G8XEsxIfCw4OX3OQRKlkxEjQIlYEQH6ghhUWzSUh?=
- =?us-ascii?Q?lZSSwF0Muw5s2l6I1chHwVoiCzGcNSqeHNqZRdNNZ4v6LccNsG7q6v60Pmor?=
- =?us-ascii?Q?OBzs0+nYR8cb+aG9tmCao+Dj7LeavD8Es4DCBod2I9jauFvc4r7lXkNyWCrB?=
- =?us-ascii?Q?EzwO5zSyw/ZXsZCKYOvjTS/MrJgXfHu+P5Ywf7OQpBa6Mk2TZ8jQHxgJPlkt?=
- =?us-ascii?Q?QIlg0tUOfVUZvo/vr3bS/hWaaKJGI9nKEjgJNVaKD1vl57KmFVugC2kt6CtL?=
- =?us-ascii?Q?rANLK8sGDBoPiE5pR5F9ylcMotPJ6N7lFACTXCcokF0+Qgd/M9j+yyRQ5NLN?=
- =?us-ascii?Q?+MwH5HavEecU1ejBDGjdNKqEvU+Acv6myfBF8rqDpUP1Ln32iv2rEPZkZfVM?=
- =?us-ascii?Q?cOQ+osOGI689UOf+macieJiHBOUz3xYz8HsPGo7FHRMns0muptniVSmots/7?=
- =?us-ascii?Q?BB57caBD66dC+aIDBPbt/W1U613XdmjDhzNRsN5LDsvIO1ANdQgM517V8W5a?=
- =?us-ascii?Q?KYUcATpzqs/Cuz9EhhN3psySIVWK1hvHc+DzcJyln3Xxwy1JyQQkOmVKBuIf?=
- =?us-ascii?Q?15S+Z3wcQfw37QnNQ1FeeOmviXvHsXFqaS8/2TfqCoAkfq3xOpxSTweb28T9?=
- =?us-ascii?Q?V6Ve5xxHK67xgho5cwTXGoysvtxJhToHxwGkNUbCl9KKgtZ7TfgnOTJhoYy7?=
- =?us-ascii?Q?APPpdexcDXaX753h/b2RAYE7oN/+vnBkzyk3egeWkvcFfWcTukdwTEgOCYxz?=
- =?us-ascii?Q?oBjg3aGKi8+kmU5PGEpZvg3tS4yIk5DZXNLjbovlKrygiI+75QP0NpiLg6hG?=
- =?us-ascii?Q?fnZhhotz5MXKJbROtlEoNOq0jZ5qON8HuiKFfeHTCYdVhSJOPCywpFBUj513?=
- =?us-ascii?Q?RezWCpOMOE908rL8fUaBv2z1xdf6atdQgp+vGEfRO2/Pszk/nQzVH2UepSWB?=
- =?us-ascii?Q?3Kt9q85wB+Z4Fd7ikPOcgTPm5HeebEBl/50UcIkK7Xzw51pvAEy8kfxDU5qO?=
- =?us-ascii?Q?rA=3D=3D?=
+	=?us-ascii?Q?BBaRCuRBrImPf+sK3eiBVJg/8Pth31+YwoDVoYL0DcMnaUZsOg1Ac78uRun3?=
+ =?us-ascii?Q?U18lUW96H6LtFNZGia57fxw1mLtDo1Tmsx+CbrHw5A5uv8Nofh/ebP07NzYH?=
+ =?us-ascii?Q?vhS8mvMtrkWOmahwp7bdZBHMYeaYGq7tAvlNJsoXTpz4aERU7+Na2nNcNuO7?=
+ =?us-ascii?Q?OSg394EFR7p3ieokSZi5AyIxPVSYQgu+ih8U2gnnic0MnqmHLGufZp3eWOcs?=
+ =?us-ascii?Q?0Z4wvzUxL7KQLgax/ObPyFE8O0+SkVYrb33FkRHViFNoVhJVogv+3HvrTn9E?=
+ =?us-ascii?Q?UbiXhTId7UDtr3/YuSsk0/QBSNQtXxVBpUBu9fnLGb06RPZ7G15AlSPZ7pU1?=
+ =?us-ascii?Q?7eKbQZb+NlDcD8RlwQJPlkPP4SlWAbPlcpi0csh7bKCD0mVL0WrJEU2xUaAn?=
+ =?us-ascii?Q?2bSN5E45YjU86ASxu77/L7jMxCrBzSXM5+BOv0CIL/Y9wfVi2BoTiOyA5oLj?=
+ =?us-ascii?Q?mwD3eG6e9TRsJAEHglJtzzCLU5DqeNuxnQApf159fF2D8TLDUvT+fReKnvIQ?=
+ =?us-ascii?Q?wHqthcO1zhW2UzU4mpJCqfUPGBBg7lpEgQajZEGpBfs3ZVp29/Nyjp3RRFui?=
+ =?us-ascii?Q?XKkaLqhb7c/dG8qWiRNTPohMB/2sMEH+CiinuH+5LOiEQcia/N8z+YDkf530?=
+ =?us-ascii?Q?vPjPbvVjWoaEzVUltAB7jmz/t1X8mdLMm8HOi14fi5ImfPRvhd5GaRKQQ5gi?=
+ =?us-ascii?Q?Uh8zWDhbmxWTNTRhus/8xEkwGSJTuvlcklDUWHdMxnmtjdRONkwp5xGb8eoA?=
+ =?us-ascii?Q?A//baM2D8KaIqrdZOSa69PzzSVfO1AzbuCzBBekHhgY7LtPCxwajdGBUOww+?=
+ =?us-ascii?Q?HkeVaV5rklnSTn8LhYbhZxY9OaDxSjNshkWgpt66lQoC9yfLmLWfFadXYFEe?=
+ =?us-ascii?Q?grha+jD8qT97+0zmhAAwYe0m/tz32q5Z97l6Hm6BhhgdJlWMjk6L1Y1OHOwQ?=
+ =?us-ascii?Q?F4lzR2aFIzCEhjuLjqconzRa7OUX6at/qYDi/T68EiOsAD2sreHFWnlu0hnI?=
+ =?us-ascii?Q?aByqGcrUH1Lzbbkpb6255Qlf5fsqq80fu4fbiwodsmQBKQ44a0FzPPGzJbB8?=
+ =?us-ascii?Q?EC/XzhILH1FnynqHgBdu3569Z9e+QgIwxDgP3C3tCBMQ/f7aQEHrzUiV+pY3?=
+ =?us-ascii?Q?Zg1LDEPevALU3BZCmTTFcM8r3SOi3ch90qNMsNzs/IH98tYBla2TvCIGbpCn?=
+ =?us-ascii?Q?mw5P8gHY/01qw+cFZdXA8oH1oTaeKiE7UxnNI2JXS99iB9rlYCE3HOJ7QGCQ?=
+ =?us-ascii?Q?znFII3AmQ3iAilCDQQSOLARLwhfcHteE2MpAqttrgH0WrjJ19/uQPEBmdPsZ?=
+ =?us-ascii?Q?0rc4PopriBobbVWrS5zL4jcGY0Hn/7rJ07r6oTIucHT/u3ojuoKHoZx50wML?=
+ =?us-ascii?Q?756uV9PosT59k7VWpKkLG9fa8HZe29gV8gvqHCJPO+w+X/BaBS/1DeiIy7yA?=
+ =?us-ascii?Q?2JsEyXTRPue29mp/lyVZ45NHuaPNBj5AZ0Ub5CPWVGRIFmLAkh6FWGOsGH6E?=
+ =?us-ascii?Q?etumrtX5hLItK7DsbqHXvuM8/MeI7mmuxyiBV0tTu4X5Dt4yzyaUxANYW7mT?=
+ =?us-ascii?Q?l35iJUYGkrRRBSaW97ZiiGl3El2J/lSK7cd5x98xnE4z7M4HvLcsImlq/FOd?=
+ =?us-ascii?Q?WQ=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	vJWA96ZGVyXgxyFa4spVbFhkTWn+N8axyrNEwqphyTSxoQ3Spi8zXMAN0+ESv/Is5vuHKSCOuP1J9J+UFEBFTrpL/bk/v4V22Dggnjl6wg6hAU4SRFdeRRNA3HwiXiW5gy2GQHrT4KrElpqbiL6YtI64gB8cb3850D49RppBiKfLfoORnH+GkCNiRmGrRNcgyIh2N3KHt4n6D2aao1JO5iIS0CXsAgJZQeKVgOuMI6yxmm5qmYJeIFvlqZYgE++PfMXDrGK5sNHljDXJ5Nn4tHXymIT/AKNJQyyut8rm1BrCEVHCSOSkKjNTrnk79aOnb1iVxP5kuPotn0cMDalw0/G6jwX9kz45RAppkENKJ1eav1qPwuq08sGLBs/imCdGHhUPdLQFzXnAkNEGq2hjkqLY7mIlceQWeZQRJWeKe5n2PR/sQK9Q5BZOKYnLhA5yuOAl8OlvwuU6qESD+Y0C2am72cXpJiRZZPJA8+CuS/wbT4WbSkh/6SmKXJ+aYMHPfoa5acGZvDdDgYzPIbBxB1ry8N17HnRUfKXDr7g5aL5LIPzArIJF/hoznphZ+z/rSVN4GxlareEXGHs1u5QPB0FjFc6RMTbBQ2nbniZ1Oc8=
+	OudAhNQbdF8yjF+UtECc/lEoB6D6TrJTShJ7hUFUnMjeFRav2ytxyFVeE91FCnDvYbz8wOqbvI+L/lDpA92Dwmi3ORoGwZ+3FECtw1LxnXI8F2FGHoDsz68t3c5I/kq5SQr/yOalAqH8TrUezR4OtkZ7DmgcSeaDrjNlYnB7LfwVgUfYxIZSoKlaaNpv4ilfjDYBnNaAC/0O/z6D+WXi1BJpIl3ejozITY7+mawlUT68JJV050yqkqhQwYa+GgfnFxiZ4iiFbnEUzA3U+xYhgnRpEt8nbybt5gbiWfRknq5+rOTWitbFd57lwsetNTY9FmOdIAGsfLaQcOAfLnbn2YjLc8oDDoxiz3amJtGjZmlfW/CQolL4ENaRgYl7s0dMOqbYW1qge0qfCxNu7S8Ypg2cGyXnJUkpUsOMGpS0rCZqzTKGFEJ8Pngy0LJXZBcdAn1SCfReewpwfJQT7bybClRWqVWqJjWfnTwhkMFq0Iz/ZpBx7tXcWL08/w7ExU256fcxbPZhRY3YWg9+DVVhovZjb/N40/2RVwMT3W4irkPMz3uW+YGEq22bc0HJiOmWSZQZgAcLbONUlF1XDcL7IhwO7gVTaJIBryHP3kFPuRI=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 2a29dca4-b514-46b3-f9ec-08ddf637771f
+X-MS-Exchange-CrossTenant-Network-Message-Id: f7e07bc4-9417-49c8-3128-08ddf6377819
 X-MS-Exchange-CrossTenant-AuthSource: CY8PR10MB7243.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Sep 2025 22:13:43.9854
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Sep 2025 22:13:45.6724
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: fzRarhAKLftudjdYRWDPfcUvvchig793O5iioU4GafR7MqopOECumhpIU80hmUHLYRUTOS/xnB7+IhGHc99NZQboEzw0KSs4X5cl33jJ+jU=
+X-MS-Exchange-CrossTenant-UserPrincipalName: jBKdHWKvNLjEgogkRVSZgphI4e8vjNugrWG6NTM06HqT+pE2x0hU7U1uhaVoDXrLbJISlPN3ULTeFYEYmGv3Br+YDj4y5kvqt0QORD4P2qY=
 X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH3PR10MB7564
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
@@ -172,253 +172,308 @@ X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 sp
  bulkscore=0 mlxscore=0 suspectscore=0 mlxlogscore=999 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
  definitions=main-2509170215
-X-Proofpoint-ORIG-GUID: E9_4vouZmm_uK5SvNSlkJFAIzd54lgFw
-X-Proofpoint-GUID: E9_4vouZmm_uK5SvNSlkJFAIzd54lgFw
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX9ZmuwHuMeHc8
- U4/ZOs/NQGaPntgSbh+4Sh/z7wlyPiXnPOpLiPtmDUmoYa0XJ20JKW3wFSVcgIpkG+r8cirY9Mu
- PPbgdw7C118Mk0ZVA7ncxQsN1DVe+7uyj3m+Zo531UUi3Fs8To0vMOc9xqonSLOvivGRbYq+8P9
- byutLfw3Wa6kQocHKZm6UuHEvOKjgYSPy5GiB6nVDoYYzQOjURflRYNExH8uBOijksVEyUHziX1
- nt5zfqZQ1x6wl/EJuq3lhPbHtKGJFL1BS0stz1Kb1hIrnxmwm00sJUyh2YGVVsu6tkawh2bUWHN
- 1sG03gkUlJHsNPvs4mfW19E5L+duMk/EVeX0gG2CIneZJv3x08yXRDl970LC+2HImaieM7HFEFH
- qjAr7ULL
-X-Authority-Analysis: v=2.4 cv=N/QpF39B c=1 sm=1 tr=0 ts=68cb329b cx=c_pps
+X-Proofpoint-GUID: y05jFxxAWTih73A0DkJx1QH0u-dhe4-I
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX6F5ydYdITkn0
+ Y3yYbh9Iy400UcWni/oOzXhCRxU+mUMq3Yr2KPzRaPxjDobVjZRCtfBAXm00VqA7JtzTgI8q4Wi
+ E04PYkXNwAsmPzhZCpj3VYYjihSU0TkN+Dw+rXwCQzeY1m5dPdvG2qPTZtq/lopvxfGYWWoKxKa
+ O0erh8hl8z0bQSgSl+1FZmJV0xyvTxCXe93ptrCsDwTRxMj+DybS/bJ6Y3Hz9OOAwOnTYpnQAAU
+ PGRIOl6bhleRFsi9Ndv8CR1raoPLDr5y9wVKHhD6IIXEXOypbvdlCcEdgJRoJByXShNUVjA937o
+ v2/7oKmfB+RbjGQwdagTf1icMngIfbn9EQu9v7g1I+UHwdri90wSBhWmCNui2tpuTWhWuO37LyT
+ APa3w42C
+X-Authority-Analysis: v=2.4 cv=cerSrmDM c=1 sm=1 tr=0 ts=68cb329e cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
  a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=yJojWOMRYYMA:10
- a=GoEa3M9JfhUA:10 a=yPCof4ZbAAAA:8 a=-c9VzbpeAAAA:8 a=2nhI7uIJQZ1U3olpLWUA:9
+ a=GoEa3M9JfhUA:10 a=yPCof4ZbAAAA:8 a=-c9VzbpeAAAA:8 a=OOAKvqf1tipb_53jp7oA:9
  a=WAq88MDkwfy8HpmZFCM0:22
+X-Proofpoint-ORIG-GUID: y05jFxxAWTih73A0DkJx1QH0u-dhe4-I
 
-This creates some macros to reduce code duplication for when we handle
-per CPU stats. It them converts the existing LUN and auth cases.
+The atomic use in the main I/O path is causing perf issues when using
+higher performance backend devices and multiple queues (more than
+10 when using vhost-scsi) like with this fio workload:
 
-Note: This is similar to percpu_counters but they only support s64 since
-they are also used for non-stat counters where you need to handle/prevent
-rollover more gracefully. Our use is just for stats where the spec
-defines u64 use plus we already have some files exporting u64 values so
-it's not possible to directly use percpu_counters.
+[global]
+bs=4K
+iodepth=128
+direct=1
+ioengine=libaio
+group_reporting
+time_based
+runtime=120
+name=standard-iops
+rw=randread
+numjobs=16
+cpus_allowed=0-15
+
+To fix this issue, this moves the LUN stats to per CPU.
+
+Note: I forgot to include this patch with the delayed/ordered per CPU
+tracking and per device/device entry per CPU stats. With this patch you
+get the full 33% improvements when using fast backends, multiple queues
+and multiple IO submiters.
 
 Signed-off-by: Mike Christie <michael.christie@oracle.com>
 Reviewed-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
- drivers/target/target_core_stat.c | 197 +++++++++---------------------
- 1 file changed, 61 insertions(+), 136 deletions(-)
+ drivers/target/target_core_device.c          |  1 +
+ drivers/target/target_core_fabric_configfs.c |  2 +-
+ drivers/target/target_core_internal.h        |  1 +
+ drivers/target/target_core_stat.c            | 67 +++++++-------------
+ drivers/target/target_core_tpg.c             | 23 ++++++-
+ drivers/target/target_core_transport.c       | 22 +++++--
+ include/target/target_core_base.h            |  8 +--
+ 7 files changed, 65 insertions(+), 59 deletions(-)
 
-diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
-index 4fdc307ea38b..e29d43dacaf7 100644
---- a/drivers/target/target_core_stat.c
-+++ b/drivers/target/target_core_stat.c
-@@ -276,56 +276,39 @@ static ssize_t target_stat_lu_state_bit_show(struct config_item *item,
- 	return snprintf(page, PAGE_SIZE, "exposed\n");
+diff --git a/drivers/target/target_core_device.c b/drivers/target/target_core_device.c
+index 7bb711b24c0d..2d4a7c0c69ce 100644
+--- a/drivers/target/target_core_device.c
++++ b/drivers/target/target_core_device.c
+@@ -814,6 +814,7 @@ struct se_device *target_alloc_device(struct se_hba *hba, const char *name)
+ 	dev->dev_attrib.max_write_same_len = DA_MAX_WRITE_SAME_LEN;
+ 	dev->dev_attrib.submit_type = TARGET_FABRIC_DEFAULT_SUBMIT;
+ 
++	/* Skip allocating lun_stats since we can't export them. */
+ 	xcopy_lun = &dev->xcopy_lun;
+ 	rcu_assign_pointer(xcopy_lun->lun_se_dev, dev);
+ 	init_completion(&xcopy_lun->lun_shutdown_comp);
+diff --git a/drivers/target/target_core_fabric_configfs.c b/drivers/target/target_core_fabric_configfs.c
+index 7156a4dc1ca7..13159928e365 100644
+--- a/drivers/target/target_core_fabric_configfs.c
++++ b/drivers/target/target_core_fabric_configfs.c
+@@ -697,7 +697,7 @@ static void target_fabric_port_release(struct config_item *item)
+ 	struct se_lun *lun = container_of(to_config_group(item),
+ 					  struct se_lun, lun_group);
+ 
+-	kfree_rcu(lun, rcu_head);
++	call_rcu(&lun->rcu_head, target_tpg_free_lun);
  }
  
--static ssize_t target_stat_lu_num_cmds_show(struct config_item *item,
--		char *page)
--{
--	struct se_device *dev = to_stat_lu_dev(item);
--	struct se_dev_io_stats *stats;
--	unsigned int cpu;
--	u64 cmds = 0;
--
--	for_each_possible_cpu(cpu) {
--		stats = per_cpu_ptr(dev->stats, cpu);
--		cmds += stats->total_cmds;
--	}
--
--	/* scsiLuNumCommands */
--	return snprintf(page, PAGE_SIZE, "%llu\n", cmds);
--}
--
--static ssize_t target_stat_lu_read_mbytes_show(struct config_item *item,
--		char *page)
--{
--	struct se_device *dev = to_stat_lu_dev(item);
--	struct se_dev_io_stats *stats;
--	unsigned int cpu;
--	u64 bytes = 0;
--
--	for_each_possible_cpu(cpu) {
--		stats = per_cpu_ptr(dev->stats, cpu);
--		bytes += stats->read_bytes;
--	}
--
--	/* scsiLuReadMegaBytes */
--	return snprintf(page, PAGE_SIZE, "%llu\n", bytes >> 20);
--}
--
--static ssize_t target_stat_lu_write_mbytes_show(struct config_item *item,
--		char *page)
--{
--	struct se_device *dev = to_stat_lu_dev(item);
--	struct se_dev_io_stats *stats;
--	unsigned int cpu;
--	u64 bytes = 0;
--
--	for_each_possible_cpu(cpu) {
--		stats = per_cpu_ptr(dev->stats, cpu);
--		bytes += stats->write_bytes;
--	}
--
--	/* scsiLuWrittenMegaBytes */
--	return snprintf(page, PAGE_SIZE, "%llu\n", bytes >> 20);
--}
-+#define per_cpu_stat_snprintf(stats_struct, prefix, field, shift)	\
-+static ssize_t								\
-+per_cpu_stat_##prefix##_snprintf(struct stats_struct __percpu *per_cpu_stats, \
-+				 char *page)				\
-+{									\
-+	struct stats_struct *stats;					\
-+	unsigned int cpu;						\
-+	u64 sum = 0;							\
-+									\
-+	for_each_possible_cpu(cpu) {					\
-+		stats = per_cpu_ptr(per_cpu_stats, cpu);		\
-+		sum += stats->field;					\
-+	}								\
-+									\
-+	return snprintf(page, PAGE_SIZE, "%llu\n", sum >> shift);	\
-+}
-+
-+#define lu_show_per_cpu_stat(prefix, field, shift)			\
-+per_cpu_stat_snprintf(se_dev_io_stats, prefix, field, shift);		\
-+static ssize_t								\
-+target_stat_##prefix##_show(struct config_item *item, char *page)	\
-+{									\
-+	struct se_device *dev = to_stat_lu_dev(item);			\
-+									\
-+	return per_cpu_stat_##prefix##_snprintf(dev->stats, page);	\
-+}									\
-+
-+/* scsiLuNumCommands */
-+lu_show_per_cpu_stat(lu_num_cmds, total_cmds, 0);
-+/* scsiLuReadMegaBytes */
-+lu_show_per_cpu_stat(lu_read_mbytes, read_bytes, 20);
-+/* scsiLuWrittenMegaBytes */
-+lu_show_per_cpu_stat(lu_write_mbytes, write_bytes, 20);
- 
- static ssize_t target_stat_lu_resets_show(struct config_item *item, char *page)
- {
-@@ -1035,92 +1018,34 @@ static ssize_t target_stat_auth_att_count_show(struct config_item *item,
+ static struct configfs_item_operations target_fabric_port_item_ops = {
+diff --git a/drivers/target/target_core_internal.h b/drivers/target/target_core_internal.h
+index 20aab1f50565..763e6d26e187 100644
+--- a/drivers/target/target_core_internal.h
++++ b/drivers/target/target_core_internal.h
+@@ -125,6 +125,7 @@ void	core_tpg_add_node_to_devs(struct se_node_acl *, struct se_portal_group *,
+ 				  struct se_lun *);
+ void	core_tpg_wait_for_nacl_pr_ref(struct se_node_acl *);
+ struct se_lun *core_tpg_alloc_lun(struct se_portal_group *, u64);
++void	target_tpg_free_lun(struct rcu_head *head);
+ int	core_tpg_add_lun(struct se_portal_group *, struct se_lun *,
+ 		bool, struct se_device *);
+ void core_tpg_remove_lun(struct se_portal_group *, struct se_lun *);
+diff --git a/drivers/target/target_core_stat.c b/drivers/target/target_core_stat.c
+index e29d43dacaf7..083205052be2 100644
+--- a/drivers/target/target_core_stat.c
++++ b/drivers/target/target_core_stat.c
+@@ -606,53 +606,30 @@ static ssize_t target_stat_tgt_port_port_index_show(struct config_item *item,
  	return ret;
  }
  
--static ssize_t target_stat_auth_num_cmds_show(struct config_item *item,
+-static ssize_t target_stat_tgt_port_in_cmds_show(struct config_item *item,
 -		char *page)
 -{
--	struct se_lun_acl *lacl = auth_to_lacl(item);
--	struct se_node_acl *nacl = lacl->se_lun_nacl;
--	struct se_dev_entry_io_stats *stats;
--	struct se_dev_entry *deve;
--	unsigned int cpu;
--	ssize_t ret;
--	u64 cmds = 0;
+-	struct se_lun *lun = to_stat_tgt_port(item);
+-	struct se_device *dev;
+-	ssize_t ret = -ENODEV;
 -
 -	rcu_read_lock();
--	deve = target_nacl_find_deve(nacl, lacl->mapped_lun);
--	if (!deve) {
--		rcu_read_unlock();
--		return -ENODEV;
--	}
--
--	for_each_possible_cpu(cpu) {
--		stats = per_cpu_ptr(deve->stats, cpu);
--		cmds += stats->total_cmds;
--	}
--
--	/* scsiAuthIntrOutCommands */
--	ret = snprintf(page, PAGE_SIZE, "%llu\n", cmds);
+-	dev = rcu_dereference(lun->lun_se_dev);
+-	if (dev)
+-		ret = snprintf(page, PAGE_SIZE, "%lu\n",
+-			       atomic_long_read(&lun->lun_stats.cmd_pdus));
 -	rcu_read_unlock();
 -	return ret;
 -}
 -
--static ssize_t target_stat_auth_read_mbytes_show(struct config_item *item,
+-static ssize_t target_stat_tgt_port_write_mbytes_show(struct config_item *item,
 -		char *page)
 -{
--	struct se_lun_acl *lacl = auth_to_lacl(item);
--	struct se_node_acl *nacl = lacl->se_lun_nacl;
--	struct se_dev_entry_io_stats *stats;
--	struct se_dev_entry *deve;
--	unsigned int cpu;
--	ssize_t ret;
--	u64 bytes = 0;
+-	struct se_lun *lun = to_stat_tgt_port(item);
+-	struct se_device *dev;
+-	ssize_t ret = -ENODEV;
 -
 -	rcu_read_lock();
--	deve = target_nacl_find_deve(nacl, lacl->mapped_lun);
--	if (!deve) {
--		rcu_read_unlock();
--		return -ENODEV;
--	}
--
--	for_each_possible_cpu(cpu) {
--		stats = per_cpu_ptr(deve->stats, cpu);
--		bytes += stats->read_bytes;
--	}
--
--	/* scsiAuthIntrReadMegaBytes */
--	ret = snprintf(page, PAGE_SIZE, "%llu\n", bytes >> 20);
+-	dev = rcu_dereference(lun->lun_se_dev);
+-	if (dev)
+-		ret = snprintf(page, PAGE_SIZE, "%u\n",
+-			(u32)(atomic_long_read(&lun->lun_stats.rx_data_octets) >> 20));
 -	rcu_read_unlock();
 -	return ret;
--}
--
--static ssize_t target_stat_auth_write_mbytes_show(struct config_item *item,
--		char *page)
--{
--	struct se_lun_acl *lacl = auth_to_lacl(item);
--	struct se_node_acl *nacl = lacl->se_lun_nacl;
--	struct se_dev_entry_io_stats *stats;
--	struct se_dev_entry *deve;
--	unsigned int cpu;
--	ssize_t ret;
--	u64 bytes = 0;
--
--	rcu_read_lock();
--	deve = target_nacl_find_deve(nacl, lacl->mapped_lun);
--	if (!deve) {
--		rcu_read_unlock();
--		return -ENODEV;
--	}
--
--	for_each_possible_cpu(cpu) {
--		stats = per_cpu_ptr(deve->stats, cpu);
--		bytes += stats->write_bytes;
--	}
--
--	/* scsiAuthIntrWrittenMegaBytes */
--	ret = snprintf(page, PAGE_SIZE, "%llu\n", bytes >> 20);
--	rcu_read_unlock();
--	return ret;
--}
-+#define auth_show_per_cpu_stat(prefix, field, shift)			\
-+per_cpu_stat_snprintf(se_dev_entry_io_stats, prefix, field, shift);	\
++#define tgt_port_show_per_cpu_stat(prefix, field, shift)		\
++per_cpu_stat_snprintf(scsi_port_stats, prefix, field, shift);		\
 +static ssize_t								\
 +target_stat_##prefix##_show(struct config_item *item, char *page)	\
 +{									\
-+	struct se_lun_acl *lacl = auth_to_lacl(item);			\
-+	struct se_node_acl *nacl = lacl->se_lun_nacl;			\
-+	struct se_dev_entry *deve;					\
++	struct se_lun *lun = to_stat_tgt_port(item);			\
++	struct se_device *dev;						\
 +	int ret;							\
 +									\
 +	rcu_read_lock();						\
-+	deve = target_nacl_find_deve(nacl, lacl->mapped_lun);		\
-+	if (!deve) {							\
++	dev = rcu_dereference(lun->lun_se_dev);				\
++	if (!dev) {							\
 +		rcu_read_unlock();					\
 +		return -ENODEV;						\
 +	}								\
 +									\
-+	ret = per_cpu_stat_##prefix##_snprintf(deve->stats, page);	\
++	ret = per_cpu_stat_##prefix##_snprintf(lun->lun_stats, page);	\
 +	rcu_read_unlock();						\
 +	return ret;							\
+ }
+ 
+-static ssize_t target_stat_tgt_port_read_mbytes_show(struct config_item *item,
+-		char *page)
+-{
+-	struct se_lun *lun = to_stat_tgt_port(item);
+-	struct se_device *dev;
+-	ssize_t ret = -ENODEV;
+-
+-	rcu_read_lock();
+-	dev = rcu_dereference(lun->lun_se_dev);
+-	if (dev)
+-		ret = snprintf(page, PAGE_SIZE, "%u\n",
+-				(u32)(atomic_long_read(&lun->lun_stats.tx_data_octets) >> 20));
+-	rcu_read_unlock();
+-	return ret;
+-}
++tgt_port_show_per_cpu_stat(tgt_port_in_cmds, cmd_pdus, 0);
++tgt_port_show_per_cpu_stat(tgt_port_write_mbytes, rx_data_octets, 20);
++tgt_port_show_per_cpu_stat(tgt_port_read_mbytes, tx_data_octets, 20);
+ 
+ static ssize_t target_stat_tgt_port_hs_in_cmds_show(struct config_item *item,
+ 		char *page)
+diff --git a/drivers/target/target_core_tpg.c b/drivers/target/target_core_tpg.c
+index c0e429e5ef31..8b5ad50baa43 100644
+--- a/drivers/target/target_core_tpg.c
++++ b/drivers/target/target_core_tpg.c
+@@ -548,7 +548,7 @@ int core_tpg_register(
+ 		ret = core_tpg_add_lun(se_tpg, se_tpg->tpg_virt_lun0,
+ 				true, g_lun0_dev);
+ 		if (ret < 0) {
+-			kfree(se_tpg->tpg_virt_lun0);
++			target_tpg_free_lun(&se_tpg->tpg_virt_lun0->rcu_head);
+ 			return ret;
+ 		}
+ 	}
+@@ -595,7 +595,7 @@ int core_tpg_deregister(struct se_portal_group *se_tpg)
+ 
+ 	if (se_tpg->proto_id >= 0) {
+ 		core_tpg_remove_lun(se_tpg, se_tpg->tpg_virt_lun0);
+-		kfree_rcu(se_tpg->tpg_virt_lun0, rcu_head);
++		call_rcu(&se_tpg->tpg_virt_lun0->rcu_head, target_tpg_free_lun);
+ 	}
+ 
+ 	target_tpg_deregister_rtpi(se_tpg);
+@@ -615,6 +615,13 @@ struct se_lun *core_tpg_alloc_lun(
+ 		pr_err("Unable to allocate se_lun memory\n");
+ 		return ERR_PTR(-ENOMEM);
+ 	}
++
++	lun->lun_stats = alloc_percpu(struct scsi_port_stats);
++	if (!lun->lun_stats) {
++		pr_err("Unable to allocate se_lun stats memory\n");
++		goto free_lun;
++	}
++
+ 	lun->unpacked_lun = unpacked_lun;
+ 	atomic_set(&lun->lun_acl_count, 0);
+ 	init_completion(&lun->lun_shutdown_comp);
+@@ -628,6 +635,18 @@ struct se_lun *core_tpg_alloc_lun(
+ 	lun->lun_tpg = tpg;
+ 
+ 	return lun;
++
++free_lun:
++	kfree(lun);
++	return ERR_PTR(-ENOMEM);
 +}
 +
-+/* scsiAuthIntrOutCommands */
-+auth_show_per_cpu_stat(auth_num_cmds, total_cmds, 0);
-+/* scsiAuthIntrReadMegaBytes */
-+auth_show_per_cpu_stat(auth_read_mbytes, read_bytes, 20);
-+/* scsiAuthIntrWrittenMegaBytes */
-+auth_show_per_cpu_stat(auth_write_mbytes, write_bytes, 20);
++void target_tpg_free_lun(struct rcu_head *head)
++{
++	struct se_lun *lun = container_of(head, struct se_lun, rcu_head);
++
++	free_percpu(lun->lun_stats);
++	kfree(lun);
+ }
  
- static ssize_t target_stat_auth_hs_num_cmds_show(struct config_item *item,
- 		char *page)
+ int core_tpg_add_lun(
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 0a76bdfe5528..fca9b44288bc 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -1571,7 +1571,12 @@ target_cmd_parse_cdb(struct se_cmd *cmd)
+ 		return ret;
+ 
+ 	cmd->se_cmd_flags |= SCF_SUPPORTED_SAM_OPCODE;
+-	atomic_long_inc(&cmd->se_lun->lun_stats.cmd_pdus);
++	/*
++	 * If this is the xcopy_lun then we won't have lun_stats since we
++	 * can't export them.
++	 */
++	if (cmd->se_lun->lun_stats)
++		this_cpu_inc(cmd->se_lun->lun_stats->cmd_pdus);
+ 	return 0;
+ }
+ EXPORT_SYMBOL(target_cmd_parse_cdb);
+@@ -2597,8 +2602,9 @@ static void target_complete_ok_work(struct work_struct *work)
+ 		    !(cmd->se_cmd_flags & SCF_TREAT_READ_AS_NORMAL))
+ 			goto queue_status;
+ 
+-		atomic_long_add(cmd->data_length,
+-				&cmd->se_lun->lun_stats.tx_data_octets);
++		if (cmd->se_lun->lun_stats)
++			this_cpu_add(cmd->se_lun->lun_stats->tx_data_octets,
++				     cmd->data_length);
+ 		/*
+ 		 * Perform READ_STRIP of PI using software emulation when
+ 		 * backend had PI enabled, if the transport will not be
+@@ -2621,14 +2627,16 @@ static void target_complete_ok_work(struct work_struct *work)
+ 			goto queue_full;
+ 		break;
+ 	case DMA_TO_DEVICE:
+-		atomic_long_add(cmd->data_length,
+-				&cmd->se_lun->lun_stats.rx_data_octets);
++		if (cmd->se_lun->lun_stats)
++			this_cpu_add(cmd->se_lun->lun_stats->rx_data_octets,
++				     cmd->data_length);
+ 		/*
+ 		 * Check if we need to send READ payload for BIDI-COMMAND
+ 		 */
+ 		if (cmd->se_cmd_flags & SCF_BIDI) {
+-			atomic_long_add(cmd->data_length,
+-					&cmd->se_lun->lun_stats.tx_data_octets);
++			if (cmd->se_lun->lun_stats)
++				this_cpu_add(cmd->se_lun->lun_stats->tx_data_octets,
++					     cmd->data_length);
+ 			ret = cmd->se_tfo->queue_data_in(cmd);
+ 			if (ret)
+ 				goto queue_full;
+diff --git a/include/target/target_core_base.h b/include/target/target_core_base.h
+index 27e1f9d5f0c6..372da2eadf54 100644
+--- a/include/target/target_core_base.h
++++ b/include/target/target_core_base.h
+@@ -744,9 +744,9 @@ struct se_port_stat_grps {
+ };
+ 
+ struct scsi_port_stats {
+-	atomic_long_t	cmd_pdus;
+-	atomic_long_t	tx_data_octets;
+-	atomic_long_t	rx_data_octets;
++	u64			cmd_pdus;
++	u64			tx_data_octets;
++	u64			rx_data_octets;
+ };
+ 
+ struct se_lun {
+@@ -773,7 +773,7 @@ struct se_lun {
+ 	spinlock_t		lun_tg_pt_gp_lock;
+ 
+ 	struct se_portal_group	*lun_tpg;
+-	struct scsi_port_stats	lun_stats;
++	struct scsi_port_stats	__percpu *lun_stats;
+ 	struct config_group	lun_group;
+ 	struct se_port_stat_grps port_stat_grps;
+ 	struct completion	lun_shutdown_comp;
 -- 
 2.47.1
 
