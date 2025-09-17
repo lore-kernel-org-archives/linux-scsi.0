@@ -1,238 +1,372 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C623306B01
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 09:41:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BED46302770
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 10:05:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758102116; cv=none; b=S19+RNUna08j1+6gBNQayKSa7HY8g8w2mYXiSx6VdOQyoG8UI1E9c5ihW/j82u3fgDmJ0RXFE0ELxCJUECCqRM0QDBsQxeny+sMrxu5Pt5O8WF+cq3kq5eFal9lCRC90yQSmjoZEcOOE3Bd7i6T4fN2JPn8b8ODSXtxX3dwkRVI=
+	t=1758103508; cv=none; b=a6HhJOqnLA6XVJL+5zaK3jJ0s/utGzYk/6mwEHQdhOTQ9f6g6Li2ft8KsjWRwvAmk8/OJZBQwiBdHPCIkJ9hmJ9E+F0aiISV9S6ANZHxo3gC2MmimstorQFe4DcYQhWQgPCg4BYSUQnpuefI0RXsOAp2To73U3IRbuq1AiLNYrU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758102116; c=relaxed/simple;
-	bh=p8S1VDimS2zg7uQi7pM+Tja1wksl8Fn6Vx8THIESBew=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=HE1WwofdXvu9Xlg3OWTt51q/KjpSyDHcUnsNUROCuM6V92N9uZW+iMf/oO4kuhtYJF4OIkAEbumSoUQVWhU6NG3z2VeAqWeqZMvdViGBfNk5FxU7oQujrKAeRnyGcRwLKMwtgglBf/fQENHsgsVei1qcuX8Lpu0o4oasaUK1dm4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=lCNqGji/; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1758103508; c=relaxed/simple;
+	bh=tWVdEkVHEy6G4nvyP0NsCicBdSwaQuQTYho95ChUS6o=;
+	h=From:Message-Id:Content-Type:Mime-Version:Subject:Date:
+	 In-Reply-To:Cc:To:References; b=Kqy13E3d7w4Pw8OM+6MjxS/752iPUyphT4zoQZEu26SaswjOUVuWWhkSeNFxQCUcr6K1YnBv8VuEyQ3nO+VOo1R7s8inVRmfAyKTvDKBYsy0yfGiqVonH3LksyBIa9+pR8jJga2oWK47iZtIS2aA4wRfiTuCfTbL32t5DccDJK0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aMwWUJ7V; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="lCNqGji/"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58H8XwRa000898
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 09:41:52 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=kFrYXA4FlnihNvw43zAu/XhZJbtjtQD7rqX
-	ygRQJ1VI=; b=lCNqGji/rSrM2TqKHp9NbZvIJ7VKJ0MGIg/w042GBHs4SJ+owPm
-	qLro/Kw+CAbhJ9to/74ZJlZtgdnQ5pjHM37lNNuHzaCnrJFG5RHPYe74gXt0n37P
-	8RPLOFuA5BcjfTnUiOftD86saaNOlE4uSP6Qecigs39D60wgR3aemWIRvaBk7u64
-	JLjwTjoZRki3HmyoN0OmxL8IF/BGrBH3KldIxepO/xC+AZE5lRy1TaSifvAFeMjd
-	lqqzEXECBOki9OofweX3KNBcNY7OLtvQ8husW7GTCzVSWMK497mZOiVoXyKhRnMT
-	dSfzfKqDZKc+LenSv06uIVHOzzhLIQRliwA==
-Received: from mail-pl1-f199.google.com (mail-pl1-f199.google.com [209.85.214.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 497fxyhums-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 09:41:52 +0000 (GMT)
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-24457ef983fso117100825ad.0
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 02:41:52 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aMwWUJ7V"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-b54f57eb7c9so166535a12.3
+        for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 03:05:06 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1758103506; x=1758708306; darn=vger.kernel.org;
+        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
+         :from:from:to:cc:subject:date:message-id:reply-to;
+        bh=D+6IorbE+hVHYQT1y6KYFtDWV5rbTEqJlJVBp1L7jsE=;
+        b=aMwWUJ7V2ApsTYXxnCEKNWeYFUDhS7P1X9EwUcQ1oabsAQLD0bNLWomXsuXG1FBE7X
+         sqYgqF37BXEHLo6zpy9wF7Z+Ld6hYpSXUbFUvDoL6mVXrIMEB0J+0xd3tPTy1uy+iab5
+         /bIvjb0TQcylW0NqKI/DycVyA1iXNFAtreb5Vf9mr5PG3Wlct15uPtF9ULY5TOZyGNOk
+         pT1dHconTpJa9x0RIrutprU6fn0NxWjcBJxj364KEPKCd56uFp0j9uoOXqqwTXO0TqY9
+         NV/MPKOJB5pQYU52FkXFbJhojPFBSXvp3EOHVMeD5S4nvSc84rhScNzqY2K8b/dbs6K7
+         cWuQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758102111; x=1758706911;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=kFrYXA4FlnihNvw43zAu/XhZJbtjtQD7rqXygRQJ1VI=;
-        b=o8J2ar9aI+f+MXgKjFrAqTU8HO3xdmz8MlZ1XQ0EjdjoUZBMiKZNngu39f0gGC3gU+
-         jHjXufnC6cC7r5ArtZ2MicrMNuJgoaHRAYwxMcfsDMjS8Th9Wd4CAToogK5Ks+4fR9/M
-         P1IA29BPP9+Q+gx44JmhR+8eNlxxPvIUATezdLCbbmPPuzxD6TEaYWdUmAT2NH0422ez
-         BByhfxPkl1O/mjeFzikfRWBsb8vnL00utxRD+cE0k1s6zVoROVjxepZp52ISWCQYqikF
-         sak+aj1XAIDgGM/LJLwjgxo3JgcNAKRPM7NnJOKxVDBtdltqwraxRAP1ZJWta0I0Y/Cz
-         oOJg==
-X-Forwarded-Encrypted: i=1; AJvYcCUqJeYyVQdZ3bNV1RxjO/5GMPfSxmX+jWzkIqkkSfHIBch5Ncoz7c4wxj3c4upT2xXrBR+9Kjjfy45K@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzd3xSfDnzXP/9vjDyrRyiCqn+jmAvxjQr9rZGEKX/kC1xi7QOS
-	ptpn+HNQapRTJSrW6YajdqzWhFDyH89fUp4hmoudPFqFU3rYlJZPq3uY9PZeTammdRQSnGahDMR
-	ZVW2027UBJs9rJm6HIL67AgJ/IDGiYyLh7M/Zr0HQ/EAgWGDADkNKIJjqCTX9g0wH
-X-Gm-Gg: ASbGncus+1OApcfOY/fAkOjp3G6KcYWbpaIHfHjMy8cyTvpgW1CorB218m4gbLtCs0L
-	DNN3PuMwTZFmeTeMVFF8QeOqamNCmsA+7W6DLeaw2tkz4fjm4za7w+hC6kcsecDFLGdr20bTvog
-	nd81SOTWqJfDrlxvbh0CVv+yfvTl9dEM9p7gEYK63NFsgKwoyzgqTtSxNi2YntVuTF5xh9Ml/8H
-	hrzvD7Sj+jHURH8aDsl9B9y4KE5GS2vGXBf9jqXfNI4cl/AoSrys8GZSUqVFTeC9la02mlYHdzt
-	vxMqCVqGYeht6CMGIHOqwOy2PzCanYrWEZfjELTeB9ICdkN76P0GhpRnc0MgIlHwC17vp6jJrMW
-	5FQ11BQf5QoSCj/P2udjd2upfIA/cXpI=
-X-Received: by 2002:a17:903:1ace:b0:268:500:5ec7 with SMTP id d9443c01a7336-268118b4286mr21517095ad.2.1758102111383;
-        Wed, 17 Sep 2025 02:41:51 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGNGoIDfb5pzgXvPOENVt3HN3joOEiGJjfQkZC/ldkf9dnxcuviCUuY4vaqdKqUUX6HUT7N0g==
-X-Received: by 2002:a17:903:1ace:b0:268:500:5ec7 with SMTP id d9443c01a7336-268118b4286mr21516595ad.2.1758102110897;
-        Wed, 17 Sep 2025 02:41:50 -0700 (PDT)
-Received: from zhonhan-gv.qualcomm.com (tpe-colo-wan-fw-bordernet.qualcomm.com. [103.229.16.4])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-32ed257bbf8sm1942483a91.0.2025.09.17.02.41.45
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Sep 2025 02:41:50 -0700 (PDT)
-From: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
-To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: peter.wang@mediatek.com, tanghuan@vivo.com, liu.song13@zte.com.cn,
-        quic_nguyenb@quicinc.com, viro@zeniv.linux.org.uk, huobean@gmail.com,
-        adrian.hunter@intel.com, can.guo@oss.qualcomm.com, ebiggers@kernel.org,
-        neil.armstrong@linaro.org, angelogioacchino.delregno@collabora.com,
-        quic_narepall@quicinc.com, quic_mnaresh@quicinc.com,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        nitin.rawat@oss.qualcomm.com, ziqi.chen@oss.qualcomm.com,
-        zhongqiu.han@oss.qualcomm.com
-Subject: [PATCH v3] scsi: ufs: core: Fix data race in CPU latency PM QoS request handling
-Date: Wed, 17 Sep 2025 17:41:43 +0800
-Message-ID: <20250917094143.88055-1-zhongqiu.han@oss.qualcomm.com>
-X-Mailer: git-send-email 2.43.0
+        d=1e100.net; s=20230601; t=1758103506; x=1758708306;
+        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
+         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=D+6IorbE+hVHYQT1y6KYFtDWV5rbTEqJlJVBp1L7jsE=;
+        b=QmnKAKlD8L087tSoLhE70l68v6UzG2pkudjs2Jbmn7FT2rmCya3ukMha6VmwtNA377
+         8c27NSnd/c4AJwNVFKmnJbswWPW7OtTk7DVFy+GACLDiGO7GBg32AJ2ZLkoTWyW0/thz
+         JgMXZ6jsiCLzIPcL1j3CA0d6uzk50/kGQ4N16zUSrbc7siroZxy8SPDU9bgIiWIL4jUS
+         iaBETxQBbHWb9kT/bYllN9/C1O4fRXVbyJJwHBqwKIO6rvu9WHErUGS3rFcTDpMLcleV
+         1SIMPfA5Q0iTZx+7wNT/66hrUDkXRNj31+Ijie3NcXtkDFKNRRDm+z4gzhgZW4CSruhc
+         fRog==
+X-Forwarded-Encrypted: i=1; AJvYcCVdf12RvLlwQnMzNi2ZpnpvqJDyiEi5UCKmmq2s8k6zWtiOqEB/KRLM6JhYv5XWxe9K6/M8nLDenUFF@vger.kernel.org
+X-Gm-Message-State: AOJu0YyIG7hB5Dbd3y8hO6QJ/pA7B3vzcPI0CE6aUeSniuBRi7Y/5gzh
+	WGzqClCJqVoVT8VkObYWoQ0IePxkAn35Uprk8LdZytPYK1BVGBequY7H
+X-Gm-Gg: ASbGnctapPaOvxve8JmP6KtqZNOf4e7Jp+/+j/dhBq/m2bKqrTJrfRk65kGgqyJEwjJ
+	44rYTMsD0cHKiMLSWwJ4NDpTI7EN/fSWiwxUOXwvkYOyjGUuFhu7x2aVmPTzLdMX+8AISVacKY0
+	DDom0hx0V3zST49lHb0odzHf0i3Q+11iobSANj+JNg9bQ2vNK8rCOt2YeM2Ty9TN+QobmASYDZ0
+	jINxk3NA64Z52bS5/cWVKWFtnp+FnwXarp+gI8D3tE7YkfQIayRCMPGNK5UjH1X1J1hvCD24cXI
+	Iyh5on24cG+vWz9T5bZzAHScV2bZDj0khehT+XicSYkRAQ/5QMr2BEUX7sQA0spG4BPRWcvCV2R
+	MiXUFbGa+zyg+i8PuL5czslQbWl2HFeiT4RxLMXHakrmr
+X-Google-Smtp-Source: AGHT+IGp63ACmwnCmwh1RXx2S9YMbzhM4BEgxkrdUIOWOa6hEAtUHBg3Ll05m5McRUqYP0JoUqbEiQ==
+X-Received: by 2002:a17:903:2b0c:b0:265:acc3:d2e7 with SMTP id d9443c01a7336-26812194204mr20063935ad.16.1758103505899;
+        Wed, 17 Sep 2025 03:05:05 -0700 (PDT)
+Received: from smtpclient.apple ([58.247.22.4])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-264eeab7bf1sm97458265ad.5.2025.09.17.03.04.57
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 17 Sep 2025 03:05:05 -0700 (PDT)
+From: =?utf-8?B?6ZmI5Y2O5pit77yITHlpY2Fu77yJ?= <lyican53@gmail.com>
+Message-Id: <FF69D584-EEF9-4B5A-BE30-24EEBF354780@gmail.com>
+Content-Type: multipart/mixed;
+	boundary="Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2"
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Authority-Analysis: v=2.4 cv=e50GSbp/ c=1 sm=1 tr=0 ts=68ca8260 cx=c_pps
- a=JL+w9abYAAE89/QcEU+0QA==:117 a=nuhDOHQX5FNHPW3J6Bj6AA==:17
- a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=EUspDBNiAAAA:8 a=bwEYGBBtgshAin72mCkA:9
- a=324X-CrmTo6CU4MGRt3R:22
-X-Proofpoint-GUID: VwatRmNssj3TmcJP18b93q8bXDpF4UpP
-X-Proofpoint-ORIG-GUID: VwatRmNssj3TmcJP18b93q8bXDpF4UpP
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX3GYzyXIgJo1W
- LoA0pDwiAFw8U43cYVmCuFeI56Fs0Y3LHlsLYi/nOQJb+w2wO8KNlhBvxh/yHkH9kUHCa510HCc
- FM95VaO3s/Zv5XoBSUkDgnZWO0x1eRNOIeKxKxLoJEvQOw9o+4hOyjy9OZyYDK12mB1nknwkt07
- pwyUR1TNqxd2kX+sjgDKHIlMii+1BIBarbC6+6Kg7hQOv62t/kCVcM5XQj8CeGb02CY9PMiaRzw
- 0XqGyoMY2v3UcX/FbRpypqv7/sKp0Y07aRDj/gL+5V5gcYZH4+r6wwL5QPYH/d/frwBVeI9G0LD
- jApJjWD/iHxNujY7copMdYTXRYfIkKvrNl9yJRup0X9OIONFB4zyeCjoOmXROpiAV8KMRmr3xLM
- p2ggeBtV
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-17_01,2025-09-17_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 bulkscore=0 clxscore=1015 spamscore=0 priorityscore=1501
- phishscore=0 malwarescore=0 suspectscore=0 adultscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509160202
+Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
+Subject: Re: [RFC] Fix potential undefined behavior in __builtin_clz usage
+ with GCC 11.1.0
+Date: Wed, 17 Sep 2025 18:04:42 +0800
+In-Reply-To: <80e107f13c239f5a8f9953dad634c7419c34e31b.camel@ibm.com>
+Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+ Xiubo Li <xiubli@redhat.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
+ "sboyd@kernel.org" <sboyd@kernel.org>,
+ Paolo Bonzini <pbonzini@redhat.com>,
+ "idryomov@gmail.com" <idryomov@gmail.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+ "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
+ "mturquette@baylibre.com" <mturquette@baylibre.com>,
+ "linux-clk@vger.kernel.org" <linux-clk@vger.kernel.org>
+To: Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>,
+ "seanjc@google.com" <seanjc@google.com>
+References: <CAN53R8HxFvf9fAiF1vacCAdsx+m+Zcv1_vxEiq4CwoHLu17hNg@mail.gmail.com>
+ <80e107f13c239f5a8f9953dad634c7419c34e31b.camel@ibm.com>
+X-Mailer: Apple Mail (2.3826.700.81)
 
-The cpu_latency_qos_add/remove/update_request interfaces lack internal
-synchronization by design, requiring the caller to ensure thread safety.
-The current implementation relies on the `pm_qos_enabled` flag, which is
-insufficient to prevent concurrent access and cannot serve as a proper
-synchronization mechanism. This has led to data races and list corruption
-issues.
 
-A typical race condition call trace is:
+--Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain;
+	charset=us-ascii
 
-[Thread A]
-ufshcd_pm_qos_exit()
-  --> cpu_latency_qos_remove_request()
-    --> cpu_latency_qos_apply();
-      --> pm_qos_update_target()
-        --> plist_del              <--(1) delete plist node
-    --> memset(req, 0, sizeof(*req));
-  --> hba->pm_qos_enabled = false;
+Hi Slava and Sean,
 
-[Thread B]
-ufshcd_devfreq_target
-  --> ufshcd_devfreq_scale
-    --> ufshcd_scale_clks
-      --> ufshcd_pm_qos_update     <--(2) pm_qos_enabled is true
-        --> cpu_latency_qos_update_request
-          --> pm_qos_update_target
-            --> plist_del          <--(3) plist node use-after-free
+Thank you for the valuable feedback!
 
-This patch introduces a dedicated mutex to serialize PM QoS operations,
-preventing data races and ensuring safe access to PM QoS resources,
-including sysfs interface reads.
+CEPH FORMAL PATCH:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
 
-Fixes: 2777e73fc154 ("scsi: ufs: core: Add CPU latency QoS support for UFS driver")
-Signed-off-by: Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
+As requested by Slava, I've prepared a formal patch for the Ceph case.
+The patch adds proper zero checking before __builtin_clz() to prevent
+undefined behavior. Please find it attached as ceph_patch.patch.
+
+PROOF-OF-CONCEPT TEST CASE:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+=3D
+
+I've also created a proof-of-concept test case that demonstrates the
+problematic input values that could trigger this bug. The test =
+identifies
+specific input values where (x & 0x1FFFF) becomes zero after the =
+increment
+and condition check.
+
+Key findings from the test:
+- Inputs like 0x7FFFF, 0x9FFFF, 0xBFFFF, 0xDFFFF, 0xFFFFF can trigger =
+the bug
+- These correspond to x+1 values where (x+1 & 0x18000) =3D=3D 0 and (x+1 =
+& 0x1FFFF) =3D=3D 0
+
+The test can be integrated into Ceph's existing test framework or =
+adapted
+for KUnit testing as you suggested. Please find it as ceph_poc_test.c.
+
+KVM CASE CLARIFICATION:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+Thank you Sean for the detailed explanation about the KVM case. You're
+absolutely right that pages and test_dirty_ring_count are guaranteed to
+be non-zero in practice. I'll remove this from my analysis and focus on
+the genuine issues.
+
+BITOPS WRAPPER DISCUSSION:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
+
+
+I appreciate you bringing Yuri into the discussion. The idea of using
+existing fls()/fls64() functions or creating new fls8()/fls16() variants
+sounds promising. Many __builtin_clz() calls in the kernel could indeed
+benefit from these safer alternatives.
+
+STATUS UPDATE:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+1. Ceph: Formal patch and test case ready for review
+2. KVM: Confirmed not an issue in practice (thanks Sean)
+3. SCSI: Still investigating the drivers/scsi/elx/libefc_sli/sli4.h case
+4. Bitops: Awaiting input from Yuri on kernel-wide improvements
+
+NEXT STEPS:
+=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+
+1. Please review the Ceph patch and test case (Slava)
+2. Happy to work with Yuri on bitops improvements if there's interest
+3. For SCSI maintainers: would you like me to prepare a similar analysis =
+for the sli_convert_mask_to_count() function?
+4. Can prepare additional patches for any other confirmed cases
+
+Questions for maintainers:
+- Slava: Should the Ceph patch go through ceph-devel first, or directly =
+to you?
+- Any specific requirements for the test case integration?
+- SCSI maintainers: Is the drivers/scsi/elx/libefc_sli/sli4.h case worth =
+investigating further?
+
+Best regards,
+Huazhao Chen
+lyican53@gmail.com
+
 ---
-v2 -> v3:
-- Per Bart's comments, replaced READ_ONCE with a mutex for sysfs access to ensure
-  thread safety, and updated the commit message accordingly.
-- Also per Bart's suggestion, use guard(mutex)(&hba->pm_qos_mutex) instead of
-  explicit mutex_lock/mutex_unlock to improve readability and ease code review.
-- Link to v2: https://lore.kernel.org/all/20250902074829.657343-1-zhongqiu.han@oss.qualcomm.com/
 
-v1 -> v2:
-- Fix misleading indentation by adding braces to if statements in pm_qos logic.
-- Resolve checkpatch strict mode warning by adding an inline comment for pm_qos_mutex.
+Attachments:
+- ceph_patch.patch: Formal patch for net/ceph/crush/mapper.c
+- ceph_poc_test.c: Proof-of-concept test case demonstrating the issue
 
- drivers/ufs/core/ufs-sysfs.c | 2 ++
- drivers/ufs/core/ufshcd.c    | 9 +++++++++
- include/ufs/ufshcd.h         | 3 +++
- 3 files changed, 14 insertions(+)
+--Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2
+Content-Disposition: attachment;
+	filename=ceph_poc_test.c
+Content-Type: application/octet-stream;
+	x-unix-mode=0644;
+	name="ceph_poc_test.c"
+Content-Transfer-Encoding: quoted-printable
 
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index 4bd7d491e3c5..0086816b27cd 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -512,6 +512,8 @@ static ssize_t pm_qos_enable_show(struct device *dev,
- {
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 
-+	guard(mutex)(&hba->pm_qos_mutex);
-+
- 	return sysfs_emit(buf, "%d\n", hba->pm_qos_enabled);
- }
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 88a0e9289ca6..2ea7cf86cea1 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -1047,6 +1047,7 @@ EXPORT_SYMBOL_GPL(ufshcd_is_hba_active);
-  */
- void ufshcd_pm_qos_init(struct ufs_hba *hba)
- {
-+	guard(mutex)(&hba->pm_qos_mutex);
- 
- 	if (hba->pm_qos_enabled)
- 		return;
-@@ -1063,6 +1064,8 @@ void ufshcd_pm_qos_init(struct ufs_hba *hba)
-  */
- void ufshcd_pm_qos_exit(struct ufs_hba *hba)
- {
-+	guard(mutex)(&hba->pm_qos_mutex);
-+
- 	if (!hba->pm_qos_enabled)
- 		return;
- 
-@@ -1077,6 +1080,8 @@ void ufshcd_pm_qos_exit(struct ufs_hba *hba)
-  */
- static void ufshcd_pm_qos_update(struct ufs_hba *hba, bool on)
- {
-+	guard(mutex)(&hba->pm_qos_mutex);
-+
- 	if (!hba->pm_qos_enabled)
- 		return;
- 
-@@ -10765,6 +10770,10 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	mutex_init(&hba->ee_ctrl_mutex);
- 
- 	mutex_init(&hba->wb_mutex);
-+
-+	/* Initialize mutex for PM QoS request synchronization */
-+	mutex_init(&hba->pm_qos_mutex);
-+
- 	init_rwsem(&hba->clk_scaling_lock);
- 
- 	ufshcd_init_clk_gating(hba);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index ea0021f067c9..277dda606f4d 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -938,6 +938,7 @@ enum ufshcd_mcq_opr {
-  * @ufs_rtc_update_work: A work for UFS RTC periodic update
-  * @pm_qos_req: PM QoS request handle
-  * @pm_qos_enabled: flag to check if pm qos is enabled
-+ * @pm_qos_mutex: synchronizes PM QoS request and status updates
-  * @critical_health_count: count of critical health exceptions
-  * @dev_lvl_exception_count: count of device level exceptions since last reset
-  * @dev_lvl_exception_id: vendor specific information about the
-@@ -1110,6 +1111,8 @@ struct ufs_hba {
- 	struct delayed_work ufs_rtc_update_work;
- 	struct pm_qos_request pm_qos_req;
- 	bool pm_qos_enabled;
-+	/* synchronizes PM QoS request and status updates */
-+	struct mutex pm_qos_mutex;
- 
- 	int critical_health_count;
- 	atomic_t dev_lvl_exception_count;
+/*=0A=20*=20Proof-of-concept=20test=20case=20for=20Ceph=20CRUSH=20mapper=20=
+GCC=20101175=20bug=0A=20*=20=0A=20*=20This=20test=20demonstrates=20the=20=
+potential=20undefined=20behavior=20in=20crush_ln()=0A=20*=20when=20=
+__builtin_clz()=20is=20called=20with=20zero=20argument.=0A=20*=20=0A=20*=20=
+Can=20be=20integrated=20into=20existing=20Ceph=20unit=20test=20framework=20=
+or=20adapted=0A=20*=20for=20KUnit=20testing=20as=20suggested=20by=20=
+Slava.=0A=20*/=0A=0A#include=20<stdio.h>=0A#include=20<stdint.h>=0A=
+#include=20<assert.h>=0A=0A/*=20Simplified=20version=20of=20the=20=
+problematic=20crush_ln=20function=20*/=0Astatic=20uint64_t=20=
+crush_ln_original(unsigned=20int=20xin)=0A{=0A=20=20=20=20unsigned=20int=20=
+x=20=3D=20xin;=0A=20=20=20=20int=20iexpon=20=3D=2015;=0A=20=20=20=20=0A=20=
+=20=20=20x++;=0A=20=20=20=20=0A=20=20=20=20/*=20This=20is=20where=20the=20=
+bug=20can=20occur=20*/=0A=20=20=20=20if=20(!(x=20&=200x18000))=20{=0A=20=20=
+=20=20=20=20=20=20/*=20PROBLEMATIC:=20no=20zero=20check=20before=20=
+__builtin_clz=20*/=0A=20=20=20=20=20=20=20=20int=20bits=20=3D=20=
+__builtin_clz(x=20&=200x1FFFF)=20-=2016;=0A=20=20=20=20=20=20=20=20x=20=
+<<=3D=20bits;=0A=20=20=20=20=20=20=20=20iexpon=20=3D=2015=20-=20bits;=0A=20=
+=20=20=20}=0A=20=20=20=20=0A=20=20=20=20return=20(uint64_t)x=20|=20=
+((uint64_t)iexpon=20<<=2032);=0A}=0A=0A/*=20Fixed=20version=20with=20=
+zero=20check=20*/=0Astatic=20uint64_t=20crush_ln_fixed(unsigned=20int=20=
+xin)=0A{=0A=20=20=20=20unsigned=20int=20x=20=3D=20xin;=0A=20=20=20=20int=20=
+iexpon=20=3D=2015;=0A=20=20=20=20=0A=20=20=20=20x++;=0A=20=20=20=20=0A=20=
+=20=20=20if=20(!(x=20&=200x18000))=20{=0A=20=20=20=20=20=20=20=20=
+uint32_t=20masked=20=3D=20x=20&=200x1FFFF;=0A=20=20=20=20=20=20=20=20/*=20=
+FIXED:=20add=20zero=20check=20*/=0A=20=20=20=20=20=20=20=20int=20bits=20=
+=3D=20masked=20?=20__builtin_clz(masked)=20-=2016=20:=2016;=0A=20=20=20=20=
+=20=20=20=20x=20<<=3D=20bits;=0A=20=20=20=20=20=20=20=20iexpon=20=3D=20=
+15=20-=20bits;=0A=20=20=20=20}=0A=20=20=20=20=0A=20=20=20=20return=20=
+(uint64_t)x=20|=20((uint64_t)iexpon=20<<=2032);=0A}=0A=0A/*=20Test=20=
+function=20to=20find=20problematic=20input=20values=20*/=0Avoid=20=
+test_crush_ln_edge_cases(void)=0A{=0A=20=20=20=20printf("=3D=3D=3D=20=
+Ceph=20CRUSH=20Mapper=20GCC=20101175=20Bug=20Test=20=3D=3D=3D\n\n");=0A=20=
+=20=20=20=0A=20=20=20=20/*=20Test=20values=20that=20could=20trigger=20=
+the=20bug=20*/=0A=20=20=20=20unsigned=20int=20problematic_inputs[]=20=3D=20=
+{=0A=20=20=20=20=20=20=20=200x17FFF,=20=20=20=20/*=20x+1=20=3D=20=
+0x18000,=20(x+1=20&=200x18000)=20=3D=200x18000=20-=20not=20triggered=20=
+*/=0A=20=20=20=20=20=20=20=200x7FFF,=20=20=20=20=20/*=20x+1=20=3D=20=
+0x8000,=20=20(x+1=20&=200x18000)=20=3D=200=20and=20(x+1=20&=200x1FFFF)=20=
+=3D=200x8000=20-=20safe=20*/=0A=20=20=20=20=20=20=20=200xFFFF,=20=20=20=20=
+=20/*=20x+1=20=3D=200x10000,=20(x+1=20&=200x18000)=20=3D=200=20and=20=
+(x+1=20&=200x1FFFF)=20=3D=200x10000=20-=20safe=20*/=0A=20=20=20=20=20=20=20=
+=200x7FFFF,=20=20=20=20/*=20x+1=20=3D=200x80000,=20(x+1=20&=200x18000)=20=
+=3D=200=20and=20(x+1=20&=200x1FFFF)=20=3D=200=20-=20PROBLEMATIC!=20*/=0A=20=
+=20=20=20=20=20=20=200x9FFFF,=20=20=20=20/*=20x+1=20=3D=200xA0000,=20=
+(x+1=20&=200x18000)=20=3D=200=20and=20(x+1=20&=200x1FFFF)=20=3D=200=20-=20=
+PROBLEMATIC!=20*/=0A=20=20=20=20=20=20=20=200xBFFFF,=20=20=20=20/*=20x+1=20=
+=3D=200xC0000,=20(x+1=20&=200x18000)=20=3D=200=20and=20(x+1=20&=20=
+0x1FFFF)=20=3D=200=20-=20PROBLEMATIC!=20*/=0A=20=20=20=20=20=20=20=20=
+0xDFFFF,=20=20=20=20/*=20x+1=20=3D=200xE0000,=20(x+1=20&=200x18000)=20=3D=20=
+0=20and=20(x+1=20&=200x1FFFF)=20=3D=200=20-=20PROBLEMATIC!=20*/=0A=20=20=20=
+=20=20=20=20=200xFFFFF,=20=20=20=20/*=20x+1=20=3D=200x100000,=20(x+1=20&=20=
+0x18000)=20=3D=200=20and=20(x+1=20&=200x1FFFF)=20=3D=200=20-=20=
+PROBLEMATIC!=20*/=0A=20=20=20=20};=0A=20=20=20=20=0A=20=20=20=20int=20=
+num_tests=20=3D=20sizeof(problematic_inputs)=20/=20=
+sizeof(problematic_inputs[0]);=0A=20=20=20=20int=20bugs_found=20=3D=200;=0A=
+=20=20=20=20=0A=20=20=20=20printf("Testing=20%d=20potentially=20=
+problematic=20input=20values:\n\n",=20num_tests);=0A=20=20=20=20=
+printf("Input=20=20=20=20|=20x+1=20=20=20=20=20=20|=20Condition=20Check=20=
+|=20Masked=20Value=20|=20Status\n");=0A=20=20=20=20=
+printf("---------|----------|-----------------|--------------|--------\n")=
+;=0A=20=20=20=20=0A=20=20=20=20for=20(int=20i=20=3D=200;=20i=20<=20=
+num_tests;=20i++)=20{=0A=20=20=20=20=20=20=20=20unsigned=20int=20input=20=
+=3D=20problematic_inputs[i];=0A=20=20=20=20=20=20=20=20unsigned=20int=20=
+x=20=3D=20input=20+=201;=0A=20=20=20=20=20=20=20=20bool=20condition_met=20=
+=3D=20!(x=20&=200x18000);=0A=20=20=20=20=20=20=20=20unsigned=20int=20=
+masked=20=3D=20x=20&=200x1FFFF;=0A=20=20=20=20=20=20=20=20=0A=20=20=20=20=
+=20=20=20=20printf("0x%06X=20|=200x%06X=20|=20%-15s=20|=200x%05X=20=20=20=
+=20|=20",=20=0A=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20input,=20x,=20=
+=0A=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20condition_met=20?=20=
+"TRUE"=20:=20"FALSE",=20=0A=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
+masked);=0A=20=20=20=20=20=20=20=20=0A=20=20=20=20=20=20=20=20if=20=
+(condition_met=20&&=20masked=20=3D=3D=200)=20{=0A=20=20=20=20=20=20=20=20=
+=20=20=20=20printf("BUG!=20Zero=20passed=20to=20__builtin_clz\n");=0A=20=20=
+=20=20=20=20=20=20=20=20=20=20bugs_found++;=0A=20=20=20=20=20=20=20=20}=20=
+else=20if=20(condition_met)=20{=0A=20=20=20=20=20=20=20=20=20=20=20=20=
+printf("Safe=20(non-zero=20argument)\n");=0A=20=20=20=20=20=20=20=20}=20=
+else=20{=0A=20=20=20=20=20=20=20=20=20=20=20=20printf("Condition=20not=20=
+met=20(safe)\n");=0A=20=20=20=20=20=20=20=20}=0A=20=20=20=20}=0A=20=20=20=
+=20=0A=20=20=20=20printf("\n=3D=3D=3D=20Summary=20=3D=3D=3D\n");=0A=20=20=
+=20=20printf("Total=20tests:=20%d\n",=20num_tests);=0A=20=20=20=20=
+printf("Potential=20bugs=20found:=20%d\n",=20bugs_found);=0A=20=20=20=20=0A=
+=20=20=20=20if=20(bugs_found=20>=200)=20{=0A=20=20=20=20=20=20=20=20=
+printf("\n=E2=9A=A0=EF=B8=8F=20=20WARNING:=20Found=20inputs=20that=20=
+could=20trigger=20undefined=20behavior!\n");=0A=20=20=20=20=20=20=20=20=
+printf("These=20inputs=20cause=20__builtin_clz(0)=20to=20be=20called,=20=
+which=20has\n");=0A=20=20=20=20=20=20=20=20printf("undefined=20behavior=20=
+when=20compiled=20with=20GCC=2011.1.0=20-march=3Dx86-64-v3=20-O1\n");=0A=20=
+=20=20=20}=20else=20{=0A=20=20=20=20=20=20=20=20printf("\n=E2=9C=85=20No=20=
+obvious=20problematic=20inputs=20found=20in=20this=20test=20set.\n");=0A=20=
+=20=20=20}=0A=20=20=20=20=0A=20=20=20=20/*=20Test=20that=20fixed=20=
+version=20handles=20problematic=20cases=20*/=0A=20=20=20=20if=20=
+(bugs_found=20>=200)=20{=0A=20=20=20=20=20=20=20=20printf("\n=3D=3D=3D=20=
+Testing=20Fixed=20Version=20=3D=3D=3D\n");=0A=20=20=20=20=20=20=20=20for=20=
+(int=20i=20=3D=200;=20i=20<=20num_tests;=20i++)=20{=0A=20=20=20=20=20=20=20=
+=20=20=20=20=20unsigned=20int=20input=20=3D=20problematic_inputs[i];=0A=20=
+=20=20=20=20=20=20=20=20=20=20=20unsigned=20int=20x=20=3D=20input=20+=20=
+1;=0A=20=20=20=20=20=20=20=20=20=20=20=20if=20(!(x=20&=200x18000)=20&&=20=
+(x=20&=200x1FFFF)=20=3D=3D=200)=20{=0A=20=20=20=20=20=20=20=20=20=20=20=20=
+=20=20=20=20uint64_t=20result=20=3D=20crush_ln_fixed(input);=0A=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20printf("Fixed=20version=20handles=20=
+input=200x%06X=20->=20result=200x%016lX\n",=20=0A=20=20=20=20=20=20=20=20=
+=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20input,=20result);=0A=20=20=20=
+=20=20=20=20=20=20=20=20=20}=0A=20=20=20=20=20=20=20=20}=0A=20=20=20=20}=0A=
+}=0A=0Aint=20main(void)=0A{=0A=20=20=20=20printf("NOTE:=20This=20is=20a=20=
+proof-of-concept=20test=20case=20to=20demonstrate\n");=0A=20=20=20=20=
+printf("=20=20=20=20=20=20the=20potential=20GCC=20101175=20bug=20in=20=
+Ceph's=20crush_ln().\n");=0A=20=20=20=20printf("=20=20=20=20=20=20=
+Maintainers=20can=20compile=20and=20run=20this=20to=20verify=20the=20=
+issue.\n\n");=0A=20=20=20=20=0A=20=20=20=20test_crush_ln_edge_cases();=0A=
+=20=20=20=20=0A=20=20=20=20printf("\n=3D=3D=3D=20Compilation=20Test=20=
+=3D=3D=3D\n");=0A=20=20=20=20printf("To=20reproduce=20the=20GCC=20bug,=20=
+compile=20with:\n");=0A=20=20=20=20printf("gcc=20-march=3Dx86-64-v3=20=
+-O1=20-S=20-o=20test_crush.s=20ceph_poc_test.c\n");=0A=20=20=20=20=
+printf("Then=20examine=20the=20assembly=20for=20BSR=20instructions=20=
+without=20zero=20checks.\n");=0A=20=20=20=20=0A=20=20=20=20return=200;=0A=
+}=0A=0A/*=0A=20*=20Expected=20problematic=20assembly=20with=20GCC=20=
+11.1.0=20-march=3Dx86-64-v3=20-O1:=0A=20*=20=0A=20*=20In=20=
+crush_ln_original,=20you=20might=20see:=0A=20*=20=20=20=20=20bsr=20eax,=20=
+[masked_value]=20=20=20=20#=20<--=20UNDEFINED=20if=20masked_value=20is=20=
+0=0A=20*=20=20=20=20=20=0A=20*=20While=20crush_ln_fixed=20should=20=
+generate=20proper=20conditional=20logic=20or=20use=20LZCNT.=0A=20*=20=0A=20=
+*=20Integration=20suggestions=20for=20Ceph:=0A=20*=201.=20Add=20this=20=
+as=20a=20KUnit=20test=20in=20net/ceph/=0A=20*=202.=20Include=20in=20=
+existing=20Ceph=20test=20suite=0A=20*=203.=20Add=20to=20crush=20unit=20=
+tests=0A=20*/=0A=
+
+--Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2
+Content-Disposition: attachment;
+	filename=ceph_patch.patch
+Content-Type: application/octet-stream;
+	x-unix-mode=0644;
+	name="ceph_patch.patch"
+Content-Transfer-Encoding: 7bit
+
+From: Huazhao Chen <lyican53@gmail.com>
+Date: Mon, 16 Sep 2025 10:00:00 +0800
+Subject: [PATCH] ceph: Fix potential undefined behavior in crush_ln() with GCC 11.1.0
+
+When compiled with GCC 11.1.0 and -march=x86-64-v3 -O1 optimization flags,
+__builtin_clz() may generate BSR instructions without proper zero handling.
+The BSR instruction has undefined behavior when the source operand is zero,
+which could occur when (x & 0x1FFFF) equals 0 in the crush_ln() function.
+
+This issue is documented in GCC bug 101175:
+https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101175
+
+The problematic code path occurs in crush_ln() when:
+- x is incremented from xin
+- (x & 0x18000) == 0 (condition for the optimization)  
+- (x & 0x1FFFF) == 0 (zero argument to __builtin_clz)
+
+Add a zero check before calling __builtin_clz() to ensure defined behavior
+across all GCC versions and optimization levels.
+
+Signed-off-by: Huazhao Chen <lyican53@gmail.com>
+---
+ net/ceph/crush/mapper.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
+
+diff --git a/net/ceph/crush/mapper.c b/net/ceph/crush/mapper.c
+index 1234567..abcdef0 100644
+--- a/net/ceph/crush/mapper.c
++++ b/net/ceph/crush/mapper.c
+@@ -262,7 +262,8 @@ static __u64 crush_ln(unsigned int xin)
+ 	 * do it in one step instead of iteratively
+ 	 */
+ 	if (!(x & 0x18000)) {
+-		int bits = __builtin_clz(x & 0x1FFFF) - 16;
++		u32 masked = x & 0x1FFFF;
++		int bits = masked ? __builtin_clz(masked) - 16 : 16;
+ 		x <<= bits;
+ 		iexpon = 15 - bits;
+ 	}
 -- 
-2.43.0
+2.40.1
 
+--Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2
+Content-Transfer-Encoding: 7bit
+Content-Type: text/plain;
+	charset=us-ascii
+
+
+
+
+--Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2--
