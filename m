@@ -1,174 +1,177 @@
-Received: from mail-pl1-f180.google.com (mail-pl1-f180.google.com [209.85.214.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B5A221A76BB
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 14:18:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5977B33C77A;
+	Wed, 17 Sep 2025 14:19:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758118692; cv=none; b=B5vVmjI7j+WbaA5lngnZ6AIi08CGf3U2TNJQy2M30VAjCFkgn06aAoGbR1WkGP0LfLOAuXfYks60e753Dq5k6c0x4SbzLTrp3qTcIEdBv6Gs+D5RjmO3IQyli+uJRYiiRU580O/ZHRuvBYlh28yFgqG81500djdAbZWkfBJYkJI=
+	t=1758118799; cv=none; b=qqWPFYuKebWv2sX8j7sxeS2n0/FRu3lBfocMEroCJcO5Hyk9B7C48YEFKmfLf9Bb068yKli5gelNBfGn0rU+Oeq50qH7Ud8Pq3RcieOjEGZHmtvWTRuImHKZspEiBiU4Jn8oIuG5pB7diPVMxqkB3rctT6fk9ZEt7LH3aBW76kw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758118692; c=relaxed/simple;
-	bh=rijBXGyPPRI7zVY1PE5cIgzPuGwv03123CnIu1WqQ/c=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=SE5g+ykoEw7aM8nQI1pB4A5NrmaQ6j5L5E0qvWi9ETAZn5gsxkrnIyFSplt61ioCmesStlcUoWIqifJofIS96KWvAJsWnlLfLNLBBRtK6cliBn8408YAz8vRxfGhWvVsj9yrEQNrRJZu8XA/XwSfIGziG153MjtUaTkTvGc50c0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Dvs2nOWu; arc=none smtp.client-ip=209.85.214.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1758118799; c=relaxed/simple;
+	bh=K8AzLf7x2a9JNhbTQRQliEaTadQE9bAB6ts5jXpmOOA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
+	 In-Reply-To:Content-Type; b=QZnNEYAzmoeLrR5k20EX5to4gn0PAFK+Ux5Tdrsi9aYFo3/P93A9anCAkGhPNwXxPwyMwgl6XkC1VBNdsi3POgF6Myfsn6t2KoOgnTN+iTOjujS4fwa9WmNFy701yKtn9go3pDWNx22/T+k1L7J78syRDlNt2mLcXBHWfd59wwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=hLWa/b6a; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Dvs2nOWu"
-Received: by mail-pl1-f180.google.com with SMTP id d9443c01a7336-266fa7a0552so32232175ad.3
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 07:18:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758118690; x=1758723490; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=TRTCbDx6myQFWxAdWRCj4l7Pp4fnr8OTe0kIEsi/f/4=;
-        b=Dvs2nOWuewo9eig8ugL9pyqkIcrBBUrd2zukXvCI+S02addnY3DPFGpGDbhyLDptoR
-         g6bqOMnbk+QI49oi1OE24WPSveEYFFqYkTzlMvz6aIHf/R/k6XN+IuODlZ5FdwNehUZE
-         gXrBjvB3VR1F3uNn/ByAJbRUJ+hh3yGCU81Z13rKxr6jev214yujd1ftqPlxRWviGZM/
-         qqAa8STgkQ+Eed9oTQJNt24vwdcVBGvfbsw8OCJD50zcYS6rk3t+GuV5BZ+vvHWmIKAd
-         aZSjjNH/MBMhKE8WXyGg7N7APw8rT6UNWHaFFXQL5oLUKuuY+Y9sOxGbr1sLDMaa3zkk
-         TNzA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758118690; x=1758723490;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=TRTCbDx6myQFWxAdWRCj4l7Pp4fnr8OTe0kIEsi/f/4=;
-        b=Rd9HDS1ykN1w53948MqWrbqhbFhqcOsTPI0z0wL9dZ8MXsyQ2QugPqC2+aktt/4Oke
-         k/Di4f8kusQXPM91tCpXnJNXM+WbkI668ucsNu6FxCu2WzIfy/ut98RNYVd50OhXSEwb
-         XG+CYneeCtNJIYOa3PUsDIEa7lQFuXEfRQuQYZo129gYkDf8bQ2P1CIlcaxxnS/mS4Fn
-         QHFL2nABra4gcIWzd+YeVDOqkHFek+kGvaIRSifNpvHRABWg3AjOc7qE0ovPKdKo7wN+
-         Lj2+eKu/vAJqogFi0DiDR0n1SbMfEtwlTgx1C1PfE2h3gRnJ5Tj0t2nczImqJq5RShU+
-         60aw==
-X-Forwarded-Encrypted: i=1; AJvYcCUOpvwOHJIOeoQNrZWn7eaRAzmG5SO5U/hE22zOvEmrrVqkFTULU7yZZNF3EhuGEtKfn5PyFuVO8VRx@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywq/wAYKvDwwmB3HbZ9Xw1rfawMhB8KVRARTv6OCanXzPnClFFo
-	bWDch8ix0a44OhFs89EYoD8ZCtotIIaIo6URxSxfEmCqVYsDQ/+FihTV52xITw==
-X-Gm-Gg: ASbGncv4/MV6HkcRpmQZGw0g6c2rRCGkvaRzow1Km6B0W2hWX6B3GqaEY9g1glilkhK
-	qLqbF2mHifOQc/PdtZrdbAwJSuVtEI0WQ5t4Tnj6uCSSiWZcjKJPyIW4V38ox2rmlUBX17PK4Fv
-	lr77xWf69xmmY+DrxEW2AL2VV+O5nQ3ZTDrGDBEZ4c/flvLmFrl2poEB94qUUad+pFOTMJv9mEZ
-	MfhzUw1weshehK/glXdB+rIPslA1eJ5hZm2iaJbpaX5DYu/lYdIF8xo98IYYSsMrw5wozefO/oT
-	8F9s2LVbUWwEplHdGKB5wRrleMHRX3PASNmOoP7iRMaPvhtEwApTxzWEqDw4UceA3cM7iAXp6EX
-	ROsQVMOBh7BBMBrX1XEW/pzflpqP+hfjH
-X-Google-Smtp-Source: AGHT+IF+FxnnVbL96kb6pRnRNwKlX+NEALRG1IpYvbainoyd6nXRnmkIYrgpnMijmi2HscnYoH8gYg==
-X-Received: by 2002:a17:902:d509:b0:24c:ea17:e322 with SMTP id d9443c01a7336-268118b3f86mr27269085ad.3.1758118689645;
-        Wed, 17 Sep 2025 07:18:09 -0700 (PDT)
-Received: from localhost ([216.228.125.129])
-        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-32ed26f583esm2663438a91.27.2025.09.17.07.18.08
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 17 Sep 2025 07:18:08 -0700 (PDT)
-From: "Yury Norov (NVIDIA)" <yury.norov@gmail.com>
-To: James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: "Yury Norov (NVIDIA)" <yury.norov@gmail.com>
-Subject: [PATCH] scsi: lpfc: rework lpfc_sli4_fcf_rr_next_index_get()
-Date: Wed, 17 Sep 2025 10:18:05 -0400
-Message-ID: <20250917141806.661826-1-yury.norov@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="hLWa/b6a"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58H8Xafb021451;
+	Wed, 17 Sep 2025 14:19:46 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	QClkAHTCsjCfKUD7nA/NyZmaWUaO8cGUX++gkDPGqS0=; b=hLWa/b6aA4kHDM4d
+	qbNNlapMynzRtfzhtbLDvtibkQCRHi9nz6uzjJq5Q6+7IpG4laEzcOc3Tvz6piX2
+	wwoWi1Eadqw3nOGTd4JI657i+BlXdT9NM3R5pWqx+wyDxSkxEatwWFiovq9WOVJL
+	Iw5IHH0R0V+0dv2oEhb0tgM8olUpFrqBTxw7TXyNzg+L0dhEGDEPFcYIYaJX6bLI
+	Y5rMkEcIVBPOvxcnEC0NNagBeNhOHH1E08bhJvziB/LP0QFCzdYnhY6j+kH2Hy1+
+	Mo+VDPxP0cT3dFmbk8ryKXdRaB+o59VFcSW6KqEymqICMqEpp7xYDmx5pFRpAxIX
+	9ju7sA==
+Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 497fy5an25-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 17 Sep 2025 14:19:46 +0000 (GMT)
+Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 58HEJjXO029528
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Wed, 17 Sep 2025 14:19:45 GMT
+Received: from [10.218.4.141] (10.80.80.8) by nalasex01b.na.qualcomm.com
+ (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.24; Wed, 17 Sep
+ 2025 07:19:41 -0700
+Message-ID: <2a3903f5-4494-4053-b821-435a75b1ad7b@quicinc.com>
+Date: Wed, 17 Sep 2025 19:49:38 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V5 0/4] Add DT-based gear and rate limiting support
+To: Alim Akhtar <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
+        <bvanassche@acm.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
+        <conor+dt@kernel.org>, <mani@kernel.org>,
+        <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
+        <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
+References: <CGME20250902164927epcas5p459352c28c0d5c5a4c04bd88345a049f0@epcas5p4.samsung.com>
+ <20250902164900.21685-1-quic_rdwivedi@quicinc.com>
+ <3a9101dc1c8d$f476b8e0$dd642aa0$@samsung.com>
+Content-Language: en-US
+From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+In-Reply-To: <3a9101dc1c8d$f476b8e0$dd642aa0$@samsung.com>
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
+X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+ nalasex01b.na.qualcomm.com (10.47.209.197)
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-GUID: XTpOCO247mJJyou_uzo_-nSWIJjDP4ZH
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX5Ve8HZQOx8E9
+ u5uQYBI80UHUr9QAyYfnstmOdU8lC69fuamhRR/o0LNJi/Z7izg0E5XCBXCNPpiX7u9wNvYJP49
+ NGjuMaIeR5JsRtMjtID5aZOU13829ddQRdDXfJidFGInqhTNgfeOYpdzQbXRh06MZZndYjXTmeC
+ kZcO5UF9vzMUYzRP2M/hV4WiJhyq+FHrMWjc+Ij0WIPvnpdEtjBlZTr+9Yi8+uEL28ybRDy6qJo
+ WVQyk9tJWUxHQ5Yn39sbssJM0tHni/G9Ffa2g0qPk1NvzhJVf/D4taI4eqFMovbsvgzgNuzuY09
+ 1NBMCb2q5vNrt15HmkxH2GKZaUmUcLskS9ofK0sBa6oqeyOYVVZHU8eHdAkGPjX6tS93e3d+kbw
+ LHU3T44/
+X-Authority-Analysis: v=2.4 cv=Y+f4sgeN c=1 sm=1 tr=0 ts=68cac382 cx=c_pps
+ a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
+ a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=COk6AnOGAAAA:8
+ a=hD80L64hAAAA:8 a=JF9118EUAAAA:8 a=N54-gffFAAAA:8 a=VwQbUJbxAAAA:8
+ a=bLk-5xynAAAA:8 a=yPCof4ZbAAAA:8 a=tC5-z0Gf1kRdzandcvAA:9 a=3ZKOabzyN94A:10
+ a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22 a=xVlTc564ipvMDusKsbsT:22
+ a=zSyb8xVVt2t83sZkrLMb:22
+X-Proofpoint-ORIG-GUID: XTpOCO247mJJyou_uzo_-nSWIJjDP4ZH
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-17_01,2025-09-17_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ priorityscore=1501 suspectscore=0 impostorscore=0 phishscore=0 adultscore=0
+ malwarescore=0 bulkscore=0 spamscore=0 clxscore=1015 classifier=typeunknown
+ authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2509160202
 
-The function opencodes for_each_set_bit_wrap(). Use it, and while there
-switch from goto-driven codeflow to more high-level constructions.
 
-Signed-off-by: Yury Norov (NVIDIA) <yury.norov@gmail.com>
----
- drivers/scsi/lpfc/lpfc_sli.c | 62 +++++++++++-------------------------
- 1 file changed, 18 insertions(+), 44 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index a8fbdf7119d8..9a2b821adfaa 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -20370,62 +20370,36 @@ lpfc_check_next_fcf_pri_level(struct lpfc_hba *phba)
- uint16_t
- lpfc_sli4_fcf_rr_next_index_get(struct lpfc_hba *phba)
- {
--	uint16_t next_fcf_index;
-+	uint16_t next;
- 
--initial_priority:
--	/* Search start from next bit of currently registered FCF index */
--	next_fcf_index = phba->fcf.current_rec.fcf_indx;
--
--next_priority:
--	/* Determine the next fcf index to check */
--	next_fcf_index = (next_fcf_index + 1) % LPFC_SLI4_FCF_TBL_INDX_MAX;
--	next_fcf_index = find_next_bit(phba->fcf.fcf_rr_bmask,
--				       LPFC_SLI4_FCF_TBL_INDX_MAX,
--				       next_fcf_index);
-+	do {
-+		for_each_set_bit_wrap(next, phba->fcf.fcf_rr_bmask,
-+				LPFC_SLI4_FCF_TBL_INDX_MAX, phba->fcf.current_rec.fcf_indx) {
-+			if (next == phba->fcf.current_rec.fcf_indx)
-+				continue;
- 
--	/* Wrap around condition on phba->fcf.fcf_rr_bmask */
--	if (next_fcf_index >= LPFC_SLI4_FCF_TBL_INDX_MAX) {
--		/*
--		 * If we have wrapped then we need to clear the bits that
--		 * have been tested so that we can detect when we should
--		 * change the priority level.
--		 */
--		next_fcf_index = find_first_bit(phba->fcf.fcf_rr_bmask,
--					       LPFC_SLI4_FCF_TBL_INDX_MAX);
--	}
-+			if (phba->fcf.fcf_pri[next].fcf_rec.flag & LPFC_FCF_FLOGI_FAILED == 0) {
-+				lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
-+					"2845 Get next roundrobin failover FCF (x%x)\n", next);
-+				return next;
-+			}
- 
-+			if (list_is_singular(&phba->fcf.fcf_pri_list))
-+				return LPFC_FCOE_FCF_NEXT_NONE;
-+		}
- 
--	/* Check roundrobin failover list empty condition */
--	if (next_fcf_index >= LPFC_SLI4_FCF_TBL_INDX_MAX ||
--		next_fcf_index == phba->fcf.current_rec.fcf_indx) {
- 		/*
- 		 * If next fcf index is not found check if there are lower
- 		 * Priority level fcf's in the fcf_priority list.
- 		 * Set up the rr_bmask with all of the avaiable fcf bits
- 		 * at that level and continue the selection process.
- 		 */
--		if (lpfc_check_next_fcf_pri_level(phba))
--			goto initial_priority;
--		lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
--				"2844 No roundrobin failover FCF available\n");
--
--		return LPFC_FCOE_FCF_NEXT_NONE;
--	}
--
--	if (next_fcf_index < LPFC_SLI4_FCF_TBL_INDX_MAX &&
--		phba->fcf.fcf_pri[next_fcf_index].fcf_rec.flag &
--		LPFC_FCF_FLOGI_FAILED) {
--		if (list_is_singular(&phba->fcf.fcf_pri_list))
--			return LPFC_FCOE_FCF_NEXT_NONE;
-+	} while (lpfc_check_next_fcf_pri_level(phba));
- 
--		goto next_priority;
--	}
--
--	lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
--			"2845 Get next roundrobin failover FCF (x%x)\n",
--			next_fcf_index);
-+	lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
-+			"2844 No roundrobin failover FCF available\n");
- 
--	return next_fcf_index;
-+	return LPFC_FCOE_FCF_NEXT_NONE;
- }
- 
- /**
--- 
-2.43.0
+On 03-Sep-25 10:18 AM, Alim Akhtar wrote:
+> Hi Ram
+> 
+>> -----Original Message-----
+>> From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+>> Sent: Tuesday, September 2, 2025 10:19 PM
+>> To: alim.akhtar@samsung.com; avri.altman@wdc.com;
+>> bvanassche@acm.org; robh@kernel.org; krzk+dt@kernel.org;
+>> conor+dt@kernel.org; mani@kernel.org;
+>> James.Bottomley@HansenPartnership.com; martin.petersen@oracle.com
+>> Cc: linux-scsi@vger.kernel.org; devicetree@vger.kernel.org; linux-
+>> kernel@vger.kernel.org; linux-arm-msm@vger.kernel.org
+>> Subject: [PATCH V5 0/4] Add DT-based gear and rate limiting support
+>>
+>> This patch series adds support for limiting the maximum high-speed gear
+> and
+>> rate used by the UFS controller via device tree properties.
+>>
+>> Some platforms may have signal integrity, clock configuration, or layout
+>> issues that prevent reliable operation at higher gears or rates.
+>> This is especially critical in automotive and other platforms where
+> stability is
+>> prioritized over peak performance.
+>>
+>> The series follows this logical progression:
+>> 1. Document the new DT properties in the common UFS binding 2. Clean up
+>> existing redundant code in the qcom driver 3. Add platform-level parsing
+>> support for the new properties 4. Integrate the platform support in the
+> qcom
+>> driver
+>>
+>> This approach makes the functionality available to other UFS host drivers
+> and
+>> provides a cleaner, more maintainable implementation.
+>>
+>> Changes from V1:
+>> - Restructured patch series for better logical flow and maintainability.
+>> - Moved DT bindings to ufs-common.yaml making it available for all UFS
+>>   controllers.
+>> - Added platform-level support in ufshcd-pltfrm.c for code reusability.
+>> - Separated the cleanup patch to remove redundant hs_rate assignment in
+>>   qcom driver.
+>> - Removed SA8155 DTS changes to keep the series focused on core
+>>   functionality.
+>> - Improved commit messages with better technical rationale.
+>>
+>> Changes from V2:
+>> - Documented default values of limit-rate and limit-hs-gear in DT bindings
+>>   as per Krzysztof's suggestion.
+>>
+>> Changes from V3:
+>> - Changed limit-rate property from numeric values 1 and 2 to string values
+>>   Rate-A and Rate-B for better readability and clarity as suggested by
+>>   Bart and Krzysztof.
+>> - Added Co-developed-by tag for Nitin Rawat in 3rd patch.
+>>
+>> Changes from V4:
+>> - Added the missing argument to the error message while parsing
+>>   limit-rate property.
+>> - Updated the maximum supported value and default for limit-gear
+>>   property to gear 6, as per Krzysztof's and Bart's recommendation.
+>> - Renamed Rate-A and Rate-B to lowercase (rate-a, rate-b) as suggested
+>>   by Krzysztof.
+>>
+> Please allow minimum 4 ~ 5 days for reviewers to complete the review before
+> posting next version.
+> That will also help to reduce the number of iteration a patch goes through.
+> Thanks
+
+Hi Alim,
+
+Thanks for input. I’ll make sure to allow at least 4–5 days for the 
+reviewers to complete their review before posting the next version.
+
+Thanks,
+Ram.> 
+> 
+> 
 
