@@ -1,64 +1,65 @@
 Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 075872F60C4;
-	Wed, 17 Sep 2025 02:27:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0873222575;
+	Wed, 17 Sep 2025 02:27:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758076048; cv=none; b=Vwmg5dzsSgfKlJtoaqk1RmvOfobcTsZfX8SfBwCJL8VFndTKWlmu5NW+JRpDttWPyAqGFHiCJI6iErXMjeUfRSck51IB7YZ0SQpnW7xo9plKvv3qJ5lpc5GwzNbo0gUEUfO8ty2Xry9ni1r633uWuMjQqtVMoODFJhVGXVYmd7E=
+	t=1758076049; cv=none; b=TnmzS5Pjms2It3iOJhXQ9hcGSM6CSWeJY7ANeWOCh65fEhQuXkCilIVZnlR5BGV1rtMVyMMIMlb88wxuvPekR3Np+r1KkHzDuK8QMqiA1CxvQdHIMxM2tc5c/fLa8PO3uBA/MRtbBf/B2syW2zaISGVYM1ccXoZbrHsWWigNvH0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758076048; c=relaxed/simple;
-	bh=9Hvcq3I29CMyHbPrdGNNVOmTlzCY7bQRsnIvv2qhsBk=;
+	s=arc-20240116; t=1758076049; c=relaxed/simple;
+	bh=V3OIPbMvwHEgKJdrQds31lN7E7XLXRIKIY/Y+p6dKF4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=bdUXJ00VINpSdNw8+R2ymnSjhWQHBajZfhlxnLnWJVuqQ29gXV7WOoK93TeYP0ybbrJX7i7oKjWwTvNCkLE+zyfXpEbbAsVIPhCifhC2H4PWkuErwZOJiWivsrbOLT5t3LDnG+ZRFHBIHKop1GMs4lO62FnYZqRy4ryoMG7JOvE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Z7KU/EKB; arc=none smtp.client-ip=205.220.165.32
+	 MIME-Version:Content-Type; b=mclYhmic13H4y9sasjGoKqodil+tit9UU+0JkrsGpOahqUSwGnFa9ftXru/6Wwf0e6OetxcY6ISzDtEw7kVlpfb5IXuGPUSogel4Xgd0XHV2dYem4cnU4uyui+WPU27kiD23L2Al3WJGZX7cmSLZKjmGMOWfvImTw/H/8o878ZQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=bx4fmVI8; arc=none smtp.client-ip=205.220.165.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Z7KU/EKB"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58GLZ14c012543;
-	Wed, 17 Sep 2025 02:27:19 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="bx4fmVI8"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58GLZ93M032174;
+	Wed, 17 Sep 2025 02:27:18 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=Txiaa5BNsA9MDXMG+TjfAzJBFszpsGpWduNtIMzhpoU=; b=
-	Z7KU/EKBTWRuxk4aEIQQhst+Rmr+rBZmC03KSqv2Z4/dNbc10a5khnXoSbePUJf+
-	QtpEJTYfRCujjH1fV1wDuexSZfv8ngM8IdKFqsq89G/ihw8PI4oX8pulTC3tLvIi
-	MucsbqEMyo/RUVubji6Q14fugiZQNnrEYw4mFvGaLOTbrThNUCxBw/ksJdpuRg5t
-	5/DUMKE43/FTteV7NSg/fgTcjVixC39qxlr8J6uf/rh0StKRDkZAhGCTXFIgg8FK
-	bTZfNK5f4Q58xfDLghVWZdqecq8pyIBQePcwkLQnoD01KJCBY+RSynPIt3su/D6h
-	KrNLm0xkCHGPWODxKBj5dw==
+	corp-2025-04-25; bh=Rsk0geJ2RaM2trAUsQqwIYhPanp68wyRGAfVutmZZ8s=; b=
+	bx4fmVI8KHnnpsmTRl17HK1R/uVpv1B5g3WN0lcPPSf96eb05J3cy6NEe9x5k00g
+	y3qg2UOlTQ/o12zUsxBDd8FR6RVeV2TtWZKR3neeWLY+jOiRinu9G033Iorff43p
+	o8gOvRp2Lt1AHxksTwSlmt5zSSQ/YoSukwIDwzIWw/3rZrXzfoqWtorRoCn66hXb
+	rt8JvhGw4UStKYDnHVRzriCpJuRVVCVORSFC4kTjiidKNoqVuGhVxcWQzcxDnhpa
+	6w7Yai0aRDMXFrYRSMEOICuHV/2INJdrZnvNHBdBxBXqKJKKyvXRUdMdkTco3BbO
+	jgHAtuCvJP6ej9kE4beYfw==
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 497fx9r9bd-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 497fxb09ah-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 17 Sep 2025 02:27:19 +0000 (GMT)
+	Wed, 17 Sep 2025 02:27:18 +0000 (GMT)
 Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58H0gSg7028794;
-	Wed, 17 Sep 2025 02:27:18 GMT
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58H0bUVU028863;
+	Wed, 17 Sep 2025 02:27:17 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 494y2d52fx-1
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 494y2d52fj-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 17 Sep 2025 02:27:18 +0000
+	Wed, 17 Sep 2025 02:27:17 +0000
 Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 58H2RHY5037520;
-	Wed, 17 Sep 2025 02:27:18 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 58H2RHY3037520;
+	Wed, 17 Sep 2025 02:27:17 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 494y2d52f0-2;
-	Wed, 17 Sep 2025 02:27:18 +0000
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 494y2d52f0-1;
+	Wed, 17 Sep 2025 02:27:17 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: James Smart <james.smart@broadcom.com>,
-        Dick Kennedy <dick.kennedy@broadcom.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+To: Jack Wang <jinpu.wang@cloud.ionos.com>,
+        John Garry <john.g.garry@oracle.com>,
+        "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
         linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        Qianfeng Rong <rongqianfeng@vivo.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: Re: [PATCH] scsi: lpfc: Use int type to store negative error codes
-Date: Tue, 16 Sep 2025 22:27:10 -0400
-Message-ID: <175798566833.3116853.69252163477869377.b4-ty@oracle.com>
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH v3][next] scsi: pm80xx: Avoid -Wflex-array-member-not-at-end warnings
+Date: Tue, 16 Sep 2025 22:27:09 -0400
+Message-ID: <175798566836.3116853.1907076670217510948.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20250904132351.483297-1-rongqianfeng@vivo.com>
-References: <20250904132351.483297-1-rongqianfeng@vivo.com>
+In-Reply-To: <aL8jeSJ8uKih9DNJ@kspp>
+References: <aL8jeSJ8uKih9DNJ@kspp>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,40 +72,38 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-09-16_02,2025-09-16_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 phishscore=0
- bulkscore=0 mlxscore=0 suspectscore=0 mlxlogscore=953 adultscore=0
+ bulkscore=0 mlxscore=0 suspectscore=0 mlxlogscore=447 adultscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
  definitions=main-2509170022
-X-Proofpoint-ORIG-GUID: koVpCdHKIqhZFVFAswCqaNwLeuSiQfO9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX8xJ8IC0+f3fb
- MFjvSIGN3W+AoJpaNpAhjIks8NPQ76ChWxg0FBOKdt0erTNcA9xpiRA8Rc/cNTcuMMxfnHkyjaR
- I5AAAICrCovhRZIvGeeOf1C9M+En0sF8clk3V0jovCFAKfc5HC8RQ/QNi8nDUG4mAQYvbJuSuYa
- pHcoMqKwxvPgyw4tT5nWSaCu3PieE+NuihG2cZrh1jAIwWVSjiSyVyb0OfK0GiVMw7Vy9cAk3cL
- PcHafcy2K2KrmSD8vJDm8fOhMdgNiKy22DDfuzp15qERNKh0Fu1mQvhsNBXcaG+6PnHoJRfxWqW
- PzJ8x/ritlQ4aylh+/LOXaySYNQDh/SEtKeIhvw934SPeb+arQWBurZQztxLKpDbcnZsdNaLdaT
- Bc80Nx+w
-X-Proofpoint-GUID: koVpCdHKIqhZFVFAswCqaNwLeuSiQfO9
-X-Authority-Analysis: v=2.4 cv=C7vpyRP+ c=1 sm=1 tr=0 ts=68ca1c87 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX1vqCgUf3XLQp
+ Q0pnusuywIXVEs2uwKshImI/akwynmS4aAe2VVNp882d+LDUlbo2XsZ21EEFOAOjvVGpLcsBQ+0
+ uguTkCxdGuP2JTQlSDmsroKBoN/hM9UF8u4LL52AblAJl42d0d9jQ1qvzcB99TMtzdZ4iqOddbS
+ uhBb7krVihqTVkeN5usuGbJLkAVbs5I1dz3AV/bOZtw6uTrFAEAcNiX9XMX9QW7wKwPUaPGxtGL
+ kqa097O+OK8DHTbWepWKHMuZpCYAJKyYhMs42xseYBTTP0CEj6BI/t9n6IyvrrEmD4m5/r4/xhY
+ 0PmqV65N8MXDTxJwq7TBVdP9ivXsrMHI6jFS26c/cknTmxKMrUpQ0Nyp3t7GSnyObTuAwt9iO9O
+ /2yV0u+s
+X-Authority-Analysis: v=2.4 cv=KOJaDEFo c=1 sm=1 tr=0 ts=68ca1c86 cx=c_pps
  a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
- a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=0YdJrSoTKAKcOoZutCgA:9
- a=QEXdDO2ut3YA:10
+ a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=EscN_06PMkp4Idz6WpUA:9
+ a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10
+X-Proofpoint-GUID: SXrM2rDnZuu6dKj-MlZJcRvIagyUefg8
+X-Proofpoint-ORIG-GUID: SXrM2rDnZuu6dKj-MlZJcRvIagyUefg8
 
-On Thu, 04 Sep 2025 21:23:51 +0800, Qianfeng Rong wrote:
+On Mon, 08 Sep 2025 20:42:01 +0200, Gustavo A. R. Silva wrote:
 
-> Change the 'ret' variable in lpfc_sli4_issue_wqe() from uint32_t to int,
-> as it needs to store either negative error codes or zero returned by
-> lpfc_sli4_wq_put().
+> Comment out unused field `residual_count` in a couple of structures,
+> and with this, fix the following -Wflex-array-member-not-at-end
+> warnings:
 > 
-> Storing the negative error codes in unsigned type, doesn't cause an issue
-> at runtime but can be confusing.  Additionally, assigning negative error
-> codes to unsigned type may trigger a GCC warning when the -Wsign-conversion
-> flag is enabled.
+> drivers/scsi/pm8001/pm8001_hwi.h:342:33: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
+> drivers/scsi/pm8001/pm80xx_hwi.h:561:32: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
 > 
 > [...]
 
 Applied to 6.18/scsi-queue, thanks!
 
-[1/1] scsi: lpfc: Use int type to store negative error codes
-      https://git.kernel.org/mkp/scsi/c/5cffc679ad1d
+[1/1] scsi: pm80xx: Avoid -Wflex-array-member-not-at-end warnings
+      https://git.kernel.org/mkp/scsi/c/508e754c6931
 
 -- 
 Martin K. Petersen
