@@ -1,48 +1,48 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5977B33C77A;
-	Wed, 17 Sep 2025 14:19:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 010362D4B71;
+	Wed, 17 Sep 2025 14:29:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758118799; cv=none; b=qqWPFYuKebWv2sX8j7sxeS2n0/FRu3lBfocMEroCJcO5Hyk9B7C48YEFKmfLf9Bb068yKli5gelNBfGn0rU+Oeq50qH7Ud8Pq3RcieOjEGZHmtvWTRuImHKZspEiBiU4Jn8oIuG5pB7diPVMxqkB3rctT6fk9ZEt7LH3aBW76kw=
+	t=1758119401; cv=none; b=IzYUVq2fHRFoF9GGhY2oQ1yOl6J3lSis7+Go1nDQi6lPlE59Gq3emRVzvC3Jo5dGNUvqfeTZ3/VYjoZA3rjFlwlEM+P+gR1rQBhPZoRRu1clkz1MYjK5D2nCpiLSI0v0h5X6OnFcLASPUyKS+Vzuk8TfhpKRuVVHe6DMARg2S/M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758118799; c=relaxed/simple;
-	bh=K8AzLf7x2a9JNhbTQRQliEaTadQE9bAB6ts5jXpmOOA=;
+	s=arc-20240116; t=1758119401; c=relaxed/simple;
+	bh=6AC9IsRJupEPZp611yucaK3pIYA+QofGgL5/NzSNUgY=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=QZnNEYAzmoeLrR5k20EX5to4gn0PAFK+Ux5Tdrsi9aYFo3/P93A9anCAkGhPNwXxPwyMwgl6XkC1VBNdsi3POgF6Myfsn6t2KoOgnTN+iTOjujS4fwa9WmNFy701yKtn9go3pDWNx22/T+k1L7J78syRDlNt2mLcXBHWfd59wwU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=hLWa/b6a; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=uNSBOED+6iaLueZsuv6pS6uOyc+6Ln5EODgM8N5gpukwFwUYh0uk6QQi2M7g3rOfT8typIvkf4rseteOjYA1RgZOpZNoWZgYDiM5ssztnIempE/1fMltnskB0OFjkAmTUZU4WSpBNSXSatxqU6YPEXw6fct4S5iF/r4HoAgrOo0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=S9LDaaun; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="hLWa/b6a"
-Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58H8Xafb021451;
-	Wed, 17 Sep 2025 14:19:46 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="S9LDaaun"
+Received: from pps.filterd (m0279864.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58H8XfmS010827;
+	Wed, 17 Sep 2025 14:29:48 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	QClkAHTCsjCfKUD7nA/NyZmaWUaO8cGUX++gkDPGqS0=; b=hLWa/b6aA4kHDM4d
-	qbNNlapMynzRtfzhtbLDvtibkQCRHi9nz6uzjJq5Q6+7IpG4laEzcOc3Tvz6piX2
-	wwoWi1Eadqw3nOGTd4JI657i+BlXdT9NM3R5pWqx+wyDxSkxEatwWFiovq9WOVJL
-	Iw5IHH0R0V+0dv2oEhb0tgM8olUpFrqBTxw7TXyNzg+L0dhEGDEPFcYIYaJX6bLI
-	Y5rMkEcIVBPOvxcnEC0NNagBeNhOHH1E08bhJvziB/LP0QFCzdYnhY6j+kH2Hy1+
-	Mo+VDPxP0cT3dFmbk8ryKXdRaB+o59VFcSW6KqEymqICMqEpp7xYDmx5pFRpAxIX
-	9ju7sA==
+	jawXIxis37bWIPOnqourLw0/qXEIwvwtvxlta3lSn7I=; b=S9LDaaunSk35t9We
+	wqxw2m5U488RVf+3I1tfmC8Cs6JIYP2+9QEfSzdXUAnzgCIiS3cRMWROyuWqvpcB
+	6ZOQsGTUxu2uPDc6bsLfPDjM1f73fJRYk5Bt5pS/cuxD5lgvSdHga0d3Pjb1FK75
+	/WQW04C4/UfOiP4yoc2tCuot48MxZWQ0KUADbY6lxlhUEreN7l2IduTX014kLyXW
+	vXCDGIKdh6RaoRqQ2KkqTwQQfBCSXe9665dE+jbqrUXfyDv+DqeI5ofHHExVlzpc
+	sGZlI4KMgF7yBcKEa2718wS8EqfDGzrJWq4fBDRTD8l/7sWXKcNygUWePGCo5hHB
+	YjugkA==
 Received: from nalasppmta02.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 497fy5an25-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 497fxxtp9y-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 17 Sep 2025 14:19:46 +0000 (GMT)
+	Wed, 17 Sep 2025 14:29:48 +0000 (GMT)
 Received: from nalasex01b.na.qualcomm.com (nalasex01b.na.qualcomm.com [10.47.209.197])
-	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 58HEJjXO029528
+	by NALASPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 58HETl9v012967
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 17 Sep 2025 14:19:45 GMT
+	Wed, 17 Sep 2025 14:29:47 GMT
 Received: from [10.218.4.141] (10.80.80.8) by nalasex01b.na.qualcomm.com
  (10.47.209.197) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.24; Wed, 17 Sep
- 2025 07:19:41 -0700
-Message-ID: <2a3903f5-4494-4053-b821-435a75b1ad7b@quicinc.com>
-Date: Wed, 17 Sep 2025 19:49:38 +0530
+ 2025 07:29:43 -0700
+Message-ID: <8138a25e-eb1b-4edc-92d1-270066b8fc85@quicinc.com>
+Date: Wed, 17 Sep 2025 19:59:40 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,54 +50,55 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH V5 0/4] Add DT-based gear and rate limiting support
+Subject: Re: [PATCH V5 2/4] ufs: ufs-qcom: Remove redundant re-assignment to
+ hs_rate
 To: Alim Akhtar <alim.akhtar@samsung.com>, <avri.altman@wdc.com>,
         <bvanassche@acm.org>, <robh@kernel.org>, <krzk+dt@kernel.org>,
         <conor+dt@kernel.org>, <mani@kernel.org>,
         <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>,
         <linux-kernel@vger.kernel.org>, <linux-arm-msm@vger.kernel.org>
-References: <CGME20250902164927epcas5p459352c28c0d5c5a4c04bd88345a049f0@epcas5p4.samsung.com>
- <20250902164900.21685-1-quic_rdwivedi@quicinc.com>
- <3a9101dc1c8d$f476b8e0$dd642aa0$@samsung.com>
+References: <20250902164900.21685-1-quic_rdwivedi@quicinc.com>
+ <CGME20250902164935epcas5p14139d20b5d385b99edfc0da60865dd98@epcas5p1.samsung.com>
+ <20250902164900.21685-3-quic_rdwivedi@quicinc.com>
+ <3a9201dc1c8e$affa1c10$0fee5430$@samsung.com>
 Content-Language: en-US
 From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
-In-Reply-To: <3a9101dc1c8d$f476b8e0$dd642aa0$@samsung.com>
+In-Reply-To: <3a9201dc1c8e$affa1c10$0fee5430$@samsung.com>
 Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
  nalasex01b.na.qualcomm.com (10.47.209.197)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-GUID: XTpOCO247mJJyou_uzo_-nSWIJjDP4ZH
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX5Ve8HZQOx8E9
- u5uQYBI80UHUr9QAyYfnstmOdU8lC69fuamhRR/o0LNJi/Z7izg0E5XCBXCNPpiX7u9wNvYJP49
- NGjuMaIeR5JsRtMjtID5aZOU13829ddQRdDXfJidFGInqhTNgfeOYpdzQbXRh06MZZndYjXTmeC
- kZcO5UF9vzMUYzRP2M/hV4WiJhyq+FHrMWjc+Ij0WIPvnpdEtjBlZTr+9Yi8+uEL28ybRDy6qJo
- WVQyk9tJWUxHQ5Yn39sbssJM0tHni/G9Ffa2g0qPk1NvzhJVf/D4taI4eqFMovbsvgzgNuzuY09
- 1NBMCb2q5vNrt15HmkxH2GKZaUmUcLskS9ofK0sBa6oqeyOYVVZHU8eHdAkGPjX6tS93e3d+kbw
- LHU3T44/
-X-Authority-Analysis: v=2.4 cv=Y+f4sgeN c=1 sm=1 tr=0 ts=68cac382 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX0z6uE4Lx1C4G
+ NL+W9Rd4ytpvINNx8Z45mZuF697l16+nWLfZumhOpeosTWQvPaRR/QlmMYA522ZvC9SH1fuOLbj
+ SN1LfnMT72plrSm9wEvPC6FYQkYIsoYNU1CHph1qfdBduju03AyzMhbM4UiJFuckAzGEcsGvD+4
+ 165+wp8P3P/bPk97+WK1+6IALNaSOnjZpi6GLmw238XIiG+1zb4KjsfypYqhyuutamLt9hKwr5n
+ 45UXPgbsREISEn5o+NvzyHSlAeUdz7GfT4k8Uu34Q/bd6cRPU5+dc2sOptB55Do6kom+U+Oy3Pl
+ dtofFuMizxwjPnCD2mBmz+8WncKRSVLDUgmw/y8rwxKZCOQ+YsmtRVfvq5Ar+ZrchMThcAnmL73
+ eU8rtdKo
+X-Proofpoint-ORIG-GUID: Zp6r04OFxRdBFBG5JyIeQwTXDFXOnjmT
+X-Authority-Analysis: v=2.4 cv=KJZaDEFo c=1 sm=1 tr=0 ts=68cac5dc cx=c_pps
  a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
  a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=COk6AnOGAAAA:8
  a=hD80L64hAAAA:8 a=JF9118EUAAAA:8 a=N54-gffFAAAA:8 a=VwQbUJbxAAAA:8
- a=bLk-5xynAAAA:8 a=yPCof4ZbAAAA:8 a=tC5-z0Gf1kRdzandcvAA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22 a=xVlTc564ipvMDusKsbsT:22
- a=zSyb8xVVt2t83sZkrLMb:22
-X-Proofpoint-ORIG-GUID: XTpOCO247mJJyou_uzo_-nSWIJjDP4ZH
+ a=bLk-5xynAAAA:8 a=yPCof4ZbAAAA:8 a=OIpetahlEYfThk03V3EA:9 a=QEXdDO2ut3YA:10
+ a=TjNXssC_j7lpFel5tvFf:22 a=xVlTc564ipvMDusKsbsT:22 a=zSyb8xVVt2t83sZkrLMb:22
+X-Proofpoint-GUID: Zp6r04OFxRdBFBG5JyIeQwTXDFXOnjmT
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-09-17_01,2025-09-17_02,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 suspectscore=0 impostorscore=0 phishscore=0 adultscore=0
- malwarescore=0 bulkscore=0 spamscore=0 clxscore=1015 classifier=typeunknown
- authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2509160202
+ spamscore=0 phishscore=0 bulkscore=0 adultscore=0 impostorscore=0
+ suspectscore=0 malwarescore=0 clxscore=1015 priorityscore=1501
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2507300000 definitions=main-2509160202
 
 
 
-On 03-Sep-25 10:18 AM, Alim Akhtar wrote:
-> Hi Ram
+On 03-Sep-25 10:23 AM, Alim Akhtar wrote:
+> 
 > 
 >> -----Original Message-----
 >> From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
@@ -108,70 +109,57 @@ On 03-Sep-25 10:18 AM, Alim Akhtar wrote:
 >> James.Bottomley@HansenPartnership.com; martin.petersen@oracle.com
 >> Cc: linux-scsi@vger.kernel.org; devicetree@vger.kernel.org; linux-
 >> kernel@vger.kernel.org; linux-arm-msm@vger.kernel.org
->> Subject: [PATCH V5 0/4] Add DT-based gear and rate limiting support
+>> Subject: [PATCH V5 2/4] ufs: ufs-qcom: Remove redundant re-assignment to
+>> hs_rate
 >>
->> This patch series adds support for limiting the maximum high-speed gear
-> and
->> rate used by the UFS controller via device tree properties.
+>> Remove the redundant else block that assigns PA_HS_MODE_B to hs_rate,
+>> as it is already assigned in ufshcd_init_host_params(). This avoids
+>> unnecessary reassignment and prevents overwriting hs_rate when it is
+>> explicitly set to a different value.
 >>
->> Some platforms may have signal integrity, clock configuration, or layout
->> issues that prevent reliable operation at higher gears or rates.
->> This is especially critical in automotive and other platforms where
-> stability is
->> prioritized over peak performance.
->>
->> The series follows this logical progression:
->> 1. Document the new DT properties in the common UFS binding 2. Clean up
->> existing redundant code in the qcom driver 3. Add platform-level parsing
->> support for the new properties 4. Integrate the platform support in the
-> qcom
->> driver
->>
->> This approach makes the functionality available to other UFS host drivers
-> and
->> provides a cleaner, more maintainable implementation.
->>
->> Changes from V1:
->> - Restructured patch series for better logical flow and maintainability.
->> - Moved DT bindings to ufs-common.yaml making it available for all UFS
->>   controllers.
->> - Added platform-level support in ufshcd-pltfrm.c for code reusability.
->> - Separated the cleanup patch to remove redundant hs_rate assignment in
->>   qcom driver.
->> - Removed SA8155 DTS changes to keep the series focused on core
->>   functionality.
->> - Improved commit messages with better technical rationale.
->>
->> Changes from V2:
->> - Documented default values of limit-rate and limit-hs-gear in DT bindings
->>   as per Krzysztof's suggestion.
->>
->> Changes from V3:
->> - Changed limit-rate property from numeric values 1 and 2 to string values
->>   Rate-A and Rate-B for better readability and clarity as suggested by
->>   Bart and Krzysztof.
->> - Added Co-developed-by tag for Nitin Rawat in 3rd patch.
->>
->> Changes from V4:
->> - Added the missing argument to the error message while parsing
->>   limit-rate property.
->> - Updated the maximum supported value and default for limit-gear
->>   property to gear 6, as per Krzysztof's and Bart's recommendation.
->> - Renamed Rate-A and Rate-B to lowercase (rate-a, rate-b) as suggested
->>   by Krzysztof.
->>
-> Please allow minimum 4 ~ 5 days for reviewers to complete the review before
-> posting next version.
-> That will also help to reduce the number of iteration a patch goes through.
-> Thanks
+>> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+>> ---
+> Better to send non-dependent patches separately.
 
 Hi Alim,
 
-Thanks for input. I’ll make sure to allow at least 4–5 days for the 
-reviewers to complete their review before posting the next version.
+Thanks for the suggestion. This patch is essential for our
+ufs-qcom changes to function correctly. Without it,
+the rate limit would be overwritten.
 
 Thanks,
 Ram.> 
+> Feel free to add:
+> Reviewed-by: Alim Akhtar <alim.akhtar@samsung.com>  
+> 
+>>  drivers/ufs/host/ufs-qcom.c | 8 ++------
+>>  1 file changed, 2 insertions(+), 6 deletions(-)
+>>
+>> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index
+>> 9574fdc2bb0f..1a93351fb70e 100644
+>> --- a/drivers/ufs/host/ufs-qcom.c
+>> +++ b/drivers/ufs/host/ufs-qcom.c
+>> @@ -494,12 +494,8 @@ static int ufs_qcom_power_up_sequence(struct
+>> ufs_hba *hba)
+>>  	 * If the HS-G5 PHY gear is used, update host_params->hs_rate to
+>> Rate-A,
+>>  	 * so that the subsequent power mode change shall stick to Rate-A.
+>>  	 */
+>> -	if (host->hw_ver.major == 0x5) {
+>> -		if (host->phy_gear == UFS_HS_G5)
+>> -			host_params->hs_rate = PA_HS_MODE_A;
+>> -		else
+>> -			host_params->hs_rate = PA_HS_MODE_B;
+>> -	}
+>> +	if (host->hw_ver.major == 0x5 && host->phy_gear == UFS_HS_G5)
+>> +		host_params->hs_rate = PA_HS_MODE_A;
+>>
+>>  	mode = host_params->hs_rate == PA_HS_MODE_B ?
+>> PHY_MODE_UFS_HS_B : PHY_MODE_UFS_HS_A;
+>>
+>> --
+>> 2.50.1
 > 
 > 
 
