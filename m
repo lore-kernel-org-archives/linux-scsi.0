@@ -1,372 +1,386 @@
-Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BED46302770
-	for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 10:05:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758103508; cv=none; b=a6HhJOqnLA6XVJL+5zaK3jJ0s/utGzYk/6mwEHQdhOTQ9f6g6Li2ft8KsjWRwvAmk8/OJZBQwiBdHPCIkJ9hmJ9E+F0aiISV9S6ANZHxo3gC2MmimstorQFe4DcYQhWQgPCg4BYSUQnpuefI0RXsOAp2To73U3IRbuq1AiLNYrU=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758103508; c=relaxed/simple;
-	bh=tWVdEkVHEy6G4nvyP0NsCicBdSwaQuQTYho95ChUS6o=;
-	h=From:Message-Id:Content-Type:Mime-Version:Subject:Date:
-	 In-Reply-To:Cc:To:References; b=Kqy13E3d7w4Pw8OM+6MjxS/752iPUyphT4zoQZEu26SaswjOUVuWWhkSeNFxQCUcr6K1YnBv8VuEyQ3nO+VOo1R7s8inVRmfAyKTvDKBYsy0yfGiqVonH3LksyBIa9+pR8jJga2oWK47iZtIS2aA4wRfiTuCfTbL32t5DccDJK0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aMwWUJ7V; arc=none smtp.client-ip=209.85.215.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 037FA30CB3A
+	for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 12:09:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1758110965; cv=fail; b=fRHkbgIVZHxJuMXwFAe+OZrZkzvlGezNYbwmpHVV/vEgS0cKuwOpGLgfUfJ0seiKQ07zVbs7E91gqOfIMEECQheczP7yqTv7jr/ZTNsGXVfJ1RqUUU3ODrSNXDbFs+MZ9jvXt39rakz91WhTBDzmjvJ6SusWRa8vXeY8ZBqfwN8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1758110965; c=relaxed/simple;
+	bh=baL9JK+N+OP3nPaf7HBqaQzzTeRk1Wy/sUXT0jU1omU=;
+	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
+	 Content-Type:MIME-Version; b=Ahwfc2k4x0IWUqwr3UlPJtu3iGwBStMVlcNdP4lUzqsYzl8flvYSzVDB165Zn8E4ddieqaXCw9P8lIcWqs4q5Uu5i3fMKh07qrjGuriWOjMKkPp1b9WFKVuKCGxda+nh77fwZe+nfwFHj+EjwO60A9UmxYZo8Q1QEx1KE0+24Kk=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=NgorPYqW; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=zWvnAuDo; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aMwWUJ7V"
-Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-b54f57eb7c9so166535a12.3
-        for <linux-scsi@vger.kernel.org>; Wed, 17 Sep 2025 03:05:06 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="NgorPYqW";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="zWvnAuDo"
+Received: from pps.filterd (m0246617.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58HAQwxs012813;
+	Wed, 17 Sep 2025 12:09:17 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=QA53BVNdzQD0KygNSdmuj7F2N80TcPvBDrOe/AXT2LE=; b=
+	NgorPYqWzNwOsgwI3T698ZXDLkmjfowWvRuJgDrwlA8GiCXUblkO4op3tYfBISsa
+	0HdILROwA+bTljvJThve/drHA4jB4AJvZeqHr7AVCbwELzLHvbMDeRHvR7eYREvk
+	96NsZgZs/h7U1tMv5URD7hFcJ2zimrGrxM27tSrlB9T7W8kd30YcI7k1S3ZYx0hS
+	3hBCpG8vyekSAKglI8UDxyKxAsyhXtMny7sbKjyrEWzo1fTFOUKjVSGt0YkZv/Iq
+	amZ4++FJRFgsCfGvrcOxifoSwwifxRX2+Eqxy1kc60D8R7SfRlzujk82lqVXz9LF
+	csdTNzhugnv4xUeiQatoNw==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 497fxbs2yf-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 17 Sep 2025 12:09:17 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58HBvHwh028898;
+	Wed, 17 Sep 2025 12:09:16 GMT
+Received: from co1pr03cu002.outbound.protection.outlook.com (mail-westus2azon11010063.outbound.protection.outlook.com [52.101.46.63])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 494y2dngsa-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 17 Sep 2025 12:09:16 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=TapiyBBZDMGQlFL7Uc1cdsls033lT+Gytl3sUco+ULYDEN7icbu3lqCHnpMDT+d9vVoPZmrA+hrGl5IyenzHqoiFgkgQCnQya4kl/rGD3p8FiwzEiWZ1qT7H5wPRE8dZq8oX1XXxo3iVSKOQ7uCx0/fvD0S5tYvjwhXw0Pd/H2DvxW5xmUqhCx41l+u8/7zMmCMKHpFhHVo1BgY08a0y6lw0uRK6QexQXoR8Wn4HovdSBjNK5aVLbMoQZmVhNRmnFp6ZudYJMQh+jUGrQ+udQo0kFUr9K0EJs9OOokAOkdMZN1+tU49braAJJ2sssZi0FtEN5lwiYNXubV2i9OcLqg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=QA53BVNdzQD0KygNSdmuj7F2N80TcPvBDrOe/AXT2LE=;
+ b=fe8bdgpPEIw3/6E70j0B9uD1nx6gvuRTxl5Vmq3yDeHp/9Ve65xwTv/nz9ghS1EyFwqd47qQ/hdQAUy5v8Z8B6DHFkD50fduPUomhA3BfTnuE6KF+kYTtHrsvlBNI0xjBCkO9CBvau3z24LZzZ1L9wNm1UAhjUMVdboTj/5KRMLLKcVgO2EBUGyd1vdRTcp9C5A2JFAD6d+gBx1nooVmlRHgD8iGE0PUoQPS1RoyWfBuUyz5Klg66ihw/miUYG3tWHP2OaPIAQ71OK7Q4smXfjtbT5ZAnMGGDzWP+c4r/BCE9+XMFphtOGzipH+yq+Ve4MuXpALOiziB/HVG31sxjQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758103506; x=1758708306; darn=vger.kernel.org;
-        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
-         :from:from:to:cc:subject:date:message-id:reply-to;
-        bh=D+6IorbE+hVHYQT1y6KYFtDWV5rbTEqJlJVBp1L7jsE=;
-        b=aMwWUJ7V2ApsTYXxnCEKNWeYFUDhS7P1X9EwUcQ1oabsAQLD0bNLWomXsuXG1FBE7X
-         sqYgqF37BXEHLo6zpy9wF7Z+Ld6hYpSXUbFUvDoL6mVXrIMEB0J+0xd3tPTy1uy+iab5
-         /bIvjb0TQcylW0NqKI/DycVyA1iXNFAtreb5Vf9mr5PG3Wlct15uPtF9ULY5TOZyGNOk
-         pT1dHconTpJa9x0RIrutprU6fn0NxWjcBJxj364KEPKCd56uFp0j9uoOXqqwTXO0TqY9
-         NV/MPKOJB5pQYU52FkXFbJhojPFBSXvp3EOHVMeD5S4nvSc84rhScNzqY2K8b/dbs6K7
-         cWuQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758103506; x=1758708306;
-        h=references:to:cc:in-reply-to:date:subject:mime-version:message-id
-         :from:x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=D+6IorbE+hVHYQT1y6KYFtDWV5rbTEqJlJVBp1L7jsE=;
-        b=QmnKAKlD8L087tSoLhE70l68v6UzG2pkudjs2Jbmn7FT2rmCya3ukMha6VmwtNA377
-         8c27NSnd/c4AJwNVFKmnJbswWPW7OtTk7DVFy+GACLDiGO7GBg32AJ2ZLkoTWyW0/thz
-         JgMXZ6jsiCLzIPcL1j3CA0d6uzk50/kGQ4N16zUSrbc7siroZxy8SPDU9bgIiWIL4jUS
-         iaBETxQBbHWb9kT/bYllN9/C1O4fRXVbyJJwHBqwKIO6rvu9WHErUGS3rFcTDpMLcleV
-         1SIMPfA5Q0iTZx+7wNT/66hrUDkXRNj31+Ijie3NcXtkDFKNRRDm+z4gzhgZW4CSruhc
-         fRog==
-X-Forwarded-Encrypted: i=1; AJvYcCVdf12RvLlwQnMzNi2ZpnpvqJDyiEi5UCKmmq2s8k6zWtiOqEB/KRLM6JhYv5XWxe9K6/M8nLDenUFF@vger.kernel.org
-X-Gm-Message-State: AOJu0YyIG7hB5Dbd3y8hO6QJ/pA7B3vzcPI0CE6aUeSniuBRi7Y/5gzh
-	WGzqClCJqVoVT8VkObYWoQ0IePxkAn35Uprk8LdZytPYK1BVGBequY7H
-X-Gm-Gg: ASbGnctapPaOvxve8JmP6KtqZNOf4e7Jp+/+j/dhBq/m2bKqrTJrfRk65kGgqyJEwjJ
-	44rYTMsD0cHKiMLSWwJ4NDpTI7EN/fSWiwxUOXwvkYOyjGUuFhu7x2aVmPTzLdMX+8AISVacKY0
-	DDom0hx0V3zST49lHb0odzHf0i3Q+11iobSANj+JNg9bQ2vNK8rCOt2YeM2Ty9TN+QobmASYDZ0
-	jINxk3NA64Z52bS5/cWVKWFtnp+FnwXarp+gI8D3tE7YkfQIayRCMPGNK5UjH1X1J1hvCD24cXI
-	Iyh5on24cG+vWz9T5bZzAHScV2bZDj0khehT+XicSYkRAQ/5QMr2BEUX7sQA0spG4BPRWcvCV2R
-	MiXUFbGa+zyg+i8PuL5czslQbWl2HFeiT4RxLMXHakrmr
-X-Google-Smtp-Source: AGHT+IGp63ACmwnCmwh1RXx2S9YMbzhM4BEgxkrdUIOWOa6hEAtUHBg3Ll05m5McRUqYP0JoUqbEiQ==
-X-Received: by 2002:a17:903:2b0c:b0:265:acc3:d2e7 with SMTP id d9443c01a7336-26812194204mr20063935ad.16.1758103505899;
-        Wed, 17 Sep 2025 03:05:05 -0700 (PDT)
-Received: from smtpclient.apple ([58.247.22.4])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-264eeab7bf1sm97458265ad.5.2025.09.17.03.04.57
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Wed, 17 Sep 2025 03:05:05 -0700 (PDT)
-From: =?utf-8?B?6ZmI5Y2O5pit77yITHlpY2Fu77yJ?= <lyican53@gmail.com>
-Message-Id: <FF69D584-EEF9-4B5A-BE30-24EEBF354780@gmail.com>
-Content-Type: multipart/mixed;
-	boundary="Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2"
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=QA53BVNdzQD0KygNSdmuj7F2N80TcPvBDrOe/AXT2LE=;
+ b=zWvnAuDomLqi66lwCMytjYodKJUaBJ/xDejQqh+XGwOC443LYDsbQwExMoFJ4jWSa4IBDqQzGqdSJSvKIB0frGVu9lXALV7tV2ZGHHT6R/cTrpnzKlIEV+HBKOArzOWOjNy2KYfdSLZL/6I43IjOvDvsqhmyfj35P0MzZDACaIQ=
+Received: from MN2PR10MB4320.namprd10.prod.outlook.com (2603:10b6:208:1d5::16)
+ by SN4PR10MB5576.namprd10.prod.outlook.com (2603:10b6:806:207::9) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9137.13; Wed, 17 Sep
+ 2025 12:09:13 +0000
+Received: from MN2PR10MB4320.namprd10.prod.outlook.com
+ ([fe80::42ec:1d58:8ba8:800c]) by MN2PR10MB4320.namprd10.prod.outlook.com
+ ([fe80::42ec:1d58:8ba8:800c%5]) with mapi id 15.20.9137.012; Wed, 17 Sep 2025
+ 12:09:13 +0000
+Message-ID: <75018e17-4dea-4e1b-8c92-7a224a1e13b9@oracle.com>
+Date: Wed, 17 Sep 2025 13:09:11 +0100
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 07/29] scsi_debug: Allocate a pseudo SCSI device
+To: Bart Van Assche <bvanassche@acm.org>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20250912182340.3487688-1-bvanassche@acm.org>
+ <20250912182340.3487688-8-bvanassche@acm.org>
+Content-Language: en-US
+From: John Garry <john.g.garry@oracle.com>
+Organization: Oracle Corporation
+In-Reply-To: <20250912182340.3487688-8-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-ClientProxiedBy: LNXP265CA0015.GBRP265.PROD.OUTLOOK.COM
+ (2603:10a6:600:5e::27) To MN2PR10MB4320.namprd10.prod.outlook.com
+ (2603:10b6:208:1d5::16)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3826.700.81\))
-Subject: Re: [RFC] Fix potential undefined behavior in __builtin_clz usage
- with GCC 11.1.0
-Date: Wed, 17 Sep 2025 18:04:42 +0800
-In-Reply-To: <80e107f13c239f5a8f9953dad634c7419c34e31b.camel@ibm.com>
-Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
- Xiubo Li <xiubli@redhat.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
- "sboyd@kernel.org" <sboyd@kernel.org>,
- Paolo Bonzini <pbonzini@redhat.com>,
- "idryomov@gmail.com" <idryomov@gmail.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>,
- "kvm@vger.kernel.org" <kvm@vger.kernel.org>,
- "mturquette@baylibre.com" <mturquette@baylibre.com>,
- "linux-clk@vger.kernel.org" <linux-clk@vger.kernel.org>
-To: Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>,
- "seanjc@google.com" <seanjc@google.com>
-References: <CAN53R8HxFvf9fAiF1vacCAdsx+m+Zcv1_vxEiq4CwoHLu17hNg@mail.gmail.com>
- <80e107f13c239f5a8f9953dad634c7419c34e31b.camel@ibm.com>
-X-Mailer: Apple Mail (2.3826.700.81)
+MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: MN2PR10MB4320:EE_|SN4PR10MB5576:EE_
+X-MS-Office365-Filtering-Correlation-Id: eed45814-d201-442a-2cd0-08ddf5e3043d
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016|7053199007;
+X-Microsoft-Antispam-Message-Info:
+	=?utf-8?B?d2FlTWRHZHdVbWZ2amdKeXNCc0NsaWp1bGV6b29Xek03V2sxdGFqSk9kcVVH?=
+ =?utf-8?B?WFdMVmZmSFZlOUVVN1NiVDlkL2lpdzB6YXVyK2YwWHlrbzZMVVFXdEdqVENG?=
+ =?utf-8?B?L1B6NG5BOTZaMHRpV0EwTVYvQVphZmFxL3pIZHBRNWd2ak1YMXdSN0ZuTits?=
+ =?utf-8?B?Tm1mQm43Y1pLd216MVFzdDlwNWRsZkZId2gwS1JYSWV3NkZBOWRBUktIWktX?=
+ =?utf-8?B?SzlCemtER092V2JtL3h5TmkrOEhYNFhxNmNIbXp1bUprY05nWVhBaUZzTTVk?=
+ =?utf-8?B?eE9UMEpqcXVCMWxIbnVpZldLL1FpVkRxb2R2YTdaNVFBaEgwQXN2Mk00WXJK?=
+ =?utf-8?B?RTl6UytjNStFV1BlSmZCeitXVWFheCttSzJaOUpsWGZKK2dTYU01eTV3RWpM?=
+ =?utf-8?B?Z1RwU2t5alVwL002WUVzME9UU2VVWW8vak54Q2Z4QVdGcDVzZDVOM1dEdG1q?=
+ =?utf-8?B?ajEwanV6eDdYRkI1b1BYS0VTaU14MHJwbWczVzQxU3YvM0hoV1VhL21ZMVMx?=
+ =?utf-8?B?Q1F4cWtPRnRzZnJYbW0wSjVEOGpIcURiU1ZFelU1VVZ5L1d4eWUycDUrSlUv?=
+ =?utf-8?B?YWU4T1VlQU05aFFMU0d1ZW9FenhwRWtzMVlpUzVydGFyOFVJQm5Pb1V0aVda?=
+ =?utf-8?B?UkVjOEc1Zm02dmY4SXBSV2RVVFBQellLR2VIcFdieERFRjFjQUxwbXFlL0hi?=
+ =?utf-8?B?NThwVUxPMktudDBUYmRDMlFFODlOYkZzS2NDa21GbnAvL3ZnczFUVmxSa0xz?=
+ =?utf-8?B?T3o1eUJiWXYxZHRzbWtpYmNKZ09sazN4RmYvUDUxY0hlQ3JXZk1ZNkhEWWZT?=
+ =?utf-8?B?d1FyWkt2L3QxeDBQQ0VKMlZ2emQrdWprYVdlbjJiUzJ5bVBqZXNXbTR2SGQ5?=
+ =?utf-8?B?amQyMUpydzlveGd1NStaUnM2cStWTjRKam9JMnB4T3RpbHFDMVZDSlFHS05G?=
+ =?utf-8?B?bFBVWWhNWmNsVkkrY0VMeGtGSHBvL29PT0NGd2tiUWpJMDF6SGpWVUdrOXZR?=
+ =?utf-8?B?NjJwWHViSmJCeFFjY3RQdkMvdHpNK0M5VzMxaEV6U2ExR3pNOGo3TVVrcWZO?=
+ =?utf-8?B?bUZmU1VXR3Zwa0JzR2lpSmJpSEhHTzlpUTQyQmdNWVlQc0NQbmtJcVZJcWdC?=
+ =?utf-8?B?L1dJdEIzSTg2ZDdkS1R5WHppYktya1hKMzNVTmNDQkYxUUp2bUdHRlIrOTBF?=
+ =?utf-8?B?cWhBSnl0bnBhcndjQXVSbUJza0VBelM3ZVFUWXN4MGZzT1daMFQ3cXpTelpR?=
+ =?utf-8?B?MGRvTm5Lbzh6a0wyR0JKdmphWk1MOXhtTG5kVWVlTEpjMWV4ZXdqaXQ4eERB?=
+ =?utf-8?B?R3JxWE9zMzZRTERqVGowenR5S1U1QXF2a0pwVlJtVEdKc1ZWaHZkTHk0V0Qz?=
+ =?utf-8?B?Zy9wVlhNaGVWWGVkaTY2Y1FqalBCbFhYYTVIekFSeEo4VDMxcy9RMGNUOGI2?=
+ =?utf-8?B?MnRzN21pdys0Ty9KZEVTYlUrU2tmOUs5emgyaXV6eGlDd0FLWDFLQ2RaQWxx?=
+ =?utf-8?B?QWc2V2IrZStOMXhNb05qZHFhZmRHL3IwMEFYamgwaTVJVGJiUG8rU0VUWFIr?=
+ =?utf-8?B?blY1TndoeFVBYXRvMkxCWnZabGMrRnl1TjJnYW9QNmY0bGQyT000ZGhyYmtX?=
+ =?utf-8?B?aDl4S0Y0aFZpcGQ5SFJEbU5DeThjd0VwNHJtblRjLzVDNU9QelVUSXFCV2Yv?=
+ =?utf-8?B?T3h0MmlRb2VCOVNZRG9XNUdSQmtZaHBETElnSFJLMFJWQnNjNjFPSFdUZGtG?=
+ =?utf-8?B?enl3enpTMStrS1RpWWUyMjJnL2IrVUdWc0xzUWphbUd5ZFcra1hjZjl1WTN2?=
+ =?utf-8?B?cnMrT3hoYmhDQlRJNUpWZGwzUWw1K3B1dEljd2RXemdSUzFaVzYvVHBjN0xB?=
+ =?utf-8?B?eWtNU213QlhrSDYrSUErRUJJYlM5RHNRZ1RBa0ZteXYrWVVmWG5INlo3clh4?=
+ =?utf-8?Q?2ghC2HFQoeY=3D?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR10MB4320.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(7053199007);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?utf-8?B?eUVpYmdUZ3N5cmpqVFoyeEdvaWxoMFdlTk1PRXNTQVBaRFd3NDN4TXhHcW9O?=
+ =?utf-8?B?K3FlMWJCclpTVkN0Y1QzQ0dtSHhMNERDblJncUVaUkhrTXBZWW1rVlpnRmYx?=
+ =?utf-8?B?ajg2bUVsMGxpb0xTWEJwMy9aaUlmanpIc1FxbjVtczg2UmhzVFBPaEZNR0JQ?=
+ =?utf-8?B?ZzZOYkVPZmpmWkFOLzlMZzBUYWZNSEVWdEJLcUF5eWM2blJDRnJXeS9zNk5M?=
+ =?utf-8?B?aThhOWN3SXhjZ2l5emx5QnNWb3JLQklCemVWd2VpSk1KTWtRdTEvSXhJVitY?=
+ =?utf-8?B?R3FWcGllbWE1VWZCS2lodHJlVG1HSVlCQXdiRG80ZldYVzc2S1FZSlEzTTVE?=
+ =?utf-8?B?OWQ0MURWbEd2TnBFbWRxVEk3MDdTL2FYY081dGU3MzU2N2JDUGhVUk8vVnFE?=
+ =?utf-8?B?ZE5uVU4wWFU3UjZmbysxVmxKNzZmdS9GLzA3dVp1SlVBOXZ0OU5wSDFIMm5C?=
+ =?utf-8?B?Nm5sM00vODFKbGYwY3ZnYlJsMlVwNEZ5RlFoKzY0SHR2UHl6aUV2VHVrbVVM?=
+ =?utf-8?B?V01idkoydGdrbEN2ZVJ6T0NiTkZTYWk1OVpld1U4YzNMc2RHZGFIRVlKaEpT?=
+ =?utf-8?B?L1pLTk9KT1BUa0dmNThjd0tRdmJpTjZuUjNhRnBTakQxcmU0eVoxZVV6Kzdu?=
+ =?utf-8?B?a3JveHExZ1FhM3JSTGpjakhBaU5lZEp6amUxQmdkdlFIRW4zOVZZRStiQXlO?=
+ =?utf-8?B?d1hEbGErcFFTbEVjUngycnN4Y2kyNzNQWHJYUUk5ZmlhY3dvK1J0UlFIRk1B?=
+ =?utf-8?B?MG1Uak11N0VaL2xubEFZWkIybzVQMWNKcForWjVwdkszUll6MTIxTnlyZTEz?=
+ =?utf-8?B?Y3phTkt3dWxaTFdaUFM2WWRsbnRIdTdyZFprOUVEQVhIbTd4SDhiVWlrYy9D?=
+ =?utf-8?B?Vm9tcHV6Z1pRa1A2Snk5RXl6M2ZoSTAvSDM5V1kvQVlVVmFUeEV2bG9GbExZ?=
+ =?utf-8?B?TUp5VEpVWUMwT004T3V1RERJNXpvTUtqOHBBaWxMaDNHS0VWV04yZDVyUG93?=
+ =?utf-8?B?bjJUbDRMRlpLRUNjL1ZEczA4aGdNYlJ6MjFWbHhNSUx3Y3RrTmUwWURuTmxp?=
+ =?utf-8?B?bDEyUjR3NzQxdFdpaWk2OGd5VjBNTThHU3g2RUFVd2NhcVBzTEFkYXU4RmRp?=
+ =?utf-8?B?b1R6cUlEK1gvR3RrS08zemtHODhpeTVOSFY2cTBZc2FLOEdOOEV6T21mNFk1?=
+ =?utf-8?B?UzRFNWlRTVNRdTBBNVRkS2orVDQ1VnBBTG52Si8xK2RTemxDOHlySW5uTFJ3?=
+ =?utf-8?B?a0VyQm5mTTNhbnZMRmxLM0FLRWRTRUR0TnBPYlhHWU40Z1pHSnVxTWNvZTdC?=
+ =?utf-8?B?eUpjMG5mQ0dYL3lIRjhQZVZTbWdJWDQ0TURTYXh3MG1pNFFiOE9saXZ6cFhI?=
+ =?utf-8?B?ekFPOGdtbTkvRzA2bitSUWwyOUlodDZGdkJEa0krT0E0OTQ3VzV4T2N4SkdP?=
+ =?utf-8?B?TDJLUDdUM3lneFpTbVVUeE5nUzBZeldlVVdnSk54QzQ3TWdmWGpoMkZOaERI?=
+ =?utf-8?B?WVdrSkpRcHVlbm9iWGpQV2IzMmtSNVg3QUlPWVYwUExBR0IwdTQ4cHRsN3Vj?=
+ =?utf-8?B?U3B6T1RkYjhsdElaMURnL3lFNHMwamhoZGUvbWltb1BWVmxDQ2ZGTmhkQmhN?=
+ =?utf-8?B?ZzFBb05CYXBaRXU5eHJQLy9aRTlKdXJqMG43UFZPRlJ6L0U2TzZSd1JCTXh6?=
+ =?utf-8?B?Wk1CMU5QN1ZUUVIvZW5sM2dIb0lQMC9IV1I2aDBSdDJyd1hvMFNsdHBRYWxi?=
+ =?utf-8?B?c1pISDY1T1ZkOFYrODkyUFEvZEN4a3hTaFZMa3R1OUxiZ2hTQ3FBd09vUlpM?=
+ =?utf-8?B?Z29pNFpRS3d5UjZ4aWNRS2VyYmpKUVh0clJaZllScVpLV0pvTzN0Y1F1emZp?=
+ =?utf-8?B?OHRFUmJyUlBzSUFMVHNpYzNiMWdhRlBnWnJjbTNCNkdESnZuSGN2c2lVT0E4?=
+ =?utf-8?B?UzYrSFBVcFd1Y2FjZTdtdUg3VGRNb0s5U01NNjJoVU1rbzlyQXcrNHA2dUZY?=
+ =?utf-8?B?TVhWaUFKbFBXRWhrYTBJSFJnek1GV0RzdUxaT3ErOWZxcGptMkRVWmlnWW9a?=
+ =?utf-8?B?ajJDT2xPWU11RGRFTStHUXhLNWJzWGs4VzBPcS9nMk81bHQyNlhOZ3d1SVJh?=
+ =?utf-8?B?VzRnZThZbnQ4VlZZT0NOc0x2dmprcWlpOG9pTWQwS0ltTGh0Y0RESDdmaU5P?=
+ =?utf-8?B?eWc9PQ==?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	vNJHv8h7hxQqUtiqu9wTnrhit1xpllpXTLg+jH1lyo0TCoHapzgTndJ/wrvpugQdWRfZ6b2ccxlhWSiRXlLDJcUqw0p50IVl2gO97uxf8W9ECEs/1JhP/gDJENDTbKfh8sWX0ps6TZIyIZY2HLb9m0easw+VF6v4vSX6pDpOB0lGA0C3HEcXoFPpbm8sV8jq/rrEOETK8oNxkH20H5BOYKhYh4/JOUa2fgbBjSe+OqEKhKR8UtYeaPDFxwloCWwxuypZJRvU+Bp54pWsKoCmbJJY3wT3hRr6Mq6KT9pOwnGjR0XKekdt1GGsSrPSPCDXhd9nOwyIJ7RbD+glh1yk0Gp/TYp8WNQKiRZEIpuYmnOJKj0FkhtaSNbTs5lK//O3dGFeDrF2gZ77GKphGU0ncLHJ3RfiSSxu5FnWfGh+UPaOJarw+qrKXQ4TVocY2BOGwJhfcNWzUagbYKBhyJT2036xABOuLmQRsZFMwmKe/xwpLl0Oz07oO+Jjv5i3Vi0RiJYVkq0NVhbCclnnwBO5wlUjr7rXcM3XWZGw1hbQfU6dvN0aH3w35z7SyJrbpbOrIt3YWn8U6v8Dl3+V0pFQV60lQWcZuIfjb1fTXNVap4M=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: eed45814-d201-442a-2cd0-08ddf5e3043d
+X-MS-Exchange-CrossTenant-AuthSource: MN2PR10MB4320.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 17 Sep 2025 12:09:13.7667
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: njarTpKiyS/Go2j2iakLfqN7kz4x9s0VBNLIL5XijOTkcMbF4UCIkQHF8VRpSfq/9Szh2DBfkKyihjgqkZmWuQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SN4PR10MB5576
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-17_01,2025-09-17_02,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0 phishscore=0
+ bulkscore=0 mlxscore=0 suspectscore=0 mlxlogscore=999 adultscore=0
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2508110000
+ definitions=main-2509170118
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX8iye+ishrz98
+ kGx5zhqbSopE/VRd08CU9H55gBYtHZErVllSXRYLz8w9kEg30RYapEQ8YfcdoGpinYFPlMf4GvQ
+ uJZ+p0gna2W2dC2xmkJR+ZGvAag/LsSoSz+J1YUhIxrERGrVwKBzWVe64iHzkJT37niqpe6rF2Z
+ Niqunfl/V7HdUoQzcnDEbq861+QMKU+04qHtXcy9fjfQQ/E4Ush9W/vVpbLOSQq9/o6rygLKWJe
+ 5XjwnJyLcoDbB8UnGRzz3LpLRYRXQRpeHQApcoPih9NI9pU+nrlvsrL8k/dxy0kB2g3+ns/AFhx
+ G3/MMfW0ZER3IGtAH+w8vdE7gtjEKv0zp5ht5kLE0IWJOZwN9qoqiZl8fg7fXl3uwEsaIPdFfH4
+ NTooviku
+X-Authority-Analysis: v=2.4 cv=X5RSKHTe c=1 sm=1 tr=0 ts=68caa4ed cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=wKuvFiaSGQ0qltdbU6+NXLB8nM8=:19
+ a=Ol13hO9ccFRV9qXi2t6ftBPywas=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
+ a=yJojWOMRYYMA:10 a=GoEa3M9JfhUA:10 a=N54-gffFAAAA:8 a=yPCof4ZbAAAA:8
+ a=WkX6UQAgNGhJ3wlZ18sA:9 a=QEXdDO2ut3YA:10
+X-Proofpoint-GUID: ltFNwz3zIOnQNRcMrJKZijQzsB_fkzVL
+X-Proofpoint-ORIG-GUID: ltFNwz3zIOnQNRcMrJKZijQzsB_fkzVL
 
+On 12/09/2025 19:21, Bart Van Assche wrote:
+> Make sure that the code for allocating a pseudo SCSI device gets triggered
+> while running blktests.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> ---
+>   drivers/scsi/scsi_debug.c | 14 ++++++++++++++
+>   1 file changed, 14 insertions(+)
+> 
+> diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> index 2a8638937d23..3f7884025d19 100644
+> --- a/drivers/scsi/scsi_debug.c
+> +++ b/drivers/scsi/scsi_debug.c
+> @@ -9197,6 +9197,19 @@ static int sdebug_fail_cmd(struct scsi_cmnd *cmnd, int *retval,
+>   	return ret;
+>   }
+>   
+> +/*
 
---Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain;
-	charset=us-ascii
+Hi Bart,
 
-Hi Slava and Sean,
+Could you consider integrating the following patch into this series? I 
+think maybe some ideas can be applied to the UFS driver. I made this 
+change on top of your series. My motivation is that I would like to be 
+able to test reserved commands handling.
 
-Thank you for the valuable feedback!
+Thanks.
 
-CEPH FORMAL PATCH:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+-------8<------
 
-As requested by Slava, I've prepared a formal patch for the Ceph case.
-The patch adds proper zero checking before __builtin_clz() to prevent
-undefined behavior. Please find it attached as ceph_patch.patch.
+ From 67bff76aacaffcf8f22c634d5b8afaee8e705424 Mon Sep 17 00:00:00 2001
+From: John Garry <john.g.garry@oracle.com>
+Date: Wed, 17 Sep 2025 12:58:10 +0100
+Subject: [PATCH] scsi_debug: really handle reserved commands
 
-PROOF-OF-CONCEPT TEST CASE:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
-=3D
+Use the scsi reserved command handling for issuing aborts.
 
-I've also created a proof-of-concept test case that demonstrates the
-problematic input values that could trigger this bug. The test =
-identifies
-specific input values where (x & 0x1FFFF) becomes zero after the =
-increment
-and condition check.
+This allows developers without specific HW access to test reserved
+commands handling.
 
-Key findings from the test:
-- Inputs like 0x7FFFF, 0x9FFFF, 0xBFFFF, 0xDFFFF, 0xFFFFF can trigger =
-the bug
-- These correspond to x+1 values where (x+1 & 0x18000) =3D=3D 0 and (x+1 =
-& 0x1FFFF) =3D=3D 0
+In reality, the only thing which we are doing is changing the context
+in which we abort commands. But at least we are trying to emulate real
+HW handling for such a scenario.
 
-The test can be integrated into Ceph's existing test framework or =
-adapted
-for KUnit testing as you suggested. Please find it as ceph_poc_test.c.
+Other users of scsi_debug_abort_cmnd() can we switched over eventually.
 
-KVM CASE CLARIFICATION:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+Signed-off-by: John Garry <john.g.garry@oracle.com>
 
-Thank you Sean for the detailed explanation about the KVM case. You're
-absolutely right that pages and test_dirty_ring_count are guaranteed to
-be non-zero in practice. I'll remove this from my analysis and focus on
-the genuine issues.
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 3f7884025d19..1c5d0b012c65 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -6729,20 +6729,53 @@ static bool scsi_debug_stop_cmnd(struct 
+scsi_cmnd *cmnd)
+  	return false;
+  }
 
-BITOPS WRAPPER DISCUSSION:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=
++struct scsi_debug_abort_cmd {
++	u16 tag;
++	u16 hwq;
++};
++
++enum {
++	SCSI_DEBUG_ABORT_CMD,
++};
++
++struct scsi_debug_reserved_data {
++	unsigned int type;
++
++	union {
++		struct scsi_debug_abort_cmd abort_cmd;
++	};
++};
++
+  /*
+   * Called from scsi_debug_abort() only, which is for timed-out cmd.
+   */
+  static bool scsi_debug_abort_cmnd(struct scsi_cmnd *cmnd)
+  {
+-	struct sdebug_scsi_cmd *sdsc = scsi_cmd_priv(cmnd);
+-	unsigned long flags;
+-	bool res;
++	struct request *rq = scsi_cmd_to_rq(cmnd);
++	u32 unique_tag = blk_mq_unique_tag(rq);
++	u16 hwq = blk_mq_unique_tag_to_hwq(unique_tag);
++	u16 tag = blk_mq_unique_tag_to_tag(unique_tag);
++	struct scsi_device *sdev = cmnd->device;
++	struct Scsi_Host *shost = sdev->host;
++	int err;
++	struct scsi_exec_args args = {
++		.req_flags = BLK_MQ_REQ_RESERVED | BLK_MQ_REQ_NOWAIT,
++	};
++	struct scsi_debug_reserved_data data = {
++		.type = SCSI_DEBUG_ABORT_CMD,
++		.abort_cmd = {
++			.tag = tag,
++			.hwq = hwq,
++		},
++	};
 
+-	spin_lock_irqsave(&sdsc->lock, flags);
+-	res = scsi_debug_stop_cmnd(cmnd);
+-	spin_unlock_irqrestore(&sdsc->lock, flags);
++	err = scsi_execute_cmd(shost->pseudo_sdev, NULL, REQ_OP_DRV_OUT,
++			&data, sizeof(data), 3000, 0, &args);
 
-I appreciate you bringing Yuri into the discussion. The idea of using
-existing fls()/fls64() functions or creating new fls8()/fls16() variants
-sounds promising. Many __builtin_clz() calls in the kernel could indeed
-benefit from these safer alternatives.
+-	return res;
++	if (err)
++		return false;
++	return true;
+  }
 
-STATUS UPDATE:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
+  /*
+@@ -9197,14 +9230,41 @@ static int sdebug_fail_cmd(struct scsi_cmnd 
+*cmnd, int *retval,
+  	return ret;
+  }
 
-1. Ceph: Formal patch and test case ready for review
-2. KVM: Confirmed not an issue in practice (thanks Sean)
-3. SCSI: Still investigating the drivers/scsi/elx/libefc_sli/sli4.h case
-4. Bitops: Awaiting input from Yuri on kernel-wide improvements
+-/*
+- * The only purpose of this function is to make the SCSI core allocate a
+- * pseudo SCSI device.
+- */
+  static int scsi_debug_queue_reserved_command(struct Scsi_Host *shost,
+  					     struct scsi_cmnd *scp)
+  {
+-	WARN_ON_ONCE(true);
++	struct request *rq = scsi_cmd_to_rq(scp);
++	struct scsi_debug_reserved_data *data = bio_data(rq->bio);
++
++	switch (data->type) {
++	case SCSI_DEBUG_ABORT_CMD:
++		struct scsi_debug_abort_cmd *abort_cmd = &data->abort_cmd;
++		struct blk_mq_tag_set *tag_set = &shost->tag_set;
++		unsigned int tag = abort_cmd->tag;
++		unsigned int hwq = abort_cmd->hwq;
++		struct scsi_cmnd *abort_scmd;
++		struct sdebug_scsi_cmd *sdsc;
++		struct request *abort_rq;
++		struct blk_mq_tags *tags;
++		unsigned long flags;
++		bool res;
++
++		tags = tag_set->tags[hwq];
++		abort_rq = blk_mq_tag_to_rq(tags, tag);
++		abort_scmd = blk_mq_rq_to_pdu(abort_rq);
++		sdsc = scsi_cmd_priv(abort_scmd);
++		spin_lock_irqsave(&sdsc->lock, flags);
++		res = scsi_debug_stop_cmnd(abort_scmd);
++		spin_unlock_irqrestore(&sdsc->lock, flags);
++		if (res == true) {
++			scp->result = DID_OK << 16;
++			scsi_done(scp);
++			return 0;
++		}
++		fallthrough;
++		default:
++	}
++
+  	scp->result = DID_ERROR << 16;
+  	scsi_done(scp);
+  	return 0;
+@@ -9451,6 +9511,7 @@ static const struct scsi_host_template 
+sdebug_driver_template = {
+  	.init_cmd_priv = sdebug_init_cmd_priv,
+  	.target_alloc =		sdebug_target_alloc,
+  	.target_destroy =	sdebug_target_destroy,
++	.nr_reserved_cmds =	1,
+  };
 
-NEXT STEPS:
-=3D=3D=3D=3D=3D=3D=3D=3D=3D=3D
-
-1. Please review the Ceph patch and test case (Slava)
-2. Happy to work with Yuri on bitops improvements if there's interest
-3. For SCSI maintainers: would you like me to prepare a similar analysis =
-for the sli_convert_mask_to_count() function?
-4. Can prepare additional patches for any other confirmed cases
-
-Questions for maintainers:
-- Slava: Should the Ceph patch go through ceph-devel first, or directly =
-to you?
-- Any specific requirements for the test case integration?
-- SCSI maintainers: Is the drivers/scsi/elx/libefc_sli/sli4.h case worth =
-investigating further?
-
-Best regards,
-Huazhao Chen
-lyican53@gmail.com
-
----
-
-Attachments:
-- ceph_patch.patch: Formal patch for net/ceph/crush/mapper.c
-- ceph_poc_test.c: Proof-of-concept test case demonstrating the issue
-
---Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2
-Content-Disposition: attachment;
-	filename=ceph_poc_test.c
-Content-Type: application/octet-stream;
-	x-unix-mode=0644;
-	name="ceph_poc_test.c"
-Content-Transfer-Encoding: quoted-printable
-
-/*=0A=20*=20Proof-of-concept=20test=20case=20for=20Ceph=20CRUSH=20mapper=20=
-GCC=20101175=20bug=0A=20*=20=0A=20*=20This=20test=20demonstrates=20the=20=
-potential=20undefined=20behavior=20in=20crush_ln()=0A=20*=20when=20=
-__builtin_clz()=20is=20called=20with=20zero=20argument.=0A=20*=20=0A=20*=20=
-Can=20be=20integrated=20into=20existing=20Ceph=20unit=20test=20framework=20=
-or=20adapted=0A=20*=20for=20KUnit=20testing=20as=20suggested=20by=20=
-Slava.=0A=20*/=0A=0A#include=20<stdio.h>=0A#include=20<stdint.h>=0A=
-#include=20<assert.h>=0A=0A/*=20Simplified=20version=20of=20the=20=
-problematic=20crush_ln=20function=20*/=0Astatic=20uint64_t=20=
-crush_ln_original(unsigned=20int=20xin)=0A{=0A=20=20=20=20unsigned=20int=20=
-x=20=3D=20xin;=0A=20=20=20=20int=20iexpon=20=3D=2015;=0A=20=20=20=20=0A=20=
-=20=20=20x++;=0A=20=20=20=20=0A=20=20=20=20/*=20This=20is=20where=20the=20=
-bug=20can=20occur=20*/=0A=20=20=20=20if=20(!(x=20&=200x18000))=20{=0A=20=20=
-=20=20=20=20=20=20/*=20PROBLEMATIC:=20no=20zero=20check=20before=20=
-__builtin_clz=20*/=0A=20=20=20=20=20=20=20=20int=20bits=20=3D=20=
-__builtin_clz(x=20&=200x1FFFF)=20-=2016;=0A=20=20=20=20=20=20=20=20x=20=
-<<=3D=20bits;=0A=20=20=20=20=20=20=20=20iexpon=20=3D=2015=20-=20bits;=0A=20=
-=20=20=20}=0A=20=20=20=20=0A=20=20=20=20return=20(uint64_t)x=20|=20=
-((uint64_t)iexpon=20<<=2032);=0A}=0A=0A/*=20Fixed=20version=20with=20=
-zero=20check=20*/=0Astatic=20uint64_t=20crush_ln_fixed(unsigned=20int=20=
-xin)=0A{=0A=20=20=20=20unsigned=20int=20x=20=3D=20xin;=0A=20=20=20=20int=20=
-iexpon=20=3D=2015;=0A=20=20=20=20=0A=20=20=20=20x++;=0A=20=20=20=20=0A=20=
-=20=20=20if=20(!(x=20&=200x18000))=20{=0A=20=20=20=20=20=20=20=20=
-uint32_t=20masked=20=3D=20x=20&=200x1FFFF;=0A=20=20=20=20=20=20=20=20/*=20=
-FIXED:=20add=20zero=20check=20*/=0A=20=20=20=20=20=20=20=20int=20bits=20=
-=3D=20masked=20?=20__builtin_clz(masked)=20-=2016=20:=2016;=0A=20=20=20=20=
-=20=20=20=20x=20<<=3D=20bits;=0A=20=20=20=20=20=20=20=20iexpon=20=3D=20=
-15=20-=20bits;=0A=20=20=20=20}=0A=20=20=20=20=0A=20=20=20=20return=20=
-(uint64_t)x=20|=20((uint64_t)iexpon=20<<=2032);=0A}=0A=0A/*=20Test=20=
-function=20to=20find=20problematic=20input=20values=20*/=0Avoid=20=
-test_crush_ln_edge_cases(void)=0A{=0A=20=20=20=20printf("=3D=3D=3D=20=
-Ceph=20CRUSH=20Mapper=20GCC=20101175=20Bug=20Test=20=3D=3D=3D\n\n");=0A=20=
-=20=20=20=0A=20=20=20=20/*=20Test=20values=20that=20could=20trigger=20=
-the=20bug=20*/=0A=20=20=20=20unsigned=20int=20problematic_inputs[]=20=3D=20=
-{=0A=20=20=20=20=20=20=20=200x17FFF,=20=20=20=20/*=20x+1=20=3D=20=
-0x18000,=20(x+1=20&=200x18000)=20=3D=200x18000=20-=20not=20triggered=20=
-*/=0A=20=20=20=20=20=20=20=200x7FFF,=20=20=20=20=20/*=20x+1=20=3D=20=
-0x8000,=20=20(x+1=20&=200x18000)=20=3D=200=20and=20(x+1=20&=200x1FFFF)=20=
-=3D=200x8000=20-=20safe=20*/=0A=20=20=20=20=20=20=20=200xFFFF,=20=20=20=20=
-=20/*=20x+1=20=3D=200x10000,=20(x+1=20&=200x18000)=20=3D=200=20and=20=
-(x+1=20&=200x1FFFF)=20=3D=200x10000=20-=20safe=20*/=0A=20=20=20=20=20=20=20=
-=200x7FFFF,=20=20=20=20/*=20x+1=20=3D=200x80000,=20(x+1=20&=200x18000)=20=
-=3D=200=20and=20(x+1=20&=200x1FFFF)=20=3D=200=20-=20PROBLEMATIC!=20*/=0A=20=
-=20=20=20=20=20=20=200x9FFFF,=20=20=20=20/*=20x+1=20=3D=200xA0000,=20=
-(x+1=20&=200x18000)=20=3D=200=20and=20(x+1=20&=200x1FFFF)=20=3D=200=20-=20=
-PROBLEMATIC!=20*/=0A=20=20=20=20=20=20=20=200xBFFFF,=20=20=20=20/*=20x+1=20=
-=3D=200xC0000,=20(x+1=20&=200x18000)=20=3D=200=20and=20(x+1=20&=20=
-0x1FFFF)=20=3D=200=20-=20PROBLEMATIC!=20*/=0A=20=20=20=20=20=20=20=20=
-0xDFFFF,=20=20=20=20/*=20x+1=20=3D=200xE0000,=20(x+1=20&=200x18000)=20=3D=20=
-0=20and=20(x+1=20&=200x1FFFF)=20=3D=200=20-=20PROBLEMATIC!=20*/=0A=20=20=20=
-=20=20=20=20=200xFFFFF,=20=20=20=20/*=20x+1=20=3D=200x100000,=20(x+1=20&=20=
-0x18000)=20=3D=200=20and=20(x+1=20&=200x1FFFF)=20=3D=200=20-=20=
-PROBLEMATIC!=20*/=0A=20=20=20=20};=0A=20=20=20=20=0A=20=20=20=20int=20=
-num_tests=20=3D=20sizeof(problematic_inputs)=20/=20=
-sizeof(problematic_inputs[0]);=0A=20=20=20=20int=20bugs_found=20=3D=200;=0A=
-=20=20=20=20=0A=20=20=20=20printf("Testing=20%d=20potentially=20=
-problematic=20input=20values:\n\n",=20num_tests);=0A=20=20=20=20=
-printf("Input=20=20=20=20|=20x+1=20=20=20=20=20=20|=20Condition=20Check=20=
-|=20Masked=20Value=20|=20Status\n");=0A=20=20=20=20=
-printf("---------|----------|-----------------|--------------|--------\n")=
-;=0A=20=20=20=20=0A=20=20=20=20for=20(int=20i=20=3D=200;=20i=20<=20=
-num_tests;=20i++)=20{=0A=20=20=20=20=20=20=20=20unsigned=20int=20input=20=
-=3D=20problematic_inputs[i];=0A=20=20=20=20=20=20=20=20unsigned=20int=20=
-x=20=3D=20input=20+=201;=0A=20=20=20=20=20=20=20=20bool=20condition_met=20=
-=3D=20!(x=20&=200x18000);=0A=20=20=20=20=20=20=20=20unsigned=20int=20=
-masked=20=3D=20x=20&=200x1FFFF;=0A=20=20=20=20=20=20=20=20=0A=20=20=20=20=
-=20=20=20=20printf("0x%06X=20|=200x%06X=20|=20%-15s=20|=200x%05X=20=20=20=
-=20|=20",=20=0A=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20input,=20x,=20=
-=0A=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20condition_met=20?=20=
-"TRUE"=20:=20"FALSE",=20=0A=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20=
-masked);=0A=20=20=20=20=20=20=20=20=0A=20=20=20=20=20=20=20=20if=20=
-(condition_met=20&&=20masked=20=3D=3D=200)=20{=0A=20=20=20=20=20=20=20=20=
-=20=20=20=20printf("BUG!=20Zero=20passed=20to=20__builtin_clz\n");=0A=20=20=
-=20=20=20=20=20=20=20=20=20=20bugs_found++;=0A=20=20=20=20=20=20=20=20}=20=
-else=20if=20(condition_met)=20{=0A=20=20=20=20=20=20=20=20=20=20=20=20=
-printf("Safe=20(non-zero=20argument)\n");=0A=20=20=20=20=20=20=20=20}=20=
-else=20{=0A=20=20=20=20=20=20=20=20=20=20=20=20printf("Condition=20not=20=
-met=20(safe)\n");=0A=20=20=20=20=20=20=20=20}=0A=20=20=20=20}=0A=20=20=20=
-=20=0A=20=20=20=20printf("\n=3D=3D=3D=20Summary=20=3D=3D=3D\n");=0A=20=20=
-=20=20printf("Total=20tests:=20%d\n",=20num_tests);=0A=20=20=20=20=
-printf("Potential=20bugs=20found:=20%d\n",=20bugs_found);=0A=20=20=20=20=0A=
-=20=20=20=20if=20(bugs_found=20>=200)=20{=0A=20=20=20=20=20=20=20=20=
-printf("\n=E2=9A=A0=EF=B8=8F=20=20WARNING:=20Found=20inputs=20that=20=
-could=20trigger=20undefined=20behavior!\n");=0A=20=20=20=20=20=20=20=20=
-printf("These=20inputs=20cause=20__builtin_clz(0)=20to=20be=20called,=20=
-which=20has\n");=0A=20=20=20=20=20=20=20=20printf("undefined=20behavior=20=
-when=20compiled=20with=20GCC=2011.1.0=20-march=3Dx86-64-v3=20-O1\n");=0A=20=
-=20=20=20}=20else=20{=0A=20=20=20=20=20=20=20=20printf("\n=E2=9C=85=20No=20=
-obvious=20problematic=20inputs=20found=20in=20this=20test=20set.\n");=0A=20=
-=20=20=20}=0A=20=20=20=20=0A=20=20=20=20/*=20Test=20that=20fixed=20=
-version=20handles=20problematic=20cases=20*/=0A=20=20=20=20if=20=
-(bugs_found=20>=200)=20{=0A=20=20=20=20=20=20=20=20printf("\n=3D=3D=3D=20=
-Testing=20Fixed=20Version=20=3D=3D=3D\n");=0A=20=20=20=20=20=20=20=20for=20=
-(int=20i=20=3D=200;=20i=20<=20num_tests;=20i++)=20{=0A=20=20=20=20=20=20=20=
-=20=20=20=20=20unsigned=20int=20input=20=3D=20problematic_inputs[i];=0A=20=
-=20=20=20=20=20=20=20=20=20=20=20unsigned=20int=20x=20=3D=20input=20+=20=
-1;=0A=20=20=20=20=20=20=20=20=20=20=20=20if=20(!(x=20&=200x18000)=20&&=20=
-(x=20&=200x1FFFF)=20=3D=3D=200)=20{=0A=20=20=20=20=20=20=20=20=20=20=20=20=
-=20=20=20=20uint64_t=20result=20=3D=20crush_ln_fixed(input);=0A=20=20=20=20=
-=20=20=20=20=20=20=20=20=20=20=20=20printf("Fixed=20version=20handles=20=
-input=200x%06X=20->=20result=200x%016lX\n",=20=0A=20=20=20=20=20=20=20=20=
-=20=20=20=20=20=20=20=20=20=20=20=20=20=20=20input,=20result);=0A=20=20=20=
-=20=20=20=20=20=20=20=20=20}=0A=20=20=20=20=20=20=20=20}=0A=20=20=20=20}=0A=
-}=0A=0Aint=20main(void)=0A{=0A=20=20=20=20printf("NOTE:=20This=20is=20a=20=
-proof-of-concept=20test=20case=20to=20demonstrate\n");=0A=20=20=20=20=
-printf("=20=20=20=20=20=20the=20potential=20GCC=20101175=20bug=20in=20=
-Ceph's=20crush_ln().\n");=0A=20=20=20=20printf("=20=20=20=20=20=20=
-Maintainers=20can=20compile=20and=20run=20this=20to=20verify=20the=20=
-issue.\n\n");=0A=20=20=20=20=0A=20=20=20=20test_crush_ln_edge_cases();=0A=
-=20=20=20=20=0A=20=20=20=20printf("\n=3D=3D=3D=20Compilation=20Test=20=
-=3D=3D=3D\n");=0A=20=20=20=20printf("To=20reproduce=20the=20GCC=20bug,=20=
-compile=20with:\n");=0A=20=20=20=20printf("gcc=20-march=3Dx86-64-v3=20=
--O1=20-S=20-o=20test_crush.s=20ceph_poc_test.c\n");=0A=20=20=20=20=
-printf("Then=20examine=20the=20assembly=20for=20BSR=20instructions=20=
-without=20zero=20checks.\n");=0A=20=20=20=20=0A=20=20=20=20return=200;=0A=
-}=0A=0A/*=0A=20*=20Expected=20problematic=20assembly=20with=20GCC=20=
-11.1.0=20-march=3Dx86-64-v3=20-O1:=0A=20*=20=0A=20*=20In=20=
-crush_ln_original,=20you=20might=20see:=0A=20*=20=20=20=20=20bsr=20eax,=20=
-[masked_value]=20=20=20=20#=20<--=20UNDEFINED=20if=20masked_value=20is=20=
-0=0A=20*=20=20=20=20=20=0A=20*=20While=20crush_ln_fixed=20should=20=
-generate=20proper=20conditional=20logic=20or=20use=20LZCNT.=0A=20*=20=0A=20=
-*=20Integration=20suggestions=20for=20Ceph:=0A=20*=201.=20Add=20this=20=
-as=20a=20KUnit=20test=20in=20net/ceph/=0A=20*=202.=20Include=20in=20=
-existing=20Ceph=20test=20suite=0A=20*=203.=20Add=20to=20crush=20unit=20=
-tests=0A=20*/=0A=
-
---Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2
-Content-Disposition: attachment;
-	filename=ceph_patch.patch
-Content-Type: application/octet-stream;
-	x-unix-mode=0644;
-	name="ceph_patch.patch"
-Content-Transfer-Encoding: 7bit
-
-From: Huazhao Chen <lyican53@gmail.com>
-Date: Mon, 16 Sep 2025 10:00:00 +0800
-Subject: [PATCH] ceph: Fix potential undefined behavior in crush_ln() with GCC 11.1.0
-
-When compiled with GCC 11.1.0 and -march=x86-64-v3 -O1 optimization flags,
-__builtin_clz() may generate BSR instructions without proper zero handling.
-The BSR instruction has undefined behavior when the source operand is zero,
-which could occur when (x & 0x1FFFF) equals 0 in the crush_ln() function.
-
-This issue is documented in GCC bug 101175:
-https://gcc.gnu.org/bugzilla/show_bug.cgi?id=101175
-
-The problematic code path occurs in crush_ln() when:
-- x is incremented from xin
-- (x & 0x18000) == 0 (condition for the optimization)  
-- (x & 0x1FFFF) == 0 (zero argument to __builtin_clz)
-
-Add a zero check before calling __builtin_clz() to ensure defined behavior
-across all GCC versions and optimization levels.
-
-Signed-off-by: Huazhao Chen <lyican53@gmail.com>
----
- net/ceph/crush/mapper.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
-
-diff --git a/net/ceph/crush/mapper.c b/net/ceph/crush/mapper.c
-index 1234567..abcdef0 100644
---- a/net/ceph/crush/mapper.c
-+++ b/net/ceph/crush/mapper.c
-@@ -262,7 +262,8 @@ static __u64 crush_ln(unsigned int xin)
- 	 * do it in one step instead of iteratively
- 	 */
- 	if (!(x & 0x18000)) {
--		int bits = __builtin_clz(x & 0x1FFFF) - 16;
-+		u32 masked = x & 0x1FFFF;
-+		int bits = masked ? __builtin_clz(masked) - 16 : 16;
- 		x <<= bits;
- 		iexpon = 15 - bits;
- 	}
+  static int sdebug_driver_probe(struct device *dev)
 -- 
-2.40.1
-
---Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2
-Content-Transfer-Encoding: 7bit
-Content-Type: text/plain;
-	charset=us-ascii
+2.43.0
 
 
 
-
---Apple-Mail=_4690181B-0FED-42CB-AB79-5BCD1270BAD2--
