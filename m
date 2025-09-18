@@ -1,128 +1,86 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f46.google.com (mail-yx1-f46.google.com [74.125.224.46])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B6F413B2A4;
-	Thu, 18 Sep 2025 21:01:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 08C1F286D70
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2025 23:24:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758229285; cv=none; b=l2cAHRMu9dFnSS6NGEqcii3hj0WOya0Y9aJtHZ1ROMgWvN+tKNqf8dYWSZi+3NsHtjB6md/0zlE6Mv+LBitXC4lL6TNJ8iFujMaX1Tr4O+rXNRd0tShNPwEYuGPtN6cyKM2efWXzByCx4+BGk3WwULMqoYYQO4oFJCah8oFPryQ=
+	t=1758237886; cv=none; b=bKx9iptY/QaMh5XulS5qYptlXcI77i57LfBchRPv/e7EndmdkxIFiuLK0+wh+Sn2eqcxc4HpSpXp169gUk+2mbmljRWa1MVTeGL0VY4FuRVRyf2BRgmtfp6QFMrBfou8IM3tsDNU8CGCYht1iUTTmysJUvTGvD3bb/Gli45meCI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758229285; c=relaxed/simple;
-	bh=3Fr5cTyASEnRYfVPbwcbcj3QYtupddmi9rlAva9j1/4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=CJLZ6DmacQ0pL1bjL0FnQi9SEFH9pDuWtw/HlOdTuupAQlyidSWXPQFqsCrkfFkoG8v1Pfqc+W83tZ8Z6Tx+5ElwX0TEDJlRvRpvtbIkkNPAzwv5Z8tZxRuXobeg1u2NkBCB6RhrCHdB1LWCNRo0wkm9/h6JHA0u11klDzQqi28=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=g3yzNnN5; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758237886; c=relaxed/simple;
+	bh=KJ6eDJFZIq1v7BWaE8E+JtTKTM/ntkeLT86o6EjF27g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=JnisWfFKvu6/QpWr9mu4QG9Nx4D8mxtCjfd7ZumoObV4vT6gl63ci6SwKqh8JoIYglsOt1g8AmUmDVHPvZnz4bj0ToKqJ1fODKGj6BH7MV4/qgzyFGkEf+GbYDpupOdr5BSn7qozbs0Szrwa9KcYKB2+YVkQnLrycwTFG0RlXCQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ZT4tzB/b; arc=none smtp.client-ip=74.125.224.46
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="g3yzNnN5"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0F198C4CEE7;
-	Thu, 18 Sep 2025 21:01:22 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758229285;
-	bh=3Fr5cTyASEnRYfVPbwcbcj3QYtupddmi9rlAva9j1/4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=g3yzNnN5lyv+G8ndwvOiP7abAJ2qbeVjngy19oeVEbaS1EPhdFX1+J8oc3SAL5KEm
-	 q/yc5zbrKD9ptopC5+nO2Ia3+pfOGv0JOnUwItX6FtYre0jYsAouU94zQhs1JXFKWR
-	 JHwnxpi16LkED3mC2xtbnibzEh5GOtYrph+SZEDR7E4lM5akqPD+v3Zr9uPz3YN2ih
-	 cOGydhOJCK7dvPeYWo2ZFrEY4lt5M10851MtxzDowX2mtlKB0VTzqHeBAU5+Szo+xY
-	 ke6VvHvyYFTVPuoPQ1Gt4IeQdtu/fR3MoKf06RPou2vO+A0+6siaNBrrOmW4Dmgmic
-	 9MCQWBmA2WHUw==
-Message-ID: <e36f6832-16e3-4aac-a1b9-02b51ab11e2a@kernel.org>
-Date: Thu, 18 Sep 2025 16:01:21 -0500
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ZT4tzB/b"
+Received: by mail-yx1-f46.google.com with SMTP id 956f58d0204a3-632e9c6b411so912207d50.2
+        for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2025 16:24:44 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1758237884; x=1758842684; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=CvsGel4kr99TW5YyyaaFZ7yb3mg4vfy3/AwN3gMDYlU=;
+        b=ZT4tzB/b0FXWbXbc4V5XpQR9izM6DXvrc5SrRLsUUX818wRaNDjqnk8kUUbIyKl7TB
+         JYxug4LTXl1GfvSE/b4kDPN+zeVsxWq4FcLcBhQHE7YZ34L3zrNeAy7qFxPcTHMP3LzE
+         8fEt9EhTUQOgk1iaRMeVq2ELT3lfxYDP0KZ/gL6lNxdETlTccUtZkbVkQ668a0ySxqJo
+         JCWcc1LLJH+IZuXvmGDK6uB4vn9iH8mVM2JWtJJLPf0+wBRdErOfpASUR5W9/8/8KS/9
+         9byX8FSKxsWamtC4RgI07jw8S0kjxV4CsVSCi4lhx3PDVvXMgmTV7K+SQhkvlrk+PruG
+         iLLw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758237884; x=1758842684;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=CvsGel4kr99TW5YyyaaFZ7yb3mg4vfy3/AwN3gMDYlU=;
+        b=T4MM/HjTyvWou+YoGL/XRquWiCKgkj78SePrfNV2q33W6vbuUctpzupZjy7+fmYV3S
+         l9dSMrZXRajBdvID8ntWvRHYvFed1Lrs7xdgkTQaGVR1joC0IUDOgcJ4XBoO/KFZX0L5
+         UkScTpGYIyp2TcubZ7q7uXua/no4P22HHRUYJUcrWlgBeC73s83E0Fb7Wy6nRDYXo1Ig
+         66izU6zzeCUY6DRSLY5i7GdUqNjcTMErcIF9/NhHxF5+GtE1C7OJo/aXtkWFUFrY7rrq
+         YfwqmRfeywWbF+5NKyC82MwBPbHaxNBJLkpI52eE3ETbMSJy0jjKV60nhFkYhOgmPJVd
+         78SQ==
+X-Forwarded-Encrypted: i=1; AJvYcCUY57g6TnrECQ8yA9q919CSCdn6dZvZO7xqTPXfLjafa3zrB2pbLkiAIVe3CjbFfIyvNja/Ia4s461o@vger.kernel.org
+X-Gm-Message-State: AOJu0YyiPpOAaZFzOyGVQZNX1PHLzGWK0ganW1C9OnhvL/4gEjFp0mqS
+	WpVi1r68u5Uf2gDenkX2uioMWhIEZTGwbe4YHZd6w7OzlvdAUkVwuoGCHdXvimQtJ7OIHIIRfeS
+	HF7bz9JDy7xYbOdYX1YEXY4uIg0BVY+M=
+X-Gm-Gg: ASbGncsYp0/r7tw9iVe1sBRVcz95UZoQRiDdj+JnKyVHEcFS/ZlHTNXC1lObxfhq6Dp
+	Qyfg8aSlWR3ox9r2VCmx0rshNBY68IJ8otJf7Wt4HBi6vPVCESiz7U3dRB+Favt9/DLY9T5vrQU
+	Mk4rYF5LkOJ4Y+txUwvbPyWG4afkUw18CFuGOVGRTCcft/GRn9Qhjkc2a1Xid1NYwTuxUipMym6
+	QAenUr0iyrJQFy65+4wfgSDs80=
+X-Google-Smtp-Source: AGHT+IGnlRT51Rt/EmIV+6PuLeofyi5CG17OdD1HpDWJozqBX1ywLiIjRWssfaPB3W3r+0+fH94losGcIjmTdT9C9/U=
+X-Received: by 2002:a05:690e:d50:b0:62e:35c:f4dd with SMTP id
+ 956f58d0204a3-6347f5a2ce8mr1145514d50.28.1758237883961; Thu, 18 Sep 2025
+ 16:24:43 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 4/4] USB: Pass PMSG_POWEROFF event to suspend_common()
-To: Bjorn Helgaas <helgaas@kernel.org>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
- Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
- Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>,
- Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>,
- =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>,
- "open list:HIBERNATION (aka Software Suspend, aka swsusp)"
- <linux-pm@vger.kernel.org>,
- "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
- "open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
- AceLan Kao <acelan.kao@canonical.com>, Kai-Heng Feng <kaihengf@nvidia.com>,
- Mark Pearson <mpearson-lenovo@squebb.ca>,
- =?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>,
- Eric Naim <dnaim@cachyos.org>, "Guilherme G . Piccoli" <gpiccoli@igalia.com>
-References: <20250918195509.GA1918371@bhelgaas>
-Content-Language: en-US
-From: "Mario Limonciello (AMD) (kernel.org)" <superm1@kernel.org>
-In-Reply-To: <20250918195509.GA1918371@bhelgaas>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20250917141806.661826-1-yury.norov@gmail.com>
+In-Reply-To: <20250917141806.661826-1-yury.norov@gmail.com>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Thu, 18 Sep 2025 16:24:30 -0700
+X-Gm-Features: AS18NWCx6-1PZIfOInuho6Ua4GZ5_d0gdGjoTSTVK59NruqS-sIn5SQORAc7xug
+Message-ID: <CABPRKS9mmUCig30yz4DE1JgAkS+NejeZwr74rd80F5actbS6_Q@mail.gmail.com>
+Subject: Re: [PATCH] scsi: lpfc: rework lpfc_sli4_fcf_rr_next_index_get()
+To: "Yury Norov (NVIDIA)" <yury.norov@gmail.com>
+Cc: James Smart <james.smart@broadcom.com>, Justin Tee <justin.tee@broadcom.com>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
 
-On 9/18/2025 2:55 PM, Bjorn Helgaas wrote:
-> On Wed, Sep 17, 2025 at 10:44:27PM -0500, Mario Limonciello (AMD) wrote:
->> suspend_common() passes the a PM message indicating what type of event
->> is occurring.  Add a new callback hcd_pci_poweroff() which will
->> determine if target state is power off and pass PMSG_POWEROFF as the
->> message.
-> 
-> Something is missing in "passes the a".
+Hi Yury,
 
-A wild 'a' appeared.
-> 
->> There are no functional changes in this patch.
-> 
-> Maybe so, but the .poweroff() path previously called
-> "suspend_common(dev, PMSG_SUSPEND)" and now may call
-> "suspend_common(dev, PMSG_POWEROFF)", so it's not completely obvious
-> that this is a functional no-op.
-> 
-> It seems sort of weird that apparently we can call .poweroff() for
-> either a "suspend" or a "power-off" event.
-> 
+> +                       if (phba->fcf.fcf_pri[next].fcf_rec.flag & LPFC_FCF_FLOGI_FAILED == 0) {
 
-It's actually either a hibernate or a power off event.  The nomenclature 
-can be a bit confusing.
+May we change this to?
+if (!(phba->fcf.fcf_pri[next].fcf_rec.flag & LPFC_FCF_FLOGI_FAILED)) {
 
-I'll add a comment to the top of the function to explain it.
+Thank you for noticing and implementing the rework.
 
-> Maybe it would be helpful to explain how we get to .poweroff() when
-> system_state is something other than SYSTEM_POWER_OFF, and what that
-> means?
-
-Well right now it's not a possible path, but per Rafael's guidance of 
-splitting the series into 3 parts across 3 cycles the path that leads 
-here won't exist for a while.  It was just plumbing.
-
-I'll adjust the commit message to allude to the future.
-
-> 
->> +static int hcd_pci_poweroff(struct device *dev)
->> +{
->> +	if (system_state == SYSTEM_POWER_OFF)
->> +		return suspend_common(dev, PMSG_POWEROFF);
->> +	return suspend_common(dev, PMSG_SUSPEND);
->> +}
->> +
->>   static int hcd_pci_suspend_noirq(struct device *dev)
->>   {
->>   	struct pci_dev		*pci_dev = to_pci_dev(dev);
->> @@ -602,6 +610,7 @@ static int hcd_pci_restore(struct device *dev)
->>   #define hcd_pci_suspend		NULL
->>   #define hcd_pci_freeze			NULL
->>   #define hcd_pci_suspend_noirq	NULL
->> +#define hcd_pci_poweroff	NULL
->>   #define hcd_pci_poweroff_late	NULL
->>   #define hcd_pci_resume_noirq	NULL
->>   #define hcd_pci_resume		NULL
->> @@ -639,7 +648,7 @@ const struct dev_pm_ops usb_hcd_pci_pm_ops = {
->>   	.freeze_noirq	= check_root_hub_suspended,
->>   	.thaw_noirq	= NULL,
->>   	.thaw		= hcd_pci_resume,
->> -	.poweroff	= hcd_pci_suspend,
->> +	.poweroff	= hcd_pci_poweroff,
->>   	.poweroff_late	= hcd_pci_poweroff_late,
->>   	.poweroff_noirq	= hcd_pci_suspend_noirq,
->>   	.restore_noirq	= hcd_pci_resume_noirq,
->> -- 
->> 2.51.0
->>
-
+Regards,
+Justin Tee
