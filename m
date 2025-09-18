@@ -1,96 +1,110 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83DAB26B76A
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2025 19:49:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A2E3264A72;
+	Thu, 18 Sep 2025 19:55:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758224982; cv=none; b=fzD52XlhdiJcwS29byBgDIEFpZrN3T6+UhjtZxgNudX7RaGwJ385K8lNEhfLKlhCByRjrdVLt1zu/ukFEj2zSOPeAIq096uPyxwO0qo8GM3IHpkpryzC3lWAjfxD7DNGQJf10MOETEPYFTsAB9kxObUcliM7gxQlyUbxN6Lx/2g=
+	t=1758225311; cv=none; b=V9Ba8dk4cF596kZ4uz+Fr624ormuf0ztB/cAkp/6wlCtJnF1EV5+Nz+22viiY+mHVCim23RbtURCFmjwGuu6HMePxNkNutbc7nthCJYctBdjdVQpsBhGs8NivsIdzpwuB9KMGL0QP4x07T/sjuGgsn95mfQBIzn098cL8xaC/78=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758224982; c=relaxed/simple;
-	bh=Q4O/zomWpCJiftu8/CiLmHfkekoI9/OjAvD3qJc44rM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=iw4LfuVYsbsPOEM0lW/sJFDX+LZrrOrDx6HwfeIrpUbGl10QSwjER5OuPtkrXdVGwGf4Sll6wC/MjEKtTlvCONLBLWhS/OaaXzY7UMD+C/rkZ/IMk44DkxHkOpoYzBia43mRyYE7zcq/d4EN8xEGHBOODl8hUKbGaLW1EIqGSJo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=bO9hdemg; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1758225311; c=relaxed/simple;
+	bh=0XjeHWc7Ujz6cslBYlKoJ6z/2iHTu3+LdywlTfZMjcA=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=iDN86s+fNRrHmkgPEHgC9C2pse94eNX78XhLMi+dOx3ULgdpaUy4rqGFeDEzFoIr5+Tz4k/X5oYSQ1akqjttWZFMltk8Optcpr2RNDoybj/qTwIm/GK7msdV12O80QJ5QF11l57L15gyU23hVcr5so/BbNySoFj/JNuFqh9Sahs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=poWkNhV9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="bO9hdemg"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cSR6q446Jzm1743;
-	Thu, 18 Sep 2025 19:49:39 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758224978; x=1760816979; bh=DQKgHy35E8PZSKdW3AlsTwvK
-	wRgGk78f+mbYBNhNMwE=; b=bO9hdemgYB51W7xq7TpCHhCFTnDYjRxyr8S8VXad
-	40aBQPh4PBPFA5NyN0QiI7bW6yE+q1GGQPROGisJsC8gROkrAmbfUnzuIFocIZec
-	4bmlw8acFvMAEIiaB64YGRYig14agWdqS+dI8Y7F0N3HQtzha2ySCiAlaQCGkHDw
-	ymyhIzSoOasQNkgiGMC4ByKUKJueD7gvZ1l6qVDC/yxZmaE3i1Wv4BE1wTt5DMcF
-	3/EWmu6JtHBki/1IuNb9FJ+GDFEvnULToVeAHDsR9UDooxq61mND1oMe+b5moRtX
-	Az2mxMsgfqRdiVycaWuFWDyZLo+R4jTHTJfNeb+C0dwuJQ==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id BvKSCBNqWV_m; Thu, 18 Sep 2025 19:49:38 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cSR6k3jdRzm0yVQ;
-	Thu, 18 Sep 2025 19:49:33 +0000 (UTC)
-Message-ID: <7a884834-7fb3-4666-9252-a4f76b7a673a@acm.org>
-Date: Thu, 18 Sep 2025 12:49:32 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="poWkNhV9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B46DAC4CEE7;
+	Thu, 18 Sep 2025 19:55:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1758225310;
+	bh=0XjeHWc7Ujz6cslBYlKoJ6z/2iHTu3+LdywlTfZMjcA=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:From;
+	b=poWkNhV9UH/yVw9GvWbwOpWUpmJyuVwCTGnJNjlCwZgUVKdABnveWULD6BIfR6aGg
+	 sMY8urXOYx1nd6UbwTVmGkd1hRT1uBOrERvVEOzG6vv8syPHkL6gjJF5Rnnrh7/0Ip
+	 H4S34SEIgk3u6UGahBbeegL4vbhYP0sv68Nn/1JTh7BYuovhn3QITNQ8WMqWN9aq/9
+	 NgGeOv2PMVUqkJwdAyL6Lr4/LTiYuzsrYyYdApNCFgypsqWzXacyumxMZDXq+gbEYk
+	 1NWueEm6003ZR5KSyoHnkBb2rleNWAFSRPhfGzMHpQx9f85t4O3p7Nshw7fKvSZ3hO
+	 pYzVIC7i5CVDg==
+Date: Thu, 18 Sep 2025 14:55:09 -0500
+From: Bjorn Helgaas <helgaas@kernel.org>
+To: "Mario Limonciello (AMD)" <superm1@kernel.org>
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Pavel Machek <pavel@kernel.org>, Len Brown <lenb@kernel.org>,
+	Christian =?utf-8?B?S8O2bmln?= <christian.koenig@amd.com>,
+	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>,
+	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
+	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>,
+	AceLan Kao <acelan.kao@canonical.com>,
+	Kai-Heng Feng <kaihengf@nvidia.com>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	Merthan =?utf-8?Q?Karaka=C5=9F?= <m3rthn.k@gmail.com>,
+	Eric Naim <dnaim@cachyos.org>,
+	"Guilherme G . Piccoli" <gpiccoli@igalia.com>
+Subject: Re: [PATCH v8 4/4] USB: Pass PMSG_POWEROFF event to suspend_common()
+Message-ID: <20250918195509.GA1918371@bhelgaas>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 06/29] scsi: core: Extend the scsi_execute_cmd()
- functionality
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
- Mike Christie <michael.christie@oracle.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250912182340.3487688-1-bvanassche@acm.org>
- <20250912182340.3487688-7-bvanassche@acm.org>
- <3688955b-ed3c-497d-a54f-633c9587a9ba@oracle.com>
- <2c10d952-8b21-4432-9a87-a4c82745f2d7@acm.org>
- <871a7b50-8920-4808-8537-e188e5ad91ab@oracle.com>
- <d175ed35-874f-40f7-bd34-15dc13d58b5b@acm.org>
- <e7ebba4d-d09b-4823-8830-6aeb6286bcb5@acm.org>
- <331639f8-e162-47fd-aa7c-070bf36d1dc0@oracle.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <331639f8-e162-47fd-aa7c-070bf36d1dc0@oracle.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250918034427.3226217-5-superm1@kernel.org>
 
-On 9/18/25 1:01 AM, John Garry wrote:
-> On 18/09/2025 00:42, Bart Van Assche wrote:
->> There is another concern: passing the scsi_exec_args pointer via the
->> scsi_execute_cmd() @buffer argument makes it impossible to pass both a
->> scsi_exec_args pointer and a data buffer to scsi_execute_cmd().
+On Wed, Sep 17, 2025 at 10:44:27PM -0500, Mario Limonciello (AMD) wrote:
+> suspend_common() passes the a PM message indicating what type of event
+> is occurring.  Add a new callback hcd_pci_poweroff() which will
+> determine if target state is power off and pass PMSG_POWEROFF as the
+> message.
+
+Something is missing in "passes the a".
+
+> There are no functional changes in this patch.
+
+Maybe so, but the .poweroff() path previously called
+"suspend_common(dev, PMSG_SUSPEND)" and now may call
+"suspend_common(dev, PMSG_POWEROFF)", so it's not completely obvious
+that this is a functional no-op.
+
+It seems sort of weird that apparently we can call .poweroff() for
+either a "suspend" or a "power-off" event.
+
+Maybe it would be helpful to explain how we get to .poweroff() when
+system_state is something other than SYSTEM_POWER_OFF, and what that
+means?
+
+> +static int hcd_pci_poweroff(struct device *dev)
+> +{
+> +	if (system_state == SYSTEM_POWER_OFF)
+> +		return suspend_common(dev, PMSG_POWEROFF);
+> +	return suspend_common(dev, PMSG_SUSPEND);
+> +}
+> +
+>  static int hcd_pci_suspend_noirq(struct device *dev)
+>  {
+>  	struct pci_dev		*pci_dev = to_pci_dev(dev);
+> @@ -602,6 +610,7 @@ static int hcd_pci_restore(struct device *dev)
+>  #define hcd_pci_suspend		NULL
+>  #define hcd_pci_freeze			NULL
+>  #define hcd_pci_suspend_noirq	NULL
+> +#define hcd_pci_poweroff	NULL
+>  #define hcd_pci_poweroff_late	NULL
+>  #define hcd_pci_resume_noirq	NULL
+>  #define hcd_pci_resume		NULL
+> @@ -639,7 +648,7 @@ const struct dev_pm_ops usb_hcd_pci_pm_ops = {
+>  	.freeze_noirq	= check_root_hub_suspended,
+>  	.thaw_noirq	= NULL,
+>  	.thaw		= hcd_pci_resume,
+> -	.poweroff	= hcd_pci_suspend,
+> +	.poweroff	= hcd_pci_poweroff,
+>  	.poweroff_late	= hcd_pci_poweroff_late,
+>  	.poweroff_noirq	= hcd_pci_suspend_noirq,
+>  	.restore_noirq	= hcd_pci_resume_noirq,
+> -- 
+> 2.51.0
 > 
-> I would not suggest to put any pointers in the data buffer - just copy 
-> in or out the data which you require, like the example which I had for 
-> scsi_debug.
-
-Hi John,
-
-In patch 29/29 of this series several pointers are present in the data
-structures in which struct scsi_exec_args is embedded.
-
-It seems like the scsi_execute_cmd() changes in this patch series are
-controversial. How about dropping these changes from this patch series
-and restoring the approach of v3 of this patch series? That means
-calling blk_execute_rq() instead of scsi_execute_cmd().
-
-Thanks,
-
-Bart.
