@@ -1,107 +1,82 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B3BC2FBDE0;
-	Thu, 18 Sep 2025 08:07:12 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6AAE02E2EFC
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2025 09:57:31 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758182832; cv=none; b=OIRryJbIVyaBsmhGpdTKuTdInKTN2AZNcrr21xSF4Fpi5IIFAruLXmHu6cgEyPchn3Q5rlmHo6pJ/L9UKXX9u6dL5VzMd4Ptzuy4BceUUbACaD5P8s6XwrYe2oWfGPmkjGQB5BJh74hq5DyZkknhFJ0twGgUDC8UtF6oBcSLHWQ=
+	t=1758189451; cv=none; b=eJBpQmZypzOHyVjErkXp2dA5wYnDp4fmQKD9J9j3PDulZ0i7D25ycXvxhiayRU6cAWew9GDnZ87U9/G/dn48Rk87tFBMSLOfy3heWDF5btAC55piSl6ra6/RUAGhuIo8OtLdqE+7ozlV/AT6Hr2R977dSEt2evEF+HTymQIHatM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758182832; c=relaxed/simple;
-	bh=XBWJaxmtBirrXj8wv9G7xuKZMzhfTcfINGcpYJ1NhCs=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fSlD3gyWPXyF7BsTht0fZ8lo4vC+zw+YC730Tf4I2siyP7fT0N7yT+sGigcIcYeaCbo/F0QdDlmTTBwRXyDm76p/ZJUyQIo9PNDu3dWKcbS7ZUCfPx7p47tpQ9nc1B17Zc0XMP4wbGFlxXu2b3wIua2PgLRfE/zr8TmdBkZcSWI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kABUX8p8; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758189451; c=relaxed/simple;
+	bh=DqU1N+O/wes0P065QC+RNWMhMh08T+1GH6wdnFBI8GU=;
+	h=From:To:Subject:Date:Message-ID:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=Qk0BV/zuBQOmqHY7Vi4jM+vFTLPdFyVWUkma120cVsxEIBPETVPdH2CcF7IpxMR7M9klkhYYJTGmoMQ/GHJ1/axGYMEWAzQtZgn5o/5WEGx+wHXGXoPQ2XJu8/BljYwgcUJENbG7RN2LmmKAKX4u75IPHLDbDhy3WepHKET0dvM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nQCOvLPY; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kABUX8p8"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id D28F5C4CEF0;
-	Thu, 18 Sep 2025 08:07:08 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nQCOvLPY"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id F3AAAC4CEF7
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2025 09:57:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758182832;
-	bh=XBWJaxmtBirrXj8wv9G7xuKZMzhfTcfINGcpYJ1NhCs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=kABUX8p8dFSCjVuNXWjogazoqPzMU8S2jGvFrlVOwSG0FxAoZbVf9kIicNYPH8b1J
-	 m7dYaNL3r0rxtgyZqZVDXQozgA/iTS1P+ONRSBzAiW3yXxSE/PKdYP2mszcfllnmE1
-	 l/70ScsDSHqKr6r/lg3mQe+EvzjZt8YoTIj3Eyutp9NVXdpElj5RPJHl5VW9PYpcNf
-	 n6kl5+K3PvQmAF1gEQgca9KKk8DFnzblHkB8/Y/Q5XsB/Oss0I5P5DZ0H2Rkn3Uc1q
-	 OlEK84bE/0nKFen9h7TbhM3XanxfTy8Q/i7IL7DxiK2esAwaf/rqNo/0Z50Eoo10aM
-	 6R/qGgwxiEsag==
-From: Alexey Gladkov <legion@kernel.org>
-To: Nathan Chancellor <nathan@kernel.org>,
-	Nicolas Schier <nicolas.schier@linux.dev>,
-	Petr Pavlu <petr.pavlu@suse.com>,
-	Luis Chamberlain <mcgrof@kernel.org>,
-	Sami Tolvanen <samitolvanen@google.com>,
-	Daniel Gomez <da.gomez@samsung.com>
-Cc: linux-kernel@vger.kernel.org,
-	linux-modules@vger.kernel.org,
-	linux-kbuild@vger.kernel.org,
-	Alexey Gladkov <legion@kernel.org>,
-	Khalid Aziz <khalid@gonehiking.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	James Bottomley <James.Bottomley@HansenPartnership.com>,
-	Arnd Bergmann <arnd@arndb.de>,
-	Damien Le Moal <dlemoal@kernel.org>
-Subject: [PATCH v8 5/8] scsi: Always define blogic_pci_tbl structure
-Date: Thu, 18 Sep 2025 10:05:49 +0200
-Message-ID: <fd8e30de07de79a4923ae967eaee5ba2f2fcef00.1758182101.git.legion@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <cover.1758182101.git.legion@kernel.org>
-References: <cover.1758182101.git.legion@kernel.org>
+	s=k20201202; t=1758189451;
+	bh=DqU1N+O/wes0P065QC+RNWMhMh08T+1GH6wdnFBI8GU=;
+	h=From:To:Subject:Date:In-Reply-To:References:From;
+	b=nQCOvLPYfkQfsvNb33kdjsKmQoABoeCoQ0h4zh5DNXWOplfckaCASxCX0fYiTvrLW
+	 KS0Rp32nf4Knx3Lv8E6UA2VNWQNtud52cTnfsvaPXuDZvEhOradz268V050DIup+rF
+	 1BV+Rd2/mxtl2VLMfoO14D7xcQeSYHwFVhi6KXODKR72foHWvQE8bhTY8yP/twK8a0
+	 8wb+yrkbNyMpHMzChIXP1lk180rWWWS2hVGXZ44p3t7N0MqhZ660ww9JDSkVJwRlJ1
+	 NZULyQw4YFoHXsf+WcJWuRbrhJa3oPF3RnzbOnr7lR36+lnDH4bu34tWyzHdqcXrc7
+	 dZz6/JEEzR4MQ==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id E4B01C53BC5; Thu, 18 Sep 2025 09:57:30 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 85101] hpsa + P410 does not show connected HP SAS port
+ expanders
+Date: Thu, 18 Sep 2025 09:57:30 +0000
+X-Bugzilla-Reason: None
+X-Bugzilla-Type: changed
+X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Product: SCSI Drivers
+X-Bugzilla-Component: Other
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: low
+X-Bugzilla-Who: dmmnychl123@gmail.com
+X-Bugzilla-Status: RESOLVED
+X-Bugzilla-Resolution: DOCUMENTED
+X-Bugzilla-Priority: P1
+X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: cc
+Message-ID: <bug-85101-11613-hbW5sYmPBY@https.bugzilla.kernel.org/>
+In-Reply-To: <bug-85101-11613@https.bugzilla.kernel.org/>
+References: <bug-85101-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-The blogic_pci_tbl structure is used by the MODULE_DEVICE_TABLE macro.
-There is no longer a need to protect it with the MODULE condition, since
-this no longer causes the compiler to warn about an unused variable.
+https://bugzilla.kernel.org/show_bug.cgi?id=3D85101
 
-To avoid warnings when -Wunused-const-variable option is used, mark it
-as __maybe_unused for such configuration.
+Emma Alva (dmmnychl123@gmail.com) changed:
 
-Cc: Khalid Aziz <khalid@gonehiking.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Suggested-by: James Bottomley <James.Bottomley@HansenPartnership.com>
-Signed-off-by: Alexey Gladkov <legion@kernel.org>
-Signed-off-by: Arnd Bergmann <arnd@arndb.de>
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
----
- drivers/scsi/BusLogic.c | 4 +---
- 1 file changed, 1 insertion(+), 3 deletions(-)
+           What    |Removed                     |Added
+----------------------------------------------------------------------------
+                 CC|                            |dmmnychl123@gmail.com
 
-diff --git a/drivers/scsi/BusLogic.c b/drivers/scsi/BusLogic.c
-index 1f100270cd385..82597bd96525b 100644
---- a/drivers/scsi/BusLogic.c
-+++ b/drivers/scsi/BusLogic.c
-@@ -3715,7 +3715,6 @@ static void __exit blogic_exit(void)
- 
- __setup("BusLogic=", blogic_setup);
- 
--#ifdef MODULE
- /*static const struct pci_device_id blogic_pci_tbl[] = {
- 	{ PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER,
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
-@@ -3725,13 +3724,12 @@ __setup("BusLogic=", blogic_setup);
- 	  PCI_ANY_ID, PCI_ANY_ID, 0, 0, 0},
- 	{ }
- };*/
--static const struct pci_device_id blogic_pci_tbl[] = {
-+static const struct pci_device_id blogic_pci_tbl[] __maybe_unused = {
- 	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER)},
- 	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_MULTIMASTER_NC)},
- 	{PCI_DEVICE(PCI_VENDOR_ID_BUSLOGIC, PCI_DEVICE_ID_BUSLOGIC_FLASHPOINT)},
- 	{0, },
- };
--#endif
- MODULE_DEVICE_TABLE(pci, blogic_pci_tbl);
- 
- module_init(blogic_init);
--- 
-2.51.0
+--- Comment #11 from Emma Alva (dmmnychl123@gmail.com) ---
+Try booting the system with no peripherals connected first, then add one
+expander, followed by two, and finally connect drives to the expanders.
+https://tinyfishing.co
 
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are watching the assignee of the bug.=
