@@ -1,118 +1,94 @@
-Received: from proxmox-new.maurer-it.com (proxmox-new.maurer-it.com [94.136.29.106])
+Received: from out-182.mta0.migadu.com (out-182.mta0.migadu.com [91.218.175.182])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DED6F21B199;
-	Thu, 18 Sep 2025 12:46:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=94.136.29.106
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 86109302168
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2025 14:41:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.182
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758199615; cv=none; b=CUO0V3Lr4P/upB+S6O7jNPCmyjlpYOth4Y/I6gdXU6owKa4wEJP7FiSV2x+lLLHxyqdzG707o7YMExDXey9xK/0aejGuQGo66bp1xaehIvG4zgJOwjFTbSyrAVVJIlrSfv8/yLNgnDmMDSfzR8UReLAlrl/RLYlbdAN1h21zrEA=
+	t=1758206515; cv=none; b=eTJGaTxgXqF2R0ou3TxmmfBBMzt3PrdqXLx+XETjW1p+YZg51yEN4MFwNkIGUZ0tz/uJoH7RupF9GAsTsq8Wf4S5GL2Fkc672qDHlxpvccOTGSRSESFTRIu4HRgxdorQlRR+Bv1rdg8ifSsGPREYI/1K1XMfzoWLAHArULFRais=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758199615; c=relaxed/simple;
-	bh=j3LgcXkZGb+gIC+Ry9Yqzb9XF3Ssc3Kw4mvGIT22bIU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=V7w3W6bV3uCLeCnWy4M/MPDRVM1+JTpAXSmetiAVMUB3B4OloeRi9Lx9aDo9g3gcGo8+6EpEgBLy/EkzpbHBrP7chQPcPUWTKgF1fv+Bykg08GBFV3vVQy9ZwZitAOWGJ9qECqTTNDCdeiyIh4F4cP95EatuC+nr4Rgvkfal/Gs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com; spf=pass smtp.mailfrom=proxmox.com; arc=none smtp.client-ip=94.136.29.106
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=proxmox.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=proxmox.com
-Received: from proxmox-new.maurer-it.com (localhost.localdomain [127.0.0.1])
-	by proxmox-new.maurer-it.com (Proxmox) with ESMTP id 472784ED6C;
-	Thu, 18 Sep 2025 14:46:42 +0200 (CEST)
-Message-ID: <8103ec9d-642a-4b40-b544-af1aae1205cc@proxmox.com>
-Date: Thu, 18 Sep 2025 14:46:41 +0200
+	s=arc-20240116; t=1758206515; c=relaxed/simple;
+	bh=lIqF7SobE3jlk9Ur+yA6oA5MrzHP8rPuVgTkZhdOYas=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=oW+4lokkEVR6MoNCMR7oKw++WMT5HztxWY+Ej2HEi+wD2CpDdYiBZM0qlDrmmqDTWJ7r+XEXL/s43C+YavwdOEz0t8kgNGz+A7NxrYwYIR8CPi4ru39/U20QMhdiemN0WYJykp3eija+TZJvCjPwu/uCK8OsIMDdVEJEQCPLva4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=kqKQkA7n; arc=none smtp.client-ip=91.218.175.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="kqKQkA7n"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1758206510;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=+WnQWfcuRskG69FtOy67tDcJOkD2U0BCxAn6o7LjEV0=;
+	b=kqKQkA7nLP9mVnK1LJaXwMxG2bnygclpaDMFijhynBfxZTrP2q5Yg7t4Rd0JXcucFPIcJh
+	Vo/6e2BTki08VwGBY0EHrxjiBWH9T8M1lqiZxRb61iwOhYs4atmL89HHf6GtgSx9U0KKuX
+	mUXz9bwAZZb02nHJAMhc2Kbpp/iMr9U=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: Anil Gurumurthy <anil.gurumurthy@qlogic.com>,
+	Sudarsana Kalluru <sudarsana.kalluru@qlogic.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: bfa: Replace kzalloc + copy_from_user with memdup_user
+Date: Thu, 18 Sep 2025 16:40:32 +0200
+Message-ID: <20250918144031.175148-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v7 08/19] scsi: detect support for command duration limits
-To: Damien Le Moal <dlemoal@kernel.org>,
- Diangang Li <lidiangang@bytedance.com>
-Cc: Mira Limbeck <m.limbeck@proxmox.com>, Niklas Cassel <nks@flawful.org>,
- Jens Axboe <axboe@kernel.dk>, "Martin K. Petersen"
- <martin.petersen@oracle.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>,
- Kashyap Desai <kashyap.desai@broadcom.com>,
- Sumit Saxena <sumit.saxena@broadcom.com>,
- Shivasharan S <shivasharan.srikanteshwara@broadcom.com>,
- Chandrakanth patil <chandrakanth.patil@broadcom.com>,
- Sathya Prakash Veerichetty <sathya.prakash@broadcom.com>,
- Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
- megaraidlinux.pdl@broadcom.com, mpi3mr-linuxdrv.pdl@broadcom.com,
- Bart Van Assche <bvanassche@acm.org>, Christoph Hellwig <hch@lst.de>,
- Hannes Reinecke <hare@suse.de>, linux-scsi@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-block@vger.kernel.org,
- Niklas Cassel <niklas.cassel@wdc.com>
-References: <3dee186c-285e-4c1c-b879-6445eb2f3edf@proxmox.com>
- <6fb8499a-b5bc-4d41-bf37-32ebdea43e9a@kernel.org>
- <2e7d6a7e-4a82-4da5-ab39-267a7400ca49@proxmox.com>
- <b1d9e928-a7f3-4555-9c0a-5b83ba87a698@kernel.org>
- <a927b51b-1b34-4d4f-9447-d8c559127707@proxmox.com>
- <54e0a717-e9fc-4534-bc27-8bc1ee745048@kernel.org>
- <72bf0fd7-f646-46f7-a2aa-ef815dbfa4e2@proxmox.com>
- <3b2a6cfe-5bf3-4818-8633-c200d8e6f122@kernel.org>
- <4cb58e56-d9e2-4868-84ad-8b7253148228@proxmox.com>
- <75412b1b-3f39-4f6a-93ce-823c15a19bf3@kernel.org>
- <20250731114832.GA97414@bytedance.com>
- <856aa232-701f-40bf-bae9-1aff8886f473@kernel.org>
-Content-Language: en-US
-From: Friedrich Weber <f.weber@proxmox.com>
-In-Reply-To: <856aa232-701f-40bf-bae9-1aff8886f473@kernel.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Bm-Milter-Handled: 55990f41-d878-4baa-be0a-ee34c49e34d2
-X-Bm-Transport-Timestamp: 1758199592700
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On 01/08/2025 01:21, Damien Le Moal wrote:
-> On 7/31/25 20:48, Diangang Li wrote:
->> On Tue, Jul 22, 2025 at 06:37:50PM +0900, Damien Le Moal wrote:
->>> On 7/22/25 6:32 PM, Friedrich Weber wrote:
->>>> On 14/07/2025 04:48, Damien Le Moal wrote:
->>>>> On 7/10/25 5:41 PM, Friedrich Weber wrote:
->>>>>> Thanks for looking into this, it is definitely a strange problem.
->>>>>>
->>>>>> Considering these drives don't support CDL anyway: Do you think it would
->>>>>> be possible to provide an "escape hatch" to disable only the CDL checks
->>>>>> (a module parameter?) so hotplug can work for the user again for their
->>>>>> device? If I see correctly, disabling just the CDL checks is not
->>>>>> possible (without recompiling the kernel) -- scsi_mod.dev_flags can be
->>>>>> used to disable RSOC, but I guess that has other unintended consequences
->>>>>> too, so a more "targeted" escape hatch would be nice.
->>>>>
->>>>> Could you test the attached patch ? That should solve the issue.
->>>>>
->>>>
->>>> Thanks for the patch! The user tested it on top of a 6.15.6 kernel and
->>>> with the SAS3008 HBA, and indeed:
->>>>
->>>> - under 6.15.6, hotplug fails with the log messages mentioned in my
->>>> first message,
->>>> - with your patch on top, hotplug works again.
->>>
->>> OK. Will post a proper patch then (tomorrow).
->>> Thanks for testing.
->>>
->>
->> Hi Damien,
->>
->> Are you planning to post a formal patch to upstream?
-> 
-> I initially thought that the issue was due to some problem with the HBA SAT
-> (SCSI to ATA translation). However, the drives that trigger the issue are SAS
-> drives, so there is no command translation and it is much less likely that the
-> issue is related to the HBA. So I am relunctant to take a big hammer and disable
-> CDL for mpt3sas for SAS drive. HBAs driven by that driver do *not* support CDL
-> for ATA, so disabling CDL would not be an issue for SATA disks. But there is no
-> good reasons to disable CDL for SAS drives.
-> 
-> This is being handled as a drive issue now, off-list.
+Replace kzalloc() followed by copy_from_user() with memdup_user() to
+improve and simplify bfad_im_bsg_els_ct_request(). memdup_user() returns
+either -ENOMEM or -EFAULT (instead of -EIO) if an error occurs.
 
-Posting the resolution here for posterity: After updating the firmware
-of affected drives to GC8, hotplug works again.
+Use u64_to_user_ptr() instead of manually casting 'bsg_data->payload'.
 
-Thanks again for the troubleshooting!
+No functional changes intended other than returning the more idiomatic
+error code -EFAULT.
 
-Best,
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+---
+ drivers/scsi/bfa/bfad_bsg.c | 19 ++++---------------
+ 1 file changed, 4 insertions(+), 15 deletions(-)
 
-Friedrich
+diff --git a/drivers/scsi/bfa/bfad_bsg.c b/drivers/scsi/bfa/bfad_bsg.c
+index 54bd11e6d593..d90dfee95160 100644
+--- a/drivers/scsi/bfa/bfad_bsg.c
++++ b/drivers/scsi/bfa/bfad_bsg.c
+@@ -3392,21 +3392,10 @@ bfad_im_bsg_els_ct_request(struct bsg_job *job)
+ 	if (bsg_data == NULL)
+ 		goto out;
+ 
+-	/*
+-	 * Allocate buffer for bsg_fcpt and do a copy_from_user op for payload
+-	 * buffer of size bsg_data->payload_len
+-	 */
+-	bsg_fcpt = kzalloc(bsg_data->payload_len, GFP_KERNEL);
+-	if (!bsg_fcpt) {
+-		rc = -ENOMEM;
+-		goto out;
+-	}
+-
+-	if (copy_from_user((uint8_t *)bsg_fcpt,
+-				(void *)(unsigned long)bsg_data->payload,
+-				bsg_data->payload_len)) {
+-		kfree(bsg_fcpt);
+-		rc = -EIO;
++	bsg_fcpt = memdup_user(u64_to_user_ptr(bsg_data->payload),
++			       bsg_data->payload_len);
++	if (IS_ERR(bsg_fcpt)) {
++		rc = PTR_ERR(bsg_fcpt);
+ 		goto out;
+ 	}
+ 
+-- 
+2.51.0
 
