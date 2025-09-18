@@ -1,48 +1,48 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8550624E4D4
-	for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2025 18:39:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E844B1DDC2B
+	for <linux-scsi@vger.kernel.org>; Thu, 18 Sep 2025 19:28:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758220772; cv=none; b=JRH8qlLcNqfEniS1cvWhlq4EcrQDbqrJDOcewIcuhWE/aKN0igZ4KY8nh0EAUpmeWlZaJV50n3zYyWnRXRan6RQ36aEa1acKhqjDNaSnanVWWsXhj2Di4hLnIxkQb21+svglLf0yJLRQvnfYjO8LuJjcKhV56Di0LQAiwr4D7hw=
+	t=1758223706; cv=none; b=qlfBftPGfpUjVLD1UAv2DJxekJju5/i2pQxS6Nc5xk+f9bGkaoKDDMbCSI2ffLVlKHXNlSQcRTkplbd9DtSzoiMK4AbnfYDdwtllnsjK9gsMVZXQlH1HwONEG/a9XLJO7aOXmD4PrLbY+Xg1daGqjlQTrGqIJER4CAw5MXLjViM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758220772; c=relaxed/simple;
-	bh=/2Kha1IT8DcMp2pOYY79CYDENJmSAq3cVEdOpIgytBU=;
+	s=arc-20240116; t=1758223706; c=relaxed/simple;
+	bh=DmsuSXRya+AuEMpYm4myvICHIZufhIehrKdUEWo96Mg=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mDegRVqDSgkena1abmXvjVlvYTAvqPH3hi0FioM0YANzB1/gc5tzsNJ2EbQfOQ3DQsWmeeoUMvPxkvL6x4XlznVG9W5dAuKjw9DrQV9OzRzMu2udWnICJ7jbZSLyAhu4EwKja4axH0nJ7sX+X2CRk95bSWLzhctGnD/0CtVhP5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=EaYHxFWx; arc=none smtp.client-ip=199.89.3.7
+	 In-Reply-To:Content-Type; b=FYccIWUVSxL41/SybFDLixndQriks33SdAOHgWByuXnwrsvNsLga/zu0ASUjZtO0em7XIs3j+taNFvfilBp2tYrjfZj5qrZQI8qYNOIEsij+lpoHTjiolt+F1swtkYIrkJj8YIq1xp9zJyhScrJZqKk97f+VifPoeSwCshdGIOI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=RxQ7sbFB; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="EaYHxFWx"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="RxQ7sbFB"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cSPYs4JCDzm0yQq;
-	Thu, 18 Sep 2025 18:39:29 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cSQfF5hZczltP0V;
+	Thu, 18 Sep 2025 19:28:21 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758220766; x=1760812767; bh=18F93i41DECTqPUgQ1X9ryaK
-	GagXJ2RY9pp/WFcaWng=; b=EaYHxFWxi0sCpUbl0fBUnsDg04dblHAt/YKnRnmd
-	ytjOaWdwInRGmm/A/15xKdKd78Xh0RuLfN2ZPKcNM9pxgyKNG18c69aFNdKDhWGD
-	x5y0GhR9ClnPV85rwZqCTttRWo2PRATGlOr495kM0LoAR+dV+vZdetd1uvbX5wne
-	xihCmWPdnKshJCVq6WQ/yUJ1B9UiS1fm5Le2tS/Wp7Rq5BgSg+I+9scEKMobZsd7
-	AZIlp044N8UZaCLSR3XT7APSGm49tmnp9O2bdoDEavJ4XWBzKbhqcm6wzClSG7wQ
-	zaCtJpTSwrH6zHC/PvBrA5ne/nn3yhG0VOiUjNOfveCCGw==
+	 s=mr01; t=1758223698; x=1760815699; bh=to7t8pxAzeROLpmJIHcDUV0b
+	8IiZYPu9MdlR3yTFEEY=; b=RxQ7sbFBuhiYQqS4qCCXqSLljtifSIsQPdZATkYn
+	8eVR6TSpfunIS5o2Fg+yNVLpUn5xhBkpjPEen9WH+yec6dCW3dNmfiRxvti+iqdn
+	HuhArA6/gHtGsYccotFW7FhDz8bmmrexXv+2jriWVNzodmR+JgGb+zztowN0ixj2
+	ozaJ2oDgPmu2YWLVty+vkd45lTsARcpVYO4oi6bVK7VR9RCIYbwwkyD7CCCyT9S1
+	JIGCiM2jHhyLrrNwVrID2fkaOVCP3ukFCI/zRgl2CvFzAXINwpBuPW2e+YBvZqJK
+	AiX4nj2TP7Yp20Xl6E7qp+v0tU0QuXHr7+ATnyWTQVwcLg==
 X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Y1jNnBRTRRlB; Thu, 18 Sep 2025 18:39:26 +0000 (UTC)
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id DHCMMoKn-ojq; Thu, 18 Sep 2025 19:28:18 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cSPYb0kv9zm0yVJ;
-	Thu, 18 Sep 2025 18:39:13 +0000 (UTC)
-Message-ID: <6f4f954d-64fe-461e-9c65-6630b0409710@acm.org>
-Date: Thu, 18 Sep 2025 11:39:12 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cSQdz0wq3zlrnQ8;
+	Thu, 18 Sep 2025 19:28:06 +0000 (UTC)
+Message-ID: <ff2243ed-3f7d-4746-80cc-b8f3f1b9e8b7@acm.org>
+Date: Thu, 18 Sep 2025 12:28:05 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,8 +50,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 07/10] ufs: host: mediatek: Fix shutdown/suspend race
- condition
+Subject: Re: [PATCH v1 05/10] ufs: host: mediatek: Adjust sync length for
+ FASTAUTO mode
 To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
  martin.petersen@oracle.com
 Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
@@ -61,31 +61,29 @@ Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
  tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
  ed.tsai@mediatek.com
 References: <20250918104000.208856-1-peter.wang@mediatek.com>
- <20250918104000.208856-8-peter.wang@mediatek.com>
+ <20250918104000.208856-6-peter.wang@mediatek.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250918104000.208856-8-peter.wang@mediatek.com>
+In-Reply-To: <20250918104000.208856-6-peter.wang@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
 On 9/18/25 3:36 AM, peter.wang@mediatek.com wrote:
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 109cbb36c02d..7df475ebd06d 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -1436,6 +1436,11 @@ static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
->   	return ufshcd_dme_set(hba, UIC_ARG_MIB(PA_LOCAL_TX_LCC_ENABLE), 0);
->   }
+> @@ -160,7 +163,9 @@
+>   #define PA_PACPFRAMECOUNT	0x15C0
+>   #define PA_PACPERRORCOUNT	0x15C1
+>   #define PA_PHYTESTCONTROL	0x15C2
+> -#define PA_TXHSADAPTTYPE       0x15D4
+> +#define PA_TXHSG4SYNCLENGTH	0x15D0
+> +#define PA_TXHSADAPTTYPE	0x15D4
+> +#define PA_TXHSG5SYNCLENGTH	0x15D6
 >   
-> +static inline bool ufshcd_is_user_access_allowed(struct ufs_hba *hba)
-> +{
-> +	return !hba->shutting_down;
-> +}
-> +
+>   /* Adpat type for PA_TXHSADAPTTYPE attribute */
+>   #define PA_REFRESH_ADAPT       0x00
 
-Please do not move the ufshcd_is_user_access_allowed() definition - I'd
-like to remove this function. Please either use hba->shutting_down
-directly or add a .shutdown callback in ufs_mtk_pltform.
+The "#define PA_TXHSADAPTTYPE	0x15D4" line shouldn't have been
+changed. It seems like this patch changes the whitespace before the
+"0x"?
 
 Thanks,
 
