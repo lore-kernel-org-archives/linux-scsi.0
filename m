@@ -1,45 +1,46 @@
-Received: from SN4PR0501CU005.outbound.protection.outlook.com (mail-southcentralusazon11011067.outbound.protection.outlook.com [40.93.194.67])
+Received: from SJ2PR03CU001.outbound.protection.outlook.com (mail-westusazon11012021.outbound.protection.outlook.com [52.101.43.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 17C851A9FAB;
-	Fri, 19 Sep 2025 12:39:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.93.194.67
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A6A431F03C9;
+	Fri, 19 Sep 2025 12:39:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.43.21
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758285559; cv=fail; b=YTbYH2wcbcY+pwqLcjrEHW9qBSyc0uGMhAYUpwiifbhFXbLykkQjN4VbLQwlhZTL+difZG5WB9L31sQdH+2O1XPbLlEHiI1JsRgCuA5jT5mWBEVTBQEnxd9iY/jnF+SMBr1re8D37NurDwmcOMlUJXTeoDtjwPhA5L5Clt3HEPY=
+	t=1758285563; cv=fail; b=mT2VXECiYyabbTSObS6OD/NVqeLIIMFSEUZahMXKbnpLc1Byqohq8HTAv662w2XW0U1sxmB6j3d5/FLYcNtWPKmeXsu0naDBhHUsYOsjMo2cO3SAI0u8DFSlfvJ6E12AlhHEM0sRZLeI8TuKioa6EtH0iJPZY2nBqmSAc/HHSFo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758285559; c=relaxed/simple;
-	bh=RQd7EHc2zZ5qg2r6QWgs2ZJ12N1RvrwM3tIDGLCF2mY=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ADGe6zxoOCtJ8hdVT2MZPLdOpLUEQynQTFcxJVAGtF3X3AtswRhJoCsFGDow4PKUEbrtxicz+NsF0QvzdNJn7M+0DUO3G2jm0E5n6eytfpAG3qS5Mz+EL3DdUoYzdPHkrPQt5deYHZoD8DmeZtP0HzFjrZlzjBMFhFTjIpXGSfE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=LoioTL0p; arc=fail smtp.client-ip=40.93.194.67
+	s=arc-20240116; t=1758285563; c=relaxed/simple;
+	bh=peZTPXUdwE7D2+JBciut5/Htr/l9AT5+uylliLdxGDk=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=K6diuJthozWWS8ef33tPXxlqsFTrA9qXZ7uaKnlnZW1EFfcZtJow+IPPxm0oqAKMTr6fAOgdgg/v/xin8TyC8y/xqD8JW3lptIOIZ1J0e9TiNsFzBi6aD9nIm0O3KP7DE5byn9HMetAP0BC06WyUOFITIvdaXVqWo+oMosDYe3M=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=la0yegqw; arc=fail smtp.client-ip=52.101.43.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="LoioTL0p"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="la0yegqw"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=mymWjNUT+fyHXSGpttZgCdOOFVQBila9K7Aqk94JZOdde40vE0yUdVuCXb4KYV+P9sHW8wk9dqWkse723Ao+If/aObEx2RMMXgA+Y19X9D0IAlXJ/3mWzJciKewHWu6GS634tissf0E2BCAASjXHVp6EyyXGcXXyBiJmRhp8MZ6S0MTuqieZvUO45aS0qaVWHy35RjBMRJhGhheDw5hHSKPJRBEfj2mqlKV7bvO+h2n6nFiD0mhOSdqBkM7nyWftaJ30MNBoCqV7HoQCCFxYdaJKpBqyS9jxpYCFgULBqsh2QZ1fF3dLI99MEe9doeGbyvVTOLRhqkE9u0QNlqlFVg==
+ b=jxxAAe4oBR2n2q8+8L/eiT+RJ5BOrD2wDpxmE19dFD3GqPEYhVZBsN4wOYm4XdSwHPWI7lE7C+XC/3e/38UmJCa5ion4GRBfs4r1rY2FcwLHi3OC23qnHuZj46/DA2jpUg/EbiYYOsBBcNbmCwi5OkOT6OP3rI2zM0VdeKWiyTFBRZVHPGKFQK4mwdIT6cvIQqxxzr0QrpquMvKZd7K3IkYk5YHPc52wK11eMNIyUTMc/zBNw2ag+6j+PVvttUCG8f6fFyAdGVUFVCLEhDDu3ssu3/dzHdJMqZ1sdbyywGHdZkS7uJcYRIHrf1BQlXiJqS7CrsWLnV/vNYz3BaE7Fw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=bIslk8y0ZkkSQ03xpvWGtMaEBy1pkzvXG4gOCjuxGf8=;
- b=yO/kHzf+PYaDt1ua7fUk9J14pZ47Reeazvm05aYU1hM4j74BBq0sDLecY06PrwyOcgxwH+6uId563zRo4SYihhFYRwkRJ7VrMbBPFVHloZ80xq6bJyfUf9l37u66m3YtTiqBWZXfABt9kBUlRTqql3CjbQfVjCKLEG6PePy0YWWkCjeU+UUZO8M/vsVvZwYDQeTlbo46P/Shi0FonBxYqVWvIewOA95MmtXqKmn05T2gBKhxxr7JSpYkPaiTtTNJUVd6QZKM6br+6gnASULMsZtm4CL8Vr7T3ZnrmOxNRfbcp0piRjGqPiRAxPMOYPulU+NI+UOVOoDrBERXwq+qWg==
+ bh=Lnfwyoj95jQ777UEHjD+yjAWlLfcrY9Yl+qb5xeevpY=;
+ b=VoIWy9HieTittydJ+fjnHEKqTn42tGK2PY0o0UeZQpCeCRVtVQsz3TYWwiJiqWqYaLwF4LAN0cZKr/FkHNaVLC8UY56W12RDvHjYDrllluS5tlGsAgGA8EVeGR1Tkfmyn6Xi6taGxuBk5cPLfIwnZ8JmVMvMXdgKke+d/3p9OyS8SSU0NaZmz5REl5x98GNOu/Yhwat41B08iRFg63GvUyMgq3if+YVU/3NHeLrej26K8+SlJvnf8uNQ7edtVLEI52C5KhzPNqXO/tJtg3b7U657Yn9fSHCXpOyUGxxKlU/o6h0dWevAtJRZeewW1qs5OdI6QbN4yZfrH0+BjFhxBA==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=oracle.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=bIslk8y0ZkkSQ03xpvWGtMaEBy1pkzvXG4gOCjuxGf8=;
- b=LoioTL0pK6Hf/egpL8DdlnKXtzV/rE3ny1knDbPJAz/tjFpnLIc+3ObcoRkIlzaEeVNrr4iGCz/CPQYHPLuYN2BEV2IugRdTEP6+zBtN3Ld8zojhr1GX0VnhYbHnd/L63mB2dJ2B+M5iDNfx29uB5jcc2LmS3Lj71FKeCQy9Pxc=
-Received: from SJ0PR13CA0240.namprd13.prod.outlook.com (2603:10b6:a03:2c1::35)
- by BL1PR12MB5825.namprd12.prod.outlook.com (2603:10b6:208:394::20) with
+ bh=Lnfwyoj95jQ777UEHjD+yjAWlLfcrY9Yl+qb5xeevpY=;
+ b=la0yegqw+yGoaLxBymRACXeK5px58MRyBykBkmJ83uEbSP6rlidrK8biPJuF2bGFnB54dm8e/8KRQgu8WUjrfkOYDus7UUsLAlEnalfpmcT+tHsid8Mdyc8MAcDSXtLqGQQevy/QxbCMgNCwdVo4+2kSaWhpbOy4YTCAQHZ/7Zg=
+Received: from SJ0PR03CA0048.namprd03.prod.outlook.com (2603:10b6:a03:33e::23)
+ by PH7PR12MB5806.namprd12.prod.outlook.com (2603:10b6:510:1d2::10) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9137.13; Fri, 19 Sep
- 2025 12:39:15 +0000
-Received: from MWH0EPF000971E4.namprd02.prod.outlook.com
- (2603:10b6:a03:2c1:cafe::7c) by SJ0PR13CA0240.outlook.office365.com
- (2603:10b6:a03:2c1::35) with Microsoft SMTP Server (version=TLS1_3,
+ 2025 12:39:19 +0000
+Received: from MWH0EPF000971E8.namprd02.prod.outlook.com
+ (2603:10b6:a03:33e:cafe::50) by SJ0PR03CA0048.outlook.office365.com
+ (2603:10b6:a03:33e::23) with Microsoft SMTP Server (version=TLS1_3,
  cipher=TLS_AES_256_GCM_SHA384) id 15.20.9137.14 via Frontend Transport; Fri,
- 19 Sep 2025 12:39:14 +0000
+ 19 Sep 2025 12:39:19 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -47,20 +48,20 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb08.amd.com; pr=C
 Received: from satlexmb08.amd.com (165.204.84.17) by
- MWH0EPF000971E4.mail.protection.outlook.com (10.167.243.72) with Microsoft
+ MWH0EPF000971E8.mail.protection.outlook.com (10.167.243.68) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9137.12 via Frontend Transport; Fri, 19 Sep 2025 12:39:14 +0000
-Received: from SATLEXMB05.amd.com (10.181.40.146) by satlexmb08.amd.com
+ 15.20.9137.12 via Frontend Transport; Fri, 19 Sep 2025 12:39:18 +0000
+Received: from Satlexmb09.amd.com (10.181.42.218) by satlexmb08.amd.com
  (10.181.42.217) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.2562.17; Fri, 19 Sep
- 2025 05:38:45 -0700
-Received: from satlexmb08.amd.com (10.181.42.217) by SATLEXMB05.amd.com
- (10.181.40.146) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Fri, 19 Sep
- 2025 07:38:43 -0500
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Fri, 19 Sep
+ 2025 05:38:50 -0700
+Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb09.amd.com
+ (10.181.42.218) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Fri, 19 Sep
+ 2025 05:38:49 -0700
 Received: from xhdharinik40.xilinx.com (10.180.168.240) by satlexmb08.amd.com
  (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.17 via Frontend
- Transport; Fri, 19 Sep 2025 05:38:38 -0700
+ Transport; Fri, 19 Sep 2025 05:38:44 -0700
 From: Ajay Neeli <ajay.neeli@amd.com>
 To: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>,
 	<robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
@@ -68,11 +69,14 @@ To: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>,
 CC: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
 	<linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>, <git@amd.com>,
 	<michal.simek@amd.com>, <srinivas.goud@amd.com>,
-	<radhey.shyam.pandey@amd.com>, Ajay Neeli <ajay.neeli@amd.com>
-Subject: [PATCH 0/5] ufs: Add support for AMD Versal Gen2 UFS
-Date: Fri, 19 Sep 2025 18:08:30 +0530
-Message-ID: <20250919123835.17899-1-ajay.neeli@amd.com>
+	<radhey.shyam.pandey@amd.com>, Sai Krishna Potthuri
+	<sai.krishna.potthuri@amd.com>, Ajay Neeli <ajay.neeli@amd.com>
+Subject: [PATCH 1/5] dt-bindings: ufs: amd-versal2: Add support for AMD Versal Gen 2 UFS Host Controller
+Date: Fri, 19 Sep 2025 18:08:31 +0530
+Message-ID: <20250919123835.17899-2-ajay.neeli@amd.com>
 X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20250919123835.17899-1-ajay.neeli@amd.com>
+References: <20250919123835.17899-1-ajay.neeli@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,99 +84,134 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
-Received-SPF: None (SATLEXMB05.amd.com: ajay.neeli@amd.com does not designate
- permitted sender hosts)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MWH0EPF000971E4:EE_|BL1PR12MB5825:EE_
-X-MS-Office365-Filtering-Correlation-Id: 6104e799-f451-49ac-5291-08ddf7798a79
+X-MS-TrafficTypeDiagnostic: MWH0EPF000971E8:EE_|PH7PR12MB5806:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2b496a50-4f93-4aa8-ffb7-08ddf7798d32
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|1800799024|36860700013|376014|7416014|82310400026;
+	BCL:0;ARA:13230040|1800799024|7416014|376014|82310400026|36860700013;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?pdoGYl03R3nDrSfMgObNtmBxjq8vqodnZ+7OmolEv2qUfOt1gCr5xMu92glz?=
- =?us-ascii?Q?sbuhA+g97jNOrpIAenHtcmbhRSbI5GfnozNLNAf1RHGrI9jpi1ZbHDk6dy02?=
- =?us-ascii?Q?PiWvYGWdLn8AEH3X5AxynjntUdS9TAyoUWuZyX6Ag7Jk3J8oOc0foT18nHKE?=
- =?us-ascii?Q?eW5Cx58PGzIm1EPAAcxgwGa+cHX0d7De4O41aaWlcDYyjY398aA251ad9OnP?=
- =?us-ascii?Q?H1a6+hKVYugzdt7g6CcBhGv7dC5wDo8eZvAvCftVqs0TAKXniG3g4Bv80n8i?=
- =?us-ascii?Q?ewNSrueWBXiCiAuQc2bLsVH9ScfdtndQsHbD6aIxPfYKJIWL+Bj00CPeWnB4?=
- =?us-ascii?Q?4sOBXVcl3VwONrECsbu9oQ7k1Bi2jbdY8D4XO3wA0Oi+HGiO4+UlzQwVEVKD?=
- =?us-ascii?Q?PT+1QbjDqoUHsHl32V4uADn/ePiXOyUl99AzXkd1XUuMuTbG7x4/YCAH2LYX?=
- =?us-ascii?Q?2jH0YZ6Qj1slKTP0LkleRUeoG1dgPU1gtGsGM8tBu9m8773kMbWGvasXVr2n?=
- =?us-ascii?Q?ERFY2eOmE5nuRXipKz9/YLYawesluIAYQCWcKckiPRCpTlW9CH46W5fgIH7d?=
- =?us-ascii?Q?nX/2Jkyr+DUxx7NbxOJNpd9me/u6vK4ExmOXV9/xMbXS0/1A2HGNS4uQsguB?=
- =?us-ascii?Q?l3l/CjA92rvob8IAhBQeCDExfgY7Si/rFRFRxe7WK47bR4/R4jRZ5y+Ko5TS?=
- =?us-ascii?Q?5El6hmkdGNxfyVxpMmE5GYx3g3CBn2wLrBP4yF6Aur0s/5Tqe+aGJWxPjffM?=
- =?us-ascii?Q?4rVsV05Fobde64bMSgjft5TfliDVb+tma5E8ovGFdeCUW5Hzja73qn+puwvd?=
- =?us-ascii?Q?BmwUQjSbjD8m5/Qm+eFOIILooIYwVzf9QORXlxhV1YdaPWEZcjkxrVEnEqCt?=
- =?us-ascii?Q?UiaxX8lKsMUaTDrVD8l3l0vWVqqpkQBaHoSjOMxyd2ae/FBWCdT9/aw8gNLL?=
- =?us-ascii?Q?RP9uaOwyot7l+xJUibEfK+0thlRAURiRaCvct/l6AZXdnhVWI3HUIWNugzRX?=
- =?us-ascii?Q?onKUcoXNbNLWb5ds1d+LK7cAxU/Z/fYWlfag4DZlxqz3JiVBS2dd3o/Iku14?=
- =?us-ascii?Q?4oefY6Jb+NDJnMs70bD3N7Q97hRrDaEfVlrTusTgz62bFW2B00gR40nbw/FM?=
- =?us-ascii?Q?2BFfPxfNZdmyUNyuXxiy5ZRPTQ7DxHG4q3IsijxseyZQ+ptxwAbr1RY8DSMf?=
- =?us-ascii?Q?rCvbzPO6FRbkyMLtfOt0/VDLXIJ0zNe8VLyWs9S0fV8Gimx+chgF/XsYcgjx?=
- =?us-ascii?Q?JwIwLUMGxxy3Q/CO2u5Jitb1Cga/z7cAzCql1LuO9OJl66gk+ul3djiyEwzw?=
- =?us-ascii?Q?0q9hmu7vrr8jKwNKfZusBV6eP2+bhteQac+Ura6yeXTvWvoogrB/823qCTjN?=
- =?us-ascii?Q?raP1py6lPYa+cmZmJlFBQKvl/Du5PfUTXhRR70yvNiXycPxcdsoQf0QcKkeu?=
- =?us-ascii?Q?cifm1eXdPeuWpe7x3sWe9DYWmCVmjLgdt5YurA3mfPT/5x4Cdvai9WQfupW6?=
- =?us-ascii?Q?yW/aLtNi2U7T7zsfpRhhmSL0xr+OP9GdsP/y?=
+	=?us-ascii?Q?enoF3izJNr9M+KVeRrIukjaGgGbZcvfksD8VMc9HKLaLr0mRVfSNj8o9Tomm?=
+ =?us-ascii?Q?3LWsyOYdcD8eeArDy6xa8+17UlUk77AwD/I483zIzUMaveO5jH8XeVzcgKCM?=
+ =?us-ascii?Q?hbs65OnsFjs5/bI2WBxSAX4BpoXdQ7aeL/iat5mXIYEcr1syloAsE3huGJru?=
+ =?us-ascii?Q?IbcpCTGszl2BS+re7tIPYkTLeKwbCx/1khGJrl0bTWmODVn8tlDlXeJu9xI7?=
+ =?us-ascii?Q?nckJ4gDLvMvoFtrcelAWMP2ULr9mIG5PyHNYC5pzizlqylCQowrquN1msF3m?=
+ =?us-ascii?Q?1PLU8IHsBaXU31KKlkXwVSaqpDrFASTHvDddyti9Flq2GzVPvr2Sqg8W5aTR?=
+ =?us-ascii?Q?pQbq/GUbhJnXhGvSgcEECyjTC0X2zGw+3sf7kJCXjI6Ns98RbgSzKInzhpMm?=
+ =?us-ascii?Q?vAJwns3h3+e9p1KBbsk49KJZiWypuQymRZxrY3V2FqPEHpXg2TuelGNnwmjb?=
+ =?us-ascii?Q?GnXxo3b9Ijo+0xJm6M5VZ7vNo57IgniBgTiU20DHsiOnIqroMr1cINuH/PY1?=
+ =?us-ascii?Q?34im5mdxYyvwqlYfcc6VqBOrYCxChVf66cLUb60w1BCOyQVJ3cliN1tTDK5C?=
+ =?us-ascii?Q?8//VrBGPeaSxiE0d8rAVuFGCBU0loG22xUN3Ffhs1Oe8o20s5T3/E59IIu6B?=
+ =?us-ascii?Q?HLIWYv3WnB3COiEi5GJ/8/ugFnprGC91a0krwPq4dBdLW+UEVhrArgzirQr1?=
+ =?us-ascii?Q?SSgqYbTbW3Dqewq9DL9vIE/PI2Ws4jwU8rFBy3Z275UfHot/O67Wu/Glrols?=
+ =?us-ascii?Q?ADBhbWEPNZZHk8cMLBiPRvRpm6A0ULd7izBVp9X+WYjqVZlb759kKU6kSbHo?=
+ =?us-ascii?Q?04cd8yRlHX1G0Ljy4+sv0OLCcGBzFIWkgtHu5FFKUYSQFuOYoqBXVPJkKS4d?=
+ =?us-ascii?Q?dYLDCJZMu1v81jVxsDHmlJIdMvBL8Yce2ocD28Qa5oD4YSIrwdKI9RxGSx0K?=
+ =?us-ascii?Q?kxQuPj5rA3YEF320NMhVelGacwr0RoTgnv4Gdxtby7UpjYaASK8Sg3/0oV/T?=
+ =?us-ascii?Q?F31fhrkckWeEAfWr8HEfvGvwEP34lPuRyPGIXJ2yMfxYgwACMQ/bWFK/kWz8?=
+ =?us-ascii?Q?gUtbwzFoZsprKVhaAm1yQSdsidIIC8TbmssKBazRD+jE2TRsonHMLjcYp1hr?=
+ =?us-ascii?Q?l1Gf8tuUUyEtcy+H2HHpNXjHtchjvn0SUg0EABpKfCBq4yf4O4K+O5U6+fIm?=
+ =?us-ascii?Q?UF5jniBtHXxCsfyUQoAt8es83HtSP50Laznf3LH+XPbgQjMSuwCsKKT1aAl9?=
+ =?us-ascii?Q?dbuVzEky5Kxa+13H6QHaIJvMiLSohf1T8LaXo9sBTPTceow9Gm6/iU8z8kmV?=
+ =?us-ascii?Q?ihKA8fT1eDeoGQkupm8rTO+Mb40VYpaTJ5tSEjwGf7weeVJEm38LcE7lRDc0?=
+ =?us-ascii?Q?DkMUNl848TdN0W0QrpFifE/07Vu9XoAjzxqaoORxXi4lE2wQmlD+qxEpEJhw?=
+ =?us-ascii?Q?2iBy3IDHIFN7dVlbzsUqhGT7CKxH+PSpLHrmD+IiPya8TA0RmDq1bQ=3D=3D?=
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(36860700013)(376014)(7416014)(82310400026);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:satlexmb08.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(7416014)(376014)(82310400026)(36860700013);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Sep 2025 12:39:14.1446
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Sep 2025 12:39:18.7178
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 6104e799-f451-49ac-5291-08ddf7798a79
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2b496a50-4f93-4aa8-ffb7-08ddf7798d32
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb08.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	MWH0EPF000971E4.namprd02.prod.outlook.com
+	MWH0EPF000971E8.namprd02.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BL1PR12MB5825
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR12MB5806
 
-This patch series adds support for the AMD Versal Gen2 UFS, including:
-- Device tree bindings and driver implementation.
-- Secure read support for the secure retrieval of UFS calibration values.
-- Vendor-specific interrupts support to the UFS core, enabling handling
-  of interrupt bits that are not defined in UFSHCI specification,
-  to avoid unhandled interrupts.
+From: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
 
-Ajay Neeli (1):
-  firmware: xilinx: Add APIs for UFS PHY initialization
+Add devicetree document for AMD Versal Gen 2 UFS Host Controller.
+This includes clocks and clock-names as mandated by UFS common bindings.
 
-Izhar Ameer Shaikh (1):
-  firmware: xilinx: Add support for secure read/write ioctl interface
-
-Sai Krishna Potthuri (3):
-  dt-bindings: ufs: amd-versal2: Add support for AMD Versal Gen 2 UFS
-    Host Controller
-  ufs: core: Add vendor specific ops to handle interrupts
-  ufs: amd-versal2: Add AMD Versal Gen 2 UFS support
-
- .../devicetree/bindings/ufs/amd,versal2-ufs.yaml   |  61 +++
- MAINTAINERS                                        |   7 +
- drivers/firmware/xilinx/Makefile                   |   2 +-
- drivers/firmware/xilinx/zynqmp-ufs.c               | 118 +++++
- drivers/firmware/xilinx/zynqmp.c                   |  46 ++
- drivers/ufs/core/ufshcd-priv.h                     |   8 +
- drivers/ufs/core/ufshcd.c                          |   3 +
- drivers/ufs/host/Kconfig                           |  13 +
- drivers/ufs/host/Makefile                          |   1 +
- drivers/ufs/host/ufs-amd-versal2.c                 | 589 +++++++++++++++++++++
- drivers/ufs/host/ufshcd-dwc.h                      |  49 ++
- drivers/ufs/host/ufshci-dwc.h                      |   5 +
- include/linux/firmware/xlnx-zynqmp-ufs.h           |  38 ++
- include/linux/firmware/xlnx-zynqmp.h               |  16 +
- include/ufs/ufshcd.h                               |   2 +
- include/ufs/ufshci.h                               |   3 +
- include/ufs/unipro.h                               |   1 +
- 17 files changed, 961 insertions(+), 1 deletion(-)
+Signed-off-by: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
+Co-developed-by: Ajay Neeli <ajay.neeli@amd.com>
+Signed-off-by: Ajay Neeli <ajay.neeli@amd.com>
+---
+ .../devicetree/bindings/ufs/amd,versal2-ufs.yaml   | 61 ++++++++++++++++++++++
+ 1 file changed, 61 insertions(+)
  create mode 100644 Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
- create mode 100644 drivers/firmware/xilinx/zynqmp-ufs.c
- create mode 100644 drivers/ufs/host/ufs-amd-versal2.c
- create mode 100644 include/linux/firmware/xlnx-zynqmp-ufs.h
 
+diff --git a/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml b/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
+new file mode 100644
+index 0000000..9f55949
+--- /dev/null
++++ b/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
+@@ -0,0 +1,61 @@
++# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
++%YAML 1.2
++---
++$id: http://devicetree.org/schemas/ufs/amd,versal2-ufs.yaml#
++$schema: http://devicetree.org/meta-schemas/core.yaml#
++
++title: AMD Versal Gen 2 UFS Host Controller
++
++maintainers:
++  - Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
++
++allOf:
++  - $ref: ufs-common.yaml
++
++properties:
++  compatible:
++    const: amd,versal2-ufs
++
++  reg:
++    maxItems: 1
++
++  clocks:
++    maxItems: 1
++
++  clock-names:
++    items:
++      - const: core
++
++  power-domains:
++    maxItems: 1
++
++  resets:
++    maxItems: 2
++
++  reset-names:
++    items:
++      - const: ufshc
++      - const: ufsphy
++
++required:
++  - reg
++  - clocks
++  - clock-names
++  - resets
++  - reset-names
++
++unevaluatedProperties: false
++
++examples:
++  - |
++    #include <dt-bindings/interrupt-controller/arm-gic.h>
++    ufs@f10b0000 {
++        compatible = "amd,versal2-ufs";
++        reg = <0xf10b0000 0x1000>;
++        clocks = <&ufs_core_clk>;
++        clock-names = "core";
++        resets = <&scmi_reset 4>, <&scmi_reset 35>;
++        reset-names = "ufshc", "ufsphy";
++        interrupts = <GIC_SPI 234 IRQ_TYPE_LEVEL_HIGH>;
++        freq-table-hz = <0 0>;
++    };
 -- 
 1.8.3.1
 
