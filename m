@@ -1,32 +1,32 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3499253957;
-	Fri, 19 Sep 2025 11:52:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 458A0241114;
+	Fri, 19 Sep 2025 11:56:38 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758282731; cv=none; b=W1edqmeMEJS40mJISexrsN7+ScLzsglP3JWHyXczhsyVV0pVtkY2KCfQ+mEscRwt9KOAiNBB6YIG3TJapHhfPQRFhb8BcAPhPhP2Vojmxj0b/NjEcB2DdG1JEgz/Wi5xIWxEi4xDJ2zlmDf5dnQpRUVJkx9CfALx1V4ACMtOYk0=
+	t=1758282999; cv=none; b=rWbUKsV/yzcbIVynWsl8fscPpqXsQO3HzyT3XPvas8jKPELBjwOflCdfCq/j3LxGKFwy6e1iNkgdmrQB5xpxKX37UNkERsnLCBl9My0KimH/d4kmGofxXQMPRLVyCZjJ0GtGP1jDhWFQZOzD+QQeqs8njrD935V9BQIzFA7NHZ4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758282731; c=relaxed/simple;
-	bh=4zOOWCIE/jOUUbkA1p7nAv4iBylqqTbsZNU+OpYIMtM=;
+	s=arc-20240116; t=1758282999; c=relaxed/simple;
+	bh=XwTnZALbZwj44TjyhIuxH8YvKou6PHqTMKw/IZCxo3A=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition; b=Zdeg3NKJPp8s16lSlVMK68mqfkjZAdM7wJq4qwv8JKe+wa6rQS02EtLZbyMKoLMs7pNt/yYAM9GxxpX8WxcWud5ZnbG4turQTsH4cYSiRf/uGJQ1Rv6AXGn5ExBwRvOGSJPG+a3Veewvw6/vF/aXhpvoA2vcr4UJ8b/hq8swuvg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=j59se0WM; arc=none smtp.client-ip=10.30.226.201
+	 Content-Disposition; b=QEQNuvXWEO1+UvdCe10tHVpDLnnPpyEeWSeNaAg4+/JYTT2PP994+xvoZqWC58DNQUXHwwpnU93Rha9ixIqE/IjbXPEq2HMoHGmJBY5WmOf3uKazriA/DZHPxeKh86V3t3p3ioa3pjunb+8V5/YDKBiedQuv4kWQ3OA6k3q0dpg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=duMJq5ht; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="j59se0WM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 348C5C4CEF0;
-	Fri, 19 Sep 2025 11:52:05 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="duMJq5ht"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0CD43C4CEF0;
+	Fri, 19 Sep 2025 11:56:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758282730;
-	bh=4zOOWCIE/jOUUbkA1p7nAv4iBylqqTbsZNU+OpYIMtM=;
+	s=k20201202; t=1758282998;
+	bh=XwTnZALbZwj44TjyhIuxH8YvKou6PHqTMKw/IZCxo3A=;
 	h=Date:From:To:Cc:Subject:From;
-	b=j59se0WMkE6KHF7R+PhF5ql6vHkA7RgkKnujtTNGDU7sOBeavbYbWu2KsV+1rfYxX
-	 +I54chMi6p8W9eWISW9U1Hxca7HOfnaQvr807ihWAuZ4LHgax2/tgiaWoL85Lv55mn
-	 fvb1XGCRl04g3y/tAZpBlWWt5EXq9TZyjnRtJSvqvneQfuE1KghDdiIIWGazNistup
-	 GHtbcTMgrirIMelgenu9rOejuXM6oIPJCsdYDWueZFX5hw6/0wmLVyPkxBx6uV5uh6
-	 k9Np6vjWpq96grXyeRUZhISLUb8Z0Dp4jWoBhyGEN3tdSLPCgoPCk+TvSz3HFhKycD
-	 gxTYnj++WSpNw==
-Date: Fri, 19 Sep 2025 13:52:02 +0200
+	b=duMJq5htnYGfa6pIzloPCsqjLvFbcBvKa/Ei4VH3UU6qESp4wzXOQjNFZD21AAqvB
+	 jNb3Fz9flf2FwD4mOaI/ITCYfhGCDagR/lDsTLY7ckPj5JZiJTucKq9Nuk9nR5t1AF
+	 IwNlTrcyRbD7AJWoAmAmr/9WoxbvF9gxK4rmdcv3IE3RvPHjrGJXHr8c/Be4nWDL7X
+	 MflvJ++WLPdh/MVZ3pSc70Z8t6dCK3p+36tAhvX7lAwGO6z8AZ2q/tIdB4we2k0FHo
+	 KA2erK1p760UfB+4x1HCi2wDxXRa7CMUuz2QUtkKH3PRhSPCEeMr8ma96fd9THP0I6
+	 undi/Z5TZfFkg==
+Date: Fri, 19 Sep 2025 13:56:29 +0200
 From: "Gustavo A. R. Silva" <gustavoars@kernel.org>
 To: Kashyap Desai <kashyap.desai@broadcom.com>,
 	Sumit Saxena <sumit.saxena@broadcom.com>,
@@ -38,9 +38,9 @@ Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	"Gustavo A. R. Silva" <gustavoars@kernel.org>,
 	linux-hardening@vger.kernel.org
-Subject: [PATCH][next] scsi: megaraid_sas: Avoid a couple
+Subject: [PATCH v2][next] scsi: megaraid_sas: Avoid a couple
  -Wflex-array-member-not-at-end warnings
-Message-ID: <aM1D4nPVH96DglfT@kspp>
+Message-ID: <aM1E7Xa8qYdZ598N@kspp>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -68,10 +68,17 @@ This overlays the trailing members onto the FAM (struct MR_LD_SPAN_MAP
 ldSpanMap[];) while keeping the FAM and the start of MEMBERS aligned.
 
 The static_assert() ensures this alignment remains, and it's intentionally
-placed inmediately after `struct virtnet_info` --no blank line in between).
+placed inmediately after the corresponding structures --no blank line in
+between.
 
 Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
 ---
+Changes in v2:
+ - Update changelog text --remove reference to unrelated structure.
+
+v1:
+ - Link: https://lore.kernel.org/linux-hardening/aM1D4nPVH96DglfT@kspp/
+
  drivers/scsi/megaraid/megaraid_sas_fusion.h | 17 ++++++++++++-----
  1 file changed, 12 insertions(+), 5 deletions(-)
 
