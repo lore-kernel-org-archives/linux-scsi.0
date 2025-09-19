@@ -1,46 +1,46 @@
-Received: from CH1PR05CU001.outbound.protection.outlook.com (mail-northcentralusazon11010029.outbound.protection.outlook.com [52.101.193.29])
+Received: from CH5PR02CU005.outbound.protection.outlook.com (mail-northcentralusazon11012031.outbound.protection.outlook.com [40.107.200.31])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF8671A9FAB;
-	Fri, 19 Sep 2025 12:39:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.193.29
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F087B1A9FAB;
+	Fri, 19 Sep 2025 12:39:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=40.107.200.31
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758285551; cv=fail; b=hTZJJHnCW4QCMpEWWQmZTV7B42gr7pkjRh5EtvqAEv8x/kgETuDjDjPyIMyhhBDEXjwKSPxoxYciFLwocGyXtcQAXK0Mq3ljWVFaelDmWNQrUfqDioSEnmeCbxz306Q6Jle4bDIa+DAzuegAzhl44r5wAYanYeaQrAdUur4kpb4=
+	t=1758285555; cv=fail; b=dSqUQr6YDdqxyKVo/NbLZRQ2OHzQq8xVBb9L+N/92K1qWKYLicnv9YqDz4uJS2UItaQ63OfTeuFFVx2hrxiIgBVNphKLfzI0OLhhiIWTlli68g+jyEUieHt/5vAzPzENbfswFsBrl63GgFSqXhF/ppsCrrJ2DhN4fkb67H43Ekg=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758285551; c=relaxed/simple;
-	bh=kJ7JN2/JLkUQFWq1hYS7fhiZ8Z6tj1e8ohJN2UkZKOE=;
+	s=arc-20240116; t=1758285555; c=relaxed/simple;
+	bh=/AW3NMn3JRqN62kE74aJeMgm+lmr71G7z5vUXa4y7KE=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ugLQ2LrlaYv9255wPZETC1A4Nmc8cs5+ijd4bGWMqH4k4wTo/v/mbFyd0b722rJXsCcjtVwtHO3KiB+lc/TB66dId7GY3z56M5FtwfHkUB4DGO8Fj3jQBaqfDx3Kn7HNe05QVViLXR0+9JKfBrwQx1sBu6H9ewvazARuVbeSGEI=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=kjOMvuE6; arc=fail smtp.client-ip=52.101.193.29
+	 MIME-Version:Content-Type; b=cH4OYciHCSe5tyQR2isd6WiPFlT9ePDmuLoFLVZLTAbVXUIn97azO2mDkbFo21Mep6znNsMq6NnRmMhbcDnb/s/Rp3Dhr3CjJZFe1+Kks524M76lRIJ/G8jj2o8BXESW1Q6t+D5pv3O8iqk55YaJXWWp0h7RIHmk2EW/IEUQsAY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com; spf=fail smtp.mailfrom=amd.com; dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b=e7x9F2cs; arc=fail smtp.client-ip=40.107.200.31
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amd.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=amd.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="kjOMvuE6"
+	dkim=pass (1024-bit key) header.d=amd.com header.i=@amd.com header.b="e7x9F2cs"
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=lk2SYAJlAKjOGnxJRXxnmcaBRiTO0bmsmPM20WRV1Z41D1yglMUuXHQdfKqEoZ+mH1WjfmQfe4GirDHJ9zRimMFZ7GZBPRtJfEwYlD504jX31Ec4T1NZhZnP40HtfGonDKTNlYsKz/jOwYvLCT4wCH6AbaUwmNXv+L4vV8Rm48v04VlAfiVI+BFXJ3sIj+i6HtHxzxPHEob9agloyPQcX/HwF8YnaPkDpyK/EhhTRBORhntqexSTAIl5J4GE8d31ZuQbF8UtZp6e4mGkduRySj8DipmkKu2fCraYxs9fyoAzYrPXTQ3BKSWOyL15JSBb8x7l1mbDX1Up+UmDdCToEw==
+ b=nhFMwu4DpzRdffDzvfIvJA/ow2tWz0NeCmM0VZCVxznLuIXaZQ90fb20ic19z5fxe+2/+QJUJUuD25hyPZtZlAdtjZrrPnk7F0Uzw1l/oiyQyOwB93jzMTh1vexif7VW9nx8Bo4MAJ9oTwO0eJnjW5DWd9BAtbrecIXxPkbKBgS+n7NaC77MSNcjvNBt4xBzkZ9zFnjQ9hUlfYO7oLbLBiJkdCLtEDc3CLAKP+tvGpQ/r24MKvtOq9waqVfcq8YciK/x/GKg+P0Bpoe1wnf2e0TXyVB40qCfb5UNx5FF3020XUu9BzekMtDcYOVSwUssoce66ZPERrYIviMv/jKf4A==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=8QAP9Jweiz6mJRKe8HWf+P2/sHpWKsRImOFG6QbquNI=;
- b=muF9LHraMHi6b2e49nm4WaX4Yqo0Kp51LL/TOR1/iSD+yJIMBSVATH0C5k/CkcKtvodcgJiDhxJrxWu0e87yIIb6R0UkxoBPzcYGzVCv0X+dm0rcIevQ/wLY2PIXzC57VqWJJlPW6242FCXPzlc3FQ1KZm0I/Vkxz91ItXlhisqM2Cx5Dk9xpaSuJz9cwIm/l3fhETVvkdegObdI6G8QxIfVrBugYhsiGRqUDu23z8Whe16QJ2J9+8Ugh5+FSQY6/zukQfP5wBGkXWvN2FYqIx6cg+fKAGHkfiQ55087kDmyHL7iv49KAb1ieZtAjuKoW8jKPJnZNJyp463Rj80ssw==
+ bh=/SK7ingm9bxDO8cm2LYXoG9S/iwT8P/p+wggDJUs5ac=;
+ b=nY9F5GVnmUBiz2m7VKnXzTKfnkjC0ZaDD8OyHjtHyjs+jpnVe85SPqB+JZ4t+QFG76Rp9kSabsFe1aQ3z3DYfeR94T2HXnNl0VbfrDJN0DyaYEx52p3fxdn8C5Sn2QVYv5mzF7nqxxptH2Fud7zkk9QiVbuOwja756P5pgQJmv6pF29AgFaycb6BaJpQ7P+6lmunzN0qv8lFwCJNCae5aArStpL5LPw9THoxzLiVOEHly+S4AgD+r85W/yZ+spcFBfC4hvGzjlTN+v4JoCypNtqh7IJTjm0DPaVkIM4gGg84C/eShyukFSh+6CMpV7t4pm3nB2+t9oxxkOPlVMmnPw==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass (sender ip is
  165.204.84.17) smtp.rcpttodomain=oracle.com smtp.mailfrom=amd.com; dmarc=pass
  (p=quarantine sp=quarantine pct=100) action=none header.from=amd.com;
  dkim=none (message not signed); arc=none (0)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=amd.com; s=selector1;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=8QAP9Jweiz6mJRKe8HWf+P2/sHpWKsRImOFG6QbquNI=;
- b=kjOMvuE644nF2Y89fNrr4kWKdMJrVFwjq5j6MXgmSVa8I54Sv8y8R36weMKSbs7LZFCSqkiBT+JSA/cRfVz7AEMAzgRfyidwELvmbGV+3hyPwU5dxxuLJVlD9WaZyVCSMYlUAHFE/wgi17st3fI8cWiHkveTqqc8hWYvPSLY7Y0=
-Received: from BY5PR13CA0003.namprd13.prod.outlook.com (2603:10b6:a03:180::16)
- by CH1PR12MB9720.namprd12.prod.outlook.com (2603:10b6:610:2b2::11) with
+ bh=/SK7ingm9bxDO8cm2LYXoG9S/iwT8P/p+wggDJUs5ac=;
+ b=e7x9F2csDCQYBlrxxs8u9NXaRiN6wUHlitktbGhdH1rt2tFo7zxTN9dCYNFcewOQPJeGidvEODitb4UOi622HHtHIWcn7h+cYOHNF8dqEThz5Olx+zuoKMw8IH+2O7ciGbRknL86e9GmTWM2qauPGuDt+R4YkMc0zRkND2xg6dI=
+Received: from MW4P221CA0010.NAMP221.PROD.OUTLOOK.COM (2603:10b6:303:8b::15)
+ by DM6PR12MB4234.namprd12.prod.outlook.com (2603:10b6:5:213::18) with
  Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9137.14; Fri, 19 Sep
- 2025 12:39:07 +0000
-Received: from SN1PEPF0002529F.namprd05.prod.outlook.com
- (2603:10b6:a03:180:cafe::48) by BY5PR13CA0003.outlook.office365.com
- (2603:10b6:a03:180::16) with Microsoft SMTP Server (version=TLS1_3,
- cipher=TLS_AES_256_GCM_SHA384) id 15.20.9137.14 via Frontend Transport; Fri,
- 19 Sep 2025 12:39:07 +0000
+ 2025 12:39:09 +0000
+Received: from SN1PEPF0002529D.namprd05.prod.outlook.com
+ (2603:10b6:303:8b:cafe::2a) by MW4P221CA0010.outlook.office365.com
+ (2603:10b6:303:8b::15) with Microsoft SMTP Server (version=TLS1_3,
+ cipher=TLS_AES_256_GCM_SHA384) id 15.20.9137.13 via Frontend Transport; Fri,
+ 19 Sep 2025 12:39:09 +0000
 X-MS-Exchange-Authentication-Results: spf=pass (sender IP is 165.204.84.17)
  smtp.mailfrom=amd.com; dkim=none (message not signed)
  header.d=none;dmarc=pass action=none header.from=amd.com;
@@ -48,20 +48,20 @@ Received-SPF: Pass (protection.outlook.com: domain of amd.com designates
  165.204.84.17 as permitted sender) receiver=protection.outlook.com;
  client-ip=165.204.84.17; helo=satlexmb07.amd.com; pr=C
 Received: from satlexmb07.amd.com (165.204.84.17) by
- SN1PEPF0002529F.mail.protection.outlook.com (10.167.242.6) with Microsoft
+ SN1PEPF0002529D.mail.protection.outlook.com (10.167.242.4) with Microsoft
  SMTP Server (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.20.9137.12 via Frontend Transport; Fri, 19 Sep 2025 12:39:07 +0000
-Received: from satlexmb10.amd.com (10.181.42.219) by satlexmb07.amd.com
+ 15.20.9137.12 via Frontend Transport; Fri, 19 Sep 2025 12:39:08 +0000
+Received: from SATLEXMB05.amd.com (10.181.40.146) by satlexmb07.amd.com
  (10.181.42.216) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Fri, 19 Sep
- 2025 05:39:02 -0700
-Received: from satlexmb08.amd.com (10.181.42.217) by satlexmb10.amd.com
- (10.181.42.219) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Fri, 19 Sep
- 2025 05:39:01 -0700
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.2.2562.17; Fri, 19 Sep
+ 2025 05:39:08 -0700
+Received: from satlexmb08.amd.com (10.181.42.217) by SATLEXMB05.amd.com
+ (10.181.40.146) with Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id 15.1.2507.39; Fri, 19 Sep
+ 2025 07:39:06 -0500
 Received: from xhdharinik40.xilinx.com (10.180.168.240) by satlexmb08.amd.com
  (10.181.42.217) with Microsoft SMTP Server id 15.2.2562.17 via Frontend
- Transport; Fri, 19 Sep 2025 05:38:56 -0700
+ Transport; Fri, 19 Sep 2025 05:39:01 -0700
 From: Ajay Neeli <ajay.neeli@amd.com>
 To: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>,
 	<robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
@@ -69,10 +69,11 @@ To: <martin.petersen@oracle.com>, <James.Bottomley@HansenPartnership.com>,
 CC: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
 	<linux-scsi@vger.kernel.org>, <devicetree@vger.kernel.org>, <git@amd.com>,
 	<michal.simek@amd.com>, <srinivas.goud@amd.com>,
-	<radhey.shyam.pandey@amd.com>, Ajay Neeli <ajay.neeli@amd.com>
-Subject: [PATCH 3/5] firmware: xilinx: Add APIs for UFS PHY initialization
-Date: Fri, 19 Sep 2025 18:08:33 +0530
-Message-ID: <20250919123835.17899-4-ajay.neeli@amd.com>
+	<radhey.shyam.pandey@amd.com>, Sai Krishna Potthuri
+	<sai.krishna.potthuri@amd.com>, Ajay Neeli <ajay.neeli@amd.com>
+Subject: [PATCH 4/5] ufs: core: Add vendor specific ops to handle interrupts
+Date: Fri, 19 Sep 2025 18:08:34 +0530
+Message-ID: <20250919123835.17899-5-ajay.neeli@amd.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20250919123835.17899-1-ajay.neeli@amd.com>
 References: <20250919123835.17899-1-ajay.neeli@amd.com>
@@ -83,262 +84,140 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain
+Received-SPF: None (SATLEXMB05.amd.com: ajay.neeli@amd.com does not designate
+ permitted sender hosts)
 X-EOPAttributedMessage: 0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: SN1PEPF0002529F:EE_|CH1PR12MB9720:EE_
-X-MS-Office365-Filtering-Correlation-Id: 0cf65b47-408e-4e8d-e8d4-08ddf7798631
+X-MS-TrafficTypeDiagnostic: SN1PEPF0002529D:EE_|DM6PR12MB4234:EE_
+X-MS-Office365-Filtering-Correlation-Id: 715e5d6f-7644-43a7-d0b2-08ddf7798750
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
 X-Microsoft-Antispam:
-	BCL:0;ARA:13230040|82310400026|7416014|376014|36860700013|1800799024;
+	BCL:0;ARA:13230040|1800799024|82310400026|36860700013|7416014|376014;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?2SBMk8vchxxSsr3BHM65wZZ3C1I3vSLeS3w2ingIaMG4czYtoQIt7oy6Ojdo?=
- =?us-ascii?Q?ZarThnFcqpw/ENBBobxmEGXu5Oedy74hl4YhXV/n6+rMvP3BMk32gGo7u2O2?=
- =?us-ascii?Q?7QQXWaR5uTS57T1dZUAh91RuEsPPDK+Cp7sqk9foopmcompaWJCme1VRzhPR?=
- =?us-ascii?Q?5hzT2qFZ12sGcPmxirQrSgRbUV+iUCPdwodU5oaHYL+GIG/urFfSIQPwqcjF?=
- =?us-ascii?Q?Eo6Qc6Tjr1N5PjiMC70nKIPAvZ5QnhCh38R+riCdzlBpn9kSatRFQ4XsVOGK?=
- =?us-ascii?Q?5i+Mf6VPIvZ4S8VNzNMhspwhs6jfXe8UxUCOZykEckyytYwG5UBxxw/5HHY5?=
- =?us-ascii?Q?Dtl+Wb2q4hTxPKCO0DtPbXH+G0J3rDGuYq/krUBFF8LheolpkR38OyPXx3Wr?=
- =?us-ascii?Q?sK6wmu7UATB9iMZxRBZHs+DGHNisnLj8Txl5u9Sy7d9owhqPeDPzf7Ft8g8S?=
- =?us-ascii?Q?zlcnlGJmKFDH+H4QAz3gRdOChExeiJbzKRIfJJoYBHrEd5uN1REyZ47bll9r?=
- =?us-ascii?Q?NIC1Tz9GwrQn6+sqm8hG7PGBZtVztKeyJAutKnTTy7jyJtf9wHBwo/Ul4+tx?=
- =?us-ascii?Q?7Jr51NT/iLv2H5VbjGQZJTU6lODL7ck+xExB6P8wgzRaPYDMOm8clsVL7MgX?=
- =?us-ascii?Q?S93xD2DYatXLhb5CV9jVBhQ17038AaZJzDKkxVHDJ4P8A5i+eFonCfa5N961?=
- =?us-ascii?Q?jnEJoJiMUC8tezR8mTAGRfANAfBKfB/oGb2xvV6Uwrrv4WJn2lNZr/JhxZQg?=
- =?us-ascii?Q?/by2oLnUply+6m3cIU8G/CIsohCMhmVXiUke5MKP9ybsv3/HqpGCbDwxVLwL?=
- =?us-ascii?Q?U83aZM7wqGWKNB9M14RPxA8SWC0xhsn8ba1QPkMJ2FZG/4ELPQuxMi+PWmNP?=
- =?us-ascii?Q?82XmCqgmPptQZQoKbEL41nG3AprXGpg1ChwvdTZKoWcStbL6pFYckJdUwS9a?=
- =?us-ascii?Q?jvo5R5xNTabqJpOROgYfyKBlrA84wROSD/Snlhd30Z4kLqDLy2BQjj925b0g?=
- =?us-ascii?Q?LAPb4AYp4SRsdJVLrDUmSUoDSI6kuo2ZJlS2jHzlVTzhfEmwhkrJu50i5E2G?=
- =?us-ascii?Q?lfrbAaUWSVOGDDhO+KXpirfKMXOQ6uEgrcD8Gy6CQNk4mcu05pUMrrAlpNZE?=
- =?us-ascii?Q?0OrMfTcHbGdyEsN2HoUQXlX2ThNr6ubFPzEx+ChAl6FLgORMMlqkB3GsgiFY?=
- =?us-ascii?Q?IuBS+Re6gqpfKbrmVHU7OMyI+vCqPGyw78DBaOZ9Q/EqFk1hI8wd5f+K1/6q?=
- =?us-ascii?Q?tzFOpvPWn2BghfSb3V4tHGzJjyYpcCEERotrI3u+CtTKvgViJcGRwi0QKzsu?=
- =?us-ascii?Q?Q5XAomKQcBn+mXWDyr2MuHztIplPUkLklLWhcW/eHUwU8ioDjsi6MimpFbdM?=
- =?us-ascii?Q?OBLNmAJK9bMn7X83BqYcwFGB1AtF1CdNuBUfZd7NM/YFSHkr4tzgFcgTCB+e?=
- =?us-ascii?Q?DHNSpkeh63MKHMgz/ud5iaoK6OZg0HOv7xNQ88/OpeLv74zVbcZiOPPQ1QBz?=
- =?us-ascii?Q?gNC7Vzn+K81fsT89KzrJSie6SB7NOrdtVNvF?=
+	=?us-ascii?Q?Lx2osqy5975SnrdNSFmMBKqCEj9hI7py4eahW4o5jaicy3qaYuwjaYMocCu5?=
+ =?us-ascii?Q?MhvpS34IKmYdrp6pBTVG52roerCFXQGjgcdZMkqHIr4PNAit+7Zi6xPBLuLN?=
+ =?us-ascii?Q?9K5XHrmaSJS5SsE49G3MvHeu/HRzzt6IH/ocVPuXyQAxyrLA/gWoZg1n3R/o?=
+ =?us-ascii?Q?VW+2bWxJRTApaxxPJZXD4YOJyeicKtKJqWjEvHhSZedKneuV8MEUAccoQzQx?=
+ =?us-ascii?Q?ql+/O5ZS92frcThcMIbGMO+iyJ8VA3d85ibBAKRNCbjF0yh5ttTkPwCbq3aL?=
+ =?us-ascii?Q?TcgpyNovkFkSvbu1vlM5fzh9nFXj9JrwIpbeX3T5MWeGoc+0KVqUAkqHONBb?=
+ =?us-ascii?Q?bIGJV48ZGzY5qDfFhL2ubt7k61Xyjn644bhxGUKhj/GhyWAFf6PH0cbtVU2M?=
+ =?us-ascii?Q?Ea3lgTCptUogiwZ5WTjyEb/kN6NPIj2uy5in7Q7TvZWMnTukiZgytHVTSy89?=
+ =?us-ascii?Q?tcwf3QV1kjBdgYtMWVFinluwoH65lFHDS1v2VIedYxSIt97/SSqB2gDKwgLP?=
+ =?us-ascii?Q?LAOvoHiSJEe04nuQGwaP5a3+v/iLfraa7DBwXVuZ6+0cqI/xlXKd8ow9jswz?=
+ =?us-ascii?Q?K8LXS1TaRIvEKnarleVj5ft6YNn55s7sLDWTVY8H2CRgBujsSpYaoqXfhPNI?=
+ =?us-ascii?Q?ERn5PI76teYf6ReCPMaVI7bw8WCKWwtc6kBi3xVAEtSb8NKH+tKfNy1ZQKs0?=
+ =?us-ascii?Q?MTlsjcJS4tpc/5MRNLHfgk6dq9+4GNQqCXhHcpeeYSm9nk7bdmADXqpqPXIm?=
+ =?us-ascii?Q?BdhTiLTCEzZxKAK1nbf+niFORjORVXVOooIB0vvaWqNykLUpU7S7NB/m1/yp?=
+ =?us-ascii?Q?Xl6+AEqvpL0oRwFZQkPKBkDE7mRXDcR+BU0leLH7X7J+7id2KgNCHGL8FFpc?=
+ =?us-ascii?Q?MknxoWBkb1dPLfBTzx5GllSdx5De0oy3rryOBskNIEDy2bX2pEJUvLgf00KS?=
+ =?us-ascii?Q?70NWoJ6MOPLpWOmXzYdaR59KslSbUsuva1Ku5SuTb1xEMT3xbib/VoRBdKDh?=
+ =?us-ascii?Q?pgH+2AdnJer4ynFQZ+cDs+j+F40gyn+WyDMiFawa1XJmXZdiOUBdwPqs4Eai?=
+ =?us-ascii?Q?h0pbV3ZwrJK68RDVNJTnWAFhYakGczPDYxmDJpHU3FBoG/tLJNnsYFpvM8/+?=
+ =?us-ascii?Q?ooClDkeNwdB85iOCBfT99rc+VLemhWwuciTPOhbkmwaHwKvzVwij7AGozCiV?=
+ =?us-ascii?Q?3ifVToywEE0Tp2cZt8d7mlK2a0jgR5P6dQIsY3NrXxik7c4eVa6EX8gxF4+0?=
+ =?us-ascii?Q?OUSqSZ36CRaED4BvEsnyV5Reo6Uv4HiDVDAYqTveB6uwN0MqnrNqsi1C9sFH?=
+ =?us-ascii?Q?YC43YJHK4kflgsg++WVF97hXD5RKmC/w3zknG6g4AAKEozV459Nad94NYld9?=
+ =?us-ascii?Q?7zND2v5wjd3LXDgcJmH6iNkQaDhJkK7FkcSdJ/D/x0FC2MZIzJzKP/u4++TJ?=
+ =?us-ascii?Q?SqPmzeFWLacRpZ0kfy+vxZjTvmNUS95DlsEoGPLgcLpjtofKQuqopuW88cZ0?=
+ =?us-ascii?Q?Y0d5y7UwzpNQKwkO03wKDXXkmox7Wt0dcS2T?=
 X-Forefront-Antispam-Report:
-	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(82310400026)(7416014)(376014)(36860700013)(1800799024);DIR:OUT;SFP:1101;
+	CIP:165.204.84.17;CTRY:US;LANG:en;SCL:1;SRV:;IPV:CAL;SFV:NSPM;H:satlexmb07.amd.com;PTR:InfoDomainNonexistent;CAT:NONE;SFS:(13230040)(1800799024)(82310400026)(36860700013)(7416014)(376014);DIR:OUT;SFP:1101;
 X-OriginatorOrg: amd.com
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Sep 2025 12:39:07.0297
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 19 Sep 2025 12:39:08.9192
  (UTC)
-X-MS-Exchange-CrossTenant-Network-Message-Id: 0cf65b47-408e-4e8d-e8d4-08ddf7798631
+X-MS-Exchange-CrossTenant-Network-Message-Id: 715e5d6f-7644-43a7-d0b2-08ddf7798750
 X-MS-Exchange-CrossTenant-Id: 3dd8961f-e488-4e60-8e11-a82d994e183d
 X-MS-Exchange-CrossTenant-OriginalAttributedTenantConnectingIp: TenantId=3dd8961f-e488-4e60-8e11-a82d994e183d;Ip=[165.204.84.17];Helo=[satlexmb07.amd.com]
 X-MS-Exchange-CrossTenant-AuthSource:
-	SN1PEPF0002529F.namprd05.prod.outlook.com
+	SN1PEPF0002529D.namprd05.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Anonymous
 X-MS-Exchange-CrossTenant-FromEntityHeader: HybridOnPrem
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH1PR12MB9720
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DM6PR12MB4234
 
-- Add APIs for UFS PHY initialization.
-- Verify M-PHY TX-RX configuration readiness.
-- Confirm SRAM initialization and Set SRAM bypass.
-- Retrieve UFS calibration values.
+From: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
 
+Some vendors will define their own interrupts, current interrupt service
+routine handles only interrupts defined by the JEDEC standard.
+Add provision to handle vendor specific interrupts by defining vendor
+specific vops.
+
+Signed-off-by: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
 Signed-off-by: Ajay Neeli <ajay.neeli@amd.com>
-Acked-by: Senthil Nathan Thangaraj <senthilnathan.thangaraj@amd.com>
 ---
- drivers/firmware/xilinx/Makefile         |   2 +-
- drivers/firmware/xilinx/zynqmp-ufs.c     | 118 +++++++++++++++++++++++++++++++
- include/linux/firmware/xlnx-zynqmp-ufs.h |  38 ++++++++++
- include/linux/firmware/xlnx-zynqmp.h     |   1 +
- 4 files changed, 158 insertions(+), 1 deletion(-)
- create mode 100644 drivers/firmware/xilinx/zynqmp-ufs.c
- create mode 100644 include/linux/firmware/xlnx-zynqmp-ufs.h
+ drivers/ufs/core/ufshcd-priv.h | 8 ++++++++
+ drivers/ufs/core/ufshcd.c      | 3 +++
+ include/ufs/ufshcd.h           | 2 ++
+ include/ufs/ufshci.h           | 3 +++
+ 4 files changed, 16 insertions(+)
 
-diff --git a/drivers/firmware/xilinx/Makefile b/drivers/firmware/xilinx/Makefile
-index 875a537..70f8f02 100644
---- a/drivers/firmware/xilinx/Makefile
-+++ b/drivers/firmware/xilinx/Makefile
-@@ -1,5 +1,5 @@
- # SPDX-License-Identifier: GPL-2.0
- # Makefile for Xilinx firmwares
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index d0a2c96..04a31f0 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -118,6 +118,14 @@ static inline u32 ufshcd_vops_get_ufs_hci_version(struct ufs_hba *hba)
+ 	return ufshcd_readl(hba, REG_UFS_VERSION);
+ }
  
--obj-$(CONFIG_ZYNQMP_FIRMWARE) += zynqmp.o
-+obj-$(CONFIG_ZYNQMP_FIRMWARE) += zynqmp.o zynqmp-ufs.o
- obj-$(CONFIG_ZYNQMP_FIRMWARE_DEBUG) += zynqmp-debug.o
-diff --git a/drivers/firmware/xilinx/zynqmp-ufs.c b/drivers/firmware/xilinx/zynqmp-ufs.c
-new file mode 100644
-index 0000000..85da8a8
---- /dev/null
-+++ b/drivers/firmware/xilinx/zynqmp-ufs.c
-@@ -0,0 +1,118 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * Firmware Layer for UFS APIs
-+ *
-+ * Copyright (C) 2025 Advanced Micro Devices, Inc.
-+ */
-+
-+#include <linux/firmware/xlnx-zynqmp.h>
-+#include <linux/module.h>
-+
-+/* Register Node IDs */
-+#define PM_REGNODE_PMC_IOU_SLCR		0x30000002 /* PMC IOU SLCR */
-+#define PM_REGNODE_EFUSE_CACHE		0x30000003 /* EFUSE Cache */
-+
-+/* Register Offsets for PMC IOU SLCR */
-+#define SRAM_CSR_OFFSET			0x104C /* SRAM Control and Status */
-+#define TXRX_CFGRDY_OFFSET		0x1054 /* M-PHY TX-RX Config ready */
-+
-+/* Masks for SRAM Control and Status Register */
-+#define SRAM_CSR_INIT_DONE_MASK		BIT(0) /* SRAM initialization done */
-+#define SRAM_CSR_EXT_LD_DONE_MASK	BIT(1) /* SRAM External load done */
-+#define SRAM_CSR_BYPASS_MASK		BIT(2) /* Bypass SRAM interface */
-+
-+/* Mask to check M-PHY TX-RX configuration readiness */
-+#define TX_RX_CFG_RDY_MASK		GENMASK(3, 0)
-+
-+/* Register Offsets for EFUSE Cache */
-+#define UFS_CAL_1_OFFSET		0xBE8 /* UFS Calibration Value */
-+
-+/**
-+ * zynqmp_pm_is_mphy_tx_rx_config_ready - check M-PHY TX-RX config readiness
-+ * @is_ready:	Store output status (true/false)
-+ *
-+ * Return:	Returns 0 on success or error value on failure.
-+ */
-+int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
++static inline irqreturn_t ufshcd_vops_isr(struct ufs_hba *hba, u32 intr_status)
 +{
-+	u32 regval;
-+	int ret;
++	if (hba->vops && hba->vops->isr)
++		return hba->vops->isr(hba, intr_status);
 +
-+	if (!is_ready)
-+		return -EINVAL;
-+
-+	ret = zynqmp_pm_sec_read_reg(PM_REGNODE_PMC_IOU_SLCR, TXRX_CFGRDY_OFFSET, &regval);
-+	if (ret)
-+		return ret;
-+
-+	regval &= TX_RX_CFG_RDY_MASK;
-+	if (regval)
-+		*is_ready = true;
-+	else
-+		*is_ready = false;
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(zynqmp_pm_is_mphy_tx_rx_config_ready);
-+
-+/**
-+ * zynqmp_pm_is_sram_init_done - check SRAM initialization
-+ * @is_done:	Store output status (true/false)
-+ *
-+ * Return:	Returns 0 on success or error value on failure.
-+ */
-+int zynqmp_pm_is_sram_init_done(bool *is_done)
-+{
-+	u32 regval;
-+	int ret;
-+
-+	if (!is_done)
-+		return -EINVAL;
-+
-+	ret = zynqmp_pm_sec_read_reg(PM_REGNODE_PMC_IOU_SLCR, SRAM_CSR_OFFSET, &regval);
-+	if (ret)
-+		return ret;
-+
-+	regval &= SRAM_CSR_INIT_DONE_MASK;
-+	if (regval)
-+		*is_done = true;
-+	else
-+		*is_done = false;
-+
-+	return ret;
-+}
-+EXPORT_SYMBOL_GPL(zynqmp_pm_is_sram_init_done);
-+
-+/**
-+ * zynqmp_pm_set_sram_bypass - Set SRAM bypass Control
-+ *
-+ * Return:	Returns 0 on success or error value on failure.
-+ */
-+int zynqmp_pm_set_sram_bypass(void)
-+{
-+	u32 sram_csr;
-+	int ret;
-+
-+	ret = zynqmp_pm_sec_read_reg(PM_REGNODE_PMC_IOU_SLCR, SRAM_CSR_OFFSET, &sram_csr);
-+	if (ret)
-+		return ret;
-+
-+	sram_csr &= ~SRAM_CSR_EXT_LD_DONE_MASK;
-+	sram_csr |= SRAM_CSR_BYPASS_MASK;
-+
-+	return zynqmp_pm_sec_mask_write_reg(PM_REGNODE_PMC_IOU_SLCR, SRAM_CSR_OFFSET,
-+					    GENMASK(2, 1), sram_csr);
-+}
-+EXPORT_SYMBOL_GPL(zynqmp_pm_set_sram_bypass);
-+
-+/**
-+ * zynqmp_pm_get_ufs_calibration_values - Read UFS calibration values
-+ * @val:	Store the calibration value
-+ *
-+ * Return:	Returns 0 on success or error value on failure.
-+ */
-+int zynqmp_pm_get_ufs_calibration_values(u32 *val)
-+{
-+	return zynqmp_pm_sec_read_reg(PM_REGNODE_EFUSE_CACHE, UFS_CAL_1_OFFSET, val);
-+}
-+EXPORT_SYMBOL_GPL(zynqmp_pm_get_ufs_calibration_values);
-diff --git a/include/linux/firmware/xlnx-zynqmp-ufs.h b/include/linux/firmware/xlnx-zynqmp-ufs.h
-new file mode 100644
-index 0000000..d3538dd
---- /dev/null
-+++ b/include/linux/firmware/xlnx-zynqmp-ufs.h
-@@ -0,0 +1,38 @@
-+/* SPDX-License-Identifier: GPL-2.0 */
-+/*
-+ * Firmware layer for UFS APIs.
-+ *
-+ * Copyright (c) 2025 Advanced Micro Devices, Inc.
-+ */
-+
-+#ifndef __FIRMWARE_XLNX_ZYNQMP_UFS_H__
-+#define __FIRMWARE_XLNX_ZYNQMP_UFS_H__
-+
-+#if IS_REACHABLE(CONFIG_ZYNQMP_FIRMWARE)
-+int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready);
-+int zynqmp_pm_is_sram_init_done(bool *is_done);
-+int zynqmp_pm_set_sram_bypass(void);
-+int zynqmp_pm_get_ufs_calibration_values(u32 *val);
-+#else
-+static inline int zynqmp_pm_is_mphy_tx_rx_config_ready(bool *is_ready)
-+{
-+	return -ENODEV;
++	return 0;
 +}
 +
-+static inline int zynqmp_pm_is_sram_init_done(bool *is_done)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline int zynqmp_pm_set_sram_bypass(void)
-+{
-+	return -ENODEV;
-+}
-+
-+static inline int zynqmp_pm_get_ufs_calibration_values(u32 *val)
-+{
-+	return -ENODEV;
-+}
-+#endif
-+
-+#endif /* __FIRMWARE_XLNX_ZYNQMP_UFS_H__ */
-diff --git a/include/linux/firmware/xlnx-zynqmp.h b/include/linux/firmware/xlnx-zynqmp.h
-index f441eea..604a03f 100644
---- a/include/linux/firmware/xlnx-zynqmp.h
-+++ b/include/linux/firmware/xlnx-zynqmp.h
-@@ -16,6 +16,7 @@
- #include <linux/types.h>
+ static inline int ufshcd_vops_clk_scale_notify(struct ufs_hba *hba, bool up,
+ 					       unsigned long target_freq,
+ 					       enum ufs_notify_change_status status)
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 5442bb8..7a6dde8 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -7069,6 +7069,9 @@ static irqreturn_t ufshcd_sl_intr(struct ufs_hba *hba, u32 intr_status)
+ 	if (intr_status & MCQ_CQ_EVENT_STATUS)
+ 		retval |= ufshcd_handle_mcq_cq_events(hba);
  
- #include <linux/err.h>
-+#include <linux/firmware/xlnx-zynqmp-ufs.h>
++	if (intr_status & UFSHCD_VENDOR_IS_MASK)
++		retval |= ufshcd_vops_isr(hba, intr_status);
++
+ 	return retval;
+ }
  
- #define ZYNQMP_PM_VERSION_MAJOR	1
- #define ZYNQMP_PM_VERSION_MINOR	0
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 1d39437..64c958e 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -337,6 +337,7 @@ struct ufs_pwr_mode_info {
+  * @config_esi: called to config Event Specific Interrupt
+  * @config_scsi_dev: called to configure SCSI device parameters
+  * @freq_to_gear_speed: called to map clock frequency to the max supported gear speed
++ * @isr: called to handle vendor specific interrupts
+  */
+ struct ufs_hba_variant_ops {
+ 	const char *name;
+@@ -386,6 +387,7 @@ struct ufs_hba_variant_ops {
+ 	int	(*config_esi)(struct ufs_hba *hba);
+ 	void	(*config_scsi_dev)(struct scsi_device *sdev);
+ 	u32	(*freq_to_gear_speed)(struct ufs_hba *hba, unsigned long freq);
++	irqreturn_t	(*isr)(struct ufs_hba *hba, u32 intr_status);
+ };
+ 
+ /* clock gating state  */
+diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+index 612500a..2844772 100644
+--- a/include/ufs/ufshci.h
++++ b/include/ufs/ufshci.h
+@@ -185,6 +185,9 @@ static inline u32 ufshci_version(u32 major, u32 minor)
+ #define CRYPTO_ENGINE_FATAL_ERROR		0x40000
+ #define MCQ_CQ_EVENT_STATUS			0x100000
+ 
++/* Other than above mentioned bits are treated as Vendor specific status bits */
++#define UFSHCD_VENDOR_IS_MASK			0xFFE8F000
++
+ #define UFSHCD_UIC_HIBERN8_MASK	(UIC_HIBERNATE_ENTER |\
+ 				UIC_HIBERNATE_EXIT)
+ 
 -- 
 1.8.3.1
 
