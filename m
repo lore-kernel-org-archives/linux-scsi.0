@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DE4A1D54D8
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Sep 2025 21:03:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 29CAF2D6636
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Sep 2025 21:09:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758315786; cv=none; b=fkCq+/LTXl4glk8siEhBVIW7whmaYq0ErdwyNlloRlChPrD6GXt6p8c1MMBsIFxPhmMSFK1vPmq/ZXxyAyULnycLVoBSbf8zSCqV9XxM5aENABW3Y6LRKm5AEPPeSDcWF6ybjqzwvT7VsJbbJFubG10BXQXftwf05N5ANeE9pm8=
+	t=1758316188; cv=none; b=evxbv5kuBI2hoh1Gr0m1TQZX9B1xW9C62giMVeRERX4DONZVhVoqcQ1BIcUbLKbfcJj16kUmnr18NwLSpMjxGgMzEVasEvrk79zKPsxMiADCakc5c+MadfmUuV74UVKONbkZzv0EONJTjuKHUrIknswGSWKTyq5jWdAq7qrwP9g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758315786; c=relaxed/simple;
-	bh=ehmo0zVpsScCNwYSk35hKBqCz+aSYotg0zAVgDcga6U=;
+	s=arc-20240116; t=1758316188; c=relaxed/simple;
+	bh=8m/6ATPSbdiv4CxyuTQovzQUAjRChlNIC99GXk5+VB4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=eQPs7lpAtREM8OltRrLeKIzdYypZ7jlXhzoI/hKY7GcDLU9LeADLW2Wa5cwvqVDeG5OLlWnw6jjub0zdBtrHRUTM1v5w54ao5Q1zHldwhHw3Wg5ixgR3Bq+6qiPVJYPxmzIE8jPS6xHn9Jvyv2hmXyZ8AJzdEIzMBz7GVH6uYfs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=psgjlYXi; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=OtV8QXtuLm9jOaI0aIdIPb9j4fDGVDs43OiiY5LgEp+7svBUz6f/i2e1A9Mbj4jFz1AArtVvfl5pjC6nVtUrwXv48Ch7/f/Q2m5qldjV0a9D69IhK0pevj6+7HcLaeIBFfIyM65ThFlqoQD3tRZVspZflarawzWLSgsCGN5MSKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ubsYQwbb; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="psgjlYXi"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ubsYQwbb"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cT4j34gnfzlgqy3;
-	Fri, 19 Sep 2025 21:03:03 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cT4rn1GJfzm0ysv;
+	Fri, 19 Sep 2025 21:09:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758315780; x=1760907781; bh=ehmo0zVpsScCNwYSk35hKBqC
-	z+aSYotg0zAVgDcga6U=; b=psgjlYXi6XyLUlF5wGplfA2yNWAPmFRPFzgHvQBp
-	ZMlRtBhTLSLMlQArNonkSLFSRHLQHliv4q1+tQXp6FHiB7fwrx7NE14fcc/TDe8K
-	GWkStKe1eQBJ3AGBGmIbNGNih+aJciqMxVPZSwGV8zSyC4Doa5X5ZOqv70k4b/Yg
-	id3UgnNx+UseFMHnpZIeKdOrheyefq1HAF4T2LsaKZujZNSDeOVyFka70sGwqYyN
-	Cj7nQKOL8vZrSdZHusXcncq9ggjqqtFTfbeiTASAnXDHPstKSpV+l05W/ohnoSR9
-	c+OEcTE4be6slXYQt4xI2WcS7o9WUIu+Xoz7ijCTtsySPw==
+	 s=mr01; t=1758316182; x=1760908183; bh=8m/6ATPSbdiv4CxyuTQovzQU
+	AjRChlNIC99GXk5+VB4=; b=ubsYQwbbbagbqFuW5JkcT8pJwQpZtvdDgyo6hnhR
+	1buyRNOUW8dC4esn+SfBTgHW6v2P9wK6u76q6ylzR5K5sFKTUJE7tx4dHxVK6joM
+	vil/YyFC3vn+S7vZ4aTRp7fxx8/AGGuLtY/6ivogCphpkLp8VIuecgrk8NzwMq40
+	iSKfr9s5dvhipDdeyu+lB3Z4p9bzvgDp/CJvAgSwx+3odoyzaVhOW9Xdt6tx2UtA
+	mTcJOqkUpWzK1uAKtM/lPMC9HfzkXp11c6Ll2sv+5upfSywf+9c8ppqSBiNFu5ye
+	JnAH6zhzaLLwH6CDnJ5fHQrJ+fjwKsRwB0JajnOrCSewrw==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id pO4KjVvECtoX; Fri, 19 Sep 2025 21:03:00 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id LtO7asyir2qE; Fri, 19 Sep 2025 21:09:42 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cT4hm2w7Yzlgqxm;
-	Fri, 19 Sep 2025 21:02:47 +0000 (UTC)
-Message-ID: <ba381e9a-4cb5-45df-9fe0-3d370a84429d@acm.org>
-Date: Fri, 19 Sep 2025 14:02:46 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cT4rT0LbLzm0yVT;
+	Fri, 19 Sep 2025 21:09:28 +0000 (UTC)
+Message-ID: <3d2a98e0-03d3-4b7b-816c-581d77551598@acm.org>
+Date: Fri, 19 Sep 2025 14:09:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,8 +50,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 02/10] ufs: host: mediatek: Correct clock scaling with
- PM QoS flow
+Subject: Re: [PATCH v1 06/10] ufs: host: mediatek: Enable interrupts for MCQ
+ mode
 To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
  "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
  "martin.petersen@oracle.com" <martin.petersen@oracle.com>
@@ -71,40 +71,33 @@ Cc: =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
  =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
  =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>
 References: <20250918104000.208856-1-peter.wang@mediatek.com>
- <20250918104000.208856-3-peter.wang@mediatek.com>
- <02338932-b3e9-458a-ac24-41b4f29eb514@acm.org>
- <21a451c752709cd9c1a3e18568c18f384bb77a05.camel@mediatek.com>
+ <20250918104000.208856-7-peter.wang@mediatek.com>
+ <5ae6134f-6e41-4453-b11f-4e3eb92a1c04@acm.org>
+ <beda693842394d162c95d5523eb90373fd975d3c.camel@mediatek.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <21a451c752709cd9c1a3e18568c18f384bb77a05.camel@mediatek.com>
+In-Reply-To: <beda693842394d162c95d5523eb90373fd975d3c.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
-On 9/19/25 1:11 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> On Thu, 2025-09-18 at 11:30 -0700, Bart Van Assche wrote:
->> On 9/18/25 3:36 AM, peter.wang@mediatek.com=C2=A0wrote:
->> > Correct clock scaling with PM QoS during suspend and resume.
->> > Ensure PM QoS is released during suspend if scaling up and
->> > re-applied after resume. This prevents performance issues
->> > and maintains proper power management.
->>=20
->> Is this issue related in any way to the MediaTek UFS host driver? If
->> not, please change this patch into a patch for the UFS core driver
->> such
->> that this issue is fixed for all UFS host drivers at once.
->
-> Yes, this is a MediaTek-specific test which disables clock scaling
-> and keeps the power mode in high gear.
-> So, I don't think this patch should be applied to the ufshcd core.
+On 9/19/25 1:14 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> On Thu, 2025-09-18 at 11:34 -0700, Bart Van Assche wrote:
+>> Additionally, the above patch description doesn't make it clear what
+>> makes the MediaTek driver different from other drivers and why only
+>> the
+>> MediaTek driver needs this change.
+>=20
+> This is a confidential design by MediaTek, so we are unable
+> to share further details. We apologize for the inconvenience.
 
-Hmm ... it is not clear to me why this change is specific to MediaTek
-host controllers. Please move the code changes in this patch from the
-MediaTek driver into the UFSHCI driver core.
-
-Additionally, why is this change necessary? Suspend and resume should
-happen quickly. Does removing CPU latency QoS requests during suspend
-and resume really save power? Has the power impact of this patch been
-measured?
+Having taken a closer look at this patch, the only reason I can think of
+why interrupts are re-enabled from a .resume callback is a workaround
+for a controller bug. Please consider adding a quirk and moving the code
+that reenables interrupts into the UFSHCI core instead of exporting the
+ufshcd_enable_intr() function. I'm concerned that exporting
+ufshcd_enable_intr() would make the UFSHCI driver much harder to
+maintain than necessary, especially if this would lead to concurrent
+writes to the REG_INTERRUPT_ENABLE register.
 
 Thanks,
 
