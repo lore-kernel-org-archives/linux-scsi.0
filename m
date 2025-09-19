@@ -1,48 +1,48 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F9EF2C324C
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Sep 2025 20:57:36 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DE4A1D54D8
+	for <linux-scsi@vger.kernel.org>; Fri, 19 Sep 2025 21:03:04 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758315458; cv=none; b=CpPjSt9CGCL/kXX9cg9X8fcCyKH+PpGXZZGNKpONmqdNO31i4usd4sIORKElvPZ34vhyAxKqyhiLnIgCQCPqLluQWVEbaRD9xb5H3v5VhpioU4xdFuD8PxmfdB5xSFZxeLkhu3G23VkFTl1wjXbkxXwCpgX1v7mYfjIVvURRyIk=
+	t=1758315786; cv=none; b=fkCq+/LTXl4glk8siEhBVIW7whmaYq0ErdwyNlloRlChPrD6GXt6p8c1MMBsIFxPhmMSFK1vPmq/ZXxyAyULnycLVoBSbf8zSCqV9XxM5aENABW3Y6LRKm5AEPPeSDcWF6ybjqzwvT7VsJbbJFubG10BXQXftwf05N5ANeE9pm8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758315458; c=relaxed/simple;
-	bh=075ADIsmLahIbmAw7/wnG2nMH1uc7KsthP948Epyzug=;
+	s=arc-20240116; t=1758315786; c=relaxed/simple;
+	bh=ehmo0zVpsScCNwYSk35hKBqCz+aSYotg0zAVgDcga6U=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=jhEwDbW+2vbfvUtWrvTyWw5WTC6hgGrU4+vdaTVVnl1ywZT7vVrbIeddsZNXVkFEY7hm/kpJbdMLDSI6hdYijWYM6O9nnzfOTWLma0ZDKOC2N/Dq5Dhyhbno0fe8cn17grIQmoT+lto1u70TVzHEvkGjP+HQBRg5YVn+niDFzjM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=pebarhp0; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=eQPs7lpAtREM8OltRrLeKIzdYypZ7jlXhzoI/hKY7GcDLU9LeADLW2Wa5cwvqVDeG5OLlWnw6jjub0zdBtrHRUTM1v5w54ao5Q1zHldwhHw3Wg5ixgR3Bq+6qiPVJYPxmzIE8jPS6xHn9Jvyv2hmXyZ8AJzdEIzMBz7GVH6uYfs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=psgjlYXi; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="pebarhp0"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="psgjlYXi"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cT4Zl2Mtczlmm7p;
-	Fri, 19 Sep 2025 20:57:35 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cT4j34gnfzlgqy3;
+	Fri, 19 Sep 2025 21:03:03 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758315452; x=1760907453; bh=o9ku7JZxIEtLSd3q0U+dBteb
-	+15Ur+wK9Hg4iSg4GiQ=; b=pebarhp07tHaXV7iah8FS+Dphi+FoWMxJvjTpYd6
-	nEuyDmjDkZ6Q/sEedBsooJ6ynVliwSTuME+I8jMv+XohIiVUT7g7s+VQCnitjAEt
-	OKcy1TfWmPCtl8lJ1Xho7vyJkSGZ+rs2sngYLo2GjPsggZkcZas9awQQww6MKCRf
-	SRI7+WkKIfeYaE6szqeEvq3NypFJcjI75HmsSyFLoUcuVvE2kCJtJt0pbdktS9cU
-	BHtGfVzmeYFvwf326T3/gpTRpzjEcHTxx6mlKE7leRaOcT0KEey1v3WFk5nuApHT
-	YQrzfiBkxzMrCbrXg+UvMsxRJO53wGl0ZcGB3dp3c0ix2g==
+	 s=mr01; t=1758315780; x=1760907781; bh=ehmo0zVpsScCNwYSk35hKBqC
+	z+aSYotg0zAVgDcga6U=; b=psgjlYXi6XyLUlF5wGplfA2yNWAPmFRPFzgHvQBp
+	ZMlRtBhTLSLMlQArNonkSLFSRHLQHliv4q1+tQXp6FHiB7fwrx7NE14fcc/TDe8K
+	GWkStKe1eQBJ3AGBGmIbNGNih+aJciqMxVPZSwGV8zSyC4Doa5X5ZOqv70k4b/Yg
+	id3UgnNx+UseFMHnpZIeKdOrheyefq1HAF4T2LsaKZujZNSDeOVyFka70sGwqYyN
+	Cj7nQKOL8vZrSdZHusXcncq9ggjqqtFTfbeiTASAnXDHPstKSpV+l05W/ohnoSR9
+	c+OEcTE4be6slXYQt4xI2WcS7o9WUIu+Xoz7ijCTtsySPw==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id BlR3mNq9qd8M; Fri, 19 Sep 2025 20:57:32 +0000 (UTC)
+ id pO4KjVvECtoX; Fri, 19 Sep 2025 21:03:00 +0000 (UTC)
 Received: from [100.66.154.22] (unknown [104.135.204.82])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cT4ZS2SZ2zlgqW0;
-	Fri, 19 Sep 2025 20:57:19 +0000 (UTC)
-Message-ID: <bc612c10-a4eb-41ab-b8e5-726d22935518@acm.org>
-Date: Fri, 19 Sep 2025 13:57:18 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cT4hm2w7Yzlgqxm;
+	Fri, 19 Sep 2025 21:02:47 +0000 (UTC)
+Message-ID: <ba381e9a-4cb5-45df-9fe0-3d370a84429d@acm.org>
+Date: Fri, 19 Sep 2025 14:02:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,8 +50,8 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 01/10] ufs: host: mediatek: Fix runtime suspend error
- deadlock
+Subject: Re: [PATCH v1 02/10] ufs: host: mediatek: Correct clock scaling with
+ PM QoS flow
 To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
  "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
  "martin.petersen@oracle.com" <martin.petersen@oracle.com>
@@ -71,70 +71,40 @@ Cc: =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
  =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
  =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>
 References: <20250918104000.208856-1-peter.wang@mediatek.com>
- <20250918104000.208856-2-peter.wang@mediatek.com>
- <80a31144-852f-4df5-802e-a8c5d04a298a@acm.org>
- <bdb6ee1402ae4c9ba8919011b1d8fcb9d984129f.camel@mediatek.com>
+ <20250918104000.208856-3-peter.wang@mediatek.com>
+ <02338932-b3e9-458a-ac24-41b4f29eb514@acm.org>
+ <21a451c752709cd9c1a3e18568c18f384bb77a05.camel@mediatek.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <bdb6ee1402ae4c9ba8919011b1d8fcb9d984129f.camel@mediatek.com>
+In-Reply-To: <21a451c752709cd9c1a3e18568c18f384bb77a05.camel@mediatek.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: quoted-printable
 
 On 9/19/25 1:11 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> An error occurred during the suspend process, causing IO to hang.
-> This is because the error handler (eh) work is waiting for
-> resume, while the suspend work is waiting for the error handler
-> to finish before sending SSU.
+> On Thu, 2025-09-18 at 11:30 -0700, Bart Van Assche wrote:
+>> On 9/18/25 3:36 AM, peter.wang@mediatek.com=C2=A0wrote:
+>> > Correct clock scaling with PM QoS during suspend and resume.
+>> > Ensure PM QoS is released during suspend if scaling up and
+>> > re-applied after resume. This prevents performance issues
+>> > and maintains proper power management.
+>>=20
+>> Is this issue related in any way to the MediaTek UFS host driver? If
+>> not, please change this patch into a patch for the UFS core driver
+>> such
+>> that this issue is fixed for all UFS host drivers at once.
+>
+> Yes, this is a MediaTek-specific test which disables clock scaling
+> and keeps the power mode in high gear.
+> So, I don't think this patch should be applied to the ufshcd core.
 
-If the suspend callback waits for error handling to finish and the
-error handler waits until resuming has finished, isn't this an issue
-that can occur for any UFS host controller and hence that should be
-fixed in the UFSHCI driver core rather than in one host driver only?
+Hmm ... it is not clear to me why this change is specific to MediaTek
+host controllers. Please move the code changes in this patch from the
+MediaTek driver into the UFSHCI driver core.
 
-Why is the hba->pm_op_in_progress variable not sufficient to prevent
-this deadlock? Should this code perhaps be moved from
-ufshcd_eh_host_reset_handler() into ufshcd_err_handler()?
-
-	/*
-	 * If runtime PM sent SSU and got a timeout, scsi_error_handler is
-	 * stuck in this function waiting for flush_work(&hba->eh_work). And
-	 * ufshcd_err_handler(eh_work) is stuck waiting for runtime PM. Do
-	 * ufshcd_link_recovery instead of eh_work to prevent deadlock.
-	 */
-	if (hba->pm_op_in_progress) {
-		if (ufshcd_link_recovery(hba))
-			err =3D FAILED;
-
-		return err;
-	}
-
->> How can ufs_mtk_suspend() be called while the error handler is in
->> progress? ufshcd_err_handler() disables RPM before it sets the
->> UFSHCD_EH_IN_PROGRESS flag.
->=20
-> This error is triggered by ufs_mtk_auto_hibern8_disable,
-> As the comment description
-> /* May trigger EH work without exiting hibern8 error */
-> so it could happen during the suspend period.
-
-That source code comment is confusing me, especially the "without
-exiting hibern8 error" part. Do you really want to say that the device
-is in a hibernation error state and remains in a hibernation error
-state?
-
->> The UFSHCD_EH_IN_PROGRESS definition and also the
->> ufshcd_set_eh_in_progress() and ufshcd_clear_eh_in_progress()
->> definitions must remain in the UFS core private code. Please do not
->> move
->> these definitions into the include/ufs/ufshcd.h header file.
->=20
-> Do you think we should check ufshcd_eh_in_progress in
-> __ufshcd_wl_suspend? I'm not sure, because we don't see this
-> error on all UFS hosts =E2=80=94 the vendor suspend operations
-> (ufshcd_vops_suspend) could be different.
-
-Why is auto-hibernation disabled during suspend? As far as I know the
-UFSHCI standard allows to keep auto-hibernation enabled during suspend.
+Additionally, why is this change necessary? Suspend and resume should
+happen quickly. Does removing CPU latency QoS requests during suspend
+and resume really save power? Has the power impact of this patch been
+measured?
 
 Thanks,
 
