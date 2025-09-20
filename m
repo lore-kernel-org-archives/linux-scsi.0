@@ -1,301 +1,110 @@
-Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66D6C2D3757
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Sep 2025 10:21:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
+Received: from sgoci-sdnproxy-4.icoremail.net (sgoci-sdnproxy-4.icoremail.net [129.150.39.64])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 30F941B87C0;
+	Sat, 20 Sep 2025 13:42:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=129.150.39.64
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758363690; cv=none; b=CtIV4s6ECCQQOE3t7qRz15+QGmyK7BPm0uj/a/zkkU4BY00AGXTVNJoS14raf2aHBpBaGSMkLRB6+XeJ0+033k+71MdqE74CfyueEvzZm45O/FoYymKmGpvzHG+aDy0UCMPwlKxZuHyak+vje68OlK1jh+xAY7nh5DZzEETx6Vg=
+	t=1758375768; cv=none; b=FlDDAG3VKs2x87pS05134tvTXvxfwcwJu2ZCv0DUaZRlo8aGyoK0db44DQdYFkySK7+b9r0NlIBI4l+7fLSeNEHePAxrj38YUdYWooLt1ZxrS7l5jdcpMtQni86I8HPiOFvdwWAHqUI7WCi2jmikJ28iQeKdCh3f1x6KS2Ufe0Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758363690; c=relaxed/simple;
-	bh=NeUWLUvwC6kW9VyfKYx42FFXe0IA1wZCOhU/BXYAKwI=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=eXdYkhOf3YmGH4qBFgAR/Twy2tnF+CzcxujJgIlIVDpxqRaWCWfDUntnCNZZBl+pGTwwigol+OnPfrCAaJvodjCCFVUc8t9Cfy5VcC8MJoP28tO5wqnk1j4DVIeh46Nc5Js3cQKgZMiKHojmHXpwa8EQzdC3JcsyfGrbDH2mYQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=R/7euhNL; arc=none smtp.client-ip=209.85.128.51
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="R/7euhNL"
-Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-468973c184bso7435095e9.3
-        for <linux-scsi@vger.kernel.org>; Sat, 20 Sep 2025 03:21:27 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758363686; x=1758968486; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=P0vYXtUQVOuP2mhoWd4ropfz+61/nK8dVG+VKmZf9qg=;
-        b=R/7euhNLFeNlzmaUZ+Phoi0Q88Um1/yPfSkGC3G2sFF8md/oqJcr43+2FV+9UmZ2Dk
-         SUnKvAzbGiMrGaYgJR97ThDsbv3pKQfcEILZgylruuHbwAgK1ibJB3U9tn1aPxbYXcK1
-         MyRhovHH6tj9EMTzJqrblnvCmVfWpPYmKtlRwrM4k2sJZEX5nejonCqSjRQvEZ+qH5zA
-         DZ8wgDnOm8GaSljL3BUhgkod1l54KOPFjRhr/NVlywP8mhfKqtfasB/gPB/yUR4l9gOU
-         cdSyKg0V831oaRBDwypFkfc9dJHAFm8Nx1QoZlRSq09uBR4nwN02T4sdmyv+CMFSoURH
-         KYog==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758363686; x=1758968486;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=P0vYXtUQVOuP2mhoWd4ropfz+61/nK8dVG+VKmZf9qg=;
-        b=l7PWX7uemY4IH0nnIldFDy+apVudvDklBn1aAShCBP+dM+33V7QAoSufScrcHpJLIO
-         XK+6P7zR+JT9cA+mW2DX9mE2TvapFzT3OcYd31DTHWNMKgqUD34g9Q3GDxgSUiwsD1Y6
-         vLJhLv/O0O4S7mrCIHnR2N3dfblIfsWYmvDMdz11Gv/ixNT17ZuaHeIe2uvynyW4D0r3
-         /clvrwkSlDVUEtm5C/rUBF/iYg1TJhQ2mUnBPGNJm2O/NvAVHhgUM3a66c3HJUPea2M5
-         3lKAvsBmznp0xdO1WrQSTH3poILtmsSNqV30nfz/otXNT3Urd43IZBNmHT4jDXQjOuez
-         FaRw==
-X-Forwarded-Encrypted: i=1; AJvYcCU2qNV5ODJyv4iobWAqLXzPl4E4GzgvozH4Dy0qzU6PkrZqjI+kAtY/DNGxmScVgvj5AoYG1HpDQ4EL@vger.kernel.org
-X-Gm-Message-State: AOJu0YytIcNM7YL0xhVsd93hUMxkDINV8dfQTp5Y9SADmK5UzYaIEaL3
-	3h0YdY4wuWJydH03daoAxRC5NYQlHN/d88O4EF7RDVDUZjD1seQoW9sw
-X-Gm-Gg: ASbGnctgMbkMtHKGoKVk2Dt2Q+iM5uiibROfiwufraQATZ7qCp5PP7Dky1Gbe0gy1Ro
-	85OtRcMMLi0YmpJ3firT7aHdnEgU6G98dtqDFYgn8H2z17QeZo3wZRRWs0hJ10c+gRg4lM09YGL
-	eUXU4n3lq1MVv4lZ5rMXvESVmkIE7hdPTMPR40Nn165mlLQ4Kp693qhaLzeVr3DC0qXVH48sCjV
-	RsL5XyUcRuLVTOe6h361W2NVUZfifPYnIFgdNUSCHPjbybwWYU9REbVZ5gHPCtGefMc1FcSN/Op
-	nKN1teV5oIsQnBTarOtcipcWA+1eObTPjaNReC49W8pBRrmdQgodckdk+sBI92GUouAlEwg8l+v
-	ktPOOSqzjs0PeCLnX6+67gHYgnCHRHXPlblkKv2jAXQS+e6uguRfadG5drEU0
-X-Google-Smtp-Source: AGHT+IFiz+7GSgFF/mIUUp0ndfipkNQ39jr+2XK+PXUAveDTslyL1Wu67txaLfdop4/qCEdAg/m1vQ==
-X-Received: by 2002:a05:600c:c8f:b0:45f:2919:5e6c with SMTP id 5b1f17b1804b1-467e6f37d8dmr76782405e9.16.1758363685327;
-        Sat, 20 Sep 2025 03:21:25 -0700 (PDT)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-3f0e28c83d6sm5624389f8f.56.2025.09.20.03.21.23
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 20 Sep 2025 03:21:25 -0700 (PDT)
-Date: Sat, 20 Sep 2025 11:21:22 +0100
-From: David Laight <david.laight.linux@gmail.com>
-To: Christian =?UTF-8?B?S8O2bmln?= <christian.koenig@amd.com>
-Cc: linux@armlinux.org.uk, jdike@addtoit.com,
- anton.ivanov@cambridgegreys.com, dave.hansen@linux.intel.com,
- peterz@infradead.org, tglx@linutronix.de, x86@kernel.org, hpa@zytor.com,
- tony.luck@intel.com, qiuxu.zhuo@intel.com, mchehab@kernel.org,
- james.morse@arm.com, rric@kernel.org, harry.wentland@amd.com,
- sunpeng.li@amd.com, alexander.deucher@amd.com, airlied@linux.ie,
- daniel@ffwll.ch, evan.quan@amd.com, james.qian.wang@arm.com,
- liviu.dudau@arm.com, mihail.atanassov@arm.com, brian.starkey@arm.com,
- maarten.lankhorst@linux.intel.com, mripard@kernel.org, tzimmermann@suse.de,
- robdclark@gmail.com, sean@poorly.run, dmitry.torokhov@gmail.com,
- agk@redhat.com, snitzer@redhat.com, dm-devel@redhat.com, rajur@chelsio.com,
- davem@davemloft.net, kuba@kernel.org, peppe.cavallaro@st.com,
- alexandre.torgue@st.com, joabreu@synopsys.com, mcoquelin.stm32@gmail.com,
- malattia@linux.it, hdegoede@redhat.com, mgross@linux.intel.com,
- intel-linux-scu@intel.com, artur.paszkiewicz@intel.com, jejb@linux.ibm.com,
- martin.petersen@oracle.com, sakari.ailus@linux.intel.com,
- gregkh@linuxfoundation.org, dushistov@mail.ru, luc.vanoostenryck@gmail.com,
- rostedt@goodmis.org, pmladek@suse.com, sergey.senozhatsky@gmail.com,
- andriy.shevchenko@linux.intel.com, linux@rasmusvillemoes.dk,
- akpm@linux-foundation.org, kuznet@ms2.inr.ac.ru, yoshfuji@linux-ipv6.org,
- pablo@netfilter.org, kadlec@netfilter.org, jmaloy@redhat.com,
- ying.xue@windriver.com, willy@infradead.org, sashal@kernel.org,
- ruanjinjie@huawei.com, David.Laight@ACULAB.COM, herve.codina@bootlin.com,
- Jason@zx2c4.com, bvanassche@acm.org, keescook@chromium.org,
- linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
- linux-um@lists.infradead.org, linux-edac@vger.kernel.org,
- amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
- linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
- linux-hwmon@vger.kernel.org, linux-input@vger.kernel.org,
- linux-media@vger.kernel.org, netdev@vger.kernel.org,
- linux-stm32@st-md-mailman.stormreply.com,
- platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
- linux-staging@lists.linux.dev, linux-btrfs@vger.kernel.org,
- linux-ext4@vger.kernel.org, linux-sparse@vger.kernel.org,
- linux-mm@kvack.org, netfilter-devel@vger.kernel.org,
- coreteam@netfilter.org, tipc-discussion@lists.sourceforge.net,
- stable@vger.kernel.org, jonnyc@amazon.com
-Subject: Re: [PATCH 00/27 5.10.y] Backport minmax.h updates from v6.17-rc6
-Message-ID: <20250920111904.6d9ecb17@pumpkin>
-In-Reply-To: <184ce83f-0063-43a0-a1c8-da23c5d03cf7@amd.com>
-References: <20250919101727.16152-1-farbere@amazon.com>
-	<184ce83f-0063-43a0-a1c8-da23c5d03cf7@amd.com>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+	s=arc-20240116; t=1758375768; c=relaxed/simple;
+	bh=bxGLZ1KtmnTKgV48yxkrqLP1/cvNjp0TCVABJhWKa/0=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=NJXcyu28l7gyJlG7ju6FoxBYM9dqogRsRpNxcD31NU3Z8Q2G2Dc4cTl4Nlb3V2VZgwLbwcdMpgDS/e9GOt0jCY7uncT5MbcXl9+KvgczB5CnuppT63Ye2O/FAjuGFwbtsd3ZDV5w6ivVZzY2CFdhvjfePQdVf45p43k7FqlAU94=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=129.150.39.64
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [218.12.20.76])
+	by mtasvr (Coremail) with SMTP id _____wBnt7Axr85oZmxVAg--.716S3;
+	Sat, 20 Sep 2025 21:42:11 +0800 (CST)
+Received: from ubuntu.localdomain (unknown [218.12.20.76])
+	by mail-app1 (Coremail) with SMTP id yy_KCgBHmdQrr85o_AlBAg--.18751S2;
+	Sat, 20 Sep 2025 21:42:08 +0800 (CST)
+From: Duoming Zhou <duoming@zju.edu.cn>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	christophe.jaillet@wanadoo.fr,
+	mingo@kernel.org,
+	tglx@linutronix.de,
+	linux@treblig.org,
+	fourier.thomas@gmail.com,
+	Duoming Zhou <duoming@zju.edu.cn>
+Subject: [PATCH] scsi: mvsas: Fix use-after-free bugs in mvs_work_queue
+Date: Sat, 20 Sep 2025 21:42:01 +0800
+Message-Id: <20250920134201.18428-1-duoming@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:yy_KCgBHmdQrr85o_AlBAg--.18751S2
+X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAwcPAWjNsfsG7QAZsX
+X-CM-DELIVERINFO: =?B?33xENgXKKxbFmtjJiESix3B1w3uoVhYI+vyen2ZzBEkOnu5chDpkB+ZdGnv/zQ0PbP
+	CR17JWIj2S50sroAcAzxKp+F41Z092AV/gunfW8rDv1UV0ym2ldWluBcKk0DO6PF64/Voy
+	8atT3b2U5oNC2n/zoSwhR/VnrddamsHADA/v/9FKmhbX+QqPOU3b+sWb/6rE0A==
+X-Coremail-Antispam: 1Uk129KBj93XoW7Zw48ur1rGrW8ZryxAw4UKFX_yoW8WFyfpF
+	WfG34UG3y7JF1UKwnFgFW0gF1Yga1kA34qkw4Ig3y7GFyrJry3Jr1fGayF9a4DArWkAw1a
+	vrsIv3s7uF4UK3XCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUvvb4IE77IF4wAFF20E14v26r4j6ryUM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYIkI8VC2zVCFFI0UMc
+	02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAF
+	wI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0Y48IcxkI7V
+	AKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I
+	3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxV
+	WUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8I
+	cVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aV
+	AFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuY
+	vjxU7xwIDUUUU
 
-On Fri, 19 Sep 2025 14:11:37 +0200
-Christian K=C3=B6nig <christian.koenig@amd.com> wrote:
+During the detaching of Marvell's SAS/SATA controller, the origin
+code calls cancel_delayed_work() in mvs_free() to cancel the delayed
+work item mwq->work_q. However, if mwq->work_q is already running,
+the cancel_delayed_work() may fail to cancel it. This can lead to
+use-after-free scenarios where mvs_free() frees the mvs_info while
+mvs_work_queue() is still executing and attempts to access the
+already-freed mvs_info.
 
-> On 19.09.25 12:17, Eliav Farber wrote:
-> > This series includes a total of 27 patches, to align minmax.h of
-> > v5.15.y with v6.17-rc6.
-> >=20
-> > The set consists of 24 commits that directly update minmax.h:
-> > 1) 92d23c6e9415 ("overflow, tracing: Define the is_signed_type() macro
-> >    once")
-> > 2) 5efcecd9a3b1 ("minmax: sanity check constant bounds when clamping")
-> > 3) 2122e2a4efc2 ("minmax: clamp more efficiently by avoiding extra
-> >    comparison")
-> > 4) f9bff0e31881 ("minmax: add in_range() macro")
-> > 5) c952c748c7a9 ("minmax: Introduce {min,max}_array()")
-> > 6) 5e57418a2031 ("minmax: deduplicate __unconst_integer_typeof()")
-> > 7) f6e9d38f8eb0 ("minmax: fix header inclusions")
-> > 8) d03eba99f5bf ("minmax: allow min()/max()/clamp() if the arguments
-> >    have the same signedness.")
-> > 9) f4b84b2ff851 ("minmax: fix indentation of __cmp_once() and
-> >    __clamp_once()")
-> > 10) 4ead534fba42 ("minmax: allow comparisons of 'int' against 'unsigned
-> >     char/short'")
-> > 11) 867046cc7027 ("minmax: relax check to allow comparison between
-> >     unsigned arguments and signed constants")
-> > 12) 3a7e02c040b1 ("minmax: avoid overly complicated constant
-> >     expressions in VM code")
-> > 14) 017fa3e89187 ("minmax: simplify and clarify min_t()/max_t()
-> >     implementation")
-> > 15) 1a251f52cfdc ("minmax: make generic MIN() and MAX() macros
-> >     available everywhere")
-> > 18) dc1c8034e31b ("minmax: simplify min()/max()/clamp()
-> >     implementation")
-> > 19) 22f546873149 ("minmax: improve macro expansion and type
-> >     checking")
-> > 20) 21b136cc63d2 ("minmax: fix up min3() and max3() too")
-> > 21) 71ee9b16251e ("minmax.h: add whitespace around operators and after
-> >     commas")
-> > 22) 10666e992048 ("minmax.h: update some comments")
-> > 23) b280bb27a9f7 ("minmax.h: reduce the #define expansion of min(),
-> >     max() and clamp()")
-> > 24) a5743f32baec ("minmax.h: use BUILD_BUG_ON_MSG() for the lo < hi
-> >     test in clamp()")
-> > 25) c3939872ee4a ("minmax.h: move all the clamp() definitions after the
-> >     min/max() ones")
-> > 26) 495bba17cdf9 ("minmax.h: simplify the variants of clamp()")
-> > 27) 2b97aaf74ed5 ("minmax.h: remove some #defines that are only
-> >     expanded once")
-> >=20
-> > 2 prerequisite commits that adjust users of MIN and MAX macros (to
-> > prevent compilation issues):
-> > 13) 4477b39c32fd ("minmax: add a few more MIN_T/MAX_T users")
-> > 17) cb04e8b1d2f2 ("minmax: don't use max() in situations that want a C
-> >     constant expression")
-> >=20
-> > 1 additional commit introduced to resolve a build failures during the
-> > backport:
-> > 16) lib: zstd: drop local MIN/MAX macros in favor of generic ones
-> >=20
-> > The primary motivation is to bring in commit (8).
-> > In mainline, this change allows min()/max()/clamp() to accept mixed
-> > argument types when both share the same signedness.
-> > Backported patches to v5.10.y that use such forms trigger compiler
-> > warnings, which in turn cause build failures when -Werror is enabled.
-> >=20
-> > Originaly I aligned 5.10.y to 5.15.y, but David Laight commented that I
-> > need to pick up the later changes (from Linus) as well.
-> >=20
-> > Andy Shevchenko (2):
-> >   minmax: deduplicate __unconst_integer_typeof()
-> >   minmax: fix header inclusions
-> >=20
-> > Bart Van Assche (1):
-> >   overflow, tracing: Define the is_signed_type() macro once
-> >=20
-> > David Laight (11):
-> >   minmax: allow min()/max()/clamp() if the arguments have the same
-> >     signedness.
-> >   minmax: fix indentation of __cmp_once() and __clamp_once()
-> >   minmax: allow comparisons of 'int' against 'unsigned char/short'
-> >   minmax: relax check to allow comparison between unsigned arguments and
-> >     signed constants
-> >   minmax.h: add whitespace around operators and after commas
-> >   minmax.h: update some comments
-> >   minmax.h: reduce the #define expansion of min(), max() and clamp()
-> >   minmax.h: use BUILD_BUG_ON_MSG() for the lo < hi test in clamp()
-> >   minmax.h: move all the clamp() definitions after the min/max() ones
-> >   minmax.h: simplify the variants of clamp()
-> >   minmax.h: remove some #defines that are only expanded once
-> >=20
-> > Eliav Farber (1):
-> >   lib: zstd: drop local MIN/MAX macros in favor of generic ones
-> >=20
-> > Herve Codina (1):
-> >   minmax: Introduce {min,max}_array()
-> >=20
-> > Jason A. Donenfeld (2):
-> >   minmax: sanity check constant bounds when clamping
-> >   minmax: clamp more efficiently by avoiding extra comparison
-> >=20
-> > Linus Torvalds (8):
-> >   minmax: avoid overly complicated constant expressions in VM code
-> >   minmax: add a few more MIN_T/MAX_T users
-> >   minmax: simplify and clarify min_t()/max_t() implementation
-> >   minmax: make generic MIN() and MAX() macros available everywhere
-> >   minmax: don't use max() in situations that want a C constant
-> >     expression
-> >   minmax: simplify min()/max()/clamp() implementation
-> >   minmax: improve macro expansion and type checking
-> >   minmax: fix up min3() and max3() too
-> >=20
-> > Matthew Wilcox (Oracle) (1):
-> >   minmax: add in_range() macro
-> >=20
-> >  arch/arm/mm/pageattr.c                        |   6 +-
-> >  arch/um/drivers/mconsole_user.c               |   2 +
-> >  arch/x86/mm/pgtable.c                         |   2 +- =20
->=20
-> >  drivers/edac/sb_edac.c                        |   4 +-
-> >  drivers/edac/skx_common.h                     |   1 -
-> >  .../drm/amd/display/modules/hdcp/hdcp_ddc.c   |   2 +
-> >  .../drm/amd/pm/powerplay/hwmgr/ppevvmath.h    |  14 +-
-> >  .../drm/arm/display/include/malidp_utils.h    |   2 +-
-> >  .../display/komeda/komeda_pipeline_state.c    |  24 +-
-> >  drivers/gpu/drm/drm_color_mgmt.c              |   2 +-
-> >  drivers/gpu/drm/msm/adreno/a6xx_gmu.c         |   6 -
-> >  drivers/gpu/drm/radeon/evergreen_cs.c         |   2 +
-> >  drivers/hwmon/adt7475.c                       |  24 +-
-> >  drivers/input/touchscreen/cyttsp4_core.c      |   2 +-
-> >  drivers/md/dm-integrity.c                     |   2 +-
-> >  drivers/media/dvb-frontends/stv0367_priv.h    |   3 +
-> >  .../net/ethernet/chelsio/cxgb3/cxgb3_main.c   |  18 +-
-> >  .../net/ethernet/stmicro/stmmac/stmmac_main.c |   2 +-
-> >  drivers/net/fjes/fjes_main.c                  |   4 +-
-> >  drivers/nfc/pn544/i2c.c                       |   2 -
-> >  drivers/platform/x86/sony-laptop.c            |   1 -
-> >  drivers/scsi/isci/init.c                      |   6 +- =20
->=20
-> I do see the value to backport the infrastructure, but why are driver spe=
-cific changes backported as well?
+A typical race condition is illustrated below:
 
-They will be about removing local definitions of MIN() and MAX() freeing
-them up for simple implementations (usable as constant initialisers) and th=
-en
-using them in places where the compound statements in min() and max() can't
-be used.
+CPU 0 (remove)            | CPU 1 (delayed work callback)
+mvs_pci_remove()          |
+  mvs_free()              | mvs_work_queue()
+    cancel_delayed_work() |
+      kfree(mvi)          |
+                          |   mvi-> // UAF
 
-Linus did all those changes - so he didn't have to wait for the maintainers
-to apply the changes (etc).
+Replace cancel_delayed_work() with cancel_delayed_work_sync() to
+ensure that the delayed work item is properly canceled and any
+executing delayed work item completes before the mvs_info is
+deallocated.
 
-	David
-=20
->=20
-> I mean the changes are most likely correct but also not valuable in anywa=
-y as bug fix.
->=20
-> Regards,
-> Christian.
->=20
-> >  .../pci/hive_isp_css_include/math_support.h   |   5 -
-> >  fs/btrfs/misc.h                               |   2 -
-> >  fs/btrfs/tree-checker.c                       |   2 +-
-> >  fs/ext2/balloc.c                              |   2 -
-> >  fs/ext4/ext4.h                                |   2 -
-> >  fs/ufs/util.h                                 |   6 -
-> >  include/linux/compiler.h                      |  15 +
-> >  include/linux/minmax.h                        | 267 ++++++++++++++----
-> >  include/linux/overflow.h                      |   1 -
-> >  include/linux/trace_events.h                  |   2 -
-> >  kernel/trace/preemptirq_delay_test.c          |   2 -
-> >  lib/btree.c                                   |   1 -
-> >  lib/decompress_unlzma.c                       |   2 +
-> >  lib/logic_pio.c                               |   3 -
-> >  lib/vsprintf.c                                |   2 +-
-> >  lib/zstd/zstd_internal.h                      |   2 -
-> >  mm/zsmalloc.c                                 |   1 -
-> >  net/ipv4/proc.c                               |   2 +-
-> >  net/ipv6/proc.c                               |   2 +-
-> >  net/netfilter/nf_nat_core.c                   |   6 +-
-> >  net/tipc/core.h                               |   2 +-
-> >  net/tipc/link.c                               |  10 +-
-> >  44 files changed, 306 insertions(+), 164 deletions(-)
-> >  =20
->=20
->=20
+This bug was found by static analysis.
+
+Fixes: 20b09c2992fe ("[SCSI] mvsas: add support for 94xx; layout change; bug fixes")
+Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
+---
+ drivers/scsi/mvsas/mv_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/mvsas/mv_init.c b/drivers/scsi/mvsas/mv_init.c
+index 2c72da6b8cf0..7f1ad305eee6 100644
+--- a/drivers/scsi/mvsas/mv_init.c
++++ b/drivers/scsi/mvsas/mv_init.c
+@@ -124,7 +124,7 @@ static void mvs_free(struct mvs_info *mvi)
+ 	if (mvi->shost)
+ 		scsi_host_put(mvi->shost);
+ 	list_for_each_entry(mwq, &mvi->wq_list, entry)
+-		cancel_delayed_work(&mwq->work_q);
++		cancel_delayed_work_sync(&mwq->work_q);
+ 	kfree(mvi->rsvd_tags);
+ 	kfree(mvi);
+ }
+-- 
+2.34.1
 
