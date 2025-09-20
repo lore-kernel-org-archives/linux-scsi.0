@@ -1,93 +1,147 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 54C6535942
-	for <linux-scsi@vger.kernel.org>; Fri, 19 Sep 2025 21:11:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F092F2110E
+	for <linux-scsi@vger.kernel.org>; Sat, 20 Sep 2025 01:38:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758316273; cv=none; b=u5WzLIXgaDsn2NR6WCjtL+hXzzzlZqIOgNGwMRYcjmQlpILfT5uDB7U85w+Vn0E4Ti4wYOKQpnwWs2GTrxBDryhmhMk5lEIn9BBXmJq2lk3EZs1v/hd/4L/yXMZo7f3qCmT+pIPtL10peA/OzHdGpy+XcdsRomy8cbOXq+zSyUA=
+	t=1758332336; cv=none; b=cOsMP/nCS62LPr+dn7J0dowLBB/jrRc7v1wi9j0Xgmn2Sn3kTRerPlddap8dFyT8P/G+OWBwSSh1Tsbc/vPKgUfyKBIbmsR6cVIXgBY2rV70Eecljv+ctGc4mYdemCMySJHgeihYnykFVvg3K6LASHfbY+mJmUEGwyqobdIJtWA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758316273; c=relaxed/simple;
-	bh=ZJnkRVItrHYeZT5j+XOWub8vQDdOE/cSEXzXQKdsjVQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=n28RYO4e3d4zAx1qkyGiKMiPk0k+DVHa+XEqk+wHoJ5eldWiyIYjIJBxZ29crsuZ3RLyf3Oc3AsX4dt2I9O0BsUe3f93t03verRHXiDXev0Po0RvRlZquCtlgPYQD6fx4Q+ZQgMdoHpMvO35opuJeBnESaXJN4lg6Bq5t9fsPE8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fSuxF7zU; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1758332336; c=relaxed/simple;
+	bh=0eoP9lTL22QFCpaEYjyGQCU7y0cT4seEWfVHb9AzdOA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ANGBRQ8cIrjBH2JC9QMMZcfiHr6BGDO/KJMK7tCuJSLIL+V4Xw2QZDZ7lhFejAVE2ObT8TT0rFGPB9BoCHPZ1ehb3ZyjtbfufRd+kpOJsDcQz/37lC8qsePSQqEg9z8ZulvIuOZJQoCj+cjBhDqvSFURRm/3UvT3s0JzfEfO5A0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Nlf1J4xe; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fSuxF7zU"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cT4tQ20Xhzm0ysv;
-	Fri, 19 Sep 2025 21:11:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758316267; x=1760908268; bh=ZJnkRVItrHYeZT5j+XOWub8v
-	QDdOE/cSEXzXQKdsjVQ=; b=fSuxF7zU3h9Juow5YX1LA/fUzFegc3iiyjon3CW0
-	vQs2JhiD1vS/590D6kWfzKJijEAdkq+i+wjcgLWpPn8XRPhukV+DilGDpuGthlO3
-	KvxsuaJ5LKW9pqnyaZtPXH3pK0S0N0DqW4Omlle6BKxc7iIIazN9rfyESrpxLwaF
-	PEAbHiI6kv4W2s8YfMjJRRL7jevAVCTrWmS4FVOm5F7gEuSb6XtwP95v+fAoagEA
-	zKaE7RY2RD9UEI0uU2g2H5iSj+xW/yCb5vxFcz4uKO5E2hbl4k3Mar3qn2yAfFpf
-	j3UTcwmhzIm7PbLUtjm57R/DwCcHS0WN+p1RnJFtFEZhWQ==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id iLi1iDk2A3mY; Fri, 19 Sep 2025 21:11:07 +0000 (UTC)
-Received: from [100.66.154.22] (unknown [104.135.204.82])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cT4t540Kczm1748;
-	Fri, 19 Sep 2025 21:10:52 +0000 (UTC)
-Message-ID: <b9eb48b1-f6fd-4b32-8e0b-b7434f17b0ee@acm.org>
-Date: Fri, 19 Sep 2025 14:10:51 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Nlf1J4xe"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1758332335; x=1789868335;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=0eoP9lTL22QFCpaEYjyGQCU7y0cT4seEWfVHb9AzdOA=;
+  b=Nlf1J4xeRlb/W6n97Vb4bo+JYZVDjhKmSkEn6ZTQaIho8AR1f5oZKV+6
+   C6q9gpkHD2aESRRAWkSDoyC1Kd+juXdjxSC+BOODUTdZ7fcKPyT9/383R
+   obf2proEKrIXfPWMHtLi5cjwGGprFGT9P77OWIr6e95rQ+jFVuVKY3hex
+   l4hAlUeVwLr+cpZ+HJKXkjtJKqKVLC/IpPiQjjUes37PJEk0xO6A/fXj/
+   5LiyhbczHjbyFhGyISgSIOxtD9xG5zxA2OiZ381sbjnUlGaKwF8T0CSrA
+   8RDJ4hkLZCSnNd/i+Gmb9tFTUk/IF81wHFf8wPCCd6UoPAWz/3Va2zVe0
+   A==;
+X-CSE-ConnectionGUID: LsqVNFa2SnOvLunXFIrz4A==
+X-CSE-MsgGUID: iQRr9uW4Sr61pj3iArR5Yg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11558"; a="71307996"
+X-IronPort-AV: E=Sophos;i="6.18,279,1751266800"; 
+   d="scan'208";a="71307996"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2025 18:38:54 -0700
+X-CSE-ConnectionGUID: Y0wSdOavQbaKY4+4NaI7lg==
+X-CSE-MsgGUID: DszBOhVeToWnoMFFhqnguA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.18,279,1751266800"; 
+   d="scan'208";a="206918438"
+Received: from lkp-server01.sh.intel.com (HELO 84a20bd60769) ([10.239.97.150])
+  by fmviesa001.fm.intel.com with ESMTP; 19 Sep 2025 18:38:52 -0700
+Received: from kbuild by 84a20bd60769 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1uzmYs-0004wt-05;
+	Sat, 20 Sep 2025 01:38:50 +0000
+Date: Sat, 20 Sep 2025 09:38:36 +0800
+From: kernel test robot <lkp@intel.com>
+To: doubled <doubled@leap-io-kernel.com>,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: leapraid: Add new scsi driver
+Message-ID: <202509200958.X8eUlp0N-lkp@intel.com>
+References: <20250919100032.3931476-1-doubled@leap-io-kernel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 07/10] ufs: host: mediatek: Fix shutdown/suspend race
- condition
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: =?UTF-8?B?QWxpY2UgQ2hhbyAo6LaZ54+u5Z2HKQ==?= <Alice.Chao@mediatek.com>,
- =?UTF-8?B?Q0MgQ2hvdSAo5ZGo5b+X5p2wKQ==?= <cc.chou@mediatek.com>,
- =?UTF-8?B?RWRkaWUgSHVhbmcgKOm7g+aZuuWCkSk=?= <eddie.huang@mediatek.com>,
- =?UTF-8?B?RWQgVHNhaSAo6JSh5a6X6LuSKQ==?= <Ed.Tsai@mediatek.com>,
- wsd_upstream <wsd_upstream@mediatek.com>,
- =?UTF-8?B?Q2hhb3RpYW4gSmluZyAo5LqV5pyd5aSpKQ==?=
- <Chaotian.Jing@mediatek.com>, =?UTF-8?B?Q2h1bi1IdW5nIFd1ICjlt6vpp7/lro8p?=
- <Chun-hung.Wu@mediatek.com>, =?UTF-8?B?WWktZmFuIFBlbmcgKOW9ree+v+WHoSk=?=
- <Yi-fan.Peng@mediatek.com>, =?UTF-8?B?UWlsaW4gVGFuICjosK3pupLpup8p?=
- <Qilin.Tan@mediatek.com>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- =?UTF-8?B?SmlhamllIEhhbyAo6YOd5Yqg6IqCKQ==?= <jiajie.hao@mediatek.com>,
- =?UTF-8?B?TGluIEd1aSAo5qGC5p6XKQ==?= <Lin.Gui@mediatek.com>,
- =?UTF-8?B?TmFvbWkgQ2h1ICjmnLHoqaDnlLAp?= <Naomi.Chu@mediatek.com>,
- =?UTF-8?B?VHVuLXl1IFl1ICjmuLjmlabogb8p?= <Tun-yu.Yu@mediatek.com>
-References: <20250918104000.208856-1-peter.wang@mediatek.com>
- <20250918104000.208856-8-peter.wang@mediatek.com>
- <6f4f954d-64fe-461e-9c65-6630b0409710@acm.org>
- <e91b0fc0894eb249b853e149f2f889668c3d2e9f.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <e91b0fc0894eb249b853e149f2f889668c3d2e9f.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250919100032.3931476-1-doubled@leap-io-kernel.com>
 
-On 9/19/25 1:15 AM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> By the way, could I know the reason why you want to
-> remove ufshcd_is_user_access_allowed?
+Hi doubled,
 
-The name of that function is longer than its implementation.
-Hence, code readability will probably improve if calls to that
-function are replaced with the body of that function.
+kernel test robot noticed the following build warnings:
 
-Thanks,
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.17-rc6 next-20250919]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Bart.
+url:    https://github.com/intel-lab-lkp/linux/commits/doubled/scsi-leapraid-Add-new-scsi-driver/20250919-202535
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20250919100032.3931476-1-doubled%40leap-io-kernel.com
+patch subject: [PATCH] scsi: leapraid: Add new scsi driver
+config: i386-randconfig-002-20250920 (https://download.01.org/0day-ci/archive/20250920/202509200958.X8eUlp0N-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250920/202509200958.X8eUlp0N-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202509200958.X8eUlp0N-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/leapraid/leapraid_func.c:7478:6: warning: variable 'adapter_state' set but not used [-Wunused-but-set-variable]
+    7478 |         u32 adapter_state;
+         |             ^
+   drivers/scsi/leapraid/leapraid_func.c:93:1: warning: unused function 'leapraid_writeq' [-Wunused-function]
+      93 | leapraid_writeq(__u64 info, void __iomem *addr,
+         | ^~~~~~~~~~~~~~~
+   2 warnings generated.
+--
+>> Warning: drivers/scsi/leapraid/leapraid_app.c:112 struct member 'r0' not described in 'leapraid_ioctl_adapter_info'
+>> Warning: drivers/scsi/leapraid/leapraid_app.c:112 struct member 'r1' not described in 'leapraid_ioctl_adapter_info'
+>> Warning: drivers/scsi/leapraid/leapraid_app.c:112 struct member 'r2' not described in 'leapraid_ioctl_adapter_info'
+
+
+vim +/adapter_state +7478 drivers/scsi/leapraid/leapraid_func.c
+
+  7473	
+  7474	static int
+  7475	leapraid_adapter_unit_reset(
+  7476		struct leapraid_adapter *adapter)
+  7477	{
+> 7478		u32 adapter_state;
+  7479		unsigned long flags;
+  7480		int rc = 0;
+  7481	
+  7482		if (!(adapter->adapter_attr.features.adapter_caps &
+  7483			 LEAPRAID_ADAPTER_FEATURES_CAP_EVENT_REPLAY))
+  7484			return -EFAULT;
+  7485	
+  7486		dev_info(&adapter->pdev->dev, "fire unit reset\n");
+  7487		writel(LEAPRAID_FUNC_ADAPTER_UNIT_RESET << LEAPRAID_DB_FUNC_SHIFT,
+  7488			 &adapter->iomem_base->db);
+  7489		if (leapraid_db_wait_ack_and_clear_int(adapter))
+  7490			rc = -EFAULT;
+  7491	
+  7492		adapter_state = leapraid_get_adapter_state(adapter);
+  7493		spin_lock_irqsave(&adapter->reset_desc.adapter_reset_lock,
+  7494			 flags);
+  7495		spin_unlock_irqrestore(&adapter->reset_desc.adapter_reset_lock,
+  7496			 flags);
+  7497	
+  7498		if (!leapraid_wait_adapter_ready(adapter)) {
+  7499			rc = -EFAULT;
+  7500			goto out;
+  7501		}
+  7502	out:
+  7503		dev_info(&adapter->pdev->dev, "unit reset: %s\n",
+  7504			 ((rc == 0) ? "SUCCESS" : "FAILED"));
+  7505		return rc;
+  7506	}
+  7507	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
