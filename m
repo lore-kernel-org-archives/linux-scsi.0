@@ -1,147 +1,105 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F092F2110E
-	for <linux-scsi@vger.kernel.org>; Sat, 20 Sep 2025 01:38:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D517B2AE99;
+	Sat, 20 Sep 2025 02:25:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758332336; cv=none; b=cOsMP/nCS62LPr+dn7J0dowLBB/jrRc7v1wi9j0Xgmn2Sn3kTRerPlddap8dFyT8P/G+OWBwSSh1Tsbc/vPKgUfyKBIbmsR6cVIXgBY2rV70Eecljv+ctGc4mYdemCMySJHgeihYnykFVvg3K6LASHfbY+mJmUEGwyqobdIJtWA=
+	t=1758335104; cv=none; b=nw/7IbuMHwIjDqGGbVH4mxU83xq6hPgh/n5MEZ32Wy72vpGJ7Egvq4zTr8/KU8JEHqByyePhr+8DgeA2sSynBjIefd1eac8tAA2Uv5gSOoAX8Mpa3UMjbRPRxttBoPf4JpNMwouBEGcdB+T7Tkx9uH6b7FiYXufa5U99DuCBxlo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758332336; c=relaxed/simple;
-	bh=0eoP9lTL22QFCpaEYjyGQCU7y0cT4seEWfVHb9AzdOA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ANGBRQ8cIrjBH2JC9QMMZcfiHr6BGDO/KJMK7tCuJSLIL+V4Xw2QZDZ7lhFejAVE2ObT8TT0rFGPB9BoCHPZ1ehb3ZyjtbfufRd+kpOJsDcQz/37lC8qsePSQqEg9z8ZulvIuOZJQoCj+cjBhDqvSFURRm/3UvT3s0JzfEfO5A0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Nlf1J4xe; arc=none smtp.client-ip=192.198.163.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1758335104; c=relaxed/simple;
+	bh=We9iIzMmfZFbatTSaPpa/03n9fT5X9OYeMV2mNb0VlI=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=nEyvxmkcNAaPUqx1szjlbO2S9sY94PBf74DcWBY4EmsbpqVbsbbgXYx/ZJqdWNxmtzcBJQsqGzVIYq3Wr1baSSuEAj0Vn0R3RFcOoMa4nqsdV7rBP5JKoawgk5cp5EILhXYsRlUgCFHlroFoYxYQS4Mt3yZUNBS0YEJzi53RqjU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=QCx8585W; arc=none smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Nlf1J4xe"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1758332335; x=1789868335;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=0eoP9lTL22QFCpaEYjyGQCU7y0cT4seEWfVHb9AzdOA=;
-  b=Nlf1J4xeRlb/W6n97Vb4bo+JYZVDjhKmSkEn6ZTQaIho8AR1f5oZKV+6
-   C6q9gpkHD2aESRRAWkSDoyC1Kd+juXdjxSC+BOODUTdZ7fcKPyT9/383R
-   obf2proEKrIXfPWMHtLi5cjwGGprFGT9P77OWIr6e95rQ+jFVuVKY3hex
-   l4hAlUeVwLr+cpZ+HJKXkjtJKqKVLC/IpPiQjjUes37PJEk0xO6A/fXj/
-   5LiyhbczHjbyFhGyISgSIOxtD9xG5zxA2OiZ381sbjnUlGaKwF8T0CSrA
-   8RDJ4hkLZCSnNd/i+Gmb9tFTUk/IF81wHFf8wPCCd6UoPAWz/3Va2zVe0
-   A==;
-X-CSE-ConnectionGUID: LsqVNFa2SnOvLunXFIrz4A==
-X-CSE-MsgGUID: iQRr9uW4Sr61pj3iArR5Yg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11558"; a="71307996"
-X-IronPort-AV: E=Sophos;i="6.18,279,1751266800"; 
-   d="scan'208";a="71307996"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Sep 2025 18:38:54 -0700
-X-CSE-ConnectionGUID: Y0wSdOavQbaKY4+4NaI7lg==
-X-CSE-MsgGUID: DszBOhVeToWnoMFFhqnguA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.18,279,1751266800"; 
-   d="scan'208";a="206918438"
-Received: from lkp-server01.sh.intel.com (HELO 84a20bd60769) ([10.239.97.150])
-  by fmviesa001.fm.intel.com with ESMTP; 19 Sep 2025 18:38:52 -0700
-Received: from kbuild by 84a20bd60769 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1uzmYs-0004wt-05;
-	Sat, 20 Sep 2025 01:38:50 +0000
-Date: Sat, 20 Sep 2025 09:38:36 +0800
-From: kernel test robot <lkp@intel.com>
-To: doubled <doubled@leap-io-kernel.com>,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] scsi: leapraid: Add new scsi driver
-Message-ID: <202509200958.X8eUlp0N-lkp@intel.com>
-References: <20250919100032.3931476-1-doubled@leap-io-kernel.com>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="QCx8585W"
+Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58JDun93010150;
+	Sat, 20 Sep 2025 02:25:02 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=
+	corp-2025-04-25; bh=LX79n5R/sHZ9aLkopBHTQnNGQD0BoaH4Ti10gl3Lw20=; b=
+	QCx8585WqBCmfucsktqswSoDDsIiok8GgEATutpFiQYkUkdmuP8r7WsTF0tzzc+W
+	UasetrbfbGVaDfns2uklvyAvvJAG6pc/NzYPo5N/wj55m0ctyW+q6X0yvpWZtULP
+	9UYtSbqMvDW+j4YmBtVjBjn+BJVfwm6hQO88ZCuZJXWO0SUjOn8/H3A8wQINlbQ7
+	Xf45HHKVSy2HHWv4Uj/MXvkHBcWZUj93l9Tapmom0g+11yUniGH0eSscmkH22lGM
+	f56Ma56b1Z2S8MLxZg5zCDzI6Qdy6d3jumU8kIAy+aZI59mjdFmemHJ8GWHhjO4u
+	ud+ytNH1vgSftvwtoVpcuQ==
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 497fxb6jfx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 20 Sep 2025 02:25:01 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58K1Y8wb019773;
+	Sat, 20 Sep 2025 02:25:00 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 499jq50p2k-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Sat, 20 Sep 2025 02:25:00 +0000
+Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 58K2Lxga016735;
+	Sat, 20 Sep 2025 02:25:00 GMT
+Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 499jq50p2b-1;
+	Sat, 20 Sep 2025 02:25:00 +0000
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+To: michael.christie@oracle.com, linux-scsi@vger.kernel.org,
+        target-devel@vger.kernel.org, Alok Tiwari <alok.a.tiwari@oracle.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>
+Subject: Re: [PATCH] scsi: target: iscsi: fix typos and formatting in lio_target messages
+Date: Fri, 19 Sep 2025 22:24:51 -0400
+Message-ID: <175833431691.3341211.12584013704761747909.b4-ty@oracle.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20250910190728.3783157-1-alok.a.tiwari@oracle.com>
+References: <20250910190728.3783157-1-alok.a.tiwari@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250919100032.3931476-1-doubled@leap-io-kernel.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-20_01,2025-09-19_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 spamscore=0
+ mlxlogscore=999 suspectscore=0 phishscore=0 adultscore=0 mlxscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2508110000 definitions=main-2509200020
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTE2MDIwMiBTYWx0ZWRfX6EqloaLIL/tk
+ FtM5j7Aj4w3+PxsWtPKEi4MGuvd86D6a0HnXs/1i384ob4NOzeAV7IJNZsbT3yqLze3YpKkZ9+m
+ iCmJAnCpfiHRO2r6R5t39fN4Xe6CK/wFIU8tjBmRVNdRhsf0TWTXfuINSq0f/Q0z5Bn8YdcaSpO
+ mmu0KGL0P2qcuh8HsX6hcOhYtq63GW8cJdONZ2h27XgAFnmWCUinY0drxf0lVwDExwuSyFxsGHf
+ 7ypFnRWuDDMqzk2QP0xyMZ94PAaAZTby+xii7ueTUju179/s0HhcMWc0I6T2k+trd85ak9hwF2g
+ CFt7StkL3ioPBTuucD3Q3aGjPE+ePJVM/0vKxRweMkxNUNRaOERE3d0OJqDlDDEVjeCG3TOEEjf
+ 9ferYFMC046iKdAmqxa7j4V+6LDpaw==
+X-Authority-Analysis: v=2.4 cv=KOJaDEFo c=1 sm=1 tr=0 ts=68ce107d b=1 cx=c_pps
+ a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
+ a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=A8grC8wFmQRFXEc_IFkA:9
+ a=QEXdDO2ut3YA:10 cc=ntf awl=host:13614
+X-Proofpoint-GUID: cHQZwhgPntMv36ZiuXzDeGOwWDnpzgO6
+X-Proofpoint-ORIG-GUID: cHQZwhgPntMv36ZiuXzDeGOwWDnpzgO6
 
-Hi doubled,
+On Wed, 10 Sep 2025 12:07:20 -0700, Alok Tiwari wrote:
 
-kernel test robot noticed the following build warnings:
+> Fix several minor issues in lio_target code and messages:
+> - Correct typo "locatel" -> "locate" in error log.
+> - Add missing space in pr_debug() message for better readability.
+> - Fix comment typo: "contig_item" -> "config_item".
+> 
+> These changes improve code clarity and log readability.
+> 
+> [...]
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next linus/master v6.17-rc6 next-20250919]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Applied to 6.18/scsi-queue, thanks!
 
-url:    https://github.com/intel-lab-lkp/linux/commits/doubled/scsi-leapraid-Add-new-scsi-driver/20250919-202535
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20250919100032.3931476-1-doubled%40leap-io-kernel.com
-patch subject: [PATCH] scsi: leapraid: Add new scsi driver
-config: i386-randconfig-002-20250920 (https://download.01.org/0day-ci/archive/20250920/202509200958.X8eUlp0N-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20250920/202509200958.X8eUlp0N-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202509200958.X8eUlp0N-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/scsi/leapraid/leapraid_func.c:7478:6: warning: variable 'adapter_state' set but not used [-Wunused-but-set-variable]
-    7478 |         u32 adapter_state;
-         |             ^
-   drivers/scsi/leapraid/leapraid_func.c:93:1: warning: unused function 'leapraid_writeq' [-Wunused-function]
-      93 | leapraid_writeq(__u64 info, void __iomem *addr,
-         | ^~~~~~~~~~~~~~~
-   2 warnings generated.
---
->> Warning: drivers/scsi/leapraid/leapraid_app.c:112 struct member 'r0' not described in 'leapraid_ioctl_adapter_info'
->> Warning: drivers/scsi/leapraid/leapraid_app.c:112 struct member 'r1' not described in 'leapraid_ioctl_adapter_info'
->> Warning: drivers/scsi/leapraid/leapraid_app.c:112 struct member 'r2' not described in 'leapraid_ioctl_adapter_info'
-
-
-vim +/adapter_state +7478 drivers/scsi/leapraid/leapraid_func.c
-
-  7473	
-  7474	static int
-  7475	leapraid_adapter_unit_reset(
-  7476		struct leapraid_adapter *adapter)
-  7477	{
-> 7478		u32 adapter_state;
-  7479		unsigned long flags;
-  7480		int rc = 0;
-  7481	
-  7482		if (!(adapter->adapter_attr.features.adapter_caps &
-  7483			 LEAPRAID_ADAPTER_FEATURES_CAP_EVENT_REPLAY))
-  7484			return -EFAULT;
-  7485	
-  7486		dev_info(&adapter->pdev->dev, "fire unit reset\n");
-  7487		writel(LEAPRAID_FUNC_ADAPTER_UNIT_RESET << LEAPRAID_DB_FUNC_SHIFT,
-  7488			 &adapter->iomem_base->db);
-  7489		if (leapraid_db_wait_ack_and_clear_int(adapter))
-  7490			rc = -EFAULT;
-  7491	
-  7492		adapter_state = leapraid_get_adapter_state(adapter);
-  7493		spin_lock_irqsave(&adapter->reset_desc.adapter_reset_lock,
-  7494			 flags);
-  7495		spin_unlock_irqrestore(&adapter->reset_desc.adapter_reset_lock,
-  7496			 flags);
-  7497	
-  7498		if (!leapraid_wait_adapter_ready(adapter)) {
-  7499			rc = -EFAULT;
-  7500			goto out;
-  7501		}
-  7502	out:
-  7503		dev_info(&adapter->pdev->dev, "unit reset: %s\n",
-  7504			 ((rc == 0) ? "SUCCESS" : "FAILED"));
-  7505		return rc;
-  7506	}
-  7507	
+[1/1] scsi: target: iscsi: fix typos and formatting in lio_target messages
+      https://git.kernel.org/mkp/scsi/c/f2d81dd6751a
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Martin K. Petersen
