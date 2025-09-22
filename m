@@ -1,89 +1,98 @@
-Received: from mail-il1-f227.google.com (mail-il1-f227.google.com [209.85.166.227])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from fra-out-008.esa.eu-central-1.outbound.mail-perimeter.amazon.com (fra-out-008.esa.eu-central-1.outbound.mail-perimeter.amazon.com [35.158.23.94])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C9DC1CAA92
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 09:57:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.227
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70E8A296BA2;
+	Mon, 22 Sep 2025 10:33:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.158.23.94
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758535033; cv=none; b=seOqYNOVI2R4w2ju6CBsHXzLwZFLWx4AkNaVX4Ji0BnmwtqNHtGq3BpJ+B2aXA8IDpSHq37aPOs6WZs+xhQJbu+ixL7kJstIuFFJmckFsequSHgEyY2+RDhIOsnnbhNQNO6fLnjiNS6rOz4N4X02Kw0fby0jeJadDCglHLEGizc=
+	t=1758537200; cv=none; b=WcNmYeeiBf2QH4klzwLPh/Z0Zf6W3RvVI43XGYhGdlqRCf3pzPa94FeF65//3B/2kzKBbx9IKX68w9i1nEV5gpZJC4DqOz4TwcGWJ9z3bcqzl03Q8a9t2hQ+vkE3+3Ro8jMGy2+VsATrLPH4CuY66Ez6/6XvK8sQXt1qYoQ4Yq0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758535033; c=relaxed/simple;
-	bh=/QND+t/HIU6DQdse8jPZCPhqfTGQuWhb21QvRlgMSn0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=kw/KJ2DF5RatxN/pXXQViH7ObVLmfeGij2PBfS0TrD1DTMtvcu3tyb96AaJ1J3SX4ywSYe76MmsOR+H9LAvejXSK3ahTnWEHCyX/hlb9pH4ExAzAM5UvkkM9nEVRtcfRe8/FuFvOsZuDIUn8cgkltlYDKyIFun6IZbzq2cSngEQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=cd9XIaxa; arc=none smtp.client-ip=209.85.166.227
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
+	s=arc-20240116; t=1758537200; c=relaxed/simple;
+	bh=PixZFZmWcKwq1euE7Zl54sLIl2MpNNci4XMpny8p56I=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type; b=Dbll3C/6sB+F8s9awBYBVHf1wumV620DbPw0qNjZ6QAqgrFYkVD3wWUGdGtEkkCMRUtzy4JJDHEeSFX4KJfSRpzpV55ZxA9Z8WJKKEcYX+fiScuruph2mOkqylAE3zvf2oPatYgoOCiNbw2SHyCkVlW08Hsm/A4jJxr1F3RG/UU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=HZ8j1fpf; arc=none smtp.client-ip=35.158.23.94
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="cd9XIaxa"
-Received: by mail-il1-f227.google.com with SMTP id e9e14a558f8ab-4256ef4eeebso13871185ab.2
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 02:57:11 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758535031; x=1759139831;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:dkim-signature
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=2FqRGuK/kp1NSW3uC/+D5X2ahuEwjMfDFbYzuX5mT4U=;
-        b=h+Zoq0zG03cmRx8SoIo8nI9Ht70w+9OZNmFndiTRF6YNajirNUsbP8VSomwKb5E0s/
-         74l96QJty8EvanDOz8PqBr8OSgZwA9L4eleKYFu1YTut3/1wlqF2vrrAAPmoPyaFhphF
-         ijDkNPPe3HZ5/C3AczXikerICmlCD5IeFefv28Ukl16AgbfQfWmQiRn7I4Ls7LUYzNVl
-         YkJtZ0GeTjc7imvELT15z7E681Jv4l8pW0MHO5T+ZaJtNWQNFBoFl63syX+TOgudI42i
-         sOszpUlFP4gGDwdYnGwYCdhcqZqOoUaMiRgonc2oo1c4XCCEbkj6E6x7TvY/eQ1HWo1N
-         GThQ==
-X-Gm-Message-State: AOJu0YxqlMylIPzgiGAnuUTnztuG1t0o4KMlaktOunIhV7Jrethfwh13
-	TgJxu0NI9+EwXrUpz+uCen9tqzIznhS3COH1eIISQf1+16VtdEFAf7OuYPMHqh+IUadRhfHHW0J
-	a2FaMInr1cm8QJXQexP4j238RUnbnh9WfOaqECSok9nsI4DXm8QrBcIHsGRdSN6Fb+/d1VxlZqL
-	lCwM0KzbEMOHoxqA8uZ/7iRui/vFFaHxVRTnc5jiPd6I8Otgatj6HQN51ZQ//QFmuydBbBIy4xK
-	jka8UtuFfhzFeWL
-X-Gm-Gg: ASbGncvVphC/9ReR8iO+CAP2wke2fJPg+3lc62MRl4vWWnnRG58XRKXVIRbl1tjKNuc
-	jCmoHdn4X74mmVu1Y7H6vI7z2fzVtDg5xLcK6Tz8GlRc+6aepCBs9bRD2ZQAQhET5DkwvKM0z+1
-	iMcSOS+FE9QTtXEjWd61eXFv63VjCA6ZYXPrsbAs0frnNHYEt26SRvVthjM4984Fhz0yKhIU9i1
-	HU7ud+VV+yHgn0ZItEabHgU46XdR5UrgYs1sIbTyDRGSv+r3OougQI7uNSXJUYJtvGO772KgU3z
-	2eGj7y3z7aO7L8ECH8Y5d6EnF6mdue5YrFvM0xMfQCMNlVUm/zCAAn68IFKS9K9uAM3NqlbVQNN
-	cYTMPwYwRTgdjnqGsxcsRmYfRXkBSg8IuI/vK82fdWjU1V/stuSVTvT/HLkmvvqBr0cyn0qYBeP
-	Cc3Q==
-X-Google-Smtp-Source: AGHT+IGlnpgzp7exjCXPd0xBjBgaen9dSSOF6dxSw5SiZSgPb47qsowoDhleWe57v4nvMZcEEJVJlnAFEDAV
-X-Received: by 2002:a05:6e02:b48:b0:41f:8265:4100 with SMTP id e9e14a558f8ab-4248199c677mr203513715ab.18.1758535030733;
-        Mon, 22 Sep 2025 02:57:10 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-119.dlp.protect.broadcom.com. [144.49.247.119])
-        by smtp-relay.gmail.com with ESMTPS id e9e14a558f8ab-4247e4fbd41sm6069225ab.40.2025.09.22.02.57.09
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 22 Sep 2025 02:57:10 -0700 (PDT)
-X-Relaying-Domain: broadcom.com
-X-CFilter-Loop: Reflected
-Received: by mail-pf1-f198.google.com with SMTP id d2e1a72fcca58-77f18d99ebaso1651296b3a.1
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 02:57:09 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="HZ8j1fpf"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1758535028; x=1759139828; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2FqRGuK/kp1NSW3uC/+D5X2ahuEwjMfDFbYzuX5mT4U=;
-        b=cd9XIaxaeXrZpDoIJZsLwlAQKE9UGgBEBp2QiY364TbcaeBEaPyFCEC7dGCQLB4EX9
-         1rGZFAC/9NNrV/APmsjqPUmC6sk5w67t597toRK0atPu4BhEwzQecod2wdklahBEW98Y
-         Fw60v6MIb+xJ7Rx8B1k+gizQRHIoNln3p7XD8=
-X-Received: by 2002:a05:6a00:348a:b0:77f:efd:829b with SMTP id d2e1a72fcca58-77f0efd851emr10193239b3a.22.1758535027923;
-        Mon, 22 Sep 2025 02:57:07 -0700 (PDT)
-X-Received: by 2002:a05:6a00:348a:b0:77f:efd:829b with SMTP id d2e1a72fcca58-77f0efd851emr10193219b3a.22.1758535027452;
-        Mon, 22 Sep 2025 02:57:07 -0700 (PDT)
-Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77f4594a76bsm1034584b3a.62.2025.09.22.02.57.05
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Sep 2025 02:57:07 -0700 (PDT)
-From: Ranjan Kumar <ranjan.kumar@broadcom.com>
-To: linux-scsi@vger.kernel.org,
-	martin.petersen@oracle.com
-Cc: sathya.prakash@broadcom.com,
-	chandrakanth.patil@broadcom.com,
-	prayas.patel@broadcom.com,
-	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 4/4] mpt3sas: update driver version to 54.100.00.00
-Date: Mon, 22 Sep 2025 15:21:13 +0530
-Message-ID: <20250922095113.281484-5-ranjan.kumar@broadcom.com>
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1758537198; x=1790073198;
+  h=from:to:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=zVSnvTXkXiuh+OW/uVNUL4x1ADt15TY9E6leiyfAL50=;
+  b=HZ8j1fpfp/NtePMdMaW0FcYOCEYlQQp0vb3mDknGOZpJnZIPkI5bE+TV
+   fRzVPNGgZ2WU2PgI9wUgC136V/fTJTxHh4EOuRhKg3CJzo7t7FV1nIPZO
+   F6hVzIw41izSt/kSYjXqBxBzX5wRRf9MIzOzM+j/QWSbwWS12XeiT4CYe
+   Og0hpgkknNDbR6ZsmvhBz5/uovypzqA/wwGS6y3+JjW/7M/twEREgeuip
+   +f3oN6Y/kPEBCPVCLDTSBHdosI1RdpKd9QnWw+x2o+CFSJargqxrCTsKv
+   2JRLXxSOGxEr2xvROnRI14veGIhsUpdHbL00gDjgdi4xS1qFLW3BVazNS
+   g==;
+X-CSE-ConnectionGUID: SA7Bpc9VQgG1HmOijFiFuw==
+X-CSE-MsgGUID: 7eapTz9/SuG/x2ufntC2mg==
+X-IronPort-AV: E=Sophos;i="6.18,284,1751241600"; 
+   d="scan'208";a="2478632"
+Received: from ip-10-6-6-97.eu-central-1.compute.internal (HELO smtpout.naws.eu-central-1.prod.farcaster.email.amazon.dev) ([10.6.6.97])
+  by internal-fra-out-008.esa.eu-central-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 22 Sep 2025 10:33:14 +0000
+Received: from EX19MTAEUA002.ant.amazon.com [54.240.197.232:4640]
+ by smtpin.naws.eu-central-1.prod.farcaster.email.amazon.dev [10.0.10.226:2525] with esmtp (Farcaster)
+ id c0c65c16-13cf-4fa2-a5a8-1f23642ff95a; Mon, 22 Sep 2025 10:33:14 +0000 (UTC)
+X-Farcaster-Flow-ID: c0c65c16-13cf-4fa2-a5a8-1f23642ff95a
+Received: from EX19D018EUA004.ant.amazon.com (10.252.50.85) by
+ EX19MTAEUA002.ant.amazon.com (10.252.50.126) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20;
+ Mon, 22 Sep 2025 10:33:13 +0000
+Received: from dev-dsk-farbere-1a-46ecabed.eu-west-1.amazon.com
+ (172.19.116.181) by EX19D018EUA004.ant.amazon.com (10.252.50.85) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20; Mon, 22 Sep 2025
+ 10:32:49 +0000
+From: Eliav Farber <farbere@amazon.com>
+To: <richard@nod.at>, <anton.ivanov@cambridgegreys.com>,
+	<johannes@sipsolutions.net>, <dave.hansen@linux.intel.com>,
+	<luto@kernel.org>, <peterz@infradead.org>, <tglx@linutronix.de>,
+	<mingo@redhat.com>, <bp@alien8.de>, <x86@kernel.org>, <hpa@zytor.com>,
+	<tony.luck@intel.com>, <qiuxu.zhuo@intel.com>, <james.morse@arm.com>,
+	<mchehab@kernel.org>, <rric@kernel.org>, <harry.wentland@amd.com>,
+	<sunpeng.li@amd.com>, <Rodrigo.Siqueira@amd.com>,
+	<alexander.deucher@amd.com>, <christian.koenig@amd.com>,
+	<Xinhui.Pan@amd.com>, <airlied@gmail.com>, <daniel@ffwll.ch>,
+	<evan.quan@amd.com>, <maarten.lankhorst@linux.intel.com>,
+	<mripard@kernel.org>, <tzimmermann@suse.de>, <jdelvare@suse.com>,
+	<linux@roeck-us.net>, <linus.walleij@linaro.org>,
+	<dmitry.torokhov@gmail.com>, <wens@csie.org>, <jernej.skrabec@gmail.com>,
+	<samuel@sholland.org>, <agk@redhat.com>, <snitzer@kernel.org>,
+	<dm-devel@lists.linux.dev>, <mailhol.vincent@wanadoo.fr>,
+	<wg@grandegger.com>, <mkl@pengutronix.de>, <davem@davemloft.net>,
+	<edumazet@google.com>, <kuba@kernel.org>, <pabeni@redhat.com>,
+	<alexandre.torgue@foss.st.com>, <joabreu@synopsys.com>,
+	<mcoquelin.stm32@gmail.com>, <krzysztof.kozlowski@linaro.org>,
+	<malattia@linux.it>, <hdegoede@redhat.com>, <ilpo.jarvinen@linux.intel.com>,
+	<markgross@kernel.org>, <artur.paszkiewicz@intel.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, <sakari.ailus@linux.intel.com>,
+	<gregkh@linuxfoundation.org>, <clm@fb.com>, <josef@toxicpanda.com>,
+	<dsterba@suse.com>, <luc.vanoostenryck@gmail.com>, <rostedt@goodmis.org>,
+	<mhiramat@kernel.org>, <pmladek@suse.com>,
+	<andriy.shevchenko@linux.intel.com>, <linux@rasmusvillemoes.dk>,
+	<senozhatsky@chromium.org>, <minchan@kernel.org>,
+	<akpm@linux-foundation.org>, <dsahern@kernel.org>, <shuah@kernel.org>,
+	<keescook@chromium.org>, <wad@chromium.org>, <farbere@amazon.com>,
+	<David.Laight@ACULAB.COM>, <arnd@kernel.org>, <linux-um@lists.infradead.org>,
+	<linux-kernel@vger.kernel.org>, <linux-edac@vger.kernel.org>,
+	<amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+	<linux-hwmon@vger.kernel.org>, <linux-input@vger.kernel.org>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-sunxi@lists.linux.dev>,
+	<linux-media@vger.kernel.org>, <linux-can@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-stm32@st-md-mailman.stormreply.com>,
+	<platform-driver-x86@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-staging@lists.linux.dev>, <linux-btrfs@vger.kernel.org>,
+	<linux-sparse@vger.kernel.org>, <linux-trace-kernel@vger.kernel.org>,
+	<linux-mm@kvack.org>, <linux-kselftest@vger.kernel.org>,
+	<bpf@vger.kernel.org>, <stable@vger.kernel.org>
+Subject: [PATCH 00/15 v6.6.y] Backport minmax.h updates from v6.17-rc7
+Date: Mon, 22 Sep 2025 10:32:26 +0000
+Message-ID: <20250922103241.16213-1-farbere@amazon.com>
 X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20250922095113.281484-1-ranjan.kumar@broadcom.com>
-References: <20250922095113.281484-1-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -91,30 +100,81 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D039UWB002.ant.amazon.com (10.13.138.79) To
+ EX19D018EUA004.ant.amazon.com (10.252.50.85)
 
-Updated driver version to 54.100.00.00
+This series backports 15 patches to update minmax.h in the 6.6.y branch,
+aligning it with v6.17-rc7.
 
-Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
----
- drivers/scsi/mpt3sas/mpt3sas_base.h | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+The ultimate goal is to synchronize all longterm branches so that they
+include the full set of minmax.h changes.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.h b/drivers/scsi/mpt3sas/mpt3sas_base.h
-index 939141cde3ca..e6a6f21d309b 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_base.h
-+++ b/drivers/scsi/mpt3sas/mpt3sas_base.h
-@@ -77,8 +77,8 @@
- #define MPT3SAS_DRIVER_NAME		"mpt3sas"
- #define MPT3SAS_AUTHOR "Avago Technologies <MPT-FusionLinux.pdl@avagotech.com>"
- #define MPT3SAS_DESCRIPTION	"LSI MPT Fusion SAS 3.0 Device Driver"
--#define MPT3SAS_DRIVER_VERSION		"52.100.00.00"
--#define MPT3SAS_MAJOR_VERSION		52
-+#define MPT3SAS_DRIVER_VERSION		"54.100.00.00"
-+#define MPT3SAS_MAJOR_VERSION		54
- #define MPT3SAS_MINOR_VERSION		100
- #define MPT3SAS_BUILD_VERSION		00
- #define MPT3SAS_RELEASE_VERSION		00
+The key motivation is to bring in commit d03eba99f5bf ("minmax: allow
+min()/max()/clamp() if the arguments have the same signedness"), which
+is missing in older kernels.
+
+In mainline, this change enables min()/max()/clamp() to accept mixed
+argument types, provided both have the same signedness. Without it,
+backported patches that use these forms may trigger compiler warnings,
+which escalate to build failures when -Werror is enabled.
+
+David Laight (7):
+  minmax.h: add whitespace around operators and after commas
+  minmax.h: update some comments
+  minmax.h: reduce the #define expansion of min(), max() and clamp()
+  minmax.h: use BUILD_BUG_ON_MSG() for the lo < hi test in clamp()
+  minmax.h: move all the clamp() definitions after the min/max() ones
+  minmax.h: simplify the variants of clamp()
+  minmax.h: remove some #defines that are only expanded once
+
+Linus Torvalds (8):
+  minmax: avoid overly complicated constant expressions in VM code
+  minmax: simplify and clarify min_t()/max_t() implementation
+  minmax: add a few more MIN_T/MAX_T users
+  minmax: make generic MIN() and MAX() macros available everywhere
+  minmax: simplify min()/max()/clamp() implementation
+  minmax: don't use max() in situations that want a C constant
+    expression
+  minmax: improve macro expansion and type checking
+  minmax: fix up min3() and max3() too
+
+ arch/um/drivers/mconsole_user.c               |   2 +
+ arch/x86/mm/pgtable.c                         |   2 +-
+ drivers/edac/sb_edac.c                        |   4 +-
+ drivers/edac/skx_common.h                     |   1 -
+ .../drm/amd/display/modules/hdcp/hdcp_ddc.c   |   2 +
+ .../drm/amd/pm/powerplay/hwmgr/ppevvmath.h    |  14 +-
+ drivers/gpu/drm/amd/pm/swsmu/smu_cmn.c        |   2 +-
+ drivers/gpu/drm/drm_color_mgmt.c              |   2 +-
+ drivers/gpu/drm/radeon/evergreen_cs.c         |   2 +
+ drivers/hwmon/adt7475.c                       |  24 +-
+ drivers/input/touchscreen/cyttsp4_core.c      |   2 +-
+ drivers/irqchip/irq-sun6i-r.c                 |   2 +-
+ drivers/md/dm-integrity.c                     |   6 +-
+ drivers/media/dvb-frontends/stv0367_priv.h    |   3 +
+ .../net/can/usb/etas_es58x/es58x_devlink.c    |   2 +-
+ .../net/ethernet/stmicro/stmmac/stmmac_main.c |   2 +-
+ drivers/net/fjes/fjes_main.c                  |   4 +-
+ drivers/nfc/pn544/i2c.c                       |   2 -
+ drivers/platform/x86/sony-laptop.c            |   1 -
+ drivers/scsi/isci/init.c                      |   6 +-
+ .../pci/hive_isp_css_include/math_support.h   |   5 -
+ fs/btrfs/tree-checker.c                       |   2 +-
+ include/linux/compiler.h                      |   9 +
+ include/linux/minmax.h                        | 228 +++++++++++-------
+ include/linux/pageblock-flags.h               |   2 +-
+ kernel/trace/preemptirq_delay_test.c          |   2 -
+ lib/btree.c                                   |   1 -
+ lib/decompress_unlzma.c                       |   2 +
+ lib/vsprintf.c                                |   2 +-
+ mm/zsmalloc.c                                 |   2 -
+ net/ipv4/proc.c                               |   2 +-
+ net/ipv6/proc.c                               |   2 +-
+ tools/testing/selftests/mm/mremap_test.c      |   2 +
+ tools/testing/selftests/seccomp/seccomp_bpf.c |   2 +
+ 34 files changed, 202 insertions(+), 146 deletions(-)
+
 -- 
 2.47.3
 
