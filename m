@@ -1,76 +1,76 @@
-Received: from mail-qv1-f98.google.com (mail-qv1-f98.google.com [209.85.219.98])
+Received: from mail-yw1-f228.google.com (mail-yw1-f228.google.com [209.85.128.228])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7183D287245
-	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 09:57:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.219.98
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D6DC2F6169
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 09:57:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.228
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758535025; cv=none; b=VUVeVmk8zVK0bR+H/g04OoTlOLaCXZbUIGsum1B9MgRW6KuCaZo/7xrVpUfu0OHMZGrZmH9Nm6gB0cEurCC/AGdIXeC6RF8WCD0h9O0gp5ayarhY/bNS6fbTHAve2HB3Xb1MWVoQrF7FGKE7Ot+Lmaw7kvmd2aNJ8JC4sJosFfY=
+	t=1758535027; cv=none; b=Hc98cRQv7y2pksZZkoBmxpkDy+ZPvHDYdxmAt6avr2yev01hbyhF/ftOdbcU/C1755dismNS0qfbLypiiyAT4G3xSLozGdPqfJjeCNVE0I9BJ6iKA73Ee3uV3zxhkja7OXJJtu9omBRHEURJLHXwNNch1XcPwM1QS0FtmEBrDoU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758535025; c=relaxed/simple;
-	bh=ObkmtCJHVKyFchPvae5/kOYWZR1HWIKgbSl65AeWQUg=;
+	s=arc-20240116; t=1758535027; c=relaxed/simple;
+	bh=L828E0tg+R73r5MDDRnBLhRmnL6Gids4YjMY5C4CGZc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=syOuZLP/zNxpgcqTIbI1Xb2WzsjqF4Ql8g/opJnvQLyRFXCw2dZHbNmC9QJ91qND8yo7o89mNHdvmEeepBMKMsHIyO9kDxRpk8VKMSFMKyDaqARsTFfJ4NORrNMRaTd6TO7yobX9Dx6zgFnxu5Qg+wqgR4f24Q0UcWHoWCwtIRA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=VC/gQREd; arc=none smtp.client-ip=209.85.219.98
+	 MIME-Version; b=sVZdgqbQR1Z5JRJstLOmyk6nkd9t2qr2K1S/qOwouLJSGi+g131iGGE3c8MnbWRdCIc9ftJ1JmQ45wjNyzDilpxjMo2mz9aVYqRBKcWf9f4t/lM3ZF18O+sPqoN8IH4c0A0zgA9iLgwnharOfL9UgGZdQTIsCLMKwFf/hm5DYAA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=bYE3nmqd; arc=none smtp.client-ip=209.85.128.228
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="VC/gQREd"
-Received: by mail-qv1-f98.google.com with SMTP id 6a1803df08f44-78e4056623fso39491116d6.2
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 02:57:03 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="bYE3nmqd"
+Received: by mail-yw1-f228.google.com with SMTP id 00721157ae682-72ce9790acdso39301137b3.0
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 02:57:05 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758535022; x=1759139822;
+        d=1e100.net; s=20230601; t=1758535024; x=1759139824;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:dkim-signature
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=3QnyBpSVzjMACQ8a/+eKylQDFjEVLKitMUrRzynNxGI=;
-        b=ldpQ0LqbwG99LEU7tvXzWek+xl7ObeOGPKMaaEWR9YCXAdOgoFYI7AOJWVLfevxY8o
-         zprm8J9cPc9xThNV4L1IEDUbqM2eqVTtNu8nlHXlhtpeHrQBZ6BmIR35g8p/KKSLHTn2
-         +883oaFPQ6PB+oA3Yw7Caj4PAeN+wdRwSiPl48JZ0i7rhoOb8uM+UBMglzlcneNBHJyy
-         yQ0+5wEXQEkwa3CdYppl1tEC/2p8rndriw6UNf6J/YHZoVNHhxgD5bvyPwK3iZMHY/MH
-         NbdbOOlfAR+5NVNV4n20GlXxn5zm0jBZxF4b/AtiN4nEkSrKWIrU2j6qq8mTnV2G74us
-         QVFQ==
-X-Gm-Message-State: AOJu0Yx30kWFKntfb0YtYj30Nwjr7merBhRhRYrn3bwVi+qp6yBQWomY
-	VDLjrK31WqxllVQHwrGw4mv+rXXvjZohX+lB7fwg8g2UNE+XPDFarMTiCLSyge6ImCvbGaYOPvp
-	UiYP0i76TujgZbTr7p2pwxteeldHnfG2e7q03Y/WvbWc+8nTl7VhK/1XaYpVR5ASKPX9ELZt8PY
-	+THN3Ve9L+fZyUEahM8FvxsroW9bf5FCvc43gnNbbKrlVkADNZ7iJzlWetgJOhhF8L6LUYpgFXT
-	ikONJ7ogfPY3jNw
-X-Gm-Gg: ASbGncs/Je1pcDNxJzXPSwiWJq2KFtQ8CoEIG+7I+GcFeoV2SzL0cN2wcpmI26XuOEt
-	7B/q6dEuWolGJ4lL9+BVd4ZI0v00EEN7vj1Pdwth8fRKCEic8U5QjkWDls2bPJY+TDG7f7+cSI4
-	cATmS10/jcoLS4eIog81UMAMWzDpofxcNEXfswxHPxq4OWPonrDoRKGwFcaUPKoqJDwkI7+vS0K
-	HvdLXtWALBnL6fEz2t0CcWWHjsWyMK3YOULF6IQMgBBQulHQ4keHPOq2yLKsCb1oH9U5ctyhG8L
-	j+rd/WLsPfNoeNQMag1NDF9JrcUEvLKxtp8X4kNI17mAMn+kbvgmTrvi41lHMzfFWWB6dietmpG
-	j1ycfKuDOiaLXfB2QIBCCTODIoRLP3j/DeNZtS+uua+qs+VBAyIvEXUh5wv5jjFEvVXrl5LvM8g
-	Dsrw==
-X-Google-Smtp-Source: AGHT+IE2UPpAVDKBYfUGedDpstRDyWF5IU1QgFjqVJHRhR28JeJpBYX7jpoVzL8gn4p3yDZLpi8riIBwx+DJ
-X-Received: by 2002:ad4:5744:0:b0:77e:613f:9b66 with SMTP id 6a1803df08f44-799124b90damr126445736d6.15.1758535022177;
-        Mon, 22 Sep 2025 02:57:02 -0700 (PDT)
-Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-121.dlp.protect.broadcom.com. [144.49.247.121])
-        by smtp-relay.gmail.com with ESMTPS id 6a1803df08f44-7934ee8ba36sm7767526d6.25.2025.09.22.02.57.01
+        bh=HhX0yK4rrpKD0+953Nf0dVCcj47hZgJa4faG237Iwzk=;
+        b=OM/AIsIcctOR7fTHS096xI4WhXG2+WXK/CbttA+HJx+epAVGFEx371zfssRuhBFXMc
+         +Fe2a1rRkstTdrO7MHVJ7vgTpEmLtooMV+KsUyLPKXNoE627mZQ8uUNNvQ0oaJ/ThNL1
+         +XJaX7kMg9vx03VK12NU1jP5Kn5+E292gR5fXp2FfXv6FsLroNSMLHEexqsHpBcSn8g4
+         RSYPwHloTnziHMre7d/5qljDyd2I6qMOj2HiZ+10LqIeMWIGSNRVFO7S8XtNMElcG6+7
+         V+9eAB/relkels2IlFj341ENSQUc3JRPVr712QOXc5cvOG25qiG8lJT4nCTKzZrYZJdJ
+         jPHg==
+X-Gm-Message-State: AOJu0YwT/GhxXsP/A18dDjmk7AvBVS2419QYajdYVaI+JYMKDyW5a7va
+	RPr4ZKQSkbDjPK5Q4P1fxYNiI1mgZ3olORoAvA8QhwS9p3SHyY3XOFa6WIMU4CFDVNh0nB6kaNU
+	OKmhGxY0O9youmn+uPY0TdhwRojRkqT0hi7iGwyDpdMikduZGha2z/6SwPQf7YRabjF1PGDLrPU
+	8d2100jVlidPdyKoBJCiYyabVgWGT32UZFh/SznQru2TzcygFHgnvAxBsQqBfAhSdJmZIZ6znj2
+	ZUw5x/n7QZ8P89f
+X-Gm-Gg: ASbGnctyTrYp5whsFFceXMQykgFYWd68sFy0UQdo6kdUqwU3Ei/6HfV396PvWJqkwrL
+	9Llw762QE+NSHj9lylfEqPIwOd/LtMU6BnMu1Z8Ga/kf1nIAj3Bf9DQCYqLkFJ6h7vB8Ixje96Q
+	LE8M947/NQkJvqFT6xjGqDMollHMo0yt1PRa6Meco/LRSWtDRreOEeYdvi5nE+ophxj3WLehkwY
+	L4BnZkKLv8oZOgGBZzu6bQHJU8MvJhhmGPXh0qnvJNePEMAogE210NGKx/DlzaBknRUJGVkKnAD
+	d9H1JsbFfumIszNLz+2BjaH/I2Wjf7+hIZQ5l1PHoe6gq/JFyyJ0OkYtOOYjiIBLxPp0Aplhbh3
+	datkWPTtEp9leQ43LG32Xogwa7VqCO9oCvcw3A5k4Fzymi1/OQlGLMxzDEKaFrp/PMT48z30QCC
+	ylVQ==
+X-Google-Smtp-Source: AGHT+IHZ2ietFCmB/1C7HloOfHu/B7idEWb2SfASD4dNWNLn9FrJKSjRz9P25c1Jh4klYQ1gjzRV4Ix47Va9
+X-Received: by 2002:a05:690c:88:b0:71f:e154:7aa2 with SMTP id 00721157ae682-73d3c0170dbmr95558257b3.25.1758535024366;
+        Mon, 22 Sep 2025 02:57:04 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-101.dlp.protect.broadcom.com. [144.49.247.101])
+        by smtp-relay.gmail.com with ESMTPS id 00721157ae682-7397196275asm5407917b3.30.2025.09.22.02.57.04
         for <linux-scsi@vger.kernel.org>
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 22 Sep 2025 02:57:02 -0700 (PDT)
+        Mon, 22 Sep 2025 02:57:04 -0700 (PDT)
 X-Relaying-Domain: broadcom.com
 X-CFilter-Loop: Reflected
-Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-27356178876so12842835ad.1
-        for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 02:57:01 -0700 (PDT)
+Received: by mail-pl1-f199.google.com with SMTP id d9443c01a7336-24457f59889so48598865ad.0
+        for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 02:57:03 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=broadcom.com; s=google; t=1758535020; x=1759139820; darn=vger.kernel.org;
+        d=broadcom.com; s=google; t=1758535023; x=1759139823; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=3QnyBpSVzjMACQ8a/+eKylQDFjEVLKitMUrRzynNxGI=;
-        b=VC/gQREd9/qjyASbRFoIsXjpySn0FXnrq6ivt/INpRJMh+gmJAR18itnDITjBfeoh3
-         QtB0iGR6i5xTfG99takl0Sn5XL99I/XRaIhMr7hqrvUH+Xg3d7F0RJ90wIPCcww2rEb3
-         cGDWLmF8JQMIqPpl0ll071VOkTRIRfz/g4duA=
-X-Received: by 2002:a17:903:46ce:b0:278:daab:7940 with SMTP id d9443c01a7336-278daab7a5bmr34988115ad.17.1758535020017;
-        Mon, 22 Sep 2025 02:57:00 -0700 (PDT)
-X-Received: by 2002:a17:903:46ce:b0:278:daab:7940 with SMTP id d9443c01a7336-278daab7a5bmr34987715ad.17.1758535019520;
-        Mon, 22 Sep 2025 02:56:59 -0700 (PDT)
+        bh=HhX0yK4rrpKD0+953Nf0dVCcj47hZgJa4faG237Iwzk=;
+        b=bYE3nmqdBI+pQJ3xqHL22TtnmKAC4nFV6rL8vBz0J5t2wSCWd+KU3lX2aypQquBTyQ
+         TYdu2ANBpAvx7dJU8K0N3CxaJrz4+aatxLMg4IiJaJAEWjnIKedjBeq1v7apdtUsf5ao
+         74R1zshtljB0YtjblcciHBC4rRRdNOHLAMwRI=
+X-Received: by 2002:a17:902:e84c:b0:24b:640:ab6d with SMTP id d9443c01a7336-269ba538bb4mr185497315ad.49.1758535022717;
+        Mon, 22 Sep 2025 02:57:02 -0700 (PDT)
+X-Received: by 2002:a17:902:e84c:b0:24b:640:ab6d with SMTP id d9443c01a7336-269ba538bb4mr185496835ad.49.1758535022090;
+        Mon, 22 Sep 2025 02:57:02 -0700 (PDT)
 Received: from localhost.localdomain ([192.19.234.250])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77f4594a76bsm1034584b3a.62.2025.09.22.02.56.57
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77f4594a76bsm1034584b3a.62.2025.09.22.02.56.59
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 22 Sep 2025 02:56:59 -0700 (PDT)
+        Mon, 22 Sep 2025 02:57:01 -0700 (PDT)
 From: Ranjan Kumar <ranjan.kumar@broadcom.com>
 To: linux-scsi@vger.kernel.org,
 	martin.petersen@oracle.com
@@ -78,9 +78,9 @@ Cc: sathya.prakash@broadcom.com,
 	chandrakanth.patil@broadcom.com,
 	prayas.patel@broadcom.com,
 	Ranjan Kumar <ranjan.kumar@broadcom.com>
-Subject: [PATCH v1 1/4] mpt3sas: Fix crash in transport port remove by using ioc_info()
-Date: Mon, 22 Sep 2025 15:21:10 +0530
-Message-ID: <20250922095113.281484-2-ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 2/4] mpt3sas: suppress unnecessary IOCLogInfo on CONFIG_INVALID_PAGE
+Date: Mon, 22 Sep 2025 15:21:11 +0530
+Message-ID: <20250922095113.281484-3-ranjan.kumar@broadcom.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20250922095113.281484-1-ranjan.kumar@broadcom.com>
 References: <20250922095113.281484-1-ranjan.kumar@broadcom.com>
@@ -93,82 +93,35 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-During mpt3sas_transport_port_remove(), messages were logged with
-dev_printk() against &mpt3sas_port->port->dev. At this point the SAS
-transport device may already be partially unregistered or freed, leading
-to a crash when accessing its struct device.
+Avoid unconditional IOCLogInfo prints for CONFIG_INVALID_PAGE.
+Log only if MPT_DEBUG_REPLY is enabled or when loginfo
+represents other errors. This reduces uncessary logging without losing
+useful error reporting.
 
-Using ioc_info(), which logs via the PCI device (ioc->pdev->dev),
-guaranteed to remain valid until driver removal.
-
-[83428.295776] Oops: general protection fault, probably for non-canonical address 0x6f702f323a33312d: 0000 [#1] SMP NOPTI
-[83428.295785] CPU: 145 UID: 0 PID: 113296 Comm: rmmod Kdump: loaded Tainted: G           OE       6.16.0-rc1+ #1 PREEMPT(voluntary)
-[83428.295792] Tainted: [O]=OOT_MODULE, [E]=UNSIGNED_MODULE
-[83428.295795] Hardware name: Dell Inc. Precision 7875 Tower/, BIOS 89.1.67 02/23/2024
-[83428.295799] RIP: 0010:__dev_printk+0x1f/0x70
-[83428.295805] Code: 90 90 90 90 90 90 90 90 90 90 90 0f 1f 44 00 00 49 89 d1 48 85 f6 74 52 4c 8b 46 50 4d 85 c0 74 1f 48 8b 46 68 48 85 c0 74 22 <48> 8b 08 0f b6 7f 01 48 c7 c2 db e8 42 ad 83 ef 30 e9 7b f8 ff ff
-[83428.295813] RSP: 0018:ff85aeafc3137bb0 EFLAGS: 00010206
-[83428.295817] RAX: 6f702f323a33312d RBX: ff4290ee81292860 RCX: 5000cca25103be32
-[83428.295820] RDX: ff85aeafc3137bb8 RSI: ff4290eeb1966c00 RDI: ffffffffc1560845
-[83428.295823] RBP: ff85aeafc3137c18 R08: 74726f702f303a33 R09: ff85aeafc3137bb8
-[83428.295826] R10: ff85aeafc3137b18 R11: ff4290f5bd60fe68 R12: ff4290ee81290000
-[83428.295830] R13: ff4290ee6e345de0 R14: ff4290ee81290000 R15: ff4290ee6e345e30
-[83428.295833] FS:  00007fd9472a6740(0000) GS:ff4290f5ce96b000(0000) knlGS:0000000000000000
-[83428.295837] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[83428.295840] CR2: 00007f242b4db238 CR3: 00000002372b8006 CR4: 0000000000771ef0
-[83428.295844] PKRU: 55555554
-[83428.295846] Call Trace:
-[83428.295848]  <TASK>
-[83428.295850]  _dev_printk+0x5c/0x80
-[83428.295857]  ? srso_alias_return_thunk+0x5/0xfbef5
-[83428.295863]  mpt3sas_transport_port_remove+0x1c7/0x420 [mpt3sas]
-[83428.295882]  _scsih_remove_device+0x21b/0x280 [mpt3sas]
-[83428.295894]  ? _scsih_expander_node_remove+0x108/0x140 [mpt3sas]
-[83428.295906]  ? srso_alias_return_thunk+0x5/0xfbef5
-[83428.295910]  mpt3sas_device_remove_by_sas_address.part.0+0x8f/0x110 [mpt3sas]
-[83428.295921]  _scsih_expander_node_remove+0x129/0x140 [mpt3sas]
-[83428.295933]  _scsih_expander_node_remove+0x6a/0x140 [mpt3sas]
-[83428.295944]  scsih_remove+0x3f0/0x4a0 [mpt3sas]
-[83428.295957]  pci_device_remove+0x3b/0xb0
-[83428.295962]  device_release_driver_internal+0x193/0x200
-[83428.295968]  driver_detach+0x44/0x90
-[83428.295971]  bus_remove_driver+0x69/0xf0
-[83428.295975]  pci_unregister_driver+0x2a/0xb0
-[83428.295979]  _mpt3sas_exit+0x1f/0x300 [mpt3sas]
-[83428.295991]  __do_sys_delete_module.constprop.0+0x174/0x310
-[83428.295997]  ? srso_alias_return_thunk+0x5/0xfbef5
-[83428.296000]  ? __x64_sys_getdents64+0x9a/0x110
-[83428.296005]  ? srso_alias_return_thunk+0x5/0xfbef5
-[83428.296009]  ? syscall_trace_enter+0xf6/0x1b0
-[83428.296014]  do_syscall_64+0x7b/0x2c0
-[83428.296019]  ? srso_alias_return_thunk+0x5/0xfbef5
-[83428.296023]  entry_SYSCALL_64_after_hwframe+0x76/0x7e
-
-Fixes: f92363d12359 ("mpt3sas: add new driver supporting 12GB SAS")
 Signed-off-by: Ranjan Kumar <ranjan.kumar@broadcom.com>
 ---
- drivers/scsi/mpt3sas/mpt3sas_transport.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/scsi/mpt3sas/mpt3sas_base.c | 8 +++++++-
+ 1 file changed, 7 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_transport.c b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-index dc74ebc6405a..66fd301f03b0 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_transport.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_transport.c
-@@ -987,11 +987,9 @@ mpt3sas_transport_port_remove(struct MPT3SAS_ADAPTER *ioc, u64 sas_address,
- 	list_for_each_entry_safe(mpt3sas_phy, next_phy,
- 	    &mpt3sas_port->phy_list, port_siblings) {
- 		if ((ioc->logging_level & MPT_DEBUG_TRANSPORT))
--			dev_printk(KERN_INFO, &mpt3sas_port->port->dev,
--			    "remove: sas_addr(0x%016llx), phy(%d)\n",
--			    (unsigned long long)
--			    mpt3sas_port->remote_identify.sas_address,
--			    mpt3sas_phy->phy_id);
-+			ioc_info(ioc, "remove: sas_addr(0x%016llx), phy(%d)\n",
-+				(unsigned long long) mpt3sas_port->remote_identify.sas_address,
-+					mpt3sas_phy->phy_id);
- 		mpt3sas_phy->phy_belongs_to_port = 0;
- 		if (!ioc->remove_host)
- 			sas_port_delete_phy(mpt3sas_port->port,
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_base.c b/drivers/scsi/mpt3sas/mpt3sas_base.c
+index bd3efa5b46c7..0d652db8fe24 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_base.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_base.c
+@@ -1420,7 +1420,13 @@ _base_display_reply_info(struct MPT3SAS_ADAPTER *ioc, u16 smid, u8 msix_index,
+ 
+ 	if (ioc_status & MPI2_IOCSTATUS_FLAG_LOG_INFO_AVAILABLE) {
+ 		loginfo = le32_to_cpu(mpi_reply->IOCLogInfo);
+-		_base_sas_log_info(ioc, loginfo);
++		if (ioc->logging_level & MPT_DEBUG_REPLY)
++			_base_sas_log_info(ioc, loginfo);
++		else {
++			if (!((ioc_status & MPI2_IOCSTATUS_MASK) &
++			MPI2_IOCSTATUS_CONFIG_INVALID_PAGE))
++				_base_sas_log_info(ioc, loginfo);
++		}
+ 	}
+ 
+ 	if (ioc_status || loginfo) {
 -- 
 2.47.3
 
