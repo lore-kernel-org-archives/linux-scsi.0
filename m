@@ -1,146 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC1EF1C1ADB;
-	Mon, 22 Sep 2025 19:46:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9262D2F6583
+	for <linux-scsi@vger.kernel.org>; Mon, 22 Sep 2025 20:19:20 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758570390; cv=none; b=bNQ2w8VS2XA8iXZBDt/aaRzxgzfKMl7BK8i11aZMlux2mKBmcb3DNO1u0jQYhrAljWw0wHaZH5VrOq15sEi5P7HdrEUkAaGggIthmTj9bbuJwNcInB61G0mM2OHOs6XEbIcdkkDF1mqVHWMDPoIeGkxkG6DpXyU9SHc47mU5uPU=
+	t=1758572362; cv=none; b=TSoOg8yrOnrsRkAEOKmWcaD8znFvwnm86M+J4tS39T3z2id1BJR8g0f0eLP83BPAcQNeguCpn4Awneh0NWPwdlJhFqlplB84q4VTG5zSWdr01DKgPFRcO4X14IsisoRGc/mkJ4gFGqqaLksIdtn87fPWhnqgvwMiFhiaZ+hNn0s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758570390; c=relaxed/simple;
-	bh=9mwBHQlyy1lyCqbjaRGhEhTY0naii4PSOmHAewQhrjo=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Y9MbBkBK8Uj8k+EjXvuN/eNRnq3TOM5umOW403WnQlDiNi8MJRfePzA/tg8+2Kbfud9Dg0BO8t+SB2FsW1TEnaguUVDW+9R3uVK83C7vmbLGx7sb2Ogi4dlwrhLjZHeqYBw8Yq++kA6iLXxeiDrJ0ayOePyFAX0AhUi+tgosBBo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Uvw2dSO+; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1758572362; c=relaxed/simple;
+	bh=Wjj5orz1Ls2CmQfDaIzFeM+RMmWdHrc6IpmRS8oj2cE=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qPVhxg0OB6b5EXsjoZuiQBoJAQ6JN4zUdGAJxjbn9ECoCMj7uNBxFeJxahrGL2cwX2NBr0HR4y7BHBn10VN8+9kaZKnCwoaJR8T+6mVdS5eKDYSvdTBKYIxzHgtGmyiIYd4P6TGIwblxcftnYT7/9I8abZ7khrTl7jzeR+X1IHg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=NMWwzLT8; arc=none smtp.client-ip=91.218.175.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Uvw2dSO+"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 5ACFFC4CEF7;
-	Mon, 22 Sep 2025 19:46:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1758570390;
-	bh=9mwBHQlyy1lyCqbjaRGhEhTY0naii4PSOmHAewQhrjo=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=Uvw2dSO+0QkBvqFTP4T6g8s7hpi4WyIjvBkAZRHVIRSrFJ4394ah6Pn10JFGaf7J7
-	 PWx21DYg74+ax0MwrsKREwS3ZtT5wS2+TqmcWdrP3cyhT+PomjPU52PEJrudHDB/hH
-	 +/QMC5CqUJw6o/H9vZGUCooXtjXz402woUFtuNtoOdUHpJ0dFg7OQ4CDI/wwwDXPu+
-	 OowIsoq2M+V3SD4NqX7TEI272+RiUB2cwRVnlEh9g8eGL56v4lcJYxJNxnmsM2H6A9
-	 TKcIWe4d3foqCtzelYSShwIHeBcirJuw4nhYiYvwpwmAHS0Gfyod3Inp7kQrcFBnJF
-	 IxkN4IUiJS1gw==
-Date: Mon, 22 Sep 2025 14:46:29 -0500
-From: Rob Herring <robh@kernel.org>
-To: Ajay Neeli <ajay.neeli@amd.com>
-Cc: martin.petersen@oracle.com, James.Bottomley@hansenpartnership.com,
-	krzk+dt@kernel.org, conor+dt@kernel.org, pedrom.sousa@synopsys.com,
-	alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-	linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, git@amd.com,
-	michal.simek@amd.com, srinivas.goud@amd.com,
-	radhey.shyam.pandey@amd.com,
-	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
-Subject: Re: [PATCH 1/5] dt-bindings: ufs: amd-versal2: Add support for AMD
- Versal Gen 2 UFS Host Controller
-Message-ID: <20250922194629.GA905336-robh@kernel.org>
-References: <20250919123835.17899-1-ajay.neeli@amd.com>
- <20250919123835.17899-2-ajay.neeli@amd.com>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="NMWwzLT8"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1758572358;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=IuZR+nPkiRhCz8T90e0V2L3HEyIm3Q690MeSbxQKeMU=;
+	b=NMWwzLT8M4RGJ/zUJG7hO+v+bz5Cj+8AIAwzQgqQm4/rb07TTQQhFuLxcIw4s3e9dG6TqT
+	HNeFU6ACb3QXUVeDJwiv/r0EdF4fowykbQ8+zYhHjneR9iG3UhpL0Hf1MNXZkU80uVpgy+
+	x3WaNshFOMtbfvyQPdmpxZl4gA3/PlE=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: Don Brace <don.brace@microchip.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	storagedev@microchip.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH] scsi: smartpqi: Replace kmalloc + copy_from_user with memdup_user
+Date: Mon, 22 Sep 2025 22:18:33 +0200
+Message-ID: <20250922201832.1697874-2-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20250919123835.17899-2-ajay.neeli@amd.com>
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On Fri, Sep 19, 2025 at 06:08:31PM +0530, Ajay Neeli wrote:
-> From: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
-> 
-> Add devicetree document for AMD Versal Gen 2 UFS Host Controller.
-> This includes clocks and clock-names as mandated by UFS common bindings.
-> 
-> Signed-off-by: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
-> Co-developed-by: Ajay Neeli <ajay.neeli@amd.com>
-> Signed-off-by: Ajay Neeli <ajay.neeli@amd.com>
-> ---
->  .../devicetree/bindings/ufs/amd,versal2-ufs.yaml   | 61 ++++++++++++++++++++++
->  1 file changed, 61 insertions(+)
->  create mode 100644 Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
-> 
-> diff --git a/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml b/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
-> new file mode 100644
-> index 0000000..9f55949
-> --- /dev/null
-> +++ b/Documentation/devicetree/bindings/ufs/amd,versal2-ufs.yaml
-> @@ -0,0 +1,61 @@
-> +# SPDX-License-Identifier: (GPL-2.0-only OR BSD-2-Clause)
-> +%YAML 1.2
-> +---
-> +$id: http://devicetree.org/schemas/ufs/amd,versal2-ufs.yaml#
-> +$schema: http://devicetree.org/meta-schemas/core.yaml#
-> +
-> +title: AMD Versal Gen 2 UFS Host Controller
-> +
-> +maintainers:
-> +  - Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
-> +
-> +allOf:
-> +  - $ref: ufs-common.yaml
-> +
-> +properties:
-> +  compatible:
-> +    const: amd,versal2-ufs
+Replace kmalloc() followed by copy_from_user() with memdup_user() to
+simplify and improve pqi_passthru_ioctl().
 
-2 is versal2 or gen 2? I read it as the former, but everything else in 
-this patchset says the latter. compatibles should be based on SoC names, 
-not versions. Or does "gen 2" mean Gen 2 UFS specification (if there is 
-such a thing)?
+Since memdup_user() already allocates memory, use kzalloc() in the else
+branch instead of manually zeroing 'kernel_buffer' using memset(0).
 
-> +
-> +  reg:
-> +    maxItems: 1
-> +
-> +  clocks:
-> +    maxItems: 1
-> +
-> +  clock-names:
-> +    items:
-> +      - const: core
-> +
-> +  power-domains:
-> +    maxItems: 1
-> +
-> +  resets:
-> +    maxItems: 2
-> +
-> +  reset-names:
-> +    items:
-> +      - const: ufshc
-> +      - const: ufsphy
+Return early if an error occurs.  No functional changes intended.
 
-"ufs" part is redundant. Drop.
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+---
+ drivers/scsi/smartpqi/smartpqi_init.c | 17 ++++++++---------
+ 1 file changed, 8 insertions(+), 9 deletions(-)
 
-> +
-> +required:
-> +  - reg
-> +  - clocks
-> +  - clock-names
-> +  - resets
-> +  - reset-names
-> +
-> +unevaluatedProperties: false
-> +
-> +examples:
-> +  - |
-> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
-> +    ufs@f10b0000 {
-> +        compatible = "amd,versal2-ufs";
-> +        reg = <0xf10b0000 0x1000>;
-> +        clocks = <&ufs_core_clk>;
-> +        clock-names = "core";
-> +        resets = <&scmi_reset 4>, <&scmi_reset 35>;
-> +        reset-names = "ufshc", "ufsphy";
-> +        interrupts = <GIC_SPI 234 IRQ_TYPE_LEVEL_HIGH>;
-> +        freq-table-hz = <0 0>;
-> +    };
-> -- 
-> 1.8.3.1
-> 
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 125944941601..03c97e60d36f 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -20,6 +20,7 @@
+ #include <linux/reboot.h>
+ #include <linux/cciss_ioctl.h>
+ #include <linux/crash_dump.h>
++#include <linux/string.h>
+ #include <scsi/scsi_host.h>
+ #include <scsi/scsi_cmnd.h>
+ #include <scsi/scsi_device.h>
+@@ -6774,17 +6775,15 @@ static int pqi_passthru_ioctl(struct pqi_ctrl_info *ctrl_info, void __user *arg)
+ 	}
+ 
+ 	if (iocommand.buf_size > 0) {
+-		kernel_buffer = kmalloc(iocommand.buf_size, GFP_KERNEL);
+-		if (!kernel_buffer)
+-			return -ENOMEM;
+ 		if (iocommand.Request.Type.Direction & XFER_WRITE) {
+-			if (copy_from_user(kernel_buffer, iocommand.buf,
+-				iocommand.buf_size)) {
+-				rc = -EFAULT;
+-				goto out;
+-			}
++			kernel_buffer = memdup_user(iocommand.buf,
++						    iocommand.buf_size);
++			if (IS_ERR(kernel_buffer))
++				return PTR_ERR(kernel_buffer);
+ 		} else {
+-			memset(kernel_buffer, 0, iocommand.buf_size);
++			kernel_buffer = kzalloc(iocommand.buf_size, GFP_KERNEL);
++			if (!kernel_buffer)
++				return -ENOMEM;
+ 		}
+ 	}
+ 
+-- 
+2.51.0
+
