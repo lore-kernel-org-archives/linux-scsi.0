@@ -1,82 +1,102 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from out-177.mta0.migadu.com (out-177.mta0.migadu.com [91.218.175.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A8F2329510;
-	Tue, 23 Sep 2025 16:58:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC2D527A919
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2025 17:15:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758646692; cv=none; b=eTl5CkAo6fodLjBX87cKV34SefYOJJbrawv8egmngqsjHCVU6m76JIvnsnOuIOr7p4+U2rH6Y9Nsa1gNPqM+WUV1qqrvRP6vOLTpu+dltiIP1fLKj5m1EBWKxMntpfQaZ6qf/hZH7mDbgTF+E2NhCBLxJkHAhV6Q2lRxKloWnv8=
+	t=1758647716; cv=none; b=t8na4Zjxniq7t1QCZVODPl1kcrI8eWgXc4KcTjvoRx80Pcktr8EBnwUSWNgCU8BksfmCU3aKThSTt9u0w7vHN/pd7CixyfBKL7RYdBOdQvBOG78XbHVe1ioOG6RdV2kY/P+Apoat8iW9wch5ikOzUPjz/JqkB5+M1qu88B5IM2o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758646692; c=relaxed/simple;
-	bh=JuBJNdGSRNy+myW/r2wscOprKMlVhdWIjyBH8tEVnwA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZiD2KWvhWm0vKNWA5/gB2bhZsW0DonyHqygKjYHXKRK9TEKicNm5Mci2JiVwZzg3WgRHC0V2F3ZLppHMDWFj/t5IcdEy6/HA/laKsl1Zk5CTIbO3YDOqnwKv16OMszahDQaXoj3sU7+KxTkugc+Fm+J3uMTLTFOVblGfS1D++gI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=WKKoM9g0; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1758647716; c=relaxed/simple;
+	bh=/4ecEdJ+qGjfmy9yImHlAlNmO8QiCe+KsB7GVqxPqmk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=fEIWAiTxrgCS6Q0SA/mylX732CZBVfkCruj+SNX+cjBC3MInUTG/AlGztLpaceuFR+HGuBpk+bzFNMNrYNkN/liSJN6KqIvaLLKfV3iQpeiLI1HUNQtxMg8IN4nM6t8fz4RRsvjNFRE1QgZ5BxXJBYm0rA6tuAfX8Z5nX7dx7js=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=Y2D6VEKk; arc=none smtp.client-ip=91.218.175.177
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="WKKoM9g0"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cWR4d2Qt5zlgqVL;
-	Tue, 23 Sep 2025 16:58:09 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758646687; x=1761238688; bh=qGMTWMmkPNTFWfgPhJwvLkFh
-	aWNkj/2pQAyAO3WIAlc=; b=WKKoM9g0KnKB8GRsb+ZY4F/UYnX7NprEV4V7T2gq
-	k9AefZQlCWgr20KB4jmI8uNDORJRiIIwarNEKMTUFtwpls7IAaCfqAXC+6nQKVt7
-	5I09dL2pkk1qB12fldU9HDpNBrA+GK53Ky0tz62VTccOQHYQqp4F1rRYVXeF7yk6
-	2lcLJtll221gzY0KTE+3i/Sa2gR0IzQDjClqDM7MmOur9ZUkUXK+VLalGtknR4R5
-	rrtqZZTNzXEv4GqjZ+TGm7WcUjP9VZcAOlL76PqcsPbn6pkVXJe/JezyUzQIeMFw
-	Pn3ivQS02lnTtFQmyauNub4ASiihdQYmGi7en2pPhamtgA==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Iy651mq5vBZB; Tue, 23 Sep 2025 16:58:07 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cWR4S3TLfzlgqyp;
-	Tue, 23 Sep 2025 16:57:59 +0000 (UTC)
-Message-ID: <5bdf63e7-9b57-44a8-8816-c4d0aafc51e1@acm.org>
-Date: Tue, 23 Sep 2025 09:57:58 -0700
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="Y2D6VEKk"
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1758647712;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=GN4o6Rpepn1nYUO5av96IxMhD2q/WJpyOYfgvLYpNxI=;
+	b=Y2D6VEKkYuZLHVEfhlP3Xh2YdeFXpFs13yvbTfGNd3j+OwROnT94F/tbswBH3lhv7bb2T6
+	xT+PDgZ8UhdX5AaLPxoixST3OQJmsMhnG/8iLFg3ZOB7Tk1HqKo86nwNHyCU78W9QUdyVA
+	u4S1JQTmeOQyhSgDPkF7sKSfLnen1d8=
+From: Thorsten Blum <thorsten.blum@linux.dev>
+To: Don Brace <don.brace@microchip.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: Thorsten Blum <thorsten.blum@linux.dev>,
+	storagedev@microchip.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: [PATCH RESEND] scsi: hpsa: Replace kmalloc + copy_from_user with memdup_user
+Date: Tue, 23 Sep 2025 19:15:04 +0200
+Message-ID: <20250923171505.1847356-1-thorsten.blum@linux.dev>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1 2/3] scsi: ufs: core: fix incorrect buffer duplication
- in ufshcd_read_string_desc()
-To: Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com,
- alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
- can.guo@oss.qualcomm.com, ulf.hansson@linaro.org, beanhuo@micron.com,
- jens.wiklander@linaro.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-References: <20250923153906.1751813-1-beanhuo@iokpp.de>
- <20250923153906.1751813-3-beanhuo@iokpp.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250923153906.1751813-3-beanhuo@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+X-Migadu-Flow: FLOW_OUT
 
-On 9/23/25 8:39 AM, Bean Huo wrote:
-> The function ufshcd_read_string_desc() was duplicating memory starting
-> from the beginning of struct uc_string_id, which included the length
-> and type fields. As a result, the allocated buffer contained unwanted
-> metadata in addition to the string itself.
-> 
-> The correct behavior is to duplicate only the Unicode character array in
-> the structure. Update the code so that only the actual string content is
-> copied into the new buffer.
+Replace kmalloc() followed by copy_from_user() with memdup_user() to
+improve and simplify hpsa_passthru_ioctl().
 
-Please add a Fixes: tag. Otherwise this patch looks good to me.
+Since memdup_user() already allocates memory, use kzalloc() in the else
+branch instead of manually zeroing 'buff' using memset(0).
 
-Thanks,
+Return early if an error occurs and remove the 'out_kfree' label.
 
-Bart.
+No functional changes intended.
+
+Signed-off-by: Thorsten Blum <thorsten.blum@linux.dev>
+---
+ drivers/scsi/hpsa.c | 17 ++++++-----------
+ 1 file changed, 6 insertions(+), 11 deletions(-)
+
+diff --git a/drivers/scsi/hpsa.c b/drivers/scsi/hpsa.c
+index c73a71ac3c29..55448238d8ed 100644
+--- a/drivers/scsi/hpsa.c
++++ b/drivers/scsi/hpsa.c
+@@ -6407,18 +6407,14 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h,
+ 		return -EINVAL;
+ 	}
+ 	if (iocommand->buf_size > 0) {
+-		buff = kmalloc(iocommand->buf_size, GFP_KERNEL);
+-		if (buff == NULL)
+-			return -ENOMEM;
+ 		if (iocommand->Request.Type.Direction & XFER_WRITE) {
+-			/* Copy the data into the buffer we created */
+-			if (copy_from_user(buff, iocommand->buf,
+-				iocommand->buf_size)) {
+-				rc = -EFAULT;
+-				goto out_kfree;
+-			}
++			buff = memdup_user(iocommand->buf, iocommand->buf_size);
++			if (IS_ERR(buff))
++				return PTR_ERR(buff);
+ 		} else {
+-			memset(buff, 0, iocommand->buf_size);
++			buff = kzalloc(iocommand->buf_size, GFP_KERNEL);
++			if (!buff)
++				return -ENOMEM;
+ 		}
+ 	}
+ 	c = cmd_alloc(h);
+@@ -6478,7 +6474,6 @@ static int hpsa_passthru_ioctl(struct ctlr_info *h,
+ 	}
+ out:
+ 	cmd_free(h, c);
+-out_kfree:
+ 	kfree(buff);
+ 	return rc;
+ }
+-- 
+2.51.0
+
