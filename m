@@ -1,153 +1,119 @@
-Received: from jupiter.guys.cyano.uk (jupiter.guys.cyano.uk [45.63.120.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2CA6010F1;
-	Tue, 23 Sep 2025 13:31:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.63.120.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F48E14EC73
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2025 15:39:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758634300; cv=none; b=omPL4XBFXoQ1czwgHIKXHqUCuB6ZfYvQKiWpV895FDm5nf+croXiGEHXaeVLcZpHiXTKpF7IGcSP1NFmbsxfkLUcCNq4EPy1owANHsfZ2fkax8ZbsMCkEZCenQik/pN8RLtQi7nODERpMF6ffzg/fJwW8kIO/bsiy3y5Mtco3G0=
+	t=1758641952; cv=none; b=g+HheMuKbSk8VMmgSvvnNeCRfzWLkjjmfnkWGzURa1LsAetLmEU/iAVD9CTUo9gVBHoXMxzJrZz7ZMU33YCjSKbu2LK0WbNTfwwaaTKmHIeX9iC8EP4i3DfU1XCjeTcH3fRWlQd/u6GiZq+kFXDS0KE4IuyoV2kSbfMP/8purwc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758634300; c=relaxed/simple;
-	bh=j8byVeNX4TQDtD8QbMaEXYgRd9Te2VgWLANoo2ZQ9hw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KzfM1oqdqVSp6GLJf7uDxy0y2Vto3Pba+lVuzLE4XLukfCM0guboLpoptEtYkFKL3beBY/zI4hu3tlM4oMrVNmzT7HLqfLaTIp5VkSS7Ui/Wq5IQ/NXJjmxHC1cAfyeljxzsdnbIqSPra9Co5km/m91IOZLBnbsW/uak/YyIAic=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cyano.uk; spf=pass smtp.mailfrom=cyano.uk; dkim=pass (2048-bit key) header.d=cyano.uk header.i=@cyano.uk header.b=qQCQCnXk; arc=none smtp.client-ip=45.63.120.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cyano.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cyano.uk
+	s=arc-20240116; t=1758641952; c=relaxed/simple;
+	bh=UhbsLbOYfvT4Xu5ApY+3ggWIW7oTrdc3K/vxv6Sgjgs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=h22gT+s8n/KHXNIiLB58R0RsdBzhwLSEO7uoONVq805pI/DBymG/dKSr8XExjdzSJhbdhsRm/pUaahCs7KpvbLCogbt6MgtydQELa+j4MIkEJRs667g604BlqtPWw53fextvoT0GDQwBdE0p3/9XmixROuq4eorkJ9g26qjgu1E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mnJuAc6n; arc=none smtp.client-ip=209.85.210.180
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=cyano.uk header.i=@cyano.uk header.b="qQCQCnXk"
-Message-ID: <c6a39939-b0cd-43a3-8b63-114909ba001e@cyano.uk>
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cyano.uk; s=dkim;
-	t=1758634297;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=wlHpoIc6rMZqw0AZAsMkpyzs1nRv311zogcg+1Ko7i0=;
-	b=qQCQCnXkmXrE+HuC0wm2a0HeW5ioyMr4DLtjCpOQACNfRQCdNQoT+cuL9zS77/8vtoD7kG
-	7ARed9W19B/P3q4oa0SM724PIo/C1fyALocDzLjmFtO/xGIh6b/VlPtY8LvQgpk3Sf3xEu
-	WYcWrRrehOvtuEZABd1QnVp3TPb9POSBrDsdAjoOAoXSMp2KYcsrY8StZHoLPwqOd3+r5u
-	1J+q0LW5eQuBO8CEtANYkfCFri3HAI8BlkwSRvBuObPxhksBJgRvIKYH3hXe1WYSllIw3y
-	j4666uuJ7H24o3ao5o+P+2RVSc3LSGV4oupn+RLUju20UjuFgv5EIO5+DW0zXg==
-Authentication-Results: jupiter.guys.cyano.uk;
-	auth=pass smtp.mailfrom=cyan@cyano.uk
-Date: Tue, 23 Sep 2025 21:31:14 +0800
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mnJuAc6n"
+Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-77f343231fcso1144923b3a.3
+        for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2025 08:39:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1758641950; x=1759246750; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=3IKH7wDqw/hTFy7W7zq+0djPj1ZwecQEHG9Vmaw8v48=;
+        b=mnJuAc6nTPXhF4M0vxiRNvUn8LwQdw5oKtzDkwm4s3qoi0Tfry5FOLf+wHq32HQpej
+         tniHsj60RL2dB7fuk6ouwOCaR5T0F6hfWWsx6R+TLlA+Y5oORgC8iznz6x4jcRJva7EQ
+         to49xMEIvc4fTKaZdGg8Eb2AKRl/3b0CXgx/OMpR1M+bQHl8GJWnrhyzIp+/La8s8B6P
+         XPwrDD/sLADMklRA/LSKvEFRlY0Fsq7MSna7YWsic6oNaZeXWa5a4EGyIDPdTsY5qGGV
+         VkxTjhj+lFda6Xrg4WwYXemhOFWmC40GgrqZzYpbsv1t74z91S43FXWQ1lTIipatUYVa
+         RkEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758641950; x=1759246750;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=3IKH7wDqw/hTFy7W7zq+0djPj1ZwecQEHG9Vmaw8v48=;
+        b=LVE+wqgroljfo7bGwOdLYxUFcWZ4XkspI9gNJo49zCaUGPEqlHDe0pzqnPhVbYdtAT
+         4OaBq3Wc49LsPa0s2N93TWMIJSZqkB1FI1eqfeAFSOpKrGA4MFivA4OFtiJxzIiUbLpA
+         zzHwWKt+m1G6LlZaE/PG4E3P4l8Hqotw4+6RQel7YLQJ7RbVSKBSkkXbBS4bXs1whwMT
+         GOSVME7ZVkHdilF00flbCMm4wtYpJ3bwwXyKHiNqguLjQS5Mw63zgy+dZUgqIAtlZqV4
+         J7WUT6wrln1wS8+ajqQoDUlNPgyV9zgyDvUAuRoWxHhpMVD0Vf9v/f+BwI6/PFUUxMTF
+         Mi9g==
+X-Gm-Message-State: AOJu0Yylprx3aCoi76sxDfcmMp3spEBF7Pct5nM7UYjtQHXTC/K0oi88
+	P6ZT0PgTQhuD+rPiMgTITokOpKNbNgeCchXm5MqEzrLPGhvVAhaxlsF8dnXBcQ==
+X-Gm-Gg: ASbGncuo2pZ12nagtITzx2AU6c1nwPTW26tE926s8ZT5UqKTqJBUK0hWSsnp6hllLzJ
+	7I6o2IcXE/JyQ+WsbKmOXWGRhSK00hfNKBTwWNpd4gJRFrrJVwbRc53f5gH4zVIBlilIfNG8IaC
+	/1PNKNfS0La9B/SZRtXqh5ISTQYybNzDqxd85+p6x817Dq3sEmUf1SQwiXDxRp1DlgHTcQo79N5
+	j+UDJepJjWrSVPTc8gZpQvW3UfiT3y47zUBHYmhq99IknDE9eAT7EUgKczH/H6uLi7dbrSXS6rW
+	kANfK67pcX3pKy/lbK3WaTQTYTyOLKbtbpBbRd3+LBmCcZDUvlrz+yQ3i7rpBpg4yHln5Fuq5Y1
+	MpMUHagpH+Gky+xXZHSFGdHgvSlH4xHmQDyqcVXWTaaoFslrkjo4HXxRxo3NB
+X-Google-Smtp-Source: AGHT+IEZo9qSBbfn/Xml4KJtCvUFlULxBDpKYDPazomaYoVMFRKhE6qkj0BzJtkmIiVQastE6+DAtQ==
+X-Received: by 2002:a05:6a20:a11a:b0:24d:598d:2171 with SMTP id adf61e73a8af0-2cfefac3edbmr4798271637.51.1758641949959;
+        Tue, 23 Sep 2025 08:39:09 -0700 (PDT)
+Received: from localhost.localdomain ([23.164.40.216])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77f2f02c0d7sm7536909b3a.93.2025.09.23.08.39.09
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 23 Sep 2025 08:39:09 -0700 (PDT)
+From: James Smart <jsmart2021@gmail.com>
+To: linux-scsi@vger.kernel.org,
+	linux-nvme@lists.infradead.org
+Cc: James Smart <jsmart2021@gmail.com>
+Subject: [PATCH] MAINTAINERS: update FC element owners
+Date: Tue, 23 Sep 2025 08:38:57 -0700
+Message-Id: <20250923153857.100616-1-jsmart2021@gmail.com>
+X-Mailer: git-send-email 2.35.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Subject: Re: [PATCH v3 2/2] scsi: dc395x: improve code formatting for the
- macros
-To: James Bottomley <James.Bottomley@HansenPartnership.com>,
- linux-scsi@vger.kernel.org
-Cc: stable@vger.kernel.org, Mingcong Bai <jeffbai@aosc.io>,
- Kexy Biscuit <kexybiscuit@aosc.io>, Oliver Neukum <oliver@neukum.org>,
- Ali Akcaagac <aliakc@web.de>, Jamie Lenehan <lenehan@twibble.org>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- open list <linux-kernel@vger.kernel.org>
-References: <20250923125226.1883391-1-cyan@cyano.uk>
- <20250923125226.1883391-3-cyan@cyano.uk>
- <1ae97d061da14b0d85c0938c3000ed57ccd39382.camel@HansenPartnership.com>
-Content-Language: en-US
-From: Xinhui Yang <cyan@cyano.uk>
-In-Reply-To: <1ae97d061da14b0d85c0938c3000ed57ccd39382.camel@HansenPartnership.com>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-X-Spamd-Bar: /
 
-Hi James,
+I'm relinquishing my maintainer position on the different FC elements.
+I am updating them to the Emulex folk that have been watching over them
+for a while.
 
-在 2025/9/23 21:09, James Bottomley 写道:
-> On Tue, 2025-09-23 at 20:52 +0800, Xinhui Yang wrote:
->> These DC395x_* macros does not have white spaces around their
->> arguments,
->> thus checkpatch.pl throws an error for each change in the macros.
->>
->> Also, there are no surrounding parentheses in the expressions for the
->> read and write macros, which checkpatch.pl also complained about.
->>
->> This patch does only formatting improvements to make the macro
->> definitions align with the previous patch.
->>
->> Signed-off-by: Xinhui Yang <cyan@cyano.uk>
->> ---
->>  drivers/scsi/dc395x.c | 16 ++++++++--------
->>  1 file changed, 8 insertions(+), 8 deletions(-)
->>
->> diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
->> index aed4f21e8143..cff6fa20e53c 100644
->> --- a/drivers/scsi/dc395x.c
->> +++ b/drivers/scsi/dc395x.c
->> @@ -91,8 +91,8 @@
->>  #endif
->>  
->>  
->> -#define
->> DC395x_LOCK_IO(dev,flags)		spin_lock_irqsave(((struct Scsi_Host *)dev)->host_lock,flags)
->> -#define
->> DC395x_UNLOCK_IO(dev,flags)		spin_unlock_irqrestore(((struct Scsi_Host*)dev)->host_lock,flags)
->> +#define DC395x_LOCK_IO(dev,
->> flags)		spin_lock_irqsave(((struct Scsi_Host *)dev)->host_lock, flags)
->> +#define DC395x_UNLOCK_IO(dev,
->> flags)		spin_unlock_irqrestore(((struct Scsi_Host *)dev)->host_lock, flags)
->>  
->>  /*
->>   * read operations that may trigger side effects in the hardware,
->> @@ -100,12 +100,12 @@
->>   */
->>  #define DC395x_peek8(acb, address)		((void)(inb(acb-
->>> io_port_base + (address))))
->>  /* normal read write operations goes here. */
->> -#define DC395x_read8(acb,address)		(u8)(inb(acb-
->>> io_port_base + (address)))
->> -#define DC395x_read16(acb,address)		(u16)(inw(acb-
->>> io_port_base + (address)))
->> -#define DC395x_read32(acb,address)		(u32)(inl(acb-
->>> io_port_base + (address)))
->> -#define DC395x_write8(acb,address,value)	outb((value), acb-
->>> io_port_base + (address))
->> -#define DC395x_write16(acb,address,value)	outw((value), acb-
->>> io_port_base + (address))
->> -#define DC395x_write32(acb,address,value)	outl((value), acb-
->>> io_port_base + (address))
->> +#define DC395x_read8(acb, address)		((u8)    (inb(acb-
->>> io_port_base + (address))))
->> +#define DC395x_read16(acb, address)		((u16)   (inw(acb-
->>> io_port_base + (address))))
->> +#define DC395x_read32(acb, address)		((u32)   (inl(acb-
->>> io_port_base + (address))))
-> 
-> This doesn't look right.  The problem checkpatch is complaining about
-> is surely that the cast makes it a compound statement.  However, since
-> inb inw and inl all return the types they're being cast to the correct
-> solution is surely to remove the cast making these single statements
-> that don't need parentheses.
+Signed-off-by: James Smart <jsmart2021@gmail.com>
+---
+ MAINTAINERS | 9 +++++----
+ 1 file changed, 5 insertions(+), 4 deletions(-)
 
-Thanks, I checked the definitions and you are right - these read macros
-should have their casts removed, as they now return u8, u16 and u32
-respectively.
-
->> +#define DC395x_write8(acb, address, value)	(outb((value), acb-
->>> io_port_base + (address)))
->> +#define DC395x_write16(acb, address, value)	(outw((value), acb-
->>> io_port_base + (address)))
->> +#define DC395x_write32(acb, address, value)	(outl((value), acb-
->>> io_port_base + (address)))
-> 
-> And these are single statements which shouldn't need parentheses.  Are
-> you sure checkpatch is complaining about this, because if it is then
-> checkpatch needs fixing.
-
-Thanks for pointing this out, they don't need additional parentheses.
-
-> Regards,
-> 
-> James
-> 
-
-Thanks,
-Xinhui
-
+diff --git a/MAINTAINERS b/MAINTAINERS
+index fe168477caa4..a20ec47e42ee 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -8977,7 +8977,6 @@ F:	drivers/infiniband/hw/ocrdma/
+ F:	include/uapi/rdma/ocrdma-abi.h
+ 
+ EMULEX/BROADCOM EFCT FC/FCOE SCSI TARGET DRIVER
+-M:	James Smart <james.smart@broadcom.com>
+ M:	Ram Vegesna <ram.vegesna@broadcom.com>
+ L:	linux-scsi@vger.kernel.org
+ L:	target-devel@vger.kernel.org
+@@ -8986,8 +8985,8 @@ W:	http://www.broadcom.com
+ F:	drivers/scsi/elx/
+ 
+ EMULEX/BROADCOM LPFC FC/FCOE SCSI DRIVER
+-M:	James Smart <james.smart@broadcom.com>
+-M:	Dick Kennedy <dick.kennedy@broadcom.com>
++M:	Justin Tee <justin.tee@broadcom.com>
++M:	Paul Ely <paul.ely@broadcom.com>
+ L:	linux-scsi@vger.kernel.org
+ S:	Supported
+ W:	http://www.broadcom.com
+@@ -18129,7 +18128,9 @@ F:	drivers/nvme/target/fabrics-cmd-auth.c
+ F:	include/linux/nvme-auth.h
+ 
+ NVM EXPRESS FC TRANSPORT DRIVERS
+-M:	James Smart <james.smart@broadcom.com>
++M:	Justin Tee <justin.tee@broadcom.com>
++M:	Naresh Gottumukkala <nareshgottumukkala83@gmail.com>
++M:	Paul Ely <paul.ely@broadcom.com>
+ L:	linux-nvme@lists.infradead.org
+ S:	Supported
+ F:	drivers/nvme/host/fc.c
+-- 
+2.35.3
 
