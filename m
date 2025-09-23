@@ -1,118 +1,87 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.171])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 59F0F25CC74;
-	Tue, 23 Sep 2025 15:51:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.171
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758642681; cv=pass; b=qNhtR67TwoliaTXVVD7KsfXNcl2McQ8ieH/2fUGYKXqZ41B9ueXQMOKPZ1LDAbuAA5/1nFjaOkdZSbUd4OA23lzdyPXc7P8YG3oPGkc449rOT/1ABrIpqw8ACu66M09LHWeEY5h+wkVDKCM/sOMaOpfkYiHWKIHF31n60P54A9M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758642681; c=relaxed/simple;
-	bh=58ojsysFvPaNnj9sdPpwywdliL+WLSYvNAkP9FwIt58=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Md5Vcgq3nuorAVYxzX15/pHgt960CzVb0MI9QgYIIJpj1XO+COxfY7lwpqPX0aqSDju5uQ3U3CIGkjA/bHSqkriPCH8lvjRLTmjw2EogX3O6t0v6Fs1v6Ba9w+Tt2V6FRyGZ8J8GzW7LjLsr+kGxrtAJ/anFTVO887hjRahBW7Y=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=GUUEGTlm; arc=pass smtp.client-ip=81.169.146.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E91C416DC28
+	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2025 15:54:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1758642894; cv=none; b=aYVrgeYLNOLoZEfyCU8h7bBzUgUQete35ICNBBag1xiSoVpxF77fKxVvU+E/lhSECTY43YcM0HQKsIMrEZVgLJo9tAcuYX05zO5I6q4gcBogjacwYM2TRHexOZJeNU2fIytOAETZhEb4vL7xuK80LxZHnUUMkhXpWC6GlEKl29c=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1758642894; c=relaxed/simple;
+	bh=9ys+4oRqi7mmePWA84sBB3bccVxKdIM2g1NxO/GRES8=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=MmASA4+3HEtSIagLrnb/FMfovsUe/4W3EIkWWTJXgtwExl6wdynVbwBad8S7Ckos96oPyC2iTIMssVHffqTWrZTM3h2PVnFXOSaUAP/NxC/TZUih+255DCcAztrFkz4JN6UeDilBHPrw3lXiMHOVk98ULIvurk9dlntLbmiU/So=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=N30chI8k; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="GUUEGTlm"
-ARC-Seal: i=1; a=rsa-sha256; t=1758641959; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=mXmE2DEYzaPKrEImY96+pugrCqid+K5CAsCZWlySu/bucf/kNGmkI650SngzgQHn5Y
-    Z+E7UcA+MC/lpUUgheZQZTYdQWH0P0ZlGGw+4Fr38TqFAkUTLYX4KdDN8R3QuH9q+eKd
-    PQhMvrqA6I4WqyDp074NbFaDDEkd9cgtDNysdHZpzSoI8f2cctUkTBWkKpCNM7p6S33y
-    8jt+0XshhMJORkd76QLA3EZUxqEbFirc0ojikfs1QFLgfRaLQczx6vkl7afEpBlQNVcc
-    kEEEGzCE0pAraj2+dqv8rn4cZlc2PwmvGM7c9gryymnetRbJ1LUKjN7DBx6yjKAwzsUI
-    ntag==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1758641959;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=WeENfocnqtAAgNP8w7OEafJmaxgWIsIDh4ZeyeasUqY=;
-    b=XXde7krp64AgGN6c9sw4uIjwET0YrV8QbQHDW9XdHDRlk/VgBHOHD4j5lzPqaGh2R9
-    Y21zzCawARK9X0BYAHSMj2FPO6tvOFIZJesq6DKwKAX1IAPT3Dn0nAqMOporgnOPIqYP
-    A7en+wZwCM59Mn1Jk9rZiT3eKr8YaNVrN+fQZTQNy7UM0dGN/ip5zuo+beH5DgPad16c
-    fltyBoSWxDYTxt/bQ5nbjIee1h2bKb7mTZdTyvDPVyS9sSKOw7UHfuNW5B+rOKRAYcYC
-    uQmIoFqcv32eHXSXBw1ObsETOgd2ySHupy8XRLG46l5bcybJVtx4EcsQKcIQ8VfDS8JD
-    2J6g==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1758641959;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=WeENfocnqtAAgNP8w7OEafJmaxgWIsIDh4ZeyeasUqY=;
-    b=GUUEGTlml6tXQKR0DfmPXSKwRKHCXhKZX5rZpqknknwZA2+Q5epdaA0OY+pc8V0LNJ
-    +gG1DIYj4ULjauEgaK4rogG9e9jAs5uGh+8r1vVfvW44hmH5DfklINYhSz3jRoeDISXx
-    VxHKLemOk6Lsh9obu7gaEqlcjc86Sp9+xno1SJpTVX+/5JVwOYjbUnJI1FotUudLFxMl
-    hfpDbS/pY5t1HVuO6GJNVILWRJWikLLAc7Mcqj6t8Ig9E09o8BF1wMIkv1PTmPjahJCv
-    yQMKmBg8LVEDhpk7XkJpjbLAZwVIKNfQD6XkmqOt1E6NwJyieBr7MphUFVM1wojOuCHd
-    Qt2g==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O2J2YOom0XQaPis+nU/5K"
-Received: from Munilab01-lab.micron.com
-    by smtp.strato.de (RZmta 53.3.2 AUTH)
-    with ESMTPSA id z9ebc618NFdI3eR
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Tue, 23 Sep 2025 17:39:18 +0200 (CEST)
-From: Bean Huo <beanhuo@iokpp.de>
-To: avri.altman@wdc.com,
-	bvanassche@acm.org,
-	alim.akhtar@samsung.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	can.guo@oss.qualcomm.com,
-	ulf.hansson@linaro.org,
-	beanhuo@micron.com,
-	jens.wiklander@linaro.org
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v1 2/3] scsi: ufs: core: fix incorrect buffer duplication in ufshcd_read_string_desc()
-Date: Tue, 23 Sep 2025 17:39:05 +0200
-Message-Id: <20250923153906.1751813-3-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20250923153906.1751813-1-beanhuo@iokpp.de>
-References: <20250923153906.1751813-1-beanhuo@iokpp.de>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="N30chI8k"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cWPgV59P4zm0ytX;
+	Tue, 23 Sep 2025 15:54:46 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1758642883; x=1761234884; bh=hzXdEbAZvdcjl7GHoIg2QEV7
+	fEXYa2beOYMm8hIqXSo=; b=N30chI8ksn2Z0xxLDe9QCltfcCP0lPWZhN6vONPy
+	NRKHd6+mXZz6ix1N10I/K+hmilSVbRsGxoBOPVC6W5EAfGsYySYnXJ3Jds0HhuKX
+	zLwpe8VPWvVdQ984Ue8Mvlq/WK3CNF6/uh3MrfwAR8fgwlRrv5cuomKNutzGn+i9
+	5T1KHwRGzEm7PF5rSqYRv7KLcL5rDdRmY2R84TGW47jjT2V4KVcbB1Czbstr3Qlo
+	3eEKpZZo4B9cJgufDH90QTLeBjU75ap4Rj4R4pw+lp33xuOX+ynzIqacSbU2cbaT
+	FeGPT8Hiqkqofrrsfd1u2GvcPaDCU8bmVMWfFXj+v96kBQ==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ikHvNY3E9x2o; Tue, 23 Sep 2025 15:54:43 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cWPgB2Q3fzm0ytP;
+	Tue, 23 Sep 2025 15:54:29 +0000 (UTC)
+Message-ID: <c9f1ce41-b81d-490e-b919-a6105ed34ff0@acm.org>
+Date: Tue, 23 Sep 2025 08:54:28 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="us-ascii"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v1] ufs: core: Change MCQ interrupt enable flow
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
+ jejb@linux.ibm.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
+ yi-fan.peng@mediatek.com, qilin.tan@mediatek.com, lin.gui@mediatek.com,
+ tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
+ ed.tsai@mediatek.com
+References: <20250923090855.2522149-1-peter.wang@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250923090855.2522149-1-peter.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Bean Huo <beanhuo@micron.com>
+On 9/23/25 2:08 AM, peter.wang@mediatek.com wrote:
+> -static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
+> +void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
+>   {
+>   	u32 old_val = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
+>   	u32 new_val = old_val | intrs;
+> @@ -377,6 +372,7 @@ static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
+>   	if (new_val != old_val)
+>   		ufshcd_writel(hba, new_val, REG_INTERRUPT_ENABLE);
+>   }
+> +EXPORT_SYMBOL_GPL(ufshcd_enable_intr);
 
-The function ufshcd_read_string_desc() was duplicating memory starting
-from the beginning of struct uc_string_id, which included the length
-and type fields. As a result, the allocated buffer contained unwanted
-metadata in addition to the string itself.
+Please do not export ufshcd_enable_intr() - this function should not be
+called from outside the UFS driver core.
 
-The correct behavior is to duplicate only the Unicode character array in
-the structure. Update the code so that only the actual string content is
-copied into the new buffer.
+Thanks,
 
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufshcd.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2e1fa8cf83f5..79c7588be28a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3823,7 +3823,7 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
- 		str[ret++] = '\0';
- 
- 	} else {
--		str = kmemdup(uc_str, uc_str->len, GFP_KERNEL);
-+		str = kmemdup(uc_str->uc, uc_str->len, GFP_KERNEL);
- 		if (!str) {
- 			ret = -ENOMEM;
- 			goto out;
--- 
-2.34.1
-
+Bart.
