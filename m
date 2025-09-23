@@ -1,68 +1,76 @@
-Received: from mail-pf1-f180.google.com (mail-pf1-f180.google.com [209.85.210.180])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F48E14EC73
-	for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2025 15:39:10 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.180
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758641952; cv=none; b=g+HheMuKbSk8VMmgSvvnNeCRfzWLkjjmfnkWGzURa1LsAetLmEU/iAVD9CTUo9gVBHoXMxzJrZz7ZMU33YCjSKbu2LK0WbNTfwwaaTKmHIeX9iC8EP4i3DfU1XCjeTcH3fRWlQd/u6GiZq+kFXDS0KE4IuyoV2kSbfMP/8purwc=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758641952; c=relaxed/simple;
-	bh=UhbsLbOYfvT4Xu5ApY+3ggWIW7oTrdc3K/vxv6Sgjgs=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=h22gT+s8n/KHXNIiLB58R0RsdBzhwLSEO7uoONVq805pI/DBymG/dKSr8XExjdzSJhbdhsRm/pUaahCs7KpvbLCogbt6MgtydQELa+j4MIkEJRs667g604BlqtPWw53fextvoT0GDQwBdE0p3/9XmixROuq4eorkJ9g26qjgu1E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mnJuAc6n; arc=none smtp.client-ip=209.85.210.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 090731A23B9;
+	Tue, 23 Sep 2025 15:39:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.52
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1758641971; cv=pass; b=SjtXBWrypWYjaZxhdJfGBoYMAeLkef44fUAvF3+l3ihN20sjDWnQCdtbn0mqvin4pAz/BEDHYUZIUg/ycuuUKvMVsaapn8Jo2bWykqhWLrhwdKYlX2uI6nh8x+RZHYg+LX26OA8w2q8N0t3i52BJMNxv0RmC022z2EJ5OWu7cec=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1758641971; c=relaxed/simple;
+	bh=PXVgZnMVGVyn8qpzM628IQHxXB8vbXCbspuIEiapjkQ=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=rMlIf2MvysTGgq1ZhSKgrKSiONJ6DUHQ86FT4rFppFoDZP+uwztD1xIBfgjQuIFP1ed6d0VdE5a7adBnSRZ/1oCHM8WojXVcy4MXtaPjrxzHVIwCH6D2VeknGVJLenmVCLvbnpG9LzjwstqvHWd3JeCaU9NnBN0B8SlJ7hROXhg=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=TqiOoWdH; arc=pass smtp.client-ip=85.215.255.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mnJuAc6n"
-Received: by mail-pf1-f180.google.com with SMTP id d2e1a72fcca58-77f343231fcso1144923b3a.3
-        for <linux-scsi@vger.kernel.org>; Tue, 23 Sep 2025 08:39:10 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758641950; x=1759246750; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=3IKH7wDqw/hTFy7W7zq+0djPj1ZwecQEHG9Vmaw8v48=;
-        b=mnJuAc6nTPXhF4M0vxiRNvUn8LwQdw5oKtzDkwm4s3qoi0Tfry5FOLf+wHq32HQpej
-         tniHsj60RL2dB7fuk6ouwOCaR5T0F6hfWWsx6R+TLlA+Y5oORgC8iznz6x4jcRJva7EQ
-         to49xMEIvc4fTKaZdGg8Eb2AKRl/3b0CXgx/OMpR1M+bQHl8GJWnrhyzIp+/La8s8B6P
-         XPwrDD/sLADMklRA/LSKvEFRlY0Fsq7MSna7YWsic6oNaZeXWa5a4EGyIDPdTsY5qGGV
-         VkxTjhj+lFda6Xrg4WwYXemhOFWmC40GgrqZzYpbsv1t74z91S43FXWQ1lTIipatUYVa
-         RkEA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758641950; x=1759246750;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=3IKH7wDqw/hTFy7W7zq+0djPj1ZwecQEHG9Vmaw8v48=;
-        b=LVE+wqgroljfo7bGwOdLYxUFcWZ4XkspI9gNJo49zCaUGPEqlHDe0pzqnPhVbYdtAT
-         4OaBq3Wc49LsPa0s2N93TWMIJSZqkB1FI1eqfeAFSOpKrGA4MFivA4OFtiJxzIiUbLpA
-         zzHwWKt+m1G6LlZaE/PG4E3P4l8Hqotw4+6RQel7YLQJ7RbVSKBSkkXbBS4bXs1whwMT
-         GOSVME7ZVkHdilF00flbCMm4wtYpJ3bwwXyKHiNqguLjQS5Mw63zgy+dZUgqIAtlZqV4
-         J7WUT6wrln1wS8+ajqQoDUlNPgyV9zgyDvUAuRoWxHhpMVD0Vf9v/f+BwI6/PFUUxMTF
-         Mi9g==
-X-Gm-Message-State: AOJu0Yylprx3aCoi76sxDfcmMp3spEBF7Pct5nM7UYjtQHXTC/K0oi88
-	P6ZT0PgTQhuD+rPiMgTITokOpKNbNgeCchXm5MqEzrLPGhvVAhaxlsF8dnXBcQ==
-X-Gm-Gg: ASbGncuo2pZ12nagtITzx2AU6c1nwPTW26tE926s8ZT5UqKTqJBUK0hWSsnp6hllLzJ
-	7I6o2IcXE/JyQ+WsbKmOXWGRhSK00hfNKBTwWNpd4gJRFrrJVwbRc53f5gH4zVIBlilIfNG8IaC
-	/1PNKNfS0La9B/SZRtXqh5ISTQYybNzDqxd85+p6x817Dq3sEmUf1SQwiXDxRp1DlgHTcQo79N5
-	j+UDJepJjWrSVPTc8gZpQvW3UfiT3y47zUBHYmhq99IknDE9eAT7EUgKczH/H6uLi7dbrSXS6rW
-	kANfK67pcX3pKy/lbK3WaTQTYTyOLKbtbpBbRd3+LBmCcZDUvlrz+yQ3i7rpBpg4yHln5Fuq5Y1
-	MpMUHagpH+Gky+xXZHSFGdHgvSlH4xHmQDyqcVXWTaaoFslrkjo4HXxRxo3NB
-X-Google-Smtp-Source: AGHT+IEZo9qSBbfn/Xml4KJtCvUFlULxBDpKYDPazomaYoVMFRKhE6qkj0BzJtkmIiVQastE6+DAtQ==
-X-Received: by 2002:a05:6a20:a11a:b0:24d:598d:2171 with SMTP id adf61e73a8af0-2cfefac3edbmr4798271637.51.1758641949959;
-        Tue, 23 Sep 2025 08:39:09 -0700 (PDT)
-Received: from localhost.localdomain ([23.164.40.216])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-77f2f02c0d7sm7536909b3a.93.2025.09.23.08.39.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 23 Sep 2025 08:39:09 -0700 (PDT)
-From: James Smart <jsmart2021@gmail.com>
-To: linux-scsi@vger.kernel.org,
-	linux-nvme@lists.infradead.org
-Cc: James Smart <jsmart2021@gmail.com>
-Subject: [PATCH] MAINTAINERS: update FC element owners
-Date: Tue, 23 Sep 2025 08:38:57 -0700
-Message-Id: <20250923153857.100616-1-jsmart2021@gmail.com>
-X-Mailer: git-send-email 2.35.3
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="TqiOoWdH"
+ARC-Seal: i=1; a=rsa-sha256; t=1758641958; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=EHa+ZP144zwYWU+fxVOKnCeK8K4FlD3rS2P82ttooY4CorTbUPZBZ4udZClMDjYINU
+    JUiBJg4yE8+pDxG9+g3kG1uoZMo0ufwNCqEzyFO3Zp/zC7YfcdUSxuJ2gawNvtIQqE1k
+    /RBO2iQIUOA6v9l9SJFgCD3X+EZPU1zLT9SkEmY3tjLrFNAVC1wKkkE5G8PnWpAsljVh
+    RnQYD79hSojJMaYK6SYNKfTYDLkPlB0gLSqZvWUjNI0/dmbqtiRE9JrkSCZfcPR7YbNj
+    9KFS1QKVuJpabcxX3ujGR+K/otcr3qx9MiRYrKC/rEhBOIu1J4oqikK16bLWo2YwIgok
+    OX0w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1758641958;
+    s=strato-dkim-0002; d=strato.com;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=sdyd2ijyYBESfqq2bwwqVjP0qGi8uVwCIVmnAaiChH8=;
+    b=ozGGYy4o6C+XnXK/59U+hZFkTE/31cS/WOKvGI7AQnP0Wy9DDYqCveTfm3g0R7KYPE
+    kMGmLlqIcSF3yfMhk4MgX4ZOHH4K16QSRojNA/ygT+zhcQGZr2LoTATE2czMzMlzYq/U
+    CsLF8YN5/J0hVJCtdyIwX3wNqi+vxMPLbJklrfy46Gjg+zSncmoIX2Hd3JK8rTmGhywk
+    ZIx0aAVVEww4rxy1HVDwGYBu4TpAWSoZbvcHJRj9c7QeNgznl2LSclX2viU/N++2s5KJ
+    fWf/Ud1eFfhyuUgV8tOZ4g2Ct/mWzujET40cf+GQ8enms0Onn8c126r4TYDIxERa4J3r
+    mQgA==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo01
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1758641958;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=sdyd2ijyYBESfqq2bwwqVjP0qGi8uVwCIVmnAaiChH8=;
+    b=TqiOoWdHuhpAAQs0lA8P1960Wgcol43yxKHKPutfo8V2X1KYrKQq+icj2TMxMJBHjq
+    bSx4d0sh6JUR87Ys5BBcej+qhVsOWEqZwoX9xRvZgzeW8+GFykcgy9nya53YiFrQ5OGM
+    hrHdnkt5feU8hWKTHm1wdery+iJ8A/vtD8yA0LykwqImrv3/L1TufkWGx7zUScAeoaOb
+    6jS/Sr5srj1qdcgeUkxFxiiWQBc5g7UsRDhsF+hmyAuF76NRUPd2vUV9FOIvVgEN1UHQ
+    YShDvYQ3jo3z5fKkGqzm8jzzIrQ1ZoxM9Bq3f9MS3YAsE/iNU+meqUJqxsS/HrolCdM7
+    VBQA==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O2J2YOom0XQaPis+nU/5K"
+Received: from Munilab01-lab.micron.com
+    by smtp.strato.de (RZmta 53.3.2 AUTH)
+    with ESMTPSA id z9ebc618NFdH3eN
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Tue, 23 Sep 2025 17:39:17 +0200 (CEST)
+From: Bean Huo <beanhuo@iokpp.de>
+To: avri.altman@wdc.com,
+	bvanassche@acm.org,
+	alim.akhtar@samsung.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	can.guo@oss.qualcomm.com,
+	ulf.hansson@linaro.org,
+	beanhuo@micron.com,
+	jens.wiklander@linaro.org
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Bean Huo <beanhuo@iokpp.de>
+Subject: [PATCH v1 0/3] Add OP-TEE based RPMB driver for UFS devices
+Date: Tue, 23 Sep 2025 17:39:03 +0200
+Message-Id: <20250923153906.1751813-1-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -70,50 +78,54 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 
-I'm relinquishing my maintainer position on the different FC elements.
-I am updating them to the Emulex folk that have been watching over them
-for a while.
+This patch series introduces OP-TEE based RPMB (Replay Protected Memory Block)
+support for UFS devices, extending the kernel-level secure storage capabilities
+that are currently available for eMMC devices.
 
-Signed-off-by: James Smart <jsmart2021@gmail.com>
----
- MAINTAINERS | 9 +++++----
- 1 file changed, 5 insertions(+), 4 deletions(-)
+Background:
+Previously, OP-TEE required a userspace supplicant to access RPMB partitions,
+which created complex dependencies and reliability issues, especially during
+early boot scenarios. Recent work by Linaro has moved core supplicant
+functionality directly into the Linux kernel for eMMC devices, eliminating
+userspace dependencies and enabling immediate secure storage access.
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index fe168477caa4..a20ec47e42ee 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -8977,7 +8977,6 @@ F:	drivers/infiniband/hw/ocrdma/
- F:	include/uapi/rdma/ocrdma-abi.h
- 
- EMULEX/BROADCOM EFCT FC/FCOE SCSI TARGET DRIVER
--M:	James Smart <james.smart@broadcom.com>
- M:	Ram Vegesna <ram.vegesna@broadcom.com>
- L:	linux-scsi@vger.kernel.org
- L:	target-devel@vger.kernel.org
-@@ -8986,8 +8985,8 @@ W:	http://www.broadcom.com
- F:	drivers/scsi/elx/
- 
- EMULEX/BROADCOM LPFC FC/FCOE SCSI DRIVER
--M:	James Smart <james.smart@broadcom.com>
--M:	Dick Kennedy <dick.kennedy@broadcom.com>
-+M:	Justin Tee <justin.tee@broadcom.com>
-+M:	Paul Ely <paul.ely@broadcom.com>
- L:	linux-scsi@vger.kernel.org
- S:	Supported
- W:	http://www.broadcom.com
-@@ -18129,7 +18128,9 @@ F:	drivers/nvme/target/fabrics-cmd-auth.c
- F:	include/linux/nvme-auth.h
- 
- NVM EXPRESS FC TRANSPORT DRIVERS
--M:	James Smart <james.smart@broadcom.com>
-+M:	Justin Tee <justin.tee@broadcom.com>
-+M:	Naresh Gottumukkala <nareshgottumukkala83@gmail.com>
-+M:	Paul Ely <paul.ely@broadcom.com>
- L:	linux-nvme@lists.infradead.org
- S:	Supported
- F:	drivers/nvme/host/fc.c
+This series extends that same approach to UFS devices, which are becoming
+increasingly common in enterprise and mobile applications that require secure
+storage capabilities.
+
+Benefits:
+- Eliminates dependency on userspace supplicant for UFS RPMB access
+- Enables early boot secure storage access (e.g., fTPM, secure UEFI variables)
+- Provides kernel-level RPMB access as soon as UFS driver is initialized
+- Removes complex initramfs dependencies and boot ordering requirements
+- Ensures reliable and deterministic secure storage operations
+- Supports both built-in and modular fTPM configurations.
+
+
+RFC v1 -- v1:
+        1. Added support for all UFS RPMB regions based on https://github.com/OP-TEE/optee_os/issues/7532
+        2. Incorporated feedback and suggestions from Bart.
+
+Bean Huo (3):
+  rpmb: move rpmb_frame struct and constants to common header
+  scsi: ufs: core: fix incorrect buffer duplication in
+    ufshcd_read_string_desc()
+  scsi: ufs: core: Add OP-TEE based RPMB driver for UFS devices
+
+ drivers/misc/Kconfig           |   2 +-
+ drivers/mmc/core/block.c       |  42 ------
+ drivers/ufs/core/Makefile      |   1 +
+ drivers/ufs/core/ufs-rpmb.c    | 259 +++++++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd-priv.h |  13 ++
+ drivers/ufs/core/ufshcd.c      |  32 +++-
+ include/linux/rpmb.h           |  44 ++++++
+ include/ufs/ufs.h              |   7 +
+ include/ufs/ufshcd.h           |   3 +
+ 9 files changed, 355 insertions(+), 48 deletions(-)
+ create mode 100644 drivers/ufs/core/ufs-rpmb.c
+
 -- 
-2.35.3
+2.34.1
 
