@@ -1,190 +1,249 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from fra-out-003.esa.eu-central-1.outbound.mail-perimeter.amazon.com (fra-out-003.esa.eu-central-1.outbound.mail-perimeter.amazon.com [3.72.182.33])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 81B6E2A1BF
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 20:33:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B3C2868B5;
+	Wed, 24 Sep 2025 20:33:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=3.72.182.33
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758746023; cv=none; b=YxmhTnaMUWazsnpfHaBRQ+VofXJCRbx14C9NPKa9TLBgCO10rp5Fl4riVyxBNQ8OK8YDhiekp9/k6bpU6XfwwSGanXam3+lzu62KsXU6+1qpvM3czUTV01oQ2VQCZmfAQGkfi/xyK+vi49W0vhedN2IfetQFD1mqMGAYXsHId2I=
+	t=1758746032; cv=none; b=hFnNVwpMNjO3JZN//7oaeEdvd+I+6I7q/k4eFYwk3+DC27mom4SFy33cDeftgdGrmA2OiNRZ1F2GLHpW9LAhubz8gGHSegcs7iQCNhE9kVafLGoc3w75XqTXL6SdtV9eX5QJAiJf5sov1eGzVH45Xr+NGh12PGJhZ1w9f9//vjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758746023; c=relaxed/simple;
-	bh=yjakNsQk/Bb7D2IyTLZfFijMKyvufPmlcNt1yGPLafI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=fIsjlAH1G5sJUPxMJUUgeUciR0qXe4qO7+mE3JmBWMtxIazBFSw3hUYLw6oXIHOvsvE8qykYWhnpz8UxuDZp5iUqM6T3DSKIU2c2tT6zafNhoA8Ixe1BMJ4QR1ZUg7mDSASBUyvi90QwSkstEtKexAw77Z1peRlNdOsFMr/Sbdo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gs7oMVgm; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1758746032; c=relaxed/simple;
+	bh=7o6n/7afD73I8KmTywLVAVDBtvL4BDHX8Eeq0ODATQ8=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=RZjvlTYCsOitcMd6Bb4LhYr6YTyMsFERed4uW45/5MeYrpMWz0L3GDawp2Hw+hv0abbpoHDOn7Gsn8hdaSQYUYBpIdsnNmSnzezCdMitMHgY8pujcRg2a9MgO6GRpXtF7S1LsVibUFHCrBvbdg6wjFs8bU1Z8tWH0OxTd5wpZ7g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=mz5csiBC; arc=none smtp.client-ip=3.72.182.33
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gs7oMVgm"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cX7pr4Z1Tzlgqxf;
-	Wed, 24 Sep 2025 20:33:40 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1758746018; x=1761338019; bh=gf2mn
-	at/mcP/Cyam1G6wT5WgYLX+1AOqJpJFrgZawHM=; b=gs7oMVgmCYELQlwASARf1
-	4mgRi5ihm73dqGTi5Pm5vdr/+AkuJ+4vmMMTFZit1JNHNBUz/AobZrvjRxW6NDsp
-	nrjzHBFWQvMy/z7AikeaXLKZReRNrtH5sLFiTMe7vij0wkqxWxICddjK+A3PxkIV
-	Bwo0rSL5mdL5J7mAY1o/58mOoSGS2uihh23uPOHc0wFMT+quSEmsjJsTQMaaGvLZ
-	LtJEhdf812JywQHRXVYp+R4RqFHOQvezNtfV63nNcHqCKSWFaCwkcft5eMAZu9OT
-	O/XDeEkNfswWJ/7nSWnDC9FIJNuUF7V6wSk2uom4uPU8ybH5wFm6MV/n4REcymou
-	Q==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id KlXBS7QD9Hu9; Wed, 24 Sep 2025 20:33:38 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cX7pk57T5zlgqVP;
-	Wed, 24 Sep 2025 20:33:33 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v5 16/28] ufs: core: Rework ufshcd_eh_device_reset_handler()
-Date: Wed, 24 Sep 2025 13:30:35 -0700
-Message-ID: <20250924203142.4073403-17-bvanassche@acm.org>
-X-Mailer: git-send-email 2.51.0.536.g15c5d4f767-goog
-In-Reply-To: <20250924203142.4073403-1-bvanassche@acm.org>
-References: <20250924203142.4073403-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="mz5csiBC"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
+  t=1758746030; x=1790282030;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=0AzpApDbX8CFEbC2P7WHNPH2gra+XDIh1eSQ6GUhJZw=;
+  b=mz5csiBC5e5EXCawEyrO2AgiHgE6W3IyJPAn4R+Ddx1JfEePHEKf16US
+   +N1yH4HpLSfSBW1wgc+qet+USnPRn5SCwuNYPcF8FpKBgbB+mZCJ0oeZ+
+   LMg2vn/16Wj/sd7j6Z5CBWarhOlZT0WdqSnWlN6zqNB7Udx5uHOGe3Chg
+   eNdCBZjXpk4wPr2MIyMbbqwA91ERSS+xEspuMytUpha0aCD82++N5/tFi
+   VHqKVNxHiTEbBJc9wB28KPYrYRa/5n1kvbGgcRBkdy6s0NxSAeqQ6u5u4
+   Svq1CwKprvxkzuYwIvh+zNMTy+A5c/pwGnAMamMDesxvvA/kva935Wos9
+   Q==;
+X-CSE-ConnectionGUID: NW4hijkfRxucxyZDXD7Jdg==
+X-CSE-MsgGUID: py0FnotbSm+nXduHAvC5FQ==
+X-IronPort-AV: E=Sophos;i="6.18,291,1751241600"; 
+   d="scan'208";a="2628113"
+Received: from ip-10-6-11-83.eu-central-1.compute.internal (HELO smtpout.naws.eu-central-1.prod.farcaster.email.amazon.dev) ([10.6.11.83])
+  by internal-fra-out-003.esa.eu-central-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2025 20:33:38 +0000
+Received: from EX19MTAEUA001.ant.amazon.com [54.240.197.233:9053]
+ by smtpin.naws.eu-central-1.prod.farcaster.email.amazon.dev [10.0.9.61:2525] with esmtp (Farcaster)
+ id 38e96aa0-b2c3-49cb-9cdc-e9f990847ddb; Wed, 24 Sep 2025 20:33:37 +0000 (UTC)
+X-Farcaster-Flow-ID: 38e96aa0-b2c3-49cb-9cdc-e9f990847ddb
+Received: from EX19D018EUA004.ant.amazon.com (10.252.50.85) by
+ EX19MTAEUA001.ant.amazon.com (10.252.50.192) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20;
+ Wed, 24 Sep 2025 20:33:14 +0000
+Received: from dev-dsk-farbere-1a-46ecabed.eu-west-1.amazon.com
+ (172.19.116.181) by EX19D018EUA004.ant.amazon.com (10.252.50.85) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20; Wed, 24 Sep 2025
+ 20:32:37 +0000
+From: Eliav Farber <farbere@amazon.com>
+To: <linux@armlinux.org.uk>, <richard@nod.at>,
+	<anton.ivanov@cambridgegreys.com>, <johannes@sipsolutions.net>,
+	<dave.hansen@linux.intel.com>, <luto@kernel.org>, <peterz@infradead.org>,
+	<tglx@linutronix.de>, <mingo@redhat.com>, <bp@alien8.de>, <x86@kernel.org>,
+	<hpa@zytor.com>, <tony.luck@intel.com>, <qiuxu.zhuo@intel.com>,
+	<mchehab@kernel.org>, <james.morse@arm.com>, <rric@kernel.org>,
+	<harry.wentland@amd.com>, <sunpeng.li@amd.com>, <Rodrigo.Siqueira@amd.com>,
+	<alexander.deucher@amd.com>, <christian.koenig@amd.com>,
+	<Xinhui.Pan@amd.com>, <airlied@gmail.com>, <daniel@ffwll.ch>,
+	<evan.quan@amd.com>, <james.qian.wang@arm.com>, <liviu.dudau@arm.com>,
+	<mihail.atanassov@arm.com>, <brian.starkey@arm.com>,
+	<maarten.lankhorst@linux.intel.com>, <mripard@kernel.org>,
+	<tzimmermann@suse.de>, <robdclark@gmail.com>, <quic_abhinavk@quicinc.com>,
+	<dmitry.baryshkov@linaro.org>, <sean@poorly.run>, <jdelvare@suse.com>,
+	<linux@roeck-us.net>, <linus.walleij@linaro.org>,
+	<dmitry.torokhov@gmail.com>, <maz@kernel.org>, <wens@csie.org>,
+	<jernej.skrabec@gmail.com>, <samuel@sholland.org>, <agk@redhat.com>,
+	<snitzer@kernel.org>, <dm-devel@redhat.com>, <rajur@chelsio.com>,
+	<davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
+	<pabeni@redhat.com>, <peppe.cavallaro@st.com>,
+	<alexandre.torgue@foss.st.com>, <joabreu@synopsys.com>,
+	<mcoquelin.stm32@gmail.com>, <krzysztof.kozlowski@linaro.org>,
+	<malattia@linux.it>, <hdegoede@redhat.com>, <markgross@kernel.org>,
+	<artur.paszkiewicz@intel.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, <sakari.ailus@linux.intel.com>,
+	<gregkh@linuxfoundation.org>, <fei1.li@intel.com>, <clm@fb.com>,
+	<josef@toxicpanda.com>, <dsterba@suse.com>, <jack@suse.com>, <tytso@mit.edu>,
+	<adilger.kernel@dilger.ca>, <dushistov@mail.ru>,
+	<luc.vanoostenryck@gmail.com>, <rostedt@goodmis.org>, <mhiramat@kernel.org>,
+	<pmladek@suse.com>, <senozhatsky@chromium.org>,
+	<andriy.shevchenko@linux.intel.com>, <linux@rasmusvillemoes.dk>,
+	<minchan@kernel.org>, <ngupta@vflare.org>, <akpm@linux-foundation.org>,
+	<yoshfuji@linux-ipv6.org>, <dsahern@kernel.org>, <pablo@netfilter.org>,
+	<kadlec@netfilter.org>, <fw@strlen.de>, <jmaloy@redhat.com>,
+	<ying.xue@windriver.com>, <andrii@kernel.org>, <mykolal@fb.com>,
+	<ast@kernel.org>, <daniel@iogearbox.net>, <martin.lau@linux.dev>,
+	<song@kernel.org>, <yhs@fb.com>, <john.fastabend@gmail.com>,
+	<kpsingh@kernel.org>, <sdf@google.com>, <haoluo@google.com>,
+	<jolsa@kernel.org>, <shuah@kernel.org>, <keescook@chromium.org>,
+	<wad@chromium.org>, <willy@infradead.org>, <farbere@amazon.com>,
+	<sashal@kernel.org>, <ruanjinjie@huawei.com>, <quic_akhilpo@quicinc.com>,
+	<David.Laight@ACULAB.COM>, <herve.codina@bootlin.com>,
+	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
+	<linux-um@lists.infradead.org>, <linux-edac@vger.kernel.org>,
+	<amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
+	<linux-arm-msm@vger.kernel.org>, <freedreno@lists.freedesktop.org>,
+	<linux-hwmon@vger.kernel.org>, <linux-input@vger.kernel.org>,
+	<linux-sunxi@lists.linux.dev>, <linux-media@vger.kernel.org>,
+	<netdev@vger.kernel.org>, <linux-stm32@st-md-mailman.stormreply.com>,
+	<platform-driver-x86@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<linux-staging@lists.linux.dev>, <linux-btrfs@vger.kernel.org>,
+	<linux-ext4@vger.kernel.org>, <linux-sparse@vger.kernel.org>,
+	<linux-mm@kvack.org>, <netfilter-devel@vger.kernel.org>,
+	<coreteam@netfilter.org>, <tipc-discussion@lists.sourceforge.net>,
+	<bpf@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
+	<stable@vger.kernel.org>
+CC: Arnd Bergmann <arnd@kernel.org>, Christoph Hellwig <hch@infradead.org>,
+	Dan Carpenter <dan.carpenter@linaro.org>, "Jason A. Donenfeld"
+	<Jason@zx2c4.com>, Jens Axboe <axboe@kernel.dk>, Lorenzo Stoakes
+	<lorenzo.stoakes@oracle.com>, Mateusz Guzik <mjguzik@gmail.com>, "Pedro
+ Falcato" <pedro.falcato@gmail.com>
+Subject: [PATCH 14/19 v6.1.y] minmax.h: update some comments
+Date: Wed, 24 Sep 2025 20:23:15 +0000
+Message-ID: <20250924202320.32333-15-farbere@amazon.com>
+X-Mailer: git-send-email 2.47.3
+In-Reply-To: <20250924202320.32333-1-farbere@amazon.com>
+References: <20250924202320.32333-1-farbere@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: EX19D033UWA001.ant.amazon.com (10.13.139.103) To
+ EX19D018EUA004.ant.amazon.com (10.252.50.85)
 
-Merge the MCQ mode and legacy mode loops into a single loop. This patch
-prepares for optimizing the hot path by removing the direct hba->lrb[]
-accesses from ufshcd_eh_device_reset_handler().
+From: David Laight <David.Laight@ACULAB.COM>
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+[ Upstream commit 10666e99204818ef45c702469488353b5bb09ec7 ]
+
+- Change three to several.
+- Remove the comment about retaining constant expressions, no longer true.
+- Realign to nearer 80 columns and break on major punctiation.
+- Add a leading comment to the block before __signed_type() and __is_nonneg()
+  Otherwise the block explaining the cast is a bit 'floating'.
+  Reword the rest of that comment to improve readability.
+
+Link: https://lkml.kernel.org/r/85b050c81c1d4076aeb91a6cded45fee@AcuMS.aculab.com
+Signed-off-by: David Laight <david.laight@aculab.com>
+Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Arnd Bergmann <arnd@kernel.org>
+Cc: Christoph Hellwig <hch@infradead.org>
+Cc: Dan Carpenter <dan.carpenter@linaro.org>
+Cc: Jason A. Donenfeld <Jason@zx2c4.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Cc: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Cc: Mateusz Guzik <mjguzik@gmail.com>
+Cc: Matthew Wilcox <willy@infradead.org>
+Cc: Pedro Falcato <pedro.falcato@gmail.com>
+Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
+Signed-off-by: Eliav Farber <farbere@amazon.com>
 ---
- drivers/ufs/core/ufshcd.c | 84 ++++++++++++++++++---------------------
- 1 file changed, 38 insertions(+), 46 deletions(-)
+ include/linux/minmax.h | 53 +++++++++++++++++++-----------------------
+ 1 file changed, 24 insertions(+), 29 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index eea9e707ab4b..67607f2d10a2 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7538,6 +7538,36 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
-a *hba, struct utp_upiu_req *r
- 	return err ? : result;
- }
-=20
-+static bool ufshcd_clear_lu_cmds(struct request *req, void *priv)
-+{
-+	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(req);
-+	struct scsi_device *sdev =3D cmd->device;
-+	struct Scsi_Host *shost =3D sdev->host;
-+	struct ufs_hba *hba =3D shost_priv(shost);
-+	const u64 lun =3D *(u64 *)priv;
-+	const u32 tag =3D req->tag;
-+
-+	if (sdev->lun !=3D lun)
-+		return true;
-+
-+	if (ufshcd_clear_cmd(hba, tag) < 0) {
-+		dev_err(hba->dev, "%s: failed to clear request %d\n", __func__,
-+			tag);
-+		return true;
-+	}
-+
-+	if (hba->mcq_enabled) {
-+		struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, req);
-+
-+		if (hwq)
-+			ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+		return true;
-+	}
-+
-+	ufshcd_compl_one_cqe(hba, tag, NULL);
-+	return true;
-+}
-+
- /**
-  * ufshcd_eh_device_reset_handler() - Reset a single logical unit.
-  * @cmd: SCSI command pointer
-@@ -7546,12 +7576,8 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
-a *hba, struct utp_upiu_req *r
+diff --git a/include/linux/minmax.h b/include/linux/minmax.h
+index 51b0d988e322..24e4b372649a 100644
+--- a/include/linux/minmax.h
++++ b/include/linux/minmax.h
+@@ -8,13 +8,10 @@
+ #include <linux/types.h>
+ 
+ /*
+- * min()/max()/clamp() macros must accomplish three things:
++ * min()/max()/clamp() macros must accomplish several things:
+  *
+  * - Avoid multiple evaluations of the arguments (so side-effects like
+  *   "x++" happen only once) when non-constant.
+- * - Retain result as a constant expressions when called with only
+- *   constant expressions (to avoid tripping VLA warnings in stack
+- *   allocation usage).
+  * - Perform signed v unsigned type-checking (to generate compile
+  *   errors instead of nasty runtime surprises).
+  * - Unsigned char/short are always promoted to signed int and can be
+@@ -31,25 +28,23 @@
+  *   bit #0 set if ok for unsigned comparisons
+  *   bit #1 set if ok for signed comparisons
+  *
+- * In particular, statically non-negative signed integer
+- * expressions are ok for both.
++ * In particular, statically non-negative signed integer expressions
++ * are ok for both.
+  *
+- * NOTE! Unsigned types smaller than 'int' are implicitly
+- * converted to 'int' in expressions, and are accepted for
+- * signed conversions for now. This is debatable.
++ * NOTE! Unsigned types smaller than 'int' are implicitly converted to 'int'
++ * in expressions, and are accepted for signed conversions for now.
++ * This is debatable.
+  *
+- * Note that 'x' is the original expression, and 'ux' is
+- * the unique variable that contains the value.
++ * Note that 'x' is the original expression, and 'ux' is the unique variable
++ * that contains the value.
+  *
+- * We use 'ux' for pure type checking, and 'x' for when
+- * we need to look at the value (but without evaluating
+- * it for side effects! Careful to only ever evaluate it
+- * with sizeof() or __builtin_constant_p() etc).
++ * We use 'ux' for pure type checking, and 'x' for when we need to look at the
++ * value (but without evaluating it for side effects!
++ * Careful to only ever evaluate it with sizeof() or __builtin_constant_p() etc).
+  *
+- * Pointers end up being checked by the normal C type
+- * rules at the actual comparison, and these expressions
+- * only need to be careful to not cause warnings for
+- * pointer use.
++ * Pointers end up being checked by the normal C type rules at the actual
++ * comparison, and these expressions only need to be careful to not cause
++ * warnings for pointer use.
   */
- static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
- {
--	unsigned long flags, pending_reqs =3D 0, not_cleared =3D 0;
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
--	struct ufs_hw_queue *hwq;
--	struct ufshcd_lrb *lrbp;
--	u32 pos, not_cleared_mask =3D 0;
- 	int err;
- 	u8 resp =3D 0xF, lun;
-=20
-@@ -7560,50 +7586,16 @@ static int ufshcd_eh_device_reset_handler(struct =
-scsi_cmnd *cmd)
-=20
- 	lun =3D ufshcd_scsi_to_upiu_lun(cmd->device->lun);
- 	err =3D ufshcd_issue_tm_cmd(hba, lun, 0, UFS_LOGICAL_RESET, &resp);
--	if (err || resp !=3D UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
--		if (!err)
--			err =3D resp;
--		goto out;
--	}
--
--	if (hba->mcq_enabled) {
--		for (pos =3D 0; pos < hba->nutrs; pos++) {
--			lrbp =3D &hba->lrb[pos];
--			if (ufshcd_cmd_inflight(lrbp->cmd) &&
--			    lrbp->lun =3D=3D lun) {
--				ufshcd_clear_cmd(hba, pos);
--				hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
--				ufshcd_mcq_poll_cqe_lock(hba, hwq);
--			}
--		}
--		err =3D 0;
--		goto out;
--	}
--
--	/* clear the commands that were pending for corresponding LUN */
--	spin_lock_irqsave(&hba->outstanding_lock, flags);
--	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs)
--		if (hba->lrb[pos].lun =3D=3D lun)
--			__set_bit(pos, &pending_reqs);
--	hba->outstanding_reqs &=3D ~pending_reqs;
--	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--	for_each_set_bit(pos, &pending_reqs, hba->nutrs) {
--		if (ufshcd_clear_cmd(hba, pos) < 0) {
--			spin_lock_irqsave(&hba->outstanding_lock, flags);
--			not_cleared =3D 1U << pos &
--				ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--			hba->outstanding_reqs |=3D not_cleared;
--			not_cleared_mask |=3D not_cleared;
--			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--			dev_err(hba->dev, "%s: failed to clear request %d\n",
--				__func__, pos);
--		}
-+	if (err) {
-+	} else if (resp !=3D UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-+		err =3D resp;
-+	} else {
-+		/* clear the commands that were pending for corresponding LUN */
-+		blk_mq_tagset_busy_iter(&hba->host->tag_set,
-+					ufshcd_clear_lu_cmds,
-+					&cmd->device->lun);
- 	}
--	__ufshcd_transfer_req_compl(hba, pending_reqs & ~not_cleared_mask);
-=20
--out:
- 	hba->req_abort_count =3D 0;
- 	ufshcd_update_evt_hist(hba, UFS_EVT_DEV_RESET, (u32)err);
- 	if (!err) {
+ #define __signed_type_use(x, ux) (2 + __is_nonneg(x, ux))
+ #define __unsigned_type_use(x, ux) (1 + 2 * (sizeof(ux) < 4))
+@@ -57,19 +52,19 @@
+ 	__signed_type_use(x, ux) : __unsigned_type_use(x, ux))
+ 
+ /*
+- * To avoid warnings about casting pointers to integers
+- * of different sizes, we need that special sign type.
++ * Check whether a signed value is always non-negative.
+  *
+- * On 64-bit we can just always use 'long', since any
+- * integer or pointer type can just be cast to that.
++ * A cast is needed to avoid any warnings from values that aren't signed
++ * integer types (in which case the result doesn't matter).
+  *
+- * This does not work for 128-bit signed integers since
+- * the cast would truncate them, but we do not use s128
+- * types in the kernel (we do use 'u128', but they will
+- * be handled by the !is_signed_type() case).
++ * On 64-bit any integer or pointer type can safely be cast to 'long'.
++ * But on 32-bit we need to avoid warnings about casting pointers to integers
++ * of different sizes without truncating 64-bit values so 'long' or 'long long'
++ * must be used depending on the size of the value.
+  *
+- * NOTE! The cast is there only to avoid any warnings
+- * from when values that aren't signed integer types.
++ * This does not work for 128-bit signed integers since the cast would truncate
++ * them, but we do not use s128 types in the kernel (we do use 'u128',
++ * but they are handled by the !is_signed_type() case).
+  */
+ #ifdef CONFIG_64BIT
+   #define __signed_type(ux) long
+-- 
+2.47.3
+
