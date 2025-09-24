@@ -1,205 +1,213 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.13])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6DEA92D97AA
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 09:45:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 34E3D1F3BBB
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 12:36:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.13
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758707147; cv=none; b=nXykdQ0DqHKW0KQQjtPxvY0GXeqIaqs/b1/SLmz7YgDLLVIjFGRp/HcbaHFNA+qZK1EDscQ5IS0+i/GujA2dt0GGPS0ND8Tpxj87S441ZZVX/F//cY7iRTkyNmQ3HWhPYA+aaZAqwmOTFiMhhm58oparyIBo9uRMEESlTrf4xDI=
+	t=1758717369; cv=none; b=LoUeC5gyNcqhTYjxRwix/HWzZEPirpLldrtbzIv+27XbuP3X57NMbZTR6P4CGhEqpwfddZk4ekZsAUcFPrOeaWpwpCsAhnJMV7GOdOJN3S8VAWC3siNdMaqSngDp3XNZcQQrN8aCbXn+ma4T6nqDIUnRM/NFUSWTdDLNmndbBxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758707147; c=relaxed/simple;
-	bh=PLVGumJUU9hKZvM8NWnon0rEFhRQ2y36lAKwS2Cv2YY=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=D64EFPnFlVZ6t20iPYA3xJ/EAQMBB+CAVegK0n+JukVVMyL67t0tv3s9z3NC+Q7IyUgF3XqnlnTZavv6sxOXmbkTWH2Z+6xiI+ZRYy1sgEiDp4UM5Tyjv4Ydrd2y/iD9UGB4Ua4OC7k/GMqnHqd9RK4onsMdeiQH88lsKdAyEGE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=VBgJEDz8; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1758717369; c=relaxed/simple;
+	bh=X5sdtRbqfRqOKgZRQ4qMnFy5pSpg8b0I3voFv146QK0=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NHX7B5vgQPQB0DhF3GjlF36ZdU183deRCN8Idj9eGtMAVZDb9FQ6I6wdF3W9TxrQfTrkYP7fqkhv8wfiwJx6p+uv3tP1rbMrjN0XqJLWlijNp2XD2OAdzg0gFVouPt9/XE45cjCZPA7edfBCGfFinZS29EgUYgQ2zzj56j00XQo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ROiOdqYl; arc=none smtp.client-ip=198.175.65.13
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="VBgJEDz8"
-X-UUID: 35d592a6992b11f0b33aeb1e7f16c2b6-20250924
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=si3j8d5cgVjUsmGkTpHa4AhEh9vW1KoViw9giBVSot4=;
-	b=VBgJEDz8QI7FqPP/L6rGDF3YqOvy3UjARIN0sgC2apd+0C79ds/Hpgts7cYTpvtvCdvRLT9TRkMsycu+PBmNebb3YjUqTxLAUbqvmB5lPBnOnKfD58N2JbLxtK7lXB/QwMepxBCjRSvIPF3NzykN3ufAd6Fof6ESZymkta9CzNs=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.4,REQID:28a4d135-bf63-4b56-95d6-e6e93568cdec,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:1ca6b93,CLOUDID:0c3ce56c-8443-424b-b119-dc42e68239b0,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
-	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,
-	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 3,DMD|SSN|SDN
-X-CID-BAS: 3,DMD|SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 35d592a6992b11f0b33aeb1e7f16c2b6-20250924
-Received: from mtkmbs13n2.mediatek.inc [(172.21.101.108)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1212084665; Wed, 24 Sep 2025 17:45:31 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- MTKMBS09N1.mediatek.inc (172.21.101.35) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Wed, 24 Sep 2025 17:45:29 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1748.10 via Frontend Transport; Wed, 24 Sep 2025 17:45:29 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
-Subject: [PATCH v2 7/8] ufs: host: mediatek: Add support for new platform with MMIO_OTSD_CTR
-Date: Wed, 24 Sep 2025 17:43:29 +0800
-Message-ID: <20250924094527.2992256-8-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20250924094527.2992256-1-peter.wang@mediatek.com>
-References: <20250924094527.2992256-1-peter.wang@mediatek.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ROiOdqYl"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1758717368; x=1790253368;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=X5sdtRbqfRqOKgZRQ4qMnFy5pSpg8b0I3voFv146QK0=;
+  b=ROiOdqYlh86UAt8cq3Suoo6qrWFSxXb5JCTmPv4XVvUAMPusowiAQzdp
+   TJ+wdGCcnQqvAiU6x/4yLfvh/rRBZYOSobqyKzUQ8xXZzFyaO+ruM937z
+   55SSFWcPtdP3FXjjA6qEy5DbQHANNW0EkdxwX8GRI7BHJlXmP0rK2d9NP
+   ivjoRfjaarGKnpR+t0Hv70ZaH4bpnBsWkT5fUhqvymfP68KPXaIlLuP2B
+   UWlMDA0BDLmzBRaW59AtB5mdeNZLcqGpqGGPp+bP/hJSfgjmj5p77+/D1
+   MNtvV4MGGlW1jM50LG04d32YEpIzN2gklUiD7M9eMMGloCYOFQVFKdsBj
+   w==;
+X-CSE-ConnectionGUID: Xwf/aRNCSl21DnwEyneZOg==
+X-CSE-MsgGUID: 7RUwd6raRP2U4mz+ccm+Ig==
+X-IronPort-AV: E=McAfee;i="6800,10657,11561"; a="72113588"
+X-IronPort-AV: E=Sophos;i="6.18,290,1751266800"; 
+   d="scan'208";a="72113588"
+Received: from orviesa006.jf.intel.com ([10.64.159.146])
+  by orvoesa105.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2025 05:36:07 -0700
+X-CSE-ConnectionGUID: j3MuAqXlQJCBVs+Zc2Fykw==
+X-CSE-MsgGUID: q0OCaGtzReuxvcJr5AO4nA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.18,290,1751266800"; 
+   d="scan'208";a="176147230"
+Received: from lkp-server02.sh.intel.com (HELO 84c55410ccf6) ([10.239.97.151])
+  by orviesa006.jf.intel.com with ESMTP; 24 Sep 2025 05:36:05 -0700
+Received: from kbuild by 84c55410ccf6 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1v1Oj4-00048T-25;
+	Wed, 24 Sep 2025 12:36:02 +0000
+Date: Wed, 24 Sep 2025 20:36:02 +0800
+From: kernel test robot <lkp@intel.com>
+To: doubled <doubled@leap-io-kernel.com>,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] scsi: leapraid: Add new scsi driver
+Message-ID: <202509242058.b5d4n6HN-lkp@intel.com>
+References: <20250919100032.3931476-1-doubled@leap-io-kernel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20250919100032.3931476-1-doubled@leap-io-kernel.com>
 
-From: Peter Wang <peter.wang@mediatek.com>
+Hi doubled,
 
-Introduce support for a new UFS Mediatek platform by adding
-the REG_UFS_UFS_MMIO_OTSD_CTRL register. This update includes
-checks for legacy platforms and uses the new register to
-replace debug selection and handle specific operations.
-The changes ensure compatibility across different hardware
-versions and prevent potential issues with debug usage on
-newer platforms.
+kernel test robot noticed the following build warnings:
 
-Additional updates include error logging improvements
-during link setup for newer and legacy platforms, ensuring
-proper event logging and debugging.
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.17-rc7 next-20250923]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- drivers/ufs/host/ufs-mediatek.c | 42 +++++++++++++++++++++++++++------
- drivers/ufs/host/ufs-mediatek.h |  1 +
- 2 files changed, 36 insertions(+), 7 deletions(-)
+url:    https://github.com/intel-lab-lkp/linux/commits/doubled/scsi-leapraid-Add-new-scsi-driver/20250919-202535
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20250919100032.3931476-1-doubled%40leap-io-kernel.com
+patch subject: [PATCH] scsi: leapraid: Add new scsi driver
+config: sparc64-randconfig-r072-20250922 (https://download.01.org/0day-ci/archive/20250924/202509242058.b5d4n6HN-lkp@intel.com/config)
+compiler: sparc64-linux-gcc (GCC) 12.5.0
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 3e54154d5547..8498e95e263a 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -280,6 +280,9 @@ static int ufs_mtk_hce_enable_notify(struct ufs_hba *hba,
- 			      ufshcd_readl(hba, REG_UFS_XOUFS_CTRL) | 0x80,
- 			      REG_UFS_XOUFS_CTRL);
- 
-+		if (host->legacy_ip_ver)
-+			return 0;
-+
- 		/* DDR_EN setting */
- 		if (host->ip_ver >= IP_VER_MT6989) {
- 			ufshcd_rmwl(hba, UFS_MASK(0x7FFF, 8),
-@@ -405,7 +408,7 @@ static void ufs_mtk_dbg_sel(struct ufs_hba *hba)
- {
- 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 
--	if (((host->ip_ver >> 16) & 0xFF) >= 0x36) {
-+	if (!host->legacy_ip_ver && host->ip_ver >= IP_VER_MT6983) {
- 		ufshcd_writel(hba, 0x820820, REG_UFS_DEBUG_SEL);
- 		ufshcd_writel(hba, 0x0, REG_UFS_DEBUG_SEL_B0);
- 		ufshcd_writel(hba, 0x55555555, REG_UFS_DEBUG_SEL_B1);
-@@ -422,6 +425,7 @@ static int ufs_mtk_wait_idle_state(struct ufs_hba *hba,
- 	u64 timeout, time_checked;
- 	u32 val, sm;
- 	bool wait_idle;
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 
- 	/* cannot use plain ktime_get() in suspend */
- 	timeout = ktime_get_mono_fast_ns() + retry_ms * 1000000UL;
-@@ -432,8 +436,13 @@ static int ufs_mtk_wait_idle_state(struct ufs_hba *hba,
- 
- 	do {
- 		time_checked = ktime_get_mono_fast_ns();
--		ufs_mtk_dbg_sel(hba);
--		val = ufshcd_readl(hba, REG_UFS_PROBE);
-+		if (host->legacy_ip_ver || host->ip_ver < IP_VER_MT6899) {
-+			ufs_mtk_dbg_sel(hba);
-+			val = ufshcd_readl(hba, REG_UFS_PROBE);
-+		} else {
-+			val = ufshcd_readl(hba, REG_UFS_UFS_MMIO_OTSD_CTRL);
-+			val = val >> 16;
-+		}
- 
- 		sm = val & 0x1f;
- 
-@@ -465,13 +474,20 @@ static int ufs_mtk_wait_link_state(struct ufs_hba *hba, u32 state,
- {
- 	ktime_t timeout, time_checked;
- 	u32 val;
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 
- 	timeout = ktime_add_ms(ktime_get(), max_wait_ms);
- 	do {
- 		time_checked = ktime_get();
--		ufs_mtk_dbg_sel(hba);
--		val = ufshcd_readl(hba, REG_UFS_PROBE);
--		val = val >> 28;
-+
-+		if (host->legacy_ip_ver || host->ip_ver < IP_VER_MT6899) {
-+			ufs_mtk_dbg_sel(hba);
-+			val = ufshcd_readl(hba, REG_UFS_PROBE);
-+			val = val >> 28;
-+		} else {
-+			val = ufshcd_readl(hba, REG_UFS_UFS_MMIO_OTSD_CTRL);
-+			val = val >> 24;
-+		}
- 
- 		if (val == state)
- 			return 0;
-@@ -1639,14 +1655,26 @@ static int ufs_mtk_device_reset(struct ufs_hba *hba)
- static int ufs_mtk_link_set_hpm(struct ufs_hba *hba)
- {
- 	int err;
-+	u32 val;
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 
- 	err = ufshcd_hba_enable(hba);
- 	if (err)
- 		return err;
- 
- 	err = ufs_mtk_unipro_set_lpm(hba, false);
--	if (err)
-+	if (err) {
-+		if (host->ip_ver < IP_VER_MT6899) {
-+			ufs_mtk_dbg_sel(hba);
-+			val = ufshcd_readl(hba, REG_UFS_PROBE);
-+		} else {
-+			val = ufshcd_readl(hba, REG_UFS_UFS_MMIO_OTSD_CTRL);
-+		}
-+		ufshcd_update_evt_hist(hba, UFS_EVT_RESUME_ERR, (u32)val);
-+		val = ufshcd_readl(hba, REG_INTERRUPT_STATUS);
-+		ufshcd_update_evt_hist(hba, UFS_EVT_RESUME_ERR, (u32)val);
- 		return err;
-+	}
- 
- 	err = ufshcd_uic_hibern8_exit(hba);
- 	if (err)
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index dfbf78bd8664..f96fd032371d 100644
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -28,6 +28,7 @@
-  */
- #define REG_UFS_XOUFS_CTRL          0x140
- #define REG_UFS_REFCLK_CTRL         0x144
-+#define REG_UFS_UFS_MMIO_OTSD_CTRL  0x14C
- #define REG_UFS_MMIO_OPT_CTRL_0     0x160
- #define REG_UFS_EXTREG              0x2100
- #define REG_UFS_MPHYCTRL            0x2200
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202509242058.b5d4n6HN-lkp@intel.com/
+
+smatch warnings:
+drivers/scsi/leapraid/leapraid_func.c:7225 leapraid_set_msix() warn: inconsistent indenting
+drivers/scsi/leapraid/leapraid_func.c:7797 leapraid_request_host_memory() warn: missing unwind goto?
+drivers/scsi/leapraid/leapraid_func.c:7797 leapraid_request_host_memory() warn: missing unwind goto?
+drivers/scsi/leapraid/leapraid_func.c:8271 leapraid_cfg_pages() warn: missing error code? 'rc'
+drivers/scsi/leapraid/leapraid_func.c:8530 leapraid_make_adapter_available() warn: missing error code? 'rc'
+
+vim +7225 drivers/scsi/leapraid/leapraid_func.c
+
+  7166	
+  7167	static int
+  7168	leapraid_set_msix(struct leapraid_adapter *adapter)
+  7169	{
+  7170		int iopoll_qcnt = 0;
+  7171		int msix_cnt, i, rc;
+  7172	
+  7173		if (msix_disable == 1)
+  7174			goto legacy_int;
+  7175	
+  7176		msix_cnt = leapraid_msix_cnt(adapter->pdev);
+  7177		if (msix_cnt <= 0) {
+  7178			dev_info(&adapter->pdev->dev,
+  7179				 "msix unsupported!\n");
+  7180			goto legacy_int;
+  7181		}
+  7182	
+  7183		if (reset_devices)
+  7184			adapter->adapter_attr.rq_cnt = 1;
+  7185		else
+  7186			adapter->adapter_attr.rq_cnt = min_t(int,
+  7187				 num_online_cpus(), msix_cnt);
+  7188	
+  7189		if (max_msix_vectors > 0)
+  7190			adapter->adapter_attr.rq_cnt = min_t(int, max_msix_vectors,
+  7191				 adapter->adapter_attr.rq_cnt);
+  7192	
+  7193		if (adapter->adapter_attr.rq_cnt <= 1)
+  7194			adapter->shost->host_tagset = 0;
+  7195		if (adapter->shost->host_tagset) {
+  7196			iopoll_qcnt = poll_queues;
+  7197			if (iopoll_qcnt >= adapter->adapter_attr.rq_cnt)
+  7198				iopoll_qcnt = 0;
+  7199		}
+  7200	
+  7201		if (iopoll_qcnt) {
+  7202			adapter->notification_desc.blk_mq_poll_rqs =
+  7203				 kcalloc(iopoll_qcnt,
+  7204				 sizeof(struct leapraid_blk_mq_poll_rq), GFP_KERNEL);
+  7205			if (!adapter->notification_desc.blk_mq_poll_rqs)
+  7206				return -ENOMEM;
+  7207			adapter->adapter_attr.rq_cnt =
+  7208				 min(adapter->adapter_attr.rq_cnt +
+  7209					 iopoll_qcnt, msix_cnt);
+  7210		}
+  7211	
+  7212		adapter->notification_desc.iopoll_qdex =
+  7213			 adapter->adapter_attr.rq_cnt - iopoll_qcnt;
+  7214	
+  7215		adapter->notification_desc.iopoll_qcnt = iopoll_qcnt;
+  7216		dev_info(&adapter->pdev->dev,
+  7217			 "MSIx: req queue cnt=%d, intr=%d/poll=%d rep queues!\n",
+  7218			 adapter->adapter_attr.rq_cnt,
+  7219			 adapter->notification_desc.iopoll_qdex,
+  7220			 adapter->notification_desc.iopoll_qcnt);
+  7221	
+  7222			 adapter->notification_desc.int_rqs =
+  7223			 kcalloc(adapter->notification_desc.iopoll_qdex,
+  7224			 sizeof(struct leapraid_int_rq), GFP_KERNEL);
+> 7225		if (!adapter->notification_desc.int_rqs) {
+  7226			dev_err(&adapter->pdev->dev,
+  7227				 "MSIx: allocate %d interrupt reply queues failed!\n",
+  7228				 adapter->notification_desc.iopoll_qdex);
+  7229			return -ENOMEM;
+  7230		}
+  7231	
+  7232		for (i = 0; i < adapter->notification_desc.iopoll_qcnt; i++) {
+  7233			adapter->notification_desc.blk_mq_poll_rqs[i].rq.adapter
+  7234				 = adapter;
+  7235			adapter->notification_desc.blk_mq_poll_rqs[i].rq.msix_idx =
+  7236				 i + adapter->notification_desc.iopoll_qdex;
+  7237			atomic_set(
+  7238				&adapter->notification_desc.blk_mq_poll_rqs[i].rq.busy,
+  7239					 0);
+  7240			snprintf(adapter->notification_desc.blk_mq_poll_rqs[i].rq.name,
+  7241				 LEAPRAID_NAME_LENGTH,
+  7242				 "%s%u-MQ-Poll%u", LEAPRAID_DRIVER_NAME,
+  7243				 adapter->adapter_attr.id, i);
+  7244			atomic_set(&adapter->notification_desc.blk_mq_poll_rqs[i].busy,
+  7245				 0);
+  7246			atomic_set(
+  7247				&adapter->notification_desc.blk_mq_poll_rqs[i].pause,
+  7248				 0);
+  7249		}
+  7250	
+  7251		adapter->notification_desc.msix_cpu_map_sz =
+  7252			 num_online_cpus();
+  7253		adapter->notification_desc.msix_cpu_map =
+  7254			 kzalloc(adapter->notification_desc.msix_cpu_map_sz,
+  7255				 GFP_KERNEL);
+  7256		if (!adapter->notification_desc.msix_cpu_map)
+  7257			return -ENOMEM;
+  7258		memset(adapter->notification_desc.msix_cpu_map, 0,
+  7259			 adapter->notification_desc.msix_cpu_map_sz);
+  7260	
+  7261		adapter->notification_desc.msix_enable = true;
+  7262		rc = leapraid_setup_irqs(adapter);
+  7263		if (rc) {
+  7264			leapraid_free_irq(adapter);
+  7265			adapter->notification_desc.msix_enable = false;
+  7266			goto legacy_int;
+  7267		}
+  7268	
+  7269		return 0;
+  7270	
+  7271	legacy_int:
+  7272		rc = leapraid_set_legacy_int(adapter);
+  7273	
+  7274		return rc;
+  7275	}
+  7276	
+
 -- 
-2.45.2
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
