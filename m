@@ -1,73 +1,156 @@
-Received: from sender4-g3-154.zohomail360.com (sender4-g3-154.zohomail360.com [136.143.188.154])
+Received: from jupiter.guys.cyano.uk (jupiter.guys.cyano.uk [45.63.120.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1CD6B1B6D06
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 00:44:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.154
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758674645; cv=pass; b=krUeRMS9XpRw61Hhpmd/WOev12dfuIzNYXJVrwVU1nZrVSdhsqy2FagivbAPKTJduBI8wA75cF8JnCXh6nXl+oHevtO9NHIwpPzwAsYf339Ui+CMD9BBy1xWoqfCw+SomVLnKm2SG2Ulp7fw5xbLCNVDmLu3bkkUgbf9pLeZH5M=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758674645; c=relaxed/simple;
-	bh=lDyEitQV9bDZhJu0i2I5qfrBKEYYJs7SwHJwp+ziUHo=;
-	h=Date:From:To:Message-ID:Subject:MIME-Version:Content-Type; b=KDYC2D9cSdBQss/x9gDFQ0fGo5FkPSl5OJIK0RNwC43fmJTusqbYTrlbKjTV0LXNc5UbqozS4JRe2N/gidKKhuT9IdKfNnTHyW3yM/iUKSq8OTDJZKEDhPIorMpxzy1+oNin5z0TzO+ZodpdVE43hew9GudclUZjJ6+w9Ue+QqE=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=maguitec.com.mx; spf=pass smtp.mailfrom=bounce-zem.maguitec.com.mx; dkim=pass (1024-bit key) header.d=maguitec.com.mx header.i=@maguitec.com.mx header.b=c5e6TRla; arc=pass smtp.client-ip=136.143.188.154
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=maguitec.com.mx
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bounce-zem.maguitec.com.mx
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B9001FDA9E;
+	Wed, 24 Sep 2025 05:57:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=45.63.120.176
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1758693460; cv=none; b=u1ewLaoFyzyfYAS+DGN8Yda+g20HgffSBFAPM/juWArYs+Hu8B/9ZR4rG/4Yb1b/u+4msAYFPPqt86qOtp72HwmRmNcrBYoG+lgWBkDvjHCVQTuVonY0sqhhCkx1/dSe8f8c4AN/bwwjEa8XZrx4qNeZulrXoe0eK6jFYc7pYvs=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1758693460; c=relaxed/simple;
+	bh=OIHIefoiZtsjl/1qw+0UWoY+GP8jpQJL3SUC2EDvU/I=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=N+w5EjkrVM9ThAsiZm5hR2/aG5yxGfUumFHCg9/xSOwi/31FjbJtz2ToYQYFRXYXokaqc3LgHNfHuxpEa/XCDfCxe9eYBr5YvWTHnZc99ik5J1kMgpS5VdbMSuWoUUXngPRZzV4Fnii0ONIPZdl9HmUoGeNPTpUispbekOmzJZI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cyano.uk; spf=pass smtp.mailfrom=cyano.uk; dkim=pass (2048-bit key) header.d=cyano.uk header.i=@cyano.uk header.b=YX3zPuAT; arc=none smtp.client-ip=45.63.120.176
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cyano.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cyano.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=maguitec.com.mx header.i=@maguitec.com.mx header.b="c5e6TRla"
-ARC-Seal: i=1; a=rsa-sha256; t=1758674643; cv=none; 
-	d=us.zohomail360.com; s=zohoarc; 
-	b=M0YLIfd7tBDqqfvKxhvTHFXqbHIfv083vQLeVTDN/vod7B9GMfUOHfng6U04AgQlU0pvimkWU69WKh9Ki2oUWhXVKNBFg1cNhtKq/EMiFUdLlNe+AnxZpA/wg1LH/bNRoEQxTtqf1fJwtAkAfyBNgDmNSP6MEk/2PxVKvC12C4I=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=us.zohomail360.com; s=zohoarc; 
-	t=1758674643; h=Content-Type:Content-Transfer-Encoding:Date:Date:From:From:MIME-Version:Message-ID:Reply-To:Reply-To:Subject:Subject:To:To:Message-Id:Cc; 
-	bh=lDyEitQV9bDZhJu0i2I5qfrBKEYYJs7SwHJwp+ziUHo=; 
-	b=P234gn5YShS9JrQ8RpEhrGq4s75js+6cVX4xFANZXWKNG9jMe5/lmXW2ndLAY4fmB5dEUbwQqRqd/uEdHLnhaCeG21g30asN9AoA8GMcKKx/in9omprYGH04pNhevDEovlLP1yb51NU66ojA7Jbf4wMlFZxlIj+bjSOIaJ8s5+s=
-ARC-Authentication-Results: i=1; mx.us.zohomail360.com;
-	dkim=pass  header.i=maguitec.com.mx;
-	spf=pass  smtp.mailfrom=investorrelations+9ab53490-98d8-11f0-ace3-525400721611_vt1@bounce-zem.maguitec.com.mx;
-	dmarc=pass header.from=<investorrelations@maguitec.com.mx>
-Received: by mx.zohomail.com with SMTPS id 175867165324018.224299141755637;
-	Tue, 23 Sep 2025 16:54:13 -0700 (PDT)
-DKIM-Signature: a=rsa-sha256; b=c5e6TRlaMkGfsLMs2JIq58ggu19VKvsVk2F/0gYkG8YmqlXchjc5+9fmD4MLsmd66V1vTk2NR5bOQJMEw8bW/RQa3zyMVHqOGsB+VUj7Jz3URE76c39wNntrkdgw+4/0QH9YFzW2jOsjKNwh8O/XU/6zA2lAusnL0+6B6yQHdVA=; c=relaxed/relaxed; s=15205840; d=maguitec.com.mx; v=1; bh=lDyEitQV9bDZhJu0i2I5qfrBKEYYJs7SwHJwp+ziUHo=; h=date:from:reply-to:to:message-id:subject:mime-version:content-type:content-transfer-encoding:date:from:reply-to:to:message-id:subject;
-Date: Tue, 23 Sep 2025 16:54:13 -0700 (PDT)
-From: Al Sayyid Sultan <investorrelations@maguitec.com.mx>
-Reply-To: investorrelations@alhaitham-investment.ae
+	dkim=pass (2048-bit key) header.d=cyano.uk header.i=@cyano.uk header.b="YX3zPuAT"
+From: Xinhui Yang <cyan@cyano.uk>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=cyano.uk; s=dkim;
+	t=1758693455;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=y1HfsTjwGzBxyYzek1x06Bsy2FGe8/POltYftYBU+Ck=;
+	b=YX3zPuAT1/4oHohhcx6r7btavD6TT0jMGDyydlkFwu4sKbxUiGdFXfIRZkdWwDzJ/5qpPO
+	aMrv0xD2kkC4IscTHz3PPMPJl9kR69Nx4j+NVVQoBMo3aRH32NNX0NCgI0UtQt+GHFHitw
+	NS+7UOpEb0ey0+Ommq9pfviAuO2hvYuddcLet7lDfBjzXZke6Enb55atd0FRsEwk8fk1tm
+	KRwjKcZYwhYbG05Tq5gO1JI0GxJL85CLHuMmmgS3HYEziDTOLezBWpaxKk5EOaeWRkQicF
+	V5W0ADR5rmsPdu3og7/ivGtxlwkDs+AKwL2hRcuJjiePzlbVKJh8EFprIeyVow==
+Authentication-Results: jupiter.guys.cyano.uk;
+	auth=pass smtp.mailfrom=cyan@cyano.uk
 To: linux-scsi@vger.kernel.org
-Message-ID: <2d6f.1aedd99b146bc1ac.m1.9ab53490-98d8-11f0-ace3-525400721611.19978ffc659@bounce-zem.maguitec.com.mx>
-Subject: Thematic Funds Letter Of Intent
+Cc: stable@vger.kernel.org,
+	Mingcong Bai <jeffbai@aosc.io>,
+	Kexy Biscuit <kexybiscuit@aosc.io>,
+	Xinhui Yang <cyan@cyano.uk>,
+	Oliver Neukum <oliver@neukum.org>,
+	Ali Akcaagac <aliakc@web.de>,
+	Jamie Lenehan <lenehan@twibble.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org (open list)
+Subject: [PATCH v4 1/2] scsi: dc395x: correctly discard the return value in certain reads
+Date: Wed, 24 Sep 2025 13:56:26 +0800
+Message-ID: <20250924055628.1929177-2-cyan@cyano.uk>
+In-Reply-To: <20250924055628.1929177-1-cyan@cyano.uk>
+References: <20250924055628.1929177-1-cyan@cyano.uk>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain;
-	charset="utf-8"
-Content-Transfer-Encoding: quoted-printable
-content-transfer-encoding-Orig: quoted-printable
-content-type-Orig: text/plain;\r\n\tcharset="utf-8"
-Original-Envelope-Id: 2d6f.1aedd99b146bc1ac.m1.9ab53490-98d8-11f0-ace3-525400721611.19978ffc659
-X-JID: 2d6f.1aedd99b146bc1ac.s1.9ab53490-98d8-11f0-ace3-525400721611.19978ffc659
-TM-MAIL-JID: 2d6f.1aedd99b146bc1ac.m1.9ab53490-98d8-11f0-ace3-525400721611.19978ffc659
-X-App-Message-ID: 2d6f.1aedd99b146bc1ac.m1.9ab53490-98d8-11f0-ace3-525400721611.19978ffc659
-X-Report-Abuse: <abuse+2d6f.1aedd99b146bc1ac.m1.9ab53490-98d8-11f0-ace3-525400721611.19978ffc659@zeptomail.com>
-X-ZohoMailClient: External
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-Spamd-Bar: ---
 
-To: linux-scsi@vger.kernel.org
-Date: 24-09-2025
-Thematic Funds Letter Of Intent
+There are certain read operations performed in this code which doesn't
+really need its return value. Those read operations either clears the
+FIFO buffer, or clears the interruption status. However, unused read
+triggers compiler warnings. With CONFIG_WERROR on, these warnings get
+converted into errors:
 
-It's a pleasure to connect with you
+drivers/scsi/dc395x.c: In function ‘__dc395x_eh_bus_reset’:
+drivers/scsi/dc395x.c:97:49: error: value computed is not used [-Werror=unused-value]
+   97 | #define DC395x_read8(acb,address)               (u8)(inb(acb->io_port_base + (address)))
+      |                                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/dc395x.c:1003:9: note: in expansion of macro ‘DC395x_read8’
+ 1003 |         DC395x_read8(acb, TRM_S1040_SCSI_INTSTATUS);
+      |         ^~~~~~~~~~~~
+drivers/scsi/dc395x.c: In function ‘data_io_transfer’:
+drivers/scsi/dc395x.c:97:49: error: value computed is not used [-Werror=unused-value]
+   97 | #define DC395x_read8(acb,address)               (u8)(inb(acb->io_port_base + (address)))
+      |                                                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/dc395x.c:2032:33: note: in expansion of macro ‘DC395x_read8’
+ 2032 |                                 DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
 
-Having been referred to your investment by my team, we would be=20
-honored to review your available investment projects for onward=20
-referral to my principal investors who can allocate capital for=20
-the financing of it.
+Create a new macro DC395x_peek8() to deliberately cast the return value
+to void, which tells the compiler we really don't need the return value
+of such read operations.
 
-kindly advise at your convenience
+Cc: stable@vger.kernel.org
+Signed-off-by: Xinhui Yang <cyan@cyano.uk>
+---
+ drivers/scsi/dc395x.c | 18 ++++++++++++------
+ 1 file changed, 12 insertions(+), 6 deletions(-)
 
-Best Regards,
+diff --git a/drivers/scsi/dc395x.c b/drivers/scsi/dc395x.c
+index 386c8359e1cc..aed4f21e8143 100644
+--- a/drivers/scsi/dc395x.c
++++ b/drivers/scsi/dc395x.c
+@@ -94,6 +94,12 @@
+ #define DC395x_LOCK_IO(dev,flags)		spin_lock_irqsave(((struct Scsi_Host *)dev)->host_lock, flags)
+ #define DC395x_UNLOCK_IO(dev,flags)		spin_unlock_irqrestore(((struct Scsi_Host *)dev)->host_lock, flags)
+ 
++/*
++ * read operations that may trigger side effects in the hardware,
++ * but the value can or should be discarded.
++ */
++#define DC395x_peek8(acb, address)		((void)(inb(acb->io_port_base + (address))))
++/* normal read write operations goes here. */
+ #define DC395x_read8(acb,address)		(u8)(inb(acb->io_port_base + (address)))
+ #define DC395x_read16(acb,address)		(u16)(inw(acb->io_port_base + (address)))
+ #define DC395x_read32(acb,address)		(u32)(inl(acb->io_port_base + (address)))
+@@ -1000,7 +1006,7 @@ static int __dc395x_eh_bus_reset(struct scsi_cmnd *cmd)
+ 	DC395x_write8(acb, TRM_S1040_DMA_CONTROL, CLRXFIFO);
+ 	clear_fifo(acb, "eh_bus_reset");
+ 	/* Delete pending IRQ */
+-	DC395x_read8(acb, TRM_S1040_SCSI_INTSTATUS);
++	DC395x_peek8(acb, TRM_S1040_SCSI_INTSTATUS);
+ 	set_basic_config(acb);
+ 
+ 	reset_dev_param(acb);
+@@ -2029,8 +2035,8 @@ static void data_io_transfer(struct AdapterCtlBlk *acb,
+ 			DC395x_write8(acb, TRM_S1040_SCSI_CONFIG2,
+ 				      CFG2_WIDEFIFO);
+ 			if (io_dir & DMACMD_DIR) {
+-				DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
+-				DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
++				DC395x_peek8(acb, TRM_S1040_SCSI_FIFO);
++				DC395x_peek8(acb, TRM_S1040_SCSI_FIFO);
+ 			} else {
+ 				/* Danger, Robinson: If you find KGs
+ 				 * scattered over the wide disk, the driver
+@@ -2044,7 +2050,7 @@ static void data_io_transfer(struct AdapterCtlBlk *acb,
+ 			/* Danger, Robinson: If you find a collection of Ks on your disk
+ 			 * something broke :-( */
+ 			if (io_dir & DMACMD_DIR)
+-				DC395x_read8(acb, TRM_S1040_SCSI_FIFO);
++				DC395x_peek8(acb, TRM_S1040_SCSI_FIFO);
+ 			else
+ 				DC395x_write8(acb, TRM_S1040_SCSI_FIFO, 'K');
+ 		}
+@@ -2892,7 +2898,7 @@ static void set_basic_config(struct AdapterCtlBlk *acb)
+ 	    DMA_FIFO_HALF_HALF | DMA_ENHANCE /*| DMA_MEM_MULTI_READ */ ;
+ 	DC395x_write16(acb, TRM_S1040_DMA_CONFIG, wval);
+ 	/* Clear pending interrupt status */
+-	DC395x_read8(acb, TRM_S1040_SCSI_INTSTATUS);
++	DC395x_peek8(acb, TRM_S1040_SCSI_INTSTATUS);
+ 	/* Enable SCSI interrupt    */
+ 	DC395x_write8(acb, TRM_S1040_SCSI_INTEN, 0x7F);
+ 	DC395x_write8(acb, TRM_S1040_DMA_INTEN, EN_SCSIINTR | EN_DMAXFERERROR
+@@ -3799,7 +3805,7 @@ static void adapter_uninit_chip(struct AdapterCtlBlk *acb)
+ 		reset_scsi_bus(acb);
+ 
+ 	/* clear any pending interrupt state */
+-	DC395x_read8(acb, TRM_S1040_SCSI_INTSTATUS);
++	DC395x_peek8(acb, TRM_S1040_SCSI_INTSTATUS);
+ }
+ 
+ 
+-- 
+2.51.0
 
-Respectfully,
-Al Sayyid Sultan Yarub Al Busaidi
-Director
