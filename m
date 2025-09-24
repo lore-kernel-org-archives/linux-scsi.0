@@ -1,249 +1,191 @@
-Received: from fra-out-003.esa.eu-central-1.outbound.mail-perimeter.amazon.com (fra-out-003.esa.eu-central-1.outbound.mail-perimeter.amazon.com [3.72.182.33])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F3B3C2868B5;
-	Wed, 24 Sep 2025 20:33:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=3.72.182.33
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D613032B48B
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 20:33:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758746032; cv=none; b=hFnNVwpMNjO3JZN//7oaeEdvd+I+6I7q/k4eFYwk3+DC27mom4SFy33cDeftgdGrmA2OiNRZ1F2GLHpW9LAhubz8gGHSegcs7iQCNhE9kVafLGoc3w75XqTXL6SdtV9eX5QJAiJf5sov1eGzVH45Xr+NGh12PGJhZ1w9f9//vjw=
+	t=1758746038; cv=none; b=CQImtfc6TD0xdlQYJTu2CC0T73j2MYeyULYuvmF5415xshhwzhV2ZJ1hcpJgVSUqBittnIpIcezyHw7hToMSQsvLv4EBzHQZn+DUA9zQ8LgKeq+jSuOlyiemwYYuN0+sbkbpYKcnMsAr6hVxJjFZyIWFcj50Uj2kTDsefP1HcX4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758746032; c=relaxed/simple;
-	bh=7o6n/7afD73I8KmTywLVAVDBtvL4BDHX8Eeq0ODATQ8=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RZjvlTYCsOitcMd6Bb4LhYr6YTyMsFERed4uW45/5MeYrpMWz0L3GDawp2Hw+hv0abbpoHDOn7Gsn8hdaSQYUYBpIdsnNmSnzezCdMitMHgY8pujcRg2a9MgO6GRpXtF7S1LsVibUFHCrBvbdg6wjFs8bU1Z8tWH0OxTd5wpZ7g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=mz5csiBC; arc=none smtp.client-ip=3.72.182.33
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
+	s=arc-20240116; t=1758746038; c=relaxed/simple;
+	bh=rwf1t0egdDA/xFNvEoieKoaOOmOk+wBWgRYeEJG7npA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=KpF35o7bQVvyhrDoP+LOPQ7q53fk80lsaMD29FYAnGiSqnvq/UdNu7EDDYfOO6EUpA4A7yHv8bUvwivTqDQF4XYkWWPFreixVJJJ1ps5wwfc5+xc3EH8rvPyV+blRyUBzKxYr3aF4jZSP3LBWWDGefuUNaXs1P99zm2if3yDbKs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=wLfgMjMZ; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="mz5csiBC"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1758746030; x=1790282030;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=0AzpApDbX8CFEbC2P7WHNPH2gra+XDIh1eSQ6GUhJZw=;
-  b=mz5csiBC5e5EXCawEyrO2AgiHgE6W3IyJPAn4R+Ddx1JfEePHEKf16US
-   +N1yH4HpLSfSBW1wgc+qet+USnPRn5SCwuNYPcF8FpKBgbB+mZCJ0oeZ+
-   LMg2vn/16Wj/sd7j6Z5CBWarhOlZT0WdqSnWlN6zqNB7Udx5uHOGe3Chg
-   eNdCBZjXpk4wPr2MIyMbbqwA91ERSS+xEspuMytUpha0aCD82++N5/tFi
-   VHqKVNxHiTEbBJc9wB28KPYrYRa/5n1kvbGgcRBkdy6s0NxSAeqQ6u5u4
-   Svq1CwKprvxkzuYwIvh+zNMTy+A5c/pwGnAMamMDesxvvA/kva935Wos9
-   Q==;
-X-CSE-ConnectionGUID: NW4hijkfRxucxyZDXD7Jdg==
-X-CSE-MsgGUID: py0FnotbSm+nXduHAvC5FQ==
-X-IronPort-AV: E=Sophos;i="6.18,291,1751241600"; 
-   d="scan'208";a="2628113"
-Received: from ip-10-6-11-83.eu-central-1.compute.internal (HELO smtpout.naws.eu-central-1.prod.farcaster.email.amazon.dev) ([10.6.11.83])
-  by internal-fra-out-003.esa.eu-central-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Sep 2025 20:33:38 +0000
-Received: from EX19MTAEUA001.ant.amazon.com [54.240.197.233:9053]
- by smtpin.naws.eu-central-1.prod.farcaster.email.amazon.dev [10.0.9.61:2525] with esmtp (Farcaster)
- id 38e96aa0-b2c3-49cb-9cdc-e9f990847ddb; Wed, 24 Sep 2025 20:33:37 +0000 (UTC)
-X-Farcaster-Flow-ID: 38e96aa0-b2c3-49cb-9cdc-e9f990847ddb
-Received: from EX19D018EUA004.ant.amazon.com (10.252.50.85) by
- EX19MTAEUA001.ant.amazon.com (10.252.50.192) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20;
- Wed, 24 Sep 2025 20:33:14 +0000
-Received: from dev-dsk-farbere-1a-46ecabed.eu-west-1.amazon.com
- (172.19.116.181) by EX19D018EUA004.ant.amazon.com (10.252.50.85) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20; Wed, 24 Sep 2025
- 20:32:37 +0000
-From: Eliav Farber <farbere@amazon.com>
-To: <linux@armlinux.org.uk>, <richard@nod.at>,
-	<anton.ivanov@cambridgegreys.com>, <johannes@sipsolutions.net>,
-	<dave.hansen@linux.intel.com>, <luto@kernel.org>, <peterz@infradead.org>,
-	<tglx@linutronix.de>, <mingo@redhat.com>, <bp@alien8.de>, <x86@kernel.org>,
-	<hpa@zytor.com>, <tony.luck@intel.com>, <qiuxu.zhuo@intel.com>,
-	<mchehab@kernel.org>, <james.morse@arm.com>, <rric@kernel.org>,
-	<harry.wentland@amd.com>, <sunpeng.li@amd.com>, <Rodrigo.Siqueira@amd.com>,
-	<alexander.deucher@amd.com>, <christian.koenig@amd.com>,
-	<Xinhui.Pan@amd.com>, <airlied@gmail.com>, <daniel@ffwll.ch>,
-	<evan.quan@amd.com>, <james.qian.wang@arm.com>, <liviu.dudau@arm.com>,
-	<mihail.atanassov@arm.com>, <brian.starkey@arm.com>,
-	<maarten.lankhorst@linux.intel.com>, <mripard@kernel.org>,
-	<tzimmermann@suse.de>, <robdclark@gmail.com>, <quic_abhinavk@quicinc.com>,
-	<dmitry.baryshkov@linaro.org>, <sean@poorly.run>, <jdelvare@suse.com>,
-	<linux@roeck-us.net>, <linus.walleij@linaro.org>,
-	<dmitry.torokhov@gmail.com>, <maz@kernel.org>, <wens@csie.org>,
-	<jernej.skrabec@gmail.com>, <samuel@sholland.org>, <agk@redhat.com>,
-	<snitzer@kernel.org>, <dm-devel@redhat.com>, <rajur@chelsio.com>,
-	<davem@davemloft.net>, <edumazet@google.com>, <kuba@kernel.org>,
-	<pabeni@redhat.com>, <peppe.cavallaro@st.com>,
-	<alexandre.torgue@foss.st.com>, <joabreu@synopsys.com>,
-	<mcoquelin.stm32@gmail.com>, <krzysztof.kozlowski@linaro.org>,
-	<malattia@linux.it>, <hdegoede@redhat.com>, <markgross@kernel.org>,
-	<artur.paszkiewicz@intel.com>, <jejb@linux.ibm.com>,
-	<martin.petersen@oracle.com>, <sakari.ailus@linux.intel.com>,
-	<gregkh@linuxfoundation.org>, <fei1.li@intel.com>, <clm@fb.com>,
-	<josef@toxicpanda.com>, <dsterba@suse.com>, <jack@suse.com>, <tytso@mit.edu>,
-	<adilger.kernel@dilger.ca>, <dushistov@mail.ru>,
-	<luc.vanoostenryck@gmail.com>, <rostedt@goodmis.org>, <mhiramat@kernel.org>,
-	<pmladek@suse.com>, <senozhatsky@chromium.org>,
-	<andriy.shevchenko@linux.intel.com>, <linux@rasmusvillemoes.dk>,
-	<minchan@kernel.org>, <ngupta@vflare.org>, <akpm@linux-foundation.org>,
-	<yoshfuji@linux-ipv6.org>, <dsahern@kernel.org>, <pablo@netfilter.org>,
-	<kadlec@netfilter.org>, <fw@strlen.de>, <jmaloy@redhat.com>,
-	<ying.xue@windriver.com>, <andrii@kernel.org>, <mykolal@fb.com>,
-	<ast@kernel.org>, <daniel@iogearbox.net>, <martin.lau@linux.dev>,
-	<song@kernel.org>, <yhs@fb.com>, <john.fastabend@gmail.com>,
-	<kpsingh@kernel.org>, <sdf@google.com>, <haoluo@google.com>,
-	<jolsa@kernel.org>, <shuah@kernel.org>, <keescook@chromium.org>,
-	<wad@chromium.org>, <willy@infradead.org>, <farbere@amazon.com>,
-	<sashal@kernel.org>, <ruanjinjie@huawei.com>, <quic_akhilpo@quicinc.com>,
-	<David.Laight@ACULAB.COM>, <herve.codina@bootlin.com>,
-	<linux-arm-kernel@lists.infradead.org>, <linux-kernel@vger.kernel.org>,
-	<linux-um@lists.infradead.org>, <linux-edac@vger.kernel.org>,
-	<amd-gfx@lists.freedesktop.org>, <dri-devel@lists.freedesktop.org>,
-	<linux-arm-msm@vger.kernel.org>, <freedreno@lists.freedesktop.org>,
-	<linux-hwmon@vger.kernel.org>, <linux-input@vger.kernel.org>,
-	<linux-sunxi@lists.linux.dev>, <linux-media@vger.kernel.org>,
-	<netdev@vger.kernel.org>, <linux-stm32@st-md-mailman.stormreply.com>,
-	<platform-driver-x86@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<linux-staging@lists.linux.dev>, <linux-btrfs@vger.kernel.org>,
-	<linux-ext4@vger.kernel.org>, <linux-sparse@vger.kernel.org>,
-	<linux-mm@kvack.org>, <netfilter-devel@vger.kernel.org>,
-	<coreteam@netfilter.org>, <tipc-discussion@lists.sourceforge.net>,
-	<bpf@vger.kernel.org>, <linux-kselftest@vger.kernel.org>,
-	<stable@vger.kernel.org>
-CC: Arnd Bergmann <arnd@kernel.org>, Christoph Hellwig <hch@infradead.org>,
-	Dan Carpenter <dan.carpenter@linaro.org>, "Jason A. Donenfeld"
-	<Jason@zx2c4.com>, Jens Axboe <axboe@kernel.dk>, Lorenzo Stoakes
-	<lorenzo.stoakes@oracle.com>, Mateusz Guzik <mjguzik@gmail.com>, "Pedro
- Falcato" <pedro.falcato@gmail.com>
-Subject: [PATCH 14/19 v6.1.y] minmax.h: update some comments
-Date: Wed, 24 Sep 2025 20:23:15 +0000
-Message-ID: <20250924202320.32333-15-farbere@amazon.com>
-X-Mailer: git-send-email 2.47.3
-In-Reply-To: <20250924202320.32333-1-farbere@amazon.com>
-References: <20250924202320.32333-1-farbere@amazon.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="wLfgMjMZ"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cX7q80Hc6zlgqyG;
+	Wed, 24 Sep 2025 20:33:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:references:in-reply-to
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1758746033; x=1761338034; bh=ej4xl
+	KkOBAOfo//xzu1lOiNnR9iDnentOlb55gBYi88=; b=wLfgMjMZa9cBkgng1QvxL
+	RyB4O2d7A9rAZvMjHbwGQi6AEnp3wfXGlE337Dro65fwcUrkUB31np7VEx18whSy
+	7EV/lq+ZNWYgUoMy5PUVBam3H3b77cDQTAiNuUZ17jZlTKwAuhjtGONr7gd1zTCP
+	kRDcqGa+mC7ZVR1pmqryBxFGk0RMC3h5uum5VOAd18e3nwxdZeAu8pt5Uue39agb
+	ZnckCSoYMjBwF5+WvIk+An5L7kgHpE2D55UhrMwhdUYwFtTBC9ZDXBGjaDsTHi8g
+	Bk881/3y2t063/0eqTyZnus7I/50vcpMVpP4+aqb7Nx2RXgHmWmB6RD/zjgUKDPY
+	A==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id B2JRRLotiUNo; Wed, 24 Sep 2025 20:33:53 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cX7pw30qJzlgqxk;
+	Wed, 24 Sep 2025 20:33:43 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Chenyuan Yang <chenyuan0y@gmail.com>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	"ping.gao" <ping.gao@samsung.com>,
+	Al Viro <viro@zeniv.linux.org.uk>,
+	Can Guo <quic_cang@quicinc.com>,
+	Bean Huo <beanhuo@micron.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Ziqi Chen <quic_ziqichen@quicinc.com>,
+	Avri Altman <avri.altman@wdc.com>
+Subject: [PATCH v5 17/28] ufs: core: Rework the SCSI host queue depth calculation code
+Date: Wed, 24 Sep 2025 13:30:36 -0700
+Message-ID: <20250924203142.4073403-18-bvanassche@acm.org>
+X-Mailer: git-send-email 2.51.0.536.g15c5d4f767-goog
+In-Reply-To: <20250924203142.4073403-1-bvanassche@acm.org>
+References: <20250924203142.4073403-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: EX19D033UWA001.ant.amazon.com (10.13.139.103) To
- EX19D018EUA004.ant.amazon.com (10.252.50.85)
+Content-Transfer-Encoding: quoted-printable
 
-From: David Laight <David.Laight@ACULAB.COM>
+Prepare for allocating the SCSI host earlier by making the SCSI host
+queue depth independent of the queue depth supported by the UFS device.
+This patch may increase the queue depth of the UFS SCSI host.
 
-[ Upstream commit 10666e99204818ef45c702469488353b5bb09ec7 ]
-
-- Change three to several.
-- Remove the comment about retaining constant expressions, no longer true.
-- Realign to nearer 80 columns and break on major punctiation.
-- Add a leading comment to the block before __signed_type() and __is_nonneg()
-  Otherwise the block explaining the cast is a bit 'floating'.
-  Reword the rest of that comment to improve readability.
-
-Link: https://lkml.kernel.org/r/85b050c81c1d4076aeb91a6cded45fee@AcuMS.aculab.com
-Signed-off-by: David Laight <david.laight@aculab.com>
-Cc: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Arnd Bergmann <arnd@kernel.org>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Jason A. Donenfeld <Jason@zx2c4.com>
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-Cc: Mateusz Guzik <mjguzik@gmail.com>
-Cc: Matthew Wilcox <willy@infradead.org>
-Cc: Pedro Falcato <pedro.falcato@gmail.com>
-Signed-off-by: Andrew Morton <akpm@linux-foundation.org>
-Signed-off-by: Eliav Farber <farbere@amazon.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- include/linux/minmax.h | 53 +++++++++++++++++++-----------------------
- 1 file changed, 24 insertions(+), 29 deletions(-)
+ drivers/ufs/core/ufs-mcq.c     | 20 +++++---------------
+ drivers/ufs/core/ufshcd-priv.h |  2 +-
+ drivers/ufs/core/ufshcd.c      | 17 +++++++++++++++--
+ 3 files changed, 21 insertions(+), 18 deletions(-)
 
-diff --git a/include/linux/minmax.h b/include/linux/minmax.h
-index 51b0d988e322..24e4b372649a 100644
---- a/include/linux/minmax.h
-+++ b/include/linux/minmax.h
-@@ -8,13 +8,10 @@
- #include <linux/types.h>
- 
- /*
-- * min()/max()/clamp() macros must accomplish three things:
-+ * min()/max()/clamp() macros must accomplish several things:
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 4eb4f1af7800..b99e482ad8da 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -130,17 +130,15 @@ unsigned int ufshcd_mcq_queue_cfg_addr(struct ufs_h=
+ba *hba)
+ EXPORT_SYMBOL_GPL(ufshcd_mcq_queue_cfg_addr);
+=20
+ /**
+- * ufshcd_mcq_decide_queue_depth - decide the queue depth
++ * ufshcd_get_hba_mac - Maximum number of commands supported by the host
++ *	controller.
+  * @hba: per adapter instance
   *
-  * - Avoid multiple evaluations of the arguments (so side-effects like
-  *   "x++" happen only once) when non-constant.
-- * - Retain result as a constant expressions when called with only
-- *   constant expressions (to avoid tripping VLA warnings in stack
-- *   allocation usage).
-  * - Perform signed v unsigned type-checking (to generate compile
-  *   errors instead of nasty runtime surprises).
-  * - Unsigned char/short are always promoted to signed int and can be
-@@ -31,25 +28,23 @@
-  *   bit #0 set if ok for unsigned comparisons
-  *   bit #1 set if ok for signed comparisons
+- * Return: queue-depth on success, non-zero on error
++ * Return: queue depth on success; negative upon error.
   *
-- * In particular, statically non-negative signed integer
-- * expressions are ok for both.
-+ * In particular, statically non-negative signed integer expressions
-+ * are ok for both.
-  *
-- * NOTE! Unsigned types smaller than 'int' are implicitly
-- * converted to 'int' in expressions, and are accepted for
-- * signed conversions for now. This is debatable.
-+ * NOTE! Unsigned types smaller than 'int' are implicitly converted to 'int'
-+ * in expressions, and are accepted for signed conversions for now.
-+ * This is debatable.
-  *
-- * Note that 'x' is the original expression, and 'ux' is
-- * the unique variable that contains the value.
-+ * Note that 'x' is the original expression, and 'ux' is the unique variable
-+ * that contains the value.
-  *
-- * We use 'ux' for pure type checking, and 'x' for when
-- * we need to look at the value (but without evaluating
-- * it for side effects! Careful to only ever evaluate it
-- * with sizeof() or __builtin_constant_p() etc).
-+ * We use 'ux' for pure type checking, and 'x' for when we need to look at the
-+ * value (but without evaluating it for side effects!
-+ * Careful to only ever evaluate it with sizeof() or __builtin_constant_p() etc).
-  *
-- * Pointers end up being checked by the normal C type
-- * rules at the actual comparison, and these expressions
-- * only need to be careful to not cause warnings for
-- * pointer use.
-+ * Pointers end up being checked by the normal C type rules at the actual
-+ * comparison, and these expressions only need to be careful to not cause
-+ * warnings for pointer use.
+- * MAC - Max. Active Command of the Host Controller (HC)
+- * HC wouldn't send more than this commands to the device.
+- * Calculates and adjusts the queue depth based on the depth
+- * supported by the HC and ufs device.
++ * MAC =3D Maximum number of Active Commands supported by the Host Contr=
+oller.
   */
- #define __signed_type_use(x, ux) (2 + __is_nonneg(x, ux))
- #define __unsigned_type_use(x, ux) (1 + 2 * (sizeof(ux) < 4))
-@@ -57,19 +52,19 @@
- 	__signed_type_use(x, ux) : __unsigned_type_use(x, ux))
- 
- /*
-- * To avoid warnings about casting pointers to integers
-- * of different sizes, we need that special sign type.
-+ * Check whether a signed value is always non-negative.
-  *
-- * On 64-bit we can just always use 'long', since any
-- * integer or pointer type can just be cast to that.
-+ * A cast is needed to avoid any warnings from values that aren't signed
-+ * integer types (in which case the result doesn't matter).
-  *
-- * This does not work for 128-bit signed integers since
-- * the cast would truncate them, but we do not use s128
-- * types in the kernel (we do use 'u128', but they will
-- * be handled by the !is_signed_type() case).
-+ * On 64-bit any integer or pointer type can safely be cast to 'long'.
-+ * But on 32-bit we need to avoid warnings about casting pointers to integers
-+ * of different sizes without truncating 64-bit values so 'long' or 'long long'
-+ * must be used depending on the size of the value.
-  *
-- * NOTE! The cast is there only to avoid any warnings
-- * from when values that aren't signed integer types.
-+ * This does not work for 128-bit signed integers since the cast would truncate
-+ * them, but we do not use s128 types in the kernel (we do use 'u128',
-+ * but they are handled by the !is_signed_type() case).
-  */
- #ifdef CONFIG_64BIT
-   #define __signed_type(ux) long
--- 
-2.47.3
-
+-int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
++int ufshcd_get_hba_mac(struct ufs_hba *hba)
+ {
+ 	int mac;
+=20
+@@ -160,14 +158,6 @@ int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hb=
+a)
+ 	if (mac < 0)
+ 		goto err;
+=20
+-	WARN_ON_ONCE(!hba->dev_info.bqueuedepth);
+-	/*
+-	 * max. value of bqueuedepth =3D 256, mac is host dependent.
+-	 * It is mandatory for UFS device to define bQueueDepth if
+-	 * shared queuing architecture is enabled.
+-	 */
+-	return min_t(int, mac, hba->dev_info.bqueuedepth);
+-
+ err:
+ 	dev_err(hba->dev, "Failed to get mac, err=3D%d\n", mac);
+ 	return mac;
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
+v.h
+index d0a2c963a27d..ec1bb818bc73 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -65,7 +65,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task=
+_tag,
+ 			  struct cq_entry *cqe);
+ int ufshcd_mcq_init(struct ufs_hba *hba);
+ void ufshcd_mcq_disable(struct ufs_hba *hba);
+-int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
++int ufshcd_get_hba_mac(struct ufs_hba *hba);
+ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
+ struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
+ 					   struct request *req);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 67607f2d10a2..419f05efd566 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8438,10 +8438,11 @@ static void ufs_init_rtc(struct ufs_hba *hba, u8 =
+*desc_buf)
+=20
+ static int ufs_get_device_desc(struct ufs_hba *hba)
+ {
++	struct ufs_dev_info *dev_info =3D &hba->dev_info;
++	struct Scsi_Host *shost =3D hba->host;
+ 	int err;
+ 	u8 model_index;
+ 	u8 *desc_buf;
+-	struct ufs_dev_info *dev_info =3D &hba->dev_info;
+=20
+ 	desc_buf =3D kzalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
+ 	if (!desc_buf) {
+@@ -8469,6 +8470,18 @@ static int ufs_get_device_desc(struct ufs_hba *hba=
+)
+ 				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
+ 	dev_info->bqueuedepth =3D desc_buf[DEVICE_DESC_PARAM_Q_DPTH];
+=20
++	/*
++	 * According to the UFS standard, the UFS device queue depth
++	 * (bQueueDepth) must be in the range 1..255 if the shared queueing
++	 * architecture is supported. bQueueDepth is zero if the shared queuein=
+g
++	 * architecture is not supported.
++	 */
++	if (dev_info->bqueuedepth)
++		shost->cmd_per_lun =3D min(hba->nutrs, dev_info->bqueuedepth) -
++				     UFSHCD_NUM_RESERVED;
++	else
++		shost->cmd_per_lun =3D shost->can_queue;
++
+ 	dev_info->rtt_cap =3D desc_buf[DEVICE_DESC_PARAM_RTT_CAP];
+=20
+ 	dev_info->hid_sup =3D get_unaligned_be32(desc_buf +
+@@ -8875,7 +8888,7 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+ 	int ret;
+ 	int old_nutrs =3D hba->nutrs;
+=20
+-	ret =3D ufshcd_mcq_decide_queue_depth(hba);
++	ret =3D ufshcd_get_hba_mac(hba);
+ 	if (ret < 0)
+ 		return ret;
+=20
