@@ -1,56 +1,55 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82CC83128B7
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 20:32:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A206832A3D4
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 20:32:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758745941; cv=none; b=NdW0Ucy5jdeOpGUA4vAp0A9aH1YmASJlMtPk8v3N/aksQ6l3qBzyU8AnfS8W4RwnifR1X64VDheIxXUBKs+kOMD52WDu1Ktq5jhb/+7NTWoVteiWnGPnkaVO/vwCmoxIKvzy4RLIKY4El3Xmm4YcbrSrs7cUzMjm70pk2wCoHyc=
+	t=1758745945; cv=none; b=VbRr1Mxo5MEgQ7WHio/xXHV+ZT9qYYFnyCpTH1RwjBg/tlyq9QHFshR8S4pYWeHcd9ReuO7l10CoywvtNgZ+R3a4Po6wErJ4iN0E6AtWrnPIZ7Ecm+zhwpNt9e//+7o3v7FQK0fszpL/VudBZDhkWxp70nmPy+3n/F8yDmasmZ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758745941; c=relaxed/simple;
-	bh=mPkGXBsd8MIYSqcnR9Q05CDv0/OyuQgo4FbczbGUoO0=;
+	s=arc-20240116; t=1758745945; c=relaxed/simple;
+	bh=D4WcpxBY6Pxmj2FbdsPx46+KsQ3idl1zWO8V1aysqiA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IO5APf96Hz92ZhhufI19WVpmQ2ULy0asN1rO9Og351DuRqCeglv539oa8EgzDd6NsFOTv7PTpSlUgh39jDpRQRsBLNBhqxcxbw5yq+dNIrdLooBQeIhdQRHHakIDMI7aunF/Nub5VTI5xEOqU0sMpycXcuJB24hKFFyjYn8+MQc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=TkgZiMiG; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=Hq6kyKcN7jIFiopeghBtaMiliHWt/7uAlCjqCDuHpPA4049t+psB6fkjA9WeYZh/E9f3OtUKYtU1YUdILl1xyUrKJLmAJ3fAbs+Nj2kp4LNjqC90oVXG96fPE25tLssq+H29+0OkVsrkkG6+CjX3gYCc5sp9zI2hnmCC1OHGxf4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=fYLymSv9; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="TkgZiMiG"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="fYLymSv9"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cX7nG6JnYzlgqxw;
-	Wed, 24 Sep 2025 20:32:18 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cX7nL58cBzlh0dn;
+	Wed, 24 Sep 2025 20:32:22 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1758745937; x=1761337938; bh=6QPPb
-	i9AMVrzmHc0kFp+7xZDQX/h2NFDtiExE9SKNu8=; b=TkgZiMiGox74QcKep3aCA
-	bHPC6zHZ8VsNcQJWDuMg/R7w5KDiueNGBrk6sJ8cg9SlBIVEMC/L+LTuuX6uuMHt
-	jr6YgroKPxLdt1vGdUsu6iswkz5fbQ7Xt7o75nabUWSRLBJap+/SX+xwTFoQH2M1
-	14GubWCrD3LsKLLiGsV5exZRUDe5wCkGSwBkqz9ihQAH0iBd7YF7s8e0uNALx/sE
-	RlPBmFOtnUYfdRzbvWNgOibVGDZcFddgF0Pj9rbU2m7cPSlwuA2iUruHvSXk972e
-	m4yB6bkprt3t1k+4JS1xBuA7ciUfrCXaBG8P20TthbewUOgvauhm/JJzTdNZdl80
-	A==
+	:received:received; s=mr01; t=1758745941; x=1761337942; bh=JEESJ
+	y4Z3dKnAchl95PrvlW3lPHf8usCRSHCQuw5OFE=; b=fYLymSv9+zYLLiIMoLBjl
+	5Jhl8CKjAr132Z78tYQhQ7Xnvaa66u9tBqSbToCFrtedwAwjpZFEVLopegT5GYkN
+	TPRZvEYitNxmb02wqusjLeFYWil7FhumuyDx+UC9t62ZzQV+WJIvRcsf9CLCu+oQ
+	1jtCNu5EDvOOkRfOHCmgtGFAn5J8Hmk7sO6Y/ItgYvO1mwAnTQLDcvpHnIgGGwQg
+	aVfGD7iyHSdy9UpzOT9NfddwDeX2F+CW7bnmWNoCntJYCk51MCMR+n1q/+GARJUq
+	yrxKQBKyQdfrmypVl/R9cKZMbyovnnvrK0PNLn9NyEuaToc6tGLDqjjUx50nrPNf
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ttvApAT5FmQJ; Wed, 24 Sep 2025 20:32:17 +0000 (UTC)
+ id HgCb4Rkr2DNd; Wed, 24 Sep 2025 20:32:21 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cX7n94tGtzlh3sc;
-	Wed, 24 Sep 2025 20:32:12 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cX7nG3BYhzlgqVP;
+	Wed, 24 Sep 2025 20:32:17 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Hannes Reinecke <hare@suse.de>,
-	John Garry <john.g.garry@oracle.com>,
+	John Garry <john.garry@huawei.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v5 04/28] scsi: core: Support allocating a pseudo SCSI device
-Date: Wed, 24 Sep 2025 13:30:23 -0700
-Message-ID: <20250924203142.4073403-5-bvanassche@acm.org>
+Subject: [PATCH v5 05/28] scsi: core: Introduce .queue_reserved_command()
+Date: Wed, 24 Sep 2025 13:30:24 -0700
+Message-ID: <20250924203142.4073403-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.536.g15c5d4f767-goog
 In-Reply-To: <20250924203142.4073403-1-bvanassche@acm.org>
 References: <20250924203142.4073403-1-bvanassche@acm.org>
@@ -62,276 +61,159 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-From: Hannes Reinecke <hare@suse.de>
+From: John Garry <john.garry@huawei.com>
 
-Allocate a pseudo SCSI device if 'nr_reserved_cmds' has been set. Pseudo
-SCSI devices have the SCSI ID <max_id>:U64_MAX so they won't clash with
-any devices the LLD might create. Pseudo SCSI devices are excluded from
-scanning and will not show up in sysfs. Additionally, pseudo SCSI
-devices are skipped by shost_for_each_device(). This prevents that the
-SCSI error handler tries to submit a reset to a non-existent logical unit=
-.
+Reserved commands will be used by SCSI LLDs for submitting internal
+commands. Since the SCSI host, target and device limits do not apply to
+the reserved command use cases, bypass the SCSI host limit checks for
+reserved commands. Introduce the .queue_reserved_command() callback for
+reserved commands. Additionally, do not activate the SCSI error handler
+if a reserved command fails such that reserved commands can be submitted
+from inside the SCSI error handler.
 
-Do not allocate a budget map for pseudo SCSI devices since the
-cmd_per_lun limit does not apply to pseudo SCSI devices.
-
-Do not perform queue depth ramp up / ramp down for pseudo SCSI devices.
-
-Pseudo SCSI devices will be used to send internal commands to a storage
-device.
-
-Cc: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-[ bvanassche: edited patch description / renamed host_sdev into
-  pseudo_sdev / unexported scsi_get_host_dev() / modified error path in
-  scsi_get_pseudo_dev() / skip pseudo devices in __scsi_iterate_devices()
-  and also when calling sdev_init(), sdev_configure() and sdev_destroy().
-  See also
-  https://lore.kernel.org/linux-scsi/20211125151048.103910-2-hare@suse.de=
-/ ]
+Signed-off-by: John Garry <john.garry@huawei.com>
+[ bvanassche: modified patch title and patch description. Renamed
+  .reserved_queuecommand() into .queue_reserved_command(). Changed
+  the second argument of __blk_mq_end_request() from 0 into error
+  code in the completion path if cmd->result !=3D 0. Rewrote the
+  scsi_queue_rq() changes. See also
+  https://lore.kernel.org/linux-scsi/1666693096-180008-5-git-send-email-j=
+ohn.garry@huawei.com/ ]
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/hosts.c       |  8 +++++
- drivers/scsi/scsi.c        |  7 ++--
- drivers/scsi/scsi_priv.h   |  2 ++
- drivers/scsi/scsi_scan.c   | 67 +++++++++++++++++++++++++++++++++++++-
- drivers/scsi/scsi_sysfs.c  |  5 ++-
- include/scsi/scsi_device.h | 16 +++++++++
- include/scsi/scsi_host.h   |  6 ++++
- 7 files changed, 107 insertions(+), 4 deletions(-)
+ drivers/scsi/hosts.c     |  8 +++++-
+ drivers/scsi/scsi_lib.c  | 54 ++++++++++++++++++++++++++++------------
+ include/scsi/scsi_host.h |  6 +++++
+ 3 files changed, 51 insertions(+), 17 deletions(-)
 
 diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index 9bb7f0114763..986586bf67dc 100644
+index 986586bf67dc..3a62c51379ef 100644
 --- a/drivers/scsi/hosts.c
 +++ b/drivers/scsi/hosts.c
-@@ -307,6 +307,14 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, =
+@@ -231,6 +231,12 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, =
 struct device *dev,
+ 		goto fail;
+ 	}
+=20
++	if (shost->nr_reserved_cmds && !sht->queue_reserved_command) {
++		shost_printk(KERN_ERR, shost,
++			     "nr_reserved_cmds set but no method to queue\n");
++		goto fail;
++	}
++
+ 	/* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
+ 	shost->cmd_per_lun =3D min_t(int, shost->cmd_per_lun,
+ 				   shost->can_queue);
+@@ -307,7 +313,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, s=
+truct device *dev,
  	if (error)
  		goto out_del_dev;
 =20
-+	if (sht->nr_reserved_cmds) {
-+		shost->pseudo_sdev =3D scsi_get_pseudo_dev(shost);
-+		if (!shost->pseudo_sdev) {
-+			error =3D -ENOMEM;
-+			goto out_del_dev;
-+		}
+-	if (sht->nr_reserved_cmds) {
++	if (sht->nr_reserved_cmds || sht->queue_reserved_command) {
+ 		shost->pseudo_sdev =3D scsi_get_pseudo_dev(shost);
+ 		if (!shost->pseudo_sdev) {
+ 			error =3D -ENOMEM;
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 8d711f6d8959..868013cb1f46 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -1534,6 +1534,14 @@ static void scsi_complete(struct request *rq)
+ 	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(rq);
+ 	enum scsi_disposition disposition;
+=20
++	if (blk_mq_is_reserved_rq(rq)) {
++		/* Only pass-through requests are supported in this code path. */
++		WARN_ON_ONCE(!blk_rq_is_passthrough(scsi_cmd_to_rq(cmd)));
++		scsi_mq_uninit_cmd(cmd);
++		__blk_mq_end_request(rq, scsi_result_to_blk_status(cmd->result));
++		return;
 +	}
 +
- 	scsi_proc_host_add(shost);
- 	scsi_autopm_put_host(shost);
- 	return error;
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index a9d3e0242555..b74693763af3 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -831,8 +831,11 @@ struct scsi_device *__scsi_iterate_devices(struct Sc=
-si_Host *shost,
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	while (list->next !=3D &shost->__devices) {
- 		next =3D list_entry(list->next, struct scsi_device, siblings);
--		/* skip devices that we can't get a reference to */
--		if (!scsi_device_get(next))
-+		/*
-+		 * Skip pseudo devices and also devices for which
-+		 * scsi_device_get() fails.
-+		 */
-+		if (!scsi_device_is_pseudo_dev(next) && !scsi_device_get(next))
- 			break;
- 		next =3D NULL;
- 		list =3D list->next;
-diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
-index 5b2b19f5e8ec..da3bc87ac5a6 100644
---- a/drivers/scsi/scsi_priv.h
-+++ b/drivers/scsi/scsi_priv.h
-@@ -135,6 +135,8 @@ extern int scsi_complete_async_scans(void);
- extern int scsi_scan_host_selected(struct Scsi_Host *, unsigned int,
- 				   unsigned int, u64, enum scsi_scan_mode);
- extern void scsi_forget_host(struct Scsi_Host *);
-+struct scsi_device *scsi_get_pseudo_dev(struct Scsi_Host *);
-+bool scsi_device_is_pseudo_dev(struct scsi_device *sdev);
+ 	INIT_LIST_HEAD(&cmd->eh_entry);
 =20
- /* scsi_sysctl.c */
- #ifdef CONFIG_SYSCTL
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3267b36a6059..511cf84c2f89 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -352,6 +352,9 @@ static struct scsi_device *scsi_alloc_sdev(struct scs=
-i_target *starget,
-=20
- 	scsi_sysfs_device_initialize(sdev);
-=20
-+	if (scsi_device_is_pseudo_dev(sdev))
-+		return sdev;
-+
- 	depth =3D sdev->host->cmd_per_lun ?: 1;
+ 	atomic_inc(&cmd->device->iodone_cnt);
+@@ -1823,25 +1831,31 @@ static blk_status_t scsi_queue_rq(struct blk_mq_h=
+w_ctx *hctx,
+ 	WARN_ON_ONCE(cmd->budget_token < 0);
 =20
  	/*
-@@ -1073,6 +1076,9 @@ static int scsi_add_lun(struct scsi_device *sdev, u=
-nsigned char *inq_result,
-=20
- 	sdev->sdev_bflags =3D *bflags;
-=20
-+	if (scsi_device_is_pseudo_dev(sdev))
-+		return SCSI_SCAN_LUN_PRESENT;
-+
- 	/*
- 	 * No need to freeze the queue as it isn't reachable to anyone else yet=
-.
+-	 * If the device is not in running state we will reject some or all
+-	 * commands.
++	 * Bypass the SCSI device, SCSI target and SCSI host checks for
++	 * reserved commands.
  	 */
-@@ -1216,6 +1222,12 @@ static int scsi_probe_and_add_lun(struct scsi_targ=
-et *starget,
- 	if (!sdev)
- 		goto out;
+-	if (unlikely(sdev->sdev_state !=3D SDEV_RUNNING)) {
+-		ret =3D scsi_device_state_check(sdev, req);
+-		if (ret !=3D BLK_STS_OK)
+-			goto out_put_budget;
+-	}
++	if (!blk_mq_is_reserved_rq(req)) {
++		/*
++		 * If the device is not in running state we will reject some or
++		 * all commands.
++		 */
++		if (unlikely(sdev->sdev_state !=3D SDEV_RUNNING)) {
++			ret =3D scsi_device_state_check(sdev, req);
++			if (ret !=3D BLK_STS_OK)
++				goto out_put_budget;
++		}
 =20
-+	if (scsi_device_is_pseudo_dev(sdev)) {
-+		if (bflagsp)
-+			*bflagsp =3D BLIST_NOLUN;
-+		return SCSI_SCAN_LUN_PRESENT;
-+	}
-+
- 	result =3D kmalloc(result_len, GFP_KERNEL);
- 	if (!result)
- 		goto out_free_sdev;
-@@ -2087,12 +2099,65 @@ void scsi_forget_host(struct Scsi_Host *shost)
-  restart:
- 	spin_lock_irqsave(shost->host_lock, flags);
- 	list_for_each_entry(sdev, &shost->__devices, siblings) {
--		if (sdev->sdev_state =3D=3D SDEV_DEL)
-+		if (scsi_device_is_pseudo_dev(sdev) ||
-+		    sdev->sdev_state =3D=3D SDEV_DEL)
- 			continue;
- 		spin_unlock_irqrestore(shost->host_lock, flags);
- 		__scsi_remove_device(sdev);
- 		goto restart;
+-	ret =3D BLK_STS_RESOURCE;
+-	if (!scsi_target_queue_ready(shost, sdev))
+-		goto out_put_budget;
+-	if (unlikely(scsi_host_in_recovery(shost))) {
+-		if (cmd->flags & SCMD_FAIL_IF_RECOVERING)
+-			ret =3D BLK_STS_OFFLINE;
+-		goto out_dec_target_busy;
++		ret =3D BLK_STS_RESOURCE;
++		if (!scsi_target_queue_ready(shost, sdev))
++			goto out_put_budget;
++		if (unlikely(scsi_host_in_recovery(shost))) {
++			if (cmd->flags & SCMD_FAIL_IF_RECOVERING)
++				ret =3D BLK_STS_OFFLINE;
++			goto out_dec_target_busy;
++		}
++		if (!scsi_host_queue_ready(q, shost, sdev, cmd))
++			goto out_dec_target_busy;
  	}
- 	spin_unlock_irqrestore(shost->host_lock, flags);
-+
-+	/*
-+	 * Remove the pseudo device last since it may be needed during removal
-+	 * of other SCSI devices.
-+	 */
-+	if (shost->pseudo_sdev)
-+		__scsi_remove_device(shost->pseudo_sdev);
- }
+-	if (!scsi_host_queue_ready(q, shost, sdev, cmd))
+-		goto out_dec_target_busy;
 =20
-+/**
-+ * scsi_get_pseudo_dev() - Attach a pseudo SCSI device to a SCSI host
-+ * @shost: Host that needs a pseudo SCSI device
-+ *
-+ * Lock status: None assumed.
-+ *
-+ * Returns:     The scsi_device or NULL
-+ *
-+ * Notes:
-+ *	Attach a single scsi_device to the Scsi_Host. The primary aim for thi=
-s
-+ *	device is to serve as a container from which SCSI commands can be
-+ *	allocated. Each SCSI command will carry a command tag allocated by th=
-e
-+ *	block layer. These SCSI commands can be used by the LLDD to send
-+ *	internal or passthrough commands without having to manage tag allocat=
-ion
-+ *	inside the LLDD.
-+ */
-+struct scsi_device *scsi_get_pseudo_dev(struct Scsi_Host *shost)
-+{
-+	struct scsi_device *sdev =3D NULL;
-+	struct scsi_target *starget;
-+
-+	guard(mutex)(&shost->scan_mutex);
-+
-+	if (!scsi_host_scan_allowed(shost))
-+		goto out;
-+
-+	starget =3D scsi_alloc_target(&shost->shost_gendev, 0, shost->max_id);
-+	if (!starget)
-+		goto out;
-+
-+	sdev =3D scsi_alloc_sdev(starget, U64_MAX, NULL);
-+	if (!sdev) {
-+		scsi_target_reap(starget);
-+		goto put_target;
+ 	/*
+ 	 * Only clear the driver-private command data if the LLD does not suppl=
+y
+@@ -1870,6 +1884,14 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw=
+_ctx *hctx,
+ 	cmd->submitter =3D SUBMITTED_BY_BLOCK_LAYER;
+=20
+ 	blk_mq_start_request(req);
++	if (blk_mq_is_reserved_rq(req)) {
++		reason =3D shost->hostt->queue_reserved_command(shost, cmd);
++		if (reason) {
++			ret =3D BLK_STS_RESOURCE;
++			goto out_put_budget;
++		}
++		return BLK_STS_OK;
 +	}
-+
-+	sdev->borken =3D 0;
-+
-+put_target:
-+	/* See also the get_device(dev) call in scsi_alloc_target(). */
-+	put_device(&starget->dev);
-+
-+out:
-+	return sdev;
-+}
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index 169af7d47ce7..22f76a1ca23b 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -1406,6 +1406,9 @@ int scsi_sysfs_add_sdev(struct scsi_device *sdev)
- 	int error;
- 	struct scsi_target *starget =3D sdev->sdev_target;
-=20
-+	if (WARN_ON_ONCE(scsi_device_is_pseudo_dev(sdev)))
-+		return -EINVAL;
-+
- 	error =3D scsi_target_add(starget);
- 	if (error)
- 		return error;
-@@ -1513,7 +1516,7 @@ void __scsi_remove_device(struct scsi_device *sdev)
- 	kref_put(&sdev->host->tagset_refcnt, scsi_mq_free_tags);
- 	cancel_work_sync(&sdev->requeue_work);
-=20
--	if (sdev->host->hostt->sdev_destroy)
-+	if (!scsi_device_is_pseudo_dev(sdev) && sdev->host->hostt->sdev_destroy=
-)
- 		sdev->host->hostt->sdev_destroy(sdev);
- 	transport_destroy_device(dev);
-=20
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index 6d6500148c4b..3846f5dfc51c 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -589,6 +589,22 @@ static inline unsigned int sdev_id(struct scsi_devic=
-e *sdev)
- #define scmd_id(scmd) sdev_id((scmd)->device)
- #define scmd_channel(scmd) sdev_channel((scmd)->device)
-=20
-+/**
-+ * scsi_device_is_pseudo_dev() - Whether a device is a pseudo SCSI devic=
-e.
-+ * @sdev: SCSI device to examine
-+ *
-+ * A pseudo SCSI device can be used to allocate SCSI commands but does n=
-ot show
-+ * up in sysfs. Additionally, the logical unit information in *@sdev is =
-made up.
-+ *
-+ * This function tests the LUN number instead of comparing @sdev with
-+ * @sdev->host->pseudo_sdev because this function may be called before
-+ * @sdev->host->pseudo_sdev has been initialized.
-+ */
-+static inline bool scsi_device_is_pseudo_dev(struct scsi_device *sdev)
-+{
-+	return sdev->lun =3D=3D U64_MAX;
-+}
-+
- /*
-  * checks for positions of the SCSI state machine
-  */
+ 	reason =3D scsi_dispatch_cmd(cmd);
+ 	if (reason) {
+ 		scsi_set_blocked(cmd, reason);
 diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index 91eb3f52b3d0..3bfb53cf5dfc 100644
+index 3bfb53cf5dfc..9a0b07bfd559 100644
 --- a/include/scsi/scsi_host.h
 +++ b/include/scsi/scsi_host.h
-@@ -721,6 +721,12 @@ struct Scsi_Host {
- 	/* ldm bits */
- 	struct device		shost_gendev, shost_dev;
+@@ -86,6 +86,12 @@ struct scsi_host_template {
+ 	 */
+ 	int (* queuecommand)(struct Scsi_Host *, struct scsi_cmnd *);
 =20
 +	/*
-+	 * A SCSI device structure used for sending internal commands to the
-+	 * HBA. There is no corresponding logical unit inside the SCSI device.
++	 * Queue a reserved command (BLK_MQ_REQ_RESERVED). The .queuecommand()
++	 * documentation also applies to the .queue_reserved_command() callback=
+.
 +	 */
-+	struct scsi_device *pseudo_sdev;
++	int (*queue_reserved_command)(struct Scsi_Host *, struct scsi_cmnd *);
 +
  	/*
- 	 * Points to the transport data (if any) which is allocated
- 	 * separately
+ 	 * The commit_rqs function is used to trigger a hardware
+ 	 * doorbell after some requests have been queued with
