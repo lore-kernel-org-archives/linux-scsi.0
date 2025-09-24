@@ -1,59 +1,52 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D747132A3EC
-	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 20:35:26 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A4B8332BC13
+	for <linux-scsi@vger.kernel.org>; Wed, 24 Sep 2025 20:35:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758746128; cv=none; b=CVSr4LLHWeq/kvA4m/vA/YtUrEB1G5w3nJH9ffK2fZl6/6fLGjazt0fWIrFeJt7VtEALf4J2HSyzGaZBQorzQaYln1MC50P+t9Ae0zX9Rp4vG/lJsOQ+STIoJnc4ZD28NwxhlqftKc2KQgGerPX42E4vKcm/vt/sN6ezqKDrsCg=
+	t=1758746130; cv=none; b=PlRAva4wMr51jse03rHLXMg9d17nCqGysahO4NFqcPp+1lVTpY1KKoy8MD1eK0O5yPzM9WnOgtrv6FO8R/CDiK60zU27Mc/yBaDmq5RMgSMLO76X9r2zOzxLhLbQruOxCpYhKv4fwURTzAu5RgKotLjp2r14W1dUcizlLeQ68Is=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758746128; c=relaxed/simple;
-	bh=4WJTkDCR4zJK+RPvPP5WAkd3lGQ2HFGK0857HKe2gG4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PLaX4KFJ4ccgwlxhrQk5Sf0W9H7fveLTAXYvHfwxUzwkAL/Pn4UHJHh8gqDtEFBilC345kzbb97hg1iF4E5r/AVJ1ocDEW4mUZKqmcB0MZGSBsZNiYcluExlxNoCsw3dK7Utqx4XDwEGHqZRu9P1SYpR2R7BjI5AIjuprkaL+Us=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jMlhBMjT; arc=none smtp.client-ip=199.89.3.6
+	s=arc-20240116; t=1758746130; c=relaxed/simple;
+	bh=GgC6hhz4u1ogmWlpztjCiCFwCy1XUmmOBAOgGdv60ds=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=geTQT3HcqtDJ+E9o3FdZkl4h/4LBTxwlhC9EutNeBacfUT3C+6ETNUGSkuMpBySZL/d6cA5bxwLrbCR9Rk+sEgjFhkC6Bvo6Pi0YAWp0WMDux361ByImNbpdFYAGwEwRziz/VVtcLI8C9mufLigwQqru2kmkqg2zrqssdsTAQWk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=McP6Zu/R; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jMlhBMjT"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="McP6Zu/R"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cX7mz4pZnzlgqxn;
-	Wed, 24 Sep 2025 20:32:03 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cX7mt3p1Dzlgqyd;
+	Wed, 24 Sep 2025 20:31:58 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1758745922; x=1761337923; bh=w4IGV
-	yt2ZryuwB6AoPct6pLrk4xyQ98jPpBniikmNsU=; b=jMlhBMjTcmjxoucsWoV8j
-	vi5CjyPLqCVmNoXlxZ6IwmuP+k6nTm5+CW2wLlBx4pjbrz3qiuwOIJR/NC3VHvlY
-	W+8r0YzBqQdDyZjXp14P/n89dVrWfoAGKvCPZca7T6calNfZrhGcdiaxHDCZ7gB6
-	k5fFMa4PlNiuv7U+jvz7gwXSH3VBZwC/cMS2jUTLex+4AucrZTlT9f2WNBGbfuu7
-	YkHhb+9k3bvU2Paw/jbhGF5aJ14lMS8goyFLeFQU+aL6SxnOSXYasxK3ttCFrpac
-	MMoLrSPLI1TE2ZDeF7W/jsErGmHXVIcnJPSOM8S5QoFJJAspig+aCZq6YG303KvF
-	A==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1758745917; x=1761337918; bh=81Jt/MaAq/q1B5LhG7LIgjzGTZLeRPqcbOc
+	3cLZYLRo=; b=McP6Zu/RgotHofkePsWEpQPbvbLXitQJTS3J8W7eOqYqIvmkGmh
+	tmx7k94Oaf4G7xS711boZ+CZiSeS2GYnpIgnbCcxK4E84Pz0cZNQC5UA+rv1nVkh
+	/DWcERpiJwvK0mdu73Cw4tAe6ju6EEmxPy/uvjjaaPKBreNG+X9DO7jX68QY/tRM
+	HtoRoFhKCBF7hw6JO8gtuRDvtcRaMGeKvHM5tRh4n48d/23x9aJvAtZ3m4yCnaUg
+	yKnu5TFeBvnes4MtoMGuPAHwLJYLHhEdzP6cCA6Zkb0qnwWfRtdcFqz4uM8xN8ux
+	1xL66fk9Dcl0vAjSkXK70dQ7EE2A48WNeVw==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Trp4SDF-YqLu; Wed, 24 Sep 2025 20:32:02 +0000 (UTC)
+ id ath_ojxysEU1; Wed, 24 Sep 2025 20:31:57 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cX7mt4Bv8zlgqxl;
-	Wed, 24 Sep 2025 20:31:57 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cX7mq674zzlgqxw;
+	Wed, 24 Sep 2025 20:31:54 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Hannes Reinecke <hare@suse.de>,
-	John Garry <john.g.garry@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v5 01/28] scsi: core: Support allocating reserved commands
-Date: Wed, 24 Sep 2025 13:30:20 -0700
-Message-ID: <20250924203142.4073403-2-bvanassche@acm.org>
+	Bart Van Assche <bvanassche@acm.org>
+Subject: [PATCH v5 00/28] Optimize the hot path in the UFS driver
+Date: Wed, 24 Sep 2025 13:30:19 -0700
+Message-ID: <20250924203142.4073403-1-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.536.g15c5d4f767-goog
-In-Reply-To: <20250924203142.4073403-1-bvanassche@acm.org>
-References: <20250924203142.4073403-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,102 +55,155 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-From: Hannes Reinecke <hare@suse.de>
+Hi Martin,
 
-Quite some drivers are using management commands internally. These
-commands typically use the same tag pool as regular SCSI commands. Tags
-for these management commands are set aside before allocating the
-block-mq tag bitmap for regular SCSI commands. The block layer already
-supports this via the reserved tag mechanism. Add a new field
-'nr_reserved_cmds' to the SCSI host template to instruct the block layer
-to set aside a tag space for these management commands by using reserved
-tags. Exclude reserved commands from .can_queue because .can_queue is
-visible in sysfs.
+This patch series optimizes the hot path of the UFS driver by making
+struct scsi_cmnd and struct ufshcd_lrb adjacent. Making these two data
+structures adjacent is realized as follows:
 
-Signed-off-by: Hannes Reinecke <hare@suse.de>
-[ bvanassche: modified patch title and patch description. Left out the
-  following statements: "if (sht->nr_reserved_cmds)" and also
-  "if (sdev->host->nr_reserved_cmds) flags |=3D BLK_MQ_REQ_RESERVED;". Mo=
-ved
-  nr_reserved_cmds declarations and statements close to the
-  corresponding can_queue declarations and statements. See also
-  https://lore.kernel.org/linux-scsi/20210503150333.130310-11-hare@suse.d=
-e/ ]
-Reviewed-by: John Garry <john.g.garry@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/scsi/hosts.c     |  1 +
- drivers/scsi/scsi_lib.c  |  3 ++-
- include/scsi/scsi_host.h | 21 ++++++++++++++++++++-
- 3 files changed, 23 insertions(+), 2 deletions(-)
+@@ -9040,6 +9046,7 @@ static const struct scsi_host_template ufshcd_drive=
+r_template =3D {
+     .name           =3D UFSHCD,
+     .proc_name      =3D UFSHCD,
+     .map_queues     =3D ufshcd_map_queues,
++    .cmd_size       =3D sizeof(struct ufshcd_lrb),
+     .init_cmd_priv  =3D ufshcd_init_cmd_priv,
+     .queuecommand   =3D ufshcd_queuecommand,
+     .mq_poll        =3D ufshcd_poll,
 
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index cc5d05dc395c..9bb7f0114763 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -436,6 +436,7 @@ struct Scsi_Host *scsi_host_alloc(const struct scsi_h=
-ost_template *sht, int priv
- 	shost->hostt =3D sht;
- 	shost->this_id =3D sht->this_id;
- 	shost->can_queue =3D sht->can_queue;
-+	shost->nr_reserved_cmds =3D sht->nr_reserved_cmds;
- 	shost->sg_tablesize =3D sht->sg_tablesize;
- 	shost->sg_prot_tablesize =3D sht->sg_prot_tablesize;
- 	shost->cmd_per_lun =3D sht->cmd_per_lun;
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 0c65ecfedfbd..9c67e04265ce 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -2083,7 +2083,8 @@ int scsi_mq_setup_tags(struct Scsi_Host *shost)
- 		tag_set->ops =3D &scsi_mq_ops_no_commit;
- 	tag_set->nr_hw_queues =3D shost->nr_hw_queues ? : 1;
- 	tag_set->nr_maps =3D shost->nr_maps ? : 1;
--	tag_set->queue_depth =3D shost->can_queue;
-+	tag_set->queue_depth =3D shost->can_queue + shost->nr_reserved_cmds;
-+	tag_set->reserved_tags =3D shost->nr_reserved_cmds;
- 	tag_set->cmd_size =3D cmd_size;
- 	tag_set->numa_node =3D dev_to_node(shost->dma_dev);
- 	if (shost->hostt->tag_alloc_policy_rr)
-diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
-index c53812b9026f..91eb3f52b3d0 100644
---- a/include/scsi/scsi_host.h
-+++ b/include/scsi/scsi_host.h
-@@ -375,10 +375,19 @@ struct scsi_host_template {
- 	/*
- 	 * This determines if we will use a non-interrupt driven
- 	 * or an interrupt driven scheme.  It is set to the maximum number
--	 * of simultaneous commands a single hw queue in HBA will accept.
-+	 * of simultaneous commands a single hw queue in HBA will accept
-+	 * excluding internal commands.
- 	 */
- 	int can_queue;
-=20
-+	/*
-+	 * This determines how many commands the HBA will set aside
-+	 * for internal commands. This number will be added to
-+	 * @can_queue to calculate the maximum number of simultaneous
-+	 * commands sent to the host.
-+	 */
-+	int nr_reserved_cmds;
-+
- 	/*
- 	 * In many instances, especially where disconnect / reconnect are
- 	 * supported, our host also has an ID on the SCSI bus.  If this is
-@@ -611,7 +620,17 @@ struct Scsi_Host {
- 	unsigned short max_cmd_len;
-=20
- 	int this_id;
-+
-+	/*
-+	 * Number of commands this host can handle at the same time.
-+	 * This excludes reserved commands as specified by nr_reserved_cmds.
-+	 */
- 	int can_queue;
-+	/*
-+	 * Number of reserved commands to allocate, if any.
-+	 */
-+	unsigned int nr_reserved_cmds;
-+
- 	short cmd_per_lun;
- 	short unsigned int sg_tablesize;
- 	short unsigned int sg_prot_tablesize;
+The following changes had to be made prior to making these two data
+structures adjacent:
+* Add support for driver-internal and reserved commands in the SCSI core.
+* Instead of making the reserved command slot (hba->reserved_slot)
+  invisible to the SCSI core, let the SCSI core allocate a reserved comma=
+nd.
+* Remove all UFS data structure members that are no longer needed
+  because struct scsi_cmnd and struct ufshcd_lrb are now adjacent
+* Call ufshcd_init_lrb() from inside ufshcd_queuecommand() instead of
+  calling this function before I/O starts. This is necessary because
+  ufshcd_memory_alloc() allocates fewer instances than the block layer
+  allocates requests. See also the following code in the block layer
+  core:
+
+    if (blk_mq_init_request(set, hctx->fq->flush_rq, hctx_idx,
+                hctx->numa_node))
+
+  Although the UFS driver could be modified such that ufshcd_init_lrb()
+  is called from ufshcd_init_cmd_priv(), realizing this would require
+  moving the memory allocations that happen from inside
+  ufshcd_memory_alloc() into ufshcd_init_cmd_priv(). That would make
+  this patch series even larger. Although ufshcd_init_lrb() is called for=
+ each
+  command, the benefits of reduced indirection and better cache efficienc=
+y
+  outweigh the small overhead of per-command lrb initialization.
+* ufshcd_add_scsi_host() happens now before any device management
+  commands are submitted. This change is necessary because this patch
+  makes device management command allocation happen when the SCSI host
+  is allocated.
+* Allocate as many command slots as the host controller supports. Decreas=
+e
+  host->cmds_per_lun if necessary once it is clear whether or not the UFS
+  device supports less command slots than the host controller.
+
+Changes compared to v4:
+ - Dropped the scsi_execute_cmd() changes.
+ - Restored patch "scsi: core: Add scsi_{get,put}_internal_cmd() helpers"=
+.
+ - Switched back from scsi_execute_cmd() to blk_execute_rq() for submitti=
+ng
+   device management commands in the UFS driver.
+ - As suggested by John Garry, modified the scsi_debug patch such that ab=
+orting
+   a SCSI command happens by submitting a reserved command.
+
+Changes compared to v3:
+ - Fixed a spelling error in patch 1 and left out a superfluous if-statem=
+ent.
+ - Left out scsi_host_template.alloc_pseudo_sdev and allocate a pseudo SC=
+SI
+   device if either nr_reserved_cmds > 0 or .queue_reserved_commands has =
+been
+   set.
+ - Left out the 'pseudo_sdev' local variable from scsi_forget_host().
+ - Removed a backwards jump from scsi_get_pseudo_dev().
+ - Included a bug fix for synchronous scanning.
+ - Skip scsi_track_queue_full() and scsi_handle_queue_ramp_up() for pseud=
+o SCSI
+   devices.
+ - Extended the scsi_execute_rq() functionality.
+ - Use scsi_execute_rq() for submitting reserved commands instead of
+   blk_execute_rq().
+ - Dropped the patch that introduces scsi_get_internal_cmd() and
+   scsi_put_internal_cmd().
+
+Changes compared to v2:
+ - Removed scsi_host_update_can_queue() and also the UFS driver refactori=
+ng
+   patches that were introduced to support this call.
+ - Added .queue_reserved_command(). Added ufshcd_queue_reserved_command()=
+.
+ - Removed a BUG_ON() statement from ufshcd_get_dev_mgmt_cmd().
+ - Modified and renamed ufshcd_mcq_decide_queue_depth().
+
+Changes compared to v1:
+ - Left out the kernel patches related to support for const SCSI command
+   arguments.
+ - Added SCSI core patches for allocating a pseudo SCSI device and reserv=
+ed
+   command support.
+ - Added several kernel patches to switch the UFS driver from a hardcoded
+   reserved slot to calling scsi_get_internal_cmd().
+ - Enable .alloc_pseudo_sdev in the scsi_debug driver.
+
+Bart Van Assche (24):
+  scsi: core: Move two statements
+  scsi: core: Make the budget map optional
+  scsi_debug: Abort SCSI commands via .queue_reserved_command()
+  ufs: core: Move an assignment in ufshcd_mcq_process_cqe()
+  ufs: core: Change the type of one ufshcd_add_cmd_upiu_trace() argument
+  ufs: core: Only call ufshcd_add_command_trace() for SCSI commands
+  ufs: core: Change the type of one ufshcd_add_command_trace() argument
+  ufs: core: Change the type of one ufshcd_send_command() argument
+  ufs: core: Only call ufshcd_should_inform_monitor() for SCSI commands
+  ufs: core: Change the monitor function argument types
+  ufs: core: Rework ufshcd_mcq_compl_pending_transfer()
+  ufs: core: Rework ufshcd_eh_device_reset_handler()
+  ufs: core: Rework the SCSI host queue depth calculation code
+  ufs: core: Allocate the SCSI host earlier
+  ufs: core: Call ufshcd_init_lrb() later
+  ufs: core: Use hba->reserved_slot
+  ufs: core: Make the reserved slot a reserved request
+  ufs: core: Do not clear driver-private command data
+  ufs: core: Optimize the hot path
+  ufs: core: Pass a SCSI pointer instead of an LRB pointer
+  ufs: core: Remove the ufshcd_lrb task_tag member
+  ufs: core: Make blk_mq_tagset_busy_iter() skip reserved requests
+  ufs: core: Move code out of ufshcd_wait_for_dev_cmd()
+  ufs: core: Switch to scsi_get_internal_cmd()
+
+Hannes Reinecke (3):
+  scsi: core: Support allocating reserved commands
+  scsi: core: Support allocating a pseudo SCSI device
+  scsi: core: Add scsi_{get,put}_internal_cmd() helpers
+
+John Garry (1):
+  scsi: core: Introduce .queue_reserved_command()
+
+ drivers/scsi/hosts.c             |  15 +
+ drivers/scsi/scsi.c              |  12 +-
+ drivers/scsi/scsi_debug.c        | 106 +++-
+ drivers/scsi/scsi_error.c        |   3 +
+ drivers/scsi/scsi_lib.c          | 145 +++++-
+ drivers/scsi/scsi_priv.h         |   2 +
+ drivers/scsi/scsi_scan.c         |  77 ++-
+ drivers/scsi/scsi_sysfs.c        |   5 +-
+ drivers/ufs/core/ufs-mcq.c       |  51 +-
+ drivers/ufs/core/ufshcd-crypto.h |  18 +-
+ drivers/ufs/core/ufshcd-priv.h   |  20 +-
+ drivers/ufs/core/ufshcd.c        | 808 ++++++++++++++++---------------
+ include/scsi/scsi_device.h       |  23 +
+ include/scsi/scsi_host.h         |  33 +-
+ include/ufs/ufshcd.h             |  12 -
+ 15 files changed, 861 insertions(+), 469 deletions(-)
+
