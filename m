@@ -1,208 +1,115 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from omta40.uswest2.a.cloudfilter.net (omta40.uswest2.a.cloudfilter.net [35.89.44.39])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A0AC4211460
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 13:07:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9CCCC26CE0F
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 13:40:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=35.89.44.39
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758805666; cv=none; b=PxGR4t/g8cLLNeGeLYi4CDLP6DcQc9LneKQYU90pj9U37NdoAWmiOzfJWHjMZAlLTQjMOQ39sl3NhBN8W2elFCImnWvakNSoNwybHZum47K4zfeRthB4wLXb+8rlVC5fLf/sQrmkgWaInj3LeslRPRXTTggOIKOsThny5UOwVAA=
+	t=1758807625; cv=none; b=jsxBsPYY2CQs1x26kT5KPNOjEk0jhuoqgVS+RybZXn6eljRPr+W3DRGT3vN/Hj/7yye/LJlKcxAS+yh/e042Yt/uy8SiATBZuTet8Elprvpqj82WKYeT+zaZQwX5gQ0ooXD7ptlAnwmimJFc71yuXLLzV0i2l9+gDzT4LI054+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758805666; c=relaxed/simple;
-	bh=AXgg6aVQhrKS0z+6GonYS5IUww9XN7DP7viYWSWFnfU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-type; b=Dzx/c2xfaKt+6bJ/XPUop3yGQ8yRTTmEp9pixDTmX+zudj/uDKFKQUqhJDNZz/Y43CFK7FzEp1g8OFjCfKmBhOanj8m4+yVq2pKWMR1ZosoIR8tT62MJ1V6Jn7tmG7twQpnDP0eRQ5ssdGS3sW4npAX4oqzU30+z3F/iEXGqUuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BigewqUG; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1758807625; c=relaxed/simple;
+	bh=MsToDH6hP+40tbkyOnlWGZFZ1tvFz3QF4jZUvbvJ12Y=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=dSE1xXjLyj9SAQjdGLlRYSTCC3bNyG/MimkTsljjBVmknbWz1UOkcpEtFtAQ4a3va0PauUXkNRoGMPa3ArccTHQc/qdx8jUgg/01/jKqvmbej1B3+1obBXyTg8E3RnvyhuzxNLrEykxaG/qxPLlxqOA+I6FLkYX9fjZzGMsI7m8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=zE6RtRID; arc=none smtp.client-ip=35.89.44.39
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BigewqUG"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1758805663;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=MkQYmrCxrc8CnKCxeo6oVs5/RyiJjlpdil5P3w+AxXI=;
-	b=BigewqUG+UpsOO7yi08r2DdIoSN+LXM0xGI4AuJvkVUZTGurEKsVT2oSRMh4cbm/wDGKIz
-	BFnRLueICZncj9P20m7W9CPxM2L5HO07R5lgDIRtP+qK67qA3c+Wh9kST+Ntp4qv54DbdB
-	be/gpye2kiAH/wXm0AWE4xrUVY3tNHc=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-263-ZYqVUPb8NOaGbku-hYrT1g-1; Thu,
- 25 Sep 2025 09:07:40 -0400
-X-MC-Unique: ZYqVUPb8NOaGbku-hYrT1g-1
-X-Mimecast-MFC-AGG-ID: ZYqVUPb8NOaGbku-hYrT1g_1758805658
-Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9726E1800286;
-	Thu, 25 Sep 2025 13:07:37 +0000 (UTC)
-Received: from jmeneghi-thinkpadp1gen7.rmtusnh.csb (unknown [10.22.81.200])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id E45BB180035C;
-	Thu, 25 Sep 2025 13:07:32 +0000 (UTC)
-From: John Meneghini <jmeneghi@redhat.com>
-To: martin.petersen@oracle.com
-Cc: axboe@kernel.dk,
-	bgurney@redhat.com,
-	emilne@redhat.com,
-	gustavoars@kernel.org,
-	hare@suse.de,
-	hch@lst.de,
-	james.smart@broadcom.com,
-	jmeneghi@redhat.com,
-	kbusch@kernel.org,
-	kees@kernel.org,
-	linux-hardening@vger.kernel.org,
-	linux-nvme@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	njavali@marvell.com,
-	sagi@grimberg.me
-Subject: [PATCH] Revert "scsi: qla2xxx: Fix memcpy() field-spanning write issue"
-Date: Thu, 25 Sep 2025 09:07:29 -0400
-Message-ID: <20250925130729.776904-1-jmeneghi@redhat.com>
-In-Reply-To: <yq1zfajqpec.fsf@ca-mkp.ca.oracle.com>
-References: <yq1zfajqpec.fsf@ca-mkp.ca.oracle.com>
+	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="zE6RtRID"
+Received: from eig-obgw-5007b.ext.cloudfilter.net ([10.0.29.167])
+	by cmsmtp with ESMTPS
+	id 1hO6v1FOtaPqL1mCtvJpFc; Thu, 25 Sep 2025 13:40:23 +0000
+Received: from gator4166.hostgator.com ([108.167.133.22])
+	by cmsmtp with ESMTPS
+	id 1mBOvANUBFT7u1mBPvp98F; Thu, 25 Sep 2025 13:38:51 +0000
+X-Authority-Analysis: v=2.4 cv=Du5W+H/+ c=1 sm=1 tr=0 ts=68d545eb
+ a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=TDP2S4RWD7HzL5QBIXWMeQ==:17
+ a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=7T7KSl7uo7wA:10 a=VwQbUJbxAAAA:8
+ a=yPCof4ZbAAAA:8 a=20KFwNOVAAAA:8 a=EiXV_-hVxRXBCySLXD0A:9 a=QEXdDO2ut3YA:10
+ a=xYX6OU9JNrHFPr8prv8u:22
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
+	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
+	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
+	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
+	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=K+YFgHQ4Teu+XFPGZnoAo5eSaI9P010gBxD5eRvHMl0=; b=zE6RtRIDyskQpB2rC8J2HUJRt3
+	0rf5pvzUTlL/0cddhj0NBkyikRRNVt2mWt9BISx7pi9FSBKp8mlDTVc8m5LqSe9LCg+8N+MlsFtK0
+	gDFm/JzNfnl3sVM+6C9sx8eNUOEKLYrI9FwJgBxcn/Otlmqnc7a3ka1U/EUn4Mu5dk9nXbU0UzdE+
+	d16AIdF+hZSHh813AgTs6oSslctOxH8Wu170MwJiAj55HXHFDOhLFrnY64jWvXJILu21PSG7Bw96o
+	fqAMce73RnLKB4GN64vNWTNSnsf0AcjorNgGQukD94upszLkA3I8zt1b2hpGVKfuDv15ti5pG7y3I
+	dbI8M6sw==;
+Received: from [83.214.222.209] (port=38970 helo=[192.168.1.104])
+	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+	(Exim 4.98.1)
+	(envelope-from <gustavo@embeddedor.com>)
+	id 1v1mBL-00000003y5E-2EC2;
+	Thu, 25 Sep 2025 08:38:47 -0500
+Message-ID: <fcdb0a83-3b1c-42bd-b58b-b501cfbf27fa@embeddedor.com>
+Date: Thu, 25 Sep 2025 15:38:37 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-type: text/plain
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] Revert "scsi: qla2xxx: Fix memcpy() field-spanning write
+ issue"
+To: John Meneghini <jmeneghi@redhat.com>, martin.petersen@oracle.com
+Cc: axboe@kernel.dk, bgurney@redhat.com, emilne@redhat.com,
+ gustavoars@kernel.org, hare@suse.de, hch@lst.de, james.smart@broadcom.com,
+ kbusch@kernel.org, kees@kernel.org, linux-hardening@vger.kernel.org,
+ linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
+ njavali@marvell.com, sagi@grimberg.me
+References: <yq1zfajqpec.fsf@ca-mkp.ca.oracle.com>
+ <20250925130729.776904-1-jmeneghi@redhat.com>
+Content-Language: en-US
+From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
+In-Reply-To: <20250925130729.776904-1-jmeneghi@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
+X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
+X-AntiAbuse: Original Domain - vger.kernel.org
+X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
+X-AntiAbuse: Sender Address Domain - embeddedor.com
+X-BWhitelist: no
+X-Source-IP: 83.214.222.209
+X-Source-L: No
+X-Exim-ID: 1v1mBL-00000003y5E-2EC2
+X-Source: 
+X-Source-Args: 
+X-Source-Dir: 
+X-Source-Sender: ([192.168.1.104]) [83.214.222.209]:38970
+X-Source-Auth: gustavo@embeddedor.com
+X-Email-Count: 3
+X-Org: HG=hgshared;ORG=hostgator;
+X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
+X-Local-Domain: yes
+X-CMAE-Envelope: MS4xfHWac3ByO6uXzoTLRUaKc6KioFKqmZv/wrLP/TfAQTByQp3tHLHAfgjm+Cd33oIExUcSjME37otp6W98UEe3IcYUoGmeK7w3ks/IZnDfMKptKyqyX6m2
+ Q9NmNX0kbySKxdgs3ACQGpWBAfHDZaIHFZlILx9f99o5fdNvrDbVIlDjUFTH56lZiPiI4LKaPlkCfBa0hT8RmBhMd7iMsoYCJ3Oa1/ySOSKw6HJdIThkUWxP
 
-This reverts commit 6f4b10226b6b1e7d1ff3cdb006cf0f6da6eed71e.
 
-We've been testing this patch and it turns out there is a significant
-bug here. This leaks memory and causes a driver hang.
 
-Link:
-https://lore.kernel.org/linux-scsi/yq1zfajqpec.fsf@ca-mkp.ca.oracle.com/
+On 9/25/25 15:07, John Meneghini wrote:
+> This reverts commit 6f4b10226b6b1e7d1ff3cdb006cf0f6da6eed71e.
+> 
+> We've been testing this patch and it turns out there is a significant
+> bug here. This leaks memory and causes a driver hang.
+> 
+> Link:
+> https://lore.kernel.org/linux-scsi/yq1zfajqpec.fsf@ca-mkp.ca.oracle.com/
 
-Signed-off-by: John Meneghini <jmeneghi@redhat.com>
----
- drivers/scsi/qla2xxx/qla_def.h  | 10 ++++------
- drivers/scsi/qla2xxx/qla_isr.c  | 17 +++++++++--------
- drivers/scsi/qla2xxx/qla_nvme.c |  2 +-
- drivers/scsi/qla2xxx/qla_os.c   |  5 ++---
- 4 files changed, 16 insertions(+), 18 deletions(-)
+Thanks for the report. I wonder if you have any logs or something I could
+look at to figure out what's going on.
 
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index 604e66bead1e..cb95b7b12051 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -4890,7 +4890,9 @@ struct purex_item {
- 			     struct purex_item *pkt);
- 	atomic_t in_use;
- 	uint16_t size;
--	uint8_t iocb[] __counted_by(size);
-+	struct {
-+		uint8_t iocb[64];
-+	} iocb;
- };
- 
- #include "qla_edif.h"
-@@ -5099,6 +5101,7 @@ typedef struct scsi_qla_host {
- 		struct list_head head;
- 		spinlock_t lock;
- 	} purex_list;
-+	struct purex_item default_item;
- 
- 	struct name_list_extended gnl;
- 	/* Count of active session/fcport */
-@@ -5127,11 +5130,6 @@ typedef struct scsi_qla_host {
- #define DPORT_DIAG_IN_PROGRESS                 BIT_0
- #define DPORT_DIAG_CHIP_RESET_IN_PROGRESS      BIT_1
- 	uint16_t dport_status;
--
--	/* Must be last --ends in a flexible-array member. */
--	TRAILING_OVERLAP(struct purex_item, default_item, iocb,
--		uint8_t __default_item_iocb[QLA_DEFAULT_PAYLOAD_SIZE];
--	);
- } scsi_qla_host_t;
- 
- struct qla27xx_image_status {
-diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
-index 4559b490614d..c4c6b5c6658c 100644
---- a/drivers/scsi/qla2xxx/qla_isr.c
-+++ b/drivers/scsi/qla2xxx/qla_isr.c
-@@ -1077,17 +1077,17 @@ static struct purex_item *
- qla24xx_alloc_purex_item(scsi_qla_host_t *vha, uint16_t size)
- {
- 	struct purex_item *item = NULL;
-+	uint8_t item_hdr_size = sizeof(*item);
- 
- 	if (size > QLA_DEFAULT_PAYLOAD_SIZE) {
--		item = kzalloc(struct_size(item, iocb, size), GFP_ATOMIC);
-+		item = kzalloc(item_hdr_size +
-+		    (size - QLA_DEFAULT_PAYLOAD_SIZE), GFP_ATOMIC);
- 	} else {
- 		if (atomic_inc_return(&vha->default_item.in_use) == 1) {
- 			item = &vha->default_item;
- 			goto initialize_purex_header;
- 		} else {
--			item = kzalloc(
--				struct_size(item, iocb, QLA_DEFAULT_PAYLOAD_SIZE),
--				GFP_ATOMIC);
-+			item = kzalloc(item_hdr_size, GFP_ATOMIC);
- 		}
- 	}
- 	if (!item) {
-@@ -1127,16 +1127,17 @@ qla24xx_queue_purex_item(scsi_qla_host_t *vha, struct purex_item *pkt,
-  * @vha: SCSI driver HA context
-  * @pkt: ELS packet
-  */
--static struct purex_item *
--qla24xx_copy_std_pkt(struct scsi_qla_host *vha, void *pkt)
-+static struct purex_item
-+*qla24xx_copy_std_pkt(struct scsi_qla_host *vha, void *pkt)
- {
- 	struct purex_item *item;
- 
--	item = qla24xx_alloc_purex_item(vha, QLA_DEFAULT_PAYLOAD_SIZE);
-+	item = qla24xx_alloc_purex_item(vha,
-+					QLA_DEFAULT_PAYLOAD_SIZE);
- 	if (!item)
- 		return item;
- 
--	memcpy(&item->iocb, pkt, QLA_DEFAULT_PAYLOAD_SIZE);
-+	memcpy(&item->iocb, pkt, sizeof(item->iocb));
- 	return item;
- }
- 
-diff --git a/drivers/scsi/qla2xxx/qla_nvme.c b/drivers/scsi/qla2xxx/qla_nvme.c
-index 065f9bcca26f..316594aa40cc 100644
---- a/drivers/scsi/qla2xxx/qla_nvme.c
-+++ b/drivers/scsi/qla2xxx/qla_nvme.c
-@@ -1308,7 +1308,7 @@ void qla2xxx_process_purls_iocb(void **pkt, struct rsp_que **rsp)
- 
- 	ql_dbg(ql_dbg_unsol, vha, 0x2121,
- 	       "PURLS OP[%01x] size %d xchg addr 0x%x portid %06x\n",
--	       item->iocb[3], item->size, uctx->exchange_address,
-+	       item->iocb.iocb[3], item->size, uctx->exchange_address,
- 	       fcport->d_id.b24);
- 	/* +48    0  1  2  3  4  5  6  7  8  9  A  B  C  D  E  F
- 	 * ----- -----------------------------------------------
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 98a5c105fdfd..9a2f328200ab 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -6459,10 +6459,9 @@ void qla24xx_process_purex_rdp(struct scsi_qla_host *vha,
- void
- qla24xx_free_purex_item(struct purex_item *item)
- {
--	if (item == &item->vha->default_item) {
-+	if (item == &item->vha->default_item)
- 		memset(&item->vha->default_item, 0, sizeof(struct purex_item));
--		memset(&item->vha->__default_item_iocb, 0, QLA_DEFAULT_PAYLOAD_SIZE);
--	} else
-+	else
- 		kfree(item);
- }
- 
--- 
-2.51.0
+Bryan,
+
+Could you please share how this patch[1] was tested?
+
+Thanks
+-Gustavo
+
+[1] https://lore.kernel.org/linux-scsi/20250813200744.17975-10-bgurney@redhat.com/
 
