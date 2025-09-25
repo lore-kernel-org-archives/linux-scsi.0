@@ -1,140 +1,178 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE0E2FC02B
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 11:56:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 05F561A0B15
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 12:49:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758801362; cv=none; b=rxuO0dQtC+9YMJMj0TZopjWAgVHp2Q3N4a2mPzQ2vHB/MQ5Dwx/9Bd5aogYMjDjm60nlaTH9EjTiwikswk8vLyAmIm9wn0aBZ+kj+Xb2mNm91uwl22a7ItG6GD9Bz9zOlhT4bBftMNXexXzD1ovxItOpLV8/nPpertOS1vWu4GM=
+	t=1758804597; cv=none; b=U88Lvx3w1tGeVmjrD0FEXLF9qq4qWn9O8RvSIZWz3WBbQJ8Sp1n1Dj3iooUbYMEw38Z5TPS5jjHKoRZ9+FAnRD25H26GmyJHKUDQdK7KSsUqtqMWAU3Lwe0cCX0ROOsam5Zgu1X/zwKtC38M6bwNkgcg7f/jYEH1KhMucuTJX6I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758801362; c=relaxed/simple;
-	bh=yl52+8t16PBY6bibfVojwBzJQIRHVSQe2DfRABhpTfs=;
+	s=arc-20240116; t=1758804597; c=relaxed/simple;
+	bh=MF54MGCuDfi8gReEhm6Ls7UVrLmOKS7TeRw9elzcLcQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fmPMfsYakn1rZZZ7b+BxM1afIp3mK86RZuviQxvWw2yMjuYMZca8yJPSRUfwgFdGXA/AZxyyJToCqdaE21UW9ZDn65GnuavnHehiV59IRNI90gy50kOsnpT4j7M3ZxnMasI/q17LEqs9QoLKLnciX2idpmFkIG0lwehBVWcHb98=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ghK7Gy6U; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 In-Reply-To:Content-Type; b=OGlPQGGb6ZYl5IVtDZsqeVCueyjonzF+bHa3v6+H6LYmbaK3+7DB7q3TJpAbfdVVCAWZd5FDUqHHDotbLTIAXYoTIa7etOpBEmCcPIS2xHYNkNhPdD00vvCrSreCij+MpLZGkofpp5oRFm32X1orGx4yWUpvwyHjIf3hKcflGhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A8CmWYcb; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ghK7Gy6U"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58P9XqB2024010
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 11:56:00 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	BGho4vei24vHpadg3iVDOtkY/sdrfcEeDXVF20xwVL8=; b=ghK7Gy6U3dP69nus
-	K1EkoylRUWcWiCXq0RJWUTUIDslnKTYIHtym5SsrlCV3DqbpJ0wmWG+Qwox+Rkqo
-	RYHN7hqkRRN0CgBNpntNwi4aqvODBgLrJ9YOjIYqZRZvSWzL8cLJnNbbS36VvlzJ
-	Emq8L3BY1a0PDv2NF3CvlLZbHu+MxBTVzEz7tSbBUWepAP9McKfal87L3qLf3yyN
-	bJ5B3haiQ1PHNUle9LGPf90aKlFbeRvadOQLjp9ZcDnyvee23rnt5jm0mzWKbnR5
-	t4ms2exDANoscV2QbpvVNnGKKtBtDa6zHwFDvhNgu64wwQ6Do9ARbw48SbsF+eaC
-	NXjFrw==
-Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49bwp0f07j-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 11:56:00 +0000 (GMT)
-Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-7c51f566163so2516506d6.0
-        for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 04:56:00 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758801359; x=1759406159;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A8CmWYcb"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-46e38bd65faso374545e9.2
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 05:49:55 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1758804594; x=1759409394; darn=vger.kernel.org;
         h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :references:cc:to:subject:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=uDHkDpnwsvXEtA5926rNuw5z8tqEQhjcHTKI7hITw3g=;
+        b=A8CmWYcbs7J+eaUMRhy/EpGN/Zxtp0fG2sJ5usJeQBUhcph4/piPijJT+AgMs1pjV9
+         iDGJTwRiIEAnIhrJJEXWLfFMuwRG+YQsMHnp5DR4LptAmDyubFZsiuJdcMQueP9FWzKg
+         b9puH6pI4G+R2VP/i+afwnGPTRETsgihqiSzJkS2El5IaNJuxLaixaMN7sXiWKNgyO1f
+         eeJcNs2YdDvghSLUnUrm++t3VLK2Egies46b22P0Ff+EfxzsL/6VptO2sqL3VmECTaDd
+         GCKfZ+LGrnC2fbqdaPqltYch+G5MBg9qXqjqjhJ1Dlk7fk1JUNghnpSuizHZZl6CZ7ip
+         mwEA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758804594; x=1759409394;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:mime-version:date:message-id
          :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=BGho4vei24vHpadg3iVDOtkY/sdrfcEeDXVF20xwVL8=;
-        b=i1BaASpVA4Qm+JKVfVllc1qF4QB9Zo6bkyKaJehidJv2vYUHXVR52BjfiZ7+pwBhTO
-         ARPlqQ1YO6H2KkUjGXypkblTSRKPcrDvZNMcJyW0tJq5mgeUsk9wUcoG08mw/RIM554f
-         tD8r0LkiB7vps0/HCDqypWmRkQkwqHraStAdrHwwZoFxfEh6kpJIFa9MOB8aC9+FD2ME
-         zHLVzGVK9pdYDREy+vgu3RS6L9p3CyWIs2dZSF0bDBdKE46TQB6jOGbUbl0iieXVHOPC
-         bgdcS8IGEafrnbQngnTR0qntDKkrjz6dBthVJNK70i0OsB/FifHhBDPxfmIe1TlI0+zz
-         tyTw==
-X-Forwarded-Encrypted: i=1; AJvYcCVJe61VA51AOZ3NBg8qnakKRgYHhQEeDnzSbo4rdaA0X2TthHbAzJNmueVWJyrtP8usn70N8QQ0HJbN@vger.kernel.org
-X-Gm-Message-State: AOJu0YwBSrJ05qPJ9LLgzAhc7dnNHjvLjjvj0uFA6gQYTJZRMCvcRFgo
-	ZJC5EnoJeCpcNUc2PZTF+hkgBu+NLvfnhXNvXeE6L0hjtaxlBMrq5HGHnyhocyXbkpuHztYiZEx
-	8wlb2EbvtY7TR/JmOq3PFviZvvqQYeIateTm1wIhF54iHHvjFBeoRX3uV73El66cj
-X-Gm-Gg: ASbGncs0OqHmo34ujBsZg7AEc29jH9w8Qgdar1YTJDgiD2ZZMQi5FJPDhTT3DEGsruU
-	9mz5tYJxjjhLNV47zHuRpLQ6DuZueNHjdJkqNi56xch7HKmCoRBsirLhTe1CkWb2ALjbLXLYATC
-	bgVOUmoot0sxdbqmDHySbooSGmSMJqWQvk229DaWj7C4vFXSBPyxhd89D5RYQ3Sq903m/Mh1pTd
-	uxb63+h/A57Wvh9YlC9RE+qCdNvqCqKitJyCjtLLZlasNInS9lTdsGEPuXX6/4JqEBf7zOHjqu6
-	i8uc6622eZ9/sWnN/1YvJR5AVklOcDMwXZiiDJMEAzFFRGL2AQMQI3r3djkYEVYNlAiWsnMFPm5
-	9dP7+2xuXt5ina+9WrOua1A==
-X-Received: by 2002:ac8:5d08:0:b0:4d7:9039:2e87 with SMTP id d75a77b69052e-4da47c063ffmr28296781cf.1.1758801359225;
-        Thu, 25 Sep 2025 04:55:59 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFfws3DHjZ7NiFj2AF7AaqOeOE+RAgqdSMayjchEUwDWrTLQ8HNN+0mGYgmyc++RfEn9OQlxA==
-X-Received: by 2002:ac8:5d08:0:b0:4d7:9039:2e87 with SMTP id d75a77b69052e-4da47c063ffmr28296531cf.1.1758801358755;
-        Thu, 25 Sep 2025 04:55:58 -0700 (PDT)
-Received: from [192.168.149.223] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b353e5d168dsm160195466b.4.2025.09.25.04.55.56
+        bh=uDHkDpnwsvXEtA5926rNuw5z8tqEQhjcHTKI7hITw3g=;
+        b=bxfsyWndCImkha0UbaFYp4UxFQRK2fWzofZO1nFkMIVilnAzJgDQJMPwvWS7cUh2qM
+         Jt67KFCygwJVZ+W6gjXW/S60cyP1ZJs6RPEqXdnO8S2Tk6AqfY8diZOhqd1d5eFw7INL
+         BvNWVTPUGrgY91EmI1Aq3rFmvptihgoMLhZ0fZdHECshMv+8o4lXPG9ehSDmpsOuOTeG
+         +LThOnrXfJS/oRi48jwn9UCHdNnVB1sQz+onOknwfwamtRr5Pg9zw4qte8391MzoRsDe
+         WzDnTtX8TJc7VsQF2j7o8tqWqgAofKW64P1c5SEBJkKj6mB6AF4W2cgYL2fH0AeqhuhO
+         UW7w==
+X-Gm-Message-State: AOJu0Yz1fN2NjK1PtQIABhWRim+2h9jJ4PjPZseigck3dgHd+X3kVS4X
+	rJTq7Pofsl8lOOaDo4NISZYiSSz3JWsbFnBBjPtB5lO6NmwliorFbbIw3cYEr/RAIH0Y
+X-Gm-Gg: ASbGncv4cd8o2F1RCMm2bh5Y3W7CIU/Zg2JJbRKWKBubaAiXlOUvNhBROaLq8d5EMMS
+	xk0Y5OAFBCrDhDSvdGSF9MCEXW3fUpYBMxqATGqcHFosNwpoAR8X1fYU+B49nDMRVrxmgbrgb4D
+	8rse24H+stf+PfvQAITlGNYISKv2iN2jxk9j1JpL1Lsay5LqNl81jpl9qqSxzZrd1WzfCGo3qQ7
+	uhna3aquB1exwir0GuZ66HI6mj4ojet4Wd469nZZmQXOXCmc41eAKGrx2x2pTP+bSq3EmYrYMdj
+	bhR2LMQxskz+8VKnLIvc/NYTpi5/m78NwqqsGEQsSOcXSVCZyvD4hEbyyQ/ZrPUrP/LvNy3Dl8/
+	CfCUN0uYvB8WptEyXXfAcDIJL6uA6boJSOFLyY9bKTUM/yE2zXyGormLbcAfO
+X-Google-Smtp-Source: AGHT+IGRbKrVkaHhQiDxnGP95SsqRWK4KznirLakvgFxIIq9h6bEbsYldjuEYHWl6BnbYeAb+ou3WQ==
+X-Received: by 2002:a05:6000:2a89:b0:3ec:db87:e8a9 with SMTP id ffacd0b85a97d-40e3ab888bfmr1523246f8f.0.1758804593967;
+        Thu, 25 Sep 2025 05:49:53 -0700 (PDT)
+Received: from localhost (20.red-80-39-32.staticip.rima-tde.net. [80.39.32.20])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46e32bf61b1sm18914565e9.2.2025.09.25.05.49.52
         (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 25 Sep 2025 04:55:58 -0700 (PDT)
-Message-ID: <ee4f25d6-d04a-42fd-8b72-6b272e750b9c@oss.qualcomm.com>
-Date: Thu, 25 Sep 2025 13:55:55 +0200
+        Thu, 25 Sep 2025 05:49:53 -0700 (PDT)
+Message-ID: <0669b097-0bf1-4895-9c2a-5e953aebbfab@gmail.com>
+Date: Thu, 25 Sep 2025 14:49:52 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 2/2] dt-bindings: phy: Add QMP UFS PHY compatible for
- Kaanapali
-To: Jingyi Wang <jingyi.wang@oss.qualcomm.com>,
-        Alim Akhtar <alim.akhtar@samsung.com>,
-        Avri Altman <avri.altman@wdc.com>,
-        Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-        Krzysztof Kozlowski <krzk+dt@kernel.org>,
-        Conor Dooley
- <conor+dt@kernel.org>,
-        Bjorn Andersson <andersson@kernel.org>, Vinod Koul <vkoul@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>
-Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-phy@lists.infradead.org, aiqun.yu@oss.qualcomm.com,
-        tingwei.zhang@oss.qualcomm.com, trilok.soni@oss.qualcomm.com,
-        yijie.yang@oss.qualcomm.com
-References: <20250924-knp-ufs-v1-0-42e0955a1f7c@oss.qualcomm.com>
- <20250924-knp-ufs-v1-2-42e0955a1f7c@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20250924-knp-ufs-v1-2-42e0955a1f7c@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH 14/15] scsi: qla2xxx: add back SRR support
+To: Tony Battersby <tonyb@cybernetics.com>,
+ Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ adadasdasdasasd@adasdasasdasdasdas
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
+ scst-devel@lists.sourceforge.net, KERNEL ML <linux-kernel@vger.kernel.org>
+References: <f8977250-638c-4d7d-ac0c-65f742b8d535@cybernetics.com>
+ <2cc10189-6953-428e-b34e-b1c714fc0eae@cybernetics.com>
+Content-Language: en-US, en-GB, es-ES
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+In-Reply-To: <2cc10189-6953-428e-b34e-b1c714fc0eae@cybernetics.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Authority-Analysis: v=2.4 cv=KNxaDEFo c=1 sm=1 tr=0 ts=68d52dd0 cx=c_pps
- a=oc9J++0uMp73DTRD5QyR2A==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
- a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=EUspDBNiAAAA:8 a=mUVx_TFFIgGiSlsxcIcA:9
- a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10 a=iYH6xdkBrDN1Jqds4HTS:22
-X-Proofpoint-GUID: xIVH2OQXgCjzCzKfiv3V55ZkUC6uX0oj
-X-Proofpoint-ORIG-GUID: xIVH2OQXgCjzCzKfiv3V55ZkUC6uX0oj
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTIzMDEzOCBTYWx0ZWRfX9uLlFBXyCjbE
- qAbthPWO4vcDkUtXrdMCmZHEOoGdFEnLo93L+qn5RVYOtcvq6xnbPiwD/v8SpyxxnngZOm+UDaD
- pVK2H81nzByxi9uJLzP2z79yWXNoI44bjbg/nb1jdijUXOJhcbJj8uGJp9B/RoD8QSeppdmJDkP
- sgyBPe75/GXXX+6FePJkks08/lbHCFqwAA3kGPIMptClze1sBH/xXIaaqlRNHugo5GG4JsRjCRk
- D5rAK+GSsSHDs7ATIa9IigpseK4LsQii/t3vV2/YM66EURzmbOggO89II/1jUSoiiSTgcmilolb
- 5+7HFBUmY5B6VUiz+P7vvKbkqjFiPc8DeT0z+br1Nv+RwbaUGgfw/Bm+ImZpBzIR3KB7wrhuz/1
- Yv6aKDnP
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-25_01,2025-09-24_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 priorityscore=1501 clxscore=1015 phishscore=0 suspectscore=0
- adultscore=0 bulkscore=0 spamscore=0 malwarescore=0 classifier=typeunknown
- authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
- engine=8.19.0-2507300000 definitions=main-2509230138
 
-On 9/25/25 1:29 AM, Jingyi Wang wrote:
-> Document the QMP UFS PHY compatible for Qualcomm Kaanapali to support
-> physical layer functionality for UFS found on the SoC. Use fallback to
-> indicate the compatibility of the QMP UFS PHY on the Kaanapali with that
-> on the SM8750.
+On 9/8/25 9:10 PM, Tony Battersby wrote:
+
+> (target mode)
+
+> [...]
+
+> I ran into some HBA firmware bugs with QLE2694L firmware 9.06.02 -
+> 9.08.02 where a SRR would cause the HBA to misbehave badly.  Since SRRs
+> are rare and therefore difficult to test, I figured it would be worth
+> checking for the buggy firmware and disabling SLER with a warning
+> instead of letting others run into the same problem on the rare
+> occasion that they get a SRR.  This turned out to be difficult because
+> the firmware version isn't known in the normal NVRAM config routine, so
+> I added a second NVRAM config routine that is called after the firmware
+> version is known.  It may be necessary to add checks for additional
+> buggy firmware versions or additional chips that I was not able to
+> test.
 > 
-> Signed-off-by: Jingyi Wang <jingyi.wang@oss.qualcomm.com>
+> Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 > ---
+>   drivers/scsi/qla2xxx/qla_dbg.c     |    1 +
+>   drivers/scsi/qla2xxx/qla_init.c    |    1 +
+>   drivers/scsi/qla2xxx/qla_target.c  | 1030 ++++++++++++++++++++++++++++
+>   drivers/scsi/qla2xxx/qla_target.h  |   81 +++
+>   drivers/scsi/qla2xxx/tcm_qla2xxx.c |   15 +
+>   5 files changed, 1128 insertions(+)
 
-I can confirm the SW expectations are identical, down to the programming
-sequences (mostly, there's some minor adjustments that MAY be specific
-to 8750/8750QRD, but IDK if that matters or if the docs haven't been
-updated)
+> [...]
 
-Acked-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+> + * Return true if the HBA firmware version is known to have bugs that
+> + * prevent Sequence Level Error Recovery (SLER) / Sequence Retransmission
+> + * Request (SRR) from working.
+> + */
+> +static bool qlt_has_sler_fw_bug(struct qla_hw_data *ha)
+> +{
+> +	bool has_sler_fw_bug = false;
+> +
+> +	if (IS_QLA2071(ha)) {
+> +		/*
+> +		 * QLE2694L known bad firmware:
+> +		 *   9.06.02
+> +		 *   9.07.00
+> +		 *   9.08.02
+> +		 *   SRRs trigger hundreds of bogus entries in the response
+> +		 *   queue and various other problems.
+> +		 *
+> +		 * QLE2694L known good firmware:
+> +		 *   8.08.05
+> +		 *   9.09.00
+> +		 *
+> +		 * QLE2694L unknown firmware:
+> +		 *   9.00.00 - 9.05.xx
+> +		 */
+> +		if (ha->fw_major_version == 9 &&
+> +		    ha->fw_minor_version >= 6 &&
+> +		    ha->fw_minor_version <= 8)
+> +			has_sler_fw_bug = true;
+> +	}
+> +
+> +	return has_sler_fw_bug;
+> +}
 
-Konrad
+> [...]
 
+ > +/* Update any settings that depend on ha->fw_*_version. */> +void
+> +qlt_config_nvram_with_fw_version(struct scsi_qla_host *vha)
+> +{
+> +	struct qla_hw_data *ha = vha->hw;
+> +
+> +	if (!QLA_TGT_MODE_ENABLED())
+> +		return;
+> +
+> +	if (ql2xtgt_tape_enable && qlt_has_sler_fw_bug(ha)) {
+> +		ql_log(ql_log_warn, vha, 0x11036,
+> +		    "WARNING: ignoring ql2xtgt_tape_enable due to buggy HBA firmware; please upgrade FW\n");
+> +
+> +		/* Disable FC Tape support */
+> +		if (ha->isp_ops->nvram_config == qla81xx_nvram_config) {
+> +			struct init_cb_81xx *icb =
+> +				(struct init_cb_81xx *)ha->init_cb;
+> +			icb->firmware_options_2 &= cpu_to_le32(~BIT_12);
+> +		} else {
+> +			struct init_cb_24xx *icb =
+> +				(struct init_cb_24xx *)ha->init_cb;
+> +			icb->firmware_options_2 &= cpu_to_le32(~BIT_12);
+> +		}
+> +	}
+> +}
+
+If you want to review the firmware changelog, mainly: FCD-1183 (FCD-371, ER147301), FCD-259, ER146998
+(from 9.00.00 to 9.15.05 [06/10/25]):
+https://www.marvell.com/content/dam/marvell/en/drivers/2025-06-10-release/fw_release_notes/Fibre_Channel_Firmware_Release_Notes.pdf
+
+It's look like all 2{678}xx devices/chips are affected by this bug.
+Perhaps the Marvel crew could provide more information on this.
