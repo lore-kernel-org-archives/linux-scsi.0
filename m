@@ -1,107 +1,140 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 651B52EA464
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 10:24:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DE0E2FC02B
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 11:56:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758795871; cv=none; b=PDIYAcZuQ1fBDR9Nbnzo7Tig7UA8G8u6qZ5COZULAm8fyfUGCMEElFa4wOSnuwlMLU+zxWdA9lwyGBLeUWAR45fxGybIFQsaBZOQvpVR9gQf7b18+29eoMJsCFGx+wp5YQlOXBjSeqlj2fV8RooNsx78izq+JtNH3YGAtmENRHI=
+	t=1758801362; cv=none; b=rxuO0dQtC+9YMJMj0TZopjWAgVHp2Q3N4a2mPzQ2vHB/MQ5Dwx/9Bd5aogYMjDjm60nlaTH9EjTiwikswk8vLyAmIm9wn0aBZ+kj+Xb2mNm91uwl22a7ItG6GD9Bz9zOlhT4bBftMNXexXzD1ovxItOpLV8/nPpertOS1vWu4GM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758795871; c=relaxed/simple;
-	bh=VjT9Yascm7HCRW44tlxab+bewcYfi/9WyD+5ReGVf2s=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ejBXCNdifvAEx0+UWW1hEyWOlIQXMjkicP7PpilwIww5Olh1lfNDSgPelPeidEb6PvwYIeWYfqx3qEde1l4oHFpvJy5+jyRGJ7VgXpwUeiezn6F9ejd0GcmUFjyoYRproc3CacyEj9lXUzdx9MIotvCFRPTRQtk9ENoJRh4TVfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=DTq6BLCP; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1758801362; c=relaxed/simple;
+	bh=yl52+8t16PBY6bibfVojwBzJQIRHVSQe2DfRABhpTfs=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fmPMfsYakn1rZZZ7b+BxM1afIp3mK86RZuviQxvWw2yMjuYMZca8yJPSRUfwgFdGXA/AZxyyJToCqdaE21UW9ZDn65GnuavnHehiV59IRNI90gy50kOsnpT4j7M3ZxnMasI/q17LEqs9QoLKLnciX2idpmFkIG0lwehBVWcHb98=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=ghK7Gy6U; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="DTq6BLCP"
-X-UUID: cdc3e72e99f911f08d9e1119e76e3a28-20250925
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=t6Yl0F3CBWt6RVv26a4kHnOE9hsWbU7MfM6c5bWgKbk=;
-	b=DTq6BLCP1HkzNeYg4mHf7lnhRJpm9WZvG1gouUffmA4/WKEYz7RslTvB/KQQoHaP+dMpBGzKhZxqW1bAKCjda/1Cxi83ooScLZYBLDKOKjftesQ593o3i7yotQmOiqa6Z/PZ31ndIugCZg1cBY/TMUfgKbQFzrLMUNKB0Yx2Ecw=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.6,REQID:1b3f6fcf-6531-483c-9655-448731c80de2,IP:0,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:0
-X-CID-META: VersionHash:a9d874c,CLOUDID:12ecef6c-8443-424b-b119-dc42e68239b0,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|836|888|898,TC:-5,Content:0|15|5
-	0,EDM:-3,IP:nil,URL:0,File:130,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:0,
-	OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: cdc3e72e99f911f08d9e1119e76e3a28-20250925
-Received: from mtkmbs11n2.mediatek.inc [(172.21.101.187)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 943721817; Thu, 25 Sep 2025 18:24:22 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Thu, 25 Sep 2025 18:24:21 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1748.10 via Frontend Transport; Thu, 25 Sep 2025 18:24:21 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>,
-	<avri.altman@wdc.com>, <alim.akhtar@samsung.com>, <jejb@linux.ibm.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<yi-fan.peng@mediatek.com>, <qilin.tan@mediatek.com>, <lin.gui@mediatek.com>,
-	<tun-yu.yu@mediatek.com>, <eddie.huang@mediatek.com>,
-	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>, <bvanassche@acm.org>
-Subject: [PATCH v2] ufs: core: Fix runtime suspend error deadlock
-Date: Thu, 25 Sep 2025 18:22:25 +0800
-Message-ID: <20250925102420.3553715-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="ghK7Gy6U"
+Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58P9XqB2024010
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 11:56:00 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	BGho4vei24vHpadg3iVDOtkY/sdrfcEeDXVF20xwVL8=; b=ghK7Gy6U3dP69nus
+	K1EkoylRUWcWiCXq0RJWUTUIDslnKTYIHtym5SsrlCV3DqbpJ0wmWG+Qwox+Rkqo
+	RYHN7hqkRRN0CgBNpntNwi4aqvODBgLrJ9YOjIYqZRZvSWzL8cLJnNbbS36VvlzJ
+	Emq8L3BY1a0PDv2NF3CvlLZbHu+MxBTVzEz7tSbBUWepAP9McKfal87L3qLf3yyN
+	bJ5B3haiQ1PHNUle9LGPf90aKlFbeRvadOQLjp9ZcDnyvee23rnt5jm0mzWKbnR5
+	t4ms2exDANoscV2QbpvVNnGKKtBtDa6zHwFDvhNgu64wwQ6Do9ARbw48SbsF+eaC
+	NXjFrw==
+Received: from mail-qv1-f70.google.com (mail-qv1-f70.google.com [209.85.219.70])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49bwp0f07j-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 11:56:00 +0000 (GMT)
+Received: by mail-qv1-f70.google.com with SMTP id 6a1803df08f44-7c51f566163so2516506d6.0
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 04:56:00 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758801359; x=1759406159;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=BGho4vei24vHpadg3iVDOtkY/sdrfcEeDXVF20xwVL8=;
+        b=i1BaASpVA4Qm+JKVfVllc1qF4QB9Zo6bkyKaJehidJv2vYUHXVR52BjfiZ7+pwBhTO
+         ARPlqQ1YO6H2KkUjGXypkblTSRKPcrDvZNMcJyW0tJq5mgeUsk9wUcoG08mw/RIM554f
+         tD8r0LkiB7vps0/HCDqypWmRkQkwqHraStAdrHwwZoFxfEh6kpJIFa9MOB8aC9+FD2ME
+         zHLVzGVK9pdYDREy+vgu3RS6L9p3CyWIs2dZSF0bDBdKE46TQB6jOGbUbl0iieXVHOPC
+         bgdcS8IGEafrnbQngnTR0qntDKkrjz6dBthVJNK70i0OsB/FifHhBDPxfmIe1TlI0+zz
+         tyTw==
+X-Forwarded-Encrypted: i=1; AJvYcCVJe61VA51AOZ3NBg8qnakKRgYHhQEeDnzSbo4rdaA0X2TthHbAzJNmueVWJyrtP8usn70N8QQ0HJbN@vger.kernel.org
+X-Gm-Message-State: AOJu0YwBSrJ05qPJ9LLgzAhc7dnNHjvLjjvj0uFA6gQYTJZRMCvcRFgo
+	ZJC5EnoJeCpcNUc2PZTF+hkgBu+NLvfnhXNvXeE6L0hjtaxlBMrq5HGHnyhocyXbkpuHztYiZEx
+	8wlb2EbvtY7TR/JmOq3PFviZvvqQYeIateTm1wIhF54iHHvjFBeoRX3uV73El66cj
+X-Gm-Gg: ASbGncs0OqHmo34ujBsZg7AEc29jH9w8Qgdar1YTJDgiD2ZZMQi5FJPDhTT3DEGsruU
+	9mz5tYJxjjhLNV47zHuRpLQ6DuZueNHjdJkqNi56xch7HKmCoRBsirLhTe1CkWb2ALjbLXLYATC
+	bgVOUmoot0sxdbqmDHySbooSGmSMJqWQvk229DaWj7C4vFXSBPyxhd89D5RYQ3Sq903m/Mh1pTd
+	uxb63+h/A57Wvh9YlC9RE+qCdNvqCqKitJyCjtLLZlasNInS9lTdsGEPuXX6/4JqEBf7zOHjqu6
+	i8uc6622eZ9/sWnN/1YvJR5AVklOcDMwXZiiDJMEAzFFRGL2AQMQI3r3djkYEVYNlAiWsnMFPm5
+	9dP7+2xuXt5ina+9WrOua1A==
+X-Received: by 2002:ac8:5d08:0:b0:4d7:9039:2e87 with SMTP id d75a77b69052e-4da47c063ffmr28296781cf.1.1758801359225;
+        Thu, 25 Sep 2025 04:55:59 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IFfws3DHjZ7NiFj2AF7AaqOeOE+RAgqdSMayjchEUwDWrTLQ8HNN+0mGYgmyc++RfEn9OQlxA==
+X-Received: by 2002:ac8:5d08:0:b0:4d7:9039:2e87 with SMTP id d75a77b69052e-4da47c063ffmr28296531cf.1.1758801358755;
+        Thu, 25 Sep 2025 04:55:58 -0700 (PDT)
+Received: from [192.168.149.223] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b353e5d168dsm160195466b.4.2025.09.25.04.55.56
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 25 Sep 2025 04:55:58 -0700 (PDT)
+Message-ID: <ee4f25d6-d04a-42fd-8b72-6b272e750b9c@oss.qualcomm.com>
+Date: Thu, 25 Sep 2025 13:55:55 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/2] dt-bindings: phy: Add QMP UFS PHY compatible for
+ Kaanapali
+To: Jingyi Wang <jingyi.wang@oss.qualcomm.com>,
+        Alim Akhtar <alim.akhtar@samsung.com>,
+        Avri Altman <avri.altman@wdc.com>,
+        Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+        Krzysztof Kozlowski <krzk+dt@kernel.org>,
+        Conor Dooley
+ <conor+dt@kernel.org>,
+        Bjorn Andersson <andersson@kernel.org>, Vinod Koul <vkoul@kernel.org>,
+        Kishon Vijay Abraham I <kishon@kernel.org>
+Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-phy@lists.infradead.org, aiqun.yu@oss.qualcomm.com,
+        tingwei.zhang@oss.qualcomm.com, trilok.soni@oss.qualcomm.com,
+        yijie.yang@oss.qualcomm.com
+References: <20250924-knp-ufs-v1-0-42e0955a1f7c@oss.qualcomm.com>
+ <20250924-knp-ufs-v1-2-42e0955a1f7c@oss.qualcomm.com>
+Content-Language: en-US
+From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
+In-Reply-To: <20250924-knp-ufs-v1-2-42e0955a1f7c@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Authority-Analysis: v=2.4 cv=KNxaDEFo c=1 sm=1 tr=0 ts=68d52dd0 cx=c_pps
+ a=oc9J++0uMp73DTRD5QyR2A==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
+ a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=EUspDBNiAAAA:8 a=mUVx_TFFIgGiSlsxcIcA:9
+ a=QEXdDO2ut3YA:10 a=zZCYzV9kfG8A:10 a=iYH6xdkBrDN1Jqds4HTS:22
+X-Proofpoint-GUID: xIVH2OQXgCjzCzKfiv3V55ZkUC6uX0oj
+X-Proofpoint-ORIG-GUID: xIVH2OQXgCjzCzKfiv3V55ZkUC6uX0oj
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTIzMDEzOCBTYWx0ZWRfX9uLlFBXyCjbE
+ qAbthPWO4vcDkUtXrdMCmZHEOoGdFEnLo93L+qn5RVYOtcvq6xnbPiwD/v8SpyxxnngZOm+UDaD
+ pVK2H81nzByxi9uJLzP2z79yWXNoI44bjbg/nb1jdijUXOJhcbJj8uGJp9B/RoD8QSeppdmJDkP
+ sgyBPe75/GXXX+6FePJkks08/lbHCFqwAA3kGPIMptClze1sBH/xXIaaqlRNHugo5GG4JsRjCRk
+ D5rAK+GSsSHDs7ATIa9IigpseK4LsQii/t3vV2/YM66EURzmbOggO89II/1jUSoiiSTgcmilolb
+ 5+7HFBUmY5B6VUiz+P7vvKbkqjFiPc8DeT0z+br1Nv+RwbaUGgfw/Bm+ImZpBzIR3KB7wrhuz/1
+ Yv6aKDnP
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-09-25_01,2025-09-24_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 priorityscore=1501 clxscore=1015 phishscore=0 suspectscore=0
+ adultscore=0 bulkscore=0 spamscore=0 malwarescore=0 classifier=typeunknown
+ authscore=0 authtc= authcc= route=outbound adjust=0 reason=mlx scancount=1
+ engine=8.19.0-2507300000 definitions=main-2509230138
 
-From: Peter Wang <peter.wang@mediatek.com>
+On 9/25/25 1:29 AM, Jingyi Wang wrote:
+> Document the QMP UFS PHY compatible for Qualcomm Kaanapali to support
+> physical layer functionality for UFS found on the SoC. Use fallback to
+> indicate the compatibility of the QMP UFS PHY on the Kaanapali with that
+> on the SM8750.
+> 
+> Signed-off-by: Jingyi Wang <jingyi.wang@oss.qualcomm.com>
+> ---
 
-Resolve the deadlock issue during runtime suspend when an
-error triggers the error handler. Prevent the deadlock
-by checking pm_op_in_progress and performing a quick recovery.
-This approach ensures that the error handler does not wait
-indefinitely for runtime PM to resume, allowing runtime
-suspend to proceed smoothly.
+I can confirm the SW expectations are identical, down to the programming
+sequences (mostly, there's some minor adjustments that MAY be specific
+to 8750/8750QRD, but IDK if that matters or if the docs haven't been
+updated)
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Suggested-by: Bart Van Assche <bvanassche@acm.org>
-Tested-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 8 ++++++++
- 1 file changed, 8 insertions(+)
+Acked-by: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 88a0e9289ca6..8185a7791923 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6681,6 +6681,14 @@ static void ufshcd_err_handler(struct work_struct *work)
- 	}
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- 
-+	ufshcd_rpm_get_noresume(hba);
-+	if (hba->pm_op_in_progress) {
-+		ufshcd_link_recovery(hba);
-+		ufshcd_rpm_put(hba);
-+		return;
-+	}
-+	ufshcd_rpm_put(hba);
-+
- 	ufshcd_err_handling_prepare(hba);
- 
- 	spin_lock_irqsave(hba->host->host_lock, flags);
--- 
-2.45.2
+Konrad
 
