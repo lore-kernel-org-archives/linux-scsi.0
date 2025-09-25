@@ -1,48 +1,37 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D7C552FB0B5
-	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 15:49:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 27839301718
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 16:04:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758815351; cv=none; b=e5guH0OOlhb8PhPyz08MhVUYpMsDkwMemPr4sGBsBvRL4guFo81BIlxfRzqWttYxdNcCukAkA2wvYWXI/qw/mGjcC06hNPTM/LIUWFFAJqj6cQBIbf3EEOD3fseX8ANiCRitzTqREpzCAQ6sTBPXQ7v5WxY/2kU7+OLDFcoRIqU=
+	t=1758816285; cv=none; b=tdkY8KzC2xL/XYdd3hqBbFk9EWpFPQqMGO9DNV84JvYYjyJhrwWotNykFRjBtdUhlMGVDc4vjx0Adx+q28lsR50HyL9Kq5bzIJzKfl9Z0GDxLNJFrrXrHXt9AfT8RdGTLbEko5VUtdSDesVQKtJpeix7VlbJfzZjcuE0Mto+X9w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758815351; c=relaxed/simple;
-	bh=JNJavTQjkknopqd0oPAIQcXO5xoI8oxuPjMPorcG+Ao=;
+	s=arc-20240116; t=1758816285; c=relaxed/simple;
+	bh=+oXAL0tcgRlO8c1J/dU2scA4s8TwfctnQlh8fiSh9g4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=mjHn5GriySATDNXQ8vukXM+fzuHc7GgnVI53MNNQiwcNH/tIShDiPdFSOhNWedm+eKUfbSLDTkk+vdCcY2y3Yg9yUlXwkcN7in6cmtL1FX4pB9hCpZw44k8qOusSvgGB/1Lpng2sQ2DaFPq0pVHG/MUlHrDkD87NXdMIqiUCTIs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=1+JeKSWi; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	 In-Reply-To:Content-Type; b=SpS/7fLVWeUnsRGGKAZNsQb5cNBRx+8V0q6npL4ZhGYjyfAcVPq+lyRRoMSp8ER4bhKrJHJqhQ9nwFmC1YpNNzwqFwTjSGoviJ4Vvt0ct5rXxsvjDDAZA1M5rURx4IOTGIOS2B9nT4tIFrdPKOV6BSBkM4YkP4b7spZ66lV2rQI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=fail (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=LbagwA8e reason="signature verification failed"; arc=none smtp.client-ip=72.215.153.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="1+JeKSWi"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cXdS355M5zm0pJw;
-	Thu, 25 Sep 2025 15:49:07 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758815344; x=1761407345; bh=JNJavTQjkknopqd0oPAIQcXO
-	5xoI8oxuPjMPorcG+Ao=; b=1+JeKSWibrZVfErAUN4XyEsWCpGAEg2a4lkCqwj8
-	OIyNgYY/ZSQALymCf7APRcppZqUWvXto9WdTvGAkRAjDxA5yqWMWKqppnOcN8p4P
-	d29Ek/gMvhnLzC87fSJZX6ahQVCka2ITVQg0QY/jadcxqwIswgJjWm6hPFYzE/8A
-	Lf2354m905SgoF6n1IkJpjwP8OCK2Id12/mKgPoyx4bMUr3rJhTRZin0GjdS0xpT
-	ZOyU6410BB5xNx8IdgIeSm+rnK2++eFqIJp05cnHaGouAHveZcBJTndJDyvFvC1C
-	dpRsU1tzuU7CmUEIoUv929DKDzdDvtbHDqgnPrZLXfHYVg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id QXziTda_FYE4; Thu, 25 Sep 2025 15:49:04 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cXdRk626fzm0djt;
-	Thu, 25 Sep 2025 15:48:49 +0000 (UTC)
-Message-ID: <81e6af29-eb75-4149-8fbc-7e726fdd2acc@acm.org>
-Date: Thu, 25 Sep 2025 08:48:48 -0700
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="LbagwA8e"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id uscABGpxUb0YaIwe; Thu, 25 Sep 2025 12:04:41 -0400 (EDT)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+	bh=vrdtGJZWfvcp+2ww2Ngcwu6CnGiELosz9EX38y+xxjs=;
+	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:Content-Language:
+	References:Cc:To:Subject:MIME-Version:Date:Message-ID; b=LbagwA8eV7zi6j8wgzzm
+	+N8oWURdI9DXENCNzzdWgddwyuvXmguZfjj+l5PvZiR1AshF4R4W0oXnynifJ7vmUBrG86jBpDi+Z
+	4Lr7BoollYw/1oXTIyE4xAUJ6ZqpqI/4XtNTUFMVSpZmCP9UGB0tkXXPi0IBmVKrMTMTuVcdEw=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
+  with ESMTPS id 14212895; Thu, 25 Sep 2025 12:04:41 -0400
+Message-ID: <46422ab9-9088-4d9c-b93d-31083f8b9398@cybernetics.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
+Date: Thu, 25 Sep 2025 12:04:41 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,29 +39,69 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2] ufs: core: Fix runtime suspend error deadlock
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
- yi-fan.peng@mediatek.com, qilin.tan@mediatek.com, lin.gui@mediatek.com,
- tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
- ed.tsai@mediatek.com
-References: <20250925102420.3553715-1-peter.wang@mediatek.com>
+Subject: Re: [PATCH 14/15] scsi: qla2xxx: add back SRR support
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>,
+ Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+X-ASG-Orig-Subj: Re: [PATCH 14/15] scsi: qla2xxx: add back SRR support
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
+ scst-devel@lists.sourceforge.net, KERNEL ML <linux-kernel@vger.kernel.org>
+References: <f8977250-638c-4d7d-ac0c-65f742b8d535@cybernetics.com>
+ <2cc10189-6953-428e-b34e-b1c714fc0eae@cybernetics.com>
+ <0669b097-0bf1-4895-9c2a-5e953aebbfab@gmail.com>
+ <8056aa80-7e5a-4cb3-804c-d9c7f8bd6d55@gmail.com>
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250925102420.3553715-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+From: Tony Battersby <tonyb@cybernetics.com>
+In-Reply-To: <8056aa80-7e5a-4cb3-804c-d9c7f8bd6d55@gmail.com>
+Content-Type: text/plain; charset=UTF-8
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1758816281
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 1584
+X-Barracuda-BRTS-Status: 1
+Content-Transfer-Encoding: quoted-printable
+X-ASG-Debug-ID: 1758816281-1cf43947df3a52a0001-ziuLRu
 
-On 9/25/25 3:22 AM, peter.wang@mediatek.com wrote:
-> Tested-by: Bart Van Assche <bvanassche@acm.org>
+On 9/25/25 11:30, Xose Vazquez Perez wrote:
+> On 9/25/25 2:49 PM, Xose Vazquez Perez wrote:
+>
+>> If you want to review the firmware changelog, mainly: FCD-1183 (FCD-37=
+1, ER147301), FCD-259, ER146998
+>> (from 9.00.00 to 9.15.05 [06/10/25]):
+>> https://www.marvell.com/content/dam/marvell/en/drivers/2025-06-10-rele=
+ase/fw_release_notes/Fibre_Channel_Firmware_Release_Notes.pdf
+>>
+>> It's look like all 2{678}xx devices/chips are affected by this bug.
+>> Perhaps the Marvel crew could provide more information on this.
+> 267x, or older, is still on 8.08, so apparently it's free of this bug:
+> https://www.marvell.com/content/dam/marvell/en/drivers/release-matrix/r=
+elease-matrix-qlogic-fc-sw-posting-by-release-matrix.pdf
+>
+> 2870 / 2770 :        9.15.06 FW
+> 2740 / 2760 / 269x : 9.15.01 FW
+> 267x :               8.08.231 FW
 
-Did I ever claim that I tested this patch? I think the Tested-by tag
-should be removed.
+I am still trying to figure out what macros to use to test for the
+affected HBAs.=C2=A0 So far I have:
 
-Anyway, since this patch looks good to me:
+if (IS_QLA27XX(ha) || IS_QLA28XX(ha))
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+But all the ISP numbers are pretty confusing.=C2=A0 I have a number of 8,=
+ 16,
+32, and 64 Gbps HBAs lying around to test, but I am sure I don't have
+every possible model.
+
+There are a number of items under "Changes and Fixes from v9.08.00 to
+v9.09.00" that might be related to the problem that I was experiencing.=C2=
+=A0
+For example=C2=A0FCD-1076 sounds similar except that the SRR problem was =
+with
+the CTIO queue rather than the ATIO queue.=C2=A0 I could expand the "bad
+firmware" versions to include v9.04.00 - v9.08.00, since=C2=A0v9.04.00
+introduced ER147301 and v9.09.00 fixed FCD-1183.
+
+Thanks,
+Tony
+
