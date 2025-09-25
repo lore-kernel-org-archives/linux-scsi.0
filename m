@@ -1,139 +1,98 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f47.google.com (mail-wr1-f47.google.com [209.85.221.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD6601D63CD;
-	Thu, 25 Sep 2025 14:57:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.167
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758812258; cv=pass; b=PhAcH+OvZfKMk+g3RAIpKoTDigWxHm97tbxOogd4ckNFQ6Pc5jQkleJ0EhywCx79ofvn60unXAduip/NzOQ5eWdgntJmPcODjFTUQUzmrCMhRcybdDWTWTVkiT0GvgGcsvjqeHr1LPhi8fd6sBsWKocWhrLgMRpJvzRckSM2F4I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758812258; c=relaxed/simple;
-	bh=3ldgBpz1sge+KvxB+jBoeRxMENW6zW1QtNR63O3m9eE=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=XcH7+PKTtGa0R1aKb1UPnbtwQk2EPqrZ+JjHySyDezoUHCHjgUfJs6aTXV+ojQCc+FBkVnEK7qkv2pchx9cJwU77uIVPQZTi8npS/b+kxBUVGJgUrXMn1Z2bV6SGXFSXgxfDe5Y6NGCH4I0MlcgUn7s2ZOj1RsoZ/qJdf1CkZqc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Mm34qHhN; arc=pass smtp.client-ip=81.169.146.167
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BF4D82E62BE
+	for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 15:30:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.47
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1758814214; cv=none; b=nwN7JNlpYIv6zSGSsx9veZSkRlTkfqWEMRJKUlPyPbHsS8Rivkw9eSbRcBTMZhScnRVOyO3YxEKP9TZYXAt15RIh9bc2M/hnT5hHTUiBt0CJfEJQPUeJ/dprRCb8L2N6PnQdm71tJOhCppPjPDl7YAkTKKkj422ClxRFTyDKeOY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1758814214; c=relaxed/simple;
+	bh=7embYRPF/5Q9/8iByQGHRwo8kMx6aLILpJkp6lh8BDQ=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=hYPFZURmOLOrGIqRXD1fmslMixGpC/c1IffzBELxvPBUpuj37spqbm1/YMPqQ6QZXuWLxei9CMF9SsQIzqzE+WJ/md2UJZs3Baz81u2JogcrAHaMdiqTT2oKABmBcNMVbztAw6Mc/DbCvehbZ3cstwd22hJ/j1P0V8TTaY/wocc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=f90Q2eyg; arc=none smtp.client-ip=209.85.221.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Mm34qHhN"
-ARC-Seal: i=1; a=rsa-sha256; t=1758811893; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=Wks9rFjMhMdlauncy0O2xHQ8iLMFrFV/ZaN9v+Z5DUUE0lXiF7YwKtEy6IptAaOxF8
-    o4k6q1bZ+9lT+elaZg53SVOzsuCOxZ4J1/lbD5Nckr4fVonNhpz3q0byHPLnSpl+Dkam
-    F4J0Z/A3ax0nXLcT5AF6FCZp/QIGgEGRF1aCH2ybYwQ4p91Frhi2je/g7VZYNMn4RPxI
-    vOgxZQT/7+r8r9YFx3lyTZZkYv4IoUGZb3cvt3lLAHpng4Z7+JuT2xI2L0vyXkaCKWZp
-    pQRfFTi4ZFOAECaTyMiEMR+De+P5ngcsfiZP7cOxCxKkjhPGPuB5Zzi7jMAvT4/TsmD0
-    8jSA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1758811893;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=3ldgBpz1sge+KvxB+jBoeRxMENW6zW1QtNR63O3m9eE=;
-    b=LIFtXBwTszLh9HoiFQc1yS4sgyk0LoiS5113ewqEEIG+DVA0gG6R9RiBqjRYD8iH4C
-    J41Kk3dIEYZEy36OagCWfzsF3vyzzA7mMFGBduLbxr1CMnKE8zsF9UYOCp482ai/JEUr
-    68hO7DzHlT5XFhEkDTCSR7FzHpTbcGhVlT8egTHRy8S6QgdEa8L3cpedQlY146h9ZzR+
-    ocht5bABnC3QQEF7s0BpQ/ptkAyq4MTV/txuHNcCjsmxgajSGj/ypzUMorrChQmLvTSo
-    VlWbBrJqP3LhdrvY2y46L0yrSuGfsyXq6GYV0g1H1UZ+LCcWSKu78aLrBnzW5ZP7XcwL
-    s7CQ==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1758811893;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=3ldgBpz1sge+KvxB+jBoeRxMENW6zW1QtNR63O3m9eE=;
-    b=Mm34qHhNTsea0MirIPe5semBUhMVOTn1fO7cupkZP0mqxMSExyWh7D/jetMOQwuLmD
-    R0SZUtu3Iry1eP29hilXDHO53dlNXGFE3psDKXx6fodOZRa6kJV2CaNWpfpObV3bQkJT
-    fXPLF0QyV4nQpQ4lcVKAzhd7AoI+DgfXu2tYMb3h/2gdI89eIY1ZE/dWJbjNWmELSoe3
-    yxvclB5iw6m7jwBF6YA2Nvge84Uh2+y+qcjGWzD17J9tBxPEt84nY5V8NJoHMNCRs901
-    ExX/4gIyKtDIzk2bJDk2jDmYaq7YSJDqKJ3S5WX044qUc/HwjQIY7tVqrds7vBTCWALj
-    c0Gg==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZqk"
-Received: from [10.176.235.211]
-    by smtp.strato.de (RZmta 53.3.2 AUTH)
-    with ESMTPSA id z9ebc618PEpWESA
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Thu, 25 Sep 2025 16:51:32 +0200 (CEST)
-Message-ID: <af99ce08cf20977d92f3b993f3b989b91d172c79.camel@iokpp.de>
-Subject: Re: [PATCH v1 1/3] rpmb: move rpmb_frame struct and constants to
- common header
-From: Bean Huo <beanhuo@iokpp.de>
-To: Avri Altman <Avri.Altman@sandisk.com>, "avri.altman@wdc.com"
- <avri.altman@wdc.com>, "bvanassche@acm.org" <bvanassche@acm.org>, 
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "jejb@linux.ibm.com"
- <jejb@linux.ibm.com>,  "martin.petersen@oracle.com"
- <martin.petersen@oracle.com>, "can.guo@oss.qualcomm.com"
- <can.guo@oss.qualcomm.com>, "ulf.hansson@linaro.org"
- <ulf.hansson@linaro.org>,  "beanhuo@micron.com" <beanhuo@micron.com>,
- "jens.wiklander@linaro.org" <jens.wiklander@linaro.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-	"linux-kernel@vger.kernel.org"
-	 <linux-kernel@vger.kernel.org>
-Date: Thu, 25 Sep 2025 16:51:32 +0200
-In-Reply-To: <PH7PR16MB6196C3B7F5186F3E63C05A3FE51CA@PH7PR16MB6196.namprd16.prod.outlook.com>
-References: <20250923153906.1751813-1-beanhuo@iokpp.de>
-	 <20250923153906.1751813-2-beanhuo@iokpp.de>
-	 <PH7PR16MB6196C3B7F5186F3E63C05A3FE51CA@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="f90Q2eyg"
+Received: by mail-wr1-f47.google.com with SMTP id ffacd0b85a97d-3f5d2d99b8fso25097f8f.1
+        for <linux-scsi@vger.kernel.org>; Thu, 25 Sep 2025 08:30:12 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1758814211; x=1759419011; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:mime-version:date:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=VF1Bqi8k7PXZlzWvyUXBJx9B9dWwFCwidqruMuP4DAw=;
+        b=f90Q2eygaG4dc0yryHBMGZQ6RAsDgj/qQVgiqBJg0uemvGk1G1YyRGRLOAbfMUpdJm
+         BDs7s6e7VxAbWWzDRwOpYu9HORzi3yPg7qWBHSMIia7wp3bcEvRl54Qd5k3Ol26KF0Iz
+         XFMx0v41u4bQrq0PVQrn6t0G8kz8gM0V7BGPkxShESZFW6j+NdHFN4OS4xqsFMRZN1go
+         1j0aWZOCGvqZ1DG1aueIzp3qrCMgL9XJqDOKosOnktamH/HVkmuChXLg5fQAAQMo4mcD
+         PuihuQ3DyvW+FhF7pXrobXvTv3GVwYpcjJRxVkKbYjWGi9lo69fMf/gHakOqNWaG0dAi
+         fw5w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758814211; x=1759419011;
+        h=content-transfer-encoding:in-reply-to:content-language:references
+         :cc:to:from:subject:mime-version:date:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=VF1Bqi8k7PXZlzWvyUXBJx9B9dWwFCwidqruMuP4DAw=;
+        b=qgBumpGiVB0KshxaSDuC1ClzLCAXygjjovQj7WfxFbggLK0oRaJwaB1prXulS1Hfta
+         u/ZzNNolcminaKY8UnS2SAju4CyqBt/IikZgA0aUwo+FnyPOdGg0qI8vifrD3nWt7Otq
+         GaKSNy45BdCO6riXKCOzI7x79X5TdmDLzD4ssFxU9kt1bBOOjT0HqwgwUXwXEPyuGGzB
+         mtpSpfP4gTGBfqBDrbnBhHK6B6l+6C62O/ijzw+ZDiSSGNqh2xgBIAAM+iIk7bnZLMuu
+         HdBr/lZnGggxL7P4S5Tk2JeDxUEnZiKGnz6MLFh05ftqt2a/GYRW71qgK54NP8or237k
+         y1eA==
+X-Gm-Message-State: AOJu0YzBH9/RYGpH2R1nmXnkccVn1mYIgFmQS88lx1OPic0YGf12m750
+	/KmQqjPrCvnSDVlh0wgfk3TrDXHrZslOzli+Da4vTMuoYYkbKIL62io=
+X-Gm-Gg: ASbGnctRUkzdCBXrJrjhpxZarCBjXAZW+C0PQDON2tUEZ5dTAQ2uqswdERWzFhW7lF5
+	/2aLCMaYv0sRlGxSmtey75ra1MY5HXh2a6H5SYnEvVRhXw8MVS1EmK4vNk+VWj/6oEfR9AY8B+9
+	U4S7M+65Oi4uaCBT0J3OLZplGEc+0R5V34fkXlyAXH1xGpYmstZlvNsjg4+k3OUiBX++Bf/M9t3
+	XhH5ifPpBLdRrzTOlQ0SiAzDSt+k95XPN815m5wyEaUZgjFf3AZoA1pEr1Yv/l3+90QVBw1cc5e
+	KqHOkVVuUErt7ufR1N4SHumfSkyR4ULvl7VRqKzQQ+o/Vyk8vJ1k3Vo5WnUPtYFAZlbnrx5XPFs
+	aMOyBpt9CqWW74Yy11rH7+HNOmekjVTjqUvVOGuKx4Z8tqh7yS8ntjSxFHVgr
+X-Google-Smtp-Source: AGHT+IFqiPDWCPZpM+LXT8lqt7ta4cimw64WrasTX61w6SM4yI70RjOESL5EB0LuI187Xe9we0NonQ==
+X-Received: by 2002:a05:6000:2a89:b0:3ec:db87:e8a9 with SMTP id ffacd0b85a97d-40e3ab888bfmr1778010f8f.0.1758814210739;
+        Thu, 25 Sep 2025 08:30:10 -0700 (PDT)
+Received: from localhost (20.red-80-39-32.staticip.rima-tde.net. [80.39.32.20])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-40fb9c32734sm3546318f8f.25.2025.09.25.08.30.09
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Thu, 25 Sep 2025 08:30:10 -0700 (PDT)
+Message-ID: <8056aa80-7e5a-4cb3-804c-d9c7f8bd6d55@gmail.com>
+Date: Thu, 25 Sep 2025 17:30:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Subject: Re: [PATCH 14/15] scsi: qla2xxx: add back SRR support
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+To: Tony Battersby <tonyb@cybernetics.com>,
+ Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
+ scst-devel@lists.sourceforge.net, KERNEL ML <linux-kernel@vger.kernel.org>
+References: <f8977250-638c-4d7d-ac0c-65f742b8d535@cybernetics.com>
+ <2cc10189-6953-428e-b34e-b1c714fc0eae@cybernetics.com>
+ <0669b097-0bf1-4895-9c2a-5e953aebbfab@gmail.com>
+Content-Language: en-US, en-GB, es-ES
+In-Reply-To: <0669b097-0bf1-4895-9c2a-5e953aebbfab@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, 2025-09-24 at 06:12 +0000, Avri Altman wrote:
-> > From: Bean Huo <beanhuo@micron.com>
-> >=20
-> > Move struct rpmb_frame and RPMB operation constants from MMC block
-> > driver to include/linux/rpmb.h for reuse across different RPMB
-> > implementations (UFS, NVMe, etc.).
-> UFS RPMB differs from mmc RPMB in several levels:
-> =C2=A0- 9 vs. 5 operations
-> =C2=A0- frame structure: extended 4k
-> =C2=A0- rpmb unit descriptor
-> etc.
-> And as time goes on, this gap is likely to become larger,
-> As mmc is not very likely to introduce major changes.
->=20
-> Thus, you might want to consider having an internal ufs header - will sim=
-plify
-> things in the future.
->=20
-> Thanks,
-> Avri
+On 9/25/25 2:49 PM, Xose Vazquez Perez wrote:
 
+> If you want to review the firmware changelog, mainly: FCD-1183 (FCD-371, ER147301), FCD-259, ER146998
+> (from 9.00.00 to 9.15.05 [06/10/25]):
+> https://www.marvell.com/content/dam/marvell/en/drivers/2025-06-10-release/fw_release_notes/Fibre_Channel_Firmware_Release_Notes.pdf
+> 
+> It's look like all 2{678}xx devices/chips are affected by this bug.
+> Perhaps the Marvel crew could provide more information on this.
 
-Avri,
+267x, or older, is still on 8.08, so apparently it's free of this bug:
+https://www.marvell.com/content/dam/marvell/en/drivers/release-matrix/release-matrix-qlogic-fc-sw-posting-by-release-matrix.pdf
 
-thanks, I got your points.
-
-In normal mode, UFS RPMB uses the same 512-byte frame format as eMMC RPMB,
-with the same fields (MAC, nonce, counter, address, etc.). That=E2=80=99s w=
-hy it makes
-sense to keep a single definition of the frame struct in include/linux/rpmb=
-.h,
-so both eMMC and UFS RPMB drivers can reuse it without duplication.
-
-The major differences only exist in UFS RPMB advanced mode, correct?
-
-For advanced mode, our plan is to introduce a UFS-specific header for the
-additional features (extended 4K frame, new opcodes, descriptors), so that
-UFS can evolve independently without breaking the shared interface.
-
-let's firstly enable UFS RPMB in normal mode, since its OP-TEE application =
-is
-avaiable in OP-TEE OS, the custoemr can use it simply. As discussed with Je=
-ns,
-we can move next step for advanced RPMB for UFS, is this ok for you?
-
-
-Kind regards,
-Bean
-
-
+2870 / 2770 :        9.15.06 FW
+2740 / 2760 / 269x : 9.15.01 FW
+267x :               8.08.231 FW
