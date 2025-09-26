@@ -1,89 +1,141 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55EA3281526
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 22:22:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 109B3202976
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 23:36:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758925328; cv=none; b=PZk4qszzk6IkWyvoclyuStbhR+olwKVye0Ex2IrMwjFw7Ny7wYlg61wuumyXX8CgMkz3ks5Q23FHgUB7VreSmyaN0IVMBt6dQ5xKOqbEXkF3Hr73txEean/+r60Pgirm4rjTTJSX16jg3WVH3iIbjiCLCmXGIo6UyUmn2dCApoY=
+	t=1758929810; cv=none; b=fVcDfwhma9voPLI6DeTss9ekTnGwBkKWF9X6aegNaY18rzZ3W7LJuXAtEK0+PCPMMjVR/cA6v7NmZTp8q6uXT5FugQhsKBcBsFxlF7wct8ZdSmodabyBw/Ah8Lrwmd173j+P42QTSzf8hjPqtznEQ8rebK1wFFL1HDewuxGedpE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758925328; c=relaxed/simple;
-	bh=Zwukybwie+hOjcVkkij6YjbzMgXpmbTEunbr3XXyMEw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ffb1J7JWLPRxLhVyngZi1Wsyr9xtmOFEP1Jlik4ofHQkszzaLA4z6DKO2hOwJVHSFu2DsRVw9CtAp4JFLO/tMjfWsnOaVAnFJvfigVaZJG3Lc9xHwvM0RFPi/RsjtsvgWae+nPC1cs+ddrUwSC1gC0xilDs+bRXkmnONthz6jmI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DnvGSsjw; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1758929810; c=relaxed/simple;
+	bh=I2Mz2aveKudWjBG56cCpDPgKcjygvlC0hAMQrwbfHiY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pppbNSBR7iWy0ye7wSKfhGksuxifHSlyXJRAWTuD/spYsFInAcidYfprqbkCaQl5rXDj1l6Bip2dxDzsgl+d2DvyI2HVU801e6fiI2aslFOaVrQkbw4UdZ7lMkN0YRscSB9iKajScVoU4pRTDYlvI99WMf4Gya0+bHePIs/ebFU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com; spf=pass smtp.mailfrom=arista.com; dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b=HS0CZFIe; arc=none smtp.client-ip=209.85.210.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arista.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DnvGSsjw"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cYQ712mTyzm0ySN;
-	Fri, 26 Sep 2025 22:22:05 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758925324; x=1761517325; bh=pO2AVqyLcrMdnOKXoWZ6ztZm
-	sYNi8JOH9Yw4XvxagkA=; b=DnvGSsjwyGvp3xc+friz+9bltWhI5hujjMjLSppz
-	v3jz5Gi3MAirJT9VayARDZcjzjMTiOF+l4GTQ7h/pmNjIa5Itm8z8hbINOfG7fID
-	UbIkm6JiInBrHKMddt+MEPq6l2vYVsy4do1kBjeIN+Zmv5XJO25a+VF4capmUM14
-	g2U+x7J6kIm8Wt9LiyPM/aLB4Gpr9XG8yUKkU285T52ozOQhzbwlqNElca8FWwVk
-	tVzeJgDlhjguwwXPLOXevvX1wrrGncpoYU2xeiu3/XipiWPpdihY3z/H/bel0zps
-	wCIvF7q0U1hJdSgMa4uD41emvttAMpyk628fzNTGU57vdA==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 4b5Bog147RmO; Fri, 26 Sep 2025 22:22:04 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cYQ6x2ZxTzm0pJt;
-	Fri, 26 Sep 2025 22:22:00 +0000 (UTC)
-Message-ID: <c9087789-73b9-4322-9d8f-7416907c5679@acm.org>
-Date: Fri, 26 Sep 2025 15:21:59 -0700
+	dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b="HS0CZFIe"
+Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-77f68fae1a8so3740465b3a.1
+        for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 16:36:47 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=arista.com; s=google; t=1758929807; x=1759534607; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=mj6zPN/OKSYjQGWBqwR3zeZiuhE+ieUvPsRJbGl8RZQ=;
+        b=HS0CZFIeKc75rpLTUl7ceWq1bM1wLxuGDIVRrER63jpKTtVVN+i5cPQZP2PRAsDeiD
+         Djh8lUV+QLHKn9VpXBoYNqBoufXv3P95Pu4HE8A0JMK11LXHUodSou78ZtCslGtS5eqq
+         A99zaOBNhiSzZbdVY5KAHtczBGqrGLYJOXT9Dm5Ib8f7O2ORb6uP6duyyg6F5L0ol46n
+         dd0ocDd+EfYCiX5EQFAE3Pp9WrY+aFhgnN3vvDJPYXCBoNlM9oqY0iBCaiqHgoQz+EYK
+         RCiBztXbTwqzVTRykOXm9RwGZgl7U+vftZs+RaGx/B+95+bP/6udeiCEzs1ihY73Nswl
+         mJ2w==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1758929807; x=1759534607;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mj6zPN/OKSYjQGWBqwR3zeZiuhE+ieUvPsRJbGl8RZQ=;
+        b=SSiZJ8igW790CMw20e0SRM40a4po8qXjgGgOiLPmEDEaIgTbOQmj8K0OZtC12kX3OP
+         1fOSt/EDmxeOP9WQEJJQp1x+1/dQqhHYlgEzAsUsr71OKyFrJtUsCH6LqhMysJlyO0T7
+         VLdOAhX8YvExnTom5M17x7SZnKOMtJWoYixo07gvRa+4uihC53vc5npW2ORC+6+lYafQ
+         8vN2EoGGlzNW6SyonDb4gr6+fDzAKuSse5V7afN4aazd4XQDV4vNJjq9JdCdmT/CcNQz
+         00Sk+/ks2Q8IorK8UWRVUCN9u8Vh06UxIYqjUd1qjOIjylWEj1hs9KDSqhtfF9B+CkTu
+         mWrQ==
+X-Gm-Message-State: AOJu0YzImqcruwf503bzXTZ1l7F9yPtIJGrtOLptqCMwk6nmlTeK71Yl
+	qQDKQX2woF/lDlehMWfKppIGLJkyB3R67x37WG7zXOMcIwizD3t9b4CO3iCYAtwjyw==
+X-Gm-Gg: ASbGncvJLvuFwOB4Y5Rt+N3wMEiZNS2ivHcuftn4Y6Z07iEfMUj+1ybZPTxZ9/RmdJP
+	wmQ0WhnxuxUIoF2rtjYknPFP6dR97wWlnJb4m7nq90JFTlubXQzkBOJ3uXxmMG2B4iOInKG8ExD
+	poyIt3g302qzDzzAGJdzKZz5+wRtppDxUWegOV2ybBKoXSXgORqCBPvyiWX3oZLMsu6NjoPNyx/
+	n4ooOKMqzlwakPa3vr31FmM67W2b/a0pId/qNwB6sDJo7Gys19xl8U4ohPx7DtHvQCe9beGTw3c
+	DTIvd0C0ArKo1v5I7Z2qgT7g3/9794psf9HsHfBtrM0GCt6oODrlfU3IeIp2JSQy5qVMJN9NGN7
+	fdGcRH7R3xog06VWSj/CsQkPpRkSQkb/UsKGvvtBjHuMZIhvhFhiwoh/kdA==
+X-Google-Smtp-Source: AGHT+IFZEBrKtz1BDhTWgm8mofWtOzIr+Z/c1j14YCTUV+GOrNl6Ivmww8swrYG7BZcL4aDuz7K3PA==
+X-Received: by 2002:a05:6a20:918b:b0:24a:8315:7f5 with SMTP id adf61e73a8af0-2e7d3db5fc2mr12114110637.31.1758929807287;
+        Fri, 26 Sep 2025 16:36:47 -0700 (PDT)
+Received: from sushrut-work-nzvdj.sjc.aristanetworks.com ([74.123.28.17])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b57c55bd160sm5594002a12.47.2025.09.26.16.36.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 26 Sep 2025 16:36:46 -0700 (PDT)
+From: sushrut <sushrut@arista.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Sushrut Shirole <sushrut@arista.com>
+Subject: [PATCH] scsi: sd: Add sd_stop_on_restart parameter for restart device shutdown
+Date: Fri, 26 Sep 2025 23:36:42 +0000
+Message-ID: <20250926233642.268514-1-sushrut@arista.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 04/28] scsi: core: Support allocating a pseudo SCSI
- device
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
- John Garry <john.g.garry@oracle.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20250924203142.4073403-1-bvanassche@acm.org>
- <20250924203142.4073403-5-bvanassche@acm.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20250924203142.4073403-5-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 9/24/25 1:30 PM, Bart Van Assche wrote:
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 9bb7f0114763..986586bf67dc 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -307,6 +307,14 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
->   	if (error)
->   		goto out_del_dev;
->   
-> +	if (sht->nr_reserved_cmds) {
-> +		shost->pseudo_sdev = scsi_get_pseudo_dev(shost);
-> +		if (!shost->pseudo_sdev) {
-> +			error = -ENOMEM;
-> +			goto out_del_dev;
-> +		}
-> +	}
+From: Sushrut Shirole <sushrut@arista.com>
 
-(replying to my own email)
+Currently, sd_shutdown() skips calling sd_start_stop_device() during
+system restart (SYSTEM_RESTART) to avoid delays during reboot, under
+the assumption that storage devices will maintain power and don't need
+to be explicitly stopped.
 
-Unless anyone objects I will change sht->nr_reserved_cmds into
-shost->nr_reserved_cmds in the above code.
+However, this assumption doesn't hold for all system designs. Unlike
+traditional servers that can maintain storage power during restart,
+some enterprise network equipment, embedded systems, and specialized
+hardware use centralized power management that immediately cuts power
+to all components during restart. This can result in:
 
-Bart.
+- Filesystem corruption due to incomplete writes
+- SSD firmware corruption during metadata update operations,
+  potentially leading to unrecoverable device failure
+- Elevated SMART error counters (e.g., Unexpected_Power_Loss_Ct)
+- Potential data loss in systems without proper power-fail protection
+
+While the kernel provides manage_shutdown and manage_runtime_start_stop
+flags for fine-grained control in other scenarios, there's currently no
+mechanism to ensure proper device shutdown during restart for systems
+that require it.
+
+Add a module parameter 'sd_stop_on_restart' (default: false) to allow
+administrators to enable device stop operations during system restart.
+This maintains backward compatibility while providing the flexibility
+needed for diverse hardware configurations.
+
+The parameter follows established patterns in other SCSI drivers
+(e.g., smartpqi's disable_ctrl_shutdown) and provides a clean
+administrative interface via /sys/module/sd_mod/parameters/.
+
+Signed-off-by: Sushrut Shirole <sushrut@arista.com>
+---
+ drivers/scsi/sd.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5b8668accf8e..d280b395026d 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -116,6 +116,10 @@ static DEFINE_IDA(sd_index_ida);
+ static mempool_t *sd_page_pool;
+ static struct lock_class_key sd_bio_compl_lkclass;
+ 
++static bool sd_stop_on_restart;
++module_param(sd_stop_on_restart, bool, 0644);
++MODULE_PARM_DESC(sd_stop_on_restart, "Issue STOP UNIT command on system restart (default: false)");
++
+ static const char *sd_cache_types[] = {
+ 	"write through", "none", "write back",
+ 	"write back, no read (daft)"
+@@ -4172,6 +4176,9 @@ static void sd_shutdown(struct device *dev)
+ 
+ 	if ((system_state != SYSTEM_RESTART &&
+ 	     sdkp->device->manage_system_start_stop) ||
++	    (system_state == SYSTEM_RESTART &&
++	     sdkp->device->manage_system_start_stop &&
++	     sd_stop_on_restart) ||
+ 	    (system_state == SYSTEM_POWER_OFF &&
+ 	     sdkp->device->manage_shutdown) ||
+ 	    (system_state == SYSTEM_RUNNING &&
+-- 
+2.51.0
+
