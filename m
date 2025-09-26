@@ -1,74 +1,74 @@
 Received: from esa.hc6817-7.iphmx.com (esa.hc6817-7.iphmx.com [216.71.154.88])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7BEAF1D6AA
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 06:24:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A9EEE27B354
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 06:44:50 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.88
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758867860; cv=fail; b=acP9DjorjRLkMDDIGUYnq3LCNtRpSkTR0be7luH9JsPr7h68Cb/EyLgYHdR6ZR9JvLShKDgbVbUdAN2RlL9BmdH4dr+KFbJ4J2pDwhuwNzxX7JNWGe/V8Kxn9SZ40PFLAUYMzU/NF/VNJ1ivYuKxVaIimesnkCmE7YNim9B68j0=
+	t=1758869092; cv=fail; b=r5dhw1pB2zKHlg3lFQwRwdzKg22rHKWRABq0kNBkHiYpXo+4dT93iNw8oolq8Ob/eO2OdBOLIP3cuNZ/lF90ScOFsHGgxb2xcKavwaQ1RP3f3o8y+J1g8CGaH3R9BtljmbiPxVfh68ZZrp7nvFSf83oBPNHoysgobdV8SH/jzMo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758867860; c=relaxed/simple;
-	bh=aZ0Gs8iy5zWwpbrDQTP7SjySeL0m0jexlm0mpxnaOBI=;
+	s=arc-20240116; t=1758869092; c=relaxed/simple;
+	bh=O9VtMq/vegiVpYsLc3eVOkZ5rkzHjbWobrZMJSQQo3Y=;
 	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=g1tVm0MYynA+PHzWNvSaS9I906pcoEos40MoQJLYwmkDrEXkR1Qa9eFYmy2gz/TFheDfT08g01B7lreym0mUgQYlQx+gfRrq7XU6C5k+hUA4vUTzG0xTWNI3fgixUItdQZH9SeHSSJ6T8LE+NRsAc/T5ct8S01ggPOVgK92uj/g=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com; spf=pass smtp.mailfrom=sandisk.com; dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b=apWrKS7k; arc=fail smtp.client-ip=216.71.154.88
+	 Content-Type:MIME-Version; b=Z9Km8lb8mIzX0zaF4VxLW7chhJZWOv4TrIgQmAGuPk9qo8lT9hlHYme3NYKEe11k3H4bke5YJroXevWXDdQiFbtCh3F0okf6pz1EiOZPK4aqJVPDzrBhYxFOsowF69QK7MxNEsoAhT9SCmfDG8ByfyGO2uIPei2NnTDv3NIrRas=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com; spf=pass smtp.mailfrom=sandisk.com; dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b=ZCJLuzl0; arc=fail smtp.client-ip=216.71.154.88
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandisk.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b="apWrKS7k"
+	dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b="ZCJLuzl0"
 DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
   d=sandisk.com; i=@sandisk.com; q=dns/txt;
-  s=dkimnew.sandisk.com; t=1758867858; x=1790403858;
+  s=dkimnew.sandisk.com; t=1758869090; x=1790405090;
   h=from:to:cc:subject:date:message-id:references:
    in-reply-to:content-transfer-encoding:mime-version;
-  bh=aZ0Gs8iy5zWwpbrDQTP7SjySeL0m0jexlm0mpxnaOBI=;
-  b=apWrKS7kZZ2/L6wx8cyAQD9LgHwXYOrn6KzrpxQbmpHZTcFGHXIwnetY
-   p/rhusCod5mRQShx8fmIVs7QuFkCbIIZ6aWEw1my/eda97m0x/E5x01hr
-   woFAcfRE7q5+U4FKVoj7wMfWtW/e30zu+UgTYD2YUKpTI8U6WUO5+gZo/
-   sqaf0/QOzcKpGcjDR+fCLj+7RlPyZPFgmhqM3jktIns98Em0DOZjVjxwz
-   2wjQ0bsJY8E+hRvvXQxGHJpczLK+K5UbGxInMePsrUJZwqpHOl1UylObo
-   iCiBcf3aOjuWn14l9YTIOL7nzhb0evxk7h/qilZ4qfN/xuliJOAf/KMHf
-   A==;
-X-CSE-ConnectionGUID: 4MtKXIBGQsaU+1FcnumLKQ==
-X-CSE-MsgGUID: QXxDauNcTqyzQ07dw/VA5g==
-Received: from mail-eastus2azon11020073.outbound.protection.outlook.com (HELO BN1PR04CU002.outbound.protection.outlook.com) ([52.101.56.73])
-  by ob1.hc6817-7.iphmx.com with ESMTP; 25 Sep 2025 23:24:16 -0700
+  bh=O9VtMq/vegiVpYsLc3eVOkZ5rkzHjbWobrZMJSQQo3Y=;
+  b=ZCJLuzl0zk0lezhcMToalFdlZNt4PLa6BwxQ+AK3yDAd4EnK+urtGlHY
+   TbjqeNP4JxITd6UeS0mS8k27OXDOtCAZ8ZGDO+gZoGWTn+Bgo1OvYsvXK
+   db8JfKq//lr6rdMzgk2XK0FyELRQHWcGL11sUb7aSzwaZOdK4tqiTOYbm
+   tNpUOAItXHdtgURXLx9VJL7iNEF9DW2UtwBuOGNM2eBkemYkMJRwhQ6M8
+   xB85Vnt4U9MIaWvwHjLXNgC6R7794v8hlDQRs5G6SQ+0JSxo0NleisTbj
+   Sei4nit1y8huq7btq2WevEjXJAMo5IQ8vNGpc6D9jpH4hqErN6k35fv8I
+   g==;
+X-CSE-ConnectionGUID: cL8CjYcIRp2Lizq+Q7eNhg==
+X-CSE-MsgGUID: +jmMa4GmShqPgwBHkH1BIw==
+Received: from mail-eastus2azon11020082.outbound.protection.outlook.com (HELO BN1PR04CU002.outbound.protection.outlook.com) ([52.101.56.82])
+  by ob1.hc6817-7.iphmx.com with ESMTP; 25 Sep 2025 23:44:48 -0700
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=qCfAbwgP+MAKPBxYG0c5Qx1MVYXm7yWY9ZSj5hq8K425YLS4cyeQ5UbC+5iM9DUO63594n/4q8rxCU8sDnAdwA6QccFXplxp0NSEnYHtVqYyCiq2S6JAjfoD8C2pML6NPWzW6PalBCrn8jdIqrNR5AWUXP2M4gSIAvU4Os828NilJBb16TO6YtVeMg5dzYOYCjL+pJxFx5GwJxu+nTWqzCNGXdyDGsiId0MMImHEQQpic+v8OUlvSh3f+ufGZpl25Vboztoh+C2HTeSl3wp/gDEu+0Bdv+GEl28USP0l21yx9vrJExmhI3RdNDVFOK3db3dbMkHg2b+WUUew2Gsz9g==
+ b=TWn/Znh72Q/HdEdJ3roAkoNejriw64lQ654KNSQGPMPzxGuSjgMi6jhp/StQCn0/pIE0h6fn6owQqlhDbVtUStAskqmz2eZWdFYT3PUUcmkNm3iD4gDow8+p+vn4HnBpbJL7zGdPE+pQLd9kp8yI5nS3IZ7QPatGS1v+8jQoxigQZ4bt7zfJG7CET5i5xxw8Xx4P34MOmthk+arGTCwOVUs4sXOcnu+lrtDiJMJa9jRIhMa6dZTu5X/d4Assa3ybCCGs1MLbtdXCUOl84nzzIuKnaAn5klG9ZhIcnzAtucnpQ2zknEsCKaO80YxwCGMTZ0sVOzGGxBwD6cq66CU6Hg==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=snXee2OrWVJwip2av+FPbEF0r6q0GSfrfq6Z4giqXT8=;
- b=WOovXB56CqZKVozr8f9drqDPlgtJnnOofTrpMOO6caEs7Rv0ZYlrM4nwJYi4X1iWCdpUQF5sPKHre/zWaOoKpG7N6r+ignkCws05oDLf+CCiLWVXY95HTIOiyQ7S54qWCORN5oTbOpNM4hd2IUeZ0zflzon1Z1VRzpqTbPrimBMiquLJIVqO/yyAv9zLnh7g4az4bVNknQD10a3XsbdZbvGUatLHHSlssk2ORSgT8kj8SEcoOjTx2OCuP4cMROHsBCpWNkp/Swb97ZZxM94E2QRFNsTBk64EUTjHGW1+PipPSgGEd6MWyn4SBujKdfVLgoz8S1B/iARTuEr9MOrsOQ==
+ bh=WzG0wCsoQtMjn7cSC93hR5nDeU7Z5g3jX/w0xo9t2LM=;
+ b=Qrr0wGoWktin4NOK/EujcAsj2enfeeuVZ5hUAaEChWSZjuq68K/6WgMWBRIlj8bMNgf8D0cQhZJ/M6rb2DsWhA7PRpevGdcW4M/MHaXgld7KrjSlUQLXjy32z6nJuL1bwzU51n3b76m0QWS7vrOM7/6pBXda+7pvuFXcB3lfafX9758pLmJXg/Pt3N80tjcvxgQGot5/8lLgV5rG6N/KLiP/PfkxDjXt9sSgz79ivU8ucxNiOcm6U8k9ybqVHSg6EI9+QRSVgINlbtF0dAtuSJaPTbZbmhW+gpf4QXLCHDXHgWpXTrClp47O2YV21go7UmKZzCwnU6bmdfCnJPGclQ==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=sandisk.com; dmarc=pass action=none header.from=sandisk.com;
  dkim=pass header.d=sandisk.com; arc=none
 Received: from PH7PR16MB6196.namprd16.prod.outlook.com (2603:10b6:510:312::5)
- by BN0PR16MB4334.namprd16.prod.outlook.com (2603:10b6:408:149::12) with
+ by SJ0PR16MB4029.namprd16.prod.outlook.com (2603:10b6:a03:31b::10) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9160.11; Fri, 26 Sep
- 2025 06:24:13 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9160.13; Fri, 26 Sep
+ 2025 06:44:46 +0000
 Received: from PH7PR16MB6196.namprd16.prod.outlook.com
  ([fe80::df4a:1576:a40e:5491]) by PH7PR16MB6196.namprd16.prod.outlook.com
  ([fe80::df4a:1576:a40e:5491%6]) with mapi id 15.20.9160.008; Fri, 26 Sep 2025
- 06:24:13 +0000
+ 06:44:46 +0000
 From: Avri Altman <Avri.Altman@sandisk.com>
 To: Bart Van Assche <bvanassche@acm.org>, "Martin K . Petersen"
 	<martin.petersen@oracle.com>
 CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "James E.J.
  Bottomley" <James.Bottomley@HansenPartnership.com>, Peter Wang
 	<peter.wang@mediatek.com>, Bean Huo <beanhuo@micron.com>
-Subject: RE: [PATCH v5 14/28] ufs: core: Change the monitor function argument
- types
-Thread-Topic: [PATCH v5 14/28] ufs: core: Change the monitor function argument
- types
-Thread-Index: AQHcLZJ9F80TAh+HwkSeeG2YpGC3VLSlAH6g
-Date: Fri, 26 Sep 2025 06:24:13 +0000
+Subject: RE: [PATCH v5 15/28] ufs: core: Rework
+ ufshcd_mcq_compl_pending_transfer()
+Thread-Topic: [PATCH v5 15/28] ufs: core: Rework
+ ufshcd_mcq_compl_pending_transfer()
+Thread-Index: AQHcLZKCSfAewPJN+0qYd9fpw0hB8bSlBs5g
+Date: Fri, 26 Sep 2025 06:44:46 +0000
 Message-ID:
- <PH7PR16MB6196B3B0D72946C8341BE287E51EA@PH7PR16MB6196.namprd16.prod.outlook.com>
+ <PH7PR16MB61969B046CFC0E3D32CFEDAEE51EA@PH7PR16MB6196.namprd16.prod.outlook.com>
 References: <20250924203142.4073403-1-bvanassche@acm.org>
- <20250924203142.4073403-15-bvanassche@acm.org>
-In-Reply-To: <20250924203142.4073403-15-bvanassche@acm.org>
+ <20250924203142.4073403-16-bvanassche@acm.org>
+In-Reply-To: <20250924203142.4073403-16-bvanassche@acm.org>
 Accept-Language: en-US
 Content-Language: en-US
 X-MS-Has-Attach:
@@ -76,70 +76,71 @@ X-MS-TNEF-Correlator:
 authentication-results: dkim=none (message not signed)
  header.d=none;dmarc=none action=none header.from=sandisk.com;
 x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PH7PR16MB6196:EE_|BN0PR16MB4334:EE_
-x-ms-office365-filtering-correlation-id: 3a913254-0435-4649-e179-08ddfcc54ff6
+x-ms-traffictypediagnostic: PH7PR16MB6196:EE_|SJ0PR16MB4029:EE_
+x-ms-office365-filtering-correlation-id: f5df26e8-cbd4-4da4-eb5a-08ddfcc82ee8
 x-ms-exchange-atpmessageproperties: SA
 sndkipoutbound: EOP-TRUE
 x-ms-exchange-senderadcheck: 1
 x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|376014|366016|1800799024|38070700021;
+x-microsoft-antispam: BCL:0;ARA:13230040|1800799024|376014|366016|38070700021;
 x-microsoft-antispam-message-info:
- =?us-ascii?Q?ykEPNkVyXBhAq/8B/thna06t9mFZBAxks1RTolUAEjeGpf6EjoShLzf8uRcX?=
- =?us-ascii?Q?aXsTbChDb8TeLwCurzCY2adZNFuLFFCGtd1aUGowCnum3EUEfksNQiFhbpLM?=
- =?us-ascii?Q?/t4c2jcQKm9tISyTtHkYOsouumnLQpDIuL/bOHgw4+HcFGUklYAVRG+cKInu?=
- =?us-ascii?Q?JCBkerycL49Y8kjiUOSrR/EEVrrUiQOkLdUwzSzvG1HWLE5wSDvUIORjGHTJ?=
- =?us-ascii?Q?9qIo++WR1NzxByh0wYeKNcrkm5EdkzE9sb19ZtDM3GozZQkGbwgMBUMhfrf4?=
- =?us-ascii?Q?xzVAmPNEWPRHaMzi+jqVWfk5SLe/2q9UYE/+lo9Jq0FyfH94BGSq34hPFe4r?=
- =?us-ascii?Q?L48PjGeIXIv6LzP2EaJ5aMmGgh526wYrl5GmT+K17bmVhnSGYc8WMKak831M?=
- =?us-ascii?Q?TO2W815vTH6hoQGD2ICh3JYaZtqz4LUPm3l61ZvvYMAZ8YqHuvLnObiyMeOq?=
- =?us-ascii?Q?vlCnZGQaTdyYl3m5NkykV6rmg8vjFHS8rSseq18OMGVm5tgm1LwciIsNyPNq?=
- =?us-ascii?Q?wWMC5ztHFc8oFh5iKHTeYGi00mg9Y/cH4KFRGO0yLIoRHyWR8F02zrLpkVZk?=
- =?us-ascii?Q?OR9HOn0whXiYZK4BQTQUwbLDqwqQb6xWBUAOgoKpWPruV2qA0ofpDx3S110/?=
- =?us-ascii?Q?WlgBLNShPgzNWCm+eh+EfQrr28Eo2LbnMwJzTaa+gBs23xI6Sho9lEq9dPrh?=
- =?us-ascii?Q?WW8StOxNNzZaa1c4PPNVGV68dUdga2hN/ttup0NMB3QSTvQpp6PdN9xmn3Vg?=
- =?us-ascii?Q?VE/LMpU/1Xb3DTMk7nPoxPyvDJok8lyBAdQadMBSZtJRKklJ9I3E18Gi/S26?=
- =?us-ascii?Q?LY8PmY+Wa14RawZIOoYC/5t0xhma56rg9mz8ArucbbGITXx4sZEF9Dlq0DZY?=
- =?us-ascii?Q?oT5Jz6e7kQsh/1bXYka4bXqsi1693dMqAEWYn9aprqUbh3+ojzpAmv5VDOJ8?=
- =?us-ascii?Q?RfwPU2Kq/XP1Knwk7EJKoNpuPdT4R8FKtf13v6xLGG6TWWWQHLxy5/Byp4PQ?=
- =?us-ascii?Q?ceonRQxx5tok0Ygxm0xrxm9ILCrMnbidkVIukrOehdnoF++z20cQ8U6pHoAl?=
- =?us-ascii?Q?ZvdMl2QbGSU1UpfF75ybZ+uov87xOw7xufFgjcxffiG8MDrzTgeSorY7fYMw?=
- =?us-ascii?Q?+hE2SVd8mN3B/2eZBLC2iz7ewfx3M60/VlldP1pOFjNJDhIfoF7C7i0RmjoE?=
- =?us-ascii?Q?eiuqf7Mi7eejBA4qQLYJnaJA+p+Z49qxM2c0EXomAtJHyCcDhOSqfymaG9W2?=
- =?us-ascii?Q?QyHtSuqH8hIWctEcX8vQEf2YOswVVc3G5JTN+gk6b0WURTFS0vRBL/J1Uf7m?=
- =?us-ascii?Q?owP6p2YVZvoz0HTgcbLkgndDmux7h83Vk/PN8/9ek2EbhSlh5lwRmj0IuCO2?=
- =?us-ascii?Q?m5hXe9IWDNqWfb/O+Zz0yLu7fC2vuMbEsxv25g0hELFOJF57d5J86I/bUlMG?=
- =?us-ascii?Q?co+5HhX+oY3sU5GT/Jv2qV5TaJTU9w9QtEOJgOeg1se4dIkjWdbjyw=3D=3D?=
+ =?us-ascii?Q?ZyvN2RIdO436ZBzcOpZvXCfwKfV+5WcPtKAJseceO+ZVEejOvZjHtCNzXCsY?=
+ =?us-ascii?Q?NZqg4/4LNzKzem4uL6S5A1g6UCM/0i2tRLw+Hx9acTZDa3nWU4nmmoKzlXm9?=
+ =?us-ascii?Q?c+shmoIDWEPe/XFHhgMGBMI08lATsXmJPxjna7USHHtRmdF3Kaxu2u9ui8Uk?=
+ =?us-ascii?Q?zgoepwO/BETBNHZiSPvAkp53qNT2q38406+g1ePkkmBrVxgAsmF4eUfxfrcx?=
+ =?us-ascii?Q?cUrF0KzECjzuyxLp5338cTqzXWQ4GeUYayOzpuWqjGDeqOwDZWipMNT8TqbF?=
+ =?us-ascii?Q?hPwYoU1LNsg6UhuE/2OAUqhOdsyNhXostHXHvNSpBulpz3INM5hzzD4Hd2uR?=
+ =?us-ascii?Q?t8mUVR+hDFQ4/LL4CA6NfYHkwrEVE8fFPfK/y7Yi4YXK0x3MXjopdMqiu4kB?=
+ =?us-ascii?Q?CnqCcmByt2BzuFwTn7gl94xb6O2NWaQnZtpt4g4DQTUYgQGRPGfV1yJtaYsI?=
+ =?us-ascii?Q?AJME0ooxMLkvQlM+B1Mc5MSy4SO1jsYmoPPkLpXroVBvqr+xbBE1C+9ZQb5E?=
+ =?us-ascii?Q?EniJ2vUlEy+AVM8uQhtqpTNk0IWTivDztT4TjTf3nGfEYZUvK2iS/W3sW/YU?=
+ =?us-ascii?Q?5tk9RnHMzetwUpfRiayanuSjBqnh9u2Q+M2V7aCOB73CfS6rnezvBWtEoQz1?=
+ =?us-ascii?Q?FLGKGnnEWU+u3SPaW+81xnp/LQ3vSLUybzLCaNT66Xs5ssJCZBSTft2mZiDE?=
+ =?us-ascii?Q?Qwotk8Wdz13iUcfEKwmr1Ew7WTshWF+SZ3GH9/uDIFptPmyxW2iyD5j38Usj?=
+ =?us-ascii?Q?C+8+hLJgSf3+4+ZcyJ/hwc7hNDprJ/I+YKDplqsLwEYVqCAyv63DeLImupFL?=
+ =?us-ascii?Q?sygIi6c82sdN0JqyINK2tXNvWD892hEJf2yMzWCqR8qDrGWu+whjYGNQHNUp?=
+ =?us-ascii?Q?6e6dKq8D8mSgo5H9yZPYdd52NKjjJnWzqDpXCrEX0qKD2XdvMUFvxaVr/1Ja?=
+ =?us-ascii?Q?8ESxxmH3rC7F4U3WrMioSxM0sSA9ieFgte4fpXpNT0XuKeLz4NYqleO8Qv8g?=
+ =?us-ascii?Q?Cxo8M6esnJgtqKA2GjU8xnala2uKNFuRZdf+xitjFycyI118izLT73bGRzHV?=
+ =?us-ascii?Q?M6ygzwhGT6FYmvUkLm8/D/tJtgsFBPN10ltY7Vfv0Tl3J7wL0Ijvw99ZclU0?=
+ =?us-ascii?Q?Bi9RKpp7n32QKHbhIDkfG6BCrVqT2fE2uhUDxGY53Roulyd8/x7N8jzWDf/k?=
+ =?us-ascii?Q?62AF2R3jTIvRNfagpHsgDCeHGL863JlWaVcy6GFrh0/xva6uG7/03TKdlbL3?=
+ =?us-ascii?Q?lVw2loKA9kj4O7bdJvbOBX9V0SHe5f0JtIMPsLWmIXtlkoV9a25N4n3Rl/1M?=
+ =?us-ascii?Q?CyJDvVTrSq3+ga/s+nfWD2NRjREsGNzOttGMSKGTviaRJJSx2VrqA7PLL67S?=
+ =?us-ascii?Q?b8QvvMLVrHSR86TG99cBZ6jgrOOXEawpxE+xfmv4S/32ehhAtllsbVV4Luix?=
+ =?us-ascii?Q?xF5++5nfmlyL5UTIIop4RqZmUjKAryi2j5Pq9WF61M6doIKmvjAk+XCC3oXU?=
+ =?us-ascii?Q?XVq5GCOP6IIxtUFKixMiV49XhfRFwmwoieZT?=
 x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR16MB6196.namprd16.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(366016)(1800799024)(38070700021);DIR:OUT;SFP:1102;
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR16MB6196.namprd16.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016)(38070700021);DIR:OUT;SFP:1102;
 x-ms-exchange-antispam-messagedata-chunkcount: 1
 x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?q4LNVaPna6dkKvshVnkss3+CP9FXqPrmFXLC/YnSKGqzTUSwGQIo0vgAHq/2?=
- =?us-ascii?Q?LjLKylD6PSv9BTH9dNMhkRHgRekQyFxRxCsSk1qk3wDjnz71b9CanJ/Jp6J/?=
- =?us-ascii?Q?pew6ir8U19lJwcove3J53DFRjY4Qz8pgucoGFAgFUKRAk04Dw9w7xMXmIdMN?=
- =?us-ascii?Q?vqzgPEJ7ZRgE5iMqKCVjEwCZj3EmWKowbAIL1/+YZ0xknbUOQjeduGL+j6y7?=
- =?us-ascii?Q?VB0dQ+9RileotlKVoh5jYVYxKH0Smk78aLdWR2b7m3/Qr9wFnYk+bV5glCQ9?=
- =?us-ascii?Q?rHgOTRsYWlkiqMkn4AFIgUH4yInX6ZJmJoJejy6FmS8JXv6etQv0Q+pECn34?=
- =?us-ascii?Q?vk4sdJvXtLXbX0F89YlLALyLueLxzVyD20Bu3l7bLvOdAJRS2Bs0Vz1PHNRY?=
- =?us-ascii?Q?Osf6DFtqP1LnvlgsdwZsF3NVsmIZu+iObT85vN85XNx2B4A4hLgntboBEJul?=
- =?us-ascii?Q?Sh7Gl5scV3VZgGj5htK6vVgLP9ohcSqo2KdX6JIOxpBrZxcjUMXaCvvPWzm4?=
- =?us-ascii?Q?sPvyYYA/+Bioev1/24nLQCQZGRjMkHutW4aCS5a5lRf3pxbR0dcb7Y/yBd00?=
- =?us-ascii?Q?Jc6XwSQI6mBvnVNSpWiMN47q6M8Od/UyjuxBlH+ev1cyZ1LCbfUHy2qlst/f?=
- =?us-ascii?Q?9gydb3v99/cxubq+dAJt2gzluLKK+Sg3r10299R8MeshxlITYMs29AHXjB+Q?=
- =?us-ascii?Q?HMxDFBBNoGM/2blZsC3GDS/NGNc0JyY3up0NHiyl0xroWnrLzxCdZcyMhQe6?=
- =?us-ascii?Q?KeoO0QX9vLq14vzzdrmoLcgv8P3V3I18rVkXKVxLPcdtSlQeFLfsAeeyP6a2?=
- =?us-ascii?Q?ft6UDYH3FFLu5EMRd+OFDfofOfpzMyl0xxnW/VSbchg97DKcVeDAb4zqYb6z?=
- =?us-ascii?Q?2vvHdNiM5yIK0wubOUEfC90u69OYcJtWKA30hp/DdCT4I0adUnXQEi+8fJHE?=
- =?us-ascii?Q?5Zxs01GUfZXN+vOL+K8G6bG2ZMr/kTuaxPN8ODtnSwgPvMOyd8XUiXKMqN1V?=
- =?us-ascii?Q?v1O4TNhNNT+d0Tw9a9DYtkij5cGS1vV9zm9EvJ0De5uSQKv4nW13fhZOAySj?=
- =?us-ascii?Q?yTesWSITs1sgIZiUfHv6oSyo1HCvMeunIWVADUJVZOD8SLMzWfuKzKz97In3?=
- =?us-ascii?Q?HgDU/H71VwuprtNWJMpDoRw+Nk+H7067y7XwHc2E0cOccVgMJ8gLfsLANEv9?=
- =?us-ascii?Q?BKP0rhbURKuo4bA3KmRn2S0Xa3CkDiba6d2OAfj03VD5t1T0vC387og913pn?=
- =?us-ascii?Q?kw5c6pPOiRum3dKqsyo7UmMCVTSiIwMAfnWmGgA1oXbiCZta6dX9/IOuwN5f?=
- =?us-ascii?Q?Hwr2ByTewky+G5YHVvJGb5C75JOS362NqcxqvP0P6YwEN8itQyN6GhmZlB1f?=
- =?us-ascii?Q?U5tQ8TZJwkbIc4xFcJkAwpzPW/3294xaXj30BsC4I3he6GCqSvKZBztqDlc+?=
- =?us-ascii?Q?xkwFiuGJr4YOU9zj+hP94VvTJrxZ46pgQj6vnLEtNS9+irGi9sCzNHgQCnwR?=
- =?us-ascii?Q?4L33lwssdfRzS3E/CVgTyIaaN89rCyPVYMTVFFRAibK5+jx4UuEqWY3AEv6a?=
- =?us-ascii?Q?2j8ESnBodcXsJcz7icpXuNVt0kst6ZkAszOkBAwc?=
+ =?us-ascii?Q?4qAiX3w55Ps3W+vuV+QSyTBnhvnJZH4xvVpO6NL3j3r0WuhEvrHw2xS9oK3V?=
+ =?us-ascii?Q?OUbeoRC9EynA/40Umcoj96jRB+rLxrFAgR2rtnv9rvw7B+DexYP7BiRS/Q4P?=
+ =?us-ascii?Q?Xjbvs4+RynCP+uDac+JC5gnLb3/S1EuQUi6JAvwlrYDXbFiyt+YLybuPghM+?=
+ =?us-ascii?Q?3yC3ySd+KaGVjejFs5YzhvpuhuPFB1r+7/imuhQzvRwXG9ReUbkTW/OwEA93?=
+ =?us-ascii?Q?8ifLAuuDMGzAvvN4YB0M0pOAXsJSBiX9beHj6qYwD7J2X/OWejQjb9/Qm/9M?=
+ =?us-ascii?Q?Uq/jgrNtubHWmoXfwf+Kc4M7U+nWeDJuBXxmGasesnTRc/XemiiOESmoxU68?=
+ =?us-ascii?Q?VFfQaYrggPxCnX25GTo87+WwPKhjaJIyUPYkEjW3Kggj5qgamyRE3vakc7LQ?=
+ =?us-ascii?Q?LVWA0cuJGMKCINaMzjBV4bncxJp5O7oLCuW92rQQStURJpIbNlkwp75+bsAA?=
+ =?us-ascii?Q?6zViYx6hvXcZG1PjpBZCxrlWdT9RKUeFZL8liQdEHhlxvYeTNXVu2ilVXxJa?=
+ =?us-ascii?Q?LpxtT7YhOxROuenGfRzREoirtxzEUFcDDONGtlX5mxFMpZzKh0PIkhDCk1gA?=
+ =?us-ascii?Q?2vaLFYlDDm9vIA0dfxinBOwT/zZDEb4TnWCFGgdDkbR4bxs/HzGu5XQI3d5B?=
+ =?us-ascii?Q?7ZVkpZi7tFXtpg1lmUcREnxyynrWUutqcrg0CuyvaF+62Gf67z7u3T5MARYE?=
+ =?us-ascii?Q?d3FWHBMXES39sWrKzTbrKFktbq+cjZegsQo/jKLv63RG7tK65CP2FnPHugdQ?=
+ =?us-ascii?Q?HfxlQSVC0JZg/VaKtipNgWidhwcvkehmPr+j9W0+N52hjohd94bYbDK352JH?=
+ =?us-ascii?Q?NnH4gEI48mO7qGXO4Q0jKoHZvx/yOPONpmEMMwRm0cA4qmGaI/y7d3V01m44?=
+ =?us-ascii?Q?AYq0B//r7ov25slTYtVgmmVBeDHrYizRs8SVeP5nrUpRmHULyMXt8ym5nsFn?=
+ =?us-ascii?Q?pzAu31C0ev3DXQQ4EDuRVbIcsU53p2xSarWLcpMBrQ8HmJTC5+TEaSRUU9NZ?=
+ =?us-ascii?Q?NZ1eiDfmh+f859rgrxxrDDviZvr+kcXeQxMJO+k4YJ0w8PZwqlrp2gChXvbS?=
+ =?us-ascii?Q?vG63kjW9C95O8v7Jpco/uloxKb2GH5oPW62OBAt8IWIPJzBFw/sMmuANjeDU?=
+ =?us-ascii?Q?ZmjenPKT/c3RC+IuMimrk9cJsEjZjHh/Hq/oyd97r+qxxzB8ZfPZkcfSsKH2?=
+ =?us-ascii?Q?+zqPkvk8sRE4cp2jg2MTZTMmOK1JWKvng2vKbNNf7Q9odr+bEU7d1fnLrJR0?=
+ =?us-ascii?Q?0hsrjX5N2IpRMn57oLIiXsYd893JocGtq8kuXz4HIJ2q2grXbE6STgsGPQEg?=
+ =?us-ascii?Q?9A0MUEYnpP53MrdLPm7UXuvqwLsJaD6KvJ211u6B2VNzQill4JxdPjxtBdgt?=
+ =?us-ascii?Q?kQCj1LRcZyovj9e31d9Va9k53M6GXabDsydkvRflCFzFsqALuHxqB2r0KMSU?=
+ =?us-ascii?Q?0OP1c3chl2TS9zvTrP1tahTYKQ5VNxpHR5BKxDSIiBmvucAz5H6QAWpI2Lme?=
+ =?us-ascii?Q?g/HSXkFvXP2uhgIPd3wGSKdF6BxNXkmf733ykMX1cGb7W+A6XXdmIJ0Vmsr3?=
+ =?us-ascii?Q?1PoBbVjpp0WOWSVItdAI+/qAjPpVTD/VgeZNSQ8R?=
 Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
@@ -150,150 +151,131 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	NKs5WiTDAdkmeLbxl3nNucXirthANvlVIKOBbJBFkTUMVmlA9ofjEYh3a0XO8oOixxfMRWtENfnohtha65MWirCDGTRy3XX+Rf5o0lJfywbhQO/ymfUYqo//o7Fwa0znWTDot8nEvX5Xx/+hDca9xua0q16elr1Gbc+HFsX4d0GH54X79oL0y7cmgajXgoah3FxCAiEmNsgAZTMg3jaq8dGS7Jbs7mc1WKMeXrNLp6cQzOwpaAHg6IjQc+pQNkf9+5+eZHoeTPtMGbPRO9rpLO+s+i9zVAYuEwMlcSt90N3ETb+p27ADVtbsOQ/57gZAg1GSsvVDBeTHO2OfmR7yDWlR9mL2QFjd+GlTb7dj6z7ZlB7vRtRyJUwDXEgfrKqVph5QDmLoyj3st0in87FaNj9yo4VKmvd/zJGT0tBbeIqPfQ0/oYIDMqQ1yULJXhW3DA+TcoX5iyAB57Q8qD6rIqkelCyY3Eh9Rh97Baz5UizyCGXtEm1Kv6KnZH31s54kmAmaWLExqawDXeUc6kPdsO66Zlvv2EJmwwQLC22wNX+08YWW+J1WcmNJGsCWlE+6kkRCkwd7P6dW74W4SjwyIm2BtbhaJIqeA+yeO7EIFPmYDo6/FFmCguzIpLQvj5+djnenDK1FEjSt9TBgfIUr3A==
+	MmzwkHEW+CAETbdk6YzOQBlkpgXTFLnq1uQIzMMjal76ducVZgC93np6vPRjLZGOfY+r/6i7P7vzcgemX8KZO9SOt3i3kVLvmoiQZ+gslD/nUnslLgUmmOBMgLo20HMWkk/MYD7+huSUXnv/oSFW+r+BSENN9PpsxdIQ2cozJ9TxgrOwDQ/4c2UPMH0gQ0U46IcP8JS2DhLU60uUr1Q7hRUH1A1eieCI4+mZD175SyQFNAy/DXgdWqdQ6G/OkljXivUGizfwEYAUJSoGzx5rS+dzC082W6NKlDnMowMgZtYOonUZivLCGa2e33oEtdMIOjvqgYY8kysU0THvYRsDefqoYEVWhf0yk0rhg0e8u0SXqjeGD+Rbl4/HIRpK2KJawsWhHjHv39QbgpWNRetSsvOKcApg2tG27eKhYLVLHLDJ/bOb2zfcH4UcwnpEL8mq0G/1sk6VGgBC4cMHsuljEYnSaY1XY/enfAG48dBjic/PvWhkkAUch+DRNDE9EXNOvbXTJe881Fed4dHfraOt6WZQbmL6s/DK/Chg8qy32kAI8FHTeZFkOC4EZUTgVnpcbxC99O5ThY7XHmjvi8YU9J2A/AV3Xe/ZPltxaR4hy0y0GR/NEEKBaLnGuocZx7jGMrnTVTpuCmr/AR7piipGyg==
 X-OriginatorOrg: sandisk.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
 X-MS-Exchange-CrossTenant-AuthSource: PH7PR16MB6196.namprd16.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3a913254-0435-4649-e179-08ddfcc54ff6
-X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Sep 2025 06:24:13.6367
+X-MS-Exchange-CrossTenant-Network-Message-Id: f5df26e8-cbd4-4da4-eb5a-08ddfcc82ee8
+X-MS-Exchange-CrossTenant-originalarrivaltime: 26 Sep 2025 06:44:46.6622
  (UTC)
 X-MS-Exchange-CrossTenant-fromentityheader: Hosted
 X-MS-Exchange-CrossTenant-id: 7ffe0ff2-35d0-407e-a107-79fc32e84ec4
 X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: IPNE1amOkGNsXMjSBOpVWcXTo4oYuJHI8HzZffxwBq8vseXf9pFUYz5yE5Ry2sIfoH1d3cFCx7VFsOsStFdqNw==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN0PR16MB4334
+X-MS-Exchange-CrossTenant-userprincipalname: Pzn4gsEOTb+hQ6uq6OjCz8v3QvlXzc83o1Z3l4LP9nSMPJ+rXWlLEXYDjEM5LwdhSCumOlAoIt+SjTbVGpUnHw==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: SJ0PR16MB4029
 
-> Pass a SCSI command pointer instead of a struct ufshcd_lrb pointer. This =
-patch
-> prepares for combining the SCSI command and ufshcd_lrb data structures in=
-to
-> a single data structure.
+>=20
+> Replace a tag loop with blk_mq_tagset_busy_iter(). This patch prepares fo=
+r
+> removing the hba->lrb[] array.
 >=20
 > Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 Reviewed-by: Avri Altman <avri.altman@sandisk.com>
 
 > ---
->  drivers/ufs/core/ufshcd.c | 44 +++++++++++++++++++--------------------
->  1 file changed, 22 insertions(+), 22 deletions(-)
+>  drivers/ufs/core/ufshcd.c | 80 ++++++++++++++++++++++-----------------
+>  1 file changed, 46 insertions(+), 34 deletions(-)
 >=20
 > diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
-> be8fd3b15d5f..ec1c8bdf07e6 100644
+> ec1c8bdf07e6..eea9e707ab4b 100644
 > --- a/drivers/ufs/core/ufshcd.c
 > +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2294,19 +2294,20 @@ static inline int ufshcd_monitor_opcode2dir(u8
-> opcode)
->=20
->  /* Must only be called for SCSI commands. */  static inline bool
-> ufshcd_should_inform_monitor(struct ufs_hba *hba,
-> -                                               struct ufshcd_lrb *lrbp)
-> +                                               struct scsi_cmnd *cmd)
->  {
->         const struct ufs_hba_monitor *m =3D &hba->monitor;
-> +       struct request *rq =3D scsi_cmd_to_rq(cmd);
-> +       struct ufshcd_lrb *lrbp =3D &hba->lrb[rq->tag];
->=20
-> -       return (m->enabled &&
-> -               (!m->chunk_size || m->chunk_size =3D=3D lrbp->cmd->sdb.le=
-ngth) &&
-> -               ktime_before(hba->monitor.enabled_ts, lrbp->issue_time_st=
-amp));
-> +       return m->enabled &&
-> +              (!m->chunk_size || m->chunk_size =3D=3D cmd->sdb.length) &=
-&
-> +              ktime_before(hba->monitor.enabled_ts,
-> + lrbp->issue_time_stamp);
+> @@ -5717,6 +5717,48 @@ static int ufshcd_poll(struct Scsi_Host *shost,
+> unsigned int queue_num)
+>         return completed_reqs !=3D 0;
 >  }
 >=20
-> -static void ufshcd_start_monitor(struct ufs_hba *hba,
-> -                                const struct ufshcd_lrb *lrbp)
-> +static void ufshcd_start_monitor(struct ufs_hba *hba, struct scsi_cmnd
-> +*cmd)
->  {
-> -       int dir =3D ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
-> +       int dir =3D ufshcd_monitor_opcode2dir(cmd->cmnd[0]);
->         unsigned long flags;
->=20
->         spin_lock_irqsave(hba->host->host_lock, flags); @@ -2315,14 +2316=
-,15
-> @@ static void ufshcd_start_monitor(struct ufs_hba *hba,
->         spin_unlock_irqrestore(hba->host->host_lock, flags);  }
->=20
-> -static void ufshcd_update_monitor(struct ufs_hba *hba, const struct
-> ufshcd_lrb *lrbp)
-> +static void ufshcd_update_monitor(struct ufs_hba *hba, struct scsi_cmnd
-> +*cmd)
->  {
-> -       int dir =3D ufshcd_monitor_opcode2dir(*lrbp->cmd->cmnd);
-> +       struct request *req =3D scsi_cmd_to_rq(cmd);
-> +       struct ufshcd_lrb *lrbp =3D &hba->lrb[req->tag];
-> +       int dir =3D ufshcd_monitor_opcode2dir(cmd->cmnd[0]);
->         unsigned long flags;
->=20
->         spin_lock_irqsave(hba->host->host_lock, flags);
->         if (dir >=3D 0 && hba->monitor.nr_queued[dir] > 0) {
-> -               const struct request *req =3D scsi_cmd_to_rq(lrbp->cmd);
->                 struct ufs_hba_monitor *m =3D &hba->monitor;
->                 ktime_t now, inc, lat;
->=20
-> @@ -2357,6 +2359,7 @@ static inline void ufshcd_send_command(struct
-> ufs_hba *hba,
->                                        struct ufshcd_lrb *lrbp,
->                                        struct ufs_hw_queue *hwq)  {
-> +       struct scsi_cmnd *cmd =3D lrbp->cmd;
->         unsigned long flags;
->=20
->         if (hba->monitor.enabled) {
-> @@ -2365,11 +2368,11 @@ static inline void ufshcd_send_command(struct
-> ufs_hba *hba,
->                 lrbp->compl_time_stamp =3D ktime_set(0, 0);
->                 lrbp->compl_time_stamp_local_clock =3D 0;
->         }
-> -       if (lrbp->cmd) {
-> -               ufshcd_add_command_trace(hba, lrbp->cmd, UFS_CMD_SEND);
-> +       if (cmd) {
-> +               ufshcd_add_command_trace(hba, cmd, UFS_CMD_SEND);
->                 ufshcd_clk_scaling_start_busy(hba);
-> -               if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-> -                       ufshcd_start_monitor(hba, lrbp);
-> +               if (unlikely(ufshcd_should_inform_monitor(hba, cmd)))
-> +                       ufshcd_start_monitor(hba, cmd);
->         }
->=20
->         if (hba->mcq_enabled) {
-> @@ -2385,8 +2388,7 @@ static inline void ufshcd_send_command(struct
-> ufs_hba *hba,
->         } else {
->                 spin_lock_irqsave(&hba->outstanding_lock, flags);
->                 if (hba->vops && hba->vops->setup_xfer_req)
-> -                       hba->vops->setup_xfer_req(hba, lrbp->task_tag,
-> -                                                 !!lrbp->cmd);
-> +                       hba->vops->setup_xfer_req(hba, lrbp->task_tag,
-> + !!cmd);
->                 __set_bit(lrbp->task_tag, &hba->outstanding_reqs);
->                 ufshcd_writel(hba, 1 << lrbp->task_tag,
->                               REG_UTP_TRANSFER_REQ_DOOR_BELL); @@ -5620,1=
-9
-> +5622,17 @@ void ufshcd_release_scsi_cmd(struct ufs_hba *hba,  void
-> ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
->                           struct cq_entry *cqe)  {
+> +static bool ufshcd_mcq_force_compl_one(struct request *rq, void *priv)
+> +{
+> +       struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(rq);
+> +       struct scsi_device *sdev =3D rq->q->queuedata;
+> +       struct Scsi_Host *shost =3D sdev->host;
+> +       struct ufs_hba *hba =3D shost_priv(shost);
+> +       struct ufshcd_lrb *lrbp =3D &hba->lrb[rq->tag];
+> +       struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
+> +
+> +       if (!hwq)
+> +               return true;
+> +
+> +       ufshcd_mcq_compl_all_cqes_lock(hba, hwq);
+> +
+> +       /*
+> +        * For those cmds of which the cqes are not present in the cq, co=
+mplete
+> +        * them explicitly.
+> +        */
+> +       scoped_guard(spinlock_irqsave, &hwq->cq_lock) {
+> +               if (!test_bit(SCMD_STATE_COMPLETE, &cmd->state)) {
+> +                       set_host_byte(cmd, DID_REQUEUE);
+> +                       ufshcd_release_scsi_cmd(hba, lrbp);
+> +                       scsi_done(cmd);
+> +               }
+> +       }
+> +
+> +       return true;
+> +}
+> +
+> +static bool ufshcd_mcq_compl_one(struct request *rq, void *priv) {
+> +       struct scsi_device *sdev =3D rq->q->queuedata;
+> +       struct Scsi_Host *shost =3D sdev->host;
+> +       struct ufs_hba *hba =3D shost_priv(shost);
+> +       struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
+> +
+> +       if (hwq)
+> +               ufshcd_mcq_poll_cqe_lock(hba, hwq);
+> +
+> +       return true;
+> +}
+> +
+>  /**
+>   * ufshcd_mcq_compl_pending_transfer - MCQ mode function. It is
+>   * invoked from the error handler context or ufshcd_host_reset_and_resto=
+re()
+> @@ -5731,40 +5773,10 @@ static int ufshcd_poll(struct Scsi_Host *shost,
+> unsigned int queue_num)  static void
+> ufshcd_mcq_compl_pending_transfer(struct ufs_hba *hba,
+>                                               bool force_compl)  {
+> -       struct ufs_hw_queue *hwq;
 > -       struct ufshcd_lrb *lrbp;
 > -       struct scsi_cmnd *cmd;
-> +       struct ufshcd_lrb *lrbp =3D &hba->lrb[task_tag];
-> +       struct scsi_cmnd *cmd =3D lrbp->cmd;
->         enum utp_ocs ocs;
+> -       unsigned long flags;
+> -       int tag;
+> -
+> -       for (tag =3D 0; tag < hba->nutrs; tag++) {
+> -               lrbp =3D &hba->lrb[tag];
+> -               cmd =3D lrbp->cmd;
+> -               if (!ufshcd_cmd_inflight(cmd) ||
+> -                   test_bit(SCMD_STATE_COMPLETE, &cmd->state))
+> -                       continue;
+> -
+> -               hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
+> -               if (!hwq)
+> -                       continue;
+> -
+> -               if (force_compl) {
+> -                       ufshcd_mcq_compl_all_cqes_lock(hba, hwq);
+> -                       /*
+> -                        * For those cmds of which the cqes are not prese=
+nt
+> -                        * in the cq, complete them explicitly.
+> -                        */
+> -                       spin_lock_irqsave(&hwq->cq_lock, flags);
+> -                       if (cmd && !test_bit(SCMD_STATE_COMPLETE, &cmd->s=
+tate)) {
+> -                               set_host_byte(cmd, DID_REQUEUE);
+> -                               ufshcd_release_scsi_cmd(hba, lrbp);
+> -                               scsi_done(cmd);
+> -                       }
+> -                       spin_unlock_irqrestore(&hwq->cq_lock, flags);
+> -               } else {
+> -                       ufshcd_mcq_poll_cqe_lock(hba, hwq);
+> -               }
+> -       }
+> +       blk_mq_tagset_busy_iter(&hba->host->tag_set,
+> +                               force_compl ? ufshcd_mcq_force_compl_one =
+:
+> +                                             ufshcd_mcq_compl_one,
+> +                               NULL);
+>  }
 >=20
-> -       lrbp =3D &hba->lrb[task_tag];
->         if (hba->monitor.enabled) {
->                 lrbp->compl_time_stamp =3D ktime_get();
->                 lrbp->compl_time_stamp_local_clock =3D local_clock();
->         }
-> -       cmd =3D lrbp->cmd;
->         if (cmd) {
-> -               if (unlikely(ufshcd_should_inform_monitor(hba, lrbp)))
-> -                       ufshcd_update_monitor(hba, lrbp);
-> +               if (unlikely(ufshcd_should_inform_monitor(hba, cmd)))
-> +                       ufshcd_update_monitor(hba, cmd);
->                 ufshcd_add_command_trace(hba, cmd, UFS_CMD_COMP);
->                 cmd->result =3D ufshcd_transfer_rsp_status(hba, lrbp, cqe=
-);
->                 ufshcd_release_scsi_cmd(hba, lrbp);
+>  /**
