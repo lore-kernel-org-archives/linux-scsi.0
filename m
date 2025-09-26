@@ -1,48 +1,48 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 239332AD35
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 17:32:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 052862641CA
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 20:01:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758907968; cv=none; b=FDcQG/16GBRjmgMccI4/Ql16Vh957onDB3FkIHClK2IggP3oxn/Bm7bm3ry9HwNjigP681OCiONNL9SCB/vhnQPC+nttpba88uTB2Ogs5Fbfq7WOlYmd0hzwC+56sIGm/dGQLuM5jqW/f4j5789rAzHUeBRGjoKYOqtwQea5k0Q=
+	t=1758916915; cv=none; b=gVuxNlBMWPAhBoCzT29q9zeQpLA9qrKt2fL5jfiCEGh9Kyl335HTDcJAWdTYrMM2cK+KqmobjPQXkFACrDZB/EJ4u1ecufiBEjFJrwgCxvAG4lMx4mbT/jA4pflTW9PHqfpcPqw4Pu6p09/FPy9Ah2jpHHXZfvlxLLAoOOYcwZY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758907968; c=relaxed/simple;
-	bh=ddat+5U38gJK9Wm+9TXNXRUTeqeTBtOjBt2FgZpLg88=;
+	s=arc-20240116; t=1758916915; c=relaxed/simple;
+	bh=k2SdFSRfpvdKXtzgXXlV9eo0kzJ0C7cJQOvNCE/8Mus=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Aw/M7YNR762F1auCL7j/H/JV1b5X3iWBrxAJDFqg4rj40pCK4sjT1zwz8chcFbayB034g4zVfRm0RK7OxzQPO9xtaou9w45EjmBLUYup0/XBqBiv3f0OzLzPJkdQxAGMSxD11nzCbEb2I4qmDxyywgUYbsM3Gh0b1fYYqtEq22k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=xeqlMKrZ; arc=none smtp.client-ip=199.89.3.6
+	 In-Reply-To:Content-Type; b=e4pYjqYYuQNNJfskUX0G2yl/lwLC58CaOVrrroe++O9u6QqAOZE/4/wOXjnU4NgV2dbjwz6gV8XEVmhPSQexdgZbHlIx9eUQiiv9AKvd5dDbtYGV+GoG8AbZe3ki7fFLCCUGTWzZ2GGakvRaBfcsuO6WWVcLdW+85WzHbHVbpA0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=zoNipqbG; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="xeqlMKrZ"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="zoNipqbG"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cYHjB1LDQzlgqVf;
-	Fri, 26 Sep 2025 17:32:46 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cYM153XM7zm0yTN;
+	Fri, 26 Sep 2025 20:01:45 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1758907965; x=1761499966; bh=r7z4HRWbqcX+fwNisNwMFnrw
-	stsMUj8SjpJJyDl36Io=; b=xeqlMKrZmB8/XpRaXVYYiMg8NMhR2HBEzJ0zgg9t
-	zitLpGpg1sqCszTKKxTMOX2Ne/kjDw/AK63GRRJPwjFQGhmy3ETlHhLKgLR75wM0
-	z1ar6jXEXyoJFtFQ6b/4q2auwFWEYPequbu85lQL0hU5izT+mdZbrGGPRn3IBzaA
-	nvkfxC5mo/p3TOidzGyy93EWyjcnY2XL8/Sa2/UmLgJQ8uuE36zQjM17YGEn5o3g
-	bX5wd0Xkc8e2V2ElXAuBvIupD848dKvoF1jvr9brGqDmT4a/pjRPsSjGWvCLCGkm
-	BQuXUfkHK+EmajAcJXtwfl/YsZQoPWLJ3XautLbNA9VCmA==
+	 s=mr01; t=1758916904; x=1761508905; bh=uUyePSZBvSkDDaexrK9XJqXT
+	ZPECYv/+p2ztGEO6OMM=; b=zoNipqbGp9vcADxs7wUeC5J73v2ock5eU5wjUH95
+	yMYLBoSepR5T+SEZdjAyhfavpEmicMCHJ3ZP4T14Sy98w8T5EO/vsiX8kglkbBAY
+	hJ/27renpgsZ3Xq6wXWgOnXQzD9Fm9okPeBc9+Dr3Nu0dP8QA4wM0ZSZdYAtDV5G
+	STLZIAprjh0rk0WhCpZYWR5CIoxqLlONPwkixSJptL4Xd0G1go6mp4/k7wg/LNz3
+	ntmtbjwx+FueDiPa4Q7W7NksnsjnZJRZkUoqZuOLJANesdNK/PN8cPQfKh97OfX6
+	qylI9TrR2Y+9ULwgc/7mNGAiWWrUZWBUAUBtErZ4mq56UA==
 X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 0sXw2wR5UzDb; Fri, 26 Sep 2025 17:32:45 +0000 (UTC)
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id nVXepCdd4CFu; Fri, 26 Sep 2025 20:01:44 +0000 (UTC)
 Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cYHj755XVzlgqVh;
-	Fri, 26 Sep 2025 17:32:42 +0000 (UTC)
-Message-ID: <27e9c889-ac42-44b7-b2e8-aa456aa335d4@acm.org>
-Date: Fri, 26 Sep 2025 10:32:42 -0700
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cYM0z4z4Yzm0pKN;
+	Fri, 26 Sep 2025 20:01:38 +0000 (UTC)
+Message-ID: <25157f6b-3508-4393-9439-6905d7f950d2@acm.org>
+Date: Fri, 26 Sep 2025 13:01:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,57 +50,31 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v5 00/28] Optimize the hot path in the UFS driver
+Subject: Re: [PATCH v5 04/28] scsi: core: Support allocating a pseudo SCSI
+ device
 To: John Garry <john.g.garry@oracle.com>,
  "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
+Cc: linux-scsi@vger.kernel.org, Hannes Reinecke <hare@suse.de>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 References: <20250924203142.4073403-1-bvanassche@acm.org>
- <dab3464e-7f60-4843-aede-6c81a348da8a@oracle.com>
+ <20250924203142.4073403-5-bvanassche@acm.org>
+ <bf28fcc4-4a5a-4a14-bfd3-8d72015b9b0a@oracle.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <dab3464e-7f60-4843-aede-6c81a348da8a@oracle.com>
+In-Reply-To: <bf28fcc4-4a5a-4a14-bfd3-8d72015b9b0a@oracle.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 9/26/25 3:08 AM, John Garry wrote:
-> Did you notice this when you tested?
-Yes, but I only noticed this a few minutes after I posted this patch
-series. I queued up the two changes below for when I repost this patch
-series. The first change suppresses the kernel warning from your email.
-The second change ensures that ufshcd_get_hba_mac() only prints an error
-message if it returns a negative value.
+On 9/26/25 12:14 AM, John Garry wrote:
+>> +bool scsi_device_is_pseudo_dev(struct scsi_device *sdev);
+> 
+> this is defined in scsi_device.h - why also have a prototype here?
+
+When I changed scsi_device_is_pseudo_dev() from an exported function
+into an inline function I overlooked that the above line should be
+removed. I will remove the above declaration before I repost this patch
+series.
 
 Thanks,
 
 Bart.
-
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 511cf84c2f89..5e7ef4655348 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -225,9 +225,6 @@ static int scsi_realloc_sdev_budget_map(struct 
-scsi_device *sdev,
-  	int ret;
-  	struct sbitmap sb_backup;
-
--	if (WARN_ON_ONCE(!sdev->budget_map.map))
--		return -EINVAL;
--
-  	depth = min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev));
-
-  	/*
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 9303687e38a8..1fa0f14dd291 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -156,10 +160,7 @@ int ufshcd_get_hba_mac(struct ufs_hba *hba)
-  		mac = hba->vops->get_hba_mac(hba);
-  	}
-  	if (mac < 0)
--		goto err;
--
--err:
--	dev_err(hba->dev, "Failed to get mac, err=%d\n", mac);
-+		dev_err(hba->dev, "Failed to get mac, err=%d\n", mac);
-  	return mac;
-  }
