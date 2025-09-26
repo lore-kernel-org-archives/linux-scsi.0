@@ -1,123 +1,171 @@
-Received: from mail-wr1-f41.google.com (mail-wr1-f41.google.com [209.85.221.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2F1C813BC3F
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 20:38:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 63C44307AD5
+	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 20:44:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758919123; cv=none; b=YIrQ4yNvZXeeYCtGcKaDyAjNkZkQ3Z3dMLK0w25QySwpIcOpUIeE/9I4ZCUGGHhtuYFeGcq9SBAE5dEjkO/4aEDAYAJBXyYaf3tWwj71yKX5adxHE2/q1UaxAbXlEcNPCPXbjomkSyVl1MMI0OlJ47LwVKiSwClYJNWeed+Jm5Y=
+	t=1758919473; cv=none; b=Rz1ajDjqH9qHuGe+vzU/C9eczXoWoASDTgoaLuCIbDUHluJdlF1WmRg6iIPZYQAk5taNiv5NVJEb6s8rU6uizKRihtxXzpdIU58vBobNcTG7sozblIc8qUw5jsCkt5JavK+C/Xf9IG0EecbgRf7oTaCMTwcu0xCdPmblEzKcn5U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758919123; c=relaxed/simple;
-	bh=CFC8ZBhLyEApSbHYUA9l/Leh0NamA2VnBjVYGarTn5g=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KZnOH00zzRK+8ZS+2t9jOujaAy2DuqLGMshftYfmXHhPZbU6TaMbUBy1SuVVkMkBMVch23zIuBNDFGJ+R9fFc+zegWdeKOeHjlvTt4kwQJqXfO7xyCwFbkrE/lH/yClbgVciWgQrISDJSTUVHe/GsfT+55mZDdPppNYGXydgfwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=aX/GiuUs; arc=none smtp.client-ip=209.85.221.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1758919473; c=relaxed/simple;
+	bh=L1vsF/TS6k1q2MLmfNzIW2FdoigZjl50RsjAhlA/TOc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=CS8dti2b7JHatV3nx082TS730PKyIL01RH9Dx8j/+C6xz3nOKrRaP2i/47rzQvJyo12LWwKoYwjE/CfdgsjfqQa+rDlnzhiBHLVYPEyA6u2FWMG72GvJT4/Iz7QF7N2MmLOMavzRFQCJbDqs992QtxCL+VtaflHs+wUOGCUO9sk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=T4mO3sQd; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="aX/GiuUs"
-Received: by mail-wr1-f41.google.com with SMTP id ffacd0b85a97d-3fb179b398fso318412f8f.0
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 13:38:41 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1758919120; x=1759523920; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Ym4TPzfQjAXnbYs9swIZBpT7+hJCYsXg9Gx2H6vmkGk=;
-        b=aX/GiuUsKdcpPboh0qBmnfayxvsOPQ7qDoRurLsBIL8391OIQtOA7w5RWNL1+LopEg
-         H0KBzLwB1fIgHBcJWM/su09SIctuC5ghdlNZagMXwC29G7LVJjpEKRsMSzoCx5tGQOxz
-         OnsYxcU+tJ0E6vGav9Lww3H1fU3fpA0B5xH6j2yu0rE3daYNjcUIqa3A4TDSU+RotSDf
-         M023mbEd5hOm/o3Dxs6NEcxn8yjnujri/E2VuJ3+UmSYI4YWEWRrJP8KpcO6gSALOjN0
-         lHdCp44IK5l1rgfMdW2cILTRPkTsULF9hjEz8yJq97q3Wn4ClcAPlEp7ywTBZ6sCCIqv
-         7b9w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758919120; x=1759523920;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Ym4TPzfQjAXnbYs9swIZBpT7+hJCYsXg9Gx2H6vmkGk=;
-        b=lcT8acz/vZxaBJjwWv2pi/DwoODIZrgmVy/qPRgFjxFr/PoVdpQZDFJwZ9t0mE3MlI
-         r8bdY+8mdY1sB0oX7a8YaX6IoWqO+KieL2JchjZrnhRto2TmcuHYQk9j+OLcBC+P/6g7
-         nVQZtmXH5nLgyPzAln0MQPQn6jcoRTft2nxG97xLPvnkVcGcYj55R6kIzu/Z/04YXPWS
-         K2RAJ3/6HxozyMxCKikA2+rUy77qiM97fZjH+drUi6BfQKDn8e96MAWSDCaExIiiO9G5
-         lU9wFFSoM6i7MHPSmEX+t6LG4ateAP/pjssl0isf7RIlpGblX2c9UA1YJMgj3IMtABOA
-         5PBQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXcDF8IhZuiW7pcgju01u1hIzOozwXti6f+ZoQ6zvG3YgVV1J46aqS056sZxlGyzmFBM8df3NxMADyg@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw6/UE1gkRwTG2IyxiobbHwLiHujjQg0a2qZiAaMdfMLrfvuh/W
-	GoYzhTz1qolte/dMdKIat6oiCpdZ0gTXAmNZgl8cyR5c876DRwst5m0=
-X-Gm-Gg: ASbGncsXTrOFEn1+eba2mX4WdepXr5WhKK8DLseRMl/pBCPwyB2f3X1iT1l7u2KE8NY
-	OJrPY5ZDyNbI8O99sMOK9O62JL/K0z6OHgLKF3zFpgTlYZUn6oJMpQOPV7ST0KeSkJLgc1tKzfI
-	ui6hHQurKNIlHjuBwsi+C0lLE3TVaPjdj3n7DbB7S/3v218zvBzsZEMHeannLq7/A9DmlhfXuew
-	mPGrnSp/R52D67T0YmE37jv5J0sqeOTgAaYnBluclAbA+dfnoRP8zo0HgI0H+uj4D5AJ4ZLhuRW
-	RRuPLW1Ez7UWtzEdVvXZF+55GQs4+NaJXwhDO789811EEm3j3O5deOmb2TLfB4xIACCM+ug2ulg
-	5idCz669Aro7IzhyJo2L0pyig80aTJ/rCYc+N0R23/ZuuShh+qOqTav9kmHAOfxCNNE9sl80Cw0
-	+55Mzw1g==
-X-Google-Smtp-Source: AGHT+IF4NPLOoSuml0YgFypGYUOVcC4TpUrzS7YDckho6hf9UUQyAlY8EuYIfKHrG2bdg1AAQ5cW+w==
-X-Received: by 2002:a05:6000:2112:b0:3e2:ac0:8c5c with SMTP id ffacd0b85a97d-40e442af634mr3453173f8f.1.1758919119918;
-        Fri, 26 Sep 2025 13:38:39 -0700 (PDT)
-Received: from localhost (20.red-80-39-32.staticip.rima-tde.net. [80.39.32.20])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-40fb72fb71esm8176068f8f.1.2025.09.26.13.38.38
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Sep 2025 13:38:38 -0700 (PDT)
-From: Xose Vazquez Perez <xose.vazquez@gmail.com>
-To: 
-Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	QLOGIC-ML <GR-QLogic-Storage-Upstream@marvell.com>,
-	SCSI-ML <linux-scsi@vger.kernel.org>
-Subject: [PATCH] linux-firmware: ql2500_fw: update ISP25xx Firmware
-Date: Fri, 26 Sep 2025 22:38:36 +0200
-Message-ID: <20250926203837.278863-1-xose.vazquez@gmail.com>
-X-Mailer: git-send-email 2.51.0
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="T4mO3sQd"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cYMyQ3FHrzm0yT2;
+	Fri, 26 Sep 2025 20:44:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1758919469; x=1761511470; bh=AZGGStz3qHPT+43gYJw6JtyI
+	+iydaG/zPpWMG+X8iS4=; b=T4mO3sQd1O92Dn4X/7djhx47M4bAQ5GiXPT0eujo
+	VS/wSCio1U5x4+uxGZpStq3IrHxfPtr/hV7Otwh4UyffFnj6hz7dgZff1MWMsfjT
+	z+KzefIm+oG9PCeZnSw8vH1LCxblir4SLCp+pdni31MRtoCVppIouVZb4BLEeT/q
+	VQlbgSdIvWTrZSMMyc5wdjEEhmBBz1hDjUmSmAxzlbywVzVjcaK+tzJ2vf4tTlA7
+	Bj2J2yJeCsXb5UnQiPBSyg3+u60WPBuR/Bjkg2fdGaHRsMfePwY9SDXryVkiE/pM
+	h7Qnsery4UARzzALSonGAktVldq28uWT7SRVROLk69gEgQ==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ZvgpvVZfCWn6; Fri, 26 Sep 2025 20:44:29 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cYMyL5n9Jzm0yQV;
+	Fri, 26 Sep 2025 20:44:26 +0000 (UTC)
+Message-ID: <550f7c16-036c-409d-9f5e-0fb2a5b3baa9@acm.org>
+Date: Fri, 26 Sep 2025 13:44:25 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-Patchwork-Bot: notify
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v5 07/28] scsi_debug: Abort SCSI commands via
+ .queue_reserved_command()
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20250924203142.4073403-1-bvanassche@acm.org>
+ <20250924203142.4073403-8-bvanassche@acm.org>
+ <aea7f72a-7d65-4ab6-98c3-34abf112f6e1@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <aea7f72a-7d65-4ab6-98c3-34abf112f6e1@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-For Marvell QLogic 2500 Series 8Gb FC HBAs.
-From 8.07.00 (2017) to 8.08.207 (2019).
+On 9/26/25 12:32 AM, John Garry wrote:
+> On 24/09/2025 21:30, Bart Van Assche wrote:
+>> Add a .queue_reserved_command() implementation and call it from the co=
+de
+>> path that aborts SCSI commands. This ensures that the code for
+>> allocating a pseudo SCSI device and also the code for processing
+>> reserved commands gets triggered while running blktests.
+>>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>=20
+> At least Suggested-by would be good, if you don't mind
 
-Cc: Nilesh Javali <njavali@marvell.com>
-Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Martin K. Petersen <martin.petersen@oracle.com>
-Cc: QLOGIC-ML <GR-QLogic-Storage-Upstream@marvell.com>
-Cc: SCSI-ML <linux-scsi@vger.kernel.org>
----
-Taken from:
-https://www.h3c.com/cn/BizPortal/DownLoadAccessory/AccessoryDetail.aspx?ID=254b05bb-b70b-4df2-852f-584055fd2258
-because http://ldriver.qlogic.com/firmware/ , from WHENCE, redirect to an only drivers site:
-https://www.marvell.com/support/ldriver.html
+If nobody objects I will add the following text:
 
-Note:
-"GIT binary patch" removed
-The full patch has already been sent to FIRMWARE <linux-firmware@kernel.org>
----
- WHENCE        |   2 +-
- ql2500_fw.bin | Bin 275128 -> 275944 bytes
- 2 files changed, 1 insertion(+), 1 deletion(-)
+----------------------------------------------------------------------
+Most of the code in this patch is a modified version of code from John
+Garry. See also
+https://lore.kernel.org/linux-scsi/75018e17-4dea-4e1b-8c92-7a224a1e13b9@o=
+racle.com/
 
-diff --git a/WHENCE b/WHENCE
-index e23c2d28..5b71f36a 100644
---- a/WHENCE
-+++ b/WHENCE
-@@ -348,7 +348,7 @@ Version: 3.03.28 IPX
- File: ql2400_fw.bin
- Version: 8.07.00 MID
- File: ql2500_fw.bin
--Version: 8.07.00 MIDQ
-+Version: 8.08.207 MIDQ
- 
- Licence: Redistributable. See LICENCE.qla2xxx for details
- 
-diff --git a/ql2500_fw.bin b/ql2500_fw.bin
-index 999e6f45612b74c9569f426e87136cd19de0df79..fa5cf63057d02245b52a51948b8ac42e953fc180 100644
-GIT binary patch
-[...]
+Suggested-by: John Garry <john.g.garry@oracle.com>
+----------------------------------------------------------------------
 
--- 
-2.51.0
+>> =C2=A0 enum sdeb_defer_type {SDEB_DEFER_NONE =3D 0, SDEB_DEFER_HRT =3D=
+ 1,
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0 SDEB_DEFER_WQ =3D 2, SDEB_DEFER_POLL =3D 3};
+>> @@ -466,6 +483,8 @@ struct sdebug_defer {
+>> =C2=A0 struct sdebug_scsi_cmd {
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 spinlock_t=C2=A0=C2=A0 lock;
+>> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 struct sdebug_defer sd_dp;
+>> +
+>> +=C2=A0=C2=A0=C2=A0 struct scsi_debug_internal_cmd internal_cmd;
+>=20
+> you could prob make this a union with sd_dp - I mean, could they ever=20
+> both be simultaneously used?
 
+Introducing a union for sd_dp and internal_cmd only would suggest to
+readers of the scsi_debug code that 'lock' protects both 'sd_dp' and
+'internal_cmd', which is not the case. I propose to include the
+following change in this patch:
+
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 0d4bdd38597a..12b885a2f719 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -483,8 +483,6 @@ struct sdebug_defer {
+  struct sdebug_scsi_cmd {
+  	spinlock_t   lock;
+  	struct sdebug_defer sd_dp;
+-
+-	struct scsi_debug_internal_cmd internal_cmd;
+  };
+
+  static atomic_t sdebug_cmnd_count;   /* number of incoming commands */
+@@ -9518,7 +9516,8 @@ static const struct scsi_host_template=20
+sdebug_driver_template =3D {
+  	.module =3D		THIS_MODULE,
+  	.skip_settle_delay =3D	1,
+  	.track_queue_depth =3D	1,
+-	.cmd_size =3D sizeof(struct sdebug_scsi_cmd),
++	.cmd_size =3D sizeof(union { struct sdebug_scsi_cmd c;
++				   struct scsi_debug_internal_cmd ic; }),
+  	.init_cmd_priv =3D sdebug_init_cmd_priv,
+  	.target_alloc =3D		sdebug_target_alloc,
+  	.target_destroy =3D	sdebug_target_destroy,
+
+>> +static int scsi_debug_setup_abort_cmd(struct scsi_cmnd *cmd,
+>=20
+> nobody checks the return value
+
+Agreed. I will change the return type from 'int' into 'void'.
+
+>> +=C2=A0=C2=A0=C2=A0 abort_cmd =3D scsi_get_internal_cmd(shost->pseudo_=
+sdev, DMA_TO_DEVICE,
+>=20
+> DMA_NONE?
+
+DMA_TO_DEVICE is converted into REQ_OP_DRV_OUT by=20
+scsi_get_internal_cmd(). Isn't that more appropriate for an operation
+that has side effects (aborting a SCSI command) rather than
+REQ_OP_DRV_IN?
+
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 BLK_MQ_REQ_RESE=
+RVED);
+>> +=C2=A0=C2=A0=C2=A0 if (WARN_ON_ONCE(!abort_cmd))
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 return false;
+>=20
+> I don't really think that this deserves a WARN_ON_ONCE
+
+OK, I will remove the WARN_ON_ONCE().
+
+>> +=C2=A0=C2=A0=C2=A0 scp->result =3D (res ? DID_OK : DID_ERROR) << 16;
+>=20
+> personally I think that if-else is nicer, but that's just me
+>=20
+> And please consider using set_host_byte()
+
+I will use set_host_byte().
+
+Thanks,
+
+Bart.
