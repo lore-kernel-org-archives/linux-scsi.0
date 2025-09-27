@@ -1,141 +1,124 @@
-Received: from mail-pf1-f179.google.com (mail-pf1-f179.google.com [209.85.210.179])
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 109B3202976
-	for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 23:36:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B11C627874F
+	for <linux-scsi@vger.kernel.org>; Sat, 27 Sep 2025 08:40:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1758929810; cv=none; b=fVcDfwhma9voPLI6DeTss9ekTnGwBkKWF9X6aegNaY18rzZ3W7LJuXAtEK0+PCPMMjVR/cA6v7NmZTp8q6uXT5FugQhsKBcBsFxlF7wct8ZdSmodabyBw/Ah8Lrwmd173j+P42QTSzf8hjPqtznEQ8rebK1wFFL1HDewuxGedpE=
+	t=1758962454; cv=none; b=bU/P0tkiK7M+dHgOCyDWGW9ZgcfrGz2QqBBIaNcgM7X3zYH2e9im1h+Fi3/vtovaEdzTU6v+FpoIGf8tSnf4XPOq3ZIWIa2XTOwp8o7B6eIyaU3LmQyLDpyn4hT72V1LzJeTqH9dKFo9jIjzdZCRXxKl7YwbNSKMw4j3cWZ216I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1758929810; c=relaxed/simple;
-	bh=I2Mz2aveKudWjBG56cCpDPgKcjygvlC0hAMQrwbfHiY=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=pppbNSBR7iWy0ye7wSKfhGksuxifHSlyXJRAWTuD/spYsFInAcidYfprqbkCaQl5rXDj1l6Bip2dxDzsgl+d2DvyI2HVU801e6fiI2aslFOaVrQkbw4UdZ7lMkN0YRscSB9iKajScVoU4pRTDYlvI99WMf4Gya0+bHePIs/ebFU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com; spf=pass smtp.mailfrom=arista.com; dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b=HS0CZFIe; arc=none smtp.client-ip=209.85.210.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=arista.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arista.com
+	s=arc-20240116; t=1758962454; c=relaxed/simple;
+	bh=KzguTlN0DVDwQyWaiKD+T6TVR9NBd+VANkU7welrq5M=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=W3CpJu9E97qjg7jpR91gvJozLfK5VvIC1lcRt6YOUVleyosfFN8e+8wvP/rYeyB/U+WCUtLC0XbqrO8hLIHWF8d4keR9gvly1MOnkxrYSjFWAON5AyGZDvVN5jzTnXlUO+I+d1TzRtikKpo/vKoUUgDEeVMld8hIFOnfP24WnqI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nXfEcsDx; arc=none smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arista.com header.i=@arista.com header.b="HS0CZFIe"
-Received: by mail-pf1-f179.google.com with SMTP id d2e1a72fcca58-77f68fae1a8so3740465b3a.1
-        for <linux-scsi@vger.kernel.org>; Fri, 26 Sep 2025 16:36:47 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nXfEcsDx"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-afcb7a16441so478354766b.2
+        for <linux-scsi@vger.kernel.org>; Sat, 27 Sep 2025 01:40:52 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=arista.com; s=google; t=1758929807; x=1759534607; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=mj6zPN/OKSYjQGWBqwR3zeZiuhE+ieUvPsRJbGl8RZQ=;
-        b=HS0CZFIeKc75rpLTUl7ceWq1bM1wLxuGDIVRrER63jpKTtVVN+i5cPQZP2PRAsDeiD
-         Djh8lUV+QLHKn9VpXBoYNqBoufXv3P95Pu4HE8A0JMK11LXHUodSou78ZtCslGtS5eqq
-         A99zaOBNhiSzZbdVY5KAHtczBGqrGLYJOXT9Dm5Ib8f7O2ORb6uP6duyyg6F5L0ol46n
-         dd0ocDd+EfYCiX5EQFAE3Pp9WrY+aFhgnN3vvDJPYXCBoNlM9oqY0iBCaiqHgoQz+EYK
-         RCiBztXbTwqzVTRykOXm9RwGZgl7U+vftZs+RaGx/B+95+bP/6udeiCEzs1ihY73Nswl
-         mJ2w==
+        d=gmail.com; s=20230601; t=1758962451; x=1759567251; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=KzguTlN0DVDwQyWaiKD+T6TVR9NBd+VANkU7welrq5M=;
+        b=nXfEcsDxKMSfmnnr5m6/EZOY//0Y0OstJv57LvsG9WnPFJtzLF7EOzW9tSI6NRYZt+
+         7Qz8d/6ZJWZpofZkZKF1cPm6OdtZT6MfcxiRyo+/NB+ZtW0agzckQLOa4AGeR0QufYqn
+         u3dxGQtFq8LX/ucTL7fgHn5HcVAGdUQxIinjTq4sabWEZCpYweakpVMXzWRqm+SKiIzz
+         jh3LdkTxN+15k/hY7vMLJ+ELwYMbRTsNUOnHkou5LbV4mpWbc+YekxEhd+BR0ozxmM1q
+         s3ibfxnd6qoOdmzSl4fhdPO2rIUHeV4hC/NeUpY6aysEqVjaoakszkGBW2L4w8r1WKRD
+         S+Hw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1758929807; x=1759534607;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=mj6zPN/OKSYjQGWBqwR3zeZiuhE+ieUvPsRJbGl8RZQ=;
-        b=SSiZJ8igW790CMw20e0SRM40a4po8qXjgGgOiLPmEDEaIgTbOQmj8K0OZtC12kX3OP
-         1fOSt/EDmxeOP9WQEJJQp1x+1/dQqhHYlgEzAsUsr71OKyFrJtUsCH6LqhMysJlyO0T7
-         VLdOAhX8YvExnTom5M17x7SZnKOMtJWoYixo07gvRa+4uihC53vc5npW2ORC+6+lYafQ
-         8vN2EoGGlzNW6SyonDb4gr6+fDzAKuSse5V7afN4aazd4XQDV4vNJjq9JdCdmT/CcNQz
-         00Sk+/ks2Q8IorK8UWRVUCN9u8Vh06UxIYqjUd1qjOIjylWEj1hs9KDSqhtfF9B+CkTu
-         mWrQ==
-X-Gm-Message-State: AOJu0YzImqcruwf503bzXTZ1l7F9yPtIJGrtOLptqCMwk6nmlTeK71Yl
-	qQDKQX2woF/lDlehMWfKppIGLJkyB3R67x37WG7zXOMcIwizD3t9b4CO3iCYAtwjyw==
-X-Gm-Gg: ASbGncvJLvuFwOB4Y5Rt+N3wMEiZNS2ivHcuftn4Y6Z07iEfMUj+1ybZPTxZ9/RmdJP
-	wmQ0WhnxuxUIoF2rtjYknPFP6dR97wWlnJb4m7nq90JFTlubXQzkBOJ3uXxmMG2B4iOInKG8ExD
-	poyIt3g302qzDzzAGJdzKZz5+wRtppDxUWegOV2ybBKoXSXgORqCBPvyiWX3oZLMsu6NjoPNyx/
-	n4ooOKMqzlwakPa3vr31FmM67W2b/a0pId/qNwB6sDJo7Gys19xl8U4ohPx7DtHvQCe9beGTw3c
-	DTIvd0C0ArKo1v5I7Z2qgT7g3/9794psf9HsHfBtrM0GCt6oODrlfU3IeIp2JSQy5qVMJN9NGN7
-	fdGcRH7R3xog06VWSj/CsQkPpRkSQkb/UsKGvvtBjHuMZIhvhFhiwoh/kdA==
-X-Google-Smtp-Source: AGHT+IFZEBrKtz1BDhTWgm8mofWtOzIr+Z/c1j14YCTUV+GOrNl6Ivmww8swrYG7BZcL4aDuz7K3PA==
-X-Received: by 2002:a05:6a20:918b:b0:24a:8315:7f5 with SMTP id adf61e73a8af0-2e7d3db5fc2mr12114110637.31.1758929807287;
-        Fri, 26 Sep 2025 16:36:47 -0700 (PDT)
-Received: from sushrut-work-nzvdj.sjc.aristanetworks.com ([74.123.28.17])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-b57c55bd160sm5594002a12.47.2025.09.26.16.36.46
+        d=1e100.net; s=20230601; t=1758962451; x=1759567251;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=KzguTlN0DVDwQyWaiKD+T6TVR9NBd+VANkU7welrq5M=;
+        b=kCGf0sLU9EzcjsKb6QWAbAqoo3hfdB1dLuGJEZlmQgGoDMscXBeiHAPL/LZ2pdJTxi
+         l4HPgKOLGsXhMdrx6darE/ilNwapEHlzmX2KP9htrVfj+chJBrAz4Atk/6+Wb8Z0H8dk
+         fw+GF7QPHmTylWghHaWPKxmBGX2CS/3SNU99KLufJrjoLgiJtxuyp4hFI8V5Iyox/1sp
+         9d0IpIq2STMBGscZN0dhPU8/4bPCElIRxCQZzx+k3YFbcxKnseu/N3j4VPMMldqBa8G0
+         tRgv6uGYHtPoWAplPw8GdDmPqzOL5J6i/qqjyAuImgEMbRfCXB3TPF+ePEGyuzlEIMvK
+         YOzg==
+X-Gm-Message-State: AOJu0YzYEW0vob4rsUo9mwe3tXgoVK5Flld1oun9PWkmxLLZuW90OGLf
+	/6DgCLNeYU58s6nizmIA9YdsWqojbzRWtQzJ/AQpQvxiK9hR57A2s1Mr
+X-Gm-Gg: ASbGnctnXzGiy3dUKvgH9QE35VZ+UNbr9QyhWLi3SMX1uKsb8dZa8qWDl7fQnHYiQrV
+	Ri2udjZLEhP64Szsclq2ZCWhlq7oeiMnig53ZSFRgzW/hmA6Znm7iL1zACMPy4bvhr8uV47g1IF
+	wAp7+sDmSgJpJtpVcVenepZBIbWPQAt3TqAHCaNs9hEfFU/SwZcan7uPlMhnkcRIreOoGOLTpHk
+	WcIKwXzhV8Hzr1RYGYniT37F2Opw8mqT3aDDxpJBrTILbXNS3DVp35HyY6GdTk9C0NMkpU+O/QL
+	GWrvm/a5XjlgQM+1Mue0+wbbEELT3J6rC+C05Tkw65WUANxHJkTM7LDGOkFnAl3qKZh8IkTdCts
+	xtAX5yR5put1wyJ6D1NBOUwM2hzD0HM0ZPKIoIA8SbZqBkgVgRycc2T0pZ213rlTFbSDfnJepRg
+	8DwfUr7B1FnYELLjo0uRwHQbRPmtnL7x+xs1t+3D+qioh+hTdWftfoom07UjfRdso99dZ7P/vo
+X-Google-Smtp-Source: AGHT+IHPPlIqi4T0deWOBfsYReBj/m14ttoNCIMpmMi0REJRA/BBHe2RNMNkarSZssV1kYS013S9NA==
+X-Received: by 2002:a17:907:7244:b0:b07:6538:4dc5 with SMTP id a640c23a62f3a-b34bd93d0edmr1007630466b.64.1758962450674;
+        Sat, 27 Sep 2025 01:40:50 -0700 (PDT)
+Received: from p200300c5874155a05266ae5ed58ad6cc.dip0.t-ipconnect.de (p200300c5874155a05266ae5ed58ad6cc.dip0.t-ipconnect.de. [2003:c5:8741:55a0:5266:ae5e:d58a:d6cc])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b35448dfee7sm513147166b.63.2025.09.27.01.40.49
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 26 Sep 2025 16:36:46 -0700 (PDT)
-From: sushrut <sushrut@arista.com>
-To: James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Sushrut Shirole <sushrut@arista.com>
-Subject: [PATCH] scsi: sd: Add sd_stop_on_restart parameter for restart device shutdown
-Date: Fri, 26 Sep 2025 23:36:42 +0000
-Message-ID: <20250926233642.268514-1-sushrut@arista.com>
-X-Mailer: git-send-email 2.51.0
+        Sat, 27 Sep 2025 01:40:50 -0700 (PDT)
+Message-ID: <713065cd1b7c9fb08393fab8cb44e3a345a55be1.camel@gmail.com>
+Subject: Re: [PATCH v1 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver
+ for UFS devices
+From: Bean Huo <huobean@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>, avri.altman@wdc.com, 
+	alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com, 
+	can.guo@oss.qualcomm.com, ulf.hansson@linaro.org, beanhuo@micron.com, 
+	jens.wiklander@linaro.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Sat, 27 Sep 2025 10:40:49 +0200
+In-Reply-To: <b2ed97b4-bfef-4e4b-83ed-a172214e46e8@acm.org>
+References: <20250923153906.1751813-1-beanhuo@iokpp.de>
+	 <20250923153906.1751813-4-beanhuo@iokpp.de>
+	 <b2ed97b4-bfef-4e4b-83ed-a172214e46e8@acm.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
 
-From: Sushrut Shirole <sushrut@arista.com>
+On Tue, 2025-09-23 at 13:27 -0700, Bart Van Assche wrote:
+> On 9/23/25 8:39 AM, Bean Huo wrote:
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0ret =3D scsi_execute_cmd(sde=
+v, cdb, send ? REQ_OP_DRV_OUT :
+> > REQ_OP_DRV_IN,
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 buffer, len,=C2=A0 /*timeout=3D*/30 * HZ, 0,=
+ NULL);
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0return ret <=3D 0 ? ret : -E=
+IO;
+>=20
+> scsi_execute_cmd() can return a negative value, zero, or a positive
+> value. Both negative and positive values should be considered as an
+> error.
+>=20
+> > +MODULE_DESCRIPTION("UFS RPMB integration into the RPMB framework using=
+ SCSI
+> > Secure In/Out");
+>=20
+> That's a very long module description ... Can this description be made
+> shorter without reducing clarity?
+>=20
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0u8 rpmb_region0_size;
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0u8 rpmb_region1_size;
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0u8 rpmb_region2_size;
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0u8 rpmb_region3_size;
+>=20
+> Why four separate members instead of an array?
+>=20
+> Thanks,
+>=20
+> Bart.
 
-Currently, sd_shutdown() skips calling sd_start_stop_device() during
-system restart (SYSTEM_RESTART) to avoid delays during reboot, under
-the assumption that storage devices will maintain power and don't need
-to be explicitly stopped.
+Bart,=20
 
-However, this assumption doesn't hold for all system designs. Unlike
-traditional servers that can maintain storage power during restart,
-some enterprise network equipment, embedded systems, and specialized
-hardware use centralized power management that immediately cuts power
-to all components during restart. This can result in:
+thanks, we will fix them in next version.
 
-- Filesystem corruption due to incomplete writes
-- SSD firmware corruption during metadata update operations,
-  potentially leading to unrecoverable device failure
-- Elevated SMART error counters (e.g., Unexpected_Power_Loss_Ct)
-- Potential data loss in systems without proper power-fail protection
-
-While the kernel provides manage_shutdown and manage_runtime_start_stop
-flags for fine-grained control in other scenarios, there's currently no
-mechanism to ensure proper device shutdown during restart for systems
-that require it.
-
-Add a module parameter 'sd_stop_on_restart' (default: false) to allow
-administrators to enable device stop operations during system restart.
-This maintains backward compatibility while providing the flexibility
-needed for diverse hardware configurations.
-
-The parameter follows established patterns in other SCSI drivers
-(e.g., smartpqi's disable_ctrl_shutdown) and provides a clean
-administrative interface via /sys/module/sd_mod/parameters/.
-
-Signed-off-by: Sushrut Shirole <sushrut@arista.com>
----
- drivers/scsi/sd.c | 7 +++++++
- 1 file changed, 7 insertions(+)
-
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5b8668accf8e..d280b395026d 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -116,6 +116,10 @@ static DEFINE_IDA(sd_index_ida);
- static mempool_t *sd_page_pool;
- static struct lock_class_key sd_bio_compl_lkclass;
- 
-+static bool sd_stop_on_restart;
-+module_param(sd_stop_on_restart, bool, 0644);
-+MODULE_PARM_DESC(sd_stop_on_restart, "Issue STOP UNIT command on system restart (default: false)");
-+
- static const char *sd_cache_types[] = {
- 	"write through", "none", "write back",
- 	"write back, no read (daft)"
-@@ -4172,6 +4176,9 @@ static void sd_shutdown(struct device *dev)
- 
- 	if ((system_state != SYSTEM_RESTART &&
- 	     sdkp->device->manage_system_start_stop) ||
-+	    (system_state == SYSTEM_RESTART &&
-+	     sdkp->device->manage_system_start_stop &&
-+	     sd_stop_on_restart) ||
- 	    (system_state == SYSTEM_POWER_OFF &&
- 	     sdkp->device->manage_shutdown) ||
- 	    (system_state == SYSTEM_RUNNING &&
--- 
-2.51.0
-
+Kind regards,
+Bean
