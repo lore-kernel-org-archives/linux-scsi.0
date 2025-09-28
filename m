@@ -1,72 +1,72 @@
-Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE99F34BA4E
-	for <linux-scsi@vger.kernel.org>; Sun, 28 Sep 2025 14:19:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0205678F5D
+	for <linux-scsi@vger.kernel.org>; Sun, 28 Sep 2025 17:32:37 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759069144; cv=none; b=tT3U19yN/SFEBHTkNcu9kkQWWRrmauTtY1dbLp9nHES/V4zFlNKmXCgTyzUGDuZgjxCAa+jMUy9zij9GEonH7GEol8SEULRXU1wwWO4ztYpJ9J0Tr1TyeZYXEghd5+fAQFxMGSJE5TmJsRJNYfLOotYbUmU/CA9rkvggA7sBw54=
+	t=1759080759; cv=none; b=u3befBbH5aS8ZRUC5SFGASep7Ahmoze71A3G6EuK/anL+VqDOoATa1ljm/AyG38MUJMo5bEzkaKO9xAwgNtVOrpWyP6oOqidxm/tOxty7YWRG+CYrY6nDFPovEl5BXclsxQmNLmjFdCUlrrMZs3tLZgeY6qDaZ89XfwbWhzqkeM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759069144; c=relaxed/simple;
-	bh=MrFwCcLbKUuClcrZzfcryNZzbqIQpvlXLjwePgGZEMw=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=bOFrx9Vg7RIfXGd8kOYfNuHUGK1ERr6wkbX3EeHiJIUkHQCtQS8JBd4DJY0LkLTuarA3ZOj29ZsbNRoHUFVvG8YeJ5rXFtMAwxvX5C+qPuHOTyd/6YBXIbT6Emy9zxk2bdrWMKwntEp5Vt4+6/LPled5Xgx5HelJkQ8TT9gbUJM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dqQXKW2/; arc=none smtp.client-ip=209.85.221.45
+	s=arc-20240116; t=1759080759; c=relaxed/simple;
+	bh=+yhWQs77SCKwmDa0c1dap86XxWX8S8b1JmJcq2C296A=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=RALbClLZxYiBOoGsoQt5NXsjwWIEvj3u7fTB1aEtmiYQUhyMkEUXrk0fPQaOu9oo9G2tl3NYwOnl4xKQe1z1pPL9Tz6Irfa1WXUTkmG3zy58m1RDbIJ/3a8r6p4rwROr0k3RG6kKKEe6QlzzShwGSUXcQlnzqFThN3OeGyjHCYQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y7GkaqcK; arc=none smtp.client-ip=209.85.221.42
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dqQXKW2/"
-Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-40f8e6bee90so484344f8f.1
-        for <linux-scsi@vger.kernel.org>; Sun, 28 Sep 2025 07:19:02 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y7GkaqcK"
+Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-3e74c6de6f7so458881f8f.2
+        for <linux-scsi@vger.kernel.org>; Sun, 28 Sep 2025 10:32:37 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759069141; x=1759673941; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1759080756; x=1759685556; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=znyzSTOrLcN8UxMVwa2nIyra8CRmzJojjqcYr97PvHQ=;
-        b=dqQXKW2/gZs+PC5mEepYAyBrRYRE94SElG/p/O2xOi8PGMMS0Krxx9scf+WcqPZ3YS
-         YNGop0LkM80yE27RWsipjTxgXhiUR1ehvi6f6WBHDJQN5DlzLDTy2ZDpRQ3pVA9smgFj
-         2CKPMhLy8p9F7CH6rC8W21hH4jP0/3CfTwm80kVjNN4FORY3mUbhl9zpVwkgz1k/15FU
-         kiT81CiGUn1s8E4MHpSBQSHOQM83XlI6vQ2/XFAzzHyti6oIbbWcKqY8zV4BchKhpEZM
-         734MGdNVqcp1ml/fqpZwJWEBGh9ZMlOw/CFd2mI5W0wy4/au+z7QdQLocrLfWvz1begi
-         2ESQ==
+        bh=gZpfDa1LyEfLRHt6pylVChVVp0uO3/fPa6/etQzY1rE=;
+        b=Y7GkaqcKmF1RMVhPXYt6wXipYfyDc3RTFahdHaTdfG9SKeliZMAecbTpc/uQfB1BNQ
+         C7WP+LBKu/GYqx2NCHdDJSX01/pq7FA70Sm9kPbTqlodJWkOQ4egTtg1S3q8SosiSrsh
+         lF7WtWR4Ne9YIrsNt76Lds6J+S1ZBgAWMz3kb+FqPH+ubo8xdgI0Ie1FwW4krUJX9xvJ
+         stpKJWjtN6avc8pYSOfomeG9jcWmZhyCXOZDVG/DlpB4AWRGCGVJUpcYU9h3j5qk+QzB
+         +VOYqAiBPj8ehdeKaUfjbIpUuJAQOUM+QW/YUElpMibE/DVMHhM6lzbOqGALT4QYO2lV
+         t0RA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759069141; x=1759673941;
+        d=1e100.net; s=20230601; t=1759080756; x=1759685556;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=znyzSTOrLcN8UxMVwa2nIyra8CRmzJojjqcYr97PvHQ=;
-        b=Q1TWtwof0J1IesRdGJEy2twC+tgShBPHqDTkd/eoYkdW0P1nubHWWz6OkEwMObxBnY
-         8T2XxtUdSAF/y1HMj6yHvmK6eeAGkSrITr8p+rHlplxrufvzJdK0a28XOPpk+pF9ojwy
-         wl7zwIObUKrGH9kEYvGtNJLll8EH4CiEf8rFJCuESZteAjJrIUrvNF79cw6+6HGCkh1P
-         4OwC3hfuf1mS7YjX3LmfrjRMSbgHmDN8GdtOpSVsKr8hIlqRYJETdeLar/aFsHNHe4OK
-         RpH1NgxTCNY+0Ovn705H/jUGP7d6zmVk26up+UNmhQWdW6juH8RskZnHJCgqQjRf8Qux
-         3olA==
-X-Forwarded-Encrypted: i=1; AJvYcCUsVKbP3B2fI4vWpsQs4kSCJr6bLpgJ7DRMt4wjvMnNEAqeRObkJE07LwCCSWoKKAYo1fDBd2cBFTWz@vger.kernel.org
-X-Gm-Message-State: AOJu0YxprjBHlNAncLP0ueohPkB06VX3KuwIOu+Ysl4/tx79rSfHkscO
-	ReKp5ABMesXXo1D4Afktg8i2UJYGyKgeQbHYPVdUpIegrFKpWGrLmoY=
-X-Gm-Gg: ASbGncvIIVd1W/grLH5WuwoInwzPDnpDGPKe0dsKLaM4eTajYT+Y1vlBlwXxnGuzq4T
-	AbEu6S/qYmCh4tRAy1cQM2y/T1SugpCkAatc5Kdr0jGCctmo0KQMautkd0AKNFavIpDFrHtkWTK
-	HL2LpJPGJLqaSqzIyl0vvkZSyoXquU5vNKofZMILeyjBkd8th2JRYUpP5SF0VFYBCNb3B9y1eO0
-	wS70G/O0l7PD+zqLcLg4m+hMDTa+6ExQj7PWllw0du/iJw4IIrUxDVdxORhTqewi+WkHU/TwZS2
-	VCB14egxjhjE8L2zYEJb4Tnyxz394XpxUd1/8iSi85994vghloKGKAqwf0ULyPBBpYyiBzmTNmk
-	V9TIbrK9Z/ZVTYerjuzdl0C9b8aA1rNJv1IvD7TYB+VJw8xvnUPzuBIqP/RrQ0E35d/2FDYY=
-X-Google-Smtp-Source: AGHT+IHV1s5TIqlFLZO9EGIhWru1SZ4zxrnjKZj+DcnHlgI3TKLNQSSeGSQRUE5CJ4jo6X6DU9CE/w==
-X-Received: by 2002:a05:600c:4ece:b0:46e:4705:495b with SMTP id 5b1f17b1804b1-46e47054bcbmr21513105e9.1.1759069140621;
-        Sun, 28 Sep 2025 07:19:00 -0700 (PDT)
+        bh=gZpfDa1LyEfLRHt6pylVChVVp0uO3/fPa6/etQzY1rE=;
+        b=Ca/pW3KRhTxZnJIL4CZ1gjhQOE6PWgY5Zldk89Zl3M7auXsGvPzTyziLEGQzTvqns+
+         mvog2ALhyGK1zHbFEXsPHftNM0oXfguMLP/mwJZ2UAmdeyJw8WYJgDDNvkDSIbZbRyqU
+         I9RNaNSUPs/DVxvETzTRJ+nPacuYkGscseydg8D6wNEwyFqgYnrFNIUo91JbLNfmyE7n
+         +WTHfsLMGEHigD7vzdCCp1mpDd+k2hKd218D1d48JBqJh1D6dx8oXRJrl2OskCrs5mRX
+         UYtWcAKRvZXar4J08EC+YJ08S2v9EX2FpMHOBONIPo8oB386IeugEWGv0ix+7Eo7n4LA
+         i56Q==
+X-Forwarded-Encrypted: i=1; AJvYcCW8OskILH3rNlHRS9in0YysSvA/iFTP3i2cmEXpXa2QiwfefdMuAVi+2BWSE25In4asCS8sotvNqIKl@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw9mFlFyKv7ogKYbnhOKIlTc/FNtL/ASXXPF5Sfms2DpGCOEXvZ
+	f/4Zr4bRsZ71WU5UO1VquHpqjWgK/asdAUqVJv+BARENVNLsL1lMqQQ=
+X-Gm-Gg: ASbGncuvQ18qpKWlgXZvxJiCpc4HMW51x6E0tsVm/aITOrbhilloZH/G2WqCmSnQXnw
+	zEpM5WUlAFEA3I2Kc0gSLn/LVLr2UQMzTKy3oUAEVWdjy/daD36tAfBrjj0+pP/tyRoJYr2S9aa
+	8ORRkKYpdZc/gwJRYoAh8GevQab/4M9NvJLreGEtJgUOnpujQP4iO7HjvsEDNF9cDJ63qv7rE/+
+	eFUe1N5rHdyoVgaxcDeV+ZwRmiUSIm3btOcNH8BuLsScuW5IEYgR/9QlPzQvQFIGDvB2sVg54YB
+	ZlOWbZgxusBBhNGqssA76qeDe65m+LCXANRfQmpWYQyWGhjzJEp2hJdtv2QWPD9Li0jCsJ27s0Y
+	0h99Hk7ZzMeIXzuRQwMhKbrW2Tw/4G2+pWMCGIEjoqiQAQ9jwk+Jl0NhosEO2MVFL7QzA6ww=
+X-Google-Smtp-Source: AGHT+IF9ctIc1w7pYuurOOtSQnBLKY1kKaYNPxwyS5j92ZGHx79Esox1Ll1Fj6se/C5JsV2BZGeBow==
+X-Received: by 2002:a05:600c:8711:b0:45c:b6d8:d82a with SMTP id 5b1f17b1804b1-46e32a16999mr66566055e9.6.1759080755805;
+        Sun, 28 Sep 2025 10:32:35 -0700 (PDT)
 Received: from localhost (20.red-80-39-32.staticip.rima-tde.net. [80.39.32.20])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46e33bed6basm145275785e9.16.2025.09.28.07.18.59
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46e2a996d7dsm205793335e9.4.2025.09.28.10.32.35
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 28 Sep 2025 07:19:00 -0700 (PDT)
+        Sun, 28 Sep 2025 10:32:35 -0700 (PDT)
 From: Xose Vazquez Perez <xose.vazquez@gmail.com>
 To: 
 Cc: Xose Vazquez Perez <xose.vazquez@gmail.com>,
-	Nilesh Javali <njavali@marvell.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	QLOGIC-ML <GR-QLogic-Storage-Upstream@marvell.com>,
-	SCSI-ML <linux-scsi@vger.kernel.org>
-Subject: [PATCH v2] scsi: qla2xxx: remove references to unavailable firmware files
-Date: Sun, 28 Sep 2025 16:18:58 +0200
-Message-ID: <20250928141859.215307-1-xose.vazquez@gmail.com>
+	SCSI-ML <linux-scsi@vger.kernel.org>,
+	FIRMWARE-ML <linux-firmware@kernel.org>
+Subject: [PATCH] linux-firmware: WHENCE: identify Qlogic firmware
+Date: Sun, 28 Sep 2025 19:32:33 +0200
+Message-ID: <20250928173234.233947-1-xose.vazquez@gmail.com>
 X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -77,83 +77,46 @@ MIME-Version: 1.0
 X-Patchwork-Bot: notify
 Content-Transfer-Encoding: 8bit
 
-They are not in linux-firmware, and some(all???) of them are loaded only from flash.
-This should have been done in f8ac60855ebfa and 940a7f09ad645
+Info from:
+https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/?id=1bfa11db712cbf4af1ae037cd25fd4f781f0c215
 
-v2: remove firmware upload code
-
-Cc: Nilesh Javali <njavali@marvell.com>
 Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
 Cc: Martin K. Petersen <martin.petersen@oracle.com>
 Cc: QLOGIC-ML <GR-QLogic-Storage-Upstream@marvell.com>
 Cc: SCSI-ML <linux-scsi@vger.kernel.org>
+Cc: FIRMWARE-ML <linux-firmware@kernel.org>
 Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 30 ------------------------------
- 1 file changed, 30 deletions(-)
+If anyone is interested in this, NetBSD has different/newer versions:
+https://github.com/NetBSD/src/tree/trunk/sys/dev/microcode/isp
+---
+ WHENCE | 4 ++++
+ 1 file changed, 4 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index d4b484c0fd9d..cc0bb30c1963 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -7606,12 +7606,6 @@ qla2x00_timer(struct timer_list *t)
- #define FW_ISP2322	3
- #define FW_ISP24XX	4
- #define FW_ISP25XX	5
--#define FW_ISP81XX	6
--#define FW_ISP82XX	7
--#define FW_ISP2031	8
--#define FW_ISP8031	9
--#define FW_ISP27XX	10
--#define FW_ISP28XX	11
+diff --git a/WHENCE b/WHENCE
+index bc807bd2..bf35f40e 100644
+--- a/WHENCE
++++ b/WHENCE
+@@ -70,8 +70,11 @@ Found in hex form in kernel source.
+ Driver: qla1280 - Qlogic QLA 1240/1x80/1x160 SCSI support
  
- #define FW_FILE_ISP21XX	"ql2100_fw.bin"
- #define FW_FILE_ISP22XX	"ql2200_fw.bin"
-@@ -7619,12 +7613,6 @@ qla2x00_timer(struct timer_list *t)
- #define FW_FILE_ISP2322	"ql2322_fw.bin"
- #define FW_FILE_ISP24XX	"ql2400_fw.bin"
- #define FW_FILE_ISP25XX	"ql2500_fw.bin"
--#define FW_FILE_ISP81XX	"ql8100_fw.bin"
--#define FW_FILE_ISP82XX	"ql8200_fw.bin"
--#define FW_FILE_ISP2031	"ql2600_fw.bin"
--#define FW_FILE_ISP8031	"ql8300_fw.bin"
--#define FW_FILE_ISP27XX	"ql2700_fw.bin"
--#define FW_FILE_ISP28XX	"ql2800_fw.bin"
+ File: qlogic/1040.bin
++Version: 7.65.06 Initiator/Target (14:38 Jan 07, 2002)
+ File: qlogic/1280.bin
++Version: 8.15.11 Initiator (10:20 Jan 02, 2002)
+ File: qlogic/12160.bin
++Version: 10.04.42 Initiator (15:44 Apr 18, 2003)
  
+ Licence: Redistributable. See LICENCE.qla1280 for details
  
- static DEFINE_MUTEX(qla_fw_lock);
-@@ -7636,12 +7624,6 @@ static struct fw_blob qla_fw_blobs[] = {
- 	{ .name = FW_FILE_ISP2322, .segs = { 0x800, 0x1c000, 0x1e000, 0 }, },
- 	{ .name = FW_FILE_ISP24XX, },
- 	{ .name = FW_FILE_ISP25XX, },
--	{ .name = FW_FILE_ISP81XX, },
--	{ .name = FW_FILE_ISP82XX, },
--	{ .name = FW_FILE_ISP2031, },
--	{ .name = FW_FILE_ISP8031, },
--	{ .name = FW_FILE_ISP27XX, },
--	{ .name = FW_FILE_ISP28XX, },
- 	{ .name = NULL, },
- };
+@@ -1590,6 +1593,7 @@ Licence: Redistributable. See LICENSE.conexant for details.
+ Driver: qlogicpti - PTI Qlogic, ISP Driver
  
-@@ -7663,18 +7645,6 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
- 		blob = &qla_fw_blobs[FW_ISP24XX];
- 	} else if (IS_QLA25XX(ha)) {
- 		blob = &qla_fw_blobs[FW_ISP25XX];
--	} else if (IS_QLA81XX(ha)) {
--		blob = &qla_fw_blobs[FW_ISP81XX];
--	} else if (IS_QLA82XX(ha)) {
--		blob = &qla_fw_blobs[FW_ISP82XX];
--	} else if (IS_QLA2031(ha)) {
--		blob = &qla_fw_blobs[FW_ISP2031];
--	} else if (IS_QLA8031(ha)) {
--		blob = &qla_fw_blobs[FW_ISP8031];
--	} else if (IS_QLA27XX(ha)) {
--		blob = &qla_fw_blobs[FW_ISP27XX];
--	} else if (IS_QLA28XX(ha)) {
--		blob = &qla_fw_blobs[FW_ISP28XX];
- 	} else {
- 		return NULL;
- 	}
+ File: qlogic/isp1000.bin
++Version: 1.31.00 Initiator
+ 
+ Licence: Unknown
+ 
 -- 
 2.51.0
 
