@@ -1,37 +1,37 @@
 Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2FCB42FF677
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 14:37:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1ABCB30ACE3
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 14:38:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759156656; cv=none; b=XbsCYJiA2BprkyjXfOx/rP61BCNwuoaKGFimqY4b++kbfHs5NNy0MBZVNtnkKyq05NML8xOogrZUxDjToCMb/5AjddcaOq+0tzrjAenUnW/ZeTuC+INn/iR0nqVuTzsbz4B60SpVLgqM7pGyeUhlkdEldvtRdFsEFxz5S4rHvMU=
+	t=1759156728; cv=none; b=TLHyjvfkvKmwZ0IN0d7FsHsB6zF+UODZcC+Eu0MPpYFM2c/2E2W061cCQ2Mjm+O15urZZBIVtHOD9D/nl+2H1ZG1WWgwREipdq/u3svyQ8K60YGKzysq8TZPADG0aAQRiY0CVNwkBU7jZgCKS6Tcl38C/KI/ILiLPgWNEyF1Yxc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759156656; c=relaxed/simple;
-	bh=sXwrn7Yo5KCiAM3HqChWynS5RzMN9zapu7D/7DJu+kM=;
+	s=arc-20240116; t=1759156728; c=relaxed/simple;
+	bh=s8G3Ch83nP+KBO4mTb17p0KOnrrhPdoYDSie9Wardws=;
 	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=KnpebNdP2CEfAuGMtLX/vKE5FWe3URZR3BBzVVcBy1YWWrTA1hIlrCDAKngq5oHZP6DWfj0bD20bcBU6aqSU+FdV0YMttaVsnj22IsNveuVES7kiFR3jfAtH8nDCv4+ekLIFtRc8SY1pn5i873caEEQypuvvqYKusSsR8BhdSsg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=mCbf13Px; arc=none smtp.client-ip=72.215.153.18
+	 In-Reply-To:Content-Type; b=krQb+LwvHONspP3X+paV44bbpqYyYIS9pR44Y4fCyEN2rQNDIUjd0k6YnXU9rEKv7Yweai6NuUfykom36Rk4c1rrWTpT7NHnqcsebV3aboV6XJZfknm2XsEjcnk7Y4EtHsl3U1u2UkHqVjAORHZDwz5LKe1XBOgVzTlAq5lZvkk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=evz/Pljd; arc=none smtp.client-ip=72.215.153.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="mCbf13Px"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id DbqaYgkKENzs4L9y; Mon, 29 Sep 2025 10:37:33 -0400 (EDT)
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="evz/Pljd"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id XI1COYk08SDSdQcD; Mon, 29 Sep 2025 10:38:44 -0400 (EDT)
 X-Barracuda-Envelope-From: tonyb@cybernetics.com
 X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
 X-ASG-Whitelist: Client
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=yva6rNnOTxJJzCf5mgo/aOLIjnCYtd1mEQiI9FtYCYQ=;
+	bh=LBFAukcNjWDmkm+UjMMSgloV0EOYktjJButGS3YKuJI=;
 	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Cc:To:From:
-	Content-Language:Subject:MIME-Version:Date:Message-ID; b=mCbf13PxUPhGNzPEZ9Ac
-	Eimb2suwqCiHBvgJGsCDIGv2DTh6KUZyuznWFZHhJEH0cgD/pAwDrYyMdcSCEVp1bWK/1UKqRjv/e
-	gHPZ+KkkFIwu0thEao3uBPCiSvC9suuvJxfkVviM3FMHjKB5OQKHCUuIH+22y8TWqUnVzte1jY=
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=evz/Pljd2oNZe9/BYQwL
+	8j7zzZtVfKk4ApIduC7CYb99TEE51e61MW1YrZW/s/vPw0YQnmJbo4vJS/hVe++mn8hNqQ2sWfvNY
+	OZVaY4hPGb8BEge0GGMu6dL35D5NTFtWYWbRL/+B81bf3ULpcZhfmX8PyaxxJhen/kbZiORgQk=
 Received: from [10.157.2.224] (HELO [192.168.200.1])
   by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14216623; Mon, 29 Sep 2025 10:37:33 -0400
-Message-ID: <e4dffd3f-0d62-4c9d-bff7-e1887bff1f50@cybernetics.com>
+  with ESMTPS id 14216626; Mon, 29 Sep 2025 10:38:44 -0400
+Message-ID: <8d01e3ad-9986-403b-be2f-0acec58dc7cc@cybernetics.com>
 X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Mon, 29 Sep 2025 10:37:33 -0400
+Date: Mon, 29 Sep 2025 10:38:43 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,11 +39,9 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH v2 07/16] scsi: qla2xxx: fix term exchange when cmd_sent_to_fw
- == 1
+Subject: [PATCH v2 08/16] scsi: qla2xxx: clear cmds after chip reset
 Content-Language: en-US
-X-ASG-Orig-Subj: [PATCH v2 07/16] scsi: qla2xxx: fix term exchange when cmd_sent_to_fw
- == 1
+X-ASG-Orig-Subj: [PATCH v2 08/16] scsi: qla2xxx: clear cmds after chip reset
 From: Tony Battersby <tonyb@cybernetics.com>
 To: Nilesh Javali <njavali@marvell.com>,
  GR-QLogic-Storage-Upstream@marvell.com,
@@ -59,121 +57,111 @@ In-Reply-To: <e95ee7d0-3580-4124-b854-7f73ca3a3a84@cybernetics.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1759156653
+X-Barracuda-Start-Time: 1759156724
 X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 0
+X-Barracuda-BRTS-Status: 1
 X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 3598
-X-ASG-Debug-ID: 1759156653-1cf43947df3c0260001-ziuLRu
+X-Barracuda-Scan-Msg-Size: 3908
+X-ASG-Debug-ID: 1759156724-1cf43947df3c0290001-ziuLRu
 
-(target mode)
+Commit aefed3e5548f ("scsi: qla2xxx: target: Fix offline port handling
+and host reset handling") caused two problems:
 
-Properly set the nport_handle field of the terminate exchange message.
-Previously when this field was not set properly, the term exchange would
-fail when cmd_sent_to_fw == 1 but work when cmd_sent_to_fw == 0 (i.e. it
-would fail when the HW was actively transferring data or status for the
-cmd but work when the HW was idle).  With this change, term exchange
-works in any cmd state, which now makes it possible to abort a command
-that is locked up in the HW.
+1. Commands sent to FW, after chip reset got stuck and never freed as FW
+   is not going to respond to them anymore.
 
+2. BUG_ON(cmd->sg_mapped) in qlt_free_cmd().  Commit 26f9ce53817a
+   ("scsi: qla2xxx: Fix missed DMA unmap for aborted commands")
+   attempted to fix this, but introduced another bug under different
+   circumstances when two different CPUs were racing to call
+   qlt_unmap_sg() at the same time: BUG_ON(!valid_dma_direction(dir)) in
+   dma_unmap_sg_attrs().
+
+So revert "scsi: qla2xxx: Fix missed DMA unmap for aborted commands" and
+partially revert "scsi: qla2xxx: target: Fix offline port handling and
+host reset handling" at __qla2x00_abort_all_cmds.
+
+Fixes: aefed3e5548f ("scsi: qla2xxx: target: Fix offline port handling and host reset handling")
+Fixes: 26f9ce53817a ("scsi: qla2xxx: Fix missed DMA unmap for aborted commands")
 Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
 ---
 
-v1 -> v2: no changes
+v1 -> v2: This patch is a new addition in v2.
 
- drivers/scsi/qla2xxx/qla_target.c | 52 ++++++++++++++++++-------------
- 1 file changed, 31 insertions(+), 21 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c     | 20 ++++++++++++++++++--
+ drivers/scsi/qla2xxx/qla_target.c |  5 +----
+ drivers/scsi/qla2xxx/qla_target.h |  1 +
+ 3 files changed, 20 insertions(+), 6 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index f0b77f13628d..739137ddfd68 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1875,10 +1875,26 @@ __qla2x00_abort_all_cmds(struct qla_qpair *qp, int res)
+ 					continue;
+ 				}
+ 				cmd = (struct qla_tgt_cmd *)sp;
+-				cmd->aborted = 1;
++
++				if (cmd->sg_mapped)
++					qlt_unmap_sg(vha, cmd);
++
++				if (cmd->state == QLA_TGT_STATE_NEED_DATA) {
++					cmd->aborted = 1;
++					cmd->write_data_transferred = 0;
++					cmd->state = QLA_TGT_STATE_DATA_IN;
++					ha->tgt.tgt_ops->handle_data(cmd);
++				} else {
++					ha->tgt.tgt_ops->free_cmd(cmd);
++				}
+ 				break;
+ 			case TYPE_TGT_TMCMD:
+-				/* Skip task management functions. */
++				/*
++				 * Currently, only ABTS response gets on the
++				 * outstanding_cmds[]
++				 */
++				ha->tgt.tgt_ops->free_mcmd(
++					(struct qla_tgt_mgmt_cmd *) sp);
+ 				break;
+ 			default:
+ 				break;
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 72c74f8f5375..b700bfc642b3 100644
+index b700bfc642b3..2abdb8ce0302 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3622,14 +3622,35 @@ static int __qlt_send_term_exchange(struct qla_qpair *qpair,
- 	struct qla_tgt_cmd *cmd,
- 	struct atio_from_isp *atio)
- {
--	struct scsi_qla_host *vha = qpair->vha;
- 	struct ctio7_to_24xx *ctio24;
--	request_t *pkt;
--	int ret = 0;
-+	struct scsi_qla_host *vha;
-+	uint16_t loop_id;
- 	uint16_t temp;
- 
--	if (cmd)
-+	if (cmd) {
- 		vha = cmd->vha;
-+		loop_id = cmd->loop_id;
-+	} else {
-+		port_id_t id = be_to_port_id(atio->u.isp24.fcp_hdr.s_id);
-+		struct qla_hw_data *ha;
-+		struct fc_port *sess;
-+		unsigned long flags;
-+
-+		vha = qpair->vha;
-+		ha = vha->hw;
-+
-+		/*
-+		 * CTIO7_NHANDLE_UNRECOGNIZED works when aborting an idle
-+		 * command but not when aborting a command with an active CTIO
-+		 * exchange.
-+		 */
-+		loop_id = CTIO7_NHANDLE_UNRECOGNIZED;
-+		spin_lock_irqsave(&ha->tgt.sess_lock, flags);
-+		sess = qla2x00_find_fcport_by_nportid(vha, &id, 1);
-+		if (sess)
-+			loop_id = sess->loop_id;
-+		spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
-+	}
- 
- 	if (cmd) {
- 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xe009,
-@@ -3642,31 +3663,20 @@ static int __qlt_send_term_exchange(struct qla_qpair *qpair,
- 		    vha->vp_idx, le32_to_cpu(atio->u.isp24.exchange_addr));
- 	}
- 
--	pkt = (request_t *)qla2x00_alloc_iocbs_ready(qpair, NULL);
--	if (pkt == NULL) {
-+	ctio24 = qla2x00_alloc_iocbs_ready(qpair, NULL);
-+	if (!ctio24) {
- 		ql_dbg(ql_dbg_tgt, vha, 0xe050,
- 		    "qla_target(%d): %s failed: unable to allocate "
- 		    "request packet\n", vha->vp_idx, __func__);
- 		return -ENOMEM;
- 	}
- 
--	if (cmd != NULL) {
--		if (cmd->state < QLA_TGT_STATE_PROCESSED) {
--			ql_dbg(ql_dbg_tgt, vha, 0xe051,
--			    "qla_target(%d): Terminating cmd %p with "
--			    "incorrect state %d\n", vha->vp_idx, cmd,
--			    cmd->state);
--		} else
--			ret = 1;
--	}
--
- 	qpair->tgt_counters.num_term_xchg_sent++;
--	pkt->entry_count = 1;
--	pkt->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
- 
--	ctio24 = (struct ctio7_to_24xx *)pkt;
- 	ctio24->entry_type = CTIO_TYPE7;
--	ctio24->nport_handle = cpu_to_le16(CTIO7_NHANDLE_UNRECOGNIZED);
-+	ctio24->entry_count = 1;
-+	ctio24->handle = QLA_TGT_SKIP_HANDLE | CTIO_COMPLETION_HANDLE_MARK;
-+	ctio24->nport_handle = cpu_to_le16(loop_id);
- 	ctio24->timeout = cpu_to_le16(QLA_TGT_TIMEOUT);
- 	ctio24->vp_index = vha->vp_idx;
- 	ctio24->initiator_id = be_id_to_le(atio->u.isp24.fcp_hdr.s_id);
-@@ -3683,7 +3693,7 @@ static int __qlt_send_term_exchange(struct qla_qpair *qpair,
- 		qpair->reqq_start_iocbs(qpair);
- 	else
- 		qla2x00_start_iocbs(vha, qpair->req);
--	return ret;
-+	return 0;
+@@ -2447,7 +2447,7 @@ static int qlt_pci_map_calc_cnt(struct qla_tgt_prm *prm)
+ 	return -1;
  }
  
- static void qlt_send_term_exchange(struct qla_qpair *qpair,
+-static void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
++void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
+ {
+ 	struct qla_hw_data *ha;
+ 	struct qla_qpair *qpair;
+@@ -3795,9 +3795,6 @@ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)
+ 
+ 	spin_lock_irqsave(&cmd->cmd_lock, flags);
+ 	if (cmd->aborted) {
+-		if (cmd->sg_mapped)
+-			qlt_unmap_sg(vha, cmd);
+-
+ 		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
+ 		/*
+ 		 * It's normal to see 2 calls in this path:
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index 15a59c125c53..c483966d0a84 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -1058,6 +1058,7 @@ extern int qlt_abort_cmd(struct qla_tgt_cmd *);
+ extern void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *);
+ extern void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *);
+ extern void qlt_free_cmd(struct qla_tgt_cmd *cmd);
++extern void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd);
+ extern void qlt_async_event(uint16_t, struct scsi_qla_host *, uint16_t *);
+ extern void qlt_enable_vha(struct scsi_qla_host *);
+ extern void qlt_vport_create(struct scsi_qla_host *, struct qla_hw_data *);
 -- 
 2.43.0
 
