@@ -1,139 +1,116 @@
-Received: from mailout1.w1.samsung.com (mailout1.w1.samsung.com [210.118.77.11])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3902A3002AF
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 11:27:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A262B20B22
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 12:39:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759145272; cv=none; b=r9flhPSYrSK1XMIxyjgObR1sorgRAcgpi1eCCAfxkajuDpKlv6DyynxMuL1v+GzPwzb4mtrecm1teE5RNGYVQ8Ogzm2gOfi67Mbw2QCwQy0s/Zcz8qqhk/J9tVfUzqUazJBC5GBlZirYhyjtv/UD8nSRfVZ6O3za2ghvzOVlGug=
+	t=1759149552; cv=none; b=mIUSS8m2+qsdvO+uP0Y6mvRYy5KQ0e5sbOVoyIszqyykgxoIySWHQEZKqwp55qfLVlNLzLk5Alt9uRYm/of9eN0HPQd83Rsssqdll1kDAKwMORi7X4N4R32ZLPn3fpgrHFWyoRA6VRtkrRqMa4bZy/GYxg+0QbWPh/hFsT8SY0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759145272; c=relaxed/simple;
-	bh=K4dDR17SKQ+iYYKthLN5oCT/pg1dmS959JMpR7euNx4=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
-	 References; b=DzP3b//kcNjSse+EdJ3ncHZIDUUGxKrAtUbKMhDCrMtB2+AaeneB9C88xgfxLnlcpDpwgbvkZAjWoycU7XNxiatTKwq3RgymmV8d6BmC/LdYsJ268naVG6nrIDyV7N1278FNwIMosZ2pr3OjGmMBSVMmg8kaOfp3/dtgqD/BqIM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=dEueFhTj; arc=none smtp.client-ip=210.118.77.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1759149552; c=relaxed/simple;
+	bh=UPayV7sH9iZs2yD3LVHaRcURbvcQ0a/mJAvGuC63X8o=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Z8mR49GKN9FhY1MEXS+crJNdsskEIIPnqrLtleINGJvBClUao17dwMoErJah8s3FdFvTOp0QUinqkw0FrDkW2fbLRbBCq5703G3Tn13GaOSiMnfopdATJ+K7nEJ3mfz/UgIM/CYCVekHhQedbaHy4Ese48c358hEni3MLX8U7A0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=puK0rOFs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="dEueFhTj"
-Received: from eucas1p1.samsung.com (unknown [182.198.249.206])
-	by mailout1.w1.samsung.com (KnoxPortal) with ESMTP id 20250929112741euoutp0145d61cbf68f56b0b078e402d0541c811~pvUtsFimV3101831018euoutp01n
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 11:27:41 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.w1.samsung.com 20250929112741euoutp0145d61cbf68f56b0b078e402d0541c811~pvUtsFimV3101831018euoutp01n
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1759145261;
-	bh=Is61J66vqLlTRTlRtdZNarB4aHnsTBxzCeofbT6hdKY=;
-	h=From:To:Cc:Subject:Date:References:From;
-	b=dEueFhTjCRPSm6+BghHONFrFHGtumyK4tC7Dvuk5p17KuMdWy/QsN5ktIwRxBCWM/
-	 5uhLaO5+3GSfDtjdh/AS8MA43MuN703fx6O5d9jhenK0Nax/Rn1nCAjPmA2z1niggY
-	 42lMenU+YSZLFqg8DNF5bxUCNL88yRVJntXurYDI=
-Received: from eusmtip1.samsung.com (unknown [203.254.199.221]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20250929112740eucas1p284c5c49f54fec23c55260edf07aa1138~pvUtUob8Q1108011080eucas1p2G;
-	Mon, 29 Sep 2025 11:27:40 +0000 (GMT)
-Received: from AMDC4653.digital.local (unknown [106.120.51.32]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20250929112740eusmtip144609c4746f46fcc5e314eb037ef18bd~pvUs4XQu11536915369eusmtip1j;
-	Mon, 29 Sep 2025 11:27:40 +0000 (GMT)
-From: Marek Szyprowski <m.szyprowski@samsung.com>
-To: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Cc: Marek Szyprowski <m.szyprowski@samsung.com>, Alim Akhtar
-	<alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Bart Van
-	Assche <bvanassche@acm.org>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>
-Subject: [PATCH] scsi: ufs: core: Fix PM QoS mutex initialization
-Date: Mon, 29 Sep 2025 13:27:30 +0200
-Message-Id: <20250929112730.3782765-1-m.szyprowski@samsung.com>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="puK0rOFs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3BF8BC19421
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 12:39:11 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759149551;
+	bh=UPayV7sH9iZs2yD3LVHaRcURbvcQ0a/mJAvGuC63X8o=;
+	h=References:In-Reply-To:From:Date:Subject:To:List-Id:Cc:From;
+	b=puK0rOFskCmgbj136Nt7tAC0VYKChOz6DigbqT0J4HmZ5zklS0bpUI/xr4xPbK0Qk
+	 i4MqkRsXlU2DBCxEiLQgf7rq9XsTCH+qrr7K1mTbOvJC2Hlvq2otys3Wvt5zZOoGQ3
+	 f11aJRcFyaKXUBXwhRVaMrOn/y5lxbIpSVrh/8BzO5ExIQk7tsfiLh4uD4RYxmsd+f
+	 y4EqijS4m6TZZVYGyXsxz5sZ0XYSNf7mmO8bbHWRoBP/mk8OELtF7+/B3DbfIMlwEt
+	 7DgZQuIi3MrEHSI2aDMPIj6w86uLHxWCj0Vp5NaQzxOpgnLA1AGRo/0vSK4dnPTHJA
+	 uH5s+pjE00tww==
+Received: by mail-yx1-f50.google.com with SMTP id 956f58d0204a3-6348447d5easo3432171d50.0
+        for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 05:39:11 -0700 (PDT)
+X-Forwarded-Encrypted: i=1; AJvYcCXzfnVZI66nzHutPJ8dKUKK7M4T/h91rWYZ4CWcr4mJw5lOAn9+Ptj00WFhTbm1WkHncM7bDXHQLdoy@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz0kj2UHJZE9cK6oI4SnA7eO6BLHAnG7TbnhZBqPDFSm7pjjHOy
+	CjChlk10qvBNzQdWLbMNB9JWLSLj4ZxpzLJioJM3J6c0x8uuTlIxeciD62r7f2l9weARqKe/DH8
+	VEMx38kTKHg8eHuGInmkLotQYfI4oZUY=
+X-Google-Smtp-Source: AGHT+IGBbqVPnO4g2RougADgIRndnc00QkyvpQ4fGXqajHkTlXUIa//TQhpF0x9rwfTVnpqIfxuGv8rANWtyDJ0gbXc=
+X-Received: by 2002:a53:c787:0:b0:635:4ecc:fc2a with SMTP id
+ 956f58d0204a3-6361a85b56amr13479860d50.50.1759149550355; Mon, 29 Sep 2025
+ 05:39:10 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20250929112740eucas1p284c5c49f54fec23c55260edf07aa1138
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20250929112740eucas1p284c5c49f54fec23c55260edf07aa1138
-X-EPHeader: CA
-X-CMS-RootMailID: 20250929112740eucas1p284c5c49f54fec23c55260edf07aa1138
-References: <CGME20250929112740eucas1p284c5c49f54fec23c55260edf07aa1138@eucas1p2.samsung.com>
+References: <20250928173234.233947-1-xose.vazquez@gmail.com>
+In-Reply-To: <20250928173234.233947-1-xose.vazquez@gmail.com>
+From: Josh Boyer <jwboyer@kernel.org>
+Date: Mon, 29 Sep 2025 08:38:58 -0400
+X-Gmail-Original-Message-ID: <CA+5PVA74pLZYkwocUuYcMLVpSLHM2W--siW5ZNXJ+kgm9NBhAQ@mail.gmail.com>
+X-Gm-Features: AS18NWBmSjT-Uo8ouICHJp-1aG7AXhZ-YlyOU2hLz4GUJCH5a6YRDbftHIv6gGo
+Message-ID: <CA+5PVA74pLZYkwocUuYcMLVpSLHM2W--siW5ZNXJ+kgm9NBhAQ@mail.gmail.com>
+Subject: Re: [PATCH] linux-firmware: WHENCE: identify Qlogic firmware
+To: Xose Vazquez Perez <xose.vazquez@gmail.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, 
+	QLOGIC-ML <GR-QLogic-Storage-Upstream@marvell.com>, 
+	SCSI-ML <linux-scsi@vger.kernel.org>, FIRMWARE-ML <linux-firmware@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-hba->pm_qos_mutex is used very early as a part of ufshcd_init(), so it
-need to be initialized before that call. This fixes the following
-warning:
-------------[ cut here ]------------
-DEBUG_LOCKS_WARN_ON(lock->magic != lock)
-WARNING: kernel/locking/mutex.c:577 at __mutex_lock+0x268/0x894, CPU#4: kworker/u32:4/72
-Modules linked in:
-CPU: 4 UID: 0 PID: 72 Comm: kworker/u32:4 Not tainted 6.17.0-rc7-next-20250926+ #11223 PREEMPT
-Hardware name: Qualcomm Technologies, Inc. Robotics RB5 (DT)
-Workqueue: events_unbound deferred_probe_work_func
-pstate: 60400005 (nZCv daif +PAN -UAO -TCO -DIT -SSBS BTYPE=--)
-pc : __mutex_lock+0x268/0x894
-lr : __mutex_lock+0x268/0x894
-...
-Call trace:
- __mutex_lock+0x268/0x894 (P)
- mutex_lock_nested+0x24/0x30
- ufshcd_pm_qos_update+0x30/0x78
- ufshcd_setup_clocks+0x2d4/0x3c4
- ufshcd_init+0x234/0x126c
- ufshcd_pltfrm_init+0x62c/0x82c
- ufs_qcom_probe+0x20/0x58
- platform_probe+0x5c/0xac
- really_probe+0xbc/0x298
- __driver_probe_device+0x78/0x12c
- driver_probe_device+0x40/0x164
- __device_attach_driver+0xb8/0x138
- bus_for_each_drv+0x80/0xdc
- __device_attach+0xa8/0x1b0
- device_initial_probe+0x14/0x20
- bus_probe_device+0xb0/0xb4
- deferred_probe_work_func+0x8c/0xc8
- process_one_work+0x208/0x60c
- worker_thread+0x244/0x388
- kthread+0x150/0x228
- ret_from_fork+0x10/0x20
-irq event stamp: 57267
-hardirqs last  enabled at (57267): [<ffffd761485e868c>] _raw_spin_unlock_irqrestore+0x74/0x78
-hardirqs last disabled at (57266): [<ffffd76147b13c44>] clk_enable_lock+0x7c/0xf0
-softirqs last  enabled at (56270): [<ffffd7614734446c>] handle_softirqs+0x4c4/0x4dc
-softirqs last disabled at (56265): [<ffffd76147290690>] __do_softirq+0x14/0x20
----[ end trace 0000000000000000 ]---
+On Sun, Sep 28, 2025 at 1:32=E2=80=AFPM Xose Vazquez Perez
+<xose.vazquez@gmail.com> wrote:
+>
+> Info from:
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit=
+/?id=3D1bfa11db712cbf4af1ae037cd25fd4f781f0c215
+>
+> Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: QLOGIC-ML <GR-QLogic-Storage-Upstream@marvell.com>
+> Cc: SCSI-ML <linux-scsi@vger.kernel.org>
+> Cc: FIRMWARE-ML <linux-firmware@kernel.org>
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> ---
+> If anyone is interested in this, NetBSD has different/newer versions:
+> https://github.com/NetBSD/src/tree/trunk/sys/dev/microcode/isp
+> ---
+>  WHENCE | 4 ++++
 
-Fixes: 79dde5f7dc7c ("scsi: ufs: core: Fix data race in CPU latency PM QoS request handling")
-Signed-off-by: Marek Szyprowski <m.szyprowski@samsung.com>
----
- drivers/ufs/core/ufshcd.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+I don't understand the point of this patch.  It's adding version
+information from a patch sent 16 years ago, for firmware versions that
+are 22-23 years old.  Nothing has needed this change for over two
+decades, so why add this now?
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index d9632d7c5f01..b3b14af4a726 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -10677,6 +10677,9 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 	 */
- 	spin_lock_init(&hba->clk_gating.lock);
- 
-+	/* Initialize mutex for PM QoS request synchronization */
-+	mutex_init(&hba->pm_qos_mutex);
-+
- 	/*
- 	 * Set the default power management level for runtime and system PM.
- 	 * Host controller drivers can override them in their
-@@ -10765,9 +10768,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 
- 	mutex_init(&hba->wb_mutex);
- 
--	/* Initialize mutex for PM QoS request synchronization */
--	mutex_init(&hba->pm_qos_mutex);
--
- 	init_rwsem(&hba->clk_scaling_lock);
- 
- 	ufshcd_init_clk_gating(hba);
--- 
-2.34.1
+josh
 
+>  1 file changed, 4 insertions(+)
+>
+> diff --git a/WHENCE b/WHENCE
+> index bc807bd2..bf35f40e 100644
+> --- a/WHENCE
+> +++ b/WHENCE
+> @@ -70,8 +70,11 @@ Found in hex form in kernel source.
+>  Driver: qla1280 - Qlogic QLA 1240/1x80/1x160 SCSI support
+>
+>  File: qlogic/1040.bin
+> +Version: 7.65.06 Initiator/Target (14:38 Jan 07, 2002)
+>  File: qlogic/1280.bin
+> +Version: 8.15.11 Initiator (10:20 Jan 02, 2002)
+>  File: qlogic/12160.bin
+> +Version: 10.04.42 Initiator (15:44 Apr 18, 2003)
+>
+>  Licence: Redistributable. See LICENCE.qla1280 for details
+>
+> @@ -1590,6 +1593,7 @@ Licence: Redistributable. See LICENSE.conexant for =
+details.
+>  Driver: qlogicpti - PTI Qlogic, ISP Driver
+>
+>  File: qlogic/isp1000.bin
+> +Version: 1.31.00 Initiator
+>
+>  Licence: Unknown
+>
+> --
+> 2.51.0
+>
