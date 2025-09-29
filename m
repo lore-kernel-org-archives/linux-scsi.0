@@ -1,203 +1,576 @@
-Received: from fra-out-002.esa.eu-central-1.outbound.mail-perimeter.amazon.com (fra-out-002.esa.eu-central-1.outbound.mail-perimeter.amazon.com [3.65.3.180])
+Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2E153093BA;
-	Mon, 29 Sep 2025 14:39:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=3.65.3.180
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8F401309F1D
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 14:40:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759156783; cv=none; b=TusVACyApG0hLWfh14J0rhTPV9GnC85Tvs/0bcSJhX8Q1AMqkPoZdl+ajjb03qXOAKfDxoKAwlrZZpaoRn1uBcZdJ83G/39kjtNW0PYHTvNDPHwYeBnDwuhhs0crI51ptKopx0CHEoA1qqhOz9vKN60F6MJbbkte2ptlJwnJXeo=
+	t=1759156802; cv=none; b=oS9lz/C7559DUGWQajnkbygPACpJ973zRMrK2cdK6bmfYIaHKKFm+FcjjBYBioI3OtPqLnwGsbRGberhFDGrj7OmdCzVqXocK5kC96GEVEVbqSIHz6vxlItqdd6KzkA9pN7LJTkdtmFPhn17dM45uxWc1UEoymcYjcChzhohLiI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759156783; c=relaxed/simple;
-	bh=jQWfyryv3PwAY4z7JkjeqszILRR0hMtG2kXXZBJTGME=;
-	h=Subject:From:To:CC:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=W5/hdogYNp/QLxq8P9IMjGNhuB/ItVYMuox04uiENxPXay2605+FLLDjXFHjKuNgC+0aGUyZ/VBpxt7IX6MOAj2LehMhSzYxlGXAp7QGC3ew+kKH6WZvSNgKTJC9Nai7LDOJcn+MGrtHVdK4ko8WdtfI/Qy9RcH/plJOjO9UGW0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com; spf=pass smtp.mailfrom=amazon.com; dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b=XOtWVBnb; arc=none smtp.client-ip=3.65.3.180
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=amazon.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=amazon.com
+	s=arc-20240116; t=1759156802; c=relaxed/simple;
+	bh=/GBfhvz1vgECsunkS5tptPSlU7u3Qwm1QfJQYBQM/0s=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=OzslUqyP9oxBqqmpwiQOH8/5TxcSIrI84b8yb8hY8CymxBNt7Q3ZE9pcetDO59Q8sgXQcSX3G/uMykd0r63Hh+Yx1je8phrXub+c0R0XSTDsGlg1mPA1ARDkZlJKDhUGwhteHaqxYEbHtTTwlrhKQKI1t2wKUoxTVt1VsOgNZME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=NfJzsnKW; arc=none smtp.client-ip=72.215.153.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=amazon.com header.i=@amazon.com header.b="XOtWVBnb"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-  d=amazon.com; i=@amazon.com; q=dns/txt; s=amazoncorp2;
-  t=1759156781; x=1790692781;
-  h=from:to:cc:date:message-id:references:in-reply-to:
-   content-transfer-encoding:mime-version:subject;
-  bh=jQWfyryv3PwAY4z7JkjeqszILRR0hMtG2kXXZBJTGME=;
-  b=XOtWVBnbq7icia0M+L9C9/nt/9kGThga25Z7oETYZ14KF0Rmq2SJhXDC
-   ns2utnGMOsjawl+gbqApuU8yASdiHQXUSTHcG98Z/B5I62TVfOm4UfTiC
-   kmwccb/lJW8lhFloXluQpEq6lr0XY9G4IsVlfN5yh1cgkp916w/kqCoTR
-   FVy2/5YMfA0ceuAGGrYw54mixRuSsQULe3r4Hqx2++D1zj+ydtJrE3gOY
-   pUWv1OOXUi7/Kdz8Gal/CRUlMOpXg7PTBOqPbHnSTNJ2kOKCMg4tPDtnQ
-   JrLizWb7ST3Pm7oGU8X+2sxsGVjMlH7fY7B/L6zZNRXwwk5m9A+lxdg2U
-   Q==;
-X-CSE-ConnectionGUID: Eg5FVd3DSAe1GaVTZtKB6g==
-X-CSE-MsgGUID: z2L5KGDMS7uQ8XhGedGakg==
-X-IronPort-AV: E=Sophos;i="6.18,301,1751241600"; 
-   d="scan'208";a="2836489"
-Subject: RE: [PATCH 07/19 v6.1.y] minmax: make generic MIN() and MAX() macros
- available everywhere
-Thread-Topic: [PATCH 07/19 v6.1.y] minmax: make generic MIN() and MAX() macros available
- everywhere
-Received: from ip-10-6-6-97.eu-central-1.compute.internal (HELO smtpout.naws.eu-central-1.prod.farcaster.email.amazon.dev) ([10.6.6.97])
-  by internal-fra-out-002.esa.eu-central-1.outbound.mail-perimeter.amazon.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 29 Sep 2025 14:39:28 +0000
-Received: from EX19MTAEUC002.ant.amazon.com [54.240.197.228:13136]
- by smtpin.naws.eu-central-1.prod.farcaster.email.amazon.dev [10.0.33.147:2525] with esmtp (Farcaster)
- id 231f5531-c12d-4148-9dbe-5b2468a5b014; Mon, 29 Sep 2025 14:39:28 +0000 (UTC)
-X-Farcaster-Flow-ID: 231f5531-c12d-4148-9dbe-5b2468a5b014
-Received: from EX19D018EUA004.ant.amazon.com (10.252.50.85) by
- EX19MTAEUC002.ant.amazon.com (10.252.51.245) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20;
- Mon, 29 Sep 2025 14:39:27 +0000
-Received: from EX19D018EUA004.ant.amazon.com (10.252.50.85) by
- EX19D018EUA004.ant.amazon.com (10.252.50.85) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA) id 15.2.2562.20;
- Mon, 29 Sep 2025 14:39:26 +0000
-Received: from EX19D018EUA004.ant.amazon.com ([fe80::e53:84f8:3456:a97d]) by
- EX19D018EUA004.ant.amazon.com ([fe80::e53:84f8:3456:a97d%3]) with mapi id
- 15.02.2562.020; Mon, 29 Sep 2025 14:39:26 +0000
-From: "Farber, Eliav" <farbere@amazon.com>
-To: Greg KH <gregkh@linuxfoundation.org>
-CC: "linux@armlinux.org.uk" <linux@armlinux.org.uk>, "richard@nod.at"
-	<richard@nod.at>, "anton.ivanov@cambridgegreys.com"
-	<anton.ivanov@cambridgegreys.com>, "johannes@sipsolutions.net"
-	<johannes@sipsolutions.net>, "dave.hansen@linux.intel.com"
-	<dave.hansen@linux.intel.com>, "luto@kernel.org" <luto@kernel.org>,
-	"peterz@infradead.org" <peterz@infradead.org>, "tglx@linutronix.de"
-	<tglx@linutronix.de>, "mingo@redhat.com" <mingo@redhat.com>, "bp@alien8.de"
-	<bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>, "hpa@zytor.com"
-	<hpa@zytor.com>, "tony.luck@intel.com" <tony.luck@intel.com>,
-	"qiuxu.zhuo@intel.com" <qiuxu.zhuo@intel.com>, "mchehab@kernel.org"
-	<mchehab@kernel.org>, "james.morse@arm.com" <james.morse@arm.com>,
-	"rric@kernel.org" <rric@kernel.org>, "harry.wentland@amd.com"
-	<harry.wentland@amd.com>, "sunpeng.li@amd.com" <sunpeng.li@amd.com>,
-	"Rodrigo.Siqueira@amd.com" <Rodrigo.Siqueira@amd.com>,
-	"alexander.deucher@amd.com" <alexander.deucher@amd.com>,
-	"christian.koenig@amd.com" <christian.koenig@amd.com>, "Xinhui.Pan@amd.com"
-	<Xinhui.Pan@amd.com>, "airlied@gmail.com" <airlied@gmail.com>,
-	"daniel@ffwll.ch" <daniel@ffwll.ch>, "evan.quan@amd.com" <evan.quan@amd.com>,
-	"james.qian.wang@arm.com" <james.qian.wang@arm.com>, "liviu.dudau@arm.com"
-	<liviu.dudau@arm.com>, "mihail.atanassov@arm.com" <mihail.atanassov@arm.com>,
-	"brian.starkey@arm.com" <brian.starkey@arm.com>,
-	"maarten.lankhorst@linux.intel.com" <maarten.lankhorst@linux.intel.com>,
-	"mripard@kernel.org" <mripard@kernel.org>, "tzimmermann@suse.de"
-	<tzimmermann@suse.de>, "robdclark@gmail.com" <robdclark@gmail.com>,
-	"quic_abhinavk@quicinc.com" <quic_abhinavk@quicinc.com>,
-	"dmitry.baryshkov@linaro.org" <dmitry.baryshkov@linaro.org>,
-	"sean@poorly.run" <sean@poorly.run>, "jdelvare@suse.com" <jdelvare@suse.com>,
-	"linux@roeck-us.net" <linux@roeck-us.net>, "linus.walleij@linaro.org"
-	<linus.walleij@linaro.org>, "dmitry.torokhov@gmail.com"
-	<dmitry.torokhov@gmail.com>, "maz@kernel.org" <maz@kernel.org>,
-	"wens@csie.org" <wens@csie.org>, "jernej.skrabec@gmail.com"
-	<jernej.skrabec@gmail.com>, "samuel@sholland.org" <samuel@sholland.org>,
-	"agk@redhat.com" <agk@redhat.com>, "snitzer@kernel.org" <snitzer@kernel.org>,
-	"dm-devel@redhat.com" <dm-devel@redhat.com>, "rajur@chelsio.com"
-	<rajur@chelsio.com>, "davem@davemloft.net" <davem@davemloft.net>,
-	"edumazet@google.com" <edumazet@google.com>, "kuba@kernel.org"
-	<kuba@kernel.org>, "pabeni@redhat.com" <pabeni@redhat.com>,
-	"peppe.cavallaro@st.com" <peppe.cavallaro@st.com>,
-	"alexandre.torgue@foss.st.com" <alexandre.torgue@foss.st.com>,
-	"joabreu@synopsys.com" <joabreu@synopsys.com>, "mcoquelin.stm32@gmail.com"
-	<mcoquelin.stm32@gmail.com>, "krzysztof.kozlowski@linaro.org"
-	<krzysztof.kozlowski@linaro.org>, "malattia@linux.it" <malattia@linux.it>,
-	"hdegoede@redhat.com" <hdegoede@redhat.com>, "markgross@kernel.org"
-	<markgross@kernel.org>, "artur.paszkiewicz@intel.com"
-	<artur.paszkiewicz@intel.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
-	"sakari.ailus@linux.intel.com" <sakari.ailus@linux.intel.com>,
-	"fei1.li@intel.com" <fei1.li@intel.com>, "clm@fb.com" <clm@fb.com>,
-	"josef@toxicpanda.com" <josef@toxicpanda.com>, "dsterba@suse.com"
-	<dsterba@suse.com>, "jack@suse.com" <jack@suse.com>, "tytso@mit.edu"
-	<tytso@mit.edu>, "adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
-	"dushistov@mail.ru" <dushistov@mail.ru>, "luc.vanoostenryck@gmail.com"
-	<luc.vanoostenryck@gmail.com>, "rostedt@goodmis.org" <rostedt@goodmis.org>,
-	"mhiramat@kernel.org" <mhiramat@kernel.org>, "pmladek@suse.com"
-	<pmladek@suse.com>, "senozhatsky@chromium.org" <senozhatsky@chromium.org>,
-	"andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>,
-	"linux@rasmusvillemoes.dk" <linux@rasmusvillemoes.dk>, "minchan@kernel.org"
-	<minchan@kernel.org>, "ngupta@vflare.org" <ngupta@vflare.org>,
-	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
-	"yoshfuji@linux-ipv6.org" <yoshfuji@linux-ipv6.org>, "dsahern@kernel.org"
-	<dsahern@kernel.org>, "pablo@netfilter.org" <pablo@netfilter.org>,
-	"kadlec@netfilter.org" <kadlec@netfilter.org>, "fw@strlen.de" <fw@strlen.de>,
-	"jmaloy@redhat.com" <jmaloy@redhat.com>, "ying.xue@windriver.com"
-	<ying.xue@windriver.com>, "andrii@kernel.org" <andrii@kernel.org>,
-	"mykolal@fb.com" <mykolal@fb.com>, "ast@kernel.org" <ast@kernel.org>,
-	"daniel@iogearbox.net" <daniel@iogearbox.net>, "martin.lau@linux.dev"
-	<martin.lau@linux.dev>, "song@kernel.org" <song@kernel.org>, "yhs@fb.com"
-	<yhs@fb.com>, "john.fastabend@gmail.com" <john.fastabend@gmail.com>,
-	"kpsingh@kernel.org" <kpsingh@kernel.org>, "sdf@google.com" <sdf@google.com>,
-	"haoluo@google.com" <haoluo@google.com>, "jolsa@kernel.org"
-	<jolsa@kernel.org>, "shuah@kernel.org" <shuah@kernel.org>,
-	"keescook@chromium.org" <keescook@chromium.org>, "wad@chromium.org"
-	<wad@chromium.org>, "willy@infradead.org" <willy@infradead.org>,
-	"sashal@kernel.org" <sashal@kernel.org>, "ruanjinjie@huawei.com"
-	<ruanjinjie@huawei.com>, "quic_akhilpo@quicinc.com"
-	<quic_akhilpo@quicinc.com>, "David.Laight@aculab.com"
-	<David.Laight@aculab.com>, "herve.codina@bootlin.com"
-	<herve.codina@bootlin.com>, "linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, "linux-um@lists.infradead.org"
-	<linux-um@lists.infradead.org>, "linux-edac@vger.kernel.org"
-	<linux-edac@vger.kernel.org>, "amd-gfx@lists.freedesktop.org"
-	<amd-gfx@lists.freedesktop.org>, "dri-devel@lists.freedesktop.org"
-	<dri-devel@lists.freedesktop.org>, "linux-arm-msm@vger.kernel.org"
-	<linux-arm-msm@vger.kernel.org>, "freedreno@lists.freedesktop.org"
-	<freedreno@lists.freedesktop.org>, "linux-hwmon@vger.kernel.org"
-	<linux-hwmon@vger.kernel.org>, "linux-input@vger.kernel.org"
-	<linux-input@vger.kernel.org>, "linux-sunxi@lists.linux.dev"
-	<linux-sunxi@lists.linux.dev>, "linux-media@vger.kernel.org"
-	<linux-media@vger.kernel.org>, "netdev@vger.kernel.org"
-	<netdev@vger.kernel.org>, "linux-stm32@st-md-mailman.stormreply.com"
-	<linux-stm32@st-md-mailman.stormreply.com>,
-	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-staging@lists.linux.dev" <linux-staging@lists.linux.dev>,
-	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
-	"linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
-	"linux-sparse@vger.kernel.org" <linux-sparse@vger.kernel.org>,
-	"linux-mm@kvack.org" <linux-mm@kvack.org>, "netfilter-devel@vger.kernel.org"
-	<netfilter-devel@vger.kernel.org>, "coreteam@netfilter.org"
-	<coreteam@netfilter.org>, "tipc-discussion@lists.sourceforge.net"
-	<tipc-discussion@lists.sourceforge.net>, "bpf@vger.kernel.org"
-	<bpf@vger.kernel.org>, "linux-kselftest@vger.kernel.org"
-	<linux-kselftest@vger.kernel.org>, "stable@vger.kernel.org"
-	<stable@vger.kernel.org>, Linus Torvalds <torvalds@linux-foundation.org>,
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-Thread-Index: AQHcLZHEroQ9W2lH4EW9XJumD1KlZrSqNL0AgAAM8AA=
-Date: Mon, 29 Sep 2025 14:39:26 +0000
-Message-ID: <85a995bb59474300aa3d5f973d279a13@amazon.com>
-References: <20250924202320.32333-1-farbere@amazon.com>
- <20250924202320.32333-8-farbere@amazon.com>
- <2025092923-stove-rule-a00f@gregkh>
-In-Reply-To: <2025092923-stove-rule-a00f@gregkh>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="NfJzsnKW"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id 4QLRioPYWvSA5Ioe; Mon, 29 Sep 2025 10:39:58 -0400 (EDT)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+	bh=LJE7QksyA54DuCSiYbp+rvCz3XErUe18AkzLBqdfi/8=;
+	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Cc:To:From:
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=NfJzsnKW9cXyz1oRaAUE
+	py3k6irIEcyNTDEelAzIW7TOM37Lt6qMQ7e3oOTaFTXOvzlWmxL/0QkgzvQ1fc3O1D2DVhGx30jH6
+	SLDjZQu8QnpdH8+Bg7rN4H7BQuKu2sV66otL7ecCoPz0cik/QSsvT/JlUxChEkgZUvX3pMWkRc=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
+  with ESMTPS id 14216632; Mon, 29 Sep 2025 10:39:58 -0400
+Message-ID: <814e26dc-da8d-474f-b2f2-39becfe94eec@cybernetics.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
+Date: Mon, 29 Sep 2025 10:39:58 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: [PATCH v2 09/16] scsi: qla2xxx: fix races with aborting commands
+Content-Language: en-US
+X-ASG-Orig-Subj: [PATCH v2 09/16] scsi: qla2xxx: fix races with aborting commands
+From: Tony Battersby <tonyb@cybernetics.com>
+To: Nilesh Javali <njavali@marvell.com>,
+ GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
+ scst-devel@lists.sourceforge.net,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Dmitry Bogdanov <d.bogdanov@yadro.com>,
+ Xose Vazquez Perez <xose.vazquez@gmail.com>
+References: <e95ee7d0-3580-4124-b854-7f73ca3a3a84@cybernetics.com>
+In-Reply-To: <e95ee7d0-3580-4124-b854-7f73ca3a3a84@cybernetics.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1759156798
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Barracuda-BRTS-Status: 1
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 19130
+X-ASG-Debug-ID: 1759156798-1cf43947df3c0300001-ziuLRu
 
-> On Wed, Sep 24, 2025 at 08:23:08PM +0000, Eliav Farber wrote:
-> > From: Linus Torvalds <torvalds@linux-foundation.org>
-> >
-> > [ Upstream commit 1a251f52cfdc417c84411a056bc142cbd77baef4 ]
->
-> <snip>
->
-> As this didn't go into 6.6.y yet, I'll stop here on this series for now.
-> Please fix up for newer kernels first and then resend these.
+(target mode)
 
-For 6.6.y I backported 15 commits:
-https://lore.kernel.org/stable/20250922103241.16213-1-farbere@amazon.com/T/=
-#t
+cmd->cmd_lock only protects cmd->aborted, but when deciding how to
+process a cmd, it is necessary to consider other factors such as
+cmd->state and if the chip has been reset, which are protected by
+qpair->qp_lock_ptr.  So replace cmd_lock with qp_lock_ptr, whick makes
+it possible to check additional values and make decisions about what to
+do without racing with the CTIO handler and other code.
 
-Why weren't all of them picked?
-What is missing?
+- Lock cmd->qpair->qp_lock_ptr when aborting a cmd.
+- Eliminate cmd->cmd_lock and change cmd->aborted to a bitfield since it
+  is now protected by qp_lock_ptr just like all the other flags.
+- Add another command state QLA_TGT_STATE_DONE to avoid any possible
+  races between qlt_abort_cmd() and tgt_ops->free_cmd().
+- Add the cmd->sent_term_exchg flag to indicate if
+  qlt_send_term_exchange() has already been called.
+- Export qlt_send_term_exchange() for SCST so that it can be called
+  directly instead of trying to make qlt_abort_cmd() work for both
+  TMR abort and HW timeout.
 
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 ---
-Thanks, Eliav
+
+v1 -> v2:
+- On second timeout, reset the ISP rather than unmapping DMA that
+  might be in use by the hardware.
+- Apply "scsi: qla2xxx: clear cmds after chip reset" from Dmitry
+  Bogdanov as prerequisite.  This is required for the ISP reset to clear
+  the locked-up command.
+- Move the revert of 26f9ce53817a ("scsi: qla2xxx: Fix missed DMA unmap
+  for aborted commands") from this patch to the previous patch since
+  that patch fixed the oops, even though this patch is still necessary
+  for its other improvements.  Rename this patch and reword the patch
+  description to match.
+- No longer export qlt_unmap_sg().
+- Export qla2xxx_wake_dpc().
+- Remove TRC_CTIO_IGNORED.
+
+ drivers/scsi/qla2xxx/qla_os.c      |   1 +
+ drivers/scsi/qla2xxx/qla_target.c  | 198 +++++++++++++----------------
+ drivers/scsi/qla2xxx/qla_target.h  |  17 ++-
+ drivers/scsi/qla2xxx/tcm_qla2xxx.c |   2 +
+ 4 files changed, 102 insertions(+), 116 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 739137ddfd68..2a3eb1dacf86 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -7248,6 +7248,7 @@ qla2xxx_wake_dpc(struct scsi_qla_host *vha)
+ 	if (!test_bit(UNLOADING, &vha->dpc_flags) && t)
+ 		wake_up_process(t);
+ }
++EXPORT_SYMBOL(qla2xxx_wake_dpc);
+ 
+ /*
+ *  qla2x00_rst_aen
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 2abdb8ce0302..c6dc5e9efb69 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -104,8 +104,6 @@ static void qlt_response_pkt(struct scsi_qla_host *ha, struct rsp_que *rsp,
+ 	response_t *pkt);
+ static int qlt_issue_task_mgmt(struct fc_port *sess, u64 lun,
+ 	int fn, void *iocb, int flags);
+-static void qlt_send_term_exchange(struct qla_qpair *, struct qla_tgt_cmd
+-	*cmd, struct atio_from_isp *atio, int ha_locked, int ul_abort);
+ static void qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
+ 	struct atio_from_isp *atio, uint16_t status, int qfull);
+ static void qlt_disable_vha(struct scsi_qla_host *vha);
+@@ -136,20 +134,6 @@ static struct workqueue_struct *qla_tgt_wq;
+ static DEFINE_MUTEX(qla_tgt_mutex);
+ static LIST_HEAD(qla_tgt_glist);
+ 
+-static const char *prot_op_str(u32 prot_op)
+-{
+-	switch (prot_op) {
+-	case TARGET_PROT_NORMAL:	return "NORMAL";
+-	case TARGET_PROT_DIN_INSERT:	return "DIN_INSERT";
+-	case TARGET_PROT_DOUT_INSERT:	return "DOUT_INSERT";
+-	case TARGET_PROT_DIN_STRIP:	return "DIN_STRIP";
+-	case TARGET_PROT_DOUT_STRIP:	return "DOUT_STRIP";
+-	case TARGET_PROT_DIN_PASS:	return "DIN_PASS";
+-	case TARGET_PROT_DOUT_PASS:	return "DOUT_PASS";
+-	default:			return "UNKNOWN";
+-	}
+-}
+-
+ /* This API intentionally takes dest as a parameter, rather than returning
+  * int value to avoid caller forgetting to issue wmb() after the store */
+ void qlt_do_generation_tick(struct scsi_qla_host *vha, int *dest)
+@@ -252,7 +236,7 @@ static void qlt_queue_unknown_atio(scsi_qla_host_t *vha,
+ 	return;
+ 
+ out_term:
+-	qlt_send_term_exchange(vha->hw->base_qpair, NULL, atio, ha_locked, 0);
++	qlt_send_term_exchange(vha->hw->base_qpair, NULL, atio, ha_locked);
+ 	goto out;
+ }
+ 
+@@ -271,7 +255,7 @@ static void qlt_try_to_dequeue_unknown_atios(struct scsi_qla_host *vha,
+ 			    "Freeing unknown %s %p, because of Abort\n",
+ 			    "ATIO_TYPE7", u);
+ 			qlt_send_term_exchange(vha->hw->base_qpair, NULL,
+-			    &u->atio, ha_locked, 0);
++			    &u->atio, ha_locked);
+ 			goto abort;
+ 		}
+ 
+@@ -285,7 +269,7 @@ static void qlt_try_to_dequeue_unknown_atios(struct scsi_qla_host *vha,
+ 			    "Freeing unknown %s %p, because tgt is being stopped\n",
+ 			    "ATIO_TYPE7", u);
+ 			qlt_send_term_exchange(vha->hw->base_qpair, NULL,
+-			    &u->atio, ha_locked, 0);
++			    &u->atio, ha_locked);
+ 		} else {
+ 			ql_dbg(ql_dbg_async + ql_dbg_verbose, vha, 0x503d,
+ 			    "Reschedule u %p, vha %p, host %p\n", u, vha, host);
+@@ -3461,7 +3445,6 @@ qlt_handle_dif_error(struct qla_qpair *qpair, struct qla_tgt_cmd *cmd,
+ 	uint8_t		*ep = &sts->expected_dif[0];
+ 	uint64_t	lba = cmd->se_cmd.t_task_lba;
+ 	uint8_t scsi_status, sense_key, asc, ascq;
+-	unsigned long flags;
+ 	struct scsi_qla_host *vha = cmd->vha;
+ 
+ 	cmd->trc_flags |= TRC_DIF_ERR;
+@@ -3535,13 +3518,10 @@ qlt_handle_dif_error(struct qla_qpair *qpair, struct qla_tgt_cmd *cmd,
+ 		vha->hw->tgt.tgt_ops->handle_data(cmd);
+ 		break;
+ 	default:
+-		spin_lock_irqsave(&cmd->cmd_lock, flags);
+-		if (cmd->aborted) {
+-			spin_unlock_irqrestore(&cmd->cmd_lock, flags);
++		if (cmd->sent_term_exchg) {
+ 			vha->hw->tgt.tgt_ops->free_cmd(cmd);
+ 			break;
+ 		}
+-		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
+ 
+ 		qlt_send_resp_ctio(qpair, cmd, scsi_status, sense_key, asc,
+ 		    ascq);
+@@ -3696,9 +3676,22 @@ static int __qlt_send_term_exchange(struct qla_qpair *qpair,
+ 	return 0;
+ }
+ 
+-static void qlt_send_term_exchange(struct qla_qpair *qpair,
+-	struct qla_tgt_cmd *cmd, struct atio_from_isp *atio, int ha_locked,
+-	int ul_abort)
++/*
++ * Aborting a command that is active in the FW (i.e. cmd->cmd_sent_to_fw == 1)
++ * will usually trigger the FW to send a completion CTIO with error status,
++ * and the driver will then call the ->handle_data() or ->free_cmd() callbacks.
++ * This can be used to clear a command that is locked up in the FW unless there
++ * is something more seriously wrong.
++ *
++ * Aborting a command that is not active in the FW (i.e.
++ * cmd->cmd_sent_to_fw == 0) will not directly trigger any callbacks.  Instead,
++ * when the target mode midlevel calls qlt_rdy_to_xfer() or
++ * qlt_xmit_response(), the driver will see that the cmd has been aborted and
++ * call the appropriate callback immediately without performing the requested
++ * operation.
++ */
++void qlt_send_term_exchange(struct qla_qpair *qpair,
++	struct qla_tgt_cmd *cmd, struct atio_from_isp *atio, int ha_locked)
+ {
+ 	struct scsi_qla_host *vha;
+ 	unsigned long flags = 0;
+@@ -3722,10 +3715,14 @@ static void qlt_send_term_exchange(struct qla_qpair *qpair,
+ 		qlt_alloc_qfull_cmd(vha, atio, 0, 0);
+ 
+ done:
+-	if (cmd && !ul_abort && !cmd->aborted) {
+-		if (cmd->sg_mapped)
+-			qlt_unmap_sg(vha, cmd);
+-		vha->hw->tgt.tgt_ops->free_cmd(cmd);
++	if (cmd) {
++		/*
++		 * Set this even if -ENOMEM above, since term exchange will be
++		 * sent eventually...
++		 */
++		cmd->sent_term_exchg = 1;
++		cmd->aborted = 1;
++		cmd->jiffies_at_term_exchg = jiffies;
+ 	}
+ 
+ 	if (!ha_locked)
+@@ -3733,6 +3730,7 @@ static void qlt_send_term_exchange(struct qla_qpair *qpair,
+ 
+ 	return;
+ }
++EXPORT_SYMBOL(qlt_send_term_exchange);
+ 
+ static void qlt_init_term_exchange(struct scsi_qla_host *vha)
+ {
+@@ -3783,35 +3781,35 @@ static void qlt_chk_exch_leak_thresh_hold(struct scsi_qla_host *vha)
+ 
+ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)
+ {
+-	struct qla_tgt *tgt = cmd->tgt;
+-	struct scsi_qla_host *vha = tgt->vha;
+-	struct se_cmd *se_cmd = &cmd->se_cmd;
++	struct scsi_qla_host *vha = cmd->vha;
++	struct qla_qpair *qpair = cmd->qpair;
+ 	unsigned long flags;
+ 
+-	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf014,
+-	    "qla_target(%d): terminating exchange for aborted cmd=%p "
+-	    "(se_cmd=%p, tag=%llu)", vha->vp_idx, cmd, &cmd->se_cmd,
+-	    se_cmd->tag);
++	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
+ 
+-	spin_lock_irqsave(&cmd->cmd_lock, flags);
+-	if (cmd->aborted) {
+-		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
+-		/*
+-		 * It's normal to see 2 calls in this path:
+-		 *  1) XFER Rdy completion + CMD_T_ABORT
+-		 *  2) TCM TMR - drain_state_list
+-		 */
+-		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf016,
+-		    "multiple abort. %p transport_state %x, t_state %x, "
+-		    "se_cmd_flags %x\n", cmd, cmd->se_cmd.transport_state,
+-		    cmd->se_cmd.t_state, cmd->se_cmd.se_cmd_flags);
+-		return -EIO;
++	ql_dbg(ql_dbg_tgt_mgt, vha, 0xf014,
++	    "qla_target(%d): tag %lld: cmd being aborted (state %d) %s; %s\n",
++	    vha->vp_idx, cmd->se_cmd.tag, cmd->state,
++	    cmd->cmd_sent_to_fw ? "sent to fw" : "not sent to fw",
++	    cmd->aborted ? "aborted" : "not aborted");
++
++	if (cmd->state != QLA_TGT_STATE_DONE && !cmd->sent_term_exchg) {
++		if (!qpair->fw_started ||
++		    cmd->reset_count != qpair->chip_reset) {
++			/*
++			 * Chip was reset; just pretend that we sent the term
++			 * exchange.
++			 */
++			cmd->sent_term_exchg = 1;
++			cmd->aborted = 1;
++			cmd->jiffies_at_term_exchg = jiffies;
++		} else {
++			qlt_send_term_exchange(qpair, cmd, &cmd->atio, 1);
++		}
+ 	}
+-	cmd->aborted = 1;
+-	cmd->trc_flags |= TRC_ABORT;
+-	spin_unlock_irqrestore(&cmd->cmd_lock, flags);
+ 
+-	qlt_send_term_exchange(cmd->qpair, cmd, &cmd->atio, 0, 1);
++	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
++
+ 	return 0;
+ }
+ EXPORT_SYMBOL(qlt_abort_cmd);
+@@ -3842,40 +3840,6 @@ void qlt_free_cmd(struct qla_tgt_cmd *cmd)
+ }
+ EXPORT_SYMBOL(qlt_free_cmd);
+ 
+-/*
+- * ha->hardware_lock supposed to be held on entry. Might drop it, then reaquire
+- */
+-static int qlt_term_ctio_exchange(struct qla_qpair *qpair, void *ctio,
+-	struct qla_tgt_cmd *cmd, uint32_t status)
+-{
+-	int term = 0;
+-	struct scsi_qla_host *vha = qpair->vha;
+-
+-	if (cmd->se_cmd.prot_op)
+-		ql_dbg(ql_dbg_tgt_dif, vha, 0xe013,
+-		    "Term DIF cmd: lba[0x%llx|%lld] len[0x%x] "
+-		    "se_cmd=%p tag[%x] op %#x/%s",
+-		     cmd->lba, cmd->lba,
+-		     cmd->num_blks, &cmd->se_cmd,
+-		     cmd->atio.u.isp24.exchange_addr,
+-		     cmd->se_cmd.prot_op,
+-		     prot_op_str(cmd->se_cmd.prot_op));
+-
+-	if (ctio != NULL) {
+-		struct ctio7_from_24xx *c = (struct ctio7_from_24xx *)ctio;
+-
+-		term = !(c->flags &
+-		    cpu_to_le16(OF_TERM_EXCH));
+-	} else
+-		term = 1;
+-
+-	if (term)
+-		qlt_send_term_exchange(qpair, cmd, &cmd->atio, 1, 0);
+-
+-	return term;
+-}
+-
+-
+ /* ha->hardware_lock supposed to be held on entry */
+ static void *qlt_ctio_to_cmd(struct scsi_qla_host *vha,
+ 	struct rsp_que *rsp, uint32_t handle, void *ctio)
+@@ -3981,22 +3945,35 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha,
+ 	qlt_unmap_sg(vha, cmd);
+ 
+ 	if (unlikely(status != CTIO_SUCCESS)) {
++		bool term_exchg = false;
++
++		/*
++		 * If the hardware terminated the exchange, then we don't need
++		 * to send an explicit term exchange message.
++		 */
++		if (ctio_flags & OF_TERM_EXCH) {
++			cmd->sent_term_exchg = 1;
++			cmd->aborted = 1;
++			cmd->jiffies_at_term_exchg = jiffies;
++		}
++
+ 		switch (status & 0xFFFF) {
+ 		case CTIO_INVALID_RX_ID:
++			term_exchg = true;
+ 			if (printk_ratelimit())
+ 				dev_info(&vha->hw->pdev->dev,
+ 				    "qla_target(%d): CTIO with INVALID_RX_ID ATIO attr %x CTIO Flags %x|%x\n",
+ 				    vha->vp_idx, cmd->atio.u.isp24.attr,
+ 				    ((cmd->ctio_flags >> 9) & 0xf),
+ 				    cmd->ctio_flags);
+-
+ 			break;
++
+ 		case CTIO_LIP_RESET:
+ 		case CTIO_TARGET_RESET:
+ 		case CTIO_ABORTED:
+-			/* driver request abort via Terminate exchange */
++			term_exchg = true;
++			fallthrough;
+ 		case CTIO_TIMEOUT:
+-			/* They are OK */
+ 			ql_dbg(ql_dbg_tgt_mgt, vha, 0xf058,
+ 			    "qla_target(%d): CTIO with "
+ 			    "status %#x received, state %x, se_cmd %p, "
+@@ -4017,6 +3994,7 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha,
+ 			    logged_out ? "PORT LOGGED OUT" : "PORT UNAVAILABLE",
+ 			    status, cmd->state, se_cmd);
+ 
++			term_exchg = true;
+ 			if (logged_out && cmd->sess) {
+ 				/*
+ 				 * Session is already logged out, but we need
+@@ -4062,19 +4040,21 @@ static void qlt_do_ctio_completion(struct scsi_qla_host *vha,
+ 			break;
+ 		}
+ 
++		cmd->trc_flags |= TRC_CTIO_ERR;
+ 
+-		/* "cmd->aborted" means
+-		 * cmd is already aborted/terminated, we don't
+-		 * need to terminate again.  The exchange is already
+-		 * cleaned up/freed at FW level.  Just cleanup at driver
+-		 * level.
++		/*
++		 * In state QLA_TGT_STATE_NEED_DATA the failed CTIO was for
++		 * Data-Out, so either abort the exchange or try sending check
++		 * condition with sense data depending on the severity of
++		 * the error.  In state QLA_TGT_STATE_PROCESSED the failed CTIO
++		 * was for status (and possibly Data-In), so don't try sending
++		 * an error status again in that case (if the error was for
++		 * Data-In with status, we could try sending status without
++		 * Data-In, but we don't do that currently).
+ 		 */
+-		if ((cmd->state != QLA_TGT_STATE_NEED_DATA) &&
+-		    (!cmd->aborted)) {
+-			cmd->trc_flags |= TRC_CTIO_ERR;
+-			if (qlt_term_ctio_exchange(qpair, ctio, cmd, status))
+-				return;
+-		}
++		if (!cmd->sent_term_exchg &&
++		    (term_exchg || cmd->state != QLA_TGT_STATE_NEED_DATA))
++			qlt_send_term_exchange(qpair, cmd, &cmd->atio, 1);
+ 	}
+ 
+ 	if (cmd->state == QLA_TGT_STATE_PROCESSED) {
+@@ -4164,7 +4144,6 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
+ 		goto out_term;
+ 	}
+ 
+-	spin_lock_init(&cmd->cmd_lock);
+ 	cdb = &atio->u.isp24.fcp_cmnd.cdb[0];
+ 	cmd->se_cmd.tag = le32_to_cpu(atio->u.isp24.exchange_addr);
+ 
+@@ -4201,7 +4180,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
+ 	 */
+ 	cmd->trc_flags |= TRC_DO_WORK_ERR;
+ 	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
+-	qlt_send_term_exchange(qpair, NULL, &cmd->atio, 1, 0);
++	qlt_send_term_exchange(qpair, NULL, &cmd->atio, 1);
+ 
+ 	qlt_decr_num_pend_cmds(vha);
+ 	cmd->vha->hw->tgt.tgt_ops->rel_cmd(cmd);
+@@ -5360,6 +5339,7 @@ static void qlt_handle_imm_notify(struct scsi_qla_host *vha,
+ 		if (qlt_24xx_handle_els(vha, iocb) == 0)
+ 			send_notify_ack = 0;
+ 		break;
++
+ 	default:
+ 		ql_dbg(ql_dbg_tgt_mgt, vha, 0xf06d,
+ 		    "qla_target(%d): Received unknown immediate "
+@@ -5394,7 +5374,7 @@ static int __qlt_send_busy(struct qla_qpair *qpair,
+ 	sess = qla2x00_find_fcport_by_nportid(vha, &id, 1);
+ 	spin_unlock_irqrestore(&ha->tgt.sess_lock, flags);
+ 	if (!sess) {
+-		qlt_send_term_exchange(qpair, NULL, atio, 1, 0);
++		qlt_send_term_exchange(qpair, NULL, atio, 1);
+ 		return 0;
+ 	}
+ 	/* Sending marker isn't necessary, since we called from ISR */
+@@ -5623,7 +5603,7 @@ static void qlt_24xx_atio_pkt(struct scsi_qla_host *vha,
+ 				ql_dbg(ql_dbg_tgt, vha, 0xe05f,
+ 				    "qla_target: Unable to send command to target, sending TERM EXCHANGE for rsp\n");
+ 				qlt_send_term_exchange(ha->base_qpair, NULL,
+-				    atio, 1, 0);
++				    atio, 1);
+ 				break;
+ 			case -EBUSY:
+ 				ql_dbg(ql_dbg_tgt, vha, 0xe060,
+@@ -5830,7 +5810,7 @@ static void qlt_response_pkt(struct scsi_qla_host *vha,
+ 				ql_dbg(ql_dbg_tgt, vha, 0xe05f,
+ 				    "qla_target: Unable to send command to target, sending TERM EXCHANGE for rsp\n");
+ 				qlt_send_term_exchange(rsp->qpair, NULL,
+-				    atio, 1, 0);
++				    atio, 1);
+ 				break;
+ 			case -EBUSY:
+ 				ql_dbg(ql_dbg_tgt, vha, 0xe060,
+@@ -6720,7 +6700,7 @@ qlt_24xx_process_atio_queue(struct scsi_qla_host *vha, uint8_t ha_locked)
+ 
+ 			adjust_corrupted_atio(pkt);
+ 			qlt_send_term_exchange(ha->base_qpair, NULL, pkt,
+-			    ha_locked, 0);
++			    ha_locked);
+ 		} else {
+ 			qlt_24xx_atio_pkt_all_vps(vha,
+ 			    (struct atio_from_isp *)pkt, ha_locked);
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index c483966d0a84..eb15d8e9f79e 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -754,6 +754,7 @@ int qla2x00_wait_for_hba_online(struct scsi_qla_host *);
+ #define QLA_TGT_STATE_NEED_DATA		1 /* target needs data to continue */
+ #define QLA_TGT_STATE_DATA_IN		2 /* Data arrived + target processing */
+ #define QLA_TGT_STATE_PROCESSED		3 /* target done processing */
++#define QLA_TGT_STATE_DONE		4 /* cmd being freed */
+ 
+ /* ATIO task_codes field */
+ #define ATIO_SIMPLE_QUEUE           0
+@@ -876,8 +877,6 @@ struct qla_tgt_cmd {
+ 	/* Sense buffer that will be mapped into outgoing status */
+ 	unsigned char sense_buffer[TRANSPORT_SENSE_BUFFER];
+ 
+-	spinlock_t cmd_lock;
+-	/* to save extra sess dereferences */
+ 	unsigned int conf_compl_supported:1;
+ 	unsigned int sg_mapped:1;
+ 	unsigned int write_data_transferred:1;
+@@ -887,13 +886,14 @@ struct qla_tgt_cmd {
+ 	unsigned int cmd_in_wq:1;
+ 	unsigned int edif:1;
+ 
++	/* Set if the exchange has been terminated. */
++	unsigned int sent_term_exchg:1;
++
+ 	/*
+-	 * This variable may be set from outside the LIO and I/O completion
+-	 * callback functions. Do not declare this member variable as a
+-	 * bitfield to avoid a read-modify-write operation when this variable
+-	 * is set.
++	 * Set if sent_term_exchg is set, or if the cmd was aborted by a TMR,
++	 * or if some other error prevents normal processing of the command.
+ 	 */
+-	unsigned int aborted;
++	unsigned int aborted:1;
+ 
+ 	struct scatterlist *sg;	/* cmd data buffer SG vector */
+ 	int sg_cnt;		/* SG segments count */
+@@ -932,6 +932,7 @@ struct qla_tgt_cmd {
+ #define DIF_BUNDL_DMA_VALID 1
+ 	uint16_t prot_flags;
+ 
++	unsigned long jiffies_at_term_exchg;
+ 	uint64_t jiffies_at_alloc;
+ 	uint64_t jiffies_at_free;
+ 
+@@ -1055,6 +1056,8 @@ extern void qlt_response_pkt_all_vps(struct scsi_qla_host *, struct rsp_que *,
+ extern int qlt_rdy_to_xfer(struct qla_tgt_cmd *);
+ extern int qlt_xmit_response(struct qla_tgt_cmd *, int, uint8_t);
+ extern int qlt_abort_cmd(struct qla_tgt_cmd *);
++void qlt_send_term_exchange(struct qla_qpair *qpair,
++	struct qla_tgt_cmd *cmd, struct atio_from_isp *atio, int ha_locked);
+ extern void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *);
+ extern void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *);
+ extern void qlt_free_cmd(struct qla_tgt_cmd *cmd);
+diff --git a/drivers/scsi/qla2xxx/tcm_qla2xxx.c b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+index ceaf1c7b1d17..169219fe47a2 100644
+--- a/drivers/scsi/qla2xxx/tcm_qla2xxx.c
++++ b/drivers/scsi/qla2xxx/tcm_qla2xxx.c
+@@ -303,6 +303,8 @@ static void tcm_qla2xxx_rel_cmd(struct qla_tgt_cmd *cmd)
+  */
+ static void tcm_qla2xxx_free_cmd(struct qla_tgt_cmd *cmd)
+ {
++	cmd->state = QLA_TGT_STATE_DONE;
++
+ 	cmd->qpair->tgt_counters.core_qla_free_cmd++;
+ 	cmd->cmd_in_wq = 1;
+ 
+-- 
+2.43.0
+
+
