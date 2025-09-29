@@ -1,37 +1,37 @@
 Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0B5B155A25
-	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 14:43:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 028F530ACE3
+	for <linux-scsi@vger.kernel.org>; Mon, 29 Sep 2025 14:44:35 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759157011; cv=none; b=g0FZ2XolmyxrWjY/mrCli/UauE2QFyDo4AT8zNv+nVDiZT/E5XxjtboPVYFTNxXj2SE9S1aTCva1vItwKwwVe62NhAs4opkOOnn3J3EQLaptmYKmvmesElNvYQ2gRGwejcHhQJ5ysrtku/odVOK/F8jYUb0/bZrMFDAiwcejytY=
+	t=1759157077; cv=none; b=TcdYDPhE1jiTbdjZdzJFoC9BEjQYFmB7HBYpRTKEh0iJBJoMah8+e83oeoDiyQtu2EbN2meVheBxBxr2RgfpujecagJ30tSsc8Fcvdfxcho30l8Z2Gv4aprd1qGAr60RTeu6A0WDi/Ody2qNzviMAS8wJLljjQeJk4HQRl982p8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759157011; c=relaxed/simple;
-	bh=6LBt5eyV9mYhPLfyrtop1CAeRd9F2GvZXTgUFbXGQyk=;
+	s=arc-20240116; t=1759157077; c=relaxed/simple;
+	bh=8oW2jLWEgnKwodbbp9b6V0oQUytrGU3HhuiVIqSGf4s=;
 	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=YoUY7B2HP77h8wjNpGtWApZ0D9bPixqu7Mn3rme7R4DlD1oYRGCRuWBdlnBdoMTR1QwBeHL1If3Cgih+GCX620i9sTFTKEWcQqqvecoJgAkHI6WIiUIOvmVxLjRIVrktwFmQyOxxzxKkp99xjXX4MEOXiBsYiNKC+akNV0vdKgQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=GbweeamM; arc=none smtp.client-ip=72.215.153.18
+	 In-Reply-To:Content-Type; b=QmJKlmp8+aeGXtK5voYfLXlCWtF9FWn86fkmcM7GWdyNS0/YzVbdw7n84vi2OPP0cim099EvonQe0qtDTIbh1svEkHJfkJJKbrKFJpTL3RbKO+J/Tsysd34nj4vLl5Urznd6unGxNtdKlNdKh5Ab2vmk4IRr98CVsNUopiPoCiI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=nIFLaRPM; arc=none smtp.client-ip=72.215.153.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="GbweeamM"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id m0crga1vg9aUzSkC; Mon, 29 Sep 2025 10:43:28 -0400 (EDT)
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="nIFLaRPM"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id ApvESGBBVvpfwyJI; Mon, 29 Sep 2025 10:44:34 -0400 (EDT)
 X-Barracuda-Envelope-From: tonyb@cybernetics.com
 X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
 X-ASG-Whitelist: Client
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=Ijig8A8M5l5NoiSG70XS/AqNg7MQUA3QnctmGLYA5Wc=;
+	bh=lA47FHnFvX96rFmyVLQb2sIsUaY8syLj2K+pJhbrT9g=;
 	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Cc:To:From:
-	Content-Language:Subject:MIME-Version:Date:Message-ID; b=GbweeamMLhhf1g+kurlt
-	6iTMks35WmU9rR0b4PZFDmqjM8QCLFU5GG4Rj8FJ9tjfT2HPXLIJq1KzgSBZ3ZUlzcdz6g7wA18da
-	Z14FHkmko13QzkEdRuaYdLtQABn/aaoxkoFVoP7XLjhaHiW6wPnCixl+UHShWT6Aq6Y7MdOEbM=
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=nIFLaRPMSCNvuVv7hqoA
+	UJOYe5oUeXY5lBI/HUCyoiiO5S5EJZfslwlbwFN7M7+OaNxPMyrmGIURjA9DWu8HEPY+XYl+UWQrL
+	Am9jhEWfoW/uKMEManuUk3pUJiRmGQukRBINmhG5Swi28FrfRTiOmUERTaT5GczmW3e/eKoqkQ=
 Received: from [10.157.2.224] (HELO [192.168.200.1])
   by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14216643; Mon, 29 Sep 2025 10:43:28 -0400
-Message-ID: <f52cda16-4952-4b28-bbf7-d44f4e054490@cybernetics.com>
+  with ESMTPS id 14216645; Mon, 29 Sep 2025 10:44:34 -0400
+Message-ID: <7a48ea6e-1c0c-4646-8fa7-57bf0d88ba26@cybernetics.com>
 X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Mon, 29 Sep 2025 10:43:28 -0400
+Date: Mon, 29 Sep 2025 10:44:34 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,9 +39,11 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH v2 11/16] scsi: qla2xxx: fix TMR failure handling
+Subject: [PATCH v2 12/16] scsi: qla2xxx: fix invalid memory access with big
+ CDBs
 Content-Language: en-US
-X-ASG-Orig-Subj: [PATCH v2 11/16] scsi: qla2xxx: fix TMR failure handling
+X-ASG-Orig-Subj: [PATCH v2 12/16] scsi: qla2xxx: fix invalid memory access with big
+ CDBs
 From: Tony Battersby <tonyb@cybernetics.com>
 To: Nilesh Javali <njavali@marvell.com>,
  GR-QLogic-Storage-Upstream@marvell.com,
@@ -57,201 +59,245 @@ In-Reply-To: <e95ee7d0-3580-4124-b854-7f73ca3a3a84@cybernetics.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1759157008
+X-Barracuda-Start-Time: 1759157074
 X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 0
+X-Barracuda-BRTS-Status: 1
 X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 6693
-X-ASG-Debug-ID: 1759157008-1cf43947df3c03f0001-ziuLRu
+X-Barracuda-Scan-Msg-Size: 7468
+X-ASG-Debug-ID: 1759157074-1cf43947df3c0420001-ziuLRu
 
 (target mode)
 
-If handle_tmr() fails:
+struct atio7_fcp_cmnd is a variable-length data structure because of
+add_cdb_len, but it is embedded in struct atio_from_isp and copied
+around like a fixed-length data structure.  For big CDBs > 16 bytes,
+get_datalen_for_atio() called on a fixed-length copy of the atio will
+access invalid memory.
 
-- The code for QLA_TGT_ABTS results in memory-use-after-free and
-  double-free:
-	qlt_do_tmr_work()
-		qlt_build_abts_resp_iocb()
-			qpair->req->outstanding_cmds[h] = (srb_t *)mcmd;
-		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool); FIRST FREE
-	qlt_handle_abts_completion()
-		mcmd = qlt_ctio_to_cmd()
-			cmd = req->outstanding_cmds[h];
-			return cmd;
-		vha  = mcmd->vha; USE-AFTER-FREE
-		ha->tgt.tgt_ops->free_mcmd(mcmd); SECOND FREE
-
-- qlt_send_busy() makes no sense because it sends a SCSI command
-  response instead of a TMR response.
-
-Instead just call qlt_xmit_tm_rsp() to send a TMR failed response,
-since that code is well-tested and handles a number of corner cases.
-But it would be incorrect to call ha->tgt.tgt_ops->free_mcmd() after
-handle_tmr() failed, so add a flag to mcmd indicating the proper way to
-free the mcmd so that qlt_xmit_tm_rsp() can be used for both cases.
+In some cases this can be fixed by moving the atio to the end of the
+data structure and using a variable-length allocation.  In other cases
+such as allocating struct qla_tgt_cmd, the fixed-length data structures
+are preallocated for speed, so in the case that add_cdb_len != 0,
+allocate a separate buffer for the CDB.  Also add memcpy_atio() as a
+safeguard against invalid memory accesses.
 
 Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 ---
 
-v1 -> v2:
-- Change FCP_TMF_REJECTED to FCP_TMF_FAILED.
-- Add QLA24XX_MGMT_LLD_OWNED and qlt_free_ul_mcmd().
-- Improve patch description.
+v1 -> v2: no changes
 
- drivers/scsi/qla2xxx/qla_os.c     |  2 +-
- drivers/scsi/qla2xxx/qla_target.c | 54 +++++++++++++------------------
- drivers/scsi/qla2xxx/qla_target.h |  2 ++
- 3 files changed, 25 insertions(+), 33 deletions(-)
+ drivers/scsi/qla2xxx/qla_target.c | 83 ++++++++++++++++++++++++++++---
+ drivers/scsi/qla2xxx/qla_target.h |  7 ++-
+ 2 files changed, 81 insertions(+), 9 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 2a3eb1dacf86..64387224f28a 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1893,7 +1893,7 @@ __qla2x00_abort_all_cmds(struct qla_qpair *qp, int res)
- 				 * Currently, only ABTS response gets on the
- 				 * outstanding_cmds[]
- 				 */
--				ha->tgt.tgt_ops->free_mcmd(
-+				qlt_free_ul_mcmd(ha,
- 					(struct qla_tgt_mgmt_cmd *) sp);
- 				break;
- 			default:
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index 849ab256807b..69ccba3436ec 100644
+index 69ccba3436ec..c2876b442a08 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2005,7 +2005,6 @@ static void qlt_do_tmr_work(struct work_struct *work)
- 	struct qla_hw_data *ha = mcmd->vha->hw;
- 	int rc;
- 	uint32_t tag;
--	unsigned long flags;
+@@ -210,6 +210,10 @@ static void qlt_queue_unknown_atio(scsi_qla_host_t *vha,
+ 	struct qla_tgt_sess_op *u;
+ 	struct qla_tgt *tgt = vha->vha_tgt.qla_tgt;
+ 	unsigned long flags;
++	unsigned int add_cdb_len = 0;
++
++	/* atio must be the last member of qla_tgt_sess_op for add_cdb_len */
++	BUILD_BUG_ON(offsetof(struct qla_tgt_sess_op, atio) + sizeof(u->atio) != sizeof(*u));
  
- 	switch (mcmd->tmr_func) {
- 	case QLA_TGT_ABTS:
-@@ -2020,34 +2019,12 @@ static void qlt_do_tmr_work(struct work_struct *work)
- 	    mcmd->tmr_func, tag);
- 
- 	if (rc != 0) {
--		spin_lock_irqsave(mcmd->qpair->qp_lock_ptr, flags);
--		switch (mcmd->tmr_func) {
--		case QLA_TGT_ABTS:
--			mcmd->fc_tm_rsp = FCP_TMF_REJECTED;
--			qlt_build_abts_resp_iocb(mcmd);
--			break;
--		case QLA_TGT_LUN_RESET:
--		case QLA_TGT_CLEAR_TS:
--		case QLA_TGT_ABORT_TS:
--		case QLA_TGT_CLEAR_ACA:
--		case QLA_TGT_TARGET_RESET:
--			qlt_send_busy(mcmd->qpair, &mcmd->orig_iocb.atio,
--			    qla_sam_status);
--			break;
--
--		case QLA_TGT_ABORT_ALL:
--		case QLA_TGT_NEXUS_LOSS_SESS:
--		case QLA_TGT_NEXUS_LOSS:
--			qlt_send_notify_ack(mcmd->qpair,
--			    &mcmd->orig_iocb.imm_ntfy, 0, 0, 0, 0, 0, 0);
--			break;
--		}
--		spin_unlock_irqrestore(mcmd->qpair->qp_lock_ptr, flags);
--
- 		ql_dbg(ql_dbg_tgt_mgt, mcmd->vha, 0xf052,
- 		    "qla_target(%d):  tgt_ops->handle_tmr() failed: %d\n",
- 		    mcmd->vha->vp_idx, rc);
--		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool);
-+		mcmd->flags |= QLA24XX_MGMT_LLD_OWNED;
-+		mcmd->fc_tm_rsp = FCP_TMF_FAILED;
-+		qlt_xmit_tm_rsp(mcmd);
+ 	if (tgt->tgt_stop) {
+ 		ql_dbg(ql_dbg_async, vha, 0x502c,
+@@ -218,12 +222,17 @@ static void qlt_queue_unknown_atio(scsi_qla_host_t *vha,
+ 		goto out_term;
  	}
- }
  
-@@ -2234,6 +2211,19 @@ void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *mcmd)
+-	u = kzalloc(sizeof(*u), GFP_ATOMIC);
++	if (atio->u.raw.entry_type == ATIO_TYPE7 &&
++	    atio->u.isp24.fcp_cmnd.task_mgmt_flags == 0)
++		add_cdb_len =
++			((unsigned int) atio->u.isp24.fcp_cmnd.add_cdb_len) * 4;
++
++	u = kzalloc(sizeof(*u) + add_cdb_len, GFP_ATOMIC);
+ 	if (u == NULL)
+ 		goto out_term;
+ 
+ 	u->vha = vha;
+-	memcpy(&u->atio, atio, sizeof(*atio));
++	memcpy(&u->atio, atio, sizeof(*atio) + add_cdb_len);
+ 	INIT_LIST_HEAD(&u->cmd_list);
+ 
+ 	spin_lock_irqsave(&vha->cmd_list_lock, flags);
+@@ -3829,6 +3838,13 @@ void qlt_free_cmd(struct qla_tgt_cmd *cmd)
+ 		qlt_decr_num_pend_cmds(cmd->vha);
+ 
+ 	BUG_ON(cmd->sg_mapped);
++
++	if (unlikely(cmd->cdb != &cmd->atio.u.isp24.fcp_cmnd.cdb[0])) {
++		kfree(cmd->cdb);
++		cmd->cdb = &cmd->atio.u.isp24.fcp_cmnd.cdb[0];
++		cmd->cdb_len = 16;
++	}
++
+ 	cmd->jiffies_at_free = get_jiffies_64();
+ 
+ 	if (!sess || !sess->se_sess) {
+@@ -4128,7 +4144,6 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
+ 	struct qla_hw_data *ha = vha->hw;
+ 	struct fc_port *sess = cmd->sess;
+ 	struct atio_from_isp *atio = &cmd->atio;
+-	unsigned char *cdb;
+ 	unsigned long flags;
+ 	uint32_t data_length;
+ 	int ret, fcp_task_attr, data_dir, bidi = 0;
+@@ -4144,7 +4159,6 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
+ 		goto out_term;
+ 	}
+ 
+-	cdb = &atio->u.isp24.fcp_cmnd.cdb[0];
+ 	cmd->se_cmd.tag = le32_to_cpu(atio->u.isp24.exchange_addr);
+ 
+ 	if (atio->u.isp24.fcp_cmnd.rddata &&
+@@ -4162,7 +4176,7 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
+ 	    atio->u.isp24.fcp_cmnd.task_attr);
+ 	data_length = get_datalen_for_atio(atio);
+ 
+-	ret = ha->tgt.tgt_ops->handle_cmd(vha, cmd, cdb, data_length,
++	ret = ha->tgt.tgt_ops->handle_cmd(vha, cmd, cmd->cdb, data_length,
+ 				          fcp_task_attr, data_dir, bidi);
+ 	if (ret != 0)
+ 		goto out_term;
+@@ -4183,6 +4197,11 @@ static void __qlt_do_work(struct qla_tgt_cmd *cmd)
+ 	qlt_send_term_exchange(qpair, NULL, &cmd->atio, 1);
+ 
+ 	qlt_decr_num_pend_cmds(vha);
++	if (unlikely(cmd->cdb != &cmd->atio.u.isp24.fcp_cmnd.cdb[0])) {
++		kfree(cmd->cdb);
++		cmd->cdb = &cmd->atio.u.isp24.fcp_cmnd.cdb[0];
++		cmd->cdb_len = 16;
++	}
+ 	cmd->vha->hw->tgt.tgt_ops->rel_cmd(cmd);
+ 	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+ 
+@@ -4306,18 +4325,43 @@ static void qlt_assign_qpair(struct scsi_qla_host *vha,
+ 	cmd->se_cmd.cpuid = h->cpuid;
  }
- EXPORT_SYMBOL(qlt_free_mcmd);
  
 +/*
-+ * If the upper layer knows about this mgmt cmd, then call its ->free_cmd()
-+ * callback, which will eventually call qlt_free_mcmd().  Otherwise, call
-+ * qlt_free_mcmd() directly.
++ * Safely make a fixed-length copy of a variable-length atio by truncating the
++ * CDB if necessary.
 + */
-+void qlt_free_ul_mcmd(struct qla_hw_data *ha, struct qla_tgt_mgmt_cmd *mcmd)
++static void memcpy_atio(struct atio_from_isp *dst,
++	const struct atio_from_isp *src)
 +{
-+	if (mcmd->flags & QLA24XX_MGMT_LLD_OWNED)
-+		qlt_free_mcmd(mcmd);
-+	else
-+		ha->tgt.tgt_ops->free_mcmd(mcmd);
++	int len;
++
++	memcpy(dst, src, sizeof(*dst));
++
++	/*
++	 * If the CDB was truncated, prevent get_datalen_for_atio() from
++	 * accessing invalid memory.
++	 */
++	len = src->u.isp24.fcp_cmnd.add_cdb_len;
++	if (unlikely(len != 0)) {
++		dst->u.isp24.fcp_cmnd.add_cdb_len = 0;
++		memcpy(&dst->u.isp24.fcp_cmnd.add_cdb[0],
++		       &src->u.isp24.fcp_cmnd.add_cdb[len * 4],
++		       4);
++	}
 +}
 +
- /*
-  * ha->hardware_lock supposed to be held on entry. Might drop it, then
-  * reacquire
-@@ -2326,12 +2316,12 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 			"RESET-TMR online/active/old-count/new-count = %d/%d/%d/%d.\n",
- 			vha->flags.online, qla2x00_reset_active(vha),
- 			mcmd->reset_count, qpair->chip_reset);
--		ha->tgt.tgt_ops->free_mcmd(mcmd);
-+		qlt_free_ul_mcmd(ha, mcmd);
- 		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
- 		return;
- 	}
+ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
+ 				       struct fc_port *sess,
+ 				       struct atio_from_isp *atio)
+ {
+ 	struct qla_tgt_cmd *cmd;
++	int add_cdb_len;
  
--	if (mcmd->flags == QLA24XX_MGMT_SEND_NACK) {
-+	if (mcmd->flags & QLA24XX_MGMT_SEND_NACK) {
- 		switch (mcmd->orig_iocb.imm_ntfy.u.isp24.status_subcode) {
- 		case ELS_LOGO:
- 		case ELS_PRLO:
-@@ -2364,7 +2354,7 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
- 	 * qlt_xmit_tm_rsp() returns here..
- 	 */
- 	if (free_mcmd)
--		ha->tgt.tgt_ops->free_mcmd(mcmd);
-+		qlt_free_ul_mcmd(ha, mcmd);
+ 	cmd = vha->hw->tgt.tgt_ops->get_cmd(sess);
+ 	if (!cmd)
+ 		return NULL;
  
- 	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
- }
-@@ -5742,7 +5732,7 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
- 		if (le32_to_cpu(entry->error_subcode1) == 0x1E &&
- 		    le32_to_cpu(entry->error_subcode2) == 0) {
- 			if (qlt_chk_unresolv_exchg(vha, rsp->qpair, entry)) {
--				ha->tgt.tgt_ops->free_mcmd(mcmd);
-+				qlt_free_ul_mcmd(ha, mcmd);
- 				return;
- 			}
- 			qlt_24xx_retry_term_exchange(vha, rsp->qpair,
-@@ -5753,10 +5743,10 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
- 			    vha->vp_idx, entry->compl_status,
- 			    entry->error_subcode1,
- 			    entry->error_subcode2);
--			ha->tgt.tgt_ops->free_mcmd(mcmd);
-+			qlt_free_ul_mcmd(ha, mcmd);
- 		}
- 	} else if (mcmd) {
--		ha->tgt.tgt_ops->free_mcmd(mcmd);
-+		qlt_free_ul_mcmd(ha, mcmd);
- 	}
+ 	cmd->cmd_type = TYPE_TGT_CMD;
+-	memcpy(&cmd->atio, atio, sizeof(*atio));
++	memcpy_atio(&cmd->atio, atio);
+ 	INIT_LIST_HEAD(&cmd->sess_cmd_list);
+ 	cmd->state = QLA_TGT_STATE_NEW;
+ 	cmd->tgt = vha->vha_tgt.qla_tgt;
+@@ -4337,6 +4381,29 @@ static struct qla_tgt_cmd *qlt_get_tag(scsi_qla_host_t *vha,
+ 	cmd->vp_idx = vha->vp_idx;
+ 	cmd->edif = sess->edif.enable;
+ 
++	cmd->cdb = &cmd->atio.u.isp24.fcp_cmnd.cdb[0];
++	cmd->cdb_len = 16;
++
++	/*
++	 * NOTE: memcpy_atio() set cmd->atio.u.isp24.fcp_cmnd.add_cdb_len to 0,
++	 * so use the original value here.
++	 */
++	add_cdb_len = atio->u.isp24.fcp_cmnd.add_cdb_len;
++	if (unlikely(add_cdb_len != 0)) {
++		int cdb_len = 16 + add_cdb_len * 4;
++		u8 *cdb;
++
++		cdb = kmalloc(cdb_len, GFP_ATOMIC);
++		if (unlikely(!cdb)) {
++			vha->hw->tgt.tgt_ops->free_cmd(cmd);
++			return NULL;
++		}
++		/* CAUTION: copy CDB from atio not cmd->atio */
++		memcpy(cdb, atio->u.isp24.fcp_cmnd.cdb, cdb_len);
++		cmd->cdb = cdb;
++		cmd->cdb_len = cdb_len;
++	}
++
+ 	return cmd;
  }
  
+@@ -5484,13 +5551,15 @@ qlt_alloc_qfull_cmd(struct scsi_qla_host *vha,
+ 
+ 	qlt_incr_num_pend_cmds(vha);
+ 	INIT_LIST_HEAD(&cmd->cmd_list);
+-	memcpy(&cmd->atio, atio, sizeof(*atio));
++	memcpy_atio(&cmd->atio, atio);
+ 
+ 	cmd->tgt = vha->vha_tgt.qla_tgt;
+ 	cmd->vha = vha;
+ 	cmd->reset_count = ha->base_qpair->chip_reset;
+ 	cmd->q_full = 1;
+ 	cmd->qpair = ha->base_qpair;
++	cmd->cdb = &cmd->atio.u.isp24.fcp_cmnd.cdb[0];
++	cmd->cdb_len = 16;
+ 
+ 	if (qfull) {
+ 		cmd->q_full = 1;
 diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index eb15d8e9f79e..223c40bc9498 100644
+index 223c40bc9498..97aa6d9cfc27 100644
 --- a/drivers/scsi/qla2xxx/qla_target.h
 +++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -966,6 +966,7 @@ struct qla_tgt_mgmt_cmd {
- 	unsigned int flags;
- #define QLA24XX_MGMT_SEND_NACK	BIT_0
- #define QLA24XX_MGMT_ABORT_IO_ATTR_VALID BIT_1
-+#define QLA24XX_MGMT_LLD_OWNED	BIT_2
- 	uint32_t reset_count;
+@@ -830,11 +830,13 @@ struct qla_tgt {
+ struct qla_tgt_sess_op {
+ 	struct scsi_qla_host *vha;
+ 	uint32_t chip_reset;
+-	struct atio_from_isp atio;
  	struct work_struct work;
- 	uint64_t unpacked_lun;
-@@ -1059,6 +1060,7 @@ extern int qlt_abort_cmd(struct qla_tgt_cmd *);
- void qlt_send_term_exchange(struct qla_qpair *qpair,
- 	struct qla_tgt_cmd *cmd, struct atio_from_isp *atio, int ha_locked);
- extern void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *);
-+void qlt_free_ul_mcmd(struct qla_hw_data *ha, struct qla_tgt_mgmt_cmd *mcmd);
- extern void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *);
- extern void qlt_free_cmd(struct qla_tgt_cmd *cmd);
- extern void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd);
+ 	struct list_head cmd_list;
+ 	bool aborted;
+ 	struct rsp_que *rsp;
++
++	struct atio_from_isp atio;
++	/* DO NOT ADD ANYTHING ELSE HERE - atio must be last member */
+ };
+ 
+ enum trace_flags {
+@@ -925,8 +927,9 @@ struct qla_tgt_cmd {
+ 	uint8_t scsi_status, sense_key, asc, ascq;
+ 
+ 	struct crc_context *ctx;
+-	const uint8_t	*cdb;
++	uint8_t		*cdb;
+ 	uint64_t	lba;
++	int		cdb_len;
+ 	uint16_t	a_guard, e_guard, a_app_tag, e_app_tag;
+ 	uint32_t	a_ref_tag, e_ref_tag;
+ #define DIF_BUNDL_DMA_VALID 1
 -- 
 2.43.0
 
