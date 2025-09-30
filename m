@@ -1,86 +1,108 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f53.google.com (mail-wr1-f53.google.com [209.85.221.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2D534283FEB
-	for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2025 10:17:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0327262FF3
+	for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2025 12:38:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759227461; cv=none; b=YlcSW39BxXvd50BZ1sZzC7EX0r+dhXmYGNUo/NgTBzDwIIyLARru2slHN+AbfaSCHDSBxybYzjGskdrAJ4UMrLEe65f2OP2eB0L1hsR1RecXOtd+6H80E1VlgzILxOg1LziAIDqmvz942ohyEe0ru/5Tbl92l3uiwkVkFmWCbJM=
+	t=1759235896; cv=none; b=sftl6W1DIbfAkbLnDTAJjfDWXo3j9X5OqbJDLpAU/VaJsOm+mxGifrUU2gYhHKOsEI+3LwUmMcFCm/5GRPZrMvq9SAE9qolArc2Cd9A55fd8VqHch9ZvWwQ2GBkbH+fUDg43zeUfQ5GGHRNJhkbiyaQISSzkjS99u8ZvLEMyivY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759227461; c=relaxed/simple;
-	bh=OgxsNCOG0Jgve0lCwcvadpF3pnhXsGtnVRE0S+mZi5A=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=AkBmois65VFwVfezoemI6jTMiww2XLc276S1mCRQ32NTD91xZUskKxBDRgV9WLzxowcuVYEY1j8GdfIP8M89St++b1Z2nunkCkvSVP2fmklAeieFi7XhlC6+5S1rYAbTLmeSsB53uOBC3wE1a4+qjzPi2S6p1fU7DSYPLsyv6Hk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=EN3IiMfw; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1759235896; c=relaxed/simple;
+	bh=TRuZEMG8YWoD7AC+4GOrUJfg5Kr9NAw2G8HZG37cXV8=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition; b=HrJ99NWur6cVhLMCD0374L6p/g9+l36IIqjQhEqME1FzPd4qlqaG2lMnAUZJZinS5i6SfV3kqkfbbOl8qAdiuynmiXBPZk9jPVXHZ4VyCPgBTYv3uuilgQJxEFa54pSbB+En7FTn4cCglR+golrkFSpibxtdKCri4lOPjAiiHN0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RTzF2xwq; arc=none smtp.client-ip=209.85.221.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="EN3IiMfw"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1759227459;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=LdJuTKOf/1oQDjnzdAFIGDSMiQQ/LUgyrgeX0PFVxss=;
-	b=EN3IiMfw2zu8IYtzdi/vqLFf+Fu/KyRpLXVxYDMdA2sNeVOGFHHMmkg33/+e2EADXIkRC8
-	OLU+C2Z1Z83jvOngXGk9/jg8O7jzv0NCNiM7CQ3PbvwdL4mR6qjtXNvkDpddSkSitGyJX/
-	nVu7K8SJDsQL+WwBkapGM7jmlYTd2BY=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-674-J7GdcnEpOwauqhdqpvL-Gg-1; Tue,
- 30 Sep 2025 06:17:35 -0400
-X-MC-Unique: J7GdcnEpOwauqhdqpvL-Gg-1
-X-Mimecast-MFC-AGG-ID: J7GdcnEpOwauqhdqpvL-Gg_1759227454
-Received: from mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.111])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A90951800378;
-	Tue, 30 Sep 2025 10:17:33 +0000 (UTC)
-Received: from [10.44.33.194] (unknown [10.44.33.194])
-	by mx-prod-int-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D16A2180035E;
-	Tue, 30 Sep 2025 10:17:27 +0000 (UTC)
-Message-ID: <eed2bd71-4938-47c9-a0b3-6d24f06a7361@redhat.com>
-Date: Tue, 30 Sep 2025 06:17:26 -0400
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RTzF2xwq"
+Received: by mail-wr1-f53.google.com with SMTP id ffacd0b85a97d-421b93ee372so1130595f8f.2
+        for <linux-scsi@vger.kernel.org>; Tue, 30 Sep 2025 05:38:14 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1759235893; x=1759840693; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=z3qy5r7hvv1J3r6dinn0Sogr/iaDbB6XdxwCfFluXsU=;
+        b=RTzF2xwqP5ucDaqwVyKuJCvbxjhr8lHVdMvDIHBUXvNEnw+CkJeDaSXZQqyi9kBB5W
+         vemrsIb5U/uO3+kD7+zhkrwIzjB6hAvu9BJwCew6ZzteQwlM2Qo1fWf7Jn2Ut7l7Bc7Y
+         Ck0Ffc2eVx0z5TgFqit3AR7O7kENCDcyKVWpUMoDbA9IeVF5EnHsqPPqe51o+9xqnBTX
+         iJO9en09s1r3QhSo4l+EvSb1PVkh8HAcjBVI22V60MQxa6AGtsWLHQVePrY9KZsmuj7U
+         /gtiLw1jaainPQ/tMx76iE9xp1ZqMsqMx/CgiC3ExlQQHkqqpxvPobSB/fFzjdPC8uut
+         JV6A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1759235893; x=1759840693;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=z3qy5r7hvv1J3r6dinn0Sogr/iaDbB6XdxwCfFluXsU=;
+        b=sJpHAj2rPct+vqrq74SazAAoQelZOnOC2/Y0nkf5ucHKm2jn/aQgiAtTZLli+f9Mum
+         UmqEVpe67xJWNa9aBVCbYKTS5wLgk0/q1yGD7HVIXuf37pvNtXKOI50Kaz6F0TjRrvfV
+         i9ILFw/XLaVJqxgSob1vzbd4daw4ZFU6LSptI4Ay263MTfrN6mhIrKJQIpNm7vrqhpbU
+         6SLzU4e4+Ldlx4n1578gH/xsvgu9VxUidLE0Qi7qdTU65KwRLfbND73qOULFeegktlkb
+         SAFLHSdhMyf2d2NUebrlBpkiphMLnE0QmN1FK1Pu6VDY93aH0iF7hlfjmQZqgn5ERsRq
+         Jddw==
+X-Forwarded-Encrypted: i=1; AJvYcCUreKpNKjxbsGXvQ2TihIbfCngR+xpVcj8XAAhWF+SuXgkiYZonvcxGnJ+I2nRBvbdoeyvMMdtHrqc7@vger.kernel.org
+X-Gm-Message-State: AOJu0YwOy4sJSpDf7+5Zkf5Uucw0hHF/rJKi3bW9Xlxk5P6jFuwdGRXP
+	KRJla2ZK+TNjcKTe1/U2gqEPn7zwUFJQAKrvRHqfGTeERHR+T78EYmj46V9Xe8oqZRY=
+X-Gm-Gg: ASbGncvFTycs1U1tJsoFfcctIlmsFL4qI+eSYW6Tl2fRC7JJw/vGpc/KY02nhNdY4AK
+	GEeBl4zHUoWMDnSwCXRgt01VTfI6Ro2g0SjJ5iMKIJRrGDatz2rpRF6TAdaCNjtO40TvidASkDV
+	TNQg0tuUjsX3/NnJil9HMaIv52akxiRl/8qoBoiKlRQzgQErP0NPkoPES2KJJncPBuUpxTBKw6P
+	6kYHzvB6t+BYGCT3nMi///RFhh4PrrEX8PTQAp7X1DEF96yfY0Mu55nbvdCZNYTWkYM5TP65Hoc
+	y0i95f8jUFDXqQjgcpOQe5ZqhL/8ebZn/xXoBF/bJx8IV/jA3g9Adf0ciltlqDaa2HMYqOWAEua
+	/gYbQLjdqa2YCnloffaanqCoFoc270VH1x5cYFvJbpd2NMs2hlYgE
+X-Google-Smtp-Source: AGHT+IF4ajsY7TSW0w2cltpeiR3Y44gTYcWo/2pv8CO+hAiKdk1ZuHmaFqdShvixe7b/cut30bzhRw==
+X-Received: by 2002:a05:6000:2002:b0:3ee:126a:7aab with SMTP id ffacd0b85a97d-40e4dabf373mr19174181f8f.57.1759235893126;
+        Tue, 30 Sep 2025 05:38:13 -0700 (PDT)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-40fc88b0779sm22291541f8f.58.2025.09.30.05.38.12
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 30 Sep 2025 05:38:12 -0700 (PDT)
+Date: Tue, 30 Sep 2025 15:38:09 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: Robert Love <robert.w.love@intel.com>
+Cc: Hannes Reinecke <hare@suse.de>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	kernel-janitors@vger.kernel.org
+Subject: [PATCH] scsi: libfc: Prevent integer overflow in fc_fcp_recv_data()
+Message-ID: <aNvPMet7TPtM9CY1@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v10 07/11] scsi: scsi_transport_fc: add
- fc_host_fpin_set_nvme_rport_marginal()
-To: Justin Tee <justintee8345@gmail.com>
-Cc: hare@suse.de, kbusch@kernel.org, martin.petersen@oracle.com,
- linux-nvme@lists.infradead.org, linux-scsi@vger.kernel.org,
- bgurney@redhat.com, axboe@kernel.dk, emilne@redhat.com,
- gustavoars@kernel.org, hch@lst.de, Justin Tee <justin.tee@broadcom.com>,
- james.smart@broadcom.com, kees@kernel.org, linux-hardening@vger.kernel.org,
- njavali@marvell.com, sagi@grimberg.me
-References: <20250926000200.837025-1-jmeneghi@redhat.com>
- <20250926000200.837025-8-jmeneghi@redhat.com>
- <CABPRKS9SkaGZjC_vEy-YdgYELffGLvub7DTFGCYXFW68ObWqYg@mail.gmail.com>
-Content-Language: en-US
-From: John Meneghini <jmeneghi@redhat.com>
-Organization: RHEL Core Storge Team
-In-Reply-To: <CABPRKS9SkaGZjC_vEy-YdgYELffGLvub7DTFGCYXFW68ObWqYg@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.111
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+X-Mailer: git-send-email haha only kidding
 
+The "offset" comes from the skb->data that we received.  Here the code is
+verifying that "offset + len" is within bounds however it does not take
+integer overflows into account.  Use size_add() to be safe.
 
-On 9/29/25 1:45 PM, Justin Tee wrote:
-> Hi John,
-> 
->> +       u64 local_wwpn = fc_host_port_name(shost);
-> If CONFIG_NVME_FC is not enabled, then the u64 local_wwpn variables
-> aren’t used anywhere.
+This would only be an issue on 32bit systems which are probably a very
+small percent of the users.  Still, it's worth fixing just for
+correctness sake.
 
-Oops.  Thanks I will fix this in my V11 patch series.
+Fixes: 42e9a92fe6a9 ("[SCSI] libfc: A modular Fibre Channel library")
+Signed-off-by: Dan Carpenter <dan.carpenter@linaro.org>
+---
+ drivers/scsi/libfc/fc_fcp.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-/John
-  
+diff --git a/drivers/scsi/libfc/fc_fcp.c b/drivers/scsi/libfc/fc_fcp.c
+index 16d0f02af1e4..31d08c115521 100644
+--- a/drivers/scsi/libfc/fc_fcp.c
++++ b/drivers/scsi/libfc/fc_fcp.c
+@@ -503,7 +503,7 @@ static void fc_fcp_recv_data(struct fc_fcp_pkt *fsp, struct fc_frame *fp)
+ 		host_bcode = FC_ERROR;
+ 		goto err;
+ 	}
+-	if (offset + len > fsp->data_len) {
++	if (size_add(offset, len) > fsp->data_len) {
+ 		/* this should never happen */
+ 		if ((fr_flags(fp) & FCPHF_CRC_UNCHECKED) &&
+ 		    fc_frame_crc_check(fp))
+-- 
+2.51.0
 
