@@ -1,109 +1,93 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4F8DA79F2;
-	Tue, 30 Sep 2025 04:11:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.123])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 23E0E288DB;
+	Tue, 30 Sep 2025 04:54:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759205520; cv=none; b=ugL02OuadIjRkqV3chnxl4wGREIcTIkH9CUakjQK2jkEKI7WY2y4iRHfGdt9WtqOBu54CUFtFRjTyBhu3covdm/NWWZjX0z0Yfet2HbCEmgEyUasPEKZShXm6vMKQbt3CuTWK1WU1LK+jRifXYZPqH+WZEoRR/HvFxcnTpih9Kg=
+	t=1759208075; cv=none; b=nA26UK3oinpWcuFTQ/za0xbnZFfGQubraRE9ZYl8RCS0/MdK5fikR9izmGywU1wdUSJp/VQBOrUNk4aAqTE/EfJILNqMrU+8ZnTuc2FJzGJuFtPQN4XHlPazIrAAmtf5L3PuQ0Kc6K/NCLUr3NJOkMQOcEEgwv1YnqRMQHHHYaU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759205520; c=relaxed/simple;
-	bh=y1YuXu2FleNXB9ovR1NqWJMBfKBQbqScqoCm4fTNvCA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=j5FjcGG+guh/NCzfkluxR3M6Y9JdFSgY02NE51SfMmv2uk1ymzZy3SA3b33qVvupssg84l38LZzEG7yNZTP4THgPT1eNURm+xAQAplftwBVDhSIq7XEmT93JayAw85gJAaiQx/N1hm2SOzZnbSiRtZLoZuyGmz/kjnMJwWDgzNI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=GhJe8wLF; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="GhJe8wLF"
-Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 58TNZAvN031939;
-	Tue, 30 Sep 2025 02:37:05 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=Q9SrjdEr6tUoJAHQSR9m7btb4Y82RHUspdQD+a+uA/w=; b=
-	GhJe8wLFm2b64tTTacviAVeBBoTyOAINbGQwJ7U05v4rjJ+4QtV0QEd3XRNsme7F
-	McfWtQ/LUs5BVLMFvQ4TGrnsHDQ3SMcq9JOV/lYNeEC6vdlCEwfnuE6rd/L9pSit
-	VWX8Km9C8N+bLSI4rl0hAihcBRrFkaKZg073uRpsOukkInVjMUqftayYwBjH70dD
-	XG3ssT9mRVToWX/81m/U9ra24vbh43R2GeKbLrxKSjzR2e30+OTzsJnuOJCS9TzI
-	uuM9zUAERwrZ3PyxL9qML9Q1hWDZBYxTTg+MLBhfyYF7yTRSj7VNUhDcGBBsJuY/
-	kfAKqA3Wu2Z+VnOXPhBPuQ==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 49g3wbr77j-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 30 Sep 2025 02:37:04 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 58U0RdR4007727;
-	Tue, 30 Sep 2025 02:37:03 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 49e6c86exa-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 30 Sep 2025 02:37:03 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 58U2awVH004400;
-	Tue, 30 Sep 2025 02:37:03 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 49e6c86eur-5;
-	Tue, 30 Sep 2025 02:37:03 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Don Brace <don.brace@microchip.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Thorsten Blum <thorsten.blum@linux.dev>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        storagedev@microchip.com, linux-scsi@vger.kernel.org,
-        linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: smartpqi: Replace kmalloc + copy_from_user with memdup_user
-Date: Mon, 29 Sep 2025 22:36:51 -0400
-Message-ID: <175917739956.3755404.5877755795289804707.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20250922201832.1697874-2-thorsten.blum@linux.dev>
-References: <20250922201832.1697874-2-thorsten.blum@linux.dev>
+	s=arc-20240116; t=1759208075; c=relaxed/simple;
+	bh=Gw5ZjzJnceznZ0FnaMXKyoToW5xxSQMuBie2EAuTFMU=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=jtux+TTPfUZ2v/TVWdb6LZj9iYW/CyHOGsistntMcIsrB178os4KSAX9GbSUy7eot94VhrpJIEpbY68j8j1Eh8AdpreGdEDQOaS3lp0m12sOn2eGbkPQ1XwkPTlIX36G2gr7RZPY9j5Oo7qktxV+pKuRYXXhkTKJToPabT0q4E8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
+X-CSE-ConnectionGUID: EVtpDxrPSqqcFC7xE6im6Q==
+X-CSE-MsgGUID: SnU+0+RdRwuxkDHoijzSaQ==
+X-IronPort-AV: E=Sophos;i="6.18,303,1751212800"; 
+   d="scan'208";a="154003711"
+From: guhuinan <guhuinan@xiaomi.com>
+To: Oliver Neukum <oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+CC: <linux-usb@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<usb-storage@lists.one-eyed-alien.net>, <linux-kernel@vger.kernel.org>, "Yu
+ Chen" <chenyu45@xiaomi.com>, Owen Gu <guhuinan@xiaomi.com>
+Subject: [PATCH] fix urb unmapping issue when the uas device is remove during ongoing data transfer
+Date: Tue, 30 Sep 2025 12:53:08 +0800
+Message-ID: <20250930045309.21588-1-guhuinan@xiaomi.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-09-29_08,2025-09-29_04,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 malwarescore=0
- mlxlogscore=825 mlxscore=0 phishscore=0 bulkscore=0 suspectscore=0
- adultscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2509150000 definitions=main-2509300021
-X-Proofpoint-GUID: DO-Acsdj37O9JCLWF3UU3_q1-PgF3KC0
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUwOTI5MDIyMCBTYWx0ZWRfXwso82IoBAnGl
- h/PQ3uBHj2CqozfG2JMo9ZiIYewKk9MWH9SI1xzZHqCBBaD1DLu3/Af3wdj4mqH0mEW7OFnlBix
- a7Z54w1gY9sEVlCsThOjx0+yNOwRl2BsOTGsC/IXC0IZiRH42MM1oioNgK/qCu+FPLpBj3K/7Zw
- 3BA4/8Fpxz7MWw3VszI4Z9vq8T5ay+cglFhk6AcK/r8E1TtuCNdoAiZwgdRrkpgA/LUjV/XoioQ
- AdcgPQqh42xPvLMo8ngVU+trpNdXlYoyTdPYB005WlUtPgrPh/xjBVxsMJtAVpz0pDLZ0g77ETZ
- appMdVv7xYpF9IA7pW9sxdbHFooZF64RUkXDk6aAz9z7zA1ju1TIL4FeHrobbJwZj//5HHW7xDU
- Y4nlCQbBWWnj7jBBv+SmlVWspoX7qQ==
-X-Proofpoint-ORIG-GUID: DO-Acsdj37O9JCLWF3UU3_q1-PgF3KC0
-X-Authority-Analysis: v=2.4 cv=WYoBqkhX c=1 sm=1 tr=0 ts=68db4250 b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
- a=IkcTkHD0fZMA:10 a=yJojWOMRYYMA:10 a=VwQbUJbxAAAA:8 a=VjWpJ7GMu5s1FRr9CgAA:9
- a=QEXdDO2ut3YA:10
+Content-Type: text/plain
+X-ClientProxiedBy: bj-mbx11.mioffice.cn (10.237.8.131) To BJ-MBX05.mioffice.cn
+ (10.237.8.125)
 
-On Mon, 22 Sep 2025 22:18:33 +0200, Thorsten Blum wrote:
+From: Owen Gu <guhuinan@xiaomi.com>
 
-> Replace kmalloc() followed by copy_from_user() with memdup_user() to
-> simplify and improve pqi_passthru_ioctl().
-> 
-> Since memdup_user() already allocates memory, use kzalloc() in the else
-> branch instead of manually zeroing 'kernel_buffer' using memset(0).
-> 
-> Return early if an error occurs.  No functional changes intended.
-> 
-> [...]
+When a UAS device is unplugged during data transfer, there is
+a probability of a system panic occurring. The root cause is
+an access to an invalid memory address during URB callback handling.
+Specifically, this happens when the dma_direct_unmap_sg() function
+is called within the usb_hcd_unmap_urb_for_dma() interface, but the
+sg->dma_address field is 0 and the sg data structure has already been
+freed.
 
-Applied to 6.18/scsi-queue, thanks!
+The SCSI driver sends transfer commands by invoking uas_queuecommand_lck()
+in uas.c, using the uas_submit_urbs() function to submit requests to USB.
+Within the uas_submit_urbs() implementation, three URBs (sense_urb,
+data_urb, and cmd_urb) are sequentially submitted. Device removal may
+occur at any point during uas_submit_urbs execution, which may result
+in URB submission failure. However, some URBs might have been successfully
+submitted before the failure, and uas_submit_urbs will return the -ENODEV
+error code in this case. The current error handling directly calls
+scsi_done(). In the SCSI driver, this eventually triggers scsi_complete()
+to invoke scsi_end_request() for releasing the sgtable. The successfully
+submitted URBs, when being completed (giveback), call
+usb_hcd_unmap_urb_for_dma() in hcd.c, leading to exceptions during sg
+unmapping operations since the sg data structure has already been freed.
 
-[1/1] scsi: smartpqi: Replace kmalloc + copy_from_user with memdup_user
-      https://git.kernel.org/mkp/scsi/c/0ac3c901fbeb
+This patch modifies the error condition check in the uas_submit_urbs()
+function. When a UAS device is removed but one or more URBs have already
+been successfully submitted to USB, it avoids immediately invoking
+scsi_done(). Instead, it waits for the successfully submitted URBs to
+complete , and then triggers the scsi_done() function call within
+uas_try_complete() after all pending URB operations are finalized.
 
+Signed-off-by: Yu Chen <chenyu45@xiaomi.com>
+Signed-off-by: Owen Gu <guhuinan@xiaomi.com>
+---
+ drivers/usb/storage/uas.c | 4 +++-
+ 1 file changed, 3 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 4ed0dc19afe0..6bfc7281f7ad 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -699,7 +699,9 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
+ 	 */
+ 	if (err == -ENODEV) {
+ 		set_host_byte(cmnd, DID_NO_CONNECT);
+-		scsi_done(cmnd);
++		if (!(cmdinfo->state & (COMMAND_INFLIGHT | DATA_IN_URB_INFLIGHT |
++				DATA_OUT_URB_INFLIGHT)))
++			scsi_done(cmnd);
+ 		goto zombie;
+ 	}
+ 	if (err) {
 -- 
-Martin K. Petersen
+2.43.0
+
