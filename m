@@ -1,636 +1,195 @@
-Received: from mail-oa1-f54.google.com (mail-oa1-f54.google.com [209.85.160.54])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from esa.hc6817-7.iphmx.com (esa.hc6817-7.iphmx.com [216.71.154.88])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BA4DF2512F1
-	for <linux-scsi@vger.kernel.org>; Wed,  1 Oct 2025 07:50:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.54
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759305022; cv=none; b=k8KUYmTepi4Tz6jZ7UTS71k4ARpeE84u7MfXKmH2HuOcM0j4eHcfD0NtvINX6EnZo/HEXIuyJM/Y5EYclcMoIyPnaiHZW5uaCrb+32EWb97rC/1jOVYnRqzobrFQsZusDkfWtTpgH+YyuCq7mIjPZFbkj44rktxh+WrWkfmfMHM=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759305022; c=relaxed/simple;
-	bh=ZW+DpYMCSLLfyN6ca1YzSYbOA8h3qg/FV4Rt0HjLqTw=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FnwI5LoiYokg9CjW5T8MtK7oQz96wxzNJuRxt4AmEqZccCa8n20lErYn4iyo3QuiqkHEAGQQT6hMVAgUCney+89M593U/D821PttrS1BuE1jNAYay582FUXTaQA7xvYdC9btS9NVcktl0HerfZjiuCyep3Boo2RSFwbcYAf6oKY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=L7Igl4+P; arc=none smtp.client-ip=209.85.160.54
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6CDEB1E8331;
+	Wed,  1 Oct 2025 09:48:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=216.71.154.88
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1759312096; cv=fail; b=q5mCMRRVoN3+M539im+FU3PmhcR2rmA+I/8OQBG5n4rM+4WFieloxQ+LHtXEkZYutQfKnScQnJZbKoID7/gwWPfR1sMhehF2OkYGxiu4RMwEVfldgPwyAVYygK/TlAnOs2g8SFQ29FeGCaHubbAmmEFjTqMOL4t/PPzfOKW7JEQ=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1759312096; c=relaxed/simple;
+	bh=EGAR5ajbrWsDqLLiWuU22l1EN+x2N5ijjv0C2kWN+54=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=m21dFCN0h7XqLPyzHF55jh07+51HfEW6J92rRwusf9ogbR1IekcfYD16Jzlv8PVZ7sn01DZS8R3s353cs4w3VjeMATBzkf81UcQnKjBpSPOvAH01TAOI0Tc1MRVypR1pLVneNB2KNJX70wFMoOrZMRaErpdvVpBhuqGRBPqyDPE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com; spf=pass smtp.mailfrom=sandisk.com; dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b=gptAtXLE; arc=fail smtp.client-ip=216.71.154.88
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=sandisk.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=sandisk.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="L7Igl4+P"
-Received: by mail-oa1-f54.google.com with SMTP id 586e51a60fabf-30ccec59b4bso5850715fac.3
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Oct 2025 00:50:20 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1759305020; x=1759909820; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=TiEapQYr7qDytFdFW+yZQHhbiokHmKBnSosRcuh6oZ4=;
-        b=L7Igl4+PdXqJ5W+moV4daxnYHUdH8JpXSlr9MPBFGGbSXpaeXiZ3Vv3iBKxnuakY5T
-         3oHNp0QqZlOCVIS6z8aRSP/zeOnDO0V89wG/apbzsVQYpufsGXU7vm8i4NVdyQVf35BO
-         us8Bfg32ASwyD57NGZ9Gu443uDpC1hmJENY+tKc2vJmiS9biGipME66esUVxQHX/fd7+
-         29UOP4ggtiwJEamKPs4PmHDiACnatDLcUo2aIizUKR6EFGz6MbtW9X4hv3PzWrVOxEsW
-         /od92rqA3sivo0FK+uxRwnHlAdY5NBSUe8+HzTQrwaY3QNzLEyJXlpmVU8kTN6ai1q9q
-         LU7A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759305020; x=1759909820;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=TiEapQYr7qDytFdFW+yZQHhbiokHmKBnSosRcuh6oZ4=;
-        b=ip/esdNAZRuw6Nq4n72qb0UX7djIjUBD4L+RbpKHfX650XbyEjnyC5gERcyuY7/wLL
-         7Mmbb/ajXgK1LxSVSvuAeyaJa2FxizBYtY6O2zICQK3qd73h+O9yktdYpTJ/ttzAHPVQ
-         ANtjnRSgh0I2yVBKIZ2Csx3eEVKTPO8Dgy4/ddtPpkbOiPNmit2c8K51mAi6WCT3wP4r
-         S6givnZATMuD+xjHZw3Qr3fboEYy29FgpuUQ+c/Tm7YIGC++2qBTsTOc51AnLDbPNBjX
-         UsWS0W7V6TM4K/wwVunqvJbshLhqmpx9n1l8yADjVDd8Tg0GAeOtq8KZ3/8nDW6Bgjmz
-         zkKg==
-X-Forwarded-Encrypted: i=1; AJvYcCVkyr5CuH6lNFgdIqul4G4vNAzYZjXCXi02Ugg32fPjsPFgtCClNQYfVLK2wNmtIuaoo6BW2DADsOOX@vger.kernel.org
-X-Gm-Message-State: AOJu0YwPh15/9HuMaQL3MegnN1pB/hGpSIBYnTpPba5CbHtvZK84NJ8b
-	DRNwiRyQjQ8j0+ZoSpYJlE7RLtkEM66APAKz3FoznNl5zwyHUFbPCbWZAS90wfVh+lhV9FSvt6m
-	gh3gCgqYXRi/p+ACaK5mFYxUFRf+UaUmOV61WJw7jDg==
-X-Gm-Gg: ASbGncsqavl1MhIitaT9PvozSO8smpPcDYlHUpuWkR27eOldkj8mYkwRtlBpe1E89dC
-	AvFlaPktFxpKQdegaTMWd2XR+8lN91b5Dnyz4LKQm/aLGecIDcqc4x7F2JaExw1j+hodfzigQEz
-	NJcRjkoV/B/bTTrprUIQVAFGi/V4VUHCDzIIdeTx8JhZTFQOqJiXG+hKXjP1QBp/wH8zUkPL/+X
-	dKjGA/BWrNAZkaQFpx53FNxPMjtwoxu
-X-Google-Smtp-Source: AGHT+IFtwGRldIBVDl/5Z0XL3Us/zaWAc8Ka1F2WEsdDx7dw6/DnkDxSjbnho1yIfueR7MCZ8BAflSDOFtBbGyYwlgE=
-X-Received: by 2002:a05:6870:948e:b0:31d:8964:b4aa with SMTP id
- 586e51a60fabf-39b8fbbb6a8mr1469816fac.6.1759305019516; Wed, 01 Oct 2025
- 00:50:19 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=sandisk.com header.i=@sandisk.com header.b="gptAtXLE"
+DKIM-Signature: v=1; a=rsa-sha256; c=simple/simple;
+  d=sandisk.com; i=@sandisk.com; q=dns/txt;
+  s=dkimnew.sandisk.com; t=1759312094; x=1790848094;
+  h=from:to:cc:subject:date:message-id:references:
+   in-reply-to:content-transfer-encoding:mime-version;
+  bh=EGAR5ajbrWsDqLLiWuU22l1EN+x2N5ijjv0C2kWN+54=;
+  b=gptAtXLEzBoVRdZz657XWDLc/8/mzmbPHyapUtP9YBF4+e9QTdzMj2Ux
+   ufYiaG/l7OdsS3S7EsXIcoSClHa2NAbxKdk6l9XxC/6GSqwVVZGmBMplh
+   NqTv3NJTsPoyeDQQIoMEO7Tzh/nmUik6DFCWhXb4Luh65VjptC+dYGT7l
+   0JmdG6tCVMaug4KJZy+HArat31JKRLbuDSRbC8Psy7Gu1hEZmqeYXmJha
+   NVV+vymbb1xhOj14NplxR+c+V17Jh6xAn64cNRArvPZtaSYm0LWUaNXhl
+   nj/enh4cW4ZFJPGnXOL/Gaa7eOxCctncBZ7CavCOaqsAQME6lNLqYoy9G
+   Q==;
+X-CSE-ConnectionGUID: mfMK8o1fTTuQfTWytpOKFQ==
+X-CSE-MsgGUID: bXtM45lCR9GhanjI9YkvgA==
+Received: from mail-westcentralusazon11023098.outbound.protection.outlook.com (HELO CY3PR05CU001.outbound.protection.outlook.com) ([40.93.201.98])
+  by ob1.hc6817-7.iphmx.com with ESMTP; 01 Oct 2025 02:48:06 -0700
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=BUilkkkg34M8TnnacyCcoHmznC+gDlrtqw/siEC9N0BicnBu90AWf1PWO8QMIvHEH+WVV2nvWADorMArlVzxiXfEx7twuyZ8W18RjJb6dqG55HjjEvbOLlFt6bsyUs6p7Uq6YCwm+w2/lC3TyiJIkSZy79iSOll06p7y0ZofxJ06njE67HJN2iTkDAZvgm9EXSe6qLt7E/6IkSurOGIEIEkTJ3wwuFwVcOmMIq1+NwdH1m8SRcuxfHq8m2VUt2lq8aFVCqw4oHb7yziIGterufaiyBGD+LqR7QHXUNPOMH8ynZ0mDEYx8YmC4cJzwzffX0+dd0C1TqzHx7t06DpK2w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=EGAR5ajbrWsDqLLiWuU22l1EN+x2N5ijjv0C2kWN+54=;
+ b=hzlDJCZLzNi/okb6qXa9EJfkRvwtFW3faH6+/VAkelcGlxTVQGe03/kdqOXd2V7gdwbprSr/B/sph2/Q7HiakA855L5HPXswtHi0YnJrlr6cG56V6h5uja+YdStNvonQuYRznKHOn3cxQ/olNTZmTMscZzaWkx4c0LuDeQANlYHbvSkcmyBrZdW8CmiLzMYT7d7DwvtiPc9HzvEyPaBbuFZMJ4a/m+WBXZZDPUc/+G7sTbzRfFI5NN/1r7/Wnv30V8LNobg4NbPPXLTdkZySyHSTlw7k/5aOmflq3fhiXqaUOggLMCsWffhdCUlfLqgSLZDXisOaqPYzc1X9i8GlRA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=sandisk.com; dmarc=pass action=none header.from=sandisk.com;
+ dkim=pass header.d=sandisk.com; arc=none
+Received: from PH7PR16MB6196.namprd16.prod.outlook.com (2603:10b6:510:312::5)
+ by BN7PPF902AAC9F7.namprd16.prod.outlook.com (2603:10b6:40f:fc02::717) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9160.11; Wed, 1 Oct
+ 2025 09:48:03 +0000
+Received: from PH7PR16MB6196.namprd16.prod.outlook.com
+ ([fe80::df4a:1576:a40e:5491]) by PH7PR16MB6196.namprd16.prod.outlook.com
+ ([fe80::df4a:1576:a40e:5491%6]) with mapi id 15.20.9160.015; Wed, 1 Oct 2025
+ 09:48:03 +0000
+From: Avri Altman <Avri.Altman@sandisk.com>
+To: Bean Huo <beanhuo@iokpp.de>, "avri.altman@wdc.com" <avri.altman@wdc.com>,
+	"bvanassche@acm.org" <bvanassche@acm.org>, "alim.akhtar@samsung.com"
+	<alim.akhtar@samsung.com>, "jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"can.guo@oss.qualcomm.com" <can.guo@oss.qualcomm.com>,
+	"ulf.hansson@linaro.org" <ulf.hansson@linaro.org>, "beanhuo@micron.com"
+	<beanhuo@micron.com>, "jens.wiklander@linaro.org" <jens.wiklander@linaro.org>
+CC: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+Subject: RE: [PATCH v2 1/3] rpmb: move rpmb_frame struct and constants to
+ common header
+Thread-Topic: [PATCH v2 1/3] rpmb: move rpmb_frame struct and constants to
+ common header
+Thread-Index: AQHcMpnm/l4p3Z1QsEqHWmDVKsrzbrStC5Rg
+Date: Wed, 1 Oct 2025 09:48:03 +0000
+Message-ID:
+ <PH7PR16MB6196D072A8A753B06EB8B2AAE5E6A@PH7PR16MB6196.namprd16.prod.outlook.com>
+References: <20251001060805.26462-1-beanhuo@iokpp.de>
+ <20251001060805.26462-2-beanhuo@iokpp.de>
+In-Reply-To: <20251001060805.26462-2-beanhuo@iokpp.de>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+authentication-results: dkim=none (message not signed)
+ header.d=none;dmarc=none action=none header.from=sandisk.com;
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: PH7PR16MB6196:EE_|BN7PPF902AAC9F7:EE_
+x-ms-office365-filtering-correlation-id: edbb2ba7-3ade-4c4f-0353-08de00cf9d5e
+x-ms-exchange-atpmessageproperties: SA
+sndkipoutbound: EOP-TRUE
+x-ms-exchange-senderadcheck: 1
+x-ms-exchange-antispam-relay: 0
+x-microsoft-antispam:
+ BCL:0;ARA:13230040|376014|7416014|1800799024|366016|38070700021|921020;
+x-microsoft-antispam-message-info:
+ =?utf-8?B?bGhOSStQeDdVYnpRS1VLUmtZbktFa0hDUUliOEhPYzVadm5acU5mWXdFV3dv?=
+ =?utf-8?B?aGZmVUc0RmxOWloySXZrUEFTRDBiNGw2NmVFNFpoclJRUFl3aVRGWWhXQUsz?=
+ =?utf-8?B?UERnaStsZmFRWHhhSDhrdzlwZUlUU2N4ODVGYWViVWlNb3dIbWhGWnExbkJa?=
+ =?utf-8?B?a2wxM2VFSzFXKzQzU0dhN3FUSUt2ZjRRMFJjeWdQbjRja29SYXJqRkd5Uzgv?=
+ =?utf-8?B?MUNOcSs1aDVITGs1djFlTGFjZEVlR1h1SGt2dlNjUHVKcDFiQ0VxS1VyKzhT?=
+ =?utf-8?B?RnczSG01UFdKU0J0WW5WZzJXTGtlMVdvd0s5bTcxU3J3Rmp0eExacnNWTTV0?=
+ =?utf-8?B?NmFMYUlKQ215aDd6Z2hXNG5Nbm5Eck1BVFdDU21vRUppWDF3YmE2TmtBNWRs?=
+ =?utf-8?B?NDQyUS95Tzd5UTVKa3lWNEFDY25kNzVPcVlRNnBzbFpDQXFkMzd4dHpSNGlx?=
+ =?utf-8?B?bDdOckdiRTZRL1c0NXZIMmtWOGtnRTRSdDF2TElMdnZQS094cENSRDRlNHl6?=
+ =?utf-8?B?ZzlHbWhnejY1anZ2ck5wekJ0c1RPWjAvTWRnMXRFTWYzUllmRXM1RUEwbnFh?=
+ =?utf-8?B?K1h1KzdrMXhmdm9QbUJERHZMQjIvM25oR3hncnNxY3NCTFNGUjM4YUZ5Y2FK?=
+ =?utf-8?B?WXQ0SExVMzcrN2JoS2hZNzJuWjc2b3hCZVpBdStPT04ySmZPc3lWY1hhN3lN?=
+ =?utf-8?B?S3JwaGdiRmVRZDRuTDNvUzNUSXNLZnBKT1BGOHVTZUtSUkVDNTdMZEFCSGUy?=
+ =?utf-8?B?cjgrMnJabWxUaUhNWlU5eVEzTE5YeWxGRU5JZWd0YmxSQWZ1ai9ZMXRwa2ho?=
+ =?utf-8?B?QVdNdzAwcWFQOWlRWTh5RHJ6YkpSelQ5cUZJVzFiSVZtZHp2REIyS0NRdW1M?=
+ =?utf-8?B?M1ltcEl4bGJ2R2JWbVZ4SlNUZmNha2pwQjh3aG5oalBSOXVMRDFJaU5xSDI4?=
+ =?utf-8?B?eFkxa044WGhUUFRTQ1dRa1FOZlZoZHh0ZVRIN2g3NkxUdnVzTVY2eTArYndY?=
+ =?utf-8?B?cklEQjVuazQ4dzJRQ0czMHc1SUVxOU5MMjV2WmttOTJ3NGxORGh4TU14bWpK?=
+ =?utf-8?B?VkRXOEYyNUMvYVZBZ2xRQXFra282RjhuTnprQjFwdEl5TkxoNU5EYmNBZmpl?=
+ =?utf-8?B?TFV2MEJIZzBPTEJwYkJiK1FVcWRES2pUSkljSEViTTlkQS9QcWZKMjRCY1Y1?=
+ =?utf-8?B?dXpCZENHM0hQRjJORHA4amtCd1YxbGlCTnNYa1p6YkIyQzBLaG1xSmpIZ1c0?=
+ =?utf-8?B?RUw1aThwODg2UG5HVEw3K3ZlT3c2RzFCNWVVeTV2eVBBemtkTmhOK1poaFg3?=
+ =?utf-8?B?bUZFdWd5bjFUU3RBTStMUHF3VUh3N2kvSE1sQ3hXcUk5dStoT2tyaisvWDJS?=
+ =?utf-8?B?SkVrelJZdi8yUkxQblBTcUgwZm5BT2pRSmhsQldLdWtjN21FYWwvUlovM2Yw?=
+ =?utf-8?B?clUraFoySHR5T2NENmpGSy9ZMWRIQzljOWFYUGRocFN5bDAxQ1dlVzlLZjd3?=
+ =?utf-8?B?Y1pZcytiV3NTRU9zTjF0LzNPaTROMm9iZDZSK3RlNjFGbElsdFZ5STBQVzI2?=
+ =?utf-8?B?UnpzNklWRmhvNS9Mc2o4S3NyVURCNVliMEdyMlZNNnUzU0pzYlB3UElOQXNn?=
+ =?utf-8?B?VzN4bENGVXNldDkrVmdUWWE3ZXcvSFB5WlQxbnBHME1CQjdjTFliQ3JhcXY3?=
+ =?utf-8?B?WHV1dnl4dXZsK2VRL0dMUURSS25PbjZjQWV3V3gyWlRvVkZOTmtiWnZVT3Qz?=
+ =?utf-8?B?N1BWTlBCU255RU9PRi9nZnB3VWRNbWY0SzlBdHBFWkJYTlF2TU40bzlrTU9V?=
+ =?utf-8?B?UjAxdGpmaStna0hkWDBEZlNYelNadisvWmNubElZa0lEektWOUE3T0JkdzZJ?=
+ =?utf-8?B?MzFwcUgrWGYzdWxLeXpMLzhCWFl4T0d6ZGg3Zkt1Ym56RFNDS2JNdEFwaisx?=
+ =?utf-8?B?STZwOE9vZFBLSWVxWkkxb2RmcUtHNmRUQXlyT1hVVEExU05iNy9HSDRSOFBu?=
+ =?utf-8?B?N3VIa0Z6ajNkeVgxRG9rQ2VOckhsakk0djdnaHFuQkEyeEIrTGE3RkUrOWE5?=
+ =?utf-8?B?LzM2eGxCTG9OeWNTQWRUb1NkMkxzQlVncVpwdz09?=
+x-forefront-antispam-report:
+ CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PH7PR16MB6196.namprd16.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(38070700021)(921020);DIR:OUT;SFP:1102;
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?utf-8?B?R0JjT25RQ2g0S0FvczROTTJBRGMwUWErTThnWk96UkxqV3Zud1B4MVI1ZVNF?=
+ =?utf-8?B?cXN3RGxXUGNFRVhtSmIyRE5jSml3Vk0wazBMM2QxWk5vL2xSVlVGcXVjMEMw?=
+ =?utf-8?B?NzFOVnVVSGw3MnY2dS9ISXBPaGxwN3RjcjBmTWJoa00rcU1ZQjl3aDZvVFUr?=
+ =?utf-8?B?engrREFPR0dOVDBPajR3YUJWckwvVWxhREQ5a1dGWlJyWC8rY0lnNkNEWFlN?=
+ =?utf-8?B?T3h4ZnU3czM2ZXR0d3pHVDZqb3dMeXF1cnZpUFdPN1hDRnR0RWEzVzNsTHla?=
+ =?utf-8?B?QWpYWVp3eldrcjBNRW9EUUJjNllqbXhLdkl0R2FvQ1FCd3ZHN0lCQjBvVHQ1?=
+ =?utf-8?B?eDNxZW9XaVA2VHFBMGx2cHZmZTZRUGdSdXQwMVNjc0dFRlhwN3R4VExNb1d2?=
+ =?utf-8?B?cEd3QVJlYkZLaE4wcTFVdXA5WTRySHlQU0IzKzdYclN5Z2lNLzJXZkNLaTVX?=
+ =?utf-8?B?Vm1NMEI5V3hJZkxDY3JDZ2U5QnlqTXdOT0xpbGZRRDBaSGRGa1ZJNC9GR1pW?=
+ =?utf-8?B?Y1B3M2txcXZOVzZtVS8remV5UCs0bzU5OUtGcjJXUm5aZTBsZlJJR2hGeVNm?=
+ =?utf-8?B?dGpiK3VlZHEzVjNIRWd5VE5pMjBRNVZmYUc0RGVhaUpzTWVja3l4Ty9rUHBS?=
+ =?utf-8?B?cnZ5VzIrbXJVeldyeHJBZ045NCtDam9OWm51cWdjZkMwRkIxVVZIMDBCem1s?=
+ =?utf-8?B?a3pHR3p0Y1RwYkNjSDNvMHR4SXA5T0Z2TCt0bHBhazFsdHphaVZ2ZXBnaUZz?=
+ =?utf-8?B?ZDZlZU5Nd2FQRXlaeml5ZStWN20wQlQ3TEJuK1d2dGVwaXRLN29CN01wbFoy?=
+ =?utf-8?B?anVRaHZ6T25BZkNxOW5wd04zbU1EaWZOVVBBN0JBWjQ3U3UrRTA3aHQrRHN0?=
+ =?utf-8?B?WS9IZkZKcDRXZkI3M2NVdUQxcXBwNmlERk04TmlubG1tV2RKd21NT1JtNFJU?=
+ =?utf-8?B?NmpWc3NUbXdsdFV5cHJvVVVDMDBvaHg0WFM4cG9icDJUWElQblhjSllBRk5N?=
+ =?utf-8?B?R3NoMS9IeG1lbkEzUVUwSTBDSkFBeWh6VUxFUlFRTytaV0RYc2piUUUza1Zw?=
+ =?utf-8?B?dDc5QnBpNzRzQlR0ZCt3enUwUjNNeGQyeWpnSUh4eE5XVWFHQWlGRlIyd3NV?=
+ =?utf-8?B?bUJkblJTSWtaQzh6UlF0SmUzZ2hCN2c2ZWk4MmVIcDgzbGdrNndsOHdkVS85?=
+ =?utf-8?B?dzlZQURzUTMxTHVFblRKcjFQZXFGSHhCZXdrbm1kQjRBM29PVmsrbFY4Rzl4?=
+ =?utf-8?B?T0N5Si9kOW5Zd0NaRXFYczZySzZjTGg3Tk4zMUMxNEtNWlJKMVdiTzdvSVFs?=
+ =?utf-8?B?d2h6TUNoenZYbGxKMUljR3lyNnNnd0MyNFBsU2hvUlNjMDQ5RFhrYkQxR1FN?=
+ =?utf-8?B?UktGY2hNVjUvK2JnK0JLNGZPV2EzalY5ekhxQzBWUXlSUXBKRlFkbnNHZ3RR?=
+ =?utf-8?B?VWpWc0l6c2dWL085T25vL3k0dG5VQnptUTFsTWJocWVxQ3QzRWNEU1ZDWXRs?=
+ =?utf-8?B?UXVmL3hKQUZqcERFNzBJeE5YclFWWGhTTDh0RHZKSkt6ci9mUDY3WU9EejRk?=
+ =?utf-8?B?ZS9Dd0dYdmlsL2xCcHRlOEpsYXIza3JIcEZRb1RJQWpETTl0TER1VGFBbldk?=
+ =?utf-8?B?eWExcVNMUll1amtmcTBjWnoxMjRMQ1NsODdoQVVmVHJneU52Sklqc2F0cFo4?=
+ =?utf-8?B?UXlLYy9qaDVya3lnYUwraVU5ckxkN2lZcGt3NzB1UitPei96dFMyNXlYTVhB?=
+ =?utf-8?B?ZW12NDBCZXZDZ0RHa05Na2RkNE9wRmx1NFBDRFpQckZ6UTE5czNWWk42NEtB?=
+ =?utf-8?B?eDBmcW43bGM3UkJOWC80MlBNYlh3WVVwTTluMHVjd3YrY0pwM0pOWVg2dTZQ?=
+ =?utf-8?B?dUhYVXlvQ3ZrZ3B0VkVtbUxhMkZlMUVPYi9sVlZDTFpHUmdPaEpMZFhZdkVP?=
+ =?utf-8?B?TGgweG4ydkZUWGVNTVZOVTh0QTFhTDd3WHA5MU9FYzh2KzE4cnZpSjJhT0FD?=
+ =?utf-8?B?Yi9JMWhxdzNzODhMSVlFdDFzaWI1aTh0WjRMRnBJaWtOenZ2OCtJYzVoZ1Jv?=
+ =?utf-8?B?eUVaekhQY1FtVHZlYktJaGpGUWJWNld1anZJK3MyeTZ6aHM0OEVYUHczWSty?=
+ =?utf-8?Q?OQcqCrmZDKYH+RyNdAFLUhGtM?=
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: base64
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251001060805.26462-1-beanhuo@iokpp.de> <20251001060805.26462-4-beanhuo@iokpp.de>
-In-Reply-To: <20251001060805.26462-4-beanhuo@iokpp.de>
-From: Jens Wiklander <jens.wiklander@linaro.org>
-Date: Wed, 1 Oct 2025 09:50:08 +0200
-X-Gm-Features: AS18NWCsLvPQjUitmh3IeT0eAwVCPtnPUatK-fEXiKL3fpBD4-ziUtMvREB6Bwo
-Message-ID: <CAHUa44HA0uoXbkKgyvF4Rb9OJa1Qj-Wh7QAmQxXYAf3grLdktw@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver for
- UFS devices
-To: Bean Huo <beanhuo@iokpp.de>
-Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com, 
-	jejb@linux.ibm.com, martin.petersen@oracle.com, can.guo@oss.qualcomm.com, 
-	ulf.hansson@linaro.org, beanhuo@micron.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	GtTsLPNa0InU7Ahj7WX8BvZcQejm/0kPX5ZzD9mes8XCxHAOgtwy6osM8KRGNxe9gwJItJ06FxOEecjDgrwO+FFwgEJCGdEVgZ770pcbShVm1YLdHUdQJMx2PO287BpWB2oLB+aNUWE+rviav90zSOWmO8OWDX1nBstW1OEU68owTCQfQWOtdF8cRx+pt71gQRaIa6VM8Rrj2Nq8x+DSA5nqkFR4KbAvvSYQU8CflRjihhXNnIXVNPTUaogRRPl4qBMAU4Pd6U5Sv649hjOY6lFtvsoG3ISyF8wwMvoSPculg+uLQTOV+GiECOkl49OiFmMBf5SDR7gXb1sX6oFv224QyD2APFjIxFJSrQOMTe+7Z4+WZ2VKsJQ8leJ2nBp+V4y2qlQ67ui4OOY2EPAAEoW3//Vx2vlEi5KXvHsGoctmGi954JreljpttuOhYKbALtT0FzviryOgSTeQLpH08jreLLvYZr7lBRaMcxGd1osp20RNu99yTOJJhvmoM7SQDtUYfOjn9atShQG3yoUhU7LDpBVeuYYivPUNC0isf85VxPgxlnE8/At52EO7EMBoz6OqXhlRYuYtBSE48njcBYQTHj5oIAiTeSYk0QwB4dhsMWELZkV6Y06g3d1JZLTBtbMq6JkWdwiTRpoeA8RA5Q==
+X-OriginatorOrg: sandisk.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: PH7PR16MB6196.namprd16.prod.outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: edbb2ba7-3ade-4c4f-0353-08de00cf9d5e
+X-MS-Exchange-CrossTenant-originalarrivaltime: 01 Oct 2025 09:48:03.1482
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 7ffe0ff2-35d0-407e-a107-79fc32e84ec4
+X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
+X-MS-Exchange-CrossTenant-userprincipalname: 5u2omXg1ETBMHCuD4orp7y8l6LEbc/t1VjB1dbgM1tse/w92YLqloxPzbgQ2ESzsO5W80C/aoW2LlA+7vhZZhA==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: BN7PPF902AAC9F7
 
-Hi Bean,
-
-On Wed, Oct 1, 2025 at 8:08=E2=80=AFAM Bean Huo <beanhuo@iokpp.de> wrote:
->
-> From: Bean Huo <beanhuo@micron.com>
->
-> This patch adds OP-TEE based RPMB support for UFS devices. This enables s=
-ecure RPMB operations on
-> UFS devices through OP-TEE, providing the same functionality available fo=
-r eMMC devices and
-> extending kernel-based secure storage support to UFS-based systems.
->
-> Benefits of OP-TEE based RPMB implementation:
-> - Eliminates dependency on userspace supplicant for RPMB access
-> - Enables early boot secure storage access (e.g., fTPM, secure UEFI varia=
-bles)
-> - Provides kernel-level RPMB access as soon as UFS driver is initialized
-> - Removes complex initramfs dependencies and boot ordering requirements
-> - Ensures reliable and deterministic secure storage operations
-> - Supports both built-in and modular fTPM configurations
->
-> Co-developed-by: Can Guo <can.guo@oss.qualcomm.com>
-> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
->  drivers/misc/Kconfig           |   2 +-
->  drivers/ufs/core/Makefile      |   1 +
->  drivers/ufs/core/ufs-rpmb.c    | 253 +++++++++++++++++++++++++++++++++
->  drivers/ufs/core/ufshcd-priv.h |  13 ++
->  drivers/ufs/core/ufshcd.c      |  30 +++-
->  include/ufs/ufs.h              |   4 +
->  include/ufs/ufshcd.h           |   3 +
->  7 files changed, 301 insertions(+), 5 deletions(-)
->  create mode 100644 drivers/ufs/core/ufs-rpmb.c
->
-> diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-> index b9ca56930003..46ffa62eac6e 100644
-> --- a/drivers/misc/Kconfig
-> +++ b/drivers/misc/Kconfig
-> @@ -106,7 +106,7 @@ config PHANTOM
->
->  config RPMB
->         tristate "RPMB partition interface"
-> -       depends on MMC
-> +       depends on MMC || SCSI_UFSHCD
->         help
->           Unified RPMB unit interface for RPMB capable devices such as eM=
-MC and
->           UFS. Provides interface for in-kernel security controllers to a=
-ccess
-> diff --git a/drivers/ufs/core/Makefile b/drivers/ufs/core/Makefile
-> index cf820fa09a04..51e1867e524e 100644
-> --- a/drivers/ufs/core/Makefile
-> +++ b/drivers/ufs/core/Makefile
-> @@ -2,6 +2,7 @@
->
->  obj-$(CONFIG_SCSI_UFSHCD)              +=3D ufshcd-core.o
->  ufshcd-core-y                          +=3D ufshcd.o ufs-sysfs.o ufs-mcq=
-.o
-> +ufshcd-core-$(CONFIG_RPMB)             +=3D ufs-rpmb.o
-
-SCSI_UFSHCD might need the same trick ("depends on RPMB || !RPMB") in
-Kconfig as we have for MMC_BLOCK.
-
->  ufshcd-core-$(CONFIG_DEBUG_FS)         +=3D ufs-debugfs.o
->  ufshcd-core-$(CONFIG_SCSI_UFS_BSG)     +=3D ufs_bsg.o
->  ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)  +=3D ufshcd-crypto.o
-> diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-> new file mode 100644
-> index 000000000000..84cdcf8efeb3
-> --- /dev/null
-> +++ b/drivers/ufs/core/ufs-rpmb.c
-> @@ -0,0 +1,253 @@
-> +// SPDX-License-Identifier: GPL-2.0
-> +/*
-> + * UFS OP-TEE based RPMB Driver
-> + *
-> + * Copyright (C) 2025 Micron Technology, Inc.
-> + * Copyright (C) 2025 Qualcomm Technologies, Inc.
-> + *
-> + * Authors:
-> + *     Bean Huo <beanhuo@micron.com>
-> + *     Can Guo <can.guo@oss.qualcomm.com>
-> + */
-> +
-> +#include <linux/module.h>
-> +#include <linux/device.h>
-> +#include <linux/kernel.h>
-> +#include <linux/types.h>
-> +#include <linux/rpmb.h>
-> +#include <linux/string.h>
-> +#include <linux/list.h>
-> +#include <ufs/ufshcd.h>
-> +#include <linux/unaligned.h>
-> +#include "ufshcd-priv.h"
-> +
-> +#define UFS_RPMB_SEC_PROTOCOL          0xEC    /* JEDEC UFS application =
-*/
-> +#define UFS_RPMB_SEC_PROTOCOL_ID       0x01    /* JEDEC UFS RPMB protoco=
-l ID, CDB byte3 */
-> +
-> +static const struct bus_type ufs_rpmb_bus_type =3D {
-> +       .name =3D "ufs_rpmb",
-> +};
-> +
-> +/* UFS RPMB device structure */
-> +struct ufs_rpmb_dev {
-> +       u8 region_id;
-> +       struct device dev;
-> +       struct rpmb_dev *rdev;
-> +       struct ufs_hba *hba;
-> +       struct list_head node;
-> +};
-> +
-> +static int ufs_sec_submit(struct ufs_hba *hba, u16 spsp, void *buffer, s=
-ize_t len, bool send)
-> +{
-> +       struct scsi_device *sdev =3D hba->ufs_rpmb_wlun;
-> +       u8 cdb[12] =3D { };
-> +
-> +       cdb[0] =3D send ? SECURITY_PROTOCOL_OUT : SECURITY_PROTOCOL_IN;
-> +       cdb[1] =3D UFS_RPMB_SEC_PROTOCOL;
-> +       put_unaligned_be16(spsp, &cdb[2]);
-> +       put_unaligned_be32(len, &cdb[6]);
-> +
-> +       return scsi_execute_cmd(sdev, cdb, send ? REQ_OP_DRV_OUT : REQ_OP=
-_DRV_IN,
-> +                               buffer, len, /*timeout=3D*/30 * HZ, 0, NU=
-LL);
-> +}
-> +
-> +/* UFS RPMB route frames implementation */
-> +static int ufs_rpmb_route_frames(struct device *dev, u8 *req, unsigned i=
-nt req_len, u8 *resp,
-> +                                       unsigned int resp_len)
-> +{
-> +       struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
-> +       struct rpmb_frame *frm_out =3D (struct rpmb_frame *)req;
-> +       bool need_result_read =3D true;
-> +       u16 req_type, protocol_id;
-> +       struct ufs_hba *hba;
-> +       int ret;
-> +
-> +       if (!ufs_rpmb) {
-> +               dev_err(dev, "Missing driver data\n");
-> +               return -ENODEV;
-> +       }
-> +
-> +       if (!req || !req_len || !resp || !resp_len)
-> +               return -EINVAL;
-
-This function is only called indirectly from rpmb_route_frames(),
-where this is already checked.
-
-> +
-> +       hba =3D ufs_rpmb->hba;
-> +
-> +       req_type =3D be16_to_cpu(frm_out->req_resp);
-> +
-> +       switch (req_type) {
-> +       case RPMB_PROGRAM_KEY:
-> +               if (req_len !=3D sizeof(struct rpmb_frame) || resp_len !=
-=3D sizeof(struct rpmb_frame))
-> +                       return -EINVAL;
-> +               break;
-> +       case RPMB_GET_WRITE_COUNTER:
-> +               if (req_len !=3D sizeof(struct rpmb_frame) || resp_len !=
-=3D sizeof(struct rpmb_frame))
-> +                       return -EINVAL;
-> +               need_result_read =3D false;
-> +               break;
-> +       case RPMB_WRITE_DATA:
-> +               if (req_len % sizeof(struct rpmb_frame) || resp_len !=3D =
-sizeof(struct rpmb_frame))
-> +                       return -EINVAL;
-> +               break;
-> +       case RPMB_READ_DATA:
-> +               if (req_len !=3D sizeof(struct rpmb_frame) || resp_len % =
-sizeof(struct rpmb_frame))
-> +                       return -EINVAL;
-> +               need_result_read =3D false;
-> +               break;
-> +       default:
-> +               dev_err(dev, "Unknown request type=3D0x%04x\n", req_type)=
-;
-> +               return -EINVAL;
-> +       }
-> +
-> +       protocol_id =3D ufs_rpmb->region_id << 8 | UFS_RPMB_SEC_PROTOCOL_=
-ID;
-> +
-> +       ret =3D ufs_sec_submit(hba, protocol_id, req, req_len, true);
-> +       if (ret) {
-> +               dev_err(dev, "Command failed with ret=3D%d\n", ret);
-> +               return ret;
-> +       }
-> +
-> +       if (need_result_read) {
-> +               struct rpmb_frame *frm_resp =3D (struct rpmb_frame *)resp=
-;
-> +
-> +               memset(frm_resp, 0, sizeof(*frm_resp));
-> +               frm_resp->req_resp =3D cpu_to_be16(RPMB_RESULT_READ);
-> +               ret =3D ufs_sec_submit(hba, protocol_id, resp, resp_len, =
-true);
-> +               if (ret) {
-> +                       dev_err(dev, "Result read request failed with ret=
-=3D%d\n", ret);
-> +                       return ret;
-> +               }
-> +       }
-> +
-> +       if (!ret) {
-> +               ret =3D ufs_sec_submit(hba, protocol_id, resp, resp_len, =
-false);
-> +               if (ret)
-> +                       dev_err(dev, "Response read failed with ret=3D%d\=
-n", ret);
-> +       }
-> +
-> +       return ret;
-> +}
-> +
-> +static void ufs_rpmb_device_release(struct device *dev)
-> +{
-> +       struct ufs_rpmb_dev *ufs_rpmb =3D dev_get_drvdata(dev);
-> +
-> +       if (ufs_rpmb->rdev)
-
-rpmb_dev_unregister() already checks rdev for NULL.
-
-> +               rpmb_dev_unregister(ufs_rpmb->rdev);
-> +}
-> +
-> +/* UFS RPMB device registration */
-> +int ufs_rpmb_probe(struct ufs_hba *hba)
-> +{
-> +       struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
-> +       struct rpmb_dev *rdev;
-> +       u8 cid[16] =3D { };
-> +       int region;
-> +       u8 *sn;
-> +       u32 cap;
-> +       int ret;
-> +
-> +       if (!hba->ufs_rpmb_wlun) {
-> +               dev_info(hba->dev, "No RPMB LUN, skip RPMB registration\n=
-");
-> +               return -ENODEV;
-> +       }
-> +
-> +       /* Get the UNICODE serial number data */
-> +       sn =3D hba->dev_info.serial_number;
-> +       if (!sn) {
-> +               dev_err(hba->dev, "Serial number not available\n");
-> +               return -EINVAL;
-> +       }
-> +
-> +       INIT_LIST_HEAD(&hba->rpmbs);
-> +
-> +       /* Copy serial number into device ID (max 15 chars + NUL). */
-> +       strscpy(cid, sn, sizeof(cid));
-
-strscpy(cid, sn) is enough; strscpy() can determine the size itself
-since cid is an array.
-
-> +
-> +       struct rpmb_descr descr =3D {
-> +               .type =3D RPMB_TYPE_UFS,
-
-We'll need another type if the device uses the extended RPMB frame
-format. How about you clarify this, where RPMB_TYPE_UFS is defined to
-avoid confusion?
-
-> +               .route_frames =3D ufs_rpmb_route_frames,
-> +               .dev_id_len =3D sizeof(cid),
-> +               .reliable_wr_count =3D hba->dev_info.rpmb_io_size,
-> +       };
-> +
-> +       for (region =3D 0; region < 4; region++) {
-
-Would it make sense to use ARRAY_SIZE(hba->dev_info.rpmb_region_size)
-to avoid another magic number?
-
-> +               cap =3D hba->dev_info.rpmb_region_size[region];
-> +               if (!cap)
-> +                       continue;
-> +
-> +               ufs_rpmb =3D devm_kzalloc(hba->dev, sizeof(*ufs_rpmb), GF=
-P_KERNEL);
-> +               if (!ufs_rpmb) {
-> +                       ret =3D -ENOMEM;
-> +                       goto err_out;
-> +               }
-> +
-> +               ufs_rpmb->hba =3D hba;
-> +               ufs_rpmb->dev.parent =3D &hba->ufs_rpmb_wlun->sdev_gendev=
-;
-> +               ufs_rpmb->dev.bus =3D &ufs_rpmb_bus_type;
-> +               ufs_rpmb->dev.release =3D ufs_rpmb_device_release;
-> +               dev_set_name(&ufs_rpmb->dev, "ufs_rpmb%d", region);
-> +
-> +               /* Set driver data BEFORE device_register */
-> +               dev_set_drvdata(&ufs_rpmb->dev, ufs_rpmb);
-> +
-> +               ret =3D device_register(&ufs_rpmb->dev);
-> +               if (ret) {
-> +                       dev_err(hba->dev, "Failed to register UFS RPMB de=
-vice %d\n", region);
-> +                       put_device(&ufs_rpmb->dev);
-> +                       goto err_out;
-> +               }
-> +
-> +               /* Make CID unique for this region by appending region nu=
-mbe */
-> +               cid[sizeof(cid) - 1] =3D region;
-> +               descr.dev_id =3D (void *)cid;
-
-Casting isn't needed; descr.dev_id has the same type as cid.
-
-Cheers,
-Jens
-
-> +               descr.capacity =3D cap;
-> +
-> +               /* Register RPMB device */
-> +               rdev =3D rpmb_dev_register(&ufs_rpmb->dev, &descr);
-> +               if (IS_ERR(rdev)) {
-> +                       dev_err(hba->dev, "Failed to register UFS RPMB de=
-vice.\n");
-> +                       device_unregister(&ufs_rpmb->dev);
-> +                       ret =3D PTR_ERR(rdev);
-> +                       goto err_out;
-> +               }
-> +
-> +               ufs_rpmb->rdev =3D rdev;
-> +               ufs_rpmb->region_id =3D region;
-> +
-> +               list_add_tail(&ufs_rpmb->node, &hba->rpmbs);
-> +
-> +               dev_info(hba->dev, "UFS RPMB region %d registered (capaci=
-ty=3D%u)\n", region, cap);
-> +       }
-> +
-> +       return 0;
-> +err_out:
-> +       list_for_each_entry_safe(it, tmp, &hba->rpmbs, node) {
-> +               list_del(&it->node);
-> +               device_unregister(&it->dev);
-> +       }
-> +
-> +       return ret;
-> +}
-> +
-> +/* UFS RPMB remove handler */
-> +void ufs_rpmb_remove(struct ufs_hba *hba)
-> +{
-> +       struct ufs_rpmb_dev *ufs_rpmb, *tmp;
-> +
-> +       if (list_empty(&hba->rpmbs))
-> +               return;
-> +
-> +       /* Remove all registered RPMB devices */
-> +       list_for_each_entry_safe(ufs_rpmb, tmp, &hba->rpmbs, node) {
-> +               dev_info(hba->dev, "Removing UFS RPMB region %d\n", ufs_r=
-pmb->region_id);
-> +               /* Remove from list first */
-> +               list_del(&ufs_rpmb->node);
-> +               /* Unregister device */
-> +               device_unregister(&ufs_rpmb->dev);
-> +       }
-> +
-> +       dev_info(hba->dev, "All UFS RPMB devices unregistered\n");
-> +}
-> +
-> +MODULE_LICENSE("GPL v2");
-> +MODULE_DESCRIPTION("OP-TEE RPMB subsystem based UFS RPMB driver");
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-> index d0a2c963a27d..523828d6b1d5 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -411,4 +411,17 @@ static inline u32 ufshcd_mcq_get_sq_head_slot(struct=
- ufs_hw_queue *q)
->         return val / sizeof(struct utp_transfer_req_desc);
->  }
->
-> +#ifdef CONFIG_RPMB
-> +int ufs_rpmb_probe(struct ufs_hba *hba);
-> +void ufs_rpmb_remove(struct ufs_hba *hba);
-> +#else
-> +static inline int ufs_rpmb_probe(struct ufs_hba *hba)
-> +{
-> +       return 0;
-> +}
-> +static inline void ufs_rpmb_remove(struct ufs_hba *hba)
-> +{
-> +}
-> +#endif
-> +
->  #endif /* _UFSHCD_PRIV_H_ */
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 79c7588be28a..ec1670d94946 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -5240,10 +5240,15 @@ static void ufshcd_lu_init(struct ufs_hba *hba, s=
-truct scsi_device *sdev)
->             desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT] =3D=3D UFS_LU_POWER_O=
-N_WP)
->                 hba->dev_info.is_lu_power_on_wp =3D true;
->
-> -       /* In case of RPMB LU, check if advanced RPMB mode is enabled */
-> -       if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] =3D=3D UFS_UPIU_RPMB_WLU=
-N &&
-> -           desc_buf[RPMB_UNIT_DESC_PARAM_REGION_EN] & BIT(4))
-> -               hba->dev_info.b_advanced_rpmb_en =3D true;
-> +       /* In case of RPMB LU, check if advanced RPMB mode is enabled, an=
-d get region size */
-> +       if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] =3D=3D UFS_UPIU_RPMB_WLU=
-N) {
-> +               if (desc_buf[RPMB_UNIT_DESC_PARAM_REGION_EN] & BIT(4))
-> +                       hba->dev_info.b_advanced_rpmb_en =3D true;
-
-Does this indicate that the other RPMB frame format is used?
-
-> +               hba->dev_info.rpmb_region_size[0] =3D desc_buf[RPMB_UNIT_=
-DESC_PARAM_REGION0_SIZE];
-> +               hba->dev_info.rpmb_region_size[1] =3D desc_buf[RPMB_UNIT_=
-DESC_PARAM_REGION1_SIZE];
-> +               hba->dev_info.rpmb_region_size[2] =3D desc_buf[RPMB_UNIT_=
-DESC_PARAM_REGION2_SIZE];
-> +               hba->dev_info.rpmb_region_size[3] =3D desc_buf[RPMB_UNIT_=
-DESC_PARAM_REGION3_SIZE];
-> +       }
->
->
->         kfree(desc_buf);
-> @@ -8151,8 +8156,11 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hb=
-a)
->                 ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
->         if (IS_ERR(sdev_rpmb)) {
->                 ret =3D PTR_ERR(sdev_rpmb);
-> +               hba->ufs_rpmb_wlun =3D NULL;
-> +               dev_err(hba->dev, "%s: RPMB WLUN not found\n", __func__);
->                 goto remove_ufs_device_wlun;
->         }
-> +       hba->ufs_rpmb_wlun =3D sdev_rpmb;
->         ufshcd_blk_pm_runtime_init(sdev_rpmb);
->         scsi_device_put(sdev_rpmb);
->
-> @@ -8425,6 +8433,7 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
->         int err;
->         u8 model_index;
->         u8 *desc_buf;
-> +       u8 serial_index;
->         struct ufs_dev_info *dev_info =3D &hba->dev_info;
->
->         desc_buf =3D kzalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
-> @@ -8460,6 +8469,7 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
->                                 UFS_DEV_HID_SUPPORT;
->
->         model_index =3D desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
-> +       serial_index =3D desc_buf[DEVICE_DESC_PARAM_SN];
->
->         err =3D ufshcd_read_string_desc(hba, model_index,
->                                       &dev_info->model, SD_ASCII_STD);
-> @@ -8469,6 +8479,12 @@ static int ufs_get_device_desc(struct ufs_hba *hba=
-)
->                 goto out;
->         }
->
-> +       err =3D ufshcd_read_string_desc(hba, serial_index, &dev_info->ser=
-ial_number, SD_RAW);
-> +       if (err < 0) {
-> +               dev_err(hba->dev, "%s: Failed reading Serial Number. err =
-=3D %d\n", __func__, err);
-> +               goto out;
-> +       }
-> +
->         hba->luns_avail =3D desc_buf[DEVICE_DESC_PARAM_NUM_LU] +
->                 desc_buf[DEVICE_DESC_PARAM_NUM_WLU];
->
-> @@ -8504,6 +8520,8 @@ static void ufs_put_device_desc(struct ufs_hba *hba=
-)
->
->         kfree(dev_info->model);
->         dev_info->model =3D NULL;
-> +       kfree(dev_info->serial_number);
-> +       dev_info->serial_number =3D NULL;
->  }
->
->  /**
-> @@ -8647,6 +8665,8 @@ static int ufshcd_device_geo_params_init(struct ufs=
-_hba *hba)
->         else if (desc_buf[GEOMETRY_DESC_PARAM_MAX_NUM_LUN] =3D=3D 0)
->                 hba->dev_info.max_lu_supported =3D 8;
->
-> +       hba->dev_info.rpmb_io_size =3D desc_buf[GEOMETRY_DESC_PARAM_RPMB_=
-RW_SIZE];
-> +
->  out:
->         kfree(desc_buf);
->         return err;
-> @@ -8832,6 +8852,7 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
->
->         ufs_bsg_probe(hba);
->         scsi_scan_host(hba->host);
-> +       ufs_rpmb_probe(hba);
->
->  out:
->         return ret;
-> @@ -10391,6 +10412,7 @@ void ufshcd_remove(struct ufs_hba *hba)
->                 ufshcd_rpm_get_sync(hba);
->         ufs_hwmon_remove(hba);
->         ufs_bsg_remove(hba);
-> +       ufs_rpmb_remove(hba);
->         ufs_sysfs_remove_nodes(hba->dev);
->         cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
->         blk_mq_destroy_queue(hba->tmf_queue);
-> diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-> index 72fd385037a6..1d44e2b32253 100644
-> --- a/include/ufs/ufs.h
-> +++ b/include/ufs/ufs.h
-> @@ -651,6 +651,10 @@ struct ufs_dev_info {
->         u8 rtt_cap; /* bDeviceRTTCap */
->
->         bool hid_sup;
-> +
-> +       u8 *serial_number;
-> +       u8 rpmb_io_size;
-> +       u8 rpmb_region_size[4];
->  };
->
->  /*
-> diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-> index 1d3943777584..17e97a45ef71 100644
-> --- a/include/ufs/ufshcd.h
-> +++ b/include/ufs/ufshcd.h
-> @@ -984,6 +984,7 @@ struct ufs_hba {
->         struct Scsi_Host *host;
->         struct device *dev;
->         struct scsi_device *ufs_device_wlun;
-> +       struct scsi_device *ufs_rpmb_wlun;
->
->  #ifdef CONFIG_SCSI_UFS_HWMON
->         struct device *hwmon_device;
-> @@ -1140,6 +1141,8 @@ struct ufs_hba {
->         int critical_health_count;
->         atomic_t dev_lvl_exception_count;
->         u64 dev_lvl_exception_id;
-> +
-> +       struct list_head rpmbs;
->  };
->
->  /**
-> --
-> 2.34.1
->
+PiANCj4gRnJvbTogQmVhbiBIdW8gPGJlYW5odW9AbWljcm9uLmNvbT4NCj4gDQo+IE1vdmUgc3Ry
+dWN0IHJwbWJfZnJhbWUgYW5kIFJQTUIgb3BlcmF0aW9uIGNvbnN0YW50cyBmcm9tIE1NQyBibG9j
+aw0KPiBkcml2ZXIgdG8gaW5jbHVkZS9saW51eC9ycG1iLmggZm9yIHJldXNlIGFjcm9zcyBkaWZm
+ZXJlbnQgUlBNQg0KPiBpbXBsZW1lbnRhdGlvbnMgKFVGUywgTlZNZSwgZXRjLikuDQo+IA0KPiBT
+aWduZWQtb2ZmLWJ5OiBCZWFuIEh1byA8YmVhbmh1b0BtaWNyb24uY29tPg0KUmV2aWV3ZWQtYnk6
+IEF2cmkgQWx0bWFuIDxhdnJpLmFsdG1hbkBzYW5kaXNrLmNvbT4NCg==
