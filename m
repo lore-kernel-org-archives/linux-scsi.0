@@ -1,116 +1,106 @@
-Received: from mail-4317.protonmail.ch (mail-4317.protonmail.ch [185.70.43.17])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F2701DFF7;
-	Thu,  2 Oct 2025 00:23:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.70.43.17
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEF7834BA50;
+	Thu,  2 Oct 2025 03:15:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759364637; cv=none; b=Z4YdwENlr5vg5ggYyjvB1WGH+x0CHtYR0t49lLVsOFlM/zrSbg+uglxUBWJwF0ESM6K4iLU2U/vpsDemz8eVcBv2hq32S/m5fSmbHKVYTaXaqdxEgorky/3q/IM5eSttksYzCYl74QNlMBTy6pEzdvS8ZFoLlLZsrOjk4v/q6Ns=
+	t=1759374930; cv=none; b=JCm5IW4p2hbuCRG7kr/aDqBw0UG8zOj4zyjw0jEuwSxqUQmG6zqf0wWLQ5g3aDrhyyuU6Bb/S65iddo40GtgErf+bK6FLjDbMjVcWNGgEyhcwt65W0kcgOJFs2m8YPKFBK6xD0ikLOj8KbRiNMwtBT0CiV4ZUJ0uWIqULDAGNQM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759364637; c=relaxed/simple;
-	bh=Sdb1+wtHZb+FPfadxxqZAuDijR/adSPjWxuLJEkTF2Q=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=e0e1zeOIMhiLtJubNpVfBw55ksI1X8c2PpPbfSbFTiz2cv1ieCpiH+HdZjXt/GytAgrnpoSm3LM9mqrPLAo6sfjpOssHhEUzU7sVgV9pzUF1n2JMVlxVZ9k9JFrJqxQGSpJHt00hTGd5vv/R5KJvhOR7ZckcmPNlVE0mmddOm1o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=nxsw.ie; spf=pass smtp.mailfrom=nxsw.ie; dkim=pass (2048-bit key) header.d=nxsw.ie header.i=@nxsw.ie header.b=X5Ycs8Om; arc=none smtp.client-ip=185.70.43.17
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=nxsw.ie
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=nxsw.ie
+	s=arc-20240116; t=1759374930; c=relaxed/simple;
+	bh=VpV2pOWto+o9HQrJ9eHkXRSE1ZMpRyuoqKKjw5pJooA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ChlW9ea/s8OdXD3mPkphZ3WJx6BfiB4dnFi2DGkCW/CD4ouQsPqVGsMmPufyAwzWmWBQL9KTj5kd3OUG31fyKcmMi8ZT7nDwtmbBluvhZyr1JIbT5dP1/KJDK4a5zWCHTncJ/0p6Rz6xSWu6UPX0GbFX/9MUqFHdinGRbzN08e8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=I1HNF40a; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=nxsw.ie header.i=@nxsw.ie header.b="X5Ycs8Om"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=nxsw.ie;
-	s=protonmail3; t=1759364625; x=1759623825;
-	bh=KfALADPRY43GntF4MFm9RPEBQIOEJYHeDbUmR9+DFyg=;
-	h=Date:To:From:Cc:Subject:Message-ID:In-Reply-To:References:
-	 Feedback-ID:From:To:Cc:Date:Subject:Reply-To:Feedback-ID:
-	 Message-ID:BIMI-Selector;
-	b=X5Ycs8OmuzOmS8Z0lk98QzCKzedcDfdrmuSUzaQ7tgp/Ll4l6EoiCKQFAFAvDi8Ek
-	 CgLCvFgSpCqj5Xyq33Hy01XlP8Jkr4gYdPBtpxaWR7jDmykvocrZVOjhOTlXOuLIbF
-	 5KGdhT6Y9norZdoe5IlC2C8u95zOaOfx+54YlSpchczxj1wMbd6ornRNjnG/dEhFyi
-	 aV9Ms5QHE4CmXxOcTqSx8U2lPI6Ti2McHjTlby2sWAI0QUPI0jwgfLpHdDk9mH+5NL
-	 PcYluYMvkfOYoH3ego95/ejfKGB7mLMZbZILheZoWBq1Exw+Ely4EC6i+vhWk0vmVv
-	 N2RJ+ZkB7dyww==
-Date: Thu, 02 Oct 2025 00:23:37 +0000
-To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>, Bjorn Andersson <andersson@kernel.org>, Konrad Dybcio <konradybcio@kernel.org>, Manivannan Sadhasivam <mani@kernel.org>, "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen" <martin.petersen@oracle.com>
-From: Bryan O'Donoghue <bod.linux@nxsw.ie>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="I1HNF40a"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A7DA3C4CEF9;
+	Thu,  2 Oct 2025 03:15:29 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759374930;
+	bh=VpV2pOWto+o9HQrJ9eHkXRSE1ZMpRyuoqKKjw5pJooA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=I1HNF40aFe+pAlW+FG7RemDTNOBmaEB1ILzUDbkqQ1ADr2GvSAW3HI0UrI7wMyuwd
+	 MrDcEdJ/uPk0eL86yKllUWiJTNUdjHT7Av15TcFB0wHCfKK1jbZamJBwajFiYqtEFM
+	 l2w3QA743OHgreUJrvNmZ5dYhwfZIDTxIsA75Du9/+Aj/z6oFouXH82IwwYfAqRcQC
+	 yX+nEcHR8LcOAkKd0BJxt++mFtrDbm4vetZkdqQHcp9wol0B9AEBM+CP5LFnKCB9xV
+	 FPLFScWT6DtIJ4ZwNAvyfvVsAMvxmj+ksnVZnc/xr8Yt8ccvyHJcTm0FWT2RUt7qZW
+	 sUuPSl9YDhjSw==
+Date: Wed, 1 Oct 2025 22:15:27 -0500
+From: Bjorn Andersson <andersson@kernel.org>
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Cc: Konrad Dybcio <konradybcio@kernel.org>, 
+	Manivannan Sadhasivam <mani@kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org
 Subject: Re: [PATCH 2/2] ufs: host: scale ICE clock
-Message-ID: <d31e4bba-5438-480b-8d3f-229ac5b4ddf4@nxsw.ie>
-In-Reply-To: <20251001-enable-ufs-ice-clock-scaling-v1-2-ec956160b696@oss.qualcomm.com>
-References: <20251001-enable-ufs-ice-clock-scaling-v1-0-ec956160b696@oss.qualcomm.com> <20251001-enable-ufs-ice-clock-scaling-v1-2-ec956160b696@oss.qualcomm.com>
-Feedback-ID: 136405006:user:proton
-X-Pm-Message-ID: d642a5663908cbe0fc7d6de3975240d510a45876
+Message-ID: <w66a6wfln25o7h7gublrnit5ky33s4vkhbf6jvwylsl4f2n2ou@kgqr7g45a5an>
+References: <20251001-enable-ufs-ice-clock-scaling-v1-0-ec956160b696@oss.qualcomm.com>
+ <20251001-enable-ufs-ice-clock-scaling-v1-2-ec956160b696@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251001-enable-ufs-ice-clock-scaling-v1-2-ec956160b696@oss.qualcomm.com>
 
-On 01/10/2025 12:38, Abhinaba Rakshit wrote:
+On Wed, Oct 01, 2025 at 05:08:20PM +0530, Abhinaba Rakshit wrote:
 > Scale ICE clock from ufs controller.
+> 
 
-UFS
+This isn't a good commit message.
 
->=20
+Regards,
+Bjorn
+
 > Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
 > ---
->   drivers/ufs/host/ufs-qcom.c | 14 ++++++++++++++
->   1 file changed, 14 insertions(+)
->=20
+>  drivers/ufs/host/ufs-qcom.c | 14 ++++++++++++++
+>  1 file changed, 14 insertions(+)
+> 
 > diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-> index 3e83dc51d53857d5a855df4e4dfa837747559dad..2964b95a4423e887c0414ed93=
-99cc02d37b5229a 100644
+> index 3e83dc51d53857d5a855df4e4dfa837747559dad..2964b95a4423e887c0414ed9399cc02d37b5229a 100644
 > --- a/drivers/ufs/host/ufs-qcom.c
 > +++ b/drivers/ufs/host/ufs-qcom.c
-> @@ -305,6 +305,13 @@ static int ufs_qcom_ice_prepare_key(struct blk_crypt=
-o_profile *profile,
->   =09return qcom_ice_prepare_key(host->ice, lt_key, lt_key_size, eph_key)=
-;
->   }
->=20
-> +static int ufs_qcom_ice_scale_clk(struct ufs_qcom_host *host, bool scale=
-_up)
+> @@ -305,6 +305,13 @@ static int ufs_qcom_ice_prepare_key(struct blk_crypto_profile *profile,
+>  	return qcom_ice_prepare_key(host->ice, lt_key, lt_key_size, eph_key);
+>  }
+>  
+> +static int ufs_qcom_ice_scale_clk(struct ufs_qcom_host *host, bool scale_up)
 > +{
-> +=09if (host->hba->caps & UFSHCD_CAP_CRYPTO)
-> +=09=09return qcom_ice_scale_clk(host->ice, scale_up);
-> +=09return 0;
+> +	if (host->hba->caps & UFSHCD_CAP_CRYPTO)
+> +		return qcom_ice_scale_clk(host->ice, scale_up);
+> +	return 0;
 > +}
 > +
->   static const struct blk_crypto_ll_ops ufs_qcom_crypto_ops =3D {
->   =09.keyslot_program=09=3D ufs_qcom_ice_keyslot_program,
->   =09.keyslot_evict=09=09=3D ufs_qcom_ice_keyslot_evict,
-> @@ -339,6 +346,11 @@ static void ufs_qcom_config_ice_allocator(struct ufs=
-_qcom_host *host)
->   {
->   }
->=20
-> +static inline int ufs_qcom_ice_scale_clk(struct ufs_qcom_host *host, boo=
-l scale_up)
+>  static const struct blk_crypto_ll_ops ufs_qcom_crypto_ops = {
+>  	.keyslot_program	= ufs_qcom_ice_keyslot_program,
+>  	.keyslot_evict		= ufs_qcom_ice_keyslot_evict,
+> @@ -339,6 +346,11 @@ static void ufs_qcom_config_ice_allocator(struct ufs_qcom_host *host)
+>  {
+>  }
+>  
+> +static inline int ufs_qcom_ice_scale_clk(struct ufs_qcom_host *host, bool scale_up)
 > +{
-> +=09return 0;
+> +	return 0;
 > +}
 > +
->   #endif
->=20
->   static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
-> @@ -1636,6 +1648,8 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba=
- *hba, bool scale_up,
->   =09=09else
->   =09=09=09err =3D ufs_qcom_clk_scale_down_post_change(hba, target_freq);
->=20
-> +=09=09if (!err)
-> +=09=09=09err =3D ufs_qcom_ice_scale_clk(host, scale_up);
->=20
->   =09=09if (err) {
->   =09=09=09ufshcd_uic_hibern8_exit(hba);
->=20
-> --
+>  #endif
+>  
+>  static void ufs_qcom_disable_lane_clks(struct ufs_qcom_host *host)
+> @@ -1636,6 +1648,8 @@ static int ufs_qcom_clk_scale_notify(struct ufs_hba *hba, bool scale_up,
+>  		else
+>  			err = ufs_qcom_clk_scale_down_post_change(hba, target_freq);
+>  
+> +		if (!err)
+> +			err = ufs_qcom_ice_scale_clk(host, scale_up);
+>  
+>  		if (err) {
+>  			ufshcd_uic_hibern8_exit(hba);
+> 
+> -- 
 > 2.34.1
->=20
->=20
-
-Once fixed.
-
-Reviewed-by: Bryan O'Donoghue <bryan.odonoghue@linaro.org>
-
+> 
