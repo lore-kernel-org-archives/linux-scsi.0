@@ -1,79 +1,56 @@
-Received: from mail-ed1-f41.google.com (mail-ed1-f41.google.com [209.85.208.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B07FD7263B
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Oct 2025 06:30:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36F1EA59
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Oct 2025 07:01:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759386646; cv=none; b=QfOJdKg+JUBhqRr9YsPI9YACULYUpZKnsW/268I4mxfx+mhHK76bsdLmEwRd2kr2PXG41Af8si+pPGuBfx0Jw8ntlG4L/czVrw98psHmaXytqVOjheajxVZZit24Qfc904LsLWHmst9Mllmts7TicMuOmegLF4Xi2lUTsyIXnU8=
+	t=1759388467; cv=none; b=VP1CT3k4sA4AII3Kf0eRkpgUbaAjyPbcZa3lkrjlucyhDJfZsZrRSlYr+XbKdWYZCnsIIWeJgkGZyfpe4toPDzVS94zmJBLoacfBtzH6qQFWza+xjKPR2Ko8XiWCJK5jtfmB82T0ABESvHPvYuHg7zt/Ne3qKpmF8lgjCkF2Uww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759386646; c=relaxed/simple;
-	bh=YIxKVzr9qaXBN0ZylLrG8vLvgAuwWPudPeCshwDYBxU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=BedZS81/Gu+atM5TU11XN+RbXSITUgy+VbHkeVgmSolTpJl+cq5XLxXtuV9F2tfOJINFv8rjBU9aN9x4RWrncXxFLcHSxof0cqP7jLgc/TPOqUjdmS/6DlQNRQrDhSdqmKhHWT74ct9UeHLTO9kRnfvfxKPOOdVXpJHVH6XzOK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nnTh77DK; arc=none smtp.client-ip=209.85.208.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1759388467; c=relaxed/simple;
+	bh=HwKwQBuPtqotHcc7YZfe+u1X0TJrSXxj2hiVF7dA3ts=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type:
+	 References; b=hH/NyTTFoWa5xiNtPLDpOvSEU8HVv2ZJ6txXBQp2B6anTnbSGU3uI+2YgogLR0yFZhFEGsggIRXvrNEALovYBTf1/XsOdldH1tFVq2Kiteg/HKdi1E4Me2Sr6TurgEaH3E2bG/zk4lit2pLFeitPBS6ZaTGKt53VtdAfr3+wAW8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=rIgYES2b; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nnTh77DK"
-Received: by mail-ed1-f41.google.com with SMTP id 4fb4d7f45d1cf-6318855a83fso1438281a12.2
-        for <linux-scsi@vger.kernel.org>; Wed, 01 Oct 2025 23:30:44 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759386643; x=1759991443; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=KAxo+DN0iB6IwYVHObHr0a0ySgSeQeXI1l5BX4eIFNE=;
-        b=nnTh77DKAHBIzDXoD3gIWJUVmOCuGbMmbeAURt0dhR6fXTLgH00AD+amtAXCrGAD2a
-         7BWcA+NNjU1M9foW/tpxy5k1lTpWrvNWrP11dGWC+btCvflkzb9YStPlPhk8sk9YfO5Z
-         w2YApX+ClA8nGxCP0fhKNvBJcaCU2ytJ14q0sOWzJCxgz6YdXuzg/0PublYA2CiLJ1KB
-         RvgHS9N+wHmpf4gYjDWR7y9nijnoHVL8HTZznOQbrBR2c2+h63z65GstbzzK8NKg3hO0
-         n7TJWtKcFZkxxPNaxLQNBhWnFXUcy2H1Mp9Law4SAuSsMqARAnWHDhr/h8KAurpnQ7+9
-         sM7w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759386643; x=1759991443;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=KAxo+DN0iB6IwYVHObHr0a0ySgSeQeXI1l5BX4eIFNE=;
-        b=IDkPoMJ0kZqRirRb4aM+pDCGQ8UuTRwmNx7wlZwnCycAasrNVBVBhpUz9nR5Ab6AB8
-         BVX8i+9JRyk6+QhnAyBpgn+hYFtFLCT90XstrbpW7IXvwjSiTtGbpM+h4Xp3gJ8D2bww
-         CU5hdZjyMFOQsVxCf4HD82vBtsUTFu/ifmsRsDt4QzwFShw/Zfmalteck4SIo/V9Ub1t
-         eegjj4ERPXV0Lg5tP6g5QKcyktO6iUv9+/I/fPIuMg/P+M8xrH1n2FM44Sx4c5gCDbrh
-         Dya6K5/+yYp8u5/EDsVOGWMbYNJfzFU4CWYjoFBTuliuLlylkoRkCMIJYgjIwtSB3fpu
-         lgLA==
-X-Forwarded-Encrypted: i=1; AJvYcCWCT60vEqiirBeeqBIOpmupfAcF3EMWeErgzI+tuk8FnvrWSC24jtfKI3Msma6fVbGlOouGtHgwAUyN@vger.kernel.org
-X-Gm-Message-State: AOJu0YyTU5UryPFKZW2BIXmXiJLbC1gRrzDYyOQKLhqgg9NccIzTLOgW
-	+o0iAMREaolXBl0krqYdEi1AGHcv02ZQGYDjan+lfEGHMlkdYJZpMiXF
-X-Gm-Gg: ASbGnctYK8WGR58YpQ6PxsWPraJTvnWPIgc6TGZcfgr+MeJgV9DcJSLDKyQi20h/p8W
-	Zqmh7lAb1pp1Vbt6LEAzezBwTRjcUexuQDnc3kG666HkqVF3bBjjd/rb/6beF19Dxd9ZqfYQN01
-	Q++EvbZRoK5RVmPk0wNIkgX9oL3GRwy8LicPU4mz84e5vw0Mauh3JcUQU0Z8wy6JL2X6a142GHX
-	kV3KlHJful/yKyS6VthkEd2Mc+P0QxF38wkkIQkc/1LaZ7aMeEgU3KhvkJ1h6C8ZCtAZjQzc1V3
-	nvjnXrjmfpX43KEoKv5T7ucF1R7hWEs24Q+Ybyk9pqnZiTcAGuaP9VIfz26hG14aozMk/w2aOgA
-	+/hIGsvJcnqPihHN1drcYka3nM9+cgUcmfe+oe0Qx5pt8aL6dInsKRgq8w9KuiedWJXgyhG1cAJ
-	PPS5tV5FinQn78dRxGFD3XLdAKa8gMiw==
-X-Google-Smtp-Source: AGHT+IEJ4e5RsTkszdNBup8ct9QWtwmGLRs7pM/Ik8mg+tFniTBcoaDxurre2cHsPZE3caW8pu/D7w==
-X-Received: by 2002:a17:907:944e:b0:b3e:5f40:9894 with SMTP id a640c23a62f3a-b46ea31d2abmr807245466b.62.1759386642808;
-        Wed, 01 Oct 2025 23:30:42 -0700 (PDT)
-Received: from localhost.localdomain (user-46-112-72-121.play-internet.pl. [46.112.72.121])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b4865e78242sm134271266b.35.2025.10.01.23.30.41
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 01 Oct 2025 23:30:42 -0700 (PDT)
-From: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
-To: sathya.prakash@broadcom.com,
-	kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	skhan@linuxfoundation.org,
-	david.hunter.linux@gmail.com,
-	linux-kernel-mentees@lists.linuxfoundation.org,
-	Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
-Subject: [PATCH RESEND] driver/scsi/mpi3mr.h: Fix build warning for mpi3mr_start_watchdog
-Date: Thu,  2 Oct 2025 08:30:38 +0200
-Message-Id: <20251002063038.552399-1-kubik.bartlomiej@gmail.com>
-X-Mailer: git-send-email 2.39.5
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="rIgYES2b"
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20251002070058epoutp0200b096f9f10e37bdfb70521efe69a736~qmnstGdcP0062600626epoutp02j
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Oct 2025 07:00:58 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20251002070058epoutp0200b096f9f10e37bdfb70521efe69a736~qmnstGdcP0062600626epoutp02j
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1759388458;
+	bh=6yJbRfXN+8LHPax0u6/umb94/r0L9Ec+xmv3tMcbsHA=;
+	h=From:To:Cc:Subject:Date:References:From;
+	b=rIgYES2bQvwF9NNOCl8fZxM4MX+dgbhF5HGXDV+2Q4RE1V5kJVHuf3QIPk+CXu6CU
+	 fGiCWx0nHsuw2ys2NT9wfx2d7xL3A+G1EpJeYe+kCKKs3sAr7YhhWfL0hDv3vloC5K
+	 GE39YQVxMRj6hiMECmJJzV5dpM23CDVquNUJqQkM=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas1p1.samsung.com (KnoxPortal) with ESMTPS id
+	20251002070057epcas1p154d79dd1bb022dbb4ede4da1f45c0c26~qmnsReyAO1717617176epcas1p1B;
+	Thu,  2 Oct 2025 07:00:57 +0000 (GMT)
+Received: from epcas1p3.samsung.com (unknown [182.195.38.115]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4ccjPP57RNz6B9mR; Thu,  2 Oct
+	2025 07:00:57 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
+	20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924~qmnrqNQT51483914839epcas1p4W;
+	Thu,  2 Oct 2025 07:00:57 +0000 (GMT)
+Received: from wkk-400TFA-400SFA.. (unknown [10.253.99.106]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20251002070057epsmtip2e968455d70721372572fce9f394f2b36~qmnrlsFt42374423744epsmtip2k;
+	Thu,  2 Oct 2025 07:00:57 +0000 (GMT)
+From: Wonkon Kim <wkon.kim@samsung.com>
+To: James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+	peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: wkon.kim@samsung.com
+Subject: [PATCH] ufs: core: Initialize a variable mode for PA_PWRMODE
+Date: Thu,  2 Oct 2025 16:00:27 +0900
+Message-Id: <20251002070027.228638-1-wkon.kim@samsung.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -81,40 +58,40 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924
+References: <CGME20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924@epcas1p4.samsung.com>
 
-Fix watchdog name truncation.
+If ufshcd_dme_get() fails uic cmd error,
+a variable mode has a garbage value.
+It may return unintended result for pwr mode restore.
 
-In function mpi3mr_start_watchdog, watchdog_work_q_name is build
-snprintf(mrioc->watchdog_work_q_name,
-	sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name,
-	mrioc->id);
+Initialize it as 0 and will return true when ufshcd_dme_get() fails,
+because PA power mode 0 is not defined.
 
-Signed-off-by: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
+Signed-off-by: Wonkon Kim <wkon.kim@samsung.com>
 ---
- drivers/scsi/mpi3mr/mpi3mr.h | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 8d4ef49e04d1..5307fcdf216f 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -66,6 +66,7 @@ extern atomic64_t event_counter;
-
- #define MPI3MR_NAME_LENGTH	64
- #define IOCNAME			"%s: "
-+#define MPI3MR_WATCHDOG_NAME_LENGTH	(MPI3MR_NAME_LENGTH + 15)
-
- #define MPI3MR_DEFAULT_MAX_IO_SIZE	(1 * 1024 * 1024)
-
-@@ -1261,7 +1262,7 @@ struct mpi3mr_ioc {
- 	spinlock_t fwevt_lock;
- 	struct list_head fwevt_list;
-
--	char watchdog_work_q_name[50];
-+	char watchdog_work_q_name[MPI3MR_WATCHDOG_NAME_LENGTH];
- 	struct workqueue_struct *watchdog_work_q;
- 	struct delayed_work watchdog_work;
- 	spinlock_t watchdog_lock;
---
-2.39.5
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9a43102b2b21..a4438a3cb73a 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -6581,7 +6581,7 @@ static inline void ufshcd_recover_pm_error(struct ufs_hba *hba)
+ static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
+ {
+ 	struct ufs_pa_layer_attr *pwr_info = &hba->pwr_info;
+-	u32 mode;
++	u32 mode = 0;
+ 
+ 	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
+ 
+-- 
+2.34.1
 
