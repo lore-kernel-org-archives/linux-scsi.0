@@ -1,82 +1,76 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.54])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.169])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B1EF82D1936;
-	Thu,  2 Oct 2025 13:19:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3111E2BF000;
+	Thu,  2 Oct 2025 13:39:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.169
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759411185; cv=pass; b=ocaBXhKOuczLpEfJtWIcG0A4wvGnasmWY+5NzVYRuKDwKSz0Ak0/hpGgz+GP/XG2Ih+hmBbLZ2z3ea+tOqHd8OqI8uzwblo9bHFekBfRuR2U/Q9FWZO/QWM9j5QYoKiXqWg11gd7mqHfzBZXo6uKL7iCzSZA6Y3H+gUz5k1TZTA=
+	t=1759412352; cv=pass; b=JRUEdj+5rVMvRNMTPbNhe+HC6jT3yC2iqTLEJEj/aVcihNlpSdV9z/Vzh3reMbhDN7LquhCbRbOgCvj3lLAbliMIDYtsvu9M/iX3gcffDFwtEwM0fE1VkRpLANfZXWth5VLC2sx1jde8MhyTKPH7AMECEKG+gX1wyKOy6rkoRng=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759411185; c=relaxed/simple;
-	bh=JzvkrumKusAlTsB7Mu9S0miZ9QQmnsaq0ov2x1sE5/0=;
+	s=arc-20240116; t=1759412352; c=relaxed/simple;
+	bh=ok0oABOTAz4IqjL/jhSwhVG08CIXLzEnY/S7FooKACA=;
 	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=do1F5OXnExu57mer09HvtRGdraq9/3MZGHYpq34KRbw5VJIobKlO1uGHhZMfSDUw5b7+clZH69jwa4mvA+xNBa9h737VJ/MRBvfsuePUPSbk2o3JYIT4Jh1vMBTefqpMIGtc/6o9fpmKcOEAWAdGU30tBa8J1/w15a9hxlxwXDM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=A8J2E4a8; arc=pass smtp.client-ip=85.215.255.54
+	 Content-Type:MIME-Version; b=leH8Vlky5v+u2X36V7DpT1AijduCUh3sGNcsWP9BL+DQzsnjjmb8sZ1YDtCUugBcmFfM6BUrPZt29iZQClvgSC0CWe7eACg5hXHVR/a78HJrDhqFcI2yZxD13tfysvUe/daZqk7xIofzd17wvVqVbVp1DbCATmTiVqc6DTQtn0w=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=U0JtkGlm; arc=pass smtp.client-ip=81.169.146.169
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="A8J2E4a8"
-ARC-Seal: i=1; a=rsa-sha256; t=1759411177; cv=none;
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="U0JtkGlm"
+ARC-Seal: i=1; a=rsa-sha256; t=1759412341; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=rUfvcOL2ISN0pjTmN81TDa+cqt1kV8WyxaRe25xzB7xcUpTOJ1L72pWm6GLUTK2djn
-    tVw+5e+NNtvPMEUkvKfvrNGANMq7Xmsa5E3pb4zqj5gCQfWmhXWxenWWb0zxx49lEo2v
-    JAiJxXtAiDQhtcTTE9DvxnWRSeCjKPmfWO0STxGdr587DuX7Em9T71+crnzv1QHjWDIX
-    rxT+MjW6bg3BLxSi3jHUtysaIoHdXKtIOQutBQQ2DKqNPK155p22p5tIUILcCsFwVn2A
-    PXAHmeJe9RaH7e2k0e1LDEizcgeeb7RPnCFvzi5CF1dOIbLgdq9SaKtYLiyGt41q9VAR
-    b9Gw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1759411177;
+    b=pdSd5BJAS1ICTCI7us36KavG6qSzkhVtwOxCdJvWK171UA22cznORI/E4mPvCYeYsY
+    KWWAF6e8bMsUhsWb//ZQe+BnVy4reLyT5y9FH8e9DXYELyMiYLVOU2jCuulcRj94o1A5
+    6VD0nc5uJN/7IyMX169q2JJ99yiRLjediRm4vrpz7AAmbpvMUBxIs/JHiXwEfNcpwKuz
+    e4bdu4n3+uGfux6Wg10VK8hJ1bcWlVl0/6erXd2yfLYTgFo77bYGropOlR4CH4agcCNx
+    A3WeWDV23UQZtEiAG/GpVluFyVEX+gbnDmlrZEQpOgSkcx257eNreDhY8YIBsgEXHUnO
+    m6bw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1759412341;
     s=strato-dkim-0002; d=strato.com;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=pY+LXWZai8R7ETSQISmr3YBTii1mPODyogPubFswHaM=;
-    b=AmQBh1r6gk03AmXA+AlPg0MW8PS5n1OyBjZp7m8pUPcU28tYoH3vAlNg7Cu4QbVC3m
-    y7l7pMOGZEu3mz1qpQsxJdCf+7lAr7ClCzk0c22rif68ZLgFW37ob57Ozd7VIzk9hDE3
-    YA41VQ4rgNH2pB+mFWuDum2lwpgcvaQsUOHJZik25W+PP5T/oBw5fiTSnzu8RuItcDvK
-    0Dqw5e8mIlUDkzrHjK3670roXKnCxP6xnn2uWh1ci0V1WRP+Y+dnyst4NlKfBO/1nhqa
-    Y0KLhId62g0ZUsjZ01X80jPvkusAH3fGDB6B0ru3sZj2ZR6LJ2B3n0atHw4A8JT4APF+
-    onIw==
+    bh=ok0oABOTAz4IqjL/jhSwhVG08CIXLzEnY/S7FooKACA=;
+    b=Esjs3CzB9gJdsBCFjlRl1o7DpAIWMcdj+TNP7YvefiANcIzIyVx2jw0imqunqxosfn
+    VRtM0+/VDAyK8JD2+FNrN042Lno1npuoRZmOyqPcBOB8osxIHQ4Az6PDBPZrrN0ycL2C
+    +yDaJ+RylH6s9oC2TLqv2Uckp6l5AlfXxQa7QJxhhmVTL4Kvk8qLM4X/yx1bIIcrQL2N
+    97K0/+DCWRGhD2vwpJBRMO2isE/Id2PSY8lIUg+NXElvh8WCFiKjMNmX3DBqvQ6kdtTQ
+    Ifgv22K5OpyTSJilO/J8nLHAYPsxdag9+mnFIO45UwOVWND+2P7H3y6IkTlWdz4jz2mY
+    97ZQ==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1759411177;
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1759412341;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
     From:Subject:Sender;
-    bh=pY+LXWZai8R7ETSQISmr3YBTii1mPODyogPubFswHaM=;
-    b=A8J2E4a8wt89LpysYnaIcZ2LA1cooT071iqY6t/CZ6gjwdq0I5GxzNEUc4F+0Itj0i
-    Fv5hnER8pkKR7MUWESEczpGabXG9D3rFuYDM5sDjf0VHiIePrTskg17yZ2V7Xi3Bk2+w
-    PpQowEOetRbxI8OtCuQKAIW2J3/XlIuOmOn2SUMkSE2PoJO/YseOdyvhdvztBaapel4U
-    WbULt66gXKjwMVP347kHbcTUJF6zA7YIni6pjhg4XSiiNFuqnbvhVyM9m5yfMs2DJeFM
-    OwrkoQ+tq7OMiqQZXoyguiFT4gwrbGthe+HyGj9OxKZ4OAAhNoeGcibzk+u5yjne5bhy
-    qsDg==
+    bh=ok0oABOTAz4IqjL/jhSwhVG08CIXLzEnY/S7FooKACA=;
+    b=U0JtkGlmrp/t/CCTqMNFD/V/YkaBmboFe7DkcA0ODF8YljpYtfCAn1e5wVAkQZqU1t
+    d2ZY8HCiKqE07+vT2ZNL2Q756GOaIoDhYi5O/JH+cdwLsyoN0Q5PEoz8AWANc+mGQGcU
+    ijDWTJBX/3JrOAW8oYVs+qRzKG8izChIRHNuFCchuEC7c9At4mgXYKp5T3PUbFicTJ7w
+    crqAOP67qDMnK0p0hKTZujRsL7vzNhYkXbhsg0bGt3v9uvAKllSNoxLjy1+O1Yi6EXCj
+    bxUy6gEue+uEB5RSyDP0Vk+M9LPuaTKwWyNjBke3cfW68P/t+ijQbhCK/xG7Fdfs6NwA
+    KTvg==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0zJolXBtbIoYhB+fa1AL9w=="
 Received: from [192.168.226.211]
     by smtp.strato.de (RZmta 53.3.2 AUTH)
-    with ESMTPSA id z9ebc6192DJafN1
+    with ESMTPSA id z9ebc6192DcxfSZ
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Thu, 2 Oct 2025 15:19:36 +0200 (CEST)
-Message-ID: <b7a1de5c459a98935ad6f2fbdc35e1e96d1242ba.camel@iokpp.de>
+    Thu, 2 Oct 2025 15:38:59 +0200 (CEST)
+Message-ID: <a2aeae41e7ebcb56f339e563d21a676d0f44c23f.camel@iokpp.de>
 Subject: Re: [PATCH v2 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver
  for UFS devices
 From: Bean Huo <beanhuo@iokpp.de>
-To: Avri Altman <Avri.Altman@sandisk.com>, "avri.altman@wdc.com"
- <avri.altman@wdc.com>, "bvanassche@acm.org" <bvanassche@acm.org>, 
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "jejb@linux.ibm.com"
- <jejb@linux.ibm.com>,  "martin.petersen@oracle.com"
- <martin.petersen@oracle.com>, "can.guo@oss.qualcomm.com"
- <can.guo@oss.qualcomm.com>, "ulf.hansson@linaro.org"
- <ulf.hansson@linaro.org>,  "beanhuo@micron.com" <beanhuo@micron.com>,
- "jens.wiklander@linaro.org" <jens.wiklander@linaro.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-	"linux-kernel@vger.kernel.org"
-	 <linux-kernel@vger.kernel.org>
-Date: Thu, 02 Oct 2025 15:19:33 +0200
-In-Reply-To: <PH7PR16MB6196ADF912182709D465970DE5E6A@PH7PR16MB6196.namprd16.prod.outlook.com>
+To: Bart Van Assche <bvanassche@acm.org>, avri.altman@wdc.com, 
+	alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com, 
+	can.guo@oss.qualcomm.com, ulf.hansson@linaro.org, beanhuo@micron.com, 
+	jens.wiklander@linaro.org
+Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 02 Oct 2025 15:38:57 +0200
+In-Reply-To: <00a30e2e-a137-4365-9478-91ecbabf07e7@acm.org>
 References: <20251001060805.26462-1-beanhuo@iokpp.de>
 	 <20251001060805.26462-4-beanhuo@iokpp.de>
-	 <PH7PR16MB6196ADF912182709D465970DE5E6A@PH7PR16MB6196.namprd16.prod.outlook.com>
+	 <00a30e2e-a137-4365-9478-91ecbabf07e7@acm.org>
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 User-Agent: Evolution 3.44.4-0ubuntu2 
@@ -87,53 +81,17 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 
-On Wed, 2025-10-01 at 10:06 +0000, Avri Altman wrote:
-> > From: Bean Huo <beanhuo@micron.com>
-> >=20
-> > This patch adds OP-TEE based RPMB support for UFS devices. This enables
-> > secure RPMB operations on UFS devices through OP-TEE, providing the sam=
-e
-> > functionality available for eMMC devices and extending kernel-based sec=
-ure
-> > storage support to UFS-based systems.
-> >=20
-> > Benefits of OP-TEE based RPMB implementation:
-> > - Eliminates dependency on userspace supplicant for RPMB access
-> > - Enables early boot secure storage access (e.g., fTPM, secure UEFI
-> > variables)
-> > - Provides kernel-level RPMB access as soon as UFS driver is initialize=
-d
-> > - Removes complex initramfs dependencies and boot ordering requirements
-> > - Ensures reliable and deterministic secure storage operations
-> > - Supports both built-in and modular fTPM configurations
-> >=20
-> > Co-developed-by: Can Guo <can.guo@oss.qualcomm.com>
-> > Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
-> > Signed-off-by: Bean Huo <beanhuo@micron.com>
-> Reviewed-by: Avri Altman <avri.altman@sandisk.com>
+On Wed, 2025-10-01 at 12:51 -0700, Bart Van Assche wrote:
+> On 9/30/25 11:08 PM, Bean Huo wrote:
+> > +MODULE_DESCRIPTION("OP-TEE RPMB subsystem based UFS RPMB driver");
 >=20
-> Nit: Would it make sense to simplify things, e.g. :
-> Instead of struct list_head rpmbs;
-> Use:
-> struct ufs_rpmb_dev *rpmbs[4];
+> Hmm ... "OP-TEE UFS RPMB driver" is probably more clear and still
+> unambiguous. Anyway:
 
-Avri,=20
+Bart,
 
-yes, having a fixed-size data set, choose an array over a list when needs f=
-ast,
-random access to elements by index. I will address it in next version.
-
-> Also, I don't remember if you were planning to add the additional rpmb
-> operations (6 to 9) later or not.
-
-yes, to make those usable, firstly need to enable in op-tee OS,  I will che=
-ck
-op-tee OS and enable in extension patch.
+ok, I will change to it in next version.
 
 Kind regards,
 Bean
-
->=20
-> Thanks,
-> Avri
 
