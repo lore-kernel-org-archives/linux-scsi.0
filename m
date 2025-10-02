@@ -1,47 +1,47 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6550F283FCB
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Oct 2025 19:25:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DCBEC27B34F
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Oct 2025 19:25:20 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759433121; cv=none; b=RuGc6UiXgpLCoGAhcfkFjuocPiO3LqI4IxzxXnPfwBeZ4xwOh3x/XvaNUBN+ymCEfidAjkUA3UMYtM/uyNSzQFsH8QI4DhaH9RnLWROY9hRZvShf0eOpOiF8jTR2TvnHDcU48CckJiwdtHjEhuBzgP6budp50E0BUWts3giHRBc=
+	t=1759433122; cv=none; b=qULeFuiIg8sPm+uYZgg2qp+gs/03I7jhdWhfFtvQ0K/0V69MuZKtRr6sEPueLv0RXd1RJwNeHdOwqTzLgUSp9HrBvlfKQlbCyUW2R0jbjwmoW/8Eaapnh/w2dZ52QB9MfAGOeHMGq0THgw3rD1wAKUs/pHy7ayWr/Grdu9WOCQ8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759433121; c=relaxed/simple;
-	bh=53T2nta0oYWE9uUPGGKUzFMVFFtqHTKj24e5AWGmA6A=;
+	s=arc-20240116; t=1759433122; c=relaxed/simple;
+	bh=98sAuCFuJ+Oizmz6saInVdEF6IQ6y4P5D1CesQ+PROw=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WsL2JU7QDx12gXa9mouj55m4ed6rscPOWj3hieDN85hS7B7zrDFWnBfnMh6VTdtjJE9xZip3DYJww4X2fMBtNMnZxnQl46zVnVOhlzcvO4Exn3QgxU0GpxYYYb8jxi81+pC7k2zWLw7dUFGhFzJRv40H20gHNT3GHv/JfqQc5Tc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=eCLL6XY9; arc=none smtp.client-ip=170.10.129.124
+	 MIME-Version; b=l2kTQlssqhK0MeeTkwu6CCc3yc5Z3beCr7fzwSRAjV8+ySySfel3cmLpcRmypYPd1fWQfmLKDMwgvAhn3ylts5IS7QH04A36JGFhS253IDqxaG+IdpBMLPoQSIwQ85qW/Pokon/lsuUjF1wPBGdhL1CHXy/eWLyOQT4+/huaxoY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=JikuTcb0; arc=none smtp.client-ip=170.10.129.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="eCLL6XY9"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="JikuTcb0"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1759433118;
+	s=mimecast20190719; t=1759433119;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=Gocn/7hpql95UK491SYXtCL4s2osIrDGn+cZF2NJ9t8=;
-	b=eCLL6XY9mtOGx7euRF5kEavnjYCP436e7WoDswCjGhvoq/7fiVl4w0qq8rMQ5tUXCdsvfX
-	o7KwdS1s5kVc/AEvh+BBXJb6Wm7+L8NYlZlnjRq97CTYEwrrMEwNyTXkYeBsS9UnJq5tzb
-	ubFiG1CMMZfAqX681L8ZSMTYVpbUhk0=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=sI5CHEdf+aFpSSMkEaA25jNGCkPHgFNpcfT29HfNTwY=;
+	b=JikuTcb0UmS36VoDIH3HjuHr9yZL/8UI1XZT1v5DTInftpiLbLJfCrSGbtIUbqjXGfg8fq
+	US4q8nUfwUWpsZADBwVIMkO0r/GVrYP/bcjoSluWda2+b5CfiBZnRSFDomoWqSvaK49FKa
+	Fz+Y/+WAer23If8j3N39sRyWqXiOCVA=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-537-_0ZHqCYPMo2IVnaiMVwH7Q-1; Thu,
- 02 Oct 2025 15:25:15 -0400
-X-MC-Unique: _0ZHqCYPMo2IVnaiMVwH7Q-1
-X-Mimecast-MFC-AGG-ID: _0ZHqCYPMo2IVnaiMVwH7Q_1759433114
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-587-I8x86I8CMbCJbVi0qIhXww-1; Thu,
+ 02 Oct 2025 15:25:17 -0400
+X-MC-Unique: I8x86I8CMbCJbVi0qIhXww-1
+X-Mimecast-MFC-AGG-ID: I8x86I8CMbCJbVi0qIhXww_1759433116
 Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 80C4C180045C;
-	Thu,  2 Oct 2025 19:25:14 +0000 (UTC)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 19C041956050;
+	Thu,  2 Oct 2025 19:25:16 +0000 (UTC)
 Received: from emilne-na.ibmlowe.csb (unknown [10.17.17.93])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 27E521955F19;
-	Thu,  2 Oct 2025 19:25:13 +0000 (UTC)
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id C3236195419F;
+	Thu,  2 Oct 2025 19:25:14 +0000 (UTC)
 From: "Ewan D. Milne" <emilne@redhat.com>
 To: linux-scsi@vger.kernel.org
 Cc: michael.christie@oracle.com,
@@ -49,9 +49,9 @@ Cc: michael.christie@oracle.com,
 	bvanassche@acm.org,
 	dlemoal@kernel.org,
 	hare@suse.de
-Subject: [PATCH v4 1/9] scsi: Explicitly specify .ascq = 0x00 for ASC 0x28/0x29 scsi_failures
-Date: Thu,  2 Oct 2025 15:25:02 -0400
-Message-ID: <20251002192510.1922731-2-emilne@redhat.com>
+Subject: [PATCH v4 2/9] scsi: sd: Do not retry ASC 0x3a in read_capacity_10() with any ASCQ
+Date: Thu,  2 Oct 2025 15:25:03 -0400
+Message-ID: <20251002192510.1922731-3-emilne@redhat.com>
 In-Reply-To: <20251002192510.1922731-1-emilne@redhat.com>
 References: <20251002192510.1922731-1-emilne@redhat.com>
 Precedence: bulk
@@ -63,47 +63,35 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-This does not change any behavior (since .ascq was initialized to 0 by
-the compiler) but makes explicit that the entry in the scsi_failures
-array does not handle cases where ASCQ is nonzero, consistent with other
-usage.
+This makes the handling in read_capacity_10() consistent with other
+cases, e.g. sd_spinup_disk().  Omitting .ascq in scsi_failure did not
+result in wildcard matching, it only handled ASCQ 0x00.  This patch
+changes the retry behavior, we no longer retry 3 times on ASC 0x3a
+if a nonzero ASCQ is ever returned.
 
 Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 ---
- drivers/scsi/scsi_scan.c | 2 ++
- drivers/scsi/sd.c        | 1 +
- 2 files changed, 3 insertions(+)
+ drivers/scsi/sd.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 3c6e089e80c3..c754b1d566e0 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -660,11 +660,13 @@ static int scsi_probe_lun(struct scsi_device *sdev, unsigned char *inq_result,
- 		{
- 			.sense = UNIT_ATTENTION,
- 			.asc = 0x28,
-+			.ascq = 0x00,
- 			.result = SAM_STAT_CHECK_CONDITION,
- 		},
- 		{
- 			.sense = UNIT_ATTENTION,
- 			.asc = 0x29,
-+			.ascq = 0x00,
- 			.result = SAM_STAT_CHECK_CONDITION,
- 		},
- 		{
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 5b8668accf8e..78f5903cc8d0 100644
+index 78f5903cc8d0..e3b802b26f0e 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -2740,6 +2740,7 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
+@@ -2729,11 +2729,13 @@ static int read_capacity_10(struct scsi_disk *sdkp, struct scsi_device *sdp,
  		{
  			.sense = UNIT_ATTENTION,
- 			.asc = 0x29,
-+			.ascq = 0x00,
- 			.allowed = READ_CAPACITY_RETRIES_ON_RESET,
+ 			.asc = 0x3A,
++			.ascq = SCMD_FAILURE_ASCQ_ANY,
  			.result = SAM_STAT_CHECK_CONDITION,
  		},
+ 		{
+ 			.sense = NOT_READY,
+ 			.asc = 0x3A,
++			.ascq = SCMD_FAILURE_ASCQ_ANY,
+ 			.result = SAM_STAT_CHECK_CONDITION,
+ 		},
+ 		 /* Device reset might occur several times so retry a lot */
 -- 
 2.47.1
 
