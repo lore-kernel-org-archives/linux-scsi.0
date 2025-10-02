@@ -1,170 +1,176 @@
 Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2037283FCB
-	for <linux-scsi@vger.kernel.org>; Thu,  2 Oct 2025 19:25:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AE4E279DA1
+	for <linux-scsi@vger.kernel.org>; Thu,  2 Oct 2025 20:44:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759433137; cv=none; b=aLTCh6eEVcmKJmYw3D1oeKG2e4R6vLH0BX1ImZBoRystCeOLd7JUMkYrbwnqpJUs0kUkxAIx8lOXv7bWqJSNSvTnpInZBR5cbHM8R12h7eCz2NluvSuyqSOLMHzTuAOtwrcqdZ9uF7V0W6sBlHSS4Pvw5vfehrRjDbkwqAkKVRY=
+	t=1759437851; cv=none; b=AM8vaDDB12EG/iZgaax8N9CvyRvRN3u0PKtYzezexaaJjVZgjKCVyAUK3qXQ1hssSpSuW2hyzJhrbOEc8ShPKZjfmOSdM0qNin9Pa6uhSFzMblOCQX4/zYxvq8nFQ5tGiJ/RKg8QaVouROi8actej4vz0tz+OqjKvaZFk/c6PsM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759433137; c=relaxed/simple;
-	bh=U1SdhCgA7ALbTUrYAzXFJ9BSPFfHVBMIUJIjcdBybC8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=BQsQkLNwGYRG8eoh7yMYoYs1IP2BAi5nkMgWEe6lUS7GOfOpcpMVjNnsxZKzhuoNK4spRhIV0qBgWIobHW7dFjgtfDAusd1bPT48nJ1B10abVQ/tmEIe+knMykRuv+K45+lXbsEkCfilP6PXAvGDJNcJKyp9UNSP3/mw7WIVijQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Hxiutf1x; arc=none smtp.client-ip=170.10.133.124
+	s=arc-20240116; t=1759437851; c=relaxed/simple;
+	bh=gOhQHnFNNIRBurl3ntNcPJa2Mmt22yZFAJnutuZIgR4=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Da35XwJAuY07NpqaQA9yR9bz6wvSXdK+eed5AU/4OdzTDRnX93eHjkNkgLI4DuTaR+/a9WOZa8qUprXpnindlIiXytKtVeNBvndoBNwqYUpfXvKOVIXI/DZLkdlAy9C4X8CAfLVq0WdxrNc685QGdsRo0/8CcY7fJMFWVsIlntk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LXqyk+09; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Hxiutf1x"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LXqyk+09"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1759433134;
+	s=mimecast20190719; t=1759437847;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 content-transfer-encoding:content-transfer-encoding:
 	 in-reply-to:in-reply-to:references:references;
-	bh=wCnW+7XBwlvme7yYXz9G8JhZqe2/L7TNqdMf3pJOdOc=;
-	b=Hxiutf1xnPqNR2ZReKFIVvfLm5FE8+YsLagZOR+1jR+nF8+u7cidGo26nbc38dXccEsahm
-	xtvQg5C4132NTL9XLEn8Gtcas9JuG0AXWayY7WSb9Wzpkz/dBE6lD78rP1KRaqHa5Ri8EQ
-	CMZIZthwotvnpkte884/qacqXHidld8=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-424-R2ov9pAGOWqh5cCc-yFVpQ-1; Thu,
- 02 Oct 2025 15:25:26 -0400
-X-MC-Unique: R2ov9pAGOWqh5cCc-yFVpQ-1
-X-Mimecast-MFC-AGG-ID: R2ov9pAGOWqh5cCc-yFVpQ_1759433125
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 68A711800366;
-	Thu,  2 Oct 2025 19:25:25 +0000 (UTC)
-Received: from emilne-na.ibmlowe.csb (unknown [10.17.17.93])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 18458195419F;
-	Thu,  2 Oct 2025 19:25:23 +0000 (UTC)
-From: "Ewan D. Milne" <emilne@redhat.com>
-To: linux-scsi@vger.kernel.org
-Cc: michael.christie@oracle.com,
-	dgilbert@interlog.com,
-	bvanassche@acm.org,
-	dlemoal@kernel.org,
-	hare@suse.de
-Subject: [PATCH v4 8/9] scsi: scsi_debug: Add option to suppress returned data but return good status
-Date: Thu,  2 Oct 2025 15:25:09 -0400
-Message-ID: <20251002192510.1922731-9-emilne@redhat.com>
-In-Reply-To: <20251002192510.1922731-1-emilne@redhat.com>
-References: <20251002192510.1922731-1-emilne@redhat.com>
+	bh=q/h9DuP41W+s41OnyipZ8gQ7revK9O5DUHKIW3LVxL8=;
+	b=LXqyk+09TLH5umIWT4cy6ch+Z22cW/fZPnyBtoY/xl9Zztu17LtQfKK6j65e/OwjGRccrf
+	j/o2HWHOUDNBp7NlLGgydcnHfqr+9LMsDNwi9WtgZzR3O2Il+nfT0KZx10Rj4TUZ1fm9Yb
+	bCT80bNMcT7VJPMHeTwRlI/zVKiPMZ8=
+Received: from mail-yw1-f198.google.com (mail-yw1-f198.google.com
+ [209.85.128.198]) by relay.mimecast.com with ESMTP with STARTTLS
+ (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
+ us-mta-68-3CyGw6p5MOSn4IzIWOa5hA-1; Thu, 02 Oct 2025 16:44:06 -0400
+X-MC-Unique: 3CyGw6p5MOSn4IzIWOa5hA-1
+X-Mimecast-MFC-AGG-ID: 3CyGw6p5MOSn4IzIWOa5hA_1759437846
+Received: by mail-yw1-f198.google.com with SMTP id 00721157ae682-7448a11535aso19762307b3.3
+        for <linux-scsi@vger.kernel.org>; Thu, 02 Oct 2025 13:44:06 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1759437845; x=1760042645;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=q/h9DuP41W+s41OnyipZ8gQ7revK9O5DUHKIW3LVxL8=;
+        b=AfFeY+XFDrzr7VvDnYZzePHnuThhoh4NXNfBFw2/ex0F/NA2fMvR9Q+Uyn2g0i6bRj
+         om0+RvETa0eRmj7fhAgdW4Dcr2G0r7maddpoH7KK2bZV2UgfA4Eb40hfXMyfllBbubwl
+         BnXfZp3YVwWnX5VHVw/BZVyJLtTYmHyPKCcxkXfUgU1M1TC3tjbbs96ox+gqb/soROVH
+         IkLaadKb5eLzbY2seqBTjEFovIFd31HA8mU7Jx+emqqlZ8GWmGDZqtV9go1rFYLpR22z
+         vpFwfuPONyWx3uzd6cH8b9W5TSzI6JpkxIEsh2vgwxGHVwucgpH5ISKDRbiE2u+DNgnd
+         mzng==
+X-Gm-Message-State: AOJu0YyY+NdRpHUd+ahIy/h3WIUsdt7l2EM6XmhVRkS/QqpdgO6pvbWH
+	5PXSjM2ENp9J2/r7wPXddxbgexuuYjyqVn1vd3Kt8HTaWLWl/sEB6N6xGGfwPb6olFT/5Irg64O
+	k2eClsZC0oc76AhP+mQPDNpjXQqUAYGZi8OpDmmDj1KtKVZaYDdJj46WdUsmZL+H/+v1YyaYAav
+	SPJIMowkFRNSOelB3+n1WBt+LRJ32uQrJNYeywv2usUj2yLQ==
+X-Gm-Gg: ASbGncs/XAmwX98QkaLVEKiaKqsyYFontNV8jQl1WIQ+Mws0zif60h7UEmhYQTtdMdT
+	+7nKhW4SCJ0nfN8KATMMEj+/mI7kcJ6EONG4qkqO5PU6j+H+VpZc9CmOIg8GZ7LgGbOb2+4KXvX
+	SFF1t0wPp49g6xg9AyECaMt8ktCS0=
+X-Received: by 2002:a05:690e:159a:20b0:629:e2b6:1302 with SMTP id 956f58d0204a3-63b9a07171emr627916d50.17.1759437845517;
+        Thu, 02 Oct 2025 13:44:05 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGvuUsKIeu7AOarxkJ6D4a1q6sZn8PjzdUHygy8oua/52fXE+M0cOvxe3ih+62fSys/4ZE74qWgOHt3+cLDY+U=
+X-Received: by 2002:a05:690e:159a:20b0:629:e2b6:1302 with SMTP id
+ 956f58d0204a3-63b9a07171emr627894d50.17.1759437845084; Thu, 02 Oct 2025
+ 13:44:05 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+References: <E7947463-9D29-494A-9044-460DD40CEA90@ibm.com> <B5CCED31-E0A4-4F2A-B317-E8EE56F7430C@ibm.com>
+In-Reply-To: <B5CCED31-E0A4-4F2A-B317-E8EE56F7430C@ibm.com>
+From: Ewan Milne <emilne@redhat.com>
+Date: Thu, 2 Oct 2025 16:43:54 -0400
+X-Gm-Features: AS18NWChDY0CqFvQzU_0anOFQJ7nv6rB6HAhr-zW_6yzhAUbqhfgHjBMZG1x1YY
+Message-ID: <CAGtn9rmfeSRuCiX6=iCi5QwUdQXHwF_AKkY6Ood7OERmf7g2qg@mail.gmail.com>
+Subject: Re: SG driver duplicating requests
+To: Mauricio de Jesus Cardenas Hernandez <mcardenas@ibm.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-This is used to test the earlier read_capacity_10()/16() retry patch.
+I seem to recall a problem report similar to this way back that had to
+do with a restarted system call.
 
-Signed-off-by: Ewan D. Milne <emilne@redhat.com>
----
- drivers/scsi/scsi_debug.c | 49 ++++++++++++++++++++++++++++-----------
- 1 file changed, 36 insertions(+), 13 deletions(-)
+It is problematic behavior with sequential access devices like tapes.
 
-diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 353cb60e1abe..2c49aadaef80 100644
---- a/drivers/scsi/scsi_debug.c
-+++ b/drivers/scsi/scsi_debug.c
-@@ -230,6 +230,7 @@ struct tape_block {
- #define SDEBUG_OPT_NO_CDB_NOISE		0x4000
- #define SDEBUG_OPT_HOST_BUSY		0x8000
- #define SDEBUG_OPT_CMD_ABORT		0x10000
-+#define SDEBUG_OPT_NO_DATA		0x20000
- #define SDEBUG_OPT_ALL_NOISE (SDEBUG_OPT_NOISE | SDEBUG_OPT_Q_NOISE | \
- 			      SDEBUG_OPT_RESET_NOISE)
- #define SDEBUG_OPT_ALL_INJECTING (SDEBUG_OPT_RECOVERED_ERR | \
-@@ -237,7 +238,8 @@ struct tape_block {
- 				  SDEBUG_OPT_DIF_ERR | SDEBUG_OPT_DIX_ERR | \
- 				  SDEBUG_OPT_SHORT_TRANSFER | \
- 				  SDEBUG_OPT_HOST_BUSY | \
--				  SDEBUG_OPT_CMD_ABORT)
-+				  SDEBUG_OPT_CMD_ABORT | \
-+				  SDEBUG_OPT_NO_DATA)
- #define SDEBUG_OPT_RECOV_DIF_DIX (SDEBUG_OPT_RECOVERED_ERR | \
- 				  SDEBUG_OPT_DIF_ERR | SDEBUG_OPT_DIX_ERR)
- 
-@@ -1633,7 +1635,7 @@ static int make_ua(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- static int fill_from_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
- 				int arr_len)
- {
--	int act_len;
-+	int act_len, resid;
- 	struct scsi_data_buffer *sdb = &scp->sdb;
- 
- 	if (!sdb->length)
-@@ -1641,9 +1643,19 @@ static int fill_from_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
- 	if (scp->sc_data_direction != DMA_FROM_DEVICE)
- 		return DID_ERROR << 16;
- 
--	act_len = sg_copy_from_buffer(sdb->table.sgl, sdb->table.nents,
--				      arr, arr_len);
--	scsi_set_resid(scp, scsi_bufflen(scp) - act_len);
-+	/*
-+	 * Conditionally suppress DATA IN transfer and leave resid set to bufflen.
-+	 */
-+	if (unlikely((sdebug_opts & SDEBUG_OPT_NO_DATA) &&
-+		      atomic_read(&sdeb_inject_pending))) {
-+		resid = scsi_bufflen(scp);
-+		atomic_set(&sdeb_inject_pending, 0);
-+	} else {
-+		act_len = sg_copy_from_buffer(sdb->table.sgl, sdb->table.nents,
-+					      arr, arr_len);
-+		resid = scsi_bufflen(scp) - act_len;
-+	}
-+	scsi_set_resid(scp, resid);
- 
- 	return 0;
- }
-@@ -1656,7 +1668,7 @@ static int fill_from_dev_buffer(struct scsi_cmnd *scp, unsigned char *arr,
- static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
- 				  int arr_len, unsigned int off_dst)
- {
--	unsigned int act_len, n;
-+	unsigned int act_len, n, resid;
- 	struct scsi_data_buffer *sdb = &scp->sdb;
- 	off_t skip = off_dst;
- 
-@@ -1665,13 +1677,24 @@ static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
- 	if (scp->sc_data_direction != DMA_FROM_DEVICE)
- 		return DID_ERROR << 16;
- 
--	act_len = sg_pcopy_from_buffer(sdb->table.sgl, sdb->table.nents,
--				       arr, arr_len, skip);
--	pr_debug("%s: off_dst=%u, scsi_bufflen=%u, act_len=%u, resid=%d\n",
--		 __func__, off_dst, scsi_bufflen(scp), act_len,
--		 scsi_get_resid(scp));
--	n = scsi_bufflen(scp) - (off_dst + act_len);
--	scsi_set_resid(scp, min_t(u32, scsi_get_resid(scp), n));
-+	/*
-+	 * Conditionally suppress DATA IN transfer and leave resid set to bufflen.
-+	 */
-+	if (unlikely((sdebug_opts & SDEBUG_OPT_NO_DATA) &&
-+		      atomic_read(&sdeb_inject_pending))) {
-+		resid = scsi_bufflen(scp);
-+		atomic_set(&sdeb_inject_pending, 0);
-+	} else {
-+		act_len = sg_pcopy_from_buffer(sdb->table.sgl, sdb->table.nents,
-+					       arr, arr_len, skip);
-+		pr_debug("%s: off_dst=%u, scsi_bufflen=%u, act_len=%u, resid=%d\n",
-+			 __func__, off_dst, scsi_bufflen(scp), act_len,
-+			 scsi_get_resid(scp));
-+		n = scsi_bufflen(scp) - (off_dst + act_len);
-+		resid = min_t(u32, scsi_get_resid(scp), n);
-+	}
-+	scsi_set_resid(scp, resid);
-+
- 	return 0;
- }
- 
--- 
-2.47.1
+-Ewan
+
+On Wed, Oct 1, 2025 at 11:54=E2=80=AFPM Mauricio de Jesus Cardenas Hernande=
+z
+<mcardenas@ibm.com> wrote:
+>
+> Hello everyone.
+> I=E2=80=99m sorry if this is not the way to talk about these issues but I=
+=E2=80=99m new to all of this.
+>
+> When sending a write request into a sg device it seems that a request is =
+duplicated. Specifically stopping the program on write and then continuing.=
+ In a real case scenario this is happening with system-tap. I haven't repli=
+cated this problem using system-tap but it seems that it sends a SIGSTOP si=
+gnal to the process and then it continues.
+>
+> Independently of system-tap, I made this code that also shows this behavi=
+or:
+>
+> int tape_write(size_t count, uint8_t* data) {
+>   sg_io_hdr_t request =3D {0};
+>   uint8_t sb[32] =3D {0};
+>   uint8_t cdb[6] =3D {0};
+>   cdb[0] =3D 0x0a;  // Write
+>   cdb[2] =3D (count >> 16) & 0xff;
+>   cdb[3] =3D (count >> 8) & 0xff;
+>   cdb[4] =3D count & 0xff;
+>
+>   memset(&request, 0, sizeof(request));
+>   request.dxfer_direction =3D SG_DXFER_TO_DEV;
+>   request.cmdp =3D cdb;
+>   request.cmd_len =3D sizeof(cdb);
+>   request.interface_id =3D 'S';
+>   request.mx_sb_len =3D sizeof(sb);
+>   request.sbp =3D sb;
+>   request.dxferp =3D data;
+>   request.dxfer_len =3D count;
+>
+>   if (ioctl(fd, SG_IO, &request) < 0) {
+>     return errno;
+>   }
+>
+>   if (request.masked_status !=3D 0) {
+>     // print_sense_buffer(sb);
+>     return 1;
+>   }
+>
+>   return 0;
+> }
+>
+> =E2=80=A6
+>
+> // This is running on main after unit is ready and set the position to 0
+> for (int i =3D 0; i < 10000; i++) {
+>   char c =3D (i % 26) + 65;
+>   if (tape_write(1, (uint8_t*)&c) !=3D 0) {
+>     printf("Failed to write to tape drive\n");
+>     return 1;
+>   }
+> }
+>
+>
+> If I ran this and SIGSTOP it using this following script:
+>
+> ./program &
+> PID=3D$!
+> sleep 0.4
+> kill -SIGSTOP $PID
+> sleep 1
+> kill -SIGCONT $PID
+> wait
+>
+> It will ran successfully but a block on tape will be replicated:
+>
+> Data on tape:
+> ABCDEFGHIJKLMNOPQRSTUVWXYZ=E2=80=A6
+> ABCDEEFGHIJKLMNOPQRSTUVWXYZ
+> =E2=80=A6ABCDEFGHIJKLMNOPQRSTUVWXYZ...
+>
+> As you can see the block that contains the E is duplicated.
+> I don=E2=80=99t know if this is an issue regarding the sg driver or the k=
+ernel.
+> Can somebody point to me what is going on here? It seems that is happenin=
+g a lot on a IBM=E2=80=99s product that it=E2=80=99s using this driver.
+>
+> Thanks for your time.
+> Best regards.
+> Mauricio Cardenas
+>
+>
+>
 
