@@ -1,126 +1,194 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [81.169.146.167])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9ADCD28FD;
-	Thu,  2 Oct 2025 04:49:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.167
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759380586; cv=pass; b=fxS0RgjKKH3XKf2iDVY2ettqFn0M9KgRZBcoRQFXiXE8xjnRQFjXchZdFkcSyiUJOnQdPa9rbPzpj9BJq+3GC4p4jrNSPzR0G3tCiZCHWg+C20ekRyCt4mOrWsjpcj09TySkO+GlkIekQJSyUe672WDSfcnk5VYn6lBkEKObAh4=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759380586; c=relaxed/simple;
-	bh=C4jK5CO5PsfOIxmxUrT3fIAH4o6U/8d3o32rKxowRzw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=IMShsHEYe0elCfvm0DwU44ZMxH84cUL+dMxasN6ok0uTzHpxXnymXr7/BExcgDGNS/+Cwl0/JBU3G9/CL+H9cmPd+Ehsc0EKldBQkGpSjKAkkOuoR/KL0M/5D62Hq0wiiSWNgC6rhdNhuLCVWekvFFS7XURlIxlD4r5hLDh3NrM=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=JEwqu6u+; arc=pass smtp.client-ip=81.169.146.167
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+Received: from linux.microsoft.com (linux.microsoft.com [13.77.154.182])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id A1D04288AD;
+	Thu,  2 Oct 2025 05:05:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=13.77.154.182
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1759381540; cv=none; b=LV4asN36FRSDeB3OhINy7vLWORbV2QasITeWMzCU2ifbCvgtgIIOztgg1XydPS89TjtJ+vzc4RAKaQ8Nhe8eYOx1IgBEuywxqBKc5khSH64ZQKHWNSpLz73ZUoIOSRL2ODAVPFeGDd5R9isHWn5kZcXRqUN4l16Il07v+Sygg6Q=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1759381540; c=relaxed/simple;
+	bh=bI/mZGVNvgSTCHzPzpYYFFI0KxTnqy0WQILS8PYBcjw=;
+	h=From:To:Cc:Subject:Date:Message-Id; b=LMgE+wXgP6bMWfWHSkoxwuCYuMOLv9/CC82faCLsx9jadUikIu00+Iaw60sG3XsPIu5KVZ73dWUZJ3z8wvdNIcthF0OIeaYsBAD8J/RRndJZFzG9JW2+cOlvcMn9XdtGufEa3FE0iwOXfGBgHxI7MX7EqZLKTZT0iuavwo5xdkE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com; spf=pass smtp.mailfrom=linux.microsoft.com; dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b=Jmu9XBct; arc=none smtp.client-ip=13.77.154.182
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.microsoft.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.microsoft.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="JEwqu6u+"
-ARC-Seal: i=1; a=rsa-sha256; t=1759379502; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=LcWFjsV0kSImhtYAUd+NXpZE5qfwfEgcx6rcHbdMPHPlDmBhVElrFlTGppcpz36n0a
-    BIHnKkRzvoGR5vrqJsrPBw1dBEzljEIARFdFBuR1x13Nve81KHkzH8hQt0OpY06y7Pvu
-    ESmeFTlwM19+qTh0jEoj0o2YV+cNAvCUY2ynxNjgJztJuYBpu2ERoVCJBHMjymRZvkdQ
-    DbBpXceLohKFvc0YY/O9B/VcJlKwWU8tqFycbbvNKbAPqtwJMwuZ7lwkVsKrgQVN7nVZ
-    jjf5EDcVaz89hGYa58+woCcN46Oe0RXc4jGhHpFBaAZUkRm1utYCYuQM7fd6EIuqOXn9
-    ByyQ==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1759379502;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=C4jK5CO5PsfOIxmxUrT3fIAH4o6U/8d3o32rKxowRzw=;
-    b=gLz+pdj+8jvc6nbs2yvkgguaclD8y5X5hZMfqsIrWzdzg4lNy9dVGhUmMCc2YiO8g0
-    Smq4m6RA8H62ZXr0Y2AQqqUPcdgHUnlgDblajaXHL3SyN0JCFtPIdTWW1EintEWjF3d1
-    du7uuhEWPROecAgPXwW2af3k6yTmgAoeGt3Xs1IoTU6FJyfojj5QGFcTWVPLPuTPeGLr
-    p3cSyn3oYNqEUEYAkdgyS4V45X6j19Fu3SwvU2WxZrNbkbt/Vikb0odg/pJTgNu8aQCF
-    x0PfMys8FkZSnyoFr8da/OYfGEwrZ66gmweGW0BbbpLXav4DqNlCQGqbFNNBEJWlmfEu
-    Qw+g==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1759379502;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=C4jK5CO5PsfOIxmxUrT3fIAH4o6U/8d3o32rKxowRzw=;
-    b=JEwqu6u+BE09OxiQAZDCwKxQBfo2FYowJ5jARQ3IDh4maWX7dAUeeG+UuSWbcFpdEO
-    O/srcuNoRQWSaG0DSXX+YF6MmfQ3aj2iANPMXTE0fcm9JLkVKmicstPVu9d3H+qjsgRC
-    xBskPjFQTg7aV9qZVQUKFTYWAwceKlMBuPXbghVKD/FePI/mZiq1bfn5IxhoA6dAUyF8
-    9Pmn/MuzjwaU4iCGAghcEp1zrvQgxR2fetYXoc3e/XFRkItX/R09uoCGJ2LzV3qnl5r1
-    oCNhsLD0En4aSTWu8Ili5hQs1cMDh35S1PEOowTJQ84YNw7cYcy51EVOOYmOTpOwtpyl
-    XcWA==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DRtlXRrepcRHsGkBA=="
-Received: from Munilab01-lab.fritz.box
-    by smtp.strato.de (RZmta 53.3.2 AUTH)
-    with ESMTPSA id z9ebc61924VecSO
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Thu, 2 Oct 2025 06:31:40 +0200 (CEST)
-Message-ID: <bcd555740e1168fb9237683b136cdfdac9a6916a.camel@iokpp.de>
-Subject: Re: [PATCH v2 2/3] scsi: ufs: core: fix incorrect buffer
- duplication in ufshcd_read_string_desc()
-From: Bean Huo <beanhuo@iokpp.de>
-To: Avri Altman <Avri.Altman@sandisk.com>, "avri.altman@wdc.com"
- <avri.altman@wdc.com>, "bvanassche@acm.org" <bvanassche@acm.org>, 
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, "jejb@linux.ibm.com"
- <jejb@linux.ibm.com>,  "martin.petersen@oracle.com"
- <martin.petersen@oracle.com>, "can.guo@oss.qualcomm.com"
- <can.guo@oss.qualcomm.com>, "ulf.hansson@linaro.org"
- <ulf.hansson@linaro.org>,  "beanhuo@micron.com" <beanhuo@micron.com>,
- "jens.wiklander@linaro.org" <jens.wiklander@linaro.org>
-Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
-	"linux-kernel@vger.kernel.org"
-	 <linux-kernel@vger.kernel.org>
-Date: Thu, 02 Oct 2025 06:31:39 +0200
-In-Reply-To: <PH7PR16MB6196EB54F847DD32DE097770E5E6A@PH7PR16MB6196.namprd16.prod.outlook.com>
-References: <20251001060805.26462-1-beanhuo@iokpp.de>
-	 <20251001060805.26462-3-beanhuo@iokpp.de>
-	 <PH7PR16MB6196EB54F847DD32DE097770E5E6A@PH7PR16MB6196.namprd16.prod.outlook.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (1024-bit key) header.d=linux.microsoft.com header.i=@linux.microsoft.com header.b="Jmu9XBct"
+Received: by linux.microsoft.com (Postfix, from userid 1202)
+	id 2C58D211B7BA; Wed,  1 Oct 2025 22:05:38 -0700 (PDT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 linux.microsoft.com 2C58D211B7BA
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.microsoft.com;
+	s=default; t=1759381538;
+	bh=CCt7Ka1OHCkdfERjqHmJFqFGJf3OixpHd49QDRrSK2M=;
+	h=From:To:Cc:Subject:Date:From;
+	b=Jmu9XBctU81uECJaeRw4OBjHvyQYc7DBVtU2IR8m3YbK/iDAWBSrOZ6tHvlRO7fgW
+	 ytrAe8UnjrI8xozMK5EPHOv3vzk4Ro3SYEHoA7YdN7oRvaEw/btECU2VXBJuxVd4fu
+	 fOaceNfROIj6xUbF93hgxFGjXHiNeNa1/DkBEB1I=
+From: longli@linux.microsoft.com
+To: "K. Y. Srinivasan" <kys@microsoft.com>,
+	Haiyang Zhang <haiyangz@microsoft.com>,
+	Wei Liu <wei.liu@kernel.org>,
+	Dexuan Cui <decui@microsoft.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	James Bottomley <JBottomley@Odin.com>,
+	linux-hyperv@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Cc: Long Li <longli@microsoft.com>
+Subject: [PATCH] scsi: storvsc: Prefer returning channel with the same CPU as on the I/O issuing CPU
+Date: Wed,  1 Oct 2025 22:05:30 -0700
+Message-Id: <1759381530-7414-1-git-send-email-longli@linux.microsoft.com>
+X-Mailer: git-send-email 1.8.3.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
 
-On Wed, 2025-10-01 at 10:03 +0000, Avri Altman wrote:
-> > From: Bean Huo <beanhuo@micron.com>
-> >=20
-> > The function ufshcd_read_string_desc() was duplicating memory starting =
-from
-> > the beginning of struct uc_string_id, which included the length and typ=
-e
-> > fields. As a result, the allocated buffer contained unwanted metadata i=
-n
-> > addition to the string itself.
-> >=20
-> > The correct behavior is to duplicate only the Unicode character array i=
-n the
-> > structure. Update the code so that only the actual string content is co=
-pied
-> > into
-> > the new buffer.
-> 2 Nits - only If you'll have another spin:
-> Nit 1: maybe add one more sentence: This does not imply any ABI change as
-> there are no current callers with SD_RAW
-> Nit 2: you might want to remove the duplicate definitions of SD_ASCII_STD=
- &
-> SD_RAW
+From: Long Li <longli@microsoft.com>
 
-yes, thanks Avri. I will address it in next version.
+When selecting an outgoing channel for I/O, storvsc tries to select a
+channel with a returning CPU that is not the same as issuing CPU. This
+worked well in the past, however it doesn't work well when the Hyper-V
+exposes a large number of channels (up to the number of all CPUs). Use
+a different CPU for returning channel is not efficient on Hyper-V.
 
-Kind regards,
-Bean
+Change this behavior by preferring to the channel with the same CPU
+as the current I/O issuing CPU whenever possible.
 
->=20
-> >=20
-> > Fixes: 5f57704dbcfe ("scsi: ufs: Use kmemdup in ufshcd_read_string_desc=
-()")
-> > Signed-off-by: Bean Huo <beanhuo@micron.com>
-> Reviewed-by: Avri Altman <avri.altman@sandisk.com>
+Tests have shown improvements in newer Hyper-V/Azure environment, and
+no regression with older Hyper-V/Azure environments.
 
+Tested-by: Raheel Abdul Faizy <rabdulfaizy@microsoft.com>
+Signed-off-by: Long Li <longli@microsoft.com>
+---
+ drivers/scsi/storvsc_drv.c | 96 ++++++++++++++++++--------------------
+ 1 file changed, 45 insertions(+), 51 deletions(-)
+
+diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+index d9e59204a9c3..092939791ea0 100644
+--- a/drivers/scsi/storvsc_drv.c
++++ b/drivers/scsi/storvsc_drv.c
+@@ -1406,14 +1406,19 @@ static struct vmbus_channel *get_og_chn(struct storvsc_device *stor_device,
+ 	}
+ 
+ 	/*
+-	 * Our channel array is sparsley populated and we
++	 * Our channel array could be sparsley populated and we
+ 	 * initiated I/O on a processor/hw-q that does not
+ 	 * currently have a designated channel. Fix this.
+ 	 * The strategy is simple:
+-	 * I. Ensure NUMA locality
+-	 * II. Distribute evenly (best effort)
++	 * I. Prefer the channel associated with the current CPU
++	 * II. Ensure NUMA locality
++	 * III. Distribute evenly (best effort)
+ 	 */
+ 
++	/* Prefer the channel on the I/O issuing processor/hw-q */
++	if (cpumask_test_cpu(q_num, &stor_device->alloced_cpus))
++		return stor_device->stor_chns[q_num];
++
+ 	node_mask = cpumask_of_node(cpu_to_node(q_num));
+ 
+ 	num_channels = 0;
+@@ -1469,59 +1474,48 @@ static int storvsc_do_io(struct hv_device *device,
+ 	/* See storvsc_change_target_cpu(). */
+ 	outgoing_channel = READ_ONCE(stor_device->stor_chns[q_num]);
+ 	if (outgoing_channel != NULL) {
+-		if (outgoing_channel->target_cpu == q_num) {
+-			/*
+-			 * Ideally, we want to pick a different channel if
+-			 * available on the same NUMA node.
+-			 */
+-			node_mask = cpumask_of_node(cpu_to_node(q_num));
+-			for_each_cpu_wrap(tgt_cpu,
+-				 &stor_device->alloced_cpus, q_num + 1) {
+-				if (!cpumask_test_cpu(tgt_cpu, node_mask))
+-					continue;
+-				if (tgt_cpu == q_num)
+-					continue;
+-				channel = READ_ONCE(
+-					stor_device->stor_chns[tgt_cpu]);
+-				if (channel == NULL)
+-					continue;
+-				if (hv_get_avail_to_write_percent(
+-							&channel->outbound)
+-						> ring_avail_percent_lowater) {
+-					outgoing_channel = channel;
+-					goto found_channel;
+-				}
+-			}
++		if (hv_get_avail_to_write_percent(&outgoing_channel->outbound)
++				> ring_avail_percent_lowater)
++			goto found_channel;
+ 
+-			/*
+-			 * All the other channels on the same NUMA node are
+-			 * busy. Try to use the channel on the current CPU
+-			 */
+-			if (hv_get_avail_to_write_percent(
+-						&outgoing_channel->outbound)
+-					> ring_avail_percent_lowater)
++		/*
++		 * Channel is busy, try to find a channel on the same NUMA node
++		 */
++		node_mask = cpumask_of_node(cpu_to_node(q_num));
++		for_each_cpu_wrap(tgt_cpu, &stor_device->alloced_cpus,
++				  q_num + 1) {
++			if (!cpumask_test_cpu(tgt_cpu, node_mask))
++				continue;
++			channel = READ_ONCE(stor_device->stor_chns[tgt_cpu]);
++			if (!channel)
++				continue;
++			if (hv_get_avail_to_write_percent(&channel->outbound)
++					> ring_avail_percent_lowater) {
++				outgoing_channel = channel;
+ 				goto found_channel;
++			}
++		}
+ 
+-			/*
+-			 * If we reach here, all the channels on the current
+-			 * NUMA node are busy. Try to find a channel in
+-			 * other NUMA nodes
+-			 */
+-			for_each_cpu(tgt_cpu, &stor_device->alloced_cpus) {
+-				if (cpumask_test_cpu(tgt_cpu, node_mask))
+-					continue;
+-				channel = READ_ONCE(
+-					stor_device->stor_chns[tgt_cpu]);
+-				if (channel == NULL)
+-					continue;
+-				if (hv_get_avail_to_write_percent(
+-							&channel->outbound)
+-						> ring_avail_percent_lowater) {
+-					outgoing_channel = channel;
+-					goto found_channel;
+-				}
++		/*
++		 * If we reach here, all the channels on the current
++		 * NUMA node are busy. Try to find a channel in
++		 * all NUMA nodes
++		 */
++		for_each_cpu_wrap(tgt_cpu, &stor_device->alloced_cpus,
++				  q_num + 1) {
++			channel = READ_ONCE(stor_device->stor_chns[tgt_cpu]);
++			if (!channel)
++				continue;
++			if (hv_get_avail_to_write_percent(&channel->outbound)
++					> ring_avail_percent_lowater) {
++				outgoing_channel = channel;
++				goto found_channel;
+ 			}
+ 		}
++		/*
++		 * If we reach here, all the channels are busy. Use the
++		 * original channel found.
++		 */
+ 	} else {
+ 		spin_lock_irqsave(&stor_device->lock, flags);
+ 		outgoing_channel = stor_device->stor_chns[q_num];
+-- 
+2.34.1
 
