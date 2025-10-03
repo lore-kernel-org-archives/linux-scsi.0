@@ -1,142 +1,79 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 64CC92DA777
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Oct 2025 18:40:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C72479CF;
+	Fri,  3 Oct 2025 20:06:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759516818; cv=none; b=sUQLXvLBLNpex745pKkD28gUYL+zU5MLZEBY/Fc0Pt4C7Poft0SbfDEc0QHWZoaIpgFU6jzl4kjKyjZKf4cM7ygdIg/emFglgtbszlZkc31J2vZV7alBnzmDv9jIIk7YznUaUMZTREpgTrTY8Usc7tCx0JEq7eLwxoP2xY9zUMc=
+	t=1759521990; cv=none; b=ojFmYABNxJiX8pgvNIlv74Qil+8QNmJIly5nF0uLV2AaDOB5hvXyk77cW/80vvcx3/mzpOSTEgHyqGcqrKV9SSKQDT3r3IY5aaWTBypbgm+SdnU16B+FpnSvK9XZRh16nxT1F4nsF+SrBYxBavS4JlPg5CHsGK1Hn4rbTgioR+g=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759516818; c=relaxed/simple;
-	bh=ey/li8C+LOuBbKWsY5bxj4D3ffThH0p2nhqf7x4PB2I=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=cNTVC5IyP369mLn5Is+y4X/nfkaNDmH18soIDvKwxHykslRAMohkYH+twIaLhyRykBSYClX5vQFhUJTrlLKgVuQujLapN/xauxr+d3NwxnaSM7XLOwTxwOGg5DY/nA7H9ttqSMhXT2OnO33tz3sGYCY3LBW7EkufpvN4HQ7HZx0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=Ak4e/idU; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1759521990; c=relaxed/simple;
+	bh=aH+QNLkaLWvoukhWgDkPlnh5xSfyQHEGHxAs751sKiE=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=G+H0txxZgvpB5dFfHn2gYuJtaJoxkb+J3yNdRORkUmZF7DZJ4RcYs/zuSPXDd2Q0J2Z1iNpkyNj5+Q1258NJq1jaHEHwkflYSPy6MZGWBPnF+pJQO7EjWnTQTUkYngmWfEeWXMEee60hazYuN1RNQai10X7ktnilQ0j8B/rlc5A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=eM1EK3YW; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="Ak4e/idU"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1759516815;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=IQbW8eVjnT8xbPJE/2WXb9nBASDu4yAverRBE/xnjls=;
-	b=Ak4e/idUmLUzT7kODyWz+HRfeAmzJd7ALnuAdia301Gy8OAM21FXhoBvQSJx1BQ2Qmfv2r
-	CXzJ2NpctqTyGjyKORKZFg+QVWoVWevpp8So9p4HrICAGfGEYr1Rh9A8aVPVLdWvIhLz/w
-	0jODXOolfn6PZspHsg7VMVUfPLhERcE=
-Received: from mail-yx1-f72.google.com (mail-yx1-f72.google.com
- [74.125.224.72]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-125-8PT5nJ8ONbSAT9NaxJAIiQ-1; Fri, 03 Oct 2025 14:40:14 -0400
-X-MC-Unique: 8PT5nJ8ONbSAT9NaxJAIiQ-1
-X-Mimecast-MFC-AGG-ID: 8PT5nJ8ONbSAT9NaxJAIiQ_1759516813
-Received: by mail-yx1-f72.google.com with SMTP id 956f58d0204a3-6352fd4c26dso3454843d50.0
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Oct 2025 11:40:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759516813; x=1760121613;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=IQbW8eVjnT8xbPJE/2WXb9nBASDu4yAverRBE/xnjls=;
-        b=H7SmNxGJ9YQbXsGakuEv8WDxJOTNVUAZYHuVr7eCBtkYvOSOBRn+QdJ5msvO1xiQ0s
-         VRJwyH48/mjnE3bDbhGxW7pClyL0Dlm7obLAT052rPgsJTKhZ/IdydrEB2R1NzPnDOTW
-         gQo2ORDYp6u3sMij7y9BHN3WqZabqf8ez1wM6xon9HuWYPP+5oKZdGrnmOBomdf/0iQf
-         zw6c7hjovhd0Y0trixWkHFKU5nqoz8TQcIKtuq5pioG0Lpln0JKnsm6ek5wHdIPtyKXJ
-         NQodo/3qn9gEhgsLL1ejGTpuVFNh1zno/Q3GYKhl7T+CIMaX5L1jHkJbEWp+XNej+2+A
-         jSOw==
-X-Forwarded-Encrypted: i=1; AJvYcCWGbsaw2rcgxMr/sxejQoHPdw19DGFMUpFw1X33+fOK/cHT7C4Um60lZJ9MwWJrAYZwyFbLwMPdKNQh@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz5Skp6FqGIIJYojFNfwhO3Shkpk5Zt+kZiUdUOzwO5fowZ26FQ
-	CgMabIXvyxm9EPCE2Ony+as4Lbfy1YFKccooXNed4AzKBG+4/QoUGjNnCuiYRFiJuiRFRNUfiaY
-	qJU/VXUPG6xjM6ngsQKt0B0Xh5Wn9hQanu7diWpYSaWqiujGDhwL2sGQbBbHhaOEGiHiOlvWWFF
-	cg9WhlGbk5yt2UljqNho7SXKnugu09i1+FgnW3Jg==
-X-Gm-Gg: ASbGncuemupfltx7qzEyOIyH52Yh+QMcslxYIfRyBiCB+eyx8wTfnU5hYZNd9VMG7jb
-	2vbfTsN0iRIIith2FexOA6MEV440+mw4WQ0MlfpN/PmTDpRWfVR0fIS3aM4zSr6N+wFOS1KOJRs
-	oWVsj2BQlI0/+Hx9hAbid8Bxq6Hsw=
-X-Received: by 2002:a05:690e:1549:10b0:636:d7de:8c61 with SMTP id 956f58d0204a3-63b9a077cc7mr3436741d50.17.1759516813553;
-        Fri, 03 Oct 2025 11:40:13 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IH01Kn6Fe4bIMQ6xxGJ6y5emRpxFxFP3nxR1sxiKvdKcHH10vTx1TXEk+wLYSOaq/4lOErtRB2Viq7YLlqs8mI=
-X-Received: by 2002:a05:690e:1549:10b0:636:d7de:8c61 with SMTP id
- 956f58d0204a3-63b9a077cc7mr3436707d50.17.1759516813100; Fri, 03 Oct 2025
- 11:40:13 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="eM1EK3YW"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+	d=hansenpartnership.com; s=20151216; t=1759521987;
+	bh=aH+QNLkaLWvoukhWgDkPlnh5xSfyQHEGHxAs751sKiE=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=eM1EK3YWWfxj4VX+aTpKE8t4fl243UVCVvzi0MC/sBF2JKWkmj3g/SKJHL9EBEDye
+	 qaBxLUVWE3XVE8eSZLUJ/lXkilLyYUx/6tgwc7A1I7mP7h9+z4ZQEP6LddNULp0Xls
+	 Zf+pP7dzgtIruyR8/YdxoVIzMUJf7oteCqTL/gWY=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 44F201C014F;
+	Fri, 03 Oct 2025 16:06:27 -0400 (EDT)
+Message-ID: <c1ae689eda64ccfa30d767d5e9e6601f279aedcf.camel@HansenPartnership.com>
+Subject: Re: [GIT PULL] SCSI updates for the 6.17+ merge window
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds
+	 <torvalds@linux-foundation.org>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel
+	 <linux-kernel@vger.kernel.org>
+Date: Fri, 03 Oct 2025 16:06:26 -0400
+In-Reply-To: <0d6775da1dc393821eab88883670b937ef7d8242.camel@HansenPartnership.com>
+References: 
+	<0d6775da1dc393821eab88883670b937ef7d8242.camel@HansenPartnership.com>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251002192510.1922731-1-emilne@redhat.com> <20251002192510.1922731-3-emilne@redhat.com>
- <8f250e77-5069-416d-9389-9c3e99535dbc@kernel.org> <CAGtn9rkZX-C7DgaMCABsF66RVGomQeK1RyRW5knLPsPEzvajOA@mail.gmail.com>
- <4a5394d5-6608-4a81-8f8d-006ea2bdcd61@acm.org>
-In-Reply-To: <4a5394d5-6608-4a81-8f8d-006ea2bdcd61@acm.org>
-From: Ewan Milne <emilne@redhat.com>
-Date: Fri, 3 Oct 2025 14:40:02 -0400
-X-Gm-Features: AS18NWAFXfjtmp2yicHuAjyij1_Evx97xDOJVkTn4RwC81Xc966BQlS_-td-gL0
-Message-ID: <CAGtn9rkS9v=Y2x2Pt6ex-kM4iShGNe-jJHRk1zFOTHWKonwoFQ@mail.gmail.com>
-Subject: Re: [PATCH v4 2/9] scsi: sd: Do not retry ASC 0x3a in
- read_capacity_10() with any ASCQ
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org, 
-	michael.christie@oracle.com, dgilbert@interlog.com, hare@suse.de
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
 
-On Fri, Oct 3, 2025 at 11:45=E2=80=AFAM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> On 10/3/25 7:40 AM, Ewan Milne wrote:
-> > On Fri, Oct 3, 2025 at 12:24=E2=80=AFAM Damien Le Moal <dlemoal@kernel.=
-org> wrote:
-> >>
-> >> On 10/3/25 04:25, Ewan D. Milne wrote:
-> >>> This makes the handling in read_capacity_10() consistent with other
-> >>> cases, e.g. sd_spinup_disk().  Omitting .ascq in scsi_failure did not
-> >>> result in wildcard matching, it only handled ASCQ 0x00.  This patch
-> >>> changes the retry behavior, we no longer retry 3 times on ASC 0x3a
-> >>> if a nonzero ASCQ is ever returned.
-> >>>
-> >>> Signed-off-by: Ewan D. Milne <emilne@redhat.com>
-> >>
-> >> Doesn't this need a Fixes tag ?
-> >
-> > I don't normally add a Fixes: tag for things like this, since I don't k=
-now
-> > if any device actually returns a nonzero ASCQ.  (I think either you or
-> > Bart asked for this change in an earlier patch series, which is fine.)
->
-> I think that I asked for this change. From
-> https://www.t10.org/lists/asc-num.htm:
->
-> 3Ah/00h  DZT ROM  BK    MEDIUM NOT PRESENT
-> 3Ah/01h  DZT ROM  BK    MEDIUM NOT PRESENT - TRAY CLOSED
-> 3Ah/02h  DZT ROM  BK    MEDIUM NOT PRESENT - TRAY OPEN
-> 3Ah/03h  DZT ROM  B     MEDIUM NOT PRESENT - LOADABLE
-> 3Ah/04h  DZT RO   B     MEDIUM NOT PRESENT - MEDIUM AUXILIARY MEMORY
-> ACCESSIBLE
->
-> In other words, a Fixes: tag is probably appropriate.
->
-> Thanks,
->
-> Bart.
->
+On Thu, 2025-10-02 at 17:40 -0400, James Bottomley wrote:
+[...]
+> =C2=A0drivers/scsi/lpfc/lpfc_debugfs.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+ | 633 +++++++--------------
 
-Given that c1acf38cd11ef ("scsi: sd: Have midlayer retry
-sd_spinup_disk() errors")
-set .ascq =3D SCMD_FAILURE_ASCQ_ANY for .asc =3D 0x3A and 0f11328f2f466
-("scsi: sd: Have midlayer retry read_capacity_10() errors") didn't,
-this does look
-like the right change to make.  However, prior to 0f11328f2f466 there
-was were retries
-which Mike's patch took out, I concede it's unlikely that it
-intentionally left the default
-3 retries for sub-cases of ASC 0x3A.  MIke, feel free to correct me.
+There's an off by one in the diffstat here because I forgot to account
+for this patch=20
 
-Martin, please add:
+eea6cafb5890 scsi: lpfc: Remove redundant assignment to avoid memory leak
 
-Fixes: 0f11328f2f466 ("scsi: sd: Have midlayer retry read_capacity_10() err=
-ors")
+That went up in a fixes pull.
 
--Ewan
+Regards,
+
+James
 
