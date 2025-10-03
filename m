@@ -1,77 +1,68 @@
-Received: from mail-wr1-f42.google.com (mail-wr1-f42.google.com [209.85.221.42])
+Received: from mail-wm1-f49.google.com (mail-wm1-f49.google.com [209.85.128.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B4A2126E6F3
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Oct 2025 08:40:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.42
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1883A26C39E
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Oct 2025 09:30:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759480840; cv=none; b=txcu+SZAC+cuy5q3H1duveBQr5V+56hNZha5vD4BnAO/MVWRvbC6CG5FDc3eLTUApwFa5BHrSng5Bxies83GQdT1RfX9wK6W13hdNlHIY+fmwG+oc+VA/sDbE6nAz4ShGzlNp4rImdBkE8aMjePSpkQK6hKtnqwpaaVKFp1DA2I=
+	t=1759483829; cv=none; b=g/tQCz/zBzxXOk8ZAejQ3ilyaVdAShRDmr5553MS61FWSnphdYTxM5A+EYikY9nt5h+ag8YHJAx55gyD8AYZEHIBsV2KsweWvsb5Th9ytlej6+phkgXNM6oM44TJkfY1AdSRozy+lCUcqIU6rYuO3Cark2i866Y0zbO0q9oCYEI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759480840; c=relaxed/simple;
-	bh=TFNuXojUxQ5sowkUWUwt/Zu4E1KP3EXf4UKwN5nr/50=;
+	s=arc-20240116; t=1759483829; c=relaxed/simple;
+	bh=GBHNdzaM8gQtenoI6mfiM6GXui5H0h32LA0yeyj2ciU=;
 	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
-	 Content-Disposition:In-Reply-To; b=s1Nc/uWA0dxcBhmBBXNAnq60Qc1mETEKmiDAHe4b/AERW7Hr77GjFFnVRf6GsWQFOxhemcbMr9AWEtCJnLPzZtKOTPWfHjUlew+TuZzCh0jY2CRqM47Z4nY21UvZgI7zg0vyPBgP5z8h3PSHm503a9pu1b85uybZBVQcTSCvt6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=SBlvPCnt; arc=none smtp.client-ip=209.85.221.42
+	 Content-Disposition; b=o9/hEDvQDcT0Eb2iBWzKrgN9Lxa+V8TdpKhe25vnlV+f7Fs4yhcdsrR9EGkQ4u3qQjbBmJJMG6Lx/KTrtqEdVX4irJ/Un8ockS+UWHNMMEHyFxNjBzoIsdRYQ2laLzhbpXFV7+zOXqCf7Uuf+ZQmX6CuRH1I0uWXAgHWmHpwdfc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=zDhqyWWD; arc=none smtp.client-ip=209.85.128.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="SBlvPCnt"
-Received: by mail-wr1-f42.google.com with SMTP id ffacd0b85a97d-3f0ae439b56so1268741f8f.3
-        for <linux-scsi@vger.kernel.org>; Fri, 03 Oct 2025 01:40:38 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zDhqyWWD"
+Received: by mail-wm1-f49.google.com with SMTP id 5b1f17b1804b1-46e42deffa8so21084585e9.0
+        for <linux-scsi@vger.kernel.org>; Fri, 03 Oct 2025 02:30:25 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1759480837; x=1760085637; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
-         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=Cio2lKvCKgwpMaSFyqyjcKvDHCLeYNpkbQFBjUDPl20=;
-        b=SBlvPCntmLN/DwWuyu63Uo0ZEy32iPg2Hfqtx7bsAhr1F0JeKgdghkpLJY7nHxPCp3
-         DWn3ecYs/fwFZGziPH6DFzf1qsTwfFyztEiMCq3ORoFsiFPeVomzL9vtNwgiWDap1Ju8
-         8u43obXZjxFWnEP6fPGTlnsS9nMnQct0JEOcNA7oWNsAhd3mlEuf+bF37c6jiLvXwLCC
-         CN2fJQ6KK0mqaIwNpw0jhYwjn7vHK7XB65z1a0NU0BzIRzjOLVmLqtg+TQ4K6TtlwOYW
-         XGmvpZT4ytWokzDH7BqXKx++Dke5xOvOKR6T7fIKH+lvbesA5cAmeQtqZKNkb7uVB0bs
-         I/VA==
+        d=linaro.org; s=google; t=1759483824; x=1760088624; darn=vger.kernel.org;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=H0EBtqSqgeFXQZr6pfRdyEIeXrxqzAS1NvTsWALCO9I=;
+        b=zDhqyWWDmQQqIEcNlrCmIFaOLAaBzzONFG5CKJYdnflPDvT75Fu9+SqUEQwCHqVgU9
+         51L005SfsL/qeeWLUgeFYeQ54iGo+wlKXWbAYlUXZjNsx6iuP56fvc2UUnZru/BR0edA
+         hpklvOdSpRFrT4faHJnTofiJVcZkpjICLCWk6ricOll6scTibe3fI3zff3O6+lJYaX0S
+         h4/OcthiUXKhezdZtxoat9h12oZBiwW8cxwqs0GbnRGS2JFAj//d5CxLageDG1L3RQ9Q
+         ZY4q8CCjLyyeZqfMmyK3soDnF7UiVy3Yavf42WRi26I3HQiQxbdaLQNmJc6UNDPr8Wph
+         1TQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759480837; x=1760085637;
-        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
-         :to:from:date:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Cio2lKvCKgwpMaSFyqyjcKvDHCLeYNpkbQFBjUDPl20=;
-        b=UtXay8kBMVKAxJYpqHXJMEkgR3eAaGy6lPnCi32omMaFcpBEi8UaFjZRdQV6LXZDSD
-         ncULTm0D56ApaZXjJ80pbW+i5eH0aYWN4vRxQH8WjUQee3mIdjzCEALbyjH/DO5rzfGR
-         EgBT1yzDRDclqvUDdLYOn+0k/KZUT+VRT+c+RoVn62+cioN0TwQLnc+luM1TVRwhGphX
-         CEMcs/R4nOQFyaQIQQ2RZfiNdO7ofuc49pqqAHfOX2kOwA3XgP4Ybxo0VLSm97DZvZi9
-         d67gVyhFWUvLuUhi9eH2AuaDxOALpWOT9uiSwTdd0hL4MR/nH7J4s02v2GYu8aDIGmD2
-         pTQw==
-X-Forwarded-Encrypted: i=1; AJvYcCX7vLIlaTcGmQBeolF+3L8aYg0pZMMZbtD+8l8ifg16IQDeOwuHugRTIKVv5xc1x9kkSIPmcnSZZDRc@vger.kernel.org
-X-Gm-Message-State: AOJu0Yw2QsQroSf5BlbsgMsk4VMXa5XUdrEJEpqMH17p/XGnK664KJTZ
-	+2YCSZogNXFGVIWED1PDQw1Y5/uef3qc+CVyIaeTHgvn13QYDoJSkTyWXbVvUSOscy0=
-X-Gm-Gg: ASbGncsZoHdgyqfajxAxgtnRmlPhvnS4y0QhIU/XxPiUjs65Xnybzs3d7d0MS0dFT6o
-	oIFqCrfCSi6YnpQd41ku2obRiSsg36hBTR7ctOsaSFe/jrEZO4x1p75FXdsPUrEJIebKIfF/qoo
-	+kvFZUaiDowiJgJACAAIMVe5Meo2dY1WzUjIsyt9mvVAoOtnLqtJyYaYvPQuULaiJX6WLAibtBH
-	V3ACnLW/2Yhyt0BEQBq1tML02wtsDXb1lsT3070A7EprROgjnkUh4+HSOK+9gufc27Urogl5V/e
-	y7svaH017WpnhrLolA9FMsxB0wEWCVdmXRNUTNTPWEqgW2JW0cHlapVpLRzehER8NwG3+v/AXRx
-	dHnGEBTmQH+afSWkqq1OM4VsWqrIfluxfQ8NFJLVRHwoUOZ/GPyV49MA3
-X-Google-Smtp-Source: AGHT+IGFZM0FLnmzxxN+Lk4wUetj5MlaFNlOjNUzYIpmA97eR6LNDB8/moRk0p2yC0M/4i827Faq9Q==
-X-Received: by 2002:a5d:5f94:0:b0:3ee:15b4:174c with SMTP id ffacd0b85a97d-42567159241mr1462331f8f.3.1759480836867;
-        Fri, 03 Oct 2025 01:40:36 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1759483824; x=1760088624;
+        h=content-disposition:mime-version:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=H0EBtqSqgeFXQZr6pfRdyEIeXrxqzAS1NvTsWALCO9I=;
+        b=ZvX7X3nLKyIaUL/+dWY8MCWgq5VJGOmhe/GY0POaHA3PoxaBlQetN0gy6oIFmS/59e
+         RbE9untMWYbpprjAAMBhDZ078whfLcUNmLWz4DKuVrawjxApLwiVouWlU/vfpqYJW394
+         1ykfGbIeL8hcJjDHE/PmNebzoeCRZaY8uIpcLOfYc/iJtYwlEXRH9Na6bHFZCndzlpNb
+         vmvG/n5aRsQIHZW2ax2H59RVohqI3Gyz1AXFoYiKUOlvEo2lC4CnqjLmX7MSGjerWX6T
+         ErNTGxTmHcZ3PNzBtfVdH7r6NH3XuiY3xPB3w7YbaMtBIyXKAblHttKbJXtuhnOHORj2
+         8MTg==
+X-Gm-Message-State: AOJu0YyTolehYG5dqOTIah9BBtJ5c0gDtgkLTLMk44Hvk+9o3eFJZuoy
+	OXgGQf0cDDz7luQJItQdR8Y8ri+LkrYBK6Y0x/9WrLPOpAyGMlWK+ChKi9xs4Q7oFbchXUWRu4c
+	+K1l4
+X-Gm-Gg: ASbGncsc7WprEXMd8AvaQvvsXb0MPVNAxNyNQwAQPO3cPyRrgDcIbXcyyqeuNZ5OXmA
+	2IpUjukxiWuuGR2ze5MBW4cU34RmepMzApi+NJ2/7Bn5M6xudYjrCrLO5wbm/nXbm0ktU3ADzhF
+	0aLXNdKzvBXdnLr5CWE/frjGSJwNOyLXzIsv21sMWkGlsFg0H4zhy0wuh/YZvFDgo1vHwcnPrKF
+	zHsBX5Pd9CM3rmZOb/QnATZtvypqbr/Rq0XzqiACdt/YiOTBzWivxeTYCvb0cZthMZdn9d0fgkU
+	XbEUnpqjeBdpVMUet9FCSq9MrX37J9Kd4pYNwHEVkqO93dguTcZFUClIK3b9K8kcSgcRmWEbFgw
+	JrkffGJCCKRcimA+Lu58RFlgeV1dJJ9yJ/OPPVVXDRP7u4AMRShq8tCwXVPC8KaC2Vx/XXPhkri
+	icTg==
+X-Google-Smtp-Source: AGHT+IH+Lup7L6QjLVrHnG70AJPFRPYs/0x1M/U3EfC2D8yaLIgDfQYT/ILk8Vbo4NnJ3GC1aOdDvg==
+X-Received: by 2002:a05:6000:4212:b0:3eb:dcf:bfad with SMTP id ffacd0b85a97d-425671aa848mr1445856f8f.34.1759483823621;
+        Fri, 03 Oct 2025 02:30:23 -0700 (PDT)
 Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4255d8a8542sm6954756f8f.9.2025.10.03.01.40.35
+        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-4255d8e9780sm7067474f8f.29.2025.10.03.02.30.22
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 03 Oct 2025 01:40:36 -0700 (PDT)
-Date: Fri, 3 Oct 2025 11:40:33 +0300
+        Fri, 03 Oct 2025 02:30:23 -0700 (PDT)
+Date: Fri, 3 Oct 2025 12:30:20 +0300
 From: Dan Carpenter <dan.carpenter@linaro.org>
-To: oe-kbuild@lists.linux.dev, Tony Battersby <tonyb@cybernetics.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev,
-	linux-scsi <linux-scsi@vger.kernel.org>,
-	target-devel@vger.kernel.org, scst-devel@lists.sourceforge.net,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
-	Dmitry Bogdanov <d.bogdanov@yadro.com>,
-	Xose Vazquez Perez <xose.vazquez@gmail.com>
-Subject: Re: [PATCH v2 11/16] scsi: qla2xxx: fix TMR failure handling
-Message-ID: <202510031227.18psESZQ-lkp@intel.com>
+To: Peter Wang <peter.wang@mediatek.com>
+Cc: linux-scsi@vger.kernel.org
+Subject: [bug report] scsi: ufs: core: Fix runtime suspend error deadlock
+Message-ID: <aN-XrK70ORfuWfEG@stanley.mountain>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -80,88 +71,67 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <f52cda16-4952-4b28-bbf7-d44f4e054490@cybernetics.com>
 
-Hi Tony,
+Hello Peter Wang,
 
-kernel test robot noticed the following build warnings:
+Commit f966e02ae521 ("scsi: ufs: core: Fix runtime suspend error
+deadlock") from Sep 26, 2025 (linux-next), leads to the following
+Smatch static checker warning:
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Tony-Battersby/Revert-scsi-qla2xxx-Perform-lockless-command-completion-in-abort-path/20250930-024814
-base:   e5f0a698b34ed76002dc5cff3804a61c80233a7a
-patch link:    https://lore.kernel.org/r/f52cda16-4952-4b28-bbf7-d44f4e054490%40cybernetics.com
-patch subject: [PATCH v2 11/16] scsi: qla2xxx: fix TMR failure handling
-config: i386-randconfig-141-20251002 (https://download.01.org/0day-ci/archive/20251003/202510031227.18psESZQ-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+  drivers/ufs/core/ufshcd.c:6844 ufshcd_err_handler()
+  warn: inconsistent returns '&hba->host_sem'.
+    Locked on  : 6691
+    Unlocked on: 6683,6844
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-| Closes: https://lore.kernel.org/r/202510031227.18psESZQ-lkp@intel.com/
+drivers/ufs/core/ufshcd.c
+    6658 static void ufshcd_err_handler(struct work_struct *work)
+    6659 {
+    6660         int retries = MAX_ERR_HANDLER_RETRIES;
+    6661         struct ufs_hba *hba;
+    6662         unsigned long flags;
+    6663         bool needs_restore;
+    6664         bool needs_reset;
+    6665         int pmc_err;
+    6666 
+    6667         hba = container_of(work, struct ufs_hba, eh_work);
+    6668 
+    6669         dev_info(hba->dev,
+    6670                  "%s started; HBA state %s; powered %d; shutting down %d; saved_err = 0x%x; saved_uic_err = 0x%x; force_reset = %d%s\n",
+    6671                  __func__, ufshcd_state_name[hba->ufshcd_state],
+    6672                  hba->is_powered, hba->shutting_down, hba->saved_err,
+    6673                  hba->saved_uic_err, hba->force_reset,
+    6674                  ufshcd_is_link_broken(hba) ? "; link is broken" : "");
+    6675 
+    6676         down(&hba->host_sem);
+                 ^^^^^^^^^^^^^^^^^^^^
+We're holding this semaphore.
 
-New smatch warnings:
-drivers/scsi/qla2xxx/qla_target.c:5735 qlt_handle_abts_completion() error: we previously assumed 'mcmd' could be null (see line 5723)
+    6677         spin_lock_irqsave(hba->host->host_lock, flags);
+    6678         if (ufshcd_err_handling_should_stop(hba)) {
+    6679                 if (hba->ufshcd_state != UFSHCD_STATE_ERROR)
+    6680                         hba->ufshcd_state = UFSHCD_STATE_OPERATIONAL;
+    6681                 spin_unlock_irqrestore(hba->host->host_lock, flags);
+    6682                 up(&hba->host_sem);
 
-Old smatch warnings:
-drivers/scsi/qla2xxx/qla_target.c:671 qla24xx_delete_sess_fn() warn: can 'fcport' even be NULL?
+Released.
 
-vim +/mcmd +5735 drivers/scsi/qla2xxx/qla_target.c
+    6683                 return;
+    6684         }
+    6685         spin_unlock_irqrestore(hba->host->host_lock, flags);
+    6686 
+    6687         ufshcd_rpm_get_noresume(hba);
+    6688         if (hba->pm_op_in_progress) {
+    6689                 ufshcd_link_recovery(hba);
+    6690                 ufshcd_rpm_put(hba);
+    6691                 return;
 
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5706  static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5707  	struct rsp_que *rsp, response_t *pkt)
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5708  {
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5709  	struct abts_resp_from_24xx_fw *entry =
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5710  		(struct abts_resp_from_24xx_fw *)pkt;
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5711  	u32 h = pkt->handle & ~QLA_TGT_HANDLE_MASK;
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5712  	struct qla_tgt_mgmt_cmd *mcmd;
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5713  	struct qla_hw_data *ha = vha->hw;
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5714  
-81bcf1c5cf0ee87 Bart Van Assche 2019-04-11  5715  	mcmd = qlt_ctio_to_cmd(vha, rsp, pkt->handle, pkt);
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5716  	if (mcmd == NULL && h != QLA_TGT_SKIP_HANDLE) {
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5717  		ql_dbg(ql_dbg_async, vha, 0xe064,
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5718  		    "qla_target(%d): ABTS Comp without mcmd\n",
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5719  		    vha->vp_idx);
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5720  		return;
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5721  	}
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5722  
-6b0431d6fa20bd1 Quinn Tran      2018-09-04 @5723  	if (mcmd)
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5724  		vha  = mcmd->vha;
+The patch introduces a new return but doesn't release the hba->host_sem.
+The patch was supposed to fix a deadlock but I would have thought it
+would introduce a new deadlock...
 
-mcmd can be NULL
+    6692         }
+    6693         ufshcd_rpm_put(hba);
+    6694 
 
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5725  	vha->vha_tgt.qla_tgt->abts_resp_expected--;
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5726  
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5727  	ql_dbg(ql_dbg_tgt, vha, 0xe038,
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5728  	    "ABTS_RESP_24XX: compl_status %x\n",
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5729  	    entry->compl_status);
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5730  
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5731  	if (le16_to_cpu(entry->compl_status) != ABTS_RESP_COMPL_SUCCESS) {
-7ffa5b939751b66 Bart Van Assche 2020-05-18  5732  		if (le32_to_cpu(entry->error_subcode1) == 0x1E &&
-7ffa5b939751b66 Bart Van Assche 2020-05-18  5733  		    le32_to_cpu(entry->error_subcode2) == 0) {
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5734  			if (qlt_chk_unresolv_exchg(vha, rsp->qpair, entry)) {
-74dabbbd8bb833e Tony Battersby  2025-09-29 @5735  				qlt_free_ul_mcmd(ha, mcmd);
-                                                                                                     ^^^^
-But here it is dereferenced without checking.  Previously it called
-tcm_qla2xxx_free_mcmd() which checks for NULL.
-
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5736  				return;
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5737  			}
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5738  			qlt_24xx_retry_term_exchange(vha, rsp->qpair,
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5739  			    pkt, mcmd);
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5740  		} else {
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5741  			ql_dbg(ql_dbg_tgt, vha, 0xe063,
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5742  			    "qla_target(%d): ABTS_RESP_24XX failed %x (subcode %x:%x)",
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5743  			    vha->vp_idx, entry->compl_status,
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5744  			    entry->error_subcode1,
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5745  			    entry->error_subcode2);
-74dabbbd8bb833e Tony Battersby  2025-09-29  5746  			qlt_free_ul_mcmd(ha, mcmd);
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5747  		}
-e752a04e1bd14cc Bart Van Assche 2019-08-08  5748  	} else if (mcmd) {
-74dabbbd8bb833e Tony Battersby  2025-09-29  5749  		qlt_free_ul_mcmd(ha, mcmd);
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5750  	}
-6b0431d6fa20bd1 Quinn Tran      2018-09-04  5751  }
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
-
+regards,
+dan carpenter
