@@ -1,114 +1,118 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBBEE2A1C7
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Oct 2025 16:15:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E18CE8F7D;
+	Fri,  3 Oct 2025 16:40:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759508151; cv=none; b=XQMM/14ZU/uzlZUmcKEUBU8aiHRctX1ZhTWJ7Bl8AFoHb0LAVfrXKiN80UVNtZAYMensRyZcdDghbIVWJ5a3qlFcHDIeTYmXGAU+wVyq7j5jI3Ap+8O/oz+ZNC71OsxRJ2kXckmSm9Z1hHf4ha8c1PoGJPDTbVdCDV0WSH0o7EM=
+	t=1759509645; cv=none; b=bSCSLtyk82S1GmWy8qcjzrgUcoUkAdj0Hgdr/fPUWoR45t6pQRef4Ix8EufNi71OxfGkTYXS1uVWwSEwy5NVXrKZKCERAKlVP9++cjVfchs2jFSFneaRrlsoK/sINnlKoHfs/U80/jfoVO3pdEJNKbAVav6JErc7pnP0SUpOIcg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759508151; c=relaxed/simple;
-	bh=/F0/yQ80JsAj+74Hi4PFi0/pF1bhXLdqT85Ga83aHoU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ha6O4TfEUcGnE98pg5cce6dZ7rODmpmTkDZKOFQ7cAUKr0wdxiv4eftUnpZVAW1c039rXoIkuo1LtLnSACHPYthxYXFFjeoVNH/K6u3g/i283oeZG6kLFNlb2GMb4WaoHQaC3eVv77imOsBGbHk2jpg0iVi0t2FiUwrHkvwLqPQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ueEWVnXl; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1759509645; c=relaxed/simple;
+	bh=a2RJsRNvoQXmDM1APniRUrNGrMrUzVW1Yh2uxqK1iqU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=N8hvX6LiSg9uF8MJEYtwSsIv68++KI9S+uSBCSa4XQrQzp+y4gEhXFHoI90ZW3CFEeiXwzt4GR38xjaJj9Zs+sDyMfYPwmnore3G0JHUV9xsCNb2OkbyM5f6EMIfim5+e4hPtqL8d53zWxoWUgW7D9rGfWiHBritgjelH8W3/nQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T/FClGFd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ueEWVnXl"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cdYg81fD7zlschR;
-	Fri,  3 Oct 2025 16:15:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1759508144; x=1762100145; bh=HQ3d8Ffh/1LgjQ6iaj4lMPyc
-	IAt2rbfoQUM0RcZ4GA8=; b=ueEWVnXleyFOJg3eWN4HTF7lirvGSa30gW3VV5v6
-	Hw5SMc/Y2OAgJ6em4olx8SeQ0ZnnWUenzURT5CTG01A9yEyHIYVg87Nu2LWQ/URz
-	0iTOsr0tV7N6hXlcvsCLUkYTyNlhkJx7SfabRxiblXFPCe1K7iMUzyzaqR0FUVr7
-	YuOyTYrj815urokiRIlBdOzqk1ao5+i+AHHxb69cS9oaT9pQOWf47zN5D1kcUTcT
-	fLgOaDcHMd4UlgPO/pfqPCXGH+6KyvBEw3GFXkgNj313UTWXJCur3Zuqag5uyObx
-	fIitvB3iQUyywgwe1LVE7m+iTMKX0RQjg/u4kZtro3TpkQ==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id o9fEHU-0j7zU; Fri,  3 Oct 2025 16:15:44 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cdYfp47KzzlnfwY;
-	Fri,  3 Oct 2025 16:15:29 +0000 (UTC)
-Message-ID: <3e673104-d36a-4128-bb5c-a71093eda419@acm.org>
-Date: Fri, 3 Oct 2025 09:15:28 -0700
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T/FClGFd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6691DC4CEF5;
+	Fri,  3 Oct 2025 16:40:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1759509644;
+	bh=a2RJsRNvoQXmDM1APniRUrNGrMrUzVW1Yh2uxqK1iqU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=T/FClGFdRG4WSjCh24oKaZiusXreRaQ6j1IEdcuwsl1Am9oCBnI6YLMy0+AJ3ZdJE
+	 Cc/pZVPkjNPodXezWEiswiKU0VMeUhQHsIe+y7aPZmFes3bzJwsLLe8UH3b5X0vJl2
+	 xotRPf86HJZXWubM25ofineJjJzIOv4qU9dahlLOonlEMo20qqqYJlmIk/NTUaREhH
+	 suU73NiHHmjAq2DRDoI/NTgAFNDaaQNLRmgzSTvw32860UkLyN6Dsr+ls7LHFtR+Mj
+	 5mdvyuhJgMKyiIzrP+mkTEx3QRlPlBbxIJXEFM7+RBpBlRHCAuinXkOyWuYT6rnmdX
+	 zRjIeXso57s0w==
+Date: Fri, 3 Oct 2025 22:10:28 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+Cc: Bjorn Andersson <andersson@kernel.org>, 
+	Konrad Dybcio <konradybcio@kernel.org>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 1/2] soc: qcom: ice: enable ICE clock scaling API
+Message-ID: <izxqjidbslfigzf2jiwavtyousmurrwi6c3i5rxsb3npzyaoxz@3prtbcludlqp>
+References: <20251001-enable-ufs-ice-clock-scaling-v1-0-ec956160b696@oss.qualcomm.com>
+ <20251001-enable-ufs-ice-clock-scaling-v1-1-ec956160b696@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v1] ufs: core: Fix error handler host_sem issue
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com, avri.altman@wdc.com, alim.akhtar@samsung.com,
- jejb@linux.ibm.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com,
- yi-fan.peng@mediatek.com, qilin.tan@mediatek.com, lin.gui@mediatek.com,
- tun-yu.yu@mediatek.com, eddie.huang@mediatek.com, naomi.chu@mediatek.com,
- ed.tsai@mediatek.com, dan.carpenter@linaro.org
-References: <20251003101115.3642410-1-peter.wang@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20251003101115.3642410-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251001-enable-ufs-ice-clock-scaling-v1-1-ec956160b696@oss.qualcomm.com>
 
-On 10/3/25 3:10 AM, peter.wang@mediatek.com wrote:
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 8185a7791923..9b1207dede64 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -6670,6 +6670,14 @@ static void ufshcd_err_handler(struct work_struct *work)
->   		 hba->saved_uic_err, hba->force_reset,
->   		 ufshcd_is_link_broken(hba) ? "; link is broken" : "");
->   
-> +	ufshcd_rpm_get_noresume(hba);
-> +	if (hba->pm_op_in_progress) {
-> +		ufshcd_link_recovery(hba);
-> +		ufshcd_rpm_put(hba);
-> +		return;
-> +	}
-> +	ufshcd_rpm_put(hba);
+On Wed, Oct 01, 2025 at 05:08:19PM +0530, Abhinaba Rakshit wrote:
+> Add ICE clock scaling API based on the parsed clk supported
+> frequencies from dt entry.
+> 
+
+Explain the purpose.
+
+> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+> ---
+>  drivers/soc/qcom/ice.c | 25 +++++++++++++++++++++++++
+>  include/soc/qcom/ice.h |  1 +
+>  2 files changed, 26 insertions(+)
+> 
+> diff --git a/drivers/soc/qcom/ice.c b/drivers/soc/qcom/ice.c
+> index c467b55b41744ebec0680f5112cc4bb1ba00c513..ec8d6bb9f426deee1038616282176bfc8e5b9ec1 100644
+> --- a/drivers/soc/qcom/ice.c
+> +++ b/drivers/soc/qcom/ice.c
+> @@ -97,6 +97,8 @@ struct qcom_ice {
+>  	struct clk *core_clk;
+>  	bool use_hwkm;
+>  	bool hwkm_init_complete;
+> +	u32 max_freq;
+> +	u32 min_freq;
+>  };
+>  
+>  static bool qcom_ice_check_supported(struct qcom_ice *ice)
+> @@ -514,10 +516,25 @@ int qcom_ice_import_key(struct qcom_ice *ice,
+>  }
+>  EXPORT_SYMBOL_GPL(qcom_ice_import_key);
+>  
+> +int qcom_ice_scale_clk(struct qcom_ice *ice, bool scale_up)
+> +{
+> +	int ret = 0;
 > +
->   	down(&hba->host_sem);
->   	spin_lock_irqsave(hba->host->host_lock, flags);
->   	if (ufshcd_err_handling_should_stop(hba)) {
-> @@ -6681,14 +6689,6 @@ static void ufshcd_err_handler(struct work_struct *work)
->   	}
->   	spin_unlock_irqrestore(hba->host->host_lock, flags);
->   
-> -	ufshcd_rpm_get_noresume(hba);
-> -	if (hba->pm_op_in_progress) {
-> -		ufshcd_link_recovery(hba);
-> -		ufshcd_rpm_put(hba);
-> -		return;
-> -	}
-> -	ufshcd_rpm_put(hba);
-> -
->   	ufshcd_err_handling_prepare(hba);
->   
->   	spin_lock_irqsave(hba->host->host_lock, flags);
+> +	if (scale_up && ice->max_freq)
+> +		ret = clk_set_rate(ice->core_clk, ice->max_freq);
+> +	else if (!scale_up && ice->min_freq)
+> +		ret = clk_set_rate(ice->core_clk, ice->min_freq);
+> +
+> +	return ret;
+> +}
+> +EXPORT_SYMBOL_GPL(qcom_ice_scale_clk);
+> +
+>  static struct qcom_ice *qcom_ice_create(struct device *dev,
+>  					void __iomem *base)
+>  {
+>  	struct qcom_ice *engine;
+> +	const __be32 *prop;
+> +	int len;
+>  
+>  	if (!qcom_scm_is_available())
+>  		return ERR_PTR(-EPROBE_DEFER);
+> @@ -549,6 +566,14 @@ static struct qcom_ice *qcom_ice_create(struct device *dev,
+>  	if (IS_ERR(engine->core_clk))
+>  		return ERR_CAST(engine->core_clk);
+>  
+> +	prop = of_get_property(dev->of_node, "freq-table-hz", &len);
+> +	if (!prop || len < 2 * sizeof(uint32_t)) {
+> +		dev_err(dev, "Freq-hz property not found or invalid length\n");
 
-The purpose of hba->host_sem is to serialize power management
-operations, error handling and sysfs callbacks. Hence, I think that
-hba->host_sem should be held around the ufshcd_link_recovery() call
-and hence that the code block that is moved by this patch should not
-be moved.
+We have deprecated the 'freq-table-hz' property in favor of
+'operating-points-v2'. So you should not be using it in new code. Also, throwing
+error in the absence of this property is a no-go.
 
-Thanks,
+- Mani
 
-Bart.
+-- 
+மணிவண்ணன் சதாசிவம்
