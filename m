@@ -1,203 +1,291 @@
-Received: from BN1PR04CU002.outbound.protection.outlook.com (mail-eastus2azon11010069.outbound.protection.outlook.com [52.101.56.69])
+Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19FFC205E25
-	for <linux-scsi@vger.kernel.org>; Fri,  3 Oct 2025 14:12:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.101.56.69
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759500738; cv=fail; b=PiGjByQyfeKr0qcC/X+FpsDjy5IBIH7TzqOwCi4cZtUxinESUi/LCPRqH9A7k63vmhZZhmhUY3aOM6OUYkLprqo5ihPkKAF8UMw/QkJYJm1TaF2E6U2N7i5DhtkmuZb3qZCXZ5jYZ58nJRUnLkUKvnumdbLmlvfKESll27Wly94=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759500738; c=relaxed/simple;
-	bh=PrbJX/xGOXsojrI84sExxlu4WveT1sWHz+A1MfUtM9A=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=NJbh9oGBK7W/LPyipIFXWDRz2bLLYgZJPh+GlAnkixjTGYCike45j8x2VMboW7dVckWwEU7eaTaXK1AerMTZ8JdLNKHbAhHmfekK8jPPrZ2dTsQfQ/zD/DkxpKA/VvyC+REuq/vcpx8TWcUoOg6laWcYBeTQfN8BFZYWsNbkmik=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com; spf=pass smtp.mailfrom=microchip.com; dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b=4nmJj+pS; arc=fail smtp.client-ip=52.101.56.69
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=microchip.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=microchip.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 52C282472B1
+	for <linux-scsi@vger.kernel.org>; Fri,  3 Oct 2025 14:38:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1759502311; cv=none; b=HOqHOAwvxQYIW3EElUZ6SWdLMoNkDpwItDXWXfTydtKUsVqQvGHqCRw6qZDiVMixniM0H+LPgAqzqg4jbcn+dZdgCl/KqrAh7+C7+l8nj6JTYPGtANqk0wc47VZFEohgMihZg8IRoJtjaHehno1tMfcYyXr2q7QDmCi1gspMGFY=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1759502311; c=relaxed/simple;
+	bh=s+pFCHQtx2iwLi48JMaz7+9l7AXAYiVMugLfEc3I2Y4=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=WYC6kVcaewfTWrfNEoRK9O5gln+V/J53VA7YtGR1cayK7uS9v64Or0NkRWAnRN5gS6rwfdomC8VDgWrzciA/THH/l/djlh6jZAjXms1nULMYqclrqSPO8qsm739h9kYpk7r96UhnDss+wRdgJUR3XQH9I/0GFMa69GWCwGVSFWw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=PWiJ2V3K; arc=none smtp.client-ip=72.215.153.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=microchip.com header.i=@microchip.com header.b="4nmJj+pS"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jY12sP5c5carzo80wLXxyICuH2TYIx6Enn1u1Q2bF5ggGGhksHWezU5abxrzxbZ7/yA8SZABDK5bHaAdXHFIfiDjWX4V+rmTnueXdeJF9ME1bEiP96zlx9zRJ5MskyQ4NK9eenUvS8I3l6rq44N5FkBjIgaHi2p6fTt5Rs7zvR0rQi/cwupKILUoAPB/dX7KH7EVoYk2AMksIs8jEqzMRDPTQh0WKFd1F5I5QOV9vPqYTBeM1zdJjXenmbd/y2RJbIpNNfaxZjVqlr+W5IdKEyt8i+v22e6tUrWF117lMdUvIRNOWD2Om/zDQQmao+0agiYeWszLEGsGui8wbZUg1w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=PrbJX/xGOXsojrI84sExxlu4WveT1sWHz+A1MfUtM9A=;
- b=HRaZ86IFjzdw/ZFb+vRFs9LsDNQeD0milZx6Ut516e1w6NEOpFf4TyEnhf52O+OlhAVN/ObbV6D0Y7RBeieJtBDrSbSiBURnlMeUyEz9uUjIyxBD3Ohzdh6bNQXATkgYbgNhrlxgDEm3aO3HOz40/5Wsb9rjz/mnMDwu3UEZR7G7PBMsHCGJ4rG/uJdG2WW0Q5uzOE6rBJQ9jICf62WPOc/B2sc9d5Yfb2y50oFhDv6pKIq/wYssKaYdED2olEsg/Fg6RrNJV683++5nRRx0eX6oKw9ABbCiKKM25eLwZa27veIiPEg6aADjkg2+ruErLhjZXz550S9wEVbzwcQtFA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=microchip.com; dmarc=pass action=none
- header.from=microchip.com; dkim=pass header.d=microchip.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=microchip.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=PrbJX/xGOXsojrI84sExxlu4WveT1sWHz+A1MfUtM9A=;
- b=4nmJj+pSuH/ovD7mYPNO1rd2BPK6ANihHull5qFm2/LnkYb78Uv/yaUgEA+0KwB5pw9VTdIW7k7aeQfJbKBDxr0f/XbQuSGR0CYX4IQl/8ofJaJ5gfNcIAVnL0d20KZ3cfXvwUaBxaDbzWOvA28NHeC0yT5OL+QTwjYI9W1zKZenPaU0boECb8ir2wCcPtsiJPrqDcBNms+s96SyZj1op6TtFBryukfjmq0tyEmNMy+t4ccSbSs1AkOE3TocMMwtPYzDuO5s6fZ3RHPZe5DRD+160ZckJji+0eYReDwbil9MTPEiuMk6S/f9s4fhuAceudOMfBOYmiDR0R7Lu0Y9tA==
-Received: from SJ2PR11MB8369.namprd11.prod.outlook.com (2603:10b6:a03:53d::16)
- by DS0PR11MB8688.namprd11.prod.outlook.com (2603:10b6:8:1a0::19) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9182.16; Fri, 3 Oct
- 2025 14:12:07 +0000
-Received: from SJ2PR11MB8369.namprd11.prod.outlook.com
- ([fe80::6777:e753:dd60:983b]) by SJ2PR11MB8369.namprd11.prod.outlook.com
- ([fe80::6777:e753:dd60:983b%3]) with mapi id 15.20.9182.015; Fri, 3 Oct 2025
- 14:12:07 +0000
-From: <Don.Brace@microchip.com>
-To: <bhanuseshukumar@gmail.com>, <James.Bottomley@HansenPartnership.com>,
-	<martin.petersen@oracle.com>, <storagedev@microchip.com>
-CC: <linux-scsi@vger.kernel.org>,
-	<linux-kernel-mentees@lists.linuxfoundation.org>,
-	<skhan@linuxfoundation.org>, <david.hunter.linux@gmail.com>
-Subject: Re: [PATCH] scsi: Use kmalloc_array to prevent overflow of dynamic
- size calculation
-Thread-Topic: [PATCH] scsi: Use kmalloc_array to prevent overflow of dynamic
- size calculation
-Thread-Index: AQHcMsgXq+8jxOyjmUeDNENoPkNqZbSweUjO
-Date: Fri, 3 Oct 2025 14:12:06 +0000
-Message-ID:
- <SJ2PR11MB8369D7E14C4886340917342FE1E4A@SJ2PR11MB8369.namprd11.prod.outlook.com>
-References: <20251001113935.52596-1-bhanuseshukumar@gmail.com>
-In-Reply-To: <20251001113935.52596-1-bhanuseshukumar@gmail.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=microchip.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SJ2PR11MB8369:EE_|DS0PR11MB8688:EE_
-x-ms-office365-filtering-correlation-id: f8e5b937-c930-42c4-c6b8-08de0286d5d9
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam:
- BCL:0;ARA:13230040|1800799024|366016|376014|7053199007|38070700021;
-x-microsoft-antispam-message-info:
- =?iso-8859-1?Q?6KtOTKz+Boi4BGLB0B1SOLTe+8hbjbUZyDrClB5jt6595Wr38FIt9pbQfD?=
- =?iso-8859-1?Q?Vqp+qPVHx8PPOW2aJLNfRBdw7hcHbZ+jTFTKI2xgKGNfAYM7qxt7V+SkV+?=
- =?iso-8859-1?Q?suDTmx2ZaG3Nt2VrZKfSmX3PhWp/sgdcIcR61LFHKAgTgYDP9fNUQ3OODN?=
- =?iso-8859-1?Q?9NvOe6IqxXyS0kSSkJevAAHSv/ZPf2sRWcLc/a66G5j4I/GINODIMX0X2g?=
- =?iso-8859-1?Q?UWgsnPTuZr5Tj6aQdX/Z7hgI/x9fx9wZo+oOk71lLk3MbnfS8/S2I6qm4K?=
- =?iso-8859-1?Q?9/sTZG6VP7p6PnL6DDahfaFjR9dauaz2OK65orq8UfYbc8FQT64t0VhwoE?=
- =?iso-8859-1?Q?Jo6jIqsXqHujccfh8nVy99sPVtJtIB7VW53R78/BqtrUU6PKPlzTaGki7m?=
- =?iso-8859-1?Q?N4JTbC5yiaAAPoP2ivLI02aGqTqxoMOE44/d/kigaCDT/7m6QuYrMBh2zR?=
- =?iso-8859-1?Q?ZSnlIL7A3CL4IJluSTIJ2KzvTciZGHp9+PKhudOYPXhTLZQcWrBYGNU5cV?=
- =?iso-8859-1?Q?k2LjGNJpTs4XiRWvPqDu0wd2dPfoZ8I31XBM+n/Er3fkZ5khd6esIUkW56?=
- =?iso-8859-1?Q?JOzN/2To3+Jclrsu3pdwqp8xK+4Ozd5aY12TibKmsZC3ElomDCuryy9gDY?=
- =?iso-8859-1?Q?aI7zguQGvWHCIkYk5M311hMgonUvFw4GMgOvRAu6UIvm4mlf2Pf6RXsbo+?=
- =?iso-8859-1?Q?b05O+rWtl88X/JY80UewAX/ziYKfrBWb84cOyox9U3b4dYxpwiADhVPJwr?=
- =?iso-8859-1?Q?hfvXa7g2DTMty0Xq1l/wRZIEXQrAeJJ59d2yxBAbmYxFAoKEEk3PCPskhq?=
- =?iso-8859-1?Q?y3rjW+vSzUuWyGZJDchGtjRMS8lw/XA2cHEbGsO/uPjKx4D7QFgd99733v?=
- =?iso-8859-1?Q?mmKop/5s6S9FEvJDd/9MtpeVCiBUfI5JA6EZ9MFh24kFS5GvLGFOho05Ar?=
- =?iso-8859-1?Q?O/C4nm1VPl5OjU44pcJ96PLHsOR/rvOwbujZlKP5i6wD3MGrqrU/MPcznn?=
- =?iso-8859-1?Q?zApgkesZdGWbODMEYOMQOSYCjtr2EIriYpY9fuULHIFByVdz7BNn59G+P0?=
- =?iso-8859-1?Q?yZ+0uQ3RkZCE4Vjt79kokVH09o+EUXNP7LiWIyC/wC+YHeoAis2Dk+cztS?=
- =?iso-8859-1?Q?R413sd6Bs9Tb7+YNjKQPrWjf3ml+9LEX2wdM70IHNgiHI8wjnD4f56LGZw?=
- =?iso-8859-1?Q?Irt8AoAvfOetDpGGFJqhOfIhvYVHoc3VV+RVJM5M2c2Rq640iqu4qTfz6M?=
- =?iso-8859-1?Q?5zMsKZVGidbr7L/Atid/JUn/W5GMGVKgU6RPAfx8LtDG19y1IVUtX4BMfx?=
- =?iso-8859-1?Q?L95nL69X8dboOJf72op9I3C/AeLcMDtv5UY8jOvXnqp4Z/NDE9jN8bnRsP?=
- =?iso-8859-1?Q?Kf0Zj7uM6tlWbxcmVCmHckKwwe9zFWpEb8iButtm+dZM0wpOTTgHVxYjHn?=
- =?iso-8859-1?Q?gJw9HSZLA0eT4UkNir8QQxqpijqoU7ZKNFn/EmMPg9PIGklJ6oVbrv1kUC?=
- =?iso-8859-1?Q?SG5sllAjH9z+FjO+QLXI12QAvgtfMYQhLoaHRQ9y46rh4JFyaOs8oPxkI6?=
- =?iso-8859-1?Q?7XhKApkTE4z3BBPY1k59uxPxMCkg?=
-x-forefront-antispam-report:
- CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:SJ2PR11MB8369.namprd11.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(366016)(376014)(7053199007)(38070700021);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?iso-8859-1?Q?ECbijROMvQkqIlyzxwMb+FFe034hL+6QeRIqU5gKgH1mTnvlIrgJhcuLDz?=
- =?iso-8859-1?Q?ako2+n8v/3HVE7/NQBKI5e0j5tg9IwrU3OR2RzHKpbIRxP+uw5bU+6Ob7c?=
- =?iso-8859-1?Q?uZW6uj2hDBMTxJZeF2Ko/dOo85vkTEOcBsBV74KGBK4wEc9E59BfxsMixc?=
- =?iso-8859-1?Q?uO1epDNL4wh1urJsdIBhSh0Go5BZw7lC2Yey5CScj6OaFiN7EnH7Ldx02j?=
- =?iso-8859-1?Q?1XCo7gugA+9Z0DN0e+oto/ilLlgyz4+w+NhCLTk3KuQ//SbH8S7qkaFad6?=
- =?iso-8859-1?Q?c0LpZsxJMCks4KDErr8tlU+dd0QrjWMbyBIYH21Fjb2Ea/OAuplyNQyRYP?=
- =?iso-8859-1?Q?2m1OpFi57H70umPJNx64WalSi5/M4n7kyMwIXCj99gLs9WVkt/J0GCRu6A?=
- =?iso-8859-1?Q?jUELXeQ40aKkgnUIl9jIg7b5V+PwBew72mI4Nh4mFwS59su9a8N+rFDk2F?=
- =?iso-8859-1?Q?QUzwzwAjkhYpXqJucA28DEj8cOB5peBf7UAZx+sg5DiUY+J5z5a99nHCQy?=
- =?iso-8859-1?Q?oO+0pe3+dv9YdWt+bfG85iythzmZ1TSXaQKyqTOxLBNYbM2EEpyajIPA+/?=
- =?iso-8859-1?Q?kxECWBxSOZvdo/oHTcG0b6vXl1ey2CB6ZfQ/BN4yGkGO2sUm07k7dIml96?=
- =?iso-8859-1?Q?tlrM6DsYyLyhWnDm4FyWrsLfkQnNEwxMl1v3HsYYoQ0lreTR/ymoGzE2dI?=
- =?iso-8859-1?Q?s/vA/kA7SQsUWMsBdngqI3iDfPiq+bKhLj4kv05EYBKW9GK0YaYNxqxf84?=
- =?iso-8859-1?Q?A5Y3qvxzZcThuGBuxf4eivvInowrKWZHkKYU0Y9NEhOgntM7SBX5+5gfAA?=
- =?iso-8859-1?Q?ARrR+QNmpDCoodWuWlsjSjiA2+BtF36FFE/867NDz4n65pZT0kjSjvOfxo?=
- =?iso-8859-1?Q?Xihii13H/kSD3FlA9x/p3IcrzZ74ayl96+4IsMR8CgGli5OdI/KkfUmI5j?=
- =?iso-8859-1?Q?iSz3xxyTssQLmJJGB/ekeZb6gKOWxSdLWXr54SfPeIH6omhhciDVpsB/AC?=
- =?iso-8859-1?Q?j5a7ptTOsUAjZb9C34sn1/a4LnQOzMWdLwX9MZPbUI1NmSvhBZS1D4sGUS?=
- =?iso-8859-1?Q?ymn5wDToHmkoL/FwfHrqvEadkv+WnBgq0bMtDBGu4EaYZpMiFYwBkslf4J?=
- =?iso-8859-1?Q?O+nux89/AqfCy/jpZMCbZieXSdn8arV3HOVoms8MMDAkiAGthue/fCZbfA?=
- =?iso-8859-1?Q?xIAUr1jgqBWVkw3yWFfyf62qtuLaPIOZhitOOoTAaGbKIj+mgixdVbK5t1?=
- =?iso-8859-1?Q?19mqLf4nr+/ded1zoIkaaSQAxob8aNMtXO04UB+Xcjqj+bN+R2b1P3g+3d?=
- =?iso-8859-1?Q?LqM027iK6K43l04jO8eBz2E+Rz/Qjg6KggBXjMMyez1gc+OFfsdwgOlY9V?=
- =?iso-8859-1?Q?hvSLJPs1OZ0BFT3vX9/IG7DE61d0t4LjFneX/NBW+JRgWk0XZIGCQCQHGS?=
- =?iso-8859-1?Q?/AJ9W4hv98yEglCXkNMHb50F9BteGkALXkmBcdO5VUAjQ+m2vSW7lnwMqM?=
- =?iso-8859-1?Q?md5KebCj6laitW574fIMkqsE33ipRzZYttqe3ayRsYeByC1LBT2IOxR+fj?=
- =?iso-8859-1?Q?GbMjo+Kuwae8/Yha/H7D+Iv68vAhHcrZZ5np6Qg5atHzS75m01b7kJe3ra?=
- =?iso-8859-1?Q?jJIWDa4jnejKrHRMqM5jVIwgScAJoA04c1?=
-Content-Type: text/plain; charset="iso-8859-1"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="PWiJ2V3K"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id lfBdsFd2g1Bgdmyk; Fri, 03 Oct 2025 10:38:21 -0400 (EDT)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+	bh=5bX+6YMLnqgfErhyM2kFyZ3qB51WB8BBylxMxAN4ZlY=;
+	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:From:References:Cc:To:
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=PWiJ2V3KWkJErkoC80ov
+	pMz57Wx3vAute+RVMhdzaDAbpvztkc9xPJxYHXe+hmCCo2sOEShM7jsvpeukHhpnoRJQ3cxyRG/qE
+	ypYWJOwrZogsgeR6nSe5v5hbgAgXHOkbkKHycpPmNsMlpRkhbf9MD2qAdxbOc9n/xNtOdErnv4=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
+  with ESMTPS id 14223278; Fri, 03 Oct 2025 10:38:21 -0400
+Message-ID: <2c536668-7dae-470c-a559-e278c9091b92@cybernetics.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
+Date: Fri, 3 Oct 2025 10:38:21 -0400
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: microchip.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SJ2PR11MB8369.namprd11.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: f8e5b937-c930-42c4-c6b8-08de0286d5d9
-X-MS-Exchange-CrossTenant-originalarrivaltime: 03 Oct 2025 14:12:06.9804
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 3f4057f3-b418-4d4e-ba84-d55b4e897d88
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: jajiwmpP4j6VxL4gAqyF6FFfVqc9bU/Vd0DQGvuKgcmCT4dNY9Kuf6xk3SZFs+OHhHXDf3X3ffYMBwo5ejNnig==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS0PR11MB8688
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 11/16] scsi: qla2xxx: fix TMR failure handling
+Content-Language: en-US
+X-ASG-Orig-Subj: Re: [PATCH v3 11/16] scsi: qla2xxx: fix TMR failure handling
+To: Dan Carpenter <dan.carpenter@linaro.org>, oe-kbuild@lists.linux.dev,
+ Nilesh Javali <njavali@marvell.com>, GR-QLogic-Storage-Upstream@marvell.com,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev,
+ linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
+ scst-devel@lists.sourceforge.net,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Dmitry Bogdanov <d.bogdanov@yadro.com>,
+ Xose Vazquez Perez <xose.vazquez@gmail.com>
+References: <202510031227.18psESZQ-lkp@intel.com>
+From: Tony Battersby <tonyb@cybernetics.com>
+In-Reply-To: <202510031227.18psESZQ-lkp@intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1759502301
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Barracuda-BRTS-Status: 1
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 8225
+X-ASG-Debug-ID: 1759502301-1cf43947df3e3e40001-ziuLRu
 
-From:=A0Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>=0A=
-Sent:=A0Wednesday, October 1, 2025 6:39 AM=0A=
-To:=A0Don Brace - C33706 <Don.Brace@microchip.com>; James E . J . Bottomley=
- <James.Bottomley@HansenPartnership.com>; Martin K . Petersen <martin.peter=
-sen@oracle.com>; storagedev <storagedev@microchip.com>=0A=
-Cc:=A0linux-scsi@vger.kernel.org <linux-scsi@vger.kernel.org>; linux-kernel=
--mentees@lists.linuxfoundation.org <linux-kernel-mentees@lists.linuxfoundat=
-ion.org>; skhan@linuxfoundation.org <skhan@linuxfoundation.org>; david.hunt=
-er.linux@gmail.com <david.hunter.linux@gmail.com>; bhanuseshukumar@gmail.co=
-m <bhanuseshukumar@gmail.com>=0A=
-Subject:=A0[PATCH] scsi: Use kmalloc_array to prevent overflow of dynamic s=
-ize calculation=0A=
-=A0=0A=
-EXTERNAL EMAIL: Do not click links or open attachments unless you know the =
-content is safe=0A=
-=0A=
-Use kmalloc_array to avoid potential overflow during dynamic size calculati=
-on=0A=
-inside kmalloc.=0A=
-=0A=
-Signed-off-by: Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>=0A=
-=0A=
-Acked-by: Don Brace <don.brace@microchip.com>=0A=
-Thanks for your patch,=0A=
-Don=0A=
-=0A=
----=0A=
-=A0drivers/scsi/smartpqi/smartpqi_init.c | 2 +-=0A=
-=A01 file changed, 1 insertion(+), 1 deletion(-)=0A=
-=0A=
-diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/=
-smartpqi_init.c=0A=
-index 125944941601..7ff39f1faf38 100644=0A=
---- a/drivers/scsi/smartpqi/smartpqi_init.c=0A=
-+++ b/drivers/scsi/smartpqi/smartpqi_init.c=0A=
-@@ -8937,7 +8937,7 @@ static int pqi_host_alloc_mem(struct pqi_ctrl_info *c=
-trl_info,=0A=
-=A0=A0=A0=A0=A0=A0=A0 if (sg_count =3D=3D 0 || sg_count > PQI_HOST_MAX_SG_D=
-ESCRIPTORS)=0A=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 goto out;=0A=
-=0A=
--=A0=A0=A0=A0=A0=A0 host_memory_descriptor->host_chunk_virt_address =3D kma=
-lloc(sg_count * sizeof(void *), GFP_KERNEL);=0A=
-+=A0=A0=A0=A0=A0=A0 host_memory_descriptor->host_chunk_virt_address =3D kma=
-lloc_array(sg_count, sizeof(void *), GFP_KERNEL);=0A=
-=A0=A0=A0=A0=A0=A0=A0 if (!host_memory_descriptor->host_chunk_virt_address)=
-=0A=
-=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0=A0 goto out;=0A=
-=0A=
---=0A=
-2.34.1=0A=
+On 10/3/25 04:40, Dan Carpenter wrote:
+> Hi Tony,
+>
+> kernel test robot noticed the following build warnings:
+>
+> url:    https://github.com/intel-lab-lkp/linux/commits/Tony-Battersby/Revert-scsi-qla2xxx-Perform-lockless-command-completion-in-abort-path/20250930-024814
+> base:   e5f0a698b34ed76002dc5cff3804a61c80233a7a
+> patch link:    https://lore.kernel.org/r/f52cda16-4952-4b28-bbf7-d44f4e054490%40cybernetics.com
+> patch subject: [PATCH v2 11/16] scsi: qla2xxx: fix TMR failure handling
+> config: i386-randconfig-141-20251002 (https://download.01.org/0day-ci/archive/20251003/202510031227.18psESZQ-lkp@intel.com/config)
+> compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+>
+> If you fix the issue in a separate patch/commit (i.e. not just a new version of
+> the same patch/commit), kindly add following tags
+> | Reported-by: kernel test robot <lkp@intel.com>
+> | Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+> | Closes: https://lore.kernel.org/r/202510031227.18psESZQ-lkp@intel.com/
+>
+> New smatch warnings:
+> drivers/scsi/qla2xxx/qla_target.c:5735 qlt_handle_abts_completion() error: we previously assumed 'mcmd' could be null (see line 5723)
+>
+v3 patch below, which should fix this issue.
+
+From: Tony Battersby <tonyb@cybernetics.com>
+Date: Fri, 3 Oct 2025 10:03:08 -0400
+Subject: [PATCH v3 11/16] scsi: qla2xxx: fix TMR failure handling
+
+(target mode)
+
+If handle_tmr() fails:
+
+- The code for QLA_TGT_ABTS results in memory-use-after-free and
+  double-free:
+	qlt_do_tmr_work()
+		qlt_build_abts_resp_iocb()
+			qpair->req->outstanding_cmds[h] = (srb_t *)mcmd;
+		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool); FIRST FREE
+	qlt_handle_abts_completion()
+		mcmd = qlt_ctio_to_cmd()
+			cmd = req->outstanding_cmds[h];
+			return cmd;
+		vha  = mcmd->vha; USE-AFTER-FREE
+		ha->tgt.tgt_ops->free_mcmd(mcmd); SECOND FREE
+
+- qlt_send_busy() makes no sense because it sends a SCSI command
+  response instead of a TMR response.
+
+Instead just call qlt_xmit_tm_rsp() to send a TMR failed response,
+since that code is well-tested and handles a number of corner cases.
+But it would be incorrect to call ha->tgt.tgt_ops->free_mcmd() after
+handle_tmr() failed, so add a flag to mcmd indicating the proper way to
+free the mcmd so that qlt_xmit_tm_rsp() can be used for both cases.
+
+Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
+---
+
+v2 -> v3:
+- Check for mcmd == NULL in qlt_free_ul_mcmd().
+
+v1 -> v2:
+- Change FCP_TMF_REJECTED to FCP_TMF_FAILED.
+- Add QLA24XX_MGMT_LLD_OWNED and qlt_free_ul_mcmd().
+- Improve patch description.
+
+ drivers/scsi/qla2xxx/qla_os.c     |  2 +-
+ drivers/scsi/qla2xxx/qla_target.c | 56 +++++++++++++------------------
+ drivers/scsi/qla2xxx/qla_target.h |  2 ++
+ 3 files changed, 27 insertions(+), 33 deletions(-)
+
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 2a3eb1dacf86..64387224f28a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1893,7 +1893,7 @@ __qla2x00_abort_all_cmds(struct qla_qpair *qp, int res)
+ 				 * Currently, only ABTS response gets on the
+ 				 * outstanding_cmds[]
+ 				 */
+-				ha->tgt.tgt_ops->free_mcmd(
++				qlt_free_ul_mcmd(ha,
+ 					(struct qla_tgt_mgmt_cmd *) sp);
+ 				break;
+ 			default:
+diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
+index 849ab256807b..009b9ca5c2b9 100644
+--- a/drivers/scsi/qla2xxx/qla_target.c
++++ b/drivers/scsi/qla2xxx/qla_target.c
+@@ -2005,7 +2005,6 @@ static void qlt_do_tmr_work(struct work_struct *work)
+ 	struct qla_hw_data *ha = mcmd->vha->hw;
+ 	int rc;
+ 	uint32_t tag;
+-	unsigned long flags;
+ 
+ 	switch (mcmd->tmr_func) {
+ 	case QLA_TGT_ABTS:
+@@ -2020,34 +2019,12 @@ static void qlt_do_tmr_work(struct work_struct *work)
+ 	    mcmd->tmr_func, tag);
+ 
+ 	if (rc != 0) {
+-		spin_lock_irqsave(mcmd->qpair->qp_lock_ptr, flags);
+-		switch (mcmd->tmr_func) {
+-		case QLA_TGT_ABTS:
+-			mcmd->fc_tm_rsp = FCP_TMF_REJECTED;
+-			qlt_build_abts_resp_iocb(mcmd);
+-			break;
+-		case QLA_TGT_LUN_RESET:
+-		case QLA_TGT_CLEAR_TS:
+-		case QLA_TGT_ABORT_TS:
+-		case QLA_TGT_CLEAR_ACA:
+-		case QLA_TGT_TARGET_RESET:
+-			qlt_send_busy(mcmd->qpair, &mcmd->orig_iocb.atio,
+-			    qla_sam_status);
+-			break;
+-
+-		case QLA_TGT_ABORT_ALL:
+-		case QLA_TGT_NEXUS_LOSS_SESS:
+-		case QLA_TGT_NEXUS_LOSS:
+-			qlt_send_notify_ack(mcmd->qpair,
+-			    &mcmd->orig_iocb.imm_ntfy, 0, 0, 0, 0, 0, 0);
+-			break;
+-		}
+-		spin_unlock_irqrestore(mcmd->qpair->qp_lock_ptr, flags);
+-
+ 		ql_dbg(ql_dbg_tgt_mgt, mcmd->vha, 0xf052,
+ 		    "qla_target(%d):  tgt_ops->handle_tmr() failed: %d\n",
+ 		    mcmd->vha->vp_idx, rc);
+-		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool);
++		mcmd->flags |= QLA24XX_MGMT_LLD_OWNED;
++		mcmd->fc_tm_rsp = FCP_TMF_FAILED;
++		qlt_xmit_tm_rsp(mcmd);
+ 	}
+ }
+ 
+@@ -2234,6 +2211,21 @@ void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *mcmd)
+ }
+ EXPORT_SYMBOL(qlt_free_mcmd);
+ 
++/*
++ * If the upper layer knows about this mgmt cmd, then call its ->free_cmd()
++ * callback, which will eventually call qlt_free_mcmd().  Otherwise, call
++ * qlt_free_mcmd() directly.
++ */
++void qlt_free_ul_mcmd(struct qla_hw_data *ha, struct qla_tgt_mgmt_cmd *mcmd)
++{
++	if (!mcmd)
++		return;
++	if (mcmd->flags & QLA24XX_MGMT_LLD_OWNED)
++		qlt_free_mcmd(mcmd);
++	else
++		ha->tgt.tgt_ops->free_mcmd(mcmd);
++}
++
+ /*
+  * ha->hardware_lock supposed to be held on entry. Might drop it, then
+  * reacquire
+@@ -2326,12 +2318,12 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
+ 			"RESET-TMR online/active/old-count/new-count = %d/%d/%d/%d.\n",
+ 			vha->flags.online, qla2x00_reset_active(vha),
+ 			mcmd->reset_count, qpair->chip_reset);
+-		ha->tgt.tgt_ops->free_mcmd(mcmd);
++		qlt_free_ul_mcmd(ha, mcmd);
+ 		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+ 		return;
+ 	}
+ 
+-	if (mcmd->flags == QLA24XX_MGMT_SEND_NACK) {
++	if (mcmd->flags & QLA24XX_MGMT_SEND_NACK) {
+ 		switch (mcmd->orig_iocb.imm_ntfy.u.isp24.status_subcode) {
+ 		case ELS_LOGO:
+ 		case ELS_PRLO:
+@@ -2364,7 +2356,7 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
+ 	 * qlt_xmit_tm_rsp() returns here..
+ 	 */
+ 	if (free_mcmd)
+-		ha->tgt.tgt_ops->free_mcmd(mcmd);
++		qlt_free_ul_mcmd(ha, mcmd);
+ 
+ 	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+ }
+@@ -5742,7 +5734,7 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
+ 		if (le32_to_cpu(entry->error_subcode1) == 0x1E &&
+ 		    le32_to_cpu(entry->error_subcode2) == 0) {
+ 			if (qlt_chk_unresolv_exchg(vha, rsp->qpair, entry)) {
+-				ha->tgt.tgt_ops->free_mcmd(mcmd);
++				qlt_free_ul_mcmd(ha, mcmd);
+ 				return;
+ 			}
+ 			qlt_24xx_retry_term_exchange(vha, rsp->qpair,
+@@ -5753,10 +5745,10 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
+ 			    vha->vp_idx, entry->compl_status,
+ 			    entry->error_subcode1,
+ 			    entry->error_subcode2);
+-			ha->tgt.tgt_ops->free_mcmd(mcmd);
++			qlt_free_ul_mcmd(ha, mcmd);
+ 		}
+ 	} else if (mcmd) {
+-		ha->tgt.tgt_ops->free_mcmd(mcmd);
++		qlt_free_ul_mcmd(ha, mcmd);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index eb15d8e9f79e..223c40bc9498 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -966,6 +966,7 @@ struct qla_tgt_mgmt_cmd {
+ 	unsigned int flags;
+ #define QLA24XX_MGMT_SEND_NACK	BIT_0
+ #define QLA24XX_MGMT_ABORT_IO_ATTR_VALID BIT_1
++#define QLA24XX_MGMT_LLD_OWNED	BIT_2
+ 	uint32_t reset_count;
+ 	struct work_struct work;
+ 	uint64_t unpacked_lun;
+@@ -1059,6 +1060,7 @@ extern int qlt_abort_cmd(struct qla_tgt_cmd *);
+ void qlt_send_term_exchange(struct qla_qpair *qpair,
+ 	struct qla_tgt_cmd *cmd, struct atio_from_isp *atio, int ha_locked);
+ extern void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *);
++void qlt_free_ul_mcmd(struct qla_hw_data *ha, struct qla_tgt_mgmt_cmd *mcmd);
+ extern void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *);
+ extern void qlt_free_cmd(struct qla_tgt_cmd *cmd);
+ extern void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd);
+-- 
+2.43.0
+
+
