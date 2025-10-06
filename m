@@ -1,107 +1,82 @@
-Received: from mail-pf1-f174.google.com (mail-pf1-f174.google.com [209.85.210.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ABC9826CE36
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 17:47:12 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F24682D63FF
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 17:55:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759772834; cv=none; b=TXnFcv9hZtLI5ODj0O4jbkgguHOZG2OrpqJQrBZpHBWt/1STOpLPUpBb9UWLN6uuWf4puqdkKDgRvRCVamamGKqooCkI2WQJAfj7AnllxiDHk4476oyDNIYFXZ6DO66KIIkyQsWwEV+ex6lW4M0kaGVV4H0qHC1ngimGAXUSYMM=
+	t=1759773307; cv=none; b=jg/pHX7J09117fzjboEsKUCSQKlWDTihUlcfL/X/Flqrc+stGnDJk41nX15wdycGmwfso9byr3LMRUFHfE9OYfiQeiI2BLxpAXOlNAMDvJK+4s1sNW5nBBjz/VbWsFZ08SMPXr9Wre9l5oMMhuyvlxclKFGhLGW1F9KB/LW38uE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759772834; c=relaxed/simple;
-	bh=RIiagnyRRBU18SYukiZhday7InM2c8S8PNgxP9C7a14=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=eVFNgSz2Nu6ix2tOBGfC5CWYA0IXT5SRxMdSOop+iY0ryhZ7kbJ4v1gIJEaq4vOtVOO0NUHxvUNSkOx0JLV+WhpP43xfuMVjyq2Iq0Uh9d2N0nRd3CmHaZ9emV8IASoHe1B0wIXzBb4WBEHz++mOKFHcH3S3ydkApbztCGVr00w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WRRQ/Y5C; arc=none smtp.client-ip=209.85.210.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1759773307; c=relaxed/simple;
+	bh=CZCwboed76fnJKRYE18NOd2YUTxPoQ+YCmow6gYAbfw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=qpeMs+rf7WY3epOwB8Rc1yX/vCKqjzl9KAWr/+5Kzy8e9N2/nfS0LMn/7B8yFhxEDGKKQObnZ1xIqJNPrSM8C1TCNuGF9Pnr97lDn0bJtFhz7A0WBzU+A5Ea10Z/nssEksvO0CqUoyF/I1dpVtjXkkjGhYR/oMdYrAtuVmi2lAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2y8WbyqL; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WRRQ/Y5C"
-Received: by mail-pf1-f174.google.com with SMTP id d2e1a72fcca58-78f3bfe3f69so1561514b3a.2
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 10:47:12 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759772832; x=1760377632; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=8fcadXEt2TbOOW1SS8BtpXmdQoRjzLU/r23ulkh5ITM=;
-        b=WRRQ/Y5Ct8gfBjV/hnoxzpj2GEnZo/FVUTmsFHkNE9eJTHiY5FhGEHp9T0E3Hdz/7E
-         K+y9t68aylYZ13dVvPmFgHS0lHdQ8qwhJ9ycB82S7LgHChMjLL2T2VxByMiMMuNt7N0V
-         k9L2qpHoKziaxBna4PbBB0X+jmoFga+emxiUSb0HTvHwWmjTfkAYt6QU4EXq56sDTlZK
-         LmKuww9a1F4UvxF/GTEKygzy91H393Z63RoFaPwn/gM0GNBBjqjBtiiTvoAIZNHYf77S
-         CjiQsJPDmKtDdG2nUORnOVVuFf6LX0M6fxiKVUFCopYVJDwnnUfIiZd+lzgDNtQaMWIo
-         m8UQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759772832; x=1760377632;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=8fcadXEt2TbOOW1SS8BtpXmdQoRjzLU/r23ulkh5ITM=;
-        b=JOIOZ9bS+1DAkcmSNaMHwQSjRzvfU3IKZOU3R2G80YN/pzZ4dEBBEKlkeYEx/oWzfs
-         wv78S5V19htkxUA+DpRBBKyGQZ6Qcz7YRPpPl5f8T3JFuGq5BdK8RIEMPO49FTcthKaB
-         v6UhJQUk2beGWrKVMEz1ZrqY8zzqOkV0Z321JsBriKNhwPpQZGnWsiUDxUEJ0UvW23YK
-         LN+1bcLQRA1EeC6tHQy7VFCnSgEtARlA5YW90khmDuF7i53X6lPdsVU5C9spYPGA6mc8
-         dtFOmQ1xTib5Jw0/tksTG9NkVyffku+qzg8YPxKbvM6TVrpHlHM2CzgK8yJdlYDTgUmp
-         jgNA==
-X-Forwarded-Encrypted: i=1; AJvYcCUh3PEgNy0N0kKEioZSgTyQeomAh3w9lYNZPTRg1qCIqdCij0LGz1cU7QECyw7RV+2A9SdKv15mO4f7@vger.kernel.org
-X-Gm-Message-State: AOJu0YzZg9YoGb4V1sPmMQCZpBjsaM2Co1DrkpO9C87SAthwUJ4qQ0I7
-	XJRiJyC19CSOOCEE5wViBuFyhm8nnbjVl/o4clCg7yKC54mKSvmPtVu0
-X-Gm-Gg: ASbGncs35+vIdC7lsV+v/N3DeP6rmfu3qdKmQMwRwk5MfGB4lm9H0QWAkvWP2wMhnHm
-	X00/N7NavyeITW5IPyEVRIJrCvH4WhMjhS9h4qUVGu3GMDV5W2xtIcJXpdvdKTe0GPAz0W6djQf
-	NFJFBAczx0Up7dzytBgMpC56JSxKriZqN1OjalOMz8t8tOqGl5Iq78dMotXqDrNwFaJApjePlKN
-	aJX+WapLGxKU0aeoIFFGKhX9RbtBlw1CpTsmmXclcmEZtckLT4J6SdHsyAIk5pMuIGh0VbqJ6yC
-	+HExs3JBUr6SpLtB1mn4RSFfbt8Qb6Wp6UIgZ3EYIdGW8eHyLA2Uj6i1vn6FHfzcsEE548qK1ib
-	0eJRR/o860BmudjK7GrpfkG2CXFaeWoSfQxC+03n4r/fYKgHnj7vGiNfOPq4AQiXDWkgBtY2Q0Q
-	==
-X-Google-Smtp-Source: AGHT+IEAZ3GTNkzOlBaQRRxaIIrZTAJwj5D6x0H+u0usVi9mnU3RcuVZuSifIPdG1jRzEv56AOGPGA==
-X-Received: by 2002:a05:6a21:9994:b0:2e6:22da:91bf with SMTP id adf61e73a8af0-32b61dff85fmr12599233637.9.1759772831719;
-        Mon, 06 Oct 2025 10:47:11 -0700 (PDT)
-Received: from kshitij-laptop.. ([103.120.31.122])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-78b0206e50esm13084516b3a.62.2025.10.06.10.47.07
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 06 Oct 2025 10:47:11 -0700 (PDT)
-From: Kshitij Paranjape <kshitijvparanjape@gmail.com>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Doug Gilbert <dgilbert@interlog.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	skhan@linuxfoundation.org,
-	david.hunter.linux@gmail.com,
-	khalid@kernel.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-kernel-mentees@lists.linux.dev,
-	Kshitij Paranjape <kshitijvparanjape@gmail.com>,
-	stable@vger.kernel.org,
-	syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
-Subject: [PATCH] scsi: fix shift out-of-bounds in sg_build_indirect The num variable is set to 0. The variable num gets its value from scatter_elem_sz.  However the minimum value of scatter_elem_sz is PAGE_SHIFT. So setting num to PAGE_SIZE when num < PAGE_SIZE.
-Date: Mon,  6 Oct 2025 23:16:58 +0530
-Message-ID: <20251006174658.217497-1-kshitijvparanjape@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2y8WbyqL"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cgRkC1jZLzlgqVp;
+	Mon,  6 Oct 2025 17:54:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1759773297; x=1762365298; bh=YzONJwU+rBqt7goyFkIsg4ge
+	fYjnPUqpNMBbxM9Lo5E=; b=2y8WbyqL+1V4tDHsWG+0cCryokrrwPgiicqAXys6
+	epg4JUgIQjgG/+GTSPPaV5tKfuY9DD+BvzhgT+TecXLAMELG4abLbu+m+b50OO2j
+	+sk00pbGPJHgsNgvFojbMXZ2SL4dLgxsoBcIxrLnYvoR7EM3Ak5xN3N03Zc7obX/
+	3VtBZ7VgJKHStIIrVAoWidvEmiP7OoQN/BBqjY2k+TytBchJ0QZgv8yIiVBN9qoi
+	TL42ISTRFDKRnmRl3Ho0eQvGUuDa8mPF+tX2/j+veI/LnVsnrcDxcd82ex98ynMk
+	B9qBgGBBQRGjWjwozcx36mRiPGitWyXpAOE1zkqOmLJq+g==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id E9eN2VH3uEWU; Mon,  6 Oct 2025 17:54:57 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cgRk61TYrzlgqV0;
+	Mon,  6 Oct 2025 17:54:52 +0000 (UTC)
+Message-ID: <3afd179d-e04d-4265-bfe8-652ac33ad58e@acm.org>
+Date: Mon, 6 Oct 2025 10:54:51 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v4 2/9] scsi: sd: Do not retry ASC 0x3a in
+ read_capacity_10() with any ASCQ
+To: Ewan Milne <emilne@redhat.com>
+Cc: Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org,
+ michael.christie@oracle.com, dgilbert@interlog.com, hare@suse.de
+References: <20251002192510.1922731-1-emilne@redhat.com>
+ <20251002192510.1922731-3-emilne@redhat.com>
+ <8f250e77-5069-416d-9389-9c3e99535dbc@kernel.org>
+ <CAGtn9rkZX-C7DgaMCABsF66RVGomQeK1RyRW5knLPsPEzvajOA@mail.gmail.com>
+ <4a5394d5-6608-4a81-8f8d-006ea2bdcd61@acm.org>
+ <CAGtn9rkS9v=Y2x2Pt6ex-kM4iShGNe-jJHRk1zFOTHWKonwoFQ@mail.gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAGtn9rkS9v=Y2x2Pt6ex-kM4iShGNe-jJHRk1zFOTHWKonwoFQ@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Cc: <stable@vger.kernel.org>
-Reported-by: syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
-Closes: https://syzkaller.appspot.com/bug?extid=270f1c719ee7baab9941
-Signed-off-by: Kshitij Paranjape <kshitijvparanjape@gmail.com>
----
- drivers/scsi/sg.c | 1 +
- 1 file changed, 1 insertion(+)
+On 10/3/25 11:40 AM, Ewan Milne wrote:
+> Martin, please add:
+> 
+> Fixes: 0f11328f2f466 ("scsi: sd: Have midlayer retry read_capacity_10() errors")
 
-diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-index effb7e768165..9ae41bb256d7 100644
---- a/drivers/scsi/sg.c
-+++ b/drivers/scsi/sg.c
-@@ -1888,6 +1888,7 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
- 		if (num < PAGE_SIZE) {
- 			scatter_elem_sz = PAGE_SIZE;
- 			scatter_elem_sz_prev = PAGE_SIZE;
-+			num = scatter_elem_sz;
- 		} else
- 			scatter_elem_sz_prev = num;
- 	}
--- 
-2.43.0
+Ewan, please rebase, retest and repost this patch series with the above
+tag added after the merge window has closed. Kernel v6.17 was released
+eight days ago. Hence, the merge window is still open. See also
+https://lore.kernel.org/lkml/CAHk-=wiX38oG6=xFBNLO0pnjqHfxzjd6-1kZ5Nv9HfqNC2PoFA@mail.gmail.com/
 
+Thanks,
+
+Bart.
