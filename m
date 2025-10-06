@@ -1,33 +1,81 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2B43A13957E
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 02:12:33 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 368E6139579
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 06:59:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759716754; cv=none; b=gj/b45GY7uJIu0tqyToAj6ZMnsE/gIdGRPZ5K4hXQUc1O6oII3HtazPy4269WBEkmMejQEL0bZOcR52OUl580Rfe6LyVntg2ZF3Lad7YaDY0pSMQ2tsc5WcDq8WKwaAXCruKYdWNy/OqegnORZUYXVmQ/D2tuO0PVjJOX8QgbjA=
+	t=1759733975; cv=none; b=FeMz7iL0zoPu9KpZsVoxAa2Sq6yU07145Oy+L1aD8jA8MkIhIOxWw1yXTQ8j/hFTExPPU4EX8NSuGvkZ7ux4dRxN0yzyw6LwKYImCZekrVv6qEe/iE6u9FQRpxWPMcv+J6x07bC3qPgOjrkdIZGy20s84Daxr9P2eJUrXtOfdW0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759716754; c=relaxed/simple;
-	bh=Vh2qaKGBVoAC06si2ANXIPbbBpN5Uf2SY/kAfMaFS0M=;
+	s=arc-20240116; t=1759733975; c=relaxed/simple;
+	bh=OVuSTvYS9jCsrvB+kwCG5Mr/xBEaVMGt+tgspbtQvlk=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=diILhJhBUxXmBWFjzJ44LYM/xLuVPPt6B3N1ZX2w7gqZJzu3kZpCLxf46O6oOKdX6/lyB5MCEu6xpg/sTo+ydNpTlKG8xEWTTX3DRwvsgWF7LbgUPtdzLdja6uqkhSKYKDWU5MKY67vZYIPQaUfcGUOwXzbK8OFxRCEhBLJZ0IU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=qUOUm9T9; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=csCzUViColFvp4zctHL7MI+b6n1cPF1zrgoCNFHwuk21n2zTSonhhPDoDMvNkKpFUUqYgPti36/zVgJRpPX0qrtUFMK+w7JTCsvl18XjNN2XBx0/6YqFmDDI6VIHYhymUkaCxXRVq53bTh4O+zBiqyF8JBxVamQ+XRAOGjE6S3A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=xx19aSu9; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AIEVEAd9; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=xx19aSu9; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=AIEVEAd9; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="qUOUm9T9"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id ABAFEC4CEF4;
-	Mon,  6 Oct 2025 02:12:32 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759716753;
-	bh=Vh2qaKGBVoAC06si2ANXIPbbBpN5Uf2SY/kAfMaFS0M=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=qUOUm9T9CLjHbmA6jt7XnZeAIQPil2nQr6ns9MZwAVHM78vW9tQiokPvz7TBe/7sS
-	 GB9OYjpMmhSGOQ+pxvVmvMlmLOdtHPPx4UdLHAuGEngbO/3I4+eLjUU5Lvjkrl1SR/
-	 8s3IqnsBIVlFEpGXN+YxrbK/P69p5lBy+cODpHgC+vedDNxCreemnvpfaA3rQ/EK9o
-	 D0d8HVe6+lKcSFmhKqlDj1YsantPDus+CLfmBXyU9xM31YFhX5wzmNV76JjFgyFH9x
-	 SeD6mDn5Qiqtikf3d5CzA0Gxh8avbgGcq68BQz3XzykeD1LCUPYUzo6wjza7Vlg8Mx
-	 xVmSbwGvkS5Ig==
-Message-ID: <8f043755-89d3-480a-95a6-22ee7c68ea50@kernel.org>
-Date: Mon, 6 Oct 2025 11:12:31 +0900
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="xx19aSu9";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AIEVEAd9";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="xx19aSu9";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="AIEVEAd9"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 55F9333757;
+	Mon,  6 Oct 2025 06:59:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1759733972; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Tqo7TF67v0Nt6BDb5wIfnKZ8RdtKsXNA+gooRShmJA8=;
+	b=xx19aSu9j7qINDzSxj1Re6RgtYL+pMUtkgUWLz1WXgEfFJb/TUDH0VRDM0Wuq5SGXL28ma
+	Tpj9XJEiUYqljAb4x8UIHMyqpyNIP0ejE6j3xWmDyyJHz+ubjAeZBBYFBaPES2Y50TId+b
+	PmzKHp2ziCtpwIP6OsgAXTVe4QFbYK4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1759733972;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Tqo7TF67v0Nt6BDb5wIfnKZ8RdtKsXNA+gooRShmJA8=;
+	b=AIEVEAd9r9CPHyYH0CLYOHIuzSoe5nP28veHT0KOOU1WMcY0OvHucuuyO7xghMScMlc0gm
+	CA2nX8SqpQuynMBw==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=xx19aSu9;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=AIEVEAd9
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1759733972; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Tqo7TF67v0Nt6BDb5wIfnKZ8RdtKsXNA+gooRShmJA8=;
+	b=xx19aSu9j7qINDzSxj1Re6RgtYL+pMUtkgUWLz1WXgEfFJb/TUDH0VRDM0Wuq5SGXL28ma
+	Tpj9XJEiUYqljAb4x8UIHMyqpyNIP0ejE6j3xWmDyyJHz+ubjAeZBBYFBaPES2Y50TId+b
+	PmzKHp2ziCtpwIP6OsgAXTVe4QFbYK4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1759733972;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Tqo7TF67v0Nt6BDb5wIfnKZ8RdtKsXNA+gooRShmJA8=;
+	b=AIEVEAd9r9CPHyYH0CLYOHIuzSoe5nP28veHT0KOOU1WMcY0OvHucuuyO7xghMScMlc0gm
+	CA2nX8SqpQuynMBw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 12B5D13995;
+	Mon,  6 Oct 2025 06:59:32 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id DDT1AtRo42imEQAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 06 Oct 2025 06:59:32 +0000
+Message-ID: <0309e7b1-c5ad-4a78-890a-7f271ac46a6a@suse.de>
+Date: Mon, 6 Oct 2025 08:59:31 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,46 +83,69 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 9/9] scsi: scsi_debug: Add "only_once" module option to
- inject an error one time
+Subject: Re: [PATCH v4 1/9] scsi: Explicitly specify .ascq = 0x00 for ASC
+ 0x28/0x29 scsi_failures
 To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 Cc: michael.christie@oracle.com, dgilbert@interlog.com, bvanassche@acm.org,
- hare@suse.de
+ dlemoal@kernel.org
 References: <20251002192510.1922731-1-emilne@redhat.com>
- <20251002192510.1922731-10-emilne@redhat.com>
+ <20251002192510.1922731-2-emilne@redhat.com>
 Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20251002192510.1922731-10-emilne@redhat.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20251002192510.1922731-2-emilne@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Rspamd-Queue-Id: 55F9333757
+X-Rspamd-Action: no action
+X-Rspamd-Server: rspamd1.dmz-prg2.suse.org
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	SPAMHAUS_XBL(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	MIME_TRACE(0.00)[0:+];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	TO_DN_SOME(0.00)[];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	RCVD_TLS_ALL(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	RCVD_COUNT_TWO(0.00)[2];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	MID_RHS_MATCH_FROM(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:rdns,imap1.dmz-prg2.suse.org:helo,suse.de:dkim,suse.de:mid,suse.de:email];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Score: -4.51
 
-On 10/3/25 04:25, Ewan D. Milne wrote:
-> The "every_nth" module option allows either periodic injection of errors
-> every N commands, or injection of errors on all commands after N commands.
-> It does not allow injection of a single error after N commands, which is
-> useful for testing things like code in the device probe path.
-> 
-> Add a new "only_once" module option that allows injection of a single error.
-> The "every_nth" module options are still used to control when the error
-> is injected, to simplify the code.
+On 10/2/25 21:25, Ewan D. Milne wrote:
+> This does not change any behavior (since .ascq was initialized to 0 by
+> the compiler) but makes explicit that the entry in the scsi_failures
+> array does not handle cases where ASCQ is nonzero, consistent with other
+> usage.
 > 
 > Signed-off-by: Ewan D. Milne <emilne@redhat.com>
+> ---
+>   drivers/scsi/scsi_scan.c | 2 ++
+>   drivers/scsi/sd.c        | 1 +
+>   2 files changed, 3 insertions(+)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de.
 
-Looks OK to me. One nit below.
+Cheers,
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-
-
-> +static ssize_t only_once_store(struct device_driver *ddp, const char *buf,
-> +			       size_t count)
-> +{
-> +	int n;
-> +
-> +	if ((count > 0) && (1 == sscanf(buf, "%d", &n)) && (n >= 0)) {
-
-Please drop the inner parentheses.
-
+Hannes
 -- 
-Damien Le Moal
-Western Digital Research
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
