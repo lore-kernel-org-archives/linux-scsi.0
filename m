@@ -1,139 +1,101 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f51.google.com (mail-ej1-f51.google.com [209.85.218.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F8D4259C83;
-	Mon,  6 Oct 2025 10:47:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8A12D2561AB
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 10:54:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759747669; cv=none; b=tml4xtVwYWs7mwKu465pxaD9M1wNYmsIhsvhYxtQe8J4IYyauWoIwFyBOajIomUKRi+FbYs4heASeBAJovYd3/4qXOaToPNs2uKLWlmDGAxuudifybv/pb6Jz16G0BR61jbzOUzpKpUlXQcLdtryVBvskiTo1m9DbqRTPnXAq0k=
+	t=1759748093; cv=none; b=aMFJ9EVk+pD/NYIwHsAxmQVN+aWXsTPZqPAkfQ08irvFYLRZetizJfYPOm+qAeG2rxdMx+54IM5NxBKoOXTjywGKLJU0NKolzPgNB/0O+Ogjld2Y20gI/TkOVhpAiLwoIAtUp/xkYsSTTLTHmmHCOOVDv43x2YhA6mt8vrL3ok4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759747669; c=relaxed/simple;
-	bh=FX1Lzu7+bvM9e8qmukvbO1hpPMzmlxgfp1qFo7AK/EQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=miDG5M6zH2nR+N4KhMGspZyicQXFTmDEh9ybswXjTlXN3HR+mLrxpPwebHxHysiiOqDHjMS/H8EKFHhQdNj4df9F7p4DBzVyfAygw1GCUL1GC9xovSEVk5dzcfGjbrAE8tYY2km5ucrFKZ8EY44tph7O1wcpbAS0IbE7mE7jP10=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=E597mMN/; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1759748093; c=relaxed/simple;
+	bh=qXNXLA2jr121IED5txM/3X9BlnZFSO/JqrdDDHaU+08=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=uvgwIiiA95WJCqT8FZJB54f5L1zp6p8ZCb+MhRQfvNNWMdtj2fo1pJ3qrbRBP/bpjMS5jDmutBbfxWJtmQI2G/2wqk0DMhifxENpEtOGZeIEjqtIzkLIvhlLa3OgkjtptPA66GJ7gcKo1vT/GrDd9rC+RbGoWXe1FCjqimR0nqc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mcD9iO5S; arc=none smtp.client-ip=209.85.218.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="E597mMN/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FDD7C4CEF5;
-	Mon,  6 Oct 2025 10:47:47 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1759747669;
-	bh=FX1Lzu7+bvM9e8qmukvbO1hpPMzmlxgfp1qFo7AK/EQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=E597mMN/x7YVkjNX1Bc0G8W7GHt89kk8u2seksXgi5q2H3Gw9DqBry/MoIgd7Hl/f
-	 QcuYuZ/DwxfZxXg04LwRoNwgtiAl8T7SsOstK7UXK8SyqkUmffohAckrwzORjzcTe+
-	 /i/1SV3Pn0pttPu3dXePy8Hlmyjuwx9fL801o6Qw=
-Date: Mon, 6 Oct 2025 12:47:45 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Eliav Farber <farbere@amazon.com>
-Cc: jdike@addtoit.com, richard@nod.at, anton.ivanov@cambridgegreys.com,
-	dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
-	tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, x86@kernel.org,
-	hpa@zytor.com, tony.luck@intel.com, qiuxu.zhuo@intel.com,
-	james.morse@arm.com, rric@kernel.org, airlied@linux.ie,
-	daniel@ffwll.ch, maarten.lankhorst@linux.intel.com,
-	mripard@kernel.org, tzimmermann@suse.de, robdclark@gmail.com,
-	sean@poorly.run, jdelvare@suse.com, linux@roeck-us.net,
-	linus.walleij@linaro.org, dmitry.torokhov@gmail.com, maz@kernel.org,
-	wens@csie.org, jernej.skrabec@gmail.com, agk@redhat.com,
-	snitzer@redhat.com, dm-devel@redhat.com, davem@davemloft.net,
-	kuba@kernel.org, mcoquelin.stm32@gmail.com,
-	krzysztof.kozlowski@canonical.com, malattia@linux.it,
-	hdegoede@redhat.com, mgross@linux.intel.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, sakari.ailus@linux.intel.com,
-	clm@fb.com, josef@toxicpanda.com, dsterba@suse.com, jack@suse.com,
-	tytso@mit.edu, adilger.kernel@dilger.ca, dushistov@mail.ru,
-	luc.vanoostenryck@gmail.com, rostedt@goodmis.org, pmladek@suse.com,
-	senozhatsky@chromium.org, andriy.shevchenko@linux.intel.com,
-	linux@rasmusvillemoes.dk, minchan@kernel.org, ngupta@vflare.org,
-	akpm@linux-foundation.org, yoshfuji@linux-ipv6.org,
-	dsahern@kernel.org, pablo@netfilter.org, kadlec@netfilter.org,
-	fw@strlen.de, jmaloy@redhat.com, ying.xue@windriver.com,
-	shuah@kernel.org, willy@infradead.org, sashal@kernel.org,
-	quic_akhilpo@quicinc.com, ruanjinjie@huawei.com,
-	David.Laight@aculab.com, herve.codina@bootlin.com,
-	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
-	linux-um@lists.infradead.org, linux-edac@vger.kernel.org,
-	amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
-	linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
-	linux-hwmon@vger.kernel.org, linux-input@vger.kernel.org,
-	linux-sunxi@lists.linux.dev, linux-media@vger.kernel.org,
-	netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-	platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-staging@lists.linux.dev, linux-btrfs@vger.kernel.org,
-	linux-ext4@vger.kernel.org, linux-sparse@vger.kernel.org,
-	linux-mm@kvack.org, netfilter-devel@vger.kernel.org,
-	coreteam@netfilter.org, tipc-discussion@lists.sourceforge.net,
-	linux-kselftest@vger.kernel.org, stable@vger.kernel.org,
-	Linus Torvalds <torvalds@linux-foundation.org>,
-	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-Subject: Re: [PATCH v2 07/19 5.15.y] minmax: simplify and clarify
- min_t()/max_t() implementation
-Message-ID: <2025100648-capable-register-101b@gregkh>
-References: <20251003130006.41681-1-farbere@amazon.com>
- <20251003130006.41681-8-farbere@amazon.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mcD9iO5S"
+Received: by mail-ej1-f51.google.com with SMTP id a640c23a62f3a-b3e7cc84b82so842139166b.0
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 03:54:51 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1759748090; x=1760352890; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=qXNXLA2jr121IED5txM/3X9BlnZFSO/JqrdDDHaU+08=;
+        b=mcD9iO5SD00hbHWBr0Dhlc8KF+ra94YzesMKP3XXBwhNP8xToWwzubBEpzahu8QqUy
+         zI/WgdSEYkwezj0ymaSLJF3ewQVBsMUYg2oQicusBkCsLJH2HDUxs3HCQlfPuT46gZPX
+         FhYGtkldR1Pqq/d6t/vTl9yOPLBw9ldUUdRJXZ5F9wIJSXqdFaG+t8Gc99cJvBjgl7Tb
+         9TuVHFU+lWg1TH8U0pjU23c+I68ScA5DI3YfijN8X8Pq1RoALif0DICnL+iB8MBpiZmf
+         5fC4Ij8jbQH/lXFy11ZMr8IT6K1bysipUr8eWSdvZkpIni2AMIvq5KNtqaKPqxrd+guu
+         90Bw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1759748090; x=1760352890;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=qXNXLA2jr121IED5txM/3X9BlnZFSO/JqrdDDHaU+08=;
+        b=iyT8RfEZPf4xZZUHK8DnNOtdhXXTS1/meh7oqGsKGtJVn0xN7GKbO3WTAtKiOuR5LN
+         nZ5QZpehBjXL+yvzz9qccdtZq0M0+EIEz8zr3/Lfxda1IXTe8SxoyA1CiQ6aLzfMG2U7
+         +uFxUZx+rZ1rH0V9cQEJizipmmv99VzLv5bgnWuN0ZCWfqck7bVxCYE1JUc5s9+cMBnN
+         wj2/NSw8ifFlEKPrtV+I7nV1lHyNc1TqUG5lLyG1+CftekyFXsJchfG/JJGeMWiVLFFG
+         4tQIEJS2z60nuXXlRHUuEyP9/nUg9A7R27hlcvq0Et6Qw8I/n5vuMc35OFuJcFHz+D+c
+         Jbnw==
+X-Forwarded-Encrypted: i=1; AJvYcCWq3Guab3QCXHQ2vpRkeSgs44qTJmQFp0ouVzPo0sbynYLMiDwbO1WesjNC8kWDBj15an66EPAX3CvT@vger.kernel.org
+X-Gm-Message-State: AOJu0YwFbTBM+OKYwgkhYJFo3PGe0zzdQVzz1xtCqzgmrFy6MpPvrBoM
+	+dRx7FPpZz0EM/h9mUknaKCl22y6pwVFILWLj4LuZgxjT+2ClqWuWdUl
+X-Gm-Gg: ASbGncs5ERFcqGneXZ3zpGo+PUB23TPd7sLtMZtMCMfjhUdEP66yvmjHw+/bw0vwKO6
+	SBvr7BTJXlWJgw4GOuF//JUpd+UbGrRS4j3eYDi+DHGB0c4MR6eZdtJpWUFVbdFO2lf/AKnO2yf
+	Md+v5vSwVLIqTKimI+WtT4AEU2HCjQcEMvtsKN65PPyNY9Jr6sdGQg92ipOYDUl0gXF/qmemSsH
+	5j9tn5ekBYbu3Jl/Uy7YPl91Ewl20Xdqwl72CDid40Y7PnHI682kg/TrzveI2DX9pQcrSook4tt
+	3MegoYj2J/qZrKCb+2KHj7Q3Nomrlmsk9tg+dhHT8z56DaXy7ZnAhXB9GbMkoz3kpNH+zJG4S1p
+	WP/WZQKp7OPspknHc6K4Twi6GJvcSjQSnTHZJJOrbbAf1JjATRw==
+X-Google-Smtp-Source: AGHT+IFsbJIMX046ZdbgwCO0LHE40l3aSoIKhdw9r12MAKMtV4NAk+2OeC5sVS+LTODNz1eBr36Z6A==
+X-Received: by 2002:a17:907:2d26:b0:b04:3302:d7a8 with SMTP id a640c23a62f3a-b49c4394dfbmr1406539366b.58.1759748089518;
+        Mon, 06 Oct 2025 03:54:49 -0700 (PDT)
+Received: from [10.176.235.211] ([137.201.254.43])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b48652ad839sm1117104566b.1.2025.10.06.03.54.48
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Oct 2025 03:54:49 -0700 (PDT)
+Message-ID: <41093b6af67db2073a141527e44e575d0811d55b.camel@gmail.com>
+Subject: Re: [PATCH v2 1/3] rpmb: move rpmb_frame struct and constants to
+ common header
+From: Bean Huo <huobean@gmail.com>
+To: Ulf Hansson <ulf.hansson@linaro.org>
+Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com, 
+	jejb@linux.ibm.com, martin.petersen@oracle.com, can.guo@oss.qualcomm.com, 
+	beanhuo@micron.com, jens.wiklander@linaro.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Mon, 06 Oct 2025 12:54:47 +0200
+In-Reply-To: <CAPDyKFpyh7Qag+ckCcPkr1RWh8YiST-4V2_Y7xvBU4LRLNC28A@mail.gmail.com>
+References: <20251001060805.26462-1-beanhuo@iokpp.de>
+	 <20251001060805.26462-2-beanhuo@iokpp.de>
+	 <CAPDyKFpyh7Qag+ckCcPkr1RWh8YiST-4V2_Y7xvBU4LRLNC28A@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251003130006.41681-8-farbere@amazon.com>
 
-On Fri, Oct 03, 2025 at 12:59:54PM +0000, Eliav Farber wrote:
-> From: Linus Torvalds <torvalds@linux-foundation.org>
-> 
-> [ Upstream commit 017fa3e89187848fd056af757769c9e66ac3e93d ]
-> 
-> This simplifies the min_t() and max_t() macros by no longer making them
-> work in the context of a C constant expression.
-> 
-> That means that you can no longer use them for static initializers or
-> for array sizes in type definitions, but there were only a couple of
-> such uses, and all of them were converted (famous last words) to use
-> MIN_T/MAX_T instead.
-> 
-> Cc: David Laight <David.Laight@aculab.com>
-> Cc: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
-> Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
-> Signed-off-by: Eliav Farber <farbere@amazon.com>
-
-Eliav, your testing infrastructure needs some work, this patch breaks
-the build on this kernel tree:
-
-In file included from ./include/linux/kernel.h:16,
-                 from ./include/linux/list.h:9,
-                 from ./include/linux/wait.h:7,
-                 from ./include/linux/wait_bit.h:8,
-                 from ./include/linux/fs.h:6,
-                 from fs/erofs/internal.h:10,
-                 from fs/erofs/zdata.h:9,
-                 from fs/erofs/zdata.c:6:
-fs/erofs/zdata.c: In function ‘z_erofs_decompress_pcluster’:
-fs/erofs/zdata.h:185:61: error: ISO C90 forbids variable length array ‘pages_onstack’ [-Werror=vla]
-  185 |         min_t(unsigned int, THREAD_SIZE / 8 / sizeof(struct page *), 96U)
-      |                                                             ^~~~
-./include/linux/minmax.h:49:23: note: in definition of macro ‘__cmp_once_unique’
-   49 |         ({ type ux = (x); type uy = (y); __cmp(op, ux, uy); })
-      |                       ^
-./include/linux/minmax.h:164:27: note: in expansion of macro ‘__cmp_once’
-  164 | #define min_t(type, x, y) __cmp_once(min, type, x, y)
-      |                           ^~~~~~~~~~
-fs/erofs/zdata.h:185:9: note: in expansion of macro ‘min_t’
-  185 |         min_t(unsigned int, THREAD_SIZE / 8 / sizeof(struct page *), 96U)
-      |         ^~~~~
-fs/erofs/zdata.c:847:36: note: in expansion of macro ‘Z_EROFS_VMAP_ONSTACK_PAGES’
-  847 |         struct page *pages_onstack[Z_EROFS_VMAP_ONSTACK_PAGES];
-      |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
-cc1: all warnings being treated as errors
+On Mon, 2025-10-06 at 12:21 +0200, Ulf Hansson wrote:
+> > Signed-off-by: Bean Huo <beanhuo@micron.com>
+>=20
+> I have queued this up via my mmc tree and plan to send a late
+> pull-request to Linus to get this included for 6.18-rc1.
+>=20
+> That should help to land the remaining pieces for ufs in the second
+> step without having to care about the mmc parts.
+>=20
+> Kind regards
+> Uffe
 
 
-I'll drop this whole series, please do a bit more testing before sending
-out a new version.
+thanks Uffe,
 
-thanks,
-
-greg k-h
+Kind regards,
+Bean
