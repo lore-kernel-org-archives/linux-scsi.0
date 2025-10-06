@@ -1,82 +1,117 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f44.google.com (mail-ed1-f44.google.com [209.85.208.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F24682D63FF
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 17:55:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A77951F936
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 18:00:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759773307; cv=none; b=jg/pHX7J09117fzjboEsKUCSQKlWDTihUlcfL/X/Flqrc+stGnDJk41nX15wdycGmwfso9byr3LMRUFHfE9OYfiQeiI2BLxpAXOlNAMDvJK+4s1sNW5nBBjz/VbWsFZ08SMPXr9Wre9l5oMMhuyvlxclKFGhLGW1F9KB/LW38uE=
+	t=1759773641; cv=none; b=FK5zl5O+udp691sKMXZomcL5lwV4h2nh9Tzxi8HPNpenwibj2CYRsxepl4rsfOD2Xl4xE9S6eLOhk1zRDGi3qVNo4xoD2rSfIrAwHWlbr4eVhs397VFeX7jb9Pxxc7Zzl7FqiI0GuMjofuO0fUjsHIiDqa2a2VStN+Yx/fxODkA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759773307; c=relaxed/simple;
-	bh=CZCwboed76fnJKRYE18NOd2YUTxPoQ+YCmow6gYAbfw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=qpeMs+rf7WY3epOwB8Rc1yX/vCKqjzl9KAWr/+5Kzy8e9N2/nfS0LMn/7B8yFhxEDGKKQObnZ1xIqJNPrSM8C1TCNuGF9Pnr97lDn0bJtFhz7A0WBzU+A5Ea10Z/nssEksvO0CqUoyF/I1dpVtjXkkjGhYR/oMdYrAtuVmi2lAg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2y8WbyqL; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1759773641; c=relaxed/simple;
+	bh=0GEMNRcZziGzb3s681pgK1hZuY+IKAUR9TQA+X75qiY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=Z7yzB8I0BUrA6ia4EdPIRj9r3jIn/rkQK8yGTIUBZ/Y35JoQOK82quIcWGwaQeH+J1JFxbseNVO7ycVbFI4pv7+djyHw+nrLxRPpMbDKmfEBWcIn0Fvi5bQQ/EIIneddREm5PXWzukGmO0FSkhWvic4WLnIfG659fgtgxU6OwCw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XGopF/qP; arc=none smtp.client-ip=209.85.208.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2y8WbyqL"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cgRkC1jZLzlgqVp;
-	Mon,  6 Oct 2025 17:54:59 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1759773297; x=1762365298; bh=YzONJwU+rBqt7goyFkIsg4ge
-	fYjnPUqpNMBbxM9Lo5E=; b=2y8WbyqL+1V4tDHsWG+0cCryokrrwPgiicqAXys6
-	epg4JUgIQjgG/+GTSPPaV5tKfuY9DD+BvzhgT+TecXLAMELG4abLbu+m+b50OO2j
-	+sk00pbGPJHgsNgvFojbMXZ2SL4dLgxsoBcIxrLnYvoR7EM3Ak5xN3N03Zc7obX/
-	3VtBZ7VgJKHStIIrVAoWidvEmiP7OoQN/BBqjY2k+TytBchJ0QZgv8yIiVBN9qoi
-	TL42ISTRFDKRnmRl3Ho0eQvGUuDa8mPF+tX2/j+veI/LnVsnrcDxcd82ex98ynMk
-	B9qBgGBBQRGjWjwozcx36mRiPGitWyXpAOE1zkqOmLJq+g==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id E9eN2VH3uEWU; Mon,  6 Oct 2025 17:54:57 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cgRk61TYrzlgqV0;
-	Mon,  6 Oct 2025 17:54:52 +0000 (UTC)
-Message-ID: <3afd179d-e04d-4265-bfe8-652ac33ad58e@acm.org>
-Date: Mon, 6 Oct 2025 10:54:51 -0700
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XGopF/qP"
+Received: by mail-ed1-f44.google.com with SMTP id 4fb4d7f45d1cf-6394b4ff908so8076552a12.3
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 11:00:39 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1759773638; x=1760378438; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=inbCGeX0MlCaOTe4pzWEAkquVwCrsIcfcgv0X9AXOR8=;
+        b=XGopF/qPtyupbN0LE08URXj6BA3OCXBI4X3IA99iabFOuSjMJHI/cnVZyuud7W7juJ
+         2IVLb3DxuhxwCLM76sHpS8JGl2AgjRh8jhhSJaVyE3OChfepX5Ye/z1eljXWGlsREGYD
+         rBdGcsoIEZ15Odw4mwYlo6pmtItN9ZaSfeMJWBwI3qw0cLyCD8lkSPfwZszZx7Tu7/T9
+         IYRTsEJFZ2nltYgmyjO7z/5sOYYvuPv3ke+37ylNK/UaNbywR0O2uZy29vaFLSW4Trzx
+         uKamB45KFXxym6plXieuIeFNRSHiIATxLWfvQcNcLKGGwbTvSl3bV+sA/J1U0B5IJSBf
+         ntfQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1759773638; x=1760378438;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=inbCGeX0MlCaOTe4pzWEAkquVwCrsIcfcgv0X9AXOR8=;
+        b=ZgeUiFrzJ971jpxTqmHgCqYilMKdEp8QuHteRcusUJsXteYEx0MW7bded/CTsfFZhA
+         cAUFdOVuIVo5DtooSWnyp2hD40wsfDN6rorP6z2gxH3oriNknz7uhnpmPmUcsfJ7gtr4
+         1gt0KHKvgEqEoReOliIBxvlHjpB+ikYHjduJ4DnxQEtQBN2R4XdsjKfrmMHkPILkCeUl
+         q7sWaxR6WAUIP2r/SycHdQMpju2Um7QJd8EVY7jEm/xWIpJQ9pKs5K+SF+1WIIcbPNM4
+         tMfIxQ6bwgf+g3VpNXQr4rehjJkRI6OLauf0aqlzoTzwjutkGVTS58Gf7u9Fdq+oHDTR
+         sB9Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUQrvmEKZhbqqbb66R1osiQEuqybzim1n3x6sB5dnS6bVFL9Qt0caL5LBuAp8ZVAL+1yCb/hx5WH3s8@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOlFuv+Ah0dxUhN7qJTxsL6keisncChACTbnl+nQ794yfp8syk
+	OPRZI/GpapXsDzv8L8hdFXyChHH2WnLIwTUX9r9DpRUP048NiKcZWV8ghuL2eqiK9wXUocuTaSj
+	OFJqG4qY4S+AHDXd8TxOOocpndFOi+8A=
+X-Gm-Gg: ASbGnctFF1UWbjpW0g0KzYonE4c3LDSEnxWN0KNKg4WbSro+64geflv5mha6S/sOzro
+	/GfFYfZPlxEsN3OloHLHnhS7KYoWDBkvNbq2XhjId4ymh+JftVn4obgklRye7kJVoJcyDmeRoPq
+	JRlSeoT8g7/7B50SEGh5voudlfsAP+esZPLpO9M6ABn1mKNurYQKjqVYEibS/GgGHaEDP4JN9PU
+	ay3wfVyyd300LUru6J2Xjt42BpfazwAswjF+w5GLAcd6wQIua3fHSkfrDzR9wnLx6QTsJhb85I=
+X-Google-Smtp-Source: AGHT+IHc/KM682jYWj3WvcK4lSK7EMboJJkdUb1lxllQSBBYt5rLkWpEgXxcvdPFJR/OuHQrWNQ0UC2LN9vnzduKPDI=
+X-Received: by 2002:a05:6402:354c:b0:633:d0b7:d6c3 with SMTP id
+ 4fb4d7f45d1cf-639348e53b3mr15040695a12.5.1759773637242; Mon, 06 Oct 2025
+ 11:00:37 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 2/9] scsi: sd: Do not retry ASC 0x3a in
- read_capacity_10() with any ASCQ
-To: Ewan Milne <emilne@redhat.com>
-Cc: Damien Le Moal <dlemoal@kernel.org>, linux-scsi@vger.kernel.org,
- michael.christie@oracle.com, dgilbert@interlog.com, hare@suse.de
-References: <20251002192510.1922731-1-emilne@redhat.com>
- <20251002192510.1922731-3-emilne@redhat.com>
- <8f250e77-5069-416d-9389-9c3e99535dbc@kernel.org>
- <CAGtn9rkZX-C7DgaMCABsF66RVGomQeK1RyRW5knLPsPEzvajOA@mail.gmail.com>
- <4a5394d5-6608-4a81-8f8d-006ea2bdcd61@acm.org>
- <CAGtn9rkS9v=Y2x2Pt6ex-kM4iShGNe-jJHRk1zFOTHWKonwoFQ@mail.gmail.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <CAGtn9rkS9v=Y2x2Pt6ex-kM4iShGNe-jJHRk1zFOTHWKonwoFQ@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+References: <20251006174658.217497-1-kshitijvparanjape@gmail.com>
+In-Reply-To: <20251006174658.217497-1-kshitijvparanjape@gmail.com>
+From: vivek yadav <vivekyadav1207731111@gmail.com>
+Date: Mon, 6 Oct 2025 23:30:25 +0530
+X-Gm-Features: AS18NWBipFXoldgwotbv0EXeAnZgq5bGgzj04ZlSOSM0MjF-bQqudelsREmIC6Q
+Message-ID: <CABPSWR6B0M=nos=wBpjidXMPVYVDKYi0i+-ufuR460_m48vjVw@mail.gmail.com>
+Subject: Re: [PATCH] scsi: fix shift out-of-bounds in sg_build_indirect The
+ num variable is set to 0. The variable num gets its value from
+ scatter_elem_sz. However the minimum value of scatter_elem_sz is PAGE_SHIFT.
+ So setting num to PAGE_SIZE when num < PAGE_SIZE.
+To: Kshitij Paranjape <kshitijvparanjape@gmail.com>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, Doug Gilbert <dgilbert@interlog.com>, 
+	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, skhan@linuxfoundation.org, 
+	david.hunter.linux@gmail.com, khalid@kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-kernel-mentees@lists.linux.dev, 
+	stable@vger.kernel.org, syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 10/3/25 11:40 AM, Ewan Milne wrote:
-> Martin, please add:
-> 
-> Fixes: 0f11328f2f466 ("scsi: sd: Have midlayer retry read_capacity_10() errors")
+Hi Kshitij,
 
-Ewan, please rebase, retest and repost this patch series with the above
-tag added after the merge window has closed. Kernel v6.17 was released
-eight days ago. Hence, the merge window is still open. See also
-https://lore.kernel.org/lkml/CAHk-=wiX38oG6=xFBNLO0pnjqHfxzjd6-1kZ5Nv9HfqNC2PoFA@mail.gmail.com/
+Subject line of your patch should not exceed more than 80 characters
+[recommended]
+Please check your patch format.
 
-Thanks,
+~~vivek
 
-Bart.
+On Mon, Oct 6, 2025 at 11:17=E2=80=AFPM Kshitij Paranjape
+<kshitijvparanjape@gmail.com> wrote:
+>
+> Cc: <stable@vger.kernel.org>
+> Reported-by: syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
+> Closes: https://syzkaller.appspot.com/bug?extid=3D270f1c719ee7baab9941
+> Signed-off-by: Kshitij Paranjape <kshitijvparanjape@gmail.com>
+> ---
+>  drivers/scsi/sg.c | 1 +
+>  1 file changed, 1 insertion(+)
+>
+> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
+> index effb7e768165..9ae41bb256d7 100644
+> --- a/drivers/scsi/sg.c
+> +++ b/drivers/scsi/sg.c
+> @@ -1888,6 +1888,7 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * s=
+fp, int buff_size)
+>                 if (num < PAGE_SIZE) {
+>                         scatter_elem_sz =3D PAGE_SIZE;
+>                         scatter_elem_sz_prev =3D PAGE_SIZE;
+> +                       num =3D scatter_elem_sz;
+>                 } else
+>                         scatter_elem_sz_prev =3D num;
+>         }
+> --
+> 2.43.0
+>
+>
