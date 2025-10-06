@@ -1,140 +1,231 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3E296223DFB
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 10:15:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ACC72264CE
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 10:21:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759745703; cv=none; b=RLGW0WuMweDfnra6einSgneMZ2nhuo7/+hQ3Xbtkkmkhsm/gLMd3YnVrBfMs5JwCAPgIeC7AAPFNXYho3cvMgtuT3J09jh22lxncJdvX1ztcYa5wB8QZbBeEjWx2zN5YzwQSH1TNKac9SI+tYJqsYt5mbNaEYpLWpMhsoDCZQRI=
+	t=1759746121; cv=none; b=f95g7VDlPXFCgRjwdABLzlyDKRnQozKCkumvKQ5obOZxfjap8p0HOCW+QlEZV5yKvIE3N70vBlav6TiFe5ZdY9d4Ati5V1aAiLp3Nj3QqUHw8hyR58ELXYkVx1ORDNjf205YEynOhaw4E/WzUefAEY4z0BRz5dvoWv2IQNKSxB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759745703; c=relaxed/simple;
-	bh=+lCoSswREYBVYg7PAwHQiojcdE4ZRJ/ZZspRoClzGlA=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Z4oJ0YgdUQIQKZitpqDmKYiSGdsr2qecutOkzrNII3lMnOOAWBYvcJnd0xCPCv+LqenzCGtbQfwGfsy3qQQ3dNf9fds1dQGegoBL9+ZB8dqMQMPIZt99Kj6P+ENHRnQpYZ6mLxl6X8Yxn9/0dlGKUY2Z7wD7IZQIo6NTJaqVqrw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=TS8QOqeg; arc=none smtp.client-ip=205.220.180.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	s=arc-20240116; t=1759746121; c=relaxed/simple;
+	bh=AJrCHogOFI5cKQaQS0F5R4X36lqcVoGB6kMJM/rOTkY=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=a3Shg7agU5GCc2emkbizPeCqVu9X27TZq+94wkHg6YXXBPpkClO+7XNCwF9VXelvxN/KN9FFSgTf5BagOW8kms+t0jAJ83EBWzIB0grOZstRxHDbgsztc+MBDxTid/4bv+yEaHxKM4CEnwbgjhR6oktNQqLxE5zcqfqfmeTX7rU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=WXVJ62bX; arc=none smtp.client-ip=209.85.128.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="TS8QOqeg"
-Received: from pps.filterd (m0279870.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5960G584006260
-	for <linux-scsi@vger.kernel.org>; Mon, 6 Oct 2025 10:15:01 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	aIDY01NnRK3ZSR2DKX1nbVIhaDa8uzVxxaZaHb2mwZs=; b=TS8QOqeguDZh9Glg
-	J+LrqbpRc7WdvzTGHd2wDv3yc0JIh33yU1K6pDcMUhgBdIwB91FQFcRtzlwjMUoj
-	TZtRT0+MPqkwGVvmNAGEWayNV7Ajibq7K+BqxMpIkpKElDvqu18gwLdUf8c9QxMN
-	M0hMBCGtcltvUsiAe01UKg7TSxl+HOAy/qESqIcgUs1gIRyNsL1wIYauPl6LuOrx
-	gOq/8Yh7Avk+/JrRqHTXcQ6ylj9/66sVEekNWYZKJxF2pC6InubI6XUXfcasUrkL
-	/qLeG73Dq1uI117JWtR20D3njYckp2OI2lQFqJIeoQ9WNkxic8lCH/KKoaPw81JO
-	lQHnPg==
-Received: from mail-qt1-f197.google.com (mail-qt1-f197.google.com [209.85.160.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49junu3k4r-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 10:15:01 +0000 (GMT)
-Received: by mail-qt1-f197.google.com with SMTP id d75a77b69052e-4ddf2a2d95fso17379051cf.3
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 03:15:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WXVJ62bX"
+Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-71d60110772so48059457b3.0
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 03:21:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1759746118; x=1760350918; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=YHswFDCD4540V/T99FHqHZnQrWbNJSfM6DtDuneKmnY=;
+        b=WXVJ62bXWTIxHv7/snRP2F1VHosC3KeYy3TBfnmBPIVXzKL2h24FcngY8/a3JD8g7A
+         QgruRLDrR+bvYXUu//jM241mmdJuVPeOQ0O0qwXrhWjWHTrVlGzqvDCnp806QXNc8T5o
+         r/I6eADyKnPAJxzJEaqp4wlSPBjzrP1E71qhTl1Ncm4fe8V8dU+PpCcBkiKdo5DK7fII
+         mnA2DS+gDRTIkRFkYgaEx/fodLM6MlbgGTV4MZGkIg5g0IbvzEH3vux0eUxOMaY5pdJv
+         rLacb2amccSJX9yGIXaIPu2dFmPtz1E4SPywy6x0Ch6YYIUe3CboDP0jBX0KJWqJMZZQ
+         xhxA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759745700; x=1760350500;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=aIDY01NnRK3ZSR2DKX1nbVIhaDa8uzVxxaZaHb2mwZs=;
-        b=ntRoCK36gwbXqWCblcb/PYng6gs8vteLBuCJqjpUcC9RKOduJEbsAKio4/p/NVKUfm
-         yAfLITeyoe141EgAHwZ2DvtcK9rf+g3Jo4CszoIJNYnHuyZQHobYzY/XmxyDnkUbPMCR
-         uGnm3WXLMSD9JrAH0CFeZm55SmPNAwoikYY1DaiZRVVoTjRzupe6jxurIRpDxOvJ+sAR
-         xCQCJI1H/Qbh/+JDvWFgaZ6/17eGtER7dbwb3BXhgDJMMJIziL1qhMbxog/RST2h1N16
-         kjop8i9sHPTM/cMnxdxke3uUrj1MjnbHoWqiWGECK95Ln/Dl/pMRZbEpUbFDK/7ADEk5
-         ua5w==
-X-Forwarded-Encrypted: i=1; AJvYcCVoklEnM7uA86uEjWwzKns/Xmp5ykmNImQIUOD9Z4RNiPOrdthPvi0Ak1FST/h9AVXb9YljQpxI/gvp@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz/1Y5HyiAg/V85Eddm6C2fzFO08FNbhcgns5mTDNmvkztbvuL3
-	cjysojgqSXSBP6Y5IkeBDlG/5HGP7GxlhIctuK0ttvFiJEEUTe03CuHZHITmrR3GTwoXPgETlSh
-	1wlui/gLg1vBCc6C6hQAzxYpGBH1mX0VGLVnA0u0CHL6mwf1j3BHigzLMgRStxDhNZL/lafct
-X-Gm-Gg: ASbGncsRFnkOQoHsaZeLD1zj/OS0aaHZ1cWESxT3oadDeUfIxJPwBrdiPhdcCz27GA2
-	nxQp7OwNKd3dcDMf6dZjKzHzTk4wtL8ln+pMAPrzISN/4z0PhWmV3pYccxmYo5zxim6hZWyqght
-	Ve0i/hfunuWZReZyVu9oQ6Fgxol4O447dTQdDSg5W9fI+fzDtoRfJP2jJzYt9tDaMSo8Rck3/Cg
-	AuCsnImKipwVvjmHN5apZGN3swiete4HPUAWjNdJCfv1/9bA0Qw6dWTMCt3e1CPr91rdSkyqaq5
-	ZBB0QgQ54AJs7F9riavO250bpNKo68eJ2ytRZtg7Ba0iCIBbQs4BNcDm3e7NN4G0DYvbb9tCuie
-	gukx7CVYc8CV1Wf7tBqNTEfrP+mA=
-X-Received: by 2002:ac8:7f55:0:b0:4b5:e9b6:c96 with SMTP id d75a77b69052e-4e576a6332amr88117921cf.7.1759745700015;
-        Mon, 06 Oct 2025 03:15:00 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGBeef8DRHG2bi/HP7Cc1oF7kqYny/jUEdyQyquytu8JqFxYlckOVY1l/33cLCYd16NUFWYmw==
-X-Received: by 2002:ac8:7f55:0:b0:4b5:e9b6:c96 with SMTP id d75a77b69052e-4e576a6332amr88117651cf.7.1759745699533;
-        Mon, 06 Oct 2025 03:14:59 -0700 (PDT)
-Received: from [192.168.149.223] (078088045245.garwolin.vectranet.pl. [78.88.45.245])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b486a177c62sm1096835866b.91.2025.10.06.03.14.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 06 Oct 2025 03:14:59 -0700 (PDT)
-Message-ID: <a2c3eeec-b3ae-466e-b289-991b8658aaf1@oss.qualcomm.com>
-Date: Mon, 6 Oct 2025 12:14:57 +0200
+        d=1e100.net; s=20230601; t=1759746118; x=1760350918;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=YHswFDCD4540V/T99FHqHZnQrWbNJSfM6DtDuneKmnY=;
+        b=t2+GetLksLyTXvkRNqFBDibodC842ZBI5lzPmhCmo2gn9NzOGQZRrQcBNFfkuwwBrU
+         HJLNfeRKYTpvt7h8jB0Sp3bSVl5TpUHcwP1XoW4jKWSFFQvXPIqTytv3ExAXKtSeWsy6
+         LdlVTi5KBPMeCzZ6GJzMTWyc7j7f8poziSGL5jVvdIIo9+F0dneqHeY/fs4iYsFuQBan
+         qG2iKk80iXvQ7NGQloSYIM3hefAJstxk/3MLKaO4SoAeZ+yXg7ni3VxQIZS23f4KxIF1
+         SKMjD9gorlGnfA7TgwY7wgusCcyM1DTGozgEV/CjTwewEdanKout2ybNIYhWzUU9yvS2
+         ToKw==
+X-Forwarded-Encrypted: i=1; AJvYcCVKnsDcfvKXIAPOiKijp/Zizm0FDYY5kyp/NHKUMxbxy7q3F2ZF04ivG3N6M3xDQYoCjRvSubY7sCKA@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz+FuChH7r7xyjOSl8Q3onK4Qi3Z6uTghSWuQqPk/VPzu0sf7ff
+	9dmko8Tlve1SvA/tDbyq/JQQt1ZzLN+Ht5+BLZe2ZuRNvdUpMolJ23/1JAz+/slsOCq2Gis20Uf
+	ka5qcZXA4GG73OsCrv8mwENYoBUJO9euLKXL0QKGKeQ==
+X-Gm-Gg: ASbGnctF6hSDvLNiXbe/8BNc5UjTjX0+J2rdDDOZWDnUkNYkJznq5+OCSUNo4IChYHh
+	xIGHXV2S9NhoxojAuAksQ7hwkjmRoAj6C9OG12p5uSq0usiURZSZgZDUrUKomJz5+5wiYO3vWMX
+	qUCDnkS6EVB9KZla0PUudHp5V0839XLQFo4STr0Zee4V+oy5XRkhSGUzLEcbBn+li3+fOMvJzwv
+	VU3SW0qEdt2jkhaZ2JImYWTrxPaWRxS0+re
+X-Google-Smtp-Source: AGHT+IF77psB9K+vCNT5BqknfIdXI0+uekUjNxpVa2VL0PkfMCs3+TBiryz2Ck/k2rBVvaai4e1MlY1ofOfIlxeiR/c=
+X-Received: by 2002:a05:690c:7403:b0:739:7377:fdcf with SMTP id
+ 00721157ae682-77f946d9ca3mr238701107b3.27.1759746117957; Mon, 06 Oct 2025
+ 03:21:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 1/2] soc: qcom: ice: enable ICE clock scaling API
-To: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>,
-        Bjorn Andersson <andersson@kernel.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-References: <20251001-enable-ufs-ice-clock-scaling-v1-0-ec956160b696@oss.qualcomm.com>
- <20251001-enable-ufs-ice-clock-scaling-v1-1-ec956160b696@oss.qualcomm.com>
-Content-Language: en-US
-From: Konrad Dybcio <konrad.dybcio@oss.qualcomm.com>
-In-Reply-To: <20251001-enable-ufs-ice-clock-scaling-v1-1-ec956160b696@oss.qualcomm.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Proofpoint-ORIG-GUID: 2tYbOt2k63uW5LIIIarnlOOeeCIrwkwh
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDA0MDAyMyBTYWx0ZWRfX0GvE86iGg61Y
- BAq4zgu4gxru07bSt6N83kUnX9Hb1KMV4AQPA2SnidHeNpDNXNLI4lIq1tOb/GTRU7+GLYozvFS
- aOZKCvSuQwesveAIJG5xGWpdPBwbTP5wqhFwyql0c9/5Lri/j+B6M6Z2thz3RdZMr1xpu22YTWg
- rHui3tN801jLP0s8yIa+mBS4uCK7PB023XdCD6lLAze/SaR/tBbqqNFKJoEkUleAbSaUBK+J7Ty
- e4AtM9NGNaB3E29FlU6t3rTMi5QAOx7KrdRByaHXZqR+PrrrUxgsIett0IiAFXl0LiyG4Ae2Rs5
- n7ko3IwWDBYm8GT6TxzeGgC+Z8BuyVkxnXG/ohR5+UfobGiXp46V/HXK03G8NYgOLxSwiCrnbOZ
- aynfh3BnsgNQB8V8fQIcDeGjHZRGbg==
-X-Authority-Analysis: v=2.4 cv=CbIFJbrl c=1 sm=1 tr=0 ts=68e396a5 cx=c_pps
- a=EVbN6Ke/fEF3bsl7X48z0g==:117 a=FpWmc02/iXfjRdCD7H54yg==:17
- a=IkcTkHD0fZMA:10 a=x6icFKpwvdMA:10 a=EUspDBNiAAAA:8 a=7E7N79Lt4lT18EohOwQA:9
- a=QEXdDO2ut3YA:10 a=a_PwQJl-kcHnX1M80qC6:22
-X-Proofpoint-GUID: 2tYbOt2k63uW5LIIIarnlOOeeCIrwkwh
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-10-06_03,2025-10-02_03,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 malwarescore=0 clxscore=1015 adultscore=0 suspectscore=0
- spamscore=0 priorityscore=1501 phishscore=0 impostorscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2509150000 definitions=main-2510040023
+References: <20251001060805.26462-1-beanhuo@iokpp.de> <20251001060805.26462-2-beanhuo@iokpp.de>
+In-Reply-To: <20251001060805.26462-2-beanhuo@iokpp.de>
+From: Ulf Hansson <ulf.hansson@linaro.org>
+Date: Mon, 6 Oct 2025 12:21:22 +0200
+X-Gm-Features: AS18NWBgWnP4AaXTtJfAgW5wzsxvciI-aFmsX0xMwXAc3pjmjuiaNSmq0CyP-3U
+Message-ID: <CAPDyKFpyh7Qag+ckCcPkr1RWh8YiST-4V2_Y7xvBU4LRLNC28A@mail.gmail.com>
+Subject: Re: [PATCH v2 1/3] rpmb: move rpmb_frame struct and constants to
+ common header
+To: Bean Huo <beanhuo@iokpp.de>
+Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com, 
+	jejb@linux.ibm.com, martin.petersen@oracle.com, can.guo@oss.qualcomm.com, 
+	beanhuo@micron.com, jens.wiklander@linaro.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 10/1/25 1:38 PM, Abhinaba Rakshit wrote:
-> Add ICE clock scaling API based on the parsed clk supported
-> frequencies from dt entry.
-> 
-> Signed-off-by: Abhinaba Rakshit <abhinaba.rakshit@oss.qualcomm.com>
+On Wed, 1 Oct 2025 at 08:08, Bean Huo <beanhuo@iokpp.de> wrote:
+>
+> From: Bean Huo <beanhuo@micron.com>
+>
+> Move struct rpmb_frame and RPMB operation constants from MMC block
+> driver to include/linux/rpmb.h for reuse across different RPMB
+> implementations (UFS, NVMe, etc.).
+>
+> Signed-off-by: Bean Huo <beanhuo@micron.com>
+
+I have queued this up via my mmc tree and plan to send a late
+pull-request to Linus to get this included for 6.18-rc1.
+
+That should help to land the remaining pieces for ufs in the second
+step without having to care about the mmc parts.
+
+Kind regards
+Uffe
+
 > ---
-
-[...]
-
-> +	prop = of_get_property(dev->of_node, "freq-table-hz", &len);
-> +	if (!prop || len < 2 * sizeof(uint32_t)) {
-> +		dev_err(dev, "Freq-hz property not found or invalid length\n");
-> +	} else {
-> +		engine->min_freq = be32_to_cpu(prop[0]);
-> +		engine->max_freq = be32_to_cpu(prop[1]);
-> +	}
-
-As I suggested in <fca8355e-9b34-4df1-a7e6-459bdad8b1ff@oss.qualcomm.com>,
-you should really use an OPP table if you want to do any sort of clock
-scaling here.
-
-There are then nice APIs associated with that construct that won't make
-you pull your hair out..
-
-Konrad
+>  drivers/mmc/core/block.c | 42 --------------------------------------
+>  include/linux/rpmb.h     | 44 ++++++++++++++++++++++++++++++++++++++++
+>  2 files changed, 44 insertions(+), 42 deletions(-)
+>
+> diff --git a/drivers/mmc/core/block.c b/drivers/mmc/core/block.c
+> index b32eefcca4b7..bd5f6fcb03af 100644
+> --- a/drivers/mmc/core/block.c
+> +++ b/drivers/mmc/core/block.c
+> @@ -79,48 +79,6 @@ MODULE_ALIAS("mmc:block");
+>  #define MMC_EXTRACT_INDEX_FROM_ARG(x) ((x & 0x00FF0000) >> 16)
+>  #define MMC_EXTRACT_VALUE_FROM_ARG(x) ((x & 0x0000FF00) >> 8)
+>
+> -/**
+> - * struct rpmb_frame - rpmb frame as defined by eMMC 5.1 (JESD84-B51)
+> - *
+> - * @stuff        : stuff bytes
+> - * @key_mac      : The authentication key or the message authentication
+> - *                 code (MAC) depending on the request/response type.
+> - *                 The MAC will be delivered in the last (or the only)
+> - *                 block of data.
+> - * @data         : Data to be written or read by signed access.
+> - * @nonce        : Random number generated by the host for the requests
+> - *                 and copied to the response by the RPMB engine.
+> - * @write_counter: Counter value for the total amount of the successful
+> - *                 authenticated data write requests made by the host.
+> - * @addr         : Address of the data to be programmed to or read
+> - *                 from the RPMB. Address is the serial number of
+> - *                 the accessed block (half sector 256B).
+> - * @block_count  : Number of blocks (half sectors, 256B) requested to be
+> - *                 read/programmed.
+> - * @result       : Includes information about the status of the write co=
+unter
+> - *                 (valid, expired) and result of the access made to the=
+ RPMB.
+> - * @req_resp     : Defines the type of request and response to/from the =
+memory.
+> - *
+> - * The stuff bytes and big-endian properties are modeled to fit to the s=
+pec.
+> - */
+> -struct rpmb_frame {
+> -       u8     stuff[196];
+> -       u8     key_mac[32];
+> -       u8     data[256];
+> -       u8     nonce[16];
+> -       __be32 write_counter;
+> -       __be16 addr;
+> -       __be16 block_count;
+> -       __be16 result;
+> -       __be16 req_resp;
+> -} __packed;
+> -
+> -#define RPMB_PROGRAM_KEY       0x1    /* Program RPMB Authentication Key=
+ */
+> -#define RPMB_GET_WRITE_COUNTER 0x2    /* Read RPMB write counter */
+> -#define RPMB_WRITE_DATA        0x3    /* Write data to RPMB partition */
+> -#define RPMB_READ_DATA         0x4    /* Read data from RPMB partition *=
+/
+> -#define RPMB_RESULT_READ       0x5    /* Read result request  (Internal)=
+ */
+> -
+>  #define RPMB_FRAME_SIZE        sizeof(struct rpmb_frame)
+>  #define CHECK_SIZE_NEQ(val) ((val) !=3D sizeof(struct rpmb_frame))
+>  #define CHECK_SIZE_ALIGNED(val) IS_ALIGNED((val), sizeof(struct rpmb_fra=
+me))
+> diff --git a/include/linux/rpmb.h b/include/linux/rpmb.h
+> index cccda73eea4d..ed3f8e431eff 100644
+> --- a/include/linux/rpmb.h
+> +++ b/include/linux/rpmb.h
+> @@ -61,6 +61,50 @@ struct rpmb_dev {
+>
+>  #define to_rpmb_dev(x)         container_of((x), struct rpmb_dev, dev)
+>
+> +/**
+> + * struct rpmb_frame - RPMB frame structure for authenticated access
+> + *
+> + * @stuff        : stuff bytes, a padding/reserved area of 196 bytes at =
+the
+> + *                 beginning of the RPMB frame. They don=E2=80=99t carry=
+ meaningful
+> + *                 data but are required to make the frame exactly 512 b=
+ytes.
+> + * @key_mac      : The authentication key or the message authentication
+> + *                 code (MAC) depending on the request/response type.
+> + *                 The MAC will be delivered in the last (or the only)
+> + *                 block of data.
+> + * @data         : Data to be written or read by signed access.
+> + * @nonce        : Random number generated by the host for the requests
+> + *                 and copied to the response by the RPMB engine.
+> + * @write_counter: Counter value for the total amount of the successful
+> + *                 authenticated data write requests made by the host.
+> + * @addr         : Address of the data to be programmed to or read
+> + *                 from the RPMB. Address is the serial number of
+> + *                 the accessed block (half sector 256B).
+> + * @block_count  : Number of blocks (half sectors, 256B) requested to be
+> + *                 read/programmed.
+> + * @result       : Includes information about the status of the write co=
+unter
+> + *                 (valid, expired) and result of the access made to the=
+ RPMB.
+> + * @req_resp     : Defines the type of request and response to/from the =
+memory.
+> + *
+> + * The stuff bytes and big-endian properties are modeled to fit to the s=
+pec.
+> + */
+> +struct rpmb_frame {
+> +       u8     stuff[196];
+> +       u8     key_mac[32];
+> +       u8     data[256];
+> +       u8     nonce[16];
+> +       __be32 write_counter;
+> +       __be16 addr;
+> +       __be16 block_count;
+> +       __be16 result;
+> +       __be16 req_resp;
+> +};
+> +
+> +#define RPMB_PROGRAM_KEY       0x1    /* Program RPMB Authentication Key=
+ */
+> +#define RPMB_GET_WRITE_COUNTER 0x2    /* Read RPMB write counter */
+> +#define RPMB_WRITE_DATA        0x3    /* Write data to RPMB partition */
+> +#define RPMB_READ_DATA         0x4    /* Read data from RPMB partition *=
+/
+> +#define RPMB_RESULT_READ       0x5    /* Read result request  (Internal)=
+ */
+> +
+>  #if IS_ENABLED(CONFIG_RPMB)
+>  struct rpmb_dev *rpmb_dev_get(struct rpmb_dev *rdev);
+>  void rpmb_dev_put(struct rpmb_dev *rdev);
+> --
+> 2.34.1
+>
