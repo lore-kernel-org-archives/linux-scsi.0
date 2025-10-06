@@ -1,231 +1,139 @@
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3ACC72264CE
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 10:21:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F8D4259C83;
+	Mon,  6 Oct 2025 10:47:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759746121; cv=none; b=f95g7VDlPXFCgRjwdABLzlyDKRnQozKCkumvKQ5obOZxfjap8p0HOCW+QlEZV5yKvIE3N70vBlav6TiFe5ZdY9d4Ati5V1aAiLp3Nj3QqUHw8hyR58ELXYkVx1ORDNjf205YEynOhaw4E/WzUefAEY4z0BRz5dvoWv2IQNKSxB8=
+	t=1759747669; cv=none; b=tml4xtVwYWs7mwKu465pxaD9M1wNYmsIhsvhYxtQe8J4IYyauWoIwFyBOajIomUKRi+FbYs4heASeBAJovYd3/4qXOaToPNs2uKLWlmDGAxuudifybv/pb6Jz16G0BR61jbzOUzpKpUlXQcLdtryVBvskiTo1m9DbqRTPnXAq0k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759746121; c=relaxed/simple;
-	bh=AJrCHogOFI5cKQaQS0F5R4X36lqcVoGB6kMJM/rOTkY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=a3Shg7agU5GCc2emkbizPeCqVu9X27TZq+94wkHg6YXXBPpkClO+7XNCwF9VXelvxN/KN9FFSgTf5BagOW8kms+t0jAJ83EBWzIB0grOZstRxHDbgsztc+MBDxTid/4bv+yEaHxKM4CEnwbgjhR6oktNQqLxE5zcqfqfmeTX7rU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=WXVJ62bX; arc=none smtp.client-ip=209.85.128.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1759747669; c=relaxed/simple;
+	bh=FX1Lzu7+bvM9e8qmukvbO1hpPMzmlxgfp1qFo7AK/EQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=miDG5M6zH2nR+N4KhMGspZyicQXFTmDEh9ybswXjTlXN3HR+mLrxpPwebHxHysiiOqDHjMS/H8EKFHhQdNj4df9F7p4DBzVyfAygw1GCUL1GC9xovSEVk5dzcfGjbrAE8tYY2km5ucrFKZ8EY44tph7O1wcpbAS0IbE7mE7jP10=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=E597mMN/; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="WXVJ62bX"
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-71d60110772so48059457b3.0
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 03:21:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1759746118; x=1760350918; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=YHswFDCD4540V/T99FHqHZnQrWbNJSfM6DtDuneKmnY=;
-        b=WXVJ62bXWTIxHv7/snRP2F1VHosC3KeYy3TBfnmBPIVXzKL2h24FcngY8/a3JD8g7A
-         QgruRLDrR+bvYXUu//jM241mmdJuVPeOQ0O0qwXrhWjWHTrVlGzqvDCnp806QXNc8T5o
-         r/I6eADyKnPAJxzJEaqp4wlSPBjzrP1E71qhTl1Ncm4fe8V8dU+PpCcBkiKdo5DK7fII
-         mnA2DS+gDRTIkRFkYgaEx/fodLM6MlbgGTV4MZGkIg5g0IbvzEH3vux0eUxOMaY5pdJv
-         rLacb2amccSJX9yGIXaIPu2dFmPtz1E4SPywy6x0Ch6YYIUe3CboDP0jBX0KJWqJMZZQ
-         xhxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759746118; x=1760350918;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=YHswFDCD4540V/T99FHqHZnQrWbNJSfM6DtDuneKmnY=;
-        b=t2+GetLksLyTXvkRNqFBDibodC842ZBI5lzPmhCmo2gn9NzOGQZRrQcBNFfkuwwBrU
-         HJLNfeRKYTpvt7h8jB0Sp3bSVl5TpUHcwP1XoW4jKWSFFQvXPIqTytv3ExAXKtSeWsy6
-         LdlVTi5KBPMeCzZ6GJzMTWyc7j7f8poziSGL5jVvdIIo9+F0dneqHeY/fs4iYsFuQBan
-         qG2iKk80iXvQ7NGQloSYIM3hefAJstxk/3MLKaO4SoAeZ+yXg7ni3VxQIZS23f4KxIF1
-         SKMjD9gorlGnfA7TgwY7wgusCcyM1DTGozgEV/CjTwewEdanKout2ybNIYhWzUU9yvS2
-         ToKw==
-X-Forwarded-Encrypted: i=1; AJvYcCVKnsDcfvKXIAPOiKijp/Zizm0FDYY5kyp/NHKUMxbxy7q3F2ZF04ivG3N6M3xDQYoCjRvSubY7sCKA@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz+FuChH7r7xyjOSl8Q3onK4Qi3Z6uTghSWuQqPk/VPzu0sf7ff
-	9dmko8Tlve1SvA/tDbyq/JQQt1ZzLN+Ht5+BLZe2ZuRNvdUpMolJ23/1JAz+/slsOCq2Gis20Uf
-	ka5qcZXA4GG73OsCrv8mwENYoBUJO9euLKXL0QKGKeQ==
-X-Gm-Gg: ASbGnctF6hSDvLNiXbe/8BNc5UjTjX0+J2rdDDOZWDnUkNYkJznq5+OCSUNo4IChYHh
-	xIGHXV2S9NhoxojAuAksQ7hwkjmRoAj6C9OG12p5uSq0usiURZSZgZDUrUKomJz5+5wiYO3vWMX
-	qUCDnkS6EVB9KZla0PUudHp5V0839XLQFo4STr0Zee4V+oy5XRkhSGUzLEcbBn+li3+fOMvJzwv
-	VU3SW0qEdt2jkhaZ2JImYWTrxPaWRxS0+re
-X-Google-Smtp-Source: AGHT+IF77psB9K+vCNT5BqknfIdXI0+uekUjNxpVa2VL0PkfMCs3+TBiryz2Ck/k2rBVvaai4e1MlY1ofOfIlxeiR/c=
-X-Received: by 2002:a05:690c:7403:b0:739:7377:fdcf with SMTP id
- 00721157ae682-77f946d9ca3mr238701107b3.27.1759746117957; Mon, 06 Oct 2025
- 03:21:57 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="E597mMN/"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8FDD7C4CEF5;
+	Mon,  6 Oct 2025 10:47:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1759747669;
+	bh=FX1Lzu7+bvM9e8qmukvbO1hpPMzmlxgfp1qFo7AK/EQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=E597mMN/x7YVkjNX1Bc0G8W7GHt89kk8u2seksXgi5q2H3Gw9DqBry/MoIgd7Hl/f
+	 QcuYuZ/DwxfZxXg04LwRoNwgtiAl8T7SsOstK7UXK8SyqkUmffohAckrwzORjzcTe+
+	 /i/1SV3Pn0pttPu3dXePy8Hlmyjuwx9fL801o6Qw=
+Date: Mon, 6 Oct 2025 12:47:45 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: Eliav Farber <farbere@amazon.com>
+Cc: jdike@addtoit.com, richard@nod.at, anton.ivanov@cambridgegreys.com,
+	dave.hansen@linux.intel.com, luto@kernel.org, peterz@infradead.org,
+	tglx@linutronix.de, mingo@redhat.com, bp@alien8.de, x86@kernel.org,
+	hpa@zytor.com, tony.luck@intel.com, qiuxu.zhuo@intel.com,
+	james.morse@arm.com, rric@kernel.org, airlied@linux.ie,
+	daniel@ffwll.ch, maarten.lankhorst@linux.intel.com,
+	mripard@kernel.org, tzimmermann@suse.de, robdclark@gmail.com,
+	sean@poorly.run, jdelvare@suse.com, linux@roeck-us.net,
+	linus.walleij@linaro.org, dmitry.torokhov@gmail.com, maz@kernel.org,
+	wens@csie.org, jernej.skrabec@gmail.com, agk@redhat.com,
+	snitzer@redhat.com, dm-devel@redhat.com, davem@davemloft.net,
+	kuba@kernel.org, mcoquelin.stm32@gmail.com,
+	krzysztof.kozlowski@canonical.com, malattia@linux.it,
+	hdegoede@redhat.com, mgross@linux.intel.com, jejb@linux.ibm.com,
+	martin.petersen@oracle.com, sakari.ailus@linux.intel.com,
+	clm@fb.com, josef@toxicpanda.com, dsterba@suse.com, jack@suse.com,
+	tytso@mit.edu, adilger.kernel@dilger.ca, dushistov@mail.ru,
+	luc.vanoostenryck@gmail.com, rostedt@goodmis.org, pmladek@suse.com,
+	senozhatsky@chromium.org, andriy.shevchenko@linux.intel.com,
+	linux@rasmusvillemoes.dk, minchan@kernel.org, ngupta@vflare.org,
+	akpm@linux-foundation.org, yoshfuji@linux-ipv6.org,
+	dsahern@kernel.org, pablo@netfilter.org, kadlec@netfilter.org,
+	fw@strlen.de, jmaloy@redhat.com, ying.xue@windriver.com,
+	shuah@kernel.org, willy@infradead.org, sashal@kernel.org,
+	quic_akhilpo@quicinc.com, ruanjinjie@huawei.com,
+	David.Laight@aculab.com, herve.codina@bootlin.com,
+	linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+	linux-um@lists.infradead.org, linux-edac@vger.kernel.org,
+	amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+	linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
+	linux-hwmon@vger.kernel.org, linux-input@vger.kernel.org,
+	linux-sunxi@lists.linux.dev, linux-media@vger.kernel.org,
+	netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+	platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-staging@lists.linux.dev, linux-btrfs@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-sparse@vger.kernel.org,
+	linux-mm@kvack.org, netfilter-devel@vger.kernel.org,
+	coreteam@netfilter.org, tipc-discussion@lists.sourceforge.net,
+	linux-kselftest@vger.kernel.org, stable@vger.kernel.org,
+	Linus Torvalds <torvalds@linux-foundation.org>,
+	Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+Subject: Re: [PATCH v2 07/19 5.15.y] minmax: simplify and clarify
+ min_t()/max_t() implementation
+Message-ID: <2025100648-capable-register-101b@gregkh>
+References: <20251003130006.41681-1-farbere@amazon.com>
+ <20251003130006.41681-8-farbere@amazon.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251001060805.26462-1-beanhuo@iokpp.de> <20251001060805.26462-2-beanhuo@iokpp.de>
-In-Reply-To: <20251001060805.26462-2-beanhuo@iokpp.de>
-From: Ulf Hansson <ulf.hansson@linaro.org>
-Date: Mon, 6 Oct 2025 12:21:22 +0200
-X-Gm-Features: AS18NWBgWnP4AaXTtJfAgW5wzsxvciI-aFmsX0xMwXAc3pjmjuiaNSmq0CyP-3U
-Message-ID: <CAPDyKFpyh7Qag+ckCcPkr1RWh8YiST-4V2_Y7xvBU4LRLNC28A@mail.gmail.com>
-Subject: Re: [PATCH v2 1/3] rpmb: move rpmb_frame struct and constants to
- common header
-To: Bean Huo <beanhuo@iokpp.de>
-Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com, 
-	jejb@linux.ibm.com, martin.petersen@oracle.com, can.guo@oss.qualcomm.com, 
-	beanhuo@micron.com, jens.wiklander@linaro.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251003130006.41681-8-farbere@amazon.com>
 
-On Wed, 1 Oct 2025 at 08:08, Bean Huo <beanhuo@iokpp.de> wrote:
->
-> From: Bean Huo <beanhuo@micron.com>
->
-> Move struct rpmb_frame and RPMB operation constants from MMC block
-> driver to include/linux/rpmb.h for reuse across different RPMB
-> implementations (UFS, NVMe, etc.).
->
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
+On Fri, Oct 03, 2025 at 12:59:54PM +0000, Eliav Farber wrote:
+> From: Linus Torvalds <torvalds@linux-foundation.org>
+> 
+> [ Upstream commit 017fa3e89187848fd056af757769c9e66ac3e93d ]
+> 
+> This simplifies the min_t() and max_t() macros by no longer making them
+> work in the context of a C constant expression.
+> 
+> That means that you can no longer use them for static initializers or
+> for array sizes in type definitions, but there were only a couple of
+> such uses, and all of them were converted (famous last words) to use
+> MIN_T/MAX_T instead.
+> 
+> Cc: David Laight <David.Laight@aculab.com>
+> Cc: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+> Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+> Signed-off-by: Eliav Farber <farbere@amazon.com>
 
-I have queued this up via my mmc tree and plan to send a late
-pull-request to Linus to get this included for 6.18-rc1.
+Eliav, your testing infrastructure needs some work, this patch breaks
+the build on this kernel tree:
 
-That should help to land the remaining pieces for ufs in the second
-step without having to care about the mmc parts.
+In file included from ./include/linux/kernel.h:16,
+                 from ./include/linux/list.h:9,
+                 from ./include/linux/wait.h:7,
+                 from ./include/linux/wait_bit.h:8,
+                 from ./include/linux/fs.h:6,
+                 from fs/erofs/internal.h:10,
+                 from fs/erofs/zdata.h:9,
+                 from fs/erofs/zdata.c:6:
+fs/erofs/zdata.c: In function ‘z_erofs_decompress_pcluster’:
+fs/erofs/zdata.h:185:61: error: ISO C90 forbids variable length array ‘pages_onstack’ [-Werror=vla]
+  185 |         min_t(unsigned int, THREAD_SIZE / 8 / sizeof(struct page *), 96U)
+      |                                                             ^~~~
+./include/linux/minmax.h:49:23: note: in definition of macro ‘__cmp_once_unique’
+   49 |         ({ type ux = (x); type uy = (y); __cmp(op, ux, uy); })
+      |                       ^
+./include/linux/minmax.h:164:27: note: in expansion of macro ‘__cmp_once’
+  164 | #define min_t(type, x, y) __cmp_once(min, type, x, y)
+      |                           ^~~~~~~~~~
+fs/erofs/zdata.h:185:9: note: in expansion of macro ‘min_t’
+  185 |         min_t(unsigned int, THREAD_SIZE / 8 / sizeof(struct page *), 96U)
+      |         ^~~~~
+fs/erofs/zdata.c:847:36: note: in expansion of macro ‘Z_EROFS_VMAP_ONSTACK_PAGES’
+  847 |         struct page *pages_onstack[Z_EROFS_VMAP_ONSTACK_PAGES];
+      |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
+cc1: all warnings being treated as errors
 
-Kind regards
-Uffe
 
-> ---
->  drivers/mmc/core/block.c | 42 --------------------------------------
->  include/linux/rpmb.h     | 44 ++++++++++++++++++++++++++++++++++++++++
->  2 files changed, 44 insertions(+), 42 deletions(-)
->
-> diff --git a/drivers/mmc/core/block.c b/drivers/mmc/core/block.c
-> index b32eefcca4b7..bd5f6fcb03af 100644
-> --- a/drivers/mmc/core/block.c
-> +++ b/drivers/mmc/core/block.c
-> @@ -79,48 +79,6 @@ MODULE_ALIAS("mmc:block");
->  #define MMC_EXTRACT_INDEX_FROM_ARG(x) ((x & 0x00FF0000) >> 16)
->  #define MMC_EXTRACT_VALUE_FROM_ARG(x) ((x & 0x0000FF00) >> 8)
->
-> -/**
-> - * struct rpmb_frame - rpmb frame as defined by eMMC 5.1 (JESD84-B51)
-> - *
-> - * @stuff        : stuff bytes
-> - * @key_mac      : The authentication key or the message authentication
-> - *                 code (MAC) depending on the request/response type.
-> - *                 The MAC will be delivered in the last (or the only)
-> - *                 block of data.
-> - * @data         : Data to be written or read by signed access.
-> - * @nonce        : Random number generated by the host for the requests
-> - *                 and copied to the response by the RPMB engine.
-> - * @write_counter: Counter value for the total amount of the successful
-> - *                 authenticated data write requests made by the host.
-> - * @addr         : Address of the data to be programmed to or read
-> - *                 from the RPMB. Address is the serial number of
-> - *                 the accessed block (half sector 256B).
-> - * @block_count  : Number of blocks (half sectors, 256B) requested to be
-> - *                 read/programmed.
-> - * @result       : Includes information about the status of the write co=
-unter
-> - *                 (valid, expired) and result of the access made to the=
- RPMB.
-> - * @req_resp     : Defines the type of request and response to/from the =
-memory.
-> - *
-> - * The stuff bytes and big-endian properties are modeled to fit to the s=
-pec.
-> - */
-> -struct rpmb_frame {
-> -       u8     stuff[196];
-> -       u8     key_mac[32];
-> -       u8     data[256];
-> -       u8     nonce[16];
-> -       __be32 write_counter;
-> -       __be16 addr;
-> -       __be16 block_count;
-> -       __be16 result;
-> -       __be16 req_resp;
-> -} __packed;
-> -
-> -#define RPMB_PROGRAM_KEY       0x1    /* Program RPMB Authentication Key=
- */
-> -#define RPMB_GET_WRITE_COUNTER 0x2    /* Read RPMB write counter */
-> -#define RPMB_WRITE_DATA        0x3    /* Write data to RPMB partition */
-> -#define RPMB_READ_DATA         0x4    /* Read data from RPMB partition *=
-/
-> -#define RPMB_RESULT_READ       0x5    /* Read result request  (Internal)=
- */
-> -
->  #define RPMB_FRAME_SIZE        sizeof(struct rpmb_frame)
->  #define CHECK_SIZE_NEQ(val) ((val) !=3D sizeof(struct rpmb_frame))
->  #define CHECK_SIZE_ALIGNED(val) IS_ALIGNED((val), sizeof(struct rpmb_fra=
-me))
-> diff --git a/include/linux/rpmb.h b/include/linux/rpmb.h
-> index cccda73eea4d..ed3f8e431eff 100644
-> --- a/include/linux/rpmb.h
-> +++ b/include/linux/rpmb.h
-> @@ -61,6 +61,50 @@ struct rpmb_dev {
->
->  #define to_rpmb_dev(x)         container_of((x), struct rpmb_dev, dev)
->
-> +/**
-> + * struct rpmb_frame - RPMB frame structure for authenticated access
-> + *
-> + * @stuff        : stuff bytes, a padding/reserved area of 196 bytes at =
-the
-> + *                 beginning of the RPMB frame. They don=E2=80=99t carry=
- meaningful
-> + *                 data but are required to make the frame exactly 512 b=
-ytes.
-> + * @key_mac      : The authentication key or the message authentication
-> + *                 code (MAC) depending on the request/response type.
-> + *                 The MAC will be delivered in the last (or the only)
-> + *                 block of data.
-> + * @data         : Data to be written or read by signed access.
-> + * @nonce        : Random number generated by the host for the requests
-> + *                 and copied to the response by the RPMB engine.
-> + * @write_counter: Counter value for the total amount of the successful
-> + *                 authenticated data write requests made by the host.
-> + * @addr         : Address of the data to be programmed to or read
-> + *                 from the RPMB. Address is the serial number of
-> + *                 the accessed block (half sector 256B).
-> + * @block_count  : Number of blocks (half sectors, 256B) requested to be
-> + *                 read/programmed.
-> + * @result       : Includes information about the status of the write co=
-unter
-> + *                 (valid, expired) and result of the access made to the=
- RPMB.
-> + * @req_resp     : Defines the type of request and response to/from the =
-memory.
-> + *
-> + * The stuff bytes and big-endian properties are modeled to fit to the s=
-pec.
-> + */
-> +struct rpmb_frame {
-> +       u8     stuff[196];
-> +       u8     key_mac[32];
-> +       u8     data[256];
-> +       u8     nonce[16];
-> +       __be32 write_counter;
-> +       __be16 addr;
-> +       __be16 block_count;
-> +       __be16 result;
-> +       __be16 req_resp;
-> +};
-> +
-> +#define RPMB_PROGRAM_KEY       0x1    /* Program RPMB Authentication Key=
- */
-> +#define RPMB_GET_WRITE_COUNTER 0x2    /* Read RPMB write counter */
-> +#define RPMB_WRITE_DATA        0x3    /* Write data to RPMB partition */
-> +#define RPMB_READ_DATA         0x4    /* Read data from RPMB partition *=
-/
-> +#define RPMB_RESULT_READ       0x5    /* Read result request  (Internal)=
- */
-> +
->  #if IS_ENABLED(CONFIG_RPMB)
->  struct rpmb_dev *rpmb_dev_get(struct rpmb_dev *rdev);
->  void rpmb_dev_put(struct rpmb_dev *rdev);
-> --
-> 2.34.1
->
+I'll drop this whole series, please do a bit more testing before sending
+out a new version.
+
+thanks,
+
+greg k-h
