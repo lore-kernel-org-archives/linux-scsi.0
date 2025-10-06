@@ -1,87 +1,201 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 990F93595C;
-	Mon,  6 Oct 2025 19:41:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB1292DE70E
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 20:35:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759779691; cv=none; b=jzQgkriNUWaAQmDr2HK+dqZWe3RZN93P/I6seJ+a10X7sV1jBcew2aYwAKZDECgRN7XLwh8x/PDu/HIiCJpARVUeScLeApGeHEhxrZ4MXty11YZD1312kHovLsn6E1WG5af0DGMuGEfjO0fmUL18jVaJD/d1cbAPC7Fd3pM3jow=
+	t=1759782912; cv=none; b=ZOofByLKiktHk5QgP3RbjGtYasIwlWgUnmYXvy/crP//kpixT7SZZBwYHNDgJ+L+/wWWbZ1c+W2Buyrzb17TW0AbvEDC9OpZN9eFViGFExZxoyuBdeqzpao6Tcslor9WLKA2fmxk/Qqv6aVVGvOOqzKkWguu/lH9E+liVpMRxJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759779691; c=relaxed/simple;
-	bh=jxP0zMtLefG3gelLpEwi/Nfyuz8ryR09EqQ3t1WBA+w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=rYhBYZKUjnT5WiZwNf22UZhIeAcQn/lrTGdXafANgbaSlGuLeibxPy7NQzuhQbYtxT4F8DtHzRVla6CQhUdTfbYLaNaP8MAqvlmJxyt8En1rYovijUChFbYXavlci9IlMoVNIIrSU4mIydyXAOrpiAgplmlGubA5RZ4mNPkTJSU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EBbMtXrc; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1759782912; c=relaxed/simple;
+	bh=wRqM1wL0rtVZzWbUB1vZjAZ//+DX1ksR98VvmNXh1Ag=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=aj0NB/1BKUwtM2gmBegLjdwse0nahaGMqw1QAc6dowD7KIVJhIzFQzdSDEA5yrU8uV0jd9ZHa25QLd1CSaP90OLBDuhJKsMOJnG9+GnAInIkyd7IngvPRAB/tcoAvoypFRHpM2DnhuYFRApyWElhXDRZOr8VZerEJ+suGJGo9uI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JLcuykQW; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EBbMtXrc"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DF9C2C4CEF5;
-	Mon,  6 Oct 2025 19:41:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759779691;
-	bh=jxP0zMtLefG3gelLpEwi/Nfyuz8ryR09EqQ3t1WBA+w=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=EBbMtXrcRPtkn+cXtsxzXPsiAnxRORCr2LiSol6hGiagi4OlD2EnkiyranHO9bSpv
-	 AZEv624lzFrw28XtMPu3gUaR+UIuuPiuYqudLRmE+tKPI2Nk7z1wZ/Nfo6nY4ADXH/
-	 INFg9ih6Jfs0dPPt2n7NFude6dR1lhYnG7KoURLi/8Gp/NNMy6A4jizA6tYOIa0moG
-	 /gnKML89dXOJZ1FLEhorRVVxlx1kUgH5jlFjMPrEOY9YM3m3fLZPfPZnEDsBlU6nVa
-	 QeFks1SeRxZ9uN1ajzMQmMCnV3iyFv/vCAVXivzsZZ+UBpjQdAFJ7YydsVMCCr+edn
-	 4Wh2yLZ4DPzwQ==
-Message-ID: <a6709051-bd95-4f7f-8a85-d4d670f7a316@kernel.org>
-Date: Mon, 6 Oct 2025 13:41:30 -0600
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JLcuykQW"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-46e3cdc1a6aso40490585e9.1
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 13:35:08 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1759782907; x=1760387707; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=w8A8mrbjHOp4I+EQv9aLZuINyxZFXeZgTqLUL4/gbts=;
+        b=JLcuykQWTX1qhWoGcyL4rEQ654Dn8fEafHNnYaDb6dJmDejlYhMexc8dmKE0V+67KA
+         VXeK/+jdcGamwSsNrowIARdasb/A3kfrVP+mYMrjG2fMDyohKFx1OR/CBHF/NQieDvTm
+         nYhYkQLV5FmuVpoGFvxSlH9sEY7KtEtF6AA69dHyfafQLyW7FbgGfvjK7QzAsZKhJRxF
+         6b1Bh3dSp4xPjBWSZAhhNHoWPX4ZTv1vyvmhV1EfLHKX0+BMy3LeCJPJ/qPM7TxeZzUu
+         gAvPPXnbv8/OFMtna0TOzl2h/DsQ3zNdQkpQ+LVjhXyApki4ODJMjXgeiBA/a3ojS0nY
+         rm8Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1759782907; x=1760387707;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=w8A8mrbjHOp4I+EQv9aLZuINyxZFXeZgTqLUL4/gbts=;
+        b=fIRtFLDwbt4WU8ku5xXg673OV/BLcxN9jfxHHsiXlptAtTIWyn/kurNM4qjFRMH4A0
+         M9bDWwZ7dHgl04ov/Jt71WTjxz13pO238ORrDXjyATcGm1PscOrp/4/2kpxMu/6bR7Xs
+         u2f+CJvemZ9HMavZnMGeQ/D5ewrJ6ctbFMarMLREKEWIKeiOqAFR4h2izNsi8RZMVTcG
+         UI9RZRXab3P5hxxZwvFTbSG3XX/cHittJuHvkfP0xavGCgaQLbXhOt+IJWF3i88lZdoj
+         Lz/6rM21dLlsp3eheCUfgIE4r2U1FIShyZ3Yq7nu20hMzYHMJivMIAyPdFEwV+mzjsw0
+         C+bQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWX7WFGskTSwszqOxr9CuSxiiW2wRkta1xEynd0b+tzxakU/AGmb8u6fsihPc/WvayfYLVURwIkZh5i@vger.kernel.org
+X-Gm-Message-State: AOJu0YwDGjllng6dvK4jJPW50Q3KBkWlNXgQBCPnlUuqNfFzpsD9PZtV
+	HdisF/+e+hpRCLHbZnQQ5nAOlyXJbbtxxx/6ktT2Ak94Of3Eow8tC5L/
+X-Gm-Gg: ASbGnctac2XTgLoIWLrA/NvXlwGNPcWam2kLW0IK6FBsjPHomJFb2EWzBzopl55Oe+f
+	xMh8yW4lZJeBp/uwtc6aCDsn07gFXtv4YIFmIwYI07ied8lG7lCuI4LksfOxC0c9x4LbTxKDbst
+	wYaWQycmm9/6xMGhVqDTFdlQUy53AATX3JGfQ9a/qno0SvJQRmNajTvVuJoE4t0PXnzH3OaZVBw
+	lt3dt1lVaSWOwUpYyZVfc4VjvDvJZauHZ6/12UWfZJY/ajj1BvLoPncnFaZ6ED1nUUICSxgVSvI
+	5+IWKRPRVqXeAbL0MnCMXDVvphGXCeezj3K7dr9pJhVzmudR69OWSut8W/he093vTPbLnd5RawF
+	401h7YttPfCTLtj9pSl4NxfolLjpEQK/s43YXYe/cban4huFlZcS96+Vo9DXmVd750NwCHmY4xY
+	KxndNTzSBGSstE
+X-Google-Smtp-Source: AGHT+IEnzSpQE+ROtayFnE2b4dPjTQF2CaZO9TdUfVNFcX6ejR4aNYCswD7XdVH/ajIMwYylIXY+YQ==
+X-Received: by 2002:a05:600c:2287:b0:45d:d86b:b386 with SMTP id 5b1f17b1804b1-46fa29f13dfmr4596085e9.14.1759782906754;
+        Mon, 06 Oct 2025 13:35:06 -0700 (PDT)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46e723591fcsm172334545e9.10.2025.10.06.13.35.05
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Oct 2025 13:35:06 -0700 (PDT)
+Date: Mon, 6 Oct 2025 21:35:03 +0100
+From: David Laight <david.laight.linux@gmail.com>
+To: Greg KH <gregkh@linuxfoundation.org>
+Cc: Eliav Farber <farbere@amazon.com>, dave.hansen@linux.intel.com,
+ peterz@infradead.org, tglx@linutronix.de, mingo@redhat.com, bp@alien8.de,
+ x86@kernel.org, hpa@zytor.com, james.morse@arm.com, rric@kernel.org,
+ daniel@ffwll.ch, maarten.lankhorst@linux.intel.com, mripard@kernel.org,
+ tzimmermann@suse.de, sean@poorly.run, jdelvare@suse.com,
+ linux@roeck-us.net, linus.walleij@linaro.org, dmitry.torokhov@gmail.com,
+ maz@kernel.org, wens@csie.org, jernej.skrabec@gmail.com, agk@redhat.com,
+ snitzer@redhat.com, dm-devel@redhat.com, davem@davemloft.net,
+ kuba@kernel.org, mcoquelin.stm32@gmail.com,
+ krzysztof.kozlowski@canonical.com, malattia@linux.it, hdegoede@redhat.com,
+ mgross@linux.intel.com, jejb@linux.ibm.com, martin.petersen@oracle.com,
+ sakari.ailus@linux.intel.com, clm@fb.com, josef@toxicpanda.com,
+ dsterba@suse.com, jack@suse.com, tytso@mit.edu, adilger.kernel@dilger.ca,
+ dushistov@mail.ru, luc.vanoostenryck@gmail.com, rostedt@goodmis.org,
+ pmladek@suse.com, senozhatsky@chromium.org,
+ andriy.shevchenko@linux.intel.com, linux@rasmusvillemoes.dk,
+ minchan@kernel.org, ngupta@vflare.org, akpm@linux-foundation.org,
+ yoshfuji@linux-ipv6.org, dsahern@kernel.org, pablo@netfilter.org,
+ kadlec@netfilter.org, fw@strlen.de, jmaloy@redhat.com,
+ ying.xue@windriver.com, shuah@kernel.org, willy@infradead.org,
+ sashal@kernel.org, quic_akhilpo@quicinc.com, ruanjinjie@huawei.com,
+ David.Laight@aculab.com, herve.codina@bootlin.com,
+ linux-arm-kernel@lists.infradead.org, linux-kernel@vger.kernel.org,
+ linux-um@lists.infradead.org, linux-edac@vger.kernel.org,
+ amd-gfx@lists.freedesktop.org, dri-devel@lists.freedesktop.org,
+ linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
+ linux-hwmon@vger.kernel.org, linux-input@vger.kernel.org,
+ linux-sunxi@lists.linux.dev, linux-media@vger.kernel.org,
+ netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
+ platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-staging@lists.linux.dev, linux-btrfs@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-sparse@vger.kernel.org,
+ linux-mm@kvack.org, netfilter-devel@vger.kernel.org,
+ coreteam@netfilter.org, tipc-discussion@lists.sourceforge.net,
+ linux-kselftest@vger.kernel.org, stable@vger.kernel.org, Linus Torvalds
+ <torvalds@linux-foundation.org>, Lorenzo Stoakes
+ <lorenzo.stoakes@oracle.com>
+Subject: Re: [PATCH v2 07/19 5.15.y] minmax: simplify and clarify
+ min_t()/max_t() implementation
+Message-ID: <20251006213242.3462e746@pumpkin>
+In-Reply-To: <2025100648-capable-register-101b@gregkh>
+References: <20251003130006.41681-1-farbere@amazon.com>
+	<20251003130006.41681-8-farbere@amazon.com>
+	<2025100648-capable-register-101b@gregkh>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: fix shift out-of-bounds in sg_build_indirect The
- num variable is set to 0. The variable num gets its value from
- scatter_elem_sz. However the minimum value of scatter_elem_sz is PAGE_SHIFT.
- So setting num to PAGE_SIZE when num < PAGE_SIZE.
-To: Kshitij Paranjape <kshitijvparanjape@gmail.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: Doug Gilbert <dgilbert@interlog.com>,
- "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
- skhan@linuxfoundation.org, david.hunter.linux@gmail.com,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-kernel-mentees@lists.linux.dev, stable@vger.kernel.org,
- syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
-References: <20251006174658.217497-1-kshitijvparanjape@gmail.com>
-Content-Language: en-US
-From: Khalid Aziz <khalid@kernel.org>
-In-Reply-To: <20251006174658.217497-1-kshitijvparanjape@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: quoted-printable
 
-On 10/6/25 11:46 AM, Kshitij Paranjape wrote:
-> Cc: <stable@vger.kernel.org>
-> Reported-by: syzbot+270f1c719ee7baab9941@syzkaller.appspotmail.com
-> Closes: https://syzkaller.appspot.com/bug?extid=270f1c719ee7baab9941
-> Signed-off-by: Kshitij Paranjape <kshitijvparanjape@gmail.com>
-> ---
->   drivers/scsi/sg.c | 1 +
->   1 file changed, 1 insertion(+)
-> 
-> diff --git a/drivers/scsi/sg.c b/drivers/scsi/sg.c
-> index effb7e768165..9ae41bb256d7 100644
-> --- a/drivers/scsi/sg.c
-> +++ b/drivers/scsi/sg.c
-> @@ -1888,6 +1888,7 @@ sg_build_indirect(Sg_scatter_hold * schp, Sg_fd * sfp, int buff_size)
->   		if (num < PAGE_SIZE) {
->   			scatter_elem_sz = PAGE_SIZE;
->   			scatter_elem_sz_prev = PAGE_SIZE;
-> +			num = scatter_elem_sz;
->   		} else
->   			scatter_elem_sz_prev = num;
->   	}
+On Mon, 6 Oct 2025 12:47:45 +0200
+Greg KH <gregkh@linuxfoundation.org> wrote:
 
-Have you seen any issues caused by not setting num to PAGE_SIZE when num 
-< PAGE_SIZE?
+(I've had to trim the 'To' list to send this...)
 
- From what I can see, num is used to calculate the page order for 
-allocation which will be 0 whether num=PAGE_SIZE or < PAGE_SIZE. After 
-that num gets assigned a new value any way before its next use.
+> On Fri, Oct 03, 2025 at 12:59:54PM +0000, Eliav Farber wrote:
+> > From: Linus Torvalds <torvalds@linux-foundation.org>
+> >=20
+> > [ Upstream commit 017fa3e89187848fd056af757769c9e66ac3e93d ]
+> >=20
+> > This simplifies the min_t() and max_t() macros by no longer making them
+> > work in the context of a C constant expression.
+> >=20
+> > That means that you can no longer use them for static initializers or
+> > for array sizes in type definitions, but there were only a couple of
+> > such uses, and all of them were converted (famous last words) to use
+> > MIN_T/MAX_T instead.
+> >=20
+> > Cc: David Laight <David.Laight@aculab.com>
+> > Cc: Lorenzo Stoakes <lorenzo.stoakes@oracle.com>
+> > Signed-off-by: Linus Torvalds <torvalds@linux-foundation.org>
+> > Signed-off-by: Eliav Farber <farbere@amazon.com> =20
+>=20
+> Eliav, your testing infrastructure needs some work, this patch breaks
+> the build on this kernel tree:
+>=20
+> In file included from ./include/linux/kernel.h:16,
+>                  from ./include/linux/list.h:9,
+>                  from ./include/linux/wait.h:7,
+>                  from ./include/linux/wait_bit.h:8,
+>                  from ./include/linux/fs.h:6,
+>                  from fs/erofs/internal.h:10,
+>                  from fs/erofs/zdata.h:9,
+>                  from fs/erofs/zdata.c:6:
+> fs/erofs/zdata.c: In function =E2=80=98z_erofs_decompress_pcluster=E2=80=
+=99:
+> fs/erofs/zdata.h:185:61: error: ISO C90 forbids variable length array =E2=
+=80=98pages_onstack=E2=80=99 [-Werror=3Dvla]
+>   185 |         min_t(unsigned int, THREAD_SIZE / 8 / sizeof(struct page =
+*), 96U)
+>       |                                                             ^~~~
 
---
-Khalid
+That constant seems to get (renamed and) changed to 32 in a later patch.
+I'm not sure of the rational for the min() at all.
+I think THREAD_SIZE is the size of the kernel stack? Or at least related to=
+ it.
+The default seems to be 8k on x86-64 and 4k or 8k on i386.
+So it is pretty much always going to be 96.
+
+Linus added MIN() that can be used for array sizes.
+But I'd guess this could just be changed to 32 - need to ask the erofs guys.
+
+	David
+
+
+> ./include/linux/minmax.h:49:23: note: in definition of macro =E2=80=98__c=
+mp_once_unique=E2=80=99
+>    49 |         ({ type ux =3D (x); type uy =3D (y); __cmp(op, ux, uy); })
+>       |                       ^
+> ./include/linux/minmax.h:164:27: note: in expansion of macro =E2=80=98__c=
+mp_once=E2=80=99
+>   164 | #define min_t(type, x, y) __cmp_once(min, type, x, y)
+>       |                           ^~~~~~~~~~
+> fs/erofs/zdata.h:185:9: note: in expansion of macro =E2=80=98min_t=E2=80=
+=99
+>   185 |         min_t(unsigned int, THREAD_SIZE / 8 / sizeof(struct page =
+*), 96U)
+>       |         ^~~~~
+> fs/erofs/zdata.c:847:36: note: in expansion of macro =E2=80=98Z_EROFS_VMA=
+P_ONSTACK_PAGES=E2=80=99
+>   847 |         struct page *pages_onstack[Z_EROFS_VMAP_ONSTACK_PAGES];
+>       |                                    ^~~~~~~~~~~~~~~~~~~~~~~~~~
+> cc1: all warnings being treated as errors
+>=20
+>=20
+> I'll drop this whole series, please do a bit more testing before sending
+> out a new version.
+>=20
+> thanks,
+>=20
+> greg k-h
+>=20
+
