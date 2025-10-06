@@ -1,230 +1,135 @@
-Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4DB8A27A45C
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 12:11:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1CD135898
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 12:30:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759752711; cv=none; b=l+XdLCzBPb/OBCcizAdHwYuA0IMlSovVIY9X9VSmO11JDsPQfm5/NcYueNU96FUM6lq9dtNZnB7jkxa7I+IlL53S7ErE/lVXgQgRTrSFqorVqbUaXALOjuCHEcitjCjBewRmEKa15XsNDuxW3IE7kqxAXLcRc2puz7RgaS9UcFs=
+	t=1759753845; cv=none; b=s2rJBAWmLEkq9+bXzQMTs8aFLHM/sT00t9P1hfFUulPDWhEbxC5hGz9HzT/dBbaIOa7ZIkNVItgD1w++WR7gND3BW6M/tXy8Kemy1dQGj4XPA5JDQmrjevc6p00YPrkqbfLzIbgjhoR4egSyfQL25OgaBaiZ2hd41zl+N8+mh2A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759752711; c=relaxed/simple;
-	bh=bEpFkBhMAl+Kyv9UshSYj++BncULeY9oVKP4ESd6Yqw=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=g1aM1UGfDo8b2cvk1OhcCJ+jgKNeJVrFNmeyjYDArnkMd1TSMm7n/zZLWw/2HHH2sTTKLKUhDVLfZ+SMeszwAgg1+PWy9OjKqgBYub6bRMAvLs7zWO+ugMhWCpKw6h52oso609+R8oh1KAg20X7017I9FPI3XBJONcZKNwlj10I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=oT1aSPuj; arc=none smtp.client-ip=185.67.36.65
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1759753845; c=relaxed/simple;
+	bh=8WgKRqMJPSYfkRP5kOqAcrkJUwR6La9YOMWBWAGjIFM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=FfdbXIrgLCHgr6jml/PATRC0dVjMpNs8BSLZ2/sal2vysurQFyivGIqPheV9swewRQ9g3lUL7HdB4uX9faX77dZqeIV4CSTx52DFKczUXt9faEzgwwdV1Q3ScpfcXchR0WlGQIp5tU27vfs0OlQD1fmtIqh7Jc94Hr/RaDpTuMM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=qYELF5GQ; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=crxqOEWA; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=i9FFLlfw; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=KLmWKvyW; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="oT1aSPuj"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout01.posteo.de (Postfix) with ESMTPS id 3DF6F240027
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 14:11:47 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1759752707; bh=2zbnC8Z/CyeVECVYwsvs1oT4U41KTfZNklK696kKRTQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version:Autocrypt:OpenPGP:From;
-	b=oT1aSPujWARqnkuEgI9skVSO1edRSQZdn5NVB8DdM4uIoq3hGsBtoMrJUUGfqLPra
-	 Vx6HBneQevsOvJBmw06KScau/6eW+tvKCgjFs84iMWrC6C4HCPceg49Y/R+gp/zf/w
-	 lZjSjo5MfTM6eNT5WH0blvlsJC5FzWtU+PBJAoaYxtqgJqv05XUs+va6KfgXlcoGHk
-	 4GslXLdPx32uB722r2lLIcDYZGt+dy3ZIuXZd5xzGNdADHFMEYa6OOyjOpzCs4vgjX
-	 zi2RD06L1WTePuZT/eHJANlUMdHmj/WnkfXf77+rjjPlr5NM1n8oyB/7UdvlX0Ok14
-	 8nli6YoJp2Pbw==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4cgJ696Q94z6v1b;
-	Mon,  6 Oct 2025 14:11:45 +0200 (CEST)
-Message-ID: <568ee07cc0155f3d05a868ae6dce102916b83566.camel@posteo.de>
-Subject: Re: [PATCH 1/2] Add manage_restart device attribute to scsi_disk
-From: Markus Probst <markus.probst@posteo.de>
-To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K.
- Petersen" <martin.petersen@oracle.com>
-Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Mon, 06 Oct 2025 12:11:46 +0000
-In-Reply-To: <524f67bf-f4df-41bf-bf1b-5cd0a79649eb@kernel.org>
-References: <8c3cb28c57462f9665b08fdaa022e6abc57fcd9e.camel@posteo.de>
-	 <20251005190559.1472308-1-markus.probst@posteo.de>
-	 <524f67bf-f4df-41bf-bf1b-5cd0a79649eb@kernel.org>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="qYELF5GQ";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="crxqOEWA";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="i9FFLlfw";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="KLmWKvyW"
+Received: from imap1.dmz-prg2.suse.org (imap1.dmz-prg2.suse.org [IPv6:2a07:de40:b281:104:10:150:64:97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id BDC4D336CB;
+	Mon,  6 Oct 2025 12:30:40 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1759753842; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DH/E8tdqQkikeQeW9VrxwMtlsxz2Qi0OG9Sx1VZcu7Q=;
+	b=qYELF5GQ/fEzIt6b6U/00fnf8TZ4Am9FPXKWPtwfM2jNyOIHcAiJUmj6vTLEB1sTpsQBS5
+	2RVl1SNqRt6kE+l0zwPAzWSBsbK6MVE69gUNxLrnsb80VLa6IUgECnqGq5mV5YFpQj2uiF
+	k13SsPzszmzPE07BrK6HwwmEhEmdKz4=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1759753842;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DH/E8tdqQkikeQeW9VrxwMtlsxz2Qi0OG9Sx1VZcu7Q=;
+	b=crxqOEWAKQga4pFbqrJrAPtOIrT9lTPYsnddKqsPCPaB2cX/gIIm/zikz36s6JNoBnXr9/
+	XlagKGba+KJdj1BQ==
+Authentication-Results: smtp-out1.suse.de;
+	dkim=pass header.d=suse.de header.s=susede2_rsa header.b=i9FFLlfw;
+	dkim=pass header.d=suse.de header.s=susede2_ed25519 header.b=KLmWKvyW
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1759753840; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DH/E8tdqQkikeQeW9VrxwMtlsxz2Qi0OG9Sx1VZcu7Q=;
+	b=i9FFLlfwoi6YO3QSmRJX2BbkmHa/vi/HYrvDb8+80Z6+fo6dHWx6n4FU7Uhhreem7fvng/
+	3XwvaEm1BuRvxMTLOfYUlf64xOjxyS2tRqcRPADMzDw76sKu3IO+R3BInbHhr1U1X9kbHV
+	lAKIs/EYEmuOfnSzCIp1uhkBW6M9Jys=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1759753840;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=DH/E8tdqQkikeQeW9VrxwMtlsxz2Qi0OG9Sx1VZcu7Q=;
+	b=KLmWKvyW/TQznlozFKG995pOwzVwtAuHepkeU1dXa1VBokbG36OsFgtyjvepq6mXh9Xf2x
+	fI7q0uXX/AqgndBQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id A451213995;
+	Mon,  6 Oct 2025 12:30:40 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id Uc4oJ3C242hwdwAAD6G6ig
+	(envelope-from <dwagner@suse.de>); Mon, 06 Oct 2025 12:30:40 +0000
+Date: Mon, 6 Oct 2025 14:30:32 +0200
+From: Daniel Wagner <dwagner@suse.de>
+To: Shinichiro Kawasaki <shinichiro.kawasaki@wdc.com>
+Cc: "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>, 
+	"linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>, "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, 
+	"nbd@other.debian.org" <nbd@other.debian.org>, "linux-rdma@vger.kernel.org" <linux-rdma@vger.kernel.org>
+Subject: Re: blktests failures with v6.17 kernel
+Message-ID: <6f615e86-d160-41a2-a078-478406e4c749@flourine.local>
+References: <3bbujxlhhzxufnihiyhssmknscdcqt7igyvzbhwf3sxdgbruma@kw5cf6u5npan>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <3bbujxlhhzxufnihiyhssmknscdcqt7igyvzbhwf3sxdgbruma@kw5cf6u5npan>
+X-Spamd-Result: default: False [-4.51 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	R_DKIM_ALLOW(-0.20)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	MX_GOOD(-0.01)[];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	TO_DN_EQ_ADDR_SOME(0.00)[];
+	RECEIVED_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:106:10:150:64:167:received];
+	TO_DN_SOME(0.00)[];
+	MISSING_XM_UA(0.00)[];
+	ARC_NA(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DNSWL_BLOCKED(0.00)[2a07:de40:b281:104:10:150:64:97:from,2a07:de40:b281:106:10:150:64:167:received];
+	RBL_SPAMHAUS_BLOCKED_OPENRESOLVER(0.00)[2a07:de40:b281:104:10:150:64:97:from];
+	FROM_EQ_ENVFROM(0.00)[];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_FIVE(0.00)[6];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,imap1.dmz-prg2.suse.org:rdns,suse.de:dkim];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	DKIM_TRACE(0.00)[suse.de:+]
+X-Spam-Flag: NO
+X-Spam-Level: 
+X-Rspamd-Queue-Id: BDC4D336CB
+X-Rspamd-Server: rspamd2.dmz-prg2.suse.org
+X-Rspamd-Action: no action
+X-Spam-Score: -4.51
 
-On Mon, 2025-10-06 at 09:58 +0900, Damien Le Moal wrote:
-> On 10/6/25 04:06, Markus Probst wrote:
-> > there is already manage_shutdown, manage_system_start_stop and
-> > manage_runtime_start_stop device attributes that allows the high-
-> > level
-> > device driver (sd) manage the device power state, expect for the
-> > system_state SYSTEM_RESTART. With this device attribute, it is
-> > possible to
-> > let the high-level device driver (sd) manage the device power state
-> > for
-> > SYSTEM_RESTART too.
-> >=20
-> > Signed-off-by: Markus Probst <markus.probst@posteo.de>
-> > ---
-> > =C2=A0drivers/scsi/sd.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0 | 35
-> > ++++++++++++++++++++++++++++++++++-
-> > =C2=A0include/scsi/scsi_device.h |=C2=A0 6 ++++++
-> > =C2=A02 files changed, 40 insertions(+), 1 deletion(-)
-> >=20
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index 5b8668accf8e..a3e9c2e9d9f4 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -318,6 +318,36 @@ static ssize_t manage_shutdown_store(struct
-> > device *dev,
-> > =C2=A0}
-> > =C2=A0static DEVICE_ATTR_RW(manage_shutdown);
-> > =C2=A0
-> > +static ssize_t manage_restart_show(struct device *dev,
-> > +				=C2=A0=C2=A0 struct device_attribute *attr,
-> > char *buf)
-> > +{
-> > +	struct scsi_disk *sdkp =3D to_scsi_disk(dev);
-> > +	struct scsi_device *sdp =3D sdkp->device;
->=20
-> sdp is not really needed.
+On Thu, Oct 02, 2025 at 10:35:48AM +0000, Shinichiro Kawasaki wrote:
+> #2: nvme/041 (fc transport)
+> 
+>     The test case nvme/041 fails for fc transport. Refer to the report for the
+>     v6.12 kernel [4].
+> 
+>     [4] https://lore.kernel.org/linux-nvme/6crydkodszx5vq4ieox3jjpwkxtu7mhbohypy24awlo5w7f4k6@to3dcng24rd4/
 
-Then it would be inconsistent with manage_shutdown_*,
-manage_runtime_start_stop_*, manage_system_start_stop_*, there it has
-the sdp variable declared.
+Thanks for reminding me. I'll have to update the nvme-fc-sync series
+This should finally allow to pass all tests for the FC transport. 
 
->=20
-> > +
-> > +	return sysfs_emit(buf, "%u\n", sdp->manage_restart);
-> > +}
-> > +
-> > +
-> > +static ssize_t manage_restart_store(struct device *dev,
-> > +				=C2=A0=C2=A0=C2=A0 struct device_attribute *attr,
-> > +				=C2=A0=C2=A0=C2=A0 const char *buf, size_t count)
-> > +{
-> > +	struct scsi_disk *sdkp =3D to_scsi_disk(dev);
-> > +	struct scsi_device *sdp =3D sdkp->device;
->=20
-> Same here.
->=20
-> > +	bool v;
-> > +
-> > +	if (!capable(CAP_SYS_ADMIN))
-> > +		return -EACCES;
-> > +
-> > +	if (kstrtobool(buf, &v))
-> > +		return -EINVAL;
-> > +
-> > +	sdp->manage_restart =3D v;
-> > +
-> > +	return count;
-> > +}
-> > +static DEVICE_ATTR_RW(manage_restart);
-> > +
-> > =C2=A0static ssize_t
-> > =C2=A0allow_restart_show(struct device *dev, struct device_attribute
-> > *attr, char *buf)
-> > =C2=A0{
-> > @@ -654,6 +684,7 @@ static struct attribute *sd_disk_attrs[] =3D {
-> > =C2=A0	&dev_attr_manage_system_start_stop.attr,
-> > =C2=A0	&dev_attr_manage_runtime_start_stop.attr,
-> > =C2=A0	&dev_attr_manage_shutdown.attr,
-> > +	&dev_attr_manage_restart.attr,
-> > =C2=A0	&dev_attr_protection_type.attr,
-> > =C2=A0	&dev_attr_protection_mode.attr,
-> > =C2=A0	&dev_attr_app_tag_own.attr,
-> > @@ -4175,7 +4206,9 @@ static void sd_shutdown(struct device *dev)
-> > =C2=A0	=C2=A0=C2=A0=C2=A0 (system_state =3D=3D SYSTEM_POWER_OFF &&
-> > =C2=A0	=C2=A0=C2=A0=C2=A0=C2=A0 sdkp->device->manage_shutdown) ||
-> > =C2=A0	=C2=A0=C2=A0=C2=A0 (system_state =3D=3D SYSTEM_RUNNING &&
-> > -	=C2=A0=C2=A0=C2=A0=C2=A0 sdkp->device->manage_runtime_start_stop)) {
-> > +	=C2=A0=C2=A0=C2=A0=C2=A0 sdkp->device->manage_runtime_start_stop) ||
-> > +	=C2=A0=C2=A0=C2=A0 (system_state =3D=3D SYSTEM_RESTART &&
-> > +	=C2=A0=C2=A0=C2=A0=C2=A0 sdkp->device->manage_restart)) {
-> > =C2=A0		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
-> > =C2=A0		sd_start_stop_device(sdkp, 0);
-> > =C2=A0	}
-> > diff --git a/include/scsi/scsi_device.h
-> > b/include/scsi/scsi_device.h
-> > index 6d6500148c4b..c7e657ac8b6d 100644
-> > --- a/include/scsi/scsi_device.h
-> > +++ b/include/scsi/scsi_device.h
-> > @@ -178,6 +178,12 @@ struct scsi_device {
-> > =C2=A0	 */
-> > =C2=A0	unsigned manage_shutdown:1;
-> > =C2=A0
-> > +	/*
-> > +	 * If true, let the high-level device driver (sd) manage
-> > the device
-> > +	 * power state for system restart (reboot) operations.
->=20
-> What about cold boot ? Same is needed, no ?
-Not sure what you mean with cold boot here.
-
-> The name "manage_restart" is a bit
-> confusing since we already have manage_system_start_stop,
-> manage_runtime_start_stop and manage_shutdown. I do not have a better
-> suggestion
-> though.
-In that case, we could remove the DEVICE_ATTR_RW(manage_restart), so it
-would not be exposed to userspace yet and can later by changed without
-breaking userspace?
->=20
-> > +	 */
-> > +	unsigned manage_restart:1;
-> > +
-> > =C2=A0	/*
-> > =C2=A0	 * If set and if the device is runtime suspended, ask the
-> > high-level
-> > =C2=A0	 * device driver (sd) to force a runtime resume of the
-> > device.
->=20
-
-Thanks
-- Markus Probst
+[1] https://lore.kernel.org/linux-nvme/20250829-nvme-fc-sync-v3-0-d69c87e63aee@kernel.org/
