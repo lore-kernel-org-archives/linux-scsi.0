@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB74E1E86E
-	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 02:02:11 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6E5E1E86E
+	for <linux-scsi@vger.kernel.org>; Mon,  6 Oct 2025 02:04:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759716132; cv=none; b=PAAIZ8I1XmzcWJA/3i7h2zGZnU0uy5IHgSQk3Fsg6SL3Ldso3qHfBMN5GnXKvdKgV1N0cGhLRrhFKu4O06JiRavV66k41hobubKmD0MuURSniVHn/MagxlPrPSR5hxLGgq3MB57laUyeZ4utRUYrVtzcb99p6MeZ9NrZGYfOisE=
+	t=1759716246; cv=none; b=hu/7mPpWTGVye4C2z0NLn1RW0EDTBSrPJT5BFrwQceFpEFdE9NNRtIg2qc8CmBSTTVE0z12MhkyaZT2Q1kYOh0HDj+11Gjqrq0Dj9qLUpfRxfew+j+aRXgi1qzplAsueQupA+kaWR58XqwPMwQPdabbz5l2mzP4NCVDdhbxw/Mc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759716132; c=relaxed/simple;
-	bh=/I1jrmgI3fD1HLAUZ9ymT3W6rmFEPipe2dLEOvaFS7k=;
+	s=arc-20240116; t=1759716246; c=relaxed/simple;
+	bh=hXPKX4HzKPNFT/24KL/Xv3H6znprlJMRkcpFIKcKB88=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lVY9uNpQdwvM3KzVv4qEgREih7gJ9EcS3NS6Q5aZASIJ8OjGbT+8k/LzFQ8Ye1dv8emYqH+XrUfiDTM7MdcpFVPLzci6soG4jNEWffVoOa8kMVdNuSPyUnVzWMRslLHlZf0C/2yTLJGwcoJbpSsHlCRFwcPfRR0iZHQlkSn2NCo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=redlOk/r; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=FzDPMqJPX23bmOx9/qPlPg/6uIoajc1l5UgiL9y+7n9gRtE4ahsW4MhF+y5cvQgaZjlFM0DBKMqngYIZZ88O50I+9let5fKqX+sQJ5V7HE82cznId7sAzj5RkwaVcgFfaYvzmyt2/sWdTTEfnT9Uxzckf8omx8DZ6UUppwc83eg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=tvUGrTwh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="redlOk/r"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 93297C4CEF4;
-	Mon,  6 Oct 2025 02:02:10 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="tvUGrTwh"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C0AF0C4CEF4;
+	Mon,  6 Oct 2025 02:04:05 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1759716131;
-	bh=/I1jrmgI3fD1HLAUZ9ymT3W6rmFEPipe2dLEOvaFS7k=;
+	s=k20201202; t=1759716246;
+	bh=hXPKX4HzKPNFT/24KL/Xv3H6znprlJMRkcpFIKcKB88=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=redlOk/rnrA/1qVC95X6h0QZAGDzj8yhY7DYiXep+kt8RoBHwTOHQZ4PtZgiXDXXQ
-	 S384nDJe8jXGk5Vo3KY6H/tCU95CvGiIG4NeCOYjW8Fq+0PBvnbylLALxOkP2PSWY2
-	 7zD0/ugV6PJuDNIPTd7W+GVDxvXgDMnpIKj4foL5HwkrTM5FhEeBfIZo47lARomWdP
-	 YhvH1izKQDYTNzq602Bdg/LU21tjnrzcz2EIODN4iVao3woSYxjfSvsspIg4XSaBgO
-	 zWd49RCU8IrRN/zGjLfRSvDjuRqlMaFMpBGIBkui927wBQXOZ1ae3u5PZeyRgfcYug
-	 g4/+Ew57OmE2w==
-Message-ID: <45a94d0c-89fd-4e39-9c50-a43d5c2a0df1@kernel.org>
-Date: Mon, 6 Oct 2025 11:02:09 +0900
+	b=tvUGrTwh5J4wTbJUx/ihrRpqORk4GfcwwyKpKgwWFCs0NpxE4Yut91M99i9lHIHN/
+	 mwfcIHmOzdhjFU+IVOCvwjDG2+q09W1xSDE0MtYcW4hTPE5HOhaNenr2CWJo7NSQfM
+	 sFA0y/B3nkIFqG+800Ou4Id5zllcx6R3Sw9Pxh/e30yiv0ksUYhyaV3mRU50neOwit
+	 +MF0AoCsTZNhsm2/NvgTFN+vqH11liJwqSUcohPb6p8/7UHCUFeAacVmN+bNIYxehn
+	 Xn8G8ynWInzPYOJP8GOUmy/mG723PRNcupDc0AV3y5edHTgTQl4irpCo9l3x7cVZIe
+	 BXXA4FCTUpJ0w==
+Message-ID: <3913c013-f7ce-4b9e-afbf-92920c2a2044@kernel.org>
+Date: Mon, 6 Oct 2025 11:04:04 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,25 +35,23 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v4 4/9] scsi: sd: Avoid passing potentially uninitialized
- "sense_valid" to read_capacity_error()
+Subject: Re: [PATCH v4 5/9] scsi: sd: Remove checks for -EOVERFLOW in
+ sd_read_capacity()
 To: "Ewan D. Milne" <emilne@redhat.com>, linux-scsi@vger.kernel.org
 Cc: michael.christie@oracle.com, dgilbert@interlog.com, bvanassche@acm.org,
  hare@suse.de
 References: <20251002192510.1922731-1-emilne@redhat.com>
- <20251002192510.1922731-5-emilne@redhat.com>
+ <20251002192510.1922731-6-emilne@redhat.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20251002192510.1922731-5-emilne@redhat.com>
+In-Reply-To: <20251002192510.1922731-6-emilne@redhat.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 10/3/25 04:25, Ewan D. Milne wrote:
-> read_capacity_10() sets "sense_valid" in a different conditional statement prior to
-> calling read_capacity_error(), and does not use this value otherwise.  Move the call
-> to scsi_sense_valid() to read_capacity_error() instead of passing it as a parameter
-> from read_capacity_16() and read_capacity_10().
+> Remove checks for -EOVERFLOW in sd_read_capacity() because this value has not
+> been returned to it since commit 72deb455b5ec ("block: remove CONFIG_LBDAF").
 > 
 > Signed-off-by: Ewan D. Milne <emilne@redhat.com>
 
