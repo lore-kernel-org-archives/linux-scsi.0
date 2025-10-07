@@ -1,89 +1,310 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from PH7PR06CU001.outbound.protection.outlook.com (mail-westus3azolkn19010024.outbound.protection.outlook.com [52.103.23.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D4F81B4F1F;
-	Tue,  7 Oct 2025 11:59:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759838376; cv=none; b=DzU0/ulPFojbkEZulWMVL7R/inNGX6pnIIBcAprmpQGL9aBf3U1FcOwZMCDqmJF7BXx575oe7W6S1KgCPejZMONWqQQZNmaG4JBTkqLAAwRGO6i5umN2zLkIam5TPmmZ0E7ulIAJ8F3zMEqY8hc0ho0ru/zvX9L2UU8VyRdf55c=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759838376; c=relaxed/simple;
-	bh=POsv96x9bzANj9WpBVowJ4El7FKs3C/0fM6Qltvders=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=PvJfX96M1ru8twztrB16oyvUK06bpQFMScwsphi2uzwld8q5LsAqH3bcY0XO7CKw39FdPx4DeiCjCS/WZ3q/fcmcB4ydR4KQja5yNKFdgugPJpXa6Ltn5ND6o8voELS/B1wo4U96m9aPQG9ji2XyfegkfsWguqjs8c8fdiB6aIo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=NPbJj/UI; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8CD6F2550CA;
+	Tue,  7 Oct 2025 15:41:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.23.24
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1759851708; cv=fail; b=XfV0pdecZpyz22KiWjpZTQz1/MZeeihfDH4F9Airl8fhUXqjrtM0CBOByPg+7CiI3CY2sqATSt+DRZnBJ/oFhIaEoD2EFm8mcUbMcSjptxc3Es60IjNwWjLpJEy7YGxaDNgRCTxSah1rQcDWkR/ZFV/Fjl8pmpYfdCGQWzW5JTY=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1759851708; c=relaxed/simple;
+	bh=MjqbMlVimN/evxxvqGvtn7q+2wjex4LuYxzkBIaJP3c=;
+	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
+	 Content-Type:MIME-Version; b=K+83UTb7XEfkI81HwBgHNEEu3ec4DLf3D81Ueh9VXr1AM01ux96pNqDKUE/tX7+JzyEpFvIqn4Wd2Smb8f26uwkgG0MP+LlHTb7uD0MLR20KGSnt9Qa02Bi10faxruCXsymAMfOVRE0zmrz6amkam5zrcDLiFyK0b1++OQCdvj8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=Q3EpYCR2; arc=fail smtp.client-ip=52.103.23.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="NPbJj/UI"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1759838373;
-	bh=POsv96x9bzANj9WpBVowJ4El7FKs3C/0fM6Qltvders=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=NPbJj/UIb3GbIdq7/5liQLHhYYZjns9j1HGehfhbR+sga3gjUsDRmPUa9t+9oKUoi
-	 Zun1GixjPCfFxnwhP15DRrhao2zQlNS6uY5zSdZnDCSMzMXphE4rQBVjIFFHblJuap
-	 A5S1c7hk+x8fEX2sEVgIWbckjask38RkHDmjqO2Y=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id DCA911C0114;
-	Tue, 07 Oct 2025 07:59:32 -0400 (EDT)
-Message-ID: <4cf727c56c4fda8d28df920214b3824c9739bc8f.camel@HansenPartnership.com>
-Subject: Re: [PATCH v2][next] scsi: megaraid_sas: Avoid a couple
- -Wflex-array-member-not-at-end warnings
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: "Gustavo A. R. Silva" <gustavo@embeddedor.com>, "Gustavo A. R. Silva"
- <gustavoars@kernel.org>, Kashyap Desai <kashyap.desai@broadcom.com>, Sumit
- Saxena <sumit.saxena@broadcom.com>, Shivasharan S
- <shivasharan.srikanteshwara@broadcom.com>,  Chandrakanth patil
- <chandrakanth.patil@broadcom.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>
-Cc: megaraidlinux.pdl@broadcom.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org, linux-hardening@vger.kernel.org
-Date: Tue, 07 Oct 2025 07:59:32 -0400
-In-Reply-To: <3a80fd1d-5a05-4db3-9dda-3ad38bedfb38@embeddedor.com>
-References: <aM1E7Xa8qYdZ598N@kspp>
-	 <3a80fd1d-5a05-4db3-9dda-3ad38bedfb38@embeddedor.com>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="Q3EpYCR2"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=eo/J1tin6jMbvbLzFRPJSAuizF6CnrA/nbUXBqp7292Ks9rAUYw/Q9iZyt38QIdzdGrK2Dv4tuVmvNRsyknPtMA8cepzY601KLtAdoHq/0CWFNcameLvFSaPNVzb0Jv8AQsptjgK5RFkseFdk4ke8IJPNHzVKChrWB3IMyjjmy6HwlC59UNyA9ji5wtbqecUam4W8OBQn564vnVrmkiyStxJ03RvP1/zPvkVoCMb52fUf18tN8RQhKSyuwjcmDHTPaplGQzGSpJOxlmJIeMAtklCWmLOnIipM6S2pqIFjd3EypccFrzBL/BuDQ4Lo48RF1PZKA48DHHENdFcUXjoRQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=wtXapYRCkp5V65nWgkHbEKU+tSMHN7aQL9iouvIjCkA=;
+ b=ksbBne0aAY+7IZC3p1Y4tXMtnYKesB/W/mD+CzdsiCEfa0Z5YKV4P7o0XcFwpP76B9ftBB3uPcf7CN/bkkdjcezuJ41tL4B2Z+bZvuNQ60IjT2xSj+2KOKF0SusUz4ExsrwVIjTcVabvWZhq2vr6OjL19eWuSloKEMqdkK8w7YLzBM9wu1Vb8k38eUuIr7Mv5QwqhaqQJnyq/yIiwvNapSqCSm8d3Xzqda0Ws+QoBLCZLVQnut6pzfzz9wBNYz43Udoe4zJyjFZSRt7BFsAkL/YTb66i/Ae3mQyqxmAs32nw5S6BZpoRDfwEsP78kFR49qN5+6QKRQUJO+rDoNpuxA==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=wtXapYRCkp5V65nWgkHbEKU+tSMHN7aQL9iouvIjCkA=;
+ b=Q3EpYCR28TXoMyr/6LDV7/JyjncAso0n5td5WwzvKcNDXRDmC0zvUkR8Sgood37fzwBjfGo2fiY9seLCzeZe5AwhKhEhzr0RX0xjX+KDKAeZjhOIM3fKjisZsjNA5ea4/M0QGWLvxh2de481/iLjhrvlCNS2uhJzjrYuyMmyTsHQyXFVDZgA93hiqk3pHIQPjEmQ90KBjVclFaHyOy5BYnJ04t5FEjlcx6t8No2U1zUD5iv/XxAvFyodKrAR++egFBGw/UykJUA+ryCSgvB5fXrlBTEMR+NIu2m7OaLlR8qizwpYwL4LybRXZFoo3e1LLqR6uaIMJxwMntLGjprNEQ==
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
+ by CH0PR02MB8026.namprd02.prod.outlook.com (2603:10b6:610:107::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9203.9; Tue, 7 Oct
+ 2025 15:41:43 +0000
+Received: from SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::cedd:1e64:8f61:b9df]) by SN6PR02MB4157.namprd02.prod.outlook.com
+ ([fe80::cedd:1e64:8f61:b9df%3]) with mapi id 15.20.9182.017; Tue, 7 Oct 2025
+ 15:41:43 +0000
+From: Michael Kelley <mhklinux@outlook.com>
+To: "longli@linux.microsoft.com" <longli@linux.microsoft.com>, "K. Y.
+ Srinivasan" <kys@microsoft.com>, Haiyang Zhang <haiyangz@microsoft.com>, Wei
+ Liu <wei.liu@kernel.org>, Dexuan Cui <decui@microsoft.com>, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+	<martin.petersen@oracle.com>, James Bottomley <JBottomley@Odin.com>,
+	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
+CC: Long Li <longli@microsoft.com>
+Subject: RE: [PATCH] scsi: storvsc: Prefer returning channel with the same CPU
+ as on the I/O issuing CPU
+Thread-Topic: [PATCH] scsi: storvsc: Prefer returning channel with the same
+ CPU as on the I/O issuing CPU
+Thread-Index: AQHcM1o80XmWhpePUEiNmnbV/dytobS20liA
+Date: Tue, 7 Oct 2025 15:41:43 +0000
+Message-ID:
+ <SN6PR02MB4157B7FC3362C4C6838BAD3DD4E0A@SN6PR02MB4157.namprd02.prod.outlook.com>
+References: <1759381530-7414-1-git-send-email-longli@linux.microsoft.com>
+In-Reply-To: <1759381530-7414-1-git-send-email-longli@linux.microsoft.com>
+Accept-Language: en-US
+Content-Language: en-US
+X-MS-Has-Attach:
+X-MS-TNEF-Correlator:
+x-ms-publictraffictype: Email
+x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|CH0PR02MB8026:EE_
+x-ms-office365-filtering-correlation-id: 38989c0c-c346-4b1f-78cc-08de05b80429
+x-microsoft-antispam:
+ BCL:0;ARA:14566002|41001999006|461199028|8062599012|8060799015|15080799012|19110799012|13091999003|31061999003|56899033|13041999003|3412199025|440099028|52005399003|40105399003|102099032;
+x-microsoft-antispam-message-info:
+ =?us-ascii?Q?FQ6GJ6K3XGePOOhdaBOc4I81++6GOFyHFr+HRj4yebsCFBYH0QYPejnJUMCA?=
+ =?us-ascii?Q?sdth6fA0QrsdPXIPb+k4vX6AuCJwvw0R+mcI2ztPWmOjRl6DsQiMn4ihPjri?=
+ =?us-ascii?Q?hVyNIKQoGKEkBRf/ipWv4uUHsy7+fXvbch8YUiHanuytgDNbuskxza4ahkiG?=
+ =?us-ascii?Q?pg3i+UJd+n/YfVjXnmFqlQ6x8Mmz51yCSy7mMDZBrNTmK2sA1l4y6VWuJNAZ?=
+ =?us-ascii?Q?/JuCG677fF+dUr90Q6E57ZecR2vhdEQd3Gp5+sT0Mx7AsfOscwjjKiwr264P?=
+ =?us-ascii?Q?9k5EiDE6fG3YYfx0V58JVVYnUST5ipOfMp4MBfMaKlRezSUsTnwp3BfPLH+R?=
+ =?us-ascii?Q?VHZ+N7XWEaz6oheqozc0eDBWir36kxxBEtd9VKyED1XY8NO7b2y0izvxyu5f?=
+ =?us-ascii?Q?Amicc5NuE5WhAahzUHKZE3urYr1M2pTp/aw0PGSG81qGlc6Tyi0Hv+t6n7fK?=
+ =?us-ascii?Q?q6Fszr1RXu3f/IVxgVsxnSvUQiQq3xQ4B+KzZivFKfFnsC8Y9R77C6OY6dyY?=
+ =?us-ascii?Q?2ZiREI0TVyRTd9F90QJEWABJIKkHm9rIoDyt/DHhLg+VV4f7C4OY6iMGtbY9?=
+ =?us-ascii?Q?+3yOxF+dKsOuxKzbny7y6/bhyIFKEZWGwSDMFGZ+4WzOjPjdTsB0hwH4nP9M?=
+ =?us-ascii?Q?XZM4uALD5bWETGfBYmSGqgsMDnINq/0yqf+dMfy6SA1qDb7g0n+QoXqWXKrD?=
+ =?us-ascii?Q?RONlzitEy5kH9NSwPl6+E0zPLIKZ12vJQsX4vB3ayVjo/rmgiBCfx/NACXIi?=
+ =?us-ascii?Q?fDJvI6HVn7/1djYQn5q8U2UP1SqiVZIvFeC3uRXtGhCLltsRn/3Y2K1k/fin?=
+ =?us-ascii?Q?YwKRvSaqMG15IMx6+2WnQUS9ljfPIjNWNtrZtp1m/ungnTskI54sNj3zxHJ7?=
+ =?us-ascii?Q?5hjsaM4aWABmAIS0MHqUQ59EdXHIrw3Pho8/Df+r1bCCiUB707xdNvEjKoJu?=
+ =?us-ascii?Q?GT3gtN9CWd2MWF2nEKcK6J3T8qcFo7Zw9wpHhykzL+5MEbyYn+FomyC29FwK?=
+ =?us-ascii?Q?jo9sJAwPhjOySmY4Mhsu+IQLsdFB89Q9PUJwB9F4TM7c7yrZKF+giCovTEc/?=
+ =?us-ascii?Q?ITPCWLMKnbZlbon7haZhfO4GhoYbD0V494Rc0yQNyFXZTrJLtm0GcKnq+rBQ?=
+ =?us-ascii?Q?ISbJ9IGWCwJOntUQ6l3ZMF6xYS8iJTJlRXfLcb5nCC/+qoguX3v04CWRIZvD?=
+ =?us-ascii?Q?gX47UqHJpMQHyZH9j1zd1+qCZfK+1ABWjt0gj2E9HSd05aR0qErV2jhL0nMe?=
+ =?us-ascii?Q?iHdgmCQewig4gNb89N3c6q6iniCOKWBF6I+txNToug=3D=3D?=
+x-ms-exchange-antispam-messagedata-chunkcount: 1
+x-ms-exchange-antispam-messagedata-0:
+ =?us-ascii?Q?9gsv8LiRE7rs/8XpN/reQ7NS9iNQ6Ny3fSCqEYsu/Bn2MU7EEF0cyHosJ0tw?=
+ =?us-ascii?Q?rXhqnthHcmZQO96sKJCbQLtxLgmBwMC+e94hJi4d7OQHgXfaIMLcvwXyMWSL?=
+ =?us-ascii?Q?xbRD2tFgIQvu3fIZ8/Im0engxzq4xCU9auwI+ayuD+PVFpgrav3bV5MIQZd3?=
+ =?us-ascii?Q?SoO1gJTPGdHEDE1I5rC48Qsg3OdPptkiUbPSWLaeGRJ66urpE9NDFGpAVJXf?=
+ =?us-ascii?Q?Q+dA3p7hXiFeocwUCJym4igJy5U60qsAfyYcAsBAjH0tFbbelfeL3cepvi0r?=
+ =?us-ascii?Q?Z+78ti7iKyZVsqGUVCxMXkelHP4ghnRphnS6fWTtSypVTtjjC0PoIQviexgg?=
+ =?us-ascii?Q?VG7D+LpiTka4Cu6bq88UT/tlzbYC+r9AJPXpgi1WTnTRGhRuyzbfNtRiOD6T?=
+ =?us-ascii?Q?GWTYpYxs0QdBKnPoJ5MWGcbqGwCrc7YIbcL1HW5EHWrn9Po35uUPk8Rd3obf?=
+ =?us-ascii?Q?N8jKUfihp6S1DHYgg/7LjR+9CuS5tu4jhcddL703TeL/DlKmIHoDJ42mkXPo?=
+ =?us-ascii?Q?mQ0hZ45AlpR2wCuFKyOkxfiQdqAPvxt/AgXlwH9mWTY/J+JPbxCYu1iHtGKZ?=
+ =?us-ascii?Q?7Epr5opuyVH82q+WrhDtw+gjRFYWhSr0P9FPl7zpHj+9Z2aNTp5j7zHg6P01?=
+ =?us-ascii?Q?iRviiBux1M2vFmAX7oHF6MYRcye5tDGT2T1t03oSTMwzQApAY+m88F3urQJy?=
+ =?us-ascii?Q?tBYTrQpHDGCykp/99V1+R0p4Cn3tfXWFkclzhCt2lCkau3QPP1tqebrCDgPY?=
+ =?us-ascii?Q?U18xJGLixUzD+BBWlue9E8b0gSrPapuTxRVmpXVbmdjK9LIr3FnQgJUxBZ2i?=
+ =?us-ascii?Q?MsrATu2ZtAZ3oWM4pGRjeFQqxBlEAQo32jgbEZk7fb4un6KTM5l8lKJYTDbP?=
+ =?us-ascii?Q?w1ueqDm1OhHxv6m1nGP8p4IbfcE5vfGuEs1z0ufEgpLB0GXXlYGrfFEsrmtP?=
+ =?us-ascii?Q?qBbvgbfpR+jN0Zeler/ey1bBSEhct4+2o9z5VtodC4qG1OIvhZvdmZACGaan?=
+ =?us-ascii?Q?iZ3+Wp33+0ZNvK1pi/7v+3KIlQSTVrXc/FbRDiuUX4pUGe32wrj7+/cfye5G?=
+ =?us-ascii?Q?8f+FpOdMxZeFA9uQokEiaiZj9D+pkbWjm1x0UaYRTY046WZLa/l7z4PN+A7h?=
+ =?us-ascii?Q?/e2UG7m1olryOc2xnNmpIayH/3PKsyf6cxkAfYfoxQlbwx+XV5CVqL65bENr?=
+ =?us-ascii?Q?/j8dMiXhW4zcG+OMRaVvrnzixiNr80zL0w4Ufa79b3TseuwrCL+6+9HzFiE?=
+ =?us-ascii?Q?=3D?=
+Content-Type: text/plain; charset="us-ascii"
 Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-CrossTenant-Network-Message-Id: 38989c0c-c346-4b1f-78cc-08de05b80429
+X-MS-Exchange-CrossTenant-originalarrivaltime: 07 Oct 2025 15:41:43.4961
+ (UTC)
+X-MS-Exchange-CrossTenant-fromentityheader: Hosted
+X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH0PR02MB8026
 
-On Tue, 2025-10-07 at 11:43 +0100, Gustavo A. R. Silva wrote:
-> Hi all,
+From: longli@linux.microsoft.com <longli@linux.microsoft.com> Sent: Wednesd=
+ay, October 1, 2025 10:06 PM
 >=20
-> Friendly ping: who can take this, please?
+> When selecting an outgoing channel for I/O, storvsc tries to select a
+> channel with a returning CPU that is not the same as issuing CPU. This
+> worked well in the past, however it doesn't work well when the Hyper-V
+> exposes a large number of channels (up to the number of all CPUs). Use
+> a different CPU for returning channel is not efficient on Hyper-V.
+>=20
+> Change this behavior by preferring to the channel with the same CPU
+> as the current I/O issuing CPU whenever possible.
+>=20
+> Tests have shown improvements in newer Hyper-V/Azure environment, and
+> no regression with older Hyper-V/Azure environments.
+>=20
+> Tested-by: Raheel Abdul Faizy <rabdulfaizy@microsoft.com>
+> Signed-off-by: Long Li <longli@microsoft.com>
+> ---
+>  drivers/scsi/storvsc_drv.c | 96 ++++++++++++++++++--------------------
+>  1 file changed, 45 insertions(+), 51 deletions(-)
+>=20
+> diff --git a/drivers/scsi/storvsc_drv.c b/drivers/scsi/storvsc_drv.c
+> index d9e59204a9c3..092939791ea0 100644
+> --- a/drivers/scsi/storvsc_drv.c
+> +++ b/drivers/scsi/storvsc_drv.c
+> @@ -1406,14 +1406,19 @@ static struct vmbus_channel *get_og_chn(struct st=
+orvsc_device *stor_device,
+>  	}
+>=20
+>  	/*
+> -	 * Our channel array is sparsley populated and we
+> +	 * Our channel array could be sparsley populated and we
+>  	 * initiated I/O on a processor/hw-q that does not
+>  	 * currently have a designated channel. Fix this.
+>  	 * The strategy is simple:
+> -	 * I. Ensure NUMA locality
+> -	 * II. Distribute evenly (best effort)
+> +	 * I. Prefer the channel associated with the current CPU
+> +	 * II. Ensure NUMA locality
+> +	 * III. Distribute evenly (best effort)
+>  	 */
+>=20
+> +	/* Prefer the channel on the I/O issuing processor/hw-q */
+> +	if (cpumask_test_cpu(q_num, &stor_device->alloced_cpus))
+> +		return stor_device->stor_chns[q_num];
+> +
 
-After what happened with the qla2xxx driver, everyone is a bit wary of
-these changes, particularly when they affect structures shared with the
-hardware. Megaraid is a broadcom acquisition so although maintained it
-might take them a while to check this.
+Hmmm. When get_og_chn() is called, we know that
+stor_device->stor_chns[q_num] is NULL since storvsc_do_io() has
+already handled the non-NULL case. And the checks are all done
+with stor_device->lock held, so the stor_chns array can't change.=20
+Hence the above code will return NULL, which will cause a NULL
+reference when storvsc_do_io() sends out the VMBus packet.
 
-However, you could help us with this: as I understand it (there is a
-bit of a no documentation problem here), the TRAILING_OVERLAP formalism
-merely gets the compiler not to warn about the situation rather than
-actually changing anything in the layout of the structure?  In which
-case you should be able to demonstrate the binary produced before and
-after this patch is the same, which would very much reduce the risk of
-taking it.
+My recollection is that get_og_chan() is called when there is no
+channel that interrupts the current CPU (that's what it means
+for stor_device->stor_chns[<current CPU>] to be NULL). So the
+algorithm must pick a channel that interrupts some other CPU,
+preferably a CPU in the current NUMA node. Adding code to prefer
+the channel associated with the current CPU doesn't make sense in
+get_og_chn(), as get_og_chn() is only called when it is already=20
+known that there is no such channel.
 
-Regards,
+Or is there a case that I'm missing? Regardless, the above code
+seems problematic because it would return NULL.
 
-James
+Michael
+
+>  	node_mask =3D cpumask_of_node(cpu_to_node(q_num));
+>=20
+>  	num_channels =3D 0;
+> @@ -1469,59 +1474,48 @@ static int storvsc_do_io(struct hv_device *device=
+,
+>  	/* See storvsc_change_target_cpu(). */
+>  	outgoing_channel =3D READ_ONCE(stor_device->stor_chns[q_num]);
+>  	if (outgoing_channel !=3D NULL) {
+> -		if (outgoing_channel->target_cpu =3D=3D q_num) {
+> -			/*
+> -			 * Ideally, we want to pick a different channel if
+> -			 * available on the same NUMA node.
+> -			 */
+> -			node_mask =3D cpumask_of_node(cpu_to_node(q_num));
+> -			for_each_cpu_wrap(tgt_cpu,
+> -				 &stor_device->alloced_cpus, q_num + 1) {
+> -				if (!cpumask_test_cpu(tgt_cpu, node_mask))
+> -					continue;
+> -				if (tgt_cpu =3D=3D q_num)
+> -					continue;
+> -				channel =3D READ_ONCE(
+> -					stor_device->stor_chns[tgt_cpu]);
+> -				if (channel =3D=3D NULL)
+> -					continue;
+> -				if (hv_get_avail_to_write_percent(
+> -							&channel->outbound)
+> -						> ring_avail_percent_lowater) {
+> -					outgoing_channel =3D channel;
+> -					goto found_channel;
+> -				}
+> -			}
+> +		if (hv_get_avail_to_write_percent(&outgoing_channel->outbound)
+> +				> ring_avail_percent_lowater)
+> +			goto found_channel;
+>=20
+> -			/*
+> -			 * All the other channels on the same NUMA node are
+> -			 * busy. Try to use the channel on the current CPU
+> -			 */
+> -			if (hv_get_avail_to_write_percent(
+> -						&outgoing_channel->outbound)
+> -					> ring_avail_percent_lowater)
+> +		/*
+> +		 * Channel is busy, try to find a channel on the same NUMA node
+> +		 */
+> +		node_mask =3D cpumask_of_node(cpu_to_node(q_num));
+> +		for_each_cpu_wrap(tgt_cpu, &stor_device->alloced_cpus,
+> +				  q_num + 1) {
+> +			if (!cpumask_test_cpu(tgt_cpu, node_mask))
+> +				continue;
+> +			channel =3D READ_ONCE(stor_device->stor_chns[tgt_cpu]);
+> +			if (!channel)
+> +				continue;
+> +			if (hv_get_avail_to_write_percent(&channel->outbound)
+> +					> ring_avail_percent_lowater) {
+> +				outgoing_channel =3D channel;
+>  				goto found_channel;
+> +			}
+> +		}
+>=20
+> -			/*
+> -			 * If we reach here, all the channels on the current
+> -			 * NUMA node are busy. Try to find a channel in
+> -			 * other NUMA nodes
+> -			 */
+> -			for_each_cpu(tgt_cpu, &stor_device->alloced_cpus) {
+> -				if (cpumask_test_cpu(tgt_cpu, node_mask))
+> -					continue;
+> -				channel =3D READ_ONCE(
+> -					stor_device->stor_chns[tgt_cpu]);
+> -				if (channel =3D=3D NULL)
+> -					continue;
+> -				if (hv_get_avail_to_write_percent(
+> -							&channel->outbound)
+> -						> ring_avail_percent_lowater) {
+> -					outgoing_channel =3D channel;
+> -					goto found_channel;
+> -				}
+> +		/*
+> +		 * If we reach here, all the channels on the current
+> +		 * NUMA node are busy. Try to find a channel in
+> +		 * all NUMA nodes
+> +		 */
+> +		for_each_cpu_wrap(tgt_cpu, &stor_device->alloced_cpus,
+> +				  q_num + 1) {
+> +			channel =3D READ_ONCE(stor_device->stor_chns[tgt_cpu]);
+> +			if (!channel)
+> +				continue;
+> +			if (hv_get_avail_to_write_percent(&channel->outbound)
+> +					> ring_avail_percent_lowater) {
+> +				outgoing_channel =3D channel;
+> +				goto found_channel;
+>  			}
+>  		}
+> +		/*
+> +		 * If we reach here, all the channels are busy. Use the
+> +		 * original channel found.
+> +		 */
+>  	} else {
+>  		spin_lock_irqsave(&stor_device->lock, flags);
+>  		outgoing_channel =3D stor_device->stor_chns[q_num];
+> --
+> 2.34.1
+>=20
 
