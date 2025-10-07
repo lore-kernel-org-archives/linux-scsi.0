@@ -1,130 +1,114 @@
-Received: from mail-pl1-f170.google.com (mail-pl1-f170.google.com [209.85.214.170])
+Received: from mail-pj1-f51.google.com (mail-pj1-f51.google.com [209.85.216.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6F1413B284
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Oct 2025 06:18:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.170
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85A2C25743D
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Oct 2025 06:54:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759817916; cv=none; b=gGqbaj0ieyMnaZ1LIMBc282VwsBQWOhLeo1oVcYa9Mv9wHhVhZF6hjzZy/ba2PDPASzZK6+Pr5vZnmPf97PEiUYqNmJedNJkZiTou2Mz4TNdhYrtU++QahEEsdt5sNJkRePBd6jEl3V/foCapq1bKTUNWc2ejDVMuBywUBKG3vg=
+	t=1759820049; cv=none; b=hQGrPJysS+PHXh35kL6Ik0BsahC41yv0JFBml5lyaWx1VTG8Ytzg8wFxliQOdyGFdWFsv3jViLENgjq0BZWiIRmI3R9ml7y5GQP3+B3xJrEvn75s1GKb01nqzqr+okKPiNsRex9Ab0HAPTPoSntTE3+KZUAujMjYHRrY1vQgcxY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759817916; c=relaxed/simple;
-	bh=WSad1HugXe52q/g05va5eYGyhewLw2wPoyXwmeqSge4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=sle+6+kHyHrncIHLZP5urFOW+VYjuE1syTDPbzFX3nSoUXAVOdXjJz7v/VI/0UqARVB0LGfdcPRXiNgrQxKQ6wYul8+y30EP5ocTqoXmpan3fv8adPhpeIuq1kdeeDPXDor75bYiXg+f2SsoBtfjW1iCElFBa/SRe47N2/oGh3Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Yu2bINoj; arc=none smtp.client-ip=209.85.214.170
+	s=arc-20240116; t=1759820049; c=relaxed/simple;
+	bh=TTG+AhssdA42D9C9zLf9qT/1ySGtIas7NJQm9lzkZ40=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=iV2tE9XhM6VduZ1nZLv5mJkrU484k320PRZKcOQPDqAL+LUBb73vYVjMZ2oqMcajvzIOPX1TktJG+CoBSvgi40qHqYq/wL342WUI5DzS6OZE8xV2XXGNQeiSV5GlW0CojtapxQ1eRFecAWreidn5ZCKKbJCFqbYWMRZ1KH7gvLE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NqCUjLDl; arc=none smtp.client-ip=209.85.216.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Yu2bINoj"
-Received: by mail-pl1-f170.google.com with SMTP id d9443c01a7336-26983b5411aso38483185ad.1
-        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 23:18:34 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NqCUjLDl"
+Received: by mail-pj1-f51.google.com with SMTP id 98e67ed59e1d1-339e71ccf48so2075547a91.3
+        for <linux-scsi@vger.kernel.org>; Mon, 06 Oct 2025 23:54:07 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759817914; x=1760422714; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=CDwAkbaDlWUjevGfq4nyNlKuzcgWszmvXZ9ur/30uOQ=;
-        b=Yu2bINojm2JN+k2n+PPRbpV4xPVuQRuH2HYMRduhiMIsv+wRwppZCERPDTS9+TasIl
-         9G00DVWGCUBM6S+qtQ5z1oC9GkJo23hri2/8qLwMHmC8ze5tXdt0+CvoXnWYjYKPLtdU
-         0P+uWTPm+mz0JDh/zlUdrEQ2HCEj63YJWT0ca0AT2tDCJLHhMOGR7JRf9NH5kzbeV9qV
-         m+uV/amDaLKhV9E1/nibRnNdE6nnQhQqEaHp2N/DkVfhDi9i5PXztzbJcThZQxJXZGrk
-         2W0y/Rf9OczQmHwVLAyK73LCz3fnG2qnC5fkiilHfUH19IPQhj6ssO2o4fYpxHX+7HED
-         uEUw==
+        d=gmail.com; s=20230601; t=1759820047; x=1760424847; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=mswOKIOKbhdl+VgGK7vEvPqN70bAqxJl6ivwxQMTkZ8=;
+        b=NqCUjLDllV5XRJE+MjO8bvZK9sNtfVTfLAQ5xZDQ9Kvao4oAV70x9S6ZDTVWftZnLu
+         5a7+GEDMK74bs72int1LBpySpsXJklJd8HOewOD5lUh5y1oyEAuxSHhYa3oNLfd+tyaL
+         iH2PfRe1PEJ5gk5Mm5wpWeNBPIE4PNO4RfR4J7KJvr7ZC+zHaRtsfL/0P9T7hpEcEh+Z
+         rjW8jqYtQRvc4nozAlk6hAkV+P8rO51tNBNHQ613cgVP+INA94tMYJ+ynLa0pJf9HrEM
+         MtX/Dpqgq/BzVMtImqEts+feo3+CZ202JzN7ZbQQwS9iUIt/5wilG/+5BuK8t3sKvs+i
+         fhQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759817914; x=1760422714;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=CDwAkbaDlWUjevGfq4nyNlKuzcgWszmvXZ9ur/30uOQ=;
-        b=h6Bmt7/VgRTmszSNyLQp6MRiks+Jm+xOouMTexFI6rxl4mQnGtMvKkwx0R/N4mUaVt
-         plI1iUHTAyQe82OgTRBgHiti7YY542VPqSYvAiogyrRqaBthRytrgb4YMeLeUwn38dYt
-         OmN6lC5TZO9UsJmTig4n29DTionly4wqv2CwOhRPHT9fdLy50LeIGqWVJwTC7Gx2DaRb
-         lM2NuR+UNELz6HAraUetsfqOoKvlDO4uHQS3zoHSVAlbMZNrBQPvdrlhlKx5h+tAevDV
-         ihIiOBYgszcAOmgF0jYqW/uhLmd97SSCTP1QfITjcXO2w17mY31QpGPk7YJTO+2oUfOT
-         PZDw==
-X-Forwarded-Encrypted: i=1; AJvYcCUhDk3ltlzwIwrFjq7gOdjCeINo+wT6JP+1zbmaZExXmK3uRnj5iAmlTSmqHAWkifXyvupQ/aafMkrm@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyx4+tnBoWfFd7/M43f3th6UEEwwCZvrMnyA6xzGPACYKl6/Mp1
-	1x2y4ADpHxjhENuOpXHcgcqiB4V0NWMZNvhsApBdPXYYKtsGM7dbxEX1
-X-Gm-Gg: ASbGnct8sqppFH/1MK5VKkWk4RumJuKzYJMNHm98ga8uDU+AQFPeOaTSsTNDYkSyDN1
-	WtBlpnnY5+4qKdJVpKEDwyxgHys/eVzdcTs60TEF+vj3/ieq37zZ4+a15zvp35mGQ4jxdCGvWPJ
-	r7yeaNnXx5G8LjESqQUZqqyF+nu1eXUf1AfDnknsYnGDoIawNwmDBk7DaOfN+sJ85XIuo1kIJkM
-	VFbpQJXrXDGDTyzYtuMCjtsbxcrAmdKqCV/GwM99nENUT9TXjMqkJkIqIhX3cXBypt5UrAOIaCK
-	pvF1hOZ4jz0vff9HGX1YeKPqe0oebp0vYq0yZ/HD3jtRcbXs5fS0YLWFay73ziVeudFKjDtjtAe
-	qFvtsY2dcbypFeP30QuRVfWDVME8zGx4F0gUuUdBk/wzfB0niQX3qboBs7LKR3hAjVMk=
-X-Google-Smtp-Source: AGHT+IFEB4BT03PGibT8CSd70pTCt7zClhc5w3shhrha8qeF8hont0hAokJ8+q/qQmhqQ/KGp8jHnw==
-X-Received: by 2002:a17:903:1aa7:b0:27e:ec72:f67 with SMTP id d9443c01a7336-28e9a54ee5dmr208134585ad.6.1759817913969;
-        Mon, 06 Oct 2025 23:18:33 -0700 (PDT)
-Received: from [10.0.2.15] ([14.98.178.155])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-28e8d11191bsm152771835ad.11.2025.10.06.23.18.30
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Mon, 06 Oct 2025 23:18:33 -0700 (PDT)
-Message-ID: <3ab53f69-4e1f-4f76-8605-e95d7516a97d@gmail.com>
-Date: Tue, 7 Oct 2025 11:48:29 +0530
+        d=1e100.net; s=20230601; t=1759820047; x=1760424847;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=mswOKIOKbhdl+VgGK7vEvPqN70bAqxJl6ivwxQMTkZ8=;
+        b=BqdrWl9uloEID83wYm+paozAn/LmErPkBSWDl9F+YaFVPgHqzt9j3HXzK7L8JqbHNm
+         ghbdkZqrNP4Squ98QExSxEMmQ1kt291o6Zb8T1ZeEk+LDGSWv5VWzNNqxxYpaBxIXljh
+         5BblANldcc1o23lN9c834AKt5hdOzwHv/W2kn8NR8HKu5zlzE6BBuJIfEgQLyHHbV85Y
+         bbsty/kNAV2wnmzmkOq5czCdqB+1UU6fzG11T8EjXAht6rnZXLzVli36jeBMshAlJoh/
+         ACLE/Jh93MQLzfqjawFM7eNFN/wAddNZJHk5Mfb/M6ouymroCxKVIb4T1TJL1i+yx+g/
+         SyOQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXnE/HWfWu5t/wCf7H6qNnVTRLI3rDkWEKB4bEG+FFBi2DwVDgrKK8ACZ/a3Rdmv5jYi1+bH0wrV0fN@vger.kernel.org
+X-Gm-Message-State: AOJu0YwywKo8KnS5VGNqrWrusEn8a+QWqBBLdjzycbQ8TN3ITjqWGj8Z
+	DRLJfdn1MXCVUFFnRMq8SV/mKJvgOL3+bQfiIJpRcFYKydpgSPkDyQWV
+X-Gm-Gg: ASbGnct3hZSd4jN4fNM23cCfmbb4iKcf2VekArC5H9TIRDnaphP/gtLQG9G/F75gg+T
+	u2D6C9PIA+dJderA7LRDf9a1anOLq1ysoBYqfeZ9TumkphWcItf4br/CyL2GBEDiifV4D63og28
+	mQUvMYB+Qw1vo1Ny3QQNUlbjkRWgglSQOwro+BsffVjBjC1Ix96brSWJTFvFKK5yQTTZu0vYAQa
+	NOciXr47id+RETwGfaPyZ2JXWfGBNncWcP4EtPVG5nkGYgDR/IKQ86/L04BbE8usQYSRooujGAz
+	DPOtDDCJZXykb6n8NdANsFMGs0p8y+EN5F+XPY7sNYEwVqA4+eCCnRuk3eL5drwI8tyVxpMMpxq
+	QT07RDzOP9fuxdlmxK06Q03S5bPzcVGDhfokfFLabGroscKht+5Qvr27sYlKi2ixZa/HNaHw=
+X-Google-Smtp-Source: AGHT+IFOWxg9dlREBFVestaXMYXB//r1bQveRFkHWcW/v8RP8fcHviNaQLC2YO5f6bIdAK7/nqQmyw==
+X-Received: by 2002:a17:90b:4d0b:b0:32e:43ae:e7e9 with SMTP id 98e67ed59e1d1-339c27a50ffmr20351680a91.17.1759820046589;
+        Mon, 06 Oct 2025 23:54:06 -0700 (PDT)
+Received: from ti-am64x-sdk.. ([14.98.178.155])
+        by smtp.gmail.com with ESMTPSA id 98e67ed59e1d1-339ee05db08sm824666a91.2.2025.10.06.23.54.03
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 06 Oct 2025 23:54:06 -0700 (PDT)
+From: Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>
+To: Don Brace <don.brace@microchip.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: storagedev@microchip.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	khalid@kernel.org,
+	linux-kernel-mentees@lists.linuxfoundation.org,
+	skhan@linuxfoundation.org,
+	david.hunter.linux@gmail.com,
+	bhanuseshukumar@gmail.com,
+	cassel@kernel.org
+Subject: [PATCH v2] scsi: Prefer kmalloc_array over kmalloc involving dynamic size calculations
+Date: Tue,  7 Oct 2025 12:23:45 +0530
+Message-Id: <20251007065345.8853-1-bhanuseshukumar@gmail.com>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: Use kmalloc_array to prevent overflow of dynamic
- size calculation
-To: Niklas Cassel <cassel@kernel.org>
-Cc: James Bottomley <James.Bottomley@hansenpartnership.com>,
- Don Brace <don.brace@microchip.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- storagedev@microchip.com, linux-scsi@vger.kernel.org,
- linux-kernel-mentees@lists.linuxfoundation.org, skhan@linuxfoundation.org,
- david.hunter.linux@gmail.com, bhanuseshukumar@gmail.com
-References: <20251001113935.52596-1-bhanuseshukumar@gmail.com>
- <7761904f64c554821e71e30b205e092fc2f8478e.camel@HansenPartnership.com>
- <1c6cceec-da16-4867-88e0-c629accbb35c@gmail.com> <aOOn8TFTseukaZlS@ryzen>
-Content-Language: en-US
-From: Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>
-In-Reply-To: <aOOn8TFTseukaZlS@ryzen>
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-On 06/10/25 16:58, Niklas Cassel wrote:
-> On Sat, Oct 04, 2025 at 09:55:22AM +0530, Bhanu Seshu Kumar Valluri wrote:
->> On 03/10/25 20:23, James Bottomley wrote:
->>> On Wed, 2025-10-01 at 17:09 +0530, Bhanu Seshu Kumar Valluri wrote:
->>>> Use kmalloc_array to avoid potential overflow during dynamic size
->>>> calculation inside kmalloc.
->>>
->>> This description isn't correct.
->>>
->>> Given this check
->>>
->>>>  
->>>> -	host_memory_descriptor->host_chunk_virt_address =
->>>> kmalloc(sg_count * sizeof(void *), GFP_KERNEL);
->>>
->>> How is it possible that this allocation could ever overflow?
->>>
->>> If you want to change the description to say using kmalloc_array is
->>> better practice or something (and the maintainer concurs) that's fine,
->>> but we can't have a false justification in the kernel git log.
->>>
->>> Regards,
->>>
->>> James
->>>
->> Hi,
->>
->> Thank you for your helpful comment. 
->> I will await till maintainer confirms if it is ok to push this change as v2 with
->> subject line similar what you have suggested.
-> 
-> You misinterpreted James' reply ("and the maintainer concurs").
-> 
-> James is one of the two SCSI maintainers, so there is no need to
-> delay sending a V2.
+As a best practice use kmalloc_array to safely calculate dynamic object
+sizes without overflow.
 
-Hi Niklas,
+Acked-by: Don Brace <don.brace@microchip.com>
+Signed-off-by: Bhanu Seshu Kumar Valluri <bhanuseshukumar@gmail.com>
+---
+ Note: The patch is tested for compilation.
+ Change log:
+ v1->v2:
+  Updated commit message to refelect correct intention of the patch to 
+  address James Bottomley review in v1.
+  v1 Link : https://lore.kernel.org/all/20251001113935.52596-1-bhanuseshukumar@gmail.com/
+ drivers/scsi/smartpqi/smartpqi_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Thanks for clarifying  that. I will send v2 patch.
-
-Regards,
-Bhanu Seshu Kumar Valluri
+diff --git a/drivers/scsi/smartpqi/smartpqi_init.c b/drivers/scsi/smartpqi/smartpqi_init.c
+index 03c97e60d36f..19b0075eb256 100644
+--- a/drivers/scsi/smartpqi/smartpqi_init.c
++++ b/drivers/scsi/smartpqi/smartpqi_init.c
+@@ -8936,7 +8936,7 @@ static int pqi_host_alloc_mem(struct pqi_ctrl_info *ctrl_info,
+ 	if (sg_count == 0 || sg_count > PQI_HOST_MAX_SG_DESCRIPTORS)
+ 		goto out;
+ 
+-	host_memory_descriptor->host_chunk_virt_address = kmalloc(sg_count * sizeof(void *), GFP_KERNEL);
++	host_memory_descriptor->host_chunk_virt_address = kmalloc_array(sg_count, sizeof(void *), GFP_KERNEL);
+ 	if (!host_memory_descriptor->host_chunk_virt_address)
+ 		goto out;
+ 
+-- 
+2.34.1
 
