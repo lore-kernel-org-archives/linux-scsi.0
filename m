@@ -1,152 +1,133 @@
-Received: from omta036.useast.a.cloudfilter.net (omta036.useast.a.cloudfilter.net [44.202.169.35])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-vs1-f44.google.com (mail-vs1-f44.google.com [209.85.217.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 28E7116E863;
-	Tue,  7 Oct 2025 19:48:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=44.202.169.35
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A581A8401
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Oct 2025 20:06:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759866513; cv=none; b=fiTyRRTfHgvVMLTeNkjk+Zd+xaYokKc7FN2UDbi7If7vochLzAplZGFbRp30KuY3Qq36gMtNXeH4Kxay4J+bBSIqPG3x7NHV5acVgCTwnyJlNPWruOl9+vZ3YJuiZeegE4sR11ZEki/M0bDVPJR/YIgJy/htk7D35ODB5voPWLo=
+	t=1759867563; cv=none; b=J5ay1NCYnYMVDf1lls45lM0aui4SLSyCEtl4YYwgLo58md4+GQEeWuyOr2Mt3pLCzrEZ1GdIpGGBAZhIIlIbtK4ZoIoWtTOOIkR+C9E9zlF+r9UYR/iac0cgNtCPpS9Y1Zpz9X82rTASng1oWrnkVmlMlRG/SkncAir1Lf1onO4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759866513; c=relaxed/simple;
-	bh=vMtXbq1KgnSFelCHvUhZ2kgM7oOGT+RSFcTakW+bbUQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=emFOB4agXJIKvKZ/IszM/orn0uPSNGP6zXcYi4d3IrchAB5QdjL0DIPHapdGyKOs1odT4wIm8jv/spSRbPb0p1uTF37lSrv4ioAczvbBwYsHcUquMHRzMZye+XuIGpZYbrJvnlARlm2pswl1tPid9uNzEtlL4fNeyYv7gTwB7/o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com; spf=pass smtp.mailfrom=embeddedor.com; dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b=rq3ofEwu; arc=none smtp.client-ip=44.202.169.35
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=embeddedor.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=embeddedor.com
+	s=arc-20240116; t=1759867563; c=relaxed/simple;
+	bh=WJQxWT6wF/jboV9xo52lOonbbR/k8DBgj6cYsM2PTrc=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=uwSKkGdHOUSjxIdCTw4BI/qjayAef1Vc1goYn/grL2WXdwgFG9FcvGBMJxU/YPmDyYwtLpd75OuqKXDNcFTcCklGblSNXpzBPIxXuzWl6tL/X24bZ2/IVgsowN75gV/eA2kDBfs02JMtZmIYbQVYqdbSIQOtJWBYM+V3NDW0j/8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lGowQb2Y; arc=none smtp.client-ip=209.85.217.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=embeddedor.com header.i=@embeddedor.com header.b="rq3ofEwu"
-Received: from eig-obgw-5005b.ext.cloudfilter.net ([10.0.29.189])
-	by cmsmtp with ESMTPS
-	id 6BR1vxE44KXDJ6DfcvpKpW; Tue, 07 Oct 2025 19:48:24 +0000
-Received: from gator4166.hostgator.com ([108.167.133.22])
-	by cmsmtp with ESMTPS
-	id 6DfbvD9cRfjrX6Dfbv0Zuc; Tue, 07 Oct 2025 19:48:23 +0000
-X-Authority-Analysis: v=2.4 cv=ItcecK/g c=1 sm=1 tr=0 ts=68e56e87
- a=1YbLdUo/zbTtOZ3uB5T3HA==:117 a=4oHATN8Nx7vVUZJYxp75bA==:17
- a=IkcTkHD0fZMA:10 a=x6icFKpwvdMA:10 a=7T7KSl7uo7wA:10 a=VwQbUJbxAAAA:8
- a=4e8un5K37ZRR6lRcyOEA:9 a=QEXdDO2ut3YA:10 a=xYX6OU9JNrHFPr8prv8u:22
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=embeddedor.com; s=default; h=Content-Transfer-Encoding:Content-Type:
-	In-Reply-To:From:References:Cc:To:Subject:MIME-Version:Date:Message-ID:Sender
-	:Reply-To:Content-ID:Content-Description:Resent-Date:Resent-From:
-	Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:List-Help:
-	List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=LfPENtYO9yg3I6QdDZRxM3kYJOjt9kvB6+tlT/9JDY4=; b=rq3ofEwuaf/LsUbXFiBonuvEIq
-	RxMqKlBHPQKE0AuTVNDJsDVj75ymDtYqNiO3fAmFt23hkENte81TdQlr0GsFdMRMi+jxjh7V6kyQm
-	KcNtwlIx4JaWgVdTILImYMmfZi0n9Tcp2+NWz0buuxHBboNkW3OgHiBMWnrgIhfxRQXcxzTSDUg4E
-	7vD4ODepcDwimuFZSvt52p73eFkiipi/Od1bLKyXhZUrIYk44Mtqu8xE5JygdISuIbDsZXNRThfcK
-	wsCrSSbbFFBayQ02/LatGp5Lg7Zv4mVKo6SSOElviL/eO/ILdtdEUzs/OeSN7r8ZItL53YbdKnPd0
-	/qv0cLQQ==;
-Received: from [185.134.146.81] (port=48322 helo=[10.21.53.44])
-	by gator4166.hostgator.com with esmtpsa  (TLS1.2) tls TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
-	(Exim 4.98.1)
-	(envelope-from <gustavo@embeddedor.com>)
-	id 1v65C3-00000000Luf-35FH;
-	Tue, 07 Oct 2025 05:45:19 -0500
-Message-ID: <9e0613bf-17ae-407a-a3ab-cbeac09c3a17@embeddedor.com>
-Date: Tue, 7 Oct 2025 11:45:15 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lGowQb2Y"
+Received: by mail-vs1-f44.google.com with SMTP id ada2fe7eead31-5d42137abc2so4252180137.2
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Oct 2025 13:06:01 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1759867560; x=1760472360; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=U4dyxOrFlOFe4U6sjcUwMolCRd6l1aH8+4CTrd86ew0=;
+        b=lGowQb2Y6KL9ee5iwVt5OqtrUatCWrjdsLbHMuBVBF0/M/zNMysGnpEgbGWMF726W2
+         PjAfLhnlyiqxtlv6JSRdcXxyCyzteoOM+IpShOBnA7FdUbdlH/M6xcDtve/0djFfS6d6
+         i2gxNhk+AFTXyirjKmMV2UoGgJn/+fGxiThlo/CrYw0A+kdeKHgNQP8zo91o1/hlO4z1
+         luJ4zJ8qqtxTiuo2UMzqGmlk7c02gEr/mK3e3B7JJEHAt8Mj6DVE/hnGwFxNReqfGV1d
+         4M6gEt4CgFjKQ+2iQuQKmt+cYmaWb3pnQX8hdJlNmIFkJ0pBbyvRDHGihfUwjCV0WIAG
+         m1Xw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1759867560; x=1760472360;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=U4dyxOrFlOFe4U6sjcUwMolCRd6l1aH8+4CTrd86ew0=;
+        b=eCQtBIPzFDnQ8Icc4Tc154nxmMtA8mJVBDeB/m/xV03SpQzRhZbDNzye5/Gq8p17DI
+         2tkTqL5gVGExwJThesz1AxQNxvAjZAQe4+ZneUWz3kq+yhKEQbaG5dWdE1Or1HJ8jdbF
+         nvDnBvq+kQdfWchvxgzIHrrYXqrbFO5qg/lwxHd/ngZUfdvAh4nyuL2bVw+KgJLQlyfw
+         X7bxweeoQ7NigQrVo6ScOU9zlvuz4ZZQyIRtcULm261mSNEsdQRrCClZTR7F35/vnkHS
+         CESX27yRq+UTdxoRmai6brAIeNo253k5ybRVCO0nM27ZtSuV1+b09Ct3XGGkG2d4j+19
+         EhpA==
+X-Forwarded-Encrypted: i=1; AJvYcCXgU2Aft8GytsvauJgiBXokuvkAC0bAI4IcIgVGRoANthvdEnDYwvLp/yCbId9irQvN6o3ifJxPbJEi@vger.kernel.org
+X-Gm-Message-State: AOJu0YzL8uxBjkG2Kpe6C4gvrcPUVrKtnGPXArhZ5grYzQb6SFc4ht+r
+	xEnBcRapwx1GfDuVzo/kWghnI3EvnF0Dac4uudBN+1JhOMwrE/xetS30i1U3s8BH2QGoyfb/hEM
+	8GgqrwMJgtY4tW/P8dgmX8FzXa6J76Q4=
+X-Gm-Gg: ASbGncu03bxuuKi+slrJIT0T5JgOZn5OlUibHk6a7tP7P94/RuYIA44R9/b4Dwzlwx4
+	ttRiZ1RJ8YCBq+ykRWkH5g1jzqUYyn89Ouo7nNjHSwJ0Z5kEkSQPbBn2Bbr6K6E8rbwXZQQgYHy
+	Q4gmDn0EBHejiQCusw4oE6/4933WWsQqmki//1Sn4D0V1IolbA+obEyP4BIfy8/aPqqDJ9HkUJJ
+	1S9msvpT3c2oPxYu9oKGEMSC2x1YDYn
+X-Google-Smtp-Source: AGHT+IGITUrI/yR5IXL/mFkjQlTlGUw1hLwC1/R6yICe1J0nVa6DcOEdCLR2qa/KmQF3kTfOkWB+cDAc8og/Pna9xpA=
+X-Received: by 2002:a05:6102:32c6:b0:5a4:69bc:a9e with SMTP id
+ ada2fe7eead31-5d5e2347589mr387386137.22.1759867560499; Tue, 07 Oct 2025
+ 13:06:00 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH][next] scsi: hisi_sas: Avoid a couple
- -Wflex-array-member-not-at-end warnings
-To: "Gustavo A. R. Silva" <gustavoars@kernel.org>,
- Yihang Li <liyihang9@h-partners.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- linux-hardening@vger.kernel.org
-References: <aM1J5UemZFgdso3F@kspp>
-Content-Language: en-US
-From: "Gustavo A. R. Silva" <gustavo@embeddedor.com>
-In-Reply-To: <aM1J5UemZFgdso3F@kspp>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-AntiAbuse: This header was added to track abuse, please include it with any abuse report
-X-AntiAbuse: Primary Hostname - gator4166.hostgator.com
-X-AntiAbuse: Original Domain - vger.kernel.org
-X-AntiAbuse: Originator/Caller UID/GID - [47 12] / [47 12]
-X-AntiAbuse: Sender Address Domain - embeddedor.com
-X-BWhitelist: no
-X-Source-IP: 185.134.146.81
-X-Source-L: No
-X-Exim-ID: 1v65C3-00000000Luf-35FH
-X-Source: 
-X-Source-Args: 
-X-Source-Dir: 
-X-Source-Sender: ([10.21.53.44]) [185.134.146.81]:48322
-X-Source-Auth: gustavo@embeddedor.com
-X-Email-Count: 0
-X-Org: HG=hgshared;ORG=hostgator;
-X-Source-Cap: Z3V6aWRpbmU7Z3V6aWRpbmU7Z2F0b3I0MTY2Lmhvc3RnYXRvci5jb20=
-X-Local-Domain: yes
-X-CMAE-Envelope: MS4xfNbSc0c0lJ7nQ1ngLk0019RGqvP+k6LOj9TRdVd/TY9QoFlp8hNAX6gfALSAzF4P2FwTb/3e/q7kexPAlqe54tLUMV8vfkcW49mz7pk3pbM/7FHaH7oA
- yKXcuXr1Tu+nq3HcoNx90EAz/JsDxWUedtBghBVGa3aMy5K9NtJ0ZZLjVTNlmMtiEkIZZwJvNSVIbdUnnWpLAMVp4Cj0bRvh1Zrp3RHZRB/3hIa73uvhvn6c
- Zb1Lik/Jmg3Q+GjHi6rC86gcIVcYcAmM22tULX6XLgI0uedIgAgqMTuG3Wed9+d+teesOM2+HXb8xD2jsKKN+A==
+References: <20251002063038.552399-1-kubik.bartlomiej@gmail.com> <yq1frbvforp.fsf@ca-mkp.ca.oracle.com>
+In-Reply-To: <yq1frbvforp.fsf@ca-mkp.ca.oracle.com>
+From: =?UTF-8?Q?Bart=C5=82omiej_Kubik?= <kubik.bartlomiej@gmail.com>
+Date: Tue, 7 Oct 2025 22:05:49 +0200
+X-Gm-Features: AS18NWAPKi7YsXhdeE2n6LOH1QCmcymNQDYp9uK4Va4qllY1OBre7oyhLDjL8DI
+Message-ID: <CAPqLRf1GAFR=JAo8yuPZ5XRH2aXJrTk=_b78SUqw0jbv+9hLwQ@mail.gmail.com>
+Subject: Re: [PATCH RESEND] driver/scsi/mpi3mr.h: Fix build warning for mpi3mr_start_watchdog
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: sathya.prakash@broadcom.com, kashyap.desai@broadcom.com, 
+	sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com, 
+	James.Bottomley@hansenpartnership.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
+	linux-scsi@vger.kernel.org, skhan@linuxfoundation.org, 
+	david.hunter.linux@gmail.com, linux-kernel-mentees@lists.linuxfoundation.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-Hi all,
+Hi Martin,
 
-Friendly ping: who can take this, please?
+On Tue, 7 Oct 2025 at 04:25, Martin K. Petersen
+<martin.petersen@oracle.com> wrote:
+>
+>
+> Hi Bartlomiej!
+>
+> > Fix watchdog name truncation.
+> >
+> > In function mpi3mr_start_watchdog, watchdog_work_q_name is build
+> > snprintf(mrioc->watchdog_work_q_name,
+> >       sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name=
+,
+> >       mrioc->id);
+>
+> > +#define MPI3MR_WATCHDOG_NAME_LENGTH  (MPI3MR_NAME_LENGTH + 15)
+>
+> Please document why 15 is the correct number and describe the code path
+> which leads to the watchdog name being truncated.
+>
+> Also (and I guess this is a question for Broadcom since I don't have any
+> mpi3mr hardware so I can't check), as far as I can tell, mrioc->name
+> already includes mrioc->id so the id will be listed twice in the
+> watchdog name? Or am I missing something?
+>
+> --
+> Martin K. Petersen
 
-Thanks!
--Gustavo
+GCC warn:
+drivers/scsi/mpi3mr/mpi3mr_fw.c:2872:60: warning: =E2=80=98%s=E2=80=99 dire=
+ctive
+output may be truncated writing up to 63 bytes into a region of size
+41 [-Wformat-truncation=3D]
 
-On 9/19/25 13:17, Gustavo A. R. Silva wrote:
-> -Wflex-array-member-not-at-end was introduced in GCC-14, and we are
-> getting ready to enable it, globally.
-> 
-> Move the conflicting declarations to the end of the corresponding
-> structures (and in a union). Notice that `struct ssp_command_iu`
-> is a flexible structure, this is a structure that contains a
-> flexible-array member.
-> 
-> With these changes fix the following warnings:
-> 
-> drivers/scsi/hisi_sas/hisi_sas.h:639:38: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-> drivers/scsi/hisi_sas/hisi_sas.h:616:47: warning: structure containing a flexible array member is not at the end of another structure [-Wflex-array-member-not-at-end]
-> 
-> Signed-off-by: Gustavo A. R. Silva <gustavoars@kernel.org>
-> ---
->   drivers/scsi/hisi_sas/hisi_sas.h | 10 +++++++---
->   1 file changed, 7 insertions(+), 3 deletions(-)
-> 
-> diff --git a/drivers/scsi/hisi_sas/hisi_sas.h b/drivers/scsi/hisi_sas/hisi_sas.h
-> index 1323ed8aa717..55c638dd58b1 100644
-> --- a/drivers/scsi/hisi_sas/hisi_sas.h
-> +++ b/drivers/scsi/hisi_sas/hisi_sas.h
-> @@ -613,8 +613,8 @@ struct hisi_sas_command_table_ssp {
->   	struct ssp_frame_hdr hdr;
->   	union {
->   		struct {
-> -			struct ssp_command_iu task;
->   			u32 prot[PROT_BUF_SIZE];
-> +			struct ssp_command_iu task;
->   		};
->   		struct ssp_tmf_iu ssp_task;
->   		struct xfer_rdy_iu xfer_rdy;
-> @@ -636,13 +636,17 @@ struct hisi_sas_status_buffer {
->   
->   struct hisi_sas_slot_buf_table {
->   	struct hisi_sas_status_buffer status_buffer;
-> -	union hisi_sas_command_table command_header;
->   	struct hisi_sas_sge_page sge_page;
-> +
-> +	/* Must be last --ends in a flexible-array member. */
-> +	union hisi_sas_command_table command_header;
->   };
->   
->   struct hisi_sas_slot_dif_buf_table {
-> -	struct hisi_sas_slot_buf_table slot_buf;
->   	struct hisi_sas_sge_dif_page sge_dif_page;
-> +
-> +	/* Must be last --ends in a flexible-array member. */
-> +	struct hisi_sas_slot_buf_table slot_buf;
->   };
->   
->   extern struct scsi_transport_template *hisi_sas_stt;
+In function mpi3mr_start_watchdog:
 
+The mrioc->watchdog_work_q_name is built from the string "watchdog_" +
+mrioc->name[64] and + mrioc->id.
+Currently snprintf(...) will truncate this string to size
+watchdog_work_q_name[50].
+
+I changed watchdog_work_q_name size to:
+-> "watchdog_" are 9 characters.
+-> mrioc->name[64] up to 64 characters.
+-> mrioc->id is u8 value, 3 characters.
+-> plus three extra characters for safety.
+
+Yes, as you suggested, mrioc->id is currently appended twice to the
+watchdog_work_q_name, which is unnecessary and makes it harder to
+read. I will prepare patch v2 to remove the second occurrence of
+mrioc->id from watchdog_work_q_name.
+
+Best regards
+Bart=C5=82omiej Kubik
