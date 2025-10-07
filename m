@@ -1,134 +1,122 @@
-Received: from mail-io1-f50.google.com (mail-io1-f50.google.com [209.85.166.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C3441D7E41
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Oct 2025 21:17:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61C5E1F63CD
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Oct 2025 21:48:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759871882; cv=none; b=WhIkY1I4bjJfwdUWYfdR4lFmcNofOjc7GcVY+5JkkoNoa7LGiYJHB+Eq11Mm3If//IRToJtKpk5tnOacWjUvC9Dmi15YiCsYHMLKtWY2c63JLZ3S0twoMKTyzX+V28hDzXVQ34zq6Raia/meIwMFgEFEwS+w0qhtPr/yy4kbpqE=
+	t=1759873709; cv=none; b=MDR+GzlTB5cS8hYMxBJ0Rmbri6QnxL/yd7V/wC3/7nC+M1391g6y2LuqhhPViwajZRgUYHTGsI1FUheWArHxbxzexH3mSpF2coxsVfDCPDHJcsCBBy0l1CIQSkicR6SJTpCIkltTSX96l9g/KBiRO8iCvlb/EfDeu8FWcJYhUkM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759871882; c=relaxed/simple;
-	bh=m34tLBwz1PIe/S0WfQ2UYFZwrQXwN9LclHWU15mdFJc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hDf2nmEG/7ITib+DOwVbz+WbL0QHnVJG+VOaY/qnwpi5S+tXUWbEpg1P07YSZwP4m/GvuKfxu7hF0glM3xh7dkTRYYpisP9qFRhpusoL1j6VU1davsTo9bGgpDlYfy+WToSpFhmPxfSdHtWehqGlu/xHBZYTEYnyIMH/jAWahqo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linuxfoundation.org; spf=pass smtp.mailfrom=linuxfoundation.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=Wo4soBro; arc=none smtp.client-ip=209.85.166.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linuxfoundation.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linuxfoundation.org
+	s=arc-20240116; t=1759873709; c=relaxed/simple;
+	bh=aHSOMWISwHQa4yM9lAmfrDtmUaqAzv+6gd1Ofi39Rw8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=BDcROW2ML9UhjxTxv9f0DW4vHouNbrKv1yRu1IVV7bsrU6B6RCDOLZbQgt80cVNbaihJjbt4LP6yl414hHAQtX/XqiufufPGpEfe1GztdD5eln2JiKjD3ynsRVb9RM6GSuDt2W3kBBcIkfqWKO2eH5x5J1CCIEz+foerITrim6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=a5+OOTzg; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="Wo4soBro"
-Received: by mail-io1-f50.google.com with SMTP id ca18e2360f4ac-92aee734485so293291139f.1
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Oct 2025 14:17:59 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linuxfoundation.org; s=google; t=1759871879; x=1760476679; darn=vger.kernel.org;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=4L3v1zXzH1XthRJD+O7BTVEnTPegVXFNbA8wvQbrEuo=;
-        b=Wo4soBroleVSXHoR6mY/gZBGGh8s4TnXtyrWBfvv/yuXbUJOi+dfHb2A2S+9bHd9W3
-         CWqtj7dO1WrDLGX1NHUOlys4l1ca2dhT3y4sWPju8El5bxtTUsVgahIk8IIeLWMQl0Cc
-         wNVMvKnOCzO5TH1hQ4eRHRqrOpRFii0eEozUg=
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759871879; x=1760476679;
-        h=content-transfer-encoding:in-reply-to:from:content-language
-         :references:cc:to:subject:user-agent:mime-version:date:message-id
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=4L3v1zXzH1XthRJD+O7BTVEnTPegVXFNbA8wvQbrEuo=;
-        b=wX18/iP4PGdvQX+9DV9Kemcb/W9Wd1BMrHxYddte58BBgvtjP8CvRlPnJfFFnO5y56
-         7o1FUt61OUiaXgWTvGpAIiMveK2zJK6ty4I8FWR3TVGcTf9ee0m+hx9Cj6l/BX+YgkRn
-         lxYXvT/HDnmSQZOVHY+PDw6GbXXdHM/xJUDw3AgO6fzfOxz++t/JvryWwO2I5/g9kFz7
-         qtAPX7+B0wUgFgSz/N+NzbsngQ99/Bv8Xz9pozhuIW7gJHIYTtldYybifmC5M92kWXG2
-         f5GzWr2nG61xjU/r+JQ/ROYS7pRe1Vf08W+thO6+ApoRFLhvGs+3ENH9JD4Pt9B6kmRA
-         gzYw==
-X-Forwarded-Encrypted: i=1; AJvYcCXhBWjk1AX3JSvWbXWE8t84csGAJBBaka1XEeTptjF/DP6Wfd8xOBjlrpnlgZGp/zMV5eF3OPHVVVdH@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywb5cDPLXASvfjtomC4rRIzKuWNuij0AlF5DcI4K1xpRAPaLpG2
-	oUB2VO2vu1nFv7qBV7NqOUoaw7Ilf23EbqQGcTRl2uMtkayZZHr3XXREDu8f197Cs1w=
-X-Gm-Gg: ASbGncs0rmBs9xTijkRSIwXA3N7w6HvN0geU2hLfDWNZ+wOHyWynmudHfKFphby1QWz
-	hHD3K5j+tDpQ7e1vgqFdT+JKmtLiVM4UCBH+6D4rMQV4TsM/JHrjN4utzgCxhwy4w9Yx9RBv4xx
-	GSAgEk3s8hDwGVpAp1h346GVsjxNTI28FXxf7l0K0OKyB6pguroTAeLJQTsNUVJeUllb9FQ/Cv8
-	3jPGm1pM41K0D4qNm8fnRcqwX8KUvHsCEE8iAPDcA6fUg68bjPePoTMBXKNirVnKQJcBwtGs+CE
-	3dcwfhpurWRim2Oyxa+c0WYevEQCIgm/6K7+yTIzl2M5Ao3K38U3kYvK5qU385H9V830jyVQSbk
-	iaYaN2jyRt4hSVQ6xDmygcpYFhqirWAulAgKKz1H2vEVs3MEVUYVOrvvhH9k=
-X-Google-Smtp-Source: AGHT+IFF0GpolSwqbh8qtuQ+qbO+AbH5QO7XIKCSeB2JmlXgRUD9SQ2+4zyonUIurKTJfoYnKHxvJA==
-X-Received: by 2002:a05:6602:158c:b0:93b:b891:d6e1 with SMTP id ca18e2360f4ac-93bd17b9cfemr114458539f.5.1759871878936;
-        Tue, 07 Oct 2025 14:17:58 -0700 (PDT)
-Received: from [192.168.1.14] ([38.175.187.108])
-        by smtp.gmail.com with ESMTPSA id ca18e2360f4ac-93a7d81c743sm603525739f.6.2025.10.07.14.17.57
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 07 Oct 2025 14:17:57 -0700 (PDT)
-Message-ID: <3adc91e7-8a96-4ffe-b891-2b9df252d8da@linuxfoundation.org>
-Date: Tue, 7 Oct 2025 15:17:56 -0600
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="a5+OOTzg"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4ch8rz7454zlgqVx;
+	Tue,  7 Oct 2025 21:48:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1759873698; x=1762465699; bh=v2izTBZE/hUlM6ag5GWowe5UTGqRk8b+LgW
+	kcda96ZE=; b=a5+OOTzgfdPPb9dg1PVtJeJBvfmFS+Unuu2Rp7sZJyw3CipB8Lz
+	ZOgzfltiSJ59bP2wX1y9cMH2Hnga+OriLlBTQJyIj3N6NLLxKdfuXAT6fkilLNqY
+	BTDiMDS1N9IWixsMoUafwxajwKtc+4ztsv0YAYiAPXbFsGmgtNavWrc5dNKqpTm6
+	VvUEH+kQIic4vRMMWR/Hi5RlvdL4iFU5+U4sMeHFGMhsuU9tlZ9nyY9/opc8Q0mJ
+	ofmkD21F+5/+ECQ3eEz4EPzktJ2F5KfWjqVlbZHr/2RezN+2Q+++bkYJq/qryv4s
+	A8kF356shc0ocZ7kJl9R7rHFNyEuaY4DN8g==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id oZQvKAFZsVHt; Tue,  7 Oct 2025 21:48:18 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4ch8rt1D9DzlgqW3;
+	Tue,  7 Oct 2025 21:48:13 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	Sebastian Reichel <sebastian.reichel@collabora.com>,
+	Ming Lei <ming.lei@redhat.com>,
+	Jens Axboe <axboe@kernel.dk>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] scsi: core: Fix a regression triggered by scsi_host_busy()
+Date: Tue,  7 Oct 2025 14:48:00 -0700
+Message-ID: <20251007214800.1678255-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.51.0.710.ga91ca5db03-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] driver/scsi/mpi3mr.h: Fix build warning for
- mpi3mr_start_watchdog
-To: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>,
- sathya.prakash@broadcom.com, kashyap.desai@broadcom.com,
- sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com,
- James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com
-Cc: mpi3mr-linuxdrv.pdl@broadcom.com, linux-scsi@vger.kernel.org,
- david.hunter.linux@gmail.com,
- linux-kernel-mentees@lists.linuxfoundation.org,
- Shuah Khan <skhan@linuxfoundation.org>
-References: <20250924160635.27359-1-kubik.bartlomiej@gmail.com>
-Content-Language: en-US
-From: Shuah Khan <skhan@linuxfoundation.org>
-In-Reply-To: <20250924160635.27359-1-kubik.bartlomiej@gmail.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 9/24/25 10:06, Bartlomiej Kubik wrote:
-> Fix watchdog name truncation.
-> 
-> In function mpi3mr_start_watchdog, watchdog_work_q_name is build
-> snprintf(mrioc->watchdog_work_q_name,
-> 	sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name,
-> 	mrioc->id);
+Commit 995412e23bb2 ("blk-mq: Replace tags->lock with SRCU for tag
+iterators") introduced the following regression:
 
-Include build warning in the commit message
+Call trace:
+ __srcu_read_lock+0x30/0x80 (P)
+ blk_mq_tagset_busy_iter+0x44/0x300
+ scsi_host_busy+0x38/0x70
+ ufshcd_print_host_state+0x34/0x1bc
+ ufshcd_link_startup.constprop.0+0xe4/0x2e0
+ ufshcd_init+0x944/0xf80
+ ufshcd_pltfrm_init+0x504/0x820
+ ufs_rockchip_probe+0x2c/0x88
+ platform_probe+0x5c/0xa4
+ really_probe+0xc0/0x38c
+ __driver_probe_device+0x7c/0x150
+ driver_probe_device+0x40/0x120
+ __driver_attach+0xc8/0x1e0
+ bus_for_each_dev+0x7c/0xdc
+ driver_attach+0x24/0x30
+ bus_add_driver+0x110/0x230
+ driver_register+0x68/0x130
+ __platform_driver_register+0x20/0x2c
+ ufs_rockchip_pltform_init+0x1c/0x28
+ do_one_initcall+0x60/0x1e0
+ kernel_init_freeable+0x248/0x2c4
+ kernel_init+0x20/0x140
+ ret_from_fork+0x10/0x20
 
-> 
-> Signed-off-by: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
-> ---
->   drivers/scsi/mpi3mr/mpi3mr.h | 3 ++-
->   1 file changed, 2 insertions(+), 1 deletion(-)
-> 
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-> index 8d4ef49e04d1..5307fcdf216f 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr.h
-> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> @@ -66,6 +66,7 @@ extern atomic64_t event_counter;
-> 
->   #define MPI3MR_NAME_LENGTH	64
->   #define IOCNAME			"%s: "
-> +#define MPI3MR_WATCHDOG_NAME_LENGTH	(MPI3MR_NAME_LENGTH + 15)
+Fix this regression by making scsi_host_busy() check whether the SCSI
+host tag set has already been initialized. tag_set->ops is set by
+scsi_mq_setup_tags() just before blk_mq_alloc_tag_set() is called. This
+fix is based on the assumption that scsi_host_busy() and
+scsi_mq_setup_tags() calls are serialized. This is the case in the UFS
+driver.
 
-This 15 looks random to me?
+Reported-by: Sebastian Reichel <sebastian.reichel@collabora.com>
+Closes: https://lore.kernel.org/linux-block/pnezafputodmqlpumwfbn644ohjyb=
+ouveehcjhz2hmhtcf2rka@sdhoiivync4y/
+Cc: Ming Lei <ming.lei@redhat.com>
+Cc: Jens Axboe <axboe@kernel.dk>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/hosts.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-> 
->   #define MPI3MR_DEFAULT_MAX_IO_SIZE	(1 * 1024 * 1024)
-> 
-> @@ -1261,7 +1262,7 @@ struct mpi3mr_ioc {
->   	spinlock_t fwevt_lock;
->   	struct list_head fwevt_list;
-> 
-> -	char watchdog_work_q_name[50];
-> +	char watchdog_work_q_name[MPI3MR_WATCHDOG_NAME_LENGTH];
->   	struct workqueue_struct *watchdog_work_q;
->   	struct delayed_work watchdog_work;
->   	spinlock_t watchdog_lock;
-> --
-> 2.39.5
-> 
-
-You are changing the structure size here? How did you test this
-patch? DO you have this scsi card to test and make sure this
-change doesn't introduce regressions?
-
-thanks,
--- Shuah
-
+diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+index cc5d05dc395c..17173239301e 100644
+--- a/drivers/scsi/hosts.c
++++ b/drivers/scsi/hosts.c
+@@ -611,8 +611,9 @@ int scsi_host_busy(struct Scsi_Host *shost)
+ {
+ 	int cnt =3D 0;
+=20
+-	blk_mq_tagset_busy_iter(&shost->tag_set,
+-				scsi_host_check_in_flight, &cnt);
++	if (shost->tag_set.ops)
++		blk_mq_tagset_busy_iter(&shost->tag_set,
++					scsi_host_check_in_flight, &cnt);
+ 	return cnt;
+ }
+ EXPORT_SYMBOL(scsi_host_busy);
