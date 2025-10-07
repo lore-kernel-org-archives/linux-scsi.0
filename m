@@ -1,133 +1,90 @@
-Received: from mail-vs1-f44.google.com (mail-vs1-f44.google.com [209.85.217.44])
+Received: from mail-oo1-f50.google.com (mail-oo1-f50.google.com [209.85.161.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A581A8401
-	for <linux-scsi@vger.kernel.org>; Tue,  7 Oct 2025 20:06:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 62D1E1B87F0
+	for <linux-scsi@vger.kernel.org>; Tue,  7 Oct 2025 20:20:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.161.50
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759867563; cv=none; b=J5ay1NCYnYMVDf1lls45lM0aui4SLSyCEtl4YYwgLo58md4+GQEeWuyOr2Mt3pLCzrEZ1GdIpGGBAZhIIlIbtK4ZoIoWtTOOIkR+C9E9zlF+r9UYR/iac0cgNtCPpS9Y1Zpz9X82rTASng1oWrnkVmlMlRG/SkncAir1Lf1onO4=
+	t=1759868461; cv=none; b=iO0Y85r35VrZp/nAiWiOsmsxaDVl1n0Ws1ytxChlGiTUFfgf3BGxEJbIWUC2QquoK97x4iTDhCwlibHPhE5xHB26tH/BcpM7EPmPZxqG9i7AnQ+ggxYVXbhJ3RE+Jyht14paYqbMtlku1W3oChXqNY6mgaBPv3Bw5flSoQltuo4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759867563; c=relaxed/simple;
-	bh=WJQxWT6wF/jboV9xo52lOonbbR/k8DBgj6cYsM2PTrc=;
+	s=arc-20240116; t=1759868461; c=relaxed/simple;
+	bh=y/TWEe/aEhKr6s5KMRouLoYYcgI2epSiBagA6I5SO6E=;
 	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=uwSKkGdHOUSjxIdCTw4BI/qjayAef1Vc1goYn/grL2WXdwgFG9FcvGBMJxU/YPmDyYwtLpd75OuqKXDNcFTcCklGblSNXpzBPIxXuzWl6tL/X24bZ2/IVgsowN75gV/eA2kDBfs02JMtZmIYbQVYqdbSIQOtJWBYM+V3NDW0j/8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lGowQb2Y; arc=none smtp.client-ip=209.85.217.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 To:Cc:Content-Type; b=EwotZlZgxUVp09DkTBidfoyzQ9wg2hwW3hbgaxBwVKxkP62T1qvAaXPQbzll6Onf2YTkL7BZ0U1q43C5ei72Wk2afZ+wptyjXr8ySwl3WKbVtacU2a9GcBNDVv85s2Wti6j8ueDKcOx5jyOqwp75Ab/uE/tNNKpvlk4l62dGp4A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=RcGQHjzb; arc=none smtp.client-ip=209.85.161.50
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lGowQb2Y"
-Received: by mail-vs1-f44.google.com with SMTP id ada2fe7eead31-5d42137abc2so4252180137.2
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Oct 2025 13:06:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="RcGQHjzb"
+Received: by mail-oo1-f50.google.com with SMTP id 006d021491bc7-649a715fcaeso1711166eaf.3
+        for <linux-scsi@vger.kernel.org>; Tue, 07 Oct 2025 13:20:58 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1759867560; x=1760472360; darn=vger.kernel.org;
+        d=linaro.org; s=google; t=1759868457; x=1760473257; darn=vger.kernel.org;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=U4dyxOrFlOFe4U6sjcUwMolCRd6l1aH8+4CTrd86ew0=;
-        b=lGowQb2Y6KL9ee5iwVt5OqtrUatCWrjdsLbHMuBVBF0/M/zNMysGnpEgbGWMF726W2
-         PjAfLhnlyiqxtlv6JSRdcXxyCyzteoOM+IpShOBnA7FdUbdlH/M6xcDtve/0djFfS6d6
-         i2gxNhk+AFTXyirjKmMV2UoGgJn/+fGxiThlo/CrYw0A+kdeKHgNQP8zo91o1/hlO4z1
-         luJ4zJ8qqtxTiuo2UMzqGmlk7c02gEr/mK3e3B7JJEHAt8Mj6DVE/hnGwFxNReqfGV1d
-         4M6gEt4CgFjKQ+2iQuQKmt+cYmaWb3pnQX8hdJlNmIFkJ0pBbyvRDHGihfUwjCV0WIAG
-         m1Xw==
+        bh=y/TWEe/aEhKr6s5KMRouLoYYcgI2epSiBagA6I5SO6E=;
+        b=RcGQHjzbAGRrHPJEr+DWLdnoU2rfxNB/1+f3jUIU18Wqm2hO8HXSWKM+968sr974mI
+         3AqSI36AL+0qpZJk4af5xGb6D5Ualc7Z/184RZO1wKK2PBy4q/AZA+dYeSlVzVRUi4bE
+         8K+Wjz32+OoqjvYLmNlbFWlZ8l1pfb2J9B9/l564MgZNB+onHkDww4gyk5uIG4yYL6Nz
+         15llv5nLVFN5J6pebfOFyq6jFrLKHiJATlW5NzHcc2JNmHx7fd4FEdJiJn0lLXiD9yLM
+         QkT+bRjKQjSXpa+eJUNFj0eD7jZknplgpJT1boL9SV2twmRFJ9Fo1SRs2bdUC6rBlpNC
+         wkiQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759867560; x=1760472360;
+        d=1e100.net; s=20230601; t=1759868457; x=1760473257;
         h=content-transfer-encoding:cc:to:subject:message-id:date:from
          :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=U4dyxOrFlOFe4U6sjcUwMolCRd6l1aH8+4CTrd86ew0=;
-        b=eCQtBIPzFDnQ8Icc4Tc154nxmMtA8mJVBDeB/m/xV03SpQzRhZbDNzye5/Gq8p17DI
-         2tkTqL5gVGExwJThesz1AxQNxvAjZAQe4+ZneUWz3kq+yhKEQbaG5dWdE1Or1HJ8jdbF
-         nvDnBvq+kQdfWchvxgzIHrrYXqrbFO5qg/lwxHd/ngZUfdvAh4nyuL2bVw+KgJLQlyfw
-         X7bxweeoQ7NigQrVo6ScOU9zlvuz4ZZQyIRtcULm261mSNEsdQRrCClZTR7F35/vnkHS
-         CESX27yRq+UTdxoRmai6brAIeNo253k5ybRVCO0nM27ZtSuV1+b09Ct3XGGkG2d4j+19
-         EhpA==
-X-Forwarded-Encrypted: i=1; AJvYcCXgU2Aft8GytsvauJgiBXokuvkAC0bAI4IcIgVGRoANthvdEnDYwvLp/yCbId9irQvN6o3ifJxPbJEi@vger.kernel.org
-X-Gm-Message-State: AOJu0YzL8uxBjkG2Kpe6C4gvrcPUVrKtnGPXArhZ5grYzQb6SFc4ht+r
-	xEnBcRapwx1GfDuVzo/kWghnI3EvnF0Dac4uudBN+1JhOMwrE/xetS30i1U3s8BH2QGoyfb/hEM
-	8GgqrwMJgtY4tW/P8dgmX8FzXa6J76Q4=
-X-Gm-Gg: ASbGncu03bxuuKi+slrJIT0T5JgOZn5OlUibHk6a7tP7P94/RuYIA44R9/b4Dwzlwx4
-	ttRiZ1RJ8YCBq+ykRWkH5g1jzqUYyn89Ouo7nNjHSwJ0Z5kEkSQPbBn2Bbr6K6E8rbwXZQQgYHy
-	Q4gmDn0EBHejiQCusw4oE6/4933WWsQqmki//1Sn4D0V1IolbA+obEyP4BIfy8/aPqqDJ9HkUJJ
-	1S9msvpT3c2oPxYu9oKGEMSC2x1YDYn
-X-Google-Smtp-Source: AGHT+IGITUrI/yR5IXL/mFkjQlTlGUw1hLwC1/R6yICe1J0nVa6DcOEdCLR2qa/KmQF3kTfOkWB+cDAc8og/Pna9xpA=
-X-Received: by 2002:a05:6102:32c6:b0:5a4:69bc:a9e with SMTP id
- ada2fe7eead31-5d5e2347589mr387386137.22.1759867560499; Tue, 07 Oct 2025
- 13:06:00 -0700 (PDT)
+        bh=y/TWEe/aEhKr6s5KMRouLoYYcgI2epSiBagA6I5SO6E=;
+        b=FpilLl44FU/BURCZKm+wYmzb+QgIcqIUN0+VToIsdQ/q9Yil3ZXjWTUITly+3zH/5p
+         Ize4BFjxX7n6Qc2/joOFZJ4SVxJLj3mJFQWojyDfQ7xntYZ0KxXXnLziskh2frFkDy+i
+         V4x4khhuvt14GxWhb2vCgctBYbOIBuSZwqljdCVdxzyNy1O6SG0FItd6b1QipDfa1QTR
+         h0S3/xzF84hWscgsRNjvYb/JjOLXPBdTvx5cCGRcProNqe+m9Xa4ZL9y4CnyO4WcVxow
+         VxXXRUwSn0eNvxjZSLJmULX7vpuFGZbbFyAgSqg3WAUH4+nq2J/dQq7y2AeCTqireYhj
+         52ZA==
+X-Forwarded-Encrypted: i=1; AJvYcCXRdzgYg2UW7q8t7wbLfTwu/uDnlO87UxtTX73vux6wf7wkKlNZpmLSsEsEhx6xhafSI8Yg7jPccP3r@vger.kernel.org
+X-Gm-Message-State: AOJu0Yx+yazywWeY1/1YrOhCmTg2cWTWGfmojMVZpvXapkxU9PE72Hg2
+	C6EjzzbPFeBMEXNjOd+qqnA+vim/dXHVfvYgKzlNbh4InSpv8bdH0JKPRlIB99YvWcsxzSFNUFE
+	uHRTrKYiGWUQl7SV4Qv2PnYIdKlJ5gdad6CusQfuyvg==
+X-Gm-Gg: ASbGnctifszIragdmg6gAr5xzDNfpw5nCSpJwgK7pjDieCOIIQz6HQqakB3/U5ht4vF
+	hf/XHUuGI0FbFXQ3Nzn0QryeTmrwhCif0w/sBQzDbGHevJlBcVn8EHgAYZufJrYF25owEFCPagP
+	8Vm4qza5U6QTaLqdj21pp7jGT4ACtiFmFQZya+cWlN2AaUfh6o0S3t9vlxsHNjJI4haRqjm6I6X
+	LrzUmlriNpO4/QZU3TakcRsSdk+n/+auJu1iw==
+X-Google-Smtp-Source: AGHT+IEyLeFs/tZrPpe8u5cykgOumU9CrjJh4fjO1Ik2uE9eU8H/ZkZq/fUMlKIiW99d1ig/gW3IYGMToD+2pUB6yiA=
+X-Received: by 2002:a05:6820:4a14:b0:622:1a4c:ca84 with SMTP id
+ 006d021491bc7-64fffe46c1amr372637eaf.3.1759868457494; Tue, 07 Oct 2025
+ 13:20:57 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251002063038.552399-1-kubik.bartlomiej@gmail.com> <yq1frbvforp.fsf@ca-mkp.ca.oracle.com>
-In-Reply-To: <yq1frbvforp.fsf@ca-mkp.ca.oracle.com>
-From: =?UTF-8?Q?Bart=C5=82omiej_Kubik?= <kubik.bartlomiej@gmail.com>
-Date: Tue, 7 Oct 2025 22:05:49 +0200
-X-Gm-Features: AS18NWAPKi7YsXhdeE2n6LOH1QCmcymNQDYp9uK4Va4qllY1OBre7oyhLDjL8DI
-Message-ID: <CAPqLRf1GAFR=JAo8yuPZ5XRH2aXJrTk=_b78SUqw0jbv+9hLwQ@mail.gmail.com>
-Subject: Re: [PATCH RESEND] driver/scsi/mpi3mr.h: Fix build warning for mpi3mr_start_watchdog
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: sathya.prakash@broadcom.com, kashyap.desai@broadcom.com, 
-	sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com, 
-	James.Bottomley@hansenpartnership.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
-	linux-scsi@vger.kernel.org, skhan@linuxfoundation.org, 
-	david.hunter.linux@gmail.com, linux-kernel-mentees@lists.linuxfoundation.org
+References: <20251007-power-domains-scsi-ufs-dt-bindings-exynos-v1-1-1acfa81a887a@linaro.org>
+In-Reply-To: <20251007-power-domains-scsi-ufs-dt-bindings-exynos-v1-1-1acfa81a887a@linaro.org>
+From: Peter Griffin <peter.griffin@linaro.org>
+Date: Tue, 7 Oct 2025 21:20:46 +0100
+X-Gm-Features: AS18NWBXzhclL12SN8KyOZlv89Zez5Qwco0h5Y-fiwtfj-_OtAAbqpmFxHR3Ve4
+Message-ID: <CADrjBPo5F9H3BbxBBQmwmDUFnzibnH4hNkYMPTknOn8ZHH_Mwg@mail.gmail.com>
+Subject: Re: [PATCH] scsi: ufs: dt-bindings: exynos: add power-domains
+To: =?UTF-8?Q?Andr=C3=A9_Draszik?= <andre.draszik@linaro.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, 
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>, 
+	Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>, 
+	Tudor Ambarus <tudor.ambarus@linaro.org>, Will McVicker <willmcvicker@google.com>, 
+	kernel-team@android.com, linux-scsi@vger.kernel.org, 
+	devicetree@vger.kernel.org, linux-arm-kernel@lists.infradead.org, 
+	linux-samsung-soc@vger.kernel.org, linux-kernel@vger.kernel.org
 Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Hi Martin,
-
-On Tue, 7 Oct 2025 at 04:25, Martin K. Petersen
-<martin.petersen@oracle.com> wrote:
+On Tue, 7 Oct 2025 at 16:56, Andr=C3=A9 Draszik <andre.draszik@linaro.org> =
+wrote:
 >
+> The UFS controller can be part of a power domain, so we need to allow
+> the relevant property 'power-domains'.
 >
-> Hi Bartlomiej!
->
-> > Fix watchdog name truncation.
-> >
-> > In function mpi3mr_start_watchdog, watchdog_work_q_name is build
-> > snprintf(mrioc->watchdog_work_q_name,
-> >       sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name=
-,
-> >       mrioc->id);
->
-> > +#define MPI3MR_WATCHDOG_NAME_LENGTH  (MPI3MR_NAME_LENGTH + 15)
->
-> Please document why 15 is the correct number and describe the code path
-> which leads to the watchdog name being truncated.
->
-> Also (and I guess this is a question for Broadcom since I don't have any
-> mpi3mr hardware so I can't check), as far as I can tell, mrioc->name
-> already includes mrioc->id so the id will be listed twice in the
-> watchdog name? Or am I missing something?
->
-> --
-> Martin K. Petersen
+> Signed-off-by: Andr=C3=A9 Draszik <andre.draszik@linaro.org>
+> ---
 
-GCC warn:
-drivers/scsi/mpi3mr/mpi3mr_fw.c:2872:60: warning: =E2=80=98%s=E2=80=99 dire=
-ctive
-output may be truncated writing up to 63 bytes into a region of size
-41 [-Wformat-truncation=3D]
-
-In function mpi3mr_start_watchdog:
-
-The mrioc->watchdog_work_q_name is built from the string "watchdog_" +
-mrioc->name[64] and + mrioc->id.
-Currently snprintf(...) will truncate this string to size
-watchdog_work_q_name[50].
-
-I changed watchdog_work_q_name size to:
--> "watchdog_" are 9 characters.
--> mrioc->name[64] up to 64 characters.
--> mrioc->id is u8 value, 3 characters.
--> plus three extra characters for safety.
-
-Yes, as you suggested, mrioc->id is currently appended twice to the
-watchdog_work_q_name, which is unnecessary and makes it harder to
-read. I will prepare patch v2 to remove the second occurrence of
-mrioc->id from watchdog_work_q_name.
-
-Best regards
-Bart=C5=82omiej Kubik
+Reviewed-by: Peter Griffin <peter.griffin@linaro.org>
