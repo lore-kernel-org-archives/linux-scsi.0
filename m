@@ -1,103 +1,183 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.84])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3120921FF38;
-	Wed,  8 Oct 2025 20:16:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759954578; cv=none; b=pgzn6Rd5EqSAgSZqDQriBvWSHFejwMQQbXVlXBx6IsCRgsT+PbSztIppphFbOsC5+pA/za0QJda14aJcS3eINqS1xGuQwBlnriYmFjah3mjh9Z47hw/v0euw6bJG4uZprYO5YpAU+kWDJyJVtuDoS0wwqhNTd1YE8dsEB8ev2rI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759954578; c=relaxed/simple;
-	bh=uwSxdZv9Ob+PevyC0kIku41W4ZkK0UKL799zXUt6KRw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=GNPdSH0Zjl7tWDLxrJo6FJRtdNHs4pNi4pMaGdNPMEoro1YrfQPwMRT75QU03Ap6MQurx/y9xxuQe/LUHWdMFG/ty2FwYGWJ3Wo5O7Rz9Mh+JWNvFRzJk1GeycygNBOjqKYXuKuf/nqIQApK5Qq6ZaDAaGEtfrMCN7Q/3Nyl1So=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=B5/eH4Zt; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7DE26E16F;
+	Wed,  8 Oct 2025 20:19:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.84
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1759954804; cv=pass; b=dfEoQ1adqGaX97aUlJ+8GtBkmxIsRFiP0/IDR7L86blKeZZAnobaYRvFc8uuH9STYZz2GQk+NU5ZpiVTZTGL3m+y7nKDHVDnyy45gy1tPHHtgyv74Xb7sZeZ45jNJE0h8THj8Wj9MrR3bn/tzaowKb/2t7YxGJcKh51h++wVgyw=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1759954804; c=relaxed/simple;
+	bh=Z/1u284kTILrbc3Vlj2F6kAI7Pm5I8KoorjxQhAoJN0=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=iLRlvogU2Wqh8dsL3YdDU5QkNp9ZggiVyh1vZaF5/Y87MJo0At7X3RqEp7fXKO5CLSJtChzsF3GpcYJGAM5rCK3K18CjZA+ufDx6Ga9T2mmR2pdH8mqsifiXoY3Mx28pOBtcoO2suvtwxNhcHH4CaD/lb34NHbGnKL4EPP3yIK4=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=H8QUiSeS; arc=pass smtp.client-ip=85.215.255.84
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="B5/eH4Zt"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4chkmH0LXWzlgqVQ;
-	Wed,  8 Oct 2025 20:16:15 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1759954573; x=1762546574; bh=vCfVetI2+FcGiK2SYCLJ3lvr
-	/jgoN7kswENSOY3EGO8=; b=B5/eH4Zt5ArQZGmt6J/Oea9YeyM9NA1yyb4pJIYD
-	+LeLGIwm1azfeTOLoFHDEAVL0Z/KGetygRJpiHGsRQ78JR3PGB3kE91/K5AhGRnA
-	iAMThgbjc/EG4EtzfvPyA2w5FuWfd/f5ruCrFlDgcngkvIddhd9tov+W63HIMuOj
-	I3WXUCobmZvbGTA0NyT9n5s4xsdBeFxg843PgH4Z1c4oaZneCd33vtj99K4GId5y
-	WCfzSsVsQ9FcYPmEH8igil2h9bNusllpzCDoeXIDNbiuFKxQdwZQV2ABn4oS4GUJ
-	xcPAXb2My29PMVpHlgVuYP1/8tLCYCya5+re9nEjQRvU+w==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Sr58_t9rTcg4; Wed,  8 Oct 2025 20:16:13 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4chkmB0RGbzlgqVY;
-	Wed,  8 Oct 2025 20:16:09 +0000 (UTC)
-Message-ID: <9147add6-303f-4ffe-95b6-9464d3a5f071@acm.org>
-Date: Wed, 8 Oct 2025 13:16:07 -0700
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="H8QUiSeS"
+ARC-Seal: i=1; a=rsa-sha256; t=1759954796; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=Az23f7SyQaNjUKSe+GidudBLBrjildg7MnRWN5Fg3TNBatuDhgoL8CFrggygWGxUyb
+    cOLwd8Q7uFORiW164fBtavYrS6+8v0qG9dkJL/UaTNV+G/hqJ4VBWQTYhamTQDUZ9zMY
+    x5RP4jA5L5yTz/7FvcVkP0nbTpMv+1GcI4OZKEya4qceQh1QcmPBODWzZqfLxg4zeRE+
+    6KuQNOH3YesfqQxLSdZYr8XyqhI3TTKk38KIKBnFkz0XwxOEzcK3yG8R7biYfVYEYFH+
+    EhIU0jiBUCeUoX7iRiW5Lg9jm60DssPnUxrRhEihicsopIUeZr6iEUsjWF2xTIM9V/Um
+    +9yw==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1759954796;
+    s=strato-dkim-0002; d=strato.com;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=dr1R5XYu/hf+7l2A1TdMEHNZ80/JmT/u05H28rMJYYk=;
+    b=iY9g4Mq12Et2QPixHgUYmzp4JpehzHsaCVQPESmDcKfAND8o0jZM1LKYbVH3dS6mdB
+    ti5sdHMWVhhWV6dIbp7fGiOk10pGufPmAEU0xw2IIP5HoCRXpdVLB8b9qxv6Uh8TxUBc
+    0RXOhfxR68ZvhRCnTpr8G1KnCQxAmdH16Iu6s3qrAsyvv4c0AlTCvyMPz546FnznyVHW
+    LQEQ/QQ76XQS2A76MeSqkjV+vwcPE/MXhhcxpcerz2dibXdClHWFv/JuvVWhT448OlHa
+    sGbO4Db4AvKRzKGA3TigBf7pq8z8CRQEZmU+unRuDee5pqG0TZooAGU14xgr3DTiFcY+
+    Z4kw==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1759954796;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
+    From:Subject:Sender;
+    bh=dr1R5XYu/hf+7l2A1TdMEHNZ80/JmT/u05H28rMJYYk=;
+    b=H8QUiSeS50airEtHYcryRQMNT2h8B/O14Aih2kXADKc3SdiXQYOM4m4g3JWvLPyGJT
+    dK2aBOoA+u++HnaAHl2lNe1N9PoLJSuM7J6CS5z/BhplBUPdto7s0lzZBgSibRHovNga
+    9bL2MDkCkWCDibtGMeyX96KbSjC+FwZo2X/AKeEgBn4G6OMIfgq2i7O9nnmHMHA+lAkq
+    2mt9o8s8wa1PxgzbkgeZ6TwToOfBMthe1r00Mh0YZEXiKJtHddTt35XjbTP6tziI4GN3
+    ql4wgHquZbWyXg8hXyJQaVmhDaOhfQ1FkNdw3yVo8vmruBh5Z88gMwjgajVy5X+KqUEb
+    FO8w==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O256fJ4HnWXON1RX36IbE0bahBk7fQ77Y5cN0Av1YXTvXCMGxpd0="
+Received: from Munilab01-lab.speedport.ip
+    by smtp.strato.de (RZmta 53.4.2 AUTH)
+    with ESMTPSA id z293fb198KJu3U0
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Wed, 8 Oct 2025 22:19:56 +0200 (CEST)
+From: Bean Huo <beanhuo@iokpp.de>
+To: avri.altman@wdc.com,
+	avri.altman@sandisk.com,
+	bvanassche@acm.org,
+	alim.akhtar@samsung.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	can.guo@oss.qualcomm.com,
+	ulf.hansson@linaro.org,
+	beanhuo@micron.com,
+	jens.wiklander@linaro.org
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Avri Altman <Avri.Altman@sandisk.com>
+Subject: [PATCH v4 1/3] scsi: ufs: core: Convert string descriptor format macros to enum
+Date: Wed,  8 Oct 2025 22:19:18 +0200
+Message-Id: <20251008201920.89575-2-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20251008201920.89575-1-beanhuo@iokpp.de>
+References: <20251008201920.89575-1-beanhuo@iokpp.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [syzbot] [scsi?] upstream test error: KMSAN: uninit-value in
- scsi_get_vpd_buf
-To: syzbot <syzbot+a7b56f5926d90eaf5071@syzkaller.appspotmail.com>,
- James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, martin.petersen@oracle.com,
- syzkaller-bugs@googlegroups.com
-References: <68e6c0fe.050a0220.256323.00fd.GAE@google.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <68e6c0fe.050a0220.256323.00fd.GAE@google.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 
-On 10/8/25 12:52 PM, syzbot wrote:
-> scsi 0:0:1:0: Direct-Access     Google   PersistentDisk   1    PQ: 0 ANSI: 6
-> =====================================================
-> BUG: KMSAN: uninit-value in scsi_vpd_inquiry drivers/scsi/scsi.c:323 [inline]
-> BUG: KMSAN: uninit-value in scsi_get_vpd_buf+0x4cc/0x720 drivers/scsi/scsi.c:455
->   scsi_vpd_inquiry drivers/scsi/scsi.c:323 [inline]
->   scsi_get_vpd_buf+0x4cc/0x720 drivers/scsi/scsi.c:455
->   scsi_update_vpd_page drivers/scsi/scsi.c:479 [inline]
->   scsi_attach_vpd+0x380/0xe70 drivers/scsi/scsi.c:520
->   scsi_add_lun drivers/scsi/scsi_scan.c:1110 [inline]
->   scsi_probe_and_add_lun+0x6933/0x7f20 drivers/scsi/scsi_scan.c:1288
->   __scsi_scan_target+0x2fb/0x2050 drivers/scsi/scsi_scan.c:1776
->   scsi_scan_channel drivers/scsi/scsi_scan.c:1864 [inline]
->   scsi_scan_host_selected+0x68f/0x9a0 drivers/scsi/scsi_scan.c:1893
->   do_scsi_scan_host drivers/scsi/scsi_scan.c:2032 [inline]
->   do_scan_async+0x1ad/0xdc0 drivers/scsi/scsi_scan.c:2042
->   async_run_entry_fn+0x90/0x570 kernel/async.c:129
->   process_one_work kernel/workqueue.c:3263 [inline]
->   process_scheduled_works+0xb91/0x1d80 kernel/workqueue.c:3346
->   worker_thread+0xedf/0x1590 kernel/workqueue.c:3427
->   kthread+0xd59/0xf00 kernel/kthread.c:463
->   ret_from_fork+0x233/0x380 arch/x86/kernel/process.c:158
->   ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+From: Bean Huo <beanhuo@micron.com>
 
-Syzkaller team, does the above output perhaps indicate that the 
-implementation of one of the VPD pages in the Google Persistent Disk
-product is not compliant with the SCSI standard? Although it would be
-easy to suppress the above complaint by zero-initializing VPD buffers
-before submitting an INQUIRY command, I think the above complaint
-indicates that the response to an INQUIRY command is shorter than four
-bytes. The SCSI SPC standard requires that INQUIRY responses are at
-least four bytes long if the EVPD bit has been set.
+Convert SD_ASCII_STD and SD_RAW from boolean macros to enum values for improved
+code readability. This makes ufshcd_read_string_desc() calls self-documenting by
+using explicit enum values instead of true/false.
 
-Thanks,
+Move the ufshcd_read_string_desc() declaration from include/ufs/ufshcd.h to
+drivers/ufs/core/ufshcd-priv.h since this function is not exported.
 
-Bart.
+Co-developed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Suggested-by: Avri Altman <Avri.Altman@sandisk.com>
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/ufs/core/ufshcd-priv.h | 14 ++++++++++----
+ drivers/ufs/core/ufshcd.c      |  8 +++-----
+ include/ufs/ufshcd.h           |  4 ----
+ 3 files changed, 13 insertions(+), 13 deletions(-)
 
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
+index d0a2c963a27d..d74742a855b2 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -78,11 +78,17 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+ void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
+ 			     struct ufshcd_lrb *lrbp);
+ 
+-#define SD_ASCII_STD true
+-#define SD_RAW false
+-int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+-			    u8 **buf, bool ascii);
++/**
++ * enum ufs_descr_fmt - UFS string descriptor format
++ * @SD_RAW: Raw UTF-16 format
++ * @SD_ASCII_STD: Convert to null-terminated ASCII string
++ */
++enum ufs_descr_fmt {
++	SD_RAW = 0,
++	SD_ASCII_STD = 1,
++};
+ 
++int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index, u8 **buf, enum ufs_descr_fmt fmt);
+ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
+ int ufshcd_send_bsg_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
+ 
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 2e1fa8cf83f5..773926b04149 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -3759,16 +3759,14 @@ static inline char ufshcd_remove_non_printable(u8 ch)
+  * @desc_index: descriptor index
+  * @buf: pointer to buffer where descriptor would be read,
+  *       the caller should free the memory.
+- * @ascii: if true convert from unicode to ascii characters
+- *         null terminated string.
++ * @fmt: if %SD_ASCII_STD, convert from UTF-16 to ASCII
+  *
+  * Return:
+  * *      string size on success.
+  * *      -ENOMEM: on allocation failure
+  * *      -EINVAL: on a wrong parameter
+  */
+-int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+-			    u8 **buf, bool ascii)
++int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index, u8 **buf, enum ufs_descr_fmt fmt)
+ {
+ 	struct uc_string_id *uc_str;
+ 	u8 *str;
+@@ -3797,7 +3795,7 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+ 		goto out;
+ 	}
+ 
+-	if (ascii) {
++	if (fmt == SD_ASCII_STD) {
+ 		ssize_t ascii_len;
+ 		int i;
+ 		/* remove header and divide by 2 to move from UTF16 to UTF8 */
+diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
+index 1d3943777584..9ed188d24cb0 100644
+--- a/include/ufs/ufshcd.h
++++ b/include/ufs/ufshcd.h
+@@ -1453,10 +1453,6 @@ static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
+ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
+ void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
+ 			     const struct ufs_dev_quirk *fixups);
+-#define SD_ASCII_STD true
+-#define SD_RAW false
+-int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+-			    u8 **buf, bool ascii);
+ 
+ void ufshcd_hold(struct ufs_hba *hba);
+ void ufshcd_release(struct ufs_hba *hba);
+-- 
+2.34.1
 
