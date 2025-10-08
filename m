@@ -1,62 +1,59 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.84])
+Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.50])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7DE26E16F;
-	Wed,  8 Oct 2025 20:19:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.84
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D515728E579;
+	Wed,  8 Oct 2025 20:20:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.50
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759954804; cv=pass; b=dfEoQ1adqGaX97aUlJ+8GtBkmxIsRFiP0/IDR7L86blKeZZAnobaYRvFc8uuH9STYZz2GQk+NU5ZpiVTZTGL3m+y7nKDHVDnyy45gy1tPHHtgyv74Xb7sZeZ45jNJE0h8THj8Wj9MrR3bn/tzaowKb/2t7YxGJcKh51h++wVgyw=
+	t=1759954808; cv=pass; b=OaCl6T7tm6WF7bGXrDPkQUTaZGwwcGEtAHzQGNBJ8kYJHcIkIDeOLL/sKoHx0VGLaD/yQV1wGMo0qGRV57bReD74prBq4t05ju8qfI7UUJE9AphHC90YyE902ZTmTRYwIBrtnro/KrU3Hrarv2h5FNMCeanVN55RMWbmw107P2w=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759954804; c=relaxed/simple;
-	bh=Z/1u284kTILrbc3Vlj2F6kAI7Pm5I8KoorjxQhAoJN0=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=iLRlvogU2Wqh8dsL3YdDU5QkNp9ZggiVyh1vZaF5/Y87MJo0At7X3RqEp7fXKO5CLSJtChzsF3GpcYJGAM5rCK3K18CjZA+ufDx6Ga9T2mmR2pdH8mqsifiXoY3Mx28pOBtcoO2suvtwxNhcHH4CaD/lb34NHbGnKL4EPP3yIK4=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=H8QUiSeS; arc=pass smtp.client-ip=85.215.255.84
+	s=arc-20240116; t=1759954808; c=relaxed/simple;
+	bh=Wu8UVCYXlK3TtapPadzpanl3pcuceOvJ0JDnPqiN1Zs=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=VADcRofAMW/fJ0Gwgoa3tonlADyKm+cpTq/O/j1sLbKunIyni3Hb3pHA6+fB35+g4NGWfMO86YM5yKlPYa+aDQWH5d7fHhEkf3MFwBMg6Of3iI5Fyd1aiSA8zvz6vL6q5AE3f8gEqJ5HgqmvqA4GXuE/o9Rx83D5rKt9tTFhLqY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Cm6Uv/kS; arc=pass smtp.client-ip=85.215.255.50
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="H8QUiSeS"
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Cm6Uv/kS"
 ARC-Seal: i=1; a=rsa-sha256; t=1759954796; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=Az23f7SyQaNjUKSe+GidudBLBrjildg7MnRWN5Fg3TNBatuDhgoL8CFrggygWGxUyb
-    cOLwd8Q7uFORiW164fBtavYrS6+8v0qG9dkJL/UaTNV+G/hqJ4VBWQTYhamTQDUZ9zMY
-    x5RP4jA5L5yTz/7FvcVkP0nbTpMv+1GcI4OZKEya4qceQh1QcmPBODWzZqfLxg4zeRE+
-    6KuQNOH3YesfqQxLSdZYr8XyqhI3TTKk38KIKBnFkz0XwxOEzcK3yG8R7biYfVYEYFH+
-    EhIU0jiBUCeUoX7iRiW5Lg9jm60DssPnUxrRhEihicsopIUeZr6iEUsjWF2xTIM9V/Um
-    +9yw==
+    b=ac4rEXPgl+LVhAC0v/TY0LtKTEpGkpIvQY+wJ+dNZLM4wZSRDSlanUlCQWSsXVi38M
+    VLotoTysOTwvK7mw9Suso5BUZBsnAKtjB4RavpUF43zX6awxdU9MwCR5NtGC4hFRaSwP
+    pyanckasVNG9sLcTGIo0xN4NkzZgqyjXPGeG/wGSobRcFYCFUkKAS0FgXN8wjr6NHDAW
+    3ptePr9UroFdZi1BSNlZjTZ/LX4QJp9yvo6o3oU4oJSuBWblNPUttRxZypy4liWF9daL
+    UyQaAZMJPhIrK3u9LAdshH/mgDMyJ2S0F5VbtccCmRQS6vGR+jf6sa4WerGCfFsBYN9j
+    tr2w==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1759954796;
     s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=dr1R5XYu/hf+7l2A1TdMEHNZ80/JmT/u05H28rMJYYk=;
-    b=iY9g4Mq12Et2QPixHgUYmzp4JpehzHsaCVQPESmDcKfAND8o0jZM1LKYbVH3dS6mdB
-    ti5sdHMWVhhWV6dIbp7fGiOk10pGufPmAEU0xw2IIP5HoCRXpdVLB8b9qxv6Uh8TxUBc
-    0RXOhfxR68ZvhRCnTpr8G1KnCQxAmdH16Iu6s3qrAsyvv4c0AlTCvyMPz546FnznyVHW
-    LQEQ/QQ76XQS2A76MeSqkjV+vwcPE/MXhhcxpcerz2dibXdClHWFv/JuvVWhT448OlHa
-    sGbO4Db4AvKRzKGA3TigBf7pq8z8CRQEZmU+unRuDee5pqG0TZooAGU14xgr3DTiFcY+
-    Z4kw==
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=tlm2BgO1wb7weN1i2EzSMXR8kPH0yzp2XFdQ6GUhOxs=;
+    b=pECXER553I/LLUDju11LHiAuc+r7CW34/tmvkuF28/bjqZ0eEPfn+zba//gUC7XRjP
+    O0dT0+kz/s1ACr3hTvbCZQ2qDo/YWCUokYF/+4aHresg7UH/26YaHUPxRWcAlRv9jcvb
+    X6PQzR3L3Xzcg56g5iXVf5wQJR4yGxy4Ism5EHe3wxS6od8COBjyEUObZzwrOwhE8tJ1
+    XWtZyG/ppbWTb4WdG9mZNFK2/C5N+SGoFt6jPJG6yADkP4tKGSgp379z/ly7sHK6Vjlj
+    qC9sSG9PBOBXgtUJ8DhZnxAE+WcaCJdfjmzm4hHYg7ta9s6Rpk4AhWn54AJmla1U8eZO
+    c2rQ==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
-X-RZG-CLASS-ID: mo02
+X-RZG-CLASS-ID: mo01
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1759954796;
     s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=dr1R5XYu/hf+7l2A1TdMEHNZ80/JmT/u05H28rMJYYk=;
-    b=H8QUiSeS50airEtHYcryRQMNT2h8B/O14Aih2kXADKc3SdiXQYOM4m4g3JWvLPyGJT
-    dK2aBOoA+u++HnaAHl2lNe1N9PoLJSuM7J6CS5z/BhplBUPdto7s0lzZBgSibRHovNga
-    9bL2MDkCkWCDibtGMeyX96KbSjC+FwZo2X/AKeEgBn4G6OMIfgq2i7O9nnmHMHA+lAkq
-    2mt9o8s8wa1PxgzbkgeZ6TwToOfBMthe1r00Mh0YZEXiKJtHddTt35XjbTP6tziI4GN3
-    ql4wgHquZbWyXg8hXyJQaVmhDaOhfQ1FkNdw3yVo8vmruBh5Z88gMwjgajVy5X+KqUEb
-    FO8w==
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=tlm2BgO1wb7weN1i2EzSMXR8kPH0yzp2XFdQ6GUhOxs=;
+    b=Cm6Uv/kScjHx3E9BAf2zYECPsGY3VqJTbMaIQYQ8dLmckJdmJCVvqhmY8750ojI9cf
+    6GjWQuZx7ZQ+3F7ZcQTfEVDZYjlNIiSvuWf9YHA6vqXJLOjjqhypJaP5T0dkYJ+xrwO1
+    bxjzGbEk9foIGlW0rW7q35aSYScsTGYhbqFxGSEoyoC3CJWT9cXj1rcZPnN4+aqqoC+L
+    HCiyiyQJWvle0aAvmXRjUQlqwcbv/hG1tQ1U3Tw3uwsy524t80E3Y+mGHPf1fa337AvO
+    xx8MXI5YrqqkzxmWYUhu3hokA4l36i5Mq+33IBqad7laNlykD6ZJKvLhbGHmeTrMRkyO
+    UEAw==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O256fJ4HnWXON1RX36IbE0bahBk7fQ77Y5cN0Av1YXTvXCMGxpd0="
 Received: from Munilab01-lab.speedport.ip
     by smtp.strato.de (RZmta 53.4.2 AUTH)
-    with ESMTPSA id z293fb198KJu3U0
+    with ESMTPSA id z293fb198KJt3Tz
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Wed, 8 Oct 2025 22:19:56 +0200 (CEST)
+    Wed, 8 Oct 2025 22:19:55 +0200 (CEST)
 From: Bean Huo <beanhuo@iokpp.de>
 To: avri.altman@wdc.com,
 	avri.altman@sandisk.com,
@@ -70,13 +67,11 @@ To: avri.altman@wdc.com,
 	jens.wiklander@linaro.org
 Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Avri Altman <Avri.Altman@sandisk.com>
-Subject: [PATCH v4 1/3] scsi: ufs: core: Convert string descriptor format macros to enum
-Date: Wed,  8 Oct 2025 22:19:18 +0200
-Message-Id: <20251008201920.89575-2-beanhuo@iokpp.de>
+	Bean Huo <beanhuo@iokpp.de>
+Subject: [PATCH v4 0/3] Add OP-TEE based RPMB driver for UFS devices
+Date: Wed,  8 Oct 2025 22:19:17 +0200
+Message-Id: <20251008201920.89575-1-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251008201920.89575-1-beanhuo@iokpp.de>
-References: <20251008201920.89575-1-beanhuo@iokpp.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -86,98 +81,68 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain; charset="us-ascii"
 
-From: Bean Huo <beanhuo@micron.com>
+This patch series introduces OP-TEE based RPMB (Replay Protected Memory Block)
+support for UFS devices, extending the kernel-level secure storage capabilities
+that are currently available for eMMC devices.
 
-Convert SD_ASCII_STD and SD_RAW from boolean macros to enum values for improved
-code readability. This makes ufshcd_read_string_desc() calls self-documenting by
-using explicit enum values instead of true/false.
+Previously, OP-TEE required a userspace supplicant to access RPMB partitions,
+which created complex dependencies and reliability issues, especially during
+early boot scenarios. Recent work by Linaro has moved core supplicant
+functionality directly into the Linux kernel for eMMC devices, eliminating
+userspace dependencies and enabling immediate secure storage access. This series
+extends the same approach to UFS devices, which are used in enterprise and mobile
+applications that require secure storage capabilities.
 
-Move the ufshcd_read_string_desc() declaration from include/ufs/ufshcd.h to
-drivers/ufs/core/ufshcd-priv.h since this function is not exported.
+Benefits:
+- Eliminates dependency on userspace supplicant for UFS RPMB access
+- Enables early boot secure storage access (e.g., fTPM, secure UEFI variables)
+- Provides kernel-level RPMB access as soon as UFS driver is initialized
+- Removes complex initramfs dependencies and boot ordering requirements
+- Ensures reliable and deterministic secure storage operations
+- Supports both built-in and modular fTPM configurations.
 
-Co-developed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Suggested-by: Avri Altman <Avri.Altman@sandisk.com>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufshcd-priv.h | 14 ++++++++++----
- drivers/ufs/core/ufshcd.c      |  8 +++-----
- include/ufs/ufshcd.h           |  4 ----
- 3 files changed, 13 insertions(+), 13 deletions(-)
+v3 -- v4:
+    1. Replaced patch "scsi: ufs: core: Remove duplicate macro definitions" with
+       "scsi: ufs: core: Convert string descriptor format macros to enum" based on
+       feedback from Bart Van Assche
+    2. Converted SD_ASCII_STD and SD_RAW from boolean macros to enum type for
+       improved code readability
+    3. Moved ufshcd_read_string_desc() declaration from include/ufs/ufshcd.h to
+       drivers/ufs/core/ufshcd-priv.h since it's not exported
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index d0a2c963a27d..d74742a855b2 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -78,11 +78,17 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
- void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
- 			     struct ufshcd_lrb *lrbp);
- 
--#define SD_ASCII_STD true
--#define SD_RAW false
--int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
--			    u8 **buf, bool ascii);
-+/**
-+ * enum ufs_descr_fmt - UFS string descriptor format
-+ * @SD_RAW: Raw UTF-16 format
-+ * @SD_ASCII_STD: Convert to null-terminated ASCII string
-+ */
-+enum ufs_descr_fmt {
-+	SD_RAW = 0,
-+	SD_ASCII_STD = 1,
-+};
- 
-+int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index, u8 **buf, enum ufs_descr_fmt fmt);
- int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
- int ufshcd_send_bsg_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 2e1fa8cf83f5..773926b04149 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3759,16 +3759,14 @@ static inline char ufshcd_remove_non_printable(u8 ch)
-  * @desc_index: descriptor index
-  * @buf: pointer to buffer where descriptor would be read,
-  *       the caller should free the memory.
-- * @ascii: if true convert from unicode to ascii characters
-- *         null terminated string.
-+ * @fmt: if %SD_ASCII_STD, convert from UTF-16 to ASCII
-  *
-  * Return:
-  * *      string size on success.
-  * *      -ENOMEM: on allocation failure
-  * *      -EINVAL: on a wrong parameter
-  */
--int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
--			    u8 **buf, bool ascii)
-+int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index, u8 **buf, enum ufs_descr_fmt fmt)
- {
- 	struct uc_string_id *uc_str;
- 	u8 *str;
-@@ -3797,7 +3795,7 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
- 		goto out;
- 	}
- 
--	if (ascii) {
-+	if (fmt == SD_ASCII_STD) {
- 		ssize_t ascii_len;
- 		int i;
- 		/* remove header and divide by 2 to move from UTF16 to UTF8 */
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 1d3943777584..9ed188d24cb0 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1453,10 +1453,6 @@ static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
- void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
- void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
- 			     const struct ufs_dev_quirk *fixups);
--#define SD_ASCII_STD true
--#define SD_RAW false
--int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
--			    u8 **buf, bool ascii);
- 
- void ufshcd_hold(struct ufs_hba *hba);
- void ufshcd_release(struct ufs_hba *hba);
+v2 -- v3:
+    1. Removed patch "rpmb: move rpmb_frame struct and constants to common header". since it
+       has been queued in mmc tree, and added a new patch:
+       "scsi: ufs: core: Remove duplicate macro definitions"
+    2. Incorporated suggestions from Jens
+    3. Added check if Advanced RPMB is enabled, if enabled we will not register UFS OP-TEE RPMB.
+
+v1 -- v2:
+    1. Added fix tag for patch [2/3]
+    2. Incorporated feedback and suggestions from Bart
+
+RFC v1 -- v1:
+    1. Added support for all UFS RPMB regions based on https://github.com/OP-TEE/optee_os/issues/7532
+    2. Incorporated feedback and suggestions from Bart
+
+
+
+Bean Huo (3):
+  scsi: ufs: core: Convert string descriptor format macros to enum
+  scsi: ufs: core: fix incorrect buffer duplication in
+    ufshcd_read_string_desc()
+  scsi: ufs: core: Add OP-TEE based RPMB driver for UFS devices
+
+ drivers/misc/Kconfig           |   2 +-
+ drivers/ufs/core/Makefile      |   1 +
+ drivers/ufs/core/ufs-rpmb.c    | 249 +++++++++++++++++++++++++++++++++
+ drivers/ufs/core/ufshcd-priv.h |  27 +++-
+ drivers/ufs/core/ufshcd.c      |  40 ++++--
+ include/ufs/ufs.h              |   4 +
+ include/ufs/ufshcd.h           |  12 +-
+ 7 files changed, 314 insertions(+), 21 deletions(-)
+ create mode 100644 drivers/ufs/core/ufs-rpmb.c
+
 -- 
 2.34.1
 
