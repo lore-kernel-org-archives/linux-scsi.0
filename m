@@ -1,336 +1,150 @@
-Received: from SA9PR02CU001.outbound.protection.outlook.com (mail-southcentralusazolkn19013046.outbound.protection.outlook.com [52.103.14.46])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f78.google.com (mail-io1-f78.google.com [209.85.166.78])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E43B283C9E;
-	Wed,  8 Oct 2025 18:24:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.14.46
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759947879; cv=fail; b=On9yeVCa3XB1vez+rTeZJPucSlBftFzeWtenMqTQiERfV7Z17z9xyPQ3d2eijKcHlPxEz+fC/dPkkn9kTkuphGzINEAc7e5uJ8203WJwqlTAFBT8jIdIRzeltaEhONC84JxjMgAatoMO1bnt8+4yQytPD0jqQZ0S93O4Wnmo8jo=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759947879; c=relaxed/simple;
-	bh=nLVKss+IBrVL3vIJREmeCsoMhAWC3qVWD9Sk9kuKBOY=;
-	h=From:To:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=hBAwCxNxFVkvokVkRhW0Q6FcGwbBZoTB5eTnhvsq3oiwbLwVNJ09YXFzceuxMBdgRykIdO39CQmBfkr8TWL61ahBijjiMvN99ASVTrmn69tduJ0SJZkT77RkA1UXDnTuec98YkGgsvqA8AWWT3D6igB/J7dVIO4wMrKq6pVFYdk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=kEJQE/dK; arc=fail smtp.client-ip=52.103.14.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="kEJQE/dK"
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=cnNRgn0D+S6Ie5zdSBQGzfwbyBnH8QdHK6ypStmnB0TNc1cGsz43tN9vH7Nfvwu1t4ks67Gaz0EXqaXBZgyPhnrLOvsGhjndjBSzFoOx5HjhkLw6mX5mCBynp0NSCfResqvKf7uYIguOY8gcf9oAann3yR5bvQsYuMXvtFi1t0v7PMfPx4Inqf/WRZX5guZnt+fMrSgr351CDvKOTE/KqzIMmPpC+8uYVEaOpysbjw6nmClRBv373Nj1JxavwVbaovhFDbfKXGh9LIqxea35SjwGRQjqosttLoIBsx90r9Ud/qJ4fXGSPxsi3+XkeB9+7gkyxAtIVAq6yY0OGOWY7g==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=mwcUbCFtdNGx072Ki42JyHBjeQJLf7HyrnASSpqTa0o=;
- b=MbHz7PVUyY+pC4VcRrDU7U3RHZVPO/41l2Xfgc1nESBa4x14dcNEMpQS2jmJJQA/o3BHzJrOF4Bs55Cuvg2dVyGelv5TJnRpNQ7UXmLDn4WRHfg2Hm8eeSXtUVnD3wOsZQXOEHLB82mlmGcjySXXySZbCLXKMrLechjuoZRMircNsieFosI8AGK8ETKUPFZztAFkKLopmCFLzTpLIqNRfJ0qrmqdbnR3W0cTztIfYT/Nrk9HyAV98nUXNK3AWSHY/RGC75aVImyChuNBPa1D7HEUVSdAODqrpYnT4tAtzSthGytIHWRFKepY7pxec32lKFi9bwHUzd5Xutj8n+bwYA==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
- dkim=none; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
- s=selector1;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=mwcUbCFtdNGx072Ki42JyHBjeQJLf7HyrnASSpqTa0o=;
- b=kEJQE/dKxMiyJHKGPORQdjwRe3clms4lIWw7UdypYQVZ0jxUQP/o3DmhUN8uf8gHXRkB/75hf3zxT5KPs7JzlCJW3pi3AJOjPpIH5lV96201Fuj6rWDTHGCl6rAKHmKxs7eVYALaN9V1cv0C7Uhd2bHJ9bm0LDHSH46hARORjj8XZSLfPuGdPW18AuTgm+c2K6hyTEYOyEXw2uWnA/x2XjSZNhIVi5gBauNym0HVuoDGWUzVCeLNZ1PNz4g4Fq1tT6c23TDT8jpQVCHp1i3OPQPtbdabZhan4Ou0UQ2SgY/cPync96IJizKbDqrY5AxLW9zgU+9fG5bKOTwaLdqqKQ==
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com (2603:10b6:805:33::23)
- by SA6PR02MB10479.namprd02.prod.outlook.com (2603:10b6:806:40a::15) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9203.9; Wed, 8 Oct
- 2025 18:24:35 +0000
-Received: from SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::cedd:1e64:8f61:b9df]) by SN6PR02MB4157.namprd02.prod.outlook.com
- ([fe80::cedd:1e64:8f61:b9df%3]) with mapi id 15.20.9182.017; Wed, 8 Oct 2025
- 18:24:34 +0000
-From: Michael Kelley <mhklinux@outlook.com>
-To: Long Li <longli@microsoft.com>, "longli@linux.microsoft.com"
-	<longli@linux.microsoft.com>, KY Srinivasan <kys@microsoft.com>, Haiyang
- Zhang <haiyangz@microsoft.com>, Wei Liu <wei.liu@kernel.org>, Dexuan Cui
-	<decui@microsoft.com>, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
-	<martin.petersen@oracle.com>, James Bottomley <JBottomley@Odin.com>,
-	"linux-hyperv@vger.kernel.org" <linux-hyperv@vger.kernel.org>,
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>
-Subject: RE: [PATCH] scsi: storvsc: Prefer returning channel with the same CPU
- as on the I/O issuing CPU
-Thread-Topic: [PATCH] scsi: storvsc: Prefer returning channel with the same
- CPU as on the I/O issuing CPU
-Thread-Index: AQHcM1o80XmWhpePUEiNmnbV/dytobS20liAgACjkICAAO2BEIAAJZEAgAAQ7FA=
-Date: Wed, 8 Oct 2025 18:24:34 +0000
-Message-ID:
- <SN6PR02MB41579818278E2548450A37DAD4E1A@SN6PR02MB4157.namprd02.prod.outlook.com>
-References: <1759381530-7414-1-git-send-email-longli@linux.microsoft.com>
- <SN6PR02MB4157B7FC3362C4C6838BAD3DD4E0A@SN6PR02MB4157.namprd02.prod.outlook.com>
- <DS3PR21MB573566DF7A81D555552DE8A7CEE1A@DS3PR21MB5735.namprd21.prod.outlook.com>
- <SN6PR02MB4157F816858A01D480FB203ED4E1A@SN6PR02MB4157.namprd02.prod.outlook.com>
- <DS3PR21MB573597BFA650534306FCA5CACEE1A@DS3PR21MB5735.namprd21.prod.outlook.com>
-In-Reply-To:
- <DS3PR21MB573597BFA650534306FCA5CACEE1A@DS3PR21MB5735.namprd21.prod.outlook.com>
-Accept-Language: en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-msip_labels:
- MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ActionId=1cf71a9b-5da0-4d36-8afb-a428d2ab4a7e;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_ContentBits=0;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Enabled=true;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Method=Standard;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Name=Internal;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SetDate=2025-10-07T23:58:57Z;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_SiteId=72f988bf-86f1-41af-91ab-2d7cd011db47;MSIP_Label_f42aa342-8706-4288-bd11-ebb85995028c_Tag=10,
- 3, 0, 1;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: SN6PR02MB4157:EE_|SA6PR02MB10479:EE_
-x-ms-office365-filtering-correlation-id: c4d64d5a-f2ab-465c-731b-08de0697ee5a
-x-microsoft-antispam:
- BCL:0;ARA:14566002|8060799015|19110799012|8062599012|13091999003|31061999003|461199028|12121999013|41001999006|15080799012|40105399003|440099028|3412199025|13041999003|102099032;
-x-microsoft-antispam-message-info:
- =?us-ascii?Q?YrpHR+p/CBt807+E5tJgdfE5XNNX80ZsDS8dzeI7mOyEHSVy7RNug33gyERw?=
- =?us-ascii?Q?tRexTqOEFRBFj93UoAYBpht9qbhw9bXPRFJiaYtjHtaI0N3I7iqQ7IskA5pj?=
- =?us-ascii?Q?DGk7wKouOshKglE7xfME73k+nVkLfbPhIVjKZzEEzp75bhsm08oakSAM0ikx?=
- =?us-ascii?Q?cBarV3iLwMxIjaQPraPAUjaHFSS3eQheLan5xd3u81uY02VNkTiPgj7ZB+yY?=
- =?us-ascii?Q?QLabhKbD+hqT12Ud4sx4wrVWMpvYXNUI9HU00xRIULrZixIbR/9/j76GAYJk?=
- =?us-ascii?Q?bbgpFpZrRj9+K1/zeIJjvcjYB6L5mh5fOUYkDE+pQujHrXZbWL4vGX5ZDIKw?=
- =?us-ascii?Q?Lv64l6tfja8fVkwT75A8Rs8FqzAKDaEr8uCf2a8Llw+vNEre8yixRWfVvGkX?=
- =?us-ascii?Q?E9CpFWdDzI3xlVhzOmGueEZNTK8N1nbXcU6oxkB2SqAGnud32lKHN8/TKXmZ?=
- =?us-ascii?Q?yvBCle3y3hd199iljMFHxVlxY5VoVdg4SAwCiA7AI38lpNzQxgoo4KeOZKZr?=
- =?us-ascii?Q?HrZp9mHzv57Z58S2l2apafVLb7ftbJsejMNB4oMLbpwRdzlHNw+kSxf3Bihv?=
- =?us-ascii?Q?9gjbjAhWkyAHvkLTg6fFdZsMe2sbbEFB90roAnBNVcZWCYot6+lpYGhVr7k9?=
- =?us-ascii?Q?JV1zz1RGzitXhqFeP85SfHMY0Hr7ICGniuJJRj5QnWK+xpgQykW1paxFt2zP?=
- =?us-ascii?Q?gjMvgh4oD5dm0mWkIdFxpXJTXY0gzC9uliAeG+yQt3xR23Gngu9/Rcgb0KUK?=
- =?us-ascii?Q?6U2/i6IUONpnXg6z83oB4y2hUrUhB+Jm2LreFcC/pTpPx6VVW92WcWFJ7D7i?=
- =?us-ascii?Q?U7p6rHdVOUyampHzWm3uT/FhXdJU+nEKvuDivrJdr+Fy4TzhNh/JlwuS4cKN?=
- =?us-ascii?Q?fxhpk/C7hnsmP0Vj7zvCpyCwccznE/IAqjEgD3AySi3PpoXN43bXZVwv5iWn?=
- =?us-ascii?Q?gZCzt55ZWDhDSpyJWC2jB7ibvEewwWJ6d2HzwmDKciCz3BWYyQ2CzRG2zfrl?=
- =?us-ascii?Q?4CW/JPew+i3mvCqlmOI7LJhVsBlPU8ZQSfuem3eyf+Pkviog6KpniKN0e3Jr?=
- =?us-ascii?Q?TQEY9kdF35FD6n7AocoR4ZhM404QGYoHim3TtEpRH1Ol8yArHu0/LOUPOawu?=
- =?us-ascii?Q?TFLgUQ7Nq4tO6206rIm8+VdVi+neyGFhh1JOCCyQSLxc1dJYu6u4PXpYIRRt?=
- =?us-ascii?Q?uc+GKnrn311gj2+7IMtipd0Mx4w74TSqzp5/CmG67vXeGJUvJl0vQDfZViBQ?=
- =?us-ascii?Q?nF+AfOWSmZfiPG0qYKMHhv+VLO6hroHIeB5eLuxmNg=3D=3D?=
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0:
- =?us-ascii?Q?g+aa5JMC3jkad5CC7HVB7z6nS7RktqTKt9Ddu9j9utlkRqUzuCjnS1CweIyN?=
- =?us-ascii?Q?CVwzMDRPziO2hFvjwvNgraNzcM/IU4Zfe6gcIaC6KzmjLoKTWQIbZmT30l75?=
- =?us-ascii?Q?xflqeE/M+Qo3izmyAt70cuhtsF1HdMAmQ9qNXozXQD3N27P3j4H9xk3AE3EK?=
- =?us-ascii?Q?aXGgqYjHX7xCg9/v09a/HqCdIbfXq5tydkHeMyJHDMoDGvqLvht/aRJn2/a1?=
- =?us-ascii?Q?ZqTPxe48NmXcOMq1rc8xuf4m9qDGGrf8bxMFipqu2+8FkGY7A5RLXQm+bMOO?=
- =?us-ascii?Q?YR6/hm6i+kxNYF/6oWB1Ds3sxyKiVdmTB+RF3WU87PVU2pzSOth9wuwsj74v?=
- =?us-ascii?Q?Opt159M+D4B7VclWvoumV2/C7Q4Lye49fu5Tx1wfHTRSIEuyI9pwuPQOp3Jj?=
- =?us-ascii?Q?4al+ZKaeqsGFihyO/VN2pPe6N/hY5l/AoXjNg4AaMJVVRW8/KZwGzMjN2Olm?=
- =?us-ascii?Q?gkOJj+ScdMqoXzKwP+VMVoSY1ff+OE+IwLvyaBry/bMEUP7+RhhxFAVbn2D/?=
- =?us-ascii?Q?uabn5d32JG468Ty/islmyM0eF2+ocL38T75btiCpyV6dW27lDsWZcH7aHmEG?=
- =?us-ascii?Q?1Kue07HFM2+seVDApwAqWu/WS8plVEHmNXjxrmSeWVk5ZS2pOegbLwYuomC1?=
- =?us-ascii?Q?BH3KFue2bT3z6TDaj97ykkIp0WN6llSdYQbCNWQrdQvHRJQLGeXGUfE38nsz?=
- =?us-ascii?Q?bZXSL3BuvhwA/4OquWpK3EXknvyt9ch3ttKUUDoF39u7BvE2I89bImrgf5HT?=
- =?us-ascii?Q?9Qc0XONX8cJXuSG1Kw1TvsufPnecbo7S4NXarbxqtHPyXDce0aGAQRWFmng6?=
- =?us-ascii?Q?dTCy3MW5m14++M10M0hhR5NwmBzyaxvSwZJoR6ipD/E2xhc+2aEtMK56e1/B?=
- =?us-ascii?Q?LN22A1Un2HVKAjJPPtKjJPFpq9kbvpukGrRGl/u4byPg9eH3p2aETQEGtNvC?=
- =?us-ascii?Q?kWQAgO+b3kbDPnZmNk4VS7NcdvNknVJKPxbf5uZ4wan/SFpxULmKnqsQdGB1?=
- =?us-ascii?Q?RuRcfeF7NFiDlz0U10P8crNd2CUFW3PcNqqIdTp3a6Go6G6MqolT11AY66hu?=
- =?us-ascii?Q?/41N5BJZv6oAFICu2OitIWS5njAu9PuLxUJoUtF0IhTUZI65jdpVF2QXhy/0?=
- =?us-ascii?Q?HmOZTQIOsVf0eNoxSi6R2CsU35lQmq8+PH2hTrmOZTQcAjKbupbXDH9IrXXe?=
- =?us-ascii?Q?IWZW2PwtsJUX4cbaTxy8tFjgU8sp7OYJhnPcb6BsFFC2uhZ7sj693SsPfZU?=
- =?us-ascii?Q?=3D?=
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: quoted-printable
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D16BA23D7E9
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Oct 2025 19:52:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.78
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1759953152; cv=none; b=X296KmOcihviZtweMj6mG7xMNweH1FC8M8Uc+z88KAXn9Dd2HfSH/myIbNfrZR0Z/B2LFZvCwjOsCeMEOUnXIlfkM/I6WJXpx1rv4pt5AR2bHJUQ5ZBHqYEWsQM/hZFfNYeE6GZs6xnTo0VvBjK4X3SEco4rVkMGdb6DiO/XrI8=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1759953152; c=relaxed/simple;
+	bh=m0mXtfquwpn/pEAXm5hMmK81nOqk8zME+wKLQt2LOLw=;
+	h=MIME-Version:Date:Message-ID:Subject:From:To:Content-Type; b=B0T4KjRpIgD5b3iFN0PJjwEjyfxOec658LU2BmHSiKPGF7IiI1JzYFWhFSVAPo3I1t6ZFfErWKqU7rTw3ZgYRSFbjC11swBVf+YfyWLtOofUevZgpVkcBT5d2WXA1eycqRGlqlTjEhvc4rhDJebICVpK7fB7xYCZCQB3MZuH7IA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com; arc=none smtp.client-ip=209.85.166.78
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=none dis=none) header.from=syzkaller.appspotmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=M3KW2WVRGUFZ5GODRSRYTGD7.apphosting.bounces.google.com
+Received: by mail-io1-f78.google.com with SMTP id ca18e2360f4ac-93bc56ebb0aso88720739f.0
+        for <linux-scsi@vger.kernel.org>; Wed, 08 Oct 2025 12:52:30 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1759953150; x=1760557950;
+        h=to:from:subject:message-id:date:mime-version:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=RF6ld1yoxd2iac/gXPbsZ8hOKk5638W+Efo0S99r2KA=;
+        b=XrmXHnIFU/jKTG3gm/s1ItPAw691PiQ1OFdIrnEB6SeyfQ7YEv8+iRdWcCsXnrdO4w
+         z4xmip83oB4vvAc98k8tNZ3Tf8j9scCqiEkER3pdj1MfpnRQbdC2ItIj2+KIIlrwWVWx
+         HBvSQsl1YTSMw0/xUjsXbI/PMOcyX/5f9v1TC/8kpMnzex2eJDWGywEClxW0mhxWmleN
+         rE/GAoiEgjKLA3LDP62XovWrH9gAhGaGTODywDmXXpxXvrKt8cbF5O9OUO25wqi/Wsgz
+         8Gi7zVOpv8wW5r4AUzv7c9mMVXatEuerK2YDoEzTQ4rUP8CPGEBwX1oO/DDDCaTcUQD3
+         /CSA==
+X-Forwarded-Encrypted: i=1; AJvYcCWFVxqOaKha7m0kU94VKF82Rnk7R5cyANgSWuvH8L2JAFFIQn8Q7rbpVXR3HJwRKoCuBJYlh5aBQiZl@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy4zNeyXLtX/srkIYHbdXZMP1sLSmph5m5K0wC7OVKfHgcRTqDz
+	6geLFVUX+hYlJf+y9q7Om5ZzE+LPf8nfGBOOKNKT1Y9Jb9C9D0up3Cb5MDcl6fVSgDF3qQtmR8t
+	6qYIFDqcWAT8Ek545QcDG4RiT5/CFB0mE1UiFh3v4SmzA4NJWrx2dgMJzaAM=
+X-Google-Smtp-Source: AGHT+IGqBHBHmzcQpVTB65cO6A7xkJQCfYtTXlLNYqtrBqApqQ52UnKrXEuB8fhi94o6kqQVgJGnU1Tehmck2xqdb6/k6/RipGBN
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-OriginatorOrg: outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: SN6PR02MB4157.namprd02.prod.outlook.com
-X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-CrossTenant-Network-Message-Id: c4d64d5a-f2ab-465c-731b-08de0697ee5a
-X-MS-Exchange-CrossTenant-originalarrivaltime: 08 Oct 2025 18:24:34.1294
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
-X-MS-Exchange-CrossTenant-rms-persistedconsumerorg: 00000000-0000-0000-0000-000000000000
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: SA6PR02MB10479
+X-Received: by 2002:a05:6602:6cc4:b0:920:87f9:5da8 with SMTP id
+ ca18e2360f4ac-93bd196672amr490520339f.13.1759953150078; Wed, 08 Oct 2025
+ 12:52:30 -0700 (PDT)
+Date: Wed, 08 Oct 2025 12:52:30 -0700
+X-Google-Appengine-App-Id: s~syzkaller
+X-Google-Appengine-App-Id-Alias: syzkaller
+Message-ID: <68e6c0fe.050a0220.256323.00fd.GAE@google.com>
+Subject: [syzbot] [scsi?] upstream test error: KMSAN: uninit-value in scsi_get_vpd_buf
+From: syzbot <syzbot+a7b56f5926d90eaf5071@syzkaller.appspotmail.com>
+To: James.Bottomley@HansenPartnership.com, linux-kernel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, martin.petersen@oracle.com, 
+	syzkaller-bugs@googlegroups.com
+Content-Type: text/plain; charset="UTF-8"
 
-From: Long Li <longli@microsoft.com> Sent: Wednesday, October 8, 2025 10:20=
- AM
->=20
-> > Subject: [EXTERNAL] RE: [PATCH] scsi: storvsc: Prefer returning channel=
- with the
-> > same CPU as on the I/O issuing CPU
-> >
-> > From: Long Li <longli@microsoft.com> Sent: Tuesday, October 7, 2025 5:5=
-6 PM
-> > >
-> > > > -----Original Message-----
-> > > > From: Michael Kelley <mhklinux@outlook.com>
-> > > > Sent: Tuesday, October 7, 2025 8:42 AM
-> > > > To: longli@linux.microsoft.com; KY Srinivasan <kys@microsoft.com>;
-> > > > Haiyang Zhang <haiyangz@microsoft.com>; Wei Liu
-> > > > <wei.liu@kernel.org>; Dexuan Cui <decui@microsoft.com>; James E.J.
-> > > > Bottomley <James.Bottomley@HansenPartnership.com>; Martin K.
-> > > > Petersen <martin.petersen@oracle.com>; James Bottomley
-> > > > <JBottomley@Odin.com>; linux-hyperv@vger.kernel.org;
-> > > > linux-scsi@vger.kernel.org; linux- kernel@vger.kernel.org
-> > > > Cc: Long Li <longli@microsoft.com>
-> > > > Subject: [EXTERNAL] RE: [PATCH] scsi: storvsc: Prefer returning
-> > > > channel with the same CPU as on the I/O issuing CPU
-> > > >
-> > > > From: longli@linux.microsoft.com <longli@linux.microsoft.com> Sent:
-> > > > Wednesday, October 1, 2025 10:06 PM
-> > > > >
-> > > > > When selecting an outgoing channel for I/O, storvsc tries to
-> > > > > select a channel with a returning CPU that is not the same as
-> > > > > issuing CPU. This worked well in the past, however it doesn't wor=
-k
-> > > > > well when the Hyper-V exposes a large number of channels (up to
-> > > > > the number of all CPUs). Use a different CPU for returning channe=
-l is not efficient on Hyper-V.
-> > > > >
-> > > > > Change this behavior by preferring to the channel with the same
-> > > > > CPU as the current I/O issuing CPU whenever possible.
-> > > > >
-> > > > > Tests have shown improvements in newer Hyper-V/Azure environment,
-> > > > > and no regression with older Hyper-V/Azure environments.
-> > > > >
-> > > > > Tested-by: Raheel Abdul Faizy <rabdulfaizy@microsoft.com>
-> > > > > Signed-off-by: Long Li <longli@microsoft.com>
-> > > > > ---
-> > > > >  drivers/scsi/storvsc_drv.c | 96
-> > > > > ++++++++++++++++++--------------------
-> > > > >  1 file changed, 45 insertions(+), 51 deletions(-)
-> > > > >
-> > > > > diff --git a/drivers/scsi/storvsc_drv.c
-> > > > > b/drivers/scsi/storvsc_drv.c index d9e59204a9c3..092939791ea0
-> > > > > 100644
-> > > > > --- a/drivers/scsi/storvsc_drv.c
-> > > > > +++ b/drivers/scsi/storvsc_drv.c
-> > > > > @@ -1406,14 +1406,19 @@ static struct vmbus_channel *get_og_chn(s=
-truct storvsc_device *stor_device,
-> > > > >  	}
-> > > > >
-> > > > >  	/*
-> > > > > -	 * Our channel array is sparsley populated and we
-> > > > > +	 * Our channel array could be sparsley populated and we
-> > > > >  	 * initiated I/O on a processor/hw-q that does not
-> > > > >  	 * currently have a designated channel. Fix this.
-> > > > >  	 * The strategy is simple:
-> > > > > -	 * I. Ensure NUMA locality
-> > > > > -	 * II. Distribute evenly (best effort)
-> > > > > +	 * I. Prefer the channel associated with the current CPU
-> > > > > +	 * II. Ensure NUMA locality
-> > > > > +	 * III. Distribute evenly (best effort)
-> > > > >  	 */
-> > > > >
-> > > > > +	/* Prefer the channel on the I/O issuing processor/hw-q */
-> > > > > +	if (cpumask_test_cpu(q_num, &stor_device->alloced_cpus))
-> > > > > +		return stor_device->stor_chns[q_num];
-> > > > > +
-> > > >
-> > > > Hmmm. When get_og_chn() is called, we know that stor_device-
-> > > > >stor_chns[q_num] is NULL since storvsc_do_io() has already handled
-> > > > >the non-
-> > > > NULL case. And the checks are all done with stor_device->lock held,
-> > > > so the stor_chns array can't change.
-> > > > Hence the above code will return NULL, which will cause a NULL
-> > > > reference when
-> > > > storvsc_do_io() sends out the VMBus packet.
-> > > >
-> > > > My recollection is that get_og_chan() is called when there is no
-> > > > channel that interrupts the current CPU (that's what it means for
-> > > > stor_device-
-> > > > >stor_chns[<current CPU>] to be NULL). So the algorithm must pick a
-> > > > >channel
-> > > > that interrupts some other CPU, preferably a CPU in the current NUM=
-A node.
-> > > > Adding code to prefer the channel associated with the current CPU
-> > > > doesn't make sense in get_og_chn(), as get_og_chn() is only called
-> > > > when it is already known that there is no such channel.
-> > >
-> > > The initial values for stor_chns[] and alloced_cpus are set in
-> > > storvsc_channel_init() (for primary channel) and handle_sc_creation()=
- (for
-> > subchannels).
-> >
-> > OK, I agree that if the CPU bit in alloced_cpus is set, then the corres=
-ponding entry
-> > in stor_chns[] will not be NULL.  And if the entry in stor_chns[] is NU=
-LL, the CPU
-> > bit in alloced_cpus is *not* set. All the places that manipulate these =
-fields update
-> > both so they are in sync with each other.  Hence I'll agree the code yo=
-u've added
-> > in get_og_chn() will never return a NULL value.
-> >
-> > (However, FWIW the reverse is not true:  If the entry in stor_chns[] is=
- not NULL,
-> > the corresponding CPU bit in alloced_cpus may or may not be set.)
-> >
-> > >
-> > > As a result, the check for cpumask_test_cpu(q_num,
-> > > &stor_device->alloced_cpus) will guarantee we are getting a channel.
-> > > If the check fails, the code follows the old behavior to find a chann=
-el.
-> > >
-> > > This check is needed because storvsc supports
-> > > change_target_cpu_callback() callback via vmbus.
-> >
-> > But look at the code in storvsc_do_io() where get_og_chn() is called. I=
-'ve copied
-> > the code here for discussion purposes. This is the only place that get_=
-og_chn() is
-> > called:
-> >
-> >                 spin_lock_irqsave(&stor_device->lock, flags);
-> >                 outgoing_channel =3D stor_device->stor_chns[q_num];
-> >                 if (outgoing_channel !=3D NULL) {
-> >                         spin_unlock_irqrestore(&stor_device->lock, flag=
-s);
-> >                         goto found_channel;
-> >                 }
-> >                 outgoing_channel =3D get_og_chn(stor_device, q_num);
-> >                 spin_unlock_irqrestore(&stor_device->lock, flags);
-> >
-> > The code gets the spin lock, then reads the stor_chns[] entry. If the e=
-ntry is non-
-> > NULL, then we've found a suitable channel and get_og_chn() is *not* cal=
-led. The
-> > only time get_og_chan() is called is when the stor_chn[] entry
-> > *is* NULL, which also means that the CPU bit in alloced_cpus is *not* s=
-et.
-> > So the check you've added in get_og_chn() can never be true and the che=
-ck is not
-> > needed. You said the check is needed because of change_target_cpu_callb=
-ack(),
-> > which will invoke storvsc_change_target_cpu(). But I don't see how that=
- matters
-> > given the checks done before get_og_chn() is called. The spin lock sync=
-hronizes
-> > with any changes made by storvsc_change_target_cpu().
->=20
-> I agree this check may not be necessary. Given the current patch is corre=
-ct, how about I
-> submit another patch to remove this check after more testing are done?
+Hello,
 
-That's OK with me.
+syzbot found the following issue on:
 
->=20
-> >
-> > Related, there are a couple of occurrences of code like this:
-> >
-> >                 for_each_cpu_wrap(tgt_cpu, &stor_device->alloced_cpus,
-> >                                   q_num + 1) {
-> >                         channel =3D READ_ONCE(stor_device->stor_chns[tg=
-t_cpu]);
-> >                         if (!channel)
-> >                                 continue;
-> >
-> > Given your point that the alloced_cpus and stor_chns[] entries are alwa=
-ys in sync
-> > with each other, the check for channel being NULL is not necessary.
->=20
-> I don't' agree with removing the check for NULL. This code follows the ex=
-isting storvsc behavior
-> on checking allocated CPUs. Looking at storvsc_change_target_cpu(), it ch=
-anges stor_chns
-> before changing alloced_cpus. It can run at the same time as this code. I=
- think we may need
-> to add some memory barriers in storvsc_change_target_cpu(), but that is f=
-or another topic.
+HEAD commit:    971199ad2a0f Merge tag 'arm64-fixes' of git://git.kernel.o..
+git tree:       upstream
+console output: https://syzkaller.appspot.com/x/log.txt?x=1415792f980000
+kernel config:  https://syzkaller.appspot.com/x/.config?x=ed013bd3465f2abf
+dashboard link: https://syzkaller.appspot.com/bug?extid=a7b56f5926d90eaf5071
+compiler:       Debian clang version 20.1.8 (++20250708063551+0c9f909b7976-1~exp1~20250708183702.136), Debian LLD 20.1.8
 
-Yes, you are right. The spin lock isn't held in these cases, so the checks =
-for NULL
-should stay.
+Downloadable assets:
+disk image: https://storage.googleapis.com/syzbot-assets/32974b5d3b23/disk-971199ad.raw.xz
+vmlinux: https://storage.googleapis.com/syzbot-assets/3850d8c7dc24/vmlinux-971199ad.xz
+kernel image: https://storage.googleapis.com/syzbot-assets/6ab0a4c5a862/bzImage-971199ad.xz
 
-Michael
+IMPORTANT: if you fix the issue, please add the following tag to the commit:
+Reported-by: syzbot+a7b56f5926d90eaf5071@syzkaller.appspotmail.com
+
+scsi 0:0:1:0: Direct-Access     Google   PersistentDisk   1    PQ: 0 ANSI: 6
+=====================================================
+BUG: KMSAN: uninit-value in scsi_vpd_inquiry drivers/scsi/scsi.c:323 [inline]
+BUG: KMSAN: uninit-value in scsi_get_vpd_buf+0x4cc/0x720 drivers/scsi/scsi.c:455
+ scsi_vpd_inquiry drivers/scsi/scsi.c:323 [inline]
+ scsi_get_vpd_buf+0x4cc/0x720 drivers/scsi/scsi.c:455
+ scsi_update_vpd_page drivers/scsi/scsi.c:479 [inline]
+ scsi_attach_vpd+0x380/0xe70 drivers/scsi/scsi.c:520
+ scsi_add_lun drivers/scsi/scsi_scan.c:1110 [inline]
+ scsi_probe_and_add_lun+0x6933/0x7f20 drivers/scsi/scsi_scan.c:1288
+ __scsi_scan_target+0x2fb/0x2050 drivers/scsi/scsi_scan.c:1776
+ scsi_scan_channel drivers/scsi/scsi_scan.c:1864 [inline]
+ scsi_scan_host_selected+0x68f/0x9a0 drivers/scsi/scsi_scan.c:1893
+ do_scsi_scan_host drivers/scsi/scsi_scan.c:2032 [inline]
+ do_scan_async+0x1ad/0xdc0 drivers/scsi/scsi_scan.c:2042
+ async_run_entry_fn+0x90/0x570 kernel/async.c:129
+ process_one_work kernel/workqueue.c:3263 [inline]
+ process_scheduled_works+0xb91/0x1d80 kernel/workqueue.c:3346
+ worker_thread+0xedf/0x1590 kernel/workqueue.c:3427
+ kthread+0xd59/0xf00 kernel/kthread.c:463
+ ret_from_fork+0x233/0x380 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+Uninit was created at:
+ __alloc_frozen_pages_noprof+0x689/0xf00 mm/page_alloc.c:5206
+ alloc_pages_mpol+0x328/0x860 mm/mempolicy.c:2416
+ alloc_frozen_pages_noprof+0xf7/0x200 mm/mempolicy.c:2487
+ alloc_slab_page mm/slub.c:3030 [inline]
+ allocate_slab+0x26c/0x14e0 mm/slub.c:3203
+ new_slab mm/slub.c:3257 [inline]
+ ___slab_alloc+0x131b/0x3d90 mm/slub.c:4627
+ __slab_alloc+0xa3/0x180 mm/slub.c:4746
+ __slab_alloc_node mm/slub.c:4822 [inline]
+ slab_alloc_node mm/slub.c:5233 [inline]
+ __do_kmalloc_node mm/slub.c:5602 [inline]
+ __kmalloc_noprof+0xba3/0x1b40 mm/slub.c:5615
+ kmalloc_noprof include/linux/slab.h:961 [inline]
+ kzalloc_noprof include/linux/slab.h:1094 [inline]
+ lsm_blob_alloc security/security.c:690 [inline]
+ lsm_task_alloc security/security.c:777 [inline]
+ security_task_alloc+0xa1/0x6b0 security/security.c:3229
+ copy_process+0x235a/0x5eb0 kernel/fork.c:2163
+ kernel_clone+0x416/0x1080 kernel/fork.c:2609
+ user_mode_thread+0xde/0x110 kernel/fork.c:2685
+ call_usermodehelper_exec_work+0x8a/0x300 kernel/umh.c:171
+ process_one_work kernel/workqueue.c:3263 [inline]
+ process_scheduled_works+0xb91/0x1d80 kernel/workqueue.c:3346
+ worker_thread+0xedf/0x1590 kernel/workqueue.c:3427
+ kthread+0xd59/0xf00 kernel/kthread.c:463
+ ret_from_fork+0x233/0x380 arch/x86/kernel/process.c:158
+ ret_from_fork_asm+0x1a/0x30 arch/x86/entry/entry_64.S:245
+
+CPU: 1 UID: 0 PID: 58 Comm: kworker/u8:3 Not tainted syzkaller #0 PREEMPT(none) 
+Hardware name: Google Google Compute Engine/Google Compute Engine, BIOS Google 08/18/2025
+Workqueue: async async_run_entry_fn
+=====================================================
+
+
+---
+This report is generated by a bot. It may contain errors.
+See https://goo.gl/tpsmEJ for more information about syzbot.
+syzbot engineers can be reached at syzkaller@googlegroups.com.
+
+syzbot will keep track of this issue. See:
+https://goo.gl/tpsmEJ#status for how to communicate with syzbot.
+
+If the report is already addressed, let syzbot know by replying with:
+#syz fix: exact-commit-title
+
+If you want to overwrite report's subsystems, reply with:
+#syz set subsystems: new-subsystem
+(See the list of subsystem names on the web dashboard)
+
+If the report is a duplicate of another one, reply with:
+#syz dup: exact-subject-of-another-report
+
+If you want to undo deduplication, reply with:
+#syz undup
