@@ -1,156 +1,104 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 36586C120
-	for <linux-scsi@vger.kernel.org>; Wed,  8 Oct 2025 03:17:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD7D7296BDD
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Oct 2025 05:35:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759893456; cv=none; b=ll4xKvSIH1f9BJifHradttGv5Zmb8gT3hn8bgmr4QPtmroNIdRODN574BfYBfToPvcqkjxCGc+me4/oiT3hCBjtm7iAe5zhKAbmJiwzUAyDNjVA7T2AHqyYY9ZdYG9yu8Jrfkjqs7DBlWkn4mmx8tLAFVn5u7a3WVV8tBo0vKNA=
+	t=1759901745; cv=none; b=ohSJT7cApeQzD99FFbD8n/g6/vpHeB5NU0+nUBdmhMl8GWYqXmMwdkadtpccsQRNdmDJofkRVqKP5E/tPX0xnKQFMXJftG6WIoBC5zL1PVw96G+038JIgpIpzmm4yjPfU1JEfRAx9uOUVN+xb2jiZuyoWE9gdnSKu0PXgkBfzHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759893456; c=relaxed/simple;
-	bh=qe93Ixq0d7Bpsro83b9tVt5NsJP9xbSGkq3I73IHNys=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=PAGpCntKxonYWVQb0L8hjAdMl5eeZ+S1UvKAF1FRGMFxVD6fmAuNlpXgWRnCuM7A0wU5OtyF1TCNBnUcTuIX7zu/osVyhTpV8b0OicZr6rnqYb4YTKxaveC8ogu6fBYoA2GW/MU90IdsKIxxZJJddeXCZmPOygz6g4UBdADWRrM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=ZlZHuj2z; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1759901745; c=relaxed/simple;
+	bh=7uc0xT9UsHI99+GDI6EgnSy2itreCf2z0lQhv12bRGA=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=c2WJ1jIETUzLjMDIrmzCSnGlle0W8AuAF4bcu+ZpJxZ3r1Tm1ahcyZ0NBgnqRwdYLudCSRw/AetZ3LB1VV9c2w0ZRc92pNRauHxtP+cmwcyjHyqnfEoxV9PKaixiww0HUlLn2dsX9TOzYxFWeDV+psA9FZPonOQ2JTYeWCyjAKk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=LXkUvFnM; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="ZlZHuj2z"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1759893452;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=3xXK6jsciAtc4DngVeI/obr3kbnlsly9xkp8+nSN9Pk=;
-	b=ZlZHuj2zZCG4ib34jDiFyKfqUvMgq5N+jrmKirxTEhEly1XgWhhaBFTCMJ8LR9iLYBIqwT
-	IRC4l4737o1TRzSgbfvM3E5VqZI/TZLmT0xj57WV4YAiPVjTIT8ovXM7EMTBxgFOrVCabW
-	2zoD9CtlI8t4ZfMZxbvCkQ5DgbfiaDo=
-Received: from mail-vk1-f197.google.com (mail-vk1-f197.google.com
- [209.85.221.197]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-679-5xP6Dg5kOMyB_Oe4Wn96Vg-1; Tue, 07 Oct 2025 23:17:30 -0400
-X-MC-Unique: 5xP6Dg5kOMyB_Oe4Wn96Vg-1
-X-Mimecast-MFC-AGG-ID: 5xP6Dg5kOMyB_Oe4Wn96Vg_1759893450
-Received: by mail-vk1-f197.google.com with SMTP id 71dfb90a1353d-54a7a912f1aso3746856e0c.2
-        for <linux-scsi@vger.kernel.org>; Tue, 07 Oct 2025 20:17:30 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1759893450; x=1760498250;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=3xXK6jsciAtc4DngVeI/obr3kbnlsly9xkp8+nSN9Pk=;
-        b=LZv5GmXn2s5MQ83upeFYnpoc3NnhmN6Gbb0IaWRz2C7F67t3YmWKqPW3oje5LVCtg3
-         NIXOA6OwHLi9aQEE248+qy691IaQZz5Fw0Dj/ZrHnyy2QmP3Fk2I4FlQ03gHTU0xrZHn
-         Vw4/vr3vDY2dNjJ+rdITjgX7y+pwntZMt7+7NvK2Hwyk6DYexDhpNuSBaysRmNrF8kLj
-         /37x3GWDT94XcEm7mEwaL2ufmUlSPul9iuWKS8FII4bbWmNrJfbnZ8W92nOpjY7SsOnr
-         dsPLR2jHiQLpo2loZWs7WfDPXU3P/Tes28em+rVM6GO85Vfki41huK9FilZ7LNcVqKJq
-         f2mQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUq0flp/iOb3/Mp1oWf1gX1LKshhmjvVvnMUEsPjdJg3Xfk2xUpOfjPOr3Xl0ea1ORhbt3/nBdXCiyp@vger.kernel.org
-X-Gm-Message-State: AOJu0Yy/4A7Fipvpx7ubw8S7mbbu8SBhrlK/BrwbsgY+aJguH0S0BByW
-	MwKl+0NrVC5u73hsRKKF8uBliAL7gbxYKkj7uLanHcbsntljDMVo1w0sB12mHOPJB8MuecSMMhD
-	a5LCHaWuuGMHxIElUYHhZ1Rj7MR7/+9u2H9Z6txWaI73+Odlb7c5DYJzIxdGgmNGSyo8sDXdBEr
-	DR0eY3vVJc2a8MO0zO9MpOwRtNoqTiJzT5mccSmQ==
-X-Gm-Gg: ASbGncsLmOsjXIsO18GRWnRglSk6qtfxtuUTx7DgO8YMjVkRej2EXOH/aun98SSdN5N
-	MyvAJQDihb28/HycC34NmWm35Wliz0Gw2poY70S+6izHbvTYbWJ0fHCJQ7/gC8ji4T/yTdOAbKj
-	8QsuOLwpr8FJPBDo9BwQySGs7uaus=
-X-Received: by 2002:a05:6122:917:b0:541:fdc4:2547 with SMTP id 71dfb90a1353d-554b8b8f95bmr772253e0c.4.1759893450089;
-        Tue, 07 Oct 2025 20:17:30 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFG+n4/K/N3u3lNS6vammM7FoX0OcN3gtLdE7XeBFTBQRn2doZvOb8S8W1tA9LN0X1guk5h/5CRCCMuRX+CkRs=
-X-Received: by 2002:a05:6122:917:b0:541:fdc4:2547 with SMTP id
- 71dfb90a1353d-554b8b8f95bmr772251e0c.4.1759893449762; Tue, 07 Oct 2025
- 20:17:29 -0700 (PDT)
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="LXkUvFnM"
+Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20251008053539epoutp02987a974d32b8c3c7585d54923d60a126~sbU7afYbq0652406524epoutp02i
+	for <linux-scsi@vger.kernel.org>; Wed,  8 Oct 2025 05:35:39 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20251008053539epoutp02987a974d32b8c3c7585d54923d60a126~sbU7afYbq0652406524epoutp02i
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1759901739;
+	bh=7uc0xT9UsHI99+GDI6EgnSy2itreCf2z0lQhv12bRGA=;
+	h=From:To:Cc:In-Reply-To:Subject:Date:References:From;
+	b=LXkUvFnM6gxwF6xCnQY2mIqw6mH4op32HUKsndntILWN11pDL5KtoRAliSYp7DieJ
+	 8g+L25csZ6fF5D0niPGoejxu+cooJxCwQKKwG54NvCKKQrunh8U90VlyGy3GRC5bhk
+	 MjeeYqpFOhv/fHpv1BKmnO8z4MvAabkm43VK6/n8=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas5p1.samsung.com (KnoxPortal) with ESMTPS id
+	20251008053539epcas5p1d95fda2e1b05c18f9d6ce3eb7772fb06~sbU68JLuP1634316343epcas5p1q;
+	Wed,  8 Oct 2025 05:35:39 +0000 (GMT)
+Received: from epcas5p2.samsung.com (unknown [182.195.38.93]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4chMDB1tdFz6B9m4; Wed,  8 Oct
+	2025 05:35:38 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas5p3.samsung.com (KnoxPortal) with ESMTPA id
+	20251008053537epcas5p375e37929f025c0d11aa4309e3d62d897~sbU5N0bIj0810108101epcas5p3b;
+	Wed,  8 Oct 2025 05:35:37 +0000 (GMT)
+Received: from INBRO002756 (unknown [107.122.3.168]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20251008053535epsmtip1a048821efddcf4d6723bf0bedd4fa5e3~sbU3Ue-he1568815688epsmtip17;
+	Wed,  8 Oct 2025 05:35:35 +0000 (GMT)
+From: "Alim Akhtar" <alim.akhtar@samsung.com>
+To: =?utf-8?Q?'Andr=C3=A9_Draszik'?= <andre.draszik@linaro.org>, "'Avri
+ Altman'" <avri.altman@wdc.com>, "'Bart Van Assche'" <bvanassche@acm.org>,
+	"'Rob Herring'" <robh@kernel.org>, "'Krzysztof Kozlowski'"
+	<krzk+dt@kernel.org>, "'Conor Dooley'" <conor+dt@kernel.org>
+Cc: "'Peter Griffin'" <peter.griffin@linaro.org>, "'Tudor Ambarus'"
+	<tudor.ambarus@linaro.org>, "'Will McVicker'" <willmcvicker@google.com>,
+	<kernel-team@android.com>, <linux-scsi@vger.kernel.org>,
+	<devicetree@vger.kernel.org>, <linux-arm-kernel@lists.infradead.org>,
+	<linux-samsung-soc@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+In-Reply-To: <20251007-power-domains-scsi-ufs-dt-bindings-exynos-v1-1-1acfa81a887a@linaro.org>
+Subject: RE: [PATCH] scsi: ufs: dt-bindings: exynos: add power-domains
+Date: Wed, 8 Oct 2025 11:05:34 +0530
+Message-ID: <001501dc3815$601ec450$205c4cf0$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251007214800.1678255-1-bvanassche@acm.org>
-In-Reply-To: <20251007214800.1678255-1-bvanassche@acm.org>
-From: Ming Lei <ming.lei@redhat.com>
-Date: Wed, 8 Oct 2025 11:17:18 +0800
-X-Gm-Features: AS18NWCAzy1rtuYhnYKdvEjGvOTb3dO8STdjLwXuQzKoLdIZn2jmpnPosyPyJSk
-Message-ID: <CAFj5m9K1L7n3C9mL0zgNXmzhttD-B-64LBNbcp=HCPYPNvgjMg@mail.gmail.com>
-Subject: Re: [PATCH] scsi: core: Fix a regression triggered by scsi_host_busy()
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
-	Sebastian Reichel <sebastian.reichel@collabora.com>, Jens Axboe <axboe@kernel.dk>, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 16.0
+Thread-Index: AQHS0boKDTdfIj5X2r9DvSTLTl+2HwHj5ytttLtl7FA=
+Content-Language: en-us
+X-CMS-MailID: 20251008053537epcas5p375e37929f025c0d11aa4309e3d62d897
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-542,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20251007155631epcas5p2cbf4c7b52bd217128c156bf6f5f1ea82
+References: <CGME20251007155631epcas5p2cbf4c7b52bd217128c156bf6f5f1ea82@epcas5p2.samsung.com>
+	<20251007-power-domains-scsi-ufs-dt-bindings-exynos-v1-1-1acfa81a887a@linaro.org>
 
-On Wed, Oct 8, 2025 at 5:48=E2=80=AFAM Bart Van Assche <bvanassche@acm.org>=
- wrote:
->
-> Commit 995412e23bb2 ("blk-mq: Replace tags->lock with SRCU for tag
-> iterators") introduced the following regression:
->
-> Call trace:
->  __srcu_read_lock+0x30/0x80 (P)
->  blk_mq_tagset_busy_iter+0x44/0x300
->  scsi_host_busy+0x38/0x70
->  ufshcd_print_host_state+0x34/0x1bc
->  ufshcd_link_startup.constprop.0+0xe4/0x2e0
->  ufshcd_init+0x944/0xf80
->  ufshcd_pltfrm_init+0x504/0x820
->  ufs_rockchip_probe+0x2c/0x88
->  platform_probe+0x5c/0xa4
->  really_probe+0xc0/0x38c
->  __driver_probe_device+0x7c/0x150
->  driver_probe_device+0x40/0x120
->  __driver_attach+0xc8/0x1e0
->  bus_for_each_dev+0x7c/0xdc
->  driver_attach+0x24/0x30
->  bus_add_driver+0x110/0x230
->  driver_register+0x68/0x130
->  __platform_driver_register+0x20/0x2c
->  ufs_rockchip_pltform_init+0x1c/0x28
->  do_one_initcall+0x60/0x1e0
->  kernel_init_freeable+0x248/0x2c4
->  kernel_init+0x20/0x140
->  ret_from_fork+0x10/0x20
->
-> Fix this regression by making scsi_host_busy() check whether the SCSI
-> host tag set has already been initialized. tag_set->ops is set by
-> scsi_mq_setup_tags() just before blk_mq_alloc_tag_set() is called. This
-> fix is based on the assumption that scsi_host_busy() and
-> scsi_mq_setup_tags() calls are serialized. This is the case in the UFS
-> driver.
->
-> Reported-by: Sebastian Reichel <sebastian.reichel@collabora.com>
-> Closes: https://lore.kernel.org/linux-block/pnezafputodmqlpumwfbn644ohjyb=
-ouveehcjhz2hmhtcf2rka@sdhoiivync4y/
-> Cc: Ming Lei <ming.lei@redhat.com>
-> Cc: Jens Axboe <axboe@kernel.dk>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-> ---
->  drivers/scsi/hosts.c | 5 +++--
->  1 file changed, 3 insertions(+), 2 deletions(-)
->
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index cc5d05dc395c..17173239301e 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -611,8 +611,9 @@ int scsi_host_busy(struct Scsi_Host *shost)
->  {
->         int cnt =3D 0;
->
-> -       blk_mq_tagset_busy_iter(&shost->tag_set,
-> -                               scsi_host_check_in_flight, &cnt);
-> +       if (shost->tag_set.ops)
-> +               blk_mq_tagset_busy_iter(&shost->tag_set,
-> +                                       scsi_host_check_in_flight, &cnt);
->         return cnt;
->  }
->  EXPORT_SYMBOL(scsi_host_busy);
 
-Reviewed-by: Ming Lei <ming.lei@redhat.com>
 
-Long term, the UFS driver need to be fixed, this or most of scsi core
-APIs should
-have been called after the scsi host is initialized.
-
-Thanks,
-Ming
-
+> -----Original Message-----
+> From: Andr=C3=A9=20Draszik=20<andre.draszik=40linaro.org>=0D=0A>=20Sent:=
+=20Tuesday,=20October=207,=202025=209:26=20PM=0D=0A>=20To:=20Alim=20Akhtar=
+=20<alim.akhtar=40samsung.com>;=20Avri=20Altman=0D=0A>=20<avri.altman=40wdc=
+.com>;=20Bart=20Van=20Assche=20<bvanassche=40acm.org>;=20Rob=0D=0A>=20Herri=
+ng=20<robh=40kernel.org>;=20Krzysztof=20Kozlowski=20<krzk+dt=40kernel.org>;=
+=0D=0A>=20Conor=20Dooley=20<conor+dt=40kernel.org>=0D=0A>=20Cc:=20Peter=20G=
+riffin=20<peter.griffin=40linaro.org>;=20Tudor=20Ambarus=0D=0A>=20<tudor.am=
+barus=40linaro.org>;=20Will=20McVicker=20<willmcvicker=40google.com>;=0D=0A=
+>=20kernel-team=40android.com;=20linux-scsi=40vger.kernel.org;=0D=0A>=20dev=
+icetree=40vger.kernel.org;=20linux-arm-kernel=40lists.infradead.org;=20linu=
+x-=0D=0A>=20samsung-soc=40vger.kernel.org;=20linux-kernel=40vger.kernel.org=
+;=20Andr=C3=A9=20Draszik=0D=0A>=20<andre.draszik=40linaro.org>=0D=0A>=20Sub=
+ject:=20=5BPATCH=5D=20scsi:=20ufs:=20dt-bindings:=20exynos:=20add=20power-d=
+omains=0D=0A>=20=0D=0A>=20The=20UFS=20controller=20can=20be=20part=20of=20a=
+=20power=20domain,=20so=20we=20need=20to=20allow=20the=0D=0A>=20relevant=20=
+property=20'power-domains'.=0D=0A>=20=0D=0AIn=20Exynos,=20power=20domains=
+=20has=20a=20boundary=20at=20_block_=20level.=20I=20assume=20in=20this=0D=
+=0Acase=20it=20is=20BLK_HSI,=20which=20contains,=20multiple=20IPs=20within=
+=20block,=20including=20UFS=0D=0Acontroller.=20I=20hope=20you=20will=20be=
+=20sending=20the=20corresponding=20DTS=20changes=20as=20well.=20=0D=0A=0D=
+=0A>=20Signed-off-by:=20Andr=C3=A9=20Draszik=20<andre.draszik=40linaro.org>=
+=0D=0A>=20---=0D=0AFeel=20free=20to=20add=20=0D=0AReviewed-by:=20Alim=20Akh=
+tar=20<alim.akhtar=40samsung.com>=0D=0A=0D=0A
