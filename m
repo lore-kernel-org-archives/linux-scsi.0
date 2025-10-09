@@ -1,418 +1,214 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3D91D2D6E53
-	for <linux-scsi@vger.kernel.org>; Thu,  9 Oct 2025 13:05:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 72E462E6CA5
+	for <linux-scsi@vger.kernel.org>; Thu,  9 Oct 2025 13:48:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760015120; cv=none; b=cDSx/tT7SYpT1jaKWLCYHDKNuuPj74NaJGENQFfqhPOgiFoHnT5mB0gtgvtkifuafBhWQCOtjpvKs8FuXhjtWjwLwvIAYRHsgHXdZDaXJwi/lVOyFTNO/8blymcIj88Ln6NyB1c5cKUJIJN5r7VhH6itc3crb3kWmGcKSew5GWE=
+	t=1760017697; cv=none; b=fkPMwwvO8+G+VgzNiXbJbO+zf+oC53yj6PaTRFbh1EpHyT0KWL/GU6INsGO8zOpAUiHCaCrr4NYqRW9EdJD0WB06EpNAQ9CJ/6rWRj+vyv/RigBGB77+3HxNGnI+csYoxFD+bWwPhVsiS7snlRQvgaCli2FJ2kJ77+SaDSelOpg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760015120; c=relaxed/simple;
-	bh=rvNhHy7eJpi/CQ++86qLkqgcTzR1t8caSFQn91vizX8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Y/ikyYQg0ZO/dxnnSE83s7zqd+ho3LcH4BYTiM+HVAgUzJCIGIzjP5yHQ/T33VDWdvFnC19fHFVIsym1JTaE/17Jpw5/0XFWuvZvCSkqwcVXHHhPW1Cgc3sGlA5PGsjNroiftGYcGvCr7zDf8tC9B611WHe9GZ1NlfWGVWR538U=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=E6v++OKH; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1760017697; c=relaxed/simple;
+	bh=uMTYl0l0bgRiFOYdD2SO3Mgit4uamyS2BKPDM62RoPw=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=dz03vS6L3qI206+SZ2ACoLaWNOPScijuc5V7TCGDdafv+2ehPRTz5mjr5tiII6PF1TrqGOUVBY70bjhhqdMU9lk7uT7PNC6ROxpTDH6rdIk6Gr9n7owItTBGOSSLshHSdVObWvEd3BzBaQT7QGuTiAcx0wzdIc2kYFZ5KyDH1C4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=Ko5GMo+M; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="E6v++OKH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760015116;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=oTHo4iuJRNf/FsWLVapxfI0HO0lapgIr2CMWX1RNMGw=;
-	b=E6v++OKHeuSGl4Hn5qnxIf650koqMsY8j8ZgsL77CmGzAJIrEMMLYj0RSgvhuoNwCa11S3
-	7JThFjEm7E8mzEV2XWcdeudWCO5b0RYpobIA+U9KKwQNezct5qMoSA/SD9UbOs+zLO1QDc
-	NtE5SiNrdnzgHAckfO7gAWIx1CPtuIc=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-56-PDZEtiZwMmm8bd0L1Tdo3w-1; Thu, 09 Oct 2025 09:05:14 -0400
-X-MC-Unique: PDZEtiZwMmm8bd0L1Tdo3w-1
-X-Mimecast-MFC-AGG-ID: PDZEtiZwMmm8bd0L1Tdo3w_1760015113
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-46e38bd6680so6377435e9.1
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Oct 2025 06:05:14 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760015113; x=1760619913;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=oTHo4iuJRNf/FsWLVapxfI0HO0lapgIr2CMWX1RNMGw=;
-        b=BvNCGe+OkXjc5nRhl55QCDFN6vSAU0Jx8z2IhdeYtUn7hWF/ElgxbiBzyCE9fIjWDe
-         Uz/+yTpb58S98nr9+Oh1vhTJ8b4FTrk8+LAiGFh63uY7DYQxHnx1xycQWNdfeIV8r7cA
-         JIcV2gx3S/3n7TFPyfKA2CKz+mAoio9QVbvWAjwKbB4/6WkGKLO1esaxRJjapoQtSvXp
-         uqKmaTJlaM6sGejKqUWQMX2IKk2kpT6Gd82ZC1lVRxay3k80G5kFY5r5etysEyb8hrxl
-         CWe5oPhZIL4wUsgvIcWUkHYTWV3yk0wZYVz6PFYp4pXOWjIB2k6epgOtgQAjXfwbYj2U
-         biZw==
-X-Forwarded-Encrypted: i=1; AJvYcCVc17YEZ1ii0ud+uccRvaYVkoJh7llRza7wlaxZv28NGRvVrqp5iLcKvPW9cAC6VDQJdxpZgdprQsus@vger.kernel.org
-X-Gm-Message-State: AOJu0YwGZvVHiZXjloa3Ko+DSZxpjAUKXdxJvU9dBIbqxZZQQrDX0pCe
-	yTdMSI1ns/pZ8xf+3Xw7yL8CmnQafN6Qsvil612WP7NFyqxx3A7PbB8XzmPrg1QZ8UQszxaEzI+
-	S1dt5EiH5wcFKyiNmm+ClpEEGqqZ5cf4GcY7PjAe7YsS9vtn+gN0yMT4cEdgassQ=
-X-Gm-Gg: ASbGnctwoQ3/wWacxEnE6ND6AUKr4oHOIMnfQuTSelnxHIE3t7QTwXefJz9SEu3x4Ya
-	88Q/YOBibzXzBJnqTnfR3mlD6zSg9yrT/iTxnzM+cQ904eynzvh6DdmxlS5Yy5hnr+ma1KRjz2t
-	B5k7PZBtb/32VLuim3FfmUf20EuKUHQzrhicxhjgz8BlQoJuwWkGpx+WzNLqkHWQ/ulWSWxAHxH
-	iZkWZczDG7RumQ9OalZEYyscDzcRid+L7gAXeVXZOoWPX28UR7CuEhGcEVHhOsRf9nPyfROwrUG
-	Bqck8UP5M4VMY1vGX6EAamPjuitxb4+FMLQ0j7lVZOkHCR3KOoMM3BJ4hQswI2Zn1cBvtx4L30E
-	+IYgshIsF
-X-Received: by 2002:a05:600c:83c9:b0:46f:b42e:edd0 with SMTP id 5b1f17b1804b1-46fb42eee2emr2581275e9.41.1760015112992;
-        Thu, 09 Oct 2025 06:05:12 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IH6MQEGKTHH3lQ2c+ldeRR4aSAzt+sOKbg+VkML9CB8VKORVPmv1RemKtJCCw7qNufQ/ws5mg==
-X-Received: by 2002:a05:600c:83c9:b0:46f:b42e:edd0 with SMTP id 5b1f17b1804b1-46fb42eee2emr2580495e9.41.1760015112341;
-        Thu, 09 Oct 2025 06:05:12 -0700 (PDT)
-Received: from [192.168.3.141] (tmo-083-189.customers.d1-online.com. [80.187.83.189])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46faf112fdbsm47591035e9.8.2025.10.09.06.05.08
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Oct 2025 06:05:11 -0700 (PDT)
-Message-ID: <bce57a83-e7e1-4e3d-85ae-6234a98975ea@redhat.com>
-Date: Thu, 9 Oct 2025 15:05:06 +0200
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="Ko5GMo+M"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id 283C0240101
+	for <linux-scsi@vger.kernel.org>; Thu,  9 Oct 2025 15:48:12 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1760017692; bh=2DCj6qFoCxBp2NDx0KA/+MnCcq+JdNn8e5RmKU2/pbs=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:Autocrypt:OpenPGP:From;
+	b=Ko5GMo+Mk8iG/F965pPGt/5Q+/oe29ORbJ594XdvcVdEu0RhTLynHS+BYwElaKqDf
+	 glzCuIyj8GTWBoy7uFkV62225AiUC17JmDrK0yd0/kG7PKw9YOoncMXI2vpsU82gzP
+	 uKGP1zEuiWt5lgJ0bEmqCuPP81DUJAJ4/CLGjFkW/JUIoOJv/kraoVLPclzCYNPnhg
+	 dK3uR8fsRr0J8S4qTlDntt18dqrDHc0f6P5ONErLfTpB3I5FC98xdqI+2lxubCebnM
+	 kzYkP9SjLjA7QNyjBn0H4i8rdBPHhQUyeAoVqT2Yw3IV3eFKh6UC/Kjs/d2qHMlH8k
+	 cLPFSLKQd+75g==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4cjB631b7lz6twC;
+	Thu,  9 Oct 2025 15:48:11 +0200 (CEST)
+Message-ID: <5900cfcea7e5f8bc0f100be4afeced9e203c3e9f.camel@posteo.de>
+Subject: Re: [PATCH v2 2/2] ata: Use ACPI methods to power on ata ports
+From: Markus Probst <markus.probst@posteo.de>
+To: Niklas Cassel <cassel@kernel.org>
+Cc: Damien Le Moal <dlemoal@kernel.org>, "James E . J . Bottomley"
+	 <James.Bottomley@hansenpartnership.com>, "Martin K . Petersen"
+	 <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 09 Oct 2025 13:48:11 +0000
+In-Reply-To: <aOejov5d_TlVkueH@ryzen>
+References: <8c3cb28c57462f9665b08fdaa022e6abc57fcd9e.camel@posteo.de>
+	 <20251009112433.108643-1-markus.probst@posteo.de>
+	 <20251009112433.108643-3-markus.probst@posteo.de> <aOejov5d_TlVkueH@ryzen>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: (bisected) [PATCH v2 08/37] mm/hugetlb: check for unreasonable
- folio sizes when registering hstate
-To: Christophe Leroy <christophe.leroy@csgroup.eu>,
- linux-kernel@vger.kernel.org
-Cc: Zi Yan <ziy@nvidia.com>, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
- "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Alexander Potapenko <glider@google.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
- Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
- iommu@lists.linux.dev, io-uring@vger.kernel.org,
- Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
- Johannes Weiner <hannes@cmpxchg.org>, John Hubbard <jhubbard@nvidia.com>,
- kasan-dev@googlegroups.com, kvm@vger.kernel.org,
- Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
- linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, Marco Elver <elver@google.com>,
- Marek Szyprowski <m.szyprowski@samsung.com>, Michal Hocko <mhocko@suse.com>,
- Mike Rapoport <rppt@kernel.org>, Muchun Song <muchun.song@linux.dev>,
- netdev@vger.kernel.org, Oscar Salvador <osalvador@suse.de>,
- Peter Xu <peterx@redhat.com>, Robin Murphy <robin.murphy@arm.com>,
- Suren Baghdasaryan <surenb@google.com>, Tejun Heo <tj@kernel.org>,
- virtualization@lists.linux.dev, Vlastimil Babka <vbabka@suse.cz>,
- wireguard@lists.zx2c4.com, x86@kernel.org,
- "linuxppc-dev@lists.ozlabs.org" <linuxppc-dev@lists.ozlabs.org>
-References: <20250901150359.867252-1-david@redhat.com>
- <20250901150359.867252-9-david@redhat.com>
- <3e043453-3f27-48ad-b987-cc39f523060a@csgroup.eu>
- <d3fc12d4-0b59-4b1f-bb5c-13189a01e13d@redhat.com>
- <faf62f20-8844-42a0-a7a7-846d8ead0622@csgroup.eu>
- <9361c75a-ab37-4d7f-8680-9833430d93d4@redhat.com>
- <03671aa8-4276-4707-9c75-83c96968cbb2@csgroup.eu>
- <1db15a30-72d6-4045-8aa1-68bd8411b0ba@redhat.com>
- <0c730c52-97ee-43ea-9697-ac11d2880ab7@csgroup.eu>
- <543e9440-8ee0-4d9e-9b05-0107032d665b@redhat.com>
- <4632e721-0ac8-4d72-a8ed-e6c928eee94d@csgroup.eu>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- xsFNBFXLn5EBEAC+zYvAFJxCBY9Tr1xZgcESmxVNI/0ffzE/ZQOiHJl6mGkmA1R7/uUpiCjJ
- dBrn+lhhOYjjNefFQou6478faXE6o2AhmebqT4KiQoUQFV4R7y1KMEKoSyy8hQaK1umALTdL
- QZLQMzNE74ap+GDK0wnacPQFpcG1AE9RMq3aeErY5tujekBS32jfC/7AnH7I0v1v1TbbK3Gp
- XNeiN4QroO+5qaSr0ID2sz5jtBLRb15RMre27E1ImpaIv2Jw8NJgW0k/D1RyKCwaTsgRdwuK
- Kx/Y91XuSBdz0uOyU/S8kM1+ag0wvsGlpBVxRR/xw/E8M7TEwuCZQArqqTCmkG6HGcXFT0V9
- PXFNNgV5jXMQRwU0O/ztJIQqsE5LsUomE//bLwzj9IVsaQpKDqW6TAPjcdBDPLHvriq7kGjt
- WhVhdl0qEYB8lkBEU7V2Yb+SYhmhpDrti9Fq1EsmhiHSkxJcGREoMK/63r9WLZYI3+4W2rAc
- UucZa4OT27U5ZISjNg3Ev0rxU5UH2/pT4wJCfxwocmqaRr6UYmrtZmND89X0KigoFD/XSeVv
- jwBRNjPAubK9/k5NoRrYqztM9W6sJqrH8+UWZ1Idd/DdmogJh0gNC0+N42Za9yBRURfIdKSb
- B3JfpUqcWwE7vUaYrHG1nw54pLUoPG6sAA7Mehl3nd4pZUALHwARAQABzSREYXZpZCBIaWxk
- ZW5icmFuZCA8ZGF2aWRAcmVkaGF0LmNvbT7CwZoEEwEIAEQCGwMCF4ACGQEFCwkIBwICIgIG
- FQoJCAsCBBYCAwECHgcWIQQb2cqtc1xMOkYN/MpN3hD3AP+DWgUCaJzangUJJlgIpAAKCRBN
- 3hD3AP+DWhAxD/9wcL0A+2rtaAmutaKTfxhTP0b4AAp1r/eLxjrbfbCCmh4pqzBhmSX/4z11
- opn2KqcOsueRF1t2ENLOWzQu3Roiny2HOU7DajqB4dm1BVMaXQya5ae2ghzlJN9SIoopTWlR
- 0Af3hPj5E2PYvQhlcqeoehKlBo9rROJv/rjmr2x0yOM8qeTroH/ZzNlCtJ56AsE6Tvl+r7cW
- 3x7/Jq5WvWeudKrhFh7/yQ7eRvHCjd9bBrZTlgAfiHmX9AnCCPRPpNGNedV9Yty2Jnxhfmbv
- Pw37LA/jef8zlCDyUh2KCU1xVEOWqg15o1RtTyGV1nXV2O/mfuQJud5vIgzBvHhypc3p6VZJ
- lEf8YmT+Ol5P7SfCs5/uGdWUYQEMqOlg6w9R4Pe8d+mk8KGvfE9/zTwGg0nRgKqlQXrWRERv
- cuEwQbridlPAoQHrFWtwpgYMXx2TaZ3sihcIPo9uU5eBs0rf4mOERY75SK+Ekayv2ucTfjxr
- Kf014py2aoRJHuvy85ee/zIyLmve5hngZTTe3Wg3TInT9UTFzTPhItam6dZ1xqdTGHZYGU0O
- otRHcwLGt470grdiob6PfVTXoHlBvkWRadMhSuG4RORCDpq89vu5QralFNIf3EysNohoFy2A
- LYg2/D53xbU/aa4DDzBb5b1Rkg/udO1gZocVQWrDh6I2K3+cCs7BTQRVy5+RARAA59fefSDR
- 9nMGCb9LbMX+TFAoIQo/wgP5XPyzLYakO+94GrgfZjfhdaxPXMsl2+o8jhp/hlIzG56taNdt
- VZtPp3ih1AgbR8rHgXw1xwOpuAd5lE1qNd54ndHuADO9a9A0vPimIes78Hi1/yy+ZEEvRkHk
- /kDa6F3AtTc1m4rbbOk2fiKzzsE9YXweFjQvl9p+AMw6qd/iC4lUk9g0+FQXNdRs+o4o6Qvy
- iOQJfGQ4UcBuOy1IrkJrd8qq5jet1fcM2j4QvsW8CLDWZS1L7kZ5gT5EycMKxUWb8LuRjxzZ
- 3QY1aQH2kkzn6acigU3HLtgFyV1gBNV44ehjgvJpRY2cC8VhanTx0dZ9mj1YKIky5N+C0f21
- zvntBqcxV0+3p8MrxRRcgEtDZNav+xAoT3G0W4SahAaUTWXpsZoOecwtxi74CyneQNPTDjNg
- azHmvpdBVEfj7k3p4dmJp5i0U66Onmf6mMFpArvBRSMOKU9DlAzMi4IvhiNWjKVaIE2Se9BY
- FdKVAJaZq85P2y20ZBd08ILnKcj7XKZkLU5FkoA0udEBvQ0f9QLNyyy3DZMCQWcwRuj1m73D
- sq8DEFBdZ5eEkj1dCyx+t/ga6x2rHyc8Sl86oK1tvAkwBNsfKou3v+jP/l14a7DGBvrmlYjO
- 59o3t6inu6H7pt7OL6u6BQj7DoMAEQEAAcLBfAQYAQgAJgIbDBYhBBvZyq1zXEw6Rg38yk3e
- EPcA/4NaBQJonNqrBQkmWAihAAoJEE3eEPcA/4NaKtMQALAJ8PzprBEXbXcEXwDKQu+P/vts
- IfUb1UNMfMV76BicGa5NCZnJNQASDP/+bFg6O3gx5NbhHHPeaWz/VxlOmYHokHodOvtL0WCC
- 8A5PEP8tOk6029Z+J+xUcMrJClNVFpzVvOpb1lCbhjwAV465Hy+NUSbbUiRxdzNQtLtgZzOV
- Zw7jxUCs4UUZLQTCuBpFgb15bBxYZ/BL9MbzxPxvfUQIPbnzQMcqtpUs21CMK2PdfCh5c4gS
- sDci6D5/ZIBw94UQWmGpM/O1ilGXde2ZzzGYl64glmccD8e87OnEgKnH3FbnJnT4iJchtSvx
- yJNi1+t0+qDti4m88+/9IuPqCKb6Stl+s2dnLtJNrjXBGJtsQG/sRpqsJz5x1/2nPJSRMsx9
- 5YfqbdrJSOFXDzZ8/r82HgQEtUvlSXNaXCa95ez0UkOG7+bDm2b3s0XahBQeLVCH0mw3RAQg
- r7xDAYKIrAwfHHmMTnBQDPJwVqxJjVNr7yBic4yfzVWGCGNE4DnOW0vcIeoyhy9vnIa3w1uZ
- 3iyY2Nsd7JxfKu1PRhCGwXzRw5TlfEsoRI7V9A8isUCoqE2Dzh3FvYHVeX4Us+bRL/oqareJ
- CIFqgYMyvHj7Q06kTKmauOe4Nf0l0qEkIuIzfoLJ3qr5UyXc2hLtWyT9Ir+lYlX9efqh7mOY
- qIws/H2t
-In-Reply-To: <4632e721-0ac8-4d72-a8ed-e6c928eee94d@csgroup.eu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-On 09.10.25 14:08, Christophe Leroy wrote:
-> 
-> 
-> Le 09/10/2025 à 12:27, David Hildenbrand a écrit :
->> On 09.10.25 12:01, Christophe Leroy wrote:
->>>
->>>
->>> Le 09/10/2025 à 11:20, David Hildenbrand a écrit :
->>>> On 09.10.25 11:16, Christophe Leroy wrote:
->>>>>
->>>>>
->>>>> Le 09/10/2025 à 10:14, David Hildenbrand a écrit :
->>>>>> On 09.10.25 10:04, Christophe Leroy wrote:
->>>>>>>
->>>>>>>
->>>>>>> Le 09/10/2025 à 09:22, David Hildenbrand a écrit :
->>>>>>>> On 09.10.25 09:14, Christophe Leroy wrote:
->>>>>>>>> Hi David,
->>>>>>>>>
->>>>>>>>> Le 01/09/2025 à 17:03, David Hildenbrand a écrit :
->>>>>>>>>> diff --git a/mm/hugetlb.c b/mm/hugetlb.c
->>>>>>>>>> index 1e777cc51ad04..d3542e92a712e 100644
->>>>>>>>>> --- a/mm/hugetlb.c
->>>>>>>>>> +++ b/mm/hugetlb.c
->>>>>>>>>> @@ -4657,6 +4657,7 @@ static int __init hugetlb_init(void)
->>>>>>>>>>            BUILD_BUG_ON(sizeof_field(struct page, private) *
->>>>>>>>>> BITS_PER_BYTE <
->>>>>>>>>>                    __NR_HPAGEFLAGS);
->>>>>>>>>> +    BUILD_BUG_ON_INVALID(HUGETLB_PAGE_ORDER > MAX_FOLIO_ORDER);
->>>>>>>>>>            if (!hugepages_supported()) {
->>>>>>>>>>                if (hugetlb_max_hstate ||
->>>>>>>>>> default_hstate_max_huge_pages)
->>>>>>>>>> @@ -4740,6 +4741,7 @@ void __init hugetlb_add_hstate(unsigned int
->>>>>>>>>> order)
->>>>>>>>>>            }
->>>>>>>>>>            BUG_ON(hugetlb_max_hstate >= HUGE_MAX_HSTATE);
->>>>>>>>>>            BUG_ON(order < order_base_2(__NR_USED_SUBPAGE));
->>>>>>>>>> +    WARN_ON(order > MAX_FOLIO_ORDER);
->>>>>>>>>>            h = &hstates[hugetlb_max_hstate++];
->>>>>>>>>>            __mutex_init(&h->resize_lock, "resize mutex", &h-
->>>>>>>>>>> resize_key);
->>>>>>>>>>            h->order = order;
->>>>>>>>
->>>>>>>> We end up registering hugetlb folios that are bigger than
->>>>>>>> MAX_FOLIO_ORDER. So we have to figure out how a config can trigger
->>>>>>>> that
->>>>>>>> (and if we have to support that).
->>>>>>>>
->>>>>>>
->>>>>>> MAX_FOLIO_ORDER is defined as:
->>>>>>>
->>>>>>> #ifdef CONFIG_ARCH_HAS_GIGANTIC_PAGE
->>>>>>> #define MAX_FOLIO_ORDER        PUD_ORDER
->>>>>>> #else
->>>>>>> #define MAX_FOLIO_ORDER        MAX_PAGE_ORDER
->>>>>>> #endif
->>>>>>>
->>>>>>> MAX_PAGE_ORDER is the limit for dynamic creation of hugepages via
->>>>>>> /sys/kernel/mm/hugepages/ but bigger pages can be created at boottime
->>>>>>> with kernel boot parameters without CONFIG_ARCH_HAS_GIGANTIC_PAGE:
->>>>>>>
->>>>>>>        hugepagesz=64m hugepages=1 hugepagesz=256m hugepages=1
->>>>>>>
->>>>>>> Gives:
->>>>>>>
->>>>>>> HugeTLB: registered 1.00 GiB page size, pre-allocated 0 pages
->>>>>>> HugeTLB: 0 KiB vmemmap can be freed for a 1.00 GiB page
->>>>>>> HugeTLB: registered 64.0 MiB page size, pre-allocated 1 pages
->>>>>>> HugeTLB: 0 KiB vmemmap can be freed for a 64.0 MiB page
->>>>>>> HugeTLB: registered 256 MiB page size, pre-allocated 1 pages
->>>>>>> HugeTLB: 0 KiB vmemmap can be freed for a 256 MiB page
->>>>>>> HugeTLB: registered 4.00 MiB page size, pre-allocated 0 pages
->>>>>>> HugeTLB: 0 KiB vmemmap can be freed for a 4.00 MiB page
->>>>>>> HugeTLB: registered 16.0 MiB page size, pre-allocated 0 pages
->>>>>>> HugeTLB: 0 KiB vmemmap can be freed for a 16.0 MiB page
->>>>>>
->>>>>> I think it's a violation of CONFIG_ARCH_HAS_GIGANTIC_PAGE. The
->>>>>> existing
->>>>>> folio_dump() code would not handle it correctly as well.
->>>>>
->>>>> I'm trying to dig into history and when looking at commit 4eb0716e868e
->>>>> ("hugetlb: allow to free gigantic pages regardless of the
->>>>> configuration") I understand that CONFIG_ARCH_HAS_GIGANTIC_PAGE is
->>>>> needed to be able to allocate gigantic pages at runtime. It is not
->>>>> needed to reserve gigantic pages at boottime.
->>>>>
->>>>> What am I missing ?
->>>>
->>>> That CONFIG_ARCH_HAS_GIGANTIC_PAGE has nothing runtime-specific in its
->>>> name.
->>>
->>> In its name for sure, but the commit I mention says:
->>>
->>>        On systems without CONTIG_ALLOC activated but that support gigantic
->>> pages,
->>>        boottime reserved gigantic pages can not be freed at all.  This
->>> patch
->>>        simply enables the possibility to hand back those pages to memory
->>>        allocator.
->>
->> Right, I think it was a historical artifact.
->>
->>>
->>> And one of the hunks is:
->>>
->>> diff --git a/arch/arm64/Kconfig b/arch/arm64/Kconfig
->>> index 7f7fbd8bd9d5b..7a1aa53d188d3 100644
->>> --- a/arch/arm64/Kconfig
->>> +++ b/arch/arm64/Kconfig
->>> @@ -19,7 +19,7 @@ config ARM64
->>>            select ARCH_HAS_FAST_MULTIPLIER
->>>            select ARCH_HAS_FORTIFY_SOURCE
->>>            select ARCH_HAS_GCOV_PROFILE_ALL
->>> -       select ARCH_HAS_GIGANTIC_PAGE if CONTIG_ALLOC
->>> +       select ARCH_HAS_GIGANTIC_PAGE
->>>            select ARCH_HAS_KCOV
->>>            select ARCH_HAS_KEEPINITRD
->>>            select ARCH_HAS_MEMBARRIER_SYNC_CORE
->>>
->>> So I understand from the commit message that it was possible at that
->>> time to have gigantic pages without ARCH_HAS_GIGANTIC_PAGE as long as
->>> you didn't have to be able to free them during runtime.
->>
->> Yes, I agree.
->>
->>>
->>>>
->>>> Can't we just select CONFIG_ARCH_HAS_GIGANTIC_PAGE for the relevant
->>>> hugetlb config that allows for *gigantic pages*.
->>>>
->>>
->>> We probably can, but I'd really like to understand history and how we
->>> ended up in the situation we are now.
->>> Because blind fixes often lead to more problems.
->>
->> Yes, let's figure out how to to it cleanly.
->>
->>>
->>> If I follow things correctly I see a helper gigantic_page_supported()
->>> added by commit 944d9fec8d7a ("hugetlb: add support for gigantic page
->>> allocation at runtime").
->>>
->>> And then commit 461a7184320a ("mm/hugetlb: introduce
->>> ARCH_HAS_GIGANTIC_PAGE") is added to wrap gigantic_page_supported()
->>>
->>> Then commit 4eb0716e868e ("hugetlb: allow to free gigantic pages
->>> regardless of the configuration") changed gigantic_page_supported() to
->>> gigantic_page_runtime_supported()
->>>
->>> So where are we now ?
->>
->> In
->>
->> commit fae7d834c43ccdb9fcecaf4d0f33145d884b3e5c
->> Author: Matthew Wilcox (Oracle) <willy@infradead.org>
->> Date:   Tue Feb 27 19:23:31 2024 +0000
->>
->>       mm: add __dump_folio()
->>
->>
->> We started assuming that a folio in the system (boottime, dynamic,
->> whatever)
->> has a maximum of MAX_FOLIO_NR_PAGES.
->>
->> Any other interpretation doesn't make any sense for MAX_FOLIO_NR_PAGES.
->>
->>
->> So we have two questions:
->>
->> 1) How to teach MAX_FOLIO_NR_PAGES that hugetlb supports gigantic pages
->>
->> 2) How do we handle CONFIG_ARCH_HAS_GIGANTIC_PAGE
->>
->>
->> We have the following options
->>
->> (A) Rename existing CONFIG_ARCH_HAS_GIGANTIC_PAGE to something else that is
->> clearer and add a new CONFIG_ARCH_HAS_GIGANTIC_PAGE.
->>
->> (B) Rename existing CONFIG_ARCH_HAS_GIGANTIC_PAGE -> to something else
->> that is
->> clearer and derive somehow else that hugetlb in that config supports
->> gigantic pages.
->>
->> (c) Just use CONFIG_ARCH_HAS_GIGANTIC_PAGE if hugetlb on an architecture
->> supports gigantic pages.
->>
->>
->> I don't quite see why an architecture should be able to opt in into
->> dynamically
->> allocating+freeing gigantic pages. That's just CONTIG_ALLOC magic and
->> not some
->> arch-specific thing IIRC.
->>
->>
->> Note that in mm/hugetlb.c it is
->>
->>       #ifdef CONFIG_ARCH_HAS_GIGANTIC_PAGE
->>       #ifdef CONFIG_CONTIG_ALLOC
->>
->> Meaning that at least the allocation side is guarded by CONTIG_ALLOC.
-> 
-> Yes but not the freeing since commit 4eb0716e868e ("hugetlb: allow to
-> free gigantic pages regardless of the configuration")
+On Thu, 2025-10-09 at 13:59 +0200, Niklas Cassel wrote:
+> On Thu, Oct 09, 2025 at 11:24:49AM +0000, Markus Probst wrote:
+> > Some embedded devices, including many Synology NAS devices, have
+> > the
+> > ability to control whether a ATA port has power or not.
+>=20
+> In V1, you mentioned that it was to control the SATA power supply,
+> now you mention the ATA port. I am confused.
+The power supply associated with the ata port (or to be more precise,
+it controls the power gate to the SATA Power connector for the specific
+disk, at least in the synology example). It sets the power state
+defined in ACPI on the ata port. I might need to update the wording
+used in the patches to make it more clear.
 
-Right, the freeing path is just always around as we no longer depend 
-free_contig_range().
+>=20
+> If it is for the ATA port, then SATA already has support for this,
+> using PxSCTL.
+>=20
+> How does this ACPI way to control power interact with the regular
+> way to control power for a port using PxSCTL?
+>=20
+>=20
+> >=20
+> > Add a new function, ata_acpi_dev_manage_restart(), that will be
+> > used to
+> > determine if a disk should be stopped before restarting the system.
+> > If a
+> > usable ACPI power resource has been found, it is assumed that the
+> > disk
+> > will lose power after a restart and should be stopped to avoid a
+> > power
+> > failure. Also add a new function, ata_acpi_port_set_power_state(),
+> > that
+> > will be used to power on an ata port if usable ACPI power resources
+> > are
+> > found. It will be called right before probing the port, therefore
+> > the port
+> > will be powered on just in time.
+> >=20
+> > Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> > ---
+> > =C2=A0drivers/ata/libata-acpi.c | 70
+> > +++++++++++++++++++++++++++++++++++++++
+> > =C2=A0drivers/ata/libata-core.c |=C2=A0 2 ++
+> > =C2=A0drivers/ata/libata-scsi.c |=C2=A0 1 +
+> > =C2=A0drivers/ata/libata.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 4 +++
+> > =C2=A04 files changed, 77 insertions(+)
+> >=20
+> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> > index f2140fc06ba0..bba5ef49f055 100644
+> > --- a/drivers/ata/libata-acpi.c
+> > +++ b/drivers/ata/libata-acpi.c
+> > @@ -245,6 +245,76 @@ void ata_acpi_bind_dev(struct ata_device *dev)
+> > =C2=A0				=C2=A0=C2=A0 ata_acpi_dev_uevent);
+> > =C2=A0}
+> > =C2=A0
+> > +/**
+> > + * ata_acpi_dev_manage_restart - if the disk should be stopped
+> > (spin down) on
+> > + * system restart.
+> > + * @dev: target ATA device
+> > + *
+> > + * RETURNS:
+> > + * true if the disk should be stopped, otherwise false
+> > + */
+> > +bool ata_acpi_dev_manage_restart(struct ata_device *dev)
+> > +{
+> > +	// If the device is power manageable and we assume the
+> > disk loses power
+> > +	// on reboot.
+>=20
+> Like Damien mentioned earlier, please no C++ style comments.
+>=20
+>=20
+> Kind regards,
+> Niklas
 
-> 
->>
->> So I think (C) is just the right thing to do.
->>
->> diff --git a/fs/Kconfig b/fs/Kconfig
->> index 0bfdaecaa8775..12c11eb9279d3 100644
->> --- a/fs/Kconfig
->> +++ b/fs/Kconfig
->> @@ -283,6 +283,8 @@ config HUGETLB_PMD_PAGE_TABLE_SHARING
->>           def_bool HUGETLB_PAGE
->>           depends on ARCH_WANT_HUGE_PMD_SHARE && SPLIT_PMD_PTLOCKS
->>
->> +# An architecture must select this option if there is any mechanism
->> (esp. hugetlb)
->> +# could obtain gigantic folios.
->>    config ARCH_HAS_GIGANTIC_PAGE
->>           bool
->>
->>
-> 
-> I gave it a try. That's not enough, it fixes the problem for 64 Mbytes
-> pages and 256 Mbytes pages, but not for 1 Gbytes pages.
+Also for the questions sent to the v1 patch:
 
-Thanks!
+> Since this patch implements something similar to DevSleep, but
+> rather,
+> IIUC, for the SATA power itself?
 
-> 
-> Max folio is defined by PUD_ORDER, but PUD_SIZE is 256 Mbytes so we need
-> to make MAX_FOLIO larger. Do we change it to P4D_ORDER or is it too much
-> ? P4D_SIZE is 128 Gbytes
+Yes
 
-The exact size doesn't matter, we started with something that soundes 
-reasonable.
 
-I added the comment "There is no real limit on the folio size. We limit 
-them to the maximum we currently expect (e.g., hugetlb, dax)."
+> How is SATA power supplied tied to a port in ACPI? If you have a
+desktop
+> you have a PSU, and don't really know which supply is for which port.
 
-We can set it to whatever we would expect for now.
+It is not for desktop computers, but for embedded devices.
 
--- 
-Cheers
 
-David / dhildenb
+> So, considering how many ways we already have to disable/power off a
+port,
+> you might understand why I think it is extra important that you
+document
+> exactly how, and why we need yet another way to disable/power on/off
+a port.
 
+In this case,
+- According to ACPI spec, if a device has a power resource defined it
+has to be turned on before we are able send commands to the device
+- Because there is hardware out there, that is perfectly capable of
+running upstream linux, which doesn't use one of the methods you
+mentioned for controlling the power. Same did apply for the USB VBus
+power, despite there being "USB_PORT_FEAT_POWER" in the spec and it
+also got in the kernel, see commit
+f7ac7787ad361e31a7972e2854ed8dc2eedfac3b.
+
+I will try to add a short version of the reason written above in the
+commit message.
+
+
+Thanks,
+- Markus Probst
