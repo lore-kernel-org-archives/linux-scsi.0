@@ -1,45 +1,45 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8B26C26159E;
-	Thu,  9 Oct 2025 20:11:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D199264FB5;
+	Thu,  9 Oct 2025 20:11:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760040698; cv=none; b=nSn+AXDAN1UIn9JGsGcSeADjDHTFJRdhzUvBJfr7cSy52iE73KE1ZtzIw6I8LKgilP4ctuKcaHiuSWvy9VKY5K8JSchtiwA6GLMBXGg10B564BkyWr47Ffn6Nss8mPqujx7DpDou2w6i1XGmz+B6exb7z7glfmSqIl9LVkcTLjQ=
+	t=1760040700; cv=none; b=Ptuq8SFXSioGBjfsILQkcjPy3TFVUpxnCz/xU8XwnBlf7c/eV1BUjA/jgKCZcWrV3hE4J8cUxaY9fCyvzomIDY796H+BEh+jadHl7Lp2jYYCki76qagtMfEJcGbwUWb+IJw1Gz2DeN4WQXi8jqNvmFizLrn5wJo1xGtnOfwspSI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760040698; c=relaxed/simple;
-	bh=hpM/ogVqdHozQMjR5/y/Jhr+AaojI4C95c9N+Z7I41s=;
+	s=arc-20240116; t=1760040700; c=relaxed/simple;
+	bh=dXEWI+NR30J5p+hTIFox9PrJ7WBLNV8LF5iNeg4ZxZ8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pL7it9C+boRu7rJsulXKUstk6DeasGy1CShiHsiiJVZEmD3Pybx7OlHhCpVHpKODyGIsBpOzb66ZhNVTMzotKA2Ehn8NR2akD8CQp3u8jjc0lvet7hHHTopGQD0UI6aMDq91KNwKlrJwJE4eSXBzKUxgf6U2tCs0qrLc03/Xu4A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=DU7T643a; arc=none smtp.client-ip=205.220.168.131
+	 MIME-Version:Content-Type; b=TAp4Tql8ee90irYuxeO5xyNO2OR48Gx8A3qT8ZKKsgY5JUFP5p0OqN83qQDUTeRjP9K+dJRNsuGLLhafKLH+IESbjWsOyG1ASzTCVIYdGAF/R/0iQYwIDSRsbUVJimOxqXg+J/bm7aHcR6LZo6zpcIMbSmRMWKzlwMORHztO5gs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=oAj/l8Xg; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="DU7T643a"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 599ELcF4012475;
-	Thu, 9 Oct 2025 20:11:20 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="oAj/l8Xg"
+Received: from pps.filterd (m0279873.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 599EfqWt029314;
+	Thu, 9 Oct 2025 20:11:16 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=YnTfQeXJbp7KmtxXRP1QEF8y
-	LUMvyRpjuX1yUd2RGEk=; b=DU7T643a4/C4NaOyZDp6ivw8RgpOP3a1sgjRlyIG
-	cYmm40hkvGbcKr4ef8ZecurG8giLNT3N8K5HRGDZrDEB4rh6LtSb4v5xwhJjYVSp
-	mk4Kq6vmv1aXrhmbverdiv/bB0+jmdaUtNcN9TkvOOzVRx0jQB0h3ibXIioEKus3
-	+M7gbYqrwhaUDiU//J9DE5H9iu1Fv9MHY6p257HHM7VyHkxUrGybddMB02UkI9vz
-	mMWqIEfwA+HhtuGp9zj1FOECC0A6dYUjB9S6upDioqrH6S88sBs81r2JQ9DTvovI
-	Oyr0a9qdBVQnmUefTQHaumd2R/5UFngyrEVs60Kn87fPyA==
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49nv4km711-1
+	:references:subject:to; s=qcppdkim1; bh=CA+i/6Qb3/gQyWyzsa6UvjgP
+	bY8h3JvsLFGQrqpNEy0=; b=oAj/l8XgYn7BYezYVXUG5Iuoxjjgd5TOnmMeWy9w
+	K0q5CUS0zaOX0FdG7N97k+orqgux3CxybpClSZy6yOuQCjIeHHcD1b1fbKxFlaCd
+	oF6LP3kTgadpajGBgoJhjh+pflD9ivdbwyzZoUZe/RZdqzapoJtQT1yPkVNT/WbI
+	ZjWScZvEAhnC/daCNy0D8SIZKEHXJt7uwtQ6NiZ3lI9n1WUfly4bKvf1F9v48tJs
+	5KdFE4YemkvEcmgNqsTrlYQhC3bRtTY0PQ0XHoS7OPQx8TBHhbr6/tBjl5kt8eYc
+	7MdAtJmE44Iy5RbQ3M1HWzEnW3CYl1WS/+LPxSe018nDgQ==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49nv4nm6g7-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 09 Oct 2025 20:11:19 +0000 (GMT)
+	Thu, 09 Oct 2025 20:11:16 +0000 (GMT)
 Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 599KBJl8003070
+	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 599KBEaq004992
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Thu, 9 Oct 2025 20:11:19 GMT
+	Thu, 9 Oct 2025 20:11:14 GMT
 Received: from stor-berry.qualcomm.com (10.80.80.8) by
  nasanex01a.na.qualcomm.com (10.52.223.231) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.24; Thu, 9 Oct 2025 13:11:18 -0700
+ 15.2.1748.24; Thu, 9 Oct 2025 13:11:14 -0700
 From: "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
 To: <quic_cang@quicinc.com>, <quic_nitirawa@quicinc.com>, <bvanassche@acm.org>,
         <avri.altman@wdc.com>, <peter.wang@mediatek.com>,
@@ -48,14 +48,25 @@ CC: <linux-scsi@vger.kernel.org>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
         Alim Akhtar <alim.akhtar@samsung.com>,
         "James E.J. Bottomley"
 	<James.Bottomley@HansenPartnership.com>,
-        Bean Huo <beanhuo@micron.com>,
-        "Neil
- Armstrong" <neil.armstrong@linaro.org>,
-        Eric Biggers <ebiggers@kernel.org>,
-        open list <linux-kernel@vger.kernel.org>
-Subject: [PATCH v2 2/2] scsi: ufs: core: Replace hard coded vcc-off delay with a variable
-Date: Thu, 9 Oct 2025 13:10:59 -0700
-Message-ID: <7df97c5bf49d7e53435725062bcff2ccd77a6959.1760039554.git.quic_nguyenb@quicinc.com>
+        Stanley Jhu <chu.stanley@gmail.com>,
+        Manivannan Sadhasivam <mani@kernel.org>,
+        Matthias Brugger
+	<matthias.bgg@gmail.com>,
+        AngeloGioacchino Del Regno
+	<angelogioacchino.delregno@collabora.com>,
+        Bean Huo <beanhuo@micron.com>, Manish Pandey <quic_mapa@quicinc.com>,
+        open list
+	<linux-kernel@vger.kernel.org>,
+        "moderated list:UNIVERSAL FLASH STORAGE HOST
+ CONTROLLER DRIVER..." <linux-mediatek@lists.infradead.org>,
+        "open
+ list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER..."
+	<linux-arm-msm@vger.kernel.org>,
+        "moderated list:ARM/Mediatek SoC
+ support:Keyword:mediatek" <linux-arm-kernel@lists.infradead.org>
+Subject: [PATCH v2 1/2] scsi: ufs: core: Remove UFS_DEVICE_QUIRK_DELAY_AFTER_LPM quirk
+Date: Thu, 9 Oct 2025 13:10:58 -0700
+Message-ID: <3abb389ac7ca807e82263ab344e755db8498de81.1760039554.git.quic_nguyenb@quicinc.com>
 X-Mailer: git-send-email 2.7.4
 In-Reply-To: <cover.1760039554.git.quic_nguyenb@quicinc.com>
 References: <cover.1760039554.git.quic_nguyenb@quicinc.com>
@@ -70,85 +81,128 @@ X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=dojWylg4 c=1 sm=1 tr=0 ts=68e816e7 cx=c_pps
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDA4MDEyMSBTYWx0ZWRfXxmOTFxm7GArJ
+ epIhmj0pwbh7en1ntUeKew5InN+LzXTrbx/IXK02fqZdEKDpVk7N3dF8PLNlZbAFg99gdeQ9hiC
+ M7ak0czd3Y5L3nghyrg2Ux57yGVJs4fwKzhlUAkiTlE9aezmURFwrg36oZmBau1X45FkcRZgSTZ
+ qigiIa0fq5zFYCMA2f+B0lh5LMtA7Pv0K69cJfCLdrm05ufC9qUlZMmPwQfPiG29nNWSaQm8KiY
+ fnt7QGTeFRp1h/e3EyNFRlOVn70YcJJo5UDvksD7kVA1jRQ8yLEkdGCXuXY63hZk64s4panEnO8
+ V1w8shVVF73bfzP5lJhulosdL+SOTFkTno92pPq4cOAjcAxfXuYEPyVKFs6qXGToPNd6g/x+Qz0
+ HO1eY2PNQaSwX/9wGmYk4lTJgYE2qQ==
+X-Proofpoint-ORIG-GUID: 7gCCAehqAhvUlzxiXBfiFTh1v9Kr4oLP
+X-Proofpoint-GUID: 7gCCAehqAhvUlzxiXBfiFTh1v9Kr4oLP
+X-Authority-Analysis: v=2.4 cv=VK3QXtPX c=1 sm=1 tr=0 ts=68e816e4 cx=c_pps
  a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=GEpy-HfZoHoA:10 a=x6icFKpwvdMA:10 a=COk6AnOGAAAA:8 a=BYDoPV6jByX-8JW-AE8A:9
+ a=GEpy-HfZoHoA:10 a=x6icFKpwvdMA:10 a=COk6AnOGAAAA:8 a=SKyd_0MEfDjhs0-DTAYA:9
  a=TjNXssC_j7lpFel5tvFf:22 a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-GUID: s7GE2pDgRNKfdBajkgZdRUCQfjtwFNQR
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDA4MDEyMSBTYWx0ZWRfX/7O4oVBqqp/Y
- C21+nQcJ4V3G8IeqyJujZuQ8+42zsd+OaAFWAqfY01eIUSNiTEvYTkGMfgAW3RKlvYerCK1gcU5
- JwSx5CvTc28uxSlucRljD0Hx8+pq6s8Txk4bAPJ9UBNzUYgZ4T+zMnGoJ0e/5YgY9AGPR9re/vV
- jYTjVa16WNSPLI2jk+q1cFhiaATy/k8xIewPeXLMkPrdXclQm6+TbZkAqAY+LUWISi5GidtRVak
- fmYNt7KlBEsluPRzqLWxjGMsBdROFT8ck/DLtDmOobGjUpjtjaKjqhDiPmSu7OiGVG39voqHv8i
- Y8IMf4tJh+OY1QQPz4kvGcwChdh2TvpJpxUdsXqT8AXh6EMDuabcsBfAF+CGyf9/Gpx0S+gf1Mp
- e+jXqXBeVA5I17EF2b5PuzvLeeH8Jg==
-X-Proofpoint-ORIG-GUID: s7GE2pDgRNKfdBajkgZdRUCQfjtwFNQR
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-10-09_07,2025-10-06_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1011 impostorscore=0 suspectscore=0 lowpriorityscore=0 adultscore=0
- bulkscore=0 spamscore=0 priorityscore=1501 phishscore=0 malwarescore=0
+ adultscore=0 priorityscore=1501 phishscore=0 clxscore=1015 impostorscore=0
+ bulkscore=0 spamscore=0 malwarescore=0 suspectscore=0 lowpriorityscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
  reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510080121
 
-After the ufs device vcc is powered off, all the ufs device
-manufacturers require a minimum of 1ms of power-off time before
-vcc can be powered on again. This requirement has been verified
+After the ufs device vcc is turned off, all the ufs device
+manufacturers require a period of power-off time before the
+vcc can be turned on again. This requirement has been confirmed
 with all the ufs device manufacturer's datasheets.
 
-Replace the hard coded 5ms delay with a variable using a default
-setting of 5ms. This allows the platform drivers to override this
-setting to improve the system resume latency by reducing the sleep
-time as needed.
+Remove the UFS_DEVICE_QUIRK_DELAY_AFTER_LPM quirk in the ufs
+core driver and implement a universal delay that is required by
+all the ufs device manufacturers. In addition, remove the
+support for this quirk in the platform drivers.
 
 Signed-off-by: Bao D. Nguyen <quic_nguyenb@quicinc.com>
 ---
- drivers/ufs/core/ufshcd.c | 10 +++++++++-
- include/ufs/ufshcd.h      |  2 ++
- 2 files changed, 11 insertions(+), 1 deletion(-)
+ drivers/ufs/core/ufshcd.c       |  5 ++---
+ drivers/ufs/host/ufs-mediatek.c | 11 ++++-------
+ drivers/ufs/host/ufs-qcom.c     |  3 ---
+ include/ufs/ufs_quirks.h        |  7 -------
+ 4 files changed, 6 insertions(+), 20 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index e8842dc..593c9d0 100644
+index 2e1fa8c..e8842dc 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -9741,7 +9741,8 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
- 	 * All UFS devices require delay after VCC power rail is turned-off.
+@@ -9738,10 +9738,9 @@ static void ufshcd_vreg_set_lpm(struct ufs_hba *hba)
+ 	}
+ 
+ 	/*
+-	 * Some UFS devices require delay after VCC power rail is turned-off.
++	 * All UFS devices require delay after VCC power rail is turned-off.
  	 */
- 	if (vcc_off && hba->vreg_info.vcc && !hba->vreg_info.vcc->always_on)
--		usleep_range(5000, 5100);
-+		usleep_range(hba->sleep_post_vcc_off,
-+			     hba->sleep_post_vcc_off + 100);
+-	if (vcc_off && hba->vreg_info.vcc &&
+-		hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM)
++	if (vcc_off && hba->vreg_info.vcc && !hba->vreg_info.vcc->always_on)
+ 		usleep_range(5000, 5100);
  }
  
- #ifdef CONFIG_PM
-@@ -10665,6 +10666,13 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem *mmio_base, unsigned int irq)
- 						UFS_SLEEP_PWR_MODE,
- 						UIC_LINK_HIBERN8_STATE);
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index f902ce0..5c204d1 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -40,8 +40,7 @@ static int  ufs_mtk_config_mcq(struct ufs_hba *hba, bool irq);
+ static const struct ufs_dev_quirk ufs_mtk_dev_fixups[] = {
+ 	{ .wmanufacturerid = UFS_ANY_VENDOR,
+ 	  .model = UFS_ANY_MODEL,
+-	  .quirk = UFS_DEVICE_QUIRK_DELAY_AFTER_LPM |
+-		UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM },
++	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM },
+ 	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
+ 	  .model = "H9HQ21AFAMZDAR",
+ 	  .quirk = UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES },
+@@ -1713,15 +1712,13 @@ static void ufs_mtk_fixup_dev_quirks(struct ufs_hba *hba)
+ {
+ 	ufshcd_fixup_dev_quirks(hba, ufs_mtk_dev_fixups);
  
-+	/*
-+	 * Most ufs devices require 1ms delay after vcc is powered off before
-+	 * it can be powered on again. Set the default to 5ms. The platform
-+	 * drivers can override this setting as needed.
-+	 */
-+	hba->sleep_post_vcc_off = 5000;
-+
- 	init_completion(&hba->dev_cmd.complete);
+-	if (ufs_mtk_is_broken_vcc(hba) && hba->vreg_info.vcc &&
+-	    (hba->dev_quirks & UFS_DEVICE_QUIRK_DELAY_AFTER_LPM)) {
++	if (ufs_mtk_is_broken_vcc(hba) && hba->vreg_info.vcc) {
+ 		hba->vreg_info.vcc->always_on = true;
+ 		/*
+ 		 * VCC will be kept always-on thus we don't
+-		 * need any delay during regulator operations
++		 * need any delay before putting device's VCC in LPM mode.
+ 		 */
+-		hba->dev_quirks &= ~(UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM |
+-			UFS_DEVICE_QUIRK_DELAY_AFTER_LPM);
++		hba->dev_quirks &= ~UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM;
+ 	}
  
- 	err = ufshcd_hba_init(hba);
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 1d39437..ad49979 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1140,6 +1140,8 @@ struct ufs_hba {
- 	int critical_health_count;
- 	atomic_t dev_lvl_exception_count;
- 	u64 dev_lvl_exception_id;
-+
-+	u32 sleep_post_vcc_off;
- };
+ 	ufs_mtk_vreg_fix_vcc(hba);
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index d15f1a1..15a9ffc8 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -1025,9 +1025,6 @@ static struct ufs_dev_quirk ufs_qcom_dev_fixups[] = {
+ 	{ .wmanufacturerid = UFS_VENDOR_SKHYNIX,
+ 	  .model = UFS_ANY_MODEL,
+ 	  .quirk = UFS_DEVICE_QUIRK_DELAY_BEFORE_LPM },
+-	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
+-	  .model = UFS_ANY_MODEL,
+-	  .quirk = UFS_DEVICE_QUIRK_DELAY_AFTER_LPM },
+ 	{ .wmanufacturerid = UFS_VENDOR_WDC,
+ 	  .model = UFS_ANY_MODEL,
+ 	  .quirk = UFS_DEVICE_QUIRK_HOST_PA_TACTIVATE },
+diff --git a/include/ufs/ufs_quirks.h b/include/ufs/ufs_quirks.h
+index f52de5e..1b26932 100644
+--- a/include/ufs/ufs_quirks.h
++++ b/include/ufs/ufs_quirks.h
+@@ -101,13 +101,6 @@ struct ufs_dev_quirk {
+ #define UFS_DEVICE_QUIRK_SUPPORT_EXTENDED_FEATURES (1 << 10)
  
- /**
+ /*
+- * Some UFS devices require delay after VCC power rail is turned-off.
+- * Enable this quirk to introduce 5ms delays after VCC power-off during
+- * suspend flow.
+- */
+-#define UFS_DEVICE_QUIRK_DELAY_AFTER_LPM        (1 << 11)
+-
+-/*
+  * Some ufs devices may need more time to be in hibern8 before exiting.
+  * Enable this quirk to give it an additional 100us.
+  */
 -- 
 2.7.4
 
