@@ -1,265 +1,360 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74CB31FA178
-	for <linux-scsi@vger.kernel.org>; Thu,  9 Oct 2025 10:30:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB472DCC1A
+	for <linux-scsi@vger.kernel.org>; Thu,  9 Oct 2025 11:07:03 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760005838; cv=none; b=r/9jp0TJfTrxGmzbvfIfnMUkw9Cs26SM4qFw2i6NOjxmbsd9b/iBpI/PGy99zPYJ1BRvS4/CHdGVEDbTVod0zlKB9ooZvfiMwetJH5r/5txwAB0pouhMDm1Q4Hdi9G5m7BaYyaM++7z+164RXVqsok4+AWLNAi8GGcWMfIiKMcQ=
+	t=1760008025; cv=none; b=WkmQrmNL1j/y+e2kI7zXlAV5a1MwTDXh2o4DTDIlaOpi1174IqCbbiWRJLAQNG10pM+AUhWFztHBx4lCz3lRYgVHBZUl0kyou6OjVWF75thMFLxxSm77aGUYGt9pee/vw4IfYQA8YesheXjByjMfnXBQqIr+uVyrkrlyze5z5ZI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760005838; c=relaxed/simple;
-	bh=pQkhHLuqz5FI6wkHW0gvcTQusPJLmVYgUYJXA/pKqVY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=B2NvWJ45Vbk66pvkLviikSEIRVFjmnvwWlp8GcVEai0FuGyKRbiw0wOVgi3leaFB+Yb5otTFrZkBgFFpEJPzz9NWaEPHEV+/KbJ1AiwvfkFNYE76dY6IKXnk3ML2P902Yjst3Z8zNbQtIvNsh16jcomJzEZCSEbZVpy3fHuI1Lk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=QhNlqUuE; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1760008025; c=relaxed/simple;
+	bh=bU93fiDaF53YDILN7nrgapLV3wtHSlS/AbXCHy35IZM=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=fKA9uM0xkXf/W89Ii22aWbukkIPOIETfdPJa/ovuAtviRX/4BDC3AGsb0lw05DWNSgfnFH8Vgqfgl0xQSsz+LZxEfaKnsGEk6uOviMHJm7fi56pr9o4aBkoRcgOJZQvl+Mbe4r2IEsKa/NkQEUR2KFkmTT6EW9yNoESlNAaNS1g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=eaymSdCx; arc=none smtp.client-ip=185.67.36.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="QhNlqUuE"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1760005835;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references:autocrypt:autocrypt;
-	bh=5kNnaE3wosVbbZxnmP0sVKpcafEUi286yAMPQXV2QSw=;
-	b=QhNlqUuEsZntvTKx/8um0mOXPrBTaocXHhJUBiXc0eBjqWRq2yTGClJBkTGOc2yp7VwzTy
-	QjsteWnmZaTPA0KvttQcbt9UdhQhB5/iu4v2IN3rowl2TpF4BlKjApsiN7jS1ukF677+wu
-	UOH+Qgx/PilnAElVViX2pOLP3CclQVw=
-Received: from mail-wm1-f70.google.com (mail-wm1-f70.google.com
- [209.85.128.70]) by relay.mimecast.com with ESMTP with STARTTLS
- (version=TLSv1.3, cipher=TLS_AES_256_GCM_SHA384) id
- us-mta-650-uoMFx30ZP6qTBDZczf1DzQ-1; Thu, 09 Oct 2025 06:30:34 -0400
-X-MC-Unique: uoMFx30ZP6qTBDZczf1DzQ-1
-X-Mimecast-MFC-AGG-ID: uoMFx30ZP6qTBDZczf1DzQ_1760005833
-Received: by mail-wm1-f70.google.com with SMTP id 5b1f17b1804b1-46e36f9c651so5380345e9.3
-        for <linux-scsi@vger.kernel.org>; Thu, 09 Oct 2025 03:30:34 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760005833; x=1760610633;
-        h=content-transfer-encoding:in-reply-to:autocrypt:content-language
-         :from:references:cc:to:subject:user-agent:mime-version:date
-         :message-id:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=5kNnaE3wosVbbZxnmP0sVKpcafEUi286yAMPQXV2QSw=;
-        b=exXbwnCpKoMBnEcTFMILKHVLb/L1ReHGnNY7AJgRBF3na7RUE/nnwKmElnFbjTfIW5
-         zG9xMy5ikSrNAfSr4h4Xmaep8jKGJW54MsmYCN4lWi03gH9v3fNzyrCkOSrnNIfEtgie
-         BMpFgqaR37b/VMOedUSVJrMLDBOBZogexLje3bub14jVpcsBAm3klNOVCkUEww4QQDHM
-         QNlEf4OP6ramR1h5pjPF7w9Eh+yuYclXaULsuJcl9oqIKLzrhBDIWST6L+GaBZJt5ory
-         QizGWkU0hmKrH55LcxprIqnuAgq9mxYT8N3mt3J7IxXXssrtmZWuSseUg95XYxb9McyH
-         QNcg==
-X-Forwarded-Encrypted: i=1; AJvYcCUIu0kiJFFZJ7Xy1TfqTp1zm+Vkw9nyna65yb2sI2+UgJMM4qKgNBlxDRgqQTKebLuxW2wEYGlFfSYd@vger.kernel.org
-X-Gm-Message-State: AOJu0YydCMY5L2PEpasL2c2ea05++DKjYR4Ig45eNiBXZkLs9Wr5UjEH
-	TXw/2c6rxxJeCiEzIQCrJdch8EKTdaGvy+ERWVNQOuRBFhjg2c+4MsJCNDQIWHDz09uf0nJ0F9F
-	aueUBK4bZHwPlY84t/SWAGLVOidd7wR9qYhFMQ8j4v+tTUxHw6a3no3XkFBh5gdY=
-X-Gm-Gg: ASbGncsXz0Hp9wyPw9fn1alRddkj0hGPzFSFAgz0rDKZ3X8PhL0BX/zDCz8cIxpHilD
-	JIzTCIYCzhlBo0tYvLSCKv3eoyEWTShIzXSWkt9tUQ2iamGYzE/PuDiOozRwrMLZ5iurEipo8+B
-	1TmTE/3KodpxxxJyt3jOGNMvxL/ff/UbfFEUCz0iRiY+VSHCjHVgUi7f5IDEyiXH4ABI0fVWtdE
-	QqQqZUayuf9TBVR4xqE/bEe1wwDMXta/BCjou83TXgUlmxtzXyZ3WNsEpWqeDzIBXcYOylZ9V8L
-	hQZGFS8ANudTDzRdyhUl/B3uvuJYEujbBFJmMb8WnUxaYO+R5zTjmcwVqjEKymkjC96nenN71SM
-	kXAnMbdCe
-X-Received: by 2002:a05:600c:8b22:b0:46e:4882:94c7 with SMTP id 5b1f17b1804b1-46fa9b02c6amr45782705e9.28.1760005833134;
-        Thu, 09 Oct 2025 03:30:33 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IFU6FTiIKoa0UkBC9Zx589zDahv6+GU8nNOKIx+xH1kxdPK8/6eRVsJOlUDPEfHImp4fkFddw==
-X-Received: by 2002:a05:600c:8b22:b0:46e:4882:94c7 with SMTP id 5b1f17b1804b1-46fa9b02c6amr45781975e9.28.1760005832588;
-        Thu, 09 Oct 2025 03:30:32 -0700 (PDT)
-Received: from [192.168.3.141] (tmo-083-189.customers.d1-online.com. [80.187.83.189])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-46fab3cc939sm34647705e9.1.2025.10.09.03.30.28
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Thu, 09 Oct 2025 03:30:32 -0700 (PDT)
-Message-ID: <7d82cf5e-f60c-4295-9566-c40f6897fce7@redhat.com>
-Date: Thu, 9 Oct 2025 12:30:27 +0200
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="eaymSdCx"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout02.posteo.de (Postfix) with ESMTPS id D26B7240105
+	for <linux-scsi@vger.kernel.org>; Thu,  9 Oct 2025 13:07:01 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1760008021; bh=jdodBx5Ch5acLH1mwoIFx9Y9llTCsxwJpsKX6tIr/bQ=;
+	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:
+	 Content-Transfer-Encoding:MIME-Version:Autocrypt:OpenPGP:From;
+	b=eaymSdCx3ktBFULxbRKWAutE4qhm7yc/5l25PwV+zTdcABX/As9s5g32+F+Y6sWDk
+	 64Fgpqh8hBmilUKrgTZJZWmGCiCFp52DbDH9W7ERwciWjFDD0t762Yb1CtVOcJcH17
+	 bRfqTf4RTffzCygxPrpebI/1hsrZh6UiDBHI7zoP4URizrXA9MyZbNMg3rt3rAXE58
+	 EAIuSQ7ug5MQFjY3eEuJ6HaCxKE2Gs1+zZ0lGjA1ldJIChSYOcUrJyOS42RnWl9mGk
+	 Q+CeAcLa4pUE/wO+IZrWM0n22pCRT0eBgPRdfLdm2vRbHYOaHob8q0pQdIUfEAC0ry
+	 i4lHUPZtLcQzw==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4cj6X43PvWz6v08;
+	Thu,  9 Oct 2025 13:07:00 +0200 (CEST)
+Message-ID: <d8b785ff14e4c0b12aa73a6ebb2be6466157cc1c.camel@posteo.de>
+Subject: Re: [PATCH 2/2] Power on ata ports defined in ACPI before probing
+ ports
+From: Markus Probst <markus.probst@posteo.de>
+To: Damien Le Moal <dlemoal@kernel.org>, Niklas Cassel <cassel@kernel.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K.
+ Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, Markus Probst <markus.probst@posteo.de>
+Date: Thu, 09 Oct 2025 11:07:01 +0000
+In-Reply-To: <7ab0ef5c-cce7-44d7-a416-4963e24e0b17@kernel.org>
+References: <8c3cb28c57462f9665b08fdaa022e6abc57fcd9e.camel@posteo.de>
+	 <20251005190559.1472308-1-markus.probst@posteo.de>
+	 <20251005190559.1472308-2-markus.probst@posteo.de>
+	 <7ab0ef5c-cce7-44d7-a416-4963e24e0b17@kernel.org>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH RFC 06/35] mm/page_alloc: reject unreasonable
- folio/compound page sizes in alloc_contig_range_noprof()
-To: Balbir Singh <balbirs@nvidia.com>, linux-kernel@vger.kernel.org
-Cc: Alexander Potapenko <glider@google.com>,
- Andrew Morton <akpm@linux-foundation.org>,
- Brendan Jackman <jackmanb@google.com>, Christoph Lameter <cl@gentwo.org>,
- Dennis Zhou <dennis@kernel.org>, Dmitry Vyukov <dvyukov@google.com>,
- dri-devel@lists.freedesktop.org, intel-gfx@lists.freedesktop.org,
- iommu@lists.linux.dev, io-uring@vger.kernel.org,
- Jason Gunthorpe <jgg@nvidia.com>, Jens Axboe <axboe@kernel.dk>,
- Johannes Weiner <hannes@cmpxchg.org>, John Hubbard <jhubbard@nvidia.com>,
- kasan-dev@googlegroups.com, kvm@vger.kernel.org,
- "Liam R. Howlett" <Liam.Howlett@oracle.com>,
- Linus Torvalds <torvalds@linux-foundation.org>, linux-arm-kernel@axis.com,
- linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
- linux-ide@vger.kernel.org, linux-kselftest@vger.kernel.org,
- linux-mips@vger.kernel.org, linux-mmc@vger.kernel.org, linux-mm@kvack.org,
- linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
- linux-scsi@vger.kernel.org, Lorenzo Stoakes <lorenzo.stoakes@oracle.com>,
- Marco Elver <elver@google.com>, Marek Szyprowski <m.szyprowski@samsung.com>,
- Michal Hocko <mhocko@suse.com>, Mike Rapoport <rppt@kernel.org>,
- Muchun Song <muchun.song@linux.dev>, netdev@vger.kernel.org,
- Oscar Salvador <osalvador@suse.de>, Peter Xu <peterx@redhat.com>,
- Robin Murphy <robin.murphy@arm.com>, Suren Baghdasaryan <surenb@google.com>,
- Tejun Heo <tj@kernel.org>, virtualization@lists.linux.dev,
- Vlastimil Babka <vbabka@suse.cz>, wireguard@lists.zx2c4.com, x86@kernel.org,
- Zi Yan <ziy@nvidia.com>
-References: <20250821200701.1329277-1-david@redhat.com>
- <20250821200701.1329277-7-david@redhat.com>
- <fa2e262c-d732-48e3-9c59-6ed7c684572c@nvidia.com>
- <5a5013ca-e976-4622-b881-290eb0d78b44@redhat.com>
- <a04d8499-85ad-40b4-8173-dcc81a5a71bf@nvidia.com>
-From: David Hildenbrand <david@redhat.com>
-Content-Language: en-US
-Autocrypt: addr=david@redhat.com; keydata=
- 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
- qIws/H2t
-In-Reply-To: <a04d8499-85ad-40b4-8173-dcc81a5a71bf@nvidia.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-On 09.10.25 12:25, Balbir Singh wrote:
-> On 10/9/25 17:12, David Hildenbrand wrote:
->> On 09.10.25 06:21, Balbir Singh wrote:
->>> On 8/22/25 06:06, David Hildenbrand wrote:
->>>> Let's reject them early, which in turn makes folio_alloc_gigantic() reject
->>>> them properly.
->>>>
->>>> To avoid converting from order to nr_pages, let's just add MAX_FOLIO_ORDER
->>>> and calculate MAX_FOLIO_NR_PAGES based on that.
->>>>
->>>> Signed-off-by: David Hildenbrand <david@redhat.com>
->>>> ---
->>>>    include/linux/mm.h | 6 ++++--
->>>>    mm/page_alloc.c    | 5 ++++-
->>>>    2 files changed, 8 insertions(+), 3 deletions(-)
->>>>
->>>> diff --git a/include/linux/mm.h b/include/linux/mm.h
->>>> index 00c8a54127d37..77737cbf2216a 100644
->>>> --- a/include/linux/mm.h
->>>> +++ b/include/linux/mm.h
->>>> @@ -2055,11 +2055,13 @@ static inline long folio_nr_pages(const struct folio *folio)
->>>>      /* Only hugetlbfs can allocate folios larger than MAX_ORDER */
->>>>    #ifdef CONFIG_ARCH_HAS_GIGANTIC_PAGE
->>>> -#define MAX_FOLIO_NR_PAGES    (1UL << PUD_ORDER)
->>>> +#define MAX_FOLIO_ORDER        PUD_ORDER
->>>
->>> Do we need to check for CONTIG_ALLOC as well with CONFIG_ARCH_HAS_GIGANTIC_PAGE?
->>>
->>
->> I don't think so, can you elaborate?
->>
-> 
-> The only way to allocate a gigantic page is to use CMA, IIRC, which is covered by CONTIG_ALLOC
+On Mon, 2025-10-06 at 10:09 +0900, Damien Le Moal wrote:
+> On 10/6/25 04:06, Markus Probst wrote:
+> > some devices (for example every synology nas with "deep sleep"
+> > support)
+> > have the ability to power on and off each ata port individually.
+> > This
+> > turns the specific port on, if power manageable in acpi, before
+> > probing
+> > it.
+>=20
+> Please add "ata: " prefix to the commit titel and capitalize the
+> first letter of
+> sentences.
+>=20
+> The commit message above should also be improved. E.g. The "This" in
+> "This turns
+> on..." is unclear (I am assuming you mean "this patch" ?).
+>=20
+> >=20
+> > This can later be extended to power down the ata ports (removing
+> > power
+> > from a disk) while the disk is spin down.
+> >=20
+> > Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> > ---
+> > =C2=A0drivers/ata/libata-acpi.c | 68
+> > +++++++++++++++++++++++++++++++++++++++
+> > =C2=A0drivers/ata/libata-core.c | 21 ++++++++++++
+> > =C2=A0drivers/ata/libata-scsi.c |=C2=A0 1 +
+> > =C2=A0drivers/ata/libata.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 4 +++
+> > =C2=A0include/linux/libata.h=C2=A0=C2=A0=C2=A0 |=C2=A0 1 +
+> > =C2=A05 files changed, 95 insertions(+)
+> >=20
+> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> > index f2140fc06ba0..891b59bfe29f 100644
+> > --- a/drivers/ata/libata-acpi.c
+> > +++ b/drivers/ata/libata-acpi.c
+> > @@ -245,6 +245,74 @@ void ata_acpi_bind_dev(struct ata_device *dev)
+> > =C2=A0				=C2=A0=C2=A0 ata_acpi_dev_uevent);
+> > =C2=A0}
+> > =C2=A0
+> > +/**
+> > + * ata_acpi_dev_manage_restart - if the disk should be stopped
+> > (spin down) on system restart.
+>=20
+> Long line. Please split at 80 chars.
+>=20
+> > + * @dev: target ATA device
+> > + *
+> > + * RETURNS:
+> > + * true if the disk should be stopped, otherwise false
+> > + */
+> > +bool ata_acpi_dev_manage_restart(struct ata_device *dev)
+> > +{
+> > +	// If the device is power manageable and we assume the
+> > disk loses power on reboot.
+>=20
+> This is not C++. Please use C style comments and split the long line.
+>=20
+> > +	if (dev->link->ap->flags & ATA_FLAG_ACPI_SATA) {
+> > +		if (!is_acpi_device_node(dev->tdev.fwnode))
+> > +			return false;
+> > +		return acpi_bus_power_manageable(ACPI_HANDLE(&dev-
+> > >tdev));
+> > +	}
+> > +
+> > +	if (!is_acpi_device_node(dev->link->ap->tdev.fwnode))
+> > +		return false;
+> > +	return acpi_bus_power_manageable(ACPI_HANDLE(&dev->link-
+> > >ap->tdev));
+> > +}
+> > +
+> > +/**
+> > + * ata_acpi_port_set_power_state - set the power state of the ata
+> > port
+> > + * @ap: target ATA port
+> > + *
+> > + * This function is called at the begin of ata_port_probe.
+>=20
+> ...at the beginning of ata_port_probe().
+>=20
+> > + */
+> > +void ata_acpi_port_set_power_state(struct ata_port *ap, bool
+> > enable)
+> > +{
+> > +	acpi_handle handle;
+> > +	unsigned char state;
+> > +	int i;
+> > +
+> > +	if (libata_noacpi)
+> > +		return;
+> > +
+> > +	if (enable)
+> > +		state =3D ACPI_STATE_D0;
+> > +	else
+> > +		state =3D ACPI_STATE_D3_COLD;
+> > +
+> > +	if (ap->flags & ATA_FLAG_ACPI_SATA) {
+> > +		for (i =3D 0; i < ATA_MAX_DEVICES; i++) {
+> > +			if (!is_acpi_device_node(ap-
+> > >link.device[i].tdev.fwnode))
+> > +				continue;
+> > +			handle =3D ACPI_HANDLE(&ap-
+> > >link.device[i].tdev);
+> > +			if (!acpi_bus_power_manageable(handle))
+> > +				continue;
+> > +			if (!acpi_bus_set_power(handle, state))
+> > +				ata_dev_info(&ap->link.device[i],
+> > "acpi: power was set to %d\n",
+> > +					=C2=A0=C2=A0=C2=A0=C2=A0 enable);
+> > +			else
+> > +				ata_dev_info(&ap->link.device[i],
+> > "acpi: power failed to be set\n");
+> > +		}
+>=20
+> Add a return here to avoid the else.
+>=20
+> > +	} else {
+> > +		if (!is_acpi_device_node(ap->tdev.fwnode))
+> > +			return;
+> > +		handle =3D ACPI_HANDLE(&ap->tdev);
+> > +		if (!acpi_bus_power_manageable(handle))
+> > +			return;
+> > +
+> > +		if (!acpi_bus_set_power(handle, state))
+> > +			ata_port_info(ap, "acpi: power was set to
+> > %d\n", enable);
+>=20
+> ata_port_debug(ap, "acpi: power %sabled\n",
+> 	=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 enable ? "en" : "dis");
+>=20
+> > +		else
+> > +			ata_port_info(ap, "acpi: power failed to
+> > be set\n");
+>=20
+> ata_port_err(ap, "acpi: failed to set power state\n");
+>=20
+> Overall, this hunk is the same as what is done in the loop above. So
+> maybe
+> create a helper function instead of repeating the same procedure.
+I don't think this can be avoided while still having proper log
+messages.
+In the first hunk the power state will be set on a ata_device, on the
+second hunk on a ata_port.
 
-As we are discussing as part of v2 right now, there is the way to just 
-obtain them from memblock during boot.
+>=20
+> > +	}
+> > +}
+> > +
+> > =C2=A0/**
+> > =C2=A0 * ata_acpi_dissociate - dissociate ATA host from ACPI objects
+> > =C2=A0 * @host: target ATA host
+> > diff --git a/drivers/ata/libata-core.c b/drivers/ata/libata-core.c
+> > index ff53f5f029b4..a52b916af14c 100644
+> > --- a/drivers/ata/libata-core.c
+> > +++ b/drivers/ata/libata-core.c
+> > @@ -5899,11 +5899,32 @@ void ata_host_init(struct ata_host *host,
+> > struct device *dev,
+> > =C2=A0}
+> > =C2=A0EXPORT_SYMBOL_GPL(ata_host_init);
+> > =C2=A0
+> > +static inline void ata_port_set_power_state(struct ata_port *ap,
+> > bool enable)
+> > +{
+> > +	ata_acpi_port_set_power_state(ap, enable);
+> > +	// Maybe add a way with device tree and regulators too?
+>=20
+> Drop this comment please.
+>=20
+> > +}
+> > +
+> > +/**
+> > + * ata_dev_manage_restart - if the disk should be stopped (spin
+> > down) on system restart.
+> > + * @dev: target ATA device
+> > + *
+> > + * RETURNS:
+> > + * true if the disk should be stopped, otherwise false
+> > + */
+> > +bool ata_dev_manage_restart(struct ata_device *dev)
+> > +{
+> > +	return ata_acpi_dev_manage_restart(dev);
+> > +}
+> > +EXPORT_SYMBOL_GPL(ata_dev_manage_restart);
+>=20
+> Why the export ? libata-core and libata-scsi are compiled together as
+> libata.ko.
+> The export should not be needed.
+>=20
+> > +
+> > =C2=A0void ata_port_probe(struct ata_port *ap)
+> > =C2=A0{
+> > =C2=A0	struct ata_eh_info *ehi =3D &ap->link.eh_info;
+> > =C2=A0	unsigned long flags;
+> > =C2=A0
+> > +	ata_port_set_power_state(ap, true);
+> > +
+> > =C2=A0	/* kick EH for boot probing */
+> > =C2=A0	spin_lock_irqsave(ap->lock, flags);
+> > =C2=A0
+> > diff --git a/drivers/ata/libata-scsi.c b/drivers/ata/libata-scsi.c
+> > index 2ded5e476d6e..52297d9e3dc2 100644
+> > --- a/drivers/ata/libata-scsi.c
+> > +++ b/drivers/ata/libata-scsi.c
+> > @@ -1095,6 +1095,7 @@ int ata_scsi_dev_config(struct scsi_device
+> > *sdev, struct queue_limits *lim,
+> > =C2=A0		 */
+> > =C2=A0		sdev->manage_runtime_start_stop =3D 1;
+> > =C2=A0		sdev->manage_shutdown =3D 1;
+> > +		sdev->manage_restart =3D
+> > ata_dev_manage_restart(dev);
+> > =C2=A0		sdev->force_runtime_start_on_system_start =3D 1;
+> > =C2=A0	}
+> > =C2=A0
+> > diff --git a/drivers/ata/libata.h b/drivers/ata/libata.h
+> > index e5b977a8d3e1..28cb652d99bc 100644
+> > --- a/drivers/ata/libata.h
+> > +++ b/drivers/ata/libata.h
+> > @@ -130,6 +130,8 @@ extern void ata_acpi_on_disable(struct
+> > ata_device *dev);
+> > =C2=A0extern void ata_acpi_set_state(struct ata_port *ap, pm_message_t
+> > state);
+> > =C2=A0extern void ata_acpi_bind_port(struct ata_port *ap);
+> > =C2=A0extern void ata_acpi_bind_dev(struct ata_device *dev);
+> > +extern void ata_acpi_port_set_power_state(struct ata_port *ap,
+> > bool enable);
+> > +extern bool ata_acpi_dev_manage_restart(struct ata_device *dev);
+> > =C2=A0extern acpi_handle ata_dev_acpi_handle(struct ata_device *dev);
+> > =C2=A0#else
+> > =C2=A0static inline void ata_acpi_dissociate(struct ata_host *host) { }
+> > @@ -140,6 +142,8 @@ static inline void ata_acpi_set_state(struct
+> > ata_port *ap,
+> > =C2=A0				=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pm_message_t state) { }
+> > =C2=A0static inline void ata_acpi_bind_port(struct ata_port *ap) {}
+> > =C2=A0static inline void ata_acpi_bind_dev(struct ata_device *dev) {}
+> > +static inline void ata_acpi_port_set_power_state(struct ata_port
+> > *ap, bool enable) {}
+> > +static inline bool ata_acpi_dev_manage_restart(struct ata_device
+> > *dev) { return false; }
+> > =C2=A0#endif
+> > =C2=A0
+> > =C2=A0/* libata-scsi.c */
+> > diff --git a/include/linux/libata.h b/include/linux/libata.h
+> > index 0620dd67369f..af5974e91e1d 100644
+> > --- a/include/linux/libata.h
+> > +++ b/include/linux/libata.h
+> > @@ -1302,6 +1302,7 @@ extern int sata_link_debounce(struct ata_link
+> > *link,
+> > =C2=A0extern int sata_link_scr_lpm(struct ata_link *link, enum
+> > ata_lpm_policy policy,
+> > =C2=A0			=C2=A0=C2=A0=C2=A0=C2=A0 bool spm_wakeup);
+> > =C2=A0extern int ata_slave_link_init(struct ata_port *ap);
+> > +extern bool ata_dev_manage_restart(struct ata_device *dev);
+> > =C2=A0extern void ata_port_probe(struct ata_port *ap);
+> > =C2=A0extern struct ata_port *ata_port_alloc(struct ata_host *host);
+> > =C2=A0extern void ata_port_free(struct ata_port *ap);
+>=20
 
-> 
->>>>    #else
->>>> -#define MAX_FOLIO_NR_PAGES    MAX_ORDER_NR_PAGES
->>>> +#define MAX_FOLIO_ORDER        MAX_PAGE_ORDER
->>>>    #endif
->>>>    +#define MAX_FOLIO_NR_PAGES    (1UL << MAX_FOLIO_ORDER)
->>>> +
->>>>    /*
->>>>     * compound_nr() returns the number of pages in this potentially compound
->>>>     * page.  compound_nr() can be called on a tail page, and is defined to
->>>> diff --git a/mm/page_alloc.c b/mm/page_alloc.c
->>>> index ca9e6b9633f79..1e6ae4c395b30 100644
->>>> --- a/mm/page_alloc.c
->>>> +++ b/mm/page_alloc.c
->>>> @@ -6833,6 +6833,7 @@ static int __alloc_contig_verify_gfp_mask(gfp_t gfp_mask, gfp_t *gfp_cc_mask)
->>>>    int alloc_contig_range_noprof(unsigned long start, unsigned long end,
->>>>                      acr_flags_t alloc_flags, gfp_t gfp_mask)
->>>>    {
->>>> +    const unsigned int order = ilog2(end - start);
->>>
->>> Do we need a VM_WARN_ON(end < start)?
->>
->> I don't think so.
->>
-> 
-> end - start being < 0, completely breaks ilog2. But we would error out because ilog2 > MAX_FOLIO_ORDER, so we should fine
-
-Right, and if we have code that buggy that does it, it probably 
-shouldn't be our responsibility to sanity check that :)
-
-It would have been completely buggy before this patch.
-
-> 
->>>
->>>>        unsigned long outer_start, outer_end;
->>>>        int ret = 0;
->>>>    @@ -6850,6 +6851,9 @@ int alloc_contig_range_noprof(unsigned long start, unsigned long end,
->>>>                            PB_ISOLATE_MODE_CMA_ALLOC :
->>>>                            PB_ISOLATE_MODE_OTHER;
->>>>    +    if (WARN_ON_ONCE((gfp_mask & __GFP_COMP) && order > MAX_FOLIO_ORDER))
->>>> +        return -EINVAL;
->>>> +
->>>>        gfp_mask = current_gfp_context(gfp_mask);
->>>>        if (__alloc_contig_verify_gfp_mask(gfp_mask, (gfp_t *)&cc.gfp_mask))
->>>>            return -EINVAL;
->>>> @@ -6947,7 +6951,6 @@ int alloc_contig_range_noprof(unsigned long start, unsigned long end,
->>>>                free_contig_range(end, outer_end - end);
->>>>        } else if (start == outer_start && end == outer_end && is_power_of_2(end - start)) {
->>>>            struct page *head = pfn_to_page(start);
->>>> -        int order = ilog2(end - start);
->>>>              check_new_pages(head, order);
->>>>            prep_new_page(head, order, gfp_mask, 0);
->>>
->>> Acked-by: Balbir Singh <balbirs@nvidia.com>
->>
->> Thanks for the review, but note that this is already upstream.
->>
-> 
-> Sorry, this showed up in my updated mm thread and I ended up reviewing it, please ignore if it's upstream
-
-I'm happy for any review (better in reply to v2), because any bug caught 
-early is good!
-
-
--- 
-Cheers
-
-David / dhildenb
-
+Thanks
+- Markus Probst
