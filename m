@@ -1,50 +1,50 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99754296BB7;
-	Thu,  9 Oct 2025 07:12:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C3192D0616;
+	Thu,  9 Oct 2025 07:12:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1759993928; cv=none; b=LiXNGbBFEe3bPGVTLVKOPaencEq/IqOz0N6eWhLTiQjXs5+qQ9MpA9fQDjmh8go0jm9LTL9PNwSRk5l2BtDAelT9YxmH5BwtUc5H75EeAfYZicDdc5bCbZgMVuYNCW4T2QPSLPMR4jFO8i3/hxY+h2CKSyy0baJJMjYqxz1QEN4=
+	t=1759993929; cv=none; b=ZKZQF7PdnjnJnFZ9gMPUAJKRgUzJX2uSp9C27I+Oyn076sE/GFpPY7yr3VRKYhBaGooVebtaAxvx2KkWB6adiedK5RZI38hYQSW6AqODqvhSy1zT2Jug+a+gU7mtyFQyHXVthscACi4Sm1uMzBLcB2bpwIinFOqMMrhviqlVwJQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1759993928; c=relaxed/simple;
-	bh=XmrSRM+EPi3sLxfbVYL08MqFbOufX8DFGpzCQr0M9Pg=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=DPH+fAg6jkl2TSVRX6OvDD6MK6iy0U4Pb2BtMLFHxDQK9+EdyT1HmHOxEzkw9PvAJftlQdClCVxmssK8vFnynMb44nqPvezcTqP4JZ4B1M+l+o/zSpfpUvJsLyjohjC/JkLaVe2Q4KhfXnxfGEpGB08c3GuDfmqjCjdlR1AhPfM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=kWDJGmCw; arc=none smtp.client-ip=205.220.180.131
+	s=arc-20240116; t=1759993929; c=relaxed/simple;
+	bh=sKckml6rPBuCMNtGAneTSZkXiQDk7RGnSLsg+ne8oqs=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=vAT62vkqrlPd/Qs75VufdLrXONOyQHBxgWWPJYZPdKlByYhAfz6j8wZaCX/rklmrn7qG3IgS9xOkKSOlyyVwSIVrfRf6j0g8qIPP6+h2sU5/Z51CSvio+Nui3ODo9klNoMFOkiiFP3c2wRh239cUQppyL4ewpMzGa0a3fBNURpI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=Ms5D1jhv; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="kWDJGmCw"
-Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5996Eome012092;
-	Thu, 9 Oct 2025 07:11:48 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="Ms5D1jhv"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5996F2w1020896;
+	Thu, 9 Oct 2025 07:11:47 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:date:from:in-reply-to:message-id:references:subject:to; s=
-	qcppdkim1; bh=nqA/o5ITpPtoHZAvc1TC02Ibw3AoKrSwSAKzzjGqdXM=; b=kW
-	DJGmCwwcglfwVDOjk8fzod499LJATV8LVekbGNz/oRCXBda0MEy1iVS3AdaJGQeW
-	xGICFEd9lYyv48r+nEze2d6D9aE9jeeJj9DAeOoo5oVu6uv6Fl+BwRJ32irpQTy9
-	Tk22i4h2SZIMvbREc4IBRueMB7IzImcK1WngKvJnRGOZQblzfy/2av9XZ4Ebl2o3
-	vE26h47E3/kPk0fveEuvm7jAm72/mt5onw8YKyeIgImInZ5RTlIaFIk8MmDkUAE8
-	JKxwKndgLDZYM1JLIHrbKJ5SsI26wHx5L6DdRzUakDONUGx03DYuvq3y/rhf2avc
-	YL6yI5Y3hTUHmI/BNzKw==
+	qcppdkim1; bh=tn5voEmLyZgWkHWkT3AwrvgjofTqARmCSRFRwS/9VT4=; b=Ms
+	5D1jhvMHT9VMqDvraygYxxH3mmKji/izTXkeDGE6ss9s4aY4NbQHdp3Y8xD9aVXW
+	tURoYu2YEba3QY+FJbkjx3eKBMU4cWcVtxkwfQu1tsOhfBqh7bKGsCSdh+L+BYiZ
+	2DsDa+dl5Qo07GbD7fyI18f/SiRMEVk7vkQk9hqr5hu5/kEUriC3WUdn2BBCxNAd
+	fsmbH0heoMiU7PQ1T2GmPrOmG+UfX17Hra0K5s8jkwiyMA34pCur+X4KJzIggX2o
+	cbiafgSxOfNMfb4AFmnanML3/vwLmCiL6RxsdGAsWkAL1El/dvE/eFm2aeSEMEvn
+	TlgQlgkNUgBZBd6NL2xA==
 Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49nv9a9tw2-1
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49nv4u1t1c-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
 	Thu, 09 Oct 2025 07:11:47 +0000 (GMT)
 Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5997BiZ9002192;
-	Thu, 9 Oct 2025 07:11:44 GMT
+	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5997BhwJ002156;
+	Thu, 9 Oct 2025 07:11:43 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 49jvnmbgyc-1;
-	Thu, 09 Oct 2025 07:11:44 +0000
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 49jvnmbgxy-1;
+	Thu, 09 Oct 2025 07:11:43 +0000
 Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5997BgO5002131;
-	Thu, 9 Oct 2025 07:11:44 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5997BgWE002133;
+	Thu, 9 Oct 2025 07:11:42 GMT
 Received: from hu-maiyas-hyd.qualcomm.com (hu-riteshk-hyd.qualcomm.com [10.147.241.247])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 5997Bh2k002172;
-	Thu, 09 Oct 2025 07:11:44 +0000
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 5997BgIS002128;
+	Thu, 09 Oct 2025 07:11:42 +0000
 Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2314801)
-	id AA4DD5015BE; Thu,  9 Oct 2025 12:41:41 +0530 (+0530)
+	id 98E2F5015B9; Thu,  9 Oct 2025 12:41:41 +0530 (+0530)
 From: Ritesh Kumar <quic_riteshk@quicinc.com>
 To: robin.clark@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
         jessica.zhang@oss.qualcomm.com, sean@poorly.run,
@@ -61,9 +61,9 @@ Cc: Ritesh Kumar <quic_riteshk@quicinc.com>, linux-phy@lists.infradead.org,
         freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         quic_vproddut@quicinc.com
-Subject: [PATCH 5/5] arm64: dts: qcom: Add edp reference clock for edp phy
-Date: Thu,  9 Oct 2025 12:41:27 +0530
-Message-Id: <20251009071127.26026-6-quic_riteshk@quicinc.com>
+Subject: [PATCH 1/5] dt-bindings: phy: Add edp reference clock for qcom,edp-phy
+Date: Thu,  9 Oct 2025 12:41:23 +0530
+Message-Id: <20251009071127.26026-2-quic_riteshk@quicinc.com>
 X-Mailer: git-send-email 2.17.1
 In-Reply-To: <20251009071127.26026-1-quic_riteshk@quicinc.com>
 References: <20251009071127.26026-1-quic_riteshk@quicinc.com>
@@ -71,161 +71,72 @@ X-QCInternal: smtphost
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDA4MDEyMiBTYWx0ZWRfX2AeiEuk8zb0y
- ofIyIgblYiHDJYbZ3y6RS55mfiJ+5AI1Y2rFsyNRffLB/BrmjNfaiA7wEu/vQnCQILijfD6FKQj
- p2Ss4qkJez3oiapOp80hR6AFpT/qaQ61hnpDVaWGHpMh9NOE8jxaj0fLNpAtvnfMK4xCzPNvRuy
- ZOcr5P21TWwaNV7DHhUT8e7TF/nY5n91mlQdAccoSOe2c92bQYQbUUs/6TkwK0ydbOsLxrlJMD0
- gyFzPkeOegjFHCrKKN0ci1yBdJaJwwT3DR+YUP0fLvrpVh/viYEajys59t2wVxbGp43R3spDufo
- mJUiBtoWv+XEsi3EKfK3wm10d94G23C4FTzjdXe3mflZn293t2YVJv3oozvH43AFjcDqjq/DMml
- Q6xXesXlBUZGBz65WGo+CT09QLux5g==
-X-Proofpoint-GUID: zB3fMP2A1YCTuCIF36DHEDBl07BgSVtI
-X-Proofpoint-ORIG-GUID: zB3fMP2A1YCTuCIF36DHEDBl07BgSVtI
-X-Authority-Analysis: v=2.4 cv=JPk2csKb c=1 sm=1 tr=0 ts=68e76034 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=BMW+bVQG c=1 sm=1 tr=0 ts=68e76033 cx=c_pps
  a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=x6icFKpwvdMA:10 a=COk6AnOGAAAA:8 a=52SUE-4n2jAl4pzU1y8A:9
+ a=x6icFKpwvdMA:10 a=COk6AnOGAAAA:8 a=LqggUF6c4S-tfiHryz4A:9
  a=TjNXssC_j7lpFel5tvFf:22 a=nl4s5V0KI7Kw-pW0DWrs:22 a=pHzHmUro8NiASowvMSCR:22
  a=xoEH_sTeL_Rfw54TyV31:22
+X-Proofpoint-GUID: 4m9_CLaIW7p1JGbEn66JtnwHqVaqx4wF
+X-Proofpoint-ORIG-GUID: 4m9_CLaIW7p1JGbEn66JtnwHqVaqx4wF
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDA4MDEyMSBTYWx0ZWRfX3V286EOkfMrI
+ mbxBI6stMj9DuqMlXd7VBoEnWVaU4aBKgHoJERBQXglbDm8Cp8hl/qw9HyBR25iyYGEH97zSyeJ
+ XOYAGtrLDw7Gsj0UI2cMryz740P1Ix0bUuj92+AVeULc8pA9N6zuJbHQCcpFs1c5rj8QDDuFVQn
+ L8QqHSH6N0sodChRvEaDJYwlpYfUNJGdOvtjHKjC6VNmCOHuhTtuZTnVXJ0f1LGnISr1tfHDeoX
+ rAxGmrfISjjFsmSlvBtMRR6YjaaRxmSdBf5z0KhI+sqyrpliS1SmfNjlwrw5ZTKNLi7WYXASE4I
+ PHsDULVnCz/d1Pt/NH/2g2cmftFAG0nF6Xjz9J4Hr38TSk29X7ZvaX7yxM9QQDT7SqzrmTbcZQa
+ 5CHjKzXqrnak4hH9O+FezWCoJKM2KA==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-10-09_02,2025-10-06_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- priorityscore=1501 malwarescore=0 spamscore=0 clxscore=1015 impostorscore=0
- phishscore=0 suspectscore=0 lowpriorityscore=0 adultscore=0 bulkscore=0
+ bulkscore=0 lowpriorityscore=0 phishscore=0 clxscore=1015 impostorscore=0
+ malwarescore=0 priorityscore=1501 adultscore=0 spamscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510080122
+ reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510080121
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 
-Define edp reference clock as fixed clock and add it for
-edp phy on sc8180x and sc8280xp chipsets.
+Add edp reference clock for qcom,edp-phy which is required
+to be enabled before eDP PHY initialization.
 
 Signed-off-by: Ritesh Kumar <quic_riteshk@quicinc.com>
 ---
- arch/arm64/boot/dts/qcom/sc8180x.dtsi  | 11 ++++++--
- arch/arm64/boot/dts/qcom/sc8280xp.dtsi | 36 +++++++++++++++++---------
- 2 files changed, 33 insertions(+), 14 deletions(-)
+ Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml | 7 ++++---
+ 1 file changed, 4 insertions(+), 3 deletions(-)
 
-diff --git a/arch/arm64/boot/dts/qcom/sc8180x.dtsi b/arch/arm64/boot/dts/qcom/sc8180x.dtsi
-index 85c2afcb417d..392cc9eede48 100644
---- a/arch/arm64/boot/dts/qcom/sc8180x.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc8180x.dtsi
-@@ -27,6 +27,12 @@
- 	#size-cells = <2>;
+diff --git a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+index eb97181cbb95..95e9210f4163 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+@@ -37,12 +37,13 @@ properties:
+       - description: PLL register block
  
- 	clocks {
-+		edp_ref_clk: edp-ref-clk {
-+			compatible = "fixed-clock";
-+			#clock-cells = <0>;
-+			clock-frequency = <19200000>;
-+		};
-+
- 		xo_board_clk: xo-board {
- 			compatible = "fixed-clock";
- 			#clock-cells = <0>;
-@@ -3492,8 +3498,9 @@
- 			      <0 0x0aec2000 0 0x19c>;
+   clocks:
+-    maxItems: 2
++    maxItems: 3
  
- 			clocks = <&dispcc DISP_CC_MDSS_EDP_AUX_CLK>,
--				 <&dispcc DISP_CC_MDSS_AHB_CLK>;
--			clock-names = "aux", "cfg_ahb";
-+				 <&dispcc DISP_CC_MDSS_AHB_CLK>,
-+				 <&edp_ref_clk>;
-+			clock-names = "aux", "cfg_ahb", "edp_ref";
+   clock-names:
+     items:
+       - const: aux
+       - const: cfg_ahb
++      - const: edp_ref
  
- 			power-domains = <&rpmhpd SC8180X_MX>;
+   "#clock-cells":
+     const: 1
+@@ -75,8 +76,8 @@ examples:
+             <0x0aec2600 0xa0>,
+             <0x0aec2000 0x19c>;
  
-diff --git a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-index 279e5e6beae2..d0a976aea46d 100644
---- a/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-+++ b/arch/arm64/boot/dts/qcom/sc8280xp.dtsi
-@@ -29,6 +29,12 @@
- 	#size-cells = <2>;
+-      clocks = <&dispcc 0>, <&dispcc 1>;
+-      clock-names = "aux", "cfg_ahb";
++      clocks = <&dispcc 0>, <&dispcc 1>, <&dispcc 2>;
++      clock-names = "aux", "cfg_ahb", "edp_ref";
  
- 	clocks {
-+		edp_ref_clk: edp-ref-clk {
-+			compatible = "fixed-clock";
-+			#clock-cells = <0>;
-+			clock-frequency = <19200000>;
-+		};
-+
- 		xo_board_clk: xo-board-clk {
- 			compatible = "fixed-clock";
- 			#clock-cells = <0>;
-@@ -3792,8 +3798,9 @@
- 			      <0 0x08909000 0 0x1c8>;
- 
- 			clocks = <&dispcc1 DISP_CC_MDSS_DPTX0_AUX_CLK>,
--				 <&dispcc1 DISP_CC_MDSS_AHB_CLK>;
--			clock-names = "aux", "cfg_ahb";
-+				 <&dispcc1 DISP_CC_MDSS_AHB_CLK>,
-+				 <&edp_ref_clk>;
-+			clock-names = "aux", "cfg_ahb", "edp_ref";
- 			power-domains = <&rpmhpd SC8280XP_MX>;
- 
- 			#clock-cells = <1>;
-@@ -3810,8 +3817,9 @@
- 			      <0 0x0890c000 0 0x1c8>;
- 
- 			clocks = <&dispcc1 DISP_CC_MDSS_DPTX1_AUX_CLK>,
--				 <&dispcc1 DISP_CC_MDSS_AHB_CLK>;
--			clock-names = "aux", "cfg_ahb";
-+				 <&dispcc1 DISP_CC_MDSS_AHB_CLK>,
-+				 <&edp_ref_clk>;
-+			clock-names = "aux", "cfg_ahb", "edp_ref";
- 			power-domains = <&rpmhpd SC8280XP_MX>;
- 
- 			#clock-cells = <1>;
-@@ -5022,8 +5030,9 @@
- 			      <0 0x0aec2000 0 0x1c8>;
- 
- 			clocks = <&dispcc0 DISP_CC_MDSS_DPTX2_AUX_CLK>,
--				 <&dispcc0 DISP_CC_MDSS_AHB_CLK>;
--			clock-names = "aux", "cfg_ahb";
-+				 <&dispcc0 DISP_CC_MDSS_AHB_CLK>,
-+				 <&edp_ref_clk>;
-+			clock-names = "aux", "cfg_ahb", "edp_ref";
- 			power-domains = <&rpmhpd SC8280XP_MX>;
- 
- 			#clock-cells = <1>;
-@@ -5040,8 +5049,9 @@
- 			      <0 0x0aec5000 0 0x1c8>;
- 
- 			clocks = <&dispcc0 DISP_CC_MDSS_DPTX3_AUX_CLK>,
--				 <&dispcc0 DISP_CC_MDSS_AHB_CLK>;
--			clock-names = "aux", "cfg_ahb";
-+				 <&dispcc0 DISP_CC_MDSS_AHB_CLK>,
-+				 <&edp_ref_clk>;
-+			clock-names = "aux", "cfg_ahb", "edp_ref";
- 			power-domains = <&rpmhpd SC8280XP_MX>;
- 
- 			#clock-cells = <1>;
-@@ -6368,8 +6378,9 @@
- 			      <0 0x220c2000 0 0x1c8>;
- 
- 			clocks = <&dispcc1 DISP_CC_MDSS_DPTX2_AUX_CLK>,
--				 <&dispcc1 DISP_CC_MDSS_AHB_CLK>;
--			clock-names = "aux", "cfg_ahb";
-+				 <&dispcc1 DISP_CC_MDSS_AHB_CLK>,
-+				 <&edp_ref_clk>;
-+			clock-names = "aux", "cfg_ahb", "edp_ref";
- 			power-domains = <&rpmhpd SC8280XP_MX>;
- 
- 			#clock-cells = <1>;
-@@ -6386,8 +6397,9 @@
- 			      <0 0x220c5000 0 0x1c8>;
- 
- 			clocks = <&dispcc1 DISP_CC_MDSS_DPTX3_AUX_CLK>,
--				 <&dispcc1 DISP_CC_MDSS_AHB_CLK>;
--			clock-names = "aux", "cfg_ahb";
-+				 <&dispcc1 DISP_CC_MDSS_AHB_CLK>,
-+				 <&edp_ref_clk>;
-+			clock-names = "aux", "cfg_ahb", "edp_ref";
- 			power-domains = <&rpmhpd SC8280XP_MX>;
- 
- 			#clock-cells = <1>;
+       #clock-cells = <1>;
+       #phy-cells = <0>;
 -- 
 2.17.1
 
