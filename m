@@ -1,312 +1,392 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 255E8253F12;
-	Thu,  9 Oct 2025 21:36:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 35D9924291E
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Oct 2025 08:19:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760045819; cv=none; b=dOzpiKFedK7XkuqKtvoTzVIDJjsmKBxg96s305TQukZnDfmaD72vgjpFaRgP9qs9v047xnCyFNDWxWGOxciHonX68TePMQFhXJVDhqBGMZtz3EcqlCB/qRd0I9eFIqc8vlseGqHibT7aHFA7UrTVYYMy2/7U7r1LVupzCoTOtdQ=
+	t=1760084360; cv=none; b=hjrJa7/jM1/0M7yW+uBLT28k0mIWYWkv0rUDzFTqQ04ss9DjJmdn9s7AgKiLn64y9AjJV7Ozd/ZcamIfBqpe9lTvZ1ufkStmUlgIcxKH44ttgNMa4gkKvsjdaQQTgn3saFQyG4AGsk6TNOwQiho9cVBGkIAgwK3RZ3EIQE/0ChI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760045819; c=relaxed/simple;
-	bh=lRU6V8RgpwgSzX5ER9OoVwCUnbSEWEdwpO2FocCv3wU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=oXMtKJfU6FIc5TrnI6fR649dsiER/4nxMMd77X/uvAOG494X6LnNGc3/4oe2P7Yiorsc99xHUsPCjle3yhFD5Ec7t86sEW80Ilna34vr9+1Ir39fNLx++pPd/XmL3wrNojLSEM+F/1ji54ZsrDcWXNkQnxDxWsR5wxZdDASydVo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LAFXI5oH; arc=none smtp.client-ip=192.198.163.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1760084360; c=relaxed/simple;
+	bh=r6mxFupxiX5xBowJ8FG2V2rUnJjdVvBBaa87TX+uoVg=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=EX5UeOcQcIxR7V0s7lYDJT8eGAO/JDcjHpeEYItHnRDtA7HXO4YZJnNHuiRkduDWDCnIUi/kzSxQxY5JI01ekBrG8PhzT5SJTpPinN56m9H1SpLL4DY66X1yJl+2OntEjRTETXJN4LgKnS3jNVJrMTsqlTq13CVcjTsVLDdepUA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=WvtT7iOv; arc=none smtp.client-ip=209.85.208.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LAFXI5oH"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1760045817; x=1791581817;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=lRU6V8RgpwgSzX5ER9OoVwCUnbSEWEdwpO2FocCv3wU=;
-  b=LAFXI5oHGwkc+Uk1DZdna1Uy4f42Kb2fr8rh9WRVdAO4GO0Y+PqHM3l9
-   QTwMPoFLOjS4lo9CXMHrC1DAr5IIPFwGljnjFKJJ96NQW+z6yw2Mw5Om6
-   1D3z3yo5GKYVPd3qWH0IeQ9GbRwpkHK6ny07vDKZ6bAYOcgzO089SAU8f
-   mZuVo1Sy61ucd5/WFuxrh/xTxQn/sh5NtNWALcGQSG7t8ldLZfGgH1rF3
-   jTkgZrumje2ajhQf+G1+woG+CRby+PVRt3Le+ZNJQGfL1QVbbt2KYm07U
-   xKSv8PqHAhNBtYk97vC9RJsaiqTlckiB6ewMet9KZm/GhUbayR580l7Nq
-   g==;
-X-CSE-ConnectionGUID: 8c1EaRRNSfOfE5XhtMHI+Q==
-X-CSE-MsgGUID: ABdW0UkyTuuphbW9hEQt+Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11577"; a="87726917"
-X-IronPort-AV: E=Sophos;i="6.19,217,1754982000"; 
-   d="scan'208";a="87726917"
-Received: from fmviesa004.fm.intel.com ([10.60.135.144])
-  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 09 Oct 2025 14:36:56 -0700
-X-CSE-ConnectionGUID: E7s1Qxo+TDKZWxnYoWat3w==
-X-CSE-MsgGUID: HCDAc9lCTYWG9h1xUHCI/w==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,217,1754982000"; 
-   d="scan'208";a="186082523"
-Received: from lkp-server01.sh.intel.com (HELO 6a630e8620ab) ([10.239.97.150])
-  by fmviesa004.fm.intel.com with ESMTP; 09 Oct 2025 14:36:53 -0700
-Received: from kbuild by 6a630e8620ab with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1v6yJe-0001VF-2H;
-	Thu, 09 Oct 2025 21:36:50 +0000
-Date: Fri, 10 Oct 2025 05:36:32 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bean Huo <beanhuo@iokpp.de>, avri.altman@wdc.com,
-	avri.altman@sandisk.com, bvanassche@acm.org,
-	alim.akhtar@samsung.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, can.guo@oss.qualcomm.com,
-	ulf.hansson@linaro.org, beanhuo@micron.com,
-	jens.wiklander@linaro.org
-Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="WvtT7iOv"
+Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-62fa062a1abso3126793a12.2
+        for <linux-scsi@vger.kernel.org>; Fri, 10 Oct 2025 01:19:17 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1760084356; x=1760689156; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=r6mxFupxiX5xBowJ8FG2V2rUnJjdVvBBaa87TX+uoVg=;
+        b=WvtT7iOvXH7gvaYedV13ip1UluFIaT4deLvEwCx9ozjUHo+jhdDheG6BfLr8DBe9yV
+         LbyR+G/Wge/n/dsct8k0Cbfm/9TC6Ke6lItdsH6feuwmr7jLO2PZUOiZdUynCrQJTCEA
+         UKBKP77SkySDH3MG8iun//NeYzm6ultKwTt14JF6ID8QJOlhASO7qPF8TW8iEle2ULPO
+         2jHSSt4qwOyruj/Oky7lf9WA3fPdbKUkE8pKt4lTroeLqYChtl2lDZ8IgzHI+WJa6P+C
+         x1zo9hoXpBRryzwGo3YR3o+4nvxEX19zlGU/J/jkRXsTvRV8F2zQ9iBa+pxYbWDsKla8
+         DOpQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760084356; x=1760689156;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=r6mxFupxiX5xBowJ8FG2V2rUnJjdVvBBaa87TX+uoVg=;
+        b=usKrNPocHS9hvqRNDPdsbYqybuoVUpOZfqqPKrRrShEfXSUFIZxd9To4v3uXS3vrlQ
+         atAvF9zaT6Yiv+5iXJEt6kmOphdcx+MS+asoLNP+RfifIY83ZPPqhR6SrguifG2EzDIO
+         C7j4DIr190yj2vYgPRiILXltfzVcRYJeQ1Ca/xcRTmaDjXaAGgy5UNjV0B9PB4vCYmmb
+         Xlp2p+vVTFIGYmb6vKYyb2JLYhEMuDpze4/aIS1YKfWh8/cZ9V3FTd05bqQHp53s+T2c
+         4LNhn3V8Fmr69wHMyPTN5ew8kUySNKnuhQJymj7CsGQ/77lWfyBxTC7O0o2c9XUKf987
+         9vbw==
+X-Forwarded-Encrypted: i=1; AJvYcCVBWFEGeFZo7wnS3l1scPGp7GiIufSLnokM545sG+vu5YhHoHQBzWMK/tsSD47bDzxzFGC/fqICMVX0@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw/C/XSG2DVzZXGY18rOQQyLwHpvGTy9av/+xMILJCbOhn803GF
+	1e+5zlAKu4Ojz3pr8zkFWzAChXOeMU4/i3ezKIwVMqusrojlKLYa3Viz
+X-Gm-Gg: ASbGncuS2yKa31GtiDgU+iOnHJa0/bcg+CGqPq3pOlJQ3J1BtOvA3gnl1KSMuCVc3Sv
+	jjDxz7rdKiCINXxlN/8jdx4x4UngTfUFB0iAfaIT1CavHTnVr69TFyht+TTEZ9gi/7gPNbR3k9v
+	h+K5419nfa9CZDPwH6nBSMiCZSs0fOepGosWZ2hJRf0p1WyZpFrMazCDDhjBO6p4mGXlveOAzvB
+	++aGUiGx9Vk/KuU0nCLQOLqHl2ic5bgnYUn93uNwv6XJ9dprwCIbGhF4pcIpAm3TLuoNaZ92/Fe
+	nklf7NICP2RD0GPde2lCsFpMOU3LwtTzr8zEWJLUvjV75by7YytxN+d01Y3k3KskSipQIWxbGIC
+	SKYIcD9YuBYaX50ff/oXKfiH1+esURA63ByYEpVOYpl8Z
+X-Google-Smtp-Source: AGHT+IGxROwKFFkC5f6QSuGkmjUwm42hbIwG0uyj2qXLWDat5zJND06EZ+oBF/6AN+kVmfOzdErKKw==
+X-Received: by 2002:a05:6402:5201:b0:634:b358:4c17 with SMTP id 4fb4d7f45d1cf-639d5c36aa6mr9907659a12.17.1760084356209;
+        Fri, 10 Oct 2025 01:19:16 -0700 (PDT)
+Received: from [10.176.235.211] ([137.201.254.43])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-63a52b1e89csm1751629a12.19.2025.10.10.01.19.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 10 Oct 2025 01:19:15 -0700 (PDT)
+Message-ID: <eccb18abe33299edde64f96e0c3de88c4183cb78.camel@gmail.com>
+Subject: Re: [PATCH v4 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver
+ for UFS devices
+From: Bean Huo <huobean@gmail.com>
+To: kernel test robot <lkp@intel.com>, avri.altman@wdc.com, 
+	avri.altman@sandisk.com, bvanassche@acm.org, alim.akhtar@samsung.com, 
+	jejb@linux.ibm.com, martin.petersen@oracle.com, can.guo@oss.qualcomm.com, 
+	ulf.hansson@linaro.org, beanhuo@micron.com, jens.wiklander@linaro.org
+Cc: oe-kbuild-all@lists.linux.dev, linux-scsi@vger.kernel.org, 
 	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v4 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver for
- UFS devices
-Message-ID: <202510100521.pnAPqTFK-lkp@intel.com>
+Date: Fri, 10 Oct 2025 10:19:13 +0200
+In-Reply-To: <202510100521.pnAPqTFK-lkp@intel.com>
 References: <20251008201920.89575-4-beanhuo@iokpp.de>
+	 <202510100521.pnAPqTFK-lkp@intel.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: base64
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251008201920.89575-4-beanhuo@iokpp.de>
 
-Hi Bean,
+CnNpbmNlIHRoZSBwYXRjaCAicnBtYjogbW92ZSBycG1iX2ZyYW1lIHN0cnVjdCBhbmQgY29uc3Rh
+bnRzIHRvIGNvbW1vbiBoZWFkZXIiCmhhcyBiZWVuIHF1ZXVlZCBpbiBtbWMgZ2l0IHRyZWUsIEkg
+ZGlkbid0IGFkZCBpdCBwYXRjaCBpbiBzY3NpIHRyZWUgZm9yIHRoaXMKdmVyc2lvbjoKCmh0dHBz
+Oi8vZ2l0Lmtlcm5lbC5vcmcvcHViL3NjbS9saW51eC9rZXJuZWwvZ2l0L3VsZmgvbW1jLmdpdC9j
+b21taXQvP2g9bmV4dAoKCmRvIEkgbmVlZCB0byBhZGQgdGhpcyBxdWV1ZWQgcGF0Y2ggZm9yIHNj
+c2kgdHJlZSBhcyB3ZWxsPwoKCktpbmQgcmVnYXJkcywgCkJlYW4KCgpPbiBGcmksIDIwMjUtMTAt
+MTAgYXQgMDU6MzYgKzA4MDAsIGtlcm5lbCB0ZXN0IHJvYm90IHdyb3RlOgo+IEhpIEJlYW4sCj4g
+Cj4ga2VybmVsIHRlc3Qgcm9ib3Qgbm90aWNlZCB0aGUgZm9sbG93aW5nIGJ1aWxkIGVycm9yczoK
+PiAKPiBbYXV0byBidWlsZCB0ZXN0IEVSUk9SIG9uIHY2LjE3XQo+IFthbHNvIGJ1aWxkIHRlc3Qg
+RVJST1Igb24gbmV4dC0yMDI1MTAwOV0KPiBbY2Fubm90IGFwcGx5IHRvIG1rcC1zY3NpL2Zvci1u
+ZXh0IGplamItc2NzaS9mb3ItbmV4dCBjaGFyLW1pc2MvY2hhci1taXNjLQo+IHRlc3RpbmcgY2hh
+ci1taXNjL2NoYXItbWlzYy1uZXh0IGNoYXItbWlzYy9jaGFyLW1pc2MtbGludXMgbGludXMvbWFz
+dGVyXQo+IFtJZiB5b3VyIHBhdGNoIGlzIGFwcGxpZWQgdG8gdGhlIHdyb25nIGdpdCB0cmVlLCBr
+aW5kbHkgZHJvcCB1cyBhIG5vdGUuCj4gQW5kIHdoZW4gc3VibWl0dGluZyBwYXRjaCwgd2Ugc3Vn
+Z2VzdCB0byB1c2UgJy0tYmFzZScgYXMgZG9jdW1lbnRlZCBpbgo+IGh0dHBzOi8vZ2l0LXNjbS5j
+b20vZG9jcy9naXQtZm9ybWF0LXBhdGNoI19iYXNlX3RyZWVfaW5mb3JtYXRpb25dCj4gCj4gdXJs
+OsKgwqDCoAo+IGh0dHBzOi8vZ2l0aHViLmNvbS9pbnRlbC1sYWItbGtwL2xpbnV4L2NvbW1pdHMv
+QmVhbi1IdW8vc2NzaS11ZnMtY29yZS1Db252ZXJ0LXN0cmluZy1kZXNjcmlwdG9yLWZvcm1hdC1t
+YWNyb3MtdG8tZW51bS8yMDI1MTAwOS0yMDQ3NDUKPiBiYXNlOsKgwqAgdjYuMTcKPiBwYXRjaCBs
+aW5rOsKgwqDCoAo+IGh0dHBzOi8vbG9yZS5rZXJuZWwub3JnL3IvMjAyNTEwMDgyMDE5MjAuODk1
+NzUtNC1iZWFuaHVvJTQwaW9rcHAuZGUKPiBwYXRjaCBzdWJqZWN0OiBbUEFUQ0ggdjQgMy8zXSBz
+Y3NpOiB1ZnM6IGNvcmU6IEFkZCBPUC1URUUgYmFzZWQgUlBNQiBkcml2ZXIKPiBmb3IgVUZTIGRl
+dmljZXMKPiBjb25maWc6IHNoLXJhbmRjb25maWctMDAyLTIwMjUxMDEwCj4gKGh0dHBzOi8vZG93
+bmxvYWQuMDEub3JnLzBkYXktY2kvYXJjaGl2ZS8yMDI1MTAxMC8yMDI1MTAxMDA1MjEucG5BUHFU
+RkstbGtwQGluCj4gdGVsLmNvbS9jb25maWcpCj4gY29tcGlsZXI6IHNoNC1saW51eC1nY2MgKEdD
+QykgMTUuMS4wCj4gcmVwcm9kdWNlICh0aGlzIGlzIGEgVz0xIGJ1aWxkKToKPiAoaHR0cHM6Ly9k
+b3dubG9hZC4wMS5vcmcvMGRheS1jaS9hcmNoaXZlLzIwMjUxMDEwLzIwMjUxMDEwMDUyMS5wbkFQ
+cVRGSy1sa3BAaW4KPiB0ZWwuY29tL3JlcHJvZHVjZSkKPiAKPiBJZiB5b3UgZml4IHRoZSBpc3N1
+ZSBpbiBhIHNlcGFyYXRlIHBhdGNoL2NvbW1pdCAoaS5lLiBub3QganVzdCBhIG5ldyB2ZXJzaW9u
+Cj4gb2YKPiB0aGUgc2FtZSBwYXRjaC9jb21taXQpLCBraW5kbHkgYWRkIGZvbGxvd2luZyB0YWdz
+Cj4gPiBSZXBvcnRlZC1ieToga2VybmVsIHRlc3Qgcm9ib3QgPGxrcEBpbnRlbC5jb20+Cj4gPiBD
+bG9zZXM6Cj4gPiBodHRwczovL2xvcmUua2VybmVsLm9yZy9vZS1rYnVpbGQtYWxsLzIwMjUxMDEw
+MDUyMS5wbkFQcVRGSy1sa3BAaW50ZWwuY29tLwo+IAo+IEFsbCBlcnJvcnMgKG5ldyBvbmVzIHBy
+ZWZpeGVkIGJ5ID4+KToKPiAKPiDCoMKgIEluIGZpbGUgaW5jbHVkZWQgZnJvbSBpbmNsdWRlL2xp
+bnV4L2J5dGVvcmRlci9iaWdfZW5kaWFuLmg6NSwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoCBmcm9tIGFyY2gvc2gvaW5jbHVkZS91YXBpL2FzbS9ieXRlb3JkZXIuaDo4
+LAo+IMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGZyb20gYXJjaC9zaC9p
+bmNsdWRlL2FzbS9iaXRvcHMuaDoxMCwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoCBmcm9tIGluY2x1ZGUvbGludXgvYml0b3BzLmg6NjcsCj4gwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgZnJvbSBpbmNsdWRlL2xpbnV4L2xvZzIuaDoxMiwKPiDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBmcm9tIGluY2x1ZGUvYXNtLWdl
+bmVyaWMvZGl2NjQuaDo1NSwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oCBmcm9tIC4vYXJjaC9zaC9pbmNsdWRlL2dlbmVyYXRlZC9hc20vZGl2NjQuaDoxLAo+IMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGZyb20gaW5jbHVkZS9saW51eC9tYXRo
+Lmg6NiwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBmcm9tIGluY2x1
+ZGUvbGludXgvbWF0aDY0Lmg6NiwKPiDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoCBmcm9tIGluY2x1ZGUvbGludXgvdGltZS5oOjYsCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqAgZnJvbSBpbmNsdWRlL2xpbnV4L3N0YXQuaDoxOSwKPiDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBmcm9tIGluY2x1ZGUvbGludXgvbW9kdWxl
+Lmg6MTMsCj4gwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgZnJvbSBkcml2
+ZXJzL3Vmcy9jb3JlL3Vmcy1ycG1iLmM6MTM6Cj4gwqDCoCBkcml2ZXJzL3Vmcy9jb3JlL3Vmcy1y
+cG1iLmM6IEluIGZ1bmN0aW9uICd1ZnNfcnBtYl9yb3V0ZV9mcmFtZXMnOgo+IMKgwqAgZHJpdmVy
+cy91ZnMvY29yZS91ZnMtcnBtYi5jOjcyOjM5OiBlcnJvcjogaW52YWxpZCB1c2Ugb2YgdW5kZWZp
+bmVkIHR5cGUKPiAnc3RydWN0IHJwbWJfZnJhbWUnCj4gwqDCoMKgwqDCoCA3MiB8wqDCoMKgwqDC
+oMKgwqDCoCByZXFfdHlwZSA9IGJlMTZfdG9fY3B1KGZybV9vdXQtPnJlcV9yZXNwKTsKPiDCoMKg
+wqDCoMKgwqDCoMKgIHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIF5+Cj4gwqDCoCBpbmNsdWRlL3VhcGkv
+bGludXgvYnl0ZW9yZGVyL2JpZ19lbmRpYW4uaDo0Mzo1MTogbm90ZTogaW4gZGVmaW5pdGlvbiBv
+Zgo+IG1hY3JvICdfX2JlMTZfdG9fY3B1Jwo+IMKgwqDCoMKgwqAgNDMgfCAjZGVmaW5lIF9fYmUx
+Nl90b19jcHUoeCkgKChfX2ZvcmNlIF9fdTE2KShfX2JlMTYpKHgpKQo+IMKgwqDCoMKgwqDCoMKg
+wqAgfMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgXgo+IMKgwqAg
+ZHJpdmVycy91ZnMvY29yZS91ZnMtcnBtYi5jOjcyOjIwOiBub3RlOiBpbiBleHBhbnNpb24gb2Yg
+bWFjcm8KPiAnYmUxNl90b19jcHUnCj4gwqDCoMKgwqDCoCA3MiB8wqDCoMKgwqDCoMKgwqDCoCBy
+ZXFfdHlwZSA9IGJlMTZfdG9fY3B1KGZybV9vdXQtPnJlcV9yZXNwKTsKPiDCoMKgwqDCoMKgwqDC
+oMKgIHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBefn5+fn5+fn5+fgo+
+IMKgwqAgZHJpdmVycy91ZnMvY29yZS91ZnMtcnBtYi5jOjc1OjE0OiBlcnJvcjogJ1JQTUJfUFJP
+R1JBTV9LRVknIHVuZGVjbGFyZWQKPiAoZmlyc3QgdXNlIGluIHRoaXMgZnVuY3Rpb24pCj4gwqDC
+oMKgwqDCoCA3NSB8wqDCoMKgwqDCoMKgwqDCoCBjYXNlIFJQTUJfUFJPR1JBTV9LRVk6Cj4gwqDC
+oMKgwqDCoMKgwqDCoCB8wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgXn5+fn5+fn5+fn5+fn5+
+fgo+IMKgwqAgZHJpdmVycy91ZnMvY29yZS91ZnMtcnBtYi5jOjc1OjE0OiBub3RlOiBlYWNoIHVu
+ZGVjbGFyZWQgaWRlbnRpZmllciBpcwo+IHJlcG9ydGVkIG9ubHkgb25jZSBmb3IgZWFjaCBmdW5j
+dGlvbiBpdCBhcHBlYXJzIGluCj4gwqDCoCBkcml2ZXJzL3Vmcy9jb3JlL3Vmcy1ycG1iLmM6NzY6
+Mzk6IGVycm9yOiBpbnZhbGlkIGFwcGxpY2F0aW9uIG9mICdzaXplb2YnCj4gdG8gaW5jb21wbGV0
+ZSB0eXBlICdzdHJ1Y3QgcnBtYl9mcmFtZScKPiDCoMKgwqDCoMKgIDc2IHzCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoCBpZiAocmVxX2xlbiAhPSBzaXplb2Yoc3RydWN0IHJwbWJfZnJh
+bWUpIHx8Cj4gcmVzcF9sZW4gIT0gc2l6ZW9mKHN0cnVjdCBycG1iX2ZyYW1lKSkKPiDCoMKgwqDC
+oMKgwqDCoMKgIHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIF5+fn5+fgo+IMKgwqAgZHJpdmVycy91ZnMv
+Y29yZS91ZnMtcnBtYi5jOjc2OjgwOiBlcnJvcjogaW52YWxpZCBhcHBsaWNhdGlvbiBvZiAnc2l6
+ZW9mJwo+IHRvIGluY29tcGxldGUgdHlwZSAnc3RydWN0IHJwbWJfZnJhbWUnCj4gwqDCoMKgwqDC
+oCA3NiB8wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKHJlcV9sZW4gIT0gc2l6
+ZW9mKHN0cnVjdCBycG1iX2ZyYW1lKSB8fAo+IHJlc3BfbGVuICE9IHNpemVvZihzdHJ1Y3QgcnBt
+Yl9mcmFtZSkpCj4gwqDCoMKgwqDCoMKgwqDCoAo+IHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgCj4gwqDCoCBefn5+fn4KPiDCoMKgIGRyaXZlcnMvdWZzL2NvcmUvdWZz
+LXJwbWIuYzo3OToxNDogZXJyb3I6ICdSUE1CX0dFVF9XUklURV9DT1VOVEVSJwo+IHVuZGVjbGFy
+ZWQgKGZpcnN0IHVzZSBpbiB0aGlzIGZ1bmN0aW9uKQo+IMKgwqDCoMKgwqAgNzkgfMKgwqDCoMKg
+wqDCoMKgwqAgY2FzZSBSUE1CX0dFVF9XUklURV9DT1VOVEVSOgo+IMKgwqDCoMKgwqDCoMKgwqAg
+fMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIF5+fn5+fn5+fn5+fn5+fn5+fn5+fn4KPiDCoMKg
+IGRyaXZlcnMvdWZzL2NvcmUvdWZzLXJwbWIuYzo4MDozOTogZXJyb3I6IGludmFsaWQgYXBwbGlj
+YXRpb24gb2YgJ3NpemVvZicKPiB0byBpbmNvbXBsZXRlIHR5cGUgJ3N0cnVjdCBycG1iX2ZyYW1l
+Jwo+IMKgwqDCoMKgwqAgODAgfMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIGlmIChy
+ZXFfbGVuICE9IHNpemVvZihzdHJ1Y3QgcnBtYl9mcmFtZSkgfHwKPiByZXNwX2xlbiAhPSBzaXpl
+b2Yoc3RydWN0IHJwbWJfZnJhbWUpKQo+IMKgwqDCoMKgwqDCoMKgwqAgfMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqAgXn5+fn5+Cj4gwqDCoCBkcml2ZXJzL3Vmcy9jb3JlL3Vmcy1ycG1iLmM6ODA6ODA6IGVy
+cm9yOiBpbnZhbGlkIGFwcGxpY2F0aW9uIG9mICdzaXplb2YnCj4gdG8gaW5jb21wbGV0ZSB0eXBl
+ICdzdHJ1Y3QgcnBtYl9mcmFtZScKPiDCoMKgwqDCoMKgIDgwIHzCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoCBpZiAocmVxX2xlbiAhPSBzaXplb2Yoc3RydWN0IHJwbWJfZnJhbWUpIHx8
+Cj4gcmVzcF9sZW4gIT0gc2l6ZW9mKHN0cnVjdCBycG1iX2ZyYW1lKSkKPiDCoMKgwqDCoMKgwqDC
+oMKgCj4gfMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAKPiDCoMKgIF5+
+fn5+fgo+IMKgwqAgZHJpdmVycy91ZnMvY29yZS91ZnMtcnBtYi5jOjg0OjE0OiBlcnJvcjogJ1JQ
+TUJfV1JJVEVfREFUQScgdW5kZWNsYXJlZAo+IChmaXJzdCB1c2UgaW4gdGhpcyBmdW5jdGlvbikK
+PiDCoMKgwqDCoMKgIDg0IHzCoMKgwqDCoMKgwqDCoMKgIGNhc2UgUlBNQl9XUklURV9EQVRBOgo+
+IMKgwqDCoMKgwqDCoMKgwqAgfMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIF5+fn5+fn5+fn5+
+fn5+fgo+IMKgwqAgZHJpdmVycy91ZnMvY29yZS91ZnMtcnBtYi5jOjg1OjM4OiBlcnJvcjogaW52
+YWxpZCBhcHBsaWNhdGlvbiBvZiAnc2l6ZW9mJwo+IHRvIGluY29tcGxldGUgdHlwZSAnc3RydWN0
+IHJwbWJfZnJhbWUnCj4gwqDCoMKgwqDCoCA4NSB8wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqAgaWYgKHJlcV9sZW4gJSBzaXplb2Yoc3RydWN0IHJwbWJfZnJhbWUpIHx8IHJlc3BfbGVu
+Cj4gIT0gc2l6ZW9mKHN0cnVjdCBycG1iX2ZyYW1lKSkKPiDCoMKgwqDCoMKgwqDCoMKgIHzCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoCBefn5+fn4KPiDCoMKgIGRyaXZlcnMvdWZzL2NvcmUvdWZzLXJwbWIuYzo4
+NTo3OTogZXJyb3I6IGludmFsaWQgYXBwbGljYXRpb24gb2YgJ3NpemVvZicKPiB0byBpbmNvbXBs
+ZXRlIHR5cGUgJ3N0cnVjdCBycG1iX2ZyYW1lJwo+IMKgwqDCoMKgwqAgODUgfMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgIGlmIChyZXFfbGVuICUgc2l6ZW9mKHN0cnVjdCBycG1iX2Zy
+YW1lKSB8fCByZXNwX2xlbgo+ICE9IHNpemVvZihzdHJ1Y3QgcnBtYl9mcmFtZSkpCj4gwqDCoMKg
+wqDCoMKgwqDCoAo+IHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgCj4g
+wqAgXn5+fn5+Cj4gwqDCoCBkcml2ZXJzL3Vmcy9jb3JlL3Vmcy1ycG1iLmM6ODg6MTQ6IGVycm9y
+OiAnUlBNQl9SRUFEX0RBVEEnIHVuZGVjbGFyZWQKPiAoZmlyc3QgdXNlIGluIHRoaXMgZnVuY3Rp
+b24pOyBkaWQgeW91IG1lYW4gJ0RfUkVBTF9EQVRBJz8KPiDCoMKgwqDCoMKgIDg4IHzCoMKgwqDC
+oMKgwqDCoMKgIGNhc2UgUlBNQl9SRUFEX0RBVEE6Cj4gwqDCoMKgwqDCoMKgwqDCoCB8wqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqAgXn5+fn5+fn5+fn5+fn4KPiDCoMKgwqDCoMKgwqDCoMKgIHzC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBEX1JFQUxfREFUQQo+IMKgwqAgZHJpdmVycy91ZnMv
+Y29yZS91ZnMtcnBtYi5jOjg5OjM5OiBlcnJvcjogaW52YWxpZCBhcHBsaWNhdGlvbiBvZiAnc2l6
+ZW9mJwo+IHRvIGluY29tcGxldGUgdHlwZSAnc3RydWN0IHJwbWJfZnJhbWUnCj4gwqDCoMKgwqDC
+oCA4OSB8wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAgaWYgKHJlcV9sZW4gIT0gc2l6
+ZW9mKHN0cnVjdCBycG1iX2ZyYW1lKSB8fAo+IHJlc3BfbGVuICUgc2l6ZW9mKHN0cnVjdCBycG1i
+X2ZyYW1lKSkKPiDCoMKgwqDCoMKgwqDCoMKgIHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIF5+fn5+fgo+
+IMKgwqAgZHJpdmVycy91ZnMvY29yZS91ZnMtcnBtYi5jOjg5Ojc5OiBlcnJvcjogaW52YWxpZCBh
+cHBsaWNhdGlvbiBvZiAnc2l6ZW9mJwo+IHRvIGluY29tcGxldGUgdHlwZSAnc3RydWN0IHJwbWJf
+ZnJhbWUnCj4gwqDCoMKgwqDCoCA4OSB8wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAg
+aWYgKHJlcV9sZW4gIT0gc2l6ZW9mKHN0cnVjdCBycG1iX2ZyYW1lKSB8fAo+IHJlc3BfbGVuICUg
+c2l6ZW9mKHN0cnVjdCBycG1iX2ZyYW1lKSkKPiDCoMKgwqDCoMKgwqDCoMKgCj4gfMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqAKPiDCoCBefn5+fn4KPiDCoMKgIGRyaXZl
+cnMvdWZzL2NvcmUvdWZzLXJwbWIuYzoxMDk6NDM6IGVycm9yOiBpbnZhbGlkIGFwcGxpY2F0aW9u
+IG9mICdzaXplb2YnCj4gdG8gaW5jb21wbGV0ZSB0eXBlICdzdHJ1Y3QgcnBtYl9mcmFtZScKPiDC
+oMKgwqDCoCAxMDkgfMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgIG1lbXNldChmcm1f
+cmVzcCwgMCwgc2l6ZW9mKCpmcm1fcmVzcCkpOwo+IMKgwqDCoMKgwqDCoMKgwqAgfMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoCBeCj4gwqDCoCBkcml2ZXJzL3Vmcy9jb3JlL3Vmcy1ycG1iLmM6
+MTEwOjI1OiBlcnJvcjogaW52YWxpZCB1c2Ugb2YgdW5kZWZpbmVkIHR5cGUKPiAnc3RydWN0IHJw
+bWJfZnJhbWUnCj4gwqDCoMKgwqAgMTEwIHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oCBmcm1fcmVzcC0+cmVxX3Jlc3AgPSBjcHVfdG9fYmUxNihSUE1CX1JFU1VMVF9SRUFEKTsKPiDC
+oMKgwqDCoMKgwqDCoMKgIHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqAgXn4KPiDCoMKgIGRyaXZlcnMvdWZzL2NvcmUvdWZzLXJwbWIuYzoxMTA6NTA6IGVy
+cm9yOiAnUlBNQl9SRVNVTFRfUkVBRCcgdW5kZWNsYXJlZAo+IChmaXJzdCB1c2UgaW4gdGhpcyBm
+dW5jdGlvbikKPiDCoMKgwqDCoCAxMTAgfMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+IGZybV9yZXNwLT5yZXFfcmVzcCA9IGNwdV90b19iZTE2KFJQTUJfUkVTVUxUX1JFQUQpOwo+IMKg
+wqDCoMKgwqDCoMKgwqAgfMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+IF5+fn5+fn5+fn5+fn5+fn4KPiDCoMKgIGluY2x1ZGUvdWFwaS9saW51eC9ieXRlb3JkZXIvYmln
+X2VuZGlhbi5oOjQyOjUxOiBub3RlOiBpbiBkZWZpbml0aW9uIG9mCj4gbWFjcm8gJ19fY3B1X3Rv
+X2JlMTYnCj4gwqDCoMKgwqDCoCA0MiB8ICNkZWZpbmUgX19jcHVfdG9fYmUxNih4KSAoKF9fZm9y
+Y2UgX19iZTE2KShfX3UxNikoeCkpCj4gwqDCoMKgwqDCoMKgwqDCoCB8wqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBeCj4gwqDCoCBkcml2ZXJzL3Vmcy9jb3JlL3Vm
+cy1ycG1iLmM6MTEwOjM4OiBub3RlOiBpbiBleHBhbnNpb24gb2YgbWFjcm8KPiAnY3B1X3RvX2Jl
+MTYnCj4gwqDCoMKgwqAgMTEwIHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBmcm1f
+cmVzcC0+cmVxX3Jlc3AgPSBjcHVfdG9fYmUxNihSUE1CX1JFU1VMVF9SRUFEKTsKPiDCoMKgwqDC
+oMKgwqDCoMKgIHzCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBefn5+fn5+fn5+fgo+IMKgwqAgZHJpdmVycy91
+ZnMvY29yZS91ZnMtcnBtYi5jOiBBdCB0b3AgbGV2ZWw6Cj4gPiA+IGRyaXZlcnMvdWZzL2NvcmUv
+dWZzLXJwbWIuYzoxMzU6NTogZXJyb3I6IHJlZGVmaW5pdGlvbiBvZiAndWZzX3JwbWJfcHJvYmUn
+Cj4gwqDCoMKgwqAgMTM1IHwgaW50IHVmc19ycG1iX3Byb2JlKHN0cnVjdCB1ZnNfaGJhICpoYmEp
+Cj4gwqDCoMKgwqDCoMKgwqDCoCB8wqDCoMKgwqAgXn5+fn5+fn5+fn5+fn4KPiDCoMKgIEluIGZp
+bGUgaW5jbHVkZWQgZnJvbSBkcml2ZXJzL3Vmcy9jb3JlL3Vmcy1ycG1iLmM6MjI6Cj4gwqDCoCBk
+cml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC1wcml2Lmg6NDI0OjE5OiBub3RlOiBwcmV2aW91cyBkZWZp
+bml0aW9uIG9mCj4gJ3Vmc19ycG1iX3Byb2JlJyB3aXRoIHR5cGUgJ2ludChzdHJ1Y3QgdWZzX2hi
+YSAqKScKPiDCoMKgwqDCoCA0MjQgfCBzdGF0aWMgaW5saW5lIGludCB1ZnNfcnBtYl9wcm9iZShz
+dHJ1Y3QgdWZzX2hiYSAqaGJhKQo+IMKgwqDCoMKgwqDCoMKgwqAgfMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoCBefn5+fn5+fn5+fn5+fgo+ID4gPiBkcml2ZXJzL3Vmcy9jb3Jl
+L3Vmcy1ycG1iLmM6MjI5OjY6IGVycm9yOiByZWRlZmluaXRpb24gb2YKPiA+ID4gJ3Vmc19ycG1i
+X3JlbW92ZScKPiDCoMKgwqDCoCAyMjkgfCB2b2lkIHVmc19ycG1iX3JlbW92ZShzdHJ1Y3QgdWZz
+X2hiYSAqaGJhKQo+IMKgwqDCoMKgwqDCoMKgwqAgfMKgwqDCoMKgwqAgXn5+fn5+fn5+fn5+fn5+
+Cj4gwqDCoCBkcml2ZXJzL3Vmcy9jb3JlL3Vmc2hjZC1wcml2Lmg6NDI4OjIwOiBub3RlOiBwcmV2
+aW91cyBkZWZpbml0aW9uIG9mCj4gJ3Vmc19ycG1iX3JlbW92ZScgd2l0aCB0eXBlICd2b2lkKHN0
+cnVjdCB1ZnNfaGJhICopJwo+IMKgwqDCoMKgIDQyOCB8IHN0YXRpYyBpbmxpbmUgdm9pZCB1ZnNf
+cnBtYl9yZW1vdmUoc3RydWN0IHVmc19oYmEgKmhiYSkKPiDCoMKgwqDCoMKgwqDCoMKgIHzCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoCBefn5+fn5+fn5+fn5+fn4KPiAKPiAK
+PiB2aW0gKy91ZnNfcnBtYl9wcm9iZSArMTM1IGRyaXZlcnMvdWZzL2NvcmUvdWZzLXJwbWIuYwo+
+IAo+IMKgwqAgMTMzwqDCoAo+IMKgwqAgMTM0wqDCoC8qIFVGUyBSUE1CIGRldmljZSByZWdpc3Ry
+YXRpb24gKi8KPiDCoD4gMTM1wqDCoGludCB1ZnNfcnBtYl9wcm9iZShzdHJ1Y3QgdWZzX2hiYSAq
+aGJhKQo+IMKgwqAgMTM2wqDCoHsKPiDCoMKgIDEzN8KgwqDCoMKgwqDCoMKgwqDCoMKgc3RydWN0
+IHVmc19ycG1iX2RldiAqdWZzX3JwbWIsICppdCwgKnRtcDsKPiDCoMKgIDEzOMKgwqDCoMKgwqDC
+oMKgwqDCoMKgc3RydWN0IHJwbWJfZGV2ICpyZGV2Owo+IMKgwqAgMTM5wqDCoMKgwqDCoMKgwqDC
+oMKgwqB1OCBjaWRbMTZdID0geyB9Owo+IMKgwqAgMTQwwqDCoMKgwqDCoMKgwqDCoMKgwqBpbnQg
+cmVnaW9uOwo+IMKgwqAgMTQxwqDCoMKgwqDCoMKgwqDCoMKgwqB1OCAqc247Cj4gwqDCoCAxNDLC
+oMKgwqDCoMKgwqDCoMKgwqDCoHUzMiBjYXA7Cj4gwqDCoCAxNDPCoMKgwqDCoMKgwqDCoMKgwqDC
+oGludCByZXQ7Cj4gwqDCoCAxNDTCoMKgCj4gwqDCoCAxNDXCoMKgwqDCoMKgwqDCoMKgwqDCoGlm
+ICghaGJhLT51ZnNfcnBtYl93bHVuIHx8IGhiYS0+ZGV2X2luZm8uYl9hZHZhbmNlZF9ycG1iX2Vu
+KSB7Cj4gwqDCoCAxNDbCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBkZXZfaW5m
+byhoYmEtPmRldiwgIlNraXAgT1AtVEVFIFJQTUIgcmVnaXN0cmF0aW9uXG4iKTsKPiDCoMKgIDE0
+N8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJldHVybiAtRU5PREVWOwo+IMKg
+wqAgMTQ4wqDCoMKgwqDCoMKgwqDCoMKgwqB9Cj4gwqDCoCAxNDnCoMKgCj4gwqDCoCAxNTDCoMKg
+wqDCoMKgwqDCoMKgwqDCoC8qIEdldCB0aGUgVU5JQ09ERSBzZXJpYWwgbnVtYmVyIGRhdGEgKi8K
+PiDCoMKgIDE1McKgwqDCoMKgwqDCoMKgwqDCoMKgc24gPSBoYmEtPmRldl9pbmZvLnNlcmlhbF9u
+dW1iZXI7Cj4gwqDCoCAxNTLCoMKgwqDCoMKgwqDCoMKgwqDCoGlmICghc24pIHsKPiDCoMKgIDE1
+M8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRldl9lcnIoaGJhLT5kZXYsICJT
+ZXJpYWwgbnVtYmVyIG5vdCBhdmFpbGFibGVcbiIpOwo+IMKgwqAgMTU0wqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuIC1FSU5WQUw7Cj4gwqDCoCAxNTXCoMKgwqDCoMKg
+wqDCoMKgwqDCoH0KPiDCoMKgIDE1NsKgwqAKPiDCoMKgIDE1N8KgwqDCoMKgwqDCoMKgwqDCoMKg
+SU5JVF9MSVNUX0hFQUQoJmhiYS0+cnBtYnMpOwo+IMKgwqAgMTU4wqDCoAo+IMKgwqAgMTU5wqDC
+oMKgwqDCoMKgwqDCoMKgwqAvKiBDb3B5IHNlcmlhbCBudW1iZXIgaW50byBkZXZpY2UgSUQgKG1h
+eCAxNSBjaGFycyArIE5VTCkuICovCj4gwqDCoCAxNjDCoMKgwqDCoMKgwqDCoMKgwqDCoHN0cnNj
+cHkoY2lkLCBzbik7Cj4gwqDCoCAxNjHCoMKgCj4gwqDCoCAxNjLCoMKgwqDCoMKgwqDCoMKgwqDC
+oHN0cnVjdCBycG1iX2Rlc2NyIGRlc2NyID0gewo+IMKgwqAgMTYzwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgLnR5cGUgPSBSUE1CX1RZUEVfVUZTLAo+IMKgwqAgMTY0wqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLnJvdXRlX2ZyYW1lcyA9IHVmc19ycG1iX3Jv
+dXRlX2ZyYW1lcywKPiDCoMKgIDE2NcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oC5kZXZfaWRfbGVuID0gc2l6ZW9mKGNpZCksCj4gwqDCoCAxNjbCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqAucmVsaWFibGVfd3JfY291bnQgPSBoYmEtPmRldl9pbmZvLnJwbWJf
+aW9fc2l6ZSwKPiDCoMKgIDE2N8KgwqDCoMKgwqDCoMKgwqDCoMKgfTsKPiDCoMKgIDE2OMKgwqAK
+PiDCoMKgIDE2OcKgwqDCoMKgwqDCoMKgwqDCoMKgZm9yIChyZWdpb24gPSAwOyByZWdpb24gPCBB
+UlJBWV9TSVpFKGhiYS0KPiA+ZGV2X2luZm8ucnBtYl9yZWdpb25fc2l6ZSk7IHJlZ2lvbisrKSB7
+Cj4gwqDCoCAxNzDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBjYXAgPSBoYmEt
+PmRldl9pbmZvLnJwbWJfcmVnaW9uX3NpemVbcmVnaW9uXTsKPiDCoMKgIDE3McKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGlmICghY2FwKQo+IMKgwqAgMTcywqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGNvbnRpbnVlOwo+IMKgwqAg
+MTczwqDCoAo+IMKgwqAgMTc0wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgdWZz
+X3JwbWIgPSBkZXZtX2t6YWxsb2MoaGJhLT5kZXYsIHNpemVvZigqdWZzX3JwbWIpLAo+IEdGUF9L
+RVJORUwpOwo+IMKgwqAgMTc1wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgaWYg
+KCF1ZnNfcnBtYikgewo+IMKgwqAgMTc2wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoHJldCA9IC1FTk9NRU07Cj4gwqDCoCAxNzfCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZ290byBlcnJfb3V0Owo+IMKg
+wqAgMTc4wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgfQo+IMKgwqAgMTc5wqDC
+oAo+IMKgwqAgMTgwwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgdWZzX3JwbWIt
+PmhiYSA9IGhiYTsKPiDCoMKgIDE4McKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oHVmc19ycG1iLT5kZXYucGFyZW50ID0gJmhiYS0+dWZzX3JwbWJfd2x1bi0KPiA+c2Rldl9nZW5k
+ZXY7Cj4gwqDCoCAxODLCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqB1ZnNfcnBt
+Yi0+ZGV2LmJ1cyA9ICZ1ZnNfcnBtYl9idXNfdHlwZTsKPiDCoMKgIDE4M8KgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoHVmc19ycG1iLT5kZXYucmVsZWFzZSA9IHVmc19ycG1iX2Rl
+dmljZV9yZWxlYXNlOwo+IMKgwqAgMTg0wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgZGV2X3NldF9uYW1lKCZ1ZnNfcnBtYi0+ZGV2LCAidWZzX3JwbWIlZCIsIHJlZ2lvbik7Cj4g
+wqDCoCAxODXCoMKgCj4gwqDCoCAxODbCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqAvKiBTZXQgZHJpdmVyIGRhdGEgQkVGT1JFIGRldmljZV9yZWdpc3RlciAqLwo+IMKgwqAgMTg3
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZGV2X3NldF9kcnZkYXRhKCZ1ZnNf
+cnBtYi0+ZGV2LCB1ZnNfcnBtYik7Cj4gwqDCoCAxODjCoMKgCj4gwqDCoCAxODnCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqByZXQgPSBkZXZpY2VfcmVnaXN0ZXIoJnVmc19ycG1i
+LT5kZXYpOwo+IMKgwqAgMTkwwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgaWYg
+KHJldCkgewo+IMKgwqAgMTkxwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoGRldl9lcnIoaGJhLT5kZXYsICJGYWlsZWQgdG8gcmVnaXN0ZXIgVUZTIFJQ
+TUIKPiBkZXZpY2UgJWRcbiIsIHJlZ2lvbik7Cj4gwqDCoCAxOTLCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcHV0X2RldmljZSgmdWZzX3JwbWItPmRl
+dik7Cj4gwqDCoCAxOTPCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgZ290byBlcnJfb3V0Owo+IMKgwqAgMTk0wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgfQo+IMKgwqAgMTk1wqDCoAo+IMKgwqAgMTk2wqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgLyogTWFrZSBDSUQgdW5pcXVlIGZvciB0aGlzIHJlZ2lvbiBieSBh
+cHBlbmRpbmcgcmVnaW9uCj4gbnVtYmUgKi8KPiDCoMKgIDE5N8KgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoGNpZFtzaXplb2YoY2lkKSAtIDFdID0gcmVnaW9uOwo+IMKgwqAgMTk4
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZGVzY3IuZGV2X2lkID0gY2lkOwo+
+IMKgwqAgMTk5wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZGVzY3IuY2FwYWNp
+dHkgPSBjYXA7Cj4gwqDCoCAyMDDCoMKgCj4gwqDCoCAyMDHCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqAvKiBSZWdpc3RlciBSUE1CIGRldmljZSAqLwo+IMKgwqAgMjAywqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmRldiA9IHJwbWJfZGV2X3JlZ2lzdGVyKCZ1
+ZnNfcnBtYi0+ZGV2LCAmZGVzY3IpOwo+IMKgwqAgMjAzwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgaWYgKElTX0VSUihyZGV2KSkgewo+IMKgwqAgMjA0wqDCoMKgwqDCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRldl9lcnIoaGJhLT5kZXYsICJG
+YWlsZWQgdG8gcmVnaXN0ZXIgVUZTIFJQTUIKPiBkZXZpY2UuXG4iKTsKPiDCoMKgIDIwNcKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBkZXZpY2VfdW5y
+ZWdpc3RlcigmdWZzX3JwbWItPmRldik7Cj4gwqDCoCAyMDbCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0ID0gUFRSX0VSUihyZGV2KTsKPiDCoMKg
+IDIwN8KgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBn
+b3RvIGVycl9vdXQ7Cj4gwqDCoCAyMDjCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqB9Cj4gwqDCoCAyMDnCoMKgCj4gwqDCoCAyMTDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqB1ZnNfcnBtYi0+cmRldiA9IHJkZXY7Cj4gwqDCoCAyMTHCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqB1ZnNfcnBtYi0+cmVnaW9uX2lkID0gcmVnaW9uOwo+IMKgwqAg
+MjEywqDCoAo+IMKgwqAgMjEzwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgbGlz
+dF9hZGRfdGFpbCgmdWZzX3JwbWItPm5vZGUsICZoYmEtPnJwbWJzKTsKPiDCoMKgIDIxNMKgwqAK
+PiDCoMKgIDIxNcKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRldl9pbmZvKGhi
+YS0+ZGV2LCAiVUZTIFJQTUIgcmVnaW9uICVkIHJlZ2lzdGVyZWQKPiAoY2FwYWNpdHk9JXUpXG4i
+LCByZWdpb24sIGNhcCk7Cj4gwqDCoCAyMTbCoMKgwqDCoMKgwqDCoMKgwqDCoH0KPiDCoMKgIDIx
+N8KgwqAKPiDCoMKgIDIxOMKgwqDCoMKgwqDCoMKgwqDCoMKgcmV0dXJuIDA7Cj4gwqDCoCAyMTnC
+oMKgZXJyX291dDoKPiDCoMKgIDIyMMKgwqDCoMKgwqDCoMKgwqDCoMKgbGlzdF9mb3JfZWFjaF9l
+bnRyeV9zYWZlKGl0LCB0bXAsICZoYmEtPnJwbWJzLCBub2RlKSB7Cj4gwqDCoCAyMjHCoMKgwqDC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBsaXN0X2RlbCgmaXQtPm5vZGUpOwo+IMKgwqAg
+MjIywqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgZGV2aWNlX3VucmVnaXN0ZXIo
+Jml0LT5kZXYpOwo+IMKgwqAgMjIzwqDCoMKgwqDCoMKgwqDCoMKgwqB9Cj4gwqDCoCAyMjTCoMKg
+Cj4gwqDCoCAyMjXCoMKgwqDCoMKgwqDCoMKgwqDCoHJldHVybiByZXQ7Cj4gwqDCoCAyMjbCoMKg
+fQo+IMKgwqAgMjI3wqDCoAo+IMKgwqAgMjI4wqDCoC8qIFVGUyBSUE1CIHJlbW92ZSBoYW5kbGVy
+ICovCj4gwqA+IDIyOcKgwqB2b2lkIHVmc19ycG1iX3JlbW92ZShzdHJ1Y3QgdWZzX2hiYSAqaGJh
+KQo+IMKgwqAgMjMwwqDCoHsKPiDCoMKgIDIzMcKgwqDCoMKgwqDCoMKgwqDCoMKgc3RydWN0IHVm
+c19ycG1iX2RldiAqdWZzX3JwbWIsICp0bXA7Cj4gwqDCoCAyMzLCoMKgCj4gwqDCoCAyMzPCoMKg
+wqDCoMKgwqDCoMKgwqDCoGlmIChsaXN0X2VtcHR5KCZoYmEtPnJwbWJzKSkKPiDCoMKgIDIzNMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoHJldHVybjsKPiDCoMKgIDIzNcKgwqAK
+PiDCoMKgIDIzNsKgwqDCoMKgwqDCoMKgwqDCoMKgLyogUmVtb3ZlIGFsbCByZWdpc3RlcmVkIFJQ
+TUIgZGV2aWNlcyAqLwo+IMKgwqAgMjM3wqDCoMKgwqDCoMKgwqDCoMKgwqBsaXN0X2Zvcl9lYWNo
+X2VudHJ5X3NhZmUodWZzX3JwbWIsIHRtcCwgJmhiYS0+cnBtYnMsIG5vZGUpIHsKPiDCoMKgIDIz
+OMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoGRldl9pbmZvKGhiYS0+ZGV2LCAi
+UmVtb3ZpbmcgVUZTIFJQTUIgcmVnaW9uICVkXG4iLAo+IHVmc19ycG1iLT5yZWdpb25faWQpOwo+
+IMKgwqAgMjM5wqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgLyogUmVtb3ZlIGZy
+b20gbGlzdCBmaXJzdCAqLwo+IMKgwqAgMjQwwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKg
+wqDCoMKgbGlzdF9kZWwoJnVmc19ycG1iLT5ub2RlKTsKPiDCoMKgIDI0McKgwqDCoMKgwqDCoMKg
+wqDCoMKgwqDCoMKgwqDCoMKgwqDCoC8qIFVucmVnaXN0ZXIgZGV2aWNlICovCj4gwqDCoCAyNDLC
+oMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqDCoMKgwqBkZXZpY2VfdW5yZWdpc3RlcigmdWZz
+X3JwbWItPmRldik7Cj4gwqDCoCAyNDPCoMKgwqDCoMKgwqDCoMKgwqDCoH0KPiDCoMKgIDI0NMKg
+wqAKPiDCoMKgIDI0NcKgwqDCoMKgwqDCoMKgwqDCoMKgZGV2X2luZm8oaGJhLT5kZXYsICJBbGwg
+VUZTIFJQTUIgZGV2aWNlcyB1bnJlZ2lzdGVyZWRcbiIpOwo+IMKgwqAgMjQ2wqDCoH0KPiDCoMKg
+IDI0N8KgwqAKPiAKCg==
 
-kernel test robot noticed the following build errors:
-
-[auto build test ERROR on v6.17]
-[also build test ERROR on next-20251009]
-[cannot apply to mkp-scsi/for-next jejb-scsi/for-next char-misc/char-misc-testing char-misc/char-misc-next char-misc/char-misc-linus linus/master]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Bean-Huo/scsi-ufs-core-Convert-string-descriptor-format-macros-to-enum/20251009-204745
-base:   v6.17
-patch link:    https://lore.kernel.org/r/20251008201920.89575-4-beanhuo%40iokpp.de
-patch subject: [PATCH v4 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver for UFS devices
-config: sh-randconfig-002-20251010 (https://download.01.org/0day-ci/archive/20251010/202510100521.pnAPqTFK-lkp@intel.com/config)
-compiler: sh4-linux-gcc (GCC) 15.1.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251010/202510100521.pnAPqTFK-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202510100521.pnAPqTFK-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
-   In file included from include/linux/byteorder/big_endian.h:5,
-                    from arch/sh/include/uapi/asm/byteorder.h:8,
-                    from arch/sh/include/asm/bitops.h:10,
-                    from include/linux/bitops.h:67,
-                    from include/linux/log2.h:12,
-                    from include/asm-generic/div64.h:55,
-                    from ./arch/sh/include/generated/asm/div64.h:1,
-                    from include/linux/math.h:6,
-                    from include/linux/math64.h:6,
-                    from include/linux/time.h:6,
-                    from include/linux/stat.h:19,
-                    from include/linux/module.h:13,
-                    from drivers/ufs/core/ufs-rpmb.c:13:
-   drivers/ufs/core/ufs-rpmb.c: In function 'ufs_rpmb_route_frames':
-   drivers/ufs/core/ufs-rpmb.c:72:39: error: invalid use of undefined type 'struct rpmb_frame'
-      72 |         req_type = be16_to_cpu(frm_out->req_resp);
-         |                                       ^~
-   include/uapi/linux/byteorder/big_endian.h:43:51: note: in definition of macro '__be16_to_cpu'
-      43 | #define __be16_to_cpu(x) ((__force __u16)(__be16)(x))
-         |                                                   ^
-   drivers/ufs/core/ufs-rpmb.c:72:20: note: in expansion of macro 'be16_to_cpu'
-      72 |         req_type = be16_to_cpu(frm_out->req_resp);
-         |                    ^~~~~~~~~~~
-   drivers/ufs/core/ufs-rpmb.c:75:14: error: 'RPMB_PROGRAM_KEY' undeclared (first use in this function)
-      75 |         case RPMB_PROGRAM_KEY:
-         |              ^~~~~~~~~~~~~~~~
-   drivers/ufs/core/ufs-rpmb.c:75:14: note: each undeclared identifier is reported only once for each function it appears in
-   drivers/ufs/core/ufs-rpmb.c:76:39: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-      76 |                 if (req_len != sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-         |                                       ^~~~~~
-   drivers/ufs/core/ufs-rpmb.c:76:80: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-      76 |                 if (req_len != sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-         |                                                                                ^~~~~~
-   drivers/ufs/core/ufs-rpmb.c:79:14: error: 'RPMB_GET_WRITE_COUNTER' undeclared (first use in this function)
-      79 |         case RPMB_GET_WRITE_COUNTER:
-         |              ^~~~~~~~~~~~~~~~~~~~~~
-   drivers/ufs/core/ufs-rpmb.c:80:39: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-      80 |                 if (req_len != sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-         |                                       ^~~~~~
-   drivers/ufs/core/ufs-rpmb.c:80:80: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-      80 |                 if (req_len != sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-         |                                                                                ^~~~~~
-   drivers/ufs/core/ufs-rpmb.c:84:14: error: 'RPMB_WRITE_DATA' undeclared (first use in this function)
-      84 |         case RPMB_WRITE_DATA:
-         |              ^~~~~~~~~~~~~~~
-   drivers/ufs/core/ufs-rpmb.c:85:38: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-      85 |                 if (req_len % sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-         |                                      ^~~~~~
-   drivers/ufs/core/ufs-rpmb.c:85:79: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-      85 |                 if (req_len % sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-         |                                                                               ^~~~~~
-   drivers/ufs/core/ufs-rpmb.c:88:14: error: 'RPMB_READ_DATA' undeclared (first use in this function); did you mean 'D_REAL_DATA'?
-      88 |         case RPMB_READ_DATA:
-         |              ^~~~~~~~~~~~~~
-         |              D_REAL_DATA
-   drivers/ufs/core/ufs-rpmb.c:89:39: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-      89 |                 if (req_len != sizeof(struct rpmb_frame) || resp_len % sizeof(struct rpmb_frame))
-         |                                       ^~~~~~
-   drivers/ufs/core/ufs-rpmb.c:89:79: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-      89 |                 if (req_len != sizeof(struct rpmb_frame) || resp_len % sizeof(struct rpmb_frame))
-         |                                                                               ^~~~~~
-   drivers/ufs/core/ufs-rpmb.c:109:43: error: invalid application of 'sizeof' to incomplete type 'struct rpmb_frame'
-     109 |                 memset(frm_resp, 0, sizeof(*frm_resp));
-         |                                           ^
-   drivers/ufs/core/ufs-rpmb.c:110:25: error: invalid use of undefined type 'struct rpmb_frame'
-     110 |                 frm_resp->req_resp = cpu_to_be16(RPMB_RESULT_READ);
-         |                         ^~
-   drivers/ufs/core/ufs-rpmb.c:110:50: error: 'RPMB_RESULT_READ' undeclared (first use in this function)
-     110 |                 frm_resp->req_resp = cpu_to_be16(RPMB_RESULT_READ);
-         |                                                  ^~~~~~~~~~~~~~~~
-   include/uapi/linux/byteorder/big_endian.h:42:51: note: in definition of macro '__cpu_to_be16'
-      42 | #define __cpu_to_be16(x) ((__force __be16)(__u16)(x))
-         |                                                   ^
-   drivers/ufs/core/ufs-rpmb.c:110:38: note: in expansion of macro 'cpu_to_be16'
-     110 |                 frm_resp->req_resp = cpu_to_be16(RPMB_RESULT_READ);
-         |                                      ^~~~~~~~~~~
-   drivers/ufs/core/ufs-rpmb.c: At top level:
->> drivers/ufs/core/ufs-rpmb.c:135:5: error: redefinition of 'ufs_rpmb_probe'
-     135 | int ufs_rpmb_probe(struct ufs_hba *hba)
-         |     ^~~~~~~~~~~~~~
-   In file included from drivers/ufs/core/ufs-rpmb.c:22:
-   drivers/ufs/core/ufshcd-priv.h:424:19: note: previous definition of 'ufs_rpmb_probe' with type 'int(struct ufs_hba *)'
-     424 | static inline int ufs_rpmb_probe(struct ufs_hba *hba)
-         |                   ^~~~~~~~~~~~~~
->> drivers/ufs/core/ufs-rpmb.c:229:6: error: redefinition of 'ufs_rpmb_remove'
-     229 | void ufs_rpmb_remove(struct ufs_hba *hba)
-         |      ^~~~~~~~~~~~~~~
-   drivers/ufs/core/ufshcd-priv.h:428:20: note: previous definition of 'ufs_rpmb_remove' with type 'void(struct ufs_hba *)'
-     428 | static inline void ufs_rpmb_remove(struct ufs_hba *hba)
-         |                    ^~~~~~~~~~~~~~~
-
-
-vim +/ufs_rpmb_probe +135 drivers/ufs/core/ufs-rpmb.c
-
-   133	
-   134	/* UFS RPMB device registration */
- > 135	int ufs_rpmb_probe(struct ufs_hba *hba)
-   136	{
-   137		struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
-   138		struct rpmb_dev *rdev;
-   139		u8 cid[16] = { };
-   140		int region;
-   141		u8 *sn;
-   142		u32 cap;
-   143		int ret;
-   144	
-   145		if (!hba->ufs_rpmb_wlun || hba->dev_info.b_advanced_rpmb_en) {
-   146			dev_info(hba->dev, "Skip OP-TEE RPMB registration\n");
-   147			return -ENODEV;
-   148		}
-   149	
-   150		/* Get the UNICODE serial number data */
-   151		sn = hba->dev_info.serial_number;
-   152		if (!sn) {
-   153			dev_err(hba->dev, "Serial number not available\n");
-   154			return -EINVAL;
-   155		}
-   156	
-   157		INIT_LIST_HEAD(&hba->rpmbs);
-   158	
-   159		/* Copy serial number into device ID (max 15 chars + NUL). */
-   160		strscpy(cid, sn);
-   161	
-   162		struct rpmb_descr descr = {
-   163			.type = RPMB_TYPE_UFS,
-   164			.route_frames = ufs_rpmb_route_frames,
-   165			.dev_id_len = sizeof(cid),
-   166			.reliable_wr_count = hba->dev_info.rpmb_io_size,
-   167		};
-   168	
-   169		for (region = 0; region < ARRAY_SIZE(hba->dev_info.rpmb_region_size); region++) {
-   170			cap = hba->dev_info.rpmb_region_size[region];
-   171			if (!cap)
-   172				continue;
-   173	
-   174			ufs_rpmb = devm_kzalloc(hba->dev, sizeof(*ufs_rpmb), GFP_KERNEL);
-   175			if (!ufs_rpmb) {
-   176				ret = -ENOMEM;
-   177				goto err_out;
-   178			}
-   179	
-   180			ufs_rpmb->hba = hba;
-   181			ufs_rpmb->dev.parent = &hba->ufs_rpmb_wlun->sdev_gendev;
-   182			ufs_rpmb->dev.bus = &ufs_rpmb_bus_type;
-   183			ufs_rpmb->dev.release = ufs_rpmb_device_release;
-   184			dev_set_name(&ufs_rpmb->dev, "ufs_rpmb%d", region);
-   185	
-   186			/* Set driver data BEFORE device_register */
-   187			dev_set_drvdata(&ufs_rpmb->dev, ufs_rpmb);
-   188	
-   189			ret = device_register(&ufs_rpmb->dev);
-   190			if (ret) {
-   191				dev_err(hba->dev, "Failed to register UFS RPMB device %d\n", region);
-   192				put_device(&ufs_rpmb->dev);
-   193				goto err_out;
-   194			}
-   195	
-   196			/* Make CID unique for this region by appending region numbe */
-   197			cid[sizeof(cid) - 1] = region;
-   198			descr.dev_id = cid;
-   199			descr.capacity = cap;
-   200	
-   201			/* Register RPMB device */
-   202			rdev = rpmb_dev_register(&ufs_rpmb->dev, &descr);
-   203			if (IS_ERR(rdev)) {
-   204				dev_err(hba->dev, "Failed to register UFS RPMB device.\n");
-   205				device_unregister(&ufs_rpmb->dev);
-   206				ret = PTR_ERR(rdev);
-   207				goto err_out;
-   208			}
-   209	
-   210			ufs_rpmb->rdev = rdev;
-   211			ufs_rpmb->region_id = region;
-   212	
-   213			list_add_tail(&ufs_rpmb->node, &hba->rpmbs);
-   214	
-   215			dev_info(hba->dev, "UFS RPMB region %d registered (capacity=%u)\n", region, cap);
-   216		}
-   217	
-   218		return 0;
-   219	err_out:
-   220		list_for_each_entry_safe(it, tmp, &hba->rpmbs, node) {
-   221			list_del(&it->node);
-   222			device_unregister(&it->dev);
-   223		}
-   224	
-   225		return ret;
-   226	}
-   227	
-   228	/* UFS RPMB remove handler */
- > 229	void ufs_rpmb_remove(struct ufs_hba *hba)
-   230	{
-   231		struct ufs_rpmb_dev *ufs_rpmb, *tmp;
-   232	
-   233		if (list_empty(&hba->rpmbs))
-   234			return;
-   235	
-   236		/* Remove all registered RPMB devices */
-   237		list_for_each_entry_safe(ufs_rpmb, tmp, &hba->rpmbs, node) {
-   238			dev_info(hba->dev, "Removing UFS RPMB region %d\n", ufs_rpmb->region_id);
-   239			/* Remove from list first */
-   240			list_del(&ufs_rpmb->node);
-   241			/* Unregister device */
-   242			device_unregister(&ufs_rpmb->dev);
-   243		}
-   244	
-   245		dev_info(hba->dev, "All UFS RPMB devices unregistered\n");
-   246	}
-   247	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
