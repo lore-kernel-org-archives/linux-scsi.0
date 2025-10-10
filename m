@@ -1,103 +1,189 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BBC62561A7;
-	Fri, 10 Oct 2025 15:52:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B883277CB2
+	for <linux-scsi@vger.kernel.org>; Fri, 10 Oct 2025 22:38:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760111581; cv=none; b=G05LLOfz/+yPGybV0YKJjoyZ6xo4zVlYqNMbtbejK9jWIUQTu+8n1yNyEGgcShlt3xrxUloMFsy6Nid50nQw8yKdG0tcUU9+rwcNRTQw6cjVnyKZljB5lqO/bE9sEGEo/eY1jZ3VVGgD4z5JjkEIkMlWf7bN/JNFO+tK5nNjyy8=
+	t=1760135919; cv=none; b=kfgX1snsh8t/yg+0RaroIT2LtXqGRv7uYlGJDV7RNogM5qF03i+DBR2yZPy1Iy3joqLTAoQEmjVRVXe2ByYmVBpcln+69zLKUxq6Lf7HgK9EAiGQ/4qlLGbNaG2Vs74uXttBV3TDQN2KPTlzFYo4Dslkl+Z1JdhfAp65RXY99s0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760111581; c=relaxed/simple;
-	bh=bmLy073nPbVMhndhj/eanakmMRASnKS5w4Glykb/caE=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hNbbyTKYgZ7obwA44g02aR9bOGv7hjTBBhOu/Ugl1Rv08PaHl5EkXoF//8hlwMBCGijiqVubR13nwB1g+byZX7xAy6EL848Ark5LbcFno7GJ/H6D7I/54GmnkqqEz1YUTJktXLxGkfcPU14wKuDyJcLCH9CbFfN8aH1/HLnbukU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mtktIV8A; arc=none smtp.client-ip=198.175.65.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1760135919; c=relaxed/simple;
+	bh=wm5Mop4fAhGITw4pmuwaboWK+p1GAAxLigNJpr1TQtM=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=OwY5n9oqFdYtK8eZLCAbhSENmYhZLaK/l+2hM0OunPRaGVqDCu2vlHSkfEA8kSvGcm3IVzLJkiL7eb2GH1IRU327xSivmBdDVcDt17O3322QkgijK0RH6TGdG5oodeWBBv2k7cO4+0QadLcdXT83MHiNLeq6/+vkIpXcN/fa1qQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=dojtJ9w+; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mtktIV8A"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1760111579; x=1791647579;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=bmLy073nPbVMhndhj/eanakmMRASnKS5w4Glykb/caE=;
-  b=mtktIV8A/BhydcZHtVdRPhbJ1BY/D9izzbRgVFnA44mHvQZKmVF1vRV0
-   zuxlZ8TkFTgTfjvC3LvUwQHHhVuro3bUaSbqEpkhDinvBfVekJH+XjasW
-   C5Wnj8kIsjaf1UIzt66K5MRIxVa4fXc7DYMMmBc9xky39XBNuh85EiZJj
-   bdyZmwhaUHeApS8CXygZ7Q0pMv9T2vkY03WDavoe5NeYwiymX5wbtBlwv
-   eOkYtFuZx2z+3Qai2iPEu2lrZJKK6A+L9Q+nazvCgZ4c/z9OKNykX/dg/
-   wsGyZDJrn/RzzSpcO3shYDupDb+IP5efW35Yb10SayDhC4uJhEuPAXFXW
-   A==;
-X-CSE-ConnectionGUID: YJGl8V64SI6QrflGpczaIg==
-X-CSE-MsgGUID: AiIr86EaT2OITn7vfaK/IQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11578"; a="65986443"
-X-IronPort-AV: E=Sophos;i="6.19,219,1754982000"; 
-   d="scan'208";a="65986443"
-Received: from orviesa005.jf.intel.com ([10.64.159.145])
-  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Oct 2025 08:52:58 -0700
-X-CSE-ConnectionGUID: LBHphJwtT5azFcq7AB4Gnw==
-X-CSE-MsgGUID: v7V31KnmT7+3m+qR8Fg9qg==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,219,1754982000"; 
-   d="scan'208";a="186143529"
-Received: from lkp-server01.sh.intel.com (HELO 6a630e8620ab) ([10.239.97.150])
-  by orviesa005.jf.intel.com with ESMTP; 10 Oct 2025 08:52:55 -0700
-Received: from kbuild by 6a630e8620ab with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1v7FQL-0002vX-1U;
-	Fri, 10 Oct 2025 15:52:53 +0000
-Date: Fri, 10 Oct 2025 23:52:51 +0800
-From: kernel test robot <lkp@intel.com>
-To: Markus Probst <markus.probst@posteo.de>,
-	Damien Le Moal <dlemoal@kernel.org>,
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="dojtJ9w+"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id 22127240028
+	for <linux-scsi@vger.kernel.org>; Sat, 11 Oct 2025 00:38:35 +0200 (CEST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1760135915; bh=CGpwk3JYQUO52xKhbiyFALsMKp2PBJpMVlMRu8YA4uw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
+	b=dojtJ9w+7pKjNmi+JwkY/8/gAZLiYqRJpdQKn3E01PW+paZLsR9P6APyitKeSxP9g
+	 jT+Q/1bXt6snyZ9pbzgAo38a8xBJ6RJg7YP+0ouLKajvUf2URdJU+H6QQvQzsaoEdf
+	 +QgPg1nKXPM+HuTQ9FGStX42Fvm6N7eQqziDB7QfajzKLRJUIhzO1ZYRFGzYqEr+xa
+	 T6DFdoBOIsGI9vuFsQFl5pa6twn6FgQmrXm0Dh4zETITX1erDSiou14ft8cX61tXVu
+	 jeyfaeT8NEaeojsrIHj7NI5QJ83EYVSSONMNyQEEx2hOhSTACEG36hoRra0278yP8j
+	 A4zv3HQ4U3X0w==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4ck1qZ3RG2z6tx7;
+	Sat, 11 Oct 2025 00:38:34 +0200 (CEST)
+From: Markus Probst <markus.probst@posteo.de>
+To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
 	Markus Probst <markus.probst@posteo.de>
-Subject: Re: [PATCH v2 2/2] ata: Use ACPI methods to power on ata ports
-Message-ID: <202510102322.yF4HEkAc-lkp@intel.com>
-References: <20251009112433.108643-3-markus.probst@posteo.de>
+Subject: [PATCH v3 1/2] scsi: sd: Add manage_restart device attribute to scsi_disk
+Date: Fri, 10 Oct 2025 22:38:34 +0000
+Message-ID: <20251010223817.729490-2-markus.probst@posteo.de>
+In-Reply-To: <20251010223817.729490-1-markus.probst@posteo.de>
+References: <20251010223817.729490-1-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251009112433.108643-3-markus.probst@posteo.de>
+Content-Transfer-Encoding: 8bit
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Hi Markus,
+In addition to the already existing manage_shutdown,
+manage_system_start_stop and manage_runtime_start_stop device
+scsi_disk attributes, add manage_restart, which allows the high-level
+device driver (sd) to manage the device power state for SYSTEM_RESTART if set to 1.
 
-kernel test robot noticed the following build warnings:
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+ drivers/scsi/sd.c          | 35 ++++++++++++++++++++++++++++++++++-
+ include/scsi/scsi_device.h |  6 ++++++
+ 2 files changed, 40 insertions(+), 1 deletion(-)
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next linus/master v6.17 next-20251009]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
-
-url:    https://github.com/intel-lab-lkp/linux/commits/Markus-Probst/scsi-sd-Add-manage_restart-device-attribute-to-scsi_disk/20251010-111134
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20251009112433.108643-3-markus.probst%40posteo.de
-patch subject: [PATCH v2 2/2] ata: Use ACPI methods to power on ata ports
-config: x86_64-randconfig-071-20251010 (https://download.01.org/0day-ci/archive/20251010/202510102322.yF4HEkAc-lkp@intel.com/config)
-compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251010/202510102322.yF4HEkAc-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202510102322.yF4HEkAc-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> Warning: drivers/ata/libata-acpi.c:277 function parameter 'enable' not described in 'ata_acpi_port_set_power_state'
-
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 5b8668accf8e..a3e9c2e9d9f4 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -318,6 +318,36 @@ static ssize_t manage_shutdown_store(struct device *dev,
+ }
+ static DEVICE_ATTR_RW(manage_shutdown);
+ 
++static ssize_t manage_restart_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++
++	return sysfs_emit(buf, "%u\n", sdp->manage_restart);
++}
++
++
++static ssize_t manage_restart_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++	bool v;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	if (kstrtobool(buf, &v))
++		return -EINVAL;
++
++	sdp->manage_restart = v;
++
++	return count;
++}
++static DEVICE_ATTR_RW(manage_restart);
++
+ static ssize_t
+ allow_restart_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+@@ -654,6 +684,7 @@ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_manage_system_start_stop.attr,
+ 	&dev_attr_manage_runtime_start_stop.attr,
+ 	&dev_attr_manage_shutdown.attr,
++	&dev_attr_manage_restart.attr,
+ 	&dev_attr_protection_type.attr,
+ 	&dev_attr_protection_mode.attr,
+ 	&dev_attr_app_tag_own.attr,
+@@ -4175,7 +4206,9 @@ static void sd_shutdown(struct device *dev)
+ 	    (system_state == SYSTEM_POWER_OFF &&
+ 	     sdkp->device->manage_shutdown) ||
+ 	    (system_state == SYSTEM_RUNNING &&
+-	     sdkp->device->manage_runtime_start_stop)) {
++	     sdkp->device->manage_runtime_start_stop) ||
++	    (system_state == SYSTEM_RESTART &&
++	     sdkp->device->manage_restart)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 6d6500148c4b..c7e657ac8b6d 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -178,6 +178,12 @@ struct scsi_device {
+ 	 */
+ 	unsigned manage_shutdown:1;
+ 
++	/*
++	 * If true, let the high-level device driver (sd) manage the device
++	 * power state for system restart (reboot) operations.
++	 */
++	unsigned manage_restart:1;
++
+ 	/*
+ 	 * If set and if the device is runtime suspended, ask the high-level
+ 	 * device driver (sd) to force a runtime resume of the device.
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.49.1
+
