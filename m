@@ -1,99 +1,159 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.15])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D4D263D76;
-	Sun, 12 Oct 2025 01:38:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.15
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8CE41DF252;
+	Sun, 12 Oct 2025 17:38:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760233140; cv=none; b=U+Ev8un/JzgnvzrooncgfZZ7o08ZbsuxzYmYQz53C16xez/TbWmje7dgR84FKr2nwUSGIZDKu/z6dK9FCq+oDDYaXzbIFJQELL6CIJC5hI2eiyyzrtQRGRY7/8vJM/Mkbm3McXpYP1Ft7a/h1SsaEOyx8dtIPacGPEyVTOosDAE=
+	t=1760290743; cv=none; b=eRdmj5P2bLGmAIaGT0+9lziWLyzkWnjIJDUVARmxEaZf9edvUgOzx5NVXPPe6l7bvhQLzi49huf2QwY92Om02yK16cE+VjDv5itb7eBTa00Ss3KISZe2o0oiYzf53g/tCYpCCt5orK7Kk2ddA56C2sGN2ZMfZDse07J4v4UBY3A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760233140; c=relaxed/simple;
-	bh=q0nucoZ4l6PAMnEzAW6nK6D5s0vtZz3WNq7GlDktzYw=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=pmRACRKensvPOHHIw6yFL1fzH0uBuNgU12xgW7E3P+Thn4g0SAksRnD44uHhMW4mV7EhWhuYoj9Xt4QA7bRdPYVBpHMWOEe3g6pshlo/bDb/hxA1Z9roTE96VrmCtT1AFDYCpX2UqyatGr3nJH7ssLsXnKkJDZgW7sYGQNuCEwk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=E/IFmgF4; arc=none smtp.client-ip=192.198.163.15
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1760290743; c=relaxed/simple;
+	bh=5I7ykGiAAOk6BgGy8HWD3BZzlBv59Rkn365TTJ8b+KA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XTk2Knw0J+v00PAuY/PHbWvzeO5p/pREpIDwtHGGk3cJMHqhB8pdixO0poX8HVMIGq/uJ7YEXEV7LXPXrhJS+1qctZsEJbHsWBfynzv/dkND9ua/hzOBFtjhgulgQRlwe/V2WSXd9pcOStV6nrtB1mJ+k/L9DXFMGbI+h2DjaG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Z6PSS6q7; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="E/IFmgF4"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1760233138; x=1791769138;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=q0nucoZ4l6PAMnEzAW6nK6D5s0vtZz3WNq7GlDktzYw=;
-  b=E/IFmgF4BkYGYlBYZVKV6VFeoZTLUpVwmZGAHMRKjxkS4SAIgeHiXYQl
-   yuc/n1YtjbudwXbrI8+G1F7+SCzHBE+RZNYuj1UwPCs5+Se3xAP4lBQk3
-   TUlrSiDURWoxGZjNOzoSKWQsFJIELsUjsUxGNBlUPsx/oNhLogcOh6yvF
-   XPW3MR7MK/aTsRP82ILdaSFuXUIlLHkrQJqZ3VgHGb5GLf6/BQ6hg373i
-   GNPNCiv4Z1hOkhQ0XzC/rQivMGppyAT2JyyMwdKgNsAPEoDX86mscXtWg
-   8jc7NRlS1qRtjs1xDcZReJ8nCmy6D2siGNmT1xtwT/K6LrqaVxqi4a2l8
-   g==;
-X-CSE-ConnectionGUID: MAOhjBIGT0q0ognZdXLmFg==
-X-CSE-MsgGUID: zh8IJreKRZmYDozy2B9fIg==
-X-IronPort-AV: E=McAfee;i="6800,10657,11579"; a="62507428"
-X-IronPort-AV: E=Sophos;i="6.19,222,1754982000"; 
-   d="scan'208";a="62507428"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by fmvoesa109.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Oct 2025 18:38:57 -0700
-X-CSE-ConnectionGUID: gGyGT34VTEGzk2+s8CKykw==
-X-CSE-MsgGUID: PkRRYF4jSHuNuJ5HXfONbA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,222,1754982000"; 
-   d="scan'208";a="185665552"
-Received: from lkp-server01.sh.intel.com (HELO 6a630e8620ab) ([10.239.97.150])
-  by fmviesa005.fm.intel.com with ESMTP; 11 Oct 2025 18:38:55 -0700
-Received: from kbuild by 6a630e8620ab with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1v7l2z-000471-0Y;
-	Sun, 12 Oct 2025 01:38:53 +0000
-Date: Sun, 12 Oct 2025 09:38:41 +0800
-From: kernel test robot <lkp@intel.com>
-To: John Garry <john.g.garry@oracle.com>, martin.petersen@oracle.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org, michael.christie@oracle.com,
-	John Garry <john.g.garry@oracle.com>
-Subject: Re: [PATCH v2 4/7] scsi: target: Add WRITE_ATOMIC_16 handler
-Message-ID: <202510120950.61bjguTF-lkp@intel.com>
-References: <20251010141508.3695908-5-john.g.garry@oracle.com>
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Z6PSS6q7"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59CCUFda003614;
+	Sun, 12 Oct 2025 17:38:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:date:from:message-id:mime-version
+	:subject:to; s=qcppdkim1; bh=764uBY9ag12bRJrfxTMRZfhol4GFWWG44oa
+	B8K1Qi2A=; b=Z6PSS6q7oDAyymmAYdvh2gNcCI0GMXtbnG+QSK0nRqaUn0En4IH
+	+6FTHPEj+TZ1jUd/t9an9roaysbkq1VPvXK+YYz6jNRVEnMbGM3ZDkKt0e394k57
+	NxxuKFooDJe5nM3TMqJsWMdlrPhXdaSDaqAVLMZgRShXnbtOVWIZMBg8ULEgIJOP
+	+0BSRlauZi3hi7VBUsgcWbWcuVrKI30Z1OhkcfJv27qd2wrBJMDsBNMsTS8+GG2P
+	F1mOcHQF/kVmrJlNM/CwGgEKkkn05L2/AyF8+Zx0L/Ph/SWAA9W7yTi8OoLlj7BJ
+	J2dxGQOyRlI+QASfjaZPuq5PYCyPDzWQg1A==
+Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49qgh628jd-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Sun, 12 Oct 2025 17:38:35 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 59CHcVPt007557;
+	Sun, 12 Oct 2025 17:38:31 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 49qgakks6h-1;
+	Sun, 12 Oct 2025 17:38:31 +0000
+Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 59CHcVm5007551;
+	Sun, 12 Oct 2025 17:38:31 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
+	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 59CHcU0x007550;
+	Sun, 12 Oct 2025 17:38:31 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
+	id 3540B603540; Sun, 12 Oct 2025 23:08:30 +0530 (+0530)
+From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
+        martin.petersen@oracle.com, bvanassche@acm.org,
+        konrad.dybcio@oss.qualcomm.com
+Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-scsi@vger.kernel.org, Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+Subject: [PATCH V1] ufs: ufs-qcom: Fix UFS OCP issue during UFS power down(PC=3)
+Date: Sun, 12 Oct 2025 23:08:28 +0530
+Message-ID: <20251012173828.9880-1-nitin.rawat@oss.qualcomm.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251010141508.3695908-5-john.g.garry@oracle.com>
+Content-Transfer-Encoding: 8bit
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Authority-Analysis: v=2.4 cv=H/zWAuYi c=1 sm=1 tr=0 ts=68ebe79b cx=c_pps
+ a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=x6icFKpwvdMA:10 a=EUspDBNiAAAA:8 a=ldyrZXJ3T4YXRkzK03AA:9
+ a=cPQSjfK2_nFv0Q5t_7PE:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDExMDAyNiBTYWx0ZWRfXwOb+7oYHDYRZ
+ GkVtvz60AXbHXxpfuUiSQLOC6KuPp3DSHCxikOnwRh2r0hO1SXJn8mGbOefMNJzkktMXpp9l/ct
+ NWghO3LxFGM+4U7DQG7euxrBNnbm+rYJDODc6YeWs9pO91YPctAfl9bmMGVqLmpa8dpmY4+7gUQ
+ Nsy6CBXsKWsAwMowYk4I5XXxwdtxnpJGeckn+TW9r3EtkTQlMngqsQxv8X3SDucv/ciDObGrGu9
+ JcJ/JEf+2yRwqeK1YJJLHc8EEBzjSyVaLxynmLLEbYKgnD65gP789sLLy2cv1DlCFwtg+AG6zva
+ URrLQvoBEZq7UiYt1lDyIKYRWbeXcORZWoIFbEmMdufSUD7tz4cTPpTtRlRb3dXjnJjG5Y4tx5K
+ wzqb2+LigHAmsYX0oKZ7EJwVAcktEQ==
+X-Proofpoint-ORIG-GUID: t9-cGvjqQYsJIZ1ukQAkVF7_xzYK2pQ9
+X-Proofpoint-GUID: t9-cGvjqQYsJIZ1ukQAkVF7_xzYK2pQ9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-12_07,2025-10-06_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ phishscore=0 adultscore=0 priorityscore=1501 bulkscore=0 malwarescore=0
+ clxscore=1011 impostorscore=0 spamscore=0 lowpriorityscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510110026
 
-Hi John,
+According to UFS specifications, the power-off sequence for a UFS
+device includes:
 
-kernel test robot noticed the following build errors:
+- Sending an SSU command with Power_Condition=3 and await a
+  response.
+- Asserting RST_N low.
+- Turning off REF_CLK.
+- Turning off VCC.
+- Turning off VCCQ/VCCQ2.
 
-[auto build test ERROR on mkp-scsi/for-next]
-[also build test ERROR on linus/master v6.17 next-20251010]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+As part of ufs shutdown , after the SSU command completion, asserting
+hardware reset (HWRST) triggers the device firmware to wake up and
+execute its reset routine. This routine initializes hardware blocks
+and takes a few milliseconds to complete. During this time, the
+ICCQ draws a large current.
 
-url:    https://github.com/intel-lab-lkp/linux/commits/John-Garry/scsi-target-Rename-target_configure_unmap_from_queue/20251010-221915
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20251010141508.3695908-5-john.g.garry%40oracle.com
-patch subject: [PATCH v2 4/7] scsi: target: Add WRITE_ATOMIC_16 handler
-config: arm-randconfig-001-20251012 (https://download.01.org/0day-ci/archive/20251012/202510120950.61bjguTF-lkp@intel.com/config)
-compiler: clang version 19.1.7 (https://github.com/llvm/llvm-project cd708029e0b2869e80abe31ddb175f7c35361f90)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251012/202510120950.61bjguTF-lkp@intel.com/reproduce)
+This large ICCQ current may cause issues for the regulator which
+is supplying power to UFS, because the turn off request from UFS
+driver to the regulator framework will be immediately followed by
+low power mode(LPM) request by regulator framework. This is done
+by framework because UFS which is the only client is requesting
+for disable. So if the rail is still in the process of shutting down
+while ICCQ exceeds LPM current thresholds, and LPM mode is activated
+in hardware during this state, it may trigger an overcurrent
+protection (OCP) fault in the regulator.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202510120950.61bjguTF-lkp@intel.com/
+To prevent this, a 10ms delay is added after asserting HWRST. This
+allows the reset operation to complete while power rails remain active
+and in high-power mode.
 
-All errors (new ones prefixed by >>, old ones prefixed by <<):
+Currently there is no way for Host to query whether the reset is
+completed or not and hence this the delay is based on experiments
+with Qualcomm UFS controllers across multiple UFS vendors.
 
->> ERROR: modpost: "__aeabi_uldivmod" [drivers/target/target_core_mod.ko] undefined!
+Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+---
+ drivers/ufs/host/ufs-qcom.c | 15 ++++++++++++++-
+ 1 file changed, 14 insertions(+), 1 deletion(-)
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 89a3328a7a75..cb54628be466 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -744,8 +744,21 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+
+
+ 	/* reset the connected UFS device during power down */
+-	if (ufs_qcom_is_link_off(hba) && host->device_reset)
++	if (ufs_qcom_is_link_off(hba) && host->device_reset) {
+ 		ufs_qcom_device_reset_ctrl(hba, true);
++		/*
++		 * After sending the SSU command, asserting the rst_n
++		 * line causes the device firmware to wake up and
++		 * execute its reset routine.
++		 *
++		 * During this process, the device may draw current
++		 * beyond the permissible limit for low-power mode (LPM).
++		 * A 10ms delay, based on experimental observations,
++		 * allows the UFS device to complete its hardware reset
++		 * before transitioning the power rail to LPM.
++		 */
++		usleep_range(10000, 11000);
++	}
+
+ 	return ufs_qcom_ice_suspend(host);
+ }
+--
+2.50.1
+
