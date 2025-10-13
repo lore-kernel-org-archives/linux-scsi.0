@@ -1,68 +1,121 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E3B52E0B5F;
-	Mon, 13 Oct 2025 07:45:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB162F28F2
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 08:20:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760341553; cv=none; b=dCr6Vu1rAuEFQUMv0tSvqOAUYTt4q3JoInJv7NOP5vqF4NODZCIB7H4U46mmtj2Y9/ewgloxrKtYG0IFO5TWS0KdoG+/Ym/ChocoY6bTG9lb+dOLCbJPTdRfEXKNP1RZAt5/f/PG5Fr5n5wWQFHgsB6eDVmY0UpcINbQDbcV3Co=
+	t=1760343622; cv=none; b=Yxq3URsbcgQFONrkr6iJnvnmyJvL+ksiyLXVAw3XaoLOfWYhbI0t0nQzN9VjNz0Eq0DQD7l4EOqMnmVECU9vSC9lZ+o7Qs4iZR5Auxwx/JrK5oP992uAlMO7CWTGcHJ4Tj4AqiH0sZoo4jsVdyhIcsP50MJi9/LxH0HPOJZwTNM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760341553; c=relaxed/simple;
-	bh=L9JV7fQgZkyT5akfcPN+oJ4PhIkfXdiyw9XSCV7QzCA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=hxMqNBL9Pslxk3yHT1cywUQSstHZyEFpuavSjF3wi3O0qqSd//vVLnmZb9r/KPYhVepYSFAsd9tRAWXsJr4ENoY+dNQRHBTB9VESp+7whoNlWNxUlEJ4tb8fUimyA9Q+JasVR1FfATqwzThGtVMbj1W4V2feYOIskGJSlGcZEUE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XUgNQzAw; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760343622; c=relaxed/simple;
+	bh=bWQe4catjplmIwu9viZHb1YKyb9MgQYyB1f2VOwS1ow=;
+	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=p9EdAWvwbirxU7nfNqeFpO/QAIc239pgYR1rHLV15yKnwWlsJeOfB2e94dGroq8DAwmPm5Lg+jV6io2LOg15FIyB9ICJh3+8VE1xkwfRHSbMX86vywwZFCTzQqufiXJtFZ+FdEuskzongvSqHVfg5Nr7HOkeS3DrWfr6iK+kjmk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ciCcqHEH; arc=none smtp.client-ip=203.254.224.25
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XUgNQzAw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7ED5EC4CEE7;
-	Mon, 13 Oct 2025 07:45:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760341553;
-	bh=L9JV7fQgZkyT5akfcPN+oJ4PhIkfXdiyw9XSCV7QzCA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=XUgNQzAwIuBEb71+WMCsaM1S1OQ0t1C7M1cv3E+mSGpNfcO4j4Uld4s/QRSXLoixE
-	 ROpTAPYJosf5G7r3IY0N2SQ4XKDgRs2Y4q9CnvLAa7X3PCkaa0EydLnrIMXrFTyG6/
-	 NdHUkhLdcO8dFSGyLTX6yjhqegq26Ri4OF7nbso7OlP5Ys9Bi3Go6Iec78kD1oncmI
-	 DOFTOzOKOphX3rkEujiTtjOZi27E84rjv1BJK682IGjZcJi18U8dlPxlMpRyN9XHK1
-	 WvIv98beOGjc1ZOWgKrRvtlKWjNizAwiQ0uGtHWl0pXF+C+PNE+1Sq9VaHSw4ZxDFo
-	 9OtljQ9dRn77A==
-Date: Mon, 13 Oct 2025 09:45:48 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Markus Probst <markus.probst@posteo.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 1/2] scsi: sd: Add manage_restart device attribute to
- scsi_disk
-Message-ID: <aOyuLCEDJxJS76nN@ryzen>
-References: <20251010223817.729490-1-markus.probst@posteo.de>
- <20251010223817.729490-2-markus.probst@posteo.de>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ciCcqHEH"
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20251013082016epoutp023b6b4798448e69c6da873b502a8d0b48~t-zE9TvTq3173031730epoutp02i
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 08:20:16 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20251013082016epoutp023b6b4798448e69c6da873b502a8d0b48~t-zE9TvTq3173031730epoutp02i
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1760343616;
+	bh=pRHrDBnOjjwGnV8jPr9JRBFXDzkVoPpuS0SbkJwjTKk=;
+	h=From:To:In-Reply-To:Subject:Date:References:From;
+	b=ciCcqHEHcmnmrlWu36dqAQUFQ354QbhyADVPgOgqarP6UZnl1EQb2F+lxF4jLApIv
+	 yJoym91LuElcn4AzSRS7pmNmfDjfvBZzuMRMXkFAtKZh0z+rOXOe8eA+hAfvj5vwph
+	 Uvz2jhSEjF9FpewuwkKiT2tz5nt894sB4foAXCt0=
+Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPS id
+	20251013082016epcas1p21c08be95fe2ee390cf9c96c11ed7ad2d~t-zEsaHiv2051620516epcas1p2E;
+	Mon, 13 Oct 2025 08:20:16 +0000 (GMT)
+Received: from epcas1p3.samsung.com (unknown [182.195.38.192]) by
+	epsnrtp02.localdomain (Postfix) with ESMTP id 4clVdq5dHSz2SSKm; Mon, 13 Oct
+	2025 08:20:15 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
+	20251013082015epcas1p4db542f2000d6dd8ecac911d0fa1814f1~t-zD8AF3q2088920889epcas1p44;
+	Mon, 13 Oct 2025 08:20:15 +0000 (GMT)
+Received: from wkonkim01 (unknown [10.253.100.198]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20251013082015epsmtip1b7209ee2dd056f8c8409f0f72f323e26~t-zD3UieL0807408074epsmtip1X;
+	Mon, 13 Oct 2025 08:20:15 +0000 (GMT)
+From: "Wonkon Kim" <wkon.kim@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<peter.wang@mediatek.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+In-Reply-To: <4c894d68-7d0e-49a0-b582-477bcc7f351d@acm.org>
+Subject: RE: [PATCH] ufs: core: Initialize a variable mode for PA_PWRMODE
+Date: Mon, 13 Oct 2025 17:20:14 +0900
+Message-ID: <000001dc3c1a$33e23030$9ba69090$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251010223817.729490-2-markus.probst@posteo.de>
+Content-Transfer-Encoding: quoted-printable
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQFhT2clGfJ4dWcII9qWXyagEihcgwJWi3eIAdcMmwG1lCIXkA==
+Content-Language: ko
+X-CMS-MailID: 20251013082015epcas1p4db542f2000d6dd8ecac911d0fa1814f1
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924
+References: <CGME20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924@epcas1p4.samsung.com>
+	<20251002070027.228638-1-wkon.kim@samsung.com>
+	<4c894d68-7d0e-49a0-b582-477bcc7f351d@acm.org>
 
-On Fri, Oct 10, 2025 at 10:38:34PM +0000, Markus Probst wrote:
-> In addition to the already existing manage_shutdown,
-> manage_system_start_stop and manage_runtime_start_stop device
-> scsi_disk attributes, add manage_restart, which allows the high-level
-> device driver (sd) to manage the device power state for SYSTEM_RESTART if set to 1.
+> On 10/2/25 12:00 AM, Wonkon Kim wrote:
+> >   static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
+> >   =7B
+> >   	struct ufs_pa_layer_attr *pwr_info =3D &hba->pwr_info;
+> > -	u32 mode;
+> > +	u32 mode =3D 0;
+> >
+> >   	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
+>=20
+> Since there is more code that passes a pointer to an uninitialized
+> variable to ufshcd_dme_get(), the untested patch below may be a better
+> solution:
+>=20
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
+> 127b691402f9..5226fbca29ec 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> =40=40 -4277,8 +4277,8 =40=40 int ufshcd_dme_get_attr(struct ufs_hba *hba=
+, u32
+> attr_sel,
+>   			get, UIC_GET_ATTR_ID(attr_sel),
+>   			UFS_UIC_COMMAND_RETRIES - retries);
+>=20
+> -	if (mib_val && =21ret)
+> -		*mib_val =3D uic_cmd.argument3;
+> +	if (mib_val)
+> +		*mib_val =3D ret =3D=3D 0 ? uic_cmd.argument3 : 0;
+>=20
+>   	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
+>   	    && pwr_mode_change)
+>=20
+>=20
 
-The commit message explains what is done, but does not answer the question:
-"why?"
+There are some attributes to use 0 as valid value.
+e.g. PA_MAXRXHSGEAR is set to 0 for NO_HS=3D0
+If it has 0 for valid value, most of value 0 are regarded as FALSE, unsuppo=
+rted or minimum.
+And these cases seems to check ret for command success/fail in code.
+However, is it ok to set 0 for ufshcd_send_uic_cmd() fail?
 
-I can read patch 2/2 and understand why, but considering that this is a patch
-for SCSI and not ATA, I think that you need to provide some context here, so
-that someone doing a git log drivers/scsi/ will actually have any idea of why
-this was done.
+If it can't, it needs to initialize mode.
+Value 0 for PA_PWRMODE is invalid.
 
 
-Kind regards,
-Niklas
+Thanks,
+Wonkon Kim.
+
