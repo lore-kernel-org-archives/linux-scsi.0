@@ -1,159 +1,132 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A8CE41DF252;
-	Sun, 12 Oct 2025 17:38:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 55FF0169AE6
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 02:23:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760290743; cv=none; b=eRdmj5P2bLGmAIaGT0+9lziWLyzkWnjIJDUVARmxEaZf9edvUgOzx5NVXPPe6l7bvhQLzi49huf2QwY92Om02yK16cE+VjDv5itb7eBTa00Ss3KISZe2o0oiYzf53g/tCYpCCt5orK7Kk2ddA56C2sGN2ZMfZDse07J4v4UBY3A=
+	t=1760322230; cv=none; b=MSGw/9ILkYIqihdQnBdx0l/3YTB8tFHChLfvDQdVYZbbOMQc7T0VH+FT3TMsCWkE3blvpRY2AQO2PH7HXGKdmOxr/V+b04OlfdFlpoYUHXbZT3Ke3H0A13TpMiOjC+c90V/qiAwF35lZJYXuhxR+2PPJHI/z+5f5ofNRvI65wyQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760290743; c=relaxed/simple;
-	bh=5I7ykGiAAOk6BgGy8HWD3BZzlBv59Rkn365TTJ8b+KA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=XTk2Knw0J+v00PAuY/PHbWvzeO5p/pREpIDwtHGGk3cJMHqhB8pdixO0poX8HVMIGq/uJ7YEXEV7LXPXrhJS+1qctZsEJbHsWBfynzv/dkND9ua/hzOBFtjhgulgQRlwe/V2WSXd9pcOStV6nrtB1mJ+k/L9DXFMGbI+h2DjaG8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Z6PSS6q7; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
+	s=arc-20240116; t=1760322230; c=relaxed/simple;
+	bh=7SGRryzVoFkWrc2jH/YqMfJi3jFq/2W2i6KS+SN50OI=;
+	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
+	 Content-Type:References; b=ZJJCac5ImYPpymu4DpauWs718NRxQLrikPyVf4Yr1GTUben/TLjXE7ngv5TEaTP2pcEw7tSXMucMGrqDkRzUXxgr5yaGbWD1O1eR/PkuYrqqdk9N5cXQmKRGH99Bnc3cjRKjBhwkQNpi54Q0TGm9CXxU17n9cATBKN1lbYMTzo4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=QOaXDWF9; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Z6PSS6q7"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59CCUFda003614;
-	Sun, 12 Oct 2025 17:38:35 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:date:from:message-id:mime-version
-	:subject:to; s=qcppdkim1; bh=764uBY9ag12bRJrfxTMRZfhol4GFWWG44oa
-	B8K1Qi2A=; b=Z6PSS6q7oDAyymmAYdvh2gNcCI0GMXtbnG+QSK0nRqaUn0En4IH
-	+6FTHPEj+TZ1jUd/t9an9roaysbkq1VPvXK+YYz6jNRVEnMbGM3ZDkKt0e394k57
-	NxxuKFooDJe5nM3TMqJsWMdlrPhXdaSDaqAVLMZgRShXnbtOVWIZMBg8ULEgIJOP
-	+0BSRlauZi3hi7VBUsgcWbWcuVrKI30Z1OhkcfJv27qd2wrBJMDsBNMsTS8+GG2P
-	F1mOcHQF/kVmrJlNM/CwGgEKkkn05L2/AyF8+Zx0L/Ph/SWAA9W7yTi8OoLlj7BJ
-	J2dxGQOyRlI+QASfjaZPuq5PYCyPDzWQg1A==
-Received: from apblrppmta01.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49qgh628jd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Sun, 12 Oct 2025 17:38:35 +0000 (GMT)
-Received: from pps.filterd (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 59CHcVPt007557;
-	Sun, 12 Oct 2025 17:38:31 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 49qgakks6h-1;
-	Sun, 12 Oct 2025 17:38:31 +0000
-Received: from APBLRPPMTA01.qualcomm.com (APBLRPPMTA01.qualcomm.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 59CHcVm5007551;
-	Sun, 12 Oct 2025 17:38:31 GMT
-Received: from hu-maiyas-hyd.qualcomm.com (hu-nitirawa-hyd.qualcomm.com [10.213.109.152])
-	by APBLRPPMTA01.qualcomm.com (PPS) with ESMTP id 59CHcU0x007550;
-	Sun, 12 Oct 2025 17:38:31 +0000
-Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2342877)
-	id 3540B603540; Sun, 12 Oct 2025 23:08:30 +0530 (+0530)
-From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com,
-        martin.petersen@oracle.com, bvanassche@acm.org,
-        konrad.dybcio@oss.qualcomm.com
-Cc: linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Subject: [PATCH V1] ufs: ufs-qcom: Fix UFS OCP issue during UFS power down(PC=3)
-Date: Sun, 12 Oct 2025 23:08:28 +0530
-Message-ID: <20251012173828.9880-1-nitin.rawat@oss.qualcomm.com>
-X-Mailer: git-send-email 2.50.1
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="QOaXDWF9"
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20251013022340epoutp045c6d4e28f7cc87548628197cf2e8a6dc~t67uYSp321827018270epoutp04T
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 02:23:40 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20251013022340epoutp045c6d4e28f7cc87548628197cf2e8a6dc~t67uYSp321827018270epoutp04T
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1760322220;
+	bh=D2ea9j59jiOzpu+mQ18H1BohxN0QztUwdmfA4+DrN2o=;
+	h=From:To:In-Reply-To:Subject:Date:References:From;
+	b=QOaXDWF9rmsqJsbHPi6Ls1B/bP7EKTafUK8WJHSlHQJlIQTHoyHmLSx4eYQkX0DJh
+	 fAthC+O9SUsbFYwDuGGgI8BMFz3yae73SN22siwH8fVO5/Tt4W92FHZyFOeXvTnobj
+	 MuuMZOyDLjJEyu73zEVDbAK81EB3mHNcWLjkWf4w=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPS id
+	20251013022339epcas1p3e829aed650d6533ee949363162b8ba88~t67t9h_tq2851228512epcas1p3r;
+	Mon, 13 Oct 2025 02:23:39 +0000 (GMT)
+Received: from epcas1p3.samsung.com (unknown [182.195.38.196]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4clLkM4VjPz3hhTN; Mon, 13 Oct
+	2025 02:23:39 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas1p3.samsung.com (KnoxPortal) with ESMTPA id
+	20251013022339epcas1p3a753d84e924146f94a77ef5697b9a561~t67tN9Ts92852828528epcas1p3-;
+	Mon, 13 Oct 2025 02:23:39 +0000 (GMT)
+Received: from wkonkim01 (unknown [10.253.100.198]) by epsmtip1.samsung.com
+	(KnoxPortal) with ESMTPA id
+	20251013022339epsmtip12740888892ac5a83d06d565f0baa3e41~t67tK9WBS1631316313epsmtip1c;
+	Mon, 13 Oct 2025 02:23:39 +0000 (GMT)
+From: "Wonkon Kim" <wkon.kim@samsung.com>
+To: "'Bart Van Assche'" <bvanassche@acm.org>,
+	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<peter.wang@mediatek.com>, <linux-scsi@vger.kernel.org>,
+	<linux-kernel@vger.kernel.org>
+In-Reply-To: <4c894d68-7d0e-49a0-b582-477bcc7f351d@acm.org>
+Subject: RE: [PATCH] ufs: core: Initialize a variable mode for PA_PWRMODE
+Date: Mon, 13 Oct 2025 11:23:38 +0900
+Message-ID: <000001dc3be8$62cf3370$286d9a50$@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-QCInternal: smtphost
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=H/zWAuYi c=1 sm=1 tr=0 ts=68ebe79b cx=c_pps
- a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
- a=x6icFKpwvdMA:10 a=EUspDBNiAAAA:8 a=ldyrZXJ3T4YXRkzK03AA:9
- a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDExMDAyNiBTYWx0ZWRfXwOb+7oYHDYRZ
- GkVtvz60AXbHXxpfuUiSQLOC6KuPp3DSHCxikOnwRh2r0hO1SXJn8mGbOefMNJzkktMXpp9l/ct
- NWghO3LxFGM+4U7DQG7euxrBNnbm+rYJDODc6YeWs9pO91YPctAfl9bmMGVqLmpa8dpmY4+7gUQ
- Nsy6CBXsKWsAwMowYk4I5XXxwdtxnpJGeckn+TW9r3EtkTQlMngqsQxv8X3SDucv/ciDObGrGu9
- JcJ/JEf+2yRwqeK1YJJLHc8EEBzjSyVaLxynmLLEbYKgnD65gP789sLLy2cv1DlCFwtg+AG6zva
- URrLQvoBEZq7UiYt1lDyIKYRWbeXcORZWoIFbEmMdufSUD7tz4cTPpTtRlRb3dXjnJjG5Y4tx5K
- wzqb2+LigHAmsYX0oKZ7EJwVAcktEQ==
-X-Proofpoint-ORIG-GUID: t9-cGvjqQYsJIZ1ukQAkVF7_xzYK2pQ9
-X-Proofpoint-GUID: t9-cGvjqQYsJIZ1ukQAkVF7_xzYK2pQ9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-10-12_07,2025-10-06_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 adultscore=0 priorityscore=1501 bulkscore=0 malwarescore=0
- clxscore=1011 impostorscore=0 spamscore=0 lowpriorityscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510110026
+Content-Transfer-Encoding: 7bit
+X-Mailer: Microsoft Outlook 15.0
+Thread-Index: AQFhT2clGfJ4dWcII9qWXyagEihcgwJWi3eIAdcMmwG1k7+/kA==
+Content-Language: ko
+X-CMS-MailID: 20251013022339epcas1p3a753d84e924146f94a77ef5697b9a561
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924
+References: <CGME20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924@epcas1p4.samsung.com>
+	<20251002070027.228638-1-wkon.kim@samsung.com>
+	<4c894d68-7d0e-49a0-b582-477bcc7f351d@acm.org>
 
-According to UFS specifications, the power-off sequence for a UFS
-device includes:
+> On 10/2/25 12:00 AM, Wonkon Kim wrote:
+> >   static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
+> >   {
+> >   	struct ufs_pa_layer_attr *pwr_info = &hba->pwr_info;
+> > -	u32 mode;
+> > +	u32 mode = 0;
+> >
+> >   	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
+> 
+> Since there is more code that passes a pointer to an uninitialized
+> variable to ufshcd_dme_get(), the untested patch below may be a better
+> solution:
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
+> 127b691402f9..5226fbca29ec 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -4277,8 +4277,8 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32
+> attr_sel,
+>   			get, UIC_GET_ATTR_ID(attr_sel),
+>   			UFS_UIC_COMMAND_RETRIES - retries);
+> 
+> -	if (mib_val && !ret)
+> -		*mib_val = uic_cmd.argument3;
+> +	if (mib_val)
+> +		*mib_val = ret == 0 ? uic_cmd.argument3 : 0;
+> 
+>   	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
+>   	    && pwr_mode_change)
+> 
+> 
 
-- Sending an SSU command with Power_Condition=3 and await a
-  response.
-- Asserting RST_N low.
-- Turning off REF_CLK.
-- Turning off VCC.
-- Turning off VCCQ/VCCQ2.
+Sorry for late reply.
+Ok, I agree with you and it would be more general.
+There is a code to initialize a variable.
+Do you think it also needs to fix?
 
-As part of ufs shutdown , after the SSU command completion, asserting
-hardware reset (HWRST) triggers the device firmware to wake up and
-execute its reset routine. This routine initializes hardware blocks
-and takes a few milliseconds to complete. During this time, the
-ICCQ draws a large current.
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index a4438a3cb73a..d593ff7ea63d 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4990,7 +4990,7 @@ EXPORT_SYMBOL_GPL(ufshcd_hba_enable);
+ 
+ static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer)
+ {
+-       int tx_lanes = 0, i, err = 0;
++       int tx_lanes, i, err = 0;
+ 
+        if (!peer)
+		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
+			       &tx_lanes);
+	else
+		ufshcd_dme_peer_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
+				    &tx_lanes);
 
-This large ICCQ current may cause issues for the regulator which
-is supplying power to UFS, because the turn off request from UFS
-driver to the regulator framework will be immediately followed by
-low power mode(LPM) request by regulator framework. This is done
-by framework because UFS which is the only client is requesting
-for disable. So if the rail is still in the process of shutting down
-while ICCQ exceeds LPM current thresholds, and LPM mode is activated
-in hardware during this state, it may trigger an overcurrent
-protection (OCP) fault in the regulator.
-
-To prevent this, a 10ms delay is added after asserting HWRST. This
-allows the reset operation to complete while power rails remain active
-and in high-power mode.
-
-Currently there is no way for Host to query whether the reset is
-completed or not and hence this the delay is based on experiments
-with Qualcomm UFS controllers across multiple UFS vendors.
-
-Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
----
- drivers/ufs/host/ufs-qcom.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 89a3328a7a75..cb54628be466 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -744,8 +744,21 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
-
-
- 	/* reset the connected UFS device during power down */
--	if (ufs_qcom_is_link_off(hba) && host->device_reset)
-+	if (ufs_qcom_is_link_off(hba) && host->device_reset) {
- 		ufs_qcom_device_reset_ctrl(hba, true);
-+		/*
-+		 * After sending the SSU command, asserting the rst_n
-+		 * line causes the device firmware to wake up and
-+		 * execute its reset routine.
-+		 *
-+		 * During this process, the device may draw current
-+		 * beyond the permissible limit for low-power mode (LPM).
-+		 * A 10ms delay, based on experimental observations,
-+		 * allows the UFS device to complete its hardware reset
-+		 * before transitioning the power rail to LPM.
-+		 */
-+		usleep_range(10000, 11000);
-+	}
-
- 	return ufs_qcom_ice_suspend(host);
- }
---
-2.50.1
+Thanks,
+Wonkon Kim.
 
