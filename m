@@ -1,132 +1,118 @@
-Received: from mail-oi1-f169.google.com (mail-oi1-f169.google.com [209.85.167.169])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877AA308F39
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 15:53:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C24C21E0AD;
+	Mon, 13 Oct 2025 16:23:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760370799; cv=none; b=EmmpaOhOUk5LC/uxAyOLNUWc6BIemwLI0xp34y/CQsMNzsyeXX7AIAuB2np+/8fCeCXTYxfniWrbfGTPtDHm+OUv0IjjKDEx6nM3/OWoClo+n2fkfsZgx5NhL8az4Q8VWzwL4avBZHKgEfW2tPQKZU/yGvayi0nfJOBx9tJ9KIE=
+	t=1760372583; cv=none; b=ZKes3wuqQN8KoVNFVC/KxhmwWP16c8N5onC1WV43Ks9R06XRduAyz0lbNosiMluRTQuUFXtlP8DdA/+4FEGBf7AZcsaw/KaZOG8bpSzZGVpMbXQjsGsh9GHlJGpxtXyfQA79j+dAYucQoBOg6l7frzGN1mAZXvBCnCbKvW5knAE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760370799; c=relaxed/simple;
-	bh=5p9mi92e61fJcAu02iEnX/oA6GBMIXcBIzy4NHED8ak=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=mRO4vJ8BmumH91xxdEFl5ZwrxCS+p0poaarS6f6WJ+g9mpf/4q+x0G2C8w5yL11DHnypOpfhfCAiPPO+XrUUknCwFMvPdyPUzMwafoqrqESx0AGtpFyAqmaeerxyDz8jloZFoJLAdsFpr/ztHrmKw2bWJJ9EShLUzmjAcyIRRCQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=sZXDrG0i; arc=none smtp.client-ip=209.85.167.169
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1760372583; c=relaxed/simple;
+	bh=pLaAxxAOeuMykOqTybKDCApaEgiMMJ2A2v6pqACPv7g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=Qx/w8btMVRw3B0SQP41Dc3UlecJX4VazpGeyR2oA6ksAiGwZI6kqx+T2NfDzf9rOEOaeGUvAjttq7UTaVe1ueHE94LEQTZbjD+MPrm3f22fGmVcFvEgEm/3dCfsM5E1uGaIXVI2jbZK5FLzYc9ETtt9Vyegj2ojmvXFxzUSNkzk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gtEmUH4t; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="sZXDrG0i"
-Received: by mail-oi1-f169.google.com with SMTP id 5614622812f47-43f8116a163so1965086b6e.1
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 08:53:17 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1760370796; x=1760975596; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=o20S0NfSVYB6xSo8Pl7j81A8OLLvps51lMgqxMvCNpg=;
-        b=sZXDrG0i6t0S0hgENRR+gDDPZrEwcSG7BCAzThU9G2e7H9dDSRASr4e2VvlRQHsAto
-         2SvOFjWuXvH9sqJD6heJnAp+/p1m5hJNM9WLEC8r2CbfHbyVBX3imv3DLc4OlA1HAXzb
-         IfzaV1SjZMh6BHP8wzx2JVZL6/TGNg3rezzizfOyPGdiBX55Hxp5v7k7re8yNYiFHgjS
-         y/LBq9wNFni2cET4u5YE2X2qW8EdSyzoZMVP58cLZeNucaUsSf44WMHkugSZEmTChyHn
-         68uC+FzhJo7xqNokUiojOnba5U9PAiJY+8p64MGQPYobN9+wiW7eTBJDHC/BarkVeGfS
-         4KBA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760370796; x=1760975596;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=o20S0NfSVYB6xSo8Pl7j81A8OLLvps51lMgqxMvCNpg=;
-        b=c+TFG+zXiQ5IcnXg/IPNjEdh79Xofkz27+tRD1TtZxvazu+IUtbDdehB3qWOSXWIPm
-         zGqAaK2CX/gCoLCbhzGW84UJn8HAz8AJIQ1x5SzSjR/QSTW9CLVFFzjp7GZKeS5bVkKC
-         vpdeTCEJjngKpXYgbZew5cmAlBX/nFgsSt9+jTliV+jO6c4l1ud1YJccppuoHDh8ajOE
-         lEK7kF7pmA83yMvQma2HIqPe+vsHJu3DdkyoqQ9IMfe8UzOeR8bihCQ5jaufzbuqlARg
-         cj8JbCu8MhU+zVSSfQKc+GNFbO8hG5fIzCdNhGGvVbWoApoPzNCSLxXWbAC+HvKjVqyK
-         PoyQ==
-X-Forwarded-Encrypted: i=1; AJvYcCX8kjR0sOygJpjlY8oNixi0wrs3wo8Bju41ki0y1vAqCh7/xMDuhmHIdrgos3GTuInQnDofjs2BVmOs@vger.kernel.org
-X-Gm-Message-State: AOJu0YxFaZ+QLAHxZvil55Im5Nub1ibuFbfyn3tYQ7KFaAe/S9/ZhVD8
-	KG90T3KfBBCH8KMgWZtvM3hlA0XC1JbVonNhN2UumMhu1JBru08lBRrcFw0F/0ZHYJcrs0iXXnN
-	aMR8DWX/XkvFy6HnwwFNDqfIZn/HlO6tYIreUQ4PC5Q==
-X-Gm-Gg: ASbGncsqYTibhv0uIa4kvghrU9l9+EwVi6wFGmqpvdQ6pIsaTkPX4Bh8R1Rl6+cSiHQ
-	4w7uIm5MVfjOMcQXIX0k5Dj8FxY+4jgrf1KCtGWaKZ8Jv7uw+d9EUL4yLniQWIgI56guv2YfqxF
-	OmGN9AL0yFgNsl72LR7sKGVfFnEC7iOlHi6BQtkz+vkVRL+HjrM8c6DN54kzy7/vqTj+LyR756i
-	o+n0Nvdq9emIhymgqiw5G4hnDiE
-X-Google-Smtp-Source: AGHT+IFkLmceZ5WfJLgB+vu/gJ4u92X3C5X4dHLyX3eG9NwHV1u2xqynqMbxqjysdV+YC53gB6pJi2w4IUxW4cBOy9o=
-X-Received: by 2002:a05:6808:17a6:b0:441:c793:d734 with SMTP id
- 5614622812f47-441c793e3c6mr3242066b6e.11.1760370796590; Mon, 13 Oct 2025
- 08:53:16 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gtEmUH4t"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cljH85qk9zm0yT2;
+	Mon, 13 Oct 2025 16:19:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1760372387; x=1762964388; bh=bu9PLA/8Y7BBIVllLT5wV7kp
+	7DEkGnJNGbY9I0R2Gbw=; b=gtEmUH4t67Uj9puGkOv72IVaukCEpxtWbRmeaTW6
+	jLtvFM65wvMoWvlK7p2D1/oOlBgGowQCCFyVkcn9h7wrXyFM3rFZ2ifecXltCk78
+	od8msuu/JVZFXvJGUbWwbXOlJPCvbm5mGcQSMUDxoWdzmBdk7cgAwQQ4Po6Bwyc0
+	AR9SsbpBRo5eN2OrVBq1OCaSMPmhUis4bO5EWr0Wkr4hqQh376cxDdNtEPy7cguw
+	akIcDfJ8XMebtf8MbsE8sSeH85bZhlv5UOX+kWaUzMfS38VMZVQpZ5YJXZ62mgRV
+	bQGDX77GKNj1my5iwwE2rS/0A6hp+VV9nsPHVwT9ViZs8w==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id uHKd_n-NCFLX; Mon, 13 Oct 2025 16:19:47 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cljH13cN6zm0yTR;
+	Mon, 13 Oct 2025 16:19:40 +0000 (UTC)
+Message-ID: <f90010b2-7db1-412c-8526-47339bf4aa6b@acm.org>
+Date: Mon, 13 Oct 2025 09:19:39 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251001060805.26462-1-beanhuo@iokpp.de> <20251001060805.26462-4-beanhuo@iokpp.de>
- <CAHUa44HA0uoXbkKgyvF4Rb9OJa1Qj-Wh7QAmQxXYAf3grLdktw@mail.gmail.com>
- <893731e9c8e4e74bb0d967ab2e7039e862896dc5.camel@gmail.com>
- <CAHUa44HdV8FJMayVg6TFz7oGZc1b6QntxMsUN8mdTV7pm7vkKQ@mail.gmail.com>
- <a040353e95a67dc3bde09b5f3866aa628150c9db.camel@gmail.com>
- <CAHUa44HYNgiRU5yOrVq8gBwHEEAxGz6TyT0PrBpVOiFfKxYhOQ@mail.gmail.com> <97c39c0cdb6b96d791fe05f8e5496a502a7e6ac6.camel@iokpp.de>
-In-Reply-To: <97c39c0cdb6b96d791fe05f8e5496a502a7e6ac6.camel@iokpp.de>
-From: Jens Wiklander <jens.wiklander@linaro.org>
-Date: Mon, 13 Oct 2025 17:53:05 +0200
-X-Gm-Features: AS18NWBfY6qcHPN2KCt3kVJZNcUkMUkWm8tcLo8SQpie6EFEXj14W79vk2cncCY
-Message-ID: <CAHUa44FGUvEAe-3nQyNejjuUPnG7JjnaYBgvHzwrs6kUnJYWVw@mail.gmail.com>
-Subject: Re: [PATCH v2 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver for
- UFS devices
-To: Bean Huo <beanhuo@iokpp.de>
-Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com, 
-	jejb@linux.ibm.com, martin.petersen@oracle.com, can.guo@oss.qualcomm.com, 
-	ulf.hansson@linaro.org, beanhuo@micron.com, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ufs: core: Initialize a variable mode for PA_PWRMODE
+To: Wonkon Kim <wkon.kim@samsung.com>, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, peter.wang@mediatek.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <CGME20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924@epcas1p4.samsung.com>
+ <20251002070027.228638-1-wkon.kim@samsung.com>
+ <4c894d68-7d0e-49a0-b582-477bcc7f351d@acm.org>
+ <000001dc3c1a$33e23030$9ba69090$@samsung.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <000001dc3c1a$33e23030$9ba69090$@samsung.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Mon, Oct 13, 2025 at 5:43=E2=80=AFPM Bean Huo <beanhuo@iokpp.de> wrote:
->
-> On Mon, 2025-10-13 at 14:22 +0200, Jens Wiklander wrote:
-> > >
-> > > For certain memory vendors, the serial number is guaranteed to be uni=
-que
-> > > among
-> > > all devices.
-> >
-> > This is supposed to be generic and not rely on the behavior of only
-> > some vendors.
-> >
-> > >
-> > > For partitions or regions, we have appended the region number to the =
-end of
-> > > the
-> > > CID =E2=80=94 please check the patch for details.
-> >
-> > Yes, but how do you know that you don't overwrite a part of the serial =
-number?
-> >
-> > >
-> > > Regarding improving CID uniqueness, we could include the OEM ID or pr=
-oduct
-> > > number. However, this would make the CID longer than 16 bytes.
-> >
-> > UFS doesn't have a CID, but there's no need for one either. struct
-> > rpmb_descr has dev_id and dev_id_len. It can be any length, within
-> > reason.
-> >
-> > Cheers,
-> > Jens
->
->
-> Hi Jens,
->
-> how about combining wManufacturerID, wManufactureDate, wDeviceVersion,  S=
-erial
-> Number (in unicode), plus the region number?
+On 10/13/25 1:20 AM, Wonkon Kim wrote:
+>> On 10/2/25 12:00 AM, Wonkon Kim wrote:
+>>>    static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
+>>>    {
+>>>    	struct ufs_pa_layer_attr *pwr_info = &hba->pwr_info;
+>>> -	u32 mode;
+>>> +	u32 mode = 0;
+>>>
+>>>    	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
+>>
+>> Since there is more code that passes a pointer to an uninitialized
+>> variable to ufshcd_dme_get(), the untested patch below may be a better
+>> solution:
+>>
+>> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
+>> 127b691402f9..5226fbca29ec 100644
+>> --- a/drivers/ufs/core/ufshcd.c
+>> +++ b/drivers/ufs/core/ufshcd.c
+>> @@ -4277,8 +4277,8 @@ int ufshcd_dme_get_attr(struct ufs_hba *hba, u32
+>> attr_sel,
+>>    			get, UIC_GET_ATTR_ID(attr_sel),
+>>    			UFS_UIC_COMMAND_RETRIES - retries);
+>>
+>> -	if (mib_val && !ret)
+>> -		*mib_val = uic_cmd.argument3;
+>> +	if (mib_val)
+>> +		*mib_val = ret == 0 ? uic_cmd.argument3 : 0;
+>>
+>>    	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
+>>    	    && pwr_mode_change)
+>>
+>>
+> 
+> There are some attributes to use 0 as valid value.
+> e.g. PA_MAXRXHSGEAR is set to 0 for NO_HS=0
+> If it has 0 for valid value, most of value 0 are regarded as FALSE, unsupported or minimum.
+> And these cases seems to check ret for command success/fail in code.
+> However, is it ok to set 0 for ufshcd_send_uic_cmd() fail?
+> 
+> If it can't, it needs to initialize mode.
+> Value 0 for PA_PWRMODE is invalid.
 
-Sounds good.
+Hi Wonkon,
 
-Cheers,
-Jens
+Modifying ufshcd_dme_get_attr() doesn't exclude checking the return
+value of ufshcd_dme_get_attr(). I propose to modify
+ufshcd_dme_get_attr() such that it always initializes *mib_val and also
+to check the ufshcd_dme_get_attr() return value wherever appropriate.
 
->
->
-> Kind regards,
-> Bean
+Thanks,
+
+Bart.
