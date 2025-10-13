@@ -1,181 +1,150 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ot1-f44.google.com (mail-ot1-f44.google.com [209.85.210.44])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 555E42C0F71;
-	Mon, 13 Oct 2025 08:20:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E9AC92EAD10
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 08:21:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760343644; cv=none; b=M/LMGUQSO155ao4jIiOoKSL4yDPkvijBT5jgfgXY1iaJ1yhMM+qp/hi0kH7rs7943l/VnjaKfv7N80UjgwvFA21Frla00QW11KucE3uRktTKIdZavYFLv7CG8tTgTDqLVbhWkb4szWDWvu5Z5ZEa5hDdxwN+qeauvJ3rMXhb8ww=
+	t=1760343723; cv=none; b=mOAyYrJqQUjPT8GprEju9dM+o2zsY4ES5DTdkYwlWGllr9H7h47dbpF55CbMa6elKqG9x0AOayr8tOXc1EkN9U3/RIuOSXCQijmc1iWcAuF3IUfDqDRDZRp5SgNYSwuMQmK6FMuRuUtTeVSD7N15qGHVNu2T0RyKMU9gKEKe1pQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760343644; c=relaxed/simple;
-	bh=WqSVscyKogP7qt1W7UqnltGcwKEGshwHgBtupZDlMcQ=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ev8PCp9xn/NYpHv0Z1+GKqQ3ShVaBJKEGjfzz9PV2OQtcOmWAzyDsK2n50NdnkE+syEZXGGzFdArpj8/xYoZHGd/MS2yalMNTpxpA1Jp54v7ki+T9R/Yug5/VGocMfCkP76y4Ii5CHTr5T+Ct38lZHdDBWAlvTNFeSCm6tHaaoI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p2qPs0yE; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760343723; c=relaxed/simple;
+	bh=eAD0+1vST5dCT18sRVdP+XYndG11q3exTERbaeCwb7E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=lxHEORKwvlOYZYdoeTmPgRp1qtLsXDIuvIQPrApqeSAa5jyF/QV/sOTfX7oJNSMkveB6d53H3yDjQMX6hLmJ9u4+gP9nq7io8cn3oKa8Ta4JV2GHL4SGMZyBSSDk3DCazpZXZM9PMGbJ/Mj9xqs1AhoZ3lTpQ5vdKHckLst/da0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=N+0q9GZl; arc=none smtp.client-ip=209.85.210.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p2qPs0yE"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4950AC4CEE7;
-	Mon, 13 Oct 2025 08:20:42 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760343643;
-	bh=WqSVscyKogP7qt1W7UqnltGcwKEGshwHgBtupZDlMcQ=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=p2qPs0yEoNgB8k47PI4VWAe3Te4jP3dnbQ1VgtJf39l8MawlYt1ieIB5qAfK77AXj
-	 KOptxF0lfxLHOHjxbvauF1f2Nf5YHwQCt5Nn8zJs7zDRYcWkkLJz5SiyNPt0YqLEKR
-	 XvQlEyRuBIvYgvQLH1j2vbkQ/hqX8fGRyMDuqNLYBhfLYr7feLCDKMZe193wFPRWsJ
-	 OwPxJlWOrsl7SSGNQU6gW02JCxxiJXAFP3yDSTKSNrH0Bg/F8sCxfwQvz++bhVegdi
-	 2qcps3St5ni6QeOkhQ4Zg0IO5QQhc+3NJSSD7yV0Y2N+bQN/LqydJEMnsOIr6g1uvD
-	 ltE5FO8PU5Gag==
-Date: Mon, 13 Oct 2025 10:20:39 +0200
-From: Niklas Cassel <cassel@kernel.org>
-To: Markus Probst <markus.probst@posteo.de>
-Cc: Damien Le Moal <dlemoal@kernel.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 2/2] ata: Use ACPI methods to power on disks
-Message-ID: <aOy2Vy6AQNynzewo@ryzen>
-References: <20251010223817.729490-1-markus.probst@posteo.de>
- <20251010223817.729490-3-markus.probst@posteo.de>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="N+0q9GZl"
+Received: by mail-ot1-f44.google.com with SMTP id 46e09a7af769-7c0e8367d4eso1540426a34.1
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 01:21:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1760343719; x=1760948519; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=PfkSUSbV0vhiMznuifIKRudfUsRdigA3bUiVnoZZFkE=;
+        b=N+0q9GZlzcMVOGl75nNjmjutZV2g/nlm+9VFV+F0o/j2FXrsbNnURWXIZfSQfviX8b
+         bWoy84Eg7iyUjrjJ0OsNJfsHGZu6PVzaIJNtdj46rVDpQFcR+AZRp2Jgw+F0UdCg6fpY
+         N3Dx///YF9zpELfn3r+VBimlK1KotkddrDXGOOBk+yYFBjh3HYEuSyhpTKW8nmLpw4g1
+         L6ZjSCovrL+89Gbr7uEl9gNBeguSo5zT1SDjfCoYpESKTV+4LV3ylQp0eVvBvQEN0Uje
+         KOIH6UUY8mVBXWmJna481IN5SLSne6Fb19CBGTslN3j7NYUSWNH+5hEGLQiZvcdEnt8/
+         V0Rw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760343719; x=1760948519;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=PfkSUSbV0vhiMznuifIKRudfUsRdigA3bUiVnoZZFkE=;
+        b=G1aqdm847RfMR6UduxdEf53qP5RftHyigMZ7TRU/JGbB+Qhvag3X+ALuM97TPqOa0b
+         RxhDRcTuum+xBiTuFUTcY+5flSeVNTIejiscBd/9HYAeH4XXkEWvhNrAt5tR/0rsqet1
+         36ww9uHpOR+BfmHLuYcg/reX7ZP769lIkNHnIdqyIFiV5dNi7guzists0PyGmkZQy085
+         iUamXS0N0g1QSvJ1RXAx+sAitat5tME/DBiug7UtCjsBmJk8kcQqZsbOtHF9Io8L+IcQ
+         rTU09MlfvpWI9MhzRsFeOSE39eRYubkPPGEt7w537BDmA6TenxY/bik1f44OkbpebyIh
+         R+5A==
+X-Forwarded-Encrypted: i=1; AJvYcCWQQ7UukqxF1hq744hs6f12nyV1Z7Fzu01b2s5TU8YdSSuT7DTuz5v7fJ+KHXZD2f3jmv/4dhe28jgn@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxp9Xpm05TOlzWk9MaIG6L8WL83XzdrcXwxzbcVfMHpgmU3vsPs
+	LOt0CDoSo49ds2YjgXBY7s5jdzm23IHlxLDjrP+aF/J+O2eKZpdQaxqzXwoLm1/FF7laG40KnoV
+	ZVTd2dauCwnBwNtZDqOLGlJQxCtXClBZA8+EAk8N0Wg==
+X-Gm-Gg: ASbGnct6jQc4HnOIND3E9V7N+LGjNJ06o5YGAJvhj0RuBWZ0inNOQm79d177XM8VgRq
+	yNHe/EtfHh6cHmqufVKgl0Po+ksrnfm/IvQ3gWKupXeCOORfvElpLhfdNkTwwFV73fGOxj8FP6w
+	MhbyaVWR7VsIjGA9Pg9GFbtlQUF0JssjK4Gitsj7f+zlsXK/ijwK3bznEsoUqgCRC4xdFL+XLeg
+	8frrvTnHkr0Nwy29E1aK4KoYbMX
+X-Google-Smtp-Source: AGHT+IHbBJMX3XQXIUnh0eL9Gqqi1OX8ycJZAvF31um7+RQ7SUC6Nq+yI9wt5/rT+c82tvoUj+Wt+PHgwJvmIyZts1I=
+X-Received: by 2002:a05:6808:50a0:b0:43f:713c:a38e with SMTP id
+ 5614622812f47-4417b393963mr8040987b6e.30.1760343719075; Mon, 13 Oct 2025
+ 01:21:59 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251010223817.729490-3-markus.probst@posteo.de>
+References: <20251001060805.26462-1-beanhuo@iokpp.de> <20251001060805.26462-4-beanhuo@iokpp.de>
+ <CAHUa44HA0uoXbkKgyvF4Rb9OJa1Qj-Wh7QAmQxXYAf3grLdktw@mail.gmail.com> <893731e9c8e4e74bb0d967ab2e7039e862896dc5.camel@gmail.com>
+In-Reply-To: <893731e9c8e4e74bb0d967ab2e7039e862896dc5.camel@gmail.com>
+From: Jens Wiklander <jens.wiklander@linaro.org>
+Date: Mon, 13 Oct 2025 10:21:47 +0200
+X-Gm-Features: AS18NWDSwHNWbhvfTfZVBBArRE_Meet5w9zINg4FG3XlfoXhTtWNhOWUG_vlJ4s
+Message-ID: <CAHUa44HdV8FJMayVg6TFz7oGZc1b6QntxMsUN8mdTV7pm7vkKQ@mail.gmail.com>
+Subject: Re: [PATCH v2 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver for
+ UFS devices
+To: Bean Huo <huobean@gmail.com>
+Cc: avri.altman@wdc.com, bvanassche@acm.org, alim.akhtar@samsung.com, 
+	jejb@linux.ibm.com, martin.petersen@oracle.com, can.guo@oss.qualcomm.com, 
+	ulf.hansson@linaro.org, beanhuo@micron.com, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Fri, Oct 10, 2025 at 10:38:35PM +0000, Markus Probst wrote:
-> Some embedded devices have the ability to control whether power is
-> provided to the disks via the sata power connector or not. If power
-> resources are defined on ata ports / devices in ACPI, we should try to set
-> the power state to D0 before probing the disk to ensure that any power
-> supply or power gate that may exist is providing power to the disk.
-> 
-> An example for such devices would be newer synology nas devices. Every
-> disk slot has its own sata power connector. Whether the connector is
-> providing power is controlled via an gpio, which is *off by default*.
-> Also the disk loses power on reboots.
-> 
-> Add a new function, ata_acpi_dev_manage_restart(), that will be used to
-> determine if a disk should be stopped before restarting the system. If a
-> usable ACPI power resource has been found, it is assumed that the disk
-> will lose power after a restart and should be stopped to avoid a power
-> failure. Also add a new function, ata_acpi_port_set_power_state(), that
-> will be used to power on the sata power connector if usable ACPI power
-> resources on the associated ata port are found. It will be called right
-> before probing the port, therefore the disk will be powered on just in
-> time.
-
-s/sata/SATA/
-s/nas/NAS/
-s/ata/ATA/ (except for function names of course)
-
-Since this patch is basically doing two logical changes
-1) Calling ata_acpi_dev_manage_restart() on restart, which calls
-acpi_bus_power_manageable() to disable power on shutdown.
-
-2) Calling ata_acpi_port_set_power_state() during ata_port_probe(),
-to enable power.
-
-Please also split this patch into two, so that we have one commit per
-logical change. That would make things easier to understand, as your
-commit message your just describe one behavior instead of two completely
-different behaviors.
+Hi Bean,
 
 
-Your commit message mentions that you want to spin down the disk on
-restart to avoid "avoid a power failure".
 
-Is there a reason why you call acpi_bus_power_manageable() to spin down
-the disk instead of the regular function: ata_dev_power_set_standby()
-which spins down the disk?
+On Wed, Oct 8, 2025 at 5:07=E2=80=AFPM Bean Huo <huobean@gmail.com> wrote:
+>
+> Jens,
+>
+> I incorporated your suggestions in my v3 excpet these two:
+>
+>
+> On Wed, 2025-10-01 at 09:50 +0200, Jens Wiklander wrote:
+> > > diff --git a/drivers/ufs/core/Makefile b/drivers/ufs/core/Makefile
+> > > index cf820fa09a04..51e1867e524e 100644
+> > > --- a/drivers/ufs/core/Makefile
+> > > +++ b/drivers/ufs/core/Makefile
+> > > @@ -2,6 +2,7 @@
+> > >
+> > >   obj-$(CONFIG_SCSI_UFSHCD)              +=3D ufshcd-core.o
+> > >   ufshcd-core-y                          +=3D ufshcd.o ufs-sysfs.o uf=
+s-mcq.o
+> > > +ufshcd-core-$(CONFIG_RPMB)             +=3D ufs-rpmb.o
+> >
+> > SCSI_UFSHCD might need the same trick ("depends on RPMB || !RPMB") in
+> > Kconfig as we have for MMC_BLOCK.
+> >
+> > >
+> When RPMB=3Dm and SCSI_UFSHCD=3Dy, the ufs-rpmb.o is compiled into the bu=
+ilt-in
+> ufshcd-core, ufs-rpmb.c calls functions from the OP-TEE RPMB subsystem mo=
+dule,
+> The kernel allows built-in code to reference module symbols (they become =
+runtime
+> dependencies, not link-time), please check, I tested.
+>
+> > >
+> > >
+> >
+> > > +
+> > > +       struct rpmb_descr descr =3D {
+> > > +               .type =3D RPMB_TYPE_UFS,
+> >
+> > We'll need another type if the device uses the extended RPMB frame
+> > format. How about you clarify this, where RPMB_TYPE_UFS is defined to
+> > avoid confusion?
+>
+> As ufs-bsg.c, we could use ARPMB_TYPE_UFS for UFS advanced RPMB frame, if=
+ it is
+> RPMB, we take it as normal RPMB, the frame should be the same as MMC RPMB=
+.
 
+Isn't it a bit confusing to set the type to RPMB_TYPE_EMMC when it's
+actually a UFS RPMB, even if it's supposedly compatible enough?
 
-> 
-> Signed-off-by: Markus Probst <markus.probst@posteo.de>
-> ---
->  drivers/ata/libata-acpi.c | 71 +++++++++++++++++++++++++++++++++++++++
->  drivers/ata/libata-core.c |  2 ++
->  drivers/ata/libata-scsi.c |  1 +
->  drivers/ata/libata.h      |  4 +++
->  4 files changed, 78 insertions(+)
-> 
-> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> index f2140fc06ba0..4a72a98b922c 100644
-> --- a/drivers/ata/libata-acpi.c
-> +++ b/drivers/ata/libata-acpi.c
-> @@ -245,6 +245,77 @@ void ata_acpi_bind_dev(struct ata_device *dev)
->  				   ata_acpi_dev_uevent);
->  }
->  
-> +/**
-> + * ata_acpi_dev_manage_restart - if the disk should be stopped (spun down) on
-> + * system restart.
-> + * @dev: target ATA device
-> + *
-> + * RETURNS:
-> + * 1 if the disk should be stopped, otherwise 0
-> + */
-> +bool ata_acpi_dev_manage_restart(struct ata_device *dev)
-> +{
-> +	// If the device is power manageable and we assume the disk loses power
-> +	// on reboot.
+While the frame format works, I'm concerned about the CID. It's
+essentially a namespace of its own for eMMC, and at least the OP-TEE
+implementation makes assumptions about the format by masking out the
+PRV (Product Revision) and CRC (CRC7 checksum) fields from the CID
+when deriving the RPMB key. For this to work reliably, the CID must be
+guaranteed to be unique per RPMB device.
 
-Please no C++ style comments.
+From what I understand, for UFS, the serial number is only guaranteed
+to be unique if the manufacturer and the product name are taken into
+account. Combined, these fields can be much larger than 16 bytes, and
+we also have the partition number to consider.
 
-Also "If the device is power manageable and we assume"
-should this not be
-"If the device is power manageable, we assume"
+By using RPMB_TYPE_UFS we can define a device ID tailored for UFS with
+all the fields we need. Thoughts?
 
-Because your commit message says:
-"If a usable ACPI power resource has been found, it is assumed that the disk
-will lose power after a restart"
-
-so I think the word "and" here is wrong.
-
-
-> +	if (dev->link->ap->flags & ATA_FLAG_ACPI_SATA) {
-> +		if (!is_acpi_device_node(dev->tdev.fwnode))
-> +			return 0;
-> +		return acpi_bus_power_manageable(ACPI_HANDLE(&dev->tdev));
-> +	}
-> +
-
-Please add a commend here explaining the difference between the
-two cases, because you call either:
-return acpi_bus_power_manageable(ACPI_HANDLE(&dev->tdev));
-or
-return acpi_bus_power_manageable(ACPI_HANDLE(&dev->link->ap->tdev));
-
-At least the difference is not obvious to me, from just looking at this
-function.
-
-
-> +	if (!is_acpi_device_node(dev->link->ap->tdev.fwnode))
-> +		return 0;
-> +	return acpi_bus_power_manageable(ACPI_HANDLE(&dev->link->ap->tdev));
-> +}
-> +
-> +/**
-> + * ata_acpi_port_set_power_state - set the power state of the ata port
-> + * @ap: target ATA port
-> + * @enable: power state to be set
-> + *
-> + * This function is called at the beginning of ata_port_probe.
-> + */
-> +void ata_acpi_port_set_power_state(struct ata_port *ap, bool enable)
-
-This function is never called with enable==false, so let's please remove
-this parameter and rename the function to something like
-ata_acpi_port_enable_power() or similar.
-If someone a future patch ever wants to refactor this to also handle
-disable, then that patch can also create a parameter for this function.
-Otherwise we are just adding dead code.
-
-
-Kind regards,
-Niklas
+Cheers,
+Jens
