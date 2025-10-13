@@ -1,121 +1,181 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FB162F28F2
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 08:20:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 555E42C0F71;
+	Mon, 13 Oct 2025 08:20:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760343622; cv=none; b=Yxq3URsbcgQFONrkr6iJnvnmyJvL+ksiyLXVAw3XaoLOfWYhbI0t0nQzN9VjNz0Eq0DQD7l4EOqMnmVECU9vSC9lZ+o7Qs4iZR5Auxwx/JrK5oP992uAlMO7CWTGcHJ4Tj4AqiH0sZoo4jsVdyhIcsP50MJi9/LxH0HPOJZwTNM=
+	t=1760343644; cv=none; b=M/LMGUQSO155ao4jIiOoKSL4yDPkvijBT5jgfgXY1iaJ1yhMM+qp/hi0kH7rs7943l/VnjaKfv7N80UjgwvFA21Frla00QW11KucE3uRktTKIdZavYFLv7CG8tTgTDqLVbhWkb4szWDWvu5Z5ZEa5hDdxwN+qeauvJ3rMXhb8ww=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760343622; c=relaxed/simple;
-	bh=bWQe4catjplmIwu9viZHb1YKyb9MgQYyB1f2VOwS1ow=;
-	h=From:To:In-Reply-To:Subject:Date:Message-ID:MIME-Version:
-	 Content-Type:References; b=p9EdAWvwbirxU7nfNqeFpO/QAIc239pgYR1rHLV15yKnwWlsJeOfB2e94dGroq8DAwmPm5Lg+jV6io2LOg15FIyB9ICJh3+8VE1xkwfRHSbMX86vywwZFCTzQqufiXJtFZ+FdEuskzongvSqHVfg5Nr7HOkeS3DrWfr6iK+kjmk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=ciCcqHEH; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1760343644; c=relaxed/simple;
+	bh=WqSVscyKogP7qt1W7UqnltGcwKEGshwHgBtupZDlMcQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ev8PCp9xn/NYpHv0Z1+GKqQ3ShVaBJKEGjfzz9PV2OQtcOmWAzyDsK2n50NdnkE+syEZXGGzFdArpj8/xYoZHGd/MS2yalMNTpxpA1Jp54v7ki+T9R/Yug5/VGocMfCkP76y4Ii5CHTr5T+Ct38lZHdDBWAlvTNFeSCm6tHaaoI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=p2qPs0yE; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="ciCcqHEH"
-Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20251013082016epoutp023b6b4798448e69c6da873b502a8d0b48~t-zE9TvTq3173031730epoutp02i
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 08:20:16 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20251013082016epoutp023b6b4798448e69c6da873b502a8d0b48~t-zE9TvTq3173031730epoutp02i
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1760343616;
-	bh=pRHrDBnOjjwGnV8jPr9JRBFXDzkVoPpuS0SbkJwjTKk=;
-	h=From:To:In-Reply-To:Subject:Date:References:From;
-	b=ciCcqHEHcmnmrlWu36dqAQUFQ354QbhyADVPgOgqarP6UZnl1EQb2F+lxF4jLApIv
-	 yJoym91LuElcn4AzSRS7pmNmfDjfvBZzuMRMXkFAtKZh0z+rOXOe8eA+hAfvj5vwph
-	 Uvz2jhSEjF9FpewuwkKiT2tz5nt894sB4foAXCt0=
-Received: from epsnrtp02.localdomain (unknown [182.195.42.154]) by
-	epcas1p2.samsung.com (KnoxPortal) with ESMTPS id
-	20251013082016epcas1p21c08be95fe2ee390cf9c96c11ed7ad2d~t-zEsaHiv2051620516epcas1p2E;
-	Mon, 13 Oct 2025 08:20:16 +0000 (GMT)
-Received: from epcas1p3.samsung.com (unknown [182.195.38.192]) by
-	epsnrtp02.localdomain (Postfix) with ESMTP id 4clVdq5dHSz2SSKm; Mon, 13 Oct
-	2025 08:20:15 +0000 (GMT)
-Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
-	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
-	20251013082015epcas1p4db542f2000d6dd8ecac911d0fa1814f1~t-zD8AF3q2088920889epcas1p44;
-	Mon, 13 Oct 2025 08:20:15 +0000 (GMT)
-Received: from wkonkim01 (unknown [10.253.100.198]) by epsmtip1.samsung.com
-	(KnoxPortal) with ESMTPA id
-	20251013082015epsmtip1b7209ee2dd056f8c8409f0f72f323e26~t-zD3UieL0807408074epsmtip1X;
-	Mon, 13 Oct 2025 08:20:15 +0000 (GMT)
-From: "Wonkon Kim" <wkon.kim@samsung.com>
-To: "'Bart Van Assche'" <bvanassche@acm.org>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<peter.wang@mediatek.com>, <linux-scsi@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>
-In-Reply-To: <4c894d68-7d0e-49a0-b582-477bcc7f351d@acm.org>
-Subject: RE: [PATCH] ufs: core: Initialize a variable mode for PA_PWRMODE
-Date: Mon, 13 Oct 2025 17:20:14 +0900
-Message-ID: <000001dc3c1a$33e23030$9ba69090$@samsung.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="p2qPs0yE"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 4950AC4CEE7;
+	Mon, 13 Oct 2025 08:20:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760343643;
+	bh=WqSVscyKogP7qt1W7UqnltGcwKEGshwHgBtupZDlMcQ=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=p2qPs0yEoNgB8k47PI4VWAe3Te4jP3dnbQ1VgtJf39l8MawlYt1ieIB5qAfK77AXj
+	 KOptxF0lfxLHOHjxbvauF1f2Nf5YHwQCt5Nn8zJs7zDRYcWkkLJz5SiyNPt0YqLEKR
+	 XvQlEyRuBIvYgvQLH1j2vbkQ/hqX8fGRyMDuqNLYBhfLYr7feLCDKMZe193wFPRWsJ
+	 OwPxJlWOrsl7SSGNQU6gW02JCxxiJXAFP3yDSTKSNrH0Bg/F8sCxfwQvz++bhVegdi
+	 2qcps3St5ni6QeOkhQ4Zg0IO5QQhc+3NJSSD7yV0Y2N+bQN/LqydJEMnsOIr6g1uvD
+	 ltE5FO8PU5Gag==
+Date: Mon, 13 Oct 2025 10:20:39 +0200
+From: Niklas Cassel <cassel@kernel.org>
+To: Markus Probst <markus.probst@posteo.de>
+Cc: Damien Le Moal <dlemoal@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-ide@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 2/2] ata: Use ACPI methods to power on disks
+Message-ID: <aOy2Vy6AQNynzewo@ryzen>
+References: <20251010223817.729490-1-markus.probst@posteo.de>
+ <20251010223817.729490-3-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-X-Mailer: Microsoft Outlook 15.0
-Thread-Index: AQFhT2clGfJ4dWcII9qWXyagEihcgwJWi3eIAdcMmwG1lCIXkA==
-Content-Language: ko
-X-CMS-MailID: 20251013082015epcas1p4db542f2000d6dd8ecac911d0fa1814f1
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-CMS-TYPE: 101P
-cpgsPolicy: CPGSC10-711,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924
-References: <CGME20251002070057epcas1p49ac487359f24f6813ba8f9f44bcf0924@epcas1p4.samsung.com>
-	<20251002070027.228638-1-wkon.kim@samsung.com>
-	<4c894d68-7d0e-49a0-b582-477bcc7f351d@acm.org>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251010223817.729490-3-markus.probst@posteo.de>
 
-> On 10/2/25 12:00 AM, Wonkon Kim wrote:
-> >   static bool ufshcd_is_pwr_mode_restore_needed(struct ufs_hba *hba)
-> >   =7B
-> >   	struct ufs_pa_layer_attr *pwr_info =3D &hba->pwr_info;
-> > -	u32 mode;
-> > +	u32 mode =3D 0;
-> >
-> >   	ufshcd_dme_get(hba, UIC_ARG_MIB(PA_PWRMODE), &mode);
->=20
-> Since there is more code that passes a pointer to an uninitialized
-> variable to ufshcd_dme_get(), the untested patch below may be a better
-> solution:
->=20
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c index
-> 127b691402f9..5226fbca29ec 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> =40=40 -4277,8 +4277,8 =40=40 int ufshcd_dme_get_attr(struct ufs_hba *hba=
-, u32
-> attr_sel,
->   			get, UIC_GET_ATTR_ID(attr_sel),
->   			UFS_UIC_COMMAND_RETRIES - retries);
->=20
-> -	if (mib_val && =21ret)
-> -		*mib_val =3D uic_cmd.argument3;
-> +	if (mib_val)
-> +		*mib_val =3D ret =3D=3D 0 ? uic_cmd.argument3 : 0;
->=20
->   	if (peer && (hba->quirks & UFSHCD_QUIRK_DME_PEER_ACCESS_AUTO_MODE)
->   	    && pwr_mode_change)
->=20
->=20
+On Fri, Oct 10, 2025 at 10:38:35PM +0000, Markus Probst wrote:
+> Some embedded devices have the ability to control whether power is
+> provided to the disks via the sata power connector or not. If power
+> resources are defined on ata ports / devices in ACPI, we should try to set
+> the power state to D0 before probing the disk to ensure that any power
+> supply or power gate that may exist is providing power to the disk.
+> 
+> An example for such devices would be newer synology nas devices. Every
+> disk slot has its own sata power connector. Whether the connector is
+> providing power is controlled via an gpio, which is *off by default*.
+> Also the disk loses power on reboots.
+> 
+> Add a new function, ata_acpi_dev_manage_restart(), that will be used to
+> determine if a disk should be stopped before restarting the system. If a
+> usable ACPI power resource has been found, it is assumed that the disk
+> will lose power after a restart and should be stopped to avoid a power
+> failure. Also add a new function, ata_acpi_port_set_power_state(), that
+> will be used to power on the sata power connector if usable ACPI power
+> resources on the associated ata port are found. It will be called right
+> before probing the port, therefore the disk will be powered on just in
+> time.
 
-There are some attributes to use 0 as valid value.
-e.g. PA_MAXRXHSGEAR is set to 0 for NO_HS=3D0
-If it has 0 for valid value, most of value 0 are regarded as FALSE, unsuppo=
-rted or minimum.
-And these cases seems to check ret for command success/fail in code.
-However, is it ok to set 0 for ufshcd_send_uic_cmd() fail?
+s/sata/SATA/
+s/nas/NAS/
+s/ata/ATA/ (except for function names of course)
 
-If it can't, it needs to initialize mode.
-Value 0 for PA_PWRMODE is invalid.
+Since this patch is basically doing two logical changes
+1) Calling ata_acpi_dev_manage_restart() on restart, which calls
+acpi_bus_power_manageable() to disable power on shutdown.
+
+2) Calling ata_acpi_port_set_power_state() during ata_port_probe(),
+to enable power.
+
+Please also split this patch into two, so that we have one commit per
+logical change. That would make things easier to understand, as your
+commit message your just describe one behavior instead of two completely
+different behaviors.
 
 
-Thanks,
-Wonkon Kim.
+Your commit message mentions that you want to spin down the disk on
+restart to avoid "avoid a power failure".
 
+Is there a reason why you call acpi_bus_power_manageable() to spin down
+the disk instead of the regular function: ata_dev_power_set_standby()
+which spins down the disk?
+
+
+> 
+> Signed-off-by: Markus Probst <markus.probst@posteo.de>
+> ---
+>  drivers/ata/libata-acpi.c | 71 +++++++++++++++++++++++++++++++++++++++
+>  drivers/ata/libata-core.c |  2 ++
+>  drivers/ata/libata-scsi.c |  1 +
+>  drivers/ata/libata.h      |  4 +++
+>  4 files changed, 78 insertions(+)
+> 
+> diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
+> index f2140fc06ba0..4a72a98b922c 100644
+> --- a/drivers/ata/libata-acpi.c
+> +++ b/drivers/ata/libata-acpi.c
+> @@ -245,6 +245,77 @@ void ata_acpi_bind_dev(struct ata_device *dev)
+>  				   ata_acpi_dev_uevent);
+>  }
+>  
+> +/**
+> + * ata_acpi_dev_manage_restart - if the disk should be stopped (spun down) on
+> + * system restart.
+> + * @dev: target ATA device
+> + *
+> + * RETURNS:
+> + * 1 if the disk should be stopped, otherwise 0
+> + */
+> +bool ata_acpi_dev_manage_restart(struct ata_device *dev)
+> +{
+> +	// If the device is power manageable and we assume the disk loses power
+> +	// on reboot.
+
+Please no C++ style comments.
+
+Also "If the device is power manageable and we assume"
+should this not be
+"If the device is power manageable, we assume"
+
+Because your commit message says:
+"If a usable ACPI power resource has been found, it is assumed that the disk
+will lose power after a restart"
+
+so I think the word "and" here is wrong.
+
+
+> +	if (dev->link->ap->flags & ATA_FLAG_ACPI_SATA) {
+> +		if (!is_acpi_device_node(dev->tdev.fwnode))
+> +			return 0;
+> +		return acpi_bus_power_manageable(ACPI_HANDLE(&dev->tdev));
+> +	}
+> +
+
+Please add a commend here explaining the difference between the
+two cases, because you call either:
+return acpi_bus_power_manageable(ACPI_HANDLE(&dev->tdev));
+or
+return acpi_bus_power_manageable(ACPI_HANDLE(&dev->link->ap->tdev));
+
+At least the difference is not obvious to me, from just looking at this
+function.
+
+
+> +	if (!is_acpi_device_node(dev->link->ap->tdev.fwnode))
+> +		return 0;
+> +	return acpi_bus_power_manageable(ACPI_HANDLE(&dev->link->ap->tdev));
+> +}
+> +
+> +/**
+> + * ata_acpi_port_set_power_state - set the power state of the ata port
+> + * @ap: target ATA port
+> + * @enable: power state to be set
+> + *
+> + * This function is called at the beginning of ata_port_probe.
+> + */
+> +void ata_acpi_port_set_power_state(struct ata_port *ap, bool enable)
+
+This function is never called with enable==false, so let's please remove
+this parameter and rename the function to something like
+ata_acpi_port_enable_power() or similar.
+If someone a future patch ever wants to refactor this to also handle
+disable, then that patch can also create a parameter for this function.
+Otherwise we are just adding dead code.
+
+
+Kind regards,
+Niklas
