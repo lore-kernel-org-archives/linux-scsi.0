@@ -1,71 +1,71 @@
 Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D9DD22A7E5
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BE53424A06B
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760358877; cv=none; b=HgXktAhM4eSr4BoLOTPKqf2R1LFpQmDy2gsyfjGYYvBTjBMRPfYFNC2JnwNgaYr2Lo8Brgvn/v2w7crGVwmI/0nN/qh+moVPDRMpk3sg4q3EpJd2cKCH3P2qkDGhH9Y8kdgDZ87yhrowXibAC7lO1XbT2hzsMeMeb/fJVb5wxUc=
+	t=1760358897; cv=none; b=RuFoWceMl98LhLHuQvs50/04r5v6wfSsbMqCKb5L8MpvG45pFLgXe0tuuIiv93mvH0QvQtNaOze0o36Dk7VyYbqZfbgPAsF8h2O0XrPgPKsvqH0x5NkHS3taS3UtYpsduW3FdknpjMrQJwgepr8JNZ417OyOozkeiVaL0ECoa80=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760358877; c=relaxed/simple;
-	bh=O5IBxsN6ic5oG/r8QyaBfjvgKnYuqZyVcNxtNddUJ8c=;
+	s=arc-20240116; t=1760358897; c=relaxed/simple;
+	bh=ajB9cgC6bRzVciNEiJ5Rlu8UcrAcaygnA0NUSrk7i8M=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TEAUY5zIxIHlku/J8OFEClLH7N+l5Pjs/WkxzWS9pdKwKZgAL6Ps+yoeBM1z622sfCUdyAjnhcwmCNOc2a6WS1NPWRiHGQ6KFgr1AbxoYBuLdQcY7410fqfKKm+xQdRRy6FYvH6SvoiiRp3GCsPRNR/CsXpjJ1Th9MbVHX+DfDM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cHKE6Szt; arc=none smtp.client-ip=205.220.168.131
+	 Content-Type:Content-Disposition:In-Reply-To; b=tkuia8CqRTvb2Az1tcknAWEaJ6qsNTf86KFdUBeXRQDyF2vAlJ3J/y1T2gKAyVN6cFDDcMo6T/cGo9+hbPQAERrIKl8Zt1l0vT4PiNE5QJemRVH8v+Iji9DxmbQ3dNVYQi6DGcppHF1zQxdnP8MVQbfoqkHiAzzp2fvR+cYgRlI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=TXcT0qSB; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cHKE6Szt"
-Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59D7Q96N012691
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:35 GMT
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="TXcT0qSB"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59DBAmML021336
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:55 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-type:date:from:in-reply-to:message-id:mime-version
-	:references:subject:to; s=qcppdkim1; bh=0c/YLYaDMoEGnP2p+UDoLSwW
-	bwVJnzjUv4KnwNKCfEY=; b=cHKE6Szt423RB8gknU+LDvdj0Cuw4qswyTZSaxAw
-	3Vln1wH/aKoGO3yopYn8nbYnpcw2S5NHX7Sm79VwKwLYqcQLc+ZXI9mJfef7hziV
-	AKyPZ2BlBcuN5v238ZNwTY7D5BQ55vFbmhOXJXLfe40w7C6yQPCZFlJkWD+9Scay
-	ynngzBZIK4MUfj9Pj6V8NhLYw4l6QgLJ27bWbS19Ao6+8gDR/kWDmmWrjCyZLQJS
-	Drz4A2m+5QZP+VC6nw07jEHuiMMqSvOsKt+L4sJGzjlqmM7rq0O7DHaJwuV9FO5I
-	WjOXqD+QR0hcatHH0bdFdVzbAjOv4iTSBuOaVcQi0GtIuw==
-Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49rw1a8usc-1
+	:references:subject:to; s=qcppdkim1; bh=gObp1VGk4sT3wo0aNUTQnaxb
+	hlPxOaJ9VK/6dcghZLQ=; b=TXcT0qSBuY5yfp/PNTnIrw7XNb+s9/QYCReqou30
+	gtIGh5w1O98le1QLr/UGIlqf0FRAMWKyhoiDDhQq/h5jYDxRoxHhe6PFGxmTGO4+
+	iKvu+DfCH4bBE45FfhsCs0Kr6YXrVVfvxA52xvansO5wQ7lI0sOFFKbBRHrR6CF0
+	h8H2/uLaBv/6+Iq89Xp4/B79JK/GTDI0ThFUGtYMDBywKpLJu8svaMWw/lmLFzZu
+	R+K8n4dJuanKaKDQH7sH9oCVV5sXmIT25qvxdKQhxYsCoq+ieJP5tDS+KCFNMaG+
+	OCfDv0LxPObPXHhVyDS8uCiV5xNtoVyaJw4sHJ0TQhqPDw==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49qgh64env-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:34 +0000 (GMT)
-Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-883feb13e83so2674737285a.1
-        for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 05:34:34 -0700 (PDT)
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:55 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-8635d475556so1090915485a.0
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 05:34:54 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760358873; x=1760963673;
+        d=1e100.net; s=20230601; t=1760358893; x=1760963693;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=0c/YLYaDMoEGnP2p+UDoLSwWbwVJnzjUv4KnwNKCfEY=;
-        b=X3z49lO63gGQeJv9POF4+9eLNrfBZcCiUAuKDDCyYuWk0qEgYJRo5PfEtqdicDzU1I
-         xIZGqojbwb13uRyF4Vd95GKwNu+K/kjkjX7Cgr1kchduyreF9B3IcW/CMefd7M30cwFW
-         UHZSGXGTW6F2F6oHrFMptYizzvWWXoxpSSWdSBPTt17g+/8UTOKc+wJJ5y5m+UHsTsGY
-         pYh8TQu0QVGEhu8TTxhHxEhr2Rp0mSynduJmhYXEoXmLpYhvGwWoVWoQI1oZ2OXGm6yn
-         FO9l4fxbFVhTSCEmUSPO8L65bn0RA8AOWHTSO0Ie5Id/PkzTjML4K2FuDzCWPuYf+3AG
-         FwFw==
-X-Forwarded-Encrypted: i=1; AJvYcCVcrLGiOCxl0PDkgoj8rEdFUGG4KRHAyu2YJEgBqJ9H85FJHg4fseqtjIZ7yfHIbVgxYUsjvd9Rsdfa@vger.kernel.org
-X-Gm-Message-State: AOJu0YxnpDoAZw61Rcr/PFI3/GlzaAVtjZOhLozKQoMDcrbBx5JP5A8q
-	e/fVQVyUoSwg7zfbFj+9wc6fcerErttC5h1fC5G+MGiQHf7fzyfV5MWViRz6PBYeNhBQNKJR1MU
-	UeZ8bOsS4/IijBSs2hbDTuJzWPr/0S3YnnJVAN6kuzHLK/XoLG/55VH1Pn2HNYBRl
-X-Gm-Gg: ASbGncvOAbDy/NjNvhbeS7ZyVWhox9ZDN6CXYa+2ITD3tKci14oLVNrebHKYaKJ3IAI
-	/kX0C9EeAfhdw5568EtVAqhvNwgjv7PdcQH2ORRlDniRw4bDbxbqNPpy7noYdgkSEgyZeyXDGsb
-	nuHoM4Jkx/Nj6Tbg6pEU42piU3GRvcreXZDR0Ik1s1hbouMRCqiogeBnAGvyp9/btLYLzPTOrJq
-	3P1lpkzF5wx/I5YkVWGToFgEisVsKAsy7O63t8CP8j0Qizzl8WCIRyI9IttnaNKka8UXt0gTW7D
-	hvuxEiNME+vaO2WUmI3phbxHczVSxf2mG67vKTERhpx5lAKRldjpMFUt5M4DMsnKmfQMFyrtOQ/
-	A2nOKEQcUH4Xvdc8oF+zr5xmjEzrOfkuQdgzAD/H5Y/WxMTk+PrQM
-X-Received: by 2002:ac8:5d46:0:b0:4ce:9cdc:6f2f with SMTP id d75a77b69052e-4e72122afacmr71752651cf.13.1760358873404;
-        Mon, 13 Oct 2025 05:34:33 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IGNbh12YwL4Iy4NRipEsFChMHtKqDe+smfm+D7B0YFilvKsxmQIYfhkB/7L1zjAmITtmN+oiA==
-X-Received: by 2002:ac8:5d46:0:b0:4ce:9cdc:6f2f with SMTP id d75a77b69052e-4e72122afacmr71751921cf.13.1760358872891;
-        Mon, 13 Oct 2025 05:34:32 -0700 (PDT)
+        bh=gObp1VGk4sT3wo0aNUTQnaxbhlPxOaJ9VK/6dcghZLQ=;
+        b=OD/1lWPtG3/ScuUnv/GNOtFGBsDUViweKIYtPXDLYSVOL+LrVVb0sT4nnr4hCCbXRB
+         PLY6SZcIUwGYtNc4JdERQ6DW31QL0md8sLWVyQQyyGA8HxfpVE34C9VPoVNxokDaQ0Lr
+         PYM5pOG8Exr9OVXJkCKT+mV19wy1WjjfVqxxam8PmsrA9SkHHr6oO+ybIE4IxJx86iMI
+         baQQDA9E8YfIz67hx22xFFdq8hnJhDvYbgOnJjA8Q7WgUdXlFfsclbGPzfA8dOvbgAQh
+         rcirtWv3ojfPXWp8FuABhDI+ObK0VnrZckOg9unLaJsGFKYcUFNtx1bTDeNLBdlWiWKN
+         Vlfw==
+X-Forwarded-Encrypted: i=1; AJvYcCXHWKAQCRDZkf2qkvhCfa9etq35EQTnLeZn1gXtCRQdEFVhN4SIO7xJjfav+DWx/h/paGd2t9vSlf1C@vger.kernel.org
+X-Gm-Message-State: AOJu0YwM7letLZG8/yQNxiWN+ccpdDS0ayuuJlQLGjq5p8woobz6eZXf
+	+N0mWvKh2p7FW4HH+AI8RrXaS5ZsFw/2dGTXpY6mIyyWOqxLCVPWa1kN9NVHdHupNZmjtM5tm88
+	I1+x0N9IYriSU27ARfXX3L8G0uH/lGmHEcE/ia9YXRa0qaQ+BLCXHPMhaUM+Ek2P7oCbjL8At
+X-Gm-Gg: ASbGncuubEyxAHeG5o2XG3mQum8yNLNtGqT+6aXpsHLtkW+B0kxA9CWpyNij5MtyNoe
+	dU0h+YKH/8CNbuyFqCu1t9qjpuMU0/K7XQlaKAH49CCN12pdsQ0iJL71NiAGgXTO5+SQX1mr4Hs
+	/L4kkLVK6HkWWksUf3M1OqjLMD0K47qTyXxqvKb/fLEUaYvbnaa+ZzGEHIx/oPNSJz5dTfpsDB7
+	VsiURp9Iu5pScbP1G0rVog2KJiJi74Qlpis7TtFCpBEtBiIq9qBrZfoejO/bBOky10vulP3WUAQ
+	I169xvYrC4PrTuXv5E1Pyg96CmD+h7QwmYS3usDrNlHEKiJu3y+22I+RgkExpAn20fOj9zP6Mse
+	STMNVpN3gRiQNmwjR0Yq+PW0XIzjJ3J2Agp/qK7utveez2JeMdv7i
+X-Received: by 2002:ac8:5885:0:b0:4b7:9581:a211 with SMTP id d75a77b69052e-4e6eace7e6cmr280427751cf.24.1760358893329;
+        Mon, 13 Oct 2025 05:34:53 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG5+lAIUbag3KQ/uyAYMUw2tzUdGLO9/5D5HdSvdyoQpY7sOU2YLiAsMhiWrQQX23CCsWeehA==
+X-Received: by 2002:ac8:5885:0:b0:4b7:9581:a211 with SMTP id d75a77b69052e-4e6eace7e6cmr280427561cf.24.1760358892867;
+        Mon, 13 Oct 2025 05:34:52 -0700 (PDT)
 Received: from umbar.lan (2001-14ba-a0c3-3a00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a0c3:3a00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-590881f862asm4116608e87.27.2025.10.13.05.34.31
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-59088563b53sm4075703e87.84.2025.10.13.05.34.51
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 13 Oct 2025 05:34:32 -0700 (PDT)
-Date: Mon, 13 Oct 2025 15:34:30 +0300
+        Mon, 13 Oct 2025 05:34:52 -0700 (PDT)
+Date: Mon, 13 Oct 2025 15:34:50 +0300
 From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
 To: Ritesh Kumar <quic_riteshk@quicinc.com>
 Cc: robin.clark@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
@@ -82,9 +82,11 @@ Cc: robin.clark@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
         freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
         linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
         quic_vproddut@quicinc.com
-Subject: Re: [PATCH v2 0/3] Add edp reference clock for lemans
-Message-ID: <7jmk3txdrnit6zn7ufra7davmomggd3graizdu6wqonp3lljza@mfnxt2owpknq>
+Subject: Re: [PATCH v2 1/3] dt-bindings: phy: qcom-edp: Add edp ref clk for
+ sa8775p
+Message-ID: <aifibm7pjva3rkb4gkzyxun46sraxyeh7jh6vgcirv5tsbf6ad@7f5bbs4ix7sa>
 References: <20251013104806.6599-1-quic_riteshk@quicinc.com>
+ <20251013104806.6599-2-quic_riteshk@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -93,38 +95,55 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251013104806.6599-1-quic_riteshk@quicinc.com>
-X-Authority-Analysis: v=2.4 cv=K88v3iWI c=1 sm=1 tr=0 ts=68ecf1da cx=c_pps
- a=50t2pK5VMbmlHzFWWp8p/g==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
- a=x6icFKpwvdMA:10 a=sf-Njp88EExxdhEklOUA:9 a=CjuIK1q_8ugA:10
- a=IoWCM6iH3mJn3m4BftBB:22
-X-Proofpoint-GUID: HewcucKaNl9xjyswPu27jXcEnC8dSwF4
-X-Proofpoint-ORIG-GUID: HewcucKaNl9xjyswPu27jXcEnC8dSwF4
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDEzMDAzNSBTYWx0ZWRfX0LpDx0x1nYAI
- enTLahIHs7JtgcOBSfOJzDqmrwbipaXqXHHKoHXbuM6MYuMGAibvuOv7dJ6lmHklIPL5ZjA1Yy5
- NzXjP1DUmIp7dQGxCzJdtsactzTrzQRZL+effKTAQ01iGfqEB4DjQtQuGDhoBzXCVdZSDmT3d/4
- 24Pns9Uj5ifLuZ0OJktTh1MDvHwQDeWCgCPhSsqqtyzFRCxI6Fn0g2/5i1+dxoPLpHovSNOdluo
- b6TeCWBNZZdtkgVEJQeLR5JNy0O1wVTVkGuZrRYd4S8PeytrOxG+nQPviimc2H3Fia2EzM29edR
- 8WgMA1zwBWdeFE8MORadsxEHoyt3k7iWjts2C/5kFvFTXa12lCGwhFiEkO+Pl3N55IQ2CLOO6YU
- 0JlvQuopaDJ1Wr/4kKDG4VZ/6no+8Q==
+In-Reply-To: <20251013104806.6599-2-quic_riteshk@quicinc.com>
+X-Authority-Analysis: v=2.4 cv=H/zWAuYi c=1 sm=1 tr=0 ts=68ecf1ef cx=c_pps
+ a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=x6icFKpwvdMA:10 a=COk6AnOGAAAA:8 a=yLsOkrEfH68IAt7CJG4A:9 a=CjuIK1q_8ugA:10
+ a=bTQJ7kPSJx9SKPbeHEYW:22 a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDExMDAyNiBTYWx0ZWRfX1WxvN6YPtKjh
+ sam2FwZZZsOLuwUvi6m8/yc3aKZaZUAsLwtn/NPU1ZzXu+S57grXNjGRFH5uZ2fDNK0599PPrB7
+ +6pINDWBQcla1osTZ3I0r6UpCu/kE7DAAPMzVxHCy4fX/13wlJ+/YlIV7524SWOy9fwio5YxvWh
+ zhy1EQgId9jGldQCd3iAMS2JZdkyZVwnILOm3K5BQ7gvF75NL2uljVIZyhRP3DIzt9LNWfqb9Sf
+ KLTPYaZvEW4FejjZe1xHUl0/45PNRkaMQXwEpwb7WNoArsMVB1CBud1tLz7aVeXXTtFbECRWARs
+ qqgKZ7XN0sPZ0sjYtJkvYExHp/Apg+lUyNBTXe/jzC1L16428aqqi9VpRypjC8EEzBQQNcsne3t
+ 3wRVPzGMY9BSyhFXsFSyh9B3G6rDZQ==
+X-Proofpoint-ORIG-GUID: PhLcqp12YbtLbYhtlb5O5yIhc72IrMia
+X-Proofpoint-GUID: PhLcqp12YbtLbYhtlb5O5yIhc72IrMia
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-10-13_04,2025-10-06_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 spamscore=0 impostorscore=0 priorityscore=1501 phishscore=0
- adultscore=0 clxscore=1015 bulkscore=0 suspectscore=0 lowpriorityscore=0
+ phishscore=0 adultscore=0 priorityscore=1501 bulkscore=0 malwarescore=0
+ clxscore=1015 impostorscore=0 spamscore=0 lowpriorityscore=0 suspectscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510130035
+ reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510110026
 
-On Mon, Oct 13, 2025 at 04:18:03PM +0530, Ritesh Kumar wrote:
-> On lemans chipset, edp reference clock is being voted by ufs mem phy
-> (ufs_mem_phy: phy@1d87000). But after commit 77d2fa54a9457
-> ("scsi: ufs: qcom : Refactor phy_power_on/off calls") edp reference
-> clock is getting turned off, leading to below phy poweron failure on
-> lemans edp phy.
+On Mon, Oct 13, 2025 at 04:18:04PM +0530, Ritesh Kumar wrote:
+> Add edp reference clock for sa8775p edp phy.
+> 
+> Signed-off-by: Ritesh Kumar <quic_riteshk@quicinc.com>
+> ---
+>  Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml | 1 +
+>  1 file changed, 1 insertion(+)
+> 
+> diff --git a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+> index bfc4d75f50ff..b0e4015596de 100644
+> --- a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+> +++ b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+> @@ -73,6 +73,7 @@ allOf:
+>          compatible:
+>            enum:
+>              - qcom,x1e80100-dp-phy
+> +            - qcom,sa8775p-edp-phy
 
-How does UFS turn on eDP reference clock?
+Usually such lists are sorted.
 
+>      then:
+>        properties:
+>          clocks:
+> -- 
+> 2.17.1
+> 
 
 -- 
 With best wishes
