@@ -1,268 +1,131 @@
-Received: from mout02.posteo.de (mout02.posteo.de [185.67.36.66])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EC5B27146B
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:29:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.66
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D9DD22A7E5
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760358595; cv=none; b=j/lroEPg4I/g8AIdF68XoIbWghuYe5IoH9HCJkYe8cZHc4FzxKawMm+6Vr8BAHPBmnTgOLdEUF3/RfCLPCDXgi9dNXtyQtjo2zpxpxDI4hCQk2qX+l55VQuuf4Ku//6nOKl//cyba1C00x1ngzWJVOjVGBIiETQYwl2jH4cuInQ=
+	t=1760358877; cv=none; b=HgXktAhM4eSr4BoLOTPKqf2R1LFpQmDy2gsyfjGYYvBTjBMRPfYFNC2JnwNgaYr2Lo8Brgvn/v2w7crGVwmI/0nN/qh+moVPDRMpk3sg4q3EpJd2cKCH3P2qkDGhH9Y8kdgDZ87yhrowXibAC7lO1XbT2hzsMeMeb/fJVb5wxUc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760358595; c=relaxed/simple;
-	bh=u5A2B4cxGHxuvX6wsICtQXWG0hhh2q6pv0dMsAd0ZV4=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=aDBOSLQqClloUngmvagUV7cHX3LBvuPwg05d36N0SUQ9b26I/D41x9JkRWQOo5SUL1k9HdJ6qBe4QaH/K003rUZdlR5pwW/CBmUk52tE5U15bdsgQuD+BC52QlyDAanECzqFqp1kv21Q0L31+kQZ7BdQR1r64kgYfU8wDac5qD8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=romjZbYM; arc=none smtp.client-ip=185.67.36.66
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
+	s=arc-20240116; t=1760358877; c=relaxed/simple;
+	bh=O5IBxsN6ic5oG/r8QyaBfjvgKnYuqZyVcNxtNddUJ8c=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TEAUY5zIxIHlku/J8OFEClLH7N+l5Pjs/WkxzWS9pdKwKZgAL6Ps+yoeBM1z622sfCUdyAjnhcwmCNOc2a6WS1NPWRiHGQ6KFgr1AbxoYBuLdQcY7410fqfKKm+xQdRRy6FYvH6SvoiiRp3GCsPRNR/CsXpjJ1Th9MbVHX+DfDM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=cHKE6Szt; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="romjZbYM"
-Received: from submission (posteo.de [185.67.36.169]) 
-	by mout02.posteo.de (Postfix) with ESMTPS id 9CFB4240101
-	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 14:29:46 +0200 (CEST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
-	t=1760358591; bh=BNrUhklJjD5L4z4ko/bJgHuU483gqT28YNlaAj8Gtpw=;
-	h=Message-ID:Subject:From:To:Cc:Date:Content-Type:
-	 Content-Transfer-Encoding:MIME-Version:Autocrypt:OpenPGP:From;
-	b=romjZbYMQtAHLvdiMjbdiUKDlIiEupkeHiVEe8/y2b6/56BbvEwE6KHAyMdA4k+/X
-	 XeVT8w/knYN43rOCiL88tecQTMptRVMPxkdt9mKiH027+x649G2DkZwELY9ihK6lun
-	 DEIL74DIJFHZ0ZNHSib/61ionVN105mo7gpX2qfGgYJVY3uKVfhexJ5n+snRaCvaqK
-	 D8M09wn9kj95AWAyytN0uAu5x8Iz82jqe9LsXbYzuIRgLqk9b0ZaoLMkA9VhwqqBpg
-	 CbkIWOoXTVVWtse9CLSw99m6PIdCMqP7Mc1dLh57KpfS8jMUPdOpwyIzLgMdyh+qL9
-	 MlfKjhN9SFS/w==
-Received: from customer (localhost [127.0.0.1])
-	by submission (posteo.de) with ESMTPSA id 4clc9j4lDfz6twv;
-	Mon, 13 Oct 2025 14:29:45 +0200 (CEST)
-Message-ID: <48eff111d66156fd0bd8eb2418570db4aa62f392.camel@posteo.de>
-Subject: Re: [PATCH v3 2/2] ata: Use ACPI methods to power on disks
-From: Markus Probst <markus.probst@posteo.de>
-To: Niklas Cassel <cassel@kernel.org>
-Cc: Damien Le Moal <dlemoal@kernel.org>, "James E.J. Bottomley"
-	 <James.Bottomley@hansenpartnership.com>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, linux-ide@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Mon, 13 Oct 2025 12:29:46 +0000
-In-Reply-To: <aOy2Vy6AQNynzewo@ryzen>
-References: <20251010223817.729490-1-markus.probst@posteo.de>
-	 <20251010223817.729490-3-markus.probst@posteo.de> <aOy2Vy6AQNynzewo@ryzen>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="cHKE6Szt"
+Received: from pps.filterd (m0279865.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59D7Q96N012691
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:35 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=qcppdkim1; bh=0c/YLYaDMoEGnP2p+UDoLSwW
+	bwVJnzjUv4KnwNKCfEY=; b=cHKE6Szt423RB8gknU+LDvdj0Cuw4qswyTZSaxAw
+	3Vln1wH/aKoGO3yopYn8nbYnpcw2S5NHX7Sm79VwKwLYqcQLc+ZXI9mJfef7hziV
+	AKyPZ2BlBcuN5v238ZNwTY7D5BQ55vFbmhOXJXLfe40w7C6yQPCZFlJkWD+9Scay
+	ynngzBZIK4MUfj9Pj6V8NhLYw4l6QgLJ27bWbS19Ao6+8gDR/kWDmmWrjCyZLQJS
+	Drz4A2m+5QZP+VC6nw07jEHuiMMqSvOsKt+L4sJGzjlqmM7rq0O7DHaJwuV9FO5I
+	WjOXqD+QR0hcatHH0bdFdVzbAjOv4iTSBuOaVcQi0GtIuw==
+Received: from mail-qk1-f197.google.com (mail-qk1-f197.google.com [209.85.222.197])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49rw1a8usc-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 12:34:34 +0000 (GMT)
+Received: by mail-qk1-f197.google.com with SMTP id af79cd13be357-883feb13e83so2674737285a.1
+        for <linux-scsi@vger.kernel.org>; Mon, 13 Oct 2025 05:34:34 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760358873; x=1760963673;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=0c/YLYaDMoEGnP2p+UDoLSwWbwVJnzjUv4KnwNKCfEY=;
+        b=X3z49lO63gGQeJv9POF4+9eLNrfBZcCiUAuKDDCyYuWk0qEgYJRo5PfEtqdicDzU1I
+         xIZGqojbwb13uRyF4Vd95GKwNu+K/kjkjX7Cgr1kchduyreF9B3IcW/CMefd7M30cwFW
+         UHZSGXGTW6F2F6oHrFMptYizzvWWXoxpSSWdSBPTt17g+/8UTOKc+wJJ5y5m+UHsTsGY
+         pYh8TQu0QVGEhu8TTxhHxEhr2Rp0mSynduJmhYXEoXmLpYhvGwWoVWoQI1oZ2OXGm6yn
+         FO9l4fxbFVhTSCEmUSPO8L65bn0RA8AOWHTSO0Ie5Id/PkzTjML4K2FuDzCWPuYf+3AG
+         FwFw==
+X-Forwarded-Encrypted: i=1; AJvYcCVcrLGiOCxl0PDkgoj8rEdFUGG4KRHAyu2YJEgBqJ9H85FJHg4fseqtjIZ7yfHIbVgxYUsjvd9Rsdfa@vger.kernel.org
+X-Gm-Message-State: AOJu0YxnpDoAZw61Rcr/PFI3/GlzaAVtjZOhLozKQoMDcrbBx5JP5A8q
+	e/fVQVyUoSwg7zfbFj+9wc6fcerErttC5h1fC5G+MGiQHf7fzyfV5MWViRz6PBYeNhBQNKJR1MU
+	UeZ8bOsS4/IijBSs2hbDTuJzWPr/0S3YnnJVAN6kuzHLK/XoLG/55VH1Pn2HNYBRl
+X-Gm-Gg: ASbGncvOAbDy/NjNvhbeS7ZyVWhox9ZDN6CXYa+2ITD3tKci14oLVNrebHKYaKJ3IAI
+	/kX0C9EeAfhdw5568EtVAqhvNwgjv7PdcQH2ORRlDniRw4bDbxbqNPpy7noYdgkSEgyZeyXDGsb
+	nuHoM4Jkx/Nj6Tbg6pEU42piU3GRvcreXZDR0Ik1s1hbouMRCqiogeBnAGvyp9/btLYLzPTOrJq
+	3P1lpkzF5wx/I5YkVWGToFgEisVsKAsy7O63t8CP8j0Qizzl8WCIRyI9IttnaNKka8UXt0gTW7D
+	hvuxEiNME+vaO2WUmI3phbxHczVSxf2mG67vKTERhpx5lAKRldjpMFUt5M4DMsnKmfQMFyrtOQ/
+	A2nOKEQcUH4Xvdc8oF+zr5xmjEzrOfkuQdgzAD/H5Y/WxMTk+PrQM
+X-Received: by 2002:ac8:5d46:0:b0:4ce:9cdc:6f2f with SMTP id d75a77b69052e-4e72122afacmr71752651cf.13.1760358873404;
+        Mon, 13 Oct 2025 05:34:33 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IGNbh12YwL4Iy4NRipEsFChMHtKqDe+smfm+D7B0YFilvKsxmQIYfhkB/7L1zjAmITtmN+oiA==
+X-Received: by 2002:ac8:5d46:0:b0:4ce:9cdc:6f2f with SMTP id d75a77b69052e-4e72122afacmr71751921cf.13.1760358872891;
+        Mon, 13 Oct 2025 05:34:32 -0700 (PDT)
+Received: from umbar.lan (2001-14ba-a0c3-3a00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a0c3:3a00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-590881f862asm4116608e87.27.2025.10.13.05.34.31
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 13 Oct 2025 05:34:32 -0700 (PDT)
+Date: Mon, 13 Oct 2025 15:34:30 +0300
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Ritesh Kumar <quic_riteshk@quicinc.com>
+Cc: robin.clark@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
+        jessica.zhang@oss.qualcomm.com, sean@poorly.run,
+        marijn.suijten@somainline.org, maarten.lankhorst@linux.intel.com,
+        mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
+        simona@ffwll.ch, robh@kernel.org, krzk+dt@kernel.org,
+        conor+dt@kernel.org, quic_mahap@quicinc.com, andersson@kernel.org,
+        konradybcio@kernel.org, mani@kernel.org,
+        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        vkoul@kernel.org, kishon@kernel.org,
+        cros-qcom-dts-watchers@chromium.org, linux-phy@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        quic_vproddut@quicinc.com
+Subject: Re: [PATCH v2 0/3] Add edp reference clock for lemans
+Message-ID: <7jmk3txdrnit6zn7ufra7davmomggd3graizdu6wqonp3lljza@mfnxt2owpknq>
+References: <20251013104806.6599-1-quic_riteshk@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
-  keydata=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
-  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
-OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251013104806.6599-1-quic_riteshk@quicinc.com>
+X-Authority-Analysis: v=2.4 cv=K88v3iWI c=1 sm=1 tr=0 ts=68ecf1da cx=c_pps
+ a=50t2pK5VMbmlHzFWWp8p/g==:117 a=xqWC_Br6kY4A:10 a=kj9zAlcOel0A:10
+ a=x6icFKpwvdMA:10 a=sf-Njp88EExxdhEklOUA:9 a=CjuIK1q_8ugA:10
+ a=IoWCM6iH3mJn3m4BftBB:22
+X-Proofpoint-GUID: HewcucKaNl9xjyswPu27jXcEnC8dSwF4
+X-Proofpoint-ORIG-GUID: HewcucKaNl9xjyswPu27jXcEnC8dSwF4
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDEzMDAzNSBTYWx0ZWRfX0LpDx0x1nYAI
+ enTLahIHs7JtgcOBSfOJzDqmrwbipaXqXHHKoHXbuM6MYuMGAibvuOv7dJ6lmHklIPL5ZjA1Yy5
+ NzXjP1DUmIp7dQGxCzJdtsactzTrzQRZL+effKTAQ01iGfqEB4DjQtQuGDhoBzXCVdZSDmT3d/4
+ 24Pns9Uj5ifLuZ0OJktTh1MDvHwQDeWCgCPhSsqqtyzFRCxI6Fn0g2/5i1+dxoPLpHovSNOdluo
+ b6TeCWBNZZdtkgVEJQeLR5JNy0O1wVTVkGuZrRYd4S8PeytrOxG+nQPviimc2H3Fia2EzM29edR
+ 8WgMA1zwBWdeFE8MORadsxEHoyt3k7iWjts2C/5kFvFTXa12lCGwhFiEkO+Pl3N55IQ2CLOO6YU
+ 0JlvQuopaDJ1Wr/4kKDG4VZ/6no+8Q==
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1117,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-13_04,2025-10-06_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 spamscore=0 impostorscore=0 priorityscore=1501 phishscore=0
+ adultscore=0 clxscore=1015 bulkscore=0 suspectscore=0 lowpriorityscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510130035
 
-On Mon, 2025-10-13 at 10:20 +0200, Niklas Cassel wrote:
-> On Fri, Oct 10, 2025 at 10:38:35PM +0000, Markus Probst wrote:
-> > Some embedded devices have the ability to control whether power is
-> > provided to the disks via the sata power connector or not. If power
-> > resources are defined on ata ports / devices in ACPI, we should try
-> > to set
-> > the power state to D0 before probing the disk to ensure that any
-> > power
-> > supply or power gate that may exist is providing power to the disk.
-> >=20
-> > An example for such devices would be newer synology nas devices.
-> > Every
-> > disk slot has its own sata power connector. Whether the connector
-> > is
-> > providing power is controlled via an gpio, which is *off by
-> > default*.
-> > Also the disk loses power on reboots.
-> >=20
-> > Add a new function, ata_acpi_dev_manage_restart(), that will be
-> > used to
-> > determine if a disk should be stopped before restarting the system.
-> > If a
-> > usable ACPI power resource has been found, it is assumed that the
-> > disk
-> > will lose power after a restart and should be stopped to avoid a
-> > power
-> > failure. Also add a new function, ata_acpi_port_set_power_state(),
-> > that
-> > will be used to power on the sata power connector if usable ACPI
-> > power
-> > resources on the associated ata port are found. It will be called
-> > right
-> > before probing the port, therefore the disk will be powered on just
-> > in
-> > time.
->=20
-> s/sata/SATA/
-> s/nas/NAS/
-> s/ata/ATA/ (except for function names of course)
->=20
-> Since this patch is basically doing two logical changes
-> 1) Calling ata_acpi_dev_manage_restart() on restart, which calls
-> acpi_bus_power_manageable() to disable power on shutdown.
->=20
-> 2) Calling ata_acpi_port_set_power_state() during ata_port_probe(),
-> to enable power.
->=20
-> Please also split this patch into two, so that we have one commit per
-> logical change. That would make things easier to understand, as your
-> commit message your just describe one behavior instead of two
-> completely
-> different behaviors.
->=20
->=20
-> Your commit message mentions that you want to spin down the disk on
-> restart to avoid "avoid a power failure".
->=20
-> Is there a reason why you call acpi_bus_power_manageable() to spin
-> down
-> the disk instead of the regular function: ata_dev_power_set_standby()
-> which spins down the disk?
-I don't use acpi_bus_power_manageable() to spin down the disk. It just
-checks if there is a power resource present in acpi for the ata port /
-device. If thats the case, scsi should spin the disk down on
-SYSTEM_RESTART.
->=20
->=20
-> >=20
-> > Signed-off-by: Markus Probst <markus.probst@posteo.de>
-> > ---
-> > =C2=A0drivers/ata/libata-acpi.c | 71
-> > +++++++++++++++++++++++++++++++++++++++
-> > =C2=A0drivers/ata/libata-core.c |=C2=A0 2 ++
-> > =C2=A0drivers/ata/libata-scsi.c |=C2=A0 1 +
-> > =C2=A0drivers/ata/libata.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 4 +++
-> > =C2=A04 files changed, 78 insertions(+)
-> >=20
-> > diff --git a/drivers/ata/libata-acpi.c b/drivers/ata/libata-acpi.c
-> > index f2140fc06ba0..4a72a98b922c 100644
-> > --- a/drivers/ata/libata-acpi.c
-> > +++ b/drivers/ata/libata-acpi.c
-> > @@ -245,6 +245,77 @@ void ata_acpi_bind_dev(struct ata_device *dev)
-> > =C2=A0				=C2=A0=C2=A0 ata_acpi_dev_uevent);
-> > =C2=A0}
-> > =C2=A0
-> > +/**
-> > + * ata_acpi_dev_manage_restart - if the disk should be stopped
-> > (spun down) on
-> > + * system restart.
-> > + * @dev: target ATA device
-> > + *
-> > + * RETURNS:
-> > + * 1 if the disk should be stopped, otherwise 0
-> > + */
-> > +bool ata_acpi_dev_manage_restart(struct ata_device *dev)
-> > +{
-> > +	// If the device is power manageable and we assume the
-> > disk loses power
-> > +	// on reboot.
->=20
-> Please no C++ style comments.
->=20
-> Also "If the device is power manageable and we assume"
-> should this not be
-> "If the device is power manageable, we assume"
->=20
-> Because your commit message says:
-> "If a usable ACPI power resource has been found, it is assumed that
-> the disk
-> will lose power after a restart"
->=20
-> so I think the word "and" here is wrong.
->=20
->=20
-> > +	if (dev->link->ap->flags & ATA_FLAG_ACPI_SATA) {
-> > +		if (!is_acpi_device_node(dev->tdev.fwnode))
-> > +			return 0;
-> > +		return acpi_bus_power_manageable(ACPI_HANDLE(&dev-
-> > >tdev));
-> > +	}
-> > +
->=20
-> Please add a commend here explaining the difference between the
-> two cases, because you call either:
-> return acpi_bus_power_manageable(ACPI_HANDLE(&dev->tdev));
-> or
-> return acpi_bus_power_manageable(ACPI_HANDLE(&dev->link->ap->tdev));
->=20
-> At least the difference is not obvious to me, from just looking at
-> this
-> function.
-if ATA_FLAG_ACPI_SATA is set, the acpi fwnode with the power resources
-is not set on the ata_port->tdev, but on the ata_device->tdev. See
-ata_acpi_bind_port (return if ATA_FLAG_ACPI_SATA is set) and
-ata_acpi_bind_dev (return if ATA_FLAG_ACPI_SATA is not set).
-I will add a comment for this.
+On Mon, Oct 13, 2025 at 04:18:03PM +0530, Ritesh Kumar wrote:
+> On lemans chipset, edp reference clock is being voted by ufs mem phy
+> (ufs_mem_phy: phy@1d87000). But after commit 77d2fa54a9457
+> ("scsi: ufs: qcom : Refactor phy_power_on/off calls") edp reference
+> clock is getting turned off, leading to below phy poweron failure on
+> lemans edp phy.
 
-Thanks
-- Markus Probst
+How does UFS turn on eDP reference clock?
 
->=20
->=20
-> > +	if (!is_acpi_device_node(dev->link->ap->tdev.fwnode))
-> > +		return 0;
-> > +	return acpi_bus_power_manageable(ACPI_HANDLE(&dev->link-
-> > >ap->tdev));
-> > +}
-> > +
-> > +/**
-> > + * ata_acpi_port_set_power_state - set the power state of the ata
-> > port
-> > + * @ap: target ATA port
-> > + * @enable: power state to be set
-> > + *
-> > + * This function is called at the beginning of ata_port_probe.
-> > + */
-> > +void ata_acpi_port_set_power_state(struct ata_port *ap, bool
-> > enable)
->=20
-> This function is never called with enable=3D=3Dfalse, so let's please
-> remove
-> this parameter and rename the function to something like
-> ata_acpi_port_enable_power() or similar.
-> If someone a future patch ever wants to refactor this to also handle
-> disable, then that patch can also create a parameter for this
-> function.
-> Otherwise we are just adding dead code.
->=20
->=20
-> Kind regards,
-> Niklas
+
+-- 
+With best wishes
+Dmitry
