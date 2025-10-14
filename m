@@ -1,30 +1,30 @@
 Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 51AAC20296A
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2025 13:18:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3D6230C371
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2025 13:18:08 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760447890; cv=none; b=MOkICU1rOkIbc44f0V47G1j1PweNB3TPaNea0R0PGZN3qUG1P8o1G2SCcU591/G1XuQViYDHDKEn4KvQLTEM+oGKaTz4cHHeFfgwnhcmMuXXuvGY2/U+NBBQply8BqEcWKJBMhFf4RTGsiM3gQF0vZErpCqKL6YogZIIt2jSFKo=
+	t=1760447891; cv=none; b=iApAkD8nniTlF5ZmwkVHUVJwBZhwrKZlgkF+YhY2hApYeDIh7qwNlXPxQHQy5ln43BSYzQhnHBY8VcDXS124zLZpUG4HdHf6gLysZRNWCDAZCAjxSLRFPD84wPSJNq+drX6zqd7eJSWSRWYe2QkX1Kg8SBwTdST3L8Ps3GOTMxI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760447890; c=relaxed/simple;
-	bh=8s1KwrYnQoRE7ByXfll4MmvWnXA1IyZVX7cnZlGg2sI=;
+	s=arc-20240116; t=1760447891; c=relaxed/simple;
+	bh=a4U9kx+Xi94Kq6OcyaZHLd8HYR6/Nns88uhffwYgL80=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=G0J/ZjJEYsdPz6+gL94t7eufCQBqsjCc84gouRF29Ru0tz+fmlFa6+wxDpGxpWENY6eMkpP9vxRnD2QtwTFkzhT+sTU477FuAfuezxTz3nb3xLKu8lVjtrVtaMeObOBdHGqiI7sx4tZ75fo8J39AE12UQLuYi4FsCBgf00EVSKA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=mH7M1wNs; arc=none smtp.client-ip=60.244.123.138
+	 MIME-Version:Content-Type; b=RSPa60/9VgQ9GiflHueOTFaP8CGwmdLBUu1IuBxeQKpHiIpfGtrnk8tLqOpkweNvaCJIQveQzs9qsfF7rsoa5Js/Uo6NNheOZPYDdxdnWCTZAXBDkLVm0gg8LKU81HsfLwytz7aiQ/QPW8ODCO3ENxb89MC/QGlivQnOg7mcECo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=nVpg5dXg; arc=none smtp.client-ip=60.244.123.138
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="mH7M1wNs"
-X-UUID: 35cd9968a90011f0ae1e63ff8927bad3-20251014
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="nVpg5dXg"
+X-UUID: 35cec0cca90011f0ae1e63ff8927bad3-20251014
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=b+/W5GqzX/f5jDv4MiVoAwbQFTs/rNKTXRmIxjri/8c=;
-	b=mH7M1wNsVq3Hu5og42+L//ge6BNCmRZ8RMLzM/4SCUBzzIzVwQOL0cNQ1Gix8VQIXgMiJ0cGiXSRbri59ivt9P2v/X0ucT6rAmjM7WkF+tIXkQOnRAku0bWumSFCXjB8sBuc0shKbQywMJ5DpsktLLz2azVXhkRahFQZseHj2AM=;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=0v/CBd1rmPyG88zln9xhPVoHM485BZhnHYxuMKXiFXE=;
+	b=nVpg5dXgCG08lKzjCVgj8dPRlxJCowM2jQHQ1LFC5+0s6A2qpuvigUG+Au2ZhhA23M9WwLeptmnjR5HJVW90NAutQBsg1eip3DRJY4+iQ/Yx80uXOR1QKh4PY+7EQuIiJQd2tAd0kXvXRaw/ambu4t3twlOvXt6yhOTUDR2uOcM=;
 X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.6,REQID:8cad5a82-ee4f-4b82-a158-ecccac790f13,IP:0,UR
-	L:0,TC:0,Content:-5,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:
-	release,TS:-5
-X-CID-META: VersionHash:a9d874c,CLOUDID:d1670c51-c509-4cf3-8dc0-fcdaad49a6d3,B
+X-CID-O-INFO: VERSION:1.3.6,REQID:63090723-ef0a-49ff-9e88-a25094724279,IP:0,UR
+	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
+	:release,TS:-25
+X-CID-META: VersionHash:a9d874c,CLOUDID:d0670c51-c509-4cf3-8dc0-fcdaad49a6d3,B
 	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
 	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,
 	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
@@ -32,11 +32,11 @@ X-CID-BVR: 2,SSN|SDN
 X-CID-BAS: 2,SSN|SDN,0,_
 X-CID-FACTOR: TF_CID_SPAM_SNR
 X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 35cd9968a90011f0ae1e63ff8927bad3-20251014
+X-UUID: 35cec0cca90011f0ae1e63ff8927bad3-20251014
 Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
 	(envelope-from <peter.wang@mediatek.com>)
 	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 998302681; Tue, 14 Oct 2025 21:18:01 +0800
+	with ESMTP id 760664814; Tue, 14 Oct 2025 21:18:01 +0800
 Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
  MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
@@ -53,9 +53,9 @@ CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
 	<qilin.tan@mediatek.com>, <lin.gui@mediatek.com>, <tun-yu.yu@mediatek.com>,
 	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
 	<bvanassche@acm.org>
-Subject: [PATCH v1 1/2] ufs: core: update CQ Entry to UFS 4.1 format
-Date: Tue, 14 Oct 2025 21:15:55 +0800
-Message-ID: <20251014131758.270324-2-peter.wang@mediatek.com>
+Subject: [PATCH v1 2/2] ufs: core: support dumping CQ entry in MCQ Mode
+Date: Tue, 14 Oct 2025 21:15:56 +0800
+Message-ID: <20251014131758.270324-3-peter.wang@mediatek.com>
 X-Mailer: git-send-email 2.45.2
 In-Reply-To: <20251014131758.270324-1-peter.wang@mediatek.com>
 References: <20251014131758.270324-1-peter.wang@mediatek.com>
@@ -71,69 +71,70 @@ X-MTK: N
 
 From: Peter Wang <peter.wang@mediatek.com>
 
-Update the completion queue (CQ) entry format with UFS 4.1
-specifications. UFS 4.1 introduces new members in reserved
-record DW5. This patch also refines the DW4 with detailed
-members defined in UFS 4.0. Modify the code to
-incorporate these changes by updating the overall_status
-in the CQ entry structure.
+Enhance the ufshcd_print_tr function to support dumping
+completion queue (CQ) entries in MCQ mode when an error occurs.
+This addition provides more detailed debugging information
+by including the CQ entry data in the error logs, aiding
+in the diagnosis of issues in MCQ mode.
 
 Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 ---
- drivers/ufs/core/ufshcd.c |  4 ++--
- include/ufs/ufshci.h      | 17 +++++++++++++----
- 2 files changed, 15 insertions(+), 6 deletions(-)
+ drivers/ufs/core/ufshcd.c | 13 ++++++++-----
+ 1 file changed, 8 insertions(+), 5 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index ff7a3d60b11d..d779cc777a17 100644
+index d779cc777a17..b90500126b35 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -858,7 +858,7 @@ static enum utp_ocs ufshcd_get_tr_ocs(struct ufshcd_lrb *lrbp,
- 				      struct cq_entry *cqe)
- {
- 	if (cqe)
--		return le32_to_cpu(cqe->status) & MASK_OCS;
-+		return cqe->overall_status & MASK_OCS;
- 
- 	return lrbp->utr_descriptor_ptr->header.ocs & MASK_OCS;
+@@ -599,7 +599,8 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
  }
-@@ -5643,7 +5643,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task_tag,
- 		scsi_done(cmd);
+ 
+ static
+-void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
++void ufshcd_print_tr(struct ufs_hba *hba, struct cq_entry *cqe,
++		     int tag, bool pr_prdt)
+ {
+ 	const struct ufshcd_lrb *lrbp;
+ 	int prdt_length;
+@@ -618,6 +619,8 @@ void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
+ 
+ 	ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
+ 			sizeof(struct utp_transfer_req_desc));
++	if (cqe)
++		ufshcd_hex_dump("UPIU CQE: ", cqe, sizeof(struct cq_entry));
+ 	dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
+ 		(u64)lrbp->ucd_req_dma_addr);
+ 	ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
+@@ -648,7 +651,7 @@ static bool ufshcd_print_tr_iter(struct request *req, void *priv)
+ 	struct Scsi_Host *shost = sdev->host;
+ 	struct ufs_hba *hba = shost_priv(shost);
+ 
+-	ufshcd_print_tr(hba, req->tag, *(bool *)priv);
++	ufshcd_print_tr(hba, NULL, req->tag, *(bool *)priv);
+ 
+ 	return true;
+ }
+@@ -5536,7 +5539,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
+ 
+ 	if ((host_byte(result) != DID_OK) &&
+ 	    (host_byte(result) != DID_REQUEUE) && !hba->silence_err_logs)
+-		ufshcd_print_tr(hba, lrbp->task_tag, true);
++		ufshcd_print_tr(hba, cqe, lrbp->task_tag, true);
+ 	return result;
+ }
+ 
+@@ -7763,9 +7766,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
+ 		ufshcd_print_evt_hist(hba);
+ 		ufshcd_print_host_state(hba);
+ 		ufshcd_print_pwr_info(hba);
+-		ufshcd_print_tr(hba, tag, true);
++		ufshcd_print_tr(hba, NULL, tag, true);
  	} else {
- 		if (cqe) {
--			ocs = le32_to_cpu(cqe->status) & MASK_OCS;
-+			ocs = cqe->overall_status & MASK_OCS;
- 			lrbp->utr_descriptor_ptr->header.ocs = ocs;
- 		}
- 		complete(&hba->dev_cmd.complete);
-diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
-index 612500a7088f..8b14f6e5e6f5 100644
---- a/include/ufs/ufshci.h
-+++ b/include/ufs/ufshci.h
-@@ -567,10 +567,19 @@ struct cq_entry {
- 	__le16  prd_table_offset;
+-		ufshcd_print_tr(hba, tag, false);
++		ufshcd_print_tr(hba, NULL, tag, false);
+ 	}
+ 	hba->req_abort_count++;
  
- 	/* DW 4 */
--	__le32 status;
--
--	/* DW 5-7 */
--	__le32 reserved[3];
-+	u8 overall_status;
-+	u8 extended_error_code;
-+	__le16 reserved_1;
-+
-+	/* DW 5 */
-+	u8 task_tag;
-+	u8 lun;
-+	u8 iid:4;
-+	u8 ext_iid:4;
-+	u8 reserved_2;
-+
-+	/* DW 6-7 */
-+	__le32 reserved_3[2];
- };
- 
- static_assert(sizeof(struct cq_entry) == 32);
 -- 
 2.45.2
 
