@@ -1,46 +1,46 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D71F22E8B7A;
-	Tue, 14 Oct 2025 21:55:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBF3E2E88B6;
+	Tue, 14 Oct 2025 21:55:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760478918; cv=none; b=Gd3WqlkJo/wYy++k8P8wc8ud8yC1EUsow4FXmO8xoJU31D15uTIq0ncXXIdrS4o/FLI9TO6OYqOvaiT8O4tAYBdlZS9nDWB1chxmOQlAio5pAj6BjB1Uu1dt+/Zh2GjAMczOdj+QelgJhjwc6HSDtf0stNE3WUcdZZzIXRunoXM=
+	t=1760478923; cv=none; b=pYRndABp7+SA1hp3r29YD+XOfJpYCHpDhx+8vfz+EjmhAl6LB35RTI5Z/fyby47mZkHSCW+MhL35Yvt4ZEElM5ip4ufSMfc5pSLc45yhyYiIknRQEqoKYy0neYns65j71SlzAcSxKb4ngF0PnsQzsi1lpFRiEm/G05dI1LtT+G8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760478918; c=relaxed/simple;
-	bh=63QIMj2l/N6+b8kvO1RBuBAxjXlPpObMSb2Cbt/aahY=;
+	s=arc-20240116; t=1760478923; c=relaxed/simple;
+	bh=Ufxl2UkV0c+Hh77Tbp8x6e+Mm1NahCpBwbyMbzOHLr4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=PvqqZqiS+vvLBDqoQkyVtSThoBccRGCjAePmH9KwZtP2hjbvbisoII/N7pxNbt0W5fjtbCk1pdoJug/L3dJs/WsTntrV1VJ4BBaDVKAkKLtoxQGb2cVuiDMdBpfOQMuVXEQobhvDRavU2BEtUpzS24dNg/ROXDvxW8qH1lCwPOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=SHBLsfiz; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=vBNCYmIDeF9g8c2F97v3H35/SSk5xnKwk8YwY2uTtD1MErbNlBZnTL9egkFbJHqt9gyurNRHEOFkl8bX+n3Ziq0VAUF7inUHVjF/F2UCU/tpWJh4UvXsjxq8KtHmCjzhWT7FQX6oBs8SZBJmM61GbOZXTh0ubI72xPiVxUNQJtY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=KruGerGy; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="SHBLsfiz"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="KruGerGy"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cmSgl6m3Gzm0yVS;
-	Tue, 14 Oct 2025 21:55:15 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cmSgr5Rkkzm0yVD;
+	Tue, 14 Oct 2025 21:55:20 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1760478914; x=1763070915; bh=xqEwE
-	sIoTg4R5q2LDbXSZtPI0qahtpWfGzBBWHMqyks=; b=SHBLsfizMDkeSffxoZ2K7
-	pBzYL4AYTg6FQXVoMbXnLo2u0iZF536muuuEq01P8Yylp860FyBBjXRiI7i9dIBb
-	E1mN9FMAxFgnKdnD90FFSm5+CRlBuy/x33/jsdtdDhN7VKkmYlt6hLanT5aaS8PJ
-	csebDqA4FT1rrugXpCc+zXl/VBUP95mrPxXw0GG7OK0J5xLXHq6Y/CL0aiO7kxrL
-	ho16iEnDrrEhFK35riinAoVCEO9pFMTEqP37BI14j0mDaMxR/yRe9K8B6yUoJ8nl
-	bP9DZEc1pv1lHXYYT+pxd0pfATIWhOQAXcqFGRmJNt8I9FdxCQrMWQdDvHJvCQYT
+	:received:received; s=mr01; t=1760478919; x=1763070920; bh=mpnax
+	OVGH4VD79H0lHUAbbjpAvvzrt4nYyaA03cCCH8=; b=KruGerGyWrqXESgDYzRSY
+	VoDlLOt9vsENlRaTHrCicAAH0RJPaYwLzPB1wyUb8MaGJKnrp8bDbXrQ62gAoHGU
+	CvnMmS0U80kbSXltM7ICig9cDewWr5uG8dyddGWzrMTMvura2cF74Wavznu9yKUY
+	RcNYfmABsaVVN4Y8uICulgcKqxm91B6+HaLiX+LMMDrndaxM2Fhqy41CFwhPtLWN
+	IIB7XGt7QRBT6XbKyfyOdtObsDXpWvmQyyLWKH4IKJEqqyWtp7j0SOf07xG0leeb
+	1LkjWdfX7oKAGJFp4PGB8SmNy5C7uil4QDGgRZqpzATi34NvJcHCKj0LdASDJ6vX
 	A==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Rx756RXOQk8D; Tue, 14 Oct 2025 21:55:14 +0000 (UTC)
+ id hpS5nkRJjs9j; Tue, 14 Oct 2025 21:55:19 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cmSgf3BbKzm0yV3;
-	Tue, 14 Oct 2025 21:55:09 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cmSgl3FRzzm0yVJ;
+	Tue, 14 Oct 2025 21:55:14 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -48,9 +48,9 @@ Cc: linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v25 04/20] blk-mq: Move the blk_queue_sq_sched() calls
-Date: Tue, 14 Oct 2025 14:54:12 -0700
-Message-ID: <20251014215428.3686084-5-bvanassche@acm.org>
+Subject: [PATCH v25 05/20] blk-mq: Run all hwqs for sq scheds if write pipelining is enabled
+Date: Tue, 14 Oct 2025 14:54:13 -0700
+Message-ID: <20251014215428.3686084-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.788.g6d19910ace-goog
 In-Reply-To: <20251014215428.3686084-1-bvanassche@acm.org>
 References: <20251014215428.3686084-1-bvanassche@acm.org>
@@ -62,71 +62,48 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Move the blk_queue_sq_sched() calls from blk_mq_run_hw_queues() and
-blk_mq_delay_run_hw_queues() into blk_mq_get_sq_hctx(). Prepare for runni=
-ng
-all hardware queues for single-queue I/O schedulers if write pipelining i=
-s
-enabled. No functionality has been changed.
+One of the optimizations in the block layer is that blk_mq_run_hw_queues(=
+)
+only calls blk_mq_run_hw_queue() for a single hardware queue for single
+queue I/O schedulers. Since this optimization may cause I/O reordering,
+disable this optimization if ELEVATOR_FLAG_SUPPORTS_ZONED_WRITE_PIPELININ=
+G
+has been set. This patch prepares for adding write pipelining support in
+the mq-deadline I/O scheduler.
 
 Cc: Damien Le Moal <dlemoal@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-mq.c | 19 ++++++++++---------
- 1 file changed, 10 insertions(+), 9 deletions(-)
+ block/blk-mq.c | 8 ++++++--
+ 1 file changed, 6 insertions(+), 2 deletions(-)
 
 diff --git a/block/blk-mq.c b/block/blk-mq.c
-index 28d05b8846d7..81952d0ae544 100644
+index 81952d0ae544..5f07483960f8 100644
 --- a/block/blk-mq.c
 +++ b/block/blk-mq.c
-@@ -2406,7 +2406,13 @@ EXPORT_SYMBOL(blk_mq_run_hw_queue);
+@@ -2401,8 +2401,7 @@ void blk_mq_run_hw_queue(struct blk_mq_hw_ctx *hctx=
+, bool async)
+ EXPORT_SYMBOL(blk_mq_run_hw_queue);
+=20
+ /*
+- * Return prefered queue to dispatch from (if any) for non-mq aware IO
+- * scheduler.
++ * Return preferred queue to dispatch from for single-queue IO scheduler=
+s.
   */
  static struct blk_mq_hw_ctx *blk_mq_get_sq_hctx(struct request_queue *q)
  {
--	struct blk_mq_ctx *ctx =3D blk_mq_get_ctx(q);
-+	struct blk_mq_hw_ctx *hctx;
-+	struct blk_mq_ctx *ctx;
-+
-+	if (!blk_queue_sq_sched(q))
+@@ -2412,6 +2411,11 @@ static struct blk_mq_hw_ctx *blk_mq_get_sq_hctx(st=
+ruct request_queue *q)
+ 	if (!blk_queue_sq_sched(q))
+ 		return NULL;
+=20
++	if (blk_queue_is_zoned(q) && blk_pipeline_zwr(q) &&
++	    test_bit(ELEVATOR_FLAG_SUPPORTS_ZONED_WRITE_PIPELINING,
++		     &q->elevator->flags))
 +		return NULL;
 +
-+	ctx =3D blk_mq_get_ctx(q);
+ 	ctx =3D blk_mq_get_ctx(q);
  	/*
  	 * If the IO scheduler does not respect hardware queues when
- 	 * dispatching, we just don't bother with multiple HW queues and
-@@ -2414,8 +2420,7 @@ static struct blk_mq_hw_ctx *blk_mq_get_sq_hctx(str=
-uct request_queue *q)
- 	 * just causes lock contention inside the scheduler and pointless cache
- 	 * bouncing.
- 	 */
--	struct blk_mq_hw_ctx *hctx =3D ctx->hctxs[HCTX_TYPE_DEFAULT];
--
-+	hctx =3D ctx->hctxs[HCTX_TYPE_DEFAULT];
- 	if (!blk_mq_hctx_stopped(hctx))
- 		return hctx;
- 	return NULL;
-@@ -2431,9 +2436,7 @@ void blk_mq_run_hw_queues(struct request_queue *q, =
-bool async)
- 	struct blk_mq_hw_ctx *hctx, *sq_hctx;
- 	unsigned long i;
-=20
--	sq_hctx =3D NULL;
--	if (blk_queue_sq_sched(q))
--		sq_hctx =3D blk_mq_get_sq_hctx(q);
-+	sq_hctx =3D blk_mq_get_sq_hctx(q);
- 	queue_for_each_hw_ctx(q, hctx, i) {
- 		if (blk_mq_hctx_stopped(hctx))
- 			continue;
-@@ -2459,9 +2462,7 @@ void blk_mq_delay_run_hw_queues(struct request_queu=
-e *q, unsigned long msecs)
- 	struct blk_mq_hw_ctx *hctx, *sq_hctx;
- 	unsigned long i;
-=20
--	sq_hctx =3D NULL;
--	if (blk_queue_sq_sched(q))
--		sq_hctx =3D blk_mq_get_sq_hctx(q);
-+	sq_hctx =3D blk_mq_get_sq_hctx(q);
- 	queue_for_each_hw_ctx(q, hctx, i) {
- 		if (blk_mq_hctx_stopped(hctx))
- 			continue;
