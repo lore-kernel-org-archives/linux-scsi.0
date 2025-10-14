@@ -1,631 +1,213 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 773D130649D
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2025 20:22:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760473325; cv=none; b=MgtKV3QWlU4U9D9BKgxW9WEM3m/UUAFv+WDpqlqZOWPQaNqcExK13zZ6YxxCVHdaSDvZqetEGdSAVEy6n7BHqbcuOn3Q+BBnvcjoCBbKBmZy55rsJR0zlf/uQHeXqHElcnl6gDUqzJxOe8R8Gvx7sWbmsEpK3yiAvwphkvtjpyQ=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760473325; c=relaxed/simple;
-	bh=EhhMScIa4itksA7Oqk4M2eRhRlECdtvExus1K9CIJB0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=HshpbSyTNIS+LAjiaEr5NbwVQEr3Qt2tQQqudHHrxB3DFUY+sFvL0NtyQjPYmRvwNVN90jhSZIrCxLNBaqCj2h3s6ZBQUHM+HNRp3QNjcYMBdIO7/RVe1YvIMjg5ExLB1OYJ60jxuzYhqx3JP1fUsGJuIe9l+lZ2ndPEMu7I2GA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=XzldqKRM; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83B76296BC1;
+	Tue, 14 Oct 2025 21:38:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1760477891; cv=fail; b=T4PsBKJ1XzMGpIixRNTgllAahUS2WBKkSJxITjRIS3tRMw7WHuOFKAOsyRa64difgsO2NGLhZCOFRRut9A3jhaD0WnM8p/zdli6HOVjfjaCIMhX8NCJY3GhKzgjTMuilflMjsVcsZdbIasyPvWOAFoaGPM7KqvZhBEIyVkqGOuE=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1760477891; c=relaxed/simple;
+	bh=yGe+bkrqYAxKhWXnLhIF2DYNdZDBZ3KSLWeYdyLDhgY=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=uN670+kKKbmyyDTuKrB6x6mmRvJeXHEkP8lpxF5kXnL1kj4sZBHEXJUV68LCdUXxNaccRG9Hm/zhFRHOSAvUR8E0a+RKIRllRWdhY+Eu+SIZeo+ADKNGHe/7zplcuN4AZLyzPra7u0IRuTY8PWLqDoGyXSotxZs+dKpFL7HqupE=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=VVkhybeX; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=DH9Umcuu; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="XzldqKRM"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cmQcB5bCXzm0ytC;
-	Tue, 14 Oct 2025 20:22:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1760473319; x=1763065320; bh=HBuib
-	90ILXSBa2ePhjeNZyIKXsO8AxSyi4XY4on9JV4=; b=XzldqKRMtJKeqHeB5nWpC
-	T4MiheSPsFpBpQecuuUUlQIZfh11oTDyioqq2URLH4ebVppX4+JhbM3RYh9634kN
-	DOrftNJUM9zR28I/0Khz3N+uXwaKe6hY/QZa06iRU2T+B3d+o3j9CogHr39cXUta
-	k9OR7Hz+U8FMUOgtgbBR1ZagSt46pFYPLEpu4+kR4ciWwAfeW7M909rXXO53Su6M
-	imII5JpfvNMaYY79cScJK2XknM+5oKymLGJ67oFPRDmS5Qc2c55yhePyrOFZUPjk
-	cXFXvFHRH+bVLJkLkks7VJ03fcblnsWOo5qn41HPBUmnJeBFJ+1SU9eY4DjkEMTn
-	w==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id YBwJfznF52Iv; Tue, 14 Oct 2025 20:21:59 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cmQbw2czpzm0yVJ;
-	Tue, 14 Oct 2025 20:21:47 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	"ping.gao" <ping.gao@samsung.com>,
-	Chenyuan Yang <chenyuan0y@gmail.com>,
-	Alok Tiwari <alok.a.tiwari@oracle.com>,
-	Ziqi Chen <quic_ziqichen@quicinc.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Eric Biggers <ebiggers@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>
-Subject: [PATCH v6 28/28] ufs: core: Switch to scsi_get_internal_cmd()
-Date: Tue, 14 Oct 2025 13:16:10 -0700
-Message-ID: <20251014201707.3396650-29-bvanassche@acm.org>
-X-Mailer: git-send-email 2.51.0.788.g6d19910ace-goog
-In-Reply-To: <20251014201707.3396650-1-bvanassche@acm.org>
-References: <20251014201707.3396650-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="VVkhybeX";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="DH9Umcuu"
+Received: from pps.filterd (m0246631.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59EEfCPg014452;
+	Tue, 14 Oct 2025 21:38:06 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2025-04-25; bh=AWZuYOLCvVQe8QzeR8
+	/NyJlY0Nsso5dNQ2/CTxlEP8U=; b=VVkhybeX0nTco5Uywl1xZdQlmhCYWze5JC
+	EfVqjikSri6dkgtVwNffVjFQ3rxY6aZyMqFSzgw1+WffkulmdpG8b8HSqU1noCQq
+	C3uQ9/Uy84gDaQJ57824TC3c+2E3INfiTFFtSIGPsdYQ5zR4gSlVEg9xrvt7z1Ui
+	eEarwi1aVjspqATSfBLUrKHKPxnk8FiIS5hz6bMLuMUEJ169hZghXO+dptAT2jeJ
+	PtlclK5Nt0ofJQAh9ewOPcCwzs4DHMgMwJiw9ftiEGRuY46E5YPlt+QrriTiASaY
+	Vi/7nBAo/oFVYTjF6R14BfAXJSBoHtWUP2GdUNg06ZYJqJ/TSUfQ==
+Received: from iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta01.appoci.oracle.com [130.35.100.223])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 49ra1qcfca-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 14 Oct 2025 21:38:06 +0000 (GMT)
+Received: from pps.filterd (iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 59EKGZSr037867;
+	Tue, 14 Oct 2025 21:38:05 GMT
+Received: from bl0pr03cu003.outbound.protection.outlook.com (mail-eastusazon11012060.outbound.protection.outlook.com [52.101.53.60])
+	by iadpaimrmta01.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 49qdpfhmt2-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Tue, 14 Oct 2025 21:38:05 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=kgA4dY4pUMt/aIgijaj4QxQ6ebC6oNui05inF3vLMUTR7nfH6NP+BHuea7g29l58pGKiqiKHntDlAFg7d+NQKZG4b1AJxubM/CHa6ToBf8CD4mZMGpvkKOuPJlQ8X7kuabMllBOP76EOULe5T4WIJVsFjmqbdXExzWjD0HARNwJ2cBJwbeT+zswkFRbCER5L5CNif3KjIFbeRPRnvMm9S5siYqGC3E4JpCBYNLi5wtZgp4zl2U6vvmS1EUp160Hum2rYnaajbtEwuzBTssZ5WtxOcw/b96uGJenZ/sG2bo/KyGEOakjfvDq/plfq/C2NT2AggxYHIsYxT1adPqI/0w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=AWZuYOLCvVQe8QzeR8/NyJlY0Nsso5dNQ2/CTxlEP8U=;
+ b=vc2OC7vCsyD3Go6qPKussXnfIUep52RIeI12DF5Yjzt44j6J6FtL7MjqmCnuUDNWJWDuvNQQil2ZfWcZFdUkfnuaD7QaZGPHbzIC5XO3Ybkkqa2LOJWP7nSr2qRYMCukaGY0HWMEdkC88eLcGq9/hc9oRCX/adgz2Q5aghYYF/qlwELN16a4wyKHFHKvsW9WDx2hn47MHTSgpV3ytAEU60fu2q2cl5t1BUUlRwIPqiDIvwZC70S2WrQcYpDGsROI7XX7W4OkzFmSxUsl1uqYA8Il+ybARq26NaoC1bjvWJB1pd1VHX+CrQtQ9X7s2WrbnMiIWYihqgjmOWL9AmG2rg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=AWZuYOLCvVQe8QzeR8/NyJlY0Nsso5dNQ2/CTxlEP8U=;
+ b=DH9UmcuuTMGrge5cdJjoNjKYAIOiWe114jy9eZgblj5sVnble+B6UPm6R4yC85bz6sUrHM7XGPR6TmHTLrKbWey1f4Iy8qIJLM4V4xsMJfS74FKpDtJVte8VkYbVIwrg88teAFEiGqNo4kWLX/eoVnm42rrL/SfpjzigIKkumMw=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by PH0PR10MB5755.namprd10.prod.outlook.com (2603:10b6:510:149::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9203.13; Tue, 14 Oct
+ 2025 21:38:03 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf%6]) with mapi id 15.20.9228.009; Tue, 14 Oct 2025
+ 21:38:03 +0000
+To: "Gustavo A. R. Silva" <gustavoars@kernel.org>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin
+ K. Petersen" <martin.petersen@oracle.com>,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+        linux-hardening@vger.kernel.org
+Subject: Re: [PATCH][next] scsi: isci: Avoid -Wflex-array-member-not-at-end
+ warning
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <aM09bpl1xj9KZSZl@kspp> (Gustavo A. R. Silva's message of "Fri,
+	19 Sep 2025 13:24:30 +0200")
+Organization: Oracle Corporation
+Message-ID: <yq1wm4xb1wg.fsf@ca-mkp.ca.oracle.com>
+References: <aM09bpl1xj9KZSZl@kspp>
+Date: Tue, 14 Oct 2025 17:38:00 -0400
+Content-Type: text/plain
+X-ClientProxiedBy: YQBP288CA0023.CANP288.PROD.OUTLOOK.COM
+ (2603:10b6:c01:6a::19) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|PH0PR10MB5755:EE_
+X-MS-Office365-Filtering-Correlation-Id: e0b31aee-70aa-41cb-870a-08de0b69f420
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?Fj3oC8hJDckktO5s+/1+5SEn/fDfuPUaWgAn+LRm+xfFet9Nf46tICbO4FHN?=
+ =?us-ascii?Q?B7U8AQU65fnoQFesY17t1ghhl8bPOw0/qp7tJDQnPRkM3H2NJoNlTVLiNclZ?=
+ =?us-ascii?Q?buTRThJkU3fZnNmxtRP+uh9BqoOnxS/NOk2My/oZIGyUeaEMOMaTWXLpDQcV?=
+ =?us-ascii?Q?fgS2lV4PzNsHv8FZkXFtRrK72lygwKGgT5FgqG724QkgfRH25SeiPMa1f3WL?=
+ =?us-ascii?Q?jfy+waZ1uRNq7thPi873wGw4itTFgj51rHOQaQEdK9BHMQu9Sc4p0y//oAY7?=
+ =?us-ascii?Q?wgodZH/opowU9M44SITdEDrJryamOhFn6xaDOiRj3RguVViWagzJAPrw3pzW?=
+ =?us-ascii?Q?paey4xlsxRP97f91sFQbC3O2hdv2rtoS+LgbfiH9UQP7yN+s8SMLhsm6If+3?=
+ =?us-ascii?Q?6OHELqpTNTzdCciN8o+8dorslRMFGn5KhO425R2Lpl3qHJPcfX61Ttd/KGFM?=
+ =?us-ascii?Q?SpZOV3zyDTuLT9N/5JdkIRN4tLwaACSdB4g8z9GE+urTexc2brWdfiIaRhOG?=
+ =?us-ascii?Q?igG9I0kiREGXIxsge0Hoj/r88kSIsqnarQ9RcKCCULFze1gAnnt3B/7qcNJQ?=
+ =?us-ascii?Q?6JStIxRLVN/B8lW+03h2PjF5wMaXfwqChVntyYirUViZNfDoKYNMXKL/8F5e?=
+ =?us-ascii?Q?4v62Lnr9Rtkemt9Hj3ev00bcSuRI69BIzEzq7hHwLgjXld2d1AvLfFJpkQ4V?=
+ =?us-ascii?Q?yROBafOtkLWT6V6+gx1Klt6Yizt99+P6sa1X7I7RYgM6cftk/7ZuHPPceR8j?=
+ =?us-ascii?Q?jh2QyGA0wkOL+fHSTgeaZh2+wiPkhktQac2trOsqEN923Mw0Y8iu1n4MTj/W?=
+ =?us-ascii?Q?ZU8nHbh14FzNbBkaVJ/a7fRc2RLC1zeFZlFyah7lv/wLjD1mOD6yMyJak0KL?=
+ =?us-ascii?Q?ouvwjSGbLDopxLiWWcNUDoNzkC9axf5jLSdfWNfmvZL8abDHN16H7i/94czk?=
+ =?us-ascii?Q?hDUW0h3hz5+0a+f7WDQQ0hROwm+169+cpP7MOpW+w+HdWCAMWS1NeVfRIU6U?=
+ =?us-ascii?Q?RXvNbVcRCgWJPoSAXOHskRpsysIOa2wN/nO9kS64Ul8sZLeXwj3EG4ysDtqh?=
+ =?us-ascii?Q?egDdF5YR05Q191bO1AabP1vEtSz2eZa/4TB+3PBErsqWLTVT+ySFIv95EdIo?=
+ =?us-ascii?Q?PzX4fQrJzbaPstvBY3o2Gf6TwQOoiA2Lftri0lAG1Hz74v4eLAe1PEYbatrR?=
+ =?us-ascii?Q?6jBrB9Qicvx03tOe64v0IPudBdpPmN+KvxQ0PUWq9T+HF/RVjmKVOdMvFUX+?=
+ =?us-ascii?Q?J5XsHTc2clQpgcU4T0xdQPfe0fSDdIUqmplHALg/GL7YshOmvT1PqJtpObor?=
+ =?us-ascii?Q?4koV6j8y7J1pm3r6rnZW0i9g/MienRoFx4spq+GKgUzo5bZ9jhTZbIVgWvv8?=
+ =?us-ascii?Q?CWCCw18e8BDWKdrlQvXgbs58oj7mRJoLLh35F1ooS/Ih42Zm3Bh3ZEDmg6zj?=
+ =?us-ascii?Q?qdUMrUpG52qqVSTaabKxB93dWR8uUwQx?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?+ScjNEezx4OPMbbCC9WdxHwK+33+dVGTumQBy5wo7zLTfqwHtxunlryKs2X6?=
+ =?us-ascii?Q?sbOkT22DlgqRy7O7mgBaXcC43Ll6QHz1tRdnoP1X6is9EGmsS+ipZdgsXFnD?=
+ =?us-ascii?Q?0hMNn3nAVdAB6+k3kfxG1j5TodRvnrXD4Rc/BRa/H6HuQJrE2arJYyBC+y0Q?=
+ =?us-ascii?Q?YTQELb6Zifa41QkQGuFThThsYVTwaDgnflH9hMC7DwNxpluHWxBjOuEdXxM9?=
+ =?us-ascii?Q?SYAEYDvvEX8gSTQyYK6oIsOj1qz5LfcFdtzo14D7h8EaJ/CHhXmYErf/tx3x?=
+ =?us-ascii?Q?FgV+L/a8ygpRhFOixpf1RAAuiwMqiqA/A06q1fnFRIvA9AYyFLQPnDp+akvW?=
+ =?us-ascii?Q?NZulUzhWSEU5dsmrOLqpodGrkoglLJJV6iiHkyiyHtjo8rArfXSDZIFayU55?=
+ =?us-ascii?Q?YCMz3B32yJN1vRrVJel4SpK5YHhwAaBh8JrwQ63P9zoRZSo4W/YVxT2YVs6k?=
+ =?us-ascii?Q?ebGA8MzYu+rFbedU1QnltcbpI/3ugJ2qfXH4q94gUpxlRb/F2IlWr7TgA0V4?=
+ =?us-ascii?Q?uOYuIHwQFe84URp2cqEeyIlgd5/3OWwAqZzbGlHC/K0vaqZAOYpHjtczkRdr?=
+ =?us-ascii?Q?bmCyw3bmgvFNQA3+MHYYchBJeBCCR8ucWQw4g+Uh9YdwLeNrhKU0QI/kwID7?=
+ =?us-ascii?Q?rTtzLzjGhU2hb7JhEHZMVSBaSfy6DLmI8SKssSyLuXl/BWhEPWCL3laI19z6?=
+ =?us-ascii?Q?17o34DsQM2yHdWCPsIR/wuD+XLzl0UaD6fWw8DuEBeqhcptXH2c3/2F4bJtM?=
+ =?us-ascii?Q?Cdt8PMsyMNElsWRbShYZI50CLWYCi7e41bzgmXl9MEe6XEo5mU9QwfSje3Sz?=
+ =?us-ascii?Q?0fOXDXA4ub9cs2YxUKgEGcpkfpLkg8hgvlsl+3WXVSqOMK/YDbesrgkYnO1N?=
+ =?us-ascii?Q?FDj2nzJnk23+AKoJfiO8xFqNDj5FShd1ndrX/pM4KJCxSLvNv2R4FG9cHG/7?=
+ =?us-ascii?Q?m+jiiOIOo1JHuDkexA28KBHNogLPpgAN9AVvAEQ5dgpS5gx6IWJepqPP1HUk?=
+ =?us-ascii?Q?jSJqt/w4O+fAmgXsZISlL/FqsL56bj8afXhy553dnlz+OEbHyeVENE9Iq9SU?=
+ =?us-ascii?Q?MJ8avsgOyLbyssla7v4oxFQL8OzLX/kU36HlkSPcH2Jb3LLM66CMCMwrWpOa?=
+ =?us-ascii?Q?XTsuaIfKvyrgCtMcy8WiP9QK1i7pudfpF1ecGrrQ7k7PTj/Lw0n64805fEuw?=
+ =?us-ascii?Q?KcexWvyyR5J2fccr2N82LEAplN7fXxOe07yPUmqzDsr+7TbqxKAIRyL5WWMU?=
+ =?us-ascii?Q?FH/EWpYeMy39jTdwGuzchv2l5k4DEA4qZVRTjshr6WgaNwndC9y0ERc5X6y1?=
+ =?us-ascii?Q?YfoThAFVaorF7bh5rs3d6hWE+u+rLFIx8ZwSWPP9qHplHGUnef5jHmA8O5+6?=
+ =?us-ascii?Q?7DDxkvph2OQmAK/HIXx5MfV7GqEG3Ld/lte95hOujZX4YqfDIPYVXsUkwaJn?=
+ =?us-ascii?Q?jTn5SiLDmxPBP2Fd91nT+UGtZLhBub34cawT7jpU73Uje1NXN3G9PvilL3Zq?=
+ =?us-ascii?Q?N0GmqtvzmVdR/qnmnHsyHaKdAV2qSBmdTAIwhC4EEJ68xF/HaOOMMmediwMV?=
+ =?us-ascii?Q?pvlHeQbHW9sgCteffxa7ds6LkYxqwumhoTfT8vltd+RmlC9Bi0gnGfixJ8dN?=
+ =?us-ascii?Q?2g=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	HdI29muMLsHNl/T3wneU/za0Zv2922hrzwZpsJSwmrzJ6RUOTix43akkUixaM4o4vb7Y4W0/9+3MZFWNsqfaNU7AXYHWniGsqEp50JCV9JTxb+GTBsSHLwpHle7f001GNrHNwb5abSTkkYXcc5rP2zWpLpUTpf9Rg4B5CJqeVDxIUsMPTUxHxW8ufRJpwip4kKgpKOGWFq+yshbi9rXFIfByE618ANLoxpMh8uKcFLEERd2BRaFCzUSJVENmX1xgi7mRYFm1TDTROeX+MexkcSio/DZNm1rCbsrEQJVx0digV9ApVION5B70eBT4k3P/RZIy7utkjO11vgV+ELqQQauKQO8Bgc6R8eQAk18E8OgVameC1vbmCSVOaJ8sDbzsAhAPuE7b9ItRhiC2a7IDcmnWYaY8iT24ESK/ZnCbIPDmekVbqM1ewSZLwBmy0Oc1Qfvl/Zk89aa3mIGCZjW+e5Q+sMxcxrK/xwKgSXkon6FwXBnFfwJj7sZtqpsnzoYl/AEDSCQKEPAnNzPKLqOTB0O0hMhlgD+FHN+QoeFMFYKOv0F4Snv2T2bh6hzB4NgQn424doqls45ni8maPYIAS3A+g1o9mNg3mjipAP+xQr4=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: e0b31aee-70aa-41cb-870a-08de0b69f420
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 14 Oct 2025 21:38:02.9691
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: YQm4NnS0Yo0CzcreFVPtkUUtXjJ/UQt+2Uc8T5nZC0VJ5xQx718FMRC9sX4P7g8ofNkklokCUkghI+41KG8ToZW/kKsa0HwBL3wAqmgn0Ao=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH0PR10MB5755
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-14_04,2025-10-13_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxlogscore=782
+ malwarescore=0 mlxscore=0 spamscore=0 suspectscore=0 phishscore=0
+ bulkscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2510020000 definitions=main-2510140146
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDEyMDA1MSBTYWx0ZWRfX4vreH8W84Ery
+ 5m2diIM3jL98by0WfM4I9YH14HT40qAJ6YZUnSfySxiua1y8gx/yRlmT9wAIt0LkIZ4P494AoNN
+ K1FEYK7DT0jn+HO6hE2bKCy+HexdFJglN6zYyVFGFbM6ts3QbPNh+FT//8mrmH3e0TI4JGRnpPd
+ qL/8ZGmWF+5ogH9bPTwXnI3V+mCie8fwulVAnf4POZTPjDSNhsCbFsjFeAmYKThWbwWTV6brQah
+ Byv0hbWxsPPYgvYd+zVKsFPSgSjsBiqU7JI+ZTJXhx/ku9d8Q5YIBwmJGrLMGYHC9kf8ELKLuCn
+ sBAn8yaLtsZ9sl+b4O+qFpdBs+0BjHvInYvABdrcr6A75aSdXz8y0fQ/kgFMPMlbn3VSDFT1fnJ
+ 5LXVZvib4CfPrQgsTGX2HK6wJBVclaSFvnELORt/UPXu8kri+vs=
+X-Proofpoint-GUID: 0jQ68vOiNAYMjpvScHB9QMQ8xQSIc3Fq
+X-Proofpoint-ORIG-GUID: 0jQ68vOiNAYMjpvScHB9QMQ8xQSIc3Fq
+X-Authority-Analysis: v=2.4 cv=GL0F0+NK c=1 sm=1 tr=0 ts=68eec2be b=1 cx=c_pps
+ a=zPCbziy225d3KhSqZt3L1A==:117 a=zPCbziy225d3KhSqZt3L1A==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=x6icFKpwvdMA:10
+ a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=f_l1T3mUF-Plsrszu-MA:9 cc=ntf
+ awl=host:12091
 
-Instead of storing the tag of the reserved command in hba->reserved_slot,
-use scsi_get_internal_cmd() and scsi_put_internal_cmd() to allocate the
-tag for the reserved command dynamically. Add
-ufshcd_queue_reserved_command() for submitting reserved commands. Add
-support in ufshcd_abort() for device management commands. Use
-blk_execute_rq() for submitting reserved commands. Remove the code and
-data structures that became superfluous. This includes
-ufshcd_wait_for_dev_cmd(), hba->reserved_slot and ufs_dev_cmd.complete.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs-mcq.c     |  19 ++-
- drivers/ufs/core/ufshcd-priv.h |  25 +---
- drivers/ufs/core/ufshcd.c      | 218 ++++++++++++++++-----------------
- include/ufs/ufshcd.h           |   6 -
- 4 files changed, 115 insertions(+), 153 deletions(-)
+Gustavo,
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index dc2d6620588f..cd3b55e7e1ac 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -479,9 +479,6 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
- 		mutex_init(&hwq->sq_mutex);
- 	}
-=20
--	/* The very first HW queue serves device commands */
--	hba->dev_cmd_queue =3D &hba->uhq[0];
--
- 	host->host_tagset =3D 1;
- 	return 0;
- }
-@@ -536,6 +533,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int ta=
-sk_tag)
- {
- 	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, task_tag);
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
- 	struct ufs_hw_queue *hwq;
- 	void __iomem *reg, *opr_sqd_base;
- 	u32 nexus, id, val;
-@@ -544,15 +542,12 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int =
-task_tag)
- 	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
- 		return -ETIMEDOUT;
-=20
--	if (task_tag !=3D hba->reserved_slot) {
--		if (!cmd)
--			return -EINVAL;
--		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
--		if (!hwq)
--			return 0;
--	} else {
--		hwq =3D hba->dev_cmd_queue;
--	}
-+	if (!cmd)
-+		return -EINVAL;
-+
-+	hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
-+	if (!hwq)
-+		return 0;
-=20
- 	id =3D hwq->id;
-=20
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-index 3222c4d3ceb4..35c3277a4373 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -367,30 +367,7 @@ static inline bool ufs_is_valid_unit_desc_lun(struct=
- ufs_dev_info *dev_info, u8
- static inline struct scsi_cmnd *ufshcd_tag_to_cmd(struct ufs_hba *hba, u=
-32 tag)
- {
- 	struct blk_mq_tags *tags =3D hba->host->tag_set.shared_tags;
--	struct request *rq;
--
--	/*
--	 * Handle reserved tags differently because the UFS driver does not
--	 * call blk_mq_alloc_request() for allocating reserved requests.
--	 * Allocating reserved tags with blk_mq_alloc_request() would require
--	 * the following:
--	 * - Allocate an additional request queue from &hba->host->tag_set for
--	 *   allocating reserved requests from.
--	 * - For that request queue, allocate a SCSI device.
--	 * - Calling blk_mq_alloc_request(hba->dev_mgmt_queue, REQ_OP_DRV_OUT,
--	 *   BLK_MQ_REQ_RESERVED) for allocating a reserved request and
--	 *   blk_mq_free_request() for freeing reserved requests.
--	 * - Set the .device pointer for these reserved requests.
--	 * - Submit reserved requests with blk_execute_rq().
--	 * - Modify ufshcd_queuecommand() such that it handles reserved request=
-s
--	 *   in another way than SCSI requests.
--	 * - Modify ufshcd_compl_one_cqe() such that it calls scsi_done() for
--	 *   device management commands.
--	 * - Modify all callback functions called by blk_mq_tagset_busy_iter()
--	 *   calls in the UFS driver and skip device management commands.
--	 */
--	rq =3D tag < UFSHCD_NUM_RESERVED ? tags->static_rqs[tag] :
--					 blk_mq_tag_to_rq(tags, tag);
-+	struct request *rq =3D blk_mq_tag_to_rq(tags, tag);
-=20
- 	if (WARN_ON_ONCE(!rq))
- 		return NULL;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 62c11f3e43ba..684937ebf754 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2355,7 +2355,7 @@ static void ufshcd_update_monitor(struct ufs_hba *h=
-ba, struct scsi_cmnd *cmd)
-  */
- static bool ufshcd_is_scsi_cmd(struct scsi_cmnd *cmd)
- {
--	return blk_mq_request_started(scsi_cmd_to_rq(cmd));
-+	return !blk_mq_is_reserved_rq(scsi_cmd_to_rq(cmd));
- }
-=20
- /**
-@@ -2486,7 +2486,6 @@ static inline int ufshcd_hba_capabilities(struct uf=
-s_hba *hba)
- 	hba->nutrs =3D (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) +=
- 1;
- 	hba->nutmrs =3D
- 	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
--	hba->reserved_slot =3D 0;
-=20
- 	hba->nortt =3D FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities=
-) + 1;
-=20
-@@ -3114,6 +3113,20 @@ static int ufshcd_queuecommand(struct Scsi_Host *h=
-ost, struct scsi_cmnd *cmd)
- 	return err;
- }
-=20
-+static int ufshcd_queue_reserved_command(struct Scsi_Host *host,
-+					 struct scsi_cmnd *cmd)
-+{
-+	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
-+	struct ufs_hba *hba =3D shost_priv(host);
-+	struct ufs_hw_queue *hwq =3D
-+		hba->mcq_enabled ? ufshcd_mcq_req_to_hwq(hba, rq) : NULL;
-+
-+	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
-+	ufshcd_send_command(hba, cmd, hwq);
-+	return 0;
-+}
-+
- static void ufshcd_setup_dev_cmd(struct ufs_hba *hba, struct scsi_cmnd *=
-cmd,
- 				 enum dev_cmd_type cmd_type, u8 lun, int tag)
- {
-@@ -3243,84 +3256,6 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, str=
-uct ufshcd_lrb *lrbp)
- 	return err;
- }
-=20
--/*
-- * Return: 0 upon success; > 0 in case the UFS device reported an OCS er=
-ror;
-- * < 0 if another error occurred.
-- */
--static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
--		struct ufshcd_lrb *lrbp, int max_timeout)
--{
--	struct scsi_cmnd *cmd =3D (struct scsi_cmnd *)lrbp - 1;
--	const int tag =3D scsi_cmd_to_rq(cmd)->tag;
--	unsigned long time_left =3D msecs_to_jiffies(max_timeout);
--	unsigned long flags;
--	bool pending;
--	int err;
--
--retry:
--	time_left =3D wait_for_completion_timeout(&hba->dev_cmd.complete,
--						time_left);
--
--	if (likely(time_left)) {
--		err =3D ufshcd_get_tr_ocs(lrbp, NULL);
--	} else {
--		err =3D -ETIMEDOUT;
--		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
--			__func__, tag);
--
--		/* MCQ mode */
--		if (hba->mcq_enabled) {
--			/* successfully cleared the command, retry if needed */
--			if (ufshcd_clear_cmd(hba, tag) =3D=3D 0)
--				err =3D -EAGAIN;
--			return err;
--		}
--
--		/* SDB mode */
--		if (ufshcd_clear_cmd(hba, tag) =3D=3D 0) {
--			/* successfully cleared the command, retry if needed */
--			err =3D -EAGAIN;
--			/*
--			 * Since clearing the command succeeded we also need to
--			 * clear the task tag bit from the outstanding_reqs
--			 * variable.
--			 */
--			spin_lock_irqsave(&hba->outstanding_lock, flags);
--			pending =3D test_bit(tag, &hba->outstanding_reqs);
--			if (pending)
--				__clear_bit(tag, &hba->outstanding_reqs);
--			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--			if (!pending) {
--				/*
--				 * The completion handler ran while we tried to
--				 * clear the command.
--				 */
--				time_left =3D 1;
--				goto retry;
--			}
--		} else {
--			dev_err(hba->dev, "%s: failed to clear tag %d\n",
--				__func__, tag);
--
--			spin_lock_irqsave(&hba->outstanding_lock, flags);
--			pending =3D test_bit(tag, &hba->outstanding_reqs);
--			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--			if (!pending) {
--				/*
--				 * The completion handler ran while we tried to
--				 * clear the command.
--				 */
--				time_left =3D 1;
--				goto retry;
--			}
--		}
--	}
--
--	return err;
--}
--
- static void ufshcd_dev_man_lock(struct ufs_hba *hba)
- {
- 	ufshcd_hold(hba);
-@@ -3335,6 +3270,29 @@ static void ufshcd_dev_man_unlock(struct ufs_hba *=
-hba)
- 	ufshcd_release(hba);
- }
-=20
-+static struct scsi_cmnd *ufshcd_get_dev_mgmt_cmd(struct ufs_hba *hba)
-+{
-+	/*
-+	 * The caller must hold this lock to guarantee that the NOWAIT
-+	 * allocation will succeed.
-+	 */
-+	lockdep_assert_held(&hba->dev_cmd.lock);
-+
-+	/*
-+	 * Allocate from hardware queue 0 instead of the hardware queue
-+	 * corresponding to the current CPU because some UFSHCI controllers
-+	 * only support hardware queue 0 for device management commands.
-+	 */
-+	return scsi_get_internal_cmd_hctx(
-+		hba->host->pseudo_sdev, DMA_TO_DEVICE,
-+		BLK_MQ_REQ_RESERVED | BLK_MQ_REQ_NOWAIT, 0);
-+}
-+
-+static void ufshcd_put_dev_mgmt_cmd(struct scsi_cmnd *cmd)
-+{
-+	scsi_put_internal_cmd(cmd);
-+}
-+
- /*
-  * Return: 0 upon success; > 0 in case the UFS device reported an OCS er=
-ror;
-  * < 0 if another error occurred.
-@@ -3343,16 +3301,14 @@ static int ufshcd_issue_dev_cmd(struct ufs_hba *h=
-ba, struct scsi_cmnd *cmd,
- 				const u32 tag, int timeout)
- {
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
--	int err;
--
--	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
--	ufshcd_send_command(hba, cmd, hba->dev_cmd_queue);
--	err =3D ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
--
--	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
--				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
-+	blk_status_t sts;
-=20
--	return err;
-+	rq->timeout =3D timeout;
-+	sts =3D blk_execute_rq(rq, true);
-+	if (sts !=3D BLK_STS_OK)
-+		return blk_status_to_errno(sts);
-+	return lrbp->utr_descriptor_ptr->header.ocs;
- }
-=20
- /**
-@@ -3370,23 +3326,31 @@ static int ufshcd_issue_dev_cmd(struct ufs_hba *h=
-ba, struct scsi_cmnd *cmd,
- static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 		enum dev_cmd_type cmd_type, int timeout)
- {
--	const u32 tag =3D hba->reserved_slot;
--	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, tag);
-+	struct scsi_cmnd *cmd =3D ufshcd_get_dev_mgmt_cmd(hba);
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	u32 tag;
- 	int err;
-=20
--	/* Protects use of hba->reserved_slot. */
-+	/* Protects use of hba->dev_cmd. */
- 	lockdep_assert_held(&hba->dev_cmd.lock);
-=20
-+	if (WARN_ON_ONCE(!cmd))
-+		return -ENOMEM;
-+
-+	tag =3D scsi_cmd_to_rq(cmd)->tag;
-+
- 	err =3D ufshcd_compose_dev_cmd(hba, cmd, cmd_type, tag);
- 	if (unlikely(err))
--		return err;
-+		goto out;
-=20
- 	err =3D ufshcd_issue_dev_cmd(hba, cmd, tag, timeout);
--	if (err)
--		return err;
-+	if (err =3D=3D 0)
-+		err =3D ufshcd_dev_cmd_completion(hba, lrbp);
-+
-+out:
-+	ufshcd_put_dev_mgmt_cmd(cmd);
-=20
--	return ufshcd_dev_cmd_completion(hba, lrbp);
-+	return err;
- }
-=20
- /**
-@@ -5654,6 +5618,10 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int=
- task_tag,
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
- 	enum utp_ocs ocs;
-=20
-+	if (WARN_ONCE(!cmd, "cqe->command_desc_base_addr =3D %#llx\n",
-+		      le64_to_cpu(cqe->command_desc_base_addr)))
-+		return;
-+
- 	if (hba->monitor.enabled) {
- 		lrbp->compl_time_stamp =3D ktime_get();
- 		lrbp->compl_time_stamp_local_clock =3D local_clock();
-@@ -5664,15 +5632,21 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, in=
-t task_tag,
- 		ufshcd_add_command_trace(hba, cmd, UFS_CMD_COMP);
- 		cmd->result =3D ufshcd_transfer_rsp_status(hba, cmd, cqe);
- 		ufshcd_release_scsi_cmd(hba, cmd);
--		/* Do not touch lrbp after scsi done */
--		scsi_done(cmd);
- 	} else {
- 		if (cqe) {
- 			ocs =3D le32_to_cpu(cqe->status) & MASK_OCS;
- 			lrbp->utr_descriptor_ptr->header.ocs =3D ocs;
-+		} else {
-+			ocs =3D lrbp->utr_descriptor_ptr->header.ocs;
- 		}
--		complete(&hba->dev_cmd.complete);
-+		ufshcd_add_query_upiu_trace(
-+			hba,
-+			ocs =3D=3D OCS_SUCCESS ? UFS_QUERY_COMP : UFS_QUERY_ERR,
-+			(struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
-+		cmd->result =3D 0;
- 	}
-+	/* Do not touch lrbp after scsi_done() has been called. */
-+	scsi_done(cmd);
- }
-=20
- /**
-@@ -7382,15 +7356,20 @@ static int ufshcd_issue_devman_upiu_cmd(struct uf=
-s_hba *hba,
- 					enum dev_cmd_type cmd_type,
- 					enum query_opcode desc_op)
- {
--	const u32 tag =3D hba->reserved_slot;
--	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, tag);
-+	struct scsi_cmnd *cmd =3D ufshcd_get_dev_mgmt_cmd(hba);
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	u32 tag;
- 	int err =3D 0;
- 	u8 upiu_flags;
-=20
--	/* Protects use of hba->reserved_slot. */
-+	/* Protects use of hba->dev_cmd. */
- 	lockdep_assert_held(&hba->dev_cmd.lock);
-=20
-+	if (WARN_ON_ONCE(!cmd))
-+		return -ENOMEM;
-+
-+	tag =3D scsi_cmd_to_rq(cmd)->tag;
-+
- 	ufshcd_setup_dev_cmd(hba, cmd, cmd_type, 0, tag);
-=20
- 	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, DMA_NONE, 0);
-@@ -7434,6 +7413,8 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_=
-hba *hba,
- 		}
- 	}
-=20
-+	ufshcd_put_dev_mgmt_cmd(cmd);
-+
- 	return err;
- }
-=20
-@@ -7527,9 +7508,9 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba=
- *hba, struct utp_upiu_req *r
- 			 struct ufs_ehs *rsp_ehs, int sg_cnt, struct scatterlist *sg_list,
- 			 enum dma_data_direction dir)
- {
--	const u32 tag =3D hba->reserved_slot;
--	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, tag);
--	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	struct scsi_cmnd *cmd;
-+	struct ufshcd_lrb *lrbp;
-+	u32 tag;
- 	int err =3D 0;
- 	int result;
- 	u8 upiu_flags;
-@@ -7537,9 +7518,18 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
-a *hba, struct utp_upiu_req *r
- 	u16 ehs_len;
- 	int ehs =3D (hba->capabilities & MASK_EHSLUTRD_SUPPORTED) ? 2 : 0;
-=20
--	/* Protects use of hba->reserved_slot. */
- 	ufshcd_dev_man_lock(hba);
-=20
-+	cmd =3D ufshcd_get_dev_mgmt_cmd(hba);
-+
-+	if (WARN_ON_ONCE(!cmd)) {
-+		ufshcd_dev_man_unlock(hba);
-+		return -ENOMEM;
-+	}
-+
-+	lrbp =3D scsi_cmd_priv(cmd);
-+	tag =3D scsi_cmd_to_rq(cmd)->tag;
-+
- 	ufshcd_setup_dev_cmd(hba, cmd, DEV_CMD_TYPE_RPMB, UFS_UPIU_RPMB_WLUN,
- 			     tag);
-=20
-@@ -7586,6 +7576,8 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba=
- *hba, struct utp_upiu_req *r
- 		}
- 	}
-=20
-+	ufshcd_put_dev_mgmt_cmd(cmd);
-+
- 	ufshcd_dev_man_unlock(hba);
-=20
- 	return err ? : result;
-@@ -7756,7 +7748,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *host =3D cmd->device->host;
- 	struct ufs_hba *hba =3D shost_priv(host);
--	int tag =3D scsi_cmd_to_rq(cmd)->tag;
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
-+	int tag =3D rq->tag;
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
- 	unsigned long flags;
- 	int err =3D FAILED;
-@@ -7786,7 +7779,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	 * to reduce repeated printouts. For other aborted requests only print
- 	 * basic details.
- 	 */
--	scsi_print_command(cmd);
-+	if (ufshcd_is_scsi_cmd(cmd))
-+		scsi_print_command(cmd);
- 	if (!hba->req_abort_count) {
- 		ufshcd_update_evt_hist(hba, UFS_EVT_ABORT, tag);
- 		ufshcd_print_evt_hist(hba);
-@@ -7838,7 +7832,10 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto release;
- 	}
-=20
--	err =3D ufshcd_try_to_abort_task(hba, tag);
-+	if (blk_mq_is_reserved_rq(rq))
-+		err =3D ufshcd_clear_cmd(hba, tag);
-+	else
-+		err =3D ufshcd_try_to_abort_task(hba, tag);
- 	if (err) {
- 		dev_err(hba->dev, "%s: failed with err %d\n", __func__, err);
- 		ufshcd_set_req_abort_skip(hba, hba->outstanding_reqs);
-@@ -9208,6 +9205,7 @@ static const struct scsi_host_template ufshcd_drive=
-r_template =3D {
- 	.cmd_size		=3D sizeof(struct ufshcd_lrb),
- 	.init_cmd_priv		=3D ufshcd_init_cmd_priv,
- 	.queuecommand		=3D ufshcd_queuecommand,
-+	.queue_reserved_command	=3D ufshcd_queue_reserved_command,
- 	.nr_reserved_cmds	=3D UFSHCD_NUM_RESERVED,
- 	.mq_poll		=3D ufshcd_poll,
- 	.sdev_init		=3D ufshcd_sdev_init,
-@@ -10753,8 +10751,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
- *mmio_base, unsigned int irq)
- 						UFS_SLEEP_PWR_MODE,
- 						UIC_LINK_HIBERN8_STATE);
-=20
--	init_completion(&hba->dev_cmd.complete);
--
- 	err =3D ufshcd_hba_init(hba);
- 	if (err)
- 		goto out_error;
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 54e0653c53f5..5fee5da4d8ea 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -236,13 +236,11 @@ struct ufs_query {
-  * struct ufs_dev_cmd - all assosiated fields with device management com=
-mands
-  * @type: device management command type - Query, NOP OUT
-  * @lock: lock to allow one command at a time
-- * @complete: internal commands completion
-  * @query: Device management query information
-  */
- struct ufs_dev_cmd {
- 	enum dev_cmd_type type;
- 	struct mutex lock;
--	struct completion complete;
- 	struct ufs_query query;
- };
-=20
-@@ -838,7 +836,6 @@ enum ufshcd_mcq_opr {
-  * @nutrs: Transfer Request Queue depth supported by controller
-  * @nortt - Max outstanding RTTs supported by controller
-  * @nutmrs: Task Management Queue depth supported by controller
-- * @reserved_slot: Used to submit device commands. Protected by @dev_cmd=
-.lock.
-  * @ufs_version: UFS Version to which controller complies
-  * @vops: pointer to variant specific operations
-  * @vps: pointer to variant specific parameters
-@@ -929,7 +926,6 @@ enum ufshcd_mcq_opr {
-  * @res: array of resource info of MCQ registers
-  * @mcq_base: Multi circular queue registers base address
-  * @uhq: array of supported hardware queues
-- * @dev_cmd_queue: Queue for issuing device management commands
-  * @mcq_opr: MCQ operation and runtime registers
-  * @ufs_rtc_update_work: A work for UFS RTC periodic update
-  * @pm_qos_req: PM QoS request handle
-@@ -981,7 +977,6 @@ struct ufs_hba {
- 	int nortt;
- 	u32 mcq_capabilities;
- 	int nutmrs;
--	u32 reserved_slot;
- 	u32 ufs_version;
- 	const struct ufs_hba_variant_ops *vops;
- 	struct ufs_hba_variant_params *vps;
-@@ -1099,7 +1094,6 @@ struct ufs_hba {
- 	bool mcq_esi_enabled;
- 	void __iomem *mcq_base;
- 	struct ufs_hw_queue *uhq;
--	struct ufs_hw_queue *dev_cmd_queue;
- 	struct ufshcd_mcq_opr_info_t mcq_opr[OPR_MAX];
-=20
- 	struct delayed_work ufs_rtc_update_work;
+> -Wflex-array-member-not-at-end was introduced in GCC-14, and we are
+> getting ready to enable it, globally.
+>
+> Move the conflicting declaration (which happens to be in a union, so
+> we're moving the entire union) to the end of the corresponding
+> structure. Notice that `struct ssp_response_iu` is a flexible
+> structure, this is a structure that contains a flexible-array member.
+>
+> With these changes fix the following warning:
+>
+> drivers/scsi/isci/task.h:92:11: warning: structure containing a
+> flexible array member is not at the end of another structure
+> [-Wflex-array-member-not-at-end]
+
+Applied to 6.19/scsi-staging, thanks!
+
+-- 
+Martin K. Petersen
