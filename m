@@ -1,57 +1,60 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BCAC2BE02A
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2025 20:20:25 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 985BE2BE02A
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2025 20:20:34 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760473227; cv=none; b=Ad+/UQfG25HtWzTjkiZ2cWj+nPit2DZf2GIFS3w0WctGWpvpGfVfm48HPzzgPB7Z+3lybhvXt5fFXh6DvofAwwqQ2UHGGLRbaVK79SMQgqoxmpXVeNJ2bjoVINWGIkHtOLVfrTT9fbRTwTMrjkglyvwmNSriRZ/6m4+jsfOP+0E=
+	t=1760473236; cv=none; b=pCgXhGRaJU4GXeg0E0hAz0gvvHdLTuobrvrvrPJwrYq566bhy0TOQE4FX7fLpc7d9RJFFJij5SaRLqVDL6LvVRT+rZB/yh7tEI7Rtz4lmpTxXm/kEH9vO6CnE/T+eHBMsvF44NjtFRFR8XRBHILnqxEdop1PbxkGN2wVeIX7eC8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760473227; c=relaxed/simple;
-	bh=BXAx16R4pTw/U3Hqz0t3P+W8Zf83MAnQaB4vsQ57s8c=;
+	s=arc-20240116; t=1760473236; c=relaxed/simple;
+	bh=05auVugi9fsRoK6yxB89A/EgR6qztnsDXnM5MAJw+To=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=bVeieG/yHrL/9CC3n6Co5xRkXJnYF2LpBkQUzk+ATKeJthE0R1TGCV2U3+6PWTHOsiT8obXa72Ql2Y6H+vAZRHvjGDUeeMFHL2e5jrFPbm5V0N1fPyHl3yK/Ypl9SvfLPimO9KqttcqjcBU6M039oS2Jb4aU4TFv3Mryboxsa+E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=jUzz2wez; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=YotdRIyULNDuBvlbGMAPEmJQ3drvv4HIStwpSPEkeHyIA5bUexq8CeXStHuDEu21CHRQcQTOxdkk8yILEZ0dU9yMOLAPCyn7XXwanFfMr6Dg9Vsu3Kr4kOHGKa70VuYIELnJAH0SzzwbAUOAXAPeFa7EzLdRrpopIybhpPp3lto=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=mnXiAFDQ; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="jUzz2wez"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="mnXiAFDQ"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cmQZJ6M63zm0yVW;
-	Tue, 14 Oct 2025 20:20:24 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cmQZT5YbVzm0yVM;
+	Tue, 14 Oct 2025 20:20:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1760473223; x=1763065224; bh=gucst
-	6WqnDt9lQpe4WdsDj9dkjouJSRN9gkuaok4RoM=; b=jUzz2wezqYsmZi4ffWAOD
-	A5WGeoOlpZYXPXsCsC8yfXpnPoeK64Min0T1t+Y08yCsF9G5Yx1i61U5/DiIemsW
-	gqhgUtU2gouoHf5GBaJDY4cQzWu8MFrudwNtqZMruW3QhTXcKe71KhtqjEvQSBec
-	bYt/BNa9Cqo7VqhqTD6KfRHocHsGeE8sJOfDtXoNwPoGtAQgCjvg02TqMNmE2vZd
-	G1Q8qDG3ITQDeRktglYFJRf45orbm+CyBLfWT0xxwjMJcw+mrmVjL1SD+uy54ONM
-	Y2nE2OtUcV/GoQJ5GSrYUaqhcSmrB1i4kcyusHX/vdyRAfAyUt35foFaVr+uonqG
-	g==
+	:received:received; s=mr01; t=1760473231; x=1763065232; bh=YUyai
+	aoy/zR7TJnrtVdyf43U0MrigqqiJHfpS31/nHY=; b=mnXiAFDQFiy7c7eluWXpS
+	hb3AwZIiAaO7imSVXP9TQMlzlOPG5wDXNuwHDiohrCGCteSDqyy+1w4yI4mmFXb4
+	k3iqFvdJZCxB1zhj4+pJRQ+xbY4VMMMpBNrJnlVP/hH8f2yrhskgeucMOCcVZZat
+	YdfgyseokmjIShTzwn8JeiC29b0EF+SJviZBq/B0cM5z24IT8fmdiCkC4ASbV5d/
+	xWZq9p4Uu08nPOu3ptu3pzO6fxYYk4QbJ3MZ2Cw9k/YK9eBWdA6zCTO1BbZrJoLY
+	4Drf30zVMmK9Cgo+geXAj0G7NCMSxsJiP+5lpnH5/xrMAmiCNn7ZtWW7bkRu2bO5
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9WGptNhsK8hI; Tue, 14 Oct 2025 20:20:23 +0000 (UTC)
+ id Bq2ebDx0kHVl; Tue, 14 Oct 2025 20:20:31 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cmQZB1D93zm0yVS;
-	Tue, 14 Oct 2025 20:20:17 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cmQZK42Gnzm0yVJ;
+	Tue, 14 Oct 2025 20:20:24 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Peter Wang <peter.wang@mediatek.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
 	Avri Altman <avri.altman@sandisk.com>,
-	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v6 19/28] ufs: core: Call ufshcd_init_lrb() later
-Date: Tue, 14 Oct 2025 13:16:01 -0700
-Message-ID: <20251014201707.3396650-20-bvanassche@acm.org>
+	Alok Tiwari <alok.a.tiwari@oracle.com>,
+	Chenyuan Yang <chenyuan0y@gmail.com>,
+	"ping.gao" <ping.gao@samsung.com>
+Subject: [PATCH v6 20/28] ufs: core: Use hba->reserved_slot
+Date: Tue, 14 Oct 2025 13:16:02 -0700
+Message-ID: <20251014201707.3396650-21-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.788.g6d19910ace-goog
 In-Reply-To: <20251014201707.3396650-1-bvanassche@acm.org>
 References: <20251014201707.3396650-1-bvanassche@acm.org>
@@ -63,118 +66,25 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Call ufshcd_init_lrb() from inside ufshcd_setup_dev_cmd() instead of
-ufshcd_host_memory_configure(). This patch prepares for calling
-ufshcd_host_memory_configure() before the information is available
-that is required to call ufshcd_setup_dev_cmd().
+Use hba->reserved_slot instead of open-coding it. This patch prepares
+for changing the value of hba->reserved_slot.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 53 ++++++++++++++++++++-------------------
- 1 file changed, 27 insertions(+), 26 deletions(-)
+ drivers/ufs/core/ufs-mcq.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index a7e4aee959df..bd87a7953551 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2903,8 +2903,32 @@ static void ufshcd_comp_scsi_upiu(struct ufs_hba *=
-hba, struct ufshcd_lrb *lrbp)
- 	ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
- }
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 36b755f6d7d0..3e4260084e34 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -544,7 +544,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int ta=
+sk_tag)
+ 	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
+ 		return -ETIMEDOUT;
 =20
--static void __ufshcd_setup_cmd(struct ufshcd_lrb *lrbp, struct scsi_cmnd=
- *cmd, u8 lun, int tag)
-+static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb,=
- int i)
-+{
-+	struct utp_transfer_cmd_desc *cmd_descp =3D
-+		(void *)hba->ucdl_base_addr + i * ufshcd_get_ucd_size(hba);
-+	struct utp_transfer_req_desc *utrdlp =3D hba->utrdl_base_addr;
-+	dma_addr_t cmd_desc_element_addr =3D
-+		hba->ucdl_dma_addr + i * ufshcd_get_ucd_size(hba);
-+	u16 response_offset =3D le16_to_cpu(utrdlp[i].response_upiu_offset);
-+	u16 prdt_offset =3D le16_to_cpu(utrdlp[i].prd_table_offset);
-+
-+	lrb->utr_descriptor_ptr =3D utrdlp + i;
-+	lrb->utrd_dma_addr =3D
-+		hba->utrdl_dma_addr + i * sizeof(struct utp_transfer_req_desc);
-+	lrb->ucd_req_ptr =3D (struct utp_upiu_req *)cmd_descp->command_upiu;
-+	lrb->ucd_req_dma_addr =3D cmd_desc_element_addr;
-+	lrb->ucd_rsp_ptr =3D (struct utp_upiu_rsp *)cmd_descp->response_upiu;
-+	lrb->ucd_rsp_dma_addr =3D cmd_desc_element_addr + response_offset;
-+	lrb->ucd_prdt_ptr =3D (struct ufshcd_sg_entry *)cmd_descp->prd_table;
-+	lrb->ucd_prdt_dma_addr =3D cmd_desc_element_addr + prdt_offset;
-+}
-+
-+static void __ufshcd_setup_cmd(struct ufs_hba *hba, struct ufshcd_lrb *l=
-rbp,
-+			       struct scsi_cmnd *cmd, u8 lun, int tag)
- {
-+	ufshcd_init_lrb(hba, lrbp, tag);
-+
- 	memset(lrbp->ucd_req_ptr, 0, sizeof(*lrbp->ucd_req_ptr));
-=20
- 	lrbp->cmd =3D cmd;
-@@ -2916,7 +2940,7 @@ static void __ufshcd_setup_cmd(struct ufshcd_lrb *l=
-rbp, struct scsi_cmnd *cmd, u
- static void ufshcd_setup_scsi_cmd(struct ufs_hba *hba, struct ufshcd_lrb=
- *lrbp,
- 				  struct scsi_cmnd *cmd, u8 lun, int tag)
- {
--	__ufshcd_setup_cmd(lrbp, cmd, lun, tag);
-+	__ufshcd_setup_cmd(hba, lrbp, cmd, lun, tag);
- 	lrbp->intr_cmd =3D !ufshcd_is_intr_aggr_allowed(hba);
- 	lrbp->req_abort_skip =3D false;
-=20
-@@ -2971,27 +2995,6 @@ static void ufshcd_map_queues(struct Scsi_Host *sh=
-ost)
- 	}
- }
-=20
--static void ufshcd_init_lrb(struct ufs_hba *hba, struct ufshcd_lrb *lrb,=
- int i)
--{
--	struct utp_transfer_cmd_desc *cmd_descp =3D (void *)hba->ucdl_base_addr=
- +
--		i * ufshcd_get_ucd_size(hba);
--	struct utp_transfer_req_desc *utrdlp =3D hba->utrdl_base_addr;
--	dma_addr_t cmd_desc_element_addr =3D hba->ucdl_dma_addr +
--		i * ufshcd_get_ucd_size(hba);
--	u16 response_offset =3D le16_to_cpu(utrdlp[i].response_upiu_offset);
--	u16 prdt_offset =3D le16_to_cpu(utrdlp[i].prd_table_offset);
--
--	lrb->utr_descriptor_ptr =3D utrdlp + i;
--	lrb->utrd_dma_addr =3D hba->utrdl_dma_addr +
--		i * sizeof(struct utp_transfer_req_desc);
--	lrb->ucd_req_ptr =3D (struct utp_upiu_req *)cmd_descp->command_upiu;
--	lrb->ucd_req_dma_addr =3D cmd_desc_element_addr;
--	lrb->ucd_rsp_ptr =3D (struct utp_upiu_rsp *)cmd_descp->response_upiu;
--	lrb->ucd_rsp_dma_addr =3D cmd_desc_element_addr + response_offset;
--	lrb->ucd_prdt_ptr =3D (struct ufshcd_sg_entry *)cmd_descp->prd_table;
--	lrb->ucd_prdt_dma_addr =3D cmd_desc_element_addr + prdt_offset;
--}
--
- /**
-  * ufshcd_queuecommand - main entry point for SCSI requests
-  * @host: SCSI host pointer
-@@ -3084,7 +3087,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *ho=
-st, struct scsi_cmnd *cmd)
- static void ufshcd_setup_dev_cmd(struct ufs_hba *hba, struct ufshcd_lrb =
-*lrbp,
- 			     enum dev_cmd_type cmd_type, u8 lun, int tag)
- {
--	__ufshcd_setup_cmd(lrbp, NULL, lun, tag);
-+	__ufshcd_setup_cmd(hba, lrbp, NULL, lun, tag);
- 	lrbp->intr_cmd =3D true; /* No interrupt aggregation */
- 	hba->dev_cmd.type =3D cmd_type;
- }
-@@ -4047,8 +4050,6 @@ static void ufshcd_host_memory_configure(struct ufs=
-_hba *hba)
- 			utrdlp[i].response_upiu_length =3D
- 				cpu_to_le16(ALIGNED_UPIU_SIZE >> 2);
- 		}
--
--		ufshcd_init_lrb(hba, &hba->lrb[i], i);
- 	}
- }
-=20
+-	if (task_tag !=3D hba->nutrs - UFSHCD_NUM_RESERVED) {
++	if (task_tag !=3D hba->reserved_slot) {
+ 		if (!cmd)
+ 			return -EINVAL;
+ 		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
