@@ -1,140 +1,114 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B3D6230C371
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2025 13:18:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=60.244.123.138
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760447891; cv=none; b=iApAkD8nniTlF5ZmwkVHUVJwBZhwrKZlgkF+YhY2hApYeDIh7qwNlXPxQHQy5ln43BSYzQhnHBY8VcDXS124zLZpUG4HdHf6gLysZRNWCDAZCAjxSLRFPD84wPSJNq+drX6zqd7eJSWSRWYe2QkX1Kg8SBwTdST3L8Ps3GOTMxI=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760447891; c=relaxed/simple;
-	bh=a4U9kx+Xi94Kq6OcyaZHLd8HYR6/Nns88uhffwYgL80=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=RSPa60/9VgQ9GiflHueOTFaP8CGwmdLBUu1IuBxeQKpHiIpfGtrnk8tLqOpkweNvaCJIQveQzs9qsfF7rsoa5Js/Uo6NNheOZPYDdxdnWCTZAXBDkLVm0gg8LKU81HsfLwytz7aiQ/QPW8ODCO3ENxb89MC/QGlivQnOg7mcECo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=nVpg5dXg; arc=none smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 33FBF2F60D5;
+	Tue, 14 Oct 2025 15:11:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1760454684; cv=pass; b=ER9rXBtuPb7MJSCF2cj4h/Ut8BdtwgmasvtGxl31+IMOvEvJ82MaSFh0260ocISl8daOQXeCH5c+nmyOrRHBeUjyGx6+T+tNqpflawbs3vM3bDInCsfrHJoEvvksOcmwSZ6uiHC6I8KYHROXDCdP1issHTLFnb88+bTG3ICPkoM=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1760454684; c=relaxed/simple;
+	bh=FT7rwYbfbYv/WUqESExDjKNVuc3tXZAx0bdt5TFToJE=;
+	h=From:Subject:Date:Message-Id:MIME-Version:Content-Type:To:Cc; b=oBlQ5eBR713jautlfyynvWll6eRsu0q8Ya/WVrqNvd5GgqJ/GaPVuD8I9xlUOLmyxJ0VDdMpDX8tZGWhVp55NWuFrbe3UKJTShk0+iY0MjvKdTCOTUVZV3dMXNLKfp/pEHJFnJYOYMtIg4kJIRjQWuv9NWEQJMxVyftQMGLMhlc=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=Y5B2OAhQ; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="nVpg5dXg"
-X-UUID: 35cec0cca90011f0ae1e63ff8927bad3-20251014
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:References:In-Reply-To:Message-ID:Date:Subject:CC:To:From; bh=0v/CBd1rmPyG88zln9xhPVoHM485BZhnHYxuMKXiFXE=;
-	b=nVpg5dXgCG08lKzjCVgj8dPRlxJCowM2jQHQ1LFC5+0s6A2qpuvigUG+Au2ZhhA23M9WwLeptmnjR5HJVW90NAutQBsg1eip3DRJY4+iQ/Yx80uXOR1QKh4PY+7EQuIiJQd2tAd0kXvXRaw/ambu4t3twlOvXt6yhOTUDR2uOcM=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.6,REQID:63090723-ef0a-49ff-9e88-a25094724279,IP:0,UR
-	L:0,TC:0,Content:-25,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION
-	:release,TS:-25
-X-CID-META: VersionHash:a9d874c,CLOUDID:d0670c51-c509-4cf3-8dc0-fcdaad49a6d3,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:81|82|102|836|888|898,TC:-5,Content:
-	0|15|50,EDM:-3,IP:nil,URL:0,File:130,RT:nil,Bulk:nil,QS:nil,BEC:nil,COL:0,
-	OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 35cec0cca90011f0ae1e63ff8927bad3-20251014
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 760664814; Tue, 14 Oct 2025 21:18:01 +0800
-Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
- MTKMBS09N2.mediatek.inc (172.21.101.94) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.10; Tue, 14 Oct 2025 21:18:00 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1748.10 via Frontend Transport; Tue, 14 Oct 2025 21:18:00 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>, <martin.petersen@oracle.com>
-CC: <wsd_upstream@mediatek.com>, <linux-mediatek@lists.infradead.org>,
-	<peter.wang@mediatek.com>, <chun-hung.wu@mediatek.com>,
-	<alice.chao@mediatek.com>, <cc.chou@mediatek.com>,
-	<chaotian.jing@mediatek.com>, <jiajie.hao@mediatek.com>,
-	<qilin.tan@mediatek.com>, <lin.gui@mediatek.com>, <tun-yu.yu@mediatek.com>,
-	<eddie.huang@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
-	<bvanassche@acm.org>
-Subject: [PATCH v1 2/2] ufs: core: support dumping CQ entry in MCQ Mode
-Date: Tue, 14 Oct 2025 21:15:56 +0800
-Message-ID: <20251014131758.270324-3-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
-In-Reply-To: <20251014131758.270324-1-peter.wang@mediatek.com>
-References: <20251014131758.270324-1-peter.wang@mediatek.com>
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="Y5B2OAhQ"
+ARC-Seal: i=1; a=rsa-sha256; t=1760454622; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=GvHyt0pU9WHVCquV5TD7GVuuvanrQd75qtwSFeAKtRGBdlrqPSRJA5QQQvrIQ/EuPr2s7GgTAXOfKvW01W6VBSsUygIWhVl6Ysx3qWhNsaM+czytxl37wPPebrUoOB0Nc2n3BRhXH+R+Uy+MqzZJtnwMxBJ/sfhC3M0txolELQE=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1760454622; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:MIME-Version:Message-ID:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=sA3fLEM3pMFmQ7m36DJ7taILG17fx4lcHYtgoNT4WgA=; 
+	b=EwD/BiKhlBqE//FJon2Zg96AGImNfF2YmXI5iwReKBaQ5p1dSdMToh4tbeEkLpveZrBqR27Fcxr6NIWZDC75NDK4vRTkl42qHF8Tz+A9pO/ELTQZ8b/fg24E1yn7VVLPJdnz6yBlCJYW62Paqft6npnsuPM3sMld3LuwtpkOTMY=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
+	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1760454622;
+	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
+	h=From:From:Subject:Subject:Date:Date:Message-Id:Message-Id:MIME-Version:Content-Type:Content-Transfer-Encoding:To:To:Cc:Cc:Reply-To;
+	bh=sA3fLEM3pMFmQ7m36DJ7taILG17fx4lcHYtgoNT4WgA=;
+	b=Y5B2OAhQqVDdnHBPeubHxvlMXvKaO0BkkNVBjF/FuNfK7Zb3Tzvo0jSQ0i8ZoBwr
+	Sl1z4kIkbrCekFbg1olcbUHQRRVUGFgBPSmMEZVv4iQk9VOv66jWvhkIfbBoovspdYb
+	C5vDltOa7r/4918IQ/YBPa+uKLpsVzJRwNe62PRA=
+Received: by mx.zohomail.com with SMTPS id 1760454620674457.63817318714723;
+	Tue, 14 Oct 2025 08:10:20 -0700 (PDT)
+From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Subject: [PATCH 0/5] MediaTek UFS Cleanup and MT8196 Enablement
+Date: Tue, 14 Oct 2025 17:10:04 +0200
+Message-Id: <20251014-mt8196-ufs-v1-0-195dceb83bc8@collabora.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-B4-Tracking: v=1; b=H4sIAMxn7mgC/zXMwQ6CMBCE4Vdp9uwmFEEtr0I4lDroHlq0LYaE8
+ O42Eo//JPNtlBAFiTq1UcRHksyhhD4pck8bHmC5l6a6qltd6YZ9vmlz4WVK7OCa0VhzRXumcnh
+ FTLL+sH44OuK9FDMfI402gd3sveROBayZ/y4N+/4FA4QRLo0AAAA=
+X-Change-ID: 20251014-mt8196-ufs-cec4b9a97e53
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>, 
+ Conor Dooley <conor+dt@kernel.org>, 
+ Matthias Brugger <matthias.bgg@gmail.com>, 
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, 
+ Stanley Chu <stanley.chu@mediatek.com>, 
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>, 
+ Kishon Vijay Abraham I <kishon@kernel.org>, 
+ Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Philipp Zabel <p.zabel@pengutronix.de>
+Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, 
+ kernel@collabora.com, linux-scsi@vger.kernel.org, 
+ devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ linux-arm-kernel@lists.infradead.org, linux-mediatek@lists.infradead.org, 
+ linux-phy@lists.infradead.org, 
+ Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+X-Mailer: b4 0.14.3
 
-From: Peter Wang <peter.wang@mediatek.com>
+In this series, the existing MediaTek UFS binding is expanded and
+completed to correctly describe not just the existing compatibles, but
+also to introduce a new compatible in the from of the MT8196 SoC.
 
-Enhance the ufshcd_print_tr function to support dumping
-completion queue (CQ) entries in MCQ mode when an error occurs.
-This addition provides more detailed debugging information
-by including the CQ entry data in the error logs, aiding
-in the diagnosis of issues in MCQ mode.
+The resets, which until now were completely absent from both the UFS
+host controller binding and the UFS PHY binding, are introduced to both.
+This also means the driver's undocumented and, in mainline, unused reset
+logic is reworked. In particular, the PHY reset is no longer a reset of
+the host controller node, but of the PHY node.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+This means the host controller can reset the PHY through the common PHY
+framework.
+
+The resets remain optional.
+
+Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 ---
- drivers/ufs/core/ufshcd.c | 13 ++++++++-----
- 1 file changed, 8 insertions(+), 5 deletions(-)
+Nicolas Frattaroli (5):
+      dt-bindings: ufs: mediatek,ufs: Add mt8196-ufshci variant
+      dt-bindings: phy: Add mediatek,mt8196-ufsphy variant
+      scsi: ufs: mediatek: Move MTK_SIP_UFS_CONTROL to mtk_sip_svc.h
+      phy: mediatek: ufs: Add support for resets
+      scsi: ufs: mediatek: Rework resets
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index d779cc777a17..b90500126b35 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -599,7 +599,8 @@ static void ufshcd_print_evt_hist(struct ufs_hba *hba)
- }
- 
- static
--void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
-+void ufshcd_print_tr(struct ufs_hba *hba, struct cq_entry *cqe,
-+		     int tag, bool pr_prdt)
- {
- 	const struct ufshcd_lrb *lrbp;
- 	int prdt_length;
-@@ -618,6 +619,8 @@ void ufshcd_print_tr(struct ufs_hba *hba, int tag, bool pr_prdt)
- 
- 	ufshcd_hex_dump("UPIU TRD: ", lrbp->utr_descriptor_ptr,
- 			sizeof(struct utp_transfer_req_desc));
-+	if (cqe)
-+		ufshcd_hex_dump("UPIU CQE: ", cqe, sizeof(struct cq_entry));
- 	dev_err(hba->dev, "UPIU[%d] - Request UPIU phys@0x%llx\n", tag,
- 		(u64)lrbp->ucd_req_dma_addr);
- 	ufshcd_hex_dump("UPIU REQ: ", lrbp->ucd_req_ptr,
-@@ -648,7 +651,7 @@ static bool ufshcd_print_tr_iter(struct request *req, void *priv)
- 	struct Scsi_Host *shost = sdev->host;
- 	struct ufs_hba *hba = shost_priv(shost);
- 
--	ufshcd_print_tr(hba, req->tag, *(bool *)priv);
-+	ufshcd_print_tr(hba, NULL, req->tag, *(bool *)priv);
- 
- 	return true;
- }
-@@ -5536,7 +5539,7 @@ ufshcd_transfer_rsp_status(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 
- 	if ((host_byte(result) != DID_OK) &&
- 	    (host_byte(result) != DID_REQUEUE) && !hba->silence_err_logs)
--		ufshcd_print_tr(hba, lrbp->task_tag, true);
-+		ufshcd_print_tr(hba, cqe, lrbp->task_tag, true);
- 	return result;
- }
- 
-@@ -7763,9 +7766,9 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		ufshcd_print_evt_hist(hba);
- 		ufshcd_print_host_state(hba);
- 		ufshcd_print_pwr_info(hba);
--		ufshcd_print_tr(hba, tag, true);
-+		ufshcd_print_tr(hba, NULL, tag, true);
- 	} else {
--		ufshcd_print_tr(hba, tag, false);
-+		ufshcd_print_tr(hba, NULL, tag, false);
- 	}
- 	hba->req_abort_count++;
- 
+ .../devicetree/bindings/phy/mediatek,ufs-phy.yaml  |  16 +++
+ .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 134 +++++++++++++++++++--
+ drivers/phy/mediatek/phy-mtk-ufs.c                 |  71 +++++++++++
+ drivers/ufs/host/ufs-mediatek-sip.h                |   9 --
+ drivers/ufs/host/ufs-mediatek.c                    |  67 ++++++-----
+ drivers/ufs/host/ufs-mediatek.h                    |   1 -
+ include/linux/soc/mediatek/mtk_sip_svc.h           |   3 +
+ 7 files changed, 251 insertions(+), 50 deletions(-)
+---
+base-commit: 40a3abb0f3e5229996c8ef0498fc8d8a0c2bd64f
+change-id: 20251014-mt8196-ufs-cec4b9a97e53
+
+Best regards,
 -- 
-2.45.2
+Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 
