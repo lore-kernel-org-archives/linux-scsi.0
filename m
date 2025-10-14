@@ -1,57 +1,64 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 75ECB306489
-	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2025 20:19:55 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C86F53054DE
+	for <linux-scsi@vger.kernel.org>; Tue, 14 Oct 2025 20:20:11 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760473197; cv=none; b=S4wOl4zUsCVfHqxsYcX6jh1w1SkZiTjTwclLVdEs1qyYGfdjI7Lc8T0ISxRVnonrbvMDQOGqDcaJUeGlx14YmjE7kVdq/ewIO9DxaZF/kaCB9QyHil0mWdhD85CtvQqQKoXfFvnY1Fr0kOxFUxB41qyPWu0B6WW78xNHDrz5zZw=
+	t=1760473213; cv=none; b=Mn9t31l2tA9Q5yWSy7U+xdRUzXI+9md0f04R/XyBbEt8ma4cDc9XN5p24NiKV6WWUJOvqJkxx9Ek7+QNH1TDVe3i2ZeFvEEk5s9Kn9dAu5Ky/tN1/Ev7frx4DuAckeo3u1bxD1i1wniNjDads38nGhSQBgQoJQwwLl6giOXQ0KY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760473197; c=relaxed/simple;
-	bh=E7lVFiY117wgyhE0XNWg1im4TvhZ6/2OBytfHvmWa5M=;
+	s=arc-20240116; t=1760473213; c=relaxed/simple;
+	bh=lM/mm93+OGC+XcWaX6Uun7r4tkYPkIbYXa5EZDEsKuE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=b195zrWCv6hLQbTgo7tT4fDeloFMkU/RZU5BUPVLLKBIoTPOldnanVGZDTl2uRee1YYiVr7sPPq4o8yxvPxlxfW/Q4n+Dr3l5vtlOgOEEM9x5aznhJKKpc/9JP8hjKZkZDzCB2cYPNHjSekizUpt3qhYfWzmd2swjoT4MntPI20=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=QHLv77ic; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=G2/Gs31EzCgN9Dfr2gji3N9C8hzUylQlJLdJCzKKPjnFIpex75Vd1+Bp/w1VxyigaZPZirSH21PhdrsOqGPiPu9Yw61vspb3xXIaK8qfEL6akQQu9+xpL5EfdB/ZHyZz/BpK6Tk04gnksikDAcCXOnm64828KwAxwEIZ9B40+oY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tGEkaRm3; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="QHLv77ic"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tGEkaRm3"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cmQYk3WgQzm0yVD;
-	Tue, 14 Oct 2025 20:19:54 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cmQZ30ljpzm0yVW;
+	Tue, 14 Oct 2025 20:20:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1760473192; x=1763065193; bh=zaFDj
-	2aJBU1VVw0THqjXvacOVi+MEZvRhiD7c49Fml4=; b=QHLv77ic6XwfeOTZIYNJp
-	HyvRIa9mvTPn3FcSWMZkMPifSTn4v/rpU57HPTy3RQuQTi50F0+cr5hg32H1BcI1
-	4JKwwVzYh5pba22l5UDpcQxG9XjLveCVxLXmCJNauGCVZaeohJshrNYut0GD0n33
-	3GURuhjTgyV74/t8yi8+BKxt3gLURnKG8S1hbTl+NUsdzd265PmCYkOAmTPw8FbS
-	emjQ8l+lgpQ1CRX/xTG0sJzwL3K5yZk3fd/aHQf86ZbDzNSg26tvSWOLOSTQ7t3t
-	aL99XkBe/H2tfP4AmBc612CsD/eUsyQKZr/Lm0UJYS7gd78jdBkw86W68oF48G7l
+	:received:received; s=mr01; t=1760473208; x=1763065209; bh=H/M6y
+	n3kPyrDpphfQTAiV//r96urjDMuiypradLkdsE=; b=tGEkaRm34AdjX6K7+x53m
+	mke7y2/XZ/ByNR6uZJstpKHYYGX9AidKf7sFISUYgYg/5s6oXP0mIJzTu0qkEbBD
+	IRJnlrVDFuupmtQpHx6w/fqtk+x9+RVx9k+QsDRMfmyWTm9gwMrnJXjIbBazxPu3
+	w25nZg03ZdNInrhA3dfi3EUPzQc8bMeH56jCabRqfP2XRVQYBaml41yh0nMOAMfa
+	RSiqKm2KLvdqacUNdDWD/Fm9PzPM1bsHbQQHqyLj64vCcRrd7aOWKPJv0HOlNmkT
+	wkWGIEaQtaEGEdAO7PVd2jrWlrrQvqWol/gGve2zJMQs4MoRDeb7YQX1WPfoLfKB
 	g==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id phU0ADqWPnzt; Tue, 14 Oct 2025 20:19:52 +0000 (UTC)
+ id PSnt7hhjjNjC; Tue, 14 Oct 2025 20:20:08 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cmQYc5YMTzm0yV3;
-	Tue, 14 Oct 2025 20:19:48 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cmQYp3n3Zzm0yTq;
+	Tue, 14 Oct 2025 20:19:57 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <avri.altman@sandisk.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Peter Wang <peter.wang@mediatek.com>,
+	Alok Tiwari <alok.a.tiwari@oracle.com>,
+	Chenyuan Yang <chenyuan0y@gmail.com>,
+	"ping.gao" <ping.gao@samsung.com>,
+	Ziqi Chen <quic_ziqichen@quicinc.com>,
+	Can Guo <quic_cang@quicinc.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
+	Avri Altman <avri.altman@sandisk.com>,
 	Bean Huo <beanhuo@micron.com>
-Subject: [PATCH v6 16/28] ufs: core: Rework ufshcd_eh_device_reset_handler()
-Date: Tue, 14 Oct 2025 13:15:58 -0700
-Message-ID: <20251014201707.3396650-17-bvanassche@acm.org>
+Subject: [PATCH v6 17/28] ufs: core: Rework the SCSI host queue depth calculation code
+Date: Tue, 14 Oct 2025 13:15:59 -0700
+Message-ID: <20251014201707.3396650-18-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.0.788.g6d19910ace-goog
 In-Reply-To: <20251014201707.3396650-1-bvanassche@acm.org>
 References: <20251014201707.3396650-1-bvanassche@acm.org>
@@ -63,129 +70,127 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Merge the MCQ mode and legacy mode loops into a single loop. This patch
-prepares for optimizing the hot path by removing the direct hba->lrb[]
-accesses from ufshcd_eh_device_reset_handler().
+Prepare for allocating the SCSI host earlier by making the SCSI host
+queue depth independent of the queue depth supported by the UFS device.
+This patch may increase the queue depth of the UFS SCSI host.
 
-Reviewed-by: Avri Altman <avri.altman@sandisk.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 84 ++++++++++++++++++---------------------
- 1 file changed, 38 insertions(+), 46 deletions(-)
+ drivers/ufs/core/ufs-mcq.c     | 25 ++++++-------------------
+ drivers/ufs/core/ufshcd-priv.h |  2 +-
+ drivers/ufs/core/ufshcd.c      | 17 +++++++++++++++--
+ 3 files changed, 22 insertions(+), 22 deletions(-)
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 32427b7b54df..7042880c4e60 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -7563,6 +7563,36 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
-a *hba, struct utp_upiu_req *r
- 	return err ? : result;
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index 8780be79a0f8..36b755f6d7d0 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -134,17 +134,15 @@ unsigned int ufshcd_mcq_queue_cfg_addr(struct ufs_h=
+ba *hba)
+ EXPORT_SYMBOL_GPL(ufshcd_mcq_queue_cfg_addr);
+=20
+ /**
+- * ufshcd_mcq_decide_queue_depth - decide the queue depth
++ * ufshcd_get_hba_mac - Maximum number of commands supported by the host
++ *	controller.
+  * @hba: per adapter instance
+  *
+- * Return: queue-depth on success, non-zero on error
++ * Return: queue depth on success; negative upon error.
+  *
+- * MAC - Max. Active Command of the Host Controller (HC)
+- * HC wouldn't send more than this commands to the device.
+- * Calculates and adjusts the queue depth based on the depth
+- * supported by the HC and ufs device.
++ * MAC =3D Maximum number of Active Commands supported by the Host Contr=
+oller.
+  */
+-int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba)
++int ufshcd_get_hba_mac(struct ufs_hba *hba)
+ {
+ 	int mac;
+=20
+@@ -162,18 +160,7 @@ int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hb=
+a)
+ 		mac =3D hba->vops->get_hba_mac(hba);
+ 	}
+ 	if (mac < 0)
+-		goto err;
+-
+-	WARN_ON_ONCE(!hba->dev_info.bqueuedepth);
+-	/*
+-	 * max. value of bqueuedepth =3D 256, mac is host dependent.
+-	 * It is mandatory for UFS device to define bQueueDepth if
+-	 * shared queuing architecture is enabled.
+-	 */
+-	return min_t(int, mac, hba->dev_info.bqueuedepth);
+-
+-err:
+-	dev_err(hba->dev, "Failed to get mac, err=3D%d\n", mac);
++		dev_err(hba->dev, "Failed to get mac, err=3D%d\n", mac);
+ 	return mac;
  }
 =20
-+static bool ufshcd_clear_lu_cmds(struct request *req, void *priv)
-+{
-+	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(req);
-+	struct scsi_device *sdev =3D cmd->device;
-+	struct Scsi_Host *shost =3D sdev->host;
-+	struct ufs_hba *hba =3D shost_priv(shost);
-+	const u64 lun =3D *(u64 *)priv;
-+	const u32 tag =3D req->tag;
-+
-+	if (sdev->lun !=3D lun)
-+		return true;
-+
-+	if (ufshcd_clear_cmd(hba, tag) < 0) {
-+		dev_err(hba->dev, "%s: failed to clear request %d\n", __func__,
-+			tag);
-+		return true;
-+	}
-+
-+	if (hba->mcq_enabled) {
-+		struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, req);
-+
-+		if (hwq)
-+			ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+		return true;
-+	}
-+
-+	ufshcd_compl_one_cqe(hba, tag, NULL);
-+	return true;
-+}
-+
- /**
-  * ufshcd_eh_device_reset_handler() - Reset a single logical unit.
-  * @cmd: SCSI command pointer
-@@ -7571,12 +7601,8 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
-a *hba, struct utp_upiu_req *r
-  */
- static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
+diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
+v.h
+index d0a2c963a27d..ec1bb818bc73 100644
+--- a/drivers/ufs/core/ufshcd-priv.h
++++ b/drivers/ufs/core/ufshcd-priv.h
+@@ -65,7 +65,7 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int task=
+_tag,
+ 			  struct cq_entry *cqe);
+ int ufshcd_mcq_init(struct ufs_hba *hba);
+ void ufshcd_mcq_disable(struct ufs_hba *hba);
+-int ufshcd_mcq_decide_queue_depth(struct ufs_hba *hba);
++int ufshcd_get_hba_mac(struct ufs_hba *hba);
+ int ufshcd_mcq_memory_alloc(struct ufs_hba *hba);
+ struct ufs_hw_queue *ufshcd_mcq_req_to_hwq(struct ufs_hba *hba,
+ 					   struct request *req);
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 7042880c4e60..696837b031b9 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8463,10 +8463,11 @@ static void ufs_init_rtc(struct ufs_hba *hba, u8 =
+*desc_buf)
+=20
+ static int ufs_get_device_desc(struct ufs_hba *hba)
  {
--	unsigned long flags, pending_reqs =3D 0, not_cleared =3D 0;
- 	struct Scsi_Host *host;
- 	struct ufs_hba *hba;
--	struct ufs_hw_queue *hwq;
--	struct ufshcd_lrb *lrbp;
--	u32 pos, not_cleared_mask =3D 0;
++	struct ufs_dev_info *dev_info =3D &hba->dev_info;
++	struct Scsi_Host *shost =3D hba->host;
  	int err;
- 	u8 resp =3D 0xF, lun;
+ 	u8 model_index;
+ 	u8 *desc_buf;
+-	struct ufs_dev_info *dev_info =3D &hba->dev_info;
 =20
-@@ -7585,50 +7611,16 @@ static int ufshcd_eh_device_reset_handler(struct =
-scsi_cmnd *cmd)
+ 	desc_buf =3D kzalloc(QUERY_DESC_MAX_SIZE, GFP_KERNEL);
+ 	if (!desc_buf) {
+@@ -8494,6 +8495,18 @@ static int ufs_get_device_desc(struct ufs_hba *hba=
+)
+ 				      desc_buf[DEVICE_DESC_PARAM_SPEC_VER + 1];
+ 	dev_info->bqueuedepth =3D desc_buf[DEVICE_DESC_PARAM_Q_DPTH];
 =20
- 	lun =3D ufshcd_scsi_to_upiu_lun(cmd->device->lun);
- 	err =3D ufshcd_issue_tm_cmd(hba, lun, 0, UFS_LOGICAL_RESET, &resp);
--	if (err || resp !=3D UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
--		if (!err)
--			err =3D resp;
--		goto out;
--	}
--
--	if (hba->mcq_enabled) {
--		for (pos =3D 0; pos < hba->nutrs; pos++) {
--			lrbp =3D &hba->lrb[pos];
--			if (ufshcd_cmd_inflight(lrbp->cmd) &&
--			    lrbp->lun =3D=3D lun) {
--				ufshcd_clear_cmd(hba, pos);
--				hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
--				ufshcd_mcq_poll_cqe_lock(hba, hwq);
--			}
--		}
--		err =3D 0;
--		goto out;
--	}
--
--	/* clear the commands that were pending for corresponding LUN */
--	spin_lock_irqsave(&hba->outstanding_lock, flags);
--	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs)
--		if (hba->lrb[pos].lun =3D=3D lun)
--			__set_bit(pos, &pending_reqs);
--	hba->outstanding_reqs &=3D ~pending_reqs;
--	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--	for_each_set_bit(pos, &pending_reqs, hba->nutrs) {
--		if (ufshcd_clear_cmd(hba, pos) < 0) {
--			spin_lock_irqsave(&hba->outstanding_lock, flags);
--			not_cleared =3D 1U << pos &
--				ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
--			hba->outstanding_reqs |=3D not_cleared;
--			not_cleared_mask |=3D not_cleared;
--			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--			dev_err(hba->dev, "%s: failed to clear request %d\n",
--				__func__, pos);
--		}
-+	if (err) {
-+	} else if (resp !=3D UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
-+		err =3D resp;
-+	} else {
-+		/* clear the commands that were pending for corresponding LUN */
-+		blk_mq_tagset_busy_iter(&hba->host->tag_set,
-+					ufshcd_clear_lu_cmds,
-+					&cmd->device->lun);
- 	}
--	__ufshcd_transfer_req_compl(hba, pending_reqs & ~not_cleared_mask);
++	/*
++	 * According to the UFS standard, the UFS device queue depth
++	 * (bQueueDepth) must be in the range 1..255 if the shared queueing
++	 * architecture is supported. bQueueDepth is zero if the shared queuein=
+g
++	 * architecture is not supported.
++	 */
++	if (dev_info->bqueuedepth)
++		shost->cmd_per_lun =3D min(hba->nutrs, dev_info->bqueuedepth) -
++				     UFSHCD_NUM_RESERVED;
++	else
++		shost->cmd_per_lun =3D shost->can_queue;
++
+ 	dev_info->rtt_cap =3D desc_buf[DEVICE_DESC_PARAM_RTT_CAP];
 =20
--out:
- 	hba->req_abort_count =3D 0;
- 	ufshcd_update_evt_hist(hba, UFS_EVT_DEV_RESET, (u32)err);
- 	if (!err) {
+ 	dev_info->hid_sup =3D get_unaligned_be32(desc_buf +
+@@ -8902,7 +8915,7 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+ 	int ret;
+ 	int old_nutrs =3D hba->nutrs;
+=20
+-	ret =3D ufshcd_mcq_decide_queue_depth(hba);
++	ret =3D ufshcd_get_hba_mac(hba);
+ 	if (ret < 0)
+ 		return ret;
+=20
