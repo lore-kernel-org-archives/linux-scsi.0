@@ -1,113 +1,92 @@
-Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.123])
-	by smtp.subspace.kernel.org (Postfix) with ESMTP id EBFC554262;
-	Wed, 15 Oct 2025 15:32:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.123
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+	(No client certificate requested)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 40C9B33438C;
+	Wed, 15 Oct 2025 15:45:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760542344; cv=none; b=djZ31ZXdm3e0DYJEDcvUfaVzVhwnn/XhJ3iadU5coMp5Kc1+yjYVXAovBf91/dgHjrbxf7mH9msOJQgMgmiQQzU5vWcoos+JK7YAdZ7wyIS27rG693xrb7AH1x6W4k8wKnTsUtfBM4ZekdTzCpDIpwiDZjQ6bSVupofVaylOJB8=
+	t=1760543142; cv=none; b=fg9Y2J0XVRSQ5sakTRVjWVnQ5Lh3VQ7S7NYlj7A3hlGOI2vCtpQCKHi5CGSX+twUjHOK7Vck1zXWQfwF+MhmOcDxmStmPvQMZXI0b5pnfWJukEGC5fmNSC0twaovQyot0EObtRI4odzfUU/e0vrnIMyE6HTECBIAWDB3FbrgMEw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760542344; c=relaxed/simple;
-	bh=J3i3YIKMWDZRvFsBd7CoRuqP8FfDRqCh7TD+GtvM1Tw=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=VPcxb7mMuVF6ZOOyTrl8YxCXrfL7o+XZsbcn8zoXSqFL9XzNXez2FE6DyHVaEdvGLyhf/PX6LJlzGfh4OYYx1Hf34gYlZuJdceIxxIdan9ahSfhTC846P/UqtqhTqudUC77QMG9WmOOv2Jeqg9Ja6Cl9iT24k1+C4CrCDmzRxgw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.123
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
-X-CSE-ConnectionGUID: GjiV+sT8QtucxSoaq8d7bQ==
-X-CSE-MsgGUID: i0SVS0lTTu2qE0nuwMSogQ==
-X-IronPort-AV: E=Sophos;i="6.19,231,1754928000"; 
-   d="scan'208";a="155387784"
-From: guhuinan <guhuinan@xiaomi.com>
-To: Oliver Neukum <oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-CC: <linux-usb@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-	<usb-storage@lists.one-eyed-alien.net>, <linux-kernel@vger.kernel.org>, "Yu
- Chen" <chenyu45@xiaomi.com>, Owen Gu <guhuinan@xiaomi.com>, Michal Pecio
-	<michal.pecio@gmail.com>
-Subject: [PATCH v2] usb: uas: fix urb unmapping issue when the uas device is remove during ongoing data transfer
-Date: Wed, 15 Oct 2025 23:31:57 +0800
-Message-ID: <20251015153157.11870-1-guhuinan@xiaomi.com>
-X-Mailer: git-send-email 2.43.0
+	s=arc-20240116; t=1760543142; c=relaxed/simple;
+	bh=yaz2Z85tZytlPOi/nqyuR3FEP2uD07pWIvLcsG6hU9U=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=mHYFxtmOID8FD8H6UjkX1WJ05DuzO7asf5AXJwq+5XBY0leNzKC6rBGfAWqgngpfMJyphBfymKFRvFSWbZPy+sGpBrr27rZigjZjrjmXb1BjM1SzJEMJc+D9DbxklMO2zeIaspuKESrqcGpQhG0WqFT9ct/8BcvB/W89DjzQfss=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=49uwCEF3; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="49uwCEF3"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cmwQp6yVhzm16kw;
+	Wed, 15 Oct 2025 15:45:38 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1760543135; x=1763135136; bh=QyuuKfs99l8LLYj4BWxd1Wj9
+	tzofVCbfQMiYUa/Hx7k=; b=49uwCEF3y3Dj6ZyMxsuJUYPhktLVKwzkkMNzSWs+
+	L/iPzcEguQfpc8KxFrvq9+xpzexPJNTIbcZOpuy00yga6CGtSkdczrftK+87EFOC
+	qCLXLSQabNmlJV5YdKhgNh5BVhoFCt4qW4ZZ/Ly1Yo679E6yeWkP44Qp4YsFevCJ
+	7w4/s11OvqBk9NR98q5z1Nz6NlNghY1zrz9WKVkkowuJ4x2d0RLnFJ/WQBAUdKox
+	Qj0QOwHs74bfi9YA1EG+SkOZKmChkqZHIa3Ht7nyTYyAMLpkvw62EHutORG4girJ
+	jN8uqwLva0Mlp8dXhQp6m4G4fx1eDsFP+E0N4jVx6fu1PA==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id xR_7uzTFA2B9; Wed, 15 Oct 2025 15:45:35 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cmwQS2KXhzm16l9;
+	Wed, 15 Oct 2025 15:45:19 +0000 (UTC)
+Message-ID: <bb9c7926-4820-4922-a67d-65a6b1bace9a@acm.org>
+Date: Wed, 15 Oct 2025 08:45:18 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-ClientProxiedBy: bj-mbx11.mioffice.cn (10.237.8.131) To BJ-MBX05.mioffice.cn
- (10.237.8.125)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V1 2/2] ufs: ufs-qcom: Disable AHIT before SQ tail update
+ to prevent race in MCQ mode
+To: Palash Kambar <palash.kambar@oss.qualcomm.com>
+Cc: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
+ peter.griffin@linaro.org, krzk@kernel.org, peter.wang@mediatek.com,
+ beanhuo@micron.com, quic_nguyenb@quicinc.com, adrian.hunter@intel.com,
+ ebiggers@kernel.org, neil.armstrong@linaro.org,
+ James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+ linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-kernel@vger.kernel.org, quic_cang@quicinc.com,
+ quic_nitirawa@quicinc.com
+References: <20251014060406.1420475-1-palash.kambar@oss.qualcomm.com>
+ <20251014060406.1420475-3-palash.kambar@oss.qualcomm.com>
+ <f2b56041-b418-4ca9-a84a-ac662a850207@acm.org>
+ <CAGbPq5dhUXr59U_J3W4haNHughkaiXpnc4kAZWXB0SjPdFQMhg@mail.gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAGbPq5dhUXr59U_J3W4haNHughkaiXpnc4kAZWXB0SjPdFQMhg@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-From: Owen Gu <guhuinan@xiaomi.com>
+On 10/15/25 7:08 AM, Palash Kambar wrote:
+> Since AHIT is a hardware-based power-saving feature, disabling it 
+> entirely
+> could lead to significant power penalties. Therefore, this patch aims to 
+> preserve
+> power efficiency while resolving the race condition.
+> We have tested this change and observed no noticeable performance 
+> degradation.
+> Also, adding in RPM callbacks will not solve the power penalty as it 
+> autosuspend timer is
+> 3 secs in comparision to AHIT timer which is 5ms.
 
-When a UAS device is unplugged during data transfer, there is
-a probability of a system panic occurring. The root cause is
-an access to an invalid memory address during URB callback handling.
-Specifically, this happens when the dma_direct_unmap_sg() function
-is called within the usb_hcd_unmap_urb_for_dma() interface, but the
-sg->dma_address field is 0 and the sg data structure has already been
-freed.
+The runtime power management timeout can be modified. Please verify
+whether the power consumption with AHIT disabled and the runtime power
+management timeout set to 5 ms is acceptable.
 
-The SCSI driver sends transfer commands by invoking uas_queuecommand_lck()
-in uas.c, using the uas_submit_urbs() function to submit requests to USB.
-Within the uas_submit_urbs() implementation, three URBs (sense_urb,
-data_urb, and cmd_urb) are sequentially submitted. Device removal may
-occur at any point during uas_submit_urbs execution, which may result
-in URB submission failure. However, some URBs might have been successfully
-submitted before the failure, and uas_submit_urbs will return the -ENODEV
-error code in this case. The current error handling directly calls
-scsi_done(). In the SCSI driver, this eventually triggers scsi_complete()
-to invoke scsi_end_request() for releasing the sgtable. The successfully
-submitted URBs, when being unlinked to giveback, call
-usb_hcd_unmap_urb_for_dma() in hcd.c, leading to exceptions during sg
-unmapping operations since the sg data structure has already been freed.
+Thanks,
 
-This patch modifies the error condition check in the uas_submit_urbs()
-function. When a UAS device is removed but one or more URBs have already
-been successfully submitted to USB, it avoids immediately invoking
-scsi_done() and save the cmnd to devinfo->cmnd array. If the successfully
-submitted URBs is completed before devinfo->resetting being set, then
-the scsi_done() function will be called within uas_try_complete() after
-all pending URB operations are finalized. Otherwise, the scsi_done()
-function will be called within uas_zap_pending(), which is executed after
-usb_kill_anchored_urbs(). The uas_zap_pending() iterates over
-devinfo->cmnd array, invoking uas_try_complete() for each command to
-finalize their handling.
-
-Signed-off-by: Yu Chen <chenyu45@xiaomi.com>
-Signed-off-by: Owen Gu <guhuinan@xiaomi.com>
----
-v2: Upon uas_submit_urbs() returning -ENODEV despite successful URB
-submission, the cmnd is added to the devinfo->cmnd array before
-exiting uas_queuecommand_lck().
-v1: https://lore.kernel.org/linux-usb/20250930045309.21588-1-guhuinan@xiaomi.com/
----
----
- drivers/usb/storage/uas.c | 5 +++++
- 1 file changed, 5 insertions(+)
-
-diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
-index 4ed0dc19afe0..45b01df364f7 100644
---- a/drivers/usb/storage/uas.c
-+++ b/drivers/usb/storage/uas.c
-@@ -698,6 +698,10 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
- 	 * of queueing, no matter how fatal the error
- 	 */
- 	if (err == -ENODEV) {
-+		if (cmdinfo->state & (COMMAND_INFLIGHT | DATA_IN_URB_INFLIGHT |
-+				DATA_OUT_URB_INFLIGHT))
-+			goto out;
-+
- 		set_host_byte(cmnd, DID_NO_CONNECT);
- 		scsi_done(cmnd);
- 		goto zombie;
-@@ -711,6 +715,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
- 		uas_add_work(cmnd);
- 	}
- 
-+out:
- 	devinfo->cmnd[idx] = cmnd;
- zombie:
- 	spin_unlock_irqrestore(&devinfo->lock, flags);
--- 
-2.43.0
-
+Bart.
