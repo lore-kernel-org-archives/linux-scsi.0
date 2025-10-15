@@ -1,89 +1,77 @@
-Received: from metis.whiteo.stw.pengutronix.de (metis.whiteo.stw.pengutronix.de [185.203.201.7])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EE5631B82A
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Oct 2025 10:08:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.203.201.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CEFDD17B50F;
+	Wed, 15 Oct 2025 14:43:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760522903; cv=none; b=j4no5cZVvqGk7oBHo56Z2vYFp5OmeO3jowrf/vy3UYkfhEs19qd6DkceNalUNMIfiReuDWZgB9J7+YCgZVSIXZpPgZNH8Ki/bqpMEF2uyhq35gKX4Yo92N1i8rpVGKa48gUqZEUu823GFdUeJOu0nFl3jBIbbftN/q2TE2hhizg=
+	t=1760539432; cv=none; b=nhQJSmAO0X7v1BFoyZRMQW767WYmf9UVgH2LOg/lvbJzR2m7az3lhvQQvM4rVSTheuGO5MbMsUyaEqlT0/lzdkM26i4KtdF8k+vOL13+MicBy0fJHlPIYFctwbXPrlzsbsbPD1QTFPUtXL42yCOhK0gJf8vyqnPCtvZX1X2hXtQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760522903; c=relaxed/simple;
-	bh=DaZ8+4l4VR/tRyonXSdloiHxXxyELF9qqkkFs5IHBbQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=sWCoMvxdDR7szkuFrmeuQgqyLiWb7lmVUZr3mqtj1aqcbhJMDwqbblDXxdk1vcc7LCOGolImvJRtdQWPYrXFbPZ8Aex0jiRJ+4oE1DqdpKtlkJgEg16X/4a3OEkMjGWEO/ClDdG4tZM50rDDQqEZAEJ+BcRU7Ye54S9YaWrxeZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de; spf=pass smtp.mailfrom=pengutronix.de; arc=none smtp.client-ip=185.203.201.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=pengutronix.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=pengutronix.de
-Received: from drehscheibe.grey.stw.pengutronix.de ([2a0a:edc0:0:c01:1d::a2])
-	by metis.whiteo.stw.pengutronix.de with esmtps (TLS1.3:ECDHE_RSA_AES_256_GCM_SHA384:256)
-	(Exim 4.92)
-	(envelope-from <p.zabel@pengutronix.de>)
-	id 1v8yPu-00057E-ND; Wed, 15 Oct 2025 12:07:34 +0200
-Received: from lupine.office.stw.pengutronix.de ([2a0a:edc0:0:900:1d::4e] helo=lupine)
-	by drehscheibe.grey.stw.pengutronix.de with esmtps  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.96)
-	(envelope-from <p.zabel@pengutronix.de>)
-	id 1v8yPq-003hjz-2m;
-	Wed, 15 Oct 2025 12:07:30 +0200
-Received: from pza by lupine with local (Exim 4.98.2)
-	(envelope-from <p.zabel@pengutronix.de>)
-	id 1v8yPq-000000007Ib-3De3;
-	Wed, 15 Oct 2025 12:07:30 +0200
-Message-ID: <8817fed4133752909c3660db2e412d73ce52c620.camel@pengutronix.de>
-Subject: Re: [PATCH 4/5] phy: mediatek: ufs: Add support for resets
-From: Philipp Zabel <p.zabel@pengutronix.de>
-To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>, Alim Akhtar	
- <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>, Bart Van
- Assche	 <bvanassche@acm.org>, Rob Herring <robh@kernel.org>, Krzysztof
- Kozlowski	 <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Matthias Brugger	 <matthias.bgg@gmail.com>, AngeloGioacchino Del Regno	
- <angelogioacchino.delregno@collabora.com>, Stanley Chu	
- <stanley.chu@mediatek.com>, Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod
- Koul <vkoul@kernel.org>, Kishon Vijay Abraham I <kishon@kernel.org>, Peter
- Wang	 <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K.
- Petersen" <martin.petersen@oracle.com>
-Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, 
-	kernel@collabora.com, linux-scsi@vger.kernel.org,
- devicetree@vger.kernel.org, 	linux-kernel@vger.kernel.org,
- linux-arm-kernel@lists.infradead.org, 	linux-mediatek@lists.infradead.org,
- linux-phy@lists.infradead.org
-Date: Wed, 15 Oct 2025 12:07:30 +0200
-In-Reply-To: <20251014-mt8196-ufs-v1-4-195dceb83bc8@collabora.com>
-References: <20251014-mt8196-ufs-v1-0-195dceb83bc8@collabora.com>
-	 <20251014-mt8196-ufs-v1-4-195dceb83bc8@collabora.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.56.1-1 
+	s=arc-20240116; t=1760539432; c=relaxed/simple;
+	bh=BdVewfzADni3rA+uLXMhw0FIoVYxSlv8WO8HdhDGEeg=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fMJKoSYMNT8wntGNxSjbyQbMUGL6AJyK1BQoPQ3wMryelCuOPC2DOd/iomaSSnqBtqw89EJ3GLJOAc5D3Dk0IgcvORu3szq2qyAs3gpPxrVxfgVhagFhSW7dt5NthB9ObGFJApxuRGG2t5VwXYeha6iLGxhgcMlDSCc5q8JqI1I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RnSAVYbX; arc=none smtp.client-ip=10.30.226.201
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RnSAVYbX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 33AFDC4CEF8;
+	Wed, 15 Oct 2025 14:43:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760539431;
+	bh=BdVewfzADni3rA+uLXMhw0FIoVYxSlv8WO8HdhDGEeg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=RnSAVYbX0pa/TbdwnqgAHLNi46jSc10fCqckm8meRRNlXCmzpes/MSgltOMJe09Ug
+	 JxdyInJGKhLHxSlIgFJYP5d1DMa/AN+TmOb6ZU2mngBuBTa4kiL0a7IlbiS/i8S+En
+	 /g4iXr3ZZjsFXgBInBqjDkI8vQ+S34EDoT113jIB013olFZ4zSjfvHAcPKJhj9WFs4
+	 m4yFWLccda0qiXQeUmNJq6scITEXvAsc57cu+xGApgTtwsq6T+ZXd60XHE0JrriWE+
+	 DDvL41D7J1pPoPbzucyHLUzWqhosGqSBeUrK2nvYQ0B3z5PDNtoU2YzTocZjSKawIk
+	 hvNZK+1DARCAA==
+Date: Wed, 15 Oct 2025 09:43:49 -0500
+From: Rob Herring <robh@kernel.org>
+To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Cc: Ritesh Kumar <quic_riteshk@quicinc.com>, robin.clark@oss.qualcomm.com,
+	lumag@kernel.org, abhinav.kumar@linux.dev,
+	jessica.zhang@oss.qualcomm.com, sean@poorly.run,
+	marijn.suijten@somainline.org, maarten.lankhorst@linux.intel.com,
+	mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
+	simona@ffwll.ch, krzk+dt@kernel.org, conor+dt@kernel.org,
+	quic_mahap@quicinc.com, andersson@kernel.org,
+	konradybcio@kernel.org, mani@kernel.org,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	vkoul@kernel.org, kishon@kernel.org,
+	cros-qcom-dts-watchers@chromium.org, linux-phy@lists.infradead.org,
+	linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	quic_vproddut@quicinc.com
+Subject: Re: [PATCH v2 1/3] dt-bindings: phy: qcom-edp: Add edp ref clk for
+ sa8775p
+Message-ID: <20251015144349.GA3302193-robh@kernel.org>
+References: <20251013104806.6599-1-quic_riteshk@quicinc.com>
+ <20251013104806.6599-2-quic_riteshk@quicinc.com>
+ <xofvrsdi2s37qefp2fr6av67c5nokvlw3jm6w3nznphm3x223f@yyatwo5cur6u>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-SA-Exim-Connect-IP: 2a0a:edc0:0:c01:1d::a2
-X-SA-Exim-Mail-From: p.zabel@pengutronix.de
-X-SA-Exim-Scanned: No (on metis.whiteo.stw.pengutronix.de); SAEximRunCond expanded to false
-X-PTX-Original-Recipient: linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <xofvrsdi2s37qefp2fr6av67c5nokvlw3jm6w3nznphm3x223f@yyatwo5cur6u>
 
-On Di, 2025-10-14 at 17:10 +0200, Nicolas Frattaroli wrote:
-> The MediaTek UFS PHY supports PHY resets. Until now, they've been
-> implemented in the UFS host driver. Since they were never documented in
-> the UFS HCI node's DT bindings, and no mainline DT uses it, it's fine if
-> it's moved to the correct location, which is the PHY driver.
->=20
-> Implement the MPHY reset logic in this driver and expose it through the
-> phy subsystem's reset op. The reset itself is optional, as judging by
-> other mainline devices that use this hardware, it's not required for the
-> device to function.
->=20
-> If no reset is present, the reset op returns -EOPNOTSUPP, which means
-> that the ufshci driver can detect it's present and not double sleep in
-> its own reset function, where it will call the phy reset.
->=20
-> Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+On Mon, Oct 13, 2025 at 03:37:47PM +0300, Dmitry Baryshkov wrote:
+> On Mon, Oct 13, 2025 at 04:18:04PM +0530, Ritesh Kumar wrote:
+> > Add edp reference clock for sa8775p edp phy.
+> 
+> eDP, PHY.
+> 
+> I'd probably ask to squash both DT binding patches together, but this
+> might cause cross-subsystem merge issues. I'll leave this to DT
+> maintainers discretion, whether to require a non-warning-adding patch or
+> two patches with warnings in the middle of the series.
 
-Reviewed-by: Philipp Zabel <p.zabel@pengutronix.de>
+One patch.
 
-regards
-Philipp
+Rob
+
