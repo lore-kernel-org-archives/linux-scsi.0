@@ -1,53 +1,53 @@
 Received: from mx0a-001b2d01.pphosted.com (mx0a-001b2d01.pphosted.com [148.163.156.1])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7B6EF2580F2
-	for <linux-scsi@vger.kernel.org>; Wed, 15 Oct 2025 20:53:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EB00A2D12F5
+	for <linux-scsi@vger.kernel.org>; Wed, 15 Oct 2025 20:53:21 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.156.1
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760561602; cv=none; b=INC/bgfafLOUh19wBn7sW55LFiTNCuWDrX6+X8nglbAdPuk3fM1Y/5ItRa8OUELljH5f1OSSh33q2y6pU1ICjqyIDGo5bB8nzQvsphF4vhWFxerDeDowzzYp+Um2DTcP6GHDRCPCFaanKRIbOy+EZ/qqyziDw2Qu1RtcAdOGhFg=
+	t=1760561603; cv=none; b=kQWUCD8PvEtNobWSdGpOfRLGQNiyJM9vDrqD14uatHhjHPiutj1jPEm/6LNUIO7AvEmWGllpWz3D4RT1Wt5kCAWF8UVBsc2eQ4UznS0Gvma6sX/AEU4k6VuPyYA4nnoYbfxZxQB7v3UtKGI4UUn+HlM6QQPnnq4ISpFFa09txU8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760561602; c=relaxed/simple;
-	bh=1/u59SbTP6ezF4fYE+S2ZAaQ0ANXakWnBDM5Tx8sB5Q=;
+	s=arc-20240116; t=1760561603; c=relaxed/simple;
+	bh=oKu3NRatX+m7pv6epkOO8MCenuQe2bQ6Wan7e9qffgQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MzjWGRXOHzmDs3YcdTd6W/pGtEutfkC/xpw7fj32tUq2V4okEXYyEOMBHub3QsjZL0pDJ/b9yXOBKnoeD6M/zMBCyD6ewpWR5z1ag9o887chYNd0QyLR+SFetXvDJ4wJUA+dgoFp++gqPBzycVtN4T6WToReJS/xIXs6RnV5sRI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=T6GkEzMh; arc=none smtp.client-ip=148.163.156.1
+	 MIME-Version; b=HCRbBlMoRofUNM1KOsUg4lT8aEYvdBPlStMZPa45YMORL/GD6uWbdQE2jPnPnNnZs5+BNVXG9I8PgOYGFjltWaeIz0Sb2SwQ2uCEW2GVMUgt+Crljr5wAUGC/ZtfEXYMOvmgQL5H2i5j1KtPlA2dbVM1XUBGtaGXpKtIBdFh0U4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=cqdBPF1w; arc=none smtp.client-ip=148.163.156.1
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="T6GkEzMh"
-Received: from pps.filterd (m0356517.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59FDhEhQ021827;
+	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="cqdBPF1w"
+Received: from pps.filterd (m0360083.ppops.net [127.0.0.1])
+	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59FDhB15001256;
 	Wed, 15 Oct 2025 20:53:19 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
 	:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=pp1; bh=WVhCrQQ+hDFAF/+i2
-	MFFgHBx+6pm+4RXR9Ev3V7Hi7E=; b=T6GkEzMhl/JyRUZKEKNDC93umohwa36mR
-	U9h49bPOpL0S//HJH4o3IME3/npAnniuCADHbhGh9azFb6Kj1TT8xnWvPzSfGgDH
-	hyVOhhJdMj0tLF5C3NM3JOyS+PrgibNZf/56bKSWyaq5dm2Zs1NgHRCQd1/m+rMV
-	35AcYhdcb6qsFXVKyHDBoS5VVEZ+nbp1hykQh9F7Tab2YvlvqJJlYP4tCB+GuiEu
-	Z3yKSgaKzTxs/9annpq8VKsaXdPkaDtgcY3f9oWr4qHFe4dDHMxW/OYDbZFW2FS+
-	Va8nqcr9l1bacIpTVz9yWwCuq6Tv68GlIgEs/9r7q5TUSHB++6PUQ==
-Received: from ppma12.dal12v.mail.ibm.com (dc.9e.1632.ip4.static.sl-reverse.com [50.22.158.220])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 49qey8xwen-1
+	:mime-version:references:subject:to; s=pp1; bh=5QhWA7OyZMacPEu7E
+	cTiVZMBAeivsRQMaFgTU1B7MFI=; b=cqdBPF1wHN8EAacancW0wwXJWyAX2W7D1
+	UwJMyFoHmH33QrRJ0dEfzzf3vNuBrpC/85pV6mO4p3iI9NpWpypAeklG1BEenVJH
+	ESHLfwfxmi5KQMKSmhawKwN76xhN68cyxx2eoHD8pERKEsr1vn20EVxPpfdeyH5F
+	zNqsqggmGOuuLq7mGQFUG8cn/heMPA6mbCFmOq4tWs6bqXuhT8l8yeomcIulFr8x
+	8LNDdt+5EcH99QXIgSa54Ge0lSFy0Pw/d5h83a/Tko1XWZL6tbJASnlf8MFD5j5W
+	SmkuH7FoqxCvcWu4MoMLMduZiL9CYq2mECZANLhK23MJZ1ri7NdMA==
+Received: from ppma21.wdc07v.mail.ibm.com (5b.69.3da9.ip4.static.sl-reverse.com [169.61.105.91])
+	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 49rfp81qt4-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 15 Oct 2025 20:53:18 +0000 (GMT)
-Received: from pps.filterd (ppma12.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma12.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 59FK4JDE015190;
-	Wed, 15 Oct 2025 20:53:17 GMT
-Received: from smtprelay06.dal12v.mail.ibm.com ([172.16.1.8])
-	by ppma12.dal12v.mail.ibm.com (PPS) with ESMTPS id 49r1jsan79-1
+	Wed, 15 Oct 2025 20:53:19 +0000 (GMT)
+Received: from pps.filterd (ppma21.wdc07v.mail.ibm.com [127.0.0.1])
+	by ppma21.wdc07v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 59FHadtR018894;
+	Wed, 15 Oct 2025 20:53:18 GMT
+Received: from smtprelay05.dal12v.mail.ibm.com ([172.16.1.7])
+	by ppma21.wdc07v.mail.ibm.com (PPS) with ESMTPS id 49r2jmte9f-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 15 Oct 2025 20:53:17 +0000
+	Wed, 15 Oct 2025 20:53:18 +0000
 Received: from smtpav04.dal12v.mail.ibm.com (smtpav04.dal12v.mail.ibm.com [10.241.53.103])
-	by smtprelay06.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 59FKrFvQ27460296
+	by smtprelay05.dal12v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 59FKrEL39503330
 	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 15 Oct 2025 20:53:15 GMT
+	Wed, 15 Oct 2025 20:53:14 GMT
 Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 317B858067;
-	Wed, 15 Oct 2025 20:53:15 +0000 (GMT)
+	by IMSVA (Postfix) with ESMTP id C85AA58066;
+	Wed, 15 Oct 2025 20:53:14 +0000 (GMT)
 Received: from smtpav04.dal12v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id DB13158062;
+	by IMSVA (Postfix) with ESMTP id 73E2858062;
 	Wed, 15 Oct 2025 20:53:14 +0000 (GMT)
 Received: from smith3.rch.stglabs.ibm.com (unknown [9.5.53.254])
 	by smtpav04.dal12v.mail.ibm.com (Postfix) with ESMTP;
@@ -56,9 +56,9 @@ From: wenxiong@linux.ibm.com
 To: njavali@marvell.com, brking@linux.ibm.com, linux-scsi@vger.kernel.org
 Cc: wenxiong@us.ibm.com, Wen Xiong <wenxiong@linux.ibm.com>,
         Kyle Mahlkuch <Kyle.Mahlkuch@ibm.com>
-Subject: [PATCH 2/2] scsi/qla2xxx: enable/disable IRQD_NO_BALANCING during reset
-Date: Wed, 15 Oct 2025 15:53:11 -0500
-Message-ID: <20251015205311.122963-3-wenxiong@linux.ibm.com>
+Subject: [PATCH 1/2] scsi/ipr: enable/disable IRQD_NO_BALANCING during reset
+Date: Wed, 15 Oct 2025 15:53:10 -0500
+Message-ID: <20251015205311.122963-2-wenxiong@linux.ibm.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <20251015205311.122963-1-wenxiong@linux.ibm.com>
 References: <20251015205311.122963-1-wenxiong@linux.ibm.com>
@@ -70,144 +70,198 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: dgZrWaWW4mcvhsvYA-J-AN2-DTzV0r2w
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDExMDAxMSBTYWx0ZWRfX0WSZo2r/Mu7r
- IAsd5biaKu9tMSIfpiaVXdI+KJbqlG1rtFQaMwFaZWqTxgYKtmUZgeDIGOsqEPXIO3thkDvVfBL
- e0RZUd0aAYCiXLEGArYRjZRHuSPBw4qcV2bbwNvXlKpK93Pp0Bgf5/tOHS7YWs8gei9dDL4Ru85
- 28erTxblA53dMbTLUT4HS/Clcm/+AsV0PpD2VPOWAsoH+zSndJcVw6ktmiq9bfctXjUAncBTnV9
- wIpq5CSPWBn6ykJ8KGLnh/f3RrX8M09m032rHOI8TnWPzK+2e05W7Ci90PYHBcBCKmqZWx5MTY1
- iULUp48lPAiwTV32v2NfQT1Drqt+FzkQfOcTIqNBqB+mZNv0KqGU6d+6qNF9yrscIa/Wd0wb/0Q
- 7ErDzRL8mtRHZXwD/ALlToPIkxQq/g==
-X-Proofpoint-GUID: dgZrWaWW4mcvhsvYA-J-AN2-DTzV0r2w
-X-Authority-Analysis: v=2.4 cv=QZ5rf8bv c=1 sm=1 tr=0 ts=68f009be cx=c_pps
- a=bLidbwmWQ0KltjZqbj+ezA==:117 a=bLidbwmWQ0KltjZqbj+ezA==:17
+X-Proofpoint-ORIG-GUID: LhA4sK8lR_8zoSGrZB3ToLdT8b6XJQEo
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDEyMDA4NCBTYWx0ZWRfX8D9NO3uM0aq1
+ TOy/oOncYFmJ8x9iYnU3BjZyI3WwUflmo9+KWmVXOEWIbtBZZflZi0W3id/+XLsMcGPs4l/kiGd
+ FVCOJSPdciroPKJBfCjACHQu2upAogqE3vSA8ce6+u3JCoRVQ6cE04b6ZYOn4Brdc0ywvws1FB7
+ PyTCwd6D9loP6Ko0TUMcHGMdtvi97x70entu03DtBEqgEKCzBk+yMZO7PnZGhHtEai5iLXqn/yN
+ ciyTiP6tsBhr2EaH7OlO15UYBtJEaDEhZyHBkrs7z94BxePTsHPwRnrnVMRRoce6NFMGfp4HO2n
+ afhjr6O49HkiLreF1hwKM0lKr0kdg6oVyXXV5+vyKXiuyCsLpPOFI+xoMUwgpCFobXUgaHYUI4O
+ Cp8xbxG5JYoR3EsoqHhH5VIq9k5x4A==
+X-Proofpoint-GUID: LhA4sK8lR_8zoSGrZB3ToLdT8b6XJQEo
+X-Authority-Analysis: v=2.4 cv=af5sXBot c=1 sm=1 tr=0 ts=68f009bf cx=c_pps
+ a=GFwsV6G8L6GxiO2Y/PsHdQ==:117 a=GFwsV6G8L6GxiO2Y/PsHdQ==:17
  a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=VnNF1IyMAAAA:8
- a=wblshgo6IW4WqGfu3kEA:9
+ a=qwQndUFV_ZDTNUs8jlYA:9
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-10-15_07,2025-10-13_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- lowpriorityscore=0 priorityscore=1501 phishscore=0 bulkscore=0 suspectscore=0
- spamscore=0 malwarescore=0 impostorscore=0 clxscore=1015 adultscore=0
+ clxscore=1015 priorityscore=1501 spamscore=0 adultscore=0 suspectscore=0
+ bulkscore=0 phishscore=0 lowpriorityscore=0 malwarescore=0 impostorscore=0
  classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510110011
+ reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510120084
 
 From: Wen Xiong <wenxiong@linux.ibm.com>
 
 Issue is:
-Dynamic remove/add of FC Qlogic storage adapters test hits EEH on Powerpc.
+Dynamic remove/add IPR storage adapter test hits EEH on Powerpc.
 
-EEH: [c00000000004f77c] __eeh_send_failure_event+0x7c/0x160
-EEH: [c000000000048464] eeh_dev_check_failure.part.0+0x254/0x660
-EEH: [c000000000934e0c] __pci_read_msi_msg+0x1ac/0x280
-EEH: [c000000000100f68] pseries_msi_compose_msg+0x28/0x40
-EEH: [c00000000020e1cc] irq_chip_compose_msi_msg+0x5c/0x90
-EEH: [c000000000214b1c] msi_domain_set_affinity+0xbc/0x100
-EEH: [c000000000206be4] irq_do_set_affinity+0x214/0x2c0
-EEH: [c000000000206e04] irq_set_affinity_locked+0x174/0x230
-EEH: [c000000000207044] irq_set_affinity+0x64/0xa0
-EEH: [c000000000212890] write_irq_affinity.constprop.0.isra.0+0x130/0x150
-EEH: [c00000000068868c] proc_reg_write+0xfc/0x160
-EEH: [c0000000005adb48] vfs_write+0xf8/0x4e0
-EEH: [c0000000005ae234] ksys_write+0x84/0x140
-EEH: [c00000000002e994] system_call_exception+0x164/0x310
-EEH: [c00000000000bfe8] system_call_vectored_common+0xe8/0x278
+EEH: [c00000000004f75c] __eeh_send_failure_event+0x7c/0x160
+EEH: [c000000000048444] eeh_dev_check_failure.part.0+0x254/0x650
+EEH: [c008000001650678] eeh_readl+0x60/0x90 [ipr]
+EEH: [c00800000166746c] ipr_cancel_op+0x2b8/0x524 [ipr]
+EEH: [c008000001656524] ipr_eh_abort+0x6c/0x130 [ipr]
+EEH: [c000000000ab0d20] scmd_eh_abort_handler+0x140/0x440
+EEH: [c00000000017e558] process_one_work+0x298/0x590
+EEH: [c00000000017eef8] worker_thread+0xa8/0x620
+EEH: [c00000000018be34] kthread+0x124/0x130
+EEH: [c00000000000cd64] ret_from_kernel_thread+0x5c/0x64
 
-We see that irqbalance daemon kicks in before invoking qla2xxx->slot_reset
-during the EEH recovery process.
+We took a pcie bus trace and found out that a vector of msix is
+cleared to 0 by irqbalance daemon.  If we disable irqbalance
+daemon, we won't see the issue on both of adapters.
 
-irqbalance daemon
-->irq_set_affinity()
-->msi_domain_set_affinity()
-->irq_chip_set_affiinity_parent()
+We enabled debug in ipr driver,
+[   44.103071] ipr: Entering __ipr_remove
+[   44.103083] ipr: Entering ipr_initiate_ioa_bringdown
+[   44.103091] ipr: Entering ipr_reset_shutdown_ioa
+[   44.103099] ipr: Leaving ipr_reset_shutdown_ioa
+[   44.103105] ipr: Leaving ipr_initiate_ioa_bringdown
+[   44.149918] ipr: Entering ipr_reset_ucode_download
+[   44.149935] ipr: Entering ipr_reset_alert
+[   44.150032] ipr: Entering ipr_reset_start_timer
+[   44.150038] ipr: Leaving ipr_reset_alert
+[   44.244343] scsi 1:2:3:0: alua: Detached
+[   44.254300] ipr: Entering ipr_reset_start_bist
+[   44.254320] ipr: Entering ipr_reset_start_timer
+[   44.254325] ipr: Leaving ipr_reset_start_bist
+[   44.364329] scsi 1:2:4:0: alua: Detached
+[   45.134341] scsi 1:2:5:0: alua: Detached
+[   45.860949] ipr: Entering ipr_reset_shutdown_ioa
+[   45.860962] ipr: Leaving ipr_reset_shutdown_ioa
+[   45.860966] ipr: Entering ipr_reset_alert
+[   45.861028] ipr: Entering ipr_reset_start_timer
+[   45.861035] ipr: Leaving ipr_reset_alert
+[   45.964302] ipr: Entering ipr_reset_start_bist
+[   45.964309] ipr: Entering ipr_reset_start_timer
+[   45.964313] ipr: Leaving ipr_reset_start_bist
+[   46.264301] ipr: Entering ipr_reset_bist_done
+[   46.264309] ipr: Leaving ipr_reset_bist_done
+
+During adapter reset, ipr device driver blocks config space access but
+can't block MMIO access for msix entries.
+There is very small window: irqbalance daemon kicks in during adapter
+reset before ipr driver calls pci_restore_state(pdev) to restore msix
+table.
+
+irqbalance daemon reads back all 0 for that msix vector
+in __pci_read_msi_msg().
+
+irqbalance daemon:
+
+msi_domain_set_affinity()
+->irq_chip_set_affinity_patent()
 ->xive_irq_set_affinity()
-->pseries_msi_compose_ms()
-->__pci_read_msi_msg()
 ->irq_chip_compose_msi_msg()
+  ->pseries_msi_compose_msg()
+  ->__pci_read_msi_msg(): read all 0 since didn't call pci_restore_state
+->irq_chip_write_msi_msg()
+  -> pci_write_msg_msi(): write 0 to the msix vector entry
 
-In __pci_read_msi_msg(), we see the first msix vector is set to all F by the
-irqbalance daemon.
-pci_write_msg_msix: index=0, lo=ffffffff hi=fffffff
+When ipr driver call pci_restore_state(pdev) in
+ipr_reset_restore_cfg_space(), the msix vector entry
+has been cleared by irqbalance daemon in pci_write_msg_msix().
 
-We tried disabling the irqbalance daemon, then ran the DLPAR remove/add
-test and the test completed succesfully.
+pci_restore_state()
+->__pci_restore_msix_state()
+
+Below is the MSIX table for ipr adapter after 'irqbalance"
+dameon kicked in during adapter reset
+
+Dump MSIx table: index=0 address_lo=c800 address_hi=10000000 msg_data=0
+Dump MSIx table: index=1 address_lo=c810 address_hi=10000000 msg_data=0
+Dump MSIx table: index=2 address_lo=c820 address_hi=10000000 msg_data=0
+Dump MSIx table: index=3 address_lo=c830 address_hi=10000000 msg_data=0
+Dump MSIx table: index=4 address_lo=c840 address_hi=10000000 msg_data=0
+Dump MSIx table: index=5 address_lo=c850 address_hi=10000000 msg_data=0
+Dump MSIx table: index=6 address_lo=c860 address_hi=10000000 msg_data=0
+Dump MSIx table: index=7 address_lo=c870 address_hi=10000000 msg_data=0
+Dump MSIx table: index=8 address_lo=0 address_hi=0 msg_data=0
+---------> Hit EEH since msix vector of index=8 are 0
+
+Dump MSIx table: index=9 address_lo=c890 address_hi=10000000 msg_data=0
+Dump MSIx table: index=10 address_lo=c8a0 address_hi=10000000 msg_data=0
+Dump MSIx table: index=11 address_lo=c8b0 address_hi=10000000 msg_data=0
+Dump MSIx table: index=12 address_lo=c8c0 address_hi=10000000 msg_data=0
+Dump MSIx table: index=13 address_lo=c8d0 address_hi=10000000 msg_data=0
+Dump MSIx table: index=14 address_lo=c8e0 address_hi=10000000 msg_data=0
+Dump MSIx table: index=15 address_lo=c8f0 address_hi=10000000 msg_data=0
+
+[   46.264312] ipr: Entering ipr_reset_restore_cfg_space
+[   46.267439] ipr: Entering ipr_fail_all_ops
+[   46.267447] ipr: Leaving ipr_fail_all_ops
+[   46.267451] ipr: Leaving ipr_reset_restore_cfg_space
+[   46.267454] ipr: Entering ipr_ioa_bringdown_done
+[   46.267458] ipr: Leaving ipr_ioa_bringdown_done
+[   46.267467] ipr: Entering ipr_worker_thread
+[   46.267470] ipr: Leaving ipr_worker_thread
 
 We don't need to do irq balance during adapter reset.
-This patch enables "IRQ_NO_BALANCING" bit before starting adapter
-reset and disables the bit after calling pci_restore_state(). The irqbalance
-daemon is disabled for this short period of ~2s.
+This patch is enabled "IRQ_NO_BALANCING" bit before starting adapter
+reset and disabled it after calling pci_restore_state(). irqbalance
+daemon is disabled for this period of short time(~2s);
 
 Thanks,
-Kyle
+Wendy
 
-Signed-off-by: Kyle Mahlkuch<Kyle.Mahlkuch@ibm.com>
 Signed-off-by: Wen Xiong<wenxiong@linux.ibm.com>
+Signed-off-by: Kyle Mahlkuch<Kyle.Mahlkuch@ibm.com>
 ---
- drivers/scsi/qla2xxx/qla_os.c | 30 ++++++++++++++++++++++++++++++
- 1 file changed, 30 insertions(+)
+ drivers/scsi/ipr.c | 26 ++++++++++++++++++++++++++
+ 1 file changed, 26 insertions(+)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index 5ffd94586652..3dd8637518be 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -17,6 +17,7 @@
- #include <linux/crash_dump.h>
- #include <linux/trace_events.h>
- #include <linux/trace.h>
-+#include <linux/irq.h>
- 
- #include <scsi/scsi_tcq.h>
- #include <scsi/scsicam.h>
-@@ -7771,6 +7772,31 @@ static void qla_pci_error_cleanup(scsi_qla_host_t *vha)
+diff --git a/drivers/scsi/ipr.c b/drivers/scsi/ipr.c
+index 44214884deaf..af73085d3f00 100644
+--- a/drivers/scsi/ipr.c
++++ b/drivers/scsi/ipr.c
+@@ -7843,6 +7843,30 @@ static int ipr_dump_mailbox_wait(struct ipr_cmnd *ipr_cmd)
+ 	return IPR_RC_JOB_RETURN;
  }
- 
  
 +/**
-+ * qla2xxx_set_affinity_nobalance
-+ * @oa_cfg: pci_dev struct for a qla2xxx device
-+ * @flag: bool
-+ * true: enable "IRQ_NO_BALANCING" bit for msix interrupt
-+ * false: disable "IRQ_NO_BALANCING" bit for msix interrupt
++ * ipr_set_affinity_nobalance
++ * @oa_cfg:	ipr_ioa_cfg struct for an ipr device
++ * @flag:	bool
++ *	true: ensable "IRQ_NO_BALANCING" bit for msix interrupt
++ *	false: disable "IRQ_NO_BALANCING" bit for msix interrupt
 + * Description: This function will be called to disable/enable
-+ * "IRQ_NO_BALANCING" to avoid irqbalance daemon
-+ * kicking in during adapter reset.
++ *	"IRQ_NO_BALANCING" to avoid irqbalance daemon
++ *	kicking in during adapter reset.
 + **/
-+
-+static void qla2xxx_set_affinity_nobalance(struct pci_dev *pdev, bool flag)
++static void ipr_set_affinity_nobalance(struct ipr_ioa_cfg *ioa_cfg, bool flag)
 +{
-+    int irq, i;
++	int irq, i;
 +
-+    for (i = 0; i < QLA_BASE_VECTORS; i++) {
-+        irq = pci_irq_vector(pdev, i);
++	for (i = 0; i < ioa_cfg->nvectors; i++) {
++		irq = pci_irq_vector(ioa_cfg->pdev, i);
 +
-+        if (flag)
-+            irq_set_status_flags(irq, IRQ_NO_BALANCING);
-+        else
-+            irq_clear_status_flags(irq, IRQ_NO_BALANCING);
-+    }
++		if (flag)
++			irq_set_status_flags(irq, IRQ_NO_BALANCING);
++		else
++			irq_clear_status_flags(irq, IRQ_NO_BALANCING);
++	}
 +}
 +
- static pci_ers_result_t
- qla2xxx_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
- {
-@@ -7789,6 +7815,8 @@ qla2xxx_pci_error_detected(struct pci_dev *pdev, pci_channel_state_t state)
- 		goto out;
+ /**
+  * ipr_reset_restore_cfg_space - Restore PCI config space.
+  * @ipr_cmd:	ipr command struct
+@@ -7867,6 +7891,7 @@ static int ipr_reset_restore_cfg_space(struct ipr_cmnd *ipr_cmd)
+ 		return IPR_RC_JOB_CONTINUE;
  	}
  
-+    qla2xxx_set_affinity_nobalance(pdev, false);
-+
- 	switch (state) {
- 	case pci_channel_io_normal:
- 		qla_pci_set_eeh_busy(vha);
-@@ -7930,6 +7958,8 @@ qla2xxx_pci_slot_reset(struct pci_dev *pdev)
- 	ql_dbg(ql_dbg_aer, base_vha, 0x900e,
- 	    "Slot Reset returning %x.\n", ret);
++	ipr_set_affinity_nobalance(ioa_cfg, false);
+ 	ipr_fail_all_ops(ioa_cfg);
  
-+    qla2xxx_set_affinity_nobalance(pdev, true);
-+
- 	return ret;
- }
+ 	if (ioa_cfg->sis64) {
+@@ -7946,6 +7971,7 @@ static int ipr_reset_start_bist(struct ipr_cmnd *ipr_cmd)
+ 		rc = pci_write_config_byte(ioa_cfg->pdev, PCI_BIST, PCI_BIST_START);
  
+ 	if (rc == PCIBIOS_SUCCESSFUL) {
++		ipr_set_affinity_nobalance(ioa_cfg, true);
+ 		ipr_cmd->job_step = ipr_reset_bist_done;
+ 		ipr_reset_start_timer(ipr_cmd, IPR_WAIT_FOR_BIST_TIMEOUT);
+ 		rc = IPR_RC_JOB_RETURN;
 -- 
 2.47.3
 
