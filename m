@@ -1,108 +1,76 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id ACE9230C60B;
-	Thu, 16 Oct 2025 16:54:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 761AF3346B7
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Oct 2025 17:45:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760633681; cv=none; b=RYVG+T0ZC6wJeXCG7GynZWMO87Xxag6bKG3cG90RBGIy0la40CZ20FrorCXFfu9iyoQ22AVrJSJ1JvyUXDvd17AX+b7z/BoSWE/HBgYrnhOqR6dA7DriSrRTzz6Zd0t0TPMgY1pUcXMZBQl5fiKLEaMuvrRuZMeExuB+eWsMMug=
+	t=1760636759; cv=none; b=MZ+m8uQbQ1rolyb8nsZvRXYhyhGvuWVNSsnNG4La9c0KfhnTqOL+0gbAT1OK4Y8jxouwU7byCcdHw9F4wBNxAgcSpVra7aQILdMZr9iTxUxEuw7OIDzT/2qXkxM14SBhObPxatra6QRAL7a+zLfEPKFYK8aKQKyOq6T5pZmetBE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760633681; c=relaxed/simple;
-	bh=P6z6MpZ3GyLdgUiuk5OCeZbUo2ga95ouA7nUg4Q6aj0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HFNSl40D6osgDopWNBqVzkf/Q9Pb9qSWV+XvmWmMPHd15UDL6Y5sZ/761b7OXCQ7wTUWeOFXHg5zvZJbXTNCnF0ddZkInohqeSwvErpu149L/YF381LO/DFTIux9oWWg4GA6iS8CvmSgf5V1dpN2EGk1xeMzGxiZ7D2vu3OPa9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ozI6wj+m; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760636759; c=relaxed/simple;
+	bh=P5LrF4XUD3Qrzh57jCUubh/KmdYfbqo+2j4KHBLHHvk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=lOYOu4eMcRm2UbbvFirjjEiWQ0Nqt5OKUuLtPj9iAIh/0Uvtxp6qfaseUYTFKTCSr7fackNxwfWMaofjlR0Kc84W2lraP0MB2+vBpz4M8buj17mt2Oz+BRifPtZqGBaRoZC4ay5SH5NDYWrVC1CQlDPFp6vuwgl5yFGlujmG47c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=S284tZt/; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ozI6wj+m"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83354C4CEF1;
-	Thu, 16 Oct 2025 16:54:36 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760633681;
-	bh=P6z6MpZ3GyLdgUiuk5OCeZbUo2ga95ouA7nUg4Q6aj0=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=ozI6wj+mVED3BwR6VvJe1HkiU6QMx0LrkGAcqVEuP/lkCLmnLHzzm54D+zom70e/0
-	 TAZk/V46RlVvu+cGZ9PLP97lhv0DGYjBtFV6t/2FHKGlvvavoHAbHs5RTEdNcD3nhp
-	 53ZGGshZZlevE3Y0ZRQAJcy5RmqT4jjV5nNgb1Kh6QocmEeueWbSvyPd4h71JHlSxD
-	 w3YsGIJjuIlU5O8byeeGpEvT0qwbBav6vL6ECWuZyRukZXaJlfJIp+WLaWlI1fRcle
-	 +WnsqyzZ6JATGqkq9Nn7uMqraI5qgHYPSX/hpaHQyw3vZdsIglDXIQD9v0DGCRqA/U
-	 zt9C6TqsMbuLQ==
-Date: Thu, 16 Oct 2025 17:54:34 +0100
-From: Conor Dooley <conor@kernel.org>
-To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Stanley Chu <stanley.chu@mediatek.com>,
-	Chunfeng Yun <chunfeng.yun@mediatek.com>,
-	Vinod Koul <vkoul@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Stanley Jhu <chu.stanley@gmail.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Philipp Zabel <p.zabel@pengutronix.de>,
-	Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
-	kernel@collabora.com, linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org
-Subject: Re: [PATCH 1/5] dt-bindings: ufs: mediatek,ufs: Add mt8196-ufshci
- variant
-Message-ID: <20251016-spookily-finisher-07e0240a11f2@spud>
-References: <20251014-mt8196-ufs-v1-0-195dceb83bc8@collabora.com>
- <20251014-mt8196-ufs-v1-1-195dceb83bc8@collabora.com>
- <20251016-kettle-clobber-2558d9c709de@spud>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="S284tZt/"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cnb3822qjzm0yNR;
+	Thu, 16 Oct 2025 17:45:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1760636753; x=1763228754; bh=P5LrF4XUD3Qrzh57jCUubh/K
+	mdYfbqo+2j4KHBLHHvk=; b=S284tZt/2XiA+I+2hPv7Cp0rDS5JIFtCFIBkVmFD
+	F6YGNwGD3PXJjB/evk10Wk693SZlXsdjI1mNflyfz7nWWR5y3/06mOelh1yDUzGd
+	rPxha2Ed1vxRxMw/Tys8E9y128XG7bAVfKuD6uH10+dYTuVE5W2pK3SpuWOyciXz
+	WDtHR2hvKS2bjE8doR7UxItBUZbL3b6zc++BHMiXJxlIN4OWQsnw/VCQxrIvPNuD
+	rm93labAQQQFIQ43QiJ/tUDhOJeWQPkyZY1L4YrT1PwBd+3baZCvj7c4YwVULcpG
+	ebbJKR/PgSaAADBpL3xrQzwTx0eZT75CuEmDbUjcft3oRg==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 8bU9H-wIF0Ao; Thu, 16 Oct 2025 17:45:53 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cnb2r0dSVzm0ytM;
+	Thu, 16 Oct 2025 17:45:38 +0000 (UTC)
+Message-ID: <5d04501f-4bb8-40ce-a396-010faae38481@acm.org>
+Date: Thu, 16 Oct 2025 10:45:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="LGvrffN0k+9EYx8j"
-Content-Disposition: inline
-In-Reply-To: <20251016-kettle-clobber-2558d9c709de@spud>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 0/2] update CQ entry and dump CQE in MCQ mode
+To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
+ martin.petersen@oracle.com
+Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
+ chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
+ chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, qilin.tan@mediatek.com,
+ lin.gui@mediatek.com, tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
+ naomi.chu@mediatek.com, ed.tsai@mediatek.com
+References: <20251016023507.1000664-1-peter.wang@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20251016023507.1000664-1-peter.wang@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 10/15/25 7:32 PM, peter.wang@mediatek.com wrote:
+> Update the CQ entry format for UFS 4.1 compatibility and
+> add support for logging CQ entries in MCQ mode, enhancing
+> debugging capabilities.
 
---LGvrffN0k+9EYx8j
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+For the series:
 
-On Thu, Oct 16, 2025 at 05:53:01PM +0100, Conor Dooley wrote:
-> On Tue, Oct 14, 2025 at 05:10:05PM +0200, Nicolas Frattaroli wrote:
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-> > @@ -30,7 +42,15 @@ properties:
-> >    reg:
-> >      maxItems: 1
-> > =20
-> > +  resets:
-> > +    maxItems: 3
-> > +
-> > +  reset-names:
-> > +    maxItems: 3
->=20
-> You cannot use reset-names if you don't define what the names are.
-> Please provide a items list with descriptions in resets and some
-> names in reset-names.
-
-I missed that the names were provided in the if/then/else. Please just
-define them here, since there's currently only one possible set and use
-the if/then/else to block their use on !8195
-
---LGvrffN0k+9EYx8j
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHQEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaPEjSgAKCRB4tDGHoIJi
-0hRAAPi8N6sPfeV1Bi3I///Ot3yTtonRd3989x6drtQm36IVAQD69kpquARZkUPk
-oMdifIXnmA5UyWpnpgSGOKCPH2daAg==
-=AjY2
------END PGP SIGNATURE-----
-
---LGvrffN0k+9EYx8j--
