@@ -1,76 +1,100 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 761AF3346B7
-	for <linux-scsi@vger.kernel.org>; Thu, 16 Oct 2025 17:45:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8AF1E21A434
+	for <linux-scsi@vger.kernel.org>; Thu, 16 Oct 2025 17:55:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760636759; cv=none; b=MZ+m8uQbQ1rolyb8nsZvRXYhyhGvuWVNSsnNG4La9c0KfhnTqOL+0gbAT1OK4Y8jxouwU7byCcdHw9F4wBNxAgcSpVra7aQILdMZr9iTxUxEuw7OIDzT/2qXkxM14SBhObPxatra6QRAL7a+zLfEPKFYK8aKQKyOq6T5pZmetBE=
+	t=1760637329; cv=none; b=Z1BpZeB1GDzPU7qpQVi1CvrNqBQMafVbI4dxn8Xj8tol2Z9lgIj/I+MPLZ85fJ74ofBIRO6R+W1uHzsFOUf2Bgd09e1IyBA71+P9kNw/kB8T3z65YJUVtdMQaSyQjlzdMVMPa33tD1wTCXpew9XXgJYef9fAm15Mvf6N4cS60oc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760636759; c=relaxed/simple;
-	bh=P5LrF4XUD3Qrzh57jCUubh/KmdYfbqo+2j4KHBLHHvk=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=lOYOu4eMcRm2UbbvFirjjEiWQ0Nqt5OKUuLtPj9iAIh/0Uvtxp6qfaseUYTFKTCSr7fackNxwfWMaofjlR0Kc84W2lraP0MB2+vBpz4M8buj17mt2Oz+BRifPtZqGBaRoZC4ay5SH5NDYWrVC1CQlDPFp6vuwgl5yFGlujmG47c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=S284tZt/; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1760637329; c=relaxed/simple;
+	bh=jjzz+iSEZjZgpsEuP9MHGHgOWLemjrow3lAUbJatC60=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ay6UopnVMCsx8qUQgcVs7t7GfscqkQhodms969fLc90EmVkxyDSgWIW5qI+Rwzckx4enjuCXAQRIv13HCAJaivyPGmmnj2KnIyKPGhL8PLQycOqgH+a78lQhzTplJazQmZBiUoShUIBbbXQIPB+sBR4jmRWJYbF0Dd2bMedFM4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=P7pDAfOK; arc=none smtp.client-ip=192.198.163.12
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="S284tZt/"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cnb3822qjzm0yNR;
-	Thu, 16 Oct 2025 17:45:56 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1760636753; x=1763228754; bh=P5LrF4XUD3Qrzh57jCUubh/K
-	mdYfbqo+2j4KHBLHHvk=; b=S284tZt/2XiA+I+2hPv7Cp0rDS5JIFtCFIBkVmFD
-	F6YGNwGD3PXJjB/evk10Wk693SZlXsdjI1mNflyfz7nWWR5y3/06mOelh1yDUzGd
-	rPxha2Ed1vxRxMw/Tys8E9y128XG7bAVfKuD6uH10+dYTuVE5W2pK3SpuWOyciXz
-	WDtHR2hvKS2bjE8doR7UxItBUZbL3b6zc++BHMiXJxlIN4OWQsnw/VCQxrIvPNuD
-	rm93labAQQQFIQ43QiJ/tUDhOJeWQPkyZY1L4YrT1PwBd+3baZCvj7c4YwVULcpG
-	ebbJKR/PgSaAADBpL3xrQzwTx0eZT75CuEmDbUjcft3oRg==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 8bU9H-wIF0Ao; Thu, 16 Oct 2025 17:45:53 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cnb2r0dSVzm0ytM;
-	Thu, 16 Oct 2025 17:45:38 +0000 (UTC)
-Message-ID: <5d04501f-4bb8-40ce-a396-010faae38481@acm.org>
-Date: Thu, 16 Oct 2025 10:45:37 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="P7pDAfOK"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1760637326; x=1792173326;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=jjzz+iSEZjZgpsEuP9MHGHgOWLemjrow3lAUbJatC60=;
+  b=P7pDAfOKcQesenFMEklEzcRt0QGOzLtv5Nn9korRXPFb9RPOcWZy7w4U
+   NEM6JBjuQ0pGwBFQ8RCHA8yEKx9vDi1utFLSxoYRdKXG5trwZbSCF0bZ4
+   vIfroYomjQtwjPxkam4xRmkMx80eVYhjhAOITcae3g1vejcm/BlgkxSFI
+   N9i2pzw5WHwAnTdaIu7d+XgzhgtIIZQ8DVv7XdfwYP67T88npJLzVNkhI
+   azrEvr3K9C9MP6HyyRdn5le5fzkwcIt+LymvEpmUgEKnm5u3OGp4Lkij/
+   8OKmcX3ucHOZmZ5PnoyvGmXokGOAfUiR3OZBOqCt/CSOJMSZLZ/sRHwok
+   g==;
+X-CSE-ConnectionGUID: pCkzsFYITviFN42/w9c3TQ==
+X-CSE-MsgGUID: hfDSxpFpTz+2cD+DajJwtw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11584"; a="66706864"
+X-IronPort-AV: E=Sophos;i="6.19,234,1754982000"; 
+   d="scan'208";a="66706864"
+Received: from orviesa003.jf.intel.com ([10.64.159.143])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2025 10:55:26 -0700
+X-CSE-ConnectionGUID: Kp9f+v1kSi2sH6EPNNtPvQ==
+X-CSE-MsgGUID: i9Rh4mXGQveq/Njehnw0fg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,234,1754982000"; 
+   d="scan'208";a="186537825"
+Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
+  by orviesa003.jf.intel.com with ESMTP; 16 Oct 2025 10:55:24 -0700
+Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1v9SC9-000579-1D;
+	Thu, 16 Oct 2025 17:55:21 +0000
+Date: Fri, 17 Oct 2025 01:54:42 +0800
+From: kernel test robot <lkp@intel.com>
+To: wenxiong@linux.ibm.com, njavali@marvell.com, brking@linux.ibm.com,
+	linux-scsi@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	wenxiong@us.ibm.com, Wen Xiong <wenxiong@linux.ibm.com>,
+	Kyle Mahlkuch <Kyle.Mahlkuch@ibm.com>
+Subject: Re: [PATCH 2/2] scsi/qla2xxx: enable/disable IRQD_NO_BALANCING
+ during reset
+Message-ID: <202510170145.mtDh1ZVp-lkp@intel.com>
+References: <20251015205311.122963-3-wenxiong@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/2] update CQ entry and dump CQE in MCQ mode
-To: peter.wang@mediatek.com, linux-scsi@vger.kernel.org,
- martin.petersen@oracle.com
-Cc: wsd_upstream@mediatek.com, linux-mediatek@lists.infradead.org,
- chun-hung.wu@mediatek.com, alice.chao@mediatek.com, cc.chou@mediatek.com,
- chaotian.jing@mediatek.com, jiajie.hao@mediatek.com, qilin.tan@mediatek.com,
- lin.gui@mediatek.com, tun-yu.yu@mediatek.com, eddie.huang@mediatek.com,
- naomi.chu@mediatek.com, ed.tsai@mediatek.com
-References: <20251016023507.1000664-1-peter.wang@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20251016023507.1000664-1-peter.wang@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251015205311.122963-3-wenxiong@linux.ibm.com>
 
-On 10/15/25 7:32 PM, peter.wang@mediatek.com wrote:
-> Update the CQ entry format for UFS 4.1 compatibility and
-> add support for logging CQ entries in MCQ mode, enhancing
-> debugging capabilities.
+Hi,
 
-For the series:
+kernel test robot noticed the following build warnings:
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.18-rc1 next-20251016]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
+url:    https://github.com/intel-lab-lkp/linux/commits/wenxiong-linux-ibm-com/scsi-ipr-enable-disable-IRQD_NO_BALANCING-during-reset/20251016-045452
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251015205311.122963-3-wenxiong%40linux.ibm.com
+patch subject: [PATCH 2/2] scsi/qla2xxx: enable/disable IRQD_NO_BALANCING during reset
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20251017/202510170145.mtDh1ZVp-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251017/202510170145.mtDh1ZVp-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202510170145.mtDh1ZVp-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> Warning: drivers/scsi/qla2xxx/qla_os.c:7786 function parameter 'pdev' not described in 'qla2xxx_set_affinity_nobalance'
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
