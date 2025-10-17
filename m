@@ -1,85 +1,100 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5CC42580FF;
-	Thu, 16 Oct 2025 20:50:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAA411F91E3
+	for <linux-scsi@vger.kernel.org>; Fri, 17 Oct 2025 05:41:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760647823; cv=none; b=qH/aBWy+qm6y3d6hTIq1JlQbn3cT9w4Sry8K6BwTVxlCPEFfVs+t6nsbZ9xMECYnpCOZ5W/KljCvxifVcOpdWtl1lnLwt4D/TYOus3YW8aHcTIu5/Jnelg6047rHHNE2pO6X8AZGOM/GInmbNDiuQVnP1w8V0N65qnzogBATfLw=
+	t=1760679663; cv=none; b=Tilnv0NJqFeakIf9kqTADPAcdsCwqGQ/c2dun2KKPLl5f1wpBAxhqDDwK6gfaPgVVDqAMjsZ/lqlmXQzFLH4Z9IIHxJxHsrqKjFBuNAR5PK8lin1+yUAMHjqJTGEZ2WpcqnK7s0r09bjle0sjFAf2WbhMOQZIiImSB64ZLdeBQg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760647823; c=relaxed/simple;
-	bh=q0LriYbVBMKSKKnUMEM4X7PxLruGGt8QKzX3/m18MFY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ClzmKMKNX5Rlv61QWOWz/YH2rr2ifyR4VgQ4rq0N/G/YiZf7Jv8zPq5VT6HYVwo7SqPrz2P/QasqQ/qWT5NE+ljF5pSY0jqQK2XF/H/5rNjY9NEZ1/kx6gUqSexdpjQpTyLaNGd5ljqJrohFGFIiF3KxG1k7SOycvyMVGs7PkuI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Hh0Aosb3; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1760679663; c=relaxed/simple;
+	bh=nk8a3nTS2ZiYQSMxTZs0AsffxcznExOONHye0IkUBkI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fvF2tMgQ+gjQrL+8PmNNNGDE6cBipQcYEV15UBdXs1CjE40qjG37UQRyCjvgvbdoCnyuel3/9LJDf0dqk5gYvvkmC2rw/NSNGoAXNDmNnnH8edzYFoRLr3NBuNT6bXva8MD8ZJUA4d2AzMwUaPTp1RHD8Q9JjLgaaFeqdaKak9I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZE2le5LD; arc=none smtp.client-ip=198.175.65.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Hh0Aosb3"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cng7w3xB0zm0yVW;
-	Thu, 16 Oct 2025 20:50:20 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1760647819; x=1763239820; bh=q0LriYbVBMKSKKnUMEM4X7Px
-	LruGGt8QKzX3/m18MFY=; b=Hh0Aosb3JDOmEwwb/GXvdgxjMPlgl5tnZA4oPTRa
-	Vy/PFwhqq9muppQLQsD0RdIEAnTqzaMrhRwa8hpcUTRiIJqqPkae6iLS87qP13SU
-	cEDwsUY28t9MS+OeN2SCDl1rLfISVpX/qu6EoYzV3RCSD/yPWVQnmKZL5f9flk7m
-	ni9FTgo98qZXmbyP1FS1ikXCQCG0d5csoAu67XwEeWHpLk41SlbkXvzUQ1D99iZq
-	WnBZ5Mc9PTQYo7fSZeGQKYzzuhh9ReANNtQzqs06V8b+H9QeL8gjzesC1LFhGEOj
-	4fPcECXogpWy9xekLqq/C9MZYUxZBqmR2xP7T/wbNsklAw==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id WERkQ4Ikx9sV; Thu, 16 Oct 2025 20:50:19 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cng7q6sVdzm0ytS;
-	Thu, 16 Oct 2025 20:50:15 +0000 (UTC)
-Message-ID: <a1850fbc-a699-4e73-9fb7-48d4734c6dd3@acm.org>
-Date: Thu, 16 Oct 2025 13:50:14 -0700
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZE2le5LD"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1760679662; x=1792215662;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=nk8a3nTS2ZiYQSMxTZs0AsffxcznExOONHye0IkUBkI=;
+  b=ZE2le5LDyLMQLD5x5eUsRsRNsSFPpIJciX8mqdAORGL81aSV4t02Selj
+   0VyU4R+nN+XujL6jhTuMtcF0zx5m0bl1MQLg3R2GSTLf51S671dUI1GKo
+   VJ96xQEaJG6eEZF2nqmd5fOXWHvKRAX5zYyQm5Nw9iFJjg9P58rcwCLw0
+   Q4OcZq2F48YkXxSh5SVMqMUqfU/V0SHbTg0t3r84M11uB6pabbkbvtJSQ
+   hltKFlnkZwnE422jI7O04cGBN0c5w3k+yPVTXaISBg+ZSKIlc76n9T8a+
+   bkobnonvpMs2C3Wvb5KnQ16ebzsvwTeMyGuJ5X1I+0WArmqipsJWVmgGN
+   Q==;
+X-CSE-ConnectionGUID: rMaldQEGSHy3+/2OgwauGA==
+X-CSE-MsgGUID: tDAMQcJmTcGv/B3UtmFePQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11584"; a="62930914"
+X-IronPort-AV: E=Sophos;i="6.19,234,1754982000"; 
+   d="scan'208";a="62930914"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 16 Oct 2025 22:41:02 -0700
+X-CSE-ConnectionGUID: CCgILAifQNe6BbFh949fGQ==
+X-CSE-MsgGUID: rxh9B2EVRM+ndhsuF1HwxQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,234,1754982000"; 
+   d="scan'208";a="181842838"
+Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
+  by orviesa010.jf.intel.com with ESMTP; 16 Oct 2025 22:41:00 -0700
+Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1v9dCz-0005ZT-1K;
+	Fri, 17 Oct 2025 05:40:57 +0000
+Date: Fri, 17 Oct 2025 13:39:43 +0800
+From: kernel test robot <lkp@intel.com>
+To: wenxiong@linux.ibm.com, njavali@marvell.com, brking@linux.ibm.com,
+	linux-scsi@vger.kernel.org
+Cc: oe-kbuild-all@lists.linux.dev, wenxiong@us.ibm.com,
+	Wen Xiong <wenxiong@linux.ibm.com>,
+	Kyle Mahlkuch <Kyle.Mahlkuch@ibm.com>
+Subject: Re: [PATCH 1/2] scsi/ipr: enable/disable IRQD_NO_BALANCING during
+ reset
+Message-ID: <202510171217.uI9F6N9y-lkp@intel.com>
+References: <20251015205311.122963-2-wenxiong@linux.ibm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v25 07/20] block/mq-deadline: Enable zoned write
- pipelining
-To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>
-References: <20251014215428.3686084-1-bvanassche@acm.org>
- <20251014215428.3686084-8-bvanassche@acm.org>
- <08ce89bb-756a-4ce8-9980-ddea8baab1d1@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <08ce89bb-756a-4ce8-9980-ddea8baab1d1@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251015205311.122963-2-wenxiong@linux.ibm.com>
 
-On 10/15/25 12:31 AM, Damien Le Moal wrote:
-> it seems to me that what you are trying to do can be generic in the
-> block layer and leave mq-deadline untouched.
-Hi Damien,
+Hi,
 
-After having given this some further thought, I think that write
-pipelining can be enabled if an I/O scheduler is active by serializing
-blk_mq_run_dispatch_ops() calls, e.g. with a mutex. For mq-deadline and
-BFQ a single mutex per request queue should be used. For Kyber one mutex
-per hwq should be sufficient. With this approach it may be necessary to
-use different hardware queues for reads and writes to prevent that read
-performance is affected negatively. Inserting different types of
-requests into different hardware queues is already supported - see e.g.
-blk_mq_map_queue(). Please let me know if you want me to look further
-into this approach.
+kernel test robot noticed the following build warnings:
 
-Thanks,
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.18-rc1 next-20251016]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Bart.
+url:    https://github.com/intel-lab-lkp/linux/commits/wenxiong-linux-ibm-com/scsi-ipr-enable-disable-IRQD_NO_BALANCING-during-reset/20251016-045452
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251015205311.122963-2-wenxiong%40linux.ibm.com
+patch subject: [PATCH 1/2] scsi/ipr: enable/disable IRQD_NO_BALANCING during reset
+config: loongarch-allyesconfig (https://download.01.org/0day-ci/archive/20251017/202510171217.uI9F6N9y-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project 754ebc6ebb9fb9fbee7aef33478c74ea74949853)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251017/202510171217.uI9F6N9y-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202510171217.uI9F6N9y-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> Warning: drivers/scsi/ipr.c:7856 function parameter 'ioa_cfg' not described in 'ipr_set_affinity_nobalance'
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
