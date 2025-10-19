@@ -1,82 +1,48 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8E1822E336E;
-	Sun, 19 Oct 2025 12:38:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E2E851A00F0;
+	Sun, 19 Oct 2025 16:25:19 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760877510; cv=none; b=bcjS0jweRihx2DjZbolATQybB5BSRMmn1b1u6FQkfLOMMtZnXvGzbBXct7/FSpmupDxhoNd8GFIH9wF0iYnua2DIvFXiEQBl8he2CqDb/63CnxRohSlvfKiVFWGyNlDaXFqpxLhg5vU6xxEeHKwqmOYs8caKfB3jEu+vB2D353U=
+	t=1760891120; cv=none; b=XHqLF6dvRtksg/rpYaCpQd0wvqWfyKJgzRoZOqo5spJ4Cn/TkCZgTu6JzpGpBu0J1SKlNei0ueCrHDOMqGwoUKzWBCBz3S9ZE0auTv0slrLqXDj6EYOZyyn3TRcK+xmuf68aD9XzkJ/k2fOaQu7wV9hIHvFwVkoglY1/dUjCpeE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760877510; c=relaxed/simple;
-	bh=oGwiDB09ge0ciPiwd9WRh3Y/M8CeD9dHfclvYoY7FBA=;
+	s=arc-20240116; t=1760891120; c=relaxed/simple;
+	bh=AqeDRU1eKSmQXUiCZ7pwi0Bd8BGGXBM48O4Ou5Xs+sw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=mRJ58PzKI1hJFwjIWXBgQw47vz38Xs8nHwZkEL/YTLAbWFSh+7UYLEGhJvz/fJ+yoFwNwtXZmxvpcz3vSaHly/w+KAPUXGv+srBW+IkmS8abBm8VT1xPaZ334tkrgSsGAG3O29AtxbLnxki8XI4e40tmD9YZ1QGFbylD9qnIA90=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=nPSmMhj3; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=ny8OD4gi8nAij93+qSPZ92ytYCmvNp2te+9feN52PBmDlCrgJ1LDdj5X2hGC62awAnItnCA0/a6WPJfjeS0Obn/cuF4G9jS+9seTkI2xHvvDm9V2UN3sxVdmY/T5nBWmWwbDG3Y/jYnCrBraz4hwbcw1tiUMrGiFXEDLdfNHHNQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=F2EokHRL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="nPSmMhj3"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B2363C4CEE7;
-	Sun, 19 Oct 2025 12:38:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
-	s=korg; t=1760877510;
-	bh=oGwiDB09ge0ciPiwd9WRh3Y/M8CeD9dHfclvYoY7FBA=;
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="F2EokHRL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7610C4CEE7;
+	Sun, 19 Oct 2025 16:25:18 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760891119;
+	bh=AqeDRU1eKSmQXUiCZ7pwi0Bd8BGGXBM48O4Ou5Xs+sw=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nPSmMhj3TEXZoJrVWpARUkUyuGqk5lSFTPPoq1ZLeK3fCa9fne3RGlMO8KN1UE5lj
-	 ujRuOzzKq00FxR8F6wzbmtZQ/5O3ZNw8lG3lB3NfHxm+YwEDzwS2JsXmf0Ca6p4Frl
-	 ca5FOfnjYZ+gRAebgpsYtYTlOl8nww3/qAlyQSN0=
-Date: Sun, 19 Oct 2025 14:38:26 +0200
-From: Greg KH <gregkh@linuxfoundation.org>
-To: Nathan Chancellor <nathan@kernel.org>
-Cc: Eliav Farber <farbere@amazon.com>, stable@vger.kernel.org,
-	linux@armlinux.org.uk, jdike@addtoit.com, richard@nod.at,
-	anton.ivanov@cambridgegreys.com, dave.hansen@linux.intel.com,
-	luto@kernel.org, peterz@infradead.org, tglx@linutronix.de,
-	mingo@redhat.com, bp@alien8.de, x86@kernel.org, hpa@zytor.com,
-	tony.luck@intel.com, qiuxu.zhuo@intel.com, mchehab@kernel.org,
-	james.morse@arm.com, rric@kernel.org, harry.wentland@amd.com,
-	sunpeng.li@amd.com, alexander.deucher@amd.com,
-	christian.koenig@amd.com, airlied@linux.ie, daniel@ffwll.ch,
-	evan.quan@amd.com, james.qian.wang@arm.com, liviu.dudau@arm.com,
-	mihail.atanassov@arm.com, brian.starkey@arm.com,
-	maarten.lankhorst@linux.intel.com, mripard@kernel.org,
-	tzimmermann@suse.de, robdclark@gmail.com, sean@poorly.run,
-	jdelvare@suse.com, linux@roeck-us.net, fery@cypress.com,
-	dmitry.torokhov@gmail.com, agk@redhat.com, snitzer@redhat.com,
-	dm-devel@redhat.com, rajur@chelsio.com, davem@davemloft.net,
-	kuba@kernel.org, peppe.cavallaro@st.com, alexandre.torgue@st.com,
-	joabreu@synopsys.com, mcoquelin.stm32@gmail.com, malattia@linux.it,
-	hdegoede@redhat.com, mgross@linux.intel.com,
-	intel-linux-scu@intel.com, artur.paszkiewicz@intel.com,
-	jejb@linux.ibm.com, martin.petersen@oracle.com,
-	sakari.ailus@linux.intel.com, clm@fb.com, josef@toxicpanda.com,
-	dsterba@suse.com, xiang@kernel.org, chao@kernel.org, jack@suse.com,
-	tytso@mit.edu, adilger.kernel@dilger.ca, dushistov@mail.ru,
-	luc.vanoostenryck@gmail.com, rostedt@goodmis.org, pmladek@suse.com,
-	sergey.senozhatsky@gmail.com, andriy.shevchenko@linux.intel.com,
-	linux@rasmusvillemoes.dk, minchan@kernel.org, ngupta@vflare.org,
-	akpm@linux-foundation.org, kuznet@ms2.inr.ac.ru,
-	yoshfuji@linux-ipv6.org, pablo@netfilter.org, kadlec@netfilter.org,
-	fw@strlen.de, jmaloy@redhat.com, ying.xue@windriver.com,
-	willy@infradead.org, sashal@kernel.org, ruanjinjie@huawei.com,
-	David.Laight@aculab.com, herve.codina@bootlin.com, Jason@zx2c4.com,
-	keescook@chromium.org, kbusch@kernel.org, bvanassche@acm.org,
-	ndesaulniers@google.com, linux-arm-kernel@lists.infradead.org,
-	linux-kernel@vger.kernel.org, linux-um@lists.infradead.org,
-	linux-edac@vger.kernel.org, amd-gfx@lists.freedesktop.org,
-	dri-devel@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
-	freedreno@lists.freedesktop.org, linux-hwmon@vger.kernel.org,
-	linux-input@vger.kernel.org, linux-media@vger.kernel.org,
-	netdev@vger.kernel.org, linux-stm32@st-md-mailman.stormreply.com,
-	platform-driver-x86@vger.kernel.org, linux-scsi@vger.kernel.org,
-	linux-staging@lists.linux.dev, linux-btrfs@vger.kernel.org,
-	linux-erofs@lists.ozlabs.org, linux-ext4@vger.kernel.org,
-	linux-sparse@vger.kernel.org, linux-mm@kvack.org,
-	netfilter-devel@vger.kernel.org, coreteam@netfilter.org,
-	tipc-discussion@lists.sourceforge.net
-Subject: Re: [PATCH v2 00/27 5.10.y] Backport minmax.h updates from v6.17-rc7
-Message-ID: <2025101905-matter-freezable-39e5@gregkh>
-References: <20251017090519.46992-1-farbere@amazon.com>
- <2025101704-rumble-chatroom-60b5@gregkh>
- <20251017160924.GA2728735@ax162>
+	b=F2EokHRLd68kZBeDRRdhxJ1rDW2elFlh8EnkyaTJnHSCfqkoujh7BohpZc68H407D
+	 6bUXmBrNoq7Ww0jTMF1QQwGeMEpfXz0BrGd0k+T8PJbgWDRrKfDcnhwumf2RRZV3Tp
+	 M1nqa0cZRI89OYqyvuvRWeFwctcqJgDf9nK43gHk2G3mRl3usq7ey6ziFEp5oxVwef
+	 8ha/lyEniLuE2fegL9ApZJO+lst38G6OUrwAE6O/NFZ/Mz1YaBFZd+ociss1pkQv9d
+	 0MzWPAoBwoLUZ5+ACw5ohULeXVrjB6+3sdA7UiNPKC79wDn4zGf7+6LA7UKkZ5vUk5
+	 GbYsQCDUj5ADg==
+Date: Sun, 19 Oct 2025 09:23:46 -0700
+From: Eric Biggers <ebiggers@kernel.org>
+To: Askar Safin <safinaskar@gmail.com>
+Cc: ardb@kernel.org, linux-arch@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org,
+	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net,
+	linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org,
+	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org,
+	loongarch@lists.linux.dev, sparclinux@vger.kernel.org,
+	x86@kernel.org, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	stable@vger.kernel.org
+Subject: Re: [PATCH v4 15/19] lib/crc32: make crc32c() go directly to lib
+Message-ID: <20251019162346.GB1604@sol>
+References: <20241202010844.144356-16-ebiggers@kernel.org>
+ <20251019060845.553414-1-safinaskar@gmail.com>
+ <CAPnZJGAb7AM4p=HdsDhYcANCzD8=gpGjuP4wYfr2utLp3WMSNQ@mail.gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -86,72 +52,54 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251017160924.GA2728735@ax162>
+In-Reply-To: <CAPnZJGAb7AM4p=HdsDhYcANCzD8=gpGjuP4wYfr2utLp3WMSNQ@mail.gmail.com>
 
-On Fri, Oct 17, 2025 at 05:09:24PM +0100, Nathan Chancellor wrote:
-> On Fri, Oct 17, 2025 at 05:03:02PM +0200, Greg KH wrote:
-> > On Fri, Oct 17, 2025 at 09:04:52AM +0000, Eliav Farber wrote:
-> > > This series backports 27 patches to update minmax.h in the 5.10.y
-> > > branch, aligning it with v6.17-rc7.
-> > > 
-> > > The ultimate goal is to synchronize all long-term branches so that they
-> > > include the full set of minmax.h changes.
-> > > 
-> > > - 6.12.y has already been backported; the changes are included in
-> > >   v6.12.49.
-> > > - 6.6.y has already been backported; the changes are included in
-> > >   v6.6.109.
-> > > - 6.1.y has already been backported; the changes are currently in the
-> > >   6.1-stable tree.
-> > > - 5.15.y has already been backported; the changes are currently in the
-> > >   5.15-stable tree.
-> > 
-> > With this series applied, on an arm64 server, building 'allmodconfig', I
-> > get the following build error.
-> > 
-> > Oddly I don't see it on my x86 server, perhaps due to different compiler
-> > versions?
-> > 
-> > Any ideas?
-> > 
-> > thanks,
-> > 
-> > greg k-h
-> > 
-> > ------------------------
-> > 
-> > In function ‘rt2800_txpower_to_dev’,
-> >     inlined from ‘rt2800_config_channel’ at ../drivers/net/wireless/ralink/rt2x00/rt2800lib.c:4022:25:
-> > ./../include/linux/compiler_types.h:309:45: error: call to ‘__compiletime_assert_1168’ declared with attribute error: clamp() low limit -7 greater than high limit 15
-> >   309 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-> >       |                                             ^
-> > ./../include/linux/compiler_types.h:290:25: note: in definition of macro ‘__compiletime_assert’
-> >   290 |                         prefix ## suffix();                             \
-> >       |                         ^~~~~~
-> > ./../include/linux/compiler_types.h:309:9: note: in expansion of macro ‘_compiletime_assert’
-> >   309 |         _compiletime_assert(condition, msg, __compiletime_assert_, __COUNTER__)
-> >       |         ^~~~~~~~~~~~~~~~~~~
-> > ../include/linux/build_bug.h:39:37: note: in expansion of macro ‘compiletime_assert’
-> >    39 | #define BUILD_BUG_ON_MSG(cond, msg) compiletime_assert(!(cond), msg)
-> >       |                                     ^~~~~~~~~~~~~~~~~~
-> > ../include/linux/minmax.h:188:9: note: in expansion of macro ‘BUILD_BUG_ON_MSG’
-> >   188 |         BUILD_BUG_ON_MSG(statically_true(ulo > uhi),                            \
-> >       |         ^~~~~~~~~~~~~~~~
-> > ../include/linux/minmax.h:195:9: note: in expansion of macro ‘__clamp_once’
-> >   195 |         __clamp_once(type, val, lo, hi, __UNIQUE_ID(v_), __UNIQUE_ID(l_), __UNIQUE_ID(h_))
-> >       |         ^~~~~~~~~~~~
-> > ../include/linux/minmax.h:218:36: note: in expansion of macro ‘__careful_clamp’
-> >   218 | #define clamp_t(type, val, lo, hi) __careful_clamp(type, val, lo, hi)
-> >       |                                    ^~~~~~~~~~~~~~~
-> > ../drivers/net/wireless/ralink/rt2x00/rt2800lib.c:3980:24: note: in expansion of macro ‘clamp_t’
-> >  3980 |                 return clamp_t(char, txpower, MIN_A_TXPOWER, MAX_A_TXPOWER);
-> >       |                        ^~~~~~~
+On Sun, Oct 19, 2025 at 11:10:25AM +0300, Askar Safin wrote:
+> On Sun, Oct 19, 2025 at 9:09 AM Askar Safin <safinaskar@gmail.com> wrote:
+> >
+> > Eric Biggers <ebiggers@kernel.org>:
+> > > Now that the lower level __crc32c_le() library function is optimized for
+> >
+> > This patch (i. e. 38a9a5121c3b ("lib/crc32: make crc32c() go directly to lib"))
+> > solves actual bug I found in practice. So, please, backport it
+> > to stable kernels.
 > 
-> Missing commit 3bc753c06dd0 ("kbuild: treat char as always unsigned")?
+> Oops. I just noticed that this patch removes module "libcrc32c".
+> And this breaks build for Debian kernel v6.12.48.
+> Previously I tested minimal build using "make localmodconfig".
+> Now I tried full build of Debian kernel using "dpkg-buildpackage".
+> And it failed, because some of Debian files reference "libcrc32c",
+> which is not available.
+> 
+> So, please, don't backport this patch to stable kernels.
+> I'm sorry.
 
-That's going to be messy to backport, it's not even in 6.1.y, so let's
-leave that alone if at all possible.
+Right, this commit simplified the CRC library design by removing the
+libcrc32c module.  initramfs build scripts that hard-coded the addition
+of libcrc32c.ko into the ramdisk (which I don't think was ever necessary
+in the first place, though it did used to be useful to hard-code some of
+the *other* CRC modules like crc32c-intel) had to be updated to remove
+it.  It looks like Debian did indeed do that, and they updated it in
+https://salsa.debian.org/kernel-team/linux/-/commit/6c242c647f84bfdbdc22a6a758fa59da4e941a10#1251f9400a85485d275e1709758350aa098709a8
 
-thanks,
+As for your original problem, I'd glad to see that the simplified design
+is preventing problems.  There's an issue with backporting this commit
+alone, though.  This was patch 15 of a 19-patch series for a good
+reason: the CRC-32C implementation in lib/ wasn't architecture-optimized
+until after patches 1-14 of this series.  Backporting this commit alone
+would make crc32c() no longer utilize architecture-optimized code.
 
-greg k-h
+Now, it already didn't do so reliably (and this patch series fixed
+that).  However, backporting this commit alone would make it never do
+so.  So it would regress performance in some cases.
+
+Since the errors you're actually getting are:
+
+    [   19.619731] Invalid ELF header magic: != ELF
+    modprobe: can't load module libcrc32c (kernel/lib/libcrc32c.ko.xz): unknown symbol in module, or unknown parameter
+
+I do have to wonder if this is actually a busybox bug or
+misconfiguration, where it's passing a compressed module to the kernel
+without decompressing it?  And removing the module just hid the problem.
+
+- Eric
