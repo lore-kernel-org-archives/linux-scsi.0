@@ -1,159 +1,196 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B044C7483
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 12:14:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 50394A41;
+	Sun, 19 Oct 2025 12:37:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760876071; cv=none; b=TXdxmzvlQ0zOO9KaIIIjjqcYVcMqtTbYOYwIZ8/aS2HOnQWna4JS3DodWQaHJ72m+wocSjp2SRU/bsSV+yI8yCp7TGd/h37Pyva/IJEPOTQXJ1fprgKZ6yjQylyC6NEd4MzEDqnDh9mLxQmH55aRnrMd69IVkwgV/TeRGLi5PLw=
+	t=1760877464; cv=none; b=feJOt1BBmQqr2VY8wbDIPztP47tXjDLCWkWHS7/NMB3pmNCBvT658W3J/QGk1dPzseCInMqyQNp0Xysq1AQNg3Cr2WSRZEafVP3zPkMbG6pmG2k4BfvzER7LhLCVrcxaS8oAa+Q3YBPqLZMwikSUA3ap4ju1hh37vYLJOeP0iXg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760876071; c=relaxed/simple;
-	bh=ukqOXoH0B8Rm/K0oOmFS3+X11r1F7wE1V9gnidNhdI4=;
+	s=arc-20240116; t=1760877464; c=relaxed/simple;
+	bh=dgzA9LsGuiP/mYejoGwFkpon4M45cMihfvBvR4qrSRg=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ULj422a/1BhKPtEjuP8U7ZKuZP1B5xAgtvkckcrwKAlkh1xGGdGP9kYnoCzXmfEeVkDnqjZDVNLMTWmDJ6tXkl4xWECjzAkMZJUFBvC21bKs2+3RHltUExaDp6lq/wuyvoOtEcVwmRgToBiAD97pYi8kuDZxBhe8Es5rf9LOg5k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=En65Ngbl; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=GZR6F4dTdA5UvN2irZqmWrvNZu7D5STaimlzgp1izDXP/XYymavfECXsTK5d+c3uL88e/OPlv1nvlBZVB2x/wF46J5qKJ5tPsgBPhbHumb7E8pA+kbkWa/cIQLot0G0lfF5TP72aSc++lJ5kEFm4/eMMi19Dhck2Uq02n/DFKfY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b=mr7tZ637; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="En65Ngbl"
-Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59JAOmVs020591
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 12:14:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	puNPrhTEXrfqnZblxaqGqUil1ruzTr+zCkgmrxJ5Bek=; b=En65NgblGY8NIrNy
-	BjKP5KUK4ujMB3MNse92ose8la5TWB9nGsRowsVSqd47vWUpN1okqFrwbLRbe/Pe
-	FNXx2CSQ1X00JbGgoIsnH6KHLWY1Qolrujvn/NYfSUhBI4uBbBj3taB/vAEKIjMg
-	G+LNq+UP+2K3EqrMaLSzL+a9/fwmXBc2Vc95pgWrtnRnurCCfm6AZnlgQNC/gZv1
-	RIiZAK7ux1qSlEfc63GcdYqlW9InQamQsiC4mUnRhK9etJjKT0GL+cHeJx6Kjb/s
-	cRb/ARXhJ2FMsgtGx0SoulEaH3RtZW1rxb22UtmhV6SMakH6axSzxO6MljqW6bs8
-	EtMyZw==
-Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49v469a8ub-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 12:14:29 +0000 (GMT)
-Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-88f1dad9992so364807985a.1
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 05:14:29 -0700 (PDT)
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760876068; x=1761480868;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=puNPrhTEXrfqnZblxaqGqUil1ruzTr+zCkgmrxJ5Bek=;
-        b=SfDYpTSYbTN1ft04mPd0zgQyEIRx0MvwEga2HaSgh76eRh1daICBtb2bmyXT/pmtOr
-         tvauHo16eCG31s7YZE5P/LA4nqKKBrWDS94A5xFcb+iekC0O347VxoN1IC9iQUO1DoCZ
-         cPozFAng8Zp6zbClKYAcoPJ++BEZzhKzoXeqbQY5m5U3xBA6RqrRr8Ko4uTbCz256iAZ
-         PTZDhs22i6srTIevStm30HQf+Gon7tpCGDWdEBS+r/ZdiEqIjz10RZWApaqLttR2AV1e
-         uHJzqwVYmbPyxCKoAiuiSrig5xgs7qOW76CXdirDYGis8eFXVIpGETpPmBfY1mrV4iy7
-         VSYQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXKFVd/MIqGFyny4iU16hvGFScZvTY9H+hUFDmr9dqowJTKxlDVc7HXyyq9XFjLOCaSSb2j+IENUF4l@vger.kernel.org
-X-Gm-Message-State: AOJu0YzbRBb9vrdupmavl1xVfjhHgjdd0quxLNQejvIpyQZbkDRAaZ+V
-	5X/BmGXCb4o0twFGIoD7t1stqLOM33zL18rP1WR0opGKDc81kr75zryag/sN2WnqlBdmcPTR11P
-	eHzX7NPY12Jxy6Odnv/eoA/GlEKekdLitd91vuwfQaBhQgwAk7HqgrfHKw0kR2T4z
-X-Gm-Gg: ASbGncuxTdlnqfEyIqf45Ld4zOHnGWcaFNJ0RrBNmjzshTOFx1vkDih1eHG9+C5BDSr
-	VkTxm8gm+vBC40comkw33762GBuYS8O7nTwEULJKOIiXadBl1FD7mpRwsbuUituSuhGbA+gNH93
-	fIAyKbPHxSA2kZSOCL+QVPeq70HC9Op8YC5CFthw10TcMTMJ6TFBrQYBGEAhpW5tUq1Fl3jBFEA
-	ofmyTSeU1LYefy3VxJUxIEPZQsiUSUCR730RiIo5beJdfS1J9h1xdCgi+Z0rW6J6r2nGh5qPxQf
-	a1FmhjVhuFSV7i6ywg3t3g4WG2UblQBG33XmVvgmSpY9pN6NYDTpiHt8IrsIOZcsXIWEyBA+sFG
-	l0AYJrLZWedhJjX+lX4V1qvd6O7pcTzhpkIrzmVzwAcL9ihoVeLZ7YYbhGE/AnFZKMJcU/qBKWP
-	3s22DLh7Omv8Q=
-X-Received: by 2002:ac8:5985:0:b0:4e8:911a:2af1 with SMTP id d75a77b69052e-4e89d3625e2mr152707031cf.46.1760876067803;
-        Sun, 19 Oct 2025 05:14:27 -0700 (PDT)
-X-Google-Smtp-Source: AGHT+IG8+CZ0NJ9bBoZZ1GZiXuCbYiL/YP/qmggrLH+uJV7bA2b9ganhGBoaFnRrleOl3gY/Yk+zFA==
-X-Received: by 2002:ac8:5985:0:b0:4e8:911a:2af1 with SMTP id d75a77b69052e-4e89d3625e2mr152706601cf.46.1760876067319;
-        Sun, 19 Oct 2025 05:14:27 -0700 (PDT)
-Received: from umbar.lan (2001-14ba-a0c3-3a00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a0c3:3a00:264b:feff:fe8b:be8a])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-591deec0b98sm1528227e87.40.2025.10.19.05.14.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sun, 19 Oct 2025 05:14:26 -0700 (PDT)
-Date: Sun, 19 Oct 2025 15:14:23 +0300
-From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-To: Ritesh Kumar <quic_riteshk@quicinc.com>
-Cc: robin.clark@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
-        jessica.zhang@oss.qualcomm.com, sean@poorly.run,
-        marijn.suijten@somainline.org, maarten.lankhorst@linux.intel.com,
-        mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
-        simona@ffwll.ch, robh@kernel.org, krzk+dt@kernel.org,
-        conor+dt@kernel.org, quic_mahap@quicinc.com, andersson@kernel.org,
-        konradybcio@kernel.org, mani@kernel.org,
-        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-        vkoul@kernel.org, kishon@kernel.org,
-        cros-qcom-dts-watchers@chromium.org, linux-phy@lists.infradead.org,
-        linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
-        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
-        quic_vproddut@quicinc.com
-Subject: Re: [PATCH v2 0/3] Add edp reference clock for lemans
-Message-ID: <ql5ps7cv7x6hz3otzz45uv6pbr64x2hdapa66vq2jtnt6l536h@kbktvupxpf4y>
-References: <20251013104806.6599-1-quic_riteshk@quicinc.com>
- <7jmk3txdrnit6zn7ufra7davmomggd3graizdu6wqonp3lljza@mfnxt2owpknq>
- <4bd619e7-e9ca-44a8-9d36-10c18d7a8157@quicinc.com>
+	dkim=pass (1024-bit key) header.d=linuxfoundation.org header.i=@linuxfoundation.org header.b="mr7tZ637"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 54864C4CEE7;
+	Sun, 19 Oct 2025 12:37:42 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=linuxfoundation.org;
+	s=korg; t=1760877463;
+	bh=dgzA9LsGuiP/mYejoGwFkpon4M45cMihfvBvR4qrSRg=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mr7tZ637v1WDh2Nr8sg19/xoeGzZL3RvlnXfYUykPJk+G6zQteton6Oo+u5wVdnxN
+	 ZBC8QPSBVC5hJfXNWgutJHN6QRJ4bxeGe2+hYWxIp2brHCNu/KXcKMeG5P43CM4Fjg
+	 vDPDOANq6idL2020QoIIUuWRPKXTuhm7Nf2n5Cxw=
+Date: Sun, 19 Oct 2025 14:37:40 +0200
+From: Greg KH <gregkh@linuxfoundation.org>
+To: "Farber, Eliav" <farbere@amazon.com>
+Cc: "stable@vger.kernel.org" <stable@vger.kernel.org>,
+	"linux@armlinux.org.uk" <linux@armlinux.org.uk>,
+	"jdike@addtoit.com" <jdike@addtoit.com>,
+	"richard@nod.at" <richard@nod.at>,
+	"anton.ivanov@cambridgegreys.com" <anton.ivanov@cambridgegreys.com>,
+	"dave.hansen@linux.intel.com" <dave.hansen@linux.intel.com>,
+	"luto@kernel.org" <luto@kernel.org>,
+	"peterz@infradead.org" <peterz@infradead.org>,
+	"tglx@linutronix.de" <tglx@linutronix.de>,
+	"mingo@redhat.com" <mingo@redhat.com>,
+	"bp@alien8.de" <bp@alien8.de>, "x86@kernel.org" <x86@kernel.org>,
+	"hpa@zytor.com" <hpa@zytor.com>,
+	"tony.luck@intel.com" <tony.luck@intel.com>,
+	"qiuxu.zhuo@intel.com" <qiuxu.zhuo@intel.com>,
+	"mchehab@kernel.org" <mchehab@kernel.org>,
+	"james.morse@arm.com" <james.morse@arm.com>,
+	"rric@kernel.org" <rric@kernel.org>,
+	"harry.wentland@amd.com" <harry.wentland@amd.com>,
+	"sunpeng.li@amd.com" <sunpeng.li@amd.com>,
+	"alexander.deucher@amd.com" <alexander.deucher@amd.com>,
+	"christian.koenig@amd.com" <christian.koenig@amd.com>,
+	"airlied@linux.ie" <airlied@linux.ie>,
+	"daniel@ffwll.ch" <daniel@ffwll.ch>,
+	"evan.quan@amd.com" <evan.quan@amd.com>,
+	"james.qian.wang@arm.com" <james.qian.wang@arm.com>,
+	"liviu.dudau@arm.com" <liviu.dudau@arm.com>,
+	"mihail.atanassov@arm.com" <mihail.atanassov@arm.com>,
+	"brian.starkey@arm.com" <brian.starkey@arm.com>,
+	"maarten.lankhorst@linux.intel.com" <maarten.lankhorst@linux.intel.com>,
+	"mripard@kernel.org" <mripard@kernel.org>,
+	"tzimmermann@suse.de" <tzimmermann@suse.de>,
+	"robdclark@gmail.com" <robdclark@gmail.com>,
+	"sean@poorly.run" <sean@poorly.run>,
+	"jdelvare@suse.com" <jdelvare@suse.com>,
+	"linux@roeck-us.net" <linux@roeck-us.net>,
+	"fery@cypress.com" <fery@cypress.com>,
+	"dmitry.torokhov@gmail.com" <dmitry.torokhov@gmail.com>,
+	"agk@redhat.com" <agk@redhat.com>,
+	"snitzer@redhat.com" <snitzer@redhat.com>,
+	"dm-devel@redhat.com" <dm-devel@redhat.com>,
+	"rajur@chelsio.com" <rajur@chelsio.com>,
+	"davem@davemloft.net" <davem@davemloft.net>,
+	"kuba@kernel.org" <kuba@kernel.org>,
+	"peppe.cavallaro@st.com" <peppe.cavallaro@st.com>,
+	"alexandre.torgue@st.com" <alexandre.torgue@st.com>,
+	"joabreu@synopsys.com" <joabreu@synopsys.com>,
+	"mcoquelin.stm32@gmail.com" <mcoquelin.stm32@gmail.com>,
+	"malattia@linux.it" <malattia@linux.it>,
+	"hdegoede@redhat.com" <hdegoede@redhat.com>,
+	"mgross@linux.intel.com" <mgross@linux.intel.com>,
+	"intel-linux-scu@intel.com" <intel-linux-scu@intel.com>,
+	"artur.paszkiewicz@intel.com" <artur.paszkiewicz@intel.com>,
+	"jejb@linux.ibm.com" <jejb@linux.ibm.com>,
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>,
+	"sakari.ailus@linux.intel.com" <sakari.ailus@linux.intel.com>,
+	"clm@fb.com" <clm@fb.com>,
+	"josef@toxicpanda.com" <josef@toxicpanda.com>,
+	"dsterba@suse.com" <dsterba@suse.com>,
+	"xiang@kernel.org" <xiang@kernel.org>,
+	"chao@kernel.org" <chao@kernel.org>,
+	"jack@suse.com" <jack@suse.com>, "tytso@mit.edu" <tytso@mit.edu>,
+	"adilger.kernel@dilger.ca" <adilger.kernel@dilger.ca>,
+	"dushistov@mail.ru" <dushistov@mail.ru>,
+	"luc.vanoostenryck@gmail.com" <luc.vanoostenryck@gmail.com>,
+	"rostedt@goodmis.org" <rostedt@goodmis.org>,
+	"pmladek@suse.com" <pmladek@suse.com>,
+	"sergey.senozhatsky@gmail.com" <sergey.senozhatsky@gmail.com>,
+	"andriy.shevchenko@linux.intel.com" <andriy.shevchenko@linux.intel.com>,
+	"linux@rasmusvillemoes.dk" <linux@rasmusvillemoes.dk>,
+	"minchan@kernel.org" <minchan@kernel.org>,
+	"ngupta@vflare.org" <ngupta@vflare.org>,
+	"akpm@linux-foundation.org" <akpm@linux-foundation.org>,
+	"kuznet@ms2.inr.ac.ru" <kuznet@ms2.inr.ac.ru>,
+	"yoshfuji@linux-ipv6.org" <yoshfuji@linux-ipv6.org>,
+	"pablo@netfilter.org" <pablo@netfilter.org>,
+	"kadlec@netfilter.org" <kadlec@netfilter.org>,
+	"fw@strlen.de" <fw@strlen.de>,
+	"jmaloy@redhat.com" <jmaloy@redhat.com>,
+	"ying.xue@windriver.com" <ying.xue@windriver.com>,
+	"willy@infradead.org" <willy@infradead.org>,
+	"sashal@kernel.org" <sashal@kernel.org>,
+	"ruanjinjie@huawei.com" <ruanjinjie@huawei.com>,
+	"David.Laight@aculab.com" <David.Laight@aculab.com>,
+	"herve.codina@bootlin.com" <herve.codina@bootlin.com>,
+	"Jason@zx2c4.com" <Jason@zx2c4.com>,
+	"keescook@chromium.org" <keescook@chromium.org>,
+	"kbusch@kernel.org" <kbusch@kernel.org>,
+	"nathan@kernel.org" <nathan@kernel.org>,
+	"bvanassche@acm.org" <bvanassche@acm.org>,
+	"ndesaulniers@google.com" <ndesaulniers@google.com>,
+	"linux-arm-kernel@lists.infradead.org" <linux-arm-kernel@lists.infradead.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"linux-um@lists.infradead.org" <linux-um@lists.infradead.org>,
+	"linux-edac@vger.kernel.org" <linux-edac@vger.kernel.org>,
+	"amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+	"freedreno@lists.freedesktop.org" <freedreno@lists.freedesktop.org>,
+	"linux-hwmon@vger.kernel.org" <linux-hwmon@vger.kernel.org>,
+	"linux-input@vger.kernel.org" <linux-input@vger.kernel.org>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"linux-stm32@st-md-mailman.stormreply.com" <linux-stm32@st-md-mailman.stormreply.com>,
+	"platform-driver-x86@vger.kernel.org" <platform-driver-x86@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-staging@lists.linux.dev" <linux-staging@lists.linux.dev>,
+	"linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+	"linux-erofs@lists.ozlabs.org" <linux-erofs@lists.ozlabs.org>,
+	"linux-ext4@vger.kernel.org" <linux-ext4@vger.kernel.org>,
+	"linux-sparse@vger.kernel.org" <linux-sparse@vger.kernel.org>,
+	"linux-mm@kvack.org" <linux-mm@kvack.org>,
+	"netfilter-devel@vger.kernel.org" <netfilter-devel@vger.kernel.org>,
+	"coreteam@netfilter.org" <coreteam@netfilter.org>,
+	"tipc-discussion@lists.sourceforge.net" <tipc-discussion@lists.sourceforge.net>
+Subject: Re: [PATCH v2 00/27 5.10.y] Backport minmax.h updates from v6.17-rc7
+Message-ID: <2025101929-curator-poplar-7460@gregkh>
+References: <20251017090519.46992-1-farbere@amazon.com>
+ <2025101704-rumble-chatroom-60b5@gregkh>
+ <CH0PR18MB5433BB2E99395D2AC8B0E0FBC6F7A@CH0PR18MB5433.namprd18.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
+Content-Type: text/plain; charset=utf-8
 Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <4bd619e7-e9ca-44a8-9d36-10c18d7a8157@quicinc.com>
-X-Proofpoint-ORIG-GUID: V8oVIrAipuxEslzI7C0IEgeoz2j6R2U9
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDE4MDAzMiBTYWx0ZWRfXyMDDuLgNKtsF
- scgCSt3sSmpIYUpYrmu+0QX9O1p1T0CTV6c4W8/TxlgpU0dLOnj8VuxdE3eG/0Z8Nm5Hk1BY4o7
- kiJ0Td7Aq8u6727JgShRHepZeZ12VYuJniPq9yVj/XmR/wu0+tOAMvfBOUpB0wVwgNEGMizc5ON
- GMqzsQmRpHqkREiyNeFjlDC9b5VauMJK3Nubx4Bhqwn051LQ3pPzkFOX1mVy2Qcw55dJ+123E7f
- 9w1si8AbDOF67jby7km5abe+U6EvTt4AgmywHTsQo00Iwbi+I3WdGGtQUmYxucseaQ1Cv+BzFte
- cnT7OdSzgzDVph1HA6hSgBUaiRvsya5tJX8RT69w19ENbVODFAUxMXp/mzd6AVaCn9H1k6urBWQ
- 2GXuwU4tGj6m61I67xUllvk/9CTK7Q==
-X-Authority-Analysis: v=2.4 cv=U8qfzOru c=1 sm=1 tr=0 ts=68f4d625 cx=c_pps
- a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=8nJEP1OIZ-IA:10
- a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=FYAu2dUYg65mSESSDlUA:9
- a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10 a=bTQJ7kPSJx9SKPbeHEYW:22
-X-Proofpoint-GUID: V8oVIrAipuxEslzI7C0IEgeoz2j6R2U9
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-10-19_05,2025-10-13_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- impostorscore=0 adultscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
- spamscore=0 clxscore=1015 lowpriorityscore=0 phishscore=0 suspectscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510180032
+In-Reply-To: <CH0PR18MB5433BB2E99395D2AC8B0E0FBC6F7A@CH0PR18MB5433.namprd18.prod.outlook.com>
 
-On Wed, Oct 15, 2025 at 02:49:08PM +0530, Ritesh Kumar wrote:
+On Sat, Oct 18, 2025 at 08:07:32PM +0000, Farber, Eliav wrote:
+> > On Fri, Oct 17, 2025 at 09:04:52AM +0000, Eliav Farber wrote:
+> > > This series backports 27 patches to update minmax.h in the 5.10.y
+> > > branch, aligning it with v6.17-rc7.
+> > >
+> > > The ultimate goal is to synchronize all long-term branches so that they
+> > > include the full set of minmax.h changes.
+> > >
+> > > - 6.12.y has already been backported; the changes are included in
+> > >   v6.12.49.
+> > > - 6.6.y has already been backported; the changes are included in
+> > >   v6.6.109.
+> > > - 6.1.y has already been backported; the changes are currently in the
+> > >   6.1-stable tree.
+> > > - 5.15.y has already been backported; the changes are currently in the
+> > >   5.15-stable tree.
+> >
+> > With this series applied, on an arm64 server, building 'allmodconfig', I
+> > get the following build error.
+> >
+> > Oddly I don't see it on my x86 server, perhaps due to different compiler
+> > versions?
+> >
+> > Any ideas?
 > 
-> On 10/13/2025 6:04 PM, Dmitry Baryshkov wrote:
-> > On Mon, Oct 13, 2025 at 04:18:03PM +0530, Ritesh Kumar wrote:
-> > > On lemans chipset, edp reference clock is being voted by ufs mem phy
-> > > (ufs_mem_phy: phy@1d87000). But after commit 77d2fa54a9457
-> > > ("scsi: ufs: qcom : Refactor phy_power_on/off calls") edp reference
-> > > clock is getting turned off, leading to below phy poweron failure on
-> > > lemans edp phy.
-> > 
-> > How does UFS turn on eDP reference clock?
+> This mainline commit is missing:
+> https://git.kernel.org/pub/scm/linux/kernel/git/torvalds/linux.git/commit/drivers/net/wireless/ralink/rt2x00/rt2800lib.c?h=v6.18-rc1&id=66063033f77e10b985258126a97573f84bb8d3b4
 > 
-> In lemans, GCC_EDP_REF_CLKREF_EN is voted as qref clock in ufs_mem_phy.
+> This fix already exists in 5.15.y:
+> https://git.kernel.org/pub/scm/linux/kernel/git/stable/linux.git/commit/drivers/net/wireless/ralink/rt2x00/rt2800lib.c?h=v5.15.194&id=2d3cef3d7a5df260a14a6679c4aca0c97e570ee5
+> â€¦but is missing in 5.10.y.
 > 
+> I now backported it to 5.10.y here:
+> https://lore.kernel.org/stable/20251018195945.18825-1-farbere@amazon.com/T/#u
 
-Ack, please fix other comments.
+Thanks,I've queued that up now.
 
-> 
-> ufs_mem_phy: phy@1d87000 {
->     compatible = "qcom,sa8775p-qmp-ufs-phy";
->     reg = <0x0 0x01d87000 0x0 0xe10>;
->     /*
->      * Yes, GCC_EDP_REF_CLKREF_EN is correct in qref. It
->      * enables the CXO clock to eDP *and* UFS PHY.
->      */
->     clocks = <&rpmhcc RPMH_CXO_CLK>,
->              <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
->              <&gcc GCC_EDP_REF_CLKREF_EN>;
->     clock-names = "ref", "ref_aux", "qref";
-> 
-> > 
-> > 
-
--- 
-With best wishes
-Dmitry
+greg k-h
