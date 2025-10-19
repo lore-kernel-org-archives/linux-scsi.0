@@ -1,182 +1,159 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BCC1226CF0;
-	Sun, 19 Oct 2025 10:19:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B044C7483
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 12:14:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760869156; cv=none; b=fbL7c6DwrszfB2c0IIOgLNUT2CYf1BNUjYf2pTnFUP9kllDvRxw+qB2Wg7aCOmwuFQiGFr7uEHoqTz/sssnErLZWD3AdtvRqHVrxdqmoj5xXJAwte+iUFgFC5m+UzJrxWLvKD5daxQRbFrXMea1jHvwk9aeFNlUFuXd9vshW3Aw=
+	t=1760876071; cv=none; b=TXdxmzvlQ0zOO9KaIIIjjqcYVcMqtTbYOYwIZ8/aS2HOnQWna4JS3DodWQaHJ72m+wocSjp2SRU/bsSV+yI8yCp7TGd/h37Pyva/IJEPOTQXJ1fprgKZ6yjQylyC6NEd4MzEDqnDh9mLxQmH55aRnrMd69IVkwgV/TeRGLi5PLw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760869156; c=relaxed/simple;
-	bh=zn/OlHAE8sHCqC3BJqgGMiH8F04MC2heZp4kXhJaObg=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=fIasLeb/1vJIvy8neHgMm5nsEyNBUV9C7Foxh9yDNHnDOrE5dN95iJev0LMrZCwD54hleyQ/zPfMPrxH+XiftbyMVQnaDcrS83vbPgTVyYo6pXkg66DK1SQ/my2eAp8rkfdvLSBrgVZH348jOa/uA+bYZOio0Ia6L9NyJ6wkZ40=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MKoJY09c; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1760876071; c=relaxed/simple;
+	bh=ukqOXoH0B8Rm/K0oOmFS3+X11r1F7wE1V9gnidNhdI4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ULj422a/1BhKPtEjuP8U7ZKuZP1B5xAgtvkckcrwKAlkh1xGGdGP9kYnoCzXmfEeVkDnqjZDVNLMTWmDJ6tXkl4xWECjzAkMZJUFBvC21bKs2+3RHltUExaDp6lq/wuyvoOtEcVwmRgToBiAD97pYi8kuDZxBhe8Es5rf9LOg5k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=En65Ngbl; arc=none smtp.client-ip=205.220.168.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MKoJY09c"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD5F7C4CEE7;
-	Sun, 19 Oct 2025 10:19:10 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760869155;
-	bh=zn/OlHAE8sHCqC3BJqgGMiH8F04MC2heZp4kXhJaObg=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=MKoJY09cMaVovykS2UtNMvPdOEwHwiCPUVwbwEZuwZcSJ7GM6k5oHEhC61KDAmDIA
-	 BIlpHoEfLH+qZF8ooQRpOF3dolT2t4edjgUmpd+ipK04sqC0EvFCi3fyyIaCBTgSG3
-	 9I+W1vXef78wr1+J2rTsXeEY9i7ME9/VfQDV4eySQZxhHwPU6vO356NlWcX9LUnRXX
-	 KqjGC+ARYYwDv6ZkzJFoebcA2Lefndy5aNN66gtsQRiz6gt+XZYNDmwdytiJcbCm65
-	 aedQiYhvP//SPittdOEsPSqjcD2O7mhdf/7xRYV7Og7P5pGi+iSFcxd9h9ZFtR5moH
-	 xhZDi4HIkkhxw==
-Message-ID: <cb173df9-4c70-4619-b36d-8e99272551b6@kernel.org>
-Date: Sun, 19 Oct 2025 12:19:09 +0200
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="En65Ngbl"
+Received: from pps.filterd (m0279866.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59JAOmVs020591
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 12:14:29 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:content-transfer-encoding:content-type:date:from:in-reply-to
+	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
+	puNPrhTEXrfqnZblxaqGqUil1ruzTr+zCkgmrxJ5Bek=; b=En65NgblGY8NIrNy
+	BjKP5KUK4ujMB3MNse92ose8la5TWB9nGsRowsVSqd47vWUpN1okqFrwbLRbe/Pe
+	FNXx2CSQ1X00JbGgoIsnH6KHLWY1Qolrujvn/NYfSUhBI4uBbBj3taB/vAEKIjMg
+	G+LNq+UP+2K3EqrMaLSzL+a9/fwmXBc2Vc95pgWrtnRnurCCfm6AZnlgQNC/gZv1
+	RIiZAK7ux1qSlEfc63GcdYqlW9InQamQsiC4mUnRhK9etJjKT0GL+cHeJx6Kjb/s
+	cRb/ARXhJ2FMsgtGx0SoulEaH3RtZW1rxb22UtmhV6SMakH6axSzxO6MljqW6bs8
+	EtMyZw==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 49v469a8ub-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES128-GCM-SHA256 bits=128 verify=NOT)
+	for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 12:14:29 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-88f1dad9992so364807985a.1
+        for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 05:14:29 -0700 (PDT)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1760876068; x=1761480868;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=puNPrhTEXrfqnZblxaqGqUil1ruzTr+zCkgmrxJ5Bek=;
+        b=SfDYpTSYbTN1ft04mPd0zgQyEIRx0MvwEga2HaSgh76eRh1daICBtb2bmyXT/pmtOr
+         tvauHo16eCG31s7YZE5P/LA4nqKKBrWDS94A5xFcb+iekC0O347VxoN1IC9iQUO1DoCZ
+         cPozFAng8Zp6zbClKYAcoPJ++BEZzhKzoXeqbQY5m5U3xBA6RqrRr8Ko4uTbCz256iAZ
+         PTZDhs22i6srTIevStm30HQf+Gon7tpCGDWdEBS+r/ZdiEqIjz10RZWApaqLttR2AV1e
+         uHJzqwVYmbPyxCKoAiuiSrig5xgs7qOW76CXdirDYGis8eFXVIpGETpPmBfY1mrV4iy7
+         VSYQ==
+X-Forwarded-Encrypted: i=1; AJvYcCXKFVd/MIqGFyny4iU16hvGFScZvTY9H+hUFDmr9dqowJTKxlDVc7HXyyq9XFjLOCaSSb2j+IENUF4l@vger.kernel.org
+X-Gm-Message-State: AOJu0YzbRBb9vrdupmavl1xVfjhHgjdd0quxLNQejvIpyQZbkDRAaZ+V
+	5X/BmGXCb4o0twFGIoD7t1stqLOM33zL18rP1WR0opGKDc81kr75zryag/sN2WnqlBdmcPTR11P
+	eHzX7NPY12Jxy6Odnv/eoA/GlEKekdLitd91vuwfQaBhQgwAk7HqgrfHKw0kR2T4z
+X-Gm-Gg: ASbGncuxTdlnqfEyIqf45Ld4zOHnGWcaFNJ0RrBNmjzshTOFx1vkDih1eHG9+C5BDSr
+	VkTxm8gm+vBC40comkw33762GBuYS8O7nTwEULJKOIiXadBl1FD7mpRwsbuUituSuhGbA+gNH93
+	fIAyKbPHxSA2kZSOCL+QVPeq70HC9Op8YC5CFthw10TcMTMJ6TFBrQYBGEAhpW5tUq1Fl3jBFEA
+	ofmyTSeU1LYefy3VxJUxIEPZQsiUSUCR730RiIo5beJdfS1J9h1xdCgi+Z0rW6J6r2nGh5qPxQf
+	a1FmhjVhuFSV7i6ywg3t3g4WG2UblQBG33XmVvgmSpY9pN6NYDTpiHt8IrsIOZcsXIWEyBA+sFG
+	l0AYJrLZWedhJjX+lX4V1qvd6O7pcTzhpkIrzmVzwAcL9ihoVeLZ7YYbhGE/AnFZKMJcU/qBKWP
+	3s22DLh7Omv8Q=
+X-Received: by 2002:ac8:5985:0:b0:4e8:911a:2af1 with SMTP id d75a77b69052e-4e89d3625e2mr152707031cf.46.1760876067803;
+        Sun, 19 Oct 2025 05:14:27 -0700 (PDT)
+X-Google-Smtp-Source: AGHT+IG8+CZ0NJ9bBoZZ1GZiXuCbYiL/YP/qmggrLH+uJV7bA2b9ganhGBoaFnRrleOl3gY/Yk+zFA==
+X-Received: by 2002:ac8:5985:0:b0:4e8:911a:2af1 with SMTP id d75a77b69052e-4e89d3625e2mr152706601cf.46.1760876067319;
+        Sun, 19 Oct 2025 05:14:27 -0700 (PDT)
+Received: from umbar.lan (2001-14ba-a0c3-3a00-264b-feff-fe8b-be8a.rev.dnainternet.fi. [2001:14ba:a0c3:3a00:264b:feff:fe8b:be8a])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-591deec0b98sm1528227e87.40.2025.10.19.05.14.25
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Sun, 19 Oct 2025 05:14:26 -0700 (PDT)
+Date: Sun, 19 Oct 2025 15:14:23 +0300
+From: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Ritesh Kumar <quic_riteshk@quicinc.com>
+Cc: robin.clark@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
+        jessica.zhang@oss.qualcomm.com, sean@poorly.run,
+        marijn.suijten@somainline.org, maarten.lankhorst@linux.intel.com,
+        mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
+        simona@ffwll.ch, robh@kernel.org, krzk+dt@kernel.org,
+        conor+dt@kernel.org, quic_mahap@quicinc.com, andersson@kernel.org,
+        konradybcio@kernel.org, mani@kernel.org,
+        James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+        vkoul@kernel.org, kishon@kernel.org,
+        cros-qcom-dts-watchers@chromium.org, linux-phy@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        quic_vproddut@quicinc.com
+Subject: Re: [PATCH v2 0/3] Add edp reference clock for lemans
+Message-ID: <ql5ps7cv7x6hz3otzz45uv6pbr64x2hdapa66vq2jtnt6l536h@kbktvupxpf4y>
+References: <20251013104806.6599-1-quic_riteshk@quicinc.com>
+ <7jmk3txdrnit6zn7ufra7davmomggd3graizdu6wqonp3lljza@mfnxt2owpknq>
+ <4bd619e7-e9ca-44a8-9d36-10c18d7a8157@quicinc.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 3/4] dt-bindings: ufs: mediatek,ufs: add MT8195
- compatible and update clock nodes
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
- "robh@kernel.org" <robh@kernel.org>,
- "James.Bottomley@HansenPartnership.com"
- <James.Bottomley@HansenPartnership.com>,
- "bvanassche@acm.org" <bvanassche@acm.org>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "conor+dt@kernel.org" <conor+dt@kernel.org>,
- =?UTF-8?B?TWFjcGF1bCBMaW4gKOael+aZuuaWjCk=?= <Macpaul.Lin@mediatek.com>,
- "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
- "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
- "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
- "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
- "linux-arm-kernel@lists.infradead.org"
- <linux-arm-kernel@lists.infradead.org>,
- "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
- "avri.altman@wdc.com" <avri.altman@wdc.com>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Cc: "macpaul@gmail.com" <macpaul@gmail.com>,
- =?UTF-8?B?UGFibG8gU3VuICjlravmr5Pnv5Qp?= <pablo.sun@mediatek.com>,
- Project_Global_Chrome_Upstream_Group
- <Project_Global_Chrome_Upstream_Group@mediatek.com>,
- =?UTF-8?B?QmVhciBXYW5nICjokKnljp/mg5/lvrcp?= <bear.wang@mediatek.com>,
- =?UTF-8?B?UmFtYXggTG8gKOe+heaYjumBoCk=?= <Ramax.Lo@mediatek.com>
-References: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
- <20250722085721.2062657-3-macpaul.lin@mediatek.com>
- <b90956e8-adf9-4411-b6f9-9212fcd14b59@collabora.com>
- <438077d191833bb4f628b2c6da3b86b3ecfb40e6.camel@mediatek.com>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <438077d191833bb4f628b2c6da3b86b3ecfb40e6.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
+In-Reply-To: <4bd619e7-e9ca-44a8-9d36-10c18d7a8157@quicinc.com>
+X-Proofpoint-ORIG-GUID: V8oVIrAipuxEslzI7C0IEgeoz2j6R2U9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDE4MDAzMiBTYWx0ZWRfXyMDDuLgNKtsF
+ scgCSt3sSmpIYUpYrmu+0QX9O1p1T0CTV6c4W8/TxlgpU0dLOnj8VuxdE3eG/0Z8Nm5Hk1BY4o7
+ kiJ0Td7Aq8u6727JgShRHepZeZ12VYuJniPq9yVj/XmR/wu0+tOAMvfBOUpB0wVwgNEGMizc5ON
+ GMqzsQmRpHqkREiyNeFjlDC9b5VauMJK3Nubx4Bhqwn051LQ3pPzkFOX1mVy2Qcw55dJ+123E7f
+ 9w1si8AbDOF67jby7km5abe+U6EvTt4AgmywHTsQo00Iwbi+I3WdGGtQUmYxucseaQ1Cv+BzFte
+ cnT7OdSzgzDVph1HA6hSgBUaiRvsya5tJX8RT69w19ENbVODFAUxMXp/mzd6AVaCn9H1k6urBWQ
+ 2GXuwU4tGj6m61I67xUllvk/9CTK7Q==
+X-Authority-Analysis: v=2.4 cv=U8qfzOru c=1 sm=1 tr=0 ts=68f4d625 cx=c_pps
+ a=HLyN3IcIa5EE8TELMZ618Q==:117 a=xqWC_Br6kY4A:10 a=8nJEP1OIZ-IA:10
+ a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22 a=FYAu2dUYg65mSESSDlUA:9
+ a=3ZKOabzyN94A:10 a=wPNLvfGTeEIA:10 a=bTQJ7kPSJx9SKPbeHEYW:22
+X-Proofpoint-GUID: V8oVIrAipuxEslzI7C0IEgeoz2j6R2U9
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
+ definitions=2025-10-19_05,2025-10-13_01,2025-03-28_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ impostorscore=0 adultscore=0 bulkscore=0 malwarescore=0 priorityscore=1501
+ spamscore=0 clxscore=1015 lowpriorityscore=0 phishscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.19.0-2510020000 definitions=main-2510180032
 
-On 23/07/2025 11:41, Peter Wang (çŽ‹ä¿¡å‹) wrote:
->> Please, look at my old submission, which actually fixes the
->> compatibles other than
->> adding the right clocks for all UFS controllers in MediaTek
->> platforms.
->>
->> https://lore.kernel.org/all/20240612074309.50278-1-angelogioacchino.delregno@collabora.com/
->>
+On Wed, Oct 15, 2025 at 02:49:08PM +0530, Ritesh Kumar wrote:
 > 
-> Hi Angelo,
+> On 10/13/2025 6:04 PM, Dmitry Baryshkov wrote:
+> > On Mon, Oct 13, 2025 at 04:18:03PM +0530, Ritesh Kumar wrote:
+> > > On lemans chipset, edp reference clock is being voted by ufs mem phy
+> > > (ufs_mem_phy: phy@1d87000). But after commit 77d2fa54a9457
+> > > ("scsi: ufs: qcom : Refactor phy_power_on/off calls") edp reference
+> > > clock is getting turned off, leading to below phy poweron failure on
+> > > lemans edp phy.
+> > 
+> > How does UFS turn on eDP reference clock?
 > 
-> The clock architecture may vary depending on the platform.
-> These clock patch look good to me.
+> In lemans, GCC_EDP_REF_CLKREF_EN is voted as qref clock in ufs_mem_phy.
 > 
+
+Ack, please fix other comments.
+
 > 
->> I want to take the occasion to remind everyone that my fixes were
->> discarded because
->> the MediaTek UFS driver maintainer wants to keep the low quality of
->> the driver in
->> favor of easier downstream porting - which is *not* in any way
->> adhering to quality
->> standards that the Linux community deserves.
->>
->> Cheers,
->> Angelo
+> ufs_mem_phy: phy@1d87000 {
+>     compatible = "qcom,sa8775p-qmp-ufs-phy";
+>     reg = <0x0 0x01d87000 0x0 0xe10>;
+>     /*
+>      * Yes, GCC_EDP_REF_CLKREF_EN is correct in qref. It
+>      * enables the CXO clock to eDP *and* UFS PHY.
+>      */
+>     clocks = <&rpmhcc RPMH_CXO_CLK>,
+>              <&gcc GCC_UFS_PHY_PHY_AUX_CLK>,
+>              <&gcc GCC_EDP_REF_CLKREF_EN>;
+>     clock-names = "ref", "ref_aux", "qref";
 > 
-> I want to clarify that I am not opposing this in order to keep the 
-> low quality of the driver for the sake of easier downstream porting.
+> > 
+> > 
 
-You did.
-
-You wrote very clearly here:
-https://lore.kernel.org/all/eb47587159484abca8e6d65dddcf0844822ce99f.camel@mediatek.com/
-
-"In addition, it will require MediaTek to put in extra
-effort to migrate the kernel. "
-
-
-Also you wrote:
-"The role of MediaTek UFS maintainer is not suitable to be handed over
-to someone outside of MediaTek."
-
-https://lore.kernel.org/all/ce0f9785f8f488010cd81adbbdb5ac07742fc988.camel@mediatek.com/
-
-Holy molly, you really wrote this!
-
-That's completely unacceptable. You don't understand how upstream
-development works and you push your downstream narrative which for us
-does not matter. You also object community led efforts, because you
-apparently want to control the upstream process.
-
-That is red flag.
-
-I think you should step down from maintainer position and find more
-suitable person, who is willing to work with the community, or rethink
-how upstream process works and understand that your downstream goals do
-not matter completely.
-
-I will be watching closely this and if situation does not improve, I
-believe we should mark the driver orphaned until we find maintainer
-caring about community, not about corporate goals.
-
-Best regards,
-Krzysztof
+-- 
+With best wishes
+Dmitry
