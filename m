@@ -1,107 +1,182 @@
-Received: from mail-yw1-f176.google.com (mail-yw1-f176.google.com [209.85.128.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3364A22A4F6
-	for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 08:11:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1BCC1226CF0;
+	Sun, 19 Oct 2025 10:19:15 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760861464; cv=none; b=UM8IHuYjTPp+3esqgZN5CBLXAkPRjyGwye8OpQ4z5XzzA8dNWx07uyCezHpO18tY8qEcSk17fovXJ14AGdvmCGqto0/dgtfiKRr4MlNnWgtJ7EFd3CLYQME/jKtQuxzmJEa6UMCK222pzDipCY3xCS9wgN8saug4DMcBAumZdZU=
+	t=1760869156; cv=none; b=fbL7c6DwrszfB2c0IIOgLNUT2CYf1BNUjYf2pTnFUP9kllDvRxw+qB2Wg7aCOmwuFQiGFr7uEHoqTz/sssnErLZWD3AdtvRqHVrxdqmoj5xXJAwte+iUFgFC5m+UzJrxWLvKD5daxQRbFrXMea1jHvwk9aeFNlUFuXd9vshW3Aw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760861464; c=relaxed/simple;
-	bh=0JD5EhU3dMvt2TzDGGngYx4VWjKCENlPlTrXXievwr0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=hJm9VnC0K0rJxXUkvx8veGGyn3W+wTE3l2gYqtGQ0ybm5JBtQbPjtaxH2B/JFfQEDDu6QEfJH6PkSlTZUO1V4BVwtWPhfnZ/+z/IFwiwVX9ouZCjKmQwOSC2BN1plExZLpluZYWKVNfULnx3jTYP8z7+1G79BdzeLfsDwqPbNvU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ccTdEhIo; arc=none smtp.client-ip=209.85.128.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1760869156; c=relaxed/simple;
+	bh=zn/OlHAE8sHCqC3BJqgGMiH8F04MC2heZp4kXhJaObg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fIasLeb/1vJIvy8neHgMm5nsEyNBUV9C7Foxh9yDNHnDOrE5dN95iJev0LMrZCwD54hleyQ/zPfMPrxH+XiftbyMVQnaDcrS83vbPgTVyYo6pXkg66DK1SQ/my2eAp8rkfdvLSBrgVZH348jOa/uA+bYZOio0Ia6L9NyJ6wkZ40=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MKoJY09c; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ccTdEhIo"
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-780fe76f457so38487117b3.0
-        for <linux-scsi@vger.kernel.org>; Sun, 19 Oct 2025 01:11:02 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1760861461; x=1761466261; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0JD5EhU3dMvt2TzDGGngYx4VWjKCENlPlTrXXievwr0=;
-        b=ccTdEhIopdhypwI8L3JBil5M4STne8SmRaQFfCBM02l9LkTDCeY07VksMZS734XIYW
-         fSr9E0vMaFgWvM5hpUfvHCdQwXqN1rLdg7uGpCmcE1a8p73wsSFiGM9KgaCUVorU2bB4
-         QXlk0k/rKjfCpslj0HWJBncYE9y9o12Mjtf9KUBJxsuzUFBzDISvTP/UdlOzuowk2O9I
-         i6m0bPW8oTEyUXCgLGFGHisuLGD8VhQ1MKnYlEu61P8OxgXOJsE/nO9c7FNSYyLg97yE
-         4ySn5cXO9k6TDK22f8AGkED3Ks52VuOYFicnSfjIjvJlszMjZfsukHxg61ULY8iC4TUN
-         9kxA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1760861461; x=1761466261;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=0JD5EhU3dMvt2TzDGGngYx4VWjKCENlPlTrXXievwr0=;
-        b=OlANlLlZsGeKU2+b6botoN+/cBzjvEoinQtiDBHHCPgNXyDsrWrxvKkc7IvejUwRnW
-         DZjF51/Bz8aIK3jtviVey5FwS8qdJ0a0EQmP3B5uB/GGqpMhHIo+4OpMr0sFXR12+SbD
-         tx0OQCrRDON4kRk5teB/l++U6zEIO0zHpTD0Y1YRg28hEhtjvtCJzXJK6nPFMdiVLZNX
-         Lj+79pmRQj95t0iPJ2257ttV2HiCHOeJwT12Z9B53F08n48eYv4UpghDGALwK1teh58w
-         1bPsisUnS3kNdVWqXScv4IOsG4ZEf/NIxPOOWrc2qmrNCAH0Dwrcm5Zi+99yOwmtj7pY
-         AMnQ==
-X-Forwarded-Encrypted: i=1; AJvYcCUW/vZ4Xbq8D2g7RdMNNAy/QV5b4Vc7Zgsa2kVfmYcQQ/w6K0/uVaaspenLZrpG7WSs/GtXQ3kfQRFo@vger.kernel.org
-X-Gm-Message-State: AOJu0Yyw0ofjIv7kSyMv1pcG/C5ilUt77ZCe3TPaBfuHLjUBqwDm5YpV
-	eTpznqFSXzDoSAmWCFkbpQZS3XxYBQHRlBmy6UGQyrBObyFdlg0bkhMY5MQX7E3WHW+zqQpEqv5
-	X+si+Fbtws5jtADuoQitefkKHWRTnDoY=
-X-Gm-Gg: ASbGncvtUE1ll6vWYTD0UOfMwzsmC+Lj+rQsRtRXTH3sXJdTVyFEw7LcEl6CUWw/Q3v
-	bKSBv9smKb8zRNhrrtjyRTT9LhqUO6P2G1n+Pcd1rsX/7QuHJZbv+DTSWMZb7vAv9vqFWXrpacg
-	bgWI3p71pwRw7qtOGGAufLJ4IAG57o6KyTBYNp4hJ/usb5F5KPS5zeDndiMeiO5yMFohzT2jpNv
-	PK3mP6dSpkEhxiJrOUJAj+ka/2TJgbDdoi/jSEKVF4sRQvEJAspkNKzJYMEM1WFR4sjCrWGIY8=
-X-Google-Smtp-Source: AGHT+IEDp/usYEtVSaz10lwwm2/rh8YYcBuxag2F0nuBjSfSMoio/EijPl9t2f1PGKCDHr/mRoxnx6oC2CKJ7h3r2Ic=
-X-Received: by 2002:a05:690c:31e:b0:782:9037:1491 with SMTP id
- 00721157ae682-7837780ba2dmr109813007b3.42.1760861461100; Sun, 19 Oct 2025
- 01:11:01 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MKoJY09c"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BD5F7C4CEE7;
+	Sun, 19 Oct 2025 10:19:10 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1760869155;
+	bh=zn/OlHAE8sHCqC3BJqgGMiH8F04MC2heZp4kXhJaObg=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=MKoJY09cMaVovykS2UtNMvPdOEwHwiCPUVwbwEZuwZcSJ7GM6k5oHEhC61KDAmDIA
+	 BIlpHoEfLH+qZF8ooQRpOF3dolT2t4edjgUmpd+ipK04sqC0EvFCi3fyyIaCBTgSG3
+	 9I+W1vXef78wr1+J2rTsXeEY9i7ME9/VfQDV4eySQZxhHwPU6vO356NlWcX9LUnRXX
+	 KqjGC+ARYYwDv6ZkzJFoebcA2Lefndy5aNN66gtsQRiz6gt+XZYNDmwdytiJcbCm65
+	 aedQiYhvP//SPittdOEsPSqjcD2O7mhdf/7xRYV7Og7P5pGi+iSFcxd9h9ZFtR5moH
+	 xhZDi4HIkkhxw==
+Message-ID: <cb173df9-4c70-4619-b36d-8e99272551b6@kernel.org>
+Date: Sun, 19 Oct 2025 12:19:09 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20241202010844.144356-16-ebiggers@kernel.org> <20251019060845.553414-1-safinaskar@gmail.com>
-In-Reply-To: <20251019060845.553414-1-safinaskar@gmail.com>
-From: Askar Safin <safinaskar@gmail.com>
-Date: Sun, 19 Oct 2025 11:10:25 +0300
-X-Gm-Features: AS18NWAhDVf2aU8hB0qWERPwO9zi-ils_dPukaoQchmqqRauvEb3B93Zz-69KFg
-Message-ID: <CAPnZJGAb7AM4p=HdsDhYcANCzD8=gpGjuP4wYfr2utLp3WMSNQ@mail.gmail.com>
-Subject: Re: [PATCH v4 15/19] lib/crc32: make crc32c() go directly to lib
-To: ebiggers@kernel.org
-Cc: ardb@kernel.org, linux-arch@vger.kernel.org, 
-	linux-arm-kernel@lists.infradead.org, linux-crypto@vger.kernel.org, 
-	linux-ext4@vger.kernel.org, linux-f2fs-devel@lists.sourceforge.net, 
-	linux-kernel@vger.kernel.org, linux-mips@vger.kernel.org, 
-	linux-riscv@lists.infradead.org, linux-s390@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linuxppc-dev@lists.ozlabs.org, 
-	loongarch@lists.linux.dev, sparclinux@vger.kernel.org, x86@kernel.org, 
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>, stable@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 3/4] dt-bindings: ufs: mediatek,ufs: add MT8195
+ compatible and update clock nodes
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
+ "robh@kernel.org" <robh@kernel.org>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "bvanassche@acm.org" <bvanassche@acm.org>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "conor+dt@kernel.org" <conor+dt@kernel.org>,
+ =?UTF-8?B?TWFjcGF1bCBMaW4gKOael+aZuuaWjCk=?= <Macpaul.Lin@mediatek.com>,
+ "linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
+ "devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
+ "krzk+dt@kernel.org" <krzk+dt@kernel.org>,
+ "alim.akhtar@samsung.com" <alim.akhtar@samsung.com>,
+ "linux-arm-kernel@lists.infradead.org"
+ <linux-arm-kernel@lists.infradead.org>,
+ "matthias.bgg@gmail.com" <matthias.bgg@gmail.com>,
+ "avri.altman@wdc.com" <avri.altman@wdc.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "macpaul@gmail.com" <macpaul@gmail.com>,
+ =?UTF-8?B?UGFibG8gU3VuICjlravmr5Pnv5Qp?= <pablo.sun@mediatek.com>,
+ Project_Global_Chrome_Upstream_Group
+ <Project_Global_Chrome_Upstream_Group@mediatek.com>,
+ =?UTF-8?B?QmVhciBXYW5nICjokKnljp/mg5/lvrcp?= <bear.wang@mediatek.com>,
+ =?UTF-8?B?UmFtYXggTG8gKOe+heaYjumBoCk=?= <Ramax.Lo@mediatek.com>
+References: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
+ <20250722085721.2062657-3-macpaul.lin@mediatek.com>
+ <b90956e8-adf9-4411-b6f9-9212fcd14b59@collabora.com>
+ <438077d191833bb4f628b2c6da3b86b3ecfb40e6.camel@mediatek.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <438077d191833bb4f628b2c6da3b86b3ecfb40e6.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Sun, Oct 19, 2025 at 9:09=E2=80=AFAM Askar Safin <safinaskar@gmail.com> =
-wrote:
->
-> Eric Biggers <ebiggers@kernel.org>:
-> > Now that the lower level __crc32c_le() library function is optimized fo=
-r
->
-> This patch (i. e. 38a9a5121c3b ("lib/crc32: make crc32c() go directly to =
-lib"))
-> solves actual bug I found in practice. So, please, backport it
-> to stable kernels.
+On 23/07/2025 11:41, Peter Wang (王信友) wrote:
+>> Please, look at my old submission, which actually fixes the
+>> compatibles other than
+>> adding the right clocks for all UFS controllers in MediaTek
+>> platforms.
+>>
+>> https://lore.kernel.org/all/20240612074309.50278-1-angelogioacchino.delregno@collabora.com/
+>>
+> 
+> Hi Angelo,
+> 
+> The clock architecture may vary depending on the platform.
+> These clock patch look good to me.
+> 
+> 
+>> I want to take the occasion to remind everyone that my fixes were
+>> discarded because
+>> the MediaTek UFS driver maintainer wants to keep the low quality of
+>> the driver in
+>> favor of easier downstream porting - which is *not* in any way
+>> adhering to quality
+>> standards that the Linux community deserves.
+>>
+>> Cheers,
+>> Angelo
+> 
+> I want to clarify that I am not opposing this in order to keep the 
+> low quality of the driver for the sake of easier downstream porting.
 
-Oops. I just noticed that this patch removes module "libcrc32c".
-And this breaks build for Debian kernel v6.12.48.
-Previously I tested minimal build using "make localmodconfig".
-Now I tried full build of Debian kernel using "dpkg-buildpackage".
-And it failed, because some of Debian files reference "libcrc32c",
-which is not available.
+You did.
 
-So, please, don't backport this patch to stable kernels.
-I'm sorry.
+You wrote very clearly here:
+https://lore.kernel.org/all/eb47587159484abca8e6d65dddcf0844822ce99f.camel@mediatek.com/
+
+"In addition, it will require MediaTek to put in extra
+effort to migrate the kernel. "
 
 
+Also you wrote:
+"The role of MediaTek UFS maintainer is not suitable to be handed over
+to someone outside of MediaTek."
 
---=20
-Askar Safin
+https://lore.kernel.org/all/ce0f9785f8f488010cd81adbbdb5ac07742fc988.camel@mediatek.com/
+
+Holy molly, you really wrote this!
+
+That's completely unacceptable. You don't understand how upstream
+development works and you push your downstream narrative which for us
+does not matter. You also object community led efforts, because you
+apparently want to control the upstream process.
+
+That is red flag.
+
+I think you should step down from maintainer position and find more
+suitable person, who is willing to work with the community, or rethink
+how upstream process works and understand that your downstream goals do
+not matter completely.
+
+I will be watching closely this and if situation does not improve, I
+believe we should mark the driver orphaned until we find maintainer
+caring about community, not about corporate goals.
+
+Best regards,
+Krzysztof
