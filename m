@@ -1,123 +1,97 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
+Received: from mailout1.samsung.com (mailout1.samsung.com [203.254.224.24])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 15C0A1B85FD
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Oct 2025 04:02:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6A2A2D6621
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Oct 2025 06:15:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.24
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760932926; cv=none; b=kitVGgxTt4ViL5YDFWRMr9CIpmwwKWveBK2p5c3RIYJ4mUzcIpTqKKBdXa+3JGmIrLqk0FJUSFzEBm6qHsqp+bQMbYELkv8yVjsyBjhtjHVsQrJC29R59nlbyKmyCbtAPruJdn4jG8a2KCYZ/RgRGcJzVqQeFNel3710P9WJJ4Q=
+	t=1760940960; cv=none; b=EDwpUr5T69dJqy8f8T5/nXVzFNiXXXYZO851smL4yE/eM1wP118xA0KrAyFBfbbBlUDzkdmksOKE5EDXc2dqb3Ax1enl6TwpM/EbHJk/FDKgIBlaQoIq+KdKkCrGUAK1ahGhEaWm3SBtwdzjLLIYSSuHHjM8Ksgt7A9dJ0PXGD4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760932926; c=relaxed/simple;
-	bh=XpTGEPwefqriVNunO+lSjBbGlZmhC/rdHfI5kdWKge4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=gQLk4d8fBX//Ysu7+BIdFE0cxlGFWNNfZ5FMJxf9jEmLg11beJj3dQjjc/nfpNT6WPe8sp6ojj1pwSj/jlKdGCPSn50rHPH1BcseBHUsJZFlLyWvG33It8hd/Wq+4TvzbkhVNTW6PIZhlEUSNwFH3/nw6zBv9K2KrWnaFNbhk5Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bg5nSHly; arc=none smtp.client-ip=192.198.163.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1760940960; c=relaxed/simple;
+	bh=uepXkKb6qvK7HJBiysgv37hIpJkktVcO8/vOidz+5O8=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:MIME-Version:
+	 Content-Type:References; b=J72PSYMRAjQ/xL8RjJQ9HzSexVegF9rNJ5I6PpRP4GYrYgIR5c8VN+vW6G8N0TfCBiQ/RFUOguL2OAAw1Khtl+ZhqL9dwPCI3yPH4pmq1G0hPJQCg9T30qRKz5tagDHjHTk63ykvE8hVxkWu+6zuAYV3BkIclNNtF25tXxd+qts=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=E/4kR761; arc=none smtp.client-ip=203.254.224.24
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bg5nSHly"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1760932925; x=1792468925;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=XpTGEPwefqriVNunO+lSjBbGlZmhC/rdHfI5kdWKge4=;
-  b=bg5nSHlyhu9jtdC0O6WB4JWylOM2TbOTBvzJ3ezjq4w/cHmF595GnGay
-   HxYoTYIERZuMqCbMY8YE8M3SKh5KcFaUn8TxuaaNkSgVSS+mafm6w8BKQ
-   WAHMR23dIjim7ZslrQmsLjeaqr/y9Izw1cJTCJkHVHzZu8fCjKLTLSvbk
-   gsRD/AevFWi16wupDzoBjoUsttAIKgBPCmSdkq9WxfkVb+y/FwO32o33P
-   7llirdiOf0WATN8cXwiJEm25VDQXTHl0k0f6kr8RZxs7xyS3Lvdk+OBf3
-   GjHgtM42TMsmFXm8fTIIoLAGmUTrTepz6I8d23fWc1069PdJzO6qXk2IK
-   g==;
-X-CSE-ConnectionGUID: f4OMNs0dT/2SbmQ8H8z+/Q==
-X-CSE-MsgGUID: rqFXX4RDSzu1EkC24ccf6g==
-X-IronPort-AV: E=McAfee;i="6800,10657,11587"; a="50619699"
-X-IronPort-AV: E=Sophos;i="6.19,241,1754982000"; 
-   d="scan'208";a="50619699"
-Received: from orviesa006.jf.intel.com ([10.64.159.146])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Oct 2025 21:02:04 -0700
-X-CSE-ConnectionGUID: 8ogO/liHR6GiQwDXlpyaxA==
-X-CSE-MsgGUID: sbeS8ehmRK2JCNZakqRpaw==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,241,1754982000"; 
-   d="scan'208";a="182376439"
-Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
-  by orviesa006.jf.intel.com with ESMTP; 19 Oct 2025 21:02:02 -0700
-Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1vAh5H-0009TN-2z;
-	Mon, 20 Oct 2025 04:01:47 +0000
-Date: Mon, 20 Oct 2025 12:00:55 +0800
-From: kernel test robot <lkp@intel.com>
-To: doubled <doubled@leap-io-kernel.com>
-Cc: oe-kbuild-all@lists.linux.dev, James.Bottomley@hansenpartnership.com,
-	linux-scsi@vger.kernel.org, martin.petersen@oracle.com
-Subject: Re: [PATCH v2] scsi: leapraid: Add new scsi driver
-Message-ID: <202510201103.iSEx48e3-lkp@intel.com>
-References: <20251017072807.3327789-1-doubled@leap-io-kernel.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="E/4kR761"
+Received: from epcas1p4.samsung.com (unknown [182.195.41.48])
+	by mailout1.samsung.com (KnoxPortal) with ESMTP id 20251020061550epoutp019f61092e84036112779f5cca196a6ee8~wHnbY_w772453224532epoutp01p
+	for <linux-scsi@vger.kernel.org>; Mon, 20 Oct 2025 06:15:50 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout1.samsung.com 20251020061550epoutp019f61092e84036112779f5cca196a6ee8~wHnbY_w772453224532epoutp01p
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1760940950;
+	bh=hW7qwDGQjpe+PuA7vU505Mlh7QwmDZfm4uTkDtfFvwE=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=E/4kR761d9Gai9tnUyzA28Cm7SlKYn42lfGc63youxgv/u/aUdYns7aiGoHylFZm5
+	 VZqt2CTYtHmiLIL4TSqeyeg2bZbeJApzV7Q9N61hQu24lDnJBpB0yambXTaVy39saT
+	 4JI6hIrypuTARQk4IAZbnsq2ga2DQ3B1wdXzUF9U=
+Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPS id
+	20251020061549epcas1p40d574bc802eb229bb3d2007c67558143~wHna9-rGf0184801848epcas1p4h;
+	Mon, 20 Oct 2025 06:15:49 +0000 (GMT)
+Received: from epcas1p3.samsung.com (unknown [182.195.38.116]) by
+	epsnrtp01.localdomain (Postfix) with ESMTP id 4cqlY14Cd3z6B9m9; Mon, 20 Oct
+	2025 06:15:49 +0000 (GMT)
+Received: from epsmtip1.samsung.com (unknown [182.195.34.30]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPA id
+	20251020061549epcas1p4c66e9194e947d624ca7560e68f3f2c53~wHnaeblHi0184801848epcas1p4a;
+	Mon, 20 Oct 2025 06:15:49 +0000 (GMT)
+Received: from wkk-400TFA-400SFA.. (unknown [10.253.99.106]) by
+	epsmtip1.samsung.com (KnoxPortal) with ESMTPA id
+	20251020061549epsmtip148a07f257723c7d8e349f6fbfadaa981~wHnaYdyTQ0607206072epsmtip1F;
+	Mon, 20 Oct 2025 06:15:49 +0000 (GMT)
+From: Wonkon Kim <wkon.kim@samsung.com>
+To: bvanassche@acm.org, James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com, peter.wang@mediatek.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: wkon.kim@samsung.com
+Subject: [PATCH 2/2] ufs: core: Declare tx_lanes witout initialization
+Date: Mon, 20 Oct 2025 15:15:39 +0900
+Message-Id: <20251020061539.28661-3-wkon.kim@samsung.com>
+X-Mailer: git-send-email 2.34.1
+In-Reply-To: <20251020061539.28661-1-wkon.kim@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251017072807.3327789-1-doubled@leap-io-kernel.com>
+Content-Transfer-Encoding: 8bit
+X-CMS-MailID: 20251020061549epcas1p4c66e9194e947d624ca7560e68f3f2c53
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20251020061549epcas1p4c66e9194e947d624ca7560e68f3f2c53
+References: <20251020061539.28661-1-wkon.kim@samsung.com>
+	<CGME20251020061549epcas1p4c66e9194e947d624ca7560e68f3f2c53@epcas1p4.samsung.com>
 
-Hi doubled,
+From: wkon-kim <wkon.kim@samsung.com>
 
-kernel test robot noticed the following build warnings:
+A value of an attribute will be initialized at ufshcd_dme_get_attr().
+There is no need to initialize a tx_lanes.
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on next-20251017]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+Signed-off-by: Wonkon Kim <wkon.kim@samsung.com>
+---
+ drivers/ufs/core/ufshcd.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-url:    https://github.com/intel-lab-lkp/linux/commits/doubled/scsi-leapraid-Add-new-scsi-driver/20251017-153514
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20251017072807.3327789-1-doubled%40leap-io-kernel.com
-patch subject: [PATCH v2] scsi: leapraid: Add new scsi driver
-config: csky-randconfig-r112-20251020 (https://download.01.org/0day-ci/archive/20251020/202510201103.iSEx48e3-lkp@intel.com/config)
-compiler: csky-linux-gcc (GCC) 10.5.0
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251020/202510201103.iSEx48e3-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202510201103.iSEx48e3-lkp@intel.com/
-
-sparse warnings: (new ones prefixed by >>)
->> drivers/scsi/leapraid/leapraid_func.c:535:9: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int [usertype] value @@     got restricted __le32 [usertype] @@
-   drivers/scsi/leapraid/leapraid_func.c:535:9: sparse:     expected unsigned int [usertype] value
-   drivers/scsi/leapraid/leapraid_func.c:535:9: sparse:     got restricted __le32 [usertype]
-   drivers/scsi/leapraid/leapraid_func.c:549:9: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int [usertype] value @@     got restricted __le32 [usertype] @@
-   drivers/scsi/leapraid/leapraid_func.c:549:9: sparse:     expected unsigned int [usertype] value
-   drivers/scsi/leapraid/leapraid_func.c:549:9: sparse:     got restricted __le32 [usertype]
-   drivers/scsi/leapraid/leapraid_func.c:564:9: sparse: sparse: incorrect type in argument 1 (different base types) @@     expected unsigned int [usertype] value @@     got restricted __le32 [usertype] @@
-   drivers/scsi/leapraid/leapraid_func.c:564:9: sparse:     expected unsigned int [usertype] value
-   drivers/scsi/leapraid/leapraid_func.c:564:9: sparse:     got restricted __le32 [usertype]
-
-vim +535 drivers/scsi/leapraid/leapraid_func.c
-
-   523	
-   524	void
-   525	leapraid_fire_scsi_io(struct leapraid_adapter *adapter,
-   526		 u16 taskid, u16 handle)
-   527	{
-   528		struct leapraid_atomic_req_desc desc;
-   529	
-   530		desc.flg = LEAPRAID_REQ_DESC_FLG_SCSI_IO;
-   531		desc.msix_idx
-   532			 = leapraid_get_and_set_msix_idx_from_taskid(adapter,
-   533					 taskid);
-   534		desc.taskid = cpu_to_le16(taskid);
- > 535		writel(cpu_to_le32(*((u32 *)&desc)),
-   536			 &adapter->iomem_base->atomic_req_desc_post);
-   537	}
-   538	
-
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 969f3a23bf92..6858f005cc8b 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -4990,7 +4990,7 @@ EXPORT_SYMBOL_GPL(ufshcd_hba_enable);
+ 
+ static int ufshcd_disable_tx_lcc(struct ufs_hba *hba, bool peer)
+ {
+-	int tx_lanes = 0, i, err = 0;
++	int tx_lanes, i, err = 0;
+ 
+ 	if (!peer)
+ 		ufshcd_dme_get(hba, UIC_ARG_MIB(PA_CONNECTEDTXDATALANES),
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+2.34.1
+
