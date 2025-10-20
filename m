@@ -1,48 +1,48 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2EC71264FB5
-	for <linux-scsi@vger.kernel.org>; Mon, 20 Oct 2025 15:52:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5D94281531;
+	Mon, 20 Oct 2025 16:01:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760975550; cv=none; b=V2Cx/OCifGzIGYiuRFzCKOnesFF8/PoM2rixANQHkYvP4XFn4DtQ2kqRzmOC7YbE6oPt/rk1ym37IQ5sbWu2cMn8ExgswPljUl/qb4x5e+eHCZBiZpXsL55j4URBEj1t4ta0zl5aNzaoOvd0EyRnRoKgCOthPQjY2ashn0VIZS4=
+	t=1760976089; cv=none; b=qhMGvLEvSKNGUftfy7Q3gdcXC82pVbK47QpLLBOaHG/nzLBwlakZpQ96wKOMoR7DZB4EY0qUydbRt1nt1QvYdYTCZ7aLoKrGbilFuIsV6dtEilVgIJKfx7ZPWNM9QLRExYvWfFL5KrzHUpiboOhZ1zlKwqOu/CzY4qGX4P6LumM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760975550; c=relaxed/simple;
-	bh=9tOsvzONexz1bBZPPwc3QBBeuANYYFma0u1mm/w13r4=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=p8+JGKivKwXwSs9qLVrU0F14dhIhsmVlHByXEN6kXRCAJh8EmhqVUM/f0WrP/Ay0/UDusD0aVrekKKQ0/RYCNI2GDUg+bvzTCI58xI3IZtj4+bgRjZm4pP6Q9VfzLPzCkCztJ/TnIH8BtlV2787VPtJb27BgHiNznY8/OKfKB0w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=IWU/5s+N; arc=none smtp.client-ip=199.89.3.7
+	s=arc-20240116; t=1760976089; c=relaxed/simple;
+	bh=8uW8TyZNB1QKAet4lyUQxOj5jxP90ZWaskUmPdpaLhU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=rmfY5R5vj1FebzQ8VInbeFDts7/rpKBTuU6JQVLl/c7NtF9Pyc+qRFStvGLV0xrDXGootggts5/x8Puo3TqgHDof1YGQKjobxgWgYCTn80pfHZuE4vZe85lQWFbfD8S6WsdsLACDmUVLHtm6r6yjjvgQQNE7fjRd5NRAuuxgSps=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=XjCctqcV; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="IWU/5s+N"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="XjCctqcV"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cr0LF4Bdlzm0yV4;
-	Mon, 20 Oct 2025 15:52:21 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cr0Xk4s79zlmm7h;
+	Mon, 20 Oct 2025 16:01:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1760975539; x=1763567540; bh=9tOsvzONexz1bBZPPwc3QBBe
-	uANYYFma0u1mm/w13r4=; b=IWU/5s+NfF8pfpOidLijkOiEp6cmWFmWb23vI+Vv
-	eo0HnwRxUEloUy5g43zhHtnYJoGZe3OEUG/78NgeUbPjUEoynsW2Bqf9yk1dQZV2
-	qvZKLDL57ytjoNfpDjCd/c7UmEdhhlUnq26NEFnT/pR41gxNuful8LCAQwUPv1cn
-	bV5iV6wzZnBCU0O/+XKRUrvi8MJtuycUPUBUb3LKwXTQZ6WDOlbVWlABSqsugH9N
-	n8jWowx5K8PzJ2AOOjc+3Wt7WFbBmto6xrUMfAHjxp49yeOhJNjVdPLzCJ3IyFXY
-	Z/aE4CNPuZWAQJIgEF9Ikw0ZN116zuEmBI5LCW0KirOuWg==
+	 s=mr01; t=1760976085; x=1763568086; bh=8uW8TyZNB1QKAet4lyUQxOj5
+	jxP90ZWaskUmPdpaLhU=; b=XjCctqcV7EzMLw1uLHXHHPlCQ7dG2V/GajH6YC+E
+	6xI1Q8rJxEYws4ArM/3dYAVyAiBvsSQC+g6WQFnv++A7X+pjfaD2vhutdVqupSqo
+	fyFLy7PxIVNKxRkKEE1EoC82ATtd7a6acK9ZpzU0vE9kYrDx/p+/jFTBfzuKiUJx
+	SNvB6fLE9H16JXn0Jfy/T74LdoKaU+T1HYH0ixDGAL0/Kbe7C/L2dc5v3+rgousU
+	2Z3HX6JLMKd2Z7+u7Kp0rjy6Y8mBWIcKRLGb4ZLEN9Hdubk2yxkdNejfvrFR2+gT
+	1Dm7N8ObrJFZRsM1ZwfBpvpHTAe3+mSYNEiN5iI3TwTv5w==
 X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 2QnmB303rYKP; Mon, 20 Oct 2025 15:52:19 +0000 (UTC)
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id dCUdWXd6rDGI; Mon, 20 Oct 2025 16:01:25 +0000 (UTC)
 Received: from [100.119.48.131] (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cr0L65DpHzm0yVF;
-	Mon, 20 Oct 2025 15:52:12 +0000 (UTC)
-Message-ID: <80ab997f-35f1-4386-a449-41b36f0b91b3@acm.org>
-Date: Mon, 20 Oct 2025 08:52:11 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cr0Xd30V8zlmm7x;
+	Mon, 20 Oct 2025 16:01:20 +0000 (UTC)
+Message-ID: <ad1498a6-3faf-4ac2-8c47-f1f3fa464f7d@acm.org>
+Date: Mon, 20 Oct 2025 09:01:19 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,36 +50,23 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] aacraid: Fail commands that are not submitted
-To: John Garry <john.g.garry@oracle.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, Gilbert Wu <gilbert.wu@microchip.com>,
- Sagar Biradar <Sagar.Biradar@microchip.com>,
- Adaptec OEM Raid Solutions <aacraid@microsemi.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20251014220323.3689699-1-bvanassche@acm.org>
- <c3703b46-fbe8-415c-85d9-1e035d2ac467@oracle.com>
+Subject: Re: [PATCH 0/2] ufs: core: Initialize a value of an attribute at
+ ufshcd_dme_get_attr()
+To: Wonkon Kim <wkon.kim@samsung.com>, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, peter.wang@mediatek.com,
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+References: <CGME20251020061545epcas1p2c494b8e57d424f1b2dfdcc9eef6e669e@epcas1p2.samsung.com>
+ <20251020061539.28661-1-wkon.kim@samsung.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <c3703b46-fbe8-415c-85d9-1e035d2ac467@oracle.com>
+In-Reply-To: <20251020061539.28661-1-wkon.kim@samsung.com>
 Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 7bit
 
-On 10/20/25 4:26 AM, John Garry wrote:
-> Doesn't scsi_dispatch_cmd() translate anything non-zero and not=20
-> SCSI_MLQUEUE_DEVICE_BUSY or SCSI_MLQUEUE_TARGET_BUSY to=20
-> SCSI_MLQUEUE_HOST_BUSY?
+On 10/19/25 11:15 PM, Wonkon Kim wrote:
+> It needs to initialize a value of an attribute at ufshcd_dme_get_attr().
 
-Yes.
+For both patches:
 
-> There are many dev->in_reset checks which return -1=C2=A0 and then FAIL=
-ED is=20
-> passed to scsi midlayer. Hence previously we would get=20
-> SCSI_MLQUEUE_HOST_BUSY - are you sure that you still don't want this?
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
 
-Probably. I plan to post a second version of this patch that doesn't
-modify the behavior of the aacraid driver.
-
-Thanks,
-
-Bart.
