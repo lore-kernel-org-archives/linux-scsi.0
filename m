@@ -1,250 +1,577 @@
-Received: from mailgw01.mediatek.com (unknown [60.244.123.138])
+Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C823222568;
-	Mon, 20 Oct 2025 11:46:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=60.244.123.138
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C44AA19992C;
+	Mon, 20 Oct 2025 13:28:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760960807; cv=fail; b=uff2qMS85ZzppbzAMNTm0CylEfLgfEM18fwKqO/anawi/BQATgnIEdzY5/X5CpOFcEiQcr1MSEdzn9RsXfNcTTeaf1ZoTCJoN/sMWFk0Y/7LGnBPbgmxfPGPdO/MVRX4E8YhBwxJSqykrOkA2NODi6xPArWfRsUUw2AkaWvDOLg=
+	t=1760966907; cv=pass; b=fWLtTDQclnRgNFpUk1h7IxU2CmUqkdVbKK3qj8aem83iJtUPXQyRiYD9YglDjpq+IRra4NagdeQkJci7Amo3N4vhiV3OaHwRrlheRxmMppcJ7dFufHoPK8aog7Uf3z4P/HB1q3wipejJNg2kjWxFekFrQBaoK3wgFs1RLXj68Wo=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760960807; c=relaxed/simple;
-	bh=HswBHiGPywFsF77KAG126weA43c/z/RIyNRi+mkpplI=;
-	h=From:To:CC:Subject:Date:Message-ID:References:In-Reply-To:
-	 Content-Type:MIME-Version; b=tU4uYnEDX3OQFNcXgyRrt7F9kffsT3E0lAIBFCXNX8W75b5v3vCh59cvkd3wGKnJF2u6gbmy8X5bU7CV313ve0qEe4Cq5Wq0HJAt1/Pfoz7+pWGI5K6FHGVQlragR6NfX7LUiUgcC5wQa0smSqXVzwKyHgg+zR7N5LGkz9xChpA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=soumNGrw; dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b=AKX6ew3O; arc=fail smtp.client-ip=60.244.123.138
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1760966907; c=relaxed/simple;
+	bh=J0R2XxBJeljrr4o1k8rc4y7oCuAm9OrS8YYT1Mhd9nU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=W6fzaSWHpz0qeZ1eGc2Zcu8TKqBwLqLgUtk50OVIkVil/j7VDu/JfxUUtmJoJ8TRCzKQ21H09Tq8GeBPcuC9zpsfzHUrj3rlWG0FJSTuwSUpCm5EDNcCCo1xVfrYac80TFY3uBSFkHNVFiZvRlYp9N0hTOtNkvha26ugkNLcttI=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=hRSoRzjw; arc=pass smtp.client-ip=136.143.188.112
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="soumNGrw";
-	dkim=pass (1024-bit key) header.d=mediateko365.onmicrosoft.com header.i=@mediateko365.onmicrosoft.com header.b="AKX6ew3O"
-X-UUID: 705c6290adaa11f0ae1e63ff8927bad3-20251020
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=MIME-Version:Content-Transfer-Encoding:Content-ID:Content-Type:In-Reply-To:References:Message-ID:Date:Subject:CC:To:From; bh=HswBHiGPywFsF77KAG126weA43c/z/RIyNRi+mkpplI=;
-	b=soumNGrwngYLp06FMsVNZcucVBwhu6hfa1IleFiKuHJi/xXpfVWq5Vx/GmdCOOo4YzIP13CLbLaHodPFhMTbIxJuJe0J8F+GbOIFLH15UbP2e2Nv01q/6Si34FsLOWDkf55QsAx1KzK3E/m47YuhQLEp9SUZ9C0oubPGZjxKBRQ=;
-X-CID-CACHE: Type:Local,Time:202510201846+08,HitQuantity:2
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.6,REQID:1338449e-06d7-4e6b-8d57-6dacf9013275,IP:0,UR
-	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
-	elease,TS:0
-X-CID-META: VersionHash:a9d874c,CLOUDID:11724051-c509-4cf3-8dc0-fcdaad49a6d3,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:80|81|82|83|102|110|111|836|888|898,
-	TC:-5,Content:0|15|50,EDM:-3,IP:nil,URL:99|1,File:130,RT:nil,Bulk:nil,QS:n
-	il,BEC:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC
-	:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULS
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 705c6290adaa11f0ae1e63ff8927bad3-20251020
-Received: from mtkmbs13n1.mediatek.inc [(172.21.101.193)] by mailgw01.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 1497190971; Mon, 20 Oct 2025 19:46:38 +0800
-Received: from mtkmbs10n2.mediatek.inc (172.21.101.183) by
- MTKMBS14N2.mediatek.inc (172.21.101.76) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Mon, 20 Oct 2025 19:46:32 +0800
-Received: from SI4PR04CU001.outbound.protection.outlook.com (172.21.101.237)
- by mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server id
- 15.2.1748.26 via Frontend Transport; Mon, 20 Oct 2025 19:46:33 +0800
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=CF25BJSI7wQUS26dKsTrcSHwO8sREZo3LsTo/IBp55rT0ONpv9KRTC8qZfHgmFYLcY8kURGzlD5Nix6s/LQoxCkP46LcAigI7e5NtLW7FFaxmVL3T5uJcASzU9GtAUdmRvlw6OIJJ7Pf9xepqUQ9xrMgrRRrx4KKvQMtBa+5aZFNls0Fsln5iMojzXvhT0gkK549SmO5RZ+GM+ZBOs25uLmlMgi/V3StHa9OFJHPssfwQKdR8BBqsw4/hRWMEzQxWI6DIBa48jh1p1gHD24mvjQMs6ke0eiz0im8dtvmCHBUf2PMBLQ+L7D4yZjBv99DQDjIY2fWU9atUbz8ho8cYg==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=HswBHiGPywFsF77KAG126weA43c/z/RIyNRi+mkpplI=;
- b=UoQUrtECGN9NhWMsUQAcMHjA8Qsu2PbW5IFtqvT93O4egBPXoKomuOkySUFrmioxr19mmYMf16jnsjoPOOkJazCJBSeEN1EyoDC7E4D2U8Pzq9/FiJsjuasHgnyffdD5fmKqjxm22yu8oKm1OmCmeBS4jVKVQvoAoqYQzUx+uhUV+uQhFp508jRLg1ZrysUXbym15gJooQz2I7lx8AZMczhO5G7ExkURc26C06weaDS5pmraizxc4lwXQsEqPebOMkvUl8Z/xkFrM0XZwBCp5CO+etPOw28AuO9OyzS2ZPUXphU6obtGrGCAbAD6Y3kNN3waUU+lpTB7rM5285VPgQ==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=mediatek.com; dmarc=pass action=none header.from=mediatek.com;
- dkim=pass header.d=mediatek.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=mediateko365.onmicrosoft.com; s=selector2-mediateko365-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=HswBHiGPywFsF77KAG126weA43c/z/RIyNRi+mkpplI=;
- b=AKX6ew3OckxvCv8imZak2A1jyqJ+pb2ijIZLkEmHpNGqIXi6tE55ghkyJEnRUkoMhFgmrOmnbSrcvXS+SIGAs69D63r8k4Yez6LDeNparoMi+NEcAD67D+2O+ICQoxyycEgCv9o/Vi5Q2VWgULfczhyLoezp+MVsG9PeJ4+q4qU=
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com (2603:1096:301:66::6)
- by JH0PR03MB8843.apcprd03.prod.outlook.com (2603:1096:990:a5::11) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9228.16; Mon, 20 Oct
- 2025 11:46:33 +0000
-Received: from PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::3945:7dbc:62bd:c31c]) by PSAPR03MB5605.apcprd03.prod.outlook.com
- ([fe80::3945:7dbc:62bd:c31c%6]) with mapi id 15.20.9228.015; Mon, 20 Oct 2025
- 11:46:33 +0000
-From: =?utf-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-To: "chu.stanley@gmail.com" <chu.stanley@gmail.com>,
-	"James.Bottomley@HansenPartnership.com"
-	<James.Bottomley@HansenPartnership.com>, "robh@kernel.org" <robh@kernel.org>,
-	"bvanassche@acm.org" <bvanassche@acm.org>, AngeloGioacchino Del Regno
-	<angelogioacchino.delregno@collabora.com>, "linux-scsi@vger.kernel.org"
-	<linux-scsi@vger.kernel.org>, "linux-kernel@vger.kernel.org"
-	<linux-kernel@vger.kernel.org>, =?utf-8?B?TWFjcGF1bCBMaW4gKOael+aZuuaWjCk=?=
-	<Macpaul.Lin@mediatek.com>, "conor+dt@kernel.org" <conor+dt@kernel.org>,
-	"linux-mediatek@lists.infradead.org" <linux-mediatek@lists.infradead.org>,
-	"devicetree@vger.kernel.org" <devicetree@vger.kernel.org>,
-	"krzk+dt@kernel.org" <krzk+dt@kernel.org>, "alim.akhtar@samsung.com"
-	<alim.akhtar@samsung.com>, "krzk@kernel.org" <krzk@kernel.org>,
-	"linux-arm-kernel@lists.infradead.org"
-	<linux-arm-kernel@lists.infradead.org>, "matthias.bgg@gmail.com"
-	<matthias.bgg@gmail.com>, "avri.altman@wdc.com" <avri.altman@wdc.com>,
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>
-CC: "macpaul@gmail.com" <macpaul@gmail.com>,
-	=?utf-8?B?UGFibG8gU3VuICjlravmr5Pnv5Qp?= <pablo.sun@mediatek.com>,
-	Project_Global_Chrome_Upstream_Group
-	<Project_Global_Chrome_Upstream_Group@mediatek.com>,
-	=?utf-8?B?QmVhciBXYW5nICjokKnljp/mg5/lvrcp?= <bear.wang@mediatek.com>,
-	=?utf-8?B?UmFtYXggTG8gKOe+heaYjumBoCk=?= <Ramax.Lo@mediatek.com>
-Subject: Re: [PATCH v2 3/4] dt-bindings: ufs: mediatek,ufs: add MT8195
- compatible and update clock nodes
-Thread-Topic: [PATCH v2 3/4] dt-bindings: ufs: mediatek,ufs: add MT8195
- compatible and update clock nodes
-Thread-Index: AQHb+ubXEcM0idFfNEe1g+HvnHp2OrQ941oAgAGSzYCAileogIABbykAgAAEWwCAABUpAIAAA1sAgAAN9ICAAAUNgIAAC7YA
-Date: Mon, 20 Oct 2025 11:46:33 +0000
-Message-ID: <2fecb7235ee54bbf66d54f57bd08c62c5f7c3a60.camel@mediatek.com>
-References: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
-	 <20250722085721.2062657-3-macpaul.lin@mediatek.com>
-	 <b90956e8-adf9-4411-b6f9-9212fcd14b59@collabora.com>
-	 <438077d191833bb4f628b2c6da3b86b3ecfb40e6.camel@mediatek.com>
-	 <cb173df9-4c70-4619-b36d-8e99272551b6@kernel.org>
-	 <a9bf15e48afd8496ca9b015e7f5b03821863a0b2.camel@mediatek.com>
-	 <7f285723-ecd7-4df6-8c9b-f2e786ce3602@kernel.org>
-	 <4b3d2678d2b724fb53ec7272ef8daf52197d4a0e.camel@mediatek.com>
-	 <4dc420a3-cf89-4f45-84e7-4d0079240681@kernel.org>
-	 <95d3fe686abcd4a6070c6613392fdb9605bdd73e.camel@mediatek.com>
-	 <6de4477a-5c2e-413f-9aa2-77b7262ebb38@collabora.com>
-In-Reply-To: <6de4477a-5c2e-413f-9aa2-77b7262ebb38@collabora.com>
-Accept-Language: zh-TW, en-US
-Content-Language: en-US
-X-MS-Has-Attach:
-X-MS-TNEF-Correlator:
-authentication-results: dkim=none (message not signed)
- header.d=none;dmarc=none action=none header.from=mediatek.com;
-x-ms-publictraffictype: Email
-x-ms-traffictypediagnostic: PSAPR03MB5605:EE_|JH0PR03MB8843:EE_
-x-ms-office365-filtering-correlation-id: 3da5f420-a36b-42b6-b80a-08de0fce5154
-x-ld-processed: a7687ede-7a6b-4ef6-bace-642f677fbe31,ExtAddr
-x-ms-exchange-senderadcheck: 1
-x-ms-exchange-antispam-relay: 0
-x-microsoft-antispam: BCL:0;ARA:13230040|376014|7416014|1800799024|366016|38070700021|921020;
-x-microsoft-antispam-message-info: =?utf-8?B?Zm9OczhsckhBTUhKeE1lLzd3L21wL0U2WFZKcm9hdEI0T0ZpYnJTZE5KK0hL?=
- =?utf-8?B?ZDZCbWM1amQ3cWMrYmRoZEQ4aWJsMm1MK3ZIQkk0V0UyTlRwS1NITnNyT1RL?=
- =?utf-8?B?TnNKNHBNVU9VYVBSTjVQY2wvWGI2Vm1TZ3A3YVUzSzM4bTc0OUNwbUxaNisx?=
- =?utf-8?B?NitHSWtVM1RJQUxFcm9qU1dCVkVBTnZJejI0M05mdkp0eFdwd1VvWUw4KzlG?=
- =?utf-8?B?V1lsdjJ0Skh4NzlYbW96VVR2cE8xMUhrc1dEQ0p3Rk5TNGEwY3k3Q01zRjJh?=
- =?utf-8?B?dXVUcHVyQUU0ZEtoNSs0RzRCUmViUWRGSWRMTGFpRWFnNVZoTjVJU0xHNGRW?=
- =?utf-8?B?bER6RHd6VjRyMUtma0JvZEprMzVWNm5Hb29na2s0SjJ3QkRDOGZGZzVDUTZU?=
- =?utf-8?B?RzNIUzdQNldDQTVJRGlNY0laN3UzNHFMRXJReTArOGU2M25sTzRIMFBMSTdZ?=
- =?utf-8?B?S2VDT2hNRDVTNzRIamdSTmQwR1o0eFdQY2g1QW1pZGNwb1hpZ29vdGpjNUVo?=
- =?utf-8?B?K3NIeFJVY2dxQjZVd3BBYXEvaVFwMW1COEZPWENmemJmUnA1enJxY0hRM0Uv?=
- =?utf-8?B?eE5hWnE5aGpYN0tCdXNBNWtZeW1uYm1STC9aOXlDalR5UFNSdHR0dTVzUnZW?=
- =?utf-8?B?S0hWd0ZjcnpqZ1hMVnBzNHFTWVBEVmlsanZ4Z0w3WFRrSHVIcnNDdmFnSEp1?=
- =?utf-8?B?WDgyVXFwQzg5Sks2ZE5TODVDeGNnQTJKeUpiZWthUjJhdVFnL200bldEVlRw?=
- =?utf-8?B?STNvckc3L0c5SHpib1hpOW1Sd2dRMFNPbHlocTVkbzgxZktEZEU1TlNIYTFp?=
- =?utf-8?B?cWM4am5yODdHSE1NRDFkZExPcCtPdWN1RDVERjFCT2pUQ1N0Z2NWNVRrU2xX?=
- =?utf-8?B?QlJ0RWp6WUtDb0hWZmZva3E4T2xnUThNbllHR2tPcHJVT3g2S29xOWNzOHFu?=
- =?utf-8?B?MXRHZHVKRmFPdlozbXh1UFNGcE5yMFNNQU4yTG9PMXMxWGE1VzdKUWpPT3BL?=
- =?utf-8?B?cG5ZSTU0SitMcVJvWTNmZjZEUG51S1owVGJtZU1maHNNcG81L3JRdlNFdkti?=
- =?utf-8?B?ODA4NHpZNGtIZEpYWjh0NjFzUnJteW4rWm9RZjE5eTcycjFjdFBjelNuNm9a?=
- =?utf-8?B?YzVLeTlOZUluMTJWTmtxNmFoNi9pSXF3U2lDV2dvWVlZN3IyY01iVXhKQ09K?=
- =?utf-8?B?T0RpUFErbDRCQXBKSnVuWGRPbUJDZUQ0STVTdEpLZVpJa3RyTHVjeXhIS2VM?=
- =?utf-8?B?RGViRnp0aUxEQnVTTWNYelp2Uy9iSXdabW81ZmtYandERE93QUtGU0lrZzcz?=
- =?utf-8?B?M2J3SWtiNHk3USs2M3BrQU9zQ3dUL21rQXArZXc4Yms4aC8yclpjWXpXODND?=
- =?utf-8?B?ZE9BZGM5cVl0QW9zZXpKTUY0RkE1elJGUkxvNmt5ZnJmR1cxU2QwTGlFM1Vz?=
- =?utf-8?B?Mm9iRmFZKzEwUEpCd2F1YWNsa2VhTlZWaEJoVDgwUU1vRFk5R1NUVmNaTW5J?=
- =?utf-8?B?TnhPZU1sN1NRSEFINDNFdjBVWmtDMnRqUFJPbi9vODh4VlFMV1N0bDRuSHNp?=
- =?utf-8?B?MU91QzNmazl1ZEE1VFYzYXRxejhVTnpicUZEcTdpOTQ3dUV6OHZSeUxNTnJ2?=
- =?utf-8?B?MzdHb1RRN1RHM3pJbTZYVnlsT3JQcTVvNzFHYU5BQWxRcHgrNHkzNnlWZ1ll?=
- =?utf-8?B?ckVJL21YMXdMUW53QW4rd0FkRmJ1czUzeHFXOUVVOUcycUQ0bDA3N0FnbDZC?=
- =?utf-8?B?MkJFQzdtcHQ3R1Y4U0JjS2JBdldjYnZvL2d0by9XTmJBaElxYmNObm5hMlBD?=
- =?utf-8?B?Z1RHTnRnOTVpMW9rb1NObUM2M2NaMGJSa2FkbWN1ME5jL3Vtd01PaklsQ3Nu?=
- =?utf-8?B?MUZ4OHZlSzhyTUs4VWJZenVDNVptMGdFQWFkd3oxNGhmYUM2cVhKOUsrZHor?=
- =?utf-8?B?TEIwc2dOTE9XdGhseEd3dnA0TFJsdE9wU3RRSzRGVnZCUHNvdlN4RVdFV1Bs?=
- =?utf-8?B?aFcrclB1bGdNa3MrS3pRaHkvYmVJS0lFeXBwSXJCbVpSWWhSOVpiVldUVldu?=
- =?utf-8?B?bElsdTlBTldFM2V4OEdOa3FjeGI4RlBnT3NYQT09?=
-x-forefront-antispam-report: CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:PSAPR03MB5605.apcprd03.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016)(38070700021)(921020);DIR:OUT;SFP:1101;
-x-ms-exchange-antispam-messagedata-chunkcount: 1
-x-ms-exchange-antispam-messagedata-0: =?utf-8?B?TWd1Y2Q3NFJiekJoOEpaTzMwdnZKZHYyV09MazRDaTE4VWZTbmpzeEhzOXZj?=
- =?utf-8?B?N3YxaEFKbmt0bU5BNzA3YWxPR0Z5V0YvQWMvQXdydEJSZFlBTHhlNUNqcitH?=
- =?utf-8?B?MjUxdXQxTG9QQzI2M0lyUVNmQmJlRU5aeW5pRlA1eW55MmR3U3F6VjA0eTl5?=
- =?utf-8?B?SWlXdVl0OTkwZFVFWDdUS204TzBpTTVpNCtEZTNpd3ZFSk5xNmkySjZkZGFU?=
- =?utf-8?B?anBGbEFNOWU0NzFaVzVYQ2RucSttWlEySWl5RjE2ODlMcitGMVdRWVE2QTB5?=
- =?utf-8?B?aitIbWFIL2Z5V2VOUEQzMm9hZVFyVHEvWVg3Nkd2eWNJWDJvWFcwSTlUa29Z?=
- =?utf-8?B?b3dYOVVWSUI4ZS9tNkJVNytBM0g2M29QY0ZFUWRQUTJLMDNqcjZOMFhGdW1q?=
- =?utf-8?B?NUVsdHl4ejRwWEZMbUwwRVFVQUJSNWNVWThwQ2l0d0tsZ1h0TWI3VElESXlo?=
- =?utf-8?B?RE1HbmV2N2oxS1J3eVREZS9VM2RwZGd5WHhwZFpwcVBMNjh5QUtoalozUVRV?=
- =?utf-8?B?VHFjRW1TQjVKQ3pBcGh2aytqSWxYWm1pYXRvU0J1d29yNHFnV2tKUU0yQlJn?=
- =?utf-8?B?VGNpZitlQTBMMDF0MnRCY3JOVHh1S2wxVVNHUG5kUEJSMmxYTHI0MmNIVWlP?=
- =?utf-8?B?b3dDcXZBdUFjeGl4VnVtckYrYUlJSkFiWWhISC9oNE1Pb1V4TGQ2QUZ3MHNa?=
- =?utf-8?B?R2wwUm44QUswaHdjS2NFU05zWFRDVkJ4WEtkQkJ5Z1p6RHRWYzJ0V0QrUFFv?=
- =?utf-8?B?dWVPaVNLZURCMDk2d2tyaFUwdG1YWWNNSnFSOGk1QzRETk50bE5GRDA5UXNw?=
- =?utf-8?B?aEtTZHdxS2FFSzhZVWdsblBnb2FCRG1vNllJNUNRMS8yZEsvamNrV1R2ZWMx?=
- =?utf-8?B?czdUU3VreVpKU093ZE9CUXRwK1BVNDNxRExrSG03MkU4NTQ2c1BsbUNWNlFx?=
- =?utf-8?B?aTVESFd6VHpJNm1WWkpDcUEwQTg3THNydFlPTk1IV28zckVVTHF6aGFzOHBn?=
- =?utf-8?B?SS9LK2RUR3B3bXc4dmY5dVVUNkF2MUdlRnkrNzRHbjR2SFYwc3plM0Q3R1Jt?=
- =?utf-8?B?UXppUXpFVmRJemt3SVBFL1YrZU1MYityNVRQOWhudzFSNkZIWmgvM1pmM21p?=
- =?utf-8?B?OGF4ZFlOVGgyOWF1RFAzQlpwWEFWbGtKdDRValZheXNKN3lpMkNJYjdRSWxT?=
- =?utf-8?B?bHhyYnBBZld6OUQ3OFdqcUxqV1BKWXVZRFBwTmVpK0dsUG9waVgxS1NFRHl6?=
- =?utf-8?B?T2NnVUhpYWcyeGMrdGRqV0p1RlVvMWF1Tlp5RG83V2tKQmVtR2xVdmM3ZkVp?=
- =?utf-8?B?ek1TUWNKVTk5eWFlcDB6YWl1eHRMaGk4N2ZSc2duSGFtVSt1bktYbEkrZmNz?=
- =?utf-8?B?YnFxaENKVjF6QmovbFZlT2xveXZyQ1NpMDVKWnZ6QUltMEwva2pmaFRXSUpl?=
- =?utf-8?B?WjdmSk0wNUxIRDJEcEtMYkIzN2hyU0tjdm5GN29Ld1NuNno2NDN0blZhb1BS?=
- =?utf-8?B?UFhUZ3N2ZzU1R2FwM21WUFVZT0M3ZVBlZkJ3U1lCY0VvbkN5b3B1Zk9jbzJx?=
- =?utf-8?B?MGhKTXdOVERoeXl3aldLVXhMTEI5VVMrUzBvZ3hSNjEwT2xNMkpmaGowYlhC?=
- =?utf-8?B?Mk9aM2VkdlVMNFk0Rllvays4MC9KcTdDL3NuTVpTc1kxek85M2RIcEZrZmtn?=
- =?utf-8?B?bFFFaU1GY24ybHhremZXUjhaSWJUUXNKdDlnbzZJL3RzclNGb1EyUDJEeFk2?=
- =?utf-8?B?bHUxckJJQlhBU2tJcUU0dlBQQ2ExejhQemlvT2EzOU9rSStLeDlESUtjN3Ur?=
- =?utf-8?B?WjhtaE1ySXZmcG9wT1loQjIwUDFlQU1oVlFvVjRaNFU4cWtvdVB2RGdCQnRK?=
- =?utf-8?B?d0o1YVgvOU5TQTlxSVdvZEwxNm54RnViSnVteE9QRVMxbkw0TVhyTyt0L1ZI?=
- =?utf-8?B?MWJmaXFkdDhLeENRRzJkVTVnTk52azdSR3dlQVRZQ05jTTJCd2dnaWlGeVJY?=
- =?utf-8?B?RFFHWnpqa1V2ZnBHalIzVWV5OWpzTUtjeGZlMTJrbzhkMXJMeGZsbDJxYVBK?=
- =?utf-8?B?dEk4T0xkWW5LWFk0d2wzSWZYWndXZEN3ZnhOcGFhN2JXUHZGTHJxYU5aTDQ3?=
- =?utf-8?B?NUNoeXBTcUhBb240MEhKSXlQTzdIMTJMdjVqRC9JWHpyZ3kvbFdQZEk3eEV2?=
- =?utf-8?B?UHc9PQ==?=
-Content-Type: text/plain; charset="utf-8"
-Content-ID: <AB7752DCE343654C8C82A171BBF2146D@apcprd03.prod.outlook.com>
-Content-Transfer-Encoding: base64
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="hRSoRzjw"
+ARC-Seal: i=1; a=rsa-sha256; t=1760966872; cv=none; 
+	d=zohomail.com; s=zohoarc; 
+	b=He/f49qslKpHvyW5PChKhFRZDapqS6wbjZaqcDIjq3H8VFdXEcEdCN3IZ6fjyZ1XX4Ppx+dNJZWy94mz74NvB/A7fmLv//2KHoRnImhArG+gjTlvJkJH7OBg2CeHOmPX8uAfqw3is7Lw/fvx6cwhjgC8ZJKqVbEFZ1Etp9Ia6f8=
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
+	t=1760966872; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=qPorIT6XFY77HZt0zXFnpqhwxa/ck6aI8q7AOZUlrNE=; 
+	b=VrK06wVnOZghZGz5bBAGeTgC2vg+0mkYqh9khgNUlP5aUQYspnE9QZthGq7c5AYi6jZBGVmjzn9ZkATprPbngGjkNOLqN7P8tDpfh+Z8iDCymtY3obMfsYKrwYCNr2t8SEN9BaRGvPk+pyZhDHK9Gh0hfVbJt4hTxlpoak4Pevs=
+ARC-Authentication-Results: i=1; mx.zohomail.com;
+	dkim=pass  header.i=collabora.com;
+	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
+	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1760966872;
+	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
+	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
+	bh=qPorIT6XFY77HZt0zXFnpqhwxa/ck6aI8q7AOZUlrNE=;
+	b=hRSoRzjwmhOtmUr5OjBlCj47NSAFZOBetLyqTnMNS4wnieeJ2kQEivSdvxoPHYtN
+	Ak7iX+kjY0mfUbMb6KjnrgW5Bu91ai+mlE/xu/QAEY1IPjU3lTt8vqUq4m9rlm71JxY
+	PVyVLcHZsCeyXcQeOOeJSNuLnZ+gZYyQt7Xirx4Y=
+Received: by mx.zohomail.com with SMTPS id 1760966870275776.6675804138243;
+	Mon, 20 Oct 2025 06:27:50 -0700 (PDT)
+From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+To: Conor Dooley <conor@kernel.org>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+ Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Philipp Zabel <p.zabel@pengutronix.de>,
+ Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, kernel@collabora.com,
+ linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org
+Subject:
+ Re: [PATCH v2 1/5] dt-bindings: ufs: mediatek,ufs: Add mt8196-ufshci variant
+Date: Mon, 20 Oct 2025 15:27:40 +0200
+Message-ID: <10741243.nUPlyArG6x@workhorse>
+In-Reply-To: <20251018-appliance-plus-361abdd09e75@spud>
+References:
+ <20251016-mt8196-ufs-v2-0-c373834c4e7a@collabora.com>
+ <118487283.nniJfEyVGO@workhorse> <20251018-appliance-plus-361abdd09e75@spud>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-AuthSource: PSAPR03MB5605.apcprd03.prod.outlook.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: 3da5f420-a36b-42b6-b80a-08de0fce5154
-X-MS-Exchange-CrossTenant-originalarrivaltime: 20 Oct 2025 11:46:33.4878
- (UTC)
-X-MS-Exchange-CrossTenant-fromentityheader: Hosted
-X-MS-Exchange-CrossTenant-id: a7687ede-7a6b-4ef6-bace-642f677fbe31
-X-MS-Exchange-CrossTenant-mailboxtype: HOSTED
-X-MS-Exchange-CrossTenant-userprincipalname: OW93m9evaW9UNWgaLhte+OxQ6n0Ej23kijUuSV1mFMvTzRdKOkPDT2CQA9f67BCzr10FVAMtFPDChCvAZXLIBg==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: JH0PR03MB8843
+Content-Transfer-Encoding: 7Bit
+Content-Type: text/plain; charset="utf-8"
 
-T24gTW9uLCAyMDI1LTEwLTIwIGF0IDEzOjA0ICswMjAwLCBBbmdlbG9HaW9hY2NoaW5vIERlbCBS
-ZWdubyB3cm90ZToNCj4gDQo+IA0KPiBTb3JyeSBQZXRlciwgYnV0IGEgMTAgc2Vjb25kcyByZXNl
-YXJjaCBvbiB5b3VyIHNpZGUgd291bGQgaGF2ZSBtYWRlDQo+IHlvdSBhd2FyZSBvZg0KPiB3aG8g
-SSBhbS4NCj4gDQo+IGh0dHBzOi8vdXJsZGVmZW5zZS5jb20vdjMvX19odHRwczovL2dpdC5rZXJu
-ZWwub3JnL3B1Yi9zY20vbGludXgva2VybmVsL2dpdC9zdGFibGUvbGludXguZ2l0L3RyZWUvTUFJ
-TlRBSU5FUlM/aD12Ni42Km4yMzQ2X187SXchIUNUUk5LQTl3TWcwQVJidyFqNDZPZEVpY1pkbENR
-azREb1VjOWJDMzJpbmtYSm55bjRtVEZ5cEdHQ0tfYkgxQ0psVzRFdDc1ZWdtbUtQQk9nZjNTSGNQ
-SlRkWF92dDd3X2hwODItbGt5cGRVY1AzMnMkDQo+IA0KPiAuLi50aGVuIGEgNjAgc2Vjb25kcyBy
-ZXNlYXJjaCB3b3VsZCByZXZlYWwgd2F5IG1vcmUgdGhhbiBqdXN0IHRoYXQNCj4gYWJvdXQgbWUs
-DQo+IGFuZCBhbHNvIHlvdXIgY29sbGVhZ3VlcyBrbm93IG1lIHF1aXRlIGEgYml0IDotKQ0KDQpI
-aSBBbmdlbG9HaW9hY2NoaW5vLA0KDQpZZXMsIGhvd2V2ZXIsIEkgd2FzIG5vdCBhd2FyZSBvZiB0
-aGlzIHdoZW4gSSByZXNwb25kZWQgbGFzdCB5ZWFyLg0KVGhlcmUgaGF2ZSBiZWVuIGludGVybmFs
-IGRpc2N1c3Npb25zIHNpbmNlIHRoZW4sIGFuZCB3ZSBoYXZlIA0KZGVjaWRlZCB0aGF0IG5ldyBN
-ZWRpYVRlayBtYWludGFpbmVycyB3aWxsIGJlIGFkZGVkLg0KVGhpcyBwb3NpdGlvbiBpcyBzdGls
-bCBub3QgYXBwcm9wcmlhdGUgZm9yIHNvbWVvbmUgZXh0ZXJuYWwNCnRvIE1lZGlhVGVrLiBJIGhv
-cGUgZm9yIHlvdXIgdW5kZXJzdGFuZGluZy4NCg0KDQo+IA0KPiBCZXNpZGVzLCB5b3UgZG9uJ3Qg
-cmVhbGx5IG5lZWQgdG8ga25vdyB3aG8gc29tZWJvZHkgaXMgdG8gbWFrZSBhbg0KPiB1cHN0cmVh
-bSByZXZpZXc6DQo+IHRoaXMgaXMgYSBjb21tdW5pdHksIGFuZCBhIGdvb2QgcGF0Y2ggbWF5IGNv
-bWUgZnJvbSBvbGQgYW5kDQo+IHJlY29nbml6ZWQgY29udHJpYnV0b3JzDQo+IGFzIG11Y2ggYXMg
-ZnJvbSBuZXcgb25lcyBzZW5kaW5nIHRoZWlyIGZpcnN0IHBhdGNoIHVwc3RyZWFtLg0KPiANCj4g
-DQo+IA0KDQpJIGFncmVlIHdpdGggeW91ciBwb2ludCwgcGVyaGFwcyB3ZSBzaW1wbHkgaGF2ZSBk
-aWZmZXJlbnQgDQp2aWV3cG9pbnRzLCBidXQgb3VyIGdvYWwgaXMgdGhlIHNhbWXigJR0byBtYWtl
-IHRoaXMgY29tbXVuaXR5IGJldHRlci4NCklmIHRoZXJlIGFyZSBhbnkgc2hvcnRjb21pbmdzIGlu
-IG91ciBpZGVhcywgd2UgY2FuIGRpc2N1c3MgDQp0aGVtIGFuZCBmb2N1cyBvbiB0aGUgcGF0Y2gg
-aXRzZWxmLCByYXRoZXIgdGhhbiByZXNvcnRpbmcgdG8gDQpibGFua2V0IGNyaXRpY2lzbXMgc3Vj
-aCBhcyBsYWJlbGluZyBkb3duc3RyZWFtIGFzIGxvdyBxdWFsaXR5IA0Kb3IgdXBzdHJlYW0gYXMg
-aW5oZXJlbnRseSBzdXBlcmlvci4NClN1Y2ggcmVtYXJrcyBkbyBub3QgY29udHJpYnV0ZSB0byB0
-aGUgaW1wcm92ZW1lbnQgb2YgdGhlIGNvbW11bml0eS4NCg0KVGhhbmtzDQpQZXRlcg0KDQo=
+On Saturday, 18 October 2025 23:30:17 Central European Summer Time Conor Dooley wrote:
+> On Fri, Oct 17, 2025 at 09:02:07PM +0200, Nicolas Frattaroli wrote:
+> > On Friday, 17 October 2025 17:42:10 Central European Summer Time Conor Dooley wrote:
+> > > On Thu, Oct 16, 2025 at 02:06:43PM +0200, Nicolas Frattaroli wrote:
+> > > > The MediaTek MT8196 SoC contains the same UFS host controller interface
+> > > > hardware as the MT8195 SoC. Add it as a variant of MT8195, and extend
+> > > > its list of allowed clocks, as well as give it the previously absent
+> > > > resets property.
+> > > > 
+> > > > Also add examples for both MT8195 and the new MT8196, so that the
+> > > > binding can be verified against examples for these two variants.
+> > > > 
+> > > > Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+> > > > Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+> > > 
+> > > I provided a review on v1 of this series yesterday, although I think
+> > > after this v2 was posted.
+> > > https://lore.kernel.org/all/20251016-kettle-clobber-2558d9c709de@spud/
+> > > I believe all of my comments still apply.
+> > 
+> > thanks for your review, I'll respond to the comments of those here
+> > to avoid needlessly bumping the v1 thread.
+> 
+> Cool, good idea.
+> 
+> > On Thursday, 16 October 2025 18:53:01 Central European Summer Time Conor Dooley wrote:
+> > > Hey,
+> > > 
+> > > On Tue, Oct 14, 2025 at 05:10:05PM +0200, Nicolas Frattaroli wrote:
+> > > > The MediaTek MT8196 SoC contains the same UFS host controller interface
+> > > > hardware as the MT8195 SoC. Add it as a variant of MT8195, and extend
+> > > > its list of allowed clocks, as well as give it the previously absent
+> > > > resets property.
+> > > > 
+> > > > Also add examples for both MT8195 and the new MT8196, so that the
+> > > > binding can be verified against examples for these two variants.
+> > > > 
+> > > > Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+> > > > ---
+> > > >  .../devicetree/bindings/ufs/mediatek,ufs.yaml      | 134 +++++++++++++++++++--
+> > > >  1 file changed, 123 insertions(+), 11 deletions(-)
+> > > > 
+> > > > diff --git a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> > > > index 1dec54fb00f3..070ae0982591 100644
+> > > > --- a/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> > > > +++ b/Documentation/devicetree/bindings/ufs/mediatek,ufs.yaml
+> > > > @@ -11,18 +11,30 @@ maintainers:
+> > > >  
+> > > >  properties:
+> > > >    compatible:
+> > > > -    enum:
+> > > > -      - mediatek,mt8183-ufshci
+> > > > -      - mediatek,mt8192-ufshci
+> > > > -      - mediatek,mt8195-ufshci
+> > > > +    oneOf:
+> > > > +      - enum:
+> > > > +          - mediatek,mt8183-ufshci
+> > > > +          - mediatek,mt8195-ufshci
+> > > > +      - items:
+> > > > +          - enum:
+> > > > +              - mediatek,mt8192-ufshci
+> > > > +          - const: mediatek,mt8183-ufshci
+> > > 
+> > > It's hard to follow what's going on in this commit.
+> > > Firstly, this seems to be some sort of unrelated change that isn't
+> > > mentioned in the commit message.
+> > 
+> > Sorry about that. Basically, the binding is currently wildly
+> > incomplete, and this was my attempt at making it at least partly
+> > useful for mainline DTs. You'll note that currently, no complete
+> > (i.e. not just SoC dtsi) device tree uses it, and if they did,
+> > all would most definitely generate warnings if they used it in a way
+> > that actually worked, or silently relied on incomplete descriptions
+> > that just happened to work out in practice.
+> > 
+> > So I'm being a bit heavy-handed here at untangling things. The
+> > compatible changes here are to stop pretending that the mt8195
+> > can use the mt8183 as a fallback, as the binding itself would
+> > not really agree with that AFAIU. The mt8183 sets the maximum
+> > number of clocks to 1, whereas mt8195 sets the minimum to 8.
+> 
+> The binding doesn't allow the 8183 as a fallback for the 8195, so that
+> tracks ;)
+> 
+> Really the problem is that the commit subject says that this is adding
+> 8196, but that's not what the body of the commit actually is. I know you
+> mention splitting further down the mail, but what I'd really like to see
+> done is one commit that corrects the property situation for the 8195,
+> providing whatever justifications you have for the changes - it's okay
+> if you don't necessarily have explanations for backed by stuff from docs
+> or whatever, if all you have is based on what platforms with the 8195 are
+> doing just mention that as why you need to have x-supply or whatever.
+> Then add one commit that adds the 8196, which is probably a fairly
+> minimal change once the 8195 is corrected.
+
+Alright, I think part of the confusion is me rebasing across a
+midstream branch that has some unrelated bandaid fixes in it
+which have never been submitted or were last submitted in 2024.
+I'll simply drop those from my boot-testing branch and do my own
+thing as I see fit, because things that were never submitted
+upstream aren't real and can't hurt me.
+
+> 
+> > > > +      - items:
+> > > > +          - enum:
+> > > > +              - mediatek,mt8196-ufshci
+> > > > +          - const: mediatek,mt8195-ufshci
+> > > >  
+> > > >    clocks:
+> > > >      minItems: 1
+> > > > -    maxItems: 8
+> > > > +    maxItems: 16
+> > > >  
+> > > >    clock-names:
+> > > >      minItems: 1
+> > > > -    maxItems: 8
+> > > > +    maxItems: 16
+> > > 
+> > > Then all devices grow 8 more permitted clocks, despite the wording in
+> > > the commit message being 8195 specific. (Hint: you missed maxItems: 8 in
+> > > the else)
+> > 
+> > Right, thanks, I'll add maxItems to the clock-names property in the else.
+> > Though that's already missing.
+> > 
+> > > > +
+> > > > +  freq-table-hz: true
+> > > 
+> > > Then you add this deprecated property, which isn't mentioned in the
+> > > commit message and I don't see why a deprecated property is needed.
+> > 
+> > I'll rework it to use operating-points-v2 instead. It needs one of
+> > the two, or else on mt8196 at least, the hardware locks up.
+> > 
+> > I'll still add operating-points-v2 for all SoCs though, if that's
+> > okay with you.
+> 
+> Right. I'd accept freq-table-hz if the other devices here have been
+> using it all along, but if this is something new - then please use the
+> operating-points-v2 property. Looking at the binding example, it looks
+> like it does indeed use freq-table-hz, so that's probably justification
+> enough to keep doing so.
+
+Turns out the only usage of freq-table-hz is in the examples I've added.
+Mainline does not at all have any nodes in the DT right now that would
+use this property.
+
+Ergo, I think I will go for operating-points-v2. We might as well clean
+this up now instead of ossifying a deprecated property in a new binding
+for the sake of downstream compatibility (which should never be a concern)
+that I am already breaking. The added benefit is that if we ever do get
+better OPP definitions than just two clock states, then we can actually
+add the OPP bandwidth properties so implementations can make informed
+decisions.
+
+> > > > +
+> > > > +  interrupts: true
+> > > >  
+> > > >    phys:
+> > > >      maxItems: 1
+> > > > @@ -30,7 +42,15 @@ properties:
+> > > >    reg:
+> > > >      maxItems: 1
+> > > >  
+> > > > +  resets:
+> > > > +    maxItems: 3
+> > > > +
+> > > > +  reset-names:
+> > > > +    maxItems: 3
+> > > 
+> > > You cannot use reset-names if you don't define what the names are.
+> > > Please provide a items list with descriptions in resets and some
+> > > names in reset-names.
+> > 
+> > Will do.
+> > 
+> > > 
+> > > >    vcc-supply: true
+> > > > +  vccq-supply: true
+> > > > +  vccq2-supply: true
+> > > 
+> > > And then two new supplies that are not mentioned in the commit message,
+> > > and again are allowed for all variants. The commit message talks about
+> > > extended 8195 features, so this is starting to look like there was some
+> > > sort of squashing accident.
+> > 
+> > No squashing accident, just me trying to get around having to justify
+> > things I cannot justify. I've just checked the MT8195 and MT8196
+> > datasheets for their pins, and see that MT8195 has a 1.8V and two 1.2V
+> > supplies.
+> 
+> As I said above, if you don't have some documented justification, just
+> cite usage or w/e, that's better than not mentioning it at all. If you
+> don't work for the vendor (and sometimes, sadly, when you do) it's not
+> possible to get complete info.
+> 
+> > MT8196 on the other hand has seemingly no 1.8V UFS supply, but two
+> > 1.2V supplies and two 0.9V supplies.
+> > 
+> > I think MT8195 can use vcc-supply for 1.8V (with the vcc-supply-1p8
+> > flag) and vccq-supply/vccq2-supply for 1.2V.
+> > 
+> > I suppose MT8196 then gets two 0.9v supply properties to play with in
+> > its driver, I'm open to name suqqestions. Vendor uses va09-supply, but
+> > that only covers one of the two possible supplies.
+> > 
+> > Interestingly, MT8183 has all of 1.8V, 1.2V and 0.9V supplies as
+> > well. No duplicates though.
+> > 
+> > MT8192 has 1.8V, and two different 1.2V supplies for UFS.
+> > 
+> > It's also entirely possible that some other supply rail is used
+> > as well for 1.8V operation on MT8196, but I'm not privy to this
+> > kind of information.
+> > 
+> > So yeah, I'll fix the supply situation, maybe by splitting
+> > this into a few separate commits.
+> 
+> My personal opinion is that the best way to do supplies is to match as
+> close to possible as the datasheet names for the supply. If that means
+> the supply names have to be different between devices, I think the
+> more complex binding is better than trying to get the names to somehow
+> fit for all devices.
+
+Alright. I think I agree with this. I've tried to use the ufs common
+supply names because I thought that was the way to go, but using the
+supply names that are in the datasheets seems much more clear and
+reasonable to me, as we're no longer introducing different meanings
+depending on the used compatible.
+
+> 
+> > > >    mediatek,ufs-disable-mcq:
+> > > >      $ref: /schemas/types.yaml#/definitions/flag
+> > > > @@ -44,22 +64,19 @@ required:
+> > > >    - reg
+> > > >    - vcc-supply
+> > > >  
+> > > > -unevaluatedProperties: false
+> > > > -
+> > > >  allOf:
+> > > >    - $ref: ufs-common.yaml
+> > > > -
+> > > >    - if:
+> > > >        properties:
+> > > >          compatible:
+> > > >            contains:
+> > > > -            enum:
+> > > > -              - mediatek,mt8195-ufshci
+> > > > +            const: mediatek,mt8195-ufshci
+> > > 
+> > > The commit message says:
+> > > | hardware as the MT8195 SoC. Add it as a variant of MT8195, and extend
+> > > | its list of allowed clocks, as well as give it the previously absent
+> > > | resets property.
+> > > 
+> > > I don't know if that's meant to mean that only the new device has 16 and
+> > > the 8195 only has 8, or if the 8195 should have had 16 possible clocks
+> > > too.
+> > 
+> > It looks like MT8195 has crypt_mux, crypt_lp, crypt_perf and ufs_rx_symbol0
+> > and ufs_rx_symbol1. I haven't found any of ufs_sel/ufs_sel_min_src/
+> > ufs_sel_max_src analogues yet.
+> 
+> I went and looked at the driver, and the list of clocks it looks up
+> don't even match what the binding permits for the 8195 (or any other
+> device):
+> 
+> 	if (ufs_mtk_init_host_clk(hba, "crypt_mux",
+> 				  &cfg->clk_crypt_mux))
+> 		goto disable_caps;
+> 
+> 	if (ufs_mtk_init_host_clk(hba, "crypt_lp",
+> 				  &cfg->clk_crypt_lp))
+> 		goto disable_caps;
+> 
+> 	if (ufs_mtk_init_host_clk(hba, "crypt_perf",
+> 				  &cfg->clk_crypt_perf))
+> 		goto disable_caps;
+> 
+> +  - if:
+> +      properties:
+> +        compatible:
+> +          contains:
+> +            enum:
+> +              - mediatek,mt8195-ufshci
+> +    then:
+> +      properties:
+> +        clocks:
+> +          minItems: 8
+> +        clock-names:
+> +          items:
+> +            - const: ufs
+> +            - const: ufs_aes
+> +            - const: ufs_tick
+> +            - const: unipro_sysclk
+> +            - const: unipro_tick
+> +            - const: unipro_mp_bclk
+> +            - const: ufs_tx_symbol
+> +            - const: ufs_mem_sub
+> 
+> Looks like that series should never have actually been accepted,
+> particularly given some of the commentary on it. It's worth noting, that
+> there is no ack etc from a devicetree binding maintainer. Telling I
+> suppose.
+
+Yeah :(
+
+> 
+> You don't mention this mismatch in your commit message, but you should.
+> 
+> Also makes me wonder why the driver doesn't bother to enable all of
+> these clocks either, since the IP must need them for something, right?
+> Does the driver even work for 8195?
+
+It's possible that it's relying on clock states from some magic MCU
+that fiddles with things. It should definitely be fixed if that's the
+case.
+
+> 
+> > Should I in this case order those three last, and then set the minimum
+> > number of clocks to 13? Should I not make mt8195 a fallback for mt8196
+> > at all?
+> 
+> For fallbacks, mostly think of it as "if the driver probed thinking that
+> this was a 8195, would it work correctly"? If you have to make changes
+> to a driver written for a 8195 to support clocks that are required on a
+> 8196, then the devices are not compatible. If the 8196 will function if
+> the extra clocks are not enabled, then sure have a fallback. But if you
+> need to turn them on, then the devices are not compatible.
+> In other words, if the fallback doesn't implement a viable subset of
+> features on the new device, then it's not suitable.
+
+I've just tried MT8196 with only the 13 clocks MT8195 will have once
+I get to work, and it seems to probe fine an read from UFS fine.
+Doesn't necessarily have to mean anything because again, a magic
+MCU may be fiddling with the clock gates.
+
+However, since the supplies of MT8195 won't be a subset of the
+supplies of MT8196, I won't make it a fallback relationship.
+E.g. an MT8195 device could be allowed to just have the 1.8V
+supply and an MT8196 device could be allowed to just have the
+1.2V/0.9V supplies, which means an implementation written against
+the MT8195 binding would not work for the MT8196.
+
+> 
+> As for the 13 v 16 etc, sure order them last. You'll have to be careful
+> with how you set up the conditional portion of the binding so that it
+> doesn't create impossible constraints, if you decide that a fallback is
+> suitable. Obviously, if there's no fallback, cos the extra 3 clocks are
+> mandatory, then it'll be much easier to set the conditions up.
+> 
+> > > >      then:
+> > > >        properties:
+> > > >          clocks:
+> > > >            minItems: 8
+> > > >          clock-names:
+> > > > +          minItems: 8
+> > > >            items:
+> > > >              - const: ufs
+> > > >              - const: ufs_aes
+> > > > @@ -69,6 +86,19 @@ allOf:
+> > > >              - const: unipro_mp_bclk
+> > > >              - const: ufs_tx_symbol
+> > > >              - const: ufs_mem_sub
+> > > > +            - const: crypt_mux
+> > > > +            - const: crypt_lp
+> > > > +            - const: crypt_perf
+> > > > +            - const: ufs_sel
+> > > > +            - const: ufs_sel_min_src
+> > > > +            - const: ufs_sel_max_src
+> > > > +            - const: ufs_rx_symbol0
+> > > > +            - const: ufs_rx_symbol1
+> > > > +        reset-names:
+> > > > +          items:
+> > > > +            - const: unipro_rst
+> > > > +            - const: crypto_rst
+> > > > +            - const: hci_rst
+> > > >      else:
+> > > >        properties:
+> > > >          clocks:
+> > > > @@ -76,6 +106,10 @@ allOf:
+> > > >          clock-names:
+> > > >            items:
+> > > >              - const: ufs
+> > > > +        resets: false
+> > > > +        reset-names: false
+> > > > +
+> > > > +unevaluatedProperties: false
+> > > >  
+> > > >  examples:
+> > > >    - |
+> > > > @@ -99,3 +133,81 @@ examples:
+> > > >              vcc-supply = <&mt_pmic_vemc_ldo_reg>;
+> > > >          };
+> > > >      };
+> > > > +  - |
+> > > > +    ufshci@11270000 {
+> > > > +        compatible = "mediatek,mt8195-ufshci";
+> > > > +        reg = <0x11270000 0x2300>;
+> > > > +        interrupts = <GIC_SPI 137 IRQ_TYPE_LEVEL_HIGH>;
+> > > > +        phys = <&ufsphy>;
+> > > > +        clocks = <&infracfg_ao 63>, <&infracfg_ao 64>, <&infracfg_ao 65>,
+> > > > +                 <&infracfg_ao 54>, <&infracfg_ao 55>,
+> > > > +                 <&infracfg_ao 56>, <&infracfg_ao 90>,
+> > > > +                 <&infracfg_ao 93>;
+> > > > +        clock-names = "ufs", "ufs_aes", "ufs_tick",
+> > > > +                      "unipro_sysclk", "unipro_tick",
+> > > > +                      "unipro_mp_bclk", "ufs_tx_symbol",
+> > > > +                      "ufs_mem_sub";
+> > > > +        freq-table-hz = <0 0>, <0 0>, <0 0>,
+> > > > +                        <0 0>, <0 0>, <0 0>,
+> > > > +                        <0 0>, <0 0>;
+> > > > +        vcc-supply = <&mt6359_vemc_1_ldo_reg>;
+> > > > +        mediatek,ufs-disable-mcq;
+> > > > +    };
+> > > > +  - |
+> > > > +    #include <dt-bindings/reset/mediatek,mt8196-resets.h>
+> > > > +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> > > > +
+> > > > +    ufshci@16810000 {
+> > > > +        compatible = "mediatek,mt8196-ufshci", "mediatek,mt8195-ufshci";
+> > > > +        reg = <0x16810000 0x2a00>;
+> > > > +        interrupts = <GIC_SPI 320 IRQ_TYPE_LEVEL_HIGH>;
+> > > > +
+> > > > +        clocks = <&ufs_ao_clk 6>,
+> > > > +                 <&ufs_ao_clk 7>,
+> > > > +                 <&clk26m>,
+> > > > +                 <&ufs_ao_clk 3>,
+> > > > +                 <&clk26m>,
+> > > > +                 <&ufs_ao_clk 4>,
+> > > > +                 <&ufs_ao_clk 0>,
+> > > > +                 <&topckgen 7>,
+> > > > +                 <&topckgen 41>,
+> > > > +                 <&topckgen 105>,
+> > > > +                 <&topckgen 83>,
+> > > > +                 <&topckgen 42>,
+> > > > +                 <&topckgen 84>,
+> > > > +                 <&topckgen 102>,
+> > > > +                 <&ufs_ao_clk 1>,
+> > > > +                 <&ufs_ao_clk 2>;
+> > > > +        clock-names = "ufs",
+> > > > +                      "ufs_aes",
+> > > > +                      "ufs_tick",
+> > > > +                      "unipro_sysclk",
+> > > > +                      "unipro_tick",
+> > > > +                      "unipro_mp_bclk",
+> > > > +                      "ufs_tx_symbol",
+> > > > +                      "ufs_mem_sub",
+> > > > +                      "crypt_mux",
+> > > > +                      "crypt_lp",
+> > > > +                      "crypt_perf",
+> > > > +                      "ufs_sel",
+> > > > +                      "ufs_sel_min_src",
+> > > > +                      "ufs_sel_max_src",
+> > > > +                      "ufs_rx_symbol0",
+> > > > +                      "ufs_rx_symbol1";
+> > > > +
+> > > > +        freq-table-hz = <273000000 499200000>, <0 0>, <0 0>, <0 0>, <0 0>,
+> > > > +                        <0 0>, <0 0>, <0 0>, <0 0>, <0 0>, <0 0>, <0 0>, <0 0>,
+> > > > +                        <0 0>;
+> > > > +
+> > > > +        phys = <&ufsphy>;
+> > > > +
+> > > > +        vcc-supply = <&mt6363_vemc>;
+> > > > +        vccq-supply = <&mt6363_vufs12>;
+> > > > +        vccq2-supply = <&mt6363_vufs18>;
+> > > > +
+> > > > +        resets = <&ufs_ao_clk MT8196_UFSAO_RST1_UFS_UNIPRO>,
+> > > > +                 <&ufs_ao_clk MT8196_UFSAO_RST1_UFS_CRYPTO>,
+> > > > +                 <&ufs_ao_clk MT8196_UFSAO_RST1_UFSHCI>;
+> > > > +        reset-names = "unipro_rst", "crypto_rst", "hci_rst";
+> > > 
+> > > Putting _rst in the name of a reset is redundant.
+> > > 
+> > > pw-bot: changes-requested
+> > > 
+> > > Thanks,
+> > > Conor.
+> > > > +        mediatek,ufs-disable-mcq;
+> > > > +    };
+> > > > 
+> > > 
+> > 
+> > Thanks for the review, I'll try to get a v3 out next week that
+> > addresses these issues and also makes the required adjustments
+> > to the drivers.
+> 
+> Cool. TL;DR, just be clear about where things are coming from and please
+> try to sort out the 8195 mess in a different patch to the 8196.
+> 
+> Cheers,
+> Conor.
+> 
+
+Thank you for helping to clear this whole mess up. Turns out this
+was way more work than initially expected, but I reckon if I come
+in like a wrecking ball right now then that will make the job easier
+for everyone contributing to mainline in the future.
+
+Kind regards,
+Nicolas Frattaroli
+
+
+
+
