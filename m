@@ -1,113 +1,88 @@
-Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 47E5FF4FA;
-	Mon, 20 Oct 2025 13:57:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760968643; cv=pass; b=u+dKKkmxoOUeN/mOZKTBrLyUprGrit53CviLQIAQY2LHHZLDIqZZ35peh2jGUQoR1a48CnkrSzHmLfau8UBWcmNW5FuMRieUfpdV4KqT5kLK4Rvgspg3rzuxP7W9F1KzzUWxucZeFY6gpFa+yjNo5MQ1AAWz2xWd16a13oOk5r0=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760968643; c=relaxed/simple;
-	bh=gGUyP/z5SYGHzwku0MV1Syx4oMNK9kl6KPfrS9cvVVc=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lsJpSYM6Zgdwgwyfi/5l83qR0tUc8I8DFEkPls6QZN+UXp9qkJI9SZvqVU2vVdd4JNMXjbELXcWN1Fq6GqkGj+wl0c9puyjLz708D90MrABE03Yy31nSoPg4gJKYLNgYt57xNlF0p1oE6NQgwWE+eY0tSI+IAWs8MfcJ30WHDDk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=VzqvIjc8; arc=pass smtp.client-ip=136.143.188.112
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D99DD86352;
+	Mon, 20 Oct 2025 15:41:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1760974869; cv=none; b=QsAkXHB+UhglNAGcqWHA2F5h7JvWrm7mluWPsYKMBzBXrtZQrYbhOKbHmjqlml9/YidP26I2T8ebOdyE+105dx09MiUiqYZCNCEfjnHMIlwd7InI2mrVKvgBBjBTbgdyAAqCnWgk8pks/zE0NR/LV/nuwHBXQUJxLYbstLH+UrQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1760974869; c=relaxed/simple;
+	bh=Oo7DpZ4wl1wswOWuSb4aFqE1cYvWje2320z/a0W/Glo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=InTWmb4fh/UVPYTPUxjyNKh/QU4YW9SPbXIKqaKfFFicQDM99ygSYbIvSbMPmyJvx6zTWnjXLoYEBuoobkyet6U2SjWJhSzg1tkqXFGawic6OliowzUgI7I9lcEwzExaNomOeVahkBKk9+Ee6u2cLdUrTo66HjCRR+FFjmLEMO8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=vDdO+gK/; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="VzqvIjc8"
-ARC-Seal: i=1; a=rsa-sha256; t=1760968609; cv=none; 
-	d=zohomail.com; s=zohoarc; 
-	b=B76x+v2U612DJuvjGJrxH9KxhqLNSHabXgPOtil2Al6AvzEPDXhdQ3pM0+2MjuypEfl4BC/0qiZWFdw1rDob742eajmqBEAz5nQX2NrnkMxAFKnha77sbTdE8DFzzaETh0Wfvm6+m8dqsdqdMP08A60N9Ar/Q4CO1Roam4dJo9U=
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1760968609; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=nqHvMgb0znCwfqJeA+RPXM5wvAfiMBWwT5rw7djWXRU=; 
-	b=k6t1B/lOVxI/5dz0U9zfC9L/tgdqerNFT21Wg03c7tDDtGurzi96OguldTDhfy+cfM82/lHAe+o36L8qf+Duq/rvmXediBJOvu+jHQCmtTZmhqB6fGIQ8bENxzlZ75mmh7AQQ+URPt9AVoF6nsSU448UsvhNQEvRm8gy6aChDBw=
-ARC-Authentication-Results: i=1; mx.zohomail.com;
-	dkim=pass  header.i=collabora.com;
-	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
-	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1760968609;
-	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
-	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
-	bh=nqHvMgb0znCwfqJeA+RPXM5wvAfiMBWwT5rw7djWXRU=;
-	b=VzqvIjc8muGtBxUkI/DjmYeRjYa+BG6VmeXEj3KCpeo8JWlPAhe3u7uiEawigmU6
-	/HNlExiXNYWxIr8mXk6VdNNpGp8QCASEc7PbXlSyaVxgZlfvhPkKEPXHm+FZmiawe2C
-	hXw+pe9pxGgm1FZLAJLVOP/TiZMToqLI3H8Ny93E=
-Received: by mx.zohomail.com with SMTPS id 1760968606551857.8630135881692;
-	Mon, 20 Oct 2025 06:56:46 -0700 (PDT)
-From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-To: Conor Dooley <conor@kernel.org>
-Cc: Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
- Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
- Krzysztof Kozlowski <krzk+dt@kernel.org>, Conor Dooley <conor+dt@kernel.org>,
- Matthias Brugger <matthias.bgg@gmail.com>,
- AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
- Chunfeng Yun <chunfeng.yun@mediatek.com>, Vinod Koul <vkoul@kernel.org>,
- Kishon Vijay Abraham I <kishon@kernel.org>,
- Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- Philipp Zabel <p.zabel@pengutronix.de>,
- Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>, kernel@collabora.com,
- linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
- linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
- linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org
-Subject:
- Re: [PATCH v2 1/5] dt-bindings: ufs: mediatek,ufs: Add mt8196-ufshci variant
-Date: Mon, 20 Oct 2025 15:56:39 +0200
-Message-ID: <2018479.PYKUYFuaPT@workhorse>
-In-Reply-To: <10741243.nUPlyArG6x@workhorse>
-References:
- <20251016-mt8196-ufs-v2-0-c373834c4e7a@collabora.com>
- <20251018-appliance-plus-361abdd09e75@spud> <10741243.nUPlyArG6x@workhorse>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="vDdO+gK/"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cr05752FhzljBC1;
+	Mon, 20 Oct 2025 15:40:59 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1760974855; x=1763566856; bh=Oo7DpZ4wl1wswOWuSb4aFqE1
+	cYvWje2320z/a0W/Glo=; b=vDdO+gK/7aLRcCYqexOk3vyB/qSdU1m71g/jSNSO
+	WYA7nKpxkNrQs127L28ptZvN9LWzUJPJ3+/+/p5fjrZ8A/kEhFnrZ0MmpZv+1xvZ
+	jMPv5odsVYbu6k5lpHWYCNVk/XAukCt0PnNiQGH0m7fI9/fJ9pOl0OllpUnL32sC
+	FNMkeCMTD8CMgozwVMuqptLt8ntFgux8f5TpK1YO7+hlUr6BVn0buBxm3sJLkIlu
+	Nj5FKVfHkAzQzi3hyYky5jWXqaHBORTRYJ/3f2TlAWRu/mCIs8xMz2opfK/tNJJb
+	BPYpqW1A1UYXVV7F1JzmDKyz2vUfouC+TMJ5Nhr4bKWAiA==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id AT_bPrdYl-hz; Mon, 20 Oct 2025 15:40:55 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cr04l5K2pzlgqVl;
+	Mon, 20 Oct 2025 15:40:38 +0000 (UTC)
+Message-ID: <05167a77-f34e-4c75-aded-3c907c4ba446@acm.org>
+Date: Mon, 20 Oct 2025 08:40:37 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 7Bit
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/4] scsi: ufs: ufs-mediatek: Add UFS host support for
+ MT8195 SoC
+To: Macpaul Lin <macpaul.lin@mediatek.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ Rob Herring <robh@kernel.org>, Krzysztof Kozlowski <krzk+dt@kernel.org>,
+ Conor Dooley <conor+dt@kernel.org>, Matthias Brugger
+ <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Peter Wang <peter.wang@mediatek.com>, Stanley Jhu <chu.stanley@gmail.com>,
+ "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, devicetree@vger.kernel.org,
+ linux-kernel@vger.kernel.org, linux-arm-kernel@lists.infradead.org,
+ linux-mediatek@lists.infradead.org
+Cc: Bear Wang <bear.wang@mediatek.com>, Pablo Sun <pablo.sun@mediatek.com>,
+ Ramax Lo <ramax.lo@mediatek.com>, Macpaul Lin <macpaul@gmail.com>,
+ MediaTek Chromebook Upstream
+ <Project_Global_Chrome_Upstream_Group@mediatek.com>
+References: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20250722085721.2062657-1-macpaul.lin@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Monday, 20 October 2025 15:27:40 Central European Summer Time Nicolas Frattaroli wrote:
-> On Saturday, 18 October 2025 23:30:17 Central European Summer Time Conor Dooley wrote:
-> > On Fri, Oct 17, 2025 at 09:02:07PM +0200, Nicolas Frattaroli wrote:
-> > > On Friday, 17 October 2025 17:42:10 Central European Summer Time Conor Dooley wrote:
-> > > > On Thu, Oct 16, 2025 at 02:06:43PM +0200, Nicolas Frattaroli wrote:
-> > > 
-> > > > > +
-> > > > > +  freq-table-hz: true
-> > > > 
-> > > > Then you add this deprecated property, which isn't mentioned in the
-> > > > commit message and I don't see why a deprecated property is needed.
-> > > 
-> > > I'll rework it to use operating-points-v2 instead. It needs one of
-> > > the two, or else on mt8196 at least, the hardware locks up.
-> > > 
-> > > I'll still add operating-points-v2 for all SoCs though, if that's
-> > > okay with you.
-> > 
-> > Right. I'd accept freq-table-hz if the other devices here have been
-> > using it all along, but if this is something new - then please use the
-> > operating-points-v2 property. Looking at the binding example, it looks
-> > like it does indeed use freq-table-hz, so that's probably justification
-> > enough to keep doing so.
-> 
-> Turns out the only usage of freq-table-hz is in the examples I've added.
-> Mainline does not at all have any nodes in the DT right now that would
-> use this property.
-> 
-> Ergo, I think I will go for operating-points-v2. We might as well clean
-> this up now instead of ossifying a deprecated property in a new binding
-> for the sake of downstream compatibility (which should never be a concern)
-> that I am already breaking. The added benefit is that if we ever do get
-> better OPP definitions than just two clock states, then we can actually
-> add the OPP bandwidth properties so implementations can make informed
-> decisions.
-> 
+On 7/22/25 1:57 AM, Macpaul Lin wrote:
+> Add "mediatek,mt8195-ufshci" to the of_device_id table to enable
+> support for MediaTek MT8195/MT8395 UFS host controller. This matches the
+> device node entry in the MT8195/MT8395 device tree and allows proper driver
+> binding.
+Please always include a cover letter when posting a patch series. The
+cover letter generated by git includes helpful information like a diffstat.
 
-Nevermind, I see the existing binding had it in the example for 8183,
-just not in the binding itself. So freq-table-hz it is.
+Thanks,
 
-
+Bart.
