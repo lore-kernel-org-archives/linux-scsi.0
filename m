@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 19E3B2F60D1;
-	Mon, 20 Oct 2025 09:56:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 65D682E9EDA;
+	Mon, 20 Oct 2025 10:02:36 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1760954204; cv=none; b=ppG2XVXhn6Os1QkgQES5EVDAhrRR6jHBuVb300KIT71kijn5HIsGkbIdqknElm3wW/Rhby8TLnYSBIHx4ntFJMUnYGmN4TVFTU+cAbDMu2NxBs9Vk+FXf0Vun3Gm7W16MYUeTnanZ9K+Cf1VyHswJj0n40k6I3/FsbwwmDsRn5w=
+	t=1760954556; cv=none; b=NwmPdy9s/C0eGn2ls4A6BJ3Pfc/VHeJX+pk9qV9dQDGB3xQB3wgqp0BVCuMtAd8H985f2p4TZPhFIXRwhFrHgPpVvIWqb6OQwfd+ykrpjkfDbEByhWf7UtJURXgPi8YKfKvFDBvsixaNQM7gC/euYzj3cklNJ9zpYbC6rCfWnd0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1760954204; c=relaxed/simple;
-	bh=eRscmhaBeaXNyyMb6QNngH3o5h5QCnU9xCb75nFP7+M=;
+	s=arc-20240116; t=1760954556; c=relaxed/simple;
+	bh=OXMj22BFd95MnCA9Pp5zB+u1q9K2KOGCsd/US9btLgQ=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=EhvHYhKRm8KqgOL9p8h1pWbkizxfqjXBQ9NwXI+lBLgA18iaQgapOPbSzQUCsDrxphAYqANxBlgFsSwH+8812EzBhJFhrHHrCIdDcbd0D9PsCJKslC/UBsJhIwDhhQmYFpwqrn0m5xBzMvw8BDwcQrV8TMPFLGx5htX4ZgmkvQM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=TTfdfeu7; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=PSEopNuD51b7tp3bs60MCHoOwM1qU2zoMz5hwgnteV+bBbWAXJ2JfckQvrW63Enxbtxdb1QIreyQ2qbN79KWWSciWgNZaXJxL/EdbuSishjl2bx1fev9HAsHsATaWiJbxGAl+c2YBk5MGLyxNJzyuxOxVaC7jgKmdLrzHialMpU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sGy0RrSn; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="TTfdfeu7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 844F3C4CEF9;
-	Mon, 20 Oct 2025 09:56:38 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sGy0RrSn"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1A6B3C4CEF9;
+	Mon, 20 Oct 2025 10:02:30 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1760954203;
-	bh=eRscmhaBeaXNyyMb6QNngH3o5h5QCnU9xCb75nFP7+M=;
+	s=k20201202; t=1760954556;
+	bh=OXMj22BFd95MnCA9Pp5zB+u1q9K2KOGCsd/US9btLgQ=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=TTfdfeu7+i1jUYuaXPwGYgFpZ061KDKhmAeYU6LXSHmZVl4lLGEFxYVEEjcUeeEIQ
-	 cvrGT7UgAI4lKgsp3/EPHY2EbxgElGBkCyw7GEhhjeH/DGWR7X6mpgaNoxKAkUXZZO
-	 Mi6f9OrDOYt0rus2Kaq8TnBWsTs5N/gJ389bdcbWjqtJ/iuhuNbY/IIUextL4vNluy
-	 +viQe9GpTDGX/6l5h/zlR2L6hMnQLjazC/sTjT5Nz84GLCCW6deVz6kg0GYBOIktNo
-	 5q+icUzkiCEYEf/J1+8Nkdkq28e8cgiyQYXWb6iXDOw7MHJ9UwIDe6oAePv90frKCU
-	 MAOkNIVOB4kPg==
-Message-ID: <4dc420a3-cf89-4f45-84e7-4d0079240681@kernel.org>
-Date: Mon, 20 Oct 2025 11:56:36 +0200
+	b=sGy0RrSn9lTmeKBPr4KkCFapcIKY2JfBl0FcWvs/pSGDb+HJ4i4UWhPXYSmHKo2cq
+	 oIJXO9ENHBj169tFKmKazLfx8d3zzeVGt8xbbOYP2CubQ5nmYzil84hja4jI/gJJ4P
+	 MXFT4MvngVStgE6lyKqpZdx0ayflqtaYXlBLuduRz4qNFnyMJSBQB0/bomuE+2mbzg
+	 2cjxtin4ToeLnB7FMv0FMTPgLREYJxNXtJ0raP5tViSmmMvC7xufV8EJQviNBomVjO
+	 bJddhSflCQkjMKzV1pX3LgmhkyUdylACzFib3IYcw/nd0dveBsgpqYbHEoDbq/45S6
+	 A5rSRHZyYC8oA==
+Message-ID: <3f5e2d98-4c4a-4a8b-b041-200bb1fc3e7e@kernel.org>
+Date: Mon, 20 Oct 2025 12:02:29 +0200
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -120,99 +120,36 @@ Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 On 20/10/2025 11:44, Peter Wang (王信友) wrote:
-> On Mon, 2025-10-20 at 10:28 +0200, Krzysztof Kozlowski wrote:
->>>
->>>
->>> Hi Krzysztof Kozlowski,
->>>
->>> The main reason for my objection was also clearly stated:
->>> "removing these DTS settings will make what was originally
->>> a simple task more complicated."
->>> I’m not sure if you are quoting only the "In addition"
->>> part to take it out of context?
 >>
->> It is not out of context. It was the statement on its own.
+>> Consider stepping down and choosing them if they better understand
+>> how
+>> upstream works.
+>>
+>> As Rob wrote earlier:
+>>
+>> "Sounds like we need a new maintainer then. They clearly don't
+>> understand that downstream doesn't exist."
+>>
+>>
+>> Best regards,
+>> Krzysztof
 > 
-> Hi Krzysztof Kozlowski,
-> 
-> However, you haven’t addressed the main reason for my objection.
-> "removing these DTS settings will make what was originally
-> a simple task more complicated."
+> I must reiterate that I do not oppose patches that are 
+> beneficial to the community; I only object to patches that are 
+> not helpful.
 
 
-You did not object in technical matter at all here:
-https://lore.kernel.org/all/ce0f9785f8f488010cd81adbbdb5ac07742fc988.camel@mediatek.com/
+Let's quote you again:
 
-Look at this patch.
+"*In addition*, it will require MediaTek to put in extra
+effort to migrate the kernel. "
 
-You said nothing about actual change, except blocking the community
-maintainer. You did not raise any other concerns so what are you
-speaking about "other main concerns"?
+This is ADDITIONAL argument you used. This is what you wrote, this is
+what you claimed to be ADDITIONAL argument.
 
-Even if such existed, they did not matter, because YOU WROTE ONLY:
+In your opinion ADDITIONAL argument is downstream and you still do not
+understand why such argument is instant NAK for you as reviewer.
 
-"The role of MediaTek UFS maintainer is not suitable to be handed over
-to someone outside of MediaTek."
-
-This is what we discuss here.
-
-> 
->>
->>
->>
->> You denied community to participate and now you twist the argument
->> like
->> you want Mediatek people to be involved. No one denied Mediatek to be
->> maintainer.
->>
->> It is you who denied community to join the maintainers.
->>
->> This is not acceptable and you still do not understand why.
-> 
-> I think I understand your point now, you believe that opposing
-> this patch means opposing community participation and support, right?
-
-Do you even read your own comments and where did you place them? Do you
-understand that we discuss emails, not some unsaid or other threads?
-
-Look at this:
-
-https://lore.kernel.org/all/ce0f9785f8f488010cd81adbbdb5ac07742fc988.camel@mediatek.com/
-
-	
-> But it’s clear that you haven’t carefully considered the main 
-> reason for my objection?
-
-Main reason for objection? What?
-
-> 
-> 
-> 
->>
->>
->> You could apologize and explain your mistakes, but instead you push
->> same
->> narrative.
->>
->> Still a red flag. I will not accept such vendor-like behaviors,
->> because
->> they significantly harm the community.
->>
->> I am very surprised that UFS maintainers did not object to it. This
->> should be clearly ostracized.
->>
->>
-> 
-> Sorry, I still don’t quite understand why having people who
-> know the SoC better maintain the SoC driver would be considered
-> harmful to the community?
-
-You are twisting the problem, like anyone denied you being the maintainer.
-
-YOU DENIED OTHER PEOPLE!
-
-I finish the discussion here, I am considering your explanations
-intentionally twisting the point thus I find it still harmful behavior.
 
 Best regards,
 Krzysztof
