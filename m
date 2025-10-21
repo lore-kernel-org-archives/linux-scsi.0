@@ -1,183 +1,107 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.80])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C139B244677;
-	Tue, 21 Oct 2025 12:46:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.80
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761050771; cv=pass; b=uTUSLdFHG9kDMT62GPQ4ifiYZYGRkF7GVSaLXADauIyNH0Rqnjq6evHCiWRn+aPRsApb7a18AmSWz43wcslBt1eZXh+ktk/bagW2gX4Wv6QATMIKHnciAtLDtB79vbUsXW89md5yxMJsQckIRcuglddb4JJGRRSIb5Sjam2SRJc=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761050771; c=relaxed/simple;
-	bh=1q6vN86jbGv3nIognT51qbJqHH1WBSGgAJTpN/qG8Mk=;
-	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=nuUjBcVvNAmfrbf1TIZ8ApsgrVsnoDh8MuUJV3JOO9AiRET9SHuWG7n7joE+JrY9PK5EdVYb/H9XTmBJCcNV4hiC9NZO5uuQQNNbOZoo9STJNCMaun9JXGpjUjcJgORoB/x5pzu/aUkt4rEs262kzkwZQNJ+qvX0z9iXor4A9Hw=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=J4Sh0dbQ; arc=pass smtp.client-ip=85.215.255.80
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C17A341655
+	for <linux-scsi@vger.kernel.org>; Tue, 21 Oct 2025 15:01:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1761058889; cv=none; b=H38qP20L5XHhFsA9SrnrnEDgs5AgY2126fv3psUImtfS8409JBdmdkTwjG5bhVndGyaJSG4Gu+GLe7E90YNijfx9xgDt9AgelWqp3mGsAGRRyuq3kC9ISXEeg+jd1cvKhgdJBrsEnoEp67ZztIKaItCHmfJyYLC/Xzut3tHFbKE=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1761058889; c=relaxed/simple;
+	bh=tDEYSndoMWfy2rdUfaONhK/wrhs6AmC9pmb4b71j6us=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SCwD4XaQ5FfwZxhJerh2iJw5B7Lz+4mlyemcuGnPHnyhn8MDD63gsCCDlpkesFbc6qHkYmS/a86EfbwImPlPncsPx72I2aGBTIT9/y3IbwdxcSH3WpuEN+Dubv1RMHUqrZ53hCTyiYhdZbo4Ah1N9x/InVcsomZQvFDjyC+UFQQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DhJlXhzW; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="J4Sh0dbQ"
-ARC-Seal: i=1; a=rsa-sha256; t=1761050584; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=dwapvN65ZFtX+7uD+549a2hjoI++KNbT7/TR96atZIzCnEPs/mp+HCdD8EYsqH8G+u
-    uaQBRb1ZNlF+aRQr+CV7O9Br2GcpHeQf4CxO8QOZJ43OvyEd9ihyOME33A0t4dX69lAw
-    3XnGviMTfeLgGKWvMaYKlXzgKvKFr/jymneaUMAFskKnAYPp6/5b04Eo2CnOmUu4Wr51
-    saK5ObEUDaqvX3A3qRmF3hIq1uOWpATqyo21oscidoFakKeHT7ADfJX2/rPIF1e8kie3
-    dnMo94IFfSCaswunmmLN1HSP0K8oYYzuGLu1OHaihCgIVkelW0FE9taT1FUw3l0eee5C
-    kN9A==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1761050584;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=OvLNPSDEQavvu1VF7E7TIN224K3UOaN9Gwv18btOmIA=;
-    b=aHazwkGhKrX7OdEtHkhFCRbZehyTldC5RGi+51Q4aSsBgeNOPEL9nBoShLWd6ViL/d
-    013ILzGwdimAG9CyVj63daXFA73b1+5HDWbBoXKsByRpWfEk78smb8zwGssjuqTe9S/B
-    LJjYjO/BHrMZ8SZVctz2kXt4O8w0LEsMQ4nfld90VYRVz5DyvKv9VCMYerWBJAKLBnmb
-    K2WICyJnBLJcWQzn3YrdHDlHIqwWLO9eYZgn87i0loyCxye2lCa30hlXajCQTUelDKKo
-    Bg3AbQ1x9e0HU3AHAIAOyFxjkg1Wkq+Jb4w5DEYLvQNxVl6RrbSsTaf8376oPK9tQ/JO
-    7qrQ==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1761050584;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
-    From:Subject:Sender;
-    bh=OvLNPSDEQavvu1VF7E7TIN224K3UOaN9Gwv18btOmIA=;
-    b=J4Sh0dbQIN1yp6g7x5BZcc1DvODAp+SavEeu0I2KIeYjo+uj93+P78UiiaSQwukm9r
-    OYcr3EDoZoJwmvQpZK59SFVvLg450XqczPpyYExXgGDY9W20fBNQguECQNos7N1p89Eb
-    Js1NcVlMJ2L2BilT2S4YrMxv+vyp9aZF9KeSvYzU9KUhRuLfDmRVbKWt1njvLf216EqD
-    jvIz6bBk4HRQ+RHNm6kiMcF6qRYAvgf2VqLivAgskqXn30/Wouu7pGMBec2jQIFFKRmV
-    M8H/yFd+3xv8obgkKRawROMUIH5LuQndM/YXUSe8Z4dmXOG5UNcNhAuaU8wZldYgG4cA
-    peIg==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O2J2YOom0XQaPis+nU/5K"
-Received: from Munilab01-lab.micron.com
-    by smtp.strato.de (RZmta 53.4.2 AUTH)
-    with ESMTPSA id z293fb19LCh4114
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Tue, 21 Oct 2025 14:43:04 +0200 (CEST)
-From: Bean Huo <beanhuo@iokpp.de>
-To: avri.altman@wdc.com,
-	avri.altman@sandisk.com,
-	bvanassche@acm.org,
-	alim.akhtar@samsung.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	can.guo@oss.qualcomm.com,
-	ulf.hansson@linaro.org,
-	beanhuo@micron.com,
-	jens.wiklander@linaro.org
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Avri Altman <Avri.Altman@sandisk.com>
-Subject: [PATCH v5 1/3] scsi: ufs: core: Convert string descriptor format macros to enum
-Date: Tue, 21 Oct 2025 14:42:52 +0200
-Message-Id: <20251021124254.1120214-2-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
-In-Reply-To: <20251021124254.1120214-1-beanhuo@iokpp.de>
-References: <20251021124254.1120214-1-beanhuo@iokpp.de>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DhJlXhzW"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4crb902VZ8zm0NB9;
+	Tue, 21 Oct 2025 15:01:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1761058882; x=1763650883; bh=CjcRfqb+ro1DE8jrnYnTNNMd
+	qWZKS583eGp4qU3haYI=; b=DhJlXhzWypHieZc5+fGFOkyx+G7P1bt2qRNB8Es5
+	LopJElMLZKfCgXEy7SFRf/Y2O5TYtXCo7q6I1GTCUdzZ5QMrHBHgixNp7D48GXhE
+	wfujqw9I95/AocM/bsFpW/pVj19AX+zCgR7HApYKQcisEdxNCbNTHBsdlWeXK8HN
+	Wx3iggxP1h1hu7IthWI0Bs8t42A451IbqYM/2Lq32/V6ThJrUoVmu+27RmfMAHqE
+	yDrTATUd4fHzk6LpS2o3/FWRa59b+5yy+ku0SfIJ0GJl1xgUdKjVbLCALzLrlLHV
+	RvBU2QguZfRW/o4O84fxaQF7GM/CXMtMvuUgBGeeaobuwQ==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id Ce058pUmQ0vE; Tue, 21 Oct 2025 15:01:22 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4crb8k41x7zm0yt6;
+	Tue, 21 Oct 2025 15:01:08 +0000 (UTC)
+Message-ID: <c80b73bc-b52a-4735-ba04-c1e7f6a353e0@acm.org>
+Date: Tue, 21 Oct 2025 08:01:06 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="us-ascii"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/8] ufs: core: Fix a race condition related to the "hid"
+ attribute group
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Cc: "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "chullee@google.com" <chullee@google.com>,
+ "beanhuo@micron.com" <beanhuo@micron.com>,
+ "adrian.hunter@intel.com" <adrian.hunter@intel.com>,
+ "James.Bottomley@HansenPartnership.com"
+ <James.Bottomley@HansenPartnership.com>,
+ "avri.altman@sandisk.com" <avri.altman@sandisk.com>,
+ "quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>
+References: <20251014200118.3390839-1-bvanassche@acm.org>
+ <20251014200118.3390839-2-bvanassche@acm.org>
+ <22dd7d580444be92d0029694468cdddf1ac98f13.camel@mediatek.com>
+ <569fcd05-4d77-468a-bc8d-c86d0a5dfc8c@acm.org>
+ <bc0ac3e9f44bb3c6e0f06efd7372b21535ac07a9.camel@mediatek.com>
+ <62ec19d2-f7ee-445d-be97-098acc1f390b@acm.org>
+ <c47fcb9200d4e969b8200a8c2cb4a4af35883047.camel@mediatek.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <c47fcb9200d4e969b8200a8c2cb4a4af35883047.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-From: Bean Huo <beanhuo@micron.com>
 
-Convert SD_ASCII_STD and SD_RAW from boolean macros to enum values for improved
-code readability. This makes ufshcd_read_string_desc() calls self-documenting by
-using explicit enum values instead of true/false.
+On 10/20/25 8:04 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> On Mon, 2025-10-20 at 09:13 -0700, Bart Van Assche wrote:
+> Apologies, I missed the HID patch. However, this change will
+> not affect only HID; other sysfs groups, such as
+> ufs_sysfs_device_descriptor_group, should also be updated?
+Hi Peter,
 
-Move the ufshcd_read_string_desc() declaration from include/ufs/ufshcd.h to
-drivers/ufs/core/ufshcd-priv.h since this function is not exported.
+Calling sysfs_update_group() is only necessary for sysfs groups that
+define an .is_visible callback and only after the input parameters for
+these callback functions have been modified. Here is an overview of the
+groups in which an .is_visible callback has been defined:
 
-Co-developed-by: Bart Van Assche <bvanassche@acm.org>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Suggested-by: Avri Altman <Avri.Altman@sandisk.com>
-Signed-off-by: Bean Huo <beanhuo@micron.com>
----
- drivers/ufs/core/ufshcd-priv.h | 14 ++++++++++----
- drivers/ufs/core/ufshcd.c      |  8 +++-----
- include/ufs/ufshcd.h           |  4 ----
- 3 files changed, 13 insertions(+), 13 deletions(-)
+$ git grep -nHw is_visible drivers/ufs/core/ufs-sysfs.c
+drivers/ufs/core/ufs-sysfs.c:1955:	.is_visible =3D ufs_sysfs_hid_is_visib=
+le,
+drivers/ufs/core/ufs-sysfs.c:2048:	.is_visible =3D=20
+ufs_unit_descriptor_is_visible,
 
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index d0a2c963a27d..d74742a855b2 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -78,11 +78,17 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
- void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
- 			     struct ufshcd_lrb *lrbp);
- 
--#define SD_ASCII_STD true
--#define SD_RAW false
--int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
--			    u8 **buf, bool ascii);
-+/**
-+ * enum ufs_descr_fmt - UFS string descriptor format
-+ * @SD_RAW: Raw UTF-16 format
-+ * @SD_ASCII_STD: Convert to null-terminated ASCII string
-+ */
-+enum ufs_descr_fmt {
-+	SD_RAW = 0,
-+	SD_ASCII_STD = 1,
-+};
- 
-+int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index, u8 **buf, enum ufs_descr_fmt fmt);
- int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
- int ufshcd_send_bsg_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
- 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 8339fec975b9..2a653137a9ea 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -3773,16 +3773,14 @@ static inline char ufshcd_remove_non_printable(u8 ch)
-  * @desc_index: descriptor index
-  * @buf: pointer to buffer where descriptor would be read,
-  *       the caller should free the memory.
-- * @ascii: if true convert from unicode to ascii characters
-- *         null terminated string.
-+ * @fmt: if %SD_ASCII_STD, convert from UTF-16 to ASCII
-  *
-  * Return:
-  * *      string size on success.
-  * *      -ENOMEM: on allocation failure
-  * *      -EINVAL: on a wrong parameter
-  */
--int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
--			    u8 **buf, bool ascii)
-+int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index, u8 **buf, enum ufs_descr_fmt fmt)
- {
- 	struct uc_string_id *uc_str;
- 	u8 *str;
-@@ -3811,7 +3809,7 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
- 		goto out;
- 	}
- 
--	if (ascii) {
-+	if (fmt == SD_ASCII_STD) {
- 		ssize_t ascii_len;
- 		int i;
- 		/* remove header and divide by 2 to move from UTF16 to UTF8 */
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9425cfd9d00e..b4eb2fa58552 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1431,10 +1431,6 @@ static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
- void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
- void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
- 			     const struct ufs_dev_quirk *fixups);
--#define SD_ASCII_STD true
--#define SD_RAW false
--int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
--			    u8 **buf, bool ascii);
- 
- void ufshcd_hold(struct ufs_hba *hba);
- void ufshcd_release(struct ufs_hba *hba);
--- 
-2.34.1
+The ufs_sysfs_hid_group is the only group for which the=20
+sysfs_update_group() function ever has to be called.
 
+ > Would it be better to ensure that ufshcd_async_scan
+ > completes before invoking ufs_sysfs_add_nodes?
+
+That would make the sysfs attributes unavailable if the LUN scan hangs.
+
+Thanks,
+
+Bart.
