@@ -1,119 +1,93 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from canpmsgout10.his.huawei.com (canpmsgout10.his.huawei.com [113.46.200.225])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DD9AB23AB9C;
-	Tue, 21 Oct 2025 05:36:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1E85227FD7D;
+	Tue, 21 Oct 2025 07:34:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.225
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761025010; cv=none; b=Rg70yt1LK63iSvOY746y8caHWP1svPSSNltUKOlQPHHpri2PcLM1h1YZXwN0THHmGwMw94Nx1gBOrq50gxdfVSNhhDSnoyctVKLmaeDCOArMPoObtiuC4ltpsXOr76Om4zJs1rtCSck/1Pri5DyYOlIoaXyk6+QQRwNzJrygOoI=
+	t=1761032091; cv=none; b=C1xfr64Qg+sHCJxVSnuvgwbrXwomQDYM5ri1sEWZlXb+rwDOGFvMcH5Nwa5+zwASE1s0qRXGR9971g35gkQ6U3AnJXcbUm9Az8tdH/uxtMNlfV3KD2fvCsa8lSaAMCdzQ3T303V9swZXB1yeDuk/CPfh32OfxdHaOy1Zyr7j5Js=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761025010; c=relaxed/simple;
-	bh=T09YKLc/aWWjmxxkF2jQHHlcSWx+HpI6aR2Lq2mNO58=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=OGQfK6jalBZxjzTZKxa3yX8z7PVrqKO6Y/NWc77+o7nza3nt3DqyInDeuLcMH3xcOC5FWHTFkpetVKGywSPGnYMi7AV9FWN5LXG2HScroSxfIVecr3ey8uoW5Tuh8CagoFKymUeaWHiKGMp/7uaSpqyTlXjJfo0TkxWBgV7tGP0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=O5ys5hDF; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1761032091; c=relaxed/simple;
+	bh=hC5tvKb13w9Pzr2Uh3ekORCYcLYXBgnL/lruhyAesrw=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=I6/gcu8eCgeywzOD17SQs3CXoHtJ84JiNlmW7DcqJdIMdC+L/r0nrFiV4p+IKidMX9vfh7MOkiiTc9jrsFTPTemZ1ty03vD+0fysbMxMSZK5Ir3jKoHjF+JIjLmoI3+CxDpOkK06xvgn9h/KLAhhDZeKlT5eNdvcp+zAgwYWl2Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=eNo5ym2N; arc=none smtp.client-ip=113.46.200.225
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="O5ys5hDF"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=YlFYbdykABayPvN+IU9EDT7b7dDniXXWQfbMhJjQoRY=; b=O5ys5hDF/JUqv4GTDZ9CfnNB97
-	bkSwcNvT9u+cK36isCaQ/FW3WPY2Uy7KpnNsxMtEoO3wLNSe4ClSQeBdbAOj6J9P4HdkTeeO8MWe5
-	l1VdwCZko+QrkD0/VPNnd2ywkMPz6gJImVpJsMoRo5DWBmiju5M0TzkvIeffT2bnDpBe1riVxxgHH
-	5kOY8ZlN2+Kixvf8nhquo//E8n+Lkt7JCuVegYYdCZvSIqQOfuZKKnlZ2EE+8stbGcBSrh4rBXGOV
-	1d5cFqNeoy3/CASLSqSX6sAdfXfF82xArzYDOY57XDQ+QJHy7LpT5pDBT2w2IdkuxtwZ8CI58IIsh
-	ypncjiDg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vB53A-0000000FsC2-1kdS;
-	Tue, 21 Oct 2025 05:36:48 +0000
-Date: Mon, 20 Oct 2025 22:36:48 -0700
-From: Christoph Hellwig <hch@infradead.org>
-To: Yuhao Jiang <danisjiang@gmail.com>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	stable@vger.kernel.org
-Subject: Re: [PATCH] scsi: wd33c93: fix buffer overflow in SCSI message-in
- handling
-Message-ID: <aPcb8MMIJ2ve64yD@infradead.org>
-References: <20251021020804.3248930-1-danisjiang@gmail.com>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="eNo5ym2N"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=6esKAayHAT9WjDVN0yl0ek5qzPVL6tQl6OyfEkc/dgw=;
+	b=eNo5ym2N2Ijmr8f3YXwIH7T5aqaFjTEHnzqYGxktYwSOFsgEOszwQfIhqFYzQ4vsQNeXuaVy0
+	+qupDOAukPNwMmrXtsdbtkDHFcTca7WDz08G39a0rdiO5cES7ao0kZBNPC3ZcJY1AgKqRAwGf21
+	TdSoYCqXEKHBYHENRTMnR+A=
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by canpmsgout10.his.huawei.com (SkyGuard) with ESMTPS id 4crPF42sCrz1K96c;
+	Tue, 21 Oct 2025 15:34:16 +0800 (CST)
+Received: from kwepemj100018.china.huawei.com (unknown [7.202.194.12])
+	by mail.maildlp.com (Postfix) with ESMTPS id 9A0C51A016C;
+	Tue, 21 Oct 2025 15:34:39 +0800 (CST)
+Received: from localhost.huawei.com (10.90.31.46) by
+ kwepemj100018.china.huawei.com (7.202.194.12) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 21 Oct 2025 15:34:38 +0800
+From: Xingui Yang <yangxingui@huawei.com>
+To: <john.g.garry@oracle.com>, <yanaijie@huawei.com>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>
+CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>,
+	<linuxarm@huawei.com>, <liyihang9@h-partners.com>, <yangxingui@huawei.com>,
+	<liuyonglong@huawei.com>, <kangfenglong@huawei.com>
+Subject: [PATCH] Revert "scsi: libsas: Fix exp-attached device scan after probe failure scanned in again after probe failed"
+Date: Tue, 21 Oct 2025 15:34:38 +0800
+Message-ID: <20251021073438.3441934-1-yangxingui@huawei.com>
+X-Mailer: git-send-email 2.33.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251021020804.3248930-1-danisjiang@gmail.com>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemj100018.china.huawei.com (7.202.194.12)
 
-This exploit really needs a catchy name.  Just think of how much
-valuable data you could extract by selling malicious fake 8-bit
-SCSI disks to retro computing enthusiasts and then exploiting their
-SCSI HBA driver.
+This reverts commit ab2068a6fb84751836a84c26ca72b3beb349619d.
 
-On Mon, Oct 20, 2025 at 09:08:04PM -0500, Yuhao Jiang wrote:
-> A buffer overflow vulnerability exists in the wd33c93 SCSI driver's
-> message handling where missing bounds checking allows a malicious
-> SCSI device to overflow the incoming_msg[] buffer and corrupt kernel
-> memory.
-> 
-> The issue occurs because:
-> - incoming_msg[] is a fixed 8-byte buffer (line 235 in wd33c93.h)
-> - wd33c93_intr() writes to incoming_msg[incoming_ptr] without
->   validating incoming_ptr is within bounds (line 935)
-> - For EXTENDED_MESSAGE, incoming_ptr increments based on the device-
->   supplied length field (line 1085) with no maximum check
-> - The validation at line 1001 only checks if the message is complete,
->   not if it exceeds buffer size
-> 
-> This allows an attacker controlling a SCSI device to craft an extended
-> message with length field 0xFF, causing the driver to write 256 bytes
-> into an 8-byte buffer. This can corrupt adjacent fields in the
-> WD33C93_hostdata structure including function pointers, potentially
-> leading to arbitrary code execution.
-> 
-> Add bounds checking in the MESSAGE_IN handler to ensure incoming_ptr
-> does not exceed buffer capacity before writing. Reject oversized
-> messages per SCSI protocol by sending MESSAGE_REJECT.
-> 
-> Reported-by: Yuhao Jiang <danisjiang@gmail.com>
-> Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
-> Cc: stable@vger.kernel.org
-> Signed-off-by: Yuhao Jiang <danisjiang@gmail.com>
-> ---
->  drivers/scsi/wd33c93.c | 13 +++++++++++++
->  1 file changed, 13 insertions(+)
-> 
-> diff --git a/drivers/scsi/wd33c93.c b/drivers/scsi/wd33c93.c
-> index dd1fef9226f2..2d50a0a01726 100644
-> --- a/drivers/scsi/wd33c93.c
-> +++ b/drivers/scsi/wd33c93.c
-> @@ -932,6 +932,19 @@ wd33c93_intr(struct Scsi_Host *instance)
->  		sr = read_wd33c93(regs, WD_SCSI_STATUS);	/* clear interrupt */
->  		udelay(7);
->  
-> +		/* Prevent buffer overflow from malicious extended messages */
-> +		if (hostdata->incoming_ptr >= sizeof(hostdata->incoming_msg)) {
-> +			printk("wd33c93: Incoming message too long, rejecting\n");
-> +			hostdata->incoming_ptr = 0;
-> +			write_wd33c93_cmd(regs, WD_CMD_ASSERT_ATN);
-> +			hostdata->outgoing_msg[0] = MESSAGE_REJECT;
-> +			hostdata->outgoing_len = 1;
-> +			write_wd33c93_cmd(regs, WD_CMD_NEGATE_ACK);
-> +			hostdata->state = S_CONNECTED;
-> +			spin_unlock_irqrestore(&hostdata->lock, flags);
-> +			break;
-> +		}
-> +
->  		hostdata->incoming_msg[hostdata->incoming_ptr] = msg;
->  		if (hostdata->incoming_msg[0] == EXTENDED_MESSAGE)
->  			msg = EXTENDED_MESSAGE;
-> -- 
-> 2.34.1
-> 
-> 
----end quoted text---
+As the disk may fall into an abnormal loop of probe when it fails to probe
+due to physical reasons and cannot be repaired.
+
+Signed-off-by: Xingui Yang <yangxingui@huawei.com>
+---
+ drivers/scsi/libsas/sas_internal.h | 14 --------------
+ 1 file changed, 14 deletions(-)
+
+diff --git a/drivers/scsi/libsas/sas_internal.h b/drivers/scsi/libsas/sas_internal.h
+index 03d6ec1eb970..85948963fb97 100644
+--- a/drivers/scsi/libsas/sas_internal.h
++++ b/drivers/scsi/libsas/sas_internal.h
+@@ -145,20 +145,6 @@ static inline void sas_fail_probe(struct domain_device *dev, const char *func, i
+ 		func, dev->parent ? "exp-attached" :
+ 		"direct-attached",
+ 		SAS_ADDR(dev->sas_addr), err);
+-
+-	/*
+-	 * If the device probe failed, the expander phy attached address
+-	 * needs to be reset so that the phy will not be treated as flutter
+-	 * in the next revalidation
+-	 */
+-	if (dev->parent && !dev_is_expander(dev->dev_type)) {
+-		struct sas_phy *phy = dev->phy;
+-		struct domain_device *parent = dev->parent;
+-		struct ex_phy *ex_phy = &parent->ex_dev.ex_phy[phy->number];
+-
+-		memset(ex_phy->attached_sas_addr, 0, SAS_ADDR_SIZE);
+-	}
+-
+ 	sas_unregister_dev(dev->port, dev);
+ }
+ 
+-- 
+2.33.0
+
