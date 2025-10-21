@@ -1,62 +1,62 @@
 Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.80])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E0A5D32E74D;
-	Tue, 21 Oct 2025 12:43:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C139B244677;
+	Tue, 21 Oct 2025 12:46:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.80
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761050597; cv=pass; b=shB0g2U0cfQybNIV0Ajj0tS3UYMmuW/wrTAcmqYDZ4opgp5OgILiKcU54ENfd4SV7/WHOV+nlWaPMATr2+ULAlTHZzZFBmec4vt20MphYTthegZMUFZFX3ktE8/bZfER5pe5f3nzUMgYUeGFZ2N+ps94rmkuiT6bICCFLmaAhyk=
+	t=1761050771; cv=pass; b=uTUSLdFHG9kDMT62GPQ4ifiYZYGRkF7GVSaLXADauIyNH0Rqnjq6evHCiWRn+aPRsApb7a18AmSWz43wcslBt1eZXh+ktk/bagW2gX4Wv6QATMIKHnciAtLDtB79vbUsXW89md5yxMJsQckIRcuglddb4JJGRRSIb5Sjam2SRJc=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761050597; c=relaxed/simple;
-	bh=OJV6Y0mWFaHhGnDBNJTFAV84xF1E1ZcmMHXilB4kaKo=;
+	s=arc-20240116; t=1761050771; c=relaxed/simple;
+	bh=1q6vN86jbGv3nIognT51qbJqHH1WBSGgAJTpN/qG8Mk=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HQpt7EI+w5HOI6oo/sY9NuwpUYPBsH4j+/ILRf2K9ET8UawSqDSEmmBd6bDyLWqjNdZ5EpmbiQafuvE/DbI6Wx5vQKg/K2G1PB9a2G4fg6L6ffLCFg7b4P1y8XFOpmvAzIPbp+jFIb81DLEv9hLizipk4Z7jYVROks1bts4fH5M=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=D9AveKzN; arc=pass smtp.client-ip=85.215.255.80
+	 MIME-Version:Content-Type; b=nuUjBcVvNAmfrbf1TIZ8ApsgrVsnoDh8MuUJV3JOO9AiRET9SHuWG7n7joE+JrY9PK5EdVYb/H9XTmBJCcNV4hiC9NZO5uuQQNNbOZoo9STJNCMaun9JXGpjUjcJgORoB/x5pzu/aUkt4rEs262kzkwZQNJ+qvX0z9iXor4A9Hw=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=J4Sh0dbQ; arc=pass smtp.client-ip=85.215.255.80
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="D9AveKzN"
-ARC-Seal: i=1; a=rsa-sha256; t=1761050586; cv=none;
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="J4Sh0dbQ"
+ARC-Seal: i=1; a=rsa-sha256; t=1761050584; cv=none;
     d=strato.com; s=strato-dkim-0002;
-    b=XljZHXQY7kf0ryE391UxADnmFvVXtiwS9HCJawetWyx4R2JMV9v8lQf8H7QE+FlgyD
-    ysMCFbabLUSKM5YZZGLwHJ0MhxwqP72MbwsdsNi3HDPRUe/vitSHtz0oi69r3P2reaS2
-    p975BRXy1TuS9IceyBXY4303pdpcecNui9G6I0mrV8FQY1UWDhR2aokeup09eTSnj+Cn
-    poKyOkhB7lCPwvKKQ8cUA0AZdxkA04fA/tAz7Z32h0essmL8n6b/TPdJFVQRK4x539Ao
-    CYu3ds8LPRiVatw80+d0iJX+wOevEfhbZSWeod4SXlmCgwR2/+eaXbidh+s9e69jIB8o
-    tS5Q==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1761050586;
+    b=dwapvN65ZFtX+7uD+549a2hjoI++KNbT7/TR96atZIzCnEPs/mp+HCdD8EYsqH8G+u
+    uaQBRb1ZNlF+aRQr+CV7O9Br2GcpHeQf4CxO8QOZJ43OvyEd9ihyOME33A0t4dX69lAw
+    3XnGviMTfeLgGKWvMaYKlXzgKvKFr/jymneaUMAFskKnAYPp6/5b04Eo2CnOmUu4Wr51
+    saK5ObEUDaqvX3A3qRmF3hIq1uOWpATqyo21oscidoFakKeHT7ADfJX2/rPIF1e8kie3
+    dnMo94IFfSCaswunmmLN1HSP0K8oYYzuGLu1OHaihCgIVkelW0FE9taT1FUw3l0eee5C
+    kN9A==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1761050584;
     s=strato-dkim-0002; d=strato.com;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=LTrT6hPQ+xMrv6B/Pa8cSWUkzHX7Q2yKPBScmOzne7Y=;
-    b=Y7FS+cgvythOzce5K62ihctVw1M6BPpFmj/JMpxoGztq4+SvpLQzseH0ep5KGrYljM
-    S2X0VesCo+QschfFAekTEoGavT8kKJ3mLrLthMrhqGm+eAMvSGlqUf/vwSCouAvXDTAu
-    +olOHuh2VdmWRl1LtOt3dwwJpTFwab601M4QWyX2qBhVH1qypvXh9/fYJmiF+LV2STf5
-    RxNC9dj3ySuO2+XX1fky/6D8x/pX3WlGtcBagvpKvZFdUMbCdwMEblqc8m1r3BZNzHuY
-    zP/zm2WmeeITdMiCs757FeS2H9LiII/9JH47lWE8lvpy8YMhsifFyu5Rr758qfiUy/pP
-    BhCg==
+    bh=OvLNPSDEQavvu1VF7E7TIN224K3UOaN9Gwv18btOmIA=;
+    b=aHazwkGhKrX7OdEtHkhFCRbZehyTldC5RGi+51Q4aSsBgeNOPEL9nBoShLWd6ViL/d
+    013ILzGwdimAG9CyVj63daXFA73b1+5HDWbBoXKsByRpWfEk78smb8zwGssjuqTe9S/B
+    LJjYjO/BHrMZ8SZVctz2kXt4O8w0LEsMQ4nfld90VYRVz5DyvKv9VCMYerWBJAKLBnmb
+    K2WICyJnBLJcWQzn3YrdHDlHIqwWLO9eYZgn87i0loyCxye2lCa30hlXajCQTUelDKKo
+    Bg3AbQ1x9e0HU3AHAIAOyFxjkg1Wkq+Jb4w5DEYLvQNxVl6RrbSsTaf8376oPK9tQ/JO
+    7qrQ==
 ARC-Authentication-Results: i=1; strato.com;
     arc=none;
     dkim=none
 X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1761050586;
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1761050584;
     s=strato-dkim-0002; d=iokpp.de;
     h=References:In-Reply-To:Message-Id:Date:Subject:Cc:To:From:Cc:Date:
     From:Subject:Sender;
-    bh=LTrT6hPQ+xMrv6B/Pa8cSWUkzHX7Q2yKPBScmOzne7Y=;
-    b=D9AveKzNFgsYH2ljNa2P+1wGr+cEvvntZlONRKzfE4eQ7O+z+g2/eCfQKNVJXZdu5M
-    cjMQQeENdslS6kP/MbmchJ8osFDGSEFyKVf2+1HwKne8IKl6+LaqJadjknPRK+9vrT3y
-    ZUWx02kTo1S9+qfs421j6HncUj/C2WzR9i6aei6ZrE6NnWLUxGuoWrq8AQR7oSRaUR3+
-    c2cd8ej9gOP7zt0zoNuAsMTLcpv//srym1gOSUV37JQrjiXI3xu1cGS8nVYIHZqvhYwH
-    RfXFOFJwytVu66fd+2xKTz6dG8X7jtdNUCJYZzE2cTmc7zRuV9ESZWrZESZuW0dmDOtf
-    oW9g==
+    bh=OvLNPSDEQavvu1VF7E7TIN224K3UOaN9Gwv18btOmIA=;
+    b=J4Sh0dbQIN1yp6g7x5BZcc1DvODAp+SavEeu0I2KIeYjo+uj93+P78UiiaSQwukm9r
+    OYcr3EDoZoJwmvQpZK59SFVvLg450XqczPpyYExXgGDY9W20fBNQguECQNos7N1p89Eb
+    Js1NcVlMJ2L2BilT2S4YrMxv+vyp9aZF9KeSvYzU9KUhRuLfDmRVbKWt1njvLf216EqD
+    jvIz6bBk4HRQ+RHNm6kiMcF6qRYAvgf2VqLivAgskqXn30/Wouu7pGMBec2jQIFFKRmV
+    M8H/yFd+3xv8obgkKRawROMUIH5LuQndM/YXUSe8Z4dmXOG5UNcNhAuaU8wZldYgG4cA
+    peIg==
 X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O2J2YOom0XQaPis+nU/5K"
 Received: from Munilab01-lab.micron.com
     by smtp.strato.de (RZmta 53.4.2 AUTH)
-    with ESMTPSA id z293fb19LCh5117
+    with ESMTPSA id z293fb19LCh4114
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
 	(Client did not present a certificate);
-    Tue, 21 Oct 2025 14:43:05 +0200 (CEST)
+    Tue, 21 Oct 2025 14:43:04 +0200 (CEST)
 From: Bean Huo <beanhuo@iokpp.de>
 To: avri.altman@wdc.com,
 	avri.altman@sandisk.com,
@@ -69,10 +69,11 @@ To: avri.altman@wdc.com,
 	beanhuo@micron.com,
 	jens.wiklander@linaro.org
 Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v5 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver for UFS devices
-Date: Tue, 21 Oct 2025 14:42:54 +0200
-Message-Id: <20251021124254.1120214-4-beanhuo@iokpp.de>
+	linux-kernel@vger.kernel.org,
+	Avri Altman <Avri.Altman@sandisk.com>
+Subject: [PATCH v5 1/3] scsi: ufs: core: Convert string descriptor format macros to enum
+Date: Tue, 21 Oct 2025 14:42:52 +0200
+Message-Id: <20251021124254.1120214-2-beanhuo@iokpp.de>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251021124254.1120214-1-beanhuo@iokpp.de>
 References: <20251021124254.1120214-1-beanhuo@iokpp.de>
@@ -87,542 +88,96 @@ Content-Type: text/plain; charset="us-ascii"
 
 From: Bean Huo <beanhuo@micron.com>
 
-This patch adds OP-TEE based RPMB support for UFS devices. This enables secure
-RPMB operations on UFS devices through OP-TEE, providing the same functionality
-available for eMMC devices and extending kernel-based secure storage support to
-UFS-based systems.
+Convert SD_ASCII_STD and SD_RAW from boolean macros to enum values for improved
+code readability. This makes ufshcd_read_string_desc() calls self-documenting by
+using explicit enum values instead of true/false.
 
-Benefits of OP-TEE based RPMB implementation:
-- Eliminates dependency on userspace supplicant for RPMB access
-- Enables early boot secure storage access (e.g., fTPM, secure UEFI variables)
-- Provides kernel-level RPMB access as soon as UFS driver is initialized
-- Removes complex initramfs dependencies and boot ordering requirements
-- Ensures reliable and deterministic secure storage operations
-- Supports both built-in and modular fTPM configurations
+Move the ufshcd_read_string_desc() declaration from include/ufs/ufshcd.h to
+drivers/ufs/core/ufshcd-priv.h since this function is not exported.
 
-Co-developed-by: Can Guo <can.guo@oss.qualcomm.com>
-Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
-Reviewed-by: Avri Altman <avri.altman@sandisk.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Co-developed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Suggested-by: Avri Altman <Avri.Altman@sandisk.com>
 Signed-off-by: Bean Huo <beanhuo@micron.com>
 ---
- drivers/misc/Kconfig           |   2 +-
- drivers/ufs/core/Makefile      |   1 +
- drivers/ufs/core/ufs-rpmb.c    | 254 +++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |  13 ++
- drivers/ufs/core/ufshcd.c      |  82 ++++++++++-
- include/ufs/ufs.h              |   5 +
- include/ufs/ufshcd.h           |   8 +-
- 7 files changed, 358 insertions(+), 7 deletions(-)
- create mode 100644 drivers/ufs/core/ufs-rpmb.c
+ drivers/ufs/core/ufshcd-priv.h | 14 ++++++++++----
+ drivers/ufs/core/ufshcd.c      |  8 +++-----
+ include/ufs/ufshcd.h           |  4 ----
+ 3 files changed, 13 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index b9c11f67315f..9d1de68dee27 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -106,7 +106,7 @@ config PHANTOM
- 
- config RPMB
- 	tristate "RPMB partition interface"
--	depends on MMC
-+	depends on MMC || SCSI_UFSHCD
- 	help
- 	  Unified RPMB unit interface for RPMB capable devices such as eMMC and
- 	  UFS. Provides interface for in-kernel security controllers to access
-diff --git a/drivers/ufs/core/Makefile b/drivers/ufs/core/Makefile
-index cf820fa09a04..51e1867e524e 100644
---- a/drivers/ufs/core/Makefile
-+++ b/drivers/ufs/core/Makefile
-@@ -2,6 +2,7 @@
- 
- obj-$(CONFIG_SCSI_UFSHCD)		+= ufshcd-core.o
- ufshcd-core-y				+= ufshcd.o ufs-sysfs.o ufs-mcq.o
-+ufshcd-core-$(CONFIG_RPMB)		+= ufs-rpmb.o
- ufshcd-core-$(CONFIG_DEBUG_FS)		+= ufs-debugfs.o
- ufshcd-core-$(CONFIG_SCSI_UFS_BSG)	+= ufs_bsg.o
- ufshcd-core-$(CONFIG_SCSI_UFS_CRYPTO)	+= ufshcd-crypto.o
-diff --git a/drivers/ufs/core/ufs-rpmb.c b/drivers/ufs/core/ufs-rpmb.c
-new file mode 100644
-index 000000000000..ffad049872b9
---- /dev/null
-+++ b/drivers/ufs/core/ufs-rpmb.c
-@@ -0,0 +1,254 @@
-+// SPDX-License-Identifier: GPL-2.0
-+/*
-+ * UFS OP-TEE based RPMB Driver
-+ *
-+ * Copyright (C) 2025 Micron Technology, Inc.
-+ * Copyright (C) 2025 Qualcomm Technologies, Inc.
-+ *
-+ * Authors:
-+ *	Bean Huo <beanhuo@micron.com>
-+ *	Can Guo <can.guo@oss.qualcomm.com>
-+ */
-+
-+#include <linux/module.h>
-+#include <linux/device.h>
-+#include <linux/kernel.h>
-+#include <linux/types.h>
-+#include <linux/rpmb.h>
-+#include <linux/string.h>
-+#include <linux/list.h>
-+#include <ufs/ufshcd.h>
-+#include <linux/unaligned.h>
-+#include "ufshcd-priv.h"
-+
-+#define UFS_RPMB_SEC_PROTOCOL		0xEC	/* JEDEC UFS application */
-+#define UFS_RPMB_SEC_PROTOCOL_ID	0x01	/* JEDEC UFS RPMB protocol ID, CDB byte3 */
-+
-+static const struct bus_type ufs_rpmb_bus_type = {
-+	.name = "ufs_rpmb",
-+};
-+
-+/* UFS RPMB device structure */
-+struct ufs_rpmb_dev {
-+	u8 region_id;
-+	struct device dev;
-+	struct rpmb_dev *rdev;
-+	struct ufs_hba *hba;
-+	struct list_head node;
-+};
-+
-+static int ufs_sec_submit(struct ufs_hba *hba, u16 spsp, void *buffer, size_t len, bool send)
-+{
-+	struct scsi_device *sdev = hba->ufs_rpmb_wlun;
-+	u8 cdb[12] = { };
-+
-+	cdb[0] = send ? SECURITY_PROTOCOL_OUT : SECURITY_PROTOCOL_IN;
-+	cdb[1] = UFS_RPMB_SEC_PROTOCOL;
-+	put_unaligned_be16(spsp, &cdb[2]);
-+	put_unaligned_be32(len, &cdb[6]);
-+
-+	return scsi_execute_cmd(sdev, cdb, send ? REQ_OP_DRV_OUT : REQ_OP_DRV_IN,
-+				buffer, len, /*timeout=*/30 * HZ, 0, NULL);
-+}
-+
-+/* UFS RPMB route frames implementation */
-+static int ufs_rpmb_route_frames(struct device *dev, u8 *req, unsigned int req_len, u8 *resp,
-+					unsigned int resp_len)
-+{
-+	struct ufs_rpmb_dev *ufs_rpmb = dev_get_drvdata(dev);
-+	struct rpmb_frame *frm_out = (struct rpmb_frame *)req;
-+	bool need_result_read = true;
-+	u16 req_type, protocol_id;
-+	struct ufs_hba *hba;
-+	int ret;
-+
-+	if (!ufs_rpmb) {
-+		dev_err(dev, "Missing driver data\n");
-+		return -ENODEV;
-+	}
-+
-+	hba = ufs_rpmb->hba;
-+
-+	req_type = be16_to_cpu(frm_out->req_resp);
-+
-+	switch (req_type) {
-+	case RPMB_PROGRAM_KEY:
-+		if (req_len != sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-+			return -EINVAL;
-+		break;
-+	case RPMB_GET_WRITE_COUNTER:
-+		if (req_len != sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-+			return -EINVAL;
-+		need_result_read = false;
-+		break;
-+	case RPMB_WRITE_DATA:
-+		if (req_len % sizeof(struct rpmb_frame) || resp_len != sizeof(struct rpmb_frame))
-+			return -EINVAL;
-+		break;
-+	case RPMB_READ_DATA:
-+		if (req_len != sizeof(struct rpmb_frame) || resp_len % sizeof(struct rpmb_frame))
-+			return -EINVAL;
-+		need_result_read = false;
-+		break;
-+	default:
-+		dev_err(dev, "Unknown request type=0x%04x\n", req_type);
-+		return -EINVAL;
-+	}
-+
-+	protocol_id = ufs_rpmb->region_id << 8 | UFS_RPMB_SEC_PROTOCOL_ID;
-+
-+	ret = ufs_sec_submit(hba, protocol_id, req, req_len, true);
-+	if (ret) {
-+		dev_err(dev, "Command failed with ret=%d\n", ret);
-+		return ret;
-+	}
-+
-+	if (need_result_read) {
-+		struct rpmb_frame *frm_resp = (struct rpmb_frame *)resp;
-+
-+		memset(frm_resp, 0, sizeof(*frm_resp));
-+		frm_resp->req_resp = cpu_to_be16(RPMB_RESULT_READ);
-+		ret = ufs_sec_submit(hba, protocol_id, resp, resp_len, true);
-+		if (ret) {
-+			dev_err(dev, "Result read request failed with ret=%d\n", ret);
-+			return ret;
-+		}
-+	}
-+
-+	if (!ret) {
-+		ret = ufs_sec_submit(hba, protocol_id, resp, resp_len, false);
-+		if (ret)
-+			dev_err(dev, "Response read failed with ret=%d\n", ret);
-+	}
-+
-+	return ret;
-+}
-+
-+static void ufs_rpmb_device_release(struct device *dev)
-+{
-+	struct ufs_rpmb_dev *ufs_rpmb = dev_get_drvdata(dev);
-+
-+	rpmb_dev_unregister(ufs_rpmb->rdev);
-+}
-+
-+/* UFS RPMB device registration */
-+int ufs_rpmb_probe(struct ufs_hba *hba)
-+{
-+	struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
-+	struct rpmb_dev *rdev;
-+	char *cid = NULL;
-+	int region;
-+	u32 cap;
-+	int ret;
-+
-+	if (!hba->ufs_rpmb_wlun || hba->dev_info.b_advanced_rpmb_en) {
-+		dev_info(hba->dev, "Skip OP-TEE RPMB registration\n");
-+		return -ENODEV;
-+	}
-+
-+	/* Check if device_id is available */
-+	if (!hba->dev_info.device_id) {
-+		dev_err(hba->dev, "UFS Device ID not available\n");
-+		return -EINVAL;
-+	}
-+
-+	INIT_LIST_HEAD(&hba->rpmbs);
-+
-+	struct rpmb_descr descr = {
-+		.type = RPMB_TYPE_UFS,
-+		.route_frames = ufs_rpmb_route_frames,
-+		.reliable_wr_count = hba->dev_info.rpmb_io_size,
-+	};
-+
-+	for (region = 0; region < ARRAY_SIZE(hba->dev_info.rpmb_region_size); region++) {
-+		cap = hba->dev_info.rpmb_region_size[region];
-+		if (!cap)
-+			continue;
-+
-+		ufs_rpmb = devm_kzalloc(hba->dev, sizeof(*ufs_rpmb), GFP_KERNEL);
-+		if (!ufs_rpmb) {
-+			ret = -ENOMEM;
-+			goto err_out;
-+		}
-+
-+		ufs_rpmb->hba = hba;
-+		ufs_rpmb->dev.parent = &hba->ufs_rpmb_wlun->sdev_gendev;
-+		ufs_rpmb->dev.bus = &ufs_rpmb_bus_type;
-+		ufs_rpmb->dev.release = ufs_rpmb_device_release;
-+		dev_set_name(&ufs_rpmb->dev, "ufs_rpmb%d", region);
-+
-+		/* Set driver data BEFORE device_register */
-+		dev_set_drvdata(&ufs_rpmb->dev, ufs_rpmb);
-+
-+		ret = device_register(&ufs_rpmb->dev);
-+		if (ret) {
-+			dev_err(hba->dev, "Failed to register UFS RPMB device %d\n", region);
-+			put_device(&ufs_rpmb->dev);
-+			goto err_out;
-+		}
-+
-+		/* Create unique ID by appending region number to device_id */
-+		cid = kasprintf(GFP_KERNEL, "%s-R%d", hba->dev_info.device_id, region);
-+		if (!cid) {
-+			device_unregister(&ufs_rpmb->dev);
-+			ret = -ENOMEM;
-+			goto err_out;
-+		}
-+
-+		descr.dev_id = cid;
-+		descr.dev_id_len = strlen(cid);
-+		descr.capacity = cap;
-+
-+		/* Register RPMB device */
-+		rdev = rpmb_dev_register(&ufs_rpmb->dev, &descr);
-+		if (IS_ERR(rdev)) {
-+			dev_err(hba->dev, "Failed to register UFS RPMB device.\n");
-+			device_unregister(&ufs_rpmb->dev);
-+			ret = PTR_ERR(rdev);
-+			goto err_out;
-+		}
-+
-+		kfree(cid);
-+		cid = NULL;
-+
-+		ufs_rpmb->rdev = rdev;
-+		ufs_rpmb->region_id = region;
-+
-+		list_add_tail(&ufs_rpmb->node, &hba->rpmbs);
-+
-+		dev_info(hba->dev, "UFS RPMB region %d registered (capacity=%u)\n", region, cap);
-+	}
-+
-+	return 0;
-+err_out:
-+	kfree(cid);
-+	list_for_each_entry_safe(it, tmp, &hba->rpmbs, node) {
-+		list_del(&it->node);
-+		device_unregister(&it->dev);
-+	}
-+
-+	return ret;
-+}
-+
-+/* UFS RPMB remove handler */
-+void ufs_rpmb_remove(struct ufs_hba *hba)
-+{
-+	struct ufs_rpmb_dev *ufs_rpmb, *tmp;
-+
-+	if (list_empty(&hba->rpmbs))
-+		return;
-+
-+	/* Remove all registered RPMB devices */
-+	list_for_each_entry_safe(ufs_rpmb, tmp, &hba->rpmbs, node) {
-+		dev_info(hba->dev, "Removing UFS RPMB region %d\n", ufs_rpmb->region_id);
-+		/* Remove from list first */
-+		list_del(&ufs_rpmb->node);
-+		/* Unregister device */
-+		device_unregister(&ufs_rpmb->dev);
-+	}
-+
-+	dev_info(hba->dev, "All UFS RPMB devices unregistered\n");
-+}
-+
-+MODULE_LICENSE("GPL v2");
-+MODULE_DESCRIPTION("OP-TEE UFS RPMB driver");
 diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-priv.h
-index d74742a855b2..e63b0e9075e0 100644
+index d0a2c963a27d..d74742a855b2 100644
 --- a/drivers/ufs/core/ufshcd-priv.h
 +++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -417,4 +417,17 @@ static inline u32 ufshcd_mcq_get_sq_head_slot(struct ufs_hw_queue *q)
- 	return val / sizeof(struct utp_transfer_req_desc);
- }
+@@ -78,11 +78,17 @@ int ufshcd_try_to_abort_task(struct ufs_hba *hba, int tag);
+ void ufshcd_release_scsi_cmd(struct ufs_hba *hba,
+ 			     struct ufshcd_lrb *lrbp);
  
-+#ifdef CONFIG_RPMB
-+int ufs_rpmb_probe(struct ufs_hba *hba);
-+void ufs_rpmb_remove(struct ufs_hba *hba);
-+#else
-+static inline int ufs_rpmb_probe(struct ufs_hba *hba)
-+{
-+	return 0;
-+}
-+static inline void ufs_rpmb_remove(struct ufs_hba *hba)
-+{
-+}
-+#endif
-+
- #endif /* _UFSHCD_PRIV_H_ */
+-#define SD_ASCII_STD true
+-#define SD_RAW false
+-int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+-			    u8 **buf, bool ascii);
++/**
++ * enum ufs_descr_fmt - UFS string descriptor format
++ * @SD_RAW: Raw UTF-16 format
++ * @SD_ASCII_STD: Convert to null-terminated ASCII string
++ */
++enum ufs_descr_fmt {
++	SD_RAW = 0,
++	SD_ASCII_STD = 1,
++};
+ 
++int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index, u8 **buf, enum ufs_descr_fmt fmt);
+ int ufshcd_send_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
+ int ufshcd_send_bsg_uic_cmd(struct ufs_hba *hba, struct uic_command *uic_cmd);
+ 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index af7f87f27630..4e0ba344dbea 100644
+index 8339fec975b9..2a653137a9ea 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -5254,10 +5254,15 @@ static void ufshcd_lu_init(struct ufs_hba *hba, struct scsi_device *sdev)
- 	    desc_buf[UNIT_DESC_PARAM_LU_WR_PROTECT] == UFS_LU_POWER_ON_WP)
- 		hba->dev_info.is_lu_power_on_wp = true;
- 
--	/* In case of RPMB LU, check if advanced RPMB mode is enabled */
--	if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] == UFS_UPIU_RPMB_WLUN &&
--	    desc_buf[RPMB_UNIT_DESC_PARAM_REGION_EN] & BIT(4))
--		hba->dev_info.b_advanced_rpmb_en = true;
-+	/* In case of RPMB LU, check if advanced RPMB mode is enabled, and get region size */
-+	if (desc_buf[UNIT_DESC_PARAM_UNIT_INDEX] == UFS_UPIU_RPMB_WLUN) {
-+		if (desc_buf[RPMB_UNIT_DESC_PARAM_REGION_EN] & BIT(4))
-+			hba->dev_info.b_advanced_rpmb_en = true;
-+		hba->dev_info.rpmb_region_size[0] = desc_buf[RPMB_UNIT_DESC_PARAM_REGION0_SIZE];
-+		hba->dev_info.rpmb_region_size[1] = desc_buf[RPMB_UNIT_DESC_PARAM_REGION1_SIZE];
-+		hba->dev_info.rpmb_region_size[2] = desc_buf[RPMB_UNIT_DESC_PARAM_REGION2_SIZE];
-+		hba->dev_info.rpmb_region_size[3] = desc_buf[RPMB_UNIT_DESC_PARAM_REGION3_SIZE];
-+	}
- 
- 
- 	kfree(desc_buf);
-@@ -8187,8 +8192,11 @@ static int ufshcd_scsi_add_wlus(struct ufs_hba *hba)
- 		ufshcd_upiu_wlun_to_scsi_wlun(UFS_UPIU_RPMB_WLUN), NULL);
- 	if (IS_ERR(sdev_rpmb)) {
- 		ret = PTR_ERR(sdev_rpmb);
-+		hba->ufs_rpmb_wlun = NULL;
-+		dev_err(hba->dev, "%s: RPMB WLUN not found\n", __func__);
- 		goto remove_ufs_device_wlun;
- 	}
-+	hba->ufs_rpmb_wlun = sdev_rpmb;
- 	ufshcd_blk_pm_runtime_init(sdev_rpmb);
- 	scsi_device_put(sdev_rpmb);
- 
-@@ -8456,6 +8464,63 @@ static void ufs_init_rtc(struct ufs_hba *hba, u8 *desc_buf)
- 	dev_info->rtc_update_period = 0;
- }
- 
-+/**
-+ * ufshcd_create_device_id - Generate unique device identifier string
-+ * @hba: per-adapter instance
-+ * @desc_buf: device descriptor buffer
-+ *
-+ * Creates a unique device ID string combining manufacturer ID, spec version,
-+ * model name, serial number (as hex), device version, and manufacture date.
-+ *
-+ * Returns: Allocated device ID string on success, NULL on failure
-+ */
-+static char *ufshcd_create_device_id(struct ufs_hba *hba, u8 *desc_buf)
-+{
-+	struct ufs_dev_info *dev_info = &hba->dev_info;
-+	u8 *serial_number;
-+	char *serial_hex;
-+	char *device_id;
-+	u8 serial_index;
-+	u16 device_version;
-+	u16 manufacture_date;
-+	int serial_len;
-+	int ret;
-+
-+	serial_index = desc_buf[DEVICE_DESC_PARAM_SN];
-+
-+	ret = ufshcd_read_string_desc(hba, serial_index, &serial_number, SD_RAW);
-+	if (ret < 0) {
-+		dev_err(hba->dev, "Failed reading Serial Number. err = %d\n", ret);
-+		return NULL;
-+	}
-+
-+	device_version = get_unaligned_be16(&desc_buf[DEVICE_DESC_PARAM_DEV_VER]);
-+	manufacture_date = get_unaligned_be16(&desc_buf[DEVICE_DESC_PARAM_MANF_DATE]);
-+
-+	serial_len = ret;
-+	/* Allocate buffer for hex string: 2 chars per byte + null terminator */
-+	serial_hex = kzalloc(serial_len * 2 + 1, GFP_KERNEL);
-+	if (!serial_hex) {
-+		kfree(serial_number);
-+		return NULL;
-+	}
-+
-+	bin2hex(serial_hex, serial_number, serial_len);
-+
-+	device_id = kasprintf(GFP_KERNEL, "%04X-%04X-%s-%s-%04X-%04X",
-+			      dev_info->wmanufacturerid, dev_info->wspecversion,
-+			      dev_info->model, serial_hex, device_version,
-+			      manufacture_date);
-+
-+	kfree(serial_hex);
-+	kfree(serial_number);
-+
-+	if (!device_id)
-+		dev_warn(hba->dev, "Failed to allocate unique device ID\n");
-+
-+	return device_id;
-+}
-+
- static int ufs_get_device_desc(struct ufs_hba *hba)
+@@ -3773,16 +3773,14 @@ static inline char ufshcd_remove_non_printable(u8 ch)
+  * @desc_index: descriptor index
+  * @buf: pointer to buffer where descriptor would be read,
+  *       the caller should free the memory.
+- * @ascii: if true convert from unicode to ascii characters
+- *         null terminated string.
++ * @fmt: if %SD_ASCII_STD, convert from UTF-16 to ASCII
+  *
+  * Return:
+  * *      string size on success.
+  * *      -ENOMEM: on allocation failure
+  * *      -EINVAL: on a wrong parameter
+  */
+-int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+-			    u8 **buf, bool ascii)
++int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index, u8 **buf, enum ufs_descr_fmt fmt)
  {
- 	int err;
-@@ -8507,6 +8572,9 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 	struct uc_string_id *uc_str;
+ 	u8 *str;
+@@ -3811,7 +3809,7 @@ int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
  		goto out;
  	}
  
-+	/* Generate unique device ID */
-+	dev_info->device_id = ufshcd_create_device_id(hba, desc_buf);
-+
- 	hba->luns_avail = desc_buf[DEVICE_DESC_PARAM_NUM_LU] +
- 		desc_buf[DEVICE_DESC_PARAM_NUM_WLU];
- 
-@@ -8542,6 +8610,8 @@ static void ufs_put_device_desc(struct ufs_hba *hba)
- 
- 	kfree(dev_info->model);
- 	dev_info->model = NULL;
-+	kfree(dev_info->device_id);
-+	dev_info->device_id = NULL;
- }
- 
- /**
-@@ -8685,6 +8755,8 @@ static int ufshcd_device_geo_params_init(struct ufs_hba *hba)
- 	else if (desc_buf[GEOMETRY_DESC_PARAM_MAX_NUM_LUN] == 0)
- 		hba->dev_info.max_lu_supported = 8;
- 
-+	hba->dev_info.rpmb_io_size = desc_buf[GEOMETRY_DESC_PARAM_RPMB_RW_SIZE];
-+
- out:
- 	kfree(desc_buf);
- 	return err;
-@@ -8871,6 +8943,7 @@ static int ufshcd_add_lus(struct ufs_hba *hba)
- 
- 	ufs_bsg_probe(hba);
- 	scsi_scan_host(hba->host);
-+	ufs_rpmb_probe(hba);
- 
- out:
- 	return ret;
-@@ -10425,6 +10498,7 @@ void ufshcd_remove(struct ufs_hba *hba)
- 		ufshcd_rpm_get_sync(hba);
- 	ufs_hwmon_remove(hba);
- 	ufs_bsg_remove(hba);
-+	ufs_rpmb_remove(hba);
- 	ufs_sysfs_remove_nodes(hba->dev);
- 	cancel_delayed_work_sync(&hba->ufs_rtc_update_work);
- 	blk_mq_destroy_queue(hba->tmf_queue);
-diff --git a/include/ufs/ufs.h b/include/ufs/ufs.h
-index 245a6a829ce9..ab8f6c07b5a2 100644
---- a/include/ufs/ufs.h
-+++ b/include/ufs/ufs.h
-@@ -651,6 +651,11 @@ struct ufs_dev_info {
- 	u8 rtt_cap; /* bDeviceRTTCap */
- 
- 	bool hid_sup;
-+
-+	/* Unique device ID string (manufacturer+model+serial+version+date) */
-+	char *device_id;
-+	u8 rpmb_io_size;
-+	u8 rpmb_region_size[4];
- };
- 
- #endif /* End of Header */
+-	if (ascii) {
++	if (fmt == SD_ASCII_STD) {
+ 		ssize_t ascii_len;
+ 		int i;
+ 		/* remove header and divide by 2 to move from UTF16 to UTF8 */
 diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index b4eb2fa58552..959d42d9b1c8 100644
+index 9425cfd9d00e..b4eb2fa58552 100644
 --- a/include/ufs/ufshcd.h
 +++ b/include/ufs/ufshcd.h
-@@ -826,6 +826,7 @@ enum ufshcd_mcq_opr {
-  * @host: Scsi_Host instance of the driver
-  * @dev: device handle
-  * @ufs_device_wlun: WLUN that controls the entire UFS device.
-+ * @ufs_rpmb_wlun: RPMB WLUN SCSI device
-  * @hwmon_device: device instance registered with the hwmon core.
-  * @curr_dev_pwr_mode: active UFS device power mode.
-  * @uic_link_state: active state of the link to the UFS device.
-@@ -941,8 +942,8 @@ enum ufshcd_mcq_opr {
-  * @pm_qos_mutex: synchronizes PM QoS request and status updates
-  * @critical_health_count: count of critical health exceptions
-  * @dev_lvl_exception_count: count of device level exceptions since last reset
-- * @dev_lvl_exception_id: vendor specific information about the
-- * device level exception event.
-+ * @dev_lvl_exception_id: vendor specific information about the device level exception event.
-+ * @rpmbs: list of OP-TEE RPMB devices (one per RPMB region)
-  */
- struct ufs_hba {
- 	void __iomem *mmio_base;
-@@ -960,6 +961,7 @@ struct ufs_hba {
- 	struct Scsi_Host *host;
- 	struct device *dev;
- 	struct scsi_device *ufs_device_wlun;
-+	struct scsi_device *ufs_rpmb_wlun;
+@@ -1431,10 +1431,6 @@ static inline int ufshcd_disable_host_tx_lcc(struct ufs_hba *hba)
+ void ufshcd_auto_hibern8_update(struct ufs_hba *hba, u32 ahit);
+ void ufshcd_fixup_dev_quirks(struct ufs_hba *hba,
+ 			     const struct ufs_dev_quirk *fixups);
+-#define SD_ASCII_STD true
+-#define SD_RAW false
+-int ufshcd_read_string_desc(struct ufs_hba *hba, u8 desc_index,
+-			    u8 **buf, bool ascii);
  
- #ifdef CONFIG_SCSI_UFS_HWMON
- 	struct device *hwmon_device;
-@@ -1117,6 +1119,8 @@ struct ufs_hba {
- 	int critical_health_count;
- 	atomic_t dev_lvl_exception_count;
- 	u64 dev_lvl_exception_id;
-+
-+	struct list_head rpmbs;
- };
- 
- /**
+ void ufshcd_hold(struct ufs_hba *hba);
+ void ufshcd_release(struct ufs_hba *hba);
 -- 
 2.34.1
 
