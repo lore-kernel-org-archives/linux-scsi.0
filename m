@@ -1,85 +1,85 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9F9437160
-	for <linux-scsi@vger.kernel.org>; Wed, 22 Oct 2025 17:32:05 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564A42D978A;
+	Wed, 22 Oct 2025 17:38:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761154325; cv=none; b=s981XzMthmKWoh43rHbRzWbGquzsbSBgCSyXkkLJjbgzgcu3oC9YBrg1j92DL3u2Ngr0lZ/6JIe5bnHmqL1m6qoUQnBrQveVzIit+hYn6zTeUuC5muuevvvY/CPAHqr/PoJXqzPo6LP4XE2F/v9k3WO/aISHWB64H7wuN0N6pqE=
+	t=1761154710; cv=none; b=nZsLejocZEapg5a4ic+NOH+NiyBmdlKRlKnyOpYnWI4esN6CAdkuM4ybiyo/vS9YZYAaFxGvpz3AdWfxB6L8qhu6DVaHeBi+AWT/4QxZOhH9x0h0omulhzgQAY4ko2WVh3BE00cZ0CYFK07331LdqlgizcsdbfEQH0boqWSsqqw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761154325; c=relaxed/simple;
-	bh=eVgz5jQ/wbiiOwcuz0UkuxdrKa82hfDgahqc2cnD/IM=;
+	s=arc-20240116; t=1761154710; c=relaxed/simple;
+	bh=a1713ONLo4RRLM5SYdpDsSJ1reTF4CU+Bkx3+uaYeUk=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=RZd27h6uFhugpbXS3+ubgVZy+YBcioeu0oPLa0aVFRDZghzPcRjMID7sXJLT1bPIA9JMOdudGKjVFpRi9FR68JblHdPRoKGUZIBgqNo1IBSpBqL7xkuLpC/3p4wbag8pwOOh611cNy9hLvMaXfVYy3mu31xcUbp5D41/2PdSmsE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=DKKW58GW; arc=none smtp.client-ip=10.30.226.201
+	 Content-Type:Content-Disposition:In-Reply-To; b=UYGO5dKuDb5Qmm5TfZXFhg53DgsK/cnoHi7oGRcDeFEIuqIzKy6qDF3mznd5qobMxBZy+M99oP25KtgRSeiTK8czKzcILE89Si0bXXKojP3S6TphZz2VEh7XlHk5PyjAIcOB5xshbaHDT9mJWCRsxwCmH56Wrfd1yo2+ObbMkzc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nXwRMOxQ; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="DKKW58GW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 58168C4CEE7;
-	Wed, 22 Oct 2025 17:32:04 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nXwRMOxQ"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAF5BC4CEE7;
+	Wed, 22 Oct 2025 17:38:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761154325;
-	bh=eVgz5jQ/wbiiOwcuz0UkuxdrKa82hfDgahqc2cnD/IM=;
+	s=k20201202; t=1761154709;
+	bh=a1713ONLo4RRLM5SYdpDsSJ1reTF4CU+Bkx3+uaYeUk=;
 	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=DKKW58GWOk/upPo/eEIMMmtqNPULo7HDpuhA0wWgLexAKoG70mzBOHpdoUveEkAhg
-	 PQ3kfa4JBoRgUqU4dSgF8ghT57+CmyLtKlmPKot6lOFJuhvVGlZ7HEuiP6snAOGjhP
-	 AcLZSgHT5UNWWZ1dcCph+tmcBE3AG9PLz6FfL1HhSHkbK/kp9EDDazERcY0BWof6W3
-	 8YvHPMi8Lh2ewfnVh1ir40VZATO2n1tesxB5uaB4bLmIR3M6ifj7/aV4oHIgi9nVqv
-	 JaQfgFwpb831IRRAJcfzc5USnl1m+uZxx+qOMYEG4osZwvlJTX/RO0ObJDJRyKwSbT
-	 PYElvV0NNFmJQ==
-Date: Wed, 22 Oct 2025 23:01:57 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 0/8] Eight small UFS patches
-Message-ID: <b5rfpnuhhewqmnaqa2uzivmo3byzommrjeanoawn5x5vargt2y@7vl7r2uw7kjo>
-References: <20251014200118.3390839-1-bvanassche@acm.org>
- <yq1ms5j4raz.fsf@ca-mkp.ca.oracle.com>
- <ueff6kzx4imwyz4bqxgls34lg7mw6oyi73yyyyiqtitbxu7p2v@rhlok6yvytj7>
- <f761feb4-6b58-4778-9417-067993a484fd@acm.org>
+	b=nXwRMOxQzPi/uWx8kqqPhc105lzgifneVm0cxnDOtGQZpxG0jhlcCiYYxqeF57x+g
+	 C0uBg5A0OnKTklrIp6vQ+TKzGGi2WZr7Oi1vCr/JvABCJrQGGD9iJngCe7n5IC57ij
+	 ngHZuz2F8jd0IE5JutXqMcyrioQNPGDyvqh7NarKU1tyd+RvVQEYbye3KxCn+yZd9W
+	 u773CHia1mMu36022nIQz0IY9aUae4qpApaiBCYno25C6DnCIh3M+jpbccTi9oMhhO
+	 lCtUpBg2C5Hhp12ONLh8MkF9IjDfy9grc44k4IwnQIvnQDSh6c3KlqEU9IyfHD7pNz
+	 uAorG/wL6vL2w==
+Date: Wed, 22 Oct 2025 18:38:24 +0100
+From: Conor Dooley <conor@kernel.org>
+To: Ajay Neeli <ajay.neeli@amd.com>
+Cc: martin.petersen@oracle.com, James.Bottomley@hansenpartnership.com,
+	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
+	pedrom.sousa@synopsys.com, alim.akhtar@samsung.com,
+	avri.altman@wdc.com, bvanassche@acm.org, linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org, git@amd.com, michal.simek@amd.com,
+	srinivas.goud@amd.com, radhey.shyam.pandey@amd.com,
+	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
+Subject: Re: [PATCH v2 1/4] dt-bindings: ufs: amd-versal2: Add UFS Host
+ Controller for AMD Versal Gen 2 SoC
+Message-ID: <20251022-collar-relation-48c77e7649cb@spud>
+References: <20251021113003.13650-1-ajay.neeli@amd.com>
+ <20251021113003.13650-2-ajay.neeli@amd.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="YMFu5lM+sEy/WU91"
 Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <f761feb4-6b58-4778-9417-067993a484fd@acm.org>
+In-Reply-To: <20251021113003.13650-2-ajay.neeli@amd.com>
 
-On Wed, Oct 22, 2025 at 09:59:09AM -0700, Bart Van Assche wrote:
-> On 10/22/25 4:04 AM, Manivannan Sadhasivam wrote:
-> > On Tue, Oct 21, 2025 at 10:13:39PM -0400, Martin K. Petersen wrote:
-> > > > This patch series includes two bug fixes for this development cycle
-> > > > and six small patches that are intended for the next merge window. If
-> > > > applying the first two patches only during the current development
-> > > > cycle would be inconvenient, postponing all patches until the next
-> > > > merge window is fine with me.
-> > > > 
-> > > > Please consider including these patches in the upstream kernel.
-> > > 
-> > > Applied to 6.19/scsi-staging, thanks!
-> > 
-> > Martin, could you please apply the first two patches to scsi-fixes? They are
-> > fixing bugs introduced in v6.18-rc1.
-> 
-> I'm not sure that's the best approach. The more patches that are moved
-> from scsi-staging into scsi-fixes, the more likely it becomes that Linus
-> will have to resolve a merge conflict during the next merge window.
-> 
 
-I don't see how there will be merge conflict unless the remaining patches (3-8)
-depend on fixes 1-2. In the cover letter, you also mentioned that the first two
-patches are bug fixes targeted for v6.18-rc1.
+--YMFu5lM+sEy/WU91
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-I echoed the same thing since without these fixes, boards running v6.18-rc1 are
-throwing a bunch of warnings making it inconvenient to use.
+On Tue, Oct 21, 2025 at 05:00:00PM +0530, Ajay Neeli wrote:
+> From: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
+>=20
+> Add devicetree document for UFS Host Controller on AMD Versal Gen 2 SoC.
+> This includes clocks and clock-names as mandated by UFS common bindings.
+>=20
+> Signed-off-by: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
+> Co-developed-by: Ajay Neeli <ajay.neeli@amd.com>
+> Signed-off-by: Ajay Neeli <ajay.neeli@amd.com>
 
-Ideally, we should try to fix the newly introduced warnings in the current
-release itself without relying on stable maintainers to backport the fixes.
+Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+pw-bot: not-applicable
 
-- Mani
+--YMFu5lM+sEy/WU91
+Content-Type: application/pgp-signature; name="signature.asc"
 
--- 
-மணிவண்ணன் சதாசிவம்
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaPkWkAAKCRB4tDGHoIJi
+0tFeAQC5wO+4QHuc/nza8lgJiNnzXpQpd/t7M113YD3RktfwbwEA7H9xWVRI2j60
+O4mTnvVfLvvWAHKmkj03OzvdIt95/Ao=
+=ZXJP
+-----END PGP SIGNATURE-----
+
+--YMFu5lM+sEy/WU91--
