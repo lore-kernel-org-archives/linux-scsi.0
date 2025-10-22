@@ -1,85 +1,85 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 564A42D978A;
-	Wed, 22 Oct 2025 17:38:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9204C2E8B9E
+	for <linux-scsi@vger.kernel.org>; Wed, 22 Oct 2025 18:07:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761154710; cv=none; b=nZsLejocZEapg5a4ic+NOH+NiyBmdlKRlKnyOpYnWI4esN6CAdkuM4ybiyo/vS9YZYAaFxGvpz3AdWfxB6L8qhu6DVaHeBi+AWT/4QxZOhH9x0h0omulhzgQAY4ko2WVh3BE00cZ0CYFK07331LdqlgizcsdbfEQH0boqWSsqqw=
+	t=1761156458; cv=none; b=RLzcACz0krtQi1Fpsyu8rOGLH4wst/B0+ruwjdVer6NUM7wM9GVkVhaPjlqwXeu45g1PnJwbzBfPG+d955Vc+dfuQl8pMafvDw3DlWsSTT8SIf3ZtS7afRaOE9g4pj/P/rpvZO7Zz9Fe2EizjjKD+IaWEmU3gS/dDYIMOAW/u38=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761154710; c=relaxed/simple;
-	bh=a1713ONLo4RRLM5SYdpDsSJ1reTF4CU+Bkx3+uaYeUk=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UYGO5dKuDb5Qmm5TfZXFhg53DgsK/cnoHi7oGRcDeFEIuqIzKy6qDF3mznd5qobMxBZy+M99oP25KtgRSeiTK8czKzcILE89Si0bXXKojP3S6TphZz2VEh7XlHk5PyjAIcOB5xshbaHDT9mJWCRsxwCmH56Wrfd1yo2+ObbMkzc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nXwRMOxQ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761156458; c=relaxed/simple;
+	bh=7bzCIZQJ+TBbTfpafd8E8wWKmN0cF2219e4eYMpShG0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=EuDi7Xh403pZLznoq9DHQ65cx0JVBch2bttvT/GnEZSimy/hspmVOOezgnKdQxvzvpvU5dlhUMoM0+F7Lp1sTU0L5LwuZX74DUH6SyMQ3LnCVuzB+nwbnEd3aYFYqzEvfjIcVHb9oyXpkO9hEMvCGDVm+6OcTX8hdAnq2jPWwOU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lSpZUAzw; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nXwRMOxQ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id AAF5BC4CEE7;
-	Wed, 22 Oct 2025 17:38:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761154709;
-	bh=a1713ONLo4RRLM5SYdpDsSJ1reTF4CU+Bkx3+uaYeUk=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nXwRMOxQzPi/uWx8kqqPhc105lzgifneVm0cxnDOtGQZpxG0jhlcCiYYxqeF57x+g
-	 C0uBg5A0OnKTklrIp6vQ+TKzGGi2WZr7Oi1vCr/JvABCJrQGGD9iJngCe7n5IC57ij
-	 ngHZuz2F8jd0IE5JutXqMcyrioQNPGDyvqh7NarKU1tyd+RvVQEYbye3KxCn+yZd9W
-	 u773CHia1mMu36022nIQz0IY9aUae4qpApaiBCYno25C6DnCIh3M+jpbccTi9oMhhO
-	 lCtUpBg2C5Hhp12ONLh8MkF9IjDfy9grc44k4IwnQIvnQDSh6c3KlqEU9IyfHD7pNz
-	 uAorG/wL6vL2w==
-Date: Wed, 22 Oct 2025 18:38:24 +0100
-From: Conor Dooley <conor@kernel.org>
-To: Ajay Neeli <ajay.neeli@amd.com>
-Cc: martin.petersen@oracle.com, James.Bottomley@hansenpartnership.com,
-	robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org,
-	pedrom.sousa@synopsys.com, alim.akhtar@samsung.com,
-	avri.altman@wdc.com, bvanassche@acm.org, linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org, git@amd.com, michal.simek@amd.com,
-	srinivas.goud@amd.com, radhey.shyam.pandey@amd.com,
-	Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
-Subject: Re: [PATCH v2 1/4] dt-bindings: ufs: amd-versal2: Add UFS Host
- Controller for AMD Versal Gen 2 SoC
-Message-ID: <20251022-collar-relation-48c77e7649cb@spud>
-References: <20251021113003.13650-1-ajay.neeli@amd.com>
- <20251021113003.13650-2-ajay.neeli@amd.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lSpZUAzw"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4csHFM3dq3zm0ytp;
+	Wed, 22 Oct 2025 18:07:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1761156454; x=1763748455; bh=GQOQFpuUuNY2uwqANOP4hsg2
+	nJkk8z1QhVxuHCaAIMw=; b=lSpZUAzwyCl64joFVk8xeTn7RW4/Wahl6ojHjeFf
+	ut332Xcs0eHzMEYtwNNayocavaCZF8eg+Z3jzER8C9au/GORk9LpKfM++pLMrA0V
+	GU/tEpMnGRMsSzq5yW2iCNGv0WFywgYAzkkN2g7DiMrfS02lQGWfJjOpzz7EGzz6
+	ZPOVH2kIa0Q9Xiy180sb8YM/0Uvhr/OVOGyDhZYHhU3qGVXQ5BV5HAKCOQu+OvEx
+	3Y1QK+9QyIs8/mU6ZSFR9VTZJq7OobqYS2e6zseFOsrN5eUlRFFN/L4OMTBkShil
+	kQ8HxkghWnPUKMbMpRMuV+dsRVm9s55n1a40ae23VGM8wA==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id rNVFxgy5Imex; Wed, 22 Oct 2025 18:07:34 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4csHFB5V53zm0yVk;
+	Wed, 22 Oct 2025 18:07:25 +0000 (UTC)
+Message-ID: <540bad1d-ba01-4044-94e0-4f7b05934779@acm.org>
+Date: Wed, 22 Oct 2025 11:07:23 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="YMFu5lM+sEy/WU91"
-Content-Disposition: inline
-In-Reply-To: <20251021113003.13650-2-ajay.neeli@amd.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: core: Fix a regression triggered by
+ scsi_host_busy()
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+ Sebastian Reichel <sebastian.reichel@collabora.com>,
+ Ming Lei <ming.lei@redhat.com>, Jens Axboe <axboe@kernel.dk>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20251007214800.1678255-1-bvanassche@acm.org>
+ <yq1h5vr4qov.fsf@ca-mkp.ca.oracle.com>
+ <fe16b110-300c-4b13-bf2b-56e7f2c6f297@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <fe16b110-300c-4b13-bf2b-56e7f2c6f297@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 10/22/25 1:13 AM, John Garry wrote:
+> On 22/10/2025 03:26, Martin K. Petersen wrote:
+>>> Commit 995412e23bb2 ("blk-mq: Replace tags->lock with SRCU for tag
+>>> iterators") introduced the following regression:
+>>
+>> Applied to 6.18/scsi-fixes, thanks!
+> 
+> I don't think that we should call scsi_host_busy() on a shost which has 
+> not been added, so it would be nice to have a plan to fix the LLDs also.
 
---YMFu5lM+sEy/WU91
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+A fix for the UFS driver has already been merged by Martin. See also
+"scsi: ufs: core: Reduce link startup failure logging".
 
-On Tue, Oct 21, 2025 at 05:00:00PM +0530, Ajay Neeli wrote:
-> From: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
->=20
-> Add devicetree document for UFS Host Controller on AMD Versal Gen 2 SoC.
-> This includes clocks and clock-names as mandated by UFS common bindings.
->=20
-> Signed-off-by: Sai Krishna Potthuri <sai.krishna.potthuri@amd.com>
-> Co-developed-by: Ajay Neeli <ajay.neeli@amd.com>
-> Signed-off-by: Ajay Neeli <ajay.neeli@amd.com>
+Thanks,
 
-Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
-pw-bot: not-applicable
-
---YMFu5lM+sEy/WU91
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaPkWkAAKCRB4tDGHoIJi
-0tFeAQC5wO+4QHuc/nza8lgJiNnzXpQpd/t7M113YD3RktfwbwEA7H9xWVRI2j60
-O4mTnvVfLvvWAHKmkj03OzvdIt95/Ao=
-=ZXJP
------END PGP SIGNATURE-----
-
---YMFu5lM+sEy/WU91--
+Bart.
