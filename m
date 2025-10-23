@@ -1,63 +1,127 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2045619994F;
-	Thu, 23 Oct 2025 01:10:27 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D898D262FDD;
+	Thu, 23 Oct 2025 05:09:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761181827; cv=none; b=lOlRVwFjs2m3ewvrXqlmOH/ldRohL/SMYlPe4f/fZTXqgjNP36nzQm0OW297Bp2wox6SsGLrntIGjbaQ6MDSfRo4EIR4E7EkdYGUUpaRJymQG/LP5A8W4xjXqVLrVTGyHHGYQbAR2OgimLb5uvXFrhq2+mgvGROH0CPDwtap800=
+	t=1761196151; cv=none; b=XBCZtcQivD/O7T2QY5HA8mxEfGTeUNIHjnSs4Q2DAOLi3AwbvM81gDjTUC9SpagDjvg0RXOPSXv7NdXBBIvLM+fEIAJgIupFzMQsObCs8+MlF3pOk5PbSpoEtaeEkBt8kCjtWxY/WMgKX6NonZCAWI/XFPxGmy+0Z0y1uYLkYzY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761181827; c=relaxed/simple;
-	bh=HX6QcBhLo9dCE8p5TPA2v6rqf7ON/azSd8dNqGQKjRo=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=YpAVwwJSpybktlBJINJL1L1dWXy8pszssRpH5QI2ePIoTQ2kJjeAseM9fsvUOmzh1CUPhkWcb1JjvSOmzSmsiPwgypqFb3MmPxnlR1VXTuONV4ZNX2qFTFb/sDyc7TAgL+LGIg9gqq+Y6/QXl0/FYEBLK3eUvnK2n9SKNnQXR04=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=lSO+qpYq; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761196151; c=relaxed/simple;
+	bh=FyjRpBeYFT67/gyCyrlrMx2WiI6e9HPkH1XYB+MG1oU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=BtRho+mJFFwMIW4JJUelWzisz+HlTKXPjtEnSfbRnDOBT4UwmuEjHG5c0Lv6MwLS7bQ0MTfVpust97iA262bNrUgSrUqoJn4cj4VuODUkUp3KHwt8ukW56aM5KYIjJMrf6+TmOP6/zQDKoO9l+Yke6n5xH/WBXKun9Uw/6haxS0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=kLOglbJR; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="lSO+qpYq"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id F29F3C4CEE7;
-	Thu, 23 Oct 2025 01:10:26 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="kLOglbJR"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 06381C4CEE7;
+	Thu, 23 Oct 2025 05:09:02 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761181827;
-	bh=HX6QcBhLo9dCE8p5TPA2v6rqf7ON/azSd8dNqGQKjRo=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=lSO+qpYqycIKGCm8I5PESW12Ts04KUg80XVSLtGIo/ORCoFJW3fP7tX8yXtAE9iha
-	 xaq0axapki7/YvvwdqKaMIvZY/hDbtrwErk0zABtVmig9sN9TK0DnO+gqLkKCW6zE2
-	 lCTg3OJTNkkpwqVIz/8UGurpiaHTCrwanbFo6MNc8vnzYyMaxxol+H0nieT8QMLn69
-	 e74sf0Zj2RD3bc+WpiHCrguvcGs7iF5pBtr0iT13jrLwajyQ4eYg8eufYPUQ6Zs6Oz
-	 2y+I8NWz4U4T3RMuvKrUMYZJhmK4bTz5k+q11ebs56loHRIgcI+GQumcNuRu/OPO3V
-	 2RzyxVw6B0JWg==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id EAFF73809A00;
-	Thu, 23 Oct 2025 01:10:08 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.18-rc2
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <892e8ced0cd493594ff29206d75977aeb20b875b.camel@HansenPartnership.com>
-References: <892e8ced0cd493594ff29206d75977aeb20b875b.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <892e8ced0cd493594ff29206d75977aeb20b875b.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: 48277906603528a1fd1946bf0f141b2fd4f84e46
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 43e9ad0c55a369ecc84a4788d06a8a6bfa634f1c
-Message-Id: <176118180758.2361762.9039537935526709309.pr-tracker-bot@kernel.org>
-Date: Thu, 23 Oct 2025 01:10:07 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	s=k20201202; t=1761196147;
+	bh=FyjRpBeYFT67/gyCyrlrMx2WiI6e9HPkH1XYB+MG1oU=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=kLOglbJRy1A0ajYKT2q2hyJd3Kz6kHQ7aGupPJzHEbzRWo7n4L1KLIi1hizR2SDQn
+	 A4xmOBoJJw/cTZpQfchaHCNib8PzLZSZLI2KOa1NhR0AxORj9uDiDI4HwlLL4kxgF9
+	 HY1KHsGJlHgRx6Rzh1R4zR05E7FyZAxMi6l8+p4s+WX9e0MN9gDFwtt4BU/+7Ev3S8
+	 E7uDYr7kyMBHdJjNALuQJFitymhtvG+YKfbsJdU3Q9plN8dIlYRF4TihyJusTIKKz5
+	 1dALmvO7FTFXC9Ydmz3cStbhq0H0fSFhVVTtbE1HEHCJuXD1JPF+fVxiJ2W514bZzJ
+	 rNWODuekvnBfQ==
+Date: Thu, 23 Oct 2025 10:38:53 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, 
+	bvanassche@acm.org, konrad.dybcio@oss.qualcomm.com, linux-arm-msm@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org
+Subject: Re: [PATCH V1] ufs: ufs-qcom: Fix UFS OCP issue during UFS power
+ down(PC=3)
+Message-ID: <ugyg2k4typuw6btpcxtbxs4bv5oisuor37m6efu5mnsvirqyvo@yqzwm2t6bm7i>
+References: <20251012173828.9880-1-nitin.rawat@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251012173828.9880-1-nitin.rawat@oss.qualcomm.com>
 
-The pull request you sent on Wed, 22 Oct 2025 14:10:57 -0700:
+On Sun, Oct 12, 2025 at 11:08:28PM +0530, Nitin Rawat wrote:
+> According to UFS specifications, the power-off sequence for a UFS
+> device includes:
+> 
+> - Sending an SSU command with Power_Condition=3 and await a
+>   response.
+> - Asserting RST_N low.
+> - Turning off REF_CLK.
+> - Turning off VCC.
+> - Turning off VCCQ/VCCQ2.
+> 
+> As part of ufs shutdown , after the SSU command completion, asserting
+> hardware reset (HWRST) triggers the device firmware to wake up and
+> execute its reset routine. This routine initializes hardware blocks
+> and takes a few milliseconds to complete. During this time, the
+> ICCQ draws a large current.
+> 
+> This large ICCQ current may cause issues for the regulator which
+> is supplying power to UFS, because the turn off request from UFS
+> driver to the regulator framework will be immediately followed by
+> low power mode(LPM) request by regulator framework. This is done
+> by framework because UFS which is the only client is requesting
+> for disable. So if the rail is still in the process of shutting down
+> while ICCQ exceeds LPM current thresholds, and LPM mode is activated
+> in hardware during this state, it may trigger an overcurrent
+> protection (OCP) fault in the regulator.
+> 
+> To prevent this, a 10ms delay is added after asserting HWRST. This
+> allows the reset operation to complete while power rails remain active
+> and in high-power mode.
+> 
+> Currently there is no way for Host to query whether the reset is
+> completed or not and hence this the delay is based on experiments
+> with Qualcomm UFS controllers across multiple UFS vendors.
+> 
+> Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/43e9ad0c55a369ecc84a4788d06a8a6bfa634f1c
+- Mani
 
-Thank you!
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 15 ++++++++++++++-
+>  1 file changed, 14 insertions(+), 1 deletion(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 89a3328a7a75..cb54628be466 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -744,8 +744,21 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+> 
+> 
+>  	/* reset the connected UFS device during power down */
+> -	if (ufs_qcom_is_link_off(hba) && host->device_reset)
+> +	if (ufs_qcom_is_link_off(hba) && host->device_reset) {
+>  		ufs_qcom_device_reset_ctrl(hba, true);
+> +		/*
+> +		 * After sending the SSU command, asserting the rst_n
+> +		 * line causes the device firmware to wake up and
+> +		 * execute its reset routine.
+> +		 *
+> +		 * During this process, the device may draw current
+> +		 * beyond the permissible limit for low-power mode (LPM).
+> +		 * A 10ms delay, based on experimental observations,
+> +		 * allows the UFS device to complete its hardware reset
+> +		 * before transitioning the power rail to LPM.
+> +		 */
+> +		usleep_range(10000, 11000);
+> +	}
+> 
+>  	return ufs_qcom_ice_suspend(host);
+>  }
+> --
+> 2.50.1
+> 
 
 -- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+மணிவண்ணன் சதாசிவம்
