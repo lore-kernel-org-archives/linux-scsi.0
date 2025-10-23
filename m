@@ -1,133 +1,134 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 39B9F2D8DDA
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2025 14:06:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2DD3320A1D
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2025 15:09:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761228398; cv=none; b=WFFJ9WcMhPhG8V6R99Gj6OV/prlR6Fu79IULnJxdyqX0q8i+PIBsCYdb5KEa/4Ao6dBHHUaSZRxXff5Bdm6MEuOyc82eO+56aeOVk1w2qeKFJDk7tWOmo01MGAVotDE8AM2Gq7RsNGCkoZW7bBdVt5Elymxo3MIM7mvHKDz4Zw0=
+	t=1761232171; cv=none; b=i6Q+P08Y65p2ODndjozRxk7xDfIyxe77iObK+AXVdVqaZNqbCAFkD5dfIye7yXhpsOZI4ybBZ//W0nnobsKICU0exCs1QP4bliXLNSkCnVhVvxcpGKPZDmBzg4OheOu7ekb2xqa4u/AsHCntQCUajLYK28BaHWQFmUdHGKDpgk8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761228398; c=relaxed/simple;
-	bh=S33Mmc3IxO4AFgXmFCVjnVGqHg9a9DacTlCmOCm7y/I=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=o+mxYoKm8gOcSMWWKxL4q79SU7X3EaIsZVNbrozW2QoIZd9Hx+UeaqHY/b4RtH8MjCUpJIKjd9j3U+WowZ4pj7h3KVcrDHVKtjSFkLAJntIpRTbmkHB+hovGOZIAGHnOfJXrTUSr8yhhO9FoSptTMUhUX962wy5bGh/8bNwwCIQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=fail (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=F/10yarZ reason="signature verification failed"; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1761232171; c=relaxed/simple;
+	bh=5X3IgpM/ixFUUNAM9uIBuAadN03MLsIicS3hc4c7CY8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=XgLO3RI/IhYuS3wcQiIBuMZ2ySVeubvqmSVUkpIdHdFqyK873CTuYEl7dH927FSlJ6CNxQ4+PktbTE8RBjbW8Vb1d+PsPfL0LvHeGdMDBgXVZ/6eto4cjs1GYN0wV0wkB+cfLyOhhcwemmQqRh33jh2vtQhQjBimLiFe2xY5dK4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bMTADMlE; arc=none smtp.client-ip=209.85.218.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=fail reason="signature verification failed" (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="F/10yarZ"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1761228395;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding;
-	bh=wyY6A/qRieM5Jc+Z3Nt5yvu8FqjEBWBQymSvHHE95zQ=;
-	b=F/10yarZPY0WLfGYK48WOEnrNv8h01MaPpQLuOSnevFc7U8UPkd9wHQVhU3XJ3HJcw7E7z
-	6HnB8TzlKArYjN5PTepLUto8CQ8BsxFKyDBgWYUIbqpM5ooMlxjYVT5lxdsv2ch1kyZVo3
-	kjjCTpscoJQ3+1ljS/t7KxuRMO6kZuU=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-591-wgAoR8SLPCmOvvlwQDRUGQ-1; Thu,
- 23 Oct 2025 10:06:31 -0400
-X-MC-Unique: wgAoR8SLPCmOvvlwQDRUGQ-1
-X-Mimecast-MFC-AGG-ID: wgAoR8SLPCmOvvlwQDRUGQ_1761228390
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 4FA6318002F9;
-	Thu, 23 Oct 2025 14:06:30 +0000 (UTC)
-Received: from fedora-work.redhat.com (unknown [10.22.66.136])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 6AD6A19560B5;
-	Thu, 23 Oct 2025 14:06:28 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
-	linux-scsi@vger.kernel.org
-Cc: David Jeffery <djeffery@redhat.com>,
-	Laurence Oberman <loberman@redhat.com>
-Subject: [PATCH] scsi: st: skip buffer flush for information ioctls when there is no buffering
-Date: Thu, 23 Oct 2025 10:04:49 -0400
-Message-ID: <20251023140531.5197-1-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bMTADMlE"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b6d3effe106so225730966b.2
+        for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2025 08:09:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761232168; x=1761836968; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=5X3IgpM/ixFUUNAM9uIBuAadN03MLsIicS3hc4c7CY8=;
+        b=bMTADMlE7c3xHIZ6EV8URigXqs67Tu2FForU4ScFR/sou/nW7cuUpwcJJMju3qCqDy
+         6zs5pj90bfGw5HziTjMB9MiVcm1urkdTe9UjENG6Ab6tbJXecAVXCB8T+XelN8d8n+JP
+         tvReAAhLqIIJRltbdQ4Emsd3K/Jo1C7VGw7W9FzUar3ecHIxlzt/02hLyGlGzt9JFpKx
+         wYrKKE4Ihq6/rxpNHQXp2Ot6baOlYA3qj+pnp1uyHNxd3RoD3ywUiXmZI/LlfqGcxnD2
+         SRc+BGR/8cnbn5c7Bu6ZgByHDRh7BmhTZfhGJUD/RfhZR7KZ3nOvoXnL2m2PlPx+x/aw
+         J7bA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761232168; x=1761836968;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=5X3IgpM/ixFUUNAM9uIBuAadN03MLsIicS3hc4c7CY8=;
+        b=v/vHCd9iWFegl96Bhsnx9ssAwm1gvDIFvHKqELpxIDc4vKXz887Fawrqgpl+oLguMI
+         dPjizG3LojYMYN4jfc9BT3RY8pjcCXMJnHBrqsyjMof2dMlzHmOgXusFK7x0xMfGxVRY
+         YEe34yQW5IwQV9UVxZ39jkY4Y1rRbmXHpFzMT39Ws9U52/zLJD+Dh4SSUhtBRJuj5YMf
+         2yqlpUWazmJOY63c0optOJPEC/rpOfgTUZ7Lm/q62Za3XWC+rpTJPOok0o5XZqqCI/cg
+         DytuQxqLsfBx02/EBJzTcou6CHFJH1PB7nyCQc45WjNQ7oenlJdXVY8+ftAD4UcM2VdT
+         GA9Q==
+X-Forwarded-Encrypted: i=1; AJvYcCW2o2uMBKBJeN0DJe/FfUaQrIHezXZi/VTdJ9m+sL8/I5M//7gLLj7cOvReL9ueWu5KOAESLMNqJ4VF@vger.kernel.org
+X-Gm-Message-State: AOJu0Yxh7ymxEYHA7yRnWDlUjz6gjSs+WaHg1FYExA/VN+O/cOT5g82B
+	RqrDkXnt6xVlUNi9uDioQkGbAsUuqV4zMqH34uQViGmCo3eNxLR2v+cr
+X-Gm-Gg: ASbGncsK/x1cMn3bE9iObRdKLgUc1c8CczyEvkezAIqTvXEE++XrM6pF8XK4Rsq+s6x
+	lKrqk+PIPBt3ZWtGKCeIpG4H95DfhzTbPUgqBrD0Ww4hVb/Dg5poBFo82G17C1Ml0FelnNC/IZM
+	Z04F5gK8wAK46GO4Y5pI8acbHODB4usjx6PCkKSonGzhXX6h6I7R5FVMKiR2Kp/t5av3wa5OXRY
+	P7mAshZby2uS9XceHLaupyMFtu0j65B4rRkmeVdI+QtTW/19XYFt3YAraiGTD4si4y8/D2Not7g
+	o5MOgz34lflKM1Ddj+Ycs1WAz3YKXdkk8Kv2NuQAhF+TniA4AyJYCQgg4ExTWLLFTUfDfTJQe7s
+	pBIUf++gUn6SE5SubWpsliDfB9bm5kX9mYKfUvPUw4EK2EgNq3rFwnmfdbxvX8+U4bVy4CBj/mW
+	y8bBDtXYWWf5+ZQg==
+X-Google-Smtp-Source: AGHT+IGjQzu4HQMYvVKaEXQllFhwmuknoqmx0ur/s+VfbFfwCPYQWL9phbO+RD9JNTxazfFwVowNIA==
+X-Received: by 2002:a17:907:984:b0:b46:8bad:6972 with SMTP id a640c23a62f3a-b6474b3725fmr3075602666b.38.1761232167735;
+        Thu, 23 Oct 2025 08:09:27 -0700 (PDT)
+Received: from [10.176.235.211] ([137.201.254.43])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b6d511d119asm240701666b.6.2025.10.23.08.09.26
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 23 Oct 2025 08:09:27 -0700 (PDT)
+Message-ID: <9f3d1d277b0d102b5d912b533be21ed78103e142.camel@gmail.com>
+Subject: Re: [PATCH v5 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver
+ for UFS devices
+From: Bean Huo <huobean@gmail.com>
+To: Jens Wiklander <jens.wiklander@linaro.org>
+Cc: avri.altman@wdc.com, avri.altman@sandisk.com, bvanassche@acm.org, 
+	alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com, 
+	can.guo@oss.qualcomm.com, ulf.hansson@linaro.org, beanhuo@micron.com, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Thu, 23 Oct 2025 17:09:25 +0200
+In-Reply-To: <CAHUa44FfQAPWGgVbfrCnZfF9HkGwW=fgUhV-y9RKrUQf1V6yNg@mail.gmail.com>
+References: <20251021124254.1120214-1-beanhuo@iokpp.de>
+	 <20251021124254.1120214-4-beanhuo@iokpp.de>
+	 <CAHUa44FfQAPWGgVbfrCnZfF9HkGwW=fgUhV-y9RKrUQf1V6yNg@mail.gmail.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.44.4-0ubuntu2 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-With commit 9604eea5bd3a ("scsi: st: Add third party poweron reset handling")
-some customer tape applications fail from being unable to complete ioctls
-to verify ID information for the device when there has been any sort of reset
-event to their tape devices.
+On Thu, 2025-10-23 at 15:53 +0200, Jens Wiklander wrote:
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 device_id =3D kasprintf(GFP_KERNE=
+L, "%04X-%04X-%s-%s-%04X-%04X",
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 dev_info->wmanufacturerid, dev_info-
+> > >wspecversion,
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 dev_info->model, serial_hex, device_version,
+> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
+=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
+=C2=A0=C2=A0=C2=A0=C2=A0 manufacture_date);
+>=20
+>=20
+> The device ID is part of the ABI with the secure world or the firmware
+> we're serving. It might be worth adding a comment so the format isn't
+> changed without understanding the consequences.
+>=20
+> Cheers,
+> Jens
 
-The st driver currently will fail all standard scsi ioctls if a call to
-flush_buffer fails in st_ioctl. This effectively allows ioctls which
-otherwise have no affect on tape state to function as an indirect method
-of flushing buffers when the tape is being used in a buffering mode.
 
-But this also makes scsi information ioctls unreliable after a reset even
-if no buffering is in use. With a reset setting the pos_unknown field,
-flush_buffer will report failure and fail all ioctls. So any application
-expecting to use ioctls to check the identify the device will be unable to
-do so in such a state.
+Jens,=20
 
-Instead of always failing the ioctls, allow the ioctls which will not
-otherwise interact with the tape to bypass the call to flush_buffer if
-there is no buffering occurring in the st driver.
+I can add, do you have suggestion for this reminder message, for example:
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Tested-by:     Laurence Oberman <loberman@redhat.com>
----
- drivers/scsi/st.c | 19 +++++++++++++++++++
- 1 file changed, 19 insertions(+)
+/*
+ * WARNING: This device ID format is part of the stable ABI between
+ * the kernel and secure world (OP-TEE). Any changes to this format
+ * must be coordinated with firmware updates to avoid breaking
+ * communication with the secure world.
+ */
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 74a6830b7ed8..d8ed3bb2304d 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3528,7 +3528,22 @@ static int partition_tape(struct scsi_tape *STp, int size)
- }
- 
- 
-+static bool st_ioctl_bypass_flush(struct scsi_tape *STp, unsigned int cmd_in)
-+{
-+	switch (cmd_in) {
-+	case SCSI_IOCTL_GET_IDLUN:
-+	case SCSI_IOCTL_GET_BUS_NUMBER:
-+	case SCSI_IOCTL_GET_PCI:
-+		break;
-+	default:
-+		return false;
-+	}
-+
-+	if (STp->buffer->writing || STp->buffer->buffer_bytes)
-+		return false;
- 
-+	return true;
-+}
- /* The ioctl command */
- static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- {
-@@ -3565,6 +3580,9 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 	if (retval)
- 		goto out;
- 
-+	if (st_ioctl_bypass_flush(STp, cmd_in))
-+		goto unlock;
-+
- 	cmd_type = _IOC_TYPE(cmd_in);
- 	cmd_nr = _IOC_NR(cmd_in);
- 
-@@ -3878,6 +3896,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
- 		retval = put_user_mtpos(p, &mt_pos);
- 		goto out;
- 	}
-+unlock:
- 	mutex_unlock(&STp->lock);
- 
- 	switch (cmd_in) {
--- 
-2.51.0
+or=20
+
+/* Device ID format is ABI with secure world - do not change without firmwa=
+re
+coordination */
+
+
+
+or ?
+
+
+
+Kind regards,
+Bean
 
