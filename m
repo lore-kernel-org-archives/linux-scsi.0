@@ -1,45 +1,45 @@
 Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8FF9434DB49;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A3DB6262815;
 	Thu, 23 Oct 2025 19:53:51 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761249233; cv=pass; b=RihezGTlzdu/IYFN2Q8reH+eVeBy9K3/Eh4VMm2Fatnt/WS8VsfrtWfc296JDA9/aNYURyMvssZgyuywaSbVw4S+GYJXKigbV0HvUtfqS/xIW+0mBHXSEcFtjZslSR1hw7cHJkCax5aMDNkzbLPWUpY/EB8Vw7yPzYeBN548RNo=
+	t=1761249234; cv=pass; b=ZHyl0s/ZGyXUJxDTpDEUcw3zy8QrBMTbXrXrnotNLtVBv5smF6Kl3kEAk84VF8RLmnuk/d3YyzMjKYFyA/kl1wuX/pR9uimGggZEtwivszy8M477scZ9wsjMzJkl8LDr2IF6Ma8RKU+cQNy9wMdxOc5NrXmpiKiGNio6jBzos7U=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761249233; c=relaxed/simple;
-	bh=RJKqgYJDQpByKFyC/umaJEMyUSuuOvfyraab9N4JGRg=;
+	s=arc-20240116; t=1761249234; c=relaxed/simple;
+	bh=zDs7D3Dqz+MlMt0cSf7lZfvEiiibZYvwmtT3oJFECtA=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=UA1X82n7pEVrR87P7AdgLgPNm0xYdoMzdTPpm4mgzBOEYlFQI0NJ6HKFFJZ9qbrNzYvzjnQn4P5X9sIbkR60nYFEGw2JY4iQd2XtV63CXNfOr6o0TKqswQ26AW/kO4MpwUO66MnXeAu3QU60+EdJMk7V8cNxSrjd9V9bBCMS7tA=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=ZSz8t0zv; arc=pass smtp.client-ip=136.143.188.112
+	 In-Reply-To:To:Cc; b=aTNx38ydBPTutLisdopb+8tcLZeXxZZvrKvg79pqDQVMqYMI+6jo9rKmEw7a6PC0KpzCiaJXA1byup3CvJOkif/aHEzxMX3yNxrUVvMz7Y7Za1Ahktrl0b7s5ttEOQX2qGZWhwHvy3YzCRJ7/S9jiJdSzjPNiORJMEwp1dWDpZo=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=T4XaKuCv; arc=pass smtp.client-ip=136.143.188.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="ZSz8t0zv"
-ARC-Seal: i=1; a=rsa-sha256; t=1761249156; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="T4XaKuCv"
+ARC-Seal: i=1; a=rsa-sha256; t=1761249020; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=VcyPy4Bav5XBRMuJwuVfXrS7rWxpP2Nv2aRhGOFw/blf+P8e5vNrjLrLW+Fiumn3fzDPV+W+B9sW5cKeGxQWWriLwG2CmD1Owj6xfNnLKfx6hd75GkX9nurHjiNa557kNiOr35/7nNjJGNWWHb0A9fVWHgA0wQlqjJXfUB1eCAs=
+	b=W3BUB7khhifPpZWDA7eK0J/bWerErbID1PcQ6BtjXrA4rrrFHZW9hwOi7cBQ+WJlbhBDCCpLHzb3CpSZukR3noLUFuoFOfatqviE4rjuGAGCw5Qgx4pkKVkuuyrU8MonRMxJK9PVFuxMt3vrPxCPKLg5kFtapaLCBTKFHg9Yoso=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1761249156; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=gacBwfWTKcgjQcO0gdGshUooCsAPU+CoMskbVUWweZo=; 
-	b=J5625+6oUf6Bxdxgt8sg1wIDbDjcFF3LwX4oJv5vGldN+S0sY+UfPpiRlstpaj7GgfwxnjsIaXSyc+XLA+l6+EX+AWIly3ejsGzN6UFTpT07HqFUy12PpYN1MaJ+p0YidfGc6zy9ugsEthAmEG6DH5XcY4C9zqm8RXwXfWMzVMk=
+	t=1761249020; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=T8IO34R0JKJXQ+IBz9tFNngJ2MQyQjiOHTpva5wqLo0=; 
+	b=AbAXck/Mi8yQLGMVGsbIw1WHvNXKcxlba/3N7Y7sySHmS+XdtCHJc2koM02SH4t/M9IEzg2xN+/ruONlEmZBSZidYFWVZZBnwHtvs28a/GD3PxzpcPd7X91oSWWCrGXuvY3vrmFkB2sATyISYBAVaqwfDvOvDVPE1Gvel+T/EyY=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
 	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1761249156;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1761249020;
 	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
 	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=gacBwfWTKcgjQcO0gdGshUooCsAPU+CoMskbVUWweZo=;
-	b=ZSz8t0zvSnRhRpZaAvu+eIRNTsO04/fK/wMw/EhoQnKXclBDECTnmDBBOJsGyZY4
-	DaGw8dZkO/BnbNeOzeV7Rg0tEhY0Xu0nBrlzh0WljjMP/4fjIsrqQUqdHgalkouZLHA
-	bjsTRCpYeWcBTv8iOZk03Fm/YjVG+7jsnQG+J4jY=
-Received: by mx.zohomail.com with SMTPS id 1761249155845262.54753612291915;
-	Thu, 23 Oct 2025 12:52:35 -0700 (PDT)
+	bh=T8IO34R0JKJXQ+IBz9tFNngJ2MQyQjiOHTpva5wqLo0=;
+	b=T4XaKuCvP2OOJa1VFRAIKPpKORA7rONGcGSdI33bAU2PzyOQxyF3b9HC0rWOs9XB
+	2ovUvMNeOV3Opp8oLQW9o3caDC45lPCKPtha493tJgsqjjP2YJb8GD4XolTKliLSzVG
+	3FW2/LrlN3teBqiwFAC5SHlVqHAnZVqJx24fBpfk=
+Received: by mx.zohomail.com with SMTPS id 1761249019669371.3549099959822;
+	Thu, 23 Oct 2025 12:50:19 -0700 (PDT)
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Date: Thu, 23 Oct 2025 21:49:41 +0200
-Subject: [PATCH v3 23/24] scsi: ufs: mediatek: Remove ret local from
- link_startup_notify
+Date: Thu, 23 Oct 2025 21:49:19 +0200
+Subject: [PATCH v3 01/24] dt-bindings: phy: Add mediatek,mt8196-ufsphy
+ variant
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,7 +48,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251023-mt8196-ufs-v3-23-0f04b4a795ff@collabora.com>
+Message-Id: <20251023-mt8196-ufs-v3-1-0f04b4a795ff@collabora.com>
 References: <20251023-mt8196-ufs-v3-0-0f04b4a795ff@collabora.com>
 In-Reply-To: <20251023-mt8196-ufs-v3-0-0f04b4a795ff@collabora.com>
 To: Alim Akhtar <alim.akhtar@samsung.com>, 
@@ -72,47 +72,61 @@ Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 X-Mailer: b4 0.14.3
 
-Remove the "ret" local variable from ufs_mtk_link_startup_notify, as
-it's pointless; in all cases it is assigned, it is returned right after
-without being read first.
+The MediaTek MT8196 SoC includes an M-PHY compatible with the already
+existing mt8183 binding.
 
-Rework the code to just return directly, and get rid of the default
-branch while at it.
+However, one omission from the original binding was that all of these
+variants may have an optional reset.
 
+Add the new compatible, and also the resets property, with an example.
+
+Reviewed-by: AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 12 +++---------
- 1 file changed, 3 insertions(+), 9 deletions(-)
+ .../devicetree/bindings/phy/mediatek,ufs-phy.yaml        | 16 ++++++++++++++++
+ 1 file changed, 16 insertions(+)
 
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 5f5ebaf61ae0..932d1fdfdc65 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1487,21 +1487,15 @@ static void ufs_mtk_post_link(struct ufs_hba *hba)
- static int ufs_mtk_link_startup_notify(struct ufs_hba *hba,
- 				       enum ufs_notify_change_status stage)
- {
--	int ret = 0;
--
- 	switch (stage) {
- 	case PRE_CHANGE:
--		ret = ufs_mtk_pre_link(hba);
--		break;
-+		return ufs_mtk_pre_link(hba);
- 	case POST_CHANGE:
- 		ufs_mtk_post_link(hba);
--		break;
--	default:
--		ret = -EINVAL;
--		break;
-+		return 0;
- 	}
+diff --git a/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml b/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
+index 3e62b5d4da61..f414aaa18997 100644
+--- a/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
+@@ -26,6 +26,7 @@ properties:
+       - items:
+           - enum:
+               - mediatek,mt8195-ufsphy
++              - mediatek,mt8196-ufsphy
+           - const: mediatek,mt8183-ufsphy
+       - const: mediatek,mt8183-ufsphy
  
--	return ret;
-+	return -EINVAL;
- }
+@@ -42,6 +43,10 @@ properties:
+       - const: unipro
+       - const: mp
  
- static int ufs_mtk_device_reset(struct ufs_hba *hba)
++  resets:
++    items:
++      - description: Optional UFS M-PHY reset.
++
+   "#phy-cells":
+     const: 0
+ 
+@@ -65,5 +70,16 @@ examples:
+         clock-names = "unipro", "mp";
+         #phy-cells = <0>;
+     };
++  - |
++    #include <dt-bindings/reset/mediatek,mt8196-resets.h>
++    ufs-phy@16800000 {
++        compatible = "mediatek,mt8196-ufsphy", "mediatek,mt8183-ufsphy";
++        reg = <0x16800000 0x10000>;
++        clocks = <&ufs_ao_clk 3>,
++                 <&ufs_ao_clk 5>;
++        clock-names = "unipro", "mp";
++        resets = <&ufs_ao_clk MT8196_UFSAO_RST0_UFS_MPHY>;
++        #phy-cells = <0>;
++    };
+ 
+ ...
 
 -- 
 2.51.1.dirty
