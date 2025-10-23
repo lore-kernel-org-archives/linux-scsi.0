@@ -1,134 +1,91 @@
-Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A2DD3320A1D
-	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2025 15:09:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF2FB26E6EB
+	for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2025 16:19:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761232171; cv=none; b=i6Q+P08Y65p2ODndjozRxk7xDfIyxe77iObK+AXVdVqaZNqbCAFkD5dfIye7yXhpsOZI4ybBZ//W0nnobsKICU0exCs1QP4bliXLNSkCnVhVvxcpGKPZDmBzg4OheOu7ekb2xqa4u/AsHCntQCUajLYK28BaHWQFmUdHGKDpgk8=
+	t=1761236399; cv=none; b=fBXIM9NEof5gvuQGq9W6q164DDSSUMARODmnHEFL0swmrQra23k3A1iAmNHKQkFq/RMyjKi7RPTmrlyzosRPLh6AOLC1RdQKjLrjKh+CGKoscYPQmpJ4jbxPoBfUqkGPadfbJTZ1oRSiD1s7y5MymWcWoJ5VQDSnu25cPKX1xpM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761232171; c=relaxed/simple;
-	bh=5X3IgpM/ixFUUNAM9uIBuAadN03MLsIicS3hc4c7CY8=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=XgLO3RI/IhYuS3wcQiIBuMZ2ySVeubvqmSVUkpIdHdFqyK873CTuYEl7dH927FSlJ6CNxQ4+PktbTE8RBjbW8Vb1d+PsPfL0LvHeGdMDBgXVZ/6eto4cjs1GYN0wV0wkB+cfLyOhhcwemmQqRh33jh2vtQhQjBimLiFe2xY5dK4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=bMTADMlE; arc=none smtp.client-ip=209.85.218.45
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1761236399; c=relaxed/simple;
+	bh=ghqzIceY08cLqozG690fz0FQ6STGdHInr+gytHYV3DA=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=SdoUNbdebB5uxrTMVCLFtKavYwC/nvW/xWstGAE3SQ1AxP6DjRx5K4O2EFK8+NXovm3w5AOSLQ5J7VcMINJCgbB13EGuI7aL1BpnX5TMl1kngqRl1oyUNsh+Rb7Nn+nIOGJq+J2gTDHKfuG2jCazQm18Za+x7680QKUo4pKH16A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=hz4ptgj0; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="bMTADMlE"
-Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b6d3effe106so225730966b.2
-        for <linux-scsi@vger.kernel.org>; Thu, 23 Oct 2025 08:09:29 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761232168; x=1761836968; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=5X3IgpM/ixFUUNAM9uIBuAadN03MLsIicS3hc4c7CY8=;
-        b=bMTADMlE7c3xHIZ6EV8URigXqs67Tu2FForU4ScFR/sou/nW7cuUpwcJJMju3qCqDy
-         6zs5pj90bfGw5HziTjMB9MiVcm1urkdTe9UjENG6Ab6tbJXecAVXCB8T+XelN8d8n+JP
-         tvReAAhLqIIJRltbdQ4Emsd3K/Jo1C7VGw7W9FzUar3ecHIxlzt/02hLyGlGzt9JFpKx
-         wYrKKE4Ihq6/rxpNHQXp2Ot6baOlYA3qj+pnp1uyHNxd3RoD3ywUiXmZI/LlfqGcxnD2
-         SRc+BGR/8cnbn5c7Bu6ZgByHDRh7BmhTZfhGJUD/RfhZR7KZ3nOvoXnL2m2PlPx+x/aw
-         J7bA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761232168; x=1761836968;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=5X3IgpM/ixFUUNAM9uIBuAadN03MLsIicS3hc4c7CY8=;
-        b=v/vHCd9iWFegl96Bhsnx9ssAwm1gvDIFvHKqELpxIDc4vKXz887Fawrqgpl+oLguMI
-         dPjizG3LojYMYN4jfc9BT3RY8pjcCXMJnHBrqsyjMof2dMlzHmOgXusFK7x0xMfGxVRY
-         YEe34yQW5IwQV9UVxZ39jkY4Y1rRbmXHpFzMT39Ws9U52/zLJD+Dh4SSUhtBRJuj5YMf
-         2yqlpUWazmJOY63c0optOJPEC/rpOfgTUZ7Lm/q62Za3XWC+rpTJPOok0o5XZqqCI/cg
-         DytuQxqLsfBx02/EBJzTcou6CHFJH1PB7nyCQc45WjNQ7oenlJdXVY8+ftAD4UcM2VdT
-         GA9Q==
-X-Forwarded-Encrypted: i=1; AJvYcCW2o2uMBKBJeN0DJe/FfUaQrIHezXZi/VTdJ9m+sL8/I5M//7gLLj7cOvReL9ueWu5KOAESLMNqJ4VF@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxh7ymxEYHA7yRnWDlUjz6gjSs+WaHg1FYExA/VN+O/cOT5g82B
-	RqrDkXnt6xVlUNi9uDioQkGbAsUuqV4zMqH34uQViGmCo3eNxLR2v+cr
-X-Gm-Gg: ASbGncsK/x1cMn3bE9iObRdKLgUc1c8CczyEvkezAIqTvXEE++XrM6pF8XK4Rsq+s6x
-	lKrqk+PIPBt3ZWtGKCeIpG4H95DfhzTbPUgqBrD0Ww4hVb/Dg5poBFo82G17C1Ml0FelnNC/IZM
-	Z04F5gK8wAK46GO4Y5pI8acbHODB4usjx6PCkKSonGzhXX6h6I7R5FVMKiR2Kp/t5av3wa5OXRY
-	P7mAshZby2uS9XceHLaupyMFtu0j65B4rRkmeVdI+QtTW/19XYFt3YAraiGTD4si4y8/D2Not7g
-	o5MOgz34lflKM1Ddj+Ycs1WAz3YKXdkk8Kv2NuQAhF+TniA4AyJYCQgg4ExTWLLFTUfDfTJQe7s
-	pBIUf++gUn6SE5SubWpsliDfB9bm5kX9mYKfUvPUw4EK2EgNq3rFwnmfdbxvX8+U4bVy4CBj/mW
-	y8bBDtXYWWf5+ZQg==
-X-Google-Smtp-Source: AGHT+IGjQzu4HQMYvVKaEXQllFhwmuknoqmx0ur/s+VfbFfwCPYQWL9phbO+RD9JNTxazfFwVowNIA==
-X-Received: by 2002:a17:907:984:b0:b46:8bad:6972 with SMTP id a640c23a62f3a-b6474b3725fmr3075602666b.38.1761232167735;
-        Thu, 23 Oct 2025 08:09:27 -0700 (PDT)
-Received: from [10.176.235.211] ([137.201.254.43])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b6d511d119asm240701666b.6.2025.10.23.08.09.26
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 23 Oct 2025 08:09:27 -0700 (PDT)
-Message-ID: <9f3d1d277b0d102b5d912b533be21ed78103e142.camel@gmail.com>
-Subject: Re: [PATCH v5 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver
- for UFS devices
-From: Bean Huo <huobean@gmail.com>
-To: Jens Wiklander <jens.wiklander@linaro.org>
-Cc: avri.altman@wdc.com, avri.altman@sandisk.com, bvanassche@acm.org, 
-	alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com, 
-	can.guo@oss.qualcomm.com, ulf.hansson@linaro.org, beanhuo@micron.com, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 23 Oct 2025 17:09:25 +0200
-In-Reply-To: <CAHUa44FfQAPWGgVbfrCnZfF9HkGwW=fgUhV-y9RKrUQf1V6yNg@mail.gmail.com>
-References: <20251021124254.1120214-1-beanhuo@iokpp.de>
-	 <20251021124254.1120214-4-beanhuo@iokpp.de>
-	 <CAHUa44FfQAPWGgVbfrCnZfF9HkGwW=fgUhV-y9RKrUQf1V6yNg@mail.gmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="hz4ptgj0"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4csrpb36SDzlgqVJ;
+	Thu, 23 Oct 2025 16:19:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1761236390; x=1763828391; bh=ghqzIceY08cLqozG690fz0FQ
+	6STGdHInr+gytHYV3DA=; b=hz4ptgj0BBp7m7WwLwXNxTjHnn2wt7pFnPAj7Th4
+	ZaYQCeMokYU0GNmXbC773OeTDgDCLhVew3Sxv0BJollPkXpnjF3mADRu/iirQMTv
+	fihoAE3eHTD8adZGJmbjS1A1mbM0n1zKK326GcsXfyXNXIJ0Y8H4VFN+W3ZzGtWH
+	0q/E+xjyKjp6JbFJlH0Ky/OIeO37zeEfzxryLG/fcCYsgbRPfMJOkK/cds6YL+WY
+	YIIEiuj0UiCtNOhqzHVORjEG3qxxRXYNPb3WFr7TzCO9FFzN5uoXdMYFptRzvGPv
+	ODfDVciu0bH5DYXAnLmES3WfcYfPXm3Xj+ipVd0iVKex5Q==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 90NFhb9YwhTO; Thu, 23 Oct 2025 16:19:50 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4csrpW70xNzlgqVH;
+	Thu, 23 Oct 2025 16:19:47 +0000 (UTC)
+Message-ID: <d15d527d-1cd4-4fb4-9b98-0bae9a723f23@acm.org>
+Date: Thu, 23 Oct 2025 09:19:46 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v6 07/28] scsi_debug: Abort SCSI commands via an internal
+ command
+To: John Garry <john.g.garry@oracle.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <20251014201707.3396650-1-bvanassche@acm.org>
+ <20251014201707.3396650-8-bvanassche@acm.org>
+ <0507fd03-b3b0-436e-9f5f-72f7a02484bb@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <0507fd03-b3b0-436e-9f5f-72f7a02484bb@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 2025-10-23 at 15:53 +0200, Jens Wiklander wrote:
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 device_id =3D kasprintf(GFP_KERNE=
-L, "%04X-%04X-%s-%s-%04X-%04X",
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 dev_info->wmanufacturerid, dev_info-
-> > >wspecversion,
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 dev_info->model, serial_hex, device_version,
-> > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0 manufacture_date);
+On 10/22/25 1:46 AM, John Garry wrote:
+> Apart from some small comments,
 >=20
+> Reviewed-by: John Garry <john.g.garry@oracle.com>
+
+Thanks!
+
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 scoped_guard(spinlock_irqs=
+ave, &to_be_aborted_sdsc->lock)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 re=
+s =3D scsi_debug_stop_cmnd(to_be_aborted_scmd);
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 if (res)
+>> +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 pr=
+_info("%s: aborted command with tag %#x\n",
 >=20
-> The device ID is part of the ABI with the secure world or the firmware
-> we're serving. It might be worth adding a comment so the format isn't
-> changed without understanding the consequences.
+> I think that it is better to print in decimal
 >=20
-> Cheers,
-> Jens
+> Or, if using hex, use 0x prefix
 
+%#x causes printk() to emit a "0x" prefix. See also the SPECIAL flag and
+the spec_flag() function in lib/vsnprintf.c. Anyway, I will change the
+output format to decimal.
 
-Jens,=20
-
-I can add, do you have suggestion for this reminder message, for example:
-
-/*
- * WARNING: This device ID format is part of the stable ABI between
- * the kernel and secure world (OP-TEE). Any changes to this format
- * must be coordinated with firmware updates to avoid breaking
- * communication with the secure world.
- */
-
-or=20
-
-/* Device ID format is ABI with secure world - do not change without firmwa=
-re
-coordination */
-
-
-
-or ?
-
-
-
-Kind regards,
-Bean
-
+Bart.
