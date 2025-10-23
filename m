@@ -1,45 +1,44 @@
 Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BE0D34E741;
-	Thu, 23 Oct 2025 19:54:54 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 83EE434EEE0;
+	Thu, 23 Oct 2025 19:54:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761249296; cv=pass; b=PdAo5Ul2dm7iEBG0SNit2cCT6yKjvemFUZ/n52u4s0Cj0/E0VKvuuTKDBD2hUjNMlmmFA04Ax8sSMxZ4SNrW4woxMZndS0/tcepHgewYSogFH7btkZR0UHwJCgTzKwjlN74dJ8iR7BFj9XAQJr6Wr829dX/Hf9KE1v95QYaoc8U=
+	t=1761249298; cv=pass; b=b0oCWPW4j3gIVYaYBlXanHB9bb5hmcAzwR1VztzJr9HB71WVgtWjE81WULg/uzbnQmnv8LilzdF5DNcr6CRv75fpaTEhB60EI5N+dQf1XQN4vvyVdb3VyeC7/yKX/mxQ7NMFcC1d0wrpK8kyNcEAUeijfVjY2kxslnCF9LjmV0I=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761249296; c=relaxed/simple;
-	bh=Bo/lDu/4JUGihfvAIT1mtkOWnAdt3U2SL+Xx9yiZ2Q0=;
+	s=arc-20240116; t=1761249298; c=relaxed/simple;
+	bh=Z2YmR7PkMS1YSbm0iLpHQBQSgJiGkM4/ruXx4rHJCcU=;
 	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:References:
-	 In-Reply-To:To:Cc; b=pIpLcJOkgsGBiCOMXbXg5/18x0Ri6IhsOGsbFP6wgYCX6avM29i+tzCKs+E3FBsS73rtL4ZTUI54NQRm+sh0QrVYjfFLP98AiA9DbrbOsP162qahHCipe7+TN4A2L/zaHPBcBywqUyEiNfSlEhS6Ov6d2q4I6UAbkcw0Cs3zuho=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=WkrH9tiB; arc=pass smtp.client-ip=136.143.188.112
+	 In-Reply-To:To:Cc; b=lq0cVod8GQM6nYHptiVwRveQVcuwn1cv43LYN5dGu8veyE0Xe7vthu0omwr+ULSqNgiKtUpRM/GZfcf6LXIuWhv2h/rSmOO4qjpfCixSlnb1KfbEtczEneJNSc7I6G4aP6y3jSpaAZx7ih3f6n0aX2ryIul/GS+TRi6xsOfV7vM=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=EfYbZfF7; arc=pass smtp.client-ip=136.143.188.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="WkrH9tiB"
-ARC-Seal: i=1; a=rsa-sha256; t=1761249144; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="EfYbZfF7"
+ARC-Seal: i=1; a=rsa-sha256; t=1761249070; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=Yo7AUNLYG4puaMUg1pCpAmZPzjl4FefWOw57fITmQG3igaTqZRC1RR5lWLG+bm4fXYez/Q0Kr2+KuEwP0INWlDtLefFxsDsUY9FjUWGYgG9SuMWFl67KX09+IXXfewOBBxGJI/H6y/Zlzo6PDlz9eUSHyLLI3l+wnYFy8sZ03WU=
+	b=kh2DOk86wNOd/SNL8t9Y2k595JSm+vN0O7rsHjVHuHBlUNJIS/kxMXKVRs74WO4tek3YKaxg8RoREl5LhWL+CBiU0T6nmaRsZRLM9aw+QVCrqmyh5aPCZPQOsokpIjxY04TyRLFyrq0/Ffm0ux32HHPKurCZ1JJYCiIYkOxhJHw=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1761249144; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=nv8CMZib8nFBopw2ZL97D8iWGoOkqbxJHPOsEghWneg=; 
-	b=ZR0Wr8jOoFZJqJHrimXvVWiSfDSOsyDkXYFxbX2HrGQAkCHdjjUjpe21JQKB8X84pNIuYVYHQzrdISdXgF3RyxqawAhMRDl/UEIQiwDpIJ+dNpxnXY8lCGNNC+hMWZK0kYsZZqNw86GhsLtLykOM7Wd2ErUDYUAO/oZVfYh+PK8=
+	t=1761249070; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=b6NzRNKiv3Nyg0F/aRgR7DPEXa3XyvQBX/ydFnGvTNg=; 
+	b=b9PAMB9hZVZp+CMz92vuH+nQqtqyyOeC/CA1ognpgJD1el6s4X8mry96g+ZtB0qs9VjQwxdQu/cA6xAN9Adz12W+52ZunD/yPyp5wMUEIlauG0raE++QPom/1bz8DXjznSVCJ4//SmTjySoEWf41AOlkIfxGTIpsV7c1Pzvfbjo=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
 	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1761249144;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1761249070;
 	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
 	h=From:From:Date:Date:Subject:Subject:MIME-Version:Content-Type:Content-Transfer-Encoding:Message-Id:Message-Id:References:In-Reply-To:To:To:Cc:Cc:Reply-To;
-	bh=nv8CMZib8nFBopw2ZL97D8iWGoOkqbxJHPOsEghWneg=;
-	b=WkrH9tiBEPdtYHzyMrol6REHB/Z4EXjOm4wCIIpf4XRfh4ZeNw6ND2DZcdOhzWd2
-	D/Ga5nm6Gkc1fwL8+cqAW3J77MI5Ybiaq68g74k11nVxDT63euPRiYuem655e1oZ138
-	9dqQPFYxqgxMuTX4U9CJXPgTzayBijHzrONyXOj8=
-Received: by mx.zohomail.com with SMTPS id 1761249143490950.346003343342;
-	Thu, 23 Oct 2025 12:52:23 -0700 (PDT)
+	bh=b6NzRNKiv3Nyg0F/aRgR7DPEXa3XyvQBX/ydFnGvTNg=;
+	b=EfYbZfF7gbLSTnK6tv97bD76v7y0QIB01K1i5OyKHvmuTUmY9dbLD3Q6OWAKoApW
+	Ic30PWMym9eQiR0bCwQQUktstXeON5E7F3hdiA0g7CQWc5Jw26xcvQZTSn8IdkD4t5K
+	9L/bMuUrCXdDqNn4CecSOumeQepgXbdb0WzBmPpw=
+Received: by mx.zohomail.com with SMTPS id 1761249069163707.8494877333445;
+	Thu, 23 Oct 2025 12:51:09 -0700 (PDT)
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
-Date: Thu, 23 Oct 2025 21:49:39 +0200
-Subject: [PATCH v3 21/24] scsi: ufs: mediatek: Back up idle timer in
- per-instance struct
+Date: Thu, 23 Oct 2025 21:49:27 +0200
+Subject: [PATCH v3 09/24] scsi: ufs: mediatek: Rework the crypt-boost stuff
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -48,7 +47,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset="utf-8"
 Content-Transfer-Encoding: 7bit
-Message-Id: <20251023-mt8196-ufs-v3-21-0f04b4a795ff@collabora.com>
+Message-Id: <20251023-mt8196-ufs-v3-9-0f04b4a795ff@collabora.com>
 References: <20251023-mt8196-ufs-v3-0-0f04b4a795ff@collabora.com>
 In-Reply-To: <20251023-mt8196-ufs-v3-0-0f04b4a795ff@collabora.com>
 To: Alim Akhtar <alim.akhtar@samsung.com>, 
@@ -72,77 +71,143 @@ Cc: Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
  Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 X-Mailer: b4 0.14.3
 
-The MediaTek UFS driver uses a function-scope static variable to back up
-a hardware register across a power change in the
-ufs_mtk_pwr_change_notify function. This is dangerous, as it's only
-correct if only ever one instance of the driver is loaded, which isn't
-true if there's more than one device on a SoC that needs it, or it
-otherwise gets loaded a second time.
+I don't know whether the crypt-boost functionality as it is currently
+implemented is even appropriate for mainline. It might be better done in
+some generic way. But what I do know is that I can rework the code to
+make it less obtuse.
 
-Back it up into a member of the host struct instead, as this struct is
-per-instance. Rework the function to not use a pointless "ret" local as
-well.
+Prefix the boost stuff with the appropriate vendor prefix, remove the
+pointless clock wrappers, and rework the function.
 
-Fixes: f5ca8d0c7a63 ("scsi: ufs: host: mediatek: Disable auto-hibern8 during power mode changes")
 Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 ---
- drivers/ufs/host/ufs-mediatek.c | 20 ++++++++------------
- drivers/ufs/host/ufs-mediatek.h |  1 +
- 2 files changed, 9 insertions(+), 12 deletions(-)
+ drivers/ufs/host/ufs-mediatek.c | 91 +++++++++++++++--------------------------
+ 1 file changed, 32 insertions(+), 59 deletions(-)
 
 diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 6f54c5a35dc4..38698fbbd228 100644
+index 131f71145a12..9c0ac72d6e43 100644
 --- a/drivers/ufs/host/ufs-mediatek.c
 +++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1385,28 +1385,24 @@ static int ufs_mtk_pwr_change_notify(struct ufs_hba *hba,
- 				const struct ufs_pa_layer_attr *dev_max_params,
- 				struct ufs_pa_layer_attr *dev_req_params)
- {
--	int ret = 0;
--	static u32 reg;
-+	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
- 
- 	switch (stage) {
- 	case PRE_CHANGE:
- 		if (ufshcd_is_auto_hibern8_supported(hba)) {
--			reg = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
-+			host->hibernate_idle_timer = ufshcd_readl(
-+				hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
- 			ufs_mtk_auto_hibern8_disable(hba);
- 		}
--		ret = ufs_mtk_pre_pwr_change(hba, dev_max_params,
--					     dev_req_params);
--		break;
-+		return ufs_mtk_pre_pwr_change(hba, dev_max_params, dev_req_params);
- 	case POST_CHANGE:
- 		if (ufshcd_is_auto_hibern8_supported(hba))
--			ufshcd_writel(hba, reg, REG_AUTO_HIBERNATE_IDLE_TIMER);
--		break;
--	default:
--		ret = -EINVAL;
--		break;
-+			ufshcd_writel(hba, host->hibernate_idle_timer,
-+				      REG_AUTO_HIBERNATE_IDLE_TIMER);
-+		return 0;
- 	}
- 
--	return ret;
-+	return -EINVAL;
+@@ -562,21 +562,6 @@ static int ufs_mtk_mphy_power_on(struct ufs_hba *hba, bool on)
+ 	return 0;
  }
  
- static int ufs_mtk_unipro_set_lpm(struct ufs_hba *hba, bool lpm)
-diff --git a/drivers/ufs/host/ufs-mediatek.h b/drivers/ufs/host/ufs-mediatek.h
-index fa27ab4d6d6c..e5a3f70e7024 100644
---- a/drivers/ufs/host/ufs-mediatek.h
-+++ b/drivers/ufs/host/ufs-mediatek.h
-@@ -187,6 +187,7 @@ struct ufs_mtk_host {
- 	u16 ref_clk_gating_wait_us;
- 	u32 ip_ver;
- 	bool legacy_ip_ver;
-+	u32 hibernate_idle_timer;
+-static int ufs_mtk_get_host_clk(struct device *dev, const char *name,
+-				struct clk **clk_out)
+-{
+-	struct clk *clk;
+-	int err = 0;
+-
+-	clk = devm_clk_get(dev, name);
+-	if (IS_ERR(clk))
+-		err = PTR_ERR(clk);
+-	else
+-		*clk_out = clk;
+-
+-	return err;
+-}
+-
+ static void ufs_mtk_boost_crypt(struct ufs_hba *hba, bool boost)
+ {
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+@@ -633,65 +618,53 @@ static void ufs_mtk_boost_crypt(struct ufs_hba *hba, bool boost)
+ 	clk_disable_unprepare(cfg->clk_crypt_mux);
+ }
  
- 	bool mcq_set_intr;
- 	bool is_mcq_intr_enabled;
+-static int ufs_mtk_init_host_clk(struct ufs_hba *hba, const char *name,
+-				 struct clk **clk)
+-{
+-	int ret;
+-
+-	ret = ufs_mtk_get_host_clk(hba->dev, name, clk);
+-	if (ret) {
+-		dev_info(hba->dev, "%s: failed to get %s: %d", __func__,
+-			 name, ret);
+-	}
+-
+-	return ret;
+-}
+-
+-static void ufs_mtk_init_boost_crypt(struct ufs_hba *hba)
++static int ufs_mtk_init_boost_crypt(struct ufs_hba *hba)
+ {
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+ 	struct ufs_mtk_crypt_cfg *cfg;
+ 	struct device *dev = hba->dev;
+-	struct regulator *reg;
+-	u32 volt;
++	int ret;
+ 
+-	host->crypt = devm_kzalloc(dev, sizeof(*(host->crypt)),
+-				   GFP_KERNEL);
+-	if (!host->crypt)
+-		goto disable_caps;
++	cfg = devm_kzalloc(dev, sizeof(*cfg), GFP_KERNEL);
++	if (!cfg)
++		return -ENOMEM;
+ 
+-	reg = devm_regulator_get_optional(dev, "dvfsrc-vcore");
+-	if (IS_ERR(reg)) {
+-		dev_info(dev, "failed to get dvfsrc-vcore: %ld",
+-			 PTR_ERR(reg));
+-		goto disable_caps;
++	cfg->reg_vcore = devm_regulator_get_optional(dev, "dvfsrc-vcore");
++	if (IS_ERR(cfg->reg_vcore)) {
++		dev_err(dev, "Failed to get dvfsrc-vcore: %pe", cfg->reg_vcore);
++		return PTR_ERR(cfg->reg_vcore);
+ 	}
+ 
+-	if (of_property_read_u32(dev->of_node, "boost-crypt-vcore-min",
+-				 &volt)) {
+-		dev_info(dev, "failed to get boost-crypt-vcore-min");
+-		goto disable_caps;
++	ret = of_property_read_u32(dev->of_node, "mediatek,boost-crypt-vcore-min",
++				   &cfg->vcore_volt);
++	if (ret) {
++		dev_err(dev, "Failed to get mediatek,boost-crypt-vcore-min: %pe\n",
++			ERR_PTR(ret));
++		return ret;
+ 	}
+ 
+-	cfg = host->crypt;
+-	if (ufs_mtk_init_host_clk(hba, "crypt_mux",
+-				  &cfg->clk_crypt_mux))
+-		goto disable_caps;
++	cfg->clk_crypt_mux = devm_clk_get(dev, "crypt_mux");
++	if (IS_ERR(cfg->clk_crypt_mux)) {
++		dev_err(dev, "Failed to get clock crypt_mux: %pe\n", cfg->clk_crypt_mux);
++		return PTR_ERR(cfg->clk_crypt_mux);
++	}
+ 
+-	if (ufs_mtk_init_host_clk(hba, "crypt_lp",
+-				  &cfg->clk_crypt_lp))
+-		goto disable_caps;
++	cfg->clk_crypt_lp = devm_clk_get(dev, "crypt_lp");
++	if (IS_ERR(cfg->clk_crypt_lp)) {
++		dev_err(dev, "Failed to get clock crypt_lp: %pe\n", cfg->clk_crypt_lp);
++		return PTR_ERR(cfg->clk_crypt_lp);
++	}
+ 
+-	if (ufs_mtk_init_host_clk(hba, "crypt_perf",
+-				  &cfg->clk_crypt_perf))
+-		goto disable_caps;
++	cfg->clk_crypt_perf = devm_clk_get(dev, "crypt_perf");
++	if (IS_ERR(cfg->clk_crypt_perf)) {
++		dev_err(dev, "Failed to get clock crypt_perf: %pe\n", cfg->clk_crypt_perf);
++		return PTR_ERR(cfg->clk_crypt_perf);
++	}
+ 
+-	cfg->reg_vcore = reg;
+-	cfg->vcore_volt = volt;
++	host->crypt = cfg;
+ 	host->caps |= UFS_MTK_CAP_BOOST_CRYPT_ENGINE;
+ 
+-disable_caps:
+-	return;
++	return 0;
+ }
+ 
+ static void ufs_mtk_init_host_caps(struct ufs_hba *hba)
 
 -- 
 2.51.1.dirty
