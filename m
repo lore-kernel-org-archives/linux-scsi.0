@@ -1,112 +1,97 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.10])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60E8B1AA1F4;
-	Fri, 24 Oct 2025 03:09:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 24A5F2ECD3A
+	for <linux-scsi@vger.kernel.org>; Fri, 24 Oct 2025 08:59:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.10
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761275380; cv=none; b=hx5+1eURAVDWkqvhFOd/2nEVd/UUO2bZDSKFWxrZMoguhibyFgo9voI9/fdjiAiAewQXkaxkvYO85nIt0i/Oca0ED4sD2SyghhF07XHXZGKZKN8d3yZm8hPrcasTHaktPdLQeezKGuV/kBZ8A62ZvvN9BCU7fDz1wfwtKJkZy48=
+	t=1761296374; cv=none; b=ZGHh6EglJy15lT5VA8UwknIMbqBJkzUHl2r7LAD+3B97ttawSwGr7IOFmbfoj6FM9TH0hdkR71zEHRn54eOVhwOaoNryPZ2yMDnwN8Q5EmD62yXF0x44n2rRCeSYewHc4h387/dH1m8Tj4WGYq8wIjC93YPlS+RcqezQDIeIekU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761275380; c=relaxed/simple;
-	bh=rFbdG33yTA6ABPwVswT7hZryKQz8WBOCVj9FmL7xrOo=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HDUrWSossJfo72ALV6y+5yhQ48JYuJuEswSVeAYiV68qqkty5mPrb0FJztWVCBPf75YPU9TOzGfXtXp/ujQrZrXX3xzvk7Ng6Q1LIkXldme/6xFhpc3qwyiQ2hO1l+DOkrJbSw5eyEWWfdvfGGPM6tVp2GGImaJunPGlgk0XFfk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=nppakm/r; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1761296374; c=relaxed/simple;
+	bh=9cVy3MOSOEN5W1H5iM7b/Zgi2f6j6mkUygDvmOgUyDk=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=FJMl0ciHTKNF/MrrU+ko1ozG71yfyHvfnt1afLFnZ8bVIGFw/r44CqJ2LE/3C+YDUe5PEH5t6graROOrr5B4ZAGtwKh3gHlPlY2aOpCoyVXhD3UyDg8hryJ07fXj0BuORs2ei/9GAU8sjJdEo8SdZvmbhBhlW2AzFYQtsaI+S+I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SFHehIXH; arc=none smtp.client-ip=198.175.65.10
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nppakm/r"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 59NLO0DD001598;
-	Fri, 24 Oct 2025 03:09:29 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=RDRxwxS5mGdh5dm9XrIkIp+2Qj2GQl/8xYffaVjIYhI=; b=
-	nppakm/rmY7UiQxAaypZth+bO6Xcw9su7o580C3UWkJQfeYYugVPFfD2nO9IpzHe
-	1qVofsXSPfk3d+a1vY5UP1c26X+vlFLMzvsVuUvSTjBzocRM9xgy0IxgBq8BkILZ
-	GCaoD+ryqZ+mWSTd+yPTtUqM2XG0UxaZEJOA3gbc/rINsWsLevbYUVmmTAHUPK+n
-	9C9hXWfmXGQ4YRtOKkdgMUVOkAm6RidBxKsSqALMYXSoV9qltW5tgnDQQ9HUt1eS
-	eQzdsligIgky1eCeFwUHqh34g4LmomkAv31P/P7KhS660IMTnsGPbVS/Hwnq4m3h
-	YRW1HPkCLaNIyvarR2TyHQ==
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 49xv3kut4j-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 24 Oct 2025 03:09:29 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 59O2gu20012175;
-	Fri, 24 Oct 2025 03:09:28 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 49v1bfkdye-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Fri, 24 Oct 2025 03:09:28 +0000
-Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 59O39RNk014958;
-	Fri, 24 Oct 2025 03:09:27 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 49v1bfkdxr-1;
-	Fri, 24 Oct 2025 03:09:27 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: mani@kernel.org, James.Bottomley@HansenPartnership.com, bvanassche@acm.org,
-        konrad.dybcio@oss.qualcomm.com,
-        Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-arm-msm@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org
-Subject: Re: [PATCH V1] ufs: ufs-qcom: Fix UFS OCP issue during UFS power down(PC=3)
-Date: Thu, 23 Oct 2025 23:09:19 -0400
-Message-ID: <176127514327.1781649.7123820195194287738.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20251012173828.9880-1-nitin.rawat@oss.qualcomm.com>
-References: <20251012173828.9880-1-nitin.rawat@oss.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SFHehIXH"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761296374; x=1792832374;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=9cVy3MOSOEN5W1H5iM7b/Zgi2f6j6mkUygDvmOgUyDk=;
+  b=SFHehIXHlBB3QSsp/DcWPZp5R3aQgccAlym5HCnC0hlh+t5BafO5tpsi
+   Ti0FJnk+WZgVHOD7Lhj5jUnE2hl6J6/lIcQs+cZJB1Zp7fbr6+CbNydJV
+   4bjh+yjl55B7XEFYyhezb2DiqZ3FGa/zGBZOoic7aReoUtJrv6/dyJnd5
+   qAVeeGTBlNI+gG/7lS3JnoLFf3J2jLTnWsqcsQz6fFdhD7MjrZAJPdKnV
+   L9l5vw9ntQ3GYN+cuE6othUXU0Ly5Qi82x+mnYq4MMaoziDOijuJud5Us
+   XsnKPuuV0lUVMBs3g0F5cQr8he4XwbT5CIIqcqh7YVc4msKVZy1w+ikdP
+   Q==;
+X-CSE-ConnectionGUID: Z4mI/bl/Q+ifQ2rrwFBIug==
+X-CSE-MsgGUID: sT8BXrVJTwe6Id7442jiuA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11586"; a="80910793"
+X-IronPort-AV: E=Sophos;i="6.19,252,1754982000"; 
+   d="scan'208";a="80910793"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by orvoesa102.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2025 01:59:33 -0700
+X-CSE-ConnectionGUID: 90sJ4i1YQ/WtkzaylZh+/Q==
+X-CSE-MsgGUID: NThSLL2+RUKl0aCIleJDqw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,252,1754982000"; 
+   d="scan'208";a="221583342"
+Received: from rvuia-mobl.ger.corp.intel.com (HELO localhost.localdomain) ([10.245.245.43])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Oct 2025 01:59:30 -0700
+From: Adrian Hunter <adrian.hunter@intel.com>
+To: Martin K Petersen <martin.petersen@oracle.com>
+Cc: James EJ Bottomley <James.Bottomley@HansenPartnership.com>,
+	Bart Van Assche <bvanassche@acm.org>,
+	Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH V2 0/4] scsi: ufs: PM fixes Intel host controllers
+Date: Fri, 24 Oct 2025 11:59:14 +0300
+Message-ID: <20251024085918.31825-1-adrian.hunter@intel.com>
+X-Mailer: git-send-email 2.48.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+Organization: Intel Finland Oy, Registered Address: c/o Alberga Business Park, 6 krs, Bertel Jungin Aukio 5, 02600 Espoo, Business Identity Code: 0357606 - 4, Domiciled in Helsinki
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-10-23_03,2025-10-22_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 mlxscore=0 suspectscore=0
- malwarescore=0 bulkscore=0 phishscore=0 spamscore=0 mlxlogscore=545
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510020000
- definitions=main-2510240026
-X-Authority-Analysis: v=2.4 cv=acVsXBot c=1 sm=1 tr=0 ts=68faede9 cx=c_pps
- a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
- a=IkcTkHD0fZMA:10 a=x6icFKpwvdMA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=7QR6E6h3abEZ3QZYDiMA:9 a=QEXdDO2ut3YA:10
- a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-ORIG-GUID: GQen-p-FkaImzuUhi76TQZFlZBXBOsrF
-X-Proofpoint-GUID: GQen-p-FkaImzuUhi76TQZFlZBXBOsrF
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDIyMDA3MSBTYWx0ZWRfX/rW24lCU6sAV
- qQF8IYwa3dozoAqxhEnow1u4AVwqUKBbx8NBoZ8clc19pgcVkoe76kUoMe24DsvavsC+oeFidE/
- M2he41E9Ngb9JPGxc2Py4voSoUnPFqeSvjcjqeNixD9vCbrhMTMpJlXZdZ415YEm9Oxp3ojuJYL
- qo+/NUkfiDCsQFsnRwhdxPDTVJ1+al/0goJ5h1z5oRVd0gfBombloD4sGLsJa0GUjqiqQuOTk3K
- SMCXR5SVSQ4fOIwplRbSlUQ+EaBeNOUsk8v6YSwlOpSXCUZt48o6bKpZra+VMRxYod2ptHmICIM
- CZ1rTeoqelyIy0dP5Q5PWiD46ktYPca2r31SLEmLsmd44iNAHHADeltE/rZu3Xzr+irMtTo5g3V
- Vco2YhD0YhPWj3OGy0NxIQnICImUkQ==
 
-On Sun, 12 Oct 2025 23:08:28 +0530, Nitin Rawat wrote:
+Hi
 
-> According to UFS specifications, the power-off sequence for a UFS
-> device includes:
-> 
-> - Sending an SSU command with Power_Condition=3 and await a
->   response.
-> - Asserting RST_N low.
-> - Turning off REF_CLK.
-> - Turning off VCC.
-> - Turning off VCCQ/VCCQ2.
-> 
-> [...]
+Here are fixes related to power management on Intel host controllers,
+primarily ones based on Intel Alder Lake.
 
-Applied to 6.18/scsi-fixes, thanks!
+Patches are based on 6.18/scsi-fixes
 
-[1/1] ufs: ufs-qcom: Fix UFS OCP issue during UFS power down(PC=3)
-      https://git.kernel.org/mkp/scsi/c/5127be409c6c
 
--- 
-Martin K. Petersen
+Changes in V2:
+
+   scsi: ufs: core: Add a quirk to suppress link_startup_again
+   scsi: ufs: ufs-pci: Set UFSHCD_QUIRK_PERFORM_LINK_STARTUP_ONCE for Intel ADL
+
+      Rename from UFSHCD_QUIRK_NO_LINK_STARTUP_AGAIN
+      to UFSHCD_QUIRK_PERFORM_LINK_STARTUP_ONCE
+
+
+Adrian Hunter (4):
+      scsi: ufs: ufs-pci: Fix S0ix/S3 for Intel controllers
+      scsi: ufs: core: Add a quirk to suppress link_startup_again
+      scsi: ufs: ufs-pci: Set UFSHCD_QUIRK_PERFORM_LINK_STARTUP_ONCE for Intel ADL
+      scsi: ufs: core: Fix invalid probe error return value
+
+ drivers/ufs/core/ufshcd.c     |  7 +++--
+ drivers/ufs/host/ufshcd-pci.c | 70 +++++++++++++++++++++++++++++++++++++++++--
+ include/ufs/ufshcd.h          |  7 +++++
+ 3 files changed, 78 insertions(+), 6 deletions(-)
+
+base-commit: c0e37ac6a5d4c4bc33b9c4408d22714fe370a1b0
+
+
+Regards
+Adrian
