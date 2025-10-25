@@ -1,54 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 741102475E3;
-	Sat, 25 Oct 2025 16:22:17 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C3853090C2;
+	Sat, 25 Oct 2025 16:22:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761409337; cv=none; b=DNa57bU8ptIptUkgU5iQsVUBb/72zivDnyPZzQyexiMYQOVemx7aI9AFFzPZCv/u1qku4oC4vVjc+MdyDxe7Hy8gMEHiZNjmcu8J8Bte4UAbjl1FNQBpmLFx3my/lBqk1XJPpNpAva6XgVKj6mBYGLQYgaJ1sD2zRw+xzlTJ+LI=
+	t=1761409368; cv=none; b=UaR5th/ZKpJT1kBn71oZ/no87NbgI/OBovANQE/5jJNT7g4hZDJ853qZB/7+RUbCeEJP4L78Os24gnTFB1hZz1CbQvw9QUEtA6A9FxNZda2238UsevLbSA/OgqgVYGWHYNvxtMat+0Ey53qo77lo/CzQFvsSA+VTXR6S6PX31N8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761409337; c=relaxed/simple;
-	bh=WNajpbc6UeE5CA1T7IoxhrEbXQRquMQp1b6mZ0IcdWI=;
+	s=arc-20240116; t=1761409368; c=relaxed/simple;
+	bh=owlvbVqMoJ68QLNIEi2hG503jMvRcodLtd1ia//GRV0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=OkxQ7RBkV9lRM3d2e6SsV+I0gHjQ6TLPpO9Fx3N/BS++U7HiOE8Y3ltBZJBg4i/IYZTPtrsDj5AeJtf/jdhuwxEDR00WVsbzONGsaR0Ihmf9nbcK2e8n1BiIYQtquzmaWSkmne0uLjEi/X1J+Ob1z3YpY6jwbcWkEarFj+2nX9A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=T3wZv4iy; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=k0vWfa1sw5YIXiT8apizHXzXmjE2HvucCzOFHt0I+K/PcE8MRQ8HhE24xN7e4+Ug1gW7AztpZZgHsOH6QySsbirrmpI7uVeCuKsHdQXa+uMnr+kLiM4iuEfh9EwRKgZv/Uzfwmer3ms+t/JkAlNgdJjVVU23iwhTAppWFe3atv0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=EyJj3rFH; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="T3wZv4iy"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 116F1C4CEFB;
-	Sat, 25 Oct 2025 16:22:14 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="EyJj3rFH"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1D865C4CEFB;
+	Sat, 25 Oct 2025 16:22:47 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761409337;
-	bh=WNajpbc6UeE5CA1T7IoxhrEbXQRquMQp1b6mZ0IcdWI=;
+	s=k20201202; t=1761409368;
+	bh=owlvbVqMoJ68QLNIEi2hG503jMvRcodLtd1ia//GRV0=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=T3wZv4iyUF9OGipuUBM9+K5MAdV+8+vYG1Ah5ppVbF9dtwDKGVGuOrVqyrwGpwUom
-	 ajI8RT52mKOm4TwmPYpClEJnCRVjA5PM4Z1l1mBgiNgORiutUAPIV/3r/TfzhLZ9A+
-	 HKLP84NNnmiiykVD+Q+OQvPZYoYvaRGpJyt8FvmwEFnZif8pm6ZxLIJEG2YeLrZZfc
-	 J0GLFZFXhUmpGKm2MRdTX43XJIGkQcEYHYUg7gXxqwOpVDZzCyC0sQLaypn5Yjn+JW
-	 BHg2nlx0anxiIjACuDHfIytKhjAUcmabK1SpvEOu4DhAdUSUZBO5ZF1KTG0T4tLRsX
-	 kHEAnM9JMjEPw==
+	b=EyJj3rFH9SEmRCg8OH9V6RAuWLQZ/WDbx6RxgJFXCY80bOuO1/y4+SlcREHO5LUrx
+	 57UWBCtEmRj02fAefKb1Ui8lIIOS+6fAPQQY9TQhQpmDUA9/RaoytacMHxf6IMWH5W
+	 i2rC1bXZJfDimXqFk45BLkgSGr8KsAqsZ5CzQuKnTocICUPN6G+quOuveLA3+0Llna
+	 5yW1ub5mwd3bO6RVq4HvWoQdjC83RFvxgzL0s8SoDUNA+32YvvhXcevNQ4Nwh6tufw
+	 n6wN0KDCsYGxv6Fsyp5s8wi76g1ISbeHdLMW7zq7g6Aby+aMI4wEum0FksSynnbwYi
+	 KjEd8tFWnvB3Q==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
+Cc: Alice Chao <alice.chao@mediatek.com>,
 	Peter Wang <peter.wang@mediatek.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
 	matthias.bgg@gmail.com,
 	angelogioacchino.delregno@collabora.com,
-	beanhuo@micron.com,
-	alexandre.f.demers@gmail.com,
-	adrian.hunter@intel.com,
-	quic_mapa@quicinc.com,
 	linux-scsi@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
 	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.17-6.6] scsi: ufs: core: Disable timestamp functionality if not supported
-Date: Sat, 25 Oct 2025 11:58:34 -0400
-Message-ID: <20251025160905.3857885-283-sashal@kernel.org>
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.17-6.1] scsi: ufs: host: mediatek: Assign power mode userdata before FASTAUTO mode change
+Date: Sat, 25 Oct 2025 11:58:44 -0400
+Message-ID: <20251025160905.3857885-293-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
 References: <20251025160905.3857885-1-sashal@kernel.org>
@@ -61,86 +54,124 @@ MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.17.5
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Bart Van Assche <bvanassche@acm.org>
+From: Alice Chao <alice.chao@mediatek.com>
 
-[ Upstream commit fb1f4568346153d2f80fdb4ffcfa0cf4fb257d3c ]
+[ Upstream commit 979feee0cf43b32d288931649d7c6d9a5524ea55 ]
 
-Some Kioxia UFS 4 devices do not support the qTimestamp attribute.  Set
-the UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT for these devices such that no
-error messages appear in the kernel log about failures to set the
-qTimestamp attribute.
+Assign power mode userdata settings before transitioning to FASTAUTO
+power mode. This ensures that default timeout values are set for various
+parameters, enhancing the reliability and performance of the power mode
+change process.
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-Reviewed-by: Avri Altman <avri.altman@sandisk.com>
-Tested-by: Nitin Rawat <quic_nitirawa@quicinc.com> # on SM8650-QRD
-Reviewed-by: Nitin Rawat <quic_nitirawa@quicinc.com>
+Signed-off-by: Alice Chao <alice.chao@mediatek.com>
 Reviewed-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Message-ID: <20250909190614.3531435-1-bvanassche@acm.org>
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Link: https://lore.kernel.org/r/20250811131423.3444014-7-peter.wang@mediatek.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-YES. The change adds a targeted quirk for the Kioxia `THGJFJT1E45BATP`
-device (`drivers/ufs/core/ufshcd.c:316`) that prevents the core driver
-from issuing the qTimestamp write when the device advertises that the
-attribute is unsupported (`drivers/ufs/core/ufshcd.c:8799`). Without it,
-every link bring-up or reset hits `ufshcd_set_timestamp_attr()` and
-emits a `dev_err` because the write reliably fails, so users see
-recurring kernel log noise on affected hardware. Introducing
-`UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT` (`include/ufs/ufs_quirks.h:117`)
-is mechanically simple, does not alter behaviour for other devices, and
-cleanly gates the existing code path via the existing quirk plumbing,
-making the risk of regression very low. Because it fixes a user-visible
-malfunction (persistent error messages) on shipping UFS 4 hardware and
-is tightly scoped with no architectural fallout, it fits stable backport
-criteria well. A natural follow-up is to validate on the affected
-hardware that the spurious log entries disappear after backporting.
+YES
 
- drivers/ufs/core/ufshcd.c | 6 +++++-
- include/ufs/ufs_quirks.h  | 3 +++
- 2 files changed, 8 insertions(+), 1 deletion(-)
+Rationale
+- Fixes a real gap in the Mediatek FASTAUTO transition path. In the
+  Mediatek vendor pre-change hook `ufs_mtk_pre_pwr_change()` the driver
+  performs an intermediate power mode switch to HSG1B FASTAUTO by
+  calling `ufshcd_uic_change_pwr_mode(hba, FASTAUTO_MODE << 4 |
+  FASTAUTO_MODE)` without first programming the UniPro power mode
+  userdata timeouts. See the existing call in `drivers/ufs/host/ufs-
+  mediatek.c:1119`. The change adds programming of
+  `PA_PWRMODEUSERDATA[0..5]` and `DME_Local*` timeout attributes
+  immediately before that FASTAUTO change (inside the `if
+  (ufs_mtk_pmc_via_fastauto(...))` block near `drivers/ufs/host/ufs-
+  mediatek.c:1101`), ensuring sane timer values are in place for the
+  intermediate FASTAUTO PWR mode operation.
+- Aligns Mediatek path with core behavior. The UFS core already sets
+  these exact defaults when it performs a (final) power mode change in
+  `ufshcd_change_power_mode()` (see `drivers/ufs/core/ufshcd.c:4674`
+  through `drivers/ufs/core/ufshcd.c:4693`). Because Mediatek does an
+  extra, vendor-specific FASTAUTO step earlier in the PRE_CHANGE hook,
+  not setting these beforehand can leave the link using unset/legacy
+  timeout values during that intermediate transition, increasing the
+  chance of DL/FC/Replay/AFC timer-related failures (the driver even
+  logs “HSG1B FASTAUTO failed” on error at `drivers/ufs/host/ufs-
+  mediatek.c:1122`).
+- Small, contained, and low-risk. The patch:
+  - Only touches `drivers/ufs/host/ufs-mediatek.c` and only executes
+    when `UFS_MTK_CAP_PMC_VIA_FASTAUTO` is enabled via DT
+    (“mediatek,ufs-pmc-via-fastauto” in `ufs_mtk_init_host_caps()`).
+  - Uses standard UniPro attributes and the same default values already
+    used by the core (`include/ufs/unipro.h`), so it’s consistent with
+    existing code paths.
+  - Is guarded by `UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING`,
+    mirroring core behavior, so it won’t override vendor-specific
+    tunings on platforms that explicitly skip the defaults.
+  - Has no API/ABI changes and doesn’t alter flow outside the Mediatek-
+    specific fastauto path.
+- Addresses user-visible reliability. While the commit message frames it
+  as improving “reliability and performance,” the operational effect is
+  to prevent misconfigured timeout values during a UIC PWR mode
+  transition that the driver initiates. That is a correctness fix for
+  affected platforms, not a feature.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 78d3f0ee16d84..1907c0f6eda0e 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -316,6 +316,9 @@ static const struct ufs_dev_quirk ufs_fixups[] = {
- 	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
- 	  .model = "THGLF2G9D8KBADG",
- 	  .quirk = UFS_DEVICE_QUIRK_PA_TACTIVATE },
-+	{ .wmanufacturerid = UFS_VENDOR_TOSHIBA,
-+	  .model = "THGJFJT1E45BATP",
-+	  .quirk = UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT },
- 	{}
- };
+Backport considerations
+- No new symbols or dependencies; the macros `PA_PWRMODEUSERDATA*`,
+  `DME_Local*`, and the quirk flag exist in current stable branches
+  (e.g., `include/ufs/unipro.h`, `include/ufs/ufshcd.h:620`).
+- The surrounding function and fastauto path exist in stable (see
+  `drivers/ufs/host/ufs-mediatek.c:1083` onward), so the change applies
+  cleanly.
+- Writing these values twice (once before the intermediate FASTAUTO,
+  again before the final power mode change in core) is benign and
+  matches existing practice in other drivers.
+
+Conclusion
+- This is an important, narrowly scoped reliability fix for Mediatek UFS
+  hosts that perform PMC via FASTAUTO. It follows stable rules (bugfix,
+  minimal risk, no architectural changes, confined to a vendor driver)
+  and should be backported.
+
+ drivers/ufs/host/ufs-mediatek.c | 22 ++++++++++++++++++++++
+ 1 file changed, 22 insertions(+)
+
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 4171fa672450d..ada21360aa270 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1349,6 +1349,28 @@ static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
+ 		ufshcd_dme_set(hba, UIC_ARG_MIB(PA_TXHSADAPTTYPE),
+ 			       PA_NO_ADAPT);
  
-@@ -8794,7 +8797,8 @@ static void ufshcd_set_timestamp_attr(struct ufs_hba *hba)
- 	struct ufs_dev_info *dev_info = &hba->dev_info;
- 	struct utp_upiu_query_v4_0 *upiu_data;
- 
--	if (dev_info->wspecversion < 0x400)
-+	if (dev_info->wspecversion < 0x400 ||
-+	    hba->dev_quirks & UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT)
- 		return;
- 
- 	ufshcd_dev_man_lock(hba);
-diff --git a/include/ufs/ufs_quirks.h b/include/ufs/ufs_quirks.h
-index f52de5ed1b3b6..83563247c36cb 100644
---- a/include/ufs/ufs_quirks.h
-+++ b/include/ufs/ufs_quirks.h
-@@ -113,4 +113,7 @@ struct ufs_dev_quirk {
-  */
- #define UFS_DEVICE_QUIRK_PA_HIBER8TIME          (1 << 12)
- 
-+/* Some UFS 4 devices do not support the qTimestamp attribute */
-+#define UFS_DEVICE_QUIRK_NO_TIMESTAMP_SUPPORT	(1 << 13)
++		if (!(hba->quirks & UFSHCD_QUIRK_SKIP_DEF_UNIPRO_TIMEOUT_SETTING)) {
++			ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA0),
++					DL_FC0ProtectionTimeOutVal_Default);
++			ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA1),
++					DL_TC0ReplayTimeOutVal_Default);
++			ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA2),
++					DL_AFC0ReqTimeOutVal_Default);
++			ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA3),
++					DL_FC1ProtectionTimeOutVal_Default);
++			ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA4),
++					DL_TC1ReplayTimeOutVal_Default);
++			ufshcd_dme_set(hba, UIC_ARG_MIB(PA_PWRMODEUSERDATA5),
++					DL_AFC1ReqTimeOutVal_Default);
 +
- #endif /* UFS_QUIRKS_H_ */
++			ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalFC0ProtectionTimeOutVal),
++					DL_FC0ProtectionTimeOutVal_Default);
++			ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalTC0ReplayTimeOutVal),
++					DL_TC0ReplayTimeOutVal_Default);
++			ufshcd_dme_set(hba, UIC_ARG_MIB(DME_LocalAFC0ReqTimeOutVal),
++					DL_AFC0ReqTimeOutVal_Default);
++		}
++
+ 		ret = ufshcd_uic_change_pwr_mode(hba,
+ 					FASTAUTO_MODE << 4 | FASTAUTO_MODE);
+ 
 -- 
 2.51.0
 
