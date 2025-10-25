@@ -1,42 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 446A03081D4;
-	Sat, 25 Oct 2025 16:26:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3166C278165;
+	Sat, 25 Oct 2025 16:26:45 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761409580; cv=none; b=tS81dk4pFCv5SDa0+TN6P2UKqi900eGKVILh2400VVnZsY6WTzOQNYSYMAdG/ZVDHFxq/kV3rFfLgBg5DQDCn+3TmX/uP1tVm3N1DvsKAcDEE3OXJXi6YlZBlgBVhREQvxoh8TYpfYz9CjdovA3AYrFbjbnd/yfw0dJVPK40pXA=
+	t=1761409605; cv=none; b=j5FCz0HfBJqq7r02gOiXjEjCEARMXeJjPaBN7qLQVnBgVGalQ8Hw/jtwf0jzDpwazVMTwcn7lhzplQzwfY2GH+GqNfbY87YZm98p0OkAGdaiZtahVCIjY8tAQP3L13UajYCs9wDwRyIG+uCQ2NQc9KFkAfANXcNLI2bthIpyuBs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761409580; c=relaxed/simple;
-	bh=JNQ39YWeAi4K7+X6qQwqEvnb4FQtk+/2HcK70qeEeds=;
+	s=arc-20240116; t=1761409605; c=relaxed/simple;
+	bh=toGPQ+wiGt2AhGw6TSwK9UndEc09/HsXQqY6zUqc3Zo=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=SaIoWAsZV5Cgyil+dvr+J0j4ZWy3hnV+0b1CJW3V4l8Al74fuNfQtnK4npYtN3l62rml/mdwkrVy2vcR/AV8XcfhxLfWORRZDyU4oeEDe3j+RrFHWobI8Scj+/IeMoHCu77PCgXiI3q5Nu9c3df1zKf/8JIBT7kyvptYAqLuPgk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sWRs00aI; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=ISDohfOVIT2MaaYjE+uu1ZAMpiZbYydN9dNM7UZBnYzhKCoaCqL08bwwuTHTS579AU8iPTNakXPcQi1Re9SnMizOoMizN00iD7Z7iWw6ZHH8oNdBFMn5Y+lLLaLwaL0BRaAsutkMcS/STfxZ+r0k6IR7dBNJaxevVA4+/sal2SI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GWxaHVJD; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sWRs00aI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 509A8C4CEF5;
-	Sat, 25 Oct 2025 16:26:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GWxaHVJD"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id D7427C4CEFB;
+	Sat, 25 Oct 2025 16:26:43 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761409580;
-	bh=JNQ39YWeAi4K7+X6qQwqEvnb4FQtk+/2HcK70qeEeds=;
+	s=k20201202; t=1761409605;
+	bh=toGPQ+wiGt2AhGw6TSwK9UndEc09/HsXQqY6zUqc3Zo=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=sWRs00aIBHypzmsQ8o4s87O8mFzjmBo64Kud3ISOh5PoqM9T1QR1AJtO9xUWB34QA
-	 zQZJ4yOurMk0q3S0EnKDfJJA79xrjOBhlx3aoFrB5YzJqGIVQzIoMPinel313JAmD4
-	 hbj0k99SJS7g4Z7pFGFWfQpwKzXp52Lw0hrEoOuc7IYWsgUhmT/SpiKIk+i0AZpbxn
-	 1A6TUj9WqAcRY42ism12BMzRvRl22woHgI6d5kMQ4p+Kq4i5tIxiYTF3BMYxZZLSIg
-	 7PXt6vJ5Jh2myQxk9OV2ViHXjmJWDKydSQQ4SrjXV4gPyT0SPi6qD6iEjzhd5oS5Cm
-	 S3APqObEtr83w==
+	b=GWxaHVJDqws1fKcNHFQIh+XfxAzPws22I8ziZAeW1N3XSMxO8U3/qIxrTi88A0d+S
+	 oLJaPhYt9PByd5L8KrKp536yfcY9wk/Fej9WGRAlJvxubs/PK1nfl7xaZGYw6TnSHN
+	 K67EOZfbQk9/x36m4Wx5QHp/GfGb0BuGtjsE6ntL300ebtDpoUL2WEXzVjFOrOK+tF
+	 +vnP1yYsUu6VwHmLKQ9A268IHiiG+/a/UPUettjcETcuXQ4KNT3jK6j31tyHV6td/P
+	 wE0QaZAZYaziMCLdeF6oMTyZiiCsSC9ZEMREFhuxvsGM41pUL0v9Bht9kmNR9o/qkM
+	 JO9RkjDzw+z8w==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
+Cc: Peter Wang <peter.wang@mediatek.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	paul.ely@broadcom.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.17-6.12] scsi: lpfc: Ensure PLOGI_ACC is sent prior to PRLI in Point to Point topology
-Date: Sat, 25 Oct 2025 12:00:06 -0400
-Message-ID: <20251025160905.3857885-375-sashal@kernel.org>
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	linux-scsi@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.17-6.6] scsi: ufs: host: mediatek: Fix auto-hibern8 timer configuration
+Date: Sat, 25 Oct 2025 12:00:19 -0400
+Message-ID: <20251025160905.3857885-388-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
 References: <20251025160905.3857885-1-sashal@kernel.org>
@@ -49,20 +53,27 @@ MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.17.5
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Peter Wang <peter.wang@mediatek.com>
 
-[ Upstream commit 2bf81856a403c92a4ce375288f33fba82ca2ccc6 ]
+[ Upstream commit aa86602a483ba48f51044fbaefa1ebbf6da194a4 ]
 
-There is a timing race condition when a PRLI may be sent on the wire
-before PLOGI_ACC in Point to Point topology.  Fix by deferring REG_RPI
-mbox completion handling to after PLOGI_ACC's CQE completion.  Because
-the discovery state machine only sends PRLI after REG_RPI mbox
-completion, PRLI is now guaranteed to be sent after PLOGI_ACC.
+Move the configuration of the Auto-Hibern8 (AHIT) timer from the
+post-link stage to the 'fixup_dev_quirks' function. This change allows
+setting the AHIT based on the vendor requirements:
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Message-ID: <20250915180811.137530-8-justintee8345@gmail.com>
+   (a) Samsung: 3.5 ms
+   (b) Micron: 2 ms
+   (c) Others: 1 ms
+
+Additionally, the clock gating timer is adjusted based on the AHIT
+scale, with a maximum setting of 10 ms. This ensures that the clock
+gating delay is appropriately configured to match the AHIT settings.
+
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Link: https://lore.kernel.org/r/20250811131423.3444014-3-peter.wang@mediatek.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
@@ -70,104 +81,206 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
 LLM Generated explanations, may be completely bogus:
 
 YES
-- `drivers/scsi/lpfc/lpfc_nportdisc.c:329-353` now keeps the original
-  `REG_RPI` mailbox queued with the PLOGI ACC when `FC_PT2PT` is set, so
-  the driver no longer tells the discovery state machine that login
-  succeeded until the ACC CQE really arrives; this closes the race where
-  the state machine could transmit PRLI while the remote port was still
-  waiting for our PLOGI_ACC.
-- The matching completion path in
-  `drivers/scsi/lpfc/lpfc_els.c:5341-5409` runs
-  `lpfc_mbx_cmpl_reg_login()` only after the ACC response finishes on a
-  point-to-point link, guaranteeing the required on-wire ordering
-  (PLOGI_ACC before PRLI) and keeping the `NLP_ACC_REGLOGIN` bookkeeping
-  consistent.
-- The change is tightly scoped to lpfc point-to-point discovery, adds no
-  new features, and leaves fabric/NVMe paths untouched; failure paths
-  still fall back to the existing cleanup, so regression risk is low.
-- Without this fix, direct-attach systems can intermittently fail to
-  establish sessions because the target sees PRLI before we have
-  acknowledged its login, which is a user-visible bug.
-- Backporters should be aware that older stable trees still use
-  `login_mbox->context3` and bitmask-clear macros for `nlp_flag`; the
-  logic ports cleanly but needs those mechanical adjustments.
 
- drivers/scsi/lpfc/lpfc_els.c       | 10 +++++++---
- drivers/scsi/lpfc/lpfc_nportdisc.c | 23 ++++++++++++++++++-----
- 2 files changed, 25 insertions(+), 8 deletions(-)
+- Fixes a real bug affecting users. Today the driver unconditionally
+  programs AH8 to 10 ms during link bring-up and derives the clock-
+  gating delay from only the AHIT timer field, ignoring the scale. That
+  yields incorrect behavior when a device needs a vendor-specific AH8
+  value or when the AHIT scale is not 1 ms. The patch:
+  - Removes the hardcoded AH8 value from `ufs_mtk_post_link()` in
+    `drivers/ufs/host/ufs-mediatek.c` and defers programming until
+    device info is known.
+  - Adds `ufs_mtk_fix_ahit()` to set `hba->ahit` based on the UFS
+    vendor: Samsung 3.5 ms, Micron 2 ms, others 1 ms.
+  - Introduces `ufs_mtk_us_to_ahit()` so the AHIT encoding matches the
+    HCI (same logic as the core sysfs helper).
+  - Reworks `ufs_mtk_setup_clk_gating()` to derive the delay from the
+    full AHIT value (timer + scale), avoiding the previous scale bug.
 
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 3f703932b2f07..8762fb84f14f1 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -5339,12 +5339,12 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		ulp_status, ulp_word4, did);
- 	/* ELS response tag <ulpIoTag> completes */
- 	lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
--			 "0110 ELS response tag x%x completes "
-+			 "0110 ELS response tag x%x completes fc_flag x%lx"
- 			 "Data: x%x x%x x%x x%x x%lx x%x x%x x%x %p %p\n",
--			 iotag, ulp_status, ulp_word4, tmo,
-+			 iotag, vport->fc_flag, ulp_status, ulp_word4, tmo,
- 			 ndlp->nlp_DID, ndlp->nlp_flag, ndlp->nlp_state,
- 			 ndlp->nlp_rpi, kref_read(&ndlp->kref), mbox, ndlp);
--	if (mbox) {
-+	if (mbox && !test_bit(FC_PT2PT, &vport->fc_flag)) {
- 		if (ulp_status == 0 &&
- 		    test_bit(NLP_ACC_REGLOGIN, &ndlp->nlp_flag)) {
- 			if (!lpfc_unreg_rpi(vport, ndlp) &&
-@@ -5403,6 +5403,10 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 		}
- out_free_mbox:
- 		lpfc_mbox_rsrc_cleanup(phba, mbox, MBOX_THD_UNLOCKED);
-+	} else if (mbox && test_bit(FC_PT2PT, &vport->fc_flag) &&
-+		   test_bit(NLP_ACC_REGLOGIN, &ndlp->nlp_flag)) {
-+		lpfc_mbx_cmpl_reg_login(phba, mbox);
-+		clear_bit(NLP_ACC_REGLOGIN, &ndlp->nlp_flag);
+- Correct stage for AHIT programming. Moving the AHIT setup from link
+  POST_CHANGE to the device-quirk fixup stage is correct because the
+  vendor ID isn’t known at `POST_CHANGE`. The fix happens in
+  `ufs_mtk_fixup_dev_quirks()` which runs after reading device
+  descriptors (see core flow in `drivers/ufs/core/ufshcd.c:8380` calling
+  `ufs_fixup_device_setup(hba)`), and before the core writes AHIT to
+  hardware (`ufshcd_configure_auto_hibern8()` at
+  `drivers/ufs/core/ufshcd.c:8967`). Hence the right AHIT gets
+  programmed without extra transitions.
+
+- Fixes a concrete correctness issue in clock-gating. Previously
+  `ufs_mtk_setup_clk_gating()` computed the delay as `ah_ms =
+  FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK, hba->ahit)` and then
+  `ufshcd_clkgate_delay_set(..., ah_ms + 5)`. That ignores the AHIT
+  scale and is only correct if the scale is 1 ms (which the driver
+  forcibly set earlier). The patch:
+  - Parses both AHIT scale and timer and converts to milliseconds via a
+    `scale_us[]` table before setting the gating delay. This fixes
+    gating delay when vendors require non-ms scales.
+  - Sets a minimum gating delay of 10 ms (`delay_ms = max(ah_ms, 10U)`)
+    to avoid overly aggressive gating when AHIT is small (1–3.5 ms).
+    This is a conservative, low-risk change that reduces churn.
+
+- Small, contained change with minimal regression risk.
+  - Scope: one driver file (`drivers/ufs/host/ufs-mediatek.c`), no API
+    or architectural changes.
+  - Behavior: only affects Mediatek UFS host behavior and only when AH8
+    is supported and enabled.
+  - The vendor-based AHIT values are bounded and modest (1–3.5 ms), and
+    the gating floor of 10 ms is conservative.
+  - The patch respects `ufshcd_is_auto_hibern8_supported()` and won’t
+    alter systems where AH8 is disabled (driver already handles
+    disabling AH8; see `drivers/ufs/host/ufs-mediatek.c:258`).
+
+- Alignment with core defaults and flow. The core sets a default AHIT
+  (150 ms) only if none is set earlier
+  (`drivers/ufs/core/ufshcd.c:10679`). The mediatek driver previously
+  overwrote this to 10 ms unconditionally at `POST_CHANGE`. The new
+  approach correctly overrides the default with vendor-specific AHIT at
+  quirk-fixup time and before the core writes the register, making the
+  effective setting both correct and deterministic.
+
+- Backport notes and considerations.
+  - The quirk-fixup hook must be present in the target stable branch
+    (`ufshcd_vops_fixup_dev_quirks()` and call site exist in current
+    stable series; see `drivers/ufs/core/ufshcd-priv.h:195` and
+    `drivers/ufs/core/ufshcd.c:8380`).
+  - The helper macros and fields used (e.g., `UFSHCI_AHIBERN8_*`,
+    `UFS_VENDOR_*`, `hba->clk_gating.delay_ms`) are present in
+    maintained stable branches.
+  - Minor nits: the patch updates `hba->clk_gating.delay_ms` under
+    `host->host_lock` instead of using `ufshcd_clkgate_delay_set()`,
+    which in core protects the assignment with `clk_gating.lock`.
+    Functionally it’s fine for a single-word store, but for consistency
+    you may prefer `ufshcd_clkgate_delay_set(hba->dev, max(ah_ms, 10U))`
+    when backporting to preserve locking semantics.
+  - The commit message says “maximum setting of 10 ms,” but the code
+    enforces a minimum of 10 ms via `max(ah_ms, 10U)`. The
+    implementation is the safer choice and aligns with the intent to
+    avoid too-aggressive gating.
+
+Conclusion: This is a targeted bug fix that corrects AHIT configuration
+timing, applies vendor requirements, and fixes the gating-delay
+calculation to account for AHIT scale. It’s small, self-contained, and
+low risk. It is suitable for backporting to stable kernel trees.
+
+ drivers/ufs/host/ufs-mediatek.c | 86 ++++++++++++++++++++++++---------
+ 1 file changed, 64 insertions(+), 22 deletions(-)
+
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index f902ce08c95a6..8dd124835151a 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1075,6 +1075,69 @@ static void ufs_mtk_vreg_fix_vccqx(struct ufs_hba *hba)
  	}
- out:
- 	if (ndlp && shost) {
-diff --git a/drivers/scsi/lpfc/lpfc_nportdisc.c b/drivers/scsi/lpfc/lpfc_nportdisc.c
-index a596b80d03d4d..3799bdf2f1b88 100644
---- a/drivers/scsi/lpfc/lpfc_nportdisc.c
-+++ b/drivers/scsi/lpfc/lpfc_nportdisc.c
-@@ -326,8 +326,14 @@ lpfc_defer_plogi_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *login_mbox)
- 		/* Now that REG_RPI completed successfully,
- 		 * we can now proceed with sending the PLOGI ACC.
- 		 */
--		rc = lpfc_els_rsp_acc(login_mbox->vport, ELS_CMD_PLOGI,
--				      save_iocb, ndlp, NULL);
-+		if (test_bit(FC_PT2PT, &ndlp->vport->fc_flag)) {
-+			rc = lpfc_els_rsp_acc(login_mbox->vport, ELS_CMD_PLOGI,
-+					      save_iocb, ndlp, login_mbox);
-+		} else {
-+			rc = lpfc_els_rsp_acc(login_mbox->vport, ELS_CMD_PLOGI,
-+					      save_iocb, ndlp, NULL);
-+		}
-+
- 		if (rc) {
- 			lpfc_printf_log(phba, KERN_ERR, LOG_TRACE_EVENT,
- 					"4576 PLOGI ACC fails pt2pt discovery: "
-@@ -335,9 +341,16 @@ lpfc_defer_plogi_acc(struct lpfc_hba *phba, LPFC_MBOXQ_t *login_mbox)
- 		}
- 	}
- 
--	/* Now process the REG_RPI cmpl */
--	lpfc_mbx_cmpl_reg_login(phba, login_mbox);
--	clear_bit(NLP_ACC_REGLOGIN, &ndlp->nlp_flag);
-+	/* If this is a fabric topology, complete the reg_rpi and prli now.
-+	 * For Pt2Pt, the reg_rpi and PRLI are deferred until after the LS_ACC
-+	 * completes.  This ensures, in Pt2Pt, that the PLOGI LS_ACC is sent
-+	 * before the PRLI.
-+	 */
-+	if (!test_bit(FC_PT2PT, &ndlp->vport->fc_flag)) {
-+		/* Now process the REG_RPI cmpl */
-+		lpfc_mbx_cmpl_reg_login(phba, login_mbox);
-+		clear_bit(NLP_ACC_REGLOGIN, &ndlp->nlp_flag);
-+	}
- 	kfree(save_iocb);
  }
  
++static void ufs_mtk_setup_clk_gating(struct ufs_hba *hba)
++{
++	unsigned long flags;
++	u32 ah_ms = 10;
++	u32 ah_scale, ah_timer;
++	u32 scale_us[] = {1, 10, 100, 1000, 10000, 100000};
++
++	if (ufshcd_is_clkgating_allowed(hba)) {
++		if (ufshcd_is_auto_hibern8_supported(hba) && hba->ahit) {
++			ah_scale = FIELD_GET(UFSHCI_AHIBERN8_SCALE_MASK,
++					  hba->ahit);
++			ah_timer = FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK,
++					  hba->ahit);
++			if (ah_scale <= 5)
++				ah_ms = ah_timer * scale_us[ah_scale] / 1000;
++		}
++
++		spin_lock_irqsave(hba->host->host_lock, flags);
++		hba->clk_gating.delay_ms = max(ah_ms, 10U);
++		spin_unlock_irqrestore(hba->host->host_lock, flags);
++	}
++}
++
++/* Convert microseconds to Auto-Hibernate Idle Timer register value */
++static u32 ufs_mtk_us_to_ahit(unsigned int timer)
++{
++	unsigned int scale;
++
++	for (scale = 0; timer > UFSHCI_AHIBERN8_TIMER_MASK; ++scale)
++		timer /= UFSHCI_AHIBERN8_SCALE_FACTOR;
++
++	return FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, timer) |
++	       FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, scale);
++}
++
++static void ufs_mtk_fix_ahit(struct ufs_hba *hba)
++{
++	unsigned int us;
++
++	if (ufshcd_is_auto_hibern8_supported(hba)) {
++		switch (hba->dev_info.wmanufacturerid) {
++		case UFS_VENDOR_SAMSUNG:
++			/* configure auto-hibern8 timer to 3.5 ms */
++			us = 3500;
++			break;
++
++		case UFS_VENDOR_MICRON:
++			/* configure auto-hibern8 timer to 2 ms */
++			us = 2000;
++			break;
++
++		default:
++			/* configure auto-hibern8 timer to 1 ms */
++			us = 1000;
++			break;
++		}
++
++		hba->ahit = ufs_mtk_us_to_ahit(us);
++	}
++
++	ufs_mtk_setup_clk_gating(hba);
++}
++
+ static void ufs_mtk_init_mcq_irq(struct ufs_hba *hba)
+ {
+ 	struct ufs_mtk_host *host = ufshcd_get_variant(hba);
+@@ -1369,32 +1432,10 @@ static int ufs_mtk_pre_link(struct ufs_hba *hba)
+ 
+ 	return ret;
+ }
+-
+-static void ufs_mtk_setup_clk_gating(struct ufs_hba *hba)
+-{
+-	u32 ah_ms;
+-
+-	if (ufshcd_is_clkgating_allowed(hba)) {
+-		if (ufshcd_is_auto_hibern8_supported(hba) && hba->ahit)
+-			ah_ms = FIELD_GET(UFSHCI_AHIBERN8_TIMER_MASK,
+-					  hba->ahit);
+-		else
+-			ah_ms = 10;
+-		ufshcd_clkgate_delay_set(hba->dev, ah_ms + 5);
+-	}
+-}
+-
+ static void ufs_mtk_post_link(struct ufs_hba *hba)
+ {
+ 	/* enable unipro clock gating feature */
+ 	ufs_mtk_cfg_unipro_cg(hba, true);
+-
+-	/* will be configured during probe hba */
+-	if (ufshcd_is_auto_hibern8_supported(hba))
+-		hba->ahit = FIELD_PREP(UFSHCI_AHIBERN8_TIMER_MASK, 10) |
+-			FIELD_PREP(UFSHCI_AHIBERN8_SCALE_MASK, 3);
+-
+-	ufs_mtk_setup_clk_gating(hba);
+ }
+ 
+ static int ufs_mtk_link_startup_notify(struct ufs_hba *hba,
+@@ -1726,6 +1767,7 @@ static void ufs_mtk_fixup_dev_quirks(struct ufs_hba *hba)
+ 
+ 	ufs_mtk_vreg_fix_vcc(hba);
+ 	ufs_mtk_vreg_fix_vccqx(hba);
++	ufs_mtk_fix_ahit(hba);
+ }
+ 
+ static void ufs_mtk_event_notify(struct ufs_hba *hba,
 -- 
 2.51.0
 
