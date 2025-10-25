@@ -1,46 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C726D30C60C;
-	Sat, 25 Oct 2025 16:28:58 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2263A32AAAC;
+	Sat, 25 Oct 2025 16:29:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761409738; cv=none; b=O0sZxKGRNvWuWoWRtOHnarUgxUZKN1SKIy4T+0yILbV2a6osKf+3mgOoyi4UoQjnrEppYABoFVnMTNXS1dWVRPFYJ/q7cznJnPgeEDVA84bV0dvQ5LBEPD/z9eTSJqJD2F+n39ojyvMawuS3sq+IPFxk0HDWXtSbsjr2qyHI92E=
+	t=1761409772; cv=none; b=EKoAzBZBn++pI8UEUZj3XA1l6vl6F0AK5LmhIk3ihoLLDrveic5+/v0KIeiLY5NVKVW7cOD8n2/rpG0A8dQak8E4R2LPVTRx8gVt1gVlIb6kGIcU9gr3ABNaALpG+N1jc0LGhb1dCLdH/jcJLJZJgdWtST2sUvZzPqlAEeqczTE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761409738; c=relaxed/simple;
-	bh=KuN0rYE5WO21s3BjY46USG2Aw+kKSQV2IfxwexUpeGc=;
+	s=arc-20240116; t=1761409772; c=relaxed/simple;
+	bh=t58dezqz4gN5IwHByHWrAXrcxcmxkrdM49NVnbP9aiA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=MYssNjvp46SvQpshp/T98NGe7PnIOfOZt3NW73canOk4G7J3iltxpHLffSwq6yp68U7LEKBFIkZ2kIvcDeekNNP6QhsdmYjLpUuvVtn6FrnOP1HRzSLaw0p/yPyYhhJVhl/aL+88Br6l7Akh9co72r0qcol1sKqDtVx1BKrrEHk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=m1Gw/umw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=JDuadvV8+dGwQARrSaAp8DVLVBHa5fGCv1aELDqYV86F68eZGPwgruSQ4i5fadTTAvbGeHYDogpzBK3+kF/ybioD2kDPclOBjD9A7YsyiU5kcgR/ca4HJrDvoUmqAULwWbP8yQ77DpQVSJw37ynIpKm27aq4xeNWH8yIDDxOP4c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SiGtk6hI; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="m1Gw/umw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7E6F1C4CEF5;
-	Sat, 25 Oct 2025 16:28:57 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SiGtk6hI"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F45CC4CEF5;
+	Sat, 25 Oct 2025 16:29:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761409738;
-	bh=KuN0rYE5WO21s3BjY46USG2Aw+kKSQV2IfxwexUpeGc=;
+	s=k20201202; t=1761409772;
+	bh=t58dezqz4gN5IwHByHWrAXrcxcmxkrdM49NVnbP9aiA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=m1Gw/umwIA1AqNSS8IRN9eAucPutiopAe1sDcY11HeLxsxIbSKE9vFF1vgevtrKET
-	 qYrT0GSD1mbdzidocEbCHGBpZpUpAvi8dVCkQJMsY2s36SFfR6CgRSahg/IP5dOs8J
-	 XovMZfeoiMA2+w1xmYahJGOUQ8pV9xp5hUeKVzkT5ivzCPHbJNze4p2qaOKMFpkDEE
-	 xk/OXXdLWo9ZSIYf3OK238UuOIf0eSgEoKtlkiIP2r0t0e8DSriEoawepTD6sD0ksa
-	 Ho+DIjlPbrefmTsGxx43nanr7ru20Eji4SuWnYjOA/ITQBJd3Kd4OJYtnwM+zj3Cdr
-	 KoVbTS2lqbudA==
+	b=SiGtk6hI253r1zL9O/R84y3pmtBHE0cv0Yxgw7D5a6QalyWrKNPyGvJGu2lmo1xJZ
+	 vIC8Qivda4rXLyUEgM/vnk58rXFQ95ioA+LA4qMRltWJ3sAbTQj+vOdxT7TYVCw//r
+	 2/8xRJuw3gY6wgEzYsgQSqYDf++EVFhk4X+JFEwC/HoHrPyi0bsy6cCCD1jd0wBVAV
+	 /ftAhDRo8q/du8516XWWu7SL/ijP50j/imBGTc9Mw6lK/FP1W0vwtWgMMUaxyLspxB
+	 Ouf8BDT2JCUlBKcDItEwCx0veO1cDGtXRAi4Q3A24TUyZ1Be3Q2UtrX6zugnLclS4O
+	 DlXw/mRxqcLcA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Peter Wang <peter.wang@mediatek.com>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	linux-scsi@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.17-6.12] scsi: ufs: host: mediatek: Correct system PM flow
-Date: Sat, 25 Oct 2025 12:01:15 -0400
-Message-ID: <20251025160905.3857885-444-sashal@kernel.org>
+	paul.ely@broadcom.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.17-5.15] scsi: lpfc: Remove ndlp kref decrement clause for F_Port_Ctrl in lpfc_cleanup
+Date: Sat, 25 Oct 2025 12:01:30 -0400
+Message-ID: <20251025160905.3857885-459-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
 References: <20251025160905.3857885-1-sashal@kernel.org>
@@ -53,18 +49,21 @@ MIME-Version: 1.0
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.17.5
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 77b96ef70b6ba46e3473e5e3a66095c4bc0e93a4 ]
+[ Upstream commit a4809b98eb004fcbf7c4d45eb5a624d1c682bb73 ]
 
-Refine the system power management (PM) flow by skipping low power mode
-(LPM) and MTCMOS settings if runtime PM is already applied. Prevent
-redundant operations to ensure a more efficient PM process.
+In lpfc_cleanup, there is an extraneous nlp_put for NPIV ports on the
+F_Port_Ctrl ndlp object.  In cases when an ABTS is issued, the
+outstanding kref is needed for when a second XRI_ABORTED CQE is
+received.  The final kref for the ndlp is designed to be decremented in
+lpfc_sli4_els_xri_aborted instead.  Also, add a new log message to allow
+for future diagnostics when debugging related issues.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Message-ID: <20250915180811.137530-5-justintee8345@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
@@ -72,108 +71,72 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
 LLM Generated explanations, may be completely bogus:
 
 YES
+**Why Backport**
+- `lpfc_cleanup` no longer drops the last reference for NPIV fabric
+  nodes up front, so those entries now flow through the normal discovery
+  teardown path instead of triggering a premature `lpfc_nlp_put()`
+  (drivers/scsi/lpfc/lpfc_init.c:3059-3076). The old short-circuit let
+  the ndlp hit a zero kref while exchanges were still draining.
+- During ABTS processing each aborted ELS exchange takes its own
+  reference (`lpfc_nlp_get`) before parking on `lpfc_abts_els_sgl_list`;
+  if the cleanup path has already removed the final reference, the
+  second `XRI_ABORTED` CQE arrives with a dangling pointer, leading to
+  crashes or RRQ cleanup failures
+  (drivers/scsi/lpfc/lpfc_sli.c:1399-1407).
+- The final release of those references is already centralized in
+  `lpfc_sli4_els_xri_aborted`, so keeping the extra kref alive until the
+  CQE arrives matches the intended life cycle; the new log line simply
+  aids diagnosis (drivers/scsi/lpfc/lpfc_els.c:12020-12029). Any ndlp
+  that never sees its CQE still gets dropped by
+  `lpfc_sli4_vport_delete_els_xri_aborted` when the vport is torn down
+  (drivers/scsi/lpfc/lpfc_els.c:11953-11979).
 
-- Fixes a real PM logic bug. Without this change, the Mediatek UFS
-  driver forces VSx/regulators out of LPM and re-enables MTCMOS during
-  system resume even if the device is runtime-suspended, which violates
-  the runtime PM state and can wake hardware spuriously (extra power
-  draw or mis-ordered bring-up). The core UFS system PM paths already
-  skip work if the device is runtime-suspended; the Mediatek vendor code
-  must mirror that behavior.
-- Aligns vendor flow with core UFS PM semantics. Core checks
-  `pm_runtime_suspended(hba->dev)` and bails from system PM work in both
-  suspend and resume (drivers/ufs/core/ufshcd.c:10284,
-  drivers/ufs/core/ufshcd.c:10311). This patch adds the same guards to
-  the Mediatek hooks so vendor-specific toggles are not performed on a
-  runtime-suspended device.
-- Corrects ordering on resume. It powers the MTCMOS domain before
-  changing device regulator LPM, matching the already-correct runtime PM
-  path and avoiding SMC/PM operations while the domain is off.
+**Risk**
+- Change is tightly scoped to the lpfc driver, removes an overzealous
+  `kref_put`, and relies on existing cleanup paths; no API shifts or
+  cross-subsystem dependencies. Impact of not backporting is a real NPIV
+  crash/UAF when ABTS races with vport removal, so the bug fix outweighs
+  the low regression risk.
 
-Key code changes and impact:
-- Add guard in system suspend to skip vendor LPM/MTCMOS when runtime-
-  suspended:
-  - `if (pm_runtime_suspended(hba->dev)) goto out;`
-    drivers/ufs/host/ufs-mediatek.c:2380
-  - Prevents redundant `ufs_mtk_dev_vreg_set_lpm(hba, true)` and
-    `ufs_mtk_mtcmos_ctrl(false, ...)` calls when runtime PM already put
-    the device in low power (drivers/ufs/host/ufs-mediatek.c:2383,
-    drivers/ufs/host/ufs-mediatek.c:2386).
-- Add guard in system resume to preserve runtime-suspended state:
-  - `if (pm_runtime_suspended(hba->dev)) goto out;`
-    drivers/ufs/host/ufs-mediatek.c:2398
-  - Avoids powering on MTCMOS and clearing LPM when device should remain
-    runtime-suspended.
-- Fix resume sequencing to match runtime resume:
-  - Enable MTCMOS before clearing LPM: `ufs_mtk_mtcmos_ctrl(true, ...)`
-    then `ufs_mtk_dev_vreg_set_lpm(hba, false)` (drivers/ufs/host/ufs-
-    mediatek.c:2401, drivers/ufs/host/ufs-mediatek.c:2404).
-  - Mirrors the runtime path order (drivers/ufs/host/ufs-
-    mediatek.c:2442, drivers/ufs/host/ufs-mediatek.c:2448).
-- Always invoke core system resume for tracing/consistency
-  (drivers/ufs/host/ufs-mediatek.c:2406).
+ drivers/scsi/lpfc/lpfc_els.c  | 6 +++++-
+ drivers/scsi/lpfc/lpfc_init.c | 7 -------
+ 2 files changed, 5 insertions(+), 8 deletions(-)
 
-Why it fits stable:
-- Small, contained fix limited to Mediatek UFS host.
-- No API changes; just conditionalizing existing operations and
-  correcting order.
-- Prevents incorrect power-state transitions and redundant SMC/PM ops;
-  low regression risk.
-- Aligns with core driver’s established PM behavior, reducing divergence
-  and surprises.
-
-Given these factors, this is an important behavioral fix with minimal
-risk and should be backported.
-
- drivers/ufs/host/ufs-mediatek.c | 17 ++++++++++++++---
- 1 file changed, 14 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 6bdbbee1f0708..91081d2aabe44 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -2264,27 +2264,38 @@ static int ufs_mtk_system_suspend(struct device *dev)
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index 4c405bade4f34..3f703932b2f07 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -12013,7 +12013,11 @@ lpfc_sli4_els_xri_aborted(struct lpfc_hba *phba,
+ 			sglq_entry->state = SGL_FREED;
+ 			spin_unlock_irqrestore(&phba->sli4_hba.sgl_list_lock,
+ 					       iflag);
+-
++			lpfc_printf_log(phba, KERN_INFO, LOG_ELS | LOG_SLI |
++					LOG_DISCOVERY | LOG_NODE,
++					"0732 ELS XRI ABORT on Node: ndlp=x%px "
++					"xri=x%x\n",
++					ndlp, xri);
+ 			if (ndlp) {
+ 				lpfc_set_rrq_active(phba, ndlp,
+ 					sglq_entry->sli4_lxritag,
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 4081d2a358eee..f7824266db5e8 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3057,13 +3057,6 @@ lpfc_cleanup(struct lpfc_vport *vport)
+ 		lpfc_vmid_vport_cleanup(vport);
  
- 	ret = ufshcd_system_suspend(dev);
- 	if (ret)
--		return ret;
-+		goto out;
-+
-+	if (pm_runtime_suspended(hba->dev))
-+		goto out;
- 
- 	ufs_mtk_dev_vreg_set_lpm(hba, true);
- 
- 	if (ufs_mtk_is_rtff_mtcmos(hba))
- 		ufs_mtk_mtcmos_ctrl(false, res);
- 
--	return 0;
-+out:
-+	return ret;
- }
- 
- static int ufs_mtk_system_resume(struct device *dev)
- {
-+	int ret = 0;
- 	struct ufs_hba *hba = dev_get_drvdata(dev);
- 	struct arm_smccc_res res;
- 
-+	if (pm_runtime_suspended(hba->dev))
-+		goto out;
-+
- 	ufs_mtk_dev_vreg_set_lpm(hba, false);
- 
- 	if (ufs_mtk_is_rtff_mtcmos(hba))
- 		ufs_mtk_mtcmos_ctrl(true, res);
- 
--	return ufshcd_system_resume(dev);
-+out:
-+	ret = ufshcd_system_resume(dev);
-+
-+	return ret;
- }
- #endif
- 
+ 	list_for_each_entry_safe(ndlp, next_ndlp, &vport->fc_nodes, nlp_listp) {
+-		if (vport->port_type != LPFC_PHYSICAL_PORT &&
+-		    ndlp->nlp_DID == Fabric_DID) {
+-			/* Just free up ndlp with Fabric_DID for vports */
+-			lpfc_nlp_put(ndlp);
+-			continue;
+-		}
+-
+ 		if (ndlp->nlp_DID == Fabric_Cntl_DID &&
+ 		    ndlp->nlp_state == NLP_STE_UNUSED_NODE) {
+ 			lpfc_nlp_put(ndlp);
 -- 
 2.51.0
 
