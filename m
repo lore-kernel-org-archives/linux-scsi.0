@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5346B303A1E;
-	Sat, 25 Oct 2025 16:25:57 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DAA7C2E8B86;
+	Sat, 25 Oct 2025 16:26:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761409558; cv=none; b=cyhUwlYZF1FUm4g8AkfmYkPPpE/Xm35lACUR6jN/95NoCaWrrPzCPMht8+N634YSpJ18QW3ot7mYi1h3fsLH0u7Od1GPvdDHBxspHjN1tahvd8L3/wBUFWneZQsyCqrMoU72PDlIGN+0op56c6w7MCMZZQ6KoxXVw2WOX+IUfC8=
+	t=1761409579; cv=none; b=cScDA02LhWkU03cnHMbVgUrbIlXjR4+1NNLpV4RIz+da1uPmDdfAF8j+hVKBw1L+mqt9K8hRp+/SkMPlzxvSGj0gUFfXiUoqI9/rb+Brq8lTLoPW1FaAlpXIAE95dC3Y9QenOynTttwFNe7GsjVzvfPbNAM7djFrl8X+a/IDXiw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761409558; c=relaxed/simple;
-	bh=hlrpPk8phQgoJEWhArz26Elnz01AASQy+w+/XDqSVPg=;
+	s=arc-20240116; t=1761409579; c=relaxed/simple;
+	bh=TTPFQPjhgfnF0VqXDar2dd7qhmfsUyK41ErUY6wpt7A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lMyRhGEASjLu8qXgWp1Te4ETR2oKYjF95kuUkQ7YeqEPYdrxMTNe0WAPSEltBc0PDtlQ7U05/SHkurKQMpvTPLIqNwKVFR0cMlik/OsWrWZ/6Gly2wVo4usLOb6ZutP839JBRg4qZjt/sL584qbQuc589G8BVjJ4MXzDRhubBfc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=rf+2I7PF; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=KmSUsmh7E1gHds+9V85iwfYK2V3G8lY52xPM5Mj80AtRf2rkAXMo8cVFYxsIuBPA8IL2Nt45W5sXWK5Hf+gtnrMJLIzWogm4R4pxlbyNIjMUilg76tWD+Ug2F7BmcKS3IAc09NPKoaszVoS6ci92K0PxFPZSGVT9bYk5ChKH+6g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=aL/tYGY9; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="rf+2I7PF"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A8BC3C4CEF5;
-	Sat, 25 Oct 2025 16:25:56 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="aL/tYGY9"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8D934C4CEF5;
+	Sat, 25 Oct 2025 16:26:17 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761409557;
-	bh=hlrpPk8phQgoJEWhArz26Elnz01AASQy+w+/XDqSVPg=;
+	s=k20201202; t=1761409578;
+	bh=TTPFQPjhgfnF0VqXDar2dd7qhmfsUyK41ErUY6wpt7A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=rf+2I7PFGqduRw+WFCcNQfoDJdse/79mIv2ou4uksQYZWpPWhrpkeJ5GwIZP3OQaF
-	 7xlUbqYv0ffumDMF83uB7+gyosqylp3ogT5MKd7xnVNJFO3sNr1Zw4IiSVsuBQHEzZ
-	 VJBXTkyunx3iGT2HPsdgemQRFyF1N/czcxtX3nnvXFVPg70+Vi1sZ6wZ07LpjvlFyX
-	 LGuCi7hTgh+1DjVzDGFLSwUcT1V1hw/l+ggl3G0FxzY9HKYksEBSCN7eYqkWvWIITj
-	 mAjHOZLwQC+DHJH7aW8wgCRfwe62FuAhGdCjXUvtDZVgHY06CsKitmknJitGkgHtYi
-	 Q4Xej1dxes2SQ==
+	b=aL/tYGY9FxN6fLwOViMzPBQfeO52uqYOYr2Af3GX6JbonUbUJNSDG188Ck2Tw130Q
+	 X7exw+XgE0xHjXTDChduQF0Q6hGY6fhGgY6m27bwsLZvQTdYeyb68+CLAaQTqng9+N
+	 SpOxcdwzWKvZwc+0mKLb5/oW7+m4wOz9T39KCi80pJ3WqpCHDqhZIz0pCzgNKILOfU
+	 TxGFxq6hKxrrwD5EVUSOJSiAuBbNqcpeMsvTXpP4ikhOCyhjJv1ocFRGkMXdlNufUa
+	 NRxz0mDHko2inyOBhOEO6D1CIULBiCliRF2xeM9m5QNzu6F4qHyOIgItDsgs1xDpS8
+	 iDQMlhc9yRh6Q==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
@@ -38,9 +38,9 @@ Cc: Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
 	sreekanth.reddy@broadcom.com,
 	mpi3mr-linuxdrv.pdl@broadcom.com,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.17-6.12] scsi: mpi3mr: Fix I/O failures during controller reset
-Date: Sat, 25 Oct 2025 11:59:55 -0400
-Message-ID: <20251025160905.3857885-364-sashal@kernel.org>
+Subject: [PATCH AUTOSEL 6.17] scsi: mpi3mr: Fix device loss during enclosure reboot due to zero link speed
+Date: Sat, 25 Oct 2025 12:00:05 -0400
+Message-ID: <20251025160905.3857885-374-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
 References: <20251025160905.3857885-1-sashal@kernel.org>
@@ -58,321 +58,297 @@ Content-Transfer-Encoding: 8bit
 
 From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
 
-[ Upstream commit b7b2176e30fc8e57664e5a8a23387af66eb7f72b ]
+[ Upstream commit d6c8e8b7c98c3cb326515ef4bc5c57e16ac5ae4e ]
 
-I/Os can race with controller reset and fail.
+During enclosure reboot or expander reset, firmware may report a link
+speed of 0 in "Device Add" events while the link is still coming up.
+The driver drops such devices, leaving them missing even after the link
+recovers.
 
-Block requests at the mid layer when reset starts using
-scsi_host_block(), and resume with scsi_host_unblock() after reset
-completes.
+Fix this by treating link speed 0 as 1.5 Gbps during device addition so
+the device is exposed to the OS. The actual link speed will be updated
+later when link-up events arrive.
 
 Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Link: https://lore.kernel.org/r/20250820084138.228471-4-chandrakanth.patil@broadcom.com
+Link: https://lore.kernel.org/r/20250820084138.228471-2-chandrakanth.patil@broadcom.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## Backporting Analysis Complete
+Based on my comprehensive analysis of this commit, I can now provide my
+final recommendation.
 
-Based on my comprehensive investigation of this commit, here is my
-determination:
-
----
-
-## **ANSWER: YES**
-
-This commit should be backported to stable kernel trees.
+## **BACKPORT RECOMMENDATION: YES**
 
 ---
 
-## Extensive Analysis and Justification
+## **DETAILED ANALYSIS**
 
-### **1. Bug Description and Impact**
+### **1. PROBLEM DESCRIPTION**
 
-The commit fixes a **race condition** where I/Os can be submitted to the
-mpi3mr controller while a reset is in progress. This is a **user-visible
-bug** that causes I/O failures with the following characteristics:
+The commit fixes a critical device loss issue in the Broadcom mpi3mr
+SAS/SATA HBA driver. During enclosure reboot or expander reset
+operations, the firmware reports a link speed of 0
+(MPI3_SAS_NEG_LINK_RATE_UNKNOWN_LINK_RATE = 0x00) in "Device Add" events
+while the physical link is still initializing. The driver was
+incorrectly dropping these devices, and they remained missing even after
+the link fully recovered to operational speed.
 
-**Problem Flow (Before Fix):**
-1. Controller reset is initiated (`mpi3mr_soft_reset_handler` at
-   drivers/scsi/mpi3mr/mpi3mr_fw.c:5397)
-2. Driver calls `mpi3mr_wait_for_host_io()` to wait for existing I/Os
-   (line 5454)
-3. **During this wait and throughout reset, new I/Os can still arrive**
-   from the SCSI midlayer
-4. These new I/Os are submitted to a resetting controller and fail
-5. Users see I/O errors during controller resets
+### **2. CODE CHANGES ANALYSIS**
 
-**Impact:** Loss of I/O reliability, potential data availability issues,
-user-visible errors during controller maintenance or fault recovery
-scenarios.
+The fix consists of four distinct changes across two files:
 
-### **2. Technical Analysis of the Fix**
-
-The fix adds exactly **5 lines** in **4 strategic locations**:
-
-**In `mpi3mr_soft_reset_handler()` (drivers/scsi/mpi3mr/mpi3mr_fw.c):**
-- **Line 5433:** `scsi_block_requests(mrioc->shost)` - Added immediately
-  after setting `device_refresh_on = 0` and before `reset_in_progress =
-  1`
-  - **Purpose:** Block new I/O submissions from SCSI midlayer before
-    reset begins
-  - **Placement:** Perfect - happens after acquiring reset_mutex but
-    before any reset operations
-
-- **Line 5542:** `scsi_unblock_requests(mrioc->shost)` - Added in
-  success path after `reset_in_progress = 0`
-  - **Purpose:** Resume I/O after successful reset
-  - **Placement:** Correct - only unblocks after controller is fully
-    operational
-
-- **Line 5567:** `scsi_unblock_requests(mrioc->shost)` - Added in
-  failure path after marking controller unrecoverable
-  - **Purpose:** Unblock even on failure to prevent permanent hang
-  - **Placement:** Essential for cleanup - ensures requests aren't
-    permanently blocked
-
-**In `mpi3mr_preparereset_evt_th()` (drivers/scsi/mpi3mr/mpi3mr_os.c):**
-- **Line 2875:** `scsi_block_requests(mrioc->shost)` - When firmware
-  signals prepare-for-reset event
-  - **Purpose:** Block I/O when firmware proactively signals upcoming
-    reset
-  - **Context:** Handles `MPI3_EVENT_PREPARE_RESET_RC_START` event from
-    firmware
-
-- **Line 2882:** `scsi_unblock_requests(mrioc->shost)` - When firmware
-  aborts prepare-for-reset
-  - **Purpose:** Resume I/O if firmware cancels the reset
-  - **Context:** Handles `MPI3_EVENT_PREPARE_RESET_RC_ABORT` event from
-    firmware
-
-### **3. Established SCSI Pattern**
-
-This fix implements a **well-established, standard pattern** used
-throughout the SCSI subsystem. My research shows this pattern is used
-by:
-
-**Drivers using scsi_block_requests/scsi_unblock_requests during
-reset:**
-- `ibmvfc` (IBM Virtual Fibre Channel) - 4 call sites
-- `qla2xxx` (QLogic adapters) - 3 call sites
-- `aacraid` (Adaptec) - Commit 5646e13a95502 specifically addressed this
-  pattern
-- `csiostor` (Chelsio) - 4 call sites
-- `libsas` (SAS framework) - Infrastructure level
-- `mesh`, `sbp2`, `uas` (Various other drivers)
-
-**How it works:**
+#### **Change 1: mpi3mr_expander_add() (mpi3mr_transport.c:2084-2085)**
 ```c
-void scsi_block_requests(struct Scsi_Host *shost)
-{
-    shost->host_self_blocked = 1;  // Simple flag set
-}
-
-void scsi_unblock_requests(struct Scsi_Host *shost)
-{
-    shost->host_self_blocked = 0;
-    scsi_run_host_queues(shost);   // Resume queued requests
-}
++if (link_rate < MPI3_SAS_NEG_LINK_RATE_1_5)
++    link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
 ```
+**Impact**: During expander device addition, treats link speeds below
+1.5 Gbps (including 0) as 1.5 Gbps, allowing the device to be exposed to
+the OS.
 
-The implementation at drivers/scsi/scsi_lib.c:2145-2166 is
-straightforward and proven. The SCSI midlayer checks `host_self_blocked`
-before submitting new I/Os to the low-level driver.
+#### **Change 2: mpi3mr_report_tgtdev_to_sas_transport()
+(mpi3mr_transport.c:2395-2396)**
+```c
++if (link_rate < MPI3_SAS_NEG_LINK_RATE_1_5)
++    link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
+```
+**Impact**: Same treatment for target device reporting to SAS transport
+layer.
 
-### **4. Code Quality Assessment**
+#### **Change 3: mpi3mr_remove_device_by_sas_address()
+(mpi3mr_transport.c:417-420)**
+```c
+-list_del_init(&tgtdev->list);
+ was_on_tgtdev_list = 1;
+-mpi3mr_tgtdev_put(tgtdev);
++if (tgtdev->state == MPI3MR_DEV_REMOVE_HS_STARTED) {
++    list_del_init(&tgtdev->list);
++    mpi3mr_tgtdev_put(tgtdev);
++}
+```
+**Impact**: Prevents premature device list deletion by checking the
+device state. Only removes devices from the list if they're in the
+MPI3MR_DEV_REMOVE_HS_STARTED state, avoiding race conditions during
+device state transitions.
 
-**Correctness:**
-- ✅ Both success and error paths properly unblock requests
-- ✅ Blocking happens before any destructive reset operations
-- ✅ Unblocking happens only after controller is ready or marked
-  unrecoverable
-- ✅ Event-driven reset preparation also handled correctly
+#### **Change 4: Debug logging improvements (mpi3mr_os.c:2058, 3078)**
+**Impact**: Adds event context (0x%08x) to debug messages for better
+diagnostics. Purely cosmetic, aids debugging.
 
-**Error Handling:**
-- ✅ Failed reset path unblocks at line 5567 (prevents permanent hang)
-- ✅ Reset abort event unblocks at line 2882 (handles firmware
-  cancellation)
-- ✅ No new error paths introduced
+### **3. HISTORICAL CONTEXT & PATTERN CONSISTENCY**
 
-**Symmetry:**
-- ✅ Every `scsi_block_requests()` has corresponding
-  `scsi_unblock_requests()`
-- ✅ Proper cleanup in all exit paths
+My research reveals this fix **extends an existing pattern** already
+established in the codebase:
 
-### **5. Risk Assessment**
+- **Commit 42fc9fee116fc6** (August 2022, v6.1): Introduced similar link
+  rate handling in `mpi3mr_sas_host_refresh()` at line 1174:
+  ```c
+  if (attached_handle && link_rate < MPI3_SAS_NEG_LINK_RATE_1_5)
+  link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
+  ```
 
-**Regression Risk: VERY LOW**
+- **Commit 3f1254ed01d086** (March 2023, v6.4): Added the
+  `mpi3mr_dev_state` enum to fix "Successive VD delete and add causes FW
+  fault"
 
-Evidence supporting low risk:
-1. **Proven Pattern:** This exact pattern has been in use across 15+
-   SCSI drivers for years
-2. **Simple APIs:** Functions just set/clear a flag and run queues
-3. **No Logic Changes:** Reset algorithm unchanged, just adds blocking
-   wrapper
-4. **Minimal Code:** Only 5 lines added
-5. **Self-Contained:** Changes confined to mpi3mr driver
-6. **Proper Testing:** Function called from multiple existing code paths
-   without issues
+This commit applies the same defensive link rate handling to two
+additional code paths that were missing it.
 
-**Potential Side Effects:**
-- I/Os are **queued** (not dropped) during reset - This is **desired
-  behavior**
-- Slight increase in I/O latency during reset - This is **acceptable and
-  expected**
-- No user-visible negative effects - Prevents failures instead
+### **4. DEPENDENCY ANALYSIS**
 
-### **6. Dependencies and Prerequisites**
+**Required for v6.4+:**
+- ✅ MPI3_SAS_NEG_LINK_RATE constants (present since driver introduction)
+- ✅ mpi3mr_update_links() function (added v6.1)
+- ✅ `enum mpi3mr_dev_state` with MPI3MR_DEV_REMOVE_HS_STARTED (added
+  v6.4)
 
-**Dependencies: NONE**
+**Backporting to < v6.4:** Would require either:
+1. Backporting commit 3f1254ed01d086 first, OR
+2. Omitting the device state check portion (changes 1-2 would still
+   provide value)
 
-My analysis confirms:
-- `scsi_block_requests()` and `scsi_unblock_requests()` exist in all
-  stable kernels with SCSI support
-- `reset_in_progress` and `prepare_for_reset` fields already exist in
-  `struct mpi3mr_ioc`
-- No new data structures or APIs required
-- No prerequisite commits needed
-- Clean applies to stable trees
+### **5. RISK ASSESSMENT**
 
-### **7. Backporting Criteria Compliance**
+**RISK LEVEL: LOW**
 
-Checking against standard stable tree rules:
+✅ **Positive factors:**
+- Small, surgical changes (13 insertions, 6 deletions)
+- Follows established code pattern (line 1174)
+- No API changes or function signature modifications
+- Confined to single driver subsystem (mpi3mr)
+- No new functionality - purely defensive fix
+- All code paths already exist, just adding validation
+
+⚠️ **Considerations:**
+- Device state check requires v6.4+ (manageable dependency)
+- Affects device lifecycle management (but improves correctness)
+
+### **6. USER IMPACT**
+
+**SEVERITY: HIGH - User-Visible Bug**
+
+**Affected scenario:** Common operational maintenance activities:
+- Enclosure reboots/power cycles
+- Expander resets
+- Fabric reconfiguration
+- Hot-plug operations
+
+**User experience without fix:**
+1. Enclosure/expander is rebooted for maintenance
+2. Firmware sends Device Add events with link_rate=0 during link
+   initialization
+3. Driver drops the device
+4. Link comes up to full speed (1.5/3.0/6.0/12.0 Gbps)
+5. **Device remains missing permanently** - requires driver reload or
+   system reboot
+
+**User experience with fix:**
+1. Enclosure/expander is rebooted
+2. Device is added with temporary 1.5 Gbps link rate
+3. Link completes initialization
+4. Actual link speed is updated via subsequent link-up events
+5. **Device remains accessible throughout**
+
+**No workaround available** - users cannot prevent firmware from
+reporting link_rate=0 during initialization.
+
+### **7. TESTING & VALIDATION**
+
+Based on git history analysis:
+- ✅ No reverts found for this commit
+- ✅ No follow-up regression fixes found
+- ✅ Similar pattern at line 1174 has been stable since v6.1 (2+ years)
+- ✅ One stable backport already exists (837115eeb55b3), indicating it's
+  being considered for stable trees
+
+### **8. STABLE TREE CRITERIA COMPLIANCE**
+
+Checking against stable kernel rules:
 
 | Criterion | Status | Evidence |
 |-----------|--------|----------|
-| Fixes important bug | ✅ YES | I/O failures during reset are user-
-visible errors affecting reliability |
-| Small and contained | ✅ YES | Only 5 lines, confined to mpi3mr driver
-|
-| Minimal regression risk | ✅ YES | Proven pattern, simple
-implementation, proper error handling |
-| No architectural changes | ✅ YES | Uses existing APIs and patterns, no
-structural changes |
-| No new features | ✅ YES | Pure bugfix - prevents failures, doesn't add
-functionality |
-| Obvious and correct | ✅ YES | Implements standard SCSI pattern
-correctly |
-| Touches critical subsystem | ⚠️ MINOR | Storage I/O, but change is
-isolated to one driver |
-| Has Cc: stable tag | ❌ NO | Not present, but not required for
-backporting |
+| **Fixes important bug** | ✅ YES | Devices lost during enclosure
+operations |
+| **User-visible impact** | ✅ YES | Missing storage devices, requires
+reboot |
+| **Small and contained** | ✅ YES | 13 lines added, 6 removed, 2 files |
+| **No new features** | ✅ YES | Pure bug fix |
+| **Minimal regression risk** | ✅ YES | Follows existing pattern, low
+complexity |
+| **Confined to subsystem** | ✅ YES | Only affects mpi3mr driver |
+| **Real-world issue** | ✅ YES | Common during enclosure maintenance |
 
-**Note on missing stable tag:** The absence of "Cc:
-stable@vger.kernel.org" or "Fixes:" tag is likely an oversight. Stable
-maintainers frequently pick up important fixes without explicit tags
-when the technical merit is clear.
+**Note:** Commit does NOT have explicit Cc: stable tag, but meets all
+technical criteria.
 
-### **8. Related Context**
+### **9. ARCHITECTURAL CONSIDERATIONS**
 
-This commit is part of a bugfix series submitted August 20, 2025 by
-Broadcom:
-- **Previous:** 829fa1582b6ff "Fix controller init failure on fault
-  during queue creation"
-- **This commit:** b7b2176e30fc8 "Fix I/O failures during controller
-  reset"
-- **Next:** 0d7167744f79f "Fix premature TM timeouts on virtual drives"
+The fix demonstrates good defensive programming:
 
-All address reliability issues in the mpi3mr driver for Broadcom MPI3
-Storage Controllers. This is active maintenance addressing real-world
-problems encountered by users.
+1. **Graceful degradation**: Treats unknown/zero link speed as minimum
+   viable speed rather than failing
+2. **Eventual consistency**: Allows initial device exposure with
+   conservative speed, updates later
+3. **State machine correctness**: Device removal now properly respects
+   state transitions
+4. **Consistency**: Applies same defensive pattern across all device
+   addition code paths
 
-### **9. Historical Precedent**
+### **10. FINAL RECOMMENDATION**
 
-Similar fixes in other drivers that were backported to stable:
-- **mpt3sas:** 8039fa72ff4d "Fix calltrace observed while running IO &
-  reset"
-- **aacraid:** 5646e13a95502 "move scsi_(block,unblock)_requests out of
-  _aac_reset_adapter()"
-- **ibmvfc:** 89376f3f174b "Fix I/O hang when port is not mapped"
+## **YES - STRONGLY RECOMMEND BACKPORTING to v6.4+**
 
-These establish clear precedent for backporting this class of fix.
+**Justification:**
 
-### **10. Testing Considerations**
+1. ✅ **Critical user-facing bug** - Devices permanently lost during
+   routine maintenance
+2. ✅ **Low risk** - Small, well-contained changes following established
+   patterns
+3. ✅ **High confidence** - Similar code has been stable since v6.1
+4. ✅ **Clean dependencies** - All prerequisites present in v6.4+
+5. ✅ **Stable tree appropriate** - Meets all criteria for important
+   bugfixes
+6. ✅ **Common scenario** - Affects standard operational procedures
+7. ✅ **No workarounds** - Users cannot avoid this firmware behavior
 
-This fix can be validated through:
-1. Controller reset during active I/O workload
-2. Firmware-initiated reset events
-3. Error injection causing controller faults
-4. Verify no I/O errors occur during reset
-5. Verify I/Os resume after reset completes
+**Target stable versions:** 6.4+, 6.6 LTS, 6.12 LTS
 
-The fix is **self-verifying** - if I/O errors disappear during resets,
-the fix works.
+**Adaptation note for < v6.4:** If backporting to kernels older than
+v6.4, the device state check in `mpi3mr_remove_device_by_sas_address()`
+would need to be omitted or commit 3f1254ed01d086 backported first.
+However, the link rate fixes (changes 1-2) alone would still provide
+significant value.
 
----
+ drivers/scsi/mpi3mr/mpi3mr_os.c        |  8 ++++----
+ drivers/scsi/mpi3mr/mpi3mr_transport.c | 11 +++++++++--
+ 2 files changed, 13 insertions(+), 6 deletions(-)
 
-## Conclusion
-
-**This commit SHOULD BE BACKPORTED because:**
-
-1. ✅ Fixes a **real, user-visible bug** (I/O failures during controller
-   reset)
-2. ✅ Uses **proven, standard SCSI pattern** (15+ drivers use same
-   approach)
-3. ✅ **Extremely low risk** (5 lines, simple APIs, proper error
-   handling)
-4. ✅ **Small and self-contained** (confined to mpi3mr driver)
-5. ✅ **No dependencies** (APIs exist in all stable kernels)
-6. ✅ **Important for users** with Broadcom MPI3 storage controllers
-7. ✅ **Improves reliability and availability** of storage subsystem
-
-The technical merit is clear and strong. This is exactly the type of
-important bugfix that stable trees are meant to include.
-
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +++
- drivers/scsi/mpi3mr/mpi3mr_os.c | 2 ++
- 2 files changed, 5 insertions(+)
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 0152d31d430ab..9e18cc2747104 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -5420,6 +5420,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	    mpi3mr_reset_rc_name(reset_reason));
- 
- 	mrioc->device_refresh_on = 0;
-+	scsi_block_requests(mrioc->shost);
- 	mrioc->reset_in_progress = 1;
- 	mrioc->stop_bsgs = 1;
- 	mrioc->prev_reset_result = -1;
-@@ -5528,6 +5529,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 	if (!retval) {
- 		mrioc->diagsave_timeout = 0;
- 		mrioc->reset_in_progress = 0;
-+		scsi_unblock_requests(mrioc->shost);
- 		mrioc->pel_abort_requested = 0;
- 		if (mrioc->pel_enabled) {
- 			mrioc->pel_cmds.retry_count = 0;
-@@ -5552,6 +5554,7 @@ int mpi3mr_soft_reset_handler(struct mpi3mr_ioc *mrioc,
- 		mrioc->device_refresh_on = 0;
- 		mrioc->unrecoverable = 1;
- 		mrioc->reset_in_progress = 0;
-+		scsi_unblock_requests(mrioc->shost);
- 		mrioc->stop_bsgs = 0;
- 		retval = -1;
- 		mpi3mr_flush_cmds_for_unrecovered_controller(mrioc);
 diff --git a/drivers/scsi/mpi3mr/mpi3mr_os.c b/drivers/scsi/mpi3mr/mpi3mr_os.c
-index 1582cdbc66302..5516ac62a5065 100644
+index e467b56949e98..1582cdbc66302 100644
 --- a/drivers/scsi/mpi3mr/mpi3mr_os.c
 +++ b/drivers/scsi/mpi3mr/mpi3mr_os.c
-@@ -2866,12 +2866,14 @@ static void mpi3mr_preparereset_evt_th(struct mpi3mr_ioc *mrioc,
- 		    "prepare for reset event top half with rc=start\n");
- 		if (mrioc->prepare_for_reset)
- 			return;
-+		scsi_block_requests(mrioc->shost);
- 		mrioc->prepare_for_reset = 1;
- 		mrioc->prepare_for_reset_timeout_counter = 0;
- 	} else if (evtdata->reason_code == MPI3_EVENT_PREPARE_RESET_RC_ABORT) {
- 		dprint_event_th(mrioc,
- 		    "prepare for reset top half with rc=abort\n");
- 		mrioc->prepare_for_reset = 0;
-+		scsi_unblock_requests(mrioc->shost);
- 		mrioc->prepare_for_reset_timeout_counter = 0;
+@@ -2049,8 +2049,8 @@ static void mpi3mr_fwevt_bh(struct mpi3mr_ioc *mrioc,
+ 	if (!fwevt->process_evt)
+ 		goto evt_ack;
+ 
+-	dprint_event_bh(mrioc, "processing event(0x%02x) in the bottom half handler\n",
+-	    fwevt->event_id);
++	dprint_event_bh(mrioc, "processing event(0x%02x) -(0x%08x) in the bottom half handler\n",
++			fwevt->event_id, fwevt->evt_ctx);
+ 
+ 	switch (fwevt->event_id) {
+ 	case MPI3_EVENT_DEVICE_ADDED:
+@@ -3076,8 +3076,8 @@ void mpi3mr_os_handle_events(struct mpi3mr_ioc *mrioc,
  	}
- 	if ((event_reply->msg_flags & MPI3_EVENT_NOTIFY_MSGFLAGS_ACK_MASK)
+ 	if (process_evt_bh || ack_req) {
+ 		dprint_event_th(mrioc,
+-			"scheduling bottom half handler for event(0x%02x),ack_required=%d\n",
+-			evt_type, ack_req);
++		    "scheduling bottom half handler for event(0x%02x) - (0x%08x), ack_required=%d\n",
++		    evt_type, le32_to_cpu(event_reply->event_context), ack_req);
+ 		sz = event_reply->event_data_length * 4;
+ 		fwevt = mpi3mr_alloc_fwevt(sz);
+ 		if (!fwevt) {
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_transport.c b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+index c8d6ced5640e9..d70f002d6487d 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_transport.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_transport.c
+@@ -413,9 +413,11 @@ static void mpi3mr_remove_device_by_sas_address(struct mpi3mr_ioc *mrioc,
+ 			 sas_address, hba_port);
+ 	if (tgtdev) {
+ 		if (!list_empty(&tgtdev->list)) {
+-			list_del_init(&tgtdev->list);
+ 			was_on_tgtdev_list = 1;
+-			mpi3mr_tgtdev_put(tgtdev);
++			if (tgtdev->state == MPI3MR_DEV_REMOVE_HS_STARTED) {
++				list_del_init(&tgtdev->list);
++				mpi3mr_tgtdev_put(tgtdev);
++			}
+ 		}
+ 	}
+ 	spin_unlock_irqrestore(&mrioc->tgtdev_lock, flags);
+@@ -2079,6 +2081,8 @@ int mpi3mr_expander_add(struct mpi3mr_ioc *mrioc, u16 handle)
+ 				link_rate = (expander_pg1.negotiated_link_rate &
+ 				    MPI3_SAS_NEG_LINK_RATE_LOGICAL_MASK) >>
+ 				    MPI3_SAS_NEG_LINK_RATE_LOGICAL_SHIFT;
++				if (link_rate < MPI3_SAS_NEG_LINK_RATE_1_5)
++					link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
+ 				mpi3mr_update_links(mrioc, sas_address_parent,
+ 				    handle, i, link_rate, hba_port);
+ 			}
+@@ -2388,6 +2392,9 @@ int mpi3mr_report_tgtdev_to_sas_transport(struct mpi3mr_ioc *mrioc,
+ 
+ 	link_rate = mpi3mr_get_sas_negotiated_logical_linkrate(mrioc, tgtdev);
+ 
++	if (link_rate < MPI3_SAS_NEG_LINK_RATE_1_5)
++		link_rate = MPI3_SAS_NEG_LINK_RATE_1_5;
++
+ 	mpi3mr_update_links(mrioc, sas_address_parent, tgtdev->dev_handle,
+ 	    parent_phy_number, link_rate, hba_port);
+ 
 -- 
 2.51.0
 
