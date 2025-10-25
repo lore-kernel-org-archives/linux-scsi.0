@@ -1,46 +1,46 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3DA1B304BAB;
-	Sat, 25 Oct 2025 16:15:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9F9613054E4;
+	Sat, 25 Oct 2025 16:15:56 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761408944; cv=none; b=Yxa9Q7owJ9PkRUVfO04mwxwLAyEBmYF6OtmnF495wSXUGR09i12/gHXm8cnLVRzaEjKd86II1V8BAZr0rNvrR4P9oB8yMZv9tYx157qvUj1XLJjdIw/NUx2sx6woAg7e7AJT0RKI40v2CZtGJELdgs44u6xssadcC4p65l6+0Ng=
+	t=1761408956; cv=none; b=EtQFSZk1jtdXhgoBMLxFfXIsvx1HqEduLzpwNOqCybQALTKK5GpwShS6oBUzk/UPQo1XB8LEuDaxjqk2iHsLW0Nx9B+tKLJmzr8Ho5ln+ADAU9BvSifWJz8gqdKCh9jQgOXwYS+pQeE1Ovb0iqgkX5r+XN2mcKZC2eNbozvwGjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761408944; c=relaxed/simple;
-	bh=T9bUWhzKcNiJkbij6q64Jm/158oQJgeuuLcU3fQ1LHc=;
+	s=arc-20240116; t=1761408956; c=relaxed/simple;
+	bh=sDveZVjGmF+hFWzrw2cClUD8xKZBCyZ7F/vmzkMigQg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=XzSrBNYN8q6uxAz29uWGKsspm7WNOpdcPpjSodaJumcB9f9Ky2Wxor664np83GHZLxvbbAd0dl83pqMfY8U+i/mzPQZWNejppZkrjTlcq1JBrF/ls21/69Vwv+hL4qwP4XSp69aDEDlJ0NIrKvmw0WjyVogghsF6WnR2NelLwo0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=J3qNX6zh; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=dOakJbLzX5QMtQ1djMT96R3gaqF/fJh3Nb4UjsNA8s+yo7djS66uqadUkB9lgOmG2IrjfyKH+wDF+GYhufdWiCwLXfE13yqHKwbsoj3tn4hs8f7FouMEA1jPaexCDBD8VEmptqK1DgHpC6n24crbqtEiP4a460yIfkOUdZZcJ0o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MWAvGlPw; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="J3qNX6zh"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id DFE57C116C6;
-	Sat, 25 Oct 2025 16:15:42 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MWAvGlPw"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51377C4CEFB;
+	Sat, 25 Oct 2025 16:15:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761408944;
-	bh=T9bUWhzKcNiJkbij6q64Jm/158oQJgeuuLcU3fQ1LHc=;
+	s=k20201202; t=1761408956;
+	bh=sDveZVjGmF+hFWzrw2cClUD8xKZBCyZ7F/vmzkMigQg=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=J3qNX6zhIjPRrofqkqE5k20+uE57j/HqNxlolYjvGWtwVX8C+N6bCYTvUT2py8jmx
-	 siunjsyisc1xZcuDgx8aIQTJtAtHRbD0oq/CheelsTQAbAbVJp0bcxE53ThmA65ZRj
-	 ITE1tGUFzheMQy7M0EJDE6rd6PjMgNEx4ZYg2sdfiEM6O54JxULwYQCTfMgouBDoNH
-	 +ssFRMSG8phxCGch7UzKM4lRjgwOY1B56baTvN+C4Qubsfz94SyEVQ4T3/SHcPymKd
-	 +0ztf7O20ipcdArDsrcuGrTbpoRBonUa6duWxJpXBNnpHvcYIfkoMzW7j1bPh/R+eE
-	 enuQhp1xYSM4A==
+	b=MWAvGlPwzPUXPm/DUT91D3C+te0LDlemo88W+BdX4pw6WHNnT9RL9/M++sDVzbHAX
+	 U163x5pBH2GWKkpChGx9dhHc5/HsiPQnJcFihaQWiqgjiujRiWGGnX6IQqKxUdORhx
+	 0tgOs+pGV/HMW4QrmDZ9RVIUO9PNhf4R8TPVK7iQWfryaD4qEzccle38oHYnlX9IiB
+	 03CX2ZEgCveAmsQi2Hu34BN0UouRqALztBQiLcdl3vmHA0wRM56rOhdzXjv2m+D+rv
+	 vQtsGg3Vhwrcw4OqUKIdlrRdcopFXOmW4LO6YuZzHGqEBbYyYhIPQw6fpf/j/3cmQC
+	 9MRQ4HSeuGpCg==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Chandrakanth Patil <chandrakanth.patil@broadcom.com>,
+Cc: Peter Wang <peter.wang@mediatek.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	sathya.prakash@broadcom.com,
-	kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.17-5.15] scsi: mpi3mr: Fix controller init failure on fault during queue creation
-Date: Sat, 25 Oct 2025 11:56:14 -0400
-Message-ID: <20251025160905.3857885-143-sashal@kernel.org>
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	linux-scsi@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.17-6.6] scsi: ufs: host: mediatek: Disable auto-hibern8 during power mode changes
+Date: Sat, 25 Oct 2025 11:56:21 -0400
+Message-ID: <20251025160905.3857885-150-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
 References: <20251025160905.3857885-1-sashal@kernel.org>
@@ -56,253 +56,192 @@ X-stable-base: Linux 6.17.5
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
+From: Peter Wang <peter.wang@mediatek.com>
 
-[ Upstream commit 829fa1582b6ff607b0e2fe41ba1c45c77f686618 ]
+[ Upstream commit f5ca8d0c7a6388abd5d8023cc682e1543728cc73 ]
 
-Firmware can enter a transient fault while creating operational queues.
-The driver fails the load immediately.
+Disable auto-hibern8 during power mode transitions to prevent unintended
+entry into auto-hibern8. Restore the original auto-hibern8 timer value
+after completing the power mode change to maintain system stability and
+prevent potential issues during power state transitions.
 
-Add a retry loop that checks controller status and history bit after
-queue creation. If either indicates a fault, retry init up to a set
-limit before failing.
-
-Signed-off-by: Chandrakanth Patil <chandrakanth.patil@broadcom.com>
-Link: https://lore.kernel.org/r/20250820084138.228471-3-chandrakanth.patil@broadcom.com
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-## BACKPORT RECOMMENDATION: **YES**
+YES
 
-Based on my comprehensive analysis of commit 829fa1582b6ff ("scsi:
-mpi3mr: Fix controller init failure on fault during queue creation"), I
-**strongly recommend backporting this commit to stable kernel trees**.
+Summary
+- The change disables Auto-Hibern8 (AH8) around UFS power mode
+  transitions and restores the prior timer afterward. This prevents
+  unintended AH8 entry while the link is being reconfigured, which can
+  cause timeouts or recovery events during transitions. The fix is
+  small, self-contained, and limited to the Mediatek UFS host driver.
 
----
+What the patch does
+- Saves current AH8 timer and disables AH8 in PRE_CHANGE:
+  - drivers/ufs/host/ufs-mediatek.c:1472–1476
+    - Reads `REG_AUTO_HIBERNATE_IDLE_TIMER` into a static `reg` and
+      calls `ufs_mtk_auto_hibern8_disable(hba)`.
+- Disables AH8 in a helper and ensures the link is up before proceeding:
+  - drivers/ufs/host/ufs-mediatek.c:1436–1461
+    - Writes 0 to `REG_AUTO_HIBERNATE_IDLE_TIMER` (disables AH8), waits
+      for the host idle state, then waits for `VS_LINK_UP`. On failure,
+      warns and triggers `ufshcd_force_error_recovery(hba)` and returns
+      `-EBUSY`.
+- Restores the previous AH8 timer in POST_CHANGE:
+  - drivers/ufs/host/ufs-mediatek.c:1480–1483
 
-### **DETAILED ANALYSIS**
+Why this fixes a bug
+- Power mode transitions involve DME configuration and link parameter
+  changes (see setup/adaptation in `ufs_mtk_pre_pwr_change()`:
+  drivers/ufs/host/ufs-mediatek.c:1405–1434). If the link enters AH8
+  mid-transition, the controller and device can deadlock or time out,
+  requiring error recovery. Temporarily disabling AH8 ensures the link
+  stays in the expected state while power mode changes occur and
+  restores normal power-saving afterwards.
+- The helper already used in suspend PRE_CHANGE (drivers/ufs/host/ufs-
+  mediatek.c:1748–1751) shows the driver’s established pattern to
+  disable AH8 before low-power transitions; extending this to power mode
+  changes closes a similar race.
 
-#### **1. What the Commit Fixes**
+Scope and risk
+- Scope: One driver file; no UFS core changes; no architectural shifts.
+  Uses existing helpers (`ufshcd_is_auto_hibern8_supported`,
+  `ufshcd_readl/writel`, `ufs_mtk_wait_*`,
+  `ufshcd_force_error_recovery`).
+- Regression risk: Low. Behavior change is to temporarily disable AH8
+  only during power mode changes and then restore the previous timer.
+  - Note: `ufs_mtk_pwr_change_notify()` stores the old AH8 timer in a
+    function-scope static (`reg`) (drivers/ufs/host/ufs-
+    mediatek.c:1469). While typical Mediatek systems have a single UFS
+    host and power mode changes are serialized, a static variable is
+    theoretically shared if multiple controllers triggered this
+    concurrently. In practice, impact is negligible on common
+    configurations.
+  - Note: The PRE_CHANGE path does not propagate the return of
+    `ufs_mtk_auto_hibern8_disable()` (drivers/ufs/host/ufs-
+    mediatek.c:1473–1478). The helper triggers error recovery internally
+    and returns `-EBUSY`, so recovery still occurs, but the immediate
+    PRE_CHANGE return value won’t reflect the failure. A tiny follow-up
+    improvement would propagate this error directly (as done later in-
+    tree).
 
-This commit addresses a **critical controller initialization bug** in
-the Broadcom mpi3mr SCSI driver:
+Evidence of established pattern
+- Other vendor drivers also manage AH8 around sensitive transitions,
+  supporting this approach:
+  - Hisilicon disables/adjusts AH8 during link setup:
+    drivers/ufs/host/ufs-hisi.c:234–237
+  - Spreadtrum disables AH8 during suspend PRE_CHANGE:
+    drivers/ufs/host/ufs-sprd.c:185–190
 
-**The Problem:**
-- Firmware can enter a **transient fault state** while the driver is
-  creating operational queues during controller initialization
-- Without this fix, the driver doesn't detect this fault condition
-- The driver proceeds with a partially initialized controller that is
-  actually in a faulted state
-- This results in **driver load failure** and the controller becoming
-  unusable
+Stable backport criteria
+- Fixes a real operational bug (unintended AH8 mid-transition),
+  observable as timeouts or recovery during power mode changes.
+- Small, targeted change in a single vendor driver; minimal risk to
+  other subsystems.
+- No new features or architectural changes; follows established patterns
+  in UFS vendor drivers.
+- While the commit message lacks an explicit Fixes/Stable tag, the
+  change aligns well with stable policy as a platform-specific
+  reliability fix.
 
-**The Fix:**
-The commit adds fault detection immediately after operational queue
-creation in `mpi3mr_create_op_queues()` (lines 2413-2420 in
-`drivers/scsi/mpi3mr/mpi3mr_fw.c`):
+Recommendation
+- Backport to stable: YES.
+- Optional but advisable: include the small follow-up that returns an
+  error immediately on idle wait timeout (to propagate the PRE_CHANGE
+  failure) to match the improved error handling now seen in-tree.
 
-```c
-ioc_status = readl(&mrioc->sysif_regs->ioc_status);
-ioc_state = mpi3mr_get_iocstate(mrioc);
-if ((ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) ||
-    ioc_state != MRIOC_STATE_READY) {
-    mpi3mr_print_fault_info(mrioc);
-    retval = -1;
-    goto out_failed;
-}
-```
+ drivers/ufs/host/ufs-mediatek.c | 53 +++++++++++++++++++--------------
+ 1 file changed, 30 insertions(+), 23 deletions(-)
 
-This check:
-1. **Reads the IOC status register** to check for the reset history bit
-2. **Gets the IOC state** to verify the controller is in READY state
-3. **If either check fails**, prints fault information and returns error
-   to trigger retry
-
-#### **2. Integration with Existing Retry Mechanism**
-
-The commit message mentions "Add a retry loop" but the code change
-itself doesn't add a new loop. Instead, it **enables the existing retry
-mechanism** that was already present in the calling functions:
-
-- **`mpi3mr_init_ioc()`** (lines 4398-4405): Has `retry < 2` loop that
-  retries controller init up to 3 times total
-- **`mpi3mr_reinit_ioc()`** (lines 4591-4598): Has identical retry logic
-  for controller reset/resume
-
-By returning -1 when a fault is detected, this commit allows these retry
-mechanisms to properly handle transient firmware faults during queue
-creation, potentially recovering the controller instead of failing
-immediately.
-
-#### **3. Code Quality and Consistency**
-
-**Excellent code quality:**
-- **Follows established patterns**: The exact same fault checking
-  pattern appears in multiple locations throughout the driver:
-  - Line 1536-1538: In `mpi3mr_bring_ioc_ready()` (added by commit
-    9634bb07083cf)
-  - Line 4563-4565: In the reset/resume path
-  - Line 4588-4590: In port enable handling (mpi3mr_os.c)
-
-- **Uses existing helper functions**:
-  - `mpi3mr_get_iocstate()` - Returns current IOC state enum
-  - `mpi3mr_print_fault_info()` - Prints detailed fault code information
-    for debugging
-
-- **Minimal and focused**: Only 10 lines added (2 variable declarations
-  + 8 lines of fault checking)
-
-#### **4. Risk Assessment: VERY LOW RISK**
-
-**Why this is safe to backport:**
-
-1. **Defensive check only**: The code only triggers when the controller
-   is **actually in a fault state**
-2. **No behavior change for normal operation**: When the controller is
-   healthy (the common case), this check passes immediately with no
-   impact
-3. **Uses well-tested code paths**: The `goto out_failed` path already
-   existed and is used when queue creation fails for other reasons
-4. **Hardware-specific impact**: Only affects Broadcom mpi3mr controller
-   users, no impact on other drivers or subsystems
-5. **Small change scope**: Confined to a single function in a single
-   driver file
-6. **No API changes**: Uses existing data structures and functions
-
-**Regression risk analysis:**
-- If the check incorrectly triggers: Would cause initialization retry
-  (at worst, slight delay)
-- If the check fails to trigger: Same behavior as before (no worse than
-  current state)
-- False positive potential: Very low - directly reads hardware registers
-
-#### **5. Dependencies and Compatibility**
-
-**All dependencies exist in stable kernels:**
-- `MPI3_SYSIF_IOC_STATUS_RESET_HISTORY` constant: Defined in
-  `drivers/scsi/mpi3mr/mpi/mpi30_transport.h:91` (part of MPI3 headers,
-  present since driver introduction)
-- `MRIOC_STATE_READY` enum: Defined in
-  `drivers/scsi/mpi3mr/mpi3mr.h:286` (core driver enum)
-- `mpi3mr_get_iocstate()`: Function in `mpi3mr_fw.c:1115` (core driver
-  function)
-- `mpi3mr_print_fault_info()`: Function in `mpi3mr_fw.c:1088` (core
-  driver function)
-
-**Related work:**
-- This builds on commit 9634bb07083cf ("scsi: mpi3mr: Enhance the Enable
-  Controller retry logic") merged in v6.12, which added similar fault
-  detection to the IOC enable phase
-- This commit extends that pattern to the operational queue creation
-  phase
-
-#### **6. User Impact**
-
-**Benefits of backporting:**
-- **Improves reliability** for systems with Broadcom mpi3mr controllers
-- **Enables automatic recovery** from transient firmware faults during
-  initialization
-- **Better diagnostics** via `mpi3mr_print_fault_info()` when faults
-  occur
-- **Prevents complete driver load failures** that would require manual
-  intervention
-
-**Who this helps:**
-- Users with Broadcom MPI3 Storage Controllers (Broadcom/Avago/LSI
-  SAS/SATA/NVMe controllers)
-- Data center environments where automatic recovery is critical
-- Systems that may experience transient firmware issues during boot or
-  reset
-
-#### **7. Stable Tree Criteria Alignment**
-
-This commit **perfectly meets all stable tree backporting criteria:**
-
-✅ **Fixes an important bug** - Controller initialization failure
-✅ **Small and contained** - Only 10 lines added
-✅ **No new features** - Pure bug fix
-✅ **No architectural changes** - Uses existing patterns
-✅ **Minimal regression risk** - Defensive check only
-✅ **Confined to subsystem** - Only affects mpi3mr driver
-✅ **Clear and obvious fix** - Easy to understand and verify
-✅ **Vendor-supported** - From Broadcom engineer with proper testing
-
-**Note:** While the commit doesn't include an explicit `Cc:
-stable@vger.kernel.org` tag, this is not uncommon for driver-specific
-fixes and doesn't diminish its suitability for backporting.
-
-#### **8. Technical Details for Backport**
-
-**Commit statistics:**
-```
-1 file changed, 10 insertions(+)
-drivers/scsi/mpi3mr/mpi3mr_fw.c | 10 ++++++++++
-```
-
-**Applies cleanly to stable trees that have:**
-- The mpi3mr driver (introduced in v5.15)
-- The retry mechanism in calling functions (present since driver
-  introduction)
-- The helper functions used (present since driver introduction)
-
-**No cherry-pick conflicts expected** because:
-- Changes are localized to one function
-- No dependencies on unreleased features
-- Uses only stable APIs and data structures
-
----
-
-### **CONCLUSION**
-
-**Backport Status: YES - STRONGLY RECOMMENDED**
-
-This commit represents a **textbook example of a stable tree
-candidate:**
-- Fixes a real, user-visible bug
-- Small, focused, and easy to verify
-- Follows established patterns
-- Minimal risk
-- Improves system reliability
-
-The commit should be backported to **all stable kernel series that
-include the mpi3mr driver** (v5.15 and later) to improve controller
-initialization reliability for users with Broadcom MPI3 storage
-controllers.
-
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 10 ++++++++++
- 1 file changed, 10 insertions(+)
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 9e18cc2747104..8fe6e0bf342e2 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2353,6 +2353,8 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
- {
- 	int retval = 0;
- 	u16 num_queues = 0, i = 0, msix_count_op_q = 1;
-+	u32 ioc_status;
-+	enum mpi3mr_iocstate ioc_state;
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 91081d2aabe44..3defb5f135e33 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1400,19 +1400,49 @@ static int ufs_mtk_pre_pwr_change(struct ufs_hba *hba,
+ 	return ret;
+ }
  
- 	num_queues = min_t(int, mrioc->facts.max_op_reply_q,
- 	    mrioc->facts.max_op_req_q);
-@@ -2408,6 +2410,14 @@ static int mpi3mr_create_op_queues(struct mpi3mr_ioc *mrioc)
- 		retval = -1;
- 		goto out_failed;
- 	}
-+	ioc_status = readl(&mrioc->sysif_regs->ioc_status);
-+	ioc_state = mpi3mr_get_iocstate(mrioc);
-+	if ((ioc_status & MPI3_SYSIF_IOC_STATUS_RESET_HISTORY) ||
-+	    ioc_state != MRIOC_STATE_READY) {
-+		mpi3mr_print_fault_info(mrioc);
-+		retval = -1;
-+		goto out_failed;
++static int ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
++{
++	int ret;
++
++	/* disable auto-hibern8 */
++	ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER);
++
++	/* wait host return to idle state when auto-hibern8 off */
++	ufs_mtk_wait_idle_state(hba, 5);
++
++	ret = ufs_mtk_wait_link_state(hba, VS_LINK_UP, 100);
++	if (ret) {
++		dev_warn(hba->dev, "exit h8 state fail, ret=%d\n", ret);
++
++		ufshcd_force_error_recovery(hba);
++
++		/* trigger error handler and break suspend */
++		ret = -EBUSY;
 +	}
- 	mrioc->num_op_reply_q = mrioc->num_op_req_q = i;
- 	ioc_info(mrioc,
- 	    "successfully created %d operational queue pairs(default/polled) queue = (%d/%d)\n",
++
++	return ret;
++}
++
+ static int ufs_mtk_pwr_change_notify(struct ufs_hba *hba,
+ 				enum ufs_notify_change_status stage,
+ 				const struct ufs_pa_layer_attr *dev_max_params,
+ 				struct ufs_pa_layer_attr *dev_req_params)
+ {
+ 	int ret = 0;
++	static u32 reg;
+ 
+ 	switch (stage) {
+ 	case PRE_CHANGE:
++		if (ufshcd_is_auto_hibern8_supported(hba)) {
++			reg = ufshcd_readl(hba, REG_AUTO_HIBERNATE_IDLE_TIMER);
++			ufs_mtk_auto_hibern8_disable(hba);
++		}
+ 		ret = ufs_mtk_pre_pwr_change(hba, dev_max_params,
+ 					     dev_req_params);
+ 		break;
+ 	case POST_CHANGE:
++		if (ufshcd_is_auto_hibern8_supported(hba))
++			ufshcd_writel(hba, reg, REG_AUTO_HIBERNATE_IDLE_TIMER);
+ 		break;
+ 	default:
+ 		ret = -EINVAL;
+@@ -1646,29 +1676,6 @@ static void ufs_mtk_dev_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
+ 	}
+ }
+ 
+-static int ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
+-{
+-	int ret;
+-
+-	/* disable auto-hibern8 */
+-	ufshcd_writel(hba, 0, REG_AUTO_HIBERNATE_IDLE_TIMER);
+-
+-	/* wait host return to idle state when auto-hibern8 off */
+-	ufs_mtk_wait_idle_state(hba, 5);
+-
+-	ret = ufs_mtk_wait_link_state(hba, VS_LINK_UP, 100);
+-	if (ret) {
+-		dev_warn(hba->dev, "exit h8 state fail, ret=%d\n", ret);
+-
+-		ufshcd_force_error_recovery(hba);
+-
+-		/* trigger error handler and break suspend */
+-		ret = -EBUSY;
+-	}
+-
+-	return ret;
+-}
+-
+ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
+ 	enum ufs_notify_change_status status)
+ {
 -- 
 2.51.0
 
