@@ -1,42 +1,47 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA25A3064A4;
-	Sat, 25 Oct 2025 16:14:14 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0FCD5306D48;
+	Sat, 25 Oct 2025 16:14:28 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761408854; cv=none; b=QdxipdBfs4MBJOSrutX7HzeM8QpvWfLH1931Jdl4v9eLTscnnh9JvFpBIdJp+pV/7W/eqYlvvpmmu966nSOH2fI3119pbicLwiYBpL+nbv1Rqy4p8Uict91+4XKN7/+2JledAOW/37JThvo6jBRjbS1Dfh8PWEvxekuzCkm+i7U=
+	t=1761408868; cv=none; b=UXCPqpWed1I/rlI/sDLX2l2VXI46rSupW/QMj4VR9SDp8vZOg4r5qSB8UWdZCE3YKDLwrJx7B4yevBJfvITb4oSNqmnbIEZSunFhl8QghFt/t+keQKIF1Tfe7GNNTN8ZJYJpTWrbGwfX25ZExEkuEOre4xGQFHbPrDyPAKD01zA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761408854; c=relaxed/simple;
-	bh=KI6+OsymNLyRak3/YPRgd2J+zh87z+gfsf2MC6/X6t8=;
+	s=arc-20240116; t=1761408868; c=relaxed/simple;
+	bh=P1gyEeiylqh/OZ2bOjUOKTj6deI6dCpDKMJw4ri6lQA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=mcCv5/02SWOV2dJHm/OL4YWJy+8UWxYG8/NvXO0PTfs54JWvoc7CkSQHu+uNBC6Rt93e5lr4RbHiCfeA+XDbU4UKkQ+X4JOnjHUWl4PIkOsX+Baf6SrvnePw2hHjMSzi6PTyTcwY8NqX/qhZmk/vuQhxZnv71ISqhGnKNY+uOME=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i04IP3Hd; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=euosfMxCumHENBPwn6fXIsWGjFgxPigUQwFiGcPjSdUwPgDAo8dcQnhCSyq8kmbt2K8ymTgAe3RnNBQhKO6I0OEFxPG+3ePU6a32AZH4I/vTLWLJXMSiThHgzLf0j1ZF2AnYSjR4gG7skiwfer+d7l+T9AuK8HK3tDP+RqJ/WDc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iAKpuxAo; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i04IP3Hd"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B63BDC4CEFB;
-	Sat, 25 Oct 2025 16:14:13 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iAKpuxAo"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9C224C113D0;
+	Sat, 25 Oct 2025 16:14:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761408854;
-	bh=KI6+OsymNLyRak3/YPRgd2J+zh87z+gfsf2MC6/X6t8=;
+	s=k20201202; t=1761408867;
+	bh=P1gyEeiylqh/OZ2bOjUOKTj6deI6dCpDKMJw4ri6lQA=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=i04IP3HdTbN02UF79PsjWsLP0IRhHmasp78Ov2yFybtduRbtUpYIzMCngvzMFKEwv
-	 Zj6vUexx8GOd6VsrR6BfuOss2wKk7dUgceD3X9kMvwRuO/v9C9QmUeUtMqkxkirNg5
-	 HVvOrGltmibOUgvciK4n/DPHp1PSJpztXGpYpYNNgE4H4YDI5bNA1iWoct8MdwakT7
-	 LM9uJmGg4rRljEk+KnAd6b5sMq9R0rEdpFguqJL30AGABhvqc0GpYoFPUl842sJfEG
-	 ZCYtOBjPGa1q70p3BgARvR+BpQpbZMAGmbXSnmk5GEpq+tPHeATNH1ERZcNPZPfKhU
-	 GBoDyUyDE5iNA==
+	b=iAKpuxAo2KPuoWW6EujXwYsM22ikGP0KHBAKzjSJfX4KGdIx5Irt4CBRBWRJ/kJnR
+	 s3H6mUribonJo9V0tlMGdGElK0g+4YkMO13a2r/h+WXwsd7cblph+/d+/dSFos0tyW
+	 OyjAW4Jf9RTiOkOQNIG6MM2n13ECGPukmDp0OBoZQs19+UsscpHprWrDZW0P24G5am
+	 bJI4C3BpPyGtropWpMLgWmYeHs5932z8/siPKNfnyRcqrS+wZ8uPAy6MzbaYhbrdEO
+	 tJEoTBEJzZIj5wFgwan4uSOE/Z4UZfviUYOC/UWtJkmohFkUcF7jOkmLsY4ehAKYfP
+	 Mef2b70ZSxd2g==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
+Cc: Alice Chao <alice.chao@mediatek.com>,
+	Peter Wang <peter.wang@mediatek.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	paul.ely@broadcom.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.17-5.4] scsi: lpfc: Check return status of lpfc_reset_flush_io_context during TGT_RESET
-Date: Sat, 25 Oct 2025 11:55:32 -0400
-Message-ID: <20251025160905.3857885-101-sashal@kernel.org>
+	matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com,
+	linux-scsi@vger.kernel.org,
+	linux-mediatek@lists.infradead.org,
+	linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org
+Subject: [PATCH AUTOSEL 6.17-6.1] scsi: ufs: host: mediatek: Fix invalid access in vccqx handling
+Date: Sat, 25 Oct 2025 11:55:39 -0400
+Message-ID: <20251025160905.3857885-108-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
 References: <20251025160905.3857885-1-sashal@kernel.org>
@@ -52,90 +57,89 @@ X-stable-base: Linux 6.17.5
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+From: Alice Chao <alice.chao@mediatek.com>
 
-[ Upstream commit f408dde2468b3957e92b25e7438f74c8e9fb9e73 ]
+[ Upstream commit 5863638598f5e4f64d2f85b03f376383ca1f2ab7 ]
 
-If lpfc_reset_flush_io_context fails to execute, then the wrong return
-status code may be passed back to upper layers when issuing a target
-reset TMF command.  Fix by checking the return status from
-lpfc_reset_flush_io_context() first in order to properly return FAILED
-or FAST_IO_FAIL.
+Add a NULL check before accessing the 'vccqx' pointer to prevent invalid
+memory access. This ensures that the function safely handles cases where
+'vccq' and 'vccq2' are not initialized, improving the robustness of the
+power management code.
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Message-ID: <20250915180811.137530-7-justintee8345@gmail.com>
+Signed-off-by: Alice Chao <alice.chao@mediatek.com>
+Reviewed-by: Peter Wang <peter.wang@mediatek.com>
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
+Link: https://lore.kernel.org/r/20250811131423.3444014-11-peter.wang@mediatek.com
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-YES - returning FAIL/Fast-IO correctly from target reset avoids trapping
-lpfc in a half-reset state.
+YES
 
-- drivers/scsi/lpfc/lpfc_scsi.c:6112-6119 now propagates the status from
-  lpfc_reset_flush_io_context(), so a flush failure surfaces as FAILED
-  instead of always falling through to FAST_IO_FAIL; previously
-  FAST_IO_FAIL was reported even when cnt != 0, leaving orphaned
-  contexts behind.
-- In the SCSI EH core, FAST_IO_FAIL is treated as a completed reset
-  (drivers/scsi/scsi_error.c:1680-1694), so the old code caused the
-  error handler to stop escalation while the adapter still had
-  outstanding I/O—users would see hung commands after a target reset
-  TMF.
-- A FAILED return triggers the midlayer to keep escalating (bus/host
-  reset), which is the only safe recovery once
-  lpfc_reset_flush_io_context() reports 0x2003 (see its failure path at
-  drivers/scsi/lpfc/lpfc_scsi.c:5969-5975); the fix therefore prevents
-  long-lived I/O leaks and recovery deadlocks.
-- Remaining changes are cosmetic (typo fix at
-  drivers/scsi/lpfc/lpfc_scsi.c:5938 and cleaned log text at
-  drivers/scsi/lpfc/lpfc_scsi.c:6210) and pose no regression risk.
-- Patch is small, self-contained in lpfc, and has no dependencies—ideal
-  for stable backporting.
+Rationale
+- The patch adds a defensive NULL guard in `ufs_mtk_vccqx_set_lpm()` so
+  it immediately returns if both `vccq` and `vccq2` are absent. This
+  prevents a NULL dereference on `vccqx->reg` when neither rail is
+  defined in DT or has been released earlier.
+- Specifically, the change adds: `if (!hba->vreg_info.vccq &&
+  !hba->vreg_info.vccq2) return;` before dereferencing `vccqx` in
+  `drivers/ufs/host/ufs-mediatek.c:1506`.
+- Without this guard, the function selects `vccqx` from
+  `hba->vreg_info.vccq` or `...vccq2` and unconditionally does
+  `regulator_set_mode(vccqx->reg, ...)` (drivers/ufs/host/ufs-
+  mediatek.c:1515), which is unsafe if both are NULL.
+- The UFS core explicitly allows these supplies to be optional, meaning
+  NULL is a valid state when a supply is not provided in DT: parsing
+  populates `vccq`/`vccq2` optionally (drivers/ufs/host/ufshcd-
+  pltfrm.c:168).
+- The Mediatek driver also clears the pointer to NULL when it
+  deliberately disables a VCCQx rail (e.g., after freeing the vreg in
+  `ufs_mtk_vreg_fix_vccqx()`, drivers/ufs/host/ufs-mediatek.c:1072).
+  That makes the callee’s NULL-robustness important.
 
- drivers/scsi/lpfc/lpfc_scsi.c | 14 ++++++++++----
- 1 file changed, 10 insertions(+), 4 deletions(-)
+Why this matters despite caller checks
+- Today, `ufs_mtk_dev_vreg_set_lpm()` computes `skip_vccqx` and only
+  calls `ufs_mtk_vccqx_set_lpm()` when appropriate
+  (drivers/ufs/host/ufs-mediatek.c:1537, 1555, 1560). However, this is a
+  single call site and relies on all future call paths being equally
+  careful.
+- The new guard makes `ufs_mtk_vccqx_set_lpm()` itself robust,
+  eliminating a class of NULL deref crashes if it is ever called without
+  prior checks, or if future refactors change the call sites.
 
-diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
-index 508ceeecf2d95..6d9d8c196936a 100644
---- a/drivers/scsi/lpfc/lpfc_scsi.c
-+++ b/drivers/scsi/lpfc/lpfc_scsi.c
-@@ -5935,7 +5935,7 @@ lpfc_chk_tgt_mapped(struct lpfc_vport *vport, struct fc_rport *rport)
- /**
-  * lpfc_reset_flush_io_context -
-  * @vport: The virtual port (scsi_host) for the flush context
-- * @tgt_id: If aborting by Target contect - specifies the target id
-+ * @tgt_id: If aborting by Target context - specifies the target id
-  * @lun_id: If aborting by Lun context - specifies the lun id
-  * @context: specifies the context level to flush at.
-  *
-@@ -6109,8 +6109,14 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
- 			pnode->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
- 			spin_unlock_irqrestore(&pnode->lock, flags);
- 		}
--		lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
--					  LPFC_CTX_TGT);
-+		status = lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
-+						     LPFC_CTX_TGT);
-+		if (status != SUCCESS) {
-+			lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
-+					 "0726 Target Reset flush status x%x\n",
-+					 status);
-+			return status;
-+		}
- 		return FAST_IO_FAIL;
- 	}
+Stable backport criteria
+- Bug fix that prevents kernel NULL deref (user-visible reliability
+  issue).
+- Change is minimal, localized, and has no architectural impact.
+- No functional side effects when supplies exist; when both are absent,
+  early return is the correct behavior (nothing to configure).
+- Touches a specific host driver (MediaTek UFS), keeping risk of
+  regression low and scope confined.
+
+Conclusion
+- This is a safe, targeted fix to avoid invalid memory access in a power
+  management path. It improves robustness with negligible risk and
+  should be backported to stable.
+
+ drivers/ufs/host/ufs-mediatek.c | 3 +++
+ 1 file changed, 3 insertions(+)
+
+diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
+index 82160da8ec71b..bb0be6bed1bca 100644
+--- a/drivers/ufs/host/ufs-mediatek.c
++++ b/drivers/ufs/host/ufs-mediatek.c
+@@ -1589,6 +1589,9 @@ static void ufs_mtk_vccqx_set_lpm(struct ufs_hba *hba, bool lpm)
+ {
+ 	struct ufs_vreg *vccqx = NULL;
  
-@@ -6202,7 +6208,7 @@ lpfc_host_reset_handler(struct scsi_cmnd *cmnd)
- 	int rc, ret = SUCCESS;
- 
- 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
--			 "3172 SCSI layer issued Host Reset Data:\n");
-+			 "3172 SCSI layer issued Host Reset\n");
- 
- 	lpfc_offline_prep(phba, LPFC_MBX_WAIT);
- 	lpfc_offline(phba);
++	if (!hba->vreg_info.vccq && !hba->vreg_info.vccq2)
++		return;
++
+ 	if (hba->vreg_info.vccq)
+ 		vccqx = hba->vreg_info.vccq;
+ 	else
 -- 
 2.51.0
 
