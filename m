@@ -1,55 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CBC33043D4;
-	Sat, 25 Oct 2025 16:19:01 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A38C30F925;
+	Sat, 25 Oct 2025 16:20:17 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761409141; cv=none; b=i5HR2x83YZK1fK0kg9Fn71wpDJb4zu/dKZDOBO5GyYycGokn8G9lr3wZjWeAM5Whi+LUvfCER1vpLd9zky823O+huG/4sjdbb3rF2ssgqgYWUCaEHxWSdOgOtPBrGDgyhDq6QzerjpWUlgOHeBI4PmWjI+0A/T/7cdQEDJMzgZA=
+	t=1761409217; cv=none; b=AsiOUUCh1tHzdjDyLQuy10cL+zuV7FPhSqsobdw1nGhwGE+PDRQXwQ31kUqmLb4mvV0kyESXS9O5GdZvkK8Burm8HMXum4gZIJ6aukP5iD34uhCwmYRCKpCVWHVJO9Ao3fqwU8vQD7NDRK9A/NspnMcugZ0mORUe2m2sjtPboHg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761409141; c=relaxed/simple;
-	bh=ed28bBdQA5ykm/RPiIaaitqo0+JNP8JIrkeHbGhDazY=;
+	s=arc-20240116; t=1761409217; c=relaxed/simple;
+	bh=ANpXLZ4bPgXvS0qIQAcVZBHmnKkHZlT5fX0rP1o9R8A=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=lVXvF37adG9PIDn3mgxOOOIoA+DQhzW2SWy5mNd6AYWGdazxcWtYyXcmu1jmP50vfoRUbh5OKROP9seZQn6QwZlzB8fro9cqXiw2bkhfRprcQFePMUXrEOxOeKNJOVJ4qK7ZxVKLlR2X2xNTDzWBaw1CNQ/5SpR8D6P+PQm286k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ZJ1/uYDU; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=G3lKK1Sbr989cJt+wgCChJmJFJnYiSj8c/rhPh5a0zFPcUS/HQhw14pugyukMgmu5f4HKF7ckur/z0S5zEsOdEeVgvAZ4+IJ6GT7w4Z+JpNxukm9BI25CGv63Q2OejXmWMADo53bh93y+7NtEPXDthzyWdThG00N7PtkdNwfEWc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WoR++aH5; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ZJ1/uYDU"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 48A0FC4CEF5;
-	Sat, 25 Oct 2025 16:18:59 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WoR++aH5"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7A727C4AF0C;
+	Sat, 25 Oct 2025 16:20:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761409141;
-	bh=ed28bBdQA5ykm/RPiIaaitqo0+JNP8JIrkeHbGhDazY=;
+	s=k20201202; t=1761409217;
+	bh=ANpXLZ4bPgXvS0qIQAcVZBHmnKkHZlT5fX0rP1o9R8A=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=ZJ1/uYDUPFngu/aVK6/hg3nv4yGQp5KDTS5vS+WyewH1x1d4RR6ZsLDfXcYnl1X5/
-	 jelBaruVU8rpnHnUlAdvsJtp+R3FXQ/NPn5K0PXDlDj4rMC9oLm4WO8Rry9EhxgdbJ
-	 I72NlW+H1wM8FU1n31vdf1lBeA03kDsy7g50cWwbXH5veK/FN43DiGVb/O0WenbtWF
-	 KJ75e985e0mgDpGIij/aOuHDqPC3F1f/YcZ9CrpitGjT1VX+oCF4wxBvqj3/2VKH6i
-	 nTv8Fnt+f3JqQq68fDZlVdF59drdkdY3ln7265tPBmjXALHFDjEk6jmcCFUU1uPOV5
-	 AbBdC2+VLIuRQ==
+	b=WoR++aH5WVmyuXNOy9N+QG3rxupOXPRunXLHY11lR0+dY/oyzjYjO8ruwgz47spxD
+	 kI4t30xIPXsh6pOhd51BeiLuVDkyG4DyPlzyqARF5zUvS8wRRrMPGp6XTWA1GNqbAw
+	 KwRq8rFkPcHJd3n3gv74CwTR/dlriGzwxDJo33XIY5cjJbyVCVTFVAtIiWxcXhR/Xy
+	 ai3+Etw8Adnazme9qX8mbVgjsZ0w/ptpo4SI2jYEyZgbD4yQheznSz0uhABO6WCOGn
+	 +8Spoee7T9EmEhFT0rq6Tx4auO+UXYBMxyiKJ4+G2EM1P1kkSF8uftXNZ2QAUeSedP
+	 8SS85es09ChwQ==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Peter Wang <peter.wang@mediatek.com>,
-	Bart Van Assche <bvanassche@acm.org>,
+Cc: Alok Tiwari <alok.a.tiwari@oracle.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	avri.altman@sandisk.com,
-	beanhuo@micron.com,
-	alexandre.f.demers@gmail.com,
-	adrian.hunter@intel.com,
-	quic_cang@quicinc.com,
-	ebiggers@kernel.org,
-	quic_nitirawa@quicinc.com,
-	neil.armstrong@linaro.org,
-	linux-scsi@vger.kernel.org,
-	linux-mediatek@lists.infradead.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.17-6.6] scsi: ufs: host: mediatek: Enhance recovery on hibernation exit failure
-Date: Sat, 25 Oct 2025 11:57:25 -0400
-Message-ID: <20251025160905.3857885-214-sashal@kernel.org>
+	hare@suse.de,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.17-5.15] scsi: libfc: Fix potential buffer overflow in fc_ct_ms_fill()
+Date: Sat, 25 Oct 2025 11:57:57 -0400
+Message-ID: <20251025160905.3857885-246-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
 References: <20251025160905.3857885-1-sashal@kernel.org>
@@ -59,23 +46,52 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 X-stable: review
 X-Patchwork-Hint: Ignore
 X-stable-base: Linux 6.17.5
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+From: Alok Tiwari <alok.a.tiwari@oracle.com>
 
-[ Upstream commit faac32d4ece30609f1a0930ca0ae951cf6dc1786 ]
+[ Upstream commit 072fdd4b0be9b9051bdf75f36d0227aa705074ba ]
 
-Improve the recovery process for hibernation exit failures. Trigger the
-error handler and break the suspend operation to ensure effective
-recovery from hibernation errors. Activate the error handling mechanism
-by ufshcd_force_error_recovery and scheduling the error handler work.
+The fc_ct_ms_fill() helper currently formats the OS name and version
+into entry->value using "%s v%s". Since init_utsname()->sysname and
+->release are unbounded strings, snprintf() may attempt to write more
+than FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN bytes, triggering a
+-Wformat-truncation warning with W=1.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+In file included from drivers/scsi/libfc/fc_elsct.c:18:
+drivers/scsi/libfc/fc_encode.h: In function ‘fc_ct_ms_fill.constprop’:
+drivers/scsi/libfc/fc_encode.h:359:30: error: ‘%s’ directive output may
+be truncated writing up to 64 bytes into a region of size between 62
+and 126 [-Werror=format-truncation=]
+  359 |                         "%s v%s",
+      |                              ^~
+  360 |                         init_utsname()->sysname,
+  361 |                         init_utsname()->release);
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~
+drivers/scsi/libfc/fc_encode.h:357:17: note: ‘snprintf’ output between
+3 and 131 bytes into a destination of size 128
+  357 |                 snprintf((char *)&entry->value,
+      |                 ^~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  358 |                         FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN,
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  359 |                         "%s v%s",
+      |                         ~~~~~~~~~
+  360 |                         init_utsname()->sysname,
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~
+  361 |                         init_utsname()->release);
+      |                         ~~~~~~~~~~~~~~~~~~~~~~~~
+
+Fix this by using "%.62s v%.62s", which ensures sysname and release are
+truncated to fit within the 128-byte field defined by
+FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN.
+
+[mkp: clarified commit description]
+
+Signed-off-by: Alok Tiwari <alok.a.tiwari@oracle.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
@@ -83,138 +99,38 @@ Signed-off-by: Sasha Levin <sashal@kernel.org>
 LLM Generated explanations, may be completely bogus:
 
 YES
+- The updated format string in `drivers/scsi/libfc/fc_encode.h:356` caps
+  both `init_utsname()->sysname` and `init_utsname()->release` at 62
+  characters, keeping the composed `"OS vversion"` entry within the
+  128-byte field defined for `FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN` at
+  `include/scsi/fc/fc_ms.h:92`. This directly prevents the -Wformat-
+  truncation build failure reported when compiling with `make W=1`, so
+  it resolves a real build bug without changing any control flow.
+- Runtime impact is limited to at most two characters of each component
+  being truncated, which is already acceptable for this management
+  payload and smaller than the silent truncation that happened
+  previously when both strings were long.
+- The patch is tiny, self-contained in libfc’s FDMI attribute formatting
+  helper, and introduces no dependency or architectural change, so
+  regression risk is negligible while restoring clean W=1 builds for
+  stable users who enable those checks.
 
-- Fixes a real bug that affects users: previously, a failure to exit
-  hibernation (H8) during suspend was only warned about and suspend
-  continued, risking a stuck/broken UFS link and subsequent I/O hangs.
-  The patch turns this into a recoverable path by triggering the error
-  handler and aborting suspend.
-- Small, contained change with clear intent:
-  - Makes the core helper available to host drivers by de-static’ing and
-    exporting `ufshcd_force_error_recovery()` and declaring it in the
-    UFS header:
-    - `drivers/ufs/core/ufshcd.c:6471` acquires `host_lock`, sets
-      `hba->force_reset = true`, invokes `ufshcd_schedule_eh_work()`,
-      and is exported via
-      `EXPORT_SYMBOL_GPL(ufshcd_force_error_recovery)`.
-    - `include/ufs/ufshcd.h:1489` adds `void
-      ufshcd_force_error_recovery(struct ufs_hba *hba);`
-  - Uses that helper in the MediaTek host driver to recover from H8 exit
-    failures and to abort suspend:
-    - `drivers/ufs/host/ufs-mediatek.c:1436` changes
-      `ufs_mtk_auto_hibern8_disable()` to return `int` and to return an
-      error on failure.
-    - `drivers/ufs/host/ufs-mediatek.c:1454` calls
-      `ufshcd_force_error_recovery(hba)` when
-      `ufs_mtk_wait_link_state(..., VS_LINK_UP, ...)` fails, then sets
-      `ret = -EBUSY` to break suspend.
-    - `drivers/ufs/host/ufs-mediatek.c:1750` propagates the PRE_CHANGE
-      failure by `return ufs_mtk_auto_hibern8_disable(hba);` in
-      `ufs_mtk_suspend()`.
-- Correct integration with the core suspend flow: the UFS core checks
-  vendor PRE_CHANGE return and aborts on error:
-  - `drivers/ufs/core/ufshcd.c:9899` calls `ufshcd_vops_suspend(hba,
-    pm_op, PRE_CHANGE)` and if `ret` is non-zero it aborts the suspend
-    path, re-enables scaling, and unwinds cleanly.
-- Error handling sequencing is robust:
-  - `drivers/ufs/core/ufshcd.c:6456` `ufshcd_schedule_eh_work()` sets
-    `ufshcd_state` to `UFSHCD_STATE_EH_SCHEDULED_FATAL` if `force_reset`
-    or fatal conditions are detected and queues `eh_work`, ensuring the
-    error handler runs promptly.
-- Scope and risk:
-  - No architectural changes; it’s a targeted behavioral fix in the
-    MediaTek UFS suspend path plus a symbol export in the UFS core for
-    in-tree drivers.
-  - Only triggers additional actions on an existing error path (H8 exit
-    failure). Normal suspend paths are unchanged.
-  - Storage reliability fix in a critical subsystem, but contained to
-    UFS/Mediatek host and UFS core error handling.
-- Stable tree criteria alignment:
-  - Fixes an important reliability bug (avoids continuing suspend with a
-    broken link and prevents I/O hang).
-  - Minimal, surgical changes, no new features.
-  - No broad side effects; the exported helper is internal API used by
-    in-tree code.
-  - No major refactoring or dependency churn.
+ drivers/scsi/libfc/fc_encode.h | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Given the above, this is a strong candidate for stable backporting.
-
- drivers/ufs/core/ufshcd.c       |  3 ++-
- drivers/ufs/host/ufs-mediatek.c | 14 +++++++++++---
- include/ufs/ufshcd.h            |  1 +
- 3 files changed, 14 insertions(+), 4 deletions(-)
-
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 465e66dbe08e8..78d3f0ee16d84 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6462,13 +6462,14 @@ void ufshcd_schedule_eh_work(struct ufs_hba *hba)
- 	}
- }
+diff --git a/drivers/scsi/libfc/fc_encode.h b/drivers/scsi/libfc/fc_encode.h
+index 02e31db31d68e..e046091a549ae 100644
+--- a/drivers/scsi/libfc/fc_encode.h
++++ b/drivers/scsi/libfc/fc_encode.h
+@@ -356,7 +356,7 @@ static inline int fc_ct_ms_fill(struct fc_lport *lport,
+ 		put_unaligned_be16(len, &entry->len);
+ 		snprintf((char *)&entry->value,
+ 			FC_FDMI_HBA_ATTR_OSNAMEVERSION_LEN,
+-			"%s v%s",
++			"%.62s v%.62s",
+ 			init_utsname()->sysname,
+ 			init_utsname()->release);
  
--static void ufshcd_force_error_recovery(struct ufs_hba *hba)
-+void ufshcd_force_error_recovery(struct ufs_hba *hba)
- {
- 	spin_lock_irq(hba->host->host_lock);
- 	hba->force_reset = true;
- 	ufshcd_schedule_eh_work(hba);
- 	spin_unlock_irq(hba->host->host_lock);
- }
-+EXPORT_SYMBOL_GPL(ufshcd_force_error_recovery);
- 
- static void ufshcd_clk_scaling_allow(struct ufs_hba *hba, bool allow)
- {
-diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-mediatek.c
-index 055b24758ca3d..6bdbbee1f0708 100644
---- a/drivers/ufs/host/ufs-mediatek.c
-+++ b/drivers/ufs/host/ufs-mediatek.c
-@@ -1646,7 +1646,7 @@ static void ufs_mtk_dev_vreg_set_lpm(struct ufs_hba *hba, bool lpm)
- 	}
- }
- 
--static void ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
-+static int ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
- {
- 	int ret;
- 
-@@ -1657,8 +1657,16 @@ static void ufs_mtk_auto_hibern8_disable(struct ufs_hba *hba)
- 	ufs_mtk_wait_idle_state(hba, 5);
- 
- 	ret = ufs_mtk_wait_link_state(hba, VS_LINK_UP, 100);
--	if (ret)
-+	if (ret) {
- 		dev_warn(hba->dev, "exit h8 state fail, ret=%d\n", ret);
-+
-+		ufshcd_force_error_recovery(hba);
-+
-+		/* trigger error handler and break suspend */
-+		ret = -EBUSY;
-+	}
-+
-+	return ret;
- }
- 
- static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
-@@ -1669,7 +1677,7 @@ static int ufs_mtk_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 
- 	if (status == PRE_CHANGE) {
- 		if (ufshcd_is_auto_hibern8_supported(hba))
--			ufs_mtk_auto_hibern8_disable(hba);
-+			return ufs_mtk_auto_hibern8_disable(hba);
- 		return 0;
- 	}
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a3fa98540d184..a4eb5bde46e88 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1511,5 +1511,6 @@ int __ufshcd_write_ee_control(struct ufs_hba *hba, u32 ee_ctrl_mask);
- int ufshcd_write_ee_control(struct ufs_hba *hba);
- int ufshcd_update_ee_control(struct ufs_hba *hba, u16 *mask,
- 			     const u16 *other_mask, u16 set, u16 clr);
-+void ufshcd_force_error_recovery(struct ufs_hba *hba);
- 
- #endif /* End of Header */
 -- 
 2.51.0
 
