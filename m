@@ -1,59 +1,42 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA5D81F1306;
-	Sat, 25 Oct 2025 16:13:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AA25A3064A4;
+	Sat, 25 Oct 2025 16:14:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761408836; cv=none; b=mnkZ0SXdj69bD1a3YthcaHa5BlbM81h+yWubCPKGHt97Rg52olSDYw82dzlxChitciWDEkZaSTSyRLQNqZLguAIMsa4cJBUhpQRNba+NJpJMVdfls6FbsEvLg50HRtIsJRtsWmFW64rHqInRgB4w+o3B0Ozr2gXyS9NXQo5Jw0w=
+	t=1761408854; cv=none; b=QdxipdBfs4MBJOSrutX7HzeM8QpvWfLH1931Jdl4v9eLTscnnh9JvFpBIdJp+pV/7W/eqYlvvpmmu966nSOH2fI3119pbicLwiYBpL+nbv1Rqy4p8Uict91+4XKN7/+2JledAOW/37JThvo6jBRjbS1Dfh8PWEvxekuzCkm+i7U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761408836; c=relaxed/simple;
-	bh=zVtHnfPXG4ioxX+DlgXGFZiXd2qgpVY5VuTt9jhmCqU=;
+	s=arc-20240116; t=1761408854; c=relaxed/simple;
+	bh=KI6+OsymNLyRak3/YPRgd2J+zh87z+gfsf2MC6/X6t8=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=HcOpiB0urtiQuHfK+tH7ekraGX/IodfXARwUEKxWev/IJ0VblGC1Q3ee5PEN1m+M53pxp+kFRrgVc0NIgKHpgf4dbYS3/JbpN2zy3LuYKtRlNZFKwMbib6Uw5QOcSbarFnUoRdw9vfUMEBve6x5qvXoh2n5mHfs8JstIZWD8FNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YbOwP7Qw; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version:Content-Type; b=mcCv5/02SWOV2dJHm/OL4YWJy+8UWxYG8/NvXO0PTfs54JWvoc7CkSQHu+uNBC6Rt93e5lr4RbHiCfeA+XDbU4UKkQ+X4JOnjHUWl4PIkOsX+Baf6SrvnePw2hHjMSzi6PTyTcwY8NqX/qhZmk/vuQhxZnv71ISqhGnKNY+uOME=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=i04IP3Hd; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YbOwP7Qw"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 3A725C4CEFB;
-	Sat, 25 Oct 2025 16:13:54 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="i04IP3Hd"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B63BDC4CEFB;
+	Sat, 25 Oct 2025 16:14:13 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761408836;
-	bh=zVtHnfPXG4ioxX+DlgXGFZiXd2qgpVY5VuTt9jhmCqU=;
+	s=k20201202; t=1761408854;
+	bh=KI6+OsymNLyRak3/YPRgd2J+zh87z+gfsf2MC6/X6t8=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=YbOwP7QwePA8fGDUTJWGSWAG7qbQ1Iym1GQkBEuSZcjDOtyFwXLLTprPB2z13gMJM
-	 nBnlmHniVN1aJvGMFeRh3UT8qbkgKCxsx8ada608Nz+5iLP7wSWFCBAssFvR5TljkR
-	 YYvyVCNrGcYYRXe+rT0a/9DjZfyTzKXpZ1iPYDPviIDbnHBboyH4eSAHWKLBWoLHs8
-	 AbnFTd6zcAq0ZacrZ1Zx8nfxPdF9tPVIh55xCyWResVNxGyTdPIRz4gaa5+iBQ1CWz
-	 bLnvj2TjO8emxcKsclWYcJAyZl59wZ2qCb+Ib5qEFPt7nxe8eXz3UJ0E7/IF4OdWqb
-	 y0nmfRe2pT/Cg==
+	b=i04IP3HdTbN02UF79PsjWsLP0IRhHmasp78Ov2yFybtduRbtUpYIzMCngvzMFKEwv
+	 Zj6vUexx8GOd6VsrR6BfuOss2wKk7dUgceD3X9kMvwRuO/v9C9QmUeUtMqkxkirNg5
+	 HVvOrGltmibOUgvciK4n/DPHp1PSJpztXGpYpYNNgE4H4YDI5bNA1iWoct8MdwakT7
+	 LM9uJmGg4rRljEk+KnAd6b5sMq9R0rEdpFguqJL30AGABhvqc0GpYoFPUl842sJfEG
+	 ZCYtOBjPGa1q70p3BgARvR+BpQpbZMAGmbXSnmk5GEpq+tPHeATNH1ERZcNPZPfKhU
+	 GBoDyUyDE5iNA==
 From: Sasha Levin <sashal@kernel.org>
 To: patches@lists.linux.dev,
 	stable@vger.kernel.org
-Cc: Peter Wang <peter.wang@mediatek.com>,
-	Bart Van Assche <bvanassche@acm.org>,
+Cc: Justin Tee <justin.tee@broadcom.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	Sasha Levin <sashal@kernel.org>,
-	matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com,
-	mani@kernel.org,
-	alim.akhtar@samsung.com,
-	chenyuan0y@gmail.com,
-	ping.gao@samsung.com,
-	alok.a.tiwari@oracle.com,
-	alexandre.f.demers@gmail.com,
-	avri.altman@sandisk.com,
-	beanhuo@micron.com,
-	adrian.hunter@intel.com,
-	quic_cang@quicinc.com,
-	quic_nitirawa@quicinc.com,
-	neil.armstrong@linaro.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	linux-arm-kernel@lists.infradead.org,
-	linux-mediatek@lists.infradead.org
-Subject: [PATCH AUTOSEL 6.17] scsi: ufs: core: Change MCQ interrupt enable flow
-Date: Sat, 25 Oct 2025 11:55:23 -0400
-Message-ID: <20251025160905.3857885-92-sashal@kernel.org>
+	paul.ely@broadcom.com,
+	linux-scsi@vger.kernel.org
+Subject: [PATCH AUTOSEL 6.17-5.4] scsi: lpfc: Check return status of lpfc_reset_flush_io_context during TGT_RESET
+Date: Sat, 25 Oct 2025 11:55:32 -0400
+Message-ID: <20251025160905.3857885-101-sashal@kernel.org>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
 References: <20251025160905.3857885-1-sashal@kernel.org>
@@ -69,141 +52,90 @@ X-stable-base: Linux 6.17.5
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+From: Justin Tee <justin.tee@broadcom.com>
 
-[ Upstream commit 253757797973c54ea967f8fd8f40d16e4a78e6d4 ]
+[ Upstream commit f408dde2468b3957e92b25e7438f74c8e9fb9e73 ]
 
-Move the MCQ interrupt enable process to
-ufshcd_mcq_make_queues_operational() to ensure that interrupts are set
-correctly when making queues operational, similar to
-ufshcd_make_hba_operational(). This change addresses the issue where
-ufshcd_mcq_make_queues_operational() was not fully operational due to
-missing interrupt enablement.
+If lpfc_reset_flush_io_context fails to execute, then the wrong return
+status code may be passed back to upper layers when issuing a target
+reset TMF command.  Fix by checking the return status from
+lpfc_reset_flush_io_context() first in order to properly return FAILED
+or FAST_IO_FAIL.
 
-This change only affects host drivers that call
-ufshcd_mcq_make_queues_operational(), i.e. ufs-mediatek.
-
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+Message-ID: <20250915180811.137530-7-justintee8345@gmail.com>
 Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
 Signed-off-by: Sasha Levin <sashal@kernel.org>
 ---
 
 LLM Generated explanations, may be completely bogus:
 
-YES
-- `ufs-mediatek` is the only host driver that calls
-  `ufshcd_mcq_make_queues_operational()` directly
-  (`drivers/ufs/host/ufs-mediatek.c:1654`). Without this patch, that
-  path never enables the MCQ-specific interrupt bits, so after MCQ
-  reconfiguration the controller cannot receive queue completion
-  interrupts and I/O stalls.
-- The fix moves the interrupt enable step into
-  `ufshcd_mcq_make_queues_operational()` itself (`drivers/ufs/core/ufs-
-  mcq.c:355`), so every caller—both the core flow and the MediaTek
-  vops—now enables `UFSHCD_ENABLE_MCQ_INTRS`, while still honoring
-  `UFSHCD_QUIRK_MCQ_BROKEN_INTR`.
-- To make that call possible from `ufs-mcq.c`, the patch simply exports
-  `ufshcd_enable_intr()` and its prototype
-  (`drivers/ufs/core/ufshcd.c:336`, `include/ufs/ufshcd.h:1310`). This
-  does not alter behavior for existing callers; it just exposes the
-  already-used helper.
-- The change is small, self-contained, and limited to MCQ bring-up. It
-  fixes a real functional regression introduced when MCQ support landed
-  for MediaTek platforms, with no architectural churn and minimal
-  regression risk.
+YES - returning FAIL/Fast-IO correctly from target reset avoids trapping
+lpfc in a half-reset state.
 
- drivers/ufs/core/ufs-mcq.c | 11 +++++++++++
- drivers/ufs/core/ufshcd.c  | 12 +-----------
- include/ufs/ufshcd.h       |  1 +
- 3 files changed, 13 insertions(+), 11 deletions(-)
+- drivers/scsi/lpfc/lpfc_scsi.c:6112-6119 now propagates the status from
+  lpfc_reset_flush_io_context(), so a flush failure surfaces as FAILED
+  instead of always falling through to FAST_IO_FAIL; previously
+  FAST_IO_FAIL was reported even when cnt != 0, leaving orphaned
+  contexts behind.
+- In the SCSI EH core, FAST_IO_FAIL is treated as a completed reset
+  (drivers/scsi/scsi_error.c:1680-1694), so the old code caused the
+  error handler to stop escalation while the adapter still had
+  outstanding I/O—users would see hung commands after a target reset
+  TMF.
+- A FAILED return triggers the midlayer to keep escalating (bus/host
+  reset), which is the only safe recovery once
+  lpfc_reset_flush_io_context() reports 0x2003 (see its failure path at
+  drivers/scsi/lpfc/lpfc_scsi.c:5969-5975); the fix therefore prevents
+  long-lived I/O leaks and recovery deadlocks.
+- Remaining changes are cosmetic (typo fix at
+  drivers/scsi/lpfc/lpfc_scsi.c:5938 and cleaned log text at
+  drivers/scsi/lpfc/lpfc_scsi.c:6210) and pose no regression risk.
+- Patch is small, self-contained in lpfc, and has no dependencies—ideal
+  for stable backporting.
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index cc88aaa106da3..c9bdd4140fd04 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -29,6 +29,10 @@
- #define MCQ_ENTRY_SIZE_IN_DWORD	8
- #define CQE_UCD_BA GENMASK_ULL(63, 7)
+ drivers/scsi/lpfc/lpfc_scsi.c | 14 ++++++++++----
+ 1 file changed, 10 insertions(+), 4 deletions(-)
+
+diff --git a/drivers/scsi/lpfc/lpfc_scsi.c b/drivers/scsi/lpfc/lpfc_scsi.c
+index 508ceeecf2d95..6d9d8c196936a 100644
+--- a/drivers/scsi/lpfc/lpfc_scsi.c
++++ b/drivers/scsi/lpfc/lpfc_scsi.c
+@@ -5935,7 +5935,7 @@ lpfc_chk_tgt_mapped(struct lpfc_vport *vport, struct fc_rport *rport)
+ /**
+  * lpfc_reset_flush_io_context -
+  * @vport: The virtual port (scsi_host) for the flush context
+- * @tgt_id: If aborting by Target contect - specifies the target id
++ * @tgt_id: If aborting by Target context - specifies the target id
+  * @lun_id: If aborting by Lun context - specifies the lun id
+  * @context: specifies the context level to flush at.
+  *
+@@ -6109,8 +6109,14 @@ lpfc_target_reset_handler(struct scsi_cmnd *cmnd)
+ 			pnode->nlp_fcp_info &= ~NLP_FCP_2_DEVICE;
+ 			spin_unlock_irqrestore(&pnode->lock, flags);
+ 		}
+-		lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
+-					  LPFC_CTX_TGT);
++		status = lpfc_reset_flush_io_context(vport, tgt_id, lun_id,
++						     LPFC_CTX_TGT);
++		if (status != SUCCESS) {
++			lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
++					 "0726 Target Reset flush status x%x\n",
++					 status);
++			return status;
++		}
+ 		return FAST_IO_FAIL;
+ 	}
  
-+#define UFSHCD_ENABLE_MCQ_INTRS	(UTP_TASK_REQ_COMPL |\
-+				 UFSHCD_ERROR_MASK |\
-+				 MCQ_CQ_EVENT_STATUS)
-+
- /* Max mcq register polling time in microseconds */
- #define MCQ_POLL_US 500000
+@@ -6202,7 +6208,7 @@ lpfc_host_reset_handler(struct scsi_cmnd *cmnd)
+ 	int rc, ret = SUCCESS;
  
-@@ -355,9 +359,16 @@ EXPORT_SYMBOL_GPL(ufshcd_mcq_poll_cqe_lock);
- void ufshcd_mcq_make_queues_operational(struct ufs_hba *hba)
- {
- 	struct ufs_hw_queue *hwq;
-+	u32 intrs;
- 	u16 qsize;
- 	int i;
+ 	lpfc_printf_vlog(vport, KERN_ERR, LOG_FCP,
+-			 "3172 SCSI layer issued Host Reset Data:\n");
++			 "3172 SCSI layer issued Host Reset\n");
  
-+	/* Enable required interrupts */
-+	intrs = UFSHCD_ENABLE_MCQ_INTRS;
-+	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_INTR)
-+		intrs &= ~MCQ_CQ_EVENT_STATUS;
-+	ufshcd_enable_intr(hba, intrs);
-+
- 	for (i = 0; i < hba->nr_hw_queues; i++) {
- 		hwq = &hba->uhq[i];
- 		hwq->id = i;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 1907c0f6eda0e..85d5e3938891a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -45,11 +45,6 @@
- 				 UTP_TASK_REQ_COMPL |\
- 				 UFSHCD_ERROR_MASK)
- 
--#define UFSHCD_ENABLE_MCQ_INTRS	(UTP_TASK_REQ_COMPL |\
--				 UFSHCD_ERROR_MASK |\
--				 MCQ_CQ_EVENT_STATUS)
--
--
- /* UIC command timeout, unit: ms */
- enum {
- 	UIC_CMD_TIMEOUT_DEFAULT	= 500,
-@@ -372,7 +367,7 @@ EXPORT_SYMBOL_GPL(ufshcd_disable_irq);
-  * @hba: per adapter instance
-  * @intrs: interrupt bits
-  */
--static void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
-+void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs)
- {
- 	u32 old_val = ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
- 	u32 new_val = old_val | intrs;
-@@ -8925,16 +8920,11 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
- static void ufshcd_config_mcq(struct ufs_hba *hba)
- {
- 	int ret;
--	u32 intrs;
- 
- 	ret = ufshcd_mcq_vops_config_esi(hba);
- 	hba->mcq_esi_enabled = !ret;
- 	dev_info(hba->dev, "ESI %sconfigured\n", ret ? "is not " : "");
- 
--	intrs = UFSHCD_ENABLE_MCQ_INTRS;
--	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_INTR)
--		intrs &= ~MCQ_CQ_EVENT_STATUS;
--	ufshcd_enable_intr(hba, intrs);
- 	ufshcd_mcq_make_queues_operational(hba);
- 	ufshcd_mcq_config_mac(hba, hba->nutrs);
- 
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a4eb5bde46e88..a060fa71b2b1b 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -1321,6 +1321,7 @@ static inline void ufshcd_rmwl(struct ufs_hba *hba, u32 mask, u32 val, u32 reg)
- 
- void ufshcd_enable_irq(struct ufs_hba *hba);
- void ufshcd_disable_irq(struct ufs_hba *hba);
-+void ufshcd_enable_intr(struct ufs_hba *hba, u32 intrs);
- int ufshcd_alloc_host(struct device *, struct ufs_hba **);
- int ufshcd_hba_enable(struct ufs_hba *hba);
- int ufshcd_init(struct ufs_hba *, void __iomem *, unsigned int);
+ 	lpfc_offline_prep(phba, LPFC_MBX_WAIT);
+ 	lpfc_offline(phba);
 -- 
 2.51.0
 
