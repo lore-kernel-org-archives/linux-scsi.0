@@ -1,142 +1,93 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2263A32AAAC;
-	Sat, 25 Oct 2025 16:29:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 74DD61F418F;
+	Sun, 26 Oct 2025 05:09:13 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761409772; cv=none; b=EKoAzBZBn++pI8UEUZj3XA1l6vl6F0AK5LmhIk3ihoLLDrveic5+/v0KIeiLY5NVKVW7cOD8n2/rpG0A8dQak8E4R2LPVTRx8gVt1gVlIb6kGIcU9gr3ABNaALpG+N1jc0LGhb1dCLdH/jcJLJZJgdWtST2sUvZzPqlAEeqczTE=
+	t=1761455353; cv=none; b=CKOQVzMuoka+aIr3d+Wk0COQO9cMBb8LUbqdyrnSVJ5Z3pYvLWBq/5nreNVXFUO3lpFZkuC86JkNZ1vF7FW3HgJIc1kt0CSycVwXwTdqN6YmxOwcZPJLxCvGnJ7Z4w77vQWQc+atwGIZMgMU39X24m8V2JE+ZDjyPIK5ejfruss=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761409772; c=relaxed/simple;
-	bh=t58dezqz4gN5IwHByHWrAXrcxcmxkrdM49NVnbP9aiA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=JDuadvV8+dGwQARrSaAp8DVLVBHa5fGCv1aELDqYV86F68eZGPwgruSQ4i5fadTTAvbGeHYDogpzBK3+kF/ybioD2kDPclOBjD9A7YsyiU5kcgR/ca4HJrDvoUmqAULwWbP8yQ77DpQVSJw37ynIpKm27aq4xeNWH8yIDDxOP4c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SiGtk6hI; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761455353; c=relaxed/simple;
+	bh=p0DuC0Tv4/qRF1AukIaOZxQa1x0y6FnUMyajKVqm+l0=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=Qws13x42TSyUKObRZXdSJZXNFdCduDX56hjpBQii7ojeCvVBZpFZxK0lkQQ8lD7Sx1uz8iQkAkUcqp2CT1Lhay9cCpmgYyGtEfXz+SmF34kwKXDAM3upniZ19KYOeddHUiCUm1h4T7VPs86L4ilsdIuh5OIQwn06CWZ4DPz4FQk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=SIvihrQ8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SiGtk6hI"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2F45CC4CEF5;
-	Sat, 25 Oct 2025 16:29:31 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="SIvihrQ8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 83C95C4CEE7;
+	Sun, 26 Oct 2025 05:09:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761409772;
-	bh=t58dezqz4gN5IwHByHWrAXrcxcmxkrdM49NVnbP9aiA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=SiGtk6hI253r1zL9O/R84y3pmtBHE0cv0Yxgw7D5a6QalyWrKNPyGvJGu2lmo1xJZ
-	 vIC8Qivda4rXLyUEgM/vnk58rXFQ95ioA+LA4qMRltWJ3sAbTQj+vOdxT7TYVCw//r
-	 2/8xRJuw3gY6wgEzYsgQSqYDf++EVFhk4X+JFEwC/HoHrPyi0bsy6cCCD1jd0wBVAV
-	 /ftAhDRo8q/du8516XWWu7SL/ijP50j/imBGTc9Mw6lK/FP1W0vwtWgMMUaxyLspxB
-	 Ouf8BDT2JCUlBKcDItEwCx0veO1cDGtXRAi4Q3A24TUyZ1Be3Q2UtrX6zugnLclS4O
-	 DlXw/mRxqcLcA==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Justin Tee <justin.tee@broadcom.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	paul.ely@broadcom.com,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.17-5.15] scsi: lpfc: Remove ndlp kref decrement clause for F_Port_Ctrl in lpfc_cleanup
-Date: Sat, 25 Oct 2025 12:01:30 -0400
-Message-ID: <20251025160905.3857885-459-sashal@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251025160905.3857885-1-sashal@kernel.org>
-References: <20251025160905.3857885-1-sashal@kernel.org>
+	s=k20201202; t=1761455353;
+	bh=p0DuC0Tv4/qRF1AukIaOZxQa1x0y6FnUMyajKVqm+l0=;
+	h=From:To:Cc:Subject:Date:From;
+	b=SIvihrQ8DoupRFx57SA2hauQ11QW1jeh5RROBf3c7kz4sEF35cRCnct1c6ufDSqCR
+	 85e3SEDwoNIZ3igCU+e0TVPBokqILeHNVvdNSRW9wTuPmyHQ+ADgOUS4RlU6sQlSDp
+	 pqX0yccXHGjNmB+xP8DA/YqwY4xM/GPd+jJ16GQ5uCBwI0lHxCWG6wMRup+p0j+Bsq
+	 4CZslaawJ+8Sms4cmzY4K6YEJLUHuUGgQGu5aK3kviB5odB2YKYJex0C184zi/1D0q
+	 N0a3/V9J1poGhOfumTEFS0KC8eMjhjcMgUrvOh4jsXokd4r5p/Z2KjwqRkPxpAahtk
+	 WTSerqiv+K4gg==
+From: "Mario Limonciello (AMD)" <superm1@kernel.org>
+To: "Rafael J . Wysocki" <rafael@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Danilo Krummrich <dakr@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>
+Cc: Pavel Machek <pavel@kernel.org>,
+	Len Brown <lenb@kernel.org>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	linux-pm@vger.kernel.org (open list:HIBERNATION (aka Software Suspend, aka swsusp)),
+	linux-scsi@vger.kernel.org (open list:SCSI SUBSYSTEM),
+	linux-usb@vger.kernel.org (open list:USB SUBSYSTEM),
+	AceLan Kao <acelan.kao@canonical.com>,
+	Kai-Heng Feng <kaihengf@nvidia.com>,
+	Mark Pearson <mpearson-lenovo@squebb.ca>,
+	=?UTF-8?q?Merthan=20Karaka=C5=9F?= <m3rthn.k@gmail.com>,
+	Eric Naim <dnaim@cachyos.org>,
+	"Guilherme G . Piccoli" <gpiccoli@igalia.com>,
+	"Mario Limonciello (AMD)" <superm1@kernel.org>
+Subject: [PATCH v9 0/4] Introduce and plumb PMSG_POWEROFF
+Date: Sun, 26 Oct 2025 00:09:01 -0500
+Message-ID: <20251026050905.764203-1-superm1@kernel.org>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.17.5
 Content-Transfer-Encoding: 8bit
 
-From: Justin Tee <justin.tee@broadcom.com>
+I've been working on a series that uses the hibernate flows (S4)
+during shutdown (S5) [1], but it's a bit risky because it has changes
+all around the kernel.  To mitigate risk Rafael suggested [2] to split
+the series into at least 3 parts across different kernel cycles.
 
-[ Upstream commit a4809b98eb004fcbf7c4d45eb5a624d1c682bb73 ]
+Here is the first part, which just introduces a PMSG_POWEROFF event
+and uses it in any driver that manipulates PM events.
 
-In lpfc_cleanup, there is an extraneous nlp_put for NPIV ports on the
-F_Port_Ctrl ndlp object.  In cases when an ABTS is issued, the
-outstanding kref is needed for when a second XRI_ABORTED CQE is
-received.  The final kref for the ndlp is designed to be decremented in
-lpfc_sli4_els_xri_aborted instead.  Also, add a new log message to allow
-for future diagnostics when debugging related issues.
+There are no functional changes for these changes and this series is
+intended for 6.19.
 
-Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-Message-ID: <20250915180811.137530-5-justintee8345@gmail.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
+v8->v9:
+ * Reword commit messages (Bjorn)
+ * Apply on top of 6.18-rc2 kernel base
 
-LLM Generated explanations, may be completely bogus:
+Link: https://lore.kernel.org/linux-pm/20250909191619.2580169-1-superm1@kernel.org/ [1]
+Link: https://lore.kernel.org/linux-pm/CAJZ5v0jHKp7c7dSQMZr5tmQOV6=fHOygTf-YG6Gx9YmurA9cTA@mail.gmail.com/ [2]
 
-YES
-**Why Backport**
-- `lpfc_cleanup` no longer drops the last reference for NPIV fabric
-  nodes up front, so those entries now flow through the normal discovery
-  teardown path instead of triggering a premature `lpfc_nlp_put()`
-  (drivers/scsi/lpfc/lpfc_init.c:3059-3076). The old short-circuit let
-  the ndlp hit a zero kref while exchanges were still draining.
-- During ABTS processing each aborted ELS exchange takes its own
-  reference (`lpfc_nlp_get`) before parking on `lpfc_abts_els_sgl_list`;
-  if the cleanup path has already removed the final reference, the
-  second `XRI_ABORTED` CQE arrives with a dangling pointer, leading to
-  crashes or RRQ cleanup failures
-  (drivers/scsi/lpfc/lpfc_sli.c:1399-1407).
-- The final release of those references is already centralized in
-  `lpfc_sli4_els_xri_aborted`, so keeping the extra kref alive until the
-  CQE arrives matches the intended life cycle; the new log line simply
-  aids diagnosis (drivers/scsi/lpfc/lpfc_els.c:12020-12029). Any ndlp
-  that never sees its CQE still gets dropped by
-  `lpfc_sli4_vport_delete_els_xri_aborted` when the vport is torn down
-  (drivers/scsi/lpfc/lpfc_els.c:11953-11979).
+Mario Limonciello (AMD) (4):
+  PM: Introduce new PMSG_POWEROFF event
+  scsi: Add PM_EVENT_POWEROFF into suspend callbacks
+  usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
+  USB: Pass PMSG_POWEROFF event to suspend_common()
 
-**Risk**
-- Change is tightly scoped to the lpfc driver, removes an overzealous
-  `kref_put`, and relies on existing cleanup paths; no API shifts or
-  cross-subsystem dependencies. Impact of not backporting is a real NPIV
-  crash/UAF when ABTS races with vport removal, so the bug fix outweighs
-  the low regression risk.
+ drivers/base/power/main.c    |  7 +++++++
+ drivers/scsi/mesh.c          |  1 +
+ drivers/scsi/stex.c          |  1 +
+ drivers/usb/core/hcd-pci.c   | 11 ++++++++++-
+ drivers/usb/host/sl811-hcd.c |  1 +
+ include/linux/pm.h           |  3 +++
+ include/trace/events/power.h |  3 ++-
+ 7 files changed, 25 insertions(+), 2 deletions(-)
 
- drivers/scsi/lpfc/lpfc_els.c  | 6 +++++-
- drivers/scsi/lpfc/lpfc_init.c | 7 -------
- 2 files changed, 5 insertions(+), 8 deletions(-)
-
-diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 4c405bade4f34..3f703932b2f07 100644
---- a/drivers/scsi/lpfc/lpfc_els.c
-+++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -12013,7 +12013,11 @@ lpfc_sli4_els_xri_aborted(struct lpfc_hba *phba,
- 			sglq_entry->state = SGL_FREED;
- 			spin_unlock_irqrestore(&phba->sli4_hba.sgl_list_lock,
- 					       iflag);
--
-+			lpfc_printf_log(phba, KERN_INFO, LOG_ELS | LOG_SLI |
-+					LOG_DISCOVERY | LOG_NODE,
-+					"0732 ELS XRI ABORT on Node: ndlp=x%px "
-+					"xri=x%x\n",
-+					ndlp, xri);
- 			if (ndlp) {
- 				lpfc_set_rrq_active(phba, ndlp,
- 					sglq_entry->sli4_lxritag,
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index 4081d2a358eee..f7824266db5e8 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -3057,13 +3057,6 @@ lpfc_cleanup(struct lpfc_vport *vport)
- 		lpfc_vmid_vport_cleanup(vport);
- 
- 	list_for_each_entry_safe(ndlp, next_ndlp, &vport->fc_nodes, nlp_listp) {
--		if (vport->port_type != LPFC_PHYSICAL_PORT &&
--		    ndlp->nlp_DID == Fabric_DID) {
--			/* Just free up ndlp with Fabric_DID for vports */
--			lpfc_nlp_put(ndlp);
--			continue;
--		}
--
- 		if (ndlp->nlp_DID == Fabric_Cntl_DID &&
- 		    ndlp->nlp_state == NLP_STE_UNUSED_NODE) {
- 			lpfc_nlp_put(ndlp);
 -- 
-2.51.0
+2.43.0
 
