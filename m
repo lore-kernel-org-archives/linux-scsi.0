@@ -1,161 +1,160 @@
-Received: from mo4-p01-ob.smtp.rzone.de (mo4-p01-ob.smtp.rzone.de [85.215.255.52])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0DDD1E4AE;
-	Sun, 26 Oct 2025 21:31:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.52
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761514292; cv=pass; b=fcIWpoDoiKwnZda+0hZbUs6KImNN6k8UsD5+SNto0mlzN4MTQkmOvKGfVGQWLG4zEbC2uemtxzF4Dc27Bv4/O7o9T5RABP7tCzqM/p+meF1tWjejj+W38bfNkaYHj7wwixn1jtCqBbbZ8bwQhLDZ2zhaCfLNYgVCm87r4PMd/3I=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761514292; c=relaxed/simple;
-	bh=WTNeCj86qTAkxcCyC2lSwFw3hg2GsPxR+IP66338EoU=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=U/+tzfr6pxcUcW39cWovXWOJvodbzQ2TmeUcNLlL5D63/avmaWK/VPoTIBtufe3LimGavFi+g6TTts4zNrVBnePbwuYbecJtWSFYfBibcN+pGrQRiNJrm5FMgn/atAYvYvx9XtoEZYCwriIl1yN3hGaojT87CWRNULpO4HzCi0k=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=ba4eCyp0; arc=pass smtp.client-ip=85.215.255.52
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8EAF31BC5C;
+	Sun, 26 Oct 2025 22:25:52 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1761517552; cv=none; b=nNpW1iwR8YHHGEY+yXwyXcB4rRhdWoYF5qzTPshlbUALkOiNvY0P5ggfaWBEjZD1iurz0wtxMFH9+I60Tk7sm/X3Vogc2r0Z+MceYEaIldhzzjDNP13sC8d9giJsWZ/ObjQ7+ey9wAs0UhSFP+agXD8RR4u3pWlUsBp3aGw8LbU=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1761517552; c=relaxed/simple;
+	bh=YcfVCtLK/W1LvoMvGvygXNzNh0vRWUm1hNpESZXkvZk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o4Weh8bEK+ArCVePNrTCzL3x0d9zg8Gc5HnEZUBOLpJvFL84k1+1qIm2APAFVynPPKzA9MpVBCb/+7sGqnZihVZwxuHVjWP/sDZiGrPFC1NCqbjbl/IpwQ/Vou4xbcofKzllyswYVoWN7Bpckm7JDL5FZEfTTfOnX2Sm81yJHgI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X55sznBA; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="ba4eCyp0"
-ARC-Seal: i=1; a=rsa-sha256; t=1761513920; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=LUxFQjMWxETUwHzyrWIbv6xr3ZuqfaiPwukmOBWBcJoIb7SDq138Z7ZjQlgKaCKnVE
-    wNuBrb7pSBXbIQ6piyrVbJ1Mw1L9snO8qnh5tUE71ZWyWFqWf3bKprdLNYb9qr6JpHPa
-    zB3lNb3ArQaR/Fe6weKfCfNVV2OACrRwigMEVGinHt/3xaoibYzIHUMr+zBmbrGFlhyU
-    9rDQvW7HU94/jWCuWu9bXiQU+gMrwz+1ylMrVb/Vv3IBX0hFX2XGigUIBITSxZN/Lic8
-    8rUxaPgb2ivDs7E3WnWRUS11l6lOF1lkrKz0G4Dn8EQSxwNAS1+Xnu02W2YJUusVgGY6
-    Y+7w==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1761513920;
-    s=strato-dkim-0002; d=strato.com;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=mrU0erB8pwfCgZC6OHlvwB1oUwIjc0ONNFVjGNrnK14=;
-    b=VUN7sTZYiNBtV0MDZK6LHVhAso2Lvj5chLkfVWCqvlSvAq0QgGyLhUmq+eXo7feuGX
-    ZB3N9KkQ8+UEg3HSDpZYWP22grNv1KhXxNtxiPfX3cCOWs5pvt93r219byIl5zHbnMwo
-    a5nWbmh9xCDIeBLnz6YmYZdJRvj3WhVkarVJoLlLvJSCIsNRsS2ICuEeWoKVpQTCNKcw
-    2xoTbQT5L6e1YtUnDRebQlBQJC6g48wbinonF2/N9+GE2L6yI2ovxWw96LjK1jivtC2z
-    pQbtyxYFHY6YYwyv8g7oTM0IwWcyxXPYABedHHCpgSLH111TSRHnz4PgpDjZYG6Zp07e
-    9GlQ==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo01
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1761513920;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
-    bh=mrU0erB8pwfCgZC6OHlvwB1oUwIjc0ONNFVjGNrnK14=;
-    b=ba4eCyp0lp54NjDcO2gr3OrBq6RCGWfKlXDCEoFjTUk4GlHcP2cXxvuJYV+6/s/qIt
-    +aKE4W+IBbUt8LBhqhhlbYYsK/AVOAABf3t/geQg0CabPMpAsImjhkXkT1HZ2tmkefGR
-    I8TM+I43E4Y9JGwwAy3PdimDmaV4uTP3jKI14AFrFjz0N1DmZHp2Gem7KbluJW9PdDo8
-    9NPinomMAMbAu+xixYG9NcqA9h8OahajqNgZvnM6GYyadJ/dnz/G4Yn/EeIDdLxybz8y
-    KCJESlb8iqbRPgDf0ZfB054Mv18dAYnHw3UL5MNT7SOF6giBM0o0GjwlEBRqriH9rMjO
-    yGHw==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O256fJ4HnWXON1RCk6IvFzzg3pKYIOBA3pK3/fXp3o2O7xeGwra8="
-Received: from Munilab01-lab.speedport.ip
-    by smtp.strato.de (RZmta 53.4.2 AUTH)
-    with ESMTPSA id z293fb19QLPJSOy
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Sun, 26 Oct 2025 22:25:19 +0100 (CET)
-From: Bean Huo <beanhuo@iokpp.de>
-To: avri.altman@wdc.com,
-	avri.altman@sandisk.com,
-	bvanassche@acm.org,
-	alim.akhtar@samsung.com,
-	jejb@linux.ibm.com,
-	martin.petersen@oracle.com,
-	can.guo@oss.qualcomm.com,
-	ulf.hansson@linaro.org,
-	beanhuo@micron.com,
-	jens.wiklander@linaro.org
-Cc: linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Bean Huo <beanhuo@iokpp.de>
-Subject: [PATCH v6 0/3] Add OP-TEE based RPMB driver for UFS devices
-Date: Sun, 26 Oct 2025 22:25:03 +0100
-Message-Id: <20251026212506.4136610-1-beanhuo@iokpp.de>
-X-Mailer: git-send-email 2.34.1
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X55sznBA"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 49624C4CEE7;
+	Sun, 26 Oct 2025 22:25:47 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761517552;
+	bh=YcfVCtLK/W1LvoMvGvygXNzNh0vRWUm1hNpESZXkvZk=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=X55sznBAWggJ/HDGIZ6dcBSXLmlm8wZtp4v11We2/RanthjNuuSqrLXxB3D6+dJjG
+	 KWLdA/u217zShuCi99Na37WPbV+mGEk3vLOm7l2lwkobjD01Ue0VTeVaSkehFWCkFY
+	 VIsVUB+J5nn8qynVBOGW4T94+24+ocYVV67OfpVpp8MZvBE9yBuq90LCEBwr8dCLPS
+	 54mHUndnVBWYO4DsnbhAUNwGBuMydDoQLLoD/wxo//W+p4+51f+YoNswBdb0VumVAz
+	 faYPxFUmixtcIAAjpcJMrs7xJr5oYeDft/J4naku8wTQTYHiSwYYy3gBXnRTXFElR6
+	 3f/UL93sKp2tQ==
+Date: Sun, 26 Oct 2025 22:25:44 +0000
+From: Conor Dooley <conor@kernel.org>
+To: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
+Cc: Alim Akhtar <alim.akhtar@samsung.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bart Van Assche <bvanassche@acm.org>, Rob Herring <robh@kernel.org>,
+	Krzysztof Kozlowski <krzk+dt@kernel.org>,
+	Conor Dooley <conor+dt@kernel.org>,
+	Matthias Brugger <matthias.bgg@gmail.com>,
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+	Chunfeng Yun <chunfeng.yun@mediatek.com>,
+	Vinod Koul <vkoul@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Philipp Zabel <p.zabel@pengutronix.de>,
+	Liam Girdwood <lgirdwood@gmail.com>,
+	Mark Brown <broonie@kernel.org>,
+	Louis-Alexis Eyraud <louisalexis.eyraud@collabora.com>,
+	kernel@collabora.com, linux-scsi@vger.kernel.org,
+	devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+	linux-arm-kernel@lists.infradead.org,
+	linux-mediatek@lists.infradead.org, linux-phy@lists.infradead.org
+Subject: Re: [PATCH v3 03/24] dt-bindings: ufs: mediatek,ufs: Add mt8196
+ variant
+Message-ID: <20251026-these-wise-9b5e63c78907@spud>
+References: <20251023-mt8196-ufs-v3-0-0f04b4a795ff@collabora.com>
+ <20251023-mt8196-ufs-v3-3-0f04b4a795ff@collabora.com>
+ <20251024-thrash-amid-d5af186c4319@spud>
+ <5617400.31r3eYUQgx@workhorse>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain; charset="us-ascii"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="LhPY1uIXOXYzwQC0"
+Content-Disposition: inline
+In-Reply-To: <5617400.31r3eYUQgx@workhorse>
 
 
-This patch series introduces OP-TEE based RPMB (Replay Protected Memory Block)
-support for UFS devices, extending the kernel-level secure storage capabilities
-that are currently available for eMMC devices.
+--LhPY1uIXOXYzwQC0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-Previously, OP-TEE required a userspace supplicant to access RPMB partitions,
-which created complex dependencies and reliability issues, especially during
-early boot scenarios. Recent work by Linaro has moved core supplicant
-functionality directly into the Linux kernel for eMMC devices, eliminating
-userspace dependencies and enabling immediate secure storage access. This series
-extends the same approach to UFS devices, which are used in enterprise and mobile
-applications that require secure storage capabilities.
+On Fri, Oct 24, 2025 at 07:51:11PM +0200, Nicolas Frattaroli wrote:
+> On Friday, 24 October 2025 19:13:36 Central European Summer Time Conor Do=
+oley wrote:
+> > On Thu, Oct 23, 2025 at 09:49:21PM +0200, Nicolas Frattaroli wrote:
+> >=20
+> > >      };
+> > > +  - |
+> > > +    #include <dt-bindings/reset/mediatek,mt8196-resets.h>
+> > > +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> > > +
+> > > +    ufshci@16810000 {
+> > > +        compatible =3D "mediatek,mt8196-ufshci";
+> > > +        reg =3D <0x16810000 0x2a00>;
+> > > +        interrupts =3D <GIC_SPI 320 IRQ_TYPE_LEVEL_HIGH>;
+> > > +
+> > > +        clocks =3D <&ufs_ao_clk 6>,
+> > > +                 <&ufs_ao_clk 7>,
+> > > +                 <&clk26m>,
+> > > +                 <&ufs_ao_clk 3>,
+> > > +                 <&clk26m>,
+> > > +                 <&ufs_ao_clk 4>,
+> > > +                 <&ufs_ao_clk 0>,
+> > > +                 <&topckgen 7>,
+> > > +                 <&topckgen 41>,
+> > > +                 <&topckgen 105>,
+> > > +                 <&topckgen 83>,
+> > > +                 <&ufs_ao_clk 1>,
+> > > +                 <&ufs_ao_clk 2>,
+> > > +                 <&topckgen 42>,
+> > > +                 <&topckgen 84>,
+> > > +                 <&topckgen 102>;
+> >=20
+> > This is absolutely a nitpick thing, but if you end up resubmitting, can
+> > you pick a consistent format between the two examples your series adds
+> > for the clocks/clock names?
+>=20
+> No problem, will do. IIRC I kept them as a list like this so I could
+> easily reorder things, but now that I'm fairly sure this order is the
+> correct one, it's probably best to make this more compact.
+>=20
+> Also sorry for the numbers as clock IDs, but MediaTek clock headers
+> have conflicting symbols and the dt schema example extractor dumps
+> all examples into one dts file. :(
 
-Benefits:
-- Eliminates dependency on userspace supplicant for UFS RPMB access
-- Enables early boot secure storage access (e.g., fTPM, secure UEFI variables)
-- Provides kernel-level RPMB access as soon as UFS driver is initialized
-- Removes complex initramfs dependencies and boot ordering requirements
-- Ensures reliable and deterministic secure storage operations
-- Supports both built-in and modular fTPM configurations.
+Numbers is fine, dw about that.
 
+> Since this has bugged me in the past, and many schemas may rely on
+> the concat behaviour now: would a patch in the distant future that
+> prefixes all MediaTek clock binding headers with the SoC name be
+> acceptable if it keeps the old names intact as aliases to them with
+> a #ifndef guard?
 
-v5 -- v6:
-      1. Added a comment in ufshcd_create_device_id() to warn against modifying the
-        device ID format without understanding its impact.
+Honestly, I don't think it's that big of a deal to use the numbers,
+they're only examples after all (even if for soc-peripherals they're
+almost always exactly what is used in reality).
 
-v4 -- v5:
-      1. Added helper function ufshcd_create_device_id() to generate unique device
-      	 identifier by combining manufacturer ID, specification version, model name,
-	 serial number (as hex), device version, and manufacture date.
-      2. Added device_id field to struct ufs_dev_info for storing allocated unique device
-      	 identifier string.
-      3. Modified UFS RPMB driver to use device_id instead of just serial_number for creating
-         unique RPMB device identifiers
-v3 -- v4:
-    1. Replaced patch "scsi: ufs: core: Remove duplicate macro definitions" with
-       "scsi: ufs: core: Convert string descriptor format macros to enum" based on
-       feedback from Bart Van Assche
-    2. Converted SD_ASCII_STD and SD_RAW from boolean macros to enum type for
-       improved code readability
-    3. Moved ufshcd_read_string_desc() declaration from include/ufs/ufshcd.h to
-       drivers/ufs/core/ufshcd-priv.h since it's not exported
+What you do with aliases is really up to the mediatek platform
+maintainers, but I think if it were my platform I would just not bother.
 
-v2 -- v3:
-    1. Removed patch "rpmb: move rpmb_frame struct and constants to common header". since it
-       has been queued in mmc tree, and added a new patch:
-       "scsi: ufs: core: Remove duplicate macro definitions"
-    2. Incorporated suggestions from Jens
-    3. Added check if Advanced RPMB is enabled, if enabled we will not register UFS OP-TEE RPMB.
+> I should also think about some way we can avoid similar bindings
+> symbol naming mishaps in the future.
+>=20
+> Thank you for pointing me in the right direction with regards to
+> the binding!
+>=20
+> Kind regards,
+> Nicolas Frattaroli
+>=20
+> > Reviewed-by: Conor Dooley <conor.dooley@microchip.com>
+> > pw-bot: not-applicable
 
-v1 -- v2:
-    1. Added fix tag for patch [2/3]
-    2. Incorporated feedback and suggestions from Bart
+--LhPY1uIXOXYzwQC0
+Content-Type: application/pgp-signature; name="signature.asc"
 
-RFC v1 -- v1:
-    1. Added support for all UFS RPMB regions based on https://github.com/OP-TEE/optee_os/issues/7532
-    2. Incorporated feedback and suggestions from Bart
+-----BEGIN PGP SIGNATURE-----
 
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaP6f6AAKCRB4tDGHoIJi
+0lVoAQDVEcmFlZDGe0sLSSI/vhJc1fCDdip8vWj9q3rZ4BUI+gEAyI4wOcjukunf
+BlHSEe6kYAuozj/qCFBWrR+C47CjOwk=
+=xrOe
+-----END PGP SIGNATURE-----
 
-Bean Huo (3):
-  scsi: ufs: core: Convert string descriptor format macros to enum
-  scsi: ufs: core: fix incorrect buffer duplication in
-    ufshcd_read_string_desc()
-  scsi: ufs: core: Add OP-TEE based RPMB driver for UFS devices
-
- drivers/misc/Kconfig           |   2 +-
- drivers/ufs/core/Makefile      |   1 +
- drivers/ufs/core/ufs-rpmb.c    | 254 +++++++++++++++++++++++++++++++++
- drivers/ufs/core/ufshcd-priv.h |  27 +++-
- drivers/ufs/core/ufshcd.c      |  96 +++++++++++--
- include/ufs/ufs.h              |   5 +
- include/ufs/ufshcd.h           |  12 +-
- 7 files changed, 376 insertions(+), 21 deletions(-)
- create mode 100644 drivers/ufs/core/ufs-rpmb.c
-
--- 
-2.34.1
-
+--LhPY1uIXOXYzwQC0--
