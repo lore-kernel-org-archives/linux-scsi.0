@@ -1,65 +1,72 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A155523EAA5;
-	Mon, 27 Oct 2025 20:28:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CB77D2D7DDA
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 21:52:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761596930; cv=none; b=LhwoonGXrl4eZKb+vBCG93SLmMhBs3xnCGepM23c0zxsCetjMgnHJXv/KgkCz73fG57NLSBd4+yWxSemhl6bIModpm3zSGrRJUw3qrXIlXX+Zli28fuHtz5jmI3NT0BfyuT88Mhy26UhboZlyQsJ59RxpwKt1d9rSfFDmAm8pXg=
+	t=1761601956; cv=none; b=lHn4UkHLWDivY6n9U5ntdSflt1WFMMPyS3BrvJlOAIhvdNxCS5qbC4eqUfv4YdpwrG6t3dCJghIh2VqzjAoh9nw61JmXaA1Wr1NoZBix5Hl5raWiqxoLJPOIoOP2MWY+NfTFT2F0e8SEy3r3Y+bTAMd0djMgi4Ytn4PXuG19KoM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761596930; c=relaxed/simple;
-	bh=PIMjobSMlnX1DCR6T/tU4HAOJpgVI33ffR2DR/yz+Cg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZYg4yetX2jm395uuFzbT+zO+75+kB5KnqPMlbEayhHSj+LJ2ZCJtzEW0Ptku8SuQSon71lxArNIZvpQQRs+d8mAJWColz5fFZzmydEh3RggHbkz1NH33iYE2PVVo6Rt9gulibhhWo39Do6bSW1mRSLZ4VqTyPeEBz1GicFGV78k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=nvjYvQZv; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761601956; c=relaxed/simple;
+	bh=yBGs8A7nKDxEp/ISey5KXq9Q4Aw54kdhhkREobKLJz0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=kzn5gCjMfKKOvPtx32mb/mgl7v4wUlzPLQFNEZahPRmTKXTS4Iz/FgN5qes/+2tzcbLLVlbzoj3MDNJpWx/cuZnhWAa9Z2g3RtVey4U74xH1vl2ZG38TQXCGCP6x0TOFblJD8dbHGl0AQDjSfyuBXeos4BjRu+1OuDrb4Ic+Rvw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=XrojugKy; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="nvjYvQZv"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id EDDEFC4CEF1;
-	Mon, 27 Oct 2025 20:28:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761596930;
-	bh=PIMjobSMlnX1DCR6T/tU4HAOJpgVI33ffR2DR/yz+Cg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=nvjYvQZvImJOQx4rKJFEQoAepE7BE7upanKfTCAseh3KYqvxQjZ3aFI8ZRXay/wSn
-	 9TM+4W0cn7/aLKqXQnEJM9GUjzLv0DvUPb4oNjfhIFWUZFLyg1ZLgNuOfJqBr8xtLP
-	 Ldthw0eLxGaTWHZhAANpoJBCWhTUsesySc5lSuLiwkv1Qo06DGIfjlReEggc62COvh
-	 sMHC2KhiIxp/4bjA3T7jxHGGYkcGhGSDx1QMNGy9+97jjeaQJBxoHUzWxUr402hnan
-	 Ev2EaJk+xGVeW23ldFSMZ67VzTx23Z39SAmp5wU29iFhjA1m8+kPw17HqqU/2turrL
-	 gJGeIDmoQ3LiA==
-Date: Mon, 27 Oct 2025 15:28:48 -0500
-From: "Rob Herring (Arm)" <robh@kernel.org>
-To: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Cc: Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>, devicetree@vger.kernel.org,
-	Avri Altman <avri.altman@wdc.com>, linux-arm-msm@vger.kernel.org,
-	Alim Akhtar <alim.akhtar@samsung.com>, linux-kernel@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>, linux-scsi@vger.kernel.org,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Andy Gross <agross@kernel.org>
-Subject: Re: [PATCH] dt-bindings: ufs: qcom: Drop redundant "reg" constraints
-Message-ID: <176159691507.1523859.10365609457145821149.robh@kernel.org>
-References: <20251027113107.75835-2-krzysztof.kozlowski@linaro.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="XrojugKy"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cwS0d5JjJzlvX7x;
+	Mon, 27 Oct 2025 21:52:33 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1761601952; x=1764193953; bh=yBGs8A7nKDxEp/ISey5KXq9Q
+	4Aw54kdhhkREobKLJz0=; b=XrojugKyCIz7hZCylFTnRYiIZcHH+dYc/xJYHnlL
+	DNxlbnP+dSb28fQvIAHY36GlUpaOMubW/tNwkU8338E1Y3Cgfr/uIUeG3VNyFR9S
+	D+8DfC2IGfzy113Rnb84J7C+nra8Z7PktARollldYZ2tX9fNw5d6ZgPjl2v3jQXf
+	f8Sjve64mXdtQImIasMwqyxSA7DSnFvyXvuNiWwooHE3I5QnDP9j187Xr/MrRdVg
+	zs+nCmVwIXJvp+G+Ad0haa3lH8PXvV9GfIYFA4glEZ+ojXBcyeX/K9hqngbdmFpr
+	YvvvN50QUxcbPpX8V+Z8+Zoq+FG6ysho+7rx6su7MrTaLA==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id i8qv3MPxql6g; Mon, 27 Oct 2025 21:52:32 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cwS0W30fzzlgqVf;
+	Mon, 27 Oct 2025 21:52:26 +0000 (UTC)
+Message-ID: <ff49b522-273b-464a-99cd-34fed378f4e6@acm.org>
+Date: Mon, 27 Oct 2025 14:52:25 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251027113107.75835-2-krzysztof.kozlowski@linaro.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH V2 0/4] scsi: ufs: PM fixes Intel host controllers
+To: Adrian Hunter <adrian.hunter@intel.com>,
+ Martin K Petersen <martin.petersen@oracle.com>
+Cc: James EJ Bottomley <James.Bottomley@HansenPartnership.com>,
+ Alim Akhtar <alim.akhtar@samsung.com>, Avri Altman <avri.altman@wdc.com>,
+ linux-scsi@vger.kernel.org
+References: <20251024085918.31825-1-adrian.hunter@intel.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20251024085918.31825-1-adrian.hunter@intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
+On 10/24/25 1:59 AM, Adrian Hunter wrote:
+> Here are fixes related to power management on Intel host controllers,
+> primarily ones based on Intel Alder Lake.
 
-On Mon, 27 Oct 2025 12:31:08 +0100, Krzysztof Kozlowski wrote:
-> The "reg" in top-level has maxItems:2, thus repeating this in "if:then:"
-> blocks is redundant.  Similarly number of items cannot be less than 1.
-> 
-> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-> ---
->  Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 3 ---
->  1 file changed, 3 deletions(-)
-> 
+For the series:
 
-Acked-by: Rob Herring (Arm) <robh@kernel.org>
-
+Reviewed-by: Bart Van Assche <bvanassche@acm.org>
