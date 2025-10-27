@@ -1,129 +1,152 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 02FFF1FBC91
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 18:47:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4E15C2D739A
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 20:23:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761590825; cv=none; b=hksKoy2SWu509XVRuHVo46BX9Wp4tJKO1FS7fDH0G4IPXvb+iiF8zxKENiuz4bv4jCZ1KbT1Bp1yqMqxfWSBAIA4PHzg1+2pgZFGf8TnpyqEBButoQXEAvuK88TETHuNkFOsQ25bPdSTBglr5ZOQdXKN+qKp5VmqPt/guxpijrk=
+	t=1761596630; cv=none; b=YGokCUkd1UpjMfuwZFh3SmBuzDRIFxnh6lX4hw3nj0u5Uzecv2ZA6kchQsiE0LkAEW+RBWtER8fFKuwOrebO47O4txKQCFHr6XHGQ28DbSAsyQnkbH/vmlUJf4LiuGPQ3fdKawL1l6/FKlFlAISeebhuJr8HmSShCUmZrQqApXA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761590825; c=relaxed/simple;
-	bh=ZrTSzKx4GpuadY2GmRsG8Io4R+dmUy4YqX8fWgHp+k8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LiFGN5kN5wIHa8gALXwajdTY89TFBXmMehjH2iVmqqHMCqHLnZIpS+4FtvYnC6UateNE4ygzxFmPui7u+UvxVseVcU2yGrcpLGQ65w5ynoS8K7wnCuM1PNePuhvZyeLn7vGrX+r3q0/3l5L+hUsGediBLEEhcF/0AKlj+yOjVG4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FVsxBO4V; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1761596630; c=relaxed/simple;
+	bh=eNQEDqw7OjskM94an5ecGHYPY0xA4Ir2dTEeEri0xOw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=PsmoB1wNo+BUrHKXQUmLgjdHN388dii1qKw/1Lj0RopLL05QrO6n7zmwZ59v/mnmOWcsGl+emhTryVSe3zjNhG+T/oSkxuQXLDC2SAU8G/YQGf74il24pyAEzXDuzVCLN8s/DV0VDS2RSATG4gl00VQgmyNcXFtybZClvowCntw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=EtKYBrZm; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FVsxBO4V"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cwMtX5lX1zlgqyM;
-	Mon, 27 Oct 2025 18:47:00 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1761590819; x=1764182820; bh=LHaqY
-	LAIJY7keO9DnL4vu9Z/FmerXaz5HkTCxeUkmJo=; b=FVsxBO4Vs6AE/sARrwzSl
-	C0lp4pssZkhbAEIp/CKLj3hUnbh4InMrKy37tw788eQLjQUJ/LRaq2K/mBglxaWM
-	yGi4Bht/K7TapYDvXGY5xe3MNmma8RFJxFZ/5Py8FoWclLbGaVwmUMH/yleC42jv
-	gMfPUDd4RmXxj/SWjQUlHbIKmnQvMz+QNhDFLvHib9OO0Gi5CxphOxYRUrKFcG12
-	jovbKLfcXLuM9SLmJRcXiXGQI2UWwsMSnsPn62gw4qDZebv+O/ZzDMydTIFYvBff
-	V1mH3aqPXj7QnVbqKmEno/fMDH+GbZISTVkLb+1cbZLmjOgqBmXUrdTvtggvkrWN
-	w==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id EiSfQQbGdwhL; Mon, 27 Oct 2025 18:46:59 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cwMtV1Vh1zlgrtT;
-	Mon, 27 Oct 2025 18:46:57 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH 2/2] scsi: target: Simplify target_lu_gp_members_show()
-Date: Mon, 27 Oct 2025 11:46:39 -0700
-Message-ID: <20251027184639.3501254-3-bvanassche@acm.org>
-X-Mailer: git-send-email 2.51.1.838.g19442a804e-goog
-In-Reply-To: <20251027184639.3501254-1-bvanassche@acm.org>
-References: <20251027184639.3501254-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="EtKYBrZm"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id A68EF24002A
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 21:23:46 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1761596626; bh=RZnGNMkbjELii2SDbcECmppAdYrlJFmo47Ja93s+ljw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
+	b=EtKYBrZm9yLSk7HfUOFlPZdirfGqy+yVYZh1t4JrAsXH95Y7fn5BwF9US4z8dFUzX
+	 2NqZRTaBz/bvlLBAgLCoJ0cZO24sYfxhb6e+9SyhdO7GRDkJMi55B8Vpte5Lqw87yW
+	 e4pWIRsP/FPHFFGJM6773xIsFh/EMt5VwvHlLSnGIfwxzlOcfsHUyMySKuy/dt7bSR
+	 dXAr2FuBCY4xSTI7sB61lRd1qomARPwrFMIIlWnwwdmAk4pbi8SJOLJRGn7KdpURuW
+	 z96IahZ6pmlE5tHvC4rt6Qpfie1UdNovBhLpGtV1ey0Nh7YPOnGmdBTE28bmBkzcUk
+	 k/+l5PaNMVbag==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4cwQ293Hmdz9rxF;
+	Mon, 27 Oct 2025 21:23:45 +0100 (CET)
+From: Markus Probst <markus.probst@posteo.de>
+To: Damien Le Moal <dlemoal@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Markus Probst <markus.probst@posteo.de>
+Subject: [PATCH v5 0/3] Support power resources defined in acpi on ata
+Date: Mon, 27 Oct 2025 20:23:46 +0000
+Message-ID: <20251027202339.1043723-1-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1880; i=markus.probst@posteo.de; h=from:subject; bh=eNQEDqw7OjskM94an5ecGHYPY0xA4Ir2dTEeEri0xOw=; b=owEBbQKS/ZANAwAIATR2H/jnrUPSAcsmYgBo/9RUJMpoiwNSMZetUOHvqdaW55KtRIimwc+EY LKIHJ4K8WaJAjMEAAEIAB0WIQSCdBjE9KxY53IwxHM0dh/4561D0gUCaP/UVAAKCRA0dh/4561D 0uqBEACsmVJ+ByfXzmqnli7w9clQJ/562RPZDYTERk95FXI0SAN8K1F9KSv6LFe+Pmvqrz+/I1g qydZuXdOEUd5tHPW/NlgqPc4wSAzOcQISZUeiQMSaizFyLYA0Qw8WIm236TQl6T+/EA+bOZheQD Dmn1pLd4i5vNlk5fScv7lZs+se9mRsviUERerBc9AmiuCuLbIPMEo3zZeN1ZV77+h1sg0gXUYDM v7SvB/cXT0HxEAM24hAHHY0uAw+0bT4ENMoPfTK231a4w3GxIys0ernCY9+WrQHKQt+qHFvgPiy KQrOCU7Y47VDlBhdGOJ5Zfa8H2+YQULZzrqQRZpgYgP+nHpVpnVjOvQqwZbmQ5Zm+6C2hvP0I6X 5/MgWFbMkAKLmx3vXXtNNmikubFluHjjP84Rf8EJ/9W2ybn2mIlwPSL2l5d3PKUHpMQCInUpZ0l 5cfrEcdoSNHhASLbNOb+XdaNgWWPr/WUUpobZ3CtNfdjBlGBQ8eZiE5s3JDT7LCLCMtUNWBTLmx vBusBOFt/dagtznXhNJ6KzPvBhYQ3HkyxWPpDnN3JoP4a1h9tlNOrmYlWv/TqvGHNcP627qrRmd 2jWPPeyYEVhFA9LzZ3p0E63NfQTbfhpW91UO13o5/PI36hClJAcSUH/IGHChj+cmndks8vR4Wo6 KDCN9rAahSHC1mQ=
+ =
+X-Developer-Key: i=markus.probst@posteo.de; a=openpgp; fpr=827418C4F4AC58E77230C47334761FF8E7AD43D2
+Content-Transfer-Encoding: 8bit
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-Remove the stack buffer 'buf'. This patch does not modify the output
-produced by target_lu_gp_members_show().
+This series adds support for power resources defined in acpi on ata
+ports/devices. A device can define a power resource in an ata port/device,
+which then gets powered on right before the port is probed. This can be
+useful for devices, which have sata power connectors that are:
+  a: powered down by default
+  b: can be individually powered on
+like in some synology nas devices. If thats the case it will be assumed,
+that the power resource won't survive reboots and therefore the disk will
+be stopped.
 
-An example of the output that is produced with this patch applied:
+Changes since v4:
+- improved documentation
+- use false/true instead of 0/1
+- removed repeating code in ata_acpi_dev_manage_restart
+- split long lines
+- removed debug message
+- improved error message
 
-$ cat /sys/kernel/config/target/core/alua/lu_gps/default_lu_gp/members
-fileio_0/vdev0
-fileio_1/vdev1
-iblock_0/vdev2
-$ od -c /sys/kernel/config/target/core/alua/lu_gps/default_lu_gp/members
-0000000   f   i   l   e   i   o   _   0   /   v   d   e   v   0  \n   f
-0000020   i   l   e   i   o   _   1   /   v   d   e   v   1  \n   i   b
-0000040   l   o   c   k   _   0   /   v   d   e   v   2  \n
-0000055
+Changes since v3:
+- rename function from "ata_port_set_power_state"
+  to "ata_acpi_port_power_on" and remove enable argument
+- split "ata_acpi_port_power_on" and "ata_acpi_dev_manage_restart" into
+  two commits
+- improved commit messages
+- improved comments (style and new comments)
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/target/target_core_configfs.c | 22 +++++++---------------
- 1 file changed, 7 insertions(+), 15 deletions(-)
+Changes since v2:
+- improved commit messages
+- addressed warning from kernel test robot
 
-diff --git a/drivers/target/target_core_configfs.c b/drivers/target/targe=
-t_core_configfs.c
-index 1bd28482e7cb..3887825412e9 100644
---- a/drivers/target/target_core_configfs.c
-+++ b/drivers/target/target_core_configfs.c
-@@ -2758,32 +2758,24 @@ static ssize_t target_lu_gp_lu_gp_id_store(struct=
- config_item *item,
- static ssize_t target_lu_gp_members_show(struct config_item *item, char =
-*page)
- {
- 	struct t10_alua_lu_gp *lu_gp =3D to_lu_gp(item);
--	struct se_device *dev;
--	struct se_hba *hba;
- 	struct t10_alua_lu_gp_member *lu_gp_mem;
--	ssize_t len =3D 0, cur_len;
--	unsigned char buf[LU_GROUP_NAME_BUF] =3D { };
-+	const char *const end =3D page + PAGE_SIZE;
-+	char *cur =3D page;
-=20
- 	spin_lock(&lu_gp->lu_gp_lock);
- 	list_for_each_entry(lu_gp_mem, &lu_gp->lu_gp_mem_list, lu_gp_mem_list) =
-{
--		dev =3D lu_gp_mem->lu_gp_mem_dev;
--		hba =3D dev->se_hba;
-+		struct se_device *dev =3D lu_gp_mem->lu_gp_mem_dev;
-+		struct se_hba *hba =3D dev->se_hba;
-=20
--		cur_len =3D snprintf(buf, LU_GROUP_NAME_BUF, "%s/%s\n",
-+		cur +=3D scnprintf(cur, end - cur, "%s/%s\n",
- 			config_item_name(&hba->hba_group.cg_item),
- 			config_item_name(&dev->dev_group.cg_item));
--
--		if ((cur_len + len) > PAGE_SIZE || cur_len > LU_GROUP_NAME_BUF) {
--			pr_warn("Ran out of lu_gp_show_attr"
--				"_members buffer\n");
-+		if (WARN_ON_ONCE(cur >=3D end))
- 			break;
--		}
--		memcpy(page+len, buf, cur_len);
--		len +=3D cur_len;
- 	}
- 	spin_unlock(&lu_gp->lu_gp_lock);
-=20
--	return len;
-+	return cur - page;
- }
-=20
- CONFIGFS_ATTR(target_lu_gp_, lu_gp_id);
+Changes since v1:
+- improved commit messages
+- addressed style issues (too long lines and docs)
+- removed ata_dev_manage_restart() and ata_port_set_power_state()
+  methods
+- improved log messages in ata_acpi_port_set_power_state
+
+
+Markus Probst (3):
+  scsi: sd: Add manage_restart device attribute to scsi_disk
+  ata: stop disk on restart if ACPI power resources are found
+  ata: Use ACPI methods to power on disks
+
+ drivers/ata/libata-acpi.c  | 66 ++++++++++++++++++++++++++++++++++++++
+ drivers/ata/libata-core.c  |  2 ++
+ drivers/ata/libata-scsi.c  |  1 +
+ drivers/ata/libata.h       |  4 +++
+ drivers/scsi/sd.c          | 35 +++++++++++++++++++-
+ include/scsi/scsi_device.h |  6 ++++
+ 6 files changed, 113 insertions(+), 1 deletion(-)
+
+-- 
+2.51.0
+
