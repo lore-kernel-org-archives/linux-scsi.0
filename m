@@ -1,104 +1,74 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BBEA313E1C
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 15:48:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9E92C312819
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 16:37:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761580118; cv=none; b=CtzSm0TNHrogcHZ+40dv1Sfn8ZJAgZ3zcH0y0naRZg4RITUnVTtUhLnIXRVrx6T/zS/4FHlPa65W3AboivgLegkhPT7WZK726RA2SA18kpvLpXcafQco4K+FdSH6WzsD4AtId2vUxDDtPwiRF23Cai7u4eMwjgTzjMqRSity7KA=
+	t=1761583055; cv=none; b=lH6DaVl8c/3GdfI0to1h44A6wtoTCs3PV8w7kMcqjwOhKByHkzjIDPUZjWYiaPOYR4EQRbkoK1+4q3AbEOGgTyfCIcCo2iJm8GvKJicXmDnDJdVZhQZ1N6rSji+HGbUwXuWBkfWuYLY8zf/bWc+sN9KZqHOis/eiczv74DssTe4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761580118; c=relaxed/simple;
-	bh=Chs4uBLVNXkITLQIhrYMMQcLqrhnaxdWbv+XRWE2D58=;
-	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=qlSnpFLb6pNsoXBhnwEGj5J+fo6YM8/SUKBjICza6j6Q+aOTnO+MIzvhMWJfEQZTke1OYzJzmdRfUMohFG44qe65yty/nujvfOY0Sc+lwU1639nRJcnepdEIQ9Ug05g2CKT05dJX+pL0NZDAgDfna7Jg39f4RIuqKemLCnYxD5w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=hAJTgAyM; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761583055; c=relaxed/simple;
+	bh=UQpUt9sFf9nCAkotJ3hhnSNq+dzLwD6DK3hikC1nFrY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Ye6bnZtkhXr1E9xlgKa6mqZdZOb+TDgzv5kIVZlw1nd9fGpro0LO4k8cHudPMaMj9j6Cyofk4Q2+LHsa/W4ekzv+UMfZokJrWMah6+38ADrgGGbye7NM5NJ/lC0BWDmTNCivJiTIfDJDF8pI79oaOLDxo9/1Js6R3F1I1dwoFwc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=0cbHLdJb; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="hAJTgAyM"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 316ACC4CEFD
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 15:48:38 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761580118;
-	bh=Chs4uBLVNXkITLQIhrYMMQcLqrhnaxdWbv+XRWE2D58=;
-	h=From:To:Subject:Date:From;
-	b=hAJTgAyM88qTC0meMn+fPzJMqNjyQy4RBPFQwNF4X2wncPOhmwTs3FgIPFsYKUgHo
-	 A9xN4k/pXuJ/pxplQQcpQpMLMIAb3rjgRMJYbvSXvkKNvhPEP744OzKQnKBo9Og6Fq
-	 /cdTFebdeVd4+QwsPKjl2hlTlkSxGMLZPgiRLHH0jz/cn7Nd48adDa9YghdZeCFRZ8
-	 7xNTWo5y9pjpH6xMKRVKLxDrVPHY516IxYHrB/Ohht2yEgp1iyJCHt3prVaSiXrKU3
-	 Z/v+REsKxjI47frVd3uSrjARvipARpjVT92G5jnhBDIeK/AQBGDXRMq9QwfwrpUUD4
-	 vaPZ2Vh6F7r2A==
-Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
-	id 2AB38C433E1; Mon, 27 Oct 2025 15:48:38 +0000 (UTC)
-From: bugzilla-daemon@kernel.org
-To: linux-scsi@vger.kernel.org
-Subject: [Bug 220707] New: ESAS2R: missing a NULL check in
- esas2r_init_adapter
-Date: Mon, 27 Oct 2025 15:48:37 +0000
-X-Bugzilla-Reason: None
-X-Bugzilla-Type: new
-X-Bugzilla-Watch-Reason: AssignedTo scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Product: SCSI Drivers
-X-Bugzilla-Component: Other
-X-Bugzilla-Version: 2.5
-X-Bugzilla-Keywords: 
-X-Bugzilla-Severity: low
-X-Bugzilla-Who: qiushi.wu@ibm.com
-X-Bugzilla-Status: NEW
-X-Bugzilla-Resolution: 
-X-Bugzilla-Priority: P3
-X-Bugzilla-Assigned-To: scsi_drivers-other@kernel-bugs.osdl.org
-X-Bugzilla-Flags: 
-X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
- op_sys bug_status bug_severity priority component assigned_to reporter
- cf_regression
-Message-ID: <bug-220707-11613@https.bugzilla.kernel.org/>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-X-Bugzilla-URL: https://bugzilla.kernel.org/
-Auto-Submitted: auto-generated
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="0cbHLdJb"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cwK184YJvzm0yTt;
+	Mon, 27 Oct 2025 16:37:32 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1761583051; x=1764175052; bh=UQpUt9sFf9nCAkotJ3hhnSNq
+	+dzLwD6DK3hikC1nFrY=; b=0cbHLdJbh2LYndolETpSWxq5W+i4nOulwDuPZWQr
+	7LIMTz0aWeCRi39n6HmoBRLJp8jmg4JzKmd5+YwBu2JEHQjXWZOUcvYBf1f+pD3r
+	2DFngyorybNtrfQS8spYu98gb0dqQ8CWwppxRuahkKjKavGXhrLaAru4sV1SN9dC
+	E62Uwk35ux7+v9FF2zSXGsBJl3SAdKa0VywDnQhPAwIn6cz1P7MULWrwKwPUGZ1m
+	QtgF3kPOYibDbc8LiWO6XWasPDBNslr+jRfFNl3vQNhs2R5oweHGxnEnhFEcs7OQ
+	Ntf3NYPSjixnC5IP+IeUkcaYu0KwUl6Vf11GHM59xC0Ocg==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id L7g53Jh2lu3l; Mon, 27 Oct 2025 16:37:31 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cwK151g9Jzm0yVL;
+	Mon, 27 Oct 2025 16:37:28 +0000 (UTC)
+Message-ID: <8e3342b7-e8cc-44a4-a746-d35cb95613ce@acm.org>
+Date: Mon, 27 Oct 2025 09:37:27 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] scsi: pm: Drop unneeded call to
+ pm_runtime_mark_last_busy()
+To: nuno.sa@analog.com, linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+References: <20251027-scsi-pm-improv-v1-1-cb9f0bceb4be@analog.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20251027-scsi-pm-improv-v1-1-cb9f0bceb4be@analog.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-https://bugzilla.kernel.org/show_bug.cgi?id=3D220707
+On 10/27/25 8:20 AM, Nuno S=C3=A1 via B4 Relay wrote:
+> There's no need to explicitly call pm_runtime_mark_last_busy() since
+> pm_runtime_autosuspend() is now doing it.
 
-            Bug ID: 220707
-           Summary: ESAS2R: missing a NULL check in esas2r_init_adapter
-           Product: SCSI Drivers
-           Version: 2.5
-          Hardware: All
-                OS: Linux
-            Status: NEW
-          Severity: low
-          Priority: P3
-         Component: Other
-          Assignee: scsi_drivers-other@kernel-bugs.osdl.org
-          Reporter: qiushi.wu@ibm.com
-        Regression: No
+"now"? Please mention the commit that introduced this behavior change in
+the description of your patch.
 
-In esas2r/esas2r_init.c, function esas2r_init_adapter() allocates a workque=
-ue
-using alloc_ordered_workqueue() but does not verify whether the allocation
-succeeds. If the call fails and returns NULL, the returned pointer
-a->fw_event_q remains unchecked, which could later lead to a NULL-pointer
-dereference when the queue is used. This issue was found via static code
-analysis. No specific runtime reproducer is available, but the missing chec=
-k is
-evident in the source logic.
+Thanks,
 
-Code: ```a->fw_event_q =3D alloc_ordered_workqueue("esas2r/%d", WQ_MEM_RECL=
-AIM,
-a->index);```
-
-Also, at this allocation point, a->index is initialized to 0 (due to the
-earlier memset(a, 0, ...)) and has not yet been assigned the adapter index.=
- It
-might be worth confirming whether a->index was intentionally used here for
-naming or if the local index variable should be used instead.
-
---=20
-You may reply to this email to add a comment.
-
-You are receiving this mail because:
-You are watching the assignee of the bug.=
+Bart.
