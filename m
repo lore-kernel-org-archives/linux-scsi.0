@@ -1,71 +1,71 @@
-Received: from mail-pg1-f176.google.com (mail-pg1-f176.google.com [209.85.215.176])
+Received: from mail-pg1-f172.google.com (mail-pg1-f172.google.com [209.85.215.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 633CC2F1FDA
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 23:24:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D1656332EB5
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 23:24:26 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761607466; cv=none; b=YdcP+ZNFzxs3cFNXjerzrPJ31XZ3RprfdNzOWBOSP1xS92CZaCPqp0XB7PrXGSqXafY4abF8891cjLsMveDA0EYfhR1cTV1L/sZAhQqN2WWT4/MVyoTIEc1S5fznwIz6GuzdzfOcI1CpYjJTdlkAWVXrWu/ivbJa+GbJu432GBo=
+	t=1761607468; cv=none; b=pcORhRnsg5l3Ne9PhfwwZYqgEiH01xINOYGeh2g8RTmBxXi7xBoA8DTz6JaLCZu03Zhf82DnMquYJIA1BuiqdqmF47Dqhj+bYP0+KEwxwldYMs9AHleMOZJ0044jLc2uX7BXZgn7LQ4jxZ7Wk8vn5B0ys7sS7rt/TdrXaJrw+AQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761607466; c=relaxed/simple;
-	bh=p7X6MBPoflUqkFR7gWj31Wmxn4fz8Mi/PNGcug2X16A=;
+	s=arc-20240116; t=1761607468; c=relaxed/simple;
+	bh=3j45qOv9dOKnEPoGLBz2aPE3Q5ghWuddtCesY8bMY7I=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=bHOG86BT1dDh4pLAcQIzrd9q+sDfxr8Gzl9iME3TBWhs1qRH+vvA7t79z3U7fQA91psmUzVsPLkBz4Scu8uD+Yjerhc+47yMZC2Q4mcKbX0qXgWOFMArho/+wqhJ9Yl2/P+6ujnXR1FWPx17uUM4jXpEpuVh6hDZuszcHoVXpaI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=M+vLYCZR; arc=none smtp.client-ip=209.85.215.176
+	 MIME-Version:Content-Type; b=dcu0/DFo3khh1AmbxeL2Qvg/kguKKv5vM/8Ue9AZG4ioHjmAr0yRkx38ULK6wED2934gaIMkwvuPxzaJXNmYnOVsLWi8iDZYl9D6e9uvTTg3LANnYJL3YYywMFGb/VjAcTwT2wak5xyvTq3UPjECy7+dndHWhJ/R7zL23vSXWiw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NZ52F4m3; arc=none smtp.client-ip=209.85.215.172
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="M+vLYCZR"
-Received: by mail-pg1-f176.google.com with SMTP id 41be03b00d2f7-b67ae7e76abso4039271a12.3
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 16:24:25 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NZ52F4m3"
+Received: by mail-pg1-f172.google.com with SMTP id 41be03b00d2f7-b6a73db16efso5006584a12.3
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 16:24:26 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761607464; x=1762212264; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1761607466; x=1762212266; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=5mQrriS4SPQnQ17D+O73Qcb1oB2v7CEu1S7xgGU48BE=;
-        b=M+vLYCZRreRIIBmls1aaDk0ZXqITRyuZBxHrqz1vBQwgRmvDBDbQNr5YFn1SYb615k
-         c2e0vZ4LHqlm9nkvl46O5Wrz198JTNt7FpcqkIPbO4wIYZPEAY1bNM3WnnIpAQV5hWJW
-         GV2kXMdtY3McuzXzopRsHQLIlbEkSi83FLRSunuFk1u+/Xta4OVxz+5KsmDDK5gwQcAu
-         4L3y/5Rst+mQrQAZWWAxvDontI0W3dWVw4bzAW8oV2sRxnEHHqetyu+ol1cl2ysFn7rr
-         LilmATd5YWtpqaIbfFhT25XeTYcEVxT3SCA7aD6znNMOLBZzJony9FpeBGbTo19Kl94L
-         MNKw==
+        bh=lZv/S16cQGzKZl+7abSz9G0MT63mkGDYKPwu+Jq/R3A=;
+        b=NZ52F4m3SSvteM7ZynL0v9jgsRAEzYZicmABZKise7PpsWD+s9LjFrcoPbNy+O6oKK
+         EY4+bRdbTZ+xElWcywLDRGv6NZXbN8tjBCg75rbXN6LM4/HtpTIC+DJO2ifZt3U1z1z5
+         +sJq5KWc6mKeeAblJePillocNrdGrp2JfsRVKfSCrjJfDckTMxfVRRPE1oUm+QpChkaD
+         eLzLncQJ+8vhkebJVvOnlXikw571QvjtS0EeB6D8iZImhwh4bjrW4kKZ0+xgX1Z89GsQ
+         NhrAOuuN4Jb/mYREQN32PvCtQFENA5zJui4uQL5E/hjwNYd8oMEkLtM87cKZQCbBSne8
+         dKUA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761607464; x=1762212264;
+        d=1e100.net; s=20230601; t=1761607466; x=1762212266;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=5mQrriS4SPQnQ17D+O73Qcb1oB2v7CEu1S7xgGU48BE=;
-        b=Wt8DR2FgEqofU5gKL3buZg0TPot2zlec1olYmPBcXPgUTgVsKxIohJpuPhUohIDTLR
-         fMb2CYyniTaheh3scOaTceBkK0wIhrFa2XX2Hj28gBBwY7cKWV+NNntRCHgKPlB1VouL
-         o0GPlHop1m8M4PYc2UrpHJSZcevFOQwibXkw8yw8ON+76BKV5dO+/FywmUcW47n4XCZw
-         c9nUTHgG/r5wvErccb2tH23iSU7a5KeC1c1zNvrQdRdOj1+Cy6oGELHvsIkRtqkPVSyb
-         dZNVslGxGqMWThromwzIdRUfBVcf/iggegZ4rZbFwdfcOn4za48ieXI5M1ci+ph5QrT4
-         SH5A==
-X-Gm-Message-State: AOJu0YwnbNz294IW6SlyiwheOnltc/72WnVAQbvyex+MRIKI7K/HZynA
-	Qb0PnMvoAAI6apYxIUD/EICugnxiy2uf/mV83mmPOUrtCLRsqInBzDvDtDry/Q==
-X-Gm-Gg: ASbGncu8De5zxd3BtFF/kIZd/wxAvDw4xdFONn/XHxK+TzdTmOh69/Gv3nFI5aUHGFx
-	L8owmXDKBwH70/XvoK5DjDfnYCUmwpHX+bLkRMDl2vKjWuYILzBkmxpf7nb4B7ZNtAznCc9b7HV
-	3b6zUD0u8YZ/evaLYMU5/PLJjV8UVRWT/wR7GAqh9n3YAezsdrF52N9MS/ULnak4i02Xb/KLdNO
-	I6qnCrz47wX6NQ4U+pmLQyWQqV2n3/3LdWCFbSvgxTSi+1cFCMvZ3BBYXn3G+T7JCV54Q2xp1bV
-	fFkGC7oGUdjNeteVLZNN6qsX4f3kft31BtIf0FUplFlDoks9jMI/1pPFYQC7T2krv1pEdjK3Pvm
-	/UmrJzpwC/zoKB6QO+KbxwHyaxhhAkX4a0G82TX+SsGmn/PaR8Ak4qwxA/O5L2zqcL3lu1qqJoD
-	ZxDvy4zM6w79LqWpSQODixyRnk5O/HnC7bgQn1Q9uDaSyhlieYEYU36SlZFFmR
-X-Google-Smtp-Source: AGHT+IFr+4ye4FHIQU1ZHoazWNKzChA/hhBgi8K6GCusJX5QWO62GJz8sFH1wqoM2yjAVCo+37FqYw==
-X-Received: by 2002:a17:902:f602:b0:269:6e73:b90a with SMTP id d9443c01a7336-294cb379df4mr17122795ad.15.1761607464380;
-        Mon, 27 Oct 2025 16:24:24 -0700 (PDT)
+        bh=lZv/S16cQGzKZl+7abSz9G0MT63mkGDYKPwu+Jq/R3A=;
+        b=il+oSMJ1jkxXfeGxfOL7ABeqxSuf+WGyR+VaVlTwH5/PCoQaB1tCId/LCtzkMgAUK8
+         Y0aMntVfE68eQHNH3OLgZi1MmQpzhnaem2N8+B1dME2WNeUcuqN1wW4QJmuVoxBHyA9v
+         rxtR9tanZ+meHXcwZnc5PRt7QKxSafhb+T7myyOCI3Bsx6M+F/rFf3GMtXBOKxcmq+kc
+         AazvFPpe1HiAVL+DuVpbVIj+1ydpG3m667R7myH4KaUS7rYZH7tnWZp1B5mFl9jYj+4s
+         dOwXJb1/AW5Pjtkk/VV2lq/sBoGsak+lHjtqAQ1RH09oWH1G5QImtln8Bat42bcdLsMD
+         iSTg==
+X-Gm-Message-State: AOJu0YwZdMg0NzjYYLFatSQce0CVereNBMUupnKw+leZIz/BZEv2fhpR
+	AqinYWW+GVas054HDaE3bG9mJhSVHYd0sEEfpDjJIGAoyYbNdJsIFVPHKVM+fQ==
+X-Gm-Gg: ASbGnctVxFczibQACb9eSj7IMKMVazo3bRvQXdw6vUZSy/HY8TGhw/TY+jXkuu5eWEE
+	69o4cuOAzpdls2Bq39Y50dKEZR4xtbZuuPcu++wPeExol2L2aTxv5zobYAr6TJk16wfzPaislNv
+	dE0SjuV79w4p9xsTgUdJ2+k8vcRvCYp7bLdzg1ErN134hp6aaVl2v37PUKHpkkaeiqLdwD6Tz+v
+	H1rEdb1MooMc/BKdw5Hrha1aUei5QMcbG+tkYCDhOsUCFvr4iobjflmh+seHGkG/Gtj43gKQtLs
+	LfnUeaY0SPKUBYKbdKpUCgpWDdzmRL1N4eDWeShChCc8oxNi1JobNHXmfeqO1lf3DgvUgbjwwj3
+	F1SzRgFuRW8G9mnm94ZMm2ZdErIbERf4eGZ4z0LaTHksU6SpkRlTuaRdmh1ZeetpAIzyyZLpU44
+	4Lbvp9NwZfEuZ7BTAB/YFaR+Z0SfJmA32x29+InomMxu90dld+IM0nJaLu/r3Z/Ykrg63PAQU=
+X-Google-Smtp-Source: AGHT+IFoYGki/+d3ZL9VNqTv+AvjbLkVs2nKxbW0I29DyHsgjMLaj182VNPcAUeeAPYSt2Ge9afZZg==
+X-Received: by 2002:a17:903:2443:b0:272:f9c3:31f7 with SMTP id d9443c01a7336-294cb6747d9mr14212495ad.50.1761607465893;
+        Mon, 27 Oct 2025 16:24:25 -0700 (PDT)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29498e41159sm93805855ad.91.2025.10.27.16.24.23
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29498e41159sm93805855ad.91.2025.10.27.16.24.24
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Mon, 27 Oct 2025 16:24:23 -0700 (PDT)
+        Mon, 27 Oct 2025 16:24:25 -0700 (PDT)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH 10/11] lpfc: Update lpfc version to 14.4.0.12
-Date: Mon, 27 Oct 2025 16:54:45 -0700
-Message-Id: <20251027235446.77200-11-justintee8345@gmail.com>
+Subject: [PATCH 11/11] lpfc: Copyright updates for 14.4.0.12 patches
+Date: Mon, 27 Oct 2025 16:54:46 -0700
+Message-Id: <20251027235446.77200-12-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20251027235446.77200-1-justintee8345@gmail.com>
 References: <20251027235446.77200-1-justintee8345@gmail.com>
@@ -75,28 +75,29 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Update lpfc version to 14.4.0.12
+Update copyrights to 2025 for files modified in the 14.4.0.12 patch set.
 
 Signed-off-by: Justin Tee <justin.tee@broadcom.com>
 ---
- drivers/scsi/lpfc/lpfc_version.h | 2 +-
+ drivers/scsi/lpfc/lpfc_disc.h | 2 +-
  1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-index 31c3c5abdca6..f3dada5bf7c1 100644
---- a/drivers/scsi/lpfc/lpfc_version.h
-+++ b/drivers/scsi/lpfc/lpfc_version.h
-@@ -20,7 +20,7 @@
-  * included with this package.                                     *
-  *******************************************************************/
- 
--#define LPFC_DRIVER_VERSION "14.4.0.11"
-+#define LPFC_DRIVER_VERSION "14.4.0.12"
- #define LPFC_DRIVER_NAME		"lpfc"
- 
- /* Used for SLI 2/3 */
+diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
+index 511aae481b77..51cb8571c049 100644
+--- a/drivers/scsi/lpfc/lpfc_disc.h
++++ b/drivers/scsi/lpfc/lpfc_disc.h
+@@ -1,7 +1,7 @@
+ /*******************************************************************
+  * This file is part of the Emulex Linux Device Driver for         *
+  * Fibre Channel Host Bus Adapters.                                *
+- * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
++ * Copyright (C) 2017-2025 Broadcom. All Rights Reserved. The term *
+  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
+  * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
+  * EMULEX and SLI are trademarks of Emulex.                        *
 -- 
 2.38.0
 
