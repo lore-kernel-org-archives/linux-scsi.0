@@ -1,121 +1,95 @@
-Received: from mail-oa1-f49.google.com (mail-oa1-f49.google.com [209.85.160.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3CFFC307ACA
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 14:06:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.160.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84B68302143
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 15:20:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761574014; cv=none; b=oBJe0F5ZqDziwJvWl/oPoeqg8gBKU6j0tsP8XHihO6Xqe+1Vpdhg7sqJLVaCWZjkBuWMpM2iPRvcQc+xiil1s0MZZ+EpcG0yvXuEUynGr7sz3VXAamxrS/KO/DLgcTnhCAnaxvn2AEp7b9bpOS8608kaeOVsg0gnBaD9kxZjzAQ=
+	t=1761578416; cv=none; b=vDAFMD0wu5qQ4YANJUx2tasfG1CLKE3AfB3aijLcNKttMlIK6DeXpYQlKFxJTLhiEsDsG+aMqs1NFQ/wLqgkNULOukN+cGMLndBjNktL00m45vHZCDGivj541zbWn8GjqCIJLc9HLPNDFXJWq386egQgQvdo4vUz4CphNtZJkb4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761574014; c=relaxed/simple;
-	bh=mGpnJ8Zatagid1o46VtMyYyzDftlYXwZZWFv5gy4pOM=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=TM0Hlv5CZPZbih1cZXKyuY5sHArDGgt4HHvbKrPb5xArz1+236TDy7paefhOMiq4TAPCNArI53k3t3DA7h/wJlX3E26zNO/Zn0WofYf4aSQthFZmyKfRILvtowHW56fO02AfoW89UnJ5XsTPNIZwELvv4XnsH7TfimxcY6q2vLA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=XZqC8vx9; arc=none smtp.client-ip=209.85.160.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1761578416; c=relaxed/simple;
+	bh=LZSrzKJC1sBVQuoK1/CZSuQG4+Mpj4gqGa4U8w5nW9E=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=M2pwNiiC0hynqd1jz4eLkamhrDMpyyCMP/s2fDBj5y/gQzfuzT98qYzdkZRGDjAApr/8aqycdKwSXekMTA85ofvQ+DpIHP/zFnXoA3USLXE6O4qSTKTa3FGYK99TqNj833vN5Lij3Arnv1izit8RoZVVuUQx1M9dCaeJykjA45A=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WKQM9EQ4; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="XZqC8vx9"
-Received: by mail-oa1-f49.google.com with SMTP id 586e51a60fabf-3d3ed0c9f49so267799fac.3
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 07:06:52 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1761574011; x=1762178811; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=hcHFXH+EoA08X3H5hkxtTOckFH1gy0nI4Gd28dcR1d0=;
-        b=XZqC8vx9usz9Og+C2Rbc/LRLAy5ZcPlS36U7hIcH6wPsTih/+VQabij369jNyLnDhZ
-         18LBY75IstPmyR5306olVWydddPjDqgBm0gYK1/f2aSuR5zctKKVXODHASBsHnhFs8ec
-         ZuURCjQsM70LLByvxZ3XjXyyfl3MV7TGDJR3wDOqz/CPhR5JVQPLvWeksMi76LOGGL/Z
-         uOoPmwRHKH6jC9rsSORUnYVOPU9RP8thiY3CSbKmhwBxnjDehWa0Y7GBuHVlAc1A2PfW
-         Fh8e0QmLAFNVz7rSixEl+uK79GZ/5krYc5ywooWkKQ6tzwSMez2rn0775w7YIfFc+k4j
-         so6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761574011; x=1762178811;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=hcHFXH+EoA08X3H5hkxtTOckFH1gy0nI4Gd28dcR1d0=;
-        b=OfFFkOpq3cBY7l6d/bOuMZXfQMfvu9BSzJYbD+7owchPYOgb0tYvWvjyl0uka6DRNo
-         RZhodb1ts36G5gyh5mE3v1PHWs2+w85hA1cVTks8lVS9GmeEE989etGGd4jwc7qmtxp8
-         I2ktSaB7RGE08VvY1NuDoQ41cVEUlrPt9EEUx+SJsC5q7fQlPG6TqJGLlzo2RSjupzHS
-         PzwmVlUhjJ/F9zuHiXQ4fbBddfp45MUlVdzsgu9oJx7idoaC+3brpYpoJO7m3V4fd0xh
-         jvdmRU/uexqUfWrRLNldo6hVqT7cCsv1DQN+0iV+7zBJJaVJHf/IwiGthtCFUoFiqyR5
-         fG3w==
-X-Forwarded-Encrypted: i=1; AJvYcCVk3pmsH8bjZw3FpoJKiWGdQmPiLzrV/KSGLtYUIHAARecRglqfvzcBqAJ0CS6t5YCTaCFzFEVdNhPu@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywm5ttZ/a8T31yXA6OCWGW+RqeauBUPIJlvOeC3yhFB5HV5h0qQ
-	nZgoDXejSx53F546vFsSoIvF9iuwbXUh6GQosbnLDjwM8LPqzpKEbudk3JdpGnNdptYbexs8BUi
-	MvJw3Jvl+ydVASlT/TxZhe1CXh51/BdfSRDF/9aXpsg==
-X-Gm-Gg: ASbGncvg/njohtKCy227i+6vWkWkyONtN61qoTv2iKg3qpKYbN5dHUb+T+MXC4gcAtm
-	J+WNHdHiEm0GKikUJ38FGgf0Iwm1n+ea+ZzZ2aSusNf6nReBlRlXMqHMlI85028lLlsstblApoK
-	1niW+QgpRJKh4ItT9NQ9yOwiKDgn5AzWw1Yr2vlGatiJffHZ9u5IuKFgSKnulC/ad+hykpjK4zo
-	wEI0FGpgUpeHpssHkTMurj+Jnxg5osDHychyD1dwFgHLMyDARwyDLfEAgI=
-X-Google-Smtp-Source: AGHT+IGyrwZiHMK+6RM41C47H7rVurhrVEco1pO7jyYc7h2XpfECj2aLp7DXtWtyefG7vr8w57fJWfOso9mUAJM3434=
-X-Received: by 2002:a05:6870:b28e:b0:3d3:4338:bbab with SMTP id
- 586e51a60fabf-3d3433949e0mr2423049fac.18.1761574010664; Mon, 27 Oct 2025
- 07:06:50 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WKQM9EQ4"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 2737FC113D0;
+	Mon, 27 Oct 2025 15:20:16 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1761578416;
+	bh=LZSrzKJC1sBVQuoK1/CZSuQG4+Mpj4gqGa4U8w5nW9E=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=WKQM9EQ46R+H/FP9lkiqgJI/dFvqdqUlu13sqems7P3SemiNkBO+J6Y9P8Mihg2xU
+	 1oB/OTsBjukRf8Xth+XsD69u2iylBGsfBXEc0/vRuMQfd366b61167lD5TLkf07q2t
+	 fgqz7FGtnLykhXxb/OQJmZj99KpuOBhq/wJgX6NDQYvGZ2tgXHUrEfWpFgbGgKn83Y
+	 ypcD5+UpVd4z8tyoyzuEuyuWtt+YHGGVfM4vuDr5FPG3iA58zx0KpUN7OfvhCom29F
+	 Df8sdA/5AzoQIC8V5APV4uC1MUuhdQQA9EzzI2Nq6m93UPXSetN4BuNJvmxoTI6fjC
+	 +qtwE4K510iPA==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF5FCCF9EB;
+	Mon, 27 Oct 2025 15:20:16 +0000 (UTC)
+From: =?utf-8?q?Nuno_S=C3=A1_via_B4_Relay?= <devnull+nuno.sa.analog.com@kernel.org>
+Date: Mon, 27 Oct 2025 15:20:46 +0000
+Subject: [PATCH] scsi: pm: Drop unneeded call to
+ pm_runtime_mark_last_busy()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251026212506.4136610-1-beanhuo@iokpp.de> <20251026212506.4136610-4-beanhuo@iokpp.de>
-In-Reply-To: <20251026212506.4136610-4-beanhuo@iokpp.de>
-From: Jens Wiklander <jens.wiklander@linaro.org>
-Date: Mon, 27 Oct 2025 15:06:38 +0100
-X-Gm-Features: AWmQ_bkzmT9YDus5mt0XJ8Oo1d8CuevUOpAXH8Tvi7Nykv4F68B6B_E-6JBqk6U
-Message-ID: <CAHUa44ELC59zbQ2xx-NN8bTWACXoZHwD9sviHdTe0ruqYuS6Pg@mail.gmail.com>
-Subject: Re: [PATCH v6 3/3] scsi: ufs: core: Add OP-TEE based RPMB driver for
- UFS devices
-To: Bean Huo <beanhuo@iokpp.de>
-Cc: avri.altman@wdc.com, avri.altman@sandisk.com, bvanassche@acm.org, 
-	alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com, 
-	can.guo@oss.qualcomm.com, ulf.hansson@linaro.org, beanhuo@micron.com, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20251027-scsi-pm-improv-v1-1-cb9f0bceb4be@analog.com>
+X-B4-Tracking: v=1; b=H4sIAM2N/2gC/x3MMQqAMAxA0atIZgNtUIpeRRy0Rs1gWxoQoXh3i
+ +Mb/i+gnIUVxqZA5ltUYqiwbQP+XMLBKFs1kKHeGnKoXgXThXKlHG90tnOOV2sGT1CjlHmX5x9
+ O8/t+2HIwWGAAAAA=
+X-Change-ID: 20251027-scsi-pm-improv-71477eb109c2
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1761578450; l=802;
+ i=nuno.sa@analog.com; s=20231116; h=from:subject:message-id;
+ bh=OB0aJ1GOVumh0AfgEbW8k67NFjNGgObUhf97nIR/bA0=;
+ b=bNRW0y7KByyvih+ji0ZYUaSRUyps6ymhPYuZ84xsSMzeMWvGPWcTZ5kqM1r4rmgpdSdJwCbQj
+ PQZbwxjzVSECarpRTi7wtASvgChemO/tNsNNNrS2lZyycPnKMGG6Nfx
+X-Developer-Key: i=nuno.sa@analog.com; a=ed25519;
+ pk=3NQwYA013OUYZsmDFBf8rmyyr5iQlxV/9H4/Df83o1E=
+X-Endpoint-Received: by B4 Relay for nuno.sa@analog.com/20231116 with
+ auth_id=100
+X-Original-From: =?utf-8?q?Nuno_S=C3=A1?= <nuno.sa@analog.com>
+Reply-To: nuno.sa@analog.com
 
-On Sun, Oct 26, 2025 at 10:25=E2=80=AFPM Bean Huo <beanhuo@iokpp.de> wrote:
->
-> From: Bean Huo <beanhuo@micron.com>
->
-> This patch adds OP-TEE based RPMB support for UFS devices. This enables s=
-ecure
-> RPMB operations on UFS devices through OP-TEE, providing the same functio=
-nality
-> available for eMMC devices and extending kernel-based secure storage supp=
-ort to
-> UFS-based systems.
->
-> Benefits of OP-TEE based RPMB implementation:
-> - Eliminates dependency on userspace supplicant for RPMB access
-> - Enables early boot secure storage access (e.g., fTPM, secure UEFI varia=
-bles)
-> - Provides kernel-level RPMB access as soon as UFS driver is initialized
-> - Removes complex initramfs dependencies and boot ordering requirements
-> - Ensures reliable and deterministic secure storage operations
-> - Supports both built-in and modular fTPM configurations
->
-> Co-developed-by: Can Guo <can.guo@oss.qualcomm.com>
-> Signed-off-by: Can Guo <can.guo@oss.qualcomm.com>
-> Reviewed-by: Avri Altman <avri.altman@sandisk.com>
-> Reviewed-by: Bart Van Assche <bvanassche@acm.org>
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
-> ---
->  drivers/misc/Kconfig           |   2 +-
->  drivers/ufs/core/Makefile      |   1 +
->  drivers/ufs/core/ufs-rpmb.c    | 254 +++++++++++++++++++++++++++++++++
->  drivers/ufs/core/ufshcd-priv.h |  13 ++
->  drivers/ufs/core/ufshcd.c      |  86 ++++++++++-
->  include/ufs/ufs.h              |   5 +
->  include/ufs/ufshcd.h           |   8 +-
->  7 files changed, 362 insertions(+), 7 deletions(-)
->  create mode 100644 drivers/ufs/core/ufs-rpmb.c
+From: Nuno Sá <nuno.sa@analog.com>
 
-Looks good.
+There's no need to explicitly call pm_runtime_mark_last_busy() since
+pm_runtime_autosuspend() is now doing it.
 
-Reviewed-by: Jens Wiklander <jens.wiklander@linaro.org>
+Signed-off-by: Nuno Sá <nuno.sa@analog.com>
+---
+ drivers/scsi/scsi_pm.c | 1 -
+ 1 file changed, 1 deletion(-)
 
-Cheers,
-Jens
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d581613d87c7..2652fecbfe47 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -205,7 +205,6 @@ static int scsi_runtime_idle(struct device *dev)
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
+ 	if (scsi_is_sdev_device(dev)) {
+-		pm_runtime_mark_last_busy(dev);
+ 		pm_runtime_autosuspend(dev);
+ 		return -EBUSY;
+ 	}
+
+---
+base-commit: 8fec172c82c2b5f6f8e47ab837c1dc91ee3d1b87
+change-id: 20251027-scsi-pm-improv-71477eb109c2
+--
+
+Thanks!
+- Nuno Sá
+
+
