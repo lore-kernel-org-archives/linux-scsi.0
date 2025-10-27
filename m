@@ -1,125 +1,128 @@
-Received: from mail-wr1-f48.google.com (mail-wr1-f48.google.com [209.85.221.48])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6686B2FA0CC
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 11:31:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E3CE30595F
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 13:35:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761564692; cv=none; b=hMFmbt5DzFXUKIr89D9eBWn/AFS1QkxMkJ0l4IeXy/2gst1dCP4cAmzbCB1RJ6nn8ksDmPu6xQLx1WDetxY5vX04eUk85EfEbZBNe2SDToZZRCjNbzMQkpJYboJyivuzewyQbz7csUyp/Im18LeBl8G0yN3bkGeb5UaooC3XjRs=
+	t=1761572143; cv=none; b=h3FJd6v6zJ10ghpiD9YVFUAktYw3gtIwyQkt4H+VJ6E+m4P1hcfHlh3XfdFOziZbhsIUE9iTq6OZlabCC7phJsvNV+x6DhvmWfVOtzvRJmMMwFCj3gqWlicSnKY0tPoZ0l2+MPVzvZimJTEGXg8NbmqYfY4IXh2dE+gb46chFJw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761564692; c=relaxed/simple;
-	bh=LHPhOV0gpy6e0X3PqYPMlaEtQLXlGi+UHQ9Bc94bXXI=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=JvENRX3Oc8ZABM3JSh0NCxVytfNrG7oP9qzLEI3RuuaZKsRzkGvBJiXgH038yila8rVtTUbx6QMgWoeq1f5LgdR91IyIF/9M6kfSwVp6ahHUXYIQDXlD4qY5MTjoX8Tno8x9F3/vX2m7bs6sDWJ0+Q9UM0S68qa1msKvYGnUJB0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=aSg3R5sA; arc=none smtp.client-ip=209.85.221.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1761572143; c=relaxed/simple;
+	bh=q1xHjAi6E4wi3oQoijyEgXm7p5tzOjAHqmVcqhQq0wg=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=c1rjQ+WoAFcqFzPSEwg4oap6q7bo+5oUSDvQHU6UHLQYI6cUlf1Pt5hhFwSRdoQGHJPrRWUa2HtuhJ4GSK5lKvF+29G8o25qn3IQ8+3V7N97vqXjC6xH8elwfudXG0s7sIosmwAyMMnPT6G6xBA72yMXFUiS9X7hvyZuH1K/IG8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=P8vvbycA; arc=none smtp.client-ip=209.85.128.41
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="aSg3R5sA"
-Received: by mail-wr1-f48.google.com with SMTP id ffacd0b85a97d-427087ee59cso668884f8f.3
-        for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 04:31:30 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="P8vvbycA"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-475dc6029b6so19762795e9.0
+        for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 06:35:41 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1761564689; x=1762169489; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=gkdBVE0BY9SVhHYsmymJ7t9CcB8wdxkdpKo/Zx6qBfk=;
-        b=aSg3R5sAo6Gr7VQQbGOTTJz6FAZIhiQ9prZGGoeuV9ELd4fuJqDKSzuH3Mq741Ta53
-         1N/L74M+W2UGdZiTyt7DQv4pf80BeVWnKNZGnIVxRzkykpIFamY4ntE/8usF5OP9+zit
-         zTPndRNME7lhUYkbZ5e8c+WCnVJB4AAAaFXu2GdeqZCztn6wlf+I7pectQ8/rmL1y3W/
-         8NxdEoRBYirL0/Su5MwX5hhHqK8QcFRrrQGupK2vYfaMLab+Fn9R30Q8layQrXL31mZ8
-         AxP95kZ0xDraV4AjITG8Z9mul57OwtiBKIqS7gKpknF8FIKxlucYFVcGYf/vRScjPGlP
-         zDsA==
+        d=suse.com; s=google; t=1761572139; x=1762176939; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=coMQJHEII5UHdUF+Ekj+pHGgsN6WEYzWi8tdyRdD9tw=;
+        b=P8vvbycAR7YrdLbLsZK9MsF8LIJaG1AUecd4CONxCa9Bm256AZZujM2MjtVUVQwh2L
+         wjQw2Ag/XcnrUCu0xW/eCq7E24V2QsqnyvDwPRGhJds5NXMWizxT7liQy3yEsgbR4Ec/
+         j9eubyUMw46E0Pvqq7iVHqbXUzUJ3dipvKZjSSHHEJ5n6NWZN/8HX5+topoMXgIOf0lx
+         BUO3FgFdVYkKygha3VYXZaoHz2yrqYEBGnzBZeWVKPBxSWfiSp8hoKuvsOmrpctvoXUI
+         MFpPyCPhjYLyJRTaaDxdCeieFvXjKWq2vsMV/wJ4FAMFQfPziPMvHN81/W6NEDdRPwvw
+         lXGg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761564689; x=1762169489;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=gkdBVE0BY9SVhHYsmymJ7t9CcB8wdxkdpKo/Zx6qBfk=;
-        b=YHvd8651IaRpVub24runw+8ZpX13wiE3BqNNS9n5QuX3MCA8DC2RpO1YIql6aJVgEr
-         F6h6A1EFEzmIPm5+DBKadSbG2nR3a3fKdkA/01AdFEWagOW2GYp0uLlPtmfmoGp0OVVq
-         3cH4ksKXHz6k1G15xAS9oYdwecgTj3IlM1o0+uJpZr5EofFRF2Vh0sN3nHlHxm07fLsL
-         3gwOiPAe1Kc1cAZP8qxnihfnZlbqnW4uN0kXxIPICGp8IPVEGxYLw+WZxt/7JbJxJNys
-         uxdZ2XtojNpJGbrgKCiuHcYJ9g6IR5EEg4KVhqRfmu/19H8k1z3imTXGXBq5TDFm5Iiz
-         x18Q==
-X-Forwarded-Encrypted: i=1; AJvYcCWgd058O5VgHhs1ZQjJY/a7HvWsaPdLHat70CqJROKyE0Uo8ZGmHm5J5fvX6VLNZGQjT1QbZGusHGSh@vger.kernel.org
-X-Gm-Message-State: AOJu0YwYPHAutz35NifrBTCF1vuqZF0O470l5zeMK9H2k/w3VrW0a9T3
-	SNLIy1MKQyNn2Byok3MjjexDhxIBfNef+gW2sRlSepNbagEdygrP6aPzDIp+zIIjj30=
-X-Gm-Gg: ASbGncvKeWlTQIOy+5Hdr0pd1NbNy681ewRBT8fSC5orbmKwt1gJK5tr7Tq8CwupiNW
-	hKeNPMSyhyZuaCJ5TWR9iXAj+eWry1t+DiiKKxEvUFCUk64L0AzevuWFRbjo4TwWOyCYQb3ZFlM
-	G2L/HMYTedp1oTgcMxGaUqJd+IIK6dcPdw1eO7d6NoMHmzLUjBQ4i/17SougYMa52YavgLys2rJ
-	Is53Flod+yxiHr2YIk6ziT+Bl6nvRFdEHhzN4puS++PzFVUZkBZDgeh2t5h03kmNV4KrBW3ZcTt
-	5xzVdGUQLIOqi8PZdc1IOEFNC4slwyUoXzOGVxkm+g6ijXWaq1U+RyhZJXOMTaLknp2HiH1i48E
-	rr6yiRR0xE0D35p9RIur61Ob2kNa56qvMvGKdS2SJ/dSpM4r0KRnj6wrpbqBwfviRBkkPnANaQJ
-	PUBcKNplkhB5iwuVKdWPrJOg==
-X-Google-Smtp-Source: AGHT+IGz6GD3y6+cDG8Os4GrrgdKI9eH0xfE/xqR67GYStPwZccvbqYVtGigldNSOQfDk9DvMczWPg==
-X-Received: by 2002:a5d:55d1:0:b0:426:fff3:5d0c with SMTP id ffacd0b85a97d-4284e531afamr8104494f8f.1.1761564688605;
-        Mon, 27 Oct 2025 04:31:28 -0700 (PDT)
-Received: from kuoka.. ([178.197.219.123])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-429952e3201sm13885403f8f.47.2025.10.27.04.31.27
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 27 Oct 2025 04:31:28 -0700 (PDT)
-From: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-To: Manivannan Sadhasivam <mani@kernel.org>,
-	Alim Akhtar <alim.akhtar@samsung.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Rob Herring <robh@kernel.org>,
-	Krzysztof Kozlowski <krzk+dt@kernel.org>,
-	Conor Dooley <conor+dt@kernel.org>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Andy Gross <agross@kernel.org>,
-	linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
-Subject: [PATCH] dt-bindings: ufs: qcom: Drop redundant "reg" constraints
-Date: Mon, 27 Oct 2025 12:31:08 +0100
-Message-ID: <20251027113107.75835-2-krzysztof.kozlowski@linaro.org>
-X-Mailer: git-send-email 2.48.1
+        d=1e100.net; s=20230601; t=1761572139; x=1762176939;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=coMQJHEII5UHdUF+Ekj+pHGgsN6WEYzWi8tdyRdD9tw=;
+        b=LNWoU3t+kLlgRSCoYwFDEE3Eb6VnJ+2lRJGTEMRIozlKlCwduADOiMJUgkUC3yEypG
+         Jxfq33t3fbDIru4EHzOJKUgaCHixTFBjSUtbs/sm3NlSccrKBPE+dkaKEvPlxmZNi5kV
+         kjUYlWfudV7fY+aLfvsJ40R/tGCWWKmLPk6nOXHEg9NyKtUAuCvjusDDHA5GYn+TSTej
+         EdIDGEmnlYVIZKUYb4i04fANOuH8oV6QsPtF99St670iTv2GM6nib3GFgdqHQ0iXSuNa
+         ZcZkJKORcGHLRPtcTT+OwO7ZudgTPXqTc5LoGQDR9KUU1d5/F/lNYg1BfuZNzXEhz8D4
+         /Csg==
+X-Forwarded-Encrypted: i=1; AJvYcCWP6Zvj9KUF30uxfDXLN7BKBgXy9Sz8ezge031SWxPRbslLAiyo604EP0B/cxFqXwNZltQ8W3sbPcbu@vger.kernel.org
+X-Gm-Message-State: AOJu0Yw8V/82l0MYU0X6n1E67Xs7YNkSpCGuJCicgfYp+jGQJQY+FgdT
+	cHMWb2R6xrVv6xg+EABbytleI1EGkTMZyRoALfqeW5Gpq98XmGOMHW9wE70JS/ewBvM=
+X-Gm-Gg: ASbGncsq8GxVMNu+V3ppXCuDGs65yZ5CKTlJilgK0gs9w67RnJJiLXWSY8L0e3ERs5K
+	S9fdhaEp38fmAfd/LIME6hFuXuUeMXAtl4LOQ9Ibmv1torcq6DvLrsi/Jt5Vv9/FdOvnz3HsUaG
+	U7A6Pazg2HBLzc5wNgRyo6HSFKb1RyGZVv/8vi0Ti+i3mvyqPkk6OxPR5cmEK+7kcptWvKtG6cc
+	R6nH49Ue2woz3gImWNBVFya2L+lL7x/dcsRxmW2vmEk028dFjBvEEY8sTMvtHg+UqO0l05aWNIM
+	tTZaoe//aJRwlRe7X3I1KQ5KMj58i9fvlXJoUuoEov9+qu1XTAH5sJByVND6t6K5DYRsG6ifFGz
+	JVfvFgH0uVMLceHAYclrMrtKXzNZ66hBOaW/0Vffjfl+GASHHrLVFC807nZtdGb3Ieqs6VmKh3q
+	+440n2PbNX0pSfE4E5LVe9wpKO8LM/tOMMsJdkpZ7g3Up1cL06RuSLJs2jaGaENm47HQ==
+X-Google-Smtp-Source: AGHT+IHqAIVjFyYDoJjqcp/dMd7ZvxXUjRECSaszUpt0012U8VY/hZ9NeJngEtVEdLXk+JU1qrULHQ==
+X-Received: by 2002:a05:600c:3b82:b0:475:daa7:ec60 with SMTP id 5b1f17b1804b1-475daa7ee4amr74939795e9.21.1761572139493;
+        Mon, 27 Oct 2025 06:35:39 -0700 (PDT)
+Received: from ?IPV6:2a02:3033:263:99eb:3ee8:c1a0:6fbf:4510? ([2a02:3033:263:99eb:3ee8:c1a0:6fbf:4510])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-429952cbc16sm13967859f8f.15.2025.10.27.06.35.38
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 27 Oct 2025 06:35:38 -0700 (PDT)
+Message-ID: <8de18ee2-ccdd-4cdd-ae49-48600ad30ed4@suse.com>
+Date: Mon, 27 Oct 2025 14:35:37 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2] usb: uas: fix urb unmapping issue when the uas device
+ is remove during ongoing data transfer
+To: Owen Gu <guhuinan@xiaomi.com>, Oliver Neukum <oneukum@suse.com>,
+ Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>
+Cc: linux-usb@vger.kernel.org, linux-scsi@vger.kernel.org,
+ usb-storage@lists.one-eyed-alien.net, linux-kernel@vger.kernel.org,
+ Yu Chen <chenyu45@xiaomi.com>, Michal Pecio <michal.pecio@gmail.com>
+References: <20251015153157.11870-1-guhuinan@xiaomi.com>
+ <aP8Llz04UH8Sbq5Q@oa-guhuinan-2.localdomain>
+Content-Language: en-US
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <aP8Llz04UH8Sbq5Q@oa-guhuinan-2.localdomain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The "reg" in top-level has maxItems:2, thus repeating this in "if:then:"
-blocks is redundant.  Similarly number of items cannot be less than 1.
+Hi,
 
-Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@linaro.org>
----
- Documentation/devicetree/bindings/ufs/qcom,ufs.yaml | 3 ---
- 1 file changed, 3 deletions(-)
+I think I was unclear the first time.
+Sorry for that.
 
-diff --git a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-index 1dd41f6d5258..516bb61a4624 100644
---- a/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+++ b/Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-@@ -88,7 +88,6 @@ allOf:
-             - const: ice_core_clk
-         reg:
-           minItems: 2
--          maxItems: 2
-         reg-names:
-           minItems: 2
-       required:
-@@ -117,7 +116,6 @@ allOf:
-             - const: tx_lane0_sync_clk
-             - const: rx_lane0_sync_clk
-         reg:
--          minItems: 1
-           maxItems: 1
-         reg-names:
-           maxItems: 1
-@@ -147,7 +145,6 @@ allOf:
-             - const: ice_core_clk
-         reg:
-           minItems: 2
--          maxItems: 2
-         reg-names:
-           minItems: 2
-       required:
--- 
-2.48.1
+On 27.10.25 07:05, Owen Gu wrote:
+> Hi Oliver,
+> 
+
+>> This patch modifies the error condition check in the uas_submit_urbs()
+>> function. When a UAS device is removed but one or more URBs have already
+>> been successfully submitted to USB, it avoids immediately invoking
+>> scsi_done() and save the cmnd to devinfo->cmnd array. If the successfully
+>> submitted URBs is completed before devinfo->resetting being set, then
+>> the scsi_done() function will be called within uas_try_complete() after
+
+This requires that uas_try_complete() is called.
+
+And I am afraid uas_stat_cmplt() cannot guarantee that in the error case.
+I think the following sequence of events is possible:
+
+CPU A						CPU B
+
+uas_queuecommand_lck() calls uas_submit_urbs()
+COMMAND_INFLIGHT is set and URB submitted
+						URB gets an error
+						status = -EBABBLE (just an example)
+						uas_stat_cmplt is called
+						resetting is not set
+						if (status)
+							goto out;
+
+						uas_try_complete _not_ called
+
+The scsi command runs for indeterminate amount of time.
+It seems to me that if you want to use your approach you also
+need to change error handling in uas_stat_cmplt()
+
+	Regards
+		Oliver
+
 
