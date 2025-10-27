@@ -1,95 +1,116 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 84B68302143
-	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 15:20:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D63831329D
+	for <linux-scsi@vger.kernel.org>; Mon, 27 Oct 2025 15:45:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761578416; cv=none; b=vDAFMD0wu5qQ4YANJUx2tasfG1CLKE3AfB3aijLcNKttMlIK6DeXpYQlKFxJTLhiEsDsG+aMqs1NFQ/wLqgkNULOukN+cGMLndBjNktL00m45vHZCDGivj541zbWn8GjqCIJLc9HLPNDFXJWq386egQgQvdo4vUz4CphNtZJkb4=
+	t=1761579909; cv=none; b=P7ZwMD8mY6Qzx7i3nOUOlhMYSjgDsbhpytLUjdlT+1vm/yQnVrcxxF5lkEbfnm+ii2ayH/cNFwcaVlFkya1h5UGHM0saT7BdoWPZrTTR94zl9osguQ+85MsG0IyYY2UwQwYMALGQygy9MIFwbvOlRwiZx813qWgTKLf1/Im+8Wk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761578416; c=relaxed/simple;
-	bh=LZSrzKJC1sBVQuoK1/CZSuQG4+Mpj4gqGa4U8w5nW9E=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=M2pwNiiC0hynqd1jz4eLkamhrDMpyyCMP/s2fDBj5y/gQzfuzT98qYzdkZRGDjAApr/8aqycdKwSXekMTA85ofvQ+DpIHP/zFnXoA3USLXE6O4qSTKTa3FGYK99TqNj833vN5Lij3Arnv1izit8RoZVVuUQx1M9dCaeJykjA45A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=WKQM9EQ4; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761579909; c=relaxed/simple;
+	bh=ne2Jse7UVQFn7byV2i/y5n6Ei0DFGdCyY0rPfLMJl/8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TzSNlrxusMmuXqZXZO8j1EH5Uey/82qawkUrm9gOKK4FFB1irCb673y6tdJ7L+qdBkBTdE7+OqNjd2AkgOp1btBtyW/GVJA0tWz68gR0i3S3XFN9/TGBSmKz8xaPQL519HqRnp9CgJjZAxeZEkpfgh8/auON4dV4LG4dIgWW3t0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2VLnhCRw; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="WKQM9EQ4"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 2737FC113D0;
-	Mon, 27 Oct 2025 15:20:16 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761578416;
-	bh=LZSrzKJC1sBVQuoK1/CZSuQG4+Mpj4gqGa4U8w5nW9E=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=WKQM9EQ46R+H/FP9lkiqgJI/dFvqdqUlu13sqems7P3SemiNkBO+J6Y9P8Mihg2xU
-	 1oB/OTsBjukRf8Xth+XsD69u2iylBGsfBXEc0/vRuMQfd366b61167lD5TLkf07q2t
-	 fgqz7FGtnLykhXxb/OQJmZj99KpuOBhq/wJgX6NDQYvGZ2tgXHUrEfWpFgbGgKn83Y
-	 ypcD5+UpVd4z8tyoyzuEuyuWtt+YHGGVfM4vuDr5FPG3iA58zx0KpUN7OfvhCom29F
-	 Df8sdA/5AzoQIC8V5APV4uC1MUuhdQQA9EzzI2Nq6m93UPXSetN4BuNJvmxoTI6fjC
-	 +qtwE4K510iPA==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 1CF5FCCF9EB;
-	Mon, 27 Oct 2025 15:20:16 +0000 (UTC)
-From: =?utf-8?q?Nuno_S=C3=A1_via_B4_Relay?= <devnull+nuno.sa.analog.com@kernel.org>
-Date: Mon, 27 Oct 2025 15:20:46 +0000
-Subject: [PATCH] scsi: pm: Drop unneeded call to
- pm_runtime_mark_last_busy()
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2VLnhCRw"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cwHrX0Nj7zm0yTm;
+	Mon, 27 Oct 2025 15:45:00 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1761579897; x=1764171898; bh=ylDij/AU+kocM1XOlFTkr2kZK18wcqckovR
+	WauHDQ4Y=; b=2VLnhCRw0KVO4auUQ1pWYPOm0PbNS4I5H0IrxKbnfBS9eFZT8Yo
+	qDkjp/Qmx5+Ya97/K7ZrvT9ugiZ8eDhGhsgLY9P+r1kGLhsmprsb0jtYxeVXam+r
+	c3s4HaZN6Qq47LuPQZxAJEcjNy5iTMiEd+eJDaxhxKyvITev+VB2+Rokfd9QPBGn
+	WMRF0N2q7cLXKZq5j2bs3EplC7T3I5iAP2I0Us/wnAZVDK01kb0SVYiwn9sB7A91
+	ZR+xyfLQrgRudYutYGGhpmh/ngKR8pHYVK+NoQP7xkIP+5IpJphiCq8MH+CCLr5I
+	MQstzapc22Bk7rnp7d/YjYXkxnClZnr47tA==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id YY_UUsaGnihO; Mon, 27 Oct 2025 15:44:57 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cwHrK3Yfbzm0yVV;
+	Mon, 27 Oct 2025 15:44:48 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Peter Wang <peter.wang@mediatek.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Chenyuan Yang <chenyuan0y@gmail.com>,
+	"ping.gao" <ping.gao@samsung.com>,
+	Alok Tiwari <alok.a.tiwari@oracle.com>,
+	Po-Wen Kao <powen.kao@mediatek.com>,
+	Stanley Jhu <chu.stanley@gmail.com>,
+	Alim Akhtar <alim.akhtar@samsung.com>
+Subject: [PATCH] ufs: core: Fix the UFSHCD_QUIRK_MCQ_BROKEN_RTC implementation
+Date: Mon, 27 Oct 2025 08:44:34 -0700
+Message-ID: <20251027154437.2394817-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.51.1.851.g4ebd6896fd-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20251027-scsi-pm-improv-v1-1-cb9f0bceb4be@analog.com>
-X-B4-Tracking: v=1; b=H4sIAM2N/2gC/x3MMQqAMAxA0atIZgNtUIpeRRy0Rs1gWxoQoXh3i
- +Mb/i+gnIUVxqZA5ltUYqiwbQP+XMLBKFs1kKHeGnKoXgXThXKlHG90tnOOV2sGT1CjlHmX5x9
- O8/t+2HIwWGAAAAA=
-X-Change-ID: 20251027-scsi-pm-improv-71477eb109c2
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1761578450; l=802;
- i=nuno.sa@analog.com; s=20231116; h=from:subject:message-id;
- bh=OB0aJ1GOVumh0AfgEbW8k67NFjNGgObUhf97nIR/bA0=;
- b=bNRW0y7KByyvih+ji0ZYUaSRUyps6ymhPYuZ84xsSMzeMWvGPWcTZ5kqM1r4rmgpdSdJwCbQj
- PQZbwxjzVSECarpRTi7wtASvgChemO/tNsNNNrS2lZyycPnKMGG6Nfx
-X-Developer-Key: i=nuno.sa@analog.com; a=ed25519;
- pk=3NQwYA013OUYZsmDFBf8rmyyr5iQlxV/9H4/Df83o1E=
-X-Endpoint-Received: by B4 Relay for nuno.sa@analog.com/20231116 with
- auth_id=100
-X-Original-From: =?utf-8?q?Nuno_S=C3=A1?= <nuno.sa@analog.com>
-Reply-To: nuno.sa@analog.com
+Content-Transfer-Encoding: quoted-printable
 
-From: Nuno Sá <nuno.sa@analog.com>
+ufshcd_mcq_sq_cleanup() must return 0 if the command with tag 'task_tag'
+is no longer in a submission queue. Check whether or not a command is
+still pending by calling ufshcd_mcq_sqe_search().
 
-There's no need to explicitly call pm_runtime_mark_last_busy() since
-pm_runtime_autosuspend() is now doing it.
-
-Signed-off-by: Nuno Sá <nuno.sa@analog.com>
+Fixes: aa9d5d0015a8 ("scsi: ufs: core: Add host quirk UFSHCD_QUIRK_MCQ_BR=
+OKEN_RTC")
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_pm.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/ufs/core/ufs-mcq.c | 10 +++++++---
+ 1 file changed, 7 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index d581613d87c7..2652fecbfe47 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -205,7 +205,6 @@ static int scsi_runtime_idle(struct device *dev)
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
- 	if (scsi_is_sdev_device(dev)) {
--		pm_runtime_mark_last_busy(dev);
- 		pm_runtime_autosuspend(dev);
- 		return -EBUSY;
+diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
+index d04662b57cd1..cd47b7e438f4 100644
+--- a/drivers/ufs/core/ufs-mcq.c
++++ b/drivers/ufs/core/ufs-mcq.c
+@@ -36,6 +36,9 @@
+ /* Max mcq register polling time in microseconds */
+ #define MCQ_POLL_US 500000
+=20
++static bool ufshcd_mcq_sqe_search(struct ufs_hba *hba, struct ufs_hw_que=
+ue *hwq,
++				  int task_tag);
++
+ static int rw_queue_count_set(const char *val, const struct kernel_param=
+ *kp)
+ {
+ 	return param_set_uint_minmax(val, kp, UFS_MCQ_MIN_RW_QUEUES,
+@@ -553,9 +556,6 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int ta=
+sk_tag)
+ 	u32 nexus, id, val;
+ 	int err;
+=20
+-	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
+-		return -ETIMEDOUT;
+-
+ 	if (task_tag !=3D hba->nutrs - UFSHCD_NUM_RESERVED) {
+ 		if (!cmd)
+ 			return -EINVAL;
+@@ -566,6 +566,10 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int t=
+ask_tag)
+ 		hwq =3D hba->dev_cmd_queue;
  	}
-
----
-base-commit: 8fec172c82c2b5f6f8e47ab837c1dc91ee3d1b87
-change-id: 20251027-scsi-pm-improv-71477eb109c2
---
-
-Thanks!
-- Nuno Sá
-
-
+=20
++	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
++		return ufshcd_mcq_sqe_search(hba, hwq, task_tag) ? -ETIMEDOUT :
++			0;
++
+ 	id =3D hwq->id;
+=20
+ 	guard(mutex)(&hwq->sq_mutex);
