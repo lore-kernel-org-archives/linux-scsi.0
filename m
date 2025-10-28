@@ -1,170 +1,90 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f43.google.com (mail-yx1-f43.google.com [74.125.224.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DFB712E0901
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 22:25:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D31134EF15
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 23:13:29 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761690311; cv=none; b=aTejhsa0ZDp+g5VbTjILiXAIX4vVkKdBqgjq55Yol+cNH3au7mDjjG5E2h6PIn9wrsnSJnBzdz7jAn/CR0Qk/egKbqSzZmCfxfCtgdbp+mCBM1sKvEDa6OvV2tJN2WdsEl2od5w6xdSHmd3DWllaX7DvV9VW9nNGvqCPWdWunSI=
+	t=1761693211; cv=none; b=ltDjOuXVDQoLzmYYHPpssU6Zr/rgtIZHGkUAxi0MQC0+CRytBaW1ICISFOZcs0uAbO4Vj4cvejWM1rguoHWg+/fC3+eAKNJNB1vOx+geSS/SOC8KGGTSllkexChHImmHZHR3SftnJwQ1InwaCmO4L5V6QMwBQ4se45a3TGDH82U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761690311; c=relaxed/simple;
-	bh=E2/uhuHZtUQSLu1FcY/vAyHM1gxIoa8DcqxBLeHTH04=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=tBQ0jRytKKROzys3Atsi5EFxqkGK2OtymlrILBfZMM4dxFDqxvJAfEFaPqAW6owmHsAlcNwyOEEf04TDTYmsbWEPOBQupj1oLUHX+Tc/6g/XdyRUdEzbkFAbfJYlNY7aIH7iLYsS9aTSz1m/BRtUsL75uTHa+AJAIuJqJ3tkwJU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=Mp2r8OMF; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1761693211; c=relaxed/simple;
+	bh=jEv0bfwJNvQLuz+znDideErJv1UWy+9Q2zCFrfX+yS8=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=amMcWBBNeE96K71M6gp1Sx5f9o/Y3m3rJ/Cd7Bh6Ld44x6R54dXI+QiZeNgLHAPLSFsEAfCmZ9ebx/3CaXRKgZGqX+JuH+0+FjsMp+cpEjMA5zog0iJp1FwETUU0AWqT02heHHh+mbCrDwpcbprxZaHbNl40Xh7ht6HyhXyanwA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=D0nbP1y9; arc=none smtp.client-ip=74.125.224.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="Mp2r8OMF"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cx4gf3sV6zm0yTr;
-	Tue, 28 Oct 2025 22:25:02 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1761690299; x=1764282300; bh=ZDqNy0Gsqyb27mGJwPi40r78zuUrMxIJoDx
-	XIxPbpkM=; b=Mp2r8OMF5JYtev+NbV9DIhfXmPY8aq/6EdIsIZRuFntGWgef+h8
-	8AncnRAZyWsW178SH+JOtzedAFgeJ8lDbaA4LVmDSIybEDwR26okWDwkDFeuuUTF
-	jrKhODgvst+eVkJD/eEYZMBYlC2oCFFUYqItn+FyDMhEAzriGImeoaI6oSf+EIwJ
-	pIge83J9zjIDj88ajCQ/75kyT8aFxTndKQxP0vADCDd82PK5u7ltUqkK8oun+6QT
-	7i4/vniFcyy2oyHURk3UpUxIlgs9/yPnJJkaLbOv8Zn7F8qwCkoH4qfgPX/W9xew
-	t4W3JTIjD6JGycf18dks3vnhvoTetBYOl8g==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id DxX4a3d5L8qJ; Tue, 28 Oct 2025 22:24:59 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cx4gK3zmczm0yT2;
-	Tue, 28 Oct 2025 22:24:44 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Daniel Lee <chullee@google.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Bjorn Andersson <andersson@kernel.org>,
-	Neil Armstrong <neil.armstrong@linaro.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Huan Tang <tanghuan@vivo.com>,
-	Avri Altman <avri.altman@wdc.com>,
-	Liu Song <liu.song13@zte.com.cn>,
-	Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Bean Huo <huobean@gmail.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Gwendal Grignou <gwendal@chromium.org>
-Subject: [PATCH] ufs: core: Revert "Make HID attributes visible"
-Date: Tue, 28 Oct 2025 15:24:24 -0700
-Message-ID: <20251028222433.1108299-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.51.1.851.g4ebd6896fd-goog
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="D0nbP1y9"
+Received: by mail-yx1-f43.google.com with SMTP id 956f58d0204a3-63bc1aeb427so6854496d50.3
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 16:13:29 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761693208; x=1762298008; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=mNMGrJ/KXZ6KzvaUnv5DQgwdVVIKCPeDMVN02PeB3Nw=;
+        b=D0nbP1y9Ex9DfdiDTE/m4PioB+gXvRhgfWMetdFpzgruiDoj23PS0xiEbOQT4RCAS1
+         +hs/PrbrmSs3wWyPbOdeMRM0+4aBH3zQqW7kpws9WAb9XcOrb0Dj4o1xP5ZYfQRel0fn
+         lZ58TVdR8NrrWvADf5fjAiys1xNhf9CILhZEx3xTLZf+MMvUZZdLWkfbyubmD+tFPs0V
+         hWxot0skGfhzhpksP75xhuH6wxO6CgKBBdfJOP22p9c1qQmdS877R8yJHsu/cMziEIXM
+         bdtQRa5PYfeSjN9nhbt2bKQcj1ShDEqFGinJYkQYD+NRs+PJ1xo7B18G3QEjX2/uCh/X
+         DBqw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761693208; x=1762298008;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=mNMGrJ/KXZ6KzvaUnv5DQgwdVVIKCPeDMVN02PeB3Nw=;
+        b=VNLpVwD6FwGAuoKpJjeGSSioCAZ0vb/IXo2dgEWf4Wy/mLFKscussMH/GEUR+UGXk0
+         cg6/XLAAeTbis5iQqhw8SCLGPE5PJg61ApveY+BaXEd3bsyKDNbhj4q8QUDbrb1JJl71
+         aEACcpuC9r8h4RVPAr4zX957jFQTeuOpjs3t4MZEDZw/PFznpdyWW/qj1Lqf3200b/qq
+         /MvUcu0FmUGTsWqdKuZWwSDnSVU3jBW1XD0N2r8TLNqd+vOKTIjPkE2sNvvo7GRHymXm
+         /OPmSbIJi5yg5ohg4hqtl4QSJ6rBzSZoEdFWtG4M2RX4sRc7ty/Q5Rk06JsfU2oKx3NB
+         NK2Q==
+X-Gm-Message-State: AOJu0YyRfJYsufHx8rDQx9ulB30ZU7fyKPJ/oJURzuEuYI5ar4O61713
+	W64I1kPEfRPW21wCn7Dsa++UaFCMQg+NVtxbN56rgtxGSd4n6YHRXeMqlckLpEPVobt0gID7Edf
+	q6H/JLWnKZMz51J9sdfHi4nbNqf8DrtQ=
+X-Gm-Gg: ASbGnctkurWsnmwiPPM+YOAKfcnbrr8ID4CXZ5z4rhrCjVY9wUBqJZqwaxMy9GliC82
+	mzt5oQHM+QYmbWDgkze0Lc/sxSI5FXOVHLgR/+2nMc1/aNJsR6OVZfps8+PIB/aujBVH78WwISx
+	mbjnUZbDOzO1AsNdeZykQOL8hlQK8h21W/wKscj7flw7PzY4FOt4s2Kqnvgc3ZeX6WnEPlhNw1b
+	MgcslbcRlpzSCb0SfkS63ez604Tfn4iPlaNi6TA/34fA7hHbQERoFqRsUqywg==
+X-Google-Smtp-Source: AGHT+IEiD19bVyIk5OFRohBQ3DIwtpxEqEN5lTnK7+XKvVcZ1tzKMz6kA9RNAGkJYZbHMtolpiBw5XKaT+i8Xjse6GI=
+X-Received: by 2002:a53:cec5:0:b0:63d:ceaa:2666 with SMTP id
+ 956f58d0204a3-63f76e153d6mr738779d50.63.1761693208389; Tue, 28 Oct 2025
+ 16:13:28 -0700 (PDT)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+References: <20251027235446.77200-1-justintee8345@gmail.com>
+ <20251027235446.77200-11-justintee8345@gmail.com> <7c9c39f7-4d25-4a1e-a2b7-a9b09e2034ce@kernel.org>
+In-Reply-To: <7c9c39f7-4d25-4a1e-a2b7-a9b09e2034ce@kernel.org>
+From: Justin Tee <justintee8345@gmail.com>
+Date: Tue, 28 Oct 2025 16:13:01 -0700
+X-Gm-Features: AWmQ_bmoTJLQ4uEYv8TNtbjXH_D7ohQ41bEKBkHywzeacfHjr0qF1I4J9dM6cMM
+Message-ID: <CABPRKS8ef+PC4WBBDPk5uh-xZ7Dyz+kzcK5Bnw+45STZCUM7hw@mail.gmail.com>
+Subject: Re: [PATCH 10/11] lpfc: Update lpfc version to 14.4.0.12
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: linux-scsi@vger.kernel.org, jsmart2021@gmail.com, justin.tee@broadcom.com
+Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: quoted-printable
 
-Patch "Make HID attributes visible" is needed for older kernel versions
-(e.g. 6.12) where ufs_get_device_desc() is called from ufshcd_probe_hba()=
-.
-In these older kernel versions ufshcd_get_device_desc() may be called
-after the sysfs attributes have been added. In the upstream kernel howeve=
-r
-ufshcd_get_device_desc() is called before ufs_sysfs_add_nodes(). See also
-the ufshcd_device_params_init() call from ufshcd_init(). Hence, calling
-sysfs_update_group() is not necessary.
+Hi Krzysztof,
 
-See also commit 69f5eb78d4b0 ("scsi: ufs: core: Move the
-ufshcd_device_init(hba, true) call") in kernel v6.13.
+> This makes little sense on its own. Please organize patches in logical
+> chunks. Not mentioning that this is useless information - you are
+> duplicating kernel version.
 
-This patch fixes the following kernel warning:
+Understood from the viewpoint of the kernel version.  We=E2=80=99ve had
+previous discussions about this with James Bottomley and Martin, and
+they=E2=80=99ve been gracious enough to allow us to tag our patchset update=
+s
+with driver version updates.  The purpose for the lpfc driver version
+updates is to assist in tracking our patchsets into the various Linux
+distributions.
 
-sysfs: cannot create duplicate filename '/devices/platform/3c2d0000.ufs/h=
-id'
-Workqueue: async async_run_entry_fn
-Call trace:
- dump_backtrace+0xfc/0x17c
- show_stack+0x18/0x28
- dump_stack_lvl+0x40/0x104
- dump_stack+0x18/0x3c
- sysfs_warn_dup+0x6c/0xc8
- internal_create_group+0x1c8/0x504
- sysfs_create_groups+0x38/0x9c
- ufs_sysfs_add_nodes+0x20/0x58
- ufshcd_init+0x1114/0x134c
- ufshcd_pltfrm_init+0x728/0x7d8
- ufs_google_probe+0x30/0x84
- platform_probe+0xa0/0xe0
- really_probe+0x114/0x454
- __driver_probe_device+0xa4/0x160
- driver_probe_device+0x44/0x23c
- __device_attach_driver+0x15c/0x1f4
- bus_for_each_drv+0x10c/0x168
- __device_attach_async_helper+0x80/0xf8
- async_run_entry_fn+0x4c/0x17c
- process_one_work+0x26c/0x65c
- worker_thread+0x33c/0x498
- kthread+0x110/0x134
- ret_from_fork+0x10/0x20
-ufshcd 3c2d0000.ufs: ufs_sysfs_add_nodes: sysfs groups creation failed (e=
-rr =3D -17)
-
-Cc: Daniel Lee <chullee@google.com>
-Cc: Peter Wang <peter.wang@mediatek.com>
-Cc: Bjorn Andersson <andersson@kernel.org>
-Cc: Neil Armstrong <neil.armstrong@linaro.org>
-Fixes: bb7663dec67b ("scsi: ufs: sysfs: Make HID attributes visible")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-
-Fixes: bb7663dec67b ("scsi: ufs: sysfs: Make HID attributes visible")
----
- drivers/ufs/core/ufs-sysfs.c | 2 +-
- drivers/ufs/core/ufs-sysfs.h | 1 -
- drivers/ufs/core/ufshcd.c    | 2 --
- 3 files changed, 1 insertion(+), 4 deletions(-)
-
-diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
-index c040afc6668e..0086816b27cd 100644
---- a/drivers/ufs/core/ufs-sysfs.c
-+++ b/drivers/ufs/core/ufs-sysfs.c
-@@ -1949,7 +1949,7 @@ static umode_t ufs_sysfs_hid_is_visible(struct kobj=
-ect *kobj,
- 	return	hba->dev_info.hid_sup ? attr->mode : 0;
- }
-=20
--const struct attribute_group ufs_sysfs_hid_group =3D {
-+static const struct attribute_group ufs_sysfs_hid_group =3D {
- 	.name =3D "hid",
- 	.attrs =3D ufs_sysfs_hid,
- 	.is_visible =3D ufs_sysfs_hid_is_visible,
-diff --git a/drivers/ufs/core/ufs-sysfs.h b/drivers/ufs/core/ufs-sysfs.h
-index 6efb82a082fd..8d94af3b8077 100644
---- a/drivers/ufs/core/ufs-sysfs.h
-+++ b/drivers/ufs/core/ufs-sysfs.h
-@@ -14,6 +14,5 @@ void ufs_sysfs_remove_nodes(struct device *dev);
-=20
- extern const struct attribute_group ufs_sysfs_unit_descriptor_group;
- extern const struct attribute_group ufs_sysfs_lun_attributes_group;
--extern const struct attribute_group ufs_sysfs_hid_group;
-=20
- #endif
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 5d6297aa5c28..2b76f543d072 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -8499,8 +8499,6 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
- 				DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP) &
- 				UFS_DEV_HID_SUPPORT;
-=20
--	sysfs_update_group(&hba->dev->kobj, &ufs_sysfs_hid_group);
--
- 	model_index =3D desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
-=20
- 	err =3D ufshcd_read_string_desc(hba, model_index,
+Regards,
+Justin
