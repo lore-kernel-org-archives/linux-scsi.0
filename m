@@ -1,123 +1,158 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6168A1531C8
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 14:47:32 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC04723C8AE
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 14:55:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761662852; cv=none; b=B8XTdjczpfMaEgMRVXsgLUHlP+wAxFuN870H8hLmkFru2hf+2xe+q94oVRvAmIxKSsuyaHUu/4/wANokDLwxLujdUFvMaCvvDQ4Cyoh/AWgT5dWd2uQa5JCHa+bC4UgoCjT9zfJZSlCBxGE+s86pQlHLZ16BHnUG8w6wIPt9YIw=
+	t=1761663351; cv=none; b=W+WlVFV5oi74qqX6Mk3HZEaScArt1ZMWnf1ovvU5dF3VnYnnD3JutHP0eelcNF2PEqJgqdc3ddgbAEq5m898vtxW2v94chdvCKBH1ozTJwdHIst2tDNxbCSSUdhtx/M1uiEC3jP9RREp4dKAuL+kfqxSzwV2c5I2POUEhBtGto8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761662852; c=relaxed/simple;
-	bh=ZQHoiYtpkZmMG+nRgL7Ywb8/dYc+n1zTXtl7AEXirwc=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NsvMyQOB0Kwhy+uusExWCg5ZU7/IwNLWHhATDDfR6s7KrPKWgYJ0SVl+2dhKk8s6Q71yrzWjr0TsqcKCIFVjyRAYAb0roPssO+ElGts7CtbW1JRmT+x/wEvbEQlUX+MjxxerIjEgHTxteQNEwQUBzUSRgn7jY32u9Ghxu4S6VdM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=LN8SkFUi; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761663351; c=relaxed/simple;
+	bh=4DfI7OcUnB+kIuMTQXNdtCg+eWdy+FCdGYX959o/v1g=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=KXwBS1jH/PIRD8Uh3z8MrIvJv1fTnq9lcoJ9A3LZo6u36N/vJurHTrKYFN+cQvYa1AmJ84X/1JQnae8VBxLVkBZuyta8KYJX1tbETZIELI51fGV5nMZKPozQqq5TDCjGDCb0S2GTHIAvDefNbAOQ26H0yRN/dAzOeG8EnaPOOzE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hHXhqDL3; arc=none smtp.client-ip=209.85.208.175
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="LN8SkFUi"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A014FC4CEE7;
-	Tue, 28 Oct 2025 14:47:30 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761662852;
-	bh=ZQHoiYtpkZmMG+nRgL7Ywb8/dYc+n1zTXtl7AEXirwc=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=LN8SkFUiB0CLZR7eb9nfpOf+DUrQLWrbvV+Gy4eXd1GmQC6Bqzmn2fyvfQkzNap7o
-	 fXU9+CHFZqZxgNcO1fRQAwDQkjPJwOIXmzYhuTpVDJHdekEgkmBHljLa2bHLm1zxB0
-	 mfG6tq8UMJUOOEOu33TL6+PJjPfvYLBFqPBgaUll52kpEIRwKQ7vY5VROElzt24wnn
-	 0/C6mLYB6LKgkbnqjSQjPSA6wKLUm7/NO6AlEXZVyRJRdC2TFe7/l8TaYw2kXf2Sa3
-	 +4ZJZRXAMk/DJQLBUg0YW6eSvwI3/csLQ1N8EwM8890M/uxpa8CHzrLCRD+ZYSqSYX
-	 eTxBuVmafvjEg==
-Date: Tue, 28 Oct 2025 09:50:29 -0500
-From: Bjorn Andersson <andersson@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org, Daniel Lee <chullee@google.com>, 
-	Peter Wang <peter.wang@mediatek.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	Matthias Brugger <matthias.bgg@gmail.com>, 
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Huan Tang <tanghuan@vivo.com>, Avri Altman <avri.altman@wdc.com>, 
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>, Gwendal Grignou <gwendal@chromium.org>, 
-	Liu Song <liu.song13@zte.com.cn>, Bean Huo <huobean@gmail.com>, 
-	Manivannan Sadhasivam <mani@kernel.org>, Adrian Hunter <adrian.hunter@intel.com>, 
-	Can Guo <quic_cang@quicinc.com>, Eric Biggers <ebiggers@kernel.org>, 
-	Nitin Rawat <quic_nitirawa@quicinc.com>, Neil Armstrong <neil.armstrong@linaro.org>
-Subject: Re: [PATCH 2/2] ufs: core: Really fix the code for updating the
- "hid" attribute group
-Message-ID: <oyiecngk4n3em5m4or7ev27w2f7qcveqwhidh6bay46gbgjvds@qs2uyfmwv76h>
-References: <20251027170950.2919594-1-bvanassche@acm.org>
- <20251027170950.2919594-3-bvanassche@acm.org>
- <fysnm3cpnz6ipqw4tbw2jh3rvxqjzgabmz2oppccjus3gv2sab@oi6dz4o4zkw2>
- <6acc1879-ebb9-4e51-bbe9-3824f8f1711f@acm.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hHXhqDL3"
+Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-378d50e1c77so55385891fa.0
+        for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 07:55:49 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1761663348; x=1762268148; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=cxgC3Ar205SePZa68q9SjHUQRYO31L1UuAjDONdLHVE=;
+        b=hHXhqDL3w0Vx6kMG51Fjk8jFxIYahWeolRhcGDxl+8U1LvwlXinDUdnMXcSe3tk74v
+         lXAVT9iEYfr+8eTv2+h+HL1LzQ5DxMA3NXV7w/cHcbuk4wtwhN5hR6qQAI50cfIce2bO
+         1+6VRN7oa4Kw15FR5RBiIxwInxGbbc8uh+Fuu817GPf/neeYeqmQWRwjBLMkf4RacqVF
+         QrfCJjpt8/ZMyhV0eZHJ3bY8Icqtqwae79eG53QTXu68q1fomyZLYtTesr9kKvPXiZb8
+         5TrfHPh+0J+hUR5T75LseO91sDCWUq46+k5IugS7brnGxKwyaRdlQ5Da/MHKw3SOGCHs
+         8BJQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761663348; x=1762268148;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=cxgC3Ar205SePZa68q9SjHUQRYO31L1UuAjDONdLHVE=;
+        b=jAG+w12NeMKh9aCNmrH/VUTP/Ra4V5umUX/L9YCP+7FXTrgHXXQi2nh702nGYTkRbU
+         Oj2V3e7MdQNTDiNYuwx3/rl+srQ412I5ZdzalCHxZ4DZ/59la1ADDpwb2RjOgLoujaEL
+         zX1dG4CsWLjYKG9HDGPFM79+1CNob7z/nkRWgSYlwsUVyMv1tW6jTDain0qVv79WUAh8
+         I3jFpqaHR6dVntMmClqLoxpvYfCqauhtfUhZRACHI5trGKKyxlTptdiZZdwCFQey6qOh
+         yhPgTBE8dGB10IDIyBNs33UrBIADT1EaHmj1OraDs5OQCqxGmS82QmYJ4QdMhbxBXdjl
+         l+dA==
+X-Forwarded-Encrypted: i=1; AJvYcCVE64iN6UbLSCUg2GfZRHzuxMMgTcSLra95lyLTxhYDSrV53OCuFePHDgYcCqBsJUoi6CPgg8VIOH1y@vger.kernel.org
+X-Gm-Message-State: AOJu0YyZX5LtwYNNANuY7ANitTArpQiPVo9JVWAXe8FpimbtX6hyvtya
+	0Vr20qxz7u7Gr3txi+EwIS/mlhrcSIwReey/89AQ/vkmVoRzrLv427Qd
+X-Gm-Gg: ASbGncsqAUPfvCnDyH7l+tQUFiR8akdFTQLtIKKo79oRwPUipPPM+5+uKjomeYhW1wz
+	lHv1+1IAwIqLH83s/h+b6A0nO+Lsnj9f+nIURfGho8m3BZDr6q3yyFPnNZSrP2IZWuAjtP4hWJs
+	/Ek/YLha1lx7ref5i7Q6vxJpqxWb0UE6g9iMVjsKDzsOHofv9iytehI2s4r6mUTnSfw19HsPDq4
+	C7lWtEsvn75CWudac9r6kAkKFuMeeaWD3ptNQySVvJ7xB3OX8tewtgs+lpkpsxm1MfQ7Lmn8n8s
+	LyxrMrrkgBERCDqjTuGgaCLlBvhchk+JYojvKJ1GBPjivw3JPGfeVkgtsOKagPxtsxChd+LsBLj
+	XZMx73W+2t9SHNUnY6/uvyaxQxVdDf2iSoRus4NXMTCdrQdZaSmiZOmKQzBFiSkMMzpoobdSgh7
+	K2uPI5LiQl7TG/YwtnAje2F6/2eaYaM5ew1Eiqtm1iUPH4JB61Bw50h0TZQ9zEDe6dZqNJULyer
+	86CPUJRg03lYc8W78eCl8L2n1GEUEE=
+X-Google-Smtp-Source: AGHT+IEYtMFNcBTkx5BcQJAnt4IjKAPptrA7hwRAVKe8cUNymnzw27KPZxunv/Xg4w6rE9Z8xlhI2Q==
+X-Received: by 2002:a05:6512:b05:b0:592:f9f4:7932 with SMTP id 2adb3069b0e04-5930e9cb1ebmr1304002e87.33.1761663347674;
+        Tue, 28 Oct 2025 07:55:47 -0700 (PDT)
+Received: from localhost.localdomain (host194.safe-lock.net. [195.20.212.194])
+        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-59302878849sm3082988e87.80.2025.10.28.07.55.46
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 28 Oct 2025 07:55:47 -0700 (PDT)
+From: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
+To: sathya.prakash@broadcom.com,
+	kashyap.desai@broadcom.com,
+	sumit.saxena@broadcom.com,
+	sreekanth.reddy@broadcom.com
+Cc: martin.petersen@oracle.com,
+	mpi3mr-linuxdrv.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	skhan@linuxfoundation.org,
+	khalid@kernel.org,
+	david.hunter.linux@gmail.com,
+	linux-kernel-mentees@lists.linuxfoundation.org,
+	linux-kernel@vger.kernel.org,
+	Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
+Subject: [PATCH RFT v2] driver/scsi/mpi3mr: Fix build warning for mpi3mr_start_watchdog
+Date: Tue, 28 Oct 2025 15:55:34 +0100
+Message-Id: <20251028145534.95457-1-kubik.bartlomiej@gmail.com>
+X-Mailer: git-send-email 2.39.5
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <6acc1879-ebb9-4e51-bbe9-3824f8f1711f@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Tue, Oct 28, 2025 at 06:57:07AM -0700, Bart Van Assche wrote:
-> 
-> On 10/27/25 8:03 PM, Bjorn Andersson wrote:
-> > So, unless I'm missing something with regards to the error handler that
-> > you refer to, I think you should solve this problem in ufshcd_init(), by
-> > making sure that syfs attributes are created before the
-> > ufshcd_device_params_init() call.
-> 
-> Something like this? (needs more work to make sure all state information
-> that can be modified through sysfs has been initialized before the sysfs
-> attributes are added)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 5d6297aa5c28..3ad258922036 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -10800,6 +10800,8 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem
-> *mmio_base, unsigned int irq)
->          */
->         ufshcd_readl(hba, REG_INTERRUPT_ENABLE);
-> 
-> +       ufs_sysfs_add_nodes(hba->dev);
-> +
->         /* IRQ registration */
->         err = devm_request_threaded_irq(dev, irq, ufshcd_intr,
-> ufshcd_threaded_intr,
->                                         IRQF_ONESHOT | IRQF_SHARED, UFSHCD,
-> hba);
-> @@ -10887,7 +10889,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem
-> *mmio_base, unsigned int irq)
->         if (err)
->                 goto out_disable;
-> 
-> -       ufs_sysfs_add_nodes(hba->dev);
->         async_schedule(ufshcd_async_scan, hba);
-> 
->         device_enable_async_suspend(dev);
-> 
+GCC warning:
+drivers/scsi/mpi3mr/mpi3mr_fw.c:2872:60: warning: ‘%s’ directive
+output may be truncated writing up to 63 bytes into a region of size
+41 [-Wformat-truncation=]
 
-Yes, to me that looks like it would solve the issue at hand in a clean
-fashion. But you'd need cleanup in out_disable as well.
+Change MPI3MR_WATCHDOG_NAME_LENGTH define to properly clarify
+the required buffer size.
 
-> > PS. How come these are attributes on the host device and not on the SCSI
-> > host device (i.e. ufshcd_driver_template::shost_groups)? It seems like
-> > more structured place to have such properties, and would avoid having to
-> > dynamically create/destroy them from the ufshcd driver itself.
-> 
-> This choice was made before I started contributing to the UFSHCI driver.
-> I'm not sure why this choice has been made. If we would start over from
-> scratch, I think the UFSHCI attributes should be added to the UFSHCI
-> device instance and the UFS attributes should be added to the SCSI host.
-> Today the sysfs attributes created by the UFSHCI driver are a mix of
-> UFSHCI and UFS attributes.
-> 
-> This is a change we can't make today because it would break user space.
-> 
+The mrioc->watchdog_work_q_name buffer in
+the mpi3mr_start_watchdog() function no longer requires adding mrioc->id,
+since mrioc->name already includes it.
 
-That's too bad, it would have been nice to get that cleaned up.
+mrioc->name is built using:
+sprintf(mrioc->name, "%s%d", mrioc->driver_name, mrioc->id)
 
-Regards,
-Bjorn
+Signed-off-by: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
+---
 
-> Thanks,
-> 
-> Bart.
+I do not have the hardware to full tests it.
+Tests only built kernel without warning and run kernel.
+
+Changelog:
+Changes since v1:
+- Add define MPI3MR_WATCHDOG_NAME_LENGTH (MPI3MR_NAME_LENGTH + 15)
+- Change watchdog_work_q_name buffer from size 50 to MPI3MR_WATCHDOG_NAME_LENGTH
+
+Link to v1
+https://lore.kernel.org/all/20251002063038.552399-1-kubik.bartlomiej@gmail.com/
+
+ drivers/scsi/mpi3mr/mpi3mr.h    | 3 ++-
+ drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +--
+ 2 files changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 6742684e2990..be15d5ec8b58 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -66,6 +66,7 @@ extern atomic64_t event_counter;
+
+ #define MPI3MR_NAME_LENGTH	64
+ #define IOCNAME			"%s: "
++#define MPI3MR_WATCHDOG_NAME_LENGTH (sizeof("watchdog_") + MPI3MR_NAME_LENGTH + 1)
+
+ #define MPI3MR_DEFAULT_MAX_IO_SIZE	(1 * 1024 * 1024)
+
+@@ -1265,7 +1266,7 @@ struct mpi3mr_ioc {
+ 	spinlock_t fwevt_lock;
+ 	struct list_head fwevt_list;
+
+-	char watchdog_work_q_name[50];
++	char watchdog_work_q_name[MPI3MR_WATCHDOG_NAME_LENGTH];
+ 	struct workqueue_struct *watchdog_work_q;
+ 	struct delayed_work watchdog_work;
+ 	spinlock_t watchdog_lock;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 8fe6e0bf342e..18b176e358c5 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2879,8 +2879,7 @@ void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrioc)
+
+ 	INIT_DELAYED_WORK(&mrioc->watchdog_work, mpi3mr_watchdog_work);
+ 	snprintf(mrioc->watchdog_work_q_name,
+-	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name,
+-	    mrioc->id);
++	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s", mrioc->name);
+ 	mrioc->watchdog_work_q = alloc_ordered_workqueue(
+ 		"%s", WQ_MEM_RECLAIM, mrioc->watchdog_work_q_name);
+ 	if (!mrioc->watchdog_work_q) {
+--
+2.39.5
+
