@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AC1E1DD0EF
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 07:32:30 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48D9B1B425C
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 07:33:07 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761636751; cv=none; b=QTY04XjdRCV9w5U9DuF3QiwmFwHh8CfaJE2Sie7Tnb1S9t/57Ga8lpgQQRkk3uMGrgkv31RUdLdywZFCGU5HfRSbIkU9Mapf9Mf4XLTiyGPPq7O88L/FYxpaf6yYpzpNdpYCRrnYkEAIZ3WJjNV7Ngi0RudlcflwHHziwK5wWUc=
+	t=1761636788; cv=none; b=VTKveIQ8lbwYIfVoLWlftXH/lx0TOjib1fKg5RoNOKjp/lb3J9s9NL/c6JJYRr0sQINkFSTvlL/UDepRtab2kija2WO6VrX5HHAvSi3gFtBsH5VLotIUiaeltJJs8q7TPYV9kSIGhs/0IHNz34gptfBzquMgemoMrGQzOtaPx3o=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761636751; c=relaxed/simple;
-	bh=4jaZJcpOr55qs335sOESgWcUfIQos5KuyL5NtUtZdkc=;
+	s=arc-20240116; t=1761636788; c=relaxed/simple;
+	bh=s/+utpUycH9Gv/VCNxoiBN+vECwBzJOsT/n4j23tuM4=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=OOOKpC+7d1l5UBaotgis7nARkQmJzTIYXJHlMyXXUJj2QvPnPF57fml6cMB5kQxvCh9gMjW+yLIRzkTCbuV454Y2lAbjiNF5ActH3EEovARVDlJZfvpRB+E/FCo+k2TM1CVsd7V9fAfG2cxw73iH5Q8lpsERZiVqM1hohzyh6As=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VQFugDet; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Hp8iVug0HXcYkevQEKvUgOkPuAM6OSjR33wkbmAz5vi/eIC2eZtJzps1wrnskWEVJVrTni293QN0GGn6/uKM826IN2X9zxVHRkAt/YOCxVVEVPdyCM7pkrwbqgA+a4RJr4K0LrDNTpLbb8ueGhug0ZS6AKjH57DH2MDCM3ORUPo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A8kzE7TP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VQFugDet"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7706DC4CEFF;
-	Tue, 28 Oct 2025 07:32:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A8kzE7TP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B23BC4CEE7;
+	Tue, 28 Oct 2025 07:33:06 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761636750;
-	bh=4jaZJcpOr55qs335sOESgWcUfIQos5KuyL5NtUtZdkc=;
+	s=k20201202; t=1761636787;
+	bh=s/+utpUycH9Gv/VCNxoiBN+vECwBzJOsT/n4j23tuM4=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=VQFugDetAUPpTGIAPsHLNE/OtYyPDzQtBzi9folBfPByyq/pRXNgTCIq/WmKrWnJA
-	 B+nJfeeCtPnl51SDBP9OqfNMbuEWOC8sQHanQ2HpLlkNblXKeO52I53aI/h7zzk9kq
-	 mRznbSpyAduhL9sAj/CIIUxkAnuTPnublas+QfYAaqNvw2Fhbt8QX2g1hxMc2ihJVv
-	 2oaUipC7p0kiLIlUJ2maMYtnhfGGS7WRWqTgygRG7S1DlkEgcCnqHCBuoU9PmSl1bm
-	 p3U1U/iYP/6DucDI7d8R8ljAqMG50pXkkk8NaU3NUD+Jx5JcVgZM3K0Q3ICbzU+ieP
-	 HIFFl9EyW+qBQ==
-Message-ID: <0e8f0242-6bc2-4202-bc6f-4aeb0d150e21@kernel.org>
-Date: Tue, 28 Oct 2025 08:32:27 +0100
+	b=A8kzE7TP/NaX8zmAvEnkbk7v/gxLsPxXcKaM9HpLw8wg2JuMIHkeL9PVaURhS3GTz
+	 VXBq72WGP0u0IDqNL+8gePWx/uYlSubCfFhkaxaNke4O4z/tXkaRlFM0PeGAjkw7kN
+	 uo/WIIhoAjvIwWHvPD9B3Slu6uqhAMh2fmXmjsFmPL/ECyxKyRQT4yDbkEasOut/Eb
+	 9sxdxsHyNCofoPTWteGtKSfhP2nEXpqEwmIb8tPxurF276Fk09fPWWr+qL84Mifsay
+	 1ueybKwdcvGbShfbjGj5dcXgJJOkK5CjzLNBHCALSh6Ztfz1O/w4ZPQJyKPKT6KstX
+	 J6khYryCkjmlw==
+Message-ID: <7c9c39f7-4d25-4a1e-a2b7-a9b09e2034ce@kernel.org>
+Date: Tue, 28 Oct 2025 08:33:04 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,11 +35,11 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 11/11] lpfc: Copyright updates for 14.4.0.12 patches
+Subject: Re: [PATCH 10/11] lpfc: Update lpfc version to 14.4.0.12
 To: Justin Tee <justintee8345@gmail.com>, linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com, justin.tee@broadcom.com
 References: <20251027235446.77200-1-justintee8345@gmail.com>
- <20251027235446.77200-12-justintee8345@gmail.com>
+ <20251027235446.77200-11-justintee8345@gmail.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -85,40 +85,33 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20251027235446.77200-12-justintee8345@gmail.com>
+In-Reply-To: <20251027235446.77200-11-justintee8345@gmail.com>
 Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Content-Transfer-Encoding: 7bit
 
 On 28/10/2025 00:54, Justin Tee wrote:
-> Update copyrights to 2025 for files modified in the 14.4.0.12 patch set.
-
-This makes no sense on its own. We do not care about copyrights and such
-patch has zero meaning to us. Plus it should be result of copyright
-work, IOW, must be squashed if at all.
-
+> Update lpfc version to 14.4.0.12
 > 
 > Signed-off-by: Justin Tee <justin.tee@broadcom.com>
-
-Does not match from address.
-
 > ---
->  drivers/scsi/lpfc/lpfc_disc.h | 2 +-
+>  drivers/scsi/lpfc/lpfc_version.h | 2 +-
 >  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
-> index 511aae481b77..51cb8571c049 100644
-> --- a/drivers/scsi/lpfc/lpfc_disc.h
-> +++ b/drivers/scsi/lpfc/lpfc_disc.h
-> @@ -1,7 +1,7 @@
->  /*******************************************************************
->   * This file is part of the Emulex Linux Device Driver for         *
->   * Fibre Channel Host Bus Adapters.                                *
-> - * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
-> + * Copyright (C) 2017-2025 Broadcom. All Rights Reserved. The term *
->   * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
->   * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
->   * EMULEX and SLI are trademarks of Emulex.                        *
+> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
+> index 31c3c5abdca6..f3dada5bf7c1 100644
+> --- a/drivers/scsi/lpfc/lpfc_version.h
+> +++ b/drivers/scsi/lpfc/lpfc_version.h
+> @@ -20,7 +20,7 @@
+>   * included with this package.                                     *
+>   *******************************************************************/
+>  
+> -#define LPFC_DRIVER_VERSION "14.4.0.11"
+> +#define LPFC_DRIVER_VERSION "14.4.0.12"
 
+
+This makes little sense on its own. Please organize patches in logical
+chunks. Not mentioning that this is useless information - you are
+duplicating kernel version.
 
 Best regards,
 Krzysztof
