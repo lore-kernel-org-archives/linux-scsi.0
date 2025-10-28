@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 48D9B1B425C
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 07:33:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 91D8F33EC
+	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 07:34:18 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761636788; cv=none; b=VTKveIQ8lbwYIfVoLWlftXH/lx0TOjib1fKg5RoNOKjp/lb3J9s9NL/c6JJYRr0sQINkFSTvlL/UDepRtab2kija2WO6VrX5HHAvSi3gFtBsH5VLotIUiaeltJJs8q7TPYV9kSIGhs/0IHNz34gptfBzquMgemoMrGQzOtaPx3o=
+	t=1761636858; cv=none; b=lEjJoFwpHEZbTYy9lG0fSNh6krCiwzIBRSASnvc2VIhxUzVDgOLTcdhdQkDgLjXm8iTapzNFcG40/fwnSOi0KFvlQUY2Gqjwjng6QWSWEoUzioAndWh8jp7GS2bjdv5Wa/8XdNjIR1LLWL1qU5riX4D4lkWG9vfKsHONWe5snVQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761636788; c=relaxed/simple;
-	bh=s/+utpUycH9Gv/VCNxoiBN+vECwBzJOsT/n4j23tuM4=;
+	s=arc-20240116; t=1761636858; c=relaxed/simple;
+	bh=Y0xIbFtD5JJBJaGOmHeZIh2A74bEzbWs5/nPzmfIbuU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Hp8iVug0HXcYkevQEKvUgOkPuAM6OSjR33wkbmAz5vi/eIC2eZtJzps1wrnskWEVJVrTni293QN0GGn6/uKM826IN2X9zxVHRkAt/YOCxVVEVPdyCM7pkrwbqgA+a4RJr4K0LrDNTpLbb8ueGhug0ZS6AKjH57DH2MDCM3ORUPo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=A8kzE7TP; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=uTAX0fbzZp/YId8W5glvLzCvv5eAxtfKVxmVFaclhEMOZsxYZrCcyxhMxdIr9YJ4u1ZeGeN3YChivry8SiYPKZnoq4/x4E4/OVvT6hSBsgkPqXYF9ZV6SLO1EeIDwdHShf7vUvJ3xieX8dNRnTPlWkOxtTk1o0hTFeHBXInGfn8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YIeWB7/g; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="A8kzE7TP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9B23BC4CEE7;
-	Tue, 28 Oct 2025 07:33:06 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YIeWB7/g"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 05C8AC4CEE7;
+	Tue, 28 Oct 2025 07:34:16 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761636787;
-	bh=s/+utpUycH9Gv/VCNxoiBN+vECwBzJOsT/n4j23tuM4=;
+	s=k20201202; t=1761636858;
+	bh=Y0xIbFtD5JJBJaGOmHeZIh2A74bEzbWs5/nPzmfIbuU=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=A8kzE7TP/NaX8zmAvEnkbk7v/gxLsPxXcKaM9HpLw8wg2JuMIHkeL9PVaURhS3GTz
-	 VXBq72WGP0u0IDqNL+8gePWx/uYlSubCfFhkaxaNke4O4z/tXkaRlFM0PeGAjkw7kN
-	 uo/WIIhoAjvIwWHvPD9B3Slu6uqhAMh2fmXmjsFmPL/ECyxKyRQT4yDbkEasOut/Eb
-	 9sxdxsHyNCofoPTWteGtKSfhP2nEXpqEwmIb8tPxurF276Fk09fPWWr+qL84Mifsay
-	 1ueybKwdcvGbShfbjGj5dcXgJJOkK5CjzLNBHCALSh6Ztfz1O/w4ZPQJyKPKT6KstX
-	 J6khYryCkjmlw==
-Message-ID: <7c9c39f7-4d25-4a1e-a2b7-a9b09e2034ce@kernel.org>
-Date: Tue, 28 Oct 2025 08:33:04 +0100
+	b=YIeWB7/g1Doft4ajsLXHTFfc691dKie8X+DthBzDrtOx0ecmzAAzyh2p62ue39ifQ
+	 aZnxGAUik0PjdvUj6awZ17G1XYF3zGEGGq+l5ktYZjHgi6H7AjoCcanUetVmUKtWxD
+	 HD5S+PTBPtn2qczKq/arLvc1SP90eHD+f18VvhlqRTlEGVHrNkXWcD9o1h4jkZUV+I
+	 TCWtQKoSvpnW6UTwuNTMicgjlaYzMaqjRlrtQUGdYPludR8IwkFEVkyuhdWYGwzoWU
+	 Sg3fVRlbU3Mv+h92NQ+/jWiU8gc20tio8lXJGC9gpq3Y65m70zR0piSe6X4vqsNbZ3
+	 UguTVJ/ZyIYyQ==
+Message-ID: <921bd950-4e62-4140-a015-c41ea7f07989@kernel.org>
+Date: Tue, 28 Oct 2025 08:34:15 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,11 +35,12 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 10/11] lpfc: Update lpfc version to 14.4.0.12
+Subject: Re: [PATCH 09/11] lpfc: Add capability to register Platform Name ID
+ to fabric
 To: Justin Tee <justintee8345@gmail.com>, linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com, justin.tee@broadcom.com
 References: <20251027235446.77200-1-justintee8345@gmail.com>
- <20251027235446.77200-11-justintee8345@gmail.com>
+ <20251027235446.77200-10-justintee8345@gmail.com>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -85,33 +86,59 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20251027235446.77200-11-justintee8345@gmail.com>
+In-Reply-To: <20251027235446.77200-10-justintee8345@gmail.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
 On 28/10/2025 00:54, Justin Tee wrote:
-> Update lpfc version to 14.4.0.12
+> FC-LS and FC-GS specifications outline fields for registering a platform
+> name identifier (PNI) to the fabric.  The PNI assists fabrics with
+> identifying the physical server source of frames in the fabric.
+> 
+> lpfc generates a PNI based partially on the uuid specific for the system.
+> Initial attempts to extract a uuid are made from SMBIOS's System
+> Information 08h uuid entry.  If SMBIOS DMI does not exist, then Open
+> Firmware Device-Tree's virtual partition uuid property is used.  Otherwise,
+> a PNI is not generated and PNI registration with the fabric is skipped.
+> 
+> The PNI is submitted in FLOGI and FDISC frames.  After successful fabric
+> login, the RSPNI_PNI CT frame is submitted to the fabric to register the OS
+> host name tying it to the PNI.
 > 
 > Signed-off-by: Justin Tee <justin.tee@broadcom.com>
+
+Still does not match From address.
+
 > ---
->  drivers/scsi/lpfc/lpfc_version.h | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
+>  drivers/scsi/lpfc/lpfc.h           |  4 ++
+>  drivers/scsi/lpfc/lpfc_ct.c        | 36 +++++++++++++
+>  drivers/scsi/lpfc/lpfc_els.c       | 18 +++++--
+>  drivers/scsi/lpfc/lpfc_hbadisc.c   |  2 +
+>  drivers/scsi/lpfc/lpfc_hw.h        | 25 ++++++++-
+>  drivers/scsi/lpfc/lpfc_nportdisc.c |  4 --
+>  drivers/scsi/lpfc/lpfc_sli.c       | 83 ++++++++++++++++++++++++++++++
+>  7 files changed, 164 insertions(+), 8 deletions(-)
 > 
-> diff --git a/drivers/scsi/lpfc/lpfc_version.h b/drivers/scsi/lpfc/lpfc_version.h
-> index 31c3c5abdca6..f3dada5bf7c1 100644
-> --- a/drivers/scsi/lpfc/lpfc_version.h
-> +++ b/drivers/scsi/lpfc/lpfc_version.h
-> @@ -20,7 +20,7 @@
->   * included with this package.                                     *
->   *******************************************************************/
+> diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
+> index 8459cf568c12..f892bb2d119a 100644
+> --- a/drivers/scsi/lpfc/lpfc.h
+> +++ b/drivers/scsi/lpfc/lpfc.h
+> @@ -633,6 +633,7 @@ struct lpfc_vport {
+>  #define FC_CT_RSPN_ID		0x8	 /* RSPN_ID accepted by switch */
+>  #define FC_CT_RFT_ID		0x10	 /* RFT_ID accepted by switch */
+>  #define FC_CT_RPRT_DEFER	0x20	 /* Defer issuing FDMI RPRT */
+> +#define FC_CT_RSPNI_PNI		0x40	 /* RSPNI_PNI accepted by switch */
 >  
-> -#define LPFC_DRIVER_VERSION "14.4.0.11"
-> +#define LPFC_DRIVER_VERSION "14.4.0.12"
+>  	struct list_head fc_nodes;
+>  	spinlock_t fc_nodes_list_lock; /* spinlock for fc_nodes list */
+> @@ -1077,6 +1078,9 @@ struct lpfc_hba {
+>  
+>  	uint32_t nport_event_cnt;	/* timestamp for nlplist entry */
+>  
+> +	unsigned long pni;		/* 64-bit Platform Name Identifier */
+> +#define PATH_UUID_IBM "ibm,partition-uuid"
 
-
-This makes little sense on its own. Please organize patches in logical
-chunks. Not mentioning that this is useless information - you are
-duplicating kernel version.
+Where did you document the ABI?
 
 Best regards,
 Krzysztof
