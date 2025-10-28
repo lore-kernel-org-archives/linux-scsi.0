@@ -1,127 +1,104 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 859CF2E88A7;
-	Tue, 28 Oct 2025 09:58:04 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+Received: from azure-sdnproxy.icoremail.net (azure-sdnproxy.icoremail.net [4.193.249.245])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id 3548A21CC44;
+	Tue, 28 Oct 2025 10:02:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=4.193.249.245
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761645486; cv=none; b=j9A/DhXm0FYFSn9ABmzpbM7AG/YSuXHD0akyxCUogamafz71smFImXq6aj0vIUNY1EQ/oUX6lHhGnBHwIgPku92s16kjGUwJiIVIVU9b6kMSf+7+fW0R3RObC+T+bf2tHOqsVPYouJSI9LGTFaGVStdl84Ha2UONHMFa5mvVyDA=
+	t=1761645732; cv=none; b=YtjJd8ljIkgiMqHRjsAiCLNxoyPO9VNfzJwXplIWP4yAc6oH3tf7vrLPFbIev8DLVKWWMJ6C02uoQh1W8osOEtk8yMtHZuDlLaGFvM/i8c87GgcvxEbCTiXrANZzC+moULb6LuOs6f737WRAvao2vVBggVEJZanH34mSXcyZKP4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761645486; c=relaxed/simple;
-	bh=/rtrNhepHf9lMxwSk8oyaHxVN4v5zy12YxO2AaKG7zc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=Xw+dueWsVM12dKTOIrVmduH/SxhkYuMAv+mKqpSlS0xSMHAZ9nlt6K7GatIskOA7k4D6L1f4HWPNUWOpeMncsP3WLn4PpucOv4d0XBExNlw80fZN+arkvO8gLkmGnfPRZoSc+9CEPMccvtk1D/ljKsfjdi4y+IDcjR6IDCdMh6I=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=asN+qANb; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="asN+qANb"
-Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 59S31w8U353480;
-	Tue, 28 Oct 2025 09:57:45 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	8I3o1pIujZUjMX2XAjT2u/HA+H8MX1k3r61MkoE1lWQ=; b=asN+qANbZLadMXxQ
-	HegT9DkuNWw7vHbi4aIKX1i0yQb+NwyMHm02F0lFtfz2arZPUlwgv5YSd+JDc+/7
-	Z9274ue3Cla24W8DLIjgxpg73ptkVm2a3h5asuf3atdlHvufALyjZfSUdySrNAio
-	vZOLJa7Z4XaTVsAB+Na9LFOekJks/G5q9kczp+D4HDo8vjIZJPWYKC3bSbwZas7w
-	ZgXegXuciZzZwhLrYwEyq7fQskjQChlG2KZkgJ/GclFlsLY+QD6sAQsPK18uT2md
-	rS2Lj20ZACcjFsIiRAzc1xH6TMKcZjrC7KDjTU4B1M7evb/4CoVx2GWCCWj2Otsh
-	/S44DQ==
-Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4a2njrs5jy-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Oct 2025 09:57:44 +0000 (GMT)
-Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 59S9viZv030350
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Oct 2025 09:57:44 GMT
-Received: from [10.206.96.75] (10.80.80.8) by nasanex01a.na.qualcomm.com
- (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.24; Tue, 28 Oct
- 2025 02:57:35 -0700
-Message-ID: <ef4effd5-bc43-4134-a4e5-a1e47b620549@quicinc.com>
-Date: Tue, 28 Oct 2025 15:27:32 +0530
+	s=arc-20240116; t=1761645732; c=relaxed/simple;
+	bh=LsYTuV7LLN5FAg+rUEomU5ZVfWHzIhuwGB/sNrd2ySE=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=fLy+mMmo0WxuAUEFj2gmx33lQJ7kAHTSt4mdijzMdQoWPSWNGB9xYsKSpaYXV5xFmNFsQpDAk0Cq6Dj07J23cBLYxJMNROgf+pXVwdEp7rVCZyTQ2Xg6YtPmieVqpCFa4/+eHJwrZzJRvi01yu/Zz3e6nBIS//mLvLKnYo0etBw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn; spf=pass smtp.mailfrom=zju.edu.cn; arc=none smtp.client-ip=4.193.249.245
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=zju.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=zju.edu.cn
+Received: from zju.edu.cn (unknown [218.12.19.0])
+	by mtasvr (Coremail) with SMTP id _____wDnk2mTlABpgDcnAw--.432S3;
+	Tue, 28 Oct 2025 18:01:56 +0800 (CST)
+Received: from ubuntu.localdomain (unknown [218.12.19.0])
+	by mail-app2 (Coremail) with SMTP id zC_KCgB3RDaOlABpdXFUAw--.49170S2;
+	Tue, 28 Oct 2025 18:01:54 +0800 (CST)
+From: Duoming Zhou <duoming@zju.edu.cn>
+To: linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org,
+	martin.petersen@oracle.com,
+	James.Bottomley@HansenPartnership.com,
+	Duoming Zhou <duoming@zju.edu.cn>
+Subject: [PATCH] scsi: imm: fix use-after-free bugs caused by unfinished delayed work
+Date: Tue, 28 Oct 2025 18:01:49 +0800
+Message-Id: <20251028100149.40721-1-duoming@zju.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 1/3] dt-bindings: phy: qcom-edp: Add edp ref clk for
- sa8775p
-Content-Language: en-US
-To: Rob Herring <robh@kernel.org>,
-        Dmitry Baryshkov
-	<dmitry.baryshkov@oss.qualcomm.com>
-CC: <robin.clark@oss.qualcomm.com>, <lumag@kernel.org>,
-        <abhinav.kumar@linux.dev>, <jessica.zhang@oss.qualcomm.com>,
-        <sean@poorly.run>, <marijn.suijten@somainline.org>,
-        <maarten.lankhorst@linux.intel.com>, <mripard@kernel.org>,
-        <tzimmermann@suse.de>, <airlied@gmail.com>, <simona@ffwll.ch>,
-        <krzk+dt@kernel.org>, <conor+dt@kernel.org>, <quic_mahap@quicinc.com>,
-        <andersson@kernel.org>, <konradybcio@kernel.org>, <mani@kernel.org>,
-        <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
-        <vkoul@kernel.org>, <kishon@kernel.org>,
-        <cros-qcom-dts-watchers@chromium.org>, <linux-phy@lists.infradead.org>,
-        <linux-arm-msm@vger.kernel.org>, <dri-devel@lists.freedesktop.org>,
-        <freedreno@lists.freedesktop.org>, <devicetree@vger.kernel.org>,
-        <linux-kernel@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
-        <quic_vproddut@quicinc.com>
-References: <20251013104806.6599-1-quic_riteshk@quicinc.com>
- <20251013104806.6599-2-quic_riteshk@quicinc.com>
- <xofvrsdi2s37qefp2fr6av67c5nokvlw3jm6w3nznphm3x223f@yyatwo5cur6u>
- <20251015144349.GA3302193-robh@kernel.org>
-From: Ritesh Kumar <quic_riteshk@quicinc.com>
-In-Reply-To: <20251015144349.GA3302193-robh@kernel.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nasanex01a.na.qualcomm.com (10.52.223.231)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=dqvWylg4 c=1 sm=1 tr=0 ts=69009398 cx=c_pps
- a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=x6icFKpwvdMA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=i-1-ecsRnRnOvt_f1vAA:9 a=QEXdDO2ut3YA:10
- a=nl4s5V0KI7Kw-pW0DWrs:22 a=pHzHmUro8NiASowvMSCR:22 a=xoEH_sTeL_Rfw54TyV31:22
-X-Proofpoint-GUID: 4CfEHxI0d71YWWwFAUQARagTdDCwDYdh
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDI4MDA4NCBTYWx0ZWRfX/wGoND2ICMMD
- opcy1bZOgAksLQ8qu35B+9JOIQgSqgahxBfX8+2z1dOnXOE2/EFliZ3UWF+7zwu+YX/WxSrspg2
- pEyNMlZ14VjFM2GFm994qqCLdcZ+6a9kmplaJjNJXSO2/FFG8PXSdf+dC86nfsf6F7tbcfpsblw
- ZB3CDazV/+xVfnJNeh5Sdqkm9k28ggaKoyVCwMHgI3QU7f18kYoBQCbfQ/HePT9nQID+F3RAFN4
- b/Lti2GxRdDUClxGtoJHv2Ns5OZ97PNyLWQfTzGkw0/AJpMRK9H34T/HMwZNbq//OOxVCmYYGlG
- 0R58Dw4jgv6oWxCAoLkKx+IIlVH9FGbepmYGKeo3YwBf47W3x7U2PN9eml5D2KhtbEKo5jTQ4xn
- D08Lo0YCu3qEJ/nS9a6J36J92XKCsg==
-X-Proofpoint-ORIG-GUID: 4CfEHxI0d71YWWwFAUQARagTdDCwDYdh
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
- definitions=2025-10-28_03,2025-10-22_01,2025-03-28_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- phishscore=0 clxscore=1015 impostorscore=0 priorityscore=1501
- lowpriorityscore=0 bulkscore=0 spamscore=0 suspectscore=0 malwarescore=0
- adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2510020000
- definitions=main-2510280084
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:zC_KCgB3RDaOlABpdXFUAw--.49170S2
+X-CM-SenderInfo: qssqjiasttq6lmxovvfxof0/1tbiAwUNAWj-yv4F7QA+s-
+X-CM-DELIVERINFO: =?B?aaysbgXKKxbFmtjJiESix3B1w3uoVhYI+vyen2ZzBEkOnu5chDpkB+ZdGnv/zQ0PbP
+	CR1yNwzV7anoiB6+B/SY26SzCtXLsURgkJIJQorRbNy8C5r+8AVgZrgI/5IUEDxN9XmH+v
+	Ws5s1vt5/vKW3V7J0whNC/8f+UfxYoAS7oQgkoOLlUUxR07JOb8BTt7NEwh8aQ==
+X-Coremail-Antispam: 1Uk129KBj93XoW7WF4kCFW3KFy8AFy8Cr4ftFc_yoW8XFyUpr
+	Z3Ga45t3y7uay8uw47Xr48WFySgrs8Gry7K3yxW3yfCr98JF1jqF13ta15Wa4rCrW8A39x
+	ZF4jqwn5ZayqyrcCm3ZEXasCq-sJn29KB7ZKAUJUUUUU529EdanIXcx71UUUUU7KY7ZEXa
+	sCq-sGcSsGvfJ3Ic02F40EFcxC0VAKzVAqx4xG6I80ebIjqfuFe4nvWSU5nxnvy29KBjDU
+	0xBIdaVrnRJUUUvvb4IE77IF4wAFF20E14v26r1j6r4UM7CY07I20VC2zVCF04k26cxKx2
+	IYs7xG6rWj6s0DM7CIcVAFz4kK6r1j6r18M28lY4IEw2IIxxk0rwA2F7IY1VAKz4vEj48v
+	e4kI8wA2z4x0Y4vE2Ix0cI8IcVAFwI0_tr0E3s1l84ACjcxK6xIIjxv20xvEc7CjxVAFwI
+	0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIE14v26rxl6s0DM28EF7xvwVC2z280aVCY1x0267AK
+	xVW0oVCq3wAS0I0E0xvYzxvE52x082IY62kv0487Mc804VCY07AIYIkI8VC2zVCFFI0UMc
+	02F40EFcxC0VAKzVAqx4xG6I80ewAv7VC0I7IYx2IY67AKxVWUJVWUGwAv7VC2z280aVAF
+	wI0_Jr0_Gr1lOx8S6xCaFVCjc4AY6r1j6r4UM4x0Y48IcxkI7VAKI48JM4x0Y48IcxkI7V
+	AKI48G6xCjnVAKz4kxMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I
+	3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxV
+	WUAVWUtwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8I
+	cVCY1x0267AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aV
+	AFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVWUJVW8JbIYCTnIWIevJa73UjIFyTuY
+	vjxU26pBDUUUU
 
+The delayed work item imm_tq is initialized in imm_attach() and
+scheduled via imm_queuecommand() for processing SCSI commands.
+When the IMM parallel port SCSI host adapter is detached through
+imm_detach(), the imm_struct device instance is deallocated.
 
-On 10/15/2025 8:13 PM, Rob Herring wrote:
-> On Mon, Oct 13, 2025 at 03:37:47PM +0300, Dmitry Baryshkov wrote:
-> > On Mon, Oct 13, 2025 at 04:18:04PM +0530, Ritesh Kumar wrote:
-> > > Add edp reference clock for sa8775p edp phy.
-> > 
-> > eDP, PHY.
-> > 
-> > I'd probably ask to squash both DT binding patches together, but this
-> > might cause cross-subsystem merge issues. I'll leave this to DT
-> > maintainers discretion, whether to require a non-warning-adding patch or
-> > two patches with warnings in the middle of the series.
->
-> One patch.
+However, the delayed work might still be pending or executing
+when imm_detach() is called, leading to use-after-free bugs
+when the work function imm_interrupt() accesses the already
+freed imm_struct memory.
 
-Sure, will update a single patch for DT bindings.
+The race condition can occur as follows:
 
-> Rob
->
+CPU 0(detach thread)   | CPU 1
+                       | imm_queuecommand()
+                       |   imm_queuecommand_lck()
+imm_detach()           |     schedule_delayed_work()
+  kfree(dev) //FREE    | imm_interrupt()
+                       |   dev = container_of(...) //USE
+                           dev-> //USE
+
+Add disable_delayed_work_sync() in imm_detach() to guarantee
+proper cancellation of the delayed work item before imm_struct
+is deallocated.
+
+Fixes: 1da177e4c3f4 ("Linux-2.6.12-rc2")
+Signed-off-by: Duoming Zhou <duoming@zju.edu.cn>
+---
+ drivers/scsi/imm.c | 1 +
+ 1 file changed, 1 insertion(+)
+
+diff --git a/drivers/scsi/imm.c b/drivers/scsi/imm.c
+index 5c602c057798..45b0e33293a5 100644
+--- a/drivers/scsi/imm.c
++++ b/drivers/scsi/imm.c
+@@ -1260,6 +1260,7 @@ static void imm_detach(struct parport *pb)
+ 	imm_struct *dev;
+ 	list_for_each_entry(dev, &imm_hosts, list) {
+ 		if (dev->dev->port == pb) {
++			disable_delayed_work_sync(&dev->imm_tq);
+ 			list_del_init(&dev->list);
+ 			scsi_remove_host(dev->host);
+ 			scsi_host_put(dev->host);
+-- 
+2.34.1
+
