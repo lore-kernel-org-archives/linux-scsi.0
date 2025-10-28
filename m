@@ -1,158 +1,169 @@
-Received: from mail-lj1-f175.google.com (mail-lj1-f175.google.com [209.85.208.175])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from SY8PR01CU002.outbound.protection.outlook.com (mail-australiaeastazolkn19010018.outbound.protection.outlook.com [52.103.72.18])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC04723C8AE
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 14:55:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.175
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761663351; cv=none; b=W+WlVFV5oi74qqX6Mk3HZEaScArt1ZMWnf1ovvU5dF3VnYnnD3JutHP0eelcNF2PEqJgqdc3ddgbAEq5m898vtxW2v94chdvCKBH1ozTJwdHIst2tDNxbCSSUdhtx/M1uiEC3jP9RREp4dKAuL+kfqxSzwV2c5I2POUEhBtGto8=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761663351; c=relaxed/simple;
-	bh=4DfI7OcUnB+kIuMTQXNdtCg+eWdy+FCdGYX959o/v1g=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=KXwBS1jH/PIRD8Uh3z8MrIvJv1fTnq9lcoJ9A3LZo6u36N/vJurHTrKYFN+cQvYa1AmJ84X/1JQnae8VBxLVkBZuyta8KYJX1tbETZIELI51fGV5nMZKPozQqq5TDCjGDCb0S2GTHIAvDefNbAOQ26H0yRN/dAzOeG8EnaPOOzE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=hHXhqDL3; arc=none smtp.client-ip=209.85.208.175
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 742BB285058;
+	Tue, 28 Oct 2025 16:30:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=52.103.72.18
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1761669027; cv=fail; b=pdw0l3mYjlUn5oJK1okZDIATphShjH8aiwhSlfU9qkSdXZft2yGJ7lUICsaFg9xzlc/eWALWG1UNtPmbIE/lud+a0P+k+vMVpHUdKki8+33OEO99s8V0TcuHYLP92Y659Yw22WWw1GArGQ5/dQM+yy6E0CXJyjI8Q4iBycgwepg=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1761669027; c=relaxed/simple;
+	bh=/9Z2X68DcGLALreBlj6sU63ZZvYMsgpP9Bh03XiBicM=;
+	h=From:To:Cc:Subject:Date:Message-ID:Content-Type:MIME-Version; b=HhDJajiZsyH6yEdQ/pqWBBvC6SpoOvCU5V7h+v1gYDmWbmwcqbYqbm1sRyNtpwa/4Ha3oFw7vDyjxBgZk1twABWrjJxwypYmJQBbS1goeuMpSBBBVOatOxRyl2HwaM1EqNbqm0YB5AQCsPEJRmJTkJ1I7LI1MUTwyLzw4KqKOwA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com; spf=pass smtp.mailfrom=outlook.com; dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b=g9jVUgL/; arc=fail smtp.client-ip=52.103.72.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=outlook.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=outlook.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="hHXhqDL3"
-Received: by mail-lj1-f175.google.com with SMTP id 38308e7fff4ca-378d50e1c77so55385891fa.0
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 07:55:49 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761663348; x=1762268148; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=cxgC3Ar205SePZa68q9SjHUQRYO31L1UuAjDONdLHVE=;
-        b=hHXhqDL3w0Vx6kMG51Fjk8jFxIYahWeolRhcGDxl+8U1LvwlXinDUdnMXcSe3tk74v
-         lXAVT9iEYfr+8eTv2+h+HL1LzQ5DxMA3NXV7w/cHcbuk4wtwhN5hR6qQAI50cfIce2bO
-         1+6VRN7oa4Kw15FR5RBiIxwInxGbbc8uh+Fuu817GPf/neeYeqmQWRwjBLMkf4RacqVF
-         QrfCJjpt8/ZMyhV0eZHJ3bY8Icqtqwae79eG53QTXu68q1fomyZLYtTesr9kKvPXiZb8
-         5TrfHPh+0J+hUR5T75LseO91sDCWUq46+k5IugS7brnGxKwyaRdlQ5Da/MHKw3SOGCHs
-         8BJQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761663348; x=1762268148;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=cxgC3Ar205SePZa68q9SjHUQRYO31L1UuAjDONdLHVE=;
-        b=jAG+w12NeMKh9aCNmrH/VUTP/Ra4V5umUX/L9YCP+7FXTrgHXXQi2nh702nGYTkRbU
-         Oj2V3e7MdQNTDiNYuwx3/rl+srQ412I5ZdzalCHxZ4DZ/59la1ADDpwb2RjOgLoujaEL
-         zX1dG4CsWLjYKG9HDGPFM79+1CNob7z/nkRWgSYlwsUVyMv1tW6jTDain0qVv79WUAh8
-         I3jFpqaHR6dVntMmClqLoxpvYfCqauhtfUhZRACHI5trGKKyxlTptdiZZdwCFQey6qOh
-         yhPgTBE8dGB10IDIyBNs33UrBIADT1EaHmj1OraDs5OQCqxGmS82QmYJ4QdMhbxBXdjl
-         l+dA==
-X-Forwarded-Encrypted: i=1; AJvYcCVE64iN6UbLSCUg2GfZRHzuxMMgTcSLra95lyLTxhYDSrV53OCuFePHDgYcCqBsJUoi6CPgg8VIOH1y@vger.kernel.org
-X-Gm-Message-State: AOJu0YyZX5LtwYNNANuY7ANitTArpQiPVo9JVWAXe8FpimbtX6hyvtya
-	0Vr20qxz7u7Gr3txi+EwIS/mlhrcSIwReey/89AQ/vkmVoRzrLv427Qd
-X-Gm-Gg: ASbGncsqAUPfvCnDyH7l+tQUFiR8akdFTQLtIKKo79oRwPUipPPM+5+uKjomeYhW1wz
-	lHv1+1IAwIqLH83s/h+b6A0nO+Lsnj9f+nIURfGho8m3BZDr6q3yyFPnNZSrP2IZWuAjtP4hWJs
-	/Ek/YLha1lx7ref5i7Q6vxJpqxWb0UE6g9iMVjsKDzsOHofv9iytehI2s4r6mUTnSfw19HsPDq4
-	C7lWtEsvn75CWudac9r6kAkKFuMeeaWD3ptNQySVvJ7xB3OX8tewtgs+lpkpsxm1MfQ7Lmn8n8s
-	LyxrMrrkgBERCDqjTuGgaCLlBvhchk+JYojvKJ1GBPjivw3JPGfeVkgtsOKagPxtsxChd+LsBLj
-	XZMx73W+2t9SHNUnY6/uvyaxQxVdDf2iSoRus4NXMTCdrQdZaSmiZOmKQzBFiSkMMzpoobdSgh7
-	K2uPI5LiQl7TG/YwtnAje2F6/2eaYaM5ew1Eiqtm1iUPH4JB61Bw50h0TZQ9zEDe6dZqNJULyer
-	86CPUJRg03lYc8W78eCl8L2n1GEUEE=
-X-Google-Smtp-Source: AGHT+IEYtMFNcBTkx5BcQJAnt4IjKAPptrA7hwRAVKe8cUNymnzw27KPZxunv/Xg4w6rE9Z8xlhI2Q==
-X-Received: by 2002:a05:6512:b05:b0:592:f9f4:7932 with SMTP id 2adb3069b0e04-5930e9cb1ebmr1304002e87.33.1761663347674;
-        Tue, 28 Oct 2025 07:55:47 -0700 (PDT)
-Received: from localhost.localdomain (host194.safe-lock.net. [195.20.212.194])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-59302878849sm3082988e87.80.2025.10.28.07.55.46
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 28 Oct 2025 07:55:47 -0700 (PDT)
-From: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
-To: sathya.prakash@broadcom.com,
-	kashyap.desai@broadcom.com,
-	sumit.saxena@broadcom.com,
-	sreekanth.reddy@broadcom.com
-Cc: martin.petersen@oracle.com,
-	mpi3mr-linuxdrv.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	skhan@linuxfoundation.org,
-	khalid@kernel.org,
-	david.hunter.linux@gmail.com,
-	linux-kernel-mentees@lists.linuxfoundation.org,
+	dkim=pass (2048-bit key) header.d=outlook.com header.i=@outlook.com header.b="g9jVUgL/"
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=pbF+sFzXGpXvevHmiF4MKk1UsIFChEG09KSHeL7GYdPW8sDLTArXJrTQWFsTLXEo+3JZG190d/dkm6+RpX/izWaaWyVn5v1mimIuf8eUHRRBB+Ztrg2GLTKZG+KNDmZ87rsl/+ftLf2EihskuBIeNMXL6I/Jvg+Q2srahFsRqpyvMqeQac2eb6tM9UUrpxV1lnkJEj/si8t+KsZTUD+1AaGI2gw6HcdzjCtyzWb8RGgcRCEOtrYTJruDYaHCVs2q9kR0S6OefIo5Z7pnh0OjeZKRgGQYNoU1hnJn6j0AL6XXygqtfGreKE5/BVuv73Ov+Izum6FAK6bBGXZNvh/XHg==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=1O64jdz4bCMPZi4gObdEnkH3AmIGpFuugBALyAO2Ohk=;
+ b=Mn9vqTi8+qwhB57OYXnJnVA17aeYEeFuFycZz6o8dTllXfjJNuMvrF/CwVc7py/6PpHNQdnn5pEUmCXIVPfvRj3vtm6CA8lX0jjWkVS3hPsejoArBPFazAsZLHeQZUP67k8Z7iN2FGJOXZfhKyEB6ua/e+kX+8Sk86kL8wxuOj0YnSz4WcZ191U7U1rsxyfbg/V8BMxGsabYf9oT1OkxxDda1Pmov2YwRjXrCWC9h0/m3Ts4MQkDkVPOLiXUB8zUmqX3S4Jq4vlXexNplLs3mVMIX1DDLlhQpLM86boDbfACXodQQK07tBiqsoJ4B7XgaCHi1tAKeIQcri8jes46qQ==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=none; dmarc=none;
+ dkim=none; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=outlook.com;
+ s=selector1;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=1O64jdz4bCMPZi4gObdEnkH3AmIGpFuugBALyAO2Ohk=;
+ b=g9jVUgL/0m0ivoyJtgkUWa0ujohKcdnU37E+a9g64Tw6qftRbOxr0NeScGRSwBjKlJa+IhD19QfO3aU4GCbXzQOfKd6ocuTDWOqs0yJUXJSzXiHuXVKOiT+ZPm2JrW/oA3XQNAjWPms+dDuw0ymF1CmoqNlRj6yd+TWCdV5qCh2nEuG+wOkf/DEh6aR7/qX64itpnThuLvOHtE5T6okScn3lHrW72B9Max0f82KS7t9QLglrvDIrFZco6ryckSoINBls7pyFw5MqogzhsxtWjKHhhs47AAOvdXm78cMoc1p9kA4ix+xqvcCLCPL7Qr2b8YR700xAHxB1V5i7FqiKtA==
+Received: from ME2PR01MB3156.ausprd01.prod.outlook.com (2603:10c6:220:29::22)
+ by MEWPR01MB8833.ausprd01.prod.outlook.com (2603:10c6:220:1f6::5) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9253.20; Tue, 28 Oct
+ 2025 16:30:21 +0000
+Received: from ME2PR01MB3156.ausprd01.prod.outlook.com
+ ([fe80::443d:da5:2e96:348d]) by ME2PR01MB3156.ausprd01.prod.outlook.com
+ ([fe80::443d:da5:2e96:348d%4]) with mapi id 15.20.9275.011; Tue, 28 Oct 2025
+ 16:30:21 +0000
+From: moonafterrain@outlook.com
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org,
-	Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
-Subject: [PATCH RFT v2] driver/scsi/mpi3mr: Fix build warning for mpi3mr_start_watchdog
-Date: Tue, 28 Oct 2025 15:55:34 +0100
-Message-Id: <20251028145534.95457-1-kubik.bartlomiej@gmail.com>
-X-Mailer: git-send-email 2.39.5
+	stable@vger.kernel.org,
+	Yuhao Jiang <danisjiang@gmail.com>,
+	Junrui Luo <moonafterrain@outlook.com>
+Subject: [PATCH] scsi: aic94xx: fix use-after-free in device removal path
+Date: Wed, 29 Oct 2025 00:29:04 +0800
+Message-ID:
+ <ME2PR01MB3156AB7DCACA206C845FC7E8AFFDA@ME2PR01MB3156.ausprd01.prod.outlook.com>
+X-Mailer: git-send-email 2.51.1.dirty
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: PH7PR03CA0016.namprd03.prod.outlook.com
+ (2603:10b6:510:339::13) To ME2PR01MB3156.ausprd01.prod.outlook.com
+ (2603:10c6:220:29::22)
+X-Microsoft-Original-Message-ID:
+ <20251028162904.44718-1-moonafterrain@outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+X-MS-Exchange-MessageSentRepresentingType: 1
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: ME2PR01MB3156:EE_|MEWPR01MB8833:EE_
+X-MS-Office365-Filtering-Correlation-Id: ff2ae6bb-f196-4ffd-c3a5-08de163f49da
+X-Microsoft-Antispam:
+	BCL:0;ARA:14566002|19110799012|15080799012|23021999003|461199028|5072599009|8060799015|5062599005|40105399003|52005399003|3412199025|440099028|3430499032|18061999006|12091999003|11031999003|1710799026;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?dyhh85adj/idAwYaWyHKvkcLkRjnohvnxpbiZtW+IOmQJjvr91bX9N9Nx2Ty?=
+ =?us-ascii?Q?2u7vTSYUDJEWktvXEjF4eelHLPlHeaIyPqllJEMkRZUw5KbnP8q+lyvbRe/4?=
+ =?us-ascii?Q?YYubNi0Whg6Qu7aISWN9ALpcJsLJh+itQAGKyv0BQc6EUOJi1jwnouMXBYGH?=
+ =?us-ascii?Q?JQ0XjtTFVBbN1lE5hxTTqMjBRBxvXEXVw35cTNhdLeeTm824NgiZqb4OSYps?=
+ =?us-ascii?Q?KfaR2dYgkEr9KNNxxf7mS2JirGHT7Vx3v0JgnAzXf8hj4Fdh08gpWM2YUmXJ?=
+ =?us-ascii?Q?990H51NlthEEmecMrbJCqGVhOMGhZnQY+R7Y0fwoUSdsN/Ocz5G7HtHvQM9W?=
+ =?us-ascii?Q?BKMVhOFfVdXVZ7G0IS2Of8SazQtTo4oPMEi4C+drigU5sbViweHtzvslF+hO?=
+ =?us-ascii?Q?UtZWWWyv7+0jSJ5DwJ06OEz8Jn3S4vZDxe6NiFNUxbkihx79NXU3XXJd5A2o?=
+ =?us-ascii?Q?1n1zEM/WSSSYgyccMblc+jHW0FLx+kxyc6e9hPgG6mAp3/WWMCXknyPyKDeA?=
+ =?us-ascii?Q?3wWDHZjlEsbu/oKT+Da1av9Dgw0coWKKcaFbGNSZfkzNiR+ofHy39ycRHiV8?=
+ =?us-ascii?Q?VIBsbKVl6YNGMCVPvLXmkPBCboW5uk/9c3zKTOvDN/mcFwvyTs5zP/MZuCSL?=
+ =?us-ascii?Q?eNIaXXcjtOhmsIHlEhdSiz6mtHV/wSxcTehylQ33dnnNtHm6tghMzeeDRuQY?=
+ =?us-ascii?Q?c8rmVGMghjLMuFuvMYD9rVILLOayPCvB8wI+aieFhqrIRYuCax84Y9YT/g27?=
+ =?us-ascii?Q?1ul1DSpnc0ArFSYwnxMUEp3Jyybt6DYTHd8VSxWmWjhwJ5Dnf9LPWNlN28eI?=
+ =?us-ascii?Q?WD40Jp2GJq33eEb8I5LtWLArRt0SOsn2bvkY+GNJGHoeP/XadqqXk5Rvw3Kv?=
+ =?us-ascii?Q?ZjUB1vF0ChuvdSeKH39mcPBaVEe54cvr6UaeUHF1MdNGElMiMDahNvIxNH4B?=
+ =?us-ascii?Q?Eh9wE3BFhJJsZIcnoY5Kz1E14xWkGlbE6yfN4al3+rQfwVZT6aS6l2LhgRKS?=
+ =?us-ascii?Q?HqcINCK8hK65WNiIkqnLra9t3A5cH2HEGqIVvG7WmEKrS91wRyBUy4mzs8/+?=
+ =?us-ascii?Q?t73ouvwvmtXHNdVxR+/DkRPn1e1anvUXDJJG71GTt4OB2ujPYiM9Vmr5lMaM?=
+ =?us-ascii?Q?KhoAd7OWpazdpnH2/DYClZ0IFVgOORFB1l9EZjYMK976Xu66H3nJ/mR59rjX?=
+ =?us-ascii?Q?yfA5iDxY2MeZVcqFEEikb6cSW3vRWXCCgDZWZaqUGwXMr9z4z8LOKCpZXN3Z?=
+ =?us-ascii?Q?afa0bK0x9KjhkS1X90+brxsFqDOiT8/uky+1eDXMYtF3UKlMOre7vkkocWkP?=
+ =?us-ascii?Q?q0KgSEn0PwOPm3LL7pOCQ/ftiNWn0rtNxQteeAs3CKXL/Q=3D=3D?=
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?42UrjPNxouenFHh31lmoic/1bPb+48W1pS4D4QvE9Lqxy7pouoptvSqDXpd9?=
+ =?us-ascii?Q?HdtA7dmOlecAoqF4xjczCHUCPy88MysiC2tJYrUNRo9vjn1TTNtwY7warviG?=
+ =?us-ascii?Q?GXKXS02yxC3anrnufrPFBxPDUUotaXgeALBFkfqbGkQDOiTHsXXk9Py6DqRY?=
+ =?us-ascii?Q?zaBTiNH+UKHsa2fuzDVLMyJmyOGKuTGAMxqKKoRk/5KBUymfeT1LpFMlXvfk?=
+ =?us-ascii?Q?xQKyjpOi5ahUwSBCoQb0BlmEfCJ5i9AjOLZexvBdqjoUTabc1zf/s57JALAf?=
+ =?us-ascii?Q?YzVrkDTqUhvDpJq5Me0ETJeax2d4sijU9AmHoVqVUROfSNHAIig7mXmEF+je?=
+ =?us-ascii?Q?/7u0nkT8tvbfxTmT1qN149u+n+x9BIU8g+cnMdCqll4Sr2HCJXw6QEJCzaGW?=
+ =?us-ascii?Q?dQX3w94zIELLkznX3uUwjRZx0XF8w7LVm2S640bPgPAX7eh5NdrqZ2vEKSYI?=
+ =?us-ascii?Q?mnXeLBl4C/NrfpXTdANMv1ocqKWqUEeIJGmD7IuBjOkZYTe30DZhroZg15bP?=
+ =?us-ascii?Q?3G+Rp2PV3tY5dOifEsouNWIohVX3gIOFVdinHJkLFN7vE8Da96FJGZPY4pWs?=
+ =?us-ascii?Q?pfVUPJWnXV0n1WOK0FPEJ7+Fp9hGeUt08pUP+RB+4MS3nm23HM93JXJ/VzE/?=
+ =?us-ascii?Q?XayaccYdhQ7Ird+5eDjPuTGa3NiumTR4JZbr0aoCZoltcPyYwhfhL7JI5J3J?=
+ =?us-ascii?Q?23RndYLC+0rZMRophG1Q6QZH5VjvnO0m2LfWidN8j7+Pyenb0bcZFr5axFlJ?=
+ =?us-ascii?Q?CZv44mfFpJ/Dw1owGnbKV7FQ0dIoMyU0gvDYuFmV4n7zK3vKqEptkRkcxZth?=
+ =?us-ascii?Q?whTxtuR7soir/LAJdxgvJz4GkLG0sQoMNgCDC/UqAGSXeILd4RBKg2R1xd+g?=
+ =?us-ascii?Q?0A6hfUaV5Mq6cujXklX379uoJ/wEMDnLKl8p50z6cz1X99NOQQnhn2vPW4x0?=
+ =?us-ascii?Q?D8jfmot3HUgKm08AqUS9l0uTF1ehFf2XPG74uQPOhq1bIdEBHIosOJW0bup0?=
+ =?us-ascii?Q?0uFDmBH0o0qzN8kC4Puq9PSZp1zSolkI5xGOO1LOkhBQgRwJYTrlSskzARsc?=
+ =?us-ascii?Q?n0YU7wDYrq+HoY9Zsh17hV5Y5OeMcw+YAsWoPZYat4UMjHTnmDmPATDLyHNG?=
+ =?us-ascii?Q?//uBU+3mqOPfc00uHrXyRam5Zokm+ImHZk8x1nP6vmPOwSOUInHEzWnkvn8V?=
+ =?us-ascii?Q?ZFcV8Ft3jXVQVBtHRrNhax3Gz1d/I4vbUKcRbL2FA/GLelr20Rc0M1ImcQKc?=
+ =?us-ascii?Q?Opxtpdu04c8M2Ws+WnGK?=
+X-OriginatorOrg: outlook.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: ff2ae6bb-f196-4ffd-c3a5-08de163f49da
+X-MS-Exchange-CrossTenant-AuthSource: ME2PR01MB3156.ausprd01.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 28 Oct 2025 16:30:21.4021
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 84df9e7f-e9f6-40af-b435-aaaaaaaaaaaa
+X-MS-Exchange-CrossTenant-RMS-PersistedConsumerOrg:
+	00000000-0000-0000-0000-000000000000
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: MEWPR01MB8833
 
-GCC warning:
-drivers/scsi/mpi3mr/mpi3mr_fw.c:2872:60: warning: ‘%s’ directive
-output may be truncated writing up to 63 bytes into a region of size
-41 [-Wformat-truncation=]
+From: Junrui Luo <moonafterrain@outlook.com>
 
-Change MPI3MR_WATCHDOG_NAME_LENGTH define to properly clarify
-the required buffer size.
+The asd_pci_remove() function fails to synchronize with pending tasklets
+before freeing the asd_ha structure, leading to a potential use-after-free
+vulnerability.
 
-The mrioc->watchdog_work_q_name buffer in
-the mpi3mr_start_watchdog() function no longer requires adding mrioc->id,
-since mrioc->name already includes it.
+When a device removal is triggered (via hot-unplug or module unload), race condition can occur.
 
-mrioc->name is built using:
-sprintf(mrioc->name, "%s%d", mrioc->driver_name, mrioc->id)
+The fix adds tasklet_kill() before freeing the asd_ha structure, ensuring
+all scheduled tasklets complete before cleanup proceeds.
 
-Signed-off-by: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
+Reported-by: Yuhao Jiang <danisjiang@gmail.com>
+Reported-by: Junrui Luo <moonafterrain@outlook.com>
+Fixes: 2908d778ab3e ("[SCSI] aic94xx: new driver")
+Cc: stable@vger.kernel.org
+Signed-off-by: Junrui Luo <moonafterrain@outlook.com>
 ---
+ drivers/scsi/aic94xx/aic94xx_init.c | 3 +++
+ 1 file changed, 3 insertions(+)
 
-I do not have the hardware to full tests it.
-Tests only built kernel without warning and run kernel.
-
-Changelog:
-Changes since v1:
-- Add define MPI3MR_WATCHDOG_NAME_LENGTH (MPI3MR_NAME_LENGTH + 15)
-- Change watchdog_work_q_name buffer from size 50 to MPI3MR_WATCHDOG_NAME_LENGTH
-
-Link to v1
-https://lore.kernel.org/all/20251002063038.552399-1-kubik.bartlomiej@gmail.com/
-
- drivers/scsi/mpi3mr/mpi3mr.h    | 3 ++-
- drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +--
- 2 files changed, 3 insertions(+), 3 deletions(-)
-
-diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-index 6742684e2990..be15d5ec8b58 100644
---- a/drivers/scsi/mpi3mr/mpi3mr.h
-+++ b/drivers/scsi/mpi3mr/mpi3mr.h
-@@ -66,6 +66,7 @@ extern atomic64_t event_counter;
-
- #define MPI3MR_NAME_LENGTH	64
- #define IOCNAME			"%s: "
-+#define MPI3MR_WATCHDOG_NAME_LENGTH (sizeof("watchdog_") + MPI3MR_NAME_LENGTH + 1)
-
- #define MPI3MR_DEFAULT_MAX_IO_SIZE	(1 * 1024 * 1024)
-
-@@ -1265,7 +1266,7 @@ struct mpi3mr_ioc {
- 	spinlock_t fwevt_lock;
- 	struct list_head fwevt_list;
-
--	char watchdog_work_q_name[50];
-+	char watchdog_work_q_name[MPI3MR_WATCHDOG_NAME_LENGTH];
- 	struct workqueue_struct *watchdog_work_q;
- 	struct delayed_work watchdog_work;
- 	spinlock_t watchdog_lock;
-diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-index 8fe6e0bf342e..18b176e358c5 100644
---- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
-+++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-@@ -2879,8 +2879,7 @@ void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrioc)
-
- 	INIT_DELAYED_WORK(&mrioc->watchdog_work, mpi3mr_watchdog_work);
- 	snprintf(mrioc->watchdog_work_q_name,
--	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name,
--	    mrioc->id);
-+	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s", mrioc->name);
- 	mrioc->watchdog_work_q = alloc_ordered_workqueue(
- 		"%s", WQ_MEM_RECLAIM, mrioc->watchdog_work_q_name);
- 	if (!mrioc->watchdog_work_q) {
---
-2.39.5
+diff --git a/drivers/scsi/aic94xx/aic94xx_init.c b/drivers/scsi/aic94xx/aic94xx_init.c
+index adf3d9145606..95f3620059f7 100644
+--- a/drivers/scsi/aic94xx/aic94xx_init.c
++++ b/drivers/scsi/aic94xx/aic94xx_init.c
+@@ -882,6 +882,9 @@ static void asd_pci_remove(struct pci_dev *dev)
+ 
+ 	asd_disable_ints(asd_ha);
+ 
++	/* Ensure all scheduled tasklets complete before freeing resources */
++	tasklet_kill(&asd_ha->seq.dl_tasklet);
++
+ 	asd_remove_dev_attrs(asd_ha);
+ 
+ 	/* XXX more here as needed */
+-- 
+2.51.1.dirty
 
