@@ -1,48 +1,48 @@
-Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 895A5302160;
-	Tue, 28 Oct 2025 09:55:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 859CF2E88A7;
+	Tue, 28 Oct 2025 09:58:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761645347; cv=none; b=pZ3ZVN9zHf1VN9s8fsEhUBnMvFuaIxq4s8JAjpPm/4ElNPi8VChhyqKKurvHo9J0hFR7KPtswAHp5YQ4kHPAay6CSJm+l2ahw6NtBua0rdaDQh6BFlrfROTjFqnHN2tvlZ3sr8o7yCTfsbeMj/W6yQDprGYzFBWwbwlvRUCWLvw=
+	t=1761645486; cv=none; b=j9A/DhXm0FYFSn9ABmzpbM7AG/YSuXHD0akyxCUogamafz71smFImXq6aj0vIUNY1EQ/oUX6lHhGnBHwIgPku92s16kjGUwJiIVIVU9b6kMSf+7+fW0R3RObC+T+bf2tHOqsVPYouJSI9LGTFaGVStdl84Ha2UONHMFa5mvVyDA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761645347; c=relaxed/simple;
-	bh=drUNvnzk4B66zjRoKAYXtMaNwYbmhzkjE6I26tkD0TU=;
+	s=arc-20240116; t=1761645486; c=relaxed/simple;
+	bh=/rtrNhepHf9lMxwSk8oyaHxVN4v5zy12YxO2AaKG7zc=;
 	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=lK1+y+IfZ4OmP6G+EMyz8NHkWsbpEdDHTwK0+ZhNGncJGTVuSWL6ei60PSRdKOnPjuBoLB3pfh3Oes4369nmLQpdZOy4yQINwf0ksXNPraVa1i1W6uT8tTLcknzzaoU/Cx2NlLcZ2ilUfVM0VUp03MCB1l7a5Xp3AEkggUylL6E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=R8FjLV0v; arc=none smtp.client-ip=205.220.180.131
+	 In-Reply-To:Content-Type; b=Xw+dueWsVM12dKTOIrVmduH/SxhkYuMAv+mKqpSlS0xSMHAZ9nlt6K7GatIskOA7k4D6L1f4HWPNUWOpeMncsP3WLn4PpucOv4d0XBExNlw80fZN+arkvO8gLkmGnfPRZoSc+9CEPMccvtk1D/ljKsfjdi4y+IDcjR6IDCdMh6I=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=asN+qANb; arc=none smtp.client-ip=205.220.168.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="R8FjLV0v"
-Received: from pps.filterd (m0279868.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 59S4p2MF591277;
-	Tue, 28 Oct 2025 09:54:59 GMT
+	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="asN+qANb"
+Received: from pps.filterd (m0279863.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 59S31w8U353480;
+	Tue, 28 Oct 2025 09:57:45 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	smXHDMXrCZNA+TvjDFOW48yo98V1HfJ29j+4aR1KUQE=; b=R8FjLV0v2mm/yqCC
-	Wr4HczVqwyo7QRsxb1OaxN73EJL6VxA+W3Z2mjSgTByxhb6XHsMOFaj4/NeIj9oR
-	2Bj7kKQaqPdSQT/DLcIiJNcP9ljYpaawC4BjXySVe3cBgGYTaQj82W8/6HY2G6Aa
-	G6kVZV/VhMelIieDEtPn3I8kZEMib9LperpsfxIy25z3h+OikJlEkR6X5abO16FJ
-	EL/mcCO3mPbdAQH3NA9M+RDIKLsInkP7fAyezzHuLm64pjTsJXsqSFs50uJkJihU
-	CgXulsXX0xWb5yKzZEOfbtquDcbQci3GcoBAMmoLukPLTXd/4SwbJqj7O3tfHxQo
-	DluBkQ==
-Received: from nasanppmta01.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4a2q5u8vke-1
+	8I3o1pIujZUjMX2XAjT2u/HA+H8MX1k3r61MkoE1lWQ=; b=asN+qANbZLadMXxQ
+	HegT9DkuNWw7vHbi4aIKX1i0yQb+NwyMHm02F0lFtfz2arZPUlwgv5YSd+JDc+/7
+	Z9274ue3Cla24W8DLIjgxpg73ptkVm2a3h5asuf3atdlHvufALyjZfSUdySrNAio
+	vZOLJa7Z4XaTVsAB+Na9LFOekJks/G5q9kczp+D4HDo8vjIZJPWYKC3bSbwZas7w
+	ZgXegXuciZzZwhLrYwEyq7fQskjQChlG2KZkgJ/GclFlsLY+QD6sAQsPK18uT2md
+	rS2Lj20ZACcjFsIiRAzc1xH6TMKcZjrC7KDjTU4B1M7evb/4CoVx2GWCCWj2Otsh
+	/S44DQ==
+Received: from nasanppmta05.qualcomm.com (i-global254.qualcomm.com [199.106.103.254])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4a2njrs5jy-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Oct 2025 09:54:59 +0000 (GMT)
+	Tue, 28 Oct 2025 09:57:44 +0000 (GMT)
 Received: from nasanex01a.na.qualcomm.com (nasanex01a.na.qualcomm.com [10.52.223.231])
-	by NASANPPMTA01.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 59S9swt8004710
+	by NASANPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 59S9viZv030350
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 28 Oct 2025 09:54:58 GMT
+	Tue, 28 Oct 2025 09:57:44 GMT
 Received: from [10.206.96.75] (10.80.80.8) by nasanex01a.na.qualcomm.com
  (10.52.223.231) with Microsoft SMTP Server (version=TLS1_2,
  cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.1748.24; Tue, 28 Oct
- 2025 02:54:49 -0700
-Message-ID: <9fe1375d-f4fc-443a-a9b0-eb8079e08376@quicinc.com>
-Date: Tue, 28 Oct 2025 15:24:46 +0530
+ 2025 02:57:35 -0700
+Message-ID: <ef4effd5-bc43-4134-a4e5-a1e47b620549@quicinc.com>
+Date: Tue, 28 Oct 2025 15:27:32 +0530
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -53,15 +53,16 @@ User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v2 1/3] dt-bindings: phy: qcom-edp: Add edp ref clk for
  sa8775p
 Content-Language: en-US
-To: Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+To: Rob Herring <robh@kernel.org>,
+        Dmitry Baryshkov
+	<dmitry.baryshkov@oss.qualcomm.com>
 CC: <robin.clark@oss.qualcomm.com>, <lumag@kernel.org>,
         <abhinav.kumar@linux.dev>, <jessica.zhang@oss.qualcomm.com>,
         <sean@poorly.run>, <marijn.suijten@somainline.org>,
         <maarten.lankhorst@linux.intel.com>, <mripard@kernel.org>,
         <tzimmermann@suse.de>, <airlied@gmail.com>, <simona@ffwll.ch>,
-        <robh@kernel.org>, <krzk+dt@kernel.org>, <conor+dt@kernel.org>,
-        <quic_mahap@quicinc.com>, <andersson@kernel.org>,
-        <konradybcio@kernel.org>, <mani@kernel.org>,
+        <krzk+dt@kernel.org>, <conor+dt@kernel.org>, <quic_mahap@quicinc.com>,
+        <andersson@kernel.org>, <konradybcio@kernel.org>, <mani@kernel.org>,
         <James.Bottomley@hansenpartnership.com>, <martin.petersen@oracle.com>,
         <vkoul@kernel.org>, <kishon@kernel.org>,
         <cros-qcom-dts-watchers@chromium.org>, <linux-phy@lists.infradead.org>,
@@ -71,68 +72,56 @@ CC: <robin.clark@oss.qualcomm.com>, <lumag@kernel.org>,
         <quic_vproddut@quicinc.com>
 References: <20251013104806.6599-1-quic_riteshk@quicinc.com>
  <20251013104806.6599-2-quic_riteshk@quicinc.com>
- <aifibm7pjva3rkb4gkzyxun46sraxyeh7jh6vgcirv5tsbf6ad@7f5bbs4ix7sa>
+ <xofvrsdi2s37qefp2fr6av67c5nokvlw3jm6w3nznphm3x223f@yyatwo5cur6u>
+ <20251015144349.GA3302193-robh@kernel.org>
 From: Ritesh Kumar <quic_riteshk@quicinc.com>
-In-Reply-To: <aifibm7pjva3rkb4gkzyxun46sraxyeh7jh6vgcirv5tsbf6ad@7f5bbs4ix7sa>
+In-Reply-To: <20251015144349.GA3302193-robh@kernel.org>
 Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: nasanex01a.na.qualcomm.com (10.52.223.231) To
+X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
  nasanex01a.na.qualcomm.com (10.52.223.231)
 X-QCInternal: smtphost
 X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDI4MDA4MyBTYWx0ZWRfXzukzlvziT20S
- HHowZRHU+mOMJ+gVXtpwz2Z2hTQxObF4IrfL9fdSu8Tx2aLRfGNc6ocku5lIHq0HH930gddcqLw
- 8VikFxtFZS5SU/RDyADfRqs6B1YsHX6Lb+vOJRJsjS+XJBwYci/UQzkQGr5lBWmhuTNi0nl0v2y
- 3tB+h3ka3m8Gm1z9dFI1+yJ5lMwMBygShHiNEANftCw1c3F7VmEsQkvLkmb+pooKxU1pcbGTtdI
- OunDTfEDA7E1zj5a0Tmw302DOz0LAm3M7Joa+In4+WAzTquB+TMFOulRBChBELdL7S+Aboubi2H
- FQAaGmvkn7jpe0nASxBhzFH8lvKb11beeAS0TtsqTH73Nx70rLZxCL/Xs1nOq/2Yg275DOuTrSZ
- pAhCckTou7M0fmeN1fJJo41Ig1kfpA==
-X-Proofpoint-ORIG-GUID: wX0ON1gh3e_AQW4vGI8oM0EVR5bZwTkO
-X-Proofpoint-GUID: wX0ON1gh3e_AQW4vGI8oM0EVR5bZwTkO
-X-Authority-Analysis: v=2.4 cv=c9CmgB9l c=1 sm=1 tr=0 ts=690092f3 cx=c_pps
+X-Authority-Analysis: v=2.4 cv=dqvWylg4 c=1 sm=1 tr=0 ts=69009398 cx=c_pps
  a=JYp8KDb2vCoCEuGobkYCKw==:117 a=JYp8KDb2vCoCEuGobkYCKw==:17
  a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=x6icFKpwvdMA:10
- a=VkNPw1HP01LnGYTKEx00:22 a=COk6AnOGAAAA:8 a=dsHzLA6eIQ2_NKwUNnsA:9
- a=QEXdDO2ut3YA:10 a=TjNXssC_j7lpFel5tvFf:22 a=nl4s5V0KI7Kw-pW0DWrs:22
- a=pHzHmUro8NiASowvMSCR:22 a=xoEH_sTeL_Rfw54TyV31:22
+ a=VkNPw1HP01LnGYTKEx00:22 a=i-1-ecsRnRnOvt_f1vAA:9 a=QEXdDO2ut3YA:10
+ a=nl4s5V0KI7Kw-pW0DWrs:22 a=pHzHmUro8NiASowvMSCR:22 a=xoEH_sTeL_Rfw54TyV31:22
+X-Proofpoint-GUID: 4CfEHxI0d71YWWwFAUQARagTdDCwDYdh
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMDI4MDA4NCBTYWx0ZWRfX/wGoND2ICMMD
+ opcy1bZOgAksLQ8qu35B+9JOIQgSqgahxBfX8+2z1dOnXOE2/EFliZ3UWF+7zwu+YX/WxSrspg2
+ pEyNMlZ14VjFM2GFm994qqCLdcZ+6a9kmplaJjNJXSO2/FFG8PXSdf+dC86nfsf6F7tbcfpsblw
+ ZB3CDazV/+xVfnJNeh5Sdqkm9k28ggaKoyVCwMHgI3QU7f18kYoBQCbfQ/HePT9nQID+F3RAFN4
+ b/Lti2GxRdDUClxGtoJHv2Ns5OZ97PNyLWQfTzGkw0/AJpMRK9H34T/HMwZNbq//OOxVCmYYGlG
+ 0R58Dw4jgv6oWxCAoLkKx+IIlVH9FGbepmYGKeo3YwBf47W3x7U2PN9eml5D2KhtbEKo5jTQ4xn
+ D08Lo0YCu3qEJ/nS9a6J36J92XKCsg==
+X-Proofpoint-ORIG-GUID: 4CfEHxI0d71YWWwFAUQARagTdDCwDYdh
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.80.40
  definitions=2025-10-28_03,2025-10-22_01,2025-03-28_01
 X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 suspectscore=0 spamscore=0 priorityscore=1501 adultscore=0
- clxscore=1015 lowpriorityscore=0 impostorscore=0 phishscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.22.0-2510020000 definitions=main-2510280083
+ phishscore=0 clxscore=1015 impostorscore=0 priorityscore=1501
+ lowpriorityscore=0 bulkscore=0 spamscore=0 suspectscore=0 malwarescore=0
+ adultscore=0 classifier=typeunknown authscore=0 authtc= authcc=
+ route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2510020000
+ definitions=main-2510280084
 
 
-On 10/13/2025 6:04 PM, Dmitry Baryshkov wrote:
-> On Mon, Oct 13, 2025 at 04:18:04PM +0530, Ritesh Kumar wrote:
-> > Add edp reference clock for sa8775p edp phy.
+On 10/15/2025 8:13 PM, Rob Herring wrote:
+> On Mon, Oct 13, 2025 at 03:37:47PM +0300, Dmitry Baryshkov wrote:
+> > On Mon, Oct 13, 2025 at 04:18:04PM +0530, Ritesh Kumar wrote:
+> > > Add edp reference clock for sa8775p edp phy.
 > > 
-> > Signed-off-by: Ritesh Kumar <quic_riteshk@quicinc.com>
-> > ---
-> >  Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml | 1 +
-> >  1 file changed, 1 insertion(+)
+> > eDP, PHY.
 > > 
-> > diff --git a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
-> > index bfc4d75f50ff..b0e4015596de 100644
-> > --- a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
-> > +++ b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
-> > @@ -73,6 +73,7 @@ allOf:
-> >          compatible:
-> >            enum:
-> >              - qcom,x1e80100-dp-phy
-> > +            - qcom,sa8775p-edp-phy
+> > I'd probably ask to squash both DT binding patches together, but this
+> > might cause cross-subsystem merge issues. I'll leave this to DT
+> > maintainers discretion, whether to require a non-warning-adding patch or
+> > two patches with warnings in the middle of the series.
 >
-> Usually such lists are sorted.
+> One patch.
 
-Sure, will update in next version.
+Sure, will update a single patch for DT bindings.
 
->
-> >      then:
-> >        properties:
-> >          clocks:
-> > -- 
-> > 2.17.1
-> > 
+> Rob
 >
