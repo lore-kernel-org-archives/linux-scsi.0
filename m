@@ -1,100 +1,155 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CCA9A30CD8D
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 16:36:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80C422E54CC
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 17:25:27 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761755804; cv=none; b=ZBPUOdP7yT13EZiGMCdw6qUVCh0pRSJf3TK3+dYf7YNo46/PHgk6NSPkDVZ+5viOLpCZYk8anM0UnO9EYG/vaEB/dcGhEBBWc1h6hHbMA4Qlc+4fpWKFbY7VEppe+JYuLPebSdXWgD0vG6DWie5i3q193ImEq3IP1xf98Uj/Xvw=
+	t=1761758727; cv=none; b=EJm2ZWI+fAyOk5MmCdJhF1kkZydgH3P39Czk5EigOGBZY7TsZrVs0euZUe/oYruUrM6XFa9581k1E6xL3ax47YSOYO2APbIG7zz8r84JMVLwd+0iGAojjubhQ7g2XZt/GaG0xMtes1Q+ULj6D6w0NIzGiDtlCgg/tLnWxYlYOtA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761755804; c=relaxed/simple;
-	bh=8r6TZbcSObQ4imaECEW23DBfiSsS2dtn/aCamN5FHgQ=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=Dj++xQuB3N6EV/0MAQ+ro5fnuB/sE3H5eJ7EtmUC7vhgAOPqRdclpMzSY3bp0H+QYZ5Y7VhiceybCZWbOw5dt+fnYJHlqFEK7L9GQ7uDNJAV2sMPO0UVoKZ/PWulnZjmnxrBoMEhtNd3bzqsbRYuS7pVpUS7Dt/AhAXmA1IXtlg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=X/GjUiYf; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1761758727; c=relaxed/simple;
+	bh=knbE+q1pgvfVUdqILk/A/goXKbrThZO8QvCagpQmC0M=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=S76q77XH6KrxFrN0KG2R4Nj0N5C4Nby4cZFibGp0YH+y5p8i+DDOc/R5x07Eq3DvI4hf3Z2+2OpCQX0Q7Vr2XRCY4d0r2XybleGmadRFFiEgsI4bSNrgZCyIMhygJtt9khewVeZVMKoLq1nlN8m2QuuCFMj/NN/EGvt5iJTzRx8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=ueJbNa0Z; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="X/GjUiYf"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 6CC27C4CEF7;
-	Wed, 29 Oct 2025 16:36:44 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="ueJbNa0Z"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id C80A7C4CEF7;
+	Wed, 29 Oct 2025 17:25:25 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1761755804;
-	bh=8r6TZbcSObQ4imaECEW23DBfiSsS2dtn/aCamN5FHgQ=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=X/GjUiYf8p4WjbiW0YLengisSXc1glKTSZWKBv19m7B34CNsZ17xm3yJ5/lUHKlGX
-	 C1Q8grKrkE0VcUSNip7gvpXNU2y6W1g53Dw83kfI9SE78i2BclJ3YSu6RhKdgrgMsM
-	 uLkBizDkMmH9Cmk8f+ikZgqRNS9D/NDg7uxAl2MYaByRNQvV1srUHmj4pADjCHGBqx
-	 5wwrSuReHknBSaIclldj9T4EIxErPbNNSPgiEzt/qTVjvk4WQI+NC4j/7yszmtqdij
-	 CdUGwjNRNGi37q6Y+s21Q1oCDvmGbfPzRALrkTq+ewGeU6sh5B0SJX+klb7qULRqku
-	 Joj3pLoo0G0lg==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 5CBF0CCF9EE;
-	Wed, 29 Oct 2025 16:36:44 +0000 (UTC)
-From: =?utf-8?q?Nuno_S=C3=A1_via_B4_Relay?= <devnull+nuno.sa.analog.com@kernel.org>
-Date: Wed, 29 Oct 2025 16:37:13 +0000
-Subject: [PATCH v2] scsi: pm: Drop unneeded call to
- pm_runtime_mark_last_busy()
+	s=k20201202; t=1761758727;
+	bh=knbE+q1pgvfVUdqILk/A/goXKbrThZO8QvCagpQmC0M=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=ueJbNa0Z1WSQ77RPYS7jaZJiVX1kFe+/j51AZZ1zdBLvfkxzKonz3izcQA57W7eXL
+	 7U3APTNzWtRXRs0kJ+yEYQNxsEqsYWOAAbjDPE+WcjqHUTBFeXMvue1sq1lmqaonBa
+	 vu3ef4l9/a+Lgd11rJiJOu2ucUuTbSfzvYVqSdtmQJjYkJuVwC77Uvb8Ykk0gCStIm
+	 WNSSrcjheu9gcLnU+e/sJKZCCRj/ufqJN6HUt8tHy6HjQO+4kERrI1ei5VZLli4uGc
+	 eiIlaWP0NTjBwffbM3fchqM2yk63tp2xAi+kXbNZ2qpAWR7lEJzo4P487F5itABsVN
+	 5X7eJCURAGw7Q==
+Date: Wed, 29 Oct 2025 12:28:30 -0500
+From: Bjorn Andersson <andersson@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, Daniel Lee <chullee@google.com>, 
+	Peter Wang <peter.wang@mediatek.com>, Neil Armstrong <neil.armstrong@linaro.org>, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, Matthias Brugger <matthias.bgg@gmail.com>, 
+	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>, Huan Tang <tanghuan@vivo.com>, Avri Altman <avri.altman@wdc.com>, 
+	Liu Song <liu.song13@zte.com.cn>, Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>, 
+	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>, Bean Huo <huobean@gmail.com>, 
+	Adrian Hunter <adrian.hunter@intel.com>, Manivannan Sadhasivam <mani@kernel.org>, 
+	Gwendal Grignou <gwendal@chromium.org>
+Subject: Re: [PATCH] ufs: core: Revert "Make HID attributes visible"
+Message-ID: <xinigkv7z6ukyb7jgls3dubvxoni5ar2bp4dvtupenpvemaz6w@l67yzcnvicw3>
+References: <20251028222433.1108299-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20251029-scsi-pm-improv-v2-1-8c276c0eb1b9@analog.com>
-X-B4-Tracking: v=1; b=H4sIALhCAmkC/3XMywrCMBCF4Vcps3YkCZVQV76HdJHEaTtgLiQSl
- JJ3N3bv8j9wvh0KZaYC12GHTJULx9BDnQZwmwkrIT96gxLqIoXSWFxhTB7ZpxwrajlqTVaKySn
- op5Rp4fcB3ufeG5dXzJ/Dr/K3/qWqRInOTouwjuxo6WaCecb17KKHubX2BaBWoYitAAAA
-X-Change-ID: 20251027-scsi-pm-improv-71477eb109c2
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1761755839; l=1077;
- i=nuno.sa@analog.com; s=20231116; h=from:subject:message-id;
- bh=Ou05bUfOa9yU7mLqzgYfaId2pVPwLTtAQ5OCE+EPKUo=;
- b=B2eLKifMO5AX8AcyAqnHC08xxFAgJ7A8rtYR5FIIJRTX+EVjFVknWd5KwTZLgg8hTUihVWk9f
- yABOfzofmRAASnJZ+OAos/AZRocAH2wWfT2DdeoSvFzFlnyXd5L7WXC
-X-Developer-Key: i=nuno.sa@analog.com; a=ed25519;
- pk=3NQwYA013OUYZsmDFBf8rmyyr5iQlxV/9H4/Df83o1E=
-X-Endpoint-Received: by B4 Relay for nuno.sa@analog.com/20231116 with
- auth_id=100
-X-Original-From: =?utf-8?q?Nuno_S=C3=A1?= <nuno.sa@analog.com>
-Reply-To: nuno.sa@analog.com
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251028222433.1108299-1-bvanassche@acm.org>
 
-From: Nuno Sá <nuno.sa@analog.com>
+On Tue, Oct 28, 2025 at 03:24:24PM -0700, Bart Van Assche wrote:
+> Patch "Make HID attributes visible" is needed for older kernel versions
+> (e.g. 6.12) where ufs_get_device_desc() is called from ufshcd_probe_hba().
+> In these older kernel versions ufshcd_get_device_desc() may be called
+> after the sysfs attributes have been added. In the upstream kernel however
+> ufshcd_get_device_desc() is called before ufs_sysfs_add_nodes(). See also
+> the ufshcd_device_params_init() call from ufshcd_init(). Hence, calling
+> sysfs_update_group() is not necessary.
+> 
+> See also commit 69f5eb78d4b0 ("scsi: ufs: core: Move the
+> ufshcd_device_init(hba, true) call") in kernel v6.13.
+> 
+> This patch fixes the following kernel warning:
+> 
+> sysfs: cannot create duplicate filename '/devices/platform/3c2d0000.ufs/hid'
+> Workqueue: async async_run_entry_fn
+> Call trace:
+>  dump_backtrace+0xfc/0x17c
+>  show_stack+0x18/0x28
+>  dump_stack_lvl+0x40/0x104
+>  dump_stack+0x18/0x3c
+>  sysfs_warn_dup+0x6c/0xc8
+>  internal_create_group+0x1c8/0x504
+>  sysfs_create_groups+0x38/0x9c
+>  ufs_sysfs_add_nodes+0x20/0x58
+>  ufshcd_init+0x1114/0x134c
+>  ufshcd_pltfrm_init+0x728/0x7d8
+>  ufs_google_probe+0x30/0x84
+>  platform_probe+0xa0/0xe0
+>  really_probe+0x114/0x454
+>  __driver_probe_device+0xa4/0x160
+>  driver_probe_device+0x44/0x23c
+>  __device_attach_driver+0x15c/0x1f4
+>  bus_for_each_drv+0x10c/0x168
+>  __device_attach_async_helper+0x80/0xf8
+>  async_run_entry_fn+0x4c/0x17c
+>  process_one_work+0x26c/0x65c
+>  worker_thread+0x33c/0x498
+>  kthread+0x110/0x134
+>  ret_from_fork+0x10/0x20
+> ufshcd 3c2d0000.ufs: ufs_sysfs_add_nodes: sysfs groups creation failed (err = -17)
+> 
+> Cc: Daniel Lee <chullee@google.com>
+> Cc: Peter Wang <peter.wang@mediatek.com>
+> Cc: Bjorn Andersson <andersson@kernel.org>
 
-There's no need to explicitly call pm_runtime_mark_last_busy() since
-pm_runtime_autosuspend() is now doing it since commit 08071e64cb64
-("PM: runtime: Mark last busy stamp in pm_runtime_autosuspend()")
+Thanks for continuing the research, this looks even better than what we
+discussed :)
 
-Signed-off-by: Nuno Sá <nuno.sa@analog.com>
----
-Changes in v2:
-- Reference the commit introducing the change affecting this patch
-- Link to v1: https://lore.kernel.org/r/20251027-scsi-pm-improv-v1-1-cb9f0bceb4be@analog.com
----
- drivers/scsi/scsi_pm.c | 1 -
- 1 file changed, 1 deletion(-)
+Reviewed-by: Bjorn Andersson <andersson@kernel.org>
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index d581613d87c7..2652fecbfe47 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -205,7 +205,6 @@ static int scsi_runtime_idle(struct device *dev)
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
- 	if (scsi_is_sdev_device(dev)) {
--		pm_runtime_mark_last_busy(dev);
- 		pm_runtime_autosuspend(dev);
- 		return -EBUSY;
- 	}
+Regards,
+Bjorn
 
----
-base-commit: 8fec172c82c2b5f6f8e47ab837c1dc91ee3d1b87
-change-id: 20251027-scsi-pm-improv-71477eb109c2
---
-
-Thanks!
-- Nuno Sá
-
-
+> Cc: Neil Armstrong <neil.armstrong@linaro.org>
+> Fixes: bb7663dec67b ("scsi: ufs: sysfs: Make HID attributes visible")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> 
+> Fixes: bb7663dec67b ("scsi: ufs: sysfs: Make HID attributes visible")
+> ---
+>  drivers/ufs/core/ufs-sysfs.c | 2 +-
+>  drivers/ufs/core/ufs-sysfs.h | 1 -
+>  drivers/ufs/core/ufshcd.c    | 2 --
+>  3 files changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index c040afc6668e..0086816b27cd 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -1949,7 +1949,7 @@ static umode_t ufs_sysfs_hid_is_visible(struct kobject *kobj,
+>  	return	hba->dev_info.hid_sup ? attr->mode : 0;
+>  }
+>  
+> -const struct attribute_group ufs_sysfs_hid_group = {
+> +static const struct attribute_group ufs_sysfs_hid_group = {
+>  	.name = "hid",
+>  	.attrs = ufs_sysfs_hid,
+>  	.is_visible = ufs_sysfs_hid_is_visible,
+> diff --git a/drivers/ufs/core/ufs-sysfs.h b/drivers/ufs/core/ufs-sysfs.h
+> index 6efb82a082fd..8d94af3b8077 100644
+> --- a/drivers/ufs/core/ufs-sysfs.h
+> +++ b/drivers/ufs/core/ufs-sysfs.h
+> @@ -14,6 +14,5 @@ void ufs_sysfs_remove_nodes(struct device *dev);
+>  
+>  extern const struct attribute_group ufs_sysfs_unit_descriptor_group;
+>  extern const struct attribute_group ufs_sysfs_lun_attributes_group;
+> -extern const struct attribute_group ufs_sysfs_hid_group;
+>  
+>  #endif
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 5d6297aa5c28..2b76f543d072 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8499,8 +8499,6 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+>  				DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP) &
+>  				UFS_DEV_HID_SUPPORT;
+>  
+> -	sysfs_update_group(&hba->dev->kobj, &ufs_sysfs_hid_group);
+> -
+>  	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+>  
+>  	err = ufshcd_read_string_desc(hba, model_index,
