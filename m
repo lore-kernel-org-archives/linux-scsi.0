@@ -1,166 +1,225 @@
-Received: from ssh248.corpemail.net (ssh248.corpemail.net [210.51.61.248])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f54.google.com (mail-wr1-f54.google.com [209.85.221.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B557273D77;
-	Wed, 29 Oct 2025 07:20:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.51.61.248
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B99412D5920
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 09:43:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761722451; cv=none; b=W3n6kVHsgtK766JNQXN1QnUCVaazAu5WUV8Dpl4VLEPP4cJjYr2O2Xv2iRTN6MoGyVvyzhLXVFrozCUskmgaIZfBX8BqCXVC234QvMby8/l1gM9Sq0tfV2E+mCFFsCSI7GZJ4UnJBwR0K618+d9QxTRRdiioXzyyKQaNkOeLxyQ=
+	t=1761730995; cv=none; b=d4v+RQcGaMykHtFUYG9Uq98dl/GPi3bZ/ePUp9VY1DAdWRztltLahLWC+C3ZTPASw3q+JhvLoHE099xhPHRn97m86g5RO8/OeKzP6NZ9kqvtC4U3IxHTREWwk1wyzIXo9YCdIu3SaQKkWQpmUiEOQFkZtkoiooBF52c+FpCfo9E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761722451; c=relaxed/simple;
-	bh=tpA9JhQM0zKzxnv53gLEYkSSwJ9KjADguR8RpH5FPqQ=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hGnVeCHn1973KqFKNRmlumv/9yFFsCLkq0OxJA/5j82YiMkLT5pmXIGqfdRc6rru5yZbROXaB2JYR7Q22NAPk/LAvegjXnN0l63n8+Xp7cLMeFvi1E8ricq1+0nWYxyTMhxvRo+GwbWJQVaSq5O1R3xgQok6zwGfCXIRYr/veJ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com; spf=pass smtp.mailfrom=inspur.com; arc=none smtp.client-ip=210.51.61.248
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=inspur.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=inspur.com
-Received: from jtjnmail201623.home.langchao.com
-        by ssh248.corpemail.net ((D)) with ASMTP (SSL) id 202510291520390231;
-        Wed, 29 Oct 2025 15:20:39 +0800
-Received: from jtjnmailAR02.home.langchao.com (10.100.2.43) by
- jtjnmail201623.home.langchao.com (10.100.2.23) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256) id
- 15.1.2507.58; Wed, 29 Oct 2025 15:20:39 +0800
-Received: from inspur.com (10.100.2.113) by jtjnmailAR02.home.langchao.com
- (10.100.2.43) with Microsoft SMTP Server id 15.1.2507.58 via Frontend
- Transport; Wed, 29 Oct 2025 15:20:39 +0800
-Received: from localhost.localdomain.com (unknown [10.94.19.60])
-	by app9 (Coremail) with SMTP id cQJkCsDwg3hGwAFpzTgHAA--.5720S2;
-	Wed, 29 Oct 2025 15:20:39 +0800 (CST)
-From: Bo Liu <liubo03@inspur.com>
-To: <anil.gurumurthy@qlogic.com>, <sudarsana.kalluru@qlogic.com>,
-	<James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<hare@suse.de>
-CC: <linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>, Bo Liu
-	<liubo03@inspur.com>
-Subject: [PATCH] scsi: Fix double word in comments
-Date: Wed, 29 Oct 2025 15:20:37 +0800
-Message-ID: <20251029072037.17862-1-liubo03@inspur.com>
-X-Mailer: git-send-email 2.43.7
+	s=arc-20240116; t=1761730995; c=relaxed/simple;
+	bh=Q/K+9hGuz91qt1w6NMss9Nats6dibYj0kroY0Wt0OT0=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=N+rhfiijYzuqhxmZO42ZiXgnoiQoHWDk6wtnKA2ArAUtviEC5b3Ns/bT4gnj2jhu/VEMDQGsOjul+7v0/DHvqMNYsRzLtxzUupAEq/4KAOFmpPiFHXpwjjwov6GoEKS2bPnFJU53QmE+BEuiYIVI7yoO5MHI9Fqf0IR8waGSqZw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=zA7fulAl; arc=none smtp.client-ip=209.85.221.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zA7fulAl"
+Received: by mail-wr1-f54.google.com with SMTP id ffacd0b85a97d-3ed20bdfdffso7014468f8f.2
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 02:43:10 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1761730989; x=1762335789; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=Vt0D38+G1zn0BIeZFHVZCFulGxgoS4bXQgM2rqMoPfo=;
+        b=zA7fulAlmtl4+7Seso0Jk/AbFlhiW0pmuR0ad/wdsK6eJ6ate8VP9qMrwPvB345TtE
+         b5TGbnTokAZf64L75VNJQpH0m3yvdtcCJaPebdmPBYEQxtWyglSAGHHr30f7DpccTLQd
+         tuuECg2OvbSS5wcEOcKWep0f1N1nAhIdFY4J9V9QydpSAvKQWajkZ+Y+Hkn8j1wjZneP
+         2j4d2iC1bP+ijzplx3c0gP+Rac+TZMPVfc5Vu9Y8FhITbslS2nkCLulnIGDrA3P7230T
+         +tcmN4nIc/GiR36uVLETyWFnDKw7fGe9oh3iiaOQ5wdc4xVPyXTvxuGCy9sGOUYOZ15h
+         0VMQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1761730989; x=1762335789;
+        h=content-transfer-encoding:in-reply-to:organization:autocrypt
+         :content-language:references:cc:to:subject:reply-to:from:user-agent
+         :mime-version:date:message-id:x-gm-message-state:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Vt0D38+G1zn0BIeZFHVZCFulGxgoS4bXQgM2rqMoPfo=;
+        b=aFDOEWTmgQ1+m4nqWya2YJqfJ1FyKW8D7rB4aFChTeB6kNDqo1LJG/Pp7GepF5cZwk
+         WYquvUsQFH0UmZtQu/zsMCxoz+QgGw6fuONBNz81IvdD/UZKNU0r3ZIWjgcG7rUjs16I
+         oca8Ccr+hEH193MXTguqiyZW0K3cOFi5wQZoh1mQHLn5aDTzBQxyIXbGNL7lY32yK7Fd
+         MWpvqpft08CUDjaR9kq+I3MLtGvBAVwuvZDgWKUVZRlQANqUo8j9PpazS0DTN/EHlx1f
+         DTe49gC8nOrx2B29CZVrxFMdGtTzvbqw2tliP6Qjwwy7VRPErYs1YoBgJWy3SqsNP5on
+         v+sA==
+X-Gm-Message-State: AOJu0YxmoaJzbC2KY1HlnaSN0DA/bkQblfapwKoIbsQojTpUlPbYl1Ji
+	Vnx5Aswj62bz1gUEbk/NzsLSc+Fdf5N7spROach3A8BBIIKgyDvMr7+5E0lIsG4JwSk=
+X-Gm-Gg: ASbGncs0IsePp5oXHOBMccU98ZpvF9b2B9zwANswePLrLWdfQo7FyniYn1GKDUMWQX0
+	XPoonfAm5Ci9kuJoiJGAJGONkufOipHsEfJxzHWDD+VudvWlbV8Pm0tc6TV6fr8nKmTNIn8O7a/
+	olDQY7gjFkp58gQtGW+fcszuZWz8Dspc0v/SYro/4hZy5K2fX4l2oNeMl58pkoSaKhZpXUiRrJd
+	jtBAsYg/hmrtC2UswBjG2VxzN7K3+cJswVIV/ArqsGRKuhK9pu4VSMg5TTMkYFdMNnWSQGPx2VW
+	wEcDHpw43E1a3umP0VmAVn2SQSvMomEIQ1qUrIRPSG4C5VSs77bVMC6TUYUeap//dF4CfUFu+80
+	UMq06GA6XVUMgfTFkZ+f+en2zU89wWXJiQfJHDoXpaXMAqXKfM3yslg2Liq9U3tvTy06FvNFEoZ
+	5zzeJMO2bKSeMqeXYizSjP0tAbwkm8j8FHcDPMOEwtEbtQTPBh1z7DOsb0ZT2p
+X-Google-Smtp-Source: AGHT+IFu3JPa7CH8WhVFc8gTq+czxDEmrDGp2rNmH4aJgIuJqdatXcbYmfh34E+/dp2wAoVIehGXMw==
+X-Received: by 2002:a05:6000:4011:b0:425:86f0:6817 with SMTP id ffacd0b85a97d-429af00231cmr1663420f8f.57.1761730988760;
+        Wed, 29 Oct 2025 02:43:08 -0700 (PDT)
+Received: from ?IPV6:2a01:e0a:cad:2140:3447:eb7a:cb9f:5e0? ([2a01:e0a:cad:2140:3447:eb7a:cb9f:5e0])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4771e3a88fdsm43394835e9.10.2025.10.29.02.43.07
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Wed, 29 Oct 2025 02:43:08 -0700 (PDT)
+Message-ID: <f596d776-173d-4a04-b005-0d1bb09f7903@linaro.org>
+Date: Wed, 29 Oct 2025 10:43:07 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CM-TRANSID: cQJkCsDwg3hGwAFpzTgHAA--.5720S2
-X-Coremail-Antispam: 1UD129KBjvJXoWxGF1xXr43AF4UJryfAw18Zrb_yoWrAF1Upa
-	y8J34Skr4DJa1IkrnFgw4UXF98Wa1xJasxGay7Wa45WFZ5Cryj9ryUKayYvFWDJrW0gF98
-	trn8try7Wa4kJrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
-	9KBjDU0xBIdaVrnRJUUUvC14x267AKxVW8JVW5JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
-	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
-	1l84ACjcxK6xIIjxv20xvE14v26w1j6s0DM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26rxl
-	6s0DM28EF7xvwVC2z280aVAFwI0_GcCE3s1l84ACjcxK6I8E87Iv6xkF7I0E14v26rxl6s
-	0DM2vYz4IE04k24VAvwVAKI4IrM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI
-	64kE6c02F40Ex7xfMcIj6xIIjxv20xvE14v26r126r1DMcIj6I8E87Iv67AKxVWUJVW8Jw
-	Am72CE4IkC6x0Yz7v_Jr0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAG
-	YxC7MxkF7I0En4kS14v26r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r
-	1j6r4UMI8I3I0E5I8CrVAFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CE
-	b7AF67AKxVWUtVW8ZwCIc40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1I6r4UMIIF0x
-	vE2Ix0cI8IcVCY1x0267AKxVW8JVWxJwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAI
-	cVC2z280aVAFwI0_Jr0_Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2Kf
-	nxnUUI43ZEXa7VUbfWrJUUUUU==
-X-CM-SenderInfo: xolxu0iqt6x0hvsx2hhfrp/
-X-CM-DELIVERINFO: =?B?zWsStmLVRuiwy3Lqe5bb/wL3YD0Z3+qys2oM3YyJaJDj+48qHwuUARU7xYOAI0q1Re
-	KIpenFMbKCZoIFWTeFCC31qk0gFLmSPkJRWi0SASSU6eCAmSP57uUykdsmbTmoZSZkTA/m
-	7GVnSw1ZoFM5AiCEqoM=
-Content-Type: text/plain
-tUid: 20251029152039e8fd1a4853760a3903c29caac8466c66
-X-Abuse-Reports-To: service@corp-email.com
-Abuse-Reports-To: service@corp-email.com
-X-Complaints-To: service@corp-email.com
-X-Report-Abuse-To: service@corp-email.com
+User-Agent: Mozilla Thunderbird
+From: Neil Armstrong <neil.armstrong@linaro.org>
+Reply-To: Neil Armstrong <neil.armstrong@linaro.org>
+Subject: Re: [PATCH] ufs: core: Revert "Make HID attributes visible"
+To: Bart Van Assche <bvanassche@acm.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org, Daniel Lee <chullee@google.com>,
+ Peter Wang <peter.wang@mediatek.com>, Bjorn Andersson
+ <andersson@kernel.org>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Matthias Brugger <matthias.bgg@gmail.com>,
+ AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
+ Huan Tang <tanghuan@vivo.com>, Avri Altman <avri.altman@wdc.com>,
+ Liu Song <liu.song13@zte.com.cn>,
+ Zhongqiu Han <zhongqiu.han@oss.qualcomm.com>,
+ "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, Bean Huo <huobean@gmail.com>,
+ Adrian Hunter <adrian.hunter@intel.com>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ Gwendal Grignou <gwendal@chromium.org>
+References: <20251028222433.1108299-1-bvanassche@acm.org>
+Content-Language: en-US, fr
+Autocrypt: addr=neil.armstrong@linaro.org; keydata=
+ xsBNBE1ZBs8BCAD78xVLsXPwV/2qQx2FaO/7mhWL0Qodw8UcQJnkrWmgTFRobtTWxuRx8WWP
+ GTjuhvbleoQ5Cxjr+v+1ARGCH46MxFP5DwauzPekwJUD5QKZlaw/bURTLmS2id5wWi3lqVH4
+ BVF2WzvGyyeV1o4RTCYDnZ9VLLylJ9bneEaIs/7cjCEbipGGFlfIML3sfqnIvMAxIMZrvcl9
+ qPV2k+KQ7q+aXavU5W+yLNn7QtXUB530Zlk/d2ETgzQ5FLYYnUDAaRl+8JUTjc0CNOTpCeik
+ 80TZcE6f8M76Xa6yU8VcNko94Ck7iB4vj70q76P/J7kt98hklrr85/3NU3oti3nrIHmHABEB
+ AAHNKk5laWwgQXJtc3Ryb25nIDxuZWlsLmFybXN0cm9uZ0BsaW5hcm8ub3JnPsLAkQQTAQoA
+ OwIbIwULCQgHAwUVCgkICwUWAgMBAAIeAQIXgBYhBInsPQWERiF0UPIoSBaat7Gkz/iuBQJk
+ Q5wSAhkBAAoJEBaat7Gkz/iuyhMIANiD94qDtUTJRfEW6GwXmtKWwl/mvqQtaTtZID2dos04
+ YqBbshiJbejgVJjy+HODcNUIKBB3PSLaln4ltdsV73SBcwUNdzebfKspAQunCM22Mn6FBIxQ
+ GizsMLcP/0FX4en9NaKGfK6ZdKK6kN1GR9YffMJd2P08EO8mHowmSRe/ExAODhAs9W7XXExw
+ UNCY4pVJyRPpEhv373vvff60bHxc1k/FF9WaPscMt7hlkbFLUs85kHtQAmr8pV5Hy9ezsSRa
+ GzJmiVclkPc2BY592IGBXRDQ38urXeM4nfhhvqA50b/nAEXc6FzqgXqDkEIwR66/Gbp0t3+r
+ yQzpKRyQif3OwE0ETVkGzwEIALyKDN/OGURaHBVzwjgYq+ZtifvekdrSNl8TIDH8g1xicBYp
+ QTbPn6bbSZbdvfeQPNCcD4/EhXZuhQXMcoJsQQQnO4vwVULmPGgtGf8PVc7dxKOeta+qUh6+
+ SRh3vIcAUFHDT3f/Zdspz+e2E0hPV2hiSvICLk11qO6cyJE13zeNFoeY3ggrKY+IzbFomIZY
+ 4yG6xI99NIPEVE9lNBXBKIlewIyVlkOaYvJWSV+p5gdJXOvScNN1epm5YHmf9aE2ZjnqZGoM
+ Mtsyw18YoX9BqMFInxqYQQ3j/HpVgTSvmo5ea5qQDDUaCsaTf8UeDcwYOtgI8iL4oHcsGtUX
+ oUk33HEAEQEAAcLAXwQYAQIACQUCTVkGzwIbDAAKCRAWmrexpM/4rrXiB/sGbkQ6itMrAIfn
+ M7IbRuiSZS1unlySUVYu3SD6YBYnNi3G5EpbwfBNuT3H8//rVvtOFK4OD8cRYkxXRQmTvqa3
+ 3eDIHu/zr1HMKErm+2SD6PO9umRef8V82o2oaCLvf4WeIssFjwB0b6a12opuRP7yo3E3gTCS
+ KmbUuLv1CtxKQF+fUV1cVaTPMyT25Od+RC1K+iOR0F54oUJvJeq7fUzbn/KdlhA8XPGzwGRy
+ 4zcsPWvwnXgfe5tk680fEKZVwOZKIEuJC3v+/yZpQzDvGYJvbyix0lHnrCzq43WefRHI5XTT
+ QbM0WUIBIcGmq38+OgUsMYu4NzLu7uZFAcmp6h8g
+Organization: Linaro
+In-Reply-To: <20251028222433.1108299-1-bvanassche@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Remove the repeated word "the" in comments.
+Hi,
 
-Signed-off-by: Bo Liu <liubo03@inspur.com>
----
- drivers/scsi/bfa/bfa_fcs_rport.c        | 2 +-
- drivers/scsi/fcoe/fcoe_ctlr.c           | 2 +-
- drivers/scsi/isci/host.h                | 2 +-
- drivers/scsi/isci/remote_device.h       | 2 +-
- drivers/scsi/isci/remote_node_context.h | 2 +-
- drivers/scsi/isci/task.c                | 2 +-
- 6 files changed, 6 insertions(+), 6 deletions(-)
+On 10/28/25 23:24, Bart Van Assche wrote:
+> Patch "Make HID attributes visible" is needed for older kernel versions
+> (e.g. 6.12) where ufs_get_device_desc() is called from ufshcd_probe_hba().
+> In these older kernel versions ufshcd_get_device_desc() may be called
+> after the sysfs attributes have been added. In the upstream kernel however
+> ufshcd_get_device_desc() is called before ufs_sysfs_add_nodes(). See also
+> the ufshcd_device_params_init() call from ufshcd_init(). Hence, calling
+> sysfs_update_group() is not necessary.
+> 
+> See also commit 69f5eb78d4b0 ("scsi: ufs: core: Move the
+> ufshcd_device_init(hba, true) call") in kernel v6.13.
+> 
+> This patch fixes the following kernel warning:
+> 
+> sysfs: cannot create duplicate filename '/devices/platform/3c2d0000.ufs/hid'
+> Workqueue: async async_run_entry_fn
+> Call trace:
+>   dump_backtrace+0xfc/0x17c
+>   show_stack+0x18/0x28
+>   dump_stack_lvl+0x40/0x104
+>   dump_stack+0x18/0x3c
+>   sysfs_warn_dup+0x6c/0xc8
+>   internal_create_group+0x1c8/0x504
+>   sysfs_create_groups+0x38/0x9c
+>   ufs_sysfs_add_nodes+0x20/0x58
+>   ufshcd_init+0x1114/0x134c
+>   ufshcd_pltfrm_init+0x728/0x7d8
+>   ufs_google_probe+0x30/0x84
+>   platform_probe+0xa0/0xe0
+>   really_probe+0x114/0x454
+>   __driver_probe_device+0xa4/0x160
+>   driver_probe_device+0x44/0x23c
+>   __device_attach_driver+0x15c/0x1f4
+>   bus_for_each_drv+0x10c/0x168
+>   __device_attach_async_helper+0x80/0xf8
+>   async_run_entry_fn+0x4c/0x17c
+>   process_one_work+0x26c/0x65c
+>   worker_thread+0x33c/0x498
+>   kthread+0x110/0x134
+>   ret_from_fork+0x10/0x20
+> ufshcd 3c2d0000.ufs: ufs_sysfs_add_nodes: sysfs groups creation failed (err = -17)
+> 
+> Cc: Daniel Lee <chullee@google.com>
+> Cc: Peter Wang <peter.wang@mediatek.com>
+> Cc: Bjorn Andersson <andersson@kernel.org>
+> Cc: Neil Armstrong <neil.armstrong@linaro.org>
+> Fixes: bb7663dec67b ("scsi: ufs: sysfs: Make HID attributes visible")
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> 
+> Fixes: bb7663dec67b ("scsi: ufs: sysfs: Make HID attributes visible")
 
-diff --git a/drivers/scsi/bfa/bfa_fcs_rport.c b/drivers/scsi/bfa/bfa_fcs_rport.c
-index d4bde9bbe75b..f88320715c16 100644
---- a/drivers/scsi/bfa/bfa_fcs_rport.c
-+++ b/drivers/scsi/bfa/bfa_fcs_rport.c
-@@ -1987,7 +1987,7 @@ bfa_fcs_rport_gidpn_response(void *fcsarg, struct bfa_fcxp_s *fcxp, void *cbarg,
- 			/*
- 			 * Device's PID has changed. We need to cleanup
- 			 * and re-login. If there is another device with
--			 * the the newly discovered pid, send an scn notice
-+			 * the newly discovered pid, send an scn notice
- 			 * so that its new pid can be discovered.
- 			 */
- 			list_for_each(qe, &rport->port->rport_q) {
-diff --git a/drivers/scsi/fcoe/fcoe_ctlr.c b/drivers/scsi/fcoe/fcoe_ctlr.c
-index 8e4241c295e3..21b91f1b6d07 100644
---- a/drivers/scsi/fcoe/fcoe_ctlr.c
-+++ b/drivers/scsi/fcoe/fcoe_ctlr.c
-@@ -205,7 +205,7 @@ static int fcoe_sysfs_fcf_add(struct fcoe_fcf *new)
- 		 * that doesn't have a priv (fcf was deleted). However,
- 		 * libfcoe will always delete FCFs before trying to add
- 		 * them. This is ensured because both recv_adv and
--		 * age_fcfs are protected by the the fcoe_ctlr's mutex.
-+		 * age_fcfs are protected by the fcoe_ctlr's mutex.
- 		 * This means that we should never get a FCF with a
- 		 * non-NULL priv pointer.
- 		 */
-diff --git a/drivers/scsi/isci/host.h b/drivers/scsi/isci/host.h
-index 52388374cf31..e4971ca00769 100644
---- a/drivers/scsi/isci/host.h
-+++ b/drivers/scsi/isci/host.h
-@@ -244,7 +244,7 @@ enum sci_controller_states {
- 	SCIC_INITIALIZED,
- 
- 	/**
--	 * This state indicates the the controller is in the process of becoming
-+	 * This state indicates the controller is in the process of becoming
- 	 * ready (i.e. starting).  In this state no new IO operations are permitted.
- 	 * This state is entered from the INITIALIZED state.
- 	 */
-diff --git a/drivers/scsi/isci/remote_device.h b/drivers/scsi/isci/remote_device.h
-index c1fdf45751cd..0ab1db862de3 100644
---- a/drivers/scsi/isci/remote_device.h
-+++ b/drivers/scsi/isci/remote_device.h
-@@ -170,7 +170,7 @@ enum sci_status sci_remote_device_stop(
-  * permitted.  This state is entered from the INITIAL state.  This state
-  * is entered from the STOPPING state.
-  *
-- * @SCI_DEV_STARTING: This state indicates the the remote device is in
-+ * @SCI_DEV_STARTING: This state indicates the remote device is in
-  * the process of becoming ready (i.e. starting).  In this state no new
-  * IO operations are permitted.  This state is entered from the STOPPED
-  * state.
-diff --git a/drivers/scsi/isci/remote_node_context.h b/drivers/scsi/isci/remote_node_context.h
-index c7ee81d01125..f22950b12b8b 100644
---- a/drivers/scsi/isci/remote_node_context.h
-+++ b/drivers/scsi/isci/remote_node_context.h
-@@ -154,7 +154,7 @@ enum sci_remote_node_context_destination_state {
- /**
-  * struct sci_remote_node_context - This structure contains the data
-  *    associated with the remote node context object.  The remote node context
-- *    (RNC) object models the the remote device information necessary to manage
-+ *    (RNC) object models the remote device information necessary to manage
-  *    the silicon RNC.
-  */
- struct sci_remote_node_context {
-diff --git a/drivers/scsi/isci/task.c b/drivers/scsi/isci/task.c
-index 3a25b1a2c52d..aeb2cda92465 100644
---- a/drivers/scsi/isci/task.c
-+++ b/drivers/scsi/isci/task.c
-@@ -67,7 +67,7 @@
- /**
- * isci_task_refuse() - complete the request to the upper layer driver in
- *     the case where an I/O needs to be completed back in the submit path.
--* @ihost: host on which the the request was queued
-+* @ihost: host on which the request was queued
- * @task: request to complete
- * @response: response code for the completed task.
- * @status: status code for the completed task.
--- 
-2.31.1
+Duplicate fixes, but perhaps you could specify this revert is only for v6.18 and the original commit should be backported ?
+
+Anyway:
+Acked-by: Neil Armstrong <neil.armstrong@linaro.org>
+
+Thanks,
+Neil
+
+> ---
+>   drivers/ufs/core/ufs-sysfs.c | 2 +-
+>   drivers/ufs/core/ufs-sysfs.h | 1 -
+>   drivers/ufs/core/ufshcd.c    | 2 --
+>   3 files changed, 1 insertion(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufs-sysfs.c b/drivers/ufs/core/ufs-sysfs.c
+> index c040afc6668e..0086816b27cd 100644
+> --- a/drivers/ufs/core/ufs-sysfs.c
+> +++ b/drivers/ufs/core/ufs-sysfs.c
+> @@ -1949,7 +1949,7 @@ static umode_t ufs_sysfs_hid_is_visible(struct kobject *kobj,
+>   	return	hba->dev_info.hid_sup ? attr->mode : 0;
+>   }
+>   
+> -const struct attribute_group ufs_sysfs_hid_group = {
+> +static const struct attribute_group ufs_sysfs_hid_group = {
+>   	.name = "hid",
+>   	.attrs = ufs_sysfs_hid,
+>   	.is_visible = ufs_sysfs_hid_is_visible,
+> diff --git a/drivers/ufs/core/ufs-sysfs.h b/drivers/ufs/core/ufs-sysfs.h
+> index 6efb82a082fd..8d94af3b8077 100644
+> --- a/drivers/ufs/core/ufs-sysfs.h
+> +++ b/drivers/ufs/core/ufs-sysfs.h
+> @@ -14,6 +14,5 @@ void ufs_sysfs_remove_nodes(struct device *dev);
+>   
+>   extern const struct attribute_group ufs_sysfs_unit_descriptor_group;
+>   extern const struct attribute_group ufs_sysfs_lun_attributes_group;
+> -extern const struct attribute_group ufs_sysfs_hid_group;
+>   
+>   #endif
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 5d6297aa5c28..2b76f543d072 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -8499,8 +8499,6 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+>   				DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP) &
+>   				UFS_DEV_HID_SUPPORT;
+>   
+> -	sysfs_update_group(&hba->dev->kobj, &ufs_sysfs_hid_group);
+> -
+>   	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+>   
+>   	err = ufshcd_read_string_desc(hba, model_index,
 
