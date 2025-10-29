@@ -1,86 +1,91 @@
-Received: from mail-yw1-f176.google.com (mail-yw1-f176.google.com [209.85.128.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from cstnet.cn (smtp81.cstnet.cn [159.226.251.81])
+	(using TLSv1.2 with cipher DHE-RSA-AES256-SHA (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AD47F34EF15
-	for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 23:16:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B0F152D3750;
+	Wed, 29 Oct 2025 03:26:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=159.226.251.81
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761693399; cv=none; b=ZTr0NmMVZOn3zVczUtk6lUF56mpA+v+CQewOUqxvvpT1Kba5khght+ukRIZn5pBxeKds3plbdS8jM39S8rvtfiAGOS1+bcNbFRNpdZzY5qQctITDAvHnCn3muaQ6X0juY+h76qMSmjT2HrlctBQ9IXX+TzaGbpL7+oJq/VFfsc0=
+	t=1761708408; cv=none; b=n/Xuca3txgTINKwozSLjbqlrhLA+fOTqXwhb7Sp3SEu6IcMUJ+S7dg0ACQa6XIcUD+673E4sQyBzt0ZUt0n/WlRQjSK2rYjGgCIfkzRXpr+Pqk6Lsoa9vurOv2ZWDqEtVLupbbMtVBnvXnDZzS1bpioCnmFvlEFTfaE4rUV0vmE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761693399; c=relaxed/simple;
-	bh=EnR/TaaGxn9w+4F1+fRM9SSGt78ralDdsQPgAI33+24=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=AlA+L9u53p3NxuWSB71SpSz0kIxbIQi4Unk8b1EhdBCxQGMj24/ygCPPzWFts3EVr857Gn+58MwFlsPnqK582QyHw/Uj7SEUTX3FeJZ5eFdRerzBIl93NUoRg3Ire5PLPBCdHJCupbj2VwagFobTIihTrqyoZn40fPNUQKCiilU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=QgM5X2H4; arc=none smtp.client-ip=209.85.128.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="QgM5X2H4"
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-7832691f86cso90817207b3.1
-        for <linux-scsi@vger.kernel.org>; Tue, 28 Oct 2025 16:16:37 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761693396; x=1762298196; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cTGE8Nk+NYr3HIPUwFKN0QH0BMMQkYXmtt5nXiUqbRQ=;
-        b=QgM5X2H49TX616Xb+cjETE1NoyY31paDcsFMuFWUdTt/NRJoWC0/1//n3XuD+4MJzg
-         brnTDTE9/pexbpbb9NYCiLdJwcXf9rqmMi3kImUPcSihla8WWqmTXrMwXFWkb1GYSNWU
-         3YCnP2Ryq6kMwIhzqt6SEXHsCs5IuEwzO7d7/sw6W8hKLMu+oWWC8GLkwL9EI9CbYv/j
-         GhsbqptVtJVl9/+jOml6lprfCAjkoIlPEZaIIjFxsC3aWFsl1bkTbW2fD17aJlNovhs2
-         3R7bVT1j/aoevGF9/A2rydDj7Weocp/4RkjzhMa7LXiEWnVtZbfxRZ21rFQjn6GLIcoa
-         6mTg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761693396; x=1762298196;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=cTGE8Nk+NYr3HIPUwFKN0QH0BMMQkYXmtt5nXiUqbRQ=;
-        b=d2LFsnYGXcktgdxZrGfSien5iOjM10tg8uuKPGdQSBAZKMo1yAgFLQRVRSUcyzqx2k
-         QEQ0tN5cl6SZ96fou4OXab3YV1IBWzdKrzQ1pYmdB37qV1VRfGQN64E/WkMFhVLvQQTM
-         z61L5YyLjfBpQy/aREDbeIzQ+gln9/Gwmj+oimXbhqZMTb36WqECwwEE7RfFY+1x7v7D
-         /iQRdoWjel3vjqX8ZGgjiLmo9hp6z0hLlDhW9Ngzcx2PcuvB4d040BrfZvhJe4P2fabD
-         jQJXlgYnCwuWsNY36NpRXzz/pOzVSh+4uBafrCOSl3WBnWIfdfUsXfanKUS8HF1NF+kj
-         QzJg==
-X-Gm-Message-State: AOJu0Yw01ENdgMNx2e5Y8EnbgGj1xUMTqcKZhro/1h3JTnOpSyYDU3CA
-	z1ETmYBW0Fm0BxLwZJDHFZRdrX+0VNJFrxOxK6efj0gQtQxwrqovx15Bcf/UYHatRkVTgGaJ1/P
-	J/JEGj4Ri/50S+1dy8XsC7UOvo60eHng=
-X-Gm-Gg: ASbGncvmMuITBHsSVGw9gPzyr+oivlQOfzkU0wOGbuiEK3uMKcEHk29hEl2e+wEqQU1
-	BBB2ofxGvQw7WkFNgr1jMQ0tMmP55cYqJrIXXdf3aGR+EQx3xfGhkdnwXYY0+Gfuo9JFzeIMsfQ
-	iyHJnGsodZUkoodbm/sihDXQ3RCy9rSADr/PSPFezQiR4xWN/zfxg4SmAtiPMXYZDHRH3Jw0yDS
-	DlbDxzZaHhdTXnJ4Ky6yF3cj531R6SZ8dkvRtDQTtEvdjo7TkXa4E/BKEPTIw==
-X-Google-Smtp-Source: AGHT+IGr5UqYJQR3XSvCeTjlzStQkWjjSO0lsevFyetEI5VkvBPJlTr5fSYLoBLKIkudH3+13ZfvV8u2Snxy15UHMC4=
-X-Received: by 2002:a05:690c:9c0d:b0:725:39d:a31a with SMTP id
- 00721157ae682-78628e84c71mr8965267b3.27.1761693396637; Tue, 28 Oct 2025
- 16:16:36 -0700 (PDT)
+	s=arc-20240116; t=1761708408; c=relaxed/simple;
+	bh=9w8hly9hZACzAJ9hezpSrzY3sdCMXJVStUSWe41MucQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=l75RY0wCxn2zURbR9tZbSr88esvS+VJrieCnohpvh3CiXVmYgoYECROJ3V4qV1S6+qacc/mnotWVnjyhjGIWofOcwkdELo7vKzUaUPHqNKz5ybh/4E7aEWlKpu68eN+XMRduDrY4ywcXGlElFSsREPXUaywB2vMX1S1fAf/rvLM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn; spf=pass smtp.mailfrom=iscas.ac.cn; arc=none smtp.client-ip=159.226.251.81
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=iscas.ac.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=iscas.ac.cn
+Received: from DESKTOP-L0HPE2S (unknown [124.16.141.245])
+	by APP-03 (Coremail) with SMTP id rQCowABX3WFoiQFpBgIuBQ--.23035S2;
+	Wed, 29 Oct 2025 11:26:34 +0800 (CST)
+From: Haotian Zhang <vulab@iscas.ac.cn>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Haotian Zhang <vulab@iscas.ac.cn>
+Subject: [PATCH] sim710: Fix resource leak by adding missing ioport_unmap calls
+Date: Wed, 29 Oct 2025 11:25:55 +0800
+Message-ID: <20251029032555.1476-1-vulab@iscas.ac.cn>
+X-Mailer: git-send-email 2.50.1.windows.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251027235446.77200-1-justintee8345@gmail.com>
- <20251027235446.77200-10-justintee8345@gmail.com> <921bd950-4e62-4140-a015-c41ea7f07989@kernel.org>
-In-Reply-To: <921bd950-4e62-4140-a015-c41ea7f07989@kernel.org>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Tue, 28 Oct 2025 16:16:09 -0700
-X-Gm-Features: AWmQ_bnspf0r08rRX59iRQpOd5XQDRi0-sw3oyJNnzNxJ6sAWWXRnvGJgIienV8
-Message-ID: <CABPRKS9qL-vNbLeE=bqtk=wodVpA2fz8WR_n_iFXS3Yey_bbmg@mail.gmail.com>
-Subject: Re: [PATCH 09/11] lpfc: Add capability to register Platform Name ID
- to fabric
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: linux-scsi@vger.kernel.org, jsmart2021@gmail.com, justin.tee@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:rQCowABX3WFoiQFpBgIuBQ--.23035S2
+X-Coremail-Antispam: 1UD129KBjvJXoW7urWfAr4xJFykJrWrJrW8Zwb_yoW8JFyfpF
+	4kW3y5u3y7Jr1xur18Zr1DWFyFvay5t34xW3yI9343uFn8ta4rZ390kFyjgF98Ja4fGFs8
+	X3WYy3yUAFWDJrJanT9S1TB71UUUUU7qnTZGkaVYY2UrUUUUjbIjqfuFe4nvWSU5nxnvy2
+	9KBjDU0xBIdaVrnRJUUUkK14x267AKxVWUJVW8JwAFc2x0x2IEx4CE42xK8VAvwI8IcIk0
+	rVWrJVCq3wAFIxvE14AKwVWUJVWUGwA2ocxC64kIII0Yj41l84x0c7CEw4AK67xGY2AK02
+	1l84ACjcxK6xIIjxv20xvE14v26r4j6ryUM28EF7xvwVC0I7IYx2IY6xkF7I0E14v26r4j
+	6F4UM28EF7xvwVC2z280aVAFwI0_Gr1j6F4UJwA2z4x0Y4vEx4A2jsIEc7CjxVAFwI0_Cr
+	1j6rxdM2AIxVAIcxkEcVAq07x20xvEncxIr21l5I8CrVACY4xI64kE6c02F40Ex7xfMcIj
+	6xIIjxv20xvE14v26r1j6r18McIj6I8E87Iv67AKxVWUJVW8JwAm72CE4IkC6x0Yz7v_Jr
+	0_Gr1lF7xvr2IYc2Ij64vIr41lF7I21c0EjII2zVCS5cI20VAGYxC7MxkF7I0En4kS14v2
+	6r126r1DMxAIw28IcxkI7VAKI48JMxC20s026xCaFVCjc4AY6r1j6r4UMI8I3I0E5I8CrV
+	AFwI0_Jr0_Jr4lx2IqxVCjr7xvwVAFwI0_JrI_JrWlx4CE17CEb7AF67AKxVWUAVWUtwCI
+	c40Y0x0EwIxGrwCI42IY6xIIjxv20xvE14v26r1j6r1xMIIF0xvE2Ix0cI8IcVCY1x0267
+	AKxVWUJVW8JwCI42IY6xAIw20EY4v20xvaj40_Jr0_JF4lIxAIcVC2z280aVAFwI0_Jr0_
+	Gr1lIxAIcVC2z280aVCY1x0267AKxVW8JVW8JrUvcSsGvfC2KfnxnUUI43ZEXa7VUjuHq7
+	UUUUU==
+X-CM-SenderInfo: pyxotu46lvutnvoduhdfq/1tbiDAUKA2kBUMLd1gAAsx
 
-> > +#define PATH_UUID_IBM "ibm,partition-uuid"
->
-> Where did you document the ABI?
-So, if of_get_property does not find anything, then our driver will
-simply not register a UUID with the fabric.  We=E2=80=99re aiming for
-best-effort on platforms that don=E2=80=99t implement SMBIOS, is this handl=
-ing
-acceptable?
+The driver calls ioport_map() to map I/O ports in sim710_probe_common()
+but never calls ioport_unmap() to release the mapping. This causes
+resource leaks in both the error path when request_irq() fails and in
+the normal device removal path via sim710_device_remove().
 
-Regards,
-Justin
+Add ioport_unmap() calls in the out_release error path and in
+sim710_device_remove().
+
+Fixes: 56fece20086e ("[PATCH] finally fix 53c700 to use the generic iomem infrastructure")
+Signed-off-by: Haotian Zhang <vulab@iscas.ac.cn>
+---
+ drivers/scsi/sim710.c | 2 ++
+ 1 file changed, 2 insertions(+)
+
+diff --git a/drivers/scsi/sim710.c b/drivers/scsi/sim710.c
+index e519df68d603..70c75ab1453a 100644
+--- a/drivers/scsi/sim710.c
++++ b/drivers/scsi/sim710.c
+@@ -133,6 +133,7 @@ static int sim710_probe_common(struct device *dev, unsigned long base_addr,
+  out_put_host:
+ 	scsi_host_put(host);
+  out_release:
++	ioport_unmap(hostdata->base);
+ 	release_region(base_addr, 64);
+  out_free:
+ 	kfree(hostdata);
+@@ -148,6 +149,7 @@ static int sim710_device_remove(struct device *dev)
+ 
+ 	scsi_remove_host(host);
+ 	NCR_700_release(host);
++	ioport_unmap(hostdata->base);
+ 	kfree(hostdata);
+ 	free_irq(host->irq, host);
+ 	release_region(host->base, 64);
+-- 
+2.50.1.windows.1
+
