@@ -1,88 +1,121 @@
-Received: from mail-yx1-f46.google.com (mail-yx1-f46.google.com [74.125.224.46])
+Received: from mail-pj1-f99.google.com (mail-pj1-f99.google.com [209.85.216.99])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07C61355808
-	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 18:15:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 868192DE6EE
+	for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 18:17:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.99
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761761724; cv=none; b=APXqUlRd3tgb5ZxuAaLFqN+7lSClBlZ8A36h+Wv+nyXckjVgosKCeGLQ2/lUrP+qN7uH2NLkcWfE+pSPJ1tzzb/FhLghLQAbPanzgre5kWw1FdhzmnEkjTpm7MqLwCGfWO6lryMGz/5vwrk3Ne0ZrbCx89/aY56sjNyX0MlhxdU=
+	t=1761761823; cv=none; b=K5gttuejEkHIW0DLWGAiFA2ozKPvsHLqUbBbywJnF6J57l+GXVMZrOmOYtzrCpHkj8e39Sq++iATxOBSvt+mRO6zK1uXw57nuBsSFlbJsQ2F3Tt3dv8PnnhbfrQqiJLjHmJY6XSq52a0eF5KSzlrB08lPCx+onn1z2viCRxaBi8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761761724; c=relaxed/simple;
-	bh=BuHwcBRjX7psQRnTKSitcdj0z27vIL/EwC/MUMdXQjo=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=s+MXpEch4S4zgVWxdz2xlxZtgzeUwpWtG5tBqRZcA1+r4JYiSllntteaZgd63jKZnQ7jo9ilFR9ouzhGE0oCY5IARhtUYZpQ9MPNpuHPruMNKUQwFJLChADdhw8FylxRhyV/dmJXTMZYV8y/uL+HajZi0UAKtDQ8mqJ5kg3CbGA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=UiyClDEC; arc=none smtp.client-ip=74.125.224.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1761761823; c=relaxed/simple;
+	bh=826f7syER6CVjG8tgWNRmzu2cg3XwS6Sp02SDx4qrvo=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=G+jUKkLPYt51cdsPLlAUpphIpgkUSyWReeJvAy7YuliljgCLYtbfeRYZQD1mUvyEE7K4Eyyg67BtsugNG6fXD6MpZ/4RbJQJYOTdpbbCfCP1jauHAMlvZ1WpjbyQXYZLQUu1FkY64PePmIi7kkWIHUHMtIknvm8T3ZFn/g8jckE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com; spf=fail smtp.mailfrom=broadcom.com; dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b=hOkzUOfx; arc=none smtp.client-ip=209.85.216.99
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=broadcom.com
+Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=broadcom.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="UiyClDEC"
-Received: by mail-yx1-f46.google.com with SMTP id 956f58d0204a3-63e35e48a25so263415d50.1
-        for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 11:15:22 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761761722; x=1762366522; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=BuHwcBRjX7psQRnTKSitcdj0z27vIL/EwC/MUMdXQjo=;
-        b=UiyClDECh70d8Im1x1oeC/kp5zO/svOg4FNXu9NvL/hzfnd6U7LQ/zbnsBj8GgaCn0
-         2pk6s/FaVrnqro/jbVBdvfqN7jbwHsWaPB2gebPmaUjTkbQqIDXIIC/Re4jq7egQAmc5
-         kEClBW7AEemGR+tWJSXn4qDNSj/bj3KrFxQR6OJzesAtEocxes2OqBI+bUbJ+OiIgZGN
-         6wQ5uFfbIYz97kezn1bTDNzwPlfjogbrQV8bgh/MFEcFssWLhBbrVWtjmsgKkMbsJnh2
-         Lt4ud4ND5dOryzEWmbtlDIJn4axNsz496678U811qLeqxh0p51DuQxdxKSlJ5OS5Ef2R
-         6qVA==
+	dkim=pass (1024-bit key) header.d=broadcom.com header.i=@broadcom.com header.b="hOkzUOfx"
+Received: by mail-pj1-f99.google.com with SMTP id 98e67ed59e1d1-3404db5e368so56872a91.0
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 11:17:01 -0700 (PDT)
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761761722; x=1762366522;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=BuHwcBRjX7psQRnTKSitcdj0z27vIL/EwC/MUMdXQjo=;
-        b=ac8vAdot1FdwrVRPeZPgeXVr1l/OHnV51TusLLm8WX3SABQpqAaIUhYxBJyELlTnC0
-         1QqbtoKOEI4gddo3StL6sUYXhishb9UmBVGxZISBGcx4NcUwAxBoBt7nw3UuRRspkOxk
-         FuNK7yF1K6ipAJCmMbCy4Isk0RD2SLS1arHCVurkdnKc19hYPGfA3o6W9G4vRwTZAbLs
-         7hJHXt8qyHEueD1131oyvnXnHA9DZpgHTMJdnOgplcu6+MNFoo2WVYFCdVtFw1o0WC+/
-         gDh3xKH2KfokRSF1zmswRqiVHZE/GI/iC4GHWn1uv4XRi9RHPW+s94Z7UwANVje/XEDh
-         WALw==
-X-Gm-Message-State: AOJu0YwJO8ZZz7ksHtZeHICXyP0tmY+/GGAjHaau8tfX4h6amtmQKnLN
-	tE1TZQnhcBO7PLEe8zdqbJ6a9yi41KToRo7Osi5gVwesRIuJYxAouBA9FcRwGuu+3QucyIIKpFK
-	Ciow6lLV/TGQxRC2pDBeMped6U3fG8ws=
-X-Gm-Gg: ASbGncvLCiBDeTPfTSQq27F2tMjW/FNndFMdsXqbResdIsGAwh2BjGSzvwniUreox4v
-	sQKSEmOMkLu8bwO9jtHTKOTWdLOtRkSwRuK6yUNZCVMs5fNU/xcHqBAiQsf3gB9/y9EUsW1VJo1
-	CXK6ZowKzzWET5CyUcozXjsJ7BQ43q+5N30yz9El0Lyp14Qs8c7qV6qUoY1567+m8uMf/vw17EP
-	+U/z9/Dkho+jPHpdnhcyl51V/4E51HAhKWrxl3qFG9hjxRBM5TA4MpLl4hxEw==
-X-Google-Smtp-Source: AGHT+IFnXhi3SdibMHCcHs/z2gFQTiRX4IoidpL3yGaXjN15H/P4VdTok3LT6Mrjv+nMa/mqc501DYapsr0wdeyncYY=
-X-Received: by 2002:a53:d548:0:b0:63e:350c:aea2 with SMTP id
- 956f58d0204a3-63f76db3c3dmr2726416d50.47.1761761721838; Wed, 29 Oct 2025
- 11:15:21 -0700 (PDT)
+        d=1e100.net; s=20230601; t=1761761821; x=1762366621;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:dkim-signature:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=xyGgq/r+aDPnBVe7k8CwapG3DKnUYOYn4VkxR9lDhsA=;
+        b=o7HgpkQq2KbPkClrc5sr48L/xPU3qs99edvmzJMZGusElB7FRNQQ6QaJKL3fBx+KXp
+         yGeYpWcHWO91sSnOWCMIXRvjl4+3kEJV31CIXcoFCfpHdjpkSUNLaPBAVCd1jteuhzKe
+         dfN7iLl9As67OXnt3b/WMLUOtqGBk9Xu0Nlsw2SiDTX5gnWZ2hNjqLux89ZGbv0n4TNl
+         X+w2FUitrxzc1fyBI+yNS0CO4uKf0GO+ADEBD79CjRQjhSNHV2BYQMsGtyP4aC77Le/m
+         8KzqntyBUI4PMC3WUGTLsENNesDl/MbAtiEWr4OegmB3ZDq6fjRu7ogCDLG80wH3I9Hx
+         wdFA==
+X-Gm-Message-State: AOJu0Yx8uGyv7iasQDpg1jEJ+zXEbCflVE3dxm4D7dMIzXwTjAd9H1VD
+	OJhO44gqSg1IjT0+HhNSqCs4YLdwqYmoQ6JYIv3uUCwlfgm0Wp9P+cAFJd5XKBk5ndglW4xg29k
+	Pj/EyqvJ/6d09c8ucJC7uYGzwkqWlbOP0GBrSolZhtU2H/lmA7mt3BY8i8ThErLYX2f+FAecIvi
+	HyrQw682JSJyShbgZih20XuDLSYLNG9OQ1wdRYkeZNbb7TqZBErP/Us31+7U520l/yE6Bg/RGuP
+	qSEg41HQfS17OCc
+X-Gm-Gg: ASbGncu7Uks2qx2LMu27t/Mg4C0/Fqt4BZpKQsKK6N/AgoZqE/lpmgt4O+4C+LsYyNI
+	FBb+6Clk1nQgWcKNKLgqsN+0h4+q8Rj4ZUVenxWClVWMm8vnc0nW6uURLauzbSDP5746Cb4Zz9t
+	N7EIksJX0gTxdwsYDkK6zWFP72X+Pa0N8+fWTn1YdqSz7ljuN45v3aXhWAX9hBCG7mFdOXSOqyQ
+	K6aSY2H16sDjn+brKAhbsLwaDiOKgi3WoMNFel/6CkwFh4Y9SVK+SxNpOnjVmgTmuXKSWzqjrhs
+	c7cgFaxqcYVGiuxJs7rAsPFT7rpdtsvms/Z/PpD+fYn3++Zx87e+t7f/ef2BQIIEIrua8UoIxFH
+	eGWOThAmyAq89ptEDXk+ef66ldTm1kgXahKaiu39DWe7Yk0UnAh/BUVQhQQrGysva57D00sS1Pv
+	0Ti7gfPsDUvw0cAAagVzO6rG2p+6UvqoDbhgXQ
+X-Google-Smtp-Source: AGHT+IGU9PQYeUD4I+NHIjzMqw8cRKQ4qRFS2A19JWudyOcVH7qGrhWdBvbAKDnVBSVJ9dnWt79wnihuXriv
+X-Received: by 2002:a17:90b:52ce:b0:33b:ae39:c297 with SMTP id 98e67ed59e1d1-3403a1581a2mr5038938a91.16.1761761820840;
+        Wed, 29 Oct 2025 11:17:00 -0700 (PDT)
+Received: from smtp-us-east1-p01-i01-si01.dlp.protect.broadcom.com (address-144-49-247-117.dlp.protect.broadcom.com. [144.49.247.117])
+        by smtp-relay.gmail.com with ESMTPS id 98e67ed59e1d1-34028fd2197sm181600a91.0.2025.10.29.11.17.00
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
+        Wed, 29 Oct 2025 11:17:00 -0700 (PDT)
+X-Relaying-Domain: broadcom.com
+X-CFilter-Loop: Reflected
+Received: by mail-pg1-f197.google.com with SMTP id 41be03b00d2f7-b5edecdf94eso120444a12.2
+        for <linux-scsi@vger.kernel.org>; Wed, 29 Oct 2025 11:16:59 -0700 (PDT)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=broadcom.com; s=google; t=1761761818; x=1762366618; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=xyGgq/r+aDPnBVe7k8CwapG3DKnUYOYn4VkxR9lDhsA=;
+        b=hOkzUOfxtegjq4G2Q4+qeCYuYZcyUWInOcqj+El/N9hTSCPQycoW+/pSIbMW8YcVTD
+         asUZmTo/XZer5dujLkLLnOwHPUY0k+0gVVTvhGysWUcrDtJjIEB+ym6QxMQBtv4+KaLZ
+         +c+ZFHOgRmmmEN7gqwDWWmqwQvtnQuWOzPh78=
+X-Received: by 2002:a17:903:2a86:b0:288:e46d:b32b with SMTP id d9443c01a7336-294dee2ed04mr47628025ad.17.1761761818164;
+        Wed, 29 Oct 2025 11:16:58 -0700 (PDT)
+X-Received: by 2002:a17:903:2a86:b0:288:e46d:b32b with SMTP id d9443c01a7336-294dee2ed04mr47627555ad.17.1761761817529;
+        Wed, 29 Oct 2025 11:16:57 -0700 (PDT)
+Received: from localhost.localdomain ([192.19.234.250])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29498cf341bsm157284565ad.14.2025.10.29.11.16.54
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 29 Oct 2025 11:16:56 -0700 (PDT)
+From: Ranjan Kumar <ranjan.kumar@broadcom.com>
+To: linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com,
+	chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com,
+	Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: [PATCH v1 0/5] mpt3sas: Improve device readiness handling and event recovery
+Date: Wed, 29 Oct 2025 23:40:44 +0530
+Message-ID: <20251029181058.39157-1-ranjan.kumar@broadcom.com>
+X-Mailer: git-send-email 2.47.3
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251027235446.77200-1-justintee8345@gmail.com>
- <20251027235446.77200-10-justintee8345@gmail.com> <921bd950-4e62-4140-a015-c41ea7f07989@kernel.org>
- <CABPRKS9qL-vNbLeE=bqtk=wodVpA2fz8WR_n_iFXS3Yey_bbmg@mail.gmail.com> <a4cfc9db-3c41-4b92-ab2b-17b0ed7f1955@kernel.org>
-In-Reply-To: <a4cfc9db-3c41-4b92-ab2b-17b0ed7f1955@kernel.org>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Wed, 29 Oct 2025 11:14:52 -0700
-X-Gm-Features: AWmQ_bki_pBu3_P0pEbxqTWfxoM59etmzo9Hgbq3zdZ_kkdAfRVeIxEsY5fYPoY
-Message-ID: <CABPRKS-uBAzvCN6nRLy0bteG7AKAbeMUPfOsc85_ww7=OjrWpA@mail.gmail.com>
-Subject: Re: [PATCH 09/11] lpfc: Add capability to register Platform Name ID
- to fabric
-To: Krzysztof Kozlowski <krzk@kernel.org>
-Cc: linux-scsi@vger.kernel.org, jsmart2021@gmail.com, justin.tee@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+X-DetectorID-Processed: b00c1d49-9d2e-4205-b15f-d015386d3d5e
 
-> That's not really answer to my question. I asked where is ABI documented
-> and you answer how driver behaves. Not related.
+This patch series enhances the mpt3sas driver’s device bring-up,
+readiness detection, and event recovery mechanisms to improve
+robustness in environments with slow-responding or transient
+SAS/PCIe devices.
 
-So, referencing lshw, the device tree ibm,partition-uuid property is
-used when reporting UUID on IBM Power systems
-https://github.com/lyonel/lshw/commit/9c5c2f0706db330114ff4624e0931ac40c1d6fe2
+The series introduces optional control over issuing TEST UNIT READY
+(TUR) commands during device unblocking, configurable retry limits,
+and a mechanism to requeue firmware topology events when devices are
+temporarily busy. Together, these updates reduce discovery failures
+and improve recovery reliability following firmware or link events.
 
-Additionally, referencing how libnvme generates UUIDs, the same
-property seems to have been chosen by IBM as the basis for NQN
-generation as well
-https://github.com/linux-nvme/libnvme/commit/62bac64627b7ee99c49f30a399240acf04c95d92
+Ranjan Kumar (5):
+  mpt3sas: Added no_turs flag to device unblock logic
+  mpt3sas: Added issue_scsi_cmd_to_bringup_drive module parameter part-1
+  mpt3sas: improve device discovery and readiness handling for slow
+    devices part-2
+  mpt3sas: Add firmware event requeue support for busy devices
+  mpt3sas: Add configurable command retry limit for slow-to-respond
+    devices
 
-Regards,
-Justin
+ drivers/scsi/mpt3sas/mpt3sas_base.c  |    6 +-
+ drivers/scsi/mpt3sas/mpt3sas_base.h  |    4 +
+ drivers/scsi/mpt3sas/mpt3sas_scsih.c | 1459 ++++++++++++++++++++++++--
+ 3 files changed, 1370 insertions(+), 99 deletions(-)
+
+-- 
+2.47.3
+
