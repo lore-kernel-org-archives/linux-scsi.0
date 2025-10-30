@@ -1,92 +1,100 @@
-Received: from mail-yx1-f44.google.com (mail-yx1-f44.google.com [74.125.224.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.11])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 759AD36A61C
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2025 17:34:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C24D23BD17
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2025 18:49:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761845675; cv=none; b=G4Zy2UhcN9Ii2Vs+0LIHoZmeWVagFnn0Gmwz1VM72APyWTaJ+5RbTKoNSfP4zKLmlgfbkcTaGPiCCYanKAHF8ZhEx7so/H49JHrFWRWdGDlrJ20XZf6YXHqUHYtXMPoZlNxsJk2oKC6Dh9BZjTTQh4flU15CUZ947Fa1cmEZ4sw=
+	t=1761850153; cv=none; b=ec87tf9FVMGUjEy/RecPurFS4ftWDMd1yLgjARQlWKAAc/cHn5XtuB/Rpaixa1rRN+9jQChzwZDV/a2P9GgF6LYR9q1zHyRsDo1uZCaREIiErlMl1VFSzrxeRyGfkCcOthl72J5DRhllr57gdyYcPMtdqJsBEtiGDMH9WlWW36E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761845675; c=relaxed/simple;
-	bh=PSFGvayo8MFkE5I7GOQ/KFSqASXyJkXWeASGjZAnylk=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=Z65fYa/StSrp4OhyMMjkc2QnlA2slTgEIBcGO3S4hK292+gDOuV3VFM0oJRL+t8Mneji8sEm4UACpIacP/xGsbRV6ogz0vPtZqEj56DCN40jGPQ/NaVQjnEtHFD39HIHcd/N5NwLJoEE9yVzQh98NnTOzIAJmuBsQw2HHUeFJOc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=J717SL48; arc=none smtp.client-ip=74.125.224.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1761850153; c=relaxed/simple;
+	bh=VCuPSyWJoXsUEfwokDYoj/SLJGyu2B621/T8dElvZlY=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=o0kB6Sg6Qpg/9BOXkuEpYLRyBjsltfCV+UPpF/czHmGEaOi64YVxj3Ux5vtxU5+0tA04QA4YnuebT/LzQpqssnNs8sOhmRxvFeL7LWEMxt64T6C9EJ4G0nJNrjeYPbjgnD9AqhmYKmAJq2MsHaC1Wck6lMotwtZnb46okbFGUc0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MIPwLir5; arc=none smtp.client-ip=192.198.163.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="J717SL48"
-Received: by mail-yx1-f44.google.com with SMTP id 956f58d0204a3-63f533fbff7so1329989d50.0
-        for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2025 10:34:34 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761845673; x=1762450473; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=PSFGvayo8MFkE5I7GOQ/KFSqASXyJkXWeASGjZAnylk=;
-        b=J717SL48P76j8FInfHmzgOmWj26OZmQnUCojGxaphQlW/2nxoAYP/i5NnzOIVfJVPX
-         7LVJeefNk9qrak4E2gcf8Pk+ALFm3aWTj2JhAgIkPLvBsziQbxajoeBGtH2x+iZK1ERt
-         vjsTCT9FhXl1v/K+YsnMyhM7gzdcjTigXbpejsYvc+iZHEHwjisKcoXO8ukcjF9lu1lX
-         f6PjyKn4n+obsmeMeSedtSupb9ybBi85Ur3WlgFSYRH1AKxKeFiymAKGF5Wbw7AkhbQH
-         hsJQYC4iLvD4k9Cwk+xAlBgeOl2PiocLrncgAsI8wHv0xq7DZoeSmfIp+Rk3Y2PWXMk6
-         GFSQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761845673; x=1762450473;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=PSFGvayo8MFkE5I7GOQ/KFSqASXyJkXWeASGjZAnylk=;
-        b=xIpn4B2DLDQk0BcIx3cZL6pRr/DC1G4bdbuldXs87wEAqRAYTgWFy1tmM6h/6cYlAA
-         FlrxKfVh7ZevO5N9WS5yps5xn4w6mZG5wbxmg+ULDZpY88dhA2TZUSGk7sV7GRlVTg5D
-         VovS4kZktivyV/o9nvAQ484t4dysGsonS7OQC1bW3PH+ZV3JzgcKv1W86j8e2ZxhOhKF
-         CQNojd1M+qSMXe2zHyoVOpTY2juZWIG95hqYUMFoBKde+t4iOIP1CHEU1JYtx9rRREM7
-         Wd6v3x8tCWDTZqIRQeUVIw0rgkq/eqvVY3fx/dDRceISNdlwvpikU0B8gR/0YMGnMQQi
-         Anqw==
-X-Forwarded-Encrypted: i=1; AJvYcCU6USELJWXBLpsTUg+sCpnKWSM68KWmTZML4EzheveSxR4pkIhefK2zjCejSHjvo3Tz9wQ9x5kjR5LN@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzf0eECxIVAnZaisXMorrFxeuPmdI90GwN4MKAaD6K7P2HVfmne
-	Kd5EqhFIJm31Y2ixnxXaN1pYMwuSIsKqEqJ0pN86XVkXY9bMfm/JNJKhevgKs/bk8m9TXG8R6C5
-	JUQjbylz0lzH9vmSh2U6dzutJQ4xbsMI=
-X-Gm-Gg: ASbGncsTQgDlneqqwM2NiUIe38reoyA83WMctDqdEOPXWDbg33GIoa5OEenaOevCzNR
-	0vEP/cDr347VC3XqbK1NjDpn7DX6sk4lckVF0hLo/zyG6Rw95mC+Kkl2Gyn9KP2TQ6AMZ+Ah0UY
-	CxSgC7k5PBDcHqiB35Bd5Hp5yMR2g7yVVZW9Q2IoCezINvJ3AGdD7kJFas47iZo8GcFGGMQ+4xi
-	MmaAClCjmwMHxr64hoD0x29MS/DbabhKY008vxX0wRMNW5rjuvV1GFLlLgva84HZMvQNvNA
-X-Google-Smtp-Source: AGHT+IGW1RR/EK1HGe7H5IXgE73oT/yC28TqN9jnfCAlufzP7adDfCJClhp+yAiK8uN5SBuKdbep8wLzCTX2sCxL1bQ=
-X-Received: by 2002:a05:690c:e0d:b0:786:379a:51ec with SMTP id
- 00721157ae682-78648577be3mr2395567b3.46.1761845673285; Thu, 30 Oct 2025
- 10:34:33 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MIPwLir5"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761850150; x=1793386150;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=VCuPSyWJoXsUEfwokDYoj/SLJGyu2B621/T8dElvZlY=;
+  b=MIPwLir5b9CCNvkz3zsVu70MWWkivTPaDultHLB+3WzKQIsg+fkRybuS
+   jBN03Fu8fi7Rz0mLwq8YGGPJA/wbHPcGRkMT7XhU1AWrt2QIZMqqkpYoV
+   47GKaV0NLBAAC8LlyRsURqAKK/79Aask7VnIDN/UtzmPuUXIVpl7ij8mT
+   porQ3eUOk8jU+Z+KLfcxRijwxpAmaCTHDeR1SP5VoWl75T9Z3nHcW0wlp
+   PVybF2FOac4Vqn1f2Ucu6IKYN3c/EhPtaWl19XB4Js+pGqJywb6JtavI/
+   d0MTSFSmh2sl6orFQTMKYQ89f4iiB/XwT2WgcC6lOCmfVf59qRhzuLSLm
+   A==;
+X-CSE-ConnectionGUID: LruWD4u2RCOiBHdXnQXFRA==
+X-CSE-MsgGUID: DDLJhiGsSlqlQeDToOIAwQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11598"; a="74603267"
+X-IronPort-AV: E=Sophos;i="6.19,267,1754982000"; 
+   d="scan'208";a="74603267"
+Received: from orviesa001.jf.intel.com ([10.64.159.141])
+  by fmvoesa105.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2025 11:49:09 -0700
+X-CSE-ConnectionGUID: 6ApZtlUSQLus/E7Ym+HZBQ==
+X-CSE-MsgGUID: SMUMd3n/T3ivoE6UBpL9xw==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,267,1754982000"; 
+   d="scan'208";a="223264628"
+Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
+  by orviesa001.jf.intel.com with ESMTP; 30 Oct 2025 11:49:08 -0700
+Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vEXhl-000MQ4-1G;
+	Thu, 30 Oct 2025 18:49:02 +0000
+Date: Fri, 31 Oct 2025 02:48:30 +0800
+From: kernel test robot <lkp@intel.com>
+To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com, Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: Re: [PATCH v1 1/5] mpt3sas: Added no_turs flag to device unblock
+ logic
+Message-ID: <202510310216.gerpzbxP-lkp@intel.com>
+References: <20251029181058.39157-2-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251027235446.77200-1-justintee8345@gmail.com>
- <20251027235446.77200-10-justintee8345@gmail.com> <921bd950-4e62-4140-a015-c41ea7f07989@kernel.org>
- <CABPRKS9qL-vNbLeE=bqtk=wodVpA2fz8WR_n_iFXS3Yey_bbmg@mail.gmail.com>
- <a4cfc9db-3c41-4b92-ab2b-17b0ed7f1955@kernel.org> <CABPRKS-uBAzvCN6nRLy0bteG7AKAbeMUPfOsc85_ww7=OjrWpA@mail.gmail.com>
- <3d435d9d-cfdb-4221-839b-ca6bd671ebc5@kernel.org>
-In-Reply-To: <3d435d9d-cfdb-4221-839b-ca6bd671ebc5@kernel.org>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Thu, 30 Oct 2025 10:34:04 -0700
-X-Gm-Features: AWmQ_bnN8eJ9SDbdPqzHixP7hAOF1j-E_oS2cfEShXZkwf1wZ7FNpk5nnN0J7Ys
-Message-ID: <CABPRKS-6Z3kD9OxxPYqc6KN5JO-Qag976C_xzZBd8GxGap7zkQ@mail.gmail.com>
-Subject: Re: [PATCH 09/11] lpfc: Add capability to register Platform Name ID
- to fabric
-To: brking@linux.vnet.ibm.com
-Cc: Krzysztof Kozlowski <krzk@kernel.org>, wenxiong@linux.vnet.ibm.com, 
-	linux-scsi@vger.kernel.org, jsmart2021@gmail.com, justin.tee@broadcom.com
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251029181058.39157-2-ranjan.kumar@broadcom.com>
 
-Hi Brian,
+Hi Ranjan,
 
-Was wondering if it was possible to help point to any documentation
-that the =E2=80=9C/proc/device-tree/ibm,partition-uuid=E2=80=9D property wo=
-uld always
-be available on IBM PowerPC platforms?
+kernel test robot noticed the following build warnings:
 
-Essentially, does there exist ABI documentation that this property can
-reliably be used for lshw, libnvme, and the lpfc driver?
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.18-rc3 next-20251030]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-Regards,
-Justin
+url:    https://github.com/intel-lab-lkp/linux/commits/Ranjan-Kumar/mpt3sas-Added-no_turs-flag-to-device-unblock-logic/20251030-025730
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251029181058.39157-2-ranjan.kumar%40broadcom.com
+patch subject: [PATCH v1 1/5] mpt3sas: Added no_turs flag to device unblock logic
+config: i386-randconfig-054-20251030 (https://download.01.org/0day-ci/archive/20251031/202510310216.gerpzbxP-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251031/202510310216.gerpzbxP-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202510310216.gerpzbxP-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> Warning: drivers/scsi/mpt3sas/mpt3sas_scsih.c:3832 function parameter 'no_turs' not described in '_scsih_ublock_io_all_device'
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
