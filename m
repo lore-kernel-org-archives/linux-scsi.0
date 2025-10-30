@@ -1,46 +1,46 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AF14F1482F2
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2025 19:39:39 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC7011482F2
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2025 19:39:48 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761853181; cv=none; b=rMQfskGzoY9Jf47k5zFMOnt16DFfhuOhiVVKyhCmZsG47AygrWy6O0m7HBlK03aSTURj447J+G+E3yBXTGIFPwIxuDZXTWnms+X93pFdVh7BqL6cTsL+HVpkjU6PRTvL3LRzz/dfUlF6Gik6J5Vy3QiKHcXFgSV6+91W8egLpKo=
+	t=1761853190; cv=none; b=Bv7t83KyD2XMxHXzvbo8H1x6/J6juOHwopKm0V3w6wuR5AOOttDhUkRw/kma9XG3QjYdqpnPKTyGiqCDDcYt6301+XUuXjDW2BhVWSIdNEXPyzrFxhT0BvW5arC9BR2uBf0tgoy93QjdIlgPkmjTzDnYL0fLd0TgdOmMvAg32rU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761853181; c=relaxed/simple;
-	bh=J2SY+cFEfRwg8JO0wzljUT+IdoKXVYoHRywIh2GvqaA=;
+	s=arc-20240116; t=1761853190; c=relaxed/simple;
+	bh=CpykVSQ0EZ26cNzeN26vVmNV2XQ4uhHa1Ob3NnQwZaE=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=UfFvvW+w/I9dSMENujlz13YaSrzEyM5K1pHLPJJgqW7BJA4PNvQ1D6kHJ/X0+P1yD/NbCE1+WutFXAauDtzQ0Xi/R/oYAqkv2e/LgOvRe+Djbbjbl8a24i2dQ5Tkg3/GTTjknvWbuxGwIiTIrYehImaOJucL8/QP9RKd5AtUcvo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=YBOqcNi0; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=EzsahocdX7OdFx5mh9WtAF/42R1AlqXHb7DwEYot9X6hdqW4xNy8xpDf9aKMh62SdQqMRlfza6lBTFkAE8GQQApTJLHYfeCYAxAQEdTd/ieuhae3EI5P/2Z2tKxwfg2VoRP++Lz9Bykmhv+zpJqEs/jh/AosK8/SBq9a52uqOYM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=u9JlEMkM; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="YBOqcNi0"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="u9JlEMkM"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cyDvv0NKSzlpTG1;
-	Thu, 30 Oct 2025 19:39:39 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cyDw40HyDzlmm7l;
+	Thu, 30 Oct 2025 19:39:48 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1761853177; x=1764445178; bh=hTHb1
-	PjsvakuwyhacZ/9eLTFOarsCAcf9K5qZcwgYVg=; b=YBOqcNi0RP+NcaaxVMlRK
-	ax0f09DssoawsIe3QUMz+vDRM/OamW5f/M89/OgbbTUYc6F9TYQaXluNS8MvTl6a
-	X6BbUMGSap40DM0u+i2yllqRvYSWf5ubBTI2ES38binzFR7WA/tvIyKAZRgSBLtF
-	YhaXlS0carUE9ddxy/0RXTw+Cz2KtQFk0/2d9oUFycjMaSELFf2NleZpA3DYTcy0
-	aSc1WkiioAB3X18kBskuy6M/Z9aJjs/hY56cuLcctgyh4FmuV8M6e4SspsGyW0wX
-	mS0mKMbycTk/MGyGHY+DvsZyWTykfTFz0ukG/MoMksbmFP8Q71Mp40Ocm0JvRQQw
-	A==
+	:received:received; s=mr01; t=1761853186; x=1764445187; bh=GI/XF
+	F1D3fh0GsODbiOikk8skr2XC6mDEdy8dhki1Q4=; b=u9JlEMkMEtTWN71TbjT92
+	ct5d6NW70ODrCZZpV4TtS51knpd5FCEOsP4WbsfNHQc2+AfGMHt8iDLqn+iWFtId
+	hP5a+qFuuV766yCC1ddWnL/5yMjYJow80qLelCUnhBSk9zx67UAQ7gnKgyp7GPFN
+	c6uv6Xtc7WhD8TEL2e9z13xLkUI/PbEgSWxMNVQ7SOpp8mrfu5J2h/tZzv3qmgwj
+	FvtOEFqN5BPP7UtJEmaqSifoejTf8J3fo9HMe8kOT6NDEJ8OS2hYRcxkN9vyAgnz
+	pK2ZxsYyRcKP9ovFRu1OkIERbIW8MFnRmwixYvrKdCSrI0/icQTYaGfYcNWR+bMc
+	w==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id p1lokuY78xgC; Thu, 30 Oct 2025 19:39:37 +0000 (UTC)
+ id zIR1BVuDsqEk; Thu, 30 Oct 2025 19:39:46 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cyDvl0hpdzlvfGf;
-	Thu, 30 Oct 2025 19:39:30 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cyDvw03p3zlvRxf;
+	Thu, 30 Oct 2025 19:39:39 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -51,9 +51,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Bean Huo <beanhuo@micron.com>,
 	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
 	Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH v7 15/28] ufs: core: Rework ufshcd_mcq_compl_pending_transfer()
-Date: Thu, 30 Oct 2025 12:36:14 -0700
-Message-ID: <20251030193720.871635-16-bvanassche@acm.org>
+Subject: [PATCH v7 16/28] ufs: core: Rework ufshcd_eh_device_reset_handler()
+Date: Thu, 30 Oct 2025 12:36:15 -0700
+Message-ID: <20251030193720.871635-17-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.1.930.gacf6e81ea2-goog
 In-Reply-To: <20251030193720.871635-1-bvanassche@acm.org>
 References: <20251030193720.871635-1-bvanassche@acm.org>
@@ -65,113 +65,129 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Replace a tag loop with blk_mq_tagset_busy_iter(). This patch prepares
-for removing the hba->lrb[] array.
+Merge the MCQ mode and legacy mode loops into a single loop. This patch
+prepares for optimizing the hot path by removing the direct hba->lrb[]
+accesses from ufshcd_eh_device_reset_handler().
 
 Reviewed-by: Avri Altman <avri.altman@sandisk.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 80 ++++++++++++++++++++++-----------------
- 1 file changed, 46 insertions(+), 34 deletions(-)
+ drivers/ufs/core/ufshcd.c | 84 ++++++++++++++++++---------------------
+ 1 file changed, 38 insertions(+), 46 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index df3f651c8d91..ed5def669a33 100644
+index ed5def669a33..f64192c672e2 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -5725,6 +5725,48 @@ static int ufshcd_poll(struct Scsi_Host *shost, un=
-signed int queue_num)
- 	return completed_reqs !=3D 0;
+@@ -7566,6 +7566,36 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
+a *hba, struct utp_upiu_req *r
+ 	return err ? : result;
  }
 =20
-+static bool ufshcd_mcq_force_compl_one(struct request *rq, void *priv)
++static bool ufshcd_clear_lu_cmds(struct request *req, void *priv)
 +{
-+	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(rq);
-+	struct scsi_device *sdev =3D rq->q->queuedata;
++	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(req);
++	struct scsi_device *sdev =3D cmd->device;
 +	struct Scsi_Host *shost =3D sdev->host;
 +	struct ufs_hba *hba =3D shost_priv(shost);
-+	struct ufshcd_lrb *lrbp =3D &hba->lrb[rq->tag];
-+	struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
++	const u64 lun =3D *(u64 *)priv;
++	const u32 tag =3D req->tag;
 +
-+	if (!hwq)
++	if (sdev->lun !=3D lun)
 +		return true;
 +
-+	ufshcd_mcq_compl_all_cqes_lock(hba, hwq);
-+
-+	/*
-+	 * For those cmds of which the cqes are not present in the cq, complete
-+	 * them explicitly.
-+	 */
-+	scoped_guard(spinlock_irqsave, &hwq->cq_lock) {
-+		if (!test_bit(SCMD_STATE_COMPLETE, &cmd->state)) {
-+			set_host_byte(cmd, DID_REQUEUE);
-+			ufshcd_release_scsi_cmd(hba, lrbp);
-+			scsi_done(cmd);
-+		}
++	if (ufshcd_clear_cmd(hba, tag) < 0) {
++		dev_err(hba->dev, "%s: failed to clear request %d\n", __func__,
++			tag);
++		return true;
 +	}
 +
-+	return true;
-+}
++	if (hba->mcq_enabled) {
++		struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, req);
 +
-+static bool ufshcd_mcq_compl_one(struct request *rq, void *priv)
-+{
-+	struct scsi_device *sdev =3D rq->q->queuedata;
-+	struct Scsi_Host *shost =3D sdev->host;
-+	struct ufs_hba *hba =3D shost_priv(shost);
-+	struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
++		if (hwq)
++			ufshcd_mcq_poll_cqe_lock(hba, hwq);
++		return true;
++	}
 +
-+	if (hwq)
-+		ufshcd_mcq_poll_cqe_lock(hba, hwq);
-+
++	ufshcd_compl_one_cqe(hba, tag, NULL);
 +	return true;
 +}
 +
  /**
-  * ufshcd_mcq_compl_pending_transfer - MCQ mode function. It is
-  * invoked from the error handler context or ufshcd_host_reset_and_resto=
-re()
-@@ -5739,40 +5781,10 @@ static int ufshcd_poll(struct Scsi_Host *shost, u=
-nsigned int queue_num)
- static void ufshcd_mcq_compl_pending_transfer(struct ufs_hba *hba,
- 					      bool force_compl)
+  * ufshcd_eh_device_reset_handler() - Reset a single logical unit.
+  * @cmd: SCSI command pointer
+@@ -7574,12 +7604,8 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
+a *hba, struct utp_upiu_req *r
+  */
+ static int ufshcd_eh_device_reset_handler(struct scsi_cmnd *cmd)
  {
+-	unsigned long flags, pending_reqs =3D 0, not_cleared =3D 0;
+ 	struct Scsi_Host *host;
+ 	struct ufs_hba *hba;
 -	struct ufs_hw_queue *hwq;
 -	struct ufshcd_lrb *lrbp;
--	struct scsi_cmnd *cmd;
--	unsigned long flags;
--	int tag;
--
--	for (tag =3D 0; tag < hba->nutrs; tag++) {
--		lrbp =3D &hba->lrb[tag];
--		cmd =3D lrbp->cmd;
--		if (!ufshcd_cmd_inflight(cmd) ||
--		    test_bit(SCMD_STATE_COMPLETE, &cmd->state))
--			continue;
--
--		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
--		if (!hwq)
--			continue;
--
--		if (force_compl) {
--			ufshcd_mcq_compl_all_cqes_lock(hba, hwq);
--			/*
--			 * For those cmds of which the cqes are not present
--			 * in the cq, complete them explicitly.
--			 */
--			spin_lock_irqsave(&hwq->cq_lock, flags);
--			if (cmd && !test_bit(SCMD_STATE_COMPLETE, &cmd->state)) {
--				set_host_byte(cmd, DID_REQUEUE);
--				ufshcd_release_scsi_cmd(hba, lrbp);
--				scsi_done(cmd);
--			}
--			spin_unlock_irqrestore(&hwq->cq_lock, flags);
--		} else {
--			ufshcd_mcq_poll_cqe_lock(hba, hwq);
--		}
--	}
-+	blk_mq_tagset_busy_iter(&hba->host->tag_set,
-+				force_compl ? ufshcd_mcq_force_compl_one :
-+					      ufshcd_mcq_compl_one,
-+				NULL);
- }
+-	u32 pos, not_cleared_mask =3D 0;
+ 	int err;
+ 	u8 resp =3D 0xF, lun;
 =20
- /**
+@@ -7588,50 +7614,16 @@ static int ufshcd_eh_device_reset_handler(struct =
+scsi_cmnd *cmd)
+=20
+ 	lun =3D ufshcd_scsi_to_upiu_lun(cmd->device->lun);
+ 	err =3D ufshcd_issue_tm_cmd(hba, lun, 0, UFS_LOGICAL_RESET, &resp);
+-	if (err || resp !=3D UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
+-		if (!err)
+-			err =3D resp;
+-		goto out;
+-	}
+-
+-	if (hba->mcq_enabled) {
+-		for (pos =3D 0; pos < hba->nutrs; pos++) {
+-			lrbp =3D &hba->lrb[pos];
+-			if (ufshcd_cmd_inflight(lrbp->cmd) &&
+-			    lrbp->lun =3D=3D lun) {
+-				ufshcd_clear_cmd(hba, pos);
+-				hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(lrbp->cmd));
+-				ufshcd_mcq_poll_cqe_lock(hba, hwq);
+-			}
+-		}
+-		err =3D 0;
+-		goto out;
+-	}
+-
+-	/* clear the commands that were pending for corresponding LUN */
+-	spin_lock_irqsave(&hba->outstanding_lock, flags);
+-	for_each_set_bit(pos, &hba->outstanding_reqs, hba->nutrs)
+-		if (hba->lrb[pos].lun =3D=3D lun)
+-			__set_bit(pos, &pending_reqs);
+-	hba->outstanding_reqs &=3D ~pending_reqs;
+-	spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+-
+-	for_each_set_bit(pos, &pending_reqs, hba->nutrs) {
+-		if (ufshcd_clear_cmd(hba, pos) < 0) {
+-			spin_lock_irqsave(&hba->outstanding_lock, flags);
+-			not_cleared =3D 1U << pos &
+-				ufshcd_readl(hba, REG_UTP_TRANSFER_REQ_DOOR_BELL);
+-			hba->outstanding_reqs |=3D not_cleared;
+-			not_cleared_mask |=3D not_cleared;
+-			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
+-
+-			dev_err(hba->dev, "%s: failed to clear request %d\n",
+-				__func__, pos);
+-		}
++	if (err) {
++	} else if (resp !=3D UPIU_TASK_MANAGEMENT_FUNC_COMPL) {
++		err =3D resp;
++	} else {
++		/* clear the commands that were pending for corresponding LUN */
++		blk_mq_tagset_busy_iter(&hba->host->tag_set,
++					ufshcd_clear_lu_cmds,
++					&cmd->device->lun);
+ 	}
+-	__ufshcd_transfer_req_compl(hba, pending_reqs & ~not_cleared_mask);
+=20
+-out:
+ 	hba->req_abort_count =3D 0;
+ 	ufshcd_update_evt_hist(hba, UFS_EVT_DEV_RESET, (u32)err);
+ 	if (!err) {
