@@ -1,59 +1,59 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6E499301482
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2025 19:41:43 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB9922FF676
+	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2025 19:41:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761853305; cv=none; b=sTeSMMxvCRrfqzJU5+/0M6gt8XPJiHIy3Ybw/qSrfchf6LYYBt6cAyhn7Ddb1oTO835xNkwGtCBb4DtFl9oRaoRcHwwrrGaEnr/HukiyaMxRCVZRlVul8kxJD4CDCGl+f44UJpYD9IWchFPWoO8DjYSZuxB2wi9erBhkKMCNL30=
+	t=1761853314; cv=none; b=U7I4EK7z8Tl+Xa+ocTjs2ofSLOfgG+ozoEMMFAwHxAtE2aIDQYDFx+IFkFypl02DDz4ugBdRiEOW3/BOTnC0IeE+fguYPB+QAOicnHf/UQ+R4c3CZGXVc+hFwV1ZjBlt+uTNny3LM0thD6aCdzgb1GjRozGwmHyscFv6YD1wbGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761853305; c=relaxed/simple;
-	bh=2aKqJPpsUXelRNGM8VDB2408JM+MxwsqHYktufL8xgc=;
+	s=arc-20240116; t=1761853314; c=relaxed/simple;
+	bh=ESL3ux7/8g0sWVy+YGGg18dxyBNpOzfKR3xc3VT8Sdc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WTr58duQpuJ1++ofBYOYITF0CFGzaVgoD/8lylRR1oAjwRY9qys9XOl9nmKK5tgMadTVnVqIhttISrk6GVYBmsyOxwt91NDMymYi8MdCv/Nxmw2ANa1Wp6ohjlDjiOgITnQpnMzlXeu2uocV8GMhIkk5LaLzUJAD4vv43nz8LMg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=AdASQ4/2; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=OCFlf49KKiVBb9nF743xOl9Dsm7XCzBUhOCpUhFlOB3iRXZE7J6HxOQYDiL8ZinxIxUTATDyh6ZaT+42TCh3/ZImbIp1g9AJM8thMXPRqEwFdoIFT3RRCXZiQMwwpTDGiocRj2W6Yu3MvqgfqM2Q1Lmdo1EtNEUgigNY6vf/Q8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=gmtnXYHp; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="AdASQ4/2"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="gmtnXYHp"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cyDyG5TxnzlvhyK;
-	Thu, 30 Oct 2025 19:41:42 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cyDyR5GnYzlssyp;
+	Thu, 30 Oct 2025 19:41:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1761853301; x=1764445302; bh=FE4/E
-	F7bK4XWgYKyiP+jJLG0NPr51im8fLDAEknQASI=; b=AdASQ4/2U6pmtPY7riorq
-	1RNOpJxOO+86MLL7RN7s3UTlMD9kzjm2+pEK0du5srCfIYXBJyL0k5W8j34RE4ET
-	wZEDRu8tAHQsuz6dIIJnuyaXdGY7HLhC0xnFECX3bsiCumqcNb4N/h/NvH8EAkUI
-	ECk4gKVWlhDuk8WbxmTonXMD/XO5ZNmezXYx5IUpjyFVOqfOL8yiXg/fCMD72tpF
-	QvznPoqKWmv3U8ikRafUA9AEGAQMbyXqVY3zi5jrYBsOsm4TfTywV/UGhCc70am6
-	ZsO55ynAqCe4DGuwWmMoSHrda8BWn7rz59qUT5QO+HUjbJWpH+Lpa1wfu82Qw/eY
-	w==
+	:received:received; s=mr01; t=1761853309; x=1764445310; bh=/V3fB
+	hxHSBvFhCn/bmVoa3kzwpTC30jg0PtLUnUMSfM=; b=gmtnXYHpvbLSPx0FtLH/2
+	XbEQmj+xDvLmyyayBNgKRDDRqmNPLkFXj23/GuWaT474ReJR06TgXwh4Cn2451nn
+	nftNHB1L673eqKfnhfZl++odiSnYMC3qxlDgzrXWrJnZHSofPUcDeDF0P2pn91t7
+	d8wXpfm/rhnbPggIlSjZCnVu0R9RBq3r8F8FG14CDtO/0IRh8EByj1hqOV2n2f3k
+	q2d1JrKm0/nrMNKuJ0tOb4JQSjYjDzkLwTACCbiO/XRVx9W+RWAVbtfFjGalnRHp
+	KENTgsWm62yHc/bV+qhaK8meCyi23NBQEyzF5qML38HjLgfNqkzPpnWY9g+kZLQL
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id dLOhwSg4GMyu; Thu, 30 Oct 2025 19:41:41 +0000 (UTC)
+ id fSWJNEh91j1R; Thu, 30 Oct 2025 19:41:49 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cyDy65vLXzlvRxf;
-	Thu, 30 Oct 2025 19:41:34 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cyDyH5CStzlvkT6;
+	Thu, 30 Oct 2025 19:41:42 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
+	Avri Altman <avri.altman@sandisk.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
 	Peter Wang <peter.wang@mediatek.com>,
-	Avri Altman <avri.altman@sandisk.com>,
 	Bean Huo <beanhuo@micron.com>,
 	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
 	Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH v7 26/28] ufs: core: Make blk_mq_tagset_busy_iter() skip reserved requests
-Date: Thu, 30 Oct 2025 12:36:25 -0700
-Message-ID: <20251030193720.871635-27-bvanassche@acm.org>
+Subject: [PATCH v7 27/28] ufs: core: Move code out of ufshcd_wait_for_dev_cmd()
+Date: Thu, 30 Oct 2025 12:36:26 -0700
+Message-ID: <20251030193720.871635-28-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.1.930.gacf6e81ea2-goog
 In-Reply-To: <20251030193720.871635-1-bvanassche@acm.org>
 References: <20251030193720.871635-1-bvanassche@acm.org>
@@ -65,68 +65,81 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-A later patch will convert hba->reserved_slot into a reserved tag. Make
-blk_mq_tagset_busy_iter() skip reserved requests such that device
-management commands are skipped.
+The ufshcd_dev_cmd_completion() call is useful for some but not for all
+ufshcd_wait_for_dev_cmd() callers. Hence, remove the
+ufshcd_dev_cmd_completion() call from ufshcd_wait_for_dev_cmd() and move
+it past the ufshcd_issue_dev_cmd() calls where appropriate. This makes
+it easier to detect timeout errors for UPIU frames submitted through the
+BSG interface.
 
+Reviewed-by: Avri Altman <avri.altman@sandisk.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 12 ++++++++----
- 1 file changed, 8 insertions(+), 4 deletions(-)
+ drivers/ufs/core/ufshcd.c | 21 ++++++++++++---------
+ 1 file changed, 12 insertions(+), 9 deletions(-)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index cc57e82ec1fb..e9ae27f0c25a 100644
+index e9ae27f0c25a..b69e73d74f68 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -644,7 +644,8 @@ static bool ufshcd_print_tr_iter(struct request *req,=
- void *priv)
- 	struct Scsi_Host *shost =3D sdev->host;
- 	struct ufs_hba *hba =3D shost_priv(shost);
+@@ -3264,8 +3264,6 @@ static int ufshcd_wait_for_dev_cmd(struct ufs_hba *=
+hba,
 =20
--	ufshcd_print_tr(hba, blk_mq_rq_to_pdu(req), *(bool *)priv);
-+	if (!blk_mq_is_reserved_rq(req))
-+		ufshcd_print_tr(hba, blk_mq_rq_to_pdu(req), *(bool *)priv);
+ 	if (likely(time_left)) {
+ 		err =3D ufshcd_get_tr_ocs(lrbp, NULL);
+-		if (!err)
+-			err =3D ufshcd_dev_cmd_completion(hba, lrbp);
+ 	} else {
+ 		err =3D -ETIMEDOUT;
+ 		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
+@@ -3375,6 +3373,7 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
+ {
+ 	const u32 tag =3D hba->reserved_slot;
+ 	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, tag);
++	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
+ 	int err;
 =20
- 	return true;
- }
-@@ -5752,7 +5753,7 @@ static bool ufshcd_mcq_force_compl_one(struct reque=
-st *rq, void *priv)
- 	struct ufs_hba *hba =3D shost_priv(shost);
- 	struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
+ 	/* Protects use of hba->reserved_slot. */
+@@ -3384,7 +3383,11 @@ static int ufshcd_exec_dev_cmd(struct ufs_hba *hba=
+,
+ 	if (unlikely(err))
+ 		return err;
 =20
--	if (!hwq)
-+	if (blk_mq_is_reserved_rq(rq) || !hwq)
- 		return true;
-=20
- 	ufshcd_mcq_compl_all_cqes_lock(hba, hwq);
-@@ -5779,7 +5780,7 @@ static bool ufshcd_mcq_compl_one(struct request *rq=
-, void *priv)
- 	struct ufs_hba *hba =3D shost_priv(shost);
- 	struct ufs_hw_queue *hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
-=20
--	if (hwq)
-+	if (!blk_mq_is_reserved_rq(rq) && hwq)
- 		ufshcd_mcq_poll_cqe_lock(hba, hwq);
-=20
- 	return true;
-@@ -6647,6 +6648,9 @@ static bool ufshcd_abort_one(struct request *rq, vo=
-id *priv)
- 	struct Scsi_Host *shost =3D sdev->host;
- 	struct ufs_hba *hba =3D shost_priv(shost);
-=20
-+	if (blk_mq_is_reserved_rq(rq))
-+		return true;
+-	return ufshcd_issue_dev_cmd(hba, cmd, tag, timeout);
++	err =3D ufshcd_issue_dev_cmd(hba, cmd, tag, timeout);
++	if (err)
++		return err;
 +
- 	*ret =3D ufshcd_try_to_abort_task(hba, tag);
- 	dev_err(hba->dev, "Aborting tag %d / CDB %#02x %s\n", tag,
- 		ufshcd_is_scsi_cmd(cmd) ? cmd->cmnd[0] : -1,
-@@ -7596,7 +7600,7 @@ static bool ufshcd_clear_lu_cmds(struct request *re=
-q, void *priv)
- 	const u64 lun =3D *(u64 *)priv;
- 	const u32 tag =3D req->tag;
++	return ufshcd_dev_cmd_completion(hba, lrbp);
+ }
 =20
--	if (sdev->lun !=3D lun)
-+	if (blk_mq_is_reserved_rq(req) || sdev->lun !=3D lun)
- 		return true;
+ /**
+@@ -7411,12 +7414,9 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs=
+_hba *hba,
 =20
- 	if (ufshcd_clear_cmd(hba, tag) < 0) {
+ 	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+=20
+-	/*
+-	 * ignore the returning value here - ufshcd_check_query_response is
+-	 * bound to fail since dev_cmd.query and dev_cmd.type were left empty.
+-	 * read the response directly ignoring all errors.
+-	 */
+-	ufshcd_issue_dev_cmd(hba, cmd, tag, dev_cmd_timeout);
++	err =3D ufshcd_issue_dev_cmd(hba, cmd, tag, dev_cmd_timeout);
++	if (err)
++		return err;
+=20
+ 	/* just copy the upiu response as it is */
+ 	memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
+@@ -7562,7 +7562,10 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
+a *hba, struct utp_upiu_req *r
+ 	memset(lrbp->ucd_rsp_ptr, 0, sizeof(struct utp_upiu_rsp));
+=20
+ 	err =3D ufshcd_issue_dev_cmd(hba, cmd, tag, ADVANCED_RPMB_REQ_TIMEOUT);
++	if (err)
++		return err;
+=20
++	err =3D ufshcd_dev_cmd_completion(hba, lrbp);
+ 	if (!err) {
+ 		/* Just copy the upiu response as it is */
+ 		memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
