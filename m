@@ -1,87 +1,143 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E3A1427FB3C;
-	Fri, 31 Oct 2025 21:55:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1577B26C3BE
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 22:09:10 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761947739; cv=none; b=bRAOMWgJ2AC7fHtyb0TNLHubUa6B0iWYrlJ6MADX6adhovl6/I5cBm06KKIMhYu3Q2xgH+YfU2HcZYC0JwKpXPBqHjKQl6qsBoTKSsAQ4rXYKVx0Sy8sRltXmgIC6fFw5YYLdrpvNOt/onr8U0idXsI+jRW8zLA0diG792IS0D4=
+	t=1761948552; cv=none; b=UWehkNPhx1eRJKcQ2X/V9FUZi4wlb3d0pzNcerVviWYNO+qUv71AfAht0HB4KjOCJHW6kDwcukijDOkVSfEOvmU3hrKH3cPAPV9UKyAkXbOioxlTObYGTV1QnD90wd+Q6I8BX8+1+zxU4OSqRaR6Jh5GXP/9JQbvtqDsGkPD4sA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761947739; c=relaxed/simple;
-	bh=ejTnG+XD06HRWSx/Nh4/cSNkzZ+idaKjT0gGtVZ3zHM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=U9b7emeQiQYfuu2dD+jHCsc4hpdw8jXilLtY8qf26J83btXtk4eq13AyI3vKhg+wx4vxu0L9OpCwCYsF8ZrZnjtjer72/WAXwinHTLBvMmTd8AQlJmEadpZJ13GUwZ42mP5RHOsm5J3AVReq1LxyYOwzuAARS8QdV1Uh4vxTW/M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=OpmO3xIc; arc=none smtp.client-ip=199.89.3.7
+	s=arc-20240116; t=1761948552; c=relaxed/simple;
+	bh=HP/Dmdl/FKwtNUmtvGqBZoClJrjkEwojscmfiK867pY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=qcCnT0oGZ4xeVXdu0wUBWyBtqU6J5MU+ilxNo60HlI5EV0+WK1qHfhNY0Y7h4GmM+HruW2WaVVqv4bIDxvh7x2gqTOA5pcnsJ/0csHDZHUK2XTLifPEtHkNiWV0ifAFvxeXgrX5F+vBBBZEMUk9A8PmCmBKChbazAs+4b4MD+Xw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=UiX/7S9l; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="OpmO3xIc"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="UiX/7S9l"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cyvtJ6kM4zm0jvK;
-	Fri, 31 Oct 2025 21:55:36 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cyw9y01Fkzlw7Lx;
+	Fri, 31 Oct 2025 22:09:10 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1761947734; x=1764539735; bh=cMr12pMLjE66ZLJgfh9u6SnW
-	e7M5oEz8wUdwX9iE4Ic=; b=OpmO3xIcXuZXUen+RPg8c8kumkTVrBZ3LPnA8Qvy
-	mYEZ3Wu7qgNYPNitoaUA8BKnHDO2shinTSHDeOfg7ftya7SNfranagToCSF7lN0E
-	KVU28LDu7UTvnD3qnf8rrzK4OzCy/CBAKOgyykQXhnS8Y0ngjU64St86qFBAMAZQ
-	o8Es0EYtpN4ckwkVwRKU/xYQrejzL8vDzdSxQ75utlmUpgAMK93VKIYjmWNmq3Vf
-	Ca3sY2WILYoYpzobqnLcguya7EgV/LmgqsRcmMX01bkdtzQLzehZwHXUvsZOi/fF
-	QK9E5rGuKsip6GcfbFGHINBcBIlgeJhbz/HH2wIBHdYtQA==
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1761948548; x=1764540549; bh=s9WclqpaG30oaGUhRKothJD+JUe8UI/zu1s
+	vj5WgRv4=; b=UiX/7S9lBrztSztOJxzFnQNPBj6tQxP61S1H7ErpoUVoSIMIaVZ
+	5CrZx0BKLGK3i4SzgvGq3ltGhKqCJF48DdvmCyJJ4e8X0BHSRQeyWQVWG5GS8yuj
+	thOUJe8KBXtb7XUU3jBYM67gIuvfTl4KgXGfF2cK4XJLv4XgHIQjm6Xp5n0M4RzS
+	mm1cG3AukH9oyISxqcgkyEKrYOKMdc3f6lOH8jxzr88u9thYgrk8MFw00e6F5WY8
+	PyRtPKi7IoRvTaAmZLNxubybo1fiUEV/IlhdU/kzLXpSXSxqP9X4+3R0qAWKaDy8
+	yznOghMh18pN25SjQlanVkgktn1zt30XQZA==
 X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id tmX2EuuEY4-X; Fri, 31 Oct 2025 21:55:34 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id aE8dBVkt6wzS; Fri, 31 Oct 2025 22:09:08 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cyvt42Yn3zm0pL4;
-	Fri, 31 Oct 2025 21:55:23 +0000 (UTC)
-Message-ID: <22912f8a-01af-415c-a4f0-9db87eac32d2@acm.org>
-Date: Fri, 31 Oct 2025 14:55:22 -0700
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cyw9s4pJXzlw65H;
+	Fri, 31 Oct 2025 22:09:04 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH] scsi: core: Remove unused code from scsi_sysfs.c
+Date: Fri, 31 Oct 2025 15:08:56 -0700
+Message-ID: <20251031220857.2917954-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.51.1.930.gacf6e81ea2-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 11/13] block: add zone write plug condition to debugfs
- zone_wplugs
-To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
- Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
- David Sterba <dsterba@suse.com>
-References: <20251031061307.185513-1-dlemoal@kernel.org>
- <20251031061307.185513-12-dlemoal@kernel.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20251031061307.185513-12-dlemoal@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
 
-On 10/30/25 11:13 PM, Damien Le Moal wrote:
-> -	seq_printf(m, "%u 0x%x %u %u %u\n", zwp_zone_no, zwp_flags, zwp_ref,
-> -		   zwp_wp_offset, zwp_bio_list_size);
-> +	seq_printf(m, "%u 0x%x %u 0x%x %u %u\n",
-> +		   zwp_zone_no, zwp_flags, zwp_ref,
-> +		   zwp_cond, zwp_wp_offset, zwp_bio_list_size);
+Remove unused code since we do not keep unused code in the Linux kernel.
 
-The debugfs output is incomprehensible for anyone who has not memorized
-the source code of queue_zone_wplug_show(). Please expand the debugfs
-output such that it becomes easier to comprehend. See e.g. the
-queue_zone_wplug_show() changes in
-https://lore.kernel.org/linux-block/20251014215428.3686084-15-bvanassche@acm.org/.
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ drivers/scsi/scsi_sysfs.c | 62 ---------------------------------------
+ 1 file changed, 62 deletions(-)
 
-Thanks,
-
-Bart.
+diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
+index ebd3e435d071..6b347596ef19 100644
+--- a/drivers/scsi/scsi_sysfs.c
++++ b/drivers/scsi/scsi_sysfs.c
+@@ -605,68 +605,6 @@ sdev_show_##field (struct device *dev, struct device=
+_attribute *attr,	\
+ 	sdev_show_function(field, format_string)			\
+ static DEVICE_ATTR(field, S_IRUGO, sdev_show_##field, NULL);
+=20
+-
+-/*
+- * sdev_rw_attr: create a function and attribute variable for a
+- * read/write field.
+- */
+-#define sdev_rw_attr(field, format_string)				\
+-	sdev_show_function(field, format_string)				\
+-									\
+-static ssize_t								\
+-sdev_store_##field (struct device *dev, struct device_attribute *attr,	\
+-		    const char *buf, size_t count)			\
+-{									\
+-	struct scsi_device *sdev;					\
+-	sdev =3D to_scsi_device(dev);					\
+-	sscanf (buf, format_string, &sdev->field);			\
+-	return count;							\
+-}									\
+-static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_sto=
+re_##field);
+-
+-/* Currently we don't export bit fields, but we might in future,
+- * so leave this code in */
+-#if 0
+-/*
+- * sdev_rd_attr: create a function and attribute variable for a
+- * read/write bit field.
+- */
+-#define sdev_rw_attr_bit(field)						\
+-	sdev_show_function(field, "%d\n")					\
+-									\
+-static ssize_t								\
+-sdev_store_##field (struct device *dev, struct device_attribute *attr,	\
+-		    const char *buf, size_t count)			\
+-{									\
+-	int ret;							\
+-	struct scsi_device *sdev;					\
+-	ret =3D scsi_sdev_check_buf_bit(buf);				\
+-	if (ret >=3D 0)	{						\
+-		sdev =3D to_scsi_device(dev);				\
+-		sdev->field =3D ret;					\
+-		ret =3D count;						\
+-	}								\
+-	return ret;							\
+-}									\
+-static DEVICE_ATTR(field, S_IRUGO | S_IWUSR, sdev_show_##field, sdev_sto=
+re_##field);
+-
+-/*
+- * scsi_sdev_check_buf_bit: return 0 if buf is "0", return 1 if buf is "=
+1",
+- * else return -EINVAL.
+- */
+-static int scsi_sdev_check_buf_bit(const char *buf)
+-{
+-	if ((buf[1] =3D=3D '\0') || ((buf[1] =3D=3D '\n') && (buf[2] =3D=3D '\0=
+'))) {
+-		if (buf[0] =3D=3D '1')
+-			return 1;
+-		else if (buf[0] =3D=3D '0')
+-			return 0;
+-		else
+-			return -EINVAL;
+-	} else
+-		return -EINVAL;
+-}
+-#endif
+ /*
+  * Create the actual show/store functions and data structures.
+  */
