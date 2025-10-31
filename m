@@ -1,64 +1,64 @@
-Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
+Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C55B333733
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 09:56:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E303333755
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 09:56:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761904616; cv=none; b=aFdaRCpfW9AxAKy/nU4PWlnJRkvdXNlFOhe+EGuHOXlbfPIdCE9TbRIH/S9sOWotwBFyG54EwANYKQvpZQHvB/tUE+6hk6RGHlOCr5Va3rHh5GNsAqRIu/RfNiH0ARcOXgb0FdMyT/Vqh6PIL71IA5SJqA4Tw16AMX/40zU0OU8=
+	t=1761904617; cv=none; b=PvTmuFCrILqBEbmo/PNPSoPyBBOgrfBN5+7qw1LOP34FOwbJqbelY7oL3iloLsBo7G857CyqzFwApN4HlLML4YG+YYHhCij0BibC4y4ZJ940MTHxa6WXj/Up5dG99Q/X6gR9gEUsFpGlcN26xN9bY0URJPbRuP6pPcE61FSYABk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761904616; c=relaxed/simple;
-	bh=iLz+raYpmV/FRkHcddplK9Xz7NwdeSLevio/ryv7bAM=;
+	s=arc-20240116; t=1761904617; c=relaxed/simple;
+	bh=YsRvqvzwy42IvsqDkcBl0YyIAOhXzGMpxsJ8NofpaA0=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ibdvDa7lMy4SuFKW3iunxAmBZAYSXtfp7lSvT2MaTNWqWrrAK8j/ZSpVmdLBuqqho2T+0gee902uoTNtZeLla9q60cwpVphplKcHdkjNFm+o/8MfxU+W7Ziiw181eZutJjEnX3j9V3gnMF3gMS4MfLJ/is8I+a9VNbEjlyBs4f0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=V3mRccOv; arc=none smtp.client-ip=209.85.128.44
+	 MIME-Version:Content-Type; b=fnoiXVTzwakTK0UZq5fpoZXIrNbv77K1ILw328W+hhbUFqMHVCWcJMehOupuMLNG67Ni+E3/0B797dwdDRtk4V7o7V63yd5BzEaNFRj6GNqimzke1lUv2LEFNQQhLkfsLY0kyJWzc0O3o5R8C5Y31U3Kk1fmrr+uox6UKQSjAQs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=L9W+SN3I; arc=none smtp.client-ip=209.85.221.43
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="V3mRccOv"
-Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-471b80b994bso25497735e9.3
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 02:56:54 -0700 (PDT)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="L9W+SN3I"
+Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-3ece1102998so1428263f8f.2
+        for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 02:56:55 -0700 (PDT)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1761904613; x=1762509413; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1761904614; x=1762509414; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=j12YdcbQpfT8Ri5Sjm8HpC33Bil9gxYaV08r43TG4D0=;
-        b=V3mRccOv6aym7YTtt9V/2lNEh9Ff0n/0sZ46AecSX451etzHFGgbJDbBVBy2bPUw63
-         ZpvLKIiRH11FnBwZxnfTkfzbKcxAROTqV3g+gRv8aC76P4FzoxcRAaOdLyjlh/akbwbq
-         8TESX0sh8uN06bg3AY4gq2/qIfIZjki7twl4N3ik+S4SwBft8r4ywBFKvqn0jf9sQovc
-         aIWGylbufp/pxoCjrmvtUwYbduZIsEdnRFcPDwm9Ebk1r0GXMtIRXTuSXc6mxm4UflSW
-         j6tX0dwkQkl5t27NkaqdYBfO7CYTLuD3DRuxLQKx/PiASaFQBbNxyCJqTO7aE6Xr+Vqk
-         Nwcw==
+        bh=wj5wFR8hbemxjJEZ74XNLCfMf4UXzmASpi1RkT2VDLs=;
+        b=L9W+SN3IK4LSuka3+vex1h2xg/fdpPfQEEsTE02E84HyN3F6FMqD0U9pn9c7kZIfUJ
+         n4Epv8Ru4Z7qPM3BdlV1KxrlCoHlq1Ztn7SK+nBd9Bqy5Tq06ToIFQibS6pE8urj2cq8
+         RcgCS+6VKJrG+t+ur0VCIwzAIGesvfZFTA1QVzh0aCXQl2sBOb38n8wWgglvKZRN6Z9h
+         X7TKjUnq5aj0fXa28K7YIapdb0KQ6TLQHUVGLykssWj0XeEhuoKYqukWCE48twwwW480
+         8Ghf7vaa1J+cs4GEvxAV4n7VfetDYHpSjcHgh2lvcGHO2i7fO5SOECYm6552Oot+tEUG
+         Qc6A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761904613; x=1762509413;
+        d=1e100.net; s=20230601; t=1761904614; x=1762509414;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=j12YdcbQpfT8Ri5Sjm8HpC33Bil9gxYaV08r43TG4D0=;
-        b=gCditfSvIlkiXQgC0iaVsxQ7s5ERbo34lkizXX0jN3UUmrUacHPxV1eOB2CPHY7DUM
-         XLc5LbjmFAO45QhORRCdaeSxhrGUkDnHU66f3dQwEfiTPETfkxmvW9tkgOCcgOWxOMPC
-         4kVHMq5MuN2F2Bi60BqOHRJosdH225j6KahDR+F7AoDAvXebbR8zmojU2vJ2mCMU4UbC
-         mrq7ARuuxHqRX9A8LmQTfT9tPmwLTeKrld16sPY0jFD/GpuuNRwbgADmO4AmffJ5IK3d
-         T3vNesLVEBHmQ7P66VX++y7NcicCKoSSuvAsjQrQhW31QdXQm3iNnJWNEnBAiW/8w/1Y
-         2UwA==
-X-Forwarded-Encrypted: i=1; AJvYcCXO2DsIMJK2yIImT+S0/7Kqo7r5h86T4CInO6Wbi3zxVvXEWhuJVBgYRQoI1Mqtfbwc8ROAz0VcA7M7@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzz83HFI4esbGPLxXMSLCg+yBhE/V8Q6T4p/hR7eK1bKxPEAySD
-	cV3cXMqdwNU66DRD5IiDWzRI/FFk55wjMaHLg39JsF4sQ7blje778EaPcNcKxTPNCxE=
-X-Gm-Gg: ASbGncuA14+EXMWKJ67mELNXH5ij2vetnPVjZktwcqHQfsmjB7BW6pj7ApAx28SNT0n
-	waC6eeaDpZphscUE25qQl5xDYmddSdAZx+2fT5VjzGyKLw6xA6xAHVx3N7I0wHWmhixt1ZwKi+6
-	TaX6yOa9PA//hClVzTBfW6A3dbL+v7t8/+o9oveYfCHNcfzgt8B9+D3HjAxJEj4mcUPU0xgcMUe
-	1PVSpEshQpxFzjbwXEVKdkUDnOw1kTdnXgO+Wv4dnn57Qtw65BidhTNXjAyqbCrVhR5vevZC4oP
-	jUDVsNaaAow9ygETUxxgI8Q+jSbZtFlnWQ6W536CJE40cMrM81e/jFUdSvZ/zaygqpQSf8caBQc
-	xCboiSv43NP21BaJvkFcz15BAViff5NlJAO4wU2biyK9xiUqw3eq6o+7OAFIiNJujSuy1Gt+9lM
-	2+B7vr4goLhLk9FwKBqYLkGS8Y1iIlD7L3WCD/ogdjm/7h0w==
-X-Google-Smtp-Source: AGHT+IHIxYUB7ucqmBG4m5QaDjIg9L1VP2kIebkbFH+exLigBCCQXvz5AOOKdVL9nqzemP99+DYyqA==
-X-Received: by 2002:a05:600c:a010:b0:477:28c1:26ce with SMTP id 5b1f17b1804b1-47730794423mr28108185e9.7.1761904612811;
-        Fri, 31 Oct 2025 02:56:52 -0700 (PDT)
+        bh=wj5wFR8hbemxjJEZ74XNLCfMf4UXzmASpi1RkT2VDLs=;
+        b=cLXLg/s6CIyiumj+2BCgVnAmu0FplCdiMRQg9MShFpN0FEId/tfgFpQeykqOdvoQFR
+         smAR5d/huP77DBbupM2DC1v2TsRl++yB6dcKM9t20+xKVeDze8HsGZjcsW1LU9omGv91
+         N/iyS7g/8/2EPQXZKZnvjmW0QbYzwOGDXYnXDzqrvAR2nssl5Aixjh3ID3Xkp3/9HFlF
+         qEk5UiQY44AGBNEWFkVloZJW3Uj0r+Cxdyd7bum5pqO4XqIu6IZFR55SZ2skPBJ8quGj
+         eujJGaByQi5KVbavtFwu3v+ltzNWhTo0/crJOu6ijfIO7hyypi30p88I2Ty60orO9TQ8
+         ArfA==
+X-Forwarded-Encrypted: i=1; AJvYcCVfk9MhtB4txityiGZ9dUwXmY2ZyxG+5qQ8FX20ZcSlt9pQduDqOnqDRRT7nrgTC2b5NCSbWNajwjZS@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywrz0my9XxsQB1TWBzr/Pv3zJ6UnWhdWEVruty0Iyp49zJQZU2h
+	QJFpUmA0O2QoIuZSbRDuruQd/ITPQz4wlwryEwwLtonhF09Q4DYJeohjNFovbzN+soM=
+X-Gm-Gg: ASbGnctZvqRW8iYkONIVfu83KAH8OqUW4PjaU9SFvL5nYmtE0q2kuhLOjKED7XcOoCs
+	JqThVEuqNeAwQMs9EIIGc1H2x3k1/aYLeyDmloJ5rH8dGTVCa7fV7XDkqGkzyak11Mn3HEV/uix
+	L/945shpiP3L+pm8vx4QWu4iqJGFTx9Whb0eU+GnoRI+Mh5stYC+NKLyNuacGIQBEZcNMhP+l/y
+	M9OLOQg3XiKd3UNj8zuKhowREaHtWmsnyThUVGhQSsdYuRdWK/akGcq9IcpnDDEB3YrjOFvhBpU
+	GIcLLyTs5QU+NMUYBw8iSQd5tGnP0nSEWtq9H79ggPs3ayhhzWemugA+/CXx4IH735Xlj9fiajF
+	Fs0/u3k5TPxDJsP9h25WImh8Lz+/4wqg2O4pnQ5cEzxtAlunls+5h7YiCohG0mN0azm8LglyXXY
+	Iiyy7KmjjbcnOhvm/UGgY81JTB
+X-Google-Smtp-Source: AGHT+IGvgD1iUrqYLeXYES3g/5f/GyDFaDz9O3/AmAhZTEp0SFV6QYXUW5hz3hGfRU8tFX97XX6G3Q==
+X-Received: by 2002:a05:6000:220f:b0:426:d582:14a3 with SMTP id ffacd0b85a97d-429bd671cbbmr1825694f8f.9.1761904613645;
+        Fri, 31 Oct 2025 02:56:53 -0700 (PDT)
 Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
         by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4772899fdfbsm81572335e9.4.2025.10.31.02.56.52
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Oct 2025 02:56:52 -0700 (PDT)
+        Fri, 31 Oct 2025 02:56:53 -0700 (PDT)
 From: Marco Crivellari <marco.crivellari@suse.com>
 To: linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org
@@ -70,9 +70,9 @@ Cc: Tejun Heo <tj@kernel.org>,
 	Michal Hocko <mhocko@suse.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 3/4] scsi: scsi_dh_alua: WQ_PERCPU added to alloc_workqueue users
-Date: Fri, 31 Oct 2025 10:56:42 +0100
-Message-ID: <20251031095643.74246-4-marco.crivellari@suse.com>
+Subject: [PATCH 4/4] scsi: scsi_transport_fc: WQ_PERCPU added to alloc_workqueue users
+Date: Fri, 31 Oct 2025 10:56:43 +0100
+Message-ID: <20251031095643.74246-5-marco.crivellari@suse.com>
 X-Mailer: git-send-email 2.51.0
 In-Reply-To: <20251031095643.74246-1-marco.crivellari@suse.com>
 References: <20251031095643.74246-1-marco.crivellari@suse.com>
@@ -112,22 +112,32 @@ become the implicit default.
 Suggested-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
 ---
- drivers/scsi/device_handler/scsi_dh_alua.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/scsi_transport_fc.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/device_handler/scsi_dh_alua.c b/drivers/scsi/device_handler/scsi_dh_alua.c
-index 1bf5948d1188..6fd89ae33059 100644
---- a/drivers/scsi/device_handler/scsi_dh_alua.c
-+++ b/drivers/scsi/device_handler/scsi_dh_alua.c
-@@ -1300,7 +1300,7 @@ static int __init alua_init(void)
- {
- 	int r;
+diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
+index 3a821afee9bc..987befb02408 100644
+--- a/drivers/scsi/scsi_transport_fc.c
++++ b/drivers/scsi/scsi_transport_fc.c
+@@ -441,7 +441,8 @@ static int fc_host_setup(struct transport_container *tc, struct device *dev,
+ 	fc_host->next_vport_number = 0;
+ 	fc_host->npiv_vports_inuse = 0;
  
--	kaluad_wq = alloc_workqueue("kaluad", WQ_MEM_RECLAIM, 0);
-+	kaluad_wq = alloc_workqueue("kaluad", WQ_MEM_RECLAIM | WQ_PERCPU, 0);
- 	if (!kaluad_wq)
+-	fc_host->work_q = alloc_workqueue("fc_wq_%d", 0, 0, shost->host_no);
++	fc_host->work_q = alloc_workqueue("fc_wq_%d", WQ_PERCPU, 0,
++					  shost->host_no);
+ 	if (!fc_host->work_q)
  		return -ENOMEM;
  
+@@ -3088,7 +3089,7 @@ fc_remote_port_create(struct Scsi_Host *shost, int channel,
+ 
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
+ 
+-	rport->devloss_work_q = alloc_workqueue("fc_dl_%d_%d", 0, 0,
++	rport->devloss_work_q = alloc_workqueue("fc_dl_%d_%d", WQ_PERCPU, 0,
+ 						shost->host_no, rport->number);
+ 	if (!rport->devloss_work_q) {
+ 		printk(KERN_ERR "FC Remote Port alloc_workqueue failed\n");
 -- 
 2.51.0
 
