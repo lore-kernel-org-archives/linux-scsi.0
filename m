@@ -1,659 +1,104 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6B9222FB983
-	for <linux-scsi@vger.kernel.org>; Thu, 30 Oct 2025 19:42:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5A94D27442
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 01:50:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761853337; cv=none; b=CuXtxiJexe+9qK9zRfntouIh84BboH6W6vcPKibl+TZDqIFf+9JWluZeoer86xWmNNW+sQPJQE76gx00FQVC1TXen3EB+Q3NjMSQzQgur9RJErt4rNvQNIRZ9u3/fpQzmlHXjMOjcZ2OJiM3Y90KI3Hx4+aUcFu4xaO7UTgncnk=
+	t=1761875418; cv=none; b=Kf/RpIzuWNC8R1cAm9nNs3UWr9+zly7hAYZuRkx914F7zXYWCqok64GUd/cq9yg1uTLG1L8NO3yaDupFDJexi5ZNXWvigeuyHZPIsEINiybJ77F8nCB7QDi8Pry15s6bAPmImIyWHtjL+OG4nuQSqTucI+I4QgO/q6z/o1Vq6xQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761853337; c=relaxed/simple;
-	bh=U/g/rqGRbR+p5naERDHxL492R7nAx8zywe8GADbkWP0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Ov6A31b5XVrQgVWdnO8rs58Tw9OVEnRvEuRriMS3aDEJZsUteXSHor2Cz5T0Xevyo8xASw1vkUAHf5MblrhYb8aDztlSLQwSPf7EQYlhbdAcV4djp/IfVKVDDIDTyGBKPkxVLuVAryLYdJvfRa+f06uGFp3hCt3UWEh88udQcBs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=DOVjMexo; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1761875418; c=relaxed/simple;
+	bh=YL0NbDRqiCyitqQvGZiAJqiTPU7arUeiQi1RUntgDM4=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=u88FdjbcufRF+SfubJN7W4YvqKTTeQcUl4rPTFEzK0RtAWVRQzYorwi7JsmwY9ESCt77iQOObaOR8sJ9Jo0dEzrHXacuGRhCLizbnTmNI1Lvj8qR45HV2aEVcgAhClLa4OqxgeVlf31s4QZBnxKcjOlkertLt89PrQDRtmO3eNc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=i8hYjsdV; arc=none smtp.client-ip=192.198.163.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="DOVjMexo"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4cyDyt3fSTzlssyp;
-	Thu, 30 Oct 2025 19:42:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1761853330; x=1764445331; bh=aSHOM
-	AFHTt2vZByKsHIwNwF3aOD1bG+krJwbvbslhNc=; b=DOVjMexoJa06U7xmDzE8/
-	lmox2qpdXUAeMvP4czNHJZ/bqHaeVH9krQBU9xvf7oo9PneWN3wU8uktJYaO3GVM
-	jLjDsk7to7389oWQkUPEQtIAHhHmYBq+wOeC4UqRLy01Y1YFdug09NGSDIYa1qfI
-	dmJ5p5mP2tTSfpZNVLC/qZdqwOq50hCh2Eo73gDFRwOc4lpB7NSR7fvDF+roMBcc
-	kPV5iSyEKtxOaXH50/kWWud+QyHoHWZVZKw0PpH0vBCEFQTD3ZXhAljL+Fa9kPHW
-	h6jUuGdsPO9ibFUAe41nNmTB9hINOWiFh2uw8dHP5aXOgu1ASrY9YKuoRHiH3h9Z
-	Q==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id h-mEvNiI1qBj; Thu, 30 Oct 2025 19:42:10 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4cyDyX3bw5zlrnQK;
-	Thu, 30 Oct 2025 19:41:55 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Chenyuan Yang <chenyuan0y@gmail.com>,
-	Alok Tiwari <alok.a.tiwari@oracle.com>,
-	"ping.gao" <ping.gao@samsung.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Ziqi Chen <quic_ziqichen@quicinc.com>,
-	Can Guo <quic_cang@quicinc.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	Eric Biggers <ebiggers@kernel.org>,
-	Nitin Rawat <quic_nitirawa@quicinc.com>,
-	Neil Armstrong <neil.armstrong@linaro.org>
-Subject: [PATCH v7 28/28] ufs: core: Switch to scsi_get_internal_cmd()
-Date: Thu, 30 Oct 2025 12:36:27 -0700
-Message-ID: <20251030193720.871635-29-bvanassche@acm.org>
-X-Mailer: git-send-email 2.51.1.930.gacf6e81ea2-goog
-In-Reply-To: <20251030193720.871635-1-bvanassche@acm.org>
-References: <20251030193720.871635-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="i8hYjsdV"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1761875416; x=1793411416;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=YL0NbDRqiCyitqQvGZiAJqiTPU7arUeiQi1RUntgDM4=;
+  b=i8hYjsdVs90J6+6WpqO/Hu7XaqnHxxyjpCrl1wGfRk2GQ3DBQZjaJ2zh
+   p7dGpEqqAJxUWtieNpf/FduWoVpr2J2UynjEZ/so12cKlBWhCEJWgl7Xq
+   wosCKJJqVKENcMCnd4oaDRUAJld1JSDYphtZScl6ZPqwbJfSScJJzfpjX
+   Rcx+pBOrIA8xjHiFhTjFdL7odGz3aTbZW/IrqwqLBU0/SHYudsqFIFnt3
+   U9SjQxfSJiT9vbAgGfbnll6P/q3UZMnYcTocCMYPyurCzBxjcpH+T0ayd
+   ZEWhGX94xysJVZLX9ROCll3eQK6O15tnwwlTU/4Dn7Fb23NONQ+T7Zqo8
+   Q==;
+X-CSE-ConnectionGUID: JZWcqt1+QdOYqQZnkyrWBw==
+X-CSE-MsgGUID: a6EqvLJ0ReiVRibhSZllOA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11598"; a="63052147"
+X-IronPort-AV: E=Sophos;i="6.19,268,1754982000"; 
+   d="scan'208";a="63052147"
+Received: from fmviesa005.fm.intel.com ([10.60.135.145])
+  by fmvoesa113.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 30 Oct 2025 18:50:16 -0700
+X-CSE-ConnectionGUID: CdHoEGHAR7qnuFmFpidqKA==
+X-CSE-MsgGUID: Dc9/6WjaTbG0wuwB+ns1OA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,268,1754982000"; 
+   d="scan'208";a="190459933"
+Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
+  by fmviesa005.fm.intel.com with ESMTP; 30 Oct 2025 18:50:13 -0700
+Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vEeGu-000Mg4-1J;
+	Fri, 31 Oct 2025 01:49:46 +0000
+Date: Fri, 31 Oct 2025 09:49:10 +0800
+From: kernel test robot <lkp@intel.com>
+To: Ranjan Kumar <ranjan.kumar@broadcom.com>, linux-scsi@vger.kernel.org,
+	martin.petersen@oracle.com
+Cc: oe-kbuild-all@lists.linux.dev, sathya.prakash@broadcom.com,
+	sumit.saxena@broadcom.com, chandrakanth.patil@broadcom.com,
+	prayas.patel@broadcom.com, Ranjan Kumar <ranjan.kumar@broadcom.com>
+Subject: Re: [PATCH v1 3/5] mpt3sas: improve device discovery and readiness
+ handling for slow devices part-2
+Message-ID: <202510310924.crvtELzs-lkp@intel.com>
+References: <20251029181058.39157-4-ranjan.kumar@broadcom.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251029181058.39157-4-ranjan.kumar@broadcom.com>
 
-Instead of storing the tag of the reserved command in hba->reserved_slot,
-use scsi_get_internal_cmd() and scsi_put_internal_cmd() to allocate the
-tag for the reserved command dynamically. Add
-ufshcd_queue_reserved_command() for submitting reserved commands. Add
-support in ufshcd_abort() for device management commands. Use
-blk_execute_rq() for submitting reserved commands. Remove the code and
-data structures that became superfluous. This includes
-ufshcd_wait_for_dev_cmd(), hba->reserved_slot and ufs_dev_cmd.complete.
+Hi Ranjan,
 
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufs-mcq.c     |  19 +--
- drivers/ufs/core/ufshcd-priv.h |  25 +---
- drivers/ufs/core/ufshcd.c      | 225 ++++++++++++++++-----------------
- include/ufs/ufshcd.h           |   6 -
- 4 files changed, 116 insertions(+), 159 deletions(-)
+kernel test robot noticed the following build warnings:
 
-diff --git a/drivers/ufs/core/ufs-mcq.c b/drivers/ufs/core/ufs-mcq.c
-index 776ff0896a2a..9ab91b4c05b0 100644
---- a/drivers/ufs/core/ufs-mcq.c
-+++ b/drivers/ufs/core/ufs-mcq.c
-@@ -479,9 +479,6 @@ int ufshcd_mcq_init(struct ufs_hba *hba)
- 		mutex_init(&hwq->sq_mutex);
- 	}
-=20
--	/* The very first HW queue serves device commands */
--	hba->dev_cmd_queue =3D &hba->uhq[0];
--
- 	host->host_tagset =3D 1;
- 	return 0;
- }
-@@ -536,6 +533,7 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int ta=
-sk_tag)
- {
- 	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, task_tag);
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
- 	struct ufs_hw_queue *hwq;
- 	void __iomem *reg, *opr_sqd_base;
- 	u32 nexus, id, val;
-@@ -544,15 +542,12 @@ int ufshcd_mcq_sq_cleanup(struct ufs_hba *hba, int =
-task_tag)
- 	if (hba->quirks & UFSHCD_QUIRK_MCQ_BROKEN_RTC)
- 		return -ETIMEDOUT;
-=20
--	if (task_tag !=3D hba->reserved_slot) {
--		if (!cmd)
--			return -EINVAL;
--		hwq =3D ufshcd_mcq_req_to_hwq(hba, scsi_cmd_to_rq(cmd));
--		if (!hwq)
--			return 0;
--	} else {
--		hwq =3D hba->dev_cmd_queue;
--	}
-+	if (!cmd)
-+		return -EINVAL;
-+
-+	hwq =3D ufshcd_mcq_req_to_hwq(hba, rq);
-+	if (!hwq)
-+		return 0;
-=20
- 	id =3D hwq->id;
-=20
-diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-index 72d2766b19e3..2f752a45db87 100644
---- a/drivers/ufs/core/ufshcd-priv.h
-+++ b/drivers/ufs/core/ufshcd-priv.h
-@@ -369,30 +369,7 @@ static inline bool ufs_is_valid_unit_desc_lun(struct=
- ufs_dev_info *dev_info, u8
- static inline struct scsi_cmnd *ufshcd_tag_to_cmd(struct ufs_hba *hba, u=
-32 tag)
- {
- 	struct blk_mq_tags *tags =3D hba->host->tag_set.shared_tags;
--	struct request *rq;
--
--	/*
--	 * Handle reserved tags differently because the UFS driver does not
--	 * call blk_mq_alloc_request() for allocating reserved requests.
--	 * Allocating reserved tags with blk_mq_alloc_request() would require
--	 * the following:
--	 * - Allocate an additional request queue from &hba->host->tag_set for
--	 *   allocating reserved requests from.
--	 * - For that request queue, allocate a SCSI device.
--	 * - Calling blk_mq_alloc_request(hba->dev_mgmt_queue, REQ_OP_DRV_OUT,
--	 *   BLK_MQ_REQ_RESERVED) for allocating a reserved request and
--	 *   blk_mq_free_request() for freeing reserved requests.
--	 * - Set the .device pointer for these reserved requests.
--	 * - Submit reserved requests with blk_execute_rq().
--	 * - Modify ufshcd_queuecommand() such that it handles reserved request=
-s
--	 *   in another way than SCSI requests.
--	 * - Modify ufshcd_compl_one_cqe() such that it calls scsi_done() for
--	 *   device management commands.
--	 * - Modify all callback functions called by blk_mq_tagset_busy_iter()
--	 *   calls in the UFS driver and skip device management commands.
--	 */
--	rq =3D tag < UFSHCD_NUM_RESERVED ? tags->static_rqs[tag] :
--					 blk_mq_tag_to_rq(tags, tag);
-+	struct request *rq =3D blk_mq_tag_to_rq(tags, tag);
-=20
- 	if (WARN_ON_ONCE(!rq))
- 		return NULL;
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b69e73d74f68..975bae047f7f 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2350,13 +2350,10 @@ static void ufshcd_update_monitor(struct ufs_hba =
-*hba, struct scsi_cmnd *cmd)
- 	spin_unlock_irqrestore(hba->host->host_lock, flags);
- }
-=20
--/*
-- * Returns %true for SCSI commands and %false for device management comm=
-ands.
-- * Must not be called for SCSI commands that have not yet been started.
-- */
-+/* Returns %true for SCSI commands and %false for device management comm=
-ands. */
- static bool ufshcd_is_scsi_cmd(struct scsi_cmnd *cmd)
- {
--	return blk_mq_request_started(scsi_cmd_to_rq(cmd));
-+	return !blk_mq_is_reserved_rq(scsi_cmd_to_rq(cmd));
- }
-=20
- /**
-@@ -2487,7 +2484,6 @@ static inline int ufshcd_hba_capabilities(struct uf=
-s_hba *hba)
- 	hba->nutrs =3D (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) +=
- 1;
- 	hba->nutmrs =3D
- 	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
--	hba->reserved_slot =3D 0;
-=20
- 	hba->nortt =3D FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities=
-) + 1;
-=20
-@@ -3115,6 +3111,20 @@ static int ufshcd_queuecommand(struct Scsi_Host *h=
-ost, struct scsi_cmnd *cmd)
- 	return err;
- }
-=20
-+static int ufshcd_queue_reserved_command(struct Scsi_Host *host,
-+					 struct scsi_cmnd *cmd)
-+{
-+	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
-+	struct ufs_hba *hba =3D shost_priv(host);
-+	struct ufs_hw_queue *hwq =3D
-+		hba->mcq_enabled ? ufshcd_mcq_req_to_hwq(hba, rq) : NULL;
-+
-+	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
-+	ufshcd_send_command(hba, cmd, hwq);
-+	return 0;
-+}
-+
- static void ufshcd_setup_dev_cmd(struct ufs_hba *hba, struct scsi_cmnd *=
-cmd,
- 				 enum dev_cmd_type cmd_type, u8 lun, int tag)
- {
-@@ -3244,84 +3254,6 @@ ufshcd_dev_cmd_completion(struct ufs_hba *hba, str=
-uct ufshcd_lrb *lrbp)
- 	return err;
- }
-=20
--/*
-- * Return: 0 upon success; > 0 in case the UFS device reported an OCS er=
-ror;
-- * < 0 if another error occurred.
-- */
--static int ufshcd_wait_for_dev_cmd(struct ufs_hba *hba,
--		struct ufshcd_lrb *lrbp, int max_timeout)
--{
--	struct scsi_cmnd *cmd =3D (struct scsi_cmnd *)lrbp - 1;
--	const int tag =3D scsi_cmd_to_rq(cmd)->tag;
--	unsigned long time_left =3D msecs_to_jiffies(max_timeout);
--	unsigned long flags;
--	bool pending;
--	int err;
--
--retry:
--	time_left =3D wait_for_completion_timeout(&hba->dev_cmd.complete,
--						time_left);
--
--	if (likely(time_left)) {
--		err =3D ufshcd_get_tr_ocs(lrbp, NULL);
--	} else {
--		err =3D -ETIMEDOUT;
--		dev_dbg(hba->dev, "%s: dev_cmd request timedout, tag %d\n",
--			__func__, tag);
--
--		/* MCQ mode */
--		if (hba->mcq_enabled) {
--			/* successfully cleared the command, retry if needed */
--			if (ufshcd_clear_cmd(hba, tag) =3D=3D 0)
--				err =3D -EAGAIN;
--			return err;
--		}
--
--		/* SDB mode */
--		if (ufshcd_clear_cmd(hba, tag) =3D=3D 0) {
--			/* successfully cleared the command, retry if needed */
--			err =3D -EAGAIN;
--			/*
--			 * Since clearing the command succeeded we also need to
--			 * clear the task tag bit from the outstanding_reqs
--			 * variable.
--			 */
--			spin_lock_irqsave(&hba->outstanding_lock, flags);
--			pending =3D test_bit(tag, &hba->outstanding_reqs);
--			if (pending)
--				__clear_bit(tag, &hba->outstanding_reqs);
--			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--			if (!pending) {
--				/*
--				 * The completion handler ran while we tried to
--				 * clear the command.
--				 */
--				time_left =3D 1;
--				goto retry;
--			}
--		} else {
--			dev_err(hba->dev, "%s: failed to clear tag %d\n",
--				__func__, tag);
--
--			spin_lock_irqsave(&hba->outstanding_lock, flags);
--			pending =3D test_bit(tag, &hba->outstanding_reqs);
--			spin_unlock_irqrestore(&hba->outstanding_lock, flags);
--
--			if (!pending) {
--				/*
--				 * The completion handler ran while we tried to
--				 * clear the command.
--				 */
--				time_left =3D 1;
--				goto retry;
--			}
--		}
--	}
--
--	return err;
--}
--
- static void ufshcd_dev_man_lock(struct ufs_hba *hba)
- {
- 	ufshcd_hold(hba);
-@@ -3336,6 +3268,24 @@ static void ufshcd_dev_man_unlock(struct ufs_hba *=
-hba)
- 	ufshcd_release(hba);
- }
-=20
-+static struct scsi_cmnd *ufshcd_get_dev_mgmt_cmd(struct ufs_hba *hba)
-+{
-+	/*
-+	 * The caller must hold this lock to guarantee that the NOWAIT
-+	 * allocation will succeed.
-+	 */
-+	lockdep_assert_held(&hba->dev_cmd.lock);
-+
-+	return scsi_get_internal_cmd(
-+		hba->host->pseudo_sdev, DMA_TO_DEVICE,
-+		BLK_MQ_REQ_RESERVED | BLK_MQ_REQ_NOWAIT);
-+}
-+
-+static void ufshcd_put_dev_mgmt_cmd(struct scsi_cmnd *cmd)
-+{
-+	scsi_put_internal_cmd(cmd);
-+}
-+
- /*
-  * Return: 0 upon success; > 0 in case the UFS device reported an OCS er=
-ror;
-  * < 0 if another error occurred.
-@@ -3344,16 +3294,14 @@ static int ufshcd_issue_dev_cmd(struct ufs_hba *h=
-ba, struct scsi_cmnd *cmd,
- 				const u32 tag, int timeout)
- {
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
--	int err;
--
--	ufshcd_add_query_upiu_trace(hba, UFS_QUERY_SEND, lrbp->ucd_req_ptr);
--	ufshcd_send_command(hba, cmd, hba->dev_cmd_queue);
--	err =3D ufshcd_wait_for_dev_cmd(hba, lrbp, timeout);
--
--	ufshcd_add_query_upiu_trace(hba, err ? UFS_QUERY_ERR : UFS_QUERY_COMP,
--				    (struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
-+	blk_status_t sts;
-=20
--	return err;
-+	rq->timeout =3D timeout;
-+	sts =3D blk_execute_rq(rq, true);
-+	if (sts !=3D BLK_STS_OK)
-+		return blk_status_to_errno(sts);
-+	return lrbp->utr_descriptor_ptr->header.ocs;
- }
-=20
- /**
-@@ -3371,23 +3319,31 @@ static int ufshcd_issue_dev_cmd(struct ufs_hba *h=
-ba, struct scsi_cmnd *cmd,
- static int ufshcd_exec_dev_cmd(struct ufs_hba *hba,
- 		enum dev_cmd_type cmd_type, int timeout)
- {
--	const u32 tag =3D hba->reserved_slot;
--	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, tag);
-+	struct scsi_cmnd *cmd =3D ufshcd_get_dev_mgmt_cmd(hba);
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	u32 tag;
- 	int err;
-=20
--	/* Protects use of hba->reserved_slot. */
-+	/* Protects use of hba->dev_cmd. */
- 	lockdep_assert_held(&hba->dev_cmd.lock);
-=20
-+	if (WARN_ON_ONCE(!cmd))
-+		return -ENOMEM;
-+
-+	tag =3D scsi_cmd_to_rq(cmd)->tag;
-+
- 	err =3D ufshcd_compose_dev_cmd(hba, cmd, cmd_type, tag);
- 	if (unlikely(err))
--		return err;
-+		goto out;
-=20
- 	err =3D ufshcd_issue_dev_cmd(hba, cmd, tag, timeout);
--	if (err)
--		return err;
-+	if (err =3D=3D 0)
-+		err =3D ufshcd_dev_cmd_completion(hba, lrbp);
-=20
--	return ufshcd_dev_cmd_completion(hba, lrbp);
-+out:
-+	ufshcd_put_dev_mgmt_cmd(cmd);
-+
-+	return err;
- }
-=20
- /**
-@@ -5657,6 +5613,10 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, int=
- task_tag,
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
- 	enum utp_ocs ocs;
-=20
-+	if (WARN_ONCE(!cmd, "cqe->command_desc_base_addr =3D %#llx\n",
-+		      le64_to_cpu(cqe->command_desc_base_addr)))
-+		return;
-+
- 	if (hba->monitor.enabled) {
- 		lrbp->compl_time_stamp =3D ktime_get();
- 		lrbp->compl_time_stamp_local_clock =3D local_clock();
-@@ -5667,15 +5627,21 @@ void ufshcd_compl_one_cqe(struct ufs_hba *hba, in=
-t task_tag,
- 		ufshcd_add_command_trace(hba, cmd, UFS_CMD_COMP);
- 		cmd->result =3D ufshcd_transfer_rsp_status(hba, cmd, cqe);
- 		ufshcd_release_scsi_cmd(hba, cmd);
--		/* Do not touch lrbp after scsi done */
--		scsi_done(cmd);
- 	} else {
- 		if (cqe) {
- 			ocs =3D cqe->overall_status & MASK_OCS;
- 			lrbp->utr_descriptor_ptr->header.ocs =3D ocs;
-+		} else {
-+			ocs =3D lrbp->utr_descriptor_ptr->header.ocs;
- 		}
--		complete(&hba->dev_cmd.complete);
-+		ufshcd_add_query_upiu_trace(
-+			hba,
-+			ocs =3D=3D OCS_SUCCESS ? UFS_QUERY_COMP : UFS_QUERY_ERR,
-+			(struct utp_upiu_req *)lrbp->ucd_rsp_ptr);
-+		cmd->result =3D 0;
- 	}
-+	/* Do not touch lrbp after scsi_done() has been called. */
-+	scsi_done(cmd);
- }
-=20
- /**
-@@ -7385,15 +7351,20 @@ static int ufshcd_issue_devman_upiu_cmd(struct uf=
-s_hba *hba,
- 					enum dev_cmd_type cmd_type,
- 					enum query_opcode desc_op)
- {
--	const u32 tag =3D hba->reserved_slot;
--	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, tag);
-+	struct scsi_cmnd *cmd =3D ufshcd_get_dev_mgmt_cmd(hba);
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	u32 tag;
- 	int err =3D 0;
- 	u8 upiu_flags;
-=20
--	/* Protects use of hba->reserved_slot. */
-+	/* Protects use of hba->dev_cmd. */
- 	lockdep_assert_held(&hba->dev_cmd.lock);
-=20
-+	if (WARN_ON_ONCE(!cmd))
-+		return -ENOMEM;
-+
-+	tag =3D scsi_cmd_to_rq(cmd)->tag;
-+
- 	ufshcd_setup_dev_cmd(hba, cmd, cmd_type, 0, tag);
-=20
- 	ufshcd_prepare_req_desc_hdr(hba, lrbp, &upiu_flags, DMA_NONE, 0);
-@@ -7416,7 +7387,7 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_=
-hba *hba,
-=20
- 	err =3D ufshcd_issue_dev_cmd(hba, cmd, tag, dev_cmd_timeout);
- 	if (err)
--		return err;
-+		goto put_dev_mgmt_cmd;
-=20
- 	/* just copy the upiu response as it is */
- 	memcpy(rsp_upiu, lrbp->ucd_rsp_ptr, sizeof(*rsp_upiu));
-@@ -7437,6 +7408,9 @@ static int ufshcd_issue_devman_upiu_cmd(struct ufs_=
-hba *hba,
- 		}
- 	}
-=20
-+put_dev_mgmt_cmd:
-+	ufshcd_put_dev_mgmt_cmd(cmd);
-+
- 	return err;
- }
-=20
-@@ -7530,9 +7504,9 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba=
- *hba, struct utp_upiu_req *r
- 			 struct ufs_ehs *rsp_ehs, int sg_cnt, struct scatterlist *sg_list,
- 			 enum dma_data_direction dir)
- {
--	const u32 tag =3D hba->reserved_slot;
--	struct scsi_cmnd *cmd =3D ufshcd_tag_to_cmd(hba, tag);
--	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
-+	struct scsi_cmnd *cmd;
-+	struct ufshcd_lrb *lrbp;
-+	u32 tag;
- 	int err =3D 0;
- 	int result;
- 	u8 upiu_flags;
-@@ -7540,9 +7514,18 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
-a *hba, struct utp_upiu_req *r
- 	u16 ehs_len;
- 	int ehs =3D (hba->capabilities & MASK_EHSLUTRD_SUPPORTED) ? 2 : 0;
-=20
--	/* Protects use of hba->reserved_slot. */
- 	ufshcd_dev_man_lock(hba);
-=20
-+	cmd =3D ufshcd_get_dev_mgmt_cmd(hba);
-+
-+	if (WARN_ON_ONCE(!cmd)) {
-+		err =3D -ENOMEM;
-+		goto unlock;
-+	}
-+
-+	lrbp =3D scsi_cmd_priv(cmd);
-+	tag =3D scsi_cmd_to_rq(cmd)->tag;
-+
- 	ufshcd_setup_dev_cmd(hba, cmd, DEV_CMD_TYPE_RPMB, UFS_UPIU_RPMB_WLUN,
- 			     tag);
-=20
-@@ -7563,7 +7546,7 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hba=
- *hba, struct utp_upiu_req *r
-=20
- 	err =3D ufshcd_issue_dev_cmd(hba, cmd, tag, ADVANCED_RPMB_REQ_TIMEOUT);
- 	if (err)
--		return err;
-+		goto put_dev_mgmt_cmd;
-=20
- 	err =3D ufshcd_dev_cmd_completion(hba, lrbp);
- 	if (!err) {
-@@ -7589,6 +7572,10 @@ int ufshcd_advanced_rpmb_req_handler(struct ufs_hb=
-a *hba, struct utp_upiu_req *r
- 		}
- 	}
-=20
-+put_dev_mgmt_cmd:
-+	ufshcd_put_dev_mgmt_cmd(cmd);
-+
-+unlock:
- 	ufshcd_dev_man_unlock(hba);
-=20
- 	return err ? : result;
-@@ -7759,7 +7746,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- {
- 	struct Scsi_Host *host =3D cmd->device->host;
- 	struct ufs_hba *hba =3D shost_priv(host);
--	int tag =3D scsi_cmd_to_rq(cmd)->tag;
-+	struct request *rq =3D scsi_cmd_to_rq(cmd);
-+	int tag =3D rq->tag;
- 	struct ufshcd_lrb *lrbp =3D scsi_cmd_priv(cmd);
- 	unsigned long flags;
- 	int err =3D FAILED;
-@@ -7789,7 +7777,8 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 	 * to reduce repeated printouts. For other aborted requests only print
- 	 * basic details.
- 	 */
--	scsi_print_command(cmd);
-+	if (ufshcd_is_scsi_cmd(cmd))
-+		scsi_print_command(cmd);
- 	if (!hba->req_abort_count) {
- 		ufshcd_update_evt_hist(hba, UFS_EVT_ABORT, tag);
- 		ufshcd_print_evt_hist(hba);
-@@ -7841,7 +7830,10 @@ static int ufshcd_abort(struct scsi_cmnd *cmd)
- 		goto release;
- 	}
-=20
--	err =3D ufshcd_try_to_abort_task(hba, tag);
-+	if (blk_mq_is_reserved_rq(rq))
-+		err =3D ufshcd_clear_cmd(hba, tag);
-+	else
-+		err =3D ufshcd_try_to_abort_task(hba, tag);
- 	if (err) {
- 		dev_err(hba->dev, "%s: failed with err %d\n", __func__, err);
- 		ufshcd_set_req_abort_skip(hba, hba->outstanding_reqs);
-@@ -9211,6 +9203,7 @@ static const struct scsi_host_template ufshcd_drive=
-r_template =3D {
- 	.cmd_size		=3D sizeof(struct ufshcd_lrb),
- 	.init_cmd_priv		=3D ufshcd_init_cmd_priv,
- 	.queuecommand		=3D ufshcd_queuecommand,
-+	.queue_reserved_command	=3D ufshcd_queue_reserved_command,
- 	.nr_reserved_cmds	=3D UFSHCD_NUM_RESERVED,
- 	.mq_poll		=3D ufshcd_poll,
- 	.sdev_init		=3D ufshcd_sdev_init,
-@@ -10763,8 +10756,6 @@ int ufshcd_init(struct ufs_hba *hba, void __iomem=
- *mmio_base, unsigned int irq)
- 	 */
- 	hba->vcc_off_delay_us =3D 2000;
-=20
--	init_completion(&hba->dev_cmd.complete);
--
- 	err =3D ufshcd_hba_init(hba);
- 	if (err)
- 		goto out_error;
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index a92062f65455..c07ba003a5cb 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -236,13 +236,11 @@ struct ufs_query {
-  * struct ufs_dev_cmd - all assosiated fields with device management com=
-mands
-  * @type: device management command type - Query, NOP OUT
-  * @lock: lock to allow one command at a time
-- * @complete: internal commands completion
-  * @query: Device management query information
-  */
- struct ufs_dev_cmd {
- 	enum dev_cmd_type type;
- 	struct mutex lock;
--	struct completion complete;
- 	struct ufs_query query;
- };
-=20
-@@ -838,7 +836,6 @@ enum ufshcd_mcq_opr {
-  * @nutrs: Transfer Request Queue depth supported by controller
-  * @nortt - Max outstanding RTTs supported by controller
-  * @nutmrs: Task Management Queue depth supported by controller
-- * @reserved_slot: Used to submit device commands. Protected by @dev_cmd=
-.lock.
-  * @ufs_version: UFS Version to which controller complies
-  * @vops: pointer to variant specific operations
-  * @vps: pointer to variant specific parameters
-@@ -929,7 +926,6 @@ enum ufshcd_mcq_opr {
-  * @res: array of resource info of MCQ registers
-  * @mcq_base: Multi circular queue registers base address
-  * @uhq: array of supported hardware queues
-- * @dev_cmd_queue: Queue for issuing device management commands
-  * @mcq_opr: MCQ operation and runtime registers
-  * @ufs_rtc_update_work: A work for UFS RTC periodic update
-  * @pm_qos_req: PM QoS request handle
-@@ -981,7 +977,6 @@ struct ufs_hba {
- 	int nortt;
- 	u32 mcq_capabilities;
- 	int nutmrs;
--	u32 reserved_slot;
- 	u32 ufs_version;
- 	const struct ufs_hba_variant_ops *vops;
- 	struct ufs_hba_variant_params *vps;
-@@ -1099,7 +1094,6 @@ struct ufs_hba {
- 	bool mcq_esi_enabled;
- 	void __iomem *mcq_base;
- 	struct ufs_hw_queue *uhq;
--	struct ufs_hw_queue *dev_cmd_queue;
- 	struct ufshcd_mcq_opr_info_t mcq_opr[OPR_MAX];
-=20
- 	struct delayed_work ufs_rtc_update_work;
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.18-rc3 next-20251030]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Ranjan-Kumar/mpt3sas-Added-no_turs-flag-to-device-unblock-logic/20251030-025730
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251029181058.39157-4-ranjan.kumar%40broadcom.com
+patch subject: [PATCH v1 3/5] mpt3sas: improve device discovery and readiness handling for slow devices part-2
+config: i386-randconfig-054-20251030 (https://download.01.org/0day-ci/archive/20251031/202510310924.crvtELzs-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251031/202510310924.crvtELzs-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202510310924.crvtELzs-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> Warning: drivers/scsi/mpt3sas/mpt3sas_scsih.c:274 struct member 'retries' not described in 'fw_event_work'
+>> Warning: drivers/scsi/mpt3sas/mpt3sas_scsih.c:274 struct member 'delayed_work_active' not described in 'fw_event_work'
+>> Warning: drivers/scsi/mpt3sas/mpt3sas_scsih.c:274 struct member 'delayed_work' not described in 'fw_event_work'
+   Warning: drivers/scsi/mpt3sas/mpt3sas_scsih.c:3885 function parameter 'no_turs' not described in '_scsih_ublock_io_all_device'
+>> Warning: drivers/scsi/mpt3sas/mpt3sas_scsih.c:3921 function parameter 'sas_address' not described in '_scsih_ublock_io_device_wait'
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
