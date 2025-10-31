@@ -1,46 +1,46 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DF21ACA6F
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 20:43:38 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96988CA6F
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 20:43:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761943420; cv=none; b=aa2sReaecRuuWeXN+9WyFhIH/UNyUSSmCLjaEKnTQHEBst3GZd9ytzBmo3Nuiupzt+HMbS2L0cPPMvO7RGucPUS4F4KeySmFOG0TMN1ZhRY8JE/5DB2X7oU8zinV9cjfR9XxNqI0FcJIsKYkynSRWowjTT3AZ8Rsnx/74PAz4yo=
+	t=1761943429; cv=none; b=h7FDKs5l/owv3HhNQ9CjqSGq/6Rn5MaKXmyktwBvz/zZuVjlX9j6virblGccoEClKMsClhDz1iRKhBNhWQMTxlWoXknq998F+m/5x0YAtvpeNhgljoBubVFKb3vkGSg+o+x/1OZRbv9iinVYavHOJhlxGtrjbfHYpATzRreBxx8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761943420; c=relaxed/simple;
-	bh=CKah/LsJkDiCBcxFEzzNk/1lKVRPcN12nO97wVQSxNY=;
+	s=arc-20240116; t=1761943429; c=relaxed/simple;
+	bh=rXhKAGXHee1we0hNiqW7mPay7RD89qvAUu0CciRj+CI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=h2WRUXmgcZZCS3pgCjLTgQMvgz9Ze5/a6oH4FTSEIg7WgJj5MYXPC+KIScZHh9oLgjWHXGyuOxCSMn9bhGfz5nPh+/cp3JcSLflNAyzxfBujaa9GXy4LSq9RHLQGBLhQ63Dlp7FzogBjfo4A8FliUq+ST+Vgz9ZsQmC1Budp084=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=iySqU2uV; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=gsQkn5f9CuTfESG616VJQnz39aSE0Nv+fbEdLW3CCYkr7GHmFsfJ2LzxiOfUwP33PoiW2hFfntTA2MV0E3LvBNzee254jyVr4CICIMt9EJZXmxdNSh0HOZX2PMa1EOmPRsJEQBV0IErnVOvS8MYBf3Kx6Dyy/a5zVNycVfqMPhU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=eDOBZRQQ; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="iySqU2uV"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="eDOBZRQQ"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cytHF72M8zm0pKT;
-	Fri, 31 Oct 2025 20:43:37 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4cytHQ4RTYzm0pKn;
+	Fri, 31 Oct 2025 20:43:46 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1761943416; x=1764535417; bh=EG4Xe
-	UYB2npd+CNcr5Cr5EhMXJk3GRJGhPIeIaRNYWc=; b=iySqU2uVrtjnG6lQZAb9F
-	HI1ywb4A4Ns4FLWvh4vXvcWQSf7AY6ZGPyNR7O0TgBLg5ZAEAXqttb4fussEqTnK
-	/JkSbIAhieBXoeNDmct7M/vv/HO6vO110wA73UVm2juDYUhoVlHdvQH3NwB1Bnzk
-	OglbTl8/7QjjmfAK95KWexS1KxHnlHQFDKy2nZCJttTiVHHEUKjuiVmTpouipns1
-	kAj2evu+23EY6RgdVSQMCukYhXLtkCsS78gjJgefRVwnOg2EVSQF+6v7P4q7IXCu
-	sRvG1trtW2U5Ou72XghE4ElJvyh4n8F0YYOwLL24/WxjV5XYPFY3wXPnboK3JfGj
+	:received:received; s=mr01; t=1761943424; x=1764535425; bh=RrLPt
+	4C5e6+12kGLJZdYNVbXvlyjHZdpg48s/AIwbjU=; b=eDOBZRQQ2J3nV3rSY+ctH
+	W2mlnBOib/83KS6zammuJ3kKbAIpi+JFnROJOMy7WPKbfY+n5PFboVqtEPwEbxpr
+	h4HV328IBmadRIl9u5wq7k0r1Gimy4cgdW3pPGn6wFVkx22OlyK79GI8JqxrtNgx
+	c+gybCoSqtg+Wh7Hj7suLfJ8LWDiY66/1f/53yqIwHlL86Fmm4+c5mZYVBCcOmO6
+	3YUF7r9y5AW/ISnX0ZsmOVqr4HBfiXwJsc4lM7nPlfFg7HIUUdxfyIiFQ9x0isJA
+	aK3NPgezWW4q1cRMt/dKbwSLWePJ1P5KRXj4oA1+t6JOocyJg/UhKO53aEhzrMR4
 	w==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id UGLGqDiP9C4m; Fri, 31 Oct 2025 20:43:36 +0000 (UTC)
+ id DhrLhJTZaamn; Fri, 31 Oct 2025 20:43:44 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cytH61cZ3zm0jvL;
-	Fri, 31 Oct 2025 20:43:29 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4cytHG6f3Rzm0pL4;
+	Fri, 31 Oct 2025 20:43:38 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -51,9 +51,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Bean Huo <beanhuo@micron.com>,
 	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
 	Adrian Hunter <adrian.hunter@intel.com>
-Subject: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved request
-Date: Fri, 31 Oct 2025 13:39:29 -0700
-Message-ID: <20251031204029.2883185-22-bvanassche@acm.org>
+Subject: [PATCH v8 22/28] ufs: core: Do not clear driver-private command data
+Date: Fri, 31 Oct 2025 13:39:30 -0700
+Message-ID: <20251031204029.2883185-23-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.1.930.gacf6e81ea2-goog
 In-Reply-To: <20251031204029.2883185-1-bvanassche@acm.org>
 References: <20251031204029.2883185-1-bvanassche@acm.org>
@@ -65,47 +65,43 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Instead of letting the SCSI core allocate hba->nutrs - 1 commands, let
-the SCSI core allocate hba->nutrs commands, set the number of reserved
-tags to 1 and use the reserved tag for device management commands. This
-patch changes the 'reserved slot' from hba->nutrs - 1 into 0 because
-the block layer reserves the smallest tags for reserved commands.
+Tell the SCSI core to skip the memset() call that clears driver-private
+data because __ufshcd_setup_cmd() performs all necessary initialization.
 
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/ufs/core/ufshcd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/ufs/core/ufshcd.c | 10 ++++++++++
+ 1 file changed, 10 insertions(+)
 
 diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index f6eecc03282a..20eae5d9487b 100644
+index 20eae5d9487b..1757aa0237da 100644
 --- a/drivers/ufs/core/ufshcd.c
 +++ b/drivers/ufs/core/ufshcd.c
-@@ -2476,7 +2476,7 @@ static inline int ufshcd_hba_capabilities(struct uf=
-s_hba *hba)
- 	hba->nutrs =3D (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) +=
- 1;
- 	hba->nutmrs =3D
- 	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
--	hba->reserved_slot =3D hba->nutrs - 1;
-+	hba->reserved_slot =3D 0;
+@@ -2996,6 +2996,15 @@ static void ufshcd_map_queues(struct Scsi_Host *sh=
+ost)
+ 	}
+ }
 =20
- 	hba->nortt =3D FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities=
-) + 1;
-=20
-@@ -8945,7 +8945,6 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
- 		goto err;
-=20
- 	hba->host->can_queue =3D hba->nutrs - UFSHCD_NUM_RESERVED;
--	hba->reserved_slot =3D hba->nutrs - UFSHCD_NUM_RESERVED;
-=20
- 	return 0;
- err:
-@@ -9184,6 +9183,7 @@ static const struct scsi_host_template ufshcd_drive=
++/*
++ * The only purpose of this function is to make the SCSI core skip the m=
+emset()
++ * call for the private command data.
++ */
++static int ufshcd_init_cmd_priv(struct Scsi_Host *host, struct scsi_cmnd=
+ *cmd)
++{
++	return 0;
++}
++
+ /**
+  * ufshcd_queuecommand - main entry point for SCSI requests
+  * @host: SCSI host pointer
+@@ -9182,6 +9191,7 @@ static const struct scsi_host_template ufshcd_drive=
 r_template =3D {
+ 	.name			=3D UFSHCD,
  	.proc_name		=3D UFSHCD,
  	.map_queues		=3D ufshcd_map_queues,
++	.init_cmd_priv		=3D ufshcd_init_cmd_priv,
  	.queuecommand		=3D ufshcd_queuecommand,
-+	.nr_reserved_cmds	=3D UFSHCD_NUM_RESERVED,
+ 	.nr_reserved_cmds	=3D UFSHCD_NUM_RESERVED,
  	.mq_poll		=3D ufshcd_poll,
- 	.sdev_init		=3D ufshcd_sdev_init,
- 	.sdev_configure		=3D ufshcd_sdev_configure,
