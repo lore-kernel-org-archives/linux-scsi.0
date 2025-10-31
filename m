@@ -1,143 +1,91 @@
-Received: from mail-wr1-f43.google.com (mail-wr1-f43.google.com [209.85.221.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E303333755
-	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 09:56:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C0CFD27A12C
+	for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 11:54:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761904617; cv=none; b=PvTmuFCrILqBEbmo/PNPSoPyBBOgrfBN5+7qw1LOP34FOwbJqbelY7oL3iloLsBo7G857CyqzFwApN4HlLML4YG+YYHhCij0BibC4y4ZJ940MTHxa6WXj/Up5dG99Q/X6gR9gEUsFpGlcN26xN9bY0URJPbRuP6pPcE61FSYABk=
+	t=1761911646; cv=none; b=tKibNtEoTVe/lbE07/SZ3s9Pn+X1Tgc3FbvgDY7BQ3ah9Kxz+wCv/HpfUVnn+x8ex6TkUSuBKpuod9TWPfSo7R0teDVczKfjVDDQ579uANAeI1BVoQ8eB+NFUZN9M69LpzlICphqtOlDoX+JisARnKuQJCOXbo6B137cjjy5AzE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761904617; c=relaxed/simple;
-	bh=YsRvqvzwy42IvsqDkcBl0YyIAOhXzGMpxsJ8NofpaA0=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=fnoiXVTzwakTK0UZq5fpoZXIrNbv77K1ILw328W+hhbUFqMHVCWcJMehOupuMLNG67Ni+E3/0B797dwdDRtk4V7o7V63yd5BzEaNFRj6GNqimzke1lUv2LEFNQQhLkfsLY0kyJWzc0O3o5R8C5Y31U3Kk1fmrr+uox6UKQSjAQs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=L9W+SN3I; arc=none smtp.client-ip=209.85.221.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1761911646; c=relaxed/simple;
+	bh=dEdFRorPDdl8Vg7yPc6DDms5IWc/bhE3C6eUCvz3Gls=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FQALpKddtXE3qlUOHZHXj5e1+3SLQKnjdO6zIr042pZb/wgUNa9YusZLZsm+Ryly/9vKaThsINBdDaBgmmgiB3Z0OU4ZGvSDaLq5nuOYMJF+gpkHAdSNY5A5tnX2zqXmUFrCNyTUKM49i/SKz/0c34ZOfJXHNN2ZSzlZS7SqmAc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=L3aME/MA; arc=none smtp.client-ip=210.61.82.184
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="L9W+SN3I"
-Received: by mail-wr1-f43.google.com with SMTP id ffacd0b85a97d-3ece1102998so1428263f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 31 Oct 2025 02:56:55 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1761904614; x=1762509414; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=wj5wFR8hbemxjJEZ74XNLCfMf4UXzmASpi1RkT2VDLs=;
-        b=L9W+SN3IK4LSuka3+vex1h2xg/fdpPfQEEsTE02E84HyN3F6FMqD0U9pn9c7kZIfUJ
-         n4Epv8Ru4Z7qPM3BdlV1KxrlCoHlq1Ztn7SK+nBd9Bqy5Tq06ToIFQibS6pE8urj2cq8
-         RcgCS+6VKJrG+t+ur0VCIwzAIGesvfZFTA1QVzh0aCXQl2sBOb38n8wWgglvKZRN6Z9h
-         X7TKjUnq5aj0fXa28K7YIapdb0KQ6TLQHUVGLykssWj0XeEhuoKYqukWCE48twwwW480
-         8Ghf7vaa1J+cs4GEvxAV4n7VfetDYHpSjcHgh2lvcGHO2i7fO5SOECYm6552Oot+tEUG
-         Qc6A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761904614; x=1762509414;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=wj5wFR8hbemxjJEZ74XNLCfMf4UXzmASpi1RkT2VDLs=;
-        b=cLXLg/s6CIyiumj+2BCgVnAmu0FplCdiMRQg9MShFpN0FEId/tfgFpQeykqOdvoQFR
-         smAR5d/huP77DBbupM2DC1v2TsRl++yB6dcKM9t20+xKVeDze8HsGZjcsW1LU9omGv91
-         N/iyS7g/8/2EPQXZKZnvjmW0QbYzwOGDXYnXDzqrvAR2nssl5Aixjh3ID3Xkp3/9HFlF
-         qEk5UiQY44AGBNEWFkVloZJW3Uj0r+Cxdyd7bum5pqO4XqIu6IZFR55SZ2skPBJ8quGj
-         eujJGaByQi5KVbavtFwu3v+ltzNWhTo0/crJOu6ijfIO7hyypi30p88I2Ty60orO9TQ8
-         ArfA==
-X-Forwarded-Encrypted: i=1; AJvYcCVfk9MhtB4txityiGZ9dUwXmY2ZyxG+5qQ8FX20ZcSlt9pQduDqOnqDRRT7nrgTC2b5NCSbWNajwjZS@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywrz0my9XxsQB1TWBzr/Pv3zJ6UnWhdWEVruty0Iyp49zJQZU2h
-	QJFpUmA0O2QoIuZSbRDuruQd/ITPQz4wlwryEwwLtonhF09Q4DYJeohjNFovbzN+soM=
-X-Gm-Gg: ASbGnctZvqRW8iYkONIVfu83KAH8OqUW4PjaU9SFvL5nYmtE0q2kuhLOjKED7XcOoCs
-	JqThVEuqNeAwQMs9EIIGc1H2x3k1/aYLeyDmloJ5rH8dGTVCa7fV7XDkqGkzyak11Mn3HEV/uix
-	L/945shpiP3L+pm8vx4QWu4iqJGFTx9Whb0eU+GnoRI+Mh5stYC+NKLyNuacGIQBEZcNMhP+l/y
-	M9OLOQg3XiKd3UNj8zuKhowREaHtWmsnyThUVGhQSsdYuRdWK/akGcq9IcpnDDEB3YrjOFvhBpU
-	GIcLLyTs5QU+NMUYBw8iSQd5tGnP0nSEWtq9H79ggPs3ayhhzWemugA+/CXx4IH735Xlj9fiajF
-	Fs0/u3k5TPxDJsP9h25WImh8Lz+/4wqg2O4pnQ5cEzxtAlunls+5h7YiCohG0mN0azm8LglyXXY
-	Iiyy7KmjjbcnOhvm/UGgY81JTB
-X-Google-Smtp-Source: AGHT+IGvgD1iUrqYLeXYES3g/5f/GyDFaDz9O3/AmAhZTEp0SFV6QYXUW5hz3hGfRU8tFX97XX6G3Q==
-X-Received: by 2002:a05:6000:220f:b0:426:d582:14a3 with SMTP id ffacd0b85a97d-429bd671cbbmr1825694f8f.9.1761904613645;
-        Fri, 31 Oct 2025 02:56:53 -0700 (PDT)
-Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-4772899fdfbsm81572335e9.4.2025.10.31.02.56.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 31 Oct 2025 02:56:53 -0700 (PDT)
-From: Marco Crivellari <marco.crivellari@suse.com>
-To: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Michal Hocko <mhocko@suse.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 4/4] scsi: scsi_transport_fc: WQ_PERCPU added to alloc_workqueue users
-Date: Fri, 31 Oct 2025 10:56:43 +0100
-Message-ID: <20251031095643.74246-5-marco.crivellari@suse.com>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251031095643.74246-1-marco.crivellari@suse.com>
-References: <20251031095643.74246-1-marco.crivellari@suse.com>
+	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="L3aME/MA"
+X-UUID: 4931396cb65011f0b33aeb1e7f16c2b6-20251031
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
+	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=vOpMHC61iHHRdCiiGDnlcSBan7YOvNFY9u/O4lacD04=;
+	b=L3aME/MAMboYfBBeOQwcGmMf3ESDjjGC/ybXIgoTcHmzN1BDo3eTCgEw2vVjZc/b2hZ/PT8x4Gfk1573z4QaktijV3LQ3lQHQp4pljdoDB6wXU1bBcBeyOT8qxZGyzrK+BF31+5hXU2V6FaxIgR2PAsMMlUsk3PRjP6C1ZX5HKg=;
+X-CID-P-RULE: Release_Ham
+X-CID-O-INFO: VERSION:1.3.6,REQID:2d484963-84b6-41ac-9019-c8009572b281,IP:0,UR
+	L:0,TC:0,Content:0,EDM:0,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTION:r
+	elease,TS:0
+X-CID-META: VersionHash:a9d874c,CLOUDID:12b87826-cfd6-4a1d-a1a8-72ac3fdb69c4,B
+	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|888|898,TC:-5,Content:0|
+	15|50,EDM:-3,IP:nil,URL:0,File:130,RT:0,Bulk:nil,QS:nil,BEC:nil,COL:0,OSI:
+	0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
+X-CID-BVR: 2,SSN|SDN
+X-CID-BAS: 2,SSN|SDN,0,_
+X-CID-FACTOR: TF_CID_SPAM_SNR
+X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
+X-UUID: 4931396cb65011f0b33aeb1e7f16c2b6-20251031
+Received: from mtkmbs14n1.mediatek.inc [(172.21.101.75)] by mailgw02.mediatek.com
+	(envelope-from <peter.wang@mediatek.com>)
+	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
+	with ESMTP id 460896439; Fri, 31 Oct 2025 19:53:59 +0800
+Received: from mtkmbs13n1.mediatek.inc (172.21.101.193) by
+ mtkmbs13n2.mediatek.inc (172.21.101.108) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1748.26; Fri, 31 Oct 2025 19:53:57 +0800
+Received: from mtksitap99.mediatek.inc (10.233.130.16) by
+ mtkmbs13n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
+ 15.2.1748.26 via Frontend Transport; Fri, 31 Oct 2025 19:53:57 +0800
+From: <peter.wang@mediatek.com>
+To: <linux-scsi@vger.kernel.org>, <jejb@linux.ibm.com>,
+	<martin.petersen@oracle.com>, <alim.akhtar@samsung.com>,
+	<avri.altman@wdc.com>, <bvanassche@acm.org>, <chaotian.jing@mediatek.com>
+CC: <matthias.bgg@gmail.com>, <angelogioacchino.delregno@collabora.com>,
+	<chu.stanley@gmail.com>, <chun-hung.wu@mediatek.com>,
+	<peter.wang@mediatek.com>, <alice.chao@mediatek.com>,
+	<naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>
+Subject: [PATCH v1] ufs: mediatek: Add the maintainer for MediaTek UFS hooks
+Date: Fri, 31 Oct 2025 19:53:16 +0800
+Message-ID: <20251031115356.1501765-1-peter.wang@mediatek.com>
+X-Mailer: git-send-email 2.45.2
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-MTK: N
 
-Currently if a user enqueue a work item using schedule_delayed_work() the
-used wq is "system_wq" (per-cpu wq) while queue_delayed_work() use
-WORK_CPU_UNBOUND (used when a cpu is not specified). The same applies to
-schedule_work() that is using system_wq and queue_work(), that makes use
-again of WORK_CPU_UNBOUND.
-This lack of consistentcy cannot be addressed without refactoring the API.
+From: Peter Wang <peter.wang@mediatek.com>
 
-alloc_workqueue() treats all queues as per-CPU by default, while unbound
-workqueues must opt-in via WQ_UNBOUND.
+Add Chaotian Jing as the maintainer of the MediaTek UFS hooks.
 
-This default is suboptimal: most workloads benefit from unbound queues,
-allowing the scheduler to place worker threads where they’re needed and
-reducing noise when CPUs are isolated.
-
-This change adds a new WQ_PERCPU flag to explicitly request
-alloc_workqueue() to be per-cpu when WQ_UNBOUND has not been specified.
-
-With the introduction of the WQ_PERCPU flag (equivalent to !WQ_UNBOUND),
-any alloc_workqueue() caller that doesn’t explicitly specify WQ_UNBOUND
-must now use WQ_PERCPU.
-
-Once migration is complete, WQ_UNBOUND can be removed and unbound will
-become the implicit default.
-
-Suggested-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
+Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 ---
- drivers/scsi/scsi_transport_fc.c | 5 +++--
- 1 file changed, 3 insertions(+), 2 deletions(-)
+ MAINTAINERS | 1 +
+ 1 file changed, 1 insertion(+)
 
-diff --git a/drivers/scsi/scsi_transport_fc.c b/drivers/scsi/scsi_transport_fc.c
-index 3a821afee9bc..987befb02408 100644
---- a/drivers/scsi/scsi_transport_fc.c
-+++ b/drivers/scsi/scsi_transport_fc.c
-@@ -441,7 +441,8 @@ static int fc_host_setup(struct transport_container *tc, struct device *dev,
- 	fc_host->next_vport_number = 0;
- 	fc_host->npiv_vports_inuse = 0;
+diff --git a/MAINTAINERS b/MAINTAINERS
+index 3da2c26a796b..6e5e204f1e09 100644
+--- a/MAINTAINERS
++++ b/MAINTAINERS
+@@ -26381,6 +26381,7 @@ F:	drivers/ufs/host/ufs-exynos*
  
--	fc_host->work_q = alloc_workqueue("fc_wq_%d", 0, 0, shost->host_no);
-+	fc_host->work_q = alloc_workqueue("fc_wq_%d", WQ_PERCPU, 0,
-+					  shost->host_no);
- 	if (!fc_host->work_q)
- 		return -ENOMEM;
- 
-@@ -3088,7 +3089,7 @@ fc_remote_port_create(struct Scsi_Host *shost, int channel,
- 
- 	spin_unlock_irqrestore(shost->host_lock, flags);
- 
--	rport->devloss_work_q = alloc_workqueue("fc_dl_%d_%d", 0, 0,
-+	rport->devloss_work_q = alloc_workqueue("fc_dl_%d_%d", WQ_PERCPU, 0,
- 						shost->host_no, rport->number);
- 	if (!rport->devloss_work_q) {
- 		printk(KERN_ERR "FC Remote Port alloc_workqueue failed\n");
+ UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER MEDIATEK HOOKS
+ M:	Peter Wang <peter.wang@mediatek.com>
++M:	Chaotian Jing <chaotian.jing@mediatek.com>
+ R:	Stanley Jhu <chu.stanley@gmail.com>
+ L:	linux-scsi@vger.kernel.org
+ L:	linux-mediatek@lists.infradead.org (moderated for non-subscribers)
 -- 
-2.51.0
+2.45.2
 
