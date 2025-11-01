@@ -1,68 +1,45 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from forward101d.mail.yandex.net (forward101d.mail.yandex.net [178.154.239.212])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5CF925C822
-	for <linux-scsi@vger.kernel.org>; Sat,  1 Nov 2025 07:59:06 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 570631FC8;
+	Sat,  1 Nov 2025 08:45:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=178.154.239.212
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1761983948; cv=none; b=ZfeTHIT76yf/SJx68croXKu81QzvAtSPpFuEZJuRiFHkYFHev0pKhjlVbPitsSIUM5qCJ8JQs0gGiXnFs+eB6alxRx6LtGwgqPjg0ML/qSfJQLBqjK/+l3OO9y8fNTe4r1haXzqKEhHqfHKBLGUkcaC5xOi2+UDDiUtlyK+P1oE=
+	t=1761986761; cv=none; b=Drndw2Oc670B34nj1BoEOl+4jKKW9Dih00FDuofSdsOb6PFwXZtNrhQI+TrICNiBjZM6FinHUBQsFi814ZKUS2YGfBSh80fhVJ2GUrcnO3Cf43i7cfv1lxIYFe4OfsqFTkLWYzexiH5CGzDiyyxQqDxyx69G+XFhHXVisFwtc5I=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1761983948; c=relaxed/simple;
-	bh=oAjAkDjUtAQk6n81S60YXrOlbuP7F5bm3hxxpXuUVUk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=KJymVHQ6msUXUCfVbWO0OSGApDvLtwsZo168U/rFl2xgaSas/kNCQI1PL+nlhscfOnZSSoXN5YwoK7e8aznlUSHYqQcenOYBx3g1rVJJH12Ug2Oz6ZACirWTJ1o51WutPsAV8Obo/5DqdiQWjUbNdeccAkd51hvNFommHB4Geyc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=lErLu6LF; arc=none smtp.client-ip=209.85.215.177
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1761986761; c=relaxed/simple;
+	bh=Y1noY9CvrxGRZeqr35Q+ZHBFe9VsTLyVDn1Dg4u7/i0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=MuELFtR38zJ2v2e1H6xcnnHLFzWyN9lXqrP7/ToEGmLWAmYDJx3cwRYQkds6HwSP+/HqwbApWhs8SGwsugBXxYRtLhNdBxtCVAnfDRvlxe5bfSkgGMulu60t80xSRXPumc+EUQq6MQmS0AnjNklPSGZ8ZO3DknJs3MqChnxtAJY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru; spf=pass smtp.mailfrom=yandex.ru; dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b=KKMesCfN; arc=none smtp.client-ip=178.154.239.212
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=yandex.ru
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=yandex.ru
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="lErLu6LF"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-b6cf3174ca4so2332845a12.2
-        for <linux-scsi@vger.kernel.org>; Sat, 01 Nov 2025 00:59:06 -0700 (PDT)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1761983946; x=1762588746; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=oLshY2j1NyL4UvQi5KisxTMa4rbmEZHWDo+dRWBxLQA=;
-        b=lErLu6LF1uleLduICAzCF6aVNhvOBkKopBkkvssSWwScEE+T70m7TaVwiPdhrCeO9u
-         BfIr0ppzjsMu0n7a8ad6DR/Rl13JZ+MneRisLBlnmbY5nhp/MNUZiSL35qyBcCnZQRMP
-         sy9R8klJ5Lw0v8OMhWwaAASvEIXFf/gSuv47QzwKLA9OBIcP9AlfD3HEtBTWDfA02J2k
-         MNDLOvrVg432XjgER/OIWp1746Fwe52QNI7NT2isgmG6yIrcjSClSDntLy0pqGqgaOeq
-         VXwUPQ9QWK4HuWFRaFJdSl3OP7NlrJ2ybt7WWFo7mZFn7A2bvu1gMmcfrl21EruUb14t
-         jZNA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1761983946; x=1762588746;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=oLshY2j1NyL4UvQi5KisxTMa4rbmEZHWDo+dRWBxLQA=;
-        b=Pqk1o8EVIz0fv/zAmmVX1ObQhnzmJgVOIDyvLa9ifCBIjYscwb7OpTJ7isomapJLym
-         8PIqPA/6y4xAOCtkSz7V0ydKUz4Dz1vYp9vbvcvl7wRpMnU2esQrdAVPhfKMUP0T7W8V
-         Vfho4IT2eGAonMM/7xdwlfOKFlRfz8AvQfMJ6KUk4XeLOgTvAO3vkviHm83vLTYxtZy1
-         9djKo54j6Kg6v0lKcPr/0Ymlu0gXa+arj8jtft1pVAFbEnrnCO5w2DqQcLAZPD2i2gmJ
-         NZ8CT6VCSnklIdywlHMVgMzrmHJHJ80H3UGcSLyJM4OIt1Z7XQWiPCkFH82jwRvOBW9D
-         BECA==
-X-Gm-Message-State: AOJu0YxudmyCzTUsasSO7De4LvW1UusPsVuWjlU4c57Ls9G8BFfQ+RbB
-	K04e88m8GEpGn8h+ZGKQ/LbuBPVodkVPRFRHWsRygwjoILttCisqyDxGpMcbsw==
-X-Gm-Gg: ASbGncv0CC7fpnod+rYf1zWL8JJjtlTFCFtINIT8nfn3hqC7y4xKLrl2VI/My1/J3E3
-	Bh7MuqGC0IOUUN6sbP4x4WYxiApiagUYAC8eOH+FhuzcAbB32b/5dnuICtsawXJ9KBBXtSpbuAZ
-	DXdNPme1JgS57KgGIC31Jnlov9riPXcx9n82p6mbP3oyhQQy8coD+XFFleWDR3fBLJ0vTQ+N0Wp
-	Pb1w1tHc3un62o6X5zIEYk9lViITvXRT9IuDy12uvKLvwu/PdYaCFKWGz3w/nd+fx6iH3A5Xrpk
-	6G6m1t0mFh8KAfFjcatdoxCKNSB2Ozz6/2n6v7k4FzS2KzWXo2B54/Fe5Tdo9Rj3bx8aqyWngZJ
-	GrQlbhaC3cPDHxq1UdFVNmOPsaWgPmlUUCMWyN3osTemJGdfLW5SMtjSb2bc/mI2m0y6tEQ6BZZ
-	/krjAu
-X-Google-Smtp-Source: AGHT+IFD2ayk5K/PRVMoe6BdN2rJdgu00rys3mSqYEg4ny79CaKXwD86jeg96qiWzlaNLe46gBymUw==
-X-Received: by 2002:a17:902:e842:b0:295:5a06:308d with SMTP id d9443c01a7336-2955a063493mr8330695ad.14.1761983945728;
-        Sat, 01 Nov 2025 00:59:05 -0700 (PDT)
-Received: from fedora ([38.183.9.34])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-295268cde10sm48247135ad.47.2025.11.01.00.59.03
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 01 Nov 2025 00:59:05 -0700 (PDT)
-From: Shi Hao <i.shihao.999@gmail.com>
-To: linux-scsi@vger.kernel.org
-Cc: Shi Hao <i.shihao.999@gmail.com>
-Subject: [PATCH] target: substitute kmap() with kmap_local_page()
-Date: Sat,  1 Nov 2025 13:28:41 +0530
-Message-ID: <20251101075841.100763-1-i.shihao.999@gmail.com>
+	dkim=pass (1024-bit key) header.d=yandex.ru header.i=@yandex.ru header.b="KKMesCfN"
+Received: from mail-nwsmtp-smtp-production-main-95.klg.yp-c.yandex.net (mail-nwsmtp-smtp-production-main-95.klg.yp-c.yandex.net [IPv6:2a02:6b8:c42:2a21:0:640:9c41:0])
+	by forward101d.mail.yandex.net (Yandex) with ESMTPS id 57546C00B6;
+	Sat, 01 Nov 2025 11:45:55 +0300 (MSK)
+Received: by mail-nwsmtp-smtp-production-main-95.klg.yp-c.yandex.net (smtp/Yandex) with ESMTPSA id rjcvGoBLIGk0-fZbYDg8S;
+	Sat, 01 Nov 2025 11:45:55 +0300
+X-Yandex-Fwd: 1
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=yandex.ru; s=mail;
+	t=1761986755; bh=t0hknyYZZGrBj+vfI+v18u3S29MxewAG3anb01IvVhU=;
+	h=Message-ID:Date:In-Reply-To:Cc:Subject:References:To:From;
+	b=KKMesCfN1/jfQ3Og5SoEhV976lffvx1Ipnh5zgv2eft9uLl59nJcK70u24wAGZXRY
+	 wLuI16g1G73LXow+x4XwzeInY1sB3bImeNz8kBYcawJBgtmyDNfGM55mU7tGbGW1ZI
+	 wH/QyJkQ6fUj5pNauZZrs7Rym9RFEyi5+ba5Gl+Y=
+Authentication-Results: mail-nwsmtp-smtp-production-main-95.klg.yp-c.yandex.net; dkim=pass header.i=@yandex.ru
+From: Dmitry Antipov <dmantipov@yandex.ru>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org,
+	Dmitry Antipov <dmantipov@yandex.ru>
+Subject: [PATCH] scsi: target: iscsi: simplify lio_target_call_addnptotpg()
+Date: Sat,  1 Nov 2025 11:45:50 +0300
+Message-ID: <20251101084550.383624-2-dmantipov@yandex.ru>
 X-Mailer: git-send-email 2.51.0
+In-Reply-To: <20251101084550.383624-1-dmantipov@yandex.ru>
+References: <20251101084550.383624-1-dmantipov@yandex.ru>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -71,34 +48,35 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-There was a single use of kmap() which could be replaced with
-kmap_local_page() for better CPU contention and cache locality.
-kmap_local_page() ensures non-sleeping operation and provides
-better multi-core CPU scalability compared to kmap().
-Convert kmap() to kmap_local_page() following modern kernel
-coding practices.
+In 'lio_target_call_addnptotpg()', use 'strscpy()' to perform both
+copying and buffer size check at once, and adjust error message to
+make it somewhat more subject-specific.
 
-Signed-off-by: Shi Hao <i.shihao.999@gmail.com>
+Signed-off-by: Dmitry Antipov <dmantipov@yandex.ru>
 ---
- drivers/target/target_core_rd.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+ drivers/target/iscsi/iscsi_target_configfs.c | 7 +++----
+ 1 file changed, 3 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/target/target_core_rd.c b/drivers/target/target_core_rd.c
-index 6f67cc09c2b5..d6768ea27f94 100644
---- a/drivers/target/target_core_rd.c
-+++ b/drivers/target/target_core_rd.c
-@@ -159,9 +159,9 @@ static int rd_allocate_sgl_table(struct rd_dev *rd_dev, struct rd_dev_sg_table *
- 			sg_assign_page(&sg[j], pg);
- 			sg[j].length = PAGE_SIZE;
-
--			p = kmap(pg);
-+			p = kmap_local_page(pg);
- 			memset(p, init_payload, PAGE_SIZE);
--			kunmap(pg);
-+			kunmap_local(p);
- 		}
-
- 		page_offset += sg_per_table;
---
+diff --git a/drivers/target/iscsi/iscsi_target_configfs.c b/drivers/target/iscsi/iscsi_target_configfs.c
+index efe8cdb20060..fe4d6d3faa88 100644
+--- a/drivers/target/iscsi/iscsi_target_configfs.c
++++ b/drivers/target/iscsi/iscsi_target_configfs.c
+@@ -163,12 +163,11 @@ static struct se_tpg_np *lio_target_call_addnptotpg(
+ 	int ret;
+ 	char buf[MAX_PORTAL_LEN + 1] = { };
+ 
+-	if (strlen(name) > MAX_PORTAL_LEN) {
+-		pr_err("strlen(name): %d exceeds MAX_PORTAL_LEN: %d\n",
+-			(int)strlen(name), MAX_PORTAL_LEN);
++	if (strscpy(buf, name, sizeof(buf)) < 0) {
++		pr_err("IPv6 iSCSI network portal address"
++		       " '%s' is too long\n", name);
+ 		return ERR_PTR(-EOVERFLOW);
+ 	}
+-	snprintf(buf, MAX_PORTAL_LEN + 1, "%s", name);
+ 
+ 	str = strstr(buf, "[");
+ 	if (str) {
+-- 
 2.51.0
 
