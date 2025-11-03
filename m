@@ -1,48 +1,37 @@
-Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+Received: from mail.cybernetics.com (mail.cybernetics.com [173.71.130.66])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1EB663043C7;
-	Mon,  3 Nov 2025 15:49:20 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99DF13176F4
+	for <linux-scsi@vger.kernel.org>; Mon,  3 Nov 2025 16:20:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=173.71.130.66
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762184962; cv=none; b=he4PnTS96kY4SNIHsYI5BAWx8m5b+KISuskr56wBZoC1xsQAr6ZCyd3W+SAksBI4I+wni7+sfM4h3q7X+s+LYTsyMbLDIgjMFfPUW8EJTUXDUU29rzyRHpVZ6752FxOrqT308P1ehb/zZZfpU36eeVBX2e+9szcGwxUkLNJjQAI=
+	t=1762186809; cv=none; b=SiK/g6AL2TjraRP3uD45QE82I3ADC5uIo8/3BLyenVDesInjvJu9yaj4EhqIjH7QBY07T6AOkHYbIu5gT86c43pSZotoTgHnLvYZyf5UKoxt6jpbnsAiXngelrfKljlI4CKvoE70DQnlg47Y4YsxH/3hicPvsF8uy/ib7atNbp0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762184962; c=relaxed/simple;
-	bh=3H+4higPbUdrQOgNTHiHoV0OkYE8XUs1kez79VSzRho=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=lwx04wnbXmApF/jfD7x0Eme/it0s3xelY+zBRHRzH0MmnAgsYTdIr7Xt07xtDQh5FD/GG20hjA7Z43kO+Zg001gcXZaLdWKLkXGe75GAaZNyCQlbTFr/dLfCH+8yfw0ZiBQ4xhV4j60FRnuuhVFLcFRB5ZSllT5lrHty/d2gVk4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=02WulxwH; arc=none smtp.client-ip=199.89.3.7
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1762186809; c=relaxed/simple;
+	bh=O90G56kfFPOri4qrEzK7YFsjB71EfKrK9p+F43qIGxo=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
+	 In-Reply-To:Content-Type; b=eCTay/qW43TwY7+V+zHALyCp30otg/Il4dhyumKA1y3HwKfIZf/x+052yae7ayIOJcNaMcRsoeYEmP8ZL08D5tVz8JeWalAjuewuXCErezDcJ9SOqw9t/R2xf1yb0aeQylRuDJ1X4plpoRSopX8rwh7taGa3HRpIeCgqFwDbcis=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=fail (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=fSK6Uii9 reason="signature verification failed"; arc=none smtp.client-ip=173.71.130.66
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="02WulxwH"
-Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d0bcB4tb7zmV4CC;
-	Mon,  3 Nov 2025 15:49:14 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1762184952; x=1764776953; bh=8+ZnI63ovUK1I7wBR7LkOuvP
-	2rrk7ZSWPowftFD0GXY=; b=02WulxwHEs8MyMtxjIJK7WJgs5zSkdrxPgnr2hXx
-	Aj005502n0zYHgaxpfkmmjClPgnX6gUyoxFaDwxk/Doj40Hfrb3CNbroypmkbuVH
-	oh1nrA6ZvRZzyhWG9Z2d8CrHuMfEigfkF+p9SvtXWYcG7RhtLid/jt6uhxiUM53w
-	f/NqvFt5I+kELSkk5RUYvh8uv9EbKfLuJx/g4QgtkSDGZkZpg8bT6N1cK9C15+nz
-	Iltvy47MrGSKu0OD2BQOMF03X2osqY2VJc+HLXrgk6HENnG7wlgDCSb8gKsc2DzQ
-	vX4OSfRMzF5y4fsgXJMIq15aGGyQwdBwwQ79htaeSFmw3A==
-X-Virus-Scanned: by MailRoute
-Received: from 004.mia.mailroute.net ([127.0.0.1])
- by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id aMFMxo0XxxXk; Mon,  3 Nov 2025 15:49:12 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d0bbt0fDwzm5mQ7;
-	Mon,  3 Nov 2025 15:48:57 +0000 (UTC)
-Message-ID: <95c729d6-fd73-4480-af1c-68075b31cd1d@acm.org>
-Date: Mon, 3 Nov 2025 07:48:54 -0800
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="fSK6Uii9"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id lo2q1DQROCs0AcPw; Mon, 03 Nov 2025 10:44:32 -0500 (EST)
+X-Barracuda-Envelope-From: tonyb@cybernetics.com
+X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
+X-ASG-Whitelist: Client
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
+	bh=LMOi7QMdqqg2dcOiYEuZyKjhgoKOfOH88JRSzJLVSto=;
+	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Cc:To:From:
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=fSK6Uii94NJBFtwTZXnv
+	WsLzglkByqRc42/NavSOP+sWtiK3JLTYl2AFAGIpfpqANBT8FcRumrdnzzZPdGRGs/uBdp44s203k
+	GsT/NOw7Ncv0cQWrOwd8YOcUcCoUyrws7ndUa6WQvr7JFrmrx1r+TMzdiAKojvM6Ev+rzvSKLk=
+Received: from [10.157.2.224] (HELO [192.168.200.1])
+  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
+  with ESMTPS id 14263426; Mon, 03 Nov 2025 10:44:32 -0500
+Message-ID: <a6b8713e-c499-4fce-9964-9f277b24ebe9@cybernetics.com>
+X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
+Date: Mon, 3 Nov 2025 10:44:32 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,45 +39,177 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 07/13] block: track zone conditions
-To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
- Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
- David Sterba <dsterba@suse.com>
-References: <20251031061307.185513-1-dlemoal@kernel.org>
- <20251031061307.185513-8-dlemoal@kernel.org>
- <40c87475-7d5a-4792-b2a6-3eeb8406f9be@acm.org>
- <93215b7c-80bd-4860-8a77-42cdd4db1ec6@kernel.org>
+Subject: Re: [PATCH v2 00/16] qla2xxx target mode improvements
 Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <93215b7c-80bd-4860-8a77-42cdd4db1ec6@kernel.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+X-ASG-Orig-Subj: Re: [PATCH v2 00/16] qla2xxx target mode improvements
+From: Tony Battersby <tonyb@cybernetics.com>
+To: "Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
+ scst-devel@lists.sourceforge.net,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ Dmitry Bogdanov <d.bogdanov@yadro.com>,
+ Xose Vazquez Perez <xose.vazquez@gmail.com>,
+ GR-QLogic-Storage-Upstream@marvell.com, Nilesh Javali <njavali@marvell.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+References: <e95ee7d0-3580-4124-b854-7f73ca3a3a84@cybernetics.com>
+In-Reply-To: <e95ee7d0-3580-4124-b854-7f73ca3a3a84@cybernetics.com>
+Content-Type: text/plain; charset=UTF-8
+X-Barracuda-Connect: UNKNOWN[10.10.4.126]
+X-Barracuda-Start-Time: 1762184672
+X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
+X-Barracuda-BRTS-Status: 1
+X-Virus-Scanned: by bsmtpd at cybernetics.com
+X-Barracuda-Scan-Msg-Size: 6032
+Content-Transfer-Encoding: quoted-printable
+X-ASG-Debug-ID: 1762184672-1cf4391391a8580001-ziuLRu
 
-On 11/2/25 10:05 PM, Damien Le Moal wrote:
-> On 11/1/25 06:17, Bart Van Assche wrote:
->> On 10/30/25 11:13 PM, Damien Le Moal wrote:
->>> Implement tracking of the runtime changes to zone conditions using
->>> the new cond field in struct blk_zone_wplug. The size of this structure
->>> remains 112 Bytes as the new field replaces the 4 Bytes padding at the
->>> end of the structure. For zones that do not have a zone write plug, the
->>> zones_cond array of a disk is used to track changes to zone conditions,
->>> e.g. when a zone reset, reset all or finish operation is executed.
->>
->> Why is it necessary to track the condition of sequential zones that do
->> not have a zone write plug? Please explain what the use cases are.
-> 
-> Because zones that do not have a zone write plug can be empty OR full.
+On 9/29/25 10:28, Tony Battersby wrote:
+> v1 -> v2
+> - Add new patch "scsi: qla2xxx: clear cmds after chip reset" suggested
+> by Dmitry Bogdanov.
+> - Rename "scsi: qla2xxx: fix oops during cmd abort" to "scsi: qla2xxx:
+> fix races with aborting commands" and make SCST reset the ISP on a HW
+> timeout instead of unmapping DMA that might still be in use.
+> - Fix "scsi: qla2xxx: fix TMR failure handling" to free mcmds properly
+> for LIO.
+> - In "scsi: qla2xxx: add back SRR support", detect more buggy HBA fw
+> versions based on the fw release notes.
+> - Shorten code comment in "scsi: qla2xxx: improve safety of cmd lookup
+> by handle" and improve patch description.
+> - Rebase other patches as needed.
+>
+> v1:
+> https://lore.kernel.org/r/f8977250-638c-4d7d-ac0c-65f742b8d535@cybernet=
+ics.com/
+>
+> This patch series improves the qla2xxx FC driver in target mode.=C2=A0 =
+I
+> developed these patches using the out-of-tree SCST target-mode subsyste=
+m
+> (https://scst.sourceforge.net/), although most of the improvements will
+> also apply to the other target-mode subsystems such as the in-tree LIO.=
+=C2=A0
+> Unfortunately qla2xxx+LIO does not pass all of my tests, but my patches
+> do not make it any worse (results below).=C2=A0 These patches have been
+> well-tested at my employer with qla2xxx+SCST in both initiator mode and
+> target mode and with a variety of FC HBAs and initiators.=C2=A0 Since S=
+CST is
+> out-of-tree, some of the patches have parts that apply in-tree and othe=
+r
+> parts that apply out-of-tree to SCST.=C2=A0 I am going to include the
+> out-of-tree SCST patches to provide additional context; feel free to
+> ignore them if you are not interested.
+>
+> All patches apply to linux 6.17 and SCST 3.10 master branch.
+>
+> Summary of patches:
+> - bugfixes
+> - cleanups
+> - improve handling of aborts and task management requests
+> - improve log message
+> - add back SLER / SRR support (removed in 2017)
+>
+> Some of these patches improve handling of aborts and task management
+> requests.=C2=A0 This is some of the testing that I did:
+>
+> Test 1: Use /dev/sg to queue random disk I/O with short timeouts; make
+> sure cmds are aborted successfully.
+> Test 2: Queue lots of disk I/O, then use "sg_reset -N -d /dev/sg" on
+> initiator to reset logical unit.
+> Test 3: Queue lots of disk I/O, then use "sg_reset -N -t /dev/sg" on
+> initiator to reset target.
+> Test 4: Queue lots of disk I/O, then use "sg_reset -N -b /dev/sg" on
+> initiator to reset bus.
+> Test 5: Queue lots of disk I/O, then use "sg_reset -N -H /dev/sg" on
+> initiator to reset host.
+> Test 6: Use fiber channel attenuator to trigger SRR during
+> write/read/compare test; check data integrity.
+>
+> With my patches, SCST passes all of these tests.
+>
+> Results with in-tree LIO target-mode subsystem:
+>
+> Test 1: Seems to abort the same cmd multiple times (both
+> qlt_24xx_retry_term_exchange() and __qlt_send_term_exchange()).=C2=A0 B=
+ut
+> cmds get aborted, so give it a pass?
+>
+> Test 2: Seems to work; cmds are aborted.
+>
+> Test 3: Target reset doesn't seem to abort cmds, instead, a few seconds
+> later:
+> qla2xxx [0000:04:00.0]-f058:9: qla_target(0): tag 1314312, op 2a: CTIO
+> with TIMEOUT status 0xb received (state 1, port 51:40:2e:c0:18:1d:9f:cc=
+,
+> LUN 0)
+>
+> Tests 4 and 5: The initiator is unable to log back in to the target; th=
+e
+> following messages are repeated over and over on the target:
+> qla2xxx [0000:04:00.0]-e01c:9: Sending TERM ELS CTIO (ha=3D00000000f881=
+1390)
+> qla2xxx [0000:04:00.0]-f097:9: Linking sess 000000008df5aba8 [0] wwn
+> 51:40:2e:c0:18:1d:9f:cc with PLOGI ACK to wwn 51:40:2e:c0:18:1d:9f:cc
+> s_id 00:00:01, ref=3D2 pla 00000000835a9271 link 0
+>
+> Test 6: passes with my patches; SRR not supported previously.
+>
+> So qla2xxx+LIO seems a bit flaky when handling exceptions, but my
+> patches do not make it any worse.=C2=A0 Perhaps someone who is more fam=
+iliar
+> with LIO can look at the difference between LIO and SCST and figure out
+> how to improve it.
+>
+> Tony Battersby
+> https://www.cybernetics.com/
+>
+> Tony Battersby (16):
+>   Revert "scsi: qla2xxx: Perform lockless command completion in abort
+>     path"
+>   scsi: qla2xxx: fix initiator mode with qlini_mode=3Dexclusive
+>   scsi: qla2xxx: fix lost interrupts with qlini_mode=3Ddisabled
+>   scsi: qla2xxx: use reinit_completion on mbx_intr_comp
+>   scsi: qla2xxx: remove code for unsupported hardware
+>   scsi: qla2xxx: improve debug output for term exchange
+>   scsi: qla2xxx: fix term exchange when cmd_sent_to_fw =3D=3D 1
+>   scsi: qla2xxx: clear cmds after chip reset
+>   scsi: qla2xxx: fix races with aborting commands
+>   scsi: qla2xxx: improve checks in qlt_xmit_response / qlt_rdy_to_xfer
+>   scsi: qla2xxx: fix TMR failure handling
+>   scsi: qla2xxx: fix invalid memory access with big CDBs
+>   scsi: qla2xxx: add cmd->rsp_sent
+>   scsi: qla2xxx: improve cmd logging
+>   scsi: qla2xxx: add back SRR support
+>   scsi: qla2xxx: improve safety of cmd lookup by handle
+>
+>  drivers/scsi/qla2xxx/qla_dbg.c     |    3 +-
+>  drivers/scsi/qla2xxx/qla_def.h     |    1 -
+>  drivers/scsi/qla2xxx/qla_gbl.h     |    2 +-
+>  drivers/scsi/qla2xxx/qla_init.c    |    1 +
+>  drivers/scsi/qla2xxx/qla_isr.c     |   32 +-
+>  drivers/scsi/qla2xxx/qla_mbx.c     |    2 +
+>  drivers/scsi/qla2xxx/qla_mid.c     |    4 +-
+>  drivers/scsi/qla2xxx/qla_os.c      |   35 +-
+>  drivers/scsi/qla2xxx/qla_target.c  | 1775 +++++++++++++++++++++++-----
+>  drivers/scsi/qla2xxx/qla_target.h  |  112 +-
+>  drivers/scsi/qla2xxx/tcm_qla2xxx.c |   17 +
+>  11 files changed, 1646 insertions(+), 338 deletions(-)
+>
+>
+> base-commit: e5f0a698b34ed76002dc5cff3804a61c80233a7a
 
-Why does the block layer have to track this information? Filesystems can
-easily derive this information from the filesystem metadata information,
-isn't it?
+Martin,
+
+Could you apply this patch series for 6.19?=C2=A0 I have addressed all re=
+view
+comments and no one has given me any objections.=C2=A0 All patches are on=
+ v2
+except patch #11 which is on v3.
+
+https://lore.kernel.org/linux-scsi/e95ee7d0-3580-4124-b854-7f73ca3a3a84@c=
+ybernetics.com/
 
 Thanks,
+Tony Battersby
+https://www.cybernetics.com/
 
-Bart.
