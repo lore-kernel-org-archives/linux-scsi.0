@@ -1,118 +1,106 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A65172877F2;
-	Mon,  3 Nov 2025 03:29:25 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 609B8286D60;
+	Mon,  3 Nov 2025 05:52:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762140567; cv=none; b=MipA6IRqmMnYHM+qluY7o6zwVopLqJXkkEiixlhP2es0GUibM9uArbAPWqwt+aEvwi8DsjOzA5cPuXgiNIQuOlt6G0kbURoubgyUaDPRV/ORsLTVbp87oTufb45F2eEM7agrYzTGREBnl8lx4JgltdUkhe4pnirPdvfnO8uQ6sI=
+	t=1762149122; cv=none; b=OiYo/olNFVK4TxDnFJHKDPplvktAmdoOQ+RV3CQ5wzmoIxqdGQsa4ZcAoBsWsawvEkfC4V/hw2kkAn+ABF9yHlr7l0ZRv3wpewk/1j8KWxZfegPboaD5DVoma9We4YbKxfWi2yQrS8NkMORp1CPMsYo9TuSTwSTFU5/LQP4sEAY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762140567; c=relaxed/simple;
-	bh=zpycrsUMNzTebiN1tnAQRjsi/DtYH677l3bvR9KCA4A=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=gDJfyvkxMjVTy0sEg43MKN/CtHQ/02abJiszeXMy30hPf1kDt/BhogzPI9S4cmYXdUoKa/T4O0ybC9iRsKp2nOt+YmBF86pwj675eWMJ9d9a0x61tdigExpFxDJPfQ0W+pZEYPLetloSHQIK5f+2+Xh9x2wtN1q9wvwCU/dg75o=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=M3gfTRHI; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1762149122; c=relaxed/simple;
+	bh=oxQXBcHnc/6qR2epkavIMIgHRy691/rhW8NxiXt8CoI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=O0wgU8srqBB0wfYMhgjpU3xpYywXQ/aM+jSKwNgokW8TWR27SYHALZqdHY/E1PK68mmGKbT85Tb8zkWye/hSaDqmNNWdVZpsvlx7WGaO7NkUu7ZKw6wckrZLVEvfiVJmqQ/XJsW+X5wcOSeHlrWoXHSNJ24i+eNTnZ87zmB8yNE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jTVi7sYX; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="M3gfTRHI"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5A33F5eZ010921;
-	Mon, 3 Nov 2025 03:29:14 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=Qgly8A/dLXmhgP+e15Z2m3GsTokIMedwfFkWKwDr3I4=; b=
-	M3gfTRHI5wh+jgcRJWUFc+cTCH7nXJ7gcwWSk7AeJq+p0HzUqIeWw9vVd4xSqGzQ
-	5t2vj7NvOJ+NhBoh4pHYByYr1fMbJrP7eRXKBd4X9+qfxH2uzNfo4SK0y6KZbPEY
-	h6WekWVbUo5psKT1SYk9/GMPe79GC/MK4Y3XOiiaoOJI+nYBQZ4SXxFaVj1PS9HJ
-	zBUywbM1+8aBVwSHZ2QO9kodSLwx0nX1rVl/zOFjvdtzaXXm7nZaZvCwbalYmlzB
-	UizQxeevRDehv1pFvGnEEt27OH0AE48bfXN+zTHMDk6D38r+xMiaIMYVtvRPvx19
-	u+RhMaa+NRLpDlHQd0VNBQ==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4a6mahg0kv-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 03 Nov 2025 03:29:13 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5A2MXj0F016143;
-	Mon, 3 Nov 2025 03:29:13 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4a58n7av7q-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Mon, 03 Nov 2025 03:29:13 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5A33TCcp011931;
-	Mon, 3 Nov 2025 03:29:12 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4a58n7av6s-1;
-	Mon, 03 Nov 2025 03:29:12 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: James.Bottomley@HansenPartnership.com, robh@kernel.org, krzk+dt@kernel.org,
-        conor+dt@kernel.org, pedrom.sousa@synopsys.com,
-        Ajay Neeli <ajay.neeli@amd.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
-        linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, git@amd.com,
-        michal.simek@amd.com, srinivas.goud@amd.com,
-        radhey.shyam.pandey@amd.com
-Subject: Re: [PATCH v2 0/4] ufs: Add support for AMD Versal Gen2 UFS
-Date: Sun,  2 Nov 2025 22:29:06 -0500
-Message-ID: <176213716989.2123602.10337247781222345446.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20251021113003.13650-1-ajay.neeli@amd.com>
-References: <20251021113003.13650-1-ajay.neeli@amd.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jTVi7sYX"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id AADD5C4CEE7;
+	Mon,  3 Nov 2025 05:51:58 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762149120;
+	bh=oxQXBcHnc/6qR2epkavIMIgHRy691/rhW8NxiXt8CoI=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=jTVi7sYXkcHQhPjE/Buo3fxpB19O1VbODJ3EXpO8SGXi/OITbcTFvdjtKMvrtbm1O
+	 4Ssd2IXFKo8l1cV3gMTphDB8noMJnfpi+6sN3XtuUYq5HqTVDuT/zB9/d5xj5EsHvT
+	 omCSwnuC+7Vi0+/vLKfRUJhDnCxme3xxOwe3NgiQgy3NH+Zg5IOrITnIYZ36w37A7+
+	 DlVr7F0lKNI1oDIB7AMFkkiqnYC6a+5V6txUA1NFnWtUZ0jg66PIyqB0zUHsFgD0pj
+	 8aE8Ua1HS57b3aBY1JkluR7H7PgSvwANVrjTO/zkqg6rtBNKMbOlR+Nl/D8Nwfmlv8
+	 hsKYmwhLwhShA==
+Message-ID: <b675e291-c369-4c7e-8fa2-1470ce90f001@kernel.org>
+Date: Mon, 3 Nov 2025 14:51:57 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-02_02,2025-10-29_03,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 bulkscore=0 mlxscore=0 suspectscore=0
- mlxlogscore=725 malwarescore=0 spamscore=0 adultscore=0 phishscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
- definitions=main-2511030029
-X-Proofpoint-ORIG-GUID: ZUXgNiq0VfNQJ13CVzwDbVsz-Rdys7LA
-X-Proofpoint-GUID: ZUXgNiq0VfNQJ13CVzwDbVsz-Rdys7LA
-X-Authority-Analysis: v=2.4 cv=Fa46BZ+6 c=1 sm=1 tr=0 ts=69082189 cx=c_pps
- a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
- a=IkcTkHD0fZMA:10 a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=pQfcJMmlV1QRne_P_tYA:9 a=QEXdDO2ut3YA:10
- a=cPQSjfK2_nFv0Q5t_7PE:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTAzMDAyOCBTYWx0ZWRfX6fsmS+TQkWDp
- SlPsJh5SGp3+rbEFBValRe/R4S/JVviOnLwMQcwOfudhSzBL8No3tnaY0z4Ttp8uBYQRpwXGv4M
- DIbOockExooMWdbqlzyhE6v0aMgAfrrRFVWtivySEwFNcasXEk8X6qxoz35Sc29ZonSjv+g6vp5
- rwRzSbuSpN7m9N1RdSQ/E7M7zQodIegJfwGpJuNo3RfzZLlv6vft4zc6xvCarAb4jx/iKsNgFib
- TSu0By3Iqw2nfEBTRcUTO92UVB5LhrfYnRO707AFNTJtnwJxVKFK6BlTPJ9imNePkS2DT3f3SQv
- 1Vx8sgIOtpRUG6th7XV6qr256hbErSE85lYGTRaE/ThLVd+2Oy1XCw/VCeVKqameRwxjqEE37dh
- 8GEGf+AppHoA7cQlw5wfxsOdThfh+Q==
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 10/13] block: introduce BLKREPORTZONESV2 ioctl
+To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+ David Sterba <dsterba@suse.com>
+References: <20251031061307.185513-1-dlemoal@kernel.org>
+ <20251031061307.185513-11-dlemoal@kernel.org>
+ <5ca96ffd-9e60-49d3-a136-c7a9eb7bce10@acm.org>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <5ca96ffd-9e60-49d3-a136-c7a9eb7bce10@acm.org>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Tue, 21 Oct 2025 16:59:59 +0530, Ajay Neeli wrote:
-
-> This patch series adds support for the UFS driver on the AMD Versal Gen 2 SoC.
-> It includes:
-> - Device tree bindings and driver implementation.
-> - Secure read support for the secure retrieval of UFS calibration values.
+On 11/1/25 01:52, Bart Van Assche wrote:
+>> +	case BLKREPORTZONEV2:
+>> +		if (rep.flags & ~BLK_ZONE_REPV2_INPUT_FLAGS)
+>> +			return -EINVAL;
 > 
-> The UFS host driver is based upon the Synopsis DesignWare (DWC) UFS architecture,
-> utilizing the existing UFSHCD_DWC and UFSHCD_PLATFORM drivers.
+> -EINVAL probably should be changed into something that indicates "not
+> supported" rather than "invalid argument"?
+
+Not supported could be confused with the cached report zones not being
+supported. It is, but the user cannot specify input flags that are not defined.
+This is to ensure that undefined flags are always 0 and that we can use these
+going forward when we need to define a new flag.
+So EINVAL seems appropriate to me.
+
 > 
-> [...]
+>> index dab5d9700898..1441d79a6173 100644
+>> --- a/include/uapi/linux/blkzoned.h
+>> +++ b/include/uapi/linux/blkzoned.h
+>> @@ -82,10 +82,20 @@ enum blk_zone_cond {
+>>   /**
+>>    * enum blk_zone_report_flags - Feature flags of reported zone descriptors.
+>>    *
+>> - * @BLK_ZONE_REP_CAPACITY: Zone descriptor has capacity field.
+>> + * @BLK_ZONE_REP_CAPACITY: Output only. Indicates that zone descriptors in a
+>> + *			   zone report have a valid capacity field.
+>> + * @BLK_ZONE_REP_CACHED: Input only. Indicates that the zone report should be
+>> + *			 generated using cached zone information. In this case,
+>> + *			 the implicit open, explicit open and closed zone
+>> + *			 conditions are all reported with the
+>> + *			 BLK_ZONE_COND_ACTIVE condition.
+>>    */
+>>   enum blk_zone_report_flags {
+>> +	/* Output flags */
+>>   	BLK_ZONE_REP_CAPACITY	= (1 << 0),
+>> +
+>> +	/* Input flags */
+>> +	BLK_ZONE_REP_CACHED	= (1 << 31),
+>>   };
+> 
+> Why 1 << 31 instead of 1 << 1?
 
-Applied to 6.19/scsi-queue, thanks!
+Why not ? That separates input and output flags instead of mixing them in
+tighter definition.
 
-[1/4] dt-bindings: ufs: amd-versal2: Add UFS Host Controller for AMD Versal Gen 2 SoC
-      https://git.kernel.org/mkp/scsi/c/754c6f539eff
-[2/4] firmware: xilinx: Add support for secure read/write ioctl interface
-      https://git.kernel.org/mkp/scsi/c/00b3e8480be7
-[3/4] firmware: xilinx: Add APIs for UFS PHY initialization
-      https://git.kernel.org/mkp/scsi/c/0e4d26f79a74
-[4/4] ufs: amd-versal2: Add UFS support for AMD Versal Gen 2 SoC
-      https://git.kernel.org/mkp/scsi/c/769b8b2ffded
+
 
 -- 
-Martin K. Petersen
+Damien Le Moal
+Western Digital Research
