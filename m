@@ -1,33 +1,66 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8C8932BE658;
-	Mon,  3 Nov 2025 07:30:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F6D72F25E2
+	for <linux-scsi@vger.kernel.org>; Mon,  3 Nov 2025 09:41:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762155038; cv=none; b=be/p9uqpe24xQ5nwq0xCY7RTZdqdJmkmd8uYQg3yUg5UTH9l/4nKwubl3UViSY5IcmyCChN82+xHtFPY2qCsv/2t+BptEryKVJtWBgW0izTJX+FA1iwvnlzw8ea6UmFrqkXrhW8hRJ3Tg2VlwwJFBd0QZwQCwoGoVwqycB/oQwU=
+	t=1762162912; cv=none; b=PyH/WFbyCQPuti41NrWu3d79o8VAjmt8F3f7TkeeSipMCTK8nwuphV03p8VQJFYbd0kfWvTJnlOZNTDttjirh1rr9S12HimL56Cp84a/CMOWufoydKYdu3mOq83p1K5ovLIcq7BgP4+5xL795kpES8YyWUCFTgGd/Dw8gynR8Sg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762155038; c=relaxed/simple;
-	bh=fNPEgWhmKcSfXgHxY8vQ6zDm8hy1QN8YPkQR/O50gEk=;
+	s=arc-20240116; t=1762162912; c=relaxed/simple;
+	bh=aXJZtEP9MzAuBE72bhvix2W9bevYZ5Ri5o0a3J6FafU=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=gmYwWlqeMWkKaSsUSbrlfIa7R5Bw+HSf9Iw/5ftSiN1Abegx+au4v4qX3KY0oqQiuZOs40wOMpPn104vxV6Oes0GM6Yx/KjzCWH9sujgdCcKo5Y8BHqqlRXw/Bf58ohE129sG41JlTZUoCS+s0pB7eYKlNJdXunFZ1XeihuzVKs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=GwOFFC0Q; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=lkqgAMAL7cSwZNDhA0DNbeLGq8nzqoO5Dfct5lHXrZqfXNUCEj31hr0mrviTOggmnxL9ZH7lEclnN8FGJIJR6I1x5zPNWrhukKJ+zld3p5x6EWygGdEe1F3zStx8InC0NlEiyRaadoAmmdjjkXOmK280OOohaUXSGvWahw/z7Ec=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=L5fbvBuu; arc=none smtp.client-ip=209.85.208.53
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="GwOFFC0Q"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BC116C4CEE7;
-	Mon,  3 Nov 2025 07:30:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762155038;
-	bh=fNPEgWhmKcSfXgHxY8vQ6zDm8hy1QN8YPkQR/O50gEk=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=GwOFFC0Qu1g/MgQu4yB4BGazeSYVXu7QOTJ+EMkLVI5N1EIFimk3bn1scoQrD6vLC
-	 Evn9J2oxFzNX2KdKVdDmZ0XS4naB8WkFv1YBXXniCy7oV8GIcNkU4AVFd7VZm0pOeH
-	 E/dIFrMTSQ0q9jnaWOTnNGr2oUBbpYqhm3LzpVaqG93dMBejtWBMCCq4T0Xylgzj0+
-	 k4KReocg/4eFiPA9zBQK+mq2IbffujegIuTfbQq1WUEHY7Fv4BrDVgc6gtp2NyP0AI
-	 wbtkqReZ9p8BS+4ut/UwgOmK1SbuBxOt7mSCer/fPybYFflSsYlOsUJ6rnOlMbUfPs
-	 RsxmdR54fDyvg==
-Message-ID: <f0124d2d-880a-4c44-bd42-178838891b20@kernel.org>
-Date: Mon, 3 Nov 2025 16:30:34 +0900
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="L5fbvBuu"
+Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-640a0812658so2677435a12.0
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Nov 2025 01:41:49 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1762162907; x=1762767707; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=uQ4p8extKYli1hpsb18sxQURINeyF5Ujv69r9EjqtSM=;
+        b=L5fbvBuuYsWJnsh89kXTpRVZTh+PLokuFWNfs7/0+mtBW1LLO9yJbex1RKcvIjrf8q
+         yFdzWW7gomoG07KS5KwlMg5qW0DY323HInapNEYNmPqx12MrW/2DxmlbOEDVqfWjvK3w
+         1Fqp6SNs2OWJWwSwVJMFSC+gj7CCH8DnDhSeUz2sO7eSveMgRHR5yQ+OZqS8NYsOezKU
+         qBWjen17GXNdKjVxzEn+wM6sciJ5OHK48LjIl3vKRKuWlUoglBCd/eEQneJfvF7v/3WY
+         W7dEXrJtZdTY9R5oyL7qPt/2ijqm7eLWmQl33DfFv5ljgwpYfpn9Kg0nmBkLLlpuyWeY
+         Xxfw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762162907; x=1762767707;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=uQ4p8extKYli1hpsb18sxQURINeyF5Ujv69r9EjqtSM=;
+        b=QqqPUwREvffcjOhhHRn6obu2gY8uIowNRbWSCXwuxrgwYBQ2tKLBwaFyQt+KasP3oB
+         hvY/hnkw4trBy1LGxqv5WeizfRe0LJwkmMFL6Hzeg34bksbUj0TYmvBRL4qXtRXCgWaA
+         cGrZZbnA+izvcA5xKuEH7liBwVcTOEPDsGmuMHlBm+9NLI50jxt9aSMoQcl/2OnKIGcA
+         I0b2Rf15SePk9OIOizQkEsjPohEFYhnfqNNCW2M7WCqcgWbKCK9Sh+A+HTQqGwdQk6PK
+         dVlC7kj2K6zI8DLjUavGdQ2pvWP5Nd9Q2+1Yt0XOKRkXgELZaG9CQzCtvVP/I2yIV2GR
+         SKIA==
+X-Forwarded-Encrypted: i=1; AJvYcCWYyD+fTBOgL5oTN4fpzdthflHjcNtUoZH4cS4BkunqqhTYPwP+lS6lwkAfkrQ7y8dVwLOuc6nrIaQm@vger.kernel.org
+X-Gm-Message-State: AOJu0YwGPC1fD9HGke099Uzpq1EFiNAlompT8gcdTHaSDZgKfz59EPNw
+	fAvHmPqdbQFM9TWvHC9nkXu6ofqKX2B8CL9i7ohKGppY1YGLvffGQaz8nxGXAHcpJIs=
+X-Gm-Gg: ASbGncves8q9InfqAlKwHhUYVFAbkS0J1TWQsftq4iOkplPvQMtAGvQTK8qBGHxyB1q
+	qp+x7QQOMWR192JOajboyxdYe/7judAIKdJZ3gdugT+f1MqBrMTPWDmpqtqyhzDiCR4k93mm4AM
+	BgG6g0iYU6Mr2SAF3NsEREcVTTT/EjTXItlYBJUQcMUDR39oQFE265qzeY8HSMJQ/zp2pobGk4l
+	5NrliexVdtLb/YHSMJO+cFpUKe7HilQjx3X9CWMrdkd/ME9DrI98RvsyUVX4EPhrbo6D2BmI1JF
+	hY9QAlzPsrTPsgNB0w2jqmqJin/QLWzp5Lqqhl5GBhG9ckaCQCLVQbOmzpZwmURsYH/XIEroYtH
+	VtpjJm3ZMKf5Plw1zSDuuHSUWogLwP1Tl22czegka00Vyhv+S+vEdy0p75T8L4bCQMI6wPUfNN1
+	EAWNWHoPkhpF3/TEHHHd3VdYg5zKqES5xegJ8kno7ZAhr7uG/lMjTw8zo=
+X-Google-Smtp-Source: AGHT+IH2gzj+vo7E8Ikz+oUAKkZsomKKLWkfIfLWgoIJFmJJqNapKWXnB39jlaelhJtTjBQ7ItLs8A==
+X-Received: by 2002:a05:6402:1472:b0:63c:1d4a:afc4 with SMTP id 4fb4d7f45d1cf-6407704138emr9280289a12.4.1762162906723;
+        Mon, 03 Nov 2025 01:41:46 -0800 (PST)
+Received: from ?IPV6:2001:a61:13df:d801:cb2e:7d62:bafe:d300? ([2001:a61:13df:d801:cb2e:7d62:bafe:d300])
+        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-64098077b1asm6659522a12.7.2025.11.03.01.41.46
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Mon, 03 Nov 2025 01:41:46 -0800 (PST)
+Message-ID: <a3d9c04d-73fe-4624-abee-b06abda9fe97@suse.com>
+Date: Mon, 3 Nov 2025 10:41:45 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,97 +68,34 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 01/13] block: freeze queue when updating zone resources
-To: Daniel Vacek <neelx@suse.com>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
- Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
- David Sterba <dsterba@suse.com>
-References: <20251031061307.185513-1-dlemoal@kernel.org>
- <20251031061307.185513-2-dlemoal@kernel.org>
- <55887a39-21ee-4e6c-a6f3-19d75af6395a@acm.org>
- <bd71691f-e230-42ca-8920-d93bf1ea6371@kernel.org>
- <CAPjX3FebPLu_P=-BuP63VuaiAnC62rthcQ0vb+J8b-w0OckyqA@mail.gmail.com>
+Subject: Re: [usb-storage] Re: [PATCH v2] usb: uas: fix urb unmapping issue
+ when the uas device is remove during ongoing data transfer
+To: Owen Gu <guhuinan@xiaomi.com>, Oliver Neukum <oneukum@suse.com>
+Cc: Alan Stern <stern@rowland.harvard.edu>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, linux-usb@vger.kernel.org,
+ linux-scsi@vger.kernel.org, usb-storage@lists.one-eyed-alien.net,
+ linux-kernel@vger.kernel.org, Yu Chen <chenyu45@xiaomi.com>,
+ Michal Pecio <michal.pecio@gmail.com>
+References: <20251015153157.11870-1-guhuinan@xiaomi.com>
+ <aP8Llz04UH8Sbq5Q@oa-guhuinan-2.localdomain>
+ <8de18ee2-ccdd-4cdd-ae49-48600ad30ed4@suse.com>
+ <aQYRIgg2lyFhd7Lf@oa-guhuinan-2.localdomain>
 Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <CAPjX3FebPLu_P=-BuP63VuaiAnC62rthcQ0vb+J8b-w0OckyqA@mail.gmail.com>
-Content-Type: text/plain; charset=UTF-8
+From: Oliver Neukum <oneukum@suse.com>
+In-Reply-To: <aQYRIgg2lyFhd7Lf@oa-guhuinan-2.localdomain>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 11/3/25 16:18, Daniel Vacek wrote:
-> On Mon, 3 Nov 2025 at 06:55, Damien Le Moal <dlemoal@kernel.org> wrote:
->>
->> On 11/1/25 02:48, Bart Van Assche wrote:
->>> Hi Damien,
->>>
->>> disk_update_zone_resources() only has a single caller and just below the
->>> only call of this function the following code is present:
->>>
->>>       if (ret) {
->>>               unsigned int memflags = blk_mq_freeze_queue(q);
->>>
->>>               disk_free_zone_resources(disk);
->>>               blk_mq_unfreeze_queue(q, memflags);
->>>       }
->>>
->>> Shouldn't this code be moved into disk_update_zone_resources() such that
->>> error handling happens without unfreezing and refreezing the request
->>> queue?
->>
->> Check the code again. disk_free_zone_resources() if the report zones callbacks
->> return an error, and in that case disk_update_zone_resources() is not called.
->> So having this call as it is cover all cases.
-> 
-> I understand Bart's idea was more like below:
-> 
->> @@ -1568,7 +1572,12 @@ static int disk_update_zone_resources(str
-> uct gendisk *disk,
->>       }
->>
->>   commit:
->> -     return queue_limits_commit_update_frozen(q, &lim);
->> +     ret = queue_limits_commit_update(q, &lim);
->> +
->> +unfreeze:
-> 
-> +       if (ret)
-> +               disk_free_zone_resources(disk);
-> 
->> +     blk_mq_unfreeze_queue(q, memflags);
->> +
->> +     return ret;
->>   }
->>
->>   static int blk_revalidate_conv_zone(struct blk_zone *zone, unsigned int idx,
-> 
-> And then in blk_revalidate_disk_zones() do this:
-> 
->         if (ret > 0) {
->                 ret = disk_update_zone_resources(disk, &args);
->         } else if (ret) {
->                 unsigned int memflags;
-> 
->                 pr_warn("%s: failed to revalidate zones\n", disk->disk_name);
-> 
->                memflags = blk_mq_freeze_queue(q);
->                disk_free_zone_resources(disk);
->                 blk_mq_unfreeze_queue(q, memflags);
->         }
-> 
-> The question remains if this looks better?
+On 01.11.25 14:55, 'Owen Gu' via USB Mass Storage on Linux wrote:
+> On Mon, Oct 27, 2025 at 02:35:37PM +0100, Oliver Neukum wrote:
 
-Rereading everything, I think that Bart has a good point: moving the call to
-disk_free_zone_resources() in the error path of disk_update_zone_resources()
-allows doing the error handling without unfreezing and re-freezing the queue.
-That's better.
+> I think the error handling only takes effect when uas_queuecommand_lck() calls
+> uas_submit_urbs() and returns the error value -ENODEV . In this case, the device is
+> disconnected, and the flow proceeds to uas_disconnect(), where uas_zap_pending() is
+> invoked to call uas_try_complete().
 
+OK, I see. You are right. Please resubmit and I'll ack it.
 
--- 
-Damien Le Moal
-Western Digital Research
+	Regards
+		Oliver
+
