@@ -1,121 +1,286 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pg1-f173.google.com (mail-pg1-f173.google.com [209.85.215.173])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4630308F0A;
-	Mon,  3 Nov 2025 12:59:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60B9230B53A
+	for <linux-scsi@vger.kernel.org>; Mon,  3 Nov 2025 13:05:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762174794; cv=none; b=fLP31nl57cnQbZgOL/E9WExW58JtGPnO32Lu4iOoUzsb/hIouDpO5L31vlWMN++1epCvPMgB5ZXMdVxs2UgufK6BYZEDSbbiwtemDOQLFVTnogogLuOWAQJ0Acm0AIqssi+Qu1stCy2u+Nnbu0xBW3AIBrYYTbgoUHWok8OSL3M=
+	t=1762175129; cv=none; b=knvr2UqpCrMkzx9I3UDeGXKxmvwmP4nsCfDqgKNOxreMN+TmD9gaWgeV9QEgrnAefi0ohEphpOjRsrr/vP815guMCJTI8nLd5eJ0lq+bKbNUPdLkRnjRj2TuN767VgD7+xAzdyDRf7UWSQiwDO5K7sBbVUiuxcRoZRjD1Hy8r/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762174794; c=relaxed/simple;
-	bh=mg14JfajU5W0qY3xKlC1LzugPqDhaogBLa+MoPCu9po=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=cat0t2zspx+mDnpH/nH8Rl4euS3z+6bYz0Aj0pCHq5b8ltnlN+rqcmEE3tJmKrcFQqJukdN4QysJ2hlQ+J8Z2HyoKWlw2WhNh0WIN0z5EiZHRC4UgtUgOv9BJVlaoxhj2aOSxGesT1nQ+IdAwinZVuaawQ+aqFJmUMKLcY6Y5uw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tfzuyc0w; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762175129; c=relaxed/simple;
+	bh=ij30OguEuI7Y2LhlP7nwZzEjA3ESY7I4DMVX6svoflg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=TnSYOYyqtYDInxj9NvMqznevUimrOfRL/O9+8xczGEomn1HWkn49TXNNCYcq8PZjs6pDsrl9adFbDfr16M2dDYAuFkcBTx7KjabPe9PJ76Va59eE+970FrSlmJ6274HHpDuWqSUxdbQsrxQOup55LePYdU8eY122vqweNLehMZY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=A6GKEddD; arc=none smtp.client-ip=209.85.215.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tfzuyc0w"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FAC8C4CEE7;
-	Mon,  3 Nov 2025 12:59:52 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762174794;
-	bh=mg14JfajU5W0qY3xKlC1LzugPqDhaogBLa+MoPCu9po=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=Tfzuyc0w0PG8B9qeo4EY1e6oWHR35RGpaPLMhqntB/ik1LckO74VHTfp82JdQfC9k
-	 0XUUezUYERCKbPcEpQY508qcq5lLukAr+xy/HgvMMnFHFrhxq+AwL0mtcl8g3ynIYb
-	 FsW8Nr3O/XJikCmQBNqdHGt7OEq0tEcBuNdvdKHO7YvkkFHuIcD0/uRGGFqYSqR9u1
-	 Pd7ZRjdZfeTJpyRPVCSwWFC4B9ujnv6yxK+/mq21WfNfEkreGE0imhdNkpA+pHbXy/
-	 TECb2JVsfxse8iQFM6majHDvwTu6aCy7dgtulG1U5hG4HAxVR6J6cFHyAK4kOVvqY9
-	 uSZasy7Ak7n8g==
-Message-ID: <32f2f32a-eafd-43ef-a599-fc4784fdf492@kernel.org>
-Date: Mon, 3 Nov 2025 21:59:49 +0900
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="A6GKEddD"
+Received: by mail-pg1-f173.google.com with SMTP id 41be03b00d2f7-b6ce6d1d3dcso2963716a12.3
+        for <linux-scsi@vger.kernel.org>; Mon, 03 Nov 2025 05:05:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1762175125; x=1762779925; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=ozVWAVtXHSgX1obV8UGv2F1d+5pDX97t1WQ6RoJB81E=;
+        b=A6GKEddDE1r5DmfYEi2F/GFyjr7r3BScabLcBtl5PmgGgBiVbz03zGcY4pXnl/GZ1T
+         rmBKZOVyQypip9eerK3j1Mv8L7KajqW47H/k9G+6aYDgN0otBJc6+f7Daoqr/0Y2Gmf1
+         I0DdSmURQe8uU2mHwzmchjUoQCjGWlHOxszkbATBxotOgJUedr+UomJFbu36J2Sd/fjS
+         YUuQzjDQwFOd1Qdh5AdZ6YzIvh4VZCTdpOHzSjX5HaR4rL0DQFVMoThH1//Q47M3343v
+         9k32+vGMekcU9Z0rau3zOOH3LEHUVXJyO+YamUSx4l0g1LoR89t0+SXnGqw+ixBKI7Lb
+         eYBw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762175125; x=1762779925;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=ozVWAVtXHSgX1obV8UGv2F1d+5pDX97t1WQ6RoJB81E=;
+        b=mCdfd6nug3Jpkp9y66puBirmTKHzVSR62zMcQQdwj8esp/xWYFInyJ5LxBkllF8FuL
+         q+J9Xz02pt149EquA8wQWfPEuZlykO/tUkhw11FzE9VcOgxvf0rF3JUd+WjaUL8gy9Mt
+         lyYx9ABKukouZKXbbl7rybTClzrJ27u/fl27BVbpy/i0wprwNQl+J7EIXpBYhGPnbIe4
+         ZvG6fg1HdGwG00CAGhnj3Iy6fLp7bhwOvmRhMEUHEzVqTshZ2s3Haut+dfRiMSdB/sJF
+         HrfA4fYFe9yM28NnykTzfksPFUyyqa1lcJCgtvgzmND/+Cvdm+XidDTF5ExnZ7gSYxWi
+         IpTQ==
+X-Forwarded-Encrypted: i=1; AJvYcCV5SOkNBxPF0AxUZj2MQ9H97HXASg+zZQ7CHkgexJ8wNp5/j7dHTvfabWN/XVEoAGL6j2F4anpBjEAp@vger.kernel.org
+X-Gm-Message-State: AOJu0YysjO05eZ73Tc4C2at4gcNJ5JkMuPBM2/2cFbxSk7XibTd4Rv8T
+	r+UWw3HJrowLEz20QlUbC0Cad6kj6Ub/wHcS5rUUp1NLdh4IP0W0LQGQ
+X-Gm-Gg: ASbGnct/1cScG836kxT0RyaH0OYdJcuCPOSarWgY9kZOUde4kUiQGopOn4ssDvNeLRi
+	Xwo9YR6NfYmbLxisEnBI/tg+kb1VRt6jZbs9z8zMfjwATaona1AhA0YNTrNEhUhIL3p4Huog38Y
+	yIETZwmEJfkkwWdiThenSCZS1BBIKPndDFreHaG2jUgs17jAzwc4Dg3HlqrCsA5Em6GsQGtNoY0
+	So/7mMVTeB9RJOvq3TwisqpjU8nxgAtimeo0qcrBfn48yh4M1sO8lFyk/Z1iN1Wu/7XmAoWXBqo
+	fNDIqYa93L+0CCrU8pmBAZNr5M3Q4xaCjN4seFedv672ytYs4kAH8pRMagJoYfjS27E8iYUxu4r
+	IcFScmLa+/481vFO543KAnwMvVYotfDBsnZ0qu2hPr4mKRx4CTdlVRHRprfMymdzlujoGOAIZT/
+	oO1A==
+X-Google-Smtp-Source: AGHT+IGHwAzpxLt+4KjyIZZ2CRKiTYWUtpEk4DW5DkV2QX7tfq+tbxLumr3SVs8LIJ3Hd/OpvUVPSA==
+X-Received: by 2002:a17:903:230f:b0:28e:aacb:e702 with SMTP id d9443c01a7336-2951a3a64f4mr155339785ad.2.1762175125035;
+        Mon, 03 Nov 2025 05:05:25 -0800 (PST)
+Received: from fedora ([2401:4900:1f33:62e4:5a30:25f7:ed82:431f])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29526871b31sm122753945ad.8.2025.11.03.05.05.19
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 03 Nov 2025 05:05:23 -0800 (PST)
+From: Shi Hao <i.shihao.999@gmail.com>
+To: sathya.prakash@broadcom.com
+Cc: sreekanth.reddy@broadcom.com,
+	suganath-prabu.subramani@broadcom.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	i.shihao.999@gmail.com
+Subject: [PATCH] scsi: mpt3sas: use sysfs_emit function in sysfs
+Date: Mon,  3 Nov 2025 18:35:01 +0530
+Message-ID: <20251103130501.40158-1-i.shihao.999@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 03/13] block: handle zone management operations
- completions
-To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
- linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
- Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
- Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
- David Sterba <dsterba@suse.com>
-References: <20251031061307.185513-1-dlemoal@kernel.org>
- <20251031061307.185513-4-dlemoal@kernel.org>
- <8947e877-cd53-4f1d-989c-bdde311c00e9@suse.de>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <8947e877-cd53-4f1d-989c-bdde311c00e9@suse.de>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
 
-On 11/3/25 20:41, Hannes Reinecke wrote:
-> On 10/31/25 07:12, Damien Le Moal wrote:
->> The functions blk_zone_wplug_handle_reset_or_finish() and
->> blk_zone_wplug_handle_reset_all() both modify the zone write pointer
->> offset of zone write plugs that are the target of a reset, reset all or
->> finish zone management operation. However, these functions do this
->> modification before the BIO is executed. So if the zone operation fails,
->> the modified zone write pointer offsets become invalid.
->>
->> Avoid this by modifying the zone write pointer offset of a zone write
->> plug that is the target of a zone management operation when the
->> operation completes. To do so, modify blk_zone_bio_endio() to call the
->> new function blk_zone_mgmt_bio_endio() which in turn calls the functions
->> blk_zone_reset_all_bio_endio(), blk_zone_reset_bio_endio() or
->> blk_zone_finish_bio_endio() depending on the operation of the completed
->> BIO, to modify a zone write plug write pointer offset accordingly.
->> These functions are called only if the BIO execution was successful.
->>
-> Hmm.
-> Question remains: what _is_ the status of a write pointer once a
-> zone management operation is in flight?
+Replace snprintf() with sysfs_emit() function as it
+removes unnecessary use cases of PAGE_SIZE also it is
+much preferred for sysfs functions. This conversion
+makes code more maintainable and follows current kernel
+code guidelines.
 
-On the device, it will be unchanged until the command completes, or rather, one
-can only see it that way since the drive will serialize such command with report
-zones.
+Signed-off-by: Shi Hao <i.shihao.999@gmail.com>
+---
+ drivers/scsi/mpt3sas/mpt3sas_ctl.c | 44 +++++++++++++++---------------
+ 1 file changed, 22 insertions(+), 22 deletions(-)
 
-> I would argue it's turning into a Schroedinger state, and so we
-> cannot make any assumptions here.
+diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+index 3b951589feeb..749f7163c7ee 100644
+--- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
++++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
+@@ -3149,7 +3149,7 @@ version_fw_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
 
-Let me try to skin that cat below :)
+-	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
++	return sysfs_emit(buf, "%02d.%02d.%02d.%02d\n",
+ 	    (ioc->facts.FWVersion.Word & 0xFF000000) >> 24,
+ 	    (ioc->facts.FWVersion.Word & 0x00FF0000) >> 16,
+ 	    (ioc->facts.FWVersion.Word & 0x0000FF00) >> 8,
+@@ -3174,7 +3174,7 @@ version_bios_show(struct device *cdev, struct device_attribute *attr,
 
-> In particular we cannot issue any other write I/O to that zone once
-> the operation is in flight, and so it becomes meaningless if we set
-> the write pointer before or after the zone operation.
-> Once the operation fails we have to issue a 'report write pointer'
-> command anyway as I'd be surprised if we could assume that a failure
-> in a zone management command would leave the write pointer unmodified.
-> So I would assume that zone write plugging already blocks the zone
-> while an zone management command is in flight.
-> But if it does, why do we need this patch?
+ 	u32 version = le32_to_cpu(ioc->bios_pg3.BiosVersion);
 
-There is no such "blocking" done, the user is free to issue a zone reset while
-writes are n flight, and most likely get write errors as a result such bad practice.
+-	return snprintf(buf, PAGE_SIZE, "%02d.%02d.%02d.%02d\n",
++	return sysfs_emit(buf, "%02d.%02d.%02d.%02d\n",
+ 	    (version & 0xFF000000) >> 24,
+ 	    (version & 0x00FF0000) >> 16,
+ 	    (version & 0x0000FF00) >> 8,
+@@ -3197,7 +3197,7 @@ version_mpi_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
 
-For this patch, the assumption is that a failed zone reset or zone finish leaves
-the zone write pointer untouched. All the drives I know do that. So it is better
-to not modify the zone write plug write pointer offset until we complete the
-command.
+-	return snprintf(buf, PAGE_SIZE, "%03x.%02x\n",
++	return sysfs_emit(buf, "%03x.%02x\n",
+ 	    ioc->facts.MsgVersion, ioc->facts.HeaderVersion >> 8);
+ }
+ static DEVICE_ATTR_RO(version_mpi);
+@@ -3236,7 +3236,7 @@ version_nvdata_persistent_show(struct device *cdev,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
 
-But granted, that is not always true since the failure may happen *after* the
-drive completed the command (e.g. the HBA loses the connection with the drive
-before signaling the completion or something like that). In such case, it would
-not matter when the update is done. And for zone reset all commands, all bets
-are off since the command may fail half-way through all the zones that need a reset.
+-	return snprintf(buf, PAGE_SIZE, "%08xh\n",
++	return sysfs_emit(buf, "%08xh\n",
+ 	    le32_to_cpu(ioc->iounit_pg0.NvdataVersionPersistent.Word));
+ }
+ static DEVICE_ATTR_RO(version_nvdata_persistent);
+@@ -3256,7 +3256,7 @@ version_nvdata_default_show(struct device *cdev, struct device_attribute
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
 
-But in the end, logically speaking, it makes more sense to update things when we
-get a success result instead of assuming we will always succeed. This has also
-the benefit of leaving the zone write plugs in place for eventual error recovery
-if needed.
+-	return snprintf(buf, PAGE_SIZE, "%08xh\n",
++	return sysfs_emit(buf, "%08xh\n",
+ 	    le32_to_cpu(ioc->iounit_pg0.NvdataVersionDefault.Word));
+ }
+ static DEVICE_ATTR_RO(version_nvdata_default);
+@@ -3336,7 +3336,7 @@ io_delay_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
 
--- 
-Damien Le Moal
-Western Digital Research
+-	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->io_missing_delay);
++	return sysfs_emit(buf, "%02d\n", ioc->io_missing_delay);
+ }
+ static DEVICE_ATTR_RO(io_delay);
+
+@@ -3358,7 +3358,7 @@ device_delay_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+
+-	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->device_missing_delay);
++	return sysfs_emit(buf, "%02d\n", ioc->device_missing_delay);
+ }
+ static DEVICE_ATTR_RO(device_delay);
+
+@@ -3379,7 +3379,7 @@ fw_queue_depth_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+
+-	return snprintf(buf, PAGE_SIZE, "%02d\n", ioc->facts.RequestCredit);
++	return sysfs_emit(buf, "%02d\n", ioc->facts.RequestCredit);
+ }
+ static DEVICE_ATTR_RO(fw_queue_depth);
+
+@@ -3401,7 +3401,7 @@ host_sas_address_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+
+-	return snprintf(buf, PAGE_SIZE, "0x%016llx\n",
++	return sysfs_emit(buf, "0x%016llx\n",
+ 	    (unsigned long long)ioc->sas_hba.sas_address);
+ }
+ static DEVICE_ATTR_RO(host_sas_address);
+@@ -3421,7 +3421,7 @@ logging_level_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+
+-	return snprintf(buf, PAGE_SIZE, "%08xh\n", ioc->logging_level);
++	return sysfs_emit(buf, "%08xh\n", ioc->logging_level);
+ }
+ static ssize_t
+ logging_level_store(struct device *cdev, struct device_attribute *attr,
+@@ -3457,7 +3457,7 @@ fwfault_debug_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->fwfault_debug);
++	return sysfs_emit(buf, "%d\n", ioc->fwfault_debug);
+ }
+ static ssize_t
+ fwfault_debug_store(struct device *cdev, struct device_attribute *attr,
+@@ -3494,7 +3494,7 @@ ioc_reset_count_show(struct device *cdev, struct device_attribute *attr,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->ioc_reset_count);
++	return sysfs_emit(buf, "%d\n", ioc->ioc_reset_count);
+ }
+ static DEVICE_ATTR_RO(ioc_reset_count);
+
+@@ -3522,7 +3522,7 @@ reply_queue_count_show(struct device *cdev,
+ 	else
+ 		reply_queue_count = 1;
+
+-	return snprintf(buf, PAGE_SIZE, "%d\n", reply_queue_count);
++	return sysfs_emit(buf, "%d\n", reply_queue_count);
+ }
+ static DEVICE_ATTR_RO(reply_queue_count);
+
+@@ -3644,7 +3644,7 @@ host_trace_buffer_size_show(struct device *cdev,
+ 		size = le32_to_cpu(request_data->Size);
+
+ 	ioc->ring_buffer_sz = size;
+-	return snprintf(buf, PAGE_SIZE, "%d\n", size);
++	return sysfs_emit(buf, "%d\n", size);
+ }
+ static DEVICE_ATTR_RO(host_trace_buffer_size);
+
+@@ -3731,12 +3731,12 @@ host_trace_buffer_enable_show(struct device *cdev,
+ 	if ((!ioc->diag_buffer[MPI2_DIAG_BUF_TYPE_TRACE]) ||
+ 	   ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+ 	    MPT3_DIAG_BUFFER_IS_REGISTERED) == 0))
+-		return snprintf(buf, PAGE_SIZE, "off\n");
++		return sysfs_emit(buf, "off\n");
+ 	else if ((ioc->diag_buffer_status[MPI2_DIAG_BUF_TYPE_TRACE] &
+ 	    MPT3_DIAG_BUFFER_IS_RELEASED))
+-		return snprintf(buf, PAGE_SIZE, "release\n");
++		return sysfs_emit(buf, "release\n");
+ 	else
+-		return snprintf(buf, PAGE_SIZE, "post\n");
++		return sysfs_emit(buf, "post\n");
+ }
+
+ static ssize_t
+@@ -4152,7 +4152,7 @@ drv_support_bitmap_show(struct device *cdev,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+
+-	return snprintf(buf, PAGE_SIZE, "0x%08x\n", ioc->drv_support_bitmap);
++	return sysfs_emit(buf, "0x%08x\n", ioc->drv_support_bitmap);
+ }
+ static DEVICE_ATTR_RO(drv_support_bitmap);
+
+@@ -4172,7 +4172,7 @@ enable_sdev_max_qd_show(struct device *cdev,
+ 	struct Scsi_Host *shost = class_to_shost(cdev);
+ 	struct MPT3SAS_ADAPTER *ioc = shost_priv(shost);
+
+-	return snprintf(buf, PAGE_SIZE, "%d\n", ioc->enable_sdev_max_qd);
++	return sysfs_emit(buf, "%d\n", ioc->enable_sdev_max_qd);
+ }
+
+ /**
+@@ -4320,7 +4320,7 @@ sas_address_show(struct device *dev, struct device_attribute *attr,
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
+
+-	return snprintf(buf, PAGE_SIZE, "0x%016llx\n",
++	return sysfs_emit(buf, "0x%016llx\n",
+ 	    (unsigned long long)sas_device_priv_data->sas_target->sas_address);
+ }
+ static DEVICE_ATTR_RO(sas_address);
+@@ -4342,7 +4342,7 @@ sas_device_handle_show(struct device *dev, struct device_attribute *attr,
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
+
+-	return snprintf(buf, PAGE_SIZE, "0x%04x\n",
++	return sysfs_emit(buf, "0x%04x\n",
+ 	    sas_device_priv_data->sas_target->handle);
+ }
+ static DEVICE_ATTR_RO(sas_device_handle);
+@@ -4380,7 +4380,7 @@ sas_ncq_prio_enable_show(struct device *dev,
+ 	struct scsi_device *sdev = to_scsi_device(dev);
+ 	struct MPT3SAS_DEVICE *sas_device_priv_data = sdev->hostdata;
+
+-	return snprintf(buf, PAGE_SIZE, "%d\n",
++	return sysfs_emit(buf, "%d\n",
+ 			sas_device_priv_data->ncq_prio_enable);
+ }
+
+--
+2.51.0
+
