@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C55FB2E6CD7;
-	Mon,  3 Nov 2025 22:51:22 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0586F2E6CD7;
+	Mon,  3 Nov 2025 22:53:10 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762210282; cv=none; b=UbzUCfJPeRrbZHx0cUExz5CeRVTcp3UFr2BUs7bs91KD384S2eMxo/itvsK+R4gmpyIMgbccYk/Vb1lEAaXkFepanwvWqlJapcvNAw8wetAxD9+nUmPwMjusGR80mmlwJM5paVrMslQJpAbU4jXHV5diFKXbqoLJ940Qnrucd7s=
+	t=1762210392; cv=none; b=hNLGQieQRN8a3XJ0Mfh5nSLFWCaUSjZA8aikExDuQUVO/tzCV+ui56onMe3+OjFWpp+j11oh1tWb8X4hLBOEqd8ahMs0VSclEoOUDu2LFHxEUuc261I/Kz+OpqtckCwPon9jbkFRYC7hpZAKGmBu+ovNmxumxZymsZCbwE80I4M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762210282; c=relaxed/simple;
-	bh=+MRghoTidc+qlTKw3kb7aFeEYXb+o5vL9QO5Jyos7Uw=;
+	s=arc-20240116; t=1762210392; c=relaxed/simple;
+	bh=WBARSNQ3hEr+eRuvUGl99YKoORdWOJ7tKJ/JcvFjW9U=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=FIc4RDMuI5CM8ZxD4cB6HxjvqEbXp0roHFoCSPgHGDoV5670kPikq/zveC/sQVKHv8roKI9SVu+SzSW8+fiO+pDf3/fbVt0uASDs51vfkrzO2cXj0OOOTqaK8ajD1LzN6h3rZtuPzEvFHI62CG0PvL8efeantx36bpUs6oxpNMk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=MDRx75kk; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=qfxQmBWpLski9spwRPS3qrlaC+Kc5Byl7noXRCEhKWvCQnuR+FceGtrGhUbS3Gh0VTtdvyxH/8wfGOUIM1F1T4l/90k8DTG8kEwncS//9QJi0n2Gq7E1E9ahvDtJtdYLnsLeKJw1sOhJgK6ABVt8vGymYmDLzalSCYZ8bBlXnlY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=FfL7WxQU; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="MDRx75kk"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1C5ACC116B1;
-	Mon,  3 Nov 2025 22:51:20 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="FfL7WxQU"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 6ADADC113D0;
+	Mon,  3 Nov 2025 22:53:08 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762210282;
-	bh=+MRghoTidc+qlTKw3kb7aFeEYXb+o5vL9QO5Jyos7Uw=;
+	s=k20201202; t=1762210390;
+	bh=WBARSNQ3hEr+eRuvUGl99YKoORdWOJ7tKJ/JcvFjW9U=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=MDRx75kknFqeD7byta0iT8As3D8wrn21+VlwkTsAbLuSmTrM0QIDS2SWD0BaPuqYK
-	 /5XuMfifJqX4ke4mO7Njpj8CuohKlsnJeIC3psnCmzYp7Tu9t0Jgl4xfIKNEr+Poh/
-	 2kLE+Wts61ELmEqBbb1rN2s/5uOYCuoG0jcUw1EkSdZRMzgOP6BIUabY7yAvCK354X
-	 BbBDi7bF85ydWMdb0FyMFm9Nky4DtGUHPxG16P+zRE3PfsdzSw6hmfsLSjZsMCeuww
-	 U9Tptzx1dnXB7DWSNRKpiebIruTwvVZBfGPlz7c9WNAJ7eeDwCbLqV99bPrCdQQOxU
-	 ++s3aApcyb1tw==
-Message-ID: <51db9579-f78d-4192-93fa-b252fe954d13@kernel.org>
-Date: Tue, 4 Nov 2025 07:51:19 +0900
+	b=FfL7WxQUONNlpa4nEEOXvIhPEK0lBNXlpobuGYqGSsSI1z4jeDdjk2KYJbNGZ3NpD
+	 ob6S+2ECZP8KGF0zPzUYND+Zn3Z4EXHcxH2AMU5gzr0vcfnrdhYztxSQyveFbmZm7A
+	 HX58Z6PSx92EksOvIDwz1TJ/tleVhPfFbW269buZ/US3nfkZEjhnfIUF9olXtJaNMU
+	 VoEGdOf4+rj+YIYsmRh4ZqtElLP0FS32u9xyxzaSgrO/9Ba2HKZz9Y1OS6BuKb/CwV
+	 85rsZFrcHMVD+66BJHwY2UfevZyV/+t+I96bj3IUdj9tN3AQywDx1TZkJY61efArra
+	 OUBKzxVfk0MXg==
+Message-ID: <83b60505-64a4-40fe-aa50-02a56ca7ad8c@kernel.org>
+Date: Tue, 4 Nov 2025 07:53:07 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,73 +35,74 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: ATA PASS-THROUGH latency regression after exposing blk-mq
- hardware queues
-To: Igor Pylypiv <ipylypiv@google.com>, Niklas Cassel <cassel@kernel.org>,
- John Garry <john.garry@huawei.com>
+Subject: Re: [PATCH 07/13] block: track zone conditions
+To: Chaitanya Kulkarni <chaitanyak@nvidia.com>,
+ Bart Van Assche <bvanassche@acm.org>
 Cc: Jens Axboe <axboe@kernel.dk>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
- linux-block@vger.kernel.org
-References: <20251103170308.3356608-1-ipylypiv@google.com>
+ "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
+ "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
+ Christoph Hellwig <hch@lst.de>,
+ "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
+ Mike Snitzer <snitzer@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
+ Carlos Maiolino <cem@kernel.org>,
+ "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
+ David Sterba <dsterba@suse.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ Keith Busch <kbusch@kernel.org>
+References: <20251031061307.185513-1-dlemoal@kernel.org>
+ <20251031061307.185513-8-dlemoal@kernel.org>
+ <40c87475-7d5a-4792-b2a6-3eeb8406f9be@acm.org>
+ <93215b7c-80bd-4860-8a77-42cdd4db1ec6@kernel.org>
+ <95c729d6-fd73-4480-af1c-68075b31cd1d@acm.org>
+ <6008fbc8-b556-46d9-98a5-a4622731d206@nvidia.com>
 Content-Language: en-US
 From: Damien Le Moal <dlemoal@kernel.org>
 Organization: Western Digital Research
-In-Reply-To: <20251103170308.3356608-1-ipylypiv@google.com>
+In-Reply-To: <6008fbc8-b556-46d9-98a5-a4622731d206@nvidia.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 11/4/25 02:03, Igor Pylypiv wrote:
-> Hello,
+On 11/4/25 01:34, Chaitanya Kulkarni wrote:
+> Adding Keith's current email address :
+> 's/Keith Busch <keith.busch@wdc.com>/kbusch@kernel.org/g'
 > 
-> I'm observing significant latency regressions for ATA PASS-THROUGH
-> commands that started after commit 42f22fe36d51 ("scsi: pm8001:
-> Expose hardware queues for pm80xx"). It looks like the libata's deferral
-> logic that relies on returning SCSI_MLQUEUE_DEVICE_BUSY does not work
-> correctly for blk-mq's multiple hardware queues.
+> On 11/3/25 7:48 AM, Bart Van Assche wrote:
+>> On 11/2/25 10:05 PM, Damien Le Moal wrote:
+>>> On 11/1/25 06:17, Bart Van Assche wrote:
+>>>> On 10/30/25 11:13 PM, Damien Le Moal wrote:
+>>>>> Implement tracking of the runtime changes to zone conditions using
+>>>>> the new cond field in struct blk_zone_wplug. The size of this 
+>>>>> structure
+>>>>> remains 112 Bytes as the new field replaces the 4 Bytes padding at the
+>>>>> end of the structure. For zones that do not have a zone write plug, 
+>>>>> the
+>>>>> zones_cond array of a disk is used to track changes to zone 
+>>>>> conditions,
+>>>>> e.g. when a zone reset, reset all or finish operation is executed.
+>>>>
+>>>> Why is it necessary to track the condition of sequential zones that do
+>>>> not have a zone write plug? Please explain what the use cases are.
+>>>
+>>> Because zones that do not have a zone write plug can be empty OR full.
+>>
+>> Why does the block layer have to track this information? Filesystems can
+>> easily derive this information from the filesystem metadata information,
+>> isn't it?
+>>
+>> Thanks,
+>>
+>> Bart.
+>>
 > 
-> Here's what I've figured out after some tracing:
-> 
-> ATA PASS-THROUGH commands get continously deferred because NCQ queue is
-> not yet drained. At the same time, other hardware queues (other CPUs)
-> keep issuing more data commands effectively preventing the NCQ queue
-> from draining. Since NCQ queue is not getting drained, ATA PASS-THROUGH
-> commands can get starved for a really long time e.g. ~5 minutes.
+> In case current file systems store this, isn't that a code duplication for each
+> fs ? perhaps having a central interface at block layer should help remove the
+> code duplication ?
 
-We already received a report of such issue, a while back. But being busy with
-other things, it fell through the cracks.
-
-Note that the issue is not just for passthrough commands, but rather for
-commands which trigger ap->ops->qc_defer() returning true, that is (most of the
-time) a non-NCQ command issued while NCQ commands are on-going. It just happen
-that most pasthrough commands are non-NCQ.
-
-I think it is time to address this command starvation issue...
-> Reverting 42f22fe36d51 seems like a plausible workaround but I think that
-> driver might still benefit from using multiple hardware queues e.g. to
-> issue commands to different drives from other hardware queues. It seems
-> like there should be a way to drain/freeze all hardware queues before
-> issuing ATA PASS-THROUGH commands but I haven't yet figured out how to do
-> that.
-
-Yes, we need to remember the fact that a deferred command exists/was issued. But
-that is not trivial to handle unless we introduce a workqueue in libata that
-handle these, draining the queue when needed. But that would mean that we keep
-on hand commands that are not being issued, which is something that the block
-layer better handles (with a requeue).
-
-So in the end, I think that the better solution is to look at the scsi & block
-layers requeue path for deferred commands and make sure that these commands are
-at the head of the dispatch queue, always, to ensure that the next time they are
-issued, they are issued first and will eventually get a chance to run once all
-on-going requests complete.
-
-> If you have any ideas or suggestions on how to fix this issue and/or what
-> things to try, please share. If you happened to have patches that would
-> fix the issue I would gladly review and test the patches.
-
-Let me see with Niklas how we can handle this. We'll send something soon.
+catch 22: You cannot ask the file system without first knowing the zone layout
+and conditions of zone to check the file system metadata.
 
 
 -- 
