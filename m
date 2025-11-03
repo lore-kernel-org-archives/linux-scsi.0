@@ -1,83 +1,131 @@
-Received: from mail-yw1-f176.google.com (mail-yw1-f176.google.com [209.85.128.176])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 173451C3306
-	for <linux-scsi@vger.kernel.org>; Mon,  3 Nov 2025 18:22:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 92FFB43147;
+	Mon,  3 Nov 2025 18:32:02 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762194144; cv=none; b=iztEavIVif7BU/6mugWVE/4w68OHTO0Ow2XzxDlsNHkCc4i68lnScqQ1edVKzqAsPXWnBe2SwxEwbC6Xzo383Rd8fvZ+knf4WK+P6g/QtIUmLv3N68zBvpOpKZSyn+ty0nelDyYAeiANnCva5yJmGbpIDhOWj/YVK/rf0acLXps=
+	t=1762194724; cv=none; b=b56QXwk7s/O/rS8ZVTwMO9WWIPju5q0XVZrpo8Fnko3XF/DWUixMRNPGKE9tFrP8sW6gV6E6caaQj8etJJUqB/0inWZAUTwo+VUeKqJAggPcrixPTdrqkaB5j4pGb6EjqfMCGVaozkNNzeUGxcb3uKNccnCtCl16sCXzf5OmvVU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762194144; c=relaxed/simple;
-	bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KuwuGVZskrftmk0EvmVXVsFCrrQmTQfjA2mHNLpvkjvPf6w02lnvo7vILC3NMfBepctwC/pKGULCD3Sw7vSDVpsU6tP/KYpH2K1JT9OCBX86gPCuIgFEPYdjB8CgOW8RPw5sRahc0zyE1U4PAzG+opDNpSNWiV34sB/u/Z8lEo4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=JSwb554f; arc=none smtp.client-ip=209.85.128.176
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1762194724; c=relaxed/simple;
+	bh=caIo3tGjRNJ9LhlUpDKcLjz1HspYMqFtn6HUaCsClVs=;
+	h=Message-ID:Date:MIME-Version:Subject:From:To:References:
+	 In-Reply-To:Content-Type; b=QMyk8XFATJgPkKFg0SHKCwNtCAaHq/iFcequ1yDOxokxEsQ3ITNBuQ9AdRQAl+9O8YW8jgmSUURALNI2eM1drF4/kCi0lcvymc6fpfwAFG+6qBq3/RnULjBb0hkvQosjlFORPMnQkcC+11zreHSZdNPyvdKuT/zfsqhVwc0wgT8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=3Wd6znBU; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="JSwb554f"
-Received: by mail-yw1-f176.google.com with SMTP id 00721157ae682-786635a8ce4so17513977b3.2
-        for <linux-scsi@vger.kernel.org>; Mon, 03 Nov 2025 10:22:21 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762194141; x=1762798941; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
-        b=JSwb554fKmClyMWwiljXGsEkLDNbwg+2uIqqJGEqGQDqeVRKI2xB5zhTr75c/SUlE6
-         6wlTDm7brLFjHRutrs4KlyYLry92Vpf1uqG6X45Und/e10uG7Z/2Szvylr/fpnDmpAKR
-         mh2h7tBwUkcYQjmiR3bi70h4oJP9CFiJn7IGiHBW8ksWH/EKlrMEtA8NuUyJyDIXtVl+
-         JFh5kshHH/s7Wot6u1f0Yj48XvFbDUDVBOPutB6b1aqnmev6Ys3d4Re4b3GhZTdbHFmI
-         46qK2S+aKhoJLmqgkNRn8yqG8sNRFbBu+MJ6ns9KggNooX2zZdy+rPgSbZFPUZ6fRQPy
-         ALjA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762194141; x=1762798941;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=Eo8mcJx96u8VH4jn7nXN0WzI3pTAqmoosY5GMUzgLRE=;
-        b=GVgfxJQobiQrJuDh18SIsdLs2VELuVf3BtAEX9MQpKJ2JlNhtxXsMH5qeDjhdbHUTw
-         8xlL6ytp4UEhbwiEY8Td9kRk3pTeLHWjUkkGAxG4XHR/v65K8/hgO9eHTS+EVwB4X/kZ
-         bxHHUNOzX08kj0O2q4DrUZoqp4ujXW/FVyww6E3o7UG0CmNY660Sf9qZN+0Y18PLORJx
-         uQs8H1PuTXUKbj/Fk9ZkDs3j3swax1KCFE6+nY3YKYpoI9OxdQtpYf7jrSz3Kem5Tvbk
-         7FpIxWv4u6M8L1ZfZPihGwnym1I7S+H5vNxJtq7tI4QG5EKRr3oFdJzTpTHFMXdZIRIe
-         ivNw==
-X-Forwarded-Encrypted: i=1; AJvYcCVH01gWRniqQUzCB6EfKCF2y4X34mxuq8uA1m1RBaQAVNCiwb9gRHwLTZ+8RY/UMnyHqEkr3786R4yp@vger.kernel.org
-X-Gm-Message-State: AOJu0YxFSVvlCEt5oEw6QlFi5sADQ2t/XCYOT8IFz50D2Yklc8skoqrf
-	6hVUvnSkfmfSQ0qrxBp1P+TSLToKF6UwFgRmfYRPekeiQCEYuyKT7BAkfWIhSBEZeY1pfgmKPo2
-	vW17GAajfA7w2hAOkYAuWT72zSN/WS0A=
-X-Gm-Gg: ASbGnctBWDw9g7bcAWiANruNaVLYPDjOnANnp7PWrd9fPIiSGS2vkqVL8HMqDycNMH1
-	Gqg+Sec7KDjskTfKTcrXgQdX4HVL2d9PklkodsInNgEe5RdSzgQyKwgo+Bx30ti43iHuDY7vCjV
-	RJux4R0/5InRMKH/Virpnra+6uGWkXn3ppYDU9Tn1j2/v7BgP5YGNzSU1gONM3mZKnaBA/CWprF
-	QxRF6SPcA3RlVUqw/p9zL/i9YTh9S6cXao/eVi7M2P3Hla2WE7uq+3/kqIl0w==
-X-Google-Smtp-Source: AGHT+IG5fl9Ca6IoFVXCby3OjpqI8VMpFebri/sOCkK+nWIHAzNm32WsbYNZ/ksmDEU40LCIfXNPgLPM3KOdt8Ty3tU=
-X-Received: by 2002:a05:690c:e4ea:b0:786:5499:634b with SMTP id
- 00721157ae682-78654996821mr73008517b3.23.1762194140728; Mon, 03 Nov 2025
- 10:22:20 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="3Wd6znBU"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d0gD147QZzmQQpT;
+	Mon,  3 Nov 2025 18:32:01 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:content-language:references:from:from:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1762194718; x=1764786719; bh=LZJml/qUOYUxSf7YMBAn3UuQ
+	CViaS2F+0XfsjOVP9Ic=; b=3Wd6znBUTNnv5oLWu0Z6ZGjHVwTIPDE0VfFHMiAH
+	IlPWZ01eXCuohryCC6xfn/qUY3c8LKulFybRi/hNBut5nOtH4uxj7WSkg/TTXkSg
+	Zep+CJgvwBue1DWnPdT/hJCgQrUGGuA2CpC4gJWwhHUifr58OpbZeCjYodl96ZF+
+	dFTMRTrXTe+oR4IqG3wrbCzvYpbVYTIYEk/Kqd/FOeqo5Tn66NSb+xKg3Ntycvf5
+	xjqm29tRGuQPoCNVAt2drUtBjZZiXk40WIiTWyuc930gIMsbHrpxhQvRRZPvaFIx
+	2gvH8ivseCYB9U6X4LgUzP3MJzwUXl9xuBFBWigPvuR/VA==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id ge3e0dOQZCba; Mon,  3 Nov 2025 18:31:58 +0000 (UTC)
+Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d0gCh59kPzmLwyn;
+	Mon,  3 Nov 2025 18:31:43 +0000 (UTC)
+Message-ID: <28a8b421-1c5f-400f-b890-62ebc7d74e88@acm.org>
+Date: Mon, 3 Nov 2025 10:31:42 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251031095643.74246-1-marco.crivellari@suse.com> <20251031095643.74246-5-marco.crivellari@suse.com>
-In-Reply-To: <20251031095643.74246-5-marco.crivellari@suse.com>
-From: Justin Tee <justintee8345@gmail.com>
-Date: Mon, 3 Nov 2025 10:21:45 -0800
-X-Gm-Features: AWmQ_blcPg1mU0jAAEnoVK9uPDIOp9VK-IcJyOwAXQxd100Xu_HVOLJgLqbdWSM
-Message-ID: <CABPRKS9eiAq6USotto=kJzhKxJvVWkQgm=eHFN11v5_hnKfM7g@mail.gmail.com>
-Subject: Re: [PATCH 4/4] scsi: scsi_transport_fc: WQ_PERCPU added to
- alloc_workqueue users
-To: Marco Crivellari <marco.crivellari@suse.com>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, 
-	Tejun Heo <tj@kernel.org>, Lai Jiangshan <jiangshanlai@gmail.com>, 
-	Frederic Weisbecker <frederic@kernel.org>, Sebastian Andrzej Siewior <bigeasy@linutronix.de>, 
-	Michal Hocko <mhocko@suse.com>, 
-	"James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	"Martin K . Petersen" <martin.petersen@oracle.com>, James Smart <james.smart@broadcom.com>, 
-	Justin Tee <justin.tee@broadcom.com>
-Content-Type: text/plain; charset="UTF-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 07/13] block: track zone conditions
+From: Bart Van Assche <bvanassche@acm.org>
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+ David Sterba <dsterba@suse.com>
+References: <20251031061307.185513-1-dlemoal@kernel.org>
+ <20251031061307.185513-8-dlemoal@kernel.org>
+ <40c87475-7d5a-4792-b2a6-3eeb8406f9be@acm.org>
+ <93215b7c-80bd-4860-8a77-42cdd4db1ec6@kernel.org>
+ <95c729d6-fd73-4480-af1c-68075b31cd1d@acm.org>
+Content-Language: en-US
+In-Reply-To: <95c729d6-fd73-4480-af1c-68075b31cd1d@acm.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-Reviewed-by: Justin Tee <justin.tee@broadcom.com>
+On 11/3/25 7:48 AM, Bart Van Assche wrote:
+> On 11/2/25 10:05 PM, Damien Le Moal wrote:
+>> On 11/1/25 06:17, Bart Van Assche wrote:
+>>> On 10/30/25 11:13 PM, Damien Le Moal wrote:
+>>>> Implement tracking of the runtime changes to zone conditions using
+>>>> the new cond field in struct blk_zone_wplug. The size of this structure
+>>>> remains 112 Bytes as the new field replaces the 4 Bytes padding at the
+>>>> end of the structure. For zones that do not have a zone write plug, the
+>>>> zones_cond array of a disk is used to track changes to zone conditions,
+>>>> e.g. when a zone reset, reset all or finish operation is executed.
+>>>
+>>> Why is it necessary to track the condition of sequential zones that do
+>>> not have a zone write plug? Please explain what the use cases are.
+>>
+>> Because zones that do not have a zone write plug can be empty OR full.
+> 
+> Why does the block layer have to track this information? Filesystems can
+> easily derive this information from the filesystem metadata information,
+> isn't it?
 
-Regards,
-Justin
+(replying to my own email)
+
+Is this a good way to check what zone type information filesystems need?
+
+$ git grep -nH BLK_ZONE_TYPE_ fs
+fs/btrfs/zoned.c:96:		ASSERT(zones[i].type != BLK_ZONE_TYPE_CONVENTIONAL);
+fs/btrfs/zoned.c:211:		zones[i].type = BLK_ZONE_TYPE_CONVENTIONAL;
+fs/btrfs/zoned.c:488:			if (zones[i].type == BLK_ZONE_TYPE_SEQWRITE_REQ)
+fs/btrfs/zoned.c:566:		    BLK_ZONE_TYPE_CONVENTIONAL)
+fs/btrfs/zoned.c:815:	if (zones[0].type == BLK_ZONE_TYPE_CONVENTIONAL) {
+fs/btrfs/zoned.c:1360:	if (unlikely(zone.type == 
+BLK_ZONE_TYPE_CONVENTIONAL)) {
+fs/f2fs/segment.c:5295:	if (zone->type != BLK_ZONE_TYPE_SEQWRITE_REQ)
+fs/f2fs/segment.c:5417:	if (zone.type != BLK_ZONE_TYPE_SEQWRITE_REQ)
+fs/f2fs/segment.c:5473:	if (zone.type != BLK_ZONE_TYPE_SEQWRITE_REQ)
+fs/f2fs/super.c:4332:	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
+fs/xfs/libxfs/xfs_zones.c:177:	case BLK_ZONE_TYPE_CONVENTIONAL:
+fs/xfs/libxfs/xfs_zones.c:179:	case BLK_ZONE_TYPE_SEQWRITE_REQ:
+fs/zonefs/super.c:385:		zone.type = BLK_ZONE_TYPE_CONVENTIONAL;
+fs/zonefs/super.c:874:	case BLK_ZONE_TYPE_CONVENTIONAL:
+fs/zonefs/super.c:886:	case BLK_ZONE_TYPE_SEQWRITE_REQ:
+fs/zonefs/super.c:887:	case BLK_ZONE_TYPE_SEQWRITE_PREF:
+fs/zonefs/zonefs.h:26: * defined in linux/blkzoned.h, that is, 
+BLK_ZONE_TYPE_SEQWRITE_REQ and
+fs/zonefs/zonefs.h:27: * BLK_ZONE_TYPE_SEQWRITE_PREF.
+fs/zonefs/zonefs.h:37:	if (zone->type == BLK_ZONE_TYPE_CONVENTIONAL)
+
+In the above I see that all filesystems check for the following zone
+types and don't check whether a zone is empty or full:
+* CONVENTIONAL
+* SEQWRITE_REQ
+* SEQWRITE_PREF
+
+Do you agree with this conclusion?
+
+Thanks,
+
+Bart.
