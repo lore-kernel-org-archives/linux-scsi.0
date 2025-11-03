@@ -1,65 +1,143 @@
-Received: from verein.lst.de (verein.lst.de [213.95.11.211])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AC4192FD7CD;
-	Mon,  3 Nov 2025 10:29:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=213.95.11.211
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C7ACC2FB0AE
+	for <linux-scsi@vger.kernel.org>; Mon,  3 Nov 2025 11:15:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762165751; cv=none; b=rbs4+K8ECP9RZ9FDPlUii5aFeu8zmEYi+WvG5fBnwsUbDDGRcRmUwbbu12dpqhu9tZBORTa8fk7UAYmyLhejzBhWmRrHaVkAC6Yyuaa22CAAUa6+y/PJlbZ9kXwO9BRjAc7A2TEHBsPe1zDDAZAMeM0P25MMisDKDf1aIhBTOM8=
+	t=1762168531; cv=none; b=sAjzmkiqzWBzS51GoBAqHObC33AuffeHhzKvT/cV6CzkH3gxo76dTjDbILhwBiK6StG1JWB6vCphdtUO6GIH/5bl9yJ5CyDNl429R2VyGemuafmrPL8Fr1QmR7+wNQjDlibCJx/lx5d9s2ZPRawT0Z8tped5CqIkKNJ7lEoe7DE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762165751; c=relaxed/simple;
-	bh=I4KqhekOC9NkOER3DEkKtQI27ATsDdkIJj+jhStltPI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AtgMJzr5awnsag9+9ULA9sRFPxyQM0ziV0C3IOXRVonG2TM/nskMdBqjJATBkGSuHTboFZC9gEzxedAnks53BpOCHJAtG3CDzJV7frUZSzotzNAMMfHwERFEvl1KR2EDSZZbLyNnqz83iY7guoTynFPaCbLEcrsySi4QLh874IE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de; spf=pass smtp.mailfrom=lst.de; arc=none smtp.client-ip=213.95.11.211
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=lst.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=lst.de
-Received: by verein.lst.de (Postfix, from userid 2407)
-	id C497E227A87; Mon,  3 Nov 2025 11:29:02 +0100 (CET)
-Date: Mon, 3 Nov 2025 11:29:02 +0100
-From: Christoph Hellwig <hch@lst.de>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>,
-	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
-	Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
-	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
-	Mikulas Patocka <mpatocka@redhat.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
-	Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
-	David Sterba <dsterba@suse.com>
-Subject: Re: [PATCH 08/13] block: introduce blkdev_get_zone_info()
-Message-ID: <20251103102902.GB8369@lst.de>
-References: <20251031061307.185513-1-dlemoal@kernel.org> <20251031061307.185513-9-dlemoal@kernel.org> <42dc640b-28e9-4706-91dc-dd075e736065@acm.org> <1276e2be-4d8b-4c59-822c-3af4490de24e@kernel.org>
+	s=arc-20240116; t=1762168531; c=relaxed/simple;
+	bh=PE5jjBcPySyviyWDBDTXr8YVrE1ft91DMQKGMM12dHQ=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=eHL1lbKPYuCzsubyGFivFrLQnKwWux1FditQzLLLmonxleaJB/PZfUfumMqA59uN4Zzu8hAioYivyKmmv4XiI8rXMc6VEqjxeksMrbuRzzWV90WFkGCjVscXRcbP11V5sbKNMwlWCgHt0IRJjeeoCrQvy7AWV/IEZ/9qSntB8rk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=X0IF/W7j; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=UwR073Kh; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=X0IF/W7j; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=UwR073Kh; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="X0IF/W7j";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="UwR073Kh";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="X0IF/W7j";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="UwR073Kh"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 17F7021CBE;
+	Mon,  3 Nov 2025 11:15:27 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1762168527; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Bk+wS36EfJQGoEmnN2KOAKKyPv/E2ZOJY94ROMtWko4=;
+	b=X0IF/W7j5x+S0GqYfFot2EpvNPQndbJlqqWCNmoLaHcIQ+q+Wq9JCIzmR8gmn6TGZCP5PS
+	4L5Rx/cXdX0m+WXB3LC1X+PvN7iyPgCMNvrVo+kJEVaVJKT3e2+Uw6OfNHQ35Y+WjtJHpj
+	+/G6FGj5o7ISqnvDt4uetORbOTS85mw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1762168527;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Bk+wS36EfJQGoEmnN2KOAKKyPv/E2ZOJY94ROMtWko4=;
+	b=UwR073KhJOzcyHNOrrqBvG9sUm5B/XZXIvYyB0p9iQhqyrVkFq683qcQfPh85/7SyaaMrI
+	We7fjwNqoMSk0YCA==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1762168527; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Bk+wS36EfJQGoEmnN2KOAKKyPv/E2ZOJY94ROMtWko4=;
+	b=X0IF/W7j5x+S0GqYfFot2EpvNPQndbJlqqWCNmoLaHcIQ+q+Wq9JCIzmR8gmn6TGZCP5PS
+	4L5Rx/cXdX0m+WXB3LC1X+PvN7iyPgCMNvrVo+kJEVaVJKT3e2+Uw6OfNHQ35Y+WjtJHpj
+	+/G6FGj5o7ISqnvDt4uetORbOTS85mw=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1762168527;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Bk+wS36EfJQGoEmnN2KOAKKyPv/E2ZOJY94ROMtWko4=;
+	b=UwR073KhJOzcyHNOrrqBvG9sUm5B/XZXIvYyB0p9iQhqyrVkFq683qcQfPh85/7SyaaMrI
+	We7fjwNqoMSk0YCA==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E6C40139A9;
+	Mon,  3 Nov 2025 11:15:26 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id JPzkN86OCGkJFgAAD6G6ig
+	(envelope-from <hare@suse.de>); Mon, 03 Nov 2025 11:15:26 +0000
+Message-ID: <16252f59-d52a-4acf-baa8-055eca54904e@suse.de>
+Date: Mon, 3 Nov 2025 12:15:26 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <1276e2be-4d8b-4c59-822c-3af4490de24e@kernel.org>
-User-Agent: Mutt/1.5.17 (2007-11-01)
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 02/13] block: cleanup blkdev_report_zones()
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+ David Sterba <dsterba@suse.com>
+References: <20251031061307.185513-1-dlemoal@kernel.org>
+ <20251031061307.185513-3-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20251031061307.185513-3-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[15];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:email,suse.de:mid]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
-On Mon, Nov 03, 2025 at 03:08:30PM +0900, Damien Le Moal wrote:
-> On 11/1/25 06:40, Bart Van Assche wrote:
-> >> +/**
-> >> + * blkdev_get_zone_info - Get a zone information from cached data
-> > 
-> > "Get a zone information" -> "Get zone information"
-> > 
-> >> +	sector = sector & (~(zone_sectors - 1));
-> > 
-> > Please consider changing the above assignment into:
-> > 
-> > 	sector -= bdev_offset_from_zone_start(bdev, sector);
+On 10/31/25 07:12, Damien Le Moal wrote:
+> The variable capacity is used only in one place and so can be removed
+> and get_capacity(disk) used directly instead.
 > 
-> That is a lot more arithmetic for the same thing.
-> If anything, I think this should be:
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> ---
+>   block/blk-zoned.c | 3 +--
+>   1 file changed, 1 insertion(+), 2 deletions(-)
 > 
-> 	sector = ALIGN(sector, zone_sectors);
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-That would have to be ALIGN_DOWN I think.  Which sounds useful to
-clean things up to me.
+Cheers,
 
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
