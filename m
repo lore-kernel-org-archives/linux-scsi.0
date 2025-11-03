@@ -1,100 +1,121 @@
-Received: from mailgw02.mediatek.com (unknown [210.61.82.184])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 016722D7BF;
-	Mon,  3 Nov 2025 11:58:15 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.61.82.184
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C4630308F0A;
+	Mon,  3 Nov 2025 12:59:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762171098; cv=none; b=NjGMlSy2BKxHch8/5aN0UtrhFd8fVfi/NyG+5zluVbGPoMhiPIkZjcpTJBAPsYeR/dr4UOmMg4A+VoRvUsyeUlze2Ph/Nf7BsZGTl3/ZFDy/RPnTZSI2iTaWyULYEp3iJemgMfCaIp/GMCXQQbrUIsFAcR7U5RqRgrvbVVmy7qU=
+	t=1762174794; cv=none; b=fLP31nl57cnQbZgOL/E9WExW58JtGPnO32Lu4iOoUzsb/hIouDpO5L31vlWMN++1epCvPMgB5ZXMdVxs2UgufK6BYZEDSbbiwtemDOQLFVTnogogLuOWAQJ0Acm0AIqssi+Qu1stCy2u+Nnbu0xBW3AIBrYYTbgoUHWok8OSL3M=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762171098; c=relaxed/simple;
-	bh=9f3gCIriMaW9vu+07GtY5VjvGBNYiwVCGnBM2hedpOE=;
-	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=EfKLjmxhYwiyWAtZ0dezyD5sEWZVik6/hUaCN5FCg8vg1pDy0kqGmbbCPIbtu3/VcUZ97WERErnD4uzClYWHx4EeVFhj5PyWEiD+hdwWVXKDQpBDVhIS4ymW0YViTCYk2KoONHFzR20XGS76tqVxvNxmKITJBwB90OJ7Ar6bLvo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com; spf=pass smtp.mailfrom=mediatek.com; dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b=EY6UN7uP; arc=none smtp.client-ip=210.61.82.184
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=mediatek.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=mediatek.com
+	s=arc-20240116; t=1762174794; c=relaxed/simple;
+	bh=mg14JfajU5W0qY3xKlC1LzugPqDhaogBLa+MoPCu9po=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=cat0t2zspx+mDnpH/nH8Rl4euS3z+6bYz0Aj0pCHq5b8ltnlN+rqcmEE3tJmKrcFQqJukdN4QysJ2hlQ+J8Z2HyoKWlw2WhNh0WIN0z5EiZHRC4UgtUgOv9BJVlaoxhj2aOSxGesT1nQ+IdAwinZVuaawQ+aqFJmUMKLcY6Y5uw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Tfzuyc0w; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=mediatek.com header.i=@mediatek.com header.b="EY6UN7uP"
-X-UUID: 5eead250b8ac11f0b33aeb1e7f16c2b6-20251103
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=mediatek.com; s=dk;
-	h=Content-Type:Content-Transfer-Encoding:MIME-Version:Message-ID:Date:Subject:CC:To:From; bh=RHKonKHpuu8h2tauK0dzekelgQBO2YV089GcLoFAdyw=;
-	b=EY6UN7uPF+IpU25XwBchGixP4+bKlnnbw3CuiPi6iIXX8FjovB0TOv0xNatm3AKr1F1eUXM5ia7k5cbgeqEW4a36SpNjbml/fy8gP+S8AtgiQU/1PUnr95KChjH3HvAta6JDU9kgW3H7SYOL1hETgSI9rKygRHjSZP/L90mQWyQ=;
-X-CID-P-RULE: Release_Ham
-X-CID-O-INFO: VERSION:1.3.6,REQID:4e402ce6-0129-402b-a267-f49be04019c8,IP:0,UR
-	L:25,TC:0,Content:0,EDM:-20,RT:0,SF:0,FILE:0,BULK:0,RULE:Release_Ham,ACTIO
-	N:release,TS:5
-X-CID-META: VersionHash:a9d874c,CLOUDID:fea78e26-cfd6-4a1d-a1a8-72ac3fdb69c4,B
-	ulkID:nil,BulkQuantity:0,Recheck:0,SF:102|123|836|888|898,TC:-5,Content:0|
-	15|50,EDM:1,IP:nil,URL:11|97|99|83|106|1,File:130,RT:0,Bulk:nil,QS:nil,BEC
-	:nil,COL:0,OSI:0,OSA:0,AV:0,LES:1,SPR:NO,DKR:0,DKP:0,BRR:0,BRE:0,ARC:0
-X-CID-BVR: 2,SSN|SDN
-X-CID-BAS: 2,SSN|SDN,0,_
-X-CID-FACTOR: TF_CID_SPAM_SNR,TF_CID_SPAM_ULN
-X-CID-RHF: D41D8CD98F00B204E9800998ECF8427E
-X-UUID: 5eead250b8ac11f0b33aeb1e7f16c2b6-20251103
-Received: from mtkmbs10n2.mediatek.inc [(172.21.101.183)] by mailgw02.mediatek.com
-	(envelope-from <peter.wang@mediatek.com>)
-	(Generic MTA with TLSv1.2 ECDHE-RSA-AES256-GCM-SHA384 256/256)
-	with ESMTP id 2112950668; Mon, 03 Nov 2025 19:58:11 +0800
-Received: from mtkmbs11n1.mediatek.inc (172.21.101.185) by
- mtkmbs10n2.mediatek.inc (172.21.101.183) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1748.26; Mon, 3 Nov 2025 19:58:12 +0800
-Received: from mtksitap99.mediatek.inc (10.233.130.16) by
- mtkmbs11n1.mediatek.inc (172.21.101.73) with Microsoft SMTP Server id
- 15.2.1748.26 via Frontend Transport; Mon, 3 Nov 2025 19:58:12 +0800
-From: <peter.wang@mediatek.com>
-To: <linux-scsi@vger.kernel.org>
-CC: <alim.akhtar@samsung.com>, <avri.altman@wdc.com>, <bvanassche@acm.org>,
-	<robh@kernel.org>, <krzysztof.kozlowski+dt@linaro.org>,
-	<conor+dt@kernel.org>, <jejb@linux.ibm.com>, <martin.petersen@oracle.com>,
-	<lgirdwood@gmail.com>, <broonie@kernel.org>, <matthias.bgg@gmail.com>,
-	<angelogioacchino.delregno@collabora.com>, <devicetree@vger.kernel.org>,
-	<linux-kernel@vger.kernel.org>, <linux-mediatek@lists.infradead.org>,
-	<linux-arm-kernel@lists.infradead.org>, <wenst@chromium.org>,
-	<conor.dooley@microchip.com>, <chu.stanley@gmail.com>,
-	<chun-hung.wu@mediatek.com>, <peter.wang@mediatek.com>,
-	<alice.chao@mediatek.com>, <naomi.chu@mediatek.com>, <ed.tsai@mediatek.com>,
-	<chunfeng.yun@mediatek.com>
-Subject: [PATCH v1] dt-bindings: phy: mediatek,ufs-phy: Update maintainer information in mediatek,ufs-phy.yaml
-Date: Mon, 3 Nov 2025 19:57:36 +0800
-Message-ID: <20251103115808.3771214-1-peter.wang@mediatek.com>
-X-Mailer: git-send-email 2.45.2
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Tfzuyc0w"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2FAC8C4CEE7;
+	Mon,  3 Nov 2025 12:59:52 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762174794;
+	bh=mg14JfajU5W0qY3xKlC1LzugPqDhaogBLa+MoPCu9po=;
+	h=Date:Subject:To:References:From:In-Reply-To:From;
+	b=Tfzuyc0w0PG8B9qeo4EY1e6oWHR35RGpaPLMhqntB/ik1LckO74VHTfp82JdQfC9k
+	 0XUUezUYERCKbPcEpQY508qcq5lLukAr+xy/HgvMMnFHFrhxq+AwL0mtcl8g3ynIYb
+	 FsW8Nr3O/XJikCmQBNqdHGt7OEq0tEcBuNdvdKHO7YvkkFHuIcD0/uRGGFqYSqR9u1
+	 Pd7ZRjdZfeTJpyRPVCSwWFC4B9ujnv6yxK+/mq21WfNfEkreGE0imhdNkpA+pHbXy/
+	 TECb2JVsfxse8iQFM6majHDvwTu6aCy7dgtulG1U5hG4HAxVR6J6cFHyAK4kOVvqY9
+	 uSZasy7Ak7n8g==
+Message-ID: <32f2f32a-eafd-43ef-a599-fc4784fdf492@kernel.org>
+Date: Mon, 3 Nov 2025 21:59:49 +0900
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-Content-Type: text/plain
-X-MTK: N
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 03/13] block: handle zone management operations
+ completions
+To: Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+ David Sterba <dsterba@suse.com>
+References: <20251031061307.185513-1-dlemoal@kernel.org>
+ <20251031061307.185513-4-dlemoal@kernel.org>
+ <8947e877-cd53-4f1d-989c-bdde311c00e9@suse.de>
+Content-Language: en-US
+From: Damien Le Moal <dlemoal@kernel.org>
+Organization: Western Digital Research
+In-Reply-To: <8947e877-cd53-4f1d-989c-bdde311c00e9@suse.de>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Peter Wang <peter.wang@mediatek.com>
+On 11/3/25 20:41, Hannes Reinecke wrote:
+> On 10/31/25 07:12, Damien Le Moal wrote:
+>> The functions blk_zone_wplug_handle_reset_or_finish() and
+>> blk_zone_wplug_handle_reset_all() both modify the zone write pointer
+>> offset of zone write plugs that are the target of a reset, reset all or
+>> finish zone management operation. However, these functions do this
+>> modification before the BIO is executed. So if the zone operation fails,
+>> the modified zone write pointer offsets become invalid.
+>>
+>> Avoid this by modifying the zone write pointer offset of a zone write
+>> plug that is the target of a zone management operation when the
+>> operation completes. To do so, modify blk_zone_bio_endio() to call the
+>> new function blk_zone_mgmt_bio_endio() which in turn calls the functions
+>> blk_zone_reset_all_bio_endio(), blk_zone_reset_bio_endio() or
+>> blk_zone_finish_bio_endio() depending on the operation of the completed
+>> BIO, to modify a zone write plug write pointer offset accordingly.
+>> These functions are called only if the BIO execution was successful.
+>>
+> Hmm.
+> Question remains: what _is_ the status of a write pointer once a
+> zone management operation is in flight?
 
-Replace Stanley Chu with me and Chaotian in the maintainers field,
-since his email address is no longer active.
+On the device, it will be unchanged until the command completes, or rather, one
+can only see it that way since the drive will serialize such command with report
+zones.
 
-Signed-off-by: Peter Wang <peter.wang@mediatek.com>
----
- Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+> I would argue it's turning into a Schroedinger state, and so we
+> cannot make any assumptions here.
 
-diff --git a/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml b/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
-index 3e62b5d4da61..6e2edd43fc2a 100644
---- a/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
-+++ b/Documentation/devicetree/bindings/phy/mediatek,ufs-phy.yaml
-@@ -8,8 +8,9 @@ $schema: http://devicetree.org/meta-schemas/core.yaml#
- title: MediaTek Universal Flash Storage (UFS) M-PHY
- 
- maintainers:
--  - Stanley Chu <stanley.chu@mediatek.com>
-   - Chunfeng Yun <chunfeng.yun@mediatek.com>
-+  - Peter Wang <peter.wang@mediatek.com>
-+  - Chaotian Jing <chaotian.jing@mediatek.com>
- 
- description: |
-   UFS M-PHY nodes are defined to describe on-chip UFS M-PHY hardware macro.
+Let me try to skin that cat below :)
+
+> In particular we cannot issue any other write I/O to that zone once
+> the operation is in flight, and so it becomes meaningless if we set
+> the write pointer before or after the zone operation.
+> Once the operation fails we have to issue a 'report write pointer'
+> command anyway as I'd be surprised if we could assume that a failure
+> in a zone management command would leave the write pointer unmodified.
+> So I would assume that zone write plugging already blocks the zone
+> while an zone management command is in flight.
+> But if it does, why do we need this patch?
+
+There is no such "blocking" done, the user is free to issue a zone reset while
+writes are n flight, and most likely get write errors as a result such bad practice.
+
+For this patch, the assumption is that a failed zone reset or zone finish leaves
+the zone write pointer untouched. All the drives I know do that. So it is better
+to not modify the zone write plug write pointer offset until we complete the
+command.
+
+But granted, that is not always true since the failure may happen *after* the
+drive completed the command (e.g. the HBA loses the connection with the drive
+before signaling the completion or something like that). In such case, it would
+not matter when the update is done. And for zone reset all commands, all bets
+are off since the command may fail half-way through all the zones that need a reset.
+
+But in the end, logically speaking, it makes more sense to update things when we
+get a success result instead of assuming we will always succeed. This has also
+the benefit of leaving the zone write plugs in place for eventual error recovery
+if needed.
+
 -- 
-2.45.2
-
+Damien Le Moal
+Western Digital Research
