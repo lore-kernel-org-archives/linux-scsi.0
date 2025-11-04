@@ -1,78 +1,195 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mout01.posteo.de (mout01.posteo.de [185.67.36.65])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4B8D91CD15;
-	Tue,  4 Nov 2025 12:32:42 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8BA6B2EBDCB
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 14:24:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.67.36.65
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762259563; cv=none; b=YoYhI+7LoyjN/MUUiXfRcjUFjLwm2FezRKPu/OKqVszv3ui+/XyyG8u9fNqvOXHzZARXi3tPMfzeBWslvZAWgfaqesbYTKT1Zlcp214gfvtn3H4r74S/bmY9JmLYWONYXIPklX3/unaeq3O7eqjjycsY0T+luqAIFH9seOa2TnY=
+	t=1762266281; cv=none; b=PO+ogKBHkCVTNR0K1DeM2pe89IiLwfPVUAhrCSpILCEdXoig8FnIdHmA0+0KVG+q5XkBgD2px4DZDGdf57g7JP+gZ8W3MFtIyl6bsARoaRnzoAbv4Z+8TKXajKhkrRgPEoGKBrihu/z0LiI+r/V0k9YknT3MJsUplyWUSS+QLS4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762259563; c=relaxed/simple;
-	bh=Wjd9WZCwkQ7vQ6XOuV9ap40jasa/RbYWhbQP6Nf1kL4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=Bn0ofhLGj8IxVHZ7UtsCLA+5qsQz9eVbinOOcbpWzK3MNV6DcCUIsG+2WZfoARuiaRVGnmAzt7OqjMtLzfKvGky0ciB16dB7bgt+lnTqr1U8cqwtl8gvb/p5YO/t+vfHukiVYt4LmFp9blssus6orrduGh42Nvv/iGzK42cwMPI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=Gihxy//Q; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1762266281; c=relaxed/simple;
+	bh=Ao5+boMmfZWYAtK2haO2ddMrlZWRsE6a0fglGAS3vZA=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=gIWbe76tq9disF/vlYTO5LLW6Tgx/ldlt1HCXlMvNIoMqH6alV1b9RsjlitD1xZNgN7QVKu8sF8C4KGmrV9eQQTEJ/sTy9125uw0Q4wx2GL/0YGSIacKuuPE+3dbEYASEuPxZaZOHY91C8W3G4YwuxsCrMFTZ5v6E4dIcapIugU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de; spf=pass smtp.mailfrom=posteo.de; dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b=WCxBK5EQ; arc=none smtp.client-ip=185.67.36.65
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=posteo.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=posteo.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="Gihxy//Q"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=pg5SBsDUAbvuxjgoI3ytMsvZIqVbaHXpOJe5j4l5vis=; b=Gihxy//QMFGt9YfqER2G1lu0I/
-	VvSoxjvNDWUAeKWeIUhZwKIjgjOuZscQPBDb1hQKIkn+/9uZPoEwaxqKOvcF5hv0b6eOh/ABax0Oz
-	Ye6oxBvFBBTeh7UCp1wyEi85NgecTUU15lCy+SQe0H7NzYit+Sw26lFYk/ACkkGhSrZyXtch7pq5D
-	eygeJOCHFPH1MI2+Ny+YgWWA6KaBrTLqVsg/OCF5mtiybpgJpA3U+zhMo+5eKyxB2F6bZy4cjMjpj
-	Ly+8Lo/N+6Clljyc/YaLVGwGypSyf7tYX8wD6NTdk72eGpUl/v7h5eyt1lMAybjPShLaaGvH+hVQH
-	bCiGpWhA==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vGGDH-0000000BnIW-1WdI;
-	Tue, 04 Nov 2025 12:32:39 +0000
-Date: Tue, 4 Nov 2025 04:32:39 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Damien Le Moal <dlemoal@kernel.org>
-Cc: John Garry <john.g.garry@oracle.com>,
-	Igor Pylypiv <ipylypiv@google.com>,
+	dkim=pass (2048-bit key) header.d=posteo.de header.i=@posteo.de header.b="WCxBK5EQ"
+Received: from submission (posteo.de [185.67.36.169]) 
+	by mout01.posteo.de (Postfix) with ESMTPS id 9AF8524002A
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 15:24:32 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=posteo.de; s=2017;
+	t=1762266272; bh=gd4HjZCWAk8CsNmoKEWEKdOMY5aCf6WYxuALDZmp8eQ=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:
+	 Content-Transfer-Encoding:Autocrypt:OpenPGP:From;
+	b=WCxBK5EQ/Y1lY7uHd9iUh2UyweOGOGYUvefC+PNYmCxy9APX+E2g9iB7DYULCdFel
+	 E09BleMZG9eU+5CvAyA5W5JNDx82X2E3nx8g+BzFSsYJTkh+2mZ62VQElzDb0Ibbtf
+	 llzHLgpGrYdD9kFuJSLrlXH3E5U7u9oD6jkD4fgebUQyg22VQ3cNUd4zfyaBxcO7Qo
+	 Ptt2pCBXNh+jtsbOR6HVsoo4xCehxkHnzhNUA1IvDPaB/MAG1/tUMHzuTNuSFOZWw3
+	 Is7mhvsyeqUzUUI7agLdVLs+wpqGUeW2rcUMM1ifv+qvk1thWmqVOQVr1pQCwAim1b
+	 tvImkGmARMdmg==
+Received: from customer (localhost [127.0.0.1])
+	by submission (posteo.de) with ESMTPSA id 4d19gz3b5nz6tw2;
+	Tue,  4 Nov 2025 15:24:31 +0100 (CET)
+From: Markus Probst <markus.probst@posteo.de>
+To: Damien Le Moal <dlemoal@kernel.org>,
 	Niklas Cassel <cassel@kernel.org>,
-	John Garry <john.garry@huawei.com>, Jens Axboe <axboe@kernel.dk>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-ide@vger.kernel.org,
-	linux-block@vger.kernel.org
-Subject: Re: ATA PASS-THROUGH latency regression after exposing blk-mq
- hardware queues
-Message-ID: <aQnyZyN-BuRXDIAu@infradead.org>
-References: <20251103170308.3356608-1-ipylypiv@google.com>
- <51db9579-f78d-4192-93fa-b252fe954d13@kernel.org>
- <c911b6fa-84d1-44a5-a668-6b46dbd00423@oracle.com>
- <180f16e4-851a-4009-8193-1efa41734afa@kernel.org>
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>
+Cc: linux-ide@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	Markus Probst <markus.probst@posteo.de>
+Subject: [PATCH v6 1/3] scsi: sd: Add manage_restart device attribute to scsi_disk
+Date: Tue, 04 Nov 2025 14:24:32 +0000
+Message-ID: <20251104142413.322347-2-markus.probst@posteo.de>
+In-Reply-To: <20251104142413.322347-1-markus.probst@posteo.de>
+References: <20251104142413.322347-1-markus.probst@posteo.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <180f16e4-851a-4009-8193-1efa41734afa@kernel.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+Content-Transfer-Encoding: 8bit
+Autocrypt: addr=markus.probst@posteo.de; prefer-encrypt=mutual;
+  keydata=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
+  aBeNN4ijKZchBXHPgVx+YtWRHfcm4l8=
+OpenPGP: url=https://posteo.de/keys/markus.probst@posteo.de.asc; preference=encrypt
 
-On Tue, Nov 04, 2025 at 09:07:56PM +0900, Damien Le Moal wrote:
-> Not illegal at all. libata-scsi is a SAT implementation which can do that. The
-> problem with multi-queue HBAs is that delaying NCQ commands with also the
-> non-NCQ ones delayed does not guarantee that the non-NCQ command will be the
-> first one to show up once the queue is drained. So this is not trivial... Not
-> sure how to do it yet.
-> 
-> An "ugly" solution would be to use a submission workqueue in libata-scsi that
-> holds on to the non-NCQ command instead of sending it back for requeue. But
-> that's not pretty and holding on command in the low level driver is not great.
-> Still thinking.
+In addition to the already existing manage_shutdown,
+manage_system_start_stop and manage_runtime_start_stop device
+scsi_disk attributes, add manage_restart, which allows the high-level
+device driver (sd) to manage the device power state for SYSTEM_RESTART if
+set to 1.
 
-I think we need to make the block layer aware of non-queued commands,
-and then have a modality where we either issue queued or non-queued
-commands with some kind of fairness between them.  I think the flush
-state machine in blk-flush.c might give some ideas and/or code to reuse
-for that.
+This attribute is necessary for the following commit "ata: stop disk on
+restart if ACPI power resources are found" to avoid a potential disk power
+failure in the case the SATA power connector does not retain the power
+state after a restart.
+
+Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
+Signed-off-by: Markus Probst <markus.probst@posteo.de>
+---
+ drivers/scsi/sd.c          | 34 +++++++++++++++++++++++++++++++++-
+ include/scsi/scsi_device.h |  6 ++++++
+ 2 files changed, 39 insertions(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index 0252d3f6bed1..f2c0744b4480 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -318,6 +318,35 @@ static ssize_t manage_shutdown_store(struct device *dev,
+ }
+ static DEVICE_ATTR_RW(manage_shutdown);
+ 
++static ssize_t manage_restart_show(struct device *dev,
++				   struct device_attribute *attr, char *buf)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++
++	return sysfs_emit(buf, "%u\n", sdp->manage_restart);
++}
++
++static ssize_t manage_restart_store(struct device *dev,
++				    struct device_attribute *attr,
++				    const char *buf, size_t count)
++{
++	struct scsi_disk *sdkp = to_scsi_disk(dev);
++	struct scsi_device *sdp = sdkp->device;
++	bool v;
++
++	if (!capable(CAP_SYS_ADMIN))
++		return -EACCES;
++
++	if (kstrtobool(buf, &v))
++		return -EINVAL;
++
++	sdp->manage_restart = v;
++
++	return count;
++}
++static DEVICE_ATTR_RW(manage_restart);
++
+ static ssize_t
+ allow_restart_show(struct device *dev, struct device_attribute *attr, char *buf)
+ {
+@@ -654,6 +683,7 @@ static struct attribute *sd_disk_attrs[] = {
+ 	&dev_attr_manage_system_start_stop.attr,
+ 	&dev_attr_manage_runtime_start_stop.attr,
+ 	&dev_attr_manage_shutdown.attr,
++	&dev_attr_manage_restart.attr,
+ 	&dev_attr_protection_type.attr,
+ 	&dev_attr_protection_mode.attr,
+ 	&dev_attr_app_tag_own.attr,
+@@ -4177,7 +4207,9 @@ static void sd_shutdown(struct device *dev)
+ 	    (system_state == SYSTEM_POWER_OFF &&
+ 	     sdkp->device->manage_shutdown) ||
+ 	    (system_state == SYSTEM_RUNNING &&
+-	     sdkp->device->manage_runtime_start_stop)) {
++	     sdkp->device->manage_runtime_start_stop) ||
++	    (system_state == SYSTEM_RESTART &&
++	     sdkp->device->manage_restart)) {
+ 		sd_printk(KERN_NOTICE, sdkp, "Stopping disk\n");
+ 		sd_start_stop_device(sdkp, 0);
+ 	}
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 993008cdea65..fd484d48df77 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -178,6 +178,12 @@ struct scsi_device {
+ 	 */
+ 	unsigned manage_shutdown:1;
+ 
++	/*
++	 * If true, let the high-level device driver (sd) manage the device
++	 * power state for system restart (reboot) operations.
++	 */
++	unsigned manage_restart:1;
++
+ 	/*
+ 	 * If set and if the device is runtime suspended, ask the high-level
+ 	 * device driver (sd) to force a runtime resume of the device.
+-- 
+2.51.0
 
