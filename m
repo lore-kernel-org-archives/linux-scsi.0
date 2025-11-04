@@ -1,137 +1,157 @@
-Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82CBB14F112
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 11:08:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 80E0B2E7F14;
+	Tue,  4 Nov 2025 11:44:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762254504; cv=none; b=Q2018ZsSSlNPJNaR9JPqQPzadWiOkqsHjhaiMgMPiFfKmHfMfTU4lo1APRViskzPlSHKnMeLWjYKyx7A7t/EPpwapI2Wtf9XVdvWCQ3W0rY9+7MhwHs1SSSPF2RdeZmLvGCOfrAECeNMo3YEOzFAPnFyHEmj+wuuYIHzOy7utTI=
+	t=1762256642; cv=none; b=D1Ev9q1fn74nMgc9VwYOlt2JmL2nYJsco8s5lfGe8shijvNhaajA9PfQ4sd1mzUt6yQ2GiEreBKZAIrII2Bl/Y8hBxo854hRw/4NVTio/vEPoWPvQ9L36z1UNdVHkpOjR5n0JzXHCdak5ms0pfLq87j/V2LOWenn2fhuRSIvEGg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762254504; c=relaxed/simple;
-	bh=WQ/ohDia7uzWf+QTovyDFaXkQtp6pvGqaaFaRGl927Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=iu5pgMKvtEOsmd4EFhkPVVZkHOXr53nGbd2IGnHR02djpHbLrPxYd0eax14RKWHH5iUtvuBEznHC0ZKWAGvu36jF14CkIyxp1zROnpvo7IO6dYM0h3GwBZ3HsViy3i5zTnyvJCwc+leRBYjnzONNvRehQfraFEfylyOhYqlAD0k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=AO9Lghqq; arc=none smtp.client-ip=209.85.218.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	s=arc-20240116; t=1762256642; c=relaxed/simple;
+	bh=2JsRRuuAy47papfGnPrnsqh20dMTcr8Dv9LLSPaOgpc=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References; b=lUWjNSQyJBE0CM5pkJYnTeMOVYRw37+ZuGzyjBj3gFXUOqyOBJvFYpiyD3iBQACgbqJnzxihpDb+3xM7xsS8uDqyQf9/r/Am4raJLIpHTscJ7yUGu3fJgp7EkgkfFvelyCr3NUea0TOZf/cAeddU1oir/sM4sdnzr5H8NXQ67ug=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=qti.qualcomm.com; spf=pass smtp.mailfrom=qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Ty6OyVW7; arc=none smtp.client-ip=205.220.180.131
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=qti.qualcomm.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="AO9Lghqq"
-Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-b7042e50899so941295466b.0
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Nov 2025 03:08:22 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1762254501; x=1762859301; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=ffwBII/8UKbjUAsU6g4VA0sKiKJx/b1RbgapN8DJwps=;
-        b=AO9Lghqqqr7EHG3Zj8HrzMVidUzoXNWzw+visfpyluiaIvLNPdzej6EG4OJN1n9gxY
-         hNo+3lzDiv5SHBjkEyAJ+wEZRHEk2zte5mzsgrilYvVseXdTMMw+bt+6yuCFFiGzyhvh
-         7aD+oIPCoOaLTtYwJ3hiJ6ZNGN879ckhoKNBJFX4Z8TUjpMBXMg3Fp7mrwJHjAoI6QBS
-         9itqI6ZyiSN0sl5Aq54CQyiMIqQsUt9uPV2jaLw2sJiEed+4dDi27kH875gtDkbb2b9X
-         820KzOznCJtVbb5ctXQhcpsJmwd9qEHNJKIsFsnu41zZ4xEIHqF9If0NXlt8G+e50QoH
-         OkWA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762254501; x=1762859301;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=ffwBII/8UKbjUAsU6g4VA0sKiKJx/b1RbgapN8DJwps=;
-        b=lRi1F5wYWBW+UowVsPs/8/jElufn9f5kjybP2PIgEkU+yEJP1rrGblQv185DzWKlsl
-         y9BZsVW8601s4DhanIc+pbq3S/UTfQpyUIP7vp7KcXqwCm4vhvWdFQUFyFaw5CHjIder
-         hCmERtCeGFgILR5Xl9qKNt/tKJZ8cadG+gvzMKDtBh4R5l3E66oieNRoupjClDjRsXWe
-         NJimNvN8l+i7e6GauMRo14iDoX9/WazUVMG7r25PvwMFxLvD++2JbUHpukW1JJ3/BaXx
-         GuU6+TYpCY06KU62X7/EwPZ2NcewvZz2iy+/Xm5sOuCx6v2pExHAFKeYrQg4JvUmdtLK
-         VcaA==
-X-Forwarded-Encrypted: i=1; AJvYcCW9qYWL48eUmBdXs7Mgbgp6+Tmuub14Ryzqn25UZWTAdUmmp0TNJ9LJcbnDV64iu6CQM2be7/3C5wGC@vger.kernel.org
-X-Gm-Message-State: AOJu0YzEyEDAagdFDiGiOiiYunF0Z+Bmd+KfgVwVmQe2ybRQolphzS36
-	QDeM2UgRtkfF/x12EbQGQJPF6efaSlQK9uPkV2NTFBFG0m4sknwg82KttQbYe6IsdzA=
-X-Gm-Gg: ASbGncuIEn3f67+4vA1vy0e8jMbDwlEDxZnmn3/G2bCJqL9O76QJDuP+2BI30Z54c57
-	sEYUBiR4RltuBx41xAFnpWo8I7+MR8dkl9gc7ORKS4YKSKskOvD9Er4mzs72QbXx2eOXk/GjI1M
-	SBZdB4ez/4wEp2McNQmbWHxbg6PRZuOoct6CrI1GAxVXmGMxObNiYB9cHzt6uWTnIgdojvbiNWt
-	LNyaI2ilcuzwfyXbCDtzciXjHu2TlsZC6bsFmnBlxmFsneheRkRTmihQRIe8AsDXPgBP3JGpPAr
-	2fVAiyT/HgDc6YpgoM+i8DJ/V1KjzJPabgNutPXU/k/cKhjZZLBCOncoCEugRT2eLC1kFlpp1Wc
-	7FBvKLZ9wSYLdYVMMwHmjKCc2w63OZCmjVJwLLkEfLC/S7DWiviFJesMvor5zvbxwcCTjNapZZc
-	MKVa4=
-X-Google-Smtp-Source: AGHT+IF5qrlPWCkuEzv3QTctjZLDhOiaF5uRDaxLj/l/ay6tSejPh79HWrKLIT/9StR2Q5AWaBBgAA==
-X-Received: by 2002:a17:907:7f94:b0:b70:e15b:286a with SMTP id a640c23a62f3a-b70e15b2d72mr680407066b.57.1762254500568;
-        Tue, 04 Nov 2025 03:08:20 -0800 (PST)
-Received: from linux ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b723fe38a4esm178899366b.62.2025.11.04.03.08.19
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Nov 2025 03:08:20 -0800 (PST)
-From: Marco Crivellari <marco.crivellari@suse.com>
-To: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Cc: Tejun Heo <tj@kernel.org>,
-	Lai Jiangshan <jiangshanlai@gmail.com>,
-	Frederic Weisbecker <frederic@kernel.org>,
-	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
-	Marco Crivellari <marco.crivellari@suse.com>,
-	Michal Hocko <mhocko@suse.com>,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>,
-	Justin Tee <justin.tee@broadcom.com>,
-	Paul Ely <paul.ely@broadcom.com>
-Subject: [PATCH] scsi: lpfc: WQ_PERCPU added to alloc_workqueue users
-Date: Tue,  4 Nov 2025 12:08:08 +0100
-Message-ID: <20251104110808.123424-1-marco.crivellari@suse.com>
-X-Mailer: git-send-email 2.51.1
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Ty6OyVW7"
+Received: from pps.filterd (m0279871.ppops.net [127.0.0.1])
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5A49VYGa1653876;
+	Tue, 4 Nov 2025 11:43:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
+	cc:date:from:in-reply-to:message-id:references:subject:to; s=
+	qcppdkim1; bh=JH/Pws9CKVqlY74TXei7B8qAn6AlsMcsqN/HNTICLIg=; b=Ty
+	6OyVW7J5a9N7itmVt18EQsAiBSMFdhvUeSUh7I1u+u1auU1gAAx+LFxxgVRI+VL+
+	F8ybs9mGN1DD0f0ibY5QsVvcTFXRGS4Q3vSvsvjXrl9BavcGzbMLWdoPgUacwqU1
+	JVqm2/yiuwkjMwc78Eol2A1Wrhuu0vVtk23JIeMBkPBOHRbWcSZTaxKdEIRvDqWo
+	QGlMxmOk7MvYGjxRYW2eoTZ8WA86C2qcq7c3YIx8OnTD5J3KyBrch4H66EB8Fr7s
+	Ztfa6GYbLea/CHAk65ZtaAPZHsf/bn75eRf87UssFWZo6EB/eWkM6GrbF9MCXgIM
+	APSJbQBkJBcUQfvSNyig==
+Received: from apblrppmta02.qualcomm.com (blr-bdr-fw-01_GlobalNAT_AllZones-Outside.qualcomm.com [103.229.18.19])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4a7ex7rb05-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
+	Tue, 04 Nov 2025 11:43:36 +0000 (GMT)
+Received: from pps.filterd (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+	by APBLRPPMTA02.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTP id 5A4BhW9v013469;
+	Tue, 4 Nov 2025 11:43:32 GMT
+Received: from pps.reinject (localhost [127.0.0.1])
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTPS id 4a5b9mg9yx-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NO);
+	Tue, 04 Nov 2025 11:43:32 +0000
+Received: from APBLRPPMTA02.qualcomm.com (APBLRPPMTA02.qualcomm.com [127.0.0.1])
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5A4BhWbG013454;
+	Tue, 4 Nov 2025 11:43:32 GMT
+Received: from hu-maiyas-hyd.qualcomm.com (hu-riteshk-hyd.qualcomm.com [10.147.241.247])
+	by APBLRPPMTA02.qualcomm.com (PPS) with ESMTP id 5A4BhVus013452;
+	Tue, 04 Nov 2025 11:43:32 +0000
+Received: by hu-maiyas-hyd.qualcomm.com (Postfix, from userid 2314801)
+	id F1ADC5015B8; Tue,  4 Nov 2025 17:13:30 +0530 (+0530)
+From: Ritesh Kumar <riteshk@qti.qualcomm.com>
+To: robin.clark@oss.qualcomm.com, lumag@kernel.org, abhinav.kumar@linux.dev,
+        jessica.zhang@oss.qualcomm.com, sean@poorly.run,
+        marijn.suijten@somainline.org, maarten.lankhorst@linux.intel.com,
+        mripard@kernel.org, tzimmermann@suse.de, airlied@gmail.com,
+        simona@ffwll.ch, robh@kernel.org, krzk+dt@kernel.org,
+        conor+dt@kernel.org, quic_mahap@quicinc.com, andersson@kernel.org,
+        konradybcio@kernel.org, mani@kernel.org,
+        James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+        vkoul@kernel.org, kishon@kernel.org,
+        cros-qcom-dts-watchers@chromium.org
+Cc: Ritesh Kumar <quic_riteshk@quicinc.com>, linux-phy@lists.infradead.org,
+        linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org,
+        freedreno@lists.freedesktop.org, devicetree@vger.kernel.org,
+        linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+        quic_vproddut@quicinc.com
+Subject: [PATCH v3 1/2] dt-bindings: phy: qcom-edp: Add eDP ref clk for sa8775p
+Date: Tue,  4 Nov 2025 17:13:26 +0530
+Message-Id: <20251104114327.27842-2-riteshk@qti.qualcomm.com>
+X-Mailer: git-send-email 2.17.1
+In-Reply-To: <20251104114327.27842-1-riteshk@qti.qualcomm.com>
+References: <20251104114327.27842-1-riteshk@qti.qualcomm.com>
+X-QCInternal: smtphost
+X-QCInternal: smtphost
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTA0MDA5NiBTYWx0ZWRfX7kQLDp8c0LxJ
+ nvSzuZefu7wIg+xjm6d97IKEm19Gn94eWbHpkTRAF6O7SDuvDQNEWEllgCBkOTzpKvg/kOTyEjb
+ YrV4GUJ9k6qpjSZ5qmNTUO7jiYi4l5Xxqy9lXlvycFURd2C7wUf+Gbtn1BE0BXJT3vzemGPo+83
+ 1opycOxkeumQjnWhPXf+davccs7PLRIul1VM6XMjWIDhJA6Ed+gJ4crLU+ry553OhWn4jssXnxE
+ vaPG5Y1c0SXA1D66T6PcwKqfX6pGFbEi/YUmyVthBlQROOiwYaufsbPbXdzkPx3KsIRFNAl/LTL
+ YAIGJU16ewRNXXEuwQ9oJqEYOLx88eqvQYhpF+oDdCqlACjPLEjsaAsRs8VBjjaK05+h7R7EiOx
+ UvQIX47Ci0m8Aj9VvrfcrYxpiDG1VA==
+X-Proofpoint-ORIG-GUID: 5cMx7Oo2mMLiqlSi83gPd13b0clyCjUl
+X-Proofpoint-GUID: 5cMx7Oo2mMLiqlSi83gPd13b0clyCjUl
+X-Authority-Analysis: v=2.4 cv=auy/yCZV c=1 sm=1 tr=0 ts=6909e6e8 cx=c_pps
+ a=Ou0eQOY4+eZoSc0qltEV5Q==:117 a=Ou0eQOY4+eZoSc0qltEV5Q==:17
+ a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22 a=COk6AnOGAAAA:8
+ a=RNLAftb8N5po9rnca2YA:9 a=TjNXssC_j7lpFel5tvFf:22 a=nl4s5V0KI7Kw-pW0DWrs:22
+ a=pHzHmUro8NiASowvMSCR:22 a=xoEH_sTeL_Rfw54TyV31:22
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-11-03_06,2025-11-03_03,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
+ malwarescore=0 phishscore=0 bulkscore=0 impostorscore=0 clxscore=1011
+ priorityscore=1501 lowpriorityscore=0 spamscore=0 adultscore=0 suspectscore=0
+ classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
+ reason=mlx scancount=1 engine=8.22.0-2510240001 definitions=main-2511040096
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
 
-Currently if a user enqueue a work item using schedule_delayed_work() the
-used wq is "system_wq" (per-cpu wq) while queue_delayed_work() use
-WORK_CPU_UNBOUND (used when a cpu is not specified). The same applies to
-schedule_work() that is using system_wq and queue_work(), that makes use
-again of WORK_CPU_UNBOUND.
-This lack of consistentcy cannot be addressed without refactoring the API.
+From: Ritesh Kumar <quic_riteshk@quicinc.com>
 
-alloc_workqueue() treats all queues as per-CPU by default, while unbound
-workqueues must opt-in via WQ_UNBOUND.
+When the initial contribution of eDP PHY for sa8775p was done,
+eDP reference clock voting was missed. It worked fine at that
+time because the clock was already enabled by the UFS PHY driver.
 
-This default is suboptimal: most workloads benefit from unbound queues,
-allowing the scheduler to place worker threads where they’re needed and
-reducing noise when CPUs are isolated.
+After commit 77d2fa54a945 ("scsi: ufs: qcom : Refactor
+phy_power_on/off calls"), eDP reference clock started getting
+turned off, leading to the following PHY power-on failure:
 
-This change adds a new WQ_PERCPU flag to explicitly request
-alloc_workqueue() to be per-cpu when WQ_UNBOUND has not been specified.
+phy phy-aec2a00.phy.10: phy poweron failed --> -110
 
-This patch continues the effort to refactor worqueue APIs, which has begun
-with the change introducing new workqueues and a new alloc_workqueue flag:
+To fix this, explicit voting for the eDP reference clock is
+required. This patch adds the eDP reference clock for sa8775p
+eDP PHY and updates the corresponding example node.
 
-commit 128ea9f6ccfb ("workqueue: Add system_percpu_wq and system_dfl_wq")
-commit 930c2ea566af ("workqueue: Add new WQ_PERCPU flag")
-
-With the introduction of the WQ_PERCPU flag (equivalent to !WQ_UNBOUND),
-any alloc_workqueue() caller that doesn’t explicitly specify WQ_UNBOUND
-must now use WQ_PERCPU.
-
-Once migration is complete, WQ_UNBOUND can be removed and unbound will
-become the implicit default.
-
-Suggested-by: Tejun Heo <tj@kernel.org>
-Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
+Signed-off-by: Ritesh Kumar <quic_riteshk@quicinc.com>
 ---
- drivers/scsi/lpfc/lpfc_init.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ .../devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml  | 6 ++++--
+ Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml     | 1 +
+ 2 files changed, 5 insertions(+), 2 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f206267d9ecd..45d43e9c5827 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -7950,7 +7950,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
- 	/* Allocate all driver workqueues here */
+diff --git a/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml b/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
+index e2730a2f25cf..6c827cf9692b 100644
+--- a/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
++++ b/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
+@@ -200,9 +200,11 @@ examples:
+                   <0x0aec2000 0x1c8>;
  
- 	/* The lpfc_wq workqueue for deferred irq use */
--	phba->wq = alloc_workqueue("lpfc_wq", WQ_MEM_RECLAIM, 0);
-+	phba->wq = alloc_workqueue("lpfc_wq", WQ_MEM_RECLAIM | WQ_PERCPU, 0);
- 	if (!phba->wq)
- 		return -ENOMEM;
+             clocks = <&dispcc0 MDSS_DISP_CC_MDSS_DPTX0_AUX_CLK>,
+-                     <&dispcc0 MDSS_DISP_CC_MDSS_AHB_CLK>;
++                     <&dispcc0 MDSS_DISP_CC_MDSS_AHB_CLK>,
++                     <&gcc GCC_EDP_REF_CLKREF_EN>;
+             clock-names = "aux",
+-                          "cfg_ahb";
++                          "cfg_ahb",
++                          "ref";
  
+             #clock-cells = <1>;
+             #phy-cells = <0>;
+diff --git a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+index bfc4d75f50ff..ba757b08b9b1 100644
+--- a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
++++ b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+@@ -72,6 +72,7 @@ allOf:
+       properties:
+         compatible:
+           enum:
++            - qcom,sa8775p-edp-phy
+             - qcom,x1e80100-dp-phy
+     then:
+       properties:
 -- 
-2.51.1
+2.17.1
 
