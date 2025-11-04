@@ -1,86 +1,161 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A70642D73BA;
-	Tue,  4 Nov 2025 17:29:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 04ADD338597
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 17:55:31 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762277348; cv=none; b=baNEd3tcvPLvm0/a3j2gGq/y7r/DBjAH8BPi61YRkBXh7ONmPOEUi8vDWOF6mwtJTLjOq+XhdSPYiNA/gIP2rEp5SI6uK7Ldv5JWSKeOJBmotRusjTg5TGyR22T4SPkFAzQBZvwUCS/FNJMI73dMtp6rr9y9FMTnRoxhHbIvjHw=
+	t=1762278933; cv=none; b=ZX1l25tVlNWkylKcYGExYIjjygS6oZV2hAgPFDpf8+DjmJezXCyFvSFGVx7Ao3CK4zBs8iI1jr3amisRCAsrur+ndJimvNY5IesC7m7xk+C8VQXm/QlGqLxuf2imcFCMlvTnRsYGycACAaNnDnBte6yc5CxJO6j7N105M2GozLs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762277348; c=relaxed/simple;
-	bh=tI4PyzTCai+yW0q5uOm9mpxVGyRvru6JHvPPumwn9bI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=InPPjRtMowud33H3jnxwklBGH3Iq0f+hy+Ar9Z+2ggDp+uU28JuOYuju8x2JfSa0R5zwC+0T+pgZOBksRmsc7Pve8mn4O+3MzEoZh1NLXHGO62Yw1tnq/Oik0183g0d6Ilgvqtpq1X4va3b/FA3cl0go3PFddQcutIm4rpjTkuU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YorEdEhW; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762278933; c=relaxed/simple;
+	bh=Uflt1BUm18HPLVV8TZr9Kk+KXTK7PClhqwMZjwCcEkY=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=PNlPfJNORaRyOEwK3vs4HAPvG+mH8vl231TE+XOh71TWrTK97hxNL3SKFuttRB0w3D2elCz2TGBoIvN3+H8Nh4ED5xghcPB6CVQKtI6Zr99oehi+tB+LBGb/z6C2YUJzK0YdwSTJihoGEi12nPzOCmZjVVvxFlhOShFuh+FOptI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1oGK9Wlw; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Mut4Kb+h; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=1oGK9Wlw; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=Mut4Kb+h; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YorEdEhW"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AA42C4CEF7;
-	Tue,  4 Nov 2025 17:29:03 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762277348;
-	bh=tI4PyzTCai+yW0q5uOm9mpxVGyRvru6JHvPPumwn9bI=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=YorEdEhWpDhiQn/NJZEVW1RFMt0ZT8Ch/UFT6N941eIHppjapbMWkDnjL/8IkxU1V
-	 rhXwaP4RoWBTrswybIRIY9IYXK70xlwE/BnzQWtg3+quYzwcMuTgeH4dO8D1Kwu21z
-	 w60S9nxeN9i/cWoQCyocGiPHnXhqQchmwYlWCCKrv8/N0q22MwwybSWK71pvNXtahA
-	 7EWfS9HNjlnKR8o6uNQJS2t5zf/xoN8H2qp+cAil4wE4vEaIaK+r9+Vt82qE93aw1/
-	 ar0gCro09h99D1kbK+zAY9v0MAq4i/ftbbuwpskFKncsgNZ2+nI296fVjQx/9Yz2yY
-	 E0bu2DzTYAssQ==
-Date: Tue, 4 Nov 2025 17:29:01 +0000
-From: Conor Dooley <conor@kernel.org>
-To: peter.wang@mediatek.com
-Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
-	avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
-	krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
-	jejb@linux.ibm.com, martin.petersen@oracle.com, lgirdwood@gmail.com,
-	broonie@kernel.org, matthias.bgg@gmail.com,
-	angelogioacchino.delregno@collabora.com, devicetree@vger.kernel.org,
-	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
-	linux-arm-kernel@lists.infradead.org, wenst@chromium.org,
-	conor.dooley@microchip.com, chu.stanley@gmail.com,
-	chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
-	naomi.chu@mediatek.com, ed.tsai@mediatek.com,
-	chunfeng.yun@mediatek.com
-Subject: Re: [PATCH v1] dt-bindings: phy: mediatek,ufs-phy: Update maintainer
- information in mediatek,ufs-phy.yaml
-Message-ID: <20251104-banish-engraved-d26d5856d0fd@spud>
-References: <20251103115808.3771214-1-peter.wang@mediatek.com>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1oGK9Wlw";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Mut4Kb+h";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="1oGK9Wlw";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="Mut4Kb+h"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 1853121174;
+	Tue,  4 Nov 2025 17:55:30 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1762278930; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rHd2eFoirDazFmsA5WtLKtkEgeModSBKHWr5WI9janA=;
+	b=1oGK9WlwrBPSGNkB/1bZxsknUz91EFsK7rh1LgGEkGR/rpNzFKE1FkqhESnW6ilXwbMd3B
+	hin0iBlMLcoQjc9ZcxaqZqvFUmlAF49DqFm2tM7USm5Ce8jj7rnKmIAP8sriUKE9m1ZDUq
+	XdaOzvHsKKECSGiUScT67lgJW2BtI5s=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1762278930;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rHd2eFoirDazFmsA5WtLKtkEgeModSBKHWr5WI9janA=;
+	b=Mut4Kb+hFZqwDOeWHnJSXEaZBOqA3AnCP+fQPY6TgwB14Tg/3eGgddrWweoJAHdRa5FGiq
+	uGixNavXGYYft6Aw==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1762278930; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rHd2eFoirDazFmsA5WtLKtkEgeModSBKHWr5WI9janA=;
+	b=1oGK9WlwrBPSGNkB/1bZxsknUz91EFsK7rh1LgGEkGR/rpNzFKE1FkqhESnW6ilXwbMd3B
+	hin0iBlMLcoQjc9ZcxaqZqvFUmlAF49DqFm2tM7USm5Ce8jj7rnKmIAP8sriUKE9m1ZDUq
+	XdaOzvHsKKECSGiUScT67lgJW2BtI5s=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1762278930;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=rHd2eFoirDazFmsA5WtLKtkEgeModSBKHWr5WI9janA=;
+	b=Mut4Kb+hFZqwDOeWHnJSXEaZBOqA3AnCP+fQPY6TgwB14Tg/3eGgddrWweoJAHdRa5FGiq
+	uGixNavXGYYft6Aw==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 78841136D1;
+	Tue,  4 Nov 2025 17:55:29 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id fBHjGxE+Cmk9HgAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 04 Nov 2025 17:55:29 +0000
+Message-ID: <d22ea013-76d9-4c61-a762-4afeed804557@suse.de>
+Date: Tue, 4 Nov 2025 18:53:48 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="EqJ9mvMN5ps+fBwp"
-Content-Disposition: inline
-In-Reply-To: <20251103115808.3771214-1-peter.wang@mediatek.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 01/15] block: handle zone management operations
+ completions
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+ Mikulas Patocka <mpatocka@redhat.com>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+ David Sterba <dsterba@suse.com>
+References: <20251104013147.913802-1-dlemoal@kernel.org>
+ <20251104013147.913802-2-dlemoal@kernel.org>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20251104013147.913802-2-dlemoal@kernel.org>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[100.00%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-0.988];
+	MIME_GOOD(-0.10)[text/plain];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	ARC_NA(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[15];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	TO_DN_SOME(0.00)[]
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
 
+On 11/4/25 02:31, Damien Le Moal wrote:
+> The functions blk_zone_wplug_handle_reset_or_finish() and
+> blk_zone_wplug_handle_reset_all() both modify the zone write pointer
+> offset of zone write plugs that are the target of a reset, reset all or
+> finish zone management operation. However, these functions do this
+> modification before the BIO is executed. So if the zone operation fails,
+> the modified zone write pointer offsets become invalid.
+> 
+> Avoid this by modifying the zone write pointer offset of a zone write
+> plug that is the target of a zone management operation when the
+> operation completes. To do so, modify blk_zone_bio_endio() to call the
+> new function blk_zone_mgmt_bio_endio() which in turn calls the functions
+> blk_zone_reset_all_bio_endio(), blk_zone_reset_bio_endio() or
+> blk_zone_finish_bio_endio() depending on the operation of the completed
+> BIO, to modify a zone write plug write pointer offset accordingly.
+> These functions are called only if the BIO execution was successful.
+> 
+> Fixes: dd291d77cc90 ("block: Introduce zone write plugging")
+> Cc: stable@vger.kernel.org
+> Signed-off-by: Damien Le Moal <dlemoal@kernel.org>
+> Reviewed-by: Christoph Hellwig <hch@lst.de>
+> Reviewed-by: Johannes Thumshirn <johannes.thumshirn@wdc.com>
+> ---
+>   block/blk-zoned.c | 139 ++++++++++++++++++++++++++++++----------------
+>   block/blk.h       |  14 +++++
+>   2 files changed, 104 insertions(+), 49 deletions(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
---EqJ9mvMN5ps+fBwp
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+Cheers,
 
-On Mon, Nov 03, 2025 at 07:57:36PM +0800, peter.wang@mediatek.com wrote:
-> From: Peter Wang <peter.wang@mediatek.com>
->=20
-> Replace Stanley Chu with me and Chaotian in the maintainers field,
-> since his email address is no longer active.
->=20
-> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
-
-Acked-by: Conor Dooley <conor.dooley@microchip.com>
-
---EqJ9mvMN5ps+fBwp
-Content-Type: application/pgp-signature; name="signature.asc"
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaQo33QAKCRB4tDGHoIJi
-0slUAQDaNzoLm5qRDZGmaVZq1Z15G/qDvAUp/mAoKtEmWaHoBQEA7pl5SuOhpCFo
-J+x+0i0xR53Wd/iJidGRqGo/gVi+5w4=
-=IlDV
------END PGP SIGNATURE-----
-
---EqJ9mvMN5ps+fBwp--
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
