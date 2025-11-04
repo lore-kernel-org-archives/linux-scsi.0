@@ -1,30 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 787C127E04C
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 10:04:31 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96EC92D5929
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 10:04:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762250671; cv=none; b=MpaAtnx4z1Xkz+ljHyRzRD/E14czPMrFIl0H0CX2Dvp41ruSS8pPy4wO0P+KFiN5HkfUd3WZBJR6cFdEKxpHRFupwc5dU9jTOIwjd/XICSvYeszEnBnX3iEAq5wRUAV2M96lElCwCiI3Vfo2wez8iQNeOd+TacZrRwLWbknVDiM=
+	t=1762250673; cv=none; b=AifB5XdFZdgLu/3rF/ctopu1U5ckjOecV1W1XOnz5OFgNNVRjiQp9IFkZjujdIjmGTYyS5NdB/W5h5Fk03Gqu0zncQaqwcthwiWo/cei3kvwMVERvsZAVw7/Km+U6lCOrf+hq6EeBI62MBIjtSsjYpbEGA/GQTI8BYG1/xN0AdM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762250671; c=relaxed/simple;
-	bh=8Y/7N33UNSC5IJiLF9cQAB9cc9V7xwtmT9J0GSknaEQ=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=jg0SW9fFOtamZJspBmvJ8gBxNWkGqQitj6+xXfpslk290bPM/rwtWnysxDRP0+jNhbFbYXF6PiKk2Z7xlQ4+fvZ8XGpUADUp3vExa4XFCIuTbrpfnYBXza9x4/EtNY1Ij4cuLQm+kpjCBX4sODKMJ6A5wWpo4R65Yxr/Qq90gXE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=G7dUpwnH; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762250673; c=relaxed/simple;
+	bh=/iNo/t+cOBVq+bDynOPjrue+B9uGSz46ttUx5aN7pEw=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=TwKejWjVvnICDhDrt4D95uToWdC4wTK4rrQ74CqC/RdmHw6goEoDDtsJiOLtZ2ZOD9jf3/o5PRETLqV/FApKSSZZr2DviUMgALZmT8L119DT1xDVw5urGDCxkAVhtiC1eQdr14VeNpf6moxHWZyJuXeblvmLN6WTGScFoz4TbZk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=siNuwLdP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="G7dUpwnH"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 50254C4CEF7;
-	Tue,  4 Nov 2025 10:04:29 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="siNuwLdP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7EACFC16AAE;
+	Tue,  4 Nov 2025 10:04:31 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762250671;
-	bh=8Y/7N33UNSC5IJiLF9cQAB9cc9V7xwtmT9J0GSknaEQ=;
-	h=From:To:Cc:Subject:Date:From;
-	b=G7dUpwnHaOdLKNOlq9JOs+ZpcNJ3XKMznKikC7lPiiUL/iN9WSP8hj1sZpKWcGdF0
-	 Dns9s4QA9N9DOwnTjTBZ3B0rAUlxWWWlEj3SzvF9AVpRnJR2IopAm0wams95Z4AJyZ
-	 lB1Krb5J+GAAYk5gxBAZCLqRDVQBtmxebYglddZMrIiS1OWOTyncb69d02uW6y4PAo
-	 CsRDVcI5gVKFlU7CVbTUEJh7lAoiKMfmEOP/50M+vpBdZPaIp9YKynvN9Iww8URyny
-	 Fvb6ddevXk1GhWop5KgvRS5pFsnejvdYOjrM084uhxvnLUCUG/lDVLW6egeidjNSH+
-	 m3u0JVqxCxKHQ==
+	s=k20201202; t=1762250673;
+	bh=/iNo/t+cOBVq+bDynOPjrue+B9uGSz46ttUx5aN7pEw=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=siNuwLdP4VtnYlNJSmcLOZCPIo+sViHYdIkpfOjbls55pupxx/q6zq3En4dyIgS8L
+	 tTf/XE8M+gTc6MxrcVCu3VvH+6piWL/K1ISXa/CeQsKPc9YWxq/TJKudt5R9/1B2qZ
+	 8IJNDfPWC48ZMGAQdFStS0ZWfciEKHbnXdf7DNUob533mxmFH0xgHAg8mU10luy9Xo
+	 ip1k1f9kB7/K0iKKjZ0Z/IdL3Bht3T8for4WDqOC4Vag4xgUn8cLTVTbi1N4Mg6IK1
+	 vnKo4+kafzb+8vvfjzBGYLcYo1iW/ndrhzDoHxc5J6H8sZDtQEohJXE+hr/9WU8Vfq
+	 gbSJl5rRHRAzw==
 From: Hannes Reinecke <hare@kernel.org>
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
@@ -33,10 +34,12 @@ Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
 	Sesidhar Baddela <sebaddel@cisco.com>,
 	Satish Kharat <satishkh@cisco.com>,
 	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH 0/4] fnic: fixup INTx and MSI interrupt modes
-Date: Tue,  4 Nov 2025 11:04:20 +0100
-Message-ID: <20251104100424.8215-1-hare@kernel.org>
+Subject: [PATCH 1/4] fnic: use resulting interrupt mode during configuration
+Date: Tue,  4 Nov 2025 11:04:21 +0100
+Message-ID: <20251104100424.8215-2-hare@kernel.org>
 X-Mailer: git-send-email 2.43.0
+In-Reply-To: <20251104100424.8215-1-hare@kernel.org>
+References: <20251104100424.8215-1-hare@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -45,26 +48,27 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Hi all,
+The configured interrupt mode might be different than the resulting
+interrupts mode after all configuration limitations have been applied.
 
-with the rework to enable multiqueue the non-multiqueue interrupt modes
-(ie MSI and INTx) got broken and resulted in a non-functional drivers.
-This patchset fixes up the driver to work in all interrupt modes and
-adds a new module parameter 'fnic_intr_mode' to switch between them.
+Signed-off-by: Hannes Reinecke <hare@kernel.org>
+---
+ drivers/scsi/fnic/fnic_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-As usual, comments and reviews are welcome.
-
-Hannes Reinecke (4):
-  fnic: use resulting interrupt mode during configuration
-  fnic: correctly initialize 'fnic->name'
-  fnic: missing initialisation for wq_copy_base
-  fnic: make interrupt mode configurable
-
- drivers/scsi/fnic/fnic.h      |  2 +-
- drivers/scsi/fnic/fnic_isr.c  | 15 +++++++++++----
- drivers/scsi/fnic/fnic_main.c | 17 ++++++++++++-----
- 3 files changed, 24 insertions(+), 10 deletions(-)
-
+diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
+index 4cc4077ea53c..7075a23d9229 100644
+--- a/drivers/scsi/fnic/fnic_main.c
++++ b/drivers/scsi/fnic/fnic_main.c
+@@ -678,7 +678,7 @@ void fnic_mq_map_queues_cpus(struct Scsi_Host *host)
+ {
+ 	struct fnic *fnic = *((struct fnic **) shost_priv(host));
+ 	struct pci_dev *l_pdev = fnic->pdev;
+-	int intr_mode = fnic->config.intr_mode;
++	int intr_mode = vnic_dev_get_intr_mode(fnic->vdev);
+ 	struct blk_mq_queue_map *qmap = &host->tag_set.map[HCTX_TYPE_DEFAULT];
+ 
+ 	if (intr_mode == VNIC_DEV_INTR_MODE_MSI || intr_mode == VNIC_DEV_INTR_MODE_INTX) {
 -- 
 2.43.0
 
