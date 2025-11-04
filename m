@@ -1,91 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 93F893B7A8;
-	Tue,  4 Nov 2025 00:15:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CFAD228DB3;
+	Tue,  4 Nov 2025 00:39:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762215330; cv=none; b=c9Z0KOK23bOYDDmM774/R6woYCdW0Y1E7qrL7+jpr6HlQO/2wx/Ed7i2RTT5rgeNvJ3WPWt6jUSwr/ZU0wTYpjX421Vz8JD/1VDA47sU05V8w+D2L9rvA6VPeTQr/4jINwXeuY3rOOY/BNYNM9p4kgJDzWg8c4kvhZl0mNC7UvA=
+	t=1762216756; cv=none; b=sTApikNkAu7nicWbbPTy4r0GNvpcPwRdEjRXZFY12Xi1tjicz/K5E4AFuEyujFv0kbm1b+xYLrJb2rk7xMXkoEy2uxP/fKxvcCf+HR81BLb3s60oZ9gWfFD0U+/M4kPaRS23LyrEQZyX16FeUFeq0CzZazwJ7d6dj5jPfAt4uXo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762215330; c=relaxed/simple;
-	bh=q51FjAcV5ST/TNFAnYhXlTQwQa95eEqoUkjdhTLCezw=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=csdaSZSnpgEzm/sHDECNm7ZxR8siaPq9Er7HBBWQ/1w5jYY6zaMPvoW9Vs2x+UJ1u375tfSplLYirKflIWVmnM/o2ZzYtoFtIcwlziXGvieZk/kl5Ksyx7IzfpWg2vHAs6iOoUsJoL1KeSj11vH4Z6AF3kBVH5tUdV9RSD1Iabc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=iCvxJbUp; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762216756; c=relaxed/simple;
+	bh=mPNm/C4lAMOMRgM7UB0KMAJ0ifsULw0KEfI5BGUhPDQ=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=in7GB6zBWrOT/tZBly414xYAkcTJCT1QJxrScyamgfwiSL13jMe7urBbxS+ifhFSBTUdk6GS0OKowYkBui59UtBASrB1Fh5dW709amRP5heufwiJaDmm2wLIeQglqYRXEXSr4U9t81piD3crDrJJIVi22PEk/UJWl2FMafzrz4E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=UhSuOo9e; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="iCvxJbUp"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2D53FC4CEFD;
-	Tue,  4 Nov 2025 00:15:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762215330;
-	bh=q51FjAcV5ST/TNFAnYhXlTQwQa95eEqoUkjdhTLCezw=;
-	h=Date:Subject:To:References:From:In-Reply-To:From;
-	b=iCvxJbUp6IyviKFnxh4K07lx1ij/PwQCubwpGDa/AjJGi2K4oJ7bZcdvw8Klnl9lF
-	 T2oDhBBvy/igyp9JfRzLTXW19/3HsOENGXGSDOQl025h4aByy20JpZTcMGHyX/CHWj
-	 bvN3pJCFDOtcbzsqBS+daoZwJMZeY58rgoInPUsByGRqOhPj4dmp9IUrIOiSTAKi5+
-	 OOoUNO/4JcRfZ8nuu37Pa1KdvtgCeOt9WMsoP4gibGoDhVvghyOGesMpHF3ACXukt1
-	 me2eOvWaVKDC90CF/kfF5QtUjwtCqkwrpQPYva9aXotqnrR5bTj2ewj+6B19nTjd3M
-	 hdDZNeslgVXog==
-Message-ID: <0154c2a8-a3ed-45d3-8f8a-1581106212fb@kernel.org>
-Date: Tue, 4 Nov 2025 09:15:26 +0900
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="UhSuOo9e"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1762216754; x=1793752754;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=mPNm/C4lAMOMRgM7UB0KMAJ0ifsULw0KEfI5BGUhPDQ=;
+  b=UhSuOo9ejRR5yDu3FL1xntaaincssnmAu+kbnk+CONg7HexAxBGSnF5I
+   Wn0ej0pOjEQdah0MebgIppxCFHdoy2UJgqmOLhayBXWcfTSDxqB9sAaQS
+   +EA33YxNswxcnPqiuDDSXkVhGFyGFkEIJMzYlwI17n5+oGvBVGKNRpzVO
+   l9GMEW4hfd7w8RCx9o7qAtNdkGq93+Z+wusepq8atQai9u1HQGcpuQun9
+   UJ6TRxvKrRYTfh49Z0VXacoS8fWMLt2RXSb5gSTOZXLwLNDA8oTlFsQP9
+   oNrEIuLD4UBZ0HBbUhMbSzkTcrGh+5TzBZjC+xqFY/UMqyXO+t6/RCUsZ
+   Q==;
+X-CSE-ConnectionGUID: Kx/OGYkUTf61LYZPQIXDEw==
+X-CSE-MsgGUID: QfML4wzCQiKdYsHjsXTSwA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11602"; a="64454564"
+X-IronPort-AV: E=Sophos;i="6.19,277,1754982000"; 
+   d="scan'208";a="64454564"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 03 Nov 2025 16:39:14 -0800
+X-CSE-ConnectionGUID: OfZ4HEkuRhyIWHXTjR/tcQ==
+X-CSE-MsgGUID: if1kyanTQXSEi5380gA62w==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,277,1754982000"; 
+   d="scan'208";a="210520385"
+Received: from lkp-server02.sh.intel.com (HELO 66d7546c76b2) ([10.239.97.151])
+  by fmviesa002.fm.intel.com with ESMTP; 03 Nov 2025 16:39:10 -0800
+Received: from kbuild by 66d7546c76b2 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vG544-000QgW-1B;
+	Tue, 04 Nov 2025 00:38:45 +0000
+Date: Tue, 4 Nov 2025 08:36:25 +0800
+From: kernel test robot <lkp@intel.com>
+To: Damien Le Moal <dlemoal@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+	linux-block@vger.kernel.org, linux-nvme@lists.infradead.org,
+	Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>,
+	dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>,
+	Mikulas Patocka <mpatocka@redhat.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org,
+	Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org,
+	David Sterba <dsterba@suse.com>
+Cc: oe-kbuild-all@lists.linux.dev
+Subject: Re: [PATCH v2 04/15] block: introduce disk_report_zone()
+Message-ID: <202511040843.y29M2yJp-lkp@intel.com>
+References: <20251103133123.645038-5-dlemoal@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 11/15] block: introduce BLKREPORTZONESV2 ioctl
-To: Johannes Thumshirn <Johannes.Thumshirn@wdc.com>,
- Jens Axboe <axboe@kernel.dk>,
- "linux-block@vger.kernel.org" <linux-block@vger.kernel.org>,
- "linux-nvme@lists.infradead.org" <linux-nvme@lists.infradead.org>,
- Keith Busch <keith.busch@wdc.com>, hch <hch@lst.de>,
- "dm-devel@lists.linux.dev" <dm-devel@lists.linux.dev>,
- Mike Snitzer <snitzer@kernel.org>, Mikulas Patocka <mpatocka@redhat.com>,
- "Martin K . Petersen" <martin.petersen@oracle.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-xfs@vger.kernel.org" <linux-xfs@vger.kernel.org>,
- Carlos Maiolino <cem@kernel.org>,
- "linux-btrfs@vger.kernel.org" <linux-btrfs@vger.kernel.org>,
- David Sterba <dsterba@suse.com>
-References: <20251103133123.645038-1-dlemoal@kernel.org>
- <20251103133123.645038-12-dlemoal@kernel.org>
- <982ed7d8-e818-4d9c-a734-64ab8b21a7e3@wdc.com>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <982ed7d8-e818-4d9c-a734-64ab8b21a7e3@wdc.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251103133123.645038-5-dlemoal@kernel.org>
 
-On 11/4/25 00:17, Johannes Thumshirn wrote:
-> On 11/3/25 2:38 PM, Damien Le Moal wrote:
->> Introduce the new BLKREPORTZONESV2 ioctl command to allow user
->> applications access to the fast zone report implemented by
->> blkdev_report_zones_cached(). This new ioctl is defined as number 142
->> and is documented in include/uapi/linux/fs.h.
->>
->> Unlike the existing BLKREPORTZONES ioctl, this new ioctl uses the flags
->> field of struct blk_zone_report also as an input. If the user sets the
->> BLK_ZONE_REP_CACHED flag as an input, then blkdev_report_zones_cached()
->> is used to generate the zone report using cached zone information. If
->> this flag is not set, then BLKREPORTZONESV2 behaves in the same manner
->> as BLKREPORTZONES and the zone report is generated by accessing the
->> zoned device.
-> 
-> 
-> Is there a downside to always do the caching? A.k.a do we need the new 
-> ioctl or can we keep using the old one and cache the report zones reply?
+Hi Damien,
 
-The old one is needed to allow getting the precise imp open, exp open, closed
-conditions, if the user cares about these. E.g. Zonefs does because of the
-(optional) explicit zone open done on file open.
+kernel test robot noticed the following build warnings:
 
-And we cannot break existing user space anyway (e.g. sysutils blkzone), so we
-must return the "legacy" report unless asked otherwise.
+[auto build test WARNING on ba6a8208cc205c6545c610b5863ea89466fc486a]
 
+url:    https://github.com/intel-lab-lkp/linux/commits/Damien-Le-Moal/block-handle-zone-management-operations-completions/20251103-214422
+base:   ba6a8208cc205c6545c610b5863ea89466fc486a
+patch link:    https://lore.kernel.org/r/20251103133123.645038-5-dlemoal%40kernel.org
+patch subject: [PATCH v2 04/15] block: introduce disk_report_zone()
+config: sparc-randconfig-002-20251104 (https://download.01.org/0day-ci/archive/20251104/202511040843.y29M2yJp-lkp@intel.com/config)
+compiler: sparc64-linux-gcc (GCC) 12.5.0
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251104/202511040843.y29M2yJp-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511040843.y29M2yJp-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> Warning: drivers/scsi/sd_zbc.c:47 function parameter 'args' not described in 'sd_zbc_parse_report'
 
 -- 
-Damien Le Moal
-Western Digital Research
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
