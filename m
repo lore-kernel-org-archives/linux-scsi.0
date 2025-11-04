@@ -1,149 +1,86 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C6FD4285056
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 15:47:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A70642D73BA;
+	Tue,  4 Nov 2025 17:29:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762271259; cv=none; b=Lw+SWZp3H+rnWd2YSCWYk8/QOQc743ttYDUYns13IrKpXKFdZnRplid7pbHifKvg04sT83Mvk+2XtMJwvoevHfh1WyFbT+Hl914vMDfHBcTL4q1FExgNzCeKsolVZs1uidD5t/EgVb54cyboA2OOsvZzjiDTaYm1a+VXohjNC2I=
+	t=1762277348; cv=none; b=baNEd3tcvPLvm0/a3j2gGq/y7r/DBjAH8BPi61YRkBXh7ONmPOEUi8vDWOF6mwtJTLjOq+XhdSPYiNA/gIP2rEp5SI6uK7Ldv5JWSKeOJBmotRusjTg5TGyR22T4SPkFAzQBZvwUCS/FNJMI73dMtp6rr9y9FMTnRoxhHbIvjHw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762271259; c=relaxed/simple;
-	bh=zaMy0vsICvTfcET1HzzBXYuwnqLere+oiKxd8HGhhPM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=lsDpgHSsN6/fG5YAzyOzDkPKMtWw3emllx6TU3YjtUDZXW4dJ86FLznG551IY4lOnonrPI9K2KJbLdpBiXTXTrep4o5x5iowqZo92rwgnkV9FVtXDKm8qWbrG2Ixp1R0ITkBlLZE0nejfLJiS4ZQ+/iUMzw4E7cFbuzQOcy79yE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=BphY3iwN; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1762277348; c=relaxed/simple;
+	bh=tI4PyzTCai+yW0q5uOm9mpxVGyRvru6JHvPPumwn9bI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=InPPjRtMowud33H3jnxwklBGH3Iq0f+hy+Ar9Z+2ggDp+uU28JuOYuju8x2JfSa0R5zwC+0T+pgZOBksRmsc7Pve8mn4O+3MzEoZh1NLXHGO62Yw1tnq/Oik0183g0d6Ilgvqtpq1X4va3b/FA3cl0go3PFddQcutIm4rpjTkuU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=YorEdEhW; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="BphY3iwN"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1762271256;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=oHP+7pFTiueSTyvj31pK0VeIKd+vF0I9LECvmFzxfbE=;
-	b=BphY3iwNFJhSZb2z0IWsZ6xuVCZ9vlVL1lqueAhmWfofgcLW+NzgEpnMQrG6aSmA3QxxwC
-	LOumD0N43/q1UrqVHvB5gvS6mzvxUV3hcTGkGKWA5v9yNEOOocnl+EnlE789ggyUPdBVp7
-	+EudFxyZQSJHl9F4KDFowKhiBwCk00Q=
-Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-39-zaZCugujOX-gOh10553wYw-1; Tue,
- 04 Nov 2025 10:47:35 -0500
-X-MC-Unique: zaZCugujOX-gOh10553wYw-1
-X-Mimecast-MFC-AGG-ID: zaZCugujOX-gOh10553wYw_1762271254
-Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 8B48918001E7;
-	Tue,  4 Nov 2025 15:47:34 +0000 (UTC)
-Received: from fedora-work.redhat.com (unknown [10.22.80.207])
-	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 4DDE419560B2;
-	Tue,  4 Nov 2025 15:47:32 +0000 (UTC)
-From: David Jeffery <djeffery@redhat.com>
-To: =?UTF-8?q?Kai=20M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>,
-	linux-scsi@vger.kernel.org
-Cc: David Jeffery <djeffery@redhat.com>,
-	Laurence Oberman <loberman@redhat.com>
-Subject: [PATCH 2/2] st: skip buffer flush for information ioctls
-Date: Tue,  4 Nov 2025 10:46:23 -0500
-Message-ID: <20251104154709.6436-2-djeffery@redhat.com>
-In-Reply-To: <20251104154709.6436-1-djeffery@redhat.com>
-References: <20251104154709.6436-1-djeffery@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="YorEdEhW"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 8AA42C4CEF7;
+	Tue,  4 Nov 2025 17:29:03 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762277348;
+	bh=tI4PyzTCai+yW0q5uOm9mpxVGyRvru6JHvPPumwn9bI=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=YorEdEhWpDhiQn/NJZEVW1RFMt0ZT8Ch/UFT6N941eIHppjapbMWkDnjL/8IkxU1V
+	 rhXwaP4RoWBTrswybIRIY9IYXK70xlwE/BnzQWtg3+quYzwcMuTgeH4dO8D1Kwu21z
+	 w60S9nxeN9i/cWoQCyocGiPHnXhqQchmwYlWCCKrv8/N0q22MwwybSWK71pvNXtahA
+	 7EWfS9HNjlnKR8o6uNQJS2t5zf/xoN8H2qp+cAil4wE4vEaIaK+r9+Vt82qE93aw1/
+	 ar0gCro09h99D1kbK+zAY9v0MAq4i/ftbbuwpskFKncsgNZ2+nI296fVjQx/9Yz2yY
+	 E0bu2DzTYAssQ==
+Date: Tue, 4 Nov 2025 17:29:01 +0000
+From: Conor Dooley <conor@kernel.org>
+To: peter.wang@mediatek.com
+Cc: linux-scsi@vger.kernel.org, alim.akhtar@samsung.com,
+	avri.altman@wdc.com, bvanassche@acm.org, robh@kernel.org,
+	krzysztof.kozlowski+dt@linaro.org, conor+dt@kernel.org,
+	jejb@linux.ibm.com, martin.petersen@oracle.com, lgirdwood@gmail.com,
+	broonie@kernel.org, matthias.bgg@gmail.com,
+	angelogioacchino.delregno@collabora.com, devicetree@vger.kernel.org,
+	linux-kernel@vger.kernel.org, linux-mediatek@lists.infradead.org,
+	linux-arm-kernel@lists.infradead.org, wenst@chromium.org,
+	conor.dooley@microchip.com, chu.stanley@gmail.com,
+	chun-hung.wu@mediatek.com, alice.chao@mediatek.com,
+	naomi.chu@mediatek.com, ed.tsai@mediatek.com,
+	chunfeng.yun@mediatek.com
+Subject: Re: [PATCH v1] dt-bindings: phy: mediatek,ufs-phy: Update maintainer
+ information in mediatek,ufs-phy.yaml
+Message-ID: <20251104-banish-engraved-d26d5856d0fd@spud>
+References: <20251103115808.3771214-1-peter.wang@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="EqJ9mvMN5ps+fBwp"
+Content-Disposition: inline
+In-Reply-To: <20251103115808.3771214-1-peter.wang@mediatek.com>
 
-With commit 9604eea5bd3a ("scsi: st: Add third party poweron reset handling")
-some customer tape applications fail from being unable to complete ioctls
-to verify ID information for the device when there has been any type of
-reset event to their tape devices.
 
-The st driver currently will fail all standard scsi ioctls if a call to
-flush_buffer fails in st_ioctl. This causes ioctls which otherwise have no
-effect on tape state to succeed or fail based on events unrelated to the
-requested ioctl.
+--EqJ9mvMN5ps+fBwp
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+Content-Transfer-Encoding: quoted-printable
 
-This makes scsi information ioctls unreliable after a reset even
-if no buffering is in use. With a reset setting the pos_unknown field,
-flush_buffer will report failure and fail all ioctls. So any application
-expecting to use ioctls to check the identify the device will be unable to
-do so in such a state.
+On Mon, Nov 03, 2025 at 07:57:36PM +0800, peter.wang@mediatek.com wrote:
+> From: Peter Wang <peter.wang@mediatek.com>
+>=20
+> Replace Stanley Chu with me and Chaotian in the maintainers field,
+> since his email address is no longer active.
+>=20
+> Signed-off-by: Peter Wang <peter.wang@mediatek.com>
 
-For scsi information ioctls, avoid the need for a buffer flush and allow
-the ioctls to execute regardless of buffer state.
+Acked-by: Conor Dooley <conor.dooley@microchip.com>
 
-Signed-off-by: David Jeffery <djeffery@redhat.com>
-Tested-by:     Laurence Oberman <loberman@redhat.com>
----
+--EqJ9mvMN5ps+fBwp
+Content-Type: application/pgp-signature; name="signature.asc"
 
- drivers/scsi/st.c | 40 ++++++++++++++++++++++------------------
- 1 file changed, 22 insertions(+), 18 deletions(-)
+-----BEGIN PGP SIGNATURE-----
 
-diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
-index 87f0e303fdd6..d4d2c8e3f912 100644
---- a/drivers/scsi/st.c
-+++ b/drivers/scsi/st.c
-@@ -3542,30 +3542,34 @@ static long st_common_ioctl(struct scsi_tape *STp, struct st_modedef *STm,
- 		goto out;
- 	}
- 
--	if ((i = flush_buffer(STp, 0)) < 0) {
--		retval = i;
--		goto out;
--	} else { /* flush_buffer succeeds */
--		if (STp->can_partitions) {
--			i = switch_partition(STp);
--			if (i < 0) {
--				retval = i;
--				goto out;
--			}
--		}
--	}
--	mutex_unlock(&STp->lock);
--
- 	switch (cmd_in) {
-+	case SCSI_IOCTL_GET_IDLUN:
-+	case SCSI_IOCTL_GET_BUS_NUMBER:
-+	case SCSI_IOCTL_GET_PCI:
-+		break;
- 	case SG_IO:
- 	case SCSI_IOCTL_SEND_COMMAND:
- 	case CDROM_SEND_PACKET:
--		if (!capable(CAP_SYS_RAWIO))
--			return -EPERM;
--		break;
-+		if (!capable(CAP_SYS_RAWIO)) {
-+			retval = -EPERM;
-+			goto out;
-+		}
-+		fallthrough;
- 	default:
--		break;
-+		if ((i = flush_buffer(STp, 0)) < 0) {
-+			retval = i;
-+			goto out;
-+		} else { /* flush_buffer succeeds */
-+			if (STp->can_partitions) {
-+				i = switch_partition(STp);
-+				if (i < 0) {
-+					retval = i;
-+					goto out;
-+				}
-+			}
-+		}
- 	}
-+	mutex_unlock(&STp->lock);
- 
- 	retval = scsi_ioctl(STp->device, file->f_mode & FMODE_WRITE,
- 			    cmd_in, (void __user *)arg);
--- 
-2.51.0
+iHUEABYKAB0WIQRh246EGq/8RLhDjO14tDGHoIJi0gUCaQo33QAKCRB4tDGHoIJi
+0slUAQDaNzoLm5qRDZGmaVZq1Z15G/qDvAUp/mAoKtEmWaHoBQEA7pl5SuOhpCFo
+J+x+0i0xR53Wd/iJidGRqGo/gVi+5w4=
+=IlDV
+-----END PGP SIGNATURE-----
 
+--EqJ9mvMN5ps+fBwp--
