@@ -1,31 +1,31 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB60E2D5929
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 10:04:35 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D0E5527E04C
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 10:04:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762250675; cv=none; b=AzJnvjRWfgGkseS6QukmUTqZBWHKW2ft05K5lqe0CtboTwHY/6PXz0QLfsrTl1qy8yCa+D5DrVwXSqLk/yIhVlmosmKd30P21Udiwy9Og2ZCdRHawWN7gZskrv4VQB9UwX+IMbjCvc0AD0Qu6Na4+LAMDPUqJoYISgW7tMV9C1c=
+	t=1762250677; cv=none; b=IwdTOYpI0lrnqQkz/H8Qbg8YqQm4C7qbTJlooQYaVwy93dyqjZP9ypbgIeJuDYabfIwSIM1zIsEmJ602yRuBE9Db+5/4yHw25hhqopnoBe22GNm1V7gq+HHrVgk9NQjoEjABMMr6FOP81rj0H/D8RfKyYXk4Urv1r6oiporeQgY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762250675; c=relaxed/simple;
-	bh=3QCMI3lWIrN4z85zKr8FZAhyb3w/JJv5uITuZfIFFhM=;
+	s=arc-20240116; t=1762250677; c=relaxed/simple;
+	bh=eEGcDJ58Tsm1y1EgJZwfHrcdc1srAfpz+GODk4y/mHQ=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=upVBABWwe12GmAtD7EaMzDEIq0+gkou2kZsyP9ls52Z/Wnk41f5DBoL7z/IObETCGZfzgh7xYffACwRlRMVY2pgKqoR+Y+BtJGbsxzGBuaxO3SuhmgRyrmSO5MNUiyDniGw3Ayzf3saCxLR4B4HKfRktIEbUwLdLwXcV7tlS5kI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=eY0SK0yu; arc=none smtp.client-ip=10.30.226.201
+	 MIME-Version; b=ZRS8RHja5bqQowlOI3xixpg7MnU+vGvrsUv0bmWtv8/kpLbaUrRCUkHxOpxHvN8Ur6Jeqh3owgnje8+ayY2RL6foU3Gat9vkfxs6AuTz+8GetCvlaqnT8oW2OIv7DkB9I9il9hJg/NYBbfQ3xmLcxr4jc7eg3NL6DGvhdl8YXCY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=n70YsyZP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="eY0SK0yu"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 9DA20C4CEF7;
-	Tue,  4 Nov 2025 10:04:33 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="n70YsyZP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id BBEDEC116D0;
+	Tue,  4 Nov 2025 10:04:35 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762250675;
-	bh=3QCMI3lWIrN4z85zKr8FZAhyb3w/JJv5uITuZfIFFhM=;
+	s=k20201202; t=1762250677;
+	bh=eEGcDJ58Tsm1y1EgJZwfHrcdc1srAfpz+GODk4y/mHQ=;
 	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=eY0SK0yuiKkwJXiAc0ZJaCvRnNo9XaVZcOk5q/U2yqpdoOtPCHmIKWnrHk2dmRy+0
-	 PAuzLs4WhQIzafDFGY/NfVI8Kvlntm/Jh+PEfpGN31C4zKYDB6CJUhqL0eZE+FxmTe
-	 n/QlVMdY5U0WKciK6HnzoGddSaexeuhLwKaZkSlQ6xsaiONDlwGnPRuy3ImQsP7vlI
-	 DEai7U8yK7qE8nG+3bq+D5KHFEnB8hdoAzizJygi6E3zLtCRhuuQvzpXmYqos8Y5Kd
-	 ipuKvjARTCa07hkhhqqUn40GbFFFuyv5DudjtkiDcpdcCiLUkMcxeWY14MJSLZE03f
-	 Mr1wnwcw8j7Uw==
+	b=n70YsyZPnE2gygjuAroTQyuiaHbHI6CwvD9Cx5WHR8wl+tfNASwKKZXI18SkWsdMj
+	 Qx4LzOfOetYuBSM56WRFkzy6rI2kU1c7CCS7l/L2le/Kg4dmaCjVCuMx3gVeHLWT2y
+	 BeSw/2+GS5h206pM4rRl4uJZcxGD3rKVdJX+o89k+rZXZ7shSiZo4AvcuaBZ9cFtrX
+	 lknbsbfWVWDb6mhLPqhReufVKINzjx9VlGcZujPcZF3KYDxC+Y/y/BmnfKj8K1DCi8
+	 cN1Xw9g3FYqwVJg3uZGFTEAI3/VswB5cEVKv3o6mfJNIsZJzvkbbgJsjuYICYfCSMD
+	 5QseoFs9v+7tQ==
 From: Hannes Reinecke <hare@kernel.org>
 To: "Martin K. Petersen" <martin.petersen@oracle.com>
 Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
@@ -34,9 +34,9 @@ Cc: James Bottomley <james.bottomley@hansenpartnership.com>,
 	Sesidhar Baddela <sebaddel@cisco.com>,
 	Satish Kharat <satishkh@cisco.com>,
 	Hannes Reinecke <hare@kernel.org>
-Subject: [PATCH 2/4] fnic: correctly initialize 'fnic->name'
-Date: Tue,  4 Nov 2025 11:04:22 +0100
-Message-ID: <20251104100424.8215-3-hare@kernel.org>
+Subject: [PATCH 3/4] fnic: missing initialisation for wq_copy_base
+Date: Tue,  4 Nov 2025 11:04:23 +0100
+Message-ID: <20251104100424.8215-4-hare@kernel.org>
 X-Mailer: git-send-email 2.43.0
 In-Reply-To: <20251104100424.8215-1-hare@kernel.org>
 References: <20251104100424.8215-1-hare@kernel.org>
@@ -48,38 +48,39 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-The instance name is required for setting up interrupt handlers, so
-set it early enough to avoid the request_irq() routine crashing on
-duplicate or empty names.
+With the conversion to multiqueue the 'wq_copy_base' value were left
+uninitialized for MSI and INTx interrupts, causing the driver to issue
+a message 'FCPIO_SUCCESS icmnd completion on the wrong queue' and finally
+running out of command tags as the completions would be accounted on
+the wrong queue.
+
+Fixes: 8a8449ca5e33 ("scsi: fnic: Modify ISRs to support multiqueue (MQ)")
 
 Signed-off-by: Hannes Reinecke <hare@kernel.org>
 ---
- drivers/scsi/fnic/fnic_main.c | 5 ++---
- 1 file changed, 2 insertions(+), 3 deletions(-)
+ drivers/scsi/fnic/fnic_isr.c | 2 ++
+ 1 file changed, 2 insertions(+)
 
-diff --git a/drivers/scsi/fnic/fnic_main.c b/drivers/scsi/fnic/fnic_main.c
-index 7075a23d9229..870b265be41a 100644
---- a/drivers/scsi/fnic/fnic_main.c
-+++ b/drivers/scsi/fnic/fnic_main.c
-@@ -575,9 +575,6 @@ static void fnic_scsi_init(struct fnic *fnic)
- {
- 	struct Scsi_Host *host = fnic->host;
+diff --git a/drivers/scsi/fnic/fnic_isr.c b/drivers/scsi/fnic/fnic_isr.c
+index 7ed50b11afa6..e16b76d537e8 100644
+--- a/drivers/scsi/fnic/fnic_isr.c
++++ b/drivers/scsi/fnic/fnic_isr.c
+@@ -350,6 +350,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 		fnic->cq_count = 3;
+ 		fnic->intr_count = 1;
+ 		fnic->err_intr_offset = 0;
++		fnic->copy_wq_base = fnic->rq_count + fnic->raw_wq_count;
  
--	snprintf(fnic->name, sizeof(fnic->name) - 1, "%s%d", DRV_NAME,
--			 host->host_no);
--
- 	host->transportt = fnic_fc_transport;
- }
+ 		FNIC_ISR_DBG(KERN_DEBUG, fnic->host, fnic->fnic_num,
+ 			     "Using MSI Interrupts\n");
+@@ -376,6 +377,7 @@ int fnic_set_intr_mode(struct fnic *fnic)
+ 		fnic->wq_copy_count = 1;
+ 		fnic->cq_count = 3;
+ 		fnic->intr_count = 3;
++		fnic->copy_wq_base = fnic->rq_count + fnic->raw_wq_count;
  
-@@ -732,6 +729,8 @@ static int fnic_probe(struct pci_dev *pdev, const struct pci_device_id *ent)
- 
- 	fnic->pdev = pdev;
- 	fnic->fnic_num = fnic_id;
-+	snprintf(fnic->name, sizeof(fnic->name) - 1, "%s%d", DRV_NAME,
-+		 fnic->fnic_num);
- 
- 	/* Find model name from PCIe subsys ID */
- 	if (fnic_get_desc_by_devid(pdev, &desc, &subsys_desc) == 0) {
+ 		FNIC_ISR_DBG(KERN_DEBUG, fnic->host, fnic->fnic_num,
+ 			     "Using Legacy Interrupts\n");
 -- 
 2.43.0
 
