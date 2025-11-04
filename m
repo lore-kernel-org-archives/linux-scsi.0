@@ -1,78 +1,78 @@
-Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
+Received: from mail-ej1-f44.google.com (mail-ej1-f44.google.com [209.85.218.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E07752D77E2
-	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 10:45:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 82CBB14F112
+	for <linux-scsi@vger.kernel.org>; Tue,  4 Nov 2025 11:08:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762253131; cv=none; b=SUxihmXkP7fzIccp/j6D4uE64d9eAUOhGMuNGABOqrA6eAMBfKq+hpxtOi0EI5FxPkthvomYw0bHKs+UtItV6ZSrLeG+YdHAZiXyTZ8rWlXhCnxvh/DdIyQrXK2m9PCcofquvK6dxwYct5MwVnVJoTrCd0hbhw5reL3yOBPBnvQ=
+	t=1762254504; cv=none; b=Q2018ZsSSlNPJNaR9JPqQPzadWiOkqsHjhaiMgMPiFfKmHfMfTU4lo1APRViskzPlSHKnMeLWjYKyx7A7t/EPpwapI2Wtf9XVdvWCQ3W0rY9+7MhwHs1SSSPF2RdeZmLvGCOfrAECeNMo3YEOzFAPnFyHEmj+wuuYIHzOy7utTI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762253131; c=relaxed/simple;
-	bh=VX0zLAsPBGlwcqvp/8KD3Z0nfnIEYq4KM2NgJGr5aXk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=ljsC3W5gmriOQ+ZqC8+J6+tNa5GydJWY1CaQjbDRxSt+ovLSZ3UR8y+NU9nIhEJx7hQmlcuAxSUxNueUFtD62gHHbeK9RhVw7NfKcX5CVp+RZ7yU3h/4bbnhYFXRKaFr2O3wNkTszRqwZLqeKbInFsOvSA2327GVIp59EsLPLL4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=PyGwY59m; arc=none smtp.client-ip=209.85.208.54
+	s=arc-20240116; t=1762254504; c=relaxed/simple;
+	bh=WQ/ohDia7uzWf+QTovyDFaXkQtp6pvGqaaFaRGl927Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=iu5pgMKvtEOsmd4EFhkPVVZkHOXr53nGbd2IGnHR02djpHbLrPxYd0eax14RKWHH5iUtvuBEznHC0ZKWAGvu36jF14CkIyxp1zROnpvo7IO6dYM0h3GwBZ3HsViy3i5zTnyvJCwc+leRBYjnzONNvRehQfraFEfylyOhYqlAD0k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=AO9Lghqq; arc=none smtp.client-ip=209.85.218.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="PyGwY59m"
-Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-640a0812658so1922436a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 04 Nov 2025 02:45:28 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="AO9Lghqq"
+Received: by mail-ej1-f44.google.com with SMTP id a640c23a62f3a-b7042e50899so941295466b.0
+        for <linux-scsi@vger.kernel.org>; Tue, 04 Nov 2025 03:08:22 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1762253127; x=1762857927; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1762254501; x=1762859301; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=WYj8Ir61bhOOSEvOfRY0NgbszhSvxELkBx7OQsS3cOQ=;
-        b=PyGwY59mWp3utUgAh2CmYtifE3gNPZiSf6GY7GwMAB+DkCf/1JXrIlq9TfMhdxE+YQ
-         2B2ECfWUTtR/K0AeYQ0VVshxBM/SlRnewghaQcoee+U1+NL0w9hzckYfh/5tF/vQGIx1
-         062ayTngKU2E1ojnOXupLDw1C180xE3yYuxJShOygafocJhwZZblIqthF0lj2rpFEBzN
-         J0sPTxm5MpB2atG3SpzlEjttx96zpyJ5sj2eomN1bq9n+C1jmnvAwPmoTZGBC1a0hKIB
-         YNgYP83Ttnih1+3vhaphHbMAx26a+kmIF+ABLmzJPtg7GM/omOBMqGeu+4l67r7l3oV0
-         whpg==
+        bh=ffwBII/8UKbjUAsU6g4VA0sKiKJx/b1RbgapN8DJwps=;
+        b=AO9Lghqqqr7EHG3Zj8HrzMVidUzoXNWzw+visfpyluiaIvLNPdzej6EG4OJN1n9gxY
+         hNo+3lzDiv5SHBjkEyAJ+wEZRHEk2zte5mzsgrilYvVseXdTMMw+bt+6yuCFFiGzyhvh
+         7aD+oIPCoOaLTtYwJ3hiJ6ZNGN879ckhoKNBJFX4Z8TUjpMBXMg3Fp7mrwJHjAoI6QBS
+         9itqI6ZyiSN0sl5Aq54CQyiMIqQsUt9uPV2jaLw2sJiEed+4dDi27kH875gtDkbb2b9X
+         820KzOznCJtVbb5ctXQhcpsJmwd9qEHNJKIsFsnu41zZ4xEIHqF9If0NXlt8G+e50QoH
+         OkWA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762253127; x=1762857927;
+        d=1e100.net; s=20230601; t=1762254501; x=1762859301;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
          :reply-to;
-        bh=WYj8Ir61bhOOSEvOfRY0NgbszhSvxELkBx7OQsS3cOQ=;
-        b=MvfffRwM5znX7WS4U/y8uy+lNIWlGBmkNWEoYmzwlnWJede9rw0yU8nU8aBjDiaGRy
-         BZx4NKbL8G6dQYDnSxNJwdhCK08UaO/N3HT07KR5C583LqTd1VsRRqdoTrH4waA+MdeJ
-         /nsUElMftQ5eCHBv23PwYTwdTULgHJ1jeMpsKG37aes4NAavqipkP2ybNINNSZbHhZZU
-         I7G8B9HTK4VmCS8stxHNJWL4IWyzTR4g7y6bXgVk+u3BJ+StwIuuEgHs5sOkMHYI4e60
-         FH6aSDDLvFpq5TpVVWUns5E33PBaHn4rHqodcRymPuyEJPMkfPOGmUSjLR9dfvdW4PW1
-         xHAw==
-X-Forwarded-Encrypted: i=1; AJvYcCXO1n+rBPs7TaCMcrkb5rjYB2LESaIuMUlD5uqrrkTfNnprgQ7FsLU4Uq0I3uf6jGMsKDDJ/jSulCWY@vger.kernel.org
-X-Gm-Message-State: AOJu0YzTPeYXqgdx0rgRJ6ocCDXb7rGVa3eYs7BlGa11IeepO4Tchjhz
-	X0eLt4WGWbUf5UaZHto+v1vChO8nuAsDz2AKBvu4xN2I0UuIzwYYvN8qcCk4nxULeTM=
-X-Gm-Gg: ASbGncvlYxLVceIa4X5ih7b3yCgBZNr8JNGbb/kl55dPSkqEFY7OwoPvgh8hd1emY8+
-	bSkYrh4I3AHLXbe5bEQnYWPwjZCAhREi0vzACh3fCxuzWY5Dj0Cjg3j/nJPTkbgSEokEyLR4KzM
-	i1hB7EBmIVLR77nrmnO6iyjnvN7hsyVD5j4UYAzB9FHBjRCrVqFa9QWJuRPa1fEzBZQGgE2EGJS
-	p/pYEPb/d6bUwHV9bZfPC1vIhNf3uNi0yq9a0I//d4VVJcbFwTnJlugRlasi2TRXgynnVpy+sue
-	rg/kRENY2P00NzkyFG4tU86ysAdzm0L6N03o5avhw+PBp63vQOXedOwQ/YvbMMm70LvV16XZXZ8
-	VjbRBaaAfCXkHd1E8NhPAFixZCRvfkhslNLVsnNNxoJ9fYIJcXprlS3PLiU8PrxNaQDA+ejh1zl
-	u5GwJyG6pknmkoyw==
-X-Google-Smtp-Source: AGHT+IEMA8UdWF6f+LHriDUDE/NjxHUOw+zfGpPihm2oIRRAOwA1BfGgSkWC9f9a8GPJW8x10c9pUQ==
-X-Received: by 2002:a17:906:e0d6:b0:b70:7d5a:2111 with SMTP id a640c23a62f3a-b707d5a6021mr1065888366b.64.1762253127163;
-        Tue, 04 Nov 2025 02:45:27 -0800 (PST)
+        bh=ffwBII/8UKbjUAsU6g4VA0sKiKJx/b1RbgapN8DJwps=;
+        b=lRi1F5wYWBW+UowVsPs/8/jElufn9f5kjybP2PIgEkU+yEJP1rrGblQv185DzWKlsl
+         y9BZsVW8601s4DhanIc+pbq3S/UTfQpyUIP7vp7KcXqwCm4vhvWdFQUFyFaw5CHjIder
+         hCmERtCeGFgILR5Xl9qKNt/tKJZ8cadG+gvzMKDtBh4R5l3E66oieNRoupjClDjRsXWe
+         NJimNvN8l+i7e6GauMRo14iDoX9/WazUVMG7r25PvwMFxLvD++2JbUHpukW1JJ3/BaXx
+         GuU6+TYpCY06KU62X7/EwPZ2NcewvZz2iy+/Xm5sOuCx6v2pExHAFKeYrQg4JvUmdtLK
+         VcaA==
+X-Forwarded-Encrypted: i=1; AJvYcCW9qYWL48eUmBdXs7Mgbgp6+Tmuub14Ryzqn25UZWTAdUmmp0TNJ9LJcbnDV64iu6CQM2be7/3C5wGC@vger.kernel.org
+X-Gm-Message-State: AOJu0YzEyEDAagdFDiGiOiiYunF0Z+Bmd+KfgVwVmQe2ybRQolphzS36
+	QDeM2UgRtkfF/x12EbQGQJPF6efaSlQK9uPkV2NTFBFG0m4sknwg82KttQbYe6IsdzA=
+X-Gm-Gg: ASbGncuIEn3f67+4vA1vy0e8jMbDwlEDxZnmn3/G2bCJqL9O76QJDuP+2BI30Z54c57
+	sEYUBiR4RltuBx41xAFnpWo8I7+MR8dkl9gc7ORKS4YKSKskOvD9Er4mzs72QbXx2eOXk/GjI1M
+	SBZdB4ez/4wEp2McNQmbWHxbg6PRZuOoct6CrI1GAxVXmGMxObNiYB9cHzt6uWTnIgdojvbiNWt
+	LNyaI2ilcuzwfyXbCDtzciXjHu2TlsZC6bsFmnBlxmFsneheRkRTmihQRIe8AsDXPgBP3JGpPAr
+	2fVAiyT/HgDc6YpgoM+i8DJ/V1KjzJPabgNutPXU/k/cKhjZZLBCOncoCEugRT2eLC1kFlpp1Wc
+	7FBvKLZ9wSYLdYVMMwHmjKCc2w63OZCmjVJwLLkEfLC/S7DWiviFJesMvor5zvbxwcCTjNapZZc
+	MKVa4=
+X-Google-Smtp-Source: AGHT+IF5qrlPWCkuEzv3QTctjZLDhOiaF5uRDaxLj/l/ay6tSejPh79HWrKLIT/9StR2Q5AWaBBgAA==
+X-Received: by 2002:a17:907:7f94:b0:b70:e15b:286a with SMTP id a640c23a62f3a-b70e15b2d72mr680407066b.57.1762254500568;
+        Tue, 04 Nov 2025 03:08:20 -0800 (PST)
 Received: from linux ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b723d3a3082sm177827666b.11.2025.11.04.02.45.26
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b723fe38a4esm178899366b.62.2025.11.04.03.08.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 04 Nov 2025 02:45:26 -0800 (PST)
+        Tue, 04 Nov 2025 03:08:20 -0800 (PST)
 From: Marco Crivellari <marco.crivellari@suse.com>
 To: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org,
-	linux1394-devel@lists.sourceforge.net
+	linux-scsi@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>,
 	Lai Jiangshan <jiangshanlai@gmail.com>,
 	Frederic Weisbecker <frederic@kernel.org>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	Marco Crivellari <marco.crivellari@suse.com>,
 	Michal Hocko <mhocko@suse.com>,
-	Chris Boot <bootc@bootc.net>,
-	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] sbp-target: replace use of system_unbound_wq with system_dfl_wq
-Date: Tue,  4 Nov 2025 11:45:18 +0100
-Message-ID: <20251104104518.102130-1-marco.crivellari@suse.com>
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Justin Tee <justin.tee@broadcom.com>,
+	Paul Ely <paul.ely@broadcom.com>
+Subject: [PATCH] scsi: lpfc: WQ_PERCPU added to alloc_workqueue users
+Date: Tue,  4 Nov 2025 12:08:08 +0100
+Message-ID: <20251104110808.123424-1-marco.crivellari@suse.com>
 X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -80,6 +80,7 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
 Currently if a user enqueue a work item using schedule_delayed_work() the
@@ -87,8 +88,17 @@ used wq is "system_wq" (per-cpu wq) while queue_delayed_work() use
 WORK_CPU_UNBOUND (used when a cpu is not specified). The same applies to
 schedule_work() that is using system_wq and queue_work(), that makes use
 again of WORK_CPU_UNBOUND.
-
 This lack of consistentcy cannot be addressed without refactoring the API.
+
+alloc_workqueue() treats all queues as per-CPU by default, while unbound
+workqueues must opt-in via WQ_UNBOUND.
+
+This default is suboptimal: most workloads benefit from unbound queues,
+allowing the scheduler to place worker threads where they’re needed and
+reducing noise when CPUs are isolated.
+
+This change adds a new WQ_PERCPU flag to explicitly request
+alloc_workqueue() to be per-cpu when WQ_UNBOUND has not been specified.
 
 This patch continues the effort to refactor worqueue APIs, which has begun
 with the change introducing new workqueues and a new alloc_workqueue flag:
@@ -96,57 +106,32 @@ with the change introducing new workqueues and a new alloc_workqueue flag:
 commit 128ea9f6ccfb ("workqueue: Add system_percpu_wq and system_dfl_wq")
 commit 930c2ea566af ("workqueue: Add new WQ_PERCPU flag")
 
-system_dfl_wq should be the default workqueue so as not to enforce
-locality constraints for random work whenever it's not required.
+With the introduction of the WQ_PERCPU flag (equivalent to !WQ_UNBOUND),
+any alloc_workqueue() caller that doesn’t explicitly specify WQ_UNBOUND
+must now use WQ_PERCPU.
 
-The old system_unbound_wq will be kept for a few release cycles.
+Once migration is complete, WQ_UNBOUND can be removed and unbound will
+become the implicit default.
 
 Suggested-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
 ---
- drivers/target/sbp/sbp_target.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/scsi/lpfc/lpfc_init.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/target/sbp/sbp_target.c b/drivers/target/sbp/sbp_target.c
-index 3b89b5a70331..b8457477cee9 100644
---- a/drivers/target/sbp/sbp_target.c
-+++ b/drivers/target/sbp/sbp_target.c
-@@ -730,7 +730,7 @@ static int tgt_agent_rw_orb_pointer(struct fw_card *card, int tcode, void *data,
- 		pr_debug("tgt_agent ORB_POINTER write: 0x%llx\n",
- 				agent->orb_pointer);
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f206267d9ecd..45d43e9c5827 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -7950,7 +7950,7 @@ lpfc_sli4_driver_resource_setup(struct lpfc_hba *phba)
+ 	/* Allocate all driver workqueues here */
  
--		queue_work(system_unbound_wq, &agent->work);
-+		queue_work(system_dfl_wq, &agent->work);
+ 	/* The lpfc_wq workqueue for deferred irq use */
+-	phba->wq = alloc_workqueue("lpfc_wq", WQ_MEM_RECLAIM, 0);
++	phba->wq = alloc_workqueue("lpfc_wq", WQ_MEM_RECLAIM | WQ_PERCPU, 0);
+ 	if (!phba->wq)
+ 		return -ENOMEM;
  
- 		return RCODE_COMPLETE;
- 
-@@ -764,7 +764,7 @@ static int tgt_agent_rw_doorbell(struct fw_card *card, int tcode, void *data,
- 
- 		pr_debug("tgt_agent DOORBELL\n");
- 
--		queue_work(system_unbound_wq, &agent->work);
-+		queue_work(system_dfl_wq, &agent->work);
- 
- 		return RCODE_COMPLETE;
- 
-@@ -990,7 +990,7 @@ static void tgt_agent_fetch_work(struct work_struct *work)
- 
- 		if (tgt_agent_check_active(agent) && !doorbell) {
- 			INIT_WORK(&req->work, tgt_agent_process_work);
--			queue_work(system_unbound_wq, &req->work);
-+			queue_work(system_dfl_wq, &req->work);
- 		} else {
- 			/* don't process this request, just check next_ORB */
- 			sbp_free_request(req);
-@@ -1618,7 +1618,7 @@ static void sbp_mgt_agent_rw(struct fw_card *card,
- 		agent->orb_offset = sbp2_pointer_to_addr(ptr);
- 		agent->request = req;
- 
--		queue_work(system_unbound_wq, &agent->work);
-+		queue_work(system_dfl_wq, &agent->work);
- 		rcode = RCODE_COMPLETE;
- 	} else if (tcode == TCODE_READ_BLOCK_REQUEST) {
- 		addr_to_sbp2_pointer(agent->orb_offset, ptr);
 -- 
 2.51.1
 
