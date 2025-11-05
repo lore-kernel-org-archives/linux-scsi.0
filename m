@@ -1,125 +1,135 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00FEC221269;
-	Wed,  5 Nov 2025 15:32:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C00632F774
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 15:45:07 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762356743; cv=none; b=H7ygj+pMR0wFCS2FpQFZrbR9LpzK1jUzajLzWQjuPo91XDW/UAWZzfby4OSk0MyZHBu6/nuLEKxLvpVjo/yQl7qlxbi494XLGcV1yGYIOREv10R3ZOLqD91I5hur90SI8tYVs1/3FGZNNCqdq+nV8g89GlIf4g2x8ohKrYcuFn8=
+	t=1762357510; cv=none; b=tF6zF55l3ts8UECbDgtxZ7zrzMjb27l3olrEaaaiirIRkXbPdlWnCrvvK3ZM9laGjO7rsXpl7oO/pPVE7olNNeHjF22x367y/wme0I0sx84G7P5gmvdL4Y4vyAJEOcM05PRZKDwLTIS1q4j3lfd/gywnJrtzAB25ySqTTGEg1YY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762356743; c=relaxed/simple;
-	bh=F6jCVB5FUTfR1/fbnGPmSEAnI5kBmVbJxWWuGwAZSaE=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=fAK6BgxiBTeBsiADzCcVmB4RzkJvErzlOLWotsK/PbuJ16mnD02P6+Qy+7UXWM5By5toJ6KdTj0rwd9+ajlxvOFvOlvN210l2pFq7OvmVJKwv8Th83bsieUnLowGTV3SdVPyMKPl0CTMimALDwTJBpik5mhjQn8sCxO4S58y5SA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=KRpKtWwq; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1762357510; c=relaxed/simple;
+	bh=vBpIbHl5BJYu3GvhFAscHMjHAct8CImIgNJ4c1z/oeA=;
+	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
+	 MIME-Version:Content-Type; b=a7xdwuaaEDdHjcx2qOLpMz4oU1tLm+MOJyYUywuA4wnXeiBbxjpx0fsmSd7aBv2HWNvxd0xPCoMgkbK98I21nblnW6maMrAQWYyaZLVHm1H+ztbpstOVnyjY/4BY1neSgzQo2KZ45tzEBUO42b7LO7KvqvUaYsb1CAvc2jkqjIw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=oXBG7qxR; arc=none smtp.client-ip=209.85.166.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="KRpKtWwq"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1762356740;
-	bh=F6jCVB5FUTfR1/fbnGPmSEAnI5kBmVbJxWWuGwAZSaE=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=KRpKtWwqeI+uhoAcDEQfN/z+YVbcMPVDKNflF/Zkh9BgoPkSsq7TQRj/SF74pxIO3
-	 pOvo7loVvjsDz/GetDBA9v49h+0tY+bxd9lKq4NnIxfdZsohTpJGhcVX16tQYORYyf
-	 jO7XcrPYarxLpuEo8B9dprrZnnOTiL9CaBO2W5w8=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 8DF1F1C02BB;
-	Wed, 05 Nov 2025 10:32:20 -0500 (EST)
-Message-ID: <407aed0ff7be4fdcafebd09e58e25496b6b4fec0.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: fix uninitialized pointers with free attr
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Ally Heev <allyheev@gmail.com>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Wed, 05 Nov 2025 10:32:19 -0500
-In-Reply-To: <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
-References: 
-	<20251105-aheev-uninitialized-free-attr-scsi-v1-1-d28435a0a7ea@gmail.com>
-	 <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
-	 <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=mQENBE58FlABCADPM714lRLxGmba4JFjkocqpj1/6/Cx+IXezcS22azZetzCXDpm2MfNElecY3qkFjfnoffQiw5rrOO0/oRSATOh8+2fmJ6el7naRbDuh+i8lVESfdlkoqX57H5R8h/UTIp6gn1mpNlxjQv6QSZbl551zQ1nmkSVRbA5TbEp4br5GZeJ58esmYDCBwxuFTsSsdzbOBNthLcudWpJZHURfMc0ew24By1nldL9F37AktNcCipKpC2U0NtGlJjYPNSVXrCd1izxKmO7te7BLP+7B4DNj1VRnaf8X9+VIApCi/l4Kdx+ZR3aLTqSuNsIMmXUJ3T8JRl+ag7kby/KBp+0OpotABEBAAG0N0phbWVzIEJvdHRvbWxleSA8SmFtZXMuQm90dG9tbGV5QEhhbnNlblBhcnRuZXJzaGlwLmNvbT6JAVgEEwEIAEICGwMGCwkIBwMCBhUIAgkKCwQWAgMBAh4BAheAAhkBFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmBLmY0FCRs1hL0ACgkQgUrkfCFIVNaEiQgAg18F4G7PGWQ68xqnIrccke7Reh5thjUz6kQIii6Dh64BDW6/UvXn20UxK2uSs/0TBLO81k1mV4c6rNE+H8b7IEjieGR9frBsp/+Q01JpToJfzzMUY7ZTDV1IXQZ+AY9L7vRzyimnJHx0Ba4JTlAyHB+Ly5i4Ab2+uZcnNfBXquWrG3oPWz+qPK88LJLya5Jxse1m1QT6R/isDuPivBzntLOooxPk+Cwf5sFAAJND+idTAzWzslexr9j7rtQ1UW6FjO4CvK9yVNz7dgG6FvEZl6J/HOr1rivtGgpCZTBzKNF8jg034n49zGfKkkzWLuXbPUOp3/oGfsKv8pnEu1c2GbQpSmFtZXMgQm90dG9tbGV5IDxqZWpiQGxpbnV4LnZuZXQuaWJtLmNvbT6JAVYEEwEIAEACGwMHCwkIBwMCAQYVC
-	AIJCgsEFgIDAQIeAQIXgBYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJgS5mXBQkbNYS9AAoJEIFK5HwhSFTWEYEH/1YZpV+1uCI2MVz0wTRlnO/3OW/xnyigrw+K4cuO7MToo0tHJb/qL9CBJ2ddG6q+GTnF5kqUe87t7M7rSrIcAkIZMbJmtIbKk0j5EstyYqlE1HzvpmssGpg/8uJBBuWbU35af1ubKCjUs1+974mYXkfLmS0a6h+cG7atVLmyClIc2frd3o0zHF9+E7BaB+HQzT4lheQAXv9KI+63ksnbBpcZnS44t6mi1lzUE65+Am1z+1KJurF2Qbj4AkICzJjJa0bXa9DmFunjPhLbCU160LppaG3OksxuNOTkGCo/tEotDOotZNBYejWaXN2nr9WrH5hDfQ5zLayfKMtLSd33T9u0IUphbWVzIEJvdHRvbWxleSA8amVqYkBrZXJuZWwub3JnPokBVQQTAQgAPwIbAwYLCQgHAwIGFQgCCQoLBBYCAwECHgECF4AWIQTVYG5zyLRicb6tmt+BSuR8IUhU1gUCYEuZmAUJGzWEvQAKCRCBSuR8IUhU1gacCAC+QZN+RQd+FOoh5g884HQm8S07ON0/2EMiaXBiL6KQb5yP3w2PKEhug3+uPzugftUfgPEw6emRucrFFpwguhriGhB3pgWJIrTD4JUevrBgjEGOztJpbD73bLLyitSiPQZ6OFVOqIGhdqlc3n0qoNQ45n/w3LMVj6yP43SfBQeQGEdq4yHQxXPs0XQCbmr6Nf2p8mNsIKRYf90fCDmABH1lfZxoGJH/frQOBCJ9bMRNCNy+aFtjd5m8ka5M7gcDvM7TAsKhD5O5qFs4aJHGajF4gCGoWmXZGrISQvrNl9kWUhgsvoPqb2OTTeAQVRuV8C4FQamxzE3MRNH25j6s/qujtCRKYW1lcyBCb3R0b21sZXkgPGplamJAbGludXguaWJtLmNvbT6JAVQEEwEIAD
-	4CGwMFCwkIBwIGFQoJCAsCBBYCAwECHgECF4AWIQTVYG5zyLRicb6tmt+BSuR8IUhU1gUCYEuZmQUJGzWEvQAKCRCBSuR8IUhU1kyHB/9VIOkf8RapONUdZ+7FgEpDgESE/y3coDeeb8jrtJyeefWCA0sWU8GSc9KMcMoSUetUreB+fukeVTe/f2NcJ87Bkq5jUEWff4qsbqf5PPM+wlD873StFc6mP8koy8bb7QcH3asH9fDFXUz7Oz5ubI0sE8+qD+Pdlk5qmLY5IiZ4D98V239nrKIhDymcuL7VztyWfdFSnbVXmumIpi79Ox536P2aMe3/v+1jAsFQOIjThMo/2xmLkQiyacB2veMcBzBkcair5WC7SBgrz2YsMCbC37X7crDWmCI3xEuwRAeDNpmxhVCb7jEvigNfRWQ4TYQADdC4KsilPfuW8Edk/8tPtCVKYW1lcyBCb3R0b21sZXkgPEpCb3R0b21sZXlAT2Rpbi5jb20+iQEfBDABAgAJBQJXI+B0Ah0gAAoJEIFK5HwhSFTWzkwH+gOg1UG/oB2lc0DF3lAJPloSIDBW38D3rezXTUiJtAhenWrH2Cl/ejznjdTukxOcuR1bV8zxR9Zs9jhUin2tgCCxIbrdvFIoYilMMRKcue1q0IYQHaqjd7ko8BHn9UysuX8qltJFar0BOClIlH95gdKWJbK46mw7bsXeD66N9IhAsOMJt6mSJmUdIOMuKy4dD4X3adegKMmoTRvHOndZQClTZHiYt5ECRPO534Lb/gyKAKQkFiwirsgx11ZSx3zGlw28brco6ohSLMBylna/Pbbn5hII86cjrCXWtQ4mE0Y6ofeFjpmMdfSRUxy6LHYd3fxVq9PoAJTv7vQ6bLTDFNa0KkphbWVzIEJvdHRvbWxleSA8SkJvdHRvbWxleUBQYXJhbGxlbHMuY29tPokBHwQwAQIACQUCVyPgjAIdIAAKCRCBSuR8IUhU1tXiB/9D9OOU8qB
-	CZPxkxB6ofp0j0pbZppRe6iCJ+btWBhSURz25DQzQNu5GVBRQt1Us6v3PPGU1cEWi5WL935nw+1hXPIVB3x8hElvdCO2aU61bMcpFd138AFHMHJ+emboKHblnhuY5+L1OlA1QmPw6wQooCor1h113lZiBZGrPFxjRYbWYVQmVaM6zhkiGgIkzQw/g9v57nAzYuBhFjnVHgmmu6/B0N8z6xD5sSPCZSjYSS38UG9w189S8HVr4eg54jReIEvLPRaxqVEnsoKmLisryyaw3EpqZcYAWoX0Am+58CXq3j5OvrCvbyqQIWFElba3Ka/oT7CnTdo/SUL/jPNobtCxKYW1lcyBCb3R0b21sZXkgPGplamJAaGFuc2VucGFydG5lcnNoaXAuY29tPokBVwQTAQgAQRYhBNVgbnPItGJxvq2a34FK5HwhSFTWBQJjg2eQAhsDBQkbNYS9BQsJCAcCAiICBhUKCQgLAgQWAgMBAh4HAheAAAoJEIFK5HwhSFTWbtAH/087y9vzXYAHMPbjd8etB/I3OEFKteFacXBRBRDKXI9ZqK5F/xvd1fuehwQWl2Y/sivD4cSAP0iM/rFOwv9GLyrr82pD/GV/+1iXt9kjlLY36/1U2qoyAczY+jsS72aZjWwcO7Og8IYTaRzlqif9Zpfj7Q0Q1e9SAefMlakI6dcZTSlZWaaXCefdPBCc7BZ0SFY4kIg0iqKaagdgQomwW61nJZ+woljMjgv3HKOkiJ+rcB/n+/moryd8RnDhNmvYASheazYvUwaF/aMj5rIb/0w5p6IbFax+wGF5RmH2U5NeUlhIkTodUF/P7g/cJf4HCL+RA1KU/xS9o8zrAOeut2+4UgRaZ7bmEwgqhkjOPQMBBwIDBH4GsIgL0yQij5S5ISDZmlR7qDQPcWUxMVx6zVPsAoITdjKFjaDmUATkS+l5zmiCrUBcJ6MBavPiYQ4kqn4/xwaJAbMEGAEIACYCGwIWIQTVYG5zyLRi
-	cb6tmt+BSuR8IUhU1gUCZag0LwUJDwLkSQCBdiAEGRMIAB0WIQTnYEDbdso9F2cI+arnQslM7pishQUCWme25gAKCRDnQslM7pishdi9AQDyOvLYOBkylBqiTlJrMnGCCsWgGZwPpKq3e3s7JQ/xBAEAlx29pPY5z0RLyIDUsjf9mtkSNTaeaQ6TIjDrFa+8XH8JEIFK5HwhSFTWkasH/j7LL9WH9dRfwfTwuMMj1/KGzjU/4KFIu4uKxDaevKpGS7sDx4F56mafCdGD8u4+ri6bJr/3mmuzIdyger0vJdRlTrnpX3ONXvR57p1JHgCljehE1ZB0RCzIk0vKhdt8+CDBQWfKbbKBTmzA7wR68raMQb2D7nQ9d0KXXbtr7Hag29yj92aUAZ/sFoe9RhDOcRUptdYyPKU1JHgJyc0Z7HwNjRSJ4lKJSKP+Px0/XxT3gV3LaDLtHuHa2IujLEAKcPzTr5DOV+xsgA3iSwTYI6H5aEe+ZRv/rA4sdjqRiVpo2d044aCUFUNQ3PiIHPAZR3KK5O64m6+BJMDXBvgSsMy4VgRaZ7clEggqhkjOPQMBBwIDBMfuMuE+PECbOoYjkD0Teno7TDbcgxJNgPV7Y2lQbNBnexMLOEY6/xJzRi1Xm/o9mOyZ+VIj8h4G5V/eWSntNkwDAQgHiQE8BBgBCAAmAhsMFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmWoNBwFCQ8C4/cACgkQgUrkfCFIVNZs4AgAnIjU1QEPLdpotiy3X01sKUO+hvcT3/Cd6g55sJyKJ5/U0o3f8fdSn6MWPhi1m62zbAxcLJFiTZ3OWNCZAMEvwHrXFb684Ey6yImQ9gm2dG2nVuCzr1+9gIaMSBeZ+4kUJqhdWSJjrNLQG38GbnBuYOJUD+x6oJ2AT10/mQfBVZ3qWDQXr/je2TSf0OIXaWyG6meG5yTqOEv0eaTH22yBb1nbodoZkmlMMb56jzRGZuorhFE06
-	N0Eb0kiGz5cCIrHZoH10dHWoa7/Z+AzfL0caOKjcmsnUPcmcrqmWzJTEibLA81z15GBCrldfQVt+dF7Us2kc0hKUgaWeI8Gv4CzwLkCDQRUdhaZARAApeF9gbNSBBudW8xeMQIiB/CZwK4VOEP7nGHZn3UsWemsvE9lvjbFzbqcIkbUp2V6ExM5tyEgzio2BavLe1ZJGHVaKkL3cKLABoYi/yBLEnogPFzzYfK2fdipm2G+GhLaqfDxtAQ7cqXeo1TCsZLSvjD+kLVV1TvKlaHS8tUCh2oUyR7fTbv6WHi5H8DLyR0Pnbt9E9/Gcs1j11JX+MWJ7jset2FVDsB5U1LM70AjhXiDiQCtNJzKaqKdMei8zazWS50iMKKeo4m/adWBjG/8ld3fQ7/Hcj6Opkh8xPaCnmgDZovYGavw4Am2tjRqE6G6rPQpS0we5I6lSsKNBP/2FhLmI9fnsBnZC1l1NrASRSX1BK0xf4LYB2Ww3fYQmbbApAUBbWZ/1aQoc2ECKbSK9iW0gfZ8rDggfMw8nzpmEEExl0hU6wtJLymyDV+QGoPx5KwYK/6qAUNJQInUYz8z2ERM/HOI09Zu3jiauFBDtouSIraX/2DDvTf7Lfe1+ihARFSlp64kEMAsjKutNBK2u5oj4H7hQ7zD+BvWLHxMgysOtYYtwggweOrM/k3RndsZ/z3nsGqF0ggct1VLuH2eznDksI+KkZ3Bg0WihQyJ7Z9omgaQAyRDFct+jnJsv2Iza+xIvPei+fpbGNAyFvj0e+TsZoQGcC34/ipGwze651UAEQEAAYkBHwQoAQIACQUCVT6BaAIdAwAKCRCBSuR8IUhU1p5QCAC7pgjOM17Hxwqz9mlGELilYqjzNPUoZt5xslcTFGxj/QWNzu0K8gEQPePnc5dTfumzWL077nxhdKYtoqwm2C6fOmXiJBZx6khBfRqctUvN2DlOB6dFf5I+1QT9TRBvceGzw01E4Gi0xjWKAB6OII
-	MAdnPcDVFzaXJdlAAJdjfg/lyJtAyxifflG8NnXJ3elwGqoBso84XBNWWzbc5VKmatzhYLOvXtfzDhu4mNPv/z7S1HTtRguI0NlH5RVBzSvfzybin9hysE3/+r3C0HJ2xiOHzucNAmG03aztzZYDMTbKQW4bQqeD5MJxT68vBYu8MtzfIe41lSLpb/qlwq1qg0iQElBBgBAgAPBQJUdhaZAhsMBQkA7U4AAAoJEIFK5HwhSFTW3YgH/AyJL2rlCvGrkLcas94ND9Pmn0cUlVrPl7wVGcIV+6I4nrw6u49TyqNMmsYam2YpjervJGgbvIbMzoHFCREi6R9XyUsw5w7GCRoWegw2blZYi5A52xe500+/RruG//MKfOtVUotu3N+u7FcXaYAg9gbYeGNZCV70vI+cnFgq0AEJRdjidzfCWVKPjafTo7jHeFxX7Q22kUfWOkMzzhoDbFg0jPhVYNiEXpNyXCwirzvKA7bvFwZPlRkbfihaiXDE7QKIUtQ10i5kw4C9rqDKwx8F0PaWDRF9gGaKd7/IJGHJaac/OcSJ36zxgkNgLsVX5GUroJ2GaZcR7W9Vppj5H+C4UgRkuRyTEwgqhkjOPQMBBwIDBOySomnsW2SkApXv1zUBaD38dFEj0LQeDEMdSE7bm1fnrdjAYt0f/CtbUUiDaPodQk2qeHzOP6wA/2K6rrjwNIWJAT0EGAEIACcDGyAEFiEE1WBuc8i0YnG+rZrfgUrkfCFIVNYFAmWoM/gFCQSxfmUACgkQgUrkfCFIVNZhTgf/VQxtQ5rgu2aoXh2KOH6naGzPKDkYDJ/K7XCJAq3nJYEpYN8G+F8mL/ql0hrihAsHfjmoDOlt+INa3AcG3v0jDZIMEzmcjAlu7g5NcXS3kntcMHgw3dCgE9eYDaKGipUCubdXvBaZWU6AUlTldaB8FE6u7It7+UO+IW4/L+KpLYKs8V5POInu2rqahlm7vgxY5iv4Txz4EvCW2e4dAlG
-	8mT2Eh9SkH+YVOmaKsajgZgrBxA7fWmGoxXswEVxJIFj3vW7yNc0C5HaUdYa5iGOMs4kg2ht4s7yy7NRQuh7BifWjo6BQ6k4S1H+6axZucxhSV1L6zN9d+lr3Xo/vy1unzA==
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="oXBG7qxR"
+Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-93e7c7c3d0bso663421139f.2
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Nov 2025 07:45:07 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1762357507; x=1762962307; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:to:from:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=pmEA5UIRtFUkoJTebXPiJtfqEeDxZBhUOtjCk6lwm1Q=;
+        b=oXBG7qxRAgxxpjvyoxPULOa1fgROdBp/4Z8g918iu8f5OrPjl3F4GHIx5MFNTDhIAn
+         pqEWO68Dj3gmQhJr7qUItHwJwG64ld8NCI3MV7bCUWXu1dZb9kfWdGjqhLEvZ479OLxd
+         7WiqKEvubQDho+R74G9Dyx22NjREEAjXzpV9A8ulR2vqMXlAUzbRrF27vJeKUN9IErWH
+         nS5fM8dz6irJDPhN+oXQW2NNuh/Xd+GhLhTh5UE92ErPNvWvCwMnK0USG76HfdDLNIZh
+         XCRNyUDNOSW9hHsEDGFGMI7ZCsw/O3VLkbMk72QQA/atz5Zr6aL5e+7DVF1PHSDpOj60
+         NUcA==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762357507; x=1762962307;
+        h=content-transfer-encoding:mime-version:date:message-id:subject
+         :references:in-reply-to:to:from:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=pmEA5UIRtFUkoJTebXPiJtfqEeDxZBhUOtjCk6lwm1Q=;
+        b=YspUksETB/+U/TQtaDOCBh/JKS6dT8x2VrtILzBsj4thr13EmQiGKf5EJuZxEadMI3
+         N+4zua7okzFEiMQz3QNdnIZQEGVyQ2oen5S+ch+sCTFVrEngtmRGkwabUJ7sRDbKcIMZ
+         YjtMfIjTSu/q0CruP04qOBQ+ytnbszrneEtnaQvJw9Y4PlIOenK1gAfRL8ePLZxtrCu1
+         SMCb9Tc+XZtIVbPpsagO7b/T+9EaIi3u5JHmBs2YWVnHI9EM+Lp8S1G2V9X+jJku9D24
+         TCbTvKhlwP4bw4Jd/NI4OMIPBFiBHNcok18mgb0GWGjGi5N4EAuQjoyHWyVDWkVJpIr1
+         hWhA==
+X-Forwarded-Encrypted: i=1; AJvYcCVSnKNSrdIQhwW9mWDLJzV7G/7quGSCFrBh2wrBx/Qo7RZsKJ3fvlHq7LmWRdqLdLKTC1rqehd7QGr9@vger.kernel.org
+X-Gm-Message-State: AOJu0YwQaufnpyMj6DRtHFDf42qTNtnuIjXJ0HY7eRHWNpegb7c3VPoa
+	2MItq6gy6B2EFxnb9w3Gw0HsFaaiwEFMpwO30+AdOm/C1q8ExWItw/aiuWT7E8THlp4=
+X-Gm-Gg: ASbGnctvEz9YPAA/Z/70MnfX2UQWPxswKR9Ee1CfkpZMq9HtDu6ZVmQ8x5AJAsrKiBJ
+	6afixrG8thU0x4QKMfkaZbBHvL0GKKaZyeXfHH5x1L5ZJRN5ziGyp9g578b+5JtF11ZFSk2fqbI
+	6CGqGR9UP/JEL5hGrFf9GDOFDLeb8qx4Ig7UU7HdjsaIpgbSdR/erSlVHSmdTMegNxW7LtVyK6C
+	PZ05wZjMz6BezI/2eDUc2jmMjM+uClcNSje/GD5gIE2rJwaUFKtYAZuNLA20GTtmA8Z/zPh2zaz
+	M9mqaGhEu3TeC72nQnmz24kdCId53C6g2U/qe/UMjUYXLXw2KvW4Jz3E8KmhaQpHgw3JkzKRoGI
+	mGvN1Wlp468djyI6ooaIfNCxs34rf817haoDGsWUV+q8WpAna0CnjlsylIvXkCsInZVVtXqdxHV
+	KXjg==
+X-Google-Smtp-Source: AGHT+IGRprlY0B/j7MFC0euD5DLU4VAIhfixS9xB+G6Pb3CIfQJOwUgjuW1G2xa98UfKd2ncVWvKMA==
+X-Received: by 2002:a05:6e02:1a85:b0:433:2957:2e87 with SMTP id e9e14a558f8ab-433407d98e4mr47454155ab.28.1762357507117;
+        Wed, 05 Nov 2025 07:45:07 -0800 (PST)
+Received: from [127.0.0.1] ([96.43.243.2])
+        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-5b72258d4e8sm2521439173.3.2025.11.05.07.45.06
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 05 Nov 2025 07:45:06 -0800 (PST)
+From: Jens Axboe <axboe@kernel.dk>
+To: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
+ Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>, 
+ dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>, 
+ Mikulas Patocka <mpatocka@redhat.com>, 
+ "Martin K . Petersen" <martin.petersen@oracle.com>, 
+ linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org, 
+ Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org, 
+ David Sterba <dsterba@suse.com>, Damien Le Moal <dlemoal@kernel.org>
+In-Reply-To: <20251104212249.1075412-1-dlemoal@kernel.org>
+References: <20251104212249.1075412-1-dlemoal@kernel.org>
+Subject: Re: [PATCH v4 00/15] Introduce cached report zones
+Message-Id: <176235750606.190479.10317258805246349798.b4-ty@kernel.dk>
+Date: Wed, 05 Nov 2025 08:45:06 -0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+X-Mailer: b4 0.14.3
 
-On Wed, 2025-11-05 at 17:46 +0300, Dan Carpenter wrote:
-> On Wed, Nov 05, 2025 at 09:21:45AM -0500, James Bottomley wrote:
-> > On Wed, 2025-11-05 at 19:44 +0530, Ally Heev wrote:
-> > > Uninitialized pointers with `__free` attribute can cause
-> > > undefined
-> > > behaviour as the memory assigned(randomly) to the pointer is
-> > > freed
-> > > automatically when the pointer goes out of scope
-> > >=20
-> > > scsi doesn't have any bugs related to this as of now, but
-> > > it is better to initialize and assign pointers with `__free` attr
-> > > in one statement to ensure proper scope-based cleanup
-> > >=20
-> > > Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-> > > Closes:
-> > > https://lore.kernel.org/all/aPiG_F5EBQUjZqsl@stanley.mountain/
-> > > Signed-off-by: Ally Heev <allyheev@gmail.com>
-> > > ---
-> > > =C2=A0drivers/scsi/scsi_debug.c | 4 ++--
-> > > =C2=A01 file changed, 2 insertions(+), 2 deletions(-)
-> > >=20
-> > > diff --git a/drivers/scsi/scsi_debug.c
-> > > b/drivers/scsi/scsi_debug.c
-> > > index
-> > > b2ab97be5db3d43d5a5647968623b8db72448379..89b36d65926bdd15c0ae93a
-> > > 6bd2
-> > > ea968e25c0e74 100644
-> > > --- a/drivers/scsi/scsi_debug.c
-> > > +++ b/drivers/scsi/scsi_debug.c
-> > > @@ -2961,11 +2961,11 @@ static int resp_mode_sense(struct
-> > > scsi_cmnd
-> > > *scp,
-> > > =C2=A0	int target_dev_id;
-> > > =C2=A0	int target =3D scp->device->id;
-> > > =C2=A0	unsigned char *ap;
-> > > -	unsigned char *arr __free(kfree);
-> > > =C2=A0	unsigned char *cmd =3D scp->cmnd;
-> > > =C2=A0	bool dbd, llbaa, msense_6, is_disk, is_zbc, is_tape;
-> > > =C2=A0
-> > > -	arr =3D kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
-> > > +	unsigned char *arr __free(kfree) =3D
-> > > kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
-> > > +
-> >=20
-> > Moving variable assignments inside code makes it way harder to
-> > read. Given that compilers will eventually detect if we do a return
-> > before initialization, can't you have smatch do the same rather
-> > than trying to force something like this?
->=20
-> This isn't a Smatch thing, it's a change to checkpatch.
->=20
-> (Smatch does work as you describe).
 
-So why are we bothering with something like this in checkpatch if we
-can detect the true problem condition and we expect compilers to catch
-up?  Encouraging people to write code like the above isn't in anyone's
-best interest.
+On Wed, 05 Nov 2025 06:22:34 +0900, Damien Le Moal wrote:
+> This patch series implements a cached report zones using information
+> from the block layer zone write plugs and a new zone condition tracking.
+> This avoids having to execute slow report zones commands on the device
+> when for instance mounting file systems, which can significantly speed
+> things up, especially in setups with multiple SMR HDDs (e.g. a BTRFS
+> RAID volume).
+> 
+> [...]
 
-Regards,
+Applied, thanks!
 
-James
+[01/15] block: handle zone management operations completions
+        commit: efae226c2ef19528ffd81d29ba0eecf1b0896ca2
+[02/15] block: freeze queue when updating zone resources
+        commit: bba4322e3f303b2d656e748be758320b567f046f
+[03/15] block: cleanup blkdev_report_zones()
+        commit: e8ecb21f081fe0cab33dc20cbe65ccbbfe615c15
+[04/15] block: introduce disk_report_zone()
+        commit: fdb9aed869f34d776298b3a8197909eb820e4d0d
+[05/15] block: reorganize struct blk_zone_wplug
+        commit: ca1a897fb266c4b23b5ecb99fe787ed18559057d
+[06/15] block: use zone condition to determine conventional zones
+        commit: 6e945ffb6555705cf20b1fcdc21a139911562995
+[07/15] block: track zone conditions
+        commit: 0bf0e2e4666822b62d7ad6473dc37fd6b377b5f1
+[08/15] block: refactor blkdev_report_zones() code
+        commit: 1af3f4e0c42b377f3405df498440566e3468c314
+[09/15] block: introduce blkdev_get_zone_info()
+        commit: f2284eec5053df271c78e687672247922bcee881
+[10/15] block: introduce blkdev_report_zones_cached()
+        commit: 31f0656a4ab712edf2888eabcc0664197a4a938e
+[11/15] block: introduce BLKREPORTZONESV2 ioctl
+        commit: b30ffcdc0c15a88f8866529d3532454e02571221
+[12/15] block: improve zone_wplugs debugfs attribute output
+        commit: 2b39d4a6c67d11ead8f39ec6376645d8e9d34554
+[13/15] block: add zone write plug condition to debugfs zone_wplugs
+        commit: 1efbbc641ef7d673059cded789b9c8a743c17c9a
+[14/15] btrfs: use blkdev_report_zones_cached()
+        commit: ad3c1188b401cbc0533515ba2d45396b4fa320e1
+[15/15] xfs: use blkdev_report_zones_cached()
+        commit: e04ccfc28252f181ea8d469d834b48e7dece65b2
+
+Best regards,
+-- 
+Jens Axboe
+
+
+
