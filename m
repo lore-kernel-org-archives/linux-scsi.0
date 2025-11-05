@@ -1,154 +1,122 @@
-Received: from smtp-out2.suse.de (smtp-out2.suse.de [195.135.223.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 853CF19D093
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 08:05:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D68DA2D6E6A;
+	Wed,  5 Nov 2025 08:44:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762329947; cv=none; b=KR9PivfGv7c/ayHPrrdjA9CpLIRyYYcELQXka1YqbkJIPjkRGvG/c+M3U34jh3JmclYiYlI9/0tS+BvAYktNgbRRKEIbWqN9LWKyeNHR35uEjlEGr3W6wd/QRJdaMN7KBibI2b+PTZO0+MQaFjQlfR4NvHu/m1vBF99ppn8HysY=
+	t=1762332277; cv=none; b=XFYzVrUG0FgCpBuXksBL4s1SlCBYXrYYkomik4lExGerB1+8hq7lu7EV1b3xFfDC/RT5JnOtckr4Zg06g87lZM8jo4Pgi4VueZQ7spPZ7D9/5/FN97CJmZPKmZF3If5hlRxYBSmf8O2Jl1rCgkk00HH3uNRp4IkIThA5t4xL544=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762329947; c=relaxed/simple;
-	bh=LnwQpS+HrMJuJMPD5zFnsXbi8j7ASo4fgZOJyU2wcRc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=d4cAiyCl4cSFs+aA6t1ijLSoFxCoW2BZIGCjaItqGIYLQe+UfPyK/CyQYS57pk15up3opQCTDsPgNHER0cf6CS8oI/mIlHkiVDfRZe8+RXy8Mp18CCvcRCCbfyHjPpanc1fZdk08JcAgrxKJZUrwA8DsBI8MSl4R4q+lZui1JuY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=BHcSsfYs; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=73b03fd9; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=BHcSsfYs; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=73b03fd9; arc=none smtp.client-ip=195.135.223.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1762332277; c=relaxed/simple;
+	bh=B1mrzqdCotHeUPx6GmeRphi3vwwxC29uywn7AUaYpIM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=TsukTHb7ZT5UC1XzdBRg4cyTYCPf6/A3zBpkp31JplJhX1TH9et1Tr7hn3ZChAYagEyI0XK1J68ZZHkKN3N5rJIjjqscOyOdiIMMA4rKObZzcicNR0sYujLoAPWr4BgMz2j4bf9+TwD9H1hh5WPgNXSbtTdLVaCjZA59l2457zo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CzGUfFRL; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="BHcSsfYs";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="73b03fd9";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="BHcSsfYs";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="73b03fd9"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out2.suse.de (Postfix) with ESMTPS id ABA201F441;
-	Wed,  5 Nov 2025 08:05:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1762329943; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=93NcHGYar2qak2M38FyxcBf/03ALML5fp0HGk5ZU+dI=;
-	b=BHcSsfYsGnZKlZXij36JDfGwIy/CJ2GcXVtV2DBhHT3lFKQBfHA4KRPBQScUDW0DG8GTHG
-	tU7GKErikcE5l0+CnZJMrTEIzXLKweEerZCLTy22+HwBw3JU1PdujEV8nRUyB5FfrgNfQa
-	saXqj+pE5/4fpBz05cASLTDHa2ahRgk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1762329943;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=93NcHGYar2qak2M38FyxcBf/03ALML5fp0HGk5ZU+dI=;
-	b=73b03fd9sAZk82JBq4dBebweOvnhlNMdF8YPk9hEN5dqHpbcLRmxkz8TBZT5Vcr88lwipV
-	u8f6rTX7OZDGucDA==
-Authentication-Results: smtp-out2.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1762329943; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=93NcHGYar2qak2M38FyxcBf/03ALML5fp0HGk5ZU+dI=;
-	b=BHcSsfYsGnZKlZXij36JDfGwIy/CJ2GcXVtV2DBhHT3lFKQBfHA4KRPBQScUDW0DG8GTHG
-	tU7GKErikcE5l0+CnZJMrTEIzXLKweEerZCLTy22+HwBw3JU1PdujEV8nRUyB5FfrgNfQa
-	saXqj+pE5/4fpBz05cASLTDHa2ahRgk=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1762329943;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=93NcHGYar2qak2M38FyxcBf/03ALML5fp0HGk5ZU+dI=;
-	b=73b03fd9sAZk82JBq4dBebweOvnhlNMdF8YPk9hEN5dqHpbcLRmxkz8TBZT5Vcr88lwipV
-	u8f6rTX7OZDGucDA==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 6EDAA13699;
-	Wed,  5 Nov 2025 08:05:43 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id bRClGFcFC2mkSAAAD6G6ig
-	(envelope-from <hare@suse.de>); Wed, 05 Nov 2025 08:05:43 +0000
-Message-ID: <b02bcd74-7e2d-4431-bb37-a299567d6101@suse.de>
-Date: Wed, 5 Nov 2025 09:05:42 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CzGUfFRL"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4CD0C4CEF8;
+	Wed,  5 Nov 2025 08:44:35 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762332276;
+	bh=B1mrzqdCotHeUPx6GmeRphi3vwwxC29uywn7AUaYpIM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=CzGUfFRLTsL19Qi/+XP0OzEpr4fmO4sluqZzOHVtWApYci0N543doqZb2LYPRMQR4
+	 dY3EVAfT1DZ2vwrO7fYLaNlYaTSnc+KirvRrrwMu6Ew/NsyGtBg43SQTwVp6Sir5ET
+	 ODovueBinj4gWGjlSR5zIFRhClia0uE1HD8cXIzP6s91aSZItsvOjfYekB9LCByPlR
+	 +owTzT/WQLgiiks5rvCRODfMhUIKdFzoFYtM9H1JdeJAQTf3yvj8hbxZfQPqTT8I9z
+	 ILgsXLWk6nWUVl6SrnknhDK+0kpfZ5ka+Z1NQgsi801m2a32GWLRkoYE2Gd55ZaGeu
+	 mZFe9LQ00RxUA==
+Date: Wed, 5 Nov 2025 09:44:33 +0100
+From: Krzysztof Kozlowski <krzk@kernel.org>
+To: Ritesh Kumar <riteshk@qti.qualcomm.com>
+Cc: robin.clark@oss.qualcomm.com, lumag@kernel.org, 
+	abhinav.kumar@linux.dev, jessica.zhang@oss.qualcomm.com, sean@poorly.run, 
+	marijn.suijten@somainline.org, maarten.lankhorst@linux.intel.com, mripard@kernel.org, 
+	tzimmermann@suse.de, airlied@gmail.com, simona@ffwll.ch, robh@kernel.org, 
+	krzk+dt@kernel.org, conor+dt@kernel.org, quic_mahap@quicinc.com, 
+	andersson@kernel.org, konradybcio@kernel.org, mani@kernel.org, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, vkoul@kernel.org, kishon@kernel.org, 
+	cros-qcom-dts-watchers@chromium.org, Ritesh Kumar <quic_riteshk@quicinc.com>, 
+	linux-phy@lists.infradead.org, linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org, 
+	freedreno@lists.freedesktop.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
+	linux-scsi@vger.kernel.org, quic_vproddut@quicinc.com
+Subject: Re: [PATCH v3 1/2] dt-bindings: phy: qcom-edp: Add eDP ref clk for
+ sa8775p
+Message-ID: <20251105-juicy-rhino-of-action-b6be48@kuoka>
+References: <20251104114327.27842-1-riteshk@qti.qualcomm.com>
+ <20251104114327.27842-2-riteshk@qti.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v6 05/28] scsi: core: Introduce .queue_reserved_command()
-To: Bart Van Assche <bvanassche@acm.org>,
- "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, John Garry <john.garry@huawei.com>,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-References: <20251014201707.3396650-1-bvanassche@acm.org>
- <20251014201707.3396650-6-bvanassche@acm.org>
-Content-Language: en-US
-From: Hannes Reinecke <hare@suse.de>
-In-Reply-To: <20251014201707.3396650-6-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 8bit
-X-Spam-Level: 
-X-Spamd-Result: default: False [-4.30 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	FROM_HAS_DN(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	ARC_NA(0.00)[];
-	TO_DN_SOME(0.00)[];
-	MIME_TRACE(0.00)[0:+];
-	TO_MATCH_ENVRCPT_ALL(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCPT_COUNT_FIVE(0.00)[5];
-	RCVD_COUNT_TWO(0.00)[2];
-	MID_RHS_MATCH_FROM(0.00)[];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,huawei.com:email]
-X-Spam-Flag: NO
-X-Spam-Score: -4.30
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+In-Reply-To: <20251104114327.27842-2-riteshk@qti.qualcomm.com>
 
-On 10/14/25 22:15, Bart Van Assche wrote:
-> From: John Garry <john.garry@huawei.com>
+On Tue, Nov 04, 2025 at 05:13:26PM +0530, Ritesh Kumar wrote:
+> From: Ritesh Kumar <quic_riteshk@quicinc.com>
 > 
-> Reserved commands will be used by SCSI LLDs for submitting internal
-> commands. Since the SCSI host, target and device limits do not apply to
-> the reserved command use cases, bypass the SCSI host limit checks for
-> reserved commands. Introduce the .queue_reserved_command() callback for
-> reserved commands. Additionally, do not activate the SCSI error handler
-> if a reserved command fails such that reserved commands can be submitted
-> from inside the SCSI error handler.
+> When the initial contribution of eDP PHY for sa8775p was done,
+> eDP reference clock voting was missed. It worked fine at that
+> time because the clock was already enabled by the UFS PHY driver.
 > 
-> Signed-off-by: John Garry <john.garry@huawei.com>
-> [ bvanassche: modified patch title and patch description. Renamed
->    .reserved_queuecommand() into .queue_reserved_command(). Changed
->    the second argument of __blk_mq_end_request() from 0 into error
->    code in the completion path if cmd->result != 0. Rewrote the
->    scsi_queue_rq() changes. See also
->    https://lore.kernel.org/linux-scsi/1666693096-180008-5-git-send-email-john.garry@huawei.com/ ]
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+> After commit 77d2fa54a945 ("scsi: ufs: qcom : Refactor
+> phy_power_on/off calls"), eDP reference clock started getting
+> turned off, leading to the following PHY power-on failure:
+> 
+> phy phy-aec2a00.phy.10: phy poweron failed --> -110
+> 
+> To fix this, explicit voting for the eDP reference clock is
+> required. This patch adds the eDP reference clock for sa8775p
+> eDP PHY and updates the corresponding example node.
+
+Please wrap commit message according to Linux coding style / submission
+process (neither too early nor over the limit):
+https://elixir.bootlin.com/linux/v6.4-rc1/source/Documentation/process/submitting-patches.rst#L597
+
+> 
+> Signed-off-by: Ritesh Kumar <quic_riteshk@quicinc.com>
 > ---
->   drivers/scsi/hosts.c     |  6 +++++
->   drivers/scsi/scsi_lib.c  | 54 ++++++++++++++++++++++++++++------------
->   include/scsi/scsi_host.h |  6 +++++
->   3 files changed, 50 insertions(+), 16 deletions(-)
+>  .../devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml  | 6 ++++--
+>  Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml     | 1 +
+>  2 files changed, 5 insertions(+), 2 deletions(-)
 > 
-Reviewed-by: Hannes Reinecke <hare@suse.de>
+> diff --git a/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml b/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
+> index e2730a2f25cf..6c827cf9692b 100644
+> --- a/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
+> +++ b/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
+> @@ -200,9 +200,11 @@ examples:
+>                    <0x0aec2000 0x1c8>;
+>  
+>              clocks = <&dispcc0 MDSS_DISP_CC_MDSS_DPTX0_AUX_CLK>,
+> -                     <&dispcc0 MDSS_DISP_CC_MDSS_AHB_CLK>;
+> +                     <&dispcc0 MDSS_DISP_CC_MDSS_AHB_CLK>,
+> +                     <&gcc GCC_EDP_REF_CLKREF_EN>;
+>              clock-names = "aux",
+> -                          "cfg_ahb";
+> +                          "cfg_ahb",
+> +                          "ref";
+>  
+>              #clock-cells = <1>;
+>              #phy-cells = <0>;
+> diff --git a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+> index bfc4d75f50ff..ba757b08b9b1 100644
+> --- a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+> +++ b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
+> @@ -72,6 +72,7 @@ allOf:
+>        properties:
+>          compatible:
+>            enum:
+> +            - qcom,sa8775p-edp-phy
+>              - qcom,x1e80100-dp-phy
 
-Cheers,
+I don't have such code in latest next, which makes it impossible to
+review.
 
-Hannes
--- 
-Dr. Hannes Reinecke                  Kernel Storage Architect
-hare@suse.de                                +49 911 74053 688
-SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
-HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
+>      then:
+>        properties:
+> -- 
+> 2.17.1
+> 
