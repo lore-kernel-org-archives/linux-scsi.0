@@ -1,122 +1,107 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D68DA2D6E6A;
-	Wed,  5 Nov 2025 08:44:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 770342F5332
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 11:22:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762332277; cv=none; b=XFYzVrUG0FgCpBuXksBL4s1SlCBYXrYYkomik4lExGerB1+8hq7lu7EV1b3xFfDC/RT5JnOtckr4Zg06g87lZM8jo4Pgi4VueZQ7spPZ7D9/5/FN97CJmZPKmZF3If5hlRxYBSmf8O2Jl1rCgkk00HH3uNRp4IkIThA5t4xL544=
+	t=1762341779; cv=none; b=G0AqysLYQbT7avciNlxdC4oGDY3jEmCFVY3oGWM+OSuuM2ugKtcJ2ZKAKaLhQxLtGeofuB6odm310E9W2mMVbhdtk0dnFkt+LWAXwv0zFSCValzprhXArjcFx3Dg8zGiG7h8EiYX8pxpFLoSeqOAUgregPZVQXba4zSIXt5C84s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762332277; c=relaxed/simple;
-	bh=B1mrzqdCotHeUPx6GmeRphi3vwwxC29uywn7AUaYpIM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=TsukTHb7ZT5UC1XzdBRg4cyTYCPf6/A3zBpkp31JplJhX1TH9et1Tr7hn3ZChAYagEyI0XK1J68ZZHkKN3N5rJIjjqscOyOdiIMMA4rKObZzcicNR0sYujLoAPWr4BgMz2j4bf9+TwD9H1hh5WPgNXSbtTdLVaCjZA59l2457zo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=CzGUfFRL; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762341779; c=relaxed/simple;
+	bh=lnLHz4GA8+8YXZRlXyloiFq/qFqW00pgYvfIRW38KzE=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=pjH2/e4xiVsIta9i7fZ39n76VPKBcsQN6Yo6uheAQreZE0eeHZ//FhyYFlgPQOIqiUX3HXhAxc7VrKjr7frQEGn/GoqCUb/5JYn45kEiFgM2YselPh3vvVlTq+VbVkJZv8hjsPQSJJijrzE4lTVDgtNeY1H4vBTpI5zISsVNaI4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=XOT9zaP0; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="CzGUfFRL"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id B4CD0C4CEF8;
-	Wed,  5 Nov 2025 08:44:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762332276;
-	bh=B1mrzqdCotHeUPx6GmeRphi3vwwxC29uywn7AUaYpIM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=CzGUfFRLTsL19Qi/+XP0OzEpr4fmO4sluqZzOHVtWApYci0N543doqZb2LYPRMQR4
-	 dY3EVAfT1DZ2vwrO7fYLaNlYaTSnc+KirvRrrwMu6Ew/NsyGtBg43SQTwVp6Sir5ET
-	 ODovueBinj4gWGjlSR5zIFRhClia0uE1HD8cXIzP6s91aSZItsvOjfYekB9LCByPlR
-	 +owTzT/WQLgiiks5rvCRODfMhUIKdFzoFYtM9H1JdeJAQTf3yvj8hbxZfQPqTT8I9z
-	 ILgsXLWk6nWUVl6SrnknhDK+0kpfZ5ka+Z1NQgsi801m2a32GWLRkoYE2Gd55ZaGeu
-	 mZFe9LQ00RxUA==
-Date: Wed, 5 Nov 2025 09:44:33 +0100
-From: Krzysztof Kozlowski <krzk@kernel.org>
-To: Ritesh Kumar <riteshk@qti.qualcomm.com>
-Cc: robin.clark@oss.qualcomm.com, lumag@kernel.org, 
-	abhinav.kumar@linux.dev, jessica.zhang@oss.qualcomm.com, sean@poorly.run, 
-	marijn.suijten@somainline.org, maarten.lankhorst@linux.intel.com, mripard@kernel.org, 
-	tzimmermann@suse.de, airlied@gmail.com, simona@ffwll.ch, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, quic_mahap@quicinc.com, 
-	andersson@kernel.org, konradybcio@kernel.org, mani@kernel.org, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, vkoul@kernel.org, kishon@kernel.org, 
-	cros-qcom-dts-watchers@chromium.org, Ritesh Kumar <quic_riteshk@quicinc.com>, 
-	linux-phy@lists.infradead.org, linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	freedreno@lists.freedesktop.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, quic_vproddut@quicinc.com
-Subject: Re: [PATCH v3 1/2] dt-bindings: phy: qcom-edp: Add eDP ref clk for
- sa8775p
-Message-ID: <20251105-juicy-rhino-of-action-b6be48@kuoka>
-References: <20251104114327.27842-1-riteshk@qti.qualcomm.com>
- <20251104114327.27842-2-riteshk@qti.qualcomm.com>
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="XOT9zaP0"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=92JC27mDPJloZ1mOGLQV9cMWKdZ2iVdLNF4HlThwsBo=;
+	b=XOT9zaP0ZU6YyK71RY5H+dVuqdqk0qcVGMGMxcP1CAPfg9BI9kNX/MvK7I37pvWhgIb+nXAsQ
+	yTnjoDh2xXNsz5JQN54mMxDCqLg+Z7yitBzncQW4jW4e034NrGrntgrEPo/OWgZcrgRhQopfYvf
+	jLUyWWa9AO7L2t+O/8ZMfpM=
+Received: from mail.maildlp.com (unknown [172.19.162.112])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4d1jZ66TZpzLlSM;
+	Wed,  5 Nov 2025 19:21:18 +0800 (CST)
+Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
+	by mail.maildlp.com (Postfix) with ESMTPS id CBF53140109;
+	Wed,  5 Nov 2025 19:22:53 +0800 (CST)
+Received: from localhost.localdomain (10.175.104.170) by
+ kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Wed, 5 Nov 2025 19:22:53 +0800
+From: JiangJianJun <jiangjianjun3@huawei.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>
+CC: <bvanassche@acm.org>, <john.g.garry@oracle.com>, <hewenliang4@huawei.com>,
+	<yangyun50@huawei.com>, <wuyifeng10@huawei.com>
+Subject: [PATCH] scsi: scsi_debug: make timeout faults by set delay to maximum value
+Date: Wed, 5 Nov 2025 19:57:22 +0800
+Message-ID: <20251105115722.1634895-1-jiangjianjun3@huawei.com>
+X-Mailer: git-send-email 2.33.0
+In-Reply-To: <20250224115517.495899-5-john.g.garry@oracle.com>
+References: <20250224115517.495899-5-john.g.garry@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-In-Reply-To: <20251104114327.27842-2-riteshk@qti.qualcomm.com>
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100001.china.huawei.com (7.221.188.238) To
+ kwepemk500001.china.huawei.com (7.202.194.86)
 
-On Tue, Nov 04, 2025 at 05:13:26PM +0530, Ritesh Kumar wrote:
-> From: Ritesh Kumar <quic_riteshk@quicinc.com>
-> 
-> When the initial contribution of eDP PHY for sa8775p was done,
-> eDP reference clock voting was missed. It worked fine at that
-> time because the clock was already enabled by the UFS PHY driver.
-> 
-> After commit 77d2fa54a945 ("scsi: ufs: qcom : Refactor
-> phy_power_on/off calls"), eDP reference clock started getting
-> turned off, leading to the following PHY power-on failure:
-> 
-> phy phy-aec2a00.phy.10: phy poweron failed --> -110
-> 
-> To fix this, explicit voting for the eDP reference clock is
-> required. This patch adds the eDP reference clock for sa8775p
-> eDP PHY and updates the corresponding example node.
+The injection of timeout faults is achieved by directly discarding the
+SCSI command.
 
-Please wrap commit message according to Linux coding style / submission
-process (neither too early nor over the limit):
-https://elixir.bootlin.com/linux/v6.4-rc1/source/Documentation/process/submitting-patches.rst#L597
+However, after the timeout, the SCSI mid-layer cancels the SCSI command.
+At this point, if the command is checked during cancellation, it will result
+in a "not found" outcome, making it impossible to cancel the command properly.
 
-> 
-> Signed-off-by: Ritesh Kumar <quic_riteshk@quicinc.com>
-> ---
->  .../devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml  | 6 ++++--
->  Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml     | 1 +
->  2 files changed, 5 insertions(+), 2 deletions(-)
-> 
-> diff --git a/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml b/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
-> index e2730a2f25cf..6c827cf9692b 100644
-> --- a/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
-> +++ b/Documentation/devicetree/bindings/display/msm/qcom,sa8775p-mdss.yaml
-> @@ -200,9 +200,11 @@ examples:
->                    <0x0aec2000 0x1c8>;
->  
->              clocks = <&dispcc0 MDSS_DISP_CC_MDSS_DPTX0_AUX_CLK>,
-> -                     <&dispcc0 MDSS_DISP_CC_MDSS_AHB_CLK>;
-> +                     <&dispcc0 MDSS_DISP_CC_MDSS_AHB_CLK>,
-> +                     <&gcc GCC_EDP_REF_CLKREF_EN>;
->              clock-names = "aux",
-> -                          "cfg_ahb";
-> +                          "cfg_ahb",
-> +                          "ref";
->  
->              #clock-cells = <1>;
->              #phy-cells = <0>;
-> diff --git a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
-> index bfc4d75f50ff..ba757b08b9b1 100644
-> --- a/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
-> +++ b/Documentation/devicetree/bindings/phy/qcom,edp-phy.yaml
-> @@ -72,6 +72,7 @@ allOf:
->        properties:
->          compatible:
->            enum:
-> +            - qcom,sa8775p-edp-phy
->              - qcom,x1e80100-dp-phy
+Therefore, the approach has been changed to avoid direct cancellation, and the
+delay is set to the maximum value(0x7FFFFFFF).
 
-I don't have such code in latest next, which makes it impossible to
-review.
+Signed-off-by: JiangJianJun <jiangjianjun3@huawei.com>
+---
+ drivers/scsi/scsi_debug.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
 
->      then:
->        properties:
-> -- 
-> 2.17.1
-> 
+diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+index 353cb60e1abe..7d86a6f10130 100644
+--- a/drivers/scsi/scsi_debug.c
++++ b/drivers/scsi/scsi_debug.c
+@@ -9249,6 +9249,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 	bool inject_now;
+ 	int ret = 0;
+ 	struct sdebug_err_inject err;
++	bool timeout = false;
+ 
+ 	scsi_set_resid(scp, 0);
+ 	if (sdebug_statistics) {
+@@ -9291,7 +9292,7 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 
+ 	if (sdebug_timeout_cmd(scp)) {
+ 		scmd_printk(KERN_INFO, scp, "timeout command 0x%x\n", opcode);
+-		return 0;
++		timeout = true;
+ 	}
+ 
+ 	ret = sdebug_fail_queue_cmd(scp);
+@@ -9398,7 +9399,9 @@ static int scsi_debug_queuecommand(struct Scsi_Host *shost,
+ 		pfp = r_pfp;    /* if leaf function ptr NULL, try the root's */
+ 
+ fini:
+-	if (F_DELAY_OVERR & flags)	/* cmds like INQUIRY respond asap */
++	if (unlikely(timeout)) /* inject timeout */
++		return schedule_resp(scp, devip, errsts, pfp, 0x7FFFFFFF, 0x7FFFFFFF);
++	else if (F_DELAY_OVERR & flags)	/* cmds like INQUIRY respond asap */
+ 		return schedule_resp(scp, devip, errsts, pfp, 0, 0);
+ 	else if ((flags & F_LONG_DELAY) && (sdebug_jdelay > 0 ||
+ 					    sdebug_ndelay > 10000)) {
+-- 
+2.33.0
+
