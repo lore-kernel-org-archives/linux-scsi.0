@@ -1,132 +1,136 @@
-Received: from mail-ej1-f48.google.com (mail-ej1-f48.google.com [209.85.218.48])
+Received: from mail-wm1-f44.google.com (mail-wm1-f44.google.com [209.85.128.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69BCB21D3DC
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 14:46:34 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A49DE30EF6D
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 15:03:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762353997; cv=none; b=F3WBwEhOFqkeVEVP2oC5AbteXXfjRnfiHyx2ZB+eS4PkK28o58vq2wIcWzGKsiMvlf3saqou1eVgLmnI2j7m0ISS66z+gXnXW2++nwTdm3pp8l9Bj1qxl4gB/9NZnRSnx6s4Ikb9ClIFE5nUxNI9plFIFzqT7buP95j5mh7sVLM=
+	t=1762355027; cv=none; b=ic5yXh0u7Jyk+qH83dpS6AUGEziGeZZKvO0rUqvcKPqeWQs3PKglc45q/ufHtxB3UY3V7vWRAjiFIpNUP2yNBxj0q0joEg9xRnyrNQuwFQuVjy4DFrAkZg9Ewe3l3oU7LUMhuOTfmtXQnWcLtj5RNES5VdFiAW8nG+x6FLjonp8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762353997; c=relaxed/simple;
-	bh=7GHF9drscydM8VlSDyNkUaIR6HtQ621NPbVjDAEzaSU=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=GU3vCzE6Kplz7cLrR3rqEMiD7WcorTI3tP+NgH+ZEzhg16fmz8TDZM6BKYbjFN3R4+pahj3AAdSo6pDEuyxQF9TOsmpdHAiHkegbfxBoZbc/ADXcYj+mucdcQNZSM0zvqTNbgpKyGXpxopA/hCP9amPJCxQt0xpt31oKaihXwHE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=pZbuh3Ex; arc=none smtp.client-ip=209.85.218.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1762355027; c=relaxed/simple;
+	bh=HFGpbq6AGnpQDHs3RJgDweKupuWTaBcUzSm+7AIU1rM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ZAtwsTw8SRYZRju14yDEysEzHyntTv5MO8feX6unVjkR8kR5X3yMG56+VVjATlxf10ppPAbZsSr9IIvn6AOu7xo2ymYMTm2BF8qurfaTpxMPzwypmANhM230B+aFy0fFxZJry5Sn7Q/GqajJlUHWKyxGbUaAgywEzB5qoJkriKM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=aQOEbkCZ; arc=none smtp.client-ip=209.85.128.44
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="pZbuh3Ex"
-Received: by mail-ej1-f48.google.com with SMTP id a640c23a62f3a-b4f323cf89bso468092866b.2
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Nov 2025 06:46:34 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="aQOEbkCZ"
+Received: by mail-wm1-f44.google.com with SMTP id 5b1f17b1804b1-477605dc769so3377915e9.1
+        for <linux-scsi@vger.kernel.org>; Wed, 05 Nov 2025 07:03:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1762353993; x=1762958793; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=85Bq0egfrxZA4M7BAnfcstD/897TxaHcMzubb+eabQs=;
-        b=pZbuh3ExC8u9Jl0lPGk2PRkA00uwak+9effgeATqsXYZvSUT5DV32vkC2bAAeeFxnv
-         PqSIk1nxZatKONSaQnG44xo2RvTcQgYMewqWbHIGjqqk0xiKWy7XDhK5qFRq1R+SpGaa
-         56pYuoXtwjWjiEWtYjH27LPIH8ghTQpKRYb/rk3qpQxEqSjj0/mj1hdLvICmmtGIX365
-         PKw+0Vp6hhjrChHdpDMTlYnT8k9U0ugMZNo/YQAdMUG7IlFjl6h6rwyTEJwb+Lsx4ocZ
-         NGX+pYUL/HPVKLfB/SUdSWtIrUymcwGsrjAkLfiacPKzbHmyqXaX++qZ9ZImHdQGc4cu
-         Mr5Q==
+        d=suse.com; s=google; t=1762355024; x=1762959824; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=/fCx1hZSgC1hl4Am8i+o/TTbFE77gj5sFZ6mozJ1t3M=;
+        b=aQOEbkCZcY2skNtBeSKjWcsTsjGSBYFLmAfVJsJP1ExeIriAyNaUiCLt9gV/1zqiA7
+         gXcs+LN5SCE8zocM0Q8nlGMAuqLejZLKpOIlO5wUYxFL653/nlrBzNjkyd5etUSJsCcx
+         7NKDWHFyR9b+DO/V3nF8V+XfyseNQZGfUPh3yVrPXnOS1GtN6Q9TYph6sizCOLEaKgt1
+         VDpml2ytZlvclRi4E1LUuj0Z/JanfnxPMUd7tvHsA4PfEqXAttj7ak3nleBHsEEmSr7L
+         /Eoj/LPwH3xm6s462gBN9NFxKI3AMAwUZqfU047FODj6oTTsHefzxYh5+PAntnvt2t/a
+         b+pA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762353993; x=1762958793;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=85Bq0egfrxZA4M7BAnfcstD/897TxaHcMzubb+eabQs=;
-        b=L5MFv8pbqfkDDC+IdnWI0ofd/vTfd+4Y+6sxGv/QOStCarkJT40CWOeXVIBnhRjymi
-         wLSiwr8iLx2ONeJiVzTJR2dC0Sp/QzJD/4NbVhE8Hd2LMuO4S0sHtxAPiujbaqvmKpCj
-         NLuc6oITYqMItI9Aid0rHjZ4Gm5HDRgGMgnlZvYK5Cz+x1TfvgQc3Z6wDA6zPumK4Iqz
-         ERve/B2kKO8iNsaQ4vriwQuATWHFILvJ3xmGnFILuRFUNjjGuLxsj4jyZOZWKGC+iN+0
-         w8o4az77v2kUuh/sXn771ACeRCWez/OHsCv63H+zpmR2IVqG5vmEgb6xsUrslPSpGCZO
-         pwuQ==
-X-Forwarded-Encrypted: i=1; AJvYcCW4JNJ+ttJ1lYGIyIzvwi9Yg+YeoTiMFvzEH6qNgf9fHE+HwmveLKTtlzqMOAu1npyj9BLYzQXEaSOa@vger.kernel.org
-X-Gm-Message-State: AOJu0YxC5Q+iaXN+7kn24BBVh6t6euTk+DUX8KUqnleLFwj6IDCk88xl
-	/r9DaMoWa6m6j+FttyLhxtqCgKNmwwDJIiPsp1MIjE62LalPZ1R6f9je4VvcwjEFtsw=
-X-Gm-Gg: ASbGncsk7LeT38lJkr0Z1ydmflEUWR4Ha2BgTOdvkDk8tnSeEUnwPblPmsEjEMOQFqm
-	qzIXBvfP0MANtzcnNC+UIdfbt061pXMm/Pvm0Hkvw5oq5QSEvlfq0Yno45EroGurGnbliYj2tMS
-	SNh1m6K2ryIRofBNcb45cfglQn3cOjVPBGU3jbFyx6Hr9AZMotCukSi0Zm/f3nQ8ONWVEJGmg2C
-	IeE2IJQv0okeB8K+0RuS3OC5ue7fx0/NT9YTGk7usmxwczBDXPCszJpIE2WTiTudjDo00gUQgxe
-	OcMXDmPMs2wz26+9dy+sTezuJZg3Jyv16OxWX1rBdBDukHmZhsAVvXrImZlikMeiedgSODecOZy
-	BhMTexqYxm6Au4atAULTOpffkYjbQj/eNEL/HH+x3ZvsEhoHjrB9eSWlbZZU34YXEAEIzhBAeot
-	MNLJZveVEoY6FS
-X-Google-Smtp-Source: AGHT+IGXiYMjE4MZ4KaJmY+QgVHdNn4HEJ2OJAx5eUeCXhhwUT8sSEarGObVX+Ze2HK1oicnld1HEw==
-X-Received: by 2002:a17:907:3f9a:b0:b54:8670:7c2d with SMTP id a640c23a62f3a-b7265682a9bmr338995866b.55.1762353992648;
-        Wed, 05 Nov 2025 06:46:32 -0800 (PST)
-Received: from localhost ([87.213.113.147])
-        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b723f6e06e2sm539356766b.40.2025.11.05.06.46.32
+        d=1e100.net; s=20230601; t=1762355024; x=1762959824;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-message-state:from:to:cc:subject:date:message-id
+         :reply-to;
+        bh=/fCx1hZSgC1hl4Am8i+o/TTbFE77gj5sFZ6mozJ1t3M=;
+        b=FjmHLlzL5Zx/r2WNbUcYv0gTmHXNQ4A2NAp2O4/E4CFr4QrjbcXKSLzhqyjuuDQDMO
+         UKuXp4nScCSedkYPKYALDHnll2y+CbiAfRoNjepBycQnhea9gUhrnav5AcnXTGJnxh6b
+         MfpIMAxpFyrEwGFGLPGWOT7SgabUpEwG9z6WXS9khZSjFSOa4PCoRVnF4C+jc6mdm+nZ
+         KcqZEspOB5dQ8n4q7RRD83wHXM53Kyz2emGqQ3iGj2f7xn+rRYC3yoaBS2o5xghCwywY
+         +47EU8/JAfQtoehUPAYaZPbax5kxy+Lh+im2oq3rPXcfSCQKb1t9U7VFBYt6hSov71nL
+         dHvg==
+X-Forwarded-Encrypted: i=1; AJvYcCUz+g3H54VqUWpFavtPosj5uSSTcyeSYukHx7ruay/EzkO6KaNaO0ZSgWeb6oqMPpJs2tGatW9q3PLc@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz/qYlYnWd+oh/Z9yN5azdpQ9nfL+kBPyWbpp6JpWU0NZuNJG8s
+	dmBuWGr4CyK+G2cSun4FgIqI0HvL+K1c9EV79V7skwzDkB1oS1uQbzVF5yBI5CW0lys=
+X-Gm-Gg: ASbGncvv9GpSaQ8IqDiptJSSPPb4V3x+NlTYMSep9UbmOi9zoMHT14CExI3w4gejVp1
+	kXrjqk20DIgSYMKdeS5BO7nBAsFoDOdQlzGT/9LTqvRraFSkukx4IHNgX9xJ+6j/xobW4BKbMD9
+	EJpKDG8gnWhk8FrwaSsmS6HMGgQEQHT5K7p1b8o//FhMTU2WwBkHcSvnmBq0qh5AFAILIs0Qn/O
+	zefmsMoMaWeZfgqc4nsz3n/Xrk+zPHC1Bk4h5Jq64wFwyMxJJaKy52PaIN/VDVLuD4ennEp+Hkr
+	4mhsCG2NUZcQ4Ay4zYREJPWvA4WAUHk1BDfP3Urx39K84V+RHcWphO/wlXJFriGQYVRTK8eZpBy
+	kaPGz44SQZF+1NyQplSksQDm1jbgfc+m1uPtpEMf5qZoIXol3AEvsSCHaSVoF82cYgIkk35RepO
+	+MEUtDIuO/E1IZANQuNOOR5ts=
+X-Google-Smtp-Source: AGHT+IFmA0c4Wtd407mbM3RJEVqW2wIems/Y5GIiyaQOas2YI7MfDjPyLQJRRLt+sr4PuRJzXADpNg==
+X-Received: by 2002:a05:600c:3e85:b0:477:bb0:7528 with SMTP id 5b1f17b1804b1-4775cdf7506mr28946685e9.22.1762355022966;
+        Wed, 05 Nov 2025 07:03:42 -0800 (PST)
+Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-429dc1f9cdbsm11483290f8f.34.2025.11.05.07.03.42
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Nov 2025 06:46:32 -0800 (PST)
-Date: Wed, 5 Nov 2025 17:46:31 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Ally Heev <allyheev@gmail.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: fix uninitialized pointers with free attr
-Message-ID: <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
-References: <20251105-aheev-uninitialized-free-attr-scsi-v1-1-d28435a0a7ea@gmail.com>
- <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
+        Wed, 05 Nov 2025 07:03:42 -0800 (PST)
+From: Marco Crivellari <marco.crivellari@suse.com>
+To: linux-kernel@vger.kernel.org,
+	linux-scsi@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Michal Hocko <mhocko@suse.com>,
+	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"Martin K . Petersen" <martin.petersen@oracle.com>,
+	Hannes Reinecke <hare@suse.de>
+Subject: [PATCH] scsi: fcoe: add WQ_PERCPU to alloc_workqueue users
+Date: Wed,  5 Nov 2025 16:03:36 +0100
+Message-ID: <20251105150336.244079-1-marco.crivellari@suse.com>
+X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
+Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
 
-On Wed, Nov 05, 2025 at 09:21:45AM -0500, James Bottomley wrote:
-> On Wed, 2025-11-05 at 19:44 +0530, Ally Heev wrote:
-> > Uninitialized pointers with `__free` attribute can cause undefined
-> > behaviour as the memory assigned(randomly) to the pointer is freed
-> > automatically when the pointer goes out of scope
-> > 
-> > scsi doesn't have any bugs related to this as of now, but
-> > it is better to initialize and assign pointers with `__free` attr
-> > in one statement to ensure proper scope-based cleanup
-> > 
-> > Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
-> > Closes:
-> > https://lore.kernel.org/all/aPiG_F5EBQUjZqsl@stanley.mountain/
-> > Signed-off-by: Ally Heev <allyheev@gmail.com>
-> > ---
-> >  drivers/scsi/scsi_debug.c | 4 ++--
-> >  1 file changed, 2 insertions(+), 2 deletions(-)
-> > 
-> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> > index
-> > b2ab97be5db3d43d5a5647968623b8db72448379..89b36d65926bdd15c0ae93a6bd2
-> > ea968e25c0e74 100644
-> > --- a/drivers/scsi/scsi_debug.c
-> > +++ b/drivers/scsi/scsi_debug.c
-> > @@ -2961,11 +2961,11 @@ static int resp_mode_sense(struct scsi_cmnd
-> > *scp,
-> >  	int target_dev_id;
-> >  	int target = scp->device->id;
-> >  	unsigned char *ap;
-> > -	unsigned char *arr __free(kfree);
-> >  	unsigned char *cmd = scp->cmnd;
-> >  	bool dbd, llbaa, msense_6, is_disk, is_zbc, is_tape;
-> >  
-> > -	arr = kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
-> > +	unsigned char *arr __free(kfree) =
-> > kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
-> > +
-> 
-> Moving variable assignments inside code makes it way harder to read. 
-> Given that compilers will eventually detect if we do a return before
-> initialization, can't you have smatch do the same rather than trying to
-> force something like this?
+Currently if a user enqueue a work item using schedule_delayed_work() the
+used wq is "system_wq" (per-cpu wq) while queue_delayed_work() use
+WORK_CPU_UNBOUND (used when a cpu is not specified). The same applies to
+schedule_work() that is using system_wq and queue_work(), that makes use
+again of WORK_CPU_UNBOUND.
+This lack of consistentcy cannot be addressed without refactoring the API.
 
-This isn't a Smatch thing, it's a change to checkpatch.
+alloc_workqueue() treats all queues as per-CPU by default, while unbound
+workqueues must opt-in via WQ_UNBOUND.
 
-(Smatch does work as you describe).
+This default is suboptimal: most workloads benefit from unbound queues,
+allowing the scheduler to place worker threads where theyâ€™re needed and
+reducing noise when CPUs are isolated.
 
-regards,
-dan carpenter
+This patch continues the effort to refactor worqueue APIs, which has begun
+with the change introducing new workqueues and a new alloc_workqueue flag:
+
+commit 128ea9f6ccfb ("workqueue: Add system_percpu_wq and system_dfl_wq")
+commit 930c2ea566af ("workqueue: Add new WQ_PERCPU flag")
+
+This change adds a new WQ_PERCPU flag to explicitly request
+alloc_workqueue() to be per-cpu when WQ_UNBOUND has not been specified.
+
+With the introduction of the WQ_PERCPU flag (equivalent to !WQ_UNBOUND),
+any alloc_workqueue() caller that doesnâ€™t explicitly specify WQ_UNBOUND
+must now use WQ_PERCPU.
+
+Once migration is complete, WQ_UNBOUND can be removed and unbound will
+become the implicit default.
+
+Suggested-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
+---
+ drivers/scsi/fcoe/fcoe.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/fcoe/fcoe.c b/drivers/scsi/fcoe/fcoe.c
+index 4912087de10d..c8c5dfb3ba9a 100644
+--- a/drivers/scsi/fcoe/fcoe.c
++++ b/drivers/scsi/fcoe/fcoe.c
+@@ -2438,7 +2438,7 @@ static int __init fcoe_init(void)
+ 	unsigned int cpu;
+ 	int rc = 0;
+ 
+-	fcoe_wq = alloc_workqueue("fcoe", 0, 0);
++	fcoe_wq = alloc_workqueue("fcoe", WQ_PERCPU, 0);
+ 	if (!fcoe_wq)
+ 		return -ENOMEM;
+ 
+-- 
+2.51.1
 
