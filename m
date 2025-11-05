@@ -1,62 +1,61 @@
 Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9EAD71BD9CE;
-	Wed,  5 Nov 2025 04:02:28 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA1A421885A
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 04:02:30 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762315350; cv=none; b=jvroBZoy/gUmIfgOXfx2Py1oQYWIaZb1OdJIc78Mu80aOiip2yY73dcdJq1bFNNVazQhzP7RF/OemBpAOcOP/nmQdqb1YGWS47aI0kWOS9/B8beZv+H8J8E8csP5UqoXEli5HE97PcJxHBxNeKo18r9A+ZCv/jUOGikV1BfyD4M=
+	t=1762315352; cv=none; b=QxFQV/6j8dOhXq4Ik2SI0ciL49rmsHOUufKOSp9QCwUHR3VqJgc2jR8VFY2mHTpsFO/XlNOVrUMJ4RIR+K4SYmPPRQUNbslCvB6XpDMk7E+W/loTi1MEfhhppXEJzmN984/oKZXpdOd9aFCZ1eWjF9fG4Qccq6wavZsmrlG2pfE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762315350; c=relaxed/simple;
-	bh=yQXSY/WrQVDYfWdO0SbyUMhuGmS/rYRQpjuHxFCtNFI=;
+	s=arc-20240116; t=1762315352; c=relaxed/simple;
+	bh=ZcE7+JL6YQckXGHMwypIgjYqkVbjycxkA93KppiR854=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=VDSD2Dz1i2qd3Z8uiDk0E94mNjcJrkhV9kuoxKRvZSv3WLBclpYJsLC2FftNHZ9xK4INr6fNiX2k+zyNT4wxgw/bv2GRqCdG/VqPFGAr6GL02iySiUdn/CF/GBPiXXQgKarnPBd5lKUkgV3Q0px4KxWnwkNv8+6QdZV5/eDCuqs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=DOVKNPI6; arc=none smtp.client-ip=205.220.177.32
+	 MIME-Version:Content-Type; b=T3odp/oujUWh1hnn3Ckphp8a2j+LZ2kJD0FO5WygN5oIe8WKYuVkpiIuGGk3usqFHtnkOh//VJo1ghyz0EIntSR6TKpbmSyXUmdRv9CiKMdXI07oquB8mSlyN+8+prBAplU9c+vKSbEsHF00Bf51s9y7zRq87ClzWXC32Vbq40E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=sen1sq/n; arc=none smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="DOVKNPI6"
-Received: from pps.filterd (m0246630.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5A53ivCW028361;
-	Wed, 5 Nov 2025 04:02:27 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="sen1sq/n"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5A5401Pv025661;
+	Wed, 5 Nov 2025 04:02:26 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=lyooww/8Fnw1zaMTJvQpvCmFyUNEz2aBTccHlIHYh5E=; b=
-	DOVKNPI6jBE+UqXCDl/KEJNlSewD8o9L7O0OYKEwRufuTDh8Isgf4sYF8VxQXVFc
-	zh72H9FYMaEZrKFwlmP4LoaZEJUHAlci5BFeBv21PTImeI59BTXpfDgGM80p3FH7
-	i9cTf/S1Ch3KSpducNVAJ4gRv97H+6olZKnqlB+Ez078l67JC3z/puPW0XS4zyh2
-	dUQBgbkW4OiGf/cG2o9gQnf0Sq530QR7qLRFybO3lW+M8xuNWdhkhnd98E+UPfs1
-	v3mAzmjuYZr9UAfH2gzrwsu+g+KLheaCJJQlAdzy46p8L8UVlxWW5KdAozBiEBwb
-	OiMpO9/1Vy5p6j/79vuxmA==
+	corp-2025-04-25; bh=GjuVwc9rRjmPkrrHkT9N9pULlVVpXWMmWvzdAUMmdJk=; b=
+	sen1sq/npeX67KIDyF1UM43fI4/NvusrLSW8/AZngBsaOXpIJRYX7sovhc+etFQF
+	xaceZAbY1oVoOiJKzvUuUYagQ9yioHtpBIY4Td2zyuT1drUoH/OumHgYJb1GO5Ub
+	VoRO6WPMpUzIHef05DmmGEh20KCCb8bpOw/jVp90eTcWRXET7wp1R/y5QZZBVXD6
+	1qbL6txs3lo3W39g8eJf7tgBCEBqDRkbUyby22lMi96hCTgntAxcuqrK2+25odmb
+	wDbDt+W8IVV7iz43kAu39nPMaA29EU/ZAXWz5BnWwkPJ0JBfxTegu6wIfwQ+u4VX
+	qF049QLQLRF12+eqN5vZxg==
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.appoci.oracle.com [147.154.18.20])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4a7xxk00t3-1
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4a7y5m802g-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 05 Nov 2025 04:02:27 +0000 (GMT)
+	Wed, 05 Nov 2025 04:02:26 +0000 (GMT)
 Received: from pps.filterd (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5A51hgIE024836;
-	Wed, 5 Nov 2025 04:02:26 GMT
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5A51owKC024856;
+	Wed, 5 Nov 2025 04:02:25 GMT
 Received: from pps.reinject (localhost [127.0.0.1])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4a58ne15hn-1
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4a58ne15h7-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Wed, 05 Nov 2025 04:02:26 +0000
+	Wed, 05 Nov 2025 04:02:25 +0000
 Received: from iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5A542Prj005395;
-	Wed, 5 Nov 2025 04:02:26 GMT
+	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5A542Pre005395;
+	Wed, 5 Nov 2025 04:02:25 GMT
 Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4a58ne15gy-4;
-	Wed, 05 Nov 2025 04:02:26 +0000
+	by iadpaimrmta02.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTP id 4a58ne15gy-1;
+	Wed, 05 Nov 2025 04:02:25 +0000
 From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: John Garry <john.g.garry@oracle.com>
+To: Bart Van Assche <bvanassche@acm.org>
 Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        target-devel@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linux-scsi@vger.kernel.org, michael.christie@oracle.com
-Subject: Re: [PATCH v3 0/7] scsi: target: Add WRITE_ATOMIC_16 support
-Date: Tue,  4 Nov 2025 23:02:18 -0500
-Message-ID: <176231440746.2306382.5588735953059411316.b4-ty@oracle.com>
+        linux-scsi@vger.kernel.org
+Subject: Re: [PATCH 0/2] Improve a SCSI target configfs show function
+Date: Tue,  4 Nov 2025 23:02:15 -0500
+Message-ID: <176231440748.2306382.16221615984221991437.b4-ty@oracle.com>
 X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20251020103820.2917593-1-john.g.garry@oracle.com>
-References: <20251020103820.2917593-1-john.g.garry@oracle.com>
+In-Reply-To: <20251027184639.3501254-1-bvanassche@acm.org>
+References: <20251027184639.3501254-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -69,53 +68,42 @@ X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-11-05_02,2025-11-03_03,2025-10-01_01
 X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 mlxscore=0 bulkscore=0
- malwarescore=0 adultscore=0 spamscore=0 mlxlogscore=999 suspectscore=0
+ malwarescore=0 adultscore=0 spamscore=0 mlxlogscore=464 suspectscore=0
  classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
  definitions=main-2511050024
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTA1MDAyMyBTYWx0ZWRfX2pUx9P+mFv9A
- 1sTLj19nPCOmqEN30R5wHhaXMuht4tg1zqOPkXCOV6Z/ej00aL6TqFYkow1GLzrQ4Oa5eTXsCnt
- Y2KxsdkXHjOWyYYdzO4NMpFvsGSB1d5XcqVewd95MArKPnDh2tvyFXm+yXKQxoZu6Yu4I/Uq+1C
- viRqRzg5wI1c7s5q5QWw6lFtJL4ytg9ignJRd7Mi1OCukuAcw7OEBHRZqHnW/pHeUmUvdVyYdD7
- fMCvzR0MVKUpVVADBZVdBmbWHiUZd6xNGcpEgToyUhRwkvcOuPk3zSqvN3do/0HVlRQVtFvv158
- 8f5tIbAfepHCSB7FYBW2ilvu429vlAHv4uZk/QoZwY82sRkZegDwxjjABjfq8ACD9lWepALH9Z/
- G2NGDzCqP2AieBC5fQ8dlGP8T7MGShyW0oRUGOPofnyc69n0WI8=
-X-Proofpoint-GUID: PpZaBKnNKcMWaG7cfPMX3ta8d36SOTxo
-X-Authority-Analysis: v=2.4 cv=PIgCOPqC c=1 sm=1 tr=0 ts=690acc53 b=1 cx=c_pps
+X-Proofpoint-GUID: 1Y9rqoMjIEZcxUx3UP7byLhDO2yf4Bfc
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTA1MDAyNCBTYWx0ZWRfX8IVswxS9RJnk
+ Mz/MctGq1JSgUZIaC4qlC3F1twzoOmT7o96/XFF/BNGkK6hTpH/QQUOzw+MC3CZOe6uXtZn2PKF
+ snGsSsuDjXnMhQA5WIGcD2LK7MVINTXpe3aGxBcWbJsBixk9b/WFI3O9y5mn9BcjdFwVM0EsZFj
+ MiUjNkEX65aAXtzGOKEVmtd/SePxfTy18/MYJpC0jfXMzuYGXkL0e9GZ9XvhmQBhGZSddDVo50N
+ KOcwbdU6VR37P+4jmE9QVoTc5Vg0Je+hUizEO4xseVB7aaca/0cXPhj9gLg/Ic09sAqQdVBx8Uo
+ 9TWrcb7+r+wb+LRXaOe0+0jbyNRkIIJ1KI4H2OUXe5wrEIB7vT0nJDWOXMgZxbQbEuR/BwU+amm
+ aHewnMfgFy71CJrWq3EqHmkbO0s18wYOhXLJTBRdy5ab5P2eI8Q=
+X-Authority-Analysis: v=2.4 cv=F9Vat6hN c=1 sm=1 tr=0 ts=690acc52 b=1 cx=c_pps
  a=e1sVV491RgrpLwSTMOnk8w==:117 a=e1sVV491RgrpLwSTMOnk8w==:17
  a=IkcTkHD0fZMA:10 a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=YyQzooh1NaLyuLBRQGEA:9 a=QEXdDO2ut3YA:10 cc=ntf
- awl=host:13657
-X-Proofpoint-ORIG-GUID: PpZaBKnNKcMWaG7cfPMX3ta8d36SOTxo
+ a=VwQbUJbxAAAA:8 a=kBQl_SByLiR99HtUR20A:9 a=QEXdDO2ut3YA:10 a=ZXulRonScM0A:10
+ cc=ntf awl=host:13657
+X-Proofpoint-ORIG-GUID: 1Y9rqoMjIEZcxUx3UP7byLhDO2yf4Bfc
 
-On Mon, 20 Oct 2025 10:38:13 +0000, John Garry wrote:
+On Mon, 27 Oct 2025 11:46:37 -0700, Bart Van Assche wrote:
 
-> This is a reposting of Mike's atomic writes support for the SCSI target.
+> A recent security fix made me take a closer look at target_lu_gp_members_show().
+> I found one bug and also noticed that this function can be simplified. Please
+> consider this patch series for the next merge window.
 > 
-> Again, we are now only supporting target_core_iblock. It's implemented
-> similar to UNMAP where we do not do any emulation and instead pass the
-> operation to the block layer.
+> Thanks,
 > 
-> Changes since v2:
-> - Fix 32b build error
+> Bart.
 > 
 > [...]
 
 Applied to 6.19/scsi-queue, thanks!
 
-[1/7] scsi: target: Rename target_configure_unmap_from_queue
-      https://git.kernel.org/mkp/scsi/c/3434be392051
-[2/7] scsi: target: Add atomic se_device fields
-      https://git.kernel.org/mkp/scsi/c/d505447b8d78
-[3/7] scsi: target: Add helper to setup atomic values from block_device
-      https://git.kernel.org/mkp/scsi/c/c486634fe2b1
-[4/7] scsi: target: Add WRITE_ATOMIC_16 handler
-      https://git.kernel.org/mkp/scsi/c/526145725106
-[5/7] scsi: target: Report atomic values in INQUIRY
-      https://git.kernel.org/mkp/scsi/c/710ad826e300
-[6/7] scsi: target: Add WRITE_ATOMIC_16 support to RSOC
-      https://git.kernel.org/mkp/scsi/c/2d9668883bba
-[7/7] scsi: target: Add atomic support to target_core_iblock
-      https://git.kernel.org/mkp/scsi/c/8e62d8f4b159
+[1/2] scsi: target: Do not write NUL characters into ASCII configfs output
+      https://git.kernel.org/mkp/scsi/c/c03b55f235e2
+[2/2] scsi: target: Simplify target_lu_gp_members_show()
+      https://git.kernel.org/mkp/scsi/c/f010c39ae14c
 
 -- 
 Martin K. Petersen
