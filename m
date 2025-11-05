@@ -1,16 +1,16 @@
 Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 770342F5332
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 11:22:56 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 188922DF3F9
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 11:25:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762341779; cv=none; b=G0AqysLYQbT7avciNlxdC4oGDY3jEmCFVY3oGWM+OSuuM2ugKtcJ2ZKAKaLhQxLtGeofuB6odm310E9W2mMVbhdtk0dnFkt+LWAXwv0zFSCValzprhXArjcFx3Dg8zGiG7h8EiYX8pxpFLoSeqOAUgregPZVQXba4zSIXt5C84s=
+	t=1762341958; cv=none; b=H+w53f9WwPsjRdvpldZPiPgAmUohI0ffb1X/drX/DURv+z/VdMaTwbJOR5os1GRub78sXPtgCp86thUe+iT7B6iQx2Uur8KnJPj4z29ZRvLcQy0Iyq6qH13tKT9WpCh+RUGZG7q8ofSTwd+XhE/w9yzFAxwi/7ItrfElaiawOZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762341779; c=relaxed/simple;
+	s=arc-20240116; t=1762341958; c=relaxed/simple;
 	bh=lnLHz4GA8+8YXZRlXyloiFq/qFqW00pgYvfIRW38KzE=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=pjH2/e4xiVsIta9i7fZ39n76VPKBcsQN6Yo6uheAQreZE0eeHZ//FhyYFlgPQOIqiUX3HXhAxc7VrKjr7frQEGn/GoqCUb/5JYn45kEiFgM2YselPh3vvVlTq+VbVkJZv8hjsPQSJJijrzE4lTVDgtNeY1H4vBTpI5zISsVNaI4=
+	 MIME-Version:Content-Type; b=L1s7ymEvnFNVxt4z2m3bqEO+VQeaK0mL3FoPqroR8G+SPDSjLpLBNOpnQHNqWnPwjq/RZYkM581eivMPcD/+GuZQLdkJfOeD9K9uY16RKQFjqydoXeHVlJJ9oXCKbK8nrplplMi9Uc2RAfe3Lc8YqJAM6EVSjih9jHRVZHc7HqM=
 ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=XOT9zaP0; arc=none smtp.client-ip=113.46.200.222
 Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
@@ -23,24 +23,24 @@ dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
 	b=XOT9zaP0ZU6YyK71RY5H+dVuqdqk0qcVGMGMxcP1CAPfg9BI9kNX/MvK7I37pvWhgIb+nXAsQ
 	yTnjoDh2xXNsz5JQN54mMxDCqLg+Z7yitBzncQW4jW4e034NrGrntgrEPo/OWgZcrgRhQopfYvf
 	jLUyWWa9AO7L2t+O/8ZMfpM=
-Received: from mail.maildlp.com (unknown [172.19.162.112])
-	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4d1jZ66TZpzLlSM;
-	Wed,  5 Nov 2025 19:21:18 +0800 (CST)
+Received: from mail.maildlp.com (unknown [172.19.163.17])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4d1jdX2MKvzLlV3;
+	Wed,  5 Nov 2025 19:24:16 +0800 (CST)
 Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
-	by mail.maildlp.com (Postfix) with ESMTPS id CBF53140109;
-	Wed,  5 Nov 2025 19:22:53 +0800 (CST)
+	by mail.maildlp.com (Postfix) with ESMTPS id 3D55A1A0188;
+	Wed,  5 Nov 2025 19:25:51 +0800 (CST)
 Received: from localhost.localdomain (10.175.104.170) by
  kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Wed, 5 Nov 2025 19:22:53 +0800
+ 15.2.1544.11; Wed, 5 Nov 2025 19:25:50 +0800
 From: JiangJianJun <jiangjianjun3@huawei.com>
 To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
 	<linux-scsi@vger.kernel.org>
 CC: <bvanassche@acm.org>, <john.g.garry@oracle.com>, <hewenliang4@huawei.com>,
 	<yangyun50@huawei.com>, <wuyifeng10@huawei.com>
 Subject: [PATCH] scsi: scsi_debug: make timeout faults by set delay to maximum value
-Date: Wed, 5 Nov 2025 19:57:22 +0800
-Message-ID: <20251105115722.1634895-1-jiangjianjun3@huawei.com>
+Date: Wed, 5 Nov 2025 20:00:11 +0800
+Message-ID: <20251105120011.1638231-1-jiangjianjun3@huawei.com>
 X-Mailer: git-send-email 2.33.0
 In-Reply-To: <20250224115517.495899-5-john.g.garry@oracle.com>
 References: <20250224115517.495899-5-john.g.garry@oracle.com>
