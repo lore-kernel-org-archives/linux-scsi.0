@@ -1,135 +1,238 @@
-Received: from mail-io1-f43.google.com (mail-io1-f43.google.com [209.85.166.43])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3C00632F774
-	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 15:45:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.166.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1AD1030F7E8
+	for <linux-scsi@vger.kernel.org>; Wed,  5 Nov 2025 15:56:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762357510; cv=none; b=tF6zF55l3ts8UECbDgtxZ7zrzMjb27l3olrEaaaiirIRkXbPdlWnCrvvK3ZM9laGjO7rsXpl7oO/pPVE7olNNeHjF22x367y/wme0I0sx84G7P5gmvdL4Y4vyAJEOcM05PRZKDwLTIS1q4j3lfd/gywnJrtzAB25ySqTTGEg1YY=
+	t=1762358210; cv=none; b=iYH1vl36py2UcC19QQ6GuT5feYKlLt2Q3CYI5c5jln2r/lkSlOiP5XqOrUTFiyd0ZNMzkhpf1/ZaSH/w95w0ke73outb+IpbCMXwPl9VTMTskj0L1bJb09+Tg7cm0V71KvVywwdRDW//nVmx35KbBz55JuXflnbTMbydJ4ey2IA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762357510; c=relaxed/simple;
-	bh=vBpIbHl5BJYu3GvhFAscHMjHAct8CImIgNJ4c1z/oeA=;
-	h=From:To:In-Reply-To:References:Subject:Message-Id:Date:
-	 MIME-Version:Content-Type; b=a7xdwuaaEDdHjcx2qOLpMz4oU1tLm+MOJyYUywuA4wnXeiBbxjpx0fsmSd7aBv2HWNvxd0xPCoMgkbK98I21nblnW6maMrAQWYyaZLVHm1H+ztbpstOVnyjY/4BY1neSgzQo2KZ45tzEBUO42b7LO7KvqvUaYsb1CAvc2jkqjIw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk; spf=pass smtp.mailfrom=kernel.dk; dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b=oXBG7qxR; arc=none smtp.client-ip=209.85.166.43
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=kernel.dk
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=kernel.dk
+	s=arc-20240116; t=1762358210; c=relaxed/simple;
+	bh=ALc0RQfMjYqxgWA3Uf3kqlyFfMFHuF0hCO/fgNaIuQo=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=vCVZpEjsaVa+Z5IBQUAUOxyec0ze+JVFi/BSPWpjKS5mvfhgFtc9EshIFtD3sSWe/wua3mXkUEKifIbDTiJ2L+zLQQIvYm7dIvqamLx4fJKLIoc6OGRAR795VufKrKYvnDS3N8vEOqQcNJjQIGKPZb5DoR5ynBV6FUMWDFfklhA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=fail (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=LGNCdh7e reason="signature verification failed"; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel-dk.20230601.gappssmtp.com header.i=@kernel-dk.20230601.gappssmtp.com header.b="oXBG7qxR"
-Received: by mail-io1-f43.google.com with SMTP id ca18e2360f4ac-93e7c7c3d0bso663421139f.2
-        for <linux-scsi@vger.kernel.org>; Wed, 05 Nov 2025 07:45:07 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=kernel-dk.20230601.gappssmtp.com; s=20230601; t=1762357507; x=1762962307; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:to:from:from:to:cc:subject:date:message-id
-         :reply-to;
-        bh=pmEA5UIRtFUkoJTebXPiJtfqEeDxZBhUOtjCk6lwm1Q=;
-        b=oXBG7qxRAgxxpjvyoxPULOa1fgROdBp/4Z8g918iu8f5OrPjl3F4GHIx5MFNTDhIAn
-         pqEWO68Dj3gmQhJr7qUItHwJwG64ld8NCI3MV7bCUWXu1dZb9kfWdGjqhLEvZ479OLxd
-         7WiqKEvubQDho+R74G9Dyx22NjREEAjXzpV9A8ulR2vqMXlAUzbRrF27vJeKUN9IErWH
-         nS5fM8dz6irJDPhN+oXQW2NNuh/Xd+GhLhTh5UE92ErPNvWvCwMnK0USG76HfdDLNIZh
-         XCRNyUDNOSW9hHsEDGFGMI7ZCsw/O3VLkbMk72QQA/atz5Zr6aL5e+7DVF1PHSDpOj60
-         NUcA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762357507; x=1762962307;
-        h=content-transfer-encoding:mime-version:date:message-id:subject
-         :references:in-reply-to:to:from:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=pmEA5UIRtFUkoJTebXPiJtfqEeDxZBhUOtjCk6lwm1Q=;
-        b=YspUksETB/+U/TQtaDOCBh/JKS6dT8x2VrtILzBsj4thr13EmQiGKf5EJuZxEadMI3
-         N+4zua7okzFEiMQz3QNdnIZQEGVyQ2oen5S+ch+sCTFVrEngtmRGkwabUJ7sRDbKcIMZ
-         YjtMfIjTSu/q0CruP04qOBQ+ytnbszrneEtnaQvJw9Y4PlIOenK1gAfRL8ePLZxtrCu1
-         SMCb9Tc+XZtIVbPpsagO7b/T+9EaIi3u5JHmBs2YWVnHI9EM+Lp8S1G2V9X+jJku9D24
-         TCbTvKhlwP4bw4Jd/NI4OMIPBFiBHNcok18mgb0GWGjGi5N4EAuQjoyHWyVDWkVJpIr1
-         hWhA==
-X-Forwarded-Encrypted: i=1; AJvYcCVSnKNSrdIQhwW9mWDLJzV7G/7quGSCFrBh2wrBx/Qo7RZsKJ3fvlHq7LmWRdqLdLKTC1rqehd7QGr9@vger.kernel.org
-X-Gm-Message-State: AOJu0YwQaufnpyMj6DRtHFDf42qTNtnuIjXJ0HY7eRHWNpegb7c3VPoa
-	2MItq6gy6B2EFxnb9w3Gw0HsFaaiwEFMpwO30+AdOm/C1q8ExWItw/aiuWT7E8THlp4=
-X-Gm-Gg: ASbGnctvEz9YPAA/Z/70MnfX2UQWPxswKR9Ee1CfkpZMq9HtDu6ZVmQ8x5AJAsrKiBJ
-	6afixrG8thU0x4QKMfkaZbBHvL0GKKaZyeXfHH5x1L5ZJRN5ziGyp9g578b+5JtF11ZFSk2fqbI
-	6CGqGR9UP/JEL5hGrFf9GDOFDLeb8qx4Ig7UU7HdjsaIpgbSdR/erSlVHSmdTMegNxW7LtVyK6C
-	PZ05wZjMz6BezI/2eDUc2jmMjM+uClcNSje/GD5gIE2rJwaUFKtYAZuNLA20GTtmA8Z/zPh2zaz
-	M9mqaGhEu3TeC72nQnmz24kdCId53C6g2U/qe/UMjUYXLXw2KvW4Jz3E8KmhaQpHgw3JkzKRoGI
-	mGvN1Wlp468djyI6ooaIfNCxs34rf817haoDGsWUV+q8WpAna0CnjlsylIvXkCsInZVVtXqdxHV
-	KXjg==
-X-Google-Smtp-Source: AGHT+IGRprlY0B/j7MFC0euD5DLU4VAIhfixS9xB+G6Pb3CIfQJOwUgjuW1G2xa98UfKd2ncVWvKMA==
-X-Received: by 2002:a05:6e02:1a85:b0:433:2957:2e87 with SMTP id e9e14a558f8ab-433407d98e4mr47454155ab.28.1762357507117;
-        Wed, 05 Nov 2025 07:45:07 -0800 (PST)
-Received: from [127.0.0.1] ([96.43.243.2])
-        by smtp.gmail.com with ESMTPSA id 8926c6da1cb9f-5b72258d4e8sm2521439173.3.2025.11.05.07.45.06
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 05 Nov 2025 07:45:06 -0800 (PST)
-From: Jens Axboe <axboe@kernel.dk>
-To: linux-block@vger.kernel.org, linux-nvme@lists.infradead.org, 
- Keith Busch <keith.busch@wdc.com>, Christoph Hellwig <hch@lst.de>, 
- dm-devel@lists.linux.dev, Mike Snitzer <snitzer@kernel.org>, 
- Mikulas Patocka <mpatocka@redhat.com>, 
- "Martin K . Petersen" <martin.petersen@oracle.com>, 
- linux-scsi@vger.kernel.org, linux-xfs@vger.kernel.org, 
- Carlos Maiolino <cem@kernel.org>, linux-btrfs@vger.kernel.org, 
- David Sterba <dsterba@suse.com>, Damien Le Moal <dlemoal@kernel.org>
-In-Reply-To: <20251104212249.1075412-1-dlemoal@kernel.org>
-References: <20251104212249.1075412-1-dlemoal@kernel.org>
-Subject: Re: [PATCH v4 00/15] Introduce cached report zones
-Message-Id: <176235750606.190479.10317258805246349798.b4-ty@kernel.dk>
-Date: Wed, 05 Nov 2025 08:45:06 -0700
+	dkim=fail reason="signature verification failed" (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="LGNCdh7e"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1762358207;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=Akz/o72H9FWNAwQc14kMnuPRHIo9xAL+ahC7clSIZ9w=;
+	b=LGNCdh7ehVDXnDAIbkAbC0DLMSDYqEfxGOPjdL1mWEelzLNJuUxU8NvzGJUq1ZGztttMYj
+	XwrmPsKpK+5LnBa8txpkUng9/yrC/YNZkH1R+G0n3ENjFZ6aER+MyQZ1kc+i9SZhcOXR/u
+	mSXKKUSNAn5N31VgrDYjhww7yx1nlmY=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-533-WFEnBvXaNnerja_eKwKI8Q-1; Wed,
+ 05 Nov 2025 10:56:44 -0500
+X-MC-Unique: WFEnBvXaNnerja_eKwKI8Q-1
+X-Mimecast-MFC-AGG-ID: WFEnBvXaNnerja_eKwKI8Q_1762358203
+Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id E05F119560A1;
+	Wed,  5 Nov 2025 15:56:42 +0000 (UTC)
+Received: from [10.22.88.66] (unknown [10.22.88.66])
+	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id B7911300018D;
+	Wed,  5 Nov 2025 15:56:41 +0000 (UTC)
+Message-ID: <cb673c0e-74ca-4275-b6d6-5401a2159494@redhat.com>
+Date: Wed, 5 Nov 2025 10:56:40 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 1/2] st: separate st-unique ioctl handling from scsi
+ common ioctl handling
+To: David Jeffery <djeffery@redhat.com>,
+ =?UTF-8?Q?Kai_M=C3=A4kisara?= <Kai.Makisara@kolumbus.fi>
+Cc: Laurence Oberman <loberman@redhat.com>, linux-scsi@vger.kernel.org
+References: <20251104154709.6436-1-djeffery@redhat.com>
+Content-Language: en-US
+From: John Meneghini <jmeneghi@redhat.com>
+Organization: RHEL Core Storge Team
+In-Reply-To: <20251104154709.6436-1-djeffery@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
-X-Mailer: b4 0.14.3
+X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+
+This diff is difficult to read.  However, in reviewing this code manually by reading the results of this patch and comparing it with
+the previous file I believe this change is correct and functionally equivalent to the previous code.
+
+I've also tested this patch with my new and improved tape_tests and reproduced the failing scsi ioctl(idlun) problem with this patch.
+So this confirms there is no functional change with this patch. It isn't pretty but it should provide a safe, bisect-able change that
+prepares for your next patch.
+
+Reviewed-by: John Meneghini <jmeneghi@redhat.com>
+Tested-by: John Meneghini <jmeneghi@redhat.com>
+
+/John
+
+https://github.com/johnmeneghini/tape_tests
+
+[root@estor-t560 ~]# grep -E "TEST.FAILED|TEST.WARN|sg_reset|Power.on/reset.recognized|Unit.Attention" /root/tape_reset_tests.log
+--- sg_reset --target /dev/sg2
+--- sg_map -st -x -i TEST WARN : device /dev/nst0 failed on scsi ioctl(idlun), skip: Input/output error
+[  247.493571] st 1:0:0:0: [st0] Power on/reset recognized.
+--- sg_map -st -x -i TEST WARN : device /dev/nst0 failed on scsi ioctl(idlun), skip: Input/output error
+--- stinit -f /home/jmeneghi/tape_tests/stinit.conf -v /dev/nst0 TEST WARN : The SCSI INQUIRY for device '/dev/nst0' failed (power off?): Input/output error
+--- sg_reset --target /dev/sg2
+[  265.727311] st 1:0:0:0: [st0] Power on/reset recognized.
+[  265.727357] st 1:0:0:0: [st0] Sense Key : Unit Attention [current]
+--- sg_map -st -x -i TEST WARN : device /dev/nst0 failed on scsi ioctl(idlun), skip: Input/output error
+--- stinit -f /home/jmeneghi/tape_tests/stinit.conf -v /dev/nst0 TEST WARN : The SCSI INQUIRY for device '/dev/nst0' failed (power off?): Input/output error
+--- sg_reset --target /dev/sg2
+[  285.860196] st 1:0:0:0: [st0] Power on/reset recognized.
+[  285.860241] st 1:0:0:0: [st0] Sense Key : Unit Attention [current]
+--- sg_reset --target /dev/sg2
+[  310.125953] st 1:0:0:0: [st0] Power on/reset recognized.
+--- sg_reset --target /dev/sg2
+[  351.444178] st 1:0:0:0: [st0] Power on/reset recognized.
+--- sg_reset --target /dev/sg2
+[  992.210217] st 1:0:0:0: [st0] Power on/reset recognized.
+--- sg_map -st -x -i TEST WARN : device /dev/nst0 failed on scsi ioctl(idlun), skip: Input/output error
+--- stinit -f /home/jmeneghi/tape_tests/stinit.conf -v /dev/nst0 TEST WARN : The SCSI INQUIRY for device '/dev/nst0' failed (power off?): Input/output error
+--- sg_reset --target /dev/sg2
+[ 1002.023106] st 1:0:0:0: [st0] Power on/reset recognized.
+[root@estor-t560 ~]#
 
 
-On Wed, 05 Nov 2025 06:22:34 +0900, Damien Le Moal wrote:
-> This patch series implements a cached report zones using information
-> from the block layer zone write plugs and a new zone condition tracking.
-> This avoids having to execute slow report zones commands on the device
-> when for instance mounting file systems, which can significantly speed
-> things up, especially in setups with multiple SMR HDDs (e.g. a BTRFS
-> RAID volume).
+
+
+
+
+On 11/4/25 10:46 AM, David Jeffery wrote:
+> The st ioctl function currently interleaves code for handling various st
+> specific ioctls with parts of code needed for handling ioctls common to
+> all scsi devices. Separate out st's code for the common ioctls into a more
+> manageable, separate function.
 > 
-> [...]
-
-Applied, thanks!
-
-[01/15] block: handle zone management operations completions
-        commit: efae226c2ef19528ffd81d29ba0eecf1b0896ca2
-[02/15] block: freeze queue when updating zone resources
-        commit: bba4322e3f303b2d656e748be758320b567f046f
-[03/15] block: cleanup blkdev_report_zones()
-        commit: e8ecb21f081fe0cab33dc20cbe65ccbbfe615c15
-[04/15] block: introduce disk_report_zone()
-        commit: fdb9aed869f34d776298b3a8197909eb820e4d0d
-[05/15] block: reorganize struct blk_zone_wplug
-        commit: ca1a897fb266c4b23b5ecb99fe787ed18559057d
-[06/15] block: use zone condition to determine conventional zones
-        commit: 6e945ffb6555705cf20b1fcdc21a139911562995
-[07/15] block: track zone conditions
-        commit: 0bf0e2e4666822b62d7ad6473dc37fd6b377b5f1
-[08/15] block: refactor blkdev_report_zones() code
-        commit: 1af3f4e0c42b377f3405df498440566e3468c314
-[09/15] block: introduce blkdev_get_zone_info()
-        commit: f2284eec5053df271c78e687672247922bcee881
-[10/15] block: introduce blkdev_report_zones_cached()
-        commit: 31f0656a4ab712edf2888eabcc0664197a4a938e
-[11/15] block: introduce BLKREPORTZONESV2 ioctl
-        commit: b30ffcdc0c15a88f8866529d3532454e02571221
-[12/15] block: improve zone_wplugs debugfs attribute output
-        commit: 2b39d4a6c67d11ead8f39ec6376645d8e9d34554
-[13/15] block: add zone write plug condition to debugfs zone_wplugs
-        commit: 1efbbc641ef7d673059cded789b9c8a743c17c9a
-[14/15] btrfs: use blkdev_report_zones_cached()
-        commit: ad3c1188b401cbc0533515ba2d45396b4fa320e1
-[15/15] xfs: use blkdev_report_zones_cached()
-        commit: e04ccfc28252f181ea8d469d834b48e7dece65b2
-
-Best regards,
--- 
-Jens Axboe
-
-
+> Signed-off-by: David Jeffery <djeffery@redhat.com>
+> Tested-by:     Laurence Oberman <loberman@redhat.com>
+> ---
+> 
+>   drivers/scsi/st.c | 85 ++++++++++++++++++++++++++++++++++-------------
+>   1 file changed, 62 insertions(+), 23 deletions(-)
+> 
+> diff --git a/drivers/scsi/st.c b/drivers/scsi/st.c
+> index 74a6830b7ed8..87f0e303fdd6 100644
+> --- a/drivers/scsi/st.c
+> +++ b/drivers/scsi/st.c
+> @@ -3526,8 +3526,60 @@ static int partition_tape(struct scsi_tape *STp, int size)
+>   out:
+>   	return result;
+>   }
+> -
+>   
+> +/*
+> + * Handles any extra state needed for ioctls which are not st-specific.
+> + * Called with the scsi_tape lock held, released before return
+> + */
+> +static long st_common_ioctl(struct scsi_tape *STp, struct st_modedef *STm,
+> +			    struct file *file, unsigned int cmd_in,
+> +			    unsigned long arg)
+> +{
+> +	int i, retval = 0;
+> +
+> +	if (!STm->defined) {
+> +		retval = -ENXIO;
+> +		goto out;
+> +	}
+> +
+> +	if ((i = flush_buffer(STp, 0)) < 0) {
+> +		retval = i;
+> +		goto out;
+> +	} else { /* flush_buffer succeeds */
+> +		if (STp->can_partitions) {
+> +			i = switch_partition(STp);
+> +			if (i < 0) {
+> +				retval = i;
+> +				goto out;
+> +			}
+> +		}
+> +	}
+> +	mutex_unlock(&STp->lock);
+> +
+> +	switch (cmd_in) {
+> +	case SG_IO:
+> +	case SCSI_IOCTL_SEND_COMMAND:
+> +	case CDROM_SEND_PACKET:
+> +		if (!capable(CAP_SYS_RAWIO))
+> +			return -EPERM;
+> +		break;
+> +	default:
+> +		break;
+> +	}
+> +
+> +	retval = scsi_ioctl(STp->device, file->f_mode & FMODE_WRITE,
+> +			    cmd_in, (void __user *)arg);
+> +	if (!retval && cmd_in == SCSI_IOCTL_STOP_UNIT) {
+> +		/* unload */
+> +		STp->rew_at_close = 0;
+> +		STp->ready = ST_NO_TAPE;
+> +	}
+> +
+> +	return retval;
+> +out:
+> +	mutex_unlock(&STp->lock);
+> +	return retval;
+> +}
+>   
+>   /* The ioctl command */
+>   static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+> @@ -3565,6 +3617,15 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+>   	if (retval)
+>   		goto out;
+>   
+> +	switch(cmd_in) {
+> +	case MTIOCPOS:
+> +	case MTIOCGET:
+> +	case MTIOCTOP:
+> +		break;
+> +	default:
+> +		return st_common_ioctl(STp, STm, file, cmd_in, arg);
+> +	}
+> +
+>   	cmd_type = _IOC_TYPE(cmd_in);
+>   	cmd_nr = _IOC_NR(cmd_in);
+>   
+> @@ -3876,29 +3937,7 @@ static long st_ioctl(struct file *file, unsigned int cmd_in, unsigned long arg)
+>   		}
+>   		mt_pos.mt_blkno = blk;
+>   		retval = put_user_mtpos(p, &mt_pos);
+> -		goto out;
+> -	}
+> -	mutex_unlock(&STp->lock);
+> -
+> -	switch (cmd_in) {
+> -	case SG_IO:
+> -	case SCSI_IOCTL_SEND_COMMAND:
+> -	case CDROM_SEND_PACKET:
+> -		if (!capable(CAP_SYS_RAWIO))
+> -			return -EPERM;
+> -		break;
+> -	default:
+> -		break;
+>   	}
+> -
+> -	retval = scsi_ioctl(STp->device, file->f_mode & FMODE_WRITE, cmd_in, p);
+> -	if (!retval && cmd_in == SCSI_IOCTL_STOP_UNIT) {
+> -		/* unload */
+> -		STp->rew_at_close = 0;
+> -		STp->ready = ST_NO_TAPE;
+> -	}
+> -	return retval;
+> -
+>    out:
+>   	mutex_unlock(&STp->lock);
+>   	return retval;
 
