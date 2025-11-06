@@ -1,70 +1,74 @@
-Received: from mail-pj1-f54.google.com (mail-pj1-f54.google.com [209.85.216.54])
+Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6EA30222594
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 22:15:39 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187F6222594
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 22:15:41 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762467340; cv=none; b=hgdSnycaMpgGYQ7DMLWHahhfygm0IzPqrbEXUJFPHWYFslYImvbNLy06wGFn+3pkZrf7wL1t2Z+rJKXJnvuNQzXhGGA0V3gq07F1T1LKlcFb58nxRC1N5OB1nydX2Tx3WoSJi4M8Q1dcmLNMlIBBUmXmiIyKCpMtfkfsAwVnVLU=
+	t=1762467343; cv=none; b=BH/p/oUyHD7HGCG3ENhgxaLNgFw2mB/MKE+tmEVG+/V2X97jpap5UyRsXi/PCmIt+dupJoELaEEL/zonScxJfstVpI5w6cyAovo8mKcP72rOXbbORo2BNaHhDRC/0MN8T+3TMsLPtBNGq+hnYIiiScwCbL7LHsu/snIXPW5aB0U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762467340; c=relaxed/simple;
-	bh=lJlIk55Uim2hPyW6U9etA3WYtvnrrRQIBOJxA5+yudQ=;
-	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=Hr2U7wOC5+XujhVWtAf3pIIwaRAFqM3lMAXvf+BJ4526kWVmb2mNkF/WpZ25OSdoX1gQ0zztbI+n7r6epnskINhZxCK4jPODLrAzQ+Zs56HkzevLzrxF8TmG+Emqv9noGTXY74v1uoYDS4mTdAeIXQf+NEp9YW6HC4EHoR9jvCc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=W11l5KSC; arc=none smtp.client-ip=209.85.216.54
+	s=arc-20240116; t=1762467343; c=relaxed/simple;
+	bh=csIMmU13go2KpEAefdnSavPDRJ8F9j9NhBOK2lOESKY=;
+	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
+	 MIME-Version; b=UXagaYCk3pxRqDQc4P9Y2FkdPPOWk6/M4L5Z7H7RBFyReVChx/Y2mqWU+I7Trw8avAcIwHX3tLBuTGkvrGG+K9wZg+aGN6Vq2/8HnN0bkIOWX4RvLYoZi+hPPDmRRG6eria6sfmXHfU9M4X9XolCv2sNSVg4yGH6l9ebETjwgio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TfjZZq0Z; arc=none smtp.client-ip=209.85.210.181
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="W11l5KSC"
-Received: by mail-pj1-f54.google.com with SMTP id 98e67ed59e1d1-33db8fde85cso128872a91.0
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 14:15:39 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TfjZZq0Z"
+Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-7aace33b75bso156366b3a.1
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 14:15:41 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762467338; x=1763072138; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=xIpAwWwEklHO2Eg5GDsJHID5J3/lvSFxJF+0kwVTCcY=;
-        b=W11l5KSCSCCt9RxgKfqhw8tnDCnN5bV2nPx2bCBeim7YR1GYE8RcuWjgiET36dhTXU
-         +i5g1dIU2QtwLKnE69MORk2r8aq+gXatNzZtPChQI1PvliYi2EB1yjbxUNYKD3+Oauh0
-         EMiroCF23BS5Y5SqMz7urLz+LcqTyCGPfawELo+Rxwb/N4XE1gmUu2chO/dzf/Y8AnHs
-         yk2eX3Sd91Th6ym9hR1BXziSP0Eqjjt5xxuVp7R+i8+FCJnVgLEmRCc7on6l1OX6nwTF
-         kVe+YHFND/ttkhl+T1k9QBzmPZzFlUMf2WZOqmmJsKYTxQzeu6Gg7O15zLQwEF1hNH/D
-         oqvg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762467338; x=1763072138;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1762467341; x=1763072141; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=xIpAwWwEklHO2Eg5GDsJHID5J3/lvSFxJF+0kwVTCcY=;
-        b=hXHgoC2OSMv/03tQ/oVxiWmPeAY4suAvoJsBJui4xBf2JPDNw5PtPlMZyEdlVm2HoA
-         N3Sh60fBM+YzfIgYtg6E7T6ch9At9sr/8Xx5zlQlEYvsUB8a7gHofc7UlEemag30VBAY
-         HORvn9c65KfcHPImWsLvSq8PyYrNndRxEvVMWAK9+nHAM8rstOUMfvBgPYKXuBZi1Hkm
-         bX1v2sIbJITRR39K9hKS096PGxttVLKeiBMJPWzVJGIksENCTTYA1s+aqVjmH8W6F/mv
-         SQGMZ38EcxyW+ycNwEawt1/5zE5RLpLS0mbJk5DcxU4ltNN1Hgj6PXZF3DlsDNx5Fdx6
-         fPLA==
-X-Gm-Message-State: AOJu0Yz0w94gFvrJyir+1JTbRYGKR2OLHAmNspoGcb7oZX9j7aql1wxh
-	EHrYDdRCKaBKJQj9IoimoCQukOqbld7b93YnQvDx9GbuaGkSbwR7ciFsdjXnPY7K
-X-Gm-Gg: ASbGncsOzqnRE2xPvxwG6FTz7UKPNEuTUCaiPxfzrKX0HP5GsL4NAt/75DilPlfSsZ6
-	l3GF924S1BisJlD9OsJehn++sznl+BbJpAC0zyS0XCJJAGbGt8BpeHUcYZKMLslTbRCTk90ATPF
-	TxiMDib3pRaHNZHaOa4seR0z/5F5N8dx80Fnldkgd0cCdS+56uEqBK16lYw1qZ2sxRzNada0/bn
-	kxP4zUX5xtoyXaf2KbgZZ/KShGUB/vAVNpVdE95J56xeR3GbryzPUFeMJ0vhmfuinFqBAvSP5Wm
-	AQsvfezMHkxst9weBl+asXckHO6tx3mh9gngFY2VcSKQI2b5fbYboR2lsFUZM6fj2CPCxHbWFAS
-	syD1QpxWeKiXxuz2Zeq4upZYVVokbHcqyq9ToV1oRDfgd51yFpiy9uqoKO8DqCbh5ZaEMneLXGq
-	evoqrJqa51NZvFbYLP7fJperIIsgrzQIz8Y/pFkfg/tuBBkIU7Epst7pOGq56V
-X-Google-Smtp-Source: AGHT+IFjs0Xv7JxXVpyr7N6xGDV4JL36VgV/cWnInwps2dA4DEYn49ElJg3NpgCv5zdDNhiP7EDyGA==
-X-Received: by 2002:a17:90b:2250:b0:32d:e780:e9d5 with SMTP id 98e67ed59e1d1-3434c55b259mr721727a91.22.1762467338479;
-        Thu, 06 Nov 2025 14:15:38 -0800 (PST)
+        bh=bdM66Gc6+/k8T6MtlOOA9P/Jrc/3parojDYchCBv4zU=;
+        b=TfjZZq0ZC2NYXcCTAj5E3wJEP5RYBnh1LS0158ShUkCWuIbNFEqPJcddZY1rn7Jdb4
+         dFa4t+15OKs/ISQAqDkX8haYQzWKkdAlAcmasx6AlHgfcGpJSEywiKWbYwWay7BCbmQT
+         lIG9kRi6Jqa9SYN/oaxeeSn8DxCfsnkVdZVGTtSQ7CKJ7P2QvzlQTUSPowFnxHnBx/he
+         c7i0Z/BuU0m4TWzGUlYa4e5xadnPhyv7qddtHiZcBQGPcE5XdnP4FxI5DZ1VQTypfKrQ
+         1Vlj8XO43DzrcElQQjKpsAAJFw76jMzp0wDEg5CMJvA56uZDsZer5gbxNONPnQ3j9aqO
+         CB3Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762467341; x=1763072141;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=bdM66Gc6+/k8T6MtlOOA9P/Jrc/3parojDYchCBv4zU=;
+        b=D4xl0Fa8AdDEwHYzw/dkrNhwFGoTjqqwaLO5F7oK+Csw7lAqI1dM0sP42TQSS0ht8p
+         i/gXiB81YEuFTNzlfu0kwzH0inQskSCZi8vOtQ+rCWxHJFeTLkH5LkTtr3hv76ZVQU1b
+         Y7PwPWXUkZAyoQkL8K6yxd0pbgMMgW0SFQQDzCqJnqpg9D+ktjmwpfoZXyUriFJ6hRnh
+         i4LuOD7tVjntJZiRJISzQR1xN2iuCnCfM4Xny9LIJ+/4MoLDq0DTYxNWWYEhJINsC9mV
+         afZHb1x/mUJNlRJRFQqapkvLOxnY0/3joK2Klp4FhrHgqZ4IOw1ctoEpDa/RQ0wxmmHD
+         wzJA==
+X-Gm-Message-State: AOJu0Ywjut+rJWBeaNvUUuiDWmO9QXM8MaxbDLaYGqhkO9Q0gs/LfMf2
+	OVWXJYC/2v3BG2VMt7hHlzRbPoTOJiQlD/tXWQXasR/wGTfdX4wxbvmWnSL7S9gW
+X-Gm-Gg: ASbGncv4BXlOVN7gAoOy/SDlHMxQmti7zkAqetE8WcRdNdHi85+gRecbP4xpMY7CiBJ
+	8SGrAQ/mBXv5VFdK4ztk9/1gxh1JCSzYzm0o+nEf4dDJ3ZNMP1CE9m/FigVHfknnN+1lw77tR32
+	aE0mKRRjAlQki0BtPY+2tskR20V3KTWLjQ1fQn0bMTDaXnCDbReM+W++J2d3xHQzYuz/9XX0jHG
+	pNTdP7qi2Db4RdJ0uPKBuNEL4JQFpn9V4IIwJqN1e9E75cq3+m61YI2+yvm/hes+OMKxLSlxjlo
+	xhvrOl2MTHhgsKjVVXBxMMOn77DCZhsTsrF/AVBaxOcc6HxXz5G3Mpq7KMHMCMH3jchUrIEtUCF
+	UAgjtGxbqNNNzsVfcqN9AmNCx33NJhqHkEuTwMyz7sQrY4JV/cnsy7NCZ5ND13y0hFIeZ/WXmBZ
+	2HIojFeby1Z+n2InjJ5hLndu88nd6TuMFQprMlDjIO4+WHCa9bwxuau1TvS1Tr3vQWi7rPcn0=
+X-Google-Smtp-Source: AGHT+IGxbSpiPsY1XcXUTh1e46yFU7FiQ/qOaVS6vnPvWMF+83MW6XKBHXowxrLEeEpNek7aZ17glw==
+X-Received: by 2002:a05:6a00:2e1e:b0:7a2:7610:364d with SMTP id d2e1a72fcca58-7b0bd5a2d7cmr1359743b3a.15.1762467341256;
+        Thu, 06 Nov 2025 14:15:41 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b0ccc59de7sm568901b3a.65.2025.11.06.14.15.37
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b0ccc59de7sm568901b3a.65.2025.11.06.14.15.40
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 06 Nov 2025 14:15:38 -0800 (PST)
+        Thu, 06 Nov 2025 14:15:40 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 00/10] Update lpfc to revision 14.4.0.12
-Date: Thu,  6 Nov 2025 14:46:29 -0800
-Message-Id: <20251106224639.139176-1-justintee8345@gmail.com>
+Subject: [PATCH v2 01/10] lpfc: Update various NPIV diagnostic log messaging
+Date: Thu,  6 Nov 2025 14:46:30 -0800
+Message-Id: <20251106224639.139176-2-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
+In-Reply-To: <20251106224639.139176-1-justintee8345@gmail.com>
+References: <20251106224639.139176-1-justintee8345@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -73,39 +77,61 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Update lpfc to revision 14.4.0.12
+Update PRLI status log message to automatically warn when CQE status is
+non-zero.
 
-This patch set contains updates to log messaging, revision of outdated
-comment descriptions, fixes to kref accounting, support for BB credit
-recovery in point-to-point mode, and introduction of registering unique
-platform name identifiers with fabrics.
+When issuing an RSCN, log ndlp's kref count to the debugfs trace buffer.
 
-The patches were cut against Martin's 6.19/scsi-queue tree.
+Add the NPIV virtual port index to the FDMI registration log message with
+the fabric.
 
-Justin Tee (10):
-  lpfc: Update various NPIV diagnostic log messaging
-  lpfc: Revise discovery related function headers and comments
-  lpfc: Remove redundant NULL ptr assignment in lpfc_els_free_iocb
-  lpfc: Ensure unregistration of rpis for received PLOGIs
-  lpfc: Fix leaked ndlp krefs when in point-to-point topology
-  lpfc: Modify kref handling for Fabric Controller ndlps
-  lpfc: Fix reusing an ndlp that is marked NLP_DROPPED during FLOGI
-  lpfc: Allow support for BB credit recovery in point-to-point topology
-  lpfc: Add capability to register Platform Name ID to fabric
-  lpfc: Update lpfc version to 14.4.0.12
+Signed-off-by: Justin Tee <justintee8345@gmail.com>
+---
+ drivers/scsi/lpfc/lpfc_els.c  | 6 +++---
+ drivers/scsi/lpfc/lpfc_init.c | 6 +++---
+ 2 files changed, 6 insertions(+), 6 deletions(-)
 
- drivers/scsi/lpfc/lpfc.h           |   4 +-
- drivers/scsi/lpfc/lpfc_ct.c        |  36 +++++
- drivers/scsi/lpfc/lpfc_disc.h      |   3 +-
- drivers/scsi/lpfc/lpfc_els.c       | 249 ++++++++++++++++++++---------
- drivers/scsi/lpfc/lpfc_hbadisc.c   |   6 +-
- drivers/scsi/lpfc/lpfc_hw.h        |  25 ++-
- drivers/scsi/lpfc/lpfc_init.c      |  12 +-
- drivers/scsi/lpfc/lpfc_nportdisc.c |  21 +--
- drivers/scsi/lpfc/lpfc_sli.c       |  79 ++++++++-
- drivers/scsi/lpfc/lpfc_version.h   |   2 +-
- 10 files changed, 327 insertions(+), 110 deletions(-)
-
+diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
+index b71db7d7d747..f7c6758557c8 100644
+--- a/drivers/scsi/lpfc/lpfc_els.c
++++ b/drivers/scsi/lpfc/lpfc_els.c
+@@ -2367,7 +2367,7 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			mode = KERN_INFO;
+ 
+ 		/* Warn PRLI status */
+-		lpfc_printf_vlog(vport, mode, LOG_ELS,
++		lpfc_vlog_msg(vport, mode, LOG_ELS,
+ 				 "2754 PRLI DID:%06X Status:x%x/x%x, "
+ 				 "data: x%x x%x x%lx\n",
+ 				 ndlp->nlp_DID, ulp_status,
+@@ -3597,8 +3597,8 @@ lpfc_issue_els_rscn(struct lpfc_vport *vport, uint8_t retry)
+ 	}
+ 
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+-			      "Issue RSCN:       did:x%x",
+-			      ndlp->nlp_DID, 0, 0);
++			      "Issue RSCN:   did:x%x refcnt %d",
++			      ndlp->nlp_DID, kref_read(&ndlp->kref), 0);
+ 
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+ 	if (rc == IOCB_ERROR) {
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index f206267d9ecd..34386b7c0b48 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -9082,9 +9082,9 @@ lpfc_setup_fdmi_mask(struct lpfc_vport *vport)
+ 			vport->fdmi_port_mask = LPFC_FDMI2_PORT_ATTR;
+ 	}
+ 
+-	lpfc_printf_log(phba, KERN_INFO, LOG_DISCOVERY,
+-			"6077 Setup FDMI mask: hba x%x port x%x\n",
+-			vport->fdmi_hba_mask, vport->fdmi_port_mask);
++	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
++			 "6077 Setup FDMI mask: hba x%x port x%x\n",
++			 vport->fdmi_hba_mask, vport->fdmi_port_mask);
+ }
+ 
+ /**
 -- 
 2.38.0
 
