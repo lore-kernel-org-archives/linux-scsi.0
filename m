@@ -1,154 +1,129 @@
-Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-ej1-f52.google.com (mail-ej1-f52.google.com [209.85.218.52])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 60C14345CB8
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 14:22:03 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 732E52E612F
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 14:46:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762438929; cv=none; b=HaGLw1lnvZA0cgWriJfNt5bgk1Llc4k7wPpOtcbotqA3Fazr6V4gc+v21d7DBwxoyVibuKtmUqOWYhsESZoORl8/mklecqZJ98SWqIJzizFCJpzYbyQlDIhkcufrp84ztraiGnNpzAIfj2UURP+cfWXB24LRXnhxf/v4IqeeuyY=
+	t=1762440419; cv=none; b=bbKCg+jaUAbb0cX/Ey2mjWjN0TRdn+I8fAOwuDR7Qhgcut1ol4fmPT33h4FpRgiEsXY9tobe9gEYV8xa+R4RLpSjMs1/z+HVwdV0gtGPVktCd0o939Zl4Rk2qzHBVMQbrzIOhwLCYZV6qX0C9JeV+Z9B3lHDo0pP6Dprmtbqa8s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762438929; c=relaxed/simple;
-	bh=cmlE6QF7aLplx5fUXChubWl3y4MDMDOmw13Oo6p8fxI=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=kiT1EfuXMgmhVZPwmD1GzrFgWq5lhvX31sJ56Ly7iNqkpbgj80o9N7vzkHuFNzS6FLzb/o/7/j1zZcDkyUO8R2gr2zElzzsF1/X7O92pGAMpiq8/kYYp5/BQJYHwWTupYCRiNNp6oySBqxgHECr6KtFZEazbvm5mDaPIAXq363A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=CK7PpxY6; arc=none smtp.client-ip=185.246.85.4
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
+	s=arc-20240116; t=1762440419; c=relaxed/simple;
+	bh=DZ1XWRZMG/rus3+GxD8gyTLsrgLZ8TB4RSOF8k7/V+I=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=j06bGPVRrd+uaYlaqmwkg2eXCQ6ZsIFp4nR7uFNV6E41R+lvjKzGbkp7pvG/ihg8GzOLZIHvz8ezwTBs1FnsTJAq0dTQxLurTPVeum324lZdoXjyaQyA05R54AMj3lAVaq9AxY5UF8eEk9QSX7XBr4+cChMBWscTxx4Jiju/P9o=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=nDJCPqvF; arc=none smtp.client-ip=209.85.218.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="CK7PpxY6"
-Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
-	by smtpout-03.galae.net (Postfix) with ESMTPS id 8D3CA4E41569;
-	Thu,  6 Nov 2025 14:22:02 +0000 (UTC)
-Received: from mail.galae.net (mail.galae.net [212.83.136.155])
-	by smtpout-01.galae.net (Postfix) with ESMTPS id 614C26068C;
-	Thu,  6 Nov 2025 14:22:02 +0000 (UTC)
-Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id CE5A0118510E6;
-	Thu,  6 Nov 2025 15:21:58 +0100 (CET)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
-	t=1762438921; h=from:subject:date:message-id:to:cc:mime-version:content-type:
-	 content-transfer-encoding; bh=4wsKrzApjohL8OKsa9W0+EY3SDDuZv01Lvvq2Jxxjic=;
-	b=CK7PpxY6/zl3rVKGY1bY9WwkHXmkLBrN7GUzaZw0AvoAsD0Hx5Ec6t0pjSenN+zKrx1E3N
-	1WsIyb7ujNfl99jgeeguE3eYLeOmuw/H6S16UhxZr9hlD94DEDJAwEFEfzFSFP9wJ5oyDu
-	1UUuXrLV2Vw+nFzFOE5kFeUuWCAtEhM5jYelGNhbHmJy/emSS0m/+AatyQ5ShdvqDNISmO
-	lcQDhrnBEuEOAhFHm+RNp9nE0WEZxhdAdUTqAqgUItGWcLYPWF0YzmJlthUj9fvCtjbFvl
-	mlkyRBKbvyymVMggk52ppPNPjerqoBNt8/k8ZPhiTaGzNXM+xHDvcPcp2kC2Ww==
-From: "Thomas Richard (TI.com)" <thomas.richard@bootlin.com>
-Date: Thu, 06 Nov 2025 15:21:54 +0100
-Subject: [PATCH] scsi: ufs: ti-j721e: Add suspend-resume support
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="nDJCPqvF"
+Received: by mail-ej1-f52.google.com with SMTP id a640c23a62f3a-b72134a5125so95992466b.0
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 06:46:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1762440416; x=1763045216; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=HduGiVleo4x3CODKWMmmltGT7D7OCw+rAdg6aPlkN5E=;
+        b=nDJCPqvFJW+LdeRgWtXwv/hBDf/B/acffR+qhA2mQknXIOLeoJitI/HkAmd/pZiCik
+         tETNeEZFPKkiiuwQz6TUrFvSVkVhk1L7V5/iw0MqT7ZdXA/z6aU6RNhJRElOQnvukiYV
+         OPEa+jypANZTI9P/aY0rZFpzaI/OcjTgBs15IHS7fn8sj+oNDb0Dws8Ls/7t+O5iTQbb
+         R6Rn7uR4B2n73uBQcHPMaG3B8pRRJ9llDTSs+Tf9rFkpMe/1Kyha0Tl5/PmD+mdxumWG
+         CBdbCCW+9Xvq0PSHRIzw1OKe5kJUqUWZpjSZK5iFIEdGBgJ4lvZjPUOInDIzJdx8634T
+         jQ9Q==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762440416; x=1763045216;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=HduGiVleo4x3CODKWMmmltGT7D7OCw+rAdg6aPlkN5E=;
+        b=NohCK98bcjJcZoHT0c+iPBorTNug2ZzEWGHr84542byiNQDJsrZAXoIdQ3BMwojs+N
+         z/5AoMaglWGrdx7OyJgq72/iUyaXl1UdufOcxp3jAQB8XIjoEvnfTaEMTfYJ9sXtboc2
+         l96IceI78HU2YN08RdkPzW0jHdMseqdBadaABEv98vm60XsT7d+N8Zp1bmcT/H4BX60r
+         0orlrjNB/WcDoT4I4iYYWP5a7af7tUr0H4T9PNfE2hdUgPUagBMP8HMZPWjVCdBhkwZn
+         tYqZbVmLjTHy9WRn3tKOYVZTwwJWJZNt4G7mgdzPRVam6gznh9BpByuMjColHMuWx1iI
+         Xyig==
+X-Forwarded-Encrypted: i=1; AJvYcCXFb81zp6CC8cOiQw3l3AEXuKWgQvQVZslEC3vfhNudPjcyvZvOcOIbSuJCYmU/kBi9xAWLAL3Jb0bz@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy+to7vIGUCEIXiHx2mS5dHWN5mJBm/51l2Z2njSxAlf6xfFfeB
+	WQKDGB+4XmO4X5IqwFqD7tsdyklr9pReHDmWoSu7f8FZDIDGepHJfc+sD1uh4cD2GaY=
+X-Gm-Gg: ASbGncszVgzXw9oL5M2uO/VZS1HMwmopzj1Ahm1egnvBGLgfjCrHE3pXrescYE/ALot
+	7qfGdT5INGjuiZKgeBQOYWkEgVov1SKKd2f73sgaDVZYLufBSqsG4peFO5u3TmUojmnyiMaDtWz
+	SQ1GKzDgTRWEMyHDXZmqiX9V/qe6JJWzW75C2rd4baAi+aPRDB/+BskyhmGw9TkYJQKon4wo4uw
+	ctTWeBkAiPAxOSc9cyAqSJB0yQr3giSiYUAbhl3RL43onyXf1FegXdP8FXF2J3uJ8+3uRQGNxb8
+	2dSZG3J0q9joAjiD/J1UJwpe4JEQlTftwCboBJ8Yxjl7BGgTuF+XYZcK/mbwlzf98SvZQkufwa2
+	Tr7NFCPPJhwaUgr2Jk3l2MFO3RTkKBSkbix/pdS6+zekdOgvftsn+ynHTFBb0lhazJqTaqEk6TZ
+	MzumsHR/V79Nl4rk5/DAoLKFE=
+X-Google-Smtp-Source: AGHT+IGw86hMYPFdWOfs9zaI9D4V+iRGEIxPznCLyxNtZbZMWrDmTzsSFfcLKNbOfZ7cLvXixIL/BQ==
+X-Received: by 2002:a17:906:794c:b0:b6d:2edf:ac5d with SMTP id a640c23a62f3a-b72655a269fmr751504566b.51.1762440415808;
+        Thu, 06 Nov 2025 06:46:55 -0800 (PST)
+Received: from localhost ([87.213.113.147])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b729d359360sm133796266b.37.2025.11.06.06.46.55
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 06 Nov 2025 06:46:55 -0800 (PST)
+Date: Thu, 6 Nov 2025 17:46:54 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Ally Heev <allyheev@gmail.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: fix uninitialized pointers with free attr
+Message-ID: <f7f26ae6-31d7-4793-8daa-331622460833@suswa.mountain>
+References: <20251105-aheev-uninitialized-free-attr-scsi-v1-1-d28435a0a7ea@gmail.com>
+ <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
+ <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
+ <407aed0ff7be4fdcafebd09e58e25496b6b4fec0.camel@HansenPartnership.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 7bit
-Message-Id: <20251106-scsi-ufs-ti-j721e-suspend-resume-support-v1-1-6f395f51219e@bootlin.com>
-X-B4-Tracking: v=1; b=H4sIAAKvDGkC/x3NQQrCMBBG4auUWTuQBGvVq4iLmP7VEUzDTCNC6
- d2NLr/NeysZVGB07lZSvMVkzg1+11F6xHwHy9hMwYXee3dgSyZcJ+NF+DkED7ZqBXlkhdXXj6X
- MunC6ITp32h9jP1DLFcUkn//qct22L9QElkx6AAAA
-X-Change-ID: 20251106-scsi-ufs-ti-j721e-suspend-resume-support-cbea00948a57
-To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
- Gregory CLEMENT <gregory.clement@bootlin.com>, Udit Kumar <u-kumar1@ti.com>, 
- Prasanth Mantena <p-mantena@ti.com>, Abhash Kumar <a-kumar2@ti.com>, 
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
- "Thomas Richard (TI.com)" <thomas.richard@bootlin.com>
-X-Mailer: b4 0.14.3
-X-Last-TLS-Session-Version: TLSv1.3
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <407aed0ff7be4fdcafebd09e58e25496b6b4fec0.camel@HansenPartnership.com>
 
-Restore the ctrl register to resume the TI UFS wrapper.
+On Wed, Nov 05, 2025 at 10:32:19AM -0500, James Bottomley wrote:
+> > > > diff --git a/drivers/scsi/scsi_debug.c
+> > > > b/drivers/scsi/scsi_debug.c
+> > > > index
+> > > > b2ab97be5db3d43d5a5647968623b8db72448379..89b36d65926bdd15c0ae93a
+> > > > 6bd2
+> > > > ea968e25c0e74 100644
+> > > > --- a/drivers/scsi/scsi_debug.c
+> > > > +++ b/drivers/scsi/scsi_debug.c
+> > > > @@ -2961,11 +2961,11 @@ static int resp_mode_sense(struct
+> > > > scsi_cmnd
+> > > > *scp,
+> > > >  	int target_dev_id;
+> > > >  	int target = scp->device->id;
+> > > >  	unsigned char *ap;
+> > > > -	unsigned char *arr __free(kfree);
+> > > >  	unsigned char *cmd = scp->cmnd;
+> > > >  	bool dbd, llbaa, msense_6, is_disk, is_zbc, is_tape;
+> > > >  
+> > > > -	arr = kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
+> > > > +	unsigned char *arr __free(kfree) =
+> > > > kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
+> > > > +
+> > > 
+> > > Moving variable assignments inside code makes it way harder to
+> > > read. Given that compilers will eventually detect if we do a return
+> > > before initialization, can't you have smatch do the same rather
+> > > than trying to force something like this?
+> > 
+> > This isn't a Smatch thing, it's a change to checkpatch.
+> > 
+> > (Smatch does work as you describe).
+> 
+> So why are we bothering with something like this in checkpatch if we
+> can detect the true problem condition and we expect compilers to catch
+> up?  Encouraging people to write code like the above isn't in anyone's
+> best interest.
 
-Signed-off-by: Thomas Richard (TI.com) <thomas.richard@bootlin.com>
----
- drivers/ufs/host/ti-j721e-ufs.c | 37 +++++++++++++++++++++++++++++--------
- 1 file changed, 29 insertions(+), 8 deletions(-)
+Initializing __free variables has been considered best practice for a
+long time.  Reviewers often will complain even if it doesn't cause a
+bug.
 
-diff --git a/drivers/ufs/host/ti-j721e-ufs.c b/drivers/ufs/host/ti-j721e-ufs.c
-index 21214e5d5896..43781593b5c1 100644
---- a/drivers/ufs/host/ti-j721e-ufs.c
-+++ b/drivers/ufs/host/ti-j721e-ufs.c
-@@ -15,18 +15,26 @@
- #define TI_UFS_SS_RST_N_PCS	BIT(0)
- #define TI_UFS_SS_CLK_26MHZ	BIT(4)
- 
-+struct ti_j721e_ufs {
-+	void __iomem *regbase;
-+	u32 reg;
-+};
-+
- static int ti_j721e_ufs_probe(struct platform_device *pdev)
- {
- 	struct device *dev = &pdev->dev;
-+	struct ti_j721e_ufs *ufs;
- 	unsigned long clk_rate;
--	void __iomem *regbase;
- 	struct clk *clk;
--	u32 reg = 0;
- 	int ret;
- 
--	regbase = devm_platform_ioremap_resource(pdev, 0);
--	if (IS_ERR(regbase))
--		return PTR_ERR(regbase);
-+	ufs = devm_kzalloc(dev, sizeof(*ufs), GFP_KERNEL);
-+	if (!ufs)
-+		return -ENOMEM;
-+
-+	ufs->regbase = devm_platform_ioremap_resource(pdev, 0);
-+	if (IS_ERR(ufs->regbase))
-+		return PTR_ERR(ufs->regbase);
- 
- 	pm_runtime_enable(dev);
- 	ret = pm_runtime_resume_and_get(dev);
-@@ -42,12 +50,14 @@ static int ti_j721e_ufs_probe(struct platform_device *pdev)
- 	}
- 	clk_rate = clk_get_rate(clk);
- 	if (clk_rate == 26000000)
--		reg |= TI_UFS_SS_CLK_26MHZ;
-+		ufs->reg |= TI_UFS_SS_CLK_26MHZ;
- 	devm_clk_put(dev, clk);
- 
- 	/*  Take UFS slave device out of reset */
--	reg |= TI_UFS_SS_RST_N_PCS;
--	writel(reg, regbase + TI_UFS_SS_CTRL);
-+	ufs->reg |= TI_UFS_SS_RST_N_PCS;
-+	writel(ufs->reg, ufs->regbase + TI_UFS_SS_CTRL);
-+
-+	dev_set_drvdata(dev, ufs);
- 
- 	ret = of_platform_populate(pdev->dev.of_node, NULL, NULL,
- 				   dev);
-@@ -72,6 +82,16 @@ static void ti_j721e_ufs_remove(struct platform_device *pdev)
- 	pm_runtime_disable(&pdev->dev);
- }
- 
-+static int ti_j721e_ufs_resume(struct device *dev)
-+{
-+	struct ti_j721e_ufs *ufs = dev_get_drvdata(dev);
-+
-+	writel(ufs->reg, ufs->regbase + TI_UFS_SS_CTRL);
-+	return 0;
-+}
-+
-+static DEFINE_SIMPLE_DEV_PM_OPS(ti_j721e_ufs_pm_ops, NULL, ti_j721e_ufs_resume);
-+
- static const struct of_device_id ti_j721e_ufs_of_match[] = {
- 	{
- 		.compatible = "ti,j721e-ufs",
-@@ -87,6 +107,7 @@ static struct platform_driver ti_j721e_ufs_driver = {
- 	.driver	= {
- 		.name   = "ti-j721e-ufs",
- 		.of_match_table = ti_j721e_ufs_of_match,
-+		.pm = pm_sleep_ptr(&ti_j721e_ufs_pm_ops),
- 	},
- };
- module_platform_driver(ti_j721e_ufs_driver);
-
----
-base-commit: 709f6117c3b05c87ef975725074062920d1bbfdc
-change-id: 20251106-scsi-ufs-ti-j721e-suspend-resume-support-cbea00948a57
-
-Best regards,
--- 
-Thomas Richard (TI.com) <thomas.richard@bootlin.com>
+regards,
+dan carpenter
 
