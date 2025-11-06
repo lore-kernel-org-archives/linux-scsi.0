@@ -1,211 +1,202 @@
-Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F349D34DCEC
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 17:30:01 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762450204; cv=none; b=ZXLFaId5klq9BJevqXCNnibhJCqs/lz0V6XgI3Pme9VhACb0zrivlb5U3sFwCxwrK+nBV1WxQKxjP9rfdmxJMQcK3TqmYm/EH7jattZcbH6KZYbzJvxU7JR0Rby3Oo8vjZgqNyL63xZEFtt4IFZK4u1alolGtsuIqFzuyy19ys4=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762450204; c=relaxed/simple;
-	bh=oQD5zik6lmJrm4iJj+XOR0YoeWD/ptGzzMxsrnq0/Fo=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=hlZ2Y3iWtWdbjVtynd3kgHYwS/P/YvINBp4b69Taz6gQgesDGDqNkfDELpBbALGVq7lpv8mPCJakwNPI9zyAnVnFwQpEduV+7NbcpiCdH+3cnbqkQXtyPg2kckvuLOZwpbU+M7F1iOeskf50vvqt1hMucuCjDmlAUtkQU6Njnp8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=InS5HDex; arc=none smtp.client-ip=209.85.128.47
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99E2F340A47;
+	Thu,  6 Nov 2025 18:22:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1762453333; cv=fail; b=V6SBCNvW72zJ0PmKJNTyZJ2MWG5p9WaaXWiAT7CLY/bZ3hA5wMZZmZtiEwk6SICwTWnKmwwv9uK/FMjeteNfQFBVL789jRR692d37qKGjyDmzqII2UQlst39dC4KXRjXjH5mY1cRya3XQYGkCvmM4yQkKwSCrWcYpF3D2E1dYh8=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1762453333; c=relaxed/simple;
+	bh=fQTyavOGYa0ibS8PcFCdF+P0efosRSFWgdCevQNGG3M=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=u79XJp9sKhctW9B+HAjFMra9gyLwSIDnrRyBSWAFTDN+fvl9xpnY1q0RigMGDdm7QySXckS2MRxVtXNAMfpIqlj+Q7xUyLMsbuOQ34xIPcX8GBWGjs+JCQaVasfxReTG6OBxh41jqZUlc8TXQoauVJTOj5XG8MoDCXP0S0ZGneQ=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=nTr1mgrZ; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=ZCWh4V82; arc=fail smtp.client-ip=205.220.165.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="InS5HDex"
-Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-477619f8ae5so11010285e9.3
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 09:30:01 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="nTr1mgrZ";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="ZCWh4V82"
+Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5A6GoQl6017631;
+	Thu, 6 Nov 2025 18:21:57 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2025-04-25; bh=PcmqNPcke28+EFOkEo
+	ltsoc0CL0S3+Yta0v89mEn5Vg=; b=nTr1mgrZyNSFt21c5pZ9VDSqRV5VO4mL/F
+	PJS9EYxC27cWc9dVszTpX43ktcOGkxfK02GXeexi5AIRQsQcO1IG6xC5Qwybndfw
+	djvwDXZ8nF28NsbV1uueUDl5KloxcuQRg4E5FUJLYc2P0tkJjOzCDi6cJuqD6c1a
+	Efd3Qi7o+xRX2fOKx/YphdhIh6E1lKYEy06lJryOd6sARoSsDoFGLN8Yg8+CRXO5
+	CP3gHoMx9F5L2NedJlMmrFo34NHevrCup1F4KKIcPyDmFyfyJj5q4LJ1QWGXQLeV
+	tWiczgXOvf8rnJL2D2i/TUrY6bx6sot5d9V/2R5Hl6Ls3tXcnpyw==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4a8yhj87kv-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 06 Nov 2025 18:21:56 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5A6HaRV6010954;
+	Thu, 6 Nov 2025 18:21:56 GMT
+Received: from bn1pr04cu002.outbound.protection.outlook.com (mail-eastus2azon11010023.outbound.protection.outlook.com [52.101.56.23])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4a58ncs5dg-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Thu, 06 Nov 2025 18:21:56 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=PL0sPSfrWCib8M7/d3aKbdDOXMoMblDMzzf7XNJ2LV3Xp/KdKoRr25EWGAZmvM/Uo38O3C5LuA5NMSmvrpYWKlXW4rw+wkEy4p36QhSoWBmk1gi9c+ocTi5X/D5wnXEIhMVQLNP8yIv9gKszVD5QTq+97gcxlO1fEOOXNDVZ822NDnn7gbN3tNhNKeRIgyY1KhqUIpzuip7JXddEbd5KZXQUpn2u75Mw14L9xM0P2y+Y5FCwqrft/FTn049fpx14IBJQNmAHrtVBg6kxfFtfghpMwZPbQWuujiBNI11WKRpoeYWVJkRA4ApiJirRP6BLqOoMx4MeHi2PesFaf2nU+g==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=PcmqNPcke28+EFOkEoltsoc0CL0S3+Yta0v89mEn5Vg=;
+ b=MDJdfGrJxGBZ6XdPmvgqYFR/Td4hxbQ05MFYDih+FDVtpmLhuXAStiztpKlHN8z9HQ0mwtvjRQCysTiD4s4fkRjXR2muda1tyIm3YweVfV9d/yJBLJ8V7ASRSzSJ4hG7ohLiHan53QnVRkKR7mh+hIDi0Liv+vrRk4MFDizpfIHrE3q2+R0ESuw3xF3l4hSS6dGze/5DVJaelTa4oZqGN3+sKR6cpw4ocK7rb9vBMavwHbtB+A3MFcAaQMFnnAr5k+MynvWKfqd482MEKOQi79tOgukyrZYmm6iITw1pde/ZS0zcpl7Kv6LH4trVjPcyCoNVll0xWpxFNwFAQ8i0Sg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762450200; x=1763055000; darn=vger.kernel.org;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=oQD5zik6lmJrm4iJj+XOR0YoeWD/ptGzzMxsrnq0/Fo=;
-        b=InS5HDexJiP5kP8JA5FUkBxEX4yRhTi/zM/icUUFPBB9w3TMICHMcz+OEpBK4UNHSS
-         KFEbdlYY3wTxM6u4x9ulTUcZlJVHRpgFHT/LZ/Zi2oxTEFZRNpcUjay7xizish0HyGlq
-         gquU5HenJ1bnwgyR8byazvArTgkmULPE5hce3pJcVeATteQOQRun210GPqo+n3Ggr26O
-         jSuD/1kfLeMwJKGnAGmPb1AUI30aKLah4N/StYmPBAApoDuHSpMIGpoj+Z99bXbdTkKb
-         6R0T0swmhdIPuh5yX2bbH8qURmrrge9ggE5qrCcehhPNJKPvL/CheS06wVICfbb6CaGj
-         /j/A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762450200; x=1763055000;
-        h=mime-version:user-agent:content-transfer-encoding:references
-         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=oQD5zik6lmJrm4iJj+XOR0YoeWD/ptGzzMxsrnq0/Fo=;
-        b=bImLHyZQGIz/IHgiWMdZQk/QqWM5T0BRLa0zA6HBMhv5EniPH4uWLZPzBdErKMZJ/f
-         WBQDgdgi9Az79Z9ev6bDua/FNzCA6OAA5VfLkyLnYamQpoDtLX6T8pnuMu2w2NJ8izHl
-         lHhW+tTShUK8NBZOtxLDJRIIrDDqbmaKt6/tBKBkUY/cubT1/g438JhQA0eoojL0ClTQ
-         pek2qbdP1gVx0V/Wc/4OzO12PQc0uqNei6q+OMZj/q0eIMH2C8mNP/u0lanj2mNYk7oY
-         4np/Gg407P/v0LDuymmEBH16Kms8pE6lAu3utjHjkBQOqhsegNhGoPOd8C/U6/k8c1yX
-         E3LA==
-X-Gm-Message-State: AOJu0YzlwtTG5uxRWQqG8gwokkDM4QCRgXaRcZ4h3UMMxJbzaNoMN5RB
-	bHUI+5Ki2TXrcyKQLZ+dvLfOyLQiZj/r8QA8PswbaIOypUZzW/Un8tCF
-X-Gm-Gg: ASbGnctZJ0qX4zUs0Mj0uQOxpVRwoPlxRAh+/uDMxTtekfzmP/HqS+eAYoT2Em9Lrct
-	l2xEv+amKOx6t3Bf08W55dxEafMkMaSSm/xsXisj5GrahTs6SPa9DtZ6jGsz6+l8/o1IrZWfCjf
-	iwoOWfVNsvTZMkDQWOiqz7Ni3zJ7o0aT+VvN9JQjCAmXCUCrlZVSmeyIzU6iMgTE90R9V1Zr7sO
-	dxCf/tgmObLBA+5g+XmRFviv9JWfQrc9kNWdP40mo7pHLAbTUpXOdDX0jPV0Q4dZj9DyQJaObno
-	vzjnNx2I3oan0dSVPNb25P7DO8RRKiP9C5dl7DJExk8QzXke/rYrM5G2N/s8BlNFEdHPQ/y2+vs
-	aHe9KYK0ubGaOgA/sBoh6hxHTLzhm7okzn11u2lRzL6mJx6p3mM0rh/MrOSqzzA4a3UWdmM2oR6
-	actxN75sqRPWOjlw==
-X-Google-Smtp-Source: AGHT+IEps87NwAd+lPUa70y/vz/9kCpABwD2KzGeMJJV+bnYKu4Iq5yog0yPFgKWsXsgB44nx1VtNQ==
-X-Received: by 2002:a05:600c:3b0f:b0:475:f16b:bcbf with SMTP id 5b1f17b1804b1-4776bcae129mr1007825e9.14.1762450199996;
-        Thu, 06 Nov 2025 09:29:59 -0800 (PST)
-Received: from [10.176.235.211] ([137.201.254.43])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42ac675ca10sm294822f8f.26.2025.11.06.09.29.58
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Nov 2025 09:29:59 -0800 (PST)
-Message-ID: <8de3c5c04fede7ef0b3a62cdbbec133b579430be.camel@gmail.com>
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=PcmqNPcke28+EFOkEoltsoc0CL0S3+Yta0v89mEn5Vg=;
+ b=ZCWh4V82aotDr6wF+O+X1y+DBlvVy11xwLxmsamp0I/Wc49AhF+1le3vb4oRUvxnpKycO6CsuaTNDRyWIsWvsUUTGUYBTQa28CmXsLniArrdKbXL1+0MsmW7wYiYWS3dRAtQM0gu5mT/47BDyLRKbmyMphMN1eEtNZUUd4K4tms=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by PH7PR10MB7106.namprd10.prod.outlook.com (2603:10b6:510:268::20) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9298.7; Thu, 6 Nov
+ 2025 18:21:53 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf%6]) with mapi id 15.20.9298.010; Thu, 6 Nov 2025
+ 18:21:53 +0000
+To: Bean Huo <huobean@gmail.com>
+Cc: avri.altman@wdc.com, avri.altman@sandisk.com, bvanassche@acm.org,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, can.guo@oss.qualcomm.com,
+        ulf.hansson@linaro.org, beanhuo@micron.com, jens.wiklander@linaro.org,
+        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
 Subject: Re: [PATCH v6 0/3] Add OP-TEE based RPMB driver for UFS devices
-From: Bean Huo <huobean@gmail.com>
-To: avri.altman@wdc.com, avri.altman@sandisk.com, bvanassche@acm.org, 
-	alim.akhtar@samsung.com, jejb@linux.ibm.com, martin.petersen@oracle.com, 
-	can.guo@oss.qualcomm.com, ulf.hansson@linaro.org, beanhuo@micron.com, 
-	jens.wiklander@linaro.org
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Date: Thu, 06 Nov 2025 18:29:57 +0100
-In-Reply-To: <20251026212506.4136610-1-beanhuo@iokpp.de>
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <8de3c5c04fede7ef0b3a62cdbbec133b579430be.camel@gmail.com> (Bean
+	Huo's message of "Thu, 06 Nov 2025 18:29:57 +0100")
+Organization: Oracle Corporation
+Message-ID: <yq18qgjm388.fsf@ca-mkp.ca.oracle.com>
 References: <20251026212506.4136610-1-beanhuo@iokpp.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2 
+	<8de3c5c04fede7ef0b3a62cdbbec133b579430be.camel@gmail.com>
+Date: Thu, 06 Nov 2025 13:21:50 -0500
+Content-Type: text/plain
+X-ClientProxiedBy: YQBPR0101CA0029.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:c00::42) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|PH7PR10MB7106:EE_
+X-MS-Office365-Filtering-Correlation-Id: 0f9b00bb-3f87-442a-65ab-08de1d615c33
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|7416014|1800799024;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?8NQc0VX+IteXlCY6JUbriCWOq3B9S/QpM/fvoVmG1FRl8r6zQOiaAqWMtVCA?=
+ =?us-ascii?Q?H4D5pxmdAz9nWTbhB5kfk4x5eZLrX8GTjJm9zFRsDIn5eFUPTJLI6Z6zvulj?=
+ =?us-ascii?Q?jfUJq6J47EKuxwCh3Pw/QVhHIJL7dR3hM+ypVkXYIV56mafWpgkoX/m6+AaP?=
+ =?us-ascii?Q?/SkLfFaMnyzvOGIzzIbLATS6ShUfn/sy3Lixo0J0qvy+wl3GCo4QDGErxghM?=
+ =?us-ascii?Q?G1tbdfZy8EQBrJQmj0ozeO10wXVspdfsoV83ZcQN5N2W6jvnSEtYya2/quJ9?=
+ =?us-ascii?Q?bYQxqmejtnxJ/sGEPZ2AlokqeJMiPtA4t9Xrc8oX5lGhWXevVwT4aXJkgC5R?=
+ =?us-ascii?Q?eifgqCHZzQkRn5696k35OksVc88XlYAjaOnnHpTPCak+k6mAa4z22PtgKvfb?=
+ =?us-ascii?Q?ERiqiZZbX8IodywZL+F6f/dxEkMaciOlE/FVquwlsGfXM1mInZt7++0gdua3?=
+ =?us-ascii?Q?SU9PHPG2E2Sj8InE6aJ4dnq+NRiXBO69XRBKGuEKdig16xlRKq9eVuUir9s/?=
+ =?us-ascii?Q?Bo1UhFbiUSPj9MHwmpT92/DZhn2o2xKCpS5MrKeTce+OH4eVNGgnGwb9l6qL?=
+ =?us-ascii?Q?QsNPssOGrZK39yvEyf0+1YhoxdFaoF7OCVM9PLu/quAi5P5yQS4rn3ykW0kb?=
+ =?us-ascii?Q?Akg9u7aLHik3eD7j3MmFB/1IJ7tAWFbnmIJmF5zyvP7VKubEmWOXDuFLEOVq?=
+ =?us-ascii?Q?P+cTirKODgH/7by9JKW9J6I0EE/Dzgs9dfoHVx/u3i9VzTlmgCfnb81u19aO?=
+ =?us-ascii?Q?6cr0oCwszRAunJodZoayMrSZPhE/ZM4S7kmA5sjLBfbgfQI2nY8EJ8+3j8vK?=
+ =?us-ascii?Q?MIs0Kxbtw/8MIYTt+cda9wBeLmURvzuLYJ0sVQ9PFWVi8wBcj/YnNuyoKaIR?=
+ =?us-ascii?Q?DxStP/chWpcPjgHA7RPmyHVkHpq/C7kuYaPCO8RgZD+R+pRh4jYSVLlHivXk?=
+ =?us-ascii?Q?/EjrR6qa3a/gKQDQKGy+rSKSCucd9sGM0mKmsfliPga9ZRg2ZJbZM1y+PdDq?=
+ =?us-ascii?Q?r5cxNrrHwtE+465dTfa6p19A+X1jr6IBIu7VhDPMmtray0dx9nwN64vvQr0D?=
+ =?us-ascii?Q?VqG4zVAjvGu5bSz0eYAcLSxQcIR8cBCqpOSmw0KZ/TmdwcOazJcmqh5rcZn2?=
+ =?us-ascii?Q?Ctx0MJlHOnTnIZGLFlsShPvqZJ3AUwkXCF7RqjItxtX0OdYvLCoQ0z24U1CH?=
+ =?us-ascii?Q?JZdNXfaSzf/+ZEPpBIai0jir0a5vYN/Sc0b92RiLR8/EdRzIsgG1mut0YwTk?=
+ =?us-ascii?Q?LBuvlpVvMSJeD4uEvI5PjaOitF5cq456HfnhD8ptpUCWw2eXyXPhTJBu+snb?=
+ =?us-ascii?Q?dkB+6XU7A4kTkrG2gKqfRysT4Itok8lx3COLUzAuDeOuUBmgqM4bGbpQyWlV?=
+ =?us-ascii?Q?fUtlDh1Bys3sfA/dXuT+rwuTJeIuDkKUaCRke7uEBvySE+EH61p0PNe2hJuB?=
+ =?us-ascii?Q?OIfLvn8HsgfriUAtQ4iCHfYIerCz3XCD?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(7416014)(1800799024);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?M3bahH8BqU148sW96jqcP2JOAnpGQDRxE71VzZOErFmIJs5P1xbomoQKoQLA?=
+ =?us-ascii?Q?+35Mb/M+kEYxeP9KMr/OBKiY44ueOiRciQEm+YhT9I8hGiHAHmCYxV7yK4tv?=
+ =?us-ascii?Q?4H2NGFvUB2CgpOtYILvICosf/qELyRsa+F0u0W32W6PFLxwnBNWC7KN2icra?=
+ =?us-ascii?Q?Q5nWvBr3AXA+naFQW9FntiAYFS6vF2gyTHNPxnDrHgmHhyvGun3ENfnk/8yZ?=
+ =?us-ascii?Q?dX25nwDYNYEO4PUR1hqWMthhYVKSQZHua7aIx7mmRs+xIigd2D6y5M24c14W?=
+ =?us-ascii?Q?CwA0q52MbzaAcJGq0Q/nKy39XpH3YRgSkE/JMwRzE76hmiYg3H9aPiCVO8uo?=
+ =?us-ascii?Q?ckEnvd82MQAfkT+feq6jBahMo8REjM+M2Gyap/KYktNYz5Mv+EoE5vE83GcZ?=
+ =?us-ascii?Q?6leJYCL1kKVD2w/sxK05fH6c0QqbGsPqf79hdsm9WtD04VhjEIuThIjTBrA0?=
+ =?us-ascii?Q?UHCMpzrgXAg25GT/KneLvtD7OzXLW+BXWD3GvruDs0S5Ssm19+DAe4K+Twl0?=
+ =?us-ascii?Q?iiF1B8FG+FiaQOpl4K6dRsv+YIwyoWxbrPMeT15OYvuZi9C5HnVWTSqbza4K?=
+ =?us-ascii?Q?susWij/SOcw8apRmHppoDcDMrHwhElBbq6EcRiSoY/PS29k6QotwAZ7BIgae?=
+ =?us-ascii?Q?CNd1MZqE4KCFdmzDo2p1DhzR53lE7QJEdVYXIS0JH4dk2IEYo1VlMpdX5KHx?=
+ =?us-ascii?Q?9Jo5NgTRZ5tLvo8YQAV9+GrewFTGIg0I7SnxR5F0vT9K47ea72Q0cMTa1U/L?=
+ =?us-ascii?Q?S1+Gm1Smu4GuypsZgtJeRBB8dDQKLAylru3hrTY596zx+hqKnUYsIvN8gBk9?=
+ =?us-ascii?Q?gftEAN16nwG2ABLaiQ/fQuOQLCLfVyVsQ/B5hPbsgHbFooa1kys6G/4ys9A/?=
+ =?us-ascii?Q?VuuVEeGrm/R/W+Fe+/Ztgrvlwo0NqVbzdTLdeo+SLWCTfKSh7vSSXolGWSeK?=
+ =?us-ascii?Q?LRGhP3T+MJ88a3UAzs8+b/MNYxgMOOq5G9sinnx9FNux6/hKoGUQwz6fieCy?=
+ =?us-ascii?Q?7RkNIxMg9Kx5lGmYKQaook5Kh2srCEhkbZL6JYTWs2kFO+uItmJCgdSS/k7/?=
+ =?us-ascii?Q?cS+1o0feFugpj7qewwYk9TCNFQagEO9i7oPQfjvMRf52P9BbFNWl1PmWtSwT?=
+ =?us-ascii?Q?LSG3w6dpS7eQF6ND4+C1hPpd0hkOoSNdvVkcU4KyisYBT2Bm+IiqMhbLh8Lz?=
+ =?us-ascii?Q?9gVMY8+foDVbKmPWbnpfIzKHEnZB3RnvpoW/SXsZ4ohh8+581LaGm0hvujPc?=
+ =?us-ascii?Q?7E1VieBcHHaVWNONU2ueyNszVgeccGxkVw7aSCugZ81u19F9FPFwg7jFWy/W?=
+ =?us-ascii?Q?62Snx5yeYWjuMmlw6Ep9Q8oytxMLpLAHfqvohL2jAFy32/QpiS+dM4Bs2nUL?=
+ =?us-ascii?Q?+qv55w1MuH7oNU7qEVKhLFHTEktrwDlgqPfSZyLKLtqH37trYip5QX2IB3pa?=
+ =?us-ascii?Q?o48gFJ02Wyx5rbPIdBCzm2DquWck9ZizSzk8FZOkuQjpA5OLS4QFAnzHLZnY?=
+ =?us-ascii?Q?rNL9osALDRzSgqfv5obWzP7T5daUSUrCg1IsEGZvnVzDb1xvLmpE2pGtRpce?=
+ =?us-ascii?Q?+9PaGZrfLgDwf8UdutMucp1qXEO4l63Ex1vRdF71p31MCa5iZ/eaRZRVbHYF?=
+ =?us-ascii?Q?Sw=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	6jJB1PFmRJob7f2iJLxqxFGMxrDrkibMsqBPW5oDr3rVMYi8KLyeV/sQIheBVC4db+cvxsQPElLA56zV+nmcsrUSqxYUz5Qcj2CTHwmt/QJY10tCcPf9TLRpphIIAQTYGmFwZPya4KUOCGE+6D+kuV9Q59ZvgGawE0EcN2Ui66tr8Rnz0Xonx39wPvRnQU3Xsh5Zo4PihW7PMGwmoT6dcXOut/GwUdRAIfsBA8/zdfY8UTpOgOaKdvyoJF0WYbbL/cSGHICCB9Tu9SYdmsJAbA9/znaZtEwtvsPsF4Qor9PUPTWYvPNalUYwHJ3GgIxuTrU8wj8LMdkD+wNULAIkhYLXVr6k+lmvyjA95kWN3wqc1lNEHGIfthld3feiemzYrgOZ+w0071wMFacpFYtub9tMzrM1KvXTfg3nUWKikYxKc8+KRSq3EzhDovKNe9u1L0KPcYm+QHxzQbotTEoj2kAn93/nbTXIymzQt8LZVKW8t50HQLXkndbPYNKEgrwtSwFUGF3ZP6lpXEHRi/SZpZMRfpU7ZuFXnW+PUsWXz+d0x9ltB47z0PjuFbb9RuxHIj1IbQCc8hKJKr6+9reo5ZEN86LsE9ezWUWNUho7D0M=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 0f9b00bb-3f87-442a-65ab-08de1d615c33
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 06 Nov 2025 18:21:53.0480
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: XouKNFK8QPYFP6IjubxdpX+mpWYOZdR6N1pcfmo0iY+Rjfixw1+HXJGVuIN0jPJSP46HTRMsI/z2LdUolwsOB4xy1BTP1BfWU5Xr+KAI2n8=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB7106
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-11-06_03,2025-11-06_01,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 phishscore=0 bulkscore=0 malwarescore=0
+ spamscore=0 suspectscore=0 mlxscore=0 adultscore=0 mlxlogscore=777
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
+ definitions=main-2511060148
+X-Proofpoint-ORIG-GUID: rPfex09b6gdp0PLYMKkNxx21COPsd_2s
+X-Proofpoint-GUID: rPfex09b6gdp0PLYMKkNxx21COPsd_2s
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTA2MDEzNSBTYWx0ZWRfX0sg6AKxbEMvd
+ uUAGX/dL7Mv2CLepPWYGb/yUdDkFQ/dv1nwmzyp/Kj+OE71rNdFNEYejMn5cOpCWKW3RNcGVaIL
+ BqPTwE1qM3SUSJEECcCFkA31vXft343mIIHxTpot8i9TVQbIycMY/fYpmnajZ9NdUjViMQ4hh8M
+ jGQ98quFu/3q37aGi1VzqanwnOgpWRDV/irY51fCo87LbAGKEeXI6M2VPEeimBIyO0FM25jI2zD
+ qBYFsM5JSnNiXBo9LORlXwcUKc+MF4c9T+tY22FM7D8BO123hVT3hZpswbtyzpPKRQV+5s4YwYY
+ AP2vGeHUkE50mEJODIaw+Qw1KIcUu8ycSvF3utUas0PhoB9mlfichalijWYaXmXH40/GY73ZZzt
+ QnCiIjy7oopwyuIU8FzU4t7z1TIybA==
+X-Authority-Analysis: v=2.4 cv=Lr+fC3dc c=1 sm=1 tr=0 ts=690ce744 cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=6UeiqGixMTsA:10
+ a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=qDlM2RZHRZ__e7gkLacA:9
+ a=cPQSjfK2_nFv0Q5t_7PE:22
 
-Hi Martin,=20
-Do you need me to rebase this patch series? I noticed you marked it as defe=
-rred
 
+Bean,
 
-Kind regards,=20
-Bean
+> Do you need me to rebase this patch series? I noticed you marked it as
+> deferred
 
+Yes, please.
 
-
-On Sun, 2025-10-26 at 22:25 +0100, Bean Huo wrote:
->=20
-> This patch series introduces OP-TEE based RPMB (Replay Protected Memory B=
-lock)
-> support for UFS devices, extending the kernel-level secure storage
-> capabilities
-> that are currently available for eMMC devices.
->=20
-> Previously, OP-TEE required a userspace supplicant to access RPMB partiti=
-ons,
-> which created complex dependencies and reliability issues, especially dur=
-ing
-> early boot scenarios. Recent work by Linaro has moved core supplicant
-> functionality directly into the Linux kernel for eMMC devices, eliminatin=
-g
-> userspace dependencies and enabling immediate secure storage access. This
-> series
-> extends the same approach to UFS devices, which are used in enterprise an=
-d
-> mobile
-> applications that require secure storage capabilities.
->=20
-> Benefits:
-> - Eliminates dependency on userspace supplicant for UFS RPMB access
-> - Enables early boot secure storage access (e.g., fTPM, secure UEFI varia=
-bles)
-> - Provides kernel-level RPMB access as soon as UFS driver is initialized
-> - Removes complex initramfs dependencies and boot ordering requirements
-> - Ensures reliable and deterministic secure storage operations
-> - Supports both built-in and modular fTPM configurations.
->=20
->=20
-> v5 -- v6:
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 1. Added a comment in ufshcd_create_device=
-_id() to warn against
-> modifying the
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 device ID format without under=
-standing its impact.
->=20
-> v4 -- v5:
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 1. Added helper function ufshcd_create_dev=
-ice_id() to generate unique
-> device
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 identifier by combining =
-manufacturer ID, specification version, model
-> name,
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 serial number (as hex), =
-device version, and manufacture date.
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 2. Added device_id field to struct ufs_dev=
-_info for storing allocated
-> unique device
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 identifier string.
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 3. Modified UFS RPMB driver to use device_=
-id instead of just
-> serial_number for creating
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 unique RPMB device ident=
-ifiers
-> v3 -- v4:
-> =C2=A0=C2=A0=C2=A0 1. Replaced patch "scsi: ufs: core: Remove duplicate m=
-acro definitions"
-> with
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 "scsi: ufs: core: Convert string des=
-criptor format macros to enum"
-> based on
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 feedback from Bart Van Assche
-> =C2=A0=C2=A0=C2=A0 2. Converted SD_ASCII_STD and SD_RAW from boolean macr=
-os to enum type for
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 improved code readability
-> =C2=A0=C2=A0=C2=A0 3. Moved ufshcd_read_string_desc() declaration from in=
-clude/ufs/ufshcd.h
-> to
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 drivers/ufs/core/ufshcd-priv.h since=
- it's not exported
->=20
-> v2 -- v3:
-> =C2=A0=C2=A0=C2=A0 1. Removed patch "rpmb: move rpmb_frame struct and con=
-stants to common
-> header". since it
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 has been queued in mmc tree, and add=
-ed a new patch:
-> =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 "scsi: ufs: core: Remove duplicate m=
-acro definitions"
-> =C2=A0=C2=A0=C2=A0 2. Incorporated suggestions from Jens
-> =C2=A0=C2=A0=C2=A0 3. Added check if Advanced RPMB is enabled, if enabled=
- we will not
-> register UFS OP-TEE RPMB.
->=20
-> v1 -- v2:
-> =C2=A0=C2=A0=C2=A0 1. Added fix tag for patch [2/3]
-> =C2=A0=C2=A0=C2=A0 2. Incorporated feedback and suggestions from Bart
->=20
-> RFC v1 -- v1:
-> =C2=A0=C2=A0=C2=A0 1. Added support for all UFS RPMB regions based on
-> https://github.com/OP-TEE/optee_os/issues/7532
-> =C2=A0=C2=A0=C2=A0 2. Incorporated feedback and suggestions from Bart
->=20
->=20
-> Bean Huo (3):
-> =C2=A0 scsi: ufs: core: Convert string descriptor format macros to enum
-> =C2=A0 scsi: ufs: core: fix incorrect buffer duplication in
-> =C2=A0=C2=A0=C2=A0 ufshcd_read_string_desc()
-> =C2=A0 scsi: ufs: core: Add OP-TEE based RPMB driver for UFS devices
->=20
-> =C2=A0drivers/misc/Kconfig=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 2 +-
-> =C2=A0drivers/ufs/core/Makefile=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=
-=A0 1 +
-> =C2=A0drivers/ufs/core/ufs-rpmb.c=C2=A0=C2=A0=C2=A0 | 254 +++++++++++++++=
-++++++++++++++++++
-> =C2=A0drivers/ufs/core/ufshcd-priv.h |=C2=A0 27 +++-
-> =C2=A0drivers/ufs/core/ufshcd.c=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0 96 =
-+++++++++++--
-> =C2=A0include/ufs/ufs.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=
-=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 |=C2=A0=C2=A0 5 +
-> =C2=A0include/ufs/ufshcd.h=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=
-=A0=C2=A0=C2=A0 |=C2=A0 12 +-
-> =C2=A07 files changed, 376 insertions(+), 21 deletions(-)
-> =C2=A0create mode 100644 drivers/ufs/core/ufs-rpmb.c
->=20
-
+-- 
+Martin K. Petersen
