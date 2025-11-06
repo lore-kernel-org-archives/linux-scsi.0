@@ -1,71 +1,71 @@
-Received: from mail-pf1-f169.google.com (mail-pf1-f169.google.com [209.85.210.169])
+Received: from mail-pf1-f171.google.com (mail-pf1-f171.google.com [209.85.210.171])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3A3E5222594
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 22:15:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.169
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4A60523185D
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 22:15:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.171
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762467349; cv=none; b=Y15kBvbLswoVLRdDESM2o+tId6BST2OHeccgWcuE3mnFNAtLKKjNbs9teHjp0wCkERPNtAb3f74yp7r6jMf60pxHSRexF7ljwj6sax1v2RMYynKm3aEUHI/UZgfNFHiGYxdwK28yR27ubzLsjjt9Dm31kZGmF4V2EbmGrs0rNMg=
+	t=1762467351; cv=none; b=IIsFhWitXw6CWGxIzg4Rr7DOvkFrGECJ18YXfgPMdOUSKQTaGWHPliyVwrBkZnMRvSRHYlgwlIkDiQLn5rWsc8xXEafTc1ZMQ+QjKVamS/TNBHRf/bR2y7uHX9Jw8YZbHUWZbHf5lnC4llW0ndO5w4BjCYz4q+TE4BbdvKVilag=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762467349; c=relaxed/simple;
-	bh=d1itu0bs6JoVU+dz/eGbUqfFd43uG7Y6ldExprzjs8U=;
+	s=arc-20240116; t=1762467351; c=relaxed/simple;
+	bh=Cqw5uLw24whIDVDFFQG2Cc1sieYwYFB8it3Xt2Lzy6k=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=FSWsUMEeM3GLGs5Z8qBst4mJG3fbI6IOdfWjJ48RLIZJToVAlX4XR+p+DHGdSTZDWacD1GQKhOmaX+SnLikZXfHipDy9loRWCcH2FegqJVkaldHpUZFaf6FLEgWxPR75Ctm7+lrVnZRHpKE1yFit8+SZvAhtIt1fGWFWcN/+1kM=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=PO8FKjpZ; arc=none smtp.client-ip=209.85.210.169
+	 MIME-Version; b=TOkL+fwLCAq2Nr6oQm1kPyTKo+FYXNWwZ79Bv0Hdhx8ehtasfklGlAyGAo3helsqYHdqQogH0wJcaf2T7ZIAZOL5Lul+s+ZYrVzeJvPXOX8krg41QfJgUiUTPoba7Eu8JvCiNplCbrSoHYXwaKZLTm4Cs5wzLWucb79uWjjYGzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Bg6BAm/I; arc=none smtp.client-ip=209.85.210.171
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="PO8FKjpZ"
-Received: by mail-pf1-f169.google.com with SMTP id d2e1a72fcca58-7aab061e7cbso186349b3a.1
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 14:15:47 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Bg6BAm/I"
+Received: by mail-pf1-f171.google.com with SMTP id d2e1a72fcca58-7aa2170adf9so141698b3a.0
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 14:15:49 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762467347; x=1763072147; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1762467348; x=1763072148; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=OGhmkh6U7xJAVQi4Am2ZXFkV/cpQszf/uu5ndkAmW5U=;
-        b=PO8FKjpZEZmxniHrtbBa250cjHWrnl2koKugK3qmeU79DS/OArPAkKAJoOoN70sONH
-         fruHGENmtnwr5lUOFSOoX426mMwD/McYUDdMUHitFB6EgeNn4pE3S/dhSXeBOaCxLCny
-         ognU7+I1X3zj1DsEDcOnI90pnnUvaxzytQ5jGfrzfmvNZ2ouWEfHtJWrjKwAcDbby6/l
-         pvpoN0LgprkUnYwZQucyFeSuh63ntP+Yan8waROt6mxGasviGqlomySkWW9/z8pmq32D
-         YG1CHPPMIwctNUEBVHJl8PlavIdcrNOqcABtXMZOmAQCDGRlOlrb+3koRKWOslKZRQ6a
-         z7QA==
+        bh=3tFxGuwU2nati/m2tCqJ5qxiZDa35cxXRDiyEw8qDNg=;
+        b=Bg6BAm/ItdtBc2n73tBgXdWrtQL/VA7G/AtxqAhQ/30rRSX3xmAeG41gMh41OnfNFV
+         YjhD57fRvxEaEy4cTqy8v29ylp+Xxqr/Gb/p16UoT+e7MVXWzUcG577F+4M0hnW+hxGu
+         0GHMx/qWSJsSJEa7q6U/D52ggscvyadwIIyrB7usjoTUUcr91tQN0XkZ6ShaHRT6qqyl
+         xOPKEj2QvqRCTUdufkMYV/31Zvx7iEsebCTuP/4CP/baaz2eBjJ3awASkgdxJaKrzNsc
+         5dfMVPYQrhB53LD0i6DOY68MoTDy59oKe4Gszrpp50YWCHu153JZID9DsLrmkHDVsBZv
+         5SAg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762467347; x=1763072147;
+        d=1e100.net; s=20230601; t=1762467348; x=1763072148;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=OGhmkh6U7xJAVQi4Am2ZXFkV/cpQszf/uu5ndkAmW5U=;
-        b=VSQVVmIrD0HYz7F6oRY+jn7VF6gqkplgVvaR9V1r6EyBFZNqgCtertXObux54nVLR0
-         dFhUh/Vf6aAH+zxI1mfXDwr9+XSqwBBe18RU9YAte/Y4hCJs1AqyfVMVidlXNkvcsfTX
-         8jEDviNYug74z49Hl/cWFWSselbbyzIXvqFp8Jxtykp2+1wY5JPvPc1xct59vBpn4Yuy
-         5j61la+MGQ8x1EDHMEx8GbGom0N5VrrVGuZXrZD+M8gIkSTOP02DJ2b5EWgV8zJjMXa6
-         lW1HTsw8EUURxASYCLhRU9sFbz79BHI+6Da22aSM5qiIm/gA95ytTz+3camrPBp5JzNW
-         /1zQ==
-X-Gm-Message-State: AOJu0YwDu8dbCW92pJ6KtnNB8YGIv/NK0FQRrVdhwz1BuPktgMwcug7W
-	Kgckkqlsfuu+PU/IxAsQllOmcDSiWXXw60ePyN5hEv8OfplBJ4qfjWWBT5HNAZap
-X-Gm-Gg: ASbGncv2ZSeHBZ96HE43WAcSfiIaU/OZ1M/KS8GrQeqFZBeWUBnTzcF7yQdNK0GSBVw
-	gKQZN5CbWg5BMjFe35qEswzhuFVJF0QNtWqwBMdxiczpjaJ0Cc6R9bCapj58//TRDY7vpyP4WMr
-	Tf/5xnDqQoRkVDXj/5LU5rfnTTdrEuRFCpToy3wkXze5sR1hcmwicQe76R5YZWRG2dkTT7DReoH
-	CaaS2orZ54JtBPVPkGi1BqIwKbZbX9hlfnBF/VlICfSfIo+RDzVlfU2KgVJpnt/CTpJpLjS2J8E
-	HsgjNTP7Xwronw9AbZgbVXKfvUTBK8Glf+Ol78GwOENWjAR3ge62ltOunjjcP98L+d5H1M9AMYF
-	0xgPKbb9oh3cj60M6mrdM2EUzW0lXZBjJ3AU5UEn42/DT64OqU4yW3T7598gdnFJ64bnGaHk8H/
-	rk2qOD6tbkKRsevYfOgyJvFyLvQPqZLcqBJ6SLk+6NGI2ZeLY1ri1ruWQbo020onUxvNwmr+o=
-X-Google-Smtp-Source: AGHT+IHuqjEJidq5FlJVSMyq0yYAsLo3Nj1anO6fLJPhjvpXi8xIB3L4TA7C//O+6M7oEOq6LbSDVw==
-X-Received: by 2002:a05:6a00:cc6:b0:7aa:d9e2:8175 with SMTP id d2e1a72fcca58-7b0bb53805dmr1647039b3a.2.1762467347210;
-        Thu, 06 Nov 2025 14:15:47 -0800 (PST)
+        bh=3tFxGuwU2nati/m2tCqJ5qxiZDa35cxXRDiyEw8qDNg=;
+        b=l2pOLio3GFdFQd6qML3zE76qvcQGepkhEWsLBRmm6YV7eH8hdlnOn2JCT2coicpyZ5
+         6vDr13O+NE2tNVfixK/jO9tbIfMd0xQq/v2ds1ucSAs076li0LEJznB9OWlC7xceglNu
+         tp9XjqCTLvTXD9IiK3BmxXmavK9vfHpZoKES1GEIY8aEqbqjE9xsb7lAJo1k/+EJSpNL
+         c2qAaMg+iaqa77YU4ryLDAbepFEE+K1H3C1ZfEJex/+fvWQCRpyaFrlcDSzwfC9/k/fd
+         wTrcNKTIbUvmy8yuPRzeL1VxE3nIuhOwmGCkyXVv26BQLjXvsAi+3M6u37YGQvoCmbhq
+         gSRQ==
+X-Gm-Message-State: AOJu0YzTK39TaWXSunL7yalGOqGljmJRcYTWZwzksK4QFAauJZKkOzKh
+	X+dZFrYyNsW2ZDW+qhVFEsUlkVpfwTE/0qY3uxlGax7c1CD5h6RYuAzCRXN3uDil
+X-Gm-Gg: ASbGncsoaVaqkyxg6vm/UT5XzSs96wc0m0pHb16P69f6W6hUdX0/17AcqjV8h4TnNqy
+	e7rnb3IgXLWzFbeOvoDM/LaYEWdF8mrwJxl7kDAh+QiR30xqLJiEGOUkhTlOJZMz84szNwwX90g
+	T82/SQYKXKgacdx9Xo/UndyUFljzWD4FV+zZZFTLYsp5/XJMSJm2WWg1EeSmuzu2XiEeTWUoHHM
+	r67No6o4Vt5yB31jka/bhCutkI87AbT2HwjJi+dzgGJKYqnCxjgzzgmQYO8uQzO3f/O30ome5an
+	CqN5pTfq+Rxaqv7JAsJzdhtCdC9Olkru/Z2ztcRtgvd45NjaKn60tC7vzjTD78xlFGPjKXI3sLc
+	MzobA9ih8BUyEUxtTbiHxTQ5bP+kXUaxIsVbYpWp5QDp8Em/PrKKxz+du8YNrnggT+xE87Pc9kE
+	w++gXaQsfZgrJ26hdLq32kS0AGuvRRbVur/Cr1ptcs+v9gYWOQmNnVhlCs45t7
+X-Google-Smtp-Source: AGHT+IF1HcLLQn50Vvt6PFLYmH4MOBhzFQZpd5lo2CClwH72EDVQMk46eBy/ZuwOIH0j0mppKRsSaA==
+X-Received: by 2002:a05:6a00:99a:b0:781:4f0b:9c58 with SMTP id d2e1a72fcca58-7b0bd5a9e9cmr1346506b3a.15.1762467348520;
+        Thu, 06 Nov 2025 14:15:48 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b0ccc59de7sm568901b3a.65.2025.11.06.14.15.46
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b0ccc59de7sm568901b3a.65.2025.11.06.14.15.47
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 06 Nov 2025 14:15:46 -0800 (PST)
+        Thu, 06 Nov 2025 14:15:48 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 05/10] lpfc: Fix leaked ndlp krefs when in point-to-point topology
-Date: Thu,  6 Nov 2025 14:46:34 -0800
-Message-Id: <20251106224639.139176-6-justintee8345@gmail.com>
+Subject: [PATCH v2 06/10] lpfc: Modify kref handling for Fabric Controller ndlps
+Date: Thu,  6 Nov 2025 14:46:35 -0800
+Message-Id: <20251106224639.139176-7-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20251106224639.139176-1-justintee8345@gmail.com>
 References: <20251106224639.139176-1-justintee8345@gmail.com>
@@ -75,191 +75,260 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-In point-to-point topology, the driver sometimes defers the unsolicited
-FLOGI LS_ACC until it sends its FLOGI to the remote port.  When
-this happens, lpfc neglects to release the ndlp allocated for
-the unsolicited FLOGI.  This patch adds code to release the
-ndlp for the deferred unsolicited FLOGI LS_ACC.
+Currently, there is a kref put in the lpfc_cleanup routine that takes care
+of outstanding references on fabric controller ndlps in UNUSED state.
+While typically there is a state change from UNUSED -> REGLOGIN when the
+ndlp successfully logs into the fabric, there may be cases when FLOGI is
+unsuccessful and the ndlp will remain in UNUSED state without a registered
+rpi, yet the ndlp incorrectly has a kref count of one.
 
-An NLP_FLOGI_DFR_ACC flag is introduced to facilitate identifying an ndlp
-with an expected deferred FLOGI LS_ACC completion.  When lpfc_cmpl_els_rsp
-detects the correct qualifiers, it releases the initial reference on the
-ndlp object.  And when lpfc_cmpl_els_rsp exits, the remaining put for the
-deferred action is executed and the ndlp is released.
+To address this, handling of Fabric Controller ndlps are moved into the
+routines: lpfc_issue_els_scr, lpfc_issue_els_rdf, lpfc_cmpl_els_disc_cmd.
+
+In both lpfc_issue_els_scr and lpfc_issue_els_rdf, if there does not exist
+a previously created fabric controller ndlp, an ndlp will be created.
+Otherwise, we can reuse the pre-existing ndlp object.
+
+In lpfc_cmpl_els_disc_cmd, if the SCR or RDF are not successfully issued,
+the initial reference on the ndlp that is not registered with upper layers
+will be decremented with a kref_put.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc.h      |  1 -
- drivers/scsi/lpfc/lpfc_disc.h |  3 +-
- drivers/scsi/lpfc/lpfc_els.c  | 65 +++++++++++++++++++++++++----------
- 3 files changed, 49 insertions(+), 20 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c  | 97 ++++++++++++++++++++++++-----------
+ drivers/scsi/lpfc/lpfc_init.c |  6 ---
+ 2 files changed, 67 insertions(+), 36 deletions(-)
 
-diff --git a/drivers/scsi/lpfc/lpfc.h b/drivers/scsi/lpfc/lpfc.h
-index 224edacf2d8e..8459cf568c12 100644
---- a/drivers/scsi/lpfc/lpfc.h
-+++ b/drivers/scsi/lpfc/lpfc.h
-@@ -311,7 +311,6 @@ struct lpfc_defer_flogi_acc {
- 	u16 rx_id;
- 	u16 ox_id;
- 	struct lpfc_nodelist *ndlp;
--
- };
- 
- #define LPFC_VMID_TIMER   300	/* timer interval in seconds */
-diff --git a/drivers/scsi/lpfc/lpfc_disc.h b/drivers/scsi/lpfc/lpfc_disc.h
-index 3d47dc7458d1..51cb8571c049 100644
---- a/drivers/scsi/lpfc/lpfc_disc.h
-+++ b/drivers/scsi/lpfc/lpfc_disc.h
-@@ -1,7 +1,7 @@
- /*******************************************************************
-  * This file is part of the Emulex Linux Device Driver for         *
-  * Fibre Channel Host Bus Adapters.                                *
-- * Copyright (C) 2017-2024 Broadcom. All Rights Reserved. The term *
-+ * Copyright (C) 2017-2025 Broadcom. All Rights Reserved. The term *
-  * “Broadcom” refers to Broadcom Inc. and/or its subsidiaries.     *
-  * Copyright (C) 2004-2013 Emulex.  All rights reserved.           *
-  * EMULEX and SLI are trademarks of Emulex.                        *
-@@ -208,6 +208,7 @@ enum lpfc_nlp_flag {
- 					   NPR list */
- 	NLP_RM_DFLT_RPI    = 26,        /* need to remove leftover dflt RPI */
- 	NLP_NODEV_REMOVE   = 27,        /* Defer removal till discovery ends */
-+	NLP_FLOGI_DFR_ACC  = 28,        /* FLOGI LS_ACC was Deferred */
- 	NLP_SC_REQ         = 29,        /* Target requires authentication */
- 	NLP_FIRSTBURST     = 30,        /* Target supports FirstBurst */
- 	NLP_RPI_REGISTERED = 31         /* nlp_rpi is valid */
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index 8552b24b45a1..b6ce7e0f8a9b 100644
+index b6ce7e0f8a9b..00cfd4ac4ccd 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -1413,11 +1413,12 @@ lpfc_issue_els_flogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 				phba->defer_flogi_acc.ox_id;
- 		}
- 
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
--				 "3354 Xmit deferred FLOGI ACC: rx_id: x%x,"
--				 " ox_id: x%x, hba_flag x%lx\n",
--				 phba->defer_flogi_acc.rx_id,
--				 phba->defer_flogi_acc.ox_id, phba->hba_flag);
-+		/* The LS_ACC completion needs to drop the initial reference.
-+		 * This is a special case for Pt2Pt because both FLOGIs need
-+		 * to complete and lpfc defers the LS_ACC when the remote
-+		 * FLOGI arrives before the driver's FLOGI.
+@@ -3390,11 +3390,21 @@ lpfc_cmpl_els_disc_cmd(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 		lpfc_cmpl_els_edc(phba, cmdiocb, rspiocb);
+ 		return;
+ 	}
++
+ 	if (ulp_status) {
+ 		/* ELS discovery cmd completes with error */
+ 		lpfc_printf_vlog(vport, KERN_WARNING, LOG_ELS | LOG_CGN_MGMT,
+ 				 "4203 ELS cmd x%x error: x%x x%X\n", cmd,
+ 				 ulp_status, ulp_word4);
++
++		/* In the case where the ELS cmd completes with an error and
++		 * the node does not have RPI registered, the node is
++		 * outstanding and should put its initial reference.
 +		 */
-+		set_bit(NLP_FLOGI_DFR_ACC, &ndlp->nlp_flag);
- 
- 		/* Send deferred FLOGI ACC */
- 		lpfc_els_rsp_acc(vport, ELS_CMD_FLOGI, &defer_flogi_acc,
-@@ -1433,6 +1434,14 @@ lpfc_issue_els_flogi(struct lpfc_vport *vport, struct lpfc_nodelist *ndlp,
- 			phba->defer_flogi_acc.ndlp = NULL;
- 		}
- 
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+				 "3354 Xmit deferred FLOGI ACC: rx_id: x%x,"
-+				 " ox_id: x%x, ndlp x%px hba_flag x%lx\n",
-+				 phba->defer_flogi_acc.rx_id,
-+				 phba->defer_flogi_acc.ox_id,
-+				 phba->defer_flogi_acc.ndlp,
-+				 phba->hba_flag);
-+
- 		vport->fc_myDID = did;
++		if ((cmd == ELS_CMD_SCR || cmd == ELS_CMD_RDF) &&
++		    !(ndlp->fc4_xpt_flags & SCSI_XPT_REGD) &&
++		    !test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
++			lpfc_nlp_put(ndlp);
+ 		goto out;
  	}
  
-@@ -5302,11 +5311,12 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	IOCB_t  *irsp;
- 	LPFC_MBOXQ_t *mbox = NULL;
- 	u32 ulp_status, ulp_word4, tmo, did, iotag;
-+	u32 cmd;
+@@ -3463,6 +3473,7 @@ lpfc_issue_els_scr(struct lpfc_vport *vport, uint8_t retry)
+ 	uint8_t *pcmd;
+ 	uint16_t cmdsize;
+ 	struct lpfc_nodelist *ndlp;
++	bool node_created = false;
  
- 	if (!vport) {
- 		lpfc_printf_log(phba, KERN_WARNING, LOG_ELS,
- 				"3177 null vport in ELS rsp\n");
--		goto out;
-+		goto release;
+ 	cmdsize = (sizeof(uint32_t) + sizeof(SCR));
+ 
+@@ -3472,21 +3483,21 @@ lpfc_issue_els_scr(struct lpfc_vport *vport, uint8_t retry)
+ 		if (!ndlp)
+ 			return 1;
+ 		lpfc_enqueue_node(vport, ndlp);
++		node_created = true;
  	}
- 	if (cmdiocb->context_un.mbox)
- 		mbox = cmdiocb->context_un.mbox;
-@@ -5416,7 +5426,7 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 	 * these conditions because it doesn't need the login.
- 	 */
- 	if (phba->sli_rev == LPFC_SLI_REV4 &&
--	    vport && vport->port_type == LPFC_NPIV_PORT &&
-+	    vport->port_type == LPFC_NPIV_PORT &&
- 	    !(ndlp->fc4_xpt_flags & SCSI_XPT_REGD)) {
- 		if (ndlp->nlp_state != NLP_STE_PLOGI_ISSUE &&
- 		    ndlp->nlp_state != NLP_STE_REG_LOGIN_ISSUE &&
-@@ -5432,6 +5442,27 @@ lpfc_cmpl_els_rsp(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 
+ 	elsiocb = lpfc_prep_els_iocb(vport, 1, cmdsize, retry, ndlp,
+ 				     ndlp->nlp_DID, ELS_CMD_SCR);
+ 	if (!elsiocb)
+-		return 1;
++		goto out_node_created;
+ 
+ 	if (phba->sli_rev == LPFC_SLI_REV4) {
+ 		rc = lpfc_reg_fab_ctrl_node(vport, ndlp);
+ 		if (rc) {
+-			lpfc_els_free_iocb(phba, elsiocb);
+ 			lpfc_printf_vlog(vport, KERN_ERR, LOG_NODE,
+ 					 "0937 %s: Failed to reg fc node, rc %d\n",
+ 					 __func__, rc);
+-			return 1;
++			goto out_free_iocb;
  		}
  	}
- 
-+	/* The driver's unsolicited deferred FLOGI ACC in Pt2Pt needs to
-+	 * release the initial reference because the put after the free_iocb
-+	 * call removes only the reference from the defer logic. This FLOGI
-+	 * is never registered with the SCSI transport.
-+	 */
-+	if (test_bit(FC_PT2PT, &vport->fc_flag) &&
-+	    test_and_clear_bit(NLP_FLOGI_DFR_ACC, &ndlp->nlp_flag)) {
-+		lpfc_printf_vlog(vport, KERN_INFO,
-+				 LOG_ELS | LOG_NODE | LOG_DISCOVERY,
-+				 "3357 Pt2Pt Defer FLOGI ACC ndlp x%px, "
-+				 "nflags x%lx, fc_flag x%lx\n",
-+				 ndlp, ndlp->nlp_flag,
-+				 vport->fc_flag);
-+		cmd = *((u32 *)cmdiocb->cmd_dmabuf->virt);
-+		if (cmd == ELS_CMD_ACC) {
-+			if (!test_and_set_bit(NLP_DROPPED, &ndlp->nlp_flag))
-+				lpfc_nlp_put(ndlp);
-+		}
-+	}
-+
-+release:
- 	/* Release the originating I/O reference. */
- 	lpfc_els_free_iocb(phba, cmdiocb);
- 	lpfc_nlp_put(ndlp);
-@@ -8399,13 +8430,6 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 						     &wqe->xmit_els_rsp.wqe_com);
- 
- 		vport->fc_myDID = did;
--
--		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
--				 "3344 Deferring FLOGI ACC: rx_id: x%x,"
--				 " ox_id: x%x, hba_flag x%lx\n",
--				 phba->defer_flogi_acc.rx_id,
--				 phba->defer_flogi_acc.ox_id, phba->hba_flag);
--
- 		phba->defer_flogi_acc.flag = true;
- 
- 		/* This nlp_get is paired with nlp_puts that reset the
-@@ -8414,6 +8438,14 @@ lpfc_els_rcv_flogi(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
- 		 * processed or cancelled.
- 		 */
- 		phba->defer_flogi_acc.ndlp = lpfc_nlp_get(ndlp);
-+
-+		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS,
-+				 "3344 Deferring FLOGI ACC: rx_id: x%x,"
-+				 " ox_id: x%x, ndlp x%px, hba_flag x%lx\n",
-+				 phba->defer_flogi_acc.rx_id,
-+				 phba->defer_flogi_acc.ox_id,
-+				 phba->defer_flogi_acc.ndlp,
-+				 phba->hba_flag);
- 		return 0;
- 	}
- 
-@@ -10354,11 +10386,8 @@ lpfc_els_unsol_buffer(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
- 	 * Do not process any unsolicited ELS commands
- 	 * if the ndlp is in DEV_LOSS
- 	 */
--	if (test_bit(NLP_IN_DEV_LOSS, &ndlp->nlp_flag)) {
--		if (newnode)
--			lpfc_nlp_put(ndlp);
-+	if (test_bit(NLP_IN_DEV_LOSS, &ndlp->nlp_flag))
- 		goto dropit;
--	}
- 
+ 	pcmd = (uint8_t *)elsiocb->cmd_dmabuf->virt;
+@@ -3505,23 +3516,27 @@ lpfc_issue_els_scr(struct lpfc_vport *vport, uint8_t retry)
+ 	phba->fc_stat.elsXmitSCR++;
+ 	elsiocb->cmd_cmpl = lpfc_cmpl_els_disc_cmd;
  	elsiocb->ndlp = lpfc_nlp_get(ndlp);
- 	if (!elsiocb->ndlp)
+-	if (!elsiocb->ndlp) {
+-		lpfc_els_free_iocb(phba, elsiocb);
+-		return 1;
+-	}
++	if (!elsiocb->ndlp)
++		goto out_free_iocb;
+ 
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+ 			      "Issue SCR:     did:x%x refcnt %d",
+ 			      ndlp->nlp_DID, kref_read(&ndlp->kref), 0);
+ 
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+-	if (rc == IOCB_ERROR) {
+-		lpfc_els_free_iocb(phba, elsiocb);
+-		lpfc_nlp_put(ndlp);
+-		return 1;
+-	}
++	if (rc == IOCB_ERROR)
++		goto out_iocb_error;
+ 
+ 	return 0;
++
++out_iocb_error:
++	lpfc_nlp_put(ndlp);
++out_free_iocb:
++	lpfc_els_free_iocb(phba, elsiocb);
++out_node_created:
++	if (node_created)
++		lpfc_nlp_put(ndlp);
++	return 1;
+ }
+ 
+ /**
+@@ -3734,7 +3749,12 @@ lpfc_issue_els_farpr(struct lpfc_vport *vport, uint32_t nportid, uint8_t retry)
+  *
+  * Return code
+  *   0 - Successfully issued rdf command
+- *   1 - Failed to issue rdf command
++ *   < 0 - Failed to issue rdf command
++ *   -EACCES - RDF not required for NPIV_PORT
++ *   -ENODEV - No fabric controller device available
++ *   -ENOMEM - No available memory
++ *   -EIO - The mailbox failed to complete successfully.
++ *
+  **/
+ int
+ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
+@@ -3745,25 +3765,30 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
+ 	struct lpfc_nodelist *ndlp;
+ 	uint16_t cmdsize;
+ 	int rc;
++	bool node_created = false;
++	int err;
+ 
+ 	cmdsize = sizeof(*prdf);
+ 
++	/* RDF ELS is not required on an NPIV VN_Port. */
++	if (vport->port_type == LPFC_NPIV_PORT)
++		return -EACCES;
++
+ 	ndlp = lpfc_findnode_did(vport, Fabric_Cntl_DID);
+ 	if (!ndlp) {
+ 		ndlp = lpfc_nlp_init(vport, Fabric_Cntl_DID);
+ 		if (!ndlp)
+ 			return -ENODEV;
+ 		lpfc_enqueue_node(vport, ndlp);
++		node_created = true;
+ 	}
+ 
+-	/* RDF ELS is not required on an NPIV VN_Port. */
+-	if (vport->port_type == LPFC_NPIV_PORT)
+-		return -EACCES;
+-
+ 	elsiocb = lpfc_prep_els_iocb(vport, 1, cmdsize, retry, ndlp,
+ 				     ndlp->nlp_DID, ELS_CMD_RDF);
+-	if (!elsiocb)
+-		return -ENOMEM;
++	if (!elsiocb) {
++		err = -ENOMEM;
++		goto out_node_created;
++	}
+ 
+ 	/* Configure the payload for the supported FPIN events. */
+ 	prdf = (struct lpfc_els_rdf_req *)elsiocb->cmd_dmabuf->virt;
+@@ -3789,8 +3814,8 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
+ 	elsiocb->cmd_cmpl = lpfc_cmpl_els_disc_cmd;
+ 	elsiocb->ndlp = lpfc_nlp_get(ndlp);
+ 	if (!elsiocb->ndlp) {
+-		lpfc_els_free_iocb(phba, elsiocb);
+-		return -EIO;
++		err = -EIO;
++		goto out_free_iocb;
+ 	}
+ 
+ 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
+@@ -3799,11 +3824,19 @@ lpfc_issue_els_rdf(struct lpfc_vport *vport, uint8_t retry)
+ 
+ 	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
+ 	if (rc == IOCB_ERROR) {
+-		lpfc_els_free_iocb(phba, elsiocb);
+-		lpfc_nlp_put(ndlp);
+-		return -EIO;
++		err = -EIO;
++		goto out_iocb_error;
+ 	}
+ 	return 0;
++
++out_iocb_error:
++	lpfc_nlp_put(ndlp);
++out_free_iocb:
++	lpfc_els_free_iocb(phba, elsiocb);
++out_node_created:
++	if (node_created)
++		lpfc_nlp_put(ndlp);
++	return err;
+ }
+ 
+  /**
+@@ -3824,19 +3857,23 @@ static int
+ lpfc_els_rcv_rdf(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+ 		 struct lpfc_nodelist *ndlp)
+ {
++	int rc;
++
++	rc = lpfc_els_rsp_acc(vport, ELS_CMD_RDF, cmdiocb, ndlp, NULL);
+ 	/* Send LS_ACC */
+-	if (lpfc_els_rsp_acc(vport, ELS_CMD_RDF, cmdiocb, ndlp, NULL)) {
++	if (rc) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_CGN_MGMT,
+-				 "1623 Failed to RDF_ACC from x%x for x%x\n",
+-				 ndlp->nlp_DID, vport->fc_myDID);
++				 "1623 Failed to RDF_ACC from x%x for x%x Data: %d\n",
++				 ndlp->nlp_DID, vport->fc_myDID, rc);
+ 		return -EIO;
+ 	}
+ 
++	rc = lpfc_issue_els_rdf(vport, 0);
+ 	/* Issue new RDF for reregistering */
+-	if (lpfc_issue_els_rdf(vport, 0)) {
++	if (rc) {
+ 		lpfc_printf_vlog(vport, KERN_INFO, LOG_ELS | LOG_CGN_MGMT,
+-				 "2623 Failed to re register RDF for x%x\n",
+-				 vport->fc_myDID);
++				 "2623 Failed to re register RDF for x%x Data: %d\n",
++				 vport->fc_myDID, rc);
+ 		return -EIO;
+ 	}
+ 
+diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
+index 34386b7c0b48..a9c6dbe3b465 100644
+--- a/drivers/scsi/lpfc/lpfc_init.c
++++ b/drivers/scsi/lpfc/lpfc_init.c
+@@ -3057,12 +3057,6 @@ lpfc_cleanup(struct lpfc_vport *vport)
+ 		lpfc_vmid_vport_cleanup(vport);
+ 
+ 	list_for_each_entry_safe(ndlp, next_ndlp, &vport->fc_nodes, nlp_listp) {
+-		if (ndlp->nlp_DID == Fabric_Cntl_DID &&
+-		    ndlp->nlp_state == NLP_STE_UNUSED_NODE) {
+-			lpfc_nlp_put(ndlp);
+-			continue;
+-		}
+-
+ 		/* Fabric Ports not in UNMAPPED state are cleaned up in the
+ 		 * DEVICE_RM event.
+ 		 */
 -- 
 2.38.0
 
