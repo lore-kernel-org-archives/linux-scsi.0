@@ -1,71 +1,71 @@
-Received: from mail-pf1-f181.google.com (mail-pf1-f181.google.com [209.85.210.181])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 187F6222594
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 22:15:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 01C74306D5F
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 22:15:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762467343; cv=none; b=BH/p/oUyHD7HGCG3ENhgxaLNgFw2mB/MKE+tmEVG+/V2X97jpap5UyRsXi/PCmIt+dupJoELaEEL/zonScxJfstVpI5w6cyAovo8mKcP72rOXbbORo2BNaHhDRC/0MN8T+3TMsLPtBNGq+hnYIiiScwCbL7LHsu/snIXPW5aB0U=
+	t=1762467345; cv=none; b=gQcua/6cLY/nuPwA84ganGWziQTkhck7NrBimBcHcZtXHp+roGhhEO+k0mSVZgFcXZPWqtgqDcoU3WG6Qge5eHFrERNO9ngGmbuW2lt3Keo08uWw7EEnphPFTm4na7aGd0BAYtaIAphPq4Kg+z6BZUwg0AbP28g2kHYiVu14cw0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762467343; c=relaxed/simple;
-	bh=csIMmU13go2KpEAefdnSavPDRJ8F9j9NhBOK2lOESKY=;
+	s=arc-20240116; t=1762467345; c=relaxed/simple;
+	bh=zajGqLUA3vr+Vz0TRc0PY+zKAOHUEgkfPBIF87z7Q4o=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=UXagaYCk3pxRqDQc4P9Y2FkdPPOWk6/M4L5Z7H7RBFyReVChx/Y2mqWU+I7Trw8avAcIwHX3tLBuTGkvrGG+K9wZg+aGN6Vq2/8HnN0bkIOWX4RvLYoZi+hPPDmRRG6eria6sfmXHfU9M4X9XolCv2sNSVg4yGH6l9ebETjwgio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=TfjZZq0Z; arc=none smtp.client-ip=209.85.210.181
+	 MIME-Version; b=gXmU+IyvcgdIa2j09IBhbO6HBbEfC4z4EkvgFac81F3YO8GbJS+qNynakFdo1NRk7ynq4t8bnnOolL7SsAdR39H35bA1LQlE/lkH12PM/48I6o9AFtxFoxYnbvOjZ5RSMuVvJWdXwf1L9J3iVphOllYoR7spxOmxGUm/688ZGfA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=mtbCSHjf; arc=none smtp.client-ip=209.85.210.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="TfjZZq0Z"
-Received: by mail-pf1-f181.google.com with SMTP id d2e1a72fcca58-7aace33b75bso156366b3a.1
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 14:15:41 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="mtbCSHjf"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-7a9c64dfa8aso101901b3a.3
+        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 14:15:43 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762467341; x=1763072141; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1762467343; x=1763072143; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=bdM66Gc6+/k8T6MtlOOA9P/Jrc/3parojDYchCBv4zU=;
-        b=TfjZZq0ZC2NYXcCTAj5E3wJEP5RYBnh1LS0158ShUkCWuIbNFEqPJcddZY1rn7Jdb4
-         dFa4t+15OKs/ISQAqDkX8haYQzWKkdAlAcmasx6AlHgfcGpJSEywiKWbYwWay7BCbmQT
-         lIG9kRi6Jqa9SYN/oaxeeSn8DxCfsnkVdZVGTtSQ7CKJ7P2QvzlQTUSPowFnxHnBx/he
-         c7i0Z/BuU0m4TWzGUlYa4e5xadnPhyv7qddtHiZcBQGPcE5XdnP4FxI5DZ1VQTypfKrQ
-         1Vlj8XO43DzrcElQQjKpsAAJFw76jMzp0wDEg5CMJvA56uZDsZer5gbxNONPnQ3j9aqO
-         CB3Q==
+        bh=iaV5T+CkHKumub+1IyVNraAlr4M5fw3/XvkVE6EY/28=;
+        b=mtbCSHjfcLbqmF4diwf9CfIEZt4EHTGOvwupDco5cUbZ3QwYcM5C7YKFuPYxiFZPz5
+         ioSStpoDM/1NNKcXKy/SXGabgcrTwdaIqU4hiyMH1UG6morJTmv40+zbbFRjG2KQM1Kd
+         FhIMXwYlhaidazQPSfthypnA1y+vN6TPArlw48XcaN2MFIUJFIWJEE2IWm4vq1bAknea
+         Jvr4kxt4jR0L+/7WKdlanQWE7p4bEP8aYYDsEAENeLLCA3JITkt/opLzJVbLVNbkODDs
+         VOT1vHsFTvaCMrbuLXKbIcSg8yy71tcgT0KuTCjkTub7md9ET3el5cmu/Fe/1C+SAEyD
+         fNQg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762467341; x=1763072141;
+        d=1e100.net; s=20230601; t=1762467343; x=1763072143;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=bdM66Gc6+/k8T6MtlOOA9P/Jrc/3parojDYchCBv4zU=;
-        b=D4xl0Fa8AdDEwHYzw/dkrNhwFGoTjqqwaLO5F7oK+Csw7lAqI1dM0sP42TQSS0ht8p
-         i/gXiB81YEuFTNzlfu0kwzH0inQskSCZi8vOtQ+rCWxHJFeTLkH5LkTtr3hv76ZVQU1b
-         Y7PwPWXUkZAyoQkL8K6yxd0pbgMMgW0SFQQDzCqJnqpg9D+ktjmwpfoZXyUriFJ6hRnh
-         i4LuOD7tVjntJZiRJISzQR1xN2iuCnCfM4Xny9LIJ+/4MoLDq0DTYxNWWYEhJINsC9mV
-         afZHb1x/mUJNlRJRFQqapkvLOxnY0/3joK2Klp4FhrHgqZ4IOw1ctoEpDa/RQ0wxmmHD
-         wzJA==
-X-Gm-Message-State: AOJu0Ywjut+rJWBeaNvUUuiDWmO9QXM8MaxbDLaYGqhkO9Q0gs/LfMf2
-	OVWXJYC/2v3BG2VMt7hHlzRbPoTOJiQlD/tXWQXasR/wGTfdX4wxbvmWnSL7S9gW
-X-Gm-Gg: ASbGncv4BXlOVN7gAoOy/SDlHMxQmti7zkAqetE8WcRdNdHi85+gRecbP4xpMY7CiBJ
-	8SGrAQ/mBXv5VFdK4ztk9/1gxh1JCSzYzm0o+nEf4dDJ3ZNMP1CE9m/FigVHfknnN+1lw77tR32
-	aE0mKRRjAlQki0BtPY+2tskR20V3KTWLjQ1fQn0bMTDaXnCDbReM+W++J2d3xHQzYuz/9XX0jHG
-	pNTdP7qi2Db4RdJ0uPKBuNEL4JQFpn9V4IIwJqN1e9E75cq3+m61YI2+yvm/hes+OMKxLSlxjlo
-	xhvrOl2MTHhgsKjVVXBxMMOn77DCZhsTsrF/AVBaxOcc6HxXz5G3Mpq7KMHMCMH3jchUrIEtUCF
-	UAgjtGxbqNNNzsVfcqN9AmNCx33NJhqHkEuTwMyz7sQrY4JV/cnsy7NCZ5ND13y0hFIeZ/WXmBZ
-	2HIojFeby1Z+n2InjJ5hLndu88nd6TuMFQprMlDjIO4+WHCa9bwxuau1TvS1Tr3vQWi7rPcn0=
-X-Google-Smtp-Source: AGHT+IGxbSpiPsY1XcXUTh1e46yFU7FiQ/qOaVS6vnPvWMF+83MW6XKBHXowxrLEeEpNek7aZ17glw==
-X-Received: by 2002:a05:6a00:2e1e:b0:7a2:7610:364d with SMTP id d2e1a72fcca58-7b0bd5a2d7cmr1359743b3a.15.1762467341256;
-        Thu, 06 Nov 2025 14:15:41 -0800 (PST)
+        bh=iaV5T+CkHKumub+1IyVNraAlr4M5fw3/XvkVE6EY/28=;
+        b=nAuYt5iQDMkiBYVVP+6ZXP+zAebJtyzBL38EiMQo9Ouaoz04htOG6+eNesf+FJoOLH
+         9AO7V+PVQI5XzvISGqtRU3kYGs/jMjwF2NXaEZUcTy0CgsI0mzJ+8hvhJWEaE+9c94tm
+         E4BKRaxUFUiwdJRi5Woh+zbX5954veocrs8cgyP1srGLd4vm7qR8RqbUvCoPjFtI7uIb
+         H6u5Fg7TzjzKmhTyUtBVC30exjdLQoBsQHLc8sOZchIy5kINpLJ60N7pARHdxWLMb8Av
+         qUWCM7wPP3Wh4hbPa0xTfk5xzxLMStbI4XKcj5B4v3tIkYMAKu3v10QhRSyAnF9ue9cH
+         SeIg==
+X-Gm-Message-State: AOJu0YzkICN82IWn1DrEJ1kJMCJbfSv4uM9Y5gP4dN9hjNJu0Oxw9zKY
+	N6eK/W0JFJ5dCzEbEbPZ25pCt1aMi3gjMGL7FXjql3/bayJkL7DrSM4kZxHTxXzT
+X-Gm-Gg: ASbGncuZVlypBKqhcHrVK/1oAX18sZREcYDAOML8Y8K2izGBznAdpoV3zsMPi/aq7OT
+	TsAYJvN8llVK+jZqBJYjR9ek0FeGAveD/pnoj9NIxokHaWMAqKKNRT1TAzMt3qG3xjW4mqszYCk
+	Z3LEFfFExsjAzMw/KA7qScXsb4peDz3xdNbL61iCmMbXTq0j1L6X+7rj6TvWQrsXCm1mPGCjZLD
+	lisEnCfSLp7Pg0dWsJTj031BlxH/NoKgTQnDcAUlpNRSkkyBXeLJa+uBrB+7gVPsgidrkhiEaxx
+	36j7Ph86xEVd1lgX/GDwCsg7d3qtJxHoXoYI9kyXBwJKqqmp9FJW2H9N6u8+nKLYi3zWjx5sCl/
+	JmFTs+uYrvKLFi537ADuRvNVyD806bGysS2dYd52HBDWwZ5rofv86LY2mBFPFMRwrOFO6sqK0lx
+	KMhlARONKh+Qap2z6o9EsvfT/RY4hj0ponH61DUxzl32+HfJBtSe2wjJU1Ln5gDI2reoxZhQU=
+X-Google-Smtp-Source: AGHT+IF2dBduhDMcTQ4BiQq/EJ5TZWxQc2hOsCcxp0dOt8jT1+qvngyFFAtDgKQUqx5CkfkHDCIxGA==
+X-Received: by 2002:a05:6a21:3394:b0:32d:b925:4a8 with SMTP id adf61e73a8af0-35227f62fa9mr1644191637.3.1762467342891;
+        Thu, 06 Nov 2025 14:15:42 -0800 (PST)
 Received: from dhcp-10-231-55-133.dhcp.broadcom.net ([192.19.223.252])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b0ccc59de7sm568901b3a.65.2025.11.06.14.15.40
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7b0ccc59de7sm568901b3a.65.2025.11.06.14.15.42
         (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Thu, 06 Nov 2025 14:15:40 -0800 (PST)
+        Thu, 06 Nov 2025 14:15:42 -0800 (PST)
 From: Justin Tee <justintee8345@gmail.com>
 To: linux-scsi@vger.kernel.org
 Cc: jsmart2021@gmail.com,
 	justin.tee@broadcom.com,
 	Justin Tee <justintee8345@gmail.com>
-Subject: [PATCH v2 01/10] lpfc: Update various NPIV diagnostic log messaging
-Date: Thu,  6 Nov 2025 14:46:30 -0800
-Message-Id: <20251106224639.139176-2-justintee8345@gmail.com>
+Subject: [PATCH v2 02/10] lpfc: Revise discovery related function headers and comments
+Date: Thu,  6 Nov 2025 14:46:31 -0800
+Message-Id: <20251106224639.139176-3-justintee8345@gmail.com>
 X-Mailer: git-send-email 2.38.0
 In-Reply-To: <20251106224639.139176-1-justintee8345@gmail.com>
 References: <20251106224639.139176-1-justintee8345@gmail.com>
@@ -77,61 +77,116 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Update PRLI status log message to automatically warn when CQE status is
-non-zero.
-
-When issuing an RSCN, log ndlp's kref count to the debugfs trace buffer.
-
-Add the NPIV virtual port index to the FDMI registration log message with
-the fabric.
+Correcting discovery related function headers, return status information,
+and comment descriptions.  There are no functional changes.
 
 Signed-off-by: Justin Tee <justintee8345@gmail.com>
 ---
- drivers/scsi/lpfc/lpfc_els.c  | 6 +++---
- drivers/scsi/lpfc/lpfc_init.c | 6 +++---
- 2 files changed, 6 insertions(+), 6 deletions(-)
+ drivers/scsi/lpfc/lpfc_els.c | 17 ++++++++---------
+ drivers/scsi/lpfc/lpfc_sli.c |  9 +++++----
+ 2 files changed, 13 insertions(+), 13 deletions(-)
 
 diff --git a/drivers/scsi/lpfc/lpfc_els.c b/drivers/scsi/lpfc/lpfc_els.c
-index b71db7d7d747..f7c6758557c8 100644
+index f7c6758557c8..5456d2ab2d36 100644
 --- a/drivers/scsi/lpfc/lpfc_els.c
 +++ b/drivers/scsi/lpfc/lpfc_els.c
-@@ -2367,7 +2367,7 @@ lpfc_cmpl_els_prli(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
- 			mode = KERN_INFO;
+@@ -3024,6 +3024,7 @@ lpfc_cmpl_els_logo(struct lpfc_hba *phba, struct lpfc_iocbq *cmdiocb,
+ 			      ndlp->nlp_DID, ulp_status,
+ 			      ulp_word4);
  
- 		/* Warn PRLI status */
--		lpfc_printf_vlog(vport, mode, LOG_ELS,
-+		lpfc_vlog_msg(vport, mode, LOG_ELS,
- 				 "2754 PRLI DID:%06X Status:x%x/x%x, "
- 				 "data: x%x x%x x%lx\n",
- 				 ndlp->nlp_DID, ulp_status,
-@@ -3597,8 +3597,8 @@ lpfc_issue_els_rscn(struct lpfc_vport *vport, uint8_t retry)
++		/* Call NLP_EVT_DEVICE_RM if link is down or LOGO is aborted */
+ 		if (lpfc_error_lost_link(vport, ulp_status, ulp_word4))
+ 			skip_recovery = 1;
  	}
+@@ -3306,7 +3307,8 @@ lpfc_reg_fab_ctrl_node(struct lpfc_vport *vport, struct lpfc_nodelist *fc_ndlp)
+  *
+  * This routine is a generic completion callback function for Discovery ELS cmd.
+  * Currently used by the ELS command issuing routines for the ELS State Change
+- * Request (SCR), lpfc_issue_els_scr() and the ELS RDF, lpfc_issue_els_rdf().
++ * Request (SCR), lpfc_issue_els_scr(), Exchange Diagnostic Capabilities (EDC),
++ * lpfc_issue_els_edc()  and the ELS RDF, lpfc_issue_els_rdf().
+  * These commands will be retried once only for ELS timeout errors.
+  **/
+ static void
+@@ -3705,10 +3707,7 @@ lpfc_issue_els_farpr(struct lpfc_vport *vport, uint32_t nportid, uint8_t retry)
+ 		lpfc_nlp_put(ndlp);
+ 		return 1;
+ 	}
+-	/* This will cause the callback-function lpfc_cmpl_els_cmd to
+-	 * trigger the release of the node.
+-	 */
+-	/* Don't release reference count as RDF is likely outstanding */
++
+ 	return 0;
+ }
  
- 	lpfc_debugfs_disc_trc(vport, LPFC_DISC_TRC_ELS_CMD,
--			      "Issue RSCN:       did:x%x",
--			      ndlp->nlp_DID, 0, 0);
-+			      "Issue RSCN:   did:x%x refcnt %d",
-+			      ndlp->nlp_DID, kref_read(&ndlp->kref), 0);
- 
+@@ -4299,7 +4298,7 @@ lpfc_issue_els_edc(struct lpfc_vport *vport, uint8_t retry)
  	rc = lpfc_sli_issue_iocb(phba, LPFC_ELS_RING, elsiocb, 0);
  	if (rc == IOCB_ERROR) {
-diff --git a/drivers/scsi/lpfc/lpfc_init.c b/drivers/scsi/lpfc/lpfc_init.c
-index f206267d9ecd..34386b7c0b48 100644
---- a/drivers/scsi/lpfc/lpfc_init.c
-+++ b/drivers/scsi/lpfc/lpfc_init.c
-@@ -9082,9 +9082,9 @@ lpfc_setup_fdmi_mask(struct lpfc_vport *vport)
- 			vport->fdmi_port_mask = LPFC_FDMI2_PORT_ATTR;
- 	}
+ 		/* The additional lpfc_nlp_put will cause the following
+-		 * lpfc_els_free_iocb routine to trigger the rlease of
++		 * lpfc_els_free_iocb routine to trigger the release of
+ 		 * the node.
+ 		 */
+ 		lpfc_els_free_iocb(phba, elsiocb);
+@@ -5127,7 +5126,7 @@ lpfc_els_free_iocb(struct lpfc_hba *phba, struct lpfc_iocbq *elsiocb)
+ {
+ 	struct lpfc_dmabuf *buf_ptr, *buf_ptr1;
  
--	lpfc_printf_log(phba, KERN_INFO, LOG_DISCOVERY,
--			"6077 Setup FDMI mask: hba x%x port x%x\n",
--			vport->fdmi_hba_mask, vport->fdmi_port_mask);
-+	lpfc_printf_vlog(vport, KERN_INFO, LOG_DISCOVERY,
-+			 "6077 Setup FDMI mask: hba x%x port x%x\n",
-+			 vport->fdmi_hba_mask, vport->fdmi_port_mask);
+-	/* The I/O iocb is complete.  Clear the node and first dmbuf */
++	/* The I/O iocb is complete.  Clear the node and first dmabuf */
+ 	elsiocb->ndlp = NULL;
+ 
+ 	/* cmd_dmabuf = cmd,  cmd_dmabuf->next = rsp, bpl_dmabuf = bpl */
+@@ -8734,7 +8733,7 @@ lpfc_els_rcv_rls(struct lpfc_vport *vport, struct lpfc_iocbq *cmdiocb,
+  * @cmdiocb: pointer to lpfc command iocb data structure.
+  * @ndlp: pointer to a node-list data structure.
+  *
+- * This routine processes Read Timout Value (RTV) IOCB received as an
++ * This routine processes Read Timeout Value (RTV) IOCB received as an
+  * ELS unsolicited event. It first checks the remote port state. If the
+  * remote port is not in NLP_STE_UNMAPPED_NODE state or NLP_STE_MAPPED_NODE
+  * state, it invokes the lpfc_els_rsl_reject() routine to send the reject
+@@ -10843,7 +10842,7 @@ lpfc_els_unsol_event(struct lpfc_hba *phba, struct lpfc_sli_ring *pring,
+ 	lpfc_els_unsol_buffer(phba, pring, vport, elsiocb);
+ 	/*
+ 	 * The different unsolicited event handlers would tell us
+-	 * if they are done with "mp" by setting cmd_dmabuf to NULL.
++	 * if they are done with "mp" by setting cmd_dmabuf/bpl_dmabuf to NULL.
+ 	 */
+ 	if (elsiocb->cmd_dmabuf) {
+ 		lpfc_in_buf_free(phba, elsiocb->cmd_dmabuf);
+diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
+index 7ea7c4245c69..41eb558dd139 100644
+--- a/drivers/scsi/lpfc/lpfc_sli.c
++++ b/drivers/scsi/lpfc/lpfc_sli.c
+@@ -19858,13 +19858,15 @@ lpfc_sli4_remove_rpis(struct lpfc_hba *phba)
  }
  
  /**
+- * lpfc_sli4_resume_rpi - Remove the rpi bitmask region
++ * lpfc_sli4_resume_rpi - Resume traffic relative to an RPI
+  * @ndlp: pointer to lpfc nodelist data structure.
+  * @cmpl: completion call-back.
+  * @iocbq: data to load as mbox ctx_u information
+  *
+- * This routine is invoked to remove the memory region that
+- * provided rpi via a bitmask.
++ * Return codes
++ *	0 - successful
++ *	-ENOMEM - No available memory
++ *	-EIO - The mailbox failed to complete successfully.
+  **/
+ int
+ lpfc_sli4_resume_rpi(struct lpfc_nodelist *ndlp,
+@@ -19894,7 +19896,6 @@ lpfc_sli4_resume_rpi(struct lpfc_nodelist *ndlp,
+ 		return -EIO;
+ 	}
+ 
+-	/* Post all rpi memory regions to the port. */
+ 	lpfc_resume_rpi(mboxq, ndlp);
+ 	if (cmpl) {
+ 		mboxq->mbox_cmpl = cmpl;
 -- 
 2.38.0
 
