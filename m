@@ -1,95 +1,171 @@
-Received: from mail-wr1-f50.google.com (mail-wr1-f50.google.com [209.85.221.50])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtpout-03.galae.net (smtpout-03.galae.net [185.246.85.4])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 255853093C4
-	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 08:50:54 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.50
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E54032E7623
+	for <linux-scsi@vger.kernel.org>; Thu,  6 Nov 2025 10:46:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=185.246.85.4
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762419056; cv=none; b=nSRw6nlagFupsH95vAqXn2GpJyjfpTN5mVjk/Da7qxnZ1hrs71a57Way035701PUa7nVqIvtC1+fyV1cVp5U6rgUhdAYvbxVZ11pgdsHo7IXIpSfjsTbwbUu6dBk6Jsl6VBu6hXmsw3P5xICQdWO/Tvyh908NBcbYMQPpBCUn3M=
+	t=1762425980; cv=none; b=HmoKABK0XUInx7MW1wtcvRW7YIi4jbZi7FAIEPJs+YeHUIrjvIA2DrDVevdeZ3ElF+EPixdduD36mULz9PKVQmB00tvoSEsRemDLGj5tsTtpfYTVzQk++Ne3y9CUozrwq8JVRJzi3dY38wQf596y2JmxsJTUpQQ5auhsLFAoabE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762419056; c=relaxed/simple;
-	bh=y/dw8Yeek5uiSFfzrYLyDpk4KHGZ2Q+0lMj56HOwE3s=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=XhY9gr7gtncdtK3jK0YrHmvWpRepNMf3HSQK/8SLuvYXLTdBjvNL2uGgyoLUl5FRYJcTaWtH4HPH1PRM7ojdQS4/fM5oC8NHaIty4frP/PyvgBVSQiwihjLM38D4RFlOSxuLGpC2bXxuaobx1oDoc4nwmj4N8X7UUXGgY2tfqZA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=zpMBkhr7; arc=none smtp.client-ip=209.85.221.50
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1762425980; c=relaxed/simple;
+	bh=UN/GKU9hvJMbqnzmKkd4b7NQH6hyTg2EHZG2w73sYZg=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=ZIYs8Nh7vOdFUKqYGtgAH3Ku1AmXZ/h2KiFKwtpGek7FtCtLmYWSVBwKb7IFCgomUwK5fMC+Wa4qYtqb9Krjei4VUwYmm6+6831HASCCWn7pVTFrvlo1xI+/WxdGQUBpREYcW4mRDi1l2OnzNxEnVqiEXLJ8o/WInCMiTKzNzA8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com; spf=pass smtp.mailfrom=bootlin.com; dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b=PTi36yJx; arc=none smtp.client-ip=185.246.85.4
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=bootlin.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=bootlin.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="zpMBkhr7"
-Received: by mail-wr1-f50.google.com with SMTP id ffacd0b85a97d-429c8632fcbso492040f8f.1
-        for <linux-scsi@vger.kernel.org>; Thu, 06 Nov 2025 00:50:54 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1762419053; x=1763023853; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=0O1+Bk0V1ecJIiIZPiuBQsoCpD34teqnebEkC3KejHk=;
-        b=zpMBkhr7lpfrb0BndEugyEG98HARsRAOlnqU7cCJ8s+vPR0tkymgHv9TIx2jWP9ht+
-         CHXG501wIUp3p/H+/5mDBgnSosnu/NlyX4MwkeNdLIXs7AewSDPD36a19QqB9lym0x8w
-         PVHatOGR4ILuSUKJSkWmycF5fI+h3e1P1R1nEk5pb6ASahhfEWjBIWHw1kOj0h9NDn+r
-         IdV2YPbWVovnaCMiXjwehpnKfH359rwrOHw0hkm5f1fYRzBQqtZpn5J90y4k46c9Dk4W
-         RsZjauAXkSj2AJYIyviETBTvEILJYhQ/O7/bM170HrI/H4AfF2R1cmj8U4b0NrL9aKiP
-         /Lxw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762419053; x=1763023853;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=0O1+Bk0V1ecJIiIZPiuBQsoCpD34teqnebEkC3KejHk=;
-        b=J6YZIwzaPbAZKZoGXG4bsNhgGg5amNo/ckPiwxnbofd4UuyQoUsIBkOIfluWDwOG/p
-         hEw4YvJnKMmKSLnhT7p210de61dz04zaD7ehX9ciQ+8kBfmq4/gZx9IJi/UF1eq0lMPe
-         0YvhnWC3YfEz/y80ypj4RpJ8ST/NJeVOJnS8p4ymt0u1m1ICasR7RTvSAGuG1I+thtyE
-         O8VgsDBwW7P0jLQTH6zBjUDrFV+en4EKP2YNa1xZFiY3WeVCziWanVCFv/UqNQo1LbBB
-         G9gbQvlDlgZGVltdMTxZ7rb3LbbyfvLNkj7yi5J50UZ0JwIgaYrclyJN0Ev47xt+ZIDA
-         Ptaw==
-X-Forwarded-Encrypted: i=1; AJvYcCVcisDNEQel9KRCPlF0e7qod8+Q8AZ78HVBEO09UItfiYj8oOOFXNkT2o7hd4+a4PbAPfjsE1F54ETz@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz58ZPVZBIbiQeZqtBEthkj7p47vkQx8yDeUPpKRlPHe58WLbYg
-	mqKz61Q//SIzP/aKZjt7rjsYhHsvOCGTl0pOa9Oh8rKFlBTOuQ7Vh682j+xLMd8eYnQ=
-X-Gm-Gg: ASbGncsiT3PHp/Qnaj9dte94MWPBxMCaUY85sH0RVda3qJJXRlM3PaFktvRim1BZ/4E
-	Bk952irJOYadmoYqtbayLLqg2Np0rb92nmeCL/hbA+z572bnHBJ8IQx2g93K6lIeg1DV3HvvrLG
-	70lEnbW6U8UQqTSajZGU1re/2WnVpr7NCADr6EFovmxson/L8oukTJ9nfTDiMEJE35kAI3KYBLh
-	ezrnSZR2QeVzSXjK/e8vm19FAhoSwHOOFnBYRMx6z1/PtZ9MJ5YTKiQ2Rs7iHzJHUIqB4DNfa1b
-	jDjL7dTNcnI2LgiBJVvv2m/RLF2RqBAfpGuRAnKIzTR3FmlBLeDHhsVpFcYmwow7o4CnGbcUHKr
-	+LipHvRKGLWbGmtCRS+vOZleL3UEmJGCeRtZnphecPW+JKYM4F7vZ26dyDJyUwjFmcAsjVG5y
-X-Google-Smtp-Source: AGHT+IEpNkwrjClS3MRT6aT/Q6UAaN6LRZvZHXmcxt93frsHr0y/6tOsqdtfdy9Fugmh28HWQ5XyVg==
-X-Received: by 2002:a05:6000:2a0c:b0:429:bb40:eecd with SMTP id ffacd0b85a97d-429e33120cfmr4859897f8f.52.1762419053386;
-        Thu, 06 Nov 2025 00:50:53 -0800 (PST)
-Received: from linaro.org ([86.121.7.169])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-429eb49a079sm3648338f8f.32.2025.11.06.00.50.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Thu, 06 Nov 2025 00:50:52 -0800 (PST)
-Date: Thu, 6 Nov 2025 10:50:49 +0200
-From: Abel Vesa <abel.vesa@linaro.org>
-To: Ritesh Kumar <riteshk@qti.qualcomm.com>
-Cc: robin.clark@oss.qualcomm.com, lumag@kernel.org, 
-	abhinav.kumar@linux.dev, jessica.zhang@oss.qualcomm.com, sean@poorly.run, 
-	marijn.suijten@somainline.org, maarten.lankhorst@linux.intel.com, mripard@kernel.org, 
-	tzimmermann@suse.de, airlied@gmail.com, simona@ffwll.ch, robh@kernel.org, 
-	krzk+dt@kernel.org, conor+dt@kernel.org, quic_mahap@quicinc.com, 
-	andersson@kernel.org, konradybcio@kernel.org, mani@kernel.org, 
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, vkoul@kernel.org, kishon@kernel.org, 
-	cros-qcom-dts-watchers@chromium.org, Ritesh Kumar <quic_riteshk@quicinc.com>, 
-	linux-phy@lists.infradead.org, linux-arm-msm@vger.kernel.org, dri-devel@lists.freedesktop.org, 
-	freedreno@lists.freedesktop.org, devicetree@vger.kernel.org, linux-kernel@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, quic_vproddut@quicinc.com
-Subject: Re: [PATCH v3 2/2] arm64: dts: qcom: lemans: Add eDP ref clk for eDP
- PHYs
-Message-ID: <x7ej2ne3lwn66xwgavdom45hj5imncczd5h5owufvvx4e3cblu@rdhb2adstev6>
-References: <20251104114327.27842-1-riteshk@qti.qualcomm.com>
- <20251104114327.27842-3-riteshk@qti.qualcomm.com>
+	dkim=pass (2048-bit key) header.d=bootlin.com header.i=@bootlin.com header.b="PTi36yJx"
+Received: from smtpout-01.galae.net (smtpout-01.galae.net [212.83.139.233])
+	by smtpout-03.galae.net (Postfix) with ESMTPS id 482B04E41565;
+	Thu,  6 Nov 2025 10:46:15 +0000 (UTC)
+Received: from mail.galae.net (mail.galae.net [212.83.136.155])
+	by smtpout-01.galae.net (Postfix) with ESMTPS id 1AF806068C;
+	Thu,  6 Nov 2025 10:46:15 +0000 (UTC)
+Received: from [127.0.0.1] (localhost [127.0.0.1]) by localhost (Mailerdaemon) with ESMTPSA id C9129118507EA;
+	Thu,  6 Nov 2025 11:46:08 +0100 (CET)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=bootlin.com; s=dkim;
+	t=1762425974; h=from:subject:date:message-id:to:cc:mime-version:content-type:
+	 content-transfer-encoding; bh=ykf8AdWKUdwglXfy0yT79Zz6cgk7FWiBvEcU7ZTGEKg=;
+	b=PTi36yJxC/EF3MvdGN6SHwZ4omaZLcP+h6NMtpL/W2BM6P5PgoRt2rlThsaf1N9wgGD2qW
+	Kew/PVlIZB5xij1CQj33zJxPg/z/oMpRem+mrGZyFmn4AWDxOTtTCnfgLObkO9jpfYxJA0
+	yVQgJ4S6Oa9ARyAXqtFr2GCrrt3U18+pBlpPeVEGdeouED4zsY81qsqEAPE/v1meZ9KlPR
+	zBPMlFbBg/yGZDIowSGnHKbr1DqHiNFwh7R9LTHFq7prc3hTccO4X3wngChfS2YFb186BD
+	1779kjAa0/dKsUQUuFtVlocfOT3xLsYkwdVpT9ZovAf4bJuOrAeQT94ULQrj2g==
+From: "Thomas Richard (TI.com)" <thomas.richard@bootlin.com>
+Date: Thu, 06 Nov 2025 11:46:04 +0100
+Subject: [PATCH] scsi: ufs: core: fix hid sysfs group update
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251104114327.27842-3-riteshk@qti.qualcomm.com>
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 7bit
+Message-Id: <20251106-scsi-ufs-core-fix-sysfs-update-hid-group-v1-1-1262037d6c97@bootlin.com>
+X-B4-Tracking: v=1; b=H4sIAGt8DGkC/x3NSwrDMAxF0a0EjSuw3Tr9bCV0EGwl0SQ2Uh1aQ
+ vZekeGBy3s7KAmTwqvbQWhj5bIa/KWDtIzrTMjZDMGF6L3rUZMytkkxFSGc+Iv6U2OrefwQLpx
+ xltIqxvvTRxeut4cjsLkqZPV5NbyP4w8U8rnhegAAAA==
+X-Change-ID: 20251106-scsi-ufs-core-fix-sysfs-update-hid-group-57915023480e
+To: Alim Akhtar <alim.akhtar@samsung.com>, 
+ Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>, 
+ Daniel Lee <chullee@google.com>
+Cc: Thomas Petazzoni <thomas.petazzoni@bootlin.com>, 
+ Gregory CLEMENT <gregory.clement@bootlin.com>, Udit Kumar <u-kumar1@ti.com>, 
+ Prasanth Mantena <p-mantena@ti.com>, Abhash Kumar <a-kumar2@ti.com>, 
+ linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, 
+ "Thomas Richard (TI.com)" <thomas.richard@bootlin.com>
+X-Mailer: b4 0.14.3
+X-Last-TLS-Session-Version: TLSv1.3
 
-On 25-11-04 17:13:27, Ritesh Kumar wrote:
-> From: Ritesh Kumar <quic_riteshk@quicinc.com>
-> 
-> Add eDP reference clock for eDP PHYs on lemans chipset.
+Without UFSHCD_QUIRK_SKIP_PH_CONFIGURATION, the UFS core fails to create
+sysfs groups due to a pre-existing hid group.
 
-I'd add more information in here as to why this is needed,
-specially since this is a fix.
+[    3.431670] Call trace:
+[    3.431673]  show_stack+0x18/0x24 (C)
+[    3.431682]  dump_stack_lvl+0x74/0x8c
+[    3.431691]  dump_stack+0x18/0x24
+[    3.431696]  sysfs_warn_dup+0x64/0x80
+[    3.431704]  internal_create_group+0x450/0x46c
+[    3.431709]  internal_create_groups+0x50/0xd0
+[    3.431714]  sysfs_create_groups+0x18/0x24
+[    3.431719]  ufs_sysfs_add_nodes+0x24/0x68
+[    3.431725]  ufshcd_init+0xb3c/0xef0
+[    3.431730]  ufshcd_pltfrm_init+0x514/0x7ec
+[    3.431735]  cdns_ufs_pltfrm_probe+0x3c/0x80
+[    3.431740]  platform_probe+0x5c/0x98
+[    3.431745]  really_probe+0xbc/0x2a8
+[    3.431749]  __driver_probe_device+0x78/0x12c
+[    3.431752]  driver_probe_device+0xd8/0x15c
+[    3.431756]  __device_attach_driver+0xb8/0x134
+[    3.431760]  bus_for_each_drv+0x88/0xe8
+[    3.431763]  __device_attach+0xa0/0x190
+[    3.431766]  device_initial_probe+0x14/0x20
+[    3.431769]  bus_probe_device+0xac/0xb0
+[    3.431773]  device_add+0x5d4/0x7a4
+[    3.431779]  of_device_add+0x44/0x60
+[    3.431785]  of_platform_device_create_pdata+0x8c/0x120
+[    3.431789]  of_platform_bus_create+0x158/0x39c
+[    3.431794]  of_platform_populate+0x74/0x108
+[    3.431798]  ti_j721e_ufs_probe+0xd8/0x1c0
+[    3.431803]  platform_probe+0x5c/0x98
+[    3.431807]  really_probe+0xbc/0x2a8
+[    3.431811]  __driver_probe_device+0x78/0x12c
+[    3.431814]  driver_probe_device+0xd8/0x15c
+[    3.431818]  __device_attach_driver+0xb8/0x134
+[    3.431821]  bus_for_each_drv+0x88/0xe8
+[    3.431824]  __device_attach+0xa0/0x190
+[    3.431828]  device_initial_probe+0x14/0x20
+[    3.431831]  bus_probe_device+0xac/0xb0
+[    3.431834]  deferred_probe_work_func+0x88/0xc0
+[    3.431838]  process_one_work+0x148/0x28c
+[    3.431844]  worker_thread+0x2d0/0x3d8
+[    3.431848]  kthread+0x12c/0x204
+[    3.431855]  ret_from_fork+0x10/0x20
+[    3.432030] cdns-ufshcd 4e84000.ufs: ufs_sysfs_add_nodes: sysfs groups creation failed (err = -17)
+
+The issue occurs because, without UFSHCD_QUIRK_SKIP_PH_CONFIGURATION, the
+hid group is updated before sysfs groups creation. The sysfs_update_group()
+function silently creates missing group, the subsequent call to
+ufs_sysfs_add_nodes() fails when it attempts to create the already-existing
+hid group.
+
+Without UFSHCD_QUIRK_SKIP_PH_CONFIGURATION:
+  ufshcd_init
+    ufshcd_device_params_init
+      ufs_get_device_desc
+        sysfs_update_group
+    ufs_sysfs_add_nodes
+
+With UFSHCD_QUIRK_SKIP_PH_CONFIGURATION:
+  ufshcd_init
+    ufs_sysfs_add_nodes
+
+Move the sysfs_update_group() call in ufshcd_device_init() after
+ufshcd_device_params_init() to ensure hid group is updated once all groups
+were created.
+
+Fixes: bb7663dec67b ("scsi: ufs: sysfs: Make HID attributes visible")
+Signed-off-by: Thomas Richard (TI.com) <thomas.richard@bootlin.com>
+---
+Issue found on a TI J784S4 EVM board. Testing confirms the issue is fixed
+on my platform. However, I was unable to verify if HID attributes are
+visible when the feature is supported.
+---
+ drivers/ufs/core/ufshcd.c | 5 +++--
+ 1 file changed, 3 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+index 9ca27de4767a..94bcb75ea2f8 100644
+--- a/drivers/ufs/core/ufshcd.c
++++ b/drivers/ufs/core/ufshcd.c
+@@ -8503,8 +8503,6 @@ static int ufs_get_device_desc(struct ufs_hba *hba)
+ 				DEVICE_DESC_PARAM_EXT_UFS_FEATURE_SUP) &
+ 				UFS_DEV_HID_SUPPORT;
+ 
+-	sysfs_update_group(&hba->dev->kobj, &ufs_sysfs_hid_group);
+-
+ 	model_index = desc_buf[DEVICE_DESC_PARAM_PRDCT_NAME];
+ 
+ 	err = ufshcd_read_string_desc(hba, model_index,
+@@ -9033,6 +9031,9 @@ static int ufshcd_device_init(struct ufs_hba *hba, bool init_dev_params)
+ 		ret = ufshcd_device_params_init(hba);
+ 		if (ret)
+ 			return ret;
++
++		sysfs_update_group(&hba->dev->kobj, &ufs_sysfs_hid_group);
++
+ 		if (is_mcq_supported(hba) &&
+ 		    hba->quirks & UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH) {
+ 			ufshcd_config_mcq(hba);
+
+---
+base-commit: 6146a0f1dfae5d37442a9ddcba012add260bceb0
+change-id: 20251106-scsi-ufs-core-fix-sysfs-update-hid-group-57915023480e
+
+Best regards,
+-- 
+Thomas Richard (TI.com) <thomas.richard@bootlin.com>
+
