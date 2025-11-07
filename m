@@ -1,62 +1,62 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CBF61A3164
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 15:16:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C50F1D61A3
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 15:24:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762528589; cv=none; b=HHLOTWQ5o+zTFSYLUEKwFosHgCxsSqeOLgcDTni/3Uh9c+mWdfes/M46faGm1nf2C7r31+j7ZP00OBbEBD1SeQ5hNMvbO6HCm4NiM8W8DDz6hH42wssN14FQp9u9GfxTdNAd+kL9hLo3lPj0MrCbnHCFhWhprv+u+n7V5OuNpts=
+	t=1762529042; cv=none; b=IhsJ1/6H7a9iVrVMihtOpVYjetTz2HdI+sS6EjP/ac28DJAqNqPH1/U2BNY++FDdxIStWE2ROxhXtqJ5ID0ZNy2gAKUYrKP1BFuZjADpXNePFWbWvgNUuK3NAhcHb0SXfHOcCoGQMARn/W1EYhYMi41eTgF5pJvoBgo3oI712gA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762528589; c=relaxed/simple;
-	bh=Q/6vxRricWDrRCUSl44BgJKITMGcBpXQaAm9tnUqR/Q=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=AIdbsIpOgDvh3ZWmC44eSjxMv/UaivgNi73TelezshO+LYgjjTnCvKFWPevD4tcRiSy9FpI2iI4memt5F8tO0ThJWglceLqlET8T5eOPyu2rNDwIMIfauW+HNc3Nl4R3tLk8+IznpS7MUkmz+kMo/bKzD5njLMNyJr9qME9Vo5g=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=L4wF4tBe; arc=none smtp.client-ip=209.85.221.46
+	s=arc-20240116; t=1762529042; c=relaxed/simple;
+	bh=nDb0O6dzOVMWuFDYYVHFPTwHHNQ+pWTzegor75kDLfg=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gPS6nBm1R5xE16Os11DCjlqhgwcIMO3Lzn7M1PBite3Oxr05jTkzVVmFO7S17QWt4cDFTZgBxuTCplAKc4D7tp1HKTqoDUcsukio6NJGPUQTnXuosbXSyVRtW6LkA7bJMKnuZCynSCy6ayVhTBXzu/R+GXWu5YmJ+Dp7/5/7jJg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=YZKT2RWX; arc=none smtp.client-ip=209.85.128.54
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="L4wF4tBe"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-3ed20bdfdffso819506f8f.2
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 07:16:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="YZKT2RWX"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-47112a73785so5831865e9.3
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 07:24:00 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1762528586; x=1763133386; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1762529039; x=1763133839; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=fcwFTq1/DogLswamjpDbcdEqXnwm4REhdjASNxEdBs8=;
-        b=L4wF4tBesny1Tg31eUJYUEIjM2pDo6xT1Z9kmDx89CIRaHLFozx4wm3k4+UVLRjgcs
-         SBNMwIhj1753vcP8COqkkE169oVf/CeilpfhOLYHbuwD7AMI0BQdEWaML77jU9EfplbT
-         zcy9IAUBcma+VILQ1yZOv01xA/lNJxPevB7DyatiZQtnY5x70BFE7MGtEJspkW2JfY2s
-         DCevp2JDSvIgpKLAsPByhjMN+InLYPujWt0eDHzREnX8C9wUKhvmUGoMw0PRj9qHt97V
-         xg/zChqqriNqIp5B1QcyJpxICwUBAF0JqBxA6S53adcRr/+jBkmNBVssJiyAErZ8QbZ5
-         Gu9Q==
+        bh=Vn7GUP8McG3zK7DlEJjzjjz52xWwiXzwF/L1BD65MSE=;
+        b=YZKT2RWXXR+VOAnDkQQPgtndgLWi3Q1kwe7utMKlVLSUgzUw8A+u6cPkDcJONmxl89
+         n6H99/PGUvutnU1a7NsZTztMvkm59RunczfPY1a7JOt4K1tLV8cNtcx3aA8aI9oUnlJd
+         SKTdqjcPfNKnuWxovB2jt/km79UVKoimObsygrFCt1R+FkYzvCh/lDedrPSOQExcgGST
+         dSRO79MxYzO8IvEVl9Q+pvaquXVtNqdWe6XpFf48pNIaGaV9WYPH9OFHSUapwLsz4W36
+         A47X8Kuc7dAnsGSLtQkypWA8d17lKdItXnO2sZDjIDisx2tR7dmi8bpXSGokIklblDTh
+         RK9A==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762528586; x=1763133386;
+        d=1e100.net; s=20230601; t=1762529039; x=1763133839;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=fcwFTq1/DogLswamjpDbcdEqXnwm4REhdjASNxEdBs8=;
-        b=GPnYjw+DbAwOXIsLjvPvKOW9gaUAioyySXOsoYWgNQdRhl7e8T4XEjZbClqKSCcQlH
-         4APv4eOBmmN2/SOTOtaqoWXoJyOiPtf5tSBb73LHayqmJdD2Rts3VpR64+hEU9X0llOP
-         pHfiSy6czjXQu0F4llUkM/5GYepp7EsRvW4cgnNyAYG+ejMs5DqJXERT0H9PqAcIqKef
-         kWb+NmofnAwCyxVGZqp+cLycbVRrauoktixeMaIW69OfDaf2vWhw0Rp1vd0purRjzm02
-         7OltbxEBytlj5mVSkVLtsmHhDDzF2m2ta8c01MQz3+cMi2PYD9qngb2IeLkAYSkog2mV
-         4WuQ==
-X-Forwarded-Encrypted: i=1; AJvYcCVXLP/TcbWDstgrnyGWyZu42ocOB1NrArLjdxh6HeOu7qtxy+NJjjUyJIuUWIRK4kgmFvvjQXx4fIM+@vger.kernel.org
-X-Gm-Message-State: AOJu0YyoRSZXIEdnYTVec4PEJ+oBdzshAPznfwscd9QI+jAM7eS9WLyr
-	nvkjw3zHhm3f12CACHw44wB9K67OPG6t9AkNx4KfzOAkvWJXG5ejcWNmRdwBsw7YAUs=
-X-Gm-Gg: ASbGncv9+DoNTuaaj+p9RusNMvHk5JmcxzMvhgbvbZdqTzRjF/8alzDQj6gdCr8uyo7
-	w4EtZNozNBlktv3fCDaS9AlAJRyRVGLCzTS6lX0jD1x/+q5ZXvoBPn/oia24R2VOnKBhYf2lu3X
-	+OoQncH06B4id4sMN5Qwe5Dw5GMwaG4T+KuNPwOr7ArDg6nN9LtvLw2g+CadxfJAM0+m+alS7dx
-	XXECF4/WuL+7QrtvNseHnsUbcS2t/Ien58BTRyuQhnE6ZuEFaAeHTYqs5jHfPCJtYN9/t2qpzqn
-	w9Shxc+GiSmtK5UZwu0boHzXKL5Yr4VEtBV3isXpV/rOpM2OSV1w8hADeDGzdVLSAzVUcoAM/aa
-	/VNzliB7B6dcXXUxn/SSpa/BoHyLAWAWa31jNE41oiSsImLDIc8xWWMBAOJpdwes2OpgsQlQwmk
-	R/eHtEWIptYAExUITy7YSNteZH
-X-Google-Smtp-Source: AGHT+IEb71e1N6JfIEUJiI9T+djX0T6M9NFuyXbFtIKtj2yXnBFzlQmVzBKFWvRjsc8GOuNvVFya4w==
-X-Received: by 2002:a5d:5847:0:b0:429:bc56:cd37 with SMTP id ffacd0b85a97d-42adc68956bmr2219409f8f.6.1762528585653;
-        Fri, 07 Nov 2025 07:16:25 -0800 (PST)
+        bh=Vn7GUP8McG3zK7DlEJjzjjz52xWwiXzwF/L1BD65MSE=;
+        b=Ovrc+g1TUFQ22zNFAoSHLnth2DA0mFbHiQNCITgb5+p8x9rIpCRhklhhL7nbcB5qDq
+         oYA84KXL60aNjAODxD5JhqdhWyxcNcMQc55cSQoEU3/DSrjK6M8D0MOsqvaoYCy2Hvh3
+         CSh37UsMPDt08KMhYkndCbvEA6oVkGeid4qix2ZMud3KdGdeuHgPtkxhlMysdTQDql58
+         L89f65GtbkcUuqeWQZCLzOjLH/DSU0q0T44TqIchszOtuKI4huLgVZ8zm2zwPiWxWcej
+         wXJeauJo3jS3IPZ46NhjSkH8Jf1d0wJEBI85YPvObSTu62IJmGhlmys9JG2C/Jc+eaUz
+         DWbw==
+X-Forwarded-Encrypted: i=1; AJvYcCUMoy1p/SNdsabU//mweZvgaX7oWNzIh69pCD1bA2VP/h3kEShGXxk+e5o1Hqf4ec9lDEgAWuSVyrl9@vger.kernel.org
+X-Gm-Message-State: AOJu0YxaaFI/1Jl23rMur9UwaVUZQlWf9Xa6ec/sfKSHnGsPVYjTOtZr
+	tIB4U+QkCoYdKS9friUHj5hSYK4v6rVJAHs/QWpUf6gFz8kN7e18dJ2ZYQrdgatgDI0=
+X-Gm-Gg: ASbGncuDBnJC/4JrK9YFbmcRECwpdlRJ3NNIs2Ge8b3Au9JaE3384/2Kk1X9KgbNYec
+	JavSOR2xqoqxzmUfPPRvUkvCsSEiQSEjwKPFpbGNUmk2GWocEB4ZizlBG8KCrSyZi1iD1tI/4tk
+	cX6KskTXC0Dqe38y0Bxjr2st74Ks9pQJF6raMnBSuudGG31X2+fsUpY6D9Vv2RqHgIEw+trhdIg
+	ln7kpYmR2yIU50Osk37GiukJy1+W9y6bq2zTAtiBmATrb9HkuRoAtfY9A7asKz4QPKaBpy1DLbN
+	fysTb4hRBQVtxfb4bdQ7wpoMjJFY/Gkan5letKKMCCaQUz0TwdLLYkyRzvsIRApcxMtpWPabroT
+	kZqWWtN/lwdcESem9AaJ4+bLqDWIPUDAzMlXZzjRLhXSRpleOjnk64izO1Lt4RUaXN451QL6eZa
+	6Z8hAY91DGRkySKX9U6nvbUEpa
+X-Google-Smtp-Source: AGHT+IEuB02jHpSTzBJzUrZVFlClNFUykNNdfp7CZbsJjUOeJSALKQCmJL04EEkoidUr0XP27QRO2w==
+X-Received: by 2002:a05:600c:1c8c:b0:475:dd9a:f791 with SMTP id 5b1f17b1804b1-4776bd04d59mr27043215e9.28.1762529038867;
+        Fri, 07 Nov 2025 07:23:58 -0800 (PST)
 Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42ac6794f6esm6688333f8f.41.2025.11.07.07.16.24
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47763e4f13dsm42953005e9.5.2025.11.07.07.23.57
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Nov 2025 07:16:25 -0800 (PST)
+        Fri, 07 Nov 2025 07:23:58 -0800 (PST)
 From: Marco Crivellari <marco.crivellari@suse.com>
 To: linux-kernel@vger.kernel.org,
 	linux-scsi@vger.kernel.org
@@ -66,14 +66,14 @@ Cc: Tejun Heo <tj@kernel.org>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	Marco Crivellari <marco.crivellari@suse.com>,
 	Michal Hocko <mhocko@suse.com>,
-	Nilesh Javali <njavali@marvell.com>,
-	Manish Rangankar <mrangankar@marvell.com>,
+	Saurav Kashyap <skashyap@marvell.com>,
+	Javed Hasan <jhasan@marvell.com>,
 	GR-QLogic-Storage-Upstream@marvell.com,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: qedi: add WQ_PERCPU to alloc_workqueue users
-Date: Fri,  7 Nov 2025 16:16:18 +0100
-Message-ID: <20251107151618.281250-1-marco.crivellari@suse.com>
+Subject: [PATCH] scsi: qedf: add WQ_PERCPU to alloc_workqueue users
+Date: Fri,  7 Nov 2025 16:23:49 +0100
+Message-ID: <20251107152349.288190-1-marco.crivellari@suse.com>
 X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -114,25 +114,51 @@ must now use WQ_PERCPU.
 Once migration is complete, WQ_UNBOUND can be removed and unbound will
 become the implicit default.
 
-Suggested-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
 ---
- drivers/scsi/qedi/qedi_main.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/qedf/qedf_main.c | 8 ++++----
+ 1 file changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
-index b168bb2178e9..56685ee22fdf 100644
---- a/drivers/scsi/qedi/qedi_main.c
-+++ b/drivers/scsi/qedi/qedi_main.c
-@@ -2768,7 +2768,7 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
- 		}
+diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
+index 6b1ebab36fa3..9c234a36dbff 100644
+--- a/drivers/scsi/qedf/qedf_main.c
++++ b/drivers/scsi/qedf/qedf_main.c
+@@ -3374,7 +3374,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_INFO, "qedf->io_mempool=%p.\n",
+ 	    qedf->io_mempool);
  
- 		qedi->offload_thread = alloc_workqueue("qedi_ofld%d",
--						       WQ_MEM_RECLAIM,
-+						       WQ_MEM_RECLAIM | WQ_PERCPU,
- 						       1, qedi->shost->host_no);
- 		if (!qedi->offload_thread) {
- 			QEDI_ERR(&qedi->dbg_ctx,
+-	qedf->link_update_wq = alloc_workqueue("qedf_%u_link", WQ_MEM_RECLAIM,
++	qedf->link_update_wq = alloc_workqueue("qedf_%u_link", WQ_MEM_RECLAIM | WQ_PERCPU,
+ 					       1, qedf->lport->host->host_no);
+ 	INIT_DELAYED_WORK(&qedf->link_update, qedf_handle_link_update);
+ 	INIT_DELAYED_WORK(&qedf->link_recovery, qedf_link_recovery);
+@@ -3628,7 +3628,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 	}
+ 
+ 	qedf->timer_work_queue = alloc_workqueue("qedf_%u_timer",
+-				WQ_MEM_RECLAIM, 1, qedf->lport->host->host_no);
++				WQ_MEM_RECLAIM | WQ_PERCPU, 1, qedf->lport->host->host_no);
+ 	if (!qedf->timer_work_queue) {
+ 		QEDF_ERR(&(qedf->dbg_ctx), "Failed to start timer "
+ 			  "workqueue.\n");
+@@ -3641,7 +3641,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+ 		sprintf(host_buf, "qedf_%u_dpc",
+ 		    qedf->lport->host->host_no);
+ 		qedf->dpc_wq =
+-			alloc_workqueue("%s", WQ_MEM_RECLAIM, 1, host_buf);
++			alloc_workqueue("%s", WQ_MEM_RECLAIM | WQ_PERCPU, 1, host_buf);
+ 	}
+ 	INIT_DELAYED_WORK(&qedf->recovery_work, qedf_recovery_handler);
+ 
+@@ -4177,7 +4177,7 @@ static int __init qedf_init(void)
+ 		goto err3;
+ 	}
+ 
+-	qedf_io_wq = alloc_workqueue("%s", WQ_MEM_RECLAIM, 1, "qedf_io_wq");
++	qedf_io_wq = alloc_workqueue("%s", WQ_MEM_RECLAIM | WQ_PERCPU, 1, "qedf_io_wq");
+ 	if (!qedf_io_wq) {
+ 		QEDF_ERR(NULL, "Could not create qedf_io_wq.\n");
+ 		goto err4;
 -- 
 2.51.1
 
