@@ -1,78 +1,79 @@
-Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
+Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD0730C61C
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 15:06:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7CBF61A3164
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 15:16:27 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762527979; cv=none; b=VK7k5QjIqpjNgrgbdTvK0tnRjmy2TrGRU8SFfxHmAWRHsSxkg+NMuCL5+WBsU/JAAPd0mE9xeof+w/6QuDOwpeS3Lbzi/paqAE0QZacc4ZdQlA1GYCxeWyiqKMkoblPa3qvNWWRrK6mPlhfBp0w5npD8Rof7nfLUtDG0O+P/pfU=
+	t=1762528589; cv=none; b=HHLOTWQ5o+zTFSYLUEKwFosHgCxsSqeOLgcDTni/3Uh9c+mWdfes/M46faGm1nf2C7r31+j7ZP00OBbEBD1SeQ5hNMvbO6HCm4NiM8W8DDz6hH42wssN14FQp9u9GfxTdNAd+kL9hLo3lPj0MrCbnHCFhWhprv+u+n7V5OuNpts=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762527979; c=relaxed/simple;
-	bh=I1uyF94YPCgRaFvl8OfqcySKhRO4bX53+vRKo3KnpXs=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FJVGCEOe6AYgQPJyeE2WGAVtWeBzQkux3iJdljX+PSR7FLLFQGzqiH4NBEgnQCN8eITMhzOymgML5Oo3C9janTcbe9jUybHx1e7BAbV+V5B5FjqAOd75GZ/HtCmuOYhO+D/ct+Lk0byM7f5HIkqE/phn1J/sW1Z4e2O/KG8s9AU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gt2nUuvM; arc=none smtp.client-ip=209.85.128.48
+	s=arc-20240116; t=1762528589; c=relaxed/simple;
+	bh=Q/6vxRricWDrRCUSl44BgJKITMGcBpXQaAm9tnUqR/Q=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=AIdbsIpOgDvh3ZWmC44eSjxMv/UaivgNi73TelezshO+LYgjjTnCvKFWPevD4tcRiSy9FpI2iI4memt5F8tO0ThJWglceLqlET8T5eOPyu2rNDwIMIfauW+HNc3Nl4R3tLk8+IznpS7MUkmz+kMo/bKzD5njLMNyJr9qME9Vo5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=L4wF4tBe; arc=none smtp.client-ip=209.85.221.46
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gt2nUuvM"
-Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-471191ac79dso9559735e9.3
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 07:06:17 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="L4wF4tBe"
+Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-3ed20bdfdffso819506f8f.2
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 07:16:27 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1762527976; x=1763132776; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1762528586; x=1763133386; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=py75GPFijQsPUx0jpTbres5/IKDk4ZsE3rbUHQbz/Yc=;
-        b=gt2nUuvM5rjYgTZZJBN5l2FbDqDK3nccnSq7jgvNxILnZU1egU2dqqhBon1hVv53sn
-         SVY5SC9brsdMEG2ESLfsVyh9ak1dYlJhsQORGe5446FIHOsmBqQKUdXSAXkLyqLmHi6/
-         MfeDgN3f660kyJ2fPtpXn4M4kBG5s8N/FXX0xBZdbwOFNOmD/YR4eAYj5VxCyDVkb3Ez
-         kCCexMNXuyfTtg8kEo/AXBFQoRQTL08pjR+6iT+QmCTeL27/uSPAG1Gcwh3foS2AlQSh
-         23Wx2+H24P/lN/lfW+i2332bD4FsEAQ3inBXdVZJuH4jpbHnjIXhQaXRYca8xKCKSLvz
-         90Bw==
+        bh=fcwFTq1/DogLswamjpDbcdEqXnwm4REhdjASNxEdBs8=;
+        b=L4wF4tBesny1Tg31eUJYUEIjM2pDo6xT1Z9kmDx89CIRaHLFozx4wm3k4+UVLRjgcs
+         SBNMwIhj1753vcP8COqkkE169oVf/CeilpfhOLYHbuwD7AMI0BQdEWaML77jU9EfplbT
+         zcy9IAUBcma+VILQ1yZOv01xA/lNJxPevB7DyatiZQtnY5x70BFE7MGtEJspkW2JfY2s
+         DCevp2JDSvIgpKLAsPByhjMN+InLYPujWt0eDHzREnX8C9wUKhvmUGoMw0PRj9qHt97V
+         xg/zChqqriNqIp5B1QcyJpxICwUBAF0JqBxA6S53adcRr/+jBkmNBVssJiyAErZ8QbZ5
+         Gu9Q==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762527976; x=1763132776;
+        d=1e100.net; s=20230601; t=1762528586; x=1763133386;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=py75GPFijQsPUx0jpTbres5/IKDk4ZsE3rbUHQbz/Yc=;
-        b=NzMn5QDVr1nOJCRI6dscphcEOcP1N6oDx4tjDATyczHLNADBrCZ4Nn0Zt5jxZXkKW/
-         YCCWWDDkGccmRe+WrH1srhkAQrSPVfNdTKEYDdtmkLoS19PW13FfgSmkeyQsRbF/nnXD
-         XAxtO1Wyrk2wKd3h/0Rl3cDGbZrNAi26CoE/TqtQlVj8BTkPC7nqdtjH2zVbFWyEEv/m
-         abTO67hfKCEzb1p7I8IRccxwf7qRNfYS4OaN+j9s4m1+qoDSrjNWCgcysbTF0FhEm8nH
-         7ZSCUCC8MugW96cnK9DRxsgcXkV6Z0BQweqMVGi51MFn2P0OCW2x11YwwnKslHP0mVYO
-         t88g==
-X-Forwarded-Encrypted: i=1; AJvYcCVEsx/Xv42oZH4L07eDu5uTVOwdtMrfXXmSEzcgTbP7I8+TfkG0Q0xG9Bvdmy/LBBE8k6XFERPxF1fM@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzrc/7maRlp+y7ffuSOkT8QEE9gT/KUQ0El1zLHv0PvTUpxsejI
-	a6ViAQjRe5C52rtTBxANXZT0srOT76AQ2B43cSqgRAG4cD6Y0G4GuetYiTJOUGQWg5w=
-X-Gm-Gg: ASbGnctz4BHH5asD7ATaLTchlc7woZV7Rgck0e/gOHIFE6WjBRveBjXH47VP/ZXzbjt
-	/Ks/30KH4JPFT/Ph3tD4HmRsk8FZoqUhv6Exd9jCzUBunIcb4MVX17BOx2nOIHGOGHladGbPhRt
-	K0EeA3ug2gM2ZyNydR/epk+Dff99WoXueX4RstdxXYW9tYNTl4pJo2B7YD1/4szVgNRQ+MYOcIr
-	tZa4hiRbRhdFb38y0MrFNXxUMEzPywQHjKcdfq0U0xe98p8qaCWjak6n95MJtTTCeJNSH6mm0ST
-	vmw/ggLStHflZYDgcbJsHpxU/Lmv6XNLZDItULLUymp4O+FiVPCE3doqBGR8wFQjuMat3CYz514
-	TXLsjUy8+7sxYw/vTtS9h8X5024QVLH8p2DKbEoyq4AXpU5bogjnaclhNLGVfYSxOH/3DQJvZ8m
-	1FYnJVmOlcvE99csWjTPfgYwoO
-X-Google-Smtp-Source: AGHT+IGz8YM6333JLm588AFc5cKs16RWmjvD1JWcT1yqGgw96JtcAIFnCIm4vEabRZZUth0PEEmaSg==
-X-Received: by 2002:a05:600c:4f53:b0:475:df91:ddf0 with SMTP id 5b1f17b1804b1-4776bcc5494mr28930715e9.33.1762527976212;
-        Fri, 07 Nov 2025 07:06:16 -0800 (PST)
+        bh=fcwFTq1/DogLswamjpDbcdEqXnwm4REhdjASNxEdBs8=;
+        b=GPnYjw+DbAwOXIsLjvPvKOW9gaUAioyySXOsoYWgNQdRhl7e8T4XEjZbClqKSCcQlH
+         4APv4eOBmmN2/SOTOtaqoWXoJyOiPtf5tSBb73LHayqmJdD2Rts3VpR64+hEU9X0llOP
+         pHfiSy6czjXQu0F4llUkM/5GYepp7EsRvW4cgnNyAYG+ejMs5DqJXERT0H9PqAcIqKef
+         kWb+NmofnAwCyxVGZqp+cLycbVRrauoktixeMaIW69OfDaf2vWhw0Rp1vd0purRjzm02
+         7OltbxEBytlj5mVSkVLtsmHhDDzF2m2ta8c01MQz3+cMi2PYD9qngb2IeLkAYSkog2mV
+         4WuQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVXLP/TcbWDstgrnyGWyZu42ocOB1NrArLjdxh6HeOu7qtxy+NJjjUyJIuUWIRK4kgmFvvjQXx4fIM+@vger.kernel.org
+X-Gm-Message-State: AOJu0YyoRSZXIEdnYTVec4PEJ+oBdzshAPznfwscd9QI+jAM7eS9WLyr
+	nvkjw3zHhm3f12CACHw44wB9K67OPG6t9AkNx4KfzOAkvWJXG5ejcWNmRdwBsw7YAUs=
+X-Gm-Gg: ASbGncv9+DoNTuaaj+p9RusNMvHk5JmcxzMvhgbvbZdqTzRjF/8alzDQj6gdCr8uyo7
+	w4EtZNozNBlktv3fCDaS9AlAJRyRVGLCzTS6lX0jD1x/+q5ZXvoBPn/oia24R2VOnKBhYf2lu3X
+	+OoQncH06B4id4sMN5Qwe5Dw5GMwaG4T+KuNPwOr7ArDg6nN9LtvLw2g+CadxfJAM0+m+alS7dx
+	XXECF4/WuL+7QrtvNseHnsUbcS2t/Ien58BTRyuQhnE6ZuEFaAeHTYqs5jHfPCJtYN9/t2qpzqn
+	w9Shxc+GiSmtK5UZwu0boHzXKL5Yr4VEtBV3isXpV/rOpM2OSV1w8hADeDGzdVLSAzVUcoAM/aa
+	/VNzliB7B6dcXXUxn/SSpa/BoHyLAWAWa31jNE41oiSsImLDIc8xWWMBAOJpdwes2OpgsQlQwmk
+	R/eHtEWIptYAExUITy7YSNteZH
+X-Google-Smtp-Source: AGHT+IEb71e1N6JfIEUJiI9T+djX0T6M9NFuyXbFtIKtj2yXnBFzlQmVzBKFWvRjsc8GOuNvVFya4w==
+X-Received: by 2002:a5d:5847:0:b0:429:bc56:cd37 with SMTP id ffacd0b85a97d-42adc68956bmr2219409f8f.6.1762528585653;
+        Fri, 07 Nov 2025 07:16:25 -0800 (PST)
 Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42ac677b41csm5666982f8f.34.2025.11.07.07.06.14
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42ac6794f6esm6688333f8f.41.2025.11.07.07.16.24
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Nov 2025 07:06:15 -0800 (PST)
+        Fri, 07 Nov 2025 07:16:25 -0800 (PST)
 From: Marco Crivellari <marco.crivellari@suse.com>
 To: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org,
-	target-devel@vger.kernel.org
+	linux-scsi@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>,
 	Lai Jiangshan <jiangshanlai@gmail.com>,
 	Frederic Weisbecker <frederic@kernel.org>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	Marco Crivellari <marco.crivellari@suse.com>,
 	Michal Hocko <mhocko@suse.com>,
-	Tyrel Datwyler <tyreld@linux.ibm.com>,
+	Nilesh Javali <njavali@marvell.com>,
+	Manish Rangankar <mrangankar@marvell.com>,
+	GR-QLogic-Storage-Upstream@marvell.com,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: ibmvscsi_tgt: add WQ_PERCPU to alloc_workqueue users
-Date: Fri,  7 Nov 2025 16:05:42 +0100
-Message-ID: <20251107150542.271229-1-marco.crivellari@suse.com>
+Subject: [PATCH] scsi: qedi: add WQ_PERCPU to alloc_workqueue users
+Date: Fri,  7 Nov 2025 16:16:18 +0100
+Message-ID: <20251107151618.281250-1-marco.crivellari@suse.com>
 X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -116,23 +117,22 @@ become the implicit default.
 Suggested-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
 ---
- drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 ++-
- 1 file changed, 2 insertions(+), 1 deletion(-)
+ drivers/scsi/qedi/qedi_main.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-index 5a3787f27369..f259746bc804 100644
---- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-+++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
-@@ -3533,7 +3533,8 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
- 	init_completion(&vscsi->wait_idle);
- 	init_completion(&vscsi->unconfig);
+diff --git a/drivers/scsi/qedi/qedi_main.c b/drivers/scsi/qedi/qedi_main.c
+index b168bb2178e9..56685ee22fdf 100644
+--- a/drivers/scsi/qedi/qedi_main.c
++++ b/drivers/scsi/qedi/qedi_main.c
+@@ -2768,7 +2768,7 @@ static int __qedi_probe(struct pci_dev *pdev, int mode)
+ 		}
  
--	vscsi->work_q = alloc_workqueue("ibmvscsis%s", WQ_MEM_RECLAIM, 1,
-+	vscsi->work_q = alloc_workqueue("ibmvscsis%s",
-+					WQ_MEM_RECLAIM | WQ_PERCPU, 1,
- 					dev_name(&vdev->dev));
- 	if (!vscsi->work_q) {
- 		rc = -ENOMEM;
+ 		qedi->offload_thread = alloc_workqueue("qedi_ofld%d",
+-						       WQ_MEM_RECLAIM,
++						       WQ_MEM_RECLAIM | WQ_PERCPU,
+ 						       1, qedi->shost->host_no);
+ 		if (!qedi->offload_thread) {
+ 			QEDI_ERR(&qedi->dbg_ctx,
 -- 
 2.51.1
 
