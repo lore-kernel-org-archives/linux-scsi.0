@@ -1,44 +1,46 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAB43207A22;
-	Fri,  7 Nov 2025 23:53:29 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B6A8207A22;
+	Fri,  7 Nov 2025 23:53:33 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762559612; cv=none; b=ijQ+aIhHrRwL8ERTk3odfanfOF4hJW3gfAkwUfAxtmV4su4RbrL7gNU0itj0qH04Q9l0qtriAuOsUN8PdU8IKqWqK8zED5YIV1SX/FKceVLbtFQQhIMjE/8X2mnHB2wDr0suh5v3+vOJnmwAri3eqssvSZW9CXHzCVe5YZAYp60=
+	t=1762559615; cv=none; b=sWnfv/iWEmdrEptkZf+Qp2Xx9TAQXu9oh+Ce6+NsGidU3JTzPybpwRAWj8RGu8QIKoKH4Dj4bQTGYJDFe4OvsdNzPk45SogQgO8jIiE68vQscC2xcJziT5l3Xs0H/eOzZ8CvBvGfHPvj6le7HTwp1ZdYayVya/4lnzcFe62lG8Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762559612; c=relaxed/simple;
-	bh=xeduAIMnU9tjgT3Xhdjqfy7ozVDu2q2t6Btx1Uz2M/w=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gJu0R8Bnp0WfCfYWEX8B0CoHdZX/A5MwuZ2y9Q8pLnyz9ix894vQLxkjvXbx6s8IFsPKBhrlUhzisbhHlM6GTBHRfX76pOemJD70793oWRqr9aSWc3Wfczvbn7Od+8VFBvy9+P7Cb4MKfyiE4wRjPDv97HizsiZrHVGiqgmzAZ8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=dTZQMqXp; arc=none smtp.client-ip=199.89.3.7
+	s=arc-20240116; t=1762559615; c=relaxed/simple;
+	bh=Bo6wmpOtlElTIVpOQsLAkzwy+ZhvRfM9DLYx0XA/yU4=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=Njq66Lg8C0aWNGsy2FUEdIv1ZAt1K3m1iu8J7ToUt0j+Y0RJLQFTKGG4UeeDLODYgicMUuOH4N7kiL398XjuRPg5B4IU1tu9lc8Z0WvoDrafzKf/hK1fXYiTAr+XDtpIg9sR/VC0EpAX0/yogWEKwrPub5JGdn17zOJVRQX/LAg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=oydhazCZ; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="dTZQMqXp"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="oydhazCZ"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d3G944SJjzm17wZ;
-	Fri,  7 Nov 2025 23:53:28 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d3G9910nMzm17wt;
+	Fri,  7 Nov 2025 23:53:33 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1762559607; x=1765151608; bh=K1azKyhrS0NmM69QwFAqM67sGxKbDXO/LvU
-	P80gvx9g=; b=dTZQMqXpqancygTKcfFxmwidaHXIIuyQLIr4eN/blXGdBOs94AB
-	S8hJh2UTY39cycvXpUhuA00QYGAfyCEbg6vbZaNurab19GnhaPlK7h+euw9j0+1N
-	dVYeMLnpn4xTWSvD7ikT3IhFmC8Jpl5+3wS+ldlbUL4JRphsztGVAu3jDkNPvLxI
-	QsKakGwGE4DsnyVgW0eYuhqlP3FlfWtgUePngmxqMdNn38al7aJkPUhtTRliATlj
-	IzEKh+owSakUR5zsgJmowBDa2QMByIeQzlkg6QINmzk7xUNzsr2kZec7zet0hEJF
-	jj8WfDPbSwzrsIfOMZWsDqJselAxIQO6prQ==
+	content-transfer-encoding:mime-version:references:in-reply-to
+	:x-mailer:message-id:date:date:subject:subject:from:from
+	:received:received; s=mr01; t=1762559611; x=1765151612; bh=LVtiz
+	nuuCfa5qyy+BfY2/xEeszgr6VBWwddcsa1rvDs=; b=oydhazCZTRQN4kLHgQ22l
+	lGYudiOt7kGV+gS+H3JmeBxNkogLkc71j5Iw4AWampD8VBOJVV4OoDrG2AmVRNFF
+	MbqVENeqEr/zUFoZRaq5ubaxU/p4iYxxHNHuQXKIkJ7oghfMp1tl+5wBYUwNOj43
+	mm3I+3iaeii8Kuu2+hLLt3qaDvbwEmWwlpGgyePcVVmH6eHUL8RE81FhWtwtvv0O
+	1UU0vRxGdmJmTZk+NM4SrB946m+PjfMtX7kMMGxvTn38pXjmH1QwzuMw8qaKupwC
+	FwQgFFOyE4PCv7WaSXgaFD8Sc2tXV78l/J9NBaHfvyMpS1qRBKc1t/eXW0r1L7rL
+	A==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id kEHdn0ylzKEO; Fri,  7 Nov 2025 23:53:27 +0000 (UTC)
+ id SUf_0r9W_dOR; Fri,  7 Nov 2025 23:53:31 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d3G8z12GXzm17wv;
-	Fri,  7 Nov 2025 23:53:22 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d3G936l42zm17wj;
+	Fri,  7 Nov 2025 23:53:27 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -46,10 +48,12 @@ Cc: linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v26 00/17] Improve write performance for zoned UFS devices
-Date: Fri,  7 Nov 2025 15:52:53 -0800
-Message-ID: <20251107235310.2098676-1-bvanassche@acm.org>
+Subject: [PATCH v26 01/17] block: Support block devices that preserve the order of write requests
+Date: Fri,  7 Nov 2025 15:52:54 -0800
+Message-ID: <20251107235310.2098676-2-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.2.1041.gc1ab5b90ca-goog
+In-Reply-To: <20251107235310.2098676-1-bvanassche@acm.org>
+References: <20251107235310.2098676-1-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -58,337 +62,50 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Hi Jens,
+Some storage controllers preserve the request order per hardware queue.
+Some but not all device mapper drivers preserve the bio order. Introduce
+the feature flag BLK_FEAT_ORDERED_HWQ to allow block drivers and stacked
+drivers to indicate that the order of write commands is preserved per
+hardware queue and hence that serialization of writes per zone is not
+required if all pending writes are submitted to the same hardware queue.
 
-This patch series improves small write IOPS by a factor of 3.5 for zoned =
-UFS
-devices on my test setup (+250%). The changes included in this patch seri=
-es are
-as follows:
- - A new request queue limits flag is introduced that allows block driver=
-s to
-   declare whether or not the request order is preserved per hardware que=
-ue.
- - The order of zoned writes is preserved in the block layer by submittin=
-g all
-   zoned writes from the same CPU core as long as any zoned writes are pe=
-nding.
- - A new member 'from_cpu' is introduced in the per-zone data structure
-   'blk_zone_wplug' to track from which CPU to submit zoned writes. This =
-data
-   member is reset to -1 after all pending zoned writes for a zone have
-   completed.
- - The retry count for zoned writes is increased in the SCSI core to deal=
- with
-   reordering caused by unit attention conditions or the SCSI error handl=
-er.
- - New functionality is added in the null_blk and scsi_debug drivers to m=
-ake it
-   easier to test the changes introduced by this patch series.
+Cc: Damien Le Moal <dlemoal@kernel.org>
+Cc: Christoph Hellwig <hch@lst.de>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+---
+ block/blk-settings.c   | 2 ++
+ include/linux/blkdev.h | 6 ++++++
+ 2 files changed, 8 insertions(+)
 
-Please consider this patch series for the next merge window.
-
-Thanks,
-
-Bart.
-
-Changes compared to v25:
- - Dropped the mq-deadline patches.
- - Introduced a new mechanism in the block layer core for serializing dis=
-patch
-   operations. This mechanism is activated only if write pipelining is en=
-abled.
-
-Changes compared to v24:
- - Split the mq-deadline patch into two patches to make reviewing easier.
- - Further improved patch descriptions and source code comments.
- - Included a patch with a source code comment fix.
-
-Changes compared to v23:
- - Removed the sysfs attribute for configuring write pipelining.
- - Split patch "Run all hwqs for sq scheds if write pipelining is enabled=
-" into
-   two patches to make it easier to review.
- - Added patch "blk-zoned: Document disk_zone_wplug_schedule_bio_work() l=
-ocking".
- - Rebased on top of Jens' for-next branch.
-
-Changes compared to v22:
- - Made write pipelining configurable via sysfs.
- - Fixed sporadic write errors observed with the mq-deadline I/O schedule=
-r.
-
-Changes compared to v21:
- - Added a patch that makes the block layer preserve the request order wh=
-en
-   inserting a request.
- - Restored a warning statement in block/blk-zoned.c.
- - Reworked the code that selects a CPU to queue zoned writes from such t=
-hat no
-   changes have to be undone if blk_zone_wplug_prepare_bio() fails.
- - Removed the "plug" label in block/blk-zoned.c and retained the
-   "add_to_bio_list" label.
- - Changed scoped_guard() back into spin_lock_*() calls.
- - Fixed a recently introduced reference count leak in
-   disk_zone_wplug_schedule_bio_work().
- - Restored the patch for the null_blk driver.
-
-Changes compared to v20:
- - Converted a struct queue_limits member variable into a queue_limits fe=
-ature
-   flag.
- - Optimized performance of blk_mq_requeue_work().
- - Instead of splitting blk_zone_wplug_bio_work(), introduce a loop in th=
-at
-   function.
- - Reworked patch "blk-zoned: Support pipelining of zoned writes".
- - Dropped the null_blk driver patch.
- - Improved several patch descriptions.
-
-Changes compared to v19:
- - Dropped patch 2/11 "block: Support allocating from a specific software=
- queue"
- - Implemented Damien's proposal to always add pipelined bios to the plug=
- list
-   and to submit all pipelined bios from the bio work for a zone.
- - Added three refactoring patches to make this patch series easier to re=
-view.
-
-Changes compared to v18:
- - Dropped patch 2/12 "block: Rework request allocation in blk_mq_submit_=
-bio()".
- - Improved patch descriptions.
-
-Changes compared to v17:
- - Rebased the patch series on top of kernel v6.16-rc1.
- - Dropped support for UFSHCI 3.0 controllers because the UFSHCI 3.0 auto=
--
-   hibernation mechanism causes request reordering. UFSHCI 4.0 controller=
-s
-   remain supported.
- - Removed the error handling and write pointer tracking mechanisms again
-   from block/blk-zoned.c.
- - Dropped the dm-linear patch from this patch series since I'm not aware=
- of
-   any use cases for write pipelining and dm-linear.
-
-Changes compared to v16:
- - Rebased the entire patch series on top of Jens' for-next branch. Compa=
-red
-   to when v16 of this series was posted, the BLK_ZONE_WPLUG_NEED_WP_UPDA=
-TE
-   flag has been introduced and support for REQ_NOWAIT has been fixed.
- - The behavior for SMR disks is preserved: if .driver_preserves_write_or=
-der
-   has not been set, BLK_ZONE_WPLUG_NEED_WP_UPDATE is still set if a writ=
-e
-   error has been encountered. If .driver_preserves_write_order has not b=
-een
-   set, the write pointer is restored and the failed zoned writes are ret=
-ried.
- - The superfluous "disk->zone_wplugs_hash_bits !=3D 0" tests have been r=
-emoved.
-
-Changes compared to v15:
- - Reworked this patch series on top of the zone write plugging approach.
- - Moved support for requeuing requests from the SCSI core into the block
-   layer core.
- - In the UFS driver, instead of disabling write pipelining if
-   auto-hibernation is enabled, rely on the requeuing mechanism to handle
-   reordering caused by resuming from auto-hibernation.
-
-Changes compared to v14:
- - Removed the drivers/scsi/Kconfig.kunit and drivers/scsi/Makefile.kunit
-   files. Instead, modified drivers/scsi/Kconfig and added #include "*_te=
-st.c"
-   directives in the appropriate .c files. Removed the EXPORT_SYMBOL()
-   directives that were added to make the unit tests link.
- - Fixed a double free in a unit test.
-
-Changes compared to v13:
- - Reworked patch "block: Preserve the order of requeued zoned writes".
- - Addressed a performance concern by removing the eh_needs_prepare_resub=
-mit
-   SCSI driver callback and by introducing the SCSI host template flag
-   .needs_prepare_resubmit instead.
- - Added a patch that adds a 'host' argument to scsi_eh_flush_done_q().
- - Made the code in unit tests less repetitive.
-
-Changes compared to v12:
- - Added two new patches: "block: Preserve the order of requeued zoned wr=
-ites"
-   and "scsi: sd: Add a unit test for sd_cmp_sector()"
- - Restricted the number of zoned write retries. To my surprise I had to =
-add
-   "&& scmd->retries <=3D scmd->allowed" in the SCSI error handler to lim=
-it the
-   number of retries.
- - In patch "scsi: ufs: Inform the block layer about write ordering", onl=
-y set
-   ELEVATOR_F_ZBD_SEQ_WRITE for zoned block devices.
-
-Changes compared to v11:
- - Fixed a NULL pointer dereference that happened when booting from an AT=
-A
-   device by adding an scmd->device !=3D NULL check in scsi_needs_prepara=
-tion().
- - Updated Reviewed-by tags.
-
-Changes compared to v10:
- - Dropped the UFS MediaTek and HiSilicon patches because these are not c=
-orrect
-   and because it is safe to drop these patches.
- - Updated Acked-by / Reviewed-by tags.
-
-Changes compared to v9:
- - Introduced an additional scsi_driver callback: .eh_needs_prepare_resub=
-mit().
- - Renamed the scsi_debug kernel module parameter 'no_zone_write_lock' in=
-to
-   'preserves_write_order'.
- - Fixed an out-of-bounds access in the unit scsi_call_prepare_resubmit()=
- unit
-   test.
- - Wrapped ufshcd_auto_hibern8_update() calls in UFS host drivers with
-   WARN_ON_ONCE() such that a kernel stack appears in case an error code =
-is
-   returned.
- - Elaborated a comment in the UFSHCI driver.
-
-Changes compared to v8:
- - Fixed handling of 'driver_preserves_write_order' and 'use_zone_write_l=
-ock'
-   in blk_stack_limits().
- - Added a comment in disk_set_zoned().
- - Modified blk_req_needs_zone_write_lock() such that it returns false if
-   q->limits.use_zone_write_lock is false.
- - Modified disk_clear_zone_settings() such that it clears
-   q->limits.use_zone_write_lock.
- - Left out one change from the mq-deadline patch that became superfluous=
- due to
-   the blk_req_needs_zone_write_lock() change.
- - Modified scsi_call_prepare_resubmit() such that it only calls list_sor=
-t() if
-   zoned writes have to be resubmitted for which zone write locking is di=
-sabled.
- - Added an additional unit test for scsi_call_prepare_resubmit().
- - Modified the sorting code in the sd driver such that only those SCSI c=
-ommands
-   are sorted for which write locking is disabled.
- - Modified sd_zbc.c such that ELEVATOR_F_ZBD_SEQ_WRITE is only set if th=
-e
-   write order is not preserved.
- - Included three patches for UFS host drivers that rework code that wrot=
-e
-   directly to the auto-hibernation controller register.
- - Modified the UFS driver such that enabling auto-hibernation is not all=
-owed
-   if a zoned logical unit is present and if the controller operates in l=
-egacy
-   mode.
- - Also in the UFS driver, simplified ufshcd_auto_hibern8_update().
-
-Changes compared to v7:
- - Split the queue_limits member variable `use_zone_write_lock' into two =
-member
-   variables: `use_zone_write_lock' (set by disk_set_zoned()) and
-   `driver_preserves_write_order' (set by the block driver or SCSI LLD). =
-This
-   should clear up the confusion about the purpose of this variable.
- - Moved the code for sorting SCSI commands by LBA from the SCSI error ha=
-ndler
-   into the SCSI disk (sd) driver as requested by Christoph.
-  =20
-Changes compared to v6:
- - Removed QUEUE_FLAG_NO_ZONE_WRITE_LOCK and instead introduced a flag in
-   the request queue limits data structure.
-
-Changes compared to v5:
- - Renamed scsi_cmp_lba() into scsi_cmp_sector().
- - Improved several source code comments.
-
-Changes compared to v4:
- - Dropped the patch that introduces the REQ_NO_ZONE_WRITE_LOCK flag.
- - Dropped the null_blk patch and added two scsi_debug patches instead.
- - Dropped the f2fs patch.
- - Split the patch for the UFS driver into two patches.
- - Modified several patch descriptions and source code comments.
- - Renamed dd_use_write_locking() into dd_use_zone_write_locking().
- - Moved the list_sort() call from scsi_unjam_host() into scsi_eh_flush_d=
-one_q()
-   such that sorting happens just before reinserting.
- - Removed the scsi_cmd_retry_allowed() call from scsi_check_sense() to m=
-ake
-   sure that the retry counter is adjusted once per retry instead of twic=
-e.
-
-Changes compared to v3:
- - Restored the patch that introduces QUEUE_FLAG_NO_ZONE_WRITE_LOCK. That=
- patch
-   had accidentally been left out from v2.
- - In patch "block: Introduce the flag REQ_NO_ZONE_WRITE_LOCK", improved =
-the
-   patch description and added the function blk_no_zone_write_lock().
- - In patch "block/mq-deadline: Only use zone locking if necessary", move=
-d the
-   blk_queue_is_zoned() call into dd_use_write_locking().
- - In patch "fs/f2fs: Disable zone write locking", set REQ_NO_ZONE_WRITE_=
-LOCK
-   from inside __bio_alloc() instead of in f2fs_submit_write_bio().
-
-Changes compared to v2:
- - Renamed the request queue flag for disabling zone write locking.
- - Introduced a new request flag for disabling zone write locking.
- - Modified the mq-deadline scheduler such that zone write locking is onl=
-y
-   disabled if both flags are set.
- - Added an F2FS patch that sets the request flag for disabling zone writ=
-e
-   locking.
- - Only disable zone write locking in the UFS driver if auto-hibernation =
-is
-   disabled.
-
-Changes compared to v1:
- - Left out the patches that are already upstream.
- - Switched the approach in patch "scsi: Retry unaligned zoned writes" fr=
-om
-   retrying immediately to sending unaligne
-
-Bart Van Assche (17):
-  block: Support block devices that preserve the order of write requests
-  blk-mq: Always insert sequential zoned writes into a software queue
-  blk-mq: Restore the zone write order when requeuing
-  blk-mq: Serialize dispatching for zoned write pipelining
-  blk-zoned: Fix a typo in a source code comment
-  blk-zoned: Add an argument to blk_zone_plug_bio()
-  blk-zoned: Split an if-statement
-  blk-zoned: Move code from disk_zone_wplug_add_bio() into its caller
-  blk-zoned: Introduce a loop in blk_zone_wplug_bio_work()
-  blk-zoned: Document disk_zone_wplug_schedule_bio_work() locking
-  blk-zoned: Support pipelining of zoned writes
-  null_blk: Add the preserves_write_order attribute
-  scsi: core: Retry unaligned zoned writes
-  scsi: sd: Increase retry count for zoned writes
-  scsi: scsi_debug: Add the preserves_write_order module parameter
-  scsi: scsi_debug: Support injecting unaligned write errors
-  ufs: core: Inform the block layer about write ordering
-
- block/bfq-iosched.c               |   2 +
- block/blk-mq.c                    |  79 +++++++++---
- block/blk-mq.h                    |  38 ++++++
- block/blk-settings.c              |   2 +
- block/blk-zoned.c                 | 203 +++++++++++++++++++-----------
- block/kyber-iosched.c             |   2 +
- block/mq-deadline.c               |   7 +-
- drivers/block/null_blk/main.c     |   4 +
- drivers/block/null_blk/null_blk.h |   1 +
- drivers/md/dm.c                   |   5 +-
- drivers/scsi/scsi_debug.c         |  22 +++-
- drivers/scsi/scsi_error.c         |  16 +++
- drivers/scsi/sd.c                 |   6 +
- drivers/ufs/core/ufshcd.c         |   7 ++
- include/linux/blk-mq.h            |  19 ++-
- include/linux/blkdev.h            |  28 ++++-
- 16 files changed, 348 insertions(+), 93 deletions(-)
-
+diff --git a/block/blk-settings.c b/block/blk-settings.c
+index 78dfef117623..edc25f2d803c 100644
+--- a/block/blk-settings.c
++++ b/block/blk-settings.c
+@@ -802,6 +802,8 @@ int blk_stack_limits(struct queue_limits *t, struct q=
+ueue_limits *b,
+ 		t->features &=3D ~BLK_FEAT_NOWAIT;
+ 	if (!(b->features & BLK_FEAT_POLL))
+ 		t->features &=3D ~BLK_FEAT_POLL;
++	if (!(b->features & BLK_FEAT_ORDERED_HWQ))
++		t->features &=3D ~BLK_FEAT_ORDERED_HWQ;
+=20
+ 	t->flags |=3D (b->flags & BLK_FLAG_MISALIGNED);
+=20
+diff --git a/include/linux/blkdev.h b/include/linux/blkdev.h
+index 2fff8a80dbd2..b97132252ec2 100644
+--- a/include/linux/blkdev.h
++++ b/include/linux/blkdev.h
+@@ -348,6 +348,12 @@ typedef unsigned int __bitwise blk_features_t;
+ #define BLK_FEAT_ATOMIC_WRITES \
+ 	((__force blk_features_t)(1u << 16))
+=20
++/*
++ * The request order is preserved per hardware queue by the block driver=
+ and by
++ * the block device. Set by the block driver.
++ */
++#define BLK_FEAT_ORDERED_HWQ		((__force blk_features_t)(1u << 17))
++
+ /*
+  * Flags automatically inherited when stacking limits.
+  */
