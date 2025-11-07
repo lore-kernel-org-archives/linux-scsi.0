@@ -1,46 +1,46 @@
 Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 535EB29BDAC;
-	Fri,  7 Nov 2025 23:54:07 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EF0F29BDAC;
+	Fri,  7 Nov 2025 23:54:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762559648; cv=none; b=V0tFAKM1peMG9Y9gKsl8rT7kWtKRS+Nk0rFDtntFAA8Phg6ZRPcrgHpAL6HWfPeLAR9zyV3OutU72XfE+i6n/2ZItk0R4iFpbNxPnZiOxjNaJgENodExsfwj9oNMAFLIO7buHMsqoQbTdfWqXhzSX0B7GDbrw5XB9kzl9Wv2L+w=
+	t=1762559653; cv=none; b=ZDbI5X8t+OQjWEpr0/VLLi65cd1yIFalMcXrP8C7RN5YtgL8CUUvyunmoxNK+TTk0sj6zPdtTDyM1x+fTWDohhCbjCXVi56tJOCDwUgd6In72PZqu81/MlUXKd4G+Zr1jn89k7NloJNAq0mVz6x71oqkIXiyONDeU63PWZbj/x4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762559648; c=relaxed/simple;
-	bh=BkqPGq5WOQOHRSxnRs0Af1a510Uv89NIgMiouaYEdNc=;
+	s=arc-20240116; t=1762559653; c=relaxed/simple;
+	bh=mGlnn1o6YLapV548JwL2K6O/Rr/8HZ0T9wexovuIjNs=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=Bako+5yy+UeAqc6GUd/yEyU+r/hPqH799galfBx40tfQAe0Dj/q86wCRwI/47uD6SUIikjHbYjZ7/HbhbYPjnmSvnOlkC4AccF0tY9NYrnSfvmTadA6LvHX1x7WIj2yLucP/OcddCj1XF6XkMiIJZ0cG3l4GytLVkfd6psWa8Pg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=KNbOu/MR; arc=none smtp.client-ip=199.89.3.7
+	 MIME-Version; b=IQcgLsa8Wo1POdVNxHO7hFOJw2qWvJcq9LJScM1AyrWPTahGBpnGc5s6VxcmHll2fpUUvdC1z3NyA48E84+CZ3x4++M/I9QvREuGaYqQJlkAUiWeSyZwU8TIyGuRve2lirj9VMaY3twoXrQ2ZqG6Rlfxcyl981hYqFfy+cE1UCM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=OxEKBeiY; arc=none smtp.client-ip=199.89.3.7
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="KNbOu/MR"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="OxEKBeiY"
 Received: from localhost (localhost [127.0.0.1])
-	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d3G9p4jtRzm17wr;
-	Fri,  7 Nov 2025 23:54:06 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d3G9v2yDZzm17x3;
+	Fri,  7 Nov 2025 23:54:11 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1762559645; x=1765151646; bh=RQnx5
-	CkPt5xhlTnQSN1aRkP6eCpGCFqUAIPvMuqaaOU=; b=KNbOu/MRlV9jggvEeDLZX
-	M5WF9J4NECYHQQwIBe+Xe5wN3w0ZUkOussv3KhEJVrS4WLDlZHYnU5OM99ebw9P/
-	IqE1Dh7bTixtT6hiPenHjU3otvPmPmad74GHpXVo2F3CAURM98QB7lpLSKZm0rKa
-	KN0m/KPz1h72EwsmXcSsmZ2CBFZ9dufPe7rmycLXU6xSwWhR/HOZ2/B9jHTvB5U0
-	suDkHo4+V5RSN8eMHI3nXPq0UmB7WVRR5lVctK56SpWIktB/yP1+6WhmGwkc4fED
-	LOgYlIi8ASeE7NxOkkunE72M0iHYNQb+e+CXnAApNj5fhJk9+6e8Ixxj1ZxNdcEG
-	w==
+	:received:received; s=mr01; t=1762559650; x=1765151651; bh=omjJO
+	+ZO76tkYuMwg5LVpQMjRiN3qbypVziG16YLON8=; b=OxEKBeiYihZ9TTpqENO/j
+	97XLsuMXstFd5ToJJV5KVeGb3RTG/a2/1oTQqvak/8OFf7Z5mQcRy/vtPi05JLkj
+	+nz+lSQqWba3TbkSCN9C/DrGunf3ZH0t8UNsYK+eRp15P6mdJ34KOh7ERNrqtlgy
+	9hTzFfq1o5CFlBeaETHci+R4dxot1fh9pZ+0fPnuDi07hO3acNOZeESORUig0tji
+	KGD4l6IsyahXpetFhb+N+ZXLKwzPTSVfaH7TeIod+Pfq40AVDNLarRmM08b47818
+	r0EnRrOirhGSzCY+cLWLw61uDg6ehZZwJsub0Mi1PBz1V/1JEi/mu164c6uekIYx
+	g==
 X-Virus-Scanned: by MailRoute
 Received: from 004.mia.mailroute.net ([127.0.0.1])
  by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id o_UGI4KdcDiD; Fri,  7 Nov 2025 23:54:05 +0000 (UTC)
+ id 1dQBabV762ue; Fri,  7 Nov 2025 23:54:10 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d3G9j34dYzm17wV;
-	Fri,  7 Nov 2025 23:54:00 +0000 (UTC)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d3G9p1H0hzm17wj;
+	Fri,  7 Nov 2025 23:54:05 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: Jens Axboe <axboe@kernel.dk>
 Cc: linux-block@vger.kernel.org,
@@ -48,9 +48,9 @@ Cc: linux-block@vger.kernel.org,
 	Christoph Hellwig <hch@lst.de>,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Bart Van Assche <bvanassche@acm.org>
-Subject: [PATCH v26 08/17] blk-zoned: Move code from disk_zone_wplug_add_bio() into its caller
-Date: Fri,  7 Nov 2025 15:53:01 -0800
-Message-ID: <20251107235310.2098676-9-bvanassche@acm.org>
+Subject: [PATCH v26 09/17] blk-zoned: Introduce a loop in blk_zone_wplug_bio_work()
+Date: Fri,  7 Nov 2025 15:53:02 -0800
+Message-ID: <20251107235310.2098676-10-bvanassche@acm.org>
 X-Mailer: git-send-email 2.51.2.1041.gc1ab5b90ca-goog
 In-Reply-To: <20251107235310.2098676-1-bvanassche@acm.org>
 References: <20251107235310.2098676-1-bvanassche@acm.org>
@@ -62,113 +62,100 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Move the following code into the only caller of disk_zone_wplug_add_bio()=
-:
- - The code for clearing the REQ_NOWAIT flag.
- - The code that sets the BLK_ZONE_WPLUG_PLUGGED flag.
- - The disk_zone_wplug_schedule_bio_work() call.
-
-No functionality has been changed.
-
-This patch prepares for zoned write pipelining by removing the code from
-disk_zone_wplug_add_bio() that does not apply to all zoned write pipelini=
-ng
-bio processing cases.
+Prepare for submitting multiple bios from inside a single
+blk_zone_wplug_bio_work() call. No functionality has been changed.
 
 Cc: Damien Le Moal <dlemoal@kernel.org>
 Cc: Christoph Hellwig <hch@lst.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-zoned.c | 33 ++++++++++++---------------------
- 1 file changed, 12 insertions(+), 21 deletions(-)
+ block/blk-zoned.c | 69 ++++++++++++++++++++++++-----------------------
+ 1 file changed, 36 insertions(+), 33 deletions(-)
 
 diff --git a/block/blk-zoned.c b/block/blk-zoned.c
-index c15ce570c7f6..7f85a424256f 100644
+index 7f85a424256f..ceb2b432e49e 100644
 --- a/block/blk-zoned.c
 +++ b/block/blk-zoned.c
-@@ -1202,8 +1202,6 @@ static inline void disk_zone_wplug_add_bio(struct g=
-endisk *disk,
- 				struct blk_zone_wplug *zwplug,
- 				struct bio *bio, unsigned int nr_segs)
- {
--	bool schedule_bio_work =3D false;
--
- 	/*
- 	 * Grab an extra reference on the BIO request queue usage counter.
- 	 * This reference will be reused to submit a request for the BIO for
-@@ -1219,16 +1217,6 @@ static inline void disk_zone_wplug_add_bio(struct =
-gendisk *disk,
- 	 */
- 	bio_clear_polled(bio);
+@@ -1731,44 +1731,47 @@ static void blk_zone_wplug_bio_work(struct work_s=
+truct *work)
+ 	struct bio *bio;
+ 	bool prepared;
 =20
 -	/*
--	 * REQ_NOWAIT BIOs are always handled using the zone write plug BIO
--	 * work, which can block. So clear the REQ_NOWAIT flag and schedule the
--	 * work if this is the first BIO we are plugging.
+-	 * Submit the next plugged BIO. If we do not have any, clear
+-	 * the plugged flag.
 -	 */
--	if (bio->bi_opf & REQ_NOWAIT) {
--		schedule_bio_work =3D !(zwplug->flags & BLK_ZONE_WPLUG_PLUGGED);
--		bio->bi_opf &=3D ~REQ_NOWAIT;
+-again:
+-	spin_lock_irqsave(&zwplug->lock, flags);
+-	bio =3D bio_list_pop(&zwplug->bio_list);
+-	if (!bio) {
+-		zwplug->flags &=3D ~BLK_ZONE_WPLUG_PLUGGED;
+-		spin_unlock_irqrestore(&zwplug->lock, flags);
+-		goto put_zwplug;
 -	}
--
- 	/*
- 	 * Reuse the poll cookie field to store the number of segments when
- 	 * split to the hardware limits.
-@@ -1244,11 +1232,6 @@ static inline void disk_zone_wplug_add_bio(struct =
-gendisk *disk,
- 	bio_list_add(&zwplug->bio_list, bio);
- 	trace_disk_zone_wplug_add_bio(zwplug->disk->queue, zwplug->zone_no,
- 				      bio->bi_iter.bi_sector, bio_sectors(bio));
--
--	zwplug->flags |=3D BLK_ZONE_WPLUG_PLUGGED;
--
--	if (schedule_bio_work)
--		disk_zone_wplug_schedule_bio_work(disk, zwplug);
- }
++	do {
++		/*
++		 * Submit the next plugged BIO. If we do not have any, clear
++		 * the plugged flag.
++		 */
++		spin_lock_irqsave(&zwplug->lock, flags);
++		bio =3D bio_list_pop(&zwplug->bio_list);
++		if (!bio) {
++			zwplug->flags &=3D ~BLK_ZONE_WPLUG_PLUGGED;
++			spin_unlock_irqrestore(&zwplug->lock, flags);
++			goto put_zwplug;
++		}
 =20
- /*
-@@ -1416,6 +1399,7 @@ static bool blk_zone_wplug_handle_write(struct bio =
-*bio, unsigned int nr_segs)
- {
- 	struct gendisk *disk =3D bio->bi_bdev->bd_disk;
- 	sector_t sector =3D bio->bi_iter.bi_sector;
-+	bool schedule_bio_work =3D false;
- 	struct blk_zone_wplug *zwplug;
- 	gfp_t gfp_mask =3D GFP_NOIO;
- 	unsigned long flags;
-@@ -1462,12 +1446,14 @@ static bool blk_zone_wplug_handle_write(struct bi=
-o *bio, unsigned int nr_segs)
- 	 * Add REQ_NOWAIT BIOs to the plug list to ensure that we will not see =
-a
- 	 * BLK_STS_AGAIN failure if we let the BIO execute.
- 	 */
--	if (bio->bi_opf & REQ_NOWAIT)
--		goto plug;
-+	if (bio->bi_opf & REQ_NOWAIT) {
-+		bio->bi_opf &=3D ~REQ_NOWAIT;
-+		goto add_to_bio_list;
-+	}
+-	trace_blk_zone_wplug_bio(zwplug->disk->queue, zwplug->zone_no,
+-				 bio->bi_iter.bi_sector, bio_sectors(bio));
++		trace_blk_zone_wplug_bio(zwplug->disk->queue, zwplug->zone_no,
++					 bio->bi_iter.bi_sector,
++					 bio_sectors(bio));
 =20
- 	/* If the zone is already plugged, add the BIO to the BIO plug list. */
- 	if (zwplug->flags & BLK_ZONE_WPLUG_PLUGGED)
--		goto plug;
-+		goto add_to_bio_list;
+-	prepared =3D blk_zone_wplug_prepare_bio(zwplug, bio);
+-	spin_unlock_irqrestore(&zwplug->lock, flags);
++		prepared =3D blk_zone_wplug_prepare_bio(zwplug, bio);
++		spin_unlock_irqrestore(&zwplug->lock, flags);
 =20
- 	if (!blk_zone_wplug_prepare_bio(zwplug, bio)) {
- 		spin_unlock_irqrestore(&zwplug->lock, flags);
-@@ -1482,8 +1468,13 @@ static bool blk_zone_wplug_handle_write(struct bio=
- *bio, unsigned int nr_segs)
+-	if (!prepared) {
+-		blk_zone_wplug_bio_io_error(zwplug, bio);
+-		goto again;
+-	}
++		if (!prepared) {
++			blk_zone_wplug_bio_io_error(zwplug, bio);
++			continue;
++		}
 =20
- 	return false;
+-	bdev =3D bio->bi_bdev;
 =20
--plug:
-+add_to_bio_list:
-+	schedule_bio_work =3D !(zwplug->flags & BLK_ZONE_WPLUG_PLUGGED);
-+	zwplug->flags |=3D BLK_ZONE_WPLUG_PLUGGED;
+-	/*
+-	 * blk-mq devices will reuse the extra reference on the request queue
+-	 * usage counter we took when the BIO was plugged, but the submission
+-	 * path for BIO-based devices will not do that. So drop this extra
+-	 * reference here.
+-	 */
+-	if (bdev_test_flag(bdev, BD_HAS_SUBMIT_BIO)) {
+-		bdev->bd_disk->fops->submit_bio(bio);
+-		blk_queue_exit(bdev->bd_disk->queue);
+-	} else {
+-		blk_mq_submit_bio(bio);
+-	}
++		bdev =3D bio->bi_bdev;
 +
- 	disk_zone_wplug_add_bio(disk, zwplug, bio, nr_segs);
-+	if (schedule_bio_work)
-+		disk_zone_wplug_schedule_bio_work(disk, zwplug);
++		/*
++		 * blk-mq devices will reuse the extra reference on the request
++		 * queue usage counter we took when the BIO was plugged, but the
++		 * submission path for BIO-based devices will not do that. So
++		 * drop this extra reference here.
++		 */
++		if (bdev_test_flag(bdev, BD_HAS_SUBMIT_BIO)) {
++			bdev->bd_disk->fops->submit_bio(bio);
++			blk_queue_exit(bdev->bd_disk->queue);
++		} else {
++			blk_mq_submit_bio(bio);
++		}
++	} while (0);
 =20
- 	spin_unlock_irqrestore(&zwplug->lock, flags);
-=20
+ put_zwplug:
+ 	/* Drop the reference we took in disk_zone_wplug_schedule_bio_work(). *=
+/
