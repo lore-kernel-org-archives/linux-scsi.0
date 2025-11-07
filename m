@@ -1,63 +1,161 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 463211DE8AE;
-	Fri,  7 Nov 2025 16:06:19 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1B8EF1A5B9E
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 20:21:42 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762531579; cv=none; b=hoIgQOrj4vn9biBiYHEvLWKqv++eEAK4pW/orcQBreBCuRP1hCzh64CJmr4Lv3x45B+mnXctIL61i++5TskCHyIpnrMAdQbiswmVkbnkn/pMM4Ng69jv3thT37neIvCR6Sf4PqljHJFxbsERhqx66+2w5LWzKrTa9Q6x9ZnHSAY=
+	t=1762546902; cv=none; b=nzDInax3y5sIIyv0fccdPn65gKQakFgPx9m3nzTU1AlxItevvGWe6zwy1e4/J/lRFZnH6OhL8yiosWxZPpR7K53FSsT6ZbbLPx+lQBBSSFDRuLcWWD97FFgCetD4QPY3OPVzmqGUUQfKn24sHzRpKL3JpJgEd1d/d777v7XByMY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762531579; c=relaxed/simple;
-	bh=JRDDN9rUaJFN2x7oqFh3tjTq8EKF7hbnlMpxGfW1uUo=;
-	h=Subject:From:In-Reply-To:References:Message-Id:Date:To:Cc; b=jxZuldMcnP9ulQpmhhIkgnyCVdh6tfPfp8uUu3A2C09pYhMw0dftWz+X8zzRuVWmJN2YFBF5vCBbitdiaayP4OVieujvzOvqQbQ9Znrc9YzTlOvxe2E8dcZK7zojYiQnNwmzhII2Gp5bJI5Ugw6U9IR8qnHDbc8wB0XS8aGA6Rg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=jGsgP85T; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762546902; c=relaxed/simple;
+	bh=XdTrFM+muNKx80yCYm3GJBX5Km77XMXCwn9qA0trw5E=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=NtdsRwrbPC5OTcsEqbxgfpxeAOrmfuAkZYaebWscghgyUV0/jtFkeWThEk4O88MQya+vSLXHRm8KiKEZHzu7wcinGfMscR7fP9IG5aqkixUvoRfY/ytlOd8bnFgkAQ+T92P0oTuiDcuJvG9szpl7U8RqxhDeDMtCMhWoHb5vXsA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=RXtjYF0T; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="jGsgP85T"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 1F2B3C113D0;
-	Fri,  7 Nov 2025 16:06:19 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="RXtjYF0T"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id DDF79C2BC87
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 20:21:41 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762531579;
-	bh=JRDDN9rUaJFN2x7oqFh3tjTq8EKF7hbnlMpxGfW1uUo=;
-	h=Subject:From:In-Reply-To:References:Date:To:Cc:From;
-	b=jGsgP85TpuslnNPceKMwaQLVK7ZMkySBkbtlpiZ4egryvN/5eTSeyNvytRAsJ3/AH
-	 tFfabr03sYEHbCW54H3QvMKxe8IdgDPOZOnZkCab4B2uQ94Q+PE+J/WoExRPDDHJ0f
-	 T0VBHZRhwGA/bCKHm4I5pnzok4kNYsQpsNzNgwXCFgPYr9dhhY2c7x4QnWKir2aUWN
-	 LF1qoOcevc7XeUtuYm6zox6199gmad31Jn+RiVsFXZnHcKdx8eegKd+uqz544c9Gdy
-	 q8GbNat0p2jM2y8rIbfoCPByi1DRKw1O62SFhvN9B01OVdujVMDdaIWfshujfBWP8Z
-	 avOYDKGNlD3ww==
-Received: from [10.30.226.235] (localhost [IPv6:::1])
-	by aws-us-west-2-korg-oddjob-rhel9-1.codeaurora.org (Postfix) with ESMTP id AE30739EFFCF;
-	Fri,  7 Nov 2025 16:05:52 +0000 (UTC)
-Subject: Re: [GIT PULL] SCSI fixes for 6.18-rc4
-From: pr-tracker-bot@kernel.org
-In-Reply-To: <9f265f47e0b99894996b89c8d79d2e40d324ddce.camel@HansenPartnership.com>
-References: <9f265f47e0b99894996b89c8d79d2e40d324ddce.camel@HansenPartnership.com>
-X-PR-Tracked-List-Id: <linux-kernel.vger.kernel.org>
-X-PR-Tracked-Message-Id: <9f265f47e0b99894996b89c8d79d2e40d324ddce.camel@HansenPartnership.com>
-X-PR-Tracked-Remote: git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
-X-PR-Tracked-Commit-Id: a2b32bc1d9e359a9f90d0de6af16699facb10935
-X-PR-Merge-Tree: torvalds/linux.git
-X-PR-Merge-Refname: refs/heads/master
-X-PR-Merge-Commit-Id: 11a6afabb4b38e70b6d697fd90fddedb9ad0ec43
-Message-Id: <176253155117.1077315.1797535502900069638.pr-tracker-bot@kernel.org>
-Date: Fri, 07 Nov 2025 16:05:51 +0000
-To: James Bottomley <James.Bottomley@HansenPartnership.com>
-Cc: Andrew Morton <akpm@linux-foundation.org>, Linus Torvalds <torvalds@linux-foundation.org>, linux-scsi <linux-scsi@vger.kernel.org>, linux-kernel <linux-kernel@vger.kernel.org>
+	s=k20201202; t=1762546901;
+	bh=XdTrFM+muNKx80yCYm3GJBX5Km77XMXCwn9qA0trw5E=;
+	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
+	b=RXtjYF0TemP/xaQRnA9RxSJLxKWgpGdSIy3q5/NjX8XlBys8CQlAQ2OfeKqh7Bi5J
+	 wnz7WHJpU3if0KcvZZzEx/IRs2PtyNY0SAIKxe+yYsbbiJXFcM/NJUuW49BI8e8C8K
+	 pqErIlWtaA0ClO9+YRR/DiI0tjtU658tgmuOBQyi1ljCQEW3Ns3LeJMPvjfZUyKaNY
+	 HIh288eHJP1LOekOzxMe4hcN4t/mrwGW/tefjz3YKoZJ3M/fa/NUEWZ1Ne0A1MG6D7
+	 Qjqc03ZDJ2qNBauQQVEoXul/JvQ0qLDi0NKX5S1MLeUKoMmb5DJDYfwfMKSBav7v6p
+	 rkj45UfZrinNw==
+Received: by mail-oo1-f46.google.com with SMTP id 006d021491bc7-656d9230ceaso64107eaf.2
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 12:21:41 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCUjSgLMyQR1olI6KMHS2nkhE14hi3mKmaF1x71AZQysWjp8RWfq2ZuFmsNC41rDHxVulbwyRL/Gr5z6@vger.kernel.org
+X-Gm-Message-State: AOJu0YyMENtcVVhbY1H3SQfQiAS6p86L3qRFyt5/bNeE7MG8MEtkzpAA
+	H+JzBsdYwWEw9gtaq/EF6CWFvgPcsqxC2OTGZ+iusNpSNy1i2nAGDVCwnsWZd9RN0TTCf+ABy4x
+	U4s/YUrFXfi+3qrfBgXvl3x1ROjWm0W4=
+X-Google-Smtp-Source: AGHT+IHSW7bYuFpaP/EHUfjyaJpeKaCAsDxHqSJ8TJifR429GMhRlPnT6p7CfvR0HmD7ZTteJPuTe/Fx/LWEHEOcrzU=
+X-Received: by 2002:a05:6820:4b91:b0:654:eea7:9c17 with SMTP id
+ 006d021491bc7-656d8e62734mr516884eaf.4.1762546901127; Fri, 07 Nov 2025
+ 12:21:41 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
+MIME-Version: 1.0
+References: <20251026050905.764203-1-superm1@kernel.org> <20251026050905.764203-2-superm1@kernel.org>
+In-Reply-To: <20251026050905.764203-2-superm1@kernel.org>
+From: "Rafael J. Wysocki" <rafael@kernel.org>
+Date: Fri, 7 Nov 2025 21:21:30 +0100
+X-Gmail-Original-Message-ID: <CAJZ5v0gh46ORBUaiZapcZEzkhzgW6spH_Y7+pW=CYu+ccJvWzA@mail.gmail.com>
+X-Gm-Features: AWmQ_bmRyzuayfd5brHh_7wCutSrwS_GyGgBygyvV8yQKaGwzxZQyWov8_IpQiE
+Message-ID: <CAJZ5v0gh46ORBUaiZapcZEzkhzgW6spH_Y7+pW=CYu+ccJvWzA@mail.gmail.com>
+Subject: Re: [PATCH v9 1/4] PM: Introduce new PMSG_POWEROFF event
+To: "Mario Limonciello (AMD)" <superm1@kernel.org>
+Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
+	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Pavel Machek <pavel@kernel.org>, 
+	Len Brown <lenb@kernel.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
+	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>, 
+	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, 
+	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>, AceLan Kao <acelan.kao@canonical.com>, 
+	Kai-Heng Feng <kaihengf@nvidia.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
+	=?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>, 
+	Eric Naim <dnaim@cachyos.org>, "Guilherme G . Piccoli" <gpiccoli@igalia.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-The pull request you sent on Thu, 06 Nov 2025 22:44:17 -0500:
+On Sun, Oct 26, 2025 at 6:09=E2=80=AFAM Mario Limonciello (AMD)
+<superm1@kernel.org> wrote:
+>
+> PMSG_POWEROFF will be used for the PM core to allow differentiating betwe=
+en
+> a hibernation or shutdown sequence when re-using callbacks for common cod=
+e.
+>
+> Hibernation is started by writing a hibernation method (such as 'platform=
+'
+> 'shutdown', or 'reboot') to use into /sys/power/disk and writing 'disk' t=
+o
+> /sys/power/state.
+>
+> Shutdown is initiated with the reboot() syscall with arguments on whether
+> to halt the system or power it off.
+>
+> Tested-by: Eric Naim <dnaim@cachyos.org>
+> Signed-off-by: Mario Limonciello (AMD) <superm1@kernel.org>
+> ---
+> v9:
+>  * Add more detail to commit message (Bjorn)
+> v8:
+>  * Break series into 3 parts
+>  * Drop PMSG_NO_WAKEUP change
+> v7:
+>  * Reword commit
+> v5:
+>  * Re-order and split
+>  * Add tags
+> v4:
+>  * https://lore.kernel.org/linux-pci/20250616175019.3471583-1-superm1@ker=
+nel.org/
+> ---
+>  drivers/base/power/main.c    | 7 +++++++
+>  include/linux/pm.h           | 3 +++
+>  include/trace/events/power.h | 3 ++-
+>  3 files changed, 12 insertions(+), 1 deletion(-)
+>
+> diff --git a/drivers/base/power/main.c b/drivers/base/power/main.c
+> index 451d54486645b..ecdd88b578a04 100644
+> --- a/drivers/base/power/main.c
+> +++ b/drivers/base/power/main.c
+> @@ -95,6 +95,8 @@ static const char *pm_verb(int event)
+>                 return "restore";
+>         case PM_EVENT_RECOVER:
+>                 return "recover";
+> +       case PM_EVENT_POWEROFF:
+> +               return "poweroff";
+>         default:
+>                 return "(unknown PM event)";
+>         }
+> @@ -367,6 +369,7 @@ static pm_callback_t pm_op(const struct dev_pm_ops *o=
+ps, pm_message_t state)
+>         case PM_EVENT_FREEZE:
+>         case PM_EVENT_QUIESCE:
+>                 return ops->freeze;
+> +       case PM_EVENT_POWEROFF:
+>         case PM_EVENT_HIBERNATE:
+>                 return ops->poweroff;
+>         case PM_EVENT_THAW:
+> @@ -401,6 +404,7 @@ static pm_callback_t pm_late_early_op(const struct de=
+v_pm_ops *ops,
+>         case PM_EVENT_FREEZE:
+>         case PM_EVENT_QUIESCE:
+>                 return ops->freeze_late;
+> +       case PM_EVENT_POWEROFF:
+>         case PM_EVENT_HIBERNATE:
+>                 return ops->poweroff_late;
+>         case PM_EVENT_THAW:
+> @@ -435,6 +439,7 @@ static pm_callback_t pm_noirq_op(const struct dev_pm_=
+ops *ops, pm_message_t stat
+>         case PM_EVENT_FREEZE:
+>         case PM_EVENT_QUIESCE:
+>                 return ops->freeze_noirq;
+> +       case PM_EVENT_POWEROFF:
+>         case PM_EVENT_HIBERNATE:
+>                 return ops->poweroff_noirq;
+>         case PM_EVENT_THAW:
+> @@ -1385,6 +1390,8 @@ static pm_message_t resume_event(pm_message_t sleep=
+_state)
+>                 return PMSG_RECOVER;
+>         case PM_EVENT_HIBERNATE:
+>                 return PMSG_RESTORE;
+> +       case PM_EVENT_POWEROFF:
+> +               return PMSG_ON;
 
-> git://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git scsi-fixes
+I'm not sure if PMSG_ON is the right choice here (as stated elsewhere,
+the "poweroff" transition at the end of system shutdown cannot really
+be rolled back and this is all about what pm_message_t value to use
+for the rollback), but even so, this change is unnecessary because
+PMSG_ON is returned by default.
 
-has been merged into torvalds/linux.git:
-https://git.kernel.org/torvalds/c/11a6afabb4b38e70b6d697fd90fddedb9ad0ec43
-
-Thank you!
-
--- 
-Deet-doot-dot, I am a bot.
-https://korg.docs.kernel.org/prtracker.html
+>         }
+>         return PMSG_ON;
+>  }
