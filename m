@@ -1,76 +1,149 @@
-Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [78.32.30.218])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wr1-f45.google.com (mail-wr1-f45.google.com [209.85.221.45])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 150CA253B4C;
-	Fri,  7 Nov 2025 12:38:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.32.30.218
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 12389328B40
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 14:15:06 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762519140; cv=none; b=dDOHK6aTh18ZloAAQo/SvJxoMIMCX39elYKjyczYsg81xAe3HWRrNZQrd1rdwpVyUrI9RgHA7uiyBk9mVorRkgG+xUP9O/XKbZdhP517sqd3mQYsVOXdVfzad9D3Q166bvIwDmTS/UDsRgR51vjVub8U4stHOKogC4Rz5BuCwfo=
+	t=1762524910; cv=none; b=A4lHRMI59VhZdIE5ycxq5Zk/LwFxL2HmIirQ/LMJpYqwTMR8E1iH3CbNHuvp25BjGfuaswoF/1xqQdVq8FQJmIBaT427kpNyDh/UwzMoqDxvfBSE5bHXtT7dtgE9M13WGLbGnMgy0BGXaloWBRhQ61g3gnA9BTtWW4nsfcD1/SY=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762519140; c=relaxed/simple;
-	bh=LYQVTmkpgyHJU99oHJyisesvpOjMTFtT39nRQnS2hJI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=tQyKOEfyvRHld4OTjZLHsbuOzSe+7WAJty5PgHqAdkDJrg5nzM/vITMZc0HgfRXx1f6rnAcR4f2NbC9b22BE5f6IYG9VKVWDegKF+FHQw8Ynr8UNnPOy584le9PA6fJIlMvf6Qk9dcbcnEjP6Pvj7+rKft58PHkiZvWn+ueWREc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=armlinux.org.uk; spf=none smtp.mailfrom=armlinux.org.uk; dkim=pass (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b=ybgPoOga; arc=none smtp.client-ip=78.32.30.218
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=armlinux.org.uk
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=armlinux.org.uk
+	s=arc-20240116; t=1762524910; c=relaxed/simple;
+	bh=XHqib5P0luygOlwFQcX5ex0tga7jkw3zWlEHHEXkhCw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=hQopsSIc49JIDpOWuyzXHK2vZ/AilDQxmfeRZhKOt2HBUyvaeUOhP7rU7isWCSRQJk6cljuDYjhFAbOiBz/kde6dPXFQzwf99oV78/UkTLG2o1GU3ocoUV0ZyzG8LoRSAZnT/BON8IrWcGN1t3jtoo87i/mucL9qdvVJSLuCRRs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=HxABlOEK; arc=none smtp.client-ip=209.85.221.45
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="ybgPoOga"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
-	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
-	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
-	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
-	bh=XtSkddwD/WDmFGCg39eRmShA6VwhT8kIPIGtzp3ms2Y=; b=ybgPoOga61pdrRlKUv7LHd1QNE
-	JH3d8zQ8ENjCCEKgv03vWO+HTMT1Bi+0T70rXtdkBQA/bcvx1CqOGA/HEI1WHmSkS+CZHxLY7AS0L
-	nl/Nqt+Hjj+qz/KGhJhbGeDQhA31vJnWuVW6sBIC8mpOrkxURH3UPUXD7FJElKdSU+NCrSheEsVhy
-	Vk0DAh9qd0CpSng84SvkaV715UlH1TM/3WmEHEh/TK1xE995eXi655tByWsCVZNnseJrGP6Z9NDC9
-	LdLgMXzHXxqI2RcqQnYcH0f0HEsmI8TpWm7fzhERAm6l5dKHfzsugHH3rKLEnnIEH6vzHbcQ2TyKV
-	PbCSnyuw==;
-Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:41666)
-	by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
-	(Exim 4.98.2)
-	(envelope-from <linux@armlinux.org.uk>)
-	id 1vHLju-000000006XW-4Be1;
-	Fri, 07 Nov 2025 12:38:51 +0000
-Received: from linux by shell.armlinux.org.uk with local (Exim 4.98.2)
-	(envelope-from <linux@shell.armlinux.org.uk>)
-	id 1vHLjs-000000007aG-4B0v;
-	Fri, 07 Nov 2025 12:38:49 +0000
-Date: Fri, 7 Nov 2025 12:38:48 +0000
-From: "Russell King (Oracle)" <linux@armlinux.org.uk>
-To: Darshan Rathod <darshanrathod475@gmail.com>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi/arm: Clean up coding style violations
-Message-ID: <aQ3oWITFc3F6Hwhu@shell.armlinux.org.uk>
-References: <20251107123435.1434-1-darshanrathod475@gmail.com>
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="HxABlOEK"
+Received: by mail-wr1-f45.google.com with SMTP id ffacd0b85a97d-4298b49f103so330956f8f.2
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 06:15:06 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=suse.com; s=google; t=1762524905; x=1763129705; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=G3gFQ6/5N2I+HN14q/CvmXF68f+oweRzkemP/li43qI=;
+        b=HxABlOEKJZjAZSHKmEdgyOkBVpeeBq9S8DcZfmrW+ufakKnnlRB3SfJmcSQsTNU7oa
+         5v9YdoO1g4OSgXO7RmjCCVeFcjq0QDxNls7ECMJNuxRRYLtb4F5j8PR871Px/0oGa/44
+         Pl3ccu0ndnw+nUfa5wOQu42hm7kl888z9B9fETclg/pceSJFOfFf/NTGfmya8ZlIMbfu
+         9r3VvQoDxOI85/rtqLUf1ODxShuWOgfejPj3H1+Q8nfKMomhfep+ywFwLir+7HMBqlGQ
+         TWaPvtwP/8J8q/15WY7wUB/gCiWP8WyBfb3bibmUT7Tjym6AsLmK4bFvOyGigotK+Pvz
+         /8Fw==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1762524905; x=1763129705;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=G3gFQ6/5N2I+HN14q/CvmXF68f+oweRzkemP/li43qI=;
+        b=GfoCRqKWe3PTfLt31QHNTTxDO3C5JuvVOhHwZJjWp0kLgp2l7rbTrQyKQqyoiFmSnF
+         bA0c3TCLSQRslGZUWq41J0XWuFxswArnYm4cJ0IqccfgM0GAJUsjpMGZj0B35zvn2uN7
+         OJ3AA7Bm/wHgg4XXvgRfvxmL6jtrM3PAkjx3neo56/rMyVANSrn7QeUtQcxwc/j61fEZ
+         g5rHfGWIptErTXADmdQvRRx6rWN9oJ+68AKVvcTqqtON5hCuBb6bla6FqlPgbQnzGubs
+         BDAyGGEd9E00UetaSNpHAVX65UL0giBWDhx53O/ekIjcsAA/wq0xFhoILDL7wpZhZuMf
+         bTNQ==
+X-Forwarded-Encrypted: i=1; AJvYcCVbyLHbsjbBOhJyy8pz6vzfHGuoPxP4ZormgvandjcKItczQpSU25Slbo2j4D+dBOBrets0t53Ise5q@vger.kernel.org
+X-Gm-Message-State: AOJu0YwHzN0JMVB1PxSruhTRbxYi4G5MGbdmd6GH58s8oC6onLAqvlIc
+	sJk3M2zpzNsjWI8r2vN+O/JRs8DdkCGtIvqFKtiYdQ3o9gNgez8smkhPaeO/kXc+sog=
+X-Gm-Gg: ASbGncvJdM15tnpBtMsASgvmjXb+w2jXXzpsxp/LliZ9IJk6kKQaamrevAcFlfUElzD
+	BE3YX/ZM98fK27KsLhsZcA3psJlChW23o4Uy6y3kFTFIeNNdJEfgBbppb8V4eYeIy/AVP7lDEQ8
+	y3UdT0FYyriUikvjtnZrjFuBhGomclNb89G+zvQkVWsCTaOK2RQIOvZzzSouKbuB4QZ9Vql2/Oz
+	PbsrOJuBZiT08Y7r+C55TFD3UL9D8lLwNsRq0XYvznhdT9J1xpn8bIHnsW+/ipz+5GNy2AnbE0A
+	yfNwbTP8q2XCLIfYNiEml3dT0W5Y/fgkRDxaVaWxEJTJPP1fha4YL22pKnvYNknQI+OTEG67DaR
+	NUNeg5Sucu4pm7Zw8QGRwaGPD1Hmhcf9ZMu5bleZbBtcyKV9BO3O/s59/Xzn045SJrt3bj79PXz
+	EvNjD4ym0DAiU1AA/zy8hXvqji
+X-Google-Smtp-Source: AGHT+IFfPXb8HgIu4Qd7GLXW/DH6761f/EmuF1ghCqH/M0Tj6NvO7VdNax1IVyh6UEpfUQabKmLlew==
+X-Received: by 2002:a05:6000:2906:b0:426:d82f:889e with SMTP id ffacd0b85a97d-42ae5880c72mr2981260f8f.14.1762524905242;
+        Fri, 07 Nov 2025 06:15:05 -0800 (PST)
+Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42ac677abeasm5493343f8f.33.2025.11.07.06.15.04
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 07 Nov 2025 06:15:04 -0800 (PST)
+From: Marco Crivellari <marco.crivellari@suse.com>
+To: linux-kernel@vger.kernel.org,
+	MPT-FusionLinux.pdl@broadcom.com,
+	linux-scsi@vger.kernel.org
+Cc: Tejun Heo <tj@kernel.org>,
+	Lai Jiangshan <jiangshanlai@gmail.com>,
+	Frederic Weisbecker <frederic@kernel.org>,
+	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
+	Marco Crivellari <marco.crivellari@suse.com>,
+	Michal Hocko <mhocko@suse.com>,
+	Sathya Prakash <sathya.prakash@broadcom.com>,
+	Sreekanth Reddy <sreekanth.reddy@broadcom.com>,
+	Suganath Prabu Subramani <suganath-prabu.subramani@broadcom.com>
+Subject: [PATCH] scsi: message: fusion: add WQ_PERCPU to alloc_workqueue users
+Date: Fri,  7 Nov 2025 15:14:58 +0100
+Message-ID: <20251107141458.225119-1-marco.crivellari@suse.com>
+X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251107123435.1434-1-darshanrathod475@gmail.com>
-Sender: Russell King (Oracle) <linux@armlinux.org.uk>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-On Fri, Nov 07, 2025 at 12:34:34PM +0000, Darshan Rathod wrote:
-> Addressed checkpatch warnings by separating assignment from a conditional
-> statement and documenting the empty for loop. These updates improve code
-> clarity and maintain style consistency.
-> 
-> No functional change intended.
-> 
-> Signed-off-by: Darshan Rathod <darshanrathod475@gmail.com>
+Currently if a user enqueues a work item using schedule_delayed_work() the
+used wq is "system_wq" (per-cpu wq) while queue_delayed_work() use
+WORK_CPU_UNBOUND (used when a cpu is not specified). The same applies to
+schedule_work() that is using system_wq and queue_work(), that makes use
+again of WORK_CPU_UNBOUND.
+This lack of consistency cannot be addressed without refactoring the API.
 
-Up to the SCSI maintainers, but this code pre-dates many of the coding
-style updates, and I believe there is a general policy not to "fix"
-old code for such things. It creates noise and additional churn.
+alloc_workqueue() treats all queues as per-CPU by default, while unbound
+workqueues must opt-in via WQ_UNBOUND.
 
+This default is suboptimal: most workloads benefit from unbound queues,
+allowing the scheduler to place worker threads where they’re needed and
+reducing noise when CPUs are isolated.
+
+This continues the effort to refactor workqueue APIs, which began with
+the introduction of new workqueues and a new alloc_workqueue flag in:
+
+commit 128ea9f6ccfb ("workqueue: Add system_percpu_wq and system_dfl_wq")
+commit 930c2ea566af ("workqueue: Add new WQ_PERCPU flag")
+
+This change adds a new WQ_PERCPU flag to explicitly request
+alloc_workqueue() to be per-cpu when WQ_UNBOUND has not been specified.
+
+With the introduction of the WQ_PERCPU flag (equivalent to !WQ_UNBOUND),
+any alloc_workqueue() caller that doesn’t explicitly specify WQ_UNBOUND
+must now use WQ_PERCPU.
+
+Once migration is complete, WQ_UNBOUND can be removed and unbound will
+become the implicit default.
+
+Suggested-by: Tejun Heo <tj@kernel.org>
+Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
+---
+ drivers/message/fusion/mptbase.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/drivers/message/fusion/mptbase.c b/drivers/message/fusion/mptbase.c
+index 738bc4e60a18..e60a8d3947c9 100644
+--- a/drivers/message/fusion/mptbase.c
++++ b/drivers/message/fusion/mptbase.c
+@@ -1857,7 +1857,8 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 	INIT_DELAYED_WORK(&ioc->fault_reset_work, mpt_fault_reset_work);
+ 
+ 	ioc->reset_work_q =
+-		alloc_workqueue("mpt_poll_%d", WQ_MEM_RECLAIM, 0, ioc->id);
++		alloc_workqueue("mpt_poll_%d", WQ_MEM_RECLAIM | WQ_PERCPU, 0,
++				ioc->id);
+ 	if (!ioc->reset_work_q) {
+ 		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
+ 		    ioc->name);
+@@ -1984,7 +1985,9 @@ mpt_attach(struct pci_dev *pdev, const struct pci_device_id *id)
+ 
+ 	INIT_LIST_HEAD(&ioc->fw_event_list);
+ 	spin_lock_init(&ioc->fw_event_lock);
+-	ioc->fw_event_q = alloc_workqueue("mpt/%d", WQ_MEM_RECLAIM, 0, ioc->id);
++	ioc->fw_event_q = alloc_workqueue("mpt/%d",
++					  WQ_MEM_RECLAIM | WQ_PERCPU, 0,
++					  ioc->id);
+ 	if (!ioc->fw_event_q) {
+ 		printk(MYIOC_s_ERR_FMT "Insufficient memory to add adapter!\n",
+ 		    ioc->name);
 -- 
-RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
-FTTP is here! 80Mbps down 10Mbps up. Decent connectivity at last!
+2.51.1
+
