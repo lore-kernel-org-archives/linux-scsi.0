@@ -1,117 +1,76 @@
-Received: from mail-pl1-f174.google.com (mail-pl1-f174.google.com [209.85.214.174])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from pandora.armlinux.org.uk (pandora.armlinux.org.uk [78.32.30.218])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EA95D1FF7C8
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 12:33:31 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.174
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 150CA253B4C;
+	Fri,  7 Nov 2025 12:38:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=78.32.30.218
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762518813; cv=none; b=nsdjifi1jq33h7MKA2IXsrVsD9XKu4vr9B5G5mAJOZTXkrfOm9W6agk2CEuReKVa3g3xcxEhLNaQCgqa/zajgVWUEqLf8+RvzJaMHnqMEL8qFzUoZ54kDbjbpF2wyu38fpVpXQUOqzVoJefKNNkqUbkbGjyIRPovjSuDRanxJDU=
+	t=1762519140; cv=none; b=dDOHK6aTh18ZloAAQo/SvJxoMIMCX39elYKjyczYsg81xAe3HWRrNZQrd1rdwpVyUrI9RgHA7uiyBk9mVorRkgG+xUP9O/XKbZdhP517sqd3mQYsVOXdVfzad9D3Q166bvIwDmTS/UDsRgR51vjVub8U4stHOKogC4Rz5BuCwfo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762518813; c=relaxed/simple;
-	bh=5lcnyf06aV0IL6EQb9F8CzVHgFLLL8ViHujqnpHB5v0=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=WVS73t97BNNTq62LQkXdAFKu0kjyJSbIvaPSfl39CQ/P5ROZudkuA/wkiKhWPe9rWgRfkRggo1AscW2J3J8XdfHHkgZ++xKSGXgZEVSl/zWyiwnfnI437gLBm1u3g0NAelSSyxX1rTA7BPUCjxzN5OEfcblsM0m1H6CUUYS8Ico=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=XleZ2MVw; arc=none smtp.client-ip=209.85.214.174
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1762519140; c=relaxed/simple;
+	bh=LYQVTmkpgyHJU99oHJyisesvpOjMTFtT39nRQnS2hJI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=tQyKOEfyvRHld4OTjZLHsbuOzSe+7WAJty5PgHqAdkDJrg5nzM/vITMZc0HgfRXx1f6rnAcR4f2NbC9b22BE5f6IYG9VKVWDegKF+FHQw8Ynr8UNnPOy584le9PA6fJIlMvf6Qk9dcbcnEjP6Pvj7+rKft58PHkiZvWn+ueWREc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=armlinux.org.uk; spf=none smtp.mailfrom=armlinux.org.uk; dkim=pass (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b=ybgPoOga; arc=none smtp.client-ip=78.32.30.218
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=armlinux.org.uk
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=armlinux.org.uk
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="XleZ2MVw"
-Received: by mail-pl1-f174.google.com with SMTP id d9443c01a7336-29524c38f4fso8306455ad.2
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 04:33:31 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762518811; x=1763123611; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=2wFg4sEi9OuCa1c0qwdmYGRON1nIlfIlliXKoJp2VYg=;
-        b=XleZ2MVwOJTKC6W/6mfrsL0h4LHHxq7EMz1xZPJCRrKlj5ohCvU6n39MSWybzmvR94
-         /C4LCtGf4+MYPLiPHC2G039tk3mRa0A/qPiv6qgCNRfaOn5HzXOOSiiujeTBiHF84Iq7
-         7uW2xu9EScGNHImdG419IGhCGYgCF+AJ4DRPb1CRGo7SA5UsgZAbJFZKFdsNjqcWKOEo
-         WzygMvzpE863js+3GcvPAJ9bhukv2jJ26siQQYD0TdnG//Np8H4SnX8DNfv+O1NeyW5G
-         ll5Tr0j+4oEtUNtiKkbl/u1YB77N92WUIpqVw3JQeOuQq5YcYHb7Y4cEGn5PR8wlrXL8
-         NxLQ==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762518811; x=1763123611;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=2wFg4sEi9OuCa1c0qwdmYGRON1nIlfIlliXKoJp2VYg=;
-        b=TEG0OPNqLcJrCcjSzihFd8H4B4+NTbbx9lJRoYvw4monLeWVBuSR5I3vXvVLDGffTU
-         ddkb3A0rX6XIRunyXGfDGFlr3qvTGKuhxJG8s01pBT2JJszK1BEulWQWtfvB3U0BxF4H
-         VsJr7qakha8mVjUb7+tGDOUgXQrKFKmMRoWyTS0mhfC9qCPCL5V2HR1bDJt7NJMb8Dhk
-         QeE6NrNfQvu8cpyEjAX4HcCW61u9nYH+Lj+PLgdAhuDsi9V9y0S8xhRJF6Q4NQ1y6oEp
-         JHT4Qw4D4wNtae5szIXNqZT0HWY1FtJyM531zyxLX9OvwhPItWfM21KK80mXWa6DlJf6
-         xoSw==
-X-Forwarded-Encrypted: i=1; AJvYcCUFWnbCR4b1inU8b0yGRLCeI5pXxxlRi7UNuRrgLq2n+Rnd3OdkEW+cHZXbfa0+iaQrREcEJvVefdfr@vger.kernel.org
-X-Gm-Message-State: AOJu0YzLwM2zOPrSyi8xa40CmSxgefElIN1VCfmtACLfX/h5f6oM2CID
-	T4IWDD7MRR7lrYWqkQfeYDrfp9hUKsGPAOU9VwfV9apgA2E3sO7FD2gr
-X-Gm-Gg: ASbGncsUUm4NKgB1AbjEgOJ+H1+9kd/1XiCjLWbtf26uICXMOfmfyUNFCkdGZOWhXV2
-	/hTZgub+29/dMlSXmJknlsAnm39ol5ih+G7fAzOKiiFRVvCo1kZAi4HAdu/Bfz6PInDiwWhHdSq
-	IcWm1ru/PfwNhsVJ5nzr4QtZjEkPAoQinpvlTmHDQyqzDkuQ1WnepSkCcDJq7RzZUc47UIwguMy
-	qEYQnusuXsyXHKHGqt7BaWO5N3kDGVDhNNOKBXOSMU46Ihp/MMGOFh75KWkioZUwt4KVBUpOTo1
-	CZRXxp4Y/hadSLuLaL2/iv3+G15+4oa8LYl1FEaUDNClSRaUpDCZteuNKx9RCRi681t+tQB1/Vc
-	HJLSh29RjNXwL0oJThsZaXjKYVDpiiJ+1lNFW9fHJ0fMIOJ05x+dX8AuePrri/SZdLSgDXgelup
-	8wDQuhIOQkJ21yjRM/WB3daTx3CvtKl6Azhw9XMXNivyR3thVXWLFGZbne/FnmKyk=
-X-Google-Smtp-Source: AGHT+IE7z6KNZTDs+X3lQn5orUAZb91cr+qoIc5amPGDhp4Mbj7m/pXX02bL6DNNvigWgocoVupEPw==
-X-Received: by 2002:a17:902:ea11:b0:288:e46d:b32b with SMTP id d9443c01a7336-297c03ad66fmr43022505ad.17.1762518811194;
-        Fri, 07 Nov 2025 04:33:31 -0800 (PST)
-Received: from SIQOL-WIN-0002-DARSHAN.localdomain ([27.57.191.202])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-29650968269sm58959735ad.17.2025.11.07.04.33.28
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Nov 2025 04:33:30 -0800 (PST)
-From: Darshan Rathod <darshanrathod475@gmail.com>
-To: linux@armlinux.org.uk,
-	James.Bottomley@HansenPartnership.com,
-	martin.petersen@oracle.com
-Cc: linux-arm-kernel@lists.infradead.org,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	Darshan Rathod <darshanrathod475@gmail.com>
-Subject: [PATCH] scsi/arm: Clean up coding style violations
-Date: Fri,  7 Nov 2025 12:34:34 +0000
-Message-ID: <20251107123435.1434-1-darshanrathod475@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (2048-bit key) header.d=armlinux.org.uk header.i=@armlinux.org.uk header.b="ybgPoOga"
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
+	d=armlinux.org.uk; s=pandora-2019; h=Sender:In-Reply-To:Content-Type:
+	MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:Reply-To:
+	Content-Transfer-Encoding:Content-ID:Content-Description:Resent-Date:
+	Resent-From:Resent-Sender:Resent-To:Resent-Cc:Resent-Message-ID:List-Id:
+	List-Help:List-Unsubscribe:List-Subscribe:List-Post:List-Owner:List-Archive;
+	bh=XtSkddwD/WDmFGCg39eRmShA6VwhT8kIPIGtzp3ms2Y=; b=ybgPoOga61pdrRlKUv7LHd1QNE
+	JH3d8zQ8ENjCCEKgv03vWO+HTMT1Bi+0T70rXtdkBQA/bcvx1CqOGA/HEI1WHmSkS+CZHxLY7AS0L
+	nl/Nqt+Hjj+qz/KGhJhbGeDQhA31vJnWuVW6sBIC8mpOrkxURH3UPUXD7FJElKdSU+NCrSheEsVhy
+	Vk0DAh9qd0CpSng84SvkaV715UlH1TM/3WmEHEh/TK1xE995eXi655tByWsCVZNnseJrGP6Z9NDC9
+	LdLgMXzHXxqI2RcqQnYcH0f0HEsmI8TpWm7fzhERAm6l5dKHfzsugHH3rKLEnnIEH6vzHbcQ2TyKV
+	PbCSnyuw==;
+Received: from shell.armlinux.org.uk ([fd8f:7570:feb6:1:5054:ff:fe00:4ec]:41666)
+	by pandora.armlinux.org.uk with esmtpsa  (TLS1.3) tls TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+	(Exim 4.98.2)
+	(envelope-from <linux@armlinux.org.uk>)
+	id 1vHLju-000000006XW-4Be1;
+	Fri, 07 Nov 2025 12:38:51 +0000
+Received: from linux by shell.armlinux.org.uk with local (Exim 4.98.2)
+	(envelope-from <linux@shell.armlinux.org.uk>)
+	id 1vHLjs-000000007aG-4B0v;
+	Fri, 07 Nov 2025 12:38:49 +0000
+Date: Fri, 7 Nov 2025 12:38:48 +0000
+From: "Russell King (Oracle)" <linux@armlinux.org.uk>
+To: Darshan Rathod <darshanrathod475@gmail.com>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	linux-arm-kernel@lists.infradead.org, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi/arm: Clean up coding style violations
+Message-ID: <aQ3oWITFc3F6Hwhu@shell.armlinux.org.uk>
+References: <20251107123435.1434-1-darshanrathod475@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251107123435.1434-1-darshanrathod475@gmail.com>
+Sender: Russell King (Oracle) <linux@armlinux.org.uk>
 
-Addressed checkpatch warnings by separating assignment from a conditional
-statement and documenting the empty for loop. These updates improve code
-clarity and maintain style consistency.
+On Fri, Nov 07, 2025 at 12:34:34PM +0000, Darshan Rathod wrote:
+> Addressed checkpatch warnings by separating assignment from a conditional
+> statement and documenting the empty for loop. These updates improve code
+> clarity and maintain style consistency.
+> 
+> No functional change intended.
+> 
+> Signed-off-by: Darshan Rathod <darshanrathod475@gmail.com>
 
-No functional change intended.
+Up to the SCSI maintainers, but this code pre-dates many of the coding
+style updates, and I believe there is a general policy not to "fix"
+old code for such things. It creates noise and additional churn.
 
-Signed-off-by: Darshan Rathod <darshanrathod475@gmail.com>
----
- drivers/scsi/arm/msgqueue.c | 6 ++++--
- 1 file changed, 4 insertions(+), 2 deletions(-)
-
-diff --git a/drivers/scsi/arm/msgqueue.c b/drivers/scsi/arm/msgqueue.c
-index 58115831362f..7e09624e5505 100644
---- a/drivers/scsi/arm/msgqueue.c
-+++ b/drivers/scsi/arm/msgqueue.c
-@@ -23,7 +23,8 @@ static struct msgqueue_entry *mqe_alloc(MsgQueue_t *msgq)
- {
- 	struct msgqueue_entry *mq;
- 
--	if ((mq = msgq->free) != NULL)
-+	mq = msgq->free;
-+	if (mq)
- 		msgq->free = mq->next;
- 
- 	return mq;
-@@ -99,7 +100,8 @@ struct message *msgqueue_getmsg(MsgQueue_t *msgq, int msgno)
- {
- 	struct msgqueue_entry *mq;
- 
--	for (mq = msgq->qe; mq && msgno; mq = mq->next, msgno--);
-+	for (mq = msgq->qe; mq && msgno; mq = mq->next, msgno--)
-+		; /* intentional: iterate to the msgno-th entry */
- 
- 	return mq ? &mq->msg : NULL;
- }
 -- 
-2.43.0
-
+RMK's Patch system: https://www.armlinux.org.uk/developer/patches/
+FTTP is here! 80Mbps down 10Mbps up. Decent connectivity at last!
