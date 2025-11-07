@@ -1,64 +1,65 @@
-Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+Received: from mail-wm1-f53.google.com (mail-wm1-f53.google.com [209.85.128.53])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9C50F1D61A3
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 15:24:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38C572D373F
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 15:40:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.53
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762529042; cv=none; b=IhsJ1/6H7a9iVrVMihtOpVYjetTz2HdI+sS6EjP/ac28DJAqNqPH1/U2BNY++FDdxIStWE2ROxhXtqJ5ID0ZNy2gAKUYrKP1BFuZjADpXNePFWbWvgNUuK3NAhcHb0SXfHOcCoGQMARn/W1EYhYMi41eTgF5pJvoBgo3oI712gA=
+	t=1762530019; cv=none; b=bZ7prVFBoo574I4GrE6TXcDa/fjMm4fPQm7OK/bBAs6U2hRciPKerQsie1TvgDhyzv4CvY+c0R9n4x2/sZPmX5wx2GrUThGQNpYbRfUeFCX8UKd7bQ3LYB1G8M5cZJCBPq44KOvXLf59Y7IJdjOrHu/Yfv57vhBlGnpOFMd+Tzg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762529042; c=relaxed/simple;
-	bh=nDb0O6dzOVMWuFDYYVHFPTwHHNQ+pWTzegor75kDLfg=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=gPS6nBm1R5xE16Os11DCjlqhgwcIMO3Lzn7M1PBite3Oxr05jTkzVVmFO7S17QWt4cDFTZgBxuTCplAKc4D7tp1HKTqoDUcsukio6NJGPUQTnXuosbXSyVRtW6LkA7bJMKnuZCynSCy6ayVhTBXzu/R+GXWu5YmJ+Dp7/5/7jJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=YZKT2RWX; arc=none smtp.client-ip=209.85.128.54
+	s=arc-20240116; t=1762530019; c=relaxed/simple;
+	bh=NBspa1M9xzcXUUTgbXNjvpUvNYxLGuDwsK4d7c3UuqY=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=W/Y6tbrCskmJ5I724eM/JzBSQTTK7NQ43FB6xEWW/t9Wl7+yQWvNIqoNy/DJzsehqL4YN0hK/DhLath7lFj8gyWHdyXrwb0M+DHpiN9Jx/bK3gMs1Ub9OC+fFOXzh6bICeYiYoh7ZuVjYsj+R+dB2Kr9Kt88xXSvwZT9yRbNNE4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=YUBRM8SN; arc=none smtp.client-ip=209.85.128.53
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="YZKT2RWX"
-Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-47112a73785so5831865e9.3
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 07:24:00 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="YUBRM8SN"
+Received: by mail-wm1-f53.google.com with SMTP id 5b1f17b1804b1-4710665e7deso4253495e9.1
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 07:40:16 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1762529039; x=1763133839; darn=vger.kernel.org;
+        d=suse.com; s=google; t=1762530015; x=1763134815; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Vn7GUP8McG3zK7DlEJjzjjz52xWwiXzwF/L1BD65MSE=;
-        b=YZKT2RWXXR+VOAnDkQQPgtndgLWi3Q1kwe7utMKlVLSUgzUw8A+u6cPkDcJONmxl89
-         n6H99/PGUvutnU1a7NsZTztMvkm59RunczfPY1a7JOt4K1tLV8cNtcx3aA8aI9oUnlJd
-         SKTdqjcPfNKnuWxovB2jt/km79UVKoimObsygrFCt1R+FkYzvCh/lDedrPSOQExcgGST
-         dSRO79MxYzO8IvEVl9Q+pvaquXVtNqdWe6XpFf48pNIaGaV9WYPH9OFHSUapwLsz4W36
-         A47X8Kuc7dAnsGSLtQkypWA8d17lKdItXnO2sZDjIDisx2tR7dmi8bpXSGokIklblDTh
-         RK9A==
+        bh=rhXOhqg1sIDmdMzsCZzzAsthVHfSqnWAIntsnfsu5cM=;
+        b=YUBRM8SNAYaK0gpnieK627FbHv3r/onK26Opg9seAnOpgGiLHEIx+GwdnrPO9OxdtF
+         n9bQfKMaL9+4M4AZlIEvzNR11O2ZSaEu6+sYyE0sDYojm3ycUwSWUHhHuQ3o8HtdOFtE
+         C5faBceOqg+I+ko7HINWXkoULwb1zv2+g9RotYtJ9VUNzeUWuB5Ayvh7/1VhIUmHj2ZJ
+         DAWX2GrPhdTccANiPM2HCCDCow6y+pzxasmpSBNlFVPjJNwqQJDWPXsLi6T//LUGbJ6i
+         IJKvkzwVI2GzXb9P26Nc/XlhHsgVakc0MB7RI/8zhlD2yYJrVlqM34Af1JZbyRH2NktZ
+         xB3w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762529039; x=1763133839;
+        d=1e100.net; s=20230601; t=1762530015; x=1763134815;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=Vn7GUP8McG3zK7DlEJjzjjz52xWwiXzwF/L1BD65MSE=;
-        b=Ovrc+g1TUFQ22zNFAoSHLnth2DA0mFbHiQNCITgb5+p8x9rIpCRhklhhL7nbcB5qDq
-         oYA84KXL60aNjAODxD5JhqdhWyxcNcMQc55cSQoEU3/DSrjK6M8D0MOsqvaoYCy2Hvh3
-         CSh37UsMPDt08KMhYkndCbvEA6oVkGeid4qix2ZMud3KdGdeuHgPtkxhlMysdTQDql58
-         L89f65GtbkcUuqeWQZCLzOjLH/DSU0q0T44TqIchszOtuKI4huLgVZ8zm2zwPiWxWcej
-         wXJeauJo3jS3IPZ46NhjSkH8Jf1d0wJEBI85YPvObSTu62IJmGhlmys9JG2C/Jc+eaUz
-         DWbw==
-X-Forwarded-Encrypted: i=1; AJvYcCUMoy1p/SNdsabU//mweZvgaX7oWNzIh69pCD1bA2VP/h3kEShGXxk+e5o1Hqf4ec9lDEgAWuSVyrl9@vger.kernel.org
-X-Gm-Message-State: AOJu0YxaaFI/1Jl23rMur9UwaVUZQlWf9Xa6ec/sfKSHnGsPVYjTOtZr
-	tIB4U+QkCoYdKS9friUHj5hSYK4v6rVJAHs/QWpUf6gFz8kN7e18dJ2ZYQrdgatgDI0=
-X-Gm-Gg: ASbGncuDBnJC/4JrK9YFbmcRECwpdlRJ3NNIs2Ge8b3Au9JaE3384/2Kk1X9KgbNYec
-	JavSOR2xqoqxzmUfPPRvUkvCsSEiQSEjwKPFpbGNUmk2GWocEB4ZizlBG8KCrSyZi1iD1tI/4tk
-	cX6KskTXC0Dqe38y0Bxjr2st74Ks9pQJF6raMnBSuudGG31X2+fsUpY6D9Vv2RqHgIEw+trhdIg
-	ln7kpYmR2yIU50Osk37GiukJy1+W9y6bq2zTAtiBmATrb9HkuRoAtfY9A7asKz4QPKaBpy1DLbN
-	fysTb4hRBQVtxfb4bdQ7wpoMjJFY/Gkan5letKKMCCaQUz0TwdLLYkyRzvsIRApcxMtpWPabroT
-	kZqWWtN/lwdcESem9AaJ4+bLqDWIPUDAzMlXZzjRLhXSRpleOjnk64izO1Lt4RUaXN451QL6eZa
-	6Z8hAY91DGRkySKX9U6nvbUEpa
-X-Google-Smtp-Source: AGHT+IEuB02jHpSTzBJzUrZVFlClNFUykNNdfp7CZbsJjUOeJSALKQCmJL04EEkoidUr0XP27QRO2w==
-X-Received: by 2002:a05:600c:1c8c:b0:475:dd9a:f791 with SMTP id 5b1f17b1804b1-4776bd04d59mr27043215e9.28.1762529038867;
-        Fri, 07 Nov 2025 07:23:58 -0800 (PST)
+        bh=rhXOhqg1sIDmdMzsCZzzAsthVHfSqnWAIntsnfsu5cM=;
+        b=nbO9j2tjEQpNakxGssNHpf+ccMroG0Y786mdpXnlQrmB+flrLfGI4DEGYfqKe0xVnY
+         doUeDgpZmBN+yqwawHnOJNsFGgrorDtlRDPPKSBr4uN4Xk/iy7zB2foxUwSELj/JNnPj
+         JvTPumjzR+s3Xl/FpAz5gpP1EYYUtNa0/ZILyDAISwaFMpGboSKeaB7OLci6CsY31OWJ
+         lziwvUTwWuGWEj98sQJ7jW4RXqg5YAQnp74TRYy6dvMI599PrQ9qwbqG15+QxnDfZSdo
+         +mJTkdgiiB+yBdVqtFH4+rWSUG9Czt+DAfVqT3dhUBlDRerC0mU8E1UCuEXPQREA5Qho
+         GoMg==
+X-Forwarded-Encrypted: i=1; AJvYcCVs3mBxyeRpdv5m//1eQToXusviLs/gjwW3mOl87J7+wqPQSg11OgQa26oTgPPbGSXoQGnSqAOd4jIk@vger.kernel.org
+X-Gm-Message-State: AOJu0YyJSsWQvVo7ecmxtQlt/Vb5a7whqTuB9x/N2IG2htyJddTAF0V/
+	VWgg0yEsdXiMqLVee9rbo65bYOFvafZgDsK5H0lTo+Pxxtyar+HjqbVryKU52gs3rXE=
+X-Gm-Gg: ASbGncv3LbCgo+mQ7I6bY3rjwgvrrp8B2FCCA2H6dGj/NXO1Y19XykCehglEDcYYkuz
+	bY+SgVBydXDYpk1886yEorUTlmfrxZ3fWaDrJAlIPn4eDGnlB4PJbqZRYC6vMnXmnhpikIzxS1h
+	n6oAkPwQzPZmAIRvfrpdu9NPQL5w7FuFL/4wWfn77WmJsCY7wDYAnsS3FbCcdVTTfrdT7porqPW
+	Ixx9AT6Y4GOFQQeCOSKV1uvHSlui+FSovqsUpX/q+Qr5hJjXBSUTzASbxtV5t0x7GpJkCS5VPld
+	ysLeePLaKwfKK68vvr5l2+pJQ2nxJGgOEQNUwQhC1GoC/JFgfW2rVLh2hu78dGJRlcfSFZa3KvA
+	2V8LzceURaiLq6mKS3ZcdV+IAzJ/8IfpsjNx5xSjlYQOYVUvwaCTJ+9BiPq4ZeJyBKEcaGUWC+X
+	QW3ae/pFupFqUfH70EJ1+kCHSi
+X-Google-Smtp-Source: AGHT+IFSx5eQ+BnvpINM9/8VhGI19WFqR+6DwHzA3h5TSyLVbX0IHAbZJD/pcebt4hPjLvWH8Ij7+w==
+X-Received: by 2002:a05:600c:46ce:b0:46f:b43a:aee1 with SMTP id 5b1f17b1804b1-4776bcff76emr28112475e9.38.1762530015224;
+        Fri, 07 Nov 2025 07:40:15 -0800 (PST)
 Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47763e4f13dsm42953005e9.5.2025.11.07.07.23.57
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47763dc2b8asm49447385e9.2.2025.11.07.07.40.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Nov 2025 07:23:58 -0800 (PST)
+        Fri, 07 Nov 2025 07:40:14 -0800 (PST)
 From: Marco Crivellari <marco.crivellari@suse.com>
 To: linux-kernel@vger.kernel.org,
+	target-devel@vger.kernel.org,
 	linux-scsi@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>,
 	Lai Jiangshan <jiangshanlai@gmail.com>,
@@ -66,14 +67,10 @@ Cc: Tejun Heo <tj@kernel.org>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	Marco Crivellari <marco.crivellari@suse.com>,
 	Michal Hocko <mhocko@suse.com>,
-	Saurav Kashyap <skashyap@marvell.com>,
-	Javed Hasan <jhasan@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
-	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH] scsi: qedf: add WQ_PERCPU to alloc_workqueue users
-Date: Fri,  7 Nov 2025 16:23:49 +0100
-Message-ID: <20251107152349.288190-1-marco.crivellari@suse.com>
+Subject: [PATCH] scsi: target: add WQ_PERCPU to alloc_workqueue users
+Date: Fri,  7 Nov 2025 16:40:08 +0100
+Message-ID: <20251107154008.304127-1-marco.crivellari@suse.com>
 X-Mailer: git-send-email 2.51.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -114,51 +111,59 @@ must now use WQ_PERCPU.
 Once migration is complete, WQ_UNBOUND can be removed and unbound will
 become the implicit default.
 
+Suggested-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
 ---
- drivers/scsi/qedf/qedf_main.c | 8 ++++----
- 1 file changed, 4 insertions(+), 4 deletions(-)
+ drivers/target/target_core_transport.c | 4 ++--
+ drivers/target/target_core_xcopy.c     | 2 +-
+ drivers/target/tcm_fc/tfc_conf.c       | 2 +-
+ 3 files changed, 4 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/scsi/qedf/qedf_main.c b/drivers/scsi/qedf/qedf_main.c
-index 6b1ebab36fa3..9c234a36dbff 100644
---- a/drivers/scsi/qedf/qedf_main.c
-+++ b/drivers/scsi/qedf/qedf_main.c
-@@ -3374,7 +3374,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 	QEDF_INFO(&(qedf->dbg_ctx), QEDF_LOG_INFO, "qedf->io_mempool=%p.\n",
- 	    qedf->io_mempool);
- 
--	qedf->link_update_wq = alloc_workqueue("qedf_%u_link", WQ_MEM_RECLAIM,
-+	qedf->link_update_wq = alloc_workqueue("qedf_%u_link", WQ_MEM_RECLAIM | WQ_PERCPU,
- 					       1, qedf->lport->host->host_no);
- 	INIT_DELAYED_WORK(&qedf->link_update, qedf_handle_link_update);
- 	INIT_DELAYED_WORK(&qedf->link_recovery, qedf_link_recovery);
-@@ -3628,7 +3628,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
+diff --git a/drivers/target/target_core_transport.c b/drivers/target/target_core_transport.c
+index 0a76bdfe5528..ca571076c15b 100644
+--- a/drivers/target/target_core_transport.c
++++ b/drivers/target/target_core_transport.c
+@@ -126,12 +126,12 @@ int init_se_kmem_caches(void)
  	}
  
- 	qedf->timer_work_queue = alloc_workqueue("qedf_%u_timer",
--				WQ_MEM_RECLAIM, 1, qedf->lport->host->host_no);
-+				WQ_MEM_RECLAIM | WQ_PERCPU, 1, qedf->lport->host->host_no);
- 	if (!qedf->timer_work_queue) {
- 		QEDF_ERR(&(qedf->dbg_ctx), "Failed to start timer "
- 			  "workqueue.\n");
-@@ -3641,7 +3641,7 @@ static int __qedf_probe(struct pci_dev *pdev, int mode)
- 		sprintf(host_buf, "qedf_%u_dpc",
- 		    qedf->lport->host->host_no);
- 		qedf->dpc_wq =
--			alloc_workqueue("%s", WQ_MEM_RECLAIM, 1, host_buf);
-+			alloc_workqueue("%s", WQ_MEM_RECLAIM | WQ_PERCPU, 1, host_buf);
- 	}
- 	INIT_DELAYED_WORK(&qedf->recovery_work, qedf_recovery_handler);
+ 	target_completion_wq = alloc_workqueue("target_completion",
+-					       WQ_MEM_RECLAIM, 0);
++					       WQ_MEM_RECLAIM | WQ_PERCPU, 0);
+ 	if (!target_completion_wq)
+ 		goto out_free_lba_map_mem_cache;
  
-@@ -4177,7 +4177,7 @@ static int __init qedf_init(void)
- 		goto err3;
- 	}
+ 	target_submission_wq = alloc_workqueue("target_submission",
+-					       WQ_MEM_RECLAIM, 0);
++					       WQ_MEM_RECLAIM | WQ_PERCPU, 0);
+ 	if (!target_submission_wq)
+ 		goto out_free_completion_wq;
  
--	qedf_io_wq = alloc_workqueue("%s", WQ_MEM_RECLAIM, 1, "qedf_io_wq");
-+	qedf_io_wq = alloc_workqueue("%s", WQ_MEM_RECLAIM | WQ_PERCPU, 1, "qedf_io_wq");
- 	if (!qedf_io_wq) {
- 		QEDF_ERR(NULL, "Could not create qedf_io_wq.\n");
- 		goto err4;
+diff --git a/drivers/target/target_core_xcopy.c b/drivers/target/target_core_xcopy.c
+index 877ce58c0a70..93534a6e14b7 100644
+--- a/drivers/target/target_core_xcopy.c
++++ b/drivers/target/target_core_xcopy.c
+@@ -462,7 +462,7 @@ static const struct target_core_fabric_ops xcopy_pt_tfo = {
+ 
+ int target_xcopy_setup_pt(void)
+ {
+-	xcopy_wq = alloc_workqueue("xcopy_wq", WQ_MEM_RECLAIM, 0);
++	xcopy_wq = alloc_workqueue("xcopy_wq", WQ_MEM_RECLAIM | WQ_PERCPU, 0);
+ 	if (!xcopy_wq) {
+ 		pr_err("Unable to allocate xcopy_wq\n");
+ 		return -ENOMEM;
+diff --git a/drivers/target/tcm_fc/tfc_conf.c b/drivers/target/tcm_fc/tfc_conf.c
+index 639fc358ed0f..f686d95d3273 100644
+--- a/drivers/target/tcm_fc/tfc_conf.c
++++ b/drivers/target/tcm_fc/tfc_conf.c
+@@ -250,7 +250,7 @@ static struct se_portal_group *ft_add_tpg(struct se_wwn *wwn, const char *name)
+ 	tpg->lport_wwn = ft_wwn;
+ 	INIT_LIST_HEAD(&tpg->lun_list);
+ 
+-	wq = alloc_workqueue("tcm_fc", 0, 1);
++	wq = alloc_workqueue("tcm_fc", WQ_PERCPU, 1);
+ 	if (!wq) {
+ 		kfree(tpg);
+ 		return NULL;
 -- 
 2.51.1
 
