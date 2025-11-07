@@ -1,85 +1,79 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-wm1-f48.google.com (mail-wm1-f48.google.com [209.85.128.48])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0400532B98B
-	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 15:02:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDD0730C61C
+	for <linux-scsi@vger.kernel.org>; Fri,  7 Nov 2025 15:06:17 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.48
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762527730; cv=none; b=aHXYDsZmFShisl1E4AWmV/k0Is20KQx48eFxJYy/b/fwKpyACMIReyM5aahyrkN8iWs3ceuVVCuN3rd0y9NfirDzKMBGOCAe7Ye3Osnn79iiYZEKCUXdBmUrKcnZwz53RlEF98wrFIfq+QKl2rDspw58MVDApkQMaV6+HrjlLdY=
+	t=1762527979; cv=none; b=VK7k5QjIqpjNgrgbdTvK0tnRjmy2TrGRU8SFfxHmAWRHsSxkg+NMuCL5+WBsU/JAAPd0mE9xeof+w/6QuDOwpeS3Lbzi/paqAE0QZacc4ZdQlA1GYCxeWyiqKMkoblPa3qvNWWRrK6mPlhfBp0w5npD8Rof7nfLUtDG0O+P/pfU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762527730; c=relaxed/simple;
-	bh=/MyQgTeg/kRKghyemlvvfpC1rLwcUH1vky5ONwwjHpI=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=Sra98PIp/sWviW1xxzViBHpRtqjD8VNP+/WBY9s2olkpmsuEhMAvIzlUk6gR4+pSEBdAhzgd/Q0oB/zppMG3LNWLfB7hnbfDCsZVDNSrZNABljW9NEW086IgUu1RepnkfpuMmyAR+/hF7eWeNg/6zYIXcYeeZuWjQxr9srynsA0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=SjTBB9p3; arc=none smtp.client-ip=209.85.128.46
+	s=arc-20240116; t=1762527979; c=relaxed/simple;
+	bh=I1uyF94YPCgRaFvl8OfqcySKhRO4bX53+vRKo3KnpXs=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=FJVGCEOe6AYgQPJyeE2WGAVtWeBzQkux3iJdljX+PSR7FLLFQGzqiH4NBEgnQCN8eITMhzOymgML5Oo3C9janTcbe9jUybHx1e7BAbV+V5B5FjqAOd75GZ/HtCmuOYhO+D/ct+Lk0byM7f5HIkqE/phn1J/sW1Z4e2O/KG8s9AU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=gt2nUuvM; arc=none smtp.client-ip=209.85.128.48
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="SjTBB9p3"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-4775ae5684fso4595845e9.1
-        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 07:02:07 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="gt2nUuvM"
+Received: by mail-wm1-f48.google.com with SMTP id 5b1f17b1804b1-471191ac79dso9559735e9.3
+        for <linux-scsi@vger.kernel.org>; Fri, 07 Nov 2025 07:06:17 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1762527726; x=1763132526; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vyt/356haOFVo0WC/XQ0zOlNsdbCiUi9taT5WCt+m6s=;
-        b=SjTBB9p3ApA94Ogdsmtjr6vhVgoTneODzXq7zF+3A6kts6/LoX8ICZOxq/puzgelO8
-         REboWuZ6JzCeGUn/HwvYPcNcTvrXjSC5smKWE2cdw7HfqujJPmIMOz288c53uBOXSYKh
-         CHGQNfk3JvdWRohJ029SIKihy57tnTreYg07bZ2M/Q0qlBW015wC/Abzv0l3VVzsx3iM
-         RgWxChTkxqKCLg6nc8qii7eqLIKLTB7p2Xf60xpbeaU6Q1zAw0FDI5kMXj8hxNkprt0u
-         daDO1qMyjElSMoFB9KbdfJA92LRwF/aqyGhMnzTXt0Z4F8wjgd3bMy/HnkjQDXgMgCvh
-         RYig==
+        d=suse.com; s=google; t=1762527976; x=1763132776; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=py75GPFijQsPUx0jpTbres5/IKDk4ZsE3rbUHQbz/Yc=;
+        b=gt2nUuvM5rjYgTZZJBN5l2FbDqDK3nccnSq7jgvNxILnZU1egU2dqqhBon1hVv53sn
+         SVY5SC9brsdMEG2ESLfsVyh9ak1dYlJhsQORGe5446FIHOsmBqQKUdXSAXkLyqLmHi6/
+         MfeDgN3f660kyJ2fPtpXn4M4kBG5s8N/FXX0xBZdbwOFNOmD/YR4eAYj5VxCyDVkb3Ez
+         kCCexMNXuyfTtg8kEo/AXBFQoRQTL08pjR+6iT+QmCTeL27/uSPAG1Gcwh3foS2AlQSh
+         23Wx2+H24P/lN/lfW+i2332bD4FsEAQ3inBXdVZJuH4jpbHnjIXhQaXRYca8xKCKSLvz
+         90Bw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762527726; x=1763132526;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=vyt/356haOFVo0WC/XQ0zOlNsdbCiUi9taT5WCt+m6s=;
-        b=Ax3djBs84lVSzgqYia5iJg4xRdrAZvnXNvecQwSCFd+rIAU4qvnSYCCvFTTxjCKa0A
-         P2z4Dx8cK206S6eWc9svN3nDVzuzhGTD9aj5dU7BSqghoT3JWaBFNE99av9O9rfGC0t2
-         LqpAbbg4hvdo8475JlWbNPLVIrx/XWvPafBubEATnbL6cQfehuj9i6V4I3j8BMBsIKfa
-         XYvUxKHEs16VFNo9/4VZ2Ru/ROWeIXeLXzHBIHgJYolXLwhGnRxsPOvrQB08IWrJRF+n
-         SfU+HG8FV+u3tdV7KR7dVWoDSbPLOnzXlrPyw6jaqb+xB2fYb5AUu5qDfxEiKQgw9rpt
-         LO8A==
-X-Forwarded-Encrypted: i=1; AJvYcCVh+usBnLr7bBxcwNP6fDcvN3pusxFMET5EjBLmuIJ2uYKVaomvgS/TJ4kc79BpAOSJQStIaLLDF0VI@vger.kernel.org
-X-Gm-Message-State: AOJu0Yx6BwOgTp+8nBC/ZvAgVxWL5iEhLr1sw3jiN3hZx8m/GknjJ8pf
-	FzrcDFZRuUtJXVf/JG2b2vnxGlFXK75pqoK80+2nSMJ94/zGWFpg7FZimV8MKd3Rc8qTSl8E629
-	QLFut
-X-Gm-Gg: ASbGncsecLsi5LrwxuXWEgWtPIHpIKbKwxNXrQ/q5pGB08c+o9QEeO514qjQFpBJ61e
-	VPnqIqSLBLkzmyYMPI72NbgeFwFTEqequ5UtpsJr7s4vXjbv0h/UKa2JSMFQTLTrY+Y9M2Y0iyX
-	oZtmC9EtYw6aPdnVKUx2wrMoDA21UM87WjGyDGrqLXZV9gDYTD0f5YMBEukN/E5cqoNlKpUIUvF
-	5e4ygiX8ICzFRdg3YPCxnPSYbmoVX+9O/uuwcJcUlIAQG0BPYwmW3i8BbiUTIrJ7ykbMn0RmRCm
-	VH1XQKEkl6BXihSarr7FaqmWcZeoTZMei8m7TapNySkre96jVBVnPz407XadEdaMkr14buuS4f8
-	7Gz09xDVbeQKMCyXGh5tslliFqdCIs3bFtM/hnOnvyaZi61QaIpfkaTj+8PHz9uqrMo4uoDP26X
-	fOdOC4GnRro8NTy7ZT1rU3Ai/1
-X-Google-Smtp-Source: AGHT+IH5Ey9B0iwSNCwyc1V8tclibBQXC7NnuyOaWnZdTUkdNZ9mMv2vosr2W3a789JDeZcYYQKCgw==
-X-Received: by 2002:a05:600c:5813:b0:477:5c45:8117 with SMTP id 5b1f17b1804b1-4776bcc98bbmr17320205e9.41.1762527724463;
-        Fri, 07 Nov 2025 07:02:04 -0800 (PST)
+        d=1e100.net; s=20230601; t=1762527976; x=1763132776;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=py75GPFijQsPUx0jpTbres5/IKDk4ZsE3rbUHQbz/Yc=;
+        b=NzMn5QDVr1nOJCRI6dscphcEOcP1N6oDx4tjDATyczHLNADBrCZ4Nn0Zt5jxZXkKW/
+         YCCWWDDkGccmRe+WrH1srhkAQrSPVfNdTKEYDdtmkLoS19PW13FfgSmkeyQsRbF/nnXD
+         XAxtO1Wyrk2wKd3h/0Rl3cDGbZrNAi26CoE/TqtQlVj8BTkPC7nqdtjH2zVbFWyEEv/m
+         abTO67hfKCEzb1p7I8IRccxwf7qRNfYS4OaN+j9s4m1+qoDSrjNWCgcysbTF0FhEm8nH
+         7ZSCUCC8MugW96cnK9DRxsgcXkV6Z0BQweqMVGi51MFn2P0OCW2x11YwwnKslHP0mVYO
+         t88g==
+X-Forwarded-Encrypted: i=1; AJvYcCVEsx/Xv42oZH4L07eDu5uTVOwdtMrfXXmSEzcgTbP7I8+TfkG0Q0xG9Bvdmy/LBBE8k6XFERPxF1fM@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzrc/7maRlp+y7ffuSOkT8QEE9gT/KUQ0El1zLHv0PvTUpxsejI
+	a6ViAQjRe5C52rtTBxANXZT0srOT76AQ2B43cSqgRAG4cD6Y0G4GuetYiTJOUGQWg5w=
+X-Gm-Gg: ASbGnctz4BHH5asD7ATaLTchlc7woZV7Rgck0e/gOHIFE6WjBRveBjXH47VP/ZXzbjt
+	/Ks/30KH4JPFT/Ph3tD4HmRsk8FZoqUhv6Exd9jCzUBunIcb4MVX17BOx2nOIHGOGHladGbPhRt
+	K0EeA3ug2gM2ZyNydR/epk+Dff99WoXueX4RstdxXYW9tYNTl4pJo2B7YD1/4szVgNRQ+MYOcIr
+	tZa4hiRbRhdFb38y0MrFNXxUMEzPywQHjKcdfq0U0xe98p8qaCWjak6n95MJtTTCeJNSH6mm0ST
+	vmw/ggLStHflZYDgcbJsHpxU/Lmv6XNLZDItULLUymp4O+FiVPCE3doqBGR8wFQjuMat3CYz514
+	TXLsjUy8+7sxYw/vTtS9h8X5024QVLH8p2DKbEoyq4AXpU5bogjnaclhNLGVfYSxOH/3DQJvZ8m
+	1FYnJVmOlcvE99csWjTPfgYwoO
+X-Google-Smtp-Source: AGHT+IGz8YM6333JLm588AFc5cKs16RWmjvD1JWcT1yqGgw96JtcAIFnCIm4vEabRZZUth0PEEmaSg==
+X-Received: by 2002:a05:600c:4f53:b0:475:df91:ddf0 with SMTP id 5b1f17b1804b1-4776bcc5494mr28930715e9.33.1762527976212;
+        Fri, 07 Nov 2025 07:06:16 -0800 (PST)
 Received: from localhost.localdomain ([2a00:6d43:105:c401:e307:1a37:2e76:ce91])
-        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42ac675ca52sm5777830f8f.25.2025.11.07.07.02.03
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42ac677b41csm5666982f8f.34.2025.11.07.07.06.14
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 07 Nov 2025 07:02:03 -0800 (PST)
+        Fri, 07 Nov 2025 07:06:15 -0800 (PST)
 From: Marco Crivellari <marco.crivellari@suse.com>
 To: linux-kernel@vger.kernel.org,
-	linux-scsi@vger.kernel.org
+	linux-scsi@vger.kernel.org,
+	target-devel@vger.kernel.org
 Cc: Tejun Heo <tj@kernel.org>,
 	Lai Jiangshan <jiangshanlai@gmail.com>,
 	Frederic Weisbecker <frederic@kernel.org>,
 	Sebastian Andrzej Siewior <bigeasy@linutronix.de>,
 	Marco Crivellari <marco.crivellari@suse.com>,
 	Michal Hocko <mhocko@suse.com>,
-	Saurav Kashyap <skashyap@marvell.com>,
-	Javed Hasan <jhasan@marvell.com>,
-	GR-QLogic-Storage-Upstream@marvell.com,
+	Tyrel Datwyler <tyreld@linux.ibm.com>,
 	"James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
 	"Martin K . Petersen" <martin.petersen@oracle.com>
-Subject: [PATCH 1/2] scsi: bnx2fc: add WQ_PERCPU to alloc_workqueue users
-Date: Fri,  7 Nov 2025 16:01:54 +0100
-Message-ID: <20251107150155.267651-2-marco.crivellari@suse.com>
+Subject: [PATCH] scsi: ibmvscsi_tgt: add WQ_PERCPU to alloc_workqueue users
+Date: Fri,  7 Nov 2025 16:05:42 +0100
+Message-ID: <20251107150542.271229-1-marco.crivellari@suse.com>
 X-Mailer: git-send-email 2.51.1
-In-Reply-To: <20251107150155.267651-1-marco.crivellari@suse.com>
-References: <20251107150155.267651-1-marco.crivellari@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -122,22 +116,23 @@ become the implicit default.
 Suggested-by: Tejun Heo <tj@kernel.org>
 Signed-off-by: Marco Crivellari <marco.crivellari@suse.com>
 ---
- drivers/scsi/bnx2fc/bnx2fc_fcoe.c | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-index 58da993251e9..0f68739d380a 100644
---- a/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-+++ b/drivers/scsi/bnx2fc/bnx2fc_fcoe.c
-@@ -2695,7 +2695,7 @@ static int __init bnx2fc_mod_init(void)
- 	if (rc)
- 		goto detach_ft;
+diff --git a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+index 5a3787f27369..f259746bc804 100644
+--- a/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
++++ b/drivers/scsi/ibmvscsi_tgt/ibmvscsi_tgt.c
+@@ -3533,7 +3533,8 @@ static int ibmvscsis_probe(struct vio_dev *vdev,
+ 	init_completion(&vscsi->wait_idle);
+ 	init_completion(&vscsi->unconfig);
  
--	bnx2fc_wq = alloc_workqueue("bnx2fc", 0, 0);
-+	bnx2fc_wq = alloc_workqueue("bnx2fc", WQ_PERCPU, 0);
- 	if (!bnx2fc_wq) {
+-	vscsi->work_q = alloc_workqueue("ibmvscsis%s", WQ_MEM_RECLAIM, 1,
++	vscsi->work_q = alloc_workqueue("ibmvscsis%s",
++					WQ_MEM_RECLAIM | WQ_PERCPU, 1,
+ 					dev_name(&vdev->dev));
+ 	if (!vscsi->work_q) {
  		rc = -ENOMEM;
- 		goto release_bt;
 -- 
 2.51.1
 
