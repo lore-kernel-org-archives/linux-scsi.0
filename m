@@ -1,65 +1,70 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from canpmsgout02.his.huawei.com (canpmsgout02.his.huawei.com [113.46.200.217])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E44D134D382;
-	Sat,  8 Nov 2025 01:39:36 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBD9027CB02
+	for <linux-scsi@vger.kernel.org>; Sat,  8 Nov 2025 08:30:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.217
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762565977; cv=none; b=T9lJ+ZTr2VvQ/R0he04PMoJPOLVX4Bpkhdom84s+gclWFM1AuBINWbPL7iKUDSiRBAx8x/6jShQTPpjIiK9MyubuteUsHftaHBD3zLNGbeC0W1XuOEzZ8zxhN73QcOPXExc1bOiH4kxN4ZEaUGMfe6yC/OlPZqTZz73EMKbLa3o=
+	t=1762590613; cv=none; b=nA5xl/30jBZumjdPUF3Wc5cOjMaS03AYFtl7CiOKqv1JHqBdSVPUymxAhq1EJiV5AkBwuiB9iLa4W/aJVFTj2czPrRDcZ+d4NKSyOWMeotCojW55pCeZlc/QvMoeh3NZMPq8GvaULeo/WwD/2L87G0eUqqTANSnO8Du4kZ5D+qE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762565977; c=relaxed/simple;
-	bh=JW1ug37roxoSjPLBgz3/FqVl1lvuRyEeYMEJGlXhVEU=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Pm1gMSWy8QGlpDNvqOcRJaFeO2zvOvL2/Va6iEYLnFy5I89BWaOKg3HjbC0LUF0Igc9HD73LF0Lw4k0BaqngJMYpmR+23UZ2TWTGT4dTFiSMU25VoKUrbRokZ/ofUl5pyu+DTAQcw/yHsu3Aq1QEpzRCw+g6LUlucYPZxZFepJg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IcU7PLEP; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762590613; c=relaxed/simple;
+	bh=lTzV9kwsQweK/tM7f+TUsFXPDcPiecB1qGXFeY6vtEQ=;
+	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=ErOlFSaklFrCr3fzoN5n3Iub1K1F6Q3Kz0sP+Wqgo4EV52LR2aBocfGEx0Bs+sl7M3HjMhQAyRU8GudRudLEYJQ2Nkzn05jgRmtw1btQOVOk1oKUz48Z6uVVYCBIBKfWrrfPXq9rik+Md+VMT9svHKas87SOAPkrd5vIqQ0/n5w=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=JfiHnMSh; arc=none smtp.client-ip=113.46.200.217
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IcU7PLEP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C5883C113D0;
-	Sat,  8 Nov 2025 01:39:35 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762565976;
-	bh=JW1ug37roxoSjPLBgz3/FqVl1lvuRyEeYMEJGlXhVEU=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=IcU7PLEPS9O04B9GHYbX4LYKNBnGFYk6Wzf+1RmrnYXYlFmawAwRtoZft61AYIdqH
-	 iMygpHWKVhLRJeIWKD2Usxh/fyPt4bccnnWAGmGGBRWEEETPPV/3JpxEYlkgBMwbj3
-	 MNDOD6yn1SDQfiSLWNoOwQf0a7GBgUWGvosb5Pup5bWFYoODmRe7wnMvIEcbr6HcBg
-	 LDAvwANdAr8D5UFBBkhJp8RPmzajfs7XQOLR/+oBDyKYAdekdmhVsoVCIq9RvACzBN
-	 ZSuREggbI5c69qXMKxF0rTZ76fwmeOF1o8cmwW2f6hs964l6r+30Ko1aePB1ih4xGq
-	 woj4pXD65/zvA==
-Message-ID: <46670499-4e0a-4e98-aea6-0c350b648c70@kernel.org>
-Date: Sat, 8 Nov 2025 10:39:34 +0900
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="JfiHnMSh"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=lTzV9kwsQweK/tM7f+TUsFXPDcPiecB1qGXFeY6vtEQ=;
+	b=JfiHnMShxcDBEzmXIEI4eU7J9SOqY5oXbWTyv/ZpJ4/DWikseVrY1ew5mozMBRTFPrJR8qu7N
+	EW5a1hp0m1kp/ky70HIcvbvNZ+/UOaIET8JfWos9dTt4fd51otVrM/mosXymI9hAJWpEkWLB1JM
+	62gt+y9At+TDfBa3zYITYBg=
+Received: from mail.maildlp.com (unknown [172.19.163.252])
+	by canpmsgout02.his.huawei.com (SkyGuard) with ESMTPS id 4d3Tb93r4nzcb4C;
+	Sat,  8 Nov 2025 16:28:21 +0800 (CST)
+Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
+	by mail.maildlp.com (Postfix) with ESMTPS id 951CB180B73;
+	Sat,  8 Nov 2025 16:30:03 +0800 (CST)
+Received: from DESKTOP-4VUP2L6.china.huawei.com (10.174.187.123) by
+ kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Sat, 8 Nov 2025 16:30:02 +0800
+From: JiangJianJun <jiangjianjun3@huawei.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>
+CC: <bvanassche@acm.org>, <john.g.garry@oracle.com>, <hewenliang4@huawei.com>,
+	<yangyun50@huawei.com>, <wuyifeng10@huawei.com>
+Subject: Re: scsi: scsi_debug: make timeout faults by set delay to maximum value
+Date: Sat, 8 Nov 2025 16:29:59 +0800
+Message-ID: <20251108082959.1831-1-jiangjianjun3@huawei.com>
+X-Mailer: git-send-email 2.43.0.windows.1
+In-Reply-To: <8d4247f6-2772-4f2e-aef7-32c1b0dc8091@oracle.com>
+References: <8d4247f6-2772-4f2e-aef7-32c1b0dc8091@oracle.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v26 05/17] blk-zoned: Fix a typo in a source code comment
-To: Bart Van Assche <bvanassche@acm.org>, Jens Axboe <axboe@kernel.dk>
-Cc: linux-block@vger.kernel.org, linux-scsi@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>
-References: <20251107235310.2098676-1-bvanassche@acm.org>
- <20251107235310.2098676-6-bvanassche@acm.org>
-Content-Language: en-US
-From: Damien Le Moal <dlemoal@kernel.org>
-Organization: Western Digital Research
-In-Reply-To: <20251107235310.2098676-6-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
+ kwepemk500001.china.huawei.com (7.202.194.86)
 
-On 11/8/25 08:52, Bart Van Assche wrote:
-> Remove a superfluous parenthesis that was introduced by commit fa8555630b32
-> ("blk-zoned: Improve the queue reference count strategy documentation").
-> 
-> Cc: Damien Le Moal <dlemoal@kernel.org>
-> Cc: Christoph Hellwig <hch@lst.de>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-
-Send this separately from this series, in a smaller series with all the other
-patches I am suggesting can go in.
-
-
--- 
-Damien Le Moal
-Western Digital Research
+> When we get discard the command, we get a timeout, and the scsi error =0D
+> handling kicks in eventually. The first thing that the scsi error =0D
+> handler tries to do is abort the command. All that the scsi_debug abort =
+=0D
+> handler can do is ensure that we no longer have a reference to the =0D
+> scsi_command, which may mean cancelling any pending completion (if =0D
+> possible). Is your problem that sometimes the abort handler may fail, =0D
+> and we have to escalate?=0D
+What I mean is, in fault injection, we need to set a timeout, and then we e=
+xpect a successful aborting. On the other hand, we can make a failed aborti=
+ng by injecting-fault.=0D
+Before your modifications, the above objectives were achievable. The purpos=
+e of my current modification is also to restore the previous functionality.=
