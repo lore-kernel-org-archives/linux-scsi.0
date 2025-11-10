@@ -1,37 +1,37 @@
 Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DDFC127A461
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2025 15:48:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CE1432236E5
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2025 15:50:06 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762789729; cv=none; b=QoqHJVhxTKPUzcbCMYMRDuuPrUrr7IzTFVy5Dd3Cq1k27IdqRrymVb52NukP8ateFdAIAPciMnA6wZ0BDxCxmX6P26+RjGPMIxWiJHZwL6M99KxwTnAtpsRIiwWpgPnR48AxVBhHF7ADd1frb+AwLZNZ5TxgWf/sKG6GQE44N80=
+	t=1762789808; cv=none; b=WpPIwQjM78H24UX4i511BTugJNbW72N28zahh0mmqUdjsjHtTKCtUtvtExFL47ceX9bSvYDTJXjw9qHjEYKkel4zQvoKdiP0sGmOXVszfRGzsWXKkVfHtGBCmfmYGupIbjDvJcMBPT6FUu9ALlEgS1OKBQQS6OuU5IJh/ArRqQc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762789729; c=relaxed/simple;
-	bh=3TZvGenUxA0A1VCJO743YS9UkcpHz5yUPoxxCOCiw/Q=;
+	s=arc-20240116; t=1762789808; c=relaxed/simple;
+	bh=r7ZEzTVCtofk3CR298ed1/N07JQxi3TGOz8b74TxlmM=;
 	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=YWjtleNHr7aVXxRAcmkstGjEk5NTTV9T54nk2IiHOSNiY+qgU6oOQ6aGOeSJCPfj51X4e0+6XUrLypn9sqtuRRQih8AkmHA9ds0qQ3HTk5DhTWqOisK3S31NdWqRB+a1RF4ztRcildpN6gUY89SKtLV44n74o3y8SSVa1JxZqGg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=BoQyEBP8; arc=none smtp.client-ip=72.215.153.18
+	 In-Reply-To:Content-Type; b=fC8WnPoxIZHTA9RUPydGeA6VlFcbGW9ictzCjgdHzcoNwIkYfcGfFZU431RN4dF13gTLsLvu9miCFdp0HajSbAXIC/jxLY4KFj1wgE1+KNoKZKOnJbQIx1yYPl0V2gAi5mhYFLyprOdZwwVaBGMeJdyPxSTO6i5OqrUNCuro2HU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=FlGnUGbX; arc=none smtp.client-ip=72.215.153.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="BoQyEBP8"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id nqxrwobn8hmD9X3a; Mon, 10 Nov 2025 10:48:45 -0500 (EST)
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="FlGnUGbX"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id CtqL1nnuD2wXUv2v; Mon, 10 Nov 2025 10:50:05 -0500 (EST)
 X-Barracuda-Envelope-From: tonyb@cybernetics.com
 X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
 X-ASG-Whitelist: Client
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=4NjKkbORxP8fLQufIbJg6HJYBMW/fqijXIGcWKXlbGs=;
+	bh=aiACeBWYRXSI3Xgdj8GfveVduI3xmQQBxnaGDiVBE3w=;
 	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Cc:To:From:
-	Content-Language:Subject:MIME-Version:Date:Message-ID; b=BoQyEBP8azBPRRoylzUc
-	QnFFdS7BQa6QUQthf8Y4RxwVRCrkAyUVe1GZgtZeg8hS1uRKTBSKRhein0viVC58xBx53r/fC6gE/
-	L0JiGZnFbSbHynVO1RjK9eRF9Z/JWjiJ8CbiRHv1bV9+Bm8NURI4xGqx2AB/pd3/B3S7q4WoZY=
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=FlGnUGbX5vIwMq1nVH6s
+	f9eB+M3akSeJ6smKM2FvcpUSJ93popyeL2owImhadQ6myIF239rtSproEXVpi3dZsu9eGqXonC8ex
+	dPCdTp0JgAMLE2bwGoa9EI2ZY4tLNmiz21aZB5bonXdVOSWlhfmDX8unwTjKULMydCyR+o99vQ=
 Received: from [10.157.2.224] (HELO [192.168.200.1])
   by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14272418; Mon, 10 Nov 2025 10:48:45 -0500
-Message-ID: <1715ec14-ba9a-45dc-9cf2-d41aa6b81b5e@cybernetics.com>
+  with ESMTPS id 14272422; Mon, 10 Nov 2025 10:50:05 -0500
+Message-ID: <56d378eb-14ad-49c7-bae9-c649b6c7691e@cybernetics.com>
 X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Mon, 10 Nov 2025 10:48:45 -0500
+Date: Mon, 10 Nov 2025 10:50:05 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,11 +39,11 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH v3 02/16] scsi: qla2xxx: fix initiator mode with
- qlini_mode=exclusive
+Subject: [PATCH v3 03/16] scsi: qla2xxx: fix lost interrupts with
+ qlini_mode=disabled
 Content-Language: en-US
-X-ASG-Orig-Subj: [PATCH v3 02/16] scsi: qla2xxx: fix initiator mode with
- qlini_mode=exclusive
+X-ASG-Orig-Subj: [PATCH v3 03/16] scsi: qla2xxx: fix lost interrupts with
+ qlini_mode=disabled
 From: Tony Battersby <tonyb@cybernetics.com>
 To: Nilesh Javali <njavali@marvell.com>,
  GR-QLogic-Storage-Upstream@marvell.com,
@@ -59,18 +59,87 @@ In-Reply-To: <aaea0ab0-da8b-4153-9369-60db7507ff7a@cybernetics.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1762789725
+X-Barracuda-Start-Time: 1762789805
 X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 0
+X-Barracuda-BRTS-Status: 1
 X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 1198
-X-ASG-Debug-ID: 1762789725-1cf439139110cc00001-ziuLRu
+X-Barracuda-Scan-Msg-Size: 7300
+X-ASG-Debug-ID: 1762789805-1cf439139110cc50001-ziuLRu
 
-When given the module parameter qlini_mode=exclusive, qla2xxx in
-initiator mode is initially unable to successfully send SCSI commands to
-devices it finds while scanning, resulting in an escalating series of
-resets until an adapter reset clears the issue.  Fix by checking the
-active mode instead of the module parameter.
+(target mode)
+
+When qla2xxx is loaded with qlini_mode=disabled,
+ha->flags.disable_msix_handshake is used before it is set, resulting in
+the wrong interrupt handler being used on certain HBAs
+(qla2xxx_msix_rsp_q_hs() is used when qla2xxx_msix_rsp_q() should be
+used).  The only difference between these two interrupt handlers is
+that the _hs() version writes to a register to clear the "RISC"
+interrupt, whereas the other version does not.  So this bug results in
+the RISC interrupt being cleared when it should not be.  This
+occasionally causes a different interrupt handler
+qla24xx_msix_default() for a different vector to see ((stat &
+HSRX_RISC_INT) == 0) and ignore its interrupt, which then causes
+problems like:
+
+qla2xxx [0000:02:00.0]-d04c:6: MBX Command timeout for cmd 20,
+  iocontrol=8 jiffies=1090c0300 mb[0-3]=[0x4000 0x0 0x40 0xda] mb7 0x500
+  host_status 0x40000010 hccr 0x3f00
+qla2xxx [0000:02:00.0]-101e:6: Mailbox cmd timeout occurred, cmd=0x20,
+  mb[0]=0x20. Scheduling ISP abort
+(the cmd varies; sometimes it is 0x20, 0x22, 0x54, 0x5a, 0x5d, or 0x6a)
+
+This problem can be reproduced with a 16 or 32 Gbps HBA by loading
+qla2xxx with qlini_mode=disabled and running a high IOPS test
+while triggering frequent RSCN database change events.
+
+While analyzing the problem I discovered that even with
+disable_msix_handshake forced to 0, it is not necessary to clear the
+RISC interrupt from qla2xxx_msix_rsp_q_hs() (more below).  So just
+completely remove qla2xxx_msix_rsp_q_hs() and the logic for selecting
+it, which also fixes the bug with qlini_mode=disabled.
+
+The test below describes the justification for not needing
+qla2xxx_msix_rsp_q_hs():
+
+Force disable_msix_handshake to 0:
+qla24xx_config_rings():
+if (0 && (ha->fw_attributes & BIT_6) && (IS_MSIX_NACK_CAPABLE(ha)) &&
+    (ha->flags.msix_enabled)) {
+
+In qla24xx_msix_rsp_q() and qla2xxx_msix_rsp_q_hs(), check:
+  (rd_reg_dword(&reg->host_status) & HSRX_RISC_INT)
+
+Count the number of calls to each function with HSRX_RISC_INT set and
+the number with HSRX_RISC_INT not set while performing some I/O.
+
+If qla2xxx_msix_rsp_q_hs() clears the RISC interrupt (original code):
+qla24xx_msix_rsp_q:    50% of calls have HSRX_RISC_INT set
+qla2xxx_msix_rsp_q_hs:  5% of calls have HSRX_RISC_INT set
+(# of qla2xxx_msix_rsp_q_hs interrupts) =
+    (# of qla24xx_msix_rsp_q interrupts) * 3
+
+If qla2xxx_msix_rsp_q_hs() does not clear the RISC interrupt (patched
+code):
+qla24xx_msix_rsp_q:    100% of calls have HSRX_RISC_INT set
+qla2xxx_msix_rsp_q_hs:   9% of calls have HSRX_RISC_INT set
+(# of qla2xxx_msix_rsp_q_hs interrupts) =
+    (# of qla24xx_msix_rsp_q interrupts) * 3
+
+In the case of the original code, qla24xx_msix_rsp_q() was seeing
+HSRX_RISC_INT set only 50% of the time because qla2xxx_msix_rsp_q_hs()
+was clearing it when it shouldn't have been.  In the patched code,
+qla24xx_msix_rsp_q() sees HSRX_RISC_INT set 100% of the time, which
+makes sense if that interrupt handler needs to clear the RISC interrupt
+(which it does).  qla2xxx_msix_rsp_q_hs() sees HSRX_RISC_INT only 9% of
+the time, which is just overlap from the other interrupt during the
+high IOPS test.
+
+Tested with SCST on:
+QLE2742  FW:v9.08.02 (32 Gbps 2-port)
+QLE2694L FW:v9.10.11 (16 Gbps 4-port)
+QLE2694L FW:v9.08.02 (16 Gbps 4-port)
+QLE2672  FW:v8.07.12 (16 Gbps 2-port)
+both initiator and target mode
 
 Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 ---
@@ -79,28 +148,110 @@ v2 -> v3: no changes
 
 v1 -> v2: no changes
 
- drivers/scsi/qla2xxx/qla_os.c | 8 +-------
- 1 file changed, 1 insertion(+), 7 deletions(-)
+ drivers/scsi/qla2xxx/qla_def.h |  1 -
+ drivers/scsi/qla2xxx/qla_gbl.h |  2 +-
+ drivers/scsi/qla2xxx/qla_isr.c | 32 +++-----------------------------
+ drivers/scsi/qla2xxx/qla_mid.c |  4 +---
+ 4 files changed, 5 insertions(+), 34 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index a52293972e10..f0b77f13628d 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -3438,13 +3438,7 @@ qla2x00_probe_one(struct pci_dev *pdev, const struct pci_device_id *id)
- 		ha->mqenable = 0;
+diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
+index cb95b7b12051..b3265952c4be 100644
+--- a/drivers/scsi/qla2xxx/qla_def.h
++++ b/drivers/scsi/qla2xxx/qla_def.h
+@@ -3503,7 +3503,6 @@ struct isp_operations {
+ #define QLA_MSIX_RSP_Q			0x01
+ #define QLA_ATIO_VECTOR		0x02
+ #define QLA_MSIX_QPAIR_MULTIQ_RSP_Q	0x03
+-#define QLA_MSIX_QPAIR_MULTIQ_RSP_Q_HS	0x04
  
- 	if (ha->mqenable) {
--		bool startit = false;
--
--		if (QLA_TGT_MODE_ENABLED())
--			startit = false;
--
--		if (ql2x_ini_mode == QLA2XXX_INI_MODE_ENABLED)
--			startit = true;
-+		bool startit = !!(host->active_mode & MODE_INITIATOR);
+ #define QLA_MIDX_DEFAULT	0
+ #define QLA_MIDX_RSP_Q		1
+diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
+index 145defc420f2..55d531c19e6b 100644
+--- a/drivers/scsi/qla2xxx/qla_gbl.h
++++ b/drivers/scsi/qla2xxx/qla_gbl.h
+@@ -766,7 +766,7 @@ extern int qla2x00_dfs_remove(scsi_qla_host_t *);
  
- 		/* Create start of day qpairs for Block MQ */
- 		for (i = 0; i < ha->max_qpairs; i++)
+ /* Globa function prototypes for multi-q */
+ extern int qla25xx_request_irq(struct qla_hw_data *, struct qla_qpair *,
+-	struct qla_msix_entry *, int);
++	struct qla_msix_entry *);
+ extern int qla25xx_init_req_que(struct scsi_qla_host *, struct req_que *);
+ extern int qla25xx_init_rsp_que(struct scsi_qla_host *, struct rsp_que *);
+ extern int qla25xx_create_req_que(struct qla_hw_data *, uint16_t, uint8_t,
+diff --git a/drivers/scsi/qla2xxx/qla_isr.c b/drivers/scsi/qla2xxx/qla_isr.c
+index c4c6b5c6658c..a3971afc2dd1 100644
+--- a/drivers/scsi/qla2xxx/qla_isr.c
++++ b/drivers/scsi/qla2xxx/qla_isr.c
+@@ -4467,32 +4467,6 @@ qla2xxx_msix_rsp_q(int irq, void *dev_id)
+ 	return IRQ_HANDLED;
+ }
+ 
+-irqreturn_t
+-qla2xxx_msix_rsp_q_hs(int irq, void *dev_id)
+-{
+-	struct qla_hw_data *ha;
+-	struct qla_qpair *qpair;
+-	struct device_reg_24xx __iomem *reg;
+-	unsigned long flags;
+-
+-	qpair = dev_id;
+-	if (!qpair) {
+-		ql_log(ql_log_info, NULL, 0x505b,
+-		    "%s: NULL response queue pointer.\n", __func__);
+-		return IRQ_NONE;
+-	}
+-	ha = qpair->hw;
+-
+-	reg = &ha->iobase->isp24;
+-	spin_lock_irqsave(&ha->hardware_lock, flags);
+-	wrt_reg_dword(&reg->hccr, HCCRX_CLR_RISC_INT);
+-	spin_unlock_irqrestore(&ha->hardware_lock, flags);
+-
+-	queue_work(ha->wq, &qpair->q_work);
+-
+-	return IRQ_HANDLED;
+-}
+-
+ /* Interrupt handling helpers. */
+ 
+ struct qla_init_msix_entry {
+@@ -4505,7 +4479,6 @@ static const struct qla_init_msix_entry msix_entries[] = {
+ 	{ "rsp_q", qla24xx_msix_rsp_q },
+ 	{ "atio_q", qla83xx_msix_atio_q },
+ 	{ "qpair_multiq", qla2xxx_msix_rsp_q },
+-	{ "qpair_multiq_hs", qla2xxx_msix_rsp_q_hs },
+ };
+ 
+ static const struct qla_init_msix_entry qla82xx_msix_entries[] = {
+@@ -4792,9 +4765,10 @@ qla2x00_free_irqs(scsi_qla_host_t *vha)
+ }
+ 
+ int qla25xx_request_irq(struct qla_hw_data *ha, struct qla_qpair *qpair,
+-	struct qla_msix_entry *msix, int vector_type)
++	struct qla_msix_entry *msix)
+ {
+-	const struct qla_init_msix_entry *intr = &msix_entries[vector_type];
++	const struct qla_init_msix_entry *intr =
++		&msix_entries[QLA_MSIX_QPAIR_MULTIQ_RSP_Q];
+ 	scsi_qla_host_t *vha = pci_get_drvdata(ha->pdev);
+ 	int ret;
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_mid.c b/drivers/scsi/qla2xxx/qla_mid.c
+index 8b71ac0b1d99..0abc47e72e0b 100644
+--- a/drivers/scsi/qla2xxx/qla_mid.c
++++ b/drivers/scsi/qla2xxx/qla_mid.c
+@@ -899,9 +899,7 @@ qla25xx_create_rsp_que(struct qla_hw_data *ha, uint16_t options,
+ 	    rsp->options, rsp->id, rsp->rsp_q_in,
+ 	    rsp->rsp_q_out);
+ 
+-	ret = qla25xx_request_irq(ha, qpair, qpair->msix,
+-		ha->flags.disable_msix_handshake ?
+-		QLA_MSIX_QPAIR_MULTIQ_RSP_Q : QLA_MSIX_QPAIR_MULTIQ_RSP_Q_HS);
++	ret = qla25xx_request_irq(ha, qpair, qpair->msix);
+ 	if (ret)
+ 		goto que_failed;
+ 
 -- 
 2.43.0
 
