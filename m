@@ -1,50 +1,50 @@
 Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5512D3446BC;
-	Mon, 10 Nov 2025 18:48:10 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 225DA348466;
+	Mon, 10 Nov 2025 18:48:14 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762800494; cv=none; b=jbXe6v7yXkNtuK74b6m6RiJIlIYPjbMTq0pGSbzI5paA4uAFyDRpwzi8io+LWmk28Xz2LQeCzbhBj7qwcSI9kTtALQDAVYFHJI/5kFInHJY4lHOmsVzBcRiz4GBYsfTvqNCDHwoxL3Aq/D20Fy20zl5spM4/T7WsN8RzK1SxNgs=
+	t=1762800496; cv=none; b=Svk4yu/UMS/iShV2tv+aVo0IIBmx7adXAj3BzW2R45/PTgyqN0WIJu/GjhVw5tkBWbqKjqL8A/iqt/oTI/Rib1RKp1D/9dviiyqstcn8oN0LRKpa//MorssO6m/nmlyW/ZEmnQab1oJ8f2nWtbyZr8/YeayIuNrli7REV5nY+AA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762800494; c=relaxed/simple;
-	bh=QGRUCvRhLj/TwbX4dQMKGketmqckWUD9lEEl/Hr0Xm0=;
+	s=arc-20240116; t=1762800496; c=relaxed/simple;
+	bh=N6ej1S2Oe19sN5Q2t2DX/aJ/MSv694AtxQx/bMLeQmA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=gBpULCbnZ6ehCcT/fHb7NZO0xg2MrK5Ts7qq+flfK6+dKA/+JN3By+YL4XlMFFCl4VgMiXmZCM8jll4UdOnjz+IcG02XTvHhH1/fGUo6+rAp/omc8G5G6yTiTC0jPK5BBcB02MPeqsB+G1bgrheSfdQKtFVVI3o+4/hR9UkTHp4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CSAntfIL; arc=none smtp.client-ip=192.198.163.16
+	 MIME-Version; b=nDsIowQYVnINb+im6g7z4Y3MYjM5NI7MBFXBP4LBTiEV3OvVafgIADdXjSJ9JKzU5hb4Mgv4WwvwHNuX3SKMNeVuq+hpzXgP8E08iN5xxXZqmwEy6GlUM6sTVDvKmGLVK4xcnPZFAz8X+MC4EGotUIUO1SSDKNnXCQuqgMFFQcY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=l00gEAvA; arc=none smtp.client-ip=192.198.163.16
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CSAntfIL"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="l00gEAvA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762800492; x=1794336492;
+  t=1762800495; x=1794336495;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=QGRUCvRhLj/TwbX4dQMKGketmqckWUD9lEEl/Hr0Xm0=;
-  b=CSAntfILWO1t0SrnZlyFwtpWk4mN60vR8UKSSWY3hn5Rj6naeDKRYOBJ
-   wEvR27fYztlMx1lOHLYcFpHXUEJGjnssq1+EQ0+zT29TP81HxINpE+HvZ
-   SMdK+BWOl5BS3QtYuuRSjoxDSCg+1k0sW29Gr0IbRcONnO4FONpiY9/0s
-   WzD4oqJWAePpnpjZSVtKlqmdrc8NsfQY81yn6+uZYPRYKRLp2wWxcr1o3
-   Dtplgmu/WD1O/g5hh04Qv6wNOllv03TAvv7vXx2aSE5Ec6rswXaItt4/n
-   FhtkL4Akkx0RGWrqURtNqPSu/OqZeyTthnDIVvygsrsc+8s+d6D+rI9IY
-   w==;
-X-CSE-ConnectionGUID: Utsz/uvmTp+sk/kHIDmQzg==
-X-CSE-MsgGUID: apoJc5YQSSyLr0KONSI2fA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="52415107"
+  bh=N6ej1S2Oe19sN5Q2t2DX/aJ/MSv694AtxQx/bMLeQmA=;
+  b=l00gEAvA+Rw81+H1k3OsX/sgwmzQam6c+hIKjr1ztgBpxQ0swG4+PSjS
+   NCucIqEDtmHJ3NewSgzx9A+bK2SZp8t5S5AT9rxWWOPxDper134/YhrrK
+   hvuOnWNqeBML3SwiWnWAYqlQGi64HUM4vsQg0H9Qr7i7LU9gK/ys5MaUZ
+   afUq8s9h2QesbQuyKDdB/u8TPm4u49OBW+GPReThplGkt0Y2/ay//401J
+   X3wmuV6C5pjEZOi+rJFoLaak2BABaFVOg3UQWUmzxUlZlqSFQ3zj7llKC
+   VTDriZ6a/e4DLGaXG3yvGdmNc/CPrWjt0QM9Cc13/oEqxAWmcLdkybyom
+   Q==;
+X-CSE-ConnectionGUID: NejlpAeiSc+++CoRO/PgKw==
+X-CSE-MsgGUID: k83PT1JpRmmrbpfgfAllmg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="52415111"
 X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
-   d="scan'208";a="52415107"
+   d="scan'208";a="52415111"
 Received: from orviesa002.jf.intel.com ([10.64.159.142])
-  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:48:08 -0800
-X-CSE-ConnectionGUID: nY+7EE6iTdmlvdOdF/MRgA==
-X-CSE-MsgGUID: ur4itLZhTBu7r9UEfABuHA==
+  by fmvoesa110.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:48:09 -0800
+X-CSE-ConnectionGUID: 5EQNr+dBT1mFhBPrqIbALw==
+X-CSE-MsgGUID: Ed9K1qb4RTaMZeoskf5q3g==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
-   d="scan'208";a="219402036"
+   d="scan'208";a="219402038"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa002.jf.intel.com with ESMTP; 10 Nov 2025 10:47:58 -0800
+  by orviesa002.jf.intel.com with ESMTP; 10 Nov 2025 10:47:59 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 78395A9; Mon, 10 Nov 2025 19:47:29 +0100 (CET)
+	id 7F0ACAA; Mon, 10 Nov 2025 19:47:29 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -142,9 +142,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Jaroslav Kysela <perex@perex.cz>,
 	Takashi Iwai <tiwai@suse.com>
-Subject: [PATCH v1 20/23] s390/dasd: Switch to use %ptSp
-Date: Mon, 10 Nov 2025 19:40:39 +0100
-Message-ID: <20251110184727.666591-21-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 21/23] scsi: fnic: Switch to use %ptS
+Date: Mon, 10 Nov 2025 19:40:40 +0100
+Message-ID: <20251110184727.666591-22-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
 References: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
@@ -156,28 +156,107 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 
-Use %ptSp instead of open coded variants to print content of
+Use %ptS instead of open coded variants to print content of
 struct timespec64 in human readable format.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/s390/block/dasd.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ drivers/scsi/fnic/fnic_trace.c | 46 +++++++++++++++-------------------
+ 1 file changed, 20 insertions(+), 26 deletions(-)
 
-diff --git a/drivers/s390/block/dasd.c b/drivers/s390/block/dasd.c
-index 7765e40f7cea..97dcc70f669e 100644
---- a/drivers/s390/block/dasd.c
-+++ b/drivers/s390/block/dasd.c
-@@ -974,8 +974,7 @@ static void dasd_stats_array(struct seq_file *m, unsigned int *array)
- static void dasd_stats_seq_print(struct seq_file *m,
- 				 struct dasd_profile_info *data)
- {
--	seq_printf(m, "start_time %lld.%09ld\n",
--		   (s64)data->starttod.tv_sec, data->starttod.tv_nsec);
-+	seq_printf(m, "start_time %ptSp\n", &data->starttod);
- 	seq_printf(m, "total_requests %u\n", data->dasd_io_reqs);
- 	seq_printf(m, "total_sectors %u\n", data->dasd_io_sects);
- 	seq_printf(m, "total_pav %u\n", data->dasd_io_alias);
+diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
+index cdc6b12b1ec2..f5543bb92ee4 100644
+--- a/drivers/scsi/fnic/fnic_trace.c
++++ b/drivers/scsi/fnic/fnic_trace.c
+@@ -138,9 +138,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			 */
+ 			len += scnprintf(fnic_dbgfs_prt->buffer + len,
+ 				  (trace_max_pages * PAGE_SIZE * 3) - len,
+-				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
+-				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
+-				  val.tv_nsec, str, tbp->host_no, tbp->tag,
++				  "%ptSp %-50s %8x %8x %16llx %16llx %16llx %16llx %16llx\n",
++				  &val, str, tbp->host_no, tbp->tag,
+ 				  tbp->data[0], tbp->data[1], tbp->data[2],
+ 				  tbp->data[3], tbp->data[4]);
+ 			rd_idx++;
+@@ -180,9 +179,8 @@ int fnic_get_trace_data(fnic_dbgfs_t *fnic_dbgfs_prt)
+ 			 */
+ 			len += scnprintf(fnic_dbgfs_prt->buffer + len,
+ 				  (trace_max_pages * PAGE_SIZE * 3) - len,
+-				  "%16llu.%09lu %-50s %8x %8x %16llx %16llx "
+-				  "%16llx %16llx %16llx\n", (u64)val.tv_sec,
+-				  val.tv_nsec, str, tbp->host_no, tbp->tag,
++				  "%ptSp %-50s %8x %8x %16llx %16llx %16llx %16llx %16llx\n",
++				  &val, str, tbp->host_no, tbp->tag,
+ 				  tbp->data[0], tbp->data[1], tbp->data[2],
+ 				  tbp->data[3], tbp->data[4]);
+ 			rd_idx++;
+@@ -225,20 +223,16 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 		"------------------------------------------\n");
+ 
+ 	len += scnprintf(debug->debug_buffer + len, buf_size - len,
+-		"Current time :          [%lld:%ld]\n"
+-		"Last stats reset time:  [%lld:%09ld]\n"
+-		"Last stats read time:   [%lld:%ld]\n"
+-		"delta since last reset: [%lld:%ld]\n"
+-		"delta since last read:  [%lld:%ld]\n",
+-	(s64)val1.tv_sec, val1.tv_nsec,
+-	(s64)stats->stats_timestamps.last_reset_time.tv_sec,
+-	stats->stats_timestamps.last_reset_time.tv_nsec,
+-	(s64)stats->stats_timestamps.last_read_time.tv_sec,
+-	stats->stats_timestamps.last_read_time.tv_nsec,
+-	(s64)timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
+-	timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
+-	(s64)timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
+-	timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
++		"Current time :          [%ptSp]\n"
++		"Last stats reset time:  [%ptSp]\n"
++		"Last stats read time:   [%ptSp]\n"
++		"delta since last reset: [%ptSp]\n"
++		"delta since last read:  [%ptSp]\n",
++	&val1,
++	&stats->stats_timestamps.last_reset_time,
++	&stats->stats_timestamps.last_read_time,
++	&timespec64_sub(val1, stats->stats_timestamps.last_reset_time),
++	&timespec64_sub(val1, stats->stats_timestamps.last_read_time));
+ 
+ 	stats->stats_timestamps.last_read_time = val1;
+ 
+@@ -416,8 +410,8 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 	jiffies_to_timespec64(stats->misc_stats.last_ack_time, &val2);
+ 
+ 	len += scnprintf(debug->debug_buffer + len, buf_size - len,
+-		  "Last ISR time: %llu (%8llu.%09lu)\n"
+-		  "Last ACK time: %llu (%8llu.%09lu)\n"
++		  "Last ISR time: %llu (%ptSp)\n"
++		  "Last ACK time: %llu (%ptSp)\n"
+ 		  "Max ISR jiffies: %llu\n"
+ 		  "Max ISR time (ms) (0 denotes < 1 ms): %llu\n"
+ 		  "Corr. work done: %llu\n"
+@@ -438,9 +432,9 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
+ 		 "Number of receive frame errors: %lld\n"
+ 		 "Port speed (in Mbps): %lld\n",
+ 		  (u64)stats->misc_stats.last_isr_time,
+-		  (s64)val1.tv_sec, val1.tv_nsec,
++		  &val1,
+ 		  (u64)stats->misc_stats.last_ack_time,
+-		  (s64)val2.tv_sec, val2.tv_nsec,
++		  &val2,
+ 		  (u64)atomic64_read(&stats->misc_stats.max_isr_jiffies),
+ 		  (u64)atomic64_read(&stats->misc_stats.max_isr_time_ms),
+ 		  (u64)atomic64_read(&stats->misc_stats.corr_work_done),
+@@ -857,8 +851,8 @@ void copy_and_format_trace_data(struct fc_trace_hdr *tdata,
+ 	len = *orig_len;
+ 
+ 	len += scnprintf(fnic_dbgfs_prt->buffer + len, max_size - len,
+-			 "%ptTs.%09lu ns%8x       %c%8x\t",
+-			 &tdata->time_stamp.tv_sec, tdata->time_stamp.tv_nsec,
++			 "%ptSs ns%8x       %c%8x\t",
++			 &tdata->time_stamp,
+ 			 tdata->host_no, tdata->frame_type, tdata->frame_len);
+ 
+ 	fc_trace = (char *)FC_TRACE_ADDRESS(tdata);
 -- 
 2.50.1
 
