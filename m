@@ -1,170 +1,231 @@
-Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2E3CF270ED2
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2025 16:07:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 66A8B321445;
+	Mon, 10 Nov 2025 18:47:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762790860; cv=none; b=Daltzt3zi+BWtnAnmgtF4+rQHSCHMRh8topFHyiLQRtZyJDgFpqP416tugDWENHGT0roHQInSrhbdHaASBZig6t1oi04b63wkxbJFebfJsG2jaLQm8oOkqKrUl66Kp3DMX7XTekeUZroLKPzgfeZ92obbDk/S2cVHNbjPPJcvdI=
+	t=1762800461; cv=none; b=lYCRzW+zeLP/NPkDfHQprL/qzGw6aJfHb3DTU7Wp7zqXzPALRqOn2YOvdAytnJ6G6NmnBQConTuZT3WIbWAsgI5OigvQcvTqv27YzfwQos9nOej3mxO4/yUeTE4vCsP5+w1HELD3IOlzwsLn17hz6QqLoMww2hCHKRUwo93Ll+8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762790860; c=relaxed/simple;
-	bh=lXO9DupS+4T46HArb030FjuM8yTb39HpUvWvwihutRA=;
-	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=B2G6QlasPbYi17jSR5Bxvh1cBmeLuMdqleoiWI0l2tS9kNwZ6/++NvUhknFuLGeljwXJqO9KtwQ02W7IO25ljxMpWsUWdIq9QPrz5yPCmBtodFy9hJf96cMgXPf1fEgWJyyBUbz31Pihn4rD9DwUhgh5lN5mv1WUD3+Kc7NaQZ4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=P1xGl5XN; arc=none smtp.client-ip=72.215.153.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
+	s=arc-20240116; t=1762800461; c=relaxed/simple;
+	bh=wAsccoU8w3B4eRMZuq2gxUaDz+Dt38AFte0j5k5tPOM=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=f8b3W5vuv4s+XrWqI8Pq0RA3TaRw/MEVpgYTAM1ahjT1QyE7YmmDTJTBLniQowlxO8/sMtpIWDtIkVUfm9pabR0MK5QKdPljqSm3yNWLGVd55TvuBd9t0f85I+EzBcQz5VReCQ7quExOZuOi8ZKznIeSpKmiZMJ8ZxQ0GURhXF0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=LGoJh2Bf; arc=none smtp.client-ip=198.175.65.21
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="P1xGl5XN"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id 6FQUcIu7d07VVBPc; Mon, 10 Nov 2025 11:07:37 -0500 (EST)
-X-Barracuda-Envelope-From: tonyb@cybernetics.com
-X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
-X-ASG-Whitelist: Client
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=7J0+/76MVsWm73gx/FbY9QMdNv2poNYNZtlcfogECYo=;
-	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Cc:To:From:
-	Content-Language:Subject:MIME-Version:Date:Message-ID; b=P1xGl5XNELvwEktOiegp
-	mt9iI3Td9/pa+TUxiqzTyGhfl48gaKEtb14LOtOapLtteVTSAmMTZlcW6flKRUq2GV1HNkN0GkrNp
-	QZtpUQgBkzqLYo2byZXC1+Mnm8Bb/FcWkZDzbkNibS/06FqbEARB8iUsD2UF1pLChtf9HuK7xw=
-Received: from [10.157.2.224] (HELO [192.168.200.1])
-  by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14272504; Mon, 10 Nov 2025 11:07:37 -0500
-Message-ID: <0e7e5d26-e7a0-42d1-8235-40eeb27f3e98@cybernetics.com>
-X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Mon, 10 Nov 2025 11:07:37 -0500
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="LGoJh2Bf"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1762800459; x=1794336459;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=wAsccoU8w3B4eRMZuq2gxUaDz+Dt38AFte0j5k5tPOM=;
+  b=LGoJh2BfuuEOTUk0FiynunvbwgLCHK795YE0dQ/MitEsCtJpwtpHTNiH
+   Nj6DYMl0zfgqyZKeLkaIY24F4IrEO/yRszpr2pGlrgkllCR9uwnm+Ad6P
+   t82nYcC5sYBsM3u38jMXlH3omlApFSwmhr+bGxDW3c0GIsGsznSIq1Vl/
+   prU9QmGB93oR52h+IN8sUUIdWFSOtsVDl1/upJtDsCuargTd1crVycmb7
+   s+FgSrUKSzRx6B9/FNN0VMBgC2vv5PHlNXMAIzZWbsk4J9qBNsuspoSjD
+   eJsTYEWjytAZvwraGcA8LHnyUUyOAE+gQXStxJ4820FW5AMOL1xxCPDSO
+   A==;
+X-CSE-ConnectionGUID: 8l0vfIDUQsig8WVTeYr+tA==
+X-CSE-MsgGUID: w/1pe4BtTF24tYVmPynttA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="64769602"
+X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
+   d="scan'208";a="64769602"
+Received: from fmviesa004.fm.intel.com ([10.60.135.144])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:47:38 -0800
+X-CSE-ConnectionGUID: i9YCGhVJRUGQcVlTpVIfpg==
+X-CSE-MsgGUID: Z0/CCH/BSBOYpkaQrxg0zg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
+   d="scan'208";a="193749558"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa004.fm.intel.com with ESMTP; 10 Nov 2025 10:47:29 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1003)
+	id E8E2195; Mon, 10 Nov 2025 19:47:28 +0100 (CET)
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Corey Minyard <corey@minyard.net>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Rob Clark <robin.clark@oss.qualcomm.com>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Hans Verkuil <hverkuil@kernel.org>,
+	Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Vitaly Lifshits <vitaly.lifshits@intel.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Calvin Owens <calvin@wbinvd.org>,
+	Sagi Maimon <maimon.sagi@gmail.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Petr Mladek <pmladek@suse.com>,
+	Max Kellermann <max.kellermann@ionos.com>,
+	Takashi Iwai <tiwai@suse.de>,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net,
+	linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linaro-mm-sig@lists.linaro.org,
+	amd-gfx@lists.freedesktop.org,
+	linux-arm-msm@vger.kernel.org,
+	freedreno@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org,
+	linux-mmc@vger.kernel.org,
+	netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org,
+	linux-pci@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-staging@lists.linux.dev,
+	ceph-devel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org,
+	linux-sound@vger.kernel.org
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	Abhinav Kumar <abhinav.kumar@linux.dev>,
+	Jessica Zhang <jesszhan0024@gmail.com>,
+	Sean Paul <sean@poorly.run>,
+	Marijn Suijten <marijn.suijten@somainline.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Lucas De Marchi <lucas.demarchi@intel.com>,
+	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Vladimir Oltean <olteanv@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rodolfo Giometti <giometti@enneenne.com>,
+	Jonathan Lemon <jonathan.lemon@gmail.com>,
+	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
+	Richard Cochran <richardcochran@gmail.com>,
+	Stefan Haberland <sth@linux.ibm.com>,
+	Jan Hoeppner <hoeppner@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Satish Kharat <satishkh@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Xiubo Li <xiubli@redhat.com>,
+	Ilya Dryomov <idryomov@gmail.com>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	Jaroslav Kysela <perex@perex.cz>,
+	Takashi Iwai <tiwai@suse.com>
+Subject: [PATCH v1 00/23] treewide: Introduce %ptS for struct timespec64 and convert users
+Date: Mon, 10 Nov 2025 19:40:19 +0100
+Message-ID: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: [PATCH v3 08/16] scsi: qla2xxx: clear cmds after chip reset
-Content-Language: en-US
-X-ASG-Orig-Subj: [PATCH v3 08/16] scsi: qla2xxx: clear cmds after chip reset
-From: Tony Battersby <tonyb@cybernetics.com>
-To: Nilesh Javali <njavali@marvell.com>,
- GR-QLogic-Storage-Upstream@marvell.com,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi <linux-scsi@vger.kernel.org>, target-devel@vger.kernel.org,
- scst-devel@lists.sourceforge.net,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- Dmitry Bogdanov <d.bogdanov@yadro.com>,
- Xose Vazquez Perez <xose.vazquez@gmail.com>
-References: <aaea0ab0-da8b-4153-9369-60db7507ff7a@cybernetics.com>
-In-Reply-To: <aaea0ab0-da8b-4153-9369-60db7507ff7a@cybernetics.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 7bit
-X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1762790857
-X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 0
-X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 3932
-X-ASG-Debug-ID: 1762790857-1cf439139110d0f0001-ziuLRu
+Content-Transfer-Encoding: 8bit
 
-Commit aefed3e5548f ("scsi: qla2xxx: target: Fix offline port handling
-and host reset handling") caused two problems:
 
-1. Commands sent to FW, after chip reset got stuck and never freed as FW
-   is not going to respond to them anymore.
+Here is the third part of unification time printing in the kernel.
+This time for struct timespec64. The first patch brings support
+into printf() implementation (test cases and documentation update
+included) followed by the treewide conversion of the current users.
 
-2. BUG_ON(cmd->sg_mapped) in qlt_free_cmd().  Commit 26f9ce53817a
-   ("scsi: qla2xxx: Fix missed DMA unmap for aborted commands")
-   attempted to fix this, but introduced another bug under different
-   circumstances when two different CPUs were racing to call
-   qlt_unmap_sg() at the same time: BUG_ON(!valid_dma_direction(dir)) in
-   dma_unmap_sg_attrs().
+The idea is to have one or a few biggest users included, the rest
+can be taken next release cycle on the subsystem basis, but I won't
+object if the respective maintainers already give their tags. Depending
+on the tags received it may go via dedicated subsystem or via PRINTK
+tree.
 
-So revert "scsi: qla2xxx: Fix missed DMA unmap for aborted commands" and
-partially revert "scsi: qla2xxx: target: Fix offline port handling and
-host reset handling" at __qla2x00_abort_all_cmds.
+Note, not everything was compile-tested. Kunit test has been passed, though.
 
-Fixes: aefed3e5548f ("scsi: qla2xxx: target: Fix offline port handling and host reset handling")
-Fixes: 26f9ce53817a ("scsi: qla2xxx: Fix missed DMA unmap for aborted commands")
-Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
-Signed-off-by: Dmitry Bogdanov <d.bogdanov@yadro.com>
----
+Andy Shevchenko (23):
+  lib/vsprintf: Add specifier for printing struct timespec64
+  ALSA: seq: Switch to use %ptSp
+  ceph: Switch to use %ptSp
+  libceph: Switch to use %ptSp
+  dma-buf: Switch to use %ptSp
+  drm/amdgpu: Switch to use %ptSp
+  drm/msm: Switch to use %ptSp
+  drm/vblank: Switch to use %ptSp
+  drm/xe: Switch to use %ptSp
+  e1000e: Switch to use %ptSp
+  igb: Switch to use %ptSp
+  ipmi: Switch to use %ptSp
+  media: av7110: Switch to use %ptSp
+  media: v4l2-ioctl: Switch to use %ptSp
+  mmc: mmc_test: Switch to use %ptSp
+  net: dsa: sja1105: Switch to use %ptSp
+  PCI: epf-test: Switch to use %ptSp
+  pps: Switch to use %ptSp
+  ptp: ocp: Switch to use %ptSp
+  s390/dasd: Switch to use %ptSp
+  scsi: fnic: Switch to use %ptS
+  scsi: snic: Switch to use %ptSp
+  tracing: Switch to use %ptSp
 
-v2 -> v3: no changes
+ Documentation/core-api/printk-formats.rst     | 11 ++++-
+ drivers/char/ipmi/ipmi_si_intf.c              |  3 +-
+ drivers/char/ipmi/ipmi_ssif.c                 |  6 +--
+ drivers/dma-buf/sync_debug.c                  |  2 +-
+ .../gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c  |  3 +-
+ drivers/gpu/drm/drm_vblank.c                  |  6 +--
+ .../gpu/drm/msm/disp/msm_disp_snapshot_util.c |  3 +-
+ drivers/gpu/drm/msm/msm_gpu.c                 |  3 +-
+ drivers/gpu/drm/xe/xe_devcoredump.c           |  4 +-
+ drivers/media/v4l2-core/v4l2-ioctl.c          |  5 +-
+ drivers/mmc/core/mmc_test.c                   | 18 +++----
+ drivers/net/dsa/sja1105/sja1105_tas.c         |  8 ++--
+ drivers/net/ethernet/intel/e1000e/ptp.c       |  7 +--
+ drivers/net/ethernet/intel/igb/igb_ptp.c      |  7 +--
+ drivers/pci/endpoint/functions/pci-epf-test.c |  5 +-
+ drivers/pps/generators/pps_gen_parport.c      |  3 +-
+ drivers/pps/kapi.c                            |  3 +-
+ drivers/ptp/ptp_ocp.c                         | 15 +++---
+ drivers/s390/block/dasd.c                     |  3 +-
+ drivers/scsi/fnic/fnic_trace.c                | 46 ++++++++----------
+ drivers/scsi/snic/snic_debugfs.c              | 10 ++--
+ drivers/scsi/snic/snic_trc.c                  |  5 +-
+ drivers/staging/media/av7110/av7110.c         |  2 +-
+ fs/ceph/dir.c                                 |  5 +-
+ fs/ceph/inode.c                               | 47 ++++++-------------
+ fs/ceph/xattr.c                               |  6 +--
+ kernel/trace/trace_output.c                   |  6 +--
+ lib/tests/printf_kunit.c                      |  4 ++
+ lib/vsprintf.c                                | 25 ++++++++++
+ net/ceph/messenger_v2.c                       |  6 +--
+ sound/core/seq/seq_queue.c                    |  2 +-
+ sound/core/seq/seq_timer.c                    |  6 +--
+ 32 files changed, 131 insertions(+), 154 deletions(-)
 
-v1 -> v2: This patch is a new addition in v2.
-
- drivers/scsi/qla2xxx/qla_os.c     | 20 ++++++++++++++++++--
- drivers/scsi/qla2xxx/qla_target.c |  5 +----
- drivers/scsi/qla2xxx/qla_target.h |  1 +
- 3 files changed, 20 insertions(+), 6 deletions(-)
-
-diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
-index f0b77f13628d..739137ddfd68 100644
---- a/drivers/scsi/qla2xxx/qla_os.c
-+++ b/drivers/scsi/qla2xxx/qla_os.c
-@@ -1875,10 +1875,26 @@ __qla2x00_abort_all_cmds(struct qla_qpair *qp, int res)
- 					continue;
- 				}
- 				cmd = (struct qla_tgt_cmd *)sp;
--				cmd->aborted = 1;
-+
-+				if (cmd->sg_mapped)
-+					qlt_unmap_sg(vha, cmd);
-+
-+				if (cmd->state == QLA_TGT_STATE_NEED_DATA) {
-+					cmd->aborted = 1;
-+					cmd->write_data_transferred = 0;
-+					cmd->state = QLA_TGT_STATE_DATA_IN;
-+					ha->tgt.tgt_ops->handle_data(cmd);
-+				} else {
-+					ha->tgt.tgt_ops->free_cmd(cmd);
-+				}
- 				break;
- 			case TYPE_TGT_TMCMD:
--				/* Skip task management functions. */
-+				/*
-+				 * Currently, only ABTS response gets on the
-+				 * outstanding_cmds[]
-+				 */
-+				ha->tgt.tgt_ops->free_mcmd(
-+					(struct qla_tgt_mgmt_cmd *) sp);
- 				break;
- 			default:
- 				break;
-diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index b700bfc642b3..2abdb8ce0302 100644
---- a/drivers/scsi/qla2xxx/qla_target.c
-+++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -2447,7 +2447,7 @@ static int qlt_pci_map_calc_cnt(struct qla_tgt_prm *prm)
- 	return -1;
- }
- 
--static void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
-+void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd)
- {
- 	struct qla_hw_data *ha;
- 	struct qla_qpair *qpair;
-@@ -3795,9 +3795,6 @@ int qlt_abort_cmd(struct qla_tgt_cmd *cmd)
- 
- 	spin_lock_irqsave(&cmd->cmd_lock, flags);
- 	if (cmd->aborted) {
--		if (cmd->sg_mapped)
--			qlt_unmap_sg(vha, cmd);
--
- 		spin_unlock_irqrestore(&cmd->cmd_lock, flags);
- 		/*
- 		 * It's normal to see 2 calls in this path:
-diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
-index 15a59c125c53..c483966d0a84 100644
---- a/drivers/scsi/qla2xxx/qla_target.h
-+++ b/drivers/scsi/qla2xxx/qla_target.h
-@@ -1058,6 +1058,7 @@ extern int qlt_abort_cmd(struct qla_tgt_cmd *);
- extern void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *);
- extern void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *);
- extern void qlt_free_cmd(struct qla_tgt_cmd *cmd);
-+extern void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd);
- extern void qlt_async_event(uint16_t, struct scsi_qla_host *, uint16_t *);
- extern void qlt_enable_vha(struct scsi_qla_host *);
- extern void qlt_vport_create(struct scsi_qla_host *, struct qla_hw_data *);
 -- 
-2.43.0
-
+2.50.1
 
