@@ -1,249 +1,169 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from out-172.mta0.migadu.com (out-172.mta0.migadu.com [91.218.175.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C191032C33C;
-	Mon, 10 Nov 2025 19:57:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 97B192F691F;
+	Mon, 10 Nov 2025 23:37:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=91.218.175.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762804649; cv=none; b=Vh8xnmdHm3pKaEgLsrj2c4PuB8jLbZ6fPaM5grxUER4ZVTQ0qD3aZrxPmxgiFvPVbh7fqacffFvXN4nfcXUgAETWDfRX9bwI1dTBUhOvyOY2pX7eVKeVZrLG8eVglzfN7YGn8V8gG1HZrIoWXY2hJFAltPs/hENNIKbxyc6G9MA=
+	t=1762817872; cv=none; b=HDhkSp0pqV6Meby3zCnOtjDwl2K+EHKEZsBw/N6ybilXHXUxo+MS8ktn2/KK/dxs94XKcqNmlAb7PLbKD3bT0xplVRTvFf5xk0evF2pvh2WQ4axETLnOBapwcZw9eV7EYE3+vS9BY6C220qmwKbGI1FQfDICAoG7D99c2aCAYaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762804649; c=relaxed/simple;
-	bh=1ac7IzhKmYqWG7jucxUrD8X+YajNf9Mfi3O6JIKv6IA=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=GbMOiQbi2AX82YUHAUcVsbku3X83SlJ/fw6tgWPX+D4ch8TzAymB48+FX7kTrFXr//T//hWqyS/GhM4d6S1Ml2N2khFCplRHt9acj7GqIXQoiluYA9RkK1W0zXPDHPZAO3T/6/K8BpleyMhktDiLXHMadb+lYPvT8yiCOQzbkO8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XYl+zes6; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762817872; c=relaxed/simple;
+	bh=odPTQHqCk/AknyMQCUhv0A0QcmH6YIldSa1T8WY4Ets=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=cY53qSbPUobmIyd1qsvB+xXxtzARZCO32Eg8pvjL/9cxUvJri0xnZzCBTdGjeN0DeXH696Y4YavfV60XpUqpWPejLhSHMeLw+U26IxYYqYU1+I6eZyiRj5P+muTRv1sl5nWqqbk07oT65wMqIhOuN5BoasOTB9F2Y0frTSVi+yg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev; spf=pass smtp.mailfrom=linux.dev; dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b=U0xyIRec; arc=none smtp.client-ip=91.218.175.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.dev
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.dev
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XYl+zes6"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 51B03C4CEFB;
-	Mon, 10 Nov 2025 19:57:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762804649;
-	bh=1ac7IzhKmYqWG7jucxUrD8X+YajNf9Mfi3O6JIKv6IA=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=XYl+zes6oNWcMoaIIWj0gQNWgw3zHnKFmEkKDSs6T+/fBSkMWnjA26zIA0T00AhqV
-	 cIGGUYig+ET9N7X2uUlo7L2DPIg8ZbfWw950fMCMflFk2WjmkKrD2ImxEjR7XvElCY
-	 33lG8f0KqlpFm05OFLyQpWklRrI6JvW8AAq6iAehZlnpAvHXEaqegLRZIPMn41LONd
-	 Wm8/Ry3Wr9/GFXah5kumt4F5SyTkUzL/kR77y2YehzcVPaeTTu2pmhHQMWLOjP48Nk
-	 IypBEVTohqSxlquLjORyJGB8Pp/URd6AIoEnpjapI8Pue/LEvjZuLwTDyUJB35k3Gu
-	 6iAF6IX22Ha1g==
-From: Sasha Levin <sashal@kernel.org>
-To: patches@lists.linux.dev,
-	stable@vger.kernel.org
-Cc: Nitin Rawat <nitin.rawat@oss.qualcomm.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Sasha Levin <sashal@kernel.org>,
-	linux-arm-msm@vger.kernel.org,
-	linux-scsi@vger.kernel.org
-Subject: [PATCH AUTOSEL 6.17] scsi: ufs: ufs-qcom: Fix UFS OCP issue during UFS power down (PC=3)
-Date: Mon, 10 Nov 2025 14:57:04 -0500
-Message-ID: <20251110195718.859919-4-sashal@kernel.org>
-X-Mailer: git-send-email 2.51.0
-In-Reply-To: <20251110195718.859919-1-sashal@kernel.org>
-References: <20251110195718.859919-1-sashal@kernel.org>
+	dkim=pass (1024-bit key) header.d=linux.dev header.i=@linux.dev header.b="U0xyIRec"
+Message-ID: <3eb5379f-c7ad-4aea-ab9a-20e07b7f34d0@linux.dev>
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=linux.dev; s=key1;
+	t=1762817866;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=N5NdZ3Il1D+l8lwQLcK5dXwNIadjasDY9t8ilnV/mV0=;
+	b=U0xyIRecUBR+iYd+jFcmevJu/4H+A2bbNJnN96yfE0hlgn9ZMrH3LxAIKYqZS4s3cJ1uvm
+	+7WK+gk43pd/VuQQ8rDReqm1AlKlWm8GBWmK3v11GgPPZIdbI1RU8LPuoyCqW5EbUBDj5d
+	3Ou4TSlLX99wMRUdq/vNAC0vrqSI3Ow=
+Date: Mon, 10 Nov 2025 23:37:33 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-stable: review
-X-Patchwork-Hint: Ignore
-X-stable-base: Linux 6.17.7
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
+Subject: Re: [PATCH v1 19/23] ptp: ocp: Switch to use %ptSp
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Corey Minyard <corey@minyard.net>, =?UTF-8?Q?Christian_K=C3=B6nig?=
+ <christian.koenig@amd.com>, "Dr. David Alan Gilbert" <linux@treblig.org>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ Thomas Zimmermann <tzimmermann@suse.de>,
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+ Rob Clark <robin.clark@oss.qualcomm.com>,
+ Matthew Brost <matthew.brost@intel.com>, Hans Verkuil <hverkuil@kernel.org>,
+ Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+ Ulf Hansson <ulf.hansson@linaro.org>,
+ Vitaly Lifshits <vitaly.lifshits@intel.com>,
+ Manivannan Sadhasivam <mani@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Calvin Owens <calvin@wbinvd.org>, Sagi Maimon <maimon.sagi@gmail.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Karan Tilak Kumar <kartilak@cisco.com>,
+ Casey Schaufler <casey@schaufler-ca.com>,
+ Steven Rostedt <rostedt@goodmis.org>, Petr Mladek <pmladek@suse.com>,
+ Max Kellermann <max.kellermann@ionos.com>, Takashi Iwai <tiwai@suse.de>,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ openipmi-developer@lists.sourceforge.net, linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+ amd-gfx@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+ freedreno@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+ linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+ intel-wired-lan@lists.osuosl.org, linux-pci@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-staging@lists.linux.dev, ceph-devel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-sound@vger.kernel.org
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+ Sergey Senozhatsky <senozhatsky@chromium.org>,
+ Jonathan Corbet <corbet@lwn.net>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Gustavo Padovan <gustavo@padovan.org>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Dmitry Baryshkov <lumag@kernel.org>,
+ Abhinav Kumar <abhinav.kumar@linux.dev>,
+ Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
+ Marijn Suijten <marijn.suijten@somainline.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ Lucas De Marchi <lucas.demarchi@intel.com>,
+ =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Vladimir Oltean <olteanv@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Tony Nguyen <anthony.l.nguyen@intel.com>,
+ Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rodolfo Giometti
+ <giometti@enneenne.com>, Jonathan Lemon <jonathan.lemon@gmail.com>,
+ Richard Cochran <richardcochran@gmail.com>,
+ Stefan Haberland <sth@linux.ibm.com>, Jan Hoeppner <hoeppner@linux.ibm.com>,
+ Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+ Alexander Gordeev <agordeev@linux.ibm.com>,
+ Christian Borntraeger <borntraeger@linux.ibm.com>,
+ Sven Schnelle <svens@linux.ibm.com>, Satish Kharat <satishkh@cisco.com>,
+ Sesidhar Baddela <sebaddel@cisco.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Xiubo Li
+ <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>
+References: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
+ <20251110184727.666591-20-andriy.shevchenko@linux.intel.com>
+Content-Language: en-US
+X-Report-Abuse: Please report any abuse attempt to abuse@migadu.com and include these headers.
+From: Vadim Fedorenko <vadim.fedorenko@linux.dev>
+In-Reply-To: <20251110184727.666591-20-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
+X-Migadu-Flow: FLOW_OUT
 
-From: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+On 10/11/2025 18:40, Andy Shevchenko wrote:
+> Use %ptSp instead of open coded variants to print content of
+> struct timespec64 in human readable format.
+> 
+> While at it, fix wrong use of %ptT against struct timespec64.
+> It's kinda lucky that it worked just because the first member
+> there 64-bit and it's of time64_t type. Now with %ptS it may
+> be used correctly.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>   drivers/ptp/ptp_ocp.c | 15 ++++++---------
+>   1 file changed, 6 insertions(+), 9 deletions(-)
+> 
+> diff --git a/drivers/ptp/ptp_ocp.c b/drivers/ptp/ptp_ocp.c
+> index a5c363252986..a0bb8d3045d2 100644
+> --- a/drivers/ptp/ptp_ocp.c
+> +++ b/drivers/ptp/ptp_ocp.c
+> @@ -3261,7 +3261,7 @@ signal_show(struct device *dev, struct device_attribute *attr, char *buf)
+>   			   signal->duty, signal->phase, signal->polarity);
+>   
+>   	ts = ktime_to_timespec64(signal->start);
+> -	count += sysfs_emit_at(buf, count, " %ptT TAI\n", &ts);
+> +	count += sysfs_emit_at(buf, count, " %ptS TAI\n", &ts);
+>   
+>   	return count;
+>   }
+> @@ -4287,11 +4287,9 @@ ptp_ocp_summary_show(struct seq_file *s, void *data)
+>   		ns += (s64)bp->utc_tai_offset * NSEC_PER_SEC;
+>   		sys_ts = ns_to_timespec64(ns);
+>   
+> -		seq_printf(s, "%7s: %lld.%ld == %ptT TAI\n", "PHC",
+> -			   ts.tv_sec, ts.tv_nsec, &ts);
+> -		seq_printf(s, "%7s: %lld.%ld == %ptT UTC offset %d\n", "SYS",
+> -			   sys_ts.tv_sec, sys_ts.tv_nsec, &sys_ts,
+> -			   bp->utc_tai_offset);
+> +		seq_printf(s, "%7s: %ptSp == %ptS TAI\n", "PHC", &ts, &ts);
+> +		seq_printf(s, "%7s: %ptSp == %ptS UTC offset %d\n", "SYS",
+> +			   &sys_ts, &sys_ts, bp->utc_tai_offset);
+>   		seq_printf(s, "%7s: PHC:SYS offset: %lld  window: %lld\n", "",
+>   			   timespec64_to_ns(&ts) - ns,
+>   			   post_ns - pre_ns);
+> @@ -4499,9 +4497,8 @@ ptp_ocp_phc_info(struct ptp_ocp *bp)
+>   		 ptp_clock_index(bp->ptp));
+>   
+>   	if (!ptp_ocp_gettimex(&bp->ptp_info, &ts, NULL))
+> -		dev_info(&bp->pdev->dev, "Time: %lld.%ld, %s\n",
+> -			 ts.tv_sec, ts.tv_nsec,
+> -			 bp->sync ? "in-sync" : "UNSYNCED");
+> +		dev_info(&bp->pdev->dev, "Time: %ptSp, %s\n",
+> +			 &ts, bp->sync ? "in-sync" : "UNSYNCED");
+>   }
+>   
+>   static void
 
-[ Upstream commit 5127be409c6c3815c4a7d8f6d88043e44f9b9543 ]
-
-According to UFS specifications, the power-off sequence for a UFS device
-includes:
-
- - Sending an SSU command with Power_Condition=3 and await a response.
-
- - Asserting RST_N low.
-
- - Turning off REF_CLK.
-
- - Turning off VCC.
-
- - Turning off VCCQ/VCCQ2.
-
-As part of ufs shutdown, after the SSU command completion, asserting
-hardware reset (HWRST) triggers the device firmware to wake up and
-execute its reset routine. This routine initializes hardware blocks and
-takes a few milliseconds to complete. During this time, the ICCQ draws a
-large current.
-
-This large ICCQ current may cause issues for the regulator which is
-supplying power to UFS, because the turn off request from UFS driver to
-the regulator framework will be immediately followed by low power
-mode(LPM) request by regulator framework. This is done by framework
-because UFS which is the only client is requesting for disable. So if
-the rail is still in the process of shutting down while ICCQ exceeds LPM
-current thresholds, and LPM mode is activated in hardware during this
-state, it may trigger an overcurrent protection (OCP) fault in the
-regulator.
-
-To prevent this, a 10ms delay is added after asserting HWRST. This
-allows the reset operation to complete while power rails remain active
-and in high-power mode.
-
-Currently there is no way for Host to query whether the reset is
-completed or not and hence this the delay is based on experiments with
-Qualcomm UFS controllers across multiple UFS vendors.
-
-Signed-off-by: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
-Link: https://patch.msgid.link/20251012173828.9880-1-nitin.rawat@oss.qualcomm.com
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Sasha Levin <sashal@kernel.org>
----
-
-LLM Generated explanations, may be completely bogus:
-
-Based on my comprehensive analysis using semantic code analysis tools
-and repository examination, here is my assessment:
-
-## BACKPORT RECOMMENDATION: YES
-
-## Analysis Summary
-
-### Semantic Analysis Tools Used:
-
-1. **mcp__semcode__find_function** - Located the `ufs_qcom_suspend` and
-   `ufs_qcom_device_reset_ctrl` functions
-2. **mcp__semcode__find_callers** - Found that
-   `ufs_qcom_device_reset_ctrl` is called by only 2 functions, making
-   impact analysis straightforward
-3. **mcp__semcode__find_callchain** - Traced the call path showing this
-   is invoked through variant ops during system suspend
-4. **mcp__semcode__diff_functions** - Confirmed this is a minimal
-   semantic change (just adding a delay)
-5. **git log/blame analysis** - Traced the historical context
-
-### Key Findings:
-
-#### 1. **Impact & Scope Analysis**
-- **Function location**: `drivers/ufs/host/ufs-qcom.c:731` in
-  `ufs_qcom_suspend()`
-- **Call graph**: The function is registered as a suspend callback in
-  `ufs_hba_variant_ops` and gets invoked during system suspend
-  operations
-- **Affected devices**: All Qualcomm UFS controllers (MSM8994, MSM8996,
-  SDM845, SM8150, SM8250, SM8350, SM8450, SM8550, SM8650, SM8750, and
-  many more)
-- **User exposure**: HIGH - triggered during normal suspend/resume
-  cycles
-
-#### 2. **Code Change Analysis**
-The change is extremely minimal and low-risk:
-```c
-if (ufs_qcom_is_link_off(hba) && host->device_reset) {
-    ufs_qcom_device_reset_ctrl(hba, true);
-+   usleep_range(10000, 11000);  // Only change: 10ms delay
-}
-```
-
-#### 3. **Historical Context**
-- The device reset during suspend was introduced in **v5.12-rc1**
-  (commit b61d041413685, Jan 2021)
-- This OCP issue has existed for **~4 years**
-- Not a recent regression - this is a long-standing hardware timing
-  issue
-
-#### 4. **Problem Severity**
-According to the commit message and code analysis:
-- **Issue**: After asserting hardware reset, the UFS device firmware
-  wakes up and draws large ICCQ current
-- **Consequence**: Can trigger overcurrent protection (OCP) faults in
-  the regulator hardware
-- **Impact**: Potential hardware protection faults during power down
-  sequence
-- **Root cause**: Race between device reset completion and regulator
-  entering low-power mode
-
-#### 5. **Risk Assessment**
-- **Regression risk**: VERY LOW - only adds a 10ms sleep
-- **Side effects**: None beyond slightly longer suspend time (10ms is
-  negligible)
-- **Dependencies**: No new dependencies introduced
-- **Architectural changes**: None
-
-### Reasoning for YES:
-
-1. **Fixes important hardware issue**: Prevents OCP faults that could
-   affect regulator hardware integrity
-2. **Wide device impact**: Affects entire Qualcomm UFS ecosystem (very
-   popular in Android devices)
-3. **Long-standing bug**: Has existed since v5.12 (2021), not a new
-   feature
-4. **Minimal and safe**: Single-line change with no complex logic
-5. **Follows stable rules**:
-   - ✓ It fixes a bug
-   - ✓ Obviously correct
-   - ✓ Small and contained
-   - ✓ Doesn't add new features
-   - ✓ Low regression risk
-
-### Notable Observations:
-
-- **No explicit stable tag**: The commit does NOT include "Cc:
-  stable@vger.kernel.org", which typically indicates maintainers didn't
-  prioritize it for backport
-- **Cautious language**: Commit uses "may cause" rather than "causes" -
-  suggesting this is a potential issue rather than frequently reported
-  problem
-- **No user reports mentioned**: No indication of widespread user-
-  visible failures
-
-### Recommendation:
-
-**YES - Backport to stable kernels 5.12+**
-
-Despite the lack of explicit stable tag, this commit should be
-backported because:
-- It prevents potential hardware protection faults
-- The fix is trivial and risk-free
-- It affects a critical subsystem (storage) on widely-used platforms
-- The issue has existed for years across all Qualcomm UFS devices
-
-Priority: **MEDIUM** - This is a valid fix for a hardware timing issue,
-but the lack of stable tag and cautious commit language suggests it's
-not causing widespread failures. However, preventing OCP faults is
-important for hardware longevity.
-
- drivers/ufs/host/ufs-qcom.c | 15 ++++++++++++++-
- 1 file changed, 14 insertions(+), 1 deletion(-)
-
-diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
-index 9574fdc2bb0fd..8fe4405ec0ec7 100644
---- a/drivers/ufs/host/ufs-qcom.c
-+++ b/drivers/ufs/host/ufs-qcom.c
-@@ -741,8 +741,21 @@ static int ufs_qcom_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
- 
- 
- 	/* reset the connected UFS device during power down */
--	if (ufs_qcom_is_link_off(hba) && host->device_reset)
-+	if (ufs_qcom_is_link_off(hba) && host->device_reset) {
- 		ufs_qcom_device_reset_ctrl(hba, true);
-+		/*
-+		 * After sending the SSU command, asserting the rst_n
-+		 * line causes the device firmware to wake up and
-+		 * execute its reset routine.
-+		 *
-+		 * During this process, the device may draw current
-+		 * beyond the permissible limit for low-power mode (LPM).
-+		 * A 10ms delay, based on experimental observations,
-+		 * allows the UFS device to complete its hardware reset
-+		 * before transitioning the power rail to LPM.
-+		 */
-+		usleep_range(10000, 11000);
-+	}
- 
- 	return ufs_qcom_ice_suspend(host);
- }
--- 
-2.51.0
-
+Acked-by: Vadim Fedorenko <vadim.fedorenko@linux.dev>
