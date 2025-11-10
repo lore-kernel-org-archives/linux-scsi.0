@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9B7133506C;
-	Mon, 10 Nov 2025 18:48:00 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1753033EB04;
+	Mon, 10 Nov 2025 18:48:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762800486; cv=none; b=PIXFwb+N3z7Y2ttb3oZ9oBTQ5KuUk0hTIvsIf4C/RxHl3DgmIN8D/LEjxPTHNeBr40fW3j2/2tw5Hyw0fG4sDdGdO1w5ZwNBgG+afkDnSWeKRoETGWu6gcq3PATi99pah1SVE309IXCE/FIbpKv5sfHxTWqIWI9kmkKSlLee/Rg=
+	t=1762800489; cv=none; b=PktZmXLFYZ6CVepOVoexaUmx3+oLpssS60IyjIlVphcbKiHyjH1+/bOxnDFNlfc8sxiC+lV1Dv9MgD9EU1kpAmYZzeah1GscoFO5SrYY0RruNkFCjdSOYNfvOlBpm2rp1XCTw6gzkeXTcssQoW0IRZNOzYm3EKNtHEXI7cknk94=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762800486; c=relaxed/simple;
-	bh=Owa/uZSyQflLahGS6CmSwDqgbO1CL5jfKyID5Cl9frQ=;
+	s=arc-20240116; t=1762800489; c=relaxed/simple;
+	bh=tX8qBxP7WneY1G2VNu4qjPGTNBHKhEkyvjbgK/EL1Bc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=u5Vc/QUuR9b8km2Qy/GE23byvumXEpov/1SRYxatWrLXOubfctazH85upqm21JDjocIAncgorDB+FiZrBp002tO1miKkuNzlwuotv4v3Y0VsejCkb7fbfDPZij24mUY63XNPXRX/jD9kaVVPkemVKXgNg0X9wLpFKA/GK8R9bu8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NLkJ+qxZ; arc=none smtp.client-ip=192.198.163.9
+	 MIME-Version; b=loFxgDFiTyhGZw13/9Cu2c9b5w8K7W20mWSXQnB+SUBKujBJ/zPBi8cf86kstmjmcXQ2ULDfbWqvNWDZUYNwL+r7HIpo6MmU4+3fzP/Fe83MsQJCTeKgw8v6Pq6EoEnTmJSm9aPqewNlA165+KjRbMOUW4mGElpcx8/syeECjhI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OYLkhzqI; arc=none smtp.client-ip=192.198.163.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NLkJ+qxZ"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OYLkhzqI"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762800482; x=1794336482;
+  t=1762800487; x=1794336487;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Owa/uZSyQflLahGS6CmSwDqgbO1CL5jfKyID5Cl9frQ=;
-  b=NLkJ+qxZ9EbEbRKRZW5yflKFkF4Lb7sKxtoI9xQy7fkeYgcRCLKBepiC
-   N+pSN4bboGSSsA6+iJ2AusrnrQy5uRngtJK8+syDVyJlSwiCL88vmrmtH
-   /4PPHXZRQhUWCyvvyZnq7StNVH/fRV8PF7w2MLpbqSXA+W9otiLC7PsBT
-   jXd8P5esF5TxGn5HAlMvxS30bcn7m+Hyx3yV4B3a1uErUWZFEM7Y21nH9
-   hDXD8QrTodEBOvKz8RH3mqMOpib+5fcHEdWcSqvgGClnlyb017zHlA93L
-   oecTjaFP5IBLO2ex3vHJVvl3qQwFoyDa5MQyvvnRLahwwO/RTUb0Olm1f
-   w==;
-X-CSE-ConnectionGUID: 9BlEehGKThuHnJVoMHB8/Q==
-X-CSE-MsgGUID: fHAfENOoTm6CEdATrLvfQA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="75543298"
+  bh=tX8qBxP7WneY1G2VNu4qjPGTNBHKhEkyvjbgK/EL1Bc=;
+  b=OYLkhzqIy6JZYPUmmbl1DOpC21509Wh8/HY/L7SmNkK+XNOssREqAgte
+   N8VX9LUEYtOwHowIRpEA9rrtnltUFpyMrP73wPlzvUq4TCS5JfTD9uQwF
+   1vfmmW45oJgpwoEHyHycxzqwO6HNIms9XgGyLKUYnrFwoEdOvr3lLuC7u
+   cl398U4gxSoOsOcSEk9hYUAs9cDzfy3dek7xH8hgACzW9dEq9hWFcccM+
+   H6xBuVIXdJ2T0aTvlzQ3+ZsMESJcu1CWGtylgvInBFLohQl6aBOqTbZ1e
+   dtokGNRy2EPVEe2AZxsC4viraghWDWV3+gXh0fDdlH4k6YaR7GclWoakl
+   Q==;
+X-CSE-ConnectionGUID: c/YS8hKARg+XLFFqqAgjLg==
+X-CSE-MsgGUID: wEtcyQhQT7iuAQ22vmPQBg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="64891950"
 X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
-   d="scan'208";a="75543298"
-Received: from fmviesa009.fm.intel.com ([10.60.135.149])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:47:57 -0800
-X-CSE-ConnectionGUID: 2eJVkzqZS9eMe6nzc5hX5g==
-X-CSE-MsgGUID: eXHDXNSIQoOeoIXPu177HQ==
+   d="scan'208";a="64891950"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa108.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:48:05 -0800
+X-CSE-ConnectionGUID: guIqNWHRTtq5hxrEbCy+oQ==
+X-CSE-MsgGUID: HlijtTw8RauXW9YntvFvtw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
-   d="scan'208";a="189190257"
+   d="scan'208";a="188385721"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa009.fm.intel.com with ESMTP; 10 Nov 2025 10:47:49 -0800
+  by fmviesa007.fm.intel.com with ESMTP; 10 Nov 2025 10:47:57 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 356449F; Mon, 10 Nov 2025 19:47:29 +0100 (CET)
+	id 649F9A6; Mon, 10 Nov 2025 19:47:29 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -142,9 +142,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Jaroslav Kysela <perex@perex.cz>,
 	Takashi Iwai <tiwai@suse.com>
-Subject: [PATCH v1 10/23] e1000e: Switch to use %ptSp
-Date: Mon, 10 Nov 2025 19:40:29 +0100
-Message-ID: <20251110184727.666591-11-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 17/23] PCI: epf-test: Switch to use %ptSp
+Date: Mon, 10 Nov 2025 19:40:36 +0100
+Message-ID: <20251110184727.666591-18-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
 References: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
@@ -161,30 +161,25 @@ struct timespec64 in human readable format.
 
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/ethernet/intel/e1000e/ptp.c | 7 ++-----
- 1 file changed, 2 insertions(+), 5 deletions(-)
+ drivers/pci/endpoint/functions/pci-epf-test.c | 5 ++---
+ 1 file changed, 2 insertions(+), 3 deletions(-)
 
-diff --git a/drivers/net/ethernet/intel/e1000e/ptp.c b/drivers/net/ethernet/intel/e1000e/ptp.c
-index ea3c3eb2ef20..ec39e35f3857 100644
---- a/drivers/net/ethernet/intel/e1000e/ptp.c
-+++ b/drivers/net/ethernet/intel/e1000e/ptp.c
-@@ -229,14 +229,11 @@ static void e1000e_systim_overflow_work(struct work_struct *work)
- 						     systim_overflow_work.work);
- 	struct e1000_hw *hw = &adapter->hw;
- 	struct timespec64 ts;
--	u64 ns;
+diff --git a/drivers/pci/endpoint/functions/pci-epf-test.c b/drivers/pci/endpoint/functions/pci-epf-test.c
+index b05e8db575c3..debd235253c5 100644
+--- a/drivers/pci/endpoint/functions/pci-epf-test.c
++++ b/drivers/pci/endpoint/functions/pci-epf-test.c
+@@ -331,9 +331,8 @@ static void pci_epf_test_print_rate(struct pci_epf_test *epf_test,
+ 		rate = div64_u64(size * NSEC_PER_SEC, ns * 1000);
  
- 	/* Update the timecounter */
--	ns = timecounter_read(&adapter->tc);
-+	ts = ns_to_timespec64(timecounter_read(&adapter->tc));
+ 	dev_info(&epf_test->epf->dev,
+-		 "%s => Size: %llu B, DMA: %s, Time: %llu.%09u s, Rate: %llu KB/s\n",
+-		 op, size, dma ? "YES" : "NO",
+-		 (u64)ts.tv_sec, (u32)ts.tv_nsec, rate);
++		 "%s => Size: %llu B, DMA: %s, Time: %ptSp s, Rate: %llu KB/s\n",
++		 op, size, dma ? "YES" : "NO", &ts, rate);
+ }
  
--	ts = ns_to_timespec64(ns);
--	e_dbg("SYSTIM overflow check at %lld.%09lu\n",
--	      (long long) ts.tv_sec, ts.tv_nsec);
-+	e_dbg("SYSTIM overflow check at %ptSp\n", &ts);
- 
- 	schedule_delayed_work(&adapter->systim_overflow_work,
- 			      E1000_SYSTIM_OVERFLOW_PERIOD);
+ static void pci_epf_test_copy(struct pci_epf_test *epf_test,
 -- 
 2.50.1
 
