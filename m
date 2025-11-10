@@ -1,37 +1,37 @@
 Received: from mail.cybernetics.com (mail.cybernetics.com [72.215.153.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 07A1622FDEC
-	for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2025 15:58:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0F28B274B4A
+	for <linux-scsi@vger.kernel.org>; Mon, 10 Nov 2025 15:59:37 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=72.215.153.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762790297; cv=none; b=XRsHl2ITRuv6OgJ8ZBpGPoGtaCjk3H6hMTmSj9N/MCnaInk8qM76kvQdk1/VXd1AqXJlJ+svMZC2d0KHx3v4oVyfwJDcti84DVj+9H6+H0nwhCZwYx1WSjzjQcp3GhzwwFk5jHuLQWiF2ZQFWhxVr9GmAHjlPliZijYMSiHYWjg=
+	t=1762790378; cv=none; b=JqYlFijihRoDXeauZZMV9u8cbcjIQa8jF9rDnCSmOI8b+TJeWK6G1HBSsYPU5zQdyT5FnToxYyIIIydwm2vH4A01HZ505V/sNRVmveq/WAq2Klz84UJRPQ8yH1pQztjLVKYT95VlFZke6NHXcJtQPdCOyyb+gFyJ2FkT7rZoXNc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762790297; c=relaxed/simple;
-	bh=XvvgPNLHx2K2IYwC99YEuuNErfuamHgP55IEE6tjwVE=;
+	s=arc-20240116; t=1762790378; c=relaxed/simple;
+	bh=FflRpot8dsZaR6QtASFvNa8+5PQWm8ZksmmZCh+KxN4=;
 	h=Message-ID:Date:MIME-Version:Subject:From:To:Cc:References:
-	 In-Reply-To:Content-Type; b=OV3OzuM6mWnz6Z+pj69CYPR8HeXESTWwSVhVaeGFd3Gf9JQL5dmPxGXiO9duh/IXC/9m8IPuhENNRhABarA0KmjIIoNz94m2h6Nee0TFW+dcu9OHte2nI1qoepK73aez8FuF2B2I0xqXYx/N3iVWhmcCXXI99jXz+Nh4bMCBdf4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=h8LXPCj5; arc=none smtp.client-ip=72.215.153.18
+	 In-Reply-To:Content-Type; b=ROgh+KqVgh/1tSXqjPws0svLupnEvL72ooWX22PabC4dIW4Qa6kVPqn9lYmNdS65rWHJype4eFgDZPNo9Cn0TjU0YSTp6018D9WgRwU3YvN6lDHCZEj5jf794fatHHO8Kt5xNSaMNN9+7bDGsYs6nLywWsoJwbxRVa22TwH9hdA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com; spf=pass smtp.mailfrom=cybernetics.com; dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b=DmHJLSKw; arc=none smtp.client-ip=72.215.153.18
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=cybernetics.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="h8LXPCj5"
-Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id KZqyQturEEUHVqIo; Mon, 10 Nov 2025 10:58:12 -0500 (EST)
+	dkim=pass (1024-bit key) header.d=cybernetics.com header.i=@cybernetics.com header.b="DmHJLSKw"
+Received: from cybernetics.com ([10.10.4.126]) by mail.cybernetics.com with ESMTP id aEMnnkhNBqwAI0jx; Mon, 10 Nov 2025 10:59:35 -0500 (EST)
 X-Barracuda-Envelope-From: tonyb@cybernetics.com
 X-Barracuda-RBL-Trusted-Forwarder: 10.10.4.126
 X-ASG-Whitelist: Client
 DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; d=cybernetics.com; s=mail;
-	bh=DvTiyzz44y1AtG6kDbhfAlRq8NZ1xcxnk5S30oKu15U=;
+	bh=oDiu89Ob9KdKFz/fiDOT6j+mIJv/OSgEPF95PNBurXU=;
 	h=Content-Transfer-Encoding:Content-Type:In-Reply-To:References:Cc:To:From:
-	Content-Language:Subject:MIME-Version:Date:Message-ID; b=h8LXPCj5xWqfwddZno2R
-	HHqJMMdz/xcJ8kWO/Sbm9aD2JIqjwRK26Z7n/gja89JZyPC+7BdWHHmEndRym1gVoXPy+ep4T1j+P
-	4bOpPPgB41sQelWiszLPOxBWBpEQ1dPase8Jt9XH7q4hqjqUfGy3UoI3nRpZBeFdqZc8MmAHxo=
+	Content-Language:Subject:MIME-Version:Date:Message-ID; b=DmHJLSKwMgLJPI3f8sPK
+	eLlC7SxSo6oFsz5/C1NyqysaZQthp56XWiu0xldrQ/m2ALf6b2cPzzyIMHBiXe7RIy2Yl4XwU+2i0
+	qTSp8F9DZ/ssVRYt+rdELeqid9z8CkvTJyQ8hDS5t3j2xxG81gg9OoU0psYalKKKgkYwoAE/10=
 Received: from [10.157.2.224] (HELO [192.168.200.1])
   by cybernetics.com (CommuniGate SPEC SMTP 8.0.5)
-  with ESMTPS id 14272449; Mon, 10 Nov 2025 10:58:12 -0500
-Message-ID: <cd6ccd31-33fa-4454-be36-507bf578a546@cybernetics.com>
+  with ESMTPS id 14272452; Mon, 10 Nov 2025 10:59:35 -0500
+Message-ID: <09a1ff3d-6738-4953-a31b-10e89c540462@cybernetics.com>
 X-Barracuda-RBL-Trusted-Forwarder: 10.157.2.224
-Date: Mon, 10 Nov 2025 10:58:12 -0500
+Date: Mon, 10 Nov 2025 10:59:35 -0500
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -39,11 +39,9 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: [PATCH v3 10/16] scsi: qla2xxx: improve checks in qlt_xmit_response /
- qlt_rdy_to_xfer
+Subject: [PATCH v3 11/16] scsi: qla2xxx: fix TMR failure handling
 Content-Language: en-US
-X-ASG-Orig-Subj: [PATCH v3 10/16] scsi: qla2xxx: improve checks in qlt_xmit_response /
- qlt_rdy_to_xfer
+X-ASG-Orig-Subj: [PATCH v3 11/16] scsi: qla2xxx: fix TMR failure handling
 From: Tony Battersby <tonyb@cybernetics.com>
 To: Nilesh Javali <njavali@marvell.com>,
  GR-QLogic-Storage-Upstream@marvell.com,
@@ -59,177 +57,206 @@ In-Reply-To: <aaea0ab0-da8b-4153-9369-60db7507ff7a@cybernetics.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 X-Barracuda-Connect: UNKNOWN[10.10.4.126]
-X-Barracuda-Start-Time: 1762790292
+X-Barracuda-Start-Time: 1762790375
 X-Barracuda-URL: https://10.10.4.122:443/cgi-mod/mark.cgi
-X-Barracuda-BRTS-Status: 0
+X-Barracuda-BRTS-Status: 1
 X-Virus-Scanned: by bsmtpd at cybernetics.com
-X-Barracuda-Scan-Msg-Size: 5709
-X-ASG-Debug-ID: 1762790292-1cf439139110cdd0001-ziuLRu
+X-Barracuda-Scan-Msg-Size: 6781
+X-ASG-Debug-ID: 1762790375-1cf439139110ce00001-ziuLRu
 
 (target mode)
 
-Similar fixes to both functions:
+If handle_tmr() fails:
 
-qlt_xmit_response:
-- If the cmd cannot be processed, remember to call ->free_cmd() to
-  prevent the target-mode midlevel from seeing a cmd lockup.
-- Do not try to send the response if the exchange has been terminated.
-- Check for chip reset once after lock instead of both before and after
-  lock.
-- Give errors from qlt_pre_xmit_response() a lower priority to
-  compensate for removing the first check for chip reset.
+- The code for QLA_TGT_ABTS results in memory-use-after-free and
+  double-free:
+	qlt_do_tmr_work()
+		qlt_build_abts_resp_iocb()
+			qpair->req->outstanding_cmds[h] = (srb_t *)mcmd;
+		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool); FIRST FREE
+	qlt_handle_abts_completion()
+		mcmd = qlt_ctio_to_cmd()
+			cmd = req->outstanding_cmds[h];
+			return cmd;
+		vha  = mcmd->vha; USE-AFTER-FREE
+		ha->tgt.tgt_ops->free_mcmd(mcmd); SECOND FREE
 
-qlt_rdy_to_xfer:
-- Check for chip reset after lock instead of before lock to avoid races.
-- Do not try to receive data if the exchange has been terminated.
-- Give errors from qlt_pci_map_calc_cnt() a lower priority to compensate
-  for moving the check for chip reset.
+- qlt_send_busy() makes no sense because it sends a SCSI command
+  response instead of a TMR response.
+
+Instead just call qlt_xmit_tm_rsp() to send a TMR failed response,
+since that code is well-tested and handles a number of corner cases.
+But it would be incorrect to call ha->tgt.tgt_ops->free_mcmd() after
+handle_tmr() failed, so add a flag to mcmd indicating the proper way to
+free the mcmd so that qlt_xmit_tm_rsp() can be used for both cases.
 
 Signed-off-by: Tony Battersby <tonyb@cybernetics.com>
 ---
 
-v2 -> v3: no changes
+v2 -> v3:
+- Check for mcmd == NULL in qlt_free_ul_mcmd().
 
-v1 -> v2: no changes
+v1 -> v2:
+- Change FCP_TMF_REJECTED to FCP_TMF_FAILED.
+- Add QLA24XX_MGMT_LLD_OWNED and qlt_free_ul_mcmd().
+- Improve patch description.
 
- drivers/scsi/qla2xxx/qla_target.c | 86 +++++++++++++++++--------------
- 1 file changed, 48 insertions(+), 38 deletions(-)
+ drivers/scsi/qla2xxx/qla_os.c     |  2 +-
+ drivers/scsi/qla2xxx/qla_target.c | 56 +++++++++++++------------------
+ drivers/scsi/qla2xxx/qla_target.h |  2 ++
+ 3 files changed, 27 insertions(+), 33 deletions(-)
 
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 2a3eb1dacf86..64387224f28a 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1893,7 +1893,7 @@ __qla2x00_abort_all_cmds(struct qla_qpair *qp, int res)
+ 				 * Currently, only ABTS response gets on the
+ 				 * outstanding_cmds[]
+ 				 */
+-				ha->tgt.tgt_ops->free_mcmd(
++				qlt_free_ul_mcmd(ha,
+ 					(struct qla_tgt_mgmt_cmd *) sp);
+ 				break;
+ 			default:
 diff --git a/drivers/scsi/qla2xxx/qla_target.c b/drivers/scsi/qla2xxx/qla_target.c
-index c6dc5e9efb69..849ab256807b 100644
+index 849ab256807b..009b9ca5c2b9 100644
 --- a/drivers/scsi/qla2xxx/qla_target.c
 +++ b/drivers/scsi/qla2xxx/qla_target.c
-@@ -3206,12 +3206,7 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	uint32_t full_req_cnt = 0;
- 	unsigned long flags = 0;
- 	int res;
+@@ -2005,7 +2005,6 @@ static void qlt_do_tmr_work(struct work_struct *work)
+ 	struct qla_hw_data *ha = mcmd->vha->hw;
+ 	int rc;
+ 	uint32_t tag;
+-	unsigned long flags;
+ 
+ 	switch (mcmd->tmr_func) {
+ 	case QLA_TGT_ABTS:
+@@ -2020,34 +2019,12 @@ static void qlt_do_tmr_work(struct work_struct *work)
+ 	    mcmd->tmr_func, tag);
+ 
+ 	if (rc != 0) {
+-		spin_lock_irqsave(mcmd->qpair->qp_lock_ptr, flags);
+-		switch (mcmd->tmr_func) {
+-		case QLA_TGT_ABTS:
+-			mcmd->fc_tm_rsp = FCP_TMF_REJECTED;
+-			qlt_build_abts_resp_iocb(mcmd);
+-			break;
+-		case QLA_TGT_LUN_RESET:
+-		case QLA_TGT_CLEAR_TS:
+-		case QLA_TGT_ABORT_TS:
+-		case QLA_TGT_CLEAR_ACA:
+-		case QLA_TGT_TARGET_RESET:
+-			qlt_send_busy(mcmd->qpair, &mcmd->orig_iocb.atio,
+-			    qla_sam_status);
+-			break;
 -
--	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
--	    (cmd->sess && cmd->sess->deleted)) {
--		cmd->state = QLA_TGT_STATE_PROCESSED;
--		return 0;
--	}
-+	int pre_xmit_res;
- 
- 	ql_dbg_qp(ql_dbg_tgt, qpair, 0xe018,
- 	    "is_send_status=%d, cmd->bufflen=%d, cmd->sg_cnt=%d, cmd->dma_data_direction=%d se_cmd[%p] qp %d\n",
-@@ -3219,33 +3214,39 @@ int qlt_xmit_response(struct qla_tgt_cmd *cmd, int xmit_type,
- 	    1 : 0, cmd->bufflen, cmd->sg_cnt, cmd->dma_data_direction,
- 	    &cmd->se_cmd, qpair->id);
- 
--	res = qlt_pre_xmit_response(cmd, &prm, xmit_type, scsi_status,
-+	pre_xmit_res = qlt_pre_xmit_response(cmd, &prm, xmit_type, scsi_status,
- 	    &full_req_cnt);
--	if (unlikely(res != 0)) {
--		return res;
--	}
-+	/*
-+	 * Check pre_xmit_res later because we want to check other errors
-+	 * first.
-+	 */
- 
- 	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
- 
-+	if (unlikely(cmd->sent_term_exchg ||
-+		     cmd->sess->deleted ||
-+		     !qpair->fw_started ||
-+		     cmd->reset_count != qpair->chip_reset)) {
-+		ql_dbg(ql_dbg_tgt_mgt, vha, 0xe101,
-+		    "qla_target(%d): tag %lld: skipping send response for aborted cmd\n",
-+		    vha->vp_idx, cmd->se_cmd.tag);
-+		qlt_unmap_sg(vha, cmd);
-+		cmd->state = QLA_TGT_STATE_PROCESSED;
-+		vha->hw->tgt.tgt_ops->free_cmd(cmd);
-+		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
-+		return 0;
-+	}
-+
-+	/* Check for errors from qlt_pre_xmit_response(). */
-+	res = pre_xmit_res;
-+	if (unlikely(res))
-+		goto out_unmap_unlock;
-+
- 	if (xmit_type == QLA_TGT_XMIT_STATUS)
- 		qpair->tgt_counters.core_qla_snd_status++;
- 	else
- 		qpair->tgt_counters.core_qla_que_buf++;
- 
--	if (!qpair->fw_started || cmd->reset_count != qpair->chip_reset) {
--		/*
--		 * Either the port is not online or this request was from
--		 * previous life, just abort the processing.
--		 */
--		cmd->state = QLA_TGT_STATE_PROCESSED;
--		ql_dbg_qp(ql_dbg_async, qpair, 0xe101,
--			"RESET-RSP online/active/old-count/new-count = %d/%d/%d/%d.\n",
--			vha->flags.online, qla2x00_reset_active(vha),
--			cmd->reset_count, qpair->chip_reset);
--		res = 0;
--		goto out_unmap_unlock;
--	}
+-		case QLA_TGT_ABORT_ALL:
+-		case QLA_TGT_NEXUS_LOSS_SESS:
+-		case QLA_TGT_NEXUS_LOSS:
+-			qlt_send_notify_ack(mcmd->qpair,
+-			    &mcmd->orig_iocb.imm_ntfy, 0, 0, 0, 0, 0, 0);
+-			break;
+-		}
+-		spin_unlock_irqrestore(mcmd->qpair->qp_lock_ptr, flags);
 -
- 	/* Does F/W have an IOCBs for this request */
- 	res = qlt_check_reserve_free_req(qpair, full_req_cnt);
- 	if (unlikely(res))
-@@ -3360,6 +3361,7 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 	struct qla_tgt_prm prm;
- 	unsigned long flags = 0;
- 	int res = 0;
-+	int pci_map_res;
- 	struct qla_qpair *qpair = cmd->qpair;
+ 		ql_dbg(ql_dbg_tgt_mgt, mcmd->vha, 0xf052,
+ 		    "qla_target(%d):  tgt_ops->handle_tmr() failed: %d\n",
+ 		    mcmd->vha->vp_idx, rc);
+-		mempool_free(mcmd, qla_tgt_mgmt_cmd_mempool);
++		mcmd->flags |= QLA24XX_MGMT_LLD_OWNED;
++		mcmd->fc_tm_rsp = FCP_TMF_FAILED;
++		qlt_xmit_tm_rsp(mcmd);
+ 	}
+ }
  
- 	memset(&prm, 0, sizeof(prm));
-@@ -3368,28 +3370,36 @@ int qlt_rdy_to_xfer(struct qla_tgt_cmd *cmd)
- 	prm.sg = NULL;
- 	prm.req_cnt = 1;
+@@ -2234,6 +2211,21 @@ void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *mcmd)
+ }
+ EXPORT_SYMBOL(qlt_free_mcmd);
  
--	if (!qpair->fw_started || (cmd->reset_count != qpair->chip_reset) ||
--	    (cmd->sess && cmd->sess->deleted)) {
--		/*
--		 * Either the port is not online or this request was from
--		 * previous life, just abort the processing.
--		 */
-+	/* Calculate number of entries and segments required */
-+	pci_map_res = qlt_pci_map_calc_cnt(&prm);
-+	/*
-+	 * Check pci_map_res later because we want to check other errors first.
-+	 */
++/*
++ * If the upper layer knows about this mgmt cmd, then call its ->free_cmd()
++ * callback, which will eventually call qlt_free_mcmd().  Otherwise, call
++ * qlt_free_mcmd() directly.
++ */
++void qlt_free_ul_mcmd(struct qla_hw_data *ha, struct qla_tgt_mgmt_cmd *mcmd)
++{
++	if (!mcmd)
++		return;
++	if (mcmd->flags & QLA24XX_MGMT_LLD_OWNED)
++		qlt_free_mcmd(mcmd);
++	else
++		ha->tgt.tgt_ops->free_mcmd(mcmd);
++}
 +
-+	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
-+
-+	if (unlikely(cmd->sent_term_exchg ||
-+		     cmd->sess->deleted ||
-+		     !qpair->fw_started ||
-+		     cmd->reset_count != qpair->chip_reset)) {
-+		ql_dbg(ql_dbg_tgt_mgt, vha, 0xe102,
-+		    "qla_target(%d): tag %lld: skipping data-out for aborted cmd\n",
-+		    vha->vp_idx, cmd->se_cmd.tag);
-+		qlt_unmap_sg(vha, cmd);
- 		cmd->aborted = 1;
- 		cmd->write_data_transferred = 0;
- 		cmd->state = QLA_TGT_STATE_DATA_IN;
- 		vha->hw->tgt.tgt_ops->handle_data(cmd);
--		ql_dbg_qp(ql_dbg_async, qpair, 0xe102,
--			"RESET-XFR online/active/old-count/new-count = %d/%d/%d/%d.\n",
--			vha->flags.online, qla2x00_reset_active(vha),
--			cmd->reset_count, qpair->chip_reset);
-+		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
- 		return 0;
+ /*
+  * ha->hardware_lock supposed to be held on entry. Might drop it, then
+  * reacquire
+@@ -2326,12 +2318,12 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
+ 			"RESET-TMR online/active/old-count/new-count = %d/%d/%d/%d.\n",
+ 			vha->flags.online, qla2x00_reset_active(vha),
+ 			mcmd->reset_count, qpair->chip_reset);
+-		ha->tgt.tgt_ops->free_mcmd(mcmd);
++		qlt_free_ul_mcmd(ha, mcmd);
+ 		spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+ 		return;
  	}
  
--	/* Calculate number of entries and segments required */
--	if (qlt_pci_map_calc_cnt(&prm) != 0)
--		return -EAGAIN;
-+	/* Check for errors from qlt_pci_map_calc_cnt(). */
-+	if (unlikely(pci_map_res != 0)) {
-+		res = -EAGAIN;
-+		goto out_unlock_free_unmap;
-+	}
+-	if (mcmd->flags == QLA24XX_MGMT_SEND_NACK) {
++	if (mcmd->flags & QLA24XX_MGMT_SEND_NACK) {
+ 		switch (mcmd->orig_iocb.imm_ntfy.u.isp24.status_subcode) {
+ 		case ELS_LOGO:
+ 		case ELS_PRLO:
+@@ -2364,7 +2356,7 @@ void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *mcmd)
+ 	 * qlt_xmit_tm_rsp() returns here..
+ 	 */
+ 	if (free_mcmd)
+-		ha->tgt.tgt_ops->free_mcmd(mcmd);
++		qlt_free_ul_mcmd(ha, mcmd);
  
--	spin_lock_irqsave(qpair->qp_lock_ptr, flags);
- 	/* Does F/W have an IOCBs for this request */
- 	res = qlt_check_reserve_free_req(qpair, prm.req_cnt);
- 	if (res != 0)
+ 	spin_unlock_irqrestore(qpair->qp_lock_ptr, flags);
+ }
+@@ -5742,7 +5734,7 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
+ 		if (le32_to_cpu(entry->error_subcode1) == 0x1E &&
+ 		    le32_to_cpu(entry->error_subcode2) == 0) {
+ 			if (qlt_chk_unresolv_exchg(vha, rsp->qpair, entry)) {
+-				ha->tgt.tgt_ops->free_mcmd(mcmd);
++				qlt_free_ul_mcmd(ha, mcmd);
+ 				return;
+ 			}
+ 			qlt_24xx_retry_term_exchange(vha, rsp->qpair,
+@@ -5753,10 +5745,10 @@ static void qlt_handle_abts_completion(struct scsi_qla_host *vha,
+ 			    vha->vp_idx, entry->compl_status,
+ 			    entry->error_subcode1,
+ 			    entry->error_subcode2);
+-			ha->tgt.tgt_ops->free_mcmd(mcmd);
++			qlt_free_ul_mcmd(ha, mcmd);
+ 		}
+ 	} else if (mcmd) {
+-		ha->tgt.tgt_ops->free_mcmd(mcmd);
++		qlt_free_ul_mcmd(ha, mcmd);
+ 	}
+ }
+ 
+diff --git a/drivers/scsi/qla2xxx/qla_target.h b/drivers/scsi/qla2xxx/qla_target.h
+index eb15d8e9f79e..223c40bc9498 100644
+--- a/drivers/scsi/qla2xxx/qla_target.h
++++ b/drivers/scsi/qla2xxx/qla_target.h
+@@ -966,6 +966,7 @@ struct qla_tgt_mgmt_cmd {
+ 	unsigned int flags;
+ #define QLA24XX_MGMT_SEND_NACK	BIT_0
+ #define QLA24XX_MGMT_ABORT_IO_ATTR_VALID BIT_1
++#define QLA24XX_MGMT_LLD_OWNED	BIT_2
+ 	uint32_t reset_count;
+ 	struct work_struct work;
+ 	uint64_t unpacked_lun;
+@@ -1059,6 +1060,7 @@ extern int qlt_abort_cmd(struct qla_tgt_cmd *);
+ void qlt_send_term_exchange(struct qla_qpair *qpair,
+ 	struct qla_tgt_cmd *cmd, struct atio_from_isp *atio, int ha_locked);
+ extern void qlt_xmit_tm_rsp(struct qla_tgt_mgmt_cmd *);
++void qlt_free_ul_mcmd(struct qla_hw_data *ha, struct qla_tgt_mgmt_cmd *mcmd);
+ extern void qlt_free_mcmd(struct qla_tgt_mgmt_cmd *);
+ extern void qlt_free_cmd(struct qla_tgt_cmd *cmd);
+ extern void qlt_unmap_sg(struct scsi_qla_host *vha, struct qla_tgt_cmd *cmd);
 -- 
 2.43.0
 
