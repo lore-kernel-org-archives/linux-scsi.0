@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 146D5342C8C;
-	Mon, 10 Nov 2025 18:48:08 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 399CA343D76;
+	Mon, 10 Nov 2025 18:48:09 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762800492; cv=none; b=sLX8q1VLj9rfZ/cIsXNVLgPyaoMvhkTWvysAk7zAKKQMWq9F0gpCBsTcjDMS5t5bdnuBuiPjeRME30AYqBV0So/HyDG4mfl9U9OvU7xB7s/N+wYYijq2nq7gv2PbamG2+uL77QzWItU190LmbLZ8fvxbqKeZIwg1Wa1qgBKtLgY=
+	t=1762800492; cv=none; b=SB09FTRGdn5ylZBjmmFvudU1c8xS+04vBBczZLk5In93LeikQViBI3aHOgParwuldiYCSHwPrZLFRnaEgRUF234ahJObdXWt5YGK5J7qBO7ElGyDMFw5ifVBVp/0eDSXM1ra2ez38FgO1nPEQJWKwz4EnTZYiTIxxOThyE5U9/A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762800492; c=relaxed/simple;
-	bh=4juQ99p3e3KtM6te/hbvKyOPptF+QeNnwr8ndteNapw=;
+	bh=2GLm4NVkdUuOv+K7T0bT1SYFkvMIdVSo+0VB+hLNaFU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=LX0Ysvh3hPchD9kNum9i9fCDyVsBbqagBFoFBJP+htoZxyuqvFp1Xy6CZF7Lpqqi9yfD1BxxmrWtaR2kGAztXbAKWEW+L1BFNqXkQcuGdDFJs6Q3Y36UTwAdO1c1/SlyQGgLaoNb33d5sq965qdcaBqQfY+0JZbUYKnzz3iG6EU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ftM6UnUf; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version; b=bXXacTMIbQ1lqJEN2fF+7ThLit1g35fOanYMOMCzSjB2M1dgSUTnj8ZDl2b9LXItiWVWbvJijoVAE8AIvsXX1oRKndr7uO9rGcS273UPNX4wBiTxfHVWEjL0Tn4IaOkPUDJLP0Q3E/eLBkc8llxSeFhZsPdGZO1zwMJ9QW2Mj6E=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Xr+xfnAY; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ftM6UnUf"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Xr+xfnAY"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762800488; x=1794336488;
+  t=1762800490; x=1794336490;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=4juQ99p3e3KtM6te/hbvKyOPptF+QeNnwr8ndteNapw=;
-  b=ftM6UnUf8GKrrx2cEUo2JRnFF3PuIB2puWGck/l9Q3QqMXc2UdVDbNiZ
-   akrW+xf71cB4p7t8WUjmT1ftA4usBogvB/xIXrAmOLSnVBTZc/GorqFJP
-   dJt53RB0WE7S9r5Zvdq1nPb0IuKOfyvnmIsUNfog+CCQqoVgyanxJlPm0
-   aKPdJK8Knqw25NZHw99Qe8ayhql3M2PmhFa/fp0mYpqbTm1ZCiEUdUjvt
-   qOl0HpjHlSM320HIYzpJIUCnlcEMKeAHpc4e+A2bM7wL3VjX5roTfNGNr
-   NHQdr7PSchGdN43aF4zhVf3nR5Fab0icirGwidkpFNLfs74dQRn7Wi/5N
-   Q==;
-X-CSE-ConnectionGUID: rvOUl+2xSnyApLYon7HxQw==
-X-CSE-MsgGUID: a/041wrgRIC26xKwO3vnKA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="64769665"
-X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
-   d="scan'208";a="64769665"
-Received: from fmviesa010.fm.intel.com ([10.60.135.150])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:48:07 -0800
-X-CSE-ConnectionGUID: 3ynojx9aTemebvQa2QUulQ==
-X-CSE-MsgGUID: twHEdvfkR26b2l2EM+qABw==
+  bh=2GLm4NVkdUuOv+K7T0bT1SYFkvMIdVSo+0VB+hLNaFU=;
+  b=Xr+xfnAYCxe6MhlF0FQVyvroEoodza+3zQHhG5UOIG/Gfb8q94Epgg5B
+   wAZ45kaq0pRGU1Iu2hWVtf/WPTAfK/MVIwX4XUM7oIZWYQGgDoYdzXKfA
+   Mgq66IjrkrtCIK+gS0jzXUknnIjiskEM4t5YRCzLS+2STRJNcFPGR2bKD
+   Fckq8z534e6b3qRwXtIloMhEX/afk2NU/Nf7Jbzb+Kicxupv5XyJ0wTll
+   LZ9Vs6Z7igbRCKG8lLs6IJIcEw5AzR3DPG4wmbhcL0G2ak9QIAj/KC9j7
+   GoUofSAjQXufth9awgckdiQDFPF63HkRBMdoSldsSH/i9EQS1eQ9cYdKg
+   g==;
+X-CSE-ConnectionGUID: HTrrBqHJR1OuiBUhZjvStw==
+X-CSE-MsgGUID: gkzU4w97SOOl0WpoEoTRgA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="68714896"
+X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
+   d="scan'208";a="68714896"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 10 Nov 2025 10:48:06 -0800
+X-CSE-ConnectionGUID: T9JvXfd2RP6uhr7fMRGrgQ==
+X-CSE-MsgGUID: Pv4wkjngReqizgRny5HiIw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,294,1754982000"; 
-   d="scan'208";a="189472138"
+   d="scan'208";a="188985842"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa010.fm.intel.com with ESMTP; 10 Nov 2025 10:47:59 -0800
+  by fmviesa008.fm.intel.com with ESMTP; 10 Nov 2025 10:47:58 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 8C76DAC; Mon, 10 Nov 2025 19:47:29 +0100 (CET)
+	id 71F03A8; Mon, 10 Nov 2025 19:47:29 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -142,9 +142,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Andrew Morton <akpm@linux-foundation.org>,
 	Jaroslav Kysela <perex@perex.cz>,
 	Takashi Iwai <tiwai@suse.com>
-Subject: [PATCH v1 23/23] tracing: Switch to use %ptSp
-Date: Mon, 10 Nov 2025 19:40:42 +0100
-Message-ID: <20251110184727.666591-24-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v1 19/23] ptp: ocp: Switch to use %ptSp
+Date: Mon, 10 Nov 2025 19:40:38 +0100
+Message-ID: <20251110184727.666591-20-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
 References: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
@@ -159,31 +159,56 @@ Content-Transfer-Encoding: 8bit
 Use %ptSp instead of open coded variants to print content of
 struct timespec64 in human readable format.
 
+While at it, fix wrong use of %ptT against struct timespec64.
+It's kinda lucky that it worked just because the first member
+there 64-bit and it's of time64_t type. Now with %ptS it may
+be used correctly.
+
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- kernel/trace/trace_output.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/ptp/ptp_ocp.c | 15 ++++++---------
+ 1 file changed, 6 insertions(+), 9 deletions(-)
 
-diff --git a/kernel/trace/trace_output.c b/kernel/trace/trace_output.c
-index ebbab3e9622b..cc2d3306bb60 100644
---- a/kernel/trace/trace_output.c
-+++ b/kernel/trace/trace_output.c
-@@ -1490,12 +1490,12 @@ trace_hwlat_print(struct trace_iterator *iter, int flags,
+diff --git a/drivers/ptp/ptp_ocp.c b/drivers/ptp/ptp_ocp.c
+index a5c363252986..a0bb8d3045d2 100644
+--- a/drivers/ptp/ptp_ocp.c
++++ b/drivers/ptp/ptp_ocp.c
+@@ -3261,7 +3261,7 @@ signal_show(struct device *dev, struct device_attribute *attr, char *buf)
+ 			   signal->duty, signal->phase, signal->polarity);
  
- 	trace_assign_type(field, entry);
+ 	ts = ktime_to_timespec64(signal->start);
+-	count += sysfs_emit_at(buf, count, " %ptT TAI\n", &ts);
++	count += sysfs_emit_at(buf, count, " %ptS TAI\n", &ts);
  
--	trace_seq_printf(s, "#%-5u inner/outer(us): %4llu/%-5llu ts:%lld.%09ld count:%d",
-+	trace_seq_printf(s, "#%-5u inner/outer(us): %4llu/%-5llu ts:%ptSp count:%d",
- 			 field->seqnum,
- 			 field->duration,
- 			 field->outer_duration,
--			 (long long)field->timestamp.tv_sec,
--			 field->timestamp.tv_nsec, field->count);
-+			 &field->timestamp,
-+			 field->count);
+ 	return count;
+ }
+@@ -4287,11 +4287,9 @@ ptp_ocp_summary_show(struct seq_file *s, void *data)
+ 		ns += (s64)bp->utc_tai_offset * NSEC_PER_SEC;
+ 		sys_ts = ns_to_timespec64(ns);
  
- 	if (field->nmi_count) {
- 		/*
+-		seq_printf(s, "%7s: %lld.%ld == %ptT TAI\n", "PHC",
+-			   ts.tv_sec, ts.tv_nsec, &ts);
+-		seq_printf(s, "%7s: %lld.%ld == %ptT UTC offset %d\n", "SYS",
+-			   sys_ts.tv_sec, sys_ts.tv_nsec, &sys_ts,
+-			   bp->utc_tai_offset);
++		seq_printf(s, "%7s: %ptSp == %ptS TAI\n", "PHC", &ts, &ts);
++		seq_printf(s, "%7s: %ptSp == %ptS UTC offset %d\n", "SYS",
++			   &sys_ts, &sys_ts, bp->utc_tai_offset);
+ 		seq_printf(s, "%7s: PHC:SYS offset: %lld  window: %lld\n", "",
+ 			   timespec64_to_ns(&ts) - ns,
+ 			   post_ns - pre_ns);
+@@ -4499,9 +4497,8 @@ ptp_ocp_phc_info(struct ptp_ocp *bp)
+ 		 ptp_clock_index(bp->ptp));
+ 
+ 	if (!ptp_ocp_gettimex(&bp->ptp_info, &ts, NULL))
+-		dev_info(&bp->pdev->dev, "Time: %lld.%ld, %s\n",
+-			 ts.tv_sec, ts.tv_nsec,
+-			 bp->sync ? "in-sync" : "UNSYNCED");
++		dev_info(&bp->pdev->dev, "Time: %ptSp, %s\n",
++			 &ts, bp->sync ? "in-sync" : "UNSYNCED");
+ }
+ 
+ static void
 -- 
 2.50.1
 
