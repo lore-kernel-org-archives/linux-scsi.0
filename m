@@ -1,41 +1,41 @@
 Received: from sender4-pp-f112.zoho.com (sender4-pp-f112.zoho.com [136.143.188.112])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F7944503B;
-	Mon, 10 Nov 2025 09:20:16 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BAEF02FFDC9;
+	Mon, 10 Nov 2025 09:24:47 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=136.143.188.112
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762766418; cv=pass; b=JJNFYh9thNCXHtdpm0CvevJAqVhnsG02pSOFSEA3VvmtzybusIfeOKi/egqszi+guk6Q9ofkjyP6QgpVmIPtWaRpxWSCm6UaEdMRDh4aJwcvle2Thplf0XMOVI4qpcLmi4kg/zzrVrZX9uVlC8FdOLjF+SNQmSsGBoIz4kpfPQs=
+	t=1762766692; cv=pass; b=njZIf4q5lAjmZpDQ3QEzKf0Jc1jH48IirIhgiMWE2Ph25yFWd6t9XnJRe5XqEnlX3PzSMNdDVesoGyARRPytYkFPjasGZi7G4gUqx01exG86F2aSSSUa3DVcK0/D7vHlfHGAc5xaEWFEjXjo9gNoS9B/QGVb5nMtvPX9F7KuWa0=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762766418; c=relaxed/simple;
-	bh=aiQbFvykbkMPAcRTW3HRuLSEfDYUjHVu9JHorCRdmr4=;
+	s=arc-20240116; t=1762766692; c=relaxed/simple;
+	bh=/9IyHse28dhhfDUIv53BKo7Pw+5RouaKVxJ8DZ5TDsc=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ceeMK/R4/OFPXU2hE9X6UxvU8p3cQ0aZ0p0b+4CVFDzL8Gcf9qVSj8rbSpOIHlDOq7zGFlZtlQvu+kgqqHsjj3lfoyb5UVGNAtBd7wsp8n9jVtOkl/azzYkli4UzMqAXE3rX2YyOv1iRbJVSK+auzcVrswFqYW6Bv1DU8MIMhsc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=FSyKtglp; arc=pass smtp.client-ip=136.143.188.112
+	 MIME-Version:Content-Type; b=dZZ8ON8LJEwy9OmJTv+5KFGTV9MzfcetnYVcV9VlkI88Y3u2JLz/vLQLqEhHaVXgQ48lJEETaW1oCQEMAj0xLmpaErgDmN33z2O6YTkpzXjGOw/rXI3iokhNvhbtfODlQrfc2ONntBadcTHt7CxWuFZMOg/Umys32qM70rWoOYA=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com; spf=pass smtp.mailfrom=collabora.com; dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b=M0zedMx4; arc=pass smtp.client-ip=136.143.188.112
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=collabora.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=collabora.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="FSyKtglp"
-ARC-Seal: i=1; a=rsa-sha256; t=1762766377; cv=none; 
+	dkim=pass (1024-bit key) header.d=collabora.com header.i=nicolas.frattaroli@collabora.com header.b="M0zedMx4"
+ARC-Seal: i=1; a=rsa-sha256; t=1762766633; cv=none; 
 	d=zohomail.com; s=zohoarc; 
-	b=mQxPVYOATQezqBL5yCJPKwUbX+JgMrUABoUyvim3PFza8c5ZHhZestibHiJFWxXvoUng13jVC8P9S64jLTObD3EpZPUjgof53bxKAflmbD/d78+0IWCG8rNnUURNAQ8Oje3LhaAfmz53emfB473ehmaxkoUhLVNdPpqAiCm1FeU=
+	b=VjrlaTXRT1DTspIRhNm8LqC+UeVeIz39ALeceKY8V7A5/ao3cVaWPJGQCtUJkoopAY3oEk19DUBQ5ibEOHjsNshLnbMXcJb7jHIVgj27JBHdSNW83mWJAtEyjqKUkU+70aUVA5OqDkOgeToKqF1ezdim2D85BEoTmgeE8g+8iMw=
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=zohomail.com; s=zohoarc; 
-	t=1762766377; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
-	bh=hxLXwdvcR73afnWX3+U+TbZmEVnvtJ1WDn3vMJOYfeI=; 
-	b=AUtP6OnBexLHP6078mlNSuvrN1eMtg8eyILcYQm+PCUyEel5aO3GjP5o+k/IR2p8jF5aO/vUOfWan+DKf+K6QVxlPMK3JNUqhpcbD2Q6ZQc69QnOsjAw2W5iAuL+QEHBPlJ0aoWglABTbUZzwNG9t4F8qJN4UUICHgiaxNcj24E=
+	t=1762766633; h=Content-Type:Content-Transfer-Encoding:Cc:Cc:Date:Date:From:From:In-Reply-To:MIME-Version:Message-ID:References:Subject:Subject:To:To:Message-Id:Reply-To; 
+	bh=VSfkaAkbqob94VjtZuefTP3rzVGvzkZ2PyLqZ5TTMEA=; 
+	b=XLMEUim6kByafUhy0mTCMpYnie0fvJC94Rlkmr9OvZoBM/BvE4A8qAyaZJ28JgXr5CMUUniOkUWEgT5jJKcEHivS6qOX4MtH7q2lmgiy0e6eGeOEQjX7p1tA7pKaMacSQhpY/rAvCpENb6KBfOD+Fn0GJelXd6Ekc/lXY/RIzCo=
 ARC-Authentication-Results: i=1; mx.zohomail.com;
 	dkim=pass  header.i=collabora.com;
 	spf=pass  smtp.mailfrom=nicolas.frattaroli@collabora.com;
 	dmarc=pass header.from=<nicolas.frattaroli@collabora.com>
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1762766376;
+DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed; t=1762766633;
 	s=zohomail; d=collabora.com; i=nicolas.frattaroli@collabora.com;
 	h=From:From:To:To:Cc:Cc:Subject:Subject:Date:Date:Message-ID:In-Reply-To:References:MIME-Version:Content-Transfer-Encoding:Content-Type:Message-Id:Reply-To;
-	bh=hxLXwdvcR73afnWX3+U+TbZmEVnvtJ1WDn3vMJOYfeI=;
-	b=FSyKtglpf319WU2vjW77dgt25xU6yIInC/sCx6LK4hbKihknuUJcM+Xfc4doAzdm
-	TkVp3GcYUsXL3ydIq01zsOAj8rnMcOSkAt6BZ5AUWKkDs6fcC2OqtvmkDzvhvjE66+d
-	HJOO9ylHv/KRJd9AOt8FaM/tBgmLyh5foC6PyvK0=
-Received: by mx.zohomail.com with SMTPS id 1762766374404175.65977685098846;
-	Mon, 10 Nov 2025 01:19:34 -0800 (PST)
+	bh=VSfkaAkbqob94VjtZuefTP3rzVGvzkZ2PyLqZ5TTMEA=;
+	b=M0zedMx4CrQIdjkZsoQwJ8KticXzTN1x4GvoNv08cmSC0hYxvMv9qSGvBmrKDbyw
+	i03mA/4eYRl4HLbD6swqiUagf75i5IfHFPr9wXgIDK/4mT9WJ1C3K1oenQu1UUNzxrQ
+	/62gPcbfd3SJ2sYn/ob1aR6YI0N5+KdulfvauR6Y=
+Received: by mx.zohomail.com with SMTPS id 1762766632129188.4290479822298;
+	Mon, 10 Nov 2025 01:23:52 -0800 (PST)
 From: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 To: Peter Wang =?UTF-8?B?KOeOi+S/oeWPiyk=?= <peter.wang@mediatek.com>,
  Chunfeng Yun =?UTF-8?B?KOS6keaYpeWzsCk=?= <Chunfeng.Yun@mediatek.com>,
@@ -66,15 +66,14 @@ Cc: "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
  "linux-arm-kernel@lists.infradead.org"
  <linux-arm-kernel@lists.infradead.org>,
  "linux-phy@lists.infradead.org" <linux-phy@lists.infradead.org>
-Subject:
- Re: [PATCH v3 09/24] scsi: ufs: mediatek: Rework the crypt-boost stuff
-Date: Mon, 10 Nov 2025 10:19:25 +0100
-Message-ID: <6210035.lOV4Wx5bFT@workhorse>
-In-Reply-To: <9ae7495023a8562566ff57bd2dfa60524194ee30.camel@mediatek.com>
+Subject: Re: [PATCH v3 10/24] scsi: ufs: mediatek: Rework probe function
+Date: Mon, 10 Nov 2025 10:23:44 +0100
+Message-ID: <5025239.GXAFRqVoOG@workhorse>
+In-Reply-To: <90a10fba2e41db4df4c28a72d182c5f0df8c016d.camel@mediatek.com>
 References:
  <20251023-mt8196-ufs-v3-0-0f04b4a795ff@collabora.com>
- <20251023-mt8196-ufs-v3-9-0f04b4a795ff@collabora.com>
- <9ae7495023a8562566ff57bd2dfa60524194ee30.camel@mediatek.com>
+ <20251023-mt8196-ufs-v3-10-0f04b4a795ff@collabora.com>
+ <90a10fba2e41db4df4c28a72d182c5f0df8c016d.camel@mediatek.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -84,183 +83,168 @@ MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 Content-Type: text/plain; charset="utf-8"
 
-On Tuesday, 4 November 2025 08:28:18 Central European Standard Time Chaotia=
-n Jing (=E4=BA=95=E6=9C=9D=E5=A4=A9) wrote:
+On Wednesday, 5 November 2025 07:28:39 Central European Standard Time Chaot=
+ian Jing (=E4=BA=95=E6=9C=9D=E5=A4=A9) wrote:
 > On Thu, 2025-10-23 at 21:49 +0200, Nicolas Frattaroli wrote:
-> > I don't know whether the crypt-boost functionality as it is currently
-> > implemented is even appropriate for mainline. It might be better done
-> > in
-> > some generic way. But what I do know is that I can rework the code to
-> > make it less obtuse.
+> > Remove the ti,syscon-reset cruft.
 > >=20
-> > Prefix the boost stuff with the appropriate vendor prefix, remove the
-> > pointless clock wrappers, and rework the function.
+> > Make PHY mandatory. All the compatibles supported by the binding make
+> > it
+> > mandatory.
+> >=20
+> why make the PHY mandatory ? note that not all of MediaTek SoCs have
+> the PHY node.
+
+Why don't they have the PHY node? Does the hardware not have a PHY?
+
+The mainline binding makes the phys property mandatory. If you have
+downstream device trees that don't have the PHY node properly
+described in the DT even though the PHY exists, then that is not a
+thing the mainline kernel should support.
+
+If the hardware really doesn't have a PHY, which would surprise me,
+then the binding should properly document this, so that the DT checks
+pass without warnings.
+
+> > Entertain this driver's insistence on playing with the PHY's RPM, but
+> > at
+> > least fix the part where it doesn't increase the reference count,
+> > which
+> > would lead to use-after-free.
 > >=20
 > > Signed-off-by: Nicolas Frattaroli <nicolas.frattaroli@collabora.com>
 > > ---
-> >  drivers/ufs/host/ufs-mediatek.c | 91 +++++++++++++++--------------
+> >  drivers/ufs/host/ufs-mediatek.c | 87 +++++++++++++++--------------
 > > ------------
-> >  1 file changed, 32 insertions(+), 59 deletions(-)
+> >  1 file changed, 32 insertions(+), 55 deletions(-)
 > >=20
 > > diff --git a/drivers/ufs/host/ufs-mediatek.c b/drivers/ufs/host/ufs-
 > > mediatek.c
-> > index 131f71145a12..9c0ac72d6e43 100644
+> > index 9c0ac72d6e43..889a1d58a041 100644
 > > --- a/drivers/ufs/host/ufs-mediatek.c
 > > +++ b/drivers/ufs/host/ufs-mediatek.c
-> > @@ -562,21 +562,6 @@ static int ufs_mtk_mphy_power_on(struct ufs_hba
-> > *hba, bool on)
-> >  	return 0;
-> >  }
-> > =20
-> > -static int ufs_mtk_get_host_clk(struct device *dev, const char
-> > *name,
-> > -				struct clk **clk_out)
-> > -{
-> > -	struct clk *clk;
-> > -	int err =3D 0;
-> > -
-> > -	clk =3D devm_clk_get(dev, name);
-> > -	if (IS_ERR(clk))
-> > -		err =3D PTR_ERR(clk);
-> > -	else
-> > -		*clk_out =3D clk;
-> > -
-> > -	return err;
-> > -}
-> > -
-> >  static void ufs_mtk_boost_crypt(struct ufs_hba *hba, bool boost)
+> > @@ -2353,74 +2353,49 @@ MODULE_DEVICE_TABLE(of, ufs_mtk_of_match);
+> >   */
+> >  static int ufs_mtk_probe(struct platform_device *pdev)
 > >  {
-> >  	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
-> > @@ -633,65 +618,53 @@ static void ufs_mtk_boost_crypt(struct ufs_hba
-> > *hba, bool boost)
-> >  	clk_disable_unprepare(cfg->clk_crypt_mux);
-> >  }
+> > -	int err;
+> > -	struct device *dev =3D &pdev->dev, *phy_dev =3D NULL;
+> > -	struct device_node *reset_node, *phy_node =3D NULL;
+> > -	struct platform_device *reset_pdev, *phy_pdev =3D NULL;
+> > -	struct device_link *link;
+> > -	struct ufs_hba *hba;
+> > +	struct platform_device *phy_pdev;
+> > +	struct device *dev =3D &pdev->dev;
+> > +	struct device_node *phy_node;
+> >  	struct ufs_mtk_host *host;
+> > +	struct device *phy_dev;
+> > +	struct ufs_hba *hba;
+> > +	int err;
 > > =20
-> > -static int ufs_mtk_init_host_clk(struct ufs_hba *hba, const char
-> > *name,
-> > -				 struct clk **clk)
-> > -{
-> > -	int ret;
-> > -
-> > -	ret =3D ufs_mtk_get_host_clk(hba->dev, name, clk);
-> > -	if (ret) {
-> > -		dev_info(hba->dev, "%s: failed to get %s: %d",
-> > __func__,
-> > -			 name, ret);
+> > -	reset_node =3D of_find_compatible_node(NULL, NULL,
+> > -					     "ti,syscon-reset");
+> > -	if (!reset_node) {
+> > -		dev_notice(dev, "find ti,syscon-reset fail\n");
+> > -		goto skip_reset;
+> > -	}
+> > -	reset_pdev =3D of_find_device_by_node(reset_node);
+> > -	if (!reset_pdev) {
+> > -		dev_notice(dev, "find reset_pdev fail\n");
+> > -		goto skip_reset;
+> > -	}
+> > -	link =3D device_link_add(dev, &reset_pdev->dev,
+> > -		DL_FLAG_AUTOPROBE_CONSUMER);
+> > -	put_device(&reset_pdev->dev);
+> > -	if (!link) {
+> > -		dev_notice(dev, "add reset device_link fail\n");
+> > -		goto skip_reset;
+> > -	}
+> > -	/* supplier is not probed */
+> > -	if (link->status =3D=3D DL_STATE_DORMANT) {
+> > -		err =3D -EPROBE_DEFER;
+> > -		goto out;
 > > -	}
 > > -
-> > -	return ret;
-> > -}
-> > -
-> > -static void ufs_mtk_init_boost_crypt(struct ufs_hba *hba)
-> > +static int ufs_mtk_init_boost_crypt(struct ufs_hba *hba)
-> You change the return type but never checked the return value when
-> calling this function ?
-
-Yeah, I should probably check the return in ufs_mtk_init_host_caps
-instead of continuing on silently.
-
-> >  {
-> >  	struct ufs_mtk_host *host =3D ufshcd_get_variant(hba);
-> >  	struct ufs_mtk_crypt_cfg *cfg;
-> >  	struct device *dev =3D hba->dev;
-> > -	struct regulator *reg;
-> > -	u32 volt;
-> > +	int ret;
+> > -skip_reset:
+> >  	/* find phy node */
+> >  	phy_node =3D of_parse_phandle(dev->of_node, "phys", 0);
+> > +	if (!phy_node)
+> > +		return dev_err_probe(dev, -ENOENT, "No PHY node
+> > found\n");
 > > =20
-> > -	host->crypt =3D devm_kzalloc(dev, sizeof(*(host->crypt)),
-> > -				   GFP_KERNEL);
-> > -	if (!host->crypt)
-> > -		goto disable_caps;
-> > +	cfg =3D devm_kzalloc(dev, sizeof(*cfg), GFP_KERNEL);
-> > +	if (!cfg)
-> > +		return -ENOMEM;
+> > -	if (phy_node) {
+> > -		phy_pdev =3D of_find_device_by_node(phy_node);
+> > -		if (!phy_pdev)
+> > -			goto skip_phy;
+> > -		phy_dev =3D &phy_pdev->dev;
+> > +	phy_pdev =3D of_find_device_by_node(phy_node);
+> > +	of_node_put(phy_node);
+> > +	if (!phy_pdev)
+> > +		return dev_err_probe(dev, -ENODEV, "No PHY device
+> > found\n");
 > > =20
-> > -	reg =3D devm_regulator_get_optional(dev, "dvfsrc-vcore");
-> > -	if (IS_ERR(reg)) {
-> > -		dev_info(dev, "failed to get dvfsrc-vcore: %ld",
-> > -			 PTR_ERR(reg));
-> > -		goto disable_caps;
-> > +	cfg->reg_vcore =3D devm_regulator_get_optional(dev, "dvfsrc-
-> > vcore");
-> > +	if (IS_ERR(cfg->reg_vcore)) {
-> > +		dev_err(dev, "Failed to get dvfsrc-vcore: %pe", cfg-
-> > >reg_vcore);
-> Since this regulator is optional, why use dev_err ? and why retune an
-> error since you never check the return value ?
-
-Because get_optional doesn't mean what you think it means. It means
-the function returns -ENODEV if the regulator is absent, instead of
-creating a dummy supply. We want to hard error out if the regulator
-is absent, because the regulator is needed.
-
-Whether or not the return code is checked makes no functional
-difference in this case. If this function exits early,
-UFS_MTK_CAP_BOOST_CRYPT_ENGINE isn't added to the host caps,
-and the host->crypt member isn't set to cfg.
-
-The return code may be useful for additional logging, which is not
-critical to the correctness of the code.
-
-> > +		return PTR_ERR(cfg->reg_vcore);
+> > -		pm_runtime_set_active(phy_dev);
+> > -		pm_runtime_enable(phy_dev);
+> > -		pm_runtime_get_sync(phy_dev);
+> > +	phy_dev =3D &phy_pdev->dev;
+> > =20
+> > -		put_device(phy_dev);
+> > -		dev_info(dev, "phys node found\n");
+> > -	} else {
+> > -		dev_notice(dev, "phys node not found\n");
+> > +	err =3D pm_runtime_set_active(phy_dev);
+> > +	if (err) {
+> > +		dev_err_probe(dev, err, "Failed to activate PHY
+> > RPM\n");
+> > +		goto err_put_phy;
+> > +	}
+> > +	pm_runtime_enable(phy_dev);
+> > +	err =3D pm_runtime_get_sync(phy_dev);
+> > +	if (err) {
+> > +		dev_err_probe(dev, err, "Failed to power on PHY\n");
+> > +		goto err_put_phy;
 > >  	}
 > > =20
-> > -	if (of_property_read_u32(dev->of_node, "boost-crypt-vcore-min",
-> > -				 &volt)) {
-> > -		dev_info(dev, "failed to get boost-crypt-vcore-min");
-> > -		goto disable_caps;
-> > +	ret =3D of_property_read_u32(dev->of_node, "mediatek,boost-crypt-
-> > vcore-min",
-> > +				   &cfg->vcore_volt);
-> > +	if (ret) {
-> > +		dev_err(dev, "Failed to get mediatek,boost-crypt-vcore-
-> > min: %pe\n",
-> > +			ERR_PTR(ret));
-> > +		return ret;
+> > -skip_phy:
+> >  	/* perform generic probe */
+> >  	err =3D ufshcd_pltfrm_init(pdev, &ufs_hba_mtk_vops);
+> >  	if (err) {
+> > -		dev_err(dev, "probe failed %d\n", err);
+> > -		goto out;
+> > +		dev_err_probe(dev, err, "Generic platform probe
+> > failed\n");
+> > +		goto err_put_phy;
 > >  	}
 > > =20
-> > -	cfg =3D host->crypt;
-> > -	if (ufs_mtk_init_host_clk(hba, "crypt_mux",
-> > -				  &cfg->clk_crypt_mux))
-> > -		goto disable_caps;
-> > +	cfg->clk_crypt_mux =3D devm_clk_get(dev, "crypt_mux");
-> > +	if (IS_ERR(cfg->clk_crypt_mux)) {
-> > +		dev_err(dev, "Failed to get clock crypt_mux: %pe\n",
-> > cfg->clk_crypt_mux);
-> > +		return PTR_ERR(cfg->clk_crypt_mux);
-> > +	}
+> >  	hba =3D platform_get_drvdata(pdev);
+> > -	if (!hba)
+> > -		goto out;
 > > =20
-> > -	if (ufs_mtk_init_host_clk(hba, "crypt_lp",
-> > -				  &cfg->clk_crypt_lp))
-> > -		goto disable_caps;
-> > +	cfg->clk_crypt_lp =3D devm_clk_get(dev, "crypt_lp");
-> > +	if (IS_ERR(cfg->clk_crypt_lp)) {
-> > +		dev_err(dev, "Failed to get clock crypt_lp: %pe\n",
-> > cfg->clk_crypt_lp);
-> > +		return PTR_ERR(cfg->clk_crypt_lp);
-> > +	}
+> > -	if (phy_node && phy_dev) {
+> > -		host =3D ufshcd_get_variant(hba);
+> > -		host->phy_dev =3D phy_dev;
+> > -	}
+> > +	host =3D ufshcd_get_variant(hba);
+> > +	host->phy_dev =3D phy_dev;
 > > =20
-> > -	if (ufs_mtk_init_host_clk(hba, "crypt_perf",
-> > -				  &cfg->clk_crypt_perf))
-> > -		goto disable_caps;
-> > +	cfg->clk_crypt_perf =3D devm_clk_get(dev, "crypt_perf");
-> > +	if (IS_ERR(cfg->clk_crypt_perf)) {
-> > +		dev_err(dev, "Failed to get clock crypt_perf: %pe\n",
-> > cfg->clk_crypt_perf);
-> > +		return PTR_ERR(cfg->clk_crypt_perf);
-> > +	}
+> >  	/*
+> >  	 * Because the default power setting of VSx (the upper layer of
+> > @@ -2429,9 +2404,11 @@ static int ufs_mtk_probe(struct
+> > platform_device *pdev)
+> >  	 */
+> >  	ufs_mtk_dev_vreg_set_lpm(hba, false);
 > > =20
-> > -	cfg->reg_vcore =3D reg;
-> > -	cfg->vcore_volt =3D volt;
-> > +	host->crypt =3D cfg;
-> >  	host->caps |=3D UFS_MTK_CAP_BOOST_CRYPT_ENGINE;
-> > =20
-> > -disable_caps:
-> > -	return;
+> > -out:
+> > -	of_node_put(phy_node);
+> > -	of_node_put(reset_node);
 > > +	return 0;
+> > +
+> > +err_put_phy:
+> > +	put_device(phy_dev);
+> > +
+> >  	return err;
 > >  }
 > > =20
-> >  static void ufs_mtk_init_host_caps(struct ufs_hba *hba)
 > >=20
 >=20
 
