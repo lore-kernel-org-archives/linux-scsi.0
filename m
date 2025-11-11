@@ -1,205 +1,143 @@
-Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 96D6E192D8A
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2025 06:42:29 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FF3015E8B;
+	Tue, 11 Nov 2025 07:58:00 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762843354; cv=none; b=F6tKC5nv3sXM2TBn7MJ3iK+iFsTxkR82zwF7j4L1IaJJ46h0Bwa6UKmJSN/vUReYe3P4GxnCT/3m/99y8sh6BGVwnWC8jkwFgNjNBRS+wS/UhKW3xZM4QIJ8q9aT5tFtxPDuufGu0BxQwu6Pxkdj2xXdfGu1jcJ7OP4eJkYJcME=
+	t=1762847882; cv=none; b=eZKZjEKMN9mOhEY2V0ziQLm7n3Pg4kKKA465ZuyjldvniYjnr1iHR4kduPqpesPO9GTSvCQb7Ip+O6ksgBWjjTh/3SBQsjaGBDtnKU6ujtXtKP2DfXfXxSiu8w9qviIldyqIQw/SB+/Yw1L8R3anq0Ek62tlJJXWURrEDpHtQ3Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762843354; c=relaxed/simple;
-	bh=ATNN5RmueLox2IC+5BDEXAgaIglCENc+yF4ZTPMaIZg=;
-	h=Date:Message-ID:From:To:Cc:Subject:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=CcLzLuMG8DOJV1otQNNuMLajPLGLmdV/zmTy3QzaT625l+MhONUWg6ArEYlFV84pWbfNtNYVzloQwJzck8sJIvN3BiV95c7fneErbYc+ZWVRSotscE3jD8D+5s3oQD3nEJqzqOHhektELemLbXlBEuAim5OcWgBBmPStEhHl6+Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MJJifpxj; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=XOVf1gy9; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=MJJifpxj; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=XOVf1gy9; arc=none smtp.client-ip=195.135.223.130
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
+	s=arc-20240116; t=1762847882; c=relaxed/simple;
+	bh=5Uaa5nwFjVAGS3f1mHP+LmUtuVFBDubmN+xdr/NpZiU=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
+	 In-Reply-To:Content-Type; b=QMpjdDxN+/6mX0/eB6d9HgpEsG02z037IrRnN32V1imj+Q0EBDxuRmDVJpDUNRwijPJK9vHIbOPC9j2xAbMUA7zppMrDfakOy3i+XqOwgBnvpYeT5O3TOu42+gDJHaMCS0OQXogbRmuVspjnOARReoRg5UkP7GyhUOke1IroFY8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ch1k3nWP; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MJJifpxj";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="XOVf1gy9";
-	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="MJJifpxj";
-	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="XOVf1gy9"
-Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by smtp-out1.suse.de (Postfix) with ESMTPS id 003E121D96;
-	Tue, 11 Nov 2025 06:42:26 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1762843347; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fnn8buj3dz2cAu1lwnMV3wmGOQAis/X/NnrYyJhRgpI=;
-	b=MJJifpxj0d+JjXgZOzmxMDpQDTSyIadrJYsNIbJl+ULZfRSkA1F3QRigpspAqsE+66Rhp4
-	Shn7meUxG5KGJZOHhOahRAQKGy6Nb5TLhqjOSRo1AsBLy8kaYN8yBZmHfsJ+Bw3No+qv6Y
-	5wW5dT7W11nmHzpKpr6zOoTnHE6LBoQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1762843347;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fnn8buj3dz2cAu1lwnMV3wmGOQAis/X/NnrYyJhRgpI=;
-	b=XOVf1gy9U5gZVwTjF3TZLqMUlzKAS6MC5EfTBJRYyS+0eMhaSrKs4ZKyZxOlsKibNkjCP/
-	7jvcMdxbfbH3qxAQ==
-Authentication-Results: smtp-out1.suse.de;
-	none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
-	t=1762843347; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fnn8buj3dz2cAu1lwnMV3wmGOQAis/X/NnrYyJhRgpI=;
-	b=MJJifpxj0d+JjXgZOzmxMDpQDTSyIadrJYsNIbJl+ULZfRSkA1F3QRigpspAqsE+66Rhp4
-	Shn7meUxG5KGJZOHhOahRAQKGy6Nb5TLhqjOSRo1AsBLy8kaYN8yBZmHfsJ+Bw3No+qv6Y
-	5wW5dT7W11nmHzpKpr6zOoTnHE6LBoQ=
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
-	s=susede2_ed25519; t=1762843347;
-	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
-	 mime-version:mime-version:content-type:content-type:
-	 in-reply-to:in-reply-to:references:references;
-	bh=fnn8buj3dz2cAu1lwnMV3wmGOQAis/X/NnrYyJhRgpI=;
-	b=XOVf1gy9U5gZVwTjF3TZLqMUlzKAS6MC5EfTBJRYyS+0eMhaSrKs4ZKyZxOlsKibNkjCP/
-	7jvcMdxbfbH3qxAQ==
-Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
-	(No client certificate requested)
-	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id EAC3E14805;
-	Tue, 11 Nov 2025 06:42:24 +0000 (UTC)
-Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
-	by imap1.dmz-prg2.suse.org with ESMTPSA
-	id OZMhONDaEmkhSgAAD6G6ig
-	(envelope-from <tiwai@suse.de>); Tue, 11 Nov 2025 06:42:24 +0000
-Date: Tue, 11 Nov 2025 07:42:24 +0100
-Message-ID: <87jyzx2hpr.wl-tiwai@suse.de>
-From: Takashi Iwai <tiwai@suse.de>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Corey Minyard <corey@minyard.net>,	Christian =?ISO-8859-1?Q?K=F6nig?=
- <christian.koenig@amd.com>,	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	Alex Deucher <alexander.deucher@amd.com>,	Thomas Zimmermann
- <tzimmermann@suse.de>,	Dmitry Baryshkov
- <dmitry.baryshkov@oss.qualcomm.com>,	Rob Clark
- <robin.clark@oss.qualcomm.com>,	Matthew Brost <matthew.brost@intel.com>,
-	Hans Verkuil <hverkuil@kernel.org>,	Laurent Pinchart
- <laurent.pinchart+renesas@ideasonboard.com>,	Ulf Hansson
- <ulf.hansson@linaro.org>,	Vitaly Lifshits <vitaly.lifshits@intel.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,	Niklas Cassel <cassel@kernel.org>,
-	Calvin Owens <calvin@wbinvd.org>,	Sagi Maimon <maimon.sagi@gmail.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,	Karan Tilak Kumar
- <kartilak@cisco.com>,	Casey Schaufler <casey@schaufler-ca.com>,	Steven
- Rostedt <rostedt@goodmis.org>,	Petr Mladek <pmladek@suse.com>,	Max
- Kellermann <max.kellermann@ionos.com>,	Takashi Iwai <tiwai@suse.de>,
-	linux-doc@vger.kernel.org,	linux-kernel@vger.kernel.org,
-	openipmi-developer@lists.sourceforge.net,	linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,	linaro-mm-sig@lists.linaro.org,
-	amd-gfx@lists.freedesktop.org,	linux-arm-msm@vger.kernel.org,
-	freedreno@lists.freedesktop.org,	intel-xe@lists.freedesktop.org,
-	linux-mmc@vger.kernel.org,	netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org,	linux-pci@vger.kernel.org,
-	linux-s390@vger.kernel.org,	linux-scsi@vger.kernel.org,
-	linux-staging@lists.linux.dev,	ceph-devel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org,	linux-sound@vger.kernel.org,	Rasmus
- Villemoes <linux@rasmusvillemoes.dk>,	Sergey Senozhatsky
- <senozhatsky@chromium.org>,	Jonathan Corbet <corbet@lwn.net>,	Sumit Semwal
- <sumit.semwal@linaro.org>,	Gustavo Padovan <gustavo@padovan.org>,	David
- Airlie <airlied@gmail.com>,	Simona Vetter <simona@ffwll.ch>,	Maarten
- Lankhorst <maarten.lankhorst@linux.intel.com>,	Maxime Ripard
- <mripard@kernel.org>,	Dmitry Baryshkov <lumag@kernel.org>,	Abhinav Kumar
- <abhinav.kumar@linux.dev>,	Jessica Zhang <jesszhan0024@gmail.com>,	Sean
- Paul <sean@poorly.run>,	Marijn Suijten <marijn.suijten@somainline.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,	Lucas De Marchi
- <lucas.demarchi@intel.com>,	Thomas =?ISO-8859-1?Q?Hellstr=F6m?=
- <thomas.hellstrom@linux.intel.com>,	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,	Vladimir Oltean
- <olteanv@gmail.com>,	Andrew Lunn <andrew@lunn.ch>,	"David S. Miller"
- <davem@davemloft.net>,	Eric Dumazet <edumazet@google.com>,	Jakub Kicinski
- <kuba@kernel.org>,	Paolo Abeni <pabeni@redhat.com>,	Tony Nguyen
- <anthony.l.nguyen@intel.com>,	Przemek Kitszel
- <przemyslaw.kitszel@intel.com>,	Krzysztof =?ISO-8859-2?Q?Wilczy=F1ski?=
- <kwilczynski@kernel.org>,	Kishon Vijay Abraham I <kishon@kernel.org>,	Bjorn
- Helgaas <bhelgaas@google.com>,	Rodolfo Giometti <giometti@enneenne.com>,
-	Jonathan Lemon <jonathan.lemon@gmail.com>,	Vadim Fedorenko
- <vadim.fedorenko@linux.dev>,	Richard Cochran <richardcochran@gmail.com>,
-	Stefan Haberland <sth@linux.ibm.com>,	Jan Hoeppner
- <hoeppner@linux.ibm.com>,	Heiko Carstens <hca@linux.ibm.com>,	Vasily Gorbik
- <gor@linux.ibm.com>,	Alexander Gordeev <agordeev@linux.ibm.com>,	Christian
- Borntraeger <borntraeger@linux.ibm.com>,	Sven Schnelle
- <svens@linux.ibm.com>,	Satish Kharat <satishkh@cisco.com>,	Sesidhar Baddela
- <sebaddel@cisco.com>,	"James E.J. Bottomley"
- <James.Bottomley@HansenPartnership.com>,	Greg Kroah-Hartman
- <gregkh@linuxfoundation.org>,	Xiubo Li <xiubli@redhat.com>,	Ilya Dryomov
- <idryomov@gmail.com>,	Masami Hiramatsu <mhiramat@kernel.org>,	Mathieu
- Desnoyers <mathieu.desnoyers@efficios.com>,	Andrew Morton
- <akpm@linux-foundation.org>,	Jaroslav Kysela <perex@perex.cz>,	Takashi Iwai
- <tiwai@suse.com>
-Subject: Re: [PATCH v1 02/23] ALSA: seq: Switch to use %ptSp
-In-Reply-To: <20251110184727.666591-3-andriy.shevchenko@linux.intel.com>
-References: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
-	<20251110184727.666591-3-andriy.shevchenko@linux.intel.com>
-User-Agent: Wanderlust/2.15.9 (Almost Unreal) Emacs/27.2 Mule/6.0
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ch1k3nWP"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85862C4CEF7;
+	Tue, 11 Nov 2025 07:57:45 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762847880;
+	bh=5Uaa5nwFjVAGS3f1mHP+LmUtuVFBDubmN+xdr/NpZiU=;
+	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
+	b=Ch1k3nWPMj6UEosM8Ssp+W11+ShFdJNgTHl19OiSOLt8ohzsfcyx1e1F7RmTDjV4h
+	 6nfm81zuqwh2U/1g+oysD3nb8RJ03+yxk6skIyzw3M3W3e/J9HtiabAgh4+xEFmu37
+	 l5MKqXDSdixGL84XrPmyQATSqs91LuFiI1HHYTjBcRMgp9dE7vdCjaftzIMHr0cVLk
+	 +CWgU4tpn3OvWPaoyx3SvYKWIXApBzibkh3iBOdzwx5+bk+s2HOEUiW5d50gYtDEsM
+	 lw10x7RmKw7oaN9Q1I5bh42iwHcHv5ipPInJZkoHKozkZTco3mSCA83d6op32oom8H
+	 eoL8yv1NXmTAw==
+Message-ID: <9f461bf7-3651-4be4-b6f9-20853cdc4c90@kernel.org>
+Date: Tue, 11 Nov 2025 08:57:43 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0 (generated by SEMI-EPG 1.14.7 - "Harue")
-Content-Type: text/plain; charset=US-ASCII
-X-Spam-Level: 
-X-Spamd-Result: default: False [-1.80 / 50.00];
-	BAYES_HAM(-3.00)[100.00%];
-	SUSPICIOUS_RECIPS(1.50)[];
-	MID_CONTAINS_FROM(1.00)[];
-	NEURAL_HAM_LONG(-1.00)[-1.000];
-	NEURAL_HAM_SHORT(-0.20)[-1.000];
-	MIME_GOOD(-0.10)[text/plain];
-	TO_DN_SOME(0.00)[];
-	TAGGED_RCPT(0.00)[renesas];
-	MIME_TRACE(0.00)[0:+];
-	FUZZY_RATELIMITED(0.00)[rspamd.com];
-	RCVD_VIA_SMTP_AUTH(0.00)[];
-	ARC_NA(0.00)[];
-	RCVD_TLS_ALL(0.00)[];
-	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
-	FROM_HAS_DN(0.00)[];
-	FREEMAIL_CC(0.00)[minyard.net,amd.com,treblig.org,suse.de,oss.qualcomm.com,intel.com,kernel.org,ideasonboard.com,linaro.org,wbinvd.org,gmail.com,oracle.com,cisco.com,schaufler-ca.com,goodmis.org,suse.com,ionos.com,vger.kernel.org,lists.sourceforge.net,lists.freedesktop.org,lists.linaro.org,lists.osuosl.org,lists.linux.dev,rasmusvillemoes.dk,chromium.org,lwn.net,padovan.org,ffwll.ch,linux.intel.com,linux.dev,poorly.run,somainline.org,lunn.ch,davemloft.net,google.com,redhat.com,enneenne.com,linux.ibm.com,HansenPartnership.com,linuxfoundation.org,efficios.com,linux-foundation.org,perex.cz];
-	R_RATELIMIT(0.00)[to_ip_from(RLmdkd3ei8pyzuqshpsr74qwzu)];
-	FROM_EQ_ENVFROM(0.00)[];
-	RCVD_COUNT_TWO(0.00)[2];
-	TO_MATCH_ENVRCPT_SOME(0.00)[];
-	RCPT_COUNT_GT_50(0.00)[96];
-	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:mid,imap1.dmz-prg2.suse.org:helo]
-X-Spam-Flag: NO
-X-Spam-Score: -1.80
+MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+From: Hans Verkuil <hverkuil+cisco@kernel.org>
+Subject: Re: [PATCH v1 13/23] media: av7110: Switch to use %ptSp
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+ Corey Minyard <corey@minyard.net>, =?UTF-8?Q?Christian_K=C3=B6nig?=
+ <christian.koenig@amd.com>, "Dr. David Alan Gilbert" <linux@treblig.org>,
+ Alex Deucher <alexander.deucher@amd.com>,
+ Thomas Zimmermann <tzimmermann@suse.de>,
+ Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+ Rob Clark <robin.clark@oss.qualcomm.com>,
+ Matthew Brost <matthew.brost@intel.com>, Hans Verkuil <hverkuil@kernel.org>,
+ Laurent Pinchart <laurent.pinchart+renesas@ideasonboard.com>,
+ Ulf Hansson <ulf.hansson@linaro.org>,
+ Vitaly Lifshits <vitaly.lifshits@intel.com>,
+ Manivannan Sadhasivam <mani@kernel.org>, Niklas Cassel <cassel@kernel.org>,
+ Calvin Owens <calvin@wbinvd.org>, Sagi Maimon <maimon.sagi@gmail.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Karan Tilak Kumar <kartilak@cisco.com>,
+ Casey Schaufler <casey@schaufler-ca.com>,
+ Steven Rostedt <rostedt@goodmis.org>, Petr Mladek <pmladek@suse.com>,
+ Max Kellermann <max.kellermann@ionos.com>, Takashi Iwai <tiwai@suse.de>,
+ linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+ openipmi-developer@lists.sourceforge.net, linux-media@vger.kernel.org,
+ dri-devel@lists.freedesktop.org, linaro-mm-sig@lists.linaro.org,
+ amd-gfx@lists.freedesktop.org, linux-arm-msm@vger.kernel.org,
+ freedreno@lists.freedesktop.org, intel-xe@lists.freedesktop.org,
+ linux-mmc@vger.kernel.org, netdev@vger.kernel.org,
+ intel-wired-lan@lists.osuosl.org, linux-pci@vger.kernel.org,
+ linux-s390@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-staging@lists.linux.dev, ceph-devel@vger.kernel.org,
+ linux-trace-kernel@vger.kernel.org, linux-sound@vger.kernel.org
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+ Sergey Senozhatsky <senozhatsky@chromium.org>,
+ Jonathan Corbet <corbet@lwn.net>, Sumit Semwal <sumit.semwal@linaro.org>,
+ Gustavo Padovan <gustavo@padovan.org>, David Airlie <airlied@gmail.com>,
+ Simona Vetter <simona@ffwll.ch>,
+ Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+ Maxime Ripard <mripard@kernel.org>, Dmitry Baryshkov <lumag@kernel.org>,
+ Abhinav Kumar <abhinav.kumar@linux.dev>,
+ Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
+ Marijn Suijten <marijn.suijten@somainline.org>,
+ Konrad Dybcio <konradybcio@kernel.org>,
+ Lucas De Marchi <lucas.demarchi@intel.com>,
+ =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+ Rodrigo Vivi <rodrigo.vivi@intel.com>,
+ Mauro Carvalho Chehab <mchehab@kernel.org>,
+ Vladimir Oltean <olteanv@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
+ "David S. Miller" <davem@davemloft.net>, Eric Dumazet <edumazet@google.com>,
+ Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+ Tony Nguyen <anthony.l.nguyen@intel.com>,
+ Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+ =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+ Kishon Vijay Abraham I <kishon@kernel.org>,
+ Bjorn Helgaas <bhelgaas@google.com>, Rodolfo Giometti
+ <giometti@enneenne.com>, Jonathan Lemon <jonathan.lemon@gmail.com>,
+ Vadim Fedorenko <vadim.fedorenko@linux.dev>,
+ Richard Cochran <richardcochran@gmail.com>,
+ Stefan Haberland <sth@linux.ibm.com>, Jan Hoeppner <hoeppner@linux.ibm.com>,
+ Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
+ Alexander Gordeev <agordeev@linux.ibm.com>,
+ Christian Borntraeger <borntraeger@linux.ibm.com>,
+ Sven Schnelle <svens@linux.ibm.com>, Satish Kharat <satishkh@cisco.com>,
+ Sesidhar Baddela <sebaddel@cisco.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Xiubo Li
+ <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
+ Masami Hiramatsu <mhiramat@kernel.org>,
+ Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+ Andrew Morton <akpm@linux-foundation.org>, Jaroslav Kysela <perex@perex.cz>,
+ Takashi Iwai <tiwai@suse.com>
+References: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
+ <20251110184727.666591-14-andriy.shevchenko@linux.intel.com>
+Content-Language: en-US, nl
+In-Reply-To: <20251110184727.666591-14-andriy.shevchenko@linux.intel.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-On Mon, 10 Nov 2025 19:40:21 +0100,
-Andy Shevchenko wrote:
-> 
+On 10/11/2025 19:40, Andy Shevchenko wrote:
 > Use %ptSp instead of open coded variants to print content of
 > struct timespec64 in human readable format.
 > 
 > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+
+Acked-by: Hans Verkuil <hverkuil+cisco@kernel.org>
+
+Regards,
+
+	Hans
+
 > ---
->  sound/core/seq/seq_queue.c | 2 +-
->  sound/core/seq/seq_timer.c | 6 +++---
->  2 files changed, 4 insertions(+), 4 deletions(-)
+>  drivers/staging/media/av7110/av7110.c | 2 +-
+>  1 file changed, 1 insertion(+), 1 deletion(-)
 > 
-> diff --git a/sound/core/seq/seq_queue.c b/sound/core/seq/seq_queue.c
-> index f5c0e401c8ae..f6e86cbf38bc 100644
-> --- a/sound/core/seq/seq_queue.c
-> +++ b/sound/core/seq/seq_queue.c
-> @@ -699,7 +699,7 @@ void snd_seq_info_queues_read(struct snd_info_entry *entry,
->  		snd_iprintf(buffer, "current tempo      : %d\n", tmr->tempo);
->  		snd_iprintf(buffer, "tempo base         : %d ns\n", tmr->tempo_base);
->  		snd_iprintf(buffer, "current BPM        : %d\n", bpm);
-> -		snd_iprintf(buffer, "current time       : %d.%09d s\n", tmr->cur_time.tv_sec, tmr->cur_time.tv_nsec);
-> +		snd_iprintf(buffer, "current time       : %ptSp s\n", &tmr->cur_time);
->  		snd_iprintf(buffer, "current tick       : %d\n", tmr->tick.cur_tick);
->  		snd_iprintf(buffer, "\n");
->  	}
+> diff --git a/drivers/staging/media/av7110/av7110.c b/drivers/staging/media/av7110/av7110.c
+> index bc9a2a40afcb..602342d1174f 100644
+> --- a/drivers/staging/media/av7110/av7110.c
+> +++ b/drivers/staging/media/av7110/av7110.c
+> @@ -321,7 +321,7 @@ static inline void print_time(char *s)
+>  	struct timespec64 ts;
+>  
+>  	ktime_get_real_ts64(&ts);
+> -	pr_info("%s(): %lld.%09ld\n", s, (s64)ts.tv_sec, ts.tv_nsec);
+> +	pr_info("%s(): %ptSp\n", s, &ts);
+>  #endif
+>  }
+>  
 
-tmr->cur_time isn't struct timespec64, but it's struct
-tmr->snd_seq_real_time.
-
-
-thanks,
-
-Takashi
