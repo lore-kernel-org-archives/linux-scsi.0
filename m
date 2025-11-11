@@ -1,72 +1,98 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 143B126A0C7;
-	Tue, 11 Nov 2025 16:38:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94909366567
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2025 17:49:49 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762879127; cv=none; b=ZZD8OMfj66SklhWFcmpuFlz6ee9pazU2e/xnEoToFfkGSs+pLzT8SR462ALUjrZWxfnzntQ1/M2fyo8EJn8jObX30EW7u0ZBiJHIs7LAJWErkZKT382uXEZ+/sUf1ToU+1j4ZMhUeiiNHqRb147hU1+jLsITDRzYDVPHfA+7r+w=
+	t=1762883389; cv=none; b=coxddKXNSV5xBbvqQAOgP/LYnny/qyRrULMNqqyaFGcnIbh/SHhqe1+itQioOdYZa9w9SPWWMU0ykRLKROmczGYxwMY9MlH88nmlT0FsivSuyBQ8KM/YwUfUfYnJyxlnn2WaC0hPWDYlbbww9GVk3/EEuRewOMqlyFnQB15clko=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762879127; c=relaxed/simple;
-	bh=WeZF0bR2aaIUY2TSMFnLen1JJjH7doVUB12Z5g9qkN8=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=JEMc51zIJGiqMiFEG+qzHmX+egJNBHx/e88+PUIQ96sPF7T6K8t/WxdlPYwDZpJagj25G1+N/2EkAzFC9Gr/N1ujI286GeG4Lt5kyhfpK+d5VN8/4d/CzIz0dCGXpVdhGbedau/Pgts9B1Fei8YWpMPD+8L1Fs3bCsPmg4Gs64A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=s6aQOsUf; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1762883389; c=relaxed/simple;
+	bh=wd8HjuszKDiWk/WLoiW49ZE7bKUwkd/mXBcVXS010B0=;
+	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=Rrppfo96DXyZUJxtQDZWZPZ7KksRrr0Pc3vyjPSzAbd7w4Bq10KJGEDyP/qvQVIgEdiwj/eyCwvzfJpMWc3HiHSeMARzsEgLfd1fuPOtFP36slvEJRPs2AQ21PjeugfkSKxJyQI666SysJtdykdO+p6/0hNj4ZU2pMviuGYNl5M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kg1hFnwK; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="s6aQOsUf"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4d5XKd0JGWzltMW0;
-	Tue, 11 Nov 2025 16:38:45 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1762879123; x=1765471124; bh=WeZF0bR2aaIUY2TSMFnLen1J
-	JjH7doVUB12Z5g9qkN8=; b=s6aQOsUfA6lKJj1FgeO/7K0H/5vVj70QFyJSbWwa
-	W6bvZPUi0OBBkibBRqYl3v3vrZ6ZhnSpsGJj/g5RXvKUALbZW2nG6a9OZELw8hwV
-	gZoJqSB0m9Q6qL88iouwGbShQ5LdtRDugw5YCW/D6vOOP4K/MhCvgdj04iQtIO02
-	rwxIaCtymm0RPtUdGv5abVpCj/2Anek1WDiedRakXXoarXgrNe+LuBpeTKnTY8lq
-	g3iaMhjE2QC0ykhQR7DZ24CblnRrtb+oLcOQZs6BLUtO+LO5xwUGBM81KTUmg43H
-	Qnp2/lxC0LwyrK65Kp7xE7nFX6UNA9VrOBKCGEiThzaWFg==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 37B7QlRuUsE6; Tue, 11 Nov 2025 16:38:43 +0000 (UTC)
-Received: from [10.111.50.167] (191.sub-174-194-195.myvzw.com [174.194.195.191])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4d5XKN0Z7hzltMRG;
-	Tue, 11 Nov 2025 16:38:31 +0000 (UTC)
-Message-ID: <4395dab0-155a-4c9f-9f56-534068845b12@acm.org>
-Date: Tue, 11 Nov 2025 08:38:26 -0800
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kg1hFnwK"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 35D45C4CEFB;
+	Tue, 11 Nov 2025 17:49:49 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1762883389;
+	bh=wd8HjuszKDiWk/WLoiW49ZE7bKUwkd/mXBcVXS010B0=;
+	h=From:Date:Subject:To:Cc:Reply-To:From;
+	b=Kg1hFnwKawtCcasxS2ejU23lYC/AdLfYeTM1WK8/6lB9dVgNymWbYXdVcLdGgOo96
+	 4n3EocI2uTTz4Vvf81Z5C9Pl026VqCNsg6PDuUG6wTKK/tMd0NFqzK6f4ALXfoDPWu
+	 WyCuvMyt6YYYSkRtAC1VcVE6mEkoJfIMoxAkxc4gcQmeeQwenMfh323E5tl54V/ykm
+	 OqR2tXnyL9QtdjYxumQYyAyYWHjYp+zNiyBLPPq/gLeDCPm+c6RHZDaLe3g21FNN1a
+	 Lh8rl/t4JSbnmnNCnpwPw4vZkahMRj7j8WE5dNEyygjYEMoAqOHaQ6jmBiw4aZH160
+	 FA8Om/p5Z4qGw==
+Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
+	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E43ECCFA18;
+	Tue, 11 Nov 2025 17:49:49 +0000 (UTC)
+From: =?utf-8?q?Nuno_S=C3=A1_via_B4_Relay?= <devnull+nuno.sa.analog.com@kernel.org>
+Date: Tue, 11 Nov 2025 17:50:17 +0000
+Subject: [PATCH RESEND v2] scsi: pm: Drop unneeded call to
+ pm_runtime_mark_last_busy()
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] UFS: Make TM command timeout configurable from host side
-To: Seunghui Lee <sh043.lee@samsung.com>, linux-kernel@vger.kernel.org,
- linux-scsi@vger.kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
- martin.petersen@oracle.com, peter.wang@mediatek.com, beanhuo@micron.com,
- adrian.hunter@intel.com, storage.sec@samsung.com
-References: <CGME20251106012702epcas1p28fdeed020ea44f18dcc751c283fbbcc2@epcas1p2.samsung.com>
- <20251106012654.4094-1-sh043.lee@samsung.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <20251106012654.4094-1-sh043.lee@samsung.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Type: text/plain; charset="utf-8"
+Content-Transfer-Encoding: 8bit
+Message-Id: <20251111-scsi-pm-improv-v2-1-626b8491f4b4@analog.com>
+To: linux-scsi@vger.kernel.org
+Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
+ "Martin K. Petersen" <martin.petersen@oracle.com>
+X-Mailer: b4 0.14.3
+X-Developer-Signature: v=1; a=ed25519-sha256; t=1762883425; l=1113;
+ i=nuno.sa@analog.com; s=20231116; h=from:subject:message-id;
+ bh=s7cddLv/0itS0gt0AH8XS27Y9mgippHn173s01vX9Rk=;
+ b=YrCa9WG+27Szsky0+QmtnLULGxfdcAB9Em4oXhIzHtDcNe4iYJFEKRECfZMjZ86VrtU6HTtHi
+ 3niS5kvmDgNBFajUOu57pXLMuiYh/Yf1s0c6vhA612RlD9FCl/ln/F9
+X-Developer-Key: i=nuno.sa@analog.com; a=ed25519;
+ pk=3NQwYA013OUYZsmDFBf8rmyyr5iQlxV/9H4/Df83o1E=
+X-Endpoint-Received: by B4 Relay for nuno.sa@analog.com/20231116 with
+ auth_id=100
+X-Original-From: =?utf-8?q?Nuno_S=C3=A1?= <nuno.sa@analog.com>
+Reply-To: nuno.sa@analog.com
 
-On 11/5/25 5:26 PM, Seunghui Lee wrote:
-> Currently, UFS driver uses hardcoded TM_CMD_TIMEOUT (100ms) for all
-> Task Management commands, which may not be optimal for different UFS
-> devices and use cases.
+From: Nuno Sá <nuno.sa@analog.com>
 
-Reviewed-by: Bart Van Assche <bvanassche@acm.org>
+There's no need to explicitly call pm_runtime_mark_last_busy() since
+pm_runtime_autosuspend() is now doing it since commit 08071e64cb64
+("PM: runtime: Mark last busy stamp in pm_runtime_autosuspend()")
+
+Signed-off-by: Nuno Sá <nuno.sa@analog.com>
+---
+Changes in v2:
+- Reference the commit introducing the change affecting this patch
+- Link to v1: https://lore.kernel.org/r/20251027-scsi-pm-improv-v1-1-cb9f0bceb4be@analog.com
+---
+ drivers/scsi/scsi_pm.c | 1 -
+ 1 file changed, 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
+index d581613d87c7..2652fecbfe47 100644
+--- a/drivers/scsi/scsi_pm.c
++++ b/drivers/scsi/scsi_pm.c
+@@ -205,7 +205,6 @@ static int scsi_runtime_idle(struct device *dev)
+ 	/* Insert hooks here for targets, hosts, and transport classes */
+ 
+ 	if (scsi_is_sdev_device(dev)) {
+-		pm_runtime_mark_last_busy(dev);
+ 		pm_runtime_autosuspend(dev);
+ 		return -EBUSY;
+ 	}
+
+---
+base-commit: 8fec172c82c2b5f6f8e47ab837c1dc91ee3d1b87
+change-id: 20251027-scsi-pm-improv-71477eb109c2
+--
+
+Thanks!
+- Nuno Sá
+-- 
+Nuno Sá <nuno.sa@analog.com>
+
 
