@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4FF3015E8B;
-	Tue, 11 Nov 2025 07:58:00 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E8A0215E8B;
+	Tue, 11 Nov 2025 08:05:12 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762847882; cv=none; b=eZKZjEKMN9mOhEY2V0ziQLm7n3Pg4kKKA465ZuyjldvniYjnr1iHR4kduPqpesPO9GTSvCQb7Ip+O6ksgBWjjTh/3SBQsjaGBDtnKU6ujtXtKP2DfXfXxSiu8w9qviIldyqIQw/SB+/Yw1L8R3anq0Ek62tlJJXWURrEDpHtQ3Y=
+	t=1762848314; cv=none; b=ej8srO2g8TjIHDWLl42Nvj70+0RWFQMnasY7D0dFK85PvBjXwmVxRwuyPXr7SoC3CtkAOmJNzLzddtbkLCQ1pERJecraYkO5wH4o4yEHrUI6DjAcwDwgFGXvX3Bx+Lrnc+coN8V/BMsZBB9QOogVbNAtFGwOAM8CK/flVf+MKmg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762847882; c=relaxed/simple;
-	bh=5Uaa5nwFjVAGS3f1mHP+LmUtuVFBDubmN+xdr/NpZiU=;
+	s=arc-20240116; t=1762848314; c=relaxed/simple;
+	bh=L5yMR8hp8K6n3p5Uz6MrsGqp/GNA0slthJowCoOHAbM=;
 	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:References:
-	 In-Reply-To:Content-Type; b=QMpjdDxN+/6mX0/eB6d9HgpEsG02z037IrRnN32V1imj+Q0EBDxuRmDVJpDUNRwijPJK9vHIbOPC9j2xAbMUA7zppMrDfakOy3i+XqOwgBnvpYeT5O3TOu42+gDJHaMCS0OQXogbRmuVspjnOARReoRg5UkP7GyhUOke1IroFY8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Ch1k3nWP; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=eYhoLeowCf3pzF6ET1EsxgubJs7+mQTI5loNCoqSqrslgDgAJSYTPLCwMxmGcoy+L6TJ+NXS8lcDUtNGzn0JhB8DvG9Tfl54r0bTdtUGApy03+C5hhPpAGacsudad1qMwMMkTZScUIVszuMANPq2dxeYCKruTUDK6GSISxTOXt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=NUIP1don; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Ch1k3nWP"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 85862C4CEF7;
-	Tue, 11 Nov 2025 07:57:45 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="NUIP1don"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 758BFC116D0;
+	Tue, 11 Nov 2025 08:04:57 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762847880;
-	bh=5Uaa5nwFjVAGS3f1mHP+LmUtuVFBDubmN+xdr/NpZiU=;
+	s=k20201202; t=1762848312;
+	bh=L5yMR8hp8K6n3p5Uz6MrsGqp/GNA0slthJowCoOHAbM=;
 	h=Date:From:Subject:To:Cc:References:In-Reply-To:From;
-	b=Ch1k3nWPMj6UEosM8Ssp+W11+ShFdJNgTHl19OiSOLt8ohzsfcyx1e1F7RmTDjV4h
-	 6nfm81zuqwh2U/1g+oysD3nb8RJ03+yxk6skIyzw3M3W3e/J9HtiabAgh4+xEFmu37
-	 l5MKqXDSdixGL84XrPmyQATSqs91LuFiI1HHYTjBcRMgp9dE7vdCjaftzIMHr0cVLk
-	 +CWgU4tpn3OvWPaoyx3SvYKWIXApBzibkh3iBOdzwx5+bk+s2HOEUiW5d50gYtDEsM
-	 lw10x7RmKw7oaN9Q1I5bh42iwHcHv5ipPInJZkoHKozkZTco3mSCA83d6op32oom8H
-	 eoL8yv1NXmTAw==
-Message-ID: <9f461bf7-3651-4be4-b6f9-20853cdc4c90@kernel.org>
-Date: Tue, 11 Nov 2025 08:57:43 +0100
+	b=NUIP1don/7EEjqY/+TuMC7+CtmpG/nW2STT6PfNtEFuFU+HXZKqLbbnEAMH/X/3JJ
+	 WVWvR5dg7fblvx/9940inFYgR2C5Gv8VCu1k/MG3tLYRY2844vpHtjrgDZFeK1fdOO
+	 JM9vzH3/AWqsGZIFSz7EL/soDKXXUbKHVx/PFFqkGRFYGIzvUKJH2LfpLXAxaji/IR
+	 Vs8kH4VSFB0ma/R7k8kHRT0ZJzgV8pEkXXgoavVjbaLi01h+sab77WCI8dWWJ+fyMQ
+	 Px0GCJGzWonU67OPy+OHOih22E625vhqYo9ne3sB2zFxHcVeAaZEH4KOlSEdxaEekL
+	 55nfUGgl/CXGw==
+Message-ID: <fd47654d-c4cc-4cbc-95da-824f1e6bbbf9@kernel.org>
+Date: Tue, 11 Nov 2025 09:04:55 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -36,7 +36,7 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 From: Hans Verkuil <hverkuil+cisco@kernel.org>
-Subject: Re: [PATCH v1 13/23] media: av7110: Switch to use %ptSp
+Subject: Re: [PATCH v1 14/23] media: v4l2-ioctl: Switch to use %ptSp
 To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
  Corey Minyard <corey@minyard.net>, =?UTF-8?Q?Christian_K=C3=B6nig?=
  <christian.koenig@amd.com>, "Dr. David Alan Gilbert" <linux@treblig.org>,
@@ -105,9 +105,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
  Andrew Morton <akpm@linux-foundation.org>, Jaroslav Kysela <perex@perex.cz>,
  Takashi Iwai <tiwai@suse.com>
 References: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
- <20251110184727.666591-14-andriy.shevchenko@linux.intel.com>
+ <20251110184727.666591-15-andriy.shevchenko@linux.intel.com>
 Content-Language: en-US, nl
-In-Reply-To: <20251110184727.666591-14-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <20251110184727.666591-15-andriy.shevchenko@linux.intel.com>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
@@ -116,28 +116,46 @@ On 10/11/2025 19:40, Andy Shevchenko wrote:
 > struct timespec64 in human readable format.
 > 
 > Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+> ---
+>  drivers/media/v4l2-core/v4l2-ioctl.c | 5 ++---
+>  1 file changed, 2 insertions(+), 3 deletions(-)
+> 
+> diff --git a/drivers/media/v4l2-core/v4l2-ioctl.c b/drivers/media/v4l2-core/v4l2-ioctl.c
+> index 01cf52c3ea33..edc4d97b4161 100644
+> --- a/drivers/media/v4l2-core/v4l2-ioctl.c
+> +++ b/drivers/media/v4l2-core/v4l2-ioctl.c
+> @@ -791,9 +791,8 @@ static void v4l_print_event(const void *arg, bool write_only)
+>  	const struct v4l2_event *p = arg;
+>  	const struct v4l2_event_ctrl *c;
+>  
+> -	pr_cont("type=0x%x, pending=%u, sequence=%u, id=%u, timestamp=%llu.%9.9llu\n",
+> -			p->type, p->pending, p->sequence, p->id,
+> -			p->timestamp.tv_sec, p->timestamp.tv_nsec);
+> +	pr_cont("type=0x%x, pending=%u, sequence=%u, id=%u, timestamp=%ptSp\n",
+> +		p->type, p->pending, p->sequence, p->id, &p->timestamp);
 
-Acked-by: Hans Verkuil <hverkuil+cisco@kernel.org>
+Hmm, p->timestamp is a struct __kernel_timespec, but that's not quite the
+same thing as struct timespec64:
+
+struct __kernel_timespec {
+        __kernel_time64_t       tv_sec;                 /* seconds */
+        long long               tv_nsec;                /* nanoseconds */
+};
+
+vs:
+
+struct timespec64 {
+        time64_t        tv_sec;                 /* seconds */
+        long            tv_nsec;                /* nanoseconds */
+};
+
+So I'm not sure this will work.
 
 Regards,
 
 	Hans
 
-> ---
->  drivers/staging/media/av7110/av7110.c | 2 +-
->  1 file changed, 1 insertion(+), 1 deletion(-)
-> 
-> diff --git a/drivers/staging/media/av7110/av7110.c b/drivers/staging/media/av7110/av7110.c
-> index bc9a2a40afcb..602342d1174f 100644
-> --- a/drivers/staging/media/av7110/av7110.c
-> +++ b/drivers/staging/media/av7110/av7110.c
-> @@ -321,7 +321,7 @@ static inline void print_time(char *s)
->  	struct timespec64 ts;
->  
->  	ktime_get_real_ts64(&ts);
-> -	pr_info("%s(): %lld.%09ld\n", s, (s64)ts.tv_sec, ts.tv_nsec);
-> +	pr_info("%s(): %ptSp\n", s, &ts);
->  #endif
->  }
->  
+>  	switch (p->type) {
+>  	case V4L2_EVENT_VSYNC:
+>  		printk(KERN_DEBUG "field=%s\n",
 
