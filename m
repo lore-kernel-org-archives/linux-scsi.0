@@ -1,72 +1,229 @@
-Received: from canpmsgout09.his.huawei.com (canpmsgout09.his.huawei.com [113.46.200.224])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 67149335082
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2025 10:59:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.224
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BBA9F358D24;
+	Tue, 11 Nov 2025 12:27:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762858752; cv=none; b=g3UDgAUl6507vb0BpkamCtccvxkredAa9qmyzZ/LPs5K4JksNNu526qqesIJrfnzQtByrfHyVN6vn/gbMwRZys8EvIWICSktxGjFLmD4IOSp3L2CxAxlRLovOPwlGgikjOxM7FoFJLNn8uCQXvN3e74BBVpwZtnaMd+w0gAj73I=
+	t=1762864070; cv=none; b=aleVMDpgytsjt8MqLk2f8fqtp+DBhgHFFwvN2BscYk3e8Vx6dx5dCOA4OG+qARriRlJYqMOkMcWBM9WkwDr/eRHfYjLwPOGAevbqPqJ4Wl9pnhdiAZPivKCdXTUQZptdhcuVzmwdl23KPzeC44Z1irxwSau32Xo2tnLFPscWsQs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762858752; c=relaxed/simple;
-	bh=sYNfEoUS7sSDXQ8zdsFMzxBlnAiXPYxjwvlJPpw3Xak=;
-	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=k/YZ3BqXoEg2CzQO3R+Yr11z5fmAE3VK/NzUehtiORGD2Mylah/sH07iSoG/JAtgXxLh8rSaBKmVk8YHEAZ/zVGkgFe19GTbS6wruvp8gKTK/1v6A6zVTOrqsZQP2TZZJoqD6vW/OWZq0tjLuKf1HKgyFi7+xTGckFbK8bC3+Kg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=aBb0VnZr; arc=none smtp.client-ip=113.46.200.224
-Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
+	s=arc-20240116; t=1762864070; c=relaxed/simple;
+	bh=3ufDyGpQ90Lh9cbA3wPj1PEHCfZCVgCTqOeDqCrieZA=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=ThEcNzEawm2bc1BIcKqjbQ0beWjHH6BxQwSYc4StlOoDLEU94dzDNQZxAE9Kfiqc6euhJOeAYVb3anKKH7xrS+l+rUtUbZC9dAE7R0KMU2H88dZZBEZfyi4+EtGwjFWlHbtP0EGDS9jcCjoO7u/6w+xNYaJJ+4lHZh+X9TkMZQg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CiaPuSs8; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="aBb0VnZr"
-dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
-	c=relaxed/relaxed; q=dns/txt;
-	h=From;
-	bh=q9WDOKbzii3Ed0xLhN6nfr95InKHbM4RNlruNcRx91U=;
-	b=aBb0VnZrJwye1q2GBied5SRy9K5tFzbKKFNrqTFkmFyT3XYfIzkF+vvHKd9h490NT3/A2xzHP
-	V6PF0hhJE/PKcj2jeRDPEAYEDOVpbqPEdC2nEpUt3knGmxINFGOb9OSr+QDaMzOqtX4PFXsVonc
-	N7awIMdp53t4RXbqMIUc6zA=
-Received: from mail.maildlp.com (unknown [172.19.163.17])
-	by canpmsgout09.his.huawei.com (SkyGuard) with ESMTPS id 4d5Nlp39S2z1cyQD;
-	Tue, 11 Nov 2025 18:57:26 +0800 (CST)
-Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
-	by mail.maildlp.com (Postfix) with ESMTPS id B00071A0188;
-	Tue, 11 Nov 2025 18:59:05 +0800 (CST)
-Received: from DESKTOP-4VUP2L6.china.huawei.com (10.174.187.123) by
- kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
- (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.11; Tue, 11 Nov 2025 18:59:04 +0800
-From: JiangJianJun <jiangjianjun3@huawei.com>
-To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
-	<linux-scsi@vger.kernel.org>
-CC: <bvanassche@acm.org>, <john.g.garry@oracle.com>, <hewenliang4@huawei.com>,
-	<yangyun50@huawei.com>, <wuyifeng10@huawei.com>
-Subject: Re: scsi: scsi_debug: make timeout faults by set delay to maximum value
-Date: Tue, 11 Nov 2025 18:59:02 +0800
-Message-ID: <20251111105902.277-1-jiangjianjun3@huawei.com>
-X-Mailer: git-send-email 2.43.0.windows.1
-In-Reply-To: <da25e95c-8895-4a0b-ad7d-9f88f58a91e0@oracle.com>
-References: <da25e95c-8895-4a0b-ad7d-9f88f58a91e0@oracle.com>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CiaPuSs8"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1762864068; x=1794400068;
+  h=from:to:cc:subject:date:message-id:mime-version:
+   content-transfer-encoding;
+  bh=3ufDyGpQ90Lh9cbA3wPj1PEHCfZCVgCTqOeDqCrieZA=;
+  b=CiaPuSs85DbUF+MqMk79YjU5wcRacaqxlT4inj3W9Ip7HM3FS1B3PLJk
+   82zUqEZWi/P7nbaTZlRFKKl0QH1H+aL7JC9b7cLXx7Vr6SKACP63paQMs
+   /XFlH5usaw/iAhx0hgjGZg8jHgWmLbkD9KtBEJvLI6xN7cw5JgOb0s2UT
+   cfC4jLXFFeGj61NrpqD3Ac/BSPpY0KNuzPaXd67IjSuFH2/gL776STrZs
+   k/QfsHoo1zG/LsEyODK0IKqVLzPLpcr2ECSnd+DxjNGOUvWJmyTBnFwsx
+   mHZ42Cp6JtUySjyASZtOlJJwTe+FYxfLjDU1R4Zkgns2hGE+4CG2Xt7sP
+   Q==;
+X-CSE-ConnectionGUID: g+JycRCmSmqgXVgQCKVOgQ==
+X-CSE-MsgGUID: Ou9x0f+RRMWitGNb5xXASg==
+X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="82552875"
+X-IronPort-AV: E=Sophos;i="6.19,296,1754982000"; 
+   d="scan'208";a="82552875"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2025 04:27:46 -0800
+X-CSE-ConnectionGUID: ZOKULRMJT7KTHajVhJ7ajg==
+X-CSE-MsgGUID: kkEFDbWaR6a5b9oyBE8QYQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,296,1754982000"; 
+   d="scan'208";a="212343281"
+Received: from black.igk.intel.com ([10.91.253.5])
+  by fmviesa002.fm.intel.com with ESMTP; 11 Nov 2025 04:27:39 -0800
+Received: by black.igk.intel.com (Postfix, from userid 1003)
+	id CC71996; Tue, 11 Nov 2025 13:27:37 +0100 (CET)
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Corey Minyard <corey@minyard.net>,
+	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Rob Clark <robin.clark@oss.qualcomm.com>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
+	Vitaly Lifshits <vitaly.lifshits@intel.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>,
+	Calvin Owens <calvin@wbinvd.org>,
+	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
+	Sagi Maimon <maimon.sagi@gmail.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Hans Verkuil <hverkuil+cisco@kernel.org>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Petr Mladek <pmladek@suse.com>,
+	Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>,
+	Max Kellermann <max.kellermann@ionos.com>,
+	linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net,
+	linux-media@vger.kernel.org,
+	dri-devel@lists.freedesktop.org,
+	linaro-mm-sig@lists.linaro.org,
+	amd-gfx@lists.freedesktop.org,
+	linux-arm-msm@vger.kernel.org,
+	freedreno@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org,
+	linux-mmc@vger.kernel.org,
+	netdev@vger.kernel.org,
+	intel-wired-lan@lists.osuosl.org,
+	linux-pci@vger.kernel.org,
+	linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org,
+	linux-staging@lists.linux.dev,
+	ceph-devel@vger.kernel.org,
+	linux-trace-kernel@vger.kernel.org
+Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	David Airlie <airlied@gmail.com>,
+	Simona Vetter <simona@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	Abhinav Kumar <abhinav.kumar@linux.dev>,
+	Jessica Zhang <jesszhan0024@gmail.com>,
+	Sean Paul <sean@poorly.run>,
+	Marijn Suijten <marijn.suijten@somainline.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Lucas De Marchi <lucas.demarchi@intel.com>,
+	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Vladimir Oltean <olteanv@gmail.com>,
+	Andrew Lunn <andrew@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>,
+	Paolo Abeni <pabeni@redhat.com>,
+	Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rodolfo Giometti <giometti@enneenne.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	Jonathan Lemon <jonathan.lemon@gmail.com>,
+	Stefan Haberland <sth@linux.ibm.com>,
+	Jan Hoeppner <hoeppner@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Satish Kharat <satishkh@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Xiubo Li <xiubli@redhat.com>,
+	Ilya Dryomov <idryomov@gmail.com>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: [PATCH v2 00/21] treewide: Introduce %ptS for struct timespec64 and convert users
+Date: Tue, 11 Nov 2025 13:20:00 +0100
+Message-ID: <20251111122735.880607-1-andriy.shevchenko@linux.intel.com>
+X-Mailer: git-send-email 2.50.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
-Content-Type: text/plain
-X-ClientProxiedBy: kwepems100002.china.huawei.com (7.221.188.206) To
- kwepemk500001.china.huawei.com (7.202.194.86)
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
 
-> I don't think that you can always expect successful aborting.=0D
-If scsi_debug has been load, and scsi device id is "3:0:0:0", then we can=0D
-inject io-timeout:=0D
-    echo '0 -1 0x2a' > /sys/kernel/debug/scsi_debug/3:0:0:0/error=0D
-First dispatched WRITE-command will be timeout, after timeout scsi middle=0D
-layer will abort this command. This abort-operation will success.=0D
-IF we want make it fail, we can inject abort-fail: =0D
-    echo '3 -1 0x2a' > /sys/kernel/debug/scsi_debug/3:0:0:0/error=0D
-So we can control the result of abort-opation.=0D
-> Which modifications are you specifically referring to?=0D
-This feature was able to achieve the expected results before you made any=0D
-changes. Additionally, I didn't change your logic; I was just restoring thi=
-s=0D
-feature.=0D
-=0D
+Here is the third part of the unification time printing in the kernel.
+This time for struct timespec64. The first patch brings a support
+into printf() implementation (test cases and documentation update
+included) followed by the treewide conversion of the current users.
+
+The idea is to have one or a few biggest users included, the rest
+can be taken next release cycle on the subsystem basis, but I won't
+object if the respective maintainers already give their tags. Depending
+on the tags received it may go via dedicated subsystem or via PRINTK
+tree. Petr, what do you think?
+
+Note, not everything was compile-tested. Kunit test has been passed, though.
+
+Changelog v2:
+- dropped wrong patches (Hans, Takashi)
+- fixed most of the checkpatch warnings (fdo CI, media CI)
+- collected tags
+
+v1: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
+
+Andy Shevchenko (21):
+  lib/vsprintf: Add specifier for printing struct timespec64
+  ceph: Switch to use %ptSp
+  libceph: Switch to use %ptSp
+  dma-buf: Switch to use %ptSp
+  drm/amdgpu: Switch to use %ptSp
+  drm/msm: Switch to use %ptSp
+  drm/vblank: Switch to use %ptSp
+  drm/xe: Switch to use %ptSp
+  e1000e: Switch to use %ptSp
+  igb: Switch to use %ptSp
+  ipmi: Switch to use %ptSp
+  media: av7110: Switch to use %ptSp
+  mmc: mmc_test: Switch to use %ptSp
+  net: dsa: sja1105: Switch to use %ptSp
+  PCI: epf-test: Switch to use %ptSp
+  pps: Switch to use %ptSp
+  ptp: ocp: Switch to use %ptSp
+  s390/dasd: Switch to use %ptSp
+  scsi: fnic: Switch to use %ptS
+  scsi: snic: Switch to use %ptSp
+  tracing: Switch to use %ptSp
+
+ Documentation/core-api/printk-formats.rst     | 11 ++++-
+ drivers/char/ipmi/ipmi_si_intf.c              |  3 +-
+ drivers/char/ipmi/ipmi_ssif.c                 |  6 +--
+ drivers/dma-buf/sync_debug.c                  |  2 +-
+ .../gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c  |  3 +-
+ drivers/gpu/drm/drm_vblank.c                  |  6 +--
+ .../gpu/drm/msm/disp/msm_disp_snapshot_util.c |  3 +-
+ drivers/gpu/drm/msm/msm_gpu.c                 |  3 +-
+ drivers/gpu/drm/xe/xe_devcoredump.c           |  4 +-
+ drivers/mmc/core/mmc_test.c                   | 20 +++-----
+ drivers/net/dsa/sja1105/sja1105_tas.c         |  8 ++-
+ drivers/net/ethernet/intel/e1000e/ptp.c       |  7 +--
+ drivers/net/ethernet/intel/igb/igb_ptp.c      |  7 +--
+ drivers/pci/endpoint/functions/pci-epf-test.c |  5 +-
+ drivers/pps/generators/pps_gen_parport.c      |  3 +-
+ drivers/pps/kapi.c                            |  3 +-
+ drivers/ptp/ptp_ocp.c                         | 13 ++---
+ drivers/s390/block/dasd.c                     |  3 +-
+ drivers/scsi/fnic/fnic_trace.c                | 46 ++++++++---------
+ drivers/scsi/snic/snic_debugfs.c              | 10 ++--
+ drivers/scsi/snic/snic_trc.c                  |  5 +-
+ drivers/staging/media/av7110/av7110.c         |  2 +-
+ fs/ceph/dir.c                                 |  5 +-
+ fs/ceph/inode.c                               | 49 ++++++-------------
+ fs/ceph/xattr.c                               |  6 +--
+ kernel/trace/trace_output.c                   |  6 +--
+ lib/tests/printf_kunit.c                      |  4 ++
+ lib/vsprintf.c                                | 25 ++++++++++
+ net/ceph/messenger_v2.c                       |  6 +--
+ 29 files changed, 126 insertions(+), 148 deletions(-)
+
+-- 
+2.50.1
+
