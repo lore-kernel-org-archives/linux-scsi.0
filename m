@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A5B2832471B;
-	Tue, 11 Nov 2025 12:28:07 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C9DE1328267;
+	Tue, 11 Nov 2025 12:28:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762864090; cv=none; b=lXJjjQcr+tuoPd3dNqW4q8vP7pVBClo35CbJllnHwqGfkWtzkaHZRbnX87hTBJA1uKFjL1kEM98p2aFQmkJRmClZHpw0Z7hAE4TIep3nDfJTeKsKaOxCeI/Ss8OmjquUYbhIc0QOnXRmWzY6H5/VISvvN8zsttaQzQ/acIxe+g8=
+	t=1762864091; cv=none; b=kfOgO33ui7469qpDyBl1RI0FbmQkKXAPO6XSfrDj+BxSWr10mQz0m8sPekLAjG7RwPXBx9NVJFzIDK9XGv+yBwRI13dr27gVV/ACFtwhfDSclLFqsZ+6ligw+Y6PtsegOgL7cp+ExKvA43pnc55AsZVe+VN5vEqgqZeTQiXyDeQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762864090; c=relaxed/simple;
-	bh=e8WeGxOtZtcbZrMvs9n+wJZzGptxfxh9oxsAvrP2sMQ=;
+	s=arc-20240116; t=1762864091; c=relaxed/simple;
+	bh=tDxqR7dAcbJglLrfzlBGLBNHFzQ2/Otni5OnaahsuNI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=KDVuBdwYfG5rlSlTv/CFmkgnQSUDia7Yb1Yers6y+OvQf81utMxsTh4fVnWc0GUkvclix3FDy1elFNGNR4OdPG2zpbaFO4rBfpbtjZq45nn5SaN88tASs6beBLEPdtnHEV5b0Q69PbnSxlU7tEEXiDKy+tNHblhbI+srS1UIQxQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=SU6Sy+CH; arc=none smtp.client-ip=192.198.163.9
+	 MIME-Version; b=IfcNdv6Qnngm/QPGNa7EFqV5qpea0u1/6RHgmkMevAe6Tx/vsYN95saoOk00x6Hhui6WXc9/+7QqrG0cn+dAS3ZiL5albRkQQchFewDLh8rfre4HqKijbPF225yGsVI6stgBO7uQJ/9xdloLrRrmQFbM3QXbpTjZSkDC02/QKrU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Nmu/xfds; arc=none smtp.client-ip=192.198.163.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="SU6Sy+CH"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Nmu/xfds"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1762864088; x=1794400088;
+  t=1762864089; x=1794400089;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=e8WeGxOtZtcbZrMvs9n+wJZzGptxfxh9oxsAvrP2sMQ=;
-  b=SU6Sy+CHPkEnhB5+AQMey4bbuAwrjV6dBGAgbXLObNQ0nyINoxYk21qJ
-   6Rt01X874ClybQZKXH/3j0fsYqMp7qcMZ5wstoLnbrJQ4+YgN+uIuoCY7
-   uKXEnsI54YBvgyUzigGJ0sxO6dDQhPGzHRHgmjPYhAUTrk5wTUIqo05z/
-   0A3H2gk66wh62bS7bOvsNKXHi70CWdVaA9O+VmnalB2a3Ep/SAc3qHhcF
-   hT0tbbTHKSuG18ZZ/53P2Cqg9WUna/lMcqUlcQ3et/fS1PYZlw4htJhgi
-   NQB440Kf4kHUllN76SGhwzWADJKsRXpattYPCuAGZFLBhUdwnS+5HAZBq
-   g==;
-X-CSE-ConnectionGUID: dARd4WCPR56htg5vynczew==
-X-CSE-MsgGUID: /NPzCeCOQkiTfaz1H1Z8qQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="75607044"
+  bh=tDxqR7dAcbJglLrfzlBGLBNHFzQ2/Otni5OnaahsuNI=;
+  b=Nmu/xfds1+D+uc5a8qkgsi7HBTb0KJFsz1vqZvdDVq0/sfGKrvc3NRtZ
+   h2SmRcTr529Yrp7xGtR9IBp0lY3ahNCWz4cYeeP6KK3XUjvo98o5zMjkm
+   4XFJ1YRyrF/VQLswFnt8FIjsJyynLTwexDWJgYgTKd8G1IUBMl8B4R6Ai
+   1Mrsid5dpzB+QrpUchFm/K7uU9tHrLZz93cG72GDzHxzyRA8/MCSVOkr5
+   M3QE74Aduy2BPDTD+Tdxg7pEuubKnUkOUS11I0vrfyaEoJTT+1G1FSBME
+   6tjjCS5mTfan40VHpw5If7pfEVOLXgLsRzGLSbcIaQDRBQLQ1dWD4msSw
+   Q==;
+X-CSE-ConnectionGUID: 8gB9+3wLR3qALh2Ni+m2Vw==
+X-CSE-MsgGUID: W1lb5ymDRoat7+KZ2zupEQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="82553149"
 X-IronPort-AV: E=Sophos;i="6.19,296,1754982000"; 
-   d="scan'208";a="75607044"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2025 04:28:06 -0800
-X-CSE-ConnectionGUID: YHDSoTq9Rr+aZdtO+8m67w==
-X-CSE-MsgGUID: KCI6LE1SS0+Hf144PvkzVA==
+   d="scan'208";a="82553149"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2025 04:28:05 -0800
+X-CSE-ConnectionGUID: 9gvBk5WhSTGKhHQCwMxqkA==
+X-CSE-MsgGUID: nvPEZ1C+TAWEHPUT+McG9Q==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,296,1754982000"; 
-   d="scan'208";a="188592922"
+   d="scan'208";a="212343318"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa007.fm.intel.com with ESMTP; 11 Nov 2025 04:27:58 -0800
+  by fmviesa002.fm.intel.com with ESMTP; 11 Nov 2025 04:27:57 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 30E48A4; Tue, 11 Nov 2025 13:27:38 +0100 (CET)
+	id 1DEA8A1; Tue, 11 Nov 2025 13:27:38 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -137,10 +137,11 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Ilya Dryomov <idryomov@gmail.com>,
 	Masami Hiramatsu <mhiramat@kernel.org>,
 	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH v2 14/21] net: dsa: sja1105: Switch to use %ptSp
-Date: Tue, 11 Nov 2025 13:20:14 +0100
-Message-ID: <20251111122735.880607-15-andriy.shevchenko@linux.intel.com>
+	Andrew Morton <akpm@linux-foundation.org>,
+	Corey Minyard <cminyard@mvista.com>
+Subject: [PATCH v2 11/21] ipmi: Switch to use %ptSp
+Date: Tue, 11 Nov 2025 13:20:11 +0100
+Message-ID: <20251111122735.880607-12-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251111122735.880607-1-andriy.shevchenko@linux.intel.com>
 References: <20251111122735.880607-1-andriy.shevchenko@linux.intel.com>
@@ -155,37 +156,44 @@ Content-Transfer-Encoding: 8bit
 Use %ptSp instead of open coded variants to print content of
 struct timespec64 in human readable format.
 
+Acked-by: Corey Minyard <cminyard@mvista.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/net/dsa/sja1105/sja1105_tas.c | 8 +++-----
- 1 file changed, 3 insertions(+), 5 deletions(-)
+ drivers/char/ipmi/ipmi_si_intf.c | 3 +--
+ drivers/char/ipmi/ipmi_ssif.c    | 6 ++----
+ 2 files changed, 3 insertions(+), 6 deletions(-)
 
-diff --git a/drivers/net/dsa/sja1105/sja1105_tas.c b/drivers/net/dsa/sja1105/sja1105_tas.c
-index d7818710bc02..d5949d2c3e71 100644
---- a/drivers/net/dsa/sja1105/sja1105_tas.c
-+++ b/drivers/net/dsa/sja1105/sja1105_tas.c
-@@ -775,9 +775,8 @@ static void sja1105_tas_state_machine(struct work_struct *work)
- 		base_time_ts = ns_to_timespec64(base_time);
- 		now_ts = ns_to_timespec64(now);
+diff --git a/drivers/char/ipmi/ipmi_si_intf.c b/drivers/char/ipmi/ipmi_si_intf.c
+index 70e55f5ff85e..5459ffdde8dc 100644
+--- a/drivers/char/ipmi/ipmi_si_intf.c
++++ b/drivers/char/ipmi/ipmi_si_intf.c
+@@ -275,8 +275,7 @@ void debug_timestamp(struct smi_info *smi_info, char *msg)
+ 	struct timespec64 t;
  
--		dev_dbg(ds->dev, "OPER base time %lld.%09ld (now %lld.%09ld)\n",
--			base_time_ts.tv_sec, base_time_ts.tv_nsec,
--			now_ts.tv_sec, now_ts.tv_nsec);
-+		dev_dbg(ds->dev, "OPER base time %ptSp (now %ptSp)\n",
-+			&base_time_ts, &now_ts);
+ 	ktime_get_ts64(&t);
+-	dev_dbg(smi_info->io.dev, "**%s: %lld.%9.9ld\n",
+-		msg, t.tv_sec, t.tv_nsec);
++	dev_dbg(smi_info->io.dev, "**%s: %ptSp\n", msg, &t);
+ }
+ #else
+ #define debug_timestamp(smi_info, x)
+diff --git a/drivers/char/ipmi/ipmi_ssif.c b/drivers/char/ipmi/ipmi_ssif.c
+index 1b63f7d2fcda..ef1582a029f4 100644
+--- a/drivers/char/ipmi/ipmi_ssif.c
++++ b/drivers/char/ipmi/ipmi_ssif.c
+@@ -1083,10 +1083,8 @@ static int sender(void *send_info, struct ipmi_smi_msg *msg)
+ 		struct timespec64 t;
  
- 		break;
- 
-@@ -798,8 +797,7 @@ static void sja1105_tas_state_machine(struct work_struct *work)
- 		if (now < tas_data->oper_base_time) {
- 			/* TAS has not started yet */
- 			diff = ns_to_timespec64(tas_data->oper_base_time - now);
--			dev_dbg(ds->dev, "time to start: [%lld.%09ld]",
--				diff.tv_sec, diff.tv_nsec);
-+			dev_dbg(ds->dev, "time to start: [%ptSp]", &diff);
- 			break;
- 		}
- 
+ 		ktime_get_real_ts64(&t);
+-		dev_dbg(&ssif_info->client->dev,
+-			"**Enqueue %02x %02x: %lld.%6.6ld\n",
+-			msg->data[0], msg->data[1],
+-			(long long)t.tv_sec, (long)t.tv_nsec / NSEC_PER_USEC);
++		dev_dbg(&ssif_info->client->dev, "**Enqueue %02x %02x: %ptSp\n",
++			msg->data[0], msg->data[1], &t);
+ 	}
+ 	return IPMI_CC_NO_ERROR;
+ }
 -- 
 2.50.1
 
