@@ -1,98 +1,89 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 004.mia.mailroute.net (004.mia.mailroute.net [199.89.3.7])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 94909366567
-	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2025 17:49:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCD413AA19B
+	for <linux-scsi@vger.kernel.org>; Tue, 11 Nov 2025 18:48:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762883389; cv=none; b=coxddKXNSV5xBbvqQAOgP/LYnny/qyRrULMNqqyaFGcnIbh/SHhqe1+itQioOdYZa9w9SPWWMU0ykRLKROmczGYxwMY9MlH88nmlT0FsivSuyBQ8KM/YwUfUfYnJyxlnn2WaC0hPWDYlbbww9GVk3/EEuRewOMqlyFnQB15clko=
+	t=1762886910; cv=none; b=oTy5oDNgPt7ih8ie1HkquA/aAerpWy1JpXSKRK9W52V1WQxHC9CB73OpZXFdDNOoclWLAP+rRXhFXF7vaz8sIr44uFjbrDQrxYKLuvVqlVhjxP6Z5d2sq/PAsaZhl7YiC5/ORl4n4WiQ1DlwL4Psk4DEq7IbzASDbzvUSVWDLVc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762883389; c=relaxed/simple;
-	bh=wd8HjuszKDiWk/WLoiW49ZE7bKUwkd/mXBcVXS010B0=;
-	h=From:Date:Subject:MIME-Version:Content-Type:Message-Id:To:Cc; b=Rrppfo96DXyZUJxtQDZWZPZ7KksRrr0Pc3vyjPSzAbd7w4Bq10KJGEDyP/qvQVIgEdiwj/eyCwvzfJpMWc3HiHSeMARzsEgLfd1fuPOtFP36slvEJRPs2AQ21PjeugfkSKxJyQI666SysJtdykdO+p6/0hNj4ZU2pMviuGYNl5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Kg1hFnwK; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1762886910; c=relaxed/simple;
+	bh=GUGJ+HiGxwv4qm7lu1iuymNEeNFrSu59YeibNUyvnuU=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=dGaWaF0MErkfvGBzOfcdUSG3Xg+EtOpgSJdMHZvfHbUcLujzj3YlBTolnm7kbdKpAVT6rULdvdD6fSMiyE0KWxeRZygCzy2xyIQTSU5FqFk7bUH3zJr7RWEe4YvT1e9BaBcqAv2TR3JQdyBAF26Uwdn2gjFiBFdRQ/JdmPQO290=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FKQNxQ4e; arc=none smtp.client-ip=199.89.3.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Kg1hFnwK"
-Received: by smtp.kernel.org (Postfix) with ESMTPS id 35D45C4CEFB;
-	Tue, 11 Nov 2025 17:49:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1762883389;
-	bh=wd8HjuszKDiWk/WLoiW49ZE7bKUwkd/mXBcVXS010B0=;
-	h=From:Date:Subject:To:Cc:Reply-To:From;
-	b=Kg1hFnwKawtCcasxS2ejU23lYC/AdLfYeTM1WK8/6lB9dVgNymWbYXdVcLdGgOo96
-	 4n3EocI2uTTz4Vvf81Z5C9Pl026VqCNsg6PDuUG6wTKK/tMd0NFqzK6f4ALXfoDPWu
-	 WyCuvMyt6YYYSkRtAC1VcVE6mEkoJfIMoxAkxc4gcQmeeQwenMfh323E5tl54V/ykm
-	 OqR2tXnyL9QtdjYxumQYyAyYWHjYp+zNiyBLPPq/gLeDCPm+c6RHZDaLe3g21FNN1a
-	 Lh8rl/t4JSbnmnNCnpwPw4vZkahMRj7j8WE5dNEyygjYEMoAqOHaQ6jmBiw4aZH160
-	 FA8Om/p5Z4qGw==
-Received: from aws-us-west-2-korg-lkml-1.web.codeaurora.org (localhost.localdomain [127.0.0.1])
-	by smtp.lore.kernel.org (Postfix) with ESMTP id 2E43ECCFA18;
-	Tue, 11 Nov 2025 17:49:49 +0000 (UTC)
-From: =?utf-8?q?Nuno_S=C3=A1_via_B4_Relay?= <devnull+nuno.sa.analog.com@kernel.org>
-Date: Tue, 11 Nov 2025 17:50:17 +0000
-Subject: [PATCH RESEND v2] scsi: pm: Drop unneeded call to
- pm_runtime_mark_last_busy()
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FKQNxQ4e"
+Received: from localhost (localhost [127.0.0.1])
+	by 004.mia.mailroute.net (Postfix) with ESMTP id 4d5bC91ZDnzlyt8G;
+	Tue, 11 Nov 2025 18:48:21 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:mime-version:x-mailer:message-id:date
+	:date:subject:subject:from:from:received:received; s=mr01; t=
+	1762886899; x=1765478900; bh=2GjlgcTIXUCE8UjAPlBqV2JErkQ5NUXZGDb
+	tCI7AUxc=; b=FKQNxQ4eCZUbQjPrzUFtKoo/mt08FtLvF3RLs61UGVOYXfCs7kU
+	gDFAGI45i61bChZ0yff9wuEB2sv976rF5GUWI82cE6ZoslpYvYOwFtWlXSiNKxBD
+	pueu/bysWLimxh+yLEEhGvX31h0Y4Xhb6UHxP3Pdz3zTa2NXwjpKz3Qf2fX0a9ci
+	NHx08S05Aqt49SSf84uVKX9EqmgMcYsUmb8NKqoHMq2oGyevA3V+IA1sJQa0qFxS
+	2Rx+JpzOrR57SrwTVOx6w8KMsL+yMiIW1QSrkxOcpzoLxFA9brYTFTZzEnM6NZYJ
+	u9wEBWVkmWzPjfKsHudHPvoTwFZEnqya9UA==
+X-Virus-Scanned: by MailRoute
+Received: from 004.mia.mailroute.net ([127.0.0.1])
+ by localhost (004.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id jcnpTj2F2LV4; Tue, 11 Nov 2025 18:48:19 +0000 (UTC)
+Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 004.mia.mailroute.net (Postfix) with ESMTPSA id 4d5bC048Hlzlyt8q;
+	Tue, 11 Nov 2025 18:48:11 +0000 (UTC)
+From: Bart Van Assche <bvanassche@acm.org>
+To: "Martin K . Petersen" <martin.petersen@oracle.com>
+Cc: linux-scsi@vger.kernel.org,
+	Bart Van Assche <bvanassche@acm.org>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	Avri Altman <avri.altman@wdc.com>,
+	Bean Huo <beanhuo@micron.com>,
+	Guixin Liu <kanie@linux.alibaba.com>,
+	Ziqi Chen <quic_ziqichen@quicinc.com>,
+	Arthur Simchaev <arthur.simchaev@sandisk.com>
+Subject: [PATCH] ufs: core: Remove an unnecessary NULL pointer check
+Date: Tue, 11 Nov 2025 10:47:59 -0800
+Message-ID: <20251111184802.125111-1-bvanassche@acm.org>
+X-Mailer: git-send-email 2.51.2.1041.gc1ab5b90ca-goog
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-Message-Id: <20251111-scsi-pm-improv-v2-1-626b8491f4b4@analog.com>
-To: linux-scsi@vger.kernel.org
-Cc: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
- "Martin K. Petersen" <martin.petersen@oracle.com>
-X-Mailer: b4 0.14.3
-X-Developer-Signature: v=1; a=ed25519-sha256; t=1762883425; l=1113;
- i=nuno.sa@analog.com; s=20231116; h=from:subject:message-id;
- bh=s7cddLv/0itS0gt0AH8XS27Y9mgippHn173s01vX9Rk=;
- b=YrCa9WG+27Szsky0+QmtnLULGxfdcAB9Em4oXhIzHtDcNe4iYJFEKRECfZMjZ86VrtU6HTtHi
- 3niS5kvmDgNBFajUOu57pXLMuiYh/Yf1s0c6vhA612RlD9FCl/ln/F9
-X-Developer-Key: i=nuno.sa@analog.com; a=ed25519;
- pk=3NQwYA013OUYZsmDFBf8rmyyr5iQlxV/9H4/Df83o1E=
-X-Endpoint-Received: by B4 Relay for nuno.sa@analog.com/20231116 with
- auth_id=100
-X-Original-From: =?utf-8?q?Nuno_S=C3=A1?= <nuno.sa@analog.com>
-Reply-To: nuno.sa@analog.com
+Content-Transfer-Encoding: quoted-printable
 
-From: Nuno Sá <nuno.sa@analog.com>
+The !payload check tests the address of a member of a data structure. We
+know that the start address of this data structure (job) is not NULL
+since the 'job' pointer has already been dereferenced. Hence, the
+!payload check is superfluous. Remove this test. This was reported by
+the CodeSonar static analyzer.
 
-There's no need to explicitly call pm_runtime_mark_last_busy() since
-pm_runtime_autosuspend() is now doing it since commit 08071e64cb64
-("PM: runtime: Mark last busy stamp in pm_runtime_autosuspend()")
-
-Signed-off-by: Nuno Sá <nuno.sa@analog.com>
+Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
-Changes in v2:
-- Reference the commit introducing the change affecting this patch
-- Link to v1: https://lore.kernel.org/r/20251027-scsi-pm-improv-v1-1-cb9f0bceb4be@analog.com
----
- drivers/scsi/scsi_pm.c | 1 -
- 1 file changed, 1 deletion(-)
+ drivers/ufs/core/ufs_bsg.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi_pm.c b/drivers/scsi/scsi_pm.c
-index d581613d87c7..2652fecbfe47 100644
---- a/drivers/scsi/scsi_pm.c
-+++ b/drivers/scsi/scsi_pm.c
-@@ -205,7 +205,6 @@ static int scsi_runtime_idle(struct device *dev)
- 	/* Insert hooks here for targets, hosts, and transport classes */
- 
- 	if (scsi_is_sdev_device(dev)) {
--		pm_runtime_mark_last_busy(dev);
- 		pm_runtime_autosuspend(dev);
- 		return -EBUSY;
- 	}
-
----
-base-commit: 8fec172c82c2b5f6f8e47ab837c1dc91ee3d1b87
-change-id: 20251027-scsi-pm-improv-71477eb109c2
---
-
-Thanks!
-- Nuno Sá
--- 
-Nuno Sá <nuno.sa@analog.com>
-
-
+diff --git a/drivers/ufs/core/ufs_bsg.c b/drivers/ufs/core/ufs_bsg.c
+index 252186124669..58b506eac6dc 100644
+--- a/drivers/ufs/core/ufs_bsg.c
++++ b/drivers/ufs/core/ufs_bsg.c
+@@ -105,7 +105,7 @@ static int ufs_bsg_exec_advanced_rpmb_req(struct ufs_=
+hba *hba, struct bsg_job *j
+=20
+ 	if (dir !=3D DMA_NONE) {
+ 		payload =3D &job->request_payload;
+-		if (!payload || !payload->payload_len || !payload->sg_cnt)
++		if (!payload->payload_len || !payload->sg_cnt)
+ 			return -EINVAL;
+=20
+ 		sg_cnt =3D dma_map_sg(hba->host->dma_dev, payload->sg_list, payload->s=
+g_cnt, dir);
