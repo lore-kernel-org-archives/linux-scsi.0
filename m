@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DA32F352945;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F2C1B352959;
 	Tue, 11 Nov 2025 12:28:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762864094; cv=none; b=fRVOvWsFNq//2ZwjDw9+Ldi3NphuZgEnlE4bfAcN6kqD/gpVfodZwnD3rJbj5rLhGYpy/JFwY8svEXj9W1w3J58qG7nOqZsV7UKuF/4oFRl0IuWnhAmjT6Jel2DOMtm1yVwzbgj2cJcL0OOnsVihtETtvhtjEHWwnAgpLTIdbMY=
+	t=1762864094; cv=none; b=K9SoIxB55gCkXvfSbwRb/6VRU6AOGtkMFJckof6Xlt7Czc4UmWr1U5TSOd4+yCU55jWt9tV/AYdJ3dK3GJU7Lw9aSmyOeZbKdIXB6GHQe4jjWbAe7Gtm9xQ1HXCm1JGDpGpvt4Zt38Etr7AzT4r1y0sIgquoCFlFbki6XSBV/2U=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1762864094; c=relaxed/simple;
-	bh=GOmlU8+AxY4qiyUG0euFaX4L/EDMDObrk8lwMAMh1Z8=;
+	bh=9P5AC3KVHcn4TcLoSKblVZwstZQ28owfF1NSWgu0v6M=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dT3Fvd59uSe04mP2WcMLUbwcEpytD2fYTMRpcm3EbOdv13CHkNMK7ovnGYzs6oUVNobV7Yv0nV7t8BdGt5PPmA4F1891NQFeLSjLP9MsVFE+wPX1HVNLzbO8fjH9vE0eO5XqvPVrPunysBkdUucFL/TiZkHoGL60lkO9RExy1ec=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=jMgLc2WB; arc=none smtp.client-ip=192.198.163.9
+	 MIME-Version; b=WTft+jwzyD5D1xDZf+2yFAKjXzkbSGuRn+Lt1QN53135CBVDRFQwNS2hf0flyIuUfg7C5evEECjhKmxfg8ndqTa3oQOLd9Oko1ellkdckBKIpUrsTPDT4/2yXpoC9uVdFBoUBF6vWL4YT+25Nfm/u8NLRcFKBm47cWthddpnS+Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=bpzcX7Rn; arc=none smtp.client-ip=192.198.163.8
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="jMgLc2WB"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="bpzcX7Rn"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1762864092; x=1794400092;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=GOmlU8+AxY4qiyUG0euFaX4L/EDMDObrk8lwMAMh1Z8=;
-  b=jMgLc2WBxSHMoXM371XSE3aFEPn7AZEqM+QEh9zObSDBv1NHJKMasdak
-   SKkx7C9Cc+RJG8Q63pgqaWjLHt+sf4GLQJQ64C7uGIk0Zg2Rg7NbvJBDq
-   fmxlOIe/Q5tpl2FtGTfW0nGAU1QpiPjgopZprS0Xml2JqfbyfEs8TbmBi
-   Tk3ZMDFCQZNB33zYUqT/ExaXieZPkxnEFyWnZo8Y2uV9ZK2bknK6eGfej
-   nzHvJUVLjB3rZXv5O2359ayjaSAj6bjY2I3ejHajamdug3dyaHoIp6KoI
-   hjAdyWkdRdjHbFScsnn1Xoa9quJliBMoFV9XGVe/0RepaKE+B7GLY7MQP
+  bh=9P5AC3KVHcn4TcLoSKblVZwstZQ28owfF1NSWgu0v6M=;
+  b=bpzcX7Rneu8JB7fvLzLVAEn/o5UuV8rSNeXorMW/5KnkonVD7sArh1PK
+   6mc9AOHGpsFHqtCDZK0+HMnxQxLT01NuTC0qlV9nGIrXJZMmyNNWezotM
+   QqFwDcaQrENz2M+x8iRNFPiLoQNOtRL4yZ8Gha4nLB0539h5NUtb7HxRL
+   TdEluVVQ42gWMSHyRZiYSU3YHWVTQ3rRX/N7x8wWsWCFs0TKWTAqw8zAn
+   ObdlYRyNiE3w/wcLvzkr54VmpfNa+EEppVDtr+yFM29+a+3RGzi9n5Z1R
+   08wxUMps/PRZ6XJj/U2wlK/yBTtNff3XRjShM84p0xaoobIOBLB0Vod5v
    g==;
-X-CSE-ConnectionGUID: CcYt3W3DQyemqvXm0/CzyQ==
-X-CSE-MsgGUID: t3O7NB0RT+GHQbYKz1hPIQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="75607147"
+X-CSE-ConnectionGUID: 9ExSZMutTOCIOnSkg43x3Q==
+X-CSE-MsgGUID: j0oCmrK0QRqDGkr4GmFneQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="82553199"
 X-IronPort-AV: E=Sophos;i="6.19,296,1754982000"; 
-   d="scan'208";a="75607147"
-Received: from fmviesa007.fm.intel.com ([10.60.135.147])
-  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2025 04:28:11 -0800
-X-CSE-ConnectionGUID: yia3IgRZTfCq+ASYpaMpdQ==
-X-CSE-MsgGUID: GuUz5Yd9Su+K/4bCpbkVwg==
+   d="scan'208";a="82553199"
+Received: from fmviesa002.fm.intel.com ([10.60.135.142])
+  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2025 04:28:06 -0800
+X-CSE-ConnectionGUID: C4sha4TYQL6Ra9K6KrIJ/w==
+X-CSE-MsgGUID: nOZ6GvmYRmiuO92CznfCzw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,296,1754982000"; 
-   d="scan'208";a="188592928"
+   d="scan'208";a="212343329"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa007.fm.intel.com with ESMTP; 11 Nov 2025 04:28:04 -0800
+  by fmviesa002.fm.intel.com with ESMTP; 11 Nov 2025 04:27:59 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 44FE2A7; Tue, 11 Nov 2025 13:27:38 +0100 (CET)
+	id 3E4F2A6; Tue, 11 Nov 2025 13:27:38 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -138,9 +138,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Masami Hiramatsu <mhiramat@kernel.org>,
 	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH v2 17/21] ptp: ocp: Switch to use %ptSp
-Date: Tue, 11 Nov 2025 13:20:17 +0100
-Message-ID: <20251111122735.880607-18-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 16/21] pps: Switch to use %ptSp
+Date: Tue, 11 Nov 2025 13:20:16 +0100
+Message-ID: <20251111122735.880607-17-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251111122735.880607-1-andriy.shevchenko@linux.intel.com>
 References: <20251111122735.880607-1-andriy.shevchenko@linux.intel.com>
@@ -155,48 +155,41 @@ Content-Transfer-Encoding: 8bit
 Use %ptSp instead of open coded variants to print content of
 struct timespec64 in human readable format.
 
-While at it, fix wrong use of %ptT against struct timespec64.
-It's kinda lucky that it worked just because the first member
-there 64-bit and it's of time64_t type. Now with %ptS it may
-be used correctly.
-
-Acked-by: Vadim Fedorenko <vadim.fedorenko@linux.dev>
+Acked-by: Rodolfo Giometti <giometti@enneenne.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/ptp/ptp_ocp.c | 13 +++++--------
- 1 file changed, 5 insertions(+), 8 deletions(-)
+ drivers/pps/generators/pps_gen_parport.c | 3 +--
+ drivers/pps/kapi.c                       | 3 +--
+ 2 files changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/ptp/ptp_ocp.c b/drivers/ptp/ptp_ocp.c
-index eeebe4d149f7..21a8109fae34 100644
---- a/drivers/ptp/ptp_ocp.c
-+++ b/drivers/ptp/ptp_ocp.c
-@@ -4293,11 +4293,9 @@ ptp_ocp_summary_show(struct seq_file *s, void *data)
- 		ns += (s64)bp->utc_tai_offset * NSEC_PER_SEC;
- 		sys_ts = ns_to_timespec64(ns);
+diff --git a/drivers/pps/generators/pps_gen_parport.c b/drivers/pps/generators/pps_gen_parport.c
+index f5eeb4dd01ad..05bbf8d30ef1 100644
+--- a/drivers/pps/generators/pps_gen_parport.c
++++ b/drivers/pps/generators/pps_gen_parport.c
+@@ -80,8 +80,7 @@ static enum hrtimer_restart hrtimer_event(struct hrtimer *timer)
+ 	/* check if we are late */
+ 	if (expire_time.tv_sec != ts1.tv_sec || ts1.tv_nsec > lim) {
+ 		local_irq_restore(flags);
+-		pr_err("we are late this time %lld.%09ld\n",
+-				(s64)ts1.tv_sec, ts1.tv_nsec);
++		pr_err("we are late this time %ptSp\n", &ts1);
+ 		goto done;
+ 	}
  
--		seq_printf(s, "%7s: %lld.%ld == %ptT TAI\n", "PHC",
--			   ts.tv_sec, ts.tv_nsec, &ts);
--		seq_printf(s, "%7s: %lld.%ld == %ptT UTC offset %d\n", "SYS",
--			   sys_ts.tv_sec, sys_ts.tv_nsec, &sys_ts,
--			   bp->utc_tai_offset);
-+		seq_printf(s, "%7s: %ptSp == %ptS TAI\n", "PHC", &ts, &ts);
-+		seq_printf(s, "%7s: %ptSp == %ptS UTC offset %d\n", "SYS",
-+			   &sys_ts, &sys_ts, bp->utc_tai_offset);
- 		seq_printf(s, "%7s: PHC:SYS offset: %lld  window: %lld\n", "",
- 			   timespec64_to_ns(&ts) - ns,
- 			   post_ns - pre_ns);
-@@ -4505,9 +4503,8 @@ ptp_ocp_phc_info(struct ptp_ocp *bp)
- 		 ptp_clock_index(bp->ptp));
+diff --git a/drivers/pps/kapi.c b/drivers/pps/kapi.c
+index e9389876229e..6985c34de2ce 100644
+--- a/drivers/pps/kapi.c
++++ b/drivers/pps/kapi.c
+@@ -163,8 +163,7 @@ void pps_event(struct pps_device *pps, struct pps_event_time *ts, int event,
+ 	/* check event type */
+ 	BUG_ON((event & (PPS_CAPTUREASSERT | PPS_CAPTURECLEAR)) == 0);
  
- 	if (!ptp_ocp_gettimex(&bp->ptp_info, &ts, NULL))
--		dev_info(&bp->pdev->dev, "Time: %lld.%ld, %s\n",
--			 ts.tv_sec, ts.tv_nsec,
--			 bp->sync ? "in-sync" : "UNSYNCED");
-+		dev_info(&bp->pdev->dev, "Time: %ptSp, %s\n",
-+			 &ts, bp->sync ? "in-sync" : "UNSYNCED");
- }
+-	dev_dbg(&pps->dev, "PPS event at %lld.%09ld\n",
+-			(s64)ts->ts_real.tv_sec, ts->ts_real.tv_nsec);
++	dev_dbg(&pps->dev, "PPS event at %ptSp\n", &ts->ts_real);
  
- static void
+ 	timespec_to_pps_ktime(&ts_real, ts->ts_real);
+ 
 -- 
 2.50.1
 
