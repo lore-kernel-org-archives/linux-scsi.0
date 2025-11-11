@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.8])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.9])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89E9D35A926;
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E188235A936;
 	Tue, 11 Nov 2025 12:27:58 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.8
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.9
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762864080; cv=none; b=IucZZnJgV9UCl+/ayi35LxsrUIBnXg0iBRvzPY87Busnf72rqBhu2l3xwJiuI2gOPXHK0hHn3fA5lPEupcVTo4IZyNZ6WqjgoJ7Nr3AS0uF+0cSQ2tlrUDvXXCIRxfAkpsN75r2NtJgSYWB4xNzuUMapmu0ngxbCsdfFR+mFMJA=
+	t=1762864081; cv=none; b=c9Qn7HlJENznzWCFYriLUrMD75G36Ahv0z99T77CdUepWkdWWLS3Wfvumoz3snywDa0y+y/HB1eSu71sx6wkQwlnnut9aGpqQAOkKaUXeD7fTrzHUIme6rpooKeKJ3YWhLVFYKM9lx6Bibs+O1SOScSsFEUtDDdu9iaTtt/3bPM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762864080; c=relaxed/simple;
-	bh=EAZPhqK1RMT/qk5MrCQgSpebw1/0a3p3ZrELaAc3EQY=;
+	s=arc-20240116; t=1762864081; c=relaxed/simple;
+	bh=biAt7h9SZCWEseGnW36hqThT4FR7mM7YTOf8pyCUSJI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=H8UQjWJnG7Qp1vOCkNIg1yXYSsgEF7VcSXzeDhXZ6JwvVnQEHcjyQMOBzClciS2mG5QwJ69iLu35PIDO4bIfhFdHrzSMzi6T/JnI3d9fePDkD4+8JfuY9JvUgEGkYbVqyV+LQ7bgMOSoVWwnrdW+8YhO23rWROcCmP/cgx740cQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=OHAjTIHd; arc=none smtp.client-ip=192.198.163.8
+	 MIME-Version; b=oYCU/ILbp5OhDy8utQwmBhs7uBmdgk63BbsLl5PvfIft89VTI8cM+YnZuLfdLHFVKpsyDDd1DKo8+Soz0GSmcYsriZYAuetscl+t7Z3XkGaxPW6/eIsYgXiJm0AnZIrEGQTgZ9qiTou19A0nQjGUNsDCqSfME6J/QQOKi4Tm4xg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=ZmJu3QX/; arc=none smtp.client-ip=192.198.163.9
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="OHAjTIHd"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="ZmJu3QX/"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
   t=1762864079; x=1794400079;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=EAZPhqK1RMT/qk5MrCQgSpebw1/0a3p3ZrELaAc3EQY=;
-  b=OHAjTIHddwJ885sx9VtN5CzX/cGK4QaLzxVRIW+X/oyMWOJmBYyKNaji
-   QoN1fRt1IPEdn+36Qph5ifM0O51BKyNXqrAfuLWOw6oiakq8BdKRJUpsF
-   ddwT0lkJFNCdL6UaD+WqCZan+Me8DpCY8U45p+jb6WHQRv4cyY7s0zEu3
-   oFuqHwU5qwO/PPVLnTqpQrerVRuMKdiL+pogR66/hxw6TE27wsxCi9zYn
-   uNPNGVKfBknpSbozoYfN2j27Op3XN+z5T3AOP3mCM/NPji7su7u01plbW
-   tjMFhOESQFWh8b3j0P5NNC8DheDaJOPcMWRIEsx7lqdhiwhqmPqTzNu6Q
-   A==;
-X-CSE-ConnectionGUID: 03d38APpQfq+Llflfi8vYg==
-X-CSE-MsgGUID: BmGwMdbiQOW/5oTA0XRfXQ==
-X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="82552976"
+  bh=biAt7h9SZCWEseGnW36hqThT4FR7mM7YTOf8pyCUSJI=;
+  b=ZmJu3QX/fApUCEr5cIrziYNFuWBvjz6jXYSvsUrC/LJ5vevNfB4cgL0V
+   OmbASkgvMVa81RbstWWWBlBx/1VKq3NJ9PpcTu9GFMb/lqrvB3VAFPKHZ
+   drIsUjSSrCAHWc0oIAxai/etFOy7ctSR/MuEJQlfAxZm3vLgKPG3ViCD9
+   wgXoZb0LGiEqbF70KCiqxKE4ZRPiXoTZfRLHFIlA+WvGLYj/fWV/uKblR
+   oQfUzdGY0EEnzVNe36SB3D2K3jvA1uUEv6Mr4aq2839Wf6nmU/A90TAAx
+   vLK2K0VRveVo4tedMHdV4PrxAAkMe6PTxXq2KV/lb1p6iEPJ5eTGtxuXu
+   Q==;
+X-CSE-ConnectionGUID: Y9BjEx1gR/yNE1uoreddtQ==
+X-CSE-MsgGUID: Tg/BzUUYQ8uJ18BqTXwHQA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11609"; a="75606874"
 X-IronPort-AV: E=Sophos;i="6.19,296,1754982000"; 
-   d="scan'208";a="82552976"
-Received: from fmviesa002.fm.intel.com ([10.60.135.142])
-  by fmvoesa102.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2025 04:27:56 -0800
-X-CSE-ConnectionGUID: Zn0AdvczRVOldKWv1Tt+SQ==
-X-CSE-MsgGUID: DQ9az50KRrCwju9FrTfLVQ==
+   d="scan'208";a="75606874"
+Received: from fmviesa007.fm.intel.com ([10.60.135.147])
+  by fmvoesa103.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 11 Nov 2025 04:27:55 -0800
+X-CSE-ConnectionGUID: liFe4ozoTXCmNT5tPfSnAQ==
+X-CSE-MsgGUID: gKVH+9KbSESEHGgPJqvBHg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,296,1754982000"; 
-   d="scan'208";a="212343298"
+   d="scan'208";a="188592904"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa002.fm.intel.com with ESMTP; 11 Nov 2025 04:27:49 -0800
+  by fmviesa007.fm.intel.com with ESMTP; 11 Nov 2025 04:27:47 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id EBC3D9B; Tue, 11 Nov 2025 13:27:37 +0100 (CET)
+	id DEBCD99; Tue, 11 Nov 2025 13:27:37 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -138,9 +138,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Masami Hiramatsu <mhiramat@kernel.org>,
 	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH v2 05/21] drm/amdgpu: Switch to use %ptSp
-Date: Tue, 11 Nov 2025 13:20:05 +0100
-Message-ID: <20251111122735.880607-6-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v2 03/21] libceph: Switch to use %ptSp
+Date: Tue, 11 Nov 2025 13:20:03 +0100
+Message-ID: <20251111122735.880607-4-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251111122735.880607-1-andriy.shevchenko@linux.intel.com>
 References: <20251111122735.880607-1-andriy.shevchenko@linux.intel.com>
@@ -155,25 +155,36 @@ Content-Transfer-Encoding: 8bit
 Use %ptSp instead of open coded variants to print content of
 struct timespec64 in human readable format.
 
+Reviewed-by: Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c | 3 +--
- 1 file changed, 1 insertion(+), 2 deletions(-)
+ net/ceph/messenger_v2.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c b/drivers/gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c
-index 8a026bc9ea44..4e2fe6674db8 100644
---- a/drivers/gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c
-+++ b/drivers/gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c
-@@ -217,8 +217,7 @@ amdgpu_devcoredump_read(char *buffer, loff_t offset, size_t count,
- 	drm_printf(&p, "version: " AMDGPU_COREDUMP_VERSION "\n");
- 	drm_printf(&p, "kernel: " UTS_RELEASE "\n");
- 	drm_printf(&p, "module: " KBUILD_MODNAME "\n");
--	drm_printf(&p, "time: %lld.%09ld\n", coredump->reset_time.tv_sec,
--		   coredump->reset_time.tv_nsec);
-+	drm_printf(&p, "time: %ptSp\n", &coredump->reset_time);
+diff --git a/net/ceph/messenger_v2.c b/net/ceph/messenger_v2.c
+index 9e39378eda00..6e676e2d4ba0 100644
+--- a/net/ceph/messenger_v2.c
++++ b/net/ceph/messenger_v2.c
+@@ -1535,8 +1535,7 @@ static int prepare_keepalive2(struct ceph_connection *con)
+ 	struct timespec64 now;
  
- 	if (coredump->reset_task_info.task.pid)
- 		drm_printf(&p, "process_name: %s PID: %d\n",
+ 	ktime_get_real_ts64(&now);
+-	dout("%s con %p timestamp %lld.%09ld\n", __func__, con, now.tv_sec,
+-	     now.tv_nsec);
++	dout("%s con %p timestamp %ptSp\n", __func__, con, &now);
+ 
+ 	ceph_encode_timespec64(ts, &now);
+ 
+@@ -2729,8 +2728,7 @@ static int process_keepalive2_ack(struct ceph_connection *con,
+ 	ceph_decode_need(&p, end, sizeof(struct ceph_timespec), bad);
+ 	ceph_decode_timespec64(&con->last_keepalive_ack, p);
+ 
+-	dout("%s con %p timestamp %lld.%09ld\n", __func__, con,
+-	     con->last_keepalive_ack.tv_sec, con->last_keepalive_ack.tv_nsec);
++	dout("%s con %p timestamp %ptSp\n", __func__, con, &con->last_keepalive_ack);
+ 
+ 	return 0;
+ 
 -- 
 2.50.1
 
