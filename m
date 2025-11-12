@@ -1,173 +1,148 @@
-Received: from mail-vs1-f49.google.com (mail-vs1-f49.google.com [209.85.217.49])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E95F12D0C64
-	for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2025 20:30:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.217.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CA13A263C9F;
+	Wed, 12 Nov 2025 20:55:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1762979412; cv=none; b=TFY3mwYzEYKpa+LTSQqZ9tH5KlryeC/WTc5MDN07QJzqhkkLAlcuCGsYWIyBLTJEG9kz3IoieU0i2If1H2P9S0MFVtDQHK206mDpyxVyLgK5k22I7CjO2bbuDk+oVRrXmENh0faOE2g+MzG4jTeH8ATnzkIN4axWpwoYWf+aF+Q=
+	t=1762980959; cv=none; b=Q2np5BnwPOUHUSYdxST++c6I01sHmc5GQCxMPDJeVd4N2BnEk0qa4dQxjkyHNWh5LX5i+tGg+CNefbMy7PVulvlI7tC8InMs89yDJHpDDy9Fx5JhjF74KerYHDmNp3Ca03j7068j7MJpG3T5LAV147yNAJTMT0owmfuXtM4gMGE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1762979412; c=relaxed/simple;
-	bh=DtbSXMnbv13JS9DE85J2oaC+TTvxz/CxHMp+L2EbBis=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=fkg/WxqDNy9NjdptXHtvmqz1DpxpibLpo0bEqcqVT24j6n8eEQNLgk+t2/sgVSDlHUbUuvxnS+tLLkZ1VmGXhgWsebuoKFd4O5/M3O8qD3XUokbtTs6/sxnkEx3P3ARoclmkZe7lNn4L96SOccmixRkk2MfXlpDEv2YIpVmEe+c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KoyeQh6i; arc=none smtp.client-ip=209.85.217.49
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1762980959; c=relaxed/simple;
+	bh=2xhUvtMSX2Py/tg024qnleIQO6c6FibNRMJPrHXfmX0=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oEhH2oioulj7ji+yhoDfJ+BtB3Pxthw1UYic7KqTrw0gvo78sRavzu8GQxbXXtMDAr8/SL7fzyKqiK0lsZMBRRuv2c3gYOd5Rw8R8TG+UNkWDUVnlktsZZDY6f6uJgLYDFOlZXe7EHIhjBGwbvFFoMGxiGzwHrMsQurRD7zrMzY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=FT4eMaE3; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KoyeQh6i"
-Received: by mail-vs1-f49.google.com with SMTP id ada2fe7eead31-5d967b67003so61707137.2
-        for <linux-scsi@vger.kernel.org>; Wed, 12 Nov 2025 12:30:09 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1762979408; x=1763584208; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=vwZOhDKhg6nzefR9evpVQL7Ofqz3agKHaVIZRWUuIFQ=;
-        b=KoyeQh6ihvjn6jss34PCiF5FIkixISy03lAn8CJQFDpwsQLRVlX+nr6hSv2xVlS5RF
-         4wqcPGHOklSj5D7HQcNCCXIMzTLNA0CUSlW4UT1orLF4gEobpdLFoxNYXiGVbYJAWZgB
-         1MtsT5oU+S1Vq565j6GCgkz/Nprf/wNcEr9Bvrv2p3wmVZA82T12R2ZhnBmkpppnszdn
-         nwU429VVAyCWmCqqebAE13/APD6gwDucL02qn4YCjXxu+SkvM7gGOUzNqSr8EfnKemqB
-         MbPuBcU7AfkV+uxjWGcMB3TsuvCz6pKX7MM7Ghs/n9To7fVxBbfhHJkP0PopxB9wtEV8
-         n80Q==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1762979408; x=1763584208;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=vwZOhDKhg6nzefR9evpVQL7Ofqz3agKHaVIZRWUuIFQ=;
-        b=EddgjFUBtRncYOsoXzj5iSBa1Iq7euk6S2UfDjQ1WgIeWjYT8CE8+PBM8GUxUpkQSO
-         NzZOqjdmqEEGiexkIPPOGzlJgViGqbuinCh/IFnNPJfKMETNqovD9sJb6DbEtrw2uL7E
-         UKUtVLJrjTAwB7WbK82IPVyfGxCv37dnfxWfTEtxIzryiDC6Wq698S7iHdCnPL03+A0K
-         bLzKFBk5jEFPWichDtj4RHEmCY1GHUYokyY/bvcurUcQ+tS6eQ+0Mju2knf7bs3xXM+L
-         dWqEEWI5bqidtHEWIlT/xgR4aPyPM7L+pbwg94HHwuheuW3TlvEj0LCZF+7i5O62PT1i
-         sM2g==
-X-Forwarded-Encrypted: i=1; AJvYcCWS+Y60a8fIV6fcdaVHLe0MReqt+vtswpKT2C8ugpuR6bc/lTz3H/qMJjdnuLxMXS1YOtegIJi5suR9@vger.kernel.org
-X-Gm-Message-State: AOJu0YxVmV5qMc4QYVkm//eqagtQ4EDmuc1x6HdApyRz1ij6dN9Dtb8m
-	E46wFuKgPmv70nwm5FAVZkh/+g4GhNukXj70qp7Wg6tdI1gc6oU1XIytjoKcrbyKn1kCnvvl1OF
-	4kHNDeZTPYQsjX9kTBXRZkz9UYV+MLsU=
-X-Gm-Gg: ASbGncvuycWRIv9w/nklkMh6B6tU5L/LvGBSCJeTImcXGOenCiZRofUC1aKop962kW3
-	Z3AkTmzREAhPf9zwA09ZqcW6pcN5W2zotgHKi2GYQyDjuVPI5apKUdzsdSQ+1cI9hugOvRHTRP3
-	5W2/dzKLw/EZT3Iypp66GojH85m1/yhsrqYLMluqPOHfOUZg4r3QyEYE0grUjEeE8DJ/EpsikxO
-	0Ktp0K6fNWpRlliVDCvuJPG/5YBuAx7SsjPMqq87KaR4bjyjFnwd6h3F14YVKY4oheFLCb8omfU
-	T/aT5oAKgn5eXqdpNwGSYO3yJGqtVnXsKOGC3F3HjfQ5KnA=
-X-Google-Smtp-Source: AGHT+IFHYQYlB5H/vZO6pAE59Ra+lPGYc/9oEwXWmHHStsX1pd0NaLKAa+GMJ2VwQwjA/HrEVrmE3Ft6/3DaLcbhLUU=
-X-Received: by 2002:a05:6102:441f:b0:5db:ee3e:860e with SMTP id
- ada2fe7eead31-5de07ceedcemr1597457137.1.1762979408635; Wed, 12 Nov 2025
- 12:30:08 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="FT4eMaE3"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4d6Fzw4B9czlgqW0;
+	Wed, 12 Nov 2025 20:55:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1762980954; x=1765572955; bh=BYieuYvWdrPkEWUDJXfeMQSD
+	1AjAzeKuKjhOJWuyxQs=; b=FT4eMaE3uRQEtis8vd1tu3rVe/X5XL6vdlf113jI
+	I0qIOsysyZLNtGa8JEYGN+SC4ydJrBrpMTy8NKCwiu50HjYAhvBSLJoFAvz3EuJf
+	MVLZTprZ19vvpzREE/7xKWkf2tO7jfa1YPrueoxAuAfqU3/TFcPF4+BdCLCYF/Cq
+	i21GE7r7kxgaHzmZEmfZLlK/5uI4Mkw6a8HQaTTm1FxH7OQNZNeQ6ZBCMMdgy4L6
+	PWlJDA3ANjV2qmd4bRT2fuyB5OycbZHcAUBfikhk1fcPBdL7vupz3z7HB1eRLQF4
+	IzVMYjJV3rf+kRvuHjJo7xMxTLQoYA5I2H9Ffbz/LlV6Pg==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id 6RrlvvJ-mdZW; Wed, 12 Nov 2025 20:55:54 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4d6Fzj5yBRzltMJC;
+	Wed, 12 Nov 2025 20:55:44 +0000 (UTC)
+Message-ID: <562fa035-c732-4bfc-8439-2279d029f72a@acm.org>
+Date: Wed, 12 Nov 2025 12:55:43 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH RFT v2] driver/scsi/mpi3mr: Fix build warning for
+ mpi3mr_start_watchdog
+To: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>,
+ sathya.prakash@broadcom.com, kashyap.desai@broadcom.com,
+ sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com
+Cc: martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com,
+ linux-scsi@vger.kernel.org, skhan@linuxfoundation.org, khalid@kernel.org,
+ david.hunter.linux@gmail.com,
+ linux-kernel-mentees@lists.linuxfoundation.org, linux-kernel@vger.kernel.org
 References: <20251028145534.95457-1-kubik.bartlomiej@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
 In-Reply-To: <20251028145534.95457-1-kubik.bartlomiej@gmail.com>
-From: =?UTF-8?Q?Bart=C5=82omiej_Kubik?= <kubik.bartlomiej@gmail.com>
-Date: Wed, 12 Nov 2025 21:29:56 +0100
-X-Gm-Features: AWmQ_bnLwOfcWQPWIKmUoND1n7tdM12UUbgDYcwxauU_Xcm3P8dYRzc2Y6PS87Y
-Message-ID: <CAPqLRf2vo6pVbF6C4LtReBwH1VaMQzEGGyd2NuFxbLMZykqM1g@mail.gmail.com>
-Subject: Re: [PATCH RFT v2] driver/scsi/mpi3mr: Fix build warning for mpi3mr_start_watchdog
-To: sathya.prakash@broadcom.com, kashyap.desai@broadcom.com, 
-	sumit.saxena@broadcom.com, sreekanth.reddy@broadcom.com
-Cc: martin.petersen@oracle.com, mpi3mr-linuxdrv.pdl@broadcom.com, 
-	linux-scsi@vger.kernel.org, skhan@linuxfoundation.org, khalid@kernel.org, 
-	david.hunter.linux@gmail.com, linux-kernel-mentees@lists.linuxfoundation.org, 
-	linux-kernel@vger.kernel.org
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Tue, 28 Oct 2025 at 15:55, Bartlomiej Kubik
-<kubik.bartlomiej@gmail.com> wrote:
->
-> GCC warning:
-> drivers/scsi/mpi3mr/mpi3mr_fw.c:2872:60: warning: =E2=80=98%s=E2=80=99 di=
-rective
-> output may be truncated writing up to 63 bytes into a region of size
-> 41 [-Wformat-truncation=3D]
->
-> Change MPI3MR_WATCHDOG_NAME_LENGTH define to properly clarify
-> the required buffer size.
->
-> The mrioc->watchdog_work_q_name buffer in
-> the mpi3mr_start_watchdog() function no longer requires adding mrioc->id,
-> since mrioc->name already includes it.
->
-> mrioc->name is built using:
-> sprintf(mrioc->name, "%s%d", mrioc->driver_name, mrioc->id)
->
-> Signed-off-by: Bartlomiej Kubik <kubik.bartlomiej@gmail.com>
-> ---
->
-> I do not have the hardware to full tests it.
-> Tests only built kernel without warning and run kernel.
->
-> Changelog:
-> Changes since v1:
-> - Add define MPI3MR_WATCHDOG_NAME_LENGTH (MPI3MR_NAME_LENGTH + 15)
-> - Change watchdog_work_q_name buffer from size 50 to MPI3MR_WATCHDOG_NAME=
-_LENGTH
->
-> Link to v1
-> https://lore.kernel.org/all/20251002063038.552399-1-kubik.bartlomiej@gmai=
-l.com/
->
->  drivers/scsi/mpi3mr/mpi3mr.h    | 3 ++-
->  drivers/scsi/mpi3mr/mpi3mr_fw.c | 3 +--
->  2 files changed, 3 insertions(+), 3 deletions(-)
->
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
-> index 6742684e2990..be15d5ec8b58 100644
-> --- a/drivers/scsi/mpi3mr/mpi3mr.h
-> +++ b/drivers/scsi/mpi3mr/mpi3mr.h
-> @@ -66,6 +66,7 @@ extern atomic64_t event_counter;
->
->  #define MPI3MR_NAME_LENGTH     64
->  #define IOCNAME                        "%s: "
-> +#define MPI3MR_WATCHDOG_NAME_LENGTH (sizeof("watchdog_") + MPI3MR_NAME_L=
-ENGTH + 1)
->
->  #define MPI3MR_DEFAULT_MAX_IO_SIZE     (1 * 1024 * 1024)
->
-> @@ -1265,7 +1266,7 @@ struct mpi3mr_ioc {
->         spinlock_t fwevt_lock;
->         struct list_head fwevt_list;
->
-> -       char watchdog_work_q_name[50];
-> +       char watchdog_work_q_name[MPI3MR_WATCHDOG_NAME_LENGTH];
->         struct workqueue_struct *watchdog_work_q;
->         struct delayed_work watchdog_work;
->         spinlock_t watchdog_lock;
-> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr=
-_fw.c
+On 10/28/25 7:55 AM, Bartlomiej Kubik wrote:
+> -	char watchdog_work_q_name[50];
+> +	char watchdog_work_q_name[MPI3MR_WATCHDOG_NAME_LENGTH];
+
+ From include/linux/workqueue.h:
+
+	WQ_NAME_LEN		= 32,
+
+	char			name[WQ_NAME_LEN]; /* I: workqueue name */
+
+In other words, increasing the workqueue name length beyond 32
+characters is not useful because it will get truncated to 32 characters
+anyway. The workqueue implementation complains about longer names as one
+can see in kernel/workqueue.c:
+
+	if (name_len >= WQ_NAME_LEN)
+		pr_warn_once("workqueue: name exceeds WQ_NAME_LEN. Truncating to: %s\n",
+			     wq->name);
+
+> diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c b/drivers/scsi/mpi3mr/mpi3mr_fw.c
 > index 8fe6e0bf342e..18b176e358c5 100644
 > --- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
 > +++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
-> @@ -2879,8 +2879,7 @@ void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrioc=
-)
->
->         INIT_DELAYED_WORK(&mrioc->watchdog_work, mpi3mr_watchdog_work);
->         snprintf(mrioc->watchdog_work_q_name,
-> -           sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->=
-name,
-> -           mrioc->id);
-> +           sizeof(mrioc->watchdog_work_q_name), "watchdog_%s", mrioc->na=
-me);
->         mrioc->watchdog_work_q =3D alloc_ordered_workqueue(
->                 "%s", WQ_MEM_RECLAIM, mrioc->watchdog_work_q_name);
->         if (!mrioc->watchdog_work_q) {
-> --
-> 2.39.5
->
+> @@ -2879,8 +2879,7 @@ void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrioc)
+> 
+>   	INIT_DELAYED_WORK(&mrioc->watchdog_work, mpi3mr_watchdog_work);
+>   	snprintf(mrioc->watchdog_work_q_name,
+> -	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name,
+> -	    mrioc->id);
+> +	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s", mrioc->name);
+>   	mrioc->watchdog_work_q = alloc_ordered_workqueue(
+>   		"%s", WQ_MEM_RECLAIM, mrioc->watchdog_work_q_name);
+>   	if (!mrioc->watchdog_work_q) {
+Leaving out mrioc->id from the workqueue name seems like an unacceptable
+behavior change to me.
 
-Hi,
+Please consider replacing the proposed changed with this untested patch:
 
-I submitted this patch about two weeks ago but haven't received any
-feedback yet.
-I wanted to check if there are any concerns with the patch or if any
-changes are needed.
+diff --git a/drivers/scsi/mpi3mr/mpi3mr.h b/drivers/scsi/mpi3mr/mpi3mr.h
+index 6742684e2990..050dcf111a4c 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr.h
++++ b/drivers/scsi/mpi3mr/mpi3mr.h
+@@ -1076,7 +1076,6 @@ struct scmd_priv {
+   * @fwevt_worker_thread: Firmware event worker thread
+   * @fwevt_lock: Firmware event lock
+   * @fwevt_list: Firmware event list
+- * @watchdog_work_q_name: Fault watchdog worker thread name
+   * @watchdog_work_q: Fault watchdog worker thread
+   * @watchdog_work: Fault watchdog work
+   * @watchdog_lock: Fault watchdog lock
+@@ -1265,7 +1264,6 @@ struct mpi3mr_ioc {
+  	spinlock_t fwevt_lock;
+  	struct list_head fwevt_list;
 
-Please let me know if you need any additional information.
+-	char watchdog_work_q_name[50];
+  	struct workqueue_struct *watchdog_work_q;
+  	struct delayed_work watchdog_work;
+  	spinlock_t watchdog_lock;
+diff --git a/drivers/scsi/mpi3mr/mpi3mr_fw.c 
+b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+index 8fe6e0bf342e..b564fe5980a6 100644
+--- a/drivers/scsi/mpi3mr/mpi3mr_fw.c
++++ b/drivers/scsi/mpi3mr/mpi3mr_fw.c
+@@ -2878,11 +2878,8 @@ void mpi3mr_start_watchdog(struct mpi3mr_ioc *mrioc)
+  		return;
 
-Best regards
-Bart=C5=82omiej Kubik
+  	INIT_DELAYED_WORK(&mrioc->watchdog_work, mpi3mr_watchdog_work);
+-	snprintf(mrioc->watchdog_work_q_name,
+-	    sizeof(mrioc->watchdog_work_q_name), "watchdog_%s%d", mrioc->name,
+-	    mrioc->id);
+  	mrioc->watchdog_work_q = alloc_ordered_workqueue(
+-		"%s", WQ_MEM_RECLAIM, mrioc->watchdog_work_q_name);
++		"watchdog_%s%d", WQ_MEM_RECLAIM, mrioc->name, mrioc->id);
+  	if (!mrioc->watchdog_work_q) {
+  		ioc_err(mrioc, "%s: failed (line=%d)\n", __func__, __LINE__);
+  		return;
+
+Thanks,
+
+Bart.
