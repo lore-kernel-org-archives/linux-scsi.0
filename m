@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 26CFA2EE60B;
-	Thu, 13 Nov 2025 15:02:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1D552F60B4;
+	Thu, 13 Nov 2025 15:02:48 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763046168; cv=none; b=TFZT+HTs6k79jnT77BZAQKPQpfQy20b8G/9XEOT1+mGkTFftZJFd4f5JETNdILybpjip5IG4WLveUVCB734/a6SZlCzZ+Cu5R4h+nhsAfw1mz7gGH4RIV1lV5PQVfOiSpzQFPhHdnN+5Ajg3wb2vSPYqN+V+l/jzVfqtQ6Nri+s=
+	t=1763046170; cv=none; b=GjQD6gMuJlhhcp6McWjd3wB6MyTPUHtqswBIcoj9IrT8BaRXooagn27yyrXjgqce55rs1U0NP46mbfzH224OjuVN4yHAPluRXYFAgr3Oz273Xl7BJKSJzSvjNQ8vFNakuQQU0BGyls0bLoEpNOJIKWqM8AF8syR5pOEKfuxrHqM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763046168; c=relaxed/simple;
-	bh=Re9XzxeVgaRpFu9Nr8p7rXjuLRXS6TBbrXT9/XQ7Zd0=;
+	s=arc-20240116; t=1763046170; c=relaxed/simple;
+	bh=biAt7h9SZCWEseGnW36hqThT4FR7mM7YTOf8pyCUSJI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=o/4MBj9MVlzD2OrhtXKji0D17zg08Cztjn0VtgRvb3qBZdnHXbuyAZjLqhVKHAP0DOjyyElG6Ty+Lu0lPGPkvpg8ekuz6+Z5hM0R/oAp/WKX6cyAcySzaPU/MVAr2OCW0etLJrNtAN+qympaKiX39QsP5qyZFi7s67nIpiy6VLE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=I2MNAVlR; arc=none smtp.client-ip=192.198.163.12
+	 MIME-Version; b=i9BBZp079MTm7UVIA2Oj/joXTjxL38R5kYNNKTo60DuLatF2wXUeSobVA+k4gKhBUTW6r/oRHZYcNhv53OnX6PRxO0+mWSHM4Y++GZzRN9u6hkkoNCYOdztrDVAh2N5Q1VT/QoNC7xlLwWHJHupc99hkswIEwbQCU5oclwADqKU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mPu+QKyA; arc=none smtp.client-ip=198.175.65.21
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="I2MNAVlR"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mPu+QKyA"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763046167; x=1794582167;
+  t=1763046169; x=1794582169;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=Re9XzxeVgaRpFu9Nr8p7rXjuLRXS6TBbrXT9/XQ7Zd0=;
-  b=I2MNAVlRDoKdmJBnttD93YH6ed3G7W4lo+X4itkRH8gxsHXOlh4HC49R
-   t5j1PAsLOqwKsS4TV/43DUTqr4yWcWyMfwKQQJO4s8K581h34A7yKsonj
-   nKDDdefFW2HDzxTT1y03v+1s9TtUo4gA/H60tub1yWKoPxSZUGQXNYl6H
-   QYKBZbiVL5jCPIK7B3FdKFO4VvA0Y3lxhf4D6oOj4OC5oALqa4I39QBxj
-   4dry1fYGY8ur0c/vCeM2nAeBYfgNhJ/TLKzhCWUmcKLbKmQ696P6GDWKE
-   A2lp7Cc2iofkvFEU3/TI/1mvQixOKXoL2GVRL4sddGgDKULmQpXCUUkPE
+  bh=biAt7h9SZCWEseGnW36hqThT4FR7mM7YTOf8pyCUSJI=;
+  b=mPu+QKyAjDqMKWuX2oPPQ4ep8ySwLZi6HV8hLMD88eD7iVIjk5Wo/krb
+   naJ5aulRkCVxkwY/wAejO6WFQSIFw2RAi5jyeCunKxMWfVBrQHsRuVTcL
+   HuXaaM0n/tHzZcQbf6sV/Tbq4P0+JdGuY6bQlK8rwIo9QqRllsl1S5eqr
+   dymWZIG8luCSflwP5MyVCaiAr7ixfSWBpXGCfzG3ThBa+YfZ+ImzMoL0z
+   bUmaCY0lpHNHGLUmsFk5hC7j8N17MivS7+XMAYK7z3iEi6wwZFgezGDsT
+   uY+LhGlPykIm9RuEIhhyFygC/lu6gYBZdATpCySzojqd4YbInEa41Y/3D
    A==;
-X-CSE-ConnectionGUID: GqXYUylZRUC2AY4Z47Kb1g==
-X-CSE-MsgGUID: 9+MWZn3sTaCn2sFWpCDE2A==
-X-IronPort-AV: E=McAfee;i="6800,10657,11612"; a="68991564"
-X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
-   d="scan'208";a="68991564"
-Received: from orviesa010.jf.intel.com ([10.64.159.150])
-  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 07:02:42 -0800
-X-CSE-ConnectionGUID: jgz+n6WVTPmKrN1pNQhPJg==
-X-CSE-MsgGUID: Pq6wVSdiTx2MefzRsMnAQg==
+X-CSE-ConnectionGUID: JUvVtAGESqiNBZjgRJmMHA==
+X-CSE-MsgGUID: dNv858aMRKaEqiKreuDjZw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="65054158"
+X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
+   d="scan'208";a="65054158"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 07:02:45 -0800
+X-CSE-ConnectionGUID: jZ3ptSFPRHWfj9HYK1+nRA==
+X-CSE-MsgGUID: /JSs45P5SKGGlcIjIShNgw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
-   d="scan'208";a="188810239"
+   d="scan'208";a="220324875"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by orviesa010.jf.intel.com with ESMTP; 13 Nov 2025 07:02:33 -0800
+  by fmviesa001.fm.intel.com with ESMTP; 13 Nov 2025 07:02:31 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 270F09C; Thu, 13 Nov 2025 16:02:19 +0100 (CET)
+	id 1384599; Thu, 13 Nov 2025 16:02:19 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -139,9 +139,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Masami Hiramatsu <mhiramat@kernel.org>,
 	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH v3 06/21] drm/msm: Switch to use %ptSp
-Date: Thu, 13 Nov 2025 15:32:20 +0100
-Message-ID: <20251113150217.3030010-7-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 03/21] libceph: Switch to use %ptSp
+Date: Thu, 13 Nov 2025 15:32:17 +0100
+Message-ID: <20251113150217.3030010-4-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
 References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
@@ -156,40 +156,36 @@ Content-Transfer-Encoding: 8bit
 Use %ptSp instead of open coded variants to print content of
 struct timespec64 in human readable format.
 
+Reviewed-by: Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- drivers/gpu/drm/msm/disp/msm_disp_snapshot_util.c | 3 +--
- drivers/gpu/drm/msm/msm_gpu.c                     | 3 +--
- 2 files changed, 2 insertions(+), 4 deletions(-)
+ net/ceph/messenger_v2.c | 6 ++----
+ 1 file changed, 2 insertions(+), 4 deletions(-)
 
-diff --git a/drivers/gpu/drm/msm/disp/msm_disp_snapshot_util.c b/drivers/gpu/drm/msm/disp/msm_disp_snapshot_util.c
-index 071bcdea80f7..19b470968f4d 100644
---- a/drivers/gpu/drm/msm/disp/msm_disp_snapshot_util.c
-+++ b/drivers/gpu/drm/msm/disp/msm_disp_snapshot_util.c
-@@ -82,8 +82,7 @@ void msm_disp_state_print(struct msm_disp_state *state, struct drm_printer *p)
- 	drm_printf(p, "kernel: " UTS_RELEASE "\n");
- 	drm_printf(p, "module: " KBUILD_MODNAME "\n");
- 	drm_printf(p, "dpu devcoredump\n");
--	drm_printf(p, "time: %lld.%09ld\n",
--		state->time.tv_sec, state->time.tv_nsec);
-+	drm_printf(p, "time: %ptSp\n", &state->time);
+diff --git a/net/ceph/messenger_v2.c b/net/ceph/messenger_v2.c
+index 9e39378eda00..6e676e2d4ba0 100644
+--- a/net/ceph/messenger_v2.c
++++ b/net/ceph/messenger_v2.c
+@@ -1535,8 +1535,7 @@ static int prepare_keepalive2(struct ceph_connection *con)
+ 	struct timespec64 now;
  
- 	list_for_each_entry_safe(block, tmp, &state->blocks, node) {
- 		drm_printf(p, "====================%s================\n", block->name);
-diff --git a/drivers/gpu/drm/msm/msm_gpu.c b/drivers/gpu/drm/msm/msm_gpu.c
-index 17759abc46d7..a4251afe4541 100644
---- a/drivers/gpu/drm/msm/msm_gpu.c
-+++ b/drivers/gpu/drm/msm/msm_gpu.c
-@@ -197,8 +197,7 @@ static ssize_t msm_gpu_devcoredump_read(char *buffer, loff_t offset,
- 	drm_printf(&p, "---\n");
- 	drm_printf(&p, "kernel: " UTS_RELEASE "\n");
- 	drm_printf(&p, "module: " KBUILD_MODNAME "\n");
--	drm_printf(&p, "time: %lld.%09ld\n",
--		state->time.tv_sec, state->time.tv_nsec);
-+	drm_printf(&p, "time: %ptSp\n", &state->time);
- 	if (state->comm)
- 		drm_printf(&p, "comm: %s\n", state->comm);
- 	if (state->cmd)
+ 	ktime_get_real_ts64(&now);
+-	dout("%s con %p timestamp %lld.%09ld\n", __func__, con, now.tv_sec,
+-	     now.tv_nsec);
++	dout("%s con %p timestamp %ptSp\n", __func__, con, &now);
+ 
+ 	ceph_encode_timespec64(ts, &now);
+ 
+@@ -2729,8 +2728,7 @@ static int process_keepalive2_ack(struct ceph_connection *con,
+ 	ceph_decode_need(&p, end, sizeof(struct ceph_timespec), bad);
+ 	ceph_decode_timespec64(&con->last_keepalive_ack, p);
+ 
+-	dout("%s con %p timestamp %lld.%09ld\n", __func__, con,
+-	     con->last_keepalive_ack.tv_sec, con->last_keepalive_ack.tv_nsec);
++	dout("%s con %p timestamp %ptSp\n", __func__, con, &con->last_keepalive_ack);
+ 
+ 	return 0;
+ 
 -- 
 2.50.1
 
