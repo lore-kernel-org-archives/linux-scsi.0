@@ -1,150 +1,34 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mail-m155101.qiye.163.com (mail-m155101.qiye.163.com [101.71.155.101])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7F4E135A125;
-	Thu, 13 Nov 2025 15:03:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70B462E9749;
+	Thu, 13 Nov 2025 15:10:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=101.71.155.101
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763046206; cv=none; b=lAVMRdUs/shogM1reRvJOXLY0XrbL5sItC0ApdIXZ/MXUruG6fddNcl3cIzQQd2eMBXXiHI/cRfBJTl6YzQwArZsO8vvogZXo+KVrG25bEUjO49OyiAHtHOd7VdDjmj7pRW/l+xjRa9aTV9NVOr5LiJeiIDM41kBi/tadQUkj9o=
+	t=1763046606; cv=none; b=LzK8YR9ZKv7vOb5YR4qMMlGmXsL3V1bWp2l9LdKDkf1i8ce39aKouuyi1Aha5jm+e5YAOpxfVoQVfdUsT81fjoX/Y3WbkLmCJJy+5nT9wG1tB97lttUyv3J/IJII4BdSPEhij+eg+Yd+GsLy5/f6kI7heyJcWfsKGCCYEdpy3WM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763046206; c=relaxed/simple;
-	bh=OtFs4nYXEH1ThWKykhpKfwgYG7osOn2qi/Z49bIrWUw=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=e2xsrQoCaO+LsaAgsIMF0gWKSjFPdhiqFEd8Bm244lyfBeDcaHf+zi3Hn1QfDBesPRTvAkMH2CuoPesf03dRx3uNGXU1WJvuETybCf4POthb2ZWIBTj0xNrXbpJfjHrhcmxzoAEM42u9oql44adyUxwbtfIRuOnvWX8sapDMLFI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=WOuQz+Me; arc=none smtp.client-ip=198.175.65.21
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1763046606; c=relaxed/simple;
+	bh=vi+LyETqpSGvjke/7Br6KgKKQXb9QDeOQwrjW7h5hug=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=ueKR863OjZtP3wPhI19sQ+/yNz0eT5M2zksd7dhw0dM2DBSPD+r636QsXMmK9lv47unWw0q5gNEurKxNuyzL3dK/oeQhihWQ4Voet9IIo/AZx3QzIrVDaat4IL77t4JZNCOz1LT2f8N50qlIN5m5MwapK5jafEXuuu7fo+4aXwU=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn; spf=pass smtp.mailfrom=seu.edu.cn; dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b=TZ9zQFz4; arc=none smtp.client-ip=101.71.155.101
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=seu.edu.cn
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=seu.edu.cn
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="WOuQz+Me"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763046205; x=1794582205;
-  h=from:to:cc:subject:date:message-id:in-reply-to:
-   references:mime-version:content-transfer-encoding;
-  bh=OtFs4nYXEH1ThWKykhpKfwgYG7osOn2qi/Z49bIrWUw=;
-  b=WOuQz+MeEOQavM2mL8rxvEvgJpuCI5O3AzUufeQa8/e11H0o5GTZ5GqT
-   n9cxFhd8bXBSS7O5mztTZkRV0wjoLc4Nd3Zz+OBhfrmtOMHV52kpdOSTe
-   Rl6KIdIbq8g8S3a0ftsG19Lmoc36q+tM5d1gjKNY4f8qBCsIKNU8qr9PX
-   nZXteDnIuQomJrb1YNR5hIwSkCfd+eGZbStKrhZWL0w2oeiMifj34Xfiu
-   OeQC2ewD0Z57bPNcBgZleBbS7L4GpLJXymksKUBMUPPjEdv5H+mYWwU7f
-   hbr+XEVgsT0qZ1wsuIDBJBXgiXZXqR2vib8qrTk2du0g4Bo+o+ABGNNXA
-   g==;
-X-CSE-ConnectionGUID: voUJCzjSS5mlD7Il6h4a8Q==
-X-CSE-MsgGUID: 4tcvY+JeTQ+4hNpACC1S4Q==
-X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="65054771"
-X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
-   d="scan'208";a="65054771"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 07:03:04 -0800
-X-CSE-ConnectionGUID: wsJEWqiyRSOTWbBWxtwAyw==
-X-CSE-MsgGUID: TObbgzKmSz6dKnfJs+E4CA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
-   d="scan'208";a="220325238"
-Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa001.fm.intel.com with ESMTP; 13 Nov 2025 07:02:55 -0800
-Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 88811AB; Thu, 13 Nov 2025 16:02:19 +0100 (CET)
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Corey Minyard <corey@minyard.net>,
-	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
-	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-	Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
-	Vitaly Lifshits <vitaly.lifshits@intel.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>,
-	Calvin Owens <calvin@wbinvd.org>,
-	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
-	Sagi Maimon <maimon.sagi@gmail.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	Hans Verkuil <hverkuil+cisco@kernel.org>,
-	Casey Schaufler <casey@schaufler-ca.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Petr Mladek <pmladek@suse.com>,
-	Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>,
-	Max Kellermann <max.kellermann@ionos.com>,
-	linux-doc@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	openipmi-developer@lists.sourceforge.net,
-	linux-media@vger.kernel.org,
-	dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org,
-	amd-gfx@lists.freedesktop.org,
-	linux-arm-msm@vger.kernel.org,
-	freedreno@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org,
-	linux-mmc@vger.kernel.org,
-	netdev@vger.kernel.org,
-	intel-wired-lan@lists.osuosl.org,
-	linux-pci@vger.kernel.org,
-	linux-s390@vger.kernel.org,
+	dkim=pass (1024-bit key) header.d=seu.edu.cn header.i=@seu.edu.cn header.b="TZ9zQFz4"
+Received: from LAPTOP-N070L597.localdomain (unknown [223.112.146.162])
+	by smtp.qiye.163.com (Hmail) with ESMTP id 297e69a6a;
+	Thu, 13 Nov 2025 23:09:59 +0800 (GMT+08:00)
+From: Zilin Guan <zilin@seu.edu.cn>
+To: James.Bottomley@HansenPartnership.com
+Cc: martin.petersen@oracle.com,
 	linux-scsi@vger.kernel.org,
-	linux-staging@lists.linux.dev,
-	ceph-devel@vger.kernel.org,
-	linux-trace-kernel@vger.kernel.org
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	David Airlie <airlied@gmail.com>,
-	Simona Vetter <simona@ffwll.ch>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Jessica Zhang <jesszhan0024@gmail.com>,
-	Sean Paul <sean@poorly.run>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Lucas De Marchi <lucas.demarchi@intel.com>,
-	=?UTF-8?q?Thomas=20Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Vladimir Oltean <olteanv@gmail.com>,
-	Andrew Lunn <andrew@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>,
-	Paolo Abeni <pabeni@redhat.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
-	=?UTF-8?q?Krzysztof=20Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rodolfo Giometti <giometti@enneenne.com>,
-	Jonathan Lemon <jonathan.lemon@gmail.com>,
-	Richard Cochran <richardcochran@gmail.com>,
-	Stefan Haberland <sth@linux.ibm.com>,
-	Jan Hoeppner <hoeppner@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Xiubo Li <xiubli@redhat.com>,
-	Ilya Dryomov <idryomov@gmail.com>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH v3 21/21] tracing: Switch to use %ptSp
-Date: Thu, 13 Nov 2025 15:32:35 +0100
-Message-ID: <20251113150217.3030010-22-andriy.shevchenko@linux.intel.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
-References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
+	linux-kernel@vger.kernel.org,
+	jianhao.xu@seu.edu.cn,
+	Zilin Guan <zilin@seu.edu.cn>
+Subject: [PATCH] scsi: mvumi: Fix memory leak in mvumi_probe_devices()
+Date: Thu, 13 Nov 2025 15:09:34 +0000
+Message-Id: <20251113150934.758067-1-zilin@seu.edu.cn>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -152,36 +36,52 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-HM-Tid: 0a9a7dc4286c03a1kunm5605d43d14a3a1
+X-HM-MType: 10
+X-HM-Spam-Status: e1kfGhgUHx5ZQUpXWQgPGg8OCBgUHx5ZQUlOS1dZFg8aDwILHllBWSg2Ly
+	tZV1koWUFITzdXWS1ZQUlXWQ8JGhUIEh9ZQVkaGBlOVhgZTxodHhoaSkJIS1YeHw5VEwETFhoSFy
+	QUDg9ZV1kYEgtZQVlJSUhVSkpJVUpPTVVKTUlZV1kWGg8SFR0UWUFZT0tIVUpLSUJDQ0xVSktLVU
+	tZBg++
+DKIM-Signature: a=rsa-sha256;
+	b=TZ9zQFz4AyyT0TiHT6M8K0LqwGXd/WPi/mAVcAQNVfSiVasDNuKmCjkk33Va3mSLz7ra4nsBfHF39/rCv9CKPtQnP5R5Du26pCxUAR4TwZw2VEVAPLFin2D6tOCN+F9zTugdSGpUG1uaZSMI6FV3V3qUbv3y+CtSScFsatmG3bU=; s=default; c=relaxed/relaxed; d=seu.edu.cn; v=1;
+	bh=0t7k+O2CxwdjkOom484ODUoUSay3YPDNbL2zPq28a14=;
+	h=date:mime-version:subject:message-id:from;
 
-Use %ptSp instead of open coded variants to print content of
-struct timespec64 in human readable format.
+In mvumi_probe_devices(), an internal command cmd is allocated via
+mvumi_create_internal_cmd() at the beginning of the function.
 
-Acked-by: Steven Rostedt (Google) <rostedt@goodmis.org>
-Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+This command is used within a loop that calls mvumi_match_devices(). If
+a device conflict is detected, the function exits immediately without
+freeing the cmd allocated at the start, leading to a memory leak.
+
+Fix this by calling mvumi_delete_internal_cmd() to release the command
+before returning in this error path.
+
+Fixes: bd756ddea18e0 ("[SCSI] mvumi: Add support for Marvell SAS/SATA RAID-on-Chip(ROC) 88RC9580")
+Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
 ---
- kernel/trace/trace_output.c | 6 +++---
- 1 file changed, 3 insertions(+), 3 deletions(-)
+ drivers/scsi/mvumi.c | 6 ++++--
+ 1 file changed, 4 insertions(+), 2 deletions(-)
 
-diff --git a/kernel/trace/trace_output.c b/kernel/trace/trace_output.c
-index ebbab3e9622b..cc2d3306bb60 100644
---- a/kernel/trace/trace_output.c
-+++ b/kernel/trace/trace_output.c
-@@ -1490,12 +1490,12 @@ trace_hwlat_print(struct trace_iterator *iter, int flags,
+diff --git a/drivers/scsi/mvumi.c b/drivers/scsi/mvumi.c
+index bdc2f2f17753..9a721608ccea 100644
+--- a/drivers/scsi/mvumi.c
++++ b/drivers/scsi/mvumi.c
+@@ -1589,10 +1589,12 @@ static int mvumi_probe_devices(struct mvumi_hba *mhba)
+ 				dev_dbg(&mhba->pdev->dev,
+ 					"probe a new device(0:%d:0)"
+ 					" wwid(%llx)\n", id, mv_dev->wwid);
+-			} else if (found == -1)
++			} else if (found == -1) {
++				mvumi_delete_internal_cmd(mhba, cmd);
+ 				return -1;
+-			else
++			} else {
+ 				continue;
++			}
+ 		}
+ 	}
  
- 	trace_assign_type(field, entry);
- 
--	trace_seq_printf(s, "#%-5u inner/outer(us): %4llu/%-5llu ts:%lld.%09ld count:%d",
-+	trace_seq_printf(s, "#%-5u inner/outer(us): %4llu/%-5llu ts:%ptSp count:%d",
- 			 field->seqnum,
- 			 field->duration,
- 			 field->outer_duration,
--			 (long long)field->timestamp.tv_sec,
--			 field->timestamp.tv_nsec, field->count);
-+			 &field->timestamp,
-+			 field->count);
- 
- 	if (field->nmi_count) {
- 		/*
 -- 
-2.50.1
+2.34.1
 
