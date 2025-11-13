@@ -1,84 +1,84 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C45A22B8A9
-	for <linux-scsi@vger.kernel.org>; Thu, 13 Nov 2025 13:37:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 895E623F429
+	for <linux-scsi@vger.kernel.org>; Thu, 13 Nov 2025 13:37:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
 ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763041036; cv=fail; b=MNAOmI+7wj8YD8rbRgzAc7s05ukeQz836y5ntuJCwGkrEgYvuz/7pA48o7gjgacZ9ACWU5s3hOlqIt+kF3hi8CMBenaNS4xBNJ6nIqaEMI/vWtZCLShI7wU1p/gOmahmY1tDmUNhVhjI20YWICJyDoS35y9YwV803QAHGVVYhfI=
+	t=1763041036; cv=fail; b=dqCqt4+VA61RUKKqleyskAWHafPTUzRwtI0ZgFFcWnzsqreWUTGX5bhhvAVia3ymljDCxBDE6+RxDFNkiycxmCg9LYtumfQ6A7IRR0cCsClV4aSkcowFDNCyxOPSETkCtmj6ZaSIIORvkqTQcD+Fa8NpfBylfOiWbG8LZQcCTCw=
 ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
 	s=arc-20240116; t=1763041036; c=relaxed/simple;
-	bh=MCo6bWw7hehdE2teplEj3g4BVQAcT2lQBXfP69DVcUo=;
+	bh=8ensRFr7XN7X00WJOceatrLSFb7TJnwUwNpuByoKsgg=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=sMFb4cNULYWJ37bctzgYhWcOz/ZxSiVXJnppx3DndehrFoDhAMDCkdXlzQfKfCpjr6L0LEql7ITk5MGTeHK7mXHWuPWPUUE5tmjHhhQ7arNLjr6LOyR6+EBs7/pm7NTQ3SbHCePJ9cZ8NJzqC+gYWcazItLm9ec6ssKl0/7GjMc=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=I9oHgsON; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=wn9DpTtc; arc=fail smtp.client-ip=205.220.165.32
+	 Content-Type:MIME-Version; b=LxmnJIIIUG3jCzd7cFtGixmp6FGlre1tOl5Eu427R3qYPmYN3XrU4avchJ1UUC7Vze8HrK2nbc2Pbg7pIFp/ByAbIapmGcbwCHkqx8qg/SIEUcUlB83gm6SCv147B2/bd+qlYFrijoRVfyWb4EWOBKR6LA4AYy4u+zUa2dwoii8=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=rJOmDWqr; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=Nk/PY1ur; arc=fail smtp.client-ip=205.220.177.32
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="I9oHgsON";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="wn9DpTtc"
-Received: from pps.filterd (m0333521.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5ADCiOod004002;
-	Thu, 13 Nov 2025 13:37:01 GMT
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="rJOmDWqr";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="Nk/PY1ur"
+Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5ADCG6pd023286;
+	Thu, 13 Nov 2025 13:37:02 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
 	:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=yJbRUOPM3ZA64wOxSnNfAX75y/0ivz9K9mXqqY5rFkQ=; b=
-	I9oHgsONTw2FQT8LM7SnFbGTacERAcT1n0iXSrkQBXrQ5pH29mpYzeS8zjK/GISu
-	xXlNHK76Qm53eTPvTQL/82GNvFFDMUIfs03kHYKWhujHE+hDlLTRKdl01FalG/dz
-	GkZGDssMyRFzXYsUvKZ1J3dmqebgslnf+9/89cYR0puPIdQDmmlfubmHgO7BwIDh
-	nTXsAxlz8H65ELJmSsrxhwrFL22FXpzVaZZCN+/YarKfwVVtGA5M63hCiOf9G72w
-	iFFnKulCgvweD4O95c2/EvfrifnFoAkp/FFXGiScvUNIY9PAFIOolfL9mDom60xG
-	59XNVfVh5op+9ZN2SWMg4Q==
-Received: from iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (iadpaimrmta03.appoci.oracle.com [130.35.103.27])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4acxwq1t2w-1
+	corp-2025-04-25; bh=c5GBAdYnUk+7ow+UZXxEvescjYtse4BkdIfQhC66urQ=; b=
+	rJOmDWqrRG297XiHac9rcHJP/GUoldML/lJtK4c2z/0u+4qWe65dqBF4iqrwPL4f
+	2D2XuPVuXPb5FBsMrgtYDqKKM9a1Womvu8XRLPaE2X5Zc7PL25haYeiUeW8quJtA
+	igANzdjDYtlVBexg6lgd1VSnrCvEsmFKwFdUnBPBx4YwwzrxO3oLO9tZ6cEtjefs
+	tImyKdbDZcb65ih2mCJsNT0vpz57VzBxaOf3O/V+jSoI7xV7IMOe7tdLYnRWhKKl
+	Qrev+nnjRrFh1BU0Y5sjtQHDqRq6wHLfJ1ZOpGQ3Laz6IIYaqOEX5TElzvXgu3mP
+	7T/wEwc3CbRxlG9KOvC2yA==
+Received: from phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta02.appoci.oracle.com [147.154.114.232])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4acybqssup-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 13 Nov 2025 13:37:00 +0000 (GMT)
-Received: from pps.filterd (iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com [127.0.0.1])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5ADButWU010789;
-	Thu, 13 Nov 2025 13:36:59 GMT
-Received: from mw6pr02cu001.outbound.protection.outlook.com (mail-westus2azon11012008.outbound.protection.outlook.com [52.101.48.8])
-	by iadpaimrmta03.imrmtpd1.prodappiadaev1.oraclevcn.com (PPS) with ESMTPS id 4a9vanwac2-1
+	Thu, 13 Nov 2025 13:37:01 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5ADBsLhM039422;
+	Thu, 13 Nov 2025 13:37:01 GMT
+Received: from sj2pr03cu001.outbound.protection.outlook.com (mail-westusazon11012070.outbound.protection.outlook.com [52.101.43.70])
+	by phxpaimrmta02.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4a9vac40u3-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Thu, 13 Nov 2025 13:36:59 +0000
+	Thu, 13 Nov 2025 13:37:01 +0000
 ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=jbPyskh1/VtKMPTQmCurgjk90+wjJG7ImI9p1Bbhu+m2Z6dUK79XZYFYLfJ8ve2wXRzN5a1Q5JaqaAf5IpmQ7GY0UlfDtR73FXiuOXLfNqOgruVFwwRf402vyuNgE1dtWdoHSjd1ynq7Q7yZIT4Yjw/feo8x8Lc7PX6utxk3XOShdMsHjIimnhJylINY9ATy5bSvANiQm86hfke8nsrsAymmEOpdv2IrLhljdw0Cm8LjML+dKJxDedrNa5/ZznDbpm5uQlP70vkrZUTcKQJLv5YdsA49j0S+NK4kCE2BHx0Ng9hjqkqyCJlOYFk1gjEVJLJ0uetCYM4J3ygIbc/ViQ==
+ b=i+bEuHC5cyk1fTmKNWqDzdm/LmtpAwPBXnDsGBrSDHnynApxWJwQxaicjGNlAuKBBsIVAsin6NB9QCd3fG0vWBb804p0LGWUBEjwC/RNXXx5dUHqViBGppE/Ybq+4qAKxuM9+hpNpawdCMbzBxZOsNrnwDlGSnKtt9g7WUBgF8h0RO+mydkHvCrVBDsWHuRLKBPjt5CRoiC///4n1eiH0TokbyyRYsPRpSoSIPlInGzRYTuEML1UpPn7xtSaj+2HTrfQNymP56v6q3YiaIJC+qAHQSZTzzvlhACEGfJPtnxMG/rPKdTJuFOduBwUUXvzr3AUNeOgElIW9txBHyfGxw==
 ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
  s=arcselector10001;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=yJbRUOPM3ZA64wOxSnNfAX75y/0ivz9K9mXqqY5rFkQ=;
- b=pz45kUdl3rVZEKxBpYfvf1Ku3tjoyAgTUtzi//C4uHPqJ1DKcm6JR63MNI1tX1fkdtwRMs8KogqnsRgppo2FTHoLfelxjBo1kGIGilw9C7vhMwpswiyNr/MUiCRX7VIB1umZn9IALuEgIH5fs46SaU1u6yhZxw1qCSjIo3nJakHOjNpCX/N0tRGa3bwPfyogVHyrJpczWLrDG5SUwA9i4ut/NFoyDlDGTLklz+Ep1EjuyGFSDKE8M7i8ciu0SIQyh/mqtKbHq/VTOpCM7zBTf2NffrCa88vDlAraMWSUzQATiU+9SA+i06jGXfV15Am87VXL7iie//M9j1EiuOMOpQ==
+ bh=c5GBAdYnUk+7ow+UZXxEvescjYtse4BkdIfQhC66urQ=;
+ b=l+Ul69949pVfMGi0FPjK1qCK3aBQHOaW10++ylxwJWfHow9rGoy/LsiKdqAIsuNM0KKGHI6G+Ma3Frnmumw1OyYkq4svbruP3CRz39EW7RUbFW1lZ92/mu1zZKba0tbC2uG7wOpgIZQSr2rUbiqp6MJ50RBlRLzwqzDgRGwuQ355CJYOQgvz4mnJsw5kp+W3Wx+3imus0zlGSsNq/wyS+T3CMwil/6LRXykCgrBVVlOlk+16Qi5vGuYCxhJajJiTFX2BWshWCzClmwh6/A9gr/U1wEYlQYWqw3huKWXAmAJsnZbIlYnJsk6z9jDzB+lv8+smgc/ah/INWzU1h/d4Ow==
 ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
  smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
  dkim=pass header.d=oracle.com; arc=none
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
  d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
  h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=yJbRUOPM3ZA64wOxSnNfAX75y/0ivz9K9mXqqY5rFkQ=;
- b=wn9DpTtcBxRasNyqjq66yEviIz2/U3rLmQWQRnSfjZYcA7tBn8UykmncH68OnQFPWbXVCrxAY9pm4IgVBC3eDFfyv6SeQgmrKf5bMwAmQacsVCrwGdK+Se64kPxINte7Wma930hlWUck7mM+Y3nKUWB8V3clHhlqog9LoBmolJo=
+ bh=c5GBAdYnUk+7ow+UZXxEvescjYtse4BkdIfQhC66urQ=;
+ b=Nk/PY1urfVvJ/EmmJw+ERqRV0k4T8VrK03oeJ4vIM8urVT/j4JQzAGqQAYBlVhaQ57KkjZsY2fUcjg0gfFEhU8kHL03r4JtJy9+uoNy5qKUjcz8i2Hf8wFW3qxDAXRXTVCi9X5WWQlM5xflh3zeQaNQAnfREA7FmSyfGPUPEXPY=
 Received: from MN2PR10MB4320.namprd10.prod.outlook.com (2603:10b6:208:1d5::16)
- by BLAPR10MB4948.namprd10.prod.outlook.com (2603:10b6:208:307::21) with
+ by PH7PR10MB6252.namprd10.prod.outlook.com (2603:10b6:510:210::19) with
  Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9320.17; Thu, 13 Nov
- 2025 13:36:55 +0000
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9320.15; Thu, 13 Nov
+ 2025 13:36:57 +0000
 Received: from MN2PR10MB4320.namprd10.prod.outlook.com
  ([fe80::42ec:1d58:8ba8:800c]) by MN2PR10MB4320.namprd10.prod.outlook.com
  ([fe80::42ec:1d58:8ba8:800c%5]) with mapi id 15.20.9298.015; Thu, 13 Nov 2025
- 13:36:55 +0000
+ 13:36:57 +0000
 From: John Garry <john.g.garry@oracle.com>
 To: martin.petersen@oracle.com, james.bottomley@hansenpartnership.com
 Cc: linux-scsi@vger.kernel.org, bvanassche@acm.org, jiangjianjun3@huawei.com,
         John Garry <john.g.garry@oracle.com>
-Subject: [PATCH 1/6] scsi: scsi_debug: Stop printing extra function name in debug logs
-Date: Thu, 13 Nov 2025 13:36:40 +0000
-Message-ID: <20251113133645.2898748-2-john.g.garry@oracle.com>
+Subject: [PATCH 2/6] scsi: scsi_debug: Stop using READ/WRITE_ONCE() when accessing sdebug_defer.defer_t
+Date: Thu, 13 Nov 2025 13:36:41 +0000
+Message-ID: <20251113133645.2898748-3-john.g.garry@oracle.com>
 X-Mailer: git-send-email 2.43.5
 In-Reply-To: <20251113133645.2898748-1-john.g.garry@oracle.com>
 References: <20251113133645.2898748-1-john.g.garry@oracle.com>
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-ClientProxiedBy: PH8P221CA0028.NAMP221.PROD.OUTLOOK.COM
- (2603:10b6:510:2d8::28) To MN2PR10MB4320.namprd10.prod.outlook.com
+X-ClientProxiedBy: PH7P220CA0122.NAMP220.PROD.OUTLOOK.COM
+ (2603:10b6:510:327::28) To MN2PR10MB4320.namprd10.prod.outlook.com
  (2603:10b6:208:1d5::16)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -87,455 +87,171 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN2PR10MB4320:EE_|BLAPR10MB4948:EE_
-X-MS-Office365-Filtering-Correlation-Id: c7d27b63-a766-47aa-ed92-08de22b9b5da
+X-MS-TrafficTypeDiagnostic: MN2PR10MB4320:EE_|PH7PR10MB6252:EE_
+X-MS-Office365-Filtering-Correlation-Id: e2b4840e-02de-401b-81cb-08de22b9b748
 X-MS-Exchange-SenderADCheck: 1
 X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|1800799024|376014|366016;
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|1800799024|366016;
 X-Microsoft-Antispam-Message-Info:
-	=?us-ascii?Q?cYiZf1gUaNQrqLCvDLV5UD8P/5LK+fhJoXxnLs7jpFT3CkepHFFZnENyz+LW?=
- =?us-ascii?Q?1jEC6SRZo2e7kV41SlI9JIfbSROj4rF0gcnvRe1YOA8kojpwwU56p/vALiSy?=
- =?us-ascii?Q?gYZpx5zu1NgvdtNSWydX7pdV/sclU5Qq1gU4hUxxz82VzuPJog2cFvF7p6hD?=
- =?us-ascii?Q?6ev/YsUQ3veSqt1SkHiKI2fHknum3dvYNhIbMgJ7IllowvCauv84MT6/sG+W?=
- =?us-ascii?Q?kCVmCTDPMMGEdOkHf7VYlXo8yQUkazrrFMBDBQg+tspEv5+9CRpKd0OcqxTK?=
- =?us-ascii?Q?ohnowsW2wpVodn3H6F7poS3xN4wtuinGBWcfkFFK+OkpCiiGJlgrNtcZZOQb?=
- =?us-ascii?Q?FxyD0E86RrheRri2mr+7IQ6HVXVFYTb08MnZJ/N5P4sGZg+2oW7IpwLweEaD?=
- =?us-ascii?Q?nEdGBnT8xfvzLFbH7UkXRogm23IRMQgErgbzK8okzKva+cCVl/L+Y6QJzDiQ?=
- =?us-ascii?Q?2ei1ZM+YGEre7YrsxGCWEU4SbVSXzwzbrQ3BEMvh4JgkuORLyjleBSH5HaJy?=
- =?us-ascii?Q?9f5TCB82pu7+RtWcrezcVGe7m8iuNBZIxsDAm/+NC/flXy1ZM0LH5tdMQx+U?=
- =?us-ascii?Q?h4RmrfbsiDpxi4CTCiLr1z5lJnA9ehBfZlIPYE+LAVXLinDaHKrFlop0eQoC?=
- =?us-ascii?Q?Jph4rYG1cHU3LlAe948R/wHCuDgtxVTyW9NovIEK+E96zyoI/mxZr+mJ7zgd?=
- =?us-ascii?Q?EvEyjX7zFBw+t4tn8mxaHmKzWP11fDzH2Kc7atHA/j9ZGPa6PkRK3Plnf9+s?=
- =?us-ascii?Q?SLWNuY8gxBW3zY4XOeRmtwkcTYytnPy+vDXB3ORgZ+HR+BKwhHAwKYPm3g0E?=
- =?us-ascii?Q?f18ddSkxd8gIGmxpjED/aQSCX6BwiR7LcEs7gPbzv4rrDxdZ/JRotsIQ2BIA?=
- =?us-ascii?Q?rEFJgvU/nLj+r1yvv3pI+QMZmmtpvE3slgGFkKkdAUkoc5HwW6ig+uab4Ynw?=
- =?us-ascii?Q?MMNyWLCfouYFiQKuWUukL5qLM4ZkccvMXkTGZiSzKtLvTzWbpYdv1Z816DYk?=
- =?us-ascii?Q?oNh94Bok5VzjaNvYssbZGbD90NLQ8GP8SBB6rnltpIUIZ+2XImq7ZmC1HKKW?=
- =?us-ascii?Q?VwAIC1V2H5TySyR7gJv/wdozwfIGbykfb+C46jFurcc0qDrtlW4m9DxqJE7y?=
- =?us-ascii?Q?PrN3e8ICSM6H1CHgTjddlFALaGhY8QA2a/c160Ny10kZ/LOb6LeCs3sX0YX6?=
- =?us-ascii?Q?VCHv+GbFz9LKzLoUt+YzWl2HzNzV/1JGnRQg15+/G1/VYwN2v7z7gkPVptvg?=
- =?us-ascii?Q?0hn7pz7T3S3opNnvlx8O9fUcYHSO23V5V+lPI9e1U37EQtLLAUw9wR8wyqzY?=
- =?us-ascii?Q?mQbzhLAc4Mzbi+kvbnxKShDkZA+9Rk6KyFZ1mza9+LfYJcct2SFcOflPH/gf?=
- =?us-ascii?Q?dgzwbGLhC0DPwkzbaFm/dWiruSS/jG49V7JsEDSW9cyUWGa3cDerHpOsl81u?=
- =?us-ascii?Q?X3dmkYlCroFanncTJq1pkExXPkHTk8sc?=
+	=?us-ascii?Q?2emTnEg1uG34kRh7VGqwyW4RnwFdpoXREj1XSOrdINwHsJdbznc7MjlZAkTI?=
+ =?us-ascii?Q?yINn4er1lqf4ZtjgJyReovfNE4a2pLuoHxKSJCpiADB493VtbcCtdeGUjsoo?=
+ =?us-ascii?Q?W/afs6bo7cbahikPEkmZCL8B05amhTF3rYFyLU0MzoDb2w/y8HDdNibhIsw3?=
+ =?us-ascii?Q?2Hy5RNBQwVate1d8csyhl6M8k543Q0YEpS/1CURqaLkIvoEqU7aien9rgANG?=
+ =?us-ascii?Q?QLX2j5Xq9w7PzLPWm7QN74gJhBmDbv0bY/uvDNLJygo7V8suaa/tJc3KCKWn?=
+ =?us-ascii?Q?4nYTbyBfST17bC0/4gmeYhXjkzJex2rp9838ryrIWXqnmmZBK8uYTR4pqUg2?=
+ =?us-ascii?Q?fqcprzfRKhhCkmfBjbRAOT5JVDKPNZxmhCKTc6hTadbYNOHBZ5dKP5u45SX0?=
+ =?us-ascii?Q?pJlX7OFj/Lr2qmihcE0T8dKHDxdzRGb8YvfhBkrrRupW+71aQk9qPZ1fbG+8?=
+ =?us-ascii?Q?X5a3SKjxZSXgFXRF8WhsqOv1T/pz1nStyOPphzTjHcbAlxCauiJQMEWYdhX7?=
+ =?us-ascii?Q?ACx5UJckjMpSFqSL8vmCJPh5QaM5i5vBbtBEagu/jenj+RRyg9J0fyPwe8HJ?=
+ =?us-ascii?Q?sDsDKIRndBKj+FdkBf3UM5gq+6PX6c5QSXghoCotb+ofbfU03xSGz/x6YjTc?=
+ =?us-ascii?Q?EYhPbgdyzDhIoSl+Sxb7FwEW0XQZfi5bpPbi+2dBjcZ/1xV5SZm3QH5/lnDf?=
+ =?us-ascii?Q?qL/R2r8M+ELPKYCzou1yegXV7b0HJ28AFtcc6x8wR1K9VHi3aN4fbfQB1c6M?=
+ =?us-ascii?Q?scGx5d93MMniAurTKWbwkNPwmWswo6VZH8loeYENcO0A0gxXKzV7oklinEJs?=
+ =?us-ascii?Q?BJ5PIBvLdc98+BkXqSlHfY8jxPLEjOhOzeK9Ky5keZ3/ETMn9YRzQFqtc/MC?=
+ =?us-ascii?Q?G7mcv98mMFDZSIY4k+vItlz+Um0j2AMggaG5ZLvprt68Jyz34aOTnC42BonI?=
+ =?us-ascii?Q?h0Xg9BwnKr5rtZiczM9xXzvZR5nkJECTVTd5EAhcHobNQlbpvq8XC0rWjQ2F?=
+ =?us-ascii?Q?miEX3BvPqee8xUIAgkIOOrgEK4pus4kLUSNpTy3QaIm5h73wsq4MfVcpAD4K?=
+ =?us-ascii?Q?PR/mnJ3x1TYhoobO9NEZYNOpoK8RTP5iTmjplLwr0cKLDQ/A6j4vH6tmdHi3?=
+ =?us-ascii?Q?6h8aiVeh+ygWmbGvS511LfO236gBMh4HbpOCTZRuLTl7d42ZTxhl0o/GAiI3?=
+ =?us-ascii?Q?0pXElJ/C8Cu010X5lcGxIwNKels2PHiSwz6LOaK+5KLzuoqlLuKgKbmLb0LI?=
+ =?us-ascii?Q?4GTw3zu8CGTJmSMSniwXYT2rLbopvaxQ6pj5TrqqWFo+ZHQ2oNsAIo6zYjmu?=
+ =?us-ascii?Q?t5Gz6Hk85jfYP7nk6DbTtIo566QxERXP/CW/tC6TAljglkTekRe9cZQlMNRU?=
+ =?us-ascii?Q?ZCfMqKn126mntG5gA16oX2uYTvA3tdT+hx6soeRqxMkCSstIohz1hSprM3hx?=
+ =?us-ascii?Q?1K3udWjk5vERzAjp8c78RhQfw34q0MzE?=
 X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR10MB4320.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(1800799024)(376014)(366016);DIR:OUT;SFP:1101;
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR10MB4320.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(1800799024)(366016);DIR:OUT;SFP:1101;
 X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-MessageData-0:
-	=?us-ascii?Q?CkK0b2JNUEHoP+VG9WImT4KOC+O0uvoQ83DH5E6CLBgx0fXJN+Br1xiNXRYi?=
- =?us-ascii?Q?KE0yAh0jfBjOm9nz3VtAbG5PMpogCImjLzjgBfbBrZn/IKPzaRrhOUiSFfRp?=
- =?us-ascii?Q?xJXiSGFA3eCfxGfqW4NZtxrfNCYYxN9J0Zt2AZ99fi4vWQ/xDQaChJ6oXFLS?=
- =?us-ascii?Q?j+aqqU831k2EdzZ/u1J6J78SFAQKkbO5dPBtEgbIo3ykubKq9K3KliOPmvEr?=
- =?us-ascii?Q?1wuY+cyEDYFekMyA02Utt224fubYTkmOX85bqi1DQU3stRioyGqyWkMi7sU+?=
- =?us-ascii?Q?KjhWSmuK1QttVRwdTQGqHAIizSVPuI8o6myXnmC6pLVRkQEQzzu2bN6PCn8d?=
- =?us-ascii?Q?GNPhtGs+FKL4jv2WW6rliy/5KN77DOE+g3pwUuxitUdPeMkQPqNfY8+140d2?=
- =?us-ascii?Q?jQFrmWTKlFhSBqVo6gBHTH8S1TajILbhU3zn9kh/K308b1vvC/HOfAytofPy?=
- =?us-ascii?Q?olAGGziCs7gF50vaL2MGXzK7mBJzcxUTH1XPavbL2kb19oLa8e99wBi+5oi0?=
- =?us-ascii?Q?qNfH9NiKX0K+WNSrIXdZzFUX2G8fmojB4vt2/hJZd/tkyMaqi+3keU97Xso6?=
- =?us-ascii?Q?GQ4st4I09DJJbgGtAob8JBkt9sKDkm9uqpWcYAWlw+dtBFQHyouS3nhzIhax?=
- =?us-ascii?Q?haROsg4WNn13lcNZutFRQrDGq9eg+EXnXshVbo/oSeA3OeVT6aVJDWX+Tnyk?=
- =?us-ascii?Q?xyKCB1ke9QdVr16HrgI+5+fiJWjp4ORG04+d9NXvMZ4qAy21NDfLPG95WVHy?=
- =?us-ascii?Q?XvE8ojPNcsRmVum1wq1WS3U+XLp2rjFX4dawGUHUDHV/DUv4YMQB+/KC+6dM?=
- =?us-ascii?Q?XCld7Ws6Srsjd9sxPgyDIvmnFtgc//LSZTJxfpPbS27PoQG//nowU6qGtlru?=
- =?us-ascii?Q?vvo6kDOuVlUELolpQlUqcc6FQ+ZBgHhmAAELPtrOBNbTNFl7AOaASNtDN1Pa?=
- =?us-ascii?Q?AJQ+rJarv2keQ8WFvkEWLztmtYXtrdqU8yLmGzZ1Cyg+s9F97giqidsbjaW/?=
- =?us-ascii?Q?HRMlyXxhZvnSE0cUsBWOdSGGUwOasF4Z1jYRh29mA5KeD/oESK0RIvX23nEW?=
- =?us-ascii?Q?pu3l2FLiyfhkZExxNYeouSzgP9sLGitjaXbOKhDSn97u4S5i8RlrJ8kesDG3?=
- =?us-ascii?Q?zPQTpj7QplCD4kLqQY2neMpYlIJtjVMtz5m1q/je/5py+1PMblUJZlvAdDlu?=
- =?us-ascii?Q?Bn1dmr/6ax2DvNQOGxYb8rt0berOciDJ/JROgGwkxvKMPv/GeRts+nAkUWPC?=
- =?us-ascii?Q?b7cbZCXr4pcUWbJfYU+Q83jdB++gETL0T9MepA2dDCCppzhMQU7mnOcdXIw6?=
- =?us-ascii?Q?C6Dcs2gjlhZwO8HFGCFs2aU31Ad3LSe54MZvzsRRt1rG7zCUSQeUAkXrb9qJ?=
- =?us-ascii?Q?uwip5Tk5fyeKeqS3empb6sP5XTbpfn4Uu9QveysIAOkCDXrXo7eMljFwE4LR?=
- =?us-ascii?Q?G4j+6Ys14VNCFm08YMJ17eGN09aYmD2Xgt2zfOVx3pG36M2Rmc1fe7CgWYK5?=
- =?us-ascii?Q?9syFZ2+i8h3V+caDaYtNcWrm2qzLGWvKpAtdbdBYSpq3G8d/L7SBIakbNWyp?=
- =?us-ascii?Q?TOe4u4JxiOd47dhnlpkW/zop+LIbeKXoknL4KwMiouyUmyx8bOgxOba53OTG?=
- =?us-ascii?Q?qA=3D=3D?=
+	=?us-ascii?Q?OuOS6Uw/uuraOTKbol94apakQ3U+u5ZRGfz+64vPTw47+k3/MzQY4jTvRBrM?=
+ =?us-ascii?Q?skWOK2qxo7TjSmMyfk5t1WNQI+BC8rHHyK9gq6AUvg9JjTu3Yz+GwneosfzM?=
+ =?us-ascii?Q?URmFOMpLj+I3LJk+0g0nD7heWdHppYClojdY5/HVmknCKazLBwjBO6tBa6l6?=
+ =?us-ascii?Q?jBrfo3b4L6vzkxSd192u5xpmAmQfIzGz2sNLlE4utuwFBs4ibQCCWO9kJZnU?=
+ =?us-ascii?Q?xzEmLf+dk5TjGXv5+5s//YCEIsTHS9pTtFcCKwuwLQO/+aM8/0FlOgF/t+cn?=
+ =?us-ascii?Q?mwu+Md2HLGNcpcAJyQJIK6jl/GDm9/ac388+o5mcfrLG3Q5TSs5hPJn/rdIG?=
+ =?us-ascii?Q?Y3xSl/tYlmng0gR6gsDptEKmfZNcmbczg85tMddkoN6QXL8zvRHx4O78BVOC?=
+ =?us-ascii?Q?nk033ez2PDutuHQxxFgergthIN/pmiRAV6+8Veble2TzDp1xV0DdPW3PVVZN?=
+ =?us-ascii?Q?O+lxGiajug5tEIe6IbmUzfUqEVT6nJZOMioApPWKzRLtIPJZ8+iHCVsmeuTw?=
+ =?us-ascii?Q?L/y/tqu8zYx22d+hafGAu0CO96Nw1YbXBQ2rZsmxZuUoeEdN3iVEi5JcLUvm?=
+ =?us-ascii?Q?SXVOugpRY38W8ijTiG2DKt0db1+LoYP/gxaZgzyC+g4+QNL0EN8ZWk3SXTAA?=
+ =?us-ascii?Q?ae0kcSEneDIqhKsaexb3cNMIydC4TWwZWx6aKkq7RYGBjztj8rOqt1Vd1cGo?=
+ =?us-ascii?Q?EflAq1/jS8pTUsCeYtM8WQfHuxuXzQdC8DJtAlO4HZ2HfpNKdlO8obeyHQmu?=
+ =?us-ascii?Q?WKw/LPsLGGtPS/RM/gd9b3oQ+V5Z1arIMTSxFDjPnZ3RFqIrm8s+FB3vEevd?=
+ =?us-ascii?Q?0YniXyaTMQaY3bBKpYLFDICsnwwZ+0gmLHe4ubtQerk3nCRSH8UZqvKysd8u?=
+ =?us-ascii?Q?w5jAaJ4kswtnnv8SMdwZEbvBsUom3DK+ytdTkGpQXfE9lYoLVbYEMcpQ1EQo?=
+ =?us-ascii?Q?hdNQSUAo1Aci51W8L0ujSYF/tv6qbOYakurUimhUdyuwep2idSYfQPCRZfcb?=
+ =?us-ascii?Q?7soLN86Wl6jJuF7BiteP8ApJ9QZA8VKtBfZrs9RXOpIo30I/kqBxCgCt0OP0?=
+ =?us-ascii?Q?oOvSLfFe7IdX+tSA4AP2yieJ6ntlBIRxvecgqub0EFKBLKkERFuiVxjH0S9U?=
+ =?us-ascii?Q?aFFTyI/3YEHrz+eBOTcxrkPbyqux9oI4kqAkBNT6wX4Z9Kk9iB3Mk9lyIbYv?=
+ =?us-ascii?Q?Yu/OjozIEitCNFnjCTnS3XcevmmxpAhCEXXVoUJ9lHqQ2lfIrkVdacHWs51r?=
+ =?us-ascii?Q?JYKRHn/8z8bxt81QIIyd7IFOceWp2U18qBiDqr6YJ4QgzYiV4tlZXkeOw4UN?=
+ =?us-ascii?Q?lt3nnez1ob91+vqnAIIKRnYWlyeiESHknMjrxNGiCBv9lGpQ6TSfKteVvooT?=
+ =?us-ascii?Q?LfXGsEtCJG0qfPndALh3o+EiKPcsvb0C6J7hSte/qkEKRbz9uA7DK6J8foW+?=
+ =?us-ascii?Q?QobXXt4hvDNC2FWJ/VxXT0Se946inA8fJ2egwswyRp2E75XvrXgkMlbQld7g?=
+ =?us-ascii?Q?zBiY8++zEk+fLbKhI73F0v3J2ejpX5PeOv092iqG3eRf2MgrFe0BLiu8SE8H?=
+ =?us-ascii?Q?duE2YmQ2/7lSpukKFv/xwPn7FYXm805DXDqHlpgFN3YPceEYIiYVZIUjejJe?=
+ =?us-ascii?Q?Lg=3D=3D?=
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
 X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	OLxXAuJYfqp3AyOBDtEhW0YDej21XrF4bA+/UxIynQXncj9H8h+HcpfPTAIeo+NBIhfOlpswC4lihjk2Jx3q89AZP4eiifO2A5vxdaOYlju55IzB2Lh36UGavmDY53JF2Dib42iGozM6RlQFQ1D4AtNJey0ErMRARFLQnlbo6K2KUlJwQR/0bQVe3Ds65b6FM1c1v89pCGurAXdEXCm7Uqrqykm4GnxeTy2F7zXfqcBt7vdXUF0qadWdMYVdL/FA22YGwTZjAo9mtc+5CT5/JWXFpSXobIV5pG5p6tN8/513kh6rUq5emGfzftvEIHAuilc/0SpLVvetQjA2dlbgfQXu/T0th15ZsiWSXkqe9hFfYatIBQNnCB8i3XBPRZnDIzNXqjoINrwtSNWeoxHzFebHir1lNvs0XSk24U6+68netlEo4aWZNw8nXVgRG6a1tBWZws/Rid9V1cR0LSMopAkWxGjOEQDATlA2L9gA6am6q3wk1pbZio9VtLrBcLhOGdsRcr5A5ICh7jXmGGt0E0pVKUCosdq8wmF4lQSsk8WKufzt2cT0l2PEX6RSK0RFfitDDfPZUNKisZMe8B5/hTI1y0jpTjn/4rGJ0whA0zg=
+	YENkfTgrLYBJ7pOZPFmsbOBDCxjKftUqphWe6bbMEr56YUCuti6pOd1hq50etHafyqv200LcAB7HfgG/D5Qiuu54qupeuMaTcJ3a25gh0zhX0hX2jDQCpRk5JyxrJihtMjTsUPbF/+dkpF2s/7M6rWDoGxBUy3XEMBPJqcCYHqgjCT7OIjQQ6tgqOJABT5aJ+Yfr7arsg/xrOshtWmaJgboc3tnaInAYzeN/+VD10Mcm5bFcE5BWQvsBQMqztDhZ/sicrXMxBMP1Q38OrHnBzz/f/xFg5IzB57/09vlRxxj4zZrgI1DDgsSCospRpQIRIrZlKrzvS1VKr3n6Z44rwcnO+jXfWGkpfpHLVJTnJY3iNSrxaiusMmjyEH9u8EnJaWW/yBHgV0wVeKluZp/69VxpcbIrOYqsFvTJTKw5wLgRxKJjvQiYRLZMAb4kGVBfYkST5pMMvVE/gZbHu86hEhrWqmBO0wrN2lM8d0HsROLD2/aGGRNAgJffMV6BCKnjbIv2MO7wi/JdGVxXtZwQycQtOGtU7yT0aoTlZK0ncU2w1Z5ByszSYoeLjgfrsfATJuFDEwqJoW/dHjfrFx0WUnSFxIqe+mQGOZ6iXQ0DNBk=
 X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: c7d27b63-a766-47aa-ed92-08de22b9b5da
+X-MS-Exchange-CrossTenant-Network-Message-Id: e2b4840e-02de-401b-81cb-08de22b9b748
 X-MS-Exchange-CrossTenant-AuthSource: MN2PR10MB4320.namprd10.prod.outlook.com
 X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Nov 2025 13:36:55.0178
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 13 Nov 2025 13:36:57.3231
  (UTC)
 X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
 X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
 X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: WnTr2O4dgZ+FpuZZKYrdRqli6u3pKdw0Npmkceqn5yqHxHodV1jubBJX+DmI3VetT8AIO7YBQSvd6jeuz+lVEA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: BLAPR10MB4948
+X-MS-Exchange-CrossTenant-UserPrincipalName: OMku5ER4bsDpGQxuFw/nidPfIghGsee6RlWr8oi3Rzb5oeOswfn3PWm9k9TX2kPEWWrXTMkbBgKxme2vIN/BdQ==
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: PH7PR10MB6252
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-11-13_02,2025-11-12_01,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 adultscore=0 suspectscore=0 mlxscore=0
- phishscore=0 mlxlogscore=999 spamscore=0 bulkscore=0 malwarescore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
- definitions=main-2511130103
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTEyMDE0MSBTYWx0ZWRfXyPMs4Kk4wNzN
- c3xP9kZpvs9MGebY7emElmovLvag2fculjKjJlslEPiphkimUoM+/vZye4GJZRQplRP7K/gZ/Su
- oQWMmrztH2OEYX9+9lrunvvF9MJUgb27/B6cP8GrxPfty1EF2iHvO/0vaRkT+Me8dFOhMc52mKO
- XxuSs4kWJR+TkiiIyyPVf7NN3XFlGNqg0I9E6CuDVqfOxH9+oq9l0PwfXL/oHcMVFEFprFsSS2E
- wdfKXmH3UmODgV+oAEa9gE8ws5Tlc67VRWPdAyq/l0nvBx1QKT1gJKz+dbcZALaYpMYzA7DRBAZ
- 3fIadwJ/TLnePIZ3kgPzIgPPZwaoGn3SBMZc4/qnaaExmiCXZS4/uMBXsfCSddxWA/mmenwUlqU
- mbxzzNgDmxFHrKdRg9lPcRcQ8poRhc5ANuC7YJzksp1bsXyeHpg=
-X-Proofpoint-ORIG-GUID: -9Tra-ypHks5Lbce2ayhe0N7uYTPmMH7
-X-Authority-Analysis: v=2.4 cv=RrjI7SmK c=1 sm=1 tr=0 ts=6915defc b=1 cx=c_pps
- a=qoll8+KPOyaMroiJ2sR5sw==:117 a=qoll8+KPOyaMroiJ2sR5sw==:17
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 mlxlogscore=999 malwarescore=0
+ adultscore=0 bulkscore=0 suspectscore=0 spamscore=0 mlxscore=0
+ phishscore=0 classifier=spam adjust=0 reason=mlx scancount=1
+ engine=8.12.0-2510240000 definitions=main-2511130103
+X-Proofpoint-GUID: 6B1Sf6XpCMTxMNUPp2N-IHHgwwD0aWN9
+X-Proofpoint-ORIG-GUID: 6B1Sf6XpCMTxMNUPp2N-IHHgwwD0aWN9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTEyMDE0NyBTYWx0ZWRfXz2TW4eRK3hDb
+ yo6P3M6qxv+QNlfi2Ac4dmIRHJStzlLnwmmPbsaptBU1As553uGJK4PddHojgxG8vjgWskXnI2p
+ CHr3mRWfA3i3rtHmXjSpnqJiQKSETP1S4XKn3BFgA2ooOa2dU82mTpmIL44WnCKvlbtBB+ZPXsV
+ 82+hB+hQZF6jVusT4LgtuxP6qxInxKokhs505FST8jUPNsLy4vlYLuuBUgTDtKwk08ebcIXUv4H
+ 713jC7Dql1BaX47EGwFfqMDsN6liuE/CMVDkZHjbNNeBk/BsOP4AlEq3vjVNrYUacMLU/z1F5L3
+ 1yRmjwfGAi7po/ZG43kr01vtGgb0ugGhYt3Lzg+kgM5a5rnQZDuabC1/SkBRDB9doZLkSTDmd2d
+ aYvEuHTVggIEjiuWB8AvXR6Ju+Taew==
+X-Authority-Analysis: v=2.4 cv=X7hf6WTe c=1 sm=1 tr=0 ts=6915defe cx=c_pps
+ a=OOZaFjgC48PWsiFpTAqLcw==:117 a=OOZaFjgC48PWsiFpTAqLcw==:17
  a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
  a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=6UeiqGixMTsA:10
  a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=yPCof4ZbAAAA:8
- a=zER9bWPFUo9ToK3aH-gA:9 cc=ntf awl=host:12100
-X-Proofpoint-GUID: -9Tra-ypHks5Lbce2ayhe0N7uYTPmMH7
+ a=Dh4rwsumbFlucIE4n6kA:9
 
-The driver defines as follows pr_fmt:
- #define pr_fmt(fmt) KBUILD_MODNAME ":%s: " fmt, __func__
+Using READ/WRITE_ONCE() means that the read or write is not torn by the
+compiler.
 
-...meaning that we already get the function name added in any debug
-statements.
+READ/WRITE_ONCE() is always used when accessing sdebug_defer.defer_t.
 
-Remove using of __func__ in debug logs to avoid the duplication.
-
-For instances of where the function name was being printed, add some
-verbose comment to avoid using "" (which would be a bit silly).
-
-It would be nicer to stop using pr_fmt(), but that would mean rewriting
-approx 100 debug statements to have a sensible and clear message.
+However, we also guard the access in a spinlock when accessing that member,
+and spinlock already guarantees no tearing, so stop using
+READ/WRITE_ONCE().
 
 Signed-off-by: John Garry <john.g.garry@oracle.com>
 ---
- drivers/scsi/scsi_debug.c | 101 +++++++++++++++++---------------------
- 1 file changed, 45 insertions(+), 56 deletions(-)
+ drivers/scsi/scsi_debug.c | 12 ++++++------
+ 1 file changed, 6 insertions(+), 6 deletions(-)
 
 diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-index 92b2af803d87e..243a440feacce 100644
+index 243a440feacce..e4994435ae514 100644
 --- a/drivers/scsi/scsi_debug.c
 +++ b/drivers/scsi/scsi_debug.c
-@@ -1369,8 +1369,7 @@ static void mk_sense_invalid_fld(struct scsi_cmnd *scp,
- 
- 	sbuff = scp->sense_buffer;
- 	if (!sbuff) {
--		sdev_printk(KERN_ERR, scp->device,
--			    "%s: sense_buffer is NULL\n", __func__);
-+		sdev_printk(KERN_ERR, scp->device, "sense_buffer is NULL\n");
- 		return;
- 	}
- 	asc = c_d ? INVALID_FIELD_IN_CDB : INVALID_FIELD_IN_PARAM_LIST;
-@@ -1402,8 +1401,7 @@ static void mk_sense_invalid_fld(struct scsi_cmnd *scp,
- static void mk_sense_buffer(struct scsi_cmnd *scp, int key, int asc, int asq)
+@@ -6716,7 +6716,7 @@ static bool scsi_debug_stop_cmnd(struct scsi_cmnd *cmnd)
  {
- 	if (!scp->sense_buffer) {
--		sdev_printk(KERN_ERR, scp->device,
--			    "%s: sense_buffer is NULL\n", __func__);
-+		sdev_printk(KERN_ERR, scp->device, "sense_buffer is NULL\n");
- 		return;
- 	}
- 	memset(scp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-@@ -1421,8 +1419,7 @@ static void mk_sense_info_tape(struct scsi_cmnd *scp, int key, int asc, int asq,
- 			unsigned int information, unsigned char tape_flags)
- {
- 	if (!scp->sense_buffer) {
--		sdev_printk(KERN_ERR, scp->device,
--			    "%s: sense_buffer is NULL\n", __func__);
-+		sdev_printk(KERN_ERR, scp->device, "sense_buffer is NULL\n");
- 		return;
- 	}
- 	memset(scp->sense_buffer, 0, SCSI_SENSE_BUFFERSIZE);
-@@ -1450,15 +1447,12 @@ static int scsi_debug_ioctl(struct scsi_device *dev, unsigned int cmd,
- {
- 	if (sdebug_verbose) {
- 		if (0x1261 == cmd)
--			sdev_printk(KERN_INFO, dev,
--				    "%s: BLKFLSBUF [0x1261]\n", __func__);
-+			sdev_printk(KERN_INFO, dev, "BLKFLSBUF [0x1261]\n");
- 		else if (0x5331 == cmd)
- 			sdev_printk(KERN_INFO, dev,
--				    "%s: CDROM_GET_CAPABILITY [0x5331]\n",
--				    __func__);
-+				    "CDROM_GET_CAPABILITY [0x5331]\n");
- 		else
--			sdev_printk(KERN_INFO, dev, "%s: cmd=0x%x\n",
--				    __func__, cmd);
-+			sdev_printk(KERN_INFO, dev, "cmd=0x%x\n", cmd);
- 	}
- 	return -EINVAL;
- 	/* return -ENOTTY; // correct return but upsets fdisk */
-@@ -1662,8 +1656,8 @@ static int p_fill_from_dev_buffer(struct scsi_cmnd *scp, const void *arr,
+ 	struct sdebug_scsi_cmd *sdsc = scsi_cmd_priv(cmnd);
+ 	struct sdebug_defer *sd_dp = &sdsc->sd_dp;
+-	enum sdeb_defer_type defer_t = READ_ONCE(sd_dp->defer_t);
++	enum sdeb_defer_type defer_t = sd_dp->defer_t;
  
- 	act_len = sg_pcopy_from_buffer(sdb->table.sgl, sdb->table.nents,
- 				       arr, arr_len, skip);
--	pr_debug("%s: off_dst=%u, scsi_bufflen=%u, act_len=%u, resid=%d\n",
--		 __func__, off_dst, scsi_bufflen(scp), act_len,
-+	pr_debug("off_dst=%u, scsi_bufflen=%u, act_len=%u, resid=%d\n",
-+		 off_dst, scsi_bufflen(scp), act_len,
- 		 scsi_get_resid(scp));
- 	n = scsi_bufflen(scp) - (off_dst + act_len);
- 	scsi_set_resid(scp, min_t(u32, scsi_get_resid(scp), n));
-@@ -3186,8 +3180,8 @@ static int resp_mode_select(struct scsi_cmnd *scp,
- 		return DID_ERROR << 16;
- 	else if (sdebug_verbose && (res < param_len))
- 		sdev_printk(KERN_INFO, scp->device,
--			    "%s: cdb indicated=%d, IO sent=%d bytes\n",
--			    __func__, param_len, res);
-+			    "cdb indicated=%d, IO sent=%d bytes\n",
-+			    param_len, res);
- 	md_len = mselect6 ? (arr[0] + 1) : (get_unaligned_be16(arr + 0) + 2);
- 	bd_len = mselect6 ? arr[3] : get_unaligned_be16(arr + 6);
- 	off = (mselect6 ? 4 : 8);
-@@ -5123,8 +5117,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 	if (lbdof == 0) {
- 		if (sdebug_verbose)
- 			sdev_printk(KERN_INFO, scp->device,
--				"%s: %s: LB Data Offset field bad\n",
--				my_name, __func__);
-+				"%s: LB Data Offset field bad\n", my_name);
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
- 		return illegal_condition_result;
- 	}
-@@ -5132,8 +5125,7 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 	if ((lrd_size + (num_lrd * lrd_size)) > lbdof_blen) {
- 		if (sdebug_verbose)
- 			sdev_printk(KERN_INFO, scp->device,
--				"%s: %s: LBA range descriptors don't fit\n",
--				my_name, __func__);
-+				"%s: LBA range descriptors don't fit\n", my_name);
- 		mk_sense_buffer(scp, ILLEGAL_REQUEST, INVALID_FIELD_IN_CDB, 0);
- 		return illegal_condition_result;
- 	}
-@@ -5142,8 +5134,8 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		return SCSI_MLQUEUE_HOST_BUSY;
- 	if (sdebug_verbose)
- 		sdev_printk(KERN_INFO, scp->device,
--			"%s: %s: Fetch header+scatter_list, lbdof_blen=%u\n",
--			my_name, __func__, lbdof_blen);
-+			"%s: Fetch header+scatter_list, lbdof_blen=%u\n",
-+			my_name, lbdof_blen);
- 	res = fetch_to_dev_buffer(scp, lrdp, lbdof_blen);
- 	if (res == -1) {
- 		ret = DID_ERROR << 16;
-@@ -5160,8 +5152,8 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		num = get_unaligned_be32(up + 8);
- 		if (sdebug_verbose)
- 			sdev_printk(KERN_INFO, scp->device,
--				"%s: %s: k=%d  LBA=0x%llx num=%u  sg_off=%u\n",
--				my_name, __func__, k, lba, num, sg_off);
-+				"%s: k=%d  LBA=0x%llx num=%u  sg_off=%u\n",
-+				my_name, k, lba, num, sg_off);
- 		if (num == 0)
- 			continue;
- 		ret = check_device_access_params(scp, lba, num, true);
-@@ -5173,8 +5165,8 @@ static int resp_write_scat(struct scsi_cmnd *scp,
- 		if ((cum_lb + num) > bt_len) {
- 			if (sdebug_verbose)
- 				sdev_printk(KERN_INFO, scp->device,
--				    "%s: %s: sum of blocks > data provided\n",
--				    my_name, __func__);
-+				    "%s: sum of blocks > data provided\n",
-+				    my_name);
- 			mk_sense_buffer(scp, ILLEGAL_REQUEST, WRITE_ERROR_ASC,
- 					0);
- 			ret = illegal_condition_result;
-@@ -5866,8 +5858,8 @@ static int resp_verify(struct scsi_cmnd *scp, struct sdebug_dev_info *devip)
- 		goto cleanup;
- 	} else if (sdebug_verbose && (ret < (a_num * lb_size))) {
- 		sdev_printk(KERN_INFO, scp->device,
--			    "%s: %s: cdb indicated=%u, IO sent=%d bytes\n",
--			    my_name, __func__, a_num * lb_size, ret);
-+			    "%s: cdb indicated=%u, IO sent=%d bytes\n",
-+			    my_name, a_num * lb_size, ret);
- 	}
- 	if (is_bytchk3) {
- 		for (j = 1, off = lb_size; j < vnum; ++j, off += lb_size)
-@@ -6675,14 +6667,14 @@ static int scsi_debug_sdev_configure(struct scsi_device *sdp,
- 	devip->debugfs_entry = debugfs_create_dir(dev_name(&sdp->sdev_dev),
- 				sdebug_debugfs_root);
- 	if (IS_ERR_OR_NULL(devip->debugfs_entry))
--		pr_info("%s: failed to create debugfs directory for device %s\n",
--			__func__, dev_name(&sdp->sdev_gendev));
-+		pr_info("failed to create debugfs directory for device %s\n",
-+			dev_name(&sdp->sdev_gendev));
+ 	lockdep_assert_held(&sdsc->lock);
  
- 	dentry = debugfs_create_file("error", 0600, devip->debugfs_entry, sdp,
- 				&sdebug_error_fops);
- 	if (IS_ERR_OR_NULL(dentry))
--		pr_info("%s: failed to create error file for device %s\n",
--			__func__, dev_name(&sdp->sdev_gendev));
-+		pr_info("failed to create error file for device %s\n",
-+			dev_name(&sdp->sdev_gendev));
- 
- 	return 0;
- }
-@@ -6870,7 +6862,7 @@ static int scsi_debug_abort(struct scsi_cmnd *SCpnt)
- 
- 	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
- 		sdev_printk(KERN_INFO, SCpnt->device,
--			    "%s: command%s found\n", __func__,
-+			    "command%s found\n",
- 			    aborted ? "" : " not");
- 
- 
-@@ -6958,7 +6950,7 @@ static int scsi_debug_device_reset(struct scsi_cmnd *SCpnt)
- 	++num_dev_resets;
- 
- 	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
--		sdev_printk(KERN_INFO, sdp, "%s\n", __func__);
-+		sdev_printk(KERN_INFO, sdp, "doing device reset");
- 
- 	scsi_debug_stop_all_queued(sdp);
- 	if (devip) {
-@@ -6998,7 +6990,7 @@ static int scsi_debug_target_reset(struct scsi_cmnd *SCpnt)
- 
- 	++num_target_resets;
- 	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
--		sdev_printk(KERN_INFO, sdp, "%s\n", __func__);
-+		sdev_printk(KERN_INFO, sdp, "doing target reset\n");
- 
- 	list_for_each_entry(devip, &sdbg_host->dev_info_list, dev_list) {
- 		if (devip->target == sdp->id) {
-@@ -7011,7 +7003,7 @@ static int scsi_debug_target_reset(struct scsi_cmnd *SCpnt)
- 
- 	if (SDEBUG_OPT_RESET_NOISE & sdebug_opts)
- 		sdev_printk(KERN_INFO, sdp,
--			    "%s: %d device(s) found in target\n", __func__, k);
-+			    "%d device(s) found in target\n", k);
- 
- 	if (sdebug_fail_target_reset(SCpnt)) {
- 		scmd_printk(KERN_INFO, SCpnt, "fail target reset 0x%x\n",
-@@ -7032,7 +7024,7 @@ static int scsi_debug_bus_reset(struct scsi_cmnd *SCpnt)
- 	++num_bus_resets;
- 
- 	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
--		sdev_printk(KERN_INFO, sdp, "%s\n", __func__);
-+		sdev_printk(KERN_INFO, sdp, "doing bus reset\n");
- 
- 	list_for_each_entry(devip, &sdbg_host->dev_info_list, dev_list) {
- 		set_bit(SDEBUG_UA_BUS_RESET, devip->uas_bm);
-@@ -7043,7 +7035,7 @@ static int scsi_debug_bus_reset(struct scsi_cmnd *SCpnt)
- 
- 	if (SDEBUG_OPT_RESET_NOISE & sdebug_opts)
- 		sdev_printk(KERN_INFO, sdp,
--			    "%s: %d device(s) found in host\n", __func__, k);
-+			    "%d device(s) found in host\n", k);
- 	return SUCCESS;
- }
- 
-@@ -7055,7 +7047,7 @@ static int scsi_debug_host_reset(struct scsi_cmnd *SCpnt)
- 
- 	++num_host_resets;
- 	if (SDEBUG_OPT_ALL_NOISE & sdebug_opts)
--		sdev_printk(KERN_INFO, SCpnt->device, "%s\n", __func__);
-+		sdev_printk(KERN_INFO, SCpnt->device, "doing host reset\n");
- 	mutex_lock(&sdebug_host_list_mutex);
- 	list_for_each_entry(sdbg_host, &sdebug_host_list, host_list) {
- 		list_for_each_entry(devip, &sdbg_host->dev_info_list,
-@@ -7070,7 +7062,7 @@ static int scsi_debug_host_reset(struct scsi_cmnd *SCpnt)
- 	stop_all_queued();
- 	if (SDEBUG_OPT_RESET_NOISE & sdebug_opts)
- 		sdev_printk(KERN_INFO, SCpnt->device,
--			    "%s: %d device(s) found\n", __func__, k);
-+			"%d device(s) found\n", k);
- 	return SUCCESS;
- }
- 
-@@ -7221,8 +7213,8 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 			scsi_result = device_qfull_result;
- 
- 			if (unlikely(SDEBUG_OPT_Q_NOISE & sdebug_opts))
--				sdev_printk(KERN_INFO, sdp, "%s: num_in_q=%d +1, <inject> status: TASK SET FULL\n",
--					    __func__, num_in_q);
-+				sdev_printk(KERN_INFO, sdp, "num_in_q=%d +1, <inject> status: TASK SET FULL\n",
-+					    num_in_q);
+@@ -7278,12 +7278,12 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 		if (polled) {
+ 			spin_lock_irqsave(&sdsc->lock, flags);
+ 			sd_dp->cmpl_ts = ktime_add(ns_to_ktime(ns_from_boot), kt);
+-			WRITE_ONCE(sd_dp->defer_t, SDEB_DEFER_POLL);
++			sd_dp->defer_t = SDEB_DEFER_POLL;
+ 			spin_unlock_irqrestore(&sdsc->lock, flags);
+ 		} else {
+ 			/* schedule the invocation of scsi_done() for a later time */
+ 			spin_lock_irqsave(&sdsc->lock, flags);
+-			WRITE_ONCE(sd_dp->defer_t, SDEB_DEFER_HRT);
++			sd_dp->defer_t = SDEB_DEFER_HRT;
+ 			hrtimer_start(&sd_dp->hrt, kt, HRTIMER_MODE_REL_PINNED);
+ 			/*
+ 			 * The completion handler will try to grab sqcp->lock,
+@@ -7307,11 +7307,11 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
+ 		if (polled) {
+ 			spin_lock_irqsave(&sdsc->lock, flags);
+ 			sd_dp->cmpl_ts = ns_to_ktime(ns_from_boot);
+-			WRITE_ONCE(sd_dp->defer_t, SDEB_DEFER_POLL);
++			sd_dp->defer_t = SDEB_DEFER_POLL;
+ 			spin_unlock_irqrestore(&sdsc->lock, flags);
+ 		} else {
+ 			spin_lock_irqsave(&sdsc->lock, flags);
+-			WRITE_ONCE(sd_dp->defer_t, SDEB_DEFER_WQ);
++			sd_dp->defer_t = SDEB_DEFER_WQ;
+ 			schedule_work(&sd_dp->ew.work);
+ 			spin_unlock_irqrestore(&sdsc->lock, flags);
  		}
+@@ -9115,7 +9115,7 @@ static bool sdebug_blk_mq_poll_iter(struct request *rq, void *opaque)
+ 
+ 	spin_lock_irqsave(&sdsc->lock, flags);
+ 	sd_dp = &sdsc->sd_dp;
+-	if (READ_ONCE(sd_dp->defer_t) != SDEB_DEFER_POLL) {
++	if (sd_dp->defer_t != SDEB_DEFER_POLL) {
+ 		spin_unlock_irqrestore(&sdsc->lock, flags);
+ 		return true;
  	}
- 
-@@ -7248,8 +7240,8 @@ static int schedule_resp(struct scsi_cmnd *cmnd, struct sdebug_dev_info *devip,
- 	}
- 
- 	if (unlikely(sdebug_verbose && cmnd->result))
--		sdev_printk(KERN_INFO, sdp, "%s: non-zero result=0x%x\n",
--			    __func__, cmnd->result);
-+		sdev_printk(KERN_INFO, sdp, "non-zero result=0x%x\n",
-+			    cmnd->result);
- 
- 	if (delta_jiff > 0 || ndelay > 0) {
- 		ktime_t kt;
-@@ -8687,7 +8679,7 @@ static int __init scsi_debug_init(void)
- 
- 	sdebug_debugfs_root = debugfs_create_dir("scsi_debug", NULL);
- 	if (IS_ERR_OR_NULL(sdebug_debugfs_root))
--		pr_info("%s: failed to create initial debugfs directory\n", __func__);
-+		pr_info("failed to create initial debugfs directory\n");
- 
- 	for (k = 0; k < hosts_to_add; k++) {
- 		if (want_store && k == 0) {
-@@ -8803,7 +8795,7 @@ static int sdebug_add_store(void)
- 	if (unlikely(res < 0)) {
- 		xa_unlock_irqrestore(per_store_ap, iflags);
- 		kfree(sip);
--		pr_warn("%s: xa_alloc() errno=%d\n", __func__, -res);
-+		pr_warn("xa_alloc() errno=%d\n", -res);
- 		return res;
- 	}
- 	sdeb_most_recent_idx = n_idx;
-@@ -8860,7 +8852,7 @@ static int sdebug_add_store(void)
- 	return (int)n_idx;
- err:
- 	sdebug_erase_store((int)n_idx, sip);
--	pr_warn("%s: failed, errno=%d\n", __func__, -res);
-+	pr_warn("failed, errno=%d\n", -res);
- 	return res;
- }
- 
-@@ -8919,7 +8911,7 @@ static int sdebug_add_host_helper(int per_host_idx)
- 		put_device(&sdbg_host->dev);
- 	else
- 		kfree(sdbg_host);
--	pr_warn("%s: failed, errno=%d\n", __func__, -error);
-+	pr_warn("failed, errno=%d\n", -error);
- 	return error;
- }
- 
-@@ -8987,7 +8979,7 @@ static int sdebug_change_qdepth(struct scsi_device *sdev, int qdepth)
- 
- 	if (qdepth > SDEBUG_CANQUEUE) {
- 		qdepth = SDEBUG_CANQUEUE;
--		pr_warn("%s: requested qdepth [%d] exceeds canqueue [%d], trim\n", __func__,
-+		pr_warn("requested qdepth [%d] exceeds canqueue [%d], trim\n",
- 			qdepth, SDEBUG_CANQUEUE);
- 	}
- 	if (qdepth < 1)
-@@ -8999,7 +8991,7 @@ static int sdebug_change_qdepth(struct scsi_device *sdev, int qdepth)
- 	mutex_unlock(&sdebug_host_list_mutex);
- 
- 	if (SDEBUG_OPT_Q_NOISE & sdebug_opts)
--		sdev_printk(KERN_INFO, sdev, "%s: qdepth=%d\n", __func__, qdepth);
-+		sdev_printk(KERN_INFO, sdev, "qdepth=%d\n", qdepth);
- 
- 	return sdev->queue_depth;
- }
-@@ -9272,8 +9264,7 @@ static void scsi_debug_abort_cmd(struct Scsi_Host *shost, struct scsi_cmnd *scp)
- 	bool res = false;
- 
- 	if (!to_be_aborted_scmd) {
--		pr_err("%s: command with tag %#x not found\n", __func__,
--		       unique_tag);
-+		pr_err("command with tag %#x not found\n", unique_tag);
- 		return;
- 	}
- 
-@@ -9281,11 +9272,9 @@ static void scsi_debug_abort_cmd(struct Scsi_Host *shost, struct scsi_cmnd *scp)
- 		res = scsi_debug_stop_cmnd(to_be_aborted_scmd);
- 
- 	if (res)
--		pr_info("%s: aborted command with tag %#x\n",
--			__func__, unique_tag);
-+		pr_info("aborted command with tag %#x\n", unique_tag);
- 	else
--		pr_err("%s: failed to abort command with tag %#x\n",
--		       __func__, unique_tag);
-+		pr_err("failed to abort command with tag %#x\n", unique_tag);
- 
- 	set_host_byte(scp, res ? DID_OK : DID_ERROR);
- }
 -- 
 2.43.5
 
