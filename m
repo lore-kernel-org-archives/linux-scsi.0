@@ -1,50 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E1D552F60B4;
-	Thu, 13 Nov 2025 15:02:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 992A62F8BFC;
+	Thu, 13 Nov 2025 15:02:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763046170; cv=none; b=GjQD6gMuJlhhcp6McWjd3wB6MyTPUHtqswBIcoj9IrT8BaRXooagn27yyrXjgqce55rs1U0NP46mbfzH224OjuVN4yHAPluRXYFAgr3Oz273Xl7BJKSJzSvjNQ8vFNakuQQU0BGyls0bLoEpNOJIKWqM8AF8syR5pOEKfuxrHqM=
+	t=1763046174; cv=none; b=HeQQV3ppEspNGmtb1AfBXoRBy2qvSQKFWg0GO34c/TlimsNiPonoUgG9EYscA+QkJeuKCUyo0gIpOh/sKT2JIqOdwhXqCbajEo4lRPLcmPJuHKMBS5WYj2apaIca3JQl0I6HVnHpQTZbPOd9zJK+f4uwJR85lhjBLnBSSxOf78A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763046170; c=relaxed/simple;
-	bh=biAt7h9SZCWEseGnW36hqThT4FR7mM7YTOf8pyCUSJI=;
+	s=arc-20240116; t=1763046174; c=relaxed/simple;
+	bh=BwaKCkNATJNlmCsZoxHG8nMGNG622vSbYsVrimboxjA=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=i9BBZp079MTm7UVIA2Oj/joXTjxL38R5kYNNKTo60DuLatF2wXUeSobVA+k4gKhBUTW6r/oRHZYcNhv53OnX6PRxO0+mWSHM4Y++GZzRN9u6hkkoNCYOdztrDVAh2N5Q1VT/QoNC7xlLwWHJHupc99hkswIEwbQCU5oclwADqKU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=mPu+QKyA; arc=none smtp.client-ip=198.175.65.21
+	 MIME-Version; b=DwXHFwKF2OycoLzEvyp1pZNq4IWgs8BAi3dhHMmVsBaCQ+y8RR4uSHlRtx1QZt7DK3A7BurvIf5QI48ArAwgkWPO+y2+4BLDZWaYt5OvHfAVfVEwAgecDzYULeCbcaLOt/U42gN0B3N5nRRzxLPf+Ttkf9fGAdpASPv+YTk/BsQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=NbmpLpaE; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="mPu+QKyA"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="NbmpLpaE"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763046169; x=1794582169;
+  t=1763046173; x=1794582173;
   h=from:to:cc:subject:date:message-id:in-reply-to:
    references:mime-version:content-transfer-encoding;
-  bh=biAt7h9SZCWEseGnW36hqThT4FR7mM7YTOf8pyCUSJI=;
-  b=mPu+QKyAjDqMKWuX2oPPQ4ep8ySwLZi6HV8hLMD88eD7iVIjk5Wo/krb
-   naJ5aulRkCVxkwY/wAejO6WFQSIFw2RAi5jyeCunKxMWfVBrQHsRuVTcL
-   HuXaaM0n/tHzZcQbf6sV/Tbq4P0+JdGuY6bQlK8rwIo9QqRllsl1S5eqr
-   dymWZIG8luCSflwP5MyVCaiAr7ixfSWBpXGCfzG3ThBa+YfZ+ImzMoL0z
-   bUmaCY0lpHNHGLUmsFk5hC7j8N17MivS7+XMAYK7z3iEi6wwZFgezGDsT
-   uY+LhGlPykIm9RuEIhhyFygC/lu6gYBZdATpCySzojqd4YbInEa41Y/3D
+  bh=BwaKCkNATJNlmCsZoxHG8nMGNG622vSbYsVrimboxjA=;
+  b=NbmpLpaE6bOWKOdDMqF/AyAJR6YSWC5/nJdfShbN6IeOz2Q8XNu3d38u
+   Slp0q5CZZNXN+vJpYZ65r9FVeC+kvx0WpN8kxl81Z7WDoSvgLMn0+GWsx
+   /VpZEfjRyQo/SGEhx5UlavL3R9Hs2EIiB4vD5Nh7gPd/JDw0mGlEcTAUT
+   uXxfYBiNfdFi57AQ97hsmzMAmO5Ci40YZiMPM6zVWDNWUalRPZxMS7aiJ
+   DuT7A0qyc7qoPsYFpu8vaR3zENDmXnP0Q+vQXCCK2YMv43KpNpkzZ4zz+
+   MPvAkRp5biL8gZcpQApxAeQNJuLVVNnGW16l/pa2V5NSpooU16HEKDZWy
    A==;
-X-CSE-ConnectionGUID: JUvVtAGESqiNBZjgRJmMHA==
-X-CSE-MsgGUID: dNv858aMRKaEqiKreuDjZw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="65054158"
-X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
-   d="scan'208";a="65054158"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 07:02:45 -0800
-X-CSE-ConnectionGUID: jZ3ptSFPRHWfj9HYK1+nRA==
-X-CSE-MsgGUID: /JSs45P5SKGGlcIjIShNgw==
+X-CSE-ConnectionGUID: YGZGwuzIRv6ewi+0GGIM/Q==
+X-CSE-MsgGUID: P4AScxfdTgO9UP9aOJGZow==
+X-IronPort-AV: E=McAfee;i="6800,10657,11612"; a="68991627"
+X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
+   d="scan'208";a="68991627"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 07:02:50 -0800
+X-CSE-ConnectionGUID: 2wgA8owXSv+Wg/jcvvYtPw==
+X-CSE-MsgGUID: 2OD1IJ/BS2+4saLwohCFmg==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
-   d="scan'208";a="220324875"
+   d="scan'208";a="188810290"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa001.fm.intel.com with ESMTP; 13 Nov 2025 07:02:31 -0800
+  by orviesa010.jf.intel.com with ESMTP; 13 Nov 2025 07:02:41 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 1384599; Thu, 13 Nov 2025 16:02:19 +0100 (CET)
+	id 40CA1A0; Thu, 13 Nov 2025 16:02:19 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -139,9 +139,9 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Masami Hiramatsu <mhiramat@kernel.org>,
 	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH v3 03/21] libceph: Switch to use %ptSp
-Date: Thu, 13 Nov 2025 15:32:17 +0100
-Message-ID: <20251113150217.3030010-4-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 10/21] igb: Switch to use %ptSp
+Date: Thu, 13 Nov 2025 15:32:24 +0100
+Message-ID: <20251113150217.3030010-11-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
 In-Reply-To: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
 References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
@@ -156,36 +156,33 @@ Content-Transfer-Encoding: 8bit
 Use %ptSp instead of open coded variants to print content of
 struct timespec64 in human readable format.
 
-Reviewed-by: Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>
+Reviewed-by: Aleksandr Loktionov <aleksandr.loktionov@intel.com>
 Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 ---
- net/ceph/messenger_v2.c | 6 ++----
- 1 file changed, 2 insertions(+), 4 deletions(-)
+ drivers/net/ethernet/intel/igb/igb_ptp.c | 7 ++-----
+ 1 file changed, 2 insertions(+), 5 deletions(-)
 
-diff --git a/net/ceph/messenger_v2.c b/net/ceph/messenger_v2.c
-index 9e39378eda00..6e676e2d4ba0 100644
---- a/net/ceph/messenger_v2.c
-+++ b/net/ceph/messenger_v2.c
-@@ -1535,8 +1535,7 @@ static int prepare_keepalive2(struct ceph_connection *con)
- 	struct timespec64 now;
+diff --git a/drivers/net/ethernet/intel/igb/igb_ptp.c b/drivers/net/ethernet/intel/igb/igb_ptp.c
+index a7876882aeaf..bd85d02ecadd 100644
+--- a/drivers/net/ethernet/intel/igb/igb_ptp.c
++++ b/drivers/net/ethernet/intel/igb/igb_ptp.c
+@@ -840,14 +840,11 @@ static void igb_ptp_overflow_check(struct work_struct *work)
+ 	struct igb_adapter *igb =
+ 		container_of(work, struct igb_adapter, ptp_overflow_work.work);
+ 	struct timespec64 ts;
+-	u64 ns;
  
- 	ktime_get_real_ts64(&now);
--	dout("%s con %p timestamp %lld.%09ld\n", __func__, con, now.tv_sec,
--	     now.tv_nsec);
-+	dout("%s con %p timestamp %ptSp\n", __func__, con, &now);
+ 	/* Update the timecounter */
+-	ns = timecounter_read(&igb->tc);
++	ts = ns_to_timespec64(timecounter_read(&igb->tc));
  
- 	ceph_encode_timespec64(ts, &now);
+-	ts = ns_to_timespec64(ns);
+-	pr_debug("igb overflow check at %lld.%09lu\n",
+-		 (long long) ts.tv_sec, ts.tv_nsec);
++	pr_debug("igb overflow check at %ptSp\n", &ts);
  
-@@ -2729,8 +2728,7 @@ static int process_keepalive2_ack(struct ceph_connection *con,
- 	ceph_decode_need(&p, end, sizeof(struct ceph_timespec), bad);
- 	ceph_decode_timespec64(&con->last_keepalive_ack, p);
- 
--	dout("%s con %p timestamp %lld.%09ld\n", __func__, con,
--	     con->last_keepalive_ack.tv_sec, con->last_keepalive_ack.tv_nsec);
-+	dout("%s con %p timestamp %ptSp\n", __func__, con, &con->last_keepalive_ack);
- 
- 	return 0;
- 
+ 	schedule_delayed_work(&igb->ptp_overflow_work,
+ 			      IGB_SYSTIM_OVERFLOW_PERIOD);
 -- 
 2.50.1
 
