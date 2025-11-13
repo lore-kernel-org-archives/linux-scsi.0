@@ -1,49 +1,50 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.21])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.12])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AB5E62E5429;
-	Thu, 13 Nov 2025 15:02:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.21
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BCDFF2036ED;
+	Thu, 13 Nov 2025 15:02:43 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.12
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763046164; cv=none; b=buzQqCvsp94Qlfnuvm0AVarUqsmtGca7CojrB7VLXiamedlsmfEfiKQFpKhZNQ1uQ77Be7OXvthG3MfhWUkUTPETgnMjrbOcPN89dtoojJu2Om7ql684bqlFErK96cVSsw1C+FQQN5oLueiY977L2Qk8oB1uN85Ug8DrRyf86i8=
+	t=1763046166; cv=none; b=cQGop9iPTiKnE2h2OEKM7dzj347VO8szysrtiX+3h9BPN36vfWeWvuYsfHbGyvHEg2V/8RA3XpkhcmBuFm0uJRCbNxQf7Hu2P/w5nvngX/F83AMXjqEjkzumzC7OZfiONWt13qfjJ5+sIoLkC3RkJCPHd3mOKPc6oYl0BXFZvHw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763046164; c=relaxed/simple;
-	bh=vx0/Sdb0miwmSnREMEy30Z2f25MQbxHWNPqxk4mpfZk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=fO8ppQznr8OHjx8PyrBQcy88qgnRphpbNMmEbBfwnKNT6d+JMkXuQ17xDhzOl9CId9CMExBalCnKX7RDeaC0ZOg4KjRgE35cjkYvJbSRBA2hsB/rlRg40Hhzz49twLrnLC/ZZ11iHtMA9cff0qrTp0wLt+L8aoUhwyTDzASeJjQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=VRe81eVr; arc=none smtp.client-ip=198.175.65.21
+	s=arc-20240116; t=1763046166; c=relaxed/simple;
+	bh=xXyctpk+av7LWTqLda4jFkpzr1VPV7EOmfIfDNoOySU=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=q7Cy/vlBbxwmAtgfRiX+qAmZCCs+/XTtlOGHPwVgLK2+Ph2Y6C6BMNCIw6o3NRbSR2shqf1j2JO5MLwMMCMaUfLTheLqjA7l2VznkeUPiFWiJqJ+1LdgSsdHUFb6vtf9ydnm2y2asDYhIIolZt7mSR1G/YAEhY1pJIOqNhWEYqE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=iiDMfzxJ; arc=none smtp.client-ip=192.198.163.12
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="VRe81eVr"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="iiDMfzxJ"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
   d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763046162; x=1794582162;
-  h=from:to:cc:subject:date:message-id:mime-version:
-   content-transfer-encoding;
-  bh=vx0/Sdb0miwmSnREMEy30Z2f25MQbxHWNPqxk4mpfZk=;
-  b=VRe81eVrxoCBcgzavv3+aNRPrGhNBHEh7nmxzooX0ReTUfIZs8jAxNP4
-   /tX+MOjoLOsdyd/1ZKHTia1TRiGwI6t7WnmqDOz3F6XTm8AjTJgezyfeX
-   1EeNWEc4NiiAUTLLOymowCHjAjqUrDBTotzOssGvl49sqmIIG7UjEgq7O
-   QDnFA7oN+K309bir8LcArClFjq9EU9US4PZRkzgS/W2OoGG3iVyBnfqxC
-   0m75w/LEM5KsUEYdEnbfTlaLAIinVZY69V7cM+Klr6/AXvfMp3USRP4Qd
-   9qGG98IeTPjLKQCJAR+iSREJNr7Du7v37w8CEMsJCdo6BIxeDuQw2Msns
+  t=1763046164; x=1794582164;
+  h=from:to:cc:subject:date:message-id:in-reply-to:
+   references:mime-version:content-transfer-encoding;
+  bh=xXyctpk+av7LWTqLda4jFkpzr1VPV7EOmfIfDNoOySU=;
+  b=iiDMfzxJUN2mk0u1/wuNHmO4lq+UK9r68OE+/Bu+Aa2CycevqN4f9ibT
+   1p8EfGmCGuRhFcYizWUNh7QlkI/wVuREzFHe2tpCdrw89COTFXKFkMSo2
+   XFbt8dtj3dYh9YJ3sADAMbUA4PodFWd9U2+VeIhXxkPVqu2WnSj54c6fi
+   UwmUx2BE8qm5ZN7nG7O011GzX+E+xPDVgRIflELZWHpC4PqVC3WukOfFz
+   Q4Yus4JeW7cligNvPGdGPK20ybQ8aoZQo4rDTit20jvS5AWd3/dgZrcxR
+   XpI5eAY8MRTuQo3Fdx8Ov3HwNKUpKwj+RxFCPCepKekd/5N/zLQ/kl/ZD
    w==;
-X-CSE-ConnectionGUID: 7EPVwNgAQSWdDwd00ZQDZQ==
-X-CSE-MsgGUID: 6/jJcZf/QleX9QsyyS8Pqw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11531"; a="65054025"
-X-IronPort-AV: E=Sophos;i="6.17,312,1747724400"; 
-   d="scan'208";a="65054025"
-Received: from fmviesa001.fm.intel.com ([10.60.135.141])
-  by orvoesa113.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 07:02:41 -0800
-X-CSE-ConnectionGUID: LWhFLovNRgWDoJiNm0HUow==
-X-CSE-MsgGUID: nE6QdQs7Rjq7/OOgIgzs2g==
+X-CSE-ConnectionGUID: YfrV6B4qT7O1GsVjie0bVQ==
+X-CSE-MsgGUID: no/KnHm+STSQoTgIG/UfgA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11612"; a="68991535"
+X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
+   d="scan'208";a="68991535"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by fmvoesa106.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 13 Nov 2025 07:02:41 -0800
+X-CSE-ConnectionGUID: DIfiUnNYR/yZE1Tf+OgUOQ==
+X-CSE-MsgGUID: alFPuFbYQTqfXKojQLQ2xw==
 X-ExtLoop1: 1
 X-IronPort-AV: E=Sophos;i="6.19,302,1754982000"; 
-   d="scan'208";a="220324615"
+   d="scan'208";a="188810238"
 Received: from black.igk.intel.com ([10.91.253.5])
-  by fmviesa001.fm.intel.com with ESMTP; 13 Nov 2025 07:02:20 -0800
+  by orviesa010.jf.intel.com with ESMTP; 13 Nov 2025 07:02:32 -0800
 Received: by black.igk.intel.com (Postfix, from userid 1003)
-	id 008C496; Thu, 13 Nov 2025 16:02:18 +0100 (CET)
+	id 19B8C9A; Thu, 13 Nov 2025 16:02:19 +0100 (CET)
 From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 To: Corey Minyard <corey@minyard.net>,
 	=?UTF-8?q?Christian=20K=C3=B6nig?= <christian.koenig@amd.com>,
@@ -138,10 +139,12 @@ Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Masami Hiramatsu <mhiramat@kernel.org>,
 	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
 	Andrew Morton <akpm@linux-foundation.org>
-Subject: [PATCH v3 00/21] treewide: Introduce %ptS for struct timespec64 and convert users
-Date: Thu, 13 Nov 2025 15:32:14 +0100
-Message-ID: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
+Subject: [PATCH v3 04/21] dma-buf: Switch to use %ptSp
+Date: Thu, 13 Nov 2025 15:32:18 +0100
+Message-ID: <20251113150217.3030010-5-andriy.shevchenko@linux.intel.com>
 X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
+References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -151,87 +154,29 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-Here is the third part of the unification time printing in the kernel.
-This time for struct timespec64. The first patch brings a support
-into printf() implementation (test cases and documentation update
-included) followed by the treewide conversion of the current users.
+Use %ptSp instead of open coded variants to print content of
+struct timespec64 in human readable format.
 
-Petr, we got like more than a half being Acked, I think if you are okay
-with this, the patches that have been tagged can be applied.
+Reviewed-by: Christian König <christian.koenig@amd.com>
+Acked-by: Sumit Semwal <sumit.semwal@linaro.org>
+Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+---
+ drivers/dma-buf/sync_debug.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-Note, not everything was compile-tested. Kunit test has been passed, though.
-
-Changelog v3:
-- fixed a compilation issue with fnic (LKP), also satisfied checkpatch
-- collected more tags
-
-Petr, I have not renamed 'p' to 'n' due to much of rework and
-noise introduction for the changes that has been reviewed.
-However, I addressed the documentation issues.
-
-v2: <20251111122735.880607-1-andriy.shevchenko@linux.intel.com>
-
-Changelog v2:
-- dropped wrong patches (Hans, Takashi)
-- fixed most of the checkpatch warnings (fdo CI, media CI)
-- collected tags
-
-v1: <20251110184727.666591-1-andriy.shevchenko@linux.intel.com>
-
-Andy Shevchenko (21):
-  lib/vsprintf: Add specifier for printing struct timespec64
-  ceph: Switch to use %ptSp
-  libceph: Switch to use %ptSp
-  dma-buf: Switch to use %ptSp
-  drm/amdgpu: Switch to use %ptSp
-  drm/msm: Switch to use %ptSp
-  drm/vblank: Switch to use %ptSp
-  drm/xe: Switch to use %ptSp
-  e1000e: Switch to use %ptSp
-  igb: Switch to use %ptSp
-  ipmi: Switch to use %ptSp
-  media: av7110: Switch to use %ptSp
-  mmc: mmc_test: Switch to use %ptSp
-  net: dsa: sja1105: Switch to use %ptSp
-  PCI: epf-test: Switch to use %ptSp
-  pps: Switch to use %ptSp
-  ptp: ocp: Switch to use %ptSp
-  s390/dasd: Switch to use %ptSp
-  scsi: fnic: Switch to use %ptSp
-  scsi: snic: Switch to use %ptSp
-  tracing: Switch to use %ptSp
-
- Documentation/core-api/printk-formats.rst     | 11 +++-
- drivers/char/ipmi/ipmi_si_intf.c              |  3 +-
- drivers/char/ipmi/ipmi_ssif.c                 |  6 +--
- drivers/dma-buf/sync_debug.c                  |  2 +-
- .../gpu/drm/amd/amdgpu/amdgpu_dev_coredump.c  |  3 +-
- drivers/gpu/drm/drm_vblank.c                  |  6 +--
- .../gpu/drm/msm/disp/msm_disp_snapshot_util.c |  3 +-
- drivers/gpu/drm/msm/msm_gpu.c                 |  3 +-
- drivers/gpu/drm/xe/xe_devcoredump.c           |  4 +-
- drivers/mmc/core/mmc_test.c                   | 20 +++----
- drivers/net/dsa/sja1105/sja1105_tas.c         |  8 ++-
- drivers/net/ethernet/intel/e1000e/ptp.c       |  7 +--
- drivers/net/ethernet/intel/igb/igb_ptp.c      |  7 +--
- drivers/pci/endpoint/functions/pci-epf-test.c |  5 +-
- drivers/pps/generators/pps_gen_parport.c      |  3 +-
- drivers/pps/kapi.c                            |  3 +-
- drivers/ptp/ptp_ocp.c                         | 13 ++---
- drivers/s390/block/dasd.c                     |  3 +-
- drivers/scsi/fnic/fnic_trace.c                | 52 ++++++++-----------
- drivers/scsi/snic/snic_debugfs.c              | 10 ++--
- drivers/scsi/snic/snic_trc.c                  |  5 +-
- drivers/staging/media/av7110/av7110.c         |  2 +-
- fs/ceph/dir.c                                 |  5 +-
- fs/ceph/inode.c                               | 49 ++++++-----------
- fs/ceph/xattr.c                               |  6 +--
- kernel/trace/trace_output.c                   |  6 +--
- lib/tests/printf_kunit.c                      |  4 ++
- lib/vsprintf.c                                | 28 +++++++++-
- net/ceph/messenger_v2.c                       |  6 +--
- 29 files changed, 130 insertions(+), 153 deletions(-)
-
+diff --git a/drivers/dma-buf/sync_debug.c b/drivers/dma-buf/sync_debug.c
+index 67cd69551e42..9e5d662cd4e8 100644
+--- a/drivers/dma-buf/sync_debug.c
++++ b/drivers/dma-buf/sync_debug.c
+@@ -59,7 +59,7 @@ static void sync_print_fence(struct seq_file *s,
+ 		struct timespec64 ts64 =
+ 			ktime_to_timespec64(fence->timestamp);
+ 
+-		seq_printf(s, "@%lld.%09ld", (s64)ts64.tv_sec, ts64.tv_nsec);
++		seq_printf(s, "@%ptSp", &ts64);
+ 	}
+ 
+ 	seq_printf(s, ": %lld", fence->seqno);
 -- 
 2.50.1
 
