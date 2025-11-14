@@ -1,99 +1,79 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0EEC2261B6E
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 16:12:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C2EF3326D4D
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 16:27:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763136764; cv=none; b=DqPJGGGlKVUdms5q5ZmFEcDzoff5vzdFVEaeSAxfiDMJH2+1A8s+UKopctsF5Ij8s5tA0482GkdGdCTF/Z5IxcprXO+nyq0TYZzz2IbKhmzJuxDAVvybsSvDI5BOIkSL7FhVwcH7lqqKdCbVTxeo7eXUVzdhAvuinmNAslDm1ZU=
+	t=1763137679; cv=none; b=uMRiLMwzW5tVbkkq9OlMWPx/LrKWjsz1IK6xFx36Ph6QQuKV5k1GxfbcFJ9Y6v7eSGJ+DZTsh8kvLEdOk8EpgckQTivV4KUE2LE3F426Hc4OFACdgBLMI27KTSPJ35onWfMmplibWMJxLFO+L286Vwr8bvSWd7xDtzhJwl5dUB8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763136764; c=relaxed/simple;
-	bh=bs2i0H0jlQ8HsZ+KnPKsgYngEWs21g4qYocSJoUifgA=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=V9c3WGNjbQQjwdzUF9nLPZQ0+cPN9DslcY4yeMVyCDFQvcbHWPb8IbQewQb9IT+BCBiOkOtzOfY+knPizuKx8w0Zc2p049SK3TlUBOoDRIUihrh6czwuUkvhVLvYZB8g7Y0lP+v6yL7SU4XkScVUK0eqUojC73cZ/dkA5kGns9c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=gcdgLKE7; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1763137679; c=relaxed/simple;
+	bh=120CtHoTxaXFrp3ACLw8sghi5sG1PUw17D+K7UfKU+g=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=GfZ6kk5Jcwm6Bs8o1jVipm82aUROOixHxS0zQVa3ZmzWD8/AjCD0gKf/HmeK17epCZM5h1i9pmrzusrERh+cSyywYxH96Ppi2UD3HE2kYvWMYkn0ufBdau3WE7xAbzQAQ2gdxySDYkjOye4PeUuH20R1D5k7TyoXV5DXeswzb5g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=bN0iWvPU; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="gcdgLKE7"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C6A43C2BC86
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 16:12:43 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1763136763;
-	bh=bs2i0H0jlQ8HsZ+KnPKsgYngEWs21g4qYocSJoUifgA=;
-	h=References:In-Reply-To:From:Date:Subject:To:Cc:From;
-	b=gcdgLKE7lEaIaFEb+rmrx9CGkbzColvzRmwy9I/t+fRKTKCq04IFa9kiUI31SjNlz
-	 Mr+e1rJ222bDqpOxWKOBXj4EisN1IZXEj8xkHqYL3ljbOBueb5az8mSELKJqWT9CTp
-	 GHeFs47leEaxQYMOlkDmHDnNce4cWltI1kSfQi55nbLYPUAAd5tPj0kmmS40SzIyyw
-	 hnDZbtThKaVOGEwnIDRrY3UwF+FA9VYbetAETXs6nvviMsMVoPvOPp6Dglmvudn4Il
-	 cVr6kr2xxOmU9yF3CbzVksAUl25oXYbvTb50UBQ5asGZk1+aXatQjVYl2QpW3VILHq
-	 uWN2B9jIN0JSQ==
-Received: by mail-ot1-f42.google.com with SMTP id 46e09a7af769-7c6d1ebb0c4so1555781a34.1
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 08:12:43 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWd9GuHBkpxb8I5eQl/I0mkSEf6FtDwp+5ve+UfXje5zyRxQV9RS3rvnE+/mlRVjdeL1tWjRWHV5COb@vger.kernel.org
-X-Gm-Message-State: AOJu0Ywq2Xcp1sR0dzfoyxbIOjwb1NpZsyxnq6byQRaQauu731S7x2fr
-	T1ZEyuC7PlUZjZYhj1JCfr+I4o45qRm1lHajEILQSBLxrPP7Vtr9Ks/UtVjkP0InbXffczQe8kw
-	YoOZyyI9kJMbXjaF7NvzjusW6vjq4k5c=
-X-Google-Smtp-Source: AGHT+IEgmPDZF6MbpSeY+SWnu4uKD6OSs6x6OPLIYCl/Q/zRfCT5orZNrCRl2BOirXPI/vN/QwqjEs+I2p6W5zFGVuA=
-X-Received: by 2002:a05:6808:5283:b0:450:3823:b5ef with SMTP id
- 5614622812f47-4509757eb23mr1966391b6e.34.1763136763085; Fri, 14 Nov 2025
- 08:12:43 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="bN0iWvPU"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4d7Mxm5qKtzlv4Vs;
+	Fri, 14 Nov 2025 16:27:56 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1763137675; x=1765729676; bh=o/6S/N1Gur1HwdzxzAKlcXkP
+	PcgKJ3dsd0antpcpdgo=; b=bN0iWvPUwUyCuOBA5b307i5prYQaqTP0wt/6qXFj
+	TVGWU51Y9Yh01txu7ihxv7Vmo9AXq3XZDHSzy97R0T4P+KUMH3iiY79ghtbPNIqH
+	YhkmUG5FTfdrplm4wjKEvfFhZgdx0J3JSt/2dCVYfk3ZWm2ydH6Go82EtDczRztZ
+	prbTnJIghEVkBSExmnjbm8wDDyKKqSB54e6ZLxlNyzr/eohO+qZpUd4/vne9WCLK
+	z4y3H0rN1V9cbJL4dvPvCgiwPGkyfbUxgNReu/+T3BHLq81oDIqKfLqjnRWDJbFy
+	WGrYwzMiyqHRhr+cPwZjrpbMvNBfQ3OmeTVJ1qjFgbzUXg==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id tCF-wUk2tCs6; Fri, 14 Nov 2025 16:27:55 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4d7Mxh18Zqzlv4D0;
+	Fri, 14 Nov 2025 16:27:51 +0000 (UTC)
+Message-ID: <df112b95-c142-4984-b2c5-ad587d98f486@acm.org>
+Date: Fri, 14 Nov 2025 08:27:50 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251112224025.2051702-1-superm1@kernel.org>
-In-Reply-To: <20251112224025.2051702-1-superm1@kernel.org>
-From: "Rafael J. Wysocki" <rafael@kernel.org>
-Date: Fri, 14 Nov 2025 17:12:31 +0100
-X-Gmail-Original-Message-ID: <CAJZ5v0i8RR_o-DmLrBUg_xLZxoNpUqLhudvPphgv7fmW=qZ9kw@mail.gmail.com>
-X-Gm-Features: AWmQ_blCfef8qy6eK5xND1HxM5r1qHEqftrJk62QA5sKUfq8A3gWPEwT79AHjN8
-Message-ID: <CAJZ5v0i8RR_o-DmLrBUg_xLZxoNpUqLhudvPphgv7fmW=qZ9kw@mail.gmail.com>
-Subject: Re: [PATCH v10 0/3] Introduce and plumb PMSG_POWEROFF
-To: "Mario Limonciello (AMD)" <superm1@kernel.org>
-Cc: "Rafael J . Wysocki" <rafael@kernel.org>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>, 
-	Danilo Krummrich <dakr@kernel.org>, Bjorn Helgaas <bhelgaas@google.com>, Pavel Machek <pavel@kernel.org>, 
-	Len Brown <lenb@kernel.org>, =?UTF-8?Q?Christian_K=C3=B6nig?= <christian.koenig@amd.com>, 
-	"open list:HIBERNATION (aka Software Suspend, aka swsusp)" <linux-pm@vger.kernel.org>, 
-	"open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>, 
-	"open list:USB SUBSYSTEM" <linux-usb@vger.kernel.org>, AceLan Kao <acelan.kao@canonical.com>, 
-	Kai-Heng Feng <kaihengf@nvidia.com>, Mark Pearson <mpearson-lenovo@squebb.ca>, 
-	=?UTF-8?Q?Merthan_Karaka=C5=9F?= <m3rthn.k@gmail.com>, 
-	Eric Naim <dnaim@cachyos.org>, "Guilherme G . Piccoli" <gpiccoli@igalia.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 2/6] scsi: scsi_debug: Stop using READ/WRITE_ONCE() when
+ accessing sdebug_defer.defer_t
+To: John Garry <john.g.garry@oracle.com>, martin.petersen@oracle.com,
+ james.bottomley@hansenpartnership.com
+Cc: linux-scsi@vger.kernel.org, jiangjianjun3@huawei.com
+References: <20251113133645.2898748-1-john.g.garry@oracle.com>
+ <20251113133645.2898748-3-john.g.garry@oracle.com>
+ <0108b7fd-77c5-4aa5-a761-2a7640d2a024@acm.org>
+ <a0e4fdd2-3dce-46c8-94ad-cdddbf90676a@oracle.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <a0e4fdd2-3dce-46c8-94ad-cdddbf90676a@oracle.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Nov 12, 2025 at 11:40=E2=80=AFPM Mario Limonciello (AMD)
-<superm1@kernel.org> wrote:
->
-> I've been working on a series that uses the hibernate flows (S4)
-> during shutdown (S5) [1], but it's a bit risky because it has changes
-> all around the kernel.  To mitigate risk Rafael suggested [2] to split
-> the series into at least 3 parts across different kernel cycles.
->
-> Here is the first part, which just introduces a PMSG_POWEROFF event
-> and uses it in any driver that manipulates PM events.
->
-> There are no functional changes for these changes and this series is
-> intended for 6.19.
->
-> v10:
->  * Drop resume_event changes
->  * Drop patch 4 (will come in later phase)
->
-> Mario Limonciello (AMD) (3):
->   PM: Introduce new PMSG_POWEROFF event
->   scsi: Add PM_EVENT_POWEROFF into suspend callbacks
->   usb: sl811-hcd: Add PM_EVENT_POWEROFF into suspend callbacks
->
->  drivers/base/power/main.c    | 5 +++++
->  drivers/scsi/mesh.c          | 1 +
->  drivers/scsi/stex.c          | 1 +
->  drivers/usb/host/sl811-hcd.c | 1 +
->  include/linux/pm.h           | 3 +++
->  include/trace/events/power.h | 3 ++-
->  6 files changed, 13 insertions(+), 1 deletion(-)
->
-> --
+On 11/14/25 1:02 AM, John Garry wrote:
+> So do you see a problem with this patch? As mentioned, 
+> sdebug_defer.defer_t is already only accessed with a spinlock held 
+> (sdebug_scsi_cmd.lock) (which I consider being a critical section).
 
-All 3 patches applied as 6.19 material, thanks!
+Ah, that's something I hadn't realized yet.
+
+I agree that this patch should be fine.
+
+Thanks,
+
+Bart.
