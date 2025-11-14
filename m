@@ -1,83 +1,83 @@
 Received: from mx0b-0031df01.pphosted.com (mx0b-0031df01.pphosted.com [205.220.180.131])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D9707331234
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 15:09:06 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 245D7329366
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 15:09:32 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.180.131
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763132948; cv=none; b=SxHlZPJPVG9Owke+VurfsTRZwUMmEotCkLFHg/8rW0jkoEv2gzWabuUfmrbAstPYk2Pf2DgkVUo17PDM1XuLxc5MnYR56loEStT2/jnV0Z0wejsXLfXA7RqNZog/6TNlftE0LH7qjgIlpymGeOiTrkha7rleW1xX+X5LjN7X7Jw=
+	t=1763132974; cv=none; b=l3ojtrxsDovWZS18AlxVAXaoRkiBuyuZvdaqQNV9H8kslNWce9d5zd9XJsN4FcL9tq3y67EI/bWyXBE8DZaaU3cfOWeYJxNXNZv4n+awGXyeZL6bJmwGYmhGWi0Brm1DDr64U5585/F3lB8zMSuFdOJ5bVS80iBODXT4cQh7zOc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763132948; c=relaxed/simple;
-	bh=2Tps5f1Fyw8EQWXWQD6thZKjGk5FwlpUaqUe/ah92YM=;
+	s=arc-20240116; t=1763132974; c=relaxed/simple;
+	bh=NDU/9DTGFzTS6lHtk5lvp+cXA2+ZXVND12r05xXFGZw=;
 	h=From:To:Cc:Subject:Date:Message-Id:In-Reply-To:References:
-	 MIME-Version; b=RIDPMydstn6XnQyZHeVkEuFywMe5p4ASfTuGKtxg44NicNYP6UlH/nZPFFxOurxr7P42Qf/0qoITCVZ3UDoZsdN64k8EjB+7ih1mxlEFX0smpRv+XKGYf9F80q5iImKFfslkPr9JuqFo2gBSEC1TzuOC98TuUAA1We20tt53T9M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=QfxLfM/n; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=h9fHoHzo; arc=none smtp.client-ip=205.220.180.131
+	 MIME-Version; b=ILWzmRaBZHYgzwm1HHtXuZPWp4K/Kwx+BwuFyhoVPVYzGwxaqzFebLsIdFHTWTwu6Hbd4gL7iMIQtCfkbOgru/YGqKVNsi0FafzMA2MSlZrkDyLWdCtorQtAv/m1mmJVEVkeJ+1MK5LKPVO9cqDbBbpiPVVLGJUk2vhQwJWzyJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com; spf=pass smtp.mailfrom=oss.qualcomm.com; dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b=Aq3cTo12; dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b=QahZBAB9; arc=none smtp.client-ip=205.220.180.131
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oss.qualcomm.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="QfxLfM/n";
-	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="h9fHoHzo"
+	dkim=pass (2048-bit key) header.d=qualcomm.com header.i=@qualcomm.com header.b="Aq3cTo12";
+	dkim=pass (2048-bit key) header.d=oss.qualcomm.com header.i=@oss.qualcomm.com header.b="QahZBAB9"
 Received: from pps.filterd (m0279872.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5AE8QZ431491315
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 15:09:05 GMT
+	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5AE8gZv21485460
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 15:09:32 GMT
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=qualcomm.com; h=
 	cc:content-transfer-encoding:date:from:in-reply-to:message-id
-	:mime-version:references:subject:to; s=qcppdkim1; bh=g65rZQuL+DW
-	NmeD3XddH64dFlYKY4T/kqk9emttSerM=; b=QfxLfM/nMmqDYpNzlt05IGvZIml
-	3SIS49rg0gpKaNFQlFsoJKgYfWEehTA7kOGxr1P67GPiaXI3wTcd36FZ48Wt6dpY
-	SXSonze2ITw5e4vH7iYi5vZb4Xl4DvgwUIGPMmKBfXeFdtixmj02ySDXn34CJ0aZ
-	jjhjt527siatmUWsbnXODK8aGE266J7x2+Fm30S4QbpFGs2tAaEFCMBu0Z9sLONO
-	VLGo5dtDi8PTa+JovBxgmP6UhaQYbT/y7zdeAzJH+9DovaZ9oxHjpDA660JbqMa2
-	/DL0KlNip4J0kHn2PVUcc6wsX6PfV4zO+yxtMIYoA93bNvPWyvVG4bwc7kA==
-Received: from mail-yw1-f200.google.com (mail-yw1-f200.google.com [209.85.128.200])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4adr9htj9p-1
+	:mime-version:references:subject:to; s=qcppdkim1; bh=aq+XT4jKptJ
+	SUIP35BrFeVRs5wjC8qJyB9EbrAfv+z4=; b=Aq3cTo12ElBNQ94jgVomCptbPf1
+	JaUEenX5oCJTddwHklj9x+zd58hXR3oK0KOH4dC4JFnopubYwgrkP0bGRjT8B1fU
+	yjhi70mjR1dmXbL3OrxAag5/GO8XIz8LkRALKta4RfvVYRqru+YK9LG0mikuhtUA
+	tddMy6k5p5v+HEeQJb2o9Tnpur53sLSf+yBAtMY5tqx9V88ExjVDvng3Rpn7mI6x
+	db1vgHHXBlN9aYkUlArPxnhuOwlzDp/+zNJaBqHO5Okm+bIiwozARBoHv2KI6sOM
+	rHz+JohAfywYdJwBffUCSTEXEugMVTkgfzhtJwW98Hcl1VyI25YLB63x0Eg==
+Received: from mail-qk1-f199.google.com (mail-qk1-f199.google.com [209.85.222.199])
+	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4adr9htjbr-1
 	(version=TLSv1.3 cipher=TLS_AES_128_GCM_SHA256 bits=128 verify=NOT)
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 15:09:05 +0000 (GMT)
-Received: by mail-yw1-f200.google.com with SMTP id 00721157ae682-787ea29b1bbso23371807b3.1
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 07:09:05 -0800 (PST)
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 15:09:31 +0000 (GMT)
+Received: by mail-qk1-f199.google.com with SMTP id af79cd13be357-8b22c87f005so653614685a.2
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 07:09:31 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=oss.qualcomm.com; s=google; t=1763132945; x=1763737745; darn=vger.kernel.org;
+        d=oss.qualcomm.com; s=google; t=1763132971; x=1763737771; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=g65rZQuL+DWNmeD3XddH64dFlYKY4T/kqk9emttSerM=;
-        b=h9fHoHzohZ1gZULmDXnweZSYkajrWWKutoMIjJq4rLZOU9RFQqtBRlaRY4izsUaf9Q
-         0ugreE9rS2VU5/XSEipuwr1tHMq0BAyYI0djMVLHaX4llHLzRWD/Gs5k/maaOSm4tTLs
-         KRcodK914qRor8MdResGgp1IlCBhbyPAioXsUnR1RZ18cP0IbSTuFiABa7LFMiIsb/po
-         PL1JjWNsAcXa0DSdgXYRi85GaDdSG6f0lXa2TDCPUrnWZU1USkbaCWguDuUxxDMqJVCK
-         YwzX2pqtA9mU4w058yA0E25wkQkbY+5rS36+Z3F/iVwE18w0Y85M4YLu6W2QNXmE03DM
-         Lq6w==
+        bh=aq+XT4jKptJSUIP35BrFeVRs5wjC8qJyB9EbrAfv+z4=;
+        b=QahZBAB9XNyd4dmveXB7s+xyqGzksVDecZLphOAmY4SkEd8y/Nq2Yz9dotX7w9pVD/
+         53W/YPd79r35kAz+qxo2xyU35Hnxv+lGmYCX2ruJM+R5PS9pzwj4LVwf4F9tCASdbuKZ
+         OVsdHW0k1zJrpjPpEWxTJVPpceodbiRmYz+iv7nPwAaxvcL5HNAylfVcFBabg6plB5ZC
+         qfHdxw2L6sN5+xLdtcPNHsBy7r0+4GL6SIfkbJ1s4P44fP2BQDQHj0sIIqm4X8nY5uMb
+         RVoyG6rHGvDmnLjzmbTncPKnQp7BWKG1YeorRNJ5ESHRLOWcITI0AG+P6uSgr7CqGYNt
+         AmZA==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763132945; x=1763737745;
+        d=1e100.net; s=20230601; t=1763132971; x=1763737771;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=g65rZQuL+DWNmeD3XddH64dFlYKY4T/kqk9emttSerM=;
-        b=LPl62cn1DExiUe1IkyOU1iPD/MyMteWHF2vCExHkX242AU21qjcaKnNGV6IrCNapGI
-         UZw3/1oRgOoLdL5HsVyNvvsoSD7seL0o8oTV/m45PO/jVn8mteuxA/yQDDAs3mk7BLVe
-         yudkee0BjwhEVnJkxhpAdkze3lKmc+ZYfqlEDwPYuWYbGpndMHf/w7XAhO1YvPvPcRUg
-         SP6fC6WcZiymGRgjbrHm+R0LMO1glTA2A+MgYnwyWiYzHCf3ao47loomPNeZFvVXyDiy
-         l0b7/CskdafxpREnbdQssTwGCCD7M9de9A6PJZCZOvRGbssEmee7yTzsnzwCaFfTdAqQ
-         ntfA==
-X-Forwarded-Encrypted: i=1; AJvYcCVmuJdi0wEdH+lpa4nskto6f+Ig84WlFe0fgOxXDpVkq9WVUZniFbBwDS683GxTomW3OLtOsZL4QwMT@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz7kPBW/70+XPHGZj7eJEjB01PWQ1rEdrrMQSPG7TEvqvP3+TNy
-	hsFtsTiwQXWGpsKEnS9x1i4oJ3v1DtgNBLku2NkXRFbVRrOarxwjk206iAIL2p25XzhMr2dy1rM
-	4thSZA5oaDEzirE/hbtZgg8vhiIHYIE+mYVoSKp0poSrqV+/F3/cdNgLKurpJ4Rk2
-X-Gm-Gg: ASbGnctY7CxA7ctS6bUINeLeIIEs/mbChjJzQ53vLl+hY8Lb19x45u5UY6RragBJOFY
-	QgVsZ4TB4i93jZ6PwGqs3ZRlIDy49OBG6hQxS1oYrmGQffY6MAlW2thyC4Z2sg1hLCmDbFY122k
-	YHFZ6hLoeu9jFUdHn9x8JOOFw/WZetFa9hxqEnmbBCS/4zs//AtQN3gbAyC4MumLTKDGao0Hxeq
-	He6f6IDH+qkd6USvVk3/N2sEJOD+tCZHWOM3KHftzK5MM6+NEKk31s4HbaAJkdfdOoS3KdfM8Kf
-	Ah+6vOgetmqIGV8OQEwTZIUOBD/jXQq1OUI2gX3VLTMk0gybmaV4kOeCh6nUUsX6WUJCWBFai5f
-	HLz5Y6DYcKF1cubgivPoieDTUdejUuA==
-X-Received: by 2002:a17:903:1aed:b0:295:3eb5:6de1 with SMTP id d9443c01a7336-2986a7414d6mr33995235ad.34.1763132235511;
-        Fri, 14 Nov 2025 06:57:15 -0800 (PST)
-X-Google-Smtp-Source: AGHT+IHcURM2L9I1+OOyvpvUoXTqdprgHqwKbFhDjS5ARa2c04S0kA+aBdyLlgE7Rc9u1AAr9SgIRQ==
-X-Received: by 2002:a17:903:1aed:b0:295:3eb5:6de1 with SMTP id d9443c01a7336-2986a7414d6mr33994885ad.34.1763132234969;
-        Fri, 14 Nov 2025 06:57:14 -0800 (PST)
+        bh=aq+XT4jKptJSUIP35BrFeVRs5wjC8qJyB9EbrAfv+z4=;
+        b=NRnG5bNY/4kt8qFKhC9fLWRFWNqizvdhX75eiZMC3OqT9gNF9YCx+ZxyH5ICzY6dOD
+         ibmVFCzmI35IavJsHpJdvEne5UWGMchHrFb9oW42ZeBSL3LmEWmo5qto1JKBt/Xtfz42
+         ye088fUsLgbUqEFWG9APzd2ttQNzr6Mo4aSlvUcFmiqL6fxG3Gw0JEgg4O8llunfVSVa
+         0UrMNum+A/kuMh+ut3ny9IjEyJIAQ1cXhcfbQCA1icvrkTlC+TGwjUV1kRqsQNLqCJOu
+         QfdiO9PgqusKoEFUNWIOPAIb7fG85fq0rjSEdvq39MU2gAtSZuXogL0TU6/gZDPTijY3
+         E+cQ==
+X-Forwarded-Encrypted: i=1; AJvYcCWMBTbsPcraTHI1cZ8ovaw2iTPHLv4nSdfNCZN0YEy5e92vDl6L/uRlIQYjZ7dpDEOqWVn/fplzrv6q@vger.kernel.org
+X-Gm-Message-State: AOJu0Yyzqi22a8xXsDZerAXlRBDKwcjlQsCUtHr7e547yJIwhj5k7FxI
+	aSRu8rWPeBXACD8vdZGsJyryGSihxGMSdhKd3W4V6rHFLPhrtd50iWrKk3NKkNQSujDqSWLpQf4
+	MX3/SdP7dvx1bPjpHpC45/4PzefLEb0TrWDptDOWJGudXtjHSLw8AqN1QQ7R0nyj1
+X-Gm-Gg: ASbGncufxThmjLYSXSi07WeNrVwYMIJUkK59/wCmzfOkjAzx6kUKOkEVJKnP2aVaNsy
+	AHXqBsv8Y5WBqkzki924YPAFQ4lGltAwVyzglTXJxnxZRh0j56IZSPrK3la92hZbXPs+tPBA5mI
+	BGh0MrGz5DFLm+S8XZvFOQs8g2i931VPHeGEt0Sy4344sV/m3rcID5TUjsgiIkaAIqDv8dSPHQB
+	TUk5Srdfkn0vUAfHfLRuR76yv/4DQELniIyaNpPeHn4r0CY0usd+0QWny2l31kZrrMXCeaqt9OA
+	FS5pJl1V1/+TFGFIqRMX17BWS5jap76XXL+FPTibsp+pkbodmRBp2JHCJym2uT72Jy/gDDB5znU
+	Wmpe+FnZIzZrmFH9IEq20s4m9+OlSKA==
+X-Received: by 2002:a17:902:e548:b0:294:fb21:ae07 with SMTP id d9443c01a7336-2986a6d692dmr37469115ad.21.1763132244621;
+        Fri, 14 Nov 2025 06:57:24 -0800 (PST)
+X-Google-Smtp-Source: AGHT+IHLkk2GCSNJknT6ol4YR4oPjskABRG9VD9RIRBzBKsc5wu7Io5HACafNijLahG9P+6hwQPyAw==
+X-Received: by 2002:a17:902:e548:b0:294:fb21:ae07 with SMTP id d9443c01a7336-2986a6d692dmr37468815ad.21.1763132244095;
+        Fri, 14 Nov 2025 06:57:24 -0800 (PST)
 Received: from hu-rdwivedi-hyd.qualcomm.com ([202.46.22.19])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2985c244e13sm57548015ad.29.2025.11.14.06.57.10
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2985c244e13sm57548015ad.29.2025.11.14.06.57.19
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Nov 2025 06:57:14 -0800 (PST)
+        Fri, 14 Nov 2025 06:57:23 -0800 (PST)
 From: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
 To: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
         bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org,
@@ -85,10 +85,11 @@ To: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com,
         martin.petersen@oracle.com, ram.dwivedi@oss.qualcomm.com,
         quic_ahari@quicinc.com
 Cc: linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org,
-        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: [PATCH V1 1/3] MAINTAINERS: broaden UFS Qualcomm binding file pattern
-Date: Fri, 14 Nov 2025 20:26:44 +0530
-Message-Id: <20251114145646.2291324-2-ram.dwivedi@oss.qualcomm.com>
+        devicetree@vger.kernel.org, linux-kernel@vger.kernel.org,
+        Shazad Hussain <quic_shazhuss@quicinc.com>
+Subject: [PATCH V1 3/3] ufs: ufs-qcom: Add support for firmware-managed resource abstraction
+Date: Fri, 14 Nov 2025 20:26:46 +0530
+Message-Id: <20251114145646.2291324-4-ram.dwivedi@oss.qualcomm.com>
 X-Mailer: git-send-email 2.34.1
 In-Reply-To: <20251114145646.2291324-1-ram.dwivedi@oss.qualcomm.com>
 References: <20251114145646.2291324-1-ram.dwivedi@oss.qualcomm.com>
@@ -99,20 +100,20 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: zSS7Zqng-exZyknNyl5_Vk4zB5-LMYLV
-X-Proofpoint-ORIG-GUID: zSS7Zqng-exZyknNyl5_Vk4zB5-LMYLV
-X-Authority-Analysis: v=2.4 cv=N+Qk1m9B c=1 sm=1 tr=0 ts=69174611 cx=c_pps
- a=NMvoxGxYzVyQPkMeJjVPKg==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
+X-Proofpoint-GUID: ULBOziIqKbM2z4V8yO2E1pQmprLRt6xG
+X-Proofpoint-ORIG-GUID: ULBOziIqKbM2z4V8yO2E1pQmprLRt6xG
+X-Authority-Analysis: v=2.4 cv=N+Qk1m9B c=1 sm=1 tr=0 ts=6917462b cx=c_pps
+ a=HLyN3IcIa5EE8TELMZ618Q==:117 a=fChuTYTh2wq5r3m49p7fHw==:17
  a=6UeiqGixMTsA:10 a=s4-Qcg_JpJYA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=COk6AnOGAAAA:8 a=VwQbUJbxAAAA:8 a=52jqHT57hFt4fz_33zkA:9
- a=kLokIza1BN8a-hAJ3hfR:22 a=TjNXssC_j7lpFel5tvFf:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTE0MDEyMiBTYWx0ZWRfX/Q+tjtI0aoJ/
- pAjNgH9V1oDCa7L2dtC2rHTGq2zVWtZyhFAb0Iho99g9KwJL6BMo/VqcF27Xm6KaW956l80SVvK
- ArlZ1agrTdERZLX3XcUStJ9hmhW45apM0Ag8Qw0vmMg7IREpW2A23c4JhZodtduT7xINJ4M9yNF
- ziy6PMly5s/818cE94+uaPRPs2h8l0hudWm5JgLdcSW4qN1dKFZoySHxB6u1NS8K7EnEaWZNvgk
- +vA7rYJz1HM+d3+kGEm2sznu60n6oyMGbapQzfEggYsMwiu0FCuBTeRYnlrUElZj/aE5M/sRhGo
- jl8zpDRsZbGY8gs/uVI/WuYUoS3kJO0PLKdDmDw0I16ScpVtHXVd87ohBngI62XQ4DlUhCvxISR
- snoa9qfeosTAv9DoIDIfr6KolfnJqg==
+ a=COk6AnOGAAAA:8 a=TgZdhWxOq2hPTxl1y-EA:9 a=bTQJ7kPSJx9SKPbeHEYW:22
+ a=TjNXssC_j7lpFel5tvFf:22
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTE0MDEyMiBTYWx0ZWRfXwkDs+3sNUshP
+ S8xKxo+2mXjLUwOnhQ/ayvtm6HUYe7VmOBBY+MWw6bf0kWiI2XJxuwWXQ/VOtpG65xoM7GXyTds
+ HBWY2+6UwhvCR4JSWTeVTsDfs2bIwrU7b5wigyGV4wfXOs5WZmWdIOAtfJIspyzlNCrufCKbiwI
+ l4AWCy8Xx5TSLZdlSsI3AE9dwz0DH2YyG/LlSqBcLCvVJdHb1QpCPzc316si2lov4E+U4bEicqT
+ CAls9W90uiF6VJDDPwK6Dpe9YaP6GLldCtuqbX6Y3YizUG5nnIigQpJeSksCio5p3mbltIioq6V
+ KpnhP2X557nchv3QMeGNH3qgMawfXg7fGa8PBwtBxhCfJhGI5XshJa3gdEZNv/Lm0t99R2eyBZ3
+ kMt4pCSnyRaPQvZggRTCHyUWuWw9Ww==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-11-14_04,2025-11-13_02,2025-10-01_01
@@ -124,29 +125,264 @@ X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
 
 From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
 
-Update the file pattern for UFS Qualcomm devicetree bindings to match
-all files under `Documentation/devicetree/bindings/ufs/qcom*` instead
-of only `qcom,ufs.yaml`. This ensures maintainers are correctly
-notified for any related binding changes.
+Add a compatible string for SA8255p platforms where resources such as
+PHY, clocks, regulators, and resets are managed by firmware through an
+SCMI server. Use the SCMI power protocol to abstract these resources and
+invoke power operations via runtime PM APIs (pm_runtime_get/put_sync).
 
+Introduce vendor operations (vops) for SA8255p targets to enable SCMI-
+based resource control. In this model, capabilities like clock scaling
+and gating are not yet supported; these will be added incrementally.
+
+Co-developed-by: Anjana Hari <quic_ahari@quicinc.com>
+Signed-off-by: Anjana Hari <quic_ahari@quicinc.com>
+Co-developed-by: Shazad Hussain <quic_shazhuss@quicinc.com>
+Signed-off-by: Shazad Hussain <quic_shazhuss@quicinc.com>
 Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
 ---
- MAINTAINERS | 2 +-
- 1 file changed, 1 insertion(+), 1 deletion(-)
+ drivers/ufs/host/ufs-qcom.c | 161 +++++++++++++++++++++++++++++++++++-
+ drivers/ufs/host/ufs-qcom.h |   1 +
+ 2 files changed, 161 insertions(+), 1 deletion(-)
 
-diff --git a/MAINTAINERS b/MAINTAINERS
-index 58c7e3f678d8..2d6a4ed4b10c 100644
---- a/MAINTAINERS
-+++ b/MAINTAINERS
-@@ -26574,7 +26574,7 @@ M:	Manivannan Sadhasivam <mani@kernel.org>
- L:	linux-arm-msm@vger.kernel.org
- L:	linux-scsi@vger.kernel.org
- S:	Maintained
--F:	Documentation/devicetree/bindings/ufs/qcom,ufs.yaml
-+F:	Documentation/devicetree/bindings/ufs/qcom*
- F:	drivers/ufs/host/ufs-qcom*
+diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+index 8d119b3223cb..13ccf1fb2ebf 100644
+--- a/drivers/ufs/host/ufs-qcom.c
++++ b/drivers/ufs/host/ufs-qcom.c
+@@ -14,6 +14,7 @@
+ #include <linux/of.h>
+ #include <linux/phy/phy.h>
+ #include <linux/platform_device.h>
++#include <linux/pm_domain.h>
+ #include <linux/reset-controller.h>
+ #include <linux/time.h>
+ #include <linux/unaligned.h>
+@@ -619,6 +620,27 @@ static int ufs_qcom_hce_enable_notify(struct ufs_hba *hba,
+ 	return err;
+ }
  
- UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER RENESAS HOOKS
++static int ufs_qcom_fw_managed_hce_enable_notify(struct ufs_hba *hba,
++						 enum ufs_notify_change_status status)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	switch (status) {
++	case PRE_CHANGE:
++		ufs_qcom_select_unipro_mode(host);
++		break;
++	case POST_CHANGE:
++		ufs_qcom_enable_hw_clk_gating(hba);
++		ufs_qcom_ice_enable(host);
++		break;
++	default:
++		dev_err(hba->dev, "Invalid status %d\n", status);
++		return -EINVAL;
++	}
++
++	return 0;
++}
++
+ /**
+  * ufs_qcom_cfg_timers - Configure ufs qcom cfg timers
+  *
+@@ -789,6 +811,38 @@ static int ufs_qcom_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
+ 	return ufs_qcom_ice_resume(host);
+ }
+ 
++static int ufs_qcom_fw_managed_suspend(struct ufs_hba *hba, enum ufs_pm_op pm_op,
++				       enum ufs_notify_change_status status)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++
++	if (status == PRE_CHANGE)
++		return 0;
++
++	if (hba->spm_lvl != UFS_PM_LVL_5) {
++		dev_err(hba->dev, "Unsupported spm level %d\n", hba->spm_lvl);
++		return -EINVAL;
++	}
++
++	pm_runtime_put_sync(hba->dev);
++
++	return ufs_qcom_ice_suspend(host);
++}
++
++static int ufs_qcom_fw_managed_resume(struct ufs_hba *hba, enum ufs_pm_op pm_op)
++{
++	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
++	int err;
++
++	err = pm_runtime_resume_and_get(hba->dev);
++	if (err) {
++		dev_err(hba->dev, "PM runtime resume failed: %d\n", err);
++		return err;
++	}
++
++	return ufs_qcom_ice_resume(host);
++}
++
+ static void ufs_qcom_dev_ref_clk_ctrl(struct ufs_qcom_host *host, bool enable)
+ {
+ 	if (host->dev_ref_clk_ctrl_mmio &&
+@@ -1421,6 +1475,52 @@ static void ufs_qcom_exit(struct ufs_hba *hba)
+ 	phy_exit(host->generic_phy);
+ }
+ 
++static int ufs_qcom_fw_managed_init(struct ufs_hba *hba)
++{
++	struct device *dev = hba->dev;
++	struct ufs_qcom_host *host;
++	int err;
++
++	host = devm_kzalloc(dev, sizeof(*host), GFP_KERNEL);
++	if (!host)
++		return -ENOMEM;
++
++	host->hba = hba;
++	ufshcd_set_variant(hba, host);
++
++	ufs_qcom_get_controller_revision(hba, &host->hw_ver.major,
++					 &host->hw_ver.minor, &host->hw_ver.step);
++
++	err = ufs_qcom_ice_init(host);
++	if (err)
++		goto out_variant_clear;
++
++	ufs_qcom_get_default_testbus_cfg(host);
++	err = ufs_qcom_testbus_config(host);
++	if (err)
++		/* Failure is non-fatal */
++		dev_warn(dev, "Failed to configure the testbus %d\n", err);
++
++	hba->caps |= UFSHCD_CAP_WB_EN;
++
++	ufs_qcom_advertise_quirks(hba);
++	host->hba->quirks &= ~UFSHCD_QUIRK_REINIT_AFTER_MAX_GEAR_SWITCH;
++
++	ufs_qcom_set_host_params(hba);
++	ufs_qcom_parse_gear_limits(hba);
++
++	return 0;
++
++out_variant_clear:
++	ufshcd_set_variant(hba, NULL);
++	return err;
++}
++
++static void ufs_qcom_fw_managed_exit(struct ufs_hba *hba)
++{
++	pm_runtime_put_sync(hba->dev);
++}
++
+ /**
+  * ufs_qcom_set_clk_40ns_cycles - Configure 40ns clk cycles
+  *
+@@ -1952,6 +2052,39 @@ static int ufs_qcom_device_reset(struct ufs_hba *hba)
+ 	return 0;
+ }
+ 
++/**
++ * ufs_qcom_fw_managed_device_reset - Reset UFS device under FW-managed design
++ * @hba: pointer to UFS host bus adapter
++ *
++ * In the firmware-managed reset model, cold boot power-on is handled
++ * automatically by the PM domain framework during SCMI protocol init,
++ * before ufshcd_device_reset() is reached. For subsequent resets
++ * (such as suspend/resume or recovery), the UFS driver must explicitly
++ * invoke PM runtime operations to reset the subsystem.
++ *
++ * Return: 0 on success or a negative error code on failure.
++ */
++static int ufs_qcom_fw_managed_device_reset(struct ufs_hba *hba)
++{
++	static bool is_boot = true;
++	int err;
++
++	/* Skip reset on cold boot; perform it on subsequent calls */
++	if (is_boot) {
++		is_boot = false;
++		return 0;
++	}
++
++	pm_runtime_put_sync(hba->dev);
++	err = pm_runtime_resume_and_get(hba->dev);
++	if (err < 0) {
++		dev_err(hba->dev, "PM runtime resume failed: %d\n", err);
++		return err;
++	}
++
++	return 0;
++}
++
+ static void ufs_qcom_config_scaling_param(struct ufs_hba *hba,
+ 					struct devfreq_dev_profile *p,
+ 					struct devfreq_simple_ondemand_data *d)
+@@ -2231,6 +2364,20 @@ static const struct ufs_hba_variant_ops ufs_hba_qcom_vops = {
+ 	.freq_to_gear_speed	= ufs_qcom_freq_to_gear_speed,
+ };
+ 
++static const struct ufs_hba_variant_ops ufs_hba_qcom_sa8255p_vops = {
++	.name                   = "qcom-sa8255p",
++	.init                   = ufs_qcom_fw_managed_init,
++	.exit                   = ufs_qcom_fw_managed_exit,
++	.hce_enable_notify      = ufs_qcom_fw_managed_hce_enable_notify,
++	.pwr_change_notify      = ufs_qcom_pwr_change_notify,
++	.apply_dev_quirks       = ufs_qcom_apply_dev_quirks,
++	.fixup_dev_quirks       = ufs_qcom_fixup_dev_quirks,
++	.suspend                = ufs_qcom_fw_managed_suspend,
++	.resume                 = ufs_qcom_fw_managed_resume,
++	.dbg_register_dump      = ufs_qcom_dump_dbg_regs,
++	.device_reset           = ufs_qcom_fw_managed_device_reset,
++};
++
+ /**
+  * ufs_qcom_probe - probe routine of the driver
+  * @pdev: pointer to Platform device handle
+@@ -2241,9 +2388,16 @@ static int ufs_qcom_probe(struct platform_device *pdev)
+ {
+ 	int err;
+ 	struct device *dev = &pdev->dev;
++	const struct ufs_hba_variant_ops *vops;
++	const struct ufs_qcom_drvdata *drvdata = device_get_match_data(dev);
++
++	if (drvdata && drvdata->vops)
++		vops = drvdata->vops;
++	else
++		vops = &ufs_hba_qcom_vops;
+ 
+ 	/* Perform generic probe */
+-	err = ufshcd_pltfrm_init(pdev, &ufs_hba_qcom_vops);
++	err = ufshcd_pltfrm_init(pdev, vops);
+ 	if (err)
+ 		return dev_err_probe(dev, err, "ufshcd_pltfrm_init() failed\n");
+ 
+@@ -2271,10 +2425,15 @@ static const struct ufs_qcom_drvdata ufs_qcom_sm8550_drvdata = {
+ 	.no_phy_retention = true,
+ };
+ 
++static const struct ufs_qcom_drvdata ufs_qcom_sa8255p_drvdata = {
++	.vops = &ufs_hba_qcom_sa8255p_vops
++};
++
+ static const struct of_device_id ufs_qcom_of_match[] __maybe_unused = {
+ 	{ .compatible = "qcom,ufshc" },
+ 	{ .compatible = "qcom,sm8550-ufshc", .data = &ufs_qcom_sm8550_drvdata },
+ 	{ .compatible = "qcom,sm8650-ufshc", .data = &ufs_qcom_sm8550_drvdata },
++	{ .compatible = "qcom,sa8255p-ufshc", .data = &ufs_qcom_sa8255p_drvdata },
+ 	{},
+ };
+ MODULE_DEVICE_TABLE(of, ufs_qcom_of_match);
+diff --git a/drivers/ufs/host/ufs-qcom.h b/drivers/ufs/host/ufs-qcom.h
+index 380d02333d38..1111ab34da01 100644
+--- a/drivers/ufs/host/ufs-qcom.h
++++ b/drivers/ufs/host/ufs-qcom.h
+@@ -313,6 +313,7 @@ struct ufs_qcom_host {
+ struct ufs_qcom_drvdata {
+ 	enum ufshcd_quirks quirks;
+ 	bool no_phy_retention;
++	const struct ufs_hba_variant_ops *vops;
+ };
+ 
+ static inline u32
 -- 
 2.34.1
 
