@@ -1,122 +1,175 @@
-Received: from mail-pl1-f171.google.com (mail-pl1-f171.google.com [209.85.214.171])
+Received: from mail-ed1-f54.google.com (mail-ed1-f54.google.com [209.85.208.54])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 61C962EB874
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 11:00:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.171
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 41D07246770
+	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 12:59:45 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763118015; cv=none; b=LUcyZja/o91Q7r+VI9e7Zxps5Jamou3q+cFHdp4AHHMHujb1Ie5z4bz3kEmdvU2rv0FMrmQg9+FuKTah22VAXAKxXu9eVnuuJO4VD7V1oKsOTAkKXK+VVR/TA2lHwQx9ZXq8JxF7lypTKjAoLp4fi7p0bWbzdjte6CtwPxbgQT8=
+	t=1763125187; cv=none; b=DYgb7LUKFDCDE3vHBUM1SSFcKaNGVMjPIN5QzJW9gS+V/+bbyfviZb8FJp3gyBiRtr/Ok7IxcZdtqK9oyNHcgEQCS2WbkyK9EhLbKrCyVTjjpKSYgqRRrQgyOIRtjZnUxxXmmxbBx6ERdIKojI0nlxPQRJ11OPpBnCuqbcgLRwU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763118015; c=relaxed/simple;
-	bh=Cr5VpJUDrX/7stDx3IyKkVdmZNiHlBWLDvGapTEWnFA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=UM+KIxilNJDiVWiAEbPLcm92mENUUifWGO/JkeUEwqXcWZc83XhNPkWo5azAr5j7m3+/m92XW3FweJauLmQCe5KpVsgSU3L0soOQvgqyxyDshvC3L2Afgpy9LRydwBFnQVTW+VRWyIblvxcn7AeePAE3Qf06eYQk85Izx6uO72w=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=IKyFB+gd; arc=none smtp.client-ip=209.85.214.171
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1763125187; c=relaxed/simple;
+	bh=OwXqaVYjP+AYjhrqdV/iUf65lNBgi6i65jcAVuzkims=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HjZJjE5gbb4LKu8UGUbKuoSuW5Snyrz7xioSAUDhAOPYpwxGt8A/2GU9HON6jHQJ/xDcxS7L2d7EVt5EdQZip3kfkmPq8Wn0IamV0R7bbIFYWEMFgeps5tTi7MdHwpfalO/xf5xxsa+GU12UYKV/Tfpg2+eURAtujE2ELdEE7Ho=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=BEEVeqKU; arc=none smtp.client-ip=209.85.208.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="IKyFB+gd"
-Received: by mail-pl1-f171.google.com with SMTP id d9443c01a7336-297dc3e299bso18744505ad.1
-        for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 03:00:14 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="BEEVeqKU"
+Received: by mail-ed1-f54.google.com with SMTP id 4fb4d7f45d1cf-640aa1445c3so3148496a12.1
+        for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 04:59:45 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763118014; x=1763722814; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=fiTiWxtyHwC7fCqBlOhxnQowLt8NNXlGyysVx3xJsUA=;
-        b=IKyFB+gdnqKFnxpRkTweF0cYSYXl5YDAkJ2V/56+peh0QqydVVgw/Y2WbTKXtZiYjN
-         p013SSyeXGu4Ya5TjCiF8ICg/pc+W472aYmdGROh3iN+2QGQ/bo5HrZhxoUQolpEv9XM
-         fgrxTEIX6uiqj7zyd0VDCqfiQ7Gw9Ml+vnH7v6oOAHvNEaNvWaPUUeve/GUUsjvHdb5e
-         rrC7ITMZZoccUzB8EO9dZrInumaelZzv9P3lp9lWhW+FlFY9qkyHOa92q7OSevxueXAe
-         hBTWPZHo7oQv8Di7mRCKckK532MHoGiVIxxnQaQ4MZdYpHhJjFp8PCqIGcADx1e9nPZ/
-         9FHg==
+        d=suse.com; s=google; t=1763125184; x=1763729984; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=lIa30kEZfIOzXn6c2Ch+jzSexECrPYWXzGffwwy3r9Q=;
+        b=BEEVeqKU0DaPcg3ffks4FVzqHARQy52xUis9U9HCXBvEnYbMo2F+8p+XGBwm6d4/SZ
+         O50qx26SAnPb3tX4yamSnUGg3oI7/1HYSChJPYejELSZHffLHG3hrQX8RPYX6ORd96Bg
+         uqfi+rN2aPopDhac6XJeevuFHjkKMIdfwhM2HG8FIA1b0lnLB+Y1Gj6Zjr9IKjiwBKsX
+         yIjO480IUbE2354PVJxnrT53++hosP/I2JwAM4ZYW/+r0CRuxdTJip7Lr5nu5OHGv5o/
+         1NiW6PtdA8j7L5K2378DtwW0M/mRZ+6Hk6FWKkpdTrB4HKr7MggREWlJ94VznlfctGik
+         J9Dg==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763118014; x=1763722814;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=fiTiWxtyHwC7fCqBlOhxnQowLt8NNXlGyysVx3xJsUA=;
-        b=a8bzJszVjquMdlRRHDHLsX+MUW1IpQxv/8L92bBsvRVkHLW8MxWvk56RhG9YVI3J7z
-         gM9JeSYgXlcaK1c20obgMnWfZP7zz06ecR5Sw1qeZ8xptMHf85k1rFm0ydkj28ywpqLB
-         nH+xAKT4tQDmV90lwCYz2zAfzNzTLXi9HaHlGtQMCkwWx020jqa8d5fT8CyxUAXwyDC7
-         G91Dwv/Yabgpb4dm5YdSdEPVnndXCSuA4PE/oKSVyePX1nTCYlOySFJGKyNM4cgxtSfM
-         5y6M2Oi2NZc7s3a6aV7bGZeyY+NWSBRQ32Db6WwXFWuoFFwl7JNUHsusOGos5ff6E1KE
-         c+NQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXl2oeS/YcZe22Yw3aSCiTUyJ7ipZjHcZ6voqsbVeNQAeNuN4MLIRD1wl7OXgwbqvoRzctSRlSrqVrq@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxm2IcMV8so3wwQh9nKEHpZlb4ZjVlh2bOkPZu0bX4L1NKQH8HX
-	aaZPkUsQVfxygsFFa33MHL/d0BD2U2ma3ok607dMcx9KDYDhdcWQ7X3E
-X-Gm-Gg: ASbGnctYouB7+XfqwehAHLN57+tpZ7Cd/PKTAES0wq792XfGVnbwR75u6MeF0FnAos7
-	/Ajx0g7dkc1ogQIaSlqJAap+RfErp1Wq5kQN9BzRfw+oCV87A4OSE4oBeHZnBpEtZk2hXG6SJhX
-	alOZhdJyTEUbDcFBuSEMmDeJ12iYWWwoKPw9Qkl3HUb1Kok47G4pTIOOVzlYPkvFZ3B2Lz8Er9B
-	5dN45WBfSV+yuoOWzmALcuYzncTWUYfPHU6iv46wv0URCIqkNZUdtGjG9oo71Rf6QDA3N/qih1m
-	WyCAhmcqAizsjd+WlPrOfKXEVtfBRKur50nXd2uyf1+lTqCOD04mAG7aLxasWkUbEf24BM9YUNq
-	74ldFr7EzJR3PFsxu+gjfAPBuCBqy4Fd2/6RuWsvdg8rXk+lgCMLj2B3E9knm818TBGBwU5nLvQ
-	Y=
-X-Google-Smtp-Source: AGHT+IHIySgW6kxe189V/hTiJIxS9B0z3kMFPtgZCzv4JcOFT7gocOXRu0WuYyJbiP7Cd41d09eUPw==
-X-Received: by 2002:a17:903:3586:b0:288:5d07:8a8f with SMTP id d9443c01a7336-2986a6d7a64mr24735395ad.24.1763118012001;
-        Fri, 14 Nov 2025 03:00:12 -0800 (PST)
-Received: from fedora ([110.224.242.132])
-        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2985c2bed16sm52409555ad.86.2025.11.14.03.00.05
+        d=1e100.net; s=20230601; t=1763125184; x=1763729984;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=lIa30kEZfIOzXn6c2Ch+jzSexECrPYWXzGffwwy3r9Q=;
+        b=EMhTIhi/E96URmmtY52hTZ2YWgMXDlCWB06FpDgtydMvF59o4rA2LnikDNNU9Ei+L8
+         FueiyhikkDm+8OerV0/ghlc5shS79UIdIcCLPdupyGsn4KiqM44D9uAef366s2065/Mh
+         5s97Flc0f7vAlC30DSvSOBFpJ9wb2uBB7MzCcjGiQfd+HAq01o0JQgbWMqenQcxkp/Wu
+         sXtwLQts28IpS9//p5bWwoV2caa1fUo4OFAGTlrz0CYm76vKm6SX7yx+6RNwOIHS+G4Q
+         ifwPQuolR+SkFKMcWZGPeAy70b5at/SXS+44s42zha19jG9fHSMd0ru7TrXWkJklnO/v
+         5jUg==
+X-Forwarded-Encrypted: i=1; AJvYcCXuxYXw1W8OkfDFSkg+76UdOwygfeUGvXCu2mK02mJYnzKYEUWNYcFgp4avpv4oGs6JzH7OzVXOBe51@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy+pt/FfBk8KQJoP616UwQ5schURCYMQr6uNayG2w+hXkbpabLC
+	UsggMhaB4p0RbIe9jPKdqwCTRMMwhjsHs0TMXXSNoIzwIhpcrPXMo8sWs8WNYitO8l0=
+X-Gm-Gg: ASbGncutKPHzTwJCGnHaaOyfhyxdYQMQiMPBLUExi0OW3iAm8NbY6wrV7uqy0esXpP5
+	SukFt8Yt5ZCN8b79yD9v4P3ZrZeu5wPeQja4Nr5qGdi4n/Bi2xZW1azkh+AYDgRA48FiTZPnTM3
+	ZfkfwzOlMhl2YOZhhIz49SjEk7Plby8+YSFTqESlc+dPniHhnx1XBz5lZaTwpGwytt7GQfZ4MsS
+	zdKsfEkag+3Dzzrjq9umKAwse4RMctvHXf9R7d55ExoNh8jg1tJNmqDGk7Aq0E49HtRPsTJ70ez
+	vkfU65Wn9rgQOF9OAt/7nwkmRKRsnH4trjO9YKUGt5WDFMgg83wzQg79IHvORnakEbazmbRvg0E
+	CiM3EBuigxFfhIS9xmcCG9l51XxpQLA+2U08X6J/wqDxegUZXWriLVrT85CS/LBpTN7S+Ia62pD
+	HO5o8=
+X-Google-Smtp-Source: AGHT+IH6H5eoyoDiGCawX8hcyfAIsFqjcgfKx5GqQ3M5ZUeRqB23EXgoQaPPEhXoJ1r2rQPfP0tLQA==
+X-Received: by 2002:a17:906:f105:b0:b73:7652:ef9e with SMTP id a640c23a62f3a-b737652f76bmr38125366b.55.1763125183501;
+        Fri, 14 Nov 2025 04:59:43 -0800 (PST)
+Received: from pathway.suse.cz ([176.114.240.130])
+        by smtp.gmail.com with ESMTPSA id a640c23a62f3a-b734fd80a3asm382714666b.37.2025.11.14.04.59.40
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 14 Nov 2025 03:00:11 -0800 (PST)
-From: Shi Hao <i.shihao.999@gmail.com>
-To: martin.petersen@oracle.com
-Cc: James.Bottomley@HansenPartnership.com,
-	suganath-prabu.subramani@broadcom.com,
-	sreekanth.reddy@broadcom.com,
-	sathya.prakash@broadcom.com,
-	i.shihao.999@gmail.com,
-	MPT-FusionLinux.pdl@broadcom.com,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Subject: [PATCH v2] scsi: mpt3sas: fix spelling mistakes in comments
-Date: Fri, 14 Nov 2025 16:29:52 +0530
-Message-ID: <20251114105952.27379-1-i.shihao.999@gmail.com>
-X-Mailer: git-send-email 2.51.0
+        Fri, 14 Nov 2025 04:59:42 -0800 (PST)
+Date: Fri, 14 Nov 2025 13:59:38 +0100
+From: Petr Mladek <pmladek@suse.com>
+To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+Cc: Corey Minyard <corey@minyard.net>,
+	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
+	"Dr. David Alan Gilbert" <linux@treblig.org>,
+	Alex Deucher <alexander.deucher@amd.com>,
+	Thomas Zimmermann <tzimmermann@suse.de>,
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
+	Rob Clark <robin.clark@oss.qualcomm.com>,
+	Matthew Brost <matthew.brost@intel.com>,
+	Ulf Hansson <ulf.hansson@linaro.org>,
+	Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
+	Vitaly Lifshits <vitaly.lifshits@intel.com>,
+	Manivannan Sadhasivam <mani@kernel.org>,
+	Niklas Cassel <cassel@kernel.org>, Calvin Owens <calvin@wbinvd.org>,
+	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
+	Sagi Maimon <maimon.sagi@gmail.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	Karan Tilak Kumar <kartilak@cisco.com>,
+	Hans Verkuil <hverkuil+cisco@kernel.org>,
+	Casey Schaufler <casey@schaufler-ca.com>,
+	Steven Rostedt <rostedt@goodmis.org>,
+	Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>,
+	Max Kellermann <max.kellermann@ionos.com>,
+	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	openipmi-developer@lists.sourceforge.net,
+	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
+	linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
+	linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
+	intel-xe@lists.freedesktop.org, linux-mmc@vger.kernel.org,
+	netdev@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
+	linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
+	linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
+	ceph-devel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	Jonathan Corbet <corbet@lwn.net>,
+	Sumit Semwal <sumit.semwal@linaro.org>,
+	Gustavo Padovan <gustavo@padovan.org>,
+	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
+	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
+	Maxime Ripard <mripard@kernel.org>,
+	Dmitry Baryshkov <lumag@kernel.org>,
+	Abhinav Kumar <abhinav.kumar@linux.dev>,
+	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
+	Marijn Suijten <marijn.suijten@somainline.org>,
+	Konrad Dybcio <konradybcio@kernel.org>,
+	Lucas De Marchi <lucas.demarchi@intel.com>,
+	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
+	Rodrigo Vivi <rodrigo.vivi@intel.com>,
+	Vladimir Oltean <olteanv@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
+	"David S. Miller" <davem@davemloft.net>,
+	Eric Dumazet <edumazet@google.com>,
+	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
+	Tony Nguyen <anthony.l.nguyen@intel.com>,
+	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
+	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
+	Kishon Vijay Abraham I <kishon@kernel.org>,
+	Bjorn Helgaas <bhelgaas@google.com>,
+	Rodolfo Giometti <giometti@enneenne.com>,
+	Jonathan Lemon <jonathan.lemon@gmail.com>,
+	Richard Cochran <richardcochran@gmail.com>,
+	Stefan Haberland <sth@linux.ibm.com>,
+	Jan Hoeppner <hoeppner@linux.ibm.com>,
+	Heiko Carstens <hca@linux.ibm.com>,
+	Vasily Gorbik <gor@linux.ibm.com>,
+	Alexander Gordeev <agordeev@linux.ibm.com>,
+	Christian Borntraeger <borntraeger@linux.ibm.com>,
+	Sven Schnelle <svens@linux.ibm.com>,
+	Satish Kharat <satishkh@cisco.com>,
+	Sesidhar Baddela <sebaddel@cisco.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Mauro Carvalho Chehab <mchehab@kernel.org>,
+	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+	Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
+	Masami Hiramatsu <mhiramat@kernel.org>,
+	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v3 01/21] lib/vsprintf: Add specifier for printing struct
+ timespec64
+Message-ID: <aRcnug35DOZ3IGNi@pathway.suse.cz>
+References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
+ <20251113150217.3030010-2-andriy.shevchenko@linux.intel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251113150217.3030010-2-andriy.shevchenko@linux.intel.com>
 
-Replace 'implemention' with 'implementation' and 'deboucing'
-with 'debouncing' to improve code readability and also ensuring
-professional code documentation standards.
+On Thu 2025-11-13 15:32:15, Andy Shevchenko wrote:
+> A handful drivers want to print a content of the struct timespec64
+> in a format of %lld:%09ld. In order to make their lives easier, add
+> the respecting specifier directly to the printf() implementation.
+> 
+> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
 
-Signed-off-by: Shi Hao <i.shihao.999@gmail.com>
+Looks goor to me:
 
----
+Reviewed-by: Petr Mladek <pmladek@suse.com>
+Tested-by: Petr Mladek <pmladek@suse.com>
 
-changes v2:
-- update patch subject description.
+I wonder how to move forward. I could take the whole patchset via
+printk tree. There is no conflict with linux-next at the moment.
 
-Signed-off-by: Shi Hao <i.shihao.999@gmail.com>
----
- drivers/scsi/mpt3sas/mpt3sas_ctl.c | 4 ++--
- 1 file changed, 2 insertions(+), 2 deletions(-)
+It seems that only 3 patches haven't got any ack yet. I am going
+to wait for more feedback and push it later the following week
+(Wednesday or so) unless anyone complains.
 
-diff --git a/drivers/scsi/mpt3sas/mpt3sas_ctl.c b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-index 3b951589feeb..1986c5c4bc14 100644
---- a/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-+++ b/drivers/scsi/mpt3sas/mpt3sas_ctl.c
-@@ -3324,7 +3324,7 @@ static DEVICE_ATTR_RO(board_tracer);
-  * @attr: ?
-  * @buf: the buffer returned
-  *
-- * This is for firmware implemention for deboucing device
-+ * This is for firmware implementation for debouncing device
-  * removal events.
-  *
-  * A sysfs 'read-only' shost attribute.
-@@ -3346,7 +3346,7 @@ static DEVICE_ATTR_RO(io_delay);
-  * @attr: ?
-  * @buf: the buffer returned
-  *
-- * This is for firmware implemention for deboucing device
-+ * This is for firmware implementation for debouncing device
-  * removal events.
-  *
-  * A sysfs 'read-only' shost attribute.
---
-2.51.0
-
+Best Regards,
+Petr
