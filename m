@@ -1,122 +1,159 @@
-Received: from mailout2.w1.samsung.com (mailout2.w1.samsung.com [210.118.77.12])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC90D2DF155
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 19:11:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=210.118.77.12
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C1BB0256C61;
+	Fri, 14 Nov 2025 19:27:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763147516; cv=none; b=p+7RJz+UlcJShDhsLRqSy/cSpw3vr4GD3XbtHQg5GvCjN0C2EfKvblZiYKZ39DEmc8R9zvRPwUgUemKxpyndpHbwCcHBXpze9aG6zj9DdxVH/NXNhmrn07JJj+WIFSehlBPkljJXw2uigEvGyc7KAOSummIkIiz+mAF53KE+oAo=
+	t=1763148460; cv=none; b=P72IENkxLZpgdPMuKBxp+nwKwbWcbJUBWQTdqok8wmlbh5ND6P2E85lWoNn/5Jmafs50z1YuVjS91u+9utObWgwxtIDtmLL5lfn4pSplBrTgQK9WOG7rR/J2ogYLZxLUUSTpNYGsokRVMMgwsBF9cMD5ubNr8xOCHUVLgA8JNrs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763147516; c=relaxed/simple;
-	bh=43HMaRLm2iGTi0djrBUd1fGfuf1R0nmLq8HKzuNRDis=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:From:In-Reply-To:
-	 Content-Type:References; b=RMHdPW8BuMjL4w4Fc9say68zWzVSsS12ByDrghiMUXw5R9FqpbHEUovaL2zP0AjkFzTTkCV5WYhFCZYYSfMBINtZy+zcoUexPXANp7Yjf8GJue+5MxzcF+eLzhYdg+KP/ufoySrpcq6BZRALYVS5Z1A4LIski2HgREcrbJ+fFkU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=KufRJhz0; arc=none smtp.client-ip=210.118.77.12
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1763148460; c=relaxed/simple;
+	bh=4zS6kNpvotULTCAWIlQuSkSHH1YFH0RmzTXAaBQMR4k=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=rwGe+Eh24hc1e3F0P2SZI8wgvo36Cq1IgGaM1JIvILWGhyPjylPRs4A8tkwkeo4cMr1BsmxcT6y7VB6MciEoHTuGeV+y0TBhEdBtydBA1PlOY3P29wQzWUm6Z4JNeFG9AhaNwnAs1IckzuwzkYpbFk1fCMeDBCvFPOTLGQpU5lk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uNaeUx2q; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="KufRJhz0"
-Received: from eucas1p2.samsung.com (unknown [182.198.249.207])
-	by mailout2.w1.samsung.com (KnoxPortal) with ESMTP id 20251114191146euoutp023a3841629f02997aaa5267d2d5aeb067~39VDE0zla1320813208euoutp02t
-	for <linux-scsi@vger.kernel.org>; Fri, 14 Nov 2025 19:11:46 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.w1.samsung.com 20251114191146euoutp023a3841629f02997aaa5267d2d5aeb067~39VDE0zla1320813208euoutp02t
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1763147506;
-	bh=TUIpLsx2jxsmv4MdZstjPdkRNw8PP0zBeh7Qiw6jsJk=;
-	h=Date:Subject:To:Cc:From:In-Reply-To:References:From;
-	b=KufRJhz07U3L3rfCBC9sHGGPnZauPltaTNYjXMMUoMtyo0r67cx92F4U+xxbwmhLA
-	 ww55cl1mrCyWVYqCMg9Pa65btOuEdCDNQuIee+vc6eklvTaaf0dDa6xd5yRfhpSlWP
-	 /aLz6kW5SsNceKiPm6YKg7rm0cPJPp79J0jBKI/4=
-Received: from eusmtip1.samsung.com (unknown [203.254.199.221]) by
-	eucas1p2.samsung.com (KnoxPortal) with ESMTPA id
-	20251114191146eucas1p2de421a3cea023e1e3dd4c4d92f4a7f9d~39VC1qpCP0758607586eucas1p2w;
-	Fri, 14 Nov 2025 19:11:46 +0000 (GMT)
-Received: from [106.210.134.192] (unknown [106.210.134.192]) by
-	eusmtip1.samsung.com (KnoxPortal) with ESMTPA id
-	20251114191145eusmtip130272265fa67e510170f67f788cb8c4f~39VCF3y_K0905209052eusmtip1G;
-	Fri, 14 Nov 2025 19:11:45 +0000 (GMT)
-Message-ID: <6c833bb5-85f6-4fda-9563-179c7e7c24a2@samsung.com>
-Date: Fri, 14 Nov 2025 20:11:44 +0100
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uNaeUx2q"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 2B49DC4CEF5;
+	Fri, 14 Nov 2025 19:27:39 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763148460;
+	bh=4zS6kNpvotULTCAWIlQuSkSHH1YFH0RmzTXAaBQMR4k=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=uNaeUx2q26LSO9Ug4y9BK9zI6eQ4LVLoGARLCvMJJINSkBqiToXBchG+YscwoDAWP
+	 ZIDuaDEcQ60I+wzPQeJtTC0XZM6WgpBi0ctpMwRWd3K5EdIq0E8JGXyCuUkgTUkYOA
+	 XoCKEUdBOvA6u9xBw0fOsWWcYKH0clrO5ZbkiqloPKmq0Ld3jn1IAZFbUNFmoo5k0V
+	 DyYv1X948/0JjKjRdl5I+C4qj03VhZTEgESoZ9qKkZeY3ED1V7v+J4dpkEbGlgpoyA
+	 P8oUvy3bzUGA2rX02fe4vnHDP3jNFHlKqDan1PA4qb5HdorufY8lydZvj28cGXveeZ
+	 bLDXTeBoLfMSQ==
+Date: Fri, 14 Nov 2025 13:32:08 -0600
+From: Bjorn Andersson <andersson@kernel.org>
+To: Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
+Cc: mani@kernel.org, alim.akhtar@samsung.com, avri.altman@wdc.com, 
+	bvanassche@acm.org, robh@kernel.org, krzk+dt@kernel.org, conor+dt@kernel.org, 
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com, quic_ahari@quicinc.com, 
+	linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, devicetree@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH V1 2/3] dt-bindings: ufs: Document bindings for SA8255P
+ UFS Host Controller
+Message-ID: <p6a5nazgd74fwbo6c3ctgvwifcigwwn4azkiu7nrmovrn5cmqn@nxzryxyx4oao>
+References: <20251114145646.2291324-1-ram.dwivedi@oss.qualcomm.com>
+ <20251114145646.2291324-3-ram.dwivedi@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Betterbird (Windows)
-Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved
- request
-To: Bart Van Assche <bvanassche@acm.org>, =?UTF-8?Q?Andr=C3=A9_Draszik?=
-	<andre.draszik@linaro.org>, "Martin K . Petersen"
-	<martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, "James E.J. Bottomley"
-	<James.Bottomley@HansenPartnership.com>, Peter Wang
-	<peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>, Bean Huo
-	<beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, Adrian
-	Hunter <adrian.hunter@intel.com>
-Content-Language: en-US
-From: Marek Szyprowski <m.szyprowski@samsung.com>
-In-Reply-To: <2a2aef4e-288f-4dec-8ab1-fbc95bc1f880@acm.org>
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20251114191146eucas1p2de421a3cea023e1e3dd4c4d92f4a7f9d
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-RootMTR: 20251114101226eucas1p162ea659808485e0f18dc0a482143d8f5
-X-EPHeader: CA
-X-CMS-RootMailID: 20251114101226eucas1p162ea659808485e0f18dc0a482143d8f5
-References: <20251031204029.2883185-1-bvanassche@acm.org>
-	<20251031204029.2883185-22-bvanassche@acm.org>
-	<CGME20251114101226eucas1p162ea659808485e0f18dc0a482143d8f5@eucas1p1.samsung.com>
-	<c988a6dd-588d-4dbc-ab83-bbee17f2a686@samsung.com>
-	<83ffbceb9e66b2a3b6096231551d969034ed8a74.camel@linaro.org>
-	<2a2aef4e-288f-4dec-8ab1-fbc95bc1f880@acm.org>
+In-Reply-To: <20251114145646.2291324-3-ram.dwivedi@oss.qualcomm.com>
 
-Hi,
+On Fri, Nov 14, 2025 at 08:26:45PM +0530, Ram Kumar Dwivedi wrote:
+> From: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> 
+> Document the device tree bindings for UFS host controller on
+> Qualcomm SA8255P platform which integrates firmware-managed
+> resources.
+> 
+> The platform firmware implements the SCMI server and manages
+> resources such as the PHY, clocks, regulators and resets via the
+> SCMI power protocol. As a result, the OS-visible DT only describes
+> the controller’s MMIO, interrupt, IOMMU and power-domain interfaces.
+> 
+> The generic "qcom,ufshc" and "jedec,ufs-2.0" compatible strings are
+> removed from the binding, since this firmware managed design won't
+> be compatible with the drivers doing full resource management.
+> 
+> Co-developed-by: Anjana Hari <quic_ahari@quicinc.com>
+> Signed-off-by: Anjana Hari <quic_ahari@quicinc.com>
+> Signed-off-by: Ram Kumar Dwivedi <quic_rdwivedi@quicinc.com>
+> ---
+>  .../bindings/ufs/qcom,sa8255p-ufshc.yaml      | 63 +++++++++++++++++++
+>  1 file changed, 63 insertions(+)
+>  create mode 100644 Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
+> 
+> diff --git a/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
+> new file mode 100644
+> index 000000000000..3b31f6282feb
+> --- /dev/null
+> +++ b/Documentation/devicetree/bindings/ufs/qcom,sa8255p-ufshc.yaml
+> @@ -0,0 +1,63 @@
+> +# SPDX-License-Identifier: GPL-2.0-only OR BSD-2-Clause
+> +%YAML 1.2
+> +---
+> +$id: http://devicetree.org/schemas/ufs/qcom,sa8255p-ufshc.yaml#
+> +$schema: http://devicetree.org/meta-schemas/core.yaml#
+> +
+> +title: Qualcomm SA8255P UFS Host Controller
+> +
+> +maintainers:
+> +  - Ram Kumar Dwivedi <ram.dwivedi@oss.qualcomm.com>
+> +  - Anjana Hari <quic_ahari@quicinc.com>
 
-On 14.11.2025 19:39, Bart Van Assche wrote:
-> On 11/14/25 9:32 AM, André Draszik wrote:
->> The commit that makes it crash is:
->>
->>    08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
->>
->> the ones leading to it just fail probe.
-> Marek and André, thanks for having reported this issue.
->
-> The series is not bisectable, which is unfortunate.
->
-> Please help with testing the patch below on top of the entire patch
-> series, e.g. on top of linux-next:
->
-> diff --git a/drivers/ufs/core/ufshcd-priv.h 
-> b/drivers/ufs/core/ufshcd-priv.h
-> index 681426fde603..f385d85d3f95 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -380,7 +380,12 @@ static inline bool 
-> ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8
->   */
->  static inline struct scsi_cmnd *ufshcd_tag_to_cmd(struct ufs_hba 
-> *hba, u32 tag)
->  {
-> -    struct blk_mq_tags *tags = hba->host->tag_set.shared_tags;
-> +    /*
-> +     * Host-wide tags are enabled in MCQ mode only. See also the
-> +     * host->host_tagset assignment in ufs-mcq.c.
-> +     */
-> +    struct blk_mq_tags *tags = hba->host->tag_set.shared_tags ? :
-> +        hba->host->tag_set.tags[0];
->      struct request *rq = blk_mq_tag_to_rq(tags, tag);
->
->      if (WARN_ON_ONCE(!rq))
->
-Yes, that's it! This fixes the observed issue. Thanks! Feel free to add:
+This should be @oss.qualcomm.com, or @qti.qualcomm.com, not
+@quicinc.com.
 
-Reported-by: Marek Szyprowski <m.szyprowski@samsung.com>
-Tested-by: Marek Szyprowski <m.szyprowski@samsung.com>
+> +
+> +properties:
+> +  compatible:
+> +    const: qcom,sa8255p-ufshc
+> +
+> +  reg:
+> +    maxItems: 1
+> +
+> +  interrupts:
+> +    maxItems: 1
+> +
+> +  iommus:
+> +    maxItems: 1
+> +
+> +  dma-coherent:
+> +    type: boolean
+> +
+> +  power-domains:
+> +    maxItems: 1
+> +
+> +required:
+> +  - compatible
+> +  - reg
+> +  - interrupts
+> +  - power-domains
+> +  - iommus
+> +  - dma-coherent
+> +
+> +allOf:
+> +  - $ref: ufs-common.yaml
+> +
+> +unevaluatedProperties: false
+> +
+> +examples:
+> +  - |
+> +    #include <dt-bindings/interrupt-controller/arm-gic.h>
+> +
+> +    soc {
+> +        #address-cells = <2>;
+> +        #size-cells = <2>;
+> +
+> +        ufshc@1d84000 {
+> +            compatible = "qcom,sa8255p-ufshc";
+> +            reg = <0x0 0x01d84000 0x0 0x3000>;
 
+Drop the two 0x0 and you don't need to change address/size-cells.
 
-Best regards
--- 
-Marek Szyprowski, PhD
-Samsung R&D Institute Poland
+Regards,
+Bjorn
 
+> +            interrupts = <GIC_SPI 265 IRQ_TYPE_LEVEL_HIGH>;
+> +            lanes-per-direction = <2>;
+> +
+> +            iommus = <&apps_smmu 0x100 0x0>;
+> +            power-domains = <&scmi3_pd 0>;
+> +            dma-coherent;
+> +        };
+> +    };
+> -- 
+> 2.34.1
+> 
+> 
