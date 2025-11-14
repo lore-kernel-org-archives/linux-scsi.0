@@ -1,92 +1,123 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.15])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC14933C189;
-	Tue, 18 Nov 2025 17:32:05 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D854F36C0B6;
+	Tue, 18 Nov 2025 18:24:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.15
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763487127; cv=none; b=CXa3U3/xbvhKS0tkJymifS+AWtS2ND2g5nbwx0XoTj70ZOWcfALfMvz7deON1E9NyTnYQ/4lUXxtyY7amdkLi8bs2txF2+6CLOGaxnE5ynR2k6kpChDvHSiTG3UFQmsA0X9570MONgPh6r0K+u7Wo+ekqWLPNuCdhz6G0kZt6Gs=
+	t=1763490286; cv=none; b=dnSDtUaywiY5BKzlgYKmr5k2E8V/zwqUSmGGF38S59sjNI/fRO0AfHBqU4SlyF9Elk0084YN2xzQKu2WTMkL5qe8rCKQAVG4F8t4sHaZSb8nG2sJgVRe9pUyEC+kI35ENnJu41zdTm3h7hIjhw+PXEsplOUfCb13CGqnIJG3w2s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763487127; c=relaxed/simple;
-	bh=iKbJl8xVpniMCgJ5orBlSij/L73PPQUhbimiUfXkh+w=;
-	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
-	 In-Reply-To:Content-Type; b=LR3f1IlSWqVUgNsxL3SLnf2bVfk2HBaSR4lImfbjtHs31uXu+1H84Jnis23VCC9UjcfHbUJQfqZ4j5pRPqe71KFTi/XV0qf+oI/8E8YnWI5+98U4XgtBhcKPCW3nC4iJ4ggijsek2S6Zhxjk2fPQDo9E0iCzAlUwLvQzY7z3x2Q=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=zKZ+YgB+; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1763490286; c=relaxed/simple;
+	bh=smBt9xKgv+8Ljt0jn1EWKPyE4mn1srC3xH4nd3DxsXs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WwA5fdgn0X0Scfz7gCCfp+aaQlgfRDLPf/Kwjt2cywNo+4DFmMGoo2TH0QvnmmIHsXu9ygSTyc2i7BU95A5Mx+bzzopdzgHbWpcv8CY6yKh7oeDsev36Di3sZLFQsfqitK6psBgU350RL73Ub2cXMr98ajYX1a7GN0wqbdsf43M=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Hks9GPqA; arc=none smtp.client-ip=198.175.65.15
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="zKZ+YgB+"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4d9s9w4snJzltMVZ;
-	Tue, 18 Nov 2025 17:32:04 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1763487123; x=1766079124; bh=iKbJl8xVpniMCgJ5orBlSij/
-	L73PPQUhbimiUfXkh+w=; b=zKZ+YgB+oBDs4bb2xuVJFIvPQ264tEiTVch343DB
-	OJaR0yWy8AoMbNm/VfqRSyV/ubh5IJumnBTHdMrLXj5aU3k+jjTJtfDa0AgOPU54
-	yClpOHr4GX1wIPXBpuSiE0z2QtJEeES5nCcm9QiX+DMEgwxiepwGbAbEd5xuKman
-	n2292U3gwUt0wO2SMJ95pde+tDBYT1ecWgoM5fBOekS1fCSfMnIT/PgJ5yadw9v7
-	CVxbg0qqZAnseUSQVaqg2fQzNF3Nb7DT/Wv43pRpLEVvCHq9r3TYNsWrrFx0y/eU
-	RwbpzR/WtYzbVIKbk40chtqnE34+g6T+lemXMTqEPAEPDw==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id x6kDp3IJ6Rms; Tue, 18 Nov 2025 17:32:03 +0000 (UTC)
-Received: from [100.119.48.131] (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4d9s9r1x5Bzlh3sX;
-	Tue, 18 Nov 2025 17:31:58 +0000 (UTC)
-Message-ID: <64bbe1aa-db10-4766-bcde-71a36d853987@acm.org>
-Date: Tue, 18 Nov 2025 09:31:57 -0800
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Hks9GPqA"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763490285; x=1795026285;
+  h=resent-from:resent-date:resent-message-id:resent-to:date:
+   from:to:cc:subject:message-id:references:mime-version:
+   in-reply-to;
+  bh=smBt9xKgv+8Ljt0jn1EWKPyE4mn1srC3xH4nd3DxsXs=;
+  b=Hks9GPqAwKL998V3CF77QbuHnlRDua/37KFTgdDRhMIdlEafFqpUdej4
+   XTYx/u7IZRwTtHlEc7/vAWpnF5HqMz7EjGbh+K6yLJoYlyLDQo9Ecxz/4
+   7snMhM9tAysw9Wnh+HL0dd/khF6kEm6vLTTVvW5j3S/S8NmmrVm8wPLBU
+   15BR1RtPVwsSeztqIjx4fCpOacPlw7fXJhz8kH6VNH727JIkojfUm4/cF
+   8J6pAYMfzsnNZxZdEUqN3u733BS1NmLcJnY67rSuMizDIO4bgeKaNNsm2
+   arCVVpXSfFIT5jOzySalxEBXFF3bG5KsIkny49MIfKgZd4jFtkvNjpfum
+   g==;
+X-CSE-ConnectionGUID: BbK6HVhVRF6SIgVcwcVe7A==
+X-CSE-MsgGUID: b0Tj24eGTLSfpUOX2epduA==
+X-IronPort-AV: E=McAfee;i="6800,10657,11617"; a="69138618"
+X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
+   d="scan'208";a="69138618"
+Received: from fmviesa001.fm.intel.com ([10.60.135.141])
+  by orvoesa107.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 10:24:44 -0800
+X-CSE-ConnectionGUID: m8/zAGudTWqB5NwtJBfmhQ==
+X-CSE-MsgGUID: hp4xmospQhuC0rftwX98Mg==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
+   d="scan'208";a="221735733"
+Received: from dalessan-mobl3.ger.corp.intel.com (HELO localhost) ([10.245.245.97])
+  by smtpauth.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 10:24:42 -0800
+Resent-From: Andy Shevchenko <andriy.shevchenko@intel.com>
+Resent-Date: Tue, 18 Nov 2025 20:24:40 +0200
+Resent-Message-ID: <aRy56C2gVMC2PoT-@ashevche-desk.local>
+Resent-To: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>,
+	linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org,
+	linux@rasmusvillemoes.dk, senozhatsky@chromium.org,
+	James.Bottomley@hansenpartnership.com, rostedt@goodmis.org,
+	pmladek@suse.com
+Date: Fri, 14 Nov 2025 10:42:34 +0200
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: "Karan Tilak Kumar (kartilak)" <kartilak@cisco.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>, Petr Mladek <pmladek@suse.com>,
+	"linux-doc@vger.kernel.org" <linux-doc@vger.kernel.org>,
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+	"openipmi-developer@lists.sourceforge.net" <openipmi-developer@lists.sourceforge.net>,
+	"linux-media@vger.kernel.org" <linux-media@vger.kernel.org>,
+	"dri-devel@lists.freedesktop.org" <dri-devel@lists.freedesktop.org>,
+	"linaro-mm-sig@lists.linaro.org" <linaro-mm-sig@lists.linaro.org>,
+	"amd-gfx@lists.freedesktop.org" <amd-gfx@lists.freedesktop.org>,
+	"linux-arm-msm@vger.kernel.org" <linux-arm-msm@vger.kernel.org>,
+	"freedreno@lists.freedesktop.org" <freedreno@lists.freedesktop.org>,
+	"intel-xe@lists.freedesktop.org" <intel-xe@lists.freedesktop.org>,
+	"linux-mmc@vger.kernel.org" <linux-mmc@vger.kernel.org>,
+	"netdev@vger.kernel.org" <netdev@vger.kernel.org>,
+	"intel-wired-lan@lists.osuosl.org" <intel-wired-lan@lists.osuosl.org>,
+	"linux-pci@vger.kernel.org" <linux-pci@vger.kernel.org>,
+	"linux-s390@vger.kernel.org" <linux-s390@vger.kernel.org>,
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+	"linux-staging@lists.linux.dev" <linux-staging@lists.linux.dev>,
+	"ceph-devel@vger.kernel.org" <ceph-devel@vger.kernel.org>,
+	"linux-trace-kernel@vger.kernel.org" <linux-trace-kernel@vger.kernel.org>,
+	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
+	Sergey Senozhatsky <senozhatsky@chromium.org>,
+	"Satish Kharat (satishkh)" <satishkh@cisco.com>,
+	"Sesidhar Baddela (sebaddel)" <sebaddel@cisco.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Andrew Morton <akpm@linux-foundation.org>
+Subject: Re: [PATCH v3 19/21] scsi: fnic: Switch to use %ptSp
+Message-ID: <aRbreoKzashQcEne@smile.fi.intel.com>
+References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
+ <20251113150217.3030010-20-andriy.shevchenko@linux.intel.com>
+ <SJ0PR11MB5896D2F9DAC35FF8ADB29087C3CDA@SJ0PR11MB5896.namprd11.prod.outlook.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] UFS: Make TM command timeout configurable from host side
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
- "sh043.lee@samsung.com" <sh043.lee@samsung.com>,
- "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
- "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
- "martin.petersen@oracle.com" <martin.petersen@oracle.com>
-References: <CGME20251106012702epcas1p28fdeed020ea44f18dcc751c283fbbcc2@epcas1p2.samsung.com>
- <20251106012654.4094-1-sh043.lee@samsung.com>
- <e98df6a1b10d185358bdadf98cb3a940e5322dcb.camel@mediatek.com>
- <009401dc52e7$5d042cf0$170c86d0$@samsung.com>
- <f3b1641b9e611f2e4cac55e20a6410f9a9a88fa3.camel@mediatek.com>
- <be4dc430-ce62-46a8-bd42-16eb0c23c0a0@acm.org>
- <8d239f26e1011eee49b7c678ba07fd4d9ca81d24.camel@mediatek.com>
- <1bf9f247-8cd7-400e-a5c8-6f3936927dfc@acm.org>
- <b83804a8419f0e8cc1a6263144fbaf1583bab2ed.camel@mediatek.com>
- <000001dc5791$5f2ea880$1d8bf980$@samsung.com>
- <e3dcb711-990d-4e4e-a128-8a0cd0ce8886@acm.org>
- <a89ccf64710deeadfce9cba08e28867f88463c77.camel@mediatek.com>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <a89ccf64710deeadfce9cba08e28867f88463c77.camel@mediatek.com>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <SJ0PR11MB5896D2F9DAC35FF8ADB29087C3CDA@SJ0PR11MB5896.namprd11.prod.outlook.com>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On 11/17/25 9:55 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
-> However, in extreme cases, it=E2=80=99s possible that after a 30-second
-> timeout, the device just send a response, and at the same time,
-> when the host receives the response, the IRQ is pending by system.
-> (other irq is executing or spin_lock_irq, etc)
+On Thu, Nov 13, 2025 at 10:34:36PM +0000, Karan Tilak Kumar (kartilak) wrote:
+> On Thursday, November 13, 2025 6:33 AM, Andy Shevchenko <andriy.shevchenko@linux.intel.com> wrote:
 
-It is not clear to me how this could happen? If a response is not
-received in time from the UFS device, an abort TMF is sent. If the
-device does not respond to the abort TMF, the UFS device is reset
-(ufshcd_device_reset() is called if ufshcd_abort_all() fails). This
-prevents that a response can be received after the error handler has
-finished, isn't it?
+...
 
-Thanks,
+> Can you please advise how I can compile test this change?
 
-Bart.
+I have added the following to my x86_64_defconfig
+
+CONFIG_SCSI_FC_ATTRS=m
+CONFIG_LIBFC=m
+CONFIG_LIBFCOE=m
+CONFIG_FCOE_FNIC=m
+
+You can always add the just a one (last) line to a configuration stanza that
+can be merged to the .config with help of merge_config tool. It will take care
+of all needed dependencies.
+
+-- 
+With Best Regards,
+Andy Shevchenko
+
+
