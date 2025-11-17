@@ -1,46 +1,46 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 06E3727FD68;
-	Mon, 17 Nov 2025 22:52:44 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 90FF927FD68;
+	Mon, 17 Nov 2025 22:52:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763419966; cv=none; b=SkJQehrfgUYFJ6MImRG0upQTG4397ub87yTA8W3pSc7Id07ijRjiMa4/FkB+XpEp2I6hOp6s2CbP84/2Mf3iWfoP8cjui+AzhRuqfEnkbp3RWw0UQVRtHO+rEeMHuFPUKQFQHW2G8aSIW0zjtJl0fD8PYOeXLo+3gUZMXlBEIZ8=
+	t=1763419974; cv=none; b=UpFT89Epr9XKqViHwEdmQ+BHutBB2pinBslfNhcK1F06pujdPzq5GAGaJMMcDAjPbltd0mdOcwPnYYNqaC5BmNkvGZF7Rpbi4RwzSAt2I5PJaH8yGjq8o260RZALdRyWDo0iLuh6n/ERqXdfSY8FU7aCwH7u430axPyfZQvOWaM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763419966; c=relaxed/simple;
-	bh=SES9V2B/BOO52H34xDaNgGtl6Z/pEIo+CDwyMNNF8lk=;
+	s=arc-20240116; t=1763419974; c=relaxed/simple;
+	bh=DLWK5qzzP3YeRmdlz/dhfX4UaVV15SGMInFtix7uBRU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=WT0+pcFfOOQejnznpwyOgvbKdUfsFVOMmWGFGojqxzDAzlvvrl++BcZMXxTZlIdXyeJOX2Emphq17S9RdjoApw4e1SLDHW0CuidDNH4Xmk2lSGrjUUfK1nHo5oDpJ/ulsD4UxR5ASmkkZrLRNN69eH/SNh+bcG11oPTcBDwSlNY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=2msCSAbl; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=RddClX4wRWESyI+VWpVSGpIW6zlkEOle4cH6IT/qbcR3NiG+GzcO6VxiVmC6jQOtTmBl+PVk2WWjEeqfyasBu2zp0d7MpaZZdYWDZQDrHtCw9iNcd7Km71CwrnFGeVEvBeTSl8ovQpqbKYiltVozOF9V7e3mJUGI5Dl3STXLRuI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=HaABAEYS; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="2msCSAbl"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="HaABAEYS"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4d9NLN11TPzltKWC;
-	Mon, 17 Nov 2025 22:52:44 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4d9NLW4DyczltP0Q;
+	Mon, 17 Nov 2025 22:52:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1763419962; x=1766011963; bh=4qzid
-	EP5w/V4nMetIYAPW9YW3hJh/LH6nNyfNI+Z9eM=; b=2msCSAbliPoacB30hzf7S
-	ZB9M9DFR3Nuyjs8QnI0dmCxJwLeHN0sRY62GJy/HHPg4LTlXN4JxQTKWD/kihTkh
-	9ctG0s5WemQKLOq0n7l9UOkWJVF3h1SU+cCb7NBu/hBPzsBZCvHUk1qb6ELM0JTI
-	VPUuqeYk+/KIp6MAgRfgm3TdzT1dfQv0IDik2+72wVd8Y1t8X1MEenvuvHwN8mYY
-	uO6tLKqhWATqlz6QIo4r9ya8PWFQe96OOzRvwBHbPYCk0Y5u3QKla7nbsO6ck7Dl
-	XT7odXOEkDprHRu9TO1yrmtfYUX7uEb/b+bOcbUOuQeROmBJVE9GZVyn88QMo/Pr
-	g==
+	:received:received; s=mr01; t=1763419969; x=1766011970; bh=jqf+Z
+	8Xo8QRSlcE0GiwY3IMilfEbBq3SJGxP3IH7IEc=; b=HaABAEYSbTU1gKqirbWmG
+	x72eZf9VAL5o08F/iq1AHT6dpAoLAIUnhCZaRc/vstaFy2s4bOm5Hn8bOoBoTcre
+	A6WHvvnbaz7DNaBTYt/9RJmhlQ+PFgM/efPhADHCNzL0+sW4RQNqYtnRIitKMCS4
+	YkVXuAinAk/I4EAFmUgV7fsSQ4Fjt0SC+kAAMg0KkUvsy1ebcZNAX80BKlo0ohyj
+	MNN8Q3Et8g2e/MwJFUAn8Y6DI3LHXiFGlU5kyYKhLyO8953gbAmtQ0dW+c+Jlwls
+	Ck7c1ATnNFuiDK6Q+pMO8N63G/Bb6H2k+nAESnM/Bzvsh0nC3laJm0JwPaD39Jpm
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id o_MyPuVDlA0N; Mon, 17 Nov 2025 22:52:42 +0000 (UTC)
+ id exZDmNwaSPFG; Mon, 17 Nov 2025 22:52:49 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4d9NLD6sGPzltMJY;
-	Mon, 17 Nov 2025 22:52:36 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4d9NLM3WV9zltP0N;
+	Mon, 17 Nov 2025 22:52:42 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -50,10 +50,11 @@ Cc: linux-scsi@vger.kernel.org,
 	Bart Van Assche <bvanassche@acm.org>,
 	Jens Axboe <axboe@kernel.dk>,
 	Christoph Hellwig <hch@infradead.org>,
-	Ming Lei <ming.lei@redhat.com>
-Subject: [PATCH v2 3/5] block: Introduce blk_mq_tagset_iter()
-Date: Mon, 17 Nov 2025 14:52:02 -0800
-Message-ID: <20251117225205.2024479-4-bvanassche@acm.org>
+	Ming Lei <ming.lei@redhat.com>,
+	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
+Subject: [PATCH v2 4/5] scsi: core: Generalize scsi_device_busy()
+Date: Mon, 17 Nov 2025 14:52:03 -0800
+Message-ID: <20251117225205.2024479-5-bvanassche@acm.org>
 X-Mailer: git-send-email 2.52.0.rc1.455.g30608eb744-goog
 In-Reply-To: <20251117225205.2024479-1-bvanassche@acm.org>
 References: <20251117225205.2024479-1-bvanassche@acm.org>
@@ -65,9 +66,10 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Support iterating over all requests in a tag set, including requests
-that have not yet been started. A later patch will call this function
-from scsi_device_busy().
+Instead of only handling dev->budget_map.map !=3D NULL, also handle
+dev->budget_map.map =3D=3D NULL. This patch prepares for supporting logic=
+al
+units without budget map (sdev->budget_map.map =3D=3D NULL).
 
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@infradead.org>
@@ -76,57 +78,77 @@ Cc: John Garry <john.g.garry@oracle.com>
 Cc: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- block/blk-mq-tag.c     | 19 +++++++++++++++++++
- include/linux/blk-mq.h |  2 ++
- 2 files changed, 21 insertions(+)
+ drivers/scsi/scsi_lib.c    | 38 ++++++++++++++++++++++++++++++++++++++
+ include/scsi/scsi_device.h |  5 +----
+ 2 files changed, 39 insertions(+), 4 deletions(-)
 
-diff --git a/block/blk-mq-tag.c b/block/blk-mq-tag.c
-index f169beeded64..f277ed7e7743 100644
---- a/block/blk-mq-tag.c
-+++ b/block/blk-mq-tag.c
-@@ -456,6 +456,25 @@ void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *=
-tagset,
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 51ad2ad07e43..ddc51472b5eb 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -446,6 +446,44 @@ static void scsi_single_lun_run(struct scsi_device *=
+current_sdev)
+ 	spin_unlock_irqrestore(shost->host_lock, flags);
  }
- EXPORT_SYMBOL(blk_mq_tagset_busy_iter);
 =20
-+/**
-+ * blk_mq_tagset_iter - iterate over all requests in a tag set
-+ * @tagset:	Tag set to iterate over.
-+ * @fn:		Pointer to the function that will be called for each request.
-+ *		@fn will be called as follows: @fn(rq, @priv) where rq is a
-+ *		pointer to a request. Return true to continue iterating tags,
-+ *		false to stop.
-+ * @priv:	Will be passed as second argument to @fn.
-+ *
-+ * We grab one request reference before calling @fn and release it after
-+ * @fn returns.
-+ */
-+void blk_mq_tagset_iter(struct blk_mq_tag_set *tagset, blk_mq_rq_iter_fn=
- *fn,
-+			void *priv)
-+{
-+	__blk_mq_tagset_iter(tagset, fn, priv, 0);
-+}
-+EXPORT_SYMBOL(blk_mq_tagset_iter);
++struct sdev_cmds_allocated_data {
++	const struct scsi_device *sdev;
++	int count;
++};
 +
- static bool blk_mq_tagset_count_completed_rqs(struct request *rq, void *=
-data)
++static bool scsi_device_check_allocated(struct request *rq, void *data)
++{
++	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(rq);
++	struct sdev_cmds_allocated_data *sifd =3D data;
++
++	if (cmd->device =3D=3D sifd->sdev)
++		sifd->count++;
++
++	return true;
++}
++
++/**
++ * scsi_device_busy() - Number of commands allocated for a SCSI device
++ * @sdev: SCSI device.
++ *
++ * Note: There is a subtle difference between this function and
++ * scsi_host_busy(). scsi_host_busy() counts the number of commands that=
+ have
++ * been started. This function counts the number of commands that have b=
+een
++ * allocated. At least the UFS driver depends on this function counting =
+commands
++ * that have already been allocated but that have not yet been started.
++ */
++int scsi_device_busy(const struct scsi_device *sdev)
++{
++	struct sdev_cmds_allocated_data sifd =3D { .sdev =3D sdev };
++	struct blk_mq_tag_set *set =3D &sdev->host->tag_set;
++
++	if (sdev->budget_map.map)
++		return sbitmap_weight(&sdev->budget_map);
++	blk_mq_tagset_iter(set, scsi_device_check_allocated, &sifd);
++	return sifd.count;
++}
++EXPORT_SYMBOL(scsi_device_busy);
++
+ static inline bool scsi_device_is_busy(struct scsi_device *sdev)
  {
- 	unsigned *count =3D data;
-diff --git a/include/linux/blk-mq.h b/include/linux/blk-mq.h
-index 3467cacb281c..20a22c1cd067 100644
---- a/include/linux/blk-mq.h
-+++ b/include/linux/blk-mq.h
-@@ -927,6 +927,8 @@ void blk_mq_run_hw_queues(struct request_queue *q, bo=
-ol async);
- void blk_mq_delay_run_hw_queues(struct request_queue *q, unsigned long m=
-secs);
- void blk_mq_tagset_busy_iter(struct blk_mq_tag_set *tagset,
- 		blk_mq_rq_iter_fn *fn, void *priv);
-+void blk_mq_tagset_iter(struct blk_mq_tag_set *tagset, blk_mq_rq_iter_fn=
- *fn,
-+		void *priv);
- void blk_mq_tagset_wait_completed_request(struct blk_mq_tag_set *tagset)=
-;
- void blk_mq_freeze_queue_nomemsave(struct request_queue *q);
- void blk_mq_unfreeze_queue_nomemrestore(struct request_queue *q);
+ 	if (scsi_device_busy(sdev) >=3D sdev->queue_depth)
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index d62265d12cfe..661f0a8e4de6 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -713,10 +713,7 @@ static inline int scsi_device_supports_vpd(struct sc=
+si_device *sdev)
+ 	return 0;
+ }
+=20
+-static inline int scsi_device_busy(struct scsi_device *sdev)
+-{
+-	return sbitmap_weight(&sdev->budget_map);
+-}
++int scsi_device_busy(const struct scsi_device *sdev);
+=20
+ /* Macros to access the UNIT ATTENTION counters */
+ #define scsi_get_ua_new_media_ctr(sdev) \
