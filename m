@@ -1,125 +1,169 @@
-Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id E6C8034E755;
-	Tue, 18 Nov 2025 13:21:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3302A30100F
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 13:38:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763472079; cv=none; b=mitzk5Te/YXTkszbFHsnwK4Ju+GkXlYPRF1PxRYvwr6/dSPdSv05Slt2KyYMN8SzhKWMvkQsFRDJzdjca9av+Xtea2BDjCmhSZ/1PC6JGHDlMEn+TDMA4PBG2U5Scw5RFFajrKLWaAfIlGznNpfPuqEfC4ko2CJlH7/zQ8q2A4E=
+	t=1763473116; cv=none; b=OOr/nISV7VcL06rie7O/yPh7Y3aOkSBRofCa2sEP0ZTfbfKoDlmd3PTSSEvY1Nnvd89Qo3fmrrYK/YyfhstlaaKhceGeXibrwWr0SQetv7+k+QbjLRqdOEQoHysNC5u+ipuYPtgD8rQIHO+0gKzYw7Ts/LFSCtQoX0kTrEjNlZw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763472079; c=relaxed/simple;
-	bh=XYuaeX0qF6ud8jsY3kjdD5P0hZaKhE1KH3vNMOXlxiQ=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=o/BA9O5whvD7c37UQ/QAc8HOSeErjXSyTpjZBjNeKaB9lE3G/tW0Zsz2jOlOZwCz0MR8ODyuxpUhbk2f1o+aI9VV9YXp3QR4EKytagYcx/HrTVKRQYgZa/2jL4TaSSlOVG6Nn8wDC7ZNJkYnR32OH/e610J7QUgBPwklXhdWXZ0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=eMafZAmU; arc=none smtp.client-ip=198.37.111.173
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
+	s=arc-20240116; t=1763473116; c=relaxed/simple;
+	bh=CSMN+2raUsI5Lk8o1UR3ipHcrxlw73UK/VcudD3rddk=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=WcZEGj2JNb05b5oi1YILPUEHE6S+vAQSKdj9B0WaIYBaN/jwTw5vC7RAlu0ZIm3fAzTFzB4bO0WVedlL3f/I+y2LMnm4uLZqQaBrWRNvq4ymA7lTdtFTsneSWE7e0xr6qyH6gYfguiLpEzkE8RbU+eC5JM8xXxjZJ6tINnuDV5c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Wx2S8lYa; arc=none smtp.client-ip=198.175.65.11
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="eMafZAmU"
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Wx2S8lYa"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-	d=hansenpartnership.com; s=20151216; t=1763472076;
-	bh=XYuaeX0qF6ud8jsY3kjdD5P0hZaKhE1KH3vNMOXlxiQ=;
-	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
-	b=eMafZAmUkfXNUpu/NLOqtsS/OgTzmiUBsCpia2Yat27Wyo8Rx+gz2IuYAe1V6UvY5
-	 7SopEfJzv33GAobXCxtRCjkC/H+2jfKTeqeqYT2yZXUfepztkI7m2ubrKUAJMj3IBS
-	 xs++k1qekPaLvcuDk2ppw/ypgyrqvYpR8WWu2c4E=
-Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id ABF5A1C0265;
-	Tue, 18 Nov 2025 08:21:16 -0500 (EST)
-Message-ID: <9c62ff497aa00bcdf213f579272d3decdd22ea34.camel@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: fix uninitialized pointers with free attr
-From: James Bottomley <James.Bottomley@HansenPartnership.com>
-To: Dan Carpenter <dan.carpenter@linaro.org>
-Cc: Ally Heev <allyheev@gmail.com>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
-	linux-kernel@vger.kernel.org
-Date: Tue, 18 Nov 2025 08:21:16 -0500
-In-Reply-To: <aRwPcgDXSE9s4jKS@stanley.mountain>
-References: 
-	<20251105-aheev-uninitialized-free-attr-scsi-v1-1-d28435a0a7ea@gmail.com>
-	 <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
-	 <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
-	 <407aed0ff7be4fdcafebd09e58e25496b6b4fec0.camel@HansenPartnership.com>
-	 <f7f26ae6-31d7-4793-8daa-331622460833@suswa.mountain>
-	 <bed8636bc4d036f4b2fe532e7bb4bb4b05c059fc.camel@HansenPartnership.com>
-	 <aRwPcgDXSE9s4jKS@stanley.mountain>
-Autocrypt: addr=James.Bottomley@HansenPartnership.com;
- prefer-encrypt=mutual;
- keydata=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
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.50.3 
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763473115; x=1795009115;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=CSMN+2raUsI5Lk8o1UR3ipHcrxlw73UK/VcudD3rddk=;
+  b=Wx2S8lYaFeWHXYVYaVsa1Ocb/dnFpT3DrFKkwV5LnXzc7iYb2f99ZCvX
+   CWiKGSCnsYcJEfmy3vsq12CKSgjKrTm5jDLcmdWAtkFHO+FA0cMKVUWjF
+   viI75Wqa+lj0yhjctkX3IQvCZBPe7hiQ4Yt0VcUqjIoE4hbPVB1LnuRSt
+   B/afW/FppNwMObPXuWxX/GpgZsFZN66KNd61Y4P+P1g1uOvIZcM5OH+xu
+   EnGeg5wkXFIuR5WoRSfOKXwELVgbYJICnlZk6B4k6ricEmFGtWnK6vXx4
+   5IP2lZ/BmKLaVcDzH2y+V69bExNxbEOoI5+Bfv+O6hyLjZKQ7Z01a6dft
+   g==;
+X-CSE-ConnectionGUID: G1tsIdUlSgiA2TUzfg3uPA==
+X-CSE-MsgGUID: CMcyRGGITYSTG4lnHA/T1w==
+X-IronPort-AV: E=McAfee;i="6800,10657,11616"; a="75818267"
+X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
+   d="scan'208";a="75818267"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 05:38:35 -0800
+X-CSE-ConnectionGUID: 89oTEYqAT2axniNjTW3Rew==
+X-CSE-MsgGUID: NC+Xl2XhRAeZOqVb1hZFFg==
+X-ExtLoop1: 1
+Received: from lkp-server01.sh.intel.com (HELO adf6d29aa8d9) ([10.239.97.150])
+  by fmviesa003.fm.intel.com with ESMTP; 18 Nov 2025 05:38:33 -0800
+Received: from kbuild by adf6d29aa8d9 with local (Exim 4.96)
+	(envelope-from <lkp@intel.com>)
+	id 1vLLug-0001md-1Z;
+	Tue, 18 Nov 2025 13:38:30 +0000
+Date: Tue, 18 Nov 2025 21:38:27 +0800
+From: kernel test robot <lkp@intel.com>
+To: Hao Dongdong <doubled@leap-io-kernel.com>,
+	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-scsi@vger.kernel.org, doubled@leap-io-kernel.com,
+	yjzhang@leap-io-kernel.com
+Subject: Re: [PATCH v4] scsi: leapraid: Add new scsi driver
+Message-ID: <202511182038.XDtPzsLQ-lkp@intel.com>
+References: <20251116112803.28078-1-doubled@leap-io-kernel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251116112803.28078-1-doubled@leap-io-kernel.com>
 
-On Tue, 2025-11-18 at 09:17 +0300, Dan Carpenter wrote:
-> On Thu, Nov 06, 2025 at 11:06:29AM -0500, James Bottomley wrote:
-[...]
-> > However, why would we treat a __free variable any differently from
-> > one without the annotation?=C2=A0 The only difference is that a functio=
-n
-> > gets called on it before exit, but as long as something can detect
-> > calling this on uninitialized variables their properties are
-> > definitely no different from non-__free variables so the can be
-> > treated exactly the same.
-> >=20
-> > To revisit why we do this for non-__free variables: most people
-> > (although there are definitely languages where this isn't true and
-> > people who think we should follow this) think that having variables
-> > at the top of a function (or at least top of a code block) make the
-> > code easier to understand.=C2=A0 Additionally, keeping the variable
-> > uninitialized allows the compiler to detect any use before set
-> > scenarios, which can be somewhat helpful detecting code faults (I'm
-> > less persuaded by this, particularly given the number of false
-> > positive warnings we've seen that force us to add annotations,
-> > although this seems to be getting better).
-> >=20
-> > So either we throw out the above for everything ... which I really
-> > wouldn't want, or we enforce it for *all* variables.
-> >=20
->=20
-> Yeah.=C2=A0 You make a good point...
->=20
-> On the other hand, a bunch of maintainers are convinced that every
-> free variable should be initialized to a valid value at declaration
-> time and will reject patches which don't do that.
+Hi Hao,
 
-Which maintainers?  The true evil I see here is rule inconsistency
-because it leads to confusion and bad coding.  So I'd hope if's fairly
-easy to point out the errors ... and if they want to argue for
-consistently coding everything with either variables always initialized
-or variables declared in code, I'm sure they'll get their day.
+kernel test robot noticed the following build warnings:
 
-> I see checkpatch as a way of avoiding this round trip where a patch
-> is automatically rejected because of something trivial.
+[auto build test WARNING on jejb-scsi/for-next]
+[also build test WARNING on mkp-scsi/for-next linus/master v6.18-rc6 next-20251117]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-But you aren't just doing that ... what you're actually doing is
-forcing bad coding rules on the rest of us.  Why else would I see a
-patch in SCSI trying to move something that's correctly coded according
-to our usual variable rules to this?
+url:    https://github.com/intel-lab-lkp/linux/commits/Hao-Dongdong/scsi-leapraid-Add-new-scsi-driver/20251116-192921
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251116112803.28078-1-doubled%40leap-io-kernel.com
+patch subject: [PATCH v4] scsi: leapraid: Add new scsi driver
+config: s390-allmodconfig (https://download.01.org/0day-ci/archive/20251118/202511182038.XDtPzsLQ-lkp@intel.com/config)
+compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251118/202511182038.XDtPzsLQ-lkp@intel.com/reproduce)
 
-> The truth is that the cleanup.h stuff is really new and I don't think
-> we've necessarily figured out all the best practices yet.
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511182038.XDtPzsLQ-lkp@intel.com/
 
-I get that ... and I'm not saying we shouldn't change stuff because of
-it, I'm just saying that any rule we do change should be reasonable and
-consistently applied.
+All warnings (new ones prefixed by >>):
 
-Regards,
+>> drivers/scsi/leapraid/leapraid_func.c:4794:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
+    4794 |         default:
+         |         ^
+   drivers/scsi/leapraid/leapraid_func.c:4794:2: note: insert 'break;' to avoid fall-through
+    4794 |         default:
+         |         ^
+         |         break; 
+   1 warning generated.
 
-James
 
+vim +4794 drivers/scsi/leapraid/leapraid_func.c
+
+  4741	
+  4742	static void leapraid_fw_work(struct leapraid_adapter *adapter,
+  4743				     struct leapraid_fw_evt_work *fw_evt)
+  4744	{
+  4745		struct leapraid_sas_dev *sas_dev;
+  4746	
+  4747		adapter->fw_evt_s.cur_evt = fw_evt;
+  4748		leapraid_del_fw_evt_from_list(adapter, fw_evt);
+  4749		if (adapter->access_ctrl.host_removing ||
+  4750		    adapter->access_ctrl.pcie_recovering) {
+  4751			leapraid_fw_evt_put(fw_evt);
+  4752			adapter->fw_evt_s.cur_evt = NULL;
+  4753			return;
+  4754		}
+  4755		switch (fw_evt->evt_type) {
+  4756		case LEAPRAID_EVT_SAS_DISCOVERY:
+  4757		{
+  4758			struct leapraid_evt_data_sas_disc *evt_data;
+  4759	
+  4760			evt_data = fw_evt->evt_data;
+  4761			if (evt_data->reason_code ==
+  4762			    LEAPRAID_EVT_SAS_DISC_RC_STARTED &&
+  4763			    !adapter->dev_topo.card.phys_num)
+  4764				leapraid_sas_host_add(adapter, 0);
+  4765			break;
+  4766		}
+  4767		case LEAPRAID_EVT_SAS_TOPO_CHANGE_LIST:
+  4768			leapraid_sas_topo_chg_evt(adapter, fw_evt);
+  4769			break;
+  4770		case LEAPRAID_EVT_IR_CHANGE:
+  4771			leapraid_sas_ir_chg_evt(adapter, fw_evt);
+  4772			break;
+  4773		case LEAPRAID_EVT_SAS_ENCL_DEV_STATUS_CHANGE:
+  4774			leapraid_sas_enc_dev_stat_chg_evt(adapter, fw_evt);
+  4775			break;
+  4776		case LEAPRAID_EVT_REMOVE_DEAD_DEV:
+  4777			while (scsi_host_in_recovery(adapter->shost) ||
+  4778			       adapter->access_ctrl.shost_recovering) {
+  4779				if (adapter->access_ctrl.host_removing ||
+  4780				    adapter->fw_evt_s.fw_evt_cleanup)
+  4781					goto out;
+  4782	
+  4783				ssleep(1);
+  4784			}
+  4785			leapraid_hardreset_async_logic(adapter);
+  4786			break;
+  4787		case LEAPRAID_EVT_TURN_ON_PFA_LED:
+  4788			sas_dev = leapraid_get_sas_dev_by_hdl(adapter,
+  4789							      fw_evt->dev_handle);
+  4790			leapraid_set_led(adapter, sas_dev, true);
+  4791			break;
+  4792		case LEAPRAID_EVT_SCAN_DEV_DONE:
+  4793			adapter->scan_dev_desc.scan_start = false;
+> 4794		default:
+  4795			break;
+  4796		}
+  4797	out:
+  4798		leapraid_fw_evt_put(fw_evt);
+  4799		adapter->fw_evt_s.cur_evt = NULL;
+  4800	}
+  4801	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
