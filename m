@@ -1,169 +1,138 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.11])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f51.google.com (mail-wm1-f51.google.com [209.85.128.51])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3302A30100F
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 13:38:35 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.11
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C56A835CB9A
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 14:22:33 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763473116; cv=none; b=OOr/nISV7VcL06rie7O/yPh7Y3aOkSBRofCa2sEP0ZTfbfKoDlmd3PTSSEvY1Nnvd89Qo3fmrrYK/YyfhstlaaKhceGeXibrwWr0SQetv7+k+QbjLRqdOEQoHysNC5u+ipuYPtgD8rQIHO+0gKzYw7Ts/LFSCtQoX0kTrEjNlZw=
+	t=1763475755; cv=none; b=IywcYdqKTbqwk0oE6iSBdqUeC6SRV5nHtJ1csdP9h8u2mZhh9LEExXjMn6Z/XBR50oS4aAYlLZz8nOErgMQHODXXhQHKWN0IgbHC8DjKNbm73qTlZl1zC8uDnDKgWL/OospQM0QuNkMok1c1+i2zyBij70wgBRhAxRkjY8f8ue0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763473116; c=relaxed/simple;
-	bh=CSMN+2raUsI5Lk8o1UR3ipHcrxlw73UK/VcudD3rddk=;
+	s=arc-20240116; t=1763475755; c=relaxed/simple;
+	bh=1bRekLSQbnogm9kiXDr6nxOYMXkbiP0m/W7fxXb9X9U=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=WcZEGj2JNb05b5oi1YILPUEHE6S+vAQSKdj9B0WaIYBaN/jwTw5vC7RAlu0ZIm3fAzTFzB4bO0WVedlL3f/I+y2LMnm4uLZqQaBrWRNvq4ymA7lTdtFTsneSWE7e0xr6qyH6gYfguiLpEzkE8RbU+eC5JM8xXxjZJ6tINnuDV5c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Wx2S8lYa; arc=none smtp.client-ip=198.175.65.11
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=roIzsMdt6v7ZdWBgGTn09sUCBkS8JLct7b6lcJDrow9zmw+bzw3cRX+xmeBY4a3fqsfvR/SzD4hG3Pqg59XDbiFMmnGuh3252ISxyvQ/wauR0gtytMuHLlEJ1zhGEevJ2hsCyi5KLrXFHJQ6Qc6RqXjw9FmLW0PF6Qxt2Zs3kv8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=bJHJveo6; arc=none smtp.client-ip=209.85.128.51
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Wx2S8lYa"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763473115; x=1795009115;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=CSMN+2raUsI5Lk8o1UR3ipHcrxlw73UK/VcudD3rddk=;
-  b=Wx2S8lYaFeWHXYVYaVsa1Ocb/dnFpT3DrFKkwV5LnXzc7iYb2f99ZCvX
-   CWiKGSCnsYcJEfmy3vsq12CKSgjKrTm5jDLcmdWAtkFHO+FA0cMKVUWjF
-   viI75Wqa+lj0yhjctkX3IQvCZBPe7hiQ4Yt0VcUqjIoE4hbPVB1LnuRSt
-   B/afW/FppNwMObPXuWxX/GpgZsFZN66KNd61Y4P+P1g1uOvIZcM5OH+xu
-   EnGeg5wkXFIuR5WoRSfOKXwELVgbYJICnlZk6B4k6ricEmFGtWnK6vXx4
-   5IP2lZ/BmKLaVcDzH2y+V69bExNxbEOoI5+Bfv+O6hyLjZKQ7Z01a6dft
-   g==;
-X-CSE-ConnectionGUID: G1tsIdUlSgiA2TUzfg3uPA==
-X-CSE-MsgGUID: CMcyRGGITYSTG4lnHA/T1w==
-X-IronPort-AV: E=McAfee;i="6800,10657,11616"; a="75818267"
-X-IronPort-AV: E=Sophos;i="6.19,314,1754982000"; 
-   d="scan'208";a="75818267"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by orvoesa103.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 18 Nov 2025 05:38:35 -0800
-X-CSE-ConnectionGUID: 89oTEYqAT2axniNjTW3Rew==
-X-CSE-MsgGUID: NC+Xl2XhRAeZOqVb1hZFFg==
-X-ExtLoop1: 1
-Received: from lkp-server01.sh.intel.com (HELO adf6d29aa8d9) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 18 Nov 2025 05:38:33 -0800
-Received: from kbuild by adf6d29aa8d9 with local (Exim 4.96)
-	(envelope-from <lkp@intel.com>)
-	id 1vLLug-0001md-1Z;
-	Tue, 18 Nov 2025 13:38:30 +0000
-Date: Tue, 18 Nov 2025 21:38:27 +0800
-From: kernel test robot <lkp@intel.com>
-To: Hao Dongdong <doubled@leap-io-kernel.com>,
-	James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-scsi@vger.kernel.org, doubled@leap-io-kernel.com,
-	yjzhang@leap-io-kernel.com
-Subject: Re: [PATCH v4] scsi: leapraid: Add new scsi driver
-Message-ID: <202511182038.XDtPzsLQ-lkp@intel.com>
-References: <20251116112803.28078-1-doubled@leap-io-kernel.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="bJHJveo6"
+Received: by mail-wm1-f51.google.com with SMTP id 5b1f17b1804b1-4779cc419b2so32689095e9.3
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 06:22:33 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1763475752; x=1764080552; darn=vger.kernel.org;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:from:to
+         :cc:subject:date:message-id:reply-to;
+        bh=cwc/mWNSnbrniQcgp/cxZONrsNTxrDETTJ3bIQ8HxWA=;
+        b=bJHJveo60izp7ibOFPQDUyvsU4ksdUEyGVgClsnIjS2601Qcc0ro/rjGaQUekGK5WY
+         Ln5x8aiffhIzAYCLQV03cKelmWu9FpfGJh+Fn7RxzPq6KPYH4OrcMzaUTS32MqAEDNwz
+         HRMcJz6Y6rmGIy7wbStvkoN1uk9xDsxGwRuztieawuqpwEcaLPrQcV8z5pho/lmPU/Pz
+         L2B5y9Nttcc2XHuq7RV6KgdJPdZVoQlVskWs9tMgqJ9ZaWyH1ye6Ydh1f1oSD6jKEElP
+         734nt7GvtOk5088sdDh/uHnpmOTZcZ8Q8GFb5IlFiiQhH31p71Rh1WFV4xq7Yt1/zcYq
+         du9g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763475752; x=1764080552;
+        h=in-reply-to:content-transfer-encoding:content-disposition
+         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=cwc/mWNSnbrniQcgp/cxZONrsNTxrDETTJ3bIQ8HxWA=;
+        b=VKoZVbzvAWMw4Wlv57jBGdRLUbAED5EJ3pa3FPN+7oWO2/ROXEYvznBLjz/1i3Zs4U
+         yaxRNVXeE0irsIRc8MMwThje3V8Gjutgp8vbTYX6wjRQ5M4A9GcIJTd7dfzupLFtsOFp
+         r5oeNbOXNeGiW7DRHN/B6T1YWFxQ3/YORQyNdGagWTZJYwvE24KsXNMyQDV3VYx5WSpE
+         LmXjDsA7SNxDXEiYZXB7LIHf+7JzR+gUmZAg5sjR7j8UjYV+AU4pb5t2Dt88o0I3oZCJ
+         TGTEiwbsMmlnfU5g9yUsOLnsGjGzVYmDI+5DU3vxXn7qYfYbl8LP06y5Sz9v+NB+N6Uv
+         8v3A==
+X-Forwarded-Encrypted: i=1; AJvYcCUp53a4gGan5+icvS+/2nxyVVLu4RJF/GEdvjT66zEKUiVOYvC4uv4KDruVisjweA78RekqJxjZdtAr@vger.kernel.org
+X-Gm-Message-State: AOJu0YwIcYHp5FVaUNjQYd4XRg29NhSD/GEoyWONAaf+BImiE0emyCwd
+	T51CEZth1Tgu/DUl8YanED75xhxKnIrfmlZ0IvDlbSDNt921fNRLOpRTRyLYaf44SOXSvg6qikh
+	4RrAv
+X-Gm-Gg: ASbGncurCQ8hTWH9qZw4BFcdLDXb8IjKxDBoYsH+56xBhVct2dzKcoEqDQrtWuOdV6k
+	RrCheF5rE4rAtpSWzfyeinE0yeDy6UfmFE/i46jqIFObd8PKHvMK1Am6+7jtYZwXeMG36yePerC
+	cWrvMyTeMsdXuTMAA4VK9ACeNS4xZb6kiKofJkDOJY34LjL/QjrOETMyz1t1C6YBtVE66zn+uIr
+	F1kTh+JuxhLmvJa90i2GsrHukawpGq++IIURFHFerRsIADcPGsWFkc5vdBNYk699msFmd8b/ggB
+	Or7ve31O+YUubIqIUaNlY1AZtW+dwcwF6gzDvSH4PsUMwCWz1WsepAal1RLX8hTcwrxyNuUl7Zd
+	DyN8KvV+JYHhKsPDQ51g056hT1LPZoNWjl7dagfFFacZqj1P4feDyIPMjnEXrqVTG0edO7/QLwa
+	jkPTotKb1+q0ZeFv6U
+X-Google-Smtp-Source: AGHT+IGvnru/DiWDOXms3ALyf9g0cQrTBhkl8C4EuDcxo5HymP6Bpl6c2tIk/W3UDCJ8vjiRxsRFtA==
+X-Received: by 2002:a05:600c:8b43:b0:477:561f:6fc8 with SMTP id 5b1f17b1804b1-4778fe50f6dmr160312705e9.5.1763475751966;
+        Tue, 18 Nov 2025 06:22:31 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with UTF8SMTPSA id 5b1f17b1804b1-477a9e0c802sm17414305e9.15.2025.11.18.06.22.30
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Nov 2025 06:22:31 -0800 (PST)
+Date: Tue, 18 Nov 2025 17:22:27 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: James Bottomley <James.Bottomley@hansenpartnership.com>
+Cc: Ally Heev <allyheev@gmail.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] scsi: fix uninitialized pointers with free attr
+Message-ID: <aRyBI_j77mQaQxgT@stanley.mountain>
+References: <20251105-aheev-uninitialized-free-attr-scsi-v1-1-d28435a0a7ea@gmail.com>
+ <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
+ <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
+ <407aed0ff7be4fdcafebd09e58e25496b6b4fec0.camel@HansenPartnership.com>
+ <f7f26ae6-31d7-4793-8daa-331622460833@suswa.mountain>
+ <bed8636bc4d036f4b2fe532e7bb4bb4b05c059fc.camel@HansenPartnership.com>
+ <aRwPcgDXSE9s4jKS@stanley.mountain>
+ <9c62ff497aa00bcdf213f579272d3decdd22ea34.camel@HansenPartnership.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
+Content-Type: text/plain; charset=iso-8859-1
 Content-Disposition: inline
-In-Reply-To: <20251116112803.28078-1-doubled@leap-io-kernel.com>
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <9c62ff497aa00bcdf213f579272d3decdd22ea34.camel@HansenPartnership.com>
 
-Hi Hao,
+On Tue, Nov 18, 2025 at 08:21:16AM -0500, James Bottomley wrote:
+> On Tue, 2025-11-18 at 09:17 +0300, Dan Carpenter wrote:
+> > On Thu, Nov 06, 2025 at 11:06:29AM -0500, James Bottomley wrote:
+> [...]
+> > > However, why would we treat a __free variable any differently from
+> > > one without the annotation?  The only difference is that a function
+> > > gets called on it before exit, but as long as something can detect
+> > > calling this on uninitialized variables their properties are
+> > > definitely no different from non-__free variables so the can be
+> > > treated exactly the same.
+> > > 
+> > > To revisit why we do this for non-__free variables: most people
+> > > (although there are definitely languages where this isn't true and
+> > > people who think we should follow this) think that having variables
+> > > at the top of a function (or at least top of a code block) make the
+> > > code easier to understand.  Additionally, keeping the variable
+> > > uninitialized allows the compiler to detect any use before set
+> > > scenarios, which can be somewhat helpful detecting code faults (I'm
+> > > less persuaded by this, particularly given the number of false
+> > > positive warnings we've seen that force us to add annotations,
+> > > although this seems to be getting better).
+> > > 
+> > > So either we throw out the above for everything ... which I really
+> > > wouldn't want, or we enforce it for *all* variables.
+> > > 
+> > 
+> > Yeah.  You make a good point...
+> > 
+> > On the other hand, a bunch of maintainers are convinced that every
+> > free variable should be initialized to a valid value at declaration
+> > time and will reject patches which don't do that.
+> 
+> Which maintainers?
 
-kernel test robot noticed the following build warnings:
+Here is an example where Krzysztof says "This is not recommended way of
+using cleanup. You should declare it with constructor."
+https://lore.kernel.org/all/a2fc02e2-d75a-43ed-8057-9b3860873ebb@kernel.org/
 
-[auto build test WARNING on jejb-scsi/for-next]
-[also build test WARNING on mkp-scsi/for-next linus/master v6.18-rc6 next-20251117]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+I know there are other people who feel this way as well but I can't
+recall who.  It's in the documentation in include/linux/cleanup.h
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Hao-Dongdong/scsi-leapraid-Add-new-scsi-driver/20251116-192921
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/jejb/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20251116112803.28078-1-doubled%40leap-io-kernel.com
-patch subject: [PATCH v4] scsi: leapraid: Add new scsi driver
-config: s390-allmodconfig (https://download.01.org/0day-ci/archive/20251118/202511182038.XDtPzsLQ-lkp@intel.com/config)
-compiler: clang version 18.1.8 (https://github.com/llvm/llvm-project 3b5b5c1ec4a3095ab096dd780e84d7ab81f3d7ff)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251118/202511182038.XDtPzsLQ-lkp@intel.com/reproduce)
+ * Given that the "__free(...) = NULL" pattern for variables defined at
+ * the top of the function poses this potential interdependency problem
+ * the recommendation is to always define and assign variables in one
+ * statement and not group variable definitions at the top of the
+ * function when __free() is used.
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202511182038.XDtPzsLQ-lkp@intel.com/
-
-All warnings (new ones prefixed by >>):
-
->> drivers/scsi/leapraid/leapraid_func.c:4794:2: warning: unannotated fall-through between switch labels [-Wimplicit-fallthrough]
-    4794 |         default:
-         |         ^
-   drivers/scsi/leapraid/leapraid_func.c:4794:2: note: insert 'break;' to avoid fall-through
-    4794 |         default:
-         |         ^
-         |         break; 
-   1 warning generated.
-
-
-vim +4794 drivers/scsi/leapraid/leapraid_func.c
-
-  4741	
-  4742	static void leapraid_fw_work(struct leapraid_adapter *adapter,
-  4743				     struct leapraid_fw_evt_work *fw_evt)
-  4744	{
-  4745		struct leapraid_sas_dev *sas_dev;
-  4746	
-  4747		adapter->fw_evt_s.cur_evt = fw_evt;
-  4748		leapraid_del_fw_evt_from_list(adapter, fw_evt);
-  4749		if (adapter->access_ctrl.host_removing ||
-  4750		    adapter->access_ctrl.pcie_recovering) {
-  4751			leapraid_fw_evt_put(fw_evt);
-  4752			adapter->fw_evt_s.cur_evt = NULL;
-  4753			return;
-  4754		}
-  4755		switch (fw_evt->evt_type) {
-  4756		case LEAPRAID_EVT_SAS_DISCOVERY:
-  4757		{
-  4758			struct leapraid_evt_data_sas_disc *evt_data;
-  4759	
-  4760			evt_data = fw_evt->evt_data;
-  4761			if (evt_data->reason_code ==
-  4762			    LEAPRAID_EVT_SAS_DISC_RC_STARTED &&
-  4763			    !adapter->dev_topo.card.phys_num)
-  4764				leapraid_sas_host_add(adapter, 0);
-  4765			break;
-  4766		}
-  4767		case LEAPRAID_EVT_SAS_TOPO_CHANGE_LIST:
-  4768			leapraid_sas_topo_chg_evt(adapter, fw_evt);
-  4769			break;
-  4770		case LEAPRAID_EVT_IR_CHANGE:
-  4771			leapraid_sas_ir_chg_evt(adapter, fw_evt);
-  4772			break;
-  4773		case LEAPRAID_EVT_SAS_ENCL_DEV_STATUS_CHANGE:
-  4774			leapraid_sas_enc_dev_stat_chg_evt(adapter, fw_evt);
-  4775			break;
-  4776		case LEAPRAID_EVT_REMOVE_DEAD_DEV:
-  4777			while (scsi_host_in_recovery(adapter->shost) ||
-  4778			       adapter->access_ctrl.shost_recovering) {
-  4779				if (adapter->access_ctrl.host_removing ||
-  4780				    adapter->fw_evt_s.fw_evt_cleanup)
-  4781					goto out;
-  4782	
-  4783				ssleep(1);
-  4784			}
-  4785			leapraid_hardreset_async_logic(adapter);
-  4786			break;
-  4787		case LEAPRAID_EVT_TURN_ON_PFA_LED:
-  4788			sas_dev = leapraid_get_sas_dev_by_hdl(adapter,
-  4789							      fw_evt->dev_handle);
-  4790			leapraid_set_led(adapter, sas_dev, true);
-  4791			break;
-  4792		case LEAPRAID_EVT_SCAN_DEV_DONE:
-  4793			adapter->scan_dev_desc.scan_start = false;
-> 4794		default:
-  4795			break;
-  4796		}
-  4797	out:
-  4798		leapraid_fw_evt_put(fw_evt);
-  4799		adapter->fw_evt_s.cur_evt = NULL;
-  4800	}
-  4801	
-
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+regards,
+dan carpenter
