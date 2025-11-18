@@ -1,60 +1,48 @@
-Received: from mx0b-001b2d01.pphosted.com (mx0b-001b2d01.pphosted.com [148.163.158.5])
+Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EF768361DD7;
-	Tue, 18 Nov 2025 15:25:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=148.163.158.5
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC14933C189;
+	Tue, 18 Nov 2025 17:32:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763479518; cv=none; b=fgMjvi/nfzqCDL56hzF4xuSHOxISfBINVEAJibe+VTBYUwYVTH3En40LFE38Bkcn1a27fVfItkHPdY70CJI0NAN6uRevvKSgjcsPY/0GYIyR6BlqNzfkTMBfgzvQoOF1WPpBo9HWG1l9x+9i5ipz+YLi+k56BX4mWbqSQxiWO7M=
+	t=1763487127; cv=none; b=CXa3U3/xbvhKS0tkJymifS+AWtS2ND2g5nbwx0XoTj70ZOWcfALfMvz7deON1E9NyTnYQ/4lUXxtyY7amdkLi8bs2txF2+6CLOGaxnE5ynR2k6kpChDvHSiTG3UFQmsA0X9570MONgPh6r0K+u7Wo+ekqWLPNuCdhz6G0kZt6Gs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763479518; c=relaxed/simple;
-	bh=b8qR1fNCOUcGmFlXBqf2Jmbglcn0cz6vrnKg5k3I8HY=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=KgoZneLy6v/l/lgb/zJMPPl3EJDQyna2nEj/yLnCAUojoju98Icev28XYJ++DkkMqrr3r1q5HvTJRNcPBc4vHGFssyKOdzpe0DncPDVMkTQQOb9lPq0Dq2PyFArLhi/sI407nF5GxAivBUZGq8QTeC/J+2KbBugWfaMZRbHs2vQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com; spf=pass smtp.mailfrom=linux.ibm.com; dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b=mEE4eUYj; arc=none smtp.client-ip=148.163.158.5
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.ibm.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.ibm.com
+	s=arc-20240116; t=1763487127; c=relaxed/simple;
+	bh=iKbJl8xVpniMCgJ5orBlSij/L73PPQUhbimiUfXkh+w=;
+	h=Message-ID:Date:MIME-Version:Subject:To:References:From:
+	 In-Reply-To:Content-Type; b=LR3f1IlSWqVUgNsxL3SLnf2bVfk2HBaSR4lImfbjtHs31uXu+1H84Jnis23VCC9UjcfHbUJQfqZ4j5pRPqe71KFTi/XV0qf+oI/8E8YnWI5+98U4XgtBhcKPCW3nC4iJ4ggijsek2S6Zhxjk2fPQDo9E0iCzAlUwLvQzY7z3x2Q=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=zKZ+YgB+; arc=none smtp.client-ip=199.89.3.6
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=ibm.com header.i=@ibm.com header.b="mEE4eUYj"
-Received: from pps.filterd (m0360072.ppops.net [127.0.0.1])
-	by mx0a-001b2d01.pphosted.com (8.18.1.2/8.18.1.2) with ESMTP id 5AI1tqs7028393;
-	Tue, 18 Nov 2025 15:23:17 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=ibm.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pp1; bh=b8qR1f
-	NCOUcGmFlXBqf2Jmbglcn0cz6vrnKg5k3I8HY=; b=mEE4eUYjgklKf8ckwZAhDy
-	SemFjclSHph4OIcNgGIRB33yKEvmDkUgpvf4MsjpE3xo0akxzvjylX58YARmSJ5h
-	c2Ooip5l5xKCeB+ZszFhhCXGu1T0RI/6rBGNycK4VKLDmLOQLbQF8xC71MwsdRpI
-	0oQIclRsJ2BH/z3isyuBtV/G5oGzzxcyO/U8jZGhW63jDjC0GT2rEygs7Nywqf0o
-	LKYkHjV4YQgao5GRKh0XTFLZa5uyctdwxj2IR2IjesWo4ulffbUPV3WfYorlMzp9
-	3UQws93x7ragECUHS6LnyzjaTYBragG1GGke7RSE/IYNqSxXY5az/LqI4/4Qzsew
-	==
-Received: from ppma13.dal12v.mail.ibm.com (dd.9e.1632.ip4.static.sl-reverse.com [50.22.158.221])
-	by mx0a-001b2d01.pphosted.com (PPS) with ESMTPS id 4aejmsk7vk-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 18 Nov 2025 15:23:16 +0000 (GMT)
-Received: from pps.filterd (ppma13.dal12v.mail.ibm.com [127.0.0.1])
-	by ppma13.dal12v.mail.ibm.com (8.18.1.2/8.18.1.2) with ESMTP id 5AICQoFw006967;
-	Tue, 18 Nov 2025 15:23:15 GMT
-Received: from smtprelay05.fra02v.mail.ibm.com ([9.218.2.225])
-	by ppma13.dal12v.mail.ibm.com (PPS) with ESMTPS id 4af62jbj06-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Tue, 18 Nov 2025 15:23:15 +0000
-Received: from smtpav02.fra02v.mail.ibm.com (smtpav02.fra02v.mail.ibm.com [10.20.54.101])
-	by smtprelay05.fra02v.mail.ibm.com (8.14.9/8.14.9/NCO v10.0) with ESMTP id 5AIFNBfr40042972
-	(version=TLSv1/SSLv3 cipher=DHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 18 Nov 2025 15:23:12 GMT
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id C34CE20040;
-	Tue, 18 Nov 2025 15:23:11 +0000 (GMT)
-Received: from smtpav02.fra02v.mail.ibm.com (unknown [127.0.0.1])
-	by IMSVA (Postfix) with ESMTP id 9A79420043;
-	Tue, 18 Nov 2025 15:23:10 +0000 (GMT)
-Received: from [9.152.212.246] (unknown [9.152.212.246])
-	by smtpav02.fra02v.mail.ibm.com (Postfix) with ESMTP;
-	Tue, 18 Nov 2025 15:23:10 +0000 (GMT)
-Message-ID: <55871dc5-2467-4558-be5b-0296d478a6d1@linux.ibm.com>
-Date: Tue, 18 Nov 2025 16:23:09 +0100
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="zKZ+YgB+"
+Received: from localhost (localhost [127.0.0.1])
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4d9s9w4snJzltMVZ;
+	Tue, 18 Nov 2025 17:32:04 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1763487123; x=1766079124; bh=iKbJl8xVpniMCgJ5orBlSij/
+	L73PPQUhbimiUfXkh+w=; b=zKZ+YgB+oBDs4bb2xuVJFIvPQ264tEiTVch343DB
+	OJaR0yWy8AoMbNm/VfqRSyV/ubh5IJumnBTHdMrLXj5aU3k+jjTJtfDa0AgOPU54
+	yClpOHr4GX1wIPXBpuSiE0z2QtJEeES5nCcm9QiX+DMEgwxiepwGbAbEd5xuKman
+	n2292U3gwUt0wO2SMJ95pde+tDBYT1ecWgoM5fBOekS1fCSfMnIT/PgJ5yadw9v7
+	CVxbg0qqZAnseUSQVaqg2fQzNF3Nb7DT/Wv43pRpLEVvCHq9r3TYNsWrrFx0y/eU
+	RwbpzR/WtYzbVIKbk40chtqnE34+g6T+lemXMTqEPAEPDw==
+X-Virus-Scanned: by MailRoute
+Received: from 003.mia.mailroute.net ([127.0.0.1])
+ by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id x6kDp3IJ6Rms; Tue, 18 Nov 2025 17:32:03 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4d9s9r1x5Bzlh3sX;
+	Tue, 18 Nov 2025 17:31:58 +0000 (UTC)
+Message-ID: <64bbe1aa-db10-4766-bcde-71a36d853987@acm.org>
+Date: Tue, 18 Nov 2025 09:31:57 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -62,130 +50,43 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v3 18/21] s390/dasd: Switch to use %ptSp
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>,
-        Corey Minyard <corey@minyard.net>,
-        =?UTF-8?Q?Christian_K=C3=B6nig?=
- <christian.koenig@amd.com>,
-        "Dr. David Alan Gilbert" <linux@treblig.org>,
-        Alex Deucher <alexander.deucher@amd.com>,
-        Thomas Zimmermann <tzimmermann@suse.de>,
-        Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-        Rob Clark <robin.clark@oss.qualcomm.com>,
-        Matthew Brost <matthew.brost@intel.com>,
-        Ulf Hansson
- <ulf.hansson@linaro.org>,
-        Aleksandr Loktionov
- <aleksandr.loktionov@intel.com>,
-        Vitaly Lifshits
- <vitaly.lifshits@intel.com>,
-        Manivannan Sadhasivam <mani@kernel.org>,
-        Niklas Cassel <cassel@kernel.org>, Calvin Owens <calvin@wbinvd.org>,
-        Vadim Fedorenko <vadim.fedorenko@linux.dev>,
-        Sagi Maimon <maimon.sagi@gmail.com>,
-        "Martin K. Petersen" <martin.petersen@oracle.com>,
-        Karan Tilak Kumar <kartilak@cisco.com>,
-        Hans Verkuil <hverkuil+cisco@kernel.org>,
-        Casey Schaufler <casey@schaufler-ca.com>,
-        Steven Rostedt <rostedt@goodmis.org>, Petr Mladek <pmladek@suse.com>,
-        Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>,
-        Max Kellermann <max.kellermann@ionos.com>, linux-doc@vger.kernel.org,
-        linux-kernel@vger.kernel.org, openipmi-developer@lists.sourceforge.net,
-        linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-        linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-        linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
-        intel-xe@lists.freedesktop.org, linux-mmc@vger.kernel.org,
-        netdev@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-        linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-        linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
-        ceph-devel@vger.kernel.org, linux-trace-kernel@vger.kernel.org
-Cc: Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-        Sergey Senozhatsky <senozhatsky@chromium.org>,
-        Jonathan Corbet <corbet@lwn.net>,
-        Sumit Semwal <sumit.semwal@linaro.org>,
-        Gustavo Padovan <gustavo@padovan.org>,
-        David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-        Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-        Maxime Ripard <mripard@kernel.org>,
-        Dmitry Baryshkov <lumag@kernel.org>,
-        Abhinav Kumar <abhinav.kumar@linux.dev>,
-        Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
-        Marijn Suijten <marijn.suijten@somainline.org>,
-        Konrad Dybcio <konradybcio@kernel.org>,
-        Lucas De Marchi <lucas.demarchi@intel.com>,
-        =?UTF-8?Q?Thomas_Hellstr=C3=B6m?= <thomas.hellstrom@linux.intel.com>,
-        Rodrigo Vivi <rodrigo.vivi@intel.com>,
-        Vladimir Oltean <olteanv@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
-        "David S. Miller" <davem@davemloft.net>,
-        Eric Dumazet <edumazet@google.com>, Jakub Kicinski <kuba@kernel.org>,
-        Paolo Abeni <pabeni@redhat.com>,
-        Tony Nguyen <anthony.l.nguyen@intel.com>,
-        Przemek Kitszel <przemyslaw.kitszel@intel.com>,
-        =?UTF-8?Q?Krzysztof_Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-        Kishon Vijay Abraham I <kishon@kernel.org>,
-        Bjorn Helgaas <bhelgaas@google.com>,
-        Rodolfo Giometti
- <giometti@enneenne.com>,
-        Jonathan Lemon <jonathan.lemon@gmail.com>,
-        Richard Cochran <richardcochran@gmail.com>,
-        Jan Hoeppner <hoeppner@linux.ibm.com>,
-        Heiko Carstens <hca@linux.ibm.com>, Vasily Gorbik <gor@linux.ibm.com>,
-        Alexander Gordeev
- <agordeev@linux.ibm.com>,
-        Christian Borntraeger <borntraeger@linux.ibm.com>,
-        Sven Schnelle <svens@linux.ibm.com>,
-        Satish Kharat <satishkh@cisco.com>,
-        Sesidhar Baddela <sebaddel@cisco.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-        Mauro Carvalho Chehab <mchehab@kernel.org>,
-        Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-        Xiubo Li
- <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
-        Masami Hiramatsu <mhiramat@kernel.org>,
-        Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-        Andrew Morton <akpm@linux-foundation.org>
-References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
- <20251113150217.3030010-19-andriy.shevchenko@linux.intel.com>
+Subject: Re: [PATCH] UFS: Make TM command timeout configurable from host side
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>,
+ "sh043.lee@samsung.com" <sh043.lee@samsung.com>,
+ "linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>,
+ "linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>,
+ "martin.petersen@oracle.com" <martin.petersen@oracle.com>
+References: <CGME20251106012702epcas1p28fdeed020ea44f18dcc751c283fbbcc2@epcas1p2.samsung.com>
+ <20251106012654.4094-1-sh043.lee@samsung.com>
+ <e98df6a1b10d185358bdadf98cb3a940e5322dcb.camel@mediatek.com>
+ <009401dc52e7$5d042cf0$170c86d0$@samsung.com>
+ <f3b1641b9e611f2e4cac55e20a6410f9a9a88fa3.camel@mediatek.com>
+ <be4dc430-ce62-46a8-bd42-16eb0c23c0a0@acm.org>
+ <8d239f26e1011eee49b7c678ba07fd4d9ca81d24.camel@mediatek.com>
+ <1bf9f247-8cd7-400e-a5c8-6f3936927dfc@acm.org>
+ <b83804a8419f0e8cc1a6263144fbaf1583bab2ed.camel@mediatek.com>
+ <000001dc5791$5f2ea880$1d8bf980$@samsung.com>
+ <e3dcb711-990d-4e4e-a128-8a0cd0ce8886@acm.org>
+ <a89ccf64710deeadfce9cba08e28867f88463c77.camel@mediatek.com>
 Content-Language: en-US
-From: Stefan Haberland <sth@linux.ibm.com>
-In-Reply-To: <20251113150217.3030010-19-andriy.shevchenko@linux.intel.com>
-Content-Type: text/plain; charset=UTF-8
-Content-Transfer-Encoding: 8bit
-X-TM-AS-GCONF: 00
-X-Proofpoint-ORIG-GUID: z5vCIuXQoxQhVWpfGoNnS3CQXWBOkQvm
-X-Authority-Analysis: v=2.4 cv=Rv3I7SmK c=1 sm=1 tr=0 ts=691c8f65 cx=c_pps
- a=AfN7/Ok6k8XGzOShvHwTGQ==:117 a=AfN7/Ok6k8XGzOShvHwTGQ==:17
- a=IkcTkHD0fZMA:10 a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=QyXUC8HyAAAA:8 a=VnNF1IyMAAAA:8 a=JNz3O4sEs4oywJvo4n4A:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=UhEZJTgQB8St2RibIkdl:22 a=Z5ABNNGmrOfJ6cZ5bIyy:22
- a=QOGEsqRv6VhmHaoFNykA:22
-X-Proofpoint-GUID: z5vCIuXQoxQhVWpfGoNnS3CQXWBOkQvm
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTE1MDAzMiBTYWx0ZWRfX7xgDi9VMkHy1
- xY1Kr5CN6JO103EZyDLYmJUVyCiuwKR/4uc3+Lmy/gvg5ECzM4sd6vU0zWqCHklppK8uLUvWjGX
- HwwwwH+Ce8Jw0NQCUNjE3exfborRXuQ4RjSB1HZACxh4RkWbE7BpIzojfb5TKd4SBA0XBh10Euo
- CsCaHasXAGt43yERBXoTQ5hFXFxjF+AK1zNBNgHfBYOInKsNmRYBkGYznwzarJkxLc/UdbEghnq
- kmXAnC8NgaNRASHp2cZtXrz3YttsT408eVXN4mQFU8o8MSMzbwi3Kptdqy/18crsQhyL56cLX4n
- RnZa0fHWW+S36zf2ZHPlGEIVPwtibWxtWTZqXsygWW1T/83Ban6/JWLGXi3iADfuOgd8HUjrRri
- jkkd9Ckpow854pIeK6bG7rGX3zWg/g==
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-18_01,2025-11-18_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- malwarescore=0 suspectscore=0 clxscore=1011 phishscore=0 priorityscore=1501
- spamscore=0 lowpriorityscore=0 impostorscore=0 adultscore=0 bulkscore=0
- classifier=typeunknown authscore=0 authtc= authcc= route=outbound adjust=0
- reason=mlx scancount=1 engine=8.19.0-2510240000 definitions=main-2511150032
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <a89ccf64710deeadfce9cba08e28867f88463c77.camel@mediatek.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: quoted-printable
 
-Am 13.11.25 um 15:32 schrieb Andy Shevchenko:
+On 11/17/25 9:55 PM, Peter Wang (=E7=8E=8B=E4=BF=A1=E5=8F=8B) wrote:
+> However, in extreme cases, it=E2=80=99s possible that after a 30-second
+> timeout, the device just send a response, and at the same time,
+> when the host receives the response, the IRQ is pending by system.
+> (other irq is executing or spin_lock_irq, etc)
 
-> Use %ptSp instead of open coded variants to print content of
-> struct timespec64 in human readable format.
->
-> Signed-off-by: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-> ---
+It is not clear to me how this could happen? If a response is not
+received in time from the UFS device, an abort TMF is sent. If the
+device does not respond to the abort TMF, the UFS device is reset
+(ufshcd_device_reset() is called if ufshcd_abort_all() fails). This
+prevents that a response can be received after the error handler has
+finished, isn't it?
 
-Thanks, looks good to me.
+Thanks,
 
-Acked-by: Stefan Haberland <sth@linux.ibm.com> 
-
-
+Bart.
