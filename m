@@ -1,169 +1,103 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f169.google.com (mail-pl1-f169.google.com [209.85.214.169])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A833D27FD68;
-	Mon, 17 Nov 2025 22:52:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 532712C2349
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 05:11:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.169
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763419982; cv=none; b=MUJ/DVLDmr+vhVW06fsJ0NF0+RZtD6+ZOloI4gGhx4rfNlw3ifc4DsAehUnf9pbQ7WwIpUp80/Ap5mdxhahzbR0MsD6WvNaHeMEP3H0N7bWWxUvQaV7HDomwPOo64bOt0CZ56FaXry9Owy9w51v0cSxddu+D36SwhtxLyFeNug0=
+	t=1763442716; cv=none; b=VzljP3GCaum52ednPicLvfabjV13qag+1mnmm1lnOtLEHMVtybTQzpWnIqxIxXf585lC15uyDiSjm2xiiPahMMXVA9ypzoqNs5ZHD9VGDNBeCkTJeoa2XnAbBBYkPXwtUm3wtWWyMQYbjGl2jXQGS1Fax3O9dobFR8PqrJlTtyk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763419982; c=relaxed/simple;
-	bh=x/w446n/RSaF+jW+bwQKxgxtrs2wR8uIz2jO9RJWSj8=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=rEj66Yf8awWwDqAb7XgZ/mexdffvYhwMCDbOl8RSDuRREfJpAimgSfhwahXFq7GkCTRHaPuf7h8aXNlgIT/UbSk3SSj9Cg2nWoi5nX4fVrRkDsHjLCwvGMtbGI4iTvsPp0T4epd0sS9ST87aoBhyBuEoJ6yCkQz37ZbMrXkX4do=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=eC86WCc8; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1763442716; c=relaxed/simple;
+	bh=kr11XY+CSDK5mIhPK9IXS8cRNnvRWjkrd2lK2Ob8UwI=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=nkAaVKgtNczYnn+aA4MgLGwbzBiv2SuqjQaXY3wMS2/q7RQVsu8aLONWonQ05auma4iKjQiqVWG2n1MtakRAzmemivCXE1Nd4+QyE6/Y5MpN01mgGdE778DBdNTT0yihK5gZSKDPsuIQzKeG0B1Ob2YfOL0KwAGtKnSpjt7snrw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y2d1hIS4; arc=none smtp.client-ip=209.85.214.169
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="eC86WCc8"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4d9NLf6JMfzltNPh;
-	Mon, 17 Nov 2025 22:52:58 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1763419976; x=1766011977; bh=tMyZH
-	oVekGei4w5TiB42NUznYkZZoEzFvcz8yo1vOtI=; b=eC86WCc8YU/xAqOtVVOws
-	kJkzviptKCqp1VQF/ypbKTmfcrTgwGapyjmPowo08A/PXJPpG7LyVf2FFcl8R87r
-	lfUCSVIyUz4Tw6cF3hAoDpyoKvGKUVudBTbNS17Pq9qGThDC9rvS2cY8AGdRKaNX
-	Kz5o0ELLYWKVHw93WgF62cM+ntfsj9tqFNVyTMkziQChdi02kPVnZEHpT+W05bu6
-	RiS1GOrsr1soTSXsUPoNfRrap/owO3dc3b1qvIfGcMa3ojJsuVJu2PzRR0JfbhUw
-	N0KyauP6dwYrOz2n2LtiUiqkC5jbLsG4NhIPxuryz9W5DaCcCe6cjfsd2oyT4P+z
-	w==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id Xv6kT4wvowTv; Mon, 17 Nov 2025 22:52:56 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4d9NLV54H5zltMJY;
-	Mon, 17 Nov 2025 22:52:49 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	linux-block@vger.kernel.org,
-	John Garry <john.g.garry@oracle.com>,
-	Hannes Reinecke <hare@suse.de>,
-	Bart Van Assche <bvanassche@acm.org>,
-	Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@infradead.org>,
-	Ming Lei <ming.lei@redhat.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 5/5] scsi: core: Improve IOPS in case of host-wide tags
-Date: Mon, 17 Nov 2025 14:52:04 -0800
-Message-ID: <20251117225205.2024479-6-bvanassche@acm.org>
-X-Mailer: git-send-email 2.52.0.rc1.455.g30608eb744-goog
-In-Reply-To: <20251117225205.2024479-1-bvanassche@acm.org>
-References: <20251117225205.2024479-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y2d1hIS4"
+Received: by mail-pl1-f169.google.com with SMTP id d9443c01a7336-29516a36affso59641335ad.3
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Nov 2025 21:11:55 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1763442714; x=1764047514; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=59xr1BKeD/o4XV8SXueHZ8zcsS791YO9ItSBrFaFB7E=;
+        b=Y2d1hIS47q02IVbLrwV05tJzJdPoyDAq/sA5SeBJ7fJurv8SAcXtkOR03676CA+qui
+         NAirPm/1vuFF2CRC+6XQFpEyslhRpYql/lZCo5Al6/LOFilF0r65vrKeSMXLHRN8yi3r
+         DGreqY/E98LAFT5mQ5PvpsQD5lg04IosIUqM4j2sAYwZ+6A9V9jDaQGuMd/KHbuglJo9
+         9D/sgtXRXeaJbm7VPHNvz/wMOgSwZXl+MXFcZR67ACTqnCvTqx0UZeNeCQE93YlcRd/0
+         xxRKYmeBoJECn4l1TGT66/HttM43sFaFf3cvYTi3o9b9RgO/t1pqVK/aFaGeLZHL1RkV
+         Oz4A==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763442714; x=1764047514;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=59xr1BKeD/o4XV8SXueHZ8zcsS791YO9ItSBrFaFB7E=;
+        b=xN2H+YmziLFO20L0DBVmYuOQQcFuqvup9skD/HehAPW8cVr5Np1If+wVZqaGJmKZnD
+         mj0mqywitOWqkTiMU2r1Rva5D4GgizxM9q+hXowzDy/LTdpIn0veYVxaj/KJbBY6IiJh
+         IQzmzyTal5gG6Dth/8lLVeqY4bue3bidN6JwQmw2Wq6BT0vG6g192+8riXymvvjU00MZ
+         JfDuIlQZ/8WEhW0pGlKP1kbHNu7SvLfpE2UwCRUdTwprCOXAIbBujXibtZudtiIODJFs
+         7ytgeqLoVDx5kRzbR16ld2VN/+HRF8QT/Ima7xVgfqRCCp3v3qncLnLnkq/FHMEZnM0E
+         wuvw==
+X-Forwarded-Encrypted: i=1; AJvYcCXcm8rJXMcIkXZjjrVxR734gDhKZTFQwXRbTfpp/yD/6UhRPO7+HZGGSDQPiv2IUTwcsZ0u5F5NwDps@vger.kernel.org
+X-Gm-Message-State: AOJu0Yzyy6artO3c+RhDtR5wuH3S2axzjtFjd8mq90PVqOIQuj5CNhu4
+	5pCaTj04TFU9QkLQfue/FhIUDaK26rtYJf4M8YAo14h7CV1DsEjJ2t/Z
+X-Gm-Gg: ASbGncuuF7ZMv8whT4dDrliFCeg9H1Ds4HebBjABb8Dw0vBia3Pxeu3hRObeJqMbCJy
+	jss1gjjCFBWrI9H46r14QUVaBaNpyaY7I0qOUa3MJK7FmLLIxQnsqnJz/RFNtyS/sOfUZ5GOJiB
+	ZbVs8TP4rqYTck9yuovPNZAZnLhGjSwSjAKWFxBFWRPUpevKWh112CcrTfFwXM213Uz1UUi7xiy
+	C0lkKI+0TSMe9Dk3gjrTpbWfwKW40cXBZGfoOsrpUU03Vq3UTZT1cBTVwxeauSbwL1fiKW6FNok
+	kyEevPFcuJ2hZA3HFqEXKBEonuiRL+syRrgWXYkCGWsI0kBj9rJbHWUQo1h3Ru5soZE3fk4koy3
+	sjdMQwijEL3miI2p688Dz4a8EiJHWO0vMRhPDdBjlkLvN2wPSPFa/AAfTTuu/+Ax/F1JEJ7Nt6K
+	yYJSaQIPf8CZHu32eB4bWw
+X-Google-Smtp-Source: AGHT+IEsZXJKIb0LuF/okoDtqo5rJwyR4L+wNew2Yio/WLO+GbmlCPI50ofe8iPVqfrbGNeEbKJBjg==
+X-Received: by 2002:a17:902:f689:b0:27e:f018:d2fb with SMTP id d9443c01a7336-2986a6abddbmr180135465ad.6.1763442714430;
+        Mon, 17 Nov 2025 21:11:54 -0800 (PST)
+Received: from fedora ([2404:7c80:5c:6769:b0bb:547d:696c:eb69])
+        by smtp.gmail.com with ESMTPSA id d9443c01a7336-2985c2b0c92sm159116415ad.69.2025.11.17.21.11.49
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Mon, 17 Nov 2025 21:11:53 -0800 (PST)
+From: Shi Hao <i.shihao.999@gmail.com>
+To: njavali@marvell.com
+Cc: mrangankar@marvell.com,
+	GR-QLogic-Storage-Upstream@marvell.com,
+	James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	i.shihao.999@gmail.com
+Subject: [PATCH] scsi: qla4xxx: fix comment spelling
+Date: Tue, 18 Nov 2025 10:41:38 +0530
+Message-ID: <20251118051138.13041-1-i.shihao.999@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Content-Transfer-Encoding: 8bit
 
-The SCSI core uses the budget map to restrict the number of commands
-that are in flight per logical unit. That limit check can be left out if
-host->cmd_per_lun >=3D host->can_queue and if the host tag set is shared
-across all hardware queues or if there is only one hardware queue  Since
-scsi_mq_get_budget() shows up in all CPU profiles for fast SCSI devices,
-do not allocate a budget map if cmd_per_lun >=3D can_queue and if the hos=
-t
-tag set is shared across all hardware queues.
+Correct "funcion" with "function" in code comment.
 
-For the following test this patch increases IOPS by 5%:
-
-modprobe scsi_debug delay=3D0 no_rwlock=3D1 host_max_queue=3D192 submit_q=
-ueues=3D$(nproc)
-
-fio --bs=3D4096 --disable_clat=3D1 --disable_slat=3D1 --group_reporting=3D=
-1 \
-  --gtod_reduce=3D1 --invalidate=3D1 --ioengine=3Dio_uring --ioscheduler=3D=
-none \
-  --norandommap --runtime=3D60 --rw=3Drandread --thread --time_based=3D1 =
-\
-  --buffered=3D0 --numjobs=3D1 --iodepth=3D192 --iodepth_batch=3D24 --nam=
-e=3D/dev/sda \
-  --filename=3D/dev/sda
-
-Cc: Jens Axboe <axboe@kernel.dk>
-Cc: Christoph Hellwig <hch@infradead.org>
-Cc: Ming Lei <ming.lei@redhat.com>
-Cc: John Garry <john.g.garry@oracle.com>
-Cc: Hannes Reinecke <hare@suse.de>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+Signed-off-by: Shi Hao <i.shihao.999@gmail.com>
 ---
- drivers/scsi/scsi.c      |  3 ++-
- drivers/scsi/scsi_scan.c | 18 +++++++++++++++++-
- 2 files changed, 19 insertions(+), 2 deletions(-)
+ drivers/scsi/qla4xxx/ql4_nx.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
-index 76cdad063f7b..3daa32c9e790 100644
---- a/drivers/scsi/scsi.c
-+++ b/drivers/scsi/scsi.c
-@@ -229,7 +229,8 @@ int scsi_change_queue_depth(struct scsi_device *sdev,=
- int depth)
- 	if (sdev->request_queue)
- 		blk_set_queue_depth(sdev->request_queue, depth);
-=20
--	sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
-+	if (sdev->budget_map.map)
-+		sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
-=20
- 	return sdev->queue_depth;
- }
-diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-index 7acbfcfc2172..99b82e28f292 100644
---- a/drivers/scsi/scsi_scan.c
-+++ b/drivers/scsi/scsi_scan.c
-@@ -215,9 +215,17 @@ static void scsi_unlock_floptical(struct scsi_device=
- *sdev,
- 			 SCSI_TIMEOUT, 3, NULL);
- }
-=20
-+static bool scsi_needs_budget_map(struct Scsi_Host *shost, unsigned int =
-depth)
-+{
-+	if (shost->host_tagset || shost->tag_set.nr_hw_queues =3D=3D 1)
-+		return depth < shost->can_queue;
-+	return true;
-+}
-+
- static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
- 					unsigned int depth)
- {
-+	struct Scsi_Host *shost =3D sdev->host;
- 	int new_shift =3D sbitmap_calculate_shift(depth);
- 	bool need_alloc =3D !sdev->budget_map.map;
- 	bool need_free =3D false;
-@@ -225,6 +233,13 @@ static int scsi_realloc_sdev_budget_map(struct scsi_=
-device *sdev,
- 	int ret;
- 	struct sbitmap sb_backup;
-=20
-+	if (!scsi_needs_budget_map(shost, depth)) {
-+		memflags =3D blk_mq_freeze_queue(sdev->request_queue);
-+		sbitmap_free(&sdev->budget_map);
-+		blk_mq_unfreeze_queue(sdev->request_queue, memflags);
-+		return 0;
-+	}
-+
- 	depth =3D min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev))=
-;
-=20
- 	/*
-@@ -1120,7 +1135,8 @@ static int scsi_add_lun(struct scsi_device *sdev, u=
-nsigned char *inq_result,
- 	scsi_cdl_check(sdev);
-=20
- 	sdev->max_queue_depth =3D sdev->queue_depth;
--	WARN_ON_ONCE(sdev->max_queue_depth > sdev->budget_map.depth);
-+	WARN_ON_ONCE(sdev->budget_map.map &&
-+		     sdev->max_queue_depth > sdev->budget_map.depth);
-=20
- 	/*
- 	 * Ok, the device is now all set up, we can
+diff --git a/drivers/scsi/qla4xxx/ql4_nx.c b/drivers/scsi/qla4xxx/ql4_nx.c
+index da2fc66ffedd..f9fc8337027b 100644
+--- a/drivers/scsi/qla4xxx/ql4_nx.c
++++ b/drivers/scsi/qla4xxx/ql4_nx.c
+@@ -3954,7 +3954,7 @@ qla4_8xxx_get_flash_info(struct scsi_qla_host *ha)
+  * Remarks:
+  * For iSCSI, throws away all I/O and AENs into bit bucket, so they will
+  * not be available after successful return.  Driver must cleanup potential
+- * outstanding I/O's after calling this funcion.
++ * outstanding I/O's after calling this function.
+  **/
+ int
+ qla4_8xxx_stop_firmware(struct scsi_qla_host *ha)
+--
+2.51.0
+
