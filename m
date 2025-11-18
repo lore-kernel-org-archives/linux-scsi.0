@@ -1,168 +1,106 @@
-Received: from mail-wr1-f46.google.com (mail-wr1-f46.google.com [209.85.221.46])
+Received: from mail-ed1-f49.google.com (mail-ed1-f49.google.com [209.85.208.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 951462E228D
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 06:17:28 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.221.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4156318DB0D
+	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 07:26:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763446651; cv=none; b=HtfuE9Ycx09It5rgnlz35Nn6eMEgjWiWoNbKOSdFCoxAIYNDmkHuznu/00ThK+h8+WHxlARRZjkeW6GDKjCIQ2mYRGNdiaA+0SAhCUDKCWdY1ArUzGxFJcP7yhwkeSzhs57KglYCg4OhCtdUKN+XJnhM+gMK+JVSJ/HaFX9JEx8=
+	t=1763450783; cv=none; b=e2RZYASTaIsFDTi0tOa1k+kxLEoDCT0DZyoIgFSML6fYXi0QZLBb1Mg0/RaOHnpbzIemx8yscBJuAK2kGVbO+gRoyM1EFWV/w0uecCVIVTWcCLkkxzGZLzHxV9YfCPKjO9Xi/Z3nArXAwDeA2uSFdrH0cdZKl0IhK2n41goQ9pQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763446651; c=relaxed/simple;
-	bh=/Hl0SyaQKq7MXxmBS18GDEuFsU+H8ICOxIkyP0l5OZY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=UJBERJrhWjIRn62rft3/VDkrXoe4eIUtXQUQ1zBl9coNTApeBD+JuE/JjaFRlZkLlGzf0f8GKWP08+QR2JCQlPcWBMgYtoig8/ESFsmw8OKBqd4LanJy/PYCJ38X2WIZqlJeF/qCUOjLX03HGEufMed4zQvb6noqFLdD+V++xc8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=DhmQmLK6; arc=none smtp.client-ip=209.85.221.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
+	s=arc-20240116; t=1763450783; c=relaxed/simple;
+	bh=tG1Pu79zt6R+oeJgsdJ0+2AsjLitDAU6A+quZxWRvLE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=jWTjHKuYvozEKuU1vpbrUjq+4NfcXZvX8/Ykk19m9RDWLtI7zjhLGnmMGgxMLAnCBXwFQNLP8jNL+oOexApLs1bYqOuQz749dM2M+pv24pptTM3pbko9wf4dGeWdCuAfX5efPvuaRGbGPCMX6x8g5UxRHrE2iBIRhMyfGvmoTMs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=QCvMIH4I; arc=none smtp.client-ip=209.85.208.49
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="DhmQmLK6"
-Received: by mail-wr1-f46.google.com with SMTP id ffacd0b85a97d-42b32a5494dso2970603f8f.2
-        for <linux-scsi@vger.kernel.org>; Mon, 17 Nov 2025 22:17:28 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QCvMIH4I"
+Received: by mail-ed1-f49.google.com with SMTP id 4fb4d7f45d1cf-640fb02a662so5240a12.1
+        for <linux-scsi@vger.kernel.org>; Mon, 17 Nov 2025 23:26:21 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=linaro.org; s=google; t=1763446647; x=1764051447; darn=vger.kernel.org;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:from:to
-         :cc:subject:date:message-id:reply-to;
-        bh=QhKA75k+Zw8gzay9nDZLfcMI74InQfiHryR7d9dLK1M=;
-        b=DhmQmLK6AWNEsu7r05+MZ635VhN6qeYrE4d3TgvPnFc7dsB+PTnK0LW/oQD0jAi9Gk
-         HWPcM3lyh+LNmPtNCpofdLt21D3GtDe4Gp4l/RTiXgOl+xHbmeZFHXVlATlT3f4mwNBC
-         6Bf7t+MkpUkNv94vnml+P5EorrjMCKnMX/EPIJdroJKhBDmv2xBagb0Ae3o7f5up54w3
-         WuPLiUgC93bb94CWlXNAf38w7snkPcpQgQTHTW/XEVnaZaCtZGVx5H/ba+B1zymN67vF
-         uHgmPwRkGPf1AIdYlID5to+RNmprixTMJD5na/dsVWAtbxCoWhLWDOIZ6JIwF4XzIBX7
-         68Mw==
+        d=google.com; s=20230601; t=1763450780; x=1764055580; darn=vger.kernel.org;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:from:to:cc:subject:date:message-id:reply-to;
+        bh=KfExQ+1jyL1z8HGLa/kfF1wxmRAORiVly+Zr/0sGp5o=;
+        b=QCvMIH4I/uVN2/ijzMZLeCl9Xrf97L/o+vw+DFwP2qSibQgBzDHJJrLfgiCw9AifAM
+         ZspaOEni2FMCk3+g88cSJItUgXfiEqlDFx1/7pGw3crreiLFvuOaTL3UGRrDFzBovU8M
+         TaTalnvSoKxCJg0wgbN0YNEKfStZuS6UXzXX/QlicE7IroLPNknfyqhmz38veWDjIJu6
+         zdZEcwRitvyJcJVWvCgkuOdHIpFDqanFE8gva8IRqcxZ60IcXv0fbKgN0DkJ8kjLVDKs
+         kEZsB5C4+rsggcys7pby/H3J5ZwWc30O6byiTl5O3HkRPkUgv9mrMdFNnO6BdxXolZ7W
+         Jo+w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763446647; x=1764051447;
-        h=in-reply-to:content-transfer-encoding:content-disposition
-         :mime-version:references:message-id:subject:cc:to:from:date:x-gm-gg
-         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
-        bh=QhKA75k+Zw8gzay9nDZLfcMI74InQfiHryR7d9dLK1M=;
-        b=IDEt+hYKj6gEDeiBrdQzD3XRip4SnDK8XXjbAbIPhsUlwKJmPL4HGa8ezDztIpFuLN
-         ZUtR6W5U4XdDtEQRNwuLILBm4kdTUYsfrSXbs3aChP/06VB9dMnj69hGfHebJOnhkvt0
-         NKhdCnHHlwYKycpq6UvmtuRR5mcVPAO14odCZtwd2NJOEeoUJGmYVnT5FEYECjZrKpMY
-         jvpGh1aq40UshCgrSl5NLjce64xLuNC2L62womXDViA6PHkX/sfiKLNpw+7SFYPic0vu
-         b1ucu5KLdSbrVBpssjVbZIwqm+b6GDeUGzZJA2XRXRIAOPktICEP7Eh6WuxA8m0X77Ir
-         4B6Q==
-X-Forwarded-Encrypted: i=1; AJvYcCVDpdHUFRHv4/ABWaj3Y2dOpEX+GXwfMp8am7vYi7xKJjhnaiMV8HNrWmM0WhA34LkEfe9FgmsiLUi1@vger.kernel.org
-X-Gm-Message-State: AOJu0YxCYhfglSgykGoVPBdfEMn6SUi7JCKcV0avRr1o+qMFUL5Idc8Z
-	8PilPzHRdOdnS00qxjkTYPzO1fQwSKRRswmGOu5OPviymOXOOuaiqM3arNCT1o1d3KE=
-X-Gm-Gg: ASbGncvwdXYJY3NiT6Q15gd7WHerhZzNADwozVq+APgb4R64NBNNbLPAmAvlDjJLH8x
-	s8ZPXPZrJ/Yum4t+NC8rFeW+Q7zeti/IUXxHu4k7C9xKDYNAa4sCmQlsFX8kxLErt0mIDv4RDS5
-	Os0PHl2gus8WWy8pq5nC2om0fZcOlKQM7SqUfyhW0IjhgXFq35x+bLkRqIi1x4GyXnrpaTBMXhH
-	/0OATeoMIdt2sU4Hh8mpEHbKVEqZB36p7uH04Pv204fPSsZdrp32OPoR99/YTBnXA3XAz/KZBjV
-	lNKHCsi0OS7D4WNgSyx74gI1OE7sAAUsbPlS7gCxVv12EcN663PMj/uZcQtBQpWlzriAQ3eJLGt
-	iSkr3z+3ugtwB2XuLgXykBB7HwMFOYsNJzhAPAHMpsmTtV7VcUiUaNPYMdhzwcyXBYLon/MDMEz
-	4ieMljLw==
-X-Google-Smtp-Source: AGHT+IEHpZGS4hYZGqTOsvKogsPZXoWir9+8fCWoV/jfwArZND55RBtGjjXc5CkVEdyW6tfv9aqUsw==
-X-Received: by 2002:a05:6000:1a8d:b0:42b:3746:3b86 with SMTP id ffacd0b85a97d-42b5938aab5mr15512287f8f.54.1763446646736;
-        Mon, 17 Nov 2025 22:17:26 -0800 (PST)
-Received: from localhost ([196.207.164.177])
-        by smtp.gmail.com with UTF8SMTPSA id ffacd0b85a97d-42b53f0b62dsm30231845f8f.24.2025.11.17.22.17.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 17 Nov 2025 22:17:25 -0800 (PST)
-Date: Tue, 18 Nov 2025 09:17:22 +0300
-From: Dan Carpenter <dan.carpenter@linaro.org>
-To: James Bottomley <James.Bottomley@hansenpartnership.com>
-Cc: Ally Heev <allyheev@gmail.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH] scsi: fix uninitialized pointers with free attr
-Message-ID: <aRwPcgDXSE9s4jKS@stanley.mountain>
-References: <20251105-aheev-uninitialized-free-attr-scsi-v1-1-d28435a0a7ea@gmail.com>
- <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
- <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
- <407aed0ff7be4fdcafebd09e58e25496b6b4fec0.camel@HansenPartnership.com>
- <f7f26ae6-31d7-4793-8daa-331622460833@suswa.mountain>
- <bed8636bc4d036f4b2fe532e7bb4bb4b05c059fc.camel@HansenPartnership.com>
+        d=1e100.net; s=20230601; t=1763450780; x=1764055580;
+        h=cc:to:subject:message-id:date:from:in-reply-to:references
+         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=KfExQ+1jyL1z8HGLa/kfF1wxmRAORiVly+Zr/0sGp5o=;
+        b=YCzRKB/HQycHvk7GxQ6JzDENN374JqpNwcDI8hUrElYLfnMJgZvHseZr5bzchyi8gL
+         fXI1nS0UFGhrvrXJ1q2Wh6UddH6J/y1Js0BkKrWbLU7hBOISpdXmMSHDuiLxFlMLvWns
+         vUmTKuUyX08Vy53XuhnB1gKjDdw73eH8kWQCR15HeYI+95HVsJXv9Cd3mgXW6yIbEuDC
+         oHbBHGWVzy9wI/8QCyBf5d+naDfH81dhQRV76No4HIFTlqDdL/EvAlggtTkV6qBMI6hY
+         /stfhHCy5Fdfk1CajcW2x5o5u2gWXKvjWLXz2fb9clR97UedwiiG/Oy1EJTiaBYbnmtg
+         rTcg==
+X-Forwarded-Encrypted: i=1; AJvYcCW0Ou3TnL+zKWwys8/MMp8ZLbM3QCabkah0jwje1WMwMLqq+yheu9FCCz7c77VObBbpfogISENtH5zw@vger.kernel.org
+X-Gm-Message-State: AOJu0YyCpNRs9Kn93yFXQo6k202YaiN/bKzDsyHw8Oh4tYHvcCW/cQda
+	+DhvF/tSlowPwy39ynSAbgKLJMbjgLQ5rFNAtkYb4Xok0basplP7EAVVbQK3oClL+PBZHRiNMH+
+	VdQg+REHO3KwAj1qWWxW+bUiI6JLVwp4SV9yA10jF
+X-Gm-Gg: ASbGnct69uny6NS3VRQKl1bt8kLCf7u5L75mtak4wEs9sM7PQOBCImGxggsaiwwRqP3
+	XYoFSljdZ/4Lhenf6G+ZtkTvdCALjE7pWit63GZ0BpGMs2I+64xQwoFaOx44xsZfri7OmTZDBUN
+	4GCcXuJiz+Mzf4wE08hSadD0KsEm6JvP6zKKGtLKtKdpeF/luBXx+OdvbyG798NJForP7DQyQII
+	iPOUjTWVAIBzmK2JXqDNvJ6Yo/NBI57XV3Gvd/vIBMZzEKsH591EZSfT85AtrUFGk66AFlVXkOd
+	cZFfkFzl0b2C69T+bHelP7+lX2Yyz83P0LVW
+X-Google-Smtp-Source: AGHT+IFVNEeGbD9DVaAgudqc+GiPKmQie5DwZOEyfitcxs5KXEWDcb5jcLGcXApFBf4Mg8ruAX3vluIRiwK/1xSsRQs=
+X-Received: by 2002:a05:6402:46c9:b0:643:6975:537e with SMTP id
+ 4fb4d7f45d1cf-6450cdadd50mr4880a12.12.1763450780399; Mon, 17 Nov 2025
+ 23:26:20 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <bed8636bc4d036f4b2fe532e7bb4bb4b05c059fc.camel@HansenPartnership.com>
+References: <20251112063214.1195761-1-powenkao@google.com> <7d964e31162bf93f583e6e78a3044152894ecb94.camel@mediatek.com>
+ <CA+=0d2YnrDL41DXtC8kDmtXioy4+hohGsmrOPxJY31jqt22uww@mail.gmail.com> <c4bd6532b003089fedf518db878a3843c516217c.camel@mediatek.com>
+In-Reply-To: <c4bd6532b003089fedf518db878a3843c516217c.camel@mediatek.com>
+From: Brian Kao <powenkao@google.com>
+Date: Tue, 18 Nov 2025 15:26:09 +0800
+X-Gm-Features: AWmQ_bkO2aCOXbgO-_v7eTNlYcbtu92nNtRKNCYTuznAMq8Bc32Gr-zKQww9Anw
+Message-ID: <CA+=0d2aYn_q=i6Yy=zSu6eE=Fj0oTk4t00e1uezBxqNc5E7pdg@mail.gmail.com>
+Subject: Re: [PATCH 1/1] scsi: ufs: core: Fix EH failure after wlun resume error
+To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
+Cc: "beanhuo@micron.com" <beanhuo@micron.com>, "avri.altman@wdc.com" <avri.altman@wdc.com>, 
+	"quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>, 
+	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, 
+	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
+	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, 
+	"adrian.hunter@intel.com" <adrian.hunter@intel.com>, "mani@kernel.org" <mani@kernel.org>, 
+	"James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, 
+	"martin.petersen@oracle.com" <martin.petersen@oracle.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Thu, Nov 06, 2025 at 11:06:29AM -0500, James Bottomley wrote:
-> On Thu, 2025-11-06 at 17:46 +0300, Dan Carpenter wrote:
-> > On Wed, Nov 05, 2025 at 10:32:19AM -0500, James Bottomley wrote:
-> > > > > > diff --git a/drivers/scsi/scsi_debug.c
-> > > > > > b/drivers/scsi/scsi_debug.c
-> > > > > > index
-> > > > > > b2ab97be5db3d43d5a5647968623b8db72448379..89b36d65926bdd15c0a
-> > > > > > e93a
-> > > > > > 6bd2
-> > > > > > ea968e25c0e74 100644
-> > > > > > --- a/drivers/scsi/scsi_debug.c
-> > > > > > +++ b/drivers/scsi/scsi_debug.c
-> > > > > > @@ -2961,11 +2961,11 @@ static int resp_mode_sense(struct
-> > > > > > scsi_cmnd
-> > > > > > *scp,
-> > > > > >  	int target_dev_id;
-> > > > > >  	int target = scp->device->id;
-> > > > > >  	unsigned char *ap;
-> > > > > > -	unsigned char *arr __free(kfree);
-> > > > > >  	unsigned char *cmd = scp->cmnd;
-> > > > > >  	bool dbd, llbaa, msense_6, is_disk, is_zbc, is_tape;
-> > > > > >  
-> > > > > > -	arr = kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
-> > > > > > +	unsigned char *arr __free(kfree) =
-> > > > > > kzalloc(SDEBUG_MAX_MSENSE_SZ, GFP_ATOMIC);
-> > > > > > +
-> > > > > 
-> > > > > Moving variable assignments inside code makes it way harder to
-> > > > > read. Given that compilers will eventually detect if we do a
-> > > > > return before initialization, can't you have smatch do the same
-> > > > > rather than trying to force something like this?
-> > > > 
-> > > > This isn't a Smatch thing, it's a change to checkpatch.
-> > > > 
-> > > > (Smatch does work as you describe).
-> > > 
-> > > So why are we bothering with something like this in checkpatch if
-> > > we can detect the true problem condition and we expect compilers to
-> > > catch up?  Encouraging people to write code like the above isn't in
-> > > anyone's best interest.
-> > 
-> > Initializing __free variables has been considered best practice for a
-> > long time.  Reviewers often will complain even if it doesn't cause a
-> > bug.
-> 
-> Well, not responsible for the daft ideas other people have.
-> 
-> However, why would we treat a __free variable any differently from one
-> without the annotation?  The only difference is that a function gets
-> called on it before exit, but as long as something can detect calling
-> this on uninitialized variables their properties are definitely no
-> different from non-__free variables so the can be treated exactly the
-> same.
-> 
-> To revisit why we do this for non-__free variables: most people
-> (although there are definitely languages where this isn't true and
-> people who think we should follow this) think that having variables at
-> the top of a function (or at least top of a code block) make the code
-> easier to understand.  Additionally, keeping the variable uninitialized
-> allows the compiler to detect any use before set scenarios, which can
-> be somewhat helpful detecting code faults (I'm less persuaded by this,
-> particularly given the number of false positive warnings we've seen
-> that force us to add annotations, although this seems to be getting
-> better).
-> 
-> So either we throw out the above for everything ... which I really
-> wouldn't want, or we enforce it for *all* variables.
-> 
+> Fault injection using saved_uic_err could create this situation,
+> but if this cannot happen in reality, we should consider whether
+> this is a reasonable test case? If it is, then I think this patch
+> looks good to me. If not, maybe we should get the runtime PM state
+> in the fault injection and remove this redundant recovery code.
+> What do you think?
 
-Yeah.  You make a good point...
+Hi Peter,
 
-On the other hand, a bunch of maintainers are convinced that every free
-variable should be initialized to a valid value at declaration time and
-will reject patches which don't do that.  I see checkpatch as a way of
-avoiding this round trip where a patch is automatically rejected because
-of something trivial.
-
-The truth is that the cleanup.h stuff is really new and I don't think
-we've necessarily figured out all the best practices yet.
-
-regards,
-dan carpenter
+Sorry that I didn't mention that this is in the resume path.
+The resume flow in bellow will re-enable IRQ and go through full
+re-initialization which potentially trigger issue I described
+previously
+```
+ufshcd_resume()
+    ufshcd_enable_irq(hba);
+ufshcd_wl_resume()
+    ufshcd_reset_and_restore()                            <== depends
+on PM level
+        ufshcd_hba_enable()
+        ufshcd_probe_hba()
+    ufshcd_set_dev_pwr_mode(hba, UFS_ACTIVE_PWR_MODE);    <== EH is
+scheduled before this point
+    ....
+```
