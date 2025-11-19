@@ -1,89 +1,53 @@
-Received: from mail-ej1-f41.google.com (mail-ej1-f41.google.com [209.85.218.41])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.7])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id DC5F2359FBE
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2025 13:11:19 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A510D288C22;
+	Wed, 19 Nov 2025 15:00:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.7
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763557883; cv=none; b=SoFiIbLapD6xSo8cHqbKTwN5z5E9fjeF9TsXxQA2tTr1BLrnCFx9xXhl/XALONYesFfP6oVCtKZjHOlPOsCBXRREvlunzkTvG9J20TQNh+spa5fCi0wOARDenKSxWdl/HhNSJAx/mst4MfRa74b81UmETp47w0az2/QtQ+Pa/ZY=
+	t=1763564454; cv=none; b=AKfNkV8bq8/+alRD0hvYA0laF+IVAZPDLWut5X1YUJtbgPxyGNZna0lCzge/CvgFakls7qf2cy655JqkxCbPuMotKB/fbOR2byBDKHxXHTQaeTh31RedexdKFQs+ZbBYc6/XPw81ttFXnnCsBmkREP6yU6cKT8/j3Rkmsm4DT+0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763557883; c=relaxed/simple;
-	bh=sJLZgI9vl/ePXAMiM1HFoKkY761fjwT9P7fNtQPrjMI=;
+	s=arc-20240116; t=1763564454; c=relaxed/simple;
+	bh=6VLOKmDo4WviGUhM4qQZA7IzCWHn1ZvDUbxiE4MHVTw=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=AbNEZaBWHAa1hVqjmQFBpd02JHXSqx7NWMldFMwpqg1l4ZUK4gyKrvmB3rWMVrNX4r+KEdKVKpCG9K9viOmFUCjjsoJyO+X7+tWpS8D4ZGfxhBl1bhlYDrqwIISa36hySYOe06kn8Sf1+8EdPQ5rgtsrZS/6nf+skPyMNtd/6lk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com; spf=pass smtp.mailfrom=suse.com; dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b=DQJFkS9T; arc=none smtp.client-ip=209.85.218.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=suse.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=kI75v+RobZF25UAlAyGXkQU5CcKzq7ygdY+d9UtDBX4ZdeWrwOwbDw9moyF7o5BN4rZqW5UCuMWyz6tmYqOcb8GrjBm/3rlDUoj+ng/Vr2qH6U08gg+QxbnHRFf5hb8HLtpz90I8TQD4g/qjBDVXW5PKFwNbDmsCAoO2pJ9+Zv4=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=kklr7JlJ; arc=none smtp.client-ip=192.198.163.7
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=suse.com header.i=@suse.com header.b="DQJFkS9T"
-Received: by mail-ej1-f41.google.com with SMTP id a640c23a62f3a-b7355f6ef12so1181205766b.3
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2025 05:11:19 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=suse.com; s=google; t=1763557878; x=1764162678; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=2hIjgqXWXn3Sbfto+9OWapsp1QwhUBtS+kZIjBq+Tlw=;
-        b=DQJFkS9TfIkIw04m01xXMLNrkosYb3FSrkUd1Mfnq3DmFPVYW5BQAF/kJ7qBH/fiSm
-         pVnVkcfKZlPcHTsyEwqHQR67eAr7CHq57OGD53huuAi4hSCw/ct6edPOGR+fsY5nGz/N
-         Yw1ooyFk/+rMnBQZngJcf6t2sX9N66HB8FZQS71x9KKl/6xkzHkV8uFKm2Iy/9fAm8Ag
-         I22CiD+iqPZDy+W/I0Ox3Jki6uwZV0vfVWc6IvJTegJWTzKaS6FEi0EnBDDhgSnIfI+y
-         k4OP4x8AdsPKrFrvmXhICnjEUtirKTXsrSbTk6Wz8fF+OXFqP7Hrg3yvNq2+bPjQ4kUM
-         Gqaw==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763557878; x=1764162678;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=2hIjgqXWXn3Sbfto+9OWapsp1QwhUBtS+kZIjBq+Tlw=;
-        b=f/pmRCfAOb+CcN3RrcZArAE3jb3d26cOZAg9alZ2HcEK8HRKeYRV+BPGbio+vgGvlJ
-         CGh8f4phEoJuGSErK08wvIccS5hdJOFnegmGqOliz3fUH+IG7c+iN2Hn5bQ9PzdVI61y
-         ne8NEg2GBakyABOmp6r7JE44OZz+IyAPqxynSHyaNUl6+pUhKjRLtLjRIOjFVH+MqTWb
-         wNP/z7NcJIZZ+uh8ydDG+iLgmDpdSK5vy3B5xayw4apLDCXrsQxRCF34SSnMOF4GrF+/
-         q0zimEw5qXw2vwt2rw62f3ku0Zu5XbtiCwjyKltyIw1sWHpiWT9EEcoxveoCu/qtF80Q
-         yb+Q==
-X-Forwarded-Encrypted: i=1; AJvYcCXtrXOUuVbROLXWoM3jayP3DUsbf7jMqOXzGis/XU/VgjsGP0OH8niPZQF0hOc4A82KuDFKyfvDsx1U@vger.kernel.org
-X-Gm-Message-State: AOJu0YyE5hxp1ls5fWw3ShamMARAPdDDnrjiGrnqqa/Tk6SNvpCRui0P
-	d9qWrVSdBdx0d8vfGRiEISaJMAUp9OqTpQGLHJLJzzE6mXiGoGOR4GyeMK+KbODT8/A=
-X-Gm-Gg: ASbGncuzVbR0JPPF8+iI426n61DHVGJ6flFNBHw7n1J3MThN4wOgREwVfTg7vhGT1/x
-	iJfRaGhHuah0fE2pZ8Sej3UoLdKk/EOTDbCE9zf5FeAGcLDk5Kxei0YfnP5WXJj6Hus8WVRvMPl
-	9BNcYBsuvNC4vAaUZDpi9MKX+I67rQ2xy9YzcXd8FYYNqGFY3YKn0Tb/PChy6KUmOQCPFelQSX3
-	PYu3kFCiE3iYXQ5VDRoZNrlnVOUBh0FFNSMmlI9/V7Y/IMMbwwg3oMJONrRaRkClaL64TQ44l3V
-	obeYil3xtRpKMljsQXPqDHLP7ggNn4lagCINb8EBVrwf+5PZlOpJGvSuIipSnexRKPbkvnLDMKB
-	K315UeZ6RQYHPcse5H6XAbCsfPJCWSmed3UNJE0JJ7m7y814vgUetr+Y8E9lHlmCLr7G4IHDCcy
-	1GjoRZLJHa8mP9Pw==
-X-Google-Smtp-Source: AGHT+IHh/9HSY9QxYY7JWRlsHkQE77dEey/TQadLHho4kIFH9l0Cnuj5X98H1aD+vZkw9c2t87Tcgg==
-X-Received: by 2002:a17:907:96a7:b0:b6d:50f7:a805 with SMTP id a640c23a62f3a-b7367c02586mr2099815666b.59.1763557878059;
-        Wed, 19 Nov 2025 05:11:18 -0800 (PST)
-Received: from pathway.suse.cz ([176.114.240.130])
-        by smtp.gmail.com with ESMTPSA id 4fb4d7f45d1cf-6433a3d8775sm15093392a12.5.2025.11.19.05.11.14
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Wed, 19 Nov 2025 05:11:17 -0800 (PST)
-Date: Wed, 19 Nov 2025 14:11:12 +0100
-From: Petr Mladek <pmladek@suse.com>
-To: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-Cc: Corey Minyard <corey@minyard.net>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
-	Vitaly Lifshits <vitaly.lifshits@intel.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, Calvin Owens <calvin@wbinvd.org>,
-	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
-	Sagi Maimon <maimon.sagi@gmail.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	Hans Verkuil <hverkuil+cisco@kernel.org>,
-	Casey Schaufler <casey@schaufler-ca.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>,
-	Max Kellermann <max.kellermann@ionos.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="kklr7JlJ"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1763564453; x=1795100453;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=6VLOKmDo4WviGUhM4qQZA7IzCWHn1ZvDUbxiE4MHVTw=;
+  b=kklr7JlJYLLwcDw0/7uI+GKZ6LbAQf/gpqXFYcGpgrSIM62EpEJDo9/G
+   qdKMXI4llO6u0oi7hu26V/GuF9S9iuQsvnFoq2jzo43ML+x45didwO8cp
+   Azfxn2c0FiCm0UNR/EMla5oNaeFcTjegV2FaaGwUXExMI1WVRZu6qR+UH
+   Cxw2f4tlrw4AUHm8G8rdsFhnv+o2c73I2J8Ji30Ei6Q3O8Nw0YkMwxFwK
+   /6ez4/2dgOQguwWr6rncaZ+k4v1tz0eKsQ45i3AbjySYmaBdreC9u3uja
+   OYip5+X47hmoIYAJqebcFYM3rQNeI54/gDPOd5IL9bqUaV1uzdc3zN2/D
+   g==;
+X-CSE-ConnectionGUID: UZizB8n9QQ+RLwBg9MkM8g==
+X-CSE-MsgGUID: /6a6VS3sR5e9ISUGOzoYLw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11618"; a="91085416"
+X-IronPort-AV: E=Sophos;i="6.19,315,1754982000"; 
+   d="scan'208";a="91085416"
+Received: from fmviesa008.fm.intel.com ([10.60.135.148])
+  by fmvoesa101.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 06:59:36 -0800
+X-CSE-ConnectionGUID: 1p6r6x9uS5u32zRd1eVaZg==
+X-CSE-MsgGUID: voIFHWIqQSaE97KThetVqA==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.19,315,1754982000"; 
+   d="scan'208";a="191329073"
+Received: from rvuia-mobl.ger.corp.intel.com (HELO localhost) ([10.245.245.245])
+  by fmviesa008-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 06:59:30 -0800
+Date: Wed, 19 Nov 2025 16:59:28 +0200
+From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
+To: Petr Mladek <pmladek@suse.com>
+Cc: Steven Rostedt <rostedt@goodmis.org>, linux-doc@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
 	openipmi-developer@lists.sourceforge.net,
 	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
 	linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
@@ -95,52 +59,12 @@ Cc: Corey Minyard <corey@minyard.net>,
 	ceph-devel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
 	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
 	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Lucas De Marchi <lucas.demarchi@intel.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Vladimir Oltean <olteanv@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rodolfo Giometti <giometti@enneenne.com>,
-	Jonathan Lemon <jonathan.lemon@gmail.com>,
-	Richard Cochran <richardcochran@gmail.com>,
-	Stefan Haberland <sth@linux.ibm.com>,
-	Jan Hoeppner <hoeppner@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Andrew Morton <akpm@linux-foundation.org>
+	Jonathan Corbet <corbet@lwn.net>
 Subject: Re: [PATCH v3 00/21] treewide: Introduce %ptS for struct timespec64
  and convert users
-Message-ID: <aR3B8ECx9W6F0BV_@pathway.suse.cz>
+Message-ID: <aR3bUMvPCqZr5utj@smile.fi.intel.com>
 References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
+ <aR3B8ECx9W6F0BV_@pathway.suse.cz>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -149,33 +73,41 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
+In-Reply-To: <aR3B8ECx9W6F0BV_@pathway.suse.cz>
+Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
+ krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Thu 2025-11-13 15:32:14, Andy Shevchenko wrote:
-> Here is the third part of the unification time printing in the kernel.
-> This time for struct timespec64. The first patch brings a support
-> into printf() implementation (test cases and documentation update
-> included) followed by the treewide conversion of the current users.
+On Wed, Nov 19, 2025 at 02:11:12PM +0100, Petr Mladek wrote:
+> On Thu 2025-11-13 15:32:14, Andy Shevchenko wrote:
+> > Here is the third part of the unification time printing in the kernel.
+> > This time for struct timespec64. The first patch brings a support
+> > into printf() implementation (test cases and documentation update
+> > included) followed by the treewide conversion of the current users.
+> > 
+> > Petr, we got like more than a half being Acked, I think if you are okay
+> > with this, the patches that have been tagged can be applied.
+> > 
+> > Note, not everything was compile-tested. Kunit test has been passed, though.
 > 
-> Petr, we got like more than a half being Acked, I think if you are okay
-> with this, the patches that have been tagged can be applied.
+> JFYI, the patchset has been committed into printk/linux.git,
+> branch for-6.19-vsprintf-timespec64.
 > 
-> Note, not everything was compile-tested. Kunit test has been passed, though.
+> Note, that I have:
+> 
+>    + fixed the 19th patch as proposed, see
+>      https://lore.kernel.org/all/aR2XAYWTEgMZu_Mx@pathway.suse.cz/
+> 
+>    + reviewed all patches but I triple checked 7th patch which
+>      did not have any ack yet. And I added my Reviewed-by tag
+>      there. ;-)
+> 
+>    + I tried build with allyesconfig. It succeeded. I am not 100%
+>      sure that it built all modified sources but...
 
-JFYI, the patchset has been committed into printk/linux.git,
-branch for-6.19-vsprintf-timespec64.
+Thank you!
 
-Note, that I have:
+-- 
+With Best Regards,
+Andy Shevchenko
 
-   + fixed the 19th patch as proposed, see
-     https://lore.kernel.org/all/aR2XAYWTEgMZu_Mx@pathway.suse.cz/
 
-   + reviewed all patches but I triple checked 7th patch which
-     did not have any ack yet. And I added my Reviewed-by tag
-     there. ;-)
-
-   + I tried build with allyesconfig. It succeeded. I am not 100%
-     sure that it built all modified sources but...
-
-Best Regards,
-Petr
