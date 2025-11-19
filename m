@@ -1,140 +1,97 @@
-Received: from mail-pg1-f177.google.com (mail-pg1-f177.google.com [209.85.215.177])
+Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89CC23002A4
-	for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 20:44:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.215.177
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 85AD6304967
+	for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2025 06:57:01 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763498679; cv=none; b=LCA5wA+HGRFySeexJpBgznND9OLQJEdybXTfktTPSVVimmAtDM5ed4jtm9qZ2Nn9+GMOe6VjRIkNHYyXxhMfh2+s5/vx1ke1sXLTHO5N6tBI08OuMtO+ETdG2m7UjO2PI+R5ciu4BF6TB/6pnHo/W4DtsbiNZoGEOS/yZq5buDc=
+	t=1763535423; cv=none; b=VnTOAluaOdjNx0+LNxow6Ou8gW23Hx8PIqE2kDMW0gkkzSiw/evuVa2FJFcgAK0EGdYoOpHRHlFoTLvOHPP1w/yeqa0YC2Yt6RO2+j5OaPekMpgKASJzwCpErcuIRi5ZK35vkAiOsAdK56frmQ+UiQZaJHfco+9SkjEktw7Mzoc=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763498679; c=relaxed/simple;
-	bh=K9fDY6NMyJz2tMJaejTPM0fHnQQgqyXhWuXx9OSlsjU=;
-	h=Content-Type:Mime-Version:Subject:From:In-Reply-To:Date:Cc:
-	 Message-Id:References:To; b=CGnRKCZuIL5tY55ff5BDuJbsT0HJLpGr8U9vMwTo3DepWutm2f749aML9L7zWbeCt54PSt40y9GoVxSsXmrn6kYI7VUZghdI9F8vx1uBfno1HrJJejjmaj6XGj8JcMC5KvgC6VjPZUVQrUmBl84T3qpEX61LIkkUFGXflLU8nrg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=KXbYeAe6; arc=none smtp.client-ip=209.85.215.177
+	s=arc-20240116; t=1763535423; c=relaxed/simple;
+	bh=f+Xbq93Jqa1GglMCTJ3Ab2B1j85mBFmSLN2S6spPTW8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=IzejJJEIgwDbNwfNwSZd7+PcWHjVaCSjfUb6IK0QTrx75+gBAzaELne8Wzo7QTs8/af0gVvWdwQcAiBdlT4DYQOIN19JrHb3W7eFTtz0abS1V1nRciVQx+fBFUh/jKTzd+DntocqybfKWRdDr2+LrTde+2yeG45MxT1LefsiVIM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nGAv2YTM; arc=none smtp.client-ip=209.85.210.176
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="KXbYeAe6"
-Received: by mail-pg1-f177.google.com with SMTP id 41be03b00d2f7-bc0d7255434so3573086a12.0
-        for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 12:44:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nGAv2YTM"
+Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-7aa2170adf9so5542581b3a.0
+        for <linux-scsi@vger.kernel.org>; Tue, 18 Nov 2025 22:57:01 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763498677; x=1764103477; darn=vger.kernel.org;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=K9fDY6NMyJz2tMJaejTPM0fHnQQgqyXhWuXx9OSlsjU=;
-        b=KXbYeAe6WCoJtBDqjIw+zOxrbJCa2f78RId0at1ZpN4oMqgxO66bR903Ej+6UFXk6H
-         lKMIvkOFDuNHIORkRzB7Z05Gm6a+1rur8QKDSWXWa/iWBNPYYjmKcB3OlYZOiE2tTPWu
-         332Lkf/XbPlaj+cRzVEQi7NRFaT0msCgGzs6WxhJ9br6rC7gRRPiQBVCfr1XpkvRRcxG
-         o/TctE22/H+W+I0CJORLxJmQ6CI0zxP0+MsQEXXZQCE9ae7UkWZdPSb898CobPtD1/lb
-         wTxzmVJwsfk8PpLENJZaEY+ssUgsL0v81xclrJgo/BAJocTqR0q7QuVPzfmHqOCuIi7h
-         AmNA==
+        d=gmail.com; s=20230601; t=1763535421; x=1764140221; darn=vger.kernel.org;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=f+Xbq93Jqa1GglMCTJ3Ab2B1j85mBFmSLN2S6spPTW8=;
+        b=nGAv2YTMdFARE/C0BOvphrGuueDIWaFHSvmGrRkoIvLpoB9l5ds4FH4efiBgr8oG6m
+         AV8f4GojmeaQMXy9vmq4A2KegUF6WNemwk9aqKR37Dve8UZ4/4tFFQ7/mGJVHw0LcEdv
+         e2okKnQsu/8vEHazmcGz1TDeWcksm9CTU0ydYNie1DgIcUCXgiMzUFIfN0ZdEEFk02II
+         w1xG2fhfJ49R5f9ldDqVIxaklJVM+7EV8OXydK59Y9KcGZSkd0CUuAYEf3zC7zQsKDfW
+         rM0GpOsxgZsCM7kyVmdFKBFS9aHmTNESfy7N9jU7AHjdjz9El+CnXvIVmNczRVA9r1Oq
+         zjOw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763498677; x=1764103477;
-        h=to:references:message-id:content-transfer-encoding:cc:date
-         :in-reply-to:from:subject:mime-version:x-gm-gg:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=K9fDY6NMyJz2tMJaejTPM0fHnQQgqyXhWuXx9OSlsjU=;
-        b=TXnzo6B/B/4b6aZBYiGqEn7DWovN1FDb2TTjJD19A7DoYd8a36c57utczi+9EV16cx
-         mYgrVcNG25Gu6xWuBUoCXKvXp3eqvDBOJcrWzZxkermQ9QjRVbSCQFfMZAFg4B+4VukK
-         R2ldUJOe6vxspWQe3yryu3fJG6i+G/jZ5NkZ3+WOJyWrXWjQZXzGSsOsSMuRGxAcxHll
-         N1vuje8NFFfmfH5OAa3AGZ+ppU7yFNodkaolBpWpsvc2jmVpTr42LaU19WXTDDcys/v4
-         mN4RdLqTSX91bPl0aKa2x22wcQt7PQJ58dG8CO2ag15Wg6p//cgcNcnE8V01sGrhqTXE
-         Tybw==
-X-Forwarded-Encrypted: i=1; AJvYcCV8F/mD4yUflwE87I3J9Uyf8OOhuYZUYb/MTq0NL0Hvrx3gYlrTXNyJ8U5qNqjfuQrdYPlzNd2FwR8p@vger.kernel.org
-X-Gm-Message-State: AOJu0Yxf6m9IKxNqgmG0Yp08fZCfqNxs8z2xtJupMzRHkOgRA7O/K8xu
-	goTplLQB5UHYxEZtDM9D7jNA+bj0qocTl956ER8XSJL7H3H/yWJAdaBU
-X-Gm-Gg: ASbGncsgzlZs2kpcwQ9wzp7yRdsPXenc6KInVeQ4+tqJcG9g/Z8u3ourcyGAs9OcVfT
-	IRr2LrHsfaGCOVYjMSBmPqsP/UfVZrG9U0KXwyEjQK4V5Tiisv7CeSGH2yPqzDfwecJhcutqZYP
-	VK8WZdVB+VM0KLOv49dvLM8UZbTDZtX9qyYZfMJrhrZHPlmQkvHHdKeG3m8jviahbsHCI45FdWN
-	0V/aGoqf3zrUM4OqlXcP8d8JxQADv6+x98vdK7M7KvcpbwvuXumKqBfnEFeazBI3Ox0EetIW0jM
-	3WOnr/Ie+dBtj8p22/J4phDgGwi3p7AlvP6h10qfa7kHP1/zcTkIZFU5Ii8a55kE6mLpwGh5cRw
-	oOo26xzTKBtqO4gUoggdS8eU4lRf88I41gXtdLuLGz8c9fcr94JM/OLQ2+mnb0DUySt/N0tHp+I
-	6Q8bNSexb1p92bd3zFJar0CWJobH0mBa0CATVpcZKMCBu02gcS3ilv87YfIZjZdpMIgA6c
-X-Google-Smtp-Source: AGHT+IH6NXrQRTAgMf2HddEUXn+z5kCzkV+fHB+mI/O4pw1ibW1tSK7SJqGLrmjc/rmo/4swJL7fzQ==
-X-Received: by 2002:a05:7022:4414:b0:11b:c0db:a5ea with SMTP id a92af1059eb24-11bc0dba69fmr5632646c88.26.1763498676692;
-        Tue, 18 Nov 2025 12:44:36 -0800 (PST)
-Received: from smtpclient.apple (c-24-5-244-16.hsd1.ca.comcast.net. [24.5.244.16])
-        by smtp.gmail.com with ESMTPSA id 5a478bee46e88-2a49d9ead79sm79567854eec.1.2025.11.18.12.44.35
-        (version=TLS1_2 cipher=ECDHE-ECDSA-AES128-GCM-SHA256 bits=128/128);
-        Tue, 18 Nov 2025 12:44:35 -0800 (PST)
-Content-Type: text/plain;
-	charset=utf-8
+        d=1e100.net; s=20230601; t=1763535421; x=1764140221;
+        h=mime-version:user-agent:content-transfer-encoding:references
+         :in-reply-to:date:cc:to:from:subject:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=f+Xbq93Jqa1GglMCTJ3Ab2B1j85mBFmSLN2S6spPTW8=;
+        b=MIarPF/zTvR7kVoMpWAMtiZyoj0fuvDvgSAwvwuPqL1usUXK3zYQbWzyBYOjf626iw
+         ffu4fqqyjWttGtY0wbTKs25TXruu6gpeQSIvt8eB8wfwYUM2wOQQEyTy1pSIBIR1xA8M
+         r3/E78/BP/LHGZfe4vLq03wHjOGhfv+ujRqyv7Zlz10PnZwIaJcE4oqnNRfa5QVpSey3
+         yBNZIhtXQJJA8QE8PKJxtl0YoN/2HtOrcxMv2ShQtsKNicjCD3oEvUTQErNJiQa8z3zP
+         1Qe/uAeqg1Z1NXEJBCl6Tqeco5udMCitC1T06DnZS0ZqnvH/pDHovNp4xEjvWJLqoLno
+         V+8g==
+X-Forwarded-Encrypted: i=1; AJvYcCVfwpRbpyNR5Bpd+AU9Ii8zT/PzRxEzZ1EoXPfk8YVEOXftYQ3b3XEcB2biibekTdFLjm2XZPQFG61o@vger.kernel.org
+X-Gm-Message-State: AOJu0YweLPW+CTdiC94gdsDN/RVrGGJn8RPnEWxjNykjqqaxse+T8XxG
+	0axFoGudjSmU+CX3uKZeRy1xuSG/fD1CkUZFMtjEGXbIZJnPS5KeInue
+X-Gm-Gg: ASbGncs+5YwskL198b8La2LuY+Hhu5VXHHMX0kz9KuQi5rtjydVE8CB2lssYCokxV9c
+	f4DJ2zCgFLHXcYWlTmoyfDXjN0DDkOGVgldy01k9NappSLpw11ok4gLh7pWKHqFe4gDJh5crU9q
+	itLsEH/dsS9pQNfMWeiVwXWun/o/FLQeILddTsqJIysy3roqT5Q5GKICCugaEJYannm88nG3k8D
+	07hMGXWA7kiRbKjRlRIdMAXFSQJFCutvg8LFDAnrhfytLxz6nNAaIRrHp+3ThjfSyyR7iYoc8Fh
+	6zyY9hNP0iUx4TDHNSGDDeJpPVWMy2M/wCIdQIkPfT2ai6N+2Tt4/yHJbcuScCTrPn2GYm8kLlD
+	umIxgYQLbdizRJNjVU5Z9Ee1Z/s2/ixHzilRjN9+zgRKmaKb3LbkYHZ3JI2kYBmSXEJP0C0IxYs
+	fpPshRhY/yFIfCWZAuo/Z6XpvmUnhjx0mH6Jh5OMy/KF3hdBAm4NfB
+X-Google-Smtp-Source: AGHT+IERGkisUKHUwsOjkdpflgk7YzL2d2g8MYKyQEpliF7eLvTfwwHOMqHduRY3E4k3gg5i/JsKmw==
+X-Received: by 2002:a05:6a20:7283:b0:342:873d:7e5a with SMTP id adf61e73a8af0-35ba228d01fmr22648983637.36.1763535420725;
+        Tue, 18 Nov 2025 22:57:00 -0800 (PST)
+Received: from ?IPv6:2401:4900:60d7:2218:52ea:a17:db14:a44? ([2401:4900:60d7:2218:52ea:a17:db14:a44])
+        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-bc36db21e8esm16856928a12.5.2025.11.18.22.56.57
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 18 Nov 2025 22:57:00 -0800 (PST)
+Message-ID: <231f839b3b567f16360ad2a24f51add1d40ea575.camel@gmail.com>
+Subject: Re: [PATCH] scsi: fix uninitialized pointers with free attr
+From: ally heev <allyheev@gmail.com>
+To: Dan Carpenter <dan.carpenter@linaro.org>, James Bottomley
+	 <James.Bottomley@hansenpartnership.com>
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Date: Wed, 19 Nov 2025 12:26:56 +0530
+In-Reply-To: <aRyBI_j77mQaQxgT@stanley.mountain>
+References: 
+	<20251105-aheev-uninitialized-free-attr-scsi-v1-1-d28435a0a7ea@gmail.com>
+	 <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
+	 <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
+	 <407aed0ff7be4fdcafebd09e58e25496b6b4fec0.camel@HansenPartnership.com>
+	 <f7f26ae6-31d7-4793-8daa-331622460833@suswa.mountain>
+	 <bed8636bc4d036f4b2fe532e7bb4bb4b05c059fc.camel@HansenPartnership.com>
+	 <aRwPcgDXSE9s4jKS@stanley.mountain>
+	 <9c62ff497aa00bcdf213f579272d3decdd22ea34.camel@HansenPartnership.com>
+	 <aRyBI_j77mQaQxgT@stanley.mountain>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.56.1-1+deb13u1 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0 (Mac OS X Mail 16.0 \(3864.200.81.1.6\))
-Subject: Re: [PATCH] scsi: qla2xxx: Fix improper freeing of purex item
-From: himanshu Madhani <hmadhani2024@gmail.com>
-In-Reply-To: <20251113151246.762510-1-zilin@seu.edu.cn>
-Date: Tue, 18 Nov 2025 12:44:24 -0800
-Cc: njavali@marvell.com,
- GR-QLogic-Storage-Upstream@marvell.com,
- "James.Bottomley@hansenpartnership.com" <James.Bottomley@HansenPartnership.com>,
- martin.petersen@oracle.com,
- linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org,
- jianhao.xu@seu.edu.cn
-Content-Transfer-Encoding: quoted-printable
-Message-Id: <45878638-8A5A-46E0-9223-BDDAD0C89362@gmail.com>
-References: <20251113151246.762510-1-zilin@seu.edu.cn>
-To: Zilin Guan <zilin@seu.edu.cn>
-X-Mailer: Apple Mail (2.3864.200.81.1.6)
+MIME-Version: 1.0
 
+As per the ongoing discussion
+https://lore.kernel.org/lkml/58fd478f408a34b578ee8d949c5c4b4da4d4f41d.camel=
+@HansenPartnership.com/
+, I believe there are no changes required here
 
-
-> On Nov 13, 2025, at 7:12=E2=80=AFAM, Zilin Guan <zilin@seu.edu.cn> =
-wrote:
->=20
-> In qla2xxx_process_purls_iocb(), an item is allocated via
-> qla27xx_copy_multiple_pkt(), which internally calls
-> qla24xx_alloc_purex_item().
->=20
-> The qla24xx_alloc_purex_item() function may return a pre-allocated =
-item
-> from a per-adapter pool for small allocations, instead of dynamically
-> allocating memory with kzalloc().
->=20
-> An error handling path in qla2xxx_process_purls_iocb() incorrectly =
-uses
-> kfree() to release the item. If the item was from the pre-allocated =
-pool,
-> calling kfree() on it is a bug that can lead to memory corruption.
->=20
-> Fix this by using the correct deallocation function,
-> qla24xx_free_purex_item(), which properly handles both dynamically
-> allocated and pre-allocated items.
->=20
-> Fixes: 875386b988578 ("scsi: qla2xxx: Add Unsolicited LS Request and =
-Response Support for NVMe")
-> Signed-off-by: Zilin Guan <zilin@seu.edu.cn>
-> ---
-> drivers/scsi/qla2xxx/qla_nvme.c | 2 +-
-> 1 file changed, 1 insertion(+), 1 deletion(-)
->=20
-> diff --git a/drivers/scsi/qla2xxx/qla_nvme.c =
-b/drivers/scsi/qla2xxx/qla_nvme.c
-> index 316594aa40cc..42eb65a62f1f 100644
-> --- a/drivers/scsi/qla2xxx/qla_nvme.c
-> +++ b/drivers/scsi/qla2xxx/qla_nvme.c
-> @@ -1292,7 +1292,7 @@ void qla2xxx_process_purls_iocb(void **pkt, =
-struct rsp_que **rsp)
-> a.reason =3D FCNVME_RJT_RC_LOGIC;
-> a.explanation =3D FCNVME_RJT_EXP_NONE;
-> xmt_reject =3D true;
-> - kfree(item);
-> + qla24xx_free_purex_item(item);
-> goto out;
-> }
->=20
-> --=20
-> 2.34.1
->=20
->=20
-Looks Good.=20
-
-Reviewed-by: Himanshu Madhani <hmadhani2024@gmail.com =
-<mailto:hmadhani2024@gmail.com>>=
+Thanks,
+Ally
