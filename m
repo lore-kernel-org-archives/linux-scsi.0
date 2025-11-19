@@ -1,266 +1,97 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.20])
+Received: from lamorak.hansenpartnership.com (lamorak.hansenpartnership.com [198.37.111.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 707CD3446B8;
-	Wed, 19 Nov 2025 10:27:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.20
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F226F27CCE0;
+	Wed, 19 Nov 2025 12:43:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.37.111.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763548037; cv=none; b=dRSeZ8LDNfgUew98rmwGSBUhsATKcvL0qflJm2YvRMbUc5pcDL8czuy5DJkHChOslbWl430nP/cxuospn/LS4F+uUGFJ81E6wRIrgHqxDPkXoGQt6+49qAe+Z0MDQQS3wHeMgc1Q+fENHeYTfCWJIncHi7WcaF4GM7LAv+QbKJE=
+	t=1763556188; cv=none; b=Z63fE6zqU9YtskbEDZsYy0XYzGVGnAhvFBh22jQUpIVeVPJPDHlP5bArjA48Hvxnxrb+PWftdTzapBDse+3hibGcQbdWE3uSNGtenbQMqEve9sasURgyhIdwB7i733qr0U+REDwYbJPiWI2kMy0im8aboE90uWI3YOc43SifXa4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763548037; c=relaxed/simple;
-	bh=jmw9bhTP6DqEEo8SaI642JH1s3dFqQGzetmEw8f3+f0=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ZDEndxOQsGURyNyw7HJ+3V+/jE0nKso+pQgMGxupM6YJ2sUFd8ByT5zUdqRku+eLZ/bVdynuKs7sPZ5pqALwV5kMjzwfg5VTY37HYidePcJ+UWS5jym+sVUxabI3v10TTkJHSTuvzO/b0fEfj/1JAKGuzcuYStaCZWlv5FiVTVw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com; spf=pass smtp.mailfrom=linux.intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=MiU7xOEM; arc=none smtp.client-ip=198.175.65.20
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linux.intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linux.intel.com
+	s=arc-20240116; t=1763556188; c=relaxed/simple;
+	bh=SwjLewPadmCyPPqAVzp7CkOBxBR0q1WeDCYM9Xs0IU8=;
+	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
+	 Content-Type:MIME-Version; b=hlSNDwcFYsrehld7B4z5JkcReEuDbRckn0AwFXK8vLFIs6lZPOSJ5MtSwz0BvrQDLfd+heIvLSJh1/v2xQYzu+qmRE5WZHULazi/HOZcmcFoolhaVicrVfZFs4eVo7ilIUf0FoUUzctNLzHzX+/852EWGvYZ1sGIqpC5PVw5zhs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com; spf=pass smtp.mailfrom=HansenPartnership.com; dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b=pW8fdafo; arc=none smtp.client-ip=198.37.111.173
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=HansenPartnership.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=HansenPartnership.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="MiU7xOEM"
+	dkim=pass (1024-bit key) header.d=hansenpartnership.com header.i=@hansenpartnership.com header.b="pW8fdafo"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1763548035; x=1795084035;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=jmw9bhTP6DqEEo8SaI642JH1s3dFqQGzetmEw8f3+f0=;
-  b=MiU7xOEMrvpSHRKoOGFoxjvp2olCkMHYcgyVqGCXYhxtUSjKS4HqPHZY
-   jwn1jZ20MYSLYgPZepTcbeT44WCjzhtiyp+/af2F23uBo2SxPny1E+O0E
-   i35l1wp5ztEr/UgnTalJgnFm37qhWHVpZKg8LSXY/NLmt0PE9WL14Y8tO
-   k3h/zOCwTRmKYN7LyemrWXS3V9sFi2e4KayP+OT7P6pLnL9tii32X9EIR
-   Lpgv24Cc1EEW8J6mJRkCTzvjuPiiwhLzT1y6FWYPeBcXX3xztfuWgYKGf
-   GVLiIWrx11wXkoB91Fm9V6NPb59zQvI7HbI0Bo9UlmO1kmJt9DFQYly3E
-   w==;
-X-CSE-ConnectionGUID: 2bBlveQeQxCd7RgNC0YNsw==
-X-CSE-MsgGUID: njPqeXaCSmC15wNSdDdbLw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11617"; a="65286211"
-X-IronPort-AV: E=Sophos;i="6.19,315,1754982000"; 
-   d="scan'208";a="65286211"
-Received: from fmviesa005.fm.intel.com ([10.60.135.145])
-  by orvoesa112.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 02:27:12 -0800
-X-CSE-ConnectionGUID: BabbyDhyQAOE+ZtEsTT7/g==
-X-CSE-MsgGUID: bIH3DAOlTZmt1WuzGTp/dQ==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.19,315,1754982000"; 
-   d="scan'208";a="195322765"
-Received: from rvuia-mobl.ger.corp.intel.com (HELO localhost) ([10.245.245.245])
-  by fmviesa005-auth.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 19 Nov 2025 02:26:53 -0800
-Date: Wed, 19 Nov 2025 12:26:51 +0200
-From: Andy Shevchenko <andriy.shevchenko@linux.intel.com>
-To: Petr Mladek <pmladek@suse.com>
-Cc: Corey Minyard <corey@minyard.net>,
-	Christian =?iso-8859-1?Q?K=F6nig?= <christian.koenig@amd.com>,
-	"Dr. David Alan Gilbert" <linux@treblig.org>,
-	Alex Deucher <alexander.deucher@amd.com>,
-	Thomas Zimmermann <tzimmermann@suse.de>,
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
-	Rob Clark <robin.clark@oss.qualcomm.com>,
-	Matthew Brost <matthew.brost@intel.com>,
-	Ulf Hansson <ulf.hansson@linaro.org>,
-	Aleksandr Loktionov <aleksandr.loktionov@intel.com>,
-	Vitaly Lifshits <vitaly.lifshits@intel.com>,
-	Manivannan Sadhasivam <mani@kernel.org>,
-	Niklas Cassel <cassel@kernel.org>, Calvin Owens <calvin@wbinvd.org>,
-	Vadim Fedorenko <vadim.fedorenko@linux.dev>,
-	Sagi Maimon <maimon.sagi@gmail.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Karan Tilak Kumar <kartilak@cisco.com>,
-	Hans Verkuil <hverkuil+cisco@kernel.org>,
-	Casey Schaufler <casey@schaufler-ca.com>,
-	Steven Rostedt <rostedt@goodmis.org>,
-	Viacheslav Dubeyko <Slava.Dubeyko@ibm.com>,
-	Max Kellermann <max.kellermann@ionos.com>,
-	linux-doc@vger.kernel.org, linux-kernel@vger.kernel.org,
-	openipmi-developer@lists.sourceforge.net,
-	linux-media@vger.kernel.org, dri-devel@lists.freedesktop.org,
-	linaro-mm-sig@lists.linaro.org, amd-gfx@lists.freedesktop.org,
-	linux-arm-msm@vger.kernel.org, freedreno@lists.freedesktop.org,
-	intel-xe@lists.freedesktop.org, linux-mmc@vger.kernel.org,
-	netdev@vger.kernel.org, intel-wired-lan@lists.osuosl.org,
-	linux-pci@vger.kernel.org, linux-s390@vger.kernel.org,
-	linux-scsi@vger.kernel.org, linux-staging@lists.linux.dev,
-	ceph-devel@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
-	Rasmus Villemoes <linux@rasmusvillemoes.dk>,
-	Sergey Senozhatsky <senozhatsky@chromium.org>,
-	Jonathan Corbet <corbet@lwn.net>,
-	Sumit Semwal <sumit.semwal@linaro.org>,
-	Gustavo Padovan <gustavo@padovan.org>,
-	David Airlie <airlied@gmail.com>, Simona Vetter <simona@ffwll.ch>,
-	Maarten Lankhorst <maarten.lankhorst@linux.intel.com>,
-	Maxime Ripard <mripard@kernel.org>,
-	Dmitry Baryshkov <lumag@kernel.org>,
-	Abhinav Kumar <abhinav.kumar@linux.dev>,
-	Jessica Zhang <jesszhan0024@gmail.com>, Sean Paul <sean@poorly.run>,
-	Marijn Suijten <marijn.suijten@somainline.org>,
-	Konrad Dybcio <konradybcio@kernel.org>,
-	Lucas De Marchi <lucas.demarchi@intel.com>,
-	Thomas =?iso-8859-1?Q?Hellstr=F6m?= <thomas.hellstrom@linux.intel.com>,
-	Rodrigo Vivi <rodrigo.vivi@intel.com>,
-	Vladimir Oltean <olteanv@gmail.com>, Andrew Lunn <andrew@lunn.ch>,
-	"David S. Miller" <davem@davemloft.net>,
-	Eric Dumazet <edumazet@google.com>,
-	Jakub Kicinski <kuba@kernel.org>, Paolo Abeni <pabeni@redhat.com>,
-	Tony Nguyen <anthony.l.nguyen@intel.com>,
-	Przemek Kitszel <przemyslaw.kitszel@intel.com>,
-	Krzysztof =?utf-8?Q?Wilczy=C5=84ski?= <kwilczynski@kernel.org>,
-	Kishon Vijay Abraham I <kishon@kernel.org>,
-	Bjorn Helgaas <bhelgaas@google.com>,
-	Rodolfo Giometti <giometti@enneenne.com>,
-	Jonathan Lemon <jonathan.lemon@gmail.com>,
-	Richard Cochran <richardcochran@gmail.com>,
-	Stefan Haberland <sth@linux.ibm.com>,
-	Jan Hoeppner <hoeppner@linux.ibm.com>,
-	Heiko Carstens <hca@linux.ibm.com>,
-	Vasily Gorbik <gor@linux.ibm.com>,
-	Alexander Gordeev <agordeev@linux.ibm.com>,
-	Christian Borntraeger <borntraeger@linux.ibm.com>,
-	Sven Schnelle <svens@linux.ibm.com>,
-	Satish Kharat <satishkh@cisco.com>,
-	Sesidhar Baddela <sebaddel@cisco.com>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Mauro Carvalho Chehab <mchehab@kernel.org>,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
-	Xiubo Li <xiubli@redhat.com>, Ilya Dryomov <idryomov@gmail.com>,
-	Masami Hiramatsu <mhiramat@kernel.org>,
-	Mathieu Desnoyers <mathieu.desnoyers@efficios.com>,
-	Andrew Morton <akpm@linux-foundation.org>
-Subject: Re: [PATCH v3 19/21] scsi: fnic: Switch to use %ptSp
-Message-ID: <aR2bazZn8m4EMHdW@smile.fi.intel.com>
-References: <20251113150217.3030010-1-andriy.shevchenko@linux.intel.com>
- <20251113150217.3030010-20-andriy.shevchenko@linux.intel.com>
- <aR2XAYWTEgMZu_Mx@pathway.suse.cz>
+	d=hansenpartnership.com; s=20151216; t=1763556183;
+	bh=SwjLewPadmCyPPqAVzp7CkOBxBR0q1WeDCYM9Xs0IU8=;
+	h=Message-ID:Subject:From:To:Date:In-Reply-To:References:From;
+	b=pW8fdafobIW/ErCkYcNyYe1sp4SUtXuE2gEoF6QMYJY+UY1Xi6s8xAyMBuHSjVquF
+	 m+ROCZMadQNQQ8JNPFbYbWoHqoeyh5jnCtbCM1MHB1PfzqN7a2/JPkJTNkraMyjMZ2
+	 8Ik3lExXiVviZj1ynFHXTpR9d3p+jtfAKndbqesc=
+Received: from lingrow.int.hansenpartnership.com (unknown [IPv6:2601:5c4:4302:c21::a774])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange x25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by lamorak.hansenpartnership.com (Postfix) with ESMTPSA id 6D0D51C000D;
+	Wed, 19 Nov 2025 07:43:03 -0500 (EST)
+Message-ID: <d2e1fc3c20f8301e0a841bee6143be5ddd4d0ef2.camel@HansenPartnership.com>
+Subject: Re: [PATCH] scsi: fix uninitialized pointers with free attr
+From: James Bottomley <James.Bottomley@HansenPartnership.com>
+To: Christoph Hellwig <hch@infradead.org>, ally heev <allyheev@gmail.com>
+Cc: Dan Carpenter <dan.carpenter@linaro.org>, "Martin K. Petersen"
+	 <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Date: Wed, 19 Nov 2025 07:43:02 -0500
+In-Reply-To: <aR2AWjHTtCszByqX@infradead.org>
+References: 
+	<20251105-aheev-uninitialized-free-attr-scsi-v1-1-d28435a0a7ea@gmail.com>
+	 <6d199d062b16abfbf083750820d7a39cb2ebf144.camel@HansenPartnership.com>
+	 <f6592ccc-155d-48ba-bac6-6e2b719a5c3e@suswa.mountain>
+	 <407aed0ff7be4fdcafebd09e58e25496b6b4fec0.camel@HansenPartnership.com>
+	 <f7f26ae6-31d7-4793-8daa-331622460833@suswa.mountain>
+	 <bed8636bc4d036f4b2fe532e7bb4bb4b05c059fc.camel@HansenPartnership.com>
+	 <aRwPcgDXSE9s4jKS@stanley.mountain>
+	 <9c62ff497aa00bcdf213f579272d3decdd22ea34.camel@HansenPartnership.com>
+	 <aRyBI_j77mQaQxgT@stanley.mountain>
+	 <231f839b3b567f16360ad2a24f51add1d40ea575.camel@gmail.com>
+	 <aR2AWjHTtCszByqX@infradead.org>
+Autocrypt: addr=James.Bottomley@HansenPartnership.com;
+ prefer-encrypt=mutual;
+ keydata=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
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+User-Agent: Evolution 3.50.3 
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <aR2XAYWTEgMZu_Mx@pathway.suse.cz>
-Organization: Intel Finland Oy - BIC 0357606-4 - c/o Alberga Business Park, 6
- krs, Bertel Jungin Aukio 5, 02600 Espoo
 
-On Wed, Nov 19, 2025 at 11:08:01AM +0100, Petr Mladek wrote:
-> On Thu 2025-11-13 15:32:33, Andy Shevchenko wrote:
-> > Use %ptSp instead of open coded variants to print content of
-> > struct timespec64 in human readable format.
-> 
-> I was about to commit the changes into printk/linux.git and
-> found a mistake during the final double check, see below.
-> 
-> > diff --git a/drivers/scsi/fnic/fnic_trace.c b/drivers/scsi/fnic/fnic_trace.c
-> > index cdc6b12b1ec2..0a849a195a8e 100644
-> > --- a/drivers/scsi/fnic/fnic_trace.c
-> > +++ b/drivers/scsi/fnic/fnic_trace.c
-> > @@ -215,30 +213,26 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
-> >  {
-> >  	int len = 0;
-> >  	int buf_size = debug->buf_size;
-> > -	struct timespec64 val1, val2;
-> > +	struct timespec64 val, val1, val2;
-> >  	int i = 0;
-> >  
-> > -	ktime_get_real_ts64(&val1);
-> > +	ktime_get_real_ts64(&val);
-> >  	len = scnprintf(debug->debug_buffer + len, buf_size - len,
-> >  		"------------------------------------------\n"
-> >  		 "\t\tTime\n"
-> >  		"------------------------------------------\n");
-> >  
-> > +	val1 = timespec64_sub(val, stats->stats_timestamps.last_reset_time);
-> > +	val2 = timespec64_sub(val, stats->stats_timestamps.last_read_time);
-> >  	len += scnprintf(debug->debug_buffer + len, buf_size - len,
-> > -		"Current time :          [%lld:%ld]\n"
-> > -		"Last stats reset time:  [%lld:%09ld]\n"
-> > -		"Last stats read time:   [%lld:%ld]\n"
-> > -		"delta since last reset: [%lld:%ld]\n"
-> > -		"delta since last read:  [%lld:%ld]\n",
-> > -	(s64)val1.tv_sec, val1.tv_nsec,
-> > -	(s64)stats->stats_timestamps.last_reset_time.tv_sec,
-> > -	stats->stats_timestamps.last_reset_time.tv_nsec,
-> > -	(s64)stats->stats_timestamps.last_read_time.tv_sec,
-> > -	stats->stats_timestamps.last_read_time.tv_nsec,
-> > -	(s64)timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_sec,
-> > -	timespec64_sub(val1, stats->stats_timestamps.last_reset_time).tv_nsec,
-> > -	(s64)timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_sec,
-> > -	timespec64_sub(val1, stats->stats_timestamps.last_read_time).tv_nsec);
-> > +			 "Current time :          [%ptSp]\n"
-> > +			 "Last stats reset time:  [%ptSp]\n"
-> > +			 "Last stats read time:   [%ptSp]\n"
-> > +			 "delta since last reset: [%ptSp]\n"
-> > +			 "delta since last read:  [%ptSp]\n",
-> 
-> Both delta times are printed at the end.
-> 
-> > +			 &val,
-> > +			 &stats->stats_timestamps.last_reset_time, &val1,
-> > +			 &stats->stats_timestamps.last_read_time, &val2);
-> 
-> I think that this should be:
-> 
-> 			 &stats->stats_timestamps.last_reset_time,
-> 			 &stats->stats_timestamps.last_read_time,
-> 			 &val1, &val2);
-> 
-> >  	stats->stats_timestamps.last_read_time = val1;
-> 
-> The original code stored the current time in "val1". This should be:
-> 
-> 	stats->stats_timestamps.last_read_time = val;
-> 
-> > @@ -416,8 +410,8 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
-> >  	jiffies_to_timespec64(stats->misc_stats.last_ack_time, &val2);
-> 
-> Just for record. Another values are stored into @val1 and @val2 at
-> this point.
-> 
-> >  	len += scnprintf(debug->debug_buffer + len, buf_size - len,
-> > -		  "Last ISR time: %llu (%8llu.%09lu)\n"
-> > -		  "Last ACK time: %llu (%8llu.%09lu)\n"
-> > +		  "Last ISR time: %llu (%ptSp)\n"
-> > +		  "Last ACK time: %llu (%ptSp)\n"
-> >  		  "Max ISR jiffies: %llu\n"
-> >  		  "Max ISR time (ms) (0 denotes < 1 ms): %llu\n"
-> >  		  "Corr. work done: %llu\n"
-> > @@ -437,10 +431,8 @@ int fnic_get_stats_data(struct stats_debug_info *debug,
-> >  		  "Number of rport not ready: %lld\n"
-> >  		 "Number of receive frame errors: %lld\n"
-> >  		 "Port speed (in Mbps): %lld\n",
-> > -		  (u64)stats->misc_stats.last_isr_time,
-> > -		  (s64)val1.tv_sec, val1.tv_nsec,
-> > -		  (u64)stats->misc_stats.last_ack_time,
-> > -		  (s64)val2.tv_sec, val2.tv_nsec,
-> > +		  (u64)stats->misc_stats.last_isr_time, &val1,
-> > +		  (u64)stats->misc_stats.last_ack_time, &val2,
-> 
-> So, this is correct!
-> 
-> >  		  (u64)atomic64_read(&stats->misc_stats.max_isr_jiffies),
-> >  		  (u64)atomic64_read(&stats->misc_stats.max_isr_time_ms),
-> >  		  (u64)atomic64_read(&stats->misc_stats.corr_work_done),
-> 
-> 
-> Now, I think that there is no need to resend the entire huge patchset.
-> 
-> I could either fix this when comitting or commit the rest and
-> you could send only this patch for review.
+On Wed, 2025-11-19 at 00:31 -0800, Christoph Hellwig wrote:
+> On Wed, Nov 19, 2025 at 12:26:56PM +0530, ally heev wrote:
+> > As per the ongoing discussion
+> > https://lore.kernel.org/lkml/58fd478f408a34b578ee8d949c5c4b4da4d4f41d.c=
+amel@HansenPartnership.com/
+> > , I believe there are no changes required here
+>=20
+> What about just dropping that __free thing that just make the code
+> harder to read and more buggy?
 
-Thank you for the thoroughly done review, I changed that patch between the
-versions and the problem is that for printf() specifiers (extensions) we do not
-have an automatic type checking. We starve for a GCC plugin for that, yeah...
+It does?  The original patch was this:
 
-In any case, if you fold your changes in, I will appreciate that!
-Otherwise it's also fine with me to send a patch separately later on.
+https://lore.kernel.org/linux-scsi/20240222214508.1630719-9-bvanassche@acm.=
+org/
 
-> PS: All other patches look good. Well, nobody acked 7th patch yet.
->     But I think that the change is pretty straightforward and
->     we could do it even without an ack.
+It's part of the series adding Advice Hints, so we can't just revert it
+because the sense buffer would be too small.  Using __free to replace a
+stack allocation looks like a nice use of the cleanup primitives: I
+think if we removed the __free and added a kfree before each of the six
+returns that would make the code more prone to bugs on its next update.
 
-This is my understanding as well. It changes the output, but that output is
-debug anyway. So I don't expect breakage of anything we have an obligation
-to keep working.
+Regards,
 
--- 
-With Best Regards,
-Andy Shevchenko
-
+James
 
