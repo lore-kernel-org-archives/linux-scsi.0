@@ -1,302 +1,135 @@
-Received: from mail-lf1-f46.google.com (mail-lf1-f46.google.com [209.85.167.46])
+Received: from mail-wm1-f52.google.com (mail-wm1-f52.google.com [209.85.128.52])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 68249369992
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2025 16:47:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 457623126BE
+	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2025 18:44:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.52
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763657224; cv=none; b=S+pOgcnnKltrbxuVjuF0H/TegXjJAPimy4teMkGFzI7oHVtlqZPglAedT8+QJQKHgnGHc3h6J/WOW1Dqelp4x/W2Kq3Jjh4N08fXaMaqBCgtnw2QOT6T+RSjped+ApolxX47k45nnywNLF8UlWra/1EKoVn8g8rzmK6B0E8WHUg=
+	t=1763664255; cv=none; b=LiYE6XCJKaifG0BlVVyFdHGtAt0zy861ds8CZ8+hjmtxWybRKYkQQaMfU07dEpOejziuD/ci+MaNBbDHU2J+gmgK21UgIoQSAgjTMPAo5V+DkPI+7auFZB5gu9cnldLCkbOtMRz9tge7cDRnK4lv+EV1TdNlPJq0G7wciGY07GQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763657224; c=relaxed/simple;
-	bh=Zt6p2aHZDBzaAD8QhGSLx+Kia8Xu1TI+LxD3yxX2DVI=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=FIsG7WGeKZ3+2QQ7m/cWqMzOi2d2S4ETYn0Bt6IEgJmMztAkO4NRxyUzT6rL3Cs6BrTeX5uwdD1fC3iFYljPWEp50Ts6f3R9iAiBlfIYn54NWAI4+8fR/WTWNfnkDSaBYLesrIi50M8UZwvjj95G2OY1/LUbu2u50ndQ9xdzOnA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=D9HPVrU/; arc=none smtp.client-ip=209.85.167.46
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
-Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
+	s=arc-20240116; t=1763664255; c=relaxed/simple;
+	bh=SunlJMvK0tyBG6whiOj5I5BfxX+8Ug6mB6PQyLzlpvc=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=DYAS4zk9oCeAnCoE1fVI/fi62sCiz1cyhRgqu4H6G2MOArBzpQ8CSDfBX3S34XWYt6zwuzAPSdYg2RNYcWferMdSnBFg6Cr4uJFsS/j1ut7ZD0+ZrOG5r95VsaqodzXsn16iB7hDJy0V57B2YluWZesDj4ZzF6bF1/rLrGvoM8c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YhHrrvXu; arc=none smtp.client-ip=209.85.128.52
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="D9HPVrU/"
-Received: by mail-lf1-f46.google.com with SMTP id 2adb3069b0e04-5957ac0efc2so1028541e87.1
-        for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2025 08:47:02 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YhHrrvXu"
+Received: by mail-wm1-f52.google.com with SMTP id 5b1f17b1804b1-47798ded6fcso7794595e9.1
+        for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2025 10:44:13 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1763657220; x=1764262020; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
+        d=gmail.com; s=20230601; t=1763664252; x=1764269052; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=yUkejxkwNkJpj7b3XeKPp2fBMSgf3ejNXMmcXfbZUqo=;
-        b=D9HPVrU/tux0xufqG17xyQvWqrB3355RO1P9SsHnS01E2upJig2LSuhziJs8n3d7EE
-         eieStatmyjiYVbTVnsY9gHf9J8XCKb8GjYpCZqsaCDpohCFyPNO5egIdxlVUjpG+Ww+a
-         eY8Q4kz4XqwfTmtSJY91po5u+w7NDdGTNVkqPRfo1YEbH+i38UpR9/08rP90xmZkYNbN
-         Gl9QQpSB7rpjT5rLU7QBkwc1RbcuKN0qOhkMB80fRMtDEhrGjsJWt/+yhGZprWEmwOAl
-         QKgpO7XToESmJPY3pi6V50BrxQ/iWVuuYGX4oKQcKvpaHFy5Nn8Gyj28G35pfH268UHE
-         2Ylg==
+        bh=qJrNo+cJlndHtNF8NwuBKA7UXHtMtDYUWgFt+UVPwaI=;
+        b=YhHrrvXud1KLS1kSl/bXJRsWjVG7fz6U8gJXyIgsHUoo5t9tY4enfBT5DncvxecvHU
+         orj4ZbOt/SdnBb4J/cAwXOZFos3AQ52+YFA67V3TKO4h7xjzAh0AEMMkZEcw59Y2/T+C
+         eQuaYQ+iRFJ1acGeYcyIK/oLLOkuLlVGrW9K4l0oXXvBH8/fUBuQHNpM2hhUjWmRO4qz
+         MIFxgk/AVxhtetWXjNRdRafNurBcHhknmP+BCUJNZq0u9E85c3HqeM83JNOsz5ZaTKWv
+         ffrgFkQCUk2Cnd3pR99YzlzwlqLGyDOiiXzBHCCaKoudtmqwvSGlyJyeaImS6Vsx06Ts
+         Vl6w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763657220; x=1764262020;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+        d=1e100.net; s=20230601; t=1763664252; x=1764269052;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=yUkejxkwNkJpj7b3XeKPp2fBMSgf3ejNXMmcXfbZUqo=;
-        b=cnSiZcn/ZRmmLlv8NidPGZRb+4A+hx177G1dhM+EtuFxnXytaUyAe868IDJA4/B97g
-         2aWui+YSRpWbv0+WT27BstZBVogLOgkIAArZ470bYvS1rHYhCWj2sGOy1WwxHRmMSGb0
-         eBO4JnMqpZ9RjhD/2tB8oTli3rj7rwOfhP7qA2/oeuCBRSCUtvGRux0zWT684TzsoCp0
-         cQuFvY4c8gSL5ZVVG67YcBb0e1S6sB6JKruuaJCLm871Hsh3q483h4xPH1IFItsehMvZ
-         Wb8EanoZCDwQTwquDWn67ml+IlD2KlFVktUHan7cxIyv25ULmlx9g0KDsFQrt1WDrG/V
-         GtvQ==
-X-Gm-Message-State: AOJu0Yz7RaHsIVFW6EvJUQfUblEzpDW5Pj7s0L1n1nObMnHOLnhc6m2E
-	ItNQYWN4/jONQPGm5J8oHh5Vv378Apj//OSXIAOP2bwk6TYio5xPh6FtYKwZhXoWZYUhJ5zHna5
-	PzYJ0QsmKYGytXhDidx2kZT51VdlxiH+7Lgz/EF+gvNkhopYaV/yb4dw=
-X-Gm-Gg: ASbGnctbMg2e/yYvFQARsqEEm+CKc2ObTBzrbWzXqnwVRbXj5wpk9YqGZUlCCYTDD5E
-	T83KJ52JTQB/rh8KVp5kD4v4vlOx6OnXXzIe4NcnjAX09ya8GEIcGCboxG6LC3REZQsjuoqUfzE
-	X1PyKgWeQds4c1HFRch5XfdlVpsqxl8twoBAIom95x6nuU3MgVOVHpBOBb0Bs1M+cmWCGcb6Fgw
-	LONh8Hwr41d1EIXruhMV4xrFfn2tv6B4TzRPBrI6av/y4HL32tUF7WCAdZuH/XeQfI/KwnEM+OL
-	kxBREMjiM5utzjaqxa4n/aOvgJSBTnIjnfFceBTauvz/LW8IdbbIsJQaRra0x+w=
-X-Google-Smtp-Source: AGHT+IFaJDmPn3jLrqjAw8ViGhHjcdOsGWXldDFW7AQIhcOj0YjL/GCL+gibvSih04h8BKua6FQ/1iwP5MYGgI5dwFk=
-X-Received: by 2002:a05:6512:31c8:b0:594:25c9:2c6e with SMTP id
- 2adb3069b0e04-5969f49a320mr1017303e87.25.1763657219933; Thu, 20 Nov 2025
- 08:46:59 -0800 (PST)
+        bh=qJrNo+cJlndHtNF8NwuBKA7UXHtMtDYUWgFt+UVPwaI=;
+        b=M9im8pP8CG/vVcrnrWRb7VkEiEtmR9hv+8XAmimUOHYr7nzqKhjKDcFAtWuszOCfd/
+         tc5X8jK52j3Y1rc89zCu/EpDQfxVO/aJeINzt/N2nf7D6DA9SfYvgt5OqQlnL0tYw2wO
+         XNPV1VQZ3HWSFCB0Q1Ba4uN1fKYzYZT1AVPtmSDB2y30AJTlE/mdeYEhH51sipkzOkEj
+         O3qm3E99HF+LyJA0LGMFc3zdxUDzSUQhfNtaQI22w9z3pXc9iBfqImu7Ixqqk6j4hm6Y
+         p6g6Ku1fGLd/VI1NBg8aHWtXnWzooZzsziM/9bbd1rv9IM5M/McEOX721DtV8C+xU3n5
+         uEQw==
+X-Forwarded-Encrypted: i=1; AJvYcCVYj99OPuirrXnO242H3Q0+Kyyva0pbjd82vFhK7ZmWkJTMQEsL3E94tqOxlJ/zQ27dV5MPvN4Lyweg@vger.kernel.org
+X-Gm-Message-State: AOJu0Ywv7YIf44UVUeniA1Rr/Hfv27ZG4bH2V9tguJP7ATcbzDqVU05x
+	AktoYH2k8E78YS284G93wATdzaRqyovLAb9KxqWNboWqxa4ajC4gP007
+X-Gm-Gg: ASbGncsvUvMdemV06DR8rfbZMk3WFDxuQ2sme9Tc0s54hYcxdNgqIlzfwFCXBce6U6z
+	WLr6Q7m99pyCZLdBpqpzsuS5lQoQtZ9ULKOLhQoam6xJdUzCiZrfDRjtpXV3xdppMYX4RFmuNZ2
+	KWALKjs8vjwMJUWahp17k03IkmIyhnemdE2e6A6gPbbGArZNeRSTj0cSsWMCOcFo4o57q3CdBtX
+	LIsOxZVRqvuxSMWfpWWDiv5Nc4iRXSVcmiauelZTtjVV0hb2euiN9OsYZ4jfCm83Nx7HqeX69Q6
+	RgkKc/dRF0dpScRg3AAbU5dTx+hNYvwfWOHAAWpj9AWjnOpvw0nzcZnd7Zc0m/5o2HJz1zozsQX
+	a7D2jQBjvALX+5cpP39tu8ZSolQKfoq4ZxeZ512UlrBnLJUOVSF7Q3QcQq5nGrS0J39+oMjJ65/
+	73jZqvSHv6cJEWo9BEf7uDuFCTzsAinAcwDJAR+sHgFK91pMiPkG/N
+X-Google-Smtp-Source: AGHT+IHqiDIShzRl9eiBzv/oh34eETw7hMAfWyuJU1Icj3jPbD0hWbvPaXLWF9dLvccDmwZ9sDVLTw==
+X-Received: by 2002:a05:600c:4ecd:b0:471:114e:5894 with SMTP id 5b1f17b1804b1-477b8a9b267mr34598365e9.25.1763664251610;
+        Thu, 20 Nov 2025 10:44:11 -0800 (PST)
+Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-477bf1f365fsm3763665e9.8.2025.11.20.10.44.11
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Thu, 20 Nov 2025 10:44:11 -0800 (PST)
+Date: Thu, 20 Nov 2025 18:44:09 +0000
+From: David Laight <david.laight.linux@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J.
+ Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>
+Subject: Re: [PATCH 26/44] drivers/scsi: use min() instead of min_t()
+Message-ID: <20251120184409.67db1c25@pumpkin>
+In-Reply-To: <2a8c62e1-6e29-4ac6-b661-7b5ec1763288@acm.org>
+References: <20251119224140.8616-1-david.laight.linux@gmail.com>
+	<20251119224140.8616-27-david.laight.linux@gmail.com>
+	<2a8c62e1-6e29-4ac6-b661-7b5ec1763288@acm.org>
+X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <yq1lelrleqr.fsf@ca-mkp.ca.oracle.com> <4f9794d2-00ed-22da-2b4b-e8afa424bf17@acm.org>
- <d0ac216445c33e9bf98e8c850f4d900acf0787bd.camel@suse.com> <9545766a-298d-1358-46f0-64ccfaf30ca0@suse.de>
- <6A8AA317-32B0-48F4-82DC-82B65A221A9F@purestorage.com> <083141cd-3b79-7c54-9464-df36c06cc59a@suse.de>
- <AE26D869-2E6A-45A9-8739-CFB65C6C0750@purestorage.com>
-In-Reply-To: <AE26D869-2E6A-45A9-8739-CFB65C6C0750@purestorage.com>
-From: Brian Bunker <brian@purestorage.com>
-Date: Thu, 20 Nov 2025 08:46:48 -0800
-X-Gm-Features: AWmQ_bmD-Z1O9ulU5S1BGDfkZdhMg2Mbvt171tQ-EzxXYTJeMoHruA32nVlRtgk
-Message-ID: <CAHZQxyJTgw3j-DP-fQOnvhVkwMc2oKEQiF03JZ-uaCK7LtKTqw@mail.gmail.com>
-Subject: Re: The PQ=1 saga
-To: linux-scsi@vger.kernel.org
-Cc: Martin Wilck <mwilck@suse.com>, Bart Van Assche <bvanassche@acm.org>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, Christoph Hellwig <hch@lst.de>, Hannes Reinecke <hare@suse.de>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-Hello all,
+On Wed, 19 Nov 2025 15:09:02 -0800
+Bart Van Assche <bvanassche@acm.org> wrote:
 
-I took another shot at this one. This one I think addresses any
-concerns that were brought up:
+> On 11/19/25 2:41 PM, david.laight.linux@gmail.com wrote:
+> > From: David Laight <david.laight.linux@gmail.com>
+> > 
+> > min_t(unsigned int, a, b) casts an 'unsigned long' to 'unsigned int'.
+> > Use min(a, b) instead as it promotes any 'unsigned int' to 'unsigned long'
+> > and so cannot discard significant bits.
+> > 
+> > In this case the 'unsigned long' value is small enough that the result
+> > is ok.
+> > 
+> > Detected by an extra check added to min_t().
+> > 
+> > Signed-off-by: David Laight <david.laight.linux@gmail.com>
+> > ---
+> >   drivers/scsi/hosts.c | 2 +-
+> >   1 file changed, 1 insertion(+), 1 deletion(-)
+> > 
+> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
+> > index 17173239301e..b15896560cf6 100644
+> > --- a/drivers/scsi/hosts.c
+> > +++ b/drivers/scsi/hosts.c
+> > @@ -247,7 +247,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
+> >   	shost->dma_dev = dma_dev;
+> >   
+> >   	if (dma_dev->dma_mask) {
+> > -		shost->max_sectors = min_t(unsigned int, shost->max_sectors,
+> > +		shost->max_sectors = min(shost->max_sectors,
+> >   				dma_max_mapping_size(dma_dev) >> SECTOR_SHIFT);
+> >   	}  
+> 
+> So instead of the type cast performed by min_t() potentially discarding
+> bits, the assignment potentially discards bits. I'm not sure this is an
+> improvement.
 
-https://lore.kernel.org/linux-scsi/20251114160213.21243-1-brian@purestorage=
-.com/
+The assignment cant discard bits because shost->max_sectors is also on the RHS.
+In any case you'd need a 2TB mapping size to get an error.
+That probably cant happen for other reasons.
 
-Thanks,
-Brian
+The patch is remove a false positive for a check added to min_t(T, a, b)
+that sizeof (b) <= sizeof (T).
 
+	David
 
-On Tue, Jan 31, 2023 at 1:00=E2=80=AFPM Brian Bunker <brian@purestorage.com=
-> wrote:
->
->
-> > On Jan 30, 2023, at 5:35 AM, Hannes Reinecke <hare@suse.de> wrote:
-> >
-> > On 1/27/23 20:57, Brian Bunker wrote:
-> >> I was doing some more testing of this since it has been a while since =
-I
-> >> ran these tests. It looks like reverting this will make the particular=
- situation
-> >> that I am worried about even worse. I will put the detail in.
-> >> With this in place (before you revert it). When SCSI devices are disco=
-vered
-> >> and some have a PQ=3D1 because they are in an unavailable ALUA state:
-> >> Jan 27 12:05:29 localhost kernel: scsi 7:0:0:1: scsi scan: peripheral =
-device type of 31, no device added
-> >> I don=E2=80=99t know if this intentional with the patch or not but any=
- devices with PQ=3D1
-> >> will not create SCSI devices. The logging is deceptive too since the d=
-evice type
-> >> Is 0 and not 31. In my case I have two paths to LUN 1. One is ALUA AO =
-and the
-> >> other in ALUA unavailable.
-> >> With this patch in I only get an sd device and an sg device for the AO=
- path.
-> >> The other path to LUN 1 gets no devices created because it is caught i=
-n the
-> >> If condition logged above.
-> >> Because there are no SCSI devices created, when the ALUA state returns
-> >> to an active state, a SCSI rescan, which I can trigger from the target=
- will result
-> >> in the devices getting created since the initial scan never created de=
-vices.
-> >> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY pas=
-s 1 length 36
-> >> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY suc=
-cessful with code 0x0
-> >> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY pas=
-s 2 length 96
-> >> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: scsi scan: INQUIRY suc=
-cessful with code 0x0
-> >> Jan 27 12:26:04 localhost kernel: scsi 7:0:0:1: Direct-Access     PURE=
-     FlashArray       8888 PQ: 0 ANSI: 6
-> >> Things are good with both paths to LUN 1 showing up. It is not optimal=
- since the
-> >> target has to trigger a LUN scan on the initiator affecting all paths =
-to those target
-> >> ports.
-> >> With the revert of this, things are a little different, but the way th=
-ey had been in
-> >> the past.
-> >> Jan 27 13:41:19 localhost kernel: sd 7:0:1:1: Asymmetric access state =
-changed
-> >> Jan 27 13:41:56 localhost kernel: scsi 7:0:1:1: alua: Detached
-> >> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY pas=
-s 1 length 36
-> >> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY suc=
-cessful with code 0x0
-> >> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY pas=
-s 2 length 96
-> >> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: scsi scan: INQUIRY suc=
-cessful with code 0x0
-> >> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: Direct-Access     PURE=
-     FlashArray       8888 PQ: 1 ANSI: 6
-> >> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: alua: supports implici=
-t TPGS
-> >> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: alua: device naa.624a9=
-370acc31b042de141460001141c port group 0 rel port a
-> >> Jan 27 13:42:22 localhost kernel: scsi 7:0:1:1: Attached scsi generic =
-sg7 type 0
-> >> Now an sg device is created but not an sd device. This means that ther=
-e will be
-> >> no way for this device to get an sd device created once the ALUA state=
- goes into
-> >> an active state.
-> >> The same thing done on the target that worked above no longer does:
-> >> Jan 27 13:47:48 localhost kernel: scsi 7:0:1:1: scsi scan: device exis=
-ts on 7:0:1:1
-> >> To get around this, the existing disk must be deleted so it is not cau=
-ght in the rescan
-> >> check. This cannot be controlled on the target, but it will require ma=
-nual intervention
-> >> on the initiator.
-> >> So the question becomes how should initial scan work when a LUN has a =
-PQ=3D1 set.
-> >> It is a valid, by spec with ALUA state unavailable but doesn=E2=80=99t=
- seem to be
-> >> handled. Why allow an sg device but not an sd one on initial scan in t=
-his case? There
-> >> are probably many ways to fix this. I think the simplest is to allow s=
-d device creation
-> >> on LUNs were PQ=3D1, and only restrict PQ=3D3. I am not sure the side =
-effect of this on other
-> >> targets. The other approach which will no longer work after the revert=
- is to trigger a
-> >> rescan from the target. This is sub-optimal since it is disruptive. An=
-y approach involving
-> >> the ALUA device handler will not help since there is no device to tran=
-sition if it is
-> >> discovered with PQ=3D1.
-> > Sheesh.
-> >
-> > There _is_ an easy solution for this, and that is to not use PQ=3D1 in =
-conjunction with ALUA unavailable :-)
-> >
-> > Hiding PQ=3D1 devices did serve the purpose for linux as we still canno=
-t to a 'real' rescan of a SCSI device; the 'vendor' and 'model' string is p=
-retty much fixed for the lifetime of the device, alongside with the entire =
-standard inquiry data. So if anything changes here we have to delete the de=
-vice before we can properly read it.
-> >
-> > (which also means that I'll have to retract my earlier comment about th=
-is being a good idea ...)
-> >
-> > And in the absence of that hiding PQ=3D1 devices is the best we can do.
-> > The alternative would be to implement a 'real' device rescan; but that =
-was too daunting a challenge to be undertaken until now.
-> > Things did change in the meantime, so maybe it's time to revisit that.
-> >
-> > But really, we should ask vendors to _not_ use PQ=3D1 when using ALUA. =
-I fail to see the benefit of this as both have roughly the same meaning; if=
- you have ALUA unavailable you can't access the device, hence it's complete=
-ly irrelevant what PQ says. And same for the other way round: if PQ=3D1 is =
-set really the only ALUA state which makes sense is 'unavailable'.
-> >
-> > Sadly it's not so easy to fix things up in the SCSI stack, as the PQ se=
-tting is evaluated during scanning, and the ALUA state way back later.
-> >
-> > Cheers,
-> >
-> > Hannes
-> What about something like this? This will remove the device if the PQ=3D1=
- and re-discover it. If the TPG
-> remains unavailable, it will just be created in the same way. If the TPG =
-has moved to an active state
-> the newly created device will be an available sd device. This way at leas=
-t target vendors can cause
-> the initiator to rescan and get the devices from unavailable to an active=
- state without the manual
-> Intervention on each host having to remove the devices with the PQ=3D1 se=
-t and rescan manually.
-> If the manual removal of devices is required, it does make ALUA unavailab=
-le unrealistic.
->
-> diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
-> index f9b18fdc7b3c..9ff9ca1b963e 100644
-> --- a/drivers/scsi/scsi_scan.c
-> +++ b/drivers/scsi/scsi_scan.c
-> @@ -1123,6 +1123,36 @@ static unsigned char *scsi_inq_str(unsigned char *=
-buf, unsigned char *inq,
->  }
->  #endif
->
-> +/**
-> + * scsi_remove_offline_device - remove the device if the criteria met
-> + * * @sdev:    scsi_device to check
-> + *
-> + * Description:
-> + * A SCSI device which is part of a TPG in the unavailable state will
-> + * have the PQ=3D1. If the device is discovered this way, there is no
-> + * way for it to transition to an active state. The device must be
-> + * removed and rediscovered during rescan in the event that the TPG
-> + * has transitioned to an active state.
-> + *
-> + * Return:
-> + * true: the conditions are met for device removal
-> + * false: the conditions are not met
-> + **/
-> +static bool scsi_remove_offline_device(struct scsi_device *sdev)
-> +{
-> +       if (sdev =3D=3D NULL || sdev->handler =3D=3D NULL)
-> +               return false;
-> +
-> +       if (sdev->inq_periph_qual =3D=3D SCSI_INQ_PQ_NOT_CON &&
-> +           (strncmp(sdev->handler->name, "alua", 4) =3D=3D 0)) {
-> +               SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
-> +                                 "scsi scan: discovered not accessible %=
-s\n",
-> +                                 dev_name(&sdev->sdev_gendev)));
-> +               return true;
-> +       }
-> +       return false;
-> +}
-> +
->  /**
->   * scsi_probe_and_add_lun - probe a LUN, if a LUN is found add it
->   * @starget:   pointer to target device structure
-> @@ -1161,6 +1191,10 @@ static int scsi_probe_and_add_lun(struct scsi_targ=
-et *starget,
->          * host adapter calls into here with rescan =3D=3D 0.
->          */
->         sdev =3D scsi_device_lookup_by_target(starget, lun);
-> +       if (scsi_remove_offline_device(sdev)) {
-> +               __scsi_remove_device(sdev);
-> +               sdev =3D NULL;
-> +       }
->         if (sdev) {
->                 if (rescan !=3D SCSI_SCAN_INITIAL || !scsi_device_created=
-(sdev)) {
->                         SCSI_LOG_SCAN_BUS(3, sdev_printk(KERN_INFO, sdev,
->
+> 
 > Thanks,
-> Brian
->
->
+> 
+> Bart.
+> 
 
-
---
-Brian Bunker
-PURE Storage, Inc.
-brian@purestorage.com
