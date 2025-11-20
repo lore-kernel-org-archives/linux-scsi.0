@@ -1,99 +1,122 @@
-Received: from mx0.herbolt.com (mx0.herbolt.com [5.59.97.199])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
-	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0E237330B03
-	for <linux-scsi@vger.kernel.org>; Thu, 20 Nov 2025 12:07:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=5.59.97.199
+Received: from outboundhk.mxmail.xiaomi.com (outboundhk.mxmail.xiaomi.com [207.226.244.123])
+	by smtp.subspace.kernel.org (Postfix) with ESMTP id C19DB26463A;
+	Thu, 20 Nov 2025 12:34:34 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=207.226.244.123
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763640445; cv=none; b=utXtwA9HUrGoYiEWxxQtcp95pFcjeearZe2o45PzzpnkXqh8uYk222eazGjHLV9hG+5HW8tY8Fd1GfEUR8K9DrN9wD2O+n1RqYauXos6LFMmxjiOBuMkCfTM6SUWvQazD0KkNRH/MGgLSGtrFDqxqUAq1bGs00Ve01/LnHR5sIw=
+	t=1763642077; cv=none; b=CncbBPapRFqOcV9de+28pICVBEYl2PYcAOUbksmQBwnUpFbTiDiUwWIKZoLLfXoBbPkhR6Kj/10anx88ZqE/4B+9b40Amw4vLHHob46/iYNE3Q7Gi+WOTbT8igQvNPyY8Z179Xpbwne5FyCiD2NVmodR5L8QIbj6BRzmwmOeb9A=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763640445; c=relaxed/simple;
-	bh=g9ajC52WCvLvBV8xT7zxZvL3Erd9bjm+j62g4t78Ras=;
-	h=MIME-Version:Date:From:To:Cc:Subject:In-Reply-To:References:
-	 Message-ID:Content-Type; b=uS7NCOKCRLkEGcy8GPeDUMrQsaxlZGUkXADiZLx5i3UE75XELtEpVV4pP2hqwiyxzAFLlBc1EaFxED6cJUVYpnxCKZZyNg41ZrEjfz+EPtdf3Ju/oZUobSLqLT8/92OHHxH3Nap4q1PRbsaRTwISZPhfdj/yJlbyEcCfTii4egE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com; spf=pass smtp.mailfrom=herbolt.com; arc=none smtp.client-ip=5.59.97.199
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=herbolt.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=herbolt.com
-Received: from mx0.herbolt.com (localhost [127.0.0.1])
-	by mx0.herbolt.com (Postfix) with ESMTP id E6471180F2C0;
-	Thu, 20 Nov 2025 13:07:06 +0100 (CET)
-Received: from mail.herbolt.com ([172.168.31.10])
-	by mx0.herbolt.com with ESMTPSA
-	id NN+zN2oEH2nxYjsAKEJqOA
-	(envelope-from <lukas@herbolt.com>); Thu, 20 Nov 2025 13:07:06 +0100
+	s=arc-20240116; t=1763642077; c=relaxed/simple;
+	bh=uASkiBThjg0+2aydI15+rppeNYNlJb+ZepyqZt3ACiI=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=RSZ99YFkYNevR0AKjbwhGx9jGpZQFsfIgZW66EXS2UwhDR1jbkW+ppxQUyLMYuUR1B5n2DGx4E6Pw9xYlctASdftWLMfnTliZ31bkc6WPn6/TbSU2FpjTVQSz+C2/SnaI3Ev9jkZYXAPItNLsZzIkkgbVViQNEMh1GgOSi2sQJc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com; spf=pass smtp.mailfrom=xiaomi.com; arc=none smtp.client-ip=207.226.244.123
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=xiaomi.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=xiaomi.com
+X-CSE-ConnectionGUID: I9S4tjiGQ7WW3GG6Ca6ONQ==
+X-CSE-MsgGUID: JD2+mL9rQqCt5e1vO6uGnA==
+X-IronPort-AV: E=Sophos;i="6.20,213,1758556800"; 
+   d="scan'208";a="158953641"
+From: guhuinan <guhuinan@xiaomi.com>
+To: Greg Kroah-Hartman <gregkh@linuxfoundation.org>, Oliver Neukum
+	<oneukum@suse.com>, Alan Stern <stern@rowland.harvard.edu>
+CC: <linux-usb@vger.kernel.org>, <linux-scsi@vger.kernel.org>,
+	<usb-storage@lists.one-eyed-alien.net>, <linux-kernel@vger.kernel.org>,
+	<stable@vger.kernel.org>, Yu Chen <chenyu45@xiaomi.com>, Owen Gu
+	<guhuinan@xiaomi.com>, Michal Pecio <michal.pecio@gmail.com>
+Subject: [PATCH v4] usb: uas: fix urb unmapping issue when the uas device is remove during ongoing data transfer
+Date: Thu, 20 Nov 2025 20:33:36 +0800
+Message-ID: <20251120123336.3328-1-guhuinan@xiaomi.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Date: Thu, 20 Nov 2025 13:07:06 +0100
-From: lukas@herbolt.com
-To: "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 1/1] scsi: sd: Rounddown host->opt_sectors to logical
-In-Reply-To: <yq1ecpt9yqb.fsf@ca-mkp.ca.oracle.com>
-References: <20251114102853.1476938-2-lukas@herbolt.com>
- <20251114102853.1476938-4-lukas@herbolt.com>
- <yq1ecpt9yqb.fsf@ca-mkp.ca.oracle.com>
-Message-ID: <75b29f2e38d88e5cfb246500c793a085@herbolt.com>
-X-Sender: lukas@herbolt.com
-Content-Type: text/plain; charset=US-ASCII;
- format=flowed
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: BJ-MBX19.mioffice.cn (10.237.8.139) To BJ-MBX05.mioffice.cn
+ (10.237.8.125)
 
-On 2025-11-20 04:26, Martin K. Petersen wrote:
-> Lukas,
-> 
->> The host->opt_sectors are by default 512 bytes aligned if we have 4KN
->> SAS disk reporting zero or smaller opt_xfer_block than the
->> host->opt_sectors we will end up with unaligned queue_limit->io_opt.
-> 
-> I am intrigued wrt. which controller returns a host->opt_sectors that
-> would trigger this misalignment. What is the actual value reported?
-> 
+From: Owen Gu <guhuinan@xiaomi.com>
 
-I have seen it on mpt3sas, I do not have the hardware in hand, but I do
-not think is related to specific driver as it goes trough 
-sas_host_setup()
+When a UAS device is unplugged during data transfer, there is
+a probability of a system panic occurring. The root cause is
+an access to an invalid memory address during URB callback handling.
+Specifically, this happens when the dma_direct_unmap_sg() function
+is called within the usb_hcd_unmap_urb_for_dma() interface, but the
+sg->dma_address field is 0 and the sg data structure has already been
+freed.
 
-static int sas_host_setup(struct transport_container *tc, struct device 
-*dev,
-                           struct device *cdev)
-{
-...
-         if (dma_dev->dma_mask) {
-                 shost->opt_sectors = min_t(unsigned int, 
-shost->max_sectors,
-                                 dma_opt_mapping_size(dma_dev) >> 
-SECTOR_SHIFT);
-         }
+The SCSI driver sends transfer commands by invoking uas_queuecommand_lck()
+in uas.c, using the uas_submit_urbs() function to submit requests to USB.
+Within the uas_submit_urbs() implementation, three URBs (sense_urb,
+data_urb, and cmd_urb) are sequentially submitted. Device removal may
+occur at any point during uas_submit_urbs execution, which may result
+in URB submission failure. However, some URBs might have been successfully
+submitted before the failure, and uas_submit_urbs will return the -ENODEV
+error code in this case. The current error handling directly calls
+scsi_done(). In the SCSI driver, this eventually triggers scsi_complete()
+to invoke scsi_end_request() for releasing the sgtable. The successfully
+submitted URBs, when being unlinked to giveback, call
+usb_hcd_unmap_urb_for_dma() in hcd.c, leading to exceptions during sg
+unmapping operations since the sg data structure has already been freed.
 
-         return 0;
-}
+This patch modifies the error condition check in the uas_submit_urbs()
+function. When a UAS device is removed but one or more URBs have already
+been successfully submitted to USB, it avoids immediately invoking
+scsi_done() and save the cmnd to devinfo->cmnd array. If the successfully
+submitted URBs is completed before devinfo->resetting being set, then
+the scsi_done() function will be called within uas_try_complete() after
+all pending URB operations are finalized. Otherwise, the scsi_done()
+function will be called within uas_zap_pending(), which is executed after
+usb_kill_anchored_urbs().
 
-I have vmcore from the system.
+The error handling only takes effect when uas_queuecommand_lck() calls
+uas_submit_urbs() and returns the error value -ENODEV . In this case,
+the device is disconnected, and the flow proceeds to uas_disconnect(),
+where uas_zap_pending() is invoked to call uas_try_complete().
 
-crash> scsishow | grep ^host | grep -v ahci
-host0     mpt3sas                ffff90b78c936000         
-ffff90b83ac92d20         ffff90b78c9368d0
-crash> Scsi_Host.opt_sectors ffff90b78c936000
-       opt_sectors = 0x7fff
-crash> pd 0x7fff<<9
-$3 = 16776704
+Fixes: eb2a86ae8c54 ("USB: UAS: fix disconnect by unplugging a hub")
+Cc: stable@vger.kernel.org
+Signed-off-by: Yu Chen <chenyu45@xiaomi.com>
+Signed-off-by: Owen Gu <guhuinan@xiaomi.com>
+Acked-by: Oliver Neukum <oneukum@suse.com>
+---
+v4: Add the fix tag, cc stable and acked-by tag
+v3: Add some commit message.
+v2: Upon uas_submit_urbs() returning -ENODEV despite successful URB
+submission, the cmnd is added to the devinfo->cmnd array before
+exiting uas_queuecommand_lck().
+https://lore.kernel.org/linux-usb/20251015153157.11870-1-guhuinan@xiaomi.com/
+v1: https://lore.kernel.org/linux-usb/20250930045309.21588-1-guhuinan@xiaomi.com/
+---
+---
+ drivers/usb/storage/uas.c | 5 +++++
+ 1 file changed, 5 insertions(+)
 
-and lsblk output:
+diff --git a/drivers/usb/storage/uas.c b/drivers/usb/storage/uas.c
+index 03043d567fa1..02fe411567fa 100644
+--- a/drivers/usb/storage/uas.c
++++ b/drivers/usb/storage/uas.c
+@@ -698,6 +698,10 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
+ 	 * of queueing, no matter how fatal the error
+ 	 */
+ 	if (err == -ENODEV) {
++		if (cmdinfo->state & (COMMAND_INFLIGHT | DATA_IN_URB_INFLIGHT |
++				DATA_OUT_URB_INFLIGHT))
++			goto out;
++
+ 		set_host_byte(cmnd, DID_NO_CONNECT);
+ 		scsi_done(cmnd);
+ 		goto zombie;
+@@ -711,6 +715,7 @@ static int uas_queuecommand_lck(struct scsi_cmnd *cmnd)
+ 		uas_add_work(cmnd);
+ 	}
+ 
++out:
+ 	devinfo->cmnd[idx] = cmnd;
+ zombie:
+ 	spin_unlock_irqrestore(&devinfo->lock, flags);
+-- 
+2.43.0
 
-NAME          ALIGNMENT MIN-IO   OPT-IO PHY-SEC LOG-SEC ROTA SCHED       
-RQ-SIZE    RA WSAME
-sdc                   0   4096 16776704    4096    4096    1 mq-deadline 
-     256 32764    0B
-
-
->> +	lim.io_opt = rounddown(lim.logical_block_size,
->> +			sdp->host->opt_sectors << SECTOR_SHIFT);
-> 
-> Those parameters would need to be reversed, I think. You want to round
-> down opt_sectors and not the logical_block_size.
-
-Ugh! My bad! Will send v2.
