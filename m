@@ -1,86 +1,104 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 883191E7C34
-	for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2025 23:44:17 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3F05816EB42;
+	Thu, 20 Nov 2025 01:47:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763595859; cv=none; b=K+2q95S9qbtzqlBUI1aGGpsW6JSjfMprGT9prkDhfYvMuxDlm9SHyvbbHfjhkLIT8RR5BHud2SBNMjml1MhPONPTNdFOIbmJFnFO2B0aoBVBJkKmp0w6yspD5JBg+sFBjR7Tf24ULCGaDkh4fXfPjW8Hz6v7Oec4YtxqxmZxxm4=
+	t=1763603259; cv=none; b=LehxLUdygbahBDgmM6n5WKLwmWaaFf9RQCIqQl/qgs2FG5m4isINVZgc+kLIMe0fLrbzyB7ytxDo9p+6iljFwa9nzhm8E8sTPonJt7PR5SgkmRLxv8aL1eiKt4NuVQYW+Yr6g3fvw6SDUo3r+ctpDePa5hzfAdvYg0zmpUaut44=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763595859; c=relaxed/simple;
-	bh=HeUtzAohRE8EmVAj5Xnfhb9nWLZ6yvqZJBZxrRzYqM0=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=R9OPwXOk3NbVtNpXyqqSl0o2FNflqTwk9nG+NAFtSLZ1MrQ+W1SYfEKZjOYqzrX95P7KDK4RAdjDA+qIJaWL/1E5y4Dwi8XFHJiW+fyhx1EdS1l9wFNhWOHCcle9CDcn2ntBMRVT0zwooOEX+6MMzX8GKdZ7GnTzxfxUm0MU9Tk=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=CGVZXyv9; arc=none smtp.client-ip=209.85.208.53
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=google.com
+	s=arc-20240116; t=1763603259; c=relaxed/simple;
+	bh=Qz0Kt9BVZotF+W8b8C03wV9uEpjzU2IZVkSaOcZVd50=;
+	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
+	 MIME-Version:Content-Type; b=AvH6jxCmb00Tu1pC9E68hK/IG2HkCQ2rUi3fteRS7RVCxd98MBVlgnbfgacz7Bq+11mxmr99AHS127RFH9nx6yI1texBxvKKBN1LoiUA+0YwLVTYlGXrBHoll7rtuLyDG5WYzWYIYohdSn8tVnM9wZ6SCws3KeZBQ74dXRwQNSw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=uF2z7xSs; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="CGVZXyv9"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-644fbd758b3so4476a12.0
-        for <linux-scsi@vger.kernel.org>; Wed, 19 Nov 2025 15:44:17 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1763595856; x=1764200656; darn=vger.kernel.org;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:from:to:cc:subject:date:message-id:reply-to;
-        bh=HeUtzAohRE8EmVAj5Xnfhb9nWLZ6yvqZJBZxrRzYqM0=;
-        b=CGVZXyv9riY3HS9YVaK685uy37baJbHqy3Y6I/mNP0jfzdcNQMFcnfwND5tgrFNP63
-         GWIMyTzmyA0dGckJ+Jbb0b692xP82oLqogJsbdzk/mGU22GEEy3OwS2OIClw+nygnbZQ
-         hl4oTrA1N3CMCjLpf9bvvT5VRDTrDkA91S6oIZEy0Nzboo/023j3YbCH0eMGz+aX2ESt
-         +7Gtm4cjsZ6QekJTv7aszDqQLXFlrX1vs9Gl223IuvLFr5deGThAm19ZENXEo+zmQrpf
-         J6Ubfq228MAC5TsfIQGukqveY/6tOI1pOKBTQ0Z5R3/ieFHQ0G8+iPd00cynQNc9UbZF
-         /46A==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763595856; x=1764200656;
-        h=cc:to:subject:message-id:date:from:in-reply-to:references
-         :mime-version:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=HeUtzAohRE8EmVAj5Xnfhb9nWLZ6yvqZJBZxrRzYqM0=;
-        b=Gxyz0VpmtiqUJr7kD7ALtrpgR4qh4EWwtI6LFLgTAX0tyvI6kEO9mlxQgSiQBETM+s
-         5CrKkAuBbwjLhCGBhEXUN8wT06WxN0jXtzLYFcA8WKM/aGyrfSszYTLso1569MZ5T6EY
-         ffmYepOtzKDGFYkgH8lRXfGX8RczK0olLFKKQ+koRXxheBY7bQbGQZEeUgDQ+uQqKo8g
-         beKaBbFHHW8bPb7PhWehhLift0Ti8Tg62CFmHl1glJLG+MzjdR1Mx5gFXWrhN9hUyYmS
-         JHwF++0sY9HtL0ikrQeMKqfLe3+a4hvCzRc0yDWTCAjqo05V3cB3nEV+oPqyVupwUrcP
-         ssMA==
-X-Forwarded-Encrypted: i=1; AJvYcCUEIAxtZQTzSQSX3q8qpJF1JvkbEsWP+ZNruc1UHknE39u+CkWBtTJn82zYU6ADeDI5fAC9KmY6Lz7v@vger.kernel.org
-X-Gm-Message-State: AOJu0YwM9LXBI0sy7F8N8Ly21j6izJSJxLMwDrlTePeFQ8NhaSD1Vqcb
-	whXYY8KTSVgtNQ87Jx0tOIaS6kkKdCrWfPHFm1+W14GYEOza+sjHRoLCkhML5GxnX6b6mjNkaW3
-	gXl+Jq6tOj6NqXhR7ayMlaj1fBonUBodplKEqELDt
-X-Gm-Gg: ASbGncuuWvfr729E7LUO3xdHM2L+Tmngrj/NGNXyatP5L3/e9R1TTUkegdnsYpErDpo
-	mgTbsdB6vMW+1i9IhfJvppUz9bxARcpC08XwyloiUnBU5zHBNA56vdqMuJtFFQMT2Ij+ZVTKXoW
-	xs9sd4UDPHcpci+22ByQ//f0sm0Pp4Nfs+iaiLQgTPv1iZvapNKwSw/U6rxcg+u0HDeCSJUTEXj
-	qZ5JllWVsi4UBaVhQk1H1Qc5cy/t6gAKrYdtpVJNwcjL2TENh9poHL5MefzhZoC4xGdTGz8nYjI
-	+5zTbtwkyh6YyTBWhGF1OjiaOVN6ta43ho/t
-X-Google-Smtp-Source: AGHT+IECxMgeB6hGldjiCyyVM1CUwH7nPUoRpi007aec7GNkGRHNxXg/yJU1gwSArBmSXF/P8S+WAa5vtxyMdbFwJPg=
-X-Received: by 2002:a05:6402:5642:b0:640:4aeb:b4d3 with SMTP id
- 4fb4d7f45d1cf-64536c3bf3amr20733a12.2.1763595855810; Wed, 19 Nov 2025
- 15:44:15 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="uF2z7xSs"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id EFC38C113D0;
+	Thu, 20 Nov 2025 01:47:34 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1763603258;
+	bh=Qz0Kt9BVZotF+W8b8C03wV9uEpjzU2IZVkSaOcZVd50=;
+	h=Date:From:To:Cc:Subject:In-Reply-To:References:From;
+	b=uF2z7xSsJBEF2o7jOCGEA8BICVnf2Ll7GN/YdEoLbs8PaQeAHioKS/o3SZ7QSxsKt
+	 vFnjbh6TICH8PLye1zHlHKdpzDE5Fm345e4L/w0hg/fEJ7Itp2slYgup6C6JZwwIym
+	 LLCi+QyeEmLY48F4L7ZzcbTStdyHeEENY8Hfnp0DqQrXSF5r2MrZk7t4OMHkvbN7PR
+	 8Qcsuc8hp1q4+vdSlLZQjWoYyrPh5U9WhuFsg9TNqdi8dNwuUtBQRxPyNJujXI9VwL
+	 mc5s7M6miwKRs2zV2Elwkq7lUfoGg+X1KHfkkxDDXD+SynQUk6oIGjhckD0gmUEmi4
+	 nBJOVjtHwyLhA==
+Date: Wed, 19 Nov 2025 17:47:34 -0800
+From: Jakub Kicinski <kuba@kernel.org>
+To: david.laight.linux@gmail.com
+Cc: linux-kernel@vger.kernel.org, Alan Stern <stern@rowland.harvard.edu>,
+ Alexander Viro <viro@zeniv.linux.org.uk>, Alexei Starovoitov
+ <ast@kernel.org>, Andi Shyti <andi.shyti@kernel.org>, Andreas Dilger
+ <adilger.kernel@dilger.ca>, Andrew Lunn <andrew@lunn.ch>, Andrew Morton
+ <akpm@linux-foundation.org>, Andrii Nakryiko <andrii@kernel.org>, Andy
+ Shevchenko <andriy.shevchenko@linux.intel.com>, Ard Biesheuvel
+ <ardb@kernel.org>, Arnaldo Carvalho de Melo <acme@kernel.org>, Bjorn
+ Helgaas <bhelgaas@google.com>, Borislav Petkov <bp@alien8.de>, Christian
+ Brauner <brauner@kernel.org>, Christian =?UTF-8?B?S8O2bmln?=
+ <christian.koenig@amd.com>, Christoph Hellwig <hch@lst.de>, Daniel Borkmann
+ <daniel@iogearbox.net>, Dan Williams <dan.j.williams@intel.com>, Dave
+ Hansen <dave.hansen@linux.intel.com>, Dave Jiang <dave.jiang@intel.com>,
+ David Ahern <dsahern@kernel.org>, David Hildenbrand <david@redhat.com>,
+ Davidlohr Bueso <dave@stgolabs.net>, "David S. Miller"
+ <davem@davemloft.net>, Dennis Zhou <dennis@kernel.org>, Eric Dumazet
+ <edumazet@google.com>, Greg Kroah-Hartman <gregkh@linuxfoundation.org>,
+ Herbert Xu <herbert@gondor.apana.org.au>, Ingo Molnar <mingo@redhat.com>,
+ Jakub Sitnicki <jakub@cloudflare.com>, "James E.J. Bottomley"
+ <James.Bottomley@HansenPartnership.com>, Jarkko Sakkinen
+ <jarkko@kernel.org>, "Jason A. Donenfeld" <Jason@zx2c4.com>, Jens Axboe
+ <axboe@kernel.dk>, Jiri Slaby <jirislaby@kernel.org>, Johannes Weiner
+ <hannes@cmpxchg.org>, John Allen <john.allen@amd.com>, Jonathan Cameron
+ <jonathan.cameron@huawei.com>, Juergen Gross <jgross@suse.com>, Kees Cook
+ <kees@kernel.org>, KP Singh <kpsingh@kernel.org>, Linus Walleij
+ <linus.walleij@linaro.org>, "Martin K. Petersen"
+ <martin.petersen@oracle.com>, "Matthew Wilcox (Oracle)"
+ <willy@infradead.org>, Mika Westerberg <westeri@kernel.org>, Mike Rapoport
+ <rppt@kernel.org>, Miklos Szeredi <miklos@szeredi.hu>, Namhyung Kim
+ <namhyung@kernel.org>, Neal Cardwell <ncardwell@google.com>,
+ nic_swsd@realtek.com, OGAWA Hirofumi <hirofumi@mail.parknet.co.jp>, Olivia
+ Mackall <olivia@selenic.com>, Paolo Abeni <pabeni@redhat.com>, Paolo
+ Bonzini <pbonzini@redhat.com>, Peter Huewe <peterhuewe@gmx.de>, Peter
+ Zijlstra <peterz@infradead.org>, "Rafael J. Wysocki" <rafael@kernel.org>,
+ Sean Christopherson <seanjc@google.com>, Srinivas Kandagatla
+ <srini@kernel.org>, Stefano Stabellini <sstabellini@kernel.org>, Steven
+ Rostedt <rostedt@goodmis.org>, Tejun Heo <tj@kernel.org>, "Theodore Ts'o"
+ <tytso@mit.edu>, Thomas Gleixner <tglx@linutronix.de>, Tom Lendacky
+ <thomas.lendacky@amd.com>, Willem de Bruijn
+ <willemdebruijn.kernel@gmail.com>, x86@kernel.org, Yury Norov
+ <yury.norov@gmail.com>, amd-gfx@lists.freedesktop.org, bpf@vger.kernel.org,
+ cgroups@vger.kernel.org, dri-devel@lists.freedesktop.org,
+ io-uring@vger.kernel.org, kvm@vger.kernel.org, linux-acpi@vger.kernel.org,
+ linux-block@vger.kernel.org, linux-crypto@vger.kernel.org,
+ linux-cxl@vger.kernel.org, linux-efi@vger.kernel.org,
+ linux-ext4@vger.kernel.org, linux-fsdevel@vger.kernel.org,
+ linux-gpio@vger.kernel.org, linux-i2c@vger.kernel.org,
+ linux-integrity@vger.kernel.org, linux-mm@kvack.org,
+ linux-nvme@lists.infradead.org, linux-pci@vger.kernel.org,
+ linux-perf-users@vger.kernel.org, linux-scsi@vger.kernel.org,
+ linux-serial@vger.kernel.org, linux-trace-kernel@vger.kernel.org,
+ linux-usb@vger.kernel.org, mptcp@lists.linux.dev, netdev@vger.kernel.org,
+ usb-storage@lists.one-eyed-alien.net
+Subject: Re: [PATCH 00/44] Change a lot of min_t() that might mask high bits
+Message-ID: <20251119174734.5cba3f95@kernel.org>
+In-Reply-To: <20251119224140.8616-1-david.laight.linux@gmail.com>
+References: <20251119224140.8616-1-david.laight.linux@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251112063214.1195761-1-powenkao@google.com> <7d964e31162bf93f583e6e78a3044152894ecb94.camel@mediatek.com>
- <CA+=0d2YnrDL41DXtC8kDmtXioy4+hohGsmrOPxJY31jqt22uww@mail.gmail.com>
- <c4bd6532b003089fedf518db878a3843c516217c.camel@mediatek.com>
- <CA+=0d2aYn_q=i6Yy=zSu6eE=Fj0oTk4t00e1uezBxqNc5E7pdg@mail.gmail.com> <301cc0724a9e22bf195cb0bafb0c5d298e93e99d.camel@mediatek.com>
-In-Reply-To: <301cc0724a9e22bf195cb0bafb0c5d298e93e99d.camel@mediatek.com>
-From: Brian Kao <powenkao@google.com>
-Date: Thu, 20 Nov 2025 07:44:03 +0800
-X-Gm-Features: AWmQ_bm4cahJS4Lohnad2QmDb2yx2c3yF0HSW0FcnEoAweWJLIFn1Fj4RIsNgLc
-Message-ID: <CA+=0d2a6YKD_OGcM89b4ZUn=gEhF6G-YxTfRBouiX-wYcyxS7w@mail.gmail.com>
-Subject: Re: [PATCH 1/1] scsi: ufs: core: Fix EH failure after wlun resume error
-To: =?UTF-8?B?UGV0ZXIgV2FuZyAo546L5L+h5Y+LKQ==?= <peter.wang@mediatek.com>
-Cc: "beanhuo@micron.com" <beanhuo@micron.com>, "avri.altman@wdc.com" <avri.altman@wdc.com>, 
-	"quic_nguyenb@quicinc.com" <quic_nguyenb@quicinc.com>, 
-	"linux-scsi@vger.kernel.org" <linux-scsi@vger.kernel.org>, "bvanassche@acm.org" <bvanassche@acm.org>, 
-	"linux-kernel@vger.kernel.org" <linux-kernel@vger.kernel.org>, 
-	"alim.akhtar@samsung.com" <alim.akhtar@samsung.com>, 
-	"adrian.hunter@intel.com" <adrian.hunter@intel.com>, "mani@kernel.org" <mani@kernel.org>, 
-	"James.Bottomley@hansenpartnership.com" <James.Bottomley@hansenpartnership.com>, 
-	"martin.petersen@oracle.com" <martin.petersen@oracle.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: text/plain; charset=US-ASCII
+Content-Transfer-Encoding: 7bit
 
-HI Peter
+On Wed, 19 Nov 2025 22:40:56 +0000 david.laight.linux@gmail.com wrote:
+> I've had to trim the 124 maintainers/lists that get_maintainer.pl finds
+> from 124 to under 100 to be able to send the cover letter.
+> The individual patches only go to the addresses found for the associated files.
+> That reduces the number of emails to a less unsane number.
 
-Yes, that is correct. :)
+Please split the networking (9?) patches out to a separate series.
+It will help you with the CC list, and help us to get this applied..
