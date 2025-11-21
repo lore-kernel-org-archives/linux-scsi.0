@@ -1,244 +1,120 @@
-Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99D7F36D4F6
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2025 18:21:52 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EC63E29E10C
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2025 19:14:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763749314; cv=none; b=WvKM9LM9vFLu6yBUFRP2pR2gsqgjJ2M43EixOVYsXMHNExORu4VTJ/M+W5rT+KjZGqq3xRO38fviRiQ3nJ6zckjlTuK6cTlaJOXADSU5Ox26twACEvwX0pJI/y1R+INna1In7fLa8po1eCznddfYxie7aHRHiVKITaPWvj6pB7s=
+	t=1763752467; cv=none; b=jESusdN/zBWBzp7PKmNuj4Orlre/HeWCtVSOLFh1fqyH/k0C+DsaJsy6Epf6y6Lzo96JLXqI0qtExz9smRuzPoVNu18+l0TSpIdV1W18EfqEzGBA3xQxtuOm8PXkD2lYNBO0BTW2k5XhNCZlpZHos+IXsR4wpP28jTXLDCKqfjw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763749314; c=relaxed/simple;
-	bh=ZJmbUn4IffQhDs/jnVD245VCpfNstnA0In0/9JfH5V4=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=MbqQLK1kgNubaP5zrIIWQ12LJ30Z0qBtb7dqNkK0paUnSqYDuLS5RQDPCtgYuRpw/XNVC0FOODU0sdeLT0IyfL9FRcA9feY8BtEzOguk+g4tlPnK+A2sdmkDsCUEgTJ94BFwLBgyJh3cVO0WkzMyw4WHWMA82kqGDMhxYYW14Qg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ANTJq6XU; arc=none smtp.client-ip=199.89.3.6
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1763752467; c=relaxed/simple;
+	bh=6XHbdE7Cl2AW8C7I4nYeJXpehHAgLoxsdbsHy0jwxQY=;
+	h=Date:Mime-Version:Message-ID:Subject:From:To:Cc:Content-Type; b=MYuwxXQAHRecP0lyiUPCqbwN3M5oIA2bQbf7K/dvyY/VaSnZX/u2KymKJjVtH08vKMMkOzpwqwj3/A5S5CQ5nWxUI1pygYJHW0NoHq24z4JmMYRkvmwCxAwwCFvnh96bBelCoF/BZE5SV2t0sO1cUovtAYWtEtorKqefYnL8KZo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=QrNPGAOJ; arc=none smtp.client-ip=209.85.216.74
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--tarunsahu.bounces.google.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ANTJq6XU"
-Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4dCk7z1tWmzlvF8J;
-	Fri, 21 Nov 2025 18:21:51 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:references:in-reply-to
-	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1763749309; x=1766341310; bh=1aTnF
-	9i74R0urw0TRGz6cYnAv4Pl6TRyGCYX8J6Rd0I=; b=ANTJq6XUw4/fDj/nRtCLQ
-	kR7KR1qrS+sROgxsnF7oHyHrJDGr+VS3NoClDHIcTsj/F3z7V7xrrh/74fEbtRRi
-	UmP3kL5lDRhWyIOnUO9VVzN8Wcmc5ucNQ9SBOeT9ikvZxW9sNDbgaLtulWIXiIgY
-	dcxv9o4Ixf3L9io5blsLXTV9yiWG0skk/9WGDRTstqNOu2HqHDL0u1VIxGSgigx/
-	aDmYz9bofs9xFZZBJ8TyIIt+pAJbgjKX6hsy6Q6HhEYo7IkaL08MoLZNr1vHSrFv
-	wAe3om5VsWVNgOXl/4E0I6wS64alGzibXZdzYUa69VOwsNpVYGnziSWZPPO3zE7r
-	Q==
-X-Virus-Scanned: by MailRoute
-Received: from 003.mia.mailroute.net ([127.0.0.1])
- by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 6Tf_UuoySkMI; Fri, 21 Nov 2025 18:21:49 +0000 (UTC)
-Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4dCk7s3cYTzlvDRy;
-	Fri, 21 Nov 2025 18:21:44 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Damien Le Moal <dlemoal@kernel.org>,
-	Himanshu Madhani <himanshu.madhani@oracle.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v3 5/5] scsi: sd: Do not split error messages
-Date: Fri, 21 Nov 2025 10:21:10 -0800
-Message-ID: <20251121182112.3485615-6-bvanassche@acm.org>
-X-Mailer: git-send-email 2.52.0.rc2.455.g230fcf2819-goog
-In-Reply-To: <20251121182112.3485615-1-bvanassche@acm.org>
-References: <20251121182112.3485615-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="QrNPGAOJ"
+Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-340ad9349b3so4932660a91.1
+        for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2025 11:14:25 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=google.com; s=20230601; t=1763752465; x=1764357265; darn=vger.kernel.org;
+        h=cc:to:from:subject:message-id:mime-version:date:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=Ao/6ZXxMc6Z81jJHtK2fJh36s23Ta/p72z+HIg0LrzI=;
+        b=QrNPGAOJiyWF1nPZNKgtsBrHFdV9hs7Kp70DdLg9s/GZ345tcT7bWYCXHStRTTDXva
+         k9CAQgdYwWl6H+SXyjShgsJ/zoA+W52ZqcBS9ogXdDxkOcQETjdRGgpzEbmzDLuiTgku
+         ymYbri7koEjTdsLKAeerNXYVApwDcr/edraP7KopPt+yN0O+oPRHqRi9mcnuYN64xFni
+         aRs/UbpZkucVwfJiDuDmA+tCjL6YdVN9Z27xqRm3IyqM+IAehdHKp0MH7WJf+8/J8YXZ
+         GHjXa52qYRijUmO/2hGMJqU4lxgGENYmlH/as6NN6V6NC5uGXTTVaZK5c0BGfsABFIXn
+         BC1g==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1763752465; x=1764357265;
+        h=cc:to:from:subject:message-id:mime-version:date:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=Ao/6ZXxMc6Z81jJHtK2fJh36s23Ta/p72z+HIg0LrzI=;
+        b=lWysXl2FhXKjObpjiAmqQY+qNrxuc8CX+ZuD6me1W7F506U+Y6E1s5d1bIaJ/RKLiK
+         FmW//sAQnPip9VKXPLhjV5MHsuqvRPZtLSc/EaUy6tdoC5/NwHPSALxIGBiyqw6fh9Vs
+         MSClbH8qlYxjF1iS43CADCkfdd1SGwWiw4Ta7nU/CWf8jqqmtXyJ+y63NaSqJBvzTpkL
+         1b2vPitbPwg0eEwGTVJYiNVbGo/bSco5k2JuslHHwnWNGtU/pucDtvxiX/0sr/6OGf7d
+         Xibi9tMy9PhZE1K7e08zY3oAdmkh1pDgDaQinDcfNAXrX9ekpcILoIzvA/31vF7fnOtc
+         Tahg==
+X-Forwarded-Encrypted: i=1; AJvYcCV7SaEv+1KVvj/aT9GxTrR2vrGUamye//TXbvLCv0CoiGNpYY4WITHQD+4CIlO6FKaMhabAT3dbEmmJ@vger.kernel.org
+X-Gm-Message-State: AOJu0YwZXLqtqXw6LEKDpL0OLe+VnvDLTumFuYpK/nAyQMkx51pHyllE
+	0VTlowT2O1VhNreGu/9nA41d3bBPaqPvAh241woEkn4vCoXkgb3+v81g8PR82EubqQFBqD652P2
+	LBlXzHZb9Xc/4BbpxtA==
+X-Google-Smtp-Source: AGHT+IEdpeXvhCE6/slRQyGoUn5xgRhHbN47nseVRQHPwwmRdUeRC4l2yFrEqesh0ActqFAViS37dhyCjlqvUHg=
+X-Received: from pjuv1.prod.google.com ([2002:a17:90a:d581:b0:342:8ef1:9719])
+ (user=tarunsahu job=prod-delivery.src-stubby-dispatcher) by
+ 2002:a17:90b:3d0f:b0:340:d578:f299 with SMTP id 98e67ed59e1d1-34733e45883mr3904022a91.3.1763752465312;
+ Fri, 21 Nov 2025 11:14:25 -0800 (PST)
+Date: Fri, 21 Nov 2025 19:14:22 +0000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+Mime-Version: 1.0
+X-Mailer: git-send-email 2.52.0.rc2.455.g230fcf2819-goog
+Message-ID: <20251121191422.2758555-1-tarunsahu@google.com>
+Subject: [RFC PATCH v2] md: remove legacy 1s delay in md_notify_reboot
+From: Tarun Sahu <tarunsahu@google.com>
+To: linux-raid@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org, song@kernel.org
+Cc: berrange@redhat.com, neil@brown.name, hch@lst.de, 
+	pasha.tatashin@soleen.com, mclapinski@google.com, khazhy@google.com, 
+	Tarun Sahu <tarunsahu@google.com>
+Content-Type: text/plain; charset="UTF-8"
 
-Make it easier to find these error messages with grep. This patch has bee=
-n
-created as follows:
-* Delete all occurrences of the following regular expression:
-  "[[:blank:]]*\\*\n[[:blank:]]*"
-* Split long lines manually where necessary.
+During system shutdown, the md driver registered notifier function
+(md_notify_reboot) currently imposes a hardcoded one-second delay.
 
-Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
-Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+This delay was introduced approximately 23 years ago and was likely
+necessary for the hardware generation of that time. Proposing this
+patch to make sure there are no known devices that need this delay.
+
+Signed-off-by: Tarun Sahu <tarunsahu@google.com>
 ---
- drivers/scsi/sd.c | 54 ++++++++++++++++++++---------------------------
- 1 file changed, 23 insertions(+), 31 deletions(-)
+v2:
+	Added linux-scsi mailing list
 
-diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index f52b435bf398..7bb9e9cf8c00 100644
---- a/drivers/scsi/sd.c
-+++ b/drivers/scsi/sd.c
-@@ -1682,9 +1682,10 @@ static int sd_ioctl(struct block_device *bdev, blk=
-_mode_t mode,
- 	struct scsi_device *sdp =3D sdkp->device;
- 	void __user *p =3D (void __user *)arg;
- 	int error;
--   =20
--	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=3D%s, "
--				    "cmd=3D0x%x\n", disk->disk_name, cmd));
-+
-+	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp,
-+				    "sd_ioctl: disk=3D%s, cmd=3D0x%x\n",
-+				    disk->disk_name, cmd));
-=20
- 	if (bdev_is_partition(bdev) && !capable(CAP_SYS_RAWIO))
- 		return -ENOIOCTLCMD;
-@@ -2583,8 +2584,8 @@ static int sd_read_protection_type(struct scsi_disk=
- *sdkp, unsigned char *buffer
- 	type =3D ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 =3D Type 1 */
-=20
- 	if (type > T10_PI_TYPE3_PROTECTION) {
--		sd_printk(KERN_ERR, sdkp, "formatted with unsupported"	\
--			  " protection type %u. Disabling disk!\n",
-+		sd_printk(KERN_ERR, sdkp,
-+			  "formatted with unsupported protection type %u. Disabling disk!\n",
- 			  type);
- 		sdkp->protection_type =3D 0;
- 		return -ENODEV;
-@@ -2861,8 +2862,8 @@ sd_read_capacity(struct scsi_disk *sdkp, struct que=
-ue_limits *lim,
- 		if ((sizeof(sdkp->capacity) > 4) &&
- 		    (sdkp->capacity > 0xffffffffULL)) {
- 			int old_sector_size =3D sector_size;
--			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
--					"Trying to use READ CAPACITY(16).\n");
-+			sd_printk(KERN_NOTICE, sdkp,
-+				  "Very big device. Trying to use READ CAPACITY(16).\n");
- 			sector_size =3D read_capacity_16(sdkp, sdp, lim, buffer);
- 			if (sector_size < 0) {
- 				sd_printk(KERN_NOTICE, sdkp,
-@@ -2888,17 +2889,16 @@ sd_read_capacity(struct scsi_disk *sdkp, struct q=
-ueue_limits *lim,
- 	 */
- 	if (sdp->fix_capacity ||
- 	    (sdp->guess_capacity && (sdkp->capacity & 0x01))) {
--		sd_printk(KERN_INFO, sdkp, "Adjusting the sector count "
--				"from its reported value: %llu\n",
--				(unsigned long long) sdkp->capacity);
-+		sd_printk(KERN_INFO, sdkp,
-+			  "Adjusting the sector count from its reported value: %llu\n",
-+			  (unsigned long long) sdkp->capacity);
- 		--sdkp->capacity;
+ drivers/md/md.c | 11 -----------
+ 1 file changed, 11 deletions(-)
+
+diff --git a/drivers/md/md.c b/drivers/md/md.c
+index b086cbf24086..66c4d66b4b86 100644
+--- a/drivers/md/md.c
++++ b/drivers/md/md.c
+@@ -9704,7 +9704,6 @@ static int md_notify_reboot(struct notifier_block *this,
+ 			    unsigned long code, void *x)
+ {
+ 	struct mddev *mddev;
+-	int need_delay = 0;
+ 
+ 	spin_lock(&all_mddevs_lock);
+ 	list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
+@@ -9718,21 +9717,11 @@ static int md_notify_reboot(struct notifier_block *this,
+ 				mddev->safemode = 2;
+ 			mddev_unlock(mddev);
+ 		}
+-		need_delay = 1;
+ 		spin_lock(&all_mddevs_lock);
+ 		mddev_put_locked(mddev);
  	}
-=20
- got_data:
- 	if (sector_size =3D=3D 0) {
- 		sector_size =3D 512;
--		sd_printk(KERN_NOTICE, sdkp, "Sector size 0 reported, "
--			  "assuming 512.\n");
-+		sd_printk(KERN_NOTICE, sdkp, "Sector size 0 reported, assuming 512.\n"=
-);
- 	}
-=20
- 	if (sector_size !=3D 512 &&
-@@ -3103,8 +3103,9 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
- char *buffer)
- 	if (len < 3)
- 		goto bad_sense;
- 	else if (len > SD_BUF_SIZE) {
--		sd_first_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
--			  "data from %d to %d bytes\n", len, SD_BUF_SIZE);
-+		sd_first_printk(KERN_NOTICE, sdkp,
-+				"Truncating mode parameter data from %d to %d bytes\n",
-+				len, SD_BUF_SIZE);
- 		len =3D SD_BUF_SIZE;
- 	}
- 	if (modepage =3D=3D 0x3F && sdp->use_192_bytes_for_3f)
-@@ -3127,8 +3128,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
- char *buffer)
- 				 */
- 				if (len - offset <=3D 2) {
- 					sd_first_printk(KERN_ERR, sdkp,
--						"Incomplete mode parameter "
--							"data\n");
-+						"Incomplete mode parameter data\n");
- 					goto defaults;
- 				} else {
- 					modepage =3D page_code;
-@@ -3143,8 +3143,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
- char *buffer)
- 					offset +=3D 2 + buffer[offset+1];
- 				else {
- 					sd_first_printk(KERN_ERR, sdkp,
--							"Incomplete mode "
--							"parameter data\n");
-+							"Incomplete mode parameter data\n");
- 					goto defaults;
- 				}
- 			}
-@@ -3607,8 +3606,7 @@ static bool sd_validate_min_xfer_size(struct scsi_d=
-isk *sdkp)
-=20
- 	if (min_xfer_bytes & (sdkp->physical_block_size - 1)) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Preferred minimum I/O size %u bytes not a " \
--				"multiple of physical block size (%u bytes)\n",
-+				"Preferred minimum I/O size %u bytes not a multiple of physical bloc=
-k size (%u bytes)\n",
- 				min_xfer_bytes, sdkp->physical_block_size);
- 		sdkp->min_xfer_blocks =3D 0;
- 		return false;
-@@ -3638,41 +3636,35 @@ static bool sd_validate_opt_xfer_size(struct scsi=
-_disk *sdkp,
-=20
- 	if (sdkp->opt_xfer_blocks > dev_max) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u logical blocks " \
--				"> dev_max (%u logical blocks)\n",
-+				"Optimal transfer size %u logical blocks > dev_max (%u logical block=
-s)\n",
- 				sdkp->opt_xfer_blocks, dev_max);
- 		return false;
- 	}
-=20
- 	if (sdkp->opt_xfer_blocks > SD_DEF_XFER_BLOCKS) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u logical blocks " \
--				"> sd driver limit (%u logical blocks)\n",
-+				"Optimal transfer size %u logical blocks > sd driver limit (%u logic=
-al blocks)\n",
- 				sdkp->opt_xfer_blocks, SD_DEF_XFER_BLOCKS);
- 		return false;
- 	}
-=20
- 	if (opt_xfer_bytes < PAGE_SIZE) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u bytes < " \
--				"PAGE_SIZE (%u bytes)\n",
-+				"Optimal transfer size %u bytes < PAGE_SIZE (%u bytes)\n",
- 				opt_xfer_bytes, (unsigned int)PAGE_SIZE);
- 		return false;
- 	}
-=20
- 	if (min_xfer_bytes && opt_xfer_bytes % min_xfer_bytes) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u bytes not a " \
--				"multiple of preferred minimum block " \
--				"size (%u bytes)\n",
-+				"Optimal transfer size %u bytes not a multiple of preferred minimum =
-block size (%u bytes)\n",
- 				opt_xfer_bytes, min_xfer_bytes);
- 		return false;
- 	}
-=20
- 	if (opt_xfer_bytes & (sdkp->physical_block_size - 1)) {
- 		sd_first_printk(KERN_WARNING, sdkp,
--				"Optimal transfer size %u bytes not a " \
--				"multiple of physical block size (%u bytes)\n",
-+				"Optimal transfer size %u bytes not a multiple of physical block siz=
-e (%u bytes)\n",
- 				opt_xfer_bytes, sdkp->physical_block_size);
- 		return false;
- 	}
+ 	spin_unlock(&all_mddevs_lock);
+ 
+-	/*
+-	 * certain more exotic SCSI devices are known to be
+-	 * volatile wrt too early system reboots. While the
+-	 * right place to handle this issue is the given
+-	 * driver, we do want to have a safe RAID driver ...
+-	 */
+-	if (need_delay)
+-		msleep(1000);
+-
+ 	return NOTIFY_DONE;
+ }
+ 
+-- 
+2.52.0.rc2.455.g230fcf2819-goog
+
