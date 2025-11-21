@@ -1,46 +1,46 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D408B1C8FBA
-	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2025 18:21:46 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 99D7F36D4F6
+	for <linux-scsi@vger.kernel.org>; Fri, 21 Nov 2025 18:21:52 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763749308; cv=none; b=oT5U6OpkQ8GYR7Jctx3zGZEhyEupN/vmVXU3/Sd87JR5eJNhPn0+jauxT2O4JS9ITkUoraUJ8WYzwl8r9TYyxwqZzx7/ZqJGmgyzb6zVr4workcNRVEo9dF0tcIPXKPm0Ba5yrwo8ZzPZClpd4OVEpHo3XDF1EfAaMUZQidZ+0k=
+	t=1763749314; cv=none; b=WvKM9LM9vFLu6yBUFRP2pR2gsqgjJ2M43EixOVYsXMHNExORu4VTJ/M+W5rT+KjZGqq3xRO38fviRiQ3nJ6zckjlTuK6cTlaJOXADSU5Ox26twACEvwX0pJI/y1R+INna1In7fLa8po1eCznddfYxie7aHRHiVKITaPWvj6pB7s=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763749308; c=relaxed/simple;
-	bh=RfeMuZy24kOE4i5GP5xojU/AEjLIgIH9mYHfojujF0M=;
+	s=arc-20240116; t=1763749314; c=relaxed/simple;
+	bh=ZJmbUn4IffQhDs/jnVD245VCpfNstnA0In0/9JfH5V4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=IZtliykkIzum131yFm0kY0yvoAXyRjBqXE4CNCr1uSE8Kn9tIsoCbo1j/1zYQnamCVAae4QNaFXdvS5Sg3l4qQ61GvDXjVFX6Fv5KTSeK+Ju+an2BX88Vfjz7UviPEpThJSt6WfKPeIXSE0S7CAs+sB+xe6jw5oMSc74EXhp8yE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=u1b0bhoS; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=MbqQLK1kgNubaP5zrIIWQ12LJ30Z0qBtb7dqNkK0paUnSqYDuLS5RQDPCtgYuRpw/XNVC0FOODU0sdeLT0IyfL9FRcA9feY8BtEzOguk+g4tlPnK+A2sdmkDsCUEgTJ94BFwLBgyJh3cVO0WkzMyw4WHWMA82kqGDMhxYYW14Qg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=ANTJq6XU; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="u1b0bhoS"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="ANTJq6XU"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4dCk7s5pRRzlvF8H;
-	Fri, 21 Nov 2025 18:21:45 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4dCk7z1tWmzlvF8J;
+	Fri, 21 Nov 2025 18:21:51 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1763749304; x=1766341305; bh=xlb8X
-	hC0A18q86FNAkULtYE4sJQolg1CKKPpXe/8/pA=; b=u1b0bhoSUj5FTdCEsIY+Q
-	POxgjpWWYrsKDPEgfz/BfPUrv5nzLRmTSQFnLiMeE7k8OVePYAH6tMdU+kiNDbXU
-	trz6kuucwyRMKWq9FS5JdQobP5H9it3HgsQDO8lw4lkYWFtOOrTfimIc70fdwOcB
-	xUs9VY1qIyZW+IEDKig4h7b5ZUKcKPbEBeItJh6+gytRZKiwgWbr9yKHeJLmMN2o
-	BcB6s5+MwPwXYPGA7fsvfhdPJpWNh/2zrhT+jlvoR7PwNm82TUp+SkmQeR7bF6/A
-	96g3PJ+yuDkujhN6XLgbQoMP+NWtrClUsPklBNpewLz4X6SWRVSq0ha2XO8FDwv2
-	w==
+	:received:received; s=mr01; t=1763749309; x=1766341310; bh=1aTnF
+	9i74R0urw0TRGz6cYnAv4Pl6TRyGCYX8J6Rd0I=; b=ANTJq6XUw4/fDj/nRtCLQ
+	kR7KR1qrS+sROgxsnF7oHyHrJDGr+VS3NoClDHIcTsj/F3z7V7xrrh/74fEbtRRi
+	UmP3kL5lDRhWyIOnUO9VVzN8Wcmc5ucNQ9SBOeT9ikvZxW9sNDbgaLtulWIXiIgY
+	dcxv9o4Ixf3L9io5blsLXTV9yiWG0skk/9WGDRTstqNOu2HqHDL0u1VIxGSgigx/
+	aDmYz9bofs9xFZZBJ8TyIIt+pAJbgjKX6hsy6Q6HhEYo7IkaL08MoLZNr1vHSrFv
+	wAe3om5VsWVNgOXl/4E0I6wS64alGzibXZdzYUa69VOwsNpVYGnziSWZPPO3zE7r
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ZhuCSaI7_t3e; Fri, 21 Nov 2025 18:21:44 +0000 (UTC)
+ id 6Tf_UuoySkMI; Fri, 21 Nov 2025 18:21:49 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4dCk7m69rKzlvF8M;
-	Fri, 21 Nov 2025 18:21:40 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4dCk7s3cYTzlvDRy;
+	Fri, 21 Nov 2025 18:21:44 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -48,9 +48,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Damien Le Moal <dlemoal@kernel.org>,
 	Himanshu Madhani <himanshu.madhani@oracle.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v3 4/5] scsi: sd: Move the sd_fops definition
-Date: Fri, 21 Nov 2025 10:21:09 -0800
-Message-ID: <20251121182112.3485615-5-bvanassche@acm.org>
+Subject: [PATCH v3 5/5] scsi: sd: Do not split error messages
+Date: Fri, 21 Nov 2025 10:21:10 -0800
+Message-ID: <20251121182112.3485615-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.52.0.rc2.455.g230fcf2819-goog
 In-Reply-To: <20251121182112.3485615-1-bvanassche@acm.org>
 References: <20251121182112.3485615-1-bvanassche@acm.org>
@@ -62,71 +62,183 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Move the sd_fops definition such that the sd_unlock_native_capacity()
-forward declaration can be removed.
+Make it easier to find these error messages with grep. This patch has bee=
+n
+created as follows:
+* Delete all occurrences of the following regular expression:
+  "[[:blank:]]*\\*\n[[:blank:]]*"
+* Split long lines manually where necessary.
 
 Reviewed-by: Damien Le Moal <dlemoal@kernel.org>
 Reviewed-by: Himanshu Madhani <himanshu.madhani@oracle.com>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/sd.c | 31 +++++++++++++++----------------
- 1 file changed, 15 insertions(+), 16 deletions(-)
+ drivers/scsi/sd.c | 54 ++++++++++++++++++++---------------------------
+ 1 file changed, 23 insertions(+), 31 deletions(-)
 
 diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-index 58b33e9dad76..f52b435bf398 100644
+index f52b435bf398..7bb9e9cf8c00 100644
 --- a/drivers/scsi/sd.c
 +++ b/drivers/scsi/sd.c
-@@ -105,7 +105,6 @@ MODULE_ALIAS_SCSI_DEVICE(TYPE_ZBC);
- static void sd_config_write_same(struct scsi_disk *sdkp,
- 		struct queue_limits *lim);
- static void  sd_revalidate_disk(struct gendisk *);
--static void sd_unlock_native_capacity(struct gendisk *disk);
-=20
- static DEFINE_IDA(sd_index_ida);
-=20
-@@ -2174,21 +2173,6 @@ static void scsi_disk_free_disk(struct gendisk *di=
-sk)
- 	put_device(&sdkp->disk_dev);
- }
-=20
--static const struct block_device_operations sd_fops =3D {
--	.owner			=3D THIS_MODULE,
--	.open			=3D sd_open,
--	.release		=3D sd_release,
--	.ioctl			=3D sd_ioctl,
--	.getgeo			=3D sd_getgeo,
--	.compat_ioctl		=3D blkdev_compat_ptr_ioctl,
--	.check_events		=3D sd_check_events,
--	.unlock_native_capacity	=3D sd_unlock_native_capacity,
--	.report_zones		=3D sd_zbc_report_zones,
--	.get_unique_id		=3D sd_get_unique_id,
--	.free_disk		=3D scsi_disk_free_disk,
--	.pr_ops			=3D &sd_pr_ops,
--};
--
- /**
-  *	sd_eh_reset - reset error handling callback
-  *	@scmd:		sd-issued command that has failed
-@@ -3882,6 +3866,21 @@ static void sd_unlock_native_capacity(struct gendi=
-sk *disk)
- 		sdev->host->hostt->unlock_native_capacity(sdev);
- }
-=20
-+static const struct block_device_operations sd_fops =3D {
-+	.owner			=3D THIS_MODULE,
-+	.open			=3D sd_open,
-+	.release		=3D sd_release,
-+	.ioctl			=3D sd_ioctl,
-+	.getgeo			=3D sd_getgeo,
-+	.compat_ioctl		=3D blkdev_compat_ptr_ioctl,
-+	.check_events		=3D sd_check_events,
-+	.unlock_native_capacity	=3D sd_unlock_native_capacity,
-+	.report_zones		=3D sd_zbc_report_zones,
-+	.get_unique_id		=3D sd_get_unique_id,
-+	.free_disk		=3D scsi_disk_free_disk,
-+	.pr_ops			=3D &sd_pr_ops,
-+};
+@@ -1682,9 +1682,10 @@ static int sd_ioctl(struct block_device *bdev, blk=
+_mode_t mode,
+ 	struct scsi_device *sdp =3D sdkp->device;
+ 	void __user *p =3D (void __user *)arg;
+ 	int error;
+-   =20
+-	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp, "sd_ioctl: disk=3D%s, "
+-				    "cmd=3D0x%x\n", disk->disk_name, cmd));
 +
- /**
-  *	sd_format_disk_name - format disk name
-  *	@prefix: name prefix - ie. "sd" for SCSI disks
++	SCSI_LOG_IOCTL(1, sd_printk(KERN_INFO, sdkp,
++				    "sd_ioctl: disk=3D%s, cmd=3D0x%x\n",
++				    disk->disk_name, cmd));
+=20
+ 	if (bdev_is_partition(bdev) && !capable(CAP_SYS_RAWIO))
+ 		return -ENOIOCTLCMD;
+@@ -2583,8 +2584,8 @@ static int sd_read_protection_type(struct scsi_disk=
+ *sdkp, unsigned char *buffer
+ 	type =3D ((buffer[12] >> 1) & 7) + 1; /* P_TYPE 0 =3D Type 1 */
+=20
+ 	if (type > T10_PI_TYPE3_PROTECTION) {
+-		sd_printk(KERN_ERR, sdkp, "formatted with unsupported"	\
+-			  " protection type %u. Disabling disk!\n",
++		sd_printk(KERN_ERR, sdkp,
++			  "formatted with unsupported protection type %u. Disabling disk!\n",
+ 			  type);
+ 		sdkp->protection_type =3D 0;
+ 		return -ENODEV;
+@@ -2861,8 +2862,8 @@ sd_read_capacity(struct scsi_disk *sdkp, struct que=
+ue_limits *lim,
+ 		if ((sizeof(sdkp->capacity) > 4) &&
+ 		    (sdkp->capacity > 0xffffffffULL)) {
+ 			int old_sector_size =3D sector_size;
+-			sd_printk(KERN_NOTICE, sdkp, "Very big device. "
+-					"Trying to use READ CAPACITY(16).\n");
++			sd_printk(KERN_NOTICE, sdkp,
++				  "Very big device. Trying to use READ CAPACITY(16).\n");
+ 			sector_size =3D read_capacity_16(sdkp, sdp, lim, buffer);
+ 			if (sector_size < 0) {
+ 				sd_printk(KERN_NOTICE, sdkp,
+@@ -2888,17 +2889,16 @@ sd_read_capacity(struct scsi_disk *sdkp, struct q=
+ueue_limits *lim,
+ 	 */
+ 	if (sdp->fix_capacity ||
+ 	    (sdp->guess_capacity && (sdkp->capacity & 0x01))) {
+-		sd_printk(KERN_INFO, sdkp, "Adjusting the sector count "
+-				"from its reported value: %llu\n",
+-				(unsigned long long) sdkp->capacity);
++		sd_printk(KERN_INFO, sdkp,
++			  "Adjusting the sector count from its reported value: %llu\n",
++			  (unsigned long long) sdkp->capacity);
+ 		--sdkp->capacity;
+ 	}
+=20
+ got_data:
+ 	if (sector_size =3D=3D 0) {
+ 		sector_size =3D 512;
+-		sd_printk(KERN_NOTICE, sdkp, "Sector size 0 reported, "
+-			  "assuming 512.\n");
++		sd_printk(KERN_NOTICE, sdkp, "Sector size 0 reported, assuming 512.\n"=
+);
+ 	}
+=20
+ 	if (sector_size !=3D 512 &&
+@@ -3103,8 +3103,9 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
+ char *buffer)
+ 	if (len < 3)
+ 		goto bad_sense;
+ 	else if (len > SD_BUF_SIZE) {
+-		sd_first_printk(KERN_NOTICE, sdkp, "Truncating mode parameter "
+-			  "data from %d to %d bytes\n", len, SD_BUF_SIZE);
++		sd_first_printk(KERN_NOTICE, sdkp,
++				"Truncating mode parameter data from %d to %d bytes\n",
++				len, SD_BUF_SIZE);
+ 		len =3D SD_BUF_SIZE;
+ 	}
+ 	if (modepage =3D=3D 0x3F && sdp->use_192_bytes_for_3f)
+@@ -3127,8 +3128,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
+ char *buffer)
+ 				 */
+ 				if (len - offset <=3D 2) {
+ 					sd_first_printk(KERN_ERR, sdkp,
+-						"Incomplete mode parameter "
+-							"data\n");
++						"Incomplete mode parameter data\n");
+ 					goto defaults;
+ 				} else {
+ 					modepage =3D page_code;
+@@ -3143,8 +3143,7 @@ sd_read_cache_type(struct scsi_disk *sdkp, unsigned=
+ char *buffer)
+ 					offset +=3D 2 + buffer[offset+1];
+ 				else {
+ 					sd_first_printk(KERN_ERR, sdkp,
+-							"Incomplete mode "
+-							"parameter data\n");
++							"Incomplete mode parameter data\n");
+ 					goto defaults;
+ 				}
+ 			}
+@@ -3607,8 +3606,7 @@ static bool sd_validate_min_xfer_size(struct scsi_d=
+isk *sdkp)
+=20
+ 	if (min_xfer_bytes & (sdkp->physical_block_size - 1)) {
+ 		sd_first_printk(KERN_WARNING, sdkp,
+-				"Preferred minimum I/O size %u bytes not a " \
+-				"multiple of physical block size (%u bytes)\n",
++				"Preferred minimum I/O size %u bytes not a multiple of physical bloc=
+k size (%u bytes)\n",
+ 				min_xfer_bytes, sdkp->physical_block_size);
+ 		sdkp->min_xfer_blocks =3D 0;
+ 		return false;
+@@ -3638,41 +3636,35 @@ static bool sd_validate_opt_xfer_size(struct scsi=
+_disk *sdkp,
+=20
+ 	if (sdkp->opt_xfer_blocks > dev_max) {
+ 		sd_first_printk(KERN_WARNING, sdkp,
+-				"Optimal transfer size %u logical blocks " \
+-				"> dev_max (%u logical blocks)\n",
++				"Optimal transfer size %u logical blocks > dev_max (%u logical block=
+s)\n",
+ 				sdkp->opt_xfer_blocks, dev_max);
+ 		return false;
+ 	}
+=20
+ 	if (sdkp->opt_xfer_blocks > SD_DEF_XFER_BLOCKS) {
+ 		sd_first_printk(KERN_WARNING, sdkp,
+-				"Optimal transfer size %u logical blocks " \
+-				"> sd driver limit (%u logical blocks)\n",
++				"Optimal transfer size %u logical blocks > sd driver limit (%u logic=
+al blocks)\n",
+ 				sdkp->opt_xfer_blocks, SD_DEF_XFER_BLOCKS);
+ 		return false;
+ 	}
+=20
+ 	if (opt_xfer_bytes < PAGE_SIZE) {
+ 		sd_first_printk(KERN_WARNING, sdkp,
+-				"Optimal transfer size %u bytes < " \
+-				"PAGE_SIZE (%u bytes)\n",
++				"Optimal transfer size %u bytes < PAGE_SIZE (%u bytes)\n",
+ 				opt_xfer_bytes, (unsigned int)PAGE_SIZE);
+ 		return false;
+ 	}
+=20
+ 	if (min_xfer_bytes && opt_xfer_bytes % min_xfer_bytes) {
+ 		sd_first_printk(KERN_WARNING, sdkp,
+-				"Optimal transfer size %u bytes not a " \
+-				"multiple of preferred minimum block " \
+-				"size (%u bytes)\n",
++				"Optimal transfer size %u bytes not a multiple of preferred minimum =
+block size (%u bytes)\n",
+ 				opt_xfer_bytes, min_xfer_bytes);
+ 		return false;
+ 	}
+=20
+ 	if (opt_xfer_bytes & (sdkp->physical_block_size - 1)) {
+ 		sd_first_printk(KERN_WARNING, sdkp,
+-				"Optimal transfer size %u bytes not a " \
+-				"multiple of physical block size (%u bytes)\n",
++				"Optimal transfer size %u bytes not a multiple of physical block siz=
+e (%u bytes)\n",
+ 				opt_xfer_bytes, sdkp->physical_block_size);
+ 		return false;
+ 	}
