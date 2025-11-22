@@ -1,171 +1,165 @@
-Received: from mail-wm1-f46.google.com (mail-wm1-f46.google.com [209.85.128.46])
+Received: from mail-wm1-f41.google.com (mail-wm1-f41.google.com [209.85.128.41])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AADA6248F47
-	for <linux-scsi@vger.kernel.org>; Sat, 22 Nov 2025 21:50:27 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.46
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6BA6218027
+	for <linux-scsi@vger.kernel.org>; Sat, 22 Nov 2025 22:15:42 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.41
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763848229; cv=none; b=UgZPs6He5vjS4ryic54DamlOpMwe/7sF0cU5KZLuYGFDOGH8sXKaRzQlDA28jrmXYXWNiUmW3lJWjVEdjvX2pS6+ifYMZ9VkgMgxbjDRrjllMRtHsNImH4c8OIiyCuCchpxXMPMtgrVdz+DickIEknyBTyrmsGCB9oRkkjZ2LdE=
+	t=1763849744; cv=none; b=pDGLHCUGe+jKoJEg7U/4n1HAznIDhhSPlhlvt/9PWvETyHG7m2kkjWjMSEtpECIjUAVAFxXCDqx5ZuxoP4QgNKgS4Bxny+o37LqMmhl31kZVEy9h2vLiO3pcCYHU+xwU982AFkcn2W0DGnv4DoysOSPALz3GFmUL1UmKpVuQsYg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763848229; c=relaxed/simple;
-	bh=rfoTv/vcDcHpqPYc567XyOgXz+CB29IrhpuLZMJ5lpU=;
-	h=Date:From:To:Cc:Subject:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=clAWjrTIAYlj+FIrSB8E5I6QO6Kf78lZLTojKLXcsBtwelgvBT69jiDLd5u843ugRbDng891dvh3hJYpwBKV2MmNXq7q41z1DV5iiyLCCjLeEVmUltn6KbW3e7eeMnFvX9fpJOO9m4sJCWXtxVVVSVk5mWLQuBkAd0MaFIwVO/E=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=YJL2Etn6; arc=none smtp.client-ip=209.85.128.46
+	s=arc-20240116; t=1763849744; c=relaxed/simple;
+	bh=ZbypScHbAO+VX+ph/T3ZdsLo8gmuwSU4A1hRC3pmB4A=;
+	h=Message-ID:Date:MIME-Version:Subject:Cc:References:From:
+	 In-Reply-To:Content-Type; b=i0y+n2jeeZxeYbitLPqaaVXvCVJKL96MWUhSWx1iDp4JMtJVuO7BhMuJuXNE6RxL6qX6U4bA3fjNu1j/y+9TMnf3jHkbbLrLhyCe4Qi8FSqn2G4r+nmSOxc3hasBp9qndGBGCwRAtwUH4wjms31JM9mDhTxIEyEfyTKioWZOzTk=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=GIrzr6TC; arc=none smtp.client-ip=209.85.128.41
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="YJL2Etn6"
-Received: by mail-wm1-f46.google.com with SMTP id 5b1f17b1804b1-47789cd2083so18315355e9.2
-        for <linux-scsi@vger.kernel.org>; Sat, 22 Nov 2025 13:50:27 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="GIrzr6TC"
+Received: by mail-wm1-f41.google.com with SMTP id 5b1f17b1804b1-47798f4059fso2994165e9.2
+        for <linux-scsi@vger.kernel.org>; Sat, 22 Nov 2025 14:15:42 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763848226; x=1764453026; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=7VzGD2PZne2Hvgq6k37X7YqrTYGMyVJ6AVnPA9INa9g=;
-        b=YJL2Etn6nCMILbp44x63NiafwgjvPkLI7VcOm0y/9+MdgKKa3lmxoiDh8+Xq12UgAS
-         4z7k2heDYb5sHdKov8Y6PW7anuI+76FfYcDHncTLtV4xyBaIKS6EWx7rAwBlbygbkEiX
-         QOUQ0Jdmt93mb+J0UQbgDGArIgvHGmN/F45MSxTNPlynr2ntDRNz4rwirWNm2TKIqnJF
-         pYoqF2MBm0PZnRpMAJiw1nQM7Nie7lg7FW5qV3ly2jQGdp2ENJF8FJJIlr71luNwa/6l
-         eM4ibJ5sj/fTkt47yYBOTb60WW2r5wqg/NWgSpSqEN564U6njkB2bRK4WhbEv+hQfTE2
-         +iqg==
+        d=gmail.com; s=20230601; t=1763849741; x=1764454541; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:subject:mime-version:date:message-id:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=RVgHtHLQUB4Ofl49yROKnRqGj/eOZU46fNyXcNC6ijs=;
+        b=GIrzr6TC+rC1jHBhWNEZHbBgJmTviV0usGrOPIU+ew74Kzt0DMYxoU3w2YmSrfwIta
+         9+BFuDAaKhloAGgefwaCm1GBN3TPvIU5CqXZyrzjS3CLnf/A8vdoGj5uz0hLeCljPhgU
+         TZW8uvXbMZNSwNDU9yD1zNN5inrq3XPpvTwLqWcQuKKO7CoNYBB2QqplIIYNQdja5k9X
+         zFrVMK3x2dGV+YUTzURTsf+MgF59oJ6pgRwArRrjL/jREte1DeIspHGow0fjZToCyQTf
+         vZw77It9LxL72kaGNF91wIoWtzZIEdQztuNzE5iigbyfcc4PNshnuxpZJfsS4uqZMV0P
+         wfkQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763848226; x=1764453026;
-        h=content-transfer-encoding:mime-version:references:in-reply-to
-         :message-id:subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=7VzGD2PZne2Hvgq6k37X7YqrTYGMyVJ6AVnPA9INa9g=;
-        b=dqXdpNeLLm9vdM9k1RRwDFl4Jz16ChAG7T4wUfz+lOdX3eLQnw5yjIj9K962Z7suO6
-         HpRRAZrsjeSoz3okrGdhOXzPqWDYRX7w8G84kLZ3zNieDQUt7F/cvzDd1kv8vnqi8S9J
-         4KL2XMGFUUKcg0CPfX7Ax0oqAoP1/vKC3GahkQciawnB6QA+Gfz95WVd5MwxcO1/4vxW
-         5HKauDF2slLA1MHkGqGqczmFmE49GTR5wARuwMnq5by2vDZHREVBVG/goWIDmRsLPUeC
-         UyNk73xjARjDlQvTeuv3OZ/fTTpU6Yk4kHNOqTROXVtS8wQHX8GyXiRt/PZpaoR7G4oD
-         Wh8Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUGi4kjw+Pl9fBWSoa1RihPrMkYQfqqjioqQ4XDQOFySvgH97Qw2V0ob8JbPSOJLogRIoWpJonXXwRT@vger.kernel.org
-X-Gm-Message-State: AOJu0YxNy7BBEbiEMqVvPVLYeECqkOoE4tXGfjnG6hmNcW6MHY9zous5
-	Mot9hd0g1J9JUTtmP308snMIhPsnUvickzx9AL/B58MB1YXWNCeL+gQ1
-X-Gm-Gg: ASbGncvdLcR8+ea1LfLtZNfa07BetAdQIrQlOj1HOWY56tSXT6SzKI37JtGe4R6f/ye
-	hhD/TRzjXXoqZ3RKl+1m5afYoyOywZcXYeAcV3XbVRd6deeDfREx3L5z41k5e3uCDpmRZVStG/C
-	CzYJoNjpco16FXTygYZ5u/aXRvgIsp8krB1rjzN4qWTNHHUvkyFP019or6+FTKvXodK6qwcBji6
-	8GNZPj1D/8dlic2eY9U/wDaER7JTHuR7peVcWiMXc8dcOLSKcUy+4hnMUmQ4qrSXNixfvpk/yRB
-	CiiwEji93gOy+7SOehZ5iWZgJfAooCjAkfKvzV09ZzshXGPWHQe2Ib0alMEI6tDJfpuM9uxpViO
-	I04Mz9M3A3F4c78l9OQ0HePh5vBiQ68RofkMk2FC2WkkUklmzpegW7IOkbADwsm34juMSy7elVi
-	hQWzYz7lhDAy1SzPgE2UtweL1oA2EPIl9TZV03b+zZT8qsK/Wkk5CFGDn9JGoZAHE=
-X-Google-Smtp-Source: AGHT+IFa4wB3TXVM6n2AaqdODIKufZ2tRcZFuBHy0buOS58QPa65FnaGDLATe40D+AWpNpfwCfCNXA==
-X-Received: by 2002:a05:600c:1c82:b0:477:9650:3175 with SMTP id 5b1f17b1804b1-477c1057310mr81311285e9.0.1763848225678;
-        Sat, 22 Nov 2025 13:50:25 -0800 (PST)
-Received: from pumpkin (82-69-66-36.dsl.in-addr.zen.co.uk. [82.69.66.36])
-        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-477bf1e868bsm108159615e9.4.2025.11.22.13.50.25
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Sat, 22 Nov 2025 13:50:25 -0800 (PST)
-Date: Sat, 22 Nov 2025 21:50:23 +0000
-From: David Laight <david.laight.linux@gmail.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: linux-kernel@vger.kernel.org, linux-scsi@vger.kernel.org, "James E.J.
- Bottomley" <James.Bottomley@HansenPartnership.com>, "Martin K. Petersen"
- <martin.petersen@oracle.com>
-Subject: Re: [PATCH 26/44] drivers/scsi: use min() instead of min_t()
-Message-ID: <20251122215023.2fe10a2b@pumpkin>
-In-Reply-To: <2a8c62e1-6e29-4ac6-b661-7b5ec1763288@acm.org>
-References: <20251119224140.8616-1-david.laight.linux@gmail.com>
-	<20251119224140.8616-27-david.laight.linux@gmail.com>
-	<2a8c62e1-6e29-4ac6-b661-7b5ec1763288@acm.org>
-X-Mailer: Claws Mail 4.1.1 (GTK 3.24.38; arm-unknown-linux-gnueabihf)
+        d=1e100.net; s=20230601; t=1763849741; x=1764454541;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:subject:mime-version:date:message-id:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=RVgHtHLQUB4Ofl49yROKnRqGj/eOZU46fNyXcNC6ijs=;
+        b=LrO1LpM/n3LDOLUfFa/sNjOOFpqMDRubHyv1AK2s2RhlkmcnDbGIeryLBPFIParh4A
+         eKGKgJGHCoSBot2e3mYKpfoRHAbiLbf5ikkdVpPiI+FjiIAqEeZb5Q5UV0TOkcHIxAJu
+         XqAKI979dp7IMNO+JR1MHqWj1hxQezGsgZLlaNrissW34cP1GDMNnC9DGpVL0+zMPFwc
+         /1LZL93OpfQe67hjhE8+Q4zH32tMEZsNHwGwvp/9qoi1NZP66qNj0Zzy0IG1wvensA2K
+         zxFndkJXD/Awka0a1CPIwSnR0jkQoNjN+8EdLD8+XhDcf5m71VEljt+L9IqJxGucfQid
+         Tydw==
+X-Forwarded-Encrypted: i=1; AJvYcCXUXrNxfPQVTulJ/dTiE++dP+mWL5DW2edBRolwytmsmG5zk9QAhD1PH0j9HTx8+Mbz3ssUAmyvIqZA@vger.kernel.org
+X-Gm-Message-State: AOJu0YyOkGz2R0ZPKFAKXXb41YNXg6EKgrEsbQVYpcDiOv8IBX/nzkn1
+	sISjKV2WHxQnWf6pjhILjYnJMTC4P474Jkb6VX+QGKcDELKXu5fdO1wCHWDOUmE=
+X-Gm-Gg: ASbGnctgHy8t3fhCkcSQ7mVF36ZAfMZYatjoa1NJ0NOwsHVvJyuF2YkexuvRB4BWlGM
+	zmGtUXJ+9mNo0yH4JLxrSoiGYQIv5h1tuZmb1b5f3WRIVhI4qtlTMH9+Xa1nxCd8d7FJTXpp3BE
+	7WMEENYNzM3CAYjxY3gDjbbFDDGL2JnVG+bOG2BBqAdTVIFu2gz/pH5QKPmJqEKKiG1/18117OI
+	gPL4eGFFt4w6DD6qLYgvPhwC1gZqcZPmRcIyX1wwzks/cIsGwrzFDZU4FIq6bo7nlqSenETXtUh
+	KX6L3zXd271BJECP1MYgxTtb9WalDm+TsJ9Wktg5OZKWF+XYmcRjq+3JM6NJJ8oX8TrL7i8IGu8
+	4GKP2OEyScZY3N7pleqtCXu9jVMF/v9gF7oSKPeOtMrjnP1rc2VgJAcIGPlaaxTdp3MYvPa9iw5
+	824bBXs1B5qC+fk5KotbFMphzlLlcARQjvsHRYIV4BTqlLSDNIjuXmPtzCVJk=
+X-Google-Smtp-Source: AGHT+IGlTo5VXic6dl+yY2Jsj7NKBqSSLOSj+GOyTKWsJ+gPRPcGzyPc5UizW5yfkzUy5ex5L1HyRw==
+X-Received: by 2002:a05:600c:45d1:b0:477:5b01:7d42 with SMTP id 5b1f17b1804b1-477c01dcbb6mr39268015e9.5.1763849740508;
+        Sat, 22 Nov 2025 14:15:40 -0800 (PST)
+Received: from localhost (98.red-80-39-32.staticip.rima-tde.net. [80.39.32.98])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-477bf3558d5sm111214545e9.1.2025.11.22.14.15.39
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 22 Nov 2025 14:15:40 -0800 (PST)
+Message-ID: <d7d58136-9730-4ed5-a0b5-42a33281da28@gmail.com>
+Date: Sat, 22 Nov 2025 23:15:39 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=US-ASCII
+Subject: Re: [PATCH v2] scsi: qla2xxx: remove references to unavailable
+ firmware files
+Cc: Nilesh Javali <njavali@marvell.com>,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ QLOGIC-ML <GR-QLogic-Storage-Upstream@marvell.com>,
+ SCSI-ML <linux-scsi@vger.kernel.org>
+References: <20250928141859.215307-1-xose.vazquez@gmail.com>
+Content-Language: en-US, en-GB, es-ES
+From: Xose Vazquez Perez <xose.vazquez@gmail.com>
+In-Reply-To: <20250928141859.215307-1-xose.vazquez@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On Wed, 19 Nov 2025 15:09:02 -0800
-Bart Van Assche <bvanassche@acm.org> wrote:
+On 9/28/25 4:18 PM, Xose Vazquez Perez wrote:
 
-> On 11/19/25 2:41 PM, david.laight.linux@gmail.com wrote:
-> > From: David Laight <david.laight.linux@gmail.com>
-> > 
-> > min_t(unsigned int, a, b) casts an 'unsigned long' to 'unsigned int'.
-> > Use min(a, b) instead as it promotes any 'unsigned int' to 'unsigned long'
-> > and so cannot discard significant bits.
-> > 
-> > In this case the 'unsigned long' value is small enough that the result
-> > is ok.
-> > 
-> > Detected by an extra check added to min_t().
-> > 
-> > Signed-off-by: David Laight <david.laight.linux@gmail.com>
-> > ---
-> >   drivers/scsi/hosts.c | 2 +-
-> >   1 file changed, 1 insertion(+), 1 deletion(-)
-> > 
-> > diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> > index 17173239301e..b15896560cf6 100644
-> > --- a/drivers/scsi/hosts.c
-> > +++ b/drivers/scsi/hosts.c
-> > @@ -247,7 +247,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
-> >   	shost->dma_dev = dma_dev;
-> >   
-> >   	if (dma_dev->dma_mask) {
-> > -		shost->max_sectors = min_t(unsigned int, shost->max_sectors,
-> > +		shost->max_sectors = min(shost->max_sectors,
-> >   				dma_max_mapping_size(dma_dev) >> SECTOR_SHIFT);
-> >   	}  
+Is there any problem/drawback?
+
+> They are not in linux-firmware, and some(all???) of them are loaded only from flash.
+> This should have been done in f8ac60855ebfa and 940a7f09ad645
 > 
-> So instead of the type cast performed by min_t() potentially discarding
-> bits, the assignment potentially discards bits. I'm not sure this is an
-> improvement.
-
-In this case the assignment is fine - shost->max_sectors is on both sides,
-so the value can only go down.
-
-The issue is that dma_max_mapping_size() returns a 64bit value.
-So if you have some magic high speed interface with a 2TB 'dma map'
-then 'dma_max_mapping_size(dma_dev) >> SECTOR_SHIFT' is '1u << 32' so
-is zero when cast to 'unsigned int'.
-At that point things start going horribly wrong.
-
-I don't think there are any such interfaces - so the bug this fixes
-can't happen.
-
-OTOH the same test does pick up a lot (and I mean a lot [1]) of driver code
-that contains code like:
-ssize_t do_xxx(...  size_t len)
-{
-	unsigned int copied = 0, frag_len;
-	while (copied < len) {
-		frag_len = min_t(unsigned int, len, MAX_FRAG);
-		....
-		copied += frag_len;
-		len -= frag_len;
-	}
-	return copied;
-}
-
-If you manage to request a transfer for 4G (or more) then it doesn't work.
-Now there might be a test earlier that stops that happening in a lot of places.
-But from the perspective of the function it isn't true.
-(I suspect readv() with a single iov[] can generate a big buffer.)
-The compile-time test detects that (unsigned int)len may not equal len
-and it can be fixed by changing to min(len, MAX_FRAG);
-In this case it might be a real bug.
-
-Note that a read can be truncated after a few bytes - it is only the
-buffer size that needs to be massive.
-
-	David
-
-[1] I've just built allmodconfig - 'only' 488 more files needed changing.
-A fair number of 'real bugs', a few false positives because PAGE_SIZE and
-sizeof() are 64bit, and a lot of dubious code.
-By far the worst are all the min_t([u8|u16], ...) in many cases the code
-uses the type of the destination - so you get (eg):
-	u8_var = min(u8, value_32 / 2, 255);
-
+> v2: remove firmware upload code
 > 
-> Thanks,
+> Cc: Nilesh Javali <njavali@marvell.com>
+> Cc: James E.J. Bottomley <James.Bottomley@HansenPartnership.com>
+> Cc: Martin K. Petersen <martin.petersen@oracle.com>
+> Cc: QLOGIC-ML <GR-QLogic-Storage-Upstream@marvell.com>
+> Cc: SCSI-ML <linux-scsi@vger.kernel.org>
+> Signed-off-by: Xose Vazquez Perez <xose.vazquez@gmail.com>
+> ---
+>   drivers/scsi/qla2xxx/qla_os.c | 30 ------------------------------
+>   1 file changed, 30 deletions(-)
 > 
-> Bart.
+> diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+> index d4b484c0fd9d..cc0bb30c1963 100644
+> --- a/drivers/scsi/qla2xxx/qla_os.c
+> +++ b/drivers/scsi/qla2xxx/qla_os.c
+> @@ -7606,12 +7606,6 @@ qla2x00_timer(struct timer_list *t)
+>   #define FW_ISP2322	3
+>   #define FW_ISP24XX	4
+>   #define FW_ISP25XX	5
+> -#define FW_ISP81XX	6
+> -#define FW_ISP82XX	7
+> -#define FW_ISP2031	8
+> -#define FW_ISP8031	9
+> -#define FW_ISP27XX	10
+> -#define FW_ISP28XX	11
+>   
+>   #define FW_FILE_ISP21XX	"ql2100_fw.bin"
+>   #define FW_FILE_ISP22XX	"ql2200_fw.bin"
+> @@ -7619,12 +7613,6 @@ qla2x00_timer(struct timer_list *t)
+>   #define FW_FILE_ISP2322	"ql2322_fw.bin"
+>   #define FW_FILE_ISP24XX	"ql2400_fw.bin"
+>   #define FW_FILE_ISP25XX	"ql2500_fw.bin"
+> -#define FW_FILE_ISP81XX	"ql8100_fw.bin"
+> -#define FW_FILE_ISP82XX	"ql8200_fw.bin"
+> -#define FW_FILE_ISP2031	"ql2600_fw.bin"
+> -#define FW_FILE_ISP8031	"ql8300_fw.bin"
+> -#define FW_FILE_ISP27XX	"ql2700_fw.bin"
+> -#define FW_FILE_ISP28XX	"ql2800_fw.bin"
+>   
+>   
+>   static DEFINE_MUTEX(qla_fw_lock);
+> @@ -7636,12 +7624,6 @@ static struct fw_blob qla_fw_blobs[] = {
+>   	{ .name = FW_FILE_ISP2322, .segs = { 0x800, 0x1c000, 0x1e000, 0 }, },
+>   	{ .name = FW_FILE_ISP24XX, },
+>   	{ .name = FW_FILE_ISP25XX, },
+> -	{ .name = FW_FILE_ISP81XX, },
+> -	{ .name = FW_FILE_ISP82XX, },
+> -	{ .name = FW_FILE_ISP2031, },
+> -	{ .name = FW_FILE_ISP8031, },
+> -	{ .name = FW_FILE_ISP27XX, },
+> -	{ .name = FW_FILE_ISP28XX, },
+>   	{ .name = NULL, },
+>   };
+>   
+> @@ -7663,18 +7645,6 @@ qla2x00_request_firmware(scsi_qla_host_t *vha)
+>   		blob = &qla_fw_blobs[FW_ISP24XX];
+>   	} else if (IS_QLA25XX(ha)) {
+>   		blob = &qla_fw_blobs[FW_ISP25XX];
+> -	} else if (IS_QLA81XX(ha)) {
+> -		blob = &qla_fw_blobs[FW_ISP81XX];
+> -	} else if (IS_QLA82XX(ha)) {
+> -		blob = &qla_fw_blobs[FW_ISP82XX];
+> -	} else if (IS_QLA2031(ha)) {
+> -		blob = &qla_fw_blobs[FW_ISP2031];
+> -	} else if (IS_QLA8031(ha)) {
+> -		blob = &qla_fw_blobs[FW_ISP8031];
+> -	} else if (IS_QLA27XX(ha)) {
+> -		blob = &qla_fw_blobs[FW_ISP27XX];
+> -	} else if (IS_QLA28XX(ha)) {
+> -		blob = &qla_fw_blobs[FW_ISP28XX];
+>   	} else {
+>   		return NULL;
+>   	}
 
