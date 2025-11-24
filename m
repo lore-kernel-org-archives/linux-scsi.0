@@ -1,74 +1,75 @@
-Received: from mail-pf1-f176.google.com (mail-pf1-f176.google.com [209.85.210.176])
+Received: from mail-pj1-f47.google.com (mail-pj1-f47.google.com [209.85.216.47])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 87EE42AD0C
-	for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2025 14:20:50 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.176
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2BB8D3126B7
+	for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2025 14:59:08 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763994052; cv=none; b=LNerU/YqJ3lysyCUsXBv2G6DrU2iJ9Di5C5wqPY+9W70oHgiqY406cQwtLl3qqSpsFsnygrKVUOcC6o1+4/vh40IWRW/sADiC+1TxHpRweJd8HbH+tOhbej2+5H7cVGzm2LaLP49sgQn7+5v+nJxiYNqDlkyCwryCuMeA8U9O9s=
+	t=1763996350; cv=none; b=dsdRcUsvMSm+q/IPDnnBQ/PzKJYIJfSWBFHypdP9yppKuOOi/s9rxtrcspWsEMb1UPJ726Dm+0fZ+eYFWBx5BysCKg1Y7nKdz1jpt3F+T2/Oyk3OU9tu+gDGohR1EDAh0bS3hi4VE7cqx9UlHbN39xZh6jvlxxoEM+ubAXNsvvE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763994052; c=relaxed/simple;
-	bh=P+9FhADf8s7MH3SOEQ+F8e6dBQaXJaNU6K1PdzBNyuA=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=rbLLw0ic8asB0VwZleOyEiRXYr/P7mhUdk0sX7bPdEA+3NUxWEX12EAW/A4/z3MuGCRA64o8iqExDIQftsH9ZxnRpqJVB6yVSksufELq6LbsYlvRiokKgEAJjurfgZZOdtHIzH7Qj4i0DjQK3uo8j2vdGtbM0gQIRXZBXp2C+Kg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=nZRIFOMT; arc=none smtp.client-ip=209.85.210.176
+	s=arc-20240116; t=1763996350; c=relaxed/simple;
+	bh=2alUDv8rvceCb5R0lAIMpgim+otu2LkDkNJp3n4GNU8=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version:Content-Type; b=VKzSqm2263em5dg7ApKC8vJgZBatxSsBkEJTe9Y+2M9VhXGGHQo1yfHV4xGn30JWuEjxkfhxRhJXRKW8K7Nl+uEIHVI7cRdh3bl8k3yY4Al3EQkjMjMtU3WoQgP62Vn6320kHUil3a6+u0Ll8ChRL9bQJJ5N5lBLi+Akx7Ze1Qo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Lmc8TUCw; arc=none smtp.client-ip=209.85.216.47
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="nZRIFOMT"
-Received: by mail-pf1-f176.google.com with SMTP id d2e1a72fcca58-7aad4823079so3725306b3a.0
-        for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2025 06:20:50 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Lmc8TUCw"
+Received: by mail-pj1-f47.google.com with SMTP id 98e67ed59e1d1-340bb1cb9ddso3616493a91.2
+        for <linux-scsi@vger.kernel.org>; Mon, 24 Nov 2025 06:59:08 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1763994050; x=1764598850; darn=vger.kernel.org;
+        d=gmail.com; s=20230601; t=1763996348; x=1764601148; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=JtEIxqFt5ongtgO9jgnonwhyV1MXPDFiUsBTRRrXqIk=;
-        b=nZRIFOMTPQ/XlTjLo0u+jmnqdgCgsTeHss8wXAfrIKwprazwgKscnByKbzlruDzWVr
-         bFBsLqsRvRCOzcG08iIeyFmxgtVaK/BFtJz3iv+9KEtzbFEMcMxXvVFysNbMfUwYfa3t
-         aSASg+l65kkaAaVNswUhm9Up9X6HmCZ4epTQrT2ct7Ic0OmnZZexdh7Y/C5l3/UHOwqz
-         B7a7HWmfmTTVqOiFE5FN7rzWmuGzlREXA5f48+farPCYYc4IqoDzjpY3v3CNJemW1BoN
-         BeHecHeWl40rIkdjaW7e/1P3Qk4BLbBLV2esMa7NDQw5X3a3BrTWY8ay8tRxDkFENP8w
-         VU2g==
+        bh=Xb/VAa48jm4ZVOyqZFMVfLn47WQAUiV4skOomqo7/fk=;
+        b=Lmc8TUCw8zEh6pp+UGkQZWgl82kzg8HJn2UB51yJmScKIE0aIfF0xJAqDOQT4A7A6B
+         P6gyhruyc5g+ivirXeFkEmGfB6xwgJyeD1ET07kG9Hmfx0Z7/OUTsO8Ifwp62TAiwCFu
+         1QCLHPE8tAC5k0Te6GDRmC415MWI6KNI5t4hzpdIYRLmNrTMb99Xn3z5E5QmfhcmVjUm
+         1VngG8OKEzn/QeE0bygIQOCDnvwE+Qmo8Kgf05SGSD4M59hdVXlS+anuCROX8WiUkba0
+         Bv0kimkeKH0eKJwEbVcj1/1QFJ0LUDK6rNkyg/qI3a+sNdV37ejw1sieQqAEXi5ZJ4Jq
+         rDAw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1763994050; x=1764598850;
+        d=1e100.net; s=20230601; t=1763996348; x=1764601148;
         h=content-transfer-encoding:mime-version:message-id:date:subject:cc
          :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=JtEIxqFt5ongtgO9jgnonwhyV1MXPDFiUsBTRRrXqIk=;
-        b=kDD2xcVx/ZpUV3FEJ+yhAukaQdLNOfc8ThxJRmyzbd+XMu+pTXno74ZjcHJpoIJO9s
-         GUMtmPspg5KBixIE9i0Y3sglB5bDuyUwDdrgxNOUxUcyABsjD7qcg5TvqzWsBnsBEc7V
-         yyRQ7l+UsQOuopKWL9sibPKwxm1K3L0U3FOyyLS1JdqPx5NEJ5PK2nfgi2IJ7yVfti4b
-         gxZbnJAoXatJtjhEQYaiqof8QzM48iKhau4lI6DCDQsIIUugmNP3XfHCJNZPqkQexuLL
-         tlPh7X4ETIjFK0bb4yy2c6u89YdYgaMMq/AoUOswnH/SfPZ8Fnoy6OO2Co50zNHPgUXU
-         h/Lg==
-X-Forwarded-Encrypted: i=1; AJvYcCX5Yp1ax49s3b5kcYUhDZH/c0ihxmd+m4TW7XoB9Y39eeIlOCYTNShwspPrgjqX8oFHVhMw67zg+lry@vger.kernel.org
-X-Gm-Message-State: AOJu0YyyVtalnjQdNSwYunaRIitmZe3Lyb9W9oJYQC3Puj7sCAk2oTy+
-	Kf6zBhMJ4kuxVIjtPedrC1ty/e+e29l+0k+vwm/J2QQ6vb5jMQ/N1Y5i
-X-Gm-Gg: ASbGncsQx98CX2TwiTwSuTNjVp0X3vZ83OTEtpgnGB1HzibGV0JtjZxyUKzAD+Xl+Gn
-	gyanZPFT890+HIphaWJZ3wTU4yy9Sf05ht83MMBkk2E3k9mGdhPXybWh5KqmBiSr5lY7/ON4hzu
-	nfk0BZFhJ+9jdfINrozEyJot3Ildx2YKe2+NnKacCZic+/RXIuTU2CpXeBv0MM8NxKasJLxH0JI
-	Zs+ivTO7dEVb0F1b3Mux9vbheC6m2yYK2fxcHO2YkXtJusjno880UQvVbRoDB1BCive72nskgpj
-	2EApvD78gAN80z0yhbH2jZlPHb74OmgeW87oOrv4GTn4dQJASujgU3YE84oUgTqehNUN5Dqc/kT
-	GyHU9Jekp3bKjxgLSCsbpMhU6RSxV5Yk6XV1kVRtF2BmwiAFfG5aaB/1lMDbucsgAsKr95XNqXh
-	DU2w==
-X-Google-Smtp-Source: AGHT+IEd80b9KHBlizAkoV7O6dqpDGYe9T7PBqWTaUJkMAkhRKB/WBdPJczUkKhbO4okXnPj9GexWQ==
-X-Received: by 2002:a05:6a20:3d07:b0:35d:a9b2:63f2 with SMTP id adf61e73a8af0-36150bb0435mr11876497637.0.1763994049808;
-        Mon, 24 Nov 2025 06:20:49 -0800 (PST)
-Received: from lgs.. ([36.255.193.25])
-        by smtp.gmail.com with ESMTPSA id 41be03b00d2f7-bd7604de68bsm13640640a12.21.2025.11.24.06.20.45
+        bh=Xb/VAa48jm4ZVOyqZFMVfLn47WQAUiV4skOomqo7/fk=;
+        b=s8yHDaqBxKD8IhKqhh+jmmlrJq1dhRsK3gD2qG34kgsXhs3Z03E55s7uZbmhzHxa1q
+         vWtNfcXr+bBlzOMOhkKlXGWZ3QlHJX2KHmvNLK/GQtRUpIqmcVIEpbehIMbKdIse36wi
+         xxqXtherLuzQJ/8o/JERqoL6jOH82q977vYSdB+Ou5+GVGbp3TI/wb86iPX6g7+mSmzX
+         A0uFLGS1vJ4q/rE2D2uAfhn8hewt4mLW62zneLppAnVy30GBKMyqSStFczrJMDJqoQd+
+         UvtbQJYHhnmxYip5iaWoK6wu5lFwhy8jWTF6dvlX6SRhs7Lo+Nd02MqeHuOBrD8qaqHT
+         bfLg==
+X-Forwarded-Encrypted: i=1; AJvYcCXoyaMzhlltCnU2gSY1ZiLUdSnpFF/Bbg9rGeQDGVxHioPlnrzEmejKehmrJmZdNQZe0CeuwcKmAoEm@vger.kernel.org
+X-Gm-Message-State: AOJu0YywTdkOUAFoPt3dstgKwpZ/GOqNuRPl8IrUiZd9G683i39eUNzF
+	nLYf3Qrl2JrBoUdRbQeCKbZQzHdxmb1CR7LbeiZaRShbjys/rxe2OL+i
+X-Gm-Gg: ASbGncuHEsibvbUZbcp8+H7nLuGwM0zFkPwnitKMjwzdfvwxK6pp3Uf77MjMPy1CEBo
+	JGJYj/c9JSim5w6TLNnprgYSsjB+pNZamAxiXYEgMIUvp/Fceml8qcjySMCCzV4BNKjlzASZmkJ
+	nc0oZbbHXGgsm3q0z3FhCz1CQj2rAym0dSe1zvLy7eeluNwgwMr8//Krd0LvltfC9+tqkPhzz4E
+	+CUHcRHb8Cemo7cI6C9YlB7IHdYAnM6Aehn60OL3pQ6Ct0f+iqxvvg6YsWLw4k0FD//xVkQ/B5K
+	zVIiUB4lF9OXnH3M9zuW1TsvYQNH8HGP6mm0QPYimzgSVuO3hbggV1Y8DelWYkYsxyc7unFuOb+
+	IxEIorn2vqThTyz8UJ+hZleipnnA7q/dX9F6PbmLFJNDf68cF0Dol9lCJc1IIFSR/2n32WromXt
+	2nXfL6ZbD5Z58=
+X-Google-Smtp-Source: AGHT+IF47tZPA1s/sNz5ZKhfOqmGjsFMQe6TdOQJCoWicSrdNNBoEVVUABWVfRIaFbBPxSsULWLDjw==
+X-Received: by 2002:a17:90b:48c5:b0:345:badf:f1b7 with SMTP id 98e67ed59e1d1-34733f3eb64mr11950422a91.28.1763996348107;
+        Mon, 24 Nov 2025 06:59:08 -0800 (PST)
+Received: from lgs.. ([2408:843c:3010:c65:73e9:29e7:cb49:995d])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7c3f175275asm14937606b3a.69.2025.11.24.06.59.00
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Mon, 24 Nov 2025 06:20:49 -0800 (PST)
+        Mon, 24 Nov 2025 06:59:07 -0800 (PST)
 From: Guangshuo Li <lgs201920130244@gmail.com>
 To: HighPoint Linux Team <linux@highpoint-tech.com>,
 	"James E.J. Bottomley" <jejb@linux.ibm.com>,
 	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	James Bottomley <James.Bottomley@SteelEye.com>,
+	James Bottomley <James.Bottomley@HansenPartnership.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
 	linux-scsi@vger.kernel.org,
 	linux-kernel@vger.kernel.org
 Cc: Guangshuo Li <lgs201920130244@gmail.com>,
 	stable@vger.kernel.org
 Subject: [PATCH] [SCSI] hptiop: Add inbound queue offset bounds check in iop_get_config_itl
-Date: Mon, 24 Nov 2025 22:20:36 +0800
-Message-ID: <20251124142036.41231-1-lgs201920130244@gmail.com>
+Date: Mon, 24 Nov 2025 22:58:48 +0800
+Message-ID: <20251124145848.45687-1-lgs201920130244@gmail.com>
 X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
@@ -79,61 +80,70 @@ MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 8bit
 
-The function iop_get_config_itl() reads a 32‑bit offset (req32) from the
-inbound queue register (hba->u.itl.iop->inbound_queue) and then uses it
-without validation to compute:
-    req = (base + req32)
-followed by memcpy_fromio(config, req, sizeof(*config)).
+In the driver code for the MV‑based queue variant (struct hpt_iopmu_mv of the
+hptiop driver), the field "inbound_head" is read from the hardware register
+and used as an index into the array "inbound_q[MVIOP_QUEUE_LEN]". For example:
 
-Without verifying that req32 is within the valid I/O region and that
-req32 + sizeof(*config) does not overflow the mapped I/O region, a
-malicious or faulty device/firmware could cause the driver to read memory
-outside the intended request structure — leading to an out‑of‑bounds I/O read.
+    u32 inbound_head = readl(&hba->u.mv.mu->inbound_head);
+    /* ... */
+    memcpy_toio(&hba->u.mv.mu->inbound_q[inbound_head], &p, 8);
 
-According to kernel documentation:
-  "The value returned from the inbound queue port is an offset relative
-  to the IOP BAR0." ([docs.kernel.org](https://docs.kernel.org/scsi/hptiop.html))
-However, the documentation does *not* specify a maximum offset, nor a bound
-such as “offset + size ≤ IOP memory region size”.
+The code then increments head and wraps it to zero when it equals MVIOP_QUEUE_LEN.
+However, the driver does *not* check that the initial value of "inbound_head"
+is strictly less than "MVIOP_QUEUE_LEN". If the hardware (or attacker‑controlled
+firmware/hardware device) writes a malicious value into the inbound_head register
+(which could be ≥ MVIOP_QUEUE_LEN), then subsequent "memcpy_toio" will write
+past the end of "inbound_q", leading to an out‑of‑bounds write condition.
 
-In the driver code, hptiop_map_pci_bar_itl() does:
-    hba->u.itl.iop = hptiop_map_pci_bar(hba, 0);
-and uses pci_resource_len(hba->pcidev, 0) to obtain the mapped region size
-for BAR0. Therefore we can use that size at runtime to bound req32 safely.
+Since inbound_q is allocated with exactly MVIOP_QUEUE_LEN entries (see:
 
-To implement the fix in iop_get_config_itl():
-  - Retrieve the BAR0 region size via:
-        struct pci_dev *pcidev = hba->pcidev;
-        u32 length = pci_resource_len(pcidev, 0);
-  - Then check:
-        if (req32 == IOPMU_QUEUE_EMPTY || req32 + sizeof(*config) > length)
-            return -EINVAL;
-  - This ensures we do not rely on a hard‑coded maximum, but use the actual
-    mapped region size for the bound.
+    __le64 inbound_q[MVIOP_QUEUE_LEN];  /* MVIOP_QUEUE_LEN == 512 */
 
-Fixes: ede1e6f8b4324 ("[SCSI] hptiop: HighPoint RocketRAID 3xxx controller driver")
+), indexing at e.g. "inbound_head == 512" or greater results in undefined memory access
+and potential corruption of adjacent fields or memory regions.
+
+This issue is particularly concerning in scenarios where an attacker has control
+or influence over the hardware/firmware on the adapter card (for example a malicious
+or compromised controller), because they could deliberately set "inbound_head" to
+a value outside the expected [0, MVIOP_QUEUE_LEN‑1] range, thus forcing the driver
+to write arbitrary data beyond the queue bounds.
+
+To mitigate this issue, we add a check to validate the value of "inbound_head"
+before it is used as an index. If "inbound_head" is found to be out of bounds (≥ MVIOP_QUEUE_LEN),
+the head will be reset to 0, and "head" will be set to 1 to ensure that a valid entry is written to
+the queue. The resetting of "inbound_head" to 0 ensures that the queue processing can continue
+safely and predictably, while the adjustment of "head = 1" ensures that the next valid index is used
+for subsequent writes.
+
+This prevents any out-of-bounds writes and ensures that the queue continues to operate safely
+even if the hardware is compromised.
+
+Fixes: 00f5970193e22 ("[SCSI] hptiop: add more adapter models and other fixes")
 Cc: stable@vger.kernel.org
 Signed-off-by: Guangshuo Li <lgs201920130244@gmail.com>
 ---
- drivers/scsi/hptiop.c | 5 ++++-
- 1 file changed, 4 insertions(+), 1 deletion(-)
+ drivers/scsi/hptiop.c | 8 ++++++++
+ 1 file changed, 8 insertions(+)
 
 diff --git a/drivers/scsi/hptiop.c b/drivers/scsi/hptiop.c
-index f18b770626e6..c01370893a81 100644
+index c01370893a81..a1a3840e6ea8 100644
 --- a/drivers/scsi/hptiop.c
 +++ b/drivers/scsi/hptiop.c
-@@ -404,7 +404,10 @@ static int iop_get_config_itl(struct hptiop_hba *hba,
- 	struct hpt_iop_request_get_config __iomem *req;
+@@ -166,6 +166,14 @@ static void mv_inbound_write(u64 p, struct hptiop_hba *hba)
+ 	if (head == MVIOP_QUEUE_LEN)
+ 		head = 0;
  
- 	req32 = readl(&hba->u.itl.iop->inbound_queue);
--	if (req32 == IOPMU_QUEUE_EMPTY)
++	if (inbound_head >= MVIOP_QUEUE_LEN) {
++		dev_err(&hba->pdev->dev,
++			"hptiop: inbound_head out of range (%u)\n",
++			inbound_head);
++		inbound_head = 0;
++		head = 1;
++	}
 +
-+	struct pci_dev *pcidev = hba->pcidev;
-+	u32 length = pci_resource_len(pcidev, 0);
-+	if (req32 == IOPMU_QUEUE_EMPTY || req32 + sizeof(*config) > length)
- 		return -1;
- 
- 	req = (struct hpt_iop_request_get_config __iomem *)
+ 	memcpy_toio(&hba->u.mv.mu->inbound_q[inbound_head], &p, 8);
+ 	writel(head, &hba->u.mv.mu->inbound_head);
+ 	writel(MVIOP_MU_INBOUND_INT_POSTQUEUE,
 -- 
 2.43.0
 
