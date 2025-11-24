@@ -1,46 +1,46 @@
 Received: from 003.mia.mailroute.net (003.mia.mailroute.net [199.89.3.6])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 22A0F27B349;
-	Mon, 24 Nov 2025 18:22:50 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4778D2BEC3A;
+	Mon, 24 Nov 2025 18:23:05 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.3.6
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764008572; cv=none; b=fQFzapfIpiMxk5U1RuNJHFqHaHNFQN8lAYTLvma7ox1xuo/rQ/sicPT6V+qiKuhbYTqlbWPTm5fTZzec/Ceu6cnvqP0und00juGzX+ZEGy6sPkM7dMuTm6T0RkLk0NA7GjvTng6DPPoC5V3UOsV/zaTUPu80qREdKvkQFF7Wu3U=
+	t=1764008586; cv=none; b=KZbvQeZG5UBcxYa+fv5ZRvznJJBSeuxB6iMa/D5cBEwAHUkuaaFUHxIfrALBADeBjQBJLpbXApiMesv9dL5QCJc8nqSPab4qQDfskOEUYUiVZcbsV0rDJYQAyKvy/u+bx+ipbYhZCDQT9n4JzaWbnk0fhJi3BSABNgRGvZO6Q2k=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764008572; c=relaxed/simple;
-	bh=8RAbwLY3vohlMl7dZtmTyk/p0iy7f0TAEPgU84BYi60=;
+	s=arc-20240116; t=1764008586; c=relaxed/simple;
+	bh=NQwWxn5LfWKZesCSgghuMX7eKSxyuc0j2+zF9C+m4RI=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=enOQEpqBebpGpIMNfE/x4mq343icz4873BuRaITeVfcgZOvBj3PpANusv6WLkO1VsaPHktUCXcsZk4c1Xs8e8QUhorvWJehVgBM/ecq/zFyJAZaQqmECF5R52LHUfuSgeHiEQTdHTXcK8zCDvQB3niEQDCFxG7jFqkpGCO8Gs7c=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=h/wnFxcm; arc=none smtp.client-ip=199.89.3.6
+	 MIME-Version; b=eUz1ek9tDbMl9DrXNwoylE41O0YYUVLnjoiiy7mwNDwdyJ9p5AaB9KnJ9iQwNjNMMnnmIFm25QmrtNGQvgIPaGmjSbjjLugcQD0wBz7OsHOSzz/uS2DpGoXAVFeILi+rGj107Ukg2SprJ3TMW+Mpb0b5Cq+35TTPF5aBdlIpe3U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=BazsgwsX; arc=none smtp.client-ip=199.89.3.6
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="h/wnFxcm"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="BazsgwsX"
 Received: from localhost (localhost [127.0.0.1])
-	by 003.mia.mailroute.net (Postfix) with ESMTP id 4dFZ1k15SszlgqVc;
-	Mon, 24 Nov 2025 18:22:50 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTP id 4dFZ202FS1zlgqTs;
+	Mon, 24 Nov 2025 18:23:04 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:mime-version:references:in-reply-to
 	:x-mailer:message-id:date:date:subject:subject:from:from
-	:received:received; s=mr01; t=1764008568; x=1766600569; bh=mOtZr
-	I6SapdoWwfKMFXSybz/kNQZ9ZMn5SiXmuRk2Mo=; b=h/wnFxcmUw4xctiIBIiZX
-	F4INjvlYAhz2mwIcfoIwh5OAsaZKUAZrLFLvl+FnvOLcch/96mATq2Sm30J2Df7w
-	Ys9eKYltdSh+GQOwLUJRQWQBBnZoF06EM6XcnITUQvMLltd1hnucp/9XZ/UxAWvF
-	LXiJZE009C1+/IWs6svda0xn/M3MulaGQTZ7wzsjAOEWVeiOBOL4Q8nmuo5HNJZl
-	irE+tM3XVBjbnk0gBLwh8kGyyzRcnGLFsUy7cAST9/zD8dK6EhLTKw8RDPgGe0ZK
-	KCGVTohvHTbH1SwXGC19Nt32sveiyX1SW3omRlASKdMZjWnrps0wZ4+1ElAcSggt
-	w==
+	:received:received; s=mr01; t=1764008582; x=1766600583; bh=vv/za
+	NGysuwdYzkp29AfYuq0ie5lUOD/Gzd+8S6f/NQ=; b=BazsgwsX7lQHUBYYrafG8
+	RqwBZeXbgBVxbdOHt0RnRax/MUxZladsntqMPv7oom/UecfVUiveeCsIeii9ZcHh
+	ouUNwbD2s5ciwlX6KoTNS+4uQCx3fSjx7LKPbR31LHpiYArfKBPnqyy1QD1RIs9F
+	ZSbGUCHY7i3UhB0j4QQ5afwyDr9N6J7n9X1HABuFnK1PgLl+NkdpnxIWcHjGXOnm
+	Leya8MFoBcCScj4Dp6XbkhbXL53YnaBdb6vlhhXuk0/mlz560STFQ4d8fmDu8TA+
+	PtUlcW/rlmNGBXOtGfv3MwttJi8XcFmtVYqBj8F4vOwHSMepsPC7urJgDiJaimOH
+	Q==
 X-Virus-Scanned: by MailRoute
 Received: from 003.mia.mailroute.net ([127.0.0.1])
  by localhost (003.mia [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id t7LOBo_YT8ge; Mon, 24 Nov 2025 18:22:48 +0000 (UTC)
+ id fZP4mWnbQGzD; Mon, 24 Nov 2025 18:23:02 +0000 (UTC)
 Received: from bvanassche.mtv.corp.google.com (unknown [104.135.180.219])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4dFZ1Y33ldzlgqTs;
-	Mon, 24 Nov 2025 18:22:40 +0000 (UTC)
+	by 003.mia.mailroute.net (Postfix) with ESMTPSA id 4dFZ1k0XGNzlgqVQ;
+	Mon, 24 Nov 2025 18:22:48 +0000 (UTC)
 From: Bart Van Assche <bvanassche@acm.org>
 To: "Martin K . Petersen" <martin.petersen@oracle.com>
 Cc: linux-scsi@vger.kernel.org,
@@ -52,9 +52,9 @@ Cc: linux-scsi@vger.kernel.org,
 	Christoph Hellwig <hch@infradead.org>,
 	Ming Lei <ming.lei@redhat.com>,
 	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: [PATCH v2 4/5] scsi: core: Generalize scsi_device_busy()
-Date: Mon, 24 Nov 2025 10:21:59 -0800
-Message-ID: <20251124182201.737160-5-bvanassche@acm.org>
+Subject: [PATCH v2 5/5] scsi: core: Improve IOPS in case of host-wide tags
+Date: Mon, 24 Nov 2025 10:22:00 -0800
+Message-ID: <20251124182201.737160-6-bvanassche@acm.org>
 X-Mailer: git-send-email 2.52.0.487.g5c8c507ade-goog
 In-Reply-To: <20251124182201.737160-1-bvanassche@acm.org>
 References: <20251124182201.737160-1-bvanassche@acm.org>
@@ -66,10 +66,29 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: quoted-printable
 
-Instead of only handling dev->budget_map.map !=3D NULL, also handle
-dev->budget_map.map =3D=3D NULL. This patch prepares for supporting logic=
-al
-units without budget map (sdev->budget_map.map =3D=3D NULL).
+The SCSI core uses the budget map to restrict the number of commands
+that are in flight per logical unit. That limit check can be left out if
+host->cmd_per_lun >=3D host->can_queue and if the host tag set is shared
+across all hardware queues or if there is only one hardware queue  Since
+scsi_mq_get_budget() shows up in all CPU profiles for fast SCSI devices,
+do not allocate a budget map if cmd_per_lun >=3D can_queue and if the hos=
+t
+tag set is shared across all hardware queues.
+
+For the following test this patch increases IOPS by 5%:
+
+modprobe scsi_debug delay=3D0 no_rwlock=3D1 host_max_queue=3D192 submit_q=
+ueues=3D$(nproc)
+
+fio --bs=3D4096 --disable_clat=3D1 --disable_slat=3D1 --group_reporting=3D=
+1 \
+  --gtod_reduce=3D1 --invalidate=3D1 --ioengine=3Dio_uring --ioscheduler=3D=
+none \
+  --norandommap --runtime=3D60 --rw=3Drandread --thread --time_based=3D1 =
+\
+  --buffered=3D0 --numjobs=3D1 --iodepth=3D192 --iodepth_batch=3D24 --nam=
+e=3D/dev/sda \
+  --filename=3D/dev/sda
 
 Cc: Jens Axboe <axboe@kernel.dk>
 Cc: Christoph Hellwig <hch@infradead.org>
@@ -78,78 +97,84 @@ Cc: John Garry <john.g.garry@oracle.com>
 Cc: Hannes Reinecke <hare@suse.de>
 Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 ---
- drivers/scsi/scsi_lib.c    | 38 ++++++++++++++++++++++++++++++++++++++
- include/scsi/scsi_device.h |  5 +----
- 2 files changed, 39 insertions(+), 4 deletions(-)
+ drivers/scsi/scsi.c      |  6 ++----
+ drivers/scsi/scsi_scan.c | 18 +++++++++++++++++-
+ 2 files changed, 19 insertions(+), 5 deletions(-)
 
-diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
-index 51ad2ad07e43..ddc51472b5eb 100644
---- a/drivers/scsi/scsi_lib.c
-+++ b/drivers/scsi/scsi_lib.c
-@@ -446,6 +446,44 @@ static void scsi_single_lun_run(struct scsi_device *=
-current_sdev)
- 	spin_unlock_irqrestore(shost->host_lock, flags);
+diff --git a/drivers/scsi/scsi.c b/drivers/scsi/scsi.c
+index 76cdad063f7b..3dc93dd9fda2 100644
+--- a/drivers/scsi/scsi.c
++++ b/drivers/scsi/scsi.c
+@@ -216,9 +216,6 @@ int scsi_device_max_queue_depth(struct scsi_device *s=
+dev)
+  */
+ int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
+ {
+-	if (!sdev->budget_map.map)
+-		return -EINVAL;
+-
+ 	depth =3D min_t(int, depth, scsi_device_max_queue_depth(sdev));
+=20
+ 	if (depth > 0) {
+@@ -229,7 +226,8 @@ int scsi_change_queue_depth(struct scsi_device *sdev,=
+ int depth)
+ 	if (sdev->request_queue)
+ 		blk_set_queue_depth(sdev->request_queue, depth);
+=20
+-	sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
++	if (sdev->budget_map.map)
++		sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
+=20
+ 	return sdev->queue_depth;
+ }
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 7acbfcfc2172..99b82e28f292 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -215,9 +215,17 @@ static void scsi_unlock_floptical(struct scsi_device=
+ *sdev,
+ 			 SCSI_TIMEOUT, 3, NULL);
  }
 =20
-+struct sdev_cmds_allocated_data {
-+	const struct scsi_device *sdev;
-+	int count;
-+};
-+
-+static bool scsi_device_check_allocated(struct request *rq, void *data)
++static bool scsi_needs_budget_map(struct Scsi_Host *shost, unsigned int =
+depth)
 +{
-+	struct scsi_cmnd *cmd =3D blk_mq_rq_to_pdu(rq);
-+	struct sdev_cmds_allocated_data *sifd =3D data;
-+
-+	if (cmd->device =3D=3D sifd->sdev)
-+		sifd->count++;
-+
++	if (shost->host_tagset || shost->tag_set.nr_hw_queues =3D=3D 1)
++		return depth < shost->can_queue;
 +	return true;
 +}
 +
-+/**
-+ * scsi_device_busy() - Number of commands allocated for a SCSI device
-+ * @sdev: SCSI device.
-+ *
-+ * Note: There is a subtle difference between this function and
-+ * scsi_host_busy(). scsi_host_busy() counts the number of commands that=
- have
-+ * been started. This function counts the number of commands that have b=
-een
-+ * allocated. At least the UFS driver depends on this function counting =
-commands
-+ * that have already been allocated but that have not yet been started.
-+ */
-+int scsi_device_busy(const struct scsi_device *sdev)
-+{
-+	struct sdev_cmds_allocated_data sifd =3D { .sdev =3D sdev };
-+	struct blk_mq_tag_set *set =3D &sdev->host->tag_set;
-+
-+	if (sdev->budget_map.map)
-+		return sbitmap_weight(&sdev->budget_map);
-+	blk_mq_tagset_iter(set, scsi_device_check_allocated, &sifd);
-+	return sifd.count;
-+}
-+EXPORT_SYMBOL(scsi_device_busy);
-+
- static inline bool scsi_device_is_busy(struct scsi_device *sdev)
+ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
+ 					unsigned int depth)
  {
- 	if (scsi_device_busy(sdev) >=3D sdev->queue_depth)
-diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
-index d32f5841f4f8..0dd078ac9b89 100644
---- a/include/scsi/scsi_device.h
-+++ b/include/scsi/scsi_device.h
-@@ -713,10 +713,7 @@ static inline int scsi_device_supports_vpd(struct sc=
-si_device *sdev)
- 	return 0;
- }
++	struct Scsi_Host *shost =3D sdev->host;
+ 	int new_shift =3D sbitmap_calculate_shift(depth);
+ 	bool need_alloc =3D !sdev->budget_map.map;
+ 	bool need_free =3D false;
+@@ -225,6 +233,13 @@ static int scsi_realloc_sdev_budget_map(struct scsi_=
+device *sdev,
+ 	int ret;
+ 	struct sbitmap sb_backup;
 =20
--static inline int scsi_device_busy(struct scsi_device *sdev)
--{
--	return sbitmap_weight(&sdev->budget_map);
--}
-+int scsi_device_busy(const struct scsi_device *sdev);
++	if (!scsi_needs_budget_map(shost, depth)) {
++		memflags =3D blk_mq_freeze_queue(sdev->request_queue);
++		sbitmap_free(&sdev->budget_map);
++		blk_mq_unfreeze_queue(sdev->request_queue, memflags);
++		return 0;
++	}
++
+ 	depth =3D min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev))=
+;
 =20
- /* Macros to access the UNIT ATTENTION counters */
- #define scsi_get_ua_new_media_ctr(sdev)	atomic_read(&sdev->ua_new_media_=
-ctr)
+ 	/*
+@@ -1120,7 +1135,8 @@ static int scsi_add_lun(struct scsi_device *sdev, u=
+nsigned char *inq_result,
+ 	scsi_cdl_check(sdev);
+=20
+ 	sdev->max_queue_depth =3D sdev->queue_depth;
+-	WARN_ON_ONCE(sdev->max_queue_depth > sdev->budget_map.depth);
++	WARN_ON_ONCE(sdev->budget_map.map &&
++		     sdev->max_queue_depth > sdev->budget_map.depth);
+=20
+ 	/*
+ 	 * Ok, the device is now all set up, we can
