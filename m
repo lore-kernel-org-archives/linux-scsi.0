@@ -1,78 +1,76 @@
-Received: from sg-1-23.ptr.blmpb.com (sg-1-23.ptr.blmpb.com [118.26.132.23])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from m16.mail.163.com (m16.mail.163.com [220.197.31.2])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BFC7120E005
-	for <linux-scsi@vger.kernel.org>; Sun, 23 Nov 2025 02:54:59 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=118.26.132.23
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1D5C02E92A6;
+	Mon, 24 Nov 2025 07:55:05 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=220.197.31.2
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1763866502; cv=none; b=IQt7urlpmG7iU+bMqrOZK00g5VKnClCYpw+7nr8I+B8tWc+/FCoxzSa01TCFawpSVeNnrJO6eB4NomEEPBRbRK5Wwt3enqLbQF5chlzf3dhfCS5zg7iJJoYjjyiOGh1NDd604dU2aOFEmIz4+S16Rsmvx4rYl5a4Jn6kHLbUbdM=
+	t=1763970916; cv=none; b=DgwlHpxDwt9vQFvPFsKvfieVGeiXRJj3xJD4ckwqWWwtzQwmJIkAdnvL+L/P9+XLGiL4SQf3q+NLnshR+C6YL0Z64Tb7FWTXqNsUQQ9d2eQSHBJJ8U0P3NKusYNmG8Uay99vn4ZaUyQU9joNGaScFMKK6a7HzaOdU3axZ0mT2T8=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1763866502; c=relaxed/simple;
-	bh=mh847J3unPTQbyMERRxaHNHORwAcSKABft1vuDCEGbo=;
-	h=To:Cc:Subject:Message-Id:Mime-Version:From:Date:In-Reply-To:
-	 References:Content-Type; b=SxKK9xtrMwcQAH4ogaWVaevu2S5644oXBzThC11hyw7zazE5Pu4erop5A08nOTSJp/LCqO8dMI2/84hZU3ISoBXOOAikpv21HDS7tCplOWz6jHenG2dqNIp/AGy6OnjSma6L1gV7SofAGZHXPSpk0X4j+CJMlDRS8NAWdI2WKOA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com; spf=none smtp.mailfrom=fnnas.com; dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b=rwdmSz5J; arc=none smtp.client-ip=118.26.132.23
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=fnnas.com
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=fnnas.com
+	s=arc-20240116; t=1763970916; c=relaxed/simple;
+	bh=kj7M8ijDDNm7vZrumWE67rtZR1okf9MkRS6J5i1g8Ig=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version; b=nRmG8asnnGseYkVhUQcw/tNpSu5zFtNSXqE5hK96FRvw8K7Gdj8x1waDLsvlpSysYiUDvmYt64sQ8zi84Ll+E9aepTwJBIYJrLywP7PjeYdJrrXIOcgu6v9zqLl+skebKZoPVWb1M/sDuLJeCG3xLi0FfE373DxA5aif7nsoX6c=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com; spf=pass smtp.mailfrom=163.com; dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b=YGbLB0Nb; arc=none smtp.client-ip=220.197.31.2
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=163.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=163.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=fnnas-com.20200927.dkim.feishu.cn header.i=@fnnas-com.20200927.dkim.feishu.cn header.b="rwdmSz5J"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
- s=s1; d=fnnas-com.20200927.dkim.feishu.cn; t=1763866373;
-  h=from:subject:mime-version:from:date:message-id:subject:to:cc:
- reply-to:content-type:mime-version:in-reply-to:message-id;
- bh=pc4oT0JK2ddakBfHidEKm10PDuZ0LU4qZLBDpU95TcU=;
- b=rwdmSz5JqwtPkLLgKt9jWHfNkR+LFBJ4Cb6nnXfdLNE81kdAZb4DwtBbhTC2b5aFDm6GzP
- rN/xRbWDp7f7bWN+oRt6wb4s1oWdOO7YH4fv/bA2uBNtKRoPMB9c6/FYMpHwXAvPThq/7M
- JySenj9BTzGaFBISUjzUlIfLX8cGmqjeGzGy7aoqZsUd9D7vQY72mGDTq3rmg/anJhK61O
- NkWkmcCmzN8/QPGnj11hvbpGAisEq2OJbD72Zoxq6+UI989CBbfCSKk+9SItaJeYvdyG13
- r2jNBnMP5+DgV4Ar6DrZaoConrMEQKrNRuKn5k0gmWay1shdwJv/Dnufvrf5nw==
-Reply-To: yukuai@fnnas.com
-To: "Tarun Sahu" <tarunsahu@google.com>, <linux-raid@vger.kernel.org>, 
-	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>, 
-	<song@kernel.org>
-Cc: <berrange@redhat.com>, <neil@brown.name>, <hch@lst.de>, 
-	<pasha.tatashin@soleen.com>, <mclapinski@google.com>, 
-	<khazhy@google.com>
-Subject: Re: [RFC PATCH v2] md: remove legacy 1s delay in md_notify_reboot
-Message-Id: <5b448039-a4c0-41b0-89d8-af0aec3e76be@fnnas.com>
+	dkim=pass (1024-bit key) header.d=163.com header.i=@163.com header.b="YGbLB0Nb"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=163.com;
+	s=s110527; h=From:To:Subject:Date:Message-Id:MIME-Version; bh=KE
+	p6OEeQjyBLRw96T6uVyiLsy8fYCs9k0A9JRhOf6OE=; b=YGbLB0NbruiC6d7Jam
+	SVb/mpGKP0PQyQRvk3adYdyOWLedmIDZoWAUmEDiUcmWRyJMi8UvtOv/Uge/r+sf
+	oQUW7ll3+kuFYsuqaD77WGoHxu3fB9AtXLDWlZ86KJ89iOK5IsLAGaW5FVqv9ljm
+	bGtqKXNbSvilJvckvNMkcyeB8=
+Received: from localhost.localdomain (unknown [])
+	by gzga-smtp-mtada-g0-0 (Coremail) with SMTP id _____wDnLTpJDyRpRLWeCQ--.2594S2;
+	Mon, 24 Nov 2025 15:54:50 +0800 (CST)
+From: Miao Li <limiao870622@163.com>
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	limiao870622@163.com,
+	Miao Li <limiao@kylinos.cn>
+Subject: [PATCH] scsi: scsi_lib: Correct the description of the return value for scsi_device_quiesce()
+Date: Mon, 24 Nov 2025 15:54:44 +0800
+Message-Id: <20251124075444.32699-1-limiao870622@163.com>
+X-Mailer: git-send-email 2.25.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Original-From: Yu Kuai <yukuai@fnnas.com>
-User-Agent: Mozilla Thunderbird
-Received: from [192.168.1.104] ([39.182.0.153]) by smtp.feishu.cn with ESMTPS; Sun, 23 Nov 2025 10:52:50 +0800
-From: "Yu Kuai" <yukuai@fnnas.com>
-Date: Sun, 23 Nov 2025 10:52:48 +0800
-Organization: fnnas
-Content-Language: en-US
-Content-Transfer-Encoding: quoted-printable
-In-Reply-To: <20251121191422.2758555-1-tarunsahu@google.com>
-References: <20251121191422.2758555-1-tarunsahu@google.com>
-X-Lms-Return-Path: <lba+269227703+63fb3e+vger.kernel.org+yukuai@fnnas.com>
-Content-Type: text/plain; charset=UTF-8
+MIME-Version: 1.0
+Content-Transfer-Encoding: 8bit
+X-CM-TRANSID:_____wDnLTpJDyRpRLWeCQ--.2594S2
+X-Coremail-Antispam: 1Uf129KBjvdXoW7Wr1DAF1rJFW7WrWkXFW8Zwb_yoWxKrX_ua
+	92kw4xWF1UtrWIvw1fXrZ5AryF9F4DW34ruFsag3savw42qr1kXFWUZr15ZF45Xr47Aw17
+	Aa9rZr4Yyw13GjkaLaAFLSUrUUUUjb8apTn2vfkv8UJUUUU8Yxn0WfASr-VFAUDa7-sFnT
+	9fnUUvcSsGvfC2KfnxnUUI43ZEXa7sRKxRhJUUUUU==
+X-CM-SenderInfo: 5olpxtbryxiliss6il2tof0z/xtbCzgo5B2kkD0q+VwAA3b
 
-=E5=9C=A8 2025/11/22 3:14, Tarun Sahu =E5=86=99=E9=81=93:
-> During system shutdown, the md driver registered notifier function
-> (md_notify_reboot) currently imposes a hardcoded one-second delay.
->
-> This delay was introduced approximately 23 years ago and was likely
-> necessary for the hardware generation of that time. Proposing this
-> patch to make sure there are no known devices that need this delay.
->
-> Signed-off-by: Tarun Sahu<tarunsahu@google.com>
-> ---
-> v2:
-> 	Added linux-scsi mailing list
->
->   drivers/md/md.c | 11 -----------
->   1 file changed, 11 deletions(-)
+From: Miao Li <limiao@kylinos.cn>
 
-LGTM
-Reviewed-by: Yu Kuai<yukuai@fnnas.com>
+if scsi_device_quiesce() returns zero, the function executed successfully.
 
---=20
-Thanks,
-Kuai
+Signed-off-by: Miao Li <limiao@kylinos.cn>
+---
+ drivers/scsi/scsi_lib.c | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index d7e42293b864..072d477b8f4b 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -2735,7 +2735,7 @@ EXPORT_SYMBOL_GPL(sdev_evt_send_simple);
+  *
+  *	Must be called with user context, may sleep.
+  *
+- *	Returns zero if unsuccessful or an error if not.
++ *	Returns zero if successful or an error if not.
+  */
+ int
+ scsi_device_quiesce(struct scsi_device *sdev)
+-- 
+2.25.1
+
