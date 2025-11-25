@@ -1,249 +1,676 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
+Received: from canpmsgout07.his.huawei.com (canpmsgout07.his.huawei.com [113.46.200.222])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 00DB92D8390;
-	Tue, 25 Nov 2025 09:08:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.165.32
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764061704; cv=fail; b=YV0iUTbHeAh38y+DSel6BxeNH4lykkucJj/pHLhKXYn/fISHTFlpMCP3fcislx9605+M1DwoIqjY/eAMjHrx6G5eCsNcZY79y9mTYAu1xLfevjmw2o/WjODzBuv/ssv8QNbZh/io6N35IZ5oTY2RJJiXfDuoHrVOzhNLo0+9SIQ=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764061704; c=relaxed/simple;
-	bh=a05PVRLG4gZqKEdmRFFjqsdi9zdAkREKqpJZYL9ATWs=;
-	h=Message-ID:Date:Subject:To:Cc:References:From:In-Reply-To:
-	 Content-Type:MIME-Version; b=O086LelficItvEDvy2fLurlA9+cIyGaxi7GRuaHlW6bdaSMmKffovOlI4iGUn9TN/eU9DKNJzV2IBN9h17AewSyQuYSdtf9JMt1E3lc+b8++B5fOlRv7cvQ9IWlJqAWmdcSGnI3MCucaT7x1/YrNEgEOdIc9bWAUlNDQgbk/6OQ=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=Ea3Q4seP; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=PkOBXPdZ; arc=fail smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id F1A972AE77;
+	Tue, 25 Nov 2025 12:48:58 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=113.46.200.222
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1764074942; cv=none; b=BwgOqiVpSQxeR0SMvUpnGccZk2dunbAfF3ZAd7SGfdm4xl808IpwFiniTGmLCnBnXN59+1KQ5G9cQvXCTPWZYxPjiSf+jLv6AslKf4CQSZWJGhyrxFlCSkCohJVP1gafiQdp2fecHo1Ozdsfc/oXm5T2Y21JONOUck1V2KuCAkQ=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1764074942; c=relaxed/simple;
+	bh=EBd3Of8wCWFI1z8U0KnKpG3FSuyx6GZIXgL9JALWtXg=;
+	h=From:To:CC:Subject:Date:Message-ID:MIME-Version:Content-Type; b=pV/UNWvwdw/tP6i80GNEW0ov9PU3+eHthhph1Rg1P3qQwSETZVE6dtN8z9uKT04c8VD0efNUJZzSXz197RpckLmXYRtKDnjt3Qay7fzmi/SqYQVq5gmx3f1/+pCYyhhPd5u9SsLxlULDTx+WaIE3TckXYr28+TBffZih+3ZQf4g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com; spf=pass smtp.mailfrom=h-partners.com; dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b=hVMBT/G4; arc=none smtp.client-ip=113.46.200.222
+Authentication-Results: smtp.subspace.kernel.org; dmarc=fail (p=quarantine dis=none) header.from=huawei.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=h-partners.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="Ea3Q4seP";
-	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="PkOBXPdZ"
-Received: from pps.filterd (m0246627.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5AP1Cfrq2342892;
-	Tue, 25 Nov 2025 09:08:09 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=qexi9qj4uf/acMxeaYHnG4YUr2GCaG7apbmgGy/oPRY=; b=
-	Ea3Q4sePpSJO6eVwQyl8azXtuUQ1ER7KWCA2gQ1ZhR1ojaRLu1BUJQk+yDEWiep2
-	XUbb+3+UfqNFI/vwz888bhFlFvWYZd/7XW4TzHvnjYgfV60byp4BN8rSPRtEIlZ8
-	W5sj7iLgdfllcpBONhWO7fQ2f9kE9hMhjambmSpCZV8Zq4MknGR4cLPhFOnEgv7b
-	lTKFz0gx4ZqNVYrlxmI4RnQA/IaYc4fOyHC8m9o5XfpxXgfn2C1KhOXTpn7hn5QA
-	+2gFItNFwNvJzaUlRh/lJokfnmwteJsViMnBg91I+O/JIMi9O+xXEGXiqObKPqVU
-	yQTD4LyT+UB0mJMwc1TO4g==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4ak8fkc2bd-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 25 Nov 2025 09:08:09 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5AP8iKcw032651;
-	Tue, 25 Nov 2025 09:08:08 GMT
-Received: from ch5pr02cu005.outbound.protection.outlook.com (mail-northcentralusazon11012014.outbound.protection.outlook.com [40.107.200.14])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4ak3m96u0s-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 25 Nov 2025 09:08:08 +0000
-ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
- b=UvCg3cD676byfkXDbmiiIaDYYL63cRA/Za2hLfFE4KQ8oXOAgj+eFsD0z+ww3iVl47BXk9Jee6by+7niO23gPGgnP8CtDZ4ajwY8GaC/ICg5hVx4yLdyfX08P2uP3xHzKDaR+E3PyxETXYP+KBv5JS1eiFzk3oNiKDsfs5hIwnBtludoiJQI+/43SSzCZP4PadJcmZsznQMH51U4xgePAOcXy7wxphzQZxN5r7po22rXaPiEmrfli8WBi8xow49/5ZXhAIkO1lHbTjEH7WxidOIyQcK3aAS8v+YQVxCBhECvXjS2ON55JtpFcD+o6D8Pnd6WPzd0QRbo3PJs91hHeA==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
- s=arcselector10001;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
- bh=qexi9qj4uf/acMxeaYHnG4YUr2GCaG7apbmgGy/oPRY=;
- b=iEHWKqZm4bPZtZvKL/TlxJZset5ZLG4LDcJh46lt1zQgkXEh+bV23oqIu1Ag4tCEOHW6xHHSPfCzGxSf90ybVOEZrOa1Jzjj4aIdwN7JBt64Cu28wFzwj3u38lRppLqP6iOsWf41ERkd37jOAU9it88ZpwPimBtubCVmwUL9EZC0TM7SipBOxuBCoiJZ9UJpC+1k48HvZJLYjaPC/bJvAnIgUtAOC7pjdo6n1js07/n/iyb9U4Mdg6dWp95x1eWYr7k3O5FWe4BbuXyDW1eiIUtM7Q5xdIsfaCflvBZz4Z7ClagKnZn/653F+4iQTtbHxrLV7D4nWs9dHYlEez9L9g==
-ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
- smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
- dkim=pass header.d=oracle.com; arc=none
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
- d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
- h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
- bh=qexi9qj4uf/acMxeaYHnG4YUr2GCaG7apbmgGy/oPRY=;
- b=PkOBXPdZtzYOqcldkm9Kkj3HLCWtzsCaV7VoT28wnUiv6hJA/G8+bwIVJ1/aqBOQa3/eds/a93L7LQVhWyquboJj4opuZjpUcTC++KibycsmjQ63b2t6BEN+EfANhzW21I7bxFJc1t674pimeAupg+eIeEXV1x9fD4/orQVdn6c=
-Received: from MN2PR10MB4320.namprd10.prod.outlook.com (2603:10b6:208:1d5::16)
- by CH2PR10MB4342.namprd10.prod.outlook.com (2603:10b6:610:a4::22) with
- Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9366.11; Tue, 25 Nov
- 2025 09:08:06 +0000
-Received: from MN2PR10MB4320.namprd10.prod.outlook.com
- ([fe80::42ec:1d58:8ba8:800c]) by MN2PR10MB4320.namprd10.prod.outlook.com
- ([fe80::42ec:1d58:8ba8:800c%5]) with mapi id 15.20.9343.011; Tue, 25 Nov 2025
- 09:08:06 +0000
-Message-ID: <28f63d40-f9c8-4c84-ac3a-9d56eb9b4072@oracle.com>
-Date: Tue, 25 Nov 2025 09:08:03 +0000
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v2 0/5] Increase SCSI IOPS
-To: Bart Van Assche <bvanassche@acm.org>,
-        "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-        Hannes Reinecke <hare@suse.de>, hch@lst.de, dlemoal@kernel.org,
-        cassel@kernel.org
-References: <20251124182201.737160-1-bvanassche@acm.org>
-Content-Language: en-US
-From: John Garry <john.g.garry@oracle.com>
-Organization: Oracle Corporation
-In-Reply-To: <20251124182201.737160-1-bvanassche@acm.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
-X-ClientProxiedBy: DU2PR04CA0191.eurprd04.prod.outlook.com
- (2603:10a6:10:28d::16) To MN2PR10MB4320.namprd10.prod.outlook.com
- (2603:10b6:208:1d5::16)
+	dkim=pass (1024-bit key) header.d=h-partners.com header.i=@h-partners.com header.b="hVMBT/G4"
+dkim-signature: v=1; a=rsa-sha256; d=h-partners.com; s=dkim;
+	c=relaxed/relaxed; q=dns/txt;
+	h=From;
+	bh=aoHMxtiPdnMqoMz8Ior+bY/QZIrLp/0WzBdytE/uM/Q=;
+	b=hVMBT/G4eAisCNA+9bubUrRQiVNkky6nnGcaNDMkLmdVjdLfTZhG7fJ/iYjgQO1fRQSHSLDLO
+	ZUILDD57yBxD8amLDBpKHkC35Rd6zBniQR5FmWutVXZjG8LMCj0kUN9laMFnTsbP7e5lZkDnbLJ
+	8ohPeatekjh2pqC1KbYMrMM=
+Received: from mail.maildlp.com (unknown [172.19.88.214])
+	by canpmsgout07.his.huawei.com (SkyGuard) with ESMTPS id 4dG2Wn6yTDzLlTn;
+	Tue, 25 Nov 2025 20:47:01 +0800 (CST)
+Received: from kwepemk500001.china.huawei.com (unknown [7.202.194.86])
+	by mail.maildlp.com (Postfix) with ESMTPS id 1432C1A016C;
+	Tue, 25 Nov 2025 20:48:49 +0800 (CST)
+Received: from localhost.localdomain (10.50.159.234) by
+ kwepemk500001.china.huawei.com (7.202.194.86) with Microsoft SMTP Server
+ (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
+ 15.2.1544.11; Tue, 25 Nov 2025 20:48:48 +0800
+From: JiangJianJun <jiangjianjun3@huawei.com>
+To: <James.Bottomley@HansenPartnership.com>, <martin.petersen@oracle.com>,
+	<linux-scsi@vger.kernel.org>, <linux-kernel@vger.kernel.org>
+CC: <hare@suse.de>, <dlemoal@kernel.org>, <yangxingui@huawei.com>,
+	<hewenliang4@huawei.com>, <yangyun50@huawei.com>, <wuyifeng10@huawei.com>,
+	<wubo40@huawei.com>, <jiangjianjun3@huawei.com>
+Subject: [PATCH] scsi: scsi_error: the Error Handler base on SCSI Device
+Date: Tue, 25 Nov 2025 20:48:43 +0800
+Message-ID: <20251125124843.1613400-1-jiangjianjun3@huawei.com>
+X-Mailer: git-send-email 2.33.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-MS-PublicTrafficType: Email
-X-MS-TrafficTypeDiagnostic: MN2PR10MB4320:EE_|CH2PR10MB4342:EE_
-X-MS-Office365-Filtering-Correlation-Id: bbac60cf-7850-498a-1411-08de2c022564
-X-MS-Exchange-SenderADCheck: 1
-X-MS-Exchange-AntiSpam-Relay: 0
-X-Microsoft-Antispam: BCL:0;ARA:13230040|366016|376014|1800799024;
-X-Microsoft-Antispam-Message-Info:
-	=?utf-8?B?MkllMWZoSjBxWWhYYzNSZXNSdjErQ3UwZVIwdjNrQVdKaFByN2RYQjNEVUR2?=
- =?utf-8?B?L0o2QkdER3BPbnV3QzY0Vm5NRm5URnNmekRCMFdUbU5aTGUzL2JiMzRGcXlp?=
- =?utf-8?B?Nzlhd1FwdjJUaFN2ejZ0UXpvRmd0cDIwMURBblQ5dnBVR0xNRkJOTm1QaThM?=
- =?utf-8?B?dEpOYTArQTZVUXVyNGcrK1hSWEJwaTFlR1FqVm5BZ0QwSW5McUVMV0ZIbkVv?=
- =?utf-8?B?T2d0WmhveUJFNUlnblpaYks4ZGZWK2tGTzRGM3YzSGQwSnA4ZGNEazNpa3VQ?=
- =?utf-8?B?cnhMbUNjV3V4MnV3Mi94ZjRtL1NabkZHaCtUQkpVL0tETHBQWHNxN01qNDFM?=
- =?utf-8?B?U0lWUi9kZDU4Z3R5VjFzTXJ2N1JmVzdhQ1RSV3czZ0l2TjFHRURzY2FOK0ox?=
- =?utf-8?B?RS9YV3dHRm52UDRPVHJZbXIwTmNxRG5SdENwM0k3cVIwTWFJMXdsZGIvQ3hx?=
- =?utf-8?B?VTNJWWY3L0tkVXhEY0hvUjdGNzhRczZSR2xSMWt2Y1gxT1ZjWWhWbTZHN0Nk?=
- =?utf-8?B?cGZ3eHhZL3hyV2prOVhnb29NRkNNZ1FES1lLazllaEFxckVab3hLZXowU0U2?=
- =?utf-8?B?Wm40Ym53d3VEMHc0c2pVdGtKSi9tbUk2bVpKd2U0UisvYnBQQ3RjMmpPTnJC?=
- =?utf-8?B?SmJMUkwyOVhWVWdYNmUwSGx6TFV5V1BTc3Q1TXVBUVZrWTRWV2M3KzZXYUpL?=
- =?utf-8?B?b2RNNy9wa3BYZXNzOUZiUldRSzgyeFNMdGlvTUdiWGtvZEtxYkpVTjhIMUdI?=
- =?utf-8?B?TjIvdXIrUHBtQThyMUV0M2NlZlFmZGdBM0YycDZ4S3pCT0Z4NmV6dmx2a0dk?=
- =?utf-8?B?T0R6cnE4bGc0WGxkSEpIYVMxVlh0M2U0QlU0M2tOeWE2eHRmdW9nRzJxU0Mw?=
- =?utf-8?B?UHI5dmxnWW45L1hDb0Qva2l3UndNUzlpbjl2SGxGTmc3M01laUd4d1FlSHFk?=
- =?utf-8?B?a3FNQTNMK0ZKeGYwVkE4L09YcVd3cC91Z21PblA1RlFWZHdxNjMrRXYxdVgr?=
- =?utf-8?B?bmt0RERhQWYzRDVvVVpaa2M2MXNvN1pkODE4RHFQWlhQUm1wTUU2THRSSGFT?=
- =?utf-8?B?WHBlbkhwbUpncGZUVk91Y3B2NjZVOUtPTzRTNzJwd0NvTTJQTWswVks3ZFNY?=
- =?utf-8?B?K2s5UWs3L3lqZnJKU05QSzAxd3VLU01kTTEvNGRDOXl3U29IWGdvcG0yeEVz?=
- =?utf-8?B?aGllcmdnR0x2aGlLNGtrTmVTcUkvNUJlSml1Q010cHVaS09tdW1DZnd0YjJr?=
- =?utf-8?B?Q1loUUFJa0xzejRZeXVyK1hWVC8rOC94UzFlcVFKMkVpWGZBZ0txZ0ZxOUIz?=
- =?utf-8?B?SmJzRTkveERNYXNRcmRiY2ZhWXMwaHI4aGhsbGR0V2NRYkpVOGM5NmhIZHVz?=
- =?utf-8?B?dmwvbDdzd092d1gzVldlcXdhK3c1WFQwL0FTR241VXVQQWZzVmRUWXgvcUpv?=
- =?utf-8?B?RVJMS0xrNmpWQ0xSNXVZZ3lNWm42aUhWVGVzTlBhVG8rZEtKZTd6UmZ0RzRM?=
- =?utf-8?B?NEhmSmk2aWVZRjZFODVpc0M1K25qbFcxRm1kY1RZQ0JZRW1VUXIzUHMzanIz?=
- =?utf-8?B?ajVXYml0aHN2anY4eFFwem94MW4wZ2wzeExYOFJORzNhak9lbU1YSmdhN3hD?=
- =?utf-8?B?bkU3OThCTVFMei81SHVpcmVrajVNVGFLaEZSaVhtOG1zdmkrVGVtYWNWTUk2?=
- =?utf-8?B?aTd6QkFydWFNdDNSYVFlSHZmQXVIOHdkVWVRaDhHbXhDZUEvZ3pZK2xyU0ww?=
- =?utf-8?B?ZTE5d1loNGo2UWNUZGhob0pYQk5peTV0UEd2eWZ0V0FSSm50a0JQNFRoSmZ5?=
- =?utf-8?B?VlJySWNIUW5VTkF0QVZVUTg5WW1MS1huWXJOUXNlRjk3Wkg5VTgrVHNMWDJk?=
- =?utf-8?B?c2kyUURKaDFUdHllT1dXUjk5RzhXajZ2R2dQV2NocFR4T1h5VlZhMk41ZFNN?=
- =?utf-8?Q?np798Q/yyBcSd1qG3q+SrWXZnFCwpzl6?=
-X-Forefront-Antispam-Report:
-	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:MN2PR10MB4320.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(366016)(376014)(1800799024);DIR:OUT;SFP:1101;
-X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-MessageData-0:
-	=?utf-8?B?aEZSU3UyT3BHUUpGNXpuNTFGcmpWMCtabng1QkFTNS9HcmJFblEyQUhDRXZB?=
- =?utf-8?B?bWIvVjY3STh1UG8rZ0JmTnJmUkIwWW8yeHl1YnZzMi9mT3R5elNadHlBdTBG?=
- =?utf-8?B?TXRDNldJODY3b2ZHRzQ2VDh0YzVrL0Q0V3JFV1lWYlpWeVAzNGg3cjhyRkVU?=
- =?utf-8?B?UkpYbVMxZi85SkxYMVNORERGNWMyMzNsOG5SNXZEazdUTkZuTU5qVzB3UGVZ?=
- =?utf-8?B?T2JIaHB0em02TGRJZllmUGU4OHEzbHRuc0Jha29jT2tlRlJiTWprdE1RQWtp?=
- =?utf-8?B?d09JVjc5T3YrcWFNUjBVbnlacUdqTU1OYitSelNGSzRaSjhicFFJQ1hpK1FY?=
- =?utf-8?B?SUpBRDFmcVdMVytKUERhbkhiN25LWHN2bng4TlZyZFJ0WkcrbmpscXd5N0s1?=
- =?utf-8?B?Z3BYZFhHek1VZ1hjQWFseE9YNkorQUlxQWswM1dnNlEzaXZPZ0tZTzREWEti?=
- =?utf-8?B?clZ6MmE0VXZCaSt4akRCWEJtU3Nua3hPV3pTWlBycnBjQ3FraC92Q3lHMDlv?=
- =?utf-8?B?TFhkZWlQN2J5V0xqWHdlY0FJenE5M1BNdjhvbzFrSkp5WGdqdEx2UnI3MjJv?=
- =?utf-8?B?N3pyZGphTzROcDFvVS9FZ05FdWVVSzJWU3JETHpVWUM5RUtEQzVqclUydGx0?=
- =?utf-8?B?VXJxbzlNcTNZbldteFd2akROQ0VXa0JTMDRGSzBMdkJyWmx6eWJlcG5ZcUE2?=
- =?utf-8?B?UHBEd3JUSWtKbFRPa0paUlJXdHc4ZmpDMUVNQzRBVEx5eFZZVnVuak81R015?=
- =?utf-8?B?MEV3UWlIUWR3amZMek11bGFGaHUzeFhzbFhnV1V1cHE1d2NiR3Q2U0FYSHFa?=
- =?utf-8?B?c2xReTNpRWRkMFA3UWZRZ3c0VzlCM1J3cXJYcXBmVmF1Y055ZldEUXFPVy9O?=
- =?utf-8?B?NnkwbHVoaFJKeW0vM3lmVGhpc3Z1TDlmeTBKdG9QNURHbWN4aTJqOTVRQWJ4?=
- =?utf-8?B?QzhlQS9abkhnejkwdDBRMWV5cXJrYTdsT2lNVHFHME5zOTNvYVpiSVpmWW9K?=
- =?utf-8?B?cExDNzFsb1pZL2xYdHlFak12VFRqam5MbWRORUJBWWZ3Z2xITHN6WmQ0UGJJ?=
- =?utf-8?B?SC9xM05FeWZqZFhXUGdXSlZPYXR1dGFlOGd1QVdwbGN3U3FON29wVklNTlN4?=
- =?utf-8?B?RXM0aVk1YTNxMlFsTnBsMHRBdi9HTkp6Z1V6VG9TWDRVVWhhbUJ5a0NTWmo1?=
- =?utf-8?B?ZmM1a3U5eTBON2dsRlNzelRhSzljdld1VjkwSGZicnFOUnluYm5XbFZMZXh4?=
- =?utf-8?B?VldEWHlmSDJjWVpnT25rMGpMUHJHZnZ4Q3MyTkZVRlJsYmVRQTF5RHJEY2RW?=
- =?utf-8?B?YnA2UnpFRmUyUG5rbWJmL3Zsb1g2MFBDaEdGL1NIcUlLSDlxWWNORjQzeDdG?=
- =?utf-8?B?VmdlcG9PYUJNUjljTGRpNnFMNXFoY2RVVG1HeldQcXc2UDFCTHRnQkgrV2NS?=
- =?utf-8?B?ekFUSnoxbE1LOGtKVDh5VTRLRXNPOXA4UmZtYmh2SnlTVFM4QW81S1hKeGkz?=
- =?utf-8?B?QzFpMXdiZWt2QlVtVEFzTlBMaEliOFVjUE12bnMxWXBsVnh4Ulh3Rmlsc0Jx?=
- =?utf-8?B?aG1teExtcyttRFF0Si85YWM0VCtJb2FPa0NpR0MyZTRkM0NCakxMOE03QjdH?=
- =?utf-8?B?alFmZzMyNGdjT3NVdFRSU013L2ZYT1JDUDlPcmZXUGdLMm5GQjUrSEw3eExO?=
- =?utf-8?B?N0g1bEFwR2JqdW1JclZDcG13WnhRcWRXMEowZ0htWnJZYzNmVk9lcU9nQWVl?=
- =?utf-8?B?Nlh2azFSYXBBeHFuKzRJSzU5ZG9ZSlNtZ3poeGh5WjQzVm9jRzU5MjRoMWlu?=
- =?utf-8?B?L0Q1Y2F4ell6RW9jV2I1WlhBZFdhSmU5YzkyRVFPV2hmOGlON2tUeGd0bUov?=
- =?utf-8?B?SG9zTkgvVEtjVXZ2L1QvTDVyM2lyUzM5VkNJYXJVS3dtd0xCb0tzSFFjcjNI?=
- =?utf-8?B?QjJia2wwYUNuTUtCc1loNDVuZGFEQ0VDT3ZKNEdGaU8vSXEvcE01dlpHRksz?=
- =?utf-8?B?bUpWSEdaeFdVN01JQTZ2ZTh1R1NzOGkwbkViTDBraFJHWnRITy9JSVpXRDVk?=
- =?utf-8?B?bEFNQzJjWjRmblVOb2dxMUFyZ2x5T0h0dGlkZHBQbzdlWElQdnI1elFZMy9u?=
- =?utf-8?Q?2G6rmR8pgaXd03aw0hxoVjU1z?=
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
-X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
-	K1asfUyH3FNEdksNbaeXBfjgovCGfhzFhrSjGIKPJWfSrdSXn04i4wEBZpIbo24iFNd3UfKppIwDyBaM/liKaeMRTYjO8Z17+bZ0DHGE1TS3mzyAuP+CCQnBKtNqMORZNNVjfH2k3K9CpZo3d96WWIHPuiQOpRr5b9eEaXoo7qLKn0q8LKITCZlUm7bsrlqzo0L6Q0h9X1vCktEdMcmINEnv0jLlOWJ5LJ3RiNbbQ2mqN97T1EM/EOo9pbsYjhQOmN9HgMN+n0T1qYkvEcVvqc5Ux5saP5P5cNmmp1MSvYOp69+d0ojtYX7w3MlVy0FVM+0rBp+7bCbTZwdwnwrbNwaT7Ovz+XLKsaQpz5vtYDskjz38I06fROoS3SrbGHYheH/18LsWQjdvJnRTahujEu1Jbwvd+qk3KdAAkXL2ylcTMkubZVR5u/QWFBxjO1fmZ7AycOocq7M4Br+qu9JpY4WPZGGVKQgLml4qjSgm1wKfycUUZTtzfAFagV+f32Teo4RCxGhMV/VCqYfSbvC+y/pEq1L5GDqxg3YSDwdfWXxkmtES4k/fsCs4g6S6ljtW1j8BsOYU9+Svc8Iti+mAjctA/BMi7htsYNiSlABMQE8=
-X-OriginatorOrg: oracle.com
-X-MS-Exchange-CrossTenant-Network-Message-Id: bbac60cf-7850-498a-1411-08de2c022564
-X-MS-Exchange-CrossTenant-AuthSource: MN2PR10MB4320.namprd10.prod.outlook.com
-X-MS-Exchange-CrossTenant-AuthAs: Internal
-X-MS-Exchange-CrossTenant-OriginalArrivalTime: 25 Nov 2025 09:08:06.3963
- (UTC)
-X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
-X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
-X-MS-Exchange-CrossTenant-MailboxType: HOSTED
-X-MS-Exchange-CrossTenant-UserPrincipalName: aOZiog6RUrUY1mtxFZIVo2ffvTAL7CVA30NI3oNbepPrGw0Y5Zz0oWZPpjsDH6jnphNl9yZKZ835z791dMpVoA==
-X-MS-Exchange-Transport-CrossTenantHeadersStamped: CH2PR10MB4342
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-25_02,2025-11-24_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 spamscore=0 mlxlogscore=999 bulkscore=0
- mlxscore=0 adultscore=0 phishscore=0 malwarescore=0 suspectscore=0
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
- definitions=main-2511250073
-X-Authority-Analysis: v=2.4 cv=f4RFxeyM c=1 sm=1 tr=0 ts=692571f9 b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
- a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
- a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=IkcTkHD0fZMA:10
- a=6UeiqGixMTsA:10 a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=FrEzGMS24_3efXhvvTkA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTI1MDA3MyBTYWx0ZWRfX3snL+TNvmGZZ
- lFWIoyHX8c/b+w07ib4h1VI30lJ+o/cez1I6iXg3veedLLNoQImN8lG0ZDUd+lTugOIW+0AGDKu
- 1ntqRBwtSAsNqXF5H00MMsm+gehnZp7u3LvNkCL1HKU99Spaj3ayyyG3ywfqcmjMUQl3wjW0aiW
- LvsW4NpbGMoG3p4o7UU3F+rHVWkGazgMIycXeiaTFx++pV+u0W8R4J8yGtnc0E1YDeNNRui8dPk
- 7VBAV5junHVzyu9dCbxRb+4qdM/CSr2OjO9HmLZRusDiCJhfU0a7RZF/dASI8Y30jsE+BrWBmyw
- VoP+puN/bLTo4YZfZG+9mehKcWULLXNBMMXOrjboRLNx7RBBMDRD9amJ9PeC/CLrHOTxi5brOOR
- fQMnJV7LUUft6TEtae+y9SrJF1VvDg==
-X-Proofpoint-ORIG-GUID: CobY3d8gpiW6JPQk9FkV6NGUumrkcfn7
-X-Proofpoint-GUID: CobY3d8gpiW6JPQk9FkV6NGUumrkcfn7
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain
+X-ClientProxiedBy: kwepems200002.china.huawei.com (7.221.188.68) To
+ kwepemk500001.china.huawei.com (7.202.194.86)
 
-On 24/11/2025 18:21, Bart Van Assche wrote:
-> Hi Martin,
-> 
-> This patch series increases scsi_debug IOPS by 5% on my test setup by disabling
-> SCSI budget management if it is not needed.
+This change is used to downgrade the lock in SCSI Error Handler.
 
-Performance results from scsi_debug are not a real acid test.
+When a SCSI device fails, SCSI locks the host and enters an error handler,
+which causes all I/O operations on the host to be locked. This performance
+impact is even more pronounced when a large number of devices are connected
+to the same host. So I believe it's necessary to downgrade the large lock.
 
-> This patch series improves the
-> performance of many SCSI LLDs, including the UFS and ATA drivers.
+This commit binds an Error Handler to the device, so that when a device
+failure occurs, only the current device is locked. If the device fails to
+recover, the default Error Handler will still be activated.
 
-Please provide results from real HW / real scenarios.
+Signed-off-by: JiangJianJun <jiangjianjun3@huawei.com>
 
-> 
-> Please consider this patch series for the next merge window.
-> 
-> Thanks,
-> 
-> Bart.
-> 
-> Changes compared to v1:
->   - Fixed a hang during LUN scanning for ATA devices.
-> 
-> Bart Van Assche (5):
->    block: Introduce __blk_mq_tagset_iter()
->    block: Introduce blk_mq_tagset_iter()
->    libata: Stop using cmd->budget_token
->    scsi: core: Generalize scsi_device_busy()
->    scsi: core: Improve IOPS in case of host-wide tags
-> 
->   block/blk-mq-tag.c         | 51 ++++++++++++++++++++++++++++----------
->   drivers/ata/libata-scsi.c  | 18 +++++---------
->   drivers/scsi/scsi.c        |  6 ++---
->   drivers/scsi/scsi_lib.c    | 38 ++++++++++++++++++++++++++++
->   drivers/scsi/scsi_scan.c   | 18 +++++++++++++-
->   include/linux/blk-mq.h     |  2 ++
->   include/scsi/scsi_device.h |  5 +---
->   7 files changed, 104 insertions(+), 34 deletions(-)
-> 
+
+References: https://lore.kernel.org/linux-scsi/20250816112417.3581253-1-jiangjianjun3@huawei.com/
+References: https://lore.kernel.org/linux-scsi/20230901094127.2010873-1-haowenchao2@huawei.com/
+
+---
+ drivers/scsi/scsi_error.c  | 308 ++++++++++++++++++++++++++++++-------
+ drivers/scsi/scsi_lib.c    |   7 +
+ drivers/scsi/scsi_priv.h   |   3 +
+ drivers/scsi/scsi_scan.c   |   1 +
+ include/scsi/scsi_device.h |  19 +++
+ include/scsi/scsi_eh.h     |   2 +
+ include/scsi/scsi_host.h   |   2 -
+ 7 files changed, 288 insertions(+), 54 deletions(-)
+
+diff --git a/drivers/scsi/scsi_error.c b/drivers/scsi/scsi_error.c
+index 746ff6a1f309..5f13ebbee46c 100644
+--- a/drivers/scsi/scsi_error.c
++++ b/drivers/scsi/scsi_error.c
+@@ -57,9 +57,25 @@
+ #define BUS_RESET_SETTLE_TIME   (10)
+ #define HOST_RESET_SETTLE_TIME  (10)
+ 
++enum {
++	SDEV_EH_STOP = 0,
++	SDEV_EH_START,
++	SDEV_EH_DONE,
++};
++
+ static int scsi_eh_try_stu(struct scsi_cmnd *scmd);
+ static enum scsi_disposition scsi_try_to_abort_cmd(const struct scsi_host_template *,
+ 						   struct scsi_cmnd *);
++static void sdev_eh_add_cmnd(struct scsi_cmnd *scmd);
++
++static inline void shost_clear_eh_done(struct Scsi_Host *shost)
++{
++	struct scsi_device *sdev;
++
++	shost_for_each_device(sdev, shost) {
++		atomic_set(&sdev->eh.state, SDEV_EH_STOP);
++	}
++}
+ 
+ void scsi_eh_wakeup(struct Scsi_Host *shost, unsigned int busy)
+ {
+@@ -292,10 +308,21 @@ static void scsi_eh_inc_host_failed(struct rcu_head *head)
+ }
+ 
+ /**
+- * scsi_eh_scmd_add - add scsi cmd to error handling.
+- * @scmd:	scmd to run eh on.
++ * scsi_eh_scmd_add_shost - Add cmd to error handling of scsi_device.
++ * @scmd:    scmd to run eh on.
+  */
+-void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
++static void scsi_eh_scmd_add_sdev(struct scsi_cmnd *scmd)
++{
++	scsi_eh_reset(scmd);
++	sdev_eh_add_cmnd(scmd);
++	sdev_eh_wakeup(scmd->device);
++}
++
++/**
++ * scsi_eh_scmd_add_shost - Add cmd to error handling of Scsi_Host.
++ * @scmd:    scmd to run eh on.
++ */
++static void scsi_eh_scmd_add_shost(struct scsi_cmnd *scmd)
+ {
+ 	struct Scsi_Host *shost = scmd->device->host;
+ 	unsigned long flags;
+@@ -322,6 +349,19 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
+ 	call_rcu_hurry(&scmd->rcu, scsi_eh_inc_host_failed);
+ }
+ 
++/**
++ * scsi_eh_scmd_add - add scsi cmd to error handling.
++ * @scmd:	scmd to run eh on.
++ */
++void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
++{
++	struct Scsi_Host *shost = scmd->device->host;
++
++	if (unlikely(scsi_host_in_recovery(shost)))
++		scsi_eh_scmd_add_shost(scmd);
++	scsi_eh_scmd_add_sdev(scmd);
++}
++
+ /**
+  * scsi_timeout - Timeout function for normal scsi commands.
+  * @req:	request that is timing out.
+@@ -881,7 +921,7 @@ void scsi_eh_done(struct scsi_cmnd *scmd)
+ 	SCSI_LOG_ERROR_RECOVERY(3, scmd_printk(KERN_INFO, scmd,
+ 			"%s result: %x\n", __func__, scmd->result));
+ 
+-	eh_action = scmd->device->host->eh_action;
++	eh_action = scmd->device->eh.action;
+ 	if (eh_action)
+ 		complete(eh_action);
+ }
+@@ -890,7 +930,7 @@ void scsi_eh_done(struct scsi_cmnd *scmd)
+  * scsi_try_host_reset - ask host adapter to reset itself
+  * @scmd:	SCSI cmd to send host reset.
+  */
+-static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
++static enum scsi_disposition __scsi_try_host_reset(struct scsi_cmnd *scmd)
+ {
+ 	unsigned long flags;
+ 	enum scsi_disposition rtn;
+@@ -916,11 +956,19 @@ static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
+ 	return rtn;
+ }
+ 
++static enum scsi_disposition scsi_try_host_reset(struct scsi_cmnd *scmd)
++{
++	if (!scsi_host_in_recovery(scmd->device->host))
++		return FAILED;
++
++	return __scsi_try_host_reset(scmd);
++}
++
+ /**
+  * scsi_try_bus_reset - ask host to perform a bus reset
+  * @scmd:	SCSI cmd to send bus reset.
+  */
+-static enum scsi_disposition scsi_try_bus_reset(struct scsi_cmnd *scmd)
++static enum scsi_disposition __scsi_try_bus_reset(struct scsi_cmnd *scmd)
+ {
+ 	unsigned long flags;
+ 	enum scsi_disposition rtn;
+@@ -946,6 +994,14 @@ static enum scsi_disposition scsi_try_bus_reset(struct scsi_cmnd *scmd)
+ 	return rtn;
+ }
+ 
++static enum scsi_disposition scsi_try_bus_reset(struct scsi_cmnd *scmd)
++{
++	if (!scsi_host_in_recovery(scmd->device->host))
++		return FAILED;
++
++	return __scsi_try_bus_reset(scmd);
++}
++
+ static void __scsi_report_device_reset(struct scsi_device *sdev, void *data)
+ {
+ 	sdev->was_reset = 1;
+@@ -1170,7 +1226,7 @@ static enum scsi_disposition scsi_send_eh_cmnd(struct scsi_cmnd *scmd,
+ 
+ retry:
+ 	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
+-	shost->eh_action = &done;
++	sdev->eh.action = &done;
+ 
+ 	scsi_log_send(scmd);
+ 	scmd->submitter = SUBMITTED_BY_SCSI_ERROR_HANDLER;
+@@ -1214,7 +1270,7 @@ static enum scsi_disposition scsi_send_eh_cmnd(struct scsi_cmnd *scmd,
+ 		rtn = SUCCESS;
+ 	}
+ 
+-	shost->eh_action = NULL;
++	sdev->eh.action = NULL;
+ 
+ 	scsi_log_completion(scmd, rtn);
+ 
+@@ -1345,6 +1401,8 @@ int scsi_eh_get_sense(struct list_head *work_q,
+ 					     current->comm));
+ 			break;
+ 		}
++		if (atomic_read(&scmd->device->eh.state) == SDEV_EH_DONE)
++			continue;
+ 		if (!scsi_status_is_check_condition(scmd->result))
+ 			/*
+ 			 * don't request sense if there's no check condition
+@@ -1507,6 +1565,31 @@ static int scsi_eh_try_stu(struct scsi_cmnd *scmd)
+ 	return 1;
+ }
+ 
++static int scsi_eh_sdev_stu(struct scsi_cmnd *scmd,
++			      struct list_head *work_q,
++			      struct list_head *done_q)
++{
++	struct scsi_device *sdev = scmd->device;
++	struct scsi_cmnd *next;
++
++	SCSI_LOG_ERROR_RECOVERY(3, sdev_printk(KERN_INFO, sdev,
++				"%s: Sending START_UNIT\n", current->comm));
++
++	if (scsi_eh_try_stu(scmd)) {
++		SCSI_LOG_ERROR_RECOVERY(3, sdev_printk(KERN_INFO, sdev,
++				    "%s: START_UNIT failed\n", current->comm));
++		return 0;
++	}
++
++	if (!scsi_device_online(sdev) || !scsi_eh_tur(scmd))
++		list_for_each_entry_safe(scmd, next, work_q, eh_entry)
++			if (scmd->device == sdev &&
++			    scsi_eh_action(scmd, SUCCESS) == SUCCESS)
++				scsi_eh_finish_cmd(scmd, done_q);
++
++	return list_empty(work_q);
++}
++
+  /**
+  * scsi_eh_stu - send START_UNIT if needed
+  * @shost:	&scsi host being recovered.
+@@ -1521,7 +1604,7 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			      struct list_head *work_q,
+ 			      struct list_head *done_q)
+ {
+-	struct scsi_cmnd *scmd, *stu_scmd, *next;
++	struct scsi_cmnd *scmd, *stu_scmd;
+ 	struct scsi_device *sdev;
+ 
+ 	shost_for_each_device(sdev, shost) {
+@@ -1533,6 +1616,8 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 			scsi_device_put(sdev);
+ 			break;
+ 		}
++		if (atomic_read(&scmd->device->eh.state) == SDEV_EH_DONE)
++			continue;
+ 		stu_scmd = NULL;
+ 		list_for_each_entry(scmd, work_q, eh_entry)
+ 			if (scmd->device == sdev && SCSI_SENSE_VALID(scmd) &&
+@@ -1544,29 +1629,41 @@ static int scsi_eh_stu(struct Scsi_Host *shost,
+ 		if (!stu_scmd)
+ 			continue;
+ 
++		if (scsi_eh_sdev_stu(stu_scmd, work_q, done_q)) {
++			scsi_device_put(sdev);
++			break;
++		}
++	}
++
++	return list_empty(work_q);
++}
++
++static int scsi_eh_sdev_reset(struct scsi_cmnd *scmd,
++			      struct list_head *work_q,
++			      struct list_head *done_q)
++{
++	struct scsi_cmnd *next;
++	struct scsi_device *sdev = scmd->device;
++	enum scsi_disposition rtn;
++
++	SCSI_LOG_ERROR_RECOVERY(3, sdev_printk(KERN_INFO, sdev,
++			     "%s: Sending BDR\n", current->comm));
++
++	rtn = scsi_try_bus_device_reset(scmd);
++	if (rtn != SUCCESS && rtn != FAST_IO_FAIL) {
+ 		SCSI_LOG_ERROR_RECOVERY(3,
+ 			sdev_printk(KERN_INFO, sdev,
+-				     "%s: Sending START_UNIT\n",
+-				    current->comm));
+-
+-		if (!scsi_eh_try_stu(stu_scmd)) {
+-			if (!scsi_device_online(sdev) ||
+-			    !scsi_eh_tur(stu_scmd)) {
+-				list_for_each_entry_safe(scmd, next,
+-							  work_q, eh_entry) {
+-					if (scmd->device == sdev &&
+-					    scsi_eh_action(scmd, SUCCESS) == SUCCESS)
+-						scsi_eh_finish_cmd(scmd, done_q);
+-				}
+-			}
+-		} else {
+-			SCSI_LOG_ERROR_RECOVERY(3,
+-				sdev_printk(KERN_INFO, sdev,
+-					    "%s: START_UNIT failed\n",
+-					    current->comm));
+-		}
++				    "%s: BDR failed\n", current->comm));
++		return 0;
+ 	}
+ 
++	if (!scsi_device_online(sdev) || rtn == FAST_IO_FAIL ||
++	    !scsi_eh_tur(scmd))
++		list_for_each_entry_safe(scmd, next, work_q, eh_entry)
++			if (scmd->device == sdev &&
++			    scsi_eh_action(scmd, rtn) != FAILED)
++				scsi_eh_finish_cmd(scmd, done_q);
++
+ 	return list_empty(work_q);
+ }
+ 
+@@ -1587,9 +1684,8 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 				    struct list_head *work_q,
+ 				    struct list_head *done_q)
+ {
+-	struct scsi_cmnd *scmd, *bdr_scmd, *next;
++	struct scsi_cmnd *scmd, *bdr_scmd;
+ 	struct scsi_device *sdev;
+-	enum scsi_disposition rtn;
+ 
+ 	shost_for_each_device(sdev, shost) {
+ 		if (scsi_host_eh_past_deadline(shost)) {
+@@ -1606,30 +1702,15 @@ static int scsi_eh_bus_device_reset(struct Scsi_Host *shost,
+ 				bdr_scmd = scmd;
+ 				break;
+ 			}
++		if (atomic_read(&scmd->device->eh.state) == SDEV_EH_DONE)
++			continue;
+ 
+ 		if (!bdr_scmd)
+ 			continue;
+ 
+-		SCSI_LOG_ERROR_RECOVERY(3,
+-			sdev_printk(KERN_INFO, sdev,
+-				     "%s: Sending BDR\n", current->comm));
+-		rtn = scsi_try_bus_device_reset(bdr_scmd);
+-		if (rtn == SUCCESS || rtn == FAST_IO_FAIL) {
+-			if (!scsi_device_online(sdev) ||
+-			    rtn == FAST_IO_FAIL ||
+-			    !scsi_eh_tur(bdr_scmd)) {
+-				list_for_each_entry_safe(scmd, next,
+-							 work_q, eh_entry) {
+-					if (scmd->device == sdev &&
+-					    scsi_eh_action(scmd, rtn) != FAILED)
+-						scsi_eh_finish_cmd(scmd,
+-								   done_q);
+-				}
+-			}
+-		} else {
+-			SCSI_LOG_ERROR_RECOVERY(3,
+-				sdev_printk(KERN_INFO, sdev,
+-					    "%s: BDR failed\n", current->comm));
++		if (scsi_eh_sdev_reset(bdr_scmd, work_q, done_q)) {
++			scsi_device_put(sdev);
++			break;
+ 		}
+ 	}
+ 
+@@ -2361,6 +2442,7 @@ int scsi_error_handler(void *data)
+ 
+ 		/* All scmds have been handled */
+ 		shost->host_failed = 0;
++		shost_clear_eh_done(shost);
+ 
+ 		/*
+ 		 * Note - if the above fails completely, the action is to take
+@@ -2511,12 +2593,12 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
+ 			break;
+ 		fallthrough;
+ 	case SG_SCSI_RESET_BUS:
+-		rtn = scsi_try_bus_reset(scmd);
++		rtn = __scsi_try_bus_reset(scmd);
+ 		if (rtn == SUCCESS || (val & SG_SCSI_RESET_NO_ESCALATE))
+ 			break;
+ 		fallthrough;
+ 	case SG_SCSI_RESET_HOST:
+-		rtn = scsi_try_host_reset(scmd);
++		rtn = __scsi_try_host_reset(scmd);
+ 		if (rtn == SUCCESS)
+ 			break;
+ 		fallthrough;
+@@ -2596,3 +2678,125 @@ bool scsi_get_sense_info_fld(const u8 *sense_buffer, int sb_len,
+ 	}
+ }
+ EXPORT_SYMBOL(scsi_get_sense_info_fld);
++
++static int scsi_sdev_eh(struct scsi_device *sdev,
++		 struct list_head *work_q,
++		 struct list_head *done_q)
++{
++	int ret = 0;
++	struct scsi_cmnd *scmd;
++
++	SCSI_LOG_ERROR_RECOVERY(2, sdev_printk(KERN_INFO, sdev,
++		"%s:luneh: checking sense\n", current->comm));
++	ret = scsi_eh_get_sense(work_q, done_q);
++	if (ret)
++		return ret;
++
++	SCSI_LOG_ERROR_RECOVERY(2, sdev_printk(KERN_INFO, sdev,
++		"%s:luneh: start unit\n", current->comm));
++	scmd = list_first_entry(work_q, struct scsi_cmnd, eh_entry);
++	ret = scsi_eh_sdev_stu(scmd, work_q, done_q);
++	if (ret)
++		return ret;
++
++	SCSI_LOG_ERROR_RECOVERY(2, sdev_printk(KERN_INFO, sdev,
++		"%s:luneh: reset LUN\n", current->comm));
++	scmd = list_first_entry(work_q, struct scsi_cmnd, eh_entry);
++	ret = scsi_eh_sdev_reset(scmd, work_q, done_q);
++
++	return ret;
++}
++static void sdev_eh_work(struct work_struct *work)
++{
++	int ret;
++	unsigned long flags;
++	struct scsi_device_eh *eh =
++		container_of(work, struct scsi_device_eh, work);
++	struct scsi_device *sdev =
++		container_of(eh, struct scsi_device, eh);
++	struct scsi_cmnd *scmd, *next;
++	LIST_HEAD(eh_work_q);
++	LIST_HEAD(eh_done_q);
++
++	spin_lock_irqsave(&eh->lock, flags);
++	list_splice_init(&eh->cmd_q, &eh_work_q);
++	spin_unlock_irqrestore(&eh->lock, flags);
++
++	ret = scsi_sdev_eh(sdev, &eh_work_q, &eh_done_q);
++	atomic_cmpxchg(&eh->state, SDEV_EH_START,
++		ret ? SDEV_EH_STOP : SDEV_EH_DONE);
++	if (ret)
++		goto out_flush_done;
++
++	SCSI_LOG_ERROR_RECOVERY(2, sdev_printk(KERN_INFO, sdev,
++		"%s:luneh fallback to host recovery\n", current->comm));
++	list_for_each_entry_safe(scmd, next, &eh_work_q, eh_entry) {
++		list_del_init(&scmd->eh_entry);
++		scsi_eh_scmd_add_shost(scmd);
++	}
++
++out_flush_done:
++	scsi_eh_flush_done_q(&eh_done_q);
++	atomic_set(&eh->fail_cnt, 0);
++}
++static void sdev_eh_add_cmnd(struct scsi_cmnd *scmd)
++{
++	unsigned long flags;
++	struct scsi_device_eh *eh = &scmd->device->eh;
++
++	atomic_inc(&eh->fail_cnt);
++	spin_lock_irqsave(&eh->lock, flags);
++	list_add_tail(&scmd->eh_entry, &eh->cmd_q);
++	spin_unlock_irqrestore(&eh->lock, flags);
++}
++bool scsi_device_in_recovery(struct scsi_device *sdev)
++{
++	return atomic_read(&sdev->eh.fail_cnt) != 0;
++}
++void sdev_eh_wakeup(struct scsi_device *sdev)
++{
++	unsigned int fail_cnt;
++	unsigned int busy_cnt;
++	struct scsi_device_eh *eh = &sdev->eh;
++	int state;
++
++	fail_cnt = atomic_read(&eh->fail_cnt);
++	if (!fail_cnt) {
++		SCSI_LOG_ERROR_RECOVERY(6, sdev_printk(KERN_INFO, sdev,
++			"%s:luneh: no failed cmd\n", current->comm));
++		return;
++	}
++
++	busy_cnt = scsi_device_busy(sdev);
++	if (busy_cnt != fail_cnt) {
++		SCSI_LOG_ERROR_RECOVERY(5, sdev_printk(KERN_INFO, sdev,
++			"%s:luneh: do not wake up, busy/fail: %d/%d\n",
++			current->comm, busy_cnt, fail_cnt));
++		return;
++	}
++
++	state = atomic_cmpxchg(&eh->state, SDEV_EH_STOP, SDEV_EH_START);
++	if (state != SDEV_EH_STOP) {
++		SCSI_LOG_ERROR_RECOVERY(5, sdev_printk(KERN_INFO, sdev,
++			"%s:luneh: is waken up, busy/fail: %d/%d\n",
++			current->comm, busy_cnt, fail_cnt));
++		return;
++	}
++
++	SCSI_LOG_ERROR_RECOVERY(2, sdev_printk(KERN_INFO, sdev,
++		"%s:luneh: waking up, busy/fail: %d/%d\n",
++		current->comm, busy_cnt, fail_cnt));
++	schedule_work(&eh->work);
++}
++
++void scsi_device_init_eh(struct scsi_device *sdev)
++{
++	struct scsi_device_eh *eh = &sdev->eh;
++
++	INIT_WORK(&eh->work, sdev_eh_work);
++	spin_lock_init(&eh->lock);
++	INIT_LIST_HEAD(&eh->cmd_q);
++	eh->action = NULL;
++	atomic_set(&eh->fail_cnt, 0);
++	atomic_set(&eh->state, SDEV_EH_STOP);
++}
+diff --git a/drivers/scsi/scsi_lib.c b/drivers/scsi/scsi_lib.c
+index 0c65ecfedfbd..ee0d33d61ee4 100644
+--- a/drivers/scsi/scsi_lib.c
++++ b/drivers/scsi/scsi_lib.c
+@@ -398,6 +398,8 @@ void scsi_device_unbusy(struct scsi_device *sdev, struct scsi_cmnd *cmd)
+ 
+ 	sbitmap_put(&sdev->budget_map, cmd->budget_token);
+ 	cmd->budget_token = -1;
++
++	sdev_eh_wakeup(sdev);
+ }
+ 
+ /*
+@@ -1360,6 +1362,9 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ {
+ 	int token;
+ 
++	if (scsi_device_in_recovery(sdev))
++		return -1;
++
+ 	token = sbitmap_get(&sdev->budget_map);
+ 	if (token < 0)
+ 		return -1;
+@@ -1374,6 +1379,7 @@ static inline int scsi_dev_queue_ready(struct request_queue *q,
+ 	if (scsi_device_busy(sdev) > 1 ||
+ 	    atomic_dec_return(&sdev->device_blocked) > 0) {
+ 		sbitmap_put(&sdev->budget_map, token);
++		sdev_eh_wakeup(sdev);
+ 		return -1;
+ 	}
+ 
+@@ -1882,6 +1888,7 @@ static blk_status_t scsi_queue_rq(struct blk_mq_hw_ctx *hctx,
+ out_put_budget:
+ 	scsi_mq_put_budget(q, cmd->budget_token);
+ 	cmd->budget_token = -1;
++	sdev_eh_wakeup(sdev);
+ 	switch (ret) {
+ 	case BLK_STS_OK:
+ 		break;
+diff --git a/drivers/scsi/scsi_priv.h b/drivers/scsi/scsi_priv.h
+index 5b2b19f5e8ec..28ae228848c0 100644
+--- a/drivers/scsi/scsi_priv.h
++++ b/drivers/scsi/scsi_priv.h
+@@ -92,6 +92,9 @@ extern int scsi_error_handler(void *host);
+ extern enum scsi_disposition scsi_decide_disposition(struct scsi_cmnd *cmd);
+ extern void scsi_eh_wakeup(struct Scsi_Host *shost, unsigned int busy);
+ extern void scsi_eh_scmd_add(struct scsi_cmnd *);
++extern void sdev_eh_wakeup(struct scsi_device *sdev);
++extern bool scsi_device_in_recovery(struct scsi_device *sdev);
++extern void scsi_device_init_eh(struct scsi_device *sdev);
+ void scsi_eh_ready_devs(struct Scsi_Host *shost,
+ 			struct list_head *work_q,
+ 			struct list_head *done_q);
+diff --git a/drivers/scsi/scsi_scan.c b/drivers/scsi/scsi_scan.c
+index 3c6e089e80c3..1e73bd869a25 100644
+--- a/drivers/scsi/scsi_scan.c
++++ b/drivers/scsi/scsi_scan.c
+@@ -362,6 +362,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
+ 	}
+ 
+ 	scsi_change_queue_depth(sdev, depth);
++	scsi_device_init_eh(sdev);
+ 
+ 	scsi_sysfs_device_initialize(sdev);
+ 
+diff --git a/include/scsi/scsi_device.h b/include/scsi/scsi_device.h
+index 6d6500148c4b..f3fc1906db45 100644
+--- a/include/scsi/scsi_device.h
++++ b/include/scsi/scsi_device.h
+@@ -100,6 +100,24 @@ struct scsi_vpd {
+ 	unsigned char	data[];
+ };
+ 
++/**
++ * struct scsi_device_eh - SCSI Device Error Handler
++ * @work: For schedule_work
++ * @lock: protect cmd_q
++ * @cmd_q: queue of failed scmd
++ * @action: error handle command's completion
++ * @fail_cnt: count of cmd_q
++ * @state: state of Error Handler working
++ */
++struct scsi_device_eh {
++	struct work_struct	work;
++	spinlock_t			lock;
++	struct list_head	cmd_q;
++	struct completion	*action;
++	atomic_t			fail_cnt;
++	atomic_t			state;
++};
++
+ struct scsi_device {
+ 	struct Scsi_Host *host;
+ 	struct request_queue *request_queue;
+@@ -289,6 +307,7 @@ struct scsi_device {
+ 	struct mutex		state_mutex;
+ 	enum scsi_device_state sdev_state;
+ 	struct task_struct	*quiesced_by;
++	struct scsi_device_eh eh;
+ 	unsigned long		sdev_data[];
+ } __attribute__((aligned(sizeof(unsigned long))));
+ 
+diff --git a/include/scsi/scsi_eh.h b/include/scsi/scsi_eh.h
+index 1ae08e81339f..f12fe46c7373 100644
+--- a/include/scsi/scsi_eh.h
++++ b/include/scsi/scsi_eh.h
+@@ -18,6 +18,8 @@ extern int scsi_block_when_processing_errors(struct scsi_device *);
+ extern bool scsi_command_normalize_sense(const struct scsi_cmnd *cmd,
+ 					 struct scsi_sense_hdr *sshdr);
+ extern enum scsi_disposition scsi_check_sense(struct scsi_cmnd *);
++extern int scsi_device_setup_eh(struct scsi_device *sdev);
++extern void scsi_device_clear_eh(struct scsi_device *sdev);
+ 
+ static inline bool scsi_sense_is_deferred(const struct scsi_sense_hdr *sshdr)
+ {
+diff --git a/include/scsi/scsi_host.h b/include/scsi/scsi_host.h
+index c53812b9026f..46f57fe78505 100644
+--- a/include/scsi/scsi_host.h
++++ b/include/scsi/scsi_host.h
+@@ -558,8 +558,6 @@ struct Scsi_Host {
+ 	struct list_head	eh_abort_list;
+ 	struct list_head	eh_cmd_q;
+ 	struct task_struct    * ehandler;  /* Error recovery thread. */
+-	struct completion     * eh_action; /* Wait for specific actions on the
+-					      host. */
+ 	wait_queue_head_t       host_wait;
+ 	const struct scsi_host_template *hostt;
+ 	struct scsi_transport_template *transportt;
+-- 
+2.33.0
 
