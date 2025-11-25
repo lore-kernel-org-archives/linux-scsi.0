@@ -1,47 +1,68 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.19])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8894828D8F1;
-	Tue, 25 Nov 2025 06:32:09 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4119E13D891;
+	Tue, 25 Nov 2025 07:00:18 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.19
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764052331; cv=none; b=tutzagnvND7EhyP/PBCWkHIdl0dICSidJmrVyOM7toAWUNL2CtVNTLIpEkOHocz7IdzrENby+lcjGMhVtQGCd052dlH3pXbCRj8JULH3lO/UKDprwlog6VK4+Nyxrv/MRqIRpC59rG7pnKXPCiFHTM+FeOXd0QC0nUK/mzT5R8o=
+	t=1764054020; cv=none; b=FQMdNvcGnMaMHEqc6qYCN03Wjo+c5CPL6uuy43Meswkq+IPML/n8E4slxM2yeEI4pNi3zqEpTMDLZt7r26wmT+bhsqK4rO673YLwgxwKngKH1RNtkTU3TJ6EIq2ktwBL+eiD9sh5VMZ8ww7r0Qi2PYfZx2+QQEE42VYvuE0Rmys=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764052331; c=relaxed/simple;
-	bh=o5D3QieV1WPDDyxNHVYaUpvgcKnckOs8bDfkWeLbZss=;
+	s=arc-20240116; t=1764054020; c=relaxed/simple;
+	bh=OMcXJ2dkVm7jKJ9rum+8R9nzWkBHh1MYXvp80cM24SA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=F2cNPJ8m3CyQEA8TO6835br/W1c1WmQ2ZXtL+g55wLv93quLBHbw15MkkkSS45pmBC3gSL447j1Azw45eNlMZ3HmnhL8sKRYq+Prt495dk+egXj1KuI0d8Alr+wwsbLr8dpG40xC6uo1FWk5sdM4OYIUWstn04b4mx25m/YDLa4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=XcvZrkNu; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	 Content-Type:Content-Disposition:In-Reply-To; b=nsYj5QbKRltpW7VBT3BzBc2TFy42zNoFp1fkrxU9I9CwrOtmXELnPSpkQQzxljR/GRNTZ0wHHYGP3aXkzHKYvcPEFvVvR7amcKBWSLLRRQCikTQ7BxdbnAEsxr48oNWTZbRI9mho1dqqVd7gjxF+OLE4zyJAs3xYVtjahrOYlHw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=CPeL5OC4; arc=none smtp.client-ip=198.175.65.19
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="XcvZrkNu"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Type:MIME-Version
-	:References:Message-ID:Subject:Cc:To:From:Date:Sender:Reply-To:
-	Content-Transfer-Encoding:Content-ID:Content-Description;
-	bh=o5D3QieV1WPDDyxNHVYaUpvgcKnckOs8bDfkWeLbZss=; b=XcvZrkNuIoZYcURBVitDMmv7dO
-	CV/T8Qx0Yfnqk3GjXffUB6x3fOvLVni+7yKkUGAWpDcv0Qax5YOB5ZoTsc6HpUV5Lpp98a+3kV6KJ
-	o0rqtotEQMfjAG6gyKVmmiQIY9UXzeugm/4jeP+HKs9U0jqoGLaPotAvFGQ6DT2yhqjuPOJYeiQ2d
-	5yMv8tWhZN3AmD8Fhzh21pR22hfevmrRW1v6ivW+GMKsrw2yaWusnMK5TVQiLcIPL5E0YYLIUKbcT
-	dNzuhApmfpPBZOA66ngkUXNP0Uz7ZKSMgB9rPLQfFhJscpI2W5nyNEav60gVg9A0kdLifPpiEP1tg
-	DS6ePBMg==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vNmau-0000000CpOD-3gdN;
-	Tue, 25 Nov 2025 06:32:08 +0000
-Date: Mon, 24 Nov 2025 22:32:08 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org, linux-block@vger.kernel.org,
-	John Garry <john.g.garry@oracle.com>,
-	Hannes Reinecke <hare@suse.de>, Jens Axboe <axboe@kernel.dk>,
-	Christoph Hellwig <hch@infradead.org>,
-	Ming Lei <ming.lei@redhat.com>
-Subject: Re: [PATCH v2 1/5] block: Introduce __blk_mq_tagset_iter()
-Message-ID: <aSVNaLyqg08-GAzN@infradead.org>
-References: <20251124182201.737160-1-bvanassche@acm.org>
- <20251124182201.737160-2-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="CPeL5OC4"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1764054020; x=1795590020;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=OMcXJ2dkVm7jKJ9rum+8R9nzWkBHh1MYXvp80cM24SA=;
+  b=CPeL5OC4E+lOy4V3dEOS1qL/DNjwxq+OkTi0AtBi+dxKpNQojSO2uB0l
+   oEDQ7uN6NUxqRIoH7vARQ0nghVv+nJDuXnuf9cxKu0WA66UPW72IAPWXV
+   6XcXAzoJZ6Ric5VHFJ0kJ+q4F8R6/30WJc/09b4iCVrCrhVEkZSB1JSNB
+   vSYkYrGnwgG1PVg7EsHQMzxGXFy3L2Z+GBj+T4ZvUuK7C9Y/e88xY+t8D
+   qr3b6bH+YU2Soj22VRDpX6a10YGi3kXhRRVLyl4fwMxNndDvJzU34CKR4
+   7aay5vyLWkcS7jgwJsVulrPwyW0o6rDlI8qfxK4dY+i3sAwzH4U+OpARj
+   Q==;
+X-CSE-ConnectionGUID: VLD0+oB4R5Cp7Wn9m4J+Ng==
+X-CSE-MsgGUID: x1mMYEN8Semi7MqS6nRbpQ==
+X-IronPort-AV: E=McAfee;i="6800,10657,11623"; a="65952038"
+X-IronPort-AV: E=Sophos;i="6.20,224,1758610800"; 
+   d="scan'208";a="65952038"
+Received: from orviesa008.jf.intel.com ([10.64.159.148])
+  by orvoesa111.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 24 Nov 2025 23:00:16 -0800
+X-CSE-ConnectionGUID: znWy9/oWQbi+RJXZ3xcLbA==
+X-CSE-MsgGUID: svTfXJE4S8+gb+Ng3MRsKQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.20,224,1758610800"; 
+   d="scan'208";a="192631933"
+Received: from lkp-server01.sh.intel.com (HELO 4664bbef4914) ([10.239.97.150])
+  by orviesa008.jf.intel.com with ESMTP; 24 Nov 2025 23:00:11 -0800
+Received: from kbuild by 4664bbef4914 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vNn21-000000001Rx-2WBZ;
+	Tue, 25 Nov 2025 07:00:09 +0000
+Date: Tue, 25 Nov 2025 14:59:25 +0800
+From: kernel test robot <lkp@intel.com>
+To: Guangshuo Li <lgs201920130244@gmail.com>,
+	HighPoint Linux Team <linux@highpoint-tech.com>,
+	"James E.J. Bottomley" <jejb@linux.ibm.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	James Bottomley <James.Bottomley@hansenpartnership.com>,
+	Andrew Morton <akpm@linux-foundation.org>,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	Linux Memory Management List <linux-mm@kvack.org>,
+	Guangshuo Li <lgs201920130244@gmail.com>, stable@vger.kernel.org
+Subject: Re: [PATCH] [SCSI] hptiop: Add inbound queue offset bounds check in
+ iop_get_config_itl
+Message-ID: <202511251457.AUHUgeyl-lkp@intel.com>
+References: <20251124145848.45687-1-lgs201920130244@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -50,9 +71,71 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <20251124182201.737160-2-bvanassche@acm.org>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+In-Reply-To: <20251124145848.45687-1-lgs201920130244@gmail.com>
 
-Why are you Ccing me on what appears 4 out of 5 patches, missing one
-and the cover letter?
+Hi Guangshuo,
 
+kernel test robot noticed the following build errors:
+
+[auto build test ERROR on mkp-scsi/for-next]
+[also build test ERROR on jejb-scsi/for-next akpm-mm/mm-everything linus/master v6.18-rc7 next-20251124]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Guangshuo-Li/hptiop-Add-inbound-queue-offset-bounds-check-in-iop_get_config_itl/20251124-230112
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251124145848.45687-1-lgs201920130244%40gmail.com
+patch subject: [PATCH] [SCSI] hptiop: Add inbound queue offset bounds check in iop_get_config_itl
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20251125/202511251457.AUHUgeyl-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251125/202511251457.AUHUgeyl-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511251457.AUHUgeyl-lkp@intel.com/
+
+All errors (new ones prefixed by >>):
+
+>> drivers/scsi/hptiop.c:170:17: error: no member named 'pdev' in 'struct hptiop_hba'
+     170 |                 dev_err(&hba->pdev->dev,
+         |                          ~~~  ^
+   include/linux/dev_printk.h:154:44: note: expanded from macro 'dev_err'
+     154 |         dev_printk_index_wrap(_dev_err, KERN_ERR, dev, dev_fmt(fmt), ##__VA_ARGS__)
+         |                                                   ^~~
+   include/linux/dev_printk.h:110:11: note: expanded from macro 'dev_printk_index_wrap'
+     110 |                 _p_func(dev, fmt, ##__VA_ARGS__);                       \
+         |                         ^~~
+   1 error generated.
+
+
+vim +170 drivers/scsi/hptiop.c
+
+   160	
+   161	static void mv_inbound_write(u64 p, struct hptiop_hba *hba)
+   162	{
+   163		u32 inbound_head = readl(&hba->u.mv.mu->inbound_head);
+   164		u32 head = inbound_head + 1;
+   165	
+   166		if (head == MVIOP_QUEUE_LEN)
+   167			head = 0;
+   168	
+   169		if (inbound_head >= MVIOP_QUEUE_LEN) {
+ > 170			dev_err(&hba->pdev->dev,
+   171				"hptiop: inbound_head out of range (%u)\n",
+   172				inbound_head);
+   173			inbound_head = 0;
+   174			head = 1;
+   175		}
+   176	
+   177		memcpy_toio(&hba->u.mv.mu->inbound_q[inbound_head], &p, 8);
+   178		writel(head, &hba->u.mv.mu->inbound_head);
+   179		writel(MVIOP_MU_INBOUND_INT_POSTQUEUE,
+   180				&hba->u.mv.regs->inbound_doorbell);
+   181	}
+   182	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
