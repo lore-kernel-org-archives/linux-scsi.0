@@ -1,158 +1,362 @@
-Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25DF730B51A;
-	Wed, 26 Nov 2025 18:07:16 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C847618CC13
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Nov 2025 23:08:19 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764180438; cv=none; b=luJtC5/hJPGIaqCyQPmBfZ8wNJtr4Qh4vFvZqVPcSjIXDRw5aytW102mx56mH972WctGJQWRX7vox8udiSIjQbYyfbCj0YEF9iz7+juYphh/96PzstXChCkWf7yLtCKPcr7CO7PkG83cjKdyu3qWWfUCnsWnxg4g9QzzPL4aTL4=
+	t=1764198499; cv=none; b=M0Vi8apy5VFmSNcyKYoHziBb/46RZ8ZRKjTFzs/Li3FRlc1HLhnrD0nOIujEY4ou6STYZJhkbrW/vXOpjxFOP1Kcgg7lNThMX0GlSfJ+3tp9r6HcxuIt2Zo2Ybl7fnv2vnMvBvwck124MgqeH23mzkFkDyjoax9mIdICwiKq2jM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764180438; c=relaxed/simple;
-	bh=ZxPVD2OX+mWyP8KER+7TTW6fM/MAUm90+J80CBazzDI=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=u2SGUBTA1XE0adApFPeGcdXgguylhF5AxGm+C81AsYj74koMftHPGPcXH5x0SL9pPf8sz8dOgiUHOnWvTzIsxn5siJXoEVZTK4PelApAPmwrhr1S4FXHeubh7A91sXKD0h8ScW6dWTMi2jGAMbAFnSEqvosfGliDvqoxFx6UEGQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Vhf2rmyr; arc=none smtp.client-ip=192.198.163.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	s=arc-20240116; t=1764198499; c=relaxed/simple;
+	bh=edCjHgsfOB3Tvm0SEOsZNOcLzAqRAaMBFmtlB8LuPAw=;
+	h=From:To:Subject:Date:Message-ID:Content-Type:MIME-Version; b=j1Mrf3DmmJ6sYNBXmO+HqmTiQn1nj7xpDPUQwd3W9QAcoF4xDOqXVMrtzUcjVNPX+iSMXwlF68e4ULV7JShkjol417j05jYmZCis/EDqmDPyr2rI7Je1JMJSJbqNWVcSw745TX3vc/+zH5KW7dIbzxTD/fzCC6OCk1B5Mmjmu3Y=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=XIFlhieh; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Vhf2rmyr"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1764180437; x=1795716437;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=ZxPVD2OX+mWyP8KER+7TTW6fM/MAUm90+J80CBazzDI=;
-  b=Vhf2rmyrw0q9mxSzAZyQEIfuFAIJ7eUjXrf5hK7p7d3EB0Mm96DI/X9+
-   vJXYltRIkGZuaqArSYGDyfMsQHkryuEnj/v6yuqn4WU8cFwSiB/f4GdGQ
-   UkZKprLancr8RiH1YknZgWOoXjgtNy4nZKPCkEMULsGg3OcxYw3RvBZh9
-   QSeM0FNxpl9XnKwVK693HcwP/2tZ4thOnqUroqEyZc0upRuOIxBUvCTxB
-   LEFv8QHnNUmqLLzOe7WsZTW798Rn0gbwiQcoFCmpscWmiK9YNCI1i6jPk
-   Z1xYZysDqzfOCyhLrpCHBT3HSVjEJdL+G/pYkoO0oTbuIwLjE4DyAbY9x
-   A==;
-X-CSE-ConnectionGUID: vDADToWTSwCG7L8ixFjIlQ==
-X-CSE-MsgGUID: mWdWA913QiWU7p1FzedRHw==
-X-IronPort-AV: E=McAfee;i="6800,10657,11625"; a="65412766"
-X-IronPort-AV: E=Sophos;i="6.20,229,1758610800"; 
-   d="scan'208";a="65412766"
-Received: from fmviesa003.fm.intel.com ([10.60.135.143])
-  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Nov 2025 10:07:16 -0800
-X-CSE-ConnectionGUID: k/fLjEWGQQq0kjdeccpQHA==
-X-CSE-MsgGUID: 1Ys4OkOBRJ2TYAKR0MgXIg==
-X-ExtLoop1: 1
-Received: from lkp-server01.sh.intel.com (HELO 4664bbef4914) ([10.239.97.150])
-  by fmviesa003.fm.intel.com with ESMTP; 26 Nov 2025 10:07:13 -0800
-Received: from kbuild by 4664bbef4914 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vOJv5-000000003Dx-1cf2;
-	Wed, 26 Nov 2025 18:07:11 +0000
-Date: Thu, 27 Nov 2025 02:06:52 +0800
-From: kernel test robot <lkp@intel.com>
-To: Stefan Hajnoczi <stefanha@redhat.com>, linux-block@vger.kernel.org
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	Mike Christie <michael.christie@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>, linux-nvme@lists.infradead.org,
-	Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
-	linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
-	Stefan Hajnoczi <stefanha@redhat.com>
-Subject: Re: [PATCH 3/4] block: add IOC_PR_READ_KEYS ioctl
-Message-ID: <202511270125.CJ6M2RHv-lkp@intel.com>
-References: <20251126163600.583036-4-stefanha@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="XIFlhieh"
+Received: by smtp.kernel.org (Postfix) with ESMTPS id 3F086C116C6
+	for <linux-scsi@vger.kernel.org>; Wed, 26 Nov 2025 23:08:19 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764198499;
+	bh=edCjHgsfOB3Tvm0SEOsZNOcLzAqRAaMBFmtlB8LuPAw=;
+	h=From:To:Subject:Date:From;
+	b=XIFlhiehaktrMG4uKuxj8EwSirO7ijUWo5Kyl4T97JeMG+fP/5bFAHvk9fliuHKRs
+	 p6py09dSmcveGCdougu+Jo9S4gnrlgDwMoA5uJqAn4eyZ3mnN2fe1l36TLV/3VAinC
+	 RD+nuzsicN+0E7UK7TjpQxuXRPPdyKoQu0iU5saqnfhx+RJz+pNBkLFTRwXU7GU/Y2
+	 y9MyV0GauXDVTzw8wh/kACqciaScRKrAT+THH8hWhldNJopXi39YHhu8VBdYeqIono
+	 Gqkvi1bC6XDytBihYNNtVPSf31aGWiTbFI6MvJeeM6/dYzC7ZxOLMHBDEv1lwGErq/
+	 /KscZu90aKtiw==
+Received: by aws-us-west-2-korg-bugzilla-1.web.codeaurora.org (Postfix, from userid 48)
+	id 33BE2C41613; Wed, 26 Nov 2025 23:08:19 +0000 (UTC)
+From: bugzilla-daemon@kernel.org
+To: linux-scsi@vger.kernel.org
+Subject: [Bug 220810] New: RTL9210: "unmap" in provisioning_mode keeps
+ getting overwritten to "full"
+Date: Wed, 26 Nov 2025 23:08:18 +0000
+X-Bugzilla-Reason: AssignedTo
+X-Bugzilla-Type: new
+X-Bugzilla-Watch-Reason: None
+X-Bugzilla-Product: IO/Storage
+X-Bugzilla-Component: SCSI
+X-Bugzilla-Version: 2.5
+X-Bugzilla-Keywords: 
+X-Bugzilla-Severity: normal
+X-Bugzilla-Who: frank.shimizu@mailbox.org
+X-Bugzilla-Status: NEW
+X-Bugzilla-Resolution: 
+X-Bugzilla-Priority: P3
+X-Bugzilla-Assigned-To: linux-scsi@vger.kernel.org
+X-Bugzilla-Flags: 
+X-Bugzilla-Changed-Fields: bug_id short_desc product version rep_platform
+ op_sys bug_status bug_severity priority component assigned_to reporter
+ cf_regression
+Message-ID: <bug-220810-11613@https.bugzilla.kernel.org/>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
+X-Bugzilla-URL: https://bugzilla.kernel.org/
+Auto-Submitted: auto-generated
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251126163600.583036-4-stefanha@redhat.com>
 
-Hi Stefan,
+https://bugzilla.kernel.org/show_bug.cgi?id=3D220810
 
-kernel test robot noticed the following build warnings:
+            Bug ID: 220810
+           Summary: RTL9210: "unmap" in provisioning_mode keeps getting
+                    overwritten to "full"
+           Product: IO/Storage
+           Version: 2.5
+          Hardware: All
+                OS: Linux
+            Status: NEW
+          Severity: normal
+          Priority: P3
+         Component: SCSI
+          Assignee: linux-scsi@vger.kernel.org
+          Reporter: frank.shimizu@mailbox.org
+        Regression: No
 
-[auto build test WARNING on mkp-scsi/for-next]
-[also build test WARNING on axboe/for-next jejb-scsi/for-next linus/master v6.18-rc7 next-20251126]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+I have a Ugreen NVMe M.2 to USB enclosure. lsusb reports it as (long version
+follows later):
+Bus 001 Device 012: ID 0bda:9210 Realtek Semiconductor Corp. RTL9210 M.2 NV=
+ME
+Adapter
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Stefan-Hajnoczi/scsi-sd-reject-invalid-pr_read_keys-num_keys-values/20251127-003756
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20251126163600.583036-4-stefanha%40redhat.com
-patch subject: [PATCH 3/4] block: add IOC_PR_READ_KEYS ioctl
-config: loongarch-allnoconfig (https://download.01.org/0day-ci/archive/20251127/202511270125.CJ6M2RHv-lkp@intel.com/config)
-compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project 9e9fe08b16ea2c4d9867fb4974edf2a3776d6ece)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251127/202511270125.CJ6M2RHv-lkp@intel.com/reproduce)
+The device supports unmap/TRIM/discard but doesn't seem to report this to t=
+he
+OS correctly. sg_vpd -a on the device reports: LBPU=3D1. This suggests trim
+should work. But the system sets the provisioning_mode to "full":
+# cat
+/sys/devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/host8/target8:0:0/8:0=
+:0:0/scsi_disk/8:0:0:0/provisioning_mode
+full
 
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202511270125.CJ6M2RHv-lkp@intel.com/
+And therefore when I try to run blkdiscard on the device I get: Operation n=
+ot
+supported.
 
-All warnings (new ones prefixed by >>):
+Windows is able to trim the device, which seems to support that the device =
+is
+capable of trim, but possibly Windows doesn't care about the chip's inaccur=
+ate
+report.
 
->> block/ioctl.c:443:21: warning: result of comparison of constant 2305843009213693951 with expression of type '__u32' (aka 'unsigned int') is always false [-Wtautological-constant-out-of-range-compare]
-     443 |         if (inout.num_keys > -sizeof(*keys_info) / sizeof(keys_info->keys[0]))
-         |             ~~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-   1 warning generated.
+When I manually write "unmap" to provisioning_mode, I can successfully run
+blkdiscard. So I created the following udev rule:
+ACTION=3D=3D"add|change", ATTRS{idVendor}=3D=3D"0bda", ATTRS{idProduct}=3D=
+=3D"9210",
+SUBSYSTEM=3D=3D"scsi_disk", ATTR{provisioning_mode}=3D"unmap"
 
+After a reboot the device indeed has "unmap" set and trim works:
+# cat
+/sys/devices/pci0000:00/0000:00:14.0/usb1/1-3/1-3:1.0/host8/target8:0:0/8:0=
+:0:0/scsi_disk/8:0:0:0/provisioning_mode
+unmap
 
-vim +443 block/ioctl.c
+So far, so good, but this is where the real problem starts: After a short t=
+ime
+it always gets set back to "full" automatically. Unfortunately I see no rel=
+ated
+messages in dmesg when this happens. The change might sometimes be triggere=
+d by
+my actions, such as opening a LUKS volume, but it also seems to happen by
+itself even when I don't do anything with the device. I tried disabling and
+masking the udisks2 service to make sure it doesn't interfere, but that did=
+n't
+help. I also tried watching the provisioning_mode file with inotify to see =
+what
+changes it but didn't get any messages when it changed.
 
-   426	
-   427	static int blkdev_pr_read_keys(struct block_device *bdev, blk_mode_t mode,
-   428			struct pr_read_keys __user *arg)
-   429	{
-   430		const struct pr_ops *ops = bdev->bd_disk->fops->pr_ops;
-   431		struct pr_keys *keys_info __free(kfree) = NULL;
-   432		struct pr_read_keys inout;
-   433		int ret;
-   434	
-   435		if (!blkdev_pr_allowed(bdev, mode))
-   436			return -EPERM;
-   437		if (!ops || !ops->pr_read_keys)
-   438			return -EOPNOTSUPP;
-   439	
-   440		if (copy_from_user(&inout, arg, sizeof(inout)))
-   441			return -EFAULT;
-   442	
- > 443		if (inout.num_keys > -sizeof(*keys_info) / sizeof(keys_info->keys[0]))
-   444			return -EINVAL;
-   445	
-   446		size_t keys_info_len = struct_size(keys_info, keys, inout.num_keys);
-   447	
-   448		keys_info = kzalloc(keys_info_len, GFP_KERNEL);
-   449		if (!keys_info)
-   450			return -ENOMEM;
-   451	
-   452		keys_info->num_keys = inout.num_keys;
-   453	
-   454		ret = ops->pr_read_keys(bdev, keys_info);
-   455		if (ret)
-   456			return ret;
-   457	
-   458		/* Copy out individual keys */
-   459		u64 __user *keys_ptr = u64_to_user_ptr(inout.keys_ptr);
-   460		u32 num_copy_keys = min(inout.num_keys, keys_info->num_keys);
-   461		size_t keys_copy_len = num_copy_keys * sizeof(keys_info->keys[0]);
-   462	
-   463		if (copy_to_user(keys_ptr, keys_info->keys, keys_copy_len))
-   464			return -EFAULT;
-   465	
-   466		/* Copy out the arg struct */
-   467		inout.generation = keys_info->generation;
-   468		inout.num_keys = keys_info->num_keys;
-   469	
-   470		if (copy_to_user(arg, &inout, sizeof(inout)))
-   471			return -EFAULT;
-   472		return ret;
-   473	}
-   474	
+Please let me know if I can provide any more information.
 
--- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Steps to reproduce:
+ * Create udev rule
+ * Plug in device -> provisioning_mode initially set by udev to "unmap"
+ * blkdiscard works
+ * Perform action on device, or wait
+ * provisioning_mode reverts to "full"
+ * blkdiscard now fails with "Operation not supported"
+
+=3D=3D=3D=3D=3D
+
+Additional info:
+
+Kernel is current Debian Trixie stock kernel, no patches
+
+# uname -a
+Linux homura 6.12.57+deb13-amd64 #1 SMP PREEMPT_DYNAMIC Debian 6.12.57-1
+(2025-11-05) x86_64 GNU/Linux
+
+-----
+
+# cat /proc/version
+Linux version 6.12.57+deb13-amd64 (debian-kernel@lists.debian.org)
+(x86_64-linux-gnu-gcc-14 (Debian 14.2.0-19) 14.2.0, GNU ld (GNU Binutils for
+Debian) 2.44) #1 SMP PREEMPT_DYNAMIC Debian 6.12.57-1 (2025-11-05)
+
+-----
+
+# sg_vpd -a /dev/sde
+Supported VPD pages VPD page:
+  Supported VPD pages [sv]
+  Unit serial number [sn]
+  Device identification [di]
+  Block limits (SBC) [bl]
+  Block device characteristics (SBC) [bdc]
+  Logical block provisioning (SBC) [lbpv]
+
+Unit serial number VPD page:
+  Product serial number: 0000000000000000
+
+Device Identification VPD page:
+  Addressed logical unit:
+    designator type: T10 vendor identification,  code set: ASCII
+      vendor id: Realtek=20
+      vendor specific: RTL9210         1.000000000000000000
+    designator type: NAA,  code set: Binary
+      0x3001237923792379
+
+Block limits VPD page (SBC)
+  Write same non-zero (WSNZ): 0
+  Maximum compare and write length: 0 blocks [command not implemented]
+  Optimal transfer length granularity: 0x1
+  Maximum transfer length: 0xffff
+  Optimal transfer length: 0xffff
+  Maximum prefetch length: 0 blocks [not reported]
+  Maximum unmap LBA count: 0x1400000
+  Maximum unmap block descriptor count: 0x1
+  Optimal unmap granularity: 0x1
+  Unmap granularity alignment valid: false
+  Maximum write same length: 0 blocks [not reported]
+  Maximum atomic transfer length: 0 blocks [not reported]
+  Atomic alignment: 0 blocks [unaligned atomic writes permitted]
+  Atomic transfer length granularity: 0 blocks [no granularity requirement]
+  Maximum atomic transfer length with atomic boundary: 0 blocks [not report=
+ed]
+  Maximum atomic boundary size: 0 blocks [can only write atomic 1 block]
+
+Block device characteristics VPD page (SBC)
+  Non-rotating medium (e.g. solid state)
+  Product type: Not specified
+  WABEREQ=3D0
+  WACEREQ=3D0
+  Nominal form factor: not reported
+  MACT=3D0
+  ZONED=3D0 [not reported]
+  RBWZ=3D0
+  FUAB=3D0
+  VBULS=3D0
+  DEPOPULATION TIME: 0x0
+
+Logical block provisioning VPD page (SBC)
+  LBPU=3D1
+  LBPWS=3D0
+  LBPWS10=3D0
+  LBPRZ=3D0x0
+  ANC_SUP=3D0
+  DP=3D0
+  Minimum percentage: 0 [not reported]
+  Provisioning type: not known or fully provisioned
+  Threshold percentage: 0 [percentages not supported]
+
+-----
+
+# lsusb -vvv -d 0bda:9210
+
+Bus 001 Device 012: ID 0bda:9210 Realtek Semiconductor Corp. RTL9210 M.2 NV=
+ME
+Adapter
+Negotiated speed: High Speed (480Mbps)
+Device Descriptor:
+  bLength                18
+  bDescriptorType         1
+  bcdUSB               2.10
+  bDeviceClass            0 [unknown]
+  bDeviceSubClass         0 [unknown]
+  bDeviceProtocol         0=20
+  bMaxPacketSize0        64
+  idVendor           0x0bda Realtek Semiconductor Corp.
+  idProduct          0x9210 RTL9210 M.2 NVME Adapter
+  bcdDevice           f0.01
+  iManufacturer           1 Ugreen
+  iProduct                2 Ugreen Storage Device
+  iSerial                 3 01293805A6A5
+  bNumConfigurations      1
+  Configuration Descriptor:
+    bLength                 9
+    bDescriptorType         2
+    wTotalLength       0x0020
+    bNumInterfaces          1
+    bConfigurationValue     1
+    iConfiguration          0=20
+    bmAttributes         0x80
+      (Bus Powered)
+    MaxPower              500mA
+    Interface Descriptor:
+      bLength                 9
+      bDescriptorType         4
+      bInterfaceNumber        0
+      bAlternateSetting       0
+      bNumEndpoints           2
+      bInterfaceClass         8 Mass Storage
+      bInterfaceSubClass      6 SCSI
+      bInterfaceProtocol     80 Bulk-Only
+      iInterface              0=20
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x81  EP 1 IN
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+      Endpoint Descriptor:
+        bLength                 7
+        bDescriptorType         5
+        bEndpointAddress     0x02  EP 2 OUT
+        bmAttributes            2
+          Transfer Type            Bulk
+          Synch Type               None
+          Usage Type               Data
+        wMaxPacketSize     0x0200  1x 512 bytes
+        bInterval               0
+Binary Object Store Descriptor:
+  bLength                 5
+  bDescriptorType        15
+  wTotalLength       0x002a
+  bNumDeviceCaps          3
+  USB 2.0 Extension Device Capability:
+    bLength                 7
+    bDescriptorType        16
+    bDevCapabilityType      2
+    bmAttributes   0x00000006
+      BESL Link Power Management (LPM) Supported
+  SuperSpeed USB Device Capability:
+    bLength                10
+    bDescriptorType        16
+    bDevCapabilityType      3
+    bmAttributes         0x00
+    wSpeedsSupported   0x000e
+      Device can operate at Full Speed (12Mbps)
+      Device can operate at High Speed (480Mbps)
+      Device can operate at SuperSpeed (5Gbps)
+    bFunctionalitySupport   1
+      Lowest fully-functional device speed is Full Speed (12Mbps)
+    bU1DevExitLat          10 micro seconds
+    bU2DevExitLat        2047 micro seconds
+  SuperSpeedPlus USB Device Capability:
+    bLength                20
+    bDescriptorType        16
+    bDevCapabilityType     10
+    bmAttributes         0x00000001
+      Sublink Speed Attribute count 2
+      Sublink Speed ID count 1
+    wFunctionalitySupport   0x1100
+      Min functional Speed Attribute ID: 0
+      Min functional RX lanes: 1
+      Min functional TX lanes: 1
+    bmSublinkSpeedAttr[0]   0x000a4030
+      Speed Attribute ID: 0 10Gb/s Symmetric RX SuperSpeedPlus
+    bmSublinkSpeedAttr[1]   0x000a40b0
+      Speed Attribute ID: 0 10Gb/s Symmetric TX SuperSpeedPlus
+can't get debug descriptor: Resource temporarily unavailable
+Device Status:     0x0000
+  (Bus Powered)
+
+-----
+
+dmesg at boot when the device is initialized:
+[  176.009742] usb 1-3: new high-speed USB device number 12 using xhci_hcd
+[  176.155752] usb 1-3: New USB device found, idVendor=3D0bda, idProduct=3D=
+9210,
+bcdDevice=3Df0.01
+[  176.155765] usb 1-3: New USB device strings: Mfr=3D1, Product=3D2,
+SerialNumber=3D3
+[  176.155770] usb 1-3: Product: Ugreen Storage Device
+[  176.155774] usb 1-3: Manufacturer: Ugreen
+[  176.155778] usb 1-3: SerialNumber: 01293805A6A5
+[  176.214591] usb-storage 1-3:1.0: USB Mass Storage device detected
+[  176.214909] scsi host8: usb-storage 1-3:1.0
+[  176.214959] usbcore: registered new interface driver usb-storage
+[  176.220056] usbcore: registered new interface driver uas
+[  179.875749] scsi 8:0:0:0: Direct-Access     WD_BLACK  SN850X 2000GB   1.=
+00
+PQ: 0 ANSI: 6
+[  179.876489] sd 8:0:0:0: Attached scsi generic sg4 type 0
+[  179.881878] sd 8:0:0:0: [sde] 3907029168 512-byte logical blocks: (2.00
+TB/1.82 TiB)
+[  179.882510] sd 8:0:0:0: [sde] Write Protect is off
+[  179.882515] sd 8:0:0:0: [sde] Mode Sense: 37 00 00 08
+[  179.883171] sd 8:0:0:0: [sde] Write cache: disabled, read cache: enabled,
+doesn't support DPO or FUA
+[  179.959742] sd 8:0:0:0: [sde] Attached SCSI disk
+
+--=20
+You may reply to this email to add a comment.
+
+You are receiving this mail because:
+You are the assignee for the bug.=
