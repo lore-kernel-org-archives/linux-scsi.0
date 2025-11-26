@@ -1,160 +1,158 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from mgamail.intel.com (mgamail.intel.com [192.198.163.18])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 38A8133F38D
-	for <linux-scsi@vger.kernel.org>; Wed, 26 Nov 2025 16:36:23 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 25DF730B51A;
+	Wed, 26 Nov 2025 18:07:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=192.198.163.18
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764174984; cv=none; b=k0T462phwhgvluB6J/ZZ1+JG9R3MW6qYiiJo7Mt0QY1enOVuuSyi7ZE5DsHGR9o3lFcH5jtZiT4zH8I7CRIWUOAU9adwOR4CRMLiaGQ7Q1nhQhNNIXlVqzBwQsgEp13gmZEDx65cLe3pbJFNl4T6BFzfRHwZRqQc0g9q3OV/hPI=
+	t=1764180438; cv=none; b=luJtC5/hJPGIaqCyQPmBfZ8wNJtr4Qh4vFvZqVPcSjIXDRw5aytW102mx56mH972WctGJQWRX7vox8udiSIjQbYyfbCj0YEF9iz7+juYphh/96PzstXChCkWf7yLtCKPcr7CO7PkG83cjKdyu3qWWfUCnsWnxg4g9QzzPL4aTL4=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764174984; c=relaxed/simple;
-	bh=gyIXhfyr6nZM6LF63rYOm8b1zevtzeUIHbeqJNAK3Mk=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=sZDmyVW3pqgR2n+lgLp/Ebeqi71hYw1vDI4auesT96J4j6EBQHO9Pbc6CLbUnRp00CMVWHpT9/D3SyrNvrcwcnisRyD+TMHizNtQ+xmFNRPL0uxRPCQJ5HDlDApWyRljksorNmo+SHbSjhBcWxroTdGR6DaLkr83OpMI20MQPJw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=gVYADB5R; arc=none smtp.client-ip=170.10.129.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1764180438; c=relaxed/simple;
+	bh=ZxPVD2OX+mWyP8KER+7TTW6fM/MAUm90+J80CBazzDI=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=u2SGUBTA1XE0adApFPeGcdXgguylhF5AxGm+C81AsYj74koMftHPGPcXH5x0SL9pPf8sz8dOgiUHOnWvTzIsxn5siJXoEVZTK4PelApAPmwrhr1S4FXHeubh7A91sXKD0h8ScW6dWTMi2jGAMbAFnSEqvosfGliDvqoxFx6UEGQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Vhf2rmyr; arc=none smtp.client-ip=192.198.163.18
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="gVYADB5R"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764174982;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=4YKeJBoqj49IiVaa5396deScmldRsSYyxygJIXwbHUQ=;
-	b=gVYADB5Rnll5f3dR7xGCo2HIWsM/uKBgGMf9V5xjkn3qWnFl/KR5V/bK/cDws3opQbWwo4
-	9GFXrPz4+PZqJJWYbwG6zpl2cy3u7Ff6APZmQCvt+9XZ1spmZU8Uqi8f6YZowTdM5j4lmH
-	ATK/LMtEvW7X8eoHJzIiZK7Jb1XN7l8=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-363-iV1plFoROoSzVVS9yFOPdQ-1; Wed,
- 26 Nov 2025 11:36:15 -0500
-X-MC-Unique: iV1plFoROoSzVVS9yFOPdQ-1
-X-Mimecast-MFC-AGG-ID: iV1plFoROoSzVVS9yFOPdQ_1764174974
-Received: from mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.4])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 1C43B180057A;
-	Wed, 26 Nov 2025 16:36:14 +0000 (UTC)
-Received: from localhost (unknown [10.2.16.50])
-	by mx-prod-int-01.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8368930044E0;
-	Wed, 26 Nov 2025 16:36:13 +0000 (UTC)
-From: Stefan Hajnoczi <stefanha@redhat.com>
-To: linux-block@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Vhf2rmyr"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1764180437; x=1795716437;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=ZxPVD2OX+mWyP8KER+7TTW6fM/MAUm90+J80CBazzDI=;
+  b=Vhf2rmyrw0q9mxSzAZyQEIfuFAIJ7eUjXrf5hK7p7d3EB0Mm96DI/X9+
+   vJXYltRIkGZuaqArSYGDyfMsQHkryuEnj/v6yuqn4WU8cFwSiB/f4GdGQ
+   UkZKprLancr8RiH1YknZgWOoXjgtNy4nZKPCkEMULsGg3OcxYw3RvBZh9
+   QSeM0FNxpl9XnKwVK693HcwP/2tZ4thOnqUroqEyZc0upRuOIxBUvCTxB
+   LEFv8QHnNUmqLLzOe7WsZTW798Rn0gbwiQcoFCmpscWmiK9YNCI1i6jPk
+   Z1xYZysDqzfOCyhLrpCHBT3HSVjEJdL+G/pYkoO0oTbuIwLjE4DyAbY9x
+   A==;
+X-CSE-ConnectionGUID: vDADToWTSwCG7L8ixFjIlQ==
+X-CSE-MsgGUID: mWdWA913QiWU7p1FzedRHw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11625"; a="65412766"
+X-IronPort-AV: E=Sophos;i="6.20,229,1758610800"; 
+   d="scan'208";a="65412766"
+Received: from fmviesa003.fm.intel.com ([10.60.135.143])
+  by fmvoesa112.fm.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 26 Nov 2025 10:07:16 -0800
+X-CSE-ConnectionGUID: k/fLjEWGQQq0kjdeccpQHA==
+X-CSE-MsgGUID: 1Ys4OkOBRJ2TYAKR0MgXIg==
+X-ExtLoop1: 1
+Received: from lkp-server01.sh.intel.com (HELO 4664bbef4914) ([10.239.97.150])
+  by fmviesa003.fm.intel.com with ESMTP; 26 Nov 2025 10:07:13 -0800
+Received: from kbuild by 4664bbef4914 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vOJv5-000000003Dx-1cf2;
+	Wed, 26 Nov 2025 18:07:11 +0000
+Date: Thu, 27 Nov 2025 02:06:52 +0800
+From: kernel test robot <lkp@intel.com>
+To: Stefan Hajnoczi <stefanha@redhat.com>, linux-block@vger.kernel.org
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-kernel@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
 	Mike Christie <michael.christie@oracle.com>,
-	Jens Axboe <axboe@kernel.dk>,
-	linux-nvme@lists.infradead.org,
-	Keith Busch <kbusch@kernel.org>,
-	Sagi Grimberg <sagi@grimberg.me>,
-	linux-scsi@vger.kernel.org,
-	Christoph Hellwig <hch@lst.de>,
+	Jens Axboe <axboe@kernel.dk>, linux-nvme@lists.infradead.org,
+	Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>,
 	Stefan Hajnoczi <stefanha@redhat.com>
-Subject: [PATCH 4/4] block: add IOC_PR_READ_RESERVATION ioctl
-Date: Wed, 26 Nov 2025 11:36:00 -0500
-Message-ID: <20251126163600.583036-5-stefanha@redhat.com>
-In-Reply-To: <20251126163600.583036-1-stefanha@redhat.com>
-References: <20251126163600.583036-1-stefanha@redhat.com>
+Subject: Re: [PATCH 3/4] block: add IOC_PR_READ_KEYS ioctl
+Message-ID: <202511270125.CJ6M2RHv-lkp@intel.com>
+References: <20251126163600.583036-4-stefanha@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251126163600.583036-4-stefanha@redhat.com>
 
-Add a Persistent Reservations ioctl to read the current reservation.
-This calls the pr_ops->read_reservation() function that was previously
-added in commit c787f1baa503 ("block: Add PR callouts for read keys and
-reservation") but was only used by the in-kernel SCSI target so far.
+Hi Stefan,
 
-The IOC_PR_READ_RESERVATION ioctl is necessary so that userspace
-applications that rely on Persistent Reservations ioctls have a way of
-inspecting the current state. Cluster managers and validation tests need
-this functionality.
+kernel test robot noticed the following build warnings:
 
-Signed-off-by: Stefan Hajnoczi <stefanha@redhat.com>
----
- include/uapi/linux/pr.h |  7 +++++++
- block/ioctl.c           | 28 ++++++++++++++++++++++++++++
- 2 files changed, 35 insertions(+)
+[auto build test WARNING on mkp-scsi/for-next]
+[also build test WARNING on axboe/for-next jejb-scsi/for-next linus/master v6.18-rc7 next-20251126]
+[If your patch is applied to the wrong git tree, kindly drop us a note.
+And when submitting patch, we suggest to use '--base' as documented in
+https://git-scm.com/docs/git-format-patch#_base_tree_information]
 
-diff --git a/include/uapi/linux/pr.h b/include/uapi/linux/pr.h
-index fcb74eab92c80..847f3051057af 100644
---- a/include/uapi/linux/pr.h
-+++ b/include/uapi/linux/pr.h
-@@ -62,6 +62,12 @@ struct pr_read_keys {
- 	__u64	keys_ptr;
- };
- 
-+struct pr_read_reservation {
-+	__u64	key;
-+	__u32	generation;
-+	__u32	type;
-+};
-+
- #define PR_FL_IGNORE_KEY	(1 << 0)	/* ignore existing key */
- 
- #define IOC_PR_REGISTER		_IOW('p', 200, struct pr_registration)
-@@ -71,5 +77,6 @@ struct pr_read_keys {
- #define IOC_PR_PREEMPT_ABORT	_IOW('p', 204, struct pr_preempt)
- #define IOC_PR_CLEAR		_IOW('p', 205, struct pr_clear)
- #define IOC_PR_READ_KEYS	_IOWR('p', 206, struct pr_read_keys)
-+#define IOC_PR_READ_RESERVATION	_IOR('p', 207, struct pr_read_reservation)
- 
- #endif /* _UAPI_PR_H */
-diff --git a/block/ioctl.c b/block/ioctl.c
-index e87c424c15ae9..7e6d5e532d16b 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -472,6 +472,32 @@ static int blkdev_pr_read_keys(struct block_device *bdev, blk_mode_t mode,
- 	return ret;
- }
- 
-+static int blkdev_pr_read_reservation(struct block_device *bdev,
-+		blk_mode_t mode, struct pr_read_reservation __user *arg)
-+{
-+	const struct pr_ops *ops = bdev->bd_disk->fops->pr_ops;
-+	struct pr_held_reservation rsv = {};
-+	struct pr_read_reservation out = {};
-+	int ret;
-+
-+	if (!blkdev_pr_allowed(bdev, mode))
-+		return -EPERM;
-+	if (!ops || !ops->pr_read_reservation)
-+		return -EOPNOTSUPP;
-+
-+	ret = ops->pr_read_reservation(bdev, &rsv);
-+	if (ret)
-+		return ret;
-+
-+	out.key = rsv.key;
-+	out.generation = rsv.generation;
-+	out.type = rsv.type;
-+
-+	if (copy_to_user(arg, &out, sizeof(out)))
-+		return -EFAULT;
-+	return 0;
-+}
-+
- static int blkdev_flushbuf(struct block_device *bdev, unsigned cmd,
- 		unsigned long arg)
- {
-@@ -695,6 +721,8 @@ static int blkdev_common_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		return blkdev_pr_clear(bdev, mode, argp);
- 	case IOC_PR_READ_KEYS:
- 		return blkdev_pr_read_keys(bdev, mode, argp);
-+	case IOC_PR_READ_RESERVATION:
-+		return blkdev_pr_read_reservation(bdev, mode, argp);
- 	default:
- 		return blk_get_meta_cap(bdev, cmd, argp);
- 	}
+url:    https://github.com/intel-lab-lkp/linux/commits/Stefan-Hajnoczi/scsi-sd-reject-invalid-pr_read_keys-num_keys-values/20251127-003756
+base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
+patch link:    https://lore.kernel.org/r/20251126163600.583036-4-stefanha%40redhat.com
+patch subject: [PATCH 3/4] block: add IOC_PR_READ_KEYS ioctl
+config: loongarch-allnoconfig (https://download.01.org/0day-ci/archive/20251127/202511270125.CJ6M2RHv-lkp@intel.com/config)
+compiler: clang version 22.0.0git (https://github.com/llvm/llvm-project 9e9fe08b16ea2c4d9867fb4974edf2a3776d6ece)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251127/202511270125.CJ6M2RHv-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202511270125.CJ6M2RHv-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> block/ioctl.c:443:21: warning: result of comparison of constant 2305843009213693951 with expression of type '__u32' (aka 'unsigned int') is always false [-Wtautological-constant-out-of-range-compare]
+     443 |         if (inout.num_keys > -sizeof(*keys_info) / sizeof(keys_info->keys[0]))
+         |             ~~~~~~~~~~~~~~ ^ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+   1 warning generated.
+
+
+vim +443 block/ioctl.c
+
+   426	
+   427	static int blkdev_pr_read_keys(struct block_device *bdev, blk_mode_t mode,
+   428			struct pr_read_keys __user *arg)
+   429	{
+   430		const struct pr_ops *ops = bdev->bd_disk->fops->pr_ops;
+   431		struct pr_keys *keys_info __free(kfree) = NULL;
+   432		struct pr_read_keys inout;
+   433		int ret;
+   434	
+   435		if (!blkdev_pr_allowed(bdev, mode))
+   436			return -EPERM;
+   437		if (!ops || !ops->pr_read_keys)
+   438			return -EOPNOTSUPP;
+   439	
+   440		if (copy_from_user(&inout, arg, sizeof(inout)))
+   441			return -EFAULT;
+   442	
+ > 443		if (inout.num_keys > -sizeof(*keys_info) / sizeof(keys_info->keys[0]))
+   444			return -EINVAL;
+   445	
+   446		size_t keys_info_len = struct_size(keys_info, keys, inout.num_keys);
+   447	
+   448		keys_info = kzalloc(keys_info_len, GFP_KERNEL);
+   449		if (!keys_info)
+   450			return -ENOMEM;
+   451	
+   452		keys_info->num_keys = inout.num_keys;
+   453	
+   454		ret = ops->pr_read_keys(bdev, keys_info);
+   455		if (ret)
+   456			return ret;
+   457	
+   458		/* Copy out individual keys */
+   459		u64 __user *keys_ptr = u64_to_user_ptr(inout.keys_ptr);
+   460		u32 num_copy_keys = min(inout.num_keys, keys_info->num_keys);
+   461		size_t keys_copy_len = num_copy_keys * sizeof(keys_info->keys[0]);
+   462	
+   463		if (copy_to_user(keys_ptr, keys_info->keys, keys_copy_len))
+   464			return -EFAULT;
+   465	
+   466		/* Copy out the arg struct */
+   467		inout.generation = keys_info->generation;
+   468		inout.num_keys = keys_info->num_keys;
+   469	
+   470		if (copy_to_user(arg, &inout, sizeof(inout)))
+   471			return -EFAULT;
+   472		return ret;
+   473	}
+   474	
+
 -- 
-2.52.0
-
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
