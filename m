@@ -1,114 +1,148 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F1BE2D978A
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Nov 2025 16:59:47 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A1ECD2F9D82
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Nov 2025 18:03:53 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764262789; cv=none; b=h+hUALQkaLw45NYvkWoe0GhJmqvucyxj6aj+hHtmI6gGI9rWCCXB6TiaiEynwPSzcox6BSMvX+2IVlG8uF02JRKFoqf0Zn1HJ3o4fkzABdSn30IU0Otcx57Zb14EiCgOvOb9V+ohAHJqRjNXCfHX9KOAn2B5SrRg5d56nzVzLyo=
+	t=1764266635; cv=none; b=DO+fmaKxDdGxXtjgix7Ftd0tr1CrmNAziC4WNf9Z25n1GJnuayFbG+lqUSg+RE3B4w0XH2kvV5wneKCltfl2qisUInSRKcc6gVjFOT+u95BVQm+Qw2QGes7EsXf/eAwyFyLk8KEWuBTVIMmK55Yg8paw77oAl+WMa7L6n/ODvQ0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764262789; c=relaxed/simple;
-	bh=w8YSUIQcvr0OXtoBuy3njN2kN7BA/vW8sDA200mQepM=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HUFTjskhXFrqBArvO/Wc3NiMn0K0/6BCkTv8eY/1N6THDc54NK1JYF3YIEwK1NFWFcCwWm7WWeB1JVA3VGIY84ynguWXV3DLV3A6Bb5KwjhYi1ZJidjCshKgqAD+fDqlIpElrUjfNpIZdrGtycBJz7LojQx9AM5ywG9oxkpGa/0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=grGwYD9N; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764266635; c=relaxed/simple;
+	bh=vkUHQROeX/mQl2Wj/R4EOZpNwjo0OQ7Z5Rt0f0IXsYI=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=nEVqIJIbDxG8YeAL61sufCNXOIE1DrE7Kt2luSyqT6WPvTUN50K46QYWurTFErSwpIH2vCKaKGOZhuLqdxJBXvjlIpkIegAtok83quHvMo1MZtIVeylPqvcxrNjxeh2VfJy71QqxFX6kxqj4QwAbDChZi8EgxRl3HYJV+3uStaI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=mQi2lsqh; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=JImYMuvY; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=ZJg3kSoC; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=fUi6AXHs; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="grGwYD9N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id A105BC4CEF8;
-	Thu, 27 Nov 2025 16:59:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764262786;
-	bh=w8YSUIQcvr0OXtoBuy3njN2kN7BA/vW8sDA200mQepM=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=grGwYD9NIkD5aYV/zJCqjfyq7FhSgTQYZ+I7QHvGnkhq0VpEaUUPwk7UGBrM1XJ5Z
-	 4NODWBFdLjHlac/5pV4uh+m2LWFcm3udJAOAguZg/02L704iw7xKoxPXETIzevkBYr
-	 F4qXkYfx8HAhn3PplMN/4GFTx8pQnBWAuvALTRPV+EVkHll5h12k1vJOF2+YYm5rCf
-	 BjZOBAsdzyzDbsiMaRKG1+CfxrShGDjTfz2dIfC+yAwK78Il3mtyNmeX6XxAdLVq8T
-	 70kQs0l5H7gfp3zK67A7r50SB3YKbwcnnDJjzCNWd/QJTHj8D3xNJYE9/14XrYj1H/
-	 Fbag7i16RZhvA==
-Date: Thu, 27 Nov 2025 22:29:35 +0530
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>, 
-	Bean Huo <beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
-	Adrian Hunter <adrian.hunter@intel.com>, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
-Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved
- request
-Message-ID: <ehorjaflathzab5oekx2nae2zss5vi2r36yqkqsfjb2fgsifz2@yk3us5g3igow>
-References: <20251031204029.2883185-1-bvanassche@acm.org>
- <20251031204029.2883185-22-bvanassche@acm.org>
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="mQi2lsqh";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="JImYMuvY";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="ZJg3kSoC";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="fUi6AXHs"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id E9A23336A4;
+	Thu, 27 Nov 2025 18:03:51 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1764266632; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UXwOJqPQn7tI1KgWPuA2BrBC2jrBW1HxngC1Xi1a91I=;
+	b=mQi2lsqh49h6oESXXOAmMchwCcvTGOaqPhGefxY1VXOWHqV3ZOa7ZPoz++rgeEU8nweFqY
+	Ohzo1aFNxFthLYyB/ZiisFZvL8Xetd9WG2IFscr9YA4qcszHc42Dh32b+Ru1VjK57dN3eb
+	aHqu1uKKfrjhNVitLqbJf118D08xfYY=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1764266632;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UXwOJqPQn7tI1KgWPuA2BrBC2jrBW1HxngC1Xi1a91I=;
+	b=JImYMuvYdKON4oiSf/wJxQ6gUJ34OLb5icpD9AekipxqnZyMqM+Hld71rnwAToJJgzBxsz
+	thk5AALAGdXLtcDQ==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1764266631; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UXwOJqPQn7tI1KgWPuA2BrBC2jrBW1HxngC1Xi1a91I=;
+	b=ZJg3kSoCn20Hr4CNrS49ssji512WmJLHCX/RuUJWGL4JjpWqKqjoDDTZBYGSCNBz539QKY
+	4dhcd5lhU3u5BAFGTAgBrdWYNWXliOqUvwZPLZEKHhxCs8Bjhje9+2lltHoKxNotjS6cMR
+	NywImEGgiEv75/Er6HYPI0ZNvDrzKHM=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1764266631;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=UXwOJqPQn7tI1KgWPuA2BrBC2jrBW1HxngC1Xi1a91I=;
+	b=fUi6AXHsPl8Gf5n9ra0dzrJz5N3bY89LF/LDJ5umaV3nbGJRPOVGSa9MnGQKnZ+vnGdlh8
+	Ppl9VkI5IPTuXVDQ==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id 81C593EA63;
+	Thu, 27 Nov 2025 18:03:51 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id RH4QHoeSKGnhXgAAD6G6ig
+	(envelope-from <hare@suse.de>); Thu, 27 Nov 2025 18:03:51 +0000
+Message-ID: <4eb8b77a-6553-42ec-ab85-a1cddb7d8f23@suse.de>
+Date: Thu, 27 Nov 2025 19:03:51 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v2 1/4] scsi: sd: reject invalid pr_read_keys() num_keys
+ values
+To: Stefan Hajnoczi <stefanha@redhat.com>, linux-block@vger.kernel.org
+Cc: Keith Busch <kbusch@kernel.org>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-kernel@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Christoph Hellwig <hch@lst.de>, Mike Christie <michael.christie@oracle.com>,
+ linux-nvme@lists.infradead.org, Jens Axboe <axboe@kernel.dk>,
+ linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>
+References: <20251127155424.617569-1-stefanha@redhat.com>
+ <20251127155424.617569-2-stefanha@redhat.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20251127155424.617569-2-stefanha@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251031204029.2883185-22-bvanassche@acm.org>
+X-Spam-Flag: NO
+X-Spam-Score: -4.30
+X-Spam-Level: 
+X-Spamd-Result: default: False [-4.30 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.20)[-1.000];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[12];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[suse.de:email,suse.de:mid,imap1.dmz-prg2.suse.org:helo]
 
-On Fri, Oct 31, 2025 at 01:39:29PM -0700, Bart Van Assche wrote:
-> Instead of letting the SCSI core allocate hba->nutrs - 1 commands, let
-> the SCSI core allocate hba->nutrs commands, set the number of reserved
-> tags to 1 and use the reserved tag for device management commands. This
-> patch changes the 'reserved slot' from hba->nutrs - 1 into 0 because
-> the block layer reserves the smallest tags for reserved commands.
+On 11/27/25 16:54, Stefan Hajnoczi wrote:
+> The pr_read_keys() interface has a u32 num_keys parameter. The SCSI
+> PERSISTENT RESERVE IN command has a maximum READ KEYS service action
+> size of 65536 bytes. Reject num_keys values that are too large to fit
+> into the SCSI command.
 > 
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
-
-Hi,
-
-While the issue introduced by this patch was fixed in [1], this patch (and the
-fix) somehow prevents mounting rootfs on Qcom RB3Gen2 board. The UFS partitions
-are detected, but rootfs is not getting mounted and the boot just got stuck.
-I collected the logs, but nothing much useful as there is no error/warning:
-https://gist.github.com/Mani-Sadhasivam/396ef4a636d3b0140e7f07595bd41e4f
-
-If I revert this patch, together with the dependencies, rootfs is getting
-mounted properly.
-
-Any inputs would be appreciated.
-
-- Mani
-
-[1] https://lore.kernel.org/linux-scsi/20251114193406.3097237-1-bvanassche@acm.org/
-
+> This will become important when pr_read_keys() is exposed to untrusted
+> userspace via an <linux/pr.h> ioctl.
+> 
+> Signed-off-by: Stefan Hajnoczi <stefanha@redhat.com>
 > ---
->  drivers/ufs/core/ufshcd.c | 4 ++--
->  1 file changed, 2 insertions(+), 2 deletions(-)
+>   drivers/scsi/sd.c | 11 ++++++++++-
+>   1 file changed, 10 insertions(+), 1 deletion(-)
 > 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index f6eecc03282a..20eae5d9487b 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -2476,7 +2476,7 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
->  	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) + 1;
->  	hba->nutmrs =
->  	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
-> -	hba->reserved_slot = hba->nutrs - 1;
-> +	hba->reserved_slot = 0;
->  
->  	hba->nortt = FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities) + 1;
->  
-> @@ -8945,7 +8945,6 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
->  		goto err;
->  
->  	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
-> -	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
->  
->  	return 0;
->  err:
-> @@ -9184,6 +9183,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
->  	.proc_name		= UFSHCD,
->  	.map_queues		= ufshcd_map_queues,
->  	.queuecommand		= ufshcd_queuecommand,
-> +	.nr_reserved_cmds	= UFSHCD_NUM_RESERVED,
->  	.mq_poll		= ufshcd_poll,
->  	.sdev_init		= ufshcd_sdev_init,
->  	.sdev_configure		= ufshcd_sdev_configure,
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
+Cheers,
+
+Hannes
 -- 
-மணிவண்ணன் சதாசிவம்
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
