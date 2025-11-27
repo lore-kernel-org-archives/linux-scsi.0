@@ -1,162 +1,114 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3BBD4331220
-	for <linux-scsi@vger.kernel.org>; Thu, 27 Nov 2025 15:54:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6F1BE2D978A
+	for <linux-scsi@vger.kernel.org>; Thu, 27 Nov 2025 16:59:47 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764258888; cv=none; b=k/1KYYyiIFn2z3Eb9jb/FD/5IeAiMDXzizVp+u05j1lCAWUisk1A2UHXDXaCt6pG5DNIl5h2FuxvTZGcOeij8r71b/I2FQ1ujBRHkHRAfQsh9Uch7qSJFqL69h9imK2RzjT16GRnsTbDMaNhxMuhj5ojf4oHtP6shPsSwCqv8tk=
+	t=1764262789; cv=none; b=h+hUALQkaLw45NYvkWoe0GhJmqvucyxj6aj+hHtmI6gGI9rWCCXB6TiaiEynwPSzcox6BSMvX+2IVlG8uF02JRKFoqf0Zn1HJ3o4fkzABdSn30IU0Otcx57Zb14EiCgOvOb9V+ohAHJqRjNXCfHX9KOAn2B5SrRg5d56nzVzLyo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764258888; c=relaxed/simple;
-	bh=UnK2ntYweN/+uoHx/cZ35NmP35Rk3AuyNeP3XG/hKoM=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version; b=dRIpfEdPOiE5wmTtDaMUEwyRDMyucAi2FBt+V/4bNlAT/fij7+f3EwrYKa6Qqmrwf8JdwAzRy4YwVAisk3HuIlOX3KdxSbYsJIHhqHUIqj6h6Y7r7BzqaQ02qnHCMgbWX+3tzMHEtVs/O+qQuMPgQiCe3kCzt9iQSlAbqlp0TOw=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=IgE4RC3q; arc=none smtp.client-ip=170.10.133.124
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
+	s=arc-20240116; t=1764262789; c=relaxed/simple;
+	bh=w8YSUIQcvr0OXtoBuy3njN2kN7BA/vW8sDA200mQepM=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=HUFTjskhXFrqBArvO/Wc3NiMn0K0/6BCkTv8eY/1N6THDc54NK1JYF3YIEwK1NFWFcCwWm7WWeB1JVA3VGIY84ynguWXV3DLV3A6Bb5KwjhYi1ZJidjCshKgqAD+fDqlIpElrUjfNpIZdrGtycBJz7LojQx9AM5ywG9oxkpGa/0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=grGwYD9N; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="IgE4RC3q"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764258884;
-	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
-	 to:to:cc:cc:mime-version:mime-version:
-	 content-transfer-encoding:content-transfer-encoding:
-	 in-reply-to:in-reply-to:references:references;
-	bh=DJlFUMlUmKnKN3LsYjfFmXO2vVL0XSZBtqZZGvyT5E0=;
-	b=IgE4RC3qN3koPWTRJr8PeRyqZ0lrVUd1dAIlEWpdAmk9iKT6FYcwg5RSlo5RUFCzdKXKMl
-	7b0hkmvO0Z8cXpYlUKrTCRux3lEMzUBVHlt8nUmCRNUK1bNKExpwAUEhDsSkE8UQH0Fe2v
-	dsmRcMw+y1ztdqfGWki7xNZK9X2kzKg=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
- relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-444-moWsFbkRM5u0v3XJFm7rjA-1; Thu,
- 27 Nov 2025 10:54:39 -0500
-X-MC-Unique: moWsFbkRM5u0v3XJFm7rjA-1
-X-Mimecast-MFC-AGG-ID: moWsFbkRM5u0v3XJFm7rjA_1764258877
-Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 591101800358;
-	Thu, 27 Nov 2025 15:54:37 +0000 (UTC)
-Received: from localhost (unknown [10.2.16.53])
-	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 65D4B195608E;
-	Thu, 27 Nov 2025 15:54:36 +0000 (UTC)
-From: Stefan Hajnoczi <stefanha@redhat.com>
-To: linux-block@vger.kernel.org
-Cc: Keith Busch <kbusch@kernel.org>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-kernel@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Christoph Hellwig <hch@lst.de>,
-	Mike Christie <michael.christie@oracle.com>,
-	linux-nvme@lists.infradead.org,
-	Jens Axboe <axboe@kernel.dk>,
-	linux-scsi@vger.kernel.org,
-	Sagi Grimberg <sagi@grimberg.me>,
-	Stefan Hajnoczi <stefanha@redhat.com>,
-	Hannes Reinecke <hare@suse.de>
-Subject: [PATCH v2 4/4] block: add IOC_PR_READ_RESERVATION ioctl
-Date: Thu, 27 Nov 2025 10:54:24 -0500
-Message-ID: <20251127155424.617569-5-stefanha@redhat.com>
-In-Reply-To: <20251127155424.617569-1-stefanha@redhat.com>
-References: <20251127155424.617569-1-stefanha@redhat.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="grGwYD9N"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id A105BC4CEF8;
+	Thu, 27 Nov 2025 16:59:41 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764262786;
+	bh=w8YSUIQcvr0OXtoBuy3njN2kN7BA/vW8sDA200mQepM=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=grGwYD9NIkD5aYV/zJCqjfyq7FhSgTQYZ+I7QHvGnkhq0VpEaUUPwk7UGBrM1XJ5Z
+	 4NODWBFdLjHlac/5pV4uh+m2LWFcm3udJAOAguZg/02L704iw7xKoxPXETIzevkBYr
+	 F4qXkYfx8HAhn3PplMN/4GFTx8pQnBWAuvALTRPV+EVkHll5h12k1vJOF2+YYm5rCf
+	 BjZOBAsdzyzDbsiMaRKG1+CfxrShGDjTfz2dIfC+yAwK78Il3mtyNmeX6XxAdLVq8T
+	 70kQs0l5H7gfp3zK67A7r50SB3YKbwcnnDJjzCNWd/QJTHj8D3xNJYE9/14XrYj1H/
+	 Fbag7i16RZhvA==
+Date: Thu, 27 Nov 2025 22:29:35 +0530
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>, 
+	Bean Huo <beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
+	Adrian Hunter <adrian.hunter@intel.com>, Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved
+ request
+Message-ID: <ehorjaflathzab5oekx2nae2zss5vi2r36yqkqsfjb2fgsifz2@yk3us5g3igow>
+References: <20251031204029.2883185-1-bvanassche@acm.org>
+ <20251031204029.2883185-22-bvanassche@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+In-Reply-To: <20251031204029.2883185-22-bvanassche@acm.org>
 
-Add a Persistent Reservations ioctl to read the current reservation.
-This calls the pr_ops->read_reservation() function that was previously
-added in commit c787f1baa503 ("block: Add PR callouts for read keys and
-reservation") but was only used by the in-kernel SCSI target so far.
+On Fri, Oct 31, 2025 at 01:39:29PM -0700, Bart Van Assche wrote:
+> Instead of letting the SCSI core allocate hba->nutrs - 1 commands, let
+> the SCSI core allocate hba->nutrs commands, set the number of reserved
+> tags to 1 and use the reserved tag for device management commands. This
+> patch changes the 'reserved slot' from hba->nutrs - 1 into 0 because
+> the block layer reserves the smallest tags for reserved commands.
+> 
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-The IOC_PR_READ_RESERVATION ioctl is necessary so that userspace
-applications that rely on Persistent Reservations ioctls have a way of
-inspecting the current state. Cluster managers and validation tests need
-this functionality.
+Hi,
 
-Signed-off-by: Stefan Hajnoczi <stefanha@redhat.com>
-Reviewed-by: Hannes Reinecke <hare@suse.de>
----
- include/uapi/linux/pr.h |  7 +++++++
- block/ioctl.c           | 28 ++++++++++++++++++++++++++++
- 2 files changed, 35 insertions(+)
+While the issue introduced by this patch was fixed in [1], this patch (and the
+fix) somehow prevents mounting rootfs on Qcom RB3Gen2 board. The UFS partitions
+are detected, but rootfs is not getting mounted and the boot just got stuck.
+I collected the logs, but nothing much useful as there is no error/warning:
+https://gist.github.com/Mani-Sadhasivam/396ef4a636d3b0140e7f07595bd41e4f
 
-diff --git a/include/uapi/linux/pr.h b/include/uapi/linux/pr.h
-index fcb74eab92c80..847f3051057af 100644
---- a/include/uapi/linux/pr.h
-+++ b/include/uapi/linux/pr.h
-@@ -62,6 +62,12 @@ struct pr_read_keys {
- 	__u64	keys_ptr;
- };
- 
-+struct pr_read_reservation {
-+	__u64	key;
-+	__u32	generation;
-+	__u32	type;
-+};
-+
- #define PR_FL_IGNORE_KEY	(1 << 0)	/* ignore existing key */
- 
- #define IOC_PR_REGISTER		_IOW('p', 200, struct pr_registration)
-@@ -71,5 +77,6 @@ struct pr_read_keys {
- #define IOC_PR_PREEMPT_ABORT	_IOW('p', 204, struct pr_preempt)
- #define IOC_PR_CLEAR		_IOW('p', 205, struct pr_clear)
- #define IOC_PR_READ_KEYS	_IOWR('p', 206, struct pr_read_keys)
-+#define IOC_PR_READ_RESERVATION	_IOR('p', 207, struct pr_read_reservation)
- 
- #endif /* _UAPI_PR_H */
-diff --git a/block/ioctl.c b/block/ioctl.c
-index 63b942392b234..a51628236fc7f 100644
---- a/block/ioctl.c
-+++ b/block/ioctl.c
-@@ -480,6 +480,32 @@ static int blkdev_pr_read_keys(struct block_device *bdev, blk_mode_t mode,
- 	return ret;
- }
- 
-+static int blkdev_pr_read_reservation(struct block_device *bdev,
-+		blk_mode_t mode, struct pr_read_reservation __user *arg)
-+{
-+	const struct pr_ops *ops = bdev->bd_disk->fops->pr_ops;
-+	struct pr_held_reservation rsv = {};
-+	struct pr_read_reservation out = {};
-+	int ret;
-+
-+	if (!blkdev_pr_allowed(bdev, mode))
-+		return -EPERM;
-+	if (!ops || !ops->pr_read_reservation)
-+		return -EOPNOTSUPP;
-+
-+	ret = ops->pr_read_reservation(bdev, &rsv);
-+	if (ret)
-+		return ret;
-+
-+	out.key = rsv.key;
-+	out.generation = rsv.generation;
-+	out.type = rsv.type;
-+
-+	if (copy_to_user(arg, &out, sizeof(out)))
-+		return -EFAULT;
-+	return 0;
-+}
-+
- static int blkdev_flushbuf(struct block_device *bdev, unsigned cmd,
- 		unsigned long arg)
- {
-@@ -703,6 +729,8 @@ static int blkdev_common_ioctl(struct block_device *bdev, blk_mode_t mode,
- 		return blkdev_pr_clear(bdev, mode, argp);
- 	case IOC_PR_READ_KEYS:
- 		return blkdev_pr_read_keys(bdev, mode, argp);
-+	case IOC_PR_READ_RESERVATION:
-+		return blkdev_pr_read_reservation(bdev, mode, argp);
- 	default:
- 		return blk_get_meta_cap(bdev, cmd, argp);
- 	}
+If I revert this patch, together with the dependencies, rootfs is getting
+mounted properly.
+
+Any inputs would be appreciated.
+
+- Mani
+
+[1] https://lore.kernel.org/linux-scsi/20251114193406.3097237-1-bvanassche@acm.org/
+
+> ---
+>  drivers/ufs/core/ufshcd.c | 4 ++--
+>  1 file changed, 2 insertions(+), 2 deletions(-)
+> 
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index f6eecc03282a..20eae5d9487b 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2476,7 +2476,7 @@ static inline int ufshcd_hba_capabilities(struct ufs_hba *hba)
+>  	hba->nutrs = (hba->capabilities & MASK_TRANSFER_REQUESTS_SLOTS_SDB) + 1;
+>  	hba->nutmrs =
+>  	((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >> 16) + 1;
+> -	hba->reserved_slot = hba->nutrs - 1;
+> +	hba->reserved_slot = 0;
+>  
+>  	hba->nortt = FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT, hba->capabilities) + 1;
+>  
+> @@ -8945,7 +8945,6 @@ static int ufshcd_alloc_mcq(struct ufs_hba *hba)
+>  		goto err;
+>  
+>  	hba->host->can_queue = hba->nutrs - UFSHCD_NUM_RESERVED;
+> -	hba->reserved_slot = hba->nutrs - UFSHCD_NUM_RESERVED;
+>  
+>  	return 0;
+>  err:
+> @@ -9184,6 +9183,7 @@ static const struct scsi_host_template ufshcd_driver_template = {
+>  	.proc_name		= UFSHCD,
+>  	.map_queues		= ufshcd_map_queues,
+>  	.queuecommand		= ufshcd_queuecommand,
+> +	.nr_reserved_cmds	= UFSHCD_NUM_RESERVED,
+>  	.mq_poll		= ufshcd_poll,
+>  	.sdev_init		= ufshcd_sdev_init,
+>  	.sdev_configure		= ufshcd_sdev_configure,
+
 -- 
-2.52.0
-
+மணிவண்ணன் சதாசிவம்
