@@ -1,194 +1,78 @@
-Received: from mailout2.samsung.com (mailout2.samsung.com [203.254.224.25])
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8D2BA2DC34D
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 03:37:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.25
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3938218FDDE;
+	Fri, 28 Nov 2025 03:49:24 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764301071; cv=none; b=CqZZ5Oj+XikIgeyliAld0LI9CgCZ/JVoLYSQVD5veo8n5Vu7p3Nsb/m0lwglh56LcwzbKO8hO/V8V/AZwodLJ6/VhPU6Su4XeNtv0CFHgjOBY7IjGYCR7ptssqTVv80hF2BCmIL4tZJfLOOETrrrATWHohxrdk0UZJwN1s8uEsA=
+	t=1764301765; cv=none; b=MjW3VRuwOwkX0neuL68bCX3pudOReTyRgNnSYaaEuITr4r2L+M0FUFN3YYEwtQ9Z1aILCnnjlpBf4C6w5jpopzI8luSPozEVu1fNW68U08wVWMfC3qtdAPNBSCN1xthxz/6QRoBUyZ31JZCnx2WK6M19DSmyNY2SxWf2M4yeDuQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764301071; c=relaxed/simple;
-	bh=3b6wIYgewbLW+NSlJo3hwLCgNV7d/iwK2UN4TDIMNug=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:MIME-Version:
-	 Content-Type:References; b=fbxZfWHk9zj4vyqMuqHMa9tuqEN1Wzw0ttAZLz8g6Ba86lImiG95Jg/6AboVSDqUjJcmLhiMMl9kyXRVjhf5OyFq9dYHWR3Od8XOp/egnLmJe/Iry2yRddJwZVu5fo9TMIysD/hSYV69VyK8MvwRGv1nssBe+CPd5eqbXJtIv5M=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=JjqqYZK/; arc=none smtp.client-ip=203.254.224.25
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
+	s=arc-20240116; t=1764301765; c=relaxed/simple;
+	bh=mzclW6QgqNXAUv3/IuGX+bQLzEOCpZhxB1N6HdEljuA=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=ocodFHo3DbeVX9Em51XGiZdEI/ZzxTIKz1MQ71cIHSh+XcBnRwV5MGk5x9UtJvuh02o7fnwikGiGbXfNs+5/KQOdxY//T10LSGl045Q64YI3D46wi7GfUSb+xfjnLBfNk/tDecxvl2qCoUXq9Ns993ofZOHVtNnGWWIpjvO8gSg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mi+9VsmM; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="JjqqYZK/"
-Received: from epcas5p1.samsung.com (unknown [182.195.41.39])
-	by mailout2.samsung.com (KnoxPortal) with ESMTP id 20251128033742epoutp02e5ca5d38867916fa7fb438ffbb509898~8Dnfme5Po0143001430epoutp02D
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 03:37:42 +0000 (GMT)
-DKIM-Filter: OpenDKIM Filter v2.11.0 mailout2.samsung.com 20251128033742epoutp02e5ca5d38867916fa7fb438ffbb509898~8Dnfme5Po0143001430epoutp02D
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
-	s=mail20170921; t=1764301062;
-	bh=qi/SRWVOW0xIZ/a8mTLL5M3ulFk+K1NrsEeMRhZKiBs=;
-	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
-	b=JjqqYZK/63AJOpx4lZ521YkHLgwzphEi79exd1RyybwBeCNcedVO31dvgLNGFC1WN
-	 Zllywk5rj7+BFr5M+ujXb5WiyDRnAbbT96OGH81rVR5hzATmYbe/H96K2bCVpwHRkQ
-	 xBUf5qFFs+AG9vBh/ENMl8AiiBeQCGEs3yv2JmaM=
-Received: from epsnrtp01.localdomain (unknown [182.195.42.153]) by
-	epcas5p3.samsung.com (KnoxPortal) with ESMTPS id
-	20251128033741epcas5p3d74b0cf8d57100265cfc1b871caf7a9d~8DnfCVGPw3116131161epcas5p3f;
-	Fri, 28 Nov 2025 03:37:41 +0000 (GMT)
-Received: from epcas5p4.samsung.com (unknown [182.195.38.86]) by
-	epsnrtp01.localdomain (Postfix) with ESMTP id 4dHfBX40Rjz6B9m6; Fri, 28 Nov
-	2025 03:37:40 +0000 (GMT)
-Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
-	epcas5p2.samsung.com (KnoxPortal) with ESMTPA id
-	20251128033722epcas5p2d083b5b13b48ceabe95b33585e197d2a~8DnNWEUM82288422884epcas5p2N;
-	Fri, 28 Nov 2025 03:37:22 +0000 (GMT)
-Received: from testpc12933.samsungds.net (unknown [109.105.129.33]) by
-	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
-	20251128033721epsmtip25693b18c085a49be62a08699aabe584b~8DnMWf4va1673216732epsmtip2f;
-	Fri, 28 Nov 2025 03:37:21 +0000 (GMT)
-From: "zheng.gong" <zheng.gong@samsung.com>
-To: linux-scsi@vger.kernel.org
-Cc: avri.altman@wdc.com, bvanassche@acm.org, quic_cang@quicinc.com,
-	alim.akhtar@samsung.com, martin.petersen@oracle.com, ebiggers@kernel.org,
-	linux-kernel@vger.kernel.org, "zheng.gong" <zheng.gong@samsung.com>
-Subject: [PATCH v3 1/1] scsi: ufs: crypto: Add
- ufs_hba_variant_ops::crypto_keyslot_remap
-Date: Fri, 28 Nov 2025 11:37:09 +0800
-Message-ID: <20251128033709.1342579-2-zheng.gong@samsung.com>
-X-Mailer: git-send-email 2.50.1
-In-Reply-To: <20251128033709.1342579-1-zheng.gong@samsung.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mi+9VsmM"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7915EC4CEF1;
+	Fri, 28 Nov 2025 03:49:24 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764301764;
+	bh=mzclW6QgqNXAUv3/IuGX+bQLzEOCpZhxB1N6HdEljuA=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=mi+9VsmMdU6cnXwIXV2H5ynZIyZ9s2qXeCheih4iEUWB0oEsI80ZWypNk6RyiF5N7
+	 O/MSXnujK8BV2m0tsLKG/nZtXf8EFtrMekQy6QytOJyfZ8UHrCA6xlTTu1fDbRLqBe
+	 07p6qICc+4WGICMYGiCCKmBa/dgad9hrDv4GbAGOF82xfgXmHb6I6FjR12BFNqdSmh
+	 +okHHgiY7hTOuay2zOCNrCBV1kBvzBG+a7IIdnMah60eY79GzqaTHb1zzJhzHHz/YV
+	 q9JUd+0WM7ulaNPl7QswqY/9ALA5yQeRfT7VaJzO9WxxHr53x98Gd3/6BwUUGKp7Fn
+	 lp55TEMQB4MBQ==
+Date: Thu, 27 Nov 2025 19:47:36 -0800
+From: Eric Biggers <ebiggers@kernel.org>
+To: "zheng.gong" <zheng.gong@samsung.com>
+Cc: linux-scsi@vger.kernel.org, avri.altman@wdc.com, bvanassche@acm.org,
+	quic_cang@quicinc.com, alim.akhtar@samsung.com,
+	martin.petersen@oracle.com, linux-kernel@vger.kernel.org
+Subject: Re: [PATCH v3 0/1] scsi: ufs: Add crypto_keyslot_remap variant op
+Message-ID: <20251128034736.GA18644@sol>
+References: <20251112031035.GA2832160@google.com>
+ <CGME20251128033713epcas5p450da60155377b3ae43af4d38edb935b2@epcas5p4.samsung.com>
+ <20251128033709.1342579-1-zheng.gong@samsung.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
-X-CMS-MailID: 20251128033722epcas5p2d083b5b13b48ceabe95b33585e197d2a
-X-Msg-Generator: CA
-Content-Type: text/plain; charset="utf-8"
-X-Sendblock-Type: REQ_APPROVE
-CMS-TYPE: 105P
-cpgsPolicy: CPGSC10-505,Y
-X-CFilter-Loop: Reflected
-X-CMS-RootMailID: 20251128033722epcas5p2d083b5b13b48ceabe95b33585e197d2a
-References: <20251112031035.GA2832160@google.com>
-	<20251128033709.1342579-1-zheng.gong@samsung.com>
-	<CGME20251128033722epcas5p2d083b5b13b48ceabe95b33585e197d2a@epcas5p2.samsung.com>
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251128033709.1342579-1-zheng.gong@samsung.com>
 
-Add a new variant operation crypto_keyslot_remap to allow platform-specific
-remapping of crypto keyslot indices before sending requests to the UFS
-controller. This is required on platforms that partition the UFS crypto
-engine's keyslots among multiple domains (e.g.virtual machines),
-where each domain has a keyslot offset.
+On Fri, Nov 28, 2025 at 11:37:08AM +0800, zheng.gong wrote:
+> Thank you very much for your feedback, Eric. I truly appreciate your review and the time you've taken to point out that a real user is required.
+> You're right. Adding a new variant op without a clear use case would not be acceptable. Let me clarify the context behind this patch.
 
-To support this, pass the UFS HBA pointer to ufshcd_prepare_lrbp_crypto(),
-so the callback can access platform context.
+To clarify, there has to be an in-tree user.
 
-This functionality is used on Samsung ExynosAuto UFS platforms, where
-keyslot allocation is per-VM and a runtime offset is applied based on
-the VM ID.
+> This hook is not theoretical. It is designed to replace an existing out-of-tree variant op (`crypto_keyslot_cfg`) used in Samsung's ExynosAuto UFS driver for multi-VM inline encryption.
+> In production, each VM has its own keyslot range per hardware allocation, and the keyslot is remapped at request time:
+> 
+>     lrbp->crypto_key_slot += vm_id * UFS_KEYSLOTS;
+> 
+> This was already in use on automotive platforms.
+> 
+> But the reason this usage isn't visible in mainline is due to ExynosAuto's kernel architecture:
+> 
+> Starting from kernel 6.1, we adopt the dual-repository model (similar to Android Common Kernel):
+> - `kernel.git`: Mainline-based, minimal patches
+> - `exynosauto-modules.git`: Hosts platform-specific drivers (as .ko or built-in)
+> 
+> Our UFS driver, including FMP and IOV support, resides in `exynosauto-modules/drivers/ufs/*`. It couldnot be upstreamed due to:
+> - Hardware-specific SMC calls
+> - Security-specific key management
+> - Non-public register interfaces
 
-Signed-off-by: zheng.gong <zheng.gong@samsung.com>
----
- drivers/ufs/core/ufshcd-crypto.h | 10 ++++++++--
- drivers/ufs/core/ufshcd.c        |  9 +++++----
- include/ufs/ufshcd.h             |  6 ++++++
- 3 files changed, 19 insertions(+), 6 deletions(-)
+The upstream driver is drivers/ufs/host/ufs-exynos.c, so you'll need to
+focus on adding this functionality to there, if it's actually needed.
+What's happening downstream is irrelevant.
 
-diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-crypto.h
-index 89bb97c14c15..6dcba6817590 100644
---- a/drivers/ufs/core/ufshcd-crypto.h
-+++ b/drivers/ufs/core/ufshcd-crypto.h
-@@ -13,7 +13,8 @@
- 
- #ifdef CONFIG_SCSI_UFS_CRYPTO
- 
--static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
-+static inline void ufshcd_prepare_lrbp_crypto(struct ufs_hba *hba,
-+					      struct request *rq,
- 					      struct ufshcd_lrb *lrbp)
- {
- 	if (!rq || !rq->crypt_keyslot) {
-@@ -22,6 +23,10 @@ static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
- 	}
- 
- 	lrbp->crypto_key_slot = blk_crypto_keyslot_index(rq->crypt_keyslot);
-+
-+	if (hba && hba->vops && hba->vops->crypto_keyslot_remap)
-+		return hba->vops->crypto_keyslot_remap(hba, lrbp);
-+
- 	lrbp->data_unit_num = rq->crypt_ctx->bc_dun[0];
- }
- 
-@@ -74,7 +79,8 @@ void ufshcd_crypto_register(struct ufs_hba *hba, struct request_queue *q);
- 
- #else /* CONFIG_SCSI_UFS_CRYPTO */
- 
--static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
-+static inline void ufshcd_prepare_lrbp_crypto(struct ufs_hba *hba,
-+					      struct request *rq,
- 					      struct ufshcd_lrb *lrbp) { }
- 
- static inline void
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index 8339fec975b9..7417c6bec81a 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -2902,20 +2902,21 @@ static void ufshcd_comp_scsi_upiu(struct ufs_hba *hba, struct ufshcd_lrb *lrbp)
- 	ufshcd_prepare_utp_scsi_cmd_upiu(lrbp, upiu_flags);
- }
- 
--static void __ufshcd_setup_cmd(struct ufshcd_lrb *lrbp, struct scsi_cmnd *cmd, u8 lun, int tag)
-+static void __ufshcd_setup_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
-+				  struct scsi_cmnd *cmd, u8 lun, int tag)
- {
- 	memset(lrbp->ucd_req_ptr, 0, sizeof(*lrbp->ucd_req_ptr));
- 
- 	lrbp->cmd = cmd;
- 	lrbp->task_tag = tag;
- 	lrbp->lun = lun;
--	ufshcd_prepare_lrbp_crypto(cmd ? scsi_cmd_to_rq(cmd) : NULL, lrbp);
-+	ufshcd_prepare_lrbp_crypto(hba, cmd ? scsi_cmd_to_rq(cmd) : NULL, lrbp);
- }
- 
- static void ufshcd_setup_scsi_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 				  struct scsi_cmnd *cmd, u8 lun, int tag)
- {
--	__ufshcd_setup_cmd(lrbp, cmd, lun, tag);
-+	__ufshcd_setup_cmd(hba, lrbp, cmd, lun, tag);
- 	lrbp->intr_cmd = !ufshcd_is_intr_aggr_allowed(hba);
- 	lrbp->req_abort_skip = false;
- 
-@@ -3083,7 +3084,7 @@ static int ufshcd_queuecommand(struct Scsi_Host *host, struct scsi_cmnd *cmd)
- static void ufshcd_setup_dev_cmd(struct ufs_hba *hba, struct ufshcd_lrb *lrbp,
- 			     enum dev_cmd_type cmd_type, u8 lun, int tag)
- {
--	__ufshcd_setup_cmd(lrbp, NULL, lun, tag);
-+	__ufshcd_setup_cmd(hba, lrbp, NULL, lun, tag);
- 	lrbp->intr_cmd = true; /* No interrupt aggregation */
- 	hba->dev_cmd.type = cmd_type;
- }
-diff --git a/include/ufs/ufshcd.h b/include/ufs/ufshcd.h
-index 9425cfd9d00e..86b7bcc1da33 100644
---- a/include/ufs/ufshcd.h
-+++ b/include/ufs/ufshcd.h
-@@ -336,6 +336,10 @@ struct ufs_pwr_mode_info {
-  * @config_esi: called to config Event Specific Interrupt
-  * @config_scsi_dev: called to configure SCSI device parameters
-  * @freq_to_gear_speed: called to map clock frequency to the max supported gear speed
-+ * @crypto_keyslot_remap: called to adjust the keyslot index before sending
-+ *	a request to the UFS controller. This allows the platform to apply a
-+ *	hardware-specific keyslot offset or other mapping logic to determine
-+ *	the correct keyslot for inline encryption.
-  */
- struct ufs_hba_variant_ops {
- 	const char *name;
-@@ -385,6 +389,8 @@ struct ufs_hba_variant_ops {
- 	int	(*config_esi)(struct ufs_hba *hba);
- 	void	(*config_scsi_dev)(struct scsi_device *sdev);
- 	u32	(*freq_to_gear_speed)(struct ufs_hba *hba, unsigned long freq);
-+	void	(*crypto_keyslot_remap)(struct ufs_hba *hba,
-+						struct ufshcd_lrb *lrbp);
- };
- 
- /* clock gating state  */
--- 
-2.50.1
-
+- Eric
