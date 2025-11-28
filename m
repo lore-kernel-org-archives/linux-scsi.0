@@ -1,146 +1,175 @@
-Received: from mail-lf1-f43.google.com (mail-lf1-f43.google.com [209.85.167.43])
+Received: from mail-lj1-f177.google.com (mail-lj1-f177.google.com [209.85.208.177])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 820EE226CFD
-	for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 14:47:55 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.167.43
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id AE64C2144CF
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 17:12:36 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.177
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764341277; cv=none; b=oIaDq1UE679gbbkZhbuSwPXUrZiKOsBzSPgPfs1+5KV/2y7/VF+hHeUFKLphTrIJ55MvxDGCYr/mdbrWwxTEdNRWlZZpTK6137J+D5URK4t6ckvtQGWiqPEbAHg2uGezzI6gkkBhkdhvYsggAXIx/xj2nSpAQ+0RmeFLhpif8KU=
+	t=1764349958; cv=none; b=TTXErHbhwl+AaWi8l2B5+UQqQ5pU0Bihc0JGJAn8Ku4RxM1J923f/w3FWLJUdUxxBsyYifI7NCNgSGDwIGqVTssi5YnjwCXsWwZJmverdiEXGhzu1lntzev3C6IGdNMRlPP19/noLqVHCC+fD/CR/YcR7IAez3M11B8chbSVByk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764341277; c=relaxed/simple;
-	bh=kBsXaBTbTfKM2axj9Do1FbixYAYlvJ2ocJAHzb3rwog=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=peGkm7aG+R1Z4GFnwbZzKPdrLhB62PZXW6uv6MpquL7qG5xYieby1AZnPSuHG+lGzbATR6MMbEEPU7ZaG367Ab1q9qj3lR5Pb8z4zLxXWcP2LJeEE0X9ke6yu1zgakhj5zQFmIOg6B9o3mowQfrG80i/DB31bi6raYOh9Nrpg/4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=Y40UwwV8; arc=none smtp.client-ip=209.85.167.43
+	s=arc-20240116; t=1764349958; c=relaxed/simple;
+	bh=g3BSPCjjOnGxxBCVOCe92o3NM5RUdh3Z4VIlFuTsNFM=;
+	h=Message-ID:Date:MIME-Version:From:Subject:To:Cc:Content-Type; b=EKHIQ0VXx7NPHY2TnJD9ShVNJd3hxfb8CZNW6DxXFomSyY+9GCCwkTB63uFpFx5dFypJi7z993L+pm95B3vVtTpuzSip49ZsFVuv4TxOUbeLPkcXc6k+4/hzTtjUp2n87H+IHGATTzJqFHcBg+UfISkD27MWUcioSLeApZvJ5KQ=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=ISTsPr/H; arc=none smtp.client-ip=209.85.208.177
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="Y40UwwV8"
-Received: by mail-lf1-f43.google.com with SMTP id 2adb3069b0e04-595819064cdso2672345e87.0
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 06:47:55 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="ISTsPr/H"
+Received: by mail-lj1-f177.google.com with SMTP id 38308e7fff4ca-37902f130e1so19798461fa.1
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 09:12:36 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764341274; x=1764946074; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=Q6/Fm/oVY95uFXuY2detaFQ/ocohpIH0USIsHRoZb9Q=;
-        b=Y40UwwV8f93b/2anVNRU2FGNsOTTNhrozfofzHUHfYXVRjntSZAVok0FBAf35+Br6k
-         YNkN4XMsql/b6dmbI+Iz3Uod3UYo1tRbmebWwog9NWoCPs1+EcM8RTjYg4qqxeb8CqMx
-         HBbWQvb4TcTwfHPyHBNQhwUZnSc1urx1SUF8CPkCFnWGQEi7drfUSqY2FzJudSI5sX8g
-         bHt+8OCtXI95VB269iQVAstQbM/xGU+KxcQ0NChNoJ1N0VonmalcmmiBAmcTg9q1Qu2g
-         hcWssjaIuFpclqWa/hbKRGWsKhwzOGUTPx7qEfF5k4Bp/Q54WpT4fGd3OjoGH2MPDM8+
-         Ik3w==
+        d=gmail.com; s=20230601; t=1764349955; x=1764954755; darn=vger.kernel.org;
+        h=content-transfer-encoding:cc:to:content-language:subject:from
+         :user-agent:mime-version:date:message-id:sender:from:to:cc:subject
+         :date:message-id:reply-to;
+        bh=4y624NKZwLRWYLn9yEjnslUqFCuVYiuH4bJp+HzF7B0=;
+        b=ISTsPr/H9G2C91q6R+RUOmp7rwuanjk3/CkMQurnnAchLGrF0tZnHbHoJSKLorX82a
+         hkzOVDWd/9XQnsbCXw9c1BhQpAjeyttxVkMTcvRxyYWXU8XUnNf2y4Dk6vXOAQU2/96h
+         5dIA+7dQDvAeHR+ckFcJw6OqmrMcfVvnCGoYDA9AdYGHCiwY0+baXGmZDi5yegSQxhz5
+         T8qszdKx5zDOPNHYz330WIvbcH81NJ9fwwAg3DJjJ1w5zVdhROIBFZ6Fx79obH4kMRm+
+         cTVrQcz59AdSEJRXBa/yp4ud3juaq99136MpA70UpZfEZRJ4mYWUPrhQRaNXT81NDNlH
+         ixgQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764341274; x=1764946074;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=Q6/Fm/oVY95uFXuY2detaFQ/ocohpIH0USIsHRoZb9Q=;
-        b=BKIaVhNgL1aqHbYWQKnTY454ce4w/OqyFyG51dwa8z0BOG+y7p26sFStfuj7Zf1Pi9
-         KeXYHBavzH/rcWhMRpHBU8RQmwN2mFmP9GKTbUxW+0yY30Ol3MkFIIvsPuSFQfNZVOHh
-         s8ONpjHZvgNO62T7dGEbe3yRAxKI+H7jW8QgACD1nDeUg691OKP3Y+Kv71Gt+/vcwT7W
-         KoFEyBw3X9kMIYHAwscuZal3F5KsRAcr2QMFJpf4XtZjBJ1P2q7c/LSTigBhEk7boKY6
-         fSZ/95SQBcGWSir+OBpCIzTAxi9Dd21lZoPO5L68M2R5q/MSbpzQ0LIgomp+aVcLozFe
-         QekQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXJR4nvsr8S6bWGEQN1Qkxyfev0al7mLuO+uzKOk1J0s57Iofx1WhhD121BsvO4uoj1At85C8WV9o63@vger.kernel.org
-X-Gm-Message-State: AOJu0YyKCOAwmAqGTYFodpicHuH8RZqWcKilZhbYXSqa5mcmRASwx6mY
-	pXycj4Yi46bmROIBxaBP7/BMF2Ap922Bk+i0xswd14IJJxGwoaqHo8oX
-X-Gm-Gg: ASbGnct8lu/LfAHcQLdOY9FFwjdUvT2XBCNvy6/SmYu8TsaCLFMOYgCNL8BxhXFX+g7
-	A1wg0Wph1ELAy7jyPhI6TC/zPQgFkTB/d3wp0hTHelzfBi7Ls7iM5G8HUExmdvbdnFgpe9Mt2kn
-	Ct4sk577Rs4qqtlseHucAItXA/X6qWHdLA9bXolv6jDWOnWwiVauZRZ5AdbfBA0XE7zOX2SeMuz
-	Ic3O+w5VwFOMq6tYgQFLhb4RDUpE71NisTxbCmOCyBBlkUjtCt6tpkbaxbm0LRU9nPNblslA8QJ
-	Cizpb01GNLs5nT1OiR/eSGfG2SlfGIazi3cWuagtxwux/IisU9aJRufkviBKYywyoch80ebEoKK
-	xahYd4QJsoJ/Vuf7wu/ZPpR7WiXxQlP02BpOPRjPfKuhp6WVtrrQg5Du8dNlRNZ3ahM2soHuhFm
-	s48ZJFIZwoudnlV8WxVXZtBZEeZfbvwWFy4bhgzSniGC9o7ZFYWSKvgXHP
-X-Google-Smtp-Source: AGHT+IGri/Kcqai6Ho5kp6UE3YX9ridRldxzonTf7wiVODikqOhdC/WBm9NPMdz2N8FXWRU8ePEc8A==
-X-Received: by 2002:ac2:4e04:0:b0:595:90ce:df8e with SMTP id 2adb3069b0e04-596a3740821mr10547766e87.5.1764341273519;
-        Fri, 28 Nov 2025 06:47:53 -0800 (PST)
-Received: from cherrypc.astracloud.ru (109-252-18-135.nat.spd-mgts.ru. [109.252.18.135])
-        by smtp.gmail.com with ESMTPSA id 2adb3069b0e04-596bfa43e6csm1261533e87.54.2025.11.28.06.47.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Nov 2025 06:47:53 -0800 (PST)
-From: Nazar Kalashnikov <sivartiwe@gmail.com>
-To: stable@vger.kernel.org,
-	Greg Kroah-Hartman <gregkh@linuxfoundation.org>
-Cc: Nazar Kalashnikov <sivartiwe@gmail.com>,
-	Jack Wang <jinpu.wang@cloud.ionos.com>,
-	"James E.J. Bottomley" <jejb@linux.ibm.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org,
-	lvc-project@linuxtesting.org,
-	Igor Pylypiv <ipylypiv@google.com>,
-	Terrence Adams <tadamsjr@google.com>,
-	Jack Wang <jinpu.wang@ionos.com>
-Subject: [PATCH 5.10/5.15/6.1] scsi: pm80xx: Set phy->enable_completion only when we
-Date: Fri, 28 Nov 2025 17:48:15 +0300
-Message-ID: <20251128144816.55522-1-sivartiwe@gmail.com>
-X-Mailer: git-send-email 2.43.0
+        d=1e100.net; s=20230601; t=1764349955; x=1764954755;
+        h=content-transfer-encoding:cc:to:content-language:subject:from
+         :user-agent:mime-version:date:message-id:sender:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=4y624NKZwLRWYLn9yEjnslUqFCuVYiuH4bJp+HzF7B0=;
+        b=kmjvarq9GSCOMegTb5wCiJjfCNwiwq9NLE4hvV6sWewF4Tji7+eeAeQwEPxrfVeeE3
+         tbAh0mHeJKeABS9xj68igd3FBuoF/3Bxyg9ZX11L2P/nE5BQv2U9aumgcWTy7I29uotq
+         mzMOZFjaqxHNp+eHd7QkpXCRD6SXjP0VEQq1hlSTt0k8yAQyGJe27W9B8EIDClixe8QR
+         LDWgC3OZPGQBaeVyrbCSPJN7YRtLhKCExYSUGdbC119m3z4hjBjZYEOGZCSHfTp9p+SY
+         MP8DhJPCX2hQ50LjLR68W1v7OtqXHSXaslbV3iXH5BprKxrJbQdQ2LLAbjSQXniRJqMh
+         irZg==
+X-Forwarded-Encrypted: i=1; AJvYcCXO8RiKkbFHt2uFSSfW3n6pPxLieTMXK9DqbQR+ponJJ8CmsVtJCVB5jYSDtnOh69BSyBwQgqLzRw/2@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz2rcenEgEjBl+TtUbKmg6/aLUhDyn4u7ZF1JtnpHefwdyfqBts
+	k2FGDcJWQDydEtfMaz95rh9viebPaHnB9OsDsKWV1Sz+zCPS8sOIhT65i1kZpLkM
+X-Gm-Gg: ASbGnctkucD+fl+wztBFpbaF0eVR0ctccfQCmLIW/eA+3Mr6YKGuecG9pPLb8QQw0v8
+	T8NX3C8wURlZ6QNvBAt3L6Ed6NTKq+DtMbMHtzaiFRrlkk7KhHI1JqMUaQqsnZxnKTUlTPJh8WA
+	cOSqZEkR0M90TL4eQgA2sgJ3/JU+QluBDm7VlQDnyQzWKSXDCE19tNoPwlkscb0Grdgikt23wZm
+	E3/FktOcFC+pcg5VtGnAvQMnvRCY/O7M3VN2hIZnscvqvNPHNqTo0HtpQGg+Q3OUqEIn7mmTMW+
+	1kblkXxxIdNflqU9PM4KZ41bIjvoRs19IsZK6bzn6pSBjBdgzS7D/t6GUWMUqeKgZwrMPr+JrdQ
+	gTYs0/F9SAEHsmJmLrDRdcqgofYiIOr1gDnXAgKjxly47MbZBibNUxs+kUeevnTrYorvOQK1xdT
+	HysC+8XaRTv5REnChKQ2UnU9BPY6a9KRuwYg==
+X-Google-Smtp-Source: AGHT+IHte/5ZtKIMvNAng3bD9glTPppPjaecJN6jmdihJB2Rj4FRXzGEZXaE0bZYZJN6SF6wnuY8FA==
+X-Received: by 2002:a05:651c:40dc:b0:37b:bafc:25e2 with SMTP id 38308e7fff4ca-37cd9202816mr62858961fa.20.1764349954399;
+        Fri, 28 Nov 2025 09:12:34 -0800 (PST)
+Received: from [192.168.1.149] (nat-0-0.nsk.sibset.net. [5.44.169.188])
+        by smtp.googlemail.com with ESMTPSA id 38308e7fff4ca-37d2368e40csm10368961fa.5.2025.11.28.09.12.33
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Nov 2025 09:12:33 -0800 (PST)
+Sender: Maxim Nikulin <m.a.nikulin@gmail.com>
+Message-ID: <a221275c-53af-459d-97ed-05a0766adb04@gmail.com>
+Date: Sat, 29 Nov 2025 00:12:32 +0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: 8bit
+User-Agent: Mozilla Thunderbird
+From: Max Nikulin <manikulin@gmail.com>
+Subject: [PATCH] docs: admin: devices: /dev/sr<N> for SCSI CD-ROM
+Content-Language: en-US, ru-RU
+To: Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
 
-From: Igor Pylypiv <ipylypiv@google.com>
+Don't claim that /dev/sr<N> device names for SCSI CD-ROM drives are
+deprecated and don't recommend /dev/scd<N> alternate names for them.
 
-[ Upstream commit e4f949ef1516c0d74745ee54a0f4882c1f6c7aea ]
+/dev/scd<N> device names for SCSI CD-ROM drives are not in use for more
+than a decade, see commit [1] that was a part of udev release 174.
+Earlier related rules were volatile, sometimes /dev/scd<N> were syminks
+to /dev/sr<N>, sometimes vice versa.
 
-pm8001_phy_control() populates the enable_completion pointer with a stack
-address, sends a PHY_LINK_RESET / PHY_HARD_RESET, waits 300 ms, and
-returns. The problem arises when a phy control response comes late.  After
-300 ms the pm8001_phy_control() function returns and the passed
-enable_completion stack address is no longer valid. Late phy control
-response invokes complete() on a dangling enable_completion pointer which
-leads to a kernel crash.
+Recognizing of root=/dev/scd<N> kernel command line argument was removed
+in kernel 2.5.45 [2].
 
-Signed-off-by: Igor Pylypiv <ipylypiv@google.com>
-Signed-off-by: Terrence Adams <tadamsjr@google.com>
-Link: https://lore.kernel.org/r/20240627155924.2361370-2-tadamsjr@google.com
-Acked-by: Jack Wang <jinpu.wang@ionos.com>
-Signed-off-by: Martin K. Petersen <martin.petersen@oracle.com>
-Signed-off-by: Nazar Kalashnikov <sivartiwe@gmail.com>
+In the docs /dev/scd<N> are recommended names since 2.6.9 [3].
+Mention of these names appeared much earlier in 1.3.22 [4].
+
+[1] https://git.kernel.org/pub/scm/linux/hotplug/udev.git/commit/?id=d132be4d58
+    2011-08-12 14:05:19 +0200 Kay Sievers.
+    rules: remove legacy rules for cdrom and usb printer
+
+[2] https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/commit/init?h=v2.5.45&id=51924607bd
+    2002-10-29 00:47:58 -0800 Alexander Viro.
+    [PATCH] removal of root_dev_names[]
+
+[3] https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/diff/Documentation/devices.txt?h=v2.6.9-rc4&id=a74e11ffeda
+    2004-03-16 15:09:38 -0800 Andrew Morton:
+    [PATCH] devices.txt: typos and removal of dead devices
+
+[4] https://git.kernel.org/pub/scm/linux/kernel/git/history/history.git/tree/Documentation/devices.txt?h=v2.6.9-rc4&id=8f0ec1f9369
+    Linus Torvalds: Import 1.3.22
+
+Signed-off-by: Max Nikulin <manikulin@gmail.com>
+
 ---
-Backport fix for CVE-2024-47666
- drivers/scsi/pm8001/pm8001_sas.c | 4 +++-
- 1 file changed, 3 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/pm8001/pm8001_sas.c b/drivers/scsi/pm8001/pm8001_sas.c
-index 765c5be6c84c..85c27f2f990f 100644
---- a/drivers/scsi/pm8001/pm8001_sas.c
-+++ b/drivers/scsi/pm8001/pm8001_sas.c
-@@ -163,7 +163,6 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 	unsigned long flags;
- 	pm8001_ha = sas_phy->ha->lldd_ha;
- 	phy = &pm8001_ha->phy[phy_id];
--	pm8001_ha->phy[phy_id].enable_completion = &completion;
- 	switch (func) {
- 	case PHY_FUNC_SET_LINK_RATE:
- 		rates = funcdata;
-@@ -176,6 +175,7 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 				rates->maximum_linkrate;
- 		}
- 		if (pm8001_ha->phy[phy_id].phy_state ==  PHY_LINK_DISABLE) {
-+			pm8001_ha->phy[phy_id].enable_completion = &completion;
- 			PM8001_CHIP_DISP->phy_start_req(pm8001_ha, phy_id);
- 			wait_for_completion(&completion);
- 		}
-@@ -184,6 +184,7 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 		break;
- 	case PHY_FUNC_HARD_RESET:
- 		if (pm8001_ha->phy[phy_id].phy_state == PHY_LINK_DISABLE) {
-+			pm8001_ha->phy[phy_id].enable_completion = &completion;
- 			PM8001_CHIP_DISP->phy_start_req(pm8001_ha, phy_id);
- 			wait_for_completion(&completion);
- 		}
-@@ -192,6 +193,7 @@ int pm8001_phy_control(struct asd_sas_phy *sas_phy, enum phy_func func,
- 		break;
- 	case PHY_FUNC_LINK_RESET:
- 		if (pm8001_ha->phy[phy_id].phy_state == PHY_LINK_DISABLE) {
-+			pm8001_ha->phy[phy_id].enable_completion = &completion;
- 			PM8001_CHIP_DISP->phy_start_req(pm8001_ha, phy_id);
- 			wait_for_completion(&completion);
- 		}
+I hope, the suggested changes make kernel docs more close to reality.
+
+During discussion of a bug in wodim (a fork of cdrecord) I was confused
+that docs recommend /dev/scd<N> as SCSI CD-ROM name. The following
+thread did not clarify the issue:
+
+https://lore.kernel.org/lkml/20061105100926.GA2883@pelagius.h-e-r-e-s-y.com/
+Scsi cdrom naming confusion; sr or scd? Sun, 5 Nov 2006 10:09:26 +0000
+
+If I'm not mistaken, "sr" was always used internally in the driver
+"scd" were limited to log strings. I have added SCSI subsystem to CC
+to confirm that there is no objection from their side.
+
+It seems, de-facto /dev/sr<N> names are used and I think, /dev/scd<N>
+should be avoided. I may be completely wrong though.
+
+I wouldn't mind if you discard this patch and to commit another one
+with better wording instead.
+---
+ Documentation/admin-guide/devices.rst | 4 +++-
+ Documentation/admin-guide/devices.txt | 6 +++---
+ 2 files changed, 6 insertions(+), 4 deletions(-)
+
+diff --git a/Documentation/admin-guide/devices.rst b/Documentation/admin-guide/devices.rst
+index e3776d77374b..515338d0e406 100644
+--- a/Documentation/admin-guide/devices.rst
++++ b/Documentation/admin-guide/devices.rst
+@@ -97,9 +97,11 @@ It is recommended that these links exist on all systems:
+ /dev/bttv0	video0		symbolic	Backward compatibility
+ /dev/radio	radio0		symbolic	Backward compatibility
+ /dev/i2o*	/dev/i2o/*	symbolic	Backward compatibility
+-/dev/scd?	sr?		hard		Alternate SCSI CD-ROM name
+ =============== =============== =============== ===============================
+ 
++Usage of ``/dev/scd?`` as alternate SCSI CD-ROM names for ``sr?`` devices
++ended around year 2011.
++
+ Locally defined links
+ +++++++++++++++++++++
+ 
+diff --git a/Documentation/admin-guide/devices.txt b/Documentation/admin-guide/devices.txt
+index 94c98be1329a..c480f230aa4a 100644
+--- a/Documentation/admin-guide/devices.txt
++++ b/Documentation/admin-guide/devices.txt
+@@ -389,11 +389,11 @@
+ 		    ...
+ 
+   11 block	SCSI CD-ROM devices
+-		  0 = /dev/scd0		First SCSI CD-ROM
+-		  1 = /dev/scd1		Second SCSI CD-ROM
++		  0 = /dev/sr0		First SCSI CD-ROM
++		  1 = /dev/sr1		Second SCSI CD-ROM
+ 		    ...
+ 
+-		The prefix /dev/sr (instead of /dev/scd) has been deprecated.
++		In the past the prefix /dev/scd (instead of /dev/sr) was used and even recommended.
+ 
+   12 char	QIC-02 tape
+ 		  2 = /dev/ntpqic11	QIC-11, no rewind-on-close
 -- 
-2.43.0
+2.39.5
 
