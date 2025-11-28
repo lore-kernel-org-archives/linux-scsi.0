@@ -1,78 +1,105 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f47.google.com (mail-yx1-f47.google.com [74.125.224.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3938218FDDE;
-	Fri, 28 Nov 2025 03:49:24 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 44A49299A81
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 08:12:21 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764301765; cv=none; b=MjW3VRuwOwkX0neuL68bCX3pudOReTyRgNnSYaaEuITr4r2L+M0FUFN3YYEwtQ9Z1aILCnnjlpBf4C6w5jpopzI8luSPozEVu1fNW68U08wVWMfC3qtdAPNBSCN1xthxz/6QRoBUyZ31JZCnx2WK6M19DSmyNY2SxWf2M4yeDuQ=
+	t=1764317542; cv=none; b=JBO079X+/pVISx86zp0BwD5bC8bjq5R4DLl6hUZVEalnyjhO7KdnW8N3WFiaSmqmX5oue9W3yqUQslko8JEgPYrPuVoNtdBWcRvcBb/SYAI50fkYhnkDlu4wkhifyR/I3Wf8LvjDebkO+2Ay7r2gXo9aMJTKFSqKbCynJk2NSt0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764301765; c=relaxed/simple;
-	bh=mzclW6QgqNXAUv3/IuGX+bQLzEOCpZhxB1N6HdEljuA=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ocodFHo3DbeVX9Em51XGiZdEI/ZzxTIKz1MQ71cIHSh+XcBnRwV5MGk5x9UtJvuh02o7fnwikGiGbXfNs+5/KQOdxY//T10LSGl045Q64YI3D46wi7GfUSb+xfjnLBfNk/tDecxvl2qCoUXq9Ns993ofZOHVtNnGWWIpjvO8gSg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=mi+9VsmM; arc=none smtp.client-ip=10.30.226.201
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="mi+9VsmM"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 7915EC4CEF1;
-	Fri, 28 Nov 2025 03:49:24 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764301764;
-	bh=mzclW6QgqNXAUv3/IuGX+bQLzEOCpZhxB1N6HdEljuA=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=mi+9VsmMdU6cnXwIXV2H5ynZIyZ9s2qXeCheih4iEUWB0oEsI80ZWypNk6RyiF5N7
-	 O/MSXnujK8BV2m0tsLKG/nZtXf8EFtrMekQy6QytOJyfZ8UHrCA6xlTTu1fDbRLqBe
-	 07p6qICc+4WGICMYGiCCKmBa/dgad9hrDv4GbAGOF82xfgXmHb6I6FjR12BFNqdSmh
-	 +okHHgiY7hTOuay2zOCNrCBV1kBvzBG+a7IIdnMah60eY79GzqaTHb1zzJhzHHz/YV
-	 q9JUd+0WM7ulaNPl7QswqY/9ALA5yQeRfT7VaJzO9WxxHr53x98Gd3/6BwUUGKp7Fn
-	 lp55TEMQB4MBQ==
-Date: Thu, 27 Nov 2025 19:47:36 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: "zheng.gong" <zheng.gong@samsung.com>
-Cc: linux-scsi@vger.kernel.org, avri.altman@wdc.com, bvanassche@acm.org,
-	quic_cang@quicinc.com, alim.akhtar@samsung.com,
-	martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v3 0/1] scsi: ufs: Add crypto_keyslot_remap variant op
-Message-ID: <20251128034736.GA18644@sol>
-References: <20251112031035.GA2832160@google.com>
- <CGME20251128033713epcas5p450da60155377b3ae43af4d38edb935b2@epcas5p4.samsung.com>
- <20251128033709.1342579-1-zheng.gong@samsung.com>
+	s=arc-20240116; t=1764317542; c=relaxed/simple;
+	bh=3R7CHDNtZbr+bCbjgtRQNIbTl5JiEn9vVnZTt2rUUlA=;
+	h=MIME-Version:From:Date:Message-ID:Subject:To:Cc:Content-Type; b=kN8KHwFnvD1M6VMYypz/tnAbEwtqCucPaDf5nE1FePEgppX+aDvoLYcpOmemJsxUCkksWXjexjUs76d5FRtC93GEvjMk8Ot9+3kf4bbZG79cT4X6VYc1CqbzX32QTf0RaZwmMa5/QhTBREXcPaKT1ipuU5+qWnMFL9NvmEHoOlg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yx1-f47.google.com with SMTP id 956f58d0204a3-63f96d5038dso1309473d50.1
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 00:12:20 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764317540; x=1764922340;
+        h=cc:to:subject:message-id:date:from:mime-version:x-gm-gg
+         :x-gm-message-state:from:to:cc:subject:date:message-id:reply-to;
+        bh=3R7CHDNtZbr+bCbjgtRQNIbTl5JiEn9vVnZTt2rUUlA=;
+        b=YNbwF9JHumekBs+C9KEBlUNOJqHkls+PrL22aV+QJIBGCMsRtPAo+LigVdveyLd1qI
+         ZDH7rduJkloMWMquECRoHq4JJ/zdIZ5r9pt4a0FhJ8iEw0MVGh28WrxrhWCjq7w+wLn6
+         vG0fbvR2qRA5+SXd3jCsGib5ReCItW2+53ZQb4NheKeue/0j4aInmHV53P22FRoloA/m
+         PSM9cKwbDx8xTkNnpKIAEiQnjhw2E41Oh04EXn7REXkvx8o0ENZIqDOVTym2elmP2k3f
+         Xu1JF9azBO8Bt+t/PDDfKzauL4GIP/JPEhbe7LVAjiL8+VW6YCwtw6NMxKh2ArwjEuxL
+         t9dA==
+X-Forwarded-Encrypted: i=1; AJvYcCW2dZ+vSJmDdMw6N2L4EIkP7zwxEZ+aCIj9lg9acJgh4avZoe97RfsvHVxfrGpl8wKf3CeZDezniyFG@vger.kernel.org
+X-Gm-Message-State: AOJu0YzmBd6Vs7u9Tfk5gyemsOzgp6H25BdXCqLAi7wNPJfFzUXD/o4y
+	zz5MNuGOrYSAem6BPIHQiuJ2Jzd1luYD8Id5q7YB9Ba3xNJeGWAO3ztdcRTRlw==
+X-Gm-Gg: ASbGncuqN9H6MySeBUDLyH+Yrc4t/GC4trNxZa10U4J8i+n727J85V+OKGkLpidIEkc
+	bsPjoFyBSQn3MQYJvsAW1V80BKS2K6TccM23LIHXib/TemaOpWOtmW8FwfhWj9wPLwDsz5hpdv6
+	gTOprwnHwBQ0JQwvnCxeTOqDCHo5uIyJCoK3JvvXkFYMkcu31DjXzEzwKCK1NwU2GwnYMUwwkJt
+	1jY9ezegJft7xuPnKSExVhWm2c1SJBIWrgwwVCO9yUTsvuommdbVH6tKk3vj13/CEqirXzQrd5Y
+	uYrJCEYDJlvIZII686zYYz+CQVxcfhc2vd8T1mfIRunClub1sLUaO96YJ67asKJ+OVFd4vzMyC1
+	L/rkXWeyWD17Fp8CfAQNatIvwjpaY3IgSEAY9yxxPEPrvoPel7Jz291HMxr+tWSEV1yVXVCfyPE
+	9UNoGbyqQyrx7bFf8LezXBgkXtdpbC53bNETl4s/OEXQ==
+X-Google-Smtp-Source: AGHT+IG1XFcMByAvrtzSb6hnVqrUOxaB5/qhIuxYdgaZhSoVWrQbnxMrNjCg25KuWJ5VXu6QtLIPQA==
+X-Received: by 2002:a05:690c:61c6:b0:786:4fd5:e5dc with SMTP id 00721157ae682-78a8b53925emr206705707b3.36.1764317540022;
+        Fri, 28 Nov 2025 00:12:20 -0800 (PST)
+Received: from mail-yx1-f49.google.com (mail-yx1-f49.google.com. [74.125.224.49])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-78ad0d5fe10sm13210127b3.14.2025.11.28.00.12.17
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Nov 2025 00:12:18 -0800 (PST)
+Received: by mail-yx1-f49.google.com with SMTP id 956f58d0204a3-6420dc2e5feso1248796d50.3
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 00:12:17 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCX5l0/tk85BlHKSlZDYamPCk1H4nfNAngR2b1YdqxjXmD5H5ZxGr91IlLze7GXXTFaOFHO/pA8RkYhg@vger.kernel.org
+X-Received: by 2002:a53:b849:0:b0:641:f5bc:6974 with SMTP id
+ 956f58d0204a3-64302b07fc0mr13984609d50.80.1764317537329; Fri, 28 Nov 2025
+ 00:12:17 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251128033709.1342579-1-zheng.gong@samsung.com>
+From: Roger Shimizu <rosh@debian.org>
+Date: Fri, 28 Nov 2025 00:12:06 -0800
+X-Gmail-Original-Message-ID: <CAEQ9gE=Yo71Aji02a5uGdv7uZ+fJcCa1TKAEZskdM_-VZedTqQ@mail.gmail.com>
+X-Gm-Features: AWmQ_bk9mUOYDVvJsIJ-Igzmxt3pBF4ab5z7MoUIMi7oStLCrWuz5qTdSoPTnCo
+Message-ID: <CAEQ9gE=Yo71Aji02a5uGdv7uZ+fJcCa1TKAEZskdM_-VZedTqQ@mail.gmail.com>
+Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved request
+To: mani@kernel.org, Bart Van Assche <bvanassche@acm.org>
+Cc: James.Bottomley@hansenpartnership.com, adrian.hunter@intel.com, 
+	avri.altman@sandisk.com, beanhuo@micron.com, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com, peter.wang@mediatek.com, quic_nguyenb@quicinc.com, 
+	Hongyang Zhao <hongyang.zhao@thundersoft.com>
+Content-Type: text/plain; charset="UTF-8"
 
-On Fri, Nov 28, 2025 at 11:37:08AM +0800, zheng.gong wrote:
-> Thank you very much for your feedback, Eric. I truly appreciate your review and the time you've taken to point out that a real user is required.
-> You're right. Adding a new variant op without a clear use case would not be acceptable. Let me clarify the context behind this patch.
+On Thu, 27 Nov 2025 22:29:35 +0530, Manivannan Sadhasivam wrote:
+> On Fri, Oct 31, 2025 at 01:39:29PM -0700, Bart Van Assche wrote:
+>> Instead of letting the SCSI core allocate hba->nutrs - 1 commands, let
+>> the SCSI core allocate hba->nutrs commands, set the number of reserved
+>> tags to 1 and use the reserved tag for device management commands. This
+>> patch changes the 'reserved slot' from hba->nutrs - 1 into 0 because
+>> the block layer reserves the smallest tags for reserved commands.
+>>
+>> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+>
+> While the issue introduced by this patch was fixed in [1], this patch (and the
+> fix) somehow prevents mounting rootfs on Qcom RB3Gen2 board. The UFS partitions
+> are detected, but rootfs is not getting mounted and the boot just got stuck.
 
-To clarify, there has to be an in-tree user.
+While testing Rubik Pi 3 [2], I found the above UFS issue, too.
+for next-20251121, I used the revert cmd below to workaround:
+$ git revert 7ff1cca -m 1
 
-> This hook is not theoretical. It is designed to replace an existing out-of-tree variant op (`crypto_keyslot_cfg`) used in Samsung's ExynosAuto UFS driver for multi-VM inline encryption.
-> In production, each VM has its own keyslot range per hardware allocation, and the keyslot is remapped at request time:
-> 
->     lrbp->crypto_key_slot += vm_id * UFS_KEYSLOTS;
-> 
-> This was already in use on automotive platforms.
-> 
-> But the reason this usage isn't visible in mainline is due to ExynosAuto's kernel architecture:
-> 
-> Starting from kernel 6.1, we adopt the dual-repository model (similar to Android Common Kernel):
-> - `kernel.git`: Mainline-based, minimal patches
-> - `exynosauto-modules.git`: Hosts platform-specific drivers (as .ko or built-in)
-> 
-> Our UFS driver, including FMP and IOV support, resides in `exynosauto-modules/drivers/ufs/*`. It couldnot be upstreamed due to:
-> - Hardware-specific SMC calls
-> - Security-specific key management
-> - Non-public register interfaces
+for next-20251128, I used cmd below, and there's a conflict to resolve.
+$ git revert f10ce81 -m 1
 
-The upstream driver is drivers/ufs/host/ufs-exynos.c, so you'll need to
-focus on adding this functionality to there, if it's actually needed.
-What's happening downstream is irrelevant.
+> If I revert this patch, together with the dependencies, rootfs is getting
+> mounted properly.
 
-- Eric
+Can you tell the commit list that needs to revert?
+
+This UFS issue is quite annoying, and difficult to bisect.
+Hope it gets resolved before 6.18. Thank you!
+
+-Roger
+
+[1] https://lore.kernel.org/linux-scsi/20251114193406.3097237-1-bvanassche@acm.org/
+[2] https://lore.kernel.org/all/20251126-rubikpi-next-20251125-v7-0-e46095b80529@thundersoft.com/
