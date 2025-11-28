@@ -1,71 +1,128 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7121F31579B;
-	Thu, 27 Nov 2025 22:26:18 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 812C52D738F
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 03:37:44 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764282378; cv=none; b=q/+xXS7uan+UmNkedc2p6OSiExxNfERQU6dEyY9V5DqMDqKXceppDHvyz+IdgfBT3k3fTXEOQu9/8bHBlsje92XOJdGmtk3SQwNIdLHNlPA9zm64p4QujM2G4NfKpzdEFwG+zMBKOGLrP5vhLypbl9990hICkACOUuy2fzvGPp4=
+	t=1764301068; cv=none; b=MScB7mPkGVYBhMpJ2YTHo4CAfAVdq8dnl6bEBwJbOm/ZO8KlFSFaL7XKlvmfqTTPMtwSzL9HzWfh3LHbKltLlYix/wkRwoucEmtM/DN9528XcSWyoYp0r4Rar1ijWPK+ztqSNVcdt+NP0fC/QbIg+pRc1tr4/SRnyv2HjDx294E=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764282378; c=relaxed/simple;
-	bh=g0XvXIax35mpN/IDkvr6y74PtJNO/TtVbIyLTvwGzVg=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=VCr/udTxf8SuxiYaLh7Z30/hoXnt/6Wl/K7WnRo2SRFg8TA7/nDbKe3gRcse/Y7LCPkTP/f3X61NH1dOIrpWI3ZQawE43Sy5rU5ftGhYkTzEpODrT2hjUlxOsvRS8AvGZ/bjGBw9ra/lC31EFitst18xyjYZ8PRRtZDaynSsOMA=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=U7TIPYni; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764301068; c=relaxed/simple;
+	bh=9fqWtvPsesdRVddDbQdwe6RHkDTPUOFusNe4LSM5TW0=;
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:MIME-Version:
+	 Content-Type:References; b=EdDNhtPhIer/5BV6KwMMJ1ZNBB4kZPvfcI2+Pw7Fv44MsTx5oVPIiTDetx4MzI4CL+zQP08NA4So+YSVhas/L2i3GcSLnBgIOiBLaPAjk003jY8X+OsYMmTVa8fAGAydbDLqrs4bsSz6YhrenlTIJ9vWPH4k16SIRVfuulqmrbw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=Ughtu1Ac; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="U7TIPYni"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id CF282C113D0;
-	Thu, 27 Nov 2025 22:26:17 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764282378;
-	bh=g0XvXIax35mpN/IDkvr6y74PtJNO/TtVbIyLTvwGzVg=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=U7TIPYni2AKQrvpJHX6zXMS/9DTS2Gn6XrEcFd/ayvMs/YHSwO0mJuKiZ3MVdVtjx
-	 nZGOvdx4hNJyqWg6NeVCapWBA0VDpMxu1GoP570H5GdW7oFXn/WwjSYEzXF21cqPa2
-	 HeeZPM7Vsl1lfxJ7PifgcjeRm6T0CPvmi4XqLcWisc2leaWZornGQATfE5apY7rHZa
-	 rMqTcOU83PSstcalKEOJPlPOk2sUuzmcKlPlsV5c9bO8vdoxRGKSea0OmE8KGxqobt
-	 0UNFN0TrPV788t4H/JQDMu4wMQGEnX5NgwXw2UuVZLe7zWj7hYwYqIDjcalnLUL6wq
-	 MEjFKy/F7wF7A==
-Date: Thu, 27 Nov 2025 14:24:29 -0800
-From: Eric Biggers <ebiggers@kernel.org>
-To: "zheng.gong" <zheng.gong@samsung.com>
-Cc: linux-scsi@vger.kernel.org, avri.altman@wdc.com, bvanassche@acm.org,
-	quic_cang@quicinc.com, alim.akhtar@samsung.com,
-	martin.petersen@oracle.com, linux-kernel@vger.kernel.org
-Subject: Re: [PATCH v2 0/2] scsi: ufs: Add crypto_keyslot_remap support
-Message-ID: <20251127222429.GB2977@sol>
-References: <20251112031035.GA2832160@google.com>
- <CGME20251127070712epcas5p4113a2d14bd4be7eaef6be6164b1f8cec@epcas5p4.samsung.com>
- <20251127070704.2935390-1-zheng.gong@samsung.com>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="Ughtu1Ac"
+Received: from epcas5p3.samsung.com (unknown [182.195.41.41])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20251128033737epoutp04d5914d68e9e1e0dc9d2a9553a6620d25~8DnbP5y3r0167801678epoutp04X
+	for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 03:37:37 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20251128033737epoutp04d5914d68e9e1e0dc9d2a9553a6620d25~8DnbP5y3r0167801678epoutp04X
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1764301057;
+	bh=pNMxVaSfZrn/lV7i9Ks6uC8VfPHEl3nFd9sIdOkJKZU=;
+	h=From:To:Cc:Subject:Date:In-Reply-To:References:From;
+	b=Ughtu1AcG4PNKuu6/sY12O+Y3wVRIo959voL0UsdIaTGQZVlxs9mOyWaTsVB2qvkd
+	 6QTj0+QYxuwGrw4HXVvEwu3cEHZdUDjYy9o+dawZ7tdUItOGgkys7W2zoymy6FzesW
+	 lAHnIpL0qOoiJ87qineTp7vv0NsLU/1PnpM/4tRY=
+Received: from epsnrtp04.localdomain (unknown [182.195.42.156]) by
+	epcas5p2.samsung.com (KnoxPortal) with ESMTPS id
+	20251128033736epcas5p2ebab850126d105dd4bb9786867e28c3d~8DnamsK5u0473904739epcas5p2N;
+	Fri, 28 Nov 2025 03:37:36 +0000 (GMT)
+Received: from epcas5p4.samsung.com (unknown [182.195.38.86]) by
+	epsnrtp04.localdomain (Postfix) with ESMTP id 4dHfBR5bB4z6B9m5; Fri, 28 Nov
+	2025 03:37:35 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas5p4.samsung.com (KnoxPortal) with ESMTPA id
+	20251128033713epcas5p450da60155377b3ae43af4d38edb935b2~8DnFFkZsw2226822268epcas5p4G;
+	Fri, 28 Nov 2025 03:37:13 +0000 (GMT)
+Received: from testpc12933.samsungds.net (unknown [109.105.129.33]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20251128033712epsmtip290643d4fdc2cbab1972e0b1b26fa64ae~8DnEJIduz1463714637epsmtip2y;
+	Fri, 28 Nov 2025 03:37:12 +0000 (GMT)
+From: "zheng.gong" <zheng.gong@samsung.com>
+To: linux-scsi@vger.kernel.org
+Cc: avri.altman@wdc.com, bvanassche@acm.org, quic_cang@quicinc.com,
+	alim.akhtar@samsung.com, martin.petersen@oracle.com, ebiggers@kernel.org,
+	linux-kernel@vger.kernel.org, "zheng.gong" <zheng.gong@samsung.com>
+Subject: [PATCH v3 0/1] scsi: ufs: Add crypto_keyslot_remap variant op
+Date: Fri, 28 Nov 2025 11:37:08 +0800
+Message-ID: <20251128033709.1342579-1-zheng.gong@samsung.com>
+X-Mailer: git-send-email 2.50.1
+In-Reply-To: <20251112031035.GA2832160@google.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251127070704.2935390-1-zheng.gong@samsung.com>
+X-CMS-MailID: 20251128033713epcas5p450da60155377b3ae43af4d38edb935b2
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+X-Sendblock-Type: REQ_APPROVE
+CMS-TYPE: 105P
+cpgsPolicy: CPGSC10-505,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20251128033713epcas5p450da60155377b3ae43af4d38edb935b2
+References: <20251112031035.GA2832160@google.com>
+	<CGME20251128033713epcas5p450da60155377b3ae43af4d38edb935b2@epcas5p4.samsung.com>
 
-On Thu, Nov 27, 2025 at 03:06:57PM +0800, zheng.gong wrote:
-> This patch series adds support for platform-specific crypto keyslot remapping
-> in the UFS host driver, enabling secure inline encryption in multi-domain
-> environments (e.g., VMs).
-> 
-> The first patch introduces a new variant operation:
->   ufs_hba_variant_ops::crypto_keyslot_remap
-> which allows platforms to adjust the keyslot index at request submission time.
-> 
-> The second patch adds a test module (CONFIG_SCSI_UFS_CRYPTO_TEST) to
-> demonstrate how the new hook is used — by applying a fixed offset to simulate
-> domain-specific keyslot layout. This patch series is in response to feedback from Eric on the v1 submission,
-> where he noted that the new callback needed to be used to make sense. Just a demonstration
-> of the new callback is included in this patch series.
+Thank you very much for your feedback, Eric. I truly appreciate your review and the time you've taken to point out that a real user is required.
+You're right. Adding a new variant op without a clear use case would not be acceptable. Let me clarify the context behind this patch.
 
-There has to be a real user, not just a useless example module.
+This hook is not theoretical. It is designed to replace an existing out-of-tree variant op (`crypto_keyslot_cfg`) used in Samsung's ExynosAuto UFS driver for multi-VM inline encryption.
+In production, each VM has its own keyslot range per hardware allocation, and the keyslot is remapped at request time:
 
-Perhaps you intend for this functionality to be used in ufs-exynos.c?
-But you haven't sent any corresponding patch.
+    lrbp->crypto_key_slot += vm_id * UFS_KEYSLOTS;
 
-- Eric
+This was already in use on automotive platforms.
+
+But the reason this usage isn't visible in mainline is due to ExynosAuto's kernel architecture:
+
+Starting from kernel 6.1, we adopt the dual-repository model (similar to Android Common Kernel):
+- `kernel.git`: Mainline-based, minimal patches
+- `exynosauto-modules.git`: Hosts platform-specific drivers (as .ko or built-in)
+
+Our UFS driver, including FMP and IOV support, resides in `exynosauto-modules/drivers/ufs/*`. It couldnot be upstreamed due to:
+- Hardware-specific SMC calls
+- Security-specific key management
+- Non-public register interfaces
+
+Despite this, we aim to minimize out-of-tree divergence by upstreaming reusable hooks like this one.
+
+Purpose of the Patch
+This change:
+- Replaces the private `crypto_keyslot_cfg` with a clean, upstreamable interface
+- Eliminates the need for out-of-tree patching
+- Reduces rebase effort across kernel versions
+- Maintains backward compatibility (no impact if not implemented)
+
+Design Principles
+- Minimal: only adds one callback
+- Reusable: fits existing `variant_ops` model
+- Non-intrusive: no changes to core crypto logic
+- Generic: can support virtualization, multi-domain, or security-isolated keyslots
+
+While `ufs-exynosauto.c` is separate from mainline `ufs-exynos.c`, they share the same goal: enabling robust UFS support on Exynos platforms. This hook benefits not only us, but potentially other vendors with similar scenrios.
+I'm fully open to feedback. If there are concerns about naming, placement, or future-proofing, i`m happy to adjust.
+
+Thank you again for your guidance. I hope this explanation helps bridge the context gap while supporting real-world use cases.
+
+Changes since v2:
+  - Removed test module (ufshcd-crypto-test.c) per feedback
+  - Clarified that this hook replaces an existing out-of-tree feature
+
+zheng.gong (1):
+  scsi: ufs: crypto: Add ufs_hba_variant_ops::crypto_keyslot_remap
+
+ drivers/ufs/core/ufshcd-crypto.h | 10 ++++++++--
+ drivers/ufs/core/ufshcd.c        |  9 +++++----
+ include/ufs/ufshcd.h             |  6 ++++++
+ 3 files changed, 19 insertions(+), 6 deletions(-)
+
+-- 
+2.50.1
+
