@@ -1,104 +1,114 @@
-Received: from mx0a-00069f02.pphosted.com (mx0a-00069f02.pphosted.com [205.220.165.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 479EC231845
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2025 03:30:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.165.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 248C0883F
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2025 04:24:14 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.179
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764387041; cv=none; b=gO63C45l/LIOwKrisH3uDl1yq00e0wqKxWQaEgif6E/Tz/k3LrYmyBtwZk6IkkXfGWGvga7u9t9T9kOuzpor0yhvWdyGvWGGxRlRw6G0eqqVUfscFi0Nwn6uavp8y6QpAdbGsMBSv2ovSa2xfmsQmo7oKVhpvSXrB+cLSMxkfD4=
+	t=1764390256; cv=none; b=pw0DkwNZfMHyLvj3spJg7npmflay2TSkDnPocORVMvZ3xNfVMqMFC2GwyEnOl75z+t/b7o6FooUYZv2QmBptBbA9ERTX2vzrcx/J3TxLG3wPHdBlF6IpY89jgA9/qpNbOkfdC1jsf87cz8gxhzlsnZDhqn/mZROXGcUGkY7Vg5Y=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764387041; c=relaxed/simple;
-	bh=U1A2yoN6TvpicuRvZYrgjtGKnfmjIaHMfGjwQ/UG8ZU=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hBJYnmmmkhwIai0h7CrRP27Pn+Drn/pPaM65rG+g5QZrooPJ2+c21nQj5bnh1DBIsj/TE9eKePx57Rn6oLKOCg/U1+rIHLOKxg05llkCEi4nDw4mnvROMvuahom5vkr9+XydpKMoNiXE1UKE/4sBOck0jb6rVZe7i5esfrfiruE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=MWqr4eHk; arc=none smtp.client-ip=205.220.165.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="MWqr4eHk"
-Received: from pps.filterd (m0246629.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5AT3C0CG623909;
-	Sat, 29 Nov 2025 03:30:16 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=dZA31L2/RXhe6+KBUm1TzhRdvL6aR8y+t7ajnqDX+ZY=; b=
-	MWqr4eHkTdtr9/e3hmk2XwssHVUrFWyP57c0/YCybvaPTmwwcLekeh0yvAIijLDu
-	QwV/kXPlE66sEYBER1gbwYRTBT4X0yfpPv4SrhTD/8Gpxb5XW6KpvzjelhNff9I1
-	cxR+T0uQULRHVOz16v6yUpS2nZwoZqaC+Z2s3TMo9irbbU+8ijQz6wGT3n1VQxMg
-	pt1YJ4oTPiLKl0ienmgh57e6Q95e0gyZ/cx7yNLR44RhygWbf26grNpOF6QzkGvn
-	w3fr1CymBNrKAUr3K2bEclM+7HO0ZdPMOZ0F6YcMyc7MLz7Btsk9BoN6GjNIkj1v
-	e5YPax6B7TBzsJvz+ZL17w==
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4aqrq700bc-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 29 Nov 2025 03:30:16 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5AT1XZiF031941;
-	Sat, 29 Nov 2025 03:30:15 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4aqq961n90-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Sat, 29 Nov 2025 03:30:15 +0000
-Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5AT3UEpF015090;
-	Sat, 29 Nov 2025 03:30:15 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4aqq961n85-2;
-	Sat, 29 Nov 2025 03:30:15 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, Douglas Gilbert <dgilbert@interlog.com>,
-        Damien Le Moal <dlemoal@kernel.org>, Christoph Hellwig <hch@lst.de>,
-        Ming Lei <ming.lei@redhat.com>,
-        "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
-Subject: Re: [PATCH] scsi: scsi_debug: Support injecting unaligned write errors
-Date: Fri, 28 Nov 2025 22:30:01 -0500
-Message-ID: <176438479594.3682470.518346544242801545.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20251113174151.1095574-1-bvanassche@acm.org>
-References: <20251113174151.1095574-1-bvanassche@acm.org>
+	s=arc-20240116; t=1764390256; c=relaxed/simple;
+	bh=nn6jsh1bpVDmqtk/NIx+mMCz1c5oxMsCpAGmjg9X0rE=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=KjwBJUf9IOV/N7O89Eu8EtSdV/eZX98WXrfwjO7/cT9N7fMwmvSAiJsc8eUYVYZgdnTYjjB11OVNmkzKsvaZrjEQDDe6CBtPbbVKFASnEz0XIQekEcRhfFIN1gD809umOpRGIA2Xje2lS/0l+EPAz9POe7eLQWR/xfUtHXI10tI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.179
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-78a835353e4so25730397b3.2
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 20:24:14 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764390254; x=1764995054;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=nn6jsh1bpVDmqtk/NIx+mMCz1c5oxMsCpAGmjg9X0rE=;
+        b=oyiixmiFztO++Qv+hh1pdhUJm3jMJ7RfEXSnUW76Dbxdb94M2rSehGaeYcHIEtx0A7
+         5GnXcdihVBAw58nzB7+ihe+bU7VylLqlhT2Cbg6EulB2h7GMNlAwhPy7scjhuz74JBS7
+         rW3m01/SZluN6+SOOMne1V61ogG7ctO0pQZwimh+HeWAiGk6GkBH/PZdbvuvrX0FblDq
+         0Zd2N4CO4MDqk8wCgtVNTo4r5OXbrAgdPyA4PxvKWcn83ZIfJ31zhnT1iTckCrJKwI71
+         EzqLFldFx4oKj/ssJJsEzTZhjkNMt49PiuytkQtXXVAw3xUvAvbNJpAODMWbKnRUL63M
+         Nm8w==
+X-Forwarded-Encrypted: i=1; AJvYcCUBK3z0vd7eXVsqcwTBdbOrtNFgTjyqk6niadRPl+y4LScrIeKKfAbLM6AsCIYg0LCTW0DjwlwjU0fg@vger.kernel.org
+X-Gm-Message-State: AOJu0YxBrtreWbBvzdWKECiXYnp9J/SWoSJQSkFa3/8PiAj7gpulADLY
+	NHF0r+1l/Wl5LsuD3qhqrysM6RAlZgWYx2AJ9Uzd3iEWUozs+/gEwT5Zdthhag==
+X-Gm-Gg: ASbGncsfYcnq/iSRSyA7deWOZH8JcJQRHzaAnyNswspmXdZb2h9rszFv/9/taVbAgqB
+	MhErCrE+lve5hfhhygbsGnNewVv7ZiMvKMTloEVlCi6NRdjVAvC0PYwf6Fw7wPRu1Vq+NNdGvLV
+	u6V+Eg047FLs0X/x3OyMmh2svB83rbvV4XgYldJq4pjXmVuddYQ9PTeYg72lHDAyHqt1i9MqFDi
+	KFYIe4wVAKXO8AV9ndfpvFTuu+eOeaydE/KGxRkTxdXp51+AQhGosmE6GnXTM0iQR/TD5h7PozA
+	2aKA4d4VrVTtppoOk0rDbVs8qY0BZ8gmB5GJ/+sq94yrBE5KLryfLDq48S8+Ty5tKLXAjxj4reu
+	pA6zoGWDFWUAaB1TcEeF1BU8T9rRytwcIzjuREWBAbJ/NmyK+++I9/BjUSx2AqP7kQemq40vOo4
+	2xYPn8Ljy+P1Q87PLrY60SK1BaqdQ46UaWrhRZpZwwYraLADHgg+Ir
+X-Google-Smtp-Source: AGHT+IEc6vhoAtjrSOsCfNZUQ3akeHtCVPdDemy0MUcQzenAV9O7HFGH+gHbYuGf+S/KShHUuCWMDQ==
+X-Received: by 2002:a05:690c:4989:b0:788:1cde:cac0 with SMTP id 00721157ae682-78a8b479b3emr247320907b3.1.1764390253710;
+        Fri, 28 Nov 2025 20:24:13 -0800 (PST)
+Received: from mail-yx1-f42.google.com (mail-yx1-f42.google.com. [74.125.224.42])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-78ad0d4179csm21957567b3.11.2025.11.28.20.24.13
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Fri, 28 Nov 2025 20:24:13 -0800 (PST)
+Received: by mail-yx1-f42.google.com with SMTP id 956f58d0204a3-63fc6115d65so1999442d50.0
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 20:24:13 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCXr5JGp+vemGsDMfMbrlVJLB44BZh0bWZU1MAbwM60raOybj8WcPbejrUql/KOdbVjjDSsINwLfLUQ/@vger.kernel.org
+X-Received: by 2002:a05:690c:61c3:b0:78a:8251:8476 with SMTP id
+ 00721157ae682-78a8b4953f2mr269176467b3.24.1764390253181; Fri, 28 Nov 2025
+ 20:24:13 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-11-28_08,2025-11-27_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0 spamscore=0
- bulkscore=0 suspectscore=0 mlxscore=0 phishscore=0 mlxlogscore=688
- classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
- definitions=main-2511290024
-X-Authority-Analysis: v=2.4 cv=BIq+bVQG c=1 sm=1 tr=0 ts=692a68c8 cx=c_pps
- a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
- a=IkcTkHD0fZMA:10 a=6UeiqGixMTsA:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=xeEhHgPonyaO15gC86EA:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMTI5MDAyNCBTYWx0ZWRfXz8QWQewZt83L
- bpGFnFclWZoWnF9G9smHVEGwayXJIl6mkzX1N8ZNjUZM0OgemwiCY4r4A+DxYspP8U1WrPzDGCF
- qFq4CNn5MtDkmFdc/I34QeeCW5meBAzni6RMCeOQX2vHkbHjWDtFL6cb6v6fWqPlZo5AfRQLDTY
- iST2XuxYATHrJx/5Hx/kZTsy8oezyaGIfCfRT14T49jxqNUu62MqQOXDhvWkImC9O+gZObCd4WJ
- 6eSs2zneqpOeTMIvzVf0dSktI4/r+ssZLrJawH/FgI32kse4NCBpfkWOmXkYWlrfPTpVo5QthjK
- NKbeFX/thdOztOGSepNPjbIkkLQymE593LfCadc5gH5V7Ro8dFwns+SK46dWwj6Kp4MjhhlJUTo
- oafy1wpEojMsGzMFOBSfTOzQoStfug==
-X-Proofpoint-ORIG-GUID: 3B7qOJlc8rcwGvxCgydCftWc8sTt6w6O
-X-Proofpoint-GUID: 3B7qOJlc8rcwGvxCgydCftWc8sTt6w6O
+References: <CAEQ9gE=Yo71Aji02a5uGdv7uZ+fJcCa1TKAEZskdM_-VZedTqQ@mail.gmail.com>
+ <cb777f15-1017-4183-91a8-b7e968d0df9c@acm.org>
+In-Reply-To: <cb777f15-1017-4183-91a8-b7e968d0df9c@acm.org>
+From: Roger Shimizu <rosh@debian.org>
+Date: Fri, 28 Nov 2025 20:24:02 -0800
+X-Gmail-Original-Message-ID: <CAEQ9gEnYYBEHMFczvcx4mggOM5ydjsQeMRaBd3gQnjisJtXE6A@mail.gmail.com>
+X-Gm-Features: AWmQ_bl0nAXwowbEB-c9sP8HCaOH34_OsmMyuH8qM-e1WZaJrV9P4OX5byzVG1s
+Message-ID: <CAEQ9gEnYYBEHMFczvcx4mggOM5ydjsQeMRaBd3gQnjisJtXE6A@mail.gmail.com>
+Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved request
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: mani@kernel.org, James.Bottomley@hansenpartnership.com, 
+	adrian.hunter@intel.com, avri.altman@sandisk.com, beanhuo@micron.com, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-scsi@vger.kernel.org, 
+	martin.petersen@oracle.com, peter.wang@mediatek.com, quic_nguyenb@quicinc.com, 
+	Hongyang Zhao <hongyang.zhao@thundersoft.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On Thu, 13 Nov 2025 09:41:51 -0800, Bart Van Assche wrote:
+On Fri, Nov 28, 2025 at 6:44=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
+> wrote:
+>
+> On 11/28/25 12:12 AM, Roger Shimizu wrote:
+> > While testing Rubik Pi 3 [2], I found the above UFS issue, too.
+> > for next-20251121, I used the revert cmd below to workaround:
+> > $ git revert 7ff1cca -m 1
+> >
+> > for next-20251128, I used cmd below, and there's a conflict to resolve.
+> > $ git revert f10ce81 -m 1
+>
+> Does your kernel tree include this patch:
+> https://lore.kernel.org/linux-scsi/20251114193406.3097237-1-bvanassche@ac=
+m.org/?
 
-> Allow user space software, e.g. a blktests test, to inject unaligned
-> write errors.
-> 
-> 
+Yes, both "next-20251121" and "next-20251128" already included the
+patch mentioned.
+And "next-20251128" is the latest from AFAIK.
 
-Applied to 6.19/scsi-queue, thanks!
+> If not, please try a more recent for-next
+> kernel. If your kernel tree includes that patch, please share the
+> kernel log.
 
-[1/1] scsi: scsi_debug: Support injecting unaligned write errors
-      https://git.kernel.org/mkp/scsi/c/13b77ed9c2a9
+You can find the serial log here: https://people.debian.org/~rosh/next-2025=
+1128/
+* serial_6.18.0-rc7-next-20251128.txt: boot stuck.
+* serial_6.18.0-rc7-next-20251128_revert-c1ec7dc.txt: reverted
+[c1ec7dc], so boot OK.
 
--- 
-Martin K. Petersen
+Thank you!
+-Roger
+
+>
+> Thanks,
+>
+> Bart.
