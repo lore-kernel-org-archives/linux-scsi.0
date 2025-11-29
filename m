@@ -1,114 +1,113 @@
-Received: from mail-yw1-f179.google.com (mail-yw1-f179.google.com [209.85.128.179])
+Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 248C0883F
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2025 04:24:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.179
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A93901A0BF3
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2025 06:13:56 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764390256; cv=none; b=pw0DkwNZfMHyLvj3spJg7npmflay2TSkDnPocORVMvZ3xNfVMqMFC2GwyEnOl75z+t/b7o6FooUYZv2QmBptBbA9ERTX2vzrcx/J3TxLG3wPHdBlF6IpY89jgA9/qpNbOkfdC1jsf87cz8gxhzlsnZDhqn/mZROXGcUGkY7Vg5Y=
+	t=1764396838; cv=none; b=L0f15WgheUjVKpPA7747U7/ci+/MyKXGTypSXtj5djX6V8P1lJa0t2aJsQcLlcIurkGI3Dvzw2vKnh9oGUupJWTklhufGmmm031kuDtjcVgBzvMI+g/1WzQKgCl3PXlVcWzwUGo3TVYm/NjDCgQfkgoRX11T+kF3dY7ZTlOAcYM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764390256; c=relaxed/simple;
-	bh=nn6jsh1bpVDmqtk/NIx+mMCz1c5oxMsCpAGmjg9X0rE=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=KjwBJUf9IOV/N7O89Eu8EtSdV/eZX98WXrfwjO7/cT9N7fMwmvSAiJsc8eUYVYZgdnTYjjB11OVNmkzKsvaZrjEQDDe6CBtPbbVKFASnEz0XIQekEcRhfFIN1gD809umOpRGIA2Xje2lS/0l+EPAz9POe7eLQWR/xfUtHXI10tI=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=209.85.128.179
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+	s=arc-20240116; t=1764396838; c=relaxed/simple;
+	bh=N/UJt7KBJ78Mnxz1RizQ8Qtf5SW/riBLR0h+pKcbRfs=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=StX14bBOUSkRZZ4X2EEEt3qiPJcyJvP9OBZax18uzUlC7hUUFEh3No6reMU8WitGeQKJgpXstcQFXlhHLpi9Q+ItMa15gUrAvuqhC0LdzB5ujwmtw7xZbtF2wPuXA1R5aJAsdCUvLGEI8bfpMp9y8h7+115JjHOp5z+K2Pa+Vio=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NxO2Clcd; arc=none smtp.client-ip=209.85.128.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yw1-f179.google.com with SMTP id 00721157ae682-78a835353e4so25730397b3.2
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 20:24:14 -0800 (PST)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NxO2Clcd"
+Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-78aa49cde3dso24742837b3.1
+        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 22:13:56 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1764396836; x=1765001636; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=N/UJt7KBJ78Mnxz1RizQ8Qtf5SW/riBLR0h+pKcbRfs=;
+        b=NxO2ClcdrMKfD/5iLSij1Y9yJIb2rmZWcce2QC/nUBdZlfv35FT4hcyiNA2KsDYjCR
+         VFYwe2sPsjO5tjl9R8I4TTNgRDvsItxmKjG5LbqIhnlGLxcdHop5bX3d+XZqWuKN7IS6
+         epO9lnKaDf+z2/CrhMDXWzD2N0zMp0JaNwnzLLgeFMwViRbY6JU0mBi8QGySAwq/5ID8
+         YYa8JwFTQEa2lcMDI4VLFCkNnO7GNBDOtqcYy5wct3kBYu6N3oUdvFxRxmpfG36K6eqC
+         FN7nuJCAGIplQWC4YB3xvaRccqCRilERqu1F6z93IU+cmm9rZFIlAqsN3O1/a6xZZBS0
+         k26g==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764390254; x=1764995054;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=nn6jsh1bpVDmqtk/NIx+mMCz1c5oxMsCpAGmjg9X0rE=;
-        b=oyiixmiFztO++Qv+hh1pdhUJm3jMJ7RfEXSnUW76Dbxdb94M2rSehGaeYcHIEtx0A7
-         5GnXcdihVBAw58nzB7+ihe+bU7VylLqlhT2Cbg6EulB2h7GMNlAwhPy7scjhuz74JBS7
-         rW3m01/SZluN6+SOOMne1V61ogG7ctO0pQZwimh+HeWAiGk6GkBH/PZdbvuvrX0FblDq
-         0Zd2N4CO4MDqk8wCgtVNTo4r5OXbrAgdPyA4PxvKWcn83ZIfJ31zhnT1iTckCrJKwI71
-         EzqLFldFx4oKj/ssJJsEzTZhjkNMt49PiuytkQtXXVAw3xUvAvbNJpAODMWbKnRUL63M
-         Nm8w==
-X-Forwarded-Encrypted: i=1; AJvYcCUBK3z0vd7eXVsqcwTBdbOrtNFgTjyqk6niadRPl+y4LScrIeKKfAbLM6AsCIYg0LCTW0DjwlwjU0fg@vger.kernel.org
-X-Gm-Message-State: AOJu0YxBrtreWbBvzdWKECiXYnp9J/SWoSJQSkFa3/8PiAj7gpulADLY
-	NHF0r+1l/Wl5LsuD3qhqrysM6RAlZgWYx2AJ9Uzd3iEWUozs+/gEwT5Zdthhag==
-X-Gm-Gg: ASbGncsfYcnq/iSRSyA7deWOZH8JcJQRHzaAnyNswspmXdZb2h9rszFv/9/taVbAgqB
-	MhErCrE+lve5hfhhygbsGnNewVv7ZiMvKMTloEVlCi6NRdjVAvC0PYwf6Fw7wPRu1Vq+NNdGvLV
-	u6V+Eg047FLs0X/x3OyMmh2svB83rbvV4XgYldJq4pjXmVuddYQ9PTeYg72lHDAyHqt1i9MqFDi
-	KFYIe4wVAKXO8AV9ndfpvFTuu+eOeaydE/KGxRkTxdXp51+AQhGosmE6GnXTM0iQR/TD5h7PozA
-	2aKA4d4VrVTtppoOk0rDbVs8qY0BZ8gmB5GJ/+sq94yrBE5KLryfLDq48S8+Ty5tKLXAjxj4reu
-	pA6zoGWDFWUAaB1TcEeF1BU8T9rRytwcIzjuREWBAbJ/NmyK+++I9/BjUSx2AqP7kQemq40vOo4
-	2xYPn8Ljy+P1Q87PLrY60SK1BaqdQ46UaWrhRZpZwwYraLADHgg+Ir
-X-Google-Smtp-Source: AGHT+IEc6vhoAtjrSOsCfNZUQ3akeHtCVPdDemy0MUcQzenAV9O7HFGH+gHbYuGf+S/KShHUuCWMDQ==
-X-Received: by 2002:a05:690c:4989:b0:788:1cde:cac0 with SMTP id 00721157ae682-78a8b479b3emr247320907b3.1.1764390253710;
-        Fri, 28 Nov 2025 20:24:13 -0800 (PST)
-Received: from mail-yx1-f42.google.com (mail-yx1-f42.google.com. [74.125.224.42])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-78ad0d4179csm21957567b3.11.2025.11.28.20.24.13
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Fri, 28 Nov 2025 20:24:13 -0800 (PST)
-Received: by mail-yx1-f42.google.com with SMTP id 956f58d0204a3-63fc6115d65so1999442d50.0
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 20:24:13 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCXr5JGp+vemGsDMfMbrlVJLB44BZh0bWZU1MAbwM60raOybj8WcPbejrUql/KOdbVjjDSsINwLfLUQ/@vger.kernel.org
-X-Received: by 2002:a05:690c:61c3:b0:78a:8251:8476 with SMTP id
- 00721157ae682-78a8b4953f2mr269176467b3.24.1764390253181; Fri, 28 Nov 2025
- 20:24:13 -0800 (PST)
+        d=1e100.net; s=20230601; t=1764396836; x=1765001636;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=N/UJt7KBJ78Mnxz1RizQ8Qtf5SW/riBLR0h+pKcbRfs=;
+        b=AltPgysPS6hipJZuzi2pT7ubTHyCWdZ4geqQV/WXip298igImezLG/jZxGcuGv/RN8
+         Kk31CZDextQgFtPpFS0Fdh5NmdNb3GBO0oVUq9N36jAGhuM2YlnbElpULEZcIIpeiRhy
+         XYwOdt4oetQat1DtjqCYMcXIc8ABhHESRqpL6WopP8zy/egBRCaKQ6dMxY5FYLMOugzD
+         Hhe0navAe2qRk3fnsTwiQWL/7d2tBdgT8mg48haYS96QmxEdyuzR+6oNd3lMhJNQKzHu
+         h83sillZSUU91jWRALOfac2ImuZ8uSzEWgZs5AMikmN5XR8jLUXcsVi98KGwTVKU0mbR
+         +LDA==
+X-Forwarded-Encrypted: i=1; AJvYcCV4QZxLJMtsI2KqjLZ8gBveevWmBFyKA8RdS3ZjAIyRahw896N/lXsKAQeFCo3wSQDUSGS/koj/Dp/F@vger.kernel.org
+X-Gm-Message-State: AOJu0YwXgvspm8Rdf0HuO6zFo2A5AyyfWji0UvraGjsh+N9UvMPqEh2f
+	JTKAQwCEw796FnF7oqNA4lrfJXLTJ4yWfLauulGFNGzp6AQFIFYuZ2sEm4oKzhUS
+X-Gm-Gg: ASbGncszYUOXQjjx4u1zRNiQHsr4OWroFtTwg6eR8034fMlpGr8zTxVHxDL6WyScF4x
+	5wGrVEODJNyXsj92SMpOdiMQ9Tiq0RVtB1gWyPVn0DQGys4wFurnc2MIcNoUAoPaYK+Gx2F77Lz
+	uXJPOjn0R4U3L1PbR2UxpQTQroCqf0jNRryzfUrl+f0M91Ysm0QwdKFN35Qg0FITpjval1BlRyV
+	xUHGHn3G5IiYcGCqnNkXC/Ii5Y0cLMZOhsqPs6hA+7jPNZ2GpxiSbX2wwGt/dchAcTBu5E2noKU
+	hEKTUqwFZWwbIVeTnNv991mSWP3usc+FKPet2gPN+AQhdNKEP4GA+1NsPqaB67ETpkKXv+mV2GT
+	eJB0zF6n3Z4YHSmtxSoLD1hoBYLIu4M9fMcWZD52sdNBGGFo0phqdLX4K5GAxeNDDK4w7QdAIAz
+	0yWbB+zvli+GlBEUIGxEJp+A==
+X-Google-Smtp-Source: AGHT+IFeF+7rAVCyTdCqnPau2+6bWuKd1NEEo09WhTMmfCMc6rDM7pGr6ebydVzsV1AqdYdGXGeuug==
+X-Received: by 2002:a05:690c:6282:b0:787:f72d:2a5d with SMTP id 00721157ae682-78a8b478e4bmr242685997b3.2.1764396835616;
+        Fri, 28 Nov 2025 22:13:55 -0800 (PST)
+Received: from archie.me ([210.87.74.117])
+        by smtp.gmail.com with ESMTPSA id 00721157ae682-78ad1045723sm22503807b3.55.2025.11.28.22.13.52
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Fri, 28 Nov 2025 22:13:53 -0800 (PST)
+Received: by archie.me (Postfix, from userid 1000)
+	id 10A90420A78D; Sat, 29 Nov 2025 13:13:48 +0700 (WIB)
+Date: Sat, 29 Nov 2025 13:13:48 +0700
+From: Bagas Sanjaya <bagasdotme@gmail.com>
+To: Max Nikulin <manikulin@gmail.com>, Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-scsi@vger.kernel.org
+Subject: Re: [PATCH] docs: admin: devices: /dev/sr<N> for SCSI CD-ROM
+Message-ID: <aSqPHMSgtHN7ty8-@archie.me>
+References: <a221275c-53af-459d-97ed-05a0766adb04@gmail.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <CAEQ9gE=Yo71Aji02a5uGdv7uZ+fJcCa1TKAEZskdM_-VZedTqQ@mail.gmail.com>
- <cb777f15-1017-4183-91a8-b7e968d0df9c@acm.org>
-In-Reply-To: <cb777f15-1017-4183-91a8-b7e968d0df9c@acm.org>
-From: Roger Shimizu <rosh@debian.org>
-Date: Fri, 28 Nov 2025 20:24:02 -0800
-X-Gmail-Original-Message-ID: <CAEQ9gEnYYBEHMFczvcx4mggOM5ydjsQeMRaBd3gQnjisJtXE6A@mail.gmail.com>
-X-Gm-Features: AWmQ_bl0nAXwowbEB-c9sP8HCaOH34_OsmMyuH8qM-e1WZaJrV9P4OX5byzVG1s
-Message-ID: <CAEQ9gEnYYBEHMFczvcx4mggOM5ydjsQeMRaBd3gQnjisJtXE6A@mail.gmail.com>
-Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved request
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: mani@kernel.org, James.Bottomley@hansenpartnership.com, 
-	adrian.hunter@intel.com, avri.altman@sandisk.com, beanhuo@micron.com, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, linux-scsi@vger.kernel.org, 
-	martin.petersen@oracle.com, peter.wang@mediatek.com, quic_nguyenb@quicinc.com, 
-	Hongyang Zhao <hongyang.zhao@thundersoft.com>
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="2DTQ2HgverAOqLYq"
+Content-Disposition: inline
+In-Reply-To: <a221275c-53af-459d-97ed-05a0766adb04@gmail.com>
+
+
+--2DTQ2HgverAOqLYq
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Fri, Nov 28, 2025 at 6:44=E2=80=AFPM Bart Van Assche <bvanassche@acm.org=
-> wrote:
->
-> On 11/28/25 12:12 AM, Roger Shimizu wrote:
-> > While testing Rubik Pi 3 [2], I found the above UFS issue, too.
-> > for next-20251121, I used the revert cmd below to workaround:
-> > $ git revert 7ff1cca -m 1
-> >
-> > for next-20251128, I used cmd below, and there's a conflict to resolve.
-> > $ git revert f10ce81 -m 1
->
-> Does your kernel tree include this patch:
-> https://lore.kernel.org/linux-scsi/20251114193406.3097237-1-bvanassche@ac=
-m.org/?
+On Sat, Nov 29, 2025 at 12:12:32AM +0700, Max Nikulin wrote:
+> +Usage of ``/dev/scd?`` as alternate SCSI CD-ROM names for ``sr?`` devices
+> +ended around year 2011.
 
-Yes, both "next-20251121" and "next-20251128" already included the
-patch mentioned.
-And "next-20251128" is the latest from AFAIK.
+What about "Support for /dev/scd? as alternative names for /dev/sr? has been
+removed in 2011"?
 
-> If not, please try a more recent for-next
-> kernel. If your kernel tree includes that patch, please share the
-> kernel log.
+Thanks.=20
 
-You can find the serial log here: https://people.debian.org/~rosh/next-2025=
-1128/
-* serial_6.18.0-rc7-next-20251128.txt: boot stuck.
-* serial_6.18.0-rc7-next-20251128_revert-c1ec7dc.txt: reverted
-[c1ec7dc], so boot OK.
+--=20
+An old man doll... just what I always wanted! - Clara
 
-Thank you!
--Roger
+--2DTQ2HgverAOqLYq
+Content-Type: application/pgp-signature; name=signature.asc
 
->
-> Thanks,
->
-> Bart.
+-----BEGIN PGP SIGNATURE-----
+
+iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCaSqPFwAKCRD2uYlJVVFO
+o6PUAQDqxcd/JKBpxfZ6OYZrxEtxybPvLxaJauhOI2xuxqhk8gD/bl1UUTyMQcHD
+OdR++u0nCqcGS37b5CQ4LkiHLrDhzgY=
+=609j
+-----END PGP SIGNATURE-----
+
+--2DTQ2HgverAOqLYq--
