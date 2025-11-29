@@ -1,33 +1,68 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-lj1-f172.google.com (mail-lj1-f172.google.com [209.85.208.172])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 3909C1A073F;
-	Sat, 29 Nov 2025 14:32:40 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BB0C21DE8BF
+	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2025 15:01:46 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764426761; cv=none; b=sh2fNSWTZW3KhZG1r4Wvb9GBfFBrg3Iea1LOMTk8iDd9jbNJneJ0uUnDqR+vww/vM+nFxeKbIK8CDEqCxRfjkqZ169cAz10zhHfZg3tqpjC6lJukmZk5K7P9IBkl0p31+NZCqLVtM7Lr+POm2IfuyUf7bcMqN4DGLWjxKqsj4bc=
+	t=1764428508; cv=none; b=MngUqv6uzFIcHQYaW8gAXJ+lF4xB/KLnP8nuv+ft/UQTJ8FuhMWI/fMz7Hw666z8ASAN4j3sYVvPhmpFa5art0QZeHWvw5lNWAh4NZAoc9P6MSBGIY80h6qXzb8qSgxpClvZvpSECcs0a5b/vUb+bkZVMMH32V4ekdlK9WqqSTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764426761; c=relaxed/simple;
-	bh=cFAC6QvAOPZT3CRPWG19TRi/7+EuAMeQCu0XGL2Q+j4=;
+	s=arc-20240116; t=1764428508; c=relaxed/simple;
+	bh=S82F1K7S3wq+wEZwqZYNaKQ6Z90pqwCr0/1QZlEP1+0=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=Ijle51p7Ws1cn5ril1ho1lkArNxuy2gXHxSAHNVrSjIgbk6sz6CVIZA7KlSiWP9EwBaDHOlGx+YVgWpSIFAiw38ddPP1Vb5K/SqRzkgpW4gIBtqgnP2EZZWSj8vXVZZ2TfB8Wtyf/lkpNd8vJDPlrWfOC/bLvrEFie+MKqMJFYg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=sI8nj46N; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=RSWCJvJUWaKiOjPGs66wq7kyLHODW38TjYZ/L9meX2/hiR7x1unLV0X4x03YwIxWcFgj8mtwjSugDLuXAilB0vFDTDY189ZR0YI+EOYXB7vtQE49w01PHgtHZyIew11JxUuqJwW2eqPcIWjapfoJkETXGxwClTOYIBgJi3Rt98g=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=HHuzSgkN; arc=none smtp.client-ip=209.85.208.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="sI8nj46N"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id BB3B6C4CEF7;
-	Sat, 29 Nov 2025 14:32:37 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764426760;
-	bh=cFAC6QvAOPZT3CRPWG19TRi/7+EuAMeQCu0XGL2Q+j4=;
-	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=sI8nj46NuVY72OsGYGu9PFnJIHyVvzIwUjg1tA+mSgKbJQsJZn5N7cpEGQPOt0ZK0
-	 8FtUptkMJyAfNFSV36izwaV6j75A8CK0mWecVDppEZND5KvEBBw56YTz2s9fFsSi7Q
-	 0iOJVSO7dwajqrhlm7JJZIdX7pjhcVeYDw5y8KhSOjiVVImgwwrNl049KSzo354EZ8
-	 eEoCPMjiXxP6tvD9AdjQszh38jTdQSoijG9XVEZkduABJG2yuTjPwOKUnviFcHptL/
-	 ssRC6gQzz+c3yw2C2vK2H/DApYVCxFImkrgMN+5x5AHCSOhJjUyzC+NbC48I35b7QA
-	 YTr1TbT/Et6Bg==
-Message-ID: <89bdc184-363c-4d14-bad6-dd4ab65b80d9@kernel.org>
-Date: Sat, 29 Nov 2025 15:32:35 +0100
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="HHuzSgkN"
+Received: by mail-lj1-f172.google.com with SMTP id 38308e7fff4ca-37bac34346dso18809401fa.2
+        for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2025 07:01:46 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1764428505; x=1765033305; darn=vger.kernel.org;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :sender:from:to:cc:subject:date:message-id:reply-to;
+        bh=2DyIri4gHptV5hDHgdSaKb6KWPh3tki3cdXW1D5aCBI=;
+        b=HHuzSgkNo8bCdB83l/XSrNqWuUvM2pvRHnQ1s6d1V/YSOOmrTXGZA5L6rYgiyZmYP4
+         uWF7/dcj8afw9Fs15l8jzDbcy2zTq2HKY1GNlok4HRSM54eK5N7pxgXq1WYlPHBll3p9
+         1GWTlrITo3tSJfVkDtJSMp/JKRNxpCVB9TognclaIKG1r1EsVL0hNWR73B4l1DWqAhUu
+         vtU3zK1TT2yD3e2iIBoXlTkDHJeRNsK+kmAkEYKAAtxVvHrW4UZ0+nHpW81TLk6DcQoL
+         C+RHImekTlrHfeR0P2X8lFgVJk7z0cmYrj1qHpoguoU+aSQa4j/mL6ykQ3XZpH3V2qLV
+         mZrQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764428505; x=1765033305;
+        h=content-transfer-encoding:in-reply-to:from:content-language
+         :references:cc:to:subject:user-agent:mime-version:date:message-id
+         :sender:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2DyIri4gHptV5hDHgdSaKb6KWPh3tki3cdXW1D5aCBI=;
+        b=PxnVdaI+hAH1y70cpfGrZjSRobL+ydHv4/UYecCfZKbZgCI8rGbQDbU4Qjzi1Dqq/q
+         nZt6fUfqbCj6abOdMwNhCFV+1fVQRMqKRVj7aK3c/hDFrHaFssW3lsFFvQ//hzIU/LeA
+         FCxaK8NiNaE0vliWEzPRfT6m7InaZ3ZM35GTj+svSkDw/qDTloqisoWRZM1yHOX8L4eb
+         MtPgUBmtLlipGEi/2t8kHntgT/03G44CU6t9+7Tug/NCqE+e9/gUZg0ppCgSH+ydzp+F
+         pZiA+c2IBUQRA9ZQ42VZerFs3InmowXLF7SZIJVEiBxxQLZfhJCKlN/Bj11of09Xv5bs
+         3pkw==
+X-Forwarded-Encrypted: i=1; AJvYcCXZkyhhBD3vTf6Sh6jSen3O/33PsitbrkK7IBh3DmS/6ltpkDXe/hzeooJgtmOD/a7LEHfqESQWDS9J@vger.kernel.org
+X-Gm-Message-State: AOJu0YxFVHhOwKOchGDxjoMTPXbO3jtu4bhgf0I54QpCv5EgPjhYtKlW
+	BBn6Zv6sCGPT60h4fzSEapGn7/D2yLuB76Gie0U39PG69PA3j+iQ9WFH
+X-Gm-Gg: ASbGncsJ9Y/VTgzkQJIw/FSgMI7ZXwrB9PqruIn3r5IbXUVew9sYbrOUuiTYZiL0h3i
+	mqmUb8P3jjpv+Y76SWEioKolQTFEi16U5PDPJpCpVlF660Lnm6DgdbcyAF8Sc9Y9Qx2SdnNVxBc
+	sM8lFOaV2rpvqSdKqLG4z/I+wJlxTvABMw4JV6uJ0K3pZFc0NryMZ7r8e1K6BSmckFV1onfcpQb
+	lHgLva8QM6dSKP7N1zzoFjvnnyHPubTp/qakh+4Hv25bFQbw9XnLuvnCSdd4Y2lj2L5cTR5bwIq
+	kfn/pP7TdSE4xD02ureU0FjfwzsqJ55iRov31wOl55kCzAOyQvtzXPq81zzoawJ81S/x1VyaC4J
+	Cqj3YVZ4TiRNZv4DwC2ZI52xsbV5Zuh/CPIoz99jczZvg4LXsA7Z2oILp4aHKPdhnK7gnm0+0aL
+	ymyg/8XeshrR0dMLKsW+62dhBdCftZTbQuh5I1aUySVjMj
+X-Google-Smtp-Source: AGHT+IEYMiFXC3v2TmshLvb59zyfSm9LpspO+/OfzyuqNLM4yBmG5ZGE/1yqj4SZxSsPzD0yHRxSmg==
+X-Received: by 2002:a05:651c:2148:b0:369:55f3:57f with SMTP id 38308e7fff4ca-37cd92cd20amr61236061fa.35.1764428504526;
+        Sat, 29 Nov 2025 07:01:44 -0800 (PST)
+Received: from [192.168.1.149] (nat-0-0.nsk.sibset.net. [5.44.169.188])
+        by smtp.googlemail.com with ESMTPSA id 38308e7fff4ca-37d2369067bsm17074441fa.9.2025.11.29.07.01.42
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sat, 29 Nov 2025 07:01:44 -0800 (PST)
+Sender: Maxim Nikulin <m.a.nikulin@gmail.com>
+Message-ID: <c5bb2474-b66d-47e5-b392-b12c4db979df@gmail.com>
+Date: Sat, 29 Nov 2025 22:01:41 +0700
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -35,92 +70,46 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH 3/4] block: add IOC_PR_READ_KEYS ioctl
-To: Hannes Reinecke <hare@suse.de>, Stefan Hajnoczi <stefanha@redhat.com>,
- linux-block@vger.kernel.org
-Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
- linux-kernel@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
- Mike Christie <michael.christie@oracle.com>, Jens Axboe <axboe@kernel.dk>,
- linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
- Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org,
- Christoph Hellwig <hch@lst.de>
-References: <20251126163600.583036-1-stefanha@redhat.com>
- <20251126163600.583036-4-stefanha@redhat.com>
- <cfd7cace-563b-4fcb-9415-72ac0eb3e811@suse.de>
-From: Krzysztof Kozlowski <krzk@kernel.org>
-Content-Language: en-US
-Autocrypt: addr=krzk@kernel.org; keydata=
- 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 a/A=
-In-Reply-To: <cfd7cace-563b-4fcb-9415-72ac0eb3e811@suse.de>
-Content-Type: text/plain; charset=UTF-8
+Subject: Re: [PATCH] docs: admin: devices: /dev/sr<N> for SCSI CD-ROM
+To: Bagas Sanjaya <bagasdotme@gmail.com>, Jonathan Corbet <corbet@lwn.net>
+Cc: linux-doc@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
+References: <a221275c-53af-459d-97ed-05a0766adb04@gmail.com>
+ <aSqPHMSgtHN7ty8-@archie.me>
+Content-Language: en-US, ru-RU
+From: Max Nikulin <manikulin@gmail.com>
+In-Reply-To: <aSqPHMSgtHN7ty8-@archie.me>
+Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 27/11/2025 08:07, Hannes Reinecke wrote:
+On 29/11/2025 13:13, Bagas Sanjaya wrote:
+> On Sat, Nov 29, 2025 at 12:12:32AM +0700, Max Nikulin wrote:
+>> +Usage of ``/dev/scd?`` as alternate SCSI CD-ROM names for ``sr?`` devices
+>> +ended around year 2011.
 > 
->> +	size_t keys_info_len = struct_size(keys_info, keys, inout.num_keys);
->> +
->> +	keys_info = kzalloc(keys_info_len, GFP_KERNEL);
->> +	if (!keys_info)
->> +		return -ENOMEM;
->> +
->> +	keys_info->num_keys = inout.num_keys;
->> +
->> +	ret = ops->pr_read_keys(bdev, keys_info);
->> +	if (ret)
->> +		return ret;
->> +
->> +	/* Copy out individual keys */
->> +	u64 __user *keys_ptr = u64_to_user_ptr(inout.keys_ptr);
->> +	u32 num_copy_keys = min(inout.num_keys, keys_info->num_keys);
->> +	size_t keys_copy_len = num_copy_keys * sizeof(keys_info->keys[0]);
-> 
-> We just had the discussion about variable declarations on the ksummit 
-> lists; I really would prefer to have all declarations at the start of 
-> the scope (read: at the start of the function here).
+> What about "Support for /dev/scd? as alternative names for /dev/sr? has been
+> removed in 2011"?
 
-Then also cleanup.h should not be used here.
+If others support your suggestion then I do not mind. Feel free to 
+commit preferred variant ignoring my patch.
 
-Best regards,
-Krzysztof
+I would be more verbose however by adding that it was removed namely 
+from udev:
+
+Creation of ``/dev/scd?`` alternative names for ``sr?`` CD-ROM and other 
+optical drives (using SCSI commands) was removed in ``udev-174`` 
+(released in 2011).
+
+Perhaps I am biased by my confusion. Noticed that wodim tries to access 
+currently absent /dev/scd0 for kernels >= X.6, I tried git blame game in 
+kernel repository to find kernel version when scd<N> were renamed to 
+sr<N>. It took some time for me to realize that it is impossible to 
+determine scd vs. sr from kernel version. That is why I would consider 
+adding explicit mention of udev. Otherwise for me it sounds like that 
+scd? names were removed from kernel. I am not a native English speaker, 
+so I do not insist on my variant.
+
+How long I should wait for comments before submitting another revision 
+of the patch? I hope, pending changes are not an obstacle for those who 
+are tempting to review the whole devices.rst file.
