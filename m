@@ -1,113 +1,139 @@
-Received: from mail-yw1-f181.google.com (mail-yw1-f181.google.com [209.85.128.181])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id A93901A0BF3
-	for <linux-scsi@vger.kernel.org>; Sat, 29 Nov 2025 06:13:56 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.181
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5C9A2262FC1;
+	Sat, 29 Nov 2025 14:31:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764396838; cv=none; b=L0f15WgheUjVKpPA7747U7/ci+/MyKXGTypSXtj5djX6V8P1lJa0t2aJsQcLlcIurkGI3Dvzw2vKnh9oGUupJWTklhufGmmm031kuDtjcVgBzvMI+g/1WzQKgCl3PXlVcWzwUGo3TVYm/NjDCgQfkgoRX11T+kF3dY7ZTlOAcYM=
+	t=1764426717; cv=none; b=qApaM9Ow9o/FnFsJQS8FvGKytewRmmKtUd1I919DFWdVRakXV1P5UJZDc+1d6PY8gQl+hLHo6Ymi69Ww0tkbweUa5jvYIXR18GGLHeKwYOkB7Dg+VzavUnjBHCl+QfxW2hYhbyoQQPf/BnHs7ksaHkUD14X9edW9XYjApSfWoTQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764396838; c=relaxed/simple;
-	bh=N/UJt7KBJ78Mnxz1RizQ8Qtf5SW/riBLR0h+pKcbRfs=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=StX14bBOUSkRZZ4X2EEEt3qiPJcyJvP9OBZax18uzUlC7hUUFEh3No6reMU8WitGeQKJgpXstcQFXlhHLpi9Q+ItMa15gUrAvuqhC0LdzB5ujwmtw7xZbtF2wPuXA1R5aJAsdCUvLGEI8bfpMp9y8h7+115JjHOp5z+K2Pa+Vio=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=NxO2Clcd; arc=none smtp.client-ip=209.85.128.181
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1764426717; c=relaxed/simple;
+	bh=b9WvgFAubhzEgsS0DvAfHxvKsNmcEmEcmJNVo2OtCOw=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=DvfLfVvzMh0SzyJKlW7710dzIdBo4qfrVKxUjdKM+FK74s4H6kLYwBHDMvwVd+JOFHwj5XZhpG1cUx2iYAOKVrrK49kRD+QnnZCDVPKlaXxZDQFCVscRxGVjWrqsMPiAHNzmHBnIAmH0hmQmLM12K0QmxPOS23Y1cb8S8TJkQno=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BZQd7Dh8; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="NxO2Clcd"
-Received: by mail-yw1-f181.google.com with SMTP id 00721157ae682-78aa49cde3dso24742837b3.1
-        for <linux-scsi@vger.kernel.org>; Fri, 28 Nov 2025 22:13:56 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764396836; x=1765001636; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=N/UJt7KBJ78Mnxz1RizQ8Qtf5SW/riBLR0h+pKcbRfs=;
-        b=NxO2ClcdrMKfD/5iLSij1Y9yJIb2rmZWcce2QC/nUBdZlfv35FT4hcyiNA2KsDYjCR
-         VFYwe2sPsjO5tjl9R8I4TTNgRDvsItxmKjG5LbqIhnlGLxcdHop5bX3d+XZqWuKN7IS6
-         epO9lnKaDf+z2/CrhMDXWzD2N0zMp0JaNwnzLLgeFMwViRbY6JU0mBi8QGySAwq/5ID8
-         YYa8JwFTQEa2lcMDI4VLFCkNnO7GNBDOtqcYy5wct3kBYu6N3oUdvFxRxmpfG36K6eqC
-         FN7nuJCAGIplQWC4YB3xvaRccqCRilERqu1F6z93IU+cmm9rZFIlAqsN3O1/a6xZZBS0
-         k26g==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764396836; x=1765001636;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=N/UJt7KBJ78Mnxz1RizQ8Qtf5SW/riBLR0h+pKcbRfs=;
-        b=AltPgysPS6hipJZuzi2pT7ubTHyCWdZ4geqQV/WXip298igImezLG/jZxGcuGv/RN8
-         Kk31CZDextQgFtPpFS0Fdh5NmdNb3GBO0oVUq9N36jAGhuM2YlnbElpULEZcIIpeiRhy
-         XYwOdt4oetQat1DtjqCYMcXIc8ABhHESRqpL6WopP8zy/egBRCaKQ6dMxY5FYLMOugzD
-         Hhe0navAe2qRk3fnsTwiQWL/7d2tBdgT8mg48haYS96QmxEdyuzR+6oNd3lMhJNQKzHu
-         h83sillZSUU91jWRALOfac2ImuZ8uSzEWgZs5AMikmN5XR8jLUXcsVi98KGwTVKU0mbR
-         +LDA==
-X-Forwarded-Encrypted: i=1; AJvYcCV4QZxLJMtsI2KqjLZ8gBveevWmBFyKA8RdS3ZjAIyRahw896N/lXsKAQeFCo3wSQDUSGS/koj/Dp/F@vger.kernel.org
-X-Gm-Message-State: AOJu0YwXgvspm8Rdf0HuO6zFo2A5AyyfWji0UvraGjsh+N9UvMPqEh2f
-	JTKAQwCEw796FnF7oqNA4lrfJXLTJ4yWfLauulGFNGzp6AQFIFYuZ2sEm4oKzhUS
-X-Gm-Gg: ASbGncszYUOXQjjx4u1zRNiQHsr4OWroFtTwg6eR8034fMlpGr8zTxVHxDL6WyScF4x
-	5wGrVEODJNyXsj92SMpOdiMQ9Tiq0RVtB1gWyPVn0DQGys4wFurnc2MIcNoUAoPaYK+Gx2F77Lz
-	uXJPOjn0R4U3L1PbR2UxpQTQroCqf0jNRryzfUrl+f0M91Ysm0QwdKFN35Qg0FITpjval1BlRyV
-	xUHGHn3G5IiYcGCqnNkXC/Ii5Y0cLMZOhsqPs6hA+7jPNZ2GpxiSbX2wwGt/dchAcTBu5E2noKU
-	hEKTUqwFZWwbIVeTnNv991mSWP3usc+FKPet2gPN+AQhdNKEP4GA+1NsPqaB67ETpkKXv+mV2GT
-	eJB0zF6n3Z4YHSmtxSoLD1hoBYLIu4M9fMcWZD52sdNBGGFo0phqdLX4K5GAxeNDDK4w7QdAIAz
-	0yWbB+zvli+GlBEUIGxEJp+A==
-X-Google-Smtp-Source: AGHT+IFeF+7rAVCyTdCqnPau2+6bWuKd1NEEo09WhTMmfCMc6rDM7pGr6ebydVzsV1AqdYdGXGeuug==
-X-Received: by 2002:a05:690c:6282:b0:787:f72d:2a5d with SMTP id 00721157ae682-78a8b478e4bmr242685997b3.2.1764396835616;
-        Fri, 28 Nov 2025 22:13:55 -0800 (PST)
-Received: from archie.me ([210.87.74.117])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-78ad1045723sm22503807b3.55.2025.11.28.22.13.52
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 28 Nov 2025 22:13:53 -0800 (PST)
-Received: by archie.me (Postfix, from userid 1000)
-	id 10A90420A78D; Sat, 29 Nov 2025 13:13:48 +0700 (WIB)
-Date: Sat, 29 Nov 2025 13:13:48 +0700
-From: Bagas Sanjaya <bagasdotme@gmail.com>
-To: Max Nikulin <manikulin@gmail.com>, Jonathan Corbet <corbet@lwn.net>
-Cc: linux-doc@vger.kernel.org,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH] docs: admin: devices: /dev/sr<N> for SCSI CD-ROM
-Message-ID: <aSqPHMSgtHN7ty8-@archie.me>
-References: <a221275c-53af-459d-97ed-05a0766adb04@gmail.com>
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BZQd7Dh8"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 30437C4CEF7;
+	Sat, 29 Nov 2025 14:31:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1764426716;
+	bh=b9WvgFAubhzEgsS0DvAfHxvKsNmcEmEcmJNVo2OtCOw=;
+	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
+	b=BZQd7Dh8bF2OS6cYEGrhzmxXIcbNiT8gpCTAcLhVIAbfZeCtUTciycL5zPRZmot14
+	 0A0baN2tUIbod/XxTzjPDvGpHLxhEUmPu1e2rLwLhpezv8Qo0CIQER+bOwfuO7jZiX
+	 PUJraJXZRLUDp47BHEfBWQtSTja8GI7j/KFz5SUQhPSECKUCJUgfBILMCUrQhZc4zk
+	 tEqn60v7NRbmTPwQrfq6T2C14zDLcONAfm6awFySOCrsfMiUryOL/x1G+Y5gziZjUT
+	 HErr2i1GjGHk5EnaQueBh1rADNmVILMtIbcoEjUTOtDoOPXYWxLE+rtfAUrRmzZUa8
+	 dMB1WBjsvCvZA==
+Message-ID: <84343571-2b89-4fa1-8b52-5b6ff1d33e88@kernel.org>
+Date: Sat, 29 Nov 2025 15:31:52 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="2DTQ2HgverAOqLYq"
-Content-Disposition: inline
-In-Reply-To: <a221275c-53af-459d-97ed-05a0766adb04@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH 3/4] block: add IOC_PR_READ_KEYS ioctl
+To: Stefan Hajnoczi <stefanha@redhat.com>, linux-block@vger.kernel.org
+Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
+ linux-kernel@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ Mike Christie <michael.christie@oracle.com>, Jens Axboe <axboe@kernel.dk>,
+ linux-nvme@lists.infradead.org, Keith Busch <kbusch@kernel.org>,
+ Sagi Grimberg <sagi@grimberg.me>, linux-scsi@vger.kernel.org,
+ Christoph Hellwig <hch@lst.de>
+References: <20251126163600.583036-1-stefanha@redhat.com>
+ <20251126163600.583036-4-stefanha@redhat.com>
+From: Krzysztof Kozlowski <krzk@kernel.org>
+Content-Language: en-US
+Autocrypt: addr=krzk@kernel.org; keydata=
+ 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 a/A=
+In-Reply-To: <20251126163600.583036-4-stefanha@redhat.com>
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 7bit
+
+On 26/11/2025 17:35, Stefan Hajnoczi wrote:
+> +
+>  #define PR_FL_IGNORE_KEY	(1 << 0)	/* ignore existing key */
+>  
+>  #define IOC_PR_REGISTER		_IOW('p', 200, struct pr_registration)
+> @@ -64,5 +70,6 @@ struct pr_clear {
+>  #define IOC_PR_PREEMPT		_IOW('p', 203, struct pr_preempt)
+>  #define IOC_PR_PREEMPT_ABORT	_IOW('p', 204, struct pr_preempt)
+>  #define IOC_PR_CLEAR		_IOW('p', 205, struct pr_clear)
+> +#define IOC_PR_READ_KEYS	_IOWR('p', 206, struct pr_read_keys)
+>  
+>  #endif /* _UAPI_PR_H */
+> diff --git a/block/ioctl.c b/block/ioctl.c
+> index d7489a56b33c3..e87c424c15ae9 100644
+> --- a/block/ioctl.c
+> +++ b/block/ioctl.c
+> @@ -1,5 +1,6 @@
+>  // SPDX-License-Identifier: GPL-2.0
+>  #include <linux/capability.h>
+> +#include <linux/cleanup.h>
+>  #include <linux/compat.h>
+>  #include <linux/blkdev.h>
+>  #include <linux/export.h>
+> @@ -423,6 +424,54 @@ static int blkdev_pr_clear(struct block_device *bdev, blk_mode_t mode,
+>  	return ops->pr_clear(bdev, c.key);
+>  }
+>  
+> +static int blkdev_pr_read_keys(struct block_device *bdev, blk_mode_t mode,
+> +		struct pr_read_keys __user *arg)
+> +{
+> +	const struct pr_ops *ops = bdev->bd_disk->fops->pr_ops;
+> +	struct pr_keys *keys_info __free(kfree) = NULL;
 
 
---2DTQ2HgverAOqLYq
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: quoted-printable
+This is an undesired syntax explicitly documented as one to avoid. You
+need here proper assignment, not NULL. Please don't use cleanup.h if you
+do not intend to follow it because it does not make the code simpler.
 
-On Sat, Nov 29, 2025 at 12:12:32AM +0700, Max Nikulin wrote:
-> +Usage of ``/dev/scd?`` as alternate SCSI CD-ROM names for ``sr?`` devices
-> +ended around year 2011.
 
-What about "Support for /dev/scd? as alternative names for /dev/sr? has been
-removed in 2011"?
 
-Thanks.=20
-
---=20
-An old man doll... just what I always wanted! - Clara
-
---2DTQ2HgverAOqLYq
-Content-Type: application/pgp-signature; name=signature.asc
-
------BEGIN PGP SIGNATURE-----
-
-iHUEABYKAB0WIQSSYQ6Cy7oyFNCHrUH2uYlJVVFOowUCaSqPFwAKCRD2uYlJVVFO
-o6PUAQDqxcd/JKBpxfZ6OYZrxEtxybPvLxaJauhOI2xuxqhk8gD/bl1UUTyMQcHD
-OdR++u0nCqcGS37b5CQ4LkiHLrDhzgY=
-=609j
------END PGP SIGNATURE-----
-
---2DTQ2HgverAOqLYq--
+Best regards,
+Krzysztof
