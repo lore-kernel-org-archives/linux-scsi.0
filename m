@@ -1,138 +1,155 @@
-Received: from mail-ed1-f48.google.com (mail-ed1-f48.google.com [209.85.208.48])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 56E8230BBBD
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Dec 2025 17:29:30 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.48
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5189C21D3F4
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Dec 2025 18:36:35 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764610172; cv=none; b=qassYQ/6YA9mtnfp4o0OSexcJXfVYqd8OYSjEySsSnrhMGv9P5XEInyxD4GrEgAiHPunC+T+TPGlEsZtDIGJy2eqVv3aX94pySgnE9wI/E2+Do6QueDIfUqADihG+hnA7GSf4qKSdMZ+Kv8huYU+7W7+9A7mMaLZYNDGbAVfDCI=
+	t=1764614196; cv=none; b=Mh+QzJucfCgqi6hnzLICCAYTfW4OzK7bfdGJCF+AcbGBu14NLXETSiAQrQwGoZIq6Q2FEg1F9nyLHyNiZXBdzyvy5U5038K1zxiNzk7YH++/fASI4Gp4hCT+TR3pfQbxsYjfsfVPHdxNa+N9O0upw1nd8Q6UQcI/8qopbf4QhTU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764610172; c=relaxed/simple;
-	bh=1XF4sGasc+EhbCDZPiAFKcYYt7VYFXu9HvmmGuhW9Ns=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=ZahX3SePhuO5izTyO/KFMUmdI1DPkYmwbNJOl+f31lnavcYnq7tuCIt5bNXXwzeg7FCkGyoBOcuCAkaOW9JYY1xnCfeMx4ywtfvNcEjjLrafZ0RdkIroO4nQbFFLYhZpP8lMqSZL861zO80WdZRJ1X5v1ZT444R7yKMdINifUl4=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com; spf=pass smtp.mailfrom=soleen.com; dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b=YUDJrZnR; arc=none smtp.client-ip=209.85.208.48
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=soleen.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=soleen.com
+	s=arc-20240116; t=1764614196; c=relaxed/simple;
+	bh=NrH/y+fQnUKXOiPZ55IULiatXMoFSssdpHc9s0BB6uo=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=NiuuBvrFoAiBeWBT/d0Om6K6tt+E8/pLkan2eAPOWz6jFSNYwf+wS3n+Kwm7DQa43WI5jfXv3rEW5L3VZMtdYuLatodfyNQmR/MaVavBm2xa+EHwSgmIU/gUbcUsXHanzzQk52SpjPcY1jPehganLWq2NLqnYSb2HQhdRrAZGFY=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=fkL6gWkI; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=soleen.com header.i=@soleen.com header.b="YUDJrZnR"
-Received: by mail-ed1-f48.google.com with SMTP id 4fb4d7f45d1cf-6417313bddaso7145124a12.3
-        for <linux-scsi@vger.kernel.org>; Mon, 01 Dec 2025 09:29:30 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=soleen.com; s=google; t=1764610169; x=1765214969; darn=vger.kernel.org;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=botBZfS2t5PMgME695nyRVlb/1VmFmEmJKJoWEZMTDE=;
-        b=YUDJrZnR8nlpRqIL+GXF6Z7ur6veEgFvVkDkYNZ40yVvVAlLHUdIVTAc5JfTiMVoz0
-         HebGJZ8UZt5Ry3TA1vum7GB8s7s1I9l7yeWE2SSx5OhdK5d953/QFDZgjhfP2aYOuEjF
-         iL0HHdDgyml8p3Umqkff+sxnTOKCE4VTPRpZAYoLpQlJY2UoxlxZoQ9ztWUdT4m9eEyu
-         m9cwVEQJrmT96bnImAMH2NdNNO97XfhEAOLjSLSSVvZbK6MFpyA9N1TrizPZOooG3sdO
-         Y/yYneGhUPFgj4zhOxoQ9TNwdGUiwpVFk/QpnmOaXJNqyLF2KiycZc9pdpBFBLHAdIXn
-         qEXg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764610169; x=1765214969;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=botBZfS2t5PMgME695nyRVlb/1VmFmEmJKJoWEZMTDE=;
-        b=xMMugfJg1q8c6jgtheL2+zGN0QCfp2rsbsaW032BeB76HAgjPAAh45gSh/JWrfZose
-         49sALdMvHDqBEII9WPYRDnRYXXrXZcAWtQzWIIjggPtLugD0taBtXHnF9BzFAvIR8EOq
-         Z2l5Z7pfFOyV5s7rAS+R4LFljbsjMd+yaXqqdsHazqbxEqE4fasMuSWNG8sZf/QPT4Z0
-         xLuTSJH4ma5wwCr8ZpQJB4vQIf3JLS+sK4EjHh2obKbTrMnSJir2vYp7GL/sD3pDWruj
-         1tRrlZeqT8v2SAm6NhGSG0v7mbyWqx5YdOUEXQg4a/heglRZoLasus8ljDAKoy9nJJKn
-         INPQ==
-X-Forwarded-Encrypted: i=1; AJvYcCXOqqM2KW7F9g4kQkDqiq9fX0wxsBfUncjhXRWR1PIKV5jlCVgBXleHjWPmQKdJ/mmlI8qAXe2SSDiY@vger.kernel.org
-X-Gm-Message-State: AOJu0Yzi8QkvH5xQu+xx5m5PE293Agy6Q0gQycsMxGo8/XxuIvB5kF4u
-	oCPC6Q40DyYJgMfUob6XXgKJ09K3yKQMiVU9fAskIw/caYD/cgrEJ4wF03fady17qUAM9SpUCtA
-	/ko4NYGC4p+mbdQnJ5sa2U+mev0dBejZTXSgmkb9yxQ==
-X-Gm-Gg: ASbGnctbIClMvezDvD7B1hsDP/2DyMoXF55yZT3oK2YaHWL1BJW0n5OSnnkYo/3lqGs
-	TCCzaSk94SNpxXGuH3tbT42ixyQd6QGmxsCjNhYKhMGrifH+E0GcGEOgARxZusamdebiPEh2vnI
-	+VdjVShph/IBQSUvtCXKDNCkI1unkCWKonwJz+w8Ok2qywVpSI9FG5VlNVO6tyu+L2YUalvhUKb
-	6Af+FNt+14mrtfPT6ZzuY1klbn9DhPAqa3dA3NS4b9ykVRoqaPewE2/kv0isgsJYJWc
-X-Google-Smtp-Source: AGHT+IEonAoHpMMw69ILk5izdQTgY0KESHpESPx6NQAkAf0GvWrIYTTNVlFQ6Aj81H47IPobVV7oT60jRjxSMEP5+rA=
-X-Received: by 2002:a05:6402:5253:b0:63b:feb1:3288 with SMTP id
- 4fb4d7f45d1cf-645eb7867d6mr23749098a12.25.1764610168487; Mon, 01 Dec 2025
- 09:29:28 -0800 (PST)
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="fkL6gWkI"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1764614194;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 in-reply-to:in-reply-to:references:references;
+	bh=y68PE+8MIkJ1RsOV+m+uznVl4WPgZ4iLffSkfESDJys=;
+	b=fkL6gWkI0HLLZWwrUTz/In7OCCP8PVR5nElK3arvPew674QTQUHRLcZhWxveA7nvoCyFWk
+	3GEtbOBgEq5u0mR9pW4TJJ4kWbQ9vGgYvDjMBO+HE58RAYJiP6dROmZzjNUQ8UbPTQLJ70
+	02pcdcQ9Qhs5HNsvItxw0fJ3vbzwPz4=
+Received: from mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-167-NAmDLMHrM864mT_0ya8-qw-1; Mon,
+ 01 Dec 2025 13:36:27 -0500
+X-MC-Unique: NAmDLMHrM864mT_0ya8-qw-1
+X-Mimecast-MFC-AGG-ID: NAmDLMHrM864mT_0ya8-qw_1764614185
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-08.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 9170B18002D7;
+	Mon,  1 Dec 2025 18:36:24 +0000 (UTC)
+Received: from localhost (unknown [10.2.16.172])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id A47C4195608E;
+	Mon,  1 Dec 2025 18:36:22 +0000 (UTC)
+Date: Mon, 1 Dec 2025 13:36:21 -0500
+From: Stefan Hajnoczi <stefanha@redhat.com>
+To: Krzysztof Kozlowski <krzk@kernel.org>
+Cc: Hannes Reinecke <hare@suse.de>, linux-block@vger.kernel.org,
+	"Martin K. Petersen" <martin.petersen@oracle.com>,
+	linux-kernel@vger.kernel.org,
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+	Mike Christie <michael.christie@oracle.com>,
+	Jens Axboe <axboe@kernel.dk>, linux-nvme@lists.infradead.org,
+	Keith Busch <kbusch@kernel.org>, Sagi Grimberg <sagi@grimberg.me>,
+	linux-scsi@vger.kernel.org, Christoph Hellwig <hch@lst.de>
+Subject: Re: [PATCH 3/4] block: add IOC_PR_READ_KEYS ioctl
+Message-ID: <20251201183621.GA919572@fedora>
+References: <20251126163600.583036-1-stefanha@redhat.com>
+ <20251126163600.583036-4-stefanha@redhat.com>
+ <cfd7cace-563b-4fcb-9415-72ac0eb3e811@suse.de>
+ <89bdc184-363c-4d14-bad6-dd4ab65b80d9@kernel.org>
+ <20251201150636.GA866564@fedora>
+ <fadbd728-6810-49de-905d-214c2f72a857@kernel.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251121191422.2758555-1-tarunsahu@google.com> <a5066e6e-40ec-4c58-a60d-55510191bf27@fnnas.com>
-In-Reply-To: <a5066e6e-40ec-4c58-a60d-55510191bf27@fnnas.com>
-From: Pasha Tatashin <pasha.tatashin@soleen.com>
-Date: Mon, 1 Dec 2025 12:28:52 -0500
-X-Gm-Features: AWmQ_bl5IvZWjRP7WOEBGs4H1jh4S0Zck379mafFl_drFZmAnSKs7zZ8P9FOUiY
-Message-ID: <CA+CK2bAdR06ZtU7XLjZvyRGG4h_sUqnA+75YqotoPRGcJ7+65w@mail.gmail.com>
-Subject: Re: [RFC PATCH v2] md: remove legacy 1s delay in md_notify_reboot
-To: yukuai@fnnas.com
-Cc: Tarun Sahu <tarunsahu@google.com>, linux-raid@vger.kernel.org, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, song@kernel.org, 
-	berrange@redhat.com, neil@brown.name, hch@lst.de, mclapinski@google.com, 
-	khazhy@google.com
-Content-Type: text/plain; charset="UTF-8"
+Content-Type: multipart/signed; micalg=pgp-sha512;
+	protocol="application/pgp-signature"; boundary="xpXfsTqxKRlXxqC4"
+Content-Disposition: inline
+In-Reply-To: <fadbd728-6810-49de-905d-214c2f72a857@kernel.org>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
+
+
+--xpXfsTqxKRlXxqC4
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Sat, Nov 29, 2025 at 8:58=E2=80=AFPM Yu Kuai <yukuai@fnnas.com> wrote:
->
-> =E5=9C=A8 2025/11/22 3:14, Tarun Sahu =E5=86=99=E9=81=93:
->
-> > During system shutdown, the md driver registered notifier function
-> > (md_notify_reboot) currently imposes a hardcoded one-second delay.
-> >
-> > This delay was introduced approximately 23 years ago and was likely
-> > necessary for the hardware generation of that time. Proposing this
-> > patch to make sure there are no known devices that need this delay.
-> >
-> > Signed-off-by: Tarun Sahu <tarunsahu@google.com>
-> > ---
-> > v2:
-> >       Added linux-scsi mailing list
-> >
-> >   drivers/md/md.c | 11 -----------
-> >   1 file changed, 11 deletions(-)
-> >
-> > diff --git a/drivers/md/md.c b/drivers/md/md.c
-> > index b086cbf24086..66c4d66b4b86 100644
-> > --- a/drivers/md/md.c
-> > +++ b/drivers/md/md.c
-> > @@ -9704,7 +9704,6 @@ static int md_notify_reboot(struct notifier_block=
- *this,
-> >                           unsigned long code, void *x)
-> >   {
-> >       struct mddev *mddev;
-> > -     int need_delay =3D 0;
-> >
-> >       spin_lock(&all_mddevs_lock);
-> >       list_for_each_entry(mddev, &all_mddevs, all_mddevs) {
-> > @@ -9718,21 +9717,11 @@ static int md_notify_reboot(struct notifier_blo=
-ck *this,
-> >                               mddev->safemode =3D 2;
-> >                       mddev_unlock(mddev);
-> >               }
-> > -             need_delay =3D 1;
-> >               spin_lock(&all_mddevs_lock);
-> >               mddev_put_locked(mddev);
-> >       }
-> >       spin_unlock(&all_mddevs_lock);
-> >
-> > -     /*
-> > -      * certain more exotic SCSI devices are known to be
-> > -      * volatile wrt too early system reboots. While the
-> > -      * right place to handle this issue is the given
-> > -      * driver, we do want to have a safe RAID driver ...
-> > -      */
-> > -     if (need_delay)
-> > -             msleep(1000);
-> > -
-> >       return NOTIFY_DONE;
-> >   }
-> >
->
-> Applied to md-6.19
+On Mon, Dec 01, 2025 at 05:26:27PM +0100, Krzysztof Kozlowski wrote:
+> On 01/12/2025 16:06, Stefan Hajnoczi wrote:
+> > On Sat, Nov 29, 2025 at 03:32:35PM +0100, Krzysztof Kozlowski wrote:
+> >> On 27/11/2025 08:07, Hannes Reinecke wrote:
+> >>>
+> >>>> +	size_t keys_info_len =3D struct_size(keys_info, keys, inout.num_ke=
+ys);
+> >>>> +
+> >>>> +	keys_info =3D kzalloc(keys_info_len, GFP_KERNEL);
+> >>>> +	if (!keys_info)
+> >>>> +		return -ENOMEM;
+> >>>> +
+> >>>> +	keys_info->num_keys =3D inout.num_keys;
+> >>>> +
+> >>>> +	ret =3D ops->pr_read_keys(bdev, keys_info);
+> >>>> +	if (ret)
+> >>>> +		return ret;
+> >>>> +
+> >>>> +	/* Copy out individual keys */
+> >>>> +	u64 __user *keys_ptr =3D u64_to_user_ptr(inout.keys_ptr);
+> >>>> +	u32 num_copy_keys =3D min(inout.num_keys, keys_info->num_keys);
+> >>>> +	size_t keys_copy_len =3D num_copy_keys * sizeof(keys_info->keys[0]=
+);
+> >>>
+> >>> We just had the discussion about variable declarations on the ksummit=
+=20
+> >>> lists; I really would prefer to have all declarations at the start of=
+=20
+> >>> the scope (read: at the start of the function here).
+> >>
+> >> Then also cleanup.h should not be used here.
+> >=20
+> > Hi Krzysztof,
+> > The documentation in cleanup.h says:
+> >=20
+> >  * Given that the "__free(...) =3D NULL" pattern for variables defined =
+at
+> >  * the top of the function poses this potential interdependency problem
+> >  * the recommendation is to always define and assign variables in one
+> >        ^^^^^^^^^^^^^^
+> >  * statement and not group variable definitions at the top of the
+> >  * function when __free() is used.
+> >=20
+> > This is a recommendation, not mandatory. It is also describing a
+> > scenario that does not apply here.
+>=20
+> If you have actual argument, so allocation in some if branch, the of cour=
+se.
 
-Awesome, thanks.
+I'm pointing out that the documentation uses the word "recommendation",
+which is usually not considered mandatory but a suggestion.
 
-Pasha
+Please update the documentation to clarify that __free() _must_ be
+assigned the real value (no NULL initialization) so that it's clear this
+is not a suggestion but mandatory.
+
+Stefan
+
+--xpXfsTqxKRlXxqC4
+Content-Type: application/pgp-signature; name=signature.asc
+
+-----BEGIN PGP SIGNATURE-----
+
+iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmkt4CUACgkQnKSrs4Gr
+c8jLDwf/eWxDE5uirmFhIp1judTLNN8oBJ2XAI8bBsjv2vTN64KlNTUqvQt4fsNu
+5DwI6lkNvDuez34Wkg5kLTvQMPUhMJnPHb1s4KD2UvgbBq+dp1jmJ8VfzoglSkyk
+k2CT1CgvgoJmUnhngtldfKqHiu5j6e/2Dx8xyqLF5GUq+OrAn+xog+P3tIRvi5yn
+BuijC0Wd48jO1W0o3xNS9tPVJSchLWTuaO5LCIsKYq6NMGkUQmUpBx64tMCWwVuD
+NYOTP3vEaJxEUlg2Shqx2xNjPLgQX/Yi6uzdDeT/+WwFoT9E8OUD1nlJvLiUKWJ4
+2/Udb13YeFPSBBxBkeaESVyPZbcFOQ==
+=QIpw
+-----END PGP SIGNATURE-----
+
+--xpXfsTqxKRlXxqC4--
+
