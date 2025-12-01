@@ -1,33 +1,33 @@
 Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D6ED319860;
-	Mon,  1 Dec 2025 16:26:32 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9D52F319860;
+	Mon,  1 Dec 2025 16:27:29 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764606392; cv=none; b=KgZZvfCBsXorGk+1hg4BKbeebARrDcgNSTFP/eyrci+mVTq8OJawS/W7SurTh65LnctCMsMh2Rhv4dn1CNOSbvWsik7MrtOa5GN5jK69pYM7VDnALncAt/mveA3ZeXuckrY89u7JYE5/UHXbv09ci1omkR+CZ3YPIfeSOF8tFeE=
+	t=1764606449; cv=none; b=KJ+XCJ5Nwma7sCV+0qkdhjd/5junBtAq47dQg/4mmvrhA3IUXCow8wsgaNQpH1cC59aFmDjfeMSSA1WslVJExddfaJnQkOdYRO+3pBw6Mw7RslUNjiN7lmbmkLgu0C0ov6M0K/I/jx8aCskOZZEZtlHQ7/Ifvx+qceoCIZUYkZU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764606392; c=relaxed/simple;
-	bh=svSOkwWJi2p/kuYLhrjOtrS2/POoZwGwh72SVTyxwQQ=;
+	s=arc-20240116; t=1764606449; c=relaxed/simple;
+	bh=LV4hBHr7fsw54iTPCFyoYsVQDd4nhWpRhydi4Nc2LNI=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=hKTnX5izPvJrA4Xu+2US1/xY6RYiJ1OMHDsg1VlHq8Ug7UFiD3S6ntl7MmKd62zFntURZp3RV+N7gec/4ensM5sknTeoKfGAoWNOiUAP8UQWtEQt0U9wQmCNENaHYeh1tq3xAKx06Xu1ncAbn1NNnA0SA/Cx18i3QsYO2DX0leE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=BHfJk4W/; arc=none smtp.client-ip=10.30.226.201
+	 In-Reply-To:Content-Type; b=Kyw0qY29WXkWvpfZEpHjxz+05X47geDHz3thgDDV3HOazXRd47ODCf2BcSXPtXeuawivQY8P+Xbs5VvI5fTYSl2pKqK+wlQ7c3y43xFL9P5DiLXvd7RJdAbqVGfpyOt202ek7NvxDHRM4EVUpkRT1Vu+hpWzzhfWmB4Yp2tFfyo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=Mhk1L55G; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="BHfJk4W/"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 0B873C4CEF1;
-	Mon,  1 Dec 2025 16:26:28 +0000 (UTC)
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="Mhk1L55G"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id 43A56C4CEF1;
+	Mon,  1 Dec 2025 16:27:26 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764606392;
-	bh=svSOkwWJi2p/kuYLhrjOtrS2/POoZwGwh72SVTyxwQQ=;
+	s=k20201202; t=1764606449;
+	bh=LV4hBHr7fsw54iTPCFyoYsVQDd4nhWpRhydi4Nc2LNI=;
 	h=Date:Subject:To:Cc:References:From:In-Reply-To:From;
-	b=BHfJk4W/+KnkpPfeGZMWdd8R/Dzodczxx2SHaCE9vV+ZAwtDiePAUW4CRgmIHSWSs
-	 V1BlAk8JGxCUaeVE4ednVBYmH6sUNvy9zyqhw5RGrCdasFqu6Xgd0nYVl0OkshTcue
-	 nbD/4xAA66n2F9NletrJ0gwae6nnSUqfKtH3wLgKggxtBSlpx60rdMPYYlEqb/VKYz
-	 UlI8VxQJwU58cGpV/ayQvCc5bZlRkXV4ha15TXy279x0BGoGncZI8sCOwkC9NgG4Xp
-	 CdHFuLI8cbm9u/CIypG/HBrD15DdQsq9GdSx3HYKFsFKyKGr54B02wubvooOVC3BFy
-	 tdBGTfNW4gxCQ==
-Message-ID: <fadbd728-6810-49de-905d-214c2f72a857@kernel.org>
-Date: Mon, 1 Dec 2025 17:26:27 +0100
+	b=Mhk1L55GPvbQG+iqngfQVjWf6N9h9T03+OR7YaJJjhn00bizI57AHfjWJ2vabKMmy
+	 UhnpGpd5xRuWf+fuucMPwQBKHmKgRJNYiqMwizvFit4WhxusnaR5851zjgl6b2kL7G
+	 /RDPigopoq8ZrcJyNYT3SoWIUeWM0Nq19YTlbSbrV1h+c2kS9MMxs6OGID+bomuuIj
+	 y0O8+34EEPn6r3mN/6DeNtmY6GSnOmJ4DPL1/1XkdCeK0ovOqw0MWWCkr4XeLTIJPP
+	 p4s3UE4kr/peLTUGop9tBVpO9MRiISK/Rf0AQs8fUpZWGw/7rQXVY+jMuqUYN7OuDv
+	 AVzwYagh/D0Jg==
+Message-ID: <d6edf8ad-1ceb-45ae-810a-f68246dd1e2f@kernel.org>
+Date: Mon, 1 Dec 2025 17:27:24 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -49,7 +49,7 @@ References: <20251126163600.583036-1-stefanha@redhat.com>
  <20251126163600.583036-4-stefanha@redhat.com>
  <cfd7cace-563b-4fcb-9415-72ac0eb3e811@suse.de>
  <89bdc184-363c-4d14-bad6-dd4ab65b80d9@kernel.org>
- <20251201150636.GA866564@fedora>
+ <20251201151418.GC866564@fedora>
 From: Krzysztof Kozlowski <krzk@kernel.org>
 Content-Language: en-US
 Autocrypt: addr=krzk@kernel.org; keydata=
@@ -95,11 +95,11 @@ Autocrypt: addr=krzk@kernel.org; keydata=
  jWt87ecuHlpL3uuQ0ZZNWqHgZoQLXoqC2ZV5KrtKWb/jyiFX/sxSrodALf0zf+tfHv0FZWT2
  zHjUqd0t4njD/UOsuIMOQn4Ig0SdivYPfZukb5cdasKJukG1NOpbW7yRNivaCnfZz6dTawXw
  XRIV/KDsHQiyVxKvN73bThKhONkcX2LWuD928tAR6XMM2G5ovxLe09vuOzzfTWQDsm++9UKF a/A=
-In-Reply-To: <20251201150636.GA866564@fedora>
+In-Reply-To: <20251201151418.GC866564@fedora>
 Content-Type: text/plain; charset=UTF-8
 Content-Transfer-Encoding: 7bit
 
-On 01/12/2025 16:06, Stefan Hajnoczi wrote:
+On 01/12/2025 16:14, Stefan Hajnoczi wrote:
 > On Sat, Nov 29, 2025 at 03:32:35PM +0100, Krzysztof Kozlowski wrote:
 >> On 27/11/2025 08:07, Hannes Reinecke wrote:
 >>>
@@ -127,49 +127,16 @@ On 01/12/2025 16:06, Stefan Hajnoczi wrote:
 >> Then also cleanup.h should not be used here.
 > 
 > Hi Krzysztof,
-> The documentation in cleanup.h says:
+> Christoph Hellwig replied to the v2 series, also against using __free().
+
+That's perfectly fine to dislike cleanup.h. It's fair. What is not fine
+is using it against its recommendations. Either you take entire
+cleanup.h with its oddities or don't use it.
+
+> Regardless of the reply I just sent to you about whether cleanup.h may
+> or may not be used in code that forbids declarations midway through a
+> scope, I will be dropping it in v3.
 > 
->  * Given that the "__free(...) = NULL" pattern for variables defined at
->  * the top of the function poses this potential interdependency problem
->  * the recommendation is to always define and assign variables in one
->        ^^^^^^^^^^^^^^
->  * statement and not group variable definitions at the top of the
->  * function when __free() is used.
-> 
-> This is a recommendation, not mandatory. It is also describing a
-> scenario that does not apply here.
-
-If you have actual argument, so allocation in some if branch, the of course.
-
-> 
-> There are many examples of existing users of __free() initialized to
-> NULL:
-> 
->   $ git grep '__free(' | grep ' = NULL' | wc -l
->   491
-> 
-
-There is tons of incorrect usage, some I started already fixing.
-Maintainers were changing when applying the correct code (correct patch)
-into incorrect declaration without constructor and separate assignment.
-
-Then contributors started adding patches at least making NULL
-assignment, but still not following recommendation.
-
-Then contributors started adding patches mixing cleanup.h with gotos,
-also clearly discouraged.
-
-Sorry, but please never use that argument. People did not read cleanup.h
-and produced poor code. Maintainers did not read cleanup.h and changed
-correct code into poor code.
-
-Existing poor code, just its existence, is never the actual argument in
-discussion.
-
-> To me it seems like it is okay to use cleanup.h in this fashion. Did I
-> miss something?
-
-
 
 Best regards,
 Krzysztof
