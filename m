@@ -1,47 +1,47 @@
-Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.133.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CBCFC31CA68
-	for <linux-scsi@vger.kernel.org>; Mon,  1 Dec 2025 16:23:14 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9620331CA68
+	for <linux-scsi@vger.kernel.org>; Mon,  1 Dec 2025 16:23:28 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.133.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764606197; cv=none; b=DCdp2ktwWkRL9o5DehSQw8zjDkObtdUlo8ZZQ4IGhNUxIb2Oo48nEvi0KPPwDlfe5XHNFGR+2GQOB8MQ4UDqCTgLJ/UD2Tne/0axjFJxUr4q97Rxv1h1rNhEXghVzWWvmfDOB9ECfYj16bXhVUp7AclDHBuS4B2/OUEZcVaInMM=
+	t=1764606210; cv=none; b=t7frq3YLyaQo/nxbPlj+d5yrU8jDEyRK4BUG275b/qgTUI341kJQpLBYXD67/9OTlnsxOyR/GpttSZkBXdLxQUQ8cVne8i43ByZYy0YH724RUMLcspo5SdTDX8s6+H2D17l0RWQnaJuI1Hv4yaobagMJO3TRHE845HZ4hKDs5/w=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764606197; c=relaxed/simple;
-	bh=qpQ8JUDKVag2flq6GT4xQY+M2quse0eIopRNEPLoZ2M=;
+	s=arc-20240116; t=1764606210; c=relaxed/simple;
+	bh=Z10Xep7cgDGVJfpaYpwtQV6DUKhjH3dPpkRNarzciN4=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=S8pvMcQC166hJbGhHkCwh5kOr68Tpo1GT+OlayJdv/mmSQL7CNstSANeGay+9sx5DYODQNp22rpIgfv9ut5eKRR9nRTdljebd7dcleulIz47hhtmgd+yRBa8A/Vr9eN0Jdq6lMtGTseknVXlZ9XqSS4YPwCUme3181poP2KmDgU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=OxJl8kFh; arc=none smtp.client-ip=170.10.129.124
+	 Content-Type:Content-Disposition:In-Reply-To; b=irr61qOp/YVONfJCDeZU42sAtv/JphqymZFWNqbnxmi/wwAUU68nk9J9pL8QMAGcGvqFSOnJcEb0n+o+uI2i48p+cqHpl8wTv1sh9qaUq2L1Wu/bvPnYH33eHCygmfNW2TjVDTPHl7K2WD09eqvUQ+I+B8sRPuVk2DgN2SQKv6U=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=KI9m+dXr; arc=none smtp.client-ip=170.10.133.124
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="OxJl8kFh"
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="KI9m+dXr"
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
-	s=mimecast20190719; t=1764606193;
+	s=mimecast20190719; t=1764606207;
 	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
 	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
 	 in-reply-to:in-reply-to:references:references;
-	bh=pS2mQ5xbofpQvFILM7dJqGHd9p4HpT8s5pC6EbcT+hk=;
-	b=OxJl8kFhNqkcQWVqHu2Olc2I1qQobLnzRQb3Y/NQyubzvdODdedhIDUMP1a7KEfKhY22Av
-	SP25XbZWdGXlURWC8ZTN3me2vBuPojpEU8FH0JfyhFEoMRo//48r7DeScb7R0CbmekiBR2
-	bb2c/iekZRf6uWKV/AjjVcrvO3j0DT8=
-Received: from mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com
- (ec2-35-165-154-97.us-west-2.compute.amazonaws.com [35.165.154.97]) by
+	bh=4iWnwLMwmGLsjkBGFc5ezIShODWDymLzptUH0xLu4zU=;
+	b=KI9m+dXrT3Vx+stwireQJzxWd0dDoL+kGJzPKwTxzytT2ekhAoeIbwSA4D+ncDXU5ucxVb
+	Zi2G0aylGN8nXIeNgrz/knofB4Ezf2cvMVilolkleI61mnFplW+kEB2nlX3TG+Y9KGYdl9
+	xFKg9v+XzuQmnp6aQdCTiBP+yAlAcr8=
+Received: from mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
  relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
- cipher=TLS_AES_256_GCM_SHA384) id us-mta-57-31z9c91cOCa-rtg8RH6E0g-1; Mon,
- 01 Dec 2025 11:23:05 -0500
-X-MC-Unique: 31z9c91cOCa-rtg8RH6E0g-1
-X-Mimecast-MFC-AGG-ID: 31z9c91cOCa-rtg8RH6E0g_1764606183
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-472-YIt7-LwiMqizY8fJDXan2w-1; Mon,
+ 01 Dec 2025 11:23:22 -0500
+X-MC-Unique: YIt7-LwiMqizY8fJDXan2w-1
+X-Mimecast-MFC-AGG-ID: YIt7-LwiMqizY8fJDXan2w_1764606200
 Received: from mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.93])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	by mx-prod-mc-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AE42A180057A;
-	Mon,  1 Dec 2025 16:23:02 +0000 (UTC)
+	by mx-prod-mc-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id AEAE41956094;
+	Mon,  1 Dec 2025 16:23:19 +0000 (UTC)
 Received: from localhost (unknown [10.2.16.172])
-	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id D83941800877;
-	Mon,  1 Dec 2025 16:23:01 +0000 (UTC)
-Date: Mon, 1 Dec 2025 11:22:55 -0500
+	by mx-prod-int-06.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTP id 8724D1800451;
+	Mon,  1 Dec 2025 16:23:18 +0000 (UTC)
+Date: Mon, 1 Dec 2025 11:23:17 -0500
 From: Stefan Hajnoczi <stefanha@redhat.com>
 To: Christoph Hellwig <hch@lst.de>
 Cc: linux-block@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
@@ -51,12 +51,12 @@ Cc: linux-block@vger.kernel.org, Keith Busch <kbusch@kernel.org>,
 	Mike Christie <michael.christie@oracle.com>,
 	linux-nvme@lists.infradead.org, Jens Axboe <axboe@kernel.dk>,
 	linux-scsi@vger.kernel.org, Sagi Grimberg <sagi@grimberg.me>
-Subject: Re: [PATCH v2 2/4] nvme: reject invalid pr_read_keys() num_keys
+Subject: Re: [PATCH v2 1/4] scsi: sd: reject invalid pr_read_keys() num_keys
  values
-Message-ID: <20251201162255.GD866564@fedora>
+Message-ID: <20251201162317.GE866564@fedora>
 References: <20251127155424.617569-1-stefanha@redhat.com>
- <20251127155424.617569-3-stefanha@redhat.com>
- <20251201063649.GB19461@lst.de>
+ <20251127155424.617569-2-stefanha@redhat.com>
+ <20251201063413.GA19461@lst.de>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -64,95 +64,55 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="YKftHGuwZht4hbb7"
+	protocol="application/pgp-signature"; boundary="/q2A/sdcGUHGB5kN"
 Content-Disposition: inline
-In-Reply-To: <20251201063649.GB19461@lst.de>
+In-Reply-To: <20251201063413.GA19461@lst.de>
 X-Scanned-By: MIMEDefang 3.4.1 on 10.30.177.93
 
 
---YKftHGuwZht4hbb7
+--/q2A/sdcGUHGB5kN
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 
-On Mon, Dec 01, 2025 at 07:36:49AM +0100, Christoph Hellwig wrote:
-> On Thu, Nov 27, 2025 at 10:54:22AM -0500, Stefan Hajnoczi wrote:
-> > The pr_read_keys() interface has a u32 num_keys parameter. The NVMe
-> > Reservation Report command has a u32 maximum length. Reject num_keys
-> > values that are too large to fit.
-> >=20
-> > This will become important when pr_read_keys() is exposed to untrusted
-> > userspace via an <linux/pr.h> ioctl.
-> >=20
-> > Signed-off-by: Stefan Hajnoczi <stefanha@redhat.com>
-> > ---
-> >  drivers/nvme/host/pr.c | 4 ++++
-> >  1 file changed, 4 insertions(+)
-> >=20
-> > diff --git a/drivers/nvme/host/pr.c b/drivers/nvme/host/pr.c
-> > index ca6a74607b139..156a2ae1fac2e 100644
-> > --- a/drivers/nvme/host/pr.c
-> > +++ b/drivers/nvme/host/pr.c
-> > @@ -233,6 +233,10 @@ static int nvme_pr_read_keys(struct block_device *=
-bdev,
-> >  	int ret, i;
-> >  	bool eds;
-> > =20
-> > +	/* Check that keys fit into u32 rse_len */
-> > +	if (num_keys > (U32_MAX - sizeof(*rse)) / sizeof(rse->regctl_eds[0]))
+On Mon, Dec 01, 2025 at 07:34:13AM +0100, Christoph Hellwig wrote:
+> On Thu, Nov 27, 2025 at 10:54:21AM -0500, Stefan Hajnoczi wrote:
+> > +	/*
+> > +	 * Each reservation key takes 8 bytes and there is an 8-byte header
+> > +	 * before the reservation key list. The total size must fit into the
+> > +	 * 16-bit ALLOCATION LENGTH field.
+> > +	 */
+> > +	if (num_keys > (USHRT_MAX / 8) - 1)
 > > +		return -EINVAL;
 > > +
+> > +	data_len =3D num_keys * 8 + 8;
 >=20
-> We use struct_size to calculate the size below, which saturates on
-> overflow.  So just checking the rse_len variable returned by the that
-> would be nicer.  Bonus points for using sizeof_field() instead of
-> hardcoding U32_MAX.
+> Having the same arithmerics express here in two different ways is a bit
+> odd.
+>=20
+> I'd expected this to be something like:
+>=20
+> 	if (check_mul_overflow(num_keys, 8, &data_len) || data_len > USHRT_MAX)
+> 		return -EINVAL;
 
-Will fix. I don't see how to use sizeof_field() here, but taking
-advantage of struct_size() already improves things a lot:
-
-diff --git a/drivers/nvme/host/pr.c b/drivers/nvme/host/pr.c
-index ca6a74607b139..ad2ecc2f49a97 100644
---- a/drivers/nvme/host/pr.c
-+++ b/drivers/nvme/host/pr.c
-@@ -228,7 +228,8 @@ static int nvme_pr_resv_report(struct block_device *bde=
-v, void *data,
- static int nvme_pr_read_keys(struct block_device *bdev,
-                struct pr_keys *keys_info)
- {
--       u32 rse_len, num_keys =3D keys_info->num_keys;
-+       size_t rse_len;
-+       u32 num_keys =3D keys_info->num_keys;
-        struct nvme_reservation_status_ext *rse;
-        int ret, i;
-        bool eds;
-@@ -238,6 +239,9 @@ static int nvme_pr_read_keys(struct block_device *bdev,
-         * enough to get enough keys to fill the return keys buffer.
-         */
-        rse_len =3D struct_size(rse, regctl_eds, num_keys);
-+       if (rse_len > U32_MAX)
-+               return -EINVAL;
-+
-        rse =3D kzalloc(rse_len, GFP_KERNEL);
-        if (!rse)
-                return -ENOMEM;
+Will fix, thanks.
 
 Stefan
 
---YKftHGuwZht4hbb7
+--/q2A/sdcGUHGB5kN
 Content-Type: application/pgp-signature; name=signature.asc
 
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmktwN8ACgkQnKSrs4Gr
-c8gLeAf/dAZo5nwpdpojnIzrv8GAq8x+o/SWFa1b7FBbj7Lc0vzxQD23XMORjCvm
-sS28Gf6duxGp88k2clDV3MELwZppYSXAPVyAM+/nVJzjrtA9F0FAcfyhLSrL4RzY
-mXLIrOrmnr6FxHTbDj6USxHsRk4h1tQzOKDwaej5Xhb1bqZdmEHkViGwVMcCfJJM
-tjKO1veWKq7p7hBjMzTsD3fABOMXKZqEZmac9fWI3X0KrwKcN9WcgHFnvV4l46M1
-7HQbxqPS8nbPf3eD98p5ZNUVHf0cbJ/pac8ztqLvdr7GD19lnmZcHBjUKmNTh8sM
-ibzD4lqyv4wHEIj/EmYShAzH+zIWZA==
-=S0Z0
+iQEzBAEBCgAdFiEEhpWov9P5fNqsNXdanKSrs4Grc8gFAmktwPUACgkQnKSrs4Gr
+c8g0gwgAiEUYpY9G7g748zxuE7RRdteHJBtuBVbAtrYXJqfIdAmupy9eKEf9Sa1D
+FUo7wdk9KaajdFP8aJSFuqdy81X4qMI5wjnl7Yv5mpbCUdVXTrTWQy3yEx93ILlO
+iCpY+0cdWjCslnFTsIdzawzlo7+4xLEzWcVBG+gRlCd3Z598f8uAyZEXwuc36qwv
+ki8wRuKkfHzLmF57XTBR/ZhJmSSFzSCFkqOneFoXX8VsDrGF7yOLyyJ0q9ATBJo4
+U15dVvLjQd1cYZhHjHX30W4rXLL4UhXWSURGKcrYXlLQW0g7B4JloBMCOFup5U6Y
+ubAwouirRAk9bodTanTM+CJq/292Pw==
+=eJaQ
 -----END PGP SIGNATURE-----
 
---YKftHGuwZht4hbb7--
+--/q2A/sdcGUHGB5kN--
 
