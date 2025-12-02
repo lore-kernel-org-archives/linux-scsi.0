@@ -1,218 +1,149 @@
-Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [85.215.255.84])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from smtp-out1.suse.de (smtp-out1.suse.de [195.135.223.130])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D6AD92AD00;
-	Tue,  2 Dec 2025 15:02:44 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=85.215.255.84
-ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764687767; cv=pass; b=rGMJVmNv/uUAu99gjktmcSKZRS0BN1J6Z4FyZ//EDA2HZxsdVNumtiGQTUqyED08RnvbcptxyJfKJoniuB3zISBRLKB+GXuiyAszzJZK8/v/n+iPgOVB5kR/7m9oPp1pgzp+gUmDxY7UjW4FhN/K54Q6Nc8x7ue0aInExzh1d5E=
-ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764687767; c=relaxed/simple;
-	bh=kYqxU7eIJ0/gC7lvlCjNInhrHE6zifIAC3ZFyKHYlqM=;
-	h=Message-ID:Subject:From:To:Cc:Date:In-Reply-To:References:
-	 Content-Type:MIME-Version; b=okqiLBQMEweqlTrZE4O0UyzZMZGrbEjBYhjP5ygzEkj0QT5lbZ8wOD/Pjl/d0dbeogzNaef7aGm2PpPFdZpRzCCemD7rPgo7F39CT/uUIGh8BzlmgJolj9MRzrA8XdaU37YdyEAoqGwbSdGmkWpm3KSG6T6t1h88IZGxGS2Dadk=
-ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=Z9iSz4xB; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=D4p9UJwh; arc=pass smtp.client-ip=85.215.255.84
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1F51823AB95
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Dec 2025 15:40:23 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=195.135.223.130
+ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1764690026; cv=none; b=suI0Zx5emBi43pzrcOa1ahknK/4o6sD8bZvyXLsILnnCs+UVlzPvIqHyUaRyCyyicePYzMjQI8eH9SKIe07/n78M3MfqpS1cV8Qqbd3ayMJry8KMdmQXP0ppzwlJz+TUBNseF5RvC48dWCA43z50jdUoM89Aw9rPHa3LBATf70M=
+ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1764690026; c=relaxed/simple;
+	bh=tUitVCELaxbe01sGcW7kmjXwULpbL7nrf7e8Hi0lg3A=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=hffxYASSsUaC5Am0uaXLuarZ4Zj+RAWoXC7FQ78idoYFa5tMC9DdwS50C1RZlwHKzCAtMkqsW0RckKMy5k+lQX1hu6m7KWVdFDXQ3/ctdLkZ160WLJ8rlxTNQ534NKMj/BzH646nvPfCN4jqk6H27ZzEP94gNjF7m0vQmPbKmH8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de; spf=pass smtp.mailfrom=suse.de; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=H8+1gVff; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IobqdJPG; dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b=H8+1gVff; dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b=IobqdJPG; arc=none smtp.client-ip=195.135.223.130
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=suse.de
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=suse.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="Z9iSz4xB";
-	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="D4p9UJwh"
-ARC-Seal: i=1; a=rsa-sha256; t=1764687571; cv=none;
-    d=strato.com; s=strato-dkim-0002;
-    b=THZg2bdTln7j1ufzUq9Q1R0g+C0c5cuUpfVKNtIJwRjAAZOUuxACuTkugMF21T7D8u
-    LVoZBXrW9Ouptt03PQAGYf0M9eZGt9YyN7271Vh13nG29BsTHwGODSFXMJbu/7K6VU2u
-    4KmZPw/jSh/vGvp3qa22EhOUOJ2KriERzakfi27bVjjVnVCZHYEB0ZvUz1hzxi6Fzgh4
-    Dqnikh6TmnFh/gK+211m+cu8nTHunYgNiDyDhcPa7h1OPrL77Txv23VqgGtTn1vZsd9g
-    SOuckLHJiKaSNdlks6xfw4uFn5S1gF2jrX8RyvezGUhci6v7PqH+O0xLfbbqVa68Ipv5
-    oVXw==
-ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1764687571;
-    s=strato-dkim-0002; d=strato.com;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=kYqxU7eIJ0/gC7lvlCjNInhrHE6zifIAC3ZFyKHYlqM=;
-    b=QSKCilVoIYfBGE1H4iGjaoz91ch/iDcb1DGbaJTqxlV1wPKRGTPnMhjzkNksnVr+Q2
-    Kp9I4JfmGiL6dpNPILmh9Z5NJmgdIWTZ5/DzKMyi9J8dSyCTqIR1MJRTgHMWssNjiA8b
-    jDaUGV45RK97Z3EsALiAKieo6QACLHDnqVCIQf+mNEcV6Ni1sU8CL1RXob5bGpLDwgIM
-    1C+sIETQlvyd2bJuaNWB8PlutbLNJz81qW/hdnSaM1lWG4SnvfmmTypi+O5CBsgWIyOJ
-    TfbNeIsV9wGi7/5/xvb3npSwNhDm3GGxMv5EABHu3N5bYawSFN2Se1m5S0hkMma0bOYC
-    mL9A==
-ARC-Authentication-Results: i=1; strato.com;
-    arc=none;
-    dkim=none
-X-RZG-CLASS-ID: mo02
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1764687571;
-    s=strato-dkim-0002; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=kYqxU7eIJ0/gC7lvlCjNInhrHE6zifIAC3ZFyKHYlqM=;
-    b=Z9iSz4xBr+GOAJgxUX/XW0WTBzug12LFuCBGYouLm8HY7f+DMv4z420MDRbQdp4UGR
-    Fq6fZpNwddz0kK08oPkjtwGHdA9lk8SqIaWAkRPyQ+v4r2v+KcqD/8wKKlIqF6FOtTs0
-    oXsD/LeVr6jtnF1wIouyCghFrTPw/UyRh+GneduJAEg1rdmJuVCtnCuSSSA5gTCIn/WR
-    106K5BrRMyZvFBUbnJY3AumdmqEYOItLidDbzFClv3X9DtFS2TWQ2hjpkGCe/1F/ltdl
-    ZDYGJYFZM/zY5Ii1oYeI6nLm2P32RnXkUKb7tAfhUUydTkGaeEOfFQtMUQDv54AGEfYu
-    LvAQ==
-DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1764687571;
-    s=strato-dkim-0003; d=iokpp.de;
-    h=References:In-Reply-To:Date:Cc:To:From:Subject:Message-ID:Cc:Date:
-    From:Subject:Sender;
-    bh=kYqxU7eIJ0/gC7lvlCjNInhrHE6zifIAC3ZFyKHYlqM=;
-    b=D4p9UJwhf7eYt/sAalj+gXG5TkInb2hLU9uB3MxPnWY6kjJU1PUNUNPPp0Umte5Pl8
-    ILlXpeLwKvw6qlUgy3Cg==
-X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSe9tgBDSDt0V0DBslXBtZUxPOub3IZqk"
-Received: from [10.176.235.211]
-    by smtp.strato.de (RZmta 54.0.0 AUTH)
-    with ESMTPSA id zd76761B2ExVHcZ
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
-	(Client did not present a certificate);
-    Tue, 2 Dec 2025 15:59:31 +0100 (CET)
-Message-ID: <84a72d8f1a84d438fc73c35aef3966d74c027a80.camel@iokpp.de>
-Subject: Re: [PATCH] scsi: ufs: core: Fix link error when CONFIG_RPMB=m
-From: Bean Huo <beanhuo@iokpp.de>
-To: Arnd Bergmann <arnd@arndb.de>, Jens Wiklander <jens.wiklander@linaro.org>
-Cc: Bart Van Assche <bvanassche@acm.org>, "Martin K. Petersen"
-	 <martin.petersen@oracle.com>, avri.altman@sandisk.com, Alim Akhtar
-	 <alim.akhtar@samsung.com>, "James E.J. Bottomley" <jejb@linux.ibm.com>, 
-	can.guo@oss.qualcomm.com, Bean Huo <beanhuo@micron.com>, 
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org, kernel test robot
-	 <lkp@intel.com>, Ulf Hansson <ulf.hansson@linaro.org>
-Date: Tue, 02 Dec 2025 15:59:30 +0100
-In-Reply-To: <dbe51014-bb52-4ffa-976f-f3823e7c391e@app.fastmail.com>
-References: <20251130151508.3076994-1-beanhuo@iokpp.de>
-	 <yq1seduunc2.fsf@ca-mkp.ca.oracle.com>
-	 <251eb7e20d91ae9c539bde847ea102a53af82b94.camel@iokpp.de>
-	 <ef4f3e29-95ad-4094-9742-c37742da26e9@acm.org>
-	 <aff12099702c07370b069b1bb111302ec4660ad1.camel@iokpp.de>
-	 <CAHUa44E5-c_rN1omhuVteBt9idz_d91r1tRKNgB2=-AWQDP2Jw@mail.gmail.com>
-	 <2503bc57443042876541ab5e1f2afed8f83551e6.camel@iokpp.de>
-	 <CAHUa44FeKSqRQ68FJneK_NNFNxKHWgynLpd4355GYOuJh=S0vA@mail.gmail.com>
-	 <dbe51014-bb52-4ffa-976f-f3823e7c391e@app.fastmail.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
-User-Agent: Evolution 3.44.4-0ubuntu2.1 
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="H8+1gVff";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IobqdJPG";
+	dkim=pass (1024-bit key) header.d=suse.de header.i=@suse.de header.b="H8+1gVff";
+	dkim=permerror (0-bit key) header.d=suse.de header.i=@suse.de header.b="IobqdJPG"
+Received: from imap1.dmz-prg2.suse.org (unknown [10.150.64.97])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by smtp-out1.suse.de (Postfix) with ESMTPS id 58EB4336A3;
+	Tue,  2 Dec 2025 15:40:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1764690022; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VdJrFte6sugcjCs88ZzSMsjRA0CJMm30fnCS8voTy+4=;
+	b=H8+1gVffEfCo2NTqvBwiSbJdlCO9CZcWjC59dvy31Vjvr7wwr1e7EqxbPnRXi6WQOvvBzp
+	9VxSHIkaMzUppbu7ez8HJNVyRcwYUBzHJO6+wgg6sBsiy1oeXe2JOtJwLpuuCrLIA/N+UR
+	h42SIYWhtl4c/GeBiptNPl2UcoSCmRA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1764690022;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VdJrFte6sugcjCs88ZzSMsjRA0CJMm30fnCS8voTy+4=;
+	b=IobqdJPGMeqolLVKsCdMm504yxmghHmD7da6LEIomG2bs/JbpSNiQ6zmCYsraOnKGSUmCy
+	LE2okwBQ6fjPOdBg==
+Authentication-Results: smtp-out1.suse.de;
+	none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=suse.de; s=susede2_rsa;
+	t=1764690022; h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VdJrFte6sugcjCs88ZzSMsjRA0CJMm30fnCS8voTy+4=;
+	b=H8+1gVffEfCo2NTqvBwiSbJdlCO9CZcWjC59dvy31Vjvr7wwr1e7EqxbPnRXi6WQOvvBzp
+	9VxSHIkaMzUppbu7ez8HJNVyRcwYUBzHJO6+wgg6sBsiy1oeXe2JOtJwLpuuCrLIA/N+UR
+	h42SIYWhtl4c/GeBiptNPl2UcoSCmRA=
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; d=suse.de;
+	s=susede2_ed25519; t=1764690022;
+	h=from:from:reply-to:date:date:message-id:message-id:to:to:cc:cc:
+	 mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=VdJrFte6sugcjCs88ZzSMsjRA0CJMm30fnCS8voTy+4=;
+	b=IobqdJPGMeqolLVKsCdMm504yxmghHmD7da6LEIomG2bs/JbpSNiQ6zmCYsraOnKGSUmCy
+	LE2okwBQ6fjPOdBg==
+Received: from imap1.dmz-prg2.suse.org (localhost [127.0.0.1])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (4096 bits) server-digest SHA256)
+	(No client certificate requested)
+	by imap1.dmz-prg2.suse.org (Postfix) with ESMTPS id E8CDE3EA63;
+	Tue,  2 Dec 2025 15:40:21 +0000 (UTC)
+Received: from dovecot-director2.suse.de ([2a07:de40:b281:106:10:150:64:167])
+	by imap1.dmz-prg2.suse.org with ESMTPSA
+	id T/4sNmUIL2mpOAAAD6G6ig
+	(envelope-from <hare@suse.de>); Tue, 02 Dec 2025 15:40:21 +0000
+Message-ID: <b32a7120-d959-40ba-944f-ef9a758d2d7b@suse.de>
+Date: Tue, 2 Dec 2025 16:40:21 +0100
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v3 1/4] scsi: sd: reject invalid pr_read_keys() num_keys
+ values
+To: Stefan Hajnoczi <stefanha@redhat.com>, linux-block@vger.kernel.org
+Cc: Christoph Hellwig <hch@lst.de>, linux-kernel@vger.kernel.org,
+ linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
+ "Martin K. Petersen" <martin.petersen@oracle.com>,
+ Keith Busch <kbusch@kernel.org>, Jens Axboe <axboe@kernel.dk>,
+ Sagi Grimberg <sagi@grimberg.me>, Mike Christie
+ <michael.christie@oracle.com>, Krzysztof Kozlowski <krzk@kernel.org>,
+ linux-nvme@lists.infradead.org
+References: <20251201214329.933945-1-stefanha@redhat.com>
+ <20251201214329.933945-2-stefanha@redhat.com>
+Content-Language: en-US
+From: Hannes Reinecke <hare@suse.de>
+In-Reply-To: <20251201214329.933945-2-stefanha@redhat.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 8bit
+X-Spamd-Result: default: False [-4.27 / 50.00];
+	BAYES_HAM(-3.00)[99.99%];
+	NEURAL_HAM_LONG(-1.00)[-1.000];
+	NEURAL_HAM_SHORT(-0.17)[-0.834];
+	MIME_GOOD(-0.10)[text/plain];
+	FUZZY_RATELIMITED(0.00)[rspamd.com];
+	RCVD_VIA_SMTP_AUTH(0.00)[];
+	MIME_TRACE(0.00)[0:+];
+	ARC_NA(0.00)[];
+	RCPT_COUNT_TWELVE(0.00)[13];
+	MID_RHS_MATCH_FROM(0.00)[];
+	RCVD_TLS_ALL(0.00)[];
+	DKIM_SIGNED(0.00)[suse.de:s=susede2_rsa,suse.de:s=susede2_ed25519];
+	FROM_HAS_DN(0.00)[];
+	TO_DN_SOME(0.00)[];
+	FROM_EQ_ENVFROM(0.00)[];
+	TO_MATCH_ENVRCPT_ALL(0.00)[];
+	RCVD_COUNT_TWO(0.00)[2];
+	DBL_BLOCKED_OPENRESOLVER(0.00)[imap1.dmz-prg2.suse.org:helo,suse.de:mid,suse.de:email]
+X-Spam-Level: 
+X-Spam-Flag: NO
+X-Spam-Score: -4.27
 
-On Tue, 2025-12-02 at 14:25 +0100, Arnd Bergmann wrote:
-> On Tue, Dec 2, 2025, at 14:17, Jens Wiklander wrote:
-> > On Tue, Dec 2, 2025 at 1:17=E2=80=AFPM Bean Huo <beanhuo@iokpp.de> wrot=
-e:
-> > > On Tue, 2025-12-02 at 12:41 +0100, Jens Wiklander wrote:
-> > > > > > >=20
-> > > > > > > Would you prefer IS_REACHABLE for theoretical flexibility, or=
- is
-> > > > > > > IS_BUILTIN
-> > > > > > > acceptable given the typical UFS built-in configuration?
-> > > > > >=20
->=20
-> I did introduce IS_REACHABLE() a long time ago, but I consider it
-> the wrong approach for almost every possible case, as it only
-> works around link failures by introducing very unexpected runtime
-> behavior.
+On 12/1/25 22:43, Stefan Hajnoczi wrote:
+> The pr_read_keys() interface has a u32 num_keys parameter. The SCSI
+> PERSISTENT RESERVE IN command has a maximum READ KEYS service action
+> size of 65536 bytes. Reject num_keys values that are too large to fit
+> into the SCSI command.
+> 
+> This will become important when pr_read_keys() is exposed to untrusted
+> userspace via an <linux/pr.h> ioctl.
+> 
+> Signed-off-by: Stefan Hajnoczi <stefanha@redhat.com>
+> ---
+>   drivers/scsi/sd.c | 12 +++++++++++-
+>   1 file changed, 11 insertions(+), 1 deletion(-)
+> 
+Reviewed-by: Hannes Reinecke <hare@suse.de>
 
-thanks for your info.
+Cheers,
 
->=20
-> > > > > > Unless someone comes up with a better solution, I propose to ap=
-ply
-> > > > > > this
-> > > > > > patch before sending a pull request to Linus and look into maki=
-ng
-> > > > > > RPMB
-> > > > > > tristate again at a later time:
-> > > > > >=20
-> > > > > > diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-> > > > > > index 9d1de68dee27..e0b7f8fb6ecb 100644
-> > > > > > --- a/drivers/misc/Kconfig
-> > > > > > +++ b/drivers/misc/Kconfig
-> > > > > > @@ -105,7 +105,7 @@ config PHANTOM
-> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 say N he=
-re.
-> > > > > >=20
-> > > > > > =C2=A0 config RPMB
-> > > > > > -=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 tristate "RPMB partition =
-interface"
-> > > > > > +=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 bool "RPMB partition inte=
-rface"
-> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 depends on MMC || SC=
-SI_UFSHCD
-> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 help
-> > > > > > =C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0=C2=A0 Unified =
-RPMB unit interface for RPMB capable devices such
-> > > > > > as
->=20
-> This equally does not seem appropriate, as others have commented.
->=20
-
-the qeustions do we need to make RPMB as a module?
-
-> > > > >=20
-> > > > > we wanted to make sure you're aware of this proposed change. The
-> > > > > reasoning
-> > > > > is:
-> > > > > 1, avoids module dependency complexity between UFS and RPMB
-> > > > > 2, matches typical usage where both are built-in
-> > > > >=20
-> > > > > Let me know if there are concerns with making RPMB bool instead o=
-f
-> > > > > tristate.
-> > > >=20
-> > > > We use "depends on RPMB || !RPMB" in drivers/tee/optee/Kconfig and
-> > > > drivers/mmc/core/Kconfig to handle this problem. Could the same
-> > > > pattern be used here?
->=20
-> This does sound like the right idea.
->=20
-> > > The pattern/dependecy used in MMC and OP-TEE doesn't apply UFS due to
-> > > different
-> > > dependency structures:
-> > >=20
-> > > MMC: The core MMC config doesn't depend on RPMB. Only MMC_BLOCK (a su=
-b-
-> > > layer)
-> > > has "depends on RPMB || !RPMB", avoiding the cycle.
-> > >=20
-> > > OP-TEE: RPMB doesn't depend on OPTEE, so "depends on RPMB || !RPMB" i=
-n
-> > > OPTEE
-> > > creates no cycle.
-> > >=20
-> > > and for UFS:
-> > >=20
-> > > UFS: This creates a direct circular dependency:
-> > >=20
-> > > drivers/misc/Kconfig: RPMB depends on SCSI_UFSHCD
-> > > drivers/ufs/Kconfig: SCSI_UFSHCD depends on RPMB
-> > >=20
-> > > This is why Bart's suggestion to make RPMB bool instead of tristate m=
-ay be
-> > > the
-> > > cleaner solution.
-> > >=20
-> >=20
-> > What will that mean for OPTEE and MMC? That they can't be modules if
-> > RPMB is enabled? Are we moving the problem somewhere else?
->=20
-> My first impression is that the 'depends on MMC || SCSI_UFSHCD' is
-> the problem here, and I would suggest simply dropping that dependency.
->=20
-
-> Any module that links against exported RPMB symbols should have
-> the 'depends on RPMB || !RPMB' line to enable linking correctly.
-> The RPMB implementation in drivers/misc on the other hand has no
-> link-time dependency I can see, and enabling it without one of
-> the other symbols simply means that there is a module that does
-> nothing.
-
-I have added this option in my previous email, can you add which one you pr=
-efer.
-
-Kind regards,
-Bean
-
->=20
-> =C2=A0=C2=A0=C2=A0=C2=A0 Arnd
-
+Hannes
+-- 
+Dr. Hannes Reinecke                  Kernel Storage Architect
+hare@suse.de                                +49 911 74053 688
+SUSE Software Solutions GmbH, Frankenstr. 146, 90461 Nürnberg
+HRB 36809 (AG Nürnberg), GF: I. Totev, A. McDonald, W. Knoblich
