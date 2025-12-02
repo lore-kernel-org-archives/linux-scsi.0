@@ -1,136 +1,150 @@
-Received: from fhigh-b1-smtp.messagingengine.com (fhigh-b1-smtp.messagingengine.com [202.12.124.152])
+Received: from mo4-p02-ob.smtp.rzone.de (mo4-p02-ob.smtp.rzone.de [81.169.146.168])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9B3DF1EB193;
-	Tue,  2 Dec 2025 15:57:43 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=202.12.124.152
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764691065; cv=none; b=LDim/Mikr8/vyW7LC1wGx4mfednsE/vtcKpiPEVw65GkyCvtCnc/BO16h/waaH3dXWKKqAiTqoePjdLSbqJ10ylk1a+Cc4ZT+z5M0ayn57PHt0DFGiiibvdPHBvnqVEU8yvi6zxSwSCaElSdvqNF7UD9oRH9V71CbvaK7etDA3E=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764691065; c=relaxed/simple;
-	bh=tJhqOgr2gUhDdL/Wj3PI4s/APWjYg0ZW39AMgna+9hY=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=t7sJWg512aU9I4yNXvR7XiIBmyhS3sag/LyV6OpXvM6b/pDuo9D6Vt+6mud3h3lucQYaSMz+XOv2c36aPW3dOxaSIqaaeb4a60bmlDBkSsB2lLopbfaAnHoanbMwnX4Z1hGXZPHCmWP0DMKL09fduGXU0z1kVkFdM6fAO6YyDC8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=O/jhbqhF; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=aPN8EkLy; arc=none smtp.client-ip=202.12.124.152
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 041FB3242BC;
+	Tue,  2 Dec 2025 15:57:50 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=pass smtp.client-ip=81.169.146.168
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1764691073; cv=pass; b=OW2MI3nWs7MSX9gcheMoSo9ScO9MdB+yqwfuUYWd35XmbRUWpg8o4sszS4FQl/aUo6Dx3llmQMWs4I5MnyOKcxatG6Yzd74zSDuFs2jmd8CrMT0cGzjkPLR0oRk6VtNbrbvnVqevbMfCzSbcJRCeW2dpinJA9iXGbh7OdpVMI3c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1764691073; c=relaxed/simple;
+	bh=CqGcwqvlT3JI5s2aWU4iSsq9geIqD7wtalzAg8TTfHI=;
+	h=From:To:Cc:Subject:Date:Message-Id:MIME-Version:Content-Type; b=lOaRPYj56SfQh+4IyqhFOD/SoanDAyWtDwlvN/ATYMBsyQHaT2Gg38zWKwu+bF1Cuxyput4e3X6MWv6IXvOdp4VJIcuBcD9DDGGfEdVtnVOPPL9e4gLu5YQ4VBEuDF4x2ujtb5G6zfcnGmI4hM+iy6Pu6DEU3f8r6II9PfCHPbY=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de; spf=none smtp.mailfrom=iokpp.de; dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=CAueKhCN; dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b=JlK7GPrQ; arc=pass smtp.client-ip=81.169.146.168
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=iokpp.de
+Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=iokpp.de
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="O/jhbqhF";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="aPN8EkLy"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfhigh.stl.internal (Postfix) with ESMTP id 8C4857A0184;
-	Tue,  2 Dec 2025 10:57:42 -0500 (EST)
-Received: from phl-imap-17 ([10.202.2.105])
-  by phl-compute-04.internal (MEProxy); Tue, 02 Dec 2025 10:57:42 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1764691062;
-	 x=1764777462; bh=kG9nksrF89Nx5W2dulPT+E1xx7iZIXn78AskAV0a8CQ=; b=
-	O/jhbqhFpvDd+7hoDM6oeffLlC2UosVmB4Xm8+jz3z93InmkDn50E8gVfPMbCwmW
-	LbGwtsZSpYXtdFOrvCpfsnt6hwSlUyQ+tLy8HWgPibc5uY6CgZhXc+qwSYeoX4yF
-	6UMsSlW0wb7ejTzsi4BHjifWGeDdxSZqBWxlPmnI+JBMkU+xh7kAQx+no8ex1Cej
-	cs/COq0CebmJl2Z06A6RIKmRRQDIUOafAPvN0zzwMSd0ekrujld2Tyca4GvF/0Qq
-	cOfYH0kJZXUySK/GPexQMb2A5hSiZZSR04En8MXF+TwQPPgqdWsV2TNflM19DADC
-	z8OHlGULqqEbvREIUTEfAA==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1764691062; x=
-	1764777462; bh=kG9nksrF89Nx5W2dulPT+E1xx7iZIXn78AskAV0a8CQ=; b=a
-	PN8EkLyvnshi7/wkytCkAeRzlZHQf08FVYokYQ+amJso2OeShgWP6HIuU4wJqAKY
-	Cn0mtZzWZfSFEElPD+H1UzA0b61ZHdk7PWYqH1OQQrTnN7vUPd5GoumOQhOySBDm
-	zpnssP4ngY0doArEKZjoVZlY9uXT3SQsGTfNYb4PE8DZ2tWKe1cPu389ufJY4l6n
-	V2zzpROe93L90xeTtv3MV/A3ODp2z+X5UMG8sK55V6jVigYE9t3fYxsC+5kGE6Gu
-	34u96sZWfMlZ4iaFBSjfJW6smZ5jvoWZNe8dXpgDHmgRlAW+kl9GDJQVEhTRMzxL
-	sL3mJLIZboaXWCE3HEx8g==
-X-ME-Sender: <xms:dQwvaQjhRl3j-2bIFZgVX7d6-NW-c5rddVUFtzFps8GT1MP4cSvAEA>
-    <xme:dQwvaT3USaQR4_BToEWWJ81fc8Q_myrsQEbktjtwkIstT83O_50rZ-MpaAjvm-BwG
-    KBOxloR-8KyugzcVddvgbFELCI8PpMz3XYItiATo3C6XNSnLWZO3xY>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdehfecutefuodetggdotefrodftvf
-    curfhrohhfihhlvgemucfhrghsthforghilhdpuffrtefokffrpgfnqfghnecuuegrihhl
-    ohhuthemuceftddtnecusecvtfgvtghiphhivghnthhsucdlqddutddtmdenucfjughrpe
-    foggffhffvvefkjghfufgtgfesthejredtredttdenucfhrhhomhepfdetrhhnugcuuegv
-    rhhgmhgrnhhnfdcuoegrrhhnugesrghrnhgusgdruggvqeenucggtffrrghtthgvrhhnpe
-    efhfehteffuddvgfeigefhjeetvdekteekjeefkeekleffjeetvedvgefhhfeihfenucff
-    ohhmrghinhepkhgvrhhnvghlrdhorhhgnecuvehluhhsthgvrhfuihiivgeptdenucfrrg
-    hrrghmpehmrghilhhfrhhomheprghrnhgusegrrhhnuggsrdguvgdpnhgspghrtghpthht
-    ohepudegpdhmohguvgepshhmthhpohhuthdprhgtphhtthhopegsvhgrnhgrshhstghhvg
-    esrggtmhdrohhrghdprhgtphhtthhopehlkhhpsehinhhtvghlrdgtohhmpdhrtghpthht
-    ohepsggvrghnhhhuohesihhokhhpphdruggvpdhrtghpthhtohepjhgvnhhsrdifihhklh
-    grnhguvghrsehlihhnrghrohdrohhrghdprhgtphhtthhopehulhhfrdhhrghnshhsohhn
-    sehlihhnrghrohdrohhrghdprhgtphhtthhopehjvghjsgeslhhinhhugidrihgsmhdrtg
-    homhdprhgtphhtthhopegsvggrnhhhuhhosehmihgtrhhonhdrtghomhdprhgtphhtthho
-    pehmrghrthhinhdrphgvthgvrhhsvghnsehorhgrtghlvgdrtghomhdprhgtphhtthhope
-    gtrghnrdhguhhosehoshhsrdhquhgrlhgtohhmmhdrtghomh
-X-ME-Proxy: <xmx:dQwvaUwZMzvOdzN-PZnF6K2lprJjgn41gtDPqILeII1IS_lxOvt7-A>
-    <xmx:dQwvaSoiwd7xoztxZrCvMysJSZmtAN1eYy0DB5_s3o12ilkuUUCFAw>
-    <xmx:dQwvacfna_Tn5D8xeSQbI0Re4y515D-4cRNw5QAJdGVitbuEqL85Zg>
-    <xmx:dQwvadqdCV2xTokvnJENHhpUzljJzBGFOITkyygytQSPTNYGkMaZ9Q>
-    <xmx:dgwvacBm8kcEZwUkM7ws4lWMXKg-Tpcmx102rX1zdeiT-6YcZ1r1aZbu>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 2CFD2C4006B; Tue,  2 Dec 2025 10:57:41 -0500 (EST)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="CAueKhCN";
+	dkim=permerror (0-bit key) header.d=iokpp.de header.i=@iokpp.de header.b="JlK7GPrQ"
+ARC-Seal: i=1; a=rsa-sha256; t=1764690707; cv=none;
+    d=strato.com; s=strato-dkim-0002;
+    b=KiXYi9+cQpEtQ0CZ6FuqegfP4AXe/WDaNrfd46RJlPlmNh75QvNv/2jNfkX5SH/7dN
+    /JKXC0+OxCkGW2hZISecuzb6zTHjcaooHD2lmJXECR0Ru0MWmoWmqES6M0D4f/eaFyCZ
+    baY0pqfFJcXr3anc6mXKjR9SJ1oukAf4ObXbA+xuAoIr4bRi2qEdlIn6472qMRVJuUPp
+    J8jLcGBruwfbleQMhd3ZbEZDmKQd3KkuPLjcjvOBgqK3xx5K1gxi3gXjRqqDQikoLsdT
+    Zne6cZPhDUQteTLTReYuRmqR6AG7rLXrPIV6g9J0YCjTeiqKMumJBk9T22ihoOzht7Zj
+    667w==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; t=1764690707;
+    s=strato-dkim-0002; d=strato.com;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=ZbjDRbLI8AhRyuG66jVB4u9mUy8L4JMG78Ig724DUeA=;
+    b=nOv4nojyYtQRMPcd1/0v9YDxwQTU7pfVrDPTJnlQ9bT6Cl1akNA5dJkRfdkWQBS6cn
+    RDrzukPzC8YqRXPbff7xMkCCmaWcUGWvL8Q5CK0+ixd8pBRVxY0bRu6wvQ7UDFOLdlao
+    dBO9+fHNwVEeDbiR7u1wcZwdj3tMgfgBIEaClDjKnlRl7NN7NNi4dE+Cia47zbSDIfmv
+    mpWDGLsIkLDt5RSqi7H1+NHwwwG7jqDnI0rb4lJ4GZCF48yklpsZGu96AT+ymJQxWqlG
+    xNFDERlEZU5VXVKiDjH5pHB8GDPuOewAH/o8dRkMok5pVIxV+xVbSeszqcR6l17gP2wN
+    J9Tw==
+ARC-Authentication-Results: i=1; strato.com;
+    arc=none;
+    dkim=none
+X-RZG-CLASS-ID: mo02
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; t=1764690707;
+    s=strato-dkim-0002; d=iokpp.de;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=ZbjDRbLI8AhRyuG66jVB4u9mUy8L4JMG78Ig724DUeA=;
+    b=CAueKhCNAG9RJx8yRgMHxrBv0iuF+EF3crlLqGpA/qb+KOxwV2PPBjehiXtRdWE8O/
+    /clKDkPH5UfYuCwC0h7R93NxlnWm5cnlTD804VD+IgfpmwnosEhvm2FZ9myGIWamgmkZ
+    QXd8t+OnZ7TThlq2lpyjV3Pg1BlULPTU/kdylofqinvxiv1EMQni1WeUleClAs/nN8Km
+    +AyC/Lb748MQGEDDFkql+ENfAUaxWkRCxQKYUeFHOrut8mTHgiV/kekyQc82+WbkHGWe
+    lKid2PAj1tjZ2c6vDadQeMEHZJEyxyHNWtiB+YKEXKxMq4//TCp45XCEChf/2Jbo3ICX
+    0qtw==
+DKIM-Signature: v=1; a=ed25519-sha256; c=relaxed/relaxed; t=1764690707;
+    s=strato-dkim-0003; d=iokpp.de;
+    h=Message-Id:Date:Subject:Cc:To:From:Cc:Date:From:Subject:Sender;
+    bh=ZbjDRbLI8AhRyuG66jVB4u9mUy8L4JMG78Ig724DUeA=;
+    b=JlK7GPrQ9fMZn+rH1+BLfNtHIhzFq0XLOApqtt/8V3ULykcWPyZ3bRLBObcR3se2qX
+    LbaiBEN5zKoDFqNqKSAw==
+X-RZG-AUTH: ":LmkFe0i9dN8c2t4QQyGBB/NDXvjDB6pBSfNuhhDSDt3O28+fJYGxVfGu0RAw7GWUjh5vFf1kXr2e9CjbuRlQs4nJC3kjeg=="
+Received: from Munilab01-lab..
+    by smtp.strato.de (RZmta 54.0.0 AUTH)
+    with ESMTPSA id zd76761B2FpkIJP
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256 bits))
+	(Client did not present a certificate);
+    Tue, 2 Dec 2025 16:51:46 +0100 (CET)
+From: Bean Huo <beanhuo@iokpp.de>
+To: avri.altman@wdc.com,
+	avri.altman@sandisk.com,
+	bvanassche@acm.org,
+	alim.akhtar@samsung.com,
+	jejb@linux.ibm.com,
+	martin.petersen@oracle.com,
+	can.guo@oss.qualcomm.com,
+	ulf.hansson@linaro.org,
+	beanhuo@micron.com,
+	jens.wiklander@linaro.org,
+	arnd@arndb.de
+Cc: linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org,
+	kernel test robot <lkp@intel.com>
+Subject: [PATCH v1] scsi: ufs: Fix RPMB link error by reversing Kconfig dependencies
+Date: Tue,  2 Dec 2025 16:51:38 +0100
+Message-Id: <20251202155138.2607210-1-beanhuo@iokpp.de>
+X-Mailer: git-send-email 2.34.1
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: AGZqLRzYUuFF
-Date: Tue, 02 Dec 2025 16:57:20 +0100
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Bean Huo" <beanhuo@iokpp.de>, "Avri Altman" <avri.altman@wdc.com>,
- avri.altman@sandisk.com, "Bart Van Assche" <bvanassche@acm.org>,
- "Alim Akhtar" <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>, can.guo@oss.qualcomm.com,
- "Ulf Hansson" <ulf.hansson@linaro.org>, "Bean Huo" <beanhuo@micron.com>,
- "Jens Wiklander" <jens.wiklander@linaro.org>
-Cc: linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
- "kernel test robot" <lkp@intel.com>
-Message-Id: <c8656f51-a683-4943-ae6e-d310217897a9@app.fastmail.com>
-In-Reply-To: <20251202155138.2607210-1-beanhuo@iokpp.de>
-References: <20251202155138.2607210-1-beanhuo@iokpp.de>
-Subject: Re: [PATCH v1] scsi: ufs: Fix RPMB link error by reversing Kconfig
- dependencies
-Content-Type: text/plain
-Content-Transfer-Encoding: 7bit
+Content-Transfer-Encoding: 8bit
+Content-Type: text/plain; charset="us-ascii"
 
-On Tue, Dec 2, 2025, at 16:51, Bean Huo wrote:
-> From: Bean Huo <beanhuo@micron.com>
->
-> When CONFIG_SCSI_UFSHCD=y and CONFIG_RPMB=m, the kernel fails to link
-> with undefined references to ufs_rpmb_probe() and ufs_rpmb_remove():
->
-> ld: drivers/ufs/core/ufshcd.c:8950: undefined reference to `ufs_rpmb_probe'
-> ld: drivers/ufs/core/ufshcd.c:10505: undefined reference to `ufs_rpmb_remove'
->
-> The issue is that RPMB depends on its consumers (MMC, UFS) in Kconfig, which
-> is backwards. This prevents proper module dependency handling when the library
-> is modular but consumers are built-in.
->
-> Fix by reversing the dependency:
-> - Remove 'depends on MMC || SCSI_UFSHCD' from RPMB Kconfig
-> - Add 'depends on RPMB || !RPMB' to SCSI_UFSHCD Kconfig
->
-> This allows RPMB to be an independent library while ensuring correct
-> linking in all module/built-in combinations.
->
-> Fixes: b06b8c421485 ("scsi: ufs: core: Add OP-TEE based RPMB driver for 
-> UFS devices")
-> Reported-by: kernel test robot <lkp@intel.com>
-> Closes: 
-> https://lore.kernel.org/oe-kbuild-all/202511300443.h7sotuL0-lkp@intel.com/
-> Suggested-by: Arnd Bergmann <arnd@arndb.de>
-> Cc: Bart Van Assche <bvanassche@acm.org>
-> Cc: Jens Wiklander <jens.wiklander@linaro.org>
-> Cc: Ulf Hansson <ulf.hansson@linaro.org>
-> Signed-off-by: Bean Huo <beanhuo@micron.com>
+From: Bean Huo <beanhuo@micron.com>
 
-Looks good to me,
+When CONFIG_SCSI_UFSHCD=y and CONFIG_RPMB=m, the kernel fails to link
+with undefined references to ufs_rpmb_probe() and ufs_rpmb_remove():
 
-Reviewed-by: Arnd Bergmann <arnd@arndb.de>
+ld: drivers/ufs/core/ufshcd.c:8950: undefined reference to `ufs_rpmb_probe'
+ld: drivers/ufs/core/ufshcd.c:10505: undefined reference to `ufs_rpmb_remove'
+
+The issue is that RPMB depends on its consumers (MMC, UFS) in Kconfig, which
+is backwards. This prevents proper module dependency handling when the library
+is modular but consumers are built-in.
+
+Fix by reversing the dependency:
+- Remove 'depends on MMC || SCSI_UFSHCD' from RPMB Kconfig
+- Add 'depends on RPMB || !RPMB' to SCSI_UFSHCD Kconfig
+
+This allows RPMB to be an independent library while ensuring correct
+linking in all module/built-in combinations.
+
+Fixes: b06b8c421485 ("scsi: ufs: core: Add OP-TEE based RPMB driver for UFS devices")
+Reported-by: kernel test robot <lkp@intel.com>
+Closes: https://lore.kernel.org/oe-kbuild-all/202511300443.h7sotuL0-lkp@intel.com/
+Suggested-by: Arnd Bergmann <arnd@arndb.de>
+Cc: Bart Van Assche <bvanassche@acm.org>
+Cc: Jens Wiklander <jens.wiklander@linaro.org>
+Cc: Ulf Hansson <ulf.hansson@linaro.org>
+Signed-off-by: Bean Huo <beanhuo@micron.com>
+---
+ drivers/misc/Kconfig | 1 -
+ drivers/ufs/Kconfig  | 1 +
+ 2 files changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
+index 9d1de68dee27..d7d41b054b98 100644
+--- a/drivers/misc/Kconfig
++++ b/drivers/misc/Kconfig
+@@ -106,7 +106,6 @@ config PHANTOM
+ 
+ config RPMB
+ 	tristate "RPMB partition interface"
+-	depends on MMC || SCSI_UFSHCD
+ 	help
+ 	  Unified RPMB unit interface for RPMB capable devices such as eMMC and
+ 	  UFS. Provides interface for in-kernel security controllers to access
+diff --git a/drivers/ufs/Kconfig b/drivers/ufs/Kconfig
+index 90226f72c158..f662e7ce71f1 100644
+--- a/drivers/ufs/Kconfig
++++ b/drivers/ufs/Kconfig
+@@ -6,6 +6,7 @@
+ menuconfig SCSI_UFSHCD
+ 	tristate "Universal Flash Storage Controller"
+ 	depends on SCSI && SCSI_DMA
++	depends on RPMB || !RPMB
+ 	select PM_DEVFREQ
+ 	select DEVFREQ_GOV_SIMPLE_ONDEMAND
+ 	select NLS
+-- 
+2.34.1
+
