@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 582922FCC16
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Dec 2025 05:46:20 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4633A1F130A
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Dec 2025 05:46:23 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764654381; cv=none; b=nB7liKYtzh6bLVmpu87LFnj7B4iLmxeOvQ5PUlrMMac5eRgvt+oG9s7po+34PktSyr2N48ZkNM2y3S9YXsu0CaTwjdRkXVqirXT7dHkX/b+R3ClojkKy3QpxBYR096HnSxxDO1sHksuY6hVDi7BP/gP6Rxyrj2YSeBKvkHya57w=
+	t=1764654384; cv=none; b=Cvyly4Ky52VVfNjf4j24GkW/7du/Xq+1WCjH26vt/rg2tc+URckv1EsbmgHFdu0c06HHIea9fsbCEo+zLC2me0K5yiHs5XJ+6JP8+bq2CnnSlkrEoYkr4cIpOk1ieOJ0xyV52RU7Nn7aVxr0Cnne12Ayp+WVncD68msTooJWrUM=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764654381; c=relaxed/simple;
-	bh=RnWZ4ya9VzEEkkFeO69Wvc3AcDJ2ty3DCFq0iLhr+Zk=;
+	s=arc-20240116; t=1764654384; c=relaxed/simple;
+	bh=JUrMMRpNQ9rFKae/QtzP1xV2I4+a3+MzH2kQkTswCq8=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=JYtjgEgyrjIuae52QOoGy53+usnVn8bTchKtBC9cF3nbtEn/a0EkbPSccKc9zP4JNP2yGCM5czdZwK+/I10tFdXGW3Bzo5xjEyG96RAaebrTFuGbbkXu19UC2XMzDrqWqwN65oLltQNEpqPMXvc1kCsDPi1RvgF4C0EaEbwP2RQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=DleBRQNo; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=NCaKaXiHLX7Ytalkn9+H4NO6uEgu84EEq7fsgLp7OdLFaWe8WVIkEN1zPQVCUoMH9EvxxBJy+Mxf1ZBZRSl82o3pBQloSBFG9SXddUbfz1N8TGl7kRElKwOrXC1wpIQr2vfe9xqshNx7d0Ag9T4nT2mQo4Px3C9dXnrwM+5Y0Uw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=pass smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=UKgU9YFJ; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="DleBRQNo"
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5B1H0nsq4147931;
-	Mon, 1 Dec 2025 21:46:15 -0800
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="UKgU9YFJ"
+Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5B1NSBs52365008;
+	Mon, 1 Dec 2025 21:46:21 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
 	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=v
-	XH1FPq4s/cVS00pTUdJznkXy7XMm/ruCJexMo3T+CU=; b=DleBRQNoRCZp6ACSz
-	bOKFSFz1M9+hW2i+d127r0SnR716WmT8b++/YI49jX4Mc6k10kEquvQVm51xFZnm
-	fHL/hwTKeBksD1aR51PIB8qxPBnKbLmrRc+diUjT6da2GULcTPch8emwV4lKy0gM
-	OCSj/CUZtIwzp/3UFOsN84p/jGJYf+xQ954ZOFH//n6lv/S8bg0kxroUrUn/dw7C
-	YPmAzLBIZ1pM+oe4HPsuIZtIyMBMmsQcKELWFRtUK7FwHJKHqGw6tz5BYuBIo3Rq
-	ZR3SPokDn/yFXQOfsto6oWBr1gsubwHnrlVWUUTcYRdZcWu5gE0B4KYIcvXKBSbT
-	K6X1Q==
+	NxviH+RUMANBM+NvVaqCk1LEmyO9M0eKHn06l8tc5w=; b=UKgU9YFJ0T1EemUb/
+	jTD4Z+7wE5SRx9Kh1SbdvPVOvGV1feoKq8EnD3Ij26nBavS6IejDHQgwcxMNi9WL
+	mZYSKCesu6Tq+RcJtgn+uJrhfgqoEx6zbygOtNFohwjNALViKnDIfVEXZvwFS0rO
+	1L92yXHzwsj6uvIQ/Z6Zt/dYY1LBktm/q13p7NnW8Brbm9dska11wuxyYsS/Neez
+	hYPl3T6GOBmGaPhy1hND5cyrC6ES82bH/HjQALbn+XpbM7rcKRCagie5DhikPBv8
+	NdTSKZ+wW/qEovTCTVfBTqCuV9MHvtaFqa+rMbAXBCxvMw+JNIXiVjtCzmkQwyyc
+	OLh6w==
 Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4ar17nn81s-1
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4asmqh8m3s-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Mon, 01 Dec 2025 21:46:15 -0800 (PST)
+	Mon, 01 Dec 2025 21:46:21 -0800 (PST)
 Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
  DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Mon, 1 Dec 2025 21:46:28 -0800
+ 15.2.1544.25; Mon, 1 Dec 2025 21:46:33 -0800
 Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
  (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Mon, 1 Dec 2025 21:46:28 -0800
+ Transport; Mon, 1 Dec 2025 21:46:33 -0800
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id A4D7C5B6975;
-	Mon,  1 Dec 2025 21:46:12 -0800 (PST)
+	by maili.marvell.com (Postfix) with ESMTP id E5A055B6972;
+	Mon,  1 Dec 2025 21:46:17 -0800 (PST)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <sdeodhar@marvell.com>, <emilne@redhat.com>,
         <jmeneghi@redhat.com>
-Subject: [PATCH 09/12] qla2xxx: validate sp before freeing associated memory
-Date: Tue, 2 Dec 2025 11:14:41 +0530
-Message-ID: <20251202054444.1711778-10-njavali@marvell.com>
+Subject: [PATCH 11/12] qla2xxx: fix bsg_done causing double free
+Date: Tue, 2 Dec 2025 11:14:43 +0530
+Message-ID: <20251202054444.1711778-12-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20251202054444.1711778-1-njavali@marvell.com>
 References: <20251202054444.1711778-1-njavali@marvell.com>
@@ -60,123 +60,160 @@ List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="UTF-8"
 Content-Transfer-Encoding: 8bit
-X-Proofpoint-GUID: W9c9MrWuyCwu7o8Hkr5QZT1KGYicROcg
-X-Authority-Analysis: v=2.4 cv=R+MO2NRX c=1 sm=1 tr=0 ts=692e7d27 cx=c_pps
+Content-Type: text/plain
+X-Authority-Analysis: v=2.4 cv=HMnO14tv c=1 sm=1 tr=0 ts=692e7d2d cx=c_pps
  a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
- a=IkcTkHD0fZMA:10 a=wP3pNCr1ah4A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8 a=6UGMoZGkOhPUpegkkFQA:9 a=3ZKOabzyN94A:10
- a=QEXdDO2ut3YA:10 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-ORIG-GUID: W9c9MrWuyCwu7o8Hkr5QZT1KGYicROcg
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjAyMDA0MyBTYWx0ZWRfXy7UhtPirPToT
- QfvbMYtb9tKLaP+N7/H1IqmSv4rjf3rXPfChLKVQGgz0CCvG/gndgzT4NG1a0sD8gJbhor3WZK9
- 11kxAYjFOU6YoF2xYJssTSPNYl+MaStuzOgcthC6BFtvOz0155jW5upVSdf++s7cX+eJbwtZqMw
- QTEtUpmzZwKVsn9W9S0GVRMSJWp5MBMYOgt1iGRQf+wys4hzaQBR1dCfGvPhCN0mYh6k5+pRfRZ
- 8aV1zG0PWgtwT/0EOLd97RVopNEuzDwAPVlhBlBljSVnJiY5EoReNFFJoJplY7OoGa9ys5vzTRk
- xGx3ZzrIElKEcuVPJBK4YGZWZfcHZuQNLZy2bRk/A==
+ a=wP3pNCr1ah4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=M5GUcnROAAAA:8 a=VwQbUJbxAAAA:8
+ a=oK_aeN5Z_2LSqHoCI5QA:9 a=OBjm3rFKGHvpk9ecZwUJ:22
+X-Proofpoint-ORIG-GUID: fp1kMMkzeu3uBBJcWP-GHqExuQTPBcd9
+X-Proofpoint-GUID: fp1kMMkzeu3uBBJcWP-GHqExuQTPBcd9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjAyMDA0MyBTYWx0ZWRfX2SUiaxdJ05BS
+ i7Y6OvARDsNxscV7YVcvc4IEqj3zCqdH4t+iXPhUNGYXonVvYS2jtmHubz2GXK/GTFQinHOiqDg
+ NV/ico8CI0fXUGQwYAOGlqZAJWspvICWGUi/rgukAT6ke61hzXmDW8S/qBxMl9Nsze75g26FhO5
+ DR6NIHJ1K8pj1adSdAkY7/v1TxdhI0ix83iKsPOXcjqWzHVm4yZsGiXmn5DODolA1kE1N8kUvvH
+ kylyyA3eNQK9iVu8pbYSyMT6ouGzKfMtTzU58LzICCVJjYY2aFJNNAFNSzhIo9mHrZfv4auan9B
+ lTkj/F9U93d3HgkngGqzhWBBDq9GAxcIHnAQ84IPnZQmp7Y8aARMNWjI06I0Fb1r5/JZMcLp251
+ It+toUl3hpZIIMoJtKX3gbJb+tHyHw==
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-11-28_08,2025-11-27_02,2025-10-01_01
 
 From: Anil Gurumurthy <agurumurthy@marvell.com>
 
-System crash with the following signature
-[154563.214890] nvme nvme2: NVME-FC{1}: controller connect complete
-[154564.169363] qla2xxx [0000:b0:00.1]-3002:2: nvme: Sched: Set ZIO exchange threshold to 3.
-[154564.169405] qla2xxx [0000:b0:00.1]-ffffff:2: SET ZIO Activity exchange threshold to 5.
-[154565.539974] qla2xxx [0000:b0:00.1]-5013:2: RSCN database changed – 0078 0080 0000.
-[154565.545744] qla2xxx [0000:b0:00.1]-5013:2: RSCN database changed – 0078 00a0 0000.
-[154565.545857] qla2xxx [0000:b0:00.1]-11a2:2: FEC=enabled (data rate).
-[154565.552760] qla2xxx [0000:b0:00.1]-11a2:2: FEC=enabled (data rate).
-[154565.553079] BUG: kernel NULL pointer dereference, address: 00000000000000f8
-[154565.553080] #PF: supervisor read access in kernel mode
-[154565.553082] #PF: error_code(0x0000) - not-present page
-[154565.553084] PGD 80000010488ab067 P4D 80000010488ab067 PUD 104978a067 PMD 0
-[154565.553089] Oops: 0000 1 PREEMPT SMP PTI
-[154565.553092] CPU: 10 PID: 858 Comm: qla2xxx_2_dpc Kdump: loaded Tainted: G           OE     -------  ---  5.14.0-503.11.1.el9_5.x86_64 #1
-[154565.553096] Hardware name: HPE Synergy 660 Gen10/Synergy 660 Gen10 Compute Module, BIOS I43 09/30/2024
-[154565.553097] RIP: 0010:qla_fab_async_scan.part.0+0x40b/0x870 [qla2xxx]
-[154565.553141] Code: 00 00 e8 58 a3 ec d4 49 89 e9 ba 12 20 00 00 4c 89 e6 49 c7 c0 00 ee a8 c0 48 c7 c1 66 c0 a9 c0 bf 00 80 00 10 e8 15 69 00 00 <4c> 8b 8d f8 00 00 00 4d 85 c9 74 35 49 8b 84 24 00 19 00 00 48 8b
-[154565.553143] RSP: 0018:ffffb4dbc8aebdd0 EFLAGS: 00010286
-[154565.553145] RAX: 0000000000000000 RBX: ffff8ec2cf0908d0 RCX: 0000000000000002
-[154565.553147] RDX: 0000000000000000 RSI: ffffffffc0a9c896 RDI: ffffb4dbc8aebd47
-[154565.553148] RBP: 0000000000000000 R08: ffffb4dbc8aebd45 R09: 0000000000ffff0a
-[154565.553150] R10: 0000000000000000 R11: 000000000000000f R12: ffff8ec2cf0908d0
-[154565.553151] R13: ffff8ec2cf090900 R14: 0000000000000102 R15: ffff8ec2cf084000
-[154565.553152] FS:  0000000000000000(0000) GS:ffff8ed27f800000(0000) knlGS:0000000000000000
-[154565.553154] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
-[154565.553155] CR2: 00000000000000f8 CR3: 000000113ae0a005 CR4: 00000000007706f0
-[154565.553157] DR0: 0000000000000000 DR1: 0000000000000000 DR2: 0000000000000000
-[154565.553158] DR3: 0000000000000000 DR6: 00000000fffe0ff0 DR7: 0000000000000400
-[154565.553159] PKRU: 55555554
-[154565.553160] Call Trace:
-[154565.553162]  <TASK>
-[154565.553165]  ? show_trace_log_lvl+0x1c4/0x2df
-[154565.553172]  ? show_trace_log_lvl+0x1c4/0x2df
-[154565.553177]  ? qla_fab_async_scan.part.0+0x40b/0x870 [qla2xxx]
-[154565.553215]  ? __die_body.cold+0x8/0xd
-[154565.553218]  ? page_fault_oops+0x134/0x170
-[154565.553223]  ? snprintf+0x49/0x70
-[154565.553229]  ? exc_page_fault+0x62/0x150
-[154565.553238]  ? asm_exc_page_fault+0x22/0x30
+Kernel panic observed on system,
 
-Check for sp being non NULL before freeing any associated memory
+[5353358.825191] BUG: unable to handle page fault for address: ff5f5e897b024000
+[5353358.825194] #PF: supervisor write access in kernel mode
+[5353358.825195] #PF: error_code(0x0002) - not-present page
+[5353358.825196] PGD 100006067 P4D 0
+[5353358.825198] Oops: 0002 [#1] PREEMPT SMP NOPTI
+[5353358.825200] CPU: 5 PID: 2132085 Comm: qlafwupdate.sub Kdump: loaded Tainted: G        W    L    -------  ---  5.14.0-503.34.1.el9_5.x86_64 #1
+[5353358.825203] Hardware name: HPE ProLiant DL360 Gen11/ProLiant DL360 Gen11, BIOS 2.44 01/17/2025
+[5353358.825204] RIP: 0010:memcpy_erms+0x6/0x10
+[5353358.825211] RSP: 0018:ff591da8f4f6b710 EFLAGS: 00010246
+[5353358.825212] RAX: ff5f5e897b024000 RBX: 0000000000007090 RCX: 0000000000001000
+[5353358.825213] RDX: 0000000000001000 RSI: ff591da8f4fed090 RDI: ff5f5e897b024000
+[5353358.825214] RBP: 0000000000010000 R08: ff5f5e897b024000 R09: 0000000000000000
+[5353358.825215] R10: ff46cf8c40517000 R11: 0000000000000001 R12: 0000000000008090
+[5353358.825216] R13: ff591da8f4f6b720 R14: 0000000000001000 R15: 0000000000000000
+[5353358.825218] FS:  00007f1e88d47740(0000) GS:ff46cf935f940000(0000) knlGS:0000000000000000
+[5353358.825219] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[5353358.825220] CR2: ff5f5e897b024000 CR3: 0000000231532004 CR4: 0000000000771ef0
+[5353358.825221] PKRU: 55555554
+[5353358.825222] Call Trace:
+[5353358.825223]  <TASK>
+[5353358.825224]  ? show_trace_log_lvl+0x1c4/0x2df
+[5353358.825229]  ? show_trace_log_lvl+0x1c4/0x2df
+[5353358.825232]  ? sg_copy_buffer+0xc8/0x110
+[5353358.825236]  ? __die_body.cold+0x8/0xd
+[5353358.825238]  ? page_fault_oops+0x134/0x170
+[5353358.825242]  ? kernelmode_fixup_or_oops+0x84/0x110
+[5353358.825244]  ? exc_page_fault+0xa8/0x150
+[5353358.825247]  ? asm_exc_page_fault+0x22/0x30
+[5353358.825252]  ? memcpy_erms+0x6/0x10
+[5353358.825253]  sg_copy_buffer+0xc8/0x110
+[5353358.825259]  qla2x00_process_vendor_specific+0x652/0x1320 [qla2xxx]
+[5353358.825317]  qla24xx_bsg_request+0x1b2/0x2d0 [qla2xxx]
 
-Fixes: a4239945b8ad ("scsi: qla2xxx: Add switch command to simplify fabric discovery")
+Most routines in qla_bsg.c call bsg_done only for
+success cases.
+However a few invoke it for failure case as well
+leading to a double free. Validate before calling bsg_done.
+
 Cc: stable@vger.kernel.org
 Signed-off-by: Anil Gurumurthy <agurumurthy@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 ---
- drivers/scsi/qla2xxx/qla_gs.c | 34 ++++++++++++++++++----------------
- 1 file changed, 18 insertions(+), 16 deletions(-)
+ drivers/scsi/qla2xxx/qla_bsg.c | 33 ++++++++++++++++++++-------------
+ 1 file changed, 20 insertions(+), 13 deletions(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_gs.c b/drivers/scsi/qla2xxx/qla_gs.c
-index e5ebb9c5b650..880cd73feaca 100644
---- a/drivers/scsi/qla2xxx/qla_gs.c
-+++ b/drivers/scsi/qla2xxx/qla_gs.c
-@@ -3698,23 +3698,25 @@ int qla_fab_async_scan(scsi_qla_host_t *vha, srb_t *sp)
+diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
+index 8afa8a4b8ccb..2c44a379cb23 100644
+--- a/drivers/scsi/qla2xxx/qla_bsg.c
++++ b/drivers/scsi/qla2xxx/qla_bsg.c
+@@ -1548,8 +1548,9 @@ qla2x00_update_optrom(struct bsg_job *bsg_job)
+ 	ha->optrom_buffer = NULL;
+ 	ha->optrom_state = QLA_SWAITING;
+ 	mutex_unlock(&ha->optrom_mutex);
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		       bsg_reply->reply_payload_rcv_len);
++	if (!rval)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
  	return rval;
+ }
  
- done_free_sp:
--	if (sp->u.iocb_cmd.u.ctarg.req) {
--		dma_free_coherent(&vha->hw->pdev->dev,
--		    sp->u.iocb_cmd.u.ctarg.req_allocated_size,
--		    sp->u.iocb_cmd.u.ctarg.req,
--		    sp->u.iocb_cmd.u.ctarg.req_dma);
--		sp->u.iocb_cmd.u.ctarg.req = NULL;
--	}
--	if (sp->u.iocb_cmd.u.ctarg.rsp) {
--		dma_free_coherent(&vha->hw->pdev->dev,
--		    sp->u.iocb_cmd.u.ctarg.rsp_allocated_size,
--		    sp->u.iocb_cmd.u.ctarg.rsp,
--		    sp->u.iocb_cmd.u.ctarg.rsp_dma);
--		sp->u.iocb_cmd.u.ctarg.rsp = NULL;
--	}
-+	if (sp) {
-+		if (sp->u.iocb_cmd.u.ctarg.req) {
-+			dma_free_coherent(&vha->hw->pdev->dev,
-+			    sp->u.iocb_cmd.u.ctarg.req_allocated_size,
-+			    sp->u.iocb_cmd.u.ctarg.req,
-+			    sp->u.iocb_cmd.u.ctarg.req_dma);
-+			sp->u.iocb_cmd.u.ctarg.req = NULL;
-+		}
-+		if (sp->u.iocb_cmd.u.ctarg.rsp) {
-+			dma_free_coherent(&vha->hw->pdev->dev,
-+			    sp->u.iocb_cmd.u.ctarg.rsp_allocated_size,
-+			    sp->u.iocb_cmd.u.ctarg.rsp,
-+			    sp->u.iocb_cmd.u.ctarg.rsp_dma);
-+			sp->u.iocb_cmd.u.ctarg.rsp = NULL;
-+		}
+@@ -2638,8 +2639,9 @@ qla2x00_manage_host_stats(struct bsg_job *bsg_job)
+ 				    sizeof(struct ql_vnd_mng_host_stats_resp));
  
--	/* ref: INIT */
--	kref_put(&sp->cmd_kref, qla2x00_sp_release);
-+		/* ref: INIT */
-+		kref_put(&sp->cmd_kref, qla2x00_sp_release);
-+	}
+ 	bsg_reply->result = DID_OK;
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		     bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
  
- 	spin_lock_irqsave(&vha->work_lock, flags);
- 	vha->scan.scan_flags &= ~SF_SCANNING;
+ 	return ret;
+ }
+@@ -2728,8 +2730,9 @@ qla2x00_get_host_stats(struct bsg_job *bsg_job)
+ 							       bsg_job->reply_payload.sg_cnt,
+ 							       data, response_len);
+ 	bsg_reply->result = DID_OK;
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		     bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ 	kfree(data);
+ host_stat_out:
+@@ -2828,8 +2831,9 @@ qla2x00_get_tgt_stats(struct bsg_job *bsg_job)
+ 				    bsg_job->reply_payload.sg_cnt, data,
+ 				    response_len);
+ 	bsg_reply->result = DID_OK;
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		     bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ tgt_stat_out:
+ 	kfree(data);
+@@ -2890,8 +2894,9 @@ qla2x00_manage_host_port(struct bsg_job *bsg_job)
+ 				    bsg_job->reply_payload.sg_cnt, &rsp_data,
+ 				    sizeof(struct ql_vnd_mng_host_port_resp));
+ 	bsg_reply->result = DID_OK;
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-		     bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ 	return ret;
+ }
+@@ -3272,7 +3277,8 @@ int qla2x00_mailbox_passthru(struct bsg_job *bsg_job)
+ 
+ 	bsg_job->reply_len = sizeof(*bsg_job->reply);
+ 	bsg_reply->result = DID_OK << 16;
+-	bsg_job_done(bsg_job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
++	if (!ret)
++		bsg_job_done(bsg_job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
+ 
+ 	kfree(req_data);
+ 
+@@ -3359,8 +3365,9 @@ static int qla28xx_validate_flash_image(struct bsg_job *bsg_job)
+ 	bsg_reply->result = DID_OK << 16;
+ 	bsg_reply->reply_payload_rcv_len = 0;
+ 	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
+-	bsg_job_done(bsg_job, bsg_reply->result,
+-			bsg_reply->reply_payload_rcv_len);
++	if (!rval)
++		bsg_job_done(bsg_job, bsg_reply->result,
++			     bsg_reply->reply_payload_rcv_len);
+ 
+ 	return QLA_SUCCESS;
+ }
 -- 
 2.23.1
 
