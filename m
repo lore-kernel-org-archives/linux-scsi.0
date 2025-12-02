@@ -1,120 +1,165 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D12BF7261C;
-	Tue,  2 Dec 2025 00:53:49 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 934CA1DE8AF
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Dec 2025 01:00:12 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764636832; cv=none; b=th6mUEloJ245bD3zAUhAy36yjDIaqbsPnKU6aqiPViy6FJrYA2eaK2xg0f9+OvX96wksWMxkhTr1ILsJNIgp1gZIgZ5M7Ob1DSNr5MWyptTwSTi2WSQySzEqs49Sss9lRX6xDlby82wx7b7Q46nYmF14XFs0for9Fw1R19xLLZg=
+	t=1764637215; cv=none; b=TzzN/wk8HOkP+08O26UL/BOU112/coqh/4JUa45v19ncxvXzjSKSJshwDyRz6Wa3Nq557pIfhmiNhi126iv2WHCcsxML/X96LTI7iWn2c8cY4sdOMyPT2G6BJVr0aMuU5I0i1OghmnSP4usn/QTcJCkA7AzXPYeYucnfkKbsDUI=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764636832; c=relaxed/simple;
-	bh=GwL9PTm1UfeWRz8QWdstyIHoUnnjatdx2KKy6uQwyEs=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=ZO5jG9s+OgtgiJ+FdZ3qpt/ICKHGEn5myNvHTqf9vBU1ANMgjSB7sGd2Zh1vlrl6Kw/+edYYM+8G0vdMb6gBdGLfEO/TPpTeVdTK2Znjdd/ruDxUXEZeIUKijAaLVr1HWpcZbcevD6GfGkGrHMQq97D4aDGD8u01JfDR9cLe22A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=4V/qnH+E; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1764637215; c=relaxed/simple;
+	bh=PxP6uKksKUzaWHty9yfcmnKTHhxY0xe7WiUUDcUvSbU=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=cBSFmnRhuT/6DpVRS7NTQ35kEfxUFOKpaYoWer3Iq/VciJYY9ayaT6v8vjXdyvN4FqW5+7BWdux/wjOI/1FK/GC4hRL2VXhtIhaDitXucYDpOQ8jiVHkrVmcQ1h+u8mJLVGZQMCn4vmGbgJ3En56Lkm7zPVQ699D47QPkH/3+xg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=RG/tYgfF; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="4V/qnH+E"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dL2Md26hQzlfgQK;
-	Tue,  2 Dec 2025 00:53:49 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1764636827; x=1767228828; bh=KqNLPPobjR29ZW7h5eD+cq+D
-	Usmg30En60oi6F/HeaM=; b=4V/qnH+Eik1XtH6lMDnrwHSAU7l9Ea4OoQK/lB6R
-	cl8HxU02bMRsZmfrJHaNZhD/vH1hVYgd8TImEBrYGYNQmDcDQaXifwAEP/vcEkaA
-	vQDDEWWVJlTFaX2NmDUtuZrlBazenxwaMiRiO0nNZcu951FKPSPaS3DGNyZxagQI
-	rdcdwHHE9fgjep/atpCx6xfHxs+qGJ5B2XsPrlLmDRBEcWmcnDHAOSnMjDk30OIf
-	oRiOpF59aQxdsC/dXFVdZ6BdH+8Z8ENzdGvPH4GKWKCq6T3e62FzzL3QopTkxNtw
-	cv7KifY+YgArZbXsKhNQibFJQPQBjHHyfkd0C+w+9w7rXQ==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 1LUTIJ__bKxO; Tue,  2 Dec 2025 00:53:47 +0000 (UTC)
-Received: from [100.68.218.127] (syn-076-081-111-208.biz.spectrum.com [76.81.111.208])
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="RG/tYgfF"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1764637210;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:content-type:content-type:
+	 content-transfer-encoding:content-transfer-encoding:
+	 in-reply-to:in-reply-to:references:references;
+	bh=BSXRUI4rYX7v7e12DwZA3WuUIB5pISkkj3j3RLO+rQQ=;
+	b=RG/tYgfFCTyAoFSLKR8CIwOTG97px6OzxuhG01Z0x/EGKv4rmo34zttq7898CSHWewkfoj
+	J/yjoJJyLMlgIDRNbZKG108fIfrCPQfzwK1lhk2i+PIcq9lAbd6hYhymJVJdNk0WZJVubi
+	QRwXFCOaedp/RT1JQd1MRV5zTdq+Qm8=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-151-ZBixc-R5PgycTpzbf1ZMkw-1; Mon,
+ 01 Dec 2025 20:00:07 -0500
+X-MC-Unique: ZBixc-R5PgycTpzbf1ZMkw-1
+X-Mimecast-MFC-AGG-ID: ZBixc-R5PgycTpzbf1ZMkw_1764637206
+Received: from mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.17])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dL2MW3hZczlgyZS;
-	Tue,  2 Dec 2025 00:53:43 +0000 (UTC)
-Message-ID: <ef4f3e29-95ad-4094-9742-c37742da26e9@acm.org>
-Date: Mon, 1 Dec 2025 16:53:42 -0800
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 788E91955F2A;
+	Tue,  2 Dec 2025 01:00:05 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
+	by mx-prod-int-05.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 82B3A1955F24;
+	Tue,  2 Dec 2025 01:00:04 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 5B2103js1429478
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Mon, 1 Dec 2025 20:00:03 -0500
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 5B21029A1429477;
+	Mon, 1 Dec 2025 20:00:02 -0500
+Date: Mon, 1 Dec 2025 20:00:02 -0500
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: Martin Wilck <mwilck@suse.com>
+Cc: "James E . J . Bottomley" <James.Bottomley@hansenpartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>, linux-scsi@vger.kernel.org,
+        dm-devel@lists.linux.dev
+Subject: Re: [PATCH] scsi: scsi_dh: Return error pointer in
+ scsi_dh_attached_handler_name
+Message-ID: <aS46EpB6dijzABwA@redhat.com>
+References: <20251121234834.1035028-1-bmarzins@redhat.com>
+ <94bce7593f2980cef43860044e5b662c3d3c0ec7.camel@suse.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH] scsi: ufs: core: Fix link error when CONFIG_RPMB=m
-To: Bean Huo <beanhuo@iokpp.de>,
- "Martin K. Petersen" <martin.petersen@oracle.com>
-Cc: avri.altman@sandisk.com, alim.akhtar@samsung.com, jejb@linux.ibm.com,
- can.guo@oss.qualcomm.com, beanhuo@micron.com, linux-scsi@vger.kernel.org,
- linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
-References: <20251130151508.3076994-1-beanhuo@iokpp.de>
- <yq1seduunc2.fsf@ca-mkp.ca.oracle.com>
- <251eb7e20d91ae9c539bde847ea102a53af82b94.camel@iokpp.de>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <251eb7e20d91ae9c539bde847ea102a53af82b94.camel@iokpp.de>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=iso-8859-1
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <94bce7593f2980cef43860044e5b662c3d3c0ec7.camel@suse.com>
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.17
 
-On 12/1/25 2:42 PM, Bean Huo wrote:
-> On Mon, 2025-12-01 at 12:25 -0500, Martin K. Petersen wrote:
->>> When CONFIG_SCSI_UFSHCD=3Dy and CONFIG_RPMB=3Dm, the kernel fails to =
-link
->>> with undefined references to ufs_rpmb_probe() and ufs_rpmb_remove():
->>>
->>>  =C2=A0 ld: drivers/ufs/core/ufshcd.c:8950: undefined reference to
->>> `ufs_rpmb_probe'
->>>  =C2=A0 ld: drivers/ufs/core/ufshcd.c:10505: undefined reference to
->>> `ufs_rpmb_remove'
->>>
->>> The issue occurs because IS_ENABLED(CONFIG_RPMB) evaluates to true
->>> when CONFIG_RPMB=3Dm, causing the header to declare the real function
->>> prototypes.
->>
->> This now breaks the modular build for me.
->=20
-> I tested both IS_BUILTIN and IS_REACHABLE for the RPMB dependencies bot=
-h work
-> correctly in my configuration.
->=20
-> IS_REACHABLE would provide more flexibility for module configurations, =
-but in
-> practice, I don't have experience with UFS being used as a module.
->=20
-> Would you prefer IS_REACHABLE for theoretical flexibility, or is IS_BUI=
-LTIN
-> acceptable given the typical UFS built-in configuration?
+On Thu, Nov 27, 2025 at 04:26:51PM +0100, Martin Wilck wrote:
+> On Fri, 2025-11-21 at 18:48 -0500, Benjamin Marzinski wrote:
+> > If scsi_dh_attached_handler_name() fails to allocate the handler
+> > name,
+> > dm-multipath (its only caller) assumes there is no attached device
+> > handler, and sets the device up incorrectly. Return an error pointer
+> > instead, so multipath can distinguish between failure and success
+> > where
+> > there is no attached device handler.
+> > 
+> > Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
+> > ---
+> >  drivers/md/dm-mpath.c  | 8 ++++++++
+> >  drivers/scsi/scsi_dh.c | 8 +++++---
+> >  2 files changed, 13 insertions(+), 3 deletions(-)
+> > 
+> > diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+> > index c18358271618..063dc526fe04 100644
+> > --- a/drivers/md/dm-mpath.c
+> > +++ b/drivers/md/dm-mpath.c
+> > @@ -950,6 +950,14 @@ static struct pgpath *parse_path(struct
+> > dm_arg_set *as, struct path_selector *ps
+> >  
+> >  	q = bdev_get_queue(p->path.dev->bdev);
+> >  	attached_handler_name = scsi_dh_attached_handler_name(q,
+> > GFP_KERNEL);
+> > +	if (IS_ERR(attached_handler_name)) {
+> > +		if (PTR_ERR(attached_handler_name) == -ENODEV)
+> > +			attached_handler_name = NULL;
+> 
+> What's the point of continuing here if we know that the SCSI device
+> doesn't exist?
 
-Hi Martin and Bean,
+we just know that it's not a SCSI device, so we clear
+attached_handler_name.  I suppose we could add another check to error
+out here if m->hw_handler_name is set. But if it is, the setup_scsi_dh()
+call just below will fail anyways, so there's not much difference.
 
-Unless someone comes up with a better solution, I propose to apply this
-patch before sending a pull request to Linus and look into making RPMB
-tristate again at a later time:
+But if you think adding that extra check makes things clearer, I'm fine
+with that.
 
-diff --git a/drivers/misc/Kconfig b/drivers/misc/Kconfig
-index 9d1de68dee27..e0b7f8fb6ecb 100644
---- a/drivers/misc/Kconfig
-+++ b/drivers/misc/Kconfig
-@@ -105,7 +105,7 @@ config PHANTOM
-  	  say N here.
+-Ben
+ 
+> Thanks,
+> Martin
+> 
+> > +		else {
+> > +			r = PTR_ERR(attached_handler_name);
+> > +			goto bad;
+> > +		}
+> > +	}
+> >  	if (attached_handler_name || m->hw_handler_name) {
+> >  		INIT_DELAYED_WORK(&p->activate_path,
+> > activate_path_work);
+> >  		r = setup_scsi_dh(p->path.dev->bdev, m,
+> > &attached_handler_name, &ti->error);
+> > diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+> > index 7b56e00c7df6..b9d805317814 100644
+> > --- a/drivers/scsi/scsi_dh.c
+> > +++ b/drivers/scsi/scsi_dh.c
+> > @@ -353,7 +353,8 @@ EXPORT_SYMBOL_GPL(scsi_dh_attach);
+> >   *      that may have a device handler attached
+> >   * @gfp - the GFP mask used in the kmalloc() call when allocating
+> > memory
+> >   *
+> > - * Returns name of attached handler, NULL if no handler is attached.
+> > + * Returns name of attached handler, NULL if no handler is attached,
+> > or
+> > + * and error pointer if an error occurred.
+> >   * Caller must take care to free the returned string.
+> >   */
+> >  const char *scsi_dh_attached_handler_name(struct request_queue *q,
+> > gfp_t gfp)
+> > @@ -363,10 +364,11 @@ const char
+> > *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
+> >  
+> >  	sdev = scsi_device_from_queue(q);
+> >  	if (!sdev)
+> > -		return NULL;
+> > +		return ERR_PTR(-ENODEV);
+> >  
+> >  	if (sdev->handler)
+> > -		handler_name = kstrdup(sdev->handler->name, gfp);
+> > +		handler_name = kstrdup(sdev->handler->name, gfp) ? :
+> > +			       ERR_PTR(-ENOMEM);
+> >  	put_device(&sdev->sdev_gendev);
+> >  	return handler_name;
+> >  }
 
-  config RPMB
--	tristate "RPMB partition interface"
-+	bool "RPMB partition interface"
-  	depends on MMC || SCSI_UFSHCD
-  	help
-  	  Unified RPMB unit interface for RPMB capable devices such as eMMC an=
-d
-
-Thanks,
-
-Bart.
