@@ -1,118 +1,157 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-yx1-f43.google.com (mail-yx1-f43.google.com [74.125.224.43])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 188BE3FF1
-	for <linux-scsi@vger.kernel.org>; Tue,  2 Dec 2025 07:37:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 018AF3016F1
+	for <linux-scsi@vger.kernel.org>; Tue,  2 Dec 2025 08:12:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.43
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764661064; cv=none; b=c/CS00odxIhz89U1Qyz7vUXxKEJFbQi1KMd4cisCdaRH0n/EPQcG6NfoCcThm/oyghgH7DqpWHi4qEWYAfUKXwhk+A1nM2CCZzDV47SKWBTzGphVmyUBVJ2fMWFQVLJW8glmYMpcq77ExrwyRADI/LNiEimR9PJ2c7sdLSjEybs=
+	t=1764663138; cv=none; b=Zo0DdVPuPmTC0fdmW0TEtsmm8W7Ynqs9gI8Yj5ACxXlYw4IyzoH4v3VKBBKQ922dZXEnhFR6qPaSqpWHlwx9QrWSzmKIBengvOdylUdlkL2n9J3rnHKsrZSflAWtpcKX2uWHQX1R/uWEcDhElZtisRfNPtL8QBIkaVyonXDH7lA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764661064; c=relaxed/simple;
-	bh=oeo6FQDW3fXLzjxga/4/2KYjk+Py5rovP0IkAsamuDc=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=R4UZTGaHS5CdYtrPfyFg2qIByZNVRhQvo67ZR4QatzpJoxRpU5dzC2vxuowRpru9t9Y4j+xfwbwiHt5vbSN0oQRkwkQOlS750yrFza8JvVnfd0Ix+o+IF5XlpU1Bb93wt5+V5EBNc5p1gVKLyqLEAd0R8oToyjuz9xwB7fBhL5A=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=lNy6tdO1; arc=none smtp.client-ip=199.89.1.16
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
-Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="lNy6tdO1"
-Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dLCKd2xNmzlfdCr;
-	Tue,  2 Dec 2025 07:37:41 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1764661059; x=1767253060; bh=Zs7uwc6VpuS9SqHAig9Xe24m
-	q2/r7fZ5T8aLoe6MeII=; b=lNy6tdO1HHgeTUUG3SJktReg9MeYwq4PpdOxa1nn
-	nJvp2ywQnJ5xWm4jQOFKV2Eps9yZUoSbGX/NzVMtRjcv0LsXDLJaBbSdVRBu6GhA
-	TrgS/nC5CCTLDWNoewVA7KVpTsSufPvtjqTMoIlc2Q1I6rK6wynrkSSKg10PA+2G
-	cGaQugw2DLI8Ll+Poq7PAI0WjW3qqqbq8lfRksW/+2LD5BxuIgM+BFZFFEsvQCwP
-	GBTv4uLg7nj/2/eTMUQftLsiFYr1A6higKdO2n0L6wniRoqKsPHFk7XAax4MuXcI
-	copSmfI9coC0nKwGlRNTSXblcs2ibMnk2G2Zqdsz79b/Lw==
-X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id 9C3H2ojphm29; Tue,  2 Dec 2025 07:37:39 +0000 (UTC)
-Received: from [10.25.100.232] (syn-098-147-059-154.biz.spectrum.com [98.147.59.154])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dLCKV2yN6zlfdff;
-	Tue,  2 Dec 2025 07:37:34 +0000 (UTC)
-Message-ID: <d7579c22-40d0-4228-b539-4dfe4e25b771@acm.org>
-Date: Mon, 1 Dec 2025 21:37:32 -1000
+	s=arc-20240116; t=1764663138; c=relaxed/simple;
+	bh=mWxBu4jp6WzKBs2dLxdEOU2DZ/Gs4+nB1u8h+TZfP2g=;
+	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
+	 To:Cc:Content-Type; b=XD6ZB+Mc8Ji/Vf7vfKzUZp5QxTdm5Qr8vlOUUUDQL4YjxwK6+tTqnzKd3qkAHpTWQqj5JFtq5cArHBBjETv4pT478qYRQhUL2bzRN7ABcPC6a0kiucuW4PCZh9vmIKWEmPY82bNTlXduiEgvefe5iUf+Ga1L9GF+RSueXQ5tFeI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.43
+Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+Received: by mail-yx1-f43.google.com with SMTP id 956f58d0204a3-640d0895d7cso6725191d50.1
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Dec 2025 00:12:16 -0800 (PST)
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764663136; x=1765267936;
+        h=content-transfer-encoding:cc:to:subject:message-id:date:from
+         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=B36oa751rRTMUwlNXN0qQhn7IgIXA2OPGJjr7TgO6ZY=;
+        b=eNdkNLOVlONlEeD/s36KkjXvQL6qZdSmjlsoNF9MLabNZf7bKauftRIzqItIL3+tCW
+         p5spIa6ZfqxB+0VSFnF14VsPifLbjZ+KCxyOeD63MoFZOXqSXh3IjHb+VMTp+RItoF9+
+         wpw67XOVOnu7Dtsw5+TucAhgMrB301AXcJWIGP03E63+ZYS6NBvaSUFpa7sKyqb8PmN8
+         qlzaE7YdRfldH5C3+hNqRLL/AS7T9TDeoZx62pp+r0Eg0qlRQMhNGTr5kLsB/j0lHobf
+         pNLBnOPUUu023/EMLRQSmQyGQiwzJwg80GBgR2QvnaHyk2GWq9mK1GURq1kjOuTZSkVX
+         IBWw==
+X-Forwarded-Encrypted: i=1; AJvYcCWmY6Mr+N8el/zQjF1QEB7fShDegK3tXB+O8Udcbu/GWNjuXkYACAB64Pj4WrrkdmlJK2gQWY7d6mwW@vger.kernel.org
+X-Gm-Message-State: AOJu0YyIETWF2r2Scr3WFplUveC6iIiALCtwzM+bjysMeDr16E6qwi6g
+	MA4CEGmq4MV1k6EKlMBNQ/ieVezjnur+MlDlVodaKxxBJ9UdKCAJ/6uka1BESQ==
+X-Gm-Gg: ASbGncvXbIq4tJ9Y8UfVc0Y6C9Bp1tjZCzE8k8BQ8m1xhTgnaenFtQ10ntWXzR5Ekpz
+	e0GZCFgrb4zkYnmiUwKQyW+XftRITmatcEwtlE+PlMGEx3v475lWsiQGZSwffvs6Bi4vVprc0M0
+	swlH0KFfECxDiDJ44vlgx1YJGbEgTAcLLBkKvCwp1F3q4WHCDpRsf3HZWifE4Wn9fGNsbDPaNWX
+	sNAACBcR7geShOQLhEHX5d9kRUPdLYEMfpXwnBtV4wD394AOHfWcVrKXOjMlI24gCvyyRtFef9e
+	eikzhw3XPBFpowRXOL2DcknwZdvbOeastyzvGzT6QFst9d97LNQgHM3gjXznyEy66k3na2kBHRk
+	TCgQM5w8+bGdjE7spx8nF4xTiDloXYVDPsQtGl6wsVXv7mg10mT9BWrimHYIQRmFibmHpOUPELX
+	XhPrEesyXJV0cjXzwhC2EgtfXORSMmM1KaRIfYoqOXIA==
+X-Google-Smtp-Source: AGHT+IGGw4Gq47h7cpbXh8yn/2VXg+2+cwoaW6feVX41R2pXT4/rCDVHH0Evreuy99P0mY5u2zi3Cw==
+X-Received: by 2002:a05:690e:14c3:b0:640:d1cc:2be7 with SMTP id 956f58d0204a3-6442f1af4d6mr789898d50.30.1764663135734;
+        Tue, 02 Dec 2025 00:12:15 -0800 (PST)
+Received: from mail-yx1-f47.google.com (mail-yx1-f47.google.com. [74.125.224.47])
+        by smtp.gmail.com with ESMTPSA id 956f58d0204a3-6433c4692a2sm5894966d50.17.2025.12.02.00.12.14
+        for <linux-scsi@vger.kernel.org>
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Tue, 02 Dec 2025 00:12:15 -0800 (PST)
+Received: by mail-yx1-f47.google.com with SMTP id 956f58d0204a3-640daf41b19so6669856d50.0
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Dec 2025 00:12:14 -0800 (PST)
+X-Forwarded-Encrypted: i=1; AJvYcCU7i5shb8BquPUHPHt6Tiuvic8vJf3GBtSU6fg+zhtCVtTya5+SIdkKQncC3IP7AW2RPhmZSq8GRrbc@vger.kernel.org
+X-Received: by 2002:a05:690e:124a:b0:640:db57:8d93 with SMTP id
+ 956f58d0204a3-6442f144d57mr1161167d50.15.1764663133868; Tue, 02 Dec 2025
+ 00:12:13 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved
- request
-To: Manivannan Sadhasivam <mani@kernel.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
- linux-scsi@vger.kernel.org,
- "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
- Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>,
- Bean Huo <beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>,
- Adrian Hunter <adrian.hunter@intel.com>,
- Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>,
- Roger Shimizu <rosh@debian.org>, Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-References: <20251031204029.2883185-1-bvanassche@acm.org>
- <20251031204029.2883185-22-bvanassche@acm.org>
+References: <20251031204029.2883185-1-bvanassche@acm.org> <20251031204029.2883185-22-bvanassche@acm.org>
  <ehorjaflathzab5oekx2nae2zss5vi2r36yqkqsfjb2fgsifz2@yk3us5g3igow>
- <5f75d98a-2c0a-4fdf-a2a9-89bfe09fe751@acm.org>
- <6fw4oikdxwkzbamtvu55fn2gqxr3ngfzymvxr6nxcrjpnpdb2s@v325mijraxmg>
+ <5f75d98a-2c0a-4fdf-a2a9-89bfe09fe751@acm.org> <6fw4oikdxwkzbamtvu55fn2gqxr3ngfzymvxr6nxcrjpnpdb2s@v325mijraxmg>
  <75cf6698-9ce9-4e6d-8b3c-64a7f9ef8cfc@acm.org>
- <in3muo5gco75eenvfjif3bcauyj2ilx3d6qgriifwnyj657fyq@eftlas3z3jiu>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <in3muo5gco75eenvfjif3bcauyj2ilx3d6qgriifwnyj657fyq@eftlas3z3jiu>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+In-Reply-To: <75cf6698-9ce9-4e6d-8b3c-64a7f9ef8cfc@acm.org>
+From: Roger Shimizu <rosh@debian.org>
+Date: Tue, 2 Dec 2025 00:12:02 -0800
+X-Gmail-Original-Message-ID: <CAEQ9gEk0TQ+=f16Lnmnx5Bh717h_CXcAcu_HjKxJWqPC2Xfihw@mail.gmail.com>
+X-Gm-Features: AWmQ_bnwQuQkqsYOdSqARsukzneOmZka6jxgQMtU6mRzj1Mr9LZqxaGAmAkVAzk
+Message-ID: <CAEQ9gEk0TQ+=f16Lnmnx5Bh717h_CXcAcu_HjKxJWqPC2Xfihw@mail.gmail.com>
+Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved request
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
+	linux-scsi@vger.kernel.org, 
+	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>, 
+	Bean Huo <beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
+	Adrian Hunter <adrian.hunter@intel.com>, 
+	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>
+Content-Type: text/plain; charset="UTF-8"
+Content-Transfer-Encoding: quoted-printable
 
-On 12/1/25 6:46 PM, Manivannan Sadhasivam wrote:
-> I checked out 1d0af94ffb5d and applied the diff, but it didn't help:
-> 
-> [    3.878314] scsi host0: ufshcd
-> [    3.881687] scsi host0: nr_reserved_cmds set but no method to queue
-> [    3.888310] ufshcd-qcom 1d84000.ufshc: scsi_add_host failed
-> [    3.895031] ufshcd-qcom 1d84000.ufshc: error -EINVAL: Initialization failed with error -22
-> [    3.903705] ufshcd-qcom 1d84000.ufshc: error -EINVAL: ufshcd_pltfrm_init() failed
-> [    3.911572] ufshcd-qcom 1d84000.ufshc: probe with driver ufshcd-qcom failed with error -22
-> 
-> I'm running out of time to debug this issue. I hope Nitin can also look into
-> this.
+On Mon, Dec 1, 2025 at 5:37=E2=80=AFPM Bart Van Assche <bvanassche@acm.org>=
+ wrote:
+>
+> On 11/28/25 6:51 PM, Manivannan Sadhasivam wrote:
+> > On Fri, Nov 28, 2025 at 06:31:36PM -0800, Bart Van Assche wrote:
+> >> On 11/27/25 8:59 AM, Manivannan Sadhasivam wrote:
+> >>> [1] https://lore.kernel.org/linux-scsi/20251114193406.3097237-1-bvana=
+ssche@acm.org/
+> >>
+> >> This log fragment is only 55 lines long. Please provide the full kerne=
+l
+> >> log.
+> >>
+> >
+> > I just copied the relevant log. But you can find the full log here:
+> > https://gist.github.com/Mani-Sadhasivam/770022b53f11340fbaba06d8eaac184=
+3
+> >
+> > Unfortunately, there is not much useful information in the log.
+>
+> (+Roger since he ran into a similar issue with a similar UFSHCI
+> controller)
+>
+> Does the untested patch below help if it is applied on top of commit
+> 1d0af94ffb5d ("scsi: ufs: core: Make the reserved slot a reserved
+> request")? I'm wondering whether changing hba->reserved_slot from 31 to
+> 0 triggers some controller behavior that has not been fully documented.
+>
+> Thanks,
+>
+> Bart.
+>
+> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
+> index 20eae5d9487b..95f5b08e1cdc 100644
+> --- a/drivers/ufs/core/ufshcd.c
+> +++ b/drivers/ufs/core/ufshcd.c
+> @@ -2476,7 +2476,8 @@ static inline int ufshcd_hba_capabilities(struct
+> ufs_hba *hba)
+>          hba->nutrs =3D (hba->capabilities &
+> MASK_TRANSFER_REQUESTS_SLOTS_SDB) + 1;
+>          hba->nutmrs =3D
+>          ((hba->capabilities & MASK_TASK_MANAGEMENT_REQUEST_SLOTS) >>
+> 16) + 1;
+> -       hba->reserved_slot =3D 0;
+> +       WARN_ON_ONCE(hba->host->nr_reserved_cmds <=3D 0);
+> +       hba->reserved_slot =3D hba->host->nr_reserved_cmds - 1;
 
-Unfortunately the series is not bisectable. Does this patch on top of
-commit 1d0af94ffb5d ("scsi: ufs: core: Make the reserved slot a reserved
-request") help? If not, does the combination of the patch below and the
-previous patch help?
+I checked "next-20251128" tag, above patch cannot be applied, and
+"hba->reserved_slot" does not exist,
+due to merged patch (to next branch) from
+https://patch.msgid.link/20251031204029.2883185-29-bvanassche@acm.org
 
-Thanks,
+This issue only occurs on next branch, so please kindly provide the
+patch on top of next branch.
+Thank you!
+-Roger
 
-Bart.
-
-diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-index e047747d4ecf..ad1476fb5035 100644
---- a/drivers/scsi/hosts.c
-+++ b/drivers/scsi/hosts.c
-@@ -231,12 +231,6 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, 
-struct device *dev,
-                 goto fail;
-         }
-
--       if (shost->nr_reserved_cmds && !sht->queue_reserved_command) {
--               shost_printk(KERN_ERR, shost,
--                            "nr_reserved_cmds set but no method to 
-queue\n");
--               goto fail;
--       }
--
-         /* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX */
-         shost->cmd_per_lun = min_t(int, shost->cmd_per_lun,
-                                    shost->can_queue);
-
+>          hba->nortt =3D FIELD_GET(MASK_NUMBER_OUTSTANDING_RTT,
+> hba->capabilities) + 1;
+>
+> diff --git a/include/ufs/ufshci.h b/include/ufs/ufshci.h
+> index d36df24242a3..46c98910dbfb 100644
+> --- a/include/ufs/ufshci.h
+> +++ b/include/ufs/ufshci.h
+> @@ -135,7 +135,7 @@ enum {
+>   #define MINOR_VERSION_NUM_MASK         UFS_MASK(0xFFFF, 0)
+>   #define MAJOR_VERSION_NUM_MASK         UFS_MASK(0xFFFF, 16)
+>
+> -#define UFSHCD_NUM_RESERVED    1
+> +#define UFSHCD_NUM_RESERVED    2
+>   /*
+>    * Controller UFSHCI version
+>    * - 2.x and newer use the following scheme:
+>
+>
