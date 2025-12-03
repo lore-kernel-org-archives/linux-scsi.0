@@ -1,238 +1,202 @@
-Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.18])
+Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EDBAF8405C;
-	Wed,  3 Dec 2025 06:16:22 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.18
-ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764742585; cv=none; b=TXx+AD+HHI0+G497OnR7d/lIhyz2NG6rAhHfruJY+oNquLY8hVj0Cg8Yog9kWxtXNBw67aRicXOSB+WwX0UBFY8daBP/TE38ipNxNzy8RR+jCxxB7knue405+ArgOg7sVx5iAZJDOL2kguJZCqXXS12g5nPMzt/Dtv2FJrthluA=
-ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764742585; c=relaxed/simple;
-	bh=JYLecQvYteNlmJUeIENj83iFe1jAfE+HHu23/MCPAg4=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=HOmPcqiGUN0p9TZz/j2S6APs4gLrWcItDb5jZDxNtj76wXkOdveArsTf8FtMRUa90BkvxG3STdFZdu7LOlgtlPWj2e8gG8lFT9w4GEBu5tbpYx0rEa5bbHmYJiQaVRkeKAhzYCJHfVdB0uc7QKC6uricXt+Z0+/NoDzWCNQKQXQ=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=Cshcfc2U; arc=none smtp.client-ip=198.175.65.18
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A16021CC5B;
+	Wed,  3 Dec 2025 06:35:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=fail smtp.client-ip=205.220.177.32
+ARC-Seal:i=2; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
+	t=1764743757; cv=fail; b=dWmMzhGwY8mVdGYW95KsmLb/M8equGmYqnyCkmAju/F1750aJKse+Q8hSqBZwT0OtXjnO0IXO8EZGNir66p7swtzmLyxWuI+DngtecI19MwP7twNAci7q+OpX71CH10pHF+fWB/jFPcgN2DcQycF+dUBNAmN10hZZMA+hWLKh9c=
+ARC-Message-Signature:i=2; a=rsa-sha256; d=subspace.kernel.org;
+	s=arc-20240116; t=1764743757; c=relaxed/simple;
+	bh=B3URmUfOtKB/oXxKzUXyMIeL3F2bg0Lu82byTx6PX4Q=;
+	h=To:Cc:Subject:From:In-Reply-To:Message-ID:References:Date:
+	 Content-Type:MIME-Version; b=l7RuaIIS0HkkQR1chETQH3Enx0Q/i22QLOyFfBab1HZZRb21/9/4GsqwISlf55ta7QqUP/M1BM1lSX77uhb32u0UhlBVE58bD8MBzjUA8I0KI7GM6fkVqT066ElU/2GWcZmhOazRra2KRNF0ioCvdYoOTSGON+QSVKMKLSzvgog=
+ARC-Authentication-Results:i=2; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=aseJF04z; dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b=fhksFJW+; arc=fail smtp.client-ip=205.220.177.32
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="Cshcfc2U"
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
-  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
-  t=1764742584; x=1796278584;
-  h=date:from:to:cc:subject:message-id:references:
-   mime-version:in-reply-to;
-  bh=JYLecQvYteNlmJUeIENj83iFe1jAfE+HHu23/MCPAg4=;
-  b=Cshcfc2UgWsEdnCan5iRFH51CMQQEcZI9OivZPFeQb4TXpAds2Bm+R5G
-   leYHYbLoyz20cgNjXChC2ydxYdm+OLSfaedvlx//mvGqOyABVJHIHJC4/
-   4OF+uw1E/WmBCcbKl2w+X5k9JpVWVmoTq9M71VgHBrbQ8KY/qo9XQzTwA
-   ZppiVU4blE38vKALMWwqaF/gUnEIX5lgNrd88k5eyatZWCyV7zb01rn8Y
-   KFqDzvmk0pqoxbWVZTbxkiCy00p4PcgT9SUWgtdxaSlSMXy88xjVfYuju
-   /r5WUsAeAIxqb6b0BvjQ6lR01kp2N9ZyC8Ysg6bmnsUlk2ZznH0wBuS5V
-   w==;
-X-CSE-ConnectionGUID: Lw5B20HJR++6Y7bAQo+NQg==
-X-CSE-MsgGUID: xPohn2B9Tpy4g6Vv5wrCIA==
-X-IronPort-AV: E=McAfee;i="6800,10657,11631"; a="66768805"
-X-IronPort-AV: E=Sophos;i="6.20,245,1758610800"; 
-   d="scan'208";a="66768805"
-Received: from fmviesa006.fm.intel.com ([10.60.135.146])
-  by orvoesa110.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2025 22:16:22 -0800
-X-CSE-ConnectionGUID: vcHkC3DQSLSiW5ELAzh+Rw==
-X-CSE-MsgGUID: gToG5bTjQQ+sjGpdWBRfkA==
-X-ExtLoop1: 1
-X-IronPort-AV: E=Sophos;i="6.20,245,1758610800"; 
-   d="scan'208";a="194469183"
-Received: from lkp-server01.sh.intel.com (HELO 4664bbef4914) ([10.239.97.150])
-  by fmviesa006.fm.intel.com with ESMTP; 02 Dec 2025 22:16:18 -0800
-Received: from kbuild by 4664bbef4914 with local (Exim 4.98.2)
-	(envelope-from <lkp@intel.com>)
-	id 1vQg9v-00000000AeH-3pXm;
-	Wed, 03 Dec 2025 06:16:15 +0000
-Date: Wed, 3 Dec 2025 14:15:55 +0800
-From: kernel test robot <lkp@intel.com>
-To: Bean Huo <beanhuo@iokpp.de>, avri.altman@sandisk.com,
-	bvanassche@acm.org, alim.akhtar@samsung.com, jejb@linux.ibm.com,
-	martin.petersen@oracle.com, can.guo@oss.qualcomm.com,
-	beanhuo@micron.com
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	kernel test robot <lkp@intel.com>
-Subject: Re: [PATCH] scsi: ufs: core: Fix link error when CONFIG_RPMB=m
-Message-ID: <202512031316.SvDwnvhy-lkp@intel.com>
-References: <20251130151508.3076994-1-beanhuo@iokpp.de>
+	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="aseJF04z";
+	dkim=pass (1024-bit key) header.d=oracle.onmicrosoft.com header.i=@oracle.onmicrosoft.com header.b="fhksFJW+"
+Received: from pps.filterd (m0246632.ppops.net [127.0.0.1])
+	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5B32uE311729938;
+	Wed, 3 Dec 2025 06:35:36 GMT
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
+	:content-type:date:from:in-reply-to:message-id:mime-version
+	:references:subject:to; s=corp-2025-04-25; bh=bQGtiypw1HwHus6RjK
+	gSVIZD6SQk6wXFS537x59uG6A=; b=aseJF04zdyCGV8J9nwk9yeyYDB88PufnYI
+	+tl7yqaRDWvAo0jqEtXx8MPZxmsyLCdoEwAERwk9Xpr7gp0YM+8k1j9lwaeg2pAL
+	uVhRZn7HghpmtT/RYqKny7yogA5Fb26LIUrSdl4nY12G1MahHoLtvcT1FvPUUH4t
+	jzfgQbxJMznZDL6aLbrD9jf6NkLIfU2/+Stq1KpfGthk1ExDzEsPt0g7jJqk4bqp
+	rKvn7gJ05fYh3F5ZndkVfHX7d0Q9zZcfoIAXkSM1TCSI7hGVH9gs98cy3KeMRqaf
+	pIdT1pWBimTG7NjSovgf/A+f6JGKLto7kmC5kIOG0TLB2eBHqY4A==
+Received: from phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta01.appoci.oracle.com [138.1.114.2])
+	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4as845vjuh-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 03 Dec 2025 06:35:35 +0000 (GMT)
+Received: from pps.filterd (phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5B33gLTb016630;
+	Wed, 3 Dec 2025 06:35:34 GMT
+Received: from dm1pr04cu001.outbound.protection.outlook.com (mail-centralusazon11010059.outbound.protection.outlook.com [52.101.61.59])
+	by phxpaimrmta01.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4aqq9a2e3x-1
+	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
+	Wed, 03 Dec 2025 06:35:34 +0000
+ARC-Seal: i=1; a=rsa-sha256; s=arcselector10001; d=microsoft.com; cv=none;
+ b=ml0kdWCV4GcNmW2/QMMXCVT4H3q/IKbWCtaih3VWJ9egzjCBXEBb18byeJ3xX44uYIoPdFWt4q8778FdDsiUAW+Ift5WEr6Ci63HAxF4pseDxPm0deWrdBujvIE96mHkgxih13zC2NBWC80pXdJ3p2JbV67E+1dqC9I9azem6W+FturRt11Ga1CHD8VHloFGvLwDCj5VOw6INH1Qo1yVB3mmMEjWi7VcPeVYGXJksIrX9gmPSToF4PbJOCDD0KtrF59ZfQ13/w6joUcmpjeC2gLCVsbRNetgjNp7s8OJXvZp1l1VMP62BnBp8miD02xtz+63p4c1Oe1KXHUHGk1sDQ==
+ARC-Message-Signature: i=1; a=rsa-sha256; c=relaxed/relaxed; d=microsoft.com;
+ s=arcselector10001;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-AntiSpam-MessageData-ChunkCount:X-MS-Exchange-AntiSpam-MessageData-0:X-MS-Exchange-AntiSpam-MessageData-1;
+ bh=bQGtiypw1HwHus6RjKgSVIZD6SQk6wXFS537x59uG6A=;
+ b=TdTlgKrO9n4CTHdn6XFCV6pOnGxvNdp12xfkCyJCvbSh2PnMiqnxih3NnyFRoCO9CLL+NMBqJzoaGApGqTbhVgHYhuQ8Ur/BkfyUhzj2+iBCshLLSz/SU6mev+kKGOIZPZlqxzXeMJGsBtAZrR3wUuRdMRCeFz5UbmZGxZNJ7hgHRGl99Ooiz1PiIG0GSSQ5vcM6XuNn/BnbuujmxFLOCPyVDL0BjsQ02gq/Gp0LZ1bNmM3pToDPp6gzVSmwCCdeKDnZ8jCyyGl1g13/ssGdjjsHQd8WVg1fnq4uiv6ALG8LHUx0VQ9Q7lS96ksIO9oOoAFRlTuYk6bXx0WLmtE0Gg==
+ARC-Authentication-Results: i=1; mx.microsoft.com 1; spf=pass
+ smtp.mailfrom=oracle.com; dmarc=pass action=none header.from=oracle.com;
+ dkim=pass header.d=oracle.com; arc=none
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+ d=oracle.onmicrosoft.com; s=selector2-oracle-onmicrosoft-com;
+ h=From:Date:Subject:Message-ID:Content-Type:MIME-Version:X-MS-Exchange-SenderADCheck;
+ bh=bQGtiypw1HwHus6RjKgSVIZD6SQk6wXFS537x59uG6A=;
+ b=fhksFJW+Sc2cYoWLzcF0ZY8E28vSoubeGqy4+Mg6zUqEKM1D6bJSg2rOWZxL6apDm60flXaUz5JZ7d7Tw07YQqiRchc1xj3AsmrLRL8TcXhA3QLU5QmeVmi5JNAOJ1CgLwf5ghfSqVCuTOt4un1vJtUlgPk9rQazNRjs46VVCME=
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com (2603:10b6:610:cb::8)
+ by DS7PR10MB4863.namprd10.prod.outlook.com (2603:10b6:5:297::17) with
+ Microsoft SMTP Server (version=TLS1_2,
+ cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.20.9388.9; Wed, 3 Dec
+ 2025 06:35:29 +0000
+Received: from CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf]) by CH0PR10MB5338.namprd10.prod.outlook.com
+ ([fe80::5cca:2bcc:cedb:d9bf%6]) with mapi id 15.20.9366.012; Wed, 3 Dec 2025
+ 06:35:29 +0000
+To: Bean Huo <beanhuo@iokpp.de>
+Cc: avri.altman@wdc.com, avri.altman@sandisk.com, bvanassche@acm.org,
+        alim.akhtar@samsung.com, jejb@linux.ibm.com,
+        martin.petersen@oracle.com, can.guo@oss.qualcomm.com,
+        ulf.hansson@linaro.org, beanhuo@micron.com, jens.wiklander@linaro.org,
+        arnd@arndb.de, linux-scsi@vger.kernel.org,
+        linux-kernel@vger.kernel.org, kernel test robot <lkp@intel.com>
+Subject: Re: [PATCH v1] scsi: ufs: Fix RPMB link error by reversing Kconfig
+ dependencies
+From: "Martin K. Petersen" <martin.petersen@oracle.com>
+In-Reply-To: <20251202155138.2607210-1-beanhuo@iokpp.de> (Bean Huo's message
+	of "Tue, 2 Dec 2025 16:51:38 +0100")
+Organization: Oracle Corporation
+Message-ID: <yq1o6ogt6n4.fsf@ca-mkp.ca.oracle.com>
+References: <20251202155138.2607210-1-beanhuo@iokpp.de>
+Date: Wed, 03 Dec 2025 01:35:27 -0500
+Content-Type: text/plain
+X-ClientProxiedBy: YQBPR0101CA0226.CANPRD01.PROD.OUTLOOK.COM
+ (2603:10b6:c01:66::26) To CH0PR10MB5338.namprd10.prod.outlook.com
+ (2603:10b6:610:cb::8)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251130151508.3076994-1-beanhuo@iokpp.de>
+X-MS-PublicTrafficType: Email
+X-MS-TrafficTypeDiagnostic: CH0PR10MB5338:EE_|DS7PR10MB4863:EE_
+X-MS-Office365-Filtering-Correlation-Id: 2b198844-c1b5-4482-b7de-08de323626ae
+X-MS-Exchange-SenderADCheck: 1
+X-MS-Exchange-AntiSpam-Relay: 0
+X-Microsoft-Antispam: BCL:0;ARA:13230040|376014|7416014|1800799024|366016;
+X-Microsoft-Antispam-Message-Info:
+	=?us-ascii?Q?SOVUeaz1PUePG7fp6unSJfbWlbzRy6N1P6gOZRCgKkis/Fvl+cfYW2yZ82yM?=
+ =?us-ascii?Q?t6d1Sk+Mkl8vpshXukHBYGlaCwNub6rjkKxieg7Hv3BPWIsfgfKl4tAebEPL?=
+ =?us-ascii?Q?9sPJrYJSI10inShKI+B7QhPCNRpdq25IpmxV2ZsHIbjwSFVt4L/P1POD+mk2?=
+ =?us-ascii?Q?EeDGyMcfYnLNxZoGfVbVQgVP0DwzZjLiEwvRGdi+q/cpgP6fFkMnNecbvmPI?=
+ =?us-ascii?Q?Evy94OiNP9z/Vd2Vulz2UK6FiSVVWSrD3JIoYK6NFwihgRWicmY2FRLl1LIo?=
+ =?us-ascii?Q?iOaTydb1+JZZr+yG4OtNlG4GkAUZ8Ri1PRNfPxS1JLfjtUFLl5hiTzJGvODe?=
+ =?us-ascii?Q?vz1JHuUTkYkOAmDxCHLkGS8BcFpQxm7NhQC4vYk0fOK0IsQzAshX5QEtgDWj?=
+ =?us-ascii?Q?xZNyQbT1oRTAt027jhrilL7dXFYtSQILaYngvkawAU3hZGp63sRIV+8YF1AL?=
+ =?us-ascii?Q?l1USEU3wRuXLeqKsRs62reduTBLqa86e24lzhdRB2dqVpzf+ny07dGDbvlRS?=
+ =?us-ascii?Q?BEGWjQVwNPgM8crsWLsnyX0Cu8iXFaeiKekb8OaFcTaAb06h2Dr5EaEAUjSE?=
+ =?us-ascii?Q?eC5pDzp++oNXYcgH8J/34ypUTmBA4HGzbooeozEJKF/k8V0y1UxznFtGcQLV?=
+ =?us-ascii?Q?w9CGpHDyVLJ6foL5T7P7grD4SzvStl8B/M26kSy0JB2QE+W0GFAksBjdDmUn?=
+ =?us-ascii?Q?HPR5STvYZB5Zo7FebEU5CibzMjorrdf/2dCOwepfRd2vhSI6Ef4ym90/P7/R?=
+ =?us-ascii?Q?Ou0O0twxmJCNztfO4zEdGUjin9mfMU/56g9ndW6uwIlKmbB7YbltKci6Yaah?=
+ =?us-ascii?Q?lMEyzbsD9q3u2sGUPU2ZWs9RgyvTOO9u3pq7yHI+fCgDy2k2FXuIFqCFs6JV?=
+ =?us-ascii?Q?Sa8Te0uCWqUFRzoj8Vyzy/2LXcpt8qJ8q6M+p2oV7H4XedGc+0lNPkAGqK+U?=
+ =?us-ascii?Q?6+de66TUsW2dqCXuY/LJ3MlO167Nrf2A34eo6yy5eGk4+Y/cNIqU0eK916h/?=
+ =?us-ascii?Q?dMjZEhLGVfoiPlwNyUnUE+xqPuyBNKxXJuYoEFwa1G6pFt3CHwo3PPxzJjYl?=
+ =?us-ascii?Q?gC+OSP+hgMmt7V8B61H9pXkEJIC0VxDVCLIEVJBtP6zVaz80PoXi/rErIyuY?=
+ =?us-ascii?Q?h9Pvd5V9hZje90g4MwnX8LKTFgh3ZiYnoG9Hlkczsqyb3a1XqJzgzxcXa6/V?=
+ =?us-ascii?Q?WMZXM4S396raqcHAlUL/ysGiuZLcC7ZgnUrcXqvuLTpaa4tQHc77Bs1ho3Fw?=
+ =?us-ascii?Q?NhpbYUpM7O8vsGSdcenm2Tg4HQOGAXXCBAwg9+B35+yOYD06VcT+mZ1GZGBa?=
+ =?us-ascii?Q?mjtbpAL3kBOhCNTI3QPudNhc+ELCwXTS1dNd+RA4kOEpYREY60NcV15dEru8?=
+ =?us-ascii?Q?dB3GT+0eTbGJR2ZOO3N0sqs9W+CdTMWA50vOu7cmG7+GAxJuF0K3QDFXN8eC?=
+ =?us-ascii?Q?TsZi2Q/y1MNPMyMfxm/xfYwfDAW7hNZI?=
+X-Forefront-Antispam-Report:
+	CIP:255.255.255.255;CTRY:;LANG:en;SCL:1;SRV:;IPV:NLI;SFV:NSPM;H:CH0PR10MB5338.namprd10.prod.outlook.com;PTR:;CAT:NONE;SFS:(13230040)(376014)(7416014)(1800799024)(366016);DIR:OUT;SFP:1101;
+X-MS-Exchange-AntiSpam-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-MessageData-0:
+	=?us-ascii?Q?gzWTRVE/pZro34hccWysHsXU9ZVQTKhSmNWX0FdS3hEkMFEymGbS8hLdGNXs?=
+ =?us-ascii?Q?t5Z1KTSiqE5lnGE+MCJ7WqKekCiKqbt4aO3Xctbzsa2OTvTwKTYP1h+g7cW/?=
+ =?us-ascii?Q?XWd3BTASNc71p8WN6yFMdERO05B5qrxyHJ20xpt7mJ2kUbW46oZiokpXahsD?=
+ =?us-ascii?Q?SH1lE4Uf6OBvX2Cq8dc8xZni8JFLyXYemakuA3AbTmLet5o0KeGLbHk/mrqe?=
+ =?us-ascii?Q?Nue7E1AZnqY19j0ULRnbkP1fk57RILGIYUWWypPUlMjF4GQJPMMim0DexkX2?=
+ =?us-ascii?Q?gSJPTTyP7KdChH4CHkNgoKrUUZImh2IjuXGEARd3P2E+DZ9FwTKIgOK4VMC7?=
+ =?us-ascii?Q?zc42ycZCzLlFeo/3A3DpOwy2tRzSr37PWumiVZET2OKzS6EswkvtGOVabzii?=
+ =?us-ascii?Q?V+g+1Jt3gEw/x3jOU742kZJA14h/2EsqXulswR1s1Er3kRXKbf2z+dE1x5Wx?=
+ =?us-ascii?Q?Z55LuWPbKquULBaMLDcKNrmqof4AqEiYPvEXxWhdCt5tyFH//QrykIcSodaL?=
+ =?us-ascii?Q?CXQhdoDFpua4ovUOq6uirInoIJ1yCSPPG5rdwRj1pwjfs6cagJOziR+6QRsJ?=
+ =?us-ascii?Q?zbZdsntnz3n9z2cKEueE1MQVH3PQHmYdFaAOm/WSO5vqdwtYPjVs10IZv9/z?=
+ =?us-ascii?Q?M0WhnAgN8JKA9fP5hb7K1w+QzHfeOYtmBZ9dgreWBtHsh/CwCgy2wNoT0ky8?=
+ =?us-ascii?Q?H5MmV2/eHl1tWw/pRNxRkw/rHQv0rVdRpQ5qe7gzd38xytlLd6YeD+7OXC1n?=
+ =?us-ascii?Q?fjbbki/f6jRyNKBlLEyPD/e2vD82rvOPqefQ3mKuCyU2ZozGHLwzdUT4qqep?=
+ =?us-ascii?Q?SpTsKL/kwOAZgWvJ3KAw8pqVyQGGjpguA4Im9M5NYtorHccjk1a9HtWkam5Q?=
+ =?us-ascii?Q?hEN9NY3UyIsi66vWpgA2crNqSPhv2tjYdxU65NB+D5QVbaHXrsQposnHobv1?=
+ =?us-ascii?Q?H8l21jOebyPQohsRyRlhbEVRtD126Gg4dTEsCEdaGtgEwgW4loXav+ONAzDd?=
+ =?us-ascii?Q?ie4HbgutcdkmffAv1bDZd3AtQZxUiaf/6dHRdwaMtYMNDIdMRAbGA+/rPjqX?=
+ =?us-ascii?Q?Xh7jm3asSieHMW0zUtl6vnPDqKPbS+GGq55WLO4UX2so5JJbViw+GVal/5Vs?=
+ =?us-ascii?Q?wsDecRr1Ac7iZWxhbcWDqUhCDer2+/8+WvrBco0Xkx2j0tarropBjLqYgsmC?=
+ =?us-ascii?Q?z8+bQ5HdXk1Lm91z2C/70izGnGkdi4aSkY+uK5vY1Pk7+73yqmIxWLikknFE?=
+ =?us-ascii?Q?pHFXB0hjOUrrI1Jay9VfwlUt/qI9eHHCgmIYspBpVyS4fl+fJY11TJ+yg2RA?=
+ =?us-ascii?Q?nVVO5O1uZ7P9UaTDmLf348YJnWayperwbfyV1TiJMmUEX+aVbNgmKefGTKV8?=
+ =?us-ascii?Q?m3Nsa2XFuzrcx2gQ+VOVO2/jibr3+vrYfq4fapfGvNVqWVNOQ8Rmr/9+Dipd?=
+ =?us-ascii?Q?JMTj2feUM/w0nBSxUgyjumP+yEcjHOQtMfAY+MhA0dGcw4etY8ZV6v7yC1v6?=
+ =?us-ascii?Q?Cl4Go6RRl9qaH0s1nhuhZlwm8g1lmbCAqv1qqEztZtLcCVTNCST0BtKxcqqb?=
+ =?us-ascii?Q?GG0BIU2QU2gNqWFEr+uFBj7oGI1eDELHjpA7nrvszFyA40hNVq+cCjegvqzm?=
+ =?us-ascii?Q?KA=3D=3D?=
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-ChunkCount: 1
+X-MS-Exchange-AntiSpam-ExternalHop-MessageData-0:
+	IlL01ucrQPJVNB1XL+MSBes7GH7Ai6RXAI6BdL7O4DxvF7WGLHinbOed2pVU0SuBlOrucacs1vD2xQLT6K+9HEvGPpLdBCPxiYvOr73RlXe9tD/mHG//LjMlcGSLLOnZ8luNqHT7SDkelPPSpvt2j8kUoGW25PYqvu2IQhiJehh4HAKwPopoQdtXcD6TJKG9qbZ8FieSedao2n1zJtPeLzgYwR6KN4x11v4WJwIWulFd7EDTN8ajW1czm7DOMR4r8tKRNRlVzlWd/PRemdxbFX2A+9sMYyM1YNDL1dSx4zkFVgvd7nQPgCo8B+zwKtG76NG7KOsH397c0K91Y9HgmBAVAR/S7YwLulJRBtdcZdexaV6H3L4c7WTxBOKNECMazs1jmaFejqYcangSYhwzTZagXVM5GCUk7AjcD7eSVpGUIy9AI3YWp+JQOLmwXvb0VJ7hmX859uUl5T3IA8iezIhvS3XY/jSl/VdQ+4ymYtWVUj9cTlFw98b3brhUp4Aaz+vpWK91JhG17L4DxAIEfd71agWDkhC8JVbC4ialkGxsHGCNs/VwR4jlFz55hZsasw4iiLxlTosluKySaaYHL/ctKgY7vMHS9GnuinS1cyg=
+X-OriginatorOrg: oracle.com
+X-MS-Exchange-CrossTenant-Network-Message-Id: 2b198844-c1b5-4482-b7de-08de323626ae
+X-MS-Exchange-CrossTenant-AuthSource: CH0PR10MB5338.namprd10.prod.outlook.com
+X-MS-Exchange-CrossTenant-AuthAs: Internal
+X-MS-Exchange-CrossTenant-OriginalArrivalTime: 03 Dec 2025 06:35:29.3637
+ (UTC)
+X-MS-Exchange-CrossTenant-FromEntityHeader: Hosted
+X-MS-Exchange-CrossTenant-Id: 4e2c6054-71cb-48f1-bd6c-3a9705aca71b
+X-MS-Exchange-CrossTenant-MailboxType: HOSTED
+X-MS-Exchange-CrossTenant-UserPrincipalName: cax8sDKWaKV71SbM9KLHQkl6QMa4llFRTF61s5o9si0Aa7foNtfh9SltFrcoXMSmDOFBVl85P+0kV5IAH3SlusCSTin5QYivvyLzIIOcdh4=
+X-MS-Exchange-Transport-CrossTenantHeadersStamped: DS7PR10MB4863
+X-Proofpoint-Virus-Version: vendor=baseguard
+ engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
+ definitions=2025-12-01_01,2025-11-27_02,2025-10-01_01
+X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 adultscore=0 spamscore=0
+ bulkscore=0 suspectscore=0 mlxscore=0 phishscore=0 mlxlogscore=910
+ classifier=spam adjust=0 reason=mlx scancount=1 engine=8.12.0-2510240000
+ definitions=main-2512030050
+X-Proofpoint-ORIG-GUID: zFK7Y-flSwX8NdkyHHlNGhNr4CpPJLnp
+X-Proofpoint-GUID: zFK7Y-flSwX8NdkyHHlNGhNr4CpPJLnp
+X-Authority-Analysis: v=2.4 cv=W8w1lBWk c=1 sm=1 tr=0 ts=692fda38 cx=c_pps
+ a=XiAAW1AwiKB2Y8Wsi+sD2Q==:117 a=XiAAW1AwiKB2Y8Wsi+sD2Q==:17
+ a=6eWqkTHjU83fiwn7nKZWdM+Sl24=:19 a=z/mQ4Ysz8XfWz/Q5cLBRGdckG28=:19
+ a=lCpzRmAYbLLaTzLvsPZ7Mbvzbb8=:19 a=xqWC_Br6kY4A:10 a=wP3pNCr1ah4A:10
+ a=GoEa3M9JfhUA:10 a=VkNPw1HP01LnGYTKEx00:22 a=ZqE8iiNBColObR7-44oA:9
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjAzMDA1MCBTYWx0ZWRfX6mro5hCXRliy
+ nRoQH//ISY29hUtm55//oKW2qnR1d333hiL4riv49HFeVCSfXuF67Aa6lQP9XWxYFm3ml//YuDD
+ yBqLtO6OAGisCh2I7IVMOhpxUioWZ3twWj+aJQN2M0VSNlq4TeXEH9Q9RHdEwHleygmpwsdc0s+
+ asb/njSWI9SvmpvKvZstd96WP4OgQ5/+TE1MxBBP6Uh+ksqFPRNnMaJAkSIpGSXxOJzqzS0rK+z
+ Vm3qgvvj48EOcZpayyyRw4Eu+cfTDWoyhyRpAqF2XfF259evDaX2LECb2AKbjb7c6LXYmWdNQsL
+ X4ei/2aRoBgg7T4tqnvLuMH39kClwRcALZADjmcMMcf2fvII9GGicqYGceErdPKNYpJWKEe2ot+
+ 7TTAejXklelpOSWJY/B3t//eNUoejA==
 
-Hi Bean,
 
-kernel test robot noticed the following build errors:
+Bean,
 
-[auto build test ERROR on mkp-scsi/for-next]
-[also build test ERROR on jejb-scsi/for-next mkp-scsi/6.19/scsi-queue next-20251202]
-[cannot apply to linus/master v6.18]
-[If your patch is applied to the wrong git tree, kindly drop us a note.
-And when submitting patch, we suggest to use '--base' as documented in
-https://git-scm.com/docs/git-format-patch#_base_tree_information]
+> When CONFIG_SCSI_UFSHCD=y and CONFIG_RPMB=m, the kernel fails to link
+> with undefined references to ufs_rpmb_probe() and ufs_rpmb_remove():
 
-url:    https://github.com/intel-lab-lkp/linux/commits/Bean-Huo/scsi-ufs-core-Fix-link-error-when-CONFIG_RPMB-m/20251130-231759
-base:   https://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git for-next
-patch link:    https://lore.kernel.org/r/20251130151508.3076994-1-beanhuo%40iokpp.de
-patch subject: [PATCH] scsi: ufs: core: Fix link error when CONFIG_RPMB=m
-config: loongarch-allmodconfig (https://download.01.org/0day-ci/archive/20251203/202512031316.SvDwnvhy-lkp@intel.com/config)
-compiler: clang version 19.1.7 (https://github.com/llvm/llvm-project cd708029e0b2869e80abe31ddb175f7c35361f90)
-reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251203/202512031316.SvDwnvhy-lkp@intel.com/reproduce)
-
-If you fix the issue in a separate patch/commit (i.e. not just a new version of
-the same patch/commit), kindly add following tags
-| Reported-by: kernel test robot <lkp@intel.com>
-| Closes: https://lore.kernel.org/oe-kbuild-all/202512031316.SvDwnvhy-lkp@intel.com/
-
-All errors (new ones prefixed by >>):
-
->> drivers/ufs/core/ufs-rpmb.c:135:5: error: redefinition of 'ufs_rpmb_probe'
-     135 | int ufs_rpmb_probe(struct ufs_hba *hba)
-         |     ^
-   drivers/ufs/core/ufshcd-priv.h:445:19: note: previous definition is here
-     445 | static inline int ufs_rpmb_probe(struct ufs_hba *hba)
-         |                   ^
->> drivers/ufs/core/ufs-rpmb.c:234:6: error: redefinition of 'ufs_rpmb_remove'
-     234 | void ufs_rpmb_remove(struct ufs_hba *hba)
-         |      ^
-   drivers/ufs/core/ufshcd-priv.h:449:20: note: previous definition is here
-     449 | static inline void ufs_rpmb_remove(struct ufs_hba *hba)
-         |                    ^
-   2 errors generated.
-
-
-vim +/ufs_rpmb_probe +135 drivers/ufs/core/ufs-rpmb.c
-
-b06b8c421485e0 Bean Huo 2025-11-08  133  
-b06b8c421485e0 Bean Huo 2025-11-08  134  /* UFS RPMB device registration */
-b06b8c421485e0 Bean Huo 2025-11-08 @135  int ufs_rpmb_probe(struct ufs_hba *hba)
-b06b8c421485e0 Bean Huo 2025-11-08  136  {
-b06b8c421485e0 Bean Huo 2025-11-08  137  	struct ufs_rpmb_dev *ufs_rpmb, *it, *tmp;
-b06b8c421485e0 Bean Huo 2025-11-08  138  	struct rpmb_dev *rdev;
-b06b8c421485e0 Bean Huo 2025-11-08  139  	char *cid = NULL;
-b06b8c421485e0 Bean Huo 2025-11-08  140  	int region;
-b06b8c421485e0 Bean Huo 2025-11-08  141  	u32 cap;
-b06b8c421485e0 Bean Huo 2025-11-08  142  	int ret;
-b06b8c421485e0 Bean Huo 2025-11-08  143  
-b06b8c421485e0 Bean Huo 2025-11-08  144  	if (!hba->ufs_rpmb_wlun || hba->dev_info.b_advanced_rpmb_en) {
-b06b8c421485e0 Bean Huo 2025-11-08  145  		dev_info(hba->dev, "Skip OP-TEE RPMB registration\n");
-b06b8c421485e0 Bean Huo 2025-11-08  146  		return -ENODEV;
-b06b8c421485e0 Bean Huo 2025-11-08  147  	}
-b06b8c421485e0 Bean Huo 2025-11-08  148  
-b06b8c421485e0 Bean Huo 2025-11-08  149  	/* Check if device_id is available */
-b06b8c421485e0 Bean Huo 2025-11-08  150  	if (!hba->dev_info.device_id) {
-b06b8c421485e0 Bean Huo 2025-11-08  151  		dev_err(hba->dev, "UFS Device ID not available\n");
-b06b8c421485e0 Bean Huo 2025-11-08  152  		return -EINVAL;
-b06b8c421485e0 Bean Huo 2025-11-08  153  	}
-b06b8c421485e0 Bean Huo 2025-11-08  154  
-b06b8c421485e0 Bean Huo 2025-11-08  155  	INIT_LIST_HEAD(&hba->rpmbs);
-b06b8c421485e0 Bean Huo 2025-11-08  156  
-b06b8c421485e0 Bean Huo 2025-11-08  157  	struct rpmb_descr descr = {
-b06b8c421485e0 Bean Huo 2025-11-08  158  		.type = RPMB_TYPE_UFS,
-b06b8c421485e0 Bean Huo 2025-11-08  159  		.route_frames = ufs_rpmb_route_frames,
-b06b8c421485e0 Bean Huo 2025-11-08  160  		.reliable_wr_count = hba->dev_info.rpmb_io_size,
-b06b8c421485e0 Bean Huo 2025-11-08  161  	};
-b06b8c421485e0 Bean Huo 2025-11-08  162  
-b06b8c421485e0 Bean Huo 2025-11-08  163  	for (region = 0; region < ARRAY_SIZE(hba->dev_info.rpmb_region_size); region++) {
-b06b8c421485e0 Bean Huo 2025-11-08  164  		cap = hba->dev_info.rpmb_region_size[region];
-b06b8c421485e0 Bean Huo 2025-11-08  165  		if (!cap)
-b06b8c421485e0 Bean Huo 2025-11-08  166  			continue;
-b06b8c421485e0 Bean Huo 2025-11-08  167  
-b06b8c421485e0 Bean Huo 2025-11-08  168  		ufs_rpmb = devm_kzalloc(hba->dev, sizeof(*ufs_rpmb), GFP_KERNEL);
-b06b8c421485e0 Bean Huo 2025-11-08  169  		if (!ufs_rpmb) {
-b06b8c421485e0 Bean Huo 2025-11-08  170  			ret = -ENOMEM;
-b06b8c421485e0 Bean Huo 2025-11-08  171  			goto err_out;
-b06b8c421485e0 Bean Huo 2025-11-08  172  		}
-b06b8c421485e0 Bean Huo 2025-11-08  173  
-b06b8c421485e0 Bean Huo 2025-11-08  174  		ufs_rpmb->hba = hba;
-b06b8c421485e0 Bean Huo 2025-11-08  175  		ufs_rpmb->dev.parent = &hba->ufs_rpmb_wlun->sdev_gendev;
-b06b8c421485e0 Bean Huo 2025-11-08  176  		ufs_rpmb->dev.bus = &ufs_rpmb_bus_type;
-b06b8c421485e0 Bean Huo 2025-11-08  177  		ufs_rpmb->dev.release = ufs_rpmb_device_release;
-b06b8c421485e0 Bean Huo 2025-11-08  178  		dev_set_name(&ufs_rpmb->dev, "ufs_rpmb%d", region);
-b06b8c421485e0 Bean Huo 2025-11-08  179  
-b06b8c421485e0 Bean Huo 2025-11-08  180  		/* Set driver data BEFORE device_register */
-b06b8c421485e0 Bean Huo 2025-11-08  181  		dev_set_drvdata(&ufs_rpmb->dev, ufs_rpmb);
-b06b8c421485e0 Bean Huo 2025-11-08  182  
-b06b8c421485e0 Bean Huo 2025-11-08  183  		ret = device_register(&ufs_rpmb->dev);
-b06b8c421485e0 Bean Huo 2025-11-08  184  		if (ret) {
-b06b8c421485e0 Bean Huo 2025-11-08  185  			dev_err(hba->dev, "Failed to register UFS RPMB device %d\n", region);
-b06b8c421485e0 Bean Huo 2025-11-08  186  			put_device(&ufs_rpmb->dev);
-b06b8c421485e0 Bean Huo 2025-11-08  187  			goto err_out;
-b06b8c421485e0 Bean Huo 2025-11-08  188  		}
-b06b8c421485e0 Bean Huo 2025-11-08  189  
-b06b8c421485e0 Bean Huo 2025-11-08  190  		/* Create unique ID by appending region number to device_id */
-b06b8c421485e0 Bean Huo 2025-11-08  191  		cid = kasprintf(GFP_KERNEL, "%s-R%d", hba->dev_info.device_id, region);
-b06b8c421485e0 Bean Huo 2025-11-08  192  		if (!cid) {
-b06b8c421485e0 Bean Huo 2025-11-08  193  			device_unregister(&ufs_rpmb->dev);
-b06b8c421485e0 Bean Huo 2025-11-08  194  			ret = -ENOMEM;
-b06b8c421485e0 Bean Huo 2025-11-08  195  			goto err_out;
-b06b8c421485e0 Bean Huo 2025-11-08  196  		}
-b06b8c421485e0 Bean Huo 2025-11-08  197  
-b06b8c421485e0 Bean Huo 2025-11-08  198  		descr.dev_id = cid;
-b06b8c421485e0 Bean Huo 2025-11-08  199  		descr.dev_id_len = strlen(cid);
-b06b8c421485e0 Bean Huo 2025-11-08  200  		descr.capacity = cap;
-b06b8c421485e0 Bean Huo 2025-11-08  201  
-b06b8c421485e0 Bean Huo 2025-11-08  202  		/* Register RPMB device */
-b06b8c421485e0 Bean Huo 2025-11-08  203  		rdev = rpmb_dev_register(&ufs_rpmb->dev, &descr);
-b06b8c421485e0 Bean Huo 2025-11-08  204  		if (IS_ERR(rdev)) {
-b06b8c421485e0 Bean Huo 2025-11-08  205  			dev_err(hba->dev, "Failed to register UFS RPMB device.\n");
-b06b8c421485e0 Bean Huo 2025-11-08  206  			device_unregister(&ufs_rpmb->dev);
-b06b8c421485e0 Bean Huo 2025-11-08  207  			ret = PTR_ERR(rdev);
-b06b8c421485e0 Bean Huo 2025-11-08  208  			goto err_out;
-b06b8c421485e0 Bean Huo 2025-11-08  209  		}
-b06b8c421485e0 Bean Huo 2025-11-08  210  
-b06b8c421485e0 Bean Huo 2025-11-08  211  		kfree(cid);
-b06b8c421485e0 Bean Huo 2025-11-08  212  		cid = NULL;
-b06b8c421485e0 Bean Huo 2025-11-08  213  
-b06b8c421485e0 Bean Huo 2025-11-08  214  		ufs_rpmb->rdev = rdev;
-b06b8c421485e0 Bean Huo 2025-11-08  215  		ufs_rpmb->region_id = region;
-b06b8c421485e0 Bean Huo 2025-11-08  216  
-b06b8c421485e0 Bean Huo 2025-11-08  217  		list_add_tail(&ufs_rpmb->node, &hba->rpmbs);
-b06b8c421485e0 Bean Huo 2025-11-08  218  
-b06b8c421485e0 Bean Huo 2025-11-08  219  		dev_info(hba->dev, "UFS RPMB region %d registered (capacity=%u)\n", region, cap);
-b06b8c421485e0 Bean Huo 2025-11-08  220  	}
-b06b8c421485e0 Bean Huo 2025-11-08  221  
-b06b8c421485e0 Bean Huo 2025-11-08  222  	return 0;
-b06b8c421485e0 Bean Huo 2025-11-08  223  err_out:
-b06b8c421485e0 Bean Huo 2025-11-08  224  	kfree(cid);
-b06b8c421485e0 Bean Huo 2025-11-08  225  	list_for_each_entry_safe(it, tmp, &hba->rpmbs, node) {
-b06b8c421485e0 Bean Huo 2025-11-08  226  		list_del(&it->node);
-b06b8c421485e0 Bean Huo 2025-11-08  227  		device_unregister(&it->dev);
-b06b8c421485e0 Bean Huo 2025-11-08  228  	}
-b06b8c421485e0 Bean Huo 2025-11-08  229  
-b06b8c421485e0 Bean Huo 2025-11-08  230  	return ret;
-b06b8c421485e0 Bean Huo 2025-11-08  231  }
-b06b8c421485e0 Bean Huo 2025-11-08  232  
-b06b8c421485e0 Bean Huo 2025-11-08  233  /* UFS RPMB remove handler */
-b06b8c421485e0 Bean Huo 2025-11-08 @234  void ufs_rpmb_remove(struct ufs_hba *hba)
-b06b8c421485e0 Bean Huo 2025-11-08  235  {
-b06b8c421485e0 Bean Huo 2025-11-08  236  	struct ufs_rpmb_dev *ufs_rpmb, *tmp;
-b06b8c421485e0 Bean Huo 2025-11-08  237  
-b06b8c421485e0 Bean Huo 2025-11-08  238  	if (list_empty(&hba->rpmbs))
-b06b8c421485e0 Bean Huo 2025-11-08  239  		return;
-b06b8c421485e0 Bean Huo 2025-11-08  240  
-b06b8c421485e0 Bean Huo 2025-11-08  241  	/* Remove all registered RPMB devices */
-b06b8c421485e0 Bean Huo 2025-11-08  242  	list_for_each_entry_safe(ufs_rpmb, tmp, &hba->rpmbs, node) {
-b06b8c421485e0 Bean Huo 2025-11-08  243  		dev_info(hba->dev, "Removing UFS RPMB region %d\n", ufs_rpmb->region_id);
-b06b8c421485e0 Bean Huo 2025-11-08  244  		/* Remove from list first */
-b06b8c421485e0 Bean Huo 2025-11-08  245  		list_del(&ufs_rpmb->node);
-b06b8c421485e0 Bean Huo 2025-11-08  246  		/* Unregister device */
-b06b8c421485e0 Bean Huo 2025-11-08  247  		device_unregister(&ufs_rpmb->dev);
-b06b8c421485e0 Bean Huo 2025-11-08  248  	}
-b06b8c421485e0 Bean Huo 2025-11-08  249  
-b06b8c421485e0 Bean Huo 2025-11-08  250  	dev_info(hba->dev, "All UFS RPMB devices unregistered\n");
-b06b8c421485e0 Bean Huo 2025-11-08  251  }
-b06b8c421485e0 Bean Huo 2025-11-08  252  
+Applied to 6.19/scsi-staging, thanks!
 
 -- 
-0-DAY CI Kernel Test Service
-https://github.com/intel/lkp-tests/wiki
+Martin K. Petersen
