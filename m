@@ -1,73 +1,77 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
+Received: from mail-dl1-f44.google.com (mail-dl1-f44.google.com [74.125.82.44])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 31C3D285C80
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 23:19:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7E90D2367D5
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 23:19:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.82.44
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764803991; cv=none; b=doGu011lAcguNNtIkRCdAlpyG7IMjuppyrNh9xYBXULWsTznPPrdUPns099caAxj6+28NdLEUNQMgixNB9E+e6W0u+XhJ619x4066KsadSPs+I8NdjLYGqUJwIKdfZrH42bwYBFcjGxHBaBsyKBF1OOAyMouQBHwxMiqAjKp5dM=
+	t=1764804000; cv=none; b=plXAxGBXdl77VhoTRTHfOHz7eAyAHfYzh0v5f8mEhMiMXewd+UZe1A/FyhNeG4x/wgRE1DRB7I53I78E+0/ENpi1ej11Byo9MTGc/s8Tw2FSYqFwsjRm3GIFjrkpK6IRmu3pTGfT/loNu6pm4y/4AHy0DWDyr6Yj8ZjBwTzK/As=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764803991; c=relaxed/simple;
+	s=arc-20240116; t=1764804000; c=relaxed/simple;
 	bh=MiUFln1njU/KMJgQ8jJ9SHzqLV9+djeJyijZ/C+/GiE=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=gT3bK3QFLGhb8m8BKNyE2SzVVHkg6f9ewKbzG8vi7y36njdv5oUbfQfg4s6msh7ko02WzIPMvVo6SvjJSSV/L1Zb1pQV/+buENjRL4mzx15lpDqRojru/QEbLfs6SGdCwdbjEnmcf+5uj4tRduaDOghe/YAWh+Y1xGLsOI/Y8xo=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=KkTu7Hcb; arc=none smtp.client-ip=209.85.210.172
+	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
+	 MIME-Version; b=KbbpkzgwXp9bGn1jObZ//aZuEWbQZkzLfDIA5zBRsDXwQMY6aSkI81Ge9+5HIPm5X/g/PMroxhh6YHkHxz/o2YwICjNgXK2kocTOJWq+Nk2fzeJ/8u27DIiFw56/oZ/bp91bJfC95FPvhMOnsqCpNcHa1iTtf90tKwo5pL/c9r0=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com; spf=fail smtp.mailfrom=purestorage.com; dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b=cNPygNZo; arc=none smtp.client-ip=74.125.82.44
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=purestorage.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="KkTu7Hcb"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-7b9c17dd591so228465b3a.3
-        for <linux-scsi@vger.kernel.org>; Wed, 03 Dec 2025 15:19:48 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=purestorage.com header.i=@purestorage.com header.b="cNPygNZo"
+Received: by mail-dl1-f44.google.com with SMTP id a92af1059eb24-11beb0a7bd6so1771436c88.1
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Dec 2025 15:19:57 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=purestorage.com; s=google2022; t=1764803988; x=1765408788; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=oZwPNbmMLIdSclvetPopPH6pQCDjwKEzJyQ5lCRoUr4=;
-        b=KkTu7HcbNPk0sZoPLjB/5M2I0hpeZiS7ONbAbIftBVkRkZe8OxgJhh1XHQ5K8DlcgU
-         6glfBT2qheXymmBN9GwM1wCN5omq+FQHX5vHQIUoOORhcJcmvGzLmNf7k2lS2Sla+n8u
-         n3Oe9yb9R4Crf2jkdYsKjQJAfw9n7pS72b20D+1J1R2c/I5uIzXlBThWeqbnMaNXo8S4
-         qN7g+XBdm8TEc9yK7kPaeCn9684MgDWAK8gdNo/GeQ8wc2FWNsLAesTkx7i0ykdK2mXK
-         6qJ6woQcsonNLX+9fCiGQxKg/0Mnx802SlPVzq23REneVvXaMd4T5d+IdToT1BQKNLQn
-         eKmg==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764803988; x=1765408788;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+        d=purestorage.com; s=google2022; t=1764803996; x=1765408796; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
         bh=oZwPNbmMLIdSclvetPopPH6pQCDjwKEzJyQ5lCRoUr4=;
-        b=P9d3HzbM+PAFkeYOCOIGRP5owcSOhHjo4NroeM6brclPszfjEajd1pDxNU3em8a7+C
-         nQXcpDd2MQCLERWTiqDEJni0o+9sGg7BsGrJI0BqNVQ4tcM6swaxpF1vwGo4OgdYfF7z
-         T8MHVhL9zNAHeD6XHlqB3FRAcOtf3zFFGa03LSjS0fVGHfcTy7SVonHifG42E4VthzKH
-         Re3ZgI8Aly0G8qvorOG3RBoBE5RHIEKZKMYpIDRFn/Taj3pb+4y27LNqWnuvlb5AqUCx
-         +jY/WkeoGbdivTMF1nd7Xz9dLpSkokYZzM47E09YsU9acjQvOnLTt1FN6bkjWVYWjq6Y
-         b6wA==
-X-Gm-Message-State: AOJu0Yw7AaJPi703H4kAg/qGwwmtfcsZv/CpSeTpiRAGVHU+FCH3qKCR
-	WP7Nq9V4VFQJ+uaOdli5v2c9AjJ0OZ+orAKZk1PnaLQdZcmNRBk756BqGXLInhsDm0LdO7fJUQn
-	AI/1yPoJ824Lx1ccCySoP3eROndgGkzuCYj4p2mBTezJi5mNg3Zmr9JGfsKDM7PYYIPJxB5nhQc
-	vV2KfzecgsdS+M0BuBApEchXWS9ClkVtxswjhlNookK3RRfeg3YA==
-X-Gm-Gg: ASbGncvegwH2Ydrb1F4UxhzOPp2xz20Lcz6lTa/KzuhrWq+OkRajwgkPNQN2x4C23Mm
-	NC4rKgvlzGtXExY3AteyC2GXDMtJ9FJRpvG5hlYq7W91A1dIHpyVs/WmBqvlH/P+h71siT8tUpQ
-	2k7jrhL24Bfa9On+Yp3EVbKAZyzyjhzpDpZMjLqOAkusDj/jJzUUdHAyUHOe0rJ9T04HVACLTze
-	XWRQBkbfDUtCkFbg7nqKU+Z30OEslWOPE7dghLgODvd9VIMOaW9BmN+I2g/c/KH91224QVvUsvJ
-	vb5XDQlm9lJNF6yR5eLq1hRTv2LmZC+ILf7s/TbswI6Ax02smcCUvnWSUMJhCXkwsLhk2WVWnWw
-	JeC7aXhlCVEhWyg6inofpgW+FjTOlBH9GNDJTpaWngZceyTsYTwfhz9cHnqirlbdp5AZEshrAiw
-	oJMNzCBHMDGW8kRAL6Rw46HGjEqK28n1XUydZr1R7UV5NCoy03rn+P+78IkD4MAvVGhpnjBYaTW
-	dULi1LpD8I2eMY+6Epe0gtSnuG36uupuVgzJjszU2z6
-X-Google-Smtp-Source: AGHT+IGABEniObf3XawdVQiI5BAFb5MNKLf7FI6TLd/8otqm+9KXNpC0EatsKuyteNxQUKX6IKk8HA==
-X-Received: by 2002:a05:7022:2643:b0:11b:36f8:c9f1 with SMTP id a92af1059eb24-11df64a44a8mr475841c88.36.1764803987287;
-        Wed, 03 Dec 2025 15:19:47 -0800 (PST)
+        b=cNPygNZoMopjDKiK86ML0GpwTOU0Xu1fLnc1C4Idov3XYgxrn/xn1Z/q8ba3wHr1X2
+         KuAdTTMrLZXl5o9kiBk3vtacS5ZmWmQu+KiHhgqXKjguXuF7XnnoJ0WGh7aDpZoPcOUN
+         FBl9ZEWfqF8dlO/Ir21BmWh1G4vbRhB3ucT4mJ/XOY3qc5Tg1HFYkvzHNmQtI+LML8/X
+         /q3VGYlzbG1wNCasKhpocnPzDML8ZfQYo6PJ+lcv58XA5+MOFrtsg5mT5KfE36DGoebz
+         5F67LIsSW75LCz7HwqmsUXXO8TXU7NTSLjzRrvGEOa5zZHxupgTttOnG2qVs45F55oOX
+         VmyQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764803996; x=1765408796;
+        h=content-transfer-encoding:mime-version:references:in-reply-to
+         :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
+         :to:cc:subject:date:message-id:reply-to;
+        bh=oZwPNbmMLIdSclvetPopPH6pQCDjwKEzJyQ5lCRoUr4=;
+        b=Q+lYe6s/KVDmklazSTjbrYiWM5aSJWszy8AfPoibk1guGWjevfPuYFWvrJrSuvPNuO
+         L7KSPv2veZHIwjyQcjhik5/HGGc7FJDOB5JQ6WDgLlrbMDy30uRBFu1wb4sq+DDAU8u/
+         0iHQhz4Z+MxfcM6eESvWy7pocJGsCMaX32QDibR1sIKjoBSQP8/5mmEVwnmpUu4mhpz7
+         beoKuBm6eYR1sjjxlKh/yICghf2KGwx37DwPRXWwqQYSXVmUgteSP2rmSQTbRei7M1oZ
+         HJRA1YATaO/2bgqONGcyGtW+qAhpGdH/V3g46QJB6saNq+rn+f3b1xZRBMTKuDLXfv/f
+         6Evg==
+X-Gm-Message-State: AOJu0YxSv6yy9a0DkAgBqrCAcGo2MtV2Nu9PPDPogaX5hjmzsBu/0TS2
+	80/0xTWgF9FIH6jYjN4WuTCqulegNz2IoGEqEO+MIyszCTTQhnSxOHLf1cw4Y6XMOTKiY6Y5lNM
+	zffpmOF8kR8GvHb/RCIs/WW+w62SFqAnjsMIpVGeF9iBbv/xYH2ZqgEtKUNG8rkeX0QD4bqwoVG
+	k9wEYb7/1XpWm574KQLqMOjwW7pWGSQrUWyao7nHpO7fBEo0Zhmw==
+X-Gm-Gg: ASbGncsxtsG/mmh4grTeQ3j2lp+lSIG6XtFRGk8bxRKkYpe+nR6x4qBEaxYznI9uo6V
+	IQDMS8USefPplerSpsjdVBG+RHo/A6bf7rTL3yh/JpvzCzdk0Mz1w6d55VwPKZGirN4YHNMbpAx
+	Vij8HcScbnB8NQo4Tc2hOoqgh9Ylutqg8uNi/PZZwe6F+tX1V0M1wtrg7iSdovw7JJJlyGMAkbd
+	6Uc9nm3f1k7F0Znp0A6cLdmBe+FadFRS0fdmsvGvqXh+bIGjWdWq/sg6YSXExO6jp5k8f/exaT5
+	4zFzgfNf9aLukmpPs4na1iCyz8KCoxAPNcbVQiwi95LSNrX5qOceFoYlxsJ3fXkLzYjgg/5W8jG
+	WXY94PZ8naXS3BXuYLR8XzdhuX7d8k3z0Wr/gq+LgwO9BKoeaXPALJIANr2mFJnZQZvHt+0Km+q
+	st9tNgyHpnmrARsq37nFjKVNMeRFEtiV/58l705kvjcZFEW6ojjWPiabA3kvqLap3TPlzxdHXX1
+	I7mWa2s6e7NN95Wms/G3NTVStbGwLnmNAex+M9gs3Cf622zIB/op34=
+X-Google-Smtp-Source: AGHT+IHrhbcXOIhxO1ILHPCybmF639lmG8VYw3BdnNfx+9tSGvECFLDLs+luJqtaRDCBE9O0WrvTOw==
+X-Received: by 2002:a05:7022:927:b0:119:e569:f865 with SMTP id a92af1059eb24-11df5fdc3dfmr926802c88.2.1764803995284;
+        Wed, 03 Dec 2025 15:19:55 -0800 (PST)
 Received: from brian--MacBookPro18.purestorage.com ([165.225.243.25])
-        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11df7552defsm131905c88.2.2025.12.03.15.19.46
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11df7552defsm131905c88.2.2025.12.03.15.19.54
         (version=TLS1_3 cipher=TLS_CHACHA20_POLY1305_SHA256 bits=256/256);
-        Wed, 03 Dec 2025 15:19:46 -0800 (PST)
+        Wed, 03 Dec 2025 15:19:54 -0800 (PST)
 From: Brian Bunker <brian@purestorage.com>
 To: linux-scsi@vger.kernel.org,
 	hare@suse.de
 Cc: Brian Bunker <brian@purestorage.com>,
 	Krishna Kant <krishna.kant@purestorage.com>
 Subject: [PATCH v3] scsi: core: add re-probe logic into SCSI rescan
-Date: Wed,  3 Dec 2025 15:19:42 -0800
-Message-ID: <20251203231943.18359-1-brian@purestorage.com>
+Date: Wed,  3 Dec 2025 15:19:43 -0800
+Message-ID: <20251203231943.18359-2-brian@purestorage.com>
 X-Mailer: git-send-email 2.51.2
+In-Reply-To: <20251203231943.18359-1-brian@purestorage.com>
+References: <20251203231943.18359-1-brian@purestorage.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
