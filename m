@@ -1,48 +1,48 @@
 Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4EA0733891D;
-	Wed,  3 Dec 2025 15:55:13 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7A4C6343D6E;
+	Wed,  3 Dec 2025 15:57:55 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764777315; cv=none; b=WHt2C/Ww6k2JId/ZAdjVt3sD9D4bm+RqVPUNmiB8AfNQ1OYWOYdRS9hvZCYgQcOJOxUXul5IqsyyoUQ6l6nZemr8Mdxz4wRggCmOgIeKgalzuYopahzctSMKGfK8RRRR4agPt8EYtSbZvFA3y0qvCf96Lps5j3TDVCkcykFN+jQ=
+	t=1764777477; cv=none; b=qjslWuo6MWYXdnCryh0dfAIrQjwACAvSO5kDBKTlAjvviffqBxE7PbbX4gr1+DPB/dtEaSpfcbrhcXzpVJWB9oGwSmREgOJjwA4ZYu4kyyKKO7oS49IpyhPIVzGUpjmhIOc7KD2DsknxrWDBy9R3gliDopZwIXLu379ynSmeOkg=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764777315; c=relaxed/simple;
-	bh=qr+HD8JTOLMGpC4ZatELM/KMquB3ZZXEJLWyu9fC8VA=;
+	s=arc-20240116; t=1764777477; c=relaxed/simple;
+	bh=yuC5AqRNozXptlKElEys759nOtatkLpbwEzbxGqXe/Q=;
 	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=BRK5ulq2VqOnWztIUG8N67I2YD3Jk3VpNwtI3Kto8eOqaduSBBb+qKyud3pF0avquTdJ1GK3+RUgSLVqOTZutOugqPBZ2BAPhqzPow8TsXnAQz8aOt4fdS/vV0qvIGkho/XXpy0NOfb+HOqbeYB4Yb9tg0AyNztPnssRAzn4QGU=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=OnAmIpKw; arc=none smtp.client-ip=199.89.1.14
+	 In-Reply-To:Content-Type; b=lPT5QcvuBb+7bkHxp5XNUESrub9fx5OdWZNnva4kmGCjX/KfcuY9R4bIn/No/R+zasE+89PxSeLyhPWgaapU/N/Ki4pAUXSZ56+6bql0AWoy46lgPzbbw+hyRPbEpJK9VAIN2y84l69/VQZjGAu2Tfz2dYXKXOu4rN4Cm87LxQA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=g+iV8Dfn; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="OnAmIpKw"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="g+iV8Dfn"
 Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dM2KD4nllz1XM6Jk;
-	Wed,  3 Dec 2025 15:55:12 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dM2NL6bJMz1XM6Jl;
+	Wed,  3 Dec 2025 15:57:54 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
 	content-transfer-encoding:content-type:content-type:in-reply-to
 	:from:from:content-language:references:subject:subject
 	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1764777311; x=1767369312; bh=qr+HD8JTOLMGpC4ZatELM/KM
-	quB3ZZXEJLWyu9fC8VA=; b=OnAmIpKwR6R4G1XlLg0z/hTDq5wnqw5KxovYUI2K
-	Yn9mu5SKvUFsRey0LcYiSTXj3AK6lD2cjuxqMQTeHWe43BahhPeWK+JymfZDYIGL
-	wjWfRoaCeQu1L0J04w5aF6qXRuMWHJjw5dbB3Z8tR3u89rNm7hvffDv9H9XXE5qX
-	t0/dpbVO0VrucMdSpZRWmUP59WFxp0L1f9IQ5Na8CzFJCgCYRy6yMd3Edof9GbQx
-	PKe50M2fchJfZJJppkvnFSoCMVapfwLiA9OKnPt8cLuPcBrKt4WvZ5QJ+Xn9j4zn
-	yUHLy9v6dQGcwq6su7beoraPqkO3Eq/i2tMC7wkgfHRl5w==
+	 s=mr01; t=1764777473; x=1767369474; bh=/dO2Rzn3myFH3VSBZWn3Q6pG
+	5bh1kBA9gR9pkIM2YMw=; b=g+iV8DfnK84+rrp1CRaB0sxE/zNtzMM580qzw6pk
+	6UQoHBo+1EcjgDE+lHx9pF2d0zWYWjegXnL6IgOjtNzbTt26k3cNoKXK2fq+IdNC
+	5Gdqtb05GJVufpvQwOVXoaRJhwlhz9bG8ivSTnk0dxrwDxm81NHfxyaELT88tvSU
+	DdPlfb99rVRpNgbBemUccPg7femQMzD4kIygM12kO70Q8MZLOnDz20/KUN/wgS/1
+	yQigZTModbtCR1HWKvgwquwZsF0vhV4py/YLsxDdJESl5Ndr7IXfggx5vUUgiDHA
+	FRiGnYdQQyrzpSIq0T9Eny4SnThJ9phEPvsKUqLOyi0dMg==
 X-Virus-Scanned: by MailRoute
 Received: from 011.lax.mailroute.net ([127.0.0.1])
  by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id ctS-ESrFiAJ2; Wed,  3 Dec 2025 15:55:11 +0000 (UTC)
+ id dzIakoKLjH-t; Wed,  3 Dec 2025 15:57:53 +0000 (UTC)
 Received: from [10.25.100.213] (syn-098-147-059-154.biz.spectrum.com [98.147.59.154])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dM2K858zYz1XM6Jg;
-	Wed,  3 Dec 2025 15:55:08 +0000 (UTC)
-Message-ID: <88900700-7f37-4c3e-878e-cf5f68f006cc@acm.org>
-Date: Wed, 3 Dec 2025 05:55:06 -1000
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dM2NG313Jz1XM6Jk;
+	Wed,  3 Dec 2025 15:57:49 +0000 (UTC)
+Message-ID: <9d678edb-0db0-4ee5-9ad7-b2b141575026@acm.org>
+Date: Wed, 3 Dec 2025 05:57:49 -1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -51,35 +51,38 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 User-Agent: Mozilla Thunderbird
 Subject: Re: [PATCH v2 1/1] scsi: core: Fix error handler encryption support
-To: Hannes Reinecke <hare@suse.com>, Christoph Hellwig <hch@infradead.org>,
- Po-Wen Kao <powenkao@google.com>
+To: Christoph Hellwig <hch@infradead.org>, Po-Wen Kao <powenkao@google.com>,
+ Hannes Reinecke <hare@suse.com>
 Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
  "Martin K. Petersen" <martin.petersen@oracle.com>,
  "open list:SCSI SUBSYSTEM" <linux-scsi@vger.kernel.org>,
  open list <linux-kernel@vger.kernel.org>
 References: <20251203073310.2248956-1-powenkao@google.com>
  <aS_pE4nf7wQ031Y8@infradead.org>
- <34848777-b370-4a63-8b08-c3246d214167@suse.com>
 Content-Language: en-US
 From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <34848777-b370-4a63-8b08-c3246d214167@suse.com>
+In-Reply-To: <aS_pE4nf7wQ031Y8@infradead.org>
 Content-Type: text/plain; charset=UTF-8; format=flowed
 Content-Transfer-Encoding: 7bit
 
-On 12/2/25 10:42 PM, Hannes Reinecke wrote:
-> There had been an intersection with the reserved command stuff, but
-> now that Bart has dusted things off there I guess I should give it
-> another go.
+On 12/2/25 9:38 PM, Christoph Hellwig wrote:
+> On Wed, Dec 03, 2025 at 07:33:08AM +0000, Po-Wen Kao wrote:
+>> From: Brian Kao <powenkao@google.com>
+>>
+>> Some low-level drivers (LLD) access block layer crypto fields, such as
+>> rq->crypt_keyslot and rq->crypt_ctx within `struct request`, to
+>> configure hardware for inline encryption.
+> 
+> So don't do that except for commands that can actually be encrypted,
+> i.e. those that have non-zero payload size.  I think you really want
+> to fix this in the driver.
 
-Does that patch series perhaps involve allocating a reserved command
-from inside the SCSI error handler? Won't that break SCSI LLDs that
-restrict the queue depth to one? I think that the following SCSI LLDs
-only support one command (.can_queue = 1):
-* drivers/scsi/fdomain.c
-* drivers/scsi/mac53c94.c
-* drivers/scsi/ppa.c
-* drivers/scsi/imm.c
-* drivers/scsi/aha152x.c
+That would make it impossible to submit SCSI commands from the SCSI
+error handler that read data, e.g. to check that the medium is still
+readable. I think that the approach of this patch is better than
+requiring that every SCSI LLD driver that supports inline encryption
+only sets up inline encryption for commands that have a non-zero
+payload size.
 
 Thanks,
 
