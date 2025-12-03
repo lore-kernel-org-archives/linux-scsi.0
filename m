@@ -1,178 +1,128 @@
-Received: from mail-yx1-f41.google.com (mail-yx1-f41.google.com [74.125.224.41])
+Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 405603A1B5
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 00:56:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.41
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A43A8405C
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 00:56:51 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764723403; cv=none; b=HsE1mpEF1fsyQMblIlFiY8u/JAfXujEigPxXJx+mlo0f5P6hsucgiqm8lIReSCBmTp5/HM3kURJzTvt+mHCFv7RSxgoFnHC9b36WDcQIvWx0v0gtHObTY9UXlVimPbKtPtLEg0XwbIKNCXTfraypwKkk85zPLUYmRwSX3TuQmV4=
+	t=1764723412; cv=none; b=pP48SnvMy3atSjWI/CeQ4AmqB84zpZVEkz+uhUpYPlOQgQRzQmlOnIyMxwvNh/qP9gI+IIVrtJCTVBe5KUU+AWORm1tzf0qKr0Y5SzJLMAroGoYkWPzEAfE3y8f4/hC9xIIAYbqhAEVKRVIUY6wdbZcaKTjPeQc/CyGvsx4FNaw=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764723403; c=relaxed/simple;
-	bh=CWzbTiHz7zTG+K7+boLZHaLei5opXpRaXIYqqiwOBHY=;
-	h=MIME-Version:References:In-Reply-To:From:Date:Message-ID:Subject:
-	 To:Cc:Content-Type; b=IY1FX105yZIQ63txuI9cOF3OLpGbGVnJFgwunA42HcYVx0+KjFaGDIGo3FiS/zCc3DSmSt+uoYwyj9vjfT+klmpvLOf0BXjEpSXzlotlSQ9Iat3I9uYJGauisFFKuL8cTzoQlsAELEK772MsGuvSLJHSfAnoftHdpwhv0phLPus=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org; spf=pass smtp.mailfrom=gmail.com; arc=none smtp.client-ip=74.125.224.41
-Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=debian.org
+	s=arc-20240116; t=1764723412; c=relaxed/simple;
+	bh=Qe+LyHWvG6IIVQQ2MDnSM1CSn/ljrERijBT+cMlAQ7E=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=plx+baBVa95WAuRO0QDLCxjIXzPk+Z0q5JgfkW7yh6Hgm2a/6hJ7HwTWRA4H5vu2x1JGyUTiB9se8Qokmo1vyEihZ8TW7jVG4GuBkPvxuUouXS1XEwmlQLbh6JQ048TkVIFoZFiBAhp6zXhGNBvbp9SYp/vG90qngsMDzjSu4aE=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G+WaU8m+; arc=none smtp.client-ip=209.85.210.172
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
-Received: by mail-yx1-f41.google.com with SMTP id 956f58d0204a3-640f2c9cc72so5652841d50.3
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Dec 2025 16:56:40 -0800 (PST)
+Authentication-Results: smtp.subspace.kernel.org;
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G+WaU8m+"
+Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-7b9a98b751eso4461020b3a.1
+        for <linux-scsi@vger.kernel.org>; Tue, 02 Dec 2025 16:56:51 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1764723410; x=1765328210; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=xIeq25nODub67uBJWLDr/T9J8C6eF/vS/9+u4qmJjzM=;
+        b=G+WaU8m+9WJYA9vnKHvYvapzQ8uyPM+T3WqOIlcQC32jMG+nSE3Frzd5aAUIjdJ5wU
+         B76qV7xBQrJdFJGhJCOFuuV1Cj0OOxzzBCdKd2dKCVGxpEXRex1PDffx63kY2GdZnOEv
+         XZkzKxPTG6ZPqueo9B6dhp+4nTBBwmxDVJ9PlPGbhc7j5j7CCQZIJ4yaxOChNlr3AWZy
+         hk/xojfLr+0v+YWrV0OOn4Ip/jiUProMqlrkD/LRPeejbpZQjSH2BkTZIyar8dE5CryG
+         Gls1X8BILW4W2V9UVuoZvp6oikfC/4cSNrYcnMzSbhWGDom+ZR1uiqikrlCtXIhsRdJA
+         r13w==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764723400; x=1765328200;
-        h=content-transfer-encoding:cc:to:subject:message-id:date:from
-         :in-reply-to:references:mime-version:x-gm-gg:x-gm-message-state:from
-         :to:cc:subject:date:message-id:reply-to;
-        bh=S+nufjPxLL1cIVMD0kPrg2zi4C0QxcA77/87khD8BlM=;
-        b=IYZLTZu9bgI5jBMmnv1uBHufACaq3vMUzEVu14EYR/zEhq0GUczqHoOC7TUeC+FujA
-         ABUfUxBQx0ZxE5Ir5+FyAucpG4I7g/8T8Z1dL3FyRbAMiOt+C97BNwQjNp8D9eWfLjxR
-         vpl3jGo0GvXfgWIyVG0nvqpgAChKw85ZQn6SwyPvAyAyGkHGIJ8UhgDm9IcSOEQHtldX
-         8eut+LWAdgMreJVhhcnrfgxJOEEGLdAKkHPciYywL4Ug/HSsDH9ukxzoRDpVbTvnC5KT
-         LVdkq10kw7gp2NJTcr/6CQ7B5opwqfMHT9/sKup2FEV3d14g08eE1d+/c6x8EGTO45DB
-         zOkg==
-X-Forwarded-Encrypted: i=1; AJvYcCXK05b4LDNh+ztR2Kha3n4SG1lqkjiVC/kz/7ZRgAME9sKa+z5dFsPz2zGNr5qhUwhNb2MEpsm1B+RD@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz1a427gx77OZbgYi7nuJz5DpDFk0+Fbz/hPFUcK38NO8joxx8w
-	XPLkEnkjn87K7ftwdoQRuGKZ+WjQ5GTwh1YpYVwzt6EeKLuUxMKV+gCTFmM/3w==
-X-Gm-Gg: ASbGncuH74BoIeZ5izjramcSEACYBYsjM517nMt53wFwbY61/5pQ810ioiZ/sfwbcKu
-	eBLdtTbaXOM3aD37wUoF8JSUZYIg6uRSoF2Xa8EnUaQILRutnagJovJ0pOZovBGeLuRk0RTtiVZ
-	8c1WcxY7b87fDoPAisQ8Tjzr/wFbVtR6t6+/yvt9JfUGO/kz1obOo28BiIFiywDv2YtQ2urpwQr
-	Gokf4ojur5vY6PeO0OZmWMhxEGSyqfVeAv3N5jBiPVzgxXEl2rp07Fl71o9DWY6OU+0p9RwqJK6
-	BLWFI4vTiWevTuPISV/pF07eqPSswuEhLY57E6LsTLgsdQwefkaLpNc1gOgzF+wwivu3au69opj
-	RZ5s4xX0SDFynTKVEB891h0IMPQdY3Ww21+J/nXH1a5nsBQeARVpEP9Pkgm7he9G4GrUVB+APs+
-	CLrXHA4GmQZ8vIYCLl6b5uAj2qHX3DArNHrT53gAd/Hw==
-X-Google-Smtp-Source: AGHT+IF6gdCaiUN4TnHnK/YDv9DAaHVGy3Y5b//XvRoolMZCmI00DO/Mcp/XgxMp5ugM36gUbJN4Xg==
-X-Received: by 2002:a05:690c:7245:b0:787:f2c3:7164 with SMTP id 00721157ae682-78c0bcbaf4cmr11946497b3.0.1764723399998;
-        Tue, 02 Dec 2025 16:56:39 -0800 (PST)
-Received: from mail-yx1-f48.google.com (mail-yx1-f48.google.com. [74.125.224.48])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-78ad100d3a1sm68603727b3.37.2025.12.02.16.56.38
-        for <linux-scsi@vger.kernel.org>
-        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
-        Tue, 02 Dec 2025 16:56:38 -0800 (PST)
-Received: by mail-yx1-f48.google.com with SMTP id 956f58d0204a3-642fcb9c16aso5029349d50.1
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Dec 2025 16:56:38 -0800 (PST)
-X-Forwarded-Encrypted: i=1; AJvYcCWnLKvPS3IrqtDY+6V2JgUB6tYzib+yiB58vvYtq2jFYBrnjD+lHnWI2udzBxkeHXtou72nGqePz1VP@vger.kernel.org
-X-Received: by 2002:a05:690c:6611:b0:787:c849:6554 with SMTP id
- 00721157ae682-78c0bf59e06mr11996967b3.13.1764723398466; Tue, 02 Dec 2025
- 16:56:38 -0800 (PST)
+        d=1e100.net; s=20230601; t=1764723410; x=1765328210;
+        h=in-reply-to:content-disposition:mime-version:references:message-id
+         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
+         :subject:date:message-id:reply-to;
+        bh=xIeq25nODub67uBJWLDr/T9J8C6eF/vS/9+u4qmJjzM=;
+        b=j0Z4vUZYrh++/XUoayUtWknD/loXpeXYBgkjDuAyBf2qtijRpEk01woiOgBgXVWbiD
+         MADtvi5biIRGbJ/txm9IdDqurmJxVwArCUrDjp5zalpvQOPKf6ZyNZh5+juO6apYFjf3
+         H+KZMq4xiK1EfoHIwBxTtbEaHvNknq42MwXhkanHGsnvi/3r/BHg4anhvSbRB6sk5MvL
+         E1dt0JL9VNfeSe7NgVj+xoBX8V2WA0X/7DYDbsvq7Z6WptsqTAie7nz2nx0tFi7BkyXh
+         Tu88MLfVL9jpXKb4wQuCB1krLA2WqGPsziZKm1y3pAoFXS4Fio3+8sIXHFr/PVQ3zD3g
+         Mh8Q==
+X-Forwarded-Encrypted: i=1; AJvYcCUUTodPGGkhjsauaYEbg+nGNZfvM55KPlIvThlrMzOohIlnsRYru5QR/aLOQPQRzb7dk0hvYns/8UAL@vger.kernel.org
+X-Gm-Message-State: AOJu0YwsuykTnMh49saTCOaB3G3i6i7t8ufX5PGVFzpwo4aoOGJdFz4v
+	SXGW37UIbWA+JS0wgQaBhMFWw6mrnh8yYQhBGd76LVW7xEgL+UhEmPW1
+X-Gm-Gg: ASbGncuyfuU48+AWU2qa313phlDbqeZiVpVn6lfal+xdH9J0HWIAuMoJAemMwMq0hyS
+	29rMj+sXTSQ6zhoMXCDkRwRAnPgZxEmp4rhosKS3P/v35oYPTHDyW4aUgbKFyFcCPKevFUv5/y8
+	VRiVcSgm5FNhuJWOSHRVv8mDAHJvAgQ8zKqO55Cmmeqgp/cAAwzspdNa1aMPOfBzHgXPovPwfWL
+	qKLjnijiS0eGG7VPKRRLUxP8Ex9N2YFsvH1mSlXEq9t72sQY9hDUXz8JHTg0qwnXm62q7bD+LzU
+	aCxE5I2FA/SQILGby5EMRgAwFAwNGuNHqOjn1XXhbUUiNXvud8Cb9DvV/EJWV17VS0c49Ev3wr9
+	jlumXYYGLpeJhU9+xOfJ6v0OzRgdx2WuK/wJaSi5WHYAelpeGUUEvOnEPi/0U9NVUDs/IelW+hg
+	9Ibzrb8vQxnr4MZhdQTbZVhbTzNbprhu+oxtPDqg==
+X-Google-Smtp-Source: AGHT+IGpAr81YW4tii5cYeSS5Aj8wL/3RSqYXE2qCiYPKaYdLsIPxATOspnpSRtWbLzzUgg6LbEF4w==
+X-Received: by 2002:a05:6a20:158e:b0:32d:b925:4a8 with SMTP id adf61e73a8af0-363f5ce75cdmr889229637.3.1764723410611;
+        Tue, 02 Dec 2025 16:56:50 -0800 (PST)
+Received: from deb-101020-bm01.eng.stellus.in ([149.97.161.244])
+        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7d15e6e6df9sm18125627b3a.39.2025.12.02.16.56.50
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 02 Dec 2025 16:56:50 -0800 (PST)
+Date: Wed, 3 Dec 2025 00:56:48 +0000
+From: Swarna Prabhu <sw.prabhu6@gmail.com>
+To: Bart Van Assche <bvanassche@acm.org>
+Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
+	mcgrof@kernel.org, kernel@pankajraghav.com,
+	Swarna Prabhu <s.prabhu@samsung.com>
+Subject: Re: [PATCH 2/2] scsi: enable sector_size > PAGE_SIZE
+Message-ID: <aS-K0LVwGazNyVNj@deb-101020-bm01.eng.stellus.in>
+References: <20251202021522.188419-1-sw.prabhu6@gmail.com>
+ <20251202021522.188419-4-sw.prabhu6@gmail.com>
+ <401d8de5-63a8-461a-bc54-5b2986779a88@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-References: <20251031204029.2883185-1-bvanassche@acm.org> <20251031204029.2883185-22-bvanassche@acm.org>
- <ehorjaflathzab5oekx2nae2zss5vi2r36yqkqsfjb2fgsifz2@yk3us5g3igow>
- <5f75d98a-2c0a-4fdf-a2a9-89bfe09fe751@acm.org> <6fw4oikdxwkzbamtvu55fn2gqxr3ngfzymvxr6nxcrjpnpdb2s@v325mijraxmg>
- <75cf6698-9ce9-4e6d-8b3c-64a7f9ef8cfc@acm.org> <in3muo5gco75eenvfjif3bcauyj2ilx3d6qgriifwnyj657fyq@eftlas3z3jiu>
- <d7579c22-40d0-4228-b539-4dfe4e25b771@acm.org> <nso6f36ozpad36yd3dlrqoujsxcvz4znvr6snqwgxihb3uxyya@gs6vuu76n6sx>
- <5c142a9d-7b41-422a-bbff-638fda1939dc@acm.org>
-In-Reply-To: <5c142a9d-7b41-422a-bbff-638fda1939dc@acm.org>
-From: Roger Shimizu <rosh@debian.org>
-Date: Tue, 2 Dec 2025 16:56:27 -0800
-X-Gmail-Original-Message-ID: <CAEQ9gEkz=Y1ksXL0wCumb7zbqXTREqJ6Vn29P-7FWS_e=iuuVQ@mail.gmail.com>
-X-Gm-Features: AWmQ_bkAOygLeZzrgvTDoKqo9DtnYNpkD5wYlC7bA2Eplx6qm3xyJjYecHlL3l4
-Message-ID: <CAEQ9gEkz=Y1ksXL0wCumb7zbqXTREqJ6Vn29P-7FWS_e=iuuVQ@mail.gmail.com>
-Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved request
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: Manivannan Sadhasivam <mani@kernel.org>, "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org, 
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>, 
-	Bean Huo <beanhuo@micron.com>, "Bao D. Nguyen" <quic_nguyenb@quicinc.com>, 
-	Adrian Hunter <adrian.hunter@intel.com>, 
-	Dmitry Baryshkov <dmitry.baryshkov@oss.qualcomm.com>, 
-	Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Content-Type: text/plain; charset="UTF-8"
-Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <401d8de5-63a8-461a-bc54-5b2986779a88@acm.org>
 
-Thanks for the patch, and detailed procedure to bisecting!
+On Tue, Dec 02, 2025 at 02:30:19PM -1000, Bart Van Assche wrote:
+> On 12/1/25 4:15 PM, sw.prabhu6@gmail.com wrote:
+> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
+> > index b2ab97be5db3..b5839e62d3bb 100644
+> > --- a/drivers/scsi/scsi_debug.c
+> > +++ b/drivers/scsi/scsi_debug.c
+> > @@ -8459,13 +8459,8 @@ static int __init scsi_debug_init(void)
+> >   	} else if (sdebug_ndelay > 0)
+> >   		sdebug_jdelay = JDELAY_OVERRIDDEN;
+> > -	switch (sdebug_sector_size) {
+> > -	case  512:
+> > -	case 1024:
+> > -	case 2048:
+> > -	case 4096:
+> > -		break;
+> > -	default:
+> > +	if (sdebug_sector_size < 512 || sdebug_sector_size > BLK_MAX_BLOCK_SIZE ||
+> > +	    !is_power_of_2(sdebug_sector_size)) {
+> >   		pr_err("invalid sector_size %d\n", sdebug_sector_size);
+> >   		return -EINVAL;
+> >   	}
+> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+> > index c3502fcba1bb..f2eac79d7263 100644
+> > --- a/drivers/scsi/sd.c
+> > +++ b/drivers/scsi/sd.c
+> > @@ -2889,10 +2889,8 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
+> >   			  "assuming 512.\n");
+> >   	}
+> > -	if (sector_size != 512 &&
+> > -	    sector_size != 1024 &&
+> > -	    sector_size != 2048 &&
+> > -	    sector_size != 4096) {
+> > +	if (sector_size < 512 || sector_size > BLK_MAX_BLOCK_SIZE ||
+> > +	    !is_power_of_2(sector_size)) {
+> >   		sd_printk(KERN_NOTICE, sdkp, "Unsupported sector size %d.\n",
+> >   			  sector_size);
+> >   		/*
+> 
+> Please reorganize this patch series into one patch for the scsi_debug
+> driver and another patch for the sd driver.
+> 
+  Sure, will do. 
 
-On Tue, Dec 2, 2025 at 8:03=E2=80=AFAM Bart Van Assche <bvanassche@acm.org>=
- wrote:
->
-> On 12/1/25 10:51 PM, Manivannan Sadhasivam wrote:
-> > Please share a fix on top of scsi-next or next/master.
-> Before a fix can be developed, the root cause needs to be identified.
-> We just learned that commit 1d0af94ffb5d ("scsi: ufs: core: Make the
-> reserved slot a reserved request") is not the root cause of the boot
-> hang.
->
-> Can you please help with the following:
-> * Verify whether or not Martin's for-next branch boots fine on the
->    Qcom RB3Gen2 board (I expect this not to be the case). Martin's
->    Linux kernel git repository is available at
->    git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git.
+  Thanks
+  Swarna
 
-No, same boot issue for mkp/for-next branch.
-
-> * If Martin's for-next branch boots fine, bisect linux-next.
-> * If the boot hang is reproducible with Martin's for-next branch,
->    bisect that branch. After every bisection step, apply the patch
->    below to work around bisectability issues in this patch series.
->    If any part of that patch fails to apply, ignore the failures.
->    We already know that the boot hang does not occur with commit
->    1d0af94ffb5d ("scsi: ufs: core: Make the reserved slot a reserved
->    request"). There are only 35 UFS patches on Martin's for-next branch
->    past that commit:
->    $ git log 1d0af94ffb5d..mkp-scsi/for-next */ufs|grep -c ^commit
->    35
-
-First I want to clarify 1d0af94ffb5d ("scsi: ufs: core: Make the
-reserved slot a reserved request")
-has boot issue.
-But applying for the debugging patch from your email, it boots fine.
-So the bisecting start from here.
-
-Bisecting result is:
-08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()") is
-the first bad commit.
-
-And this commit can apply the debugging patch (below) without any conflict.
-Hope it helps, and thank you!
--Roger
-
-> Thanks,
->
-> Bart.
->
->
-> diff --git a/drivers/scsi/hosts.c b/drivers/scsi/hosts.c
-> index 1b3fbd328277..ef7d6969ef06 100644
-> --- a/drivers/scsi/hosts.c
-> +++ b/drivers/scsi/hosts.c
-> @@ -231,12 +231,6 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost,
-> struct device *dev,
->                 goto fail;
->         }
->
-> -       if (shost->nr_reserved_cmds && !sht->queue_reserved_command) {
-> -               shost_printk(KERN_ERR, shost,
-> -                            "nr_reserved_cmds set but no method to queue=
-\n");
-> -               goto fail;
-> -       }
-> -
->         /* Use min_t(int, ...) in case shost->can_queue exceeds SHRT_MAX =
-*/
->         shost->cmd_per_lun =3D min_t(int, shost->cmd_per_lun,
->                                    shost->can_queue);
-> diff --git a/drivers/ufs/core/ufshcd-priv.h b/drivers/ufs/core/ufshcd-pri=
-v.h
-> index 7d6d19361af9..4259f499382f 100644
-> --- a/drivers/ufs/core/ufshcd-priv.h
-> +++ b/drivers/ufs/core/ufshcd-priv.h
-> @@ -374,7 +374,12 @@ static inline bool
-> ufs_is_valid_unit_desc_lun(struct ufs_dev_info *dev_info, u8
->    */
->   static inline struct scsi_cmnd *ufshcd_tag_to_cmd(struct ufs_hba *hba,
-> u32 tag)
->   {
-> -       struct blk_mq_tags *tags =3D hba->host->tag_set.shared_tags;
-> +       /*
-> +        * Host-wide tags are enabled in MCQ mode only. See also the
-> +        * host->host_tagset assignment in ufs-mcq.c.
-> +        */
-> +       struct blk_mq_tags *tags =3D hba->host->tag_set.shared_tags ?:
-> +                                          hba->host->tag_set.tags[0];
->         struct request *rq =3D blk_mq_tag_to_rq(tags, tag);
->
->         if (WARN_ON_ONCE(!rq))
->
