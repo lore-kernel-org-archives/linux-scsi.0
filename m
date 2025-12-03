@@ -1,75 +1,63 @@
-Received: from mail-pf1-f172.google.com (mail-pf1-f172.google.com [209.85.210.172])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from mgamail.intel.com (mgamail.intel.com [198.175.65.16])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 6A43A8405C
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 00:56:51 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.210.172
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id D2A1E2B9A4
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 03:46:13 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.175.65.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764723412; cv=none; b=pP48SnvMy3atSjWI/CeQ4AmqB84zpZVEkz+uhUpYPlOQgQRzQmlOnIyMxwvNh/qP9gI+IIVrtJCTVBe5KUU+AWORm1tzf0qKr0Y5SzJLMAroGoYkWPzEAfE3y8f4/hC9xIIAYbqhAEVKRVIUY6wdbZcaKTjPeQc/CyGvsx4FNaw=
+	t=1764733575; cv=none; b=jm/wQscZmFwCd8Ys8NbGmgb4pYQaM+eLLVh71Xjxw9Mxr38IFXnd/bAjLnCJ5McrdG31Oprt6m7C+1mRx5EgiV/6YTBQDir5ezMnnmn0bbYurFxXS+jR0nj0i4TRdckt6BDY8GDGJN+1axvdxEWL09YcWkd+Q7BN//zifLlf5VQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764723412; c=relaxed/simple;
-	bh=Qe+LyHWvG6IIVQQ2MDnSM1CSn/ljrERijBT+cMlAQ7E=;
+	s=arc-20240116; t=1764733575; c=relaxed/simple;
+	bh=Zw01VMIJSuTBcOHvzK3T3px//j+RS/aHvaVxL3azliA=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=plx+baBVa95WAuRO0QDLCxjIXzPk+Z0q5JgfkW7yh6Hgm2a/6hJ7HwTWRA4H5vu2x1JGyUTiB9se8Qokmo1vyEihZ8TW7jVG4GuBkPvxuUouXS1XEwmlQLbh6JQ048TkVIFoZFiBAhp6zXhGNBvbp9SYp/vG90qngsMDzjSu4aE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=G+WaU8m+; arc=none smtp.client-ip=209.85.210.172
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	 Content-Type:Content-Disposition:In-Reply-To; b=KHMl8KFOnGQKZ7sXlJIkcefLadK2s19HUSG0aOaP5xKjJeYIm+rHePIj/hOp+nV1enolmeGo2S7/mNmkzT2NaykdPvk6u9ElJT/s+QohlKZPFjdnksKbsaxuR5on+LUL+Xie6ZnRHF+ek2rSN5GwCLgYI1fTAyxuC3d4pfn2oX8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com; spf=pass smtp.mailfrom=intel.com; dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b=cQKqXfgE; arc=none smtp.client-ip=198.175.65.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=intel.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=intel.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="G+WaU8m+"
-Received: by mail-pf1-f172.google.com with SMTP id d2e1a72fcca58-7b9a98b751eso4461020b3a.1
-        for <linux-scsi@vger.kernel.org>; Tue, 02 Dec 2025 16:56:51 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764723410; x=1765328210; darn=vger.kernel.org;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=xIeq25nODub67uBJWLDr/T9J8C6eF/vS/9+u4qmJjzM=;
-        b=G+WaU8m+9WJYA9vnKHvYvapzQ8uyPM+T3WqOIlcQC32jMG+nSE3Frzd5aAUIjdJ5wU
-         B76qV7xBQrJdFJGhJCOFuuV1Cj0OOxzzBCdKd2dKCVGxpEXRex1PDffx63kY2GdZnOEv
-         XZkzKxPTG6ZPqueo9B6dhp+4nTBBwmxDVJ9PlPGbhc7j5j7CCQZIJ4yaxOChNlr3AWZy
-         hk/xojfLr+0v+YWrV0OOn4Ip/jiUProMqlrkD/LRPeejbpZQjSH2BkTZIyar8dE5CryG
-         Gls1X8BILW4W2V9UVuoZvp6oikfC/4cSNrYcnMzSbhWGDom+ZR1uiqikrlCtXIhsRdJA
-         r13w==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764723410; x=1765328210;
-        h=in-reply-to:content-disposition:mime-version:references:message-id
-         :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
-         :subject:date:message-id:reply-to;
-        bh=xIeq25nODub67uBJWLDr/T9J8C6eF/vS/9+u4qmJjzM=;
-        b=j0Z4vUZYrh++/XUoayUtWknD/loXpeXYBgkjDuAyBf2qtijRpEk01woiOgBgXVWbiD
-         MADtvi5biIRGbJ/txm9IdDqurmJxVwArCUrDjp5zalpvQOPKf6ZyNZh5+juO6apYFjf3
-         H+KZMq4xiK1EfoHIwBxTtbEaHvNknq42MwXhkanHGsnvi/3r/BHg4anhvSbRB6sk5MvL
-         E1dt0JL9VNfeSe7NgVj+xoBX8V2WA0X/7DYDbsvq7Z6WptsqTAie7nz2nx0tFi7BkyXh
-         Tu88MLfVL9jpXKb4wQuCB1krLA2WqGPsziZKm1y3pAoFXS4Fio3+8sIXHFr/PVQ3zD3g
-         Mh8Q==
-X-Forwarded-Encrypted: i=1; AJvYcCUUTodPGGkhjsauaYEbg+nGNZfvM55KPlIvThlrMzOohIlnsRYru5QR/aLOQPQRzb7dk0hvYns/8UAL@vger.kernel.org
-X-Gm-Message-State: AOJu0YwsuykTnMh49saTCOaB3G3i6i7t8ufX5PGVFzpwo4aoOGJdFz4v
-	SXGW37UIbWA+JS0wgQaBhMFWw6mrnh8yYQhBGd76LVW7xEgL+UhEmPW1
-X-Gm-Gg: ASbGncuyfuU48+AWU2qa313phlDbqeZiVpVn6lfal+xdH9J0HWIAuMoJAemMwMq0hyS
-	29rMj+sXTSQ6zhoMXCDkRwRAnPgZxEmp4rhosKS3P/v35oYPTHDyW4aUgbKFyFcCPKevFUv5/y8
-	VRiVcSgm5FNhuJWOSHRVv8mDAHJvAgQ8zKqO55Cmmeqgp/cAAwzspdNa1aMPOfBzHgXPovPwfWL
-	qKLjnijiS0eGG7VPKRRLUxP8Ex9N2YFsvH1mSlXEq9t72sQY9hDUXz8JHTg0qwnXm62q7bD+LzU
-	aCxE5I2FA/SQILGby5EMRgAwFAwNGuNHqOjn1XXhbUUiNXvud8Cb9DvV/EJWV17VS0c49Ev3wr9
-	jlumXYYGLpeJhU9+xOfJ6v0OzRgdx2WuK/wJaSi5WHYAelpeGUUEvOnEPi/0U9NVUDs/IelW+hg
-	9Ibzrb8vQxnr4MZhdQTbZVhbTzNbprhu+oxtPDqg==
-X-Google-Smtp-Source: AGHT+IGpAr81YW4tii5cYeSS5Aj8wL/3RSqYXE2qCiYPKaYdLsIPxATOspnpSRtWbLzzUgg6LbEF4w==
-X-Received: by 2002:a05:6a20:158e:b0:32d:b925:4a8 with SMTP id adf61e73a8af0-363f5ce75cdmr889229637.3.1764723410611;
-        Tue, 02 Dec 2025 16:56:50 -0800 (PST)
-Received: from deb-101020-bm01.eng.stellus.in ([149.97.161.244])
-        by smtp.gmail.com with ESMTPSA id d2e1a72fcca58-7d15e6e6df9sm18125627b3a.39.2025.12.02.16.56.50
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 02 Dec 2025 16:56:50 -0800 (PST)
-Date: Wed, 3 Dec 2025 00:56:48 +0000
-From: Swarna Prabhu <sw.prabhu6@gmail.com>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-	mcgrof@kernel.org, kernel@pankajraghav.com,
-	Swarna Prabhu <s.prabhu@samsung.com>
-Subject: Re: [PATCH 2/2] scsi: enable sector_size > PAGE_SIZE
-Message-ID: <aS-K0LVwGazNyVNj@deb-101020-bm01.eng.stellus.in>
-References: <20251202021522.188419-1-sw.prabhu6@gmail.com>
- <20251202021522.188419-4-sw.prabhu6@gmail.com>
- <401d8de5-63a8-461a-bc54-5b2986779a88@acm.org>
+	dkim=pass (2048-bit key) header.d=intel.com header.i=@intel.com header.b="cQKqXfgE"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple;
+  d=intel.com; i=@intel.com; q=dns/txt; s=Intel;
+  t=1764733573; x=1796269573;
+  h=date:from:to:cc:subject:message-id:references:
+   mime-version:in-reply-to;
+  bh=Zw01VMIJSuTBcOHvzK3T3px//j+RS/aHvaVxL3azliA=;
+  b=cQKqXfgEimW7OK2rEko+HzGh/Pxe+u3E3yjopiWntTEVm75qL2Wx+7LI
+   maqFfVpSsYDQQU40YoRv9Jtq8ro/V7bkIgWtuUhPWis/J3S/HldueQ+L+
+   ZVnQO0uEVbfeZQJfCJqqwP6V9mGvNLWmTOTRsl99dYheE08f7JX8P2TYH
+   r/4Tdnl/7lY5DpenYOqsRHuYfyX4f4t59aFDzb3YefWj02LFZJQh/cP7Y
+   2WoLSPUVA55BTRC/BzlFjw20aPnPZ+Eo+ncRX/CWfpE2lb41jssdlQNBv
+   qzWxEIZEzOh8n4DIonXxGD1c3JH1BZ5XKrNnCCy3jphfQqoe9J6K+o9aJ
+   g==;
+X-CSE-ConnectionGUID: V7eQurA4SvueJo/5eQYy/A==
+X-CSE-MsgGUID: /D25ZIVvQLOLGyqBKgIDBw==
+X-IronPort-AV: E=McAfee;i="6800,10657,11631"; a="66884909"
+X-IronPort-AV: E=Sophos;i="6.20,244,1758610800"; 
+   d="scan'208";a="66884909"
+Received: from orviesa010.jf.intel.com ([10.64.159.150])
+  by orvoesa108.jf.intel.com with ESMTP/TLS/ECDHE-RSA-AES256-GCM-SHA384; 02 Dec 2025 19:46:13 -0800
+X-CSE-ConnectionGUID: J8f8GMFXTxCq8y5/TGHTjA==
+X-CSE-MsgGUID: q+fo0rYBSdieFER7JNu8cQ==
+X-ExtLoop1: 1
+X-IronPort-AV: E=Sophos;i="6.20,244,1758610800"; 
+   d="scan'208";a="193843758"
+Received: from lkp-server01.sh.intel.com (HELO 4664bbef4914) ([10.239.97.150])
+  by orviesa010.jf.intel.com with ESMTP; 02 Dec 2025 19:46:11 -0800
+Received: from kbuild by 4664bbef4914 with local (Exim 4.98.2)
+	(envelope-from <lkp@intel.com>)
+	id 1vQdoe-00000000AWf-0PZ3;
+	Wed, 03 Dec 2025 03:46:08 +0000
+Date: Wed, 3 Dec 2025 11:45:26 +0800
+From: kernel test robot <lkp@intel.com>
+To: Nilesh Javali <njavali@marvell.com>, martin.petersen@oracle.com
+Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
+	linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+	agurumurthy@marvell.com, sdeodhar@marvell.com, emilne@redhat.com,
+	jmeneghi@redhat.com
+Subject: Re: [PATCH 03/12] qla2xxx: Add load flash firmware mailbox support
+ for 28xxx
+Message-ID: <202512031128.XsuvzBv1-lkp@intel.com>
+References: <20251202054444.1711778-4-njavali@marvell.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -78,51 +66,175 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=us-ascii
 Content-Disposition: inline
-In-Reply-To: <401d8de5-63a8-461a-bc54-5b2986779a88@acm.org>
+In-Reply-To: <20251202054444.1711778-4-njavali@marvell.com>
 
-On Tue, Dec 02, 2025 at 02:30:19PM -1000, Bart Van Assche wrote:
-> On 12/1/25 4:15 PM, sw.prabhu6@gmail.com wrote:
-> > diff --git a/drivers/scsi/scsi_debug.c b/drivers/scsi/scsi_debug.c
-> > index b2ab97be5db3..b5839e62d3bb 100644
-> > --- a/drivers/scsi/scsi_debug.c
-> > +++ b/drivers/scsi/scsi_debug.c
-> > @@ -8459,13 +8459,8 @@ static int __init scsi_debug_init(void)
-> >   	} else if (sdebug_ndelay > 0)
-> >   		sdebug_jdelay = JDELAY_OVERRIDDEN;
-> > -	switch (sdebug_sector_size) {
-> > -	case  512:
-> > -	case 1024:
-> > -	case 2048:
-> > -	case 4096:
-> > -		break;
-> > -	default:
-> > +	if (sdebug_sector_size < 512 || sdebug_sector_size > BLK_MAX_BLOCK_SIZE ||
-> > +	    !is_power_of_2(sdebug_sector_size)) {
-> >   		pr_err("invalid sector_size %d\n", sdebug_sector_size);
-> >   		return -EINVAL;
-> >   	}
-> > diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
-> > index c3502fcba1bb..f2eac79d7263 100644
-> > --- a/drivers/scsi/sd.c
-> > +++ b/drivers/scsi/sd.c
-> > @@ -2889,10 +2889,8 @@ sd_read_capacity(struct scsi_disk *sdkp, struct queue_limits *lim,
-> >   			  "assuming 512.\n");
-> >   	}
-> > -	if (sector_size != 512 &&
-> > -	    sector_size != 1024 &&
-> > -	    sector_size != 2048 &&
-> > -	    sector_size != 4096) {
-> > +	if (sector_size < 512 || sector_size > BLK_MAX_BLOCK_SIZE ||
-> > +	    !is_power_of_2(sector_size)) {
-> >   		sd_printk(KERN_NOTICE, sdkp, "Unsupported sector size %d.\n",
-> >   			  sector_size);
-> >   		/*
-> 
-> Please reorganize this patch series into one patch for the scsi_debug
-> driver and another patch for the sd driver.
-> 
-  Sure, will do. 
+Hi Nilesh,
 
-  Thanks
-  Swarna
+kernel test robot noticed the following build warnings:
 
+[auto build test WARNING on e6965188f84a7883e6a0d3448e86b0cf29b24dfc]
+
+url:    https://github.com/intel-lab-lkp/linux/commits/Nilesh-Javali/qla2xxx-Add-Speed-in-SFP-print-information/20251202-140943
+base:   e6965188f84a7883e6a0d3448e86b0cf29b24dfc
+patch link:    https://lore.kernel.org/r/20251202054444.1711778-4-njavali%40marvell.com
+patch subject: [PATCH 03/12] qla2xxx: Add load flash firmware mailbox support for 28xxx
+config: x86_64-kexec (https://download.01.org/0day-ci/archive/20251203/202512031128.XsuvzBv1-lkp@intel.com/config)
+compiler: clang version 20.1.8 (https://github.com/llvm/llvm-project 87f0227cb60147a26a1eeb4fb06e3b505e9c7261)
+reproduce (this is a W=1 build): (https://download.01.org/0day-ci/archive/20251203/202512031128.XsuvzBv1-lkp@intel.com/reproduce)
+
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Closes: https://lore.kernel.org/oe-kbuild-all/202512031128.XsuvzBv1-lkp@intel.com/
+
+All warnings (new ones prefixed by >>):
+
+>> drivers/scsi/qla2xxx/qla_init.c:8490:28: warning: variable 'fragment' set but not used [-Wunused-but-set-variable]
+    8490 |         uint templates, segments, fragment;
+         |                                   ^
+   In file included from drivers/scsi/qla2xxx/qla_init.c:6:
+   In file included from drivers/scsi/qla2xxx/qla_def.h:12:
+   In file included from include/linux/module.h:13:
+   In file included from include/linux/stat.h:19:
+   In file included from include/linux/time.h:60:
+   In file included from include/linux/time32.h:13:
+   In file included from include/linux/timex.h:67:
+   In file included from arch/x86/include/asm/timex.h:6:
+   In file included from arch/x86/include/asm/tsc.h:11:
+   In file included from arch/x86/include/asm/msr.h:11:
+   In file included from arch/x86/include/asm/cpumask.h:5:
+   In file included from include/linux/cpumask.h:12:
+   In file included from include/linux/bitmap.h:13:
+   In file included from include/linux/string.h:382:
+   include/linux/fortify-string.h:580:4: warning: call to '__read_overflow2_field' declared with 'warning' attribute: detected read beyond size of field (2nd parameter); maybe use struct_group()? [-Wattribute-warning]
+     580 |                         __read_overflow2_field(q_size_field, size);
+         |                         ^
+   2 warnings generated.
+
+
+vim +/fragment +8490 drivers/scsi/qla2xxx/qla_init.c
+
+  8482	
+  8483	static int
+  8484	qla28xx_load_fw_template(scsi_qla_host_t *vha, uint32_t faddr)
+  8485	{
+  8486		struct qla_hw_data *ha = vha->hw;
+  8487		struct fwdt *fwdt = ha->fwdt;
+  8488		struct req_que *req = ha->req_q_map[0];
+  8489		uint32_t risc_size, risc_attr = 0;
+> 8490		uint templates, segments, fragment;
+  8491		uint32_t *dcode;
+  8492		ulong dlen;
+  8493		int rval;
+  8494		uint j;
+  8495	
+  8496		dcode = (uint32_t *)req->ring;
+  8497		segments = FA_RISC_CODE_SEGMENTS;
+  8498	
+  8499		for (j = 0; j < segments; j++) {
+  8500			rval = qla24xx_read_flash_data(vha, dcode, faddr, 10);
+  8501			if (rval) {
+  8502				ql_log(ql_log_fatal, vha, 0x01a1,
+  8503				       "-> Failed to read flash addr + size .\n");
+  8504				return QLA_FUNCTION_FAILED;
+  8505			}
+  8506	
+  8507			risc_size = be32_to_cpu((__force __be32)dcode[3]);
+  8508	
+  8509			if (risc_attr == 0)
+  8510				risc_attr = be32_to_cpu((__force __be32)dcode[9]);
+  8511	
+  8512			dlen = ha->fw_transfer_size >> 2;
+  8513			for (fragment = 0; risc_size; fragment++) {
+  8514				if (dlen > risc_size)
+  8515					dlen = risc_size;
+  8516	
+  8517				faddr += dlen;
+  8518				risc_size -= dlen;
+  8519			}
+  8520		}
+  8521	
+  8522		templates = (risc_attr & BIT_9) ? 2 : 1;
+  8523	
+  8524		ql_dbg(ql_dbg_init, vha, 0x01a1, "-> templates = %u\n", templates);
+  8525	
+  8526		for (j = 0; j < templates; j++, fwdt++) {
+  8527			vfree(fwdt->template);
+  8528			fwdt->template = NULL;
+  8529			fwdt->length = 0;
+  8530	
+  8531			dcode = (uint32_t *)req->ring;
+  8532	
+  8533			rval = qla24xx_read_flash_data(vha, dcode, faddr, 7);
+  8534			if (rval) {
+  8535				ql_log(ql_log_fatal, vha, 0x01a2,
+  8536				    "-> Unable to read template size.\n");
+  8537				goto failed;
+  8538			}
+  8539	
+  8540			risc_size = be32_to_cpu((__force __be32)dcode[2]);
+  8541			ql_dbg(ql_dbg_init, vha, 0x01a3,
+  8542			    "-> fwdt%u template array at %#x (%#x dwords)\n",
+  8543			    j, faddr, risc_size);
+  8544			if (!risc_size || !~risc_size) {
+  8545				ql_dbg(ql_dbg_init, vha, 0x01a4,
+  8546				    "-> fwdt%u failed to read array\n", j);
+  8547				goto failed;
+  8548			}
+  8549	
+  8550			/* skip header and ignore checksum */
+  8551			faddr += 7;
+  8552			risc_size -= 8;
+  8553	
+  8554			ql_dbg(ql_dbg_init, vha, 0x01a5,
+  8555			    "-> fwdt%u template allocate template %#x words...\n",
+  8556			    j, risc_size);
+  8557			fwdt->template = vmalloc(risc_size * sizeof(*dcode));
+  8558			if (!fwdt->template) {
+  8559				ql_log(ql_log_warn, vha, 0x01a6,
+  8560				    "-> fwdt%u failed allocate template.\n", j);
+  8561				goto failed;
+  8562			}
+  8563	
+  8564			dcode = fwdt->template;
+  8565			rval = qla24xx_read_flash_data(vha, dcode, faddr, risc_size);
+  8566	
+  8567			if (rval || !qla27xx_fwdt_template_valid(dcode)) {
+  8568				ql_log(ql_log_warn, vha, 0x01a7,
+  8569				    "-> fwdt%u failed template validate (rval %x)\n",
+  8570				    j, rval);
+  8571				goto failed;
+  8572			}
+  8573	
+  8574			dlen = qla27xx_fwdt_template_size(dcode);
+  8575			ql_dbg(ql_dbg_init, vha, 0x01a7,
+  8576			    "-> fwdt%u template size %#lx bytes (%#lx words)\n",
+  8577			    j, dlen, dlen / sizeof(*dcode));
+  8578			if (dlen > risc_size * sizeof(*dcode)) {
+  8579				ql_log(ql_log_warn, vha, 0x01a8,
+  8580				    "-> fwdt%u template exceeds array (%-lu bytes)\n",
+  8581				    j, dlen - risc_size * sizeof(*dcode));
+  8582				goto failed;
+  8583			}
+  8584	
+  8585			fwdt->length = dlen;
+  8586			ql_dbg(ql_dbg_init, vha, 0x01a9,
+  8587			    "-> fwdt%u loaded template ok\n", j);
+  8588	
+  8589			faddr += risc_size + 1;
+  8590		}
+  8591	
+  8592		return QLA_SUCCESS;
+  8593	
+  8594	failed:
+  8595		vfree(fwdt->template);
+  8596		fwdt->template = NULL;
+  8597		fwdt->length = 0;
+  8598	
+  8599		return QLA_SUCCESS;
+  8600	}
+  8601	
+
+-- 
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
