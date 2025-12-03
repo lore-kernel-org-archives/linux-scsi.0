@@ -1,262 +1,164 @@
-Received: from mx0a-0031df01.pphosted.com (mx0a-0031df01.pphosted.com [205.220.168.131])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-pl1-f181.google.com (mail-pl1-f181.google.com [209.85.214.181])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 70AD7258CD9
-	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 22:41:21 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.168.131
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 69E0E2D6E53
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 22:59:16 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.214.181
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764801684; cv=none; b=A+pBQRiTOkXCiXRni62/XNZOf/S9BhWT+zq4zMqxCm8JnCOhoG0l2xfjRsLwJHI4pDugcxUsQadOFU6Ln/mqwLA4pXMJ8Y/vxceTELYVF/5Rs0Adm2KbgLYJ16Ygy+dEOd/TsMDhbWq9Wo0KlFN4h6GqAjRAq4xnGdT5ThZFVEo=
+	t=1764802757; cv=none; b=tSG3FLbpwi6VkfDFd58KpI2BmJg8GRaSE1r2EcPadDVJZohnp8Ke29iE5mjjJEKeqCtkWuaBg3MItHki9txQN339IpornIWfUXOPCuj3et7lGmzo4Vit6IDHs4Qa6DP/qDgpLJBJiYxzc6ax1HeTFkc2f69oOnvAoNn+v64DT40=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764801684; c=relaxed/simple;
-	bh=i/djBuwJ5x46mSXkx2STKL87N4CQpWwCemFLarAbgcM=;
-	h=Message-ID:Date:MIME-Version:Subject:To:CC:References:From:
-	 In-Reply-To:Content-Type; b=lH6C/ph+5MG3Z/id/8o4tO5A0nPUiw+vZporgjO0R4FqnZSZ0PfORhRpLiXU8g6BQNI6QfehJ0ggROh3+YPM5cUuWPKW8ywZl3tcaXCmZQTipefWTdkLNvHsSnaip8fmFKNr9v16q5fNYQBDMnPkzjronelJUXGPt1ATmLTqrYs=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com; spf=pass smtp.mailfrom=quicinc.com; dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b=fGvXRe4b; arc=none smtp.client-ip=205.220.168.131
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=quicinc.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=quicinc.com
+	s=arc-20240116; t=1764802757; c=relaxed/simple;
+	bh=AiT0DsFAzDbCQ2fDAPYpO1ae38WWUV4y3ULe8+raXTw=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=hn0fs8NYWdS5Yl1/IvWaFvojcwMYbIXXSXJ3WgWxvEJ9Id95uTl9X37WYaDdAy4AMoVX5Na9UM50DsdCMf9Ri+7kNtm1t4+oS2Kkg1sIOXKHojpRH1AAFcINV5RqUDNNcFOskOHPafCSspIJT2DDAioK/VPOJbJvjczwyb0lhbs=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=dHb7VcX1; arc=none smtp.client-ip=209.85.214.181
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=quicinc.com header.i=@quicinc.com header.b="fGvXRe4b"
-Received: from pps.filterd (m0279867.ppops.net [127.0.0.1])
-	by mx0a-0031df01.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5B3BReH31968464;
-	Wed, 3 Dec 2025 22:41:03 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=quicinc.com; h=
-	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=qcppdkim1; bh=
-	/nc4Kd8OHpYLPJe+eUb6LKqge/psEnl/OhRP3iZtT9Q=; b=fGvXRe4bMvvXcDNB
-	EOizHdPqPV9TvX3Rxj/0EnO7ypeL5kyL968MkenfcXY+19qYsMyzV4EUzbsMRoQ4
-	T99g2yWv2EC3J/EdJDPN7q47/YQV1CdKGKEtz8Es7H7hJIGJmFtmXcDqioKFAjjc
-	DQ6I/nXWKCLSNeObQBeWEguWd6GD5rb15sDIJluMOIKvtKyhXJLddH6WDcGdiFUg
-	fwv5kbNT60d72vAId/v5yhGneyesjRtTHKpOSC2vuk5OEKi4t+W/UYSiWf4zL7tm
-	5WRetJJ/SsJ8Gsz/n8eXQIoPxqX5SDWXu+jIVuHWp1cdoX+y2R1n6bQhZw+1Kb4G
-	aLv8aA==
-Received: from nalasppmta05.qualcomm.com (Global_NAT1.qualcomm.com [129.46.96.20])
-	by mx0a-0031df01.pphosted.com (PPS) with ESMTPS id 4atmbthw96-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 03 Dec 2025 22:41:02 +0000 (GMT)
-Received: from nalasex01a.na.qualcomm.com (nalasex01a.na.qualcomm.com [10.47.209.196])
-	by NALASPPMTA05.qualcomm.com (8.18.1.2/8.18.1.2) with ESMTPS id 5B3Mf1Wk000517
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 3 Dec 2025 22:41:01 GMT
-Received: from [10.216.3.38] (10.80.80.8) by nalasex01a.na.qualcomm.com
- (10.47.209.196) with Microsoft SMTP Server (version=TLS1_2,
- cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id 15.2.2562.17; Wed, 3 Dec
- 2025 14:40:59 -0800
-Message-ID: <014c3e26-24ea-40e3-a876-bf0336231b18@quicinc.com>
-Date: Thu, 4 Dec 2025 04:10:55 +0530
+	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="dHb7VcX1"
+Received: by mail-pl1-f181.google.com with SMTP id d9443c01a7336-2984dfae043so3054455ad.0
+        for <linux-scsi@vger.kernel.org>; Wed, 03 Dec 2025 14:59:16 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=gmail.com; s=20230601; t=1764802756; x=1765407556; darn=vger.kernel.org;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:from:to:cc:subject:date:message-id:reply-to;
+        bh=StjFP4Y78P0tll00GH7VVLh4F2dk0BSHeE9CSSXVLq8=;
+        b=dHb7VcX1FP1HlSxlIv60Ylo9pgek2q3lN4gMSN21CYN/N5zbpAFHPbUi7wqjQcRxua
+         jzennloi5LbsDjiCqdBqAFDA0+lGpNC5r7M3ZeCIZgqTSDgSYl9qRjZHLuvCpAca51pH
+         y17MPu/Yo+eNz9I7tI9au+wRPaRPljtXX9bUNX9k2dHVc8zh4RcZWrwzJdDb8oBp7K6B
+         LFgS1eYib6I4uWaa+kkZFi5olcsJa/IkGrYJxqgnhXvQL3pB/p/zlG4LuETsvxQIYJpJ
+         epiWBA144XBbEdTr68QP0YXmnTtuZIu16M60c5U/bdmJ1lMJ4AmnBIC1iZBFTXomucwK
+         /Vow==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1764802756; x=1765407556;
+        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
+         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=StjFP4Y78P0tll00GH7VVLh4F2dk0BSHeE9CSSXVLq8=;
+        b=JZ3yBc6V51rQzubQh+dPu1rxfht1ILuwzIzmx8BQja/wylGcW792JLbANCfiVd79jK
+         Xbvz19WPIc2calTGXH/bqe2y0yXrbF47kPlzfqIzvF25GMYfSnVNzI1aG8dEvwYdjLwv
+         p/C04m2mChFtnJ4AneRxwV1oFWHTPVL4K4DJKB/eIpRTFMZS6lRiZPI0qzsuZWFwk6b0
+         J6ysMjqKkQcetWeyYMps7s8eK2OT+dH7o7I3o40kxls0APNnqORgKx87isGA6Li9raD2
+         NiVi8Tm19tE6sDdMt+SSupU1zBzhpBZ/6P7GycQQGH/lIww8VBSNASwvMGwD7Vbp0lLJ
+         +SBA==
+X-Forwarded-Encrypted: i=1; AJvYcCVCUq9tlOStT3ZZiv3MlAmeLoc8ghoFpzp2hq377liySTmRGtTZVq02QjAJIOX2lvinuwhgWxs4KeCa@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy1K3sC/+cAGv5x7+cmZHYBuh5rsF1WI2iKOFjAlhC1+Ra3o4m+
+	Do21fL5rkwsl6Nhy+lOCHHshLQTW5UBDYMaezY5+04eI4hq8vDiR+DML
+X-Gm-Gg: ASbGncvmnFpSRnpXWl2yoO6rITY1Dwbn05SJn+WgCPWd/FoT2mK3OfFO4gN1yTZEhRT
+	hQS5wW4NXZShsGaj0AtNSysGin94qPAXeJ9ep7g2Fuq4RmvBxfebKM18jfnMCI468LuzEGSLiGq
+	lLwIFcf6hmFdusUUVi+OQ1v+rFMmUldH5FthaBC6rVAZQLANUy8Ii+FYgxsQwlbfq2BiCoYBAT3
+	b47RIl3kRV8dACxb148WdflWMwKmEQzNgwiL7im5cwPWnPlPvIOrdycr/zeKQNWLX3dG/LYT8u/
+	3kbmXAbEYO8HRF5tg+VxyWxTI9uxQe05Ss1ew5DJw7LkFWSjLfvGcsR2GuNXkMYmB3liBDd7T5F
+	/cHsHH9k5Q7pZPnHOEae8QXucRPvB5l+yZAJxwK+JYGe+hMSJ5cuF15V1xYp4OL/6MaRk+H0Qb4
+	Ep0sKc5ilMNNoapXd01S+0s2sxMeJkQvU+qbQ4XsnzZw==
+X-Google-Smtp-Source: AGHT+IE4WcTXgTakgYyG3k2I/bWIDoVLKE/1Yel/jKjUcQvVI0FEih7rPaGKnnbxb5llg7/B9cyvkg==
+X-Received: by 2002:a05:7023:b86:b0:11b:9386:8257 with SMTP id a92af1059eb24-11df0c4a067mr3136115c88.44.1764802755403;
+        Wed, 03 Dec 2025 14:59:15 -0800 (PST)
+Received: from deb-101020-bm01.dtc.local ([149.97.161.244])
+        by smtp.gmail.com with ESMTPSA id a92af1059eb24-11dcaee660asm98255225c88.3.2025.12.03.14.59.14
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Wed, 03 Dec 2025 14:59:15 -0800 (PST)
+From: sw.prabhu6@gmail.com
+To: James.Bottomley@HansenPartnership.com,
+	martin.petersen@oracle.com,
+	linux-scsi@vger.kernel.org,
+	bvanassche@acm.org
+Cc: linux-kernel@vger.kernel.org,
+	mcgrof@kernel.org,
+	kernel@pankajraghav.com,
+	Swarna Prabhu <sw.prabhu6@gmail.com>
+Subject: [RFC v2 0/2] enable sector size > PAGE_SIZE for scsi
+Date: Wed,  3 Dec 2025 22:57:25 +0000
+Message-ID: <20251203225727.1273081-1-sw.prabhu6@gmail.com>
+X-Mailer: git-send-email 2.51.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved
- request
-To: Bart Van Assche <bvanassche@acm.org>, Roger Shimizu <rosh@debian.org>
-CC: Manivannan Sadhasivam <mani@kernel.org>,
-        "Martin K . Petersen"
-	<martin.petersen@oracle.com>,
-        <linux-scsi@vger.kernel.org>,
-        "James E.J.
- Bottomley" <James.Bottomley@hansenpartnership.com>,
-        Nitin Rawat
-	<nitin.rawat@oss.qualcomm.com>
-References: <20251031204029.2883185-1-bvanassche@acm.org>
- <20251031204029.2883185-22-bvanassche@acm.org>
- <ehorjaflathzab5oekx2nae2zss5vi2r36yqkqsfjb2fgsifz2@yk3us5g3igow>
- <5f75d98a-2c0a-4fdf-a2a9-89bfe09fe751@acm.org>
- <6fw4oikdxwkzbamtvu55fn2gqxr3ngfzymvxr6nxcrjpnpdb2s@v325mijraxmg>
- <75cf6698-9ce9-4e6d-8b3c-64a7f9ef8cfc@acm.org>
- <in3muo5gco75eenvfjif3bcauyj2ilx3d6qgriifwnyj657fyq@eftlas3z3jiu>
- <d7579c22-40d0-4228-b539-4dfe4e25b771@acm.org>
- <nso6f36ozpad36yd3dlrqoujsxcvz4znvr6snqwgxihb3uxyya@gs6vuu76n6sx>
- <5c142a9d-7b41-422a-bbff-638fda1939dc@acm.org>
- <CAEQ9gEkz=Y1ksXL0wCumb7zbqXTREqJ6Vn29P-7FWS_e=iuuVQ@mail.gmail.com>
- <84b00b56-e775-43e6-a829-85e5da43508e@acm.org>
-Content-Language: en-US
-From: Nitin Rawat <quic_nitirawa@quicinc.com>
-In-Reply-To: <84b00b56-e775-43e6-a829-85e5da43508e@acm.org>
-Content-Type: text/plain; charset="UTF-8"; format=flowed
 Content-Transfer-Encoding: 8bit
-X-ClientProxiedBy: nasanex01b.na.qualcomm.com (10.46.141.250) To
- nalasex01a.na.qualcomm.com (10.47.209.196)
-X-QCInternal: smtphost
-X-Proofpoint-Virus-Version: vendor=nai engine=6200 definitions=5800 signatures=585085
-X-Authority-Analysis: v=2.4 cv=KNBXzVFo c=1 sm=1 tr=0 ts=6930bc7e cx=c_pps
- a=ouPCqIW2jiPt+lZRy3xVPw==:117 a=ouPCqIW2jiPt+lZRy3xVPw==:17
- a=GEpy-HfZoHoA:10 a=IkcTkHD0fZMA:10 a=wP3pNCr1ah4A:10
- a=VkNPw1HP01LnGYTKEx00:22 a=N54-gffFAAAA:8 a=VwQbUJbxAAAA:8
- a=Ac4ghYw8HGii8tCyR4UA:9 a=3ZKOabzyN94A:10 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: eILNo3eDpLIjIdQ8yYAcoGUkVwSN06by
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjAzMDE4MCBTYWx0ZWRfXx1ALJoKAay6g
- /xfrnq6svWfiR+eCP1TM5ViMghQtWoLE6lPQfja2svT83nBWiSPpjg+FE50nQmuApDg2JAwjSfx
- 25MQ1512hlbshOS1azyho4FE/OKRCcvV5AOUVMVnMszeRFvRcupUduGY7XpPbHNadgc9yH3CUys
- fLEOaJ/JbLYmn7gjt9zlfJa83V93eTMI8U1TgCKknMATNqADkU5aRql3sBQmGzfof/Bw/1UAueH
- YryUxQh1vFcmrwuO2wm4cwpDvbhGvguIIJUvgZ6Q3SdBdPP7AFk3tyU4g7sL4XkkCIrkp5arlfd
- hiSRIYmje6af1k37bRl34hgKMyeaqgezVTQG+8uUfgWZa1jFbXL0Exh2bG5Opp8MwC3DPeIk4KG
- WrVTCldEAnXHvqjITdS6GO3LqUXZyQ==
-X-Proofpoint-ORIG-GUID: eILNo3eDpLIjIdQ8yYAcoGUkVwSN06by
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-12-03_03,2025-12-03_02,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=outbound_notspam policy=outbound score=0
- clxscore=1015 spamscore=0 suspectscore=0 adultscore=0 malwarescore=0
- bulkscore=0 phishscore=0 priorityscore=1501 impostorscore=0
- lowpriorityscore=0 classifier=typeunknown authscore=0 authtc= authcc=
- route=outbound adjust=0 reason=mlx scancount=1 engine=8.22.0-2510240001
- definitions=main-2512030180
 
+From: Swarna Prabhu <sw.prabhu6@gmail.com>
 
+Hi All,
 
-On 12/3/2025 11:16 AM, Bart Van Assche wrote:
-> On 12/2/25 2:56 PM, Roger Shimizu wrote:
->> On Tue, Dec 2, 2025 at 8:03 AM Bart Van Assche <bvanassche@acm.org> 
->> wrote:
->>> Can you please help with the following:
->>> * Verify whether or not Martin's for-next branch boots fine on the
->>>     Qcom RB3Gen2 board (I expect this not to be the case). Martin's
->>>     Linux kernel git repository is available at
->>>     git://git.kernel.org/pub/scm/linux/kernel/git/mkp/scsi.git.
->>
->> No, same boot issue for mkp/for-next branch.
->>
->>> * If Martin's for-next branch boots fine, bisect linux-next.
->>> * If the boot hang is reproducible with Martin's for-next branch,
->>>     bisect that branch. After every bisection step, apply the patch
->>>     below to work around bisectability issues in this patch series.
->>>     If any part of that patch fails to apply, ignore the failures.
->>>     We already know that the boot hang does not occur with commit
->>>     1d0af94ffb5d ("scsi: ufs: core: Make the reserved slot a reserved
->>>     request"). There are only 35 UFS patches on Martin's for-next branch
->>>     past that commit:
->>>     $ git log 1d0af94ffb5d..mkp-scsi/for-next */ufs|grep -c ^commit
->>>     35
->>
->> First I want to clarify 1d0af94ffb5d ("scsi: ufs: core: Make the
->> reserved slot a reserved request")
->> has boot issue.
->> But applying for the debugging patch from your email, it boots fine.
->> So the bisecting start from here.
->>
->> Bisecting result is:
->> 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()") is
->> the first bad commit.
->>
->> And this commit can apply the debugging patch (below) without any 
->> conflict.
->> Hope it helps, and thank you!
-> Thanks Roger for having taken the time to bisect this issue!
-> Unfortunately this information is not sufficient to identify the root
-> cause. This is what we can conclude from the information that has been
-> shared so far:
-> - The boot hang can't be caused by a ufshcd_get_dev_mgmt_cmd() hang
->    because that function specifies the flag BLK_MQ_REQ_NOWAIT. That flag
->    makes scsi_get_internal_cmd() return immediately if no reserved tag is
->    available. If scsi_get_internal_cmd() would fail, the caller would
->    emit a kernel warning. I haven't seen any kernel warnings in any of
->    the kernel logs that have been shared so far.
-> - The boot hang can't be caused by a device management command timeout
->    because blk_execute_rq() is used for submitting device management
->    commands. blk_execute_rq() uses rq->timeout as timeout. Even if
->    rq->timeout wouldn't be set, the block layer would initialize that
->    timeout value. I haven't seen any data in any of the kernel logs that
->    indicates a device management request timeout.
-> 
-> Could anyone share the call traces produced by
-> "echo w >/proc/sysrq-trigger" and also the output produced by
-> "echo t >/proc/sysrq-trigge"" after having reproduced the boot hang?
+This is RFC V2 of the patch series V1 sent on Dec 2nd [1].
 
+The purpose of this v2 series remains the same as v1:
+Now that block layer can support block size > PAGE_SIZE, enable the
+same for scsi devices. There was one issue with write_same16 and
+write_same10 command, which is fixed as a part of the series.
 
+Changes since RFC V1:
+ - Re organized the patch series into one patch for scsi_debug driver
+   and one patch for sd driver.
+ - Slightly modified commit title and description to accommodate the above
+   re organization on commit titled - scsi: sd: fix write_same16 and
+   write_same10 for sector size > PAGE_SIZE.
+ - Updated commit title and description to reflect the re organization
+   on commit titled - scsi: scsi_debug: enable sdebug_sector_size
+   > PAGE_SIZE.
+ - No functional or code changes.
+ - Test results unchanged as mentioned in v1 cover letter.
 
-Hi Bart,
+Testing:
+  1. Test suite: xfs and generic from fstest + QEMU emulated block
+    device(scsi and nvme)
+  - fstest Config for patched xfs 16k block size [xfs_reflink_16k_scsi]
+    TEST_DEV=/dev/sda
+    SCRATCH_DEV_POOL="/dev/sdb"
+    MKFS_OPTIONS='-f -m reflink=1,rmapbt=1, -i sparse=1, -b size=16384,
+    -s size=16384'
+  - Generic test results
+    Baseline: 6.18-rc5 kernel + nvme 16k logical block size
+    Patched: 6.18-rc5 kernel + scsi 16k logical block size
+    6 failures seen on generic tests and the same seen on baseline
+    No regressions.
+  - XFS tests results
+    Baseline: 6.18-rc6 kernel + nvme16k logical block size
+    Patched: 6.18-rc6 kernel + sci 16k logical block size
+    198 failures seen on patched and baseline
+    No regressions.
+  - Tests similar to above was run on 32k logical block size
+    No regressions seen on xfs tests.
+    Generic/778 (add sudden shutdown tests for multi block atomic writes
+    )test is failing on scsi 32k block size due to atomic write taking
+    too long to start, but is passing on the nvme 32k block size setup.
+    Since sysfs shows atomic write granularity not enforced for scsi device
+    it seems that XFS issues atomic writes slower. Upon increasing the
+    wait timeout from 10s to 40s for the first atomic write in
+    'start_atomic_write_and_shutdown' generic/778 seems to pass for
+    32k scsi sector size.
 
-With the fix shared by you , SDB mode on SM8750 works fine now but MCQ 
-mode still have below error.
+ 2. blktests: scsi and block layer sub tests
+    Baseline: tests with scsi 4k block size
+    Patched:  tests with patched kernel + 16k scsi block size
+  - scsi tests - no regressions.
+  - block tests - Disabled block/010 and block/011
+    Hard to reproduce(sporadic) kernel hang seen while running
+    block layer tests ie at block/003 due to fio task being blocked
+    by a mutex held by udev event. Not seen while running it
+    individually.
+    Rootcause - block/001 stress the scsi debug devices by adding,
+    tearing, removing the devices in parallel that triggers udevs.
+    This races with fio task triggered by block/003.
+    Added udevadm settle and small delay between block/001 and
+    block/003 fixes this and using this as a temporary fix, while
+    we continue to evaluate. Note: block/002 being skipped.
 
+Comments and feedbacks are welcome.
 
-[    3.720396] ufshcd-qcom 1d84000.ufs: ufshcd_err_handler started; HBA 
-state eh_non_fatal; powered 1; shutting down 0; saved_err = 0x4; 
-saved_uic_err = 0x40; force_reset = 0
-[    3.740078] Unable to handle kernel NULL pointer dereference at 
-virtual address 0000000000000378
-[    3.740084] Mem abort info:
-[    3.740086]   ESR = 0x0000000096000006
-[    3.740089]   EC = 0x25: DABT (current EL), IL = 32 bits
-[    3.740092]   SET = 0, FnV = 0
-[    3.740094]   EA = 0, S1PTW = 0
-[    3.740096]   FSC = 0x06: level 2 translation fault
-[    3.740099] Data abort info:
-[    3.740100]   ISV = 0, ISS = 0x00000006, ISS2 = 0x00000000
-[    3.740103]   CM = 0, WnR = 0, TnD = 0, TagAccess = 0
-[    3.740105]   GCS = 0, Overlay = 0, DirtyBit = 0, Xs = 0
-[    3.740108] user pgtable: 4k pages, 48-bit VAs, pgdp=000000088f66d000
-[    3.740111] [0000000000000378] pgd=080000088f66c403, 
-p4d=080000088f66c403, pud=080000088f66b403, pmd=0000000000000000
-[    3.740123] Internal error: Oops: 0000000096000006 [#1]  SMP
+Link to v1: https://lore.kernel.org/all/20251202021522.188419-1-sw.prabhu6@gmail.com/ [1]
 
-[    3.815406] CPU: 7 UID: 0 PID: 213 Comm: kworker/u32:2 Not tainted 
-6.18.0-next-20251203-00001-gc131083d7359 #27 PREEMPT
-[    3.918160] Hardware name: Qualcomm Technologies, Inc. SM8750 MTP (DT)
-[    3.918163] Workqueue: ufs_eh_wq_0 ufshcd_err_handler
-[    3.918171] pstate: 61400005 (nZCv daif +PAN -UAO -TCO +DIT -SSBS 
-BTYPE=--)
-[    3.918176] pc : ufshcd_err_handler+0xac/0x9ec
-[    3.918181] lr : ufshcd_err_handler+0x9c/0x9ec
-[    3.918184] sp : ffff800081153d10
-[    3.918186] x29: ffff800081153d50 x28: 0000000000000000 x27: 
-ffff0008104508b0
-[    3.918194] x26: 0000000000000000 x25: ffff000800968ac0 x24: 
-ffff000801c76405
-[    3.918200] x23: 0000000000000000 x22: ffff000800028000 x21: 
-ffff000801c76400
-[    3.918206] x20: ffffc34adec2e068 x19: ffff000810450b18 x18: 
-0000000000000006
-[    3.918212] x17: 0000000000000000 x16: 0000000000000000 x15: 
-ffff80008115383f
-[    3.918218] x14: 000000000000000e x13: 655f646368736675 x12: 
-ffffc34adfee6c48
-[    3.993771] x11: 0000000000000001 x10: ffff00080f7f4cc0 x9 : 
-ffff0008013d6e00
-[    4.001105] x8 : ffff000b7e150cc0 x7 : 0000000000000000 x6 : 
-0000000000000002
-[    4.008438] x5 : ffff000b7e146408 x4 : 0000000000000001 x3 : 
-0000000000000000
-[    4.015771] x2 : 0000000000000000 x1 : 0000000000000001 x0 : 
-0000000000000378
-[    4.023106] Call trace:
-[    4.025629]  ufshcd_err_handler+0xac/0x9ec (P)
-[    4.030207]  process_one_work+0x148/0x290
-[    4.034336]  worker_thread+0x2c8/0x3e4
-[    4.038192]  kthread+0x12c/0x204
-[    4.041527]  ret_from_fork+0x10/0x20
-[    4.045210] Code: f9402760 d503201f 910de000 52800021 (b821001f)
-[    4.051474] ---[ end trace 0000000000000000 ]---
-[    4.056981] scsi 0:0:0:49488: Well-known LUN    MICRON 
-MT512GAYAX4U40   0100 PQ: 0 ANSI: 6
+Swarna Prabhu (2):
+  scsi: sd: fix write_same16 and write_same10 for sector size >
+    PAGE_SIZE
+  scsi: scsi_debug: enable sdebug_sector_size > PAGE_SIZE
 
+ drivers/scsi/scsi_debug.c |  9 ++-------
+ drivers/scsi/sd.c         | 19 +++++++++++++------
+ 2 files changed, 15 insertions(+), 13 deletions(-)
 
-[    4.281093] devfreq 1d84000.ufs: dvfs failed with (-16) error
-[    4.360921] devfreq 1d84000.ufs: dvfs failed with (-16) error
-[    4.746782] devfreq 1d84000.ufs: dvfs failed with (-16) error
-[    4.817093] devfreq 1d84000.ufs: dvfs failed with (-16) error
-[    4.893131] devfreq 1d84000.ufs: dvfs failed with (-16) error
-[    5.013146] devfreq 1d84000.ufs: dvfs failed with (-16) error
-[    7.249155] devfreq 1d84000.ufs: dvfs failed with (-16) error
-[    7.341071] devfreq 1d84000.ufs: dvfs failed with (-16) error
-
-
-However, after switching to previous tag next-20251110 of linux-next, 
-where this series of changes is not present, the issues is not seen.
-
-Regards,
-Nitin
-
-
-
-
-> 
-> Thanks,
-> 
-> Bart.
-> 
+--
+2.51.0
 
