@@ -1,120 +1,90 @@
-Received: from fhigh-a4-smtp.messagingengine.com (fhigh-a4-smtp.messagingengine.com [103.168.172.155])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id EE7DF21D3CC;
-	Wed,  3 Dec 2025 20:32:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=103.168.172.155
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id BC9A0482EB
+	for <linux-scsi@vger.kernel.org>; Wed,  3 Dec 2025 21:32:54 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764793935; cv=none; b=Ja0odaKYf6e7bFhOYSqZRDbzAdNValwcl336wqqjX0s11OY6/beE4BNSByO4EiUvizB1bPcaFWw0Q8dWyAknkB6zu9EH0CJI1ouwRfwiqbjwy3pfJr7B6GIQ14xicBeDr6QdR9wVqFdnmEMC+7kjxmHEQZPBIns+GPSjdl7thTU=
+	t=1764797576; cv=none; b=fF3YAW4P4dlBuFYOMt01obA9U5CKvZr3+OEWiwNgCyfTNsLNOEvP9EQar4KeJryjwZx4qTk0vdfL3NMYQS1ACHXfVmmxCrUEP25NqoOIsgi+/PD6cGsITObTI5I9HybCZt2QXwOlTQQGI2gNY+LDqSVxBF4amh8u6UYR9lnoP28=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764793935; c=relaxed/simple;
-	bh=YPK0k64dOD+3zdePS5bfGvkTs7O9+oH6iFliF5oYG1g=;
-	h=MIME-Version:Date:From:To:Cc:Message-Id:In-Reply-To:References:
-	 Subject:Content-Type; b=Hasbxk1jqJ9ZZy8n8zamxuEzE76Nf9YxSDLIIx6A4pnV4znRQJDeOx6oEPsZfZTBe1adgdE0lFpiKy7pCuhcggswQFB4qnt10MCJysTbQFU0s19Q1XI09uswvXbpJDcxm9HGbHw5w88QHl8w2dsQPfnvC1JNoiryYpjzBtIaAls=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de; spf=pass smtp.mailfrom=arndb.de; dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b=YZIEfJ0j; dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b=GXVMH1ej; arc=none smtp.client-ip=103.168.172.155
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=arndb.de
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=arndb.de
+	s=arc-20240116; t=1764797576; c=relaxed/simple;
+	bh=WAk91XP7wvjrxqsZoc5nkGmWZi0y77dJSEvPGcKjTsE=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=Jat9bMYK1/S3exgXtme29vNNUlkCpkv2OJ5Fuh71PIBgDah/6e0aCxohsZm2w8BEyo8soM6QhB3MVuMC5GchVw/Etr0f32vl4EggfgR1eeds559qvSEFhbVrOnMioOxcqRpftkUR89uaNaDQTgV4rrfiMAWfVuAW+LUVn4kMglM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=tmtGK+kW; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=arndb.de header.i=@arndb.de header.b="YZIEfJ0j";
-	dkim=pass (2048-bit key) header.d=messagingengine.com header.i=@messagingengine.com header.b="GXVMH1ej"
-Received: from phl-compute-04.internal (phl-compute-04.internal [10.202.2.44])
-	by mailfhigh.phl.internal (Postfix) with ESMTP id 0921314000C1;
-	Wed,  3 Dec 2025 15:32:06 -0500 (EST)
-Received: from phl-imap-17 ([10.202.2.105])
-  by phl-compute-04.internal (MEProxy); Wed, 03 Dec 2025 15:32:06 -0500
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=arndb.de; h=cc
-	:cc:content-transfer-encoding:content-type:content-type:date
-	:date:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to; s=fm3; t=1764793926;
-	 x=1764880326; bh=EDURVxXoZBPQNYYglcnxiR31l3E2zyZboYhovndqQB4=; b=
-	YZIEfJ0jFBvXkxHM82barl97u1LyBFpWOPBy51/mHlyai6cIGgLIT2nGVRKTb8PA
-	uVAi4xeMA1H9/A9rv/3j+iYFllHrsyqXvq2jGnVFzDvVukELrTi1PJ478jRzRfBP
-	TSsB+dGO6dVlsM1L1Zt+hBl1n7yyYo1p1iUlc1OhnVakb7dgBuL0S5zWZ50ogA9D
-	Kbali2jW3akgTLY/MdpdfW6E/gg+iI17WlvNatIPuDElccR5xKebHN95l6omOz5g
-	eEew/F+0VdMFuc/8dVrAio5YJgTMI/9vxAuoXscgEaM3SeaaNFHP92CeIRYt2Nk4
-	Y41VqbaLi6aRKtlzRIBDrQ==
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=
-	messagingengine.com; h=cc:cc:content-transfer-encoding
-	:content-type:content-type:date:date:feedback-id:feedback-id
-	:from:from:in-reply-to:in-reply-to:message-id:mime-version
-	:references:reply-to:subject:subject:to:to:x-me-proxy
-	:x-me-sender:x-me-sender:x-sasl-enc; s=fm1; t=1764793926; x=
-	1764880326; bh=EDURVxXoZBPQNYYglcnxiR31l3E2zyZboYhovndqQB4=; b=G
-	XVMH1ejcaTMHcRghQB9XIRTJ5JJDGOjCbL3vyRmewIrBIYyc71EAf+hYK7kMfD68
-	xMCHlD+JM7KSsrTjswEgu4xpjJH0kIAvMAKi6JOytbtjOwHaAk4LXRGd56NDjSQP
-	AOQCvKp8eaFT7ZKXNbHIfhECjV9QlprbEldwDRWnwf03+/U8co7zXwHnZ0A+LiLu
-	jk9OaC4+5DW/D+3/+hwxeQJGsSF98vh2U3P1Clw5IEO+LPGxHE4A9h3hp2p7OZ0t
-	tE7cwhypvZ/yhE3b8r+QEkuOIiEuQaVwfcgc+v6h7oITOfTz0B1hef3d5CBSIVzu
-	Ov4xYkI6deB4F/PkR09iQ==
-X-ME-Sender: <xms:RZ4waeCqutWcs4Da-UvyeISHoV7MHs7KrN-R_bkToiMpo1IeFScH7g>
-    <xme:RZ4waTXVDlgNpKWB264iuHRwVQCvAcDqdWdV7mcX9zVnMn2JMdcTHxxWy2L5uCuMX
-    pHJZj8oKghcp602wyN2YQ0OWc8g6mbN5WOPr7BzO7CqFFVOSlFMe_qE>
-X-ME-Proxy-Cause: gggruggvucftvghtrhhoucdtuddrgeefgedrtddtgdefjeejucetufdoteggodetrfdotf
-    fvucfrrhhofhhilhgvmecuhfgrshhtofgrihhlpdfurfetoffkrfgpnffqhgenuceurghi
-    lhhouhhtmecufedttdenucesvcftvggtihhpihgvnhhtshculddquddttddmnecujfgurh
-    epofggfffhvfevkfgjfhfutgfgsehtqhertdertdejnecuhfhrohhmpedftehrnhguuceu
-    vghrghhmrghnnhdfuceorghrnhgusegrrhhnuggsrdguvgeqnecuggftrfgrthhtvghrnh
-    epvdfhvdekueduveffffetgfdvveefvdelhedvvdegjedvfeehtdeggeevheefleejnecu
-    vehluhhsthgvrhfuihiivgeptdenucfrrghrrghmpehmrghilhhfrhhomheprghrnhguse
-    grrhhnuggsrdguvgdpnhgspghrtghpthhtohepudefpdhmohguvgepshhmthhpohhuthdp
-    rhgtphhtthhopegsvhgrnhgrshhstghhvgesrggtmhdrohhrghdprhgtphhtthhopehlkh
-    hpsehinhhtvghlrdgtohhmpdhrtghpthhtohepsggvrghnhhhuohesihhokhhpphdruggv
-    pdhrtghpthhtohepjhgvjhgssehlihhnuhigrdhisghmrdgtohhmpdhrtghpthhtoheplh
-    hlvhhmsehlihhsthhsrdhlihhnuhigrdguvghvpdhrtghpthhtohepohgvqdhksghuihhl
-    ugdqrghllheslhhishhtshdrlhhinhhugidruggvvhdprhgtphhtthhopegsvggrnhhhuh
-    hosehmihgtrhhonhdrtghomhdprhgtphhtthhopehmrghrthhinhdrphgvthgvrhhsvghn
-    sehorhgrtghlvgdrtghomhdprhgtphhtthhopegtrghnrdhguhhosehoshhsrdhquhgrlh
-    gtohhmmhdrtghomh
-X-ME-Proxy: <xmx:RZ4waeLw6DPpBTuCITfU2W7r57zH4mOCxu1F_2rBlX9Bp047RC5qMA>
-    <xmx:RZ4waWQtrbH--7wJrp6aJWak047p6NT5taidkNmWmHmrNzXePV_vxQ>
-    <xmx:RZ4waWJA6VQ-do_0GpDkDasa6WmmU8Urduv9iScCfu3IMEa5EMxozg>
-    <xmx:RZ4waZ8VR7p0eNPz443PYKYsSs-sz-S5jAxsLe54ZChRQ0eDVPdTyA>
-    <xmx:Rp4wafXsRp85s4E50cif_LlunKj1Fyq6TUrzoWnU0tH-lZOAFB_UlW7d>
-Feedback-ID: i56a14606:Fastmail
-Received: by mailuser.phl.internal (Postfix, from userid 501)
-	id 290D4C4006B; Wed,  3 Dec 2025 15:32:05 -0500 (EST)
-X-Mailer: MessagingEngine.com Webmail Interface
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="tmtGK+kW"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dM9pm68lNzljbX7;
+	Wed,  3 Dec 2025 21:32:48 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1764797567; x=1767389568; bh=kjAXJUhthcj9BbicKKb5Xu3m
+	I4ByUvHhZxes/OBrziI=; b=tmtGK+kW/ySk4p49hOI5pPGJgKgqV2Yc2XBQfB8R
+	Msmzkv/NM2Kmxa+GiZFaAVVcNRmhVg3y8BND6hkIIl4bPia22me6aKag7k0je63F
+	lhnzm8gUBOK9xKLIzCPc1yF/+4YVi3XJiNdzdb/S0o9LL+yYCQqk3Rm4mZ9BeFP5
+	awbZv4qQi+QB6EGwNqr1mmTWn+zK0ov/x16kYvJ7t03dd4P468TaV41lmnHEP0Rm
+	KTAnrHbQNVB8+7JvUhJ3nS+HoU/OQ8KhlM6vRadE2c1LA8jx9XmmGZfW9ueptPI/
+	4P0e5DZmni7FbXIpHt2OkZfI/1fmuMVMObh3BXPEWenbrA==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id s0rjriZ3soY6; Wed,  3 Dec 2025 21:32:47 +0000 (UTC)
+Received: from [10.25.100.213] (syn-098-147-059-154.biz.spectrum.com [98.147.59.154])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dM9ph0ZtLzlfdCs;
+	Wed,  3 Dec 2025 21:32:43 +0000 (UTC)
+Message-ID: <fb4489cb-224f-4616-ad27-4d02bedb1d06@acm.org>
+Date: Wed, 3 Dec 2025 11:32:41 -1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-X-ThreadId: ALO74ngA5rV3
-Date: Wed, 03 Dec 2025 21:31:44 +0100
-From: "Arnd Bergmann" <arnd@arndb.de>
-To: "Bean Huo" <beanhuo@iokpp.de>, "kernel test robot" <lkp@intel.com>,
- avri.altman@sandisk.com, "Bart Van Assche" <bvanassche@acm.org>,
- "Alim Akhtar" <alim.akhtar@samsung.com>,
- "James E.J. Bottomley" <jejb@linux.ibm.com>,
- "Martin K. Petersen" <martin.petersen@oracle.com>, can.guo@oss.qualcomm.com,
- "Bean Huo" <beanhuo@micron.com>
-Cc: llvm@lists.linux.dev, oe-kbuild-all@lists.linux.dev,
- linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org
-Message-Id: <4eaccff9-a89d-4d0e-afbf-95e9996f9049@app.fastmail.com>
-In-Reply-To: <fff872d022550536f05c181ad58577889af0b5ef.camel@iokpp.de>
-References: <20251130151508.3076994-1-beanhuo@iokpp.de>
- <202512031316.SvDwnvhy-lkp@intel.com>
- <98ac8e0b-6027-4f6d-b5cf-b9ad9c856ecf@app.fastmail.com>
- <fff872d022550536f05c181ad58577889af0b5ef.camel@iokpp.de>
-Subject: Re: [PATCH] scsi: ufs: core: Fix link error when CONFIG_RPMB=m
-Content-Type: text/plain; charset=utf-8
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved
+ request
+To: Roger Shimizu <rosh@debian.org>
+Cc: Nitin Rawat <quic_nitirawa@quicinc.com>,
+ Manivannan Sadhasivam <mani@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+References: <20251031204029.2883185-1-bvanassche@acm.org>
+ <20251031204029.2883185-22-bvanassche@acm.org>
+ <ehorjaflathzab5oekx2nae2zss5vi2r36yqkqsfjb2fgsifz2@yk3us5g3igow>
+ <5f75d98a-2c0a-4fdf-a2a9-89bfe09fe751@acm.org>
+ <6fw4oikdxwkzbamtvu55fn2gqxr3ngfzymvxr6nxcrjpnpdb2s@v325mijraxmg>
+ <75cf6698-9ce9-4e6d-8b3c-64a7f9ef8cfc@acm.org>
+ <in3muo5gco75eenvfjif3bcauyj2ilx3d6qgriifwnyj657fyq@eftlas3z3jiu>
+ <d7579c22-40d0-4228-b539-4dfe4e25b771@acm.org>
+ <nso6f36ozpad36yd3dlrqoujsxcvz4znvr6snqwgxihb3uxyya@gs6vuu76n6sx>
+ <5c142a9d-7b41-422a-bbff-638fda1939dc@acm.org>
+ <CAEQ9gEkz=Y1ksXL0wCumb7zbqXTREqJ6Vn29P-7FWS_e=iuuVQ@mail.gmail.com>
+ <84b00b56-e775-43e6-a829-85e5da43508e@acm.org>
+ <462fb80d-7614-41b5-aac6-2492845d7468@quicinc.com>
+ <250c9b6d-dc2a-4ad6-b3b7-e29e9a2c4798@acm.org>
+ <CAEQ9gEmnBj-ofj9VtZ1O04M9g4hHLA3yP=Y2QZjc8vUX+Sxy-w@mail.gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <CAEQ9gEmnBj-ofj9VtZ1O04M9g4hHLA3yP=Y2QZjc8vUX+Sxy-w@mail.gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Dec 3, 2025, at 17:23, Bean Huo wrote:
-> On Wed, 2025-12-03 at 15:39 +0100, Arnd Bergmann wrote:
->
-> However, the robot reported redefinition errors, which suggests that t=
-he
-> header=E2=80=99s #else branch is being included while ufs-rpmb.c is al=
-so being compiled.
->
-> I=E2=80=99m wondering if I=E2=80=99m missing something about the robot=
-=E2=80=99s build logic.
->
+On 12/3/25 9:43 AM, Roger Shimizu wrote:
+> Yes, this patch fixed the boot issue on my RUBIK Pi 3 (QCS6490). Thank you!
+> 
+> Tested-by: Roger Shimizu <rosh@debian.org>
 
-It took me a while as well, but I found the link to the patch that
-was tested now, as this was the one that changed IS_ENABLED()
-to IS_BUILTIN(), and that went wrong with CONFIG_RPMB=3Dm.
+Thanks Roger for having tested this patch!
 
-    Arnd
+Bart.
