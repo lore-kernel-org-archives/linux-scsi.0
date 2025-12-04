@@ -1,120 +1,96 @@
-Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CF0522ED844
-	for <linux-scsi@vger.kernel.org>; Thu,  4 Dec 2025 17:05:13 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2348013D539
+	for <linux-scsi@vger.kernel.org>; Thu,  4 Dec 2025 17:06:55 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764867916; cv=none; b=kRYSNhIlmRTdBtPk2R7DqCEyQxNOYkdMnskGLDyVHsDJPk6vpAKUkV3vXsZchFID6zESN0WfMVBEjoDVeoQ18gagvCF0EJfdZhhKPZjkWS+Sskt77zRzpjRdAGQDB5NSHb4vbsHL0xhVd3WlpQFJw6b6EP0avVyM8CQO49vCxCE=
+	t=1764868017; cv=none; b=Iayj6xoYl+CI62+sfcllwC+743M9aPrqezXS3m6wc4RGM5xyg/hyDPV0j4UQ4VAK4ZWrNMx/swoxndW4eKq1vP/PLq554lG26ryaVHW94d7Vt1HoqXqYl9bX93yWj5/Pt5YHmqd88/RRkZCaZWjXmiNtKnUg8pnLmj/+ZlZlTJE=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764867916; c=relaxed/simple;
-	bh=uyEuJFG/WJ+qHUos/dGYyI24pAul5qU1PF0RjN7DJ8g=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=kas6cODHSDK7jJDNg68FQlTJCZYz6TQe6kpnLHSGPcqFkjSo2rFGIrkKFQIM1mktQPQHS1c8NpSy3LFxoHjeRBsx6Ot7Sw9ni/BesEQpXUNiaoBOeWrh8+XgpktYmbN4Uamo6FDvs66pG9Xfh5ROcobD2mJ3Wz212vYHPZHJW/k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=XAjdRJyY; arc=none smtp.client-ip=199.89.1.16
+	s=arc-20240116; t=1764868017; c=relaxed/simple;
+	bh=++CmoZE4k9Vr58hUqNGGs+BXuVjQm+SMn9okcYnLRMc=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=RAADT4+3aFeuzdUqEpf6ed4pPbjnz7RouyFFDI/ND1w2z/hVKy7aI/3oHdrOfuitpAHg0gaHHVgJuZFMxrmdTJ+uq/7NpCYro/143HsdB8mJ1iGZJBQp4Kaqq6sLl83WgzMxkfkYbprHiVsEs+JQ4R5coTfs9sF+YHn85GxXTm8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=LxRyGEQD; arc=none smtp.client-ip=199.89.1.14
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="XAjdRJyY"
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="LxRyGEQD"
 Received: from localhost (localhost [127.0.0.1])
-	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dMgqY1Xg1zlxHwF;
-	Thu,  4 Dec 2025 17:05:13 +0000 (UTC)
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dMgsW41lXz1XM0pg;
+	Thu,  4 Dec 2025 17:06:55 +0000 (UTC)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:mime-version:x-mailer:message-id:date
-	:date:subject:subject:from:from:received:received; s=mr01; t=
-	1764867910; x=1767459911; bh=t+W4beQrgY6lJgYL2XBv5SmqVdABGHqNDg5
-	tdTDaG/k=; b=XAjdRJyYos09o25/FUUasUe4b1LT8YqIruGOf4RUGlH27YqxrJC
-	37df+odXb5QFiQzYm4Y7Z5kuhTtpT9K5mM6JpwRqpSby3lQiVHoGWNqXKUjAxhlD
-	aDNg6JC46g//N58qDyMHQxQod5+pxU2jSQ2OzaBdgwBMFleQhbcoYATPKeoQEUpH
-	uM0oDQ92WpfnnVD5fmoHT73rHcfWxjrXv8tAbHOeiBGd8mCXxGVTlcFFgnwoZOIO
-	th9RaVJix+XRYonf8CRjm1htdVmJmbZ37t9nLdBe+9MBZK2XVgGxt2KE+wbrZskV
-	Eacb8PCcs+pVS+EV2TxGLRNFmCxbQbCmByg==
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1764868013; x=1767460014; bh=ydhZt0t+pLzM1sMHH+v/125O
+	eKrmFP2t1rJ4rjyiNWs=; b=LxRyGEQDk/b0I+U5TYW1s0nipmv+2ZuQHQugs9YS
+	hmGp2M1vue+dq6pwpEnzhYa/NA/jyD3hyVbJPWd5Afm2vefWIku7FfNifss8ZHhu
+	mwvnsFlH37aCOMhny0lkodJpjlb9EAT+QX5jAL55JVGJRr/WJP0Mud+CZ7KMHD8r
+	j/oclWyec7P6amKwz1wygZc81cyLu/BmjvRCMshMVHiosQxe8f0jb/tvynyl67/L
+	eLtA1CXy/YkvV3h7diDTVBDcVFJUejhTW7h62oETMTuewEPp8OGP2XtDnJhYh4Cq
+	UGLjmLcjKOcskWECavRY7nWx2Cj9fTEUgL//pfJ3Lj7L8A==
 X-Virus-Scanned: by MailRoute
-Received: from 013.lax.mailroute.net ([127.0.0.1])
- by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id hvV9TgwTHpc1; Thu,  4 Dec 2025 17:05:10 +0000 (UTC)
-Received: from bvanassche-glaptop2.roam.corp.google.com (syn-098-147-059-154.biz.spectrum.com [98.147.59.154])
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id qRiLPc1M84io; Thu,  4 Dec 2025 17:06:53 +0000 (UTC)
+Received: from [10.25.100.213] (syn-098-147-059-154.biz.spectrum.com [98.147.59.154])
 	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
 	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
 	(No client certificate requested)
 	(Authenticated sender: bvanassche@acm.org)
-	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dMgqP4Ck8zlxCHd;
-	Thu,  4 Dec 2025 17:05:05 +0000 (UTC)
-From: Bart Van Assche <bvanassche@acm.org>
-To: "Martin K . Petersen" <martin.petersen@oracle.com>
-Cc: linux-scsi@vger.kernel.org,
-	Bart Van Assche <bvanassche@acm.org>,
-	Peter Wang <peter.wang@mediatek.com>,
-	Nitin Rawat <nitin.rawat@oss.qualcomm.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	Matthias Brugger <matthias.bgg@gmail.com>,
-	AngeloGioacchino Del Regno <angelogioacchino.delregno@collabora.com>,
-	Avri Altman <avri.altman@sandisk.com>,
-	Bean Huo <beanhuo@micron.com>,
-	Adrian Hunter <adrian.hunter@intel.com>,
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Subject: [PATCH] ufs: core: Fix an error handler crash
-Date: Thu,  4 Dec 2025 07:04:52 -1000
-Message-ID: <20251204170457.994851-1-bvanassche@acm.org>
-X-Mailer: git-send-email 2.52.0.177.g9f829587af-goog
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dMgsR0Gpcz1XM0pF;
+	Thu,  4 Dec 2025 17:06:50 +0000 (UTC)
+Message-ID: <bef9234f-3b4b-4321-9a61-294040d1777d@acm.org>
+Date: Thu, 4 Dec 2025 07:06:49 -1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Transfer-Encoding: quoted-printable
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH v8 21/28] ufs: core: Make the reserved slot a reserved
+ request
+To: Nitin Rawat <nitin.rawat@oss.qualcomm.com>,
+ Nitin Rawat <quic_nitirawa@quicinc.com>, Roger Shimizu <rosh@debian.org>
+Cc: Manivannan Sadhasivam <mani@kernel.org>,
+ "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>
+References: <20251031204029.2883185-1-bvanassche@acm.org>
+ <20251031204029.2883185-22-bvanassche@acm.org>
+ <ehorjaflathzab5oekx2nae2zss5vi2r36yqkqsfjb2fgsifz2@yk3us5g3igow>
+ <5f75d98a-2c0a-4fdf-a2a9-89bfe09fe751@acm.org>
+ <6fw4oikdxwkzbamtvu55fn2gqxr3ngfzymvxr6nxcrjpnpdb2s@v325mijraxmg>
+ <75cf6698-9ce9-4e6d-8b3c-64a7f9ef8cfc@acm.org>
+ <in3muo5gco75eenvfjif3bcauyj2ilx3d6qgriifwnyj657fyq@eftlas3z3jiu>
+ <d7579c22-40d0-4228-b539-4dfe4e25b771@acm.org>
+ <nso6f36ozpad36yd3dlrqoujsxcvz4znvr6snqwgxihb3uxyya@gs6vuu76n6sx>
+ <5c142a9d-7b41-422a-bbff-638fda1939dc@acm.org>
+ <CAEQ9gEkz=Y1ksXL0wCumb7zbqXTREqJ6Vn29P-7FWS_e=iuuVQ@mail.gmail.com>
+ <84b00b56-e775-43e6-a829-85e5da43508e@acm.org>
+ <014c3e26-24ea-40e3-a876-bf0336231b18@quicinc.com>
+ <3bcc40b9-5085-471b-85a9-259ec25c5c0b@acm.org>
+ <aa40a658-f036-45ad-8d7c-e133b3003748@oss.qualcomm.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <aa40a658-f036-45ad-8d7c-e133b3003748@oss.qualcomm.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-The UFS error handler may be activated before SCSI scanning has started a=
-nd
-hence before hba->ufs_device_wlun has been set. Check the
-hba->ufs_device_wlun pointer before using it.
+On 12/4/25 4:36 AM, Nitin Rawat wrote:
+> I also applied a similar change as yours, and the NULL pointer 
+> dereference issue is resolved. The clock scaling error (dvfs failed with 
+> (-16) error) also no longer appears.
 
-Cc: Peter Wang <peter.wang@mediatek.com>
-Cc: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-Fixes: e23ef4f22db3 ("scsi: ufs: core: Fix error handler host_sem issue")
-Fixes: f966e02ae521 ("scsi: ufs: core: Fix runtime suspend error deadlock=
-")
-Signed-off-by: Bart Van Assche <bvanassche@acm.org>
----
- drivers/ufs/core/ufshcd.c | 25 ++++++++++++++-----------
- 1 file changed, 14 insertions(+), 11 deletions(-)
+Thanks for having confirmed this!
+> However, the UIC error persists, causing the error handler to run on 
+> every boot. The behaviour is same on both SM8650 and SM8750.
 
-diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-index b834b9635062..80c0b49f30b0 100644
---- a/drivers/ufs/core/ufshcd.c
-+++ b/drivers/ufs/core/ufshcd.c
-@@ -6698,19 +6698,22 @@ static void ufshcd_err_handler(struct work_struct=
- *work)
- 		 hba->saved_uic_err, hba->force_reset,
- 		 ufshcd_is_link_broken(hba) ? "; link is broken" : "");
-=20
--	/*
--	 * Use ufshcd_rpm_get_noresume() here to safely perform link recovery
--	 * even if an error occurs during runtime suspend or runtime resume.
--	 * This avoids potential deadlocks that could happen if we tried to
--	 * resume the device while a PM operation is already in progress.
--	 */
--	ufshcd_rpm_get_noresume(hba);
--	if (hba->pm_op_in_progress) {
--		ufshcd_link_recovery(hba);
-+	if (hba->ufs_device_wlun) {
-+		/*
-+		 * Use ufshcd_rpm_get_noresume() here to safely perform link
-+		 * recovery even if an error occurs during runtime suspend or
-+		 * runtime resume. This avoids potential deadlocks that could
-+		 * happen if we tried to resume the device while a PM operation
-+		 * is already in progress.
-+		 */
-+		ufshcd_rpm_get_noresume(hba);
-+		if (hba->pm_op_in_progress) {
-+			ufshcd_link_recovery(hba);
-+			ufshcd_rpm_put(hba);
-+			return;
-+		}
- 		ufshcd_rpm_put(hba);
--		return;
- 	}
--	ufshcd_rpm_put(hba);
-=20
- 	down(&hba->host_sem);
- 	spin_lock_irqsave(hba->host->host_lock, flags);
+I'm not sure what is causing this. I will try to find a platform on 
+which I can reproduce this issue next week (I'm traveling this week).
+
+Thanks,
+
+Bart.
