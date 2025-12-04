@@ -1,63 +1,83 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BE261632C8;
-	Thu,  4 Dec 2025 01:40:02 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 877D12441B8;
+	Thu,  4 Dec 2025 01:59:59 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764812403; cv=none; b=Ghljky0xuX025vDtCv00JJZhcQ71zdpigN5dhfi5DudabOrSVFouNCsPNAG86ygt7T1/MytbWv+hHt1y3miffZOhJBbOMQEaXs947H176CJXOcHBRkh2D/82ToDovpgsdfwlyfPf+mIy5hBgoC01CamETpaq3fHkToexweczX7A=
+	t=1764813603; cv=none; b=EPd0JbTcx0iAcjZ99P4/zEcHgE4bT6kj83bEE/t/pVcSNO/go1N/fN5p8+StICQ6yqsxUV1hFoGiLfKZZRMH0OAiihjOb623j5VWi/mAxgKT9r8AaeLh3KUsXcullBDJDkOYPPYzJNsyx00B34pJW774+hQWDcMKvBqSYh7dbKs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764812403; c=relaxed/simple;
-	bh=Jpbe51PScgz44S9OIpdFm0SLOuxach8Elyq5Gs3im5U=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=NPRIrqhqJGdC9pYyF52xjLKsE1CbNYmCo35LdPuRg923VruZOLn+Ea35axN+W3E1ux8/hVnUPastbPnPd7By29rtTZiSb37LAcWysf8CUeaYyAc9Rm8iUv7lwnrMW86D3qG2ebAbUYWIIljeL+O9Rtih/jgwVYupuH52fv3z3+Y=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=IRS1IBFJ; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1764813603; c=relaxed/simple;
+	bh=7lJ7xxiXnWecvBg6vyBSfhOI1I39vkjaoCqiSidpYEk=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=fhnTXrdYPo09Vpe2rlhpZ9QFdxHjn17woi7MPMeKdXIteLOjLNmjL2zt5Fhiqi7V471hf6rPuOzjCxBn7NnwH/zYymG04CGH8IbKOJ/r+/femUStIUGTJHUEW3yUrR79QrmcDe6n8NUx/n/EJlPXmsyV+GQG+eaPhX5jDFjKZwo=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=CbUmkKGx; arc=none smtp.client-ip=199.89.1.14
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="IRS1IBFJ"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id C7D06C4CEF5;
-	Thu,  4 Dec 2025 01:40:01 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1764812402;
-	bh=Jpbe51PScgz44S9OIpdFm0SLOuxach8Elyq5Gs3im5U=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=IRS1IBFJ2uoAa1wtYZV0rdtWNVh+IAAcfFShrPXc7HRN08ZYkl2UhzZxY3tKwoVhD
-	 pGj5DPXlT7VQNPStayk+PFCW0EYhsHfhaA+YX2umX8yl39Afwjype/zthl8az6MyE6
-	 LX48TUwz6zLjR6qJ4sA/nRy36nGMaMVJqbkwjgVaSCjzz5vbJW1p5KD+gVndWNZ1Cn
-	 6Jccd50jdPU5q5RFaPpo/u0b4zZ5PDDit8U8eu8cHuMpXkMpchdUmpjmCfGLAlO9s6
-	 RTfhzLQIzGWyvG0CAl6+Y5xHtKBgaXNoeuqKMCBA73GO8n6wP98ds6sNYiZlXwtQJ8
-	 oG3f/X63sX8LA==
-Date: Wed, 3 Dec 2025 17:40:00 -0800
-From: Luis Chamberlain <mcgrof@kernel.org>
-To: sw.prabhu6@gmail.com
-Cc: James.Bottomley@hansenpartnership.com, martin.petersen@oracle.com,
-	linux-scsi@vger.kernel.org, bvanassche@acm.org,
-	linux-kernel@vger.kernel.org, kernel@pankajraghav.com,
-	Swarna Prabhu <s.prabhu@samsung.com>
-Subject: Re: [RFC v2 2/2] scsi: scsi_debug: enable sdebug_sector_size >
- PAGE_SIZE
-Message-ID: <aTDmcGKDXH5cav9J@bombadil.infradead.org>
-References: <20251203230546.1275683-2-sw.prabhu6@gmail.com>
- <20251203230546.1275683-3-sw.prabhu6@gmail.com>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="CbUmkKGx"
+Received: from localhost (localhost [127.0.0.1])
+	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dMHkx421dz1XM0p4;
+	Thu,  4 Dec 2025 01:59:53 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1764813592; x=1767405593; bh=mu04r3xjnF/XdaFm5+FXVPgH
+	pid/5c5wU8D36yCl4gg=; b=CbUmkKGxTlfIFEzLN+0ThKnFwraaePrDpH9qTXb1
+	UgbVI/Dop5+8NOLFePMoXavZDTiSjk+/iw6PW4BjjClnPu0+TffuO0WbC4lNegZs
+	3a1JvTMPD+evkXvzT7R3dAQFIa40hdVcK7rLCaxo5jAg7zqvQOEjBX1ratTCyMvg
+	Ccicfzx6Y4K9ERcFEMYyaVfhusYxNkr9F8L/89ffXdODbt6bRomAgOif5NAqZMzJ
+	OiG1mf0shiRiCpeL9O7vW4fp2KL3vsRWyaEgdxh8Zqn4XIZQpDCS6/94ds1u7WLB
+	UCHo6HNKhJ8cx6UsQQHO0i6NNK7f3KEX1/+z/MA837mn4A==
+X-Virus-Scanned: by MailRoute
+Received: from 011.lax.mailroute.net ([127.0.0.1])
+ by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id AF_IPRMnUGHh; Thu,  4 Dec 2025 01:59:52 +0000 (UTC)
+Received: from [10.25.100.213] (syn-098-147-059-154.biz.spectrum.com [98.147.59.154])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dMHkq3QFcz1XM0nm;
+	Thu,  4 Dec 2025 01:59:46 +0000 (UTC)
+Message-ID: <79e77629-f243-4468-8571-58725af92d77@acm.org>
+Date: Wed, 3 Dec 2025 15:59:44 -1000
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=us-ascii
-Content-Disposition: inline
-In-Reply-To: <20251203230546.1275683-3-sw.prabhu6@gmail.com>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [RFC v2 1/2] scsi: sd: fix write_same16 and write_same10 for
+ sector size > PAGE_SIZE
+To: sw.prabhu6@gmail.com, James.Bottomley@HansenPartnership.com,
+ martin.petersen@oracle.com, linux-scsi@vger.kernel.org
+Cc: linux-kernel@vger.kernel.org, mcgrof@kernel.org, kernel@pankajraghav.com,
+ Swarna Prabhu <s.prabhu@samsung.com>, Pankaj Raghav <p.raghav@samsung.com>
+References: <20251203230546.1275683-2-sw.prabhu6@gmail.com>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <20251203230546.1275683-2-sw.prabhu6@gmail.com>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Wed, Dec 03, 2025 at 11:05:47PM +0000, sw.prabhu6@gmail.com wrote:
-> From: Swarna Prabhu <sw.prabhu6@gmail.com>
-> 
-> Now that block layer can support block size > PAGE_SIZE
-> and the issue with WRITE SAME(16) and WRITE SAME(10) are
-> fixed for sector sizes > PAGE_SIZE, enable sdebug_sector_size
-> > PAGE_SIZE in scsi_debug.
-> 
-> Signed-off-by: Swarna Prabhu <s.prabhu@samsung.com>
+On 12/3/25 1:05 PM, sw.prabhu6@gmail.com wrote:
+>   static void *sd_set_special_bvec(struct request *rq, unsigned int data_len)
+>   {
+>   	struct page *page;
+> +	struct scsi_device *sdp = scsi_disk(rq->q->disk)->device;
 
-Reviewed-by: Luis Chamberlain <mcgrof@kernel.org>
+Instead of using this cumbersome approach to obtain the SCSI device
+pointer, I recommend to change the 'struct request *rq' argument into
+'struct scsi_cmnd *cmd' and to obtain the SCSI device pointer as
+follows:
 
-  Luis
+	struct scsi_device *sdp = cmd->device;
+
+Otherwise this patch looks good to me.
+
+Thanks,
+
+Bart.
