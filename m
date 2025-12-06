@@ -1,75 +1,62 @@
-Received: from mail-yx1-f44.google.com (mail-yx1-f44.google.com [74.125.224.44])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from us-smtp-delivery-124.mimecast.com (us-smtp-delivery-124.mimecast.com [170.10.129.124])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 8DB0D272801
-	for <linux-scsi@vger.kernel.org>; Fri,  5 Dec 2025 23:58:11 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=74.125.224.44
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5E53C1F17E8
+	for <linux-scsi@vger.kernel.org>; Sat,  6 Dec 2025 01:00:25 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=170.10.129.124
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1764979095; cv=none; b=HwmylOtloBaeK8g2ZUEFSDyVxRLq2a3IpASkBYfjPG6uIKFnUB2gtLm5iuFOQlTdoI2nOkaDeAgtgrUkrfE8Zpw9nCecX5FYN+75a4r4jmgfzQBQH/Szs07QwTOe0DJyI0957C8zEDh1s+fFNGc3mvLxNPiMHwmiwlg2ivKp/Mc=
+	t=1764982827; cv=none; b=sNro05UZ0+w0aF3oo5/BHnVoQhmH6hevKxtLfhA86+63sFmsxovu9Zm6vsYhUd+lJrS6o+kjDOvfDMnJt9Vu84mQcnRAIcTCOKxd0shBOTROngpqSgIG1GpcACAVLScM7bt4aMxMGUQ54BoXXNmtLu/P9s29AivuMuCdAQwO9ac=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1764979095; c=relaxed/simple;
-	bh=6eXmvFRyk7c0S5Z8owqZR1SIcLC19Pl4Ruv0fhYJByk=;
-	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=m0s+nM6Q1pBRjXLBPFhHDyFvad/nvmaLETb2ZDpVtJckghhz8ugKGq/SOwtMCGiJMrJ9hB57egjueaPKLyMdPlICjrS6vY6VeASv4tfSR7n9zB6l9a0cubHUmXwK9oEoj4C+sm1LKx+I4IBrfxOjJlk14NqLrdulfHXkTV4Bz30=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com; spf=pass smtp.mailfrom=gmail.com; dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b=joqTKcFG; arc=none smtp.client-ip=74.125.224.44
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=gmail.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=gmail.com
+	s=arc-20240116; t=1764982827; c=relaxed/simple;
+	bh=O9OGJs90B8jaJWOEsvr8omGjkuVilZIJM6X/eJ+o5ss=;
+	h=From:To:Cc:Subject:Date:Message-ID:MIME-Version; b=R+72JLKOoZaOn3TDj7LyRjbNn+sVw5Edz3VUcSVLd8nQpYPi17vn4Z23sWxjgAH0rQ5hQ505IShaGI+/p3lww1l5BY317ZbsptnyadZtE8SZGbkZlv+aUgdfk+1Hg6/OwHDBca+FtrmPOoUsMyJINdOLFzYAM9+30cJjDdeTtXc=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com; spf=pass smtp.mailfrom=redhat.com; dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b=MGnhb4ki; arc=none smtp.client-ip=170.10.129.124
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=quarantine dis=none) header.from=redhat.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=redhat.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=gmail.com header.i=@gmail.com header.b="joqTKcFG"
-Received: by mail-yx1-f44.google.com with SMTP id 956f58d0204a3-6442e2dd8bbso2102979d50.0
-        for <linux-scsi@vger.kernel.org>; Fri, 05 Dec 2025 15:58:11 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=gmail.com; s=20230601; t=1764979090; x=1765583890; darn=vger.kernel.org;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:from:to:cc:subject:date:message-id:reply-to;
-        bh=cPgQOdtl/tU0gJp0Qps8kqZujLmXDZbYPgzwk6SilGM=;
-        b=joqTKcFGmhs3//4kC1kHuGSmV3Mcuy2EnB69U9jbFbq9h7wQtOZKPxWhQEN6rHiudk
-         U3pqYOWf+EYcHCD1K7Rs+DMB2ZuXihh2/qS0qx3wc0QYZtLBE2QjMlLIc06n7Mh27rzG
-         t4BdTLNbatcrzcOgHcuMPRL4Y0dduK6f2AujkmfB84iyBqXler6CHZ9PkfkFVp8ok5d6
-         dTh5TVP9PXj3lU+Y8L+ap6jBdGZqoybLVo6mBhHte4hX4DQ4lIZyOU1opNK/ltfgWGD6
-         LUElpC7K/+5VKrIL0B/e3REduXysmAUnnDIQD6dB7uTmRvGSZB4jKhkYMuLsEck7YEu/
-         0KOA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1764979090; x=1765583890;
-        h=content-transfer-encoding:mime-version:message-id:date:subject:cc
-         :to:from:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
-         :message-id:reply-to;
-        bh=cPgQOdtl/tU0gJp0Qps8kqZujLmXDZbYPgzwk6SilGM=;
-        b=a5CdmMC6WXeo4DxCLFJihnd+lrTrCQKYQ1yzaThi4WqfiwKw92fDCIDK7RIs+MhKqW
-         c25Mn2G2Fm2SpzqOC+cjE641orKHtZFYj8V/z0xRTt9o01ZNggUavIJwOadw3jnOYQoJ
-         +vKpXRP7llfyj9fMRgaH2hFOVl3hzB01x41XYstnFTx6wFpvai5GggwZ3N13KzIN+crT
-         fra7uWO6HwZ35jaTQL2YjeeNDfUurLBW8KNxWUNv+8C75HEwrS+VD6VMQJXPXYWlEL7K
-         +SPU0CYHNzt8Oa1BtSiMSreNavark7qMvE4wA0tz3wwwBOeO+9guJ6SaPPo7h6SDyCWe
-         4xWA==
-X-Forwarded-Encrypted: i=1; AJvYcCXgM5O/RRtBY2Wi30rInCfF6Riajtvn1+7BE+4w6AlSCzuwYWzqrz5beQ0IJ7F4Uj+3I+t2raH8q2Ud@vger.kernel.org
-X-Gm-Message-State: AOJu0YzTDsueHz3ClElFK4i6eCw9AG4ZSAx1Zt3jxWp5pWIY3KaIW2Yu
-	34RaivwxUjk4RME4NrmpMXMaEUiIYXY2lHd7OqSAnGYlki7/N3/SmiG+
-X-Gm-Gg: ASbGncsAtnBPwBmwcZKkqBZriNBbDkUk+fB67alohx9SjGn8Giv3sQyuDasDVVKqTlZ
-	AFY8mdomTT05kBUfluQf80HaEECa2jrUxLpLAQUG7fuRR+zitdSCad0Ji4XsFf0572u3vCnvmiY
-	Fcq+RiLjt/E7clvk5nlYZlbe+Y15Ra75HcaB6fuFm/SNBDJnG7qAaSWiLpDzMzEfkqPseSL649R
-	KKrLx0GeYNd812ONfzrk/YhigZief3EKhTbuHfAF/tWLxJa8d9kLFZnahHehMTGc5OunRwOslMg
-	2Eu+uNDF0zpcYt8sDPfTaTssJUWFfAf1yKeeLP+97nmI/NGzUVoW2Qk0k2Gh8jhTpB7q9sI32o+
-	jtwe1yWtbGyzGq64DhgXY9Qe5VtiPtsGZ6meVMcQjgOWxyL4HMv7ZRTxS/jOCbKnRXzl00iHY5z
-	fKpGyoOw==
-X-Google-Smtp-Source: AGHT+IHQX3by7qUEucqLqlHVgdeo4lBeXWo2mpPEuAMYSDC6NV5CkJ3jE4tMh3tjLdeQoEyI4ORbGg==
-X-Received: by 2002:a05:690e:434a:b0:644:472d:daf2 with SMTP id 956f58d0204a3-6444e7b93fcmr499956d50.53.1764979090366;
-        Fri, 05 Dec 2025 15:58:10 -0800 (PST)
-Received: from localhost ([2601:346:0:79bd:be2a:7e4d:3bf:3fbc])
-        by smtp.gmail.com with ESMTPSA id 00721157ae682-78c1b78e5f5sm22031307b3.41.2025.12.05.15.58.09
-        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Fri, 05 Dec 2025 15:58:10 -0800 (PST)
-From: "Yury Norov (NVIDIA)" <yury.norov@gmail.com>
-To: James Smart <james.smart@broadcom.com>,
-	Dick Kennedy <dick.kennedy@broadcom.com>,
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	Justin Tee <justintee8345@gmail.com>,
-	linux-scsi@vger.kernel.org,
-	linux-kernel@vger.kernel.org
-Cc: "Yury Norov (NVIDIA)" <yury.norov@gmail.com>
-Subject: [PATCH v2] scsi: lpfc: rework lpfc_sli4_fcf_rr_next_index_get()
-Date: Fri,  5 Dec 2025 18:58:08 -0500
-Message-ID: <20251205235808.358258-1-yury.norov@gmail.com>
-X-Mailer: git-send-email 2.43.0
+	dkim=pass (1024-bit key) header.d=redhat.com header.i=@redhat.com header.b="MGnhb4ki"
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=redhat.com;
+	s=mimecast20190719; t=1764982824;
+	h=from:from:reply-to:subject:subject:date:date:message-id:message-id:
+	 to:to:cc:cc:mime-version:mime-version:
+	 content-transfer-encoding:content-transfer-encoding;
+	bh=5w4UtrYE7AWo/3qHhRYQubzzzFodcpQGNINtBKnKQWY=;
+	b=MGnhb4kiXO6F7762kQ3+euvtyaLe3iCsGBzLojK6R1ytLDD1hPjZ7aKVI7mOhz70qqQNGV
+	81xHn810ObcGRicPd3G8xB7xBWQefSfGYFoASVig14eTKFh7fdzlfe1iYTvGW/tLhhCA43
+	LMzLc6LRaLNmGIHvGB1OOitlIJoEzrE=
+Received: from mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com
+ (ec2-54-186-198-63.us-west-2.compute.amazonaws.com [54.186.198.63]) by
+ relay.mimecast.com with ESMTP with STARTTLS (version=TLSv1.3,
+ cipher=TLS_AES_256_GCM_SHA384) id us-mta-643-OC-B9ONaMla49omkhCrVTA-1; Fri,
+ 05 Dec 2025 20:00:19 -0500
+X-MC-Unique: OC-B9ONaMla49omkhCrVTA-1
+X-Mimecast-MFC-AGG-ID: OC-B9ONaMla49omkhCrVTA_1764982818
+Received: from mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com [10.30.177.12])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	by mx-prod-mc-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id 2E5611956066;
+	Sat,  6 Dec 2025 01:00:18 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (unknown [10.6.23.247])
+	by mx-prod-int-03.mail-002.prod.us-west-2.aws.redhat.com (Postfix) with ESMTPS id A740B19560B4;
+	Sat,  6 Dec 2025 01:00:17 +0000 (UTC)
+Received: from bmarzins-01.fast.eng.rdu2.dc.redhat.com (localhost [127.0.0.1])
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.17.1) with ESMTPS id 5B610GfL1595234
+	(version=TLSv1.3 cipher=TLS_AES_256_GCM_SHA384 bits=256 verify=NOT);
+	Fri, 5 Dec 2025 20:00:16 -0500
+Received: (from bmarzins@localhost)
+	by bmarzins-01.fast.eng.rdu2.dc.redhat.com (8.18.1/8.18.1/Submit) id 5B610F531595233;
+	Fri, 5 Dec 2025 20:00:15 -0500
+From: Benjamin Marzinski <bmarzins@redhat.com>
+To: "James E . J . Bottomley" <James.Bottomley@HansenPartnership.com>,
+        "Martin K . Petersen" <martin.petersen@oracle.com>,
+        Mikulas Patocka <mpatocka@redhat.com>,
+        Mike Snitzer <snitzer@kernel.org>
+Cc: linux-scsi@vger.kernel.org, dm-devel@lists.linux.dev,
+        Martin Wilck <mwilck@suse.com>
+Subject: [PATCH v2] scsi: scsi_dh: Return error pointer in scsi_dh_attached_handler_name
+Date: Fri,  5 Dec 2025 20:00:15 -0500
+Message-ID: <20251206010015.1595225-1-bmarzins@redhat.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -77,103 +64,80 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
+X-Scanned-By: MIMEDefang 3.0 on 10.30.177.12
 
-The function opencodes for_each_set_bit_wrap(). Use it, and while there
-switch from goto-driven codeflow to more high-level constructions.
+If scsi_dh_attached_handler_name() fails to allocate the handler name,
+dm-multipath (its only caller) assumes there is no attached device
+handler, and sets the device up incorrectly. Return an error pointer
+instead, so multipath can distinguish between failure, success where
+there is no attached device handler, or when the path device is not
+a scsi device at all.
 
-Signed-off-by: Yury Norov (NVIDIA) <yury.norov@gmail.com>
+Signed-off-by: Benjamin Marzinski <bmarzins@redhat.com>
 ---
-v1: https://lore.kernel.org/all/20250917141806.661826-1-yury.norov@gmail.com/
-v2: tweak check against LPFC_FCF_FLOGI_FAILED flag (Justin);
 
- drivers/scsi/lpfc/lpfc_sli.c | 62 +++++++++++-------------------------
- 1 file changed, 18 insertions(+), 44 deletions(-)
+Changes from v1:
+If scsi_dh_attached_handler_name() returns that the path device is not
+a scsi device (-ENODEV) but m->hw_hander_name is set, print an error
+message and clear it, like the code does when a hardware handler is set
+on a bio-based multipath device.
 
-diff --git a/drivers/scsi/lpfc/lpfc_sli.c b/drivers/scsi/lpfc/lpfc_sli.c
-index 7ea7c4245c69..c330db3e54dc 100644
---- a/drivers/scsi/lpfc/lpfc_sli.c
-+++ b/drivers/scsi/lpfc/lpfc_sli.c
-@@ -20361,62 +20361,36 @@ lpfc_check_next_fcf_pri_level(struct lpfc_hba *phba)
- uint16_t
- lpfc_sli4_fcf_rr_next_index_get(struct lpfc_hba *phba)
- {
--	uint16_t next_fcf_index;
-+	uint16_t next;
+ drivers/md/dm-mpath.c  | 13 +++++++++++++
+ drivers/scsi/scsi_dh.c |  8 +++++---
+ 2 files changed, 18 insertions(+), 3 deletions(-)
+
+diff --git a/drivers/md/dm-mpath.c b/drivers/md/dm-mpath.c
+index c18358271618..65a3e93385c0 100644
+--- a/drivers/md/dm-mpath.c
++++ b/drivers/md/dm-mpath.c
+@@ -950,6 +950,19 @@ static struct pgpath *parse_path(struct dm_arg_set *as, struct path_selector *ps
  
--initial_priority:
--	/* Search start from next bit of currently registered FCF index */
--	next_fcf_index = phba->fcf.current_rec.fcf_indx;
--
--next_priority:
--	/* Determine the next fcf index to check */
--	next_fcf_index = (next_fcf_index + 1) % LPFC_SLI4_FCF_TBL_INDX_MAX;
--	next_fcf_index = find_next_bit(phba->fcf.fcf_rr_bmask,
--				       LPFC_SLI4_FCF_TBL_INDX_MAX,
--				       next_fcf_index);
-+	do {
-+		for_each_set_bit_wrap(next, phba->fcf.fcf_rr_bmask,
-+				LPFC_SLI4_FCF_TBL_INDX_MAX, phba->fcf.current_rec.fcf_indx) {
-+			if (next == phba->fcf.current_rec.fcf_indx)
-+				continue;
- 
--	/* Wrap around condition on phba->fcf.fcf_rr_bmask */
--	if (next_fcf_index >= LPFC_SLI4_FCF_TBL_INDX_MAX) {
--		/*
--		 * If we have wrapped then we need to clear the bits that
--		 * have been tested so that we can detect when we should
--		 * change the priority level.
--		 */
--		next_fcf_index = find_first_bit(phba->fcf.fcf_rr_bmask,
--					       LPFC_SLI4_FCF_TBL_INDX_MAX);
--	}
-+			if (!(phba->fcf.fcf_pri[next].fcf_rec.flag & LPFC_FCF_FLOGI_FAILED)) {
-+				lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
-+					"2845 Get next roundrobin failover FCF (x%x)\n", next);
-+				return next;
+ 	q = bdev_get_queue(p->path.dev->bdev);
+ 	attached_handler_name = scsi_dh_attached_handler_name(q, GFP_KERNEL);
++	if (IS_ERR(attached_handler_name)) {
++		if (PTR_ERR(attached_handler_name) == -ENODEV) {
++			if (m->hw_handler_name) {
++				DMERR("hardware handlers are only allowed for scsi devices");
++				kfree(m->hw_handler_name);
++				m->hw_handler_name = NULL;
 +			}
- 
-+			if (list_is_singular(&phba->fcf.fcf_pri_list))
-+				return LPFC_FCOE_FCF_NEXT_NONE;
++			attached_handler_name = NULL;
++		} else {
++			r = PTR_ERR(attached_handler_name);
++			goto bad;
 +		}
++	}
+ 	if (attached_handler_name || m->hw_handler_name) {
+ 		INIT_DELAYED_WORK(&p->activate_path, activate_path_work);
+ 		r = setup_scsi_dh(p->path.dev->bdev, m, &attached_handler_name, &ti->error);
+diff --git a/drivers/scsi/scsi_dh.c b/drivers/scsi/scsi_dh.c
+index 7b56e00c7df6..b9d805317814 100644
+--- a/drivers/scsi/scsi_dh.c
++++ b/drivers/scsi/scsi_dh.c
+@@ -353,7 +353,8 @@ EXPORT_SYMBOL_GPL(scsi_dh_attach);
+  *      that may have a device handler attached
+  * @gfp - the GFP mask used in the kmalloc() call when allocating memory
+  *
+- * Returns name of attached handler, NULL if no handler is attached.
++ * Returns name of attached handler, NULL if no handler is attached, or
++ * and error pointer if an error occurred.
+  * Caller must take care to free the returned string.
+  */
+ const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
+@@ -363,10 +364,11 @@ const char *scsi_dh_attached_handler_name(struct request_queue *q, gfp_t gfp)
  
--	/* Check roundrobin failover list empty condition */
--	if (next_fcf_index >= LPFC_SLI4_FCF_TBL_INDX_MAX ||
--		next_fcf_index == phba->fcf.current_rec.fcf_indx) {
- 		/*
- 		 * If next fcf index is not found check if there are lower
- 		 * Priority level fcf's in the fcf_priority list.
- 		 * Set up the rr_bmask with all of the avaiable fcf bits
- 		 * at that level and continue the selection process.
- 		 */
--		if (lpfc_check_next_fcf_pri_level(phba))
--			goto initial_priority;
--		lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
--				"2844 No roundrobin failover FCF available\n");
--
--		return LPFC_FCOE_FCF_NEXT_NONE;
--	}
--
--	if (next_fcf_index < LPFC_SLI4_FCF_TBL_INDX_MAX &&
--		phba->fcf.fcf_pri[next_fcf_index].fcf_rec.flag &
--		LPFC_FCF_FLOGI_FAILED) {
--		if (list_is_singular(&phba->fcf.fcf_pri_list))
--			return LPFC_FCOE_FCF_NEXT_NONE;
-+	} while (lpfc_check_next_fcf_pri_level(phba));
+ 	sdev = scsi_device_from_queue(q);
+ 	if (!sdev)
+-		return NULL;
++		return ERR_PTR(-ENODEV);
  
--		goto next_priority;
--	}
--
--	lpfc_printf_log(phba, KERN_INFO, LOG_FIP,
--			"2845 Get next roundrobin failover FCF (x%x)\n",
--			next_fcf_index);
-+	lpfc_printf_log(phba, KERN_WARNING, LOG_FIP,
-+			"2844 No roundrobin failover FCF available\n");
- 
--	return next_fcf_index;
-+	return LPFC_FCOE_FCF_NEXT_NONE;
+ 	if (sdev->handler)
+-		handler_name = kstrdup(sdev->handler->name, gfp);
++		handler_name = kstrdup(sdev->handler->name, gfp) ? :
++			       ERR_PTR(-ENOMEM);
+ 	put_device(&sdev->sdev_gendev);
+ 	return handler_name;
  }
- 
- /**
 -- 
-2.43.0
+2.50.1
 
