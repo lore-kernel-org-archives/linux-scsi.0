@@ -1,77 +1,115 @@
-Received: from 011.lax.mailroute.net (011.lax.mailroute.net [199.89.1.14])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f47.google.com (mail-wm1-f47.google.com [209.85.128.47])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 0BA2923EAB9;
-	Sun,  7 Dec 2025 15:20:48 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.14
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9BD5B52F88
+	for <linux-scsi@vger.kernel.org>; Sun,  7 Dec 2025 21:48:57 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.47
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765120856; cv=none; b=WlXN8vu32k34D3CLVMy3YBN3TrOPIKyEy4REcgeD3lf6IPtY3CDi8FIhG4F0G3IAU4KdwOIqj51dqhTBAFEIkv+aiUzo5ex1SUH6XyWWLy5pwzM2V/tebN5MbTXWtKkchlk85c+vn1mOAA8C4rcNYFCBIVWsjTbTYV0IJ1qth+g=
+	t=1765144139; cv=none; b=YuXdSWYzWu4pACS6NNyaXVp18GcVqbk7iBc5sbbEaJuZsOtlUeKrNCtce37j8/VLMPfNS5x1kFgpyiQ6Hz8CDtYVDuZ1VUdmJgADLWFj2i7E+xTDp6i/sG1lXPq7Vnact460x0e4p+eIb7iCABhucoOvGX3DYMsrx6kVjFtDb8Q=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765120856; c=relaxed/simple;
-	bh=4sw29FNF+hDXvAnVpBSFpwowyDJGsGQ0TKMzDyV2VxQ=;
-	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
-	 In-Reply-To:Content-Type; b=D9SWaEkWEemJUuci4esqQlgXvGxiGoTbe20pVBfEQbAxMlSHDNKwHGdPweOxY2i48v5rJwde61jyC81TCOAVwzvPXU7IEudu222z109b0Druob4udiSVPbFoD7eaUNA4M0pb+/fQogSgdsCYzB7+DI600texEPFi+WR3LJARqbY=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=F08NmBhi; arc=none smtp.client-ip=199.89.1.14
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
+	s=arc-20240116; t=1765144139; c=relaxed/simple;
+	bh=x41bk8/bG8C1SvpHmRak9vofogCgnix3bLXOKySwiFg=;
+	h=Mime-Version:Content-Type:Date:Message-Id:Cc:Subject:From:To:
+	 References:In-Reply-To; b=Yfh3xc6sMb2/QSs1C47vOKNhZpzTSvTl4OYJRGnjqmVBnPj2YfqAY3ABeSrz1n+8r1oNqhjKUIoD+0CgVhIUTDTh3FgdbAOQSMP5qM3VUnZF7Qtv+gqw3GbKS0xdU7EfV6xRSO3BIXqmYdJi6eKSkwSW1KB3ocUuxmmHYq06l8k=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=arW6bDt2; arc=none smtp.client-ip=209.85.128.47
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="F08NmBhi"
-Received: from localhost (localhost [127.0.0.1])
-	by 011.lax.mailroute.net (Postfix) with ESMTP id 4dPTK01KZ0z1XM31H;
-	Sun,  7 Dec 2025 15:18:28 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
-	content-transfer-encoding:content-type:content-type:in-reply-to
-	:from:from:content-language:references:subject:subject
-	:user-agent:mime-version:date:date:message-id:received:received;
-	 s=mr01; t=1765120706; x=1767712707; bh=4sw29FNF+hDXvAnVpBSFpwow
-	yDJGsGQ0TKMzDyV2VxQ=; b=F08NmBhi6FhcjTjsh7iau1T2jSqJoYseX++LZML1
-	eF9QgmBE8fEAqeqYqQb+SQaIpYS5VVbdB8Hkdma6M8I4+TR9Eg+jPS3DUSEwNXMQ
-	Sx2SHT22ftvysaeUb8HGbQpyKZcL7pAEglwVzK4iUETGe8ApKCPZ73C5Hh026Mdk
-	bfXK3XkdaVVLXArm4/XvIpiEyE5ka2lNnBtDMOV+i9ZGCrdu4rlAFB0Lzuojwpq+
-	BCCohZ7CD4ExBTzNsFEimQDj+Ln0sLVmWwoil9JHkv8TcnQOCuY+Yv/QwW9K8xNt
-	nAzPSR6Fl5ncU9ECx1HsPFkuvoYjUofSuaIcZxEA92anRQ==
-X-Virus-Scanned: by MailRoute
-Received: from 011.lax.mailroute.net ([127.0.0.1])
- by localhost (011.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
- id G6PJ7d-KBR5B; Sun,  7 Dec 2025 15:18:26 +0000 (UTC)
-Received: from [192.168.51.14] (c-73-231-117-72.hsd1.ca.comcast.net [73.231.117.72])
-	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
-	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
-	(No client certificate requested)
-	(Authenticated sender: bvanassche@acm.org)
-	by 011.lax.mailroute.net (Postfix) with ESMTPSA id 4dPTJt3GHkz1XM5kt;
-	Sun,  7 Dec 2025 15:18:21 +0000 (UTC)
-Message-ID: <46cf2cb9-76f4-4d73-be3d-88fcbe7055f4@acm.org>
-Date: Sun, 7 Dec 2025 07:18:18 -0800
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="arW6bDt2"
+Received: by mail-wm1-f47.google.com with SMTP id 5b1f17b1804b1-4779ce2a624so49366365e9.2
+        for <linux-scsi@vger.kernel.org>; Sun, 07 Dec 2025 13:48:57 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1765144136; x=1765748936; darn=vger.kernel.org;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=x41bk8/bG8C1SvpHmRak9vofogCgnix3bLXOKySwiFg=;
+        b=arW6bDt2MKP++PXKN4yeqtHBkIjcAEwuDVLVtW1hm8ZrD1qZH794u4FmZuGIQfRyqy
+         OqtLh3Utmj2Lj2bLdO9nYojuFed4286igJpelXU4f2jXcwLkJX3iaPHQQNzNopL7zWs+
+         TWNkP6n+YrC5zAjoqyT3L4MzWPc5E/XtXUqUy1kQPze6w+7D14Zwn+UPcyHU0k/okDyN
+         2inSi5gKobBZSsD7KJIbxDOn4wpy58DX2VbKKhmtl/RQ36O7ej1C1QKupBtQi8DlXawq
+         4dt7Xgww+3QU+eIhhJbb+if9eQOBW2cwUH7GHxj5nf9sgEQAPmgaIhPxoZ6OgiNQ3fUM
+         I5DQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765144136; x=1765748936;
+        h=in-reply-to:references:to:from:subject:cc:message-id:date
+         :content-transfer-encoding:mime-version:x-gm-gg:x-gm-message-state
+         :from:to:cc:subject:date:message-id:reply-to;
+        bh=x41bk8/bG8C1SvpHmRak9vofogCgnix3bLXOKySwiFg=;
+        b=h/lmy0m+j/GFWZ3ZwNYar69LeAFKicY7gkm/PN4joNx/nY2yb8q8ST4pL6N4IR5wXr
+         3vWK7u0QVUXCFq1M+TYhKX2x4OUg6dL06C1XITb4Wt+VkrroGZZdwKFX24EmkQeRPHy5
+         38xFe2VR4poX5Z1ufUyXXbr3Rd0tNNO2uO0xNHFlEAdZy4yyDTmGzbV/bOwrafJnTJP4
+         p40NY1UHRusQaJbfHfadgo2+ZS8NyTuK60tJFp2P/ZI+q8Gd2Ipa34Xv6wqhG+BxLh1Y
+         ggwJPa7GuyfFRjmcdCKbhh5td2WMZ3R08nCfPtPCZehmmvOfi1txRmC5nRwricWQxzB/
+         TIZA==
+X-Gm-Message-State: AOJu0Yz4ZJ8hPcKs2nS0kt5QLCs0VYeM9dYC8N5uQ4XfA2MFE0dHE7fh
+	fVUP5eqRs/RTGpi8egQQOrMpWm4qOGcCQHmcxZ+CFgsjSIi83S7JOwNRd71lkdObvF8=
+X-Gm-Gg: ASbGncs6uqmpsdis4BxklH7xE/8QdjNVD2UaEkK+lECuB0gGYhQd+K3NNfGYJJMPnCX
+	O1JrE3ISQeV9vkNKZsYpKconesop9ZkOo6Dr6ZbbTfFlUEIGYfFcu7vqWgpelx3wZXmGWbBY8r7
+	RJt6do/hLAjXilwV8RJsxlOukvraAbt8Fk/k7yLJc1MjJYwViCFLYWIu9YlUGob9xK1Ty0KV88i
+	fvlYtqb6buyCAuyWADN1bHiBr5nuEJjoqa+j8avBvIsC4GCGDTXU+x53otngxJDxuuqAjLVUhdE
+	s7IYHIwjKSbqWttrNwXGJuLaLtxVXnc3g1N7ZRp2zSnJ6GNG+qVwz9Hr5zgghK2523fmnyRLVEh
+	VmuhRYbUjiATjx2JLdvQWcWwd539QT1X9QarI5RdS72b7i9M1n9ddceNWSL76yCyX84F4hMvonf
+	N8t1GvrmGdtchdkPA8a8sh3vfbfF4=
+X-Google-Smtp-Source: AGHT+IFObw15gUEw72WDQRON8fhv2pdsC0B2KeNYbK3jGB5V2TEMQylNojEhSITYudY/qPiCr06BOA==
+X-Received: by 2002:a05:6000:2891:b0:42f:8816:9505 with SMTP id ffacd0b85a97d-42f89f58e5dmr6260694f8f.61.1765144135934;
+        Sun, 07 Dec 2025 13:48:55 -0800 (PST)
+Received: from localhost ([2a02:c7c:5e34:8000:da07:24c6:f91a:9817])
+        by smtp.gmail.com with ESMTPSA id ffacd0b85a97d-42f7cbfee66sm21827912f8f.11.2025.12.07.13.48.54
+        (version=TLS1_3 cipher=TLS_AES_128_GCM_SHA256 bits=128/128);
+        Sun, 07 Dec 2025 13:48:55 -0800 (PST)
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-MIME-Version: 1.0
-User-Agent: Mozilla Thunderbird
-Subject: Re: [linux-next] potential deadlock in ufshcd?
-To: Alexey Klimov <alexey.klimov@linaro.org>, linux-scsi@vger.kernel.org,
- mani@kernel.org, linux-arm-msm@vger.kernel.org
-Cc: alim.akhtar@samsung.com, avri.altman@wdc.com, linux-next@vger.kernel.org,
- linux-kernel@vger.kernel.org
-References: <DERQ2FF2WO70.3I04I9XAG5V6D@linaro.org>
-Content-Language: en-US
-From: Bart Van Assche <bvanassche@acm.org>
-In-Reply-To: <DERQ2FF2WO70.3I04I9XAG5V6D@linaro.org>
-Content-Type: text/plain; charset=UTF-8; format=flowed
-Content-Transfer-Encoding: 7bit
+Mime-Version: 1.0
+Content-Transfer-Encoding: quoted-printable
+Content-Type: text/plain; charset=UTF-8
+Date: Sun, 07 Dec 2025 21:48:53 +0000
+Message-Id: <DESBDGL25AYP.16RFXFVTC92H9@linaro.org>
+Cc: <linux-scsi@vger.kernel.org>, "Manivannan Sadhasivam" <mani@kernel.org>,
+ "Roger Shimizu" <rosh@debian.org>, "Nitin Rawat"
+ <nitin.rawat@oss.qualcomm.com>, "James E.J. Bottomley"
+ <James.Bottomley@hansenpartnership.com>, "Peter Wang"
+ <peter.wang@mediatek.com>, "Avri Altman" <avri.altman@sandisk.com>, "Bean
+ Huo" <beanhuo@micron.com>, "Adrian Hunter" <adrian.hunter@intel.com>, "Bao
+ D. Nguyen" <quic_nguyenb@quicinc.com>
+Subject: Re: [PATCH] ufs: core: Fix a deadlock in the frequency scaling code
+From: "Alexey Klimov" <alexey.klimov@linaro.org>
+To: "Bart Van Assche" <bvanassche@acm.org>, "Martin K . Petersen"
+ <martin.petersen@oracle.com>
+X-Mailer: aerc 0.20.0
+References: <20251204181548.1006696-1-bvanassche@acm.org>
+In-Reply-To: <20251204181548.1006696-1-bvanassche@acm.org>
 
-On 12/6/25 7:07 PM, Alexey Klimov wrote:
-> Is it a known problem? I can test potential changes to resolve this
-> or try to collect more debug data if needed.
+On Thu Dec 4, 2025 at 6:15 PM GMT, Bart Van Assche wrote:
+> Commit 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()"=
+)
+> accidentally introduced a deadlock in the frequency scaling code.
+> ufshcd_clock_scaling_unprepare() may submit a device management command
+> while SCSI command processing is blocked. The deadlock was introduced by
+> using the SCSI core for submitting device management commands
+> (scsi_get_internal_cmd() + blk_execute_rq()). Fix this deadlock by callin=
+g
+> blk_mq_unquiesce_tagset() before any device management commands are
+> submitted by ufshcd_clock_scaling_unprepare().
+>
+> Fixes: 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()"=
+)
+> Reported-by: Manivannan Sadhasivam <mani@kernel.org>
+> Reported-by: Roger Shimizu <rosh@debian.org>
+> Closes: https://lore.kernel.org/linux-scsi/ehorjaflathzab5oekx2nae2zss5vi=
+2r36yqkqsfjb2fgsifz2@yk3us5g3igow/
+> Tested-by: Roger Shimizu <rosh@debian.org>
+> Cc: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
+> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
 
-Please help with testing these two kernel patches:
-* "[PATCH] ufs: core: Fix a deadlock in the frequency scaling code"
-(https://lore.kernel.org/linux-scsi/20251204181548.1006696-1-bvanassche@acm.org/).
-* "[PATCH] ufs: core: Fix an error handler crash"
-(https://lore.kernel.org/linux-scsi/20251204170457.994851-1-bvanassche@acm.org/).
+This fixes the regression of freezing/hanging boot in initramfs
+on Qcom RB5 board with recent linux-nexts. Thank you!
 
-Thanks,
+Tested-by: Alexey Klimov <alexey.klimov@linaro.org> # RB5 board
 
-Bart.
+Best regards,
+Alexey
+
