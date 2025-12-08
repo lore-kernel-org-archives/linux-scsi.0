@@ -1,112 +1,113 @@
-Received: from mail-pj1-f74.google.com (mail-pj1-f74.google.com [209.85.216.74])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
+Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1C4CF1F874C
-	for <linux-scsi@vger.kernel.org>; Mon,  8 Dec 2025 02:53:45 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.216.74
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C15593002D6;
+	Mon,  8 Dec 2025 05:16:30 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765162427; cv=none; b=Tf76haLnspLHvHLN/5PQh+SuAhZwIAeKvCkug4a7YrGBTpeiGNcAegUsT5WtlfcIRYmI03jkm0to3nRqsBEMofQifH7hokBTW4LEY2XssdNjsp65aFyr2HaFWMZdsVMUrn2nW6Cs9m+J4ixyxLnb5wLxkEYrptNS4hD3RrEv8N0=
+	t=1765170990; cv=none; b=XnN2svQjtK7iioZ1/dVj1NJzDauGbBNU2B3q3sZabZZ2QwF9Gi7hgrXD9NsLtdj7c2DnQaa9G6fx5GY4BNqtxwCKG9KEsgSwO56UKlbqFU06XxsgDtQc3zAH8TpB8GDyWIIpiEEA4ISPt1bR+uLvF9+FcnwLWoH74L6jYQzJ0jU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765162427; c=relaxed/simple;
-	bh=ZpWZDhkk+7rWx7ICEOZReOYbr+Pt63KR9LXvM+11gFE=;
-	h=Date:Mime-Version:Message-ID:Subject:From:Cc:Content-Type; b=SFipDR54pFl6sxXdyPS+Qpp6MZB1DpUT0+Pq1Ob31LtSZ1PrhlOnTHX2SRv+PU8mSRVUuVyzkHjFO1suV7ew0c3bd3D0FRcdwcxwK+0QzGJ0tri/q/zb5rqsVr3yAW5kYp2b5uip+kt6jEvH4X+NVrrzWRbWH/dm13Mt8p9Mwpc=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com; spf=pass smtp.mailfrom=flex--powenkao.bounces.google.com; dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b=DN6UuvNL; arc=none smtp.client-ip=209.85.216.74
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=google.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=flex--powenkao.bounces.google.com
+	s=arc-20240116; t=1765170990; c=relaxed/simple;
+	bh=r83WDIqcqyVKYPc60PL81S93yqBYvLV4FKtAwiWP2io=;
+	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
+	 Content-Type:Content-Disposition:In-Reply-To; b=fvm7A/Iv6PeqcxbT1wNkcZocp5Q29JznkesYpnXccG+p2YZuGExjD0bVZs8yHY/L+RDJjBfPNztkeTgnYDdenviExNH9tREJJg9XrpLUloVZdDb1TSt224BXmf7+sv4Xte4RKlrlITSK3qRqd3Bd/Ssj2Bgrqd3+pa8siaOELgA=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=HGbwq1gi; arc=none smtp.client-ip=10.30.226.201
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=google.com header.i=@google.com header.b="DN6UuvNL"
-Received: by mail-pj1-f74.google.com with SMTP id 98e67ed59e1d1-34740cc80d5so7980934a91.0
-        for <linux-scsi@vger.kernel.org>; Sun, 07 Dec 2025 18:53:45 -0800 (PST)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=google.com; s=20230601; t=1765162425; x=1765767225; darn=vger.kernel.org;
-        h=cc:from:subject:message-id:mime-version:date:from:to:cc:subject
-         :date:message-id:reply-to;
-        bh=bxUo58ZCKYrBDXm2pU0qHMkvU2xylaPbcjw+LEaUZ+Y=;
-        b=DN6UuvNLCdv5aod8icvmQt0upfRcxn0zbARDikUBfMOj1n2YAAI7DgfRvnsoiQm79Q
-         QByVn6/Uyyv1tcbhyX5SFqwhJpsaRyzSyuY5Dc5VdXEn1xylEv18cy+qA+/7JRg9mIZV
-         miSwFugVHOSv66DundGaZZl34F/fIx9yjOKHvnYpN2YTpmq5O+e4QjvVZbaRNCmdYZw6
-         QngjOPd+keBujuX52os3Le41umBrspC3fO+h8xhYSnwkcbgb+kWr0AJrfODJX/ZLZnDT
-         lc1oiNts9EkKS49RT/RdhTaLxJRwQSwdpoDoPrpYb1PLL7dR534MppVCHTLKdEQhLaA/
-         b/cA==
-X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765162425; x=1765767225;
-        h=cc:from:subject:message-id:mime-version:date:x-gm-message-state
-         :from:to:cc:subject:date:message-id:reply-to;
-        bh=bxUo58ZCKYrBDXm2pU0qHMkvU2xylaPbcjw+LEaUZ+Y=;
-        b=So/tXktY1+nKVsWJBFz9R3tg8omqhFv4HvIoZyCbQapjoaAhfTHCuaXT69S/p7xr5q
-         ZHr7DlNdRnv8uacQqXGrubxIxUUElSsyw6+riw2YpwfXW/+W8gk8WCe8W9kBRQkMn7ln
-         s/wQoFL0gpZYC4/2uZL71wxNuOPU7o5hTUcRQtmHyKymM+A9WZzZowV0cSadtKboknrN
-         yZXI99wLb6NvCUQCkhS5/fqdZ4o1XmwgshER+cDFdEbsT1IBdC6d9su/HTfdDr2pVa6Z
-         T1kXwThbBV50N2ua2ojCUbbL/Bk48DF94OiHUIAesByf2xmXH96pKoVNxaWWwNBUWxEw
-         Ydcg==
-X-Forwarded-Encrypted: i=1; AJvYcCXpfNavS3Iq9ojOuqOHyiEfXYtpfyIfuKG7BfKgiL95P6gx13+w9f5h0gaUdbr2kbDroNvmY9YEK4/m@vger.kernel.org
-X-Gm-Message-State: AOJu0YzANQxXEeau592gk8HSp2meLoF8qGU/CF2Vto4wGgBexGMpOOE5
-	LKbWj6o9b24mOQYW+4csrRZ0Y+ctMWxUIGx01pnARddaQxEuXQZfavieREN3GDhTHjUKGds+D44
-	yGFCtmEotOn306g==
-X-Google-Smtp-Source: AGHT+IH8E/s73JksrRT/edTOWaGPyf+3c563oPKWpaMDulDhGCZ6z+1fc5ggXHc0btqo4hA/Nwlu/ZGMqTcNJQ==
-X-Received: from pgdn16.prod.google.com ([2002:a63:8f10:0:b0:bc7:da10:b2c8])
- (user=powenkao job=prod-delivery.src-stubby-dispatcher) by
- 2002:a05:6a21:999f:b0:35d:d477:a7d6 with SMTP id adf61e73a8af0-36617e37c5fmr6500063637.13.1765162425270;
- Sun, 07 Dec 2025 18:53:45 -0800 (PST)
-Date: Mon,  8 Dec 2025 02:52:21 +0000
+	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="HGbwq1gi"
+Received: by smtp.kernel.org (Postfix) with ESMTPSA id E54C5C4CEF1;
+	Mon,  8 Dec 2025 05:16:25 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
+	s=k20201202; t=1765170990;
+	bh=r83WDIqcqyVKYPc60PL81S93yqBYvLV4FKtAwiWP2io=;
+	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
+	b=HGbwq1gi1BxNXixb/CBALJFXrTrV3VI+9UygoxElzuVIG0dxI4xqbY1aYahpfsU5R
+	 F5HCV5W4TFG7g4EVQOlSvUNcQoPmnZn3eFYDZS758JULfsAd/Pr6RFrZ2a2/DEqnQp
+	 VZaNIyk5QbfVeFM+XkBKH8B4PAH4/giLDmOLrVkgZIbrNCR0tmLrghhGitjh/aaLQL
+	 73ekcy3ArLyfFhenLDmi4GLK42oasGGKtkUlJyxdgepPA1Mgz4pd/+YopJUTUpvh4W
+	 wCkoRrbqPPxXjhuktqpKGqU6cAbXmf0Id+IQlcuFIH8nOSP8nJSAwK6dk2C79aBJri
+	 2HyIm3g/045ZA==
+Date: Mon, 8 Dec 2025 14:16:19 +0900
+From: Manivannan Sadhasivam <mani@kernel.org>
+To: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
+Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
+	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-arm-msm@vger.kernel.org, linux-scsi@vger.kernel.org, 
+	linux-kernel@vger.kernel.org
+Subject: Re: [PATCH] ufs: qcom: Fix confusing cleanup.h syntax
+Message-ID: <lpneh6skxhpkalzvpjjresw3akxzzxmizohfzjtwgplzpjbsjc@yje4z22fbhcp>
+References: <20251208020807.5043-2-krzysztof.kozlowski@oss.qualcomm.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
-Mime-Version: 1.0
-X-Mailer: git-send-email 2.52.0.223.gf5cc29aaa4-goog
-Message-ID: <20251208025232.4068621-1-powenkao@google.com>
-Subject: [PATCH 1/1] scsi: ufs: core: Fix error handler encryption support
-From: Po-Wen Kao <powenkao@google.com>
-Cc: Brian Kao <powenkao@google.com>, Alim Akhtar <alim.akhtar@samsung.com>, 
-	Avri Altman <avri.altman@wdc.com>, Bart Van Assche <bvanassche@acm.org>, 
-	"James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>, 
-	"Martin K. Petersen" <martin.petersen@oracle.com>, 
-	"open list:UNIVERSAL FLASH STORAGE HOST CONTROLLER DRIVER" <linux-scsi@vger.kernel.org>, open list <linux-kernel@vger.kernel.org>
-Content-Type: text/plain; charset="UTF-8"
+MIME-Version: 1.0
+Content-Type: text/plain; charset=utf-8
+Content-Disposition: inline
+Content-Transfer-Encoding: 8bit
+In-Reply-To: <20251208020807.5043-2-krzysztof.kozlowski@oss.qualcomm.com>
 
-From: Brian Kao <powenkao@google.com>
+On Mon, Dec 08, 2025 at 03:08:08AM +0100, Krzysztof Kozlowski wrote:
+> Initializing automatic __free variables to NULL without need (e.g.
+> branches with different allocations), followed by actual allocation is
+> in contrary to explicit coding rules guiding cleanup.h:
+> 
+> "Given that the "__free(...) = NULL" pattern for variables defined at
+> the top of the function poses this potential interdependency problem the
+> recommendation is to always define and assign variables in one statement
+> and not group variable definitions at the top of the function when
+> __free() is used."
+> 
+> Code does not have a bug, but is less readable and uses discouraged
+> coding practice, so fix that by moving declaration to the place of
+> assignment.
+> 
+> Signed-off-by: Krzysztof Kozlowski <krzysztof.kozlowski@oss.qualcomm.com>
 
-The UFS driver utilizes block layer crypto fields, such as
-rq->crypt_keyslot and rq->crypt_ctx, to configure hardware for inline
-encryption. However, the SCSI error handler (EH) reuses the
-Protocol Data Unit (PDU) from the original failing request when issuing
-EH commands (e.g., TEST UNIT READY, START STOP UNIT).
+Thanks. On the side note, I would recommend adding this check to checkpatch to
+warn people in the first place.
 
-This can lead to issues if the original request of reused PDU contains
-stale cryptographic configurations, which are not applicable for
-the simple EH commands. These commands should not involve data
-encryption.
+Reviewed-by: Manivannan Sadhasivam <mani@kernel.org>
 
-This patch fixes this by checking if the command was submitted by the
-SCSI error handler. If so, it bypasses the cryptographic setup for
-the request, ensuring UTRDs are not inadvertently
-configured with potentially incorrect encryption parameters.
+- Mani
 
-Signed-off-by: Brian Kao <powenkao@google.com>
----
- drivers/ufs/core/ufshcd-crypto.h | 7 ++++++-
- 1 file changed, 6 insertions(+), 1 deletion(-)
+> ---
+>  drivers/ufs/host/ufs-qcom.c | 6 ++----
+>  1 file changed, 2 insertions(+), 4 deletions(-)
+> 
+> diff --git a/drivers/ufs/host/ufs-qcom.c b/drivers/ufs/host/ufs-qcom.c
+> index 8d119b3223cb..8ebee0cc5313 100644
+> --- a/drivers/ufs/host/ufs-qcom.c
+> +++ b/drivers/ufs/host/ufs-qcom.c
+> @@ -1769,10 +1769,9 @@ static void ufs_qcom_dump_testbus(struct ufs_hba *hba)
+>  {
+>  	struct ufs_qcom_host *host = ufshcd_get_variant(hba);
+>  	int i, j, nminor = 0, testbus_len = 0;
+> -	u32 *testbus __free(kfree) = NULL;
+>  	char *prefix;
+>  
+> -	testbus = kmalloc_array(256, sizeof(u32), GFP_KERNEL);
+> +	u32 *testbus __free(kfree) = kmalloc_array(256, sizeof(u32), GFP_KERNEL);
+>  	if (!testbus)
+>  		return;
+>  
+> @@ -1794,13 +1793,12 @@ static void ufs_qcom_dump_testbus(struct ufs_hba *hba)
+>  static int ufs_qcom_dump_regs(struct ufs_hba *hba, size_t offset, size_t len,
+>  			      const char *prefix, void __iomem *base)
+>  {
+> -	u32 *regs __free(kfree) = NULL;
+>  	size_t pos;
+>  
+>  	if (offset % 4 != 0 || len % 4 != 0)
+>  		return -EINVAL;
+>  
+> -	regs = kzalloc(len, GFP_ATOMIC);
+> +	u32 *regs __free(kfree) = kzalloc(len, GFP_ATOMIC);
+>  	if (!regs)
+>  		return -ENOMEM;
+>  
+> -- 
+> 2.51.0
+> 
 
-diff --git a/drivers/ufs/core/ufshcd-crypto.h b/drivers/ufs/core/ufshcd-crypto.h
-index c148a5194378..26a0699c8412 100644
---- a/drivers/ufs/core/ufshcd-crypto.h
-+++ b/drivers/ufs/core/ufshcd-crypto.h
-@@ -16,7 +16,12 @@
- static inline void ufshcd_prepare_lrbp_crypto(struct request *rq,
- 					      struct ufshcd_lrb *lrbp)
- {
--	if (!rq || !rq->crypt_keyslot) {
-+	/*
-+	 * Do not use the crypto settings if the SCSI error handler has replaced
-+	 * the SCSI command
-+	 */
-+	if (!rq || !rq->crypt_keyslot ||
-+	    unlikely(lrbp->cmd->submitter == SUBMITTED_BY_SCSI_ERROR_HANDLER)) {
- 		lrbp->crypto_key_slot = -1;
- 		return;
- 	}
 -- 
-2.52.0.223.gf5cc29aaa4-goog
-
+மணிவண்ணன் சதாசிவம்
