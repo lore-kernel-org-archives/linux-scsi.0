@@ -1,71 +1,71 @@
-Received: from mail-ed1-f53.google.com (mail-ed1-f53.google.com [209.85.208.53])
+Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id C25F71E376C
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 20:45:37 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.53
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1734A2417DE
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 20:45:38 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765313139; cv=none; b=mpffp4fpCCxaKr7GVefHodMNEXF2svkUKjiA7fgryFBjmF31irCTNmkF0oyAtfMS8nc8fCp5aQFzezGOyDXHz+Hg1VDyAXOBigJMYVi1ewixDrU60wU5FD6Om9uXLfwwVH6amT91UO3vik6yD2HSC9OaHuRKI6aEggwNkBryEZY=
+	t=1765313141; cv=none; b=quCZ1iWlA4VZVvbuI0XQhkbQOOUvzUh1DRVzvsNopGW4wugs2sgFhznby5AOql9fZhTXedy30TH28ldMBYfvbpAMDQpWLFY7YfsnXT1hSSzzBCYBn7SheHG1qxjeKjowl2FaT6h1aKGW9FDqnSEUxlDIAdd+iCjCPQXLtwAdAEU=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765313139; c=relaxed/simple;
-	bh=Ll0IisgGOHaUv8OMzdyo5F5kYF+1d8Kt0Xt3KldsvUs=;
+	s=arc-20240116; t=1765313141; c=relaxed/simple;
+	bh=vxXCd6XEqHsxiBy3+8h4IRX/R6Q8wiV4zrt7I3asWsU=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=A+NvRnd1QsoA8RHxtTczCXWGh5F/BauErZkWBvFXuSqYbS5E8sVdPJjE366MaE287tPEJsPnU+cQRKLPk9v+34sxltbvvsMLsZ2LkrZm+jWq8UkqMRYx9sM8rU7h0AwWyWeXxXwVgWuzmn4s9NKYNGIw5MfRqnSruDQRk28oLbE=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=CO6VWcNB; arc=none smtp.client-ip=209.85.208.53
+	 MIME-Version:Content-Type; b=UQWq/YwmcSnqotM+lNiNQ76Q6dCX6unTXSzgVsTA+Y+tNEJ9cra7NFF29zXZcWngBFS+170UEiYOzLPYmjfet+ypf7jfrekQDMs6LZkF+z3PYHMhTFL2SFHIZkBzKiWDXnPhWA2zyKoF5v8QhOLp60N+eXIvHpeCG6O5Q63nvt8=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=ZbuoZ0Om; arc=none smtp.client-ip=209.85.218.49
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="CO6VWcNB"
-Received: by mail-ed1-f53.google.com with SMTP id 4fb4d7f45d1cf-6419b7b4b80so8717483a12.2
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 12:45:37 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="ZbuoZ0Om"
+Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-b79af62d36bso357451166b.3
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 12:45:38 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1765313136; x=1765917936; darn=vger.kernel.org;
+        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1765313137; x=1765917937; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=AvandfZNGrOWFbeJMnBQXszBptryBv8qYSTimK269Eg=;
-        b=CO6VWcNBUbNSmkFXWvAc93Fg8+GPcFqvpv5UVeIUjxAfijmd/YZCE7/74vEfyYepoe
-         iZBaA8P/8qT6aQlu+gq/lxw/cvNMfhYC9umJiy02BZ9twEqnQVjqhHo6gru0URdNXK0K
-         Tg4PGm1XajYCQTelWdTymBA9EOv7QNFi+6UTvunq+X7zdzeP6JeyD7bDWMcXw5keHwEb
-         CSqCrn/Q4OWLT/DMRmm4hCg82NawfV61+a9Ki35mCR27c2UV0KIv2ahrKo/js8f0RmgX
-         OJ4MhxKFQwtuk1fAbBdn0ZO9CwKZrVQz0XmMctpPPg7dzdg8efaVkxgb9V65wTaah4Z3
-         whwA==
+        bh=OyMVf8UAKt8ivdpHfCMg44/m+jYF/0j2yoV734Syfkw=;
+        b=ZbuoZ0Omb7eufVsHUf1ckFq6DOvnglSMwV8jQlqVSz2jM8sLlXfswXqP/jXI1XnvHY
+         zyCPaoSwDNp1MulnRUOm9sqkTehlGO6Yy+KbbK6Yb+lVG0tor4nbHlppCG2Fa+p2qiN1
+         MZOg49JqGTdVMfuBe9dA4mXLnmFoCUeG2k77GLK/6AzorUs0+VjF24ubdLxgvYBB+WXO
+         IUH3IC/1j8He0BGoHmAcINa5Xrip06VVbK33fjT8jS8VM5g8YF+zl92F2SuAiQLNIjSq
+         5dojK221BQTEWUz9NEwvbjctnFNBxPmyaSTn/i+bVmxJnZXE8Wb8xps/ML+SO94mdbXd
+         r9cQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765313136; x=1765917936;
+        d=1e100.net; s=20230601; t=1765313137; x=1765917937;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=AvandfZNGrOWFbeJMnBQXszBptryBv8qYSTimK269Eg=;
-        b=ecoDOEUAB8zz/ZpVdRWXUBMacAC6QWwdCF8g2+M+OTKy/djOnB7fAsIEq2pR+bU40u
-         2tzQ19Tg82HqtEFnU6PlQFItHPeOhtc1uichA2AlA3F39TAejMcJGO3XvtKIU4DliO/h
-         bnHIoo22vVloWjs+z0gOtEoflb6Wqs9f4wAOSyHVM7rTDNauwe7oQtKFEZ3ISuL9LEcn
-         0ygDKBi+ZW9X3iZqSNQPLHtY7Fgqn8lpXYCUwPCsThi1qAj5reMXUlcIJ423lYN321Bv
-         S9mKeXKzTSk/n48rRl99mvx5zqD6dPKak4QLry0enyfm2vKbmQ9/97fB6msejh93QSdz
-         HMaA==
-X-Forwarded-Encrypted: i=1; AJvYcCWShwBxbhegR9nIoxs1Wk8i6UNZvjQc41gPq/FGtnNqPBkuNpOh0yqCCBN1W2PN1uT+szbD82QiQNIr@vger.kernel.org
-X-Gm-Message-State: AOJu0YxIyEytE+acwMfoGJ09G30azVLPUYCRMtZWZpfeKg3fMF5b7SK4
-	ifmWsBGzpYfl4eBPcwwzHuTvjyjAK3qSOpzPdhN7z57jmfejTuKVetXe1ZnNoHdULLo=
-X-Gm-Gg: AY/fxX5veYL5xH7riIefcsbUBHO9R/LNHAL/SRIpEsJVvGaH/ge+MFKPjFwRw9gKOvB
-	Dh8a3BjV6wbdIXS/A75UuKeRyeYV+ghu88mTncPYcS2N2D5UPIOQ+Lihyz3LQSvxx0+Cw+KaksJ
-	n6syj5Huo62xNF0kHz1GhATXfv0KHovz/WeRVbS2sfgGnXvRN482kCz9pjo9m6lfnkXLRfGtcq4
-	w7fUspXETIi6KGFFqT4YsztOQsAMM8R3rBE2l+8XNlqFWBCkW24KYysCgMprswWnBQY6jes/Epa
-	TPvMCzxVSqSVkmXxamSUPeUQhuH9gsld3iqLPDTm915KJ0tNkTt4ZvC3VOiPCb5CC4/0FV/zpPG
-	Ca63PlKBzADz/Zs0kLCctTJp+oCK6HXm5MX/MaYaZ+jmZZTPul6PMtu9/FOT0oRtcRoXBdoz/Fw
-	/e6lBQj56tJh/qzS69
-X-Google-Smtp-Source: AGHT+IG7GS978+zk6it992R+60h9S+xg6pEFPCx0CFRpWBAP3bl8KuyuHaRieh6QUr8Yp+5ciiQTtw==
-X-Received: by 2002:a05:6402:4409:b0:645:d34b:8166 with SMTP id 4fb4d7f45d1cf-6496d5b03bcmr205319a12.26.1765313135942;
-        Tue, 09 Dec 2025 12:45:35 -0800 (PST)
+        bh=OyMVf8UAKt8ivdpHfCMg44/m+jYF/0j2yoV734Syfkw=;
+        b=sHiS8/kp60nbFfRrDMz1k4+A+F9MozWnohpkGkrYiLtQ5GrQsA8RPRcu4AdkTum3kR
+         PY/pMmx8hCwE1y4sAnpnR/8nm82f441yoQQXThKwlbwoWdyHqkkxxAf/ZgKSspiplck2
+         nFbz40cKQuVEbGZ7xyuxNwA68PEgI0SMUghn2sAH5GoIb9WT/WNReUk7tagaPHIB/bjL
+         LhaTmG3FKxjijumJuFj8zK+z+MN+Ez44ZzhW3ndXQ4feezkffIlZ4ruzq3pJD0g2bzcy
+         u2g8AAFzVG1Q6svOW1uJ9JyZsjzmqgiVhHgoZnK06E5nVccGZiwdNraZd/mENGqP5QRv
+         OQ9A==
+X-Forwarded-Encrypted: i=1; AJvYcCW1x2l1qTBe1isYtH5qQ+zQCXwSacmAY+glZqiMeQwOn2t+IJJ4BO7wQo+mu2Th3QECfPNLg1nCBYrj@vger.kernel.org
+X-Gm-Message-State: AOJu0Yz61Luaxi5jql+T20l0Ai5ULuJ1kW3qUWhVfNyQgB3VwpUKqbbL
+	di4L5OeuqPLtJjaiTcZXlPFeabbKo6epYV08ReW+S1R2OKnZNlH/tcJdOt9HzLl4zhQ=
+X-Gm-Gg: ASbGncs4ZLScTAPPeeS3rMIsYc5gH7qhsnxx5g8tNIY+VJpyLm+bMGEibG51q5R8SY5
+	6kVKWy+gOBm/i+Lmi1m6GSNyQ7vbdHJoQtzF1BwWR1kEjtcLcj0n1yhpCaPxBox7zDOt8PdiSEZ
+	hu/UFpvD0369J7Hyjx2lxHQ8NmyQtW0u1bAx/Qxu+kwL0tqbjA5ZeiG54U8z+yZTUeCwBO2Oxiw
+	OZen97yrtDEmkVZ5cuMIb4RRhjzbbX44Q1kcMGj3yaTbl6N6i5KOu0xOwwaUdZthsEKMyFcvUMJ
+	/ambIC5/oW6Dhu7HvV2U9Y5+TcL4qxuE1NqnTWtUa3dTn5WbWvlLGDsDiRmr9ekrG7mIojIXo90
+	fx5ciJRUexv009BBKbXfVf9J+fSl8RijbM/t6ivyqYzXSAqpvkePA114KXFwBuVJDCB/2X7wbsO
+	7KdPdQHq37Dr8SDGGq
+X-Google-Smtp-Source: AGHT+IEtEfoB1rWKj/l+CZHHiONRCsz4m3OxiQOG1IlxHWCyxOo/Vy72zTuE5QOuhyJ6jAt93sOoSw==
+X-Received: by 2002:a17:906:d54c:b0:b74:9862:3e36 with SMTP id a640c23a62f3a-b7a24805105mr1261501566b.51.1765313137460;
+        Tue, 09 Dec 2025 12:45:37 -0800 (PST)
 Received: from localhost ([2a02:8071:b783:6940:1d24:d58d:2b65:c291])
-        by smtp.gmail.com with UTF8SMTPSA id 4fb4d7f45d1cf-647b2ef7798sm14501893a12.15.2025.12.09.12.45.35
+        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-b79f4a2f19dsm1514544466b.64.2025.12.09.12.45.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Dec 2025 12:45:35 -0800 (PST)
+        Tue, 09 Dec 2025 12:45:37 -0800 (PST)
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH 2/8] scsi: Make use of bus callbacks
-Date: Tue,  9 Dec 2025 21:45:03 +0100
-Message-ID:  <59b408f6d89d402457a23564302afcbb334bc9dd.1765312062.git.u.kleine-koenig@baylibre.com>
+Subject: [PATCH 3/8] scsi: ch: Convert to scsi bus methods
+Date: Tue,  9 Dec 2025 21:45:04 +0100
+Message-ID:  <bab94af5f87f67fac8837ee17e06fdc541ca9cbb.1765312062.git.u.kleine-koenig@baylibre.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.1765312062.git.u.kleine-koenig@baylibre.com>
 References: <cover.1765312062.git.u.kleine-koenig@baylibre.com>
@@ -76,142 +76,65 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=4030; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=Ll0IisgGOHaUv8OMzdyo5F5kYF+1d8Kt0Xt3KldsvUs=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBpOIpTS0cU75kZgwyWR58Z2ElRoPN4D9BmrumEg ++rdvhs9oGJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCaTiKUwAKCRCPgPtYfRL+ TnYYB/4xuSTl3znXLWb7YU4PeILH4sQ2SejQrfEPH5dscHbYYcDLvLNnKnQ1KEN056mRdZ9CMgx 27fUosOGCYxvN9/Ocj9r9eI5YO3qx74oVHaYosC/xndSDmDK2wSH+TV2g9vHIc27J41bwmtuDFe cBrTwjSnHq0xZWYso+DLZ3iHjoMsjN9Gmml2bLl9hfsreeNlJzT+IO7EzhWDlirrqciRkp+FLVl xtGQ6EdwiJSjlx6Nt+2ymcNxtyrufdbkbkdE9iMHkl/xmrGyQH827BvKhYo8SjSOzcF7zJssRhz C0r8tqzf4bLYm8iwu09ZXXQjDbfUdrnnjYnKZEgoV7VEzxBd
+X-Developer-Signature: v=1; a=openpgp-sha256; l=1656; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=vxXCd6XEqHsxiBy3+8h4IRX/R6Q8wiV4zrt7I3asWsU=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBpOIpVXQRXuikXPa58vPVWo34HVrOEFkzPwNTGG 0mflJiI+0KJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCaTiKVQAKCRCPgPtYfRL+ TnW0CACghFOZPooxi1cX+MGVw1dOczYqSxs7B/ak33+XnBsvbGSuC7SOpvynkFd7ukx7QnkMc+l vEEqqW0f3Uv14359qLxVK86kQT7+hgFPcMvcu95K8XA+q8mOBGMIXw8y+Mx/QknsZIiJov/F6OW ybf8EDXS7wz8EUyhVjpwBMs0m8Z9bDh66Ir2zhohWDEYlD/eubctHkPS8N81+o92N1Z7PAYGDZW 7cByYZpbiNT/dgxRN+5GBeg3vURMZBpUYInYDf4W7ooxrWce1US4mwVwIKL77SyOFgyZeZ3f5CK +aq7V4qnFKmqSf4mY6ehE8avY+zG1/5YZf8oHhsTuDHVWSso
 X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 
-Introduce a bus specific probe, remove and shutdown function. For now
-this only allows to get rid of a cast of the generic device to an scsi
-device in the drivers and changes the remove prototype to return
-void---a non-zero return value is ignored anyhow.
-
-The objective is to get rid of users of struct device_driver callbacks
-.probe(), .remove() and .shutdown() to eventually remove these. Until
-all scsi drivers are converted this results in a runtime warning about
-the drivers needing an update because there is a bus probe function and
-a driver probe function. The in-tree drivers are fixed by the following
-commits.
+The scsi bus got dedicated callbacks for probe, remove and shutdown.
+Make use of that. This fixes a runtime warning about the driver needing
+to be converted to the bus probe method.
 
 Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
 ---
- drivers/scsi/scsi_sysfs.c  | 73 ++++++++++++++++++++++++++++++++++++--
- include/scsi/scsi_driver.h |  3 ++
- 2 files changed, 74 insertions(+), 2 deletions(-)
+ drivers/scsi/ch.c | 14 +++++++-------
+ 1 file changed, 7 insertions(+), 7 deletions(-)
 
-diff --git a/drivers/scsi/scsi_sysfs.c b/drivers/scsi/scsi_sysfs.c
-index f2d62f71c8af..343c1f9098af 100644
---- a/drivers/scsi/scsi_sysfs.c
-+++ b/drivers/scsi/scsi_sysfs.c
-@@ -554,10 +554,48 @@ static int scsi_bus_uevent(const struct device *dev, struct kobj_uevent_env *env
- 	return 0;
- }
+diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
+index f2b63e4b9b99..91318e110901 100644
+--- a/drivers/scsi/ch.c
++++ b/drivers/scsi/ch.c
+@@ -894,9 +894,9 @@ static long ch_ioctl(struct file *file,
  
-+static int scsi_bus_probe(struct device *dev)
-+{
-+	struct scsi_device *sdp = to_scsi_device(dev);
-+	struct scsi_driver *drv = to_scsi_driver(dev->driver);
-+
-+	if (drv->probe)
-+		return drv->probe(sdp);
-+	else
-+		return 0;
-+}
-+
-+static void scsi_bus_remove(struct device *dev)
-+{
-+	struct scsi_device *sdp = to_scsi_device(dev);
-+	struct scsi_driver *drv = to_scsi_driver(dev->driver);
-+
-+	if (drv->remove)
-+		drv->remove(sdp);
-+}
-+
-+static void scsi_bus_shutdown(struct device *dev)
-+{
-+	struct scsi_device *sdp = to_scsi_device(dev);
-+	struct scsi_driver *drv;
-+
-+	if (!dev->driver)
-+		return;
-+
-+	drv = to_scsi_driver(dev->driver);
-+
-+	if (drv->shutdown)
-+		drv->shutdown(sdp);
-+}
-+
-+
- const struct bus_type scsi_bus_type = {
--        .name		= "scsi",
--        .match		= scsi_bus_match,
-+	.name		= "scsi",
-+	.match		= scsi_bus_match,
- 	.uevent		= scsi_bus_uevent,
-+	.probe		= scsi_bus_probe,
-+	.remove		= scsi_bus_remove,
-+	.shutdown	= scsi_bus_shutdown,
- #ifdef CONFIG_PM
- 	.pm		= &scsi_bus_pm_ops,
- #endif
-@@ -1609,6 +1647,30 @@ void scsi_remove_target(struct device *dev)
- }
- EXPORT_SYMBOL(scsi_remove_target);
+ /* ------------------------------------------------------------------------ */
  
-+static int scsi_legacy_probe(struct scsi_device *sdp)
-+{
-+	struct device *dev = &sdp->sdev_gendev;
-+	struct device_driver *driver = dev->driver;
-+
-+	return driver->probe(dev);
-+}
-+
-+static void scsi_legacy_remove(struct scsi_device *sdp)
-+{
-+	struct device *dev = &sdp->sdev_gendev;
-+	struct device_driver *driver = dev->driver;
-+
-+	driver->remove(dev);
-+}
-+
-+static void scsi_legacy_shutdown(struct scsi_device *sdp)
-+{
-+	struct device *dev = &sdp->sdev_gendev;
-+	struct device_driver *driver = dev->driver;
-+
-+	driver->shutdown(dev);
-+}
-+
- int __scsi_register_driver(struct scsi_driver *sdrv, struct module *owner)
+-static int ch_probe(struct device *dev)
++static int ch_probe(struct scsi_device *sd)
  {
- 	struct device_driver *drv = &sdrv->gendrv;
-@@ -1616,6 +1678,13 @@ int __scsi_register_driver(struct scsi_driver *sdrv, struct module *owner)
- 	drv->bus = &scsi_bus_type;
- 	drv->owner = owner;
- 
-+	if (!sdrv->probe && drv->probe)
-+		sdrv->probe = scsi_legacy_probe;
-+	if (!sdrv->remove && drv->remove)
-+		sdrv->remove = scsi_legacy_remove;
-+	if (!sdrv->shutdown && drv->shutdown)
-+		sdrv->shutdown = scsi_legacy_shutdown;
-+
- 	return driver_register(drv);
+-	struct scsi_device *sd = to_scsi_device(dev);
++	struct device *dev = &sd->sdev_gendev;
+ 	struct device *class_dev;
+ 	int ret;
+ 	scsi_changer *ch;
+@@ -967,8 +967,9 @@ static int ch_probe(struct device *dev)
+ 	return ret;
  }
- EXPORT_SYMBOL(__scsi_register_driver);
-diff --git a/include/scsi/scsi_driver.h b/include/scsi/scsi_driver.h
-index 40aba9a9349a..249cea724abd 100644
---- a/include/scsi/scsi_driver.h
-+++ b/include/scsi/scsi_driver.h
-@@ -12,6 +12,9 @@ struct request;
- struct scsi_driver {
- 	struct device_driver	gendrv;
  
-+	int (*probe)(struct scsi_device *);
-+	void (*remove)(struct scsi_device *);
-+	void (*shutdown)(struct scsi_device *);
- 	int (*resume)(struct device *);
- 	void (*rescan)(struct device *);
- 	blk_status_t (*init_command)(struct scsi_cmnd *);
+-static int ch_remove(struct device *dev)
++static void ch_remove(struct scsi_device *sdev)
+ {
++	struct device *dev = &sdev->sdev_gendev;
+ 	scsi_changer *ch = dev_get_drvdata(dev);
+ 
+ 	spin_lock(&ch_index_lock);
+@@ -979,15 +980,14 @@ static int ch_remove(struct device *dev)
+ 	device_destroy(&ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR, ch->minor));
+ 	scsi_device_put(ch->device);
+ 	kref_put(&ch->ref, ch_destroy);
+-	return 0;
+ }
+ 
+ static struct scsi_driver ch_template = {
+-	.gendrv     	= {
++	.probe = ch_probe,
++	.remove = ch_remove,
++	.gendrv = {
+ 		.name	= "ch",
+ 		.owner	= THIS_MODULE,
+-		.probe  = ch_probe,
+-		.remove = ch_remove,
+ 	},
+ };
+ 
 -- 
 2.47.3
 
