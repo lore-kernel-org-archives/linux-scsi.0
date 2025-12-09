@@ -1,73 +1,73 @@
-Received: from mail-ej1-f47.google.com (mail-ej1-f47.google.com [209.85.218.47])
+Received: from mail-ed1-f51.google.com (mail-ed1-f51.google.com [209.85.208.51])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 4408230B538
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 21:22:57 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.47
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 89BD332862D
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 21:26:39 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.208.51
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765315382; cv=none; b=EHirzMmB4mJJGo2VEvVv14yezzvyO1+cXg+ld8LSwbOKDdReRRX9WDcKcYI6kqjOtMpAx6Sn1QeJe6JcvivLABkZ38unK91b1C1UcOfnl/BH1e+u4KexMxVtC8SVhFohV+0KPD4T2hyZ1Xis1zYieoCCTWYcQKqjOdFuQjvWFmg=
+	t=1765315602; cv=none; b=ZzEQ+Eds1liTTqQdO1FQSpue1WZ3aDWGWrNd4W8HJP2a/We18Wc8QsHf20zgKW99cOaGmxUVZeiUDHvDAWt+1f2ZgtQJjKqBIbjOnbs1otGxsgKF324FNb+SA910FvC3d4dX5xDnJfj3Mgav9RU55A8wyrXXhjbXMX6sjhhOtFo=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765315382; c=relaxed/simple;
-	bh=mVfqQFDJgXgbBCIxP2tFBjFqVcsWSwsZudzmeNbgb50=;
+	s=arc-20240116; t=1765315602; c=relaxed/simple;
+	bh=/pHDHDxU6hfgJJT8nqFLrEkunNthwWpW3H6rfoOkJUI=;
 	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=s4UeGHZbR8RgYHAZWuC/IfCfuf3boWJPoAdp1LaT0KGB2qklASomIYYhsbgeJMPdsAB8+I7vVtHODxTBHrTUmSOP6yh96r6id2Vq2P1Mo/7uDx7yN6NyckCHracs1VAt4zpgIiPk7g/AntgvGTowHV9PuDjQ600j9EBSD2X/lz0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=XnDS00Wd; arc=none smtp.client-ip=209.85.218.47
+	 Content-Type:Content-Disposition:In-Reply-To; b=K1PAq3vxBkPQkA9E/XM3a3hF7vY99GPRcyjuf6SA8Eb41o5ccIdRI0lO0xX09JnjEssIKPB2LxZq2Pl7dcaqElsTEt/CyOscZ9+uhMDkO7O8Iho2UPy/yqAQAg0sBi3zHj5NOm19xo9ggr/G3bKxmGN3Fr77YU+4XV2izgCku48=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=drejCEDN; arc=none smtp.client-ip=209.85.208.51
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="XnDS00Wd"
-Received: by mail-ej1-f47.google.com with SMTP id a640c23a62f3a-b735e278fa1so1075898366b.0
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 13:22:57 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="drejCEDN"
+Received: by mail-ed1-f51.google.com with SMTP id 4fb4d7f45d1cf-640b06fa959so9920923a12.3
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 13:26:39 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1765315376; x=1765920176; darn=vger.kernel.org;
+        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1765315598; x=1765920398; darn=vger.kernel.org;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:from:to:cc:subject:date:message-id:reply-to;
-        bh=MP/MKVcz6+Wi8CfuV/t1F42/Is8PBbTDcKLmlIkrnrs=;
-        b=XnDS00Wdan+lkoGQa5zXoUEjvCLj2/54qMGXUJwlecDFog60X/LQVvkik5+9Bdb5/k
-         6PI/vtG90EMOju8q1cBn6pwDu8/sMsugCWRxuyVLfQxuSQZRTTbwd0SWqtpt1PixlTg2
-         dHlS2rXCxxReDZaf8mzmajHS56Q/qzqhQNHAQndwT+lPoR3Vf15eUtjngmpoc/oYyz1o
-         f+Z9NoysuCDjrDFD545pQ449RZy7QpULXzpUArPL8w3Uir8j5z/H+8Ac2A52IQnfnBMP
-         TI3Q2NVfeE07zy7okzmCHK7vQhvOzbXGkZu22QENZPO6wP3A8ebEVKfNlYab3wIszfhP
-         ouZw==
+        bh=UwbbyU40SptznEhvch2S64/esv6V/zeeP+0i6BUXRGY=;
+        b=drejCEDNL7UZk4OGxRP7LNH9L9xBRY2fM5NtV77wmqi77k0tb6oqoz6NON4kCqwZhh
+         3UKJZ+CRgrpCPFWRB3Tk+y51isHlC0ALVMpJXKZJ3u3iJtmlxpSlrAPA/oqE5/ZBju+G
+         IvwzqWxr6OOrYtSP2Msk+rQT8PlPAQ/2BNu+wvs9GBkGSATJqj+ebqhjuJxQPs2t4Czm
+         JF2gg30hNZGwI/g171iR7xhjbxFR+kRRC2gExSrqO4oQvPQiYBw2oijcj7Sx8PCuggem
+         XQInaFyOvZEWk/tmpOG8sBxlyz7tu4fY4+H6PvX4SuExgesBwM6YlK3anAjlaPYQrVjN
+         fBrw==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765315376; x=1765920176;
+        d=1e100.net; s=20230601; t=1765315598; x=1765920398;
         h=in-reply-to:content-disposition:mime-version:references:message-id
          :subject:cc:to:from:date:x-gm-gg:x-gm-message-state:from:to:cc
          :subject:date:message-id:reply-to;
-        bh=MP/MKVcz6+Wi8CfuV/t1F42/Is8PBbTDcKLmlIkrnrs=;
-        b=jE5XU/jzv1DKv79+fg3SgotuJtwec4iYfTKz2e5hQl0pfUHUgymtRTAW1fgz/PQmz+
-         MgrCvjril+tuoOBHB7qJLqMEN0mvKWOyS1UEEW7N88OcrYQ8RYtSGw+HN8oh+Ar74Ju0
-         V1ECtVdsoRWq39/X0JBARMq+EZjFF9JXV9qM1USi8Dz/0DLfw1fJIIPwxAv1xvOwTbWG
-         kC31KWhvk0/yoXubKZ31b+sprFUPOjDQzfo7qIe+U7GPaA/3XFk7w6dDtW5/oHDi6CK7
-         5xF973EIDtiL+a4cmr+rFFO/kxoCzAakx4tpd4l6tH0kWIta9m+VMCQbwM9TcysKvLx8
-         JLAA==
-X-Forwarded-Encrypted: i=1; AJvYcCVu1ZpT2xEOd8slenv7H/l0yw5bqDvNY2xxp4SDGaL6niZLJuUXCQCEJ0IF53aS2+esB4fbO7sRs7Ht@vger.kernel.org
-X-Gm-Message-State: AOJu0YyS2jjyJI2P9UIiDd9ivBm7rPKhvszf7K22lyjVIEg1nVmdP+0G
-	nuvKEIIF9VL/v5qqA+ztxi7AkrrIaMFujzvkWc4/qE2Cg9w1I+oKOlH3oszAev9TNL8=
-X-Gm-Gg: ASbGncvqPFzNU+ZUXR/bT73CFmo+v+JI8LOoyT4/ch+DM1rpddzAuLlM6wJBRuEwRl0
-	LMfY/TkG41eb45mSml/kiJVXAwNYyVgqyjKaiREjA2NH77OoFlt+9YipGeZPhYzgwZTdUW/kIAu
-	/gEtTUfZUHPutY5BHnlayug0QMHX9Mp5bsxTiC8GIOExnsI3NtaI8lSeOHaMIDG8OswnoY7yxsJ
-	6bGeS+T9Gp/6AQqLbiUXyW9QldLYjj/MftPd4DsaZfUvkZmhn/+kksiui4FfpBcy2cN2szgN2+6
-	oaIkMRnpEKw41XDbu79utnQkVm/auUgJdhHedhUfq6l2aoWAumSWGTNBAKl1KVM6f5Y7bikw1gK
-	rgITtgC7vD4IaM4FHwPGQs0w1KyKv7u15AhM/If18WQYxpt4RLBKRmRDIN9ZhQNtBC5CVnbPzk/
-	No8RDyIHWNKt4peB1+
-X-Google-Smtp-Source: AGHT+IHePqBRD5VmD7+kI8U08Rj+P50pfm1oZGwJK90Uu83i4Yy0loCUmRj/oPg0m7eO0BwHKOAu2A==
-X-Received: by 2002:a17:907:3da8:b0:b3f:f207:b748 with SMTP id a640c23a62f3a-b7ce823a0ecmr10049766b.10.1765315375875;
-        Tue, 09 Dec 2025 13:22:55 -0800 (PST)
+        bh=UwbbyU40SptznEhvch2S64/esv6V/zeeP+0i6BUXRGY=;
+        b=FRcFBWFflUDPluKcNEn0iKwdxZNQ30IQEOq3/OE5PP9OgYW8TQmmNB0UrlzazP2+g1
+         S5yp0m5YN4RMhLdN+sPL2M0MmdTI+P7vwpeYzZz/rhXvfCuNKCZly7eI9/RyrTfANh62
+         luJBVK2GmGp5QEbJIVgsKn/uQzt0coZ6G3eZlwxRD2/+ghdqFwObJ/Yptx4vsHslRn4H
+         JAooNjd+OzeGHDNPBHuzPXZPO09JjDUMy1dr9vQ5cTRAwrulEyI+ZQjf/yojfVWknTCT
+         sMI1DB+o3gsnklUWl5eoQmlVqnBwTIyhTdCQNnDsoe/ap3BYq6r+uYZEgj0ysUg7szzA
+         b5nw==
+X-Forwarded-Encrypted: i=1; AJvYcCVuDoS7h2/Xrnyw/Brq532xXxh3FL9Zy/Dl5uvvdk22lX9ljEBhfx63YLI30HSX3SN6M2L13GX8YR56@vger.kernel.org
+X-Gm-Message-State: AOJu0YwnStg+ITkMgdoU2zrC79ADM8LZXgJWpjy5xbNmFpDr4xFu2oEy
+	gB6hBID6jr3WEb0GKkpP0LrzmTHhRyeDRPVf6Zaxp9xAircXrUYtHI7JdWWlMA7CykA=
+X-Gm-Gg: ASbGnctkAmMOVZm7cGe1ZsB++pieNBNqQW4Z0sVTXZqzmxPQ7Jj7wWwv6jBgxxXrbDG
+	fP7qLdbgstmQoTuyPzp0q6ehGBqJorz6Hx0a2fJ+fCW+l2UpLnJWuKTWULeW+9PjxHikCBAfwIK
+	+XeH3ZsgMCgzqPFfsEi2f7h6COv8Z4cejgOPjVNGt2kFMJSzIMN9zJ1R/e3fvl+piaL64CD/lQu
+	iU57Td/EYkbN6xMOn+u5FksKRVsCHz1w+rwQSHXitN8xPLjhauAAuNLoNx+M2kX23ID4x/ZPUyF
+	d8DIh4Z1bp6450EB1iuaQQ9B2WtDFIYXhwIKW55HcgTJk1bPcrYzrmDGbofev+X2f1Ft8AUm+sl
+	im6WBO8lmE0q0pilstdMz1KbOXyOEpm8vx4InEBru2Ssq/JrlwZvqPWleTi0dYwXSq+qLsixTM1
+	5cRWhShTfo5pD3e1l+
+X-Google-Smtp-Source: AGHT+IE/704fKY5SFopT+bENRWN8WXApAuAnyJrgtTVjIpKaAOUqjW7UFCte7tioWrFlOpYpgAq4Ww==
+X-Received: by 2002:a17:906:f596:b0:b72:b8a9:78f4 with SMTP id a640c23a62f3a-b7ce8416484mr6240566b.39.1765315597154;
+        Tue, 09 Dec 2025 13:26:37 -0800 (PST)
 Received: from localhost ([2a02:8071:b783:6940:1d24:d58d:2b65:c291])
-        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-b7a705003e7sm231356366b.25.2025.12.09.13.22.54
+        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-b79f4a15660sm1503242866b.63.2025.12.09.13.26.36
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Dec 2025 13:22:55 -0800 (PST)
-Date: Tue, 9 Dec 2025 22:22:54 +0100
+        Tue, 09 Dec 2025 13:26:36 -0800 (PST)
+Date: Tue, 9 Dec 2025 22:26:35 +0100
 From: Uwe =?utf-8?Q?Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
 To: Bart Van Assche <bvanassche@acm.org>
 Cc: "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
 	"Martin K. Petersen" <martin.petersen@oracle.com>, linux-scsi@vger.kernel.org
 Subject: Re: [PATCH 2/8] scsi: Make use of bus callbacks
-Message-ID: <akknplwphiv2qllb6s3k5cpyqz76coyvbutmwln4bjtsi5rxqo@twezemfbfiow>
+Message-ID: <zzg7idgonsinuydv3a63cr56627lw2ymfopjiwfycsoshipmjd@mwk3bihumcg3>
 References: <cover.1765312062.git.u.kleine-koenig@baylibre.com>
  <59b408f6d89d402457a23564302afcbb334bc9dd.1765312062.git.u.kleine-koenig@baylibre.com>
- <e4924c88-909c-4ba4-8281-184f783539ff@acm.org>
+ <818c2c48-6962-46bb-8268-d377eaed3083@acm.org>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
@@ -75,71 +75,58 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: multipart/signed; micalg=pgp-sha512;
-	protocol="application/pgp-signature"; boundary="4faqs2zjn6stbdzm"
+	protocol="application/pgp-signature"; boundary="j765t24o26ukj26l"
 Content-Disposition: inline
-In-Reply-To: <e4924c88-909c-4ba4-8281-184f783539ff@acm.org>
+In-Reply-To: <818c2c48-6962-46bb-8268-d377eaed3083@acm.org>
 
 
---4faqs2zjn6stbdzm
+--j765t24o26ukj26l
 Content-Type: text/plain; protected-headers=v1; charset=iso-8859-1
 Content-Disposition: inline
 Content-Transfer-Encoding: quoted-printable
 Subject: Re: [PATCH 2/8] scsi: Make use of bus callbacks
 MIME-Version: 1.0
 
-On Tue, Dec 09, 2025 at 12:59:08PM -0800, Bart Van Assche wrote:
+Hello Bart,
+
+On Tue, Dec 09, 2025 at 01:00:03PM -0800, Bart Van Assche wrote:
 > On 12/9/25 12:45 PM, Uwe Kleine-K=F6nig wrote:
-> > +static int scsi_legacy_probe(struct scsi_device *sdp)
-> > +{
-> > +	struct device *dev =3D &sdp->sdev_gendev;
-> > +	struct device_driver *driver =3D dev->driver;
-> > +
-> > +	return driver->probe(dev);
-> > +}
-> > +
-> > +static void scsi_legacy_remove(struct scsi_device *sdp)
-> > +{
-> > +	struct device *dev =3D &sdp->sdev_gendev;
-> > +	struct device_driver *driver =3D dev->driver;
-> > +
-> > +	driver->remove(dev);
-> > +}
-> > +
-> > +static void scsi_legacy_shutdown(struct scsi_device *sdp)
-> > +{
-> > +	struct device *dev =3D &sdp->sdev_gendev;
-> > +	struct device_driver *driver =3D dev->driver;
-> > +
-> > +	driver->shutdown(dev);
-> > +}
-> Does this patch series convert all SCSI drivers that trigger calls to
-> the above functions? If so, shouldn't there be a patch at the end of
-> this series that removes the above functions again?
+> > The objective is to get rid of users of struct device_driver callbacks
+> > .probe(), .remove() and .shutdown() to eventually remove these. Until
+> > all scsi drivers are converted this results in a runtime warning about
+> > the drivers needing an update because there is a bus probe function and
+> > a driver probe function. The in-tree drivers are fixed by the following
+> > commits.
+> Which runtime warning? Has that runtime warning perhaps been introduced
+> by a patch series that has not yet been merged?
 
-I decided not to do that as part of this patch set. In case I missed a
-driver and for oot drivers I think it's nice and fair to not break them
-immediately and give its users/developers a chance to see the warning
-and act on it.
+the warning is in driver_register() (drivers/base/driver.c):
 
-Before the callbacks can be removed from struct device_driver these
-obviously have to be dropped.
+        if ((drv->bus->probe && drv->probe) ||
+            (drv->bus->remove && drv->remove) ||
+            (drv->bus->shutdown && drv->shutdown))
+                pr_warn("Driver '%s' needs updating - please use "
+                        "bus_type methods\n", drv->name);
+
+since commit 594c8281f905 ("[PATCH] Add bus_type probe, remove, shutdown
+methods.") which is in v2.6.16-rc1.
 
 Best regards
 Uwe
 
---4faqs2zjn6stbdzm
+--j765t24o26ukj26l
 Content-Type: application/pgp-signature; name="signature.asc"
 
 -----BEGIN PGP SIGNATURE-----
 
-iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmk4kygACgkQj4D7WH0S
-/k5XuAgAshUsMGhwd4sO0X4qTJINO/wbB7Y3P+fG5UfxWEL6syfl39z7mh8Qjhw2
-EVof1A5Q6nwZR6ewfjlcYa7M+GU/flz3jf4mMo24cK+44TpHYOC607CMlLI44kau
-U7oKFaR50O+i0bNcvQDmXNsx9LPqWNQQLFdfPHn4zQLcVM57e5/nagmo8BAseFUU
-9mn/F8GN9tXA4XyABjsrXNdeI4Z4FPG3bx26O/lTzbhZuPwS/kke09aJXswUXONH
-T5El/L3jhIbUsaXAalJQRryCpK5Hlm2NEmIrYZEXaE5PXl2CSWgNs1mbnoOW2Dh9
-5b8PwAHwWsn9WOX6gnZtsyZ4ZWj6dw==
-=zdnE
+iQEzBAABCgAdFiEEP4GsaTp6HlmJrf7Tj4D7WH0S/k4FAmk4lAkACgkQj4D7WH0S
+/k5B/wgAo5h52rMSKabNpUg5lsH3FM1k9VLHrNvm45qbkYy2cmu6v8Yq9UDqInUV
+HU2+DPUoB2/uBeJIyyZR/4UNnH1Uu7IxCBnAJYZrnhKG1r63j+duKHQ+aBj+M/XR
+F8yYOrMlpbPGMQNr5ms6jQW1fkmgxDr9oE8VH5KHTi8Oq3tRTVtlwVtaVP4G7gM5
+D4L7I1RZird903uM9OgUK27ZyiWkTYxfzde6OLyHCd0fv1SixHKecPbINxoJU9Sw
+nG75SAtMR1NCyKOWMqdaJxie8LNdmJX4ngn2Q5e9dvemEcXhswVrgFqA91ByvkdJ
+jZsmwB0gX1fNPMb8Js38AsnUtgGkag==
+=g0Jn
 -----END PGP SIGNATURE-----
 
---4faqs2zjn6stbdzm--
+--j765t24o26ukj26l--
