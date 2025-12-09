@@ -1,108 +1,100 @@
-Received: from smtp.kernel.org (aws-us-west-2-korg-mail-1.web.codeaurora.org [10.30.226.201])
+Received: from 013.lax.mailroute.net (013.lax.mailroute.net [199.89.1.16])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7C94423D7DD
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 11:33:53 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=10.30.226.201
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id B897432ABC3
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 17:51:22 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=199.89.1.16
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765280033; cv=none; b=mltIPiyEqIb7otoDmbwospUj7DsCzgq433AWwwiOQKGbU65Yd6lVqvlhZOPU9A5Z0XbBPUNm/f2buGJYFb+HY+02eDzPp6rEIhVqW9BTJ7tDPaOsdTUoW3dLQaaEqBN/yahz/OOXEhUVdNZqjVYH645Uav5ytSa1XSUfsdVUzuQ=
+	t=1765302684; cv=none; b=VqMAjRJNC7o1Atjkcv37Q2ENsqPBXC+IIjTUxFSlS7hMilQ6ij3vj5hcJCGGD2xKlMNV19LCLd1aAjp8IPTBfOONLwa23TORdgdkyMEVaCEBJdv7g9a4qiJsi1fkPFgxYnkZq4EI2mdaFQsH4JW0TgjBTCXOxhV4ysSW657D1r0=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765280033; c=relaxed/simple;
-	bh=jZ9f4mXXn0iG2MmPzdRxjes0Y+5e6eFl7/YH5mv3GV8=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=ftcngH7ON5KQw+8NPH+hlP39kBQBmHH3zU2WIl/D1OmmZgcLJmVjUntB5cBvFXe//OtlVn3ro5E45OCttdJ9R9isuGm2qVIdL4qdtlF0rFdt5ABoajkDOOO5BQKlMK998/E4s1nD9PVfgu5F2PodjncukpftOZXfKKMDJRb7y6k=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b=VCvE745u; arc=none smtp.client-ip=10.30.226.201
+	s=arc-20240116; t=1765302684; c=relaxed/simple;
+	bh=A4GE0kBzfhXALQx3+m3YSlIUWt9OdW0Zh+uceuIPjYU=;
+	h=Message-ID:Date:MIME-Version:Subject:To:Cc:References:From:
+	 In-Reply-To:Content-Type; b=oO1fEPP0sDf7LHxf5JY7lZF2RlOwuJhRGYZk1wbNiifwBwg8hvLs4fNCuVDBT2WCAllB+9+MihRNoEM2OCqLqWAcVFfK9Grjr/7Tqt3KpClvNNWFuwOmhNO3+LGn9/6eWPPgoYxp7WScAThLUVz5l48JXTqr6iK5s/t0RjSe9eg=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org; spf=pass smtp.mailfrom=acm.org; dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b=bU9mRjfG; arc=none smtp.client-ip=199.89.1.16
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=acm.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=acm.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=kernel.org header.i=@kernel.org header.b="VCvE745u"
-Received: by smtp.kernel.org (Postfix) with ESMTPSA id 88CD5C4CEF5;
-	Tue,  9 Dec 2025 11:33:48 +0000 (UTC)
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/simple; d=kernel.org;
-	s=k20201202; t=1765280033;
-	bh=jZ9f4mXXn0iG2MmPzdRxjes0Y+5e6eFl7/YH5mv3GV8=;
-	h=Date:From:To:Cc:Subject:References:In-Reply-To:From;
-	b=VCvE745uwAez9sb3mzSoTR8lqMoKMTNvIGWLKasQiUP9rGr6MmeqIOp5PmH37mZJS
-	 ITNuPWK3SwuqVCPxeUZZnYLAI/fIc1SEK3u9DQoAzo78EXOA9G8dUFbMu48cmu6SPy
-	 dWAuTvGWnRovypCKfDWdGQ7PrDlI3He1YWhxtP0G52APAauk2lWjuV1DPVrn9hc91r
-	 n6X2/ac93cuqGW5dCq7s26oRA/2yK8g88S6vu29+AHiNqHhfeJPWWgn8A1u7OxvxJo
-	 NbNvXCYCWGhaY2Q/GN0ufLFk6B1k7dq2SOZ0HJhwf0hN4oYjr9aHhlTuoIMdzQiMmg
-	 wYctyBiPiN5Ww==
-Date: Tue, 9 Dec 2025 20:33:44 +0900
-From: Manivannan Sadhasivam <mani@kernel.org>
-To: Bart Van Assche <bvanassche@acm.org>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>, 
-	linux-scsi@vger.kernel.org, Roger Shimizu <rosh@debian.org>, 
-	Nitin Rawat <nitin.rawat@oss.qualcomm.com>, "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>, 
-	Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>, 
-	Bean Huo <beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>, 
-	"Bao D. Nguyen" <quic_nguyenb@quicinc.com>
-Subject: Re: [PATCH] ufs: core: Fix a deadlock in the frequency scaling code
-Message-ID: <cem2gv6cz6bxz3i7eogqnbruzbts5jn4ijlu43bt5g2rl5or5p@evrj4kyqovrk>
-References: <20251204181548.1006696-1-bvanassche@acm.org>
+	dkim=pass (2048-bit key) header.d=acm.org header.i=@acm.org header.b="bU9mRjfG"
+Received: from localhost (localhost [127.0.0.1])
+	by 013.lax.mailroute.net (Postfix) with ESMTP id 4dQmcV1BbPzllCmP;
+	Tue,  9 Dec 2025 17:51:22 +0000 (UTC)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=acm.org; h=
+	content-transfer-encoding:content-type:content-type:in-reply-to
+	:from:from:content-language:references:subject:subject
+	:user-agent:mime-version:date:date:message-id:received:received;
+	 s=mr01; t=1765302679; x=1767894680; bh=BQcQ2tbj6yXzC6rVxjdmT9th
+	RrCh55iMxFtJJnNXPws=; b=bU9mRjfG5st0PW945a8pPXj1gIJULzEM45LlS7qZ
+	9Vd9j+EuNw/bLIVFrOt3PPLhQU0TD0uCwc6GPbDtDkZu3QxQDySXNIzhVTrHJu/0
+	1uZNEdE6thWxmxsaVO7kQwF+CurW3BzIf2+aToq1QsSAOvIBwH60aPHRyEBv5CHz
+	s2v9L1aDL7rj7cTAUelLyEeAl7d7UmpuxW9p9T0HI7m/Z9tJP4DhRwR5BvSVvNFk
+	vJujs3GoiAEBnITsBOVbaEnIlC8eVlgiXQfsbAA9Q7nYjsaqFGl1shp46TiGTyDJ
+	EaKP6Q6Bn9BanvBE4FJ8eyjNAg8vx9bItAyPjOfKboOVqQ==
+X-Virus-Scanned: by MailRoute
+Received: from 013.lax.mailroute.net ([127.0.0.1])
+ by localhost (013.lax [127.0.0.1]) (mroute_mailscanner, port 10029) with LMTP
+ id pWFtVnCSdcTy; Tue,  9 Dec 2025 17:51:19 +0000 (UTC)
+Received: from [100.119.48.131] (unknown [104.135.180.219])
+	(using TLSv1.3 with cipher TLS_AES_256_GCM_SHA384 (256/256 bits)
+	 key-exchange X25519 server-signature RSA-PSS (2048 bits) server-digest SHA256)
+	(No client certificate requested)
+	(Authenticated sender: bvanassche@acm.org)
+	by 013.lax.mailroute.net (Postfix) with ESMTPSA id 4dQmcM3gWBzllCX2;
+	Tue,  9 Dec 2025 17:51:15 +0000 (UTC)
+Message-ID: <d6eaf149-a3c8-44d2-bab0-4e7c965e3ebc@acm.org>
+Date: Tue, 9 Dec 2025 09:51:13 -0800
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=utf-8
-Content-Disposition: inline
-Content-Transfer-Encoding: 8bit
-In-Reply-To: <20251204181548.1006696-1-bvanassche@acm.org>
+User-Agent: Mozilla Thunderbird
+Subject: Re: [PATCH] ufs: core: Fix a deadlock in the frequency scaling code
+To: Manivannan Sadhasivam <mani@kernel.org>
+Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
+ linux-scsi@vger.kernel.org, Roger Shimizu <rosh@debian.org>,
+ Nitin Rawat <nitin.rawat@oss.qualcomm.com>,
+ "James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
+ Peter Wang <peter.wang@mediatek.com>, Avri Altman <avri.altman@sandisk.com>,
+ Bean Huo <beanhuo@micron.com>, Adrian Hunter <adrian.hunter@intel.com>,
+ "Bao D. Nguyen" <quic_nguyenb@quicinc.com>
+References: <20251204181548.1006696-1-bvanassche@acm.org>
+ <cem2gv6cz6bxz3i7eogqnbruzbts5jn4ijlu43bt5g2rl5or5p@evrj4kyqovrk>
+Content-Language: en-US
+From: Bart Van Assche <bvanassche@acm.org>
+In-Reply-To: <cem2gv6cz6bxz3i7eogqnbruzbts5jn4ijlu43bt5g2rl5or5p@evrj4kyqovrk>
+Content-Type: text/plain; charset=UTF-8; format=flowed
+Content-Transfer-Encoding: 7bit
 
-On Thu, Dec 04, 2025 at 08:15:43AM -1000, Bart Van Assche wrote:
-> Commit 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
-> accidentally introduced a deadlock in the frequency scaling code.
-> ufshcd_clock_scaling_unprepare() may submit a device management command
-> while SCSI command processing is blocked. The deadlock was introduced by
-> using the SCSI core for submitting device management commands
-> (scsi_get_internal_cmd() + blk_execute_rq()). Fix this deadlock by calling
-> blk_mq_unquiesce_tagset() before any device management commands are
-> submitted by ufshcd_clock_scaling_unprepare().
-> 
-> Fixes: 08b12cda6c44 ("scsi: ufs: core: Switch to scsi_get_internal_cmd()")
-> Reported-by: Manivannan Sadhasivam <mani@kernel.org>
-> Reported-by: Roger Shimizu <rosh@debian.org>
-> Closes: https://lore.kernel.org/linux-scsi/ehorjaflathzab5oekx2nae2zss5vi2r36yqkqsfjb2fgsifz2@yk3us5g3igow/
-> Tested-by: Roger Shimizu <rosh@debian.org>
-> Cc: Nitin Rawat <nitin.rawat@oss.qualcomm.com>
-> Signed-off-by: Bart Van Assche <bvanassche@acm.org>
+On 12/9/25 3:33 AM, Manivannan Sadhasivam wrote:
+> Thanks for the quirk fix. While it seems to have fixed the boot hang, I'm
+> quite skeptical about the fix. What is the guarantee that another device
+> management command won't be submitted before blk_mq_unquiesce_tagset() in the
+> future? IOW, the developer would have no idea that doing such will result in a
+> deadlock as nothing in the UFS code makes it clear, like using the same lock and
+> such.
+I think that the recent changes can be considered as a bug fix. With 
+previous kernel versions, only SCSI commands were paused during clock
+frequency transitions but device management commands not. With the
+approach that landed in Linus' master branch, device management commands
+are also paused during clock frequency transitions. Device management
+commands should also be paused because these also use the communication
+link between host controller and UFS device.
 
-Thanks for the quirk fix. While it seems to have fixed the boot hang, I'm
-quite skeptical about the fix. What is the guarantee that another device
-management command won't be submitted before blk_mq_unquiesce_tagset() in the
-future? IOW, the developer would have no idea that doing such will result in a
-deadlock as nothing in the UFS code makes it clear, like using the same lock and
-such.
+Regarding debugging potential future deadlocks caused by submitting a
+device management command while the tag set is quiesced, a call trace
+is sufficient to discover the root cause (echo w > /proc/sysrq-trigger).
 
-- Mani
+Regarding future changes in ufshcd_clock_scaling_unprepare(), I think
+there are two cases: changes made by developers who have access to a
+test setup that supports frequency scaling and changes made by
+developers who don't have access to a test setup that supports frequency
+scaling. Has it already been considered to insert calls to
+ufshcd_clock_scaling_prepare() and ufshcd_clock_scaling_unprepare() near
+the end of ufshcd_async_scan() to make sure that this code gets executed
+on test setups that do not support frequency scaling?
 
-> ---
->  drivers/ufs/core/ufshcd.c | 7 +++----
->  1 file changed, 3 insertions(+), 4 deletions(-)
-> 
-> diff --git a/drivers/ufs/core/ufshcd.c b/drivers/ufs/core/ufshcd.c
-> index 1837ae204d5e..80c0b49f30b0 100644
-> --- a/drivers/ufs/core/ufshcd.c
-> +++ b/drivers/ufs/core/ufshcd.c
-> @@ -1455,15 +1455,14 @@ static int ufshcd_clock_scaling_prepare(struct ufs_hba *hba, u64 timeout_us)
->  static void ufshcd_clock_scaling_unprepare(struct ufs_hba *hba, int err)
->  {
->  	up_write(&hba->clk_scaling_lock);
-> +	mutex_unlock(&hba->wb_mutex);
-> +	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-> +	mutex_unlock(&hba->host->scan_mutex);
->  
->  	/* Enable Write Booster if current gear requires it else disable it */
->  	if (ufshcd_enable_wb_if_scaling_up(hba) && !err)
->  		ufshcd_wb_toggle(hba, hba->pwr_info.gear_rx >= hba->clk_scaling.wb_gear);
->  
-> -	mutex_unlock(&hba->wb_mutex);
-> -
-> -	blk_mq_unquiesce_tagset(&hba->host->tag_set);
-> -	mutex_unlock(&hba->host->scan_mutex);
->  	ufshcd_release(hba);
->  }
->  
+Thanks,
 
--- 
-மணிவண்ணன் சதாசிவம்
+Bart.
