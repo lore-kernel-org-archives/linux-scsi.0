@@ -1,109 +1,131 @@
-Received: from mx0b-00069f02.pphosted.com (mx0b-00069f02.pphosted.com [205.220.177.32])
-	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
+Received: from mail-wm1-f54.google.com (mail-wm1-f54.google.com [209.85.128.54])
+	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 862A2301474;
-	Tue,  9 Dec 2025 03:21:46 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=205.220.177.32
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 7D0C42877DE
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 08:14:11 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.128.54
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765250508; cv=none; b=g/ZZJ1YcQEoJX6uIhhMvqUM8Lc1yG8+RiBhwdYZ8Yu6TbGnrMyG11OKr53EtSOdPSaUKAbW8RKfo1us7b3rck0X+4lFEsrCpClkcDDzBHNkp5WMD4Qz2FhuWbm0ZjV2rlGnB/ICze5enzbcTrzVgUtAHI79N113JPeaBPiMjSHw=
+	t=1765268053; cv=none; b=UioVSYW3gZMBOrZ8LEdPMxCX5+LT5NFIUMixr21K5oBw+zEptDARe0ZQOztwxslkz4qshaEq6X7WxP4tm0bT+pAdz+Egxkyz6hALSz/D2X1U8DHfsSz5yRU7Lv1ZMBh7E8TYOa1mtoZYMwHPXUYSLDvwLPjXxnjXB9UDtzcckFk=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765250508; c=relaxed/simple;
-	bh=IIJOOQJ4SBcH6Wh/ORQiB10CODbVmCvIQnWYNW+rz8E=;
-	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=ShAe+bb4fogtPwHNRpQw8G25Q1utbwEUvbtG1SlC8+uXvf2v8TJGnWm2MRnn19QeGRh3JZASin2P3zrdg2uTgWnvGvjtDI+CdGKgV8OIV/1haFJH7A8/EMV/MFV9Yt1hn7nPqqlWoDK5LK61Dss62ZcOIn6do2SdryBd/fdTtO0=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com; spf=pass smtp.mailfrom=oracle.com; dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b=eDOETSu2; arc=none smtp.client-ip=205.220.177.32
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=reject dis=none) header.from=oracle.com
-Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=oracle.com
+	s=arc-20240116; t=1765268053; c=relaxed/simple;
+	bh=WiBPEAcucmMl3ncW6dEf8nzkpRo6LI+EWrYOZiB5vQM=;
+	h=Date:From:To:Cc:Subject:Message-ID:MIME-Version:Content-Type:
+	 Content-Disposition:In-Reply-To; b=RS5kpQaPJIPeg67iu6ddqx7OduYgO7QtCka9vBjRSfjiQq0HxaHsZGIdFsb0+5DwL2bltl5Q+gzN7Uk+oPuxeHD2kwBMrCuEpTaVqNIrVuNVUAob9/3UD6KV5Lv1KIzKY3VutTfZ8eP5Wv8JOvHx3WLiQQiZMNcgJQOcIGuecRI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org; spf=pass smtp.mailfrom=linaro.org; dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b=sB+2AX0R; arc=none smtp.client-ip=209.85.128.54
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=linaro.org
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=linaro.org
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=oracle.com header.i=@oracle.com header.b="eDOETSu2"
-Received: from pps.filterd (m0333520.ppops.net [127.0.0.1])
-	by mx0b-00069f02.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5B92fkQ04149799;
-	Tue, 9 Dec 2025 03:21:26 GMT
-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=oracle.com; h=cc
-	:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=
-	corp-2025-04-25; bh=MTOQFFyyrU05TrLY5ueV6KYgJKupo7zsDhm2NVeLrPE=; b=
-	eDOETSu2kpcrl2lMl6v5Lu61J+jIHZbS3NBljOREPF1YqVM8GIAzfZHxzzQnPF9L
-	GXCQB/HH+qMHvGJ67R7GD6cu03yA1RICVRkCABz5aG5pwiwcfUDXlvRfQ9PFC+xY
-	b/OgUKKUlWOzBN9lJBVTohLeOrmc/FXKnzVJp6IS9gqoIDVdo53D0tYysvGPJVK7
-	dFNv7wVePEiQaWaWTYs9JJCpy8Rm0E1Qip1m+3BGkbLEVhhUb+gpC4K7OJLgn8WE
-	5x6RathWs+6389P5/rdPxIVbfoq5o3Zh5yqYTxpzGMIf/8ca1gXM2pmZXrDxwpo3
-	srrCcko+HnYOGLKEqUttRw==
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.appoci.oracle.com [138.1.37.129])
-	by mx0b-00069f02.pphosted.com (PPS) with ESMTPS id 4axb7500ra-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 09 Dec 2025 03:21:25 +0000 (GMT)
-Received: from pps.filterd (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (8.18.1.2/8.18.1.2) with ESMTP id 5B91Q2qY038257;
-	Tue, 9 Dec 2025 03:21:24 GMT
-Received: from pps.reinject (localhost [127.0.0.1])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTPS id 4avax8j03b-1
-	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=OK);
-	Tue, 09 Dec 2025 03:21:24 +0000
-Received: from phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com [127.0.0.1])
-	by pps.reinject (8.17.1.5/8.17.1.5) with ESMTP id 5B93I4Ff022652;
-	Tue, 9 Dec 2025 03:21:24 GMT
-Received: from ca-mkp2.ca.oracle.com.com (mpeterse-ol9.allregionaliads.osdevelopmeniad.oraclevcn.com [100.100.251.135])
-	by phxpaimrmta03.imrmtpd1.prodappphxaev1.oraclevcn.com (PPS) with ESMTP id 4avax8hyys-10;
-	Tue, 09 Dec 2025 03:21:24 +0000
-From: "Martin K. Petersen" <martin.petersen@oracle.com>
-To: john.g.garry@oracle.com, yanaijie@huawei.com, jejb@linux.ibm.com,
-        Xingui Yang <yangxingui@huawei.com>
-Cc: "Martin K . Petersen" <martin.petersen@oracle.com>,
-        linux-scsi@vger.kernel.org, linux-kernel@vger.kernel.org,
-        linuxarm@huawei.com, liyihang9@h-partners.com, liuyonglong@huawei.com,
-        kangfenglong@huawei.com
-Subject: Re: [PATCH v2] Revert "scsi: libsas: Fix exp-attached device scan after probe failure scanned in again after probe failed"
-Date: Mon,  8 Dec 2025 22:21:09 -0500
-Message-ID: <176524933147.418581.13273074674404945283.b4-ty@oracle.com>
-X-Mailer: git-send-email 2.51.2
-In-Reply-To: <20251202065627.140361-1-yangxingui@huawei.com>
-References: <20251202065627.140361-1-yangxingui@huawei.com>
+	dkim=pass (2048-bit key) header.d=linaro.org header.i=@linaro.org header.b="sB+2AX0R"
+Received: by mail-wm1-f54.google.com with SMTP id 5b1f17b1804b1-477a1c28778so67687685e9.3
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 00:14:11 -0800 (PST)
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=linaro.org; s=google; t=1765268050; x=1765872850; darn=vger.kernel.org;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:from:to:cc:subject:date:message-id:reply-to;
+        bh=2wg2FYVkjXh5aCmoBNtOWAaU71M7u5F8AD88H/8BDxU=;
+        b=sB+2AX0RG2gAwhNjrJuK9d4s2M8RJMBpR0tV9Njiv3bt6jDYUn91DYeJTIVCMGghbq
+         DGAFBwiv39eVA6EJvukcw3kFqsxsmymTEGWbUo8OEWU4uIhPRiGSvrIjvuX+TiKZ9tFj
+         oKiIioD1ex4mmYQfDvolwwIH8pYUIDrLCpL86UXWsbWudz6CWVHhQPRRZMhxWDTR02Bb
+         aCiwaVzlp1SE5qqexCkv5PKQI2c+b8nNROAccDwHguXonBZeK7Pz0ufbPgOW4TtVzYKC
+         vw07hmHMsqAt7EfuvZWVzq2KrMvKFuDeOMdLE3SauhQys3d6hiSI6HHCmu6sJxFWFpKc
+         yWwQ==
+X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
+        d=1e100.net; s=20230601; t=1765268050; x=1765872850;
+        h=in-reply-to:content-disposition:mime-version:message-id:subject:cc
+         :to:from:date:x-gm-gg:x-gm-message-state:from:to:cc:subject:date
+         :message-id:reply-to;
+        bh=2wg2FYVkjXh5aCmoBNtOWAaU71M7u5F8AD88H/8BDxU=;
+        b=WT0hiAulXhj5aalkCBMNW4Q0qpatTElIFI561U7TkAKJMRJCMCPRYgPpY7W+9EOXsT
+         72Z6tn7TewQXhl2T9Y3fYGRa3XefQTySN3SeFPEBcG50wolgTHAcs+mY10p/O/ueJ8oE
+         W8ahXfRbKN6nmrCYHWpIpRZ0wU+S9tcJA9D/SZJVol+QOPpV77+sFge5ktH08jEVF8w7
+         pcqgMnooOFs3uZ7cbKl1yNpCM3f4QSkWHRP3YFQUTAWW80GX10YrAc1nOYnvNCgMNsKn
+         2T2CcGy0wKolri4zRK+25MLLOZeZaHsrxfCmX/oW34cLrgXWbcjFZ84vFQPwbUBFqqVb
+         vRhw==
+X-Forwarded-Encrypted: i=1; AJvYcCUFhUAl4vXYolv2r0QrXKbqVRWuwhoqi7AubGsywGZziHq+OiUnzhnLA+aUZBkx3ki48Lm6yXrmgS9K@vger.kernel.org
+X-Gm-Message-State: AOJu0YxIweJT6U+YQHEU+hsa8Rbb00HXXn4tcJDydrRWmt3gFpjmQmJ4
+	VNhi3o+ug0mqbsvn3ExE3PFLabpuAsgkDFG+01cT/KK+rmmkjJ5vwr+A94IAyZG9C2o=
+X-Gm-Gg: ASbGncuEZObwjD3p+pip0nbdEWkFg/YQXaQabIQ1XH0TbFSPrkbwbNrKNji/MOOUNIQ
+	Bu4SAMiHDKskSzf+AsE7zcSjT1HzNbfdPETkuW/1AnN75yjl0n5wc4pHvGSOlwGRt6UBuvAH/kQ
+	lJ603f45MG8sXl1GAavjOm0LjNjnXHnguGb8nRMnh9VlEWoTWX4f9evYm66PKhOOTdtle0ZB/VV
+	R5G/+HWa+jr0gad9ZP8oMYrDbuQyqCsqevr2yYnYbLuGNmUm9ZDZMv/0g7Fa0atTJhvIMrbMeZS
+	nX3BHWE3cgwYvQngvTZRMUqxp6I9m3qRA8VeDYT3bNt0nFATTgr5ysh31v5aifRxi5PuUrRFH/o
+	p5bQA94UvK+6lO4d9oOUF6DXW5GwnXmQwoK0pU/4ci+OxBew1LY0ERTUZMQVpZLjQdhz7FCLitq
+	vqIHoFVzjcjzae+7WL
+X-Google-Smtp-Source: AGHT+IEGfnb47BXL7kWT0jK9JS/OOmv6K3jMn7E9kJktQltZ1yjZ9wYvRbNvP+vsFqiJo5afmlDv5A==
+X-Received: by 2002:a05:600c:4446:b0:477:b0b9:3131 with SMTP id 5b1f17b1804b1-47939df7d12mr107620625e9.8.1765268049577;
+        Tue, 09 Dec 2025 00:14:09 -0800 (PST)
+Received: from localhost ([196.207.164.177])
+        by smtp.gmail.com with ESMTPSA id 5b1f17b1804b1-47a7d632cebsm27773675e9.7.2025.12.09.00.14.08
+        (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
+        Tue, 09 Dec 2025 00:14:09 -0800 (PST)
+Date: Tue, 9 Dec 2025 11:14:05 +0300
+From: Dan Carpenter <dan.carpenter@linaro.org>
+To: oe-kbuild@lists.linux.dev, Nilesh Javali <njavali@marvell.com>,
+	martin.petersen@oracle.com
+Cc: lkp@intel.com, oe-kbuild-all@lists.linux.dev,
+	linux-scsi@vger.kernel.org, GR-QLogic-Storage-Upstream@marvell.com,
+	agurumurthy@marvell.com, sdeodhar@marvell.com, emilne@redhat.com,
+	jmeneghi@redhat.com
+Subject: Re: [PATCH v2 07/12] qla2xxx: Delay module unload while fabric scan
+ in progress
+Message-ID: <202512090414.07Waorz0-lkp@intel.com>
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset="utf-8"
-Content-Transfer-Encoding: 8bit
-X-Proofpoint-Virus-Version: vendor=baseguard
- engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
- definitions=2025-12-08_07,2025-12-04_04,2025-10-01_01
-X-Proofpoint-Spam-Details: rule=notspam policy=default score=0 malwarescore=0 mlxscore=0
- mlxlogscore=999 bulkscore=0 spamscore=0 adultscore=0 phishscore=0
- suspectscore=0 classifier=spam adjust=0 reason=mlx scancount=1
- engine=8.12.0-2510240000 definitions=main-2512090023
-X-Proofpoint-ORIG-GUID: Dzw4nTIGz-9WShvPnKTYoZ4Osi418jLl
-X-Authority-Analysis: v=2.4 cv=KqBAGGWN c=1 sm=1 tr=0 ts=693795b5 b=1 cx=c_pps
- a=WeWmnZmh0fydH62SvGsd2A==:117 a=WeWmnZmh0fydH62SvGsd2A==:17
- a=IkcTkHD0fZMA:10 a=wP3pNCr1ah4A:10 a=VkNPw1HP01LnGYTKEx00:22
- a=VwQbUJbxAAAA:8 a=3gF-LyXLwZgIZm-5d90A:9 a=QEXdDO2ut3YA:10
-X-Proofpoint-GUID: Dzw4nTIGz-9WShvPnKTYoZ4Osi418jLl
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjA5MDAyMyBTYWx0ZWRfX6hxe2cdcFP79
- L7jsleoKuJgb4deHvGYdYZJVOKvBiGm79sHlhKLiuU50ynDgcUSPjP8z5MocCwf/TTqqsfalAFR
- B/hr68nRd2idIfv6yBfA7Itz85f9uHppAwowwwu2RUysdQAlf5vvGLlHlgu5fpy1zCZVr3bz5Bw
- UezlT4qjpC9UdqlcdFGULKxx4JTktbr7Dvp67rlAtF1cN+ifWfDrzZiof6EZwkZrIMJKNOzH90a
- hPcpLZIvo6Y88rDnkjKaHyjUR0CxgLlETXmtJZXqlodcLXkIUmuZmxFa62eBcGVCX7cqWDP2qyR
- vR/syh9Cg/IeKxgSC0HU+kZeYT1s7/K+f5MIdp5FByZfOZ1FTW/wvSYMznd59syZb/45VTnyW86
- 0zv0YA+H3z7w3qNcZK5fPczB/NyBzw==
+Content-Type: text/plain; charset=us-ascii
+Content-Disposition: inline
+In-Reply-To: <20251204151751.2321801-8-njavali@marvell.com>
 
-On Tue, 02 Dec 2025 14:56:27 +0800, Xingui Yang wrote:
+Hi Nilesh,
 
-> This reverts commit ab2068a6fb84751836a84c26ca72b3beb349619d.
-> 
-> When probing the exp-attached sata device, libsas/libata will issue a hard
-> reset in sas_probe_sata() -> ata_sas_async_probe(), then a broadcast event
-> will be received after the disk probe fails, and this commit causes the
-> probe will be re-executed on the disk, and a faulty disk may get into an
-> indefinite loop of probe.
-> 
-> [...]
+kernel test robot noticed the following build warnings:
 
-Applied to 6.19/scsi-queue, thanks!
+url:    https://github.com/intel-lab-lkp/linux/commits/Nilesh-Javali/qla2xxx-Add-Speed-in-SFP-print-information/20251204-233117
+base:   e6965188f84a7883e6a0d3448e86b0cf29b24dfc
+patch link:    https://lore.kernel.org/r/20251204151751.2321801-8-njavali%40marvell.com
+patch subject: [PATCH v2 07/12] qla2xxx: Delay module unload while fabric scan in progress
+config: x86_64-randconfig-r072-20251208 (https://download.01.org/0day-ci/archive/20251209/202512090414.07Waorz0-lkp@intel.com/config)
+compiler: gcc-14 (Debian 14.2.0-19) 14.2.0
 
-[1/1] Revert "scsi: libsas: Fix exp-attached device scan after probe failure scanned in again after probe failed"
-      https://git.kernel.org/mkp/scsi/c/278712d20bc8
+If you fix the issue in a separate patch/commit (i.e. not just a new version of
+the same patch/commit), kindly add following tags
+| Reported-by: kernel test robot <lkp@intel.com>
+| Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+| Closes: https://lore.kernel.org/r/202512090414.07Waorz0-lkp@intel.com/
+
+New smatch warnings:
+drivers/scsi/qla2xxx/qla_os.c:1187 qla2x00_wait_for_hba_ready() warn: if statement not indented
+drivers/scsi/qla2xxx/qla_os.c:1189 qla2x00_wait_for_hba_ready() warn: inconsistent indenting
+
+Old smatch warnings:
+drivers/scsi/qla2xxx/qla_os.c:4249 qla2x00_mem_alloc() warn: missing unwind goto?
+
+vim +1187 drivers/scsi/qla2xxx/qla_os.c
+
+638a1a01d36a14 Sawan Chandak    2014-04-11  1176  static void
+638a1a01d36a14 Sawan Chandak    2014-04-11  1177  qla2x00_wait_for_hba_ready(scsi_qla_host_t *vha)
+86fbee86e94c7e Lalit Chandivade 2010-05-04  1178  {
+86fbee86e94c7e Lalit Chandivade 2010-05-04  1179  	struct qla_hw_data *ha = vha->hw;
+783e0dc4f66ade Sawan Chandak    2016-07-06  1180  	scsi_qla_host_t *base_vha = pci_get_drvdata(ha->pdev);
+86fbee86e94c7e Lalit Chandivade 2010-05-04  1181  
+1d48390117c7df Dan Carpenter    2016-08-03  1182  	while ((qla2x00_reset_active(vha) || ha->dpc_active ||
+9d35894d338abc Sawan Chandak    2014-09-25  1183  		ha->flags.mbox_busy) ||
+9d35894d338abc Sawan Chandak    2014-09-25  1184  	       test_bit(FX00_RESET_RECOVERY, &vha->dpc_flags) ||
+cedcf9d7bcbe3a Anil Gurumurthy  2025-12-04  1185  	       test_bit(FX00_TARGET_SCAN, &vha->dpc_flags) ||
+cedcf9d7bcbe3a Anil Gurumurthy  2025-12-04  1186  		(vha->scan.scan_flags & SF_SCANNING)) {
+783e0dc4f66ade Sawan Chandak    2016-07-06 @1187  			if (test_bit(UNLOADING, &base_vha->dpc_flags))
+
+This if statement is indented too far.
+
+783e0dc4f66ade Sawan Chandak    2016-07-06  1188  			break;
+86fbee86e94c7e Lalit Chandivade 2010-05-04 @1189  		msleep(1000);
+86fbee86e94c7e Lalit Chandivade 2010-05-04  1190  	}
+783e0dc4f66ade Sawan Chandak    2016-07-06  1191  }
 
 -- 
-Martin K. Petersen
+0-DAY CI Kernel Test Service
+https://github.com/intel/lkp-tests/wiki
+
