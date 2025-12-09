@@ -1,71 +1,72 @@
-Received: from mail-ej1-f49.google.com (mail-ej1-f49.google.com [209.85.218.49])
+Received: from mail-ej1-f45.google.com (mail-ej1-f45.google.com [209.85.218.45])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES128-GCM-SHA256 (128/128 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 1734A2417DE
-	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 20:45:38 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.49
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id CC4FF1E376C
+	for <linux-scsi@vger.kernel.org>; Tue,  9 Dec 2025 20:45:40 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=209.85.218.45
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765313141; cv=none; b=quCZ1iWlA4VZVvbuI0XQhkbQOOUvzUh1DRVzvsNopGW4wugs2sgFhznby5AOql9fZhTXedy30TH28ldMBYfvbpAMDQpWLFY7YfsnXT1hSSzzBCYBn7SheHG1qxjeKjowl2FaT6h1aKGW9FDqnSEUxlDIAdd+iCjCPQXLtwAdAEU=
+	t=1765313143; cv=none; b=fPl1cO4ejvOjwLS6XyTgqoSN8m69h8c8Stz7VvpbOhD/BG1LQM5oTBk052D3BmnQfebfAWpWOatLgjeWpCUCN3dpEo485x3Mb/C8nhj3xeBYVrCwtMRakYqykBluCsx5+zYjNjBuw83LaeC72yA64MxEBIZ8lw9+pCOS+m8fmVs=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765313141; c=relaxed/simple;
-	bh=vxXCd6XEqHsxiBy3+8h4IRX/R6Q8wiV4zrt7I3asWsU=;
+	s=arc-20240116; t=1765313143; c=relaxed/simple;
+	bh=P60P1jCZ9rJ5qFV4YrZSMhbhHE9SDvYDP+HyYltMKf4=;
 	h=From:To:Cc:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=UQWq/YwmcSnqotM+lNiNQ76Q6dCX6unTXSzgVsTA+Y+tNEJ9cra7NFF29zXZcWngBFS+170UEiYOzLPYmjfet+ypf7jfrekQDMs6LZkF+z3PYHMhTFL2SFHIZkBzKiWDXnPhWA2zyKoF5v8QhOLp60N+eXIvHpeCG6O5Q63nvt8=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=ZbuoZ0Om; arc=none smtp.client-ip=209.85.218.49
+	 MIME-Version:Content-Type; b=cku8Bdk73uUpmK6vNr/i0xA4YPbCeSzC2qGocdOsxU3dT/+a19Byw/HCoS9WIyMMvUnOz1y9MGmwe0kU2yVnCGpNxyKmGpnXR+9Xl07S0aRpt5TgYL7P+6h80QDdytUViQS/3m7nK8hW893oKR1hKfrU0UAakcmWbBSkACq5lBM=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com; spf=pass smtp.mailfrom=baylibre.com; dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b=vX6E6zgT; arc=none smtp.client-ip=209.85.218.45
 Authentication-Results: smtp.subspace.kernel.org; dmarc=none (p=none dis=none) header.from=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=baylibre.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="ZbuoZ0Om"
-Received: by mail-ej1-f49.google.com with SMTP id a640c23a62f3a-b79af62d36bso357451166b.3
-        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 12:45:38 -0800 (PST)
+	dkim=pass (2048-bit key) header.d=baylibre-com.20230601.gappssmtp.com header.i=@baylibre-com.20230601.gappssmtp.com header.b="vX6E6zgT"
+Received: by mail-ej1-f45.google.com with SMTP id a640c23a62f3a-b770f4accc0so845457866b.1
+        for <linux-scsi@vger.kernel.org>; Tue, 09 Dec 2025 12:45:40 -0800 (PST)
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1765313137; x=1765917937; darn=vger.kernel.org;
+        d=baylibre-com.20230601.gappssmtp.com; s=20230601; t=1765313139; x=1765917939; darn=vger.kernel.org;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:from:to:cc:subject:date
          :message-id:reply-to;
-        bh=OyMVf8UAKt8ivdpHfCMg44/m+jYF/0j2yoV734Syfkw=;
-        b=ZbuoZ0Omb7eufVsHUf1ckFq6DOvnglSMwV8jQlqVSz2jM8sLlXfswXqP/jXI1XnvHY
-         zyCPaoSwDNp1MulnRUOm9sqkTehlGO6Yy+KbbK6Yb+lVG0tor4nbHlppCG2Fa+p2qiN1
-         MZOg49JqGTdVMfuBe9dA4mXLnmFoCUeG2k77GLK/6AzorUs0+VjF24ubdLxgvYBB+WXO
-         IUH3IC/1j8He0BGoHmAcINa5Xrip06VVbK33fjT8jS8VM5g8YF+zl92F2SuAiQLNIjSq
-         5dojK221BQTEWUz9NEwvbjctnFNBxPmyaSTn/i+bVmxJnZXE8Wb8xps/ML+SO94mdbXd
-         r9cQ==
+        bh=S8l2b4nl5sqlOEV4tFu05ObuWW/7+JFQFODSs3eF1sQ=;
+        b=vX6E6zgTvEr+Wii1WbgDhzlSfh6dDz/gVU1TsNUQkFSM/oS3H5jWanv3lKtrGqZOM8
+         xwQ8KbbmflojgaXtNvhdeo9WyNvjnB94EN1q7EesPwY0pL43VPNwvz3yw53UY+nJp4gW
+         m+Aoi/CHW42eYtkskuySjxLH9L5lnC2Wyj4euPGqU3qlfPk7gZs3gOUfRsgKec92hxSo
+         fGOkZx/3RVhwVDqAHZ/QIy/SSbTXyrfPoXdpvRCHR9X73oSSzpWEAr9jxNB5aItR2x4a
+         XN8i6RWeq8Ror767xDT5DdkZx54vb/yGIcvMNW/AeiMh4PftTX5E85XkMC2AMHnmzpcs
+         flBQ==
 X-Google-DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed;
-        d=1e100.net; s=20230601; t=1765313137; x=1765917937;
+        d=1e100.net; s=20230601; t=1765313139; x=1765917939;
         h=content-transfer-encoding:mime-version:references:in-reply-to
          :message-id:date:subject:cc:to:from:x-gm-gg:x-gm-message-state:from
          :to:cc:subject:date:message-id:reply-to;
-        bh=OyMVf8UAKt8ivdpHfCMg44/m+jYF/0j2yoV734Syfkw=;
-        b=sHiS8/kp60nbFfRrDMz1k4+A+F9MozWnohpkGkrYiLtQ5GrQsA8RPRcu4AdkTum3kR
-         PY/pMmx8hCwE1y4sAnpnR/8nm82f441yoQQXThKwlbwoWdyHqkkxxAf/ZgKSspiplck2
-         nFbz40cKQuVEbGZ7xyuxNwA68PEgI0SMUghn2sAH5GoIb9WT/WNReUk7tagaPHIB/bjL
-         LhaTmG3FKxjijumJuFj8zK+z+MN+Ez44ZzhW3ndXQ4feezkffIlZ4ruzq3pJD0g2bzcy
-         u2g8AAFzVG1Q6svOW1uJ9JyZsjzmqgiVhHgoZnK06E5nVccGZiwdNraZd/mENGqP5QRv
-         OQ9A==
-X-Forwarded-Encrypted: i=1; AJvYcCW1x2l1qTBe1isYtH5qQ+zQCXwSacmAY+glZqiMeQwOn2t+IJJ4BO7wQo+mu2Th3QECfPNLg1nCBYrj@vger.kernel.org
-X-Gm-Message-State: AOJu0Yz61Luaxi5jql+T20l0Ai5ULuJ1kW3qUWhVfNyQgB3VwpUKqbbL
-	di4L5OeuqPLtJjaiTcZXlPFeabbKo6epYV08ReW+S1R2OKnZNlH/tcJdOt9HzLl4zhQ=
-X-Gm-Gg: ASbGncs4ZLScTAPPeeS3rMIsYc5gH7qhsnxx5g8tNIY+VJpyLm+bMGEibG51q5R8SY5
-	6kVKWy+gOBm/i+Lmi1m6GSNyQ7vbdHJoQtzF1BwWR1kEjtcLcj0n1yhpCaPxBox7zDOt8PdiSEZ
-	hu/UFpvD0369J7Hyjx2lxHQ8NmyQtW0u1bAx/Qxu+kwL0tqbjA5ZeiG54U8z+yZTUeCwBO2Oxiw
-	OZen97yrtDEmkVZ5cuMIb4RRhjzbbX44Q1kcMGj3yaTbl6N6i5KOu0xOwwaUdZthsEKMyFcvUMJ
-	/ambIC5/oW6Dhu7HvV2U9Y5+TcL4qxuE1NqnTWtUa3dTn5WbWvlLGDsDiRmr9ekrG7mIojIXo90
-	fx5ciJRUexv009BBKbXfVf9J+fSl8RijbM/t6ivyqYzXSAqpvkePA114KXFwBuVJDCB/2X7wbsO
-	7KdPdQHq37Dr8SDGGq
-X-Google-Smtp-Source: AGHT+IEtEfoB1rWKj/l+CZHHiONRCsz4m3OxiQOG1IlxHWCyxOo/Vy72zTuE5QOuhyJ6jAt93sOoSw==
-X-Received: by 2002:a17:906:d54c:b0:b74:9862:3e36 with SMTP id a640c23a62f3a-b7a24805105mr1261501566b.51.1765313137460;
-        Tue, 09 Dec 2025 12:45:37 -0800 (PST)
+        bh=S8l2b4nl5sqlOEV4tFu05ObuWW/7+JFQFODSs3eF1sQ=;
+        b=TULwfmD4daTcs3n5xgYmbrwh0zWHI62eRJyYLLRRyTI38fdzq8Jlpwh5OVPm5367KW
+         UEcyeUoj2j/qIzjG/sK0QOfj5Q8hiNAzU5MOZM1KsYFFHnvXV/NlLHnfj1tUVJNcea50
+         KdLy2Z7EHCK7KndxkBLqq6nlcv8832a+J9In7s5IgfIBqV7YMpTmVox4sZoypnqZPaZA
+         PG5rxdzjZxQMuaPm1A5tX6Ai830igq+s+jLAxZzMpaiplsWVwjgftGOqZtC6xgCgDyq0
+         N0L0znwomVwIxT88H40QiMDkdSVFaEdTemNCNe9ke11TjUvb86ZfzW6C8iPvGxQNY/iE
+         441w==
+X-Forwarded-Encrypted: i=1; AJvYcCUqs+g2W+9+b87I4IOKTgGipVhsTlwJZO0AIGIKfFjtb6eBABAbiSpKAzfBnpQQtsqKCgz/Bf1Dx9YE@vger.kernel.org
+X-Gm-Message-State: AOJu0Yy9iokngkP2MKRBICeGuZpzTZaCr7HRHLXPvdPhuQV9EYteYgQ9
+	oiBXJirNnrtT/vk19N1El2r7b1w+CmjiHOcdkeaVYNR8kmAEz06rjQ2GoqpHc6fjj1y05JkUvhG
+	lUzb/
+X-Gm-Gg: ASbGncu5Cj4TLACB8uBzQE+AaQBOm/AhheDf4DW0A0qxtQ7X/8pkT7hNk2rpsyfvBW/
+	WJVwEzNY8iJdkbI89lWNHX+g7C4Gof+hSSvJbkrYfIIqgZ2QYjmId09G6gfj0AP0/Z82WwtVhCy
+	BEs3Axoizgz4Kil1KNejZuUcZW0pjeBuxryKqnE6YM4NWhg8b8R2Gnrr6Cy1wYPMXMyPWszE0Cb
+	SHQpyDWcOKlb+4MwiJpZknQAE5vf0D+ZUnjSFyVhcW4fUF4TE7jo8uR8wPLfepth8J4JnUCxF2/
+	pZFJZITaUKG6y31/lp6olJBrZwplGqJmrfM6Q1iBKt/aHYATpkJdX8VWTqM6auxNH8KiqZL0cX5
+	bmq9cbRudOutRUaICHgAtdkmVDiz+IhPiraEZ8iVBtQOcbkTcIBFx79y1F3AE9e47kyP6uTNt5g
+	0gAVdcl8JE+f/6qKAi
+X-Google-Smtp-Source: AGHT+IGeel1Ek22ij8e+JU8pYVuEvAYwPoP59zz2TsUO0WOZCwFAYqdvReghJ9dxksTb03mOmZMAJg==
+X-Received: by 2002:a17:907:9494:b0:b76:d734:d459 with SMTP id a640c23a62f3a-b7a248183d7mr1461859766b.57.1765313139003;
+        Tue, 09 Dec 2025 12:45:39 -0800 (PST)
 Received: from localhost ([2a02:8071:b783:6940:1d24:d58d:2b65:c291])
-        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-b79f4a2f19dsm1514544466b.64.2025.12.09.12.45.36
+        by smtp.gmail.com with UTF8SMTPSA id a640c23a62f3a-b79f4498d2fsm1508618566b.21.2025.12.09.12.45.38
         (version=TLS1_3 cipher=TLS_AES_256_GCM_SHA384 bits=256/256);
-        Tue, 09 Dec 2025 12:45:37 -0800 (PST)
+        Tue, 09 Dec 2025 12:45:38 -0800 (PST)
 From: =?UTF-8?q?Uwe=20Kleine-K=C3=B6nig?= <u.kleine-koenig@baylibre.com>
 To: "James E.J. Bottomley" <James.Bottomley@HansenPartnership.com>
 Cc: "Martin K. Petersen" <martin.petersen@oracle.com>,
 	linux-scsi@vger.kernel.org
-Subject: [PATCH 3/8] scsi: ch: Convert to scsi bus methods
-Date: Tue,  9 Dec 2025 21:45:04 +0100
-Message-ID:  <bab94af5f87f67fac8837ee17e06fdc541ca9cbb.1765312062.git.u.kleine-koenig@baylibre.com>
+Subject: [PATCH 4/8] scsi: sd: Convert to scsi bus methods
+Date: Tue,  9 Dec 2025 21:45:05 +0100
+Message-ID:  <1931ec5bbe8d0ad82b6fbc77939d43bf5a4f177f.1765312062.git.u.kleine-koenig@baylibre.com>
 X-Mailer: git-send-email 2.47.3
 In-Reply-To: <cover.1765312062.git.u.kleine-koenig@baylibre.com>
 References: <cover.1765312062.git.u.kleine-koenig@baylibre.com>
@@ -76,7 +77,7 @@ List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Type: text/plain; charset=UTF-8
-X-Developer-Signature: v=1; a=openpgp-sha256; l=1656; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=vxXCd6XEqHsxiBy3+8h4IRX/R6Q8wiV4zrt7I3asWsU=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBpOIpVXQRXuikXPa58vPVWo34HVrOEFkzPwNTGG 0mflJiI+0KJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCaTiKVQAKCRCPgPtYfRL+ TnW0CACghFOZPooxi1cX+MGVw1dOczYqSxs7B/ak33+XnBsvbGSuC7SOpvynkFd7ukx7QnkMc+l vEEqqW0f3Uv14359qLxVK86kQT7+hgFPcMvcu95K8XA+q8mOBGMIXw8y+Mx/QknsZIiJov/F6OW ybf8EDXS7wz8EUyhVjpwBMs0m8Z9bDh66Ir2zhohWDEYlD/eubctHkPS8N81+o92N1Z7PAYGDZW 7cByYZpbiNT/dgxRN+5GBeg3vURMZBpUYInYDf4W7ooxrWce1US4mwVwIKL77SyOFgyZeZ3f5CK +aq7V4qnFKmqSf4mY6ehE8avY+zG1/5YZf8oHhsTuDHVWSso
+X-Developer-Signature: v=1; a=openpgp-sha256; l=2930; i=u.kleine-koenig@baylibre.com; h=from:subject:message-id; bh=P60P1jCZ9rJ5qFV4YrZSMhbhHE9SDvYDP+HyYltMKf4=; b=owEBbQGS/pANAwAKAY+A+1h9Ev5OAcsmYgBpOIpX8R3j5Eww+bmAPSIUt8CCgx3zt2LlnC6rg b4sq9Hn2vyJATMEAAEKAB0WIQQ/gaxpOnoeWYmt/tOPgPtYfRL+TgUCaTiKVwAKCRCPgPtYfRL+ TmnuB/9qRuzZg3FfPW/DVheagMu4SU4re0s6Ws5it3FfBJhcqzlGZsWt7vIAohc+Zl6j0rPy7pG YAqh2pQi2J+9YEbIN3Kls83fmCyt4+Akq1G7x1A4tVPAaukvT32tYGNrFucbqGbGRYcs+gJisko L1kcKJ6hTjzch6iNooWOrxbB5RYfy6vRnTFInMOKLG/w9ZoaNOV0JYfxsBequJbwnB8V9L+mhU9 YV3MEET4REK+C/1c3Hbi4lBlH/4sbAKijak3QsG9LUaAFfdeI5/NrKrZmqVSZEfh4FC/VkBZWBK 8VpJgLxEoV1pzml3NCt4D75cyUKZkzvSNtedjp7fAo3xFmeW
 X-Developer-Key: i=u.kleine-koenig@baylibre.com; a=openpgp; fpr=0D2511F322BFAB1C1580266BE2DCDD9132669BD6
 Content-Transfer-Encoding: 8bit
 
@@ -86,55 +87,84 @@ to be converted to the bus probe method.
 
 Signed-off-by: Uwe Kleine-König <u.kleine-koenig@baylibre.com>
 ---
- drivers/scsi/ch.c | 14 +++++++-------
- 1 file changed, 7 insertions(+), 7 deletions(-)
+ drivers/scsi/sd.c | 21 +++++++++++----------
+ 1 file changed, 11 insertions(+), 10 deletions(-)
 
-diff --git a/drivers/scsi/ch.c b/drivers/scsi/ch.c
-index f2b63e4b9b99..91318e110901 100644
---- a/drivers/scsi/ch.c
-+++ b/drivers/scsi/ch.c
-@@ -894,9 +894,9 @@ static long ch_ioctl(struct file *file,
+diff --git a/drivers/scsi/sd.c b/drivers/scsi/sd.c
+index da927c030ecc..afed915eb158 100644
+--- a/drivers/scsi/sd.c
++++ b/drivers/scsi/sd.c
+@@ -108,7 +108,7 @@ static void sd_config_write_same(struct scsi_disk *sdkp,
+ 		struct queue_limits *lim);
+ static void  sd_revalidate_disk(struct gendisk *);
+ static void sd_unlock_native_capacity(struct gendisk *disk);
+-static void sd_shutdown(struct device *);
++static void sd_shutdown(struct scsi_device *);
+ static void scsi_disk_release(struct device *cdev);
  
- /* ------------------------------------------------------------------------ */
- 
--static int ch_probe(struct device *dev)
-+static int ch_probe(struct scsi_device *sd)
+ static DEFINE_IDA(sd_index_ida);
+@@ -3909,9 +3909,9 @@ static int sd_format_disk_name(char *prefix, int index, char *buf, int buflen)
+  *	Assume sd_probe is not re-entrant (for time being)
+  *	Also think about sd_probe() and sd_remove() running coincidentally.
+  **/
+-static int sd_probe(struct device *dev)
++static int sd_probe(struct scsi_device *sdp)
  {
--	struct scsi_device *sd = to_scsi_device(dev);
+-	struct scsi_device *sdp = to_scsi_device(dev);
++	struct device *dev = &sdp->sdev_gendev;
+ 	struct scsi_disk *sdkp;
+ 	struct gendisk *gd;
+ 	int index;
+@@ -4058,8 +4058,9 @@ static int sd_probe(struct device *dev)
+  *	that could be re-used by a subsequent sd_probe().
+  *	This function is not called when the built-in sd driver is "exit-ed".
+  **/
+-static int sd_remove(struct device *dev)
++static void sd_remove(struct scsi_device *sd)
+ {
 +	struct device *dev = &sd->sdev_gendev;
- 	struct device *class_dev;
- 	int ret;
- 	scsi_changer *ch;
-@@ -967,8 +967,9 @@ static int ch_probe(struct device *dev)
- 	return ret;
- }
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
  
--static int ch_remove(struct device *dev)
-+static void ch_remove(struct scsi_device *sdev)
- {
-+	struct device *dev = &sdev->sdev_gendev;
- 	scsi_changer *ch = dev_get_drvdata(dev);
+ 	scsi_autopm_get_device(sdkp->device);
+@@ -4067,10 +4068,9 @@ static int sd_remove(struct device *dev)
+ 	device_del(&sdkp->disk_dev);
+ 	del_gendisk(sdkp->disk);
+ 	if (!sdkp->suspended)
+-		sd_shutdown(dev);
++		sd_shutdown(sd);
  
- 	spin_lock(&ch_index_lock);
-@@ -979,15 +980,14 @@ static int ch_remove(struct device *dev)
- 	device_destroy(&ch_sysfs_class, MKDEV(SCSI_CHANGER_MAJOR, ch->minor));
- 	scsi_device_put(ch->device);
- 	kref_put(&ch->ref, ch_destroy);
+ 	put_disk(sdkp->disk);
 -	return 0;
  }
  
- static struct scsi_driver ch_template = {
--	.gendrv     	= {
-+	.probe = ch_probe,
-+	.remove = ch_remove,
-+	.gendrv = {
- 		.name	= "ch",
- 		.owner	= THIS_MODULE,
--		.probe  = ch_probe,
--		.remove = ch_remove,
- 	},
+ static void scsi_disk_release(struct device *dev)
+@@ -4157,8 +4157,9 @@ static int sd_start_stop_device(struct scsi_disk *sdkp, int start)
+  * the normal SCSI command structure.  Wait for the command to
+  * complete.
+  */
+-static void sd_shutdown(struct device *dev)
++static void sd_shutdown(struct scsi_device *sd)
+ {
++	struct device *dev = &sd->sdev_gendev;
+ 	struct scsi_disk *sdkp = dev_get_drvdata(dev);
+ 
+ 	if (!sdkp)
+@@ -4326,12 +4327,12 @@ static const struct dev_pm_ops sd_pm_ops = {
  };
  
+ static struct scsi_driver sd_template = {
++	.probe = sd_probe,
++	.remove = sd_remove,
++	.shutdown = sd_shutdown,
+ 	.gendrv = {
+ 		.name		= "sd",
+-		.probe		= sd_probe,
+ 		.probe_type	= PROBE_PREFER_ASYNCHRONOUS,
+-		.remove		= sd_remove,
+-		.shutdown	= sd_shutdown,
+ 		.pm		= &sd_pm_ops,
+ 	},
+ 	.rescan			= sd_rescan,
 -- 
 2.47.3
 
