@@ -1,66 +1,81 @@
-Received: from bombadil.infradead.org (bombadil.infradead.org [198.137.202.133])
+Received: from mailout4.samsung.com (mailout4.samsung.com [203.254.224.34])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 2DA59224B0D
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 05:26:41 +0000 (UTC)
-Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=198.137.202.133
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 834892EC56D
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 06:39:04 +0000 (UTC)
+Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=203.254.224.34
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765344405; cv=none; b=kJwc2Ya3fIpkk5ciu5v0qrNs4zCGAWWiz0cCmF2HpgTowQ9u13BXhrmrHHT5UPtB0Ccbu9n01SpQkYQbR/qqWKk9y9jhkDdHu9rRA55RFTlkT+l01hNDAWU4LMS9vf71dQmOHAfXvY35ax8YefyyY8WKWbKKxtYxFQZsJrKMyLs=
+	t=1765348748; cv=none; b=pXhjRBYLsCux9svX9LAm4g/MktFdlDT8ZHnKaOjpJf4ixJetgKMySkoYbB1deEj5M91faPDkBjiM9cogcT68XaV3bkDBGRA67HQhSviJUNeGs/VGNTB6Je51NSHZxRrLwqc+MLpCDYloGxmAKoL5MZhfo4fpFw20g00tQ7zxpFQ=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765344405; c=relaxed/simple;
-	bh=IBYmCLtEaqTwes0Pk0YZaBmwUfTJ35hg+vt6Wmf1egY=;
-	h=Date:From:To:Cc:Subject:Message-ID:References:MIME-Version:
-	 Content-Type:Content-Disposition:In-Reply-To; b=FOwYEI1w2Sp0AXu/Osv6icnVTKgiNeI0tjKXhUR6ZBvIcSOj5Uzw4ag1FkgUKy+iUioV7sRgLdIxzW3xPbYlS7A4tyHOU+nN9psvu2ke5juZaHiZDriKzal0Bb8Ya1avetJM7IsrRf5CmURz2xNmnd/PWMnatGKGTUpunRmILcg=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org; dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b=wernOzFN; arc=none smtp.client-ip=198.137.202.133
-Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=infradead.org
-Authentication-Results: smtp.subspace.kernel.org; spf=none smtp.mailfrom=bombadil.srs.infradead.org
+	s=arc-20240116; t=1765348748; c=relaxed/simple;
+	bh=ccLwWU5ITaOH+kNNsuC+H/BQ9YGPw6HqbTJ5cvJz9/g=;
+	h=From:To:Subject:Date:Message-ID:MIME-Version:Content-Type:
+	 References; b=G7P7G8KG7F/MXerEFfg3L47zaI7glw8xYL4HFFnyCkBXZUWqLOosysD8JUmh4+34bzf1K+MCMAjg4dG5OeoeVcxFLElQ+m6zJDBfA79oz5e9DPgYMoNrazn7/iqBqTpr6n4YsvVn5Pqb1v6phx59ZDK6myV1dzKHfMbRO06nqKI=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com; spf=pass smtp.mailfrom=samsung.com; dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b=gQV8bQmI; arc=none smtp.client-ip=203.254.224.34
+Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=samsung.com
+Authentication-Results: smtp.subspace.kernel.org; spf=pass smtp.mailfrom=samsung.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=infradead.org header.i=@infradead.org header.b="wernOzFN"
-DKIM-Signature: v=1; a=rsa-sha256; q=dns/txt; c=relaxed/relaxed;
-	d=infradead.org; s=bombadil.20210309; h=In-Reply-To:Content-Transfer-Encoding
-	:Content-Type:MIME-Version:References:Message-ID:Subject:Cc:To:From:Date:
-	Sender:Reply-To:Content-ID:Content-Description;
-	bh=YPHdr5itTzuvGfTe+Cj24FxTalH5+G5c8NxH+V9milQ=; b=wernOzFN/Ha0C6bEDmdwQRe9d/
-	LRIJxPRJ7FGhzIN2NAonuKCX+vIRM17n4+lpQ3QsmE7/HcOy3ha+XdL4VdbaAyV/Yu7PXyx1E8f71
-	jMx5wH6It9nBwKP7bSRIE+xh3vE1hpYfF2maSGLudr1gxVvPCyCCtsXFcNST7Zv91KWZqz23KVGyM
-	AulvOBoieEXdAk94tUiJeGhpbuh5OmH9M51Lu8mFS90zIlelfpk/Wa/ZSDhrQ/AzNpPckOkzXiuXT
-	nVIyIGoNn5XwBdl1Psz5L8+V7NOmfhF/c48XlxYVrgmEtM7Zv+sW4mvPK8/OgCYuJY9Vrdys/erhx
-	jfyYxdnQ==;
-Received: from hch by bombadil.infradead.org with local (Exim 4.98.2 #2 (Red Hat Linux))
-	id 1vTCim-0000000F8K5-3QQF;
-	Wed, 10 Dec 2025 05:26:40 +0000
-Date: Tue, 9 Dec 2025 21:26:40 -0800
-From: Christoph Hellwig <hch@infradead.org>
-To: Uwe =?iso-8859-1?Q?Kleine-K=F6nig?= <u.kleine-koenig@baylibre.com>
-Cc: Bart Van Assche <bvanassche@acm.org>,
-	"James E.J. Bottomley" <James.Bottomley@hansenpartnership.com>,
-	"Martin K. Petersen" <martin.petersen@oracle.com>,
-	linux-scsi@vger.kernel.org
-Subject: Re: [PATCH 2/8] scsi: Make use of bus callbacks
-Message-ID: <aTkEkPEhrcbvGzYo@infradead.org>
-References: <cover.1765312062.git.u.kleine-koenig@baylibre.com>
- <59b408f6d89d402457a23564302afcbb334bc9dd.1765312062.git.u.kleine-koenig@baylibre.com>
- <e4924c88-909c-4ba4-8281-184f783539ff@acm.org>
- <akknplwphiv2qllb6s3k5cpyqz76coyvbutmwln4bjtsi5rxqo@twezemfbfiow>
+	dkim=pass (1024-bit key) header.d=samsung.com header.i=@samsung.com header.b="gQV8bQmI"
+Received: from epcas1p2.samsung.com (unknown [182.195.41.46])
+	by mailout4.samsung.com (KnoxPortal) with ESMTP id 20251210063902epoutp047176058d506540f384e58b3230044029~-x1P1Nn0G1158611586epoutp04i
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 06:39:02 +0000 (GMT)
+DKIM-Filter: OpenDKIM Filter v2.11.0 mailout4.samsung.com 20251210063902epoutp047176058d506540f384e58b3230044029~-x1P1Nn0G1158611586epoutp04i
+DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=samsung.com;
+	s=mail20170921; t=1765348742;
+	bh=i8KuVC8C0CfDnwvTQyw9DvO8qy7Uv6L4ynZJD7L/NqE=;
+	h=From:To:Subject:Date:References:From;
+	b=gQV8bQmIgUVodZlh1M8Jcq4cOpK8GxewzvS873yaGu6vG/ohX0flcLEaZTpGBAt+5
+	 Gk6fV2NzqiUYy7nl/u3tHodU+SwZ/XZWWw9GMaXfg+im9HQw5DbKYuadgCaJq48k9i
+	 ndhhsgJ+GA/BQORrjqV5ydZ0h958dRm9/Go0t+i8=
+Received: from epsnrtp03.localdomain (unknown [182.195.42.155]) by
+	epcas1p4.samsung.com (KnoxPortal) with ESMTPS id
+	20251210063901epcas1p4032e8c924b06fed470ae126188d4024a~-x1PHPi1m1730117301epcas1p46;
+	Wed, 10 Dec 2025 06:39:01 +0000 (GMT)
+Received: from epcas1p1.samsung.com (unknown [182.195.38.119]) by
+	epsnrtp03.localdomain (Postfix) with ESMTP id 4dR5fF3bxdz3hhT9; Wed, 10 Dec
+	2025 06:39:01 +0000 (GMT)
+Received: from epsmtip2.samsung.com (unknown [182.195.34.31]) by
+	epcas1p2.samsung.com (KnoxPortal) with ESMTPA id
+	20251210063900epcas1p2d70b81b127dcf2435d2028fca70ba6af~-x1Oi3vld2571125711epcas1p2S;
+	Wed, 10 Dec 2025 06:39:00 +0000 (GMT)
+Received: from baek-500TGA-500SGA.. (unknown [10.253.99.239]) by
+	epsmtip2.samsung.com (KnoxPortal) with ESMTPA id
+	20251210063900epsmtip26e8800f6c1606d4759ba6f84dd879448~-x1OczfGF0423904239epsmtip2p;
+	Wed, 10 Dec 2025 06:39:00 +0000 (GMT)
+From: Seunghwan Baek <sh8267.baek@samsung.com>
+To: alim.akhtar@samsung.com, avri.altman@wdc.com, bvanassche@acm.org,
+	James.Bottomley@HansenPartnership.com, martin.petersen@oracle.com,
+	peter.wang@mediatek.com, beanhuo@micron.com, adrian.hunter@intel.com,
+	quic_nguyenb@quicinc.com, linux-scsi@vger.kernel.org,
+	linux-kernel@vger.kernel.org, sh8267.baek@samsung.com
+Subject: [PATCH v1 0/1] Add code for ufs suspend error.
+Date: Wed, 10 Dec 2025 15:38:53 +0900
+Message-ID: <20251210063854.1483899-1-sh8267.baek@samsung.com>
+X-Mailer: git-send-email 2.43.0
 Precedence: bulk
 X-Mailing-List: linux-scsi@vger.kernel.org
 List-Id: <linux-scsi.vger.kernel.org>
 List-Subscribe: <mailto:linux-scsi+subscribe@vger.kernel.org>
 List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
-Content-Type: text/plain; charset=iso-8859-1
-Content-Disposition: inline
 Content-Transfer-Encoding: 8bit
-In-Reply-To: <akknplwphiv2qllb6s3k5cpyqz76coyvbutmwln4bjtsi5rxqo@twezemfbfiow>
-X-SRS-Rewrite: SMTP reverse-path rewritten from <hch@infradead.org> by bombadil.infradead.org. See http://www.infradead.org/rpr.html
+X-CMS-MailID: 20251210063900epcas1p2d70b81b127dcf2435d2028fca70ba6af
+X-Msg-Generator: CA
+Content-Type: text/plain; charset="utf-8"
+CMS-TYPE: 101P
+cpgsPolicy: CPGSC10-711,Y
+X-CFilter-Loop: Reflected
+X-CMS-RootMailID: 20251210063900epcas1p2d70b81b127dcf2435d2028fca70ba6af
+References: <CGME20251210063900epcas1p2d70b81b127dcf2435d2028fca70ba6af@epcas1p2.samsung.com>
 
-On Tue, Dec 09, 2025 at 10:22:54PM +0100, Uwe Kleine-König wrote:
-> I decided not to do that as part of this patch set. In case I missed a
-> driver and for oot drivers I think it's nice and fair to not break them
-> immediately and give its users/developers a chance to see the warning
-> and act on it.
+Add ufshcd_update_evt_hist to record ufs suspend error event history.
 
-No one should care about out of tree drivers.  On the other hand
-unfinished transitions are really annoying and have a tendency to
-go stale.  So please go the final steps and finish it.
+Seunghwan Baek (1):
+  scsi: ufs : core: Add ufshcd_update_evt_hist for ufs suspend error.
+
+ drivers/ufs/core/ufshcd.c | 5 ++++-
+ 1 file changed, 4 insertions(+), 1 deletion(-)
+
+-- 
+2.43.0
 
