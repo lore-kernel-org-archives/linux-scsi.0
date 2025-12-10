@@ -1,56 +1,56 @@
 Received: from mx0b-0016f401.pphosted.com (mx0b-0016f401.pphosted.com [67.231.156.173])
 	(using TLSv1.2 with cipher ECDHE-RSA-AES256-GCM-SHA384 (256/256 bits))
 	(No client certificate requested)
-	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 5EF0C3126A0
-	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 10:16:37 +0000 (UTC)
+	by smtp.subspace.kernel.org (Postfix) with ESMTPS id 9A6DE312824
+	for <linux-scsi@vger.kernel.org>; Wed, 10 Dec 2025 10:16:40 +0000 (UTC)
 Authentication-Results: smtp.subspace.kernel.org; arc=none smtp.client-ip=67.231.156.173
 ARC-Seal:i=1; a=rsa-sha256; d=subspace.kernel.org; s=arc-20240116;
-	t=1765361799; cv=none; b=ik1JvYbqyaF3PsK2L5KWTOUdYkYCrKgkVXh5qrByxkjv/TzMrhY/3AHJqLqiORYZBsbflRFyXImhA+A+vcYpO8g7GsrxQWL3H/ashpYVvC4ufYxJxPk3+EJTnZXkK7mJ1OmTrYAZtX4ps1cur4p/N6gTXuBLSrml7LnNDK6mm+I=
+	t=1765361802; cv=none; b=fYEdBLnGYu0NNFI2p8THOVuSMXOtsbYBi1SoiHVvriVsieIwlt+2FZWOHjK7RCH+0hlUC6calZduQgI2WIjG3BqrzzCFVo+/ac0UDDYXZ/pZThJ9U2JTtEAkpIFROoSPGkQnTDqzJ2/gPngpG439WgWTqnimPHEaw/mO46l03hA=
 ARC-Message-Signature:i=1; a=rsa-sha256; d=subspace.kernel.org;
-	s=arc-20240116; t=1765361799; c=relaxed/simple;
-	bh=XnRz87Smm5yk3/nAhm3fE03CZKpIZUu5LXbUziAa45g=;
+	s=arc-20240116; t=1765361802; c=relaxed/simple;
+	bh=HtLacOxJRLZtZ40cLfUkxeGplkaKhfk/TTcdjAIDZlc=;
 	h=From:To:CC:Subject:Date:Message-ID:In-Reply-To:References:
-	 MIME-Version:Content-Type; b=hTqBkE3oQLGUE7mACgSd+jE9bpibaLGjoXcKfz71CgR1EKP8dvZim2Et1yD+jXapjuJfVy6oIJ3cAzS2xr9AB55QddGD1LBuLFLGDD1vDHUtBIu9s5blnC/Inms9l5yCe+vIDlEoavBwm/Y6pSGo50cqLX2e+xBUJkn0utRFvao=
-ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=fail smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=KulWSSgv; arc=none smtp.client-ip=67.231.156.173
+	 MIME-Version:Content-Type; b=NMgqgp1sLGUlcQHYaHKmLZHi/4H4gSPgKN5mxK3Iy5rZvRImI1mnLYjuBaZVs4pF0yrirh6d/lM82mM0e9OKEQ2IoxBC4pLIzQPISYUDFrdQdxOIqGQRtnVJI7ogmcFcv7fNevla6lfEOw5dkOl5VIMj4RTMOGwgLBpUVcRBQUw=
+ARC-Authentication-Results:i=1; smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com; spf=fail smtp.mailfrom=marvell.com; dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b=FDDA811T; arc=none smtp.client-ip=67.231.156.173
 Authentication-Results: smtp.subspace.kernel.org; dmarc=pass (p=none dis=none) header.from=marvell.com
 Authentication-Results: smtp.subspace.kernel.org; spf=fail smtp.mailfrom=marvell.com
 Authentication-Results: smtp.subspace.kernel.org;
-	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="KulWSSgv"
-Received: from pps.filterd (m0045851.ppops.net [127.0.0.1])
-	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BA4aCv9164111;
-	Wed, 10 Dec 2025 02:16:32 -0800
+	dkim=pass (2048-bit key) header.d=marvell.com header.i=@marvell.com header.b="FDDA811T"
+Received: from pps.filterd (m0431383.ppops.net [127.0.0.1])
+	by mx0b-0016f401.pphosted.com (8.18.1.11/8.18.1.11) with ESMTP id 5BA4aLJ03329360;
+	Wed, 10 Dec 2025 02:16:38 -0800
 DKIM-Signature: v=1; a=rsa-sha256; c=relaxed/relaxed; d=marvell.com; h=
 	cc:content-transfer-encoding:content-type:date:from:in-reply-to
-	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=C
-	nWI/2rlITpelAAL2I69JRN/Fe/YGmvyv2fxJtRihgw=; b=KulWSSgvGAopWXoFT
-	BPmtj8sbqU02XhKoC0wapFaB4ZW3ovgRWOYRph+olws65jPwe89G0kGDUpxDc1FW
-	j9dJoMftr9YM7QQ4f6zsdUZ/d7kHmeGS7fc0gPaim1/6ts4RURZhHE3BrDfRiEwU
-	neP3RC2DNgzIAVpjLnVK0Y/F+Yyzc5vj9JeNMEp7bZHsKjZOqKSiYxVNu8czVKW8
-	+EBWNFzFabZ1qFCEZWLH/UDcQx5Euqk7fzvq2lwJVfpyzZeAW14nH5yA1WvUROz1
-	2gA2DIGOMPk6NKRprtQs9HR4VG4JSCyefXMI4B0v8JkXEvEs4kvgb0Z2udJyWpyi
-	nSkHw==
-Received: from dc6wp-exch02.marvell.com ([4.21.29.225])
-	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4axwgd168f-1
+	:message-id:mime-version:references:subject:to; s=pfpt0220; bh=W
+	pXqJZ3FPWy3CFg4YvWlbiDTbPL+vWRn68BUIUVdAus=; b=FDDA811TFMALCZdpC
+	QJpKqgu4VN+qMEppxcpdZs/dQIKNqaHuFzz8ihQ34VBGO4NEhxFA60/w0eao7/5y
+	+YXOWxui8aaPc6VB6mXx7gHBSZcePxfwWSolrqj9+KVyakb8uGHKjBHH9fMR1FKe
+	V99bEjZBbaFN7k2jEnN/4e5SHuy2TJmziuoa5O+v8xGtXEohzZYLwE4b/4wHKr3U
+	TNH85w/KhA27QD9/N1186WBGFmuQgFCcXqSRI02JIlcYyxv3JEsFoWGQFutohdem
+	BlV7J8WX5z312cq37m43HL63qtx+VwV/lCINbAY51lKHNBapA4jc5ZCCeJtzcc85
+	5BSFQ==
+Received: from dc5-exch05.marvell.com ([199.233.59.128])
+	by mx0b-0016f401.pphosted.com (PPS) with ESMTPS id 4axuknhj18-1
 	(version=TLSv1.2 cipher=ECDHE-RSA-AES256-GCM-SHA384 bits=256 verify=NOT);
-	Wed, 10 Dec 2025 02:16:32 -0800 (PST)
-Received: from DC6WP-EXCH02.marvell.com (10.76.176.209) by
- DC6WP-EXCH02.marvell.com (10.76.176.209) with Microsoft SMTP Server
+	Wed, 10 Dec 2025 02:16:37 -0800 (PST)
+Received: from DC5-EXCH05.marvell.com (10.69.176.209) by
+ DC5-EXCH05.marvell.com (10.69.176.209) with Microsoft SMTP Server
  (version=TLS1_2, cipher=TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384) id
- 15.2.1544.25; Wed, 10 Dec 2025 02:16:45 -0800
-Received: from maili.marvell.com (10.69.176.80) by DC6WP-EXCH02.marvell.com
- (10.76.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
- Transport; Wed, 10 Dec 2025 02:16:44 -0800
+ 15.2.1544.25; Wed, 10 Dec 2025 02:16:50 -0800
+Received: from maili.marvell.com (10.69.176.80) by DC5-EXCH05.marvell.com
+ (10.69.176.209) with Microsoft SMTP Server id 15.2.1544.25 via Frontend
+ Transport; Wed, 10 Dec 2025 02:16:50 -0800
 Received: from stgdev-a5u16.punelab.marvell.com (stgdev-a5u16.punelab.marvell.com [10.31.33.164])
-	by maili.marvell.com (Postfix) with ESMTP id 53BC73F70A7;
-	Wed, 10 Dec 2025 02:16:29 -0800 (PST)
+	by maili.marvell.com (Postfix) with ESMTP id 9DEEB3F709D;
+	Wed, 10 Dec 2025 02:16:34 -0800 (PST)
 From: Nilesh Javali <njavali@marvell.com>
 To: <martin.petersen@oracle.com>
 CC: <linux-scsi@vger.kernel.org>, <GR-QLogic-Storage-Upstream@marvell.com>,
         <agurumurthy@marvell.com>, <sdeodhar@marvell.com>, <emilne@redhat.com>,
         <jmeneghi@redhat.com>
-Subject: [PATCH v3 05/12] qla2xxx: Add bsg interface to support firmware img validation
-Date: Wed, 10 Dec 2025 15:45:57 +0530
-Message-ID: <20251210101604.431868-6-njavali@marvell.com>
+Subject: [PATCH v3 07/12] qla2xxx: Delay module unload while fabric scan in progress
+Date: Wed, 10 Dec 2025 15:45:59 +0530
+Message-ID: <20251210101604.431868-8-njavali@marvell.com>
 X-Mailer: git-send-email 2.23.1
 In-Reply-To: <20251210101604.431868-1-njavali@marvell.com>
 References: <20251210101604.431868-1-njavali@marvell.com>
@@ -62,322 +62,92 @@ List-Unsubscribe: <mailto:linux-scsi+unsubscribe@vger.kernel.org>
 MIME-Version: 1.0
 Content-Transfer-Encoding: 8bit
 Content-Type: text/plain
-X-Proofpoint-ORIG-GUID: BVNzRYqS_vpqKNiEzppI7fVciNeo2bIb
-X-Proofpoint-GUID: BVNzRYqS_vpqKNiEzppI7fVciNeo2bIb
-X-Authority-Analysis: v=2.4 cv=OIcqHCaB c=1 sm=1 tr=0 ts=69394880 cx=c_pps
- a=gIfcoYsirJbf48DBMSPrZA==:117 a=gIfcoYsirJbf48DBMSPrZA==:17
- a=wP3pNCr1ah4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=M5GUcnROAAAA:8 a=pGLkceISAAAA:8
- a=VM1oBaI6kV5Rzjb4Zc4A:9 a=OBjm3rFKGHvpk9ecZwUJ:22
-X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjEwMDA4NSBTYWx0ZWRfX1iHjHSr9dM4U
- 28fHIZtyPom3/lxLIdzfXXyb2v7SNsbbqk8t0XlT8ksXjofYAcqxPAfc/Egz3gPy+Lqqlxsw+Zr
- nh8gpmw38ILtj0WnMD74IvQmlMDww6R9zMuhDJ0C8frnPMbr1nag8gBLfVAnsGhsX2aDxEBRUBX
- +4ZnePXTnJYK45v3Cl6oYSMN3gG7ttnE4JJAXRgAKtxweAvOfam/CzIdIxg3onTASXdxMrJzGA4
- 1m8m1g3CHeP/6gYhYHvagUYze4Ls4wH5m3ItruFuh7x7tVLwKBNVvDtP2D1w9QUeI3VWEQrdTmE
- JJQpI1N3OK+7EXQK9ARAI9G8RGit3gA6AX43XLE9qCk94vEUfM0qlIvWlhaV9OQo2CW3mjWANLM
- +PUgzu6aHscmgXWKZYHJvfXXdGsr/Q==
+X-Proofpoint-GUID: 1HRT6SGj73vgAdlQQgjnFmgoEQFK5Qwn
+X-Proofpoint-Spam-Details-Enc: AW1haW4tMjUxMjEwMDA4NSBTYWx0ZWRfXwUY1tQU9OUPn
+ hWkWNEygvVgmMvcyPeYXXtub58oSjj7jYxe7eerDBnKf9spcWsiO6+kKd2qNtTwuE21pj1GO4z8
+ qqKRK1lLeUgInbPjItGlf91KITwGjXHcc0WtnX8Cg7NuvZaCOqCno7pT2u32mdoWlIhtubfN3Cz
+ 6OFEpDQqWjrLJimezrsiYzbNItXgdDtqbpplXKd2Yi7j8QcT3IpPAMflb5tyIPbiIh+h8gqLwSI
+ 5COepv7wH1tGMQP1sbNRST5b2OEF112IfHfEl0Ityeo4snDDbq+xU48oBFLLxhJmEOSSH2eclNi
+ ADt5vCfuAPwo6C4G1cqnMqvZ0QOqz6srL/uQgdek3uD9WWZELuDTvhQGPOiG3pwxdL+xsUVwnny
+ QDXHEWfLHgW7tscRtbyOH+B88w4mDQ==
+X-Proofpoint-ORIG-GUID: 1HRT6SGj73vgAdlQQgjnFmgoEQFK5Qwn
+X-Authority-Analysis: v=2.4 cv=P483RyAu c=1 sm=1 tr=0 ts=69394885 cx=c_pps
+ a=rEv8fa4AjpPjGxpoe8rlIQ==:117 a=rEv8fa4AjpPjGxpoe8rlIQ==:17
+ a=wP3pNCr1ah4A:10 a=VkNPw1HP01LnGYTKEx00:22 a=VwQbUJbxAAAA:8 a=QyXUC8HyAAAA:8
+ a=M5GUcnROAAAA:8 a=KKAkSRfTAAAA:8 a=pGLkceISAAAA:8 a=-DQe6t740v65wb3uHhAA:9
+ a=OBjm3rFKGHvpk9ecZwUJ:22 a=cvBusfyB2V15izCimMoJ:22
 X-Proofpoint-Virus-Version: vendor=baseguard
  engine=ICAP:2.0.293,Aquarius:18.0.1121,Hydra:6.1.9,FMLib:17.12.100.49
  definitions=2025-12-09_05,2025-12-09_03,2025-10-01_01
 
-From: Manish Rangankar <mrangankar@marvell.com>
+From: Anil Gurumurthy <agurumurthy@marvell.com>
 
-Add new bsg interface to issue MPI
-passthrough sub command to validate
-the newly flash firmware image partition.
+System crash seen during load/unload test in a loop.
 
-Signed-off-by: Manish Rangankar <mrangankar@marvell.com>
+[105954.384919] RBP: ffff914589838dc0 R08: 0000000000000000 R09: 0000000000000086
+[105954.384920] R10: 000000000000000f R11: ffffa31240904be5 R12: ffff914605f868e0
+[105954.384921] R13: ffff914605f86910 R14: 0000000000008010 R15: 00000000ddb7c000
+[105954.384923] FS:  0000000000000000(0000) GS:ffff9163fec40000(0000) knlGS:0000000000000000
+[105954.384925] CS:  0010 DS: 0000 ES: 0000 CR0: 0000000080050033
+[105954.384926] CR2: 000055d31ce1d6a0 CR3: 0000000119f5e001 CR4: 0000000000770ee0
+[105954.384928] PKRU: 55555554
+[105954.384929] Call Trace:
+[105954.384931]  <IRQ>
+[105954.384934]  qla24xx_sp_unmap+0x1f3/0x2a0 [qla2xxx]
+[105954.384962]  ? qla_async_scan_sp_done+0x114/0x1f0 [qla2xxx]
+[105954.384980]  ? qla24xx_els_ct_entry+0x4de/0x760 [qla2xxx]
+[105954.384999]  ? __wake_up_common+0x80/0x190
+[105954.385004]  ? qla24xx_process_response_queue+0xc2/0xaa0 [qla2xxx]
+[105954.385023]  ? qla24xx_msix_rsp_q+0x44/0xb0 [qla2xxx]
+[105954.385040]  ? __handle_irq_event_percpu+0x3d/0x190
+[105954.385044]  ? handle_irq_event+0x58/0xb0
+[105954.385046]  ? handle_edge_irq+0x93/0x240
+[105954.385050]  ? __common_interrupt+0x41/0xa0
+[105954.385055]  ? common_interrupt+0x3e/0xa0
+[105954.385060]  ? asm_common_interrupt+0x22/0x40
+
+The root cause of this was that there was a free
+(dma_free_attrs) in the interrupt context.
+There was a device discovery/fabric scan in progress.
+A module unload was issued which set the UNLOADING flag.
+As part of the discovery, after receiving an interrupt a
+work queue was scheduled (which involved a work to be queued).
+Since the UNLOADING flag is set, the work item was not
+allocated and the mapped memory had to be freed.
+The free occurred in interrupt context leading to system crash.
+Delay the driver unload until the fabric scan is complete
+to avoid the crash.
+
+Reported-by: kernel test robot <lkp@intel.com>
+Reported-by: Dan Carpenter <dan.carpenter@linaro.org>
+Closes: https://lore.kernel.org/all/202512090414.07Waorz0-lkp@intel.com/
+Fixes: 783e0dc4f66a ("qla2xxx: Check for device state before unloading the driver.")
+Cc: stable@vger.kernel.org
+Signed-off-by: Anil Gurumurthy <agurumurthy@marvell.com>
 Signed-off-by: Nilesh Javali <njavali@marvell.com>
 Reviewed-by: Himanshu Madhani <hmadhani2024@gmail.com>
 ---
- drivers/scsi/qla2xxx/qla_bsg.c | 118 +++++++++++++++++++++++++++++++++
- drivers/scsi/qla2xxx/qla_bsg.h |  12 ++++
- drivers/scsi/qla2xxx/qla_def.h |  20 ++++++
- drivers/scsi/qla2xxx/qla_gbl.h |   2 +
- drivers/scsi/qla2xxx/qla_mbx.c |  40 +++++++++++
- 5 files changed, 192 insertions(+)
+v3:
+fix warning reported by kernel robot and Dan Carpenter
+v2:
+fix warning reported by kernel robot
+ drivers/scsi/qla2xxx/qla_os.c | 3 ++-
+ 1 file changed, 2 insertions(+), 1 deletion(-)
 
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.c b/drivers/scsi/qla2xxx/qla_bsg.c
-index ccfc2d26dd37..8afa8a4b8ccb 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.c
-+++ b/drivers/scsi/qla2xxx/qla_bsg.c
-@@ -11,6 +11,8 @@
- #include <linux/delay.h>
- #include <linux/bsg-lib.h>
- 
-+static int qla28xx_validate_flash_image(struct bsg_job *bsg_job);
-+
- static void qla2xxx_free_fcport_work(struct work_struct *work)
- {
- 	struct fc_port *fcport = container_of(work, typeof(*fcport),
-@@ -2549,6 +2551,30 @@ qla2x00_get_flash_image_status(struct bsg_job *bsg_job)
- 	return 0;
- }
- 
-+static int
-+qla2x00_get_drv_attr(struct bsg_job *bsg_job)
-+{
-+	struct qla_drv_attr drv_attr;
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+
-+	memset(&drv_attr, 0, sizeof(struct qla_drv_attr));
-+	drv_attr.ext_attributes |= QLA_IMG_SET_VALID_SUPPORT;
-+
-+
-+	sg_copy_from_buffer(bsg_job->reply_payload.sg_list,
-+			bsg_job->reply_payload.sg_cnt, &drv_attr,
-+			sizeof(struct qla_drv_attr));
-+
-+	bsg_reply->reply_payload_rcv_len = sizeof(struct qla_drv_attr);
-+	bsg_reply->reply_data.vendor_reply.vendor_rsp[0] = EXT_STATUS_OK;
-+
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_reply->result = DID_OK << 16;
-+	bsg_job_done(bsg_job, bsg_reply->result, bsg_reply->reply_payload_rcv_len);
-+
-+	return 0;
-+}
-+
- static int
- qla2x00_manage_host_stats(struct bsg_job *bsg_job)
- {
-@@ -2933,6 +2959,12 @@ qla2x00_process_vendor_specific(struct scsi_qla_host *vha, struct bsg_job *bsg_j
- 	case QL_VND_GET_FLASH_UPDATE_CAPS:
- 		return qla27xx_get_flash_upd_cap(bsg_job);
- 
-+	case QL_VND_GET_DRV_ATTR:
-+		return qla2x00_get_drv_attr(bsg_job);
-+
-+	case QL_VND_IMG_SET_VALID:
-+		return qla28xx_validate_flash_image(bsg_job);
-+
- 	case QL_VND_SET_FLASH_UPDATE_CAPS:
- 		return qla27xx_set_flash_upd_cap(bsg_job);
- 
-@@ -3246,3 +3278,89 @@ int qla2x00_mailbox_passthru(struct bsg_job *bsg_job)
- 
- 	return ret;
- }
-+
-+static int
-+qla28xx_do_validate_flash_image(struct bsg_job *bsg_job, uint16_t *state)
-+{
-+	struct fc_bsg_request *bsg_request = bsg_job->request;
-+	scsi_qla_host_t *vha = shost_priv(fc_bsg_to_shost(bsg_job));
-+	uint16_t mstate[16];
-+	uint16_t mpi_state = 0;
-+	uint16_t img_idx;
-+	int rval = QLA_SUCCESS;
-+
-+	memset(mstate, 0, sizeof(mstate));
-+
-+	rval = qla2x00_get_firmware_state(vha, mstate);
-+	if (rval != QLA_SUCCESS) {
-+		ql_log(ql_log_warn, vha, 0xffff,
-+				"MBC to get MPI state failed (%d)\n", rval);
-+		rval = -EINVAL;
-+		goto exit_flash_img;
-+	}
-+
-+	mpi_state = mstate[11];
-+
-+	if (!(mpi_state & BIT_9 && mpi_state & BIT_8 && mpi_state & BIT_15)) {
-+		ql_log(ql_log_warn, vha, 0xffff,
-+				"MPI firmware state failed (0x%02x)\n", mpi_state);
-+		rval = -EINVAL;
-+		goto exit_flash_img;
-+	}
-+
-+	rval = qla81xx_fac_semaphore_access(vha, FAC_SEMAPHORE_LOCK);
-+	if (rval != QLA_SUCCESS) {
-+		ql_log(ql_log_warn, vha, 0xffff,
-+				"Unable to lock flash semaphore.");
-+		goto exit_flash_img;
-+	}
-+
-+	img_idx = bsg_request->rqst_data.h_vendor.vendor_cmd[1];
-+
-+	rval = qla_mpipt_validate_fw(vha, img_idx, state);
-+	if (rval != QLA_SUCCESS) {
-+		ql_log(ql_log_warn, vha, 0xffff,
-+				"Failed to validate Firmware image index [0x%x].\n",
-+				img_idx);
-+	}
-+
-+	qla81xx_fac_semaphore_access(vha, FAC_SEMAPHORE_UNLOCK);
-+
-+exit_flash_img:
-+	return rval;
-+}
-+
-+static int qla28xx_validate_flash_image(struct bsg_job *bsg_job)
-+{
-+	scsi_qla_host_t *vha = shost_priv(fc_bsg_to_shost(bsg_job));
-+	struct fc_bsg_reply *bsg_reply = bsg_job->reply;
-+	struct qla_hw_data *ha = vha->hw;
-+	uint16_t state = 0;
-+	int rval = 0;
-+
-+	if (!IS_QLA28XX(ha) || vha->vp_idx != 0)
-+		return -EPERM;
-+
-+	mutex_lock(&ha->optrom_mutex);
-+	rval = qla28xx_do_validate_flash_image(bsg_job, &state);
-+	if (rval)
-+		rval = -EINVAL;
-+	mutex_unlock(&ha->optrom_mutex);
-+
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+
-+	if (rval)
-+		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] =
-+			(state == 39) ? EXT_STATUS_IMG_SET_VALID_ERR :
-+			EXT_STATUS_IMG_SET_CONFIG_ERR;
-+	else
-+		bsg_reply->reply_data.vendor_reply.vendor_rsp[0] = EXT_STATUS_OK;
-+
-+	bsg_reply->result = DID_OK << 16;
-+	bsg_reply->reply_payload_rcv_len = 0;
-+	bsg_job->reply_len = sizeof(struct fc_bsg_reply);
-+	bsg_job_done(bsg_job, bsg_reply->result,
-+			bsg_reply->reply_payload_rcv_len);
-+
-+	return QLA_SUCCESS;
-+}
-diff --git a/drivers/scsi/qla2xxx/qla_bsg.h b/drivers/scsi/qla2xxx/qla_bsg.h
-index d38dab0a07e8..a920c8e482bc 100644
---- a/drivers/scsi/qla2xxx/qla_bsg.h
-+++ b/drivers/scsi/qla2xxx/qla_bsg.h
-@@ -32,12 +32,14 @@
- #define QL_VND_GET_PRIV_STATS_EX	0x1A
- #define QL_VND_SS_GET_FLASH_IMAGE_STATUS	0x1E
- #define QL_VND_EDIF_MGMT                0X1F
-+#define QL_VND_GET_DRV_ATTR		0x22
- #define QL_VND_MANAGE_HOST_STATS	0x23
- #define QL_VND_GET_HOST_STATS		0x24
- #define QL_VND_GET_TGT_STATS		0x25
- #define QL_VND_MANAGE_HOST_PORT		0x26
- #define QL_VND_MBX_PASSTHRU		0x2B
- #define QL_VND_DPORT_DIAGNOSTICS_V2	0x2C
-+#define QL_VND_IMG_SET_VALID	0x30
- 
- /* BSG Vendor specific subcode returns */
- #define EXT_STATUS_OK			0
-@@ -50,6 +52,8 @@
- #define EXT_STATUS_BUFFER_TOO_SMALL	16
- #define EXT_STATUS_NO_MEMORY		17
- #define EXT_STATUS_DEVICE_OFFLINE	22
-+#define EXT_STATUS_IMG_SET_VALID_ERR	47
-+#define EXT_STATUS_IMG_SET_CONFIG_ERR	48
- 
- /*
-  * To support bidirectional iocb
-@@ -318,6 +322,14 @@ struct qla_active_regions {
- 	uint8_t reserved[31];
- } __packed;
- 
-+struct qla_drv_attr {
-+        uint32_t        attributes;
-+        u32             ext_attributes;
-+#define QLA_IMG_SET_VALID_SUPPORT       BIT_4
-+        u32             status_flags;
-+        uint8_t         reserved[20];
-+} __packed;
-+
- #include "qla_edif_bsg.h"
- 
- #endif
-diff --git a/drivers/scsi/qla2xxx/qla_def.h b/drivers/scsi/qla2xxx/qla_def.h
-index cac4745b012e..907f6db234e3 100644
---- a/drivers/scsi/qla2xxx/qla_def.h
-+++ b/drivers/scsi/qla2xxx/qla_def.h
-@@ -1386,6 +1386,26 @@ static inline bool qla2xxx_is_valid_mbs(unsigned int mbs)
- #define HCS_WRITE_SERDES		0x3
- #define HCS_READ_SERDES			0x4
- 
-+/*
-+ * ISP2[7|8]xx mailbox commands.
-+ */
-+#define MBC_MPI_PASSTHROUGH            0x200
-+
-+/* MBC_MPI_PASSTHROUGH */
-+#define MPIPT_REQ_V1 1
-+enum {
-+       MPIPT_SUBCMD_GET_SUP_CMD = 0x10,
-+       MPIPT_SUBCMD_GET_SUP_FEATURE,
-+       MPIPT_SUBCMD_GET_STATUS,
-+       MPIPT_SUBCMD_VALIDATE_FW,
-+};
-+
-+enum {
-+       MPIPT_MPI_STATUS = 1,
-+       MPIPT_FCORE_STATUS,
-+       MPIPT_LOCKDOWN_STATUS,
-+};
-+
- /* Firmware return data sizes */
- #define FCAL_MAP_SIZE	128
- 
-diff --git a/drivers/scsi/qla2xxx/qla_gbl.h b/drivers/scsi/qla2xxx/qla_gbl.h
-index 87fa1e3eabf4..2ee6c4b60589 100644
---- a/drivers/scsi/qla2xxx/qla_gbl.h
-+++ b/drivers/scsi/qla2xxx/qla_gbl.h
-@@ -842,6 +842,8 @@ extern int qla82xx_write_optrom_data(struct scsi_qla_host *, void *,
- extern int qla82xx_abort_isp(scsi_qla_host_t *);
- extern int qla82xx_restart_isp(scsi_qla_host_t *);
- 
-+extern int qla_mpipt_validate_fw(scsi_qla_host_t *vha, u16 img_idx, u16 *state);
-+
- /* IOCB related functions */
- extern int qla82xx_start_scsi(srb_t *);
- extern void qla2x00_sp_free(srb_t *sp);
-diff --git a/drivers/scsi/qla2xxx/qla_mbx.c b/drivers/scsi/qla2xxx/qla_mbx.c
-index 2a856965eb3b..26851ca2a074 100644
---- a/drivers/scsi/qla2xxx/qla_mbx.c
-+++ b/drivers/scsi/qla2xxx/qla_mbx.c
-@@ -7203,3 +7203,43 @@ int qla_mailbox_passthru(scsi_qla_host_t *vha,
- 
- 	return rval;
- }
-+
-+int qla_mpipt_validate_fw(scsi_qla_host_t *vha, u16 img_idx, uint16_t *state)
-+{
-+	struct qla_hw_data *ha = vha->hw;
-+	mbx_cmd_t mc;
-+	mbx_cmd_t *mcp = &mc;
-+	int rval;
-+
-+	if (!IS_QLA28XX(ha)) {
-+		ql_dbg(ql_dbg_mbx, vha, 0xffff, "%s %d\n", __func__, __LINE__);
-+		return QLA_FUNCTION_FAILED;
-+	}
-+
-+	if (img_idx > 1) {
-+		ql_log(ql_log_info, vha, 0xffff,
-+				"%s %d Invalid flash image index [%d]\n",
-+				__func__, __LINE__, img_idx);
-+		return QLA_INVALID_COMMAND;
-+	}
-+
-+	memset(&mc, 0, sizeof(mc));
-+	mcp->mb[0] = MBC_MPI_PASSTHROUGH;
-+	mcp->mb[1] = MPIPT_SUBCMD_VALIDATE_FW;
-+	mcp->mb[2] = img_idx;
-+	mcp->out_mb = MBX_1|MBX_0;
-+	mcp->in_mb = MBX_2|MBX_1|MBX_0;
-+
-+	/* send mb via iocb */
-+	rval = qla24xx_send_mb_cmd(vha, &mc);
-+	if (rval) {
-+		ql_log(ql_log_info, vha, 0xffff, "%s:Failed %x (mb=%x,%x)\n",
-+				__func__, rval, mcp->mb[0], mcp->mb[1]);
-+		*state = mcp->mb[1];
-+	} else {
-+		ql_log(ql_log_info, vha, 0xffff, "%s: mb=%x,%x,%x\n", __func__,
-+				mcp->mb[0], mcp->mb[1], mcp->mb[2]);
-+	}
-+
-+	return rval;
-+}
+diff --git a/drivers/scsi/qla2xxx/qla_os.c b/drivers/scsi/qla2xxx/qla_os.c
+index 5ffd94586652..5f5f3b3bb043 100644
+--- a/drivers/scsi/qla2xxx/qla_os.c
++++ b/drivers/scsi/qla2xxx/qla_os.c
+@@ -1182,7 +1182,8 @@ qla2x00_wait_for_hba_ready(scsi_qla_host_t *vha)
+ 	while ((qla2x00_reset_active(vha) || ha->dpc_active ||
+ 		ha->flags.mbox_busy) ||
+ 	       test_bit(FX00_RESET_RECOVERY, &vha->dpc_flags) ||
+-	       test_bit(FX00_TARGET_SCAN, &vha->dpc_flags)) {
++	       test_bit(FX00_TARGET_SCAN, &vha->dpc_flags) ||
++	       (vha->scan.scan_flags & SF_SCANNING)) {
+ 		if (test_bit(UNLOADING, &base_vha->dpc_flags))
+ 			break;
+ 		msleep(1000);
 -- 
 2.23.1
 
